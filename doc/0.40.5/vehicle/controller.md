@@ -1,184 +1,184 @@
 # `controller`
 
-*Fichier : `lua/vehicle/controller.lua` · VM : Véhicule · 1059 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller.lua` · VM: Vehicle · 1059 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `controller`
+**Access:** global `controller`
 
-Gestionnaire des contrôleurs jbeam du véhicule (VM véhicule, globale `controller`). Au chargement, il lit la section `controller` du jbeam (`v.data.controller`), charge chaque fichier `lua/vehicle/controller/<fileName>.lua` avec `rerequire`, appelle son `init(jbeamData)` puis les étapes `initSecondStage`, `initSounds`, `initLastStage`. Il trie les contrôleurs (par rang du périphérique powertrain `relevantDevice`, puis `manualOrder`, puis `defaultOrder`, puis nom) et construit des listes de fonctions mises en cache pour appeler tous les `update`, `updateGFX`, `updateFixedStep`, etc. sans test à chaque frame. Un moddeur l'utilise surtout pour retrouver un contrôleur (`controller.getController("nom")`) ou en charger un à chaud (`loadControllerExternal`).
+Manager of the vehicle's jbeam controllers (vehicle VM, global `controller`). On load, it reads the `controller` section of the jbeam (`v.data.controller`), loads each `lua/vehicle/controller/<fileName>.lua` file with `rerequire`, calls its `init(jbeamData)` then the stages `initSecondStage`, `initSounds`, `initLastStage`. It sorts the controllers (by rank of the powertrain device `relevantDevice`, then `manualOrder`, then `defaultOrder`, then name) and builds cached function lists to call all the `update`, `updateGFX`, `updateFixedStep`, etc. without a test every frame. A modder mainly uses it to find a controller (`controller.getController("name")`) or to load one on the fly (`loadControllerExternal`).
 
-## Exemple
+## Example
 
 ```lua
--- accès direct (erreur si absent)
+-- direct access (error if absent)
 local esc = controller.getController("esc")
--- accès tolérant : renvoie un objet 'nil' qui accepte tout appel
+-- tolerant access: returns a 'nil' object that accepts any call
 controller.getControllerSafe("jato").fire(true)
--- tous les contrôleurs d'un type
+-- all controllers of a type
 for _, c in ipairs(controller.getControllersByType("hydraulics/electricHydraulics")) do print(c.name) end
 ```
 
-## Remarques
+## Notes
 
-- Cycle de vie d'un contrôleur : (1) init(jbeamData) à la création ; (2) initSecondStage(jbeamData), initSounds(jbeamData), initLastStage(jbeamData) après que powertrain, électriques, etc. sont prêts ; (3) chaque pas physique `update(dt)` puis `updateWheelsIntermediate(dt)`, un `updateFixedStep(dt)` à 100 Hz fixe (accumulateur 1/100 s), chaque frame graphique `updateGFX(dt)`. Les hooks facultatifs sont beamBroken, beamDeformed, nodeCollision, onCouplerFound, onCouplerAttached, onCouplerDetached, onGameplayEvent, debugDraw, settingsChanged, serialize/deserialize, getState/setState.
-- Au reset : si le contrôleur n'a pas de `reset`, `controller.reset` rappelle son `init` ; `resetSecondStage` appelle `reset(jbeamData)` s'il existe, sinon `initSecondStage` ; `resetLastStage` appelle `resetLastStage()` sinon `initLastStage`. `resetSounds` n'appelle que `resetSounds()` s'il existe.
-- Attention : le nom du hook de rupture dans les contrôleurs est `beamBroken` (c'est ce que cherche cacheControllerFunctions), alors que la fonction du gestionnaire s'appelle `controller.beamBroke`.
-- Contrôleur sans `type` standard : `M.type = "main"` désigne le contrôleur principal (un seul ; un second remplace le premier avec un avertissement). S'il n'y en a pas, le contrôleur `dummy` est ajouté. Un contrôleur sans section jbeam reçoit aussi `dummy`.
-- Les contrôleurs `shiftLogic-*` (automaticGearbox, cvtGearbox, dctGearbox, manualGearbox, sequentialGearbox) sont ignorés (liste noire) ; le nom d'un contrôleur par défaut est son fileName, il faut donner `name` unique pour en instancier plusieurs du même type.
-- Contrôleurs déplacés : registerRelocatedController garde la compatibilité des anciens noms (vehicleController, AVAS, airbrakes, reverseWarn, adaptiveBrakeLights, brakedDifferentialSteering, compressionBrake, postCrashBrake, transbrake) vers leurs nouveaux sous-dossiers.
-- Les champs update, updateGFX, updateWheelsIntermediate, beamBroke, beamDeformed, nodeCollision, onCouplerFound/Attached/Detached, onGameplayEvent et debugDraw valent `nop` (fonction vide) tant qu'aucun contrôleur n'a la fonction correspondante ; ce ne sont donc pas des nil. Les champs mainController et nilController sont nil à la déclaration puis remplis par init().
-- Anomalie : les logs de getControllerSafe pour le cas relocalisé annoncent `controller.getControllersByType` au lieu de `controller.getControllerSafe` (message de log seulement).
-- onCouplerFound du gestionnaire transmet 4 arguments (dont nodeDist) alors que controllerTemplate et les versions debug n'en déclarent que 3.
-- Si une version debug codée en dur (updateDebug, etc.) est décommentée en haut du fichier, elle remplace les boucles ; elle doit être générée avec controller.printDebugMethodCalls() pour le véhicule exact.
+- Controller lifecycle: (1) init(jbeamData) on creation; (2) initSecondStage(jbeamData), initSounds(jbeamData), initLastStage(jbeamData) after the powertrain, electrics, etc. are ready; (3) every physics step `update(dt)` then `updateWheelsIntermediate(dt)`, an `updateFixedStep(dt)` at a fixed 100 Hz (1/100 s accumulator), every graphics frame `updateGFX(dt)`. The optional hooks are beamBroken, beamDeformed, nodeCollision, onCouplerFound, onCouplerAttached, onCouplerDetached, onGameplayEvent, debugDraw, settingsChanged, serialize/deserialize, getState/setState.
+- On reset: if the controller has no `reset`, `controller.reset` calls its `init` again; `resetSecondStage` calls `reset(jbeamData)` if it exists, otherwise `initSecondStage`; `resetLastStage` calls `resetLastStage()` otherwise `initLastStage`. `resetSounds` only calls `resetSounds()` if it exists.
+- Warning: the name of the break hook in controllers is `beamBroken` (this is what cacheControllerFunctions looks for), whereas the manager's function is called `controller.beamBroke`.
+- Controller without a standard `type`: `M.type = "main"` designates the main controller (only one; a second one replaces the first with a warning). If there is none, the `dummy` controller is added. A controller without a jbeam section also gets `dummy`.
+- The `shiftLogic-*` controllers (automaticGearbox, cvtGearbox, dctGearbox, manualGearbox, sequentialGearbox) are ignored (blacklist); a controller's default name is its fileName, so a unique `name` must be given to instantiate several of the same type.
+- Relocated controllers: registerRelocatedController keeps compatibility of the old names (vehicleController, AVAS, airbrakes, reverseWarn, adaptiveBrakeLights, brakedDifferentialSteering, compressionBrake, postCrashBrake, transbrake) with their new subfolders.
+- The fields update, updateGFX, updateWheelsIntermediate, beamBroke, beamDeformed, nodeCollision, onCouplerFound/Attached/Detached, onGameplayEvent and debugDraw are `nop` (empty function) as long as no controller has the corresponding function; they are therefore not nil. The fields mainController and nilController are nil at declaration and then filled by init().
+- Anomaly: the getControllerSafe logs for the relocated case announce `controller.getControllersByType` instead of `controller.getControllerSafe` (log message only).
+- The manager's onCouplerFound passes 4 arguments (including nodeDist) whereas controllerTemplate and the debug versions declare only 3.
+- If a hard-coded debug version (updateDebug, etc.) is uncommented at the top of the file, it replaces the loops; it must be generated with controller.printDebugMethodCalls() for the exact vehicle.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller.cacheAllControllerFunctions()` | Reconstruit les listes de fonctions appelées par update, updateGFX, updateFixedStep, updateWheelsIntermediate et les hooks, d'après les fonctions présentes sur chaque contrôleur trié. À rappeler si un contrôleur ajoute ou retire dynamiquement une de ces fonctions (ex. M.update = ...). | 708 |
-| `controller.getAllControllers()` | Renvoie la table réelle (non copiée) de tous les contrôleurs chargés, indexée par nom. | 228 |
-| `controller.getController(name)` | Renvoie le contrôleur de ce nom, ou nil s'il n'existe pas (à tester avant d'indexer, sinon erreur). | 232 |
-| `controller.getControllerSafe(name)` | Comme getController mais ne renvoie jamais nil : gère les contrôleurs déplacés et, si rien n'est trouvé, renvoie `nilController` qui accepte tout index ou appel sans erreur. Pratique pour les appels du type `controller.getControllerSafe("x").fonction()`. | 236 |
-| `controller.getControllersByType(typeName)` | Liste les contrôleurs dont le type (fileName) vaut typeName, en tenant compte des contrôleurs déplacés sans nom personnalisé. | 259 |
-| `controller.getControllersFromPath(path)` | Liste les contrôleurs dont le typeName commence par le préfixe donné (recherche par dossier). | 272 |
-| `controller.getState()` | Fusionne récursivement les résultats de `getState()` de chaque contrôleur qui la définit. | 995 |
-| `controller.init()` | Charge tous les contrôleurs du jbeam (ou dummy), crée le nilController, enregistre les contrôleurs déplacés, ignore la liste noire, fusionne les données `v.data[nom]` avec la déclaration, appelle `init(data)`, désigne le contrôleur principal et trie les contrôleurs. Les erreurs d'un contrôleur sont loguées sans bloquer les autres. *(interne)* | 436 |
-| `controller.initLastStage()` | Appelle `initLastStage(jbeamData)` de chaque contrôleur puis reconstruit les caches. *(interne)* | 743 |
-| `controller.initSecondStage()` | Appelle `initSecondStage(jbeamData)` de chaque contrôleur puis reconstruit les caches. Appelée après l'init de tous les systèmes du véhicule. *(interne)* | 733 |
-| `controller.initSounds()` | Appelle `initSounds(jbeamData)` de chaque contrôleur puis reconstruit les caches. *(interne)* | 753 |
-| `controller.isPhysicsStepUsed()` | Indique si au moins un contrôleur a besoin de la boucle physique (update, updateFixedStep ou updateWheelsIntermediate). *(interne)* | 1006 |
-| `controller.loadControllerExternal(fileName, controllerName, controllerData)` | Charge un contrôleur à chaud, en dehors du jbeam. Refuse un nom déjà pris et les contrôleurs de type `main`. Appelle ensuite init, initSecondStage, initSounds, initLastStage, retrie les contrôleurs et reconstruit les caches d'appel. Les erreurs sont loguées sans planter. | 297 |
-| `controller.onDeserialize(data)` | Hook appelé au rechargement d'un état sauvegardé : passe à chaque contrôleur nommé dans `data` sa part via `deserialize(controllerData)`. *(interne)* *(hook)* | 961 |
-| `controller.onSerialize()` | Hook appelé à la sauvegarde d'état : collecte `serialize()` de chaque contrôleur qui la définit. *(interne)* *(hook)* | 973 |
-| `controller.printDebugMethodCalls(callType)` | Outil de développement : imprime du code Lua listant les appels directs (par index de sortedControllers) à coller en haut de controller.lua pour remplacer les boucles. *(interne)* | 807 |
-| `controller.registerRelocatedController(originalPath, newPath)` | Déclare qu'un ancien chemin/nom de contrôleur est maintenant à un nouveau chemin, pour que les anciens jbeam continuent de fonctionner. | 62 |
-| `controller.reset()` | Remet l'accumulateur du pas fixe à 0 et rappelle `init(jbeamData)` des contrôleurs qui n'ont pas de fonction `reset` (ceux qui en ont un sont traités dans resetSecondStage). *(interne)* | 763 |
-| `controller.resetLastStage()` | Pour chaque contrôleur : `resetLastStage()` s'il existe, sinon `initLastStage(jbeamData)` ; puis reconstruit les caches. *(interne)* | 785 |
-| `controller.resetSecondStage()` | Pour chaque contrôleur : `reset(jbeamData)` s'il existe, sinon `initSecondStage(jbeamData)` ; puis reconstruit les caches. *(interne)* | 773 |
-| `controller.resetSounds()` | Appelle `resetSounds()` des contrôleurs qui la définissent puis reconstruit les caches. *(interne)* | 797 |
-| `controller.setFreeze(mode)` | Met `isFrozen` à `mode == 1` et transmet l'appel au contrôleur principal. | 282 |
-| `controller.setState(data)` | Passe `data` à la fonction `setState(data)` de chaque contrôleur qui la définit. | 983 |
-| `controller.settingsChanged()` | Appelle `settingsChanged()` sur chaque contrôleur qui la définit. Appelée quand les réglages du jeu changent. *(interne)* | 220 |
-| `controller.unloadControllerExternal(controllerName)` | Retire un contrôleur chargé du gestionnaire (sans appeler de fonction de nettoyage) et reconstruit les caches d'appel. | 376 |
-| `controller.updateSimpleControlButtons()` | Appelle `updateSimpleControlButtons()` sur chaque contrôleur qui la possède (rafraîchit les boutons de contrôle simplifiés de l'UI). | 289 |
+| `controller.cacheAllControllerFunctions()` | Rebuilds the function lists called by update, updateGFX, updateFixedStep, updateWheelsIntermediate and the hooks, based on the functions present on each sorted controller. To be called again if a controller dynamically adds or removes one of these functions (e.g. M.update = ...). | 708 |
+| `controller.getAllControllers()` | Returns the actual table (not a copy) of all loaded controllers, keyed by name. | 228 |
+| `controller.getController(name)` | Returns the controller with this name, or nil if it does not exist (test before indexing, otherwise error). | 232 |
+| `controller.getControllerSafe(name)` | Like getController but never returns nil: handles relocated controllers and, if nothing is found, returns `nilController`, which accepts any index or call without error. Handy for calls like `controller.getControllerSafe("x").function()`. | 236 |
+| `controller.getControllersByType(typeName)` | Lists the controllers whose type (fileName) equals typeName, taking into account relocated controllers without a custom name. | 259 |
+| `controller.getControllersFromPath(path)` | Lists the controllers whose typeName starts with the given prefix (search by folder). | 272 |
+| `controller.getState()` | Recursively merges the results of `getState()` from each controller that defines it. | 995 |
+| `controller.init()` | Loads all controllers from the jbeam (or dummy), creates the nilController, registers relocated controllers, skips the blacklist, merges the `v.data[name]` data with the declaration, calls `init(data)`, designates the main controller and sorts the controllers. A controller's errors are logged without blocking the others. *(internal)* | 436 |
+| `controller.initLastStage()` | Calls `initLastStage(jbeamData)` on each controller then rebuilds the caches. *(internal)* | 743 |
+| `controller.initSecondStage()` | Calls `initSecondStage(jbeamData)` on each controller then rebuilds the caches. Called after the init of all the vehicle's systems. *(internal)* | 733 |
+| `controller.initSounds()` | Calls `initSounds(jbeamData)` on each controller then rebuilds the caches. *(internal)* | 753 |
+| `controller.isPhysicsStepUsed()` | Indicates whether at least one controller needs the physics loop (update, updateFixedStep or updateWheelsIntermediate). *(internal)* | 1006 |
+| `controller.loadControllerExternal(fileName, controllerName, controllerData)` | Loads a controller on the fly, outside the jbeam. Refuses a name already taken and controllers of type `main`. Then calls init, initSecondStage, initSounds, initLastStage, re-sorts the controllers and rebuilds the call caches. Errors are logged without crashing. | 297 |
+| `controller.onDeserialize(data)` | Hook called when a saved state is reloaded: passes to each controller named in `data` its share via `deserialize(controllerData)`. *(internal)* *(hook)* | 961 |
+| `controller.onSerialize()` | Hook called on state save: collects `serialize()` from each controller that defines it. *(internal)* *(hook)* | 973 |
+| `controller.printDebugMethodCalls(callType)` | Development tool: prints Lua code listing the direct calls (by sortedControllers index) to paste at the top of controller.lua to replace the loops. *(internal)* | 807 |
+| `controller.registerRelocatedController(originalPath, newPath)` | Declares that an old controller path/name is now at a new path, so that old jbeam files keep working. | 62 |
+| `controller.reset()` | Resets the fixed-step accumulator to 0 and calls `init(jbeamData)` again on controllers that have no `reset` function (those that have one are handled in resetSecondStage). *(internal)* | 763 |
+| `controller.resetLastStage()` | For each controller: `resetLastStage()` if it exists, otherwise `initLastStage(jbeamData)`; then rebuilds the caches. *(internal)* | 785 |
+| `controller.resetSecondStage()` | For each controller: `reset(jbeamData)` if it exists, otherwise `initSecondStage(jbeamData)`; then rebuilds the caches. *(internal)* | 773 |
+| `controller.resetSounds()` | Calls `resetSounds()` on the controllers that define it then rebuilds the caches. *(internal)* | 797 |
+| `controller.setFreeze(mode)` | Sets `isFrozen` to `mode == 1` and forwards the call to the main controller. | 282 |
+| `controller.setState(data)` | Passes `data` to the `setState(data)` function of each controller that defines it. | 983 |
+| `controller.settingsChanged()` | Calls `settingsChanged()` on each controller that defines it. Called when the game settings change. *(internal)* | 220 |
+| `controller.unloadControllerExternal(controllerName)` | Removes a loaded controller from the manager (without calling any cleanup function) and rebuilds the call caches. | 376 |
+| `controller.updateSimpleControlButtons()` | Calls `updateSimpleControlButtons()` on each controller that has it (refreshes the UI's simplified control buttons). | 289 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller.getAllControllers()`
 
-Renvoie la table réelle (non copiée) de tous les contrôleurs chargés, indexée par nom.
+Returns the actual table (not a copy) of all loaded controllers, keyed by name.
 
-- **renvoie** : table<string, table> nom -> module du contrôleur.
+- **returns**: table<string, table> name -> controller module.
 
 #### `controller.getController(name)`
 
-Renvoie le contrôleur de ce nom, ou nil s'il n'existe pas (à tester avant d'indexer, sinon erreur).
+Returns the controller with this name, or nil if it does not exist (test before indexing, otherwise error).
 
-- `name` (*string*) : Nom du contrôleur (par défaut le fileName, sinon la clé `name` du jbeam).
-- **renvoie** : table|nil Le module du contrôleur.
+- `name` (*string*) : Controller name (by default the fileName, otherwise the jbeam `name` key).
+- **returns**: table|nil The controller module.
 
 #### `controller.getControllerSafe(name)`
 
-Comme getController mais ne renvoie jamais nil : gère les contrôleurs déplacés et, si rien n'est trouvé, renvoie `nilController` qui accepte tout index ou appel sans erreur. Pratique pour les appels du type `controller.getControllerSafe("x").fonction()`.
+Like getController but never returns nil: handles relocated controllers and, if nothing is found, returns `nilController`, which accepts any index or call without error. Handy for calls like `controller.getControllerSafe("x").function()`.
 
-- `name` (*string*) : Nom du contrôleur.
-- **renvoie** : table Le contrôleur, ou nilController.
+- `name` (*string*) : Controller name.
+- **returns**: table The controller, or nilController.
 
 #### `controller.getControllersByType(typeName)`
 
-Liste les contrôleurs dont le type (fileName) vaut typeName, en tenant compte des contrôleurs déplacés sans nom personnalisé.
+Lists the controllers whose type (fileName) equals typeName, taking into account relocated controllers without a custom name.
 
-- `typeName` (*string*) : Chemin de fichier, ex. "braking/transbrake".
-- **renvoie** : table[] Liste (ordre non garanti) des contrôleurs.
+- `typeName` (*string*) : File path, e.g. "braking/transbrake".
+- **returns**: table[] List (order not guaranteed) of controllers.
 
 #### `controller.getControllersFromPath(path)`
 
-Liste les contrôleurs dont le typeName commence par le préfixe donné (recherche par dossier).
+Lists the controllers whose typeName starts with the given prefix (search by folder).
 
-- `path` (*string*) : Préfixe, ex. "braking/".
-- **renvoie** : table[] Liste des contrôleurs correspondants.
+- `path` (*string*) : Prefix, e.g. "braking/".
+- **returns**: table[] List of matching controllers.
 
 #### `controller.getState()`
 
-Fusionne récursivement les résultats de `getState()` de chaque contrôleur qui la définit.
+Recursively merges the results of `getState()` from each controller that defines it.
 
-- **renvoie** : table|nil État fusionné, nil s'il est vide.
+- **returns**: table|nil Merged state, nil if empty.
 
 #### `controller.isPhysicsStepUsed()`
 
-Indique si au moins un contrôleur a besoin de la boucle physique (update, updateFixedStep ou updateWheelsIntermediate).
+Indicates whether at least one controller needs the physics loop (update, updateFixedStep or updateWheelsIntermediate).
 
-- **renvoie** : boolean true si un de ces hooks existe.
+- **returns**: boolean true if one of these hooks exists.
 
 #### `controller.loadControllerExternal(fileName, controllerName, controllerData)`
 
-Charge un contrôleur à chaud, en dehors du jbeam. Refuse un nom déjà pris et les contrôleurs de type `main`. Appelle ensuite init, initSecondStage, initSounds, initLastStage, retrie les contrôleurs et reconstruit les caches d'appel. Les erreurs sont loguées sans planter.
+Loads a controller on the fly, outside the jbeam. Refuses a name already taken and controllers of type `main`. Then calls init, initSecondStage, initSounds, initLastStage, re-sorts the controllers and rebuilds the call caches. Errors are logged without crashing.
 
-- `fileName` (*string*) : Chemin du fichier relatif à controller/ (sans .lua).
-- `controllerName` (*string|nil*) : Nom d'instance ; par défaut fileName.
-- `controllerData` (*table|nil*) : Données passées à init comme jbeamData ; {} par défaut.
-- **renvoie** : table|nil Le contrôleur chargé, nil en cas d'échec.
+- `fileName` (*string*) : File path relative to controller/ (without .lua).
+- `controllerName` (*string|nil*) : Instance name; defaults to fileName.
+- `controllerData` (*table|nil*) : Data passed to init as jbeamData; {} by default.
+- **returns**: table|nil The loaded controller, nil on failure.
 
 #### `controller.onDeserialize(data)`
 
-Hook appelé au rechargement d'un état sauvegardé : passe à chaque contrôleur nommé dans `data` sa part via `deserialize(controllerData)`.
+Hook called when a saved state is reloaded: passes to each controller named in `data` its share via `deserialize(controllerData)`.
 
-- `data` (*table<string, any>|nil*) : nom du contrôleur -> données retournées auparavant par son serialize().
+- `data` (*table<string, any>|nil*) : controller name -> data previously returned by its serialize().
 
 #### `controller.onSerialize()`
 
-Hook appelé à la sauvegarde d'état : collecte `serialize()` de chaque contrôleur qui la définit.
+Hook called on state save: collects `serialize()` from each controller that defines it.
 
-- **renvoie** : table<string, any> nom du contrôleur -> données sérialisées.
+- **returns**: table<string, any> controller name -> serialized data.
 
 #### `controller.printDebugMethodCalls(callType)`
 
-Outil de développement : imprime du code Lua listant les appels directs (par index de sortedControllers) à coller en haut de controller.lua pour remplacer les boucles.
+Development tool: prints Lua code listing the direct calls (by sortedControllers index) to paste at the top of controller.lua to replace the loops.
 
-- `callType` (*string|nil*) : "update", "updateGFX", "updateWheelsIntermediate", "beamBroke", "beamDeformed", "nodeCollision", "onCouplerFound", "onCouplerAttached", "onCouplerDetached", "onGameplayEvent", "debugDraw", "settingsChanged" ; nil = tous.
+- `callType` (*string|nil*) : "update", "updateGFX", "updateWheelsIntermediate", "beamBroke", "beamDeformed", "nodeCollision", "onCouplerFound", "onCouplerAttached", "onCouplerDetached", "onGameplayEvent", "debugDraw", "settingsChanged"; nil = all.
 
 #### `controller.registerRelocatedController(originalPath, newPath)`
 
-Déclare qu'un ancien chemin/nom de contrôleur est maintenant à un nouveau chemin, pour que les anciens jbeam continuent de fonctionner.
+Declares that an old controller path/name is now at a new path, so that old jbeam files keep working.
 
-- `originalPath` (*string*) : Ancien nom (ex. "transbrake") ou chemin ("controller/transbrake").
-- `newPath` (*string*) : Nouveau chemin relatif au dossier controller/ (ex. "braking/transbrake") ; pour loadControllerExternal c'est le chemin complet sans extension.
+- `originalPath` (*string*) : Old name (e.g. "transbrake") or path ("controller/transbrake").
+- `newPath` (*string*) : New path relative to the controller/ folder (e.g. "braking/transbrake"); for loadControllerExternal it is the full path without extension.
 
 #### `controller.setFreeze(mode)`
 
-Met `isFrozen` à `mode == 1` et transmet l'appel au contrôleur principal.
+Sets `isFrozen` to `mode == 1` and forwards the call to the main controller.
 
-- `mode` (*integer*) : 1 = gelé, autre = non gelé.
+- `mode` (*integer*) : 1 = frozen, other = not frozen.
 
 #### `controller.setState(data)`
 
-Passe `data` à la fonction `setState(data)` de chaque contrôleur qui la définit.
+Passes `data` to the `setState(data)` function of each controller that defines it.
 
-- `data` (*table|nil*) : État à appliquer ; nil ne fait rien.
+- `data` (*table|nil*) : State to apply; nil does nothing.
 
 #### `controller.unloadControllerExternal(controllerName)`
 
-Retire un contrôleur chargé du gestionnaire (sans appeler de fonction de nettoyage) et reconstruit les caches d'appel.
+Removes a loaded controller from the manager (without calling any cleanup function) and rebuilds the call caches.
 
-- `controllerName` (*string*) : Nom d'instance.
+- `controllerName` (*string*) : Instance name.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `beamBroke` | function | Diffuse beamBroken(id, energy) aux contrôleurs qui l'ont. |
-| `beamDeformed` | function | Diffuse beamDeformed(id, ratio) aux contrôleurs qui l'ont. |
-| `debugDraw` | function | Diffuse debugDraw(focusPos) aux contrôleurs qui l'ont. |
-| `isFrozen` | boolean | true si setFreeze(1) a été appelé. |
-| `mainController` | table|nil | Contrôleur dont `type == "main"` (un seul), ou le contrôleur `dummy` si aucun. nil avant init(). |
-| `nilController` | table|nil | Objet 'nul' créé par init() : toute indexation ou appel renvoie lui-même, l'écriture est ignorée. Renvoyé par getControllerSafe quand le contrôleur est introuvable. |
-| `nodeCollision` | function | Diffuse nodeCollision(p) aux contrôleurs qui l'ont (p : paramètre venant du moteur). |
-| `onCouplerAttached` | function | Diffuse onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy). |
-| `onCouplerDetached` | function | Diffuse onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce). |
-| `onCouplerFound` | function | Diffuse onCouplerFound(nodeId, obj2id, obj2nodeId, nodeDist). |
-| `onGameplayEvent` | function | Diffuse onGameplayEvent(eventName, ...) aux contrôleurs qui l'ont. |
-| `update` | function | Appelle update(dt) de chaque contrôleur puis, avec l'accumulateur 100 Hz, updateFixedStep. Vaut nop s'il n'y a rien à appeler. Appelée par la boucle physique. |
-| `updateGFX` | function | Appelle updateGFX(dt) de chaque contrôleur, une fois par frame graphique. |
-| `updateWheelsIntermediate` | function | Appelle updateWheelsIntermediate(dt) de chaque contrôleur concerné (étape physique intermédiaire des roues). |
+| `beamBroke` | function | Broadcasts beamBroken(id, energy) to the controllers that have it. |
+| `beamDeformed` | function | Broadcasts beamDeformed(id, ratio) to the controllers that have it. |
+| `debugDraw` | function | Broadcasts debugDraw(focusPos) to the controllers that have it. |
+| `isFrozen` | boolean | true if setFreeze(1) has been called. |
+| `mainController` | table|nil | Controller whose `type == "main"` (only one), or the `dummy` controller if none. nil before init(). |
+| `nilController` | table|nil | 'Null' object created by init(): any indexing or call returns itself, writing is ignored. Returned by getControllerSafe when the controller is not found. |
+| `nodeCollision` | function | Broadcasts nodeCollision(p) to the controllers that have it (p: parameter coming from the engine). |
+| `onCouplerAttached` | function | Broadcasts onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy). |
+| `onCouplerDetached` | function | Broadcasts onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce). |
+| `onCouplerFound` | function | Broadcasts onCouplerFound(nodeId, obj2id, obj2nodeId, nodeDist). |
+| `onGameplayEvent` | function | Broadcasts onGameplayEvent(eventName, ...) to the controllers that have it. |
+| `update` | function | Calls update(dt) of each controller then, with the 100 Hz accumulator, updateFixedStep. Is nop if there is nothing to call. Called by the physics loop. |
+| `updateGFX` | function | Calls updateGFX(dt) on each controller, once per graphics frame. |
+| `updateWheelsIntermediate` | function | Calls updateWheelsIntermediate(dt) on each relevant controller (intermediate physics step for the wheels). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller.lua`.*

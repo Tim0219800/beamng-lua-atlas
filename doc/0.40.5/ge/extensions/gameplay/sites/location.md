@@ -1,12 +1,12 @@
 # `gameplay_sites_location`
 
-*Fichier : `lua/ge/extensions/gameplay/sites/location.lua` · VM : Game Engine (GE) · 116 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/sites/location.lua` · VM: Game Engine (GE) · 116 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/sites/location")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/sites/location")` (file under extensions/ but not a regular extension)
 
-Classe « Location » d'un jeu de sites (fichier *.sites.json) : un point nommé de la carte avec une position, un rayon et une couleur. Sert à marquer des lieux (départ, arrivée, point d'intérêt) dans les scénarios, missions et le trafic. Le module renvoie un constructeur : require('/lua/ge/extensions/gameplay/sites/location')(sites, name, forceId).
+"Location" class of a sites set (*.sites.json file): a named map point with a position, a radius and a color. Used to mark places (start, finish, point of interest) in scenarios, missions and traffic. The module returns a constructor: require('/lua/ge/extensions/gameplay/sites/location')(sites, name, forceId).
 
-## Exemple
+## Example
 
 ```lua
 local loc = require('/lua/ge/extensions/gameplay/sites/location')(sitesObj, 'Garage')
@@ -14,30 +14,30 @@ loc:set(vec3(0,0,0), 8)
 local info = loc:findClosestRoadInfo()
 ```
 
-## Remarques
+## Notes
 
-- Rayon par défaut 5 m ; drawMode par défaut 'faded' ; sortOrder par défaut 999999.
-- onDeserialized fixe le rayon via set(...) puis le réécrit avec « data.radius or 5 » ; si data.radius vaut nil, set() met d'abord radius à nil avant la correction.
-- findClosestRoadInfo nécessite le module global map (renvoie nil sinon).
+- Default radius 5 m; default drawMode 'faded'; default sortOrder 999999.
+- onDeserialized sets the radius via set(...) then rewrites it with "data.radius or 5"; if data.radius is nil, set() first sets radius to nil before the correction.
+- findClosestRoadInfo requires the global map module (returns nil otherwise).
 
-## Classe `C`
+## Class `C`
 
-Objet location. Champs : sites, id, name, color (vec3), pos (vec3), radius, customFields (gameplay/util/customFields).
+Location object. Fields: sites, id, name, color (vec3), pos (vec3), radius, customFields (gameplay/util/customFields).
 
-Le module renvoie un constructeur : `local obj = require("gameplay_sites_location")(options)`.
+The module returns a constructor: `local obj = require("gameplay_sites_location")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawDebug(drawMode, clr)` | Dessine une sphère de debug (et le nom si le mode n'est pas 'faded'). En mode 'highlight', dessine aussi la route la plus proche. Rien au-delà de la distance de visualisation (300 m, ou la préférence de l'éditeur). | 45 |
-| `C:findClosestRoadInfo()` | Cherche le segment de route le plus proche via map.findClosestRoad et renvoie le point projeté sur ce segment, avec le rayon interpolé. Les nœuds a et b sont permutés pour que a soit le plus proche. | 81 |
-| `C:init(sites, name, forceId)` | Constructeur appelé par le module. Prend un identifiant unique de l'objet sites si forceId est absent, nom par défaut « Location <id> ». | 8 |
-| `C:onDeserialized(data)` | Restaure name, color, position, rayon et champs personnalisés depuis une table sérialisée. | 32 |
-| `C:onSerialize()` | Renvoie une table sérialisable (name, pos, radius, color, oldId, customFields). | 20 |
-| `C:set(pos, radius)` | Définit la position et le rayon de la location. | 40 |
+| `C:drawDebug(drawMode, clr)` | Draws a debug sphere (and the name if the mode is not 'faded'). In 'highlight' mode, also draws the closest road. Nothing beyond the view distance (300 m, or the editor preference). | 45 |
+| `C:findClosestRoadInfo()` | Looks for the closest road segment via map.findClosestRoad and returns the point projected onto that segment, with the interpolated radius. Nodes a and b are swapped so that a is the closest. | 81 |
+| `C:init(sites, name, forceId)` | Constructor called by the module. Takes a unique identifier from the sites object if forceId is absent, default name "Location <id>". | 8 |
+| `C:onDeserialized(data)` | Restores name, color, position, radius and custom fields from a serialized table. | 32 |
+| `C:onSerialize()` | Returns a serializable table (name, pos, radius, color, oldId, customFields). | 20 |
+| `C:set(pos, radius)` | Sets the position and radius of the location. | 40 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawCylinder`, `drawSphere`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/sites/location.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/sites/location.lua`.*

@@ -1,70 +1,70 @@
 # `couplings`
 
-*Fichier : `lua/vehicle/extensions/couplings.lua` · VM : Véhicule · 69 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/couplings.lua` · VM: Vehicle · 69 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `couplings` : `extensions.load (VM véhicule)("couplings")`, puis la globale `couplings`
+**Access:** extension `couplings`: `extensions.load (vehicle VM)("couplings")`, then the global `couplings`
 
-Extension de gestion des attelages de type sellette (fifth wheel). Elle réagit aux événements de beamstate (activation/désactivation de l'attelage automatique, détachement) en relayant aux contrôleurs 'couplings/fifthwheel' et répond aux questions de beamstate sur l'état d'attelage.
+Extension managing fifth wheel type hitches. It reacts to beamstate events (enabling/disabling of automatic coupling, detaching) by relaying them to the 'couplings/fifthwheel' controllers and answers beamstate's questions about the coupling state.
 
-## Exemple
+## Example
 
 ```lua
--- appelé par beamstate, pas par le moddeur directement
+-- called by beamstate, not by the modder directly
 extensions.couplings.isCouplerAttached()
 ```
 
-## Remarques
+## Notes
 
-- isAutoCouplingActive renvoie toujours false ; isCouplerAttached renvoie true si au moins une sellette est attachée, sinon nil (pas false).
-- couplingAttached appelle obj:stopLatching() puis beamstate.disableAutoCoupling() : l'attelage automatique est coupé dès qu'un attelage est réalisé.
-- couplingDetached et onReset sont vides.
+- isAutoCouplingActive always returns false; isCouplerAttached returns true if at least one fifth wheel is attached, otherwise nil (not false).
+- couplingAttached calls obj:stopLatching() then beamstate.disableAutoCoupling(): automatic coupling is cut as soon as a coupling is made.
+- couplingDetached and onReset are empty.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `couplings.couplingAttached(nodeId, obj2id, obj2nodeId)` | Appelé par le moteur/beamstate quand un coupleur s'attache : arrête le verrouillage automatique et désactive l'attelage auto. *(interne)* | 30 |
-| `couplings.couplingDetached(nodeId, obj2id, obj2nodeId)` | Appelé quand un coupleur se détache ; ne fait rien. *(interne)* | 35 |
-| `couplings.isAutoCouplingActive()` | Indique si l'attelage automatique est actif pour cette extension (toujours false). *(interne)* | 39 |
-| `couplings.isCouplerAttached()` | Indique si au moins une sellette est attachée. *(interne)* | 44 |
-| `couplings.onBeamstateActivateAutoCoupling()` | Appelé par beamstate à l'activation de l'attelage automatique : affiche l'indicateur de chaque sellette. *(interne)* *(hook)* | 7 |
-| `couplings.onBeamstateDetachCouplers()` | Appelé par beamstate pour détacher les coupleurs : détache chaque sellette. *(interne)* *(hook)* | 23 |
-| `couplings.onBeamstateDisableAutoLatching()` | Appelé par beamstate à la désactivation de l'attelage automatique : masque l'indicateur de chaque sellette. *(interne)* *(hook)* | 15 |
-| `couplings.onReset()` | Hook de reset du véhicule ; vide. *(interne)* *(hook)* | 53 |
+| `couplings.couplingAttached(nodeId, obj2id, obj2nodeId)` | Called by the engine/beamstate when a coupler attaches: stops the automatic latching and disables auto coupling. *(internal)* | 30 |
+| `couplings.couplingDetached(nodeId, obj2id, obj2nodeId)` | Called when a coupler detaches; does nothing. *(internal)* | 35 |
+| `couplings.isAutoCouplingActive()` | Indicates whether automatic coupling is active for this extension (always false). *(internal)* | 39 |
+| `couplings.isCouplerAttached()` | Indicates whether at least one fifth wheel is attached. *(internal)* | 44 |
+| `couplings.onBeamstateActivateAutoCoupling()` | Called by beamstate on activation of automatic coupling: displays the indicator of each fifth wheel. *(internal)* *(hook)* | 7 |
+| `couplings.onBeamstateDetachCouplers()` | Called by beamstate to detach the couplers: detaches each fifth wheel. *(internal)* *(hook)* | 23 |
+| `couplings.onBeamstateDisableAutoLatching()` | Called by beamstate on deactivation of automatic coupling: hides the indicator of each fifth wheel. *(internal)* *(hook)* | 15 |
+| `couplings.onReset()` | Vehicle reset hook; empty. *(internal)* *(hook)* | 53 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `couplings.couplingAttached(nodeId, obj2id, obj2nodeId)`
 
-Appelé par le moteur/beamstate quand un coupleur s'attache : arrête le verrouillage automatique et désactive l'attelage auto.
+Called by the engine/beamstate when a coupler attaches: stops the automatic latching and disables auto coupling.
 
-- `nodeId` (*integer*) : Nœud du coupleur.
-- `obj2id` (*integer*) : Identifiant de l'autre véhicule.
-- `obj2nodeId` (*integer*) : Nœud du coupleur de l'autre véhicule.
+- `nodeId` (*integer*) : Coupler node.
+- `obj2id` (*integer*) : Identifier of the other vehicle.
+- `obj2nodeId` (*integer*) : Coupler node of the other vehicle.
 
 #### `couplings.couplingDetached(nodeId, obj2id, obj2nodeId)`
 
-Appelé quand un coupleur se détache ; ne fait rien.
+Called when a coupler detaches; does nothing.
 
-- `nodeId` (*integer*) : Nœud du coupleur.
-- `obj2id` (*integer*) : Autre véhicule.
-- `obj2nodeId` (*integer*) : Nœud de l'autre véhicule.
+- `nodeId` (*integer*) : Coupler node.
+- `obj2id` (*integer*) : Other vehicle.
+- `obj2nodeId` (*integer*) : Node of the other vehicle.
 
 #### `couplings.isAutoCouplingActive()`
 
-Indique si l'attelage automatique est actif pour cette extension (toujours false).
+Indicates whether automatic coupling is active for this extension (always false).
 
-- **renvoie** : boolean false.
+- **returns**: boolean false.
 
 #### `couplings.isCouplerAttached()`
 
-Indique si au moins une sellette est attachée.
+Indicates whether at least one fifth wheel is attached.
 
-- **renvoie** : boolean|nil true si attachée, sinon nil.
+- **returns**: boolean|nil true if attached, otherwise nil.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `stopLatching`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/couplings.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/couplings.lua`.*

@@ -1,90 +1,90 @@
 # `editor_mainMenu`
 
-*Fichier : `lua/ge/extensions/editor/mainMenu.lua` · VM : Game Engine (GE) · 941 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/mainMenu.lua` · VM: Game Engine (GE) · 941 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_mainMenu` : `extensions.load("editor_mainMenu")`, puis la globale `editor_mainMenu`
+**Access:** extension `editor_mainMenu`: `extensions.load("editor_mainMenu")`, then the global `editor_mainMenu`
 
-Barre de menu principale du World Editor : menus File, Edit, Camera, Object, View, Window, Help, plus titre du niveau, mode d'édition courant, notifications, barre d'état, métriques de scène (mémoire GPU/CPU), et boîtes de dialogue (À propos, mode sans échec, retour du niveau à l'original, sauvegarde/suppression/réinitialisation de layouts). Il fournit aux autres outils l'API editor.addWindowMenuItem (entrée dans le menu Window), editor.showNotification, editor.setStatusBar/hideStatusBar et editor.rebuildCollision.
+Main menu bar of the World Editor: File, Edit, Camera, Object, View, Window, Help menus, plus the level title, current edit mode, notifications, status bar, scene metrics (GPU/CPU memory), and dialog boxes (About, safe mode, revert level to original, save/delete/reset layouts). It provides the other tools with the APIs editor.addWindowMenuItem (entry in the Window menu), editor.showNotification, editor.setStatusBar/hideStatusBar and editor.rebuildCollision.
 
-## Exemple
+## Example
 
 ```lua
-editor.addWindowMenuItem("Mon outil", function() editor.showWindow("monOutil") end, {groupMenuName = 'Debug'})
-editor.showNotification("Sauvegardé")
+editor.addWindowMenuItem("My tool", function() editor.showWindow("myTool") end, {groupMenuName = 'Debug'})
+editor.showNotification("Saved")
 ```
 
-## Remarques
+## Notes
 
-- Dans addWindowMenuItem, si `info` est fourni mais sans groupMenuName (par ex. seulement experimental ou gameplay), l'élément n'est ajouté à aucune liste : il n'apparaît donc pas dans le menu (bug probable du jeu). Sans `info`, l'entrée est ajoutée normalement.
-- Le menu Window mémorise les outils récemment ouverts (préférence ui.general.recentWindowMenuCount, 5 par défaut), sauvegardés dans l'état de l'éditeur (windowMenuRecentTools).
-- Le menu File n'a pas « Save Level As » (commenté dans le code).
-- Le bouton « revert to original » n'apparaît que pour un niveau officiel ou issu d'un mod déballé dans /mods/unpacked ; il supprime le dossier du niveau puis rouvre le niveau (perte des modifications).
-- En mode headless, seul le hook onEditorHeadlessMainMenuBar est émis, sans barre de menu.
+- In addWindowMenuItem, if `info` is provided but without groupMenuName (e.g. only experimental or gameplay), the item is added to no list: it therefore does not appear in the menu (probable game bug). Without `info`, the entry is added normally.
+- The Window menu remembers the recently opened tools (preference ui.general.recentWindowMenuCount, 5 by default), saved in the editor state (windowMenuRecentTools).
+- The File menu has no "Save Level As" (commented out in the code).
+- The "revert to original" button only appears for an official level or one from a mod unpacked in /mods/unpacked; it deletes the level folder then reopens the level (changes are lost).
+- In headless mode, only the onEditorHeadlessMainMenuBar hook is emitted, with no menu bar.
 
-**Dépendances (chargées avant) :** `editor_layoutManager`
+**Dependencies (loaded first):** `editor_layoutManager`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_mainMenu.onEditorActivated()` | Appelé à l'activation de l'éditeur : applique aux gizmos les préférences gizmos.general.drawGizmoPlane et highlightSelectedMeshes. *(interne)* *(hook)* | 865 |
-| `editor_mainMenu.onEditorGuiMainMenu()` | Dessine la barre de menu principale et les dialogues à chaque frame. Émet onEditorMainMenuBar (ou onEditorHeadlessMainMenuBar en headless). *(interne)* *(hook)* | 692 |
-| `editor_mainMenu.onEditorInitialized()` | Enregistre les fenêtres de dialogue, ouvre la fenêtre de mode sans échec si besoin et détermine si le bouton « revert level to original » doit être proposé. *(interne)* *(hook)* | 872 |
-| `editor_mainMenu.onEditorLoadState(state)` | Restaure la liste des outils récents depuis l'état (chaînes non vides uniquement). *(interne)* *(hook)* | 921 |
-| `editor_mainMenu.onEditorPreferenceValueChanged(path, value)` | Réagit aux préférences ui.general.sceneMetric, gizmos.visualization.visTypes et ui.general.recentWindowMenuCount. *(interne)* *(hook)* | 906 |
-| `editor_mainMenu.onEditorSaveState(state)` | Ajoute la liste des outils récents à l'état sauvegardé (state.windowMenuRecentTools). *(interne)* *(hook)* | 916 |
-| `editor_mainMenu.onExtensionLoaded()` | Appelé au chargement : vide les listes de menus, crée la file de notifications (maxNotificationCount 100) et installe editor.addWindowMenuItem, showNotification, setStatusBar, hideStatusBar, rebuildCollision. *(interne)* *(hook)* | 847 |
+| `editor_mainMenu.onEditorActivated()` | Called when the editor is activated: applies the gizmos preferences gizmos.general.drawGizmoPlane and highlightSelectedMeshes. *(internal)* *(hook)* | 865 |
+| `editor_mainMenu.onEditorGuiMainMenu()` | Draws the main menu bar and the dialogs every frame. Emits onEditorMainMenuBar (or onEditorHeadlessMainMenuBar in headless). *(internal)* *(hook)* | 692 |
+| `editor_mainMenu.onEditorInitialized()` | Registers the dialog windows, opens the safe mode window if needed and determines whether the "revert level to original" button should be offered. *(internal)* *(hook)* | 872 |
+| `editor_mainMenu.onEditorLoadState(state)` | Restores the recent tools list from the state (non-empty strings only). *(internal)* *(hook)* | 921 |
+| `editor_mainMenu.onEditorPreferenceValueChanged(path, value)` | Reacts to the preferences ui.general.sceneMetric, gizmos.visualization.visTypes and ui.general.recentWindowMenuCount. *(internal)* *(hook)* | 906 |
+| `editor_mainMenu.onEditorSaveState(state)` | Adds the recent tools list to the saved state (state.windowMenuRecentTools). *(internal)* *(hook)* | 916 |
+| `editor_mainMenu.onExtensionLoaded()` | Called on load: clears the menu lists, creates the notification queue (maxNotificationCount 100) and installs editor.addWindowMenuItem, showNotification, setStatusBar, hideStatusBar, rebuildCollision. *(internal)* *(hook)* | 847 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_mainMenu.onEditorLoadState(state)`
 
-Restaure la liste des outils récents depuis l'état (chaînes non vides uniquement).
+Restores the recent tools list from the state (non-empty strings only).
 
-- `state` (*table|nil*) : État de l'éditeur.
+- `state` (*table|nil*) : Editor state.
 
 #### `editor_mainMenu.onEditorPreferenceValueChanged(path, value)`
 
-Réagit aux préférences ui.general.sceneMetric, gizmos.visualization.visTypes et ui.general.recentWindowMenuCount.
+Reacts to the preferences ui.general.sceneMetric, gizmos.visualization.visTypes and ui.general.recentWindowMenuCount.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_mainMenu.onEditorSaveState(state)`
 
-Ajoute la liste des outils récents à l'état sauvegardé (state.windowMenuRecentTools).
+Adds the recent tools list to the saved state (state.windowMenuRecentTools).
 
-- `state` (*table*) : État de l'éditeur à compléter.
+- `state` (*table*) : Editor state to complete.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | table<integer, string> | {"editor_layoutManager"}. |
 
-## Classe `editor`
+## Class `editor`
 
-Fonctions ajoutées à la table globale `editor` par ce module.
+Functions added to the global `editor` table by this module.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.addWindowMenuItem(itemText, actionFunc, info, defaultToolWindow)` | Ajoute une entrée dans le menu Window de l'éditeur. Les entrées defaultToolWindow (Inspector, Scene Tree…) sont en tête du menu, séparées des autres ; les entrées sont triées par texte. Appelle le hook onEditorToolWindowOpened(itemText, "windowMenu") au clic. | 804 |
-| `editor.hideStatusBar()` | Masque la barre d'état. À appeler quand l'opération est terminée. | 617 |
-| `editor.rebuildCollision(force)` | Reconstruit la collision statique (be:reloadCollision, puis efface le drapeau) si nécessaire ou forcé, et affiche une notification. | 143 |
-| `editor.setStatusBar(text, uiCallback)` | Définit le texte de la barre d'état et un callback ImGui optionnel (la barre n'est visible que si le texte est non vide). | 611 |
-| `editor.showNotification(text, icon, group, duration, doBeep)` | Ajoute une notification à la file ; elle remplace celle du même groupe si elle existe. | 158 |
+| `editor.addWindowMenuItem(itemText, actionFunc, info, defaultToolWindow)` | Adds an entry to the editor's Window menu. The defaultToolWindow entries (Inspector, Scene Tree...) are at the top of the menu, separated from the others; entries are sorted by text. Calls the hook onEditorToolWindowOpened(itemText, "windowMenu") on click. | 804 |
+| `editor.hideStatusBar()` | Hides the status bar. Call it when the operation is finished. | 617 |
+| `editor.rebuildCollision(force)` | Rebuilds the static collision (be:reloadCollision, then clears the flag) if needed or forced, and shows a notification. | 143 |
+| `editor.setStatusBar(text, uiCallback)` | Sets the status bar text and an optional ImGui callback (the bar is only visible if the text is non-empty). | 611 |
+| `editor.showNotification(text, icon, group, duration, doBeep)` | Adds a notification to the queue; it replaces the one from the same group if it exists. | 158 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onEditorHeadlessMainMenuBar` — écouté par 1 module(s)
-- `onEditorMainMenuBar` — écouté par 1 module(s)
-- `onEditorToolWindowOpened` — écouté par 1 module(s)
+- `onEditorHeadlessMainMenuBar` — listened to by 1 module(s)
+- `onEditorMainMenuBar` — listened to by 1 module(s)
+- `onEditorToolWindowOpened` — listened to by 1 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `clearNeedCollisionRebuild`, `getNeedCollisionRebuild`
 - `FS:` `directoryExists`, `directoryRemove`, `fileExists`, `findFiles`
@@ -92,4 +92,4 @@ Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes 
 - `worldEditorCppApi.` `colladaExportSelection`, `setAxisGizmoHighlightSelectedMeshes`, `setAxisGizmoRenderMoveGrid`, `setAxisGizmoRenderPlane`, `setAxisGizmoRenderPlaneHashes`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/mainMenu.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/mainMenu.lua`.*

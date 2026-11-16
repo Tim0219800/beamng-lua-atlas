@@ -1,19 +1,19 @@
 # `skeleton`
 
-*Fichier : `lua/vehicle/extensions/skeleton.lua` · VM : Véhicule · 45 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/skeleton.lua` · VM: Vehicle · 45 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `skeleton` : `extensions.load (VM véhicule)("skeleton")`, puis la globale `skeleton`
+**Access:** extension `skeleton`: `extensions.load (vehicle VM)("skeleton")`, then the global `skeleton`
 
-Modèle minimal d'extension véhicule, et extension réellement utilisée : main.lua la charge toujours (extensions.load("skeleton")) à la fin de l'initialisation du véhicule. Cycle de vie : le gestionnaire d'extensions la charge, appelle onExtensionLoaded(), et si celle-ci renvoie false l'extension est déchargée immédiatement (ses hooks ne seront jamais appelés) ; sinon elle reste active et reçoit les hooks globaux (ici onDebugDraw, appelé à chaque frame de debug par main.lua). Convention : une extension expose ses hooks dans la table M (onExtensionLoaded, onInit, onReset, updateGFX, onDebugDraw, onExtensionUnloaded…) et renvoie M.
-Celle-ci dessine les poutres et nœuds du véhicule pour aider à démarrer en jbeam quand il n'y a aucun flexbody.
+Minimal vehicle extension template, and an extension actually used: main.lua always loads it (extensions.load("skeleton")) at the end of vehicle initialization. Lifecycle: the extension manager loads it, calls onExtensionLoaded(), and if that returns false the extension is unloaded immediately (its hooks will never be called); otherwise it stays active and receives the global hooks (here onDebugDraw, called every debug frame by main.lua). Convention: an extension exposes its hooks in the table M (onExtensionLoaded, onInit, onReset, updateGFX, onDebugDraw, onExtensionUnloaded…) and returns M.
+This one draws the vehicle's beams and nodes to help get started in jbeam when there is no flexbody.
 
-## Exemple
+## Example
 
 ```lua
--- squelette d'une extension véhicule
+-- skeleton of a vehicle extension
 local M = {}
 local function onExtensionLoaded()
-  if not v.data.nodes then return false end -- false = se décharger
+  if not v.data.nodes then return false end -- false = unload itself
 end
 local function updateGFX(dt) end
 M.onExtensionLoaded = onExtensionLoaded
@@ -21,33 +21,33 @@ M.updateGFX = updateGFX
 return M
 ```
 
-## Remarques
+## Notes
 
-- Se décharge (retourne false) si v.data.beams ou v.data.nodes est nil, si v.data.information.showSkeleton est défini et faux, ou si le véhicule possède des flexbodies non vides. Elle ne reste donc que pour les véhicules sans mesh visible et dont information.showSkeleton n'est pas désactivé.
-- Le retour d'onExtensionLoaded : `false` = décharger ; `true` ou nil = garder (extensions.lua ne teste que res == false).
-- Le dessin est désactivé quand bdebug.isEnabled() est vrai pour éviter un conflit avec le mode debug.
-- Couleurs : poutres (44,71,112,230) épaisseur 0.01 ; nœuds (170,57,57,230) rayon 0.03 ; triangles de collision via drawColTris.
+- Unloads itself (returns false) if v.data.beams or v.data.nodes is nil, if v.data.information.showSkeleton is defined and false, or if the vehicle has non-empty flexbodies. It therefore only stays for vehicles without a visible mesh and whose information.showSkeleton is not disabled.
+- Return value of onExtensionLoaded: `false` = unload; `true` or nil = keep (extensions.lua only tests res == false).
+- Drawing is disabled when bdebug.isEnabled() is true to avoid a conflict with debug mode.
+- Colors: beams (44,71,112,230) thickness 0.01; nodes (170,57,57,230) radius 0.03; collision triangles via drawColTris.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `skeleton.onDebugDraw(focusPos)` | Hook appelé à chaque frame par main.lua (extensions.hook('onDebugDraw', focusPos)). Dessine toutes les poutres (drawBeam3d), tous les nœuds (drawNodeSphere) et les triangles de collision, sauf si le debug beam (bdebug) est actif. *(interne)* *(hook)* | 24 |
-| `skeleton.onExtensionLoaded()` | Hook appelé juste après le chargement de l'extension. Renvoie false pour se décharger (pas de beams/nodes, showSkeleton faux, ou flexbodies présents), true sinon. *(interne)* *(hook)* | 11 |
+| `skeleton.onDebugDraw(focusPos)` | Hook called every frame by main.lua (extensions.hook('onDebugDraw', focusPos)). Draws all beams (drawBeam3d), all nodes (drawNodeSphere) and the collision triangles, unless beam debug (bdebug) is active. *(internal)* *(hook)* | 24 |
+| `skeleton.onExtensionLoaded()` | Hook called right after the extension loads. Returns false to unload itself (no beams/nodes, showSkeleton false, or flexbodies present), true otherwise. *(internal)* *(hook)* | 11 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `skeleton.onDebugDraw(focusPos)`
 
-Hook appelé à chaque frame par main.lua (extensions.hook('onDebugDraw', focusPos)). Dessine toutes les poutres (drawBeam3d), tous les nœuds (drawNodeSphere) et les triangles de collision, sauf si le debug beam (bdebug) est actif.
+Hook called every frame by main.lua (extensions.hook('onDebugDraw', focusPos)). Draws all beams (drawBeam3d), all nodes (drawNodeSphere) and the collision triangles, unless beam debug (bdebug) is active.
 
-- `focusPos` (*vec3*) : Position du focus caméra (non utilisée).
+- `focusPos` (*vec3*) : Camera focus position (unused).
 
 #### `skeleton.onExtensionLoaded()`
 
-Hook appelé juste après le chargement de l'extension. Renvoie false pour se décharger (pas de beams/nodes, showSkeleton faux, ou flexbodies présents), true sinon.
+Hook called right after the extension loads. Returns false to unload itself (no beams/nodes, showSkeleton false, or flexbodies present), true otherwise.
 
-- **renvoie** : boolean false = décharger l'extension, true = la garder.
+- **returns**: boolean false = unload the extension, true = keep it.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/skeleton.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/skeleton.lua`.*

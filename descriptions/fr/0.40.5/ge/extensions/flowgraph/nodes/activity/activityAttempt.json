@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/activity/activityAttempt.lua",
+  "module": "Nœud flowgraph « Activity Attempt » (catégorie once_instant, tags activity/mission). Crée une tentative de mission via gameplay_missions_progress.newAttempt et la sort sur le pin table « attempt » (tableType attemptData) pour les autres nœuds d'activité. Pins fixes : entrées bool « passed » et « completed » ; sortie « attempt ». Les pins d'entrée personnalisés ajoutés par l'utilisateur (tous types sauf flow) sont copiés dans les données de la tentative. S'exécute une fois quand le flux arrive (workOnce).",
+  "notes": [
+    "Le type de la tentative est toujours 'attempted' : les lignes qui le passaient à 'passed'/'completed' selon les pins sont commentées, donc les pins « passed » et « completed » sont sans effet dans ce nœud.",
+    "Les pins fixes (passed, completed) ne sont pas copiés dans les données ; seuls les pins non fixes le sont."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Active savePins et allowCustomInPins (pins d'entrée personnalisés sauvegardés).", "internal": true},
+        "postInit": {"desc": "Vide (code commenté sur des modèles de types de tentative).", "internal": true},
+        "workOnce": {"desc": "Si le flux est actif, rassemble les pins non fixes dans une table, crée la tentative 'attempted' avec ces données et la place sur le pin de sortie attempt."}
+      }
+    }
+  }
+}

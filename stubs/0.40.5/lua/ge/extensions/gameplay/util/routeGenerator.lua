@@ -2,36 +2,36 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/util/routeGenerator.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Génère procéduralement un parcours de course sur le graphe routier de la carte (map.getMap().nodes). Une marche aléatoire guidée (angle préféré selon la fluidité demandée, évitement des demi-tours et des culs-de-sac, ratios cible trail/dirt/tarmac selon la praticabilité) produit un chemin, qui est lissé, ré-échantillonné tous les 8 m, puis réduit à des checkpoints par Douglas-Peucker, décalés avant les virages serrés et validés par A* pour que le marqueur au sol suive bien la route générée. Un moddeur l'appelle avec une position de départ et une distance cible.
---- Accès : extension `gameplay_util_routeGenerator` : `extensions.load("gameplay_util_routeGenerator")`, puis la globale `gameplay_util_routeGenerator`
+--- Procedurally generates a race route on the map's road graph (map.getMap().nodes). A guided random walk (preferred angle depending on the requested flow, avoidance of U-turns and dead ends, target trail/dirt/tarmac ratios depending on drivability) produces a path, which is smoothed, resampled every 8 m, then reduced to checkpoints by Douglas-Peucker, shifted ahead of sharp turns and validated by A* so that the ground marker properly follows the generated road. A modder calls it with a start position and a target distance.
+--- Access: extension `gameplay_util_routeGenerator`: `extensions.load("gameplay_util_routeGenerator")`, then the global `gameplay_util_routeGenerator`
 ---@class gameplay_util_routeGenerator
----@field defaultMinDrivability number 0,35. Le routage du marqueur au sol doit utiliser la même valeur, sinon la phase 3 valide un itinéraire que le joueur n'aura jamais.
----@field drivabilityPenalty number 10. Pénalité de praticabilité à utiliser avec le routage de marqueur au sol.
----@field maxCheckpointRadius number 13 (m). Rayon maximal d'un checkpoint généré.
+---@field defaultMinDrivability number 0.35. Ground marker routing must use the same value, otherwise phase 3 validates a route the player will never take.
+---@field drivabilityPenalty number 10. Drivability penalty to use with ground marker routing.
+---@field maxCheckpointRadius number 13 (m). Maximum radius of a generated checkpoint.
 gameplay_util_routeGenerator = {}
 
---- Génère un parcours de la longueur demandée à partir d'une position, avec checkpoints, rayons et normales.
----Source : lua/ge/extensions/gameplay/util/routeGenerator.lua:608
----@param startPos vec3 Position de départ.
----@param targetDistanceMeters number Longueur visée du parcours (m).
----@param startDir vec3|nil Direction de départ, pour choisir le sens de la route ; sinon le nœud connecté le plus proche.
----@param minDrivability number|nil Praticabilité minimale des liens (0,35 par défaut).
----@param routeSmoothness integer|nil 1 à 3 (2 par défaut) ; plus c'est haut, plus le tracé est droit.
----@param lookAheadDistance number|nil Distance d'anticipation en m (300 par défaut).
----@param job table|nil Job du jobsystem pour yield entre les phases.
----@param seed integer|nil Graine aléatoire (os.time() par défaut).
----@param targetRatios table<string, number>|nil Proportions visées {trail, dirt, tarmac}.
----@param bandBoundaries number[]|nil Deux seuils de drivability séparant trail/dirt/tarmac.
----@param checkpointDistance number|nil Distance cible entre checkpoints en m (130 par défaut).
----@return vec3[]|nil  Positions du chemin parcouru (grossier), nil en cas d'échec.
----@return vec3[]  Positions des checkpoints.
----@return number[]  Rayons des checkpoints (m).
----@return vec3[]  Normales (direction de passage, horizontale) des checkpoints.
----@return number  Distance totale parcourue (m).
+--- Generates a route of the requested length from a position, with checkpoints, radii and normals.
+---Source: lua/ge/extensions/gameplay/util/routeGenerator.lua:608
+---@param startPos vec3 Start position.
+---@param targetDistanceMeters number Target route length (m).
+---@param startDir vec3|nil Start direction, used to choose the road direction; otherwise the nearest connected node.
+---@param minDrivability number|nil Minimum drivability of links (0.35 by default).
+---@param routeSmoothness integer|nil 1 to 3 (2 by default); the higher, the straighter the route.
+---@param lookAheadDistance number|nil Look-ahead distance in m (300 by default).
+---@param job table|nil Jobsystem job used to yield between phases.
+---@param seed integer|nil Random seed (os.time() by default).
+---@param targetRatios table<string, number>|nil Target proportions {trail, dirt, tarmac}.
+---@param bandBoundaries number[]|nil Two drivability thresholds separating trail/dirt/tarmac.
+---@param checkpointDistance number|nil Target distance between checkpoints in m (130 by default).
+---@return vec3[]|nil  Positions of the path traveled (coarse), nil on failure.
+---@return vec3[]  Checkpoint positions.
+---@return number[]  Checkpoint radii (m).
+---@return vec3[]  Checkpoint normals (horizontal direction of passage).
+---@return number  Total distance traveled (m).
 function gameplay_util_routeGenerator.generateRaceRoute(startPos, targetDistanceMeters, startDir, minDrivability, routeSmoothness, lookAheadDistance, job, seed, targetRatios, bandBoundaries, checkpointDistance) end
 
---- Choisit une position aléatoire : un nœud routier au hasard, sinon un point au hasard dans la boîte du terrain, sinon l'origine.
----Source : lua/ge/extensions/gameplay/util/routeGenerator.lua:813
----@return vec3  Position choisie.
+--- Picks a random position: a random road node, otherwise a random point in the terrain box, otherwise the origin.
+---Source: lua/ge/extensions/gameplay/util/routeGenerator.lua:813
+---@return vec3  Chosen position.
 function gameplay_util_routeGenerator.pickRandomRoadPoint() end
 

@@ -1,43 +1,67 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/stats.lua",
-  "module": "Statistiques d'usage affichées dans le panneau de l'outil Easy Object Select : nombre de sélections, distance transformée, nombre de translations/rotations/mises à l'échelle, répartition opérations monde/local et rotations par touche R/molette, plus le volume cumulé (m^3) de la sélection. draw() les affiche en ImGui avec un bouton « Reset Stats ».",
+  "module": "Usage statistics displayed in the Easy Object Select tool panel: number of selections, transformed distance, number of translations/rotations/scalings, breakdown of world/local operations and rotations by R key/wheel, plus the cumulative volume (m^3) of the selection. draw() displays them in ImGui with a \"Reset Stats\" button.",
   "notes": [
-    "Les compteurs sont locaux au module et remis à zéro uniquement par le bouton Reset Stats.",
-    "Le volume de la sélection est mis en cache et recalculé quand la sélection change, quand un objet disparaît ou quand la sélection contient un BeamNGVehicle."
+    "The counters are local to the module and only reset by the Reset Stats button.",
+    "The selection volume is cached and recomputed when the selection changes, when an object disappears or when the selection contains a BeamNGVehicle."
   ],
   "functions": {
     "activate": {
-      "desc": "Initialise le mode de coordonnées et invalide le cache de volume.",
-      "params": {"isLocal": {"type": "boolean", "desc": "true si l'espace de coordonnées est local."}},
+      "desc": "Initializes the coordinate mode and invalidates the volume cache.",
+      "params": {
+        "isLocal": {
+          "type": "boolean",
+          "desc": "true if the coordinate space is local."
+        }
+      },
       "internal": false
     },
     "setCoordinateMode": {
-      "desc": "Change le mode de coordonnées utilisé pour classer les opérations (monde ou local).",
-      "params": {"isLocal": {"type": "boolean", "desc": "true pour local."}},
+      "desc": "Changes the coordinate mode used to classify operations (world or local).",
+      "params": {
+        "isLocal": {
+          "type": "boolean",
+          "desc": "true for local."
+        }
+      },
       "internal": false
     },
     "recordSelection": {
-      "desc": "Incrémente le compteur de sélections et invalide le volume.",
+      "desc": "Increments the selection counter and invalidates the volume.",
       "params": {},
       "internal": false
     },
     "recordOperation": {
-      "desc": "Enregistre une opération de transformation : incrémente le compteur monde/local, puis transforms (et la distance cumulée), rotates (avec source « r » ou « wheel ») ou scales.",
+      "desc": "Records a transform operation: increments the world/local counter, then transforms (and the cumulative distance), rotates (with source \"r\" or \"wheel\") or scales.",
       "params": {
-        "operation": {"type": "string", "desc": "\"transform\", \"rotate\" ou \"scale\"."},
-        "source": {"type": "string|nil", "desc": "Pour une rotation : \"r\" (touche R) ou \"wheel\" (molette)."},
-        "distance": {"type": "number|nil", "desc": "Distance parcourue (m), comptée pour \"transform\"."}
+        "operation": {
+          "type": "string",
+          "desc": "\"transform\", \"rotate\" or \"scale\"."
+        },
+        "source": {
+          "type": "string|nil",
+          "desc": "For a rotation: \"r\" (R key) or \"wheel\" (mouse wheel)."
+        },
+        "distance": {
+          "type": "number|nil",
+          "desc": "Distance traveled (m), counted for \"transform\"."
+        }
       },
       "internal": false
     },
     "invalidateVolume": {
-      "desc": "Force le recalcul du volume de sélection au prochain draw.",
+      "desc": "Forces recomputation of the selection volume at the next draw.",
       "params": {},
       "internal": false
     },
     "draw": {
-      "desc": "Affiche le bloc « Stats » en ImGui (volume sélectionné, compteurs, barres de progression World/Local et R/Wheel, bouton Reset Stats).",
-      "params": {"selectedIds": {"type": "integer[]|nil", "desc": "IDs des objets sélectionnés, pour le calcul du volume."}},
+      "desc": "Displays the \"Stats\" block in ImGui (selected volume, counters, World/Local and R/Wheel progress bars, Reset Stats button).",
+      "params": {
+        "selectedIds": {
+          "type": "integer[]|nil",
+          "desc": "IDs of the selected objects, for the volume computation."
+        }
+      },
       "internal": false
     }
   }

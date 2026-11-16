@@ -1,23 +1,23 @@
 # `flowgraph_nodes_gameplay_drift_setDriftBounds`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftBounds.lua` · VM : Game Engine (GE) · 28 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftBounds.lua` · VM: Game Engine (GE) · 28 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/drift/setDriftBounds")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/drift/setDriftBounds")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Drift Bounds » (catégorie repeat_instant, drift). Utilise un fichier de sites (pin sitesPath) pour créer les limites de la mission de drift via gameplay_drift_bounds.setBounds.
+Flowgraph node "Drift Bounds" (category repeat_instant, drift). Uses a sites file (sitesPath pin) to create the bounds of the drift mission via gameplay_drift_bounds.setBounds.
 
-## Remarques
+## Notes
 
-- Le chemin est résolu avec mgr:getRelativeAbsolutePath ; rien n'est fait s'il est invalide.
-- Appelé à chaque frame tant que le nœud est atteint.
+- The path is resolved with mgr:getRelativeAbsolutePath; nothing is done if it is invalid.
+- Called every frame as long as the node is reached.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Résout le chemin du fichier de sites puis appelle gameplay_drift_bounds.setBounds(file). | 21 |
+| `C:work()` | Resolves the sites file path then calls gameplay_drift_bounds.setBounds(file). | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftBounds.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftBounds.lua`.*

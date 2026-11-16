@@ -2,498 +2,498 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/trafficSignals.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_trafficSignals` (Traffic Signals V2) : simule les feux tricolores, stops et autres signaux d'un niveau. Trois types d'objets : SignalInstance (un signal placé dans le monde avec position, direction, controller et séquence), SignalController (type de signal et liste d'états avec durées : feu tricolore, stop…) et SignalSequence (phases qui enchaînent des controllers, partagées par les instances d'une intersection). Charge signals.json et signalControllerDefinitions.json du dossier du niveau, met à jour les lumières des objets TSStatic liés (champs dynamiques signalInstance, instanceColor*), publie l'état aux véhicules (mailbox 'trafficSignalUpdates') et via le hook onTrafficSignalUpdate.
---- Accès : extension `core_trafficSignals` : `extensions.load("core_trafficSignals")`, puis la globale `core_trafficSignals`
+--- GE extension `core_trafficSignals` (Traffic Signals V2): simulates the traffic lights, stop signs and other signals of a level. Three object types: SignalInstance (a signal placed in the world with position, direction, controller and sequence), SignalController (signal type and list of states with durations: traffic light, stop...) and SignalSequence (phases chaining controllers, shared by the instances of an intersection). Loads signals.json and signalControllerDefinitions.json from the level folder, updates the lights of the linked TSStatic objects (dynamic fields signalInstance, instanceColor*), publishes the state to vehicles (mailbox 'trafficSignalUpdates') and through the onTrafficSignalUpdate hook.
+--- Access: extension `core_trafficSignals`: `extensions.load("core_trafficSignals")`, then the global `core_trafficSignals`
 ---@class core_trafficSignals
----@field debugLevel number 0 = aucun dessin debug ; 1 = dessin simple ; 2 = avec textes et flèches. Sauvegardé par onSerialize.
----@field getSignalsDict function Vaut `nop` (fonction vide) : sans effet.
----@field useDtReal boolean false par défaut ; si true, le timer avance avec le temps réel (dt) au lieu du temps de simulation (dtSim), donc même pendant une pause.
+---@field debugLevel number 0 = no debug drawing; 1 = simple drawing; 2 = with texts and arrows. Saved by onSerialize.
+---@field getSignalsDict function Equals `nop` (empty function): no effect.
+---@field useDtReal boolean false by default; if true, the timer advances with real time (dt) instead of simulation time (dtSim), so even while paused.
 core_trafficSignals = {}
 
---- Renvoie le signal le plus pertinent près d'une position. Avec dirVec, favorise les signaux devant le véhicule et orientés dans le même sens (distance divisée par le plus petit des deux produits scalaires). Le résultat est mis en cache tant que le segment de route (n1, n2) ne change pas.
----Source : lua/ge/extensions/core/trafficSignals.lua:1252
----@param pos vec3 position de recherche
----@param dirVec vec3|nil direction de déplacement
----@param resetCache boolean|nil true pour oublier le résultat en cache
----@return SignalInstance|nil  meilleure instance valide ; nil si le système n'est pas lancé ou si aucune route proche
+--- Returns the most relevant signal near a position. With dirVec, favors signals ahead of the vehicle and facing the same way (distance divided by the smaller of the two dot products). The result is cached as long as the road segment (n1, n2) does not change.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1252
+---@param pos vec3 search position
+---@param dirVec vec3|nil travel direction
+---@param resetCache boolean|nil true to forget the cached result
+---@return SignalInstance|nil  best valid instance; nil if the system is not running or no road is nearby
 function core_trafficSignals.getBestSignal(pos, dirVec, resetCache) end
 
---- Renvoie un controller par son nom.
----Source : lua/ge/extensions/core/trafficSignals.lua:1216
----@param name string nom
+--- Returns a controller by its name.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1216
+---@param name string name
 ---@return SignalController|nil  controller
 function core_trafficSignals.getControllerByName(name) end
 
---- Renvoie les définitions de controllers (states, types, signalActions, signalColors).
----Source : lua/ge/extensions/core/trafficSignals.lua:1196
----@return table  définitions (pas une copie)
+--- Returns the controller definitions (states, types, signalActions, signalColors).
+---Source: lua/ge/extensions/core/trafficSignals.lua:1196
+---@return table  definitions (not a copy)
 function core_trafficSignals.getControllerDefinitions() end
 
---- Renvoie le tableau des controllers.
----Source : lua/ge/extensions/core/trafficSignals.lua:1212
+--- Returns the array of controllers.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1212
 ---@return SignalController[]  controllers
 function core_trafficSignals.getControllers() end
 
---- Renvoie les données principales du module.
----Source : lua/ge/extensions/core/trafficSignals.lua:1232
----@param full boolean|nil si true, ajoute instancesByName, controllersByName, sequencesByName, elementsById
----@return table  {instances, controllers, sequences, loaded, active, timer, nextTime (prochaine échéance de la file, 0 si vide)} (+ tables par nom/id si full)
+--- Returns the main data of the module.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1232
+---@param full boolean|nil if true, adds instancesByName, controllersByName, sequencesByName, elementsById
+---@return table  {instances, controllers, sequences, loaded, active, timer, nextTime (next deadline in the queue, 0 if empty)} (+ tables by name/id if full)
 function core_trafficSignals.getData(full) end
 
---- Renvoie un élément (instance, controller ou séquence) d'après son id unique.
----Source : lua/ge/extensions/core/trafficSignals.lua:47
----@param id integer|nil identifiant unique
----@return SignalInstance|SignalController|SignalSequence|nil  élément
+--- Returns an element (instance, controller or sequence) by its unique id.
+---Source: lua/ge/extensions/core/trafficSignals.lua:47
+---@param id integer|nil unique identifier
+---@return SignalInstance|SignalController|SignalSequence|nil  element
 function core_trafficSignals.getElementById(id) end
 
---- Renvoie la table qui relie les noeuds de la carte routière aux signaux : [n1][n2] = liste de {instance, pos, useLane, state, action}.
----Source : lua/ge/extensions/core/trafficSignals.lua:1204
----@return table  table de références (envoyée aux véhicules)
+--- Returns the table that links road map nodes to signals: [n1][n2] = list of {instance, pos, useLane, state, action}.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1204
+---@return table  reference table (sent to vehicles)
 function core_trafficSignals.getMapNodeSignals() end
 
---- Renvoie une séquence par son nom.
----Source : lua/ge/extensions/core/trafficSignals.lua:1224
----@param name string nom
----@return SignalSequence|nil  séquence
+--- Returns a sequence by its name.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1224
+---@param name string name
+---@return SignalSequence|nil  sequence
 function core_trafficSignals.getSequenceByName(name) end
 
---- Renvoie le tableau des séquences.
----Source : lua/ge/extensions/core/trafficSignals.lua:1220
----@return SignalSequence[]  séquences
+--- Returns the array of sequences.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1220
+---@return SignalSequence[]  sequences
 function core_trafficSignals.getSequences() end
 
---- Renvoie une instance par son nom.
----Source : lua/ge/extensions/core/trafficSignals.lua:1208
----@param name string nom de l'instance
+--- Returns an instance by its name.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1208
+---@param name string instance name
 ---@return SignalInstance|nil  instance
 function core_trafficSignals.getSignalByName(name) end
 
---- Renvoie le tableau des instances de signaux.
----Source : lua/ge/extensions/core/trafficSignals.lua:1200
+--- Returns the array of signal instances.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1200
 ---@return SignalInstance[]  instances
 function core_trafficSignals.getSignals() end
 
---- Renvoie le temps écoulé du système (s) ; -1 tant qu'il n'a jamais été lancé.
----Source : lua/ge/extensions/core/trafficSignals.lua:1228
+--- Returns the elapsed system time (s); -1 as long as it has never been started.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1228
 ---@return number  timer
 function core_trafficSignals.getTimer() end
 
---- Recharge les définitions par défaut puis applique celles du niveau (signalControllerDefinitions.json dans le dossier du niveau, ou filePath).
----Source : lua/ge/extensions/core/trafficSignals.lua:1459
----@param filePath string|nil fichier de définitions ; défaut = <dossier du niveau>/signalControllerDefinitions.json
+--- Reloads the default definitions then applies those of the level (signalControllerDefinitions.json in the level folder, or filePath).
+---Source: lua/ge/extensions/core/trafficSignals.lua:1459
+---@param filePath string|nil definitions file; default = <level folder>/signalControllerDefinitions.json
 function core_trafficSignals.loadControllerDefinitions(filePath) end
 
---- Charge un fichier de signaux JSON (instances, controllers, sequences) et l'installe avec setupSignals. Charge aussi les définitions de controllers du niveau.
----Source : lua/ge/extensions/core/trafficSignals.lua:1476
----@param filePath string|nil fichier ; défaut = <dossier du niveau>/signals.json
----@param autoRun boolean|nil false si le graphe de routes n'est pas encore chargé (cas du chargement de niveau)
----@return boolean  true si le fichier a été lu
+--- Loads a JSON signals file (instances, controllers, sequences) and installs it with setupSignals. Also loads the level's controller definitions.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1476
+---@param filePath string|nil file; default = <level folder>/signals.json
+---@param autoRun boolean|nil false if the road graph is not loaded yet (level loading case)
+---@return boolean  true if the file was read
 function core_trafficSignals.loadSignals(filePath, autoRun) end
 
---- Crée un SignalController (non inclus tant que :include() n'est pas appelé).
----Source : lua/ge/extensions/core/trafficSignals.lua:1181
+--- Creates a SignalController (not included until :include() is called).
+---Source: lua/ge/extensions/core/trafficSignals.lua:1181
 ---@param data table|nil {id?, name?, type?, isSimple?, defaultIndex?, states?}
----@return SignalController  nouveau controller
+---@return SignalController  new controller
 function core_trafficSignals.newController(data) end
 
---- Crée une SignalSequence (non incluse tant que :include() n'est pas appelé).
----Source : lua/ge/extensions/core/trafficSignals.lua:1185
+--- Creates a SignalSequence (not included until :include() is called).
+---Source: lua/ge/extensions/core/trafficSignals.lua:1185
 ---@param data table|nil {id?, name?, startTime?, phases?, startDisabled?, ignoreTimer?}
----@return SignalSequence  nouvelle séquence
+---@return SignalSequence  new sequence
 function core_trafficSignals.newSequence(data) end
 
---- Crée une SignalInstance (non incluse dans le système tant que :include() n'est pas appelé). Sans pos : position de la caméra au sol ; sans dir : direction de la route la plus proche, sinon de la caméra.
----Source : lua/ge/extensions/core/trafficSignals.lua:1177
+--- Creates a SignalInstance (not included in the system until :include() is called). Without pos: camera position on the ground; without dir: direction of the nearest road, otherwise of the camera.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1177
 ---@param data table|nil {id?, name?, pos?, dir?, group?, controllerId?, sequenceId?, useCurrentLane?, startDisabled?}
----@return SignalInstance  nouvelle instance
+---@return SignalInstance  new instance
 function core_trafficSignals.newSignal(data) end
 
---- Hook : le niveau se termine ; supprime les signaux.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:1631
+--- Hook: the level ends; deletes the signals.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:1631
 function core_trafficSignals.onClientEndMission() end
 
---- Hook : un niveau démarre ; charge signals.json du niveau.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:1627
+--- Hook: a level starts; loads the level's signals.json.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:1627
 function core_trafficSignals.onClientStartMission() end
 
---- Hook : recrée et inclut les éléments sérialisés, recharge les définitions et recalcule le compteur d'ids.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:1653
----@param data table données de onSerialize
+--- Hook: recreates and includes the serialized elements, reloads the definitions and recomputes the id counter.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:1653
+---@param data table data from onSerialize
 function core_trafficSignals.onDeserialized(data) end
 
---- Hook : le graphe de routes est (re)chargé. Si le système est actif, lance runSignals (calcule durées, routes, timer, table mapNodeSignals).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:1615
+--- Hook: the road graph is (re)loaded. If the system is active, runs runSignals (computes durations, roads, timer, mapNodeSignals table).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:1615
 function core_trafficSignals.onNavgraphReloaded() end
 
---- Hook : sérialise instances, controllers, séquences, active, loaded, useDtReal, debugLevel avant un rechargement Lua.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:1635
----@return table  données
+--- Hook: serializes instances, controllers, sequences, active, loaded, useDtReal, debugLevel before a Lua reload.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:1635
+---@return table  data
 function core_trafficSignals.onSerialize() end
 
---- Hook appelé à chaque frame : fait clignoter les états à lumières clignotantes, avance le timer, dépile la file pour faire avancer les séquences, applique les changements d'état en attente (lumières, mailbox, hook onTrafficSignalUpdate) et dessine le debug si debugLevel > 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:1516
----@param dt number temps réel (s)
----@param dtSim number temps de simulation (s)
+--- Hook called every frame: blinks the flashing-light states, advances the timer, pops the queue to advance sequences, applies pending state changes (lights, mailbox, onTrafficSignalUpdate hook) and draws debug if debugLevel > 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:1516
+---@param dt number real time (s)
+---@param dtSim number simulation time (s)
 function core_trafficSignals.onUpdate(dt, dtSim) end
 
---- Recharge les définitions par défaut (settings/trafficSignals.json : états et types) et ajoute signalActions (alert=1, stop=2, briefStop=3, yield=4, slow=5) et signalColors.
----Source : lua/ge/extensions/core/trafficSignals.lua:66
+--- Reloads the default definitions (settings/trafficSignals.json: states and types) and adds signalActions (alert=1, stop=2, briefStop=3, yield=4, slow=5) and signalColors.
+---Source: lua/ge/extensions/core/trafficSignals.lua:66
 function core_trafficSignals.resetControllerDefinitions() end
 
---- Supprime tous les signaux, controllers et séquences (setupSignals sans argument).
----Source : lua/ge/extensions/core/trafficSignals.lua:1455
+--- Deletes all signals, controllers and sequences (setupSignals without argument).
+---Source: lua/ge/extensions/core/trafficSignals.lua:1455
 function core_trafficSignals.resetSignals() end
 
---- Met le timer à 0, vide la file, (ré)active les séquences et instances valides puis émet onTrafficSignalsReset.
----Source : lua/ge/extensions/core/trafficSignals.lua:1287
+--- Sets the timer to 0, empties the queue, (re)activates the valid sequences and instances, then emits onTrafficSignalsReset.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1287
 function core_trafficSignals.resetTimer() end
 
---- Active ou met en pause le système. Avec autoRun=true et système non chargé, lance runSignals immédiatement ; sinon attend onNavgraphReloaded.
----Source : lua/ge/extensions/core/trafficSignals.lua:1357
----@param val boolean état actif
----@param autoRun boolean|nil true : lancer tout de suite (graphe de routes déjà prêt)
+--- Enables or pauses the system. With autoRun=true and the system not loaded, runs runSignals immediately; otherwise waits for onNavgraphReloaded.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1357
+---@param val boolean active state
+---@param autoRun boolean|nil true: run right away (road graph already ready)
 function core_trafficSignals.setActive(val, autoRun) end
 
---- Fusionne des états et types personnalisés dans les définitions de controllers (tableMerge).
----Source : lua/ge/extensions/core/trafficSignals.lua:1189
+--- Merges custom states and types into the controller definitions (tableMerge).
+---Source: lua/ge/extensions/core/trafficSignals.lua:1189
 ---@param data table {states = {...}, types = {...}}
 function core_trafficSignals.setControllerDefinitions(data) end
 
---- Allume ou éteint directement les 3 lumières d'un objet signal (champs instanceColor, instanceColor1, instanceColor2) sans changer l'état logique.
----Source : lua/ge/extensions/core/trafficSignals.lua:1376
----@param id integer identifiant de l'objet scène (TSStatic)
----@param stateArray boolean[]|nil état de chaque lumière ; défaut {false,false,false}
+--- Directly turns on or off the 3 lights of a signal object (fields instanceColor, instanceColor1, instanceColor2) without changing the logical state.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1376
+---@param id integer scene object id (TSStatic)
+---@param stateArray boolean[]|nil state of each light; default {false,false,false}
 function core_trafficSignals.setLightsManual(id, stateArray) end
 
---- Fixe directement le timer (peut changer instantanément les états). Voir le bug dans les notes si val est nil.
----Source : lua/ge/extensions/core/trafficSignals.lua:1309
----@param val number nouvelle valeur du timer (s)
+--- Directly sets the timer (may change states instantly). See the bug in the notes if val is nil.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1309
+---@param val number new timer value (s)
 function core_trafficSignals.setTimer(val) end
 
---- Met en cache les objets TSStatic de la scène qui possèdent un champ dynamique `signalInstance` (nom d'instance), indexés par nom d'instance.
----Source : lua/ge/extensions/core/trafficSignals.lua:51
+--- Caches the scene's TSStatic objects that have a `signalInstance` dynamic field (instance name), keyed by instance name.
+---Source: lua/ge/extensions/core/trafficSignals.lua:51
 function core_trafficSignals.setupSignalObjects() end
 
---- Installe un jeu de signaux (et efface les index précédents). Sans data, vide tout. Avec data, remplace (ou fusionne si merge) instances, controllers et séquences, retire les doublons d'id puis appelle setActive(true, autoRun).
----Source : lua/ge/extensions/core/trafficSignals.lua:1387
----@param data table|nil {instances, controllers, sequences} d'objets SignalInstance/Controller/Sequence
----@param merge boolean|nil true : ajoute aux éléments existants
----@param autoRun boolean|nil true : lancer immédiatement le système
+--- Installs a set of signals (and clears the previous indexes). Without data, clears everything. With data, replaces (or merges if merge) instances, controllers and sequences, removes duplicate ids, then calls setActive(true, autoRun).
+---Source: lua/ge/extensions/core/trafficSignals.lua:1387
+---@param data table|nil {instances, controllers, sequences} of SignalInstance/Controller/Sequence objects
+---@param merge boolean|nil true: adds to the existing elements
+---@param autoRun boolean|nil true: run the system immediately
 function core_trafficSignals.setupSignals(data, merge, autoRun) end
 
---- Type de signal avec sa liste d'états ordonnés ({state, duration}) : feu tricolore, stop, etc. Champs : id, name, type, isSimple (durées ignorées), defaultIndex (état par défaut), totalDuration, states. Réutilisable par plusieurs séquences.
+--- Signal type with its ordered list of states ({state, duration}): traffic light, stop, etc. Fields: id, name, type, isSimple (durations ignored), defaultIndex (default state), totalDuration, states. Reusable by several sequences.
 ---@class core_trafficSignals_SignalController
 local core_trafficSignals_SignalController = {}
 
---- Applique un type de signal des définitions (copie isSimple, defaultIndex et les états avec leurs durées).
----Source : lua/ge/extensions/core/trafficSignals.lua:695
----@param key string|nil clé du type dans controllerDefinitions.types ; défaut 'none'
+--- Applies a signal type from the definitions (copies isSimple, defaultIndex and the states with their durations).
+---Source: lua/ge/extensions/core/trafficSignals.lua:695
+---@param key string|nil type key in controllerDefinitions.types; default 'none'
 function core_trafficSignals_SignalController:applyDefinition(key) end
 
---- Règle automatiquement les durées : vert = 0.7*vitesse + 0.6*longueur d'intersection (borné 10..40 s), jaune = 1 + (vitesse - 4.167)/3.27 (borné 3..7 s), rouge = 1 s.
----Source : lua/ge/extensions/core/trafficSignals.lua:740
----@param speedMetresPerSecond number vitesse de la route (m/s)
----@param intersectionLength number longueur de l'intersection (m)
----@param isPermissive boolean|nil non utilisé dans le code
+--- Automatically sets the durations: green = 0.7*speed + 0.6*intersection length (clamped 10..40 s), yellow = 1 + (speed - 4.167)/3.27 (clamped 3..7 s), red = 1 s.
+---Source: lua/ge/extensions/core/trafficSignals.lua:740
+---@param speedMetresPerSecond number road speed (m/s)
+---@param intersectionLength number intersection length (m)
+---@param isPermissive boolean|nil not used in the code
 function core_trafficSignals_SignalController:autoSetTimings(speedMetresPerSecond, intersectionLength, isPermissive) end
 
---- Calcule la durée totale des états (math.huge si une durée est absente ou négative ; 0 si isSimple).
----Source : lua/ge/extensions/core/trafficSignals.lua:723
----@return number  durée totale (s)
+--- Computes the total duration of the states (math.huge if a duration is missing or negative; 0 if isSimple).
+---Source: lua/ge/extensions/core/trafficSignals.lua:723
+---@return number  total duration (s)
 function core_trafficSignals_SignalController:calcDuration() end
 
---- Retire le controller des données du module.
----Source : lua/ge/extensions/core/trafficSignals.lua:763
+--- Removes the controller from the module data.
+---Source: lua/ge/extensions/core/trafficSignals.lua:763
 function core_trafficSignals_SignalController:exclude() end
 
---- Données d'un état dans les définitions (lights, action, flashingLights…).
----Source : lua/ge/extensions/core/trafficSignals.lua:719
----@param state string nom de l'état
----@return table|nil  données
+--- State data in the definitions (lights, action, flashingLights...).
+---Source: lua/ge/extensions/core/trafficSignals.lua:719
+---@param state string state name
+---@return table|nil  data
 function core_trafficSignals_SignalController:getStateData(state) end
 
---- Ajoute le controller aux données du module.
----Source : lua/ge/extensions/core/trafficSignals.lua:755
+--- Adds the controller to the module data.
+---Source: lua/ge/extensions/core/trafficSignals.lua:755
 function core_trafficSignals_SignalController:include() end
 
---- Constructeur (voir newController).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:679
+--- Constructor (see newController).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:679
 ---@param data table|nil {id?, name?, type?, isSimple?, defaultIndex?, states?}
 ---@return SignalController  controller
 function core_trafficSignals_SignalController:new(data) end
 
---- Restaure les champs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:795
----@param data table|nil données
+--- Restores the fields.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:795
+---@param data table|nil data
 function core_trafficSignals_SignalController:onDeserialized(data) end
 
---- Données à sauvegarder (les durées négatives sont ramenées à -1).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:776
----@return table  données
+--- Data to save (negative durations are set back to -1).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:776
+---@return table  data
 function core_trafficSignals_SignalController:onSerialize() end
 
---- Un signal placé dans le monde (feu, panneau). Champs : id, name, pos (vec3), dir (vec3), group, controllerId, sequenceId, startDisabled, active, road ({n1, n2, dist, pos, dir, radius}), linkedObjects (ids d'objets TSStatic liés), priorityStateIndex (état imposé qui prime sur la séquence), targetPos/intersectionId (centre de l'intersection), _invalid (signal inutilisable : pas de route ou de controller). Créé par newSignal.
+--- A signal placed in the world (light, sign). Fields: id, name, pos (vec3), dir (vec3), group, controllerId, sequenceId, startDisabled, active, road ({n1, n2, dist, pos, dir, radius}), linkedObjects (ids of linked TSStatic objects), priorityStateIndex (forced state that takes precedence over the sequence), targetPos/intersectionId (intersection center), _invalid (unusable signal: no road or controller). Created by newSignal.
 ---@class core_trafficSignals_SignalInstance
 local core_trafficSignals_SignalInstance = {}
 
---- Calcule le centre de l'intersection en moyennant les signaux de même séquence situés à moins de 40 m devant ce signal (au moins 2) et renseigne targetPos/intersectionId pour tous. Nécessite le système actif.
----Source : lua/ge/extensions/core/trafficSignals.lua:346
+--- Computes the intersection center by averaging the signals of the same sequence located less than 40 m ahead of this signal (at least 2) and fills in targetPos/intersectionId for all of them. Requires the system to be active.
+---Source: lua/ge/extensions/core/trafficSignals.lua:346
 function core_trafficSignals_SignalInstance:calcIntersectionPos() end
 
---- Délie les objets liés (efface leur champ signalInstance) ou les supprime.
----Source : lua/ge/extensions/core/trafficSignals.lua:182
----@param alsoDelete boolean|nil true : supprime les objets
+--- Unlinks the linked objects (clears their signalInstance field) or deletes them.
+---Source: lua/ge/extensions/core/trafficSignals.lua:182
+---@param alsoDelete boolean|nil true: deletes the objects
 function core_trafficSignals_SignalInstance:clearSignalObjects(alsoDelete) end
 
---- Crée un TSStatic (shape de feu, par défaut art/shapes/objects/trafficlight_overhead1.dae, cherchée dans le niveau puis dans art/shapes/), le place, le lie au signal et le range dans le groupe AutoTrafficSignals.
----Source : lua/ge/extensions/core/trafficSignals.lua:207
----@param shapeFile string|nil fichier .dae ou fragment de nom
----@param pos vec3|nil position ; défaut caméra
----@param rot quat|nil rotation ; défaut caméra
----@return userdata|nil  objet créé ; nil si la shape est introuvable
+--- Creates a TSStatic (light shape, default art/shapes/objects/trafficlight_overhead1.dae, searched in the level then in art/shapes/), places it, links it to the signal and puts it in the AutoTrafficSignals group.
+---Source: lua/ge/extensions/core/trafficSignals.lua:207
+---@param shapeFile string|nil .dae file or name fragment
+---@param pos vec3|nil position; default camera
+---@param rot quat|nil rotation; default camera
+---@return userdata|nil  created object; nil if the shape is not found
 function core_trafficSignals_SignalInstance:createSignalObject(shapeFile, pos, rot) end
 
---- Dessine cylindre, flèche et texte de debug du signal.
----Source : lua/ge/extensions/core/trafficSignals.lua:385
----@param isEditMode boolean mode éditeur
----@param isSelected boolean sélectionné
----@param showText boolean afficher les textes
----@param capColor ColorF|nil couleur du chapeau
----@param cylinderScl number|nil hauteur du cylindre, défaut 5
----@param arrowScl number|nil échelle de la flèche, défaut 2
+--- Draws the signal's debug cylinder, arrow and text.
+---Source: lua/ge/extensions/core/trafficSignals.lua:385
+---@param isEditMode boolean editor mode
+---@param isSelected boolean selected
+---@param showText boolean show texts
+---@param capColor ColorF|nil cap color
+---@param cylinderScl number|nil cylinder height, default 5
+---@param arrowScl number|nil arrow scale, default 2
 function core_trafficSignals_SignalInstance:drawDebug(isEditMode, isSelected, showText, capColor, cylinderScl, arrowScl) end
 
---- Retire l'instance des données du module.
----Source : lua/ge/extensions/core/trafficSignals.lua:640
+--- Removes the instance from the module data.
+---Source: lua/ge/extensions/core/trafficSignals.lua:640
 function core_trafficSignals_SignalInstance:exclude() end
 
---- Trouve la route la plus proche d'une position et renvoie le segment orienté dans le sens du signal (route à sens unique : sens de la route).
----Source : lua/ge/extensions/core/trafficSignals.lua:286
----@param pos vec3|nil position ; défaut self.pos
----@param dir vec3|nil direction ; défaut self.dir
----@return table|nil  {n1, n2, dist, pos, dir, radius} ou nil si aucune route
+--- Finds the nearest road to a position and returns the segment oriented in the signal's direction (one-way road: the road's direction).
+---Source: lua/ge/extensions/core/trafficSignals.lua:286
+---@param pos vec3|nil position; default self.pos
+---@param dir vec3|nil direction; default self.dir
+---@return table|nil  {n1, n2, dist, pos, dir, radius} or nil if no road
 function core_trafficSignals_SignalInstance:getBestRoad(pos, dir) end
 
---- Controller associé (via controllerId).
----Source : lua/ge/extensions/core/trafficSignals.lua:463
+--- Associated controller (via controllerId).
+---Source: lua/ge/extensions/core/trafficSignals.lua:463
 ---@return SignalController|nil  controller
 function core_trafficSignals_SignalInstance:getController() end
 
---- Séquence associée (via sequenceId).
----Source : lua/ge/extensions/core/trafficSignals.lua:467
----@return SignalSequence|nil  séquence
+--- Associated sequence (via sequenceId).
+---Source: lua/ge/extensions/core/trafficSignals.lua:467
+---@return SignalSequence|nil  sequence
 function core_trafficSignals_SignalInstance:getSequence() end
 
---- Ids des objets TSStatic liés à ce signal (champ signalInstance = nom).
----Source : lua/ge/extensions/core/trafficSignals.lua:177
----@param refresh boolean|nil true : relit la scène
+--- Ids of the TSStatic objects linked to this signal (field signalInstance = name).
+---Source: lua/ge/extensions/core/trafficSignals.lua:177
+---@param refresh boolean|nil true: re-reads the scene
 ---@return integer[]  ids
 function core_trafficSignals_SignalInstance:getSignalObjects(refresh) end
 
---- État courant (getStateAfterTime(0)).
----Source : lua/ge/extensions/core/trafficSignals.lua:528
----@return string  nom de l'état
----@return table  données de l'état
+--- Current state (getStateAfterTime(0)).
+---Source: lua/ge/extensions/core/trafficSignals.lua:528
+---@return string  state name
+---@return table  state data
 function core_trafficSignals_SignalInstance:getState() end
 
---- État du signal après `seconds` secondes (système actif requis) en simulant la séquence.
----Source : lua/ge/extensions/core/trafficSignals.lua:471
----@param seconds number|nil délai (s), défaut 0
----@param isAbsolute boolean|nil true : compté depuis le début de la séquence au lieu de maintenant
----@return string  nom de l'état ('none' si inactif)
----@return table  données de l'état (lights, action…)
+--- Signal state after `seconds` seconds (active system required), by simulating the sequence.
+---Source: lua/ge/extensions/core/trafficSignals.lua:471
+---@param seconds number|nil delay (s), default 0
+---@param isAbsolute boolean|nil true: counted from the start of the sequence instead of from now
+---@return string  state name ('none' if inactive)
+---@return table  state data (lights, action...)
 function core_trafficSignals_SignalInstance:getStateAfterTime(seconds, isAbsolute) end
 
---- Position d'un véhicule par rapport au signal.
----Source : lua/ge/extensions/core/trafficSignals.lua:324
----@param vehId integer véhicule connu de map.objects
----@return table|nil  {dot (alignement des directions), dist (m), relDist (négatif avant le signal)}
+--- Position of a vehicle relative to the signal.
+---Source: lua/ge/extensions/core/trafficSignals.lua:324
+---@param vehId integer vehicle known to map.objects
+---@return table|nil  {dot (direction alignment), dist (m), relDist (negative before the signal)}
 function core_trafficSignals_SignalInstance:getVehPlacement(vehId) end
 
---- Ajoute l'instance (et son controller/sa séquence internes éventuels) aux données du module.
----Source : lua/ge/extensions/core/trafficSignals.lua:624
+--- Adds the instance (and its internal controller/sequence, if any) to the module data.
+---Source: lua/ge/extensions/core/trafficSignals.lua:624
 function core_trafficSignals_SignalInstance:include() end
 
---- Vrai si le véhicule a franchi le point du signal dans le bon sens et à moins de maxDist.
----Source : lua/ge/extensions/core/trafficSignals.lua:335
----@param vehId integer véhicule
----@param maxDist number|nil distance max (m), défaut 20
----@param minDot number|nil produit scalaire min des directions, défaut 0.707
----@return boolean  valide
----@return table|nil  données de getVehPlacement
+--- True if the vehicle has passed the signal point in the right direction and within maxDist.
+---Source: lua/ge/extensions/core/trafficSignals.lua:335
+---@param vehId integer vehicle
+---@param maxDist number|nil max distance (m), default 20
+---@param minDot number|nil min dot product of directions, default 0.707
+---@return boolean  valid
+---@return table|nil  data from getVehPlacement
 function core_trafficSignals_SignalInstance:isVehAfterSignal(vehId, maxDist, minDot) end
 
---- Lie un objet scène à ce signal (champ dynamique signalInstance = nom).
----Source : lua/ge/extensions/core/trafficSignals.lua:195
----@param objId integer id de l'objet
+--- Links a scene object to this signal (dynamic field signalInstance = name).
+---Source: lua/ge/extensions/core/trafficSignals.lua:195
+---@param objId integer object id
 function core_trafficSignals_SignalInstance:linkSignalObject(objId) end
 
---- Constructeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:114
----@param data table|nil voir newSignal
+--- Constructor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:114
+---@param data table|nil see newSignal
 ---@return SignalInstance  instance
 function core_trafficSignals_SignalInstance:new(data) end
 
---- Restaure les champs à partir de data (pos/dir reconverties en vec3).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:669
----@param data table|nil données
+--- Restores the fields from data (pos/dir converted back to vec3).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:669
+---@param data table|nil data
 function core_trafficSignals_SignalInstance:onDeserialized(data) end
 
---- Données à sauvegarder (id, name, pos, dir, group, controllerId, sequenceId, useCurrentLane, startDisabled).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:653
----@return table  données
+--- Data to save (id, name, pos, dir, group, controllerId, sequenceId, useCurrentLane, startDisabled).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:653
+---@return table  data
 function core_trafficSignals_SignalInstance:onSerialize() end
 
---- Réactualise ce signal ainsi que sa séquence (réactive, rétablit l'étape courante).
----Source : lua/ge/extensions/core/trafficSignals.lua:532
+--- Refreshes this signal and its sequence (reactivates, restores the current step).
+---Source: lua/ge/extensions/core/trafficSignals.lua:532
 function core_trafficSignals_SignalInstance:refresh() end
 
---- Active ou désactive le signal ; à l'activation, met l'état attendu (séquence, sinon état par défaut du controller) en file d'envoi.
----Source : lua/ge/extensions/core/trafficSignals.lua:556
----@param val boolean actif
+--- Enables or disables the signal; on activation, queues the expected state (sequence, otherwise the controller's default state) for sending.
+---Source: lua/ge/extensions/core/trafficSignals.lua:556
+---@param val boolean active
 function core_trafficSignals_SignalInstance:setActive(val) end
 
---- Cherche la route, vérifie la présence du controller et recense les objets liés ; marque le signal _invalid en cas de problème (log d'erreur).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:597
+--- Looks for the road, checks that the controller exists and lists the linked objects; marks the signal _invalid on any problem (error log).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:597
 function core_trafficSignals_SignalInstance:setAuxiliaryData() end
 
---- Change le controller et rafraîchit si le système est actif.
----Source : lua/ge/extensions/core/trafficSignals.lua:546
----@param id integer|nil id du controller
+--- Changes the controller and refreshes if the system is active.
+---Source: lua/ge/extensions/core/trafficSignals.lua:546
+---@param id integer|nil controller id
 function core_trafficSignals_SignalInstance:setController(id) end
 
---- Allume/éteint directement les lumières de tous les objets liés (sans changer l'état logique). Surtout interne.
----Source : lua/ge/extensions/core/trafficSignals.lua:146
----@param lightsArray string[]|nil couleurs ; 'black' = éteint, toute autre valeur = allumé ; défaut tout éteint
+--- Directly turns on/off the lights of all linked objects (without changing the logical state). Mostly internal.
+---Source: lua/ge/extensions/core/trafficSignals.lua:146
+---@param lightsArray string[]|nil colors; 'black' = off, any other value = on; default all off
 function core_trafficSignals_SignalInstance:setLights(lightsArray) end
 
---- Change la séquence et rafraîchit si le système est actif.
----Source : lua/ge/extensions/core/trafficSignals.lua:551
----@param id integer|nil id de la séquence
+--- Changes the sequence and refreshes if the system is active.
+---Source: lua/ge/extensions/core/trafficSignals.lua:551
+---@param id integer|nil sequence id
 function core_trafficSignals_SignalInstance:setSequence(id) end
 
---- Impose l'état de ce signal d'après l'indice dans la liste d'états du controller (prime sur la séquence ; désactiver le timer de la séquence avant). Sans stateIdx valide (nil ou <= 0), le signal retrouve son état normal.
----Source : lua/ge/extensions/core/trafficSignals.lua:161
----@param stateIdx integer|nil indice (base 1) dans controller.states
+--- Forces the state of this signal from the index in the controller's state list (takes precedence over the sequence; disable the sequence timer first). Without a valid stateIdx (nil or <= 0), the signal returns to its normal state.
+---Source: lua/ge/extensions/core/trafficSignals.lua:161
+---@param stateIdx integer|nil index (1-based) in controller.states
 function core_trafficSignals_SignalInstance:setStrictState(stateIdx) end
 
---- Configuration alternative : fixe pos/dir, cherche la route, et crée un controller ('lightsBasic') et/ou une séquence si les ids donnés sont absents ou invalides.
----Source : lua/ge/extensions/core/trafficSignals.lua:266
+--- Alternative setup: sets pos/dir, looks for the road, and creates a controller ('lightsBasic') and/or a sequence if the given ids are missing or invalid.
+---Source: lua/ge/extensions/core/trafficSignals.lua:266
 ---@param pos vec3|nil position
 ---@param dir vec3|nil direction
----@param controllerId integer|nil id de controller existant
----@param sequenceId integer|nil id de séquence existante
+---@param controllerId integer|nil existing controller id
+---@param sequenceId integer|nil existing sequence id
 function core_trafficSignals_SignalInstance:setup(pos, dir, controllerId, sequenceId) end
 
---- Délie un objet scène de ce signal.
----Source : lua/ge/extensions/core/trafficSignals.lua:201
----@param objId integer id de l'objet
+--- Unlinks a scene object from this signal.
+---Source: lua/ge/extensions/core/trafficSignals.lua:201
+---@param objId integer object id
 function core_trafficSignals_SignalInstance:unlinkSignalObject(objId) end
 
---- Enchaîne des phases ({controllerIds, startTime?, totalDuration}) pour piloter les controllers d'une intersection. Champs : id, name, startTime, totalDuration, phases, timeline ([temps] = liste {nomController, indexPhase, indexEtat}), timelineTimes (temps triés), controllerStates, currStep, currPhase, stateTime, startDisabled, ignoreTimer.
+--- Chains phases ({controllerIds, startTime?, totalDuration}) to drive the controllers of an intersection. Fields: id, name, startTime, totalDuration, phases, timeline ([time] = list of {controllerName, phaseIndex, stateIndex}), timelineTimes (sorted times), controllerStates, currStep, currPhase, stateTime, startDisabled, ignoreTimer.
 ---@class core_trafficSignals_SignalSequence
 local core_trafficSignals_SignalSequence = {}
 
---- Passe à l'étape suivante (boucle au début). Appelé par la file du module quand l'échéance est atteinte.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:1012
+--- Moves to the next step (loops back to the start). Called by the module queue when the deadline is reached.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:1012
 function core_trafficSignals_SignalSequence:advance() end
 
---- Calcule la durée de chaque phase (plus longue durée de ses controllers) et de la séquence (somme, ou max de startTime + durée si startTime est donné).
----Source : lua/ge/extensions/core/trafficSignals.lua:840
----@param controllersRef table|nil table [id] = controller à utiliser à la place de elementsById (éditeur)
----@return number  durée totale (s)
+--- Computes the duration of each phase (longest duration of its controllers) and of the sequence (sum, or max of startTime + duration if startTime is given).
+---Source: lua/ge/extensions/core/trafficSignals.lua:840
+---@param controllersRef table|nil table [id] = controller to use instead of elementsById (editor)
+---@return number  total duration (s)
 function core_trafficSignals_SignalSequence:calcDuration(controllersRef) end
 
---- Ajoute une phase (à la fin ou à l'indice idx).
----Source : lua/ge/extensions/core/trafficSignals.lua:822
+--- Adds a phase (at the end or at index idx).
+---Source: lua/ge/extensions/core/trafficSignals.lua:822
 ---@param phase table|nil {controllerIds, startTime?}
----@param idx integer|nil position d'insertion
+---@param idx integer|nil insertion position
 function core_trafficSignals_SignalSequence:createPhase(phase, idx) end
 
---- Supprime une phase.
----Source : lua/ge/extensions/core/trafficSignals.lua:833
----@param idx integer|nil indice ; défaut dernière phase
+--- Deletes a phase.
+---Source: lua/ge/extensions/core/trafficSignals.lua:833
+---@param idx integer|nil index; default last phase
 function core_trafficSignals_SignalSequence:deletePhase(idx) end
 
---- Indique si la séquence suit le timer principal ; false la fige (utile avec setStep/setPhase/setStrictState).
----Source : lua/ge/extensions/core/trafficSignals.lua:1125
----@param val boolean true : suit le timer
+--- Indicates whether the sequence follows the main timer; false freezes it (useful with setStep/setPhase/setStrictState).
+---Source: lua/ge/extensions/core/trafficSignals.lua:1125
+---@param val boolean true: follows the timer
 function core_trafficSignals_SignalSequence:enableTimer(val) end
 
---- Retire la séquence des données du module.
----Source : lua/ge/extensions/core/trafficSignals.lua:1143
+--- Removes the sequence from the module data.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1143
 function core_trafficSignals_SignalSequence:exclude() end
 
---- Ajoute la séquence aux données du module.
----Source : lua/ge/extensions/core/trafficSignals.lua:1135
+--- Adds the sequence to the module data.
+---Source: lua/ge/extensions/core/trafficSignals.lua:1135
 function core_trafficSignals_SignalSequence:include() end
 
---- Constructeur (voir newSequence).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:803
+--- Constructor (see newSequence).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:803
 ---@param data table|nil {id?, name?, startTime?, phases?, startDisabled?, ignoreTimer?}
----@return SignalSequence  séquence
+---@return SignalSequence  sequence
 function core_trafficSignals_SignalSequence:new(data) end
 
---- Restaure les champs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:1169
----@param data table|nil données
+--- Restores the fields.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:1169
+---@param data table|nil data
 function core_trafficSignals_SignalSequence:onDeserialized(data) end
 
---- Interne : traite l'étape courante et planifie la suivante dans la file.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:899
+--- Internal: processes the current step and schedules the next one in the queue.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:899
 function core_trafficSignals_SignalSequence:onSequenceUpdate() end
 
---- Données à sauvegarder (id, name, phases, startTime, startDisabled, ignoreTimer).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:1156
----@return table  données
+--- Data to save (id, name, phases, startTime, startDisabled, ignoreTimer).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:1156
+---@return table  data
 function core_trafficSignals_SignalSequence:onSerialize() end
 
---- Remet la séquence au début (états par défaut des controllers) et planifie la première échéance.
----Source : lua/ge/extensions/core/trafficSignals.lua:933
+--- Resets the sequence to the beginning (controllers' default states) and schedules the first deadline.
+---Source: lua/ge/extensions/core/trafficSignals.lua:933
 function core_trafficSignals_SignalSequence:resetSequence() end
 
---- Pousse l'état des controllers modifiés vers les instances actives en file d'envoi.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/trafficSignals.lua:884
----@param forceUpdate boolean|nil true : tout pousser
+--- Pushes the state of the modified controllers to the active instances into the send queue.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/trafficSignals.lua:884
+---@param forceUpdate boolean|nil true: push everything
 function core_trafficSignals_SignalSequence:resolveUpdates(forceUpdate) end
 
---- Active la séquence (construit timeline et controllerStates, puis resetSequence ; ignorée avec un avertissement si durée nulle) ou la désactive (instances mises à l'état 'none').
----Source : lua/ge/extensions/core/trafficSignals.lua:1039
----@param val boolean actif
+--- Activates the sequence (builds timeline and controllerStates, then resetSequence; ignored with a warning if the duration is zero) or deactivates it (instances set to state 'none').
+---Source: lua/ge/extensions/core/trafficSignals.lua:1039
+---@param val boolean active
 function core_trafficSignals_SignalSequence:setActive(val) end
 
---- Saute à la première étape de la phase donnée.
----Source : lua/ge/extensions/core/trafficSignals.lua:978
----@param index integer|nil phase, base 1 ; défaut 1
+--- Jumps to the first step of the given phase.
+---Source: lua/ge/extensions/core/trafficSignals.lua:978
+---@param index integer|nil phase, 1-based; default 1
 function core_trafficSignals_SignalSequence:setPhase(index) end
 
---- Saute à l'étape d'indice donné de la timeline (si elle existe).
----Source : lua/ge/extensions/core/trafficSignals.lua:952
----@param index integer|nil étape, base 1 ; défaut 1
+--- Jumps to the step with the given timeline index (if it exists).
+---Source: lua/ge/extensions/core/trafficSignals.lua:952
+---@param index integer|nil step, 1-based; default 1
 function core_trafficSignals_SignalSequence:setStep(index) end
 
---- Impose l'état d'un controller de la séquence pour toutes ses instances (lumières et état). Désactiver le timer avant (enableTimer(false)).
----Source : lua/ge/extensions/core/trafficSignals.lua:1022
----@param ctrlName string nom du controller
----@param stateIdx integer|nil indice d'état (base 1) ; défaut état courant
+--- Forces the state of a sequence controller for all its instances (lights and state). Disable the timer beforehand (enableTimer(false)).
+---Source: lua/ge/extensions/core/trafficSignals.lua:1022
+---@param ctrlName string controller name
+---@param stateIdx integer|nil state index (1-based); default current state
 function core_trafficSignals_SignalSequence:setStrictState(ctrlName, stateIdx) end
 

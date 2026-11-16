@@ -2,70 +2,70 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/markers/bigmapMarker.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Type de marqueur utilisé par la grande carte (bigmap) : pour chaque cluster de POI, affiche une icône et une colonne (icônes d'icon renderer) qui apparaissent en fondu quand la grande carte est active et qui grossissent au survol ou à la sélection. Le module renvoie une table {createMarker, merge} : createMarker crée l'objet marqueur (classe C), merge fusionne plusieurs POI proches en un seul cluster avec une icône numérotée.
---- Accès : extension `gameplay_markers_bigmapMarker` : `extensions.load("gameplay_markers_bigmapMarker")`, puis la globale `gameplay_markers_bigmapMarker`
+--- Marker type used by the big map (bigmap): for each POI cluster, displays an icon and a column (icon renderer icons) that fade in when the big map is active and that grow on hover or selection. The module returns a table {createMarker, merge}: createMarker creates the marker object (class C), merge merges several nearby POIs into a single cluster with a numbered icon.
+--- Access: extension `gameplay_markers_bigmapMarker`: `extensions.load("gameplay_markers_bigmapMarker")`, then the global `gameplay_markers_bigmapMarker`
 ---@class gameplay_markers_bigmapMarker
 ---@field containsAnyDelivery boolean
 ---@field containsAnyMission boolean
 gameplay_markers_bigmapMarker = {}
 
---- Fabrique un objet marqueur de grande carte (instance de la classe C) et appelle son init.
----Source : lua/ge/extensions/gameplay/markers/bigmapMarker.lua:235
----@param ... any Arguments transmis à C:init (non utilisés).
----@return table  Instance de marqueur.
+--- Builds a big map marker object (instance of class C) and calls its init.
+---Source: lua/ge/extensions/gameplay/markers/bigmapMarker.lua:235
+---@param ... any Arguments passed to C:init (unused).
+---@return table  Marker instance.
 function gameplay_markers_bigmapMarker.createMarker(...) end
 
---- Fusionne une liste de POI en un seul cluster de grande carte (position moyenne, ids contenus, icône numérotée si plusieurs).
----Source : lua/ge/extensions/gameplay/markers/bigmapMarker.lua:242
----@param pois table[] POI à fusionner (avec markerInfo.bigmapMarker et data).
----@param idPrefix string Préfixe de l'id du cluster.
+--- Merges a list of POIs into a single big map cluster (average position, contained ids, numbered icon if several).
+---Source: lua/ge/extensions/gameplay/markers/bigmapMarker.lua:242
+---@param pois table[] POIs to merge (with markerInfo.bigmapMarker and data).
+---@param idPrefix string Prefix of the cluster id.
 ---@return table  Cluster {id, containedIds, containedIdsLookup, pos, icon}.
 function gameplay_markers_bigmapMarker.merge(pois, idPrefix) end
 
---- Marqueur de grande carte : une icône plus une colonne, dont l'opacité suit l'état de la grande carte.
+--- Big map marker: an icon plus a column, whose opacity follows the big map state.
 ---@class gameplay_markers_bigmapMarker_C
 local gameplay_markers_bigmapMarker_C = {}
 
---- Retire les icônes de l'icon renderer et réinitialise les références internes.
----Source : lua/ge/extensions/gameplay/markers/bigmapMarker.lua:214
+--- Removes the icons from the icon renderer and resets the internal references.
+---Source: lua/ge/extensions/gameplay/markers/bigmapMarker.lua:214
 function gameplay_markers_bigmapMarker_C:clearObjects() end
 
---- Marque le marqueur invisible (l'opacité retombe en fondu).
----Source : lua/ge/extensions/gameplay/markers/bigmapMarker.lua:199
+--- Marks the marker invisible (the opacity fades out).
+---Source: lua/ge/extensions/gameplay/markers/bigmapMarker.lua:199
 function gameplay_markers_bigmapMarker_C:hide() end
 
---- Initialise l'id, le lisseur d'opacité et visible = true, sans créer d'objet.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/markers/bigmapMarker.lua:29
+--- Initializes the id, the opacity smoother and visible = true, without creating an object.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/markers/bigmapMarker.lua:29
 function gameplay_markers_bigmapMarker_C:init() end
 
---- Ne fait rien (interface commune des marqueurs).
----Source : lua/ge/extensions/gameplay/markers/bigmapMarker.lua:208
----@param visible boolean Ignoré.
+--- Does nothing (common marker interface).
+---Source: lua/ge/extensions/gameplay/markers/bigmapMarker.lua:208
+---@param visible boolean Ignored.
 function gameplay_markers_bigmapMarker_C:instantFade(visible) end
 
---- Met l'opacité du lisseur à 1 immédiatement.
----Source : lua/ge/extensions/gameplay/markers/bigmapMarker.lua:191
+--- Sets the smoother's opacity to 1 immediately.
+---Source: lua/ge/extensions/gameplay/markers/bigmapMarker.lua:191
 function gameplay_markers_bigmapMarker_C:setFullAlphaInstant() end
 
---- Ne fait rien (interface commune des marqueurs).
----Source : lua/ge/extensions/gameplay/markers/bigmapMarker.lua:196
----@param value boolean Ignoré.
+--- Does nothing (common marker interface).
+---Source: lua/ge/extensions/gameplay/markers/bigmapMarker.lua:196
+---@param value boolean Ignored.
 function gameplay_markers_bigmapMarker_C:setHidden(value) end
 
---- Associe le marqueur à un cluster : enregistre pos et cluster, ajoute l'icône (cluster.icon) et la colonne dans l'icon renderer de gameplay_playmodeMarkers, et remet l'opacité à 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/markers/bigmapMarker.lua:156
----@param cluster table Cluster issu de merge.
+--- Associates the marker with a cluster: stores pos and cluster, adds the icon (cluster.icon) and the column in the gameplay_playmodeMarkers icon renderer, and resets the opacity to 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/markers/bigmapMarker.lua:156
+---@param cluster table Cluster from merge.
 function gameplay_markers_bigmapMarker_C:setup(cluster) end
 
---- Marque le marqueur visible.
----Source : lua/ge/extensions/gameplay/markers/bigmapMarker.lua:203
+--- Marks the marker visible.
+---Source: lua/ge/extensions/gameplay/markers/bigmapMarker.lua:203
 function gameplay_markers_bigmapMarker_C:show() end
 
---- Appelée chaque frame : lisse l'opacité (apparition en 0.2 s quand la grande carte est active et sans transition), place l'icône et la colonne devant la caméra (ou en projection orthographique), agrandit l'icône à 1.5 si le cluster est survolé ou sélectionné.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/markers/bigmapMarker.lua:77
----@param data table Données de frame : dt, camPos, bigmapTransitionActive...
+--- Called every frame: smooths the opacity (fade in over 0.2 s when the big map is active and without transition), places the icon and column in front of the camera (or in orthographic projection), enlarges the icon to 1.5 if the cluster is hovered or selected.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/markers/bigmapMarker.lua:77
+---@param data table Frame data: dt, camPos, bigmapTransitionActive...
 function gameplay_markers_bigmapMarker_C:update(data) end
 

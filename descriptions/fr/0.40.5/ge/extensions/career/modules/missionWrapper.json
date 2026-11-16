@@ -1,0 +1,72 @@
+{
+  "path": "lua/ge/extensions/career/modules/missionWrapper.lua",
+  "module": "Fait le lien entre le système de missions (gameplay_missions_*) et la sauvegarde de carrière. Les données de progression des missions sont stockées dans <save>/career/missions/ ; le module suit les missions « sales » (modifiées) et les écrit à chaque sauvegarde du profil. Il déclenche aussi une sauvegarde avant et après une mission si l'autosauvegarde est active.",
+  "notes": [
+    "À la décharge de l'extension, le chemin de sauvegarde des missions est remis à nil et tout le système de missions est rechargé.",
+    "Si une sauvegarde de mission échoue (saveMissionSaveData renvoie false), career_saveSystem.saveFailed() est appelé.",
+    "À la fin d'une mission (état stopped), l'état du joueur est réinitialisé (career_modules_playerDriving.resetPlayerState).",
+    "init, setMissionInfo et le paramètre task de preMissionHandling ne servent à rien ; `dirtyDate` est une date ISO UTC (os.date(\"!%Y-%m-%dT%H:%M:%SZ\")) par défaut."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career."}
+  },
+  "functions": {
+    "cacheMissionData": {
+      "desc": "Marque la mission comme modifiée (à sauvegarder) avec la date donnée ou la date UTC courante.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant de la mission."},
+        "dirtyDate": {"type": "string|nil", "desc": "Date ISO 8601, maintenant par défaut."}
+      },
+      "internal": false
+    },
+    "saveMission": {
+      "desc": "Marque la mission comme modifiée et lance une sauvegarde de carrière complète (career_saveSystem.saveCurrent).",
+      "params": {"id": {"type": "string", "desc": "Identifiant de la mission."}},
+      "internal": false
+    },
+    "preMissionHandling": {
+      "desc": "Étape appelée avant le démarrage d'une mission : si l'autosauvegarde est active, sauvegarde et attend onVehicleSaveFinished pour mettre step.handlingComplete = true ; sinon marque directement l'étape comme terminée.",
+      "params": {
+        "step": {"type": "table", "desc": "Étape de démarrage de mission (champ handlingComplete)."},
+        "task": {"type": "any", "desc": "Non utilisé."}
+      },
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook : si la carrière est active, fixe le chemin de sauvegarde des missions et recharge le système de missions (renvoie false sinon).",
+      "params": {},
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook : retire le chemin de sauvegarde des missions et recharge le système de missions.",
+      "params": {},
+      "internal": true
+    },
+    "onSaveCurrentProfile": {
+      "desc": "Hook de sauvegarde : écrit les données de chaque mission modifiée dans career/missions/.",
+      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde."}},
+      "internal": true
+    },
+    "onMissionLoaded": {
+      "desc": "Hook appelé quand les données d'une mission sont chargées : les enregistre comme suivies.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant de la mission."},
+        "dirtyDate": {"type": "string|nil", "desc": "Date associée."}
+      },
+      "internal": true
+    },
+    "onAnyMissionChanged": {
+      "desc": "Hook : à l'état \"stopped\", réinitialise l'état du joueur et, si l'autosauvegarde est active, sauvegarde la mission.",
+      "params": {
+        "state": {"type": "string", "desc": "État de la mission."},
+        "mission": {"type": "table|nil", "desc": "Mission concernée."}
+      },
+      "internal": true
+    },
+    "onVehicleSaveFinished": {
+      "desc": "Hook appelé quand la sauvegarde du véhicule est finie : débloque l'étape de démarrage de mission en attente.",
+      "params": {},
+      "internal": true
+    }
+  }
+}

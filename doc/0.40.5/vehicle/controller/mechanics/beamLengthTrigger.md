@@ -1,53 +1,53 @@
 # `controller_mechanics_beamLengthTrigger`
 
-*Fichier : `lua/vehicle/controller/mechanics/beamLengthTrigger.lua` · VM : Véhicule · 127 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/mechanics/beamLengthTrigger.lua` · VM: Vehicle · 127 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `mechanics/beamLengthTrigger` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `mechanics/beamLengthTrigger` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur de mécanique (type "auxiliary") qui met une valeur electrics à une valeur de déclenchement quand la longueur d'une ou plusieurs poutres (par tag) devient plus courte ou plus longue qu'un seuil, sinon à 0.
+Mechanics controller (type "auxiliary") that sets an electrics value to a trigger value when the length of one or more beams (by tag) becomes shorter or longer than a threshold, otherwise to 0.
 
-## Remarques
+## Notes
 
-- Clés jbeam (défaut) : triggerBeamTag (obligatoire), triggerLengthThreshold (nombre en m, obligatoire), comparison ("shorter" ou "longer", obligatoire), aggregation (si plusieurs poutres : "average" par défaut, "minimum" ou "maximum"), electricsName ("<nomContrôleur>_trigger"), electricsTriggerValue (1).
-- En cas de configuration invalide, une erreur est journalisée et updateGFX reste nil (contrôleur inactif).
+- jbeam keys (default): triggerBeamTag (required), triggerLengthThreshold (number in m, required), comparison ("shorter" or "longer", required), aggregation (if several beams: "average" by default, "minimum" or "maximum"), electricsName ("<controllerName>_trigger"), electricsTriggerValue (1).
+- In case of an invalid configuration, an error is logged and updateGFX stays nil (controller inactive).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_mechanics_beamLengthTrigger.init(jbeamData)` | Lit la configuration, retrouve les poutres et choisit les fonctions de comparaison et d'agrégation. *(interne)* | 71 |
-| `controller_mechanics_beamLengthTrigger.reset(jbeamData)` | Remet la valeur electrics à 0. *(interne)* | 65 |
-| `controller_mechanics_beamLengthTrigger.updateGFX(dt)` | Écrit la valeur electrics selon la longueur mesurée. (assignée dynamiquement) *(interne)* | dyn |
+| `controller_mechanics_beamLengthTrigger.init(jbeamData)` | Reads the configuration, finds the beams and chooses the comparison and aggregation functions. *(internal)* | 71 |
+| `controller_mechanics_beamLengthTrigger.reset(jbeamData)` | Resets the electrics value to 0. *(internal)* | 65 |
+| `controller_mechanics_beamLengthTrigger.updateGFX(dt)` | Writes the electrics value according to the measured length. (dynamically assigned) *(internal)* | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_mechanics_beamLengthTrigger.init(jbeamData)`
 
-Lit la configuration, retrouve les poutres et choisit les fonctions de comparaison et d'agrégation.
+Reads the configuration, finds the beams and chooses the comparison and aggregation functions.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_mechanics_beamLengthTrigger.reset(jbeamData)`
 
-Remet la valeur electrics à 0.
+Resets the electrics value to 0.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_mechanics_beamLengthTrigger.updateGFX(dt)`
 
-Écrit la valeur electrics selon la longueur mesurée. (assignée dynamiquement)
+Writes the electrics value according to the measured length. (dynamically assigned)
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getBeamLength`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/mechanics/beamLengthTrigger.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/mechanics/beamLengthTrigger.lua`.*

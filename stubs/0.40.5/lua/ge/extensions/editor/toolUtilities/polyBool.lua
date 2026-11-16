@@ -2,27 +2,27 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/polyBool.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Booléens 2D sur polygones (union, différence), maison, de type Martinez, adaptés de l'approche polybooljs (MIT). Un polygone est une table { regions = { ring, ... }, inverted = bool } où chaque ring est une liste de points {x,y}. Les calculs se font dans un repère local proche de l'origine pour que l'epsilon absolu ne s'écrase pas aux coordonnées monde. areas range ensuite une liste d'anneaux en anneaux extérieurs avec leurs trous, prêts pour une triangulation.
---- Accès : extension `editor_toolUtilities_polyBool` : `extensions.load("editor_toolUtilities_polyBool")`, puis la globale `editor_toolUtilities_polyBool`
+--- In-house 2D polygon booleans (union, difference), Martinez-like, adapted from the polybooljs approach (MIT). A polygon is a table { regions = { ring, ... }, inverted = bool } where each ring is a list of {x,y} points. Computations are done in a local frame near the origin so that the absolute epsilon does not get crushed at world coordinates. areas then sorts a list of rings into outer rings with their holes, ready for triangulation.
+--- Access: extension `editor_toolUtilities_polyBool`: `extensions.load("editor_toolUtilities_polyBool")`, then the global `editor_toolUtilities_polyBool`
 ---@class editor_toolUtilities_polyBool
 editor_toolUtilities_polyBool = {}
 
---- Trie la liste plate d'anneaux d'un résultat booléen en anneaux extérieurs portant chacun leurs trous. L'imbrication se déduit de la profondeur de contenance : pair = plein, impair = trou. Extérieurs orientés CCW, trous CW. Chaque trou est rattaché à l'anneau le plus profond qui le contient.
----Source : lua/ge/extensions/editor/toolUtilities/polyBool.lua:829
----@param regions table Liste d'anneaux {x,y} (par ex. result.regions de difference).
----@return table  Liste de { ring = anneau, holes = { anneau, ... } }.
+--- Sorts the flat list of rings of a boolean result into outer rings each carrying their holes. Nesting is deduced from containment depth: even = solid, odd = hole. Outer rings oriented CCW, holes CW. Each hole is attached to the deepest ring that contains it.
+---Source: lua/ge/extensions/editor/toolUtilities/polyBool.lua:829
+---@param regions table List of {x,y} rings (e.g. result.regions from difference).
+---@return table  List of { ring = ring, holes = { ring, ... } }.
 function editor_toolUtilities_polyBool.areas(regions) end
 
---- Différence booléenne : subject moins clip. Travaille dans un repère local comme unionMany.
----Source : lua/ge/extensions/editor/toolUtilities/polyBool.lua:774
----@param subject table Polygone, anneau ou liste d'anneaux dont on soustrait.
----@param clip table Polygone, anneau ou liste d'anneaux à soustraire.
----@return table  Polygone résultat { regions, inverted }.
+--- Boolean difference: subject minus clip. Works in a local frame like unionMany.
+---Source: lua/ge/extensions/editor/toolUtilities/polyBool.lua:774
+---@param subject table Polygon, ring or list of rings to subtract from.
+---@param clip table Polygon, ring or list of rings to subtract.
+---@return table  Result polygon { regions, inverted }.
 function editor_toolUtilities_polyBool.difference(subject, clip) end
 
---- Réunit plusieurs polygones en un seul. Renvoie un polygone vide si la liste est vide.
----Source : lua/ge/extensions/editor/toolUtilities/polyBool.lua:744
----@param polys table Liste de polygones { regions = {ring,...}, inverted = bool }.
----@return table  Polygone résultat { regions, inverted } en coordonnées monde.
+--- Merges several polygons into one. Returns an empty polygon if the list is empty.
+---Source: lua/ge/extensions/editor/toolUtilities/polyBool.lua:744
+---@param polys table List of polygons { regions = {ring,...}, inverted = bool }.
+---@return table  Result polygon { regions, inverted } in world coordinates.
 function editor_toolUtilities_polyBool.unionMany(polys) end
 

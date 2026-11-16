@@ -1,0 +1,88 @@
+{
+  "path": "lua/ge/extensions/gameplay/playmodeMarkers.lua",
+  "module": "Gère les marqueurs de jeu en freeroam/carrière (missions, parkings, zones, stations-service, etc.). Il regroupe les POI bruts de gameplay_rawPois en clusters par type de marqueur (fabriques dans gameplay/markers/<type>.lua), crée à la demande l'objet marqueur d'un cluster, et fournit les deux rendus d'icônes (BeamNGWorldIconsRenderer) du monde et de la grande carte. Un kd-tree 2D sert à retrouver les clusters visibles autour d'une position.",
+  "notes": [
+    "Les clusters sont invalidés dès que gameplay_rawPois.getRawPoiGeneration() augmente.",
+    "Types de marqueurs gérés : missionMarker, parkingMarker, zoneMarker, walkingMarker, gasStationMarker, driftLineMarker, invisibleTrigger, inspectVehicleMarker, crawlMarker, vehicleTrigger (liste codée en dur).",
+    "Les deux rendus d'icônes sont supprimés à la fin du niveau et à la sérialisation (rechargement Lua).",
+    "Les rendus d'icônes sont créés paresseusement par les getters ; le rendu du monde charge l'atlas core/art/gui/images/iconAtlas."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'gameplay_rawPois'}, extension chargée avant."},
+    "validPlaymodeMarkersStates": {"type": "table<string, boolean>", "desc": "États de jeu où les marqueurs sont actifs : freeroam et career. Modifiable pour en ajouter."}
+  },
+  "functions": {
+    "clear": {
+      "desc": "Vide les clusters, le kd-tree et supprime les objets des marqueurs créés.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getIconRendererId": {
+      "desc": "Id de l'objet BeamNGWorldIconsRenderer 'markerIconRenderer' (créé si besoin).",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Id d'objet."}],
+      "internal": false
+    },
+    "getIconRendererObj": {
+      "desc": "Objet du rendu d'icônes du monde (créé si besoin).",
+      "params": {},
+      "returns": [{"type": "userdata|nil", "desc": "Objet de la scène."}],
+      "internal": false
+    },
+    "getBigmapRendererId": {
+      "desc": "Id du rendu d'icônes de la grande carte 'bigmapIconRenderer' (créé si besoin).",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Id d'objet."}],
+      "internal": false
+    },
+    "getBigmapRendererObj": {
+      "desc": "Objet du rendu d'icônes de la grande carte (créé si besoin).",
+      "params": {},
+      "returns": [{"type": "userdata|nil", "desc": "Objet de la scène."}],
+      "internal": false
+    },
+    "getPlaymodeClusters": {
+      "desc": "Liste triée par id des clusters de marqueurs du niveau courant (calculée puis mise en cache). Chaque cluster doit avoir id, visibilityPos et visibilityRadius, sinon une erreur est loguée.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Clusters."}],
+      "internal": false
+    },
+    "getPlaymodeClustersAsQuadtree": {
+      "desc": "kd-tree 2D (kdtreebox2d) des clusters, indexé par boîte englobant visibilityPos ± visibilityRadius.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Objet kd-tree construit."}],
+      "internal": false
+    },
+    "getMarkerForCluster": {
+      "desc": "Renvoie l'objet marqueur du cluster ; le crée au premier appel (cluster.create(), createObjects, setup).",
+      "params": {"cluster": {"type": "table", "desc": "Cluster issu de getPlaymodeClusters."}},
+      "returns": [{"type": "table", "desc": "Objet marqueur."}],
+      "internal": false
+    },
+    "isStateWithPlaymodeMarkers": {
+      "desc": "Indique si l'état de jeu courant est dans validPlaymodeMarkersStates.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si les marqueurs sont autorisés."}],
+      "internal": false
+    },
+    "onClientStartMission": {
+      "desc": "Hook de début de niveau : crée les deux rendus d'icônes.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook de fin de niveau : vide clusters et marqueurs, supprime les rendus d'icônes.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook avant rechargement Lua : mêmes nettoyages que onClientEndMission.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

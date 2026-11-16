@@ -1,16 +1,39 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/career/onIntroPopupCareerClosed.lua",
-  "module": "Nœud flowgraph « On introPopupCareerClosed » (catégorie repeat_instant, couleur/icône ui). Détecte la fermeture de la fenêtre d'intro de la carrière. Sorties : closed (impulsion d'une frame) et id (any, id de la fenêtre fermée, nil sinon).",
+  "module": "Flowgraph node \"On introPopupCareerClosed\" (category repeat_instant, ui color/icon). Detects the closing of the career intro window. Outputs: closed (one-frame impulse) and id (any, id of the closed window, nil otherwise).",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
-        "work": {"desc": "Chaque frame : closed à faux et id à nil, puis applique et efface les drapeaux.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
-        "onIntroPopupCareerClosed": {"desc": "Hook : lève closed et mémorise l'id de la fenêtre si fourni.", "params": {"id": {"type": "any", "desc": "id de la fenêtre fermée"}}, "internal": true},
-        "_afterTrigger": {"desc": "Efface les drapeaux après le déclenchement.", "internal": true}
+        "init": {
+          "desc": "Creates the flag table.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Every frame: closed to false and id to nil, then applies and clears the flags.",
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "unused"
+            }
+          }
+        },
+        "onIntroPopupCareerClosed": {
+          "desc": "Hook: raises closed and stores the window id if provided.",
+          "params": {
+            "id": {
+              "type": "any",
+              "desc": "id of the closed window"
+            }
+          },
+          "internal": true
+        },
+        "_afterTrigger": {
+          "desc": "Clears the flags after the trigger.",
+          "internal": true
+        }
       }
     }
   }

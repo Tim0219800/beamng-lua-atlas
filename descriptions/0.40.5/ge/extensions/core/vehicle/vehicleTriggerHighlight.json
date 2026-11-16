@@ -1,73 +1,133 @@
 {
   "path": "lua/ge/extensions/core/vehicle/vehicleTriggerHighlight.lua",
-  "module": "Extension GE `core_vehicle_vehicleTriggerHighlight` : met en surbrillance dans le monde 3D des triggers de véhicule (zones d'interaction définies dans le jbeam). Chaque frame, onUpdate dessine avec debugDrawer une sphère (avec un cercle face caméra) ou une boîte pulsante (alpha oscillant) et, si demandé, une étiquette 'id - nom [section]'. Utile pour les outils de debug/édition de triggers.",
+  "module": "GE extension `core_vehicle_vehicleTriggerHighlight`: highlights vehicle triggers (interaction zones defined in the jbeam) in the 3D world. Every frame, onUpdate draws with debugDrawer a sphere (with a camera-facing circle) or a pulsing box (oscillating alpha) and, if requested, a label 'id - name [section]'. Useful for trigger debug/editing tools.",
   "usage": "core_vehicle_vehicleTriggerHighlight.setHighlightedTriggerByName(vehId, 'hood_trigger', {showTriggerIdAsLabel = true})\n-- ...\ncore_vehicle_vehicleTriggerHighlight.clearHighlightedTrigger()",
   "notes": [
-    "Les identifiants sont mémorisés sous forme de chaînes ; `triggerId` est le cid du trigger (clé de vdata.triggers et argument de veh:getTrigger).",
-    "Options par trigger : showTriggerIdAsLabel (true par défaut ; false masque l'étiquette).",
-    "Le trigger est déterminé comme sphère si trg.type == 'sphere' (ou type absent et size nombre) et comme boîte si trg.type == 'box' (ou type absent et size table) ; rayon d'une sphère = size, sinon radius, sinon la moitié de la diagonale de size, sinon 0.1.",
-    "drawOneHighlightedTrigger modifie la couleur partagée SPHERE_COLOR (champ alpha) à chaque dessin : les triggers dessinés dans la même frame partagent la même couleur.",
-    "Les étiquettes utilisent debugDrawer:drawTextAdvanced ; les boîtes sont tracées en triangles pleins + arêtes."
+    "Identifiers are stored as strings; `triggerId` is the trigger's cid (key of vdata.triggers and argument of veh:getTrigger).",
+    "Per-trigger options: showTriggerIdAsLabel (true by default; false hides the label).",
+    "The trigger is determined to be a sphere if trg.type == 'sphere' (or type absent and size a number) and a box if trg.type == 'box' (or type absent and size a table); sphere radius = size, otherwise radius, otherwise half the diagonal of size, otherwise 0.1.",
+    "drawOneHighlightedTrigger modifies the shared color SPHERE_COLOR (alpha field) on each draw: triggers drawn in the same frame share the same color.",
+    "Labels use debugDrawer:drawTextAdvanced; boxes are drawn as filled triangles + edges."
   ],
   "fields": {},
   "functions": {
     "hasHighlightedTriggers": {
-      "desc": "Indique si au moins un trigger est en surbrillance.",
+      "desc": "Indicates whether at least one trigger is highlighted.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true s'il y en a"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if there is one"
+        }
+      ]
     },
     "isHighlightedTrigger": {
-      "desc": "Indique si un trigger donné est en surbrillance.",
+      "desc": "Indicates whether a given trigger is highlighted.",
       "params": {
-        "vehId": {"type": "integer", "desc": "véhicule"},
-        "triggerId": {"type": "integer|string", "desc": "cid du trigger"}
+        "vehId": {
+          "type": "integer",
+          "desc": "vehicle"
+        },
+        "triggerId": {
+          "type": "integer|string",
+          "desc": "trigger cid"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si en surbrillance"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if highlighted"
+        }
+      ]
     },
     "setHighlightedTrigger": {
-      "desc": "Ajoute un trigger à la surbrillance (n'efface pas les autres).",
+      "desc": "Adds a trigger to the highlight (does not clear the others).",
       "params": {
-        "vehId": {"type": "integer", "desc": "véhicule"},
-        "triggerId": {"type": "integer|string", "desc": "cid du trigger"},
-        "options": {"type": "table|nil", "desc": "{showTriggerIdAsLabel = boolean}"}
+        "vehId": {
+          "type": "integer",
+          "desc": "vehicle"
+        },
+        "triggerId": {
+          "type": "integer|string",
+          "desc": "trigger cid"
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "{showTriggerIdAsLabel = boolean}"
+        }
       },
       "returns": []
     },
     "setHighlightedTriggerByName": {
-      "desc": "Comme setHighlightedTrigger mais retrouve le trigger par son nom, son id jbeam ou son cid dans vdata.triggers du véhicule.",
+      "desc": "Like setHighlightedTrigger but finds the trigger by its name, its jbeam id or its cid in the vehicle's vdata.triggers.",
       "params": {
-        "vehId": {"type": "integer", "desc": "véhicule"},
-        "triggerName": {"type": "string|number", "desc": "nom, id ou cid du trigger"},
-        "options": {"type": "table|nil", "desc": "{showTriggerIdAsLabel = boolean}"}
+        "vehId": {
+          "type": "integer",
+          "desc": "vehicle"
+        },
+        "triggerName": {
+          "type": "string|number",
+          "desc": "trigger name, id or cid"
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "{showTriggerIdAsLabel = boolean}"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si le trigger est introuvable"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the trigger is not found"
+        }
+      ]
     },
     "unhighlightTrigger": {
-      "desc": "Retire un trigger de la surbrillance.",
+      "desc": "Removes a trigger from the highlight.",
       "params": {
-        "vehId": {"type": "integer", "desc": "véhicule"},
-        "triggerId": {"type": "integer|string", "desc": "cid du trigger"}
+        "vehId": {
+          "type": "integer",
+          "desc": "vehicle"
+        },
+        "triggerId": {
+          "type": "integer|string",
+          "desc": "trigger cid"
+        }
       },
       "returns": []
     },
     "clearHighlightedTrigger": {
-      "desc": "Retire toutes les surbrillances de tous les véhicules.",
+      "desc": "Removes all highlights from all vehicles.",
       "params": {},
       "returns": []
     },
     "getSerializedHighlightedTriggerData": {
-      "desc": "Exporte les surbrillances sous forme de liste sérialisable.",
+      "desc": "Exports the highlights as a serializable list.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "liste de {vehId, triggerId, options}"}]
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "list of {vehId, triggerId, options}"
+        }
+      ]
     },
     "setSerializedHighlightedTriggerData": {
-      "desc": "Remplace toutes les surbrillances par celles de la liste donnée (format de getSerialized…). Accepte aussi l'ancien format d'un seul tuple {vehId, triggerId}.",
-      "params": {"data": {"type": "table", "desc": "liste de {vehId, triggerId, options}"}},
+      "desc": "Replaces all highlights with those of the given list (getSerialized... format). Also accepts the legacy format of a single {vehId, triggerId} tuple.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "list of {vehId, triggerId, options}"
+        }
+      },
       "returns": []
     },
     "onUpdate": {
-      "desc": "Hook par frame : dessine chaque trigger en surbrillance (sphère ou boîte pulsante, étiquette).",
-      "params": {"dt": {"type": "number", "desc": "temps écoulé (s), sert à faire pulser l'alpha"}},
+      "desc": "Per-frame hook: draws each highlighted trigger (sphere or pulsing box, label).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "elapsed time (s), used to pulse the alpha"
+        }
+      },
       "returns": [],
       "internal": true
     }

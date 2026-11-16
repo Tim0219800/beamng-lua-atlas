@@ -2,21 +2,21 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/gameplay/decalLine.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_gameplay_decalLine_C
 local flowgraph_nodes_gameplay_decalLine_C = {}
 
---- Réinitialise le pool de décalques et les caches de couleurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/decalLine.lua:59
+--- Resets the decal pool and the color caches.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/decalLine.lua:59
 function flowgraph_nodes_gameplay_decalLine_C:_executionStarted() end
 
---- Définit data.snapToTerrain = false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/decalLine.lua:41
+--- Sets data.snapToTerrain = false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/decalLine.lua:41
 function flowgraph_nodes_gameplay_decalLine_C:init() end
 
---- Place les décalques par interpolation entre posA et posB, choisit leur couleur selon filling1/filling2 et les soumet au renderer.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/decalLine.lua:75
+--- Places the decals by interpolation between posA and posB, chooses their color according to filling1/filling2 and submits them to the renderer.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/decalLine.lua:75
 function flowgraph_nodes_gameplay_decalLine_C:work() end
 

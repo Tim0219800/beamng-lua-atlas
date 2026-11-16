@@ -1,14 +1,20 @@
 {
   "path": "lua/vehicle/extensions/profiling/zone.lua",
-  "module": "Bibliothèque tierce : jit.zone de LuaJIT (Mike Pall), copyright 2005-2016, licence MIT. Implémente un modèle simple de zones hiérarchiques (une pile de noms) utilisé par le profileur LuaJIT (mode z de profiling_p) pour regrouper les échantillons par zone nommée. Le module retourne une table appelable : zone('nom') empile une zone, zone() la dépile.",
+  "module": "Third-party library: LuaJIT's jit.zone (Mike Pall), copyright 2005-2016, MIT license. Implements a simple model of hierarchical zones (a stack of names) used by the LuaJIT profiler (mode z of profiling_p) to group samples by named zone. The module returns a callable table: zone('name') pushes a zone, zone() pops it.",
   "usage": "local zone = require('extensions/profiling/zone')\nzone('AI')\n  zone('A*')\n  print(zone:get()) --> 'A*'\n  zone()\nprint(zone:get()) --> 'AI'\nzone()",
   "notes": [
-    "Dépiler une pile vide déclenche l'erreur « empty zone stack » (assert).",
-    "Le module n'est pas une extension du jeu : il se charge par require sur ce chemin (l'exemple d'origine citait require('jit.zone')).",
-    "Aucune fonction M : l'API est la table retournée (méthodes flush et get, plus le métamethode __call)."
+    "Popping an empty stack triggers the error \"empty zone stack\" (assert).",
+    "The module is not a game extension: it is loaded by require on this path (the original example cited require('jit.zone')).",
+    "No M function: the API is the returned table (methods flush and get, plus the __call metamethod)."
   ],
   "fields": {
-    "flush": {"type": "function", "desc": "zone:flush() vide entièrement la pile de zones."},
-    "get": {"type": "function", "desc": "zone:get() retourne la zone courante (sommet de pile), ou nil si la pile est vide."}
+    "flush": {
+      "type": "function",
+      "desc": "zone:flush() completely empties the zone stack."
+    },
+    "get": {
+      "type": "function",
+      "desc": "zone:get() returns the current zone (top of the stack), or nil if the stack is empty."
+    }
   }
 }

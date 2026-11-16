@@ -2,24 +2,24 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/nodeStream.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Serveur WebSocket local (127.0.0.1:8088, nom « nodestream ») qui diffuse en direct la structure du véhicule joueur à un client externe (visualiseur 3D, outil de débogage). Le client peut demander : les positions initiales des nœuds, les données de mappage des flexbodies, le démarrage/arrêt du flux des positions courantes (toutes les 0,1 s), ou le chargement d'une extension. Les autres messages JSON sont relayés aux extensions via le hook onWebSocketHandlerMessage.
---- Accès : extension `util_nodeStream` : `extensions.load("util_nodeStream")`, puis la globale `util_nodeStream`
+--- Local WebSocket server (127.0.0.1:8088, name "nodestream") that broadcasts the player vehicle's structure live to an external client (3D viewer, debugging tool). The client can request: the initial node positions, the flexbody mapping data, starting/stopping the stream of current positions (every 0.1 s), or loading an extension. Other JSON messages are relayed to extensions via the onWebSocketHandlerMessage hook.
+--- Access: extension `util_nodeStream`: `extensions.load("util_nodeStream")`, then the global `util_nodeStream`
 ---@class util_nodeStream
 util_nodeStream = {}
 
---- Appelé au chargement : crée (ou récupère) le serveur WebSocket via wsUtils.createOrGetWS sur 127.0.0.1:8088.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/nodeStream.lua:214
+--- Called on load: creates (or retrieves) the WebSocket server via wsUtils.createOrGetWS on 127.0.0.1:8088.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/nodeStream.lua:214
 function util_nodeStream.onExtensionLoaded() end
 
---- Appelé au déchargement : détruit le serveur WebSocket (BNGWebWSServer.destroy).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/nodeStream.lua:225
+--- Called on unload: destroys the WebSocket server (BNGWebWSServer.destroy).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/nodeStream.lua:225
 function util_nodeStream.onExtensionUnloaded() end
 
---- Hook appelé chaque frame : diffuse les positions de nœuds si le flux est actif (intervalle 0,1 s), traite les évènements des clients (connexion C, déconnexion DC, données D), puis met à jour le serveur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/nodeStream.lua:234
----@param dt number Delta de temps en secondes
+--- Hook called every frame: broadcasts node positions if the stream is active (0.1 s interval), handles client events (connection C, disconnection DC, data D), then updates the server.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/nodeStream.lua:234
+---@param dt number Time delta in seconds
 function util_nodeStream.onUpdate(dt) end
 

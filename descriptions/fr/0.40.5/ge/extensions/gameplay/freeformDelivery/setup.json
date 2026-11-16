@@ -1,0 +1,73 @@
+{
+  "path": "lua/ge/extensions/gameplay/freeformDelivery/setup.lua",
+  "module": "Mise en place et démontage d'une livraison libre. Associe les véhicules déjà spawnés par le chargeur (delivery._vehicleIndex, par internalName) aux ID de la livraison, applique leur état de départ (mode de boîte, rapport, moteur, niveau d'allumage), enregistre des aperçus, planifie les attelages (couplings) via util_stepHandler, place le joueur (dans un véhicule, à pied ou sur une place de parking) et mémorise les positions initiales pour un reset.",
+  "notes": [
+    "Les véhicules ne sont pas spawnés ici : setup() les retrouve via delivery._vehicleIndex[internalName] ; une entrée manquante est loguée en erreur et ignorée.",
+    "startupCode accepte driveMode (setGearboxMode), gear (setGear sur le dispositif transmission), engineOn (startEngine/stopEngine) ; setIgnitionLevel passe par core_vehicleBridge.executeAction.",
+    "playerStart.type : \"vehicle\" (vehicleId), \"walking\" (position {x,y,z}, rotation {x,y,z,w} facultative) ou \"parkingSpot\" (targetAreaId d'une zone de type parkingSpot).",
+    "Attelages : attente que les véhicules soient prêts (8 s max), activation via beamstate.activateAutoCoupling(nodeTag), puis vérification dans core_trailerRespawn (8 s max). Les temporisations sont des garde-fous : au timeout la séquence continue sans bloquer.",
+    "Vérifier isSetupComplete() avant de démarrer : il reste false tant qu'un véhicule n'est pas prêt ou qu'un attelage est en attente.",
+    "Un véhicule avec enterable == false est ajouté à la liste noire de gameplay_walk."
+  ],
+  "functions": {
+    "setup": {
+      "desc": "Prépare la livraison : résout les images des zones cibles, indexe les véhicules spawnés, applique l'état de départ, blacklist les véhicules non enterables, collecte et lance les attelages, place le joueur et stocke les transformations initiales.",
+      "params": {"delivery": {"type": "table", "desc": "Données de livraison (vehicles, targetAreas, playerStart, _vehicleIndex, _basePath...)."}},
+      "returns": [{"type": "boolean", "desc": "false si delivery est nil, sinon true (les opérations asynchrones continuent ensuite)."}],
+      "internal": true
+    },
+    "isSetupComplete": {
+      "desc": "Indique si la mise en place asynchrone est terminée (tous les véhicules prêts et aucun attelage en attente). Quand c'est le cas, remet setupInProgress à false.",
+      "returns": [{"type": "boolean", "desc": "true si terminée ou non démarrée."}],
+      "internal": false
+    },
+    "restoreVehicleTransforms": {
+      "desc": "Remet chaque véhicule à sa position/rotation initiale (reset physique, flexmesh réparé), réapplique l'état de départ puis relance la séquence d'attelages.",
+      "internal": false
+    },
+    "getVehicleId": {
+      "desc": "Convertit un ID de véhicule de livraison en ID d'objet du jeu.",
+      "params": {"deliveryVehicleId": {"type": "string", "desc": "ID du véhicule dans la définition de livraison."}},
+      "returns": [{"type": "integer|nil", "desc": "ID d'objet ou nil."}],
+      "internal": false
+    },
+    "isSetupInProgress": {
+      "desc": "Renvoie le drapeau interne de mise en place en cours.",
+      "returns": [{"type": "boolean", "desc": "true tant que setup/reset n'est pas terminé."}],
+      "internal": false
+    },
+    "setupPlayer": {
+      "desc": "Place le joueur selon delivery.playerStart (véhicule, marche à une position, ou marche sur une place de parking).",
+      "params": {"delivery": {"type": "table", "desc": "Données de livraison contenant playerStart."}},
+      "internal": false
+    },
+    "getPendingCouplings": {
+      "desc": "Liste des ID de véhicules dont un attelage est en attente.",
+      "returns": [{"type": "integer[]", "desc": "ID d'objets."}],
+      "internal": false
+    },
+    "getAllCouplingSetup": {
+      "desc": "Renvoie la liste des attelages collectés lors du dernier setup.",
+      "returns": [{"type": "table[]", "desc": "Entrées {vehId, nodeTag, targetVehId}."}],
+      "internal": false
+    },
+    "getSpawnedVehicles": {
+      "desc": "Renvoie les véhicules indexés par ID d'objet.",
+      "returns": [{"type": "table<integer, table>", "desc": "Entrées {vehicleId, vehicle, deliveryVehicle}."}],
+      "internal": false
+    },
+    "freezeAllVehicles": {
+      "desc": "Gèle ou dégèle tous les véhicules de la livraison (action setFreeze via core_vehicleBridge).",
+      "params": {"freeze": {"type": "boolean|nil", "desc": "true par défaut ; false pour dégeler."}},
+      "internal": false
+    },
+    "cleanup": {
+      "desc": "Démonte la livraison : si keepVehicles, extrait les véhicules des préfabs (explosion du préfab) et les remet dans MissionGroup ; supprime les préfabs créés (et recharge la collision si besoin) ; sinon supprime les véhicules. Vide ensuite tout l'état.",
+      "params": {
+        "delivery": {"type": "table|nil", "desc": "Données de livraison (_prefabIds, _hasColliders)."},
+        "keepVehicles": {"type": "boolean|nil", "desc": "true pour conserver les véhicules (faux par défaut)."}
+      },
+      "internal": true
+    }
+  }
+}

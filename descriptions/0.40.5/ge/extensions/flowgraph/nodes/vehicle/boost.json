@@ -1,25 +1,25 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/boost.lua",
-  "module": "Nœud « Boost Vehicle » (catégorie `repeat_p_duration`, tags boost/thrust). Charge l'extension véhicule `core_booster` puis appelle `core_booster.boost({power,0,0}, dtSim)` à chaque frame. Pins d'entrée : `vehId`, `power` (number). Marqué `obsolete` dans le code (« statut inconnu, essayer Apply Velocity »).",
+  "module": "Node \"Boost Vehicle\" (category `repeat_p_duration`, tags boost/thrust). Loads the vehicle extension `core_booster` then calls `core_booster.boost({power,0,0}, dtSim)` every frame. Input pins: `vehId`, `power` (number). Marked `obsolete` in the code (\"unknown status, try Apply Velocity\").",
   "notes": [
-    "`C.todo` : l'auteur ignore si le nœud fonctionne. `C.obsolete` renvoie vers le nœud Apply Velocity.",
-    "Pas de test `veh == nil` : plante si aucun véhicule n'est trouvé (le repli joueur peut aussi donner nil).",
-    "Le vecteur de boost est {power, 0, 0} : la puissance n'est appliquée que sur l'axe X (repère véhicule présumé)."
+    "`C.todo`: the author does not know whether the node works. `C.obsolete` points to the Apply Velocity node.",
+    "No `veh == nil` test: crashes if no vehicle is found (the player fallback can also give nil).",
+    "The boost vector is {power, 0, 0}: the power is applied only on the X axis (presumed vehicle frame)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_executionStopped": {
-          "desc": "Remet `loaded = false` pour recharger `core_booster` au prochain démarrage.",
+          "desc": "Resets `loaded = false` to reload `core_booster` at the next start.",
           "internal": true
         },
         "init": {
-          "desc": "Constructeur ; `loaded = false` (l'extension n'est pas encore chargée côté véhicule).",
+          "desc": "Constructor; `loaded = false` (the extension is not yet loaded on the vehicle side).",
           "internal": true
         },
         "work": {
-          "desc": "Charge `core_booster` dans la VM véhicule la première fois, puis envoie `core_booster.boost({power,0,0}, dtSim)` à chaque frame.",
+          "desc": "Loads `core_booster` in the vehicle VM the first time, then sends `core_booster.boost({power,0,0}, dtSim)` every frame.",
           "internal": true
         }
       }

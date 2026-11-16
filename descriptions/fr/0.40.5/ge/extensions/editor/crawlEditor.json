@@ -1,0 +1,134 @@
+{
+  "path": "lua/ge/extensions/editor/crawlEditor.lua",
+  "module": "Éditeur de données de « crawl » (escalade/rock crawling) du World Editor, fenêtre « Crawl Data Editor » (menu Gameplay). Il charge, édite et sauvegarde quatre types d'objets via gameplay/crawl/saveSystem : trails (parcours reliant un chemin, une frontière et une position de départ), paths (nœuds), boundaries (zones) et starting positions. Il liste aussi les objets venant de missions (/gameplay/missions/<niveau>/crawl/<mission>/). Il délègue l'édition aux sous-modules crawlEditor/paths, boundaries, trails, startingPositions, input et missionPortTool, enregistre quatre modes d'édition (pathEditMode, boundaryEditMode, startingPositionEditMode, trailEditMode) et dessine en permanence les nœuds, frontières et positions de départ sélectionnés. Utile à un moddeur qui crée des parcours de crawl pour un niveau ou veut lire les données chargées depuis une autre extension.",
+  "usage": "extensions.load('editor_crawlEditor')\nlocal trails = editor_crawlEditor.getAllTrails()\nlocal p = editor_crawlEditor.getSelectedPath()",
+  "notes": [
+    "Les index de sélection (selectedTrailIndex…) commencent à 1 ; 0 ou -1 = aucune sélection. Pour trails, paths et boundaries, les index > #allX désignent les objets de mission (missionX[index - #allX]) ; les starting positions n'ont pas d'équivalent mission.",
+    "markAsDirty(objectType, index) met le drapeau _dirty sur l'objet ; ses types valides sont « trail », « path », « boundary » et « startingPosition ». Un index hors limites est ignoré sans erreur.",
+    "Les objets de mission sont marqués _isFromMission = true et _missionName. Le bouton Save d'un trail déplace le trail entre dossier de mission et dossier de niveau selon l'écart entre isFromMission (voulu) et _isFromMission (actuel) ; moveTrailToMission est local, seul moveTrailToLevel est exporté.",
+    "renameObjectFile refuse de renommer si la cible existe déjà, renomme le fichier avec FS:renameFile, met à jour les références pathId/boundaryId/startingPositionId(/Reversed) des trails du niveau puis resauvegarde l'objet renommé.",
+    "Dossiers : fichiers de niveau dans /levels/<niveau>/crawls/ (*.trail.json, *.path.json, *.boundary.json, *.startingPosition.json) ; fichiers de mission dans /gameplay/missions/<niveau>/crawl/<mission>/. Le chargement n'a lieu qu'à la première ouverture de la fenêtre quand un niveau est chargé, ou en appelant loadAllObjects().",
+    "onSerialize/onDeserialized conservent entre rechargements Lua : currentFileDir, currentFileName, crawlData, currentTab et les quatre index de sélection.",
+    "Incohérence : getAllX() renvoie les tables internes (modifiables) ; les getters getSelectedX() renvoient nil si l'index est hors limites."
+  ],
+  "functions": {
+    "getAllTrails": {
+      "desc": "Renvoie la liste des trails de niveau chargés.",
+      "returns": [{"type": "table", "desc": "Liste de trails (table interne)"}]
+    },
+    "getAllMissionTrails": {
+      "desc": "Renvoie la liste des trails provenant des missions crawl du niveau courant.",
+      "returns": [{"type": "table", "desc": "Liste de trails de mission"}]
+    },
+    "getAllPaths": {
+      "desc": "Renvoie la liste des chemins de niveau.",
+      "returns": [{"type": "table", "desc": "Liste de chemins"}]
+    },
+    "getAllMissionPaths": {
+      "desc": "Renvoie la liste des chemins issus des missions.",
+      "returns": [{"type": "table", "desc": "Liste de chemins de mission"}]
+    },
+    "getAllBoundaries": {
+      "desc": "Renvoie la liste des frontières de niveau.",
+      "returns": [{"type": "table", "desc": "Liste de frontières"}]
+    },
+    "getAllMissionBoundaries": {
+      "desc": "Renvoie la liste des frontières issues des missions.",
+      "returns": [{"type": "table", "desc": "Liste de frontières de mission"}]
+    },
+    "getAllStartingPositions": {
+      "desc": "Renvoie la liste des positions de départ.",
+      "returns": [{"type": "table", "desc": "Liste de positions de départ"}]
+    },
+    "getSelectedTrailIndex": {
+      "desc": "Renvoie l'index du trail sélectionné.",
+      "returns": [{"type": "integer", "desc": "Index (> 0 si sélectionné)"}]
+    },
+    "getSelectedPathIndex": {
+      "desc": "Renvoie l'index du chemin sélectionné.",
+      "returns": [{"type": "integer", "desc": "Index"}]
+    },
+    "getSelectedBoundaryIndex": {
+      "desc": "Renvoie l'index de la frontière sélectionnée.",
+      "returns": [{"type": "integer", "desc": "Index"}]
+    },
+    "getSelectedStartingPositionIndex": {
+      "desc": "Renvoie l'index de la position de départ sélectionnée.",
+      "returns": [{"type": "integer", "desc": "Index"}]
+    },
+    "setSelectedTrailIndex": {
+      "desc": "Définit l'index du trail sélectionné sans toucher aux autres sélections.",
+      "params": {"index": {"type": "integer", "desc": "Index (1 = premier)"}}
+    },
+    "setSelectedPathIndex": {
+      "desc": "Définit l'index du chemin sélectionné.",
+      "params": {"index": {"type": "integer", "desc": "Index"}}
+    },
+    "setSelectedBoundaryIndex": {
+      "desc": "Définit l'index de la frontière sélectionnée.",
+      "params": {"index": {"type": "integer", "desc": "Index"}}
+    },
+    "setSelectedStartingPositionIndex": {
+      "desc": "Définit l'index de la position de départ sélectionnée.",
+      "params": {"index": {"type": "integer", "desc": "Index"}}
+    },
+    "getSelectedTrail": {
+      "desc": "Renvoie le trail sélectionné (de niveau ou de mission).",
+      "returns": [{"type": "table|nil", "desc": "Trail ou nil"}]
+    },
+    "getSelectedPath": {
+      "desc": "Renvoie le chemin sélectionné (de niveau ou de mission).",
+      "returns": [{"type": "table|nil", "desc": "Chemin ou nil"}]
+    },
+    "getSelectedBoundary": {
+      "desc": "Renvoie la frontière sélectionnée (de niveau ou de mission).",
+      "returns": [{"type": "table|nil", "desc": "Frontière ou nil"}]
+    },
+    "getSelectedStartingPosition": {
+      "desc": "Renvoie la position de départ sélectionnée.",
+      "returns": [{"type": "table|nil", "desc": "Position de départ ou nil"}]
+    },
+    "loadAllObjects": {
+      "desc": "Recharge depuis le disque trails, paths, boundaries et starting positions (via saveSystem.getAll...Files / get...ById), ainsi que ceux des missions crawl du niveau courant. Vide d'abord les listes en mémoire."
+    },
+    "markAsDirty": {
+      "desc": "Marque un objet comme modifié (non sauvegardé).",
+      "params": {
+        "objectType": {"type": "string", "desc": "« trail », « path », « boundary » ou « startingPosition »"},
+        "index": {"type": "integer", "desc": "Index global (objets de mission inclus sauf pour startingPosition)"}
+      }
+    },
+    "moveTrailToLevel": {
+      "desc": "Déplace un trail de mission vers /levels/<niveau>/crawls/ : réécrit pathId et boundaryId vers ce dossier, sauve le trail, supprime l'ancien fichier, puis recharge tout. Échoue si le trail n'est pas de mission, si aucun niveau n'est chargé ou si le fichier existe déjà.",
+      "params": {"trail": {"type": "table", "desc": "Trail avec _isFromMission = true"}},
+      "returns": [{"type": "boolean", "desc": "true si déplacé"}]
+    },
+    "renameObjectFile": {
+      "desc": "Renomme le fichier d'un objet crawl et met à jour les références des trails.",
+      "params": {
+        "oldFilePath": {"type": "string", "desc": "Ancien chemin"},
+        "newFilePath": {"type": "string", "desc": "Nouveau chemin (ne doit pas exister)"},
+        "objectType": {"type": "string", "desc": "« trail », « path », « boundary » ou « startingPosition »"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si renommé ; false si chemins identiques/nil, cible existante ou échec"}]
+    },
+    "onEditorInitialized": {
+      "desc": "Enregistre la fenêtre « Crawl Data Editor » (1800x900), l'entrée de menu (groupe Gameplay) et les quatre modes d'édition avec leurs raccourcis auxiliaires. Appelé une fois à l'initialisation de l'éditeur.",
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Appelé à chaque frame : met à jour la souris (crawlEditor/input), dessine les surcouches permanentes (nœuds, frontières, positions de départ), la fenêtre (menu File avec Save All, listes à gauche, détails à droite, boutons Save/Delete) et la fenêtre de portage de missions.",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation avant rechargement Lua : renvoie dossier/nom de fichier courants, crawlData, onglet courant et index de sélection.",
+      "returns": [{"type": "table", "desc": "Données à restaurer"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Restaure l'état renvoyé par onSerialize (index à -1 par défaut).",
+      "params": {"data": {"type": "table|nil", "desc": "Données de onSerialize"}},
+      "internal": true
+    }
+  }
+}

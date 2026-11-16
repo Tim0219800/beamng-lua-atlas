@@ -1,12 +1,12 @@
 {
   "path": "lua/vehicle/controller/nitrousOxideInjection.lua",
-  "module": "Contrôleur auxiliaire de commande du protoxyde d'azote (N2O, type \"auxiliary\", relevantDevice \"mainEngine\"). Il arme/désarme le système via electrics.values (électrique d'armement), purge les conduites à l'armement et ajoute un bouton « N2O » au panneau de contrôle simplifié et une entrée au menu radial. L'injection elle-même est gérée par le moteur (engine.nitrousOxideInjection) ; ce contrôleur ne fait que l'interface et l'armement.",
-  "usage": "local n2o = controller.getControllerSafe('nitrousOxideInjection')\nn2o.toggleActive()      -- arme/désarme\nn2o.setOverride(true)   -- force l'injection (électrique d'override)",
+  "module": "Auxiliary controller for nitrous oxide (N2O) control (type \"auxiliary\", relevantDevice \"mainEngine\"). It arms/disarms the system via electrics.values (arming electrics value), purges the lines on arming and adds an \"N2O\" button to the simplified control panel and an entry to the radial menu. The injection itself is handled by the engine (engine.nitrousOxideInjection); this controller only handles the interface and the arming.",
+  "usage": "local n2o = controller.getControllerSafe('nitrousOxideInjection')\nn2o.toggleActive()      -- arms/disarms\nn2o.setOverride(true)   -- forces the injection (override electrics value)",
   "notes": [
-    "Clés jbeam (défaut) : name (nom du contrôleur pour le menu radial), engineName (\"mainEngine\"), electricsArmName (\"nitrousOxideArm\"), electricsOverrideName (\"nitrousOxideOverride\"), purgeTime (1, s).",
-    "Le contrôleur n'est actif (updateGFX) que si le moteur possède un sous-système nitrousOxideInjection existant ; sinon M.updateGFX reste nop.",
-    "toggleActive : quand on arme (valeur electrics 0 -> 1) la purge des conduites est lancée pour purgeTime secondes ; un message d'interface Armed/Disarmed est affiché.",
-    "serialize/deserialize/getState/setState gèrent l'état d'armement (serialize) ou le temps de purge restant (getState)."
+    "jbeam keys (default): name (controller name for the radial menu), engineName (\"mainEngine\"), electricsArmName (\"nitrousOxideArm\"), electricsOverrideName (\"nitrousOxideOverride\"), purgeTime (1, s).",
+    "The controller is only active (updateGFX) if the engine has an existing nitrousOxideInjection subsystem; otherwise M.updateGFX stays nop.",
+    "toggleActive: when arming (electrics value 0 -> 1) the line purge is started for purgeTime seconds; an Armed/Disarmed interface message is displayed.",
+    "serialize/deserialize/getState/setState handle the arming state (serialize) or the remaining purge time (getState)."
   ],
   "fields": {
     "type": {
@@ -15,99 +15,99 @@
     },
     "relevantDevice": {
       "type": "string",
-      "desc": "\"mainEngine\" : dispositif de powertrain concerné (valeur par défaut)."
+      "desc": "\"mainEngine\": concerned powertrain device (default value)."
     }
   },
   "functions": {
     "init": {
-      "desc": "Lit la configuration, retrouve le moteur, enregistre le menu radial et affiche l'état.",
+      "desc": "Reads the configuration, finds the engine, registers the radial menu and displays the state.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Efface les données d'état de l'interface.",
+      "desc": "Clears the interface state data.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Met à jour le bouton du panneau simplifié quand le réservoir, l'armement ou l'activité changent (nop si pas de N2O)",
+      "desc": "Updates the simplified panel button when the tank, the arming or the activity change (nop if no N2O)",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateSimpleControlButtons": {
-      "desc": "(Re)crée le bouton « N2O » du panneau simplifié avec la couleur (inactif, armé, actif) et le niveau du réservoir.",
+      "desc": "(Re)creates the \"N2O\" button of the simplified panel with the color (inactive, armed, active) and the tank level.",
       "params": {},
       "returns": []
     },
     "setOverride": {
-      "desc": "Active/désactive l'électrique d'override de l'injection.",
+      "desc": "Enables/disables the injection override electrics value.",
       "params": {
         "active": {
           "type": "boolean",
-          "desc": "Vrai pour forcer l'injection."
+          "desc": "True to force the injection."
         }
       },
       "returns": []
     },
     "toggleActive": {
-      "desc": "Arme ou désarme le système (purge des conduites à l'armement) et affiche un message.",
+      "desc": "Arms or disarms the system (line purge on arming) and displays a message.",
       "params": {},
       "returns": []
     },
     "serialize": {
-      "desc": "Renvoie l'état d'armement.",
+      "desc": "Returns the arming state.",
       "params": {},
       "returns": [
         {
           "type": "table",
-          "desc": "{isArmed = valeur electrics}"
+          "desc": "{isArmed = electrics value}"
         }
       ]
     },
     "deserialize": {
-      "desc": "Restaure l'état d'armement.",
+      "desc": "Restores the arming state.",
       "params": {
         "data": {
           "type": "table|nil",
-          "desc": "Table renvoyée par serialize."
+          "desc": "Table returned by serialize."
         }
       },
       "returns": []
     },
     "getState": {
-      "desc": "Renvoie le temps de purge restant.",
+      "desc": "Returns the remaining purge time.",
       "params": {},
       "returns": [
         {
           "type": "table",
-          "desc": "Table d'état (réutilisée)."
+          "desc": "State table (reused)."
         }
       ]
     },
     "setState": {
-      "desc": "Restaure le temps de purge restant (borné 0..purgeTime).",
+      "desc": "Restores the remaining purge time (bounded 0..purgeTime).",
       "params": {
         "data": {
           "type": "table|nil",
-          "desc": "Table d'état."
+          "desc": "State table."
         }
       },
       "returns": []

@@ -1,178 +1,331 @@
 {
   "path": "lua/ge/extensions/ui/router/managers/transitionManager.lua",
-  "module": "Gère le cycle de vie des transitions de route du routeur d'interface : une seule transition à la fois, session de transition (jalons de progression, phase, temps écoulé par phase et total, renvois du changement de route), validation des accusés des frameworks et classification des timeouts. Le module n'a aucun effet de bord sur le routeur : update() renvoie des évènements (resendRouteChange ou timeout) que router.lua traite. Le temps est accumulé à partir de dtReal fourni par onGuiUpdate (pas os.clock).",
+  "module": "Manages the lifecycle of the UI router's route transitions: a single transition at a time, transition session (progress milestones, phase, elapsed time per phase and total, route change resends), validation of the frameworks' acknowledgments and classification of timeouts. The module has no side effects on the router: update() returns events (resendRouteChange or timeout) that router.lua handles. Time is accumulated from dtReal provided by onGuiUpdate (not os.clock).",
   "notes": [
-    "Deux régimes de timeout. Plat (Angular/legacy, session.phase == nil) : un seul délai Config.Timeout (3 s) sur elapsedTime ; à l'expiration, le hook TRANSITION_TIMEOUT est émis une fois ({type=\"hard\", context}) et update renvoie {type=\"timeout\", reason=\"timeout_reached\"}. Phasé (Vue) : phases startup, routeCommit, mountReady, done.",
-    "Phase startup : renvoie {type=\"resendRouteChange\", entry=pendingEntry} toutes les Config.PhaseTimeouts.startupResendInterval secondes, sans jamais expirer ; la phase se termine quand routeNavigationStarted est reçu (alors totalElapsed est remis à 0). Phases suivantes : budgets routeCommit et mountReady, puis plafond total ; classifications : route_change_not_completed, route_mounted_not_acknowledged, transition_total_timeout.",
-    "Un accusé est valide si une transition est active, si transitionId (quand fourni) correspond, et si routeName (quand fourni) correspond au nom attendu (entrée en attente, sinon nom de la session, sinon route cible). Raisons d'échec : no_active_transition, transition_id_mismatch, route_mismatch (complete renvoie route_name_mismatch).",
-    "L'identifiant de transition est généré sous la forme « transition_<compteur>_<UUID> » (Engine.generateUUID).",
-    "Incohérence mineure : le commentaire de start() annonce « @return transitionId, success » alors que la fonction renvoie (success, transitionId) ; router.lua utilise bien l'ordre (success, id).",
-    "isTimeoutReached ne concerne que le régime plat (elapsedTime >= Config.Timeout) ; en régime phasé elapsedTime n'est pas incrémenté."
+    "Two timeout regimes. Flat (Angular/legacy, session.phase == nil): a single Config.Timeout delay (3 s) on elapsedTime; on expiry, the TRANSITION_TIMEOUT hook is emitted once ({type=\"hard\", context}) and update returns {type=\"timeout\", reason=\"timeout_reached\"}. Phased (Vue): phases startup, routeCommit, mountReady, done.",
+    "Startup phase: returns {type=\"resendRouteChange\", entry=pendingEntry} every Config.PhaseTimeouts.startupResendInterval seconds, never expiring; the phase ends when routeNavigationStarted is received (totalElapsed is then reset to 0). Following phases: routeCommit and mountReady budgets, then total cap; classifications: route_change_not_completed, route_mounted_not_acknowledged, transition_total_timeout.",
+    "An acknowledgment is valid if a transition is active, if transitionId (when provided) matches, and if routeName (when provided) matches the expected name (pending entry, otherwise session name, otherwise target route). Failure reasons: no_active_transition, transition_id_mismatch, route_mismatch (complete returns route_name_mismatch).",
+    "The transition identifier is generated in the form \"transition_<counter>_<UUID>\" (Engine.generateUUID).",
+    "Minor inconsistency: the comment of start() announces \"@return transitionId, success\" whereas the function returns (success, transitionId); router.lua does use the order (success, id).",
+    "isTimeoutReached only concerns the flat regime (elapsedTime >= Config.Timeout); in the phased regime elapsedTime is not incremented."
   ],
   "functions": {
     "getStatus": {
-      "desc": "Renvoie l'état courant : \"idle\", \"transitioning\" ou \"cancelled\" (transitoire).",
+      "desc": "Returns the current state: \"idle\", \"transitioning\" or \"cancelled\" (transient).",
       "params": {},
-      "returns": [{"type": "string", "desc": "Constants.TransitionStatus."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Constants.TransitionStatus."
+        }
+      ],
       "internal": false
     },
     "isTransitioning": {
-      "desc": "Indique si une transition est en cours.",
+      "desc": "Indicates whether a transition is in progress.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si status == transitioning."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if status == transitioning."
+        }
+      ],
       "internal": false
     },
     "getTransitionId": {
-      "desc": "Renvoie l'identifiant de la transition active.",
+      "desc": "Returns the identifier of the active transition.",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "Identifiant ou nil si aucune transition."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Identifier or nil if no transition."
+        }
+      ],
       "internal": false
     },
     "getElapsedTime": {
-      "desc": "Temps écoulé (secondes) depuis le début de la transition plate, accumulé depuis dtReal.",
+      "desc": "Elapsed time (seconds) since the start of the flat transition, accumulated from dtReal.",
       "params": {},
-      "returns": [{"type": "number", "desc": "Secondes."}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Seconds."
+        }
+      ],
       "internal": false
     },
     "isTimeoutReached": {
-      "desc": "Indique si le délai du régime plat (Config.Timeout) est atteint.",
+      "desc": "Indicates whether the flat regime delay (Config.Timeout) is reached.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si elapsedTime >= Config.Timeout."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if elapsedTime >= Config.Timeout."
+        }
+      ],
       "internal": false
     },
     "getKind": {
-      "desc": "Renvoie le type de la transition (context.kind, \"navigate\" par défaut).",
+      "desc": "Returns the transition type (context.kind, \"navigate\" by default).",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "Type ou nil."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Type or nil."
+        }
+      ],
       "internal": false
     },
     "getToRoute": {
-      "desc": "Renvoie la route de destination de la transition active.",
+      "desc": "Returns the destination route of the active transition.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Route résolue."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Resolved route."
+        }
+      ],
       "internal": false
     },
     "getFromRoute": {
-      "desc": "Renvoie la route d'origine de la transition active.",
+      "desc": "Returns the origin route of the active transition.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Route d'origine (vue compat)."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Origin route (compat view)."
+        }
+      ],
       "internal": false
     },
     "getTransitionContext": {
-      "desc": "Renvoie un instantané du contexte de transition.",
+      "desc": "Returns a snapshot of the transition context.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{transitionId, kind, toRoute, fromRoute}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{transitionId, kind, toRoute, fromRoute}."
+        }
+      ],
       "internal": false
     },
     "validateAcknowledgement": {
-      "desc": "Valide un accusé d'un framework contre la transition active (voir notes).",
+      "desc": "Validates a framework acknowledgment against the active transition (see notes).",
       "params": {
-        "routeName": {"type": "string|nil", "desc": "Route accusée (optionnel)."},
-        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition renvoyé par l'UI (optionnel)."}
+        "routeName": {
+          "type": "string|nil",
+          "desc": "Acknowledged route (optional)."
+        },
+        "transitionId": {
+          "type": "string|nil",
+          "desc": "Transition identifier returned by the UI (optional)."
+        }
       },
-      "returns": [{"type": "table", "desc": "{success=true} ou {success=false, reason}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success=true} or {success=false, reason}."
+        }
+      ],
       "internal": false
     },
     "getSession": {
-      "desc": "Renvoie la session de transition active créée par router.lua (routeName, routeData, navigationContext, pendingEntry, skipOnMount, mounted, routeChangeCommitted, expectsMountAck, phase, phaseElapsed, totalElapsed, timeSinceLastEmit, handoffAttempts, progress, milestoneAt, protectionToken…).",
+      "desc": "Returns the active transition session created by router.lua (routeName, routeData, navigationContext, pendingEntry, skipOnMount, mounted, routeChangeCommitted, expectsMountAck, phase, phaseElapsed, totalElapsed, timeSinceLastEmit, handoffAttempts, progress, milestoneAt, protectionToken...).",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Session ou nil si inactif."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Session or nil if inactive."
+        }
+      ],
       "internal": false
     },
     "markProgress": {
-      "desc": "Enregistre un jalon de progression rapporté par le framework après validation de l'accusé.",
+      "desc": "Records a progress milestone reported by the framework after validation of the acknowledgment.",
       "params": {
-        "routeName": {"type": "string", "desc": "Route accusée."},
-        "milestone": {"type": "string", "desc": "routeChangeReceived ou routeNavigationStarted."},
-        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition."}
+        "routeName": {
+          "type": "string",
+          "desc": "Acknowledged route."
+        },
+        "milestone": {
+          "type": "string",
+          "desc": "routeChangeReceived or routeNavigationStarted."
+        },
+        "transitionId": {
+          "type": "string|nil",
+          "desc": "Transition identifier."
+        }
       },
-      "returns": [{"type": "table", "desc": "{success=true} ou {success=false, reason}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success=true} or {success=false, reason}."
+        }
+      ],
       "internal": false
     },
     "markCommitted": {
-      "desc": "Marque la session comme validée (routeChangeComplete a promu l'entrée). La validation et la promotion sont faites par le routeur.",
+      "desc": "Marks the session as committed (routeChangeComplete promoted the entry). Validation and promotion are done by the router.",
       "params": {
-        "routeName": {"type": "string", "desc": "Route validée (non utilisée, pour symétrie)."},
-        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition."}
+        "routeName": {
+          "type": "string",
+          "desc": "Committed route (unused, for symmetry)."
+        },
+        "transitionId": {
+          "type": "string|nil",
+          "desc": "Transition identifier."
+        }
       },
-      "returns": [{"type": "table", "desc": "{success=true} ou {success=false, reason=no_active_transition|transition_id_mismatch}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success=true} or {success=false, reason=no_active_transition|transition_id_mismatch}."
+        }
+      ],
       "internal": false
     },
     "markMounted": {
-      "desc": "Marque la session comme montée (accusé routeMounted traité).",
+      "desc": "Marks the session as mounted (routeMounted acknowledgment handled).",
       "params": {
-        "routeName": {"type": "string", "desc": "Route montée (non utilisée)."},
-        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition."}
+        "routeName": {
+          "type": "string",
+          "desc": "Mounted route (unused)."
+        },
+        "transitionId": {
+          "type": "string|nil",
+          "desc": "Transition identifier."
+        }
       },
-      "returns": [{"type": "table", "desc": "{success=true} ou {success=false, reason}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success=true} or {success=false, reason}."
+        }
+      ],
       "internal": false
     },
     "getTimeoutInfo": {
-      "desc": "Instantané de chronométrage pour le gestionnaire de timeout du routeur ; la classification est déduite des jalons de progression si elle n'est pas fournie.",
+      "desc": "Timing snapshot for the router's timeout handler; the classification is inferred from the progress milestones if not provided.",
       "params": {
-        "classification": {"type": "string|nil", "desc": "Classification déjà calculée (chemin phasé)."}
+        "classification": {
+          "type": "string|nil",
+          "desc": "Already computed classification (phased path)."
+        }
       },
-      "returns": [{"type": "table", "desc": "{transitionId, classification, phase, phaseElapsed, totalElapsed, handoffAttempts}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{transitionId, classification, phase, phaseElapsed, totalElapsed, handoffAttempts}."
+        }
+      ],
       "internal": false
     },
     "update": {
-      "desc": "Fait avancer le chronométrage de la transition active ; appelée par router.onGuiUpdate. Renvoie nil si rien à signaler.",
+      "desc": "Advances the timing of the active transition; called by router.onGuiUpdate. Returns nil if there is nothing to report.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta de temps réel en secondes."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta in seconds."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "{type=\"resendRouteChange\", entry} ou {type=\"timeout\", reason, classification?}."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{type=\"resendRouteChange\", entry} or {type=\"timeout\", reason, classification?}."
+        }
+      ],
       "internal": true
     },
     "canStartTransition": {
-      "desc": "Indique si une nouvelle transition peut démarrer (aucune en cours).",
+      "desc": "Indicates whether a new transition can start (none in progress).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si status ~= transitioning."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if status ~= transitioning."
+        }
+      ],
       "internal": false
     },
     "start": {
-      "desc": "Démarre une transition : génère l'identifiant, enregistre route cible/origine et session, passe en transitioning. Échoue si une transition est déjà en cours ou sans route cible.",
+      "desc": "Starts a transition: generates the identifier, records target/origin route and session, switches to transitioning. Fails if a transition is already in progress or without a target route.",
       "params": {
-        "context": {"type": "table", "desc": "{toRoute (ou resolved), fromRoute?, kind?, session?}."}
+        "context": {
+          "type": "table",
+          "desc": "{toRoute (or resolved), fromRoute?, kind?, session?}."
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "true si démarrée ; false sinon."},
-        {"type": "string", "desc": "Identifiant de transition, ou raison (transition_already_in_progress, no_target_route) en cas d'échec."}
+        {
+          "type": "boolean",
+          "desc": "true if started; false otherwise."
+        },
+        {
+          "type": "string",
+          "desc": "Transition identifier, or reason (transition_already_in_progress, no_target_route) on failure."
+        }
       ],
       "internal": false
     },
     "complete": {
-      "desc": "Termine la transition avec succès après validation de l'identifiant et du nom de route, puis remet tout l'état à zéro.",
+      "desc": "Ends the transition successfully after validating the identifier and route name, then resets all state.",
       "params": {
-        "routeName": {"type": "string|nil", "desc": "Route terminée (validée contre le nom attendu)."},
-        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition (validé si fourni)."}
+        "routeName": {
+          "type": "string|nil",
+          "desc": "Finished route (validated against the expected name)."
+        },
+        "transitionId": {
+          "type": "string|nil",
+          "desc": "Transition identifier (validated if provided)."
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "true si terminée."},
-        {"type": "string", "desc": "\"completed\" ou raison d'échec (no_active_transition, transition_id_mismatch, route_name_mismatch)."}
+        {
+          "type": "boolean",
+          "desc": "true if finished."
+        },
+        {
+          "type": "string",
+          "desc": "\"completed\" or failure reason (no_active_transition, transition_id_mismatch, route_name_mismatch)."
+        }
       ],
       "internal": false
     },
     "cancel": {
-      "desc": "Annule la transition active, efface l'état et revient à idle.",
+      "desc": "Cancels the active transition, clears the state and returns to idle.",
       "params": {
-        "reason": {"type": "string|nil", "desc": "Raison (\"cancelled\" par défaut), journalisée."}
+        "reason": {
+          "type": "string|nil",
+          "desc": "Reason (\"cancelled\" by default), logged."
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "true s'il y avait une transition."},
-        {"type": "string|nil", "desc": "Identifiant de la transition annulée."}
+        {
+          "type": "boolean",
+          "desc": "true if there was a transition."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Identifier of the cancelled transition."
+        }
       ],
       "internal": false
     },
     "reset": {
-      "desc": "Réinitialise l'état (tests ou récupération) : statut idle, identifiant, temps, session. Ne remet pas à nil kind, toRoute ni fromRoute.",
+      "desc": "Resets the state (tests or recovery): idle status, identifier, time, session. Does not reset kind, toRoute or fromRoute to nil.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getDebugInfo": {
-      "desc": "Renvoie des informations de debug.",
+      "desc": "Returns debug information.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{status, transitionId, elapsedTime}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{status, transitionId, elapsedTime}."
+        }
+      ],
       "internal": false
     }
   }

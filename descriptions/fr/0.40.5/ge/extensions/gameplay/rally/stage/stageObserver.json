@@ -1,0 +1,56 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/stage/stageObserver.lua",
+  "module": "Observateur de spéciale de rallye : à chaque mise à jour, il compare l'emprise (8 coins de la boîte englobante orientée, OOBB) du véhicule entre deux frames et détecte son passage à travers les « pathnodes » de timing (splits, arrivée). Il calcule le temps de franchissement interpolé dans la frame, renseigne les champs tracker* des données d'observation, marque les nœuds manqués (hors fenêtre ou hors route) et alimente stageTimingState. Utilisé par rallyManager. Le module renvoie un constructeur.",
+  "notes": [
+    "Deux modes d'autorité : 'shadow' (par défaut, observation seule) et 'tracker' (toute autre valeur est ramenée à 'shadow').",
+    "Fenêtres par défaut en mètres le long de la route : vérification 80 derrière / 120 devant, nœud considéré manqué à plus de 120 derrière.",
+    "Un pathnode est franchi si un coin du véhicule traverse la sphère de rayon pathnodeRadius (sans normale) ou le plan défini par la normale (avec pathnodeHasNormal) pendant la frame.",
+    "Si tracker.state vaut 'offRoute' au franchissement, le split est marqué manquant avec la raison 'offRoute' (sauf l'arrivée) ; si le nœud est dépassé sans être observé, la raison est 'missedWindow'.",
+    "Le franchissement d'un nœud de type 'finish' termine l'étape (stageComplete, completeAt sur stageTimingState).",
+    "setFootprintCorners utilise veh:getSpawnWorldOOBB() si disponible, sinon be:getObjectOOBB*XYZ ; il renvoie false tant que l'OOBB n'est pas initialisée."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet observateur renvoyé par le constructeur ; options facultatives : authorityMode, checkWindowBehindMeters, checkWindowAheadMeters, missWindowBehindMeters.",
+      "functions": {
+        "init": {
+          "desc": "Initialise le mode d'autorité, les tailles de fenêtres et le stockage des coins, puis appelle reset.",
+          "params": {"options": {"type": "table|nil", "desc": "Voir description de la classe"}},
+          "internal": true
+        },
+        "setAuthorityMode": {
+          "desc": "Définit le mode d'autorité : 'tracker' ou, pour toute autre valeur, 'shadow'.",
+          "params": {"mode": {"type": "string", "desc": "'tracker' ou 'shadow'"}}
+        },
+        "getAuthorityMode": {
+          "desc": "Renvoie le mode d'autorité courant.",
+          "returns": [{"type": "string", "desc": "'tracker' ou 'shadow'"}]
+        },
+        "reset": {"desc": "Remet à zéro la distance précédente, l'index de départ d'observation, l'emprise précédente, l'état de fin d'étape, les dernières valeurs et le compteur updateSerial."},
+        "resetFootprint": {"desc": "Oublie l'emprise précédente : la prochaine update ne fait que la mémoriser, sans détecter de franchissement."},
+        "resetAfterTeleport": {"desc": "Oublie la distance et l'emprise précédentes pour éviter un faux franchissement après une téléportation."},
+        "recordRaceSplit": {
+          "desc": "Renseigne splitData.time et splitData.source ('race') s'ils sont absents.",
+          "params": {
+            "splitData": {"type": "table|nil", "desc": "Données du split"},
+            "time": {"type": "number", "desc": "Temps du split en secondes"}
+          }
+        },
+        "update": {
+          "desc": "Met à jour l'observation pour la frame : lit le temps d'étape, récupère les coins du véhicule, avance la fenêtre d'observation, teste le franchissement des pathnodes proches et met à jour trackerObserved/trackerMissed, trackerTime, time et source, ainsi que stageTimingState.",
+          "params": {
+            "context": {"type": "table", "desc": "{tracker (distFromStart, state), pathnodeObservationList (ou splitList), vehId, raceData, stageTime, stageFrameStartTime, stageFrameDt, stageTimingState}"}
+          }
+        },
+        "getStageTime": {
+          "desc": "Temps de fin d'étape s'il est connu, sinon dernier temps d'étape échantillonné.",
+          "returns": [{"type": "number|nil", "desc": "secondes"}]
+        },
+        "getState": {
+          "desc": "Instantané : authorityMode, stageComplete, stageFinishTime, currentStageTime, currentStageTimeRounded (au dixième), trackerState, raceActive, raceComplete.",
+          "returns": [{"type": "table", "desc": "État"}]
+        }
+      }
+    }
+  }
+}

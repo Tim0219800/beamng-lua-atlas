@@ -2,111 +2,111 @@
 -- tim19Atlas stub generated from lua/ge/extensions/scenario/scenariohelper.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Boîte à outils des scénarios (extension GE scenario_scenariohelper). Elle enveloppe l'envoi de commandes Lua à un véhicule par son nom dans le scenetree, le pilotage de l'IA (mode, agressivité, route, cible, évitement), la casse de groupes de poutres, et deux messages d'interface. C'est l'API utilisée par les scénarios de moddeurs. Chaque fonction IA envoie une commande textuelle ai.xxx(...) au VM du véhicule, puis, si scenario_scenarios est chargé, mémorise l'état via scenario_scenarios.updateVehicleAiState pour pouvoir le rejouer après un reset.
---- Accès : extension `scenario_scenariohelper` : `extensions.load("scenario_scenariohelper")`, puis la globale `scenario_scenariohelper`
+--- Scenario toolbox (GE extension scenario_scenariohelper). It wraps sending Lua commands to a vehicle by its name in the scenetree, AI control (mode, aggression, route, target, avoidance), breaking beam groups, and two interface messages. It is the API used by modders' scenarios. Each AI function sends a textual ai.xxx(...) command to the vehicle VM, then, if scenario_scenarios is loaded, stores the state via scenario_scenarios.updateVehicleAiState so it can be replayed after a reset.
+--- Access: extension `scenario_scenariohelper`: `extensions.load("scenario_scenariohelper")`, then the global `scenario_scenariohelper`
 ---@class scenario_scenariohelper
 scenario_scenariohelper = {}
 
---- Casse un groupe de rupture (breakGroup) du véhicule en exécutant beamstate.breakBreakGroup(group) dans son VM.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:29
----@param vehicleName string Nom du véhicule. Doit exister, sinon erreur.
----@param group string Nom du breakGroup défini dans le jbeam.
+--- Breaks a break group (breakGroup) of the vehicle by executing beamstate.breakBreakGroup(group) in its VM.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:29
+---@param vehicleName string Vehicle name. Must exist, otherwise error.
+---@param group string Name of the breakGroup defined in the jbeam.
 function scenario_scenariohelper.breakBreakGroup(vehicleName, group) end
 
---- Affiche un message flash à l'écran via guihooks.trigger('ScenarioFlashMessage', {{msg, duration, 0, useBiggerText}}).
----Source : lua/ge/extensions/scenario/scenariohelper.lua:178
----@param msg string Texte à afficher.
----@param duration number Durée d'affichage (secondes, déduit du code).
----@param useBiggerText boolean|nil true pour un texte plus gros ; toute autre valeur est traitée comme false.
+--- Displays a flash message on screen via guihooks.trigger('ScenarioFlashMessage', {{msg, duration, 0, useBiggerText}}).
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:178
+---@param msg string Text to display.
+---@param duration number Display duration (seconds, inferred from code).
+---@param useBiggerText boolean|nil true for larger text; any other value is treated as false.
 function scenario_scenariohelper.flashUiMessage(msg, duration, useBiggerText) end
 
---- Calcule la distance entre les positions de deux objets du scenetree.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:189
----@param sceneObjectName1 string Nom du premier objet.
----@param sceneObjectName2 string Nom du second objet.
----@return number  Distance en mètres, ou -1 si l'un des objets est introuvable.
+--- Computes the distance between the positions of two scenetree objects.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:189
+---@param sceneObjectName1 string Name of the first object.
+---@param sceneObjectName2 string Name of the second object.
+---@return number  Distance in meters, or -1 if either object is not found.
 function scenario_scenariohelper.getDistanceBetweenSceneObjects(sceneObjectName1, sceneObjectName2) end
 
---- Renvoie l'objet du scenetree portant ce nom (scenetree.findObject), typiquement un véhicule.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:14
----@param name string Nom de l'objet dans le scenetree.
----@return table|nil  L'objet, ou nil s'il n'existe pas.
+--- Returns the scenetree object with this name (scenetree.findObject), typically a vehicle.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:14
+---@param name string Object name in the scenetree.
+---@return table|nil  The object, or nil if it does not exist.
 function scenario_scenariohelper.getVehicleByName(name) end
 
---- Envoie une chaîne de code Lua à exécuter dans le VM du véhicule donné (appelle vehicle:queueLuaCommand). Aucun test sur vehicle.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:9
----@param vehicle table Objet véhicule (BeamObject) déjà résolu, par exemple renvoyé par getVehicleByName.
----@param command string Code Lua à exécuter côté véhicule.
+--- Sends a string of Lua code to be executed in the given vehicle's VM (calls vehicle:queueLuaCommand). No check on vehicle.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:9
+---@param vehicle table Already resolved vehicle object (BeamObject), for example returned by getVehicleByName.
+---@param command string Lua code to execute on the vehicle side.
 function scenario_scenariohelper.queueLuaCommand(vehicle, command) end
 
---- Envoie une commande Lua à un véhicule retrouvé par son nom. Si le véhicule n'existe pas, écrit une erreur dans le log (tag scenarioHelper) et ne fait rien d'autre.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:19
----@param vehicleName string Nom du véhicule dans le scenetree.
----@param command string Code Lua à exécuter côté véhicule.
+--- Sends a Lua command to a vehicle found by its name. If the vehicle does not exist, writes an error to the log (tag scenarioHelper) and does nothing else.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:19
+---@param vehicleName string Vehicle name in the scenetree.
+---@param command string Lua code to execute on the vehicle side.
 function scenario_scenariohelper.queueLuaCommandByName(vehicleName, command) end
 
---- Met à jour l'affichage temps réel du scénario via guihooks.trigger('ScenarioRealtimeDisplay', {msg = msg}).
----Source : lua/ge/extensions/scenario/scenariohelper.lua:185
----@param msg any Contenu transmis à l'UI dans le champ msg.
+--- Updates the scenario's real-time display via guihooks.trigger('ScenarioRealtimeDisplay', {msg = msg}).
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:185
+---@param msg any Content passed to the UI in the msg field.
 function scenario_scenariohelper.realTimeUiDisplay(msg) end
 
---- Règle l'agressivité de l'IA (ai.setAggression) et la mémorise dans l'état scénario.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:58
----@param vehicleName string Nom du véhicule.
----@param aggression number Agressivité, insérée telle quelle dans la commande (le commentaire de setAiPath indique un maximum de 2).
+--- Sets the AI aggression (ai.setAggression) and stores it in the scenario state.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:58
+---@param vehicleName string Vehicle name.
+---@param aggression number Aggression, inserted as is in the command (the setAiPath comment states a maximum of 2).
 function scenario_scenariohelper.setAiAggression(vehicleName, aggression) end
 
---- Choisit le mode d'agressivité dynamique de l'IA en mode manual (ai.setAggressionMode). Avec 'rubberBand', l'agressivité varie avec la distance à l'adversaire : plus l'IA est proche, moins elle est agressive.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:67
----@param vehicleName string Nom du véhicule.
----@param aggrMode string Actuellement 'rubberBand' (seule valeur citée dans le code).
+--- Chooses the AI's dynamic aggression mode in manual mode (ai.setAggressionMode). With 'rubberBand', the aggression varies with the distance to the opponent: the closer the AI, the less aggressive.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:67
+---@param vehicleName string Vehicle name.
+---@param aggrMode string Currently 'rubberBand' (only value mentioned in the code).
 function scenario_scenariohelper.setAiAggressionMode(vehicleName, aggrMode) end
 
---- Active ou désactive l'évitement des autres voitures par l'IA (ai.setAvoidCars).
----Source : lua/ge/extensions/scenario/scenariohelper.lua:81
----@param vehicleName string Nom du véhicule.
----@param value string 'on' ou 'off'.
+--- Enables or disables the AI's avoidance of other cars (ai.setAvoidCars).
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:81
+---@param vehicleName string Vehicle name.
+---@param value string 'on' or 'off'.
 function scenario_scenariohelper.setAiAvoidCars(vehicleName, value) end
 
---- Fixe le mode de l'IA du véhicule via ai.setState({mode=...}). Si targetVehicleName est fourni, l'ID de ce véhicule est transmis comme targetObjectID (utile pour les modes qui visent un autre véhicule, par exemple chase ou flee). Mémorise le mode dans l'état scénario.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:44
----@param vehicleName string Nom du véhicule piloté par l'IA.
----@param mode string Mode IA (valeurs du ai.lua du véhicule, par exemple 'manual', 'chase', 'flee', 'stop', 'disabled' : déduit du code, non vérifié ici).
----@param targetVehicleName string|nil Nom du véhicule cible, facultatif. Doit exister s'il est fourni.
+--- Sets the vehicle's AI mode via ai.setState({mode=...}). If targetVehicleName is provided, that vehicle's ID is passed as targetObjectID (useful for modes that target another vehicle, for example chase or flee). Stores the mode in the scenario state.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:44
+---@param vehicleName string Name of the vehicle driven by the AI.
+---@param mode string AI mode (values from the vehicle's ai.lua, for example 'manual', 'chase', 'flee', 'stop', 'disabled': inferred from code, not verified here).
+---@param targetVehicleName string|nil Target vehicle name, optional. Must exist if provided.
 function scenario_scenariohelper.setAiMode(vehicleName, mode, targetVehicleName) end
 
---- Fait suivre à un véhicule IA une route entre waypoints (ai.driveUsingPath) avec de nombreuses options. L'IA calcule le plus court chemin entre waypoints consécutifs. Le tableau arg est aussi sauvegardé (core_checkpoints.saveAIPath et scenario_scenarios.updateVehicleAiState) pour être réappliqué au reset.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:104
----@param arg table Table d'options. Seuls vehicleName et waypoints sont obligatoires.
+--- Makes an AI vehicle follow a route between waypoints (ai.driveUsingPath) with many options. The AI computes the shortest path between consecutive waypoints. The arg table is also saved (core_checkpoints.saveAIPath and scenario_scenarios.updateVehicleAiState) to be reapplied on reset.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:104
+---@param arg table Options table. Only vehicleName and waypoints are required.
 function scenario_scenariohelper.setAiPath(arg) end
 
---- Active la progression automatique de l'IA le long d'une liste de waypoints (ai.driveUsingPath avec wpTargetList). Le mode IA doit être manual ou flee. Version simple de setAiPath, sans options de vitesse ou de tours.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:90
----@param vehicleName string Nom du véhicule.
----@param waypoints string[] Liste de noms de waypoints, sérialisée avec serialize().
+--- Enables the AI's automatic progression along a list of waypoints (ai.driveUsingPath with wpTargetList). The AI mode must be manual or flee. Simple version of setAiPath, without speed or lap options.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:90
+---@param vehicleName string Vehicle name.
+---@param waypoints string[] List of waypoint names, serialized with serialize().
 function scenario_scenariohelper.setAiRoute(vehicleName, waypoints) end
 
---- Définit la cible de l'IA (ai.setTarget) et la mémorise dans l'état scénario.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:74
----@param vehicleName string Nom du véhicule piloté par l'IA.
----@param target string Cible transmise à ai.setTarget (nom, entre guillemets dans la commande).
+--- Sets the AI target (ai.setTarget) and stores it in the scenario state.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:74
+---@param vehicleName string Name of the vehicle driven by the AI.
+---@param target string Target passed to ai.setTarget (name, in quotes in the command).
 function scenario_scenariohelper.setAiTarget(vehicleName, target) end
 
---- Règle le seuil de drivabilité de coupure de l'IA (ai.setCutOffDrivability), qui sert à écarter les routes de trop faible drivabilité.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:97
----@param vehicleName string Nom du véhicule.
----@param drivability number Valeur de drivabilité, insérée telle quelle dans la commande.
+--- Sets the AI's cut-off drivability threshold (ai.setCutOffDrivability), used to discard roads of too low drivability.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:97
+---@param vehicleName string Vehicle name.
+---@param drivability number Drivability value, inserted as is in the command.
 function scenario_scenariohelper.setCutOffDrivability(vehicleName, drivability) end
 
---- Active le suivi cartographique du véhicule (mapmgr.enableTracking) sous un nom de suivi personnalisé.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:39
----@param vehicleName string Nom du véhicule dans le scenetree.
----@param trackingName string Nom de suivi à utiliser.
+--- Enables map tracking of the vehicle (mapmgr.enableTracking) under a custom tracking name.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:39
+---@param vehicleName string Vehicle name in the scenetree.
+---@param trackingName string Tracking name to use.
 function scenario_scenariohelper.trackVehicle(vehicleName, trackingName) end
 
---- Déclenche un groupe de déformation (beamstate.triggerDeformGroup) : bascule vers un matériau cassé, par exemple pour briser une vitre.
----Source : lua/ge/extensions/scenario/scenariohelper.lua:34
----@param vehicleName string Nom du véhicule. Doit exister, sinon erreur.
----@param group string Nom du deformGroup défini dans le jbeam.
+--- Triggers a deform group (beamstate.triggerDeformGroup): switches to a broken material, for example to shatter a window.
+---Source: lua/ge/extensions/scenario/scenariohelper.lua:34
+---@param vehicleName string Vehicle name. Must exist, otherwise error.
+---@param group string Name of the deformGroup defined in the jbeam.
 function scenario_scenariohelper.triggerDeformGroup(vehicleName, group) end
 

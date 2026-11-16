@@ -2,32 +2,32 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+--- Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 ---@class flowgraph_nodes_mission_clearLightsDragRace_C
 local flowgraph_nodes_mission_clearLightsDragRace_C = {}
 
---- Vide la table lights et met flow a false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua:71
+--- Clears the lights table and sets flow to false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua:71
 function flowgraph_nodes_mission_clearLightsDragRace_C:_executionStarted() end
 
---- Cache les afficheurs display_time_i_l/r et display_speed_i_l/r (i de 1 a 5).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua:55
+--- Hides the displays display_time_i_l/r and display_speed_i_l/r (i from 1 to 5).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua:55
 function flowgraph_nodes_mission_clearLightsDragRace_C:clearDigits() end
 
---- Meme initialisation.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua:76
+--- Same initialization.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua:76
 function flowgraph_nodes_mission_clearLightsDragRace_C:init() end
 
---- Recherche les objets lumineux dans la scene et les cache tous (setHidden(true)).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua:18
+--- Searches the scene for the light objects and hides them all (setHidden(true)).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua:18
 function flowgraph_nodes_mission_clearLightsDragRace_C:initLights() end
 
---- Appelle initLights et clearDigits a chaque frame de flux (pas de verification du flux d'entree) et met flow a true.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua:81
+--- Calls initLights and clearDigits on every frame of flow (no check of the input flow) and sets flow to true.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua:81
 function flowgraph_nodes_mission_clearLightsDragRace_C:work() end
 

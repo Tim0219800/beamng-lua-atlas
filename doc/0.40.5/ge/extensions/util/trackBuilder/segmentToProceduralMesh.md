@@ -1,72 +1,72 @@
 # `util_trackBuilder_segmentToProceduralMesh`
 
-*Fichier : `lua/ge/extensions/util/trackBuilder/segmentToProceduralMesh.lua` · VM : Game Engine (GE) · 106 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/trackBuilder/segmentToProceduralMesh.lua` · VM: Game Engine (GE) · 106 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_trackBuilder_segmentToProceduralMesh` : `extensions.load("util_trackBuilder_segmentToProceduralMesh")`, puis la globale `util_trackBuilder_segmentToProceduralMesh`
+**Access:** extension `util_trackBuilder_segmentToProceduralMesh`: `extensions.load("util_trackBuilder_segmentToProceduralMesh")`, then the global `util_trackBuilder_segmentToProceduralMesh`
 
-Transforme un segment de piste du Track Builder en objet ProceduralMesh dans la scène. Il calcule le repère local (nx, ny, nz) de chaque point de contrôle, assemble les meshes des modules basicBorders, basicCenters, borderWallMesh et ceilingMesh, puis crée (ou met à jour) l'objet 'procMesh<subTrackIndex>-<index>' dans MissionGroup.
+Turns a Track Builder track segment into a ProceduralMesh object in the scene. It computes the local frame (nx, ny, nz) of each control point, assembles the meshes from the basicBorders, basicCenters, borderWallMesh and ceilingMesh modules, then creates (or updates) the object 'procMesh<subTrackIndex>-<index>' in MissionGroup.
 
-## Remarques
+## Notes
 
-- materialize réutilise segment.mesh s'il existe (createMesh à nouveau) et le crée sinon ; l'objet a canSave = false.
-- Le même tableau de meshes est donné trois fois (segment.meshes[1], [2], [3]) : il n'y a pas de LOD distinct.
-- materialize remet submeshIndexes/submeshCount à zéro, puis submeshCount à nil après la compilation ; segment.meshes est effacé à la fin.
-- Bug : M.settings = settings, mais la variable settings n'existe pas dans ce fichier ; le champ vaut nil.
-- Le paramètre lod de compileMeshInfo n'est pas utilisé.
-- clearShapes délègue à basicCenters.clearShapes, qui ne fait rien en pratique.
+- materialize reuses segment.mesh if it exists (createMesh again) and creates it otherwise; the object has canSave = false.
+- The same mesh array is given three times (segment.meshes[1], [2], [3]): there is no distinct LOD.
+- materialize resets submeshIndexes/submeshCount to zero, then submeshCount to nil after compilation; segment.meshes is cleared at the end.
+- Bug: M.settings = settings, but the variable settings does not exist in this file; the field is nil.
+- The lod parameter of compileMeshInfo is not used.
+- clearShapes delegates to basicCenters.clearShapes, which does nothing in practice.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_trackBuilder_segmentToProceduralMesh.calculatePointCoordinateSystem(segment)` | Pour chaque point du segment disponible pour la qualité courante (controlPoint.quality[segment.quality]), calcule orientation = {nx, ny, nz} en tournant les axes X, Y, Z par controlPoint.finalRot. | 55 |
-| `util_trackBuilder_segmentToProceduralMesh.clearShapes()` | Demande à basicCenters de vider ses caches de profils (sans effet réel, voir notes). | 48 |
-| `util_trackBuilder_segmentToProceduralMesh.compileMeshInfo(segment, lod)` | Concatène les meshes des bordures, du centre, des murs et du plafond du segment et les renvoie sous forme de liste. Les caps de début et fin sont gérés par les modules appelés. | 76 |
-| `util_trackBuilder_segmentToProceduralMesh.getReferences()` | Renvoie les modules basicCenters et basicBorders (utilisés pour injecter ces dépendances dans multiTrackMerger.setReferences). | 95 |
-| `util_trackBuilder_segmentToProceduralMesh.materialize(segment)` | Fonction principale : calcule les repères des points, compile les meshes du segment et crée ou met à jour son ProceduralMesh (stocké dans segment.mesh). | 16 |
-| `util_trackBuilder_segmentToProceduralMesh.rotateVectorByQuat(v, q)` | Renvoie le vecteur v tourné par le quaternion q (q * v). | 92 |
+| `util_trackBuilder_segmentToProceduralMesh.calculatePointCoordinateSystem(segment)` | For each segment point available for the current quality (controlPoint.quality[segment.quality]), computes orientation = {nx, ny, nz} by rotating the X, Y, Z axes by controlPoint.finalRot. | 55 |
+| `util_trackBuilder_segmentToProceduralMesh.clearShapes()` | Asks basicCenters to empty its profile caches (no real effect, see notes). | 48 |
+| `util_trackBuilder_segmentToProceduralMesh.compileMeshInfo(segment, lod)` | Concatenates the segment's border, center, wall and ceiling meshes and returns them as a list. The start and end caps are handled by the called modules. | 76 |
+| `util_trackBuilder_segmentToProceduralMesh.getReferences()` | Returns the basicCenters and basicBorders modules (used to inject these dependencies into multiTrackMerger.setReferences). | 95 |
+| `util_trackBuilder_segmentToProceduralMesh.materialize(segment)` | Main function: computes the points' frames, compiles the segment's meshes and creates or updates its ProceduralMesh (stored in segment.mesh). | 16 |
+| `util_trackBuilder_segmentToProceduralMesh.rotateVectorByQuat(v, q)` | Returns the vector v rotated by the quaternion q (q * v). | 92 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_trackBuilder_segmentToProceduralMesh.calculatePointCoordinateSystem(segment)`
 
-Pour chaque point du segment disponible pour la qualité courante (controlPoint.quality[segment.quality]), calcule orientation = {nx, ny, nz} en tournant les axes X, Y, Z par controlPoint.finalRot.
+For each segment point available for the current quality (controlPoint.quality[segment.quality]), computes orientation = {nx, ny, nz} by rotating the X, Y, Z axes by controlPoint.finalRot.
 
-- `segment` (*table*) : Segment dont les points reçoivent le champ orientation.
+- `segment` (*table*) : Segment whose points receive the orientation field.
 
 #### `util_trackBuilder_segmentToProceduralMesh.compileMeshInfo(segment, lod)`
 
-Concatène les meshes des bordures, du centre, des murs et du plafond du segment et les renvoie sous forme de liste. Les caps de début et fin sont gérés par les modules appelés.
+Concatenates the segment's border, center, wall and ceiling meshes and returns them as a list. The start and end caps are handled by the called modules.
 
-- `segment` (*table*) : Segment du Track Builder.
-- `lod` (*any*) : Non utilisé.
-- **renvoie** : table[] Liste de tables de mesh {verts, uvs, normals, faces, material, tag}.
+- `segment` (*table*) : Track Builder segment.
+- `lod` (*any*) : Not used.
+- **returns**: table[] List of mesh tables {verts, uvs, normals, faces, material, tag}.
 
 #### `util_trackBuilder_segmentToProceduralMesh.getReferences()`
 
-Renvoie les modules basicCenters et basicBorders (utilisés pour injecter ces dépendances dans multiTrackMerger.setReferences).
+Returns the basicCenters and basicBorders modules (used to inject these dependencies into multiTrackMerger.setReferences).
 
-- **renvoie** : table {basicCenters = module, basicBorders = module}.
+- **returns**: table {basicCenters = module, basicBorders = module}.
 
 #### `util_trackBuilder_segmentToProceduralMesh.materialize(segment)`
 
-Fonction principale : calcule les repères des points, compile les meshes du segment et crée ou met à jour son ProceduralMesh (stocké dans segment.mesh).
+Main function: computes the points' frames, compiles the segment's meshes and creates or updates its ProceduralMesh (stored in segment.mesh).
 
-- `segment` (*table*) : Segment avec points, quality, subTrackIndex, index (et mesh s'il existe déjà).
+- `segment` (*table*) : Segment with points, quality, subTrackIndex, index (and mesh if it already exists).
 
 #### `util_trackBuilder_segmentToProceduralMesh.rotateVectorByQuat(v, q)`
 
-Renvoie le vecteur v tourné par le quaternion q (q * v).
+Returns the vector v rotated by the quaternion q (q * v).
 
-- `v` (*vec3*) : Vecteur à tourner.
+- `v` (*vec3*) : Vector to rotate.
 - `q` (*quat*) : Rotation.
-- **renvoie** : vec3 Vecteur tourné.
+- **returns**: vec3 Rotated vector.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `settings` | nil | Toujours nil : exporte une variable locale jamais définie (bug). |
+| `settings` | nil | Always nil: exports a local variable that is never defined (bug). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/trackBuilder/segmentToProceduralMesh.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/trackBuilder/segmentToProceduralMesh.lua`.*

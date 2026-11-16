@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/raceRecoveriesUsed.lua",
+  "module": "Nœud flowgraph « Set UI Race Recovery » (catégorie repeat_instant, auteur BeamNG, durée) : met à jour l'app UI du compteur de récupérations (reset véhicule). Entrées : « cur » (number ou string), « max ». Texte envoyé via 'RaceRecoveryCounterSet' (ex. « Recoveries Used: 2 / 5 ») ; réinitialisé avec 'RaceRecoveryCounterReset'.",
+  "notes": [
+    "Le texte « Recoveries Used » est en dur (non traduit)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "work": {
+          "desc": "Envoie le compteur si cur et le flux d'entrée sont actifs, sinon réinitialise.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,43 +1,43 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenBegin.lua",
-  "module": "Nœud « StartScreen Begin » (couleur ui). Commence la construction de l'écran de démarrage d'une mission : à la première frame avec flow actif, il appelle modules.ui:startUIBuilding('startScreen'), ajoute l'en-tête (nom du projet), fixe le texte du bouton Start et, si simple est vrai, passe l'écran en mode simple. Entrées : flow, reset (impulsion), triggerStart (impulsion, simule un clic sur Start), startButtonText (string, défaut « ui.scenarios.start.start »), simple (bool). Sorties : flow (true une fois le bouton Start cliqué), build (chainFlow, une frame pour chaîner les panneaux). Se termine avec un nœud « Screen Finish ».",
+  "module": "Node \"StartScreen Begin\" (color ui). Starts building the start screen of a mission: on the first frame with flow active, it calls modules.ui:startUIBuilding('startScreen'), adds the header (project name), sets the Start button text and, if simple is true, switches the screen to simple mode. Inputs: flow, reset (pulse), triggerStart (pulse, simulates a click on Start), startButtonText (string, default \"ui.scenarios.start.start\"), simple (bool). Outputs: flow (true once the Start button is clicked), build (chainFlow, one frame to chain the panels). Ends with a \"Screen Finish\" node.",
   "notes": [
-    "Le code de repli par minuterie (started/startTime) et le hook onUILayoutLoaded sont commentés dans le fichier."
+    "The timer fallback code (started/startTime) and the onUILayoutLoaded hook are commented out in the file."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "_executionStarted": {
-          "desc": "Remet à zéro started/done/built et l'auto-skip au démarrage du projet.",
+          "desc": "Resets started/done/built and auto-skip when the project starts.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Appelé à l'arrêt du projet ; appelle closeDialogue (sans effet réel).",
+          "desc": "Called when the project stops; calls closeDialogue (no real effect).",
           "internal": true
         },
         "onClientEndMission": {
-          "desc": "Hook de fin de mission côté client ; appelle closeDialogue.",
+          "desc": "End-of-mission hook on the client side; calls closeDialogue.",
           "internal": true
         },
         "closeDialogue": {
-          "desc": "Ne fait rien en pratique : la navigation vers « play » est commentée.",
+          "desc": "Does nothing in practice: the navigation to \"play\" is commented out.",
           "internal": false
         },
         "onNodeReset": {
-          "desc": "Appelé quand le nœud est réinitialisé (pin reset ou reset du graphe).",
+          "desc": "Called when the node is reset (reset pin or graph reset).",
           "internal": true
         },
         "workOnce": {
-          "desc": "Variante exécutée une seule fois par le moteur flowgraph (corps vide ici).",
+          "desc": "Variant executed only once by the flowgraph engine (empty body here).",
           "internal": true
         },
         "work": {
-          "desc": "Gère reset, construit l'écran au premier flow, active build une frame, publie done sur le pin flow de sortie, déclenche startFromUi si triggerStart est reçu, et applique l'auto-skip (startingOptions.autoSkipStartScreen, après 2 s de temps réel).",
+          "desc": "Handles reset, builds the screen at the first flow, activates build for one frame, publishes done on the output flow pin, triggers startFromUi if triggerStart is received, and applies auto-skip (startingOptions.autoSkipStartScreen, after 2 s of real time).",
           "internal": true
         },
         "startFromUi": {
-          "desc": "Simule le clic sur Start : met done=true, émet le hook onUIStartButtonClicked, navigue vers l'écran « play » et efface modules.ui.uiLayout.",
+          "desc": "Simulates the click on Start: sets done=true, emits the onUIStartButtonClicked hook, navigates to the \"play\" screen and clears modules.ui.uiLayout.",
           "internal": false
         }
       }

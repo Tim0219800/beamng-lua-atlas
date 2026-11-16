@@ -1,80 +1,80 @@
 # `career_modules_debug_vehicleSpawn`
 
-*Fichier : `lua/ge/extensions/career/modules/debug/vehicleSpawn.lua` · VM : Game Engine (GE) · 131 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/debug/vehicleSpawn.lua` · VM: Game Engine (GE) · 131 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_debug_vehicleSpawn` : `extensions.load("career_modules_debug_vehicleSpawn")`, puis la globale `career_modules_debug_vehicleSpawn`
+**Access:** extension `career_modules_debug_vehicleSpawn`: `extensions.load("career_modules_debug_vehicleSpawn")`, then the global `career_modules_debug_vehicleSpawn`
 
-Outil de debug « Vehicle Spawn » : ajoute un marqueur de point d'intérêt au parking 'debugParking' de west_coast_usa (facilities.sites.json) dont la fenêtre de détail propose de faire apparaître un véhicule ou une remorque 'loués' (sunburst/race_M, boxutility/loaded_200), éventuellement ajoutés à l'inventaire (owned = false). spawnVehicle enchaîne fondu au noir, spawn, initPartConditions, attente puis fondu retour via util_stepHandler.
+"Vehicle Spawn" debug tool: adds a point-of-interest marker to the 'debugParking' parking of west_coast_usa (facilities.sites.json) whose detail window offers to spawn a 'rented' vehicle or trailer (sunburst/race_M, boxutility/loaded_200), optionally added to the inventory (owned = false). spawnVehicle chains fade to black, spawn, initPartConditions, wait, then fade back in via util_stepHandler.
 
-## Exemple
+## Example
 
 ```lua
 career_modules_debug_vehicleSpawn.spawnVehicle('boxutility', 'loaded_200', true)
 ```
 
-## Remarques
+## Notes
 
-- Dépend de gameplay_sites_sitesManager.
-- Le chemin /levels/west_coast_usa/facilities.sites.json est en dur : l'outil ne fonctionne que sur cette carte.
-- buttonPressed appelle buttonOptions[i], table qui n'est jamais remplie dans ce fichier (les boutons passent par luaCallback).
+- Depends on gameplay_sites_sitesManager.
+- The path /levels/west_coast_usa/facilities.sites.json is hardcoded: the tool only works on this map.
+- buttonPressed calls buttonOptions[i], a table that is never filled in this file (the buttons go through luaCallback).
 
-**Dépendances (chargées avant) :** `gameplay_sites_sitesManager`
+**Dependencies (loaded first):** `gameplay_sites_sitesManager`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_debug_vehicleSpawn.buttonPressed(i)` | Exécute buttonOptions[i]() ; cette table n'est jamais remplie dans le module. *(interne)* | 81 |
-| `career_modules_debug_vehicleSpawn.drawDebugMenu()` | À la première frame charge les sites de west_coast_usa et récupère 'debugParking' ; dessine la fenêtre 'Vehicle Spawn' avec un bouton 'Spawn and rent a vehicle' (sunburst/race_M, ajouté à l'inventaire). *(interne)* | 30 |
-| `career_modules_debug_vehicleSpawn.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook de la liste de POI : si le parking 'debugParking' est chargé, ajoute un élément 'debugVehicleSpawn' avec un marqueur de parking (path, pos, rot, scl). *(interne)* *(hook)* | 15 |
-| `career_modules_debug_vehicleSpawn.onPoiDetailPromptOpening(elemData, promptData)` | Hook : si l'élément est 'debugVehicleSpawn', ajoute à promptData un bouton 'Open Debug Menu' qui affiche un dialogue (guihooks 'showConfirmationDialog') avec trois choix de spawn. *(interne)* *(hook)* | 85 |
-| `career_modules_debug_vehicleSpawn.spawnVehicle(model, config, addToInventory)` | Fait apparaître un véhicule avec fondu au noir, initialise ses part conditions, attend la réponse du véhicule (ping) puis fait le fondu retour ; si addToInventory est vrai, l'ajoute à l'inventaire avec owned = false. | 48 |
+| `career_modules_debug_vehicleSpawn.buttonPressed(i)` | Runs buttonOptions[i](); this table is never filled in the module. *(internal)* | 81 |
+| `career_modules_debug_vehicleSpawn.drawDebugMenu()` | On the first frame loads the west_coast_usa sites and gets 'debugParking'; draws the 'Vehicle Spawn' window with a 'Spawn and rent a vehicle' button (sunburst/race_M, added to the inventory). *(internal)* | 30 |
+| `career_modules_debug_vehicleSpawn.onGetRawPoiListForLevel(levelIdentifier, elements)` | POI list hook: if the 'debugParking' parking is loaded, adds a 'debugVehicleSpawn' element with a parking marker (path, pos, rot, scl). *(internal)* *(hook)* | 15 |
+| `career_modules_debug_vehicleSpawn.onPoiDetailPromptOpening(elemData, promptData)` | Hook: if the element is 'debugVehicleSpawn', adds to promptData an 'Open Debug Menu' button that shows a dialog (guihooks 'showConfirmationDialog') with three spawn choices. *(internal)* *(hook)* | 85 |
+| `career_modules_debug_vehicleSpawn.spawnVehicle(model, config, addToInventory)` | Spawns a vehicle with a fade to black, initializes its part conditions, waits for the vehicle's response (ping) then fades back in; if addToInventory is true, adds it to the inventory with owned = false. | 48 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_debug_vehicleSpawn.buttonPressed(i)`
 
-Exécute buttonOptions[i]() ; cette table n'est jamais remplie dans le module.
+Runs buttonOptions[i](); this table is never filled in the module.
 
-- `i` (*integer*) : Index du bouton.
+- `i` (*integer*) : Button index.
 
 #### `career_modules_debug_vehicleSpawn.onGetRawPoiListForLevel(levelIdentifier, elements)`
 
-Hook de la liste de POI : si le parking 'debugParking' est chargé, ajoute un élément 'debugVehicleSpawn' avec un marqueur de parking (path, pos, rot, scl).
+POI list hook: if the 'debugParking' parking is loaded, adds a 'debugVehicleSpawn' element with a parking marker (path, pos, rot, scl).
 
-- `levelIdentifier` (*string*) : Identifiant du niveau.
-- `elements` (*table[]*) : Liste de POI à compléter.
+- `levelIdentifier` (*string*) : Level identifier.
+- `elements` (*table[]*) : POI list to complete.
 
 #### `career_modules_debug_vehicleSpawn.onPoiDetailPromptOpening(elemData, promptData)`
 
-Hook : si l'élément est 'debugVehicleSpawn', ajoute à promptData un bouton 'Open Debug Menu' qui affiche un dialogue (guihooks 'showConfirmationDialog') avec trois choix de spawn.
+Hook: if the element is 'debugVehicleSpawn', adds to promptData an 'Open Debug Menu' button that shows a dialog (guihooks 'showConfirmationDialog') with three spawn choices.
 
-- `elemData` (*table[]*) : Éléments POI concernés.
-- `promptData` (*table[]*) : Liste de boutons du prompt à compléter.
+- `elemData` (*table[]*) : POI elements concerned.
+- `promptData` (*table[]*) : Prompt button list to complete.
 
 #### `career_modules_debug_vehicleSpawn.spawnVehicle(model, config, addToInventory)`
 
-Fait apparaître un véhicule avec fondu au noir, initialise ses part conditions, attend la réponse du véhicule (ping) puis fait le fondu retour ; si addToInventory est vrai, l'ajoute à l'inventaire avec owned = false.
+Spawns a vehicle with a fade to black, initializes its part conditions, waits for the vehicle's response (ping) then fades back in; if addToInventory is true, adds it to the inventory with owned = false.
 
-- `model` (*string*) : Modèle JBeam (ex. 'sunburst').
-- `config` (*string*) : Nom de configuration (ex. 'race_M').
-- `addToInventory` (*boolean|nil*) : Ajoute le véhicule à l'inventaire (non possédé).
+- `model` (*string*) : JBeam model (e.g. 'sunburst').
+- `config` (*string*) : Configuration name (e.g. 'race_M').
+- `addToInventory` (*boolean|nil*) : Adds the vehicle to the inventory (not owned).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `debugName` | string | 'Vehicle Spawn'. |
-| `debugOrder` | number | Ordre de tri (12). |
+| `debugOrder` | number | Sort order (12). |
 | `dependencies` | string[] | {"gameplay_sites_sitesManager"}. |
 
-**Évènements UI (guihooks.trigger) :** `showConfirmationDialog`
+**UI events (guihooks.trigger):** `showConfirmationDialog`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
-**Charge les extensions :** `util_stepHandler`
+**Loads extensions:** `util_stepHandler`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/debug/vehicleSpawn.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/debug/vehicleSpawn.lua`.*

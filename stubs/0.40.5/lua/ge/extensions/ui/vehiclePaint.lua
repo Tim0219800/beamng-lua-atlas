@@ -2,29 +2,29 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/vehiclePaint.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Petite fenêtre imgui de débogage « Metallic paint » pour régler en direct les paramètres de peinture métallique du véhicule du joueur (3 peintures : métallique, rugosité, vernis, rugosité du vernis). Elle lit et écrit le champ objet `metallicPaintData` du véhicule sous forme de chaîne de 4 nombres.
---- Accès : extension `ui_vehiclePaint` : `extensions.load("ui_vehiclePaint")`, puis la globale `ui_vehiclePaint`
+--- Small "Metallic paint" imgui debug window to adjust the metallic paint parameters of the player's vehicle live (3 paints: metallic, roughness, clearcoat, clearcoat roughness). It reads and writes the object field `metallicPaintData` of the vehicle as a string of 4 numbers.
+--- Access: extension `ui_vehiclePaint`: `extensions.load("ui_vehiclePaint")`, then the global `ui_vehiclePaint`
 ---@class ui_vehiclePaint
 ---@field dependencies string[] ui_imgui.
 ui_vehiclePaint = {}
 
---- Modifie une composante de metallicPaintData de la peinture 0 du véhicule du joueur 0 et réécrit le champ.
----Source : lua/ge/extensions/ui/vehiclePaint.lua:91
----@param change number Nouvelle valeur.
----@param index integer Indice (1 à 4) dans le tableau de 4 valeurs.
+--- Modifies one component of metallicPaintData of player 0's vehicle paint 0 and rewrites the field.
+---Source: lua/ge/extensions/ui/vehiclePaint.lua:91
+---@param change number New value.
+---@param index integer Index (1 to 4) in the array of 4 values.
 function ui_vehiclePaint.changeData(change, index) end
 
---- Hook appelé au chargement : crée le pointeur booléen de visibilité (faux) et le pointeur flottant des curseurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/vehiclePaint.lua:82
+--- Hook called on load: creates the visibility boolean pointer (false) and the float pointer of the sliders.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/vehiclePaint.lua:82
 function ui_vehiclePaint.onExtensionLoaded() end
 
---- Hook appelé à chaque frame : si la fenêtre est ouverte et qu'un véhicule joueur existe, dessine les curseurs des peintures 0, 1 et 2 et applique les changements via setField.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/vehiclePaint.lua:41
+--- Hook called every frame: if the window is open and a player vehicle exists, draws the sliders of paints 0, 1 and 2 and applies the changes via setField.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/vehiclePaint.lua:41
 function ui_vehiclePaint.onUpdate() end
 
---- Ouvre la fenêtre 'Metallic paint' (la fenêtre est dessinée dans onUpdate).
----Source : lua/ge/extensions/ui/vehiclePaint.lua:78
+--- Opens the 'Metallic paint' window (the window is drawn in onUpdate).
+---Source: lua/ge/extensions/ui/vehiclePaint.lua:78
 function ui_vehiclePaint.show() end
 

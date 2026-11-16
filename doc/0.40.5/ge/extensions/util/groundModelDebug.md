@@ -1,65 +1,65 @@
 # `util_groundModelDebug`
 
-*Fichier : `lua/ge/extensions/util/groundModelDebug.lua` · VM : Game Engine (GE) · 578 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/groundModelDebug.lua` · VM: Game Engine (GE) · 578 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_groundModelDebug` : `extensions.load("util_groundModelDebug")`, puis la globale `util_groundModelDebug`
+**Access:** extension `util_groundModelDebug`: `extensions.load("util_groundModelDebug")`, then the global `util_groundModelDebug`
 
-Fenêtre ImGui de débogage et de réglage des ground models (modèles de sol : friction, fluide de surface, type de collision). Elle permet d'afficher en 3D, autour du pointeur de la souris (ou du point de focus du debugger), la carte de hauteur des ground models, sa profondeur et les triangles de collision statiques, avec une couleur par ground model, et une densité de triangles de collision par tuile. Chaque ground model peut être modifié en direct (be:setGroundModel, aliases inclus) puis sauvegardé dans /art/groundmodels.json ; le bouton « Default » recharge les valeurs d'origine. Les réglages d'affichage sont mémorisés dans settings/editor/groundModelDebug_settings.json.
+ImGui window for debugging and tuning ground models (friction, surface fluid, collision type). It can display in 3D, around the mouse pointer (or the debugger's focus point), the ground models height map, its depth and the static collision triangles, with one color per ground model, and a collision triangle density per tile. Each ground model can be modified live (be:setGroundModel, aliases included) then saved to /art/groundmodels.json; the "Default" button reloads the original values. The display settings are stored in settings/editor/groundModelDebug_settings.json.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('util_groundModelDebug')
 extensions.util_groundModelDebug.openWindow()
 ```
 
-## Remarques
+## Notes
 
-- Les propriétés modifiables d'un ground model : collisiontype (index de matériau physique), defaultDepth (m), dragAnisotropy, flowBehaviorIndex, flowConsistencyIndex, fluidDensity (kg/m3), hydrodynamicFriction, roughnessCoefficient, shearStrength, skidMarks, slidingFrictionCoefficient, staticFrictionCoefficient, strength, stribeckVelocity (m/s). Les info-bulles de la fenêtre expliquent chacune.
-- Les modifications sont appliquées en direct côté jeu ; elles ne sont écrites dans /art/groundmodels.json que par le bouton Save (le fichier est remplacé en entier ; les ground models alias ne sont pas écrits mais listés dans le champ aliases de leur parent).
-- La fenêtre se reconstruit (setup) quand core_environment.groundModels est remplacé (par exemple au chargement d'un niveau).
-- À la fermeture de la fenêtre, l'affichage des triangles statiques et de la densité sont désactivés (Engine.setStaticColDebugEnabled(false)).
-- Le bloc d'affichage de la collision statique détaillée est commenté dans le code car il provoquait de fortes chutes de framerate.
+- The editable properties of a ground model: collisiontype (physical material index), defaultDepth (m), dragAnisotropy, flowBehaviorIndex, flowConsistencyIndex, fluidDensity (kg/m3), hydrodynamicFriction, roughnessCoefficient, shearStrength, skidMarks, slidingFrictionCoefficient, staticFrictionCoefficient, strength, stribeckVelocity (m/s). The window's tooltips explain each one.
+- Changes are applied live on the game side; they are written to /art/groundmodels.json only by the Save button (the file is replaced entirely; alias ground models are not written but listed in the aliases field of their parent).
+- The window rebuilds itself (setup) when core_environment.groundModels is replaced (for example when loading a level).
+- When the window closes, the display of static triangles and density is disabled (Engine.setStaticColDebugEnabled(false)).
+- The detailed static collision display block is commented out in the code because it caused large framerate drops.
 
-**Dépendances (chargées avant) :** `ui_imguiUtils`
+**Dependencies (loaded first):** `ui_imguiUtils`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_groundModelDebug.onDeserialized(data)` | Hook de désérialisation : restaure l'état sauvegardé et réactive le débogage des collisions statiques côté moteur si nécessaire. *(interne)* *(hook)* | 563 |
-| `util_groundModelDebug.onExtensionLoaded()` | Appelé au chargement : construit la liste des ground models depuis core_environment.groundModels et relit les réglages sauvegardés. *(interne)* *(hook)* | 551 |
-| `util_groundModelDebug.onSerialize()` | Hook de sérialisation avant un rechargement d'extensions : conserve l'état d'ouverture de la fenêtre, de l'affichage des triangles statiques et de la densité. *(interne)* *(hook)* | 555 |
-| `util_groundModelDebug.onUpdate(dt)` | Hook appelé chaque frame : tant que la fenêtre est ouverte, détermine le point de focus (raycast de la souris ou Lua.lastDebugFocusPos), dessine les visualisations debug de chaque ground model actif et l'interface ImGui. *(interne)* *(hook)* | 232 |
-| `util_groundModelDebug.openWindow()` | Ouvre la fenêtre « GroundModel Debug Window ». | 207 |
+| `util_groundModelDebug.onDeserialized(data)` | Deserialization hook: restores the saved state and re-enables static collision debugging on the engine side if needed. *(internal)* *(hook)* | 563 |
+| `util_groundModelDebug.onExtensionLoaded()` | Called on load: builds the ground models list from core_environment.groundModels and re-reads the saved settings. *(internal)* *(hook)* | 551 |
+| `util_groundModelDebug.onSerialize()` | Serialization hook before an extension reload: keeps the open state of the window, of the static triangles display and of the density. *(internal)* *(hook)* | 555 |
+| `util_groundModelDebug.onUpdate(dt)` | Hook called every frame: as long as the window is open, determines the focus point (mouse raycast or Lua.lastDebugFocusPos), draws the debug visualizations of each active ground model and the ImGui interface. *(internal)* *(hook)* | 232 |
+| `util_groundModelDebug.openWindow()` | Opens the "GroundModel Debug Window". | 207 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_groundModelDebug.onDeserialized(data)`
 
-Hook de désérialisation : restaure l'état sauvegardé et réactive le débogage des collisions statiques côté moteur si nécessaire.
+Deserialization hook: restores the saved state and re-enables static collision debugging on the engine side if needed.
 
-- `data` (*table*) : Données renvoyées par onSerialize
+- `data` (*table*) : Data returned by onSerialize
 
 #### `util_groundModelDebug.onSerialize()`
 
-Hook de sérialisation avant un rechargement d'extensions : conserve l'état d'ouverture de la fenêtre, de l'affichage des triangles statiques et de la densité.
+Serialization hook before an extension reload: keeps the open state of the window, of the static triangles display and of the density.
 
-- **renvoie** : table {windowOpen, staticDebug, colDensityEnabled}
+- **returns**: table {windowOpen, staticDebug, colDensityEnabled}
 
 #### `util_groundModelDebug.onUpdate(dt)`
 
-Hook appelé chaque frame : tant que la fenêtre est ouverte, détermine le point de focus (raycast de la souris ou Lua.lastDebugFocusPos), dessine les visualisations debug de chaque ground model actif et l'interface ImGui.
+Hook called every frame: as long as the window is open, determines the focus point (mouse raycast or Lua.lastDebugFocusPos), draws the debug visualizations of each active ground model and the ImGui interface.
 
-- `dt` (*number*) : Delta de temps en secondes (non utilisé)
+- `dt` (*number*) : Time delta in seconds (unused)
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | {"ui_imguiUtils"} : utilisé pour charger l'atlas d'icônes de l'éditeur |
+| `dependencies` | string[] | {"ui_imguiUtils"}: used to load the editor icon atlas |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `setStaticColDebugEnabled`, `setStaticColDebugPosShrink`
 - `be:` `setGroundModel`
@@ -67,4 +67,4 @@ Hook appelé chaque frame : tant que la fenêtre est ouverte, détermine le poin
 - `debugDrawer:` `drawSphere`, `renderGroundModelDebug`, `renderStaticColCounter`, `renderStaticColDebug`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/groundModelDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/groundModelDebug.lua`.*

@@ -1,42 +1,42 @@
 # `editor_rallyEditor_recceTab`
 
-*Fichier : `lua/ge/extensions/editor/rallyEditor/recceTab.lua` · VM : Game Engine (GE) · 174 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/rallyEditor/recceTab.lua` · VM: Game Engine (GE) · 174 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/rallyEditor/recceTab")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/rallyEditor/recceTab")` (file under extensions/ but not a regular extension)
 
-Onglet « Recce » de l'éditeur de rallye. Il charge l'enregistrement de reconnaissance de la mission (driveline + « cuts », via gameplay/rally/recce), affiche le nombre de points et la longueur de la driveline, permet de la sous-échantillonner (seuil de rectitude entre 0.98 et 1.0) et d'importer un pacenote par cut dans le notebook. Peut dessiner en 3D les étiquettes de timestamp de la driveline. Le module renvoie un constructeur de classe C.
+"Recce" tab of the rally editor. It loads the mission's recce recording (driveline + "cuts", via gameplay/rally/recce), displays the number of points and the length of the driveline, lets you downsample it (straightness threshold between 0.98 and 1.0) and import one pacenote per cut into the notebook. Can draw the driveline's timestamp labels in 3D. The module returns a class C constructor.
 
-## Remarques
+## Notes
 
-- Aucune fonction exportée : on obtient une instance avec require(...)(rallyEditor).
-- Plus le seuil de rectitude est proche de 1, plus on garde de points (infobulle de l'interface).
-- Dans drawSectionV3, self.originalDrivelineSize et self.recce.driveline sont utilisés sans test si refresh() a échoué : erreur possible dans ce cas.
+- No exported function: you get an instance with require(...)(rallyEditor).
+- The closer the straightness threshold is to 1, the more points are kept (UI tooltip).
+- In drawSectionV3, self.originalDrivelineSize and self.recce.driveline are used without a check if refresh() failed: possible error in that case.
 
-## Classe `C`
+## Class `C`
 
-Instance de l'onglet Recce (windowDescription = 'Recce').
+Recce tab instance (windowDescription = 'Recce').
 
-Le module renvoie un constructeur : `local obj = require("editor_rallyEditor_recceTab")(options)`.
+The module returns a constructor: `local obj = require("editor_rallyEditor_recceTab")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:downsample()` | Remplace la driveline du recce par une version sous-échantillonnée selon straightnessThreshold. | 54 |
-| `C:draw(mouseInfo)` | Dessine l'onglet (ne fait rien sans notebook). | 156 |
-| `C:drawDebugEntrypoint(mouseInfo)` | Dessin debug 3D : appelle recce:drawDebugRecce avec l'option d'étiquettes. | 161 |
-| `C:drawSectionV3()` | Dessine l'interface : rafraîchir, étiquettes, infos driveline/cuts, bouton Import, bouton Downsample et curseur de seuil. | 59 |
-| `C:formatDistance(dist)` | Formate une distance en « 123.456m », ou en km au-delà de 950 m. | 43 |
-| `C:import()` | Crée les données de pacenotes depuis les cuts, les ajoute au notebook (appendPacenotes) et affiche l'onglet Pacenotes. | 147 |
-| `C:init(rallyEditor)` | Constructeur : mémorise rallyEditor ; recce = nil, drawLabels = false. | 14 |
-| `C:refresh()` | Recrée l'objet Recce pour le dossier de la mission et charge driveline et cuts ; mémorise la taille d'origine. Log d'erreur en cas d'échec. | 138 |
-| `C:selected()` | Appelé quand l'onglet est sélectionné : recharge le recce (refresh) et émet onEditorEditModeChanged(nil, nil). | 29 |
-| `C:setPath(path)` | Définit le notebook courant. | 24 |
-| `C:unselect()` | Appelé quand l'onglet est quitté : émet onEditorEditModeChanged(nil, nil). | 37 |
+| `C:downsample()` | Replaces the recce's driveline with a version downsampled according to straightnessThreshold. | 54 |
+| `C:draw(mouseInfo)` | Draws the tab (does nothing without a notebook). | 156 |
+| `C:drawDebugEntrypoint(mouseInfo)` | 3D debug drawing: calls recce:drawDebugRecce with the labels option. | 161 |
+| `C:drawSectionV3()` | Draws the UI: refresh, labels, driveline/cuts info, Import button, Downsample button and threshold slider. | 59 |
+| `C:formatDistance(dist)` | Formats a distance as "123.456m", or in km above 950 m. | 43 |
+| `C:import()` | Creates the pacenote data from the cuts, adds them to the notebook (appendPacenotes) and displays the Pacenotes tab. | 147 |
+| `C:init(rallyEditor)` | Constructor: stores rallyEditor; recce = nil, drawLabels = false. | 14 |
+| `C:refresh()` | Recreates the Recce object for the mission folder and loads the driveline and cuts; stores the original size. Logs an error on failure. | 138 |
+| `C:selected()` | Called when the tab is selected: reloads the recce (refresh) and emits onEditorEditModeChanged(nil, nil). | 29 |
+| `C:setPath(path)` | Sets the current notebook. | 24 |
+| `C:unselect()` | Called when the tab is left: emits onEditorEditModeChanged(nil, nil). | 37 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onEditorEditModeChanged` — écouté par 1 module(s)
+- `onEditorEditModeChanged` — listened to by 1 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/rallyEditor/recceTab.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/rallyEditor/recceTab.lua`.*

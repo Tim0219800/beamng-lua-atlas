@@ -1,12 +1,12 @@
 # `gameplay_rally_notebook_pacenoteGenerator`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/notebook/pacenoteGenerator.lua` · VM : Game Engine (GE) · 287 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/notebook/pacenoteGenerator.lua` · VM: Game Engine (GE) · 287 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_notebook_pacenoteGenerator` : `extensions.load("gameplay_rally_notebook_pacenoteGenerator")`, puis la globale `gameplay_rally_notebook_pacenoteGenerator`
+**Access:** extension `gameplay_rally_notebook_pacenoteGenerator`: `extensions.load("gameplay_rally_notebook_pacenoteGenerator")`, then the global `gameplay_rally_notebook_pacenoteGenerator`
 
-Générateur simple de pacenotes : à partir d'une liste de points de la ligne de conduite (driveline), il détecte les virages gauche/droite en calculant, pour chaque point, le cercle passant par trois points (le point et ceux situés `lookAheadContext` indices avant/après, en 2D). Les zones quasi droites sont filtrées, puis les segments consécutifs de même direction sont fusionnés. Sert à l'outil de génération de l'éditeur de rallye.
+Simple pacenote generator: from a list of driveline points, it detects left/right corners by computing, for each point, the circle through three points (the point and those `lookAheadContext` indices before/after, in 2D). Nearly straight areas are filtered out, then consecutive segments of the same direction are merged. Used by the rally editor's generation tool.
 
-## Exemple
+## Example
 
 ```lua
 local gen = require('gameplay_rally_notebook_pacenoteGenerator')
@@ -14,34 +14,34 @@ local res = gen.detectCorners(drivelinePoints, { straightThreshold = 8 })
 for _, c in ipairs(res.corners) do print(c.direction, c.angle, c.length) end
 ```
 
-## Remarques
+## Notes
 
-- Direction : " right" ou " left" (avec espace initial) pour un virage, "" pour un tronçon droit. Angle en degrés : positif = droite, négatif = gauche.
-- detectCorners complète la table params passée en argument (elle est modifiée en place avec les valeurs par défaut).
-- Les deux premiers/derniers points ne reçoivent aucune donnée de direction ; la découpe en virages s'arrête 3 points avant la fin de la liste.
-- Si pointList est nil ou a moins de 3 points : log 'E' et résultat { sections = {}, corners = {} }.
+- Direction: " right" or " left" (with a leading space) for a corner, "" for a straight section. Angle in degrees: positive = right, negative = left.
+- detectCorners fills in the params table passed as an argument (it is modified in place with the default values).
+- The first/last two points receive no direction data; the split into corners stops 3 points before the end of the list.
+- If pointList is nil or has fewer than 3 points: 'E' log and result { sections = {}, corners = {} }.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_notebook_pacenoteGenerator.detectCorners(pointList, params)` | Détecte les virages le long d'une ligne de conduite. Renvoie `sections` (tous les tronçons, droits inclus, pour le dessin de débogage) et `corners` (seulement ceux ayant une direction, candidats à une pacenote). Chaque section contient pos, posEnd, direction, angle, length et nodes. | 218 |
+| `gameplay_rally_notebook_pacenoteGenerator.detectCorners(pointList, params)` | Detects corners along a driveline. Returns `sections` (all sections, straights included, for debug drawing) and `corners` (only those with a direction, pacenote candidates). Each section contains pos, posEnd, direction, angle, length and nodes. | 218 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_notebook_pacenoteGenerator.detectCorners(pointList, params)`
 
-Détecte les virages le long d'une ligne de conduite. Renvoie `sections` (tous les tronçons, droits inclus, pour le dessin de débogage) et `corners` (seulement ceux ayant une direction, candidats à une pacenote). Chaque section contient pos, posEnd, direction, angle, length et nodes.
+Detects corners along a driveline. Returns `sections` (all sections, straights included, for debug drawing) and `corners` (only those with a direction, pacenote candidates). Each section contains pos, posEnd, direction, angle, length and nodes.
 
-- `pointList` (*table*) : Liste de points : tables avec un champ .pos, ou directement des vec3.
-- `params` (*table|nil*) : Surcharge de defaultParams (lookAheadContext, straightThreshold, mergeDistanceThreshold, maxSimplifyIterations).
-- **renvoie** : table { sections = table[], corners = table[] }.
+- `pointList` (*table*) : List of points: tables with a .pos field, or vec3s directly.
+- `params` (*table|nil*) : Override of defaultParams (lookAheadContext, straightThreshold, mergeDistanceThreshold, maxSimplifyIterations).
+- **returns**: table { sections = table[], corners = table[] }.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `defaultParams` | table | Paramètres par défaut : lookAheadContext = 7 (nombre de points avant/après pour le cercle), straightThreshold = 5.0 (angle en degrés sous lequel un tronçon est considéré droit), mergeDistanceThreshold = 0.2 (m, distance à la droite pour fusionner des tronçons droits), maxSimplifyIterations = 10. |
+| `defaultParams` | table | Default parameters: lookAheadContext = 7 (number of points before/after for the circle), straightThreshold = 5.0 (angle in degrees below which a section is considered straight), mergeDistanceThreshold = 0.2 (m, distance to the line for merging straight sections), maxSimplifyIterations = 10. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/notebook/pacenoteGenerator.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/notebook/pacenoteGenerator.lua`.*

@@ -2,125 +2,125 @@
 -- tim19Atlas stub generated from lua/ge/extensions/freeroam/vueBigMap.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Backend Lua de la grande carte (big map) en interface Vue : prépare pour l'UI la liste des points d'intérêt (POI : missions, garages, stations, concessions, dragstrips, points de départ, véhicule du joueur…), les filtres et les groupes de la liste latérale, l'état de jeu, et relaie les actions de l'UI (sélection, survol, navigation, panoramique, exécution d'actions de POI) vers freeroam_bigMapMode. Les données sont mises en cache à l'ouverture (enterBigMap) et libérées à la fermeture (exitBigMap). Les appels côté UI se font par bngApi.engineLua (voir le commentaire d'en-tête du fichier) ; Lua -> Vue passe par guihooks.trigger('showPoiDetails', {poiIds, ignoreReduction}). Dépend de gameplay_missions_missions, freeroam_bigMapMode, gameplay_rawPois, gameplay_missions_missionScreen. Global : freeroam_vueBigMap.
---- Accès : extension `freeroam_vueBigMap` : `extensions.load("freeroam_vueBigMap")`, puis la globale `freeroam_vueBigMap`
+--- Lua backend of the big map in the Vue UI: prepares for the UI the list of points of interest (POIs: missions, garages, stations, dealerships, dragstrips, spawn points, the player's vehicle...), the filters and groups of the side list, the game state, and relays the UI's actions (selection, hover, navigation, panning, execution of POI actions) to freeroam_bigMapMode. The data is cached on opening (enterBigMap) and freed on closing (exitBigMap). UI-side calls go through bngApi.engineLua (see the file's header comment); Lua -> Vue goes through guihooks.trigger('showPoiDetails', {poiIds, ignoreReduction}). Depends on gameplay_missions_missions, freeroam_bigMapMode, gameplay_rawPois, gameplay_missions_missionScreen. Global: freeroam_vueBigMap.
+--- Access: extension `freeroam_vueBigMap`: `extensions.load("freeroam_vueBigMap")`, then the global `freeroam_vueBigMap`
 ---@class freeroam_vueBigMap
----@field actionFunctions table<integer, function> Callbacks des actions de POI, par identifiant.
----@field actionIdCounter integer Compteur d'identifiants d'actions de POI.
----@field dependencies string[] Extensions chargées avant.
+---@field actionFunctions table<integer, function> POI action callbacks, by id.
+---@field actionIdCounter integer POI action id counter.
+---@field dependencies string[] Extensions loaded before.
 freeroam_vueBigMap = {}
 
---- Enregistre un callback d'action et renvoie la table meta enrichie de actionId.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:134
----@param callback function Fonction à appeler.
----@param meta table|nil Métadonnées (label, etc.).
----@return table  meta avec actionId.
+--- Registers an action callback and returns the meta table enriched with actionId.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:134
+---@param callback function Function to call.
+---@param meta table|nil Metadata (label, etc.).
+---@return table  meta with actionId.
 function freeroam_vueBigMap.addAction(callback, meta) end
 
---- Vide la table des actions.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:129
+--- Empties the actions table.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:129
 function freeroam_vueBigMap.clearActionFunctions() end
 
---- Ouvre la grande carte : délègue à freeroam_bigMapMode.enterBigMap (instant), génère les caches POI/filtres/groupes et applique la visibilité des POI.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:809
----@param options table|nil {controllerUsed?: boolean, isMenuBigmap?: boolean, ignoreUiStateChange?: boolean} ; ignoreUiStateChange vaut isMenuBigmap par défaut ; les action maps sont ignorées si controllerUsed et isMenuBigmap.
+--- Opens the big map: delegates to freeroam_bigMapMode.enterBigMap (instant), generates the POI/filter/group caches and applies the POIs' visibility.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:809
+---@param options table|nil {controllerUsed?: boolean, isMenuBigmap?: boolean, ignoreUiStateChange?: boolean}; ignoreUiStateChange defaults to isMenuBigmap; the action maps are ignored if controllerUsed and isMenuBigmap.
 function freeroam_vueBigMap.enterBigMap(options) end
 
---- Exécute le callback d'une action ; log d'erreur si inconnue.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:144
----@param actionId integer Identifiant.
----@return string  'success' ou 'error'.
+--- Runs an action's callback; error log if unknown.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:144
+---@param actionId integer Identifier.
+---@return string  'success' or 'error'.
 function freeroam_vueBigMap.executeAction(actionId) end
 
---- Exécute une action de POI enregistrée (voir executeAction).
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:992
----@param actionId integer Identifiant d'action.
+--- Runs a registered POI action (see executeAction).
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:992
+---@param actionId integer Action identifier.
 function freeroam_vueBigMap.executePoiAction(actionId) end
 
---- Ferme la grande carte (freeroam_bigMapMode.exitBigMap(true)), vide les caches et les actions.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:830
+--- Closes the big map (freeroam_bigMapMode.exitBigMap(true)), empties the caches and the actions.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:830
 function freeroam_vueBigMap.exitBigMap() end
 
---- Récupère puis vide l'id de POI à sélectionner automatiquement demandé à l'ouverture de la carte, depuis freeroam_bigMapMode.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:996
----@return string|nil  Id de POI.
+--- Retrieves then clears the POI id to auto-select requested when the map opened, from freeroam_bigMapMode.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:996
+---@return string|nil  POI id.
 function freeroam_vueBigMap.getAndClearPendingAutoSelectPoiId() end
 
---- Sections de filtres, chaque groupe avec son état `visible` courant.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:850
----@return table[]  Sections de filtres.
+--- Filter sections, each group with its current `visible` state.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:850
+---@return table[]  Filter sections.
 function freeroam_vueBigMap.getFilters() end
 
---- Incrémente et renvoie un nouvel identifiant d'action.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:123
----@return integer  Identifiant.
+--- Increments and returns a new action identifier.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:123
+---@return integer  Identifier.
 function freeroam_vueBigMap.getFreeActionId() end
 
---- Informations d'état de jeu pour la liste de POI, avec poiListDisplayMode (réglage, 'tree' par défaut).
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:907
----@return table  État.
+--- Game state information for the POI list, with poiListDisplayMode (setting, 'tree' by default).
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:907
+---@return table  State.
 function freeroam_vueBigMap.getGameStateInfo() end
 
---- Groupes pour la liste de POI : sections et groupes visibles non vides.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:862
+--- Groups for the POI list: visible, non-empty sections and groups.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:862
 ---@return table[]  Sections {key, icon, title, groups[{key, label, icon, elementIds, visible, openByDefault}]}.
 function freeroam_vueBigMap.getGroups() end
 
---- Données complètes des POI par id (nom, aperçu, agrégats, actions disponibles), générées si le cache est invalide.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:843
----@return table  POI par id.
+--- Full POI data by id (name, preview, aggregates, available actions), generated if the cache is invalid.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:843
+---@return table  POIs by id.
 function freeroam_vueBigMap.getPoiData() end
 
---- Met en surbrillance le marqueur du POI survolé dans la liste.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:985
----@param poiId string Id du POI.
----@param active boolean Survol actif.
+--- Highlights the marker of the POI hovered in the list.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:985
+---@param poiId string POI id.
+---@param active boolean Active hover.
 ---@return string  'success'
 ---@return boolean  active
 function freeroam_vueBigMap.hoverPoiFromList(poiId, active) end
 
---- Calcule un itinéraire vers le POI (freeroam_bigMapMode.navigateToMission).
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:951
----@param poiId string|nil Id du POI.
+--- Computes a route to the POI (freeroam_bigMapMode.navigateToMission).
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:951
+---@param poiId string|nil POI id.
 ---@return string  'success'
 function freeroam_vueBigMap.navigateToPoi(poiId) end
 
---- Appelé par la carte quand un POI y est sélectionné : envoie à l'UI showPoiDetails avec les ids de POI regroupés sous la souris (freeroam_bigMapMarkers.getIdsFromHoveredPoiId) ou liste vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:967
----@param poiId string|nil Id du POI sélectionné.
+--- Called by the map when a POI is selected on it: sends showPoiDetails to the UI with the POI ids grouped under the mouse (freeroam_bigMapMarkers.getIdsFromHoveredPoiId) or an empty list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:967
+---@param poiId string|nil Id of the selected POI.
 function freeroam_vueBigMap.onPoiSelectedFromBigmap(poiId) end
 
---- Centre la vue de la carte sur le POI.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:959
----@param poiId string|nil Id du POI.
+--- Centers the map view on the POI.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:959
+---@param poiId string|nil POI id.
 ---@return string  'success'
 function freeroam_vueBigMap.panToPoi(poiId) end
 
---- Sélectionne un POI depuis la liste (freeroam_bigMapMode.selectPoi) ou désélectionne si id nul.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:935
----@param poiId string|nil Id du POI ('undefined'/'null' = aucun).
----@param isCollapsedMode boolean|nil Si faux, la prochaine réduction de groupe est ignorée.
+--- Selects a POI from the list (freeroam_bigMapMode.selectPoi) or deselects if the id is null.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:935
+---@param poiId string|nil POI id ('undefined'/'null' = none).
+---@param isCollapsedMode boolean|nil If false, the next group reduction is ignored.
 ---@return string  'success'
 function freeroam_vueBigMap.selectPoiFromList(poiId, isCollapsedMode) end
 
---- Règle le mode d'affichage de la liste ('hidden', 'tree', 'simple') dans les réglages.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:1002
+--- Sets the list display mode ('hidden', 'tree', 'simple') in the settings.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:1002
 ---@param mode string Mode.
----@return string  'success' ou 'invalid_mode'.
+---@return string  'success' or 'invalid_mode'.
 function freeroam_vueBigMap.setPoiListDisplayMode(mode) end
 
---- Calcule les ids de POI des groupes visibles et appelle freeroam_bigMapMode.setOnlyIdsVisible.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:918
+--- Computes the POI ids of the visible groups and calls freeroam_bigMapMode.setOnlyIdsVisible.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:918
 function freeroam_vueBigMap.setVisibleIds() end
 
---- Affiche tous les groupes (sectionId 'everything') ou uniquement ceux de la section donnée.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:95
----@param sectionId string Clé de section ou 'everything'.
+--- Shows all groups (sectionId 'everything') or only those of the given section.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:95
+---@param sectionId string Section key or 'everything'.
 function freeroam_vueBigMap.toggleFilterSectionById(sectionId) end
 
---- Rend visibles uniquement les groupes dont les clés sont données (tous les autres sont masqués) et met à jour la visibilité sur la carte.
----Source : lua/ge/extensions/freeroam/vueBigMap.lua:85
----@param filterIds string[] Clés de groupes.
+--- Makes visible only the groups whose keys are given (all the others are hidden) and updates the visibility on the map.
+---Source: lua/ge/extensions/freeroam/vueBigMap.lua:85
+---@param filterIds string[] Group keys.
 function freeroam_vueBigMap.toggleFiltersByIds(filterIds) end
 

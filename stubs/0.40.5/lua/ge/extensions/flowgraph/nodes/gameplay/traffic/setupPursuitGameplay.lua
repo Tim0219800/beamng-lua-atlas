@@ -2,12 +2,12 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupPursuitGameplay.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+--- Flowgraph node class (created via `_flowgraph_createNode(C)`).
 ---@class flowgraph_nodes_gameplay_traffic_setupPursuitGameplay_C
 local flowgraph_nodes_gameplay_traffic_setupPursuitGameplay_C = {}
 
---- Lance le setup de poursuite, écrit success/fail et positionne ignoreForceTeleport sur les véhicules concernés.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupPursuitGameplay.lua:25
+--- Starts the pursuit setup, writes success/fail and sets ignoreForceTeleport on the vehicles concerned.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupPursuitGameplay.lua:25
 function flowgraph_nodes_gameplay_traffic_setupPursuitGameplay_C:workOnce() end
 

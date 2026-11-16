@@ -1,0 +1,94 @@
+{
+  "path": "lua/ge/extensions/core/vehicleBridge.lua",
+  "module": "Extension GE `core_vehicleBridge` : pont de communication entre le Lua GE et le Lua du véhicule (vlua). Envoie des commandes à `extensions.gameplayInterface` côté véhicule pour lire une valeur (requestValue), exécuter une action (executeAction) ou s'abonner aux changements d'une clé électrique (registerValueChangeNotification), et reçoit les réponses via callbackFromVlua. Les valeurs reçues par abonnement sont mises en cache dans `vehicleData[vehId].data`.",
+  "usage": "local veh = getPlayerVehicle(0)\ncore_vehicleBridge.requestValue(veh, function(data) dump(data) end, 'electrics')  -- arguments passés à gameplayInterface.getSystemData\ncore_vehicleBridge.registerValueChangeNotification(veh, 'ignitionLevel')\n-- plus tard :\nlocal v = core_vehicleBridge.getCachedVehicleData(veh:getId(), 'ignitionLevel')",
+  "notes": [
+    "Les arguments supplémentaires (`...`) de requestValue et executeAction sont sérialisés avec serialize() dans la chaîne de commande envoyée au véhicule ; leur signification dépend de gameplayInterface.lua côté véhicule.",
+    "L'identifiant de callback -2 est réservé aux notifications de changement de valeur ; les autres identifiants sont uniques et à usage unique (la fonction de rappel est supprimée après appel).",
+    "callbackFromVlua décode data avec lpack.decode ; si data.failReason est présent, une erreur est logguée mais le callback est tout de même appelé.",
+    "Le champ logCommand vaut `nop` (fonction vide globale du jeu) ou logCommandFunction selon setLogCommands ; l'analyse automatique le signale comme référence non définie, c'est une fausse alerte."
+  ],
+  "fields": {
+    "vehicleData": {"type": "table<integer, {data: table, registeredCallbacks: table<string, integer>}>", "desc": "[vehId] = {data = dernières valeurs reçues par clé, registeredCallbacks = [clé] = idCallback}. Vidé pour un véhicule détruit ou remplacé."},
+    "logCommand": {"type": "function", "desc": "Fonction appelée avant chaque envoi (log détaillé) ; `nop` par défaut, logCommandFunction si setLogCommands(true)."}
+  },
+  "functions": {
+    "logCommandFunction": {
+      "desc": "Logue (niveau D) la commande envoyée à un véhicule.",
+      "params": {
+        "veh": {"type": "userdata", "desc": "véhicule destinataire"},
+        "id": {"type": "integer", "desc": "identifiant de callback"},
+        "command": {"type": "any", "desc": "commande (chaîne ou buffer)"}
+      },
+      "returns": []
+    },
+    "setLogCommands": {
+      "desc": "Active ou désactive le log de toutes les commandes envoyées aux véhicules.",
+      "params": {"enabled": {"type": "boolean", "desc": "true pour activer"}},
+      "returns": []
+    },
+    "callbackFromVlua": {
+      "desc": "Appelée depuis le Lua du véhicule avec la réponse à une requête ou une notification. Décode les données, met à jour le cache (id -2) ou appelle la fonction de rappel enregistrée puis l'oublie.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "véhicule émetteur"},
+        "callbackId": {"type": "integer", "desc": "identifiant du callback, ou -2 pour une notification de changement de valeur"},
+        "data": {"type": "string", "desc": "données encodées par lpack"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "requestValue": {
+      "desc": "Demande une valeur au véhicule (extensions.gameplayInterface.getSystemData côté véhicule). La fonction de rappel reçoit les données décodées de manière asynchrone (au plus tôt à la frame suivante).",
+      "params": {
+        "veh": {"type": "userdata", "desc": "véhicule interrogé (log d'erreur si nil)"},
+        "callback": {"type": "function", "desc": "fonction(data) appelée avec la réponse"},
+        "...": {"type": "any", "desc": "arguments supplémentaires, sérialisés et transmis à getSystemData"}
+      },
+      "returns": []
+    },
+    "registerValueChangeNotification": {
+      "desc": "Abonne GE aux changements d'une clé électrique du véhicule : à chaque changement, la valeur est mise à jour dans vehicleData[vehId].data[clé]. Sans effet si déjà abonné à cette clé.",
+      "params": {
+        "veh": {"type": "userdata", "desc": "véhicule"},
+        "electricsKey": {"type": "string", "desc": "clé de la table electrics"}
+      },
+      "returns": []
+    },
+    "unregisterValueChangeNotification": {
+      "desc": "Annule l'abonnement créé par registerValueChangeNotification (sans effet s'il n'existe pas).",
+      "params": {
+        "veh": {"type": "userdata", "desc": "véhicule"},
+        "electricsKey": {"type": "string", "desc": "clé de la table electrics"}
+      },
+      "returns": []
+    },
+    "executeAction": {
+      "desc": "Exécute une action côté véhicule (extensions.gameplayInterface.executeAction). Vérifie que veh existe et possède queueLuaCommand.",
+      "params": {
+        "veh": {"type": "userdata", "desc": "véhicule cible"},
+        "...": {"type": "any", "desc": "arguments (nom de l'action et paramètres), sérialisés"}
+      },
+      "returns": []
+    },
+    "getCachedVehicleData": {
+      "desc": "Lit une valeur mise en cache par une notification de changement.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "identifiant du véhicule"},
+        "key": {"type": "string", "desc": "clé"}
+      },
+      "returns": [{"type": "any", "desc": "dernière valeur reçue, nil si inconnue"}]
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook : un véhicule est détruit ; efface son cache et ses abonnements.",
+      "params": {"id": {"type": "integer", "desc": "identifiant du véhicule"}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleReplaced": {
+      "desc": "Hook (émis par core_vehicles.replaceVehicle) : le véhicule a été remplacé ; efface son cache et ses abonnements (le nouveau Lua véhicule doit se réabonner).",
+      "params": {"id": {"type": "integer", "desc": "identifiant du véhicule"}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

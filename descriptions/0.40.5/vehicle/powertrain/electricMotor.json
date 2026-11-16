@@ -1,201 +1,320 @@
 {
   "path": "lua/vehicle/powertrain/electricMotor.lua",
-  "module": "Composant powertrain `electricMotor` : moteur électrique de catégorie `engine`. Il produit un couple selon une courbe couple/régime (clé jbeam `torque`), le papillon (`electrics.values.throttle`) et la régénération (`regenThrottle`). Il consomme l'énergie de batteries `electricBattery` enregistrées (registerStorage), applique l'efficacité électrique, gère un limiteur de régime temporaire, l'allumage, des sons moteur et la réaction de couple sur la carrosserie. Avec un embrayage enfant (catégorie clutchlike) il intègre sa propre vitesse ; sans embrayage il impose directement le couple de sortie à l'enfant.",
-  "usage": "local m = powertrain.getDevice(\"mainMotor\")\nprint(m.outputAV1 * 9.5493, m.engineLoad, m.maxPower, m.maxTorque) -- tr/min, 0..1, kW, N·m\nm:setTempRevLimiter(5000 * 0.10472) -- limite à 5000 tr/min",
+  "module": "Powertrain component `electricMotor`: electric motor of category `engine`. It produces a torque from a torque/RPM curve (jbeam key `torque`), the throttle (`electrics.values.throttle`) and regeneration (`regenThrottle`). It consumes energy from registered `electricBattery` batteries (registerStorage), applies electrical efficiency, handles a temporary rev limiter, ignition, engine sounds and the torque reaction on the body. With a child clutch (category clutchlike) it integrates its own speed; without a clutch it directly imposes the output torque on the child.",
+  "usage": "local m = powertrain.getDevice(\"mainMotor\")\nprint(m.outputAV1 * 9.5493, m.engineLoad, m.maxPower, m.maxTorque) -- RPM, 0..1, kW, N·m\nm:setTempRevLimiter(5000 * 0.10472) -- limit at 5000 RPM",
   "notes": [
-    "Clés jbeam lues : name, type, inputName, inputIndex, gearRatio, cumulativeGearRatio, friction (N·m), dynamicFriction (N·m par rad/s), inertia (kg·m², défaut 0.1), electricsThrottleName ('throttle'), electricsRegenThrottleName ('regenThrottle'), electricsThrottleFactorName ('throttleFactor'), isAffectedByIgnitionLevel (true), defaultMotorDirection (1), torqueReactionNodes_nodes (3 nœuds), torque (table en-tête rpm/torque, obligatoire), regenTorqueCurve (table rpm/torque), regenFadeRPM (1000), maxRegenPower (kW, = maxPower), maxRegenTorque (= maxTorque), minimumWantedRegenTorque (0), maximumWantedRegenTorque (= maxRegenTorque), electricalEfficiency (nombre ou table {charge 0..1, rendement}), energyStorage, breakTriggerBeam, soundConfig (nom d'une table jbeam de configuration sonore).",
-    "Champs principaux : outputAV1 (rad/s, vitesse du rotor ; avec embrayage elle est intégrée par le moteur, sans embrayage elle est imposée par l'enfant), outputRPM (tr/min, mis à jour dans updateGFX), outputTorque1 (N·m vers l'enfant ; avec embrayage = torqueDiff de l'embrayage), inputAV (toujours 0), torqueCurve (table indexée par tr/min entier, N·m), regenCurve (idem pour la régénération), maxRPM (tr/min), maxAV (rad/s), maxTorque (N·m), maxPower (ch/PS selon torqueToPower, = valeur de getTorqueData), maxRegenTorque, throttle (0..1 après lissage), engineLoad et instantEngineLoad (-1..1 sans embrayage, 0..1 avec), torqueCoef (0..1, réduit le couple disponible depuis l'extérieur), maxTorqueLimit (N·m, math.huge par défaut), outputTorqueState (0 ou 1), isDisabled, hasEnergy, spentEnergy (J accumulés avant prélèvement dans les batteries), grossWorkPerUpdate, frictionLossPerUpdate, motorDirection (+1 ou -1), isBroken, torqueReactionNodes ({-1,-1,-1} si absent), engineNodeID.",
-    "velocityUpdate vaut nop : un moteur ne reçoit pas de vitesse de son parent. Sa vitesse vient de l'embrayage (updateTorqueWithClutch intègre outputAV1) ou de la roue/transmission en aval (sans embrayage).",
-    "Sans embrayage, le moteur applique aussi le couple inertiel de réaction (inertia * dOutputAV/dt) via obj:applyTorqueAxisCouple sur torqueReactionNodes ; il faut donc 3 nœuds valides.",
-    "La régénération n'a lieu que si throttle vaut 0 (actualTorque = throttle > 0 and torque or regenTorque) et n'existe que dans la version sans embrayage. Un couple négatif de régénération recharge les batteries car spentEnergy devient négatif.",
-    "Coupure : disable() et lockUp() mettent outputTorqueState à 0 ; lockUp met aussi outputAVState à 0 (rotor bloqué, utilisé par onBreak). enable() est automatiquement appelée quand une batterie reprend de l'énergie.",
-    "Plafond de puissance : le couple est limité à maxPowerThrottleMap = maxPower * 735.499 W / (régime) uniquement dans la version avec embrayage.",
-    "Les champs sont lus depuis `v.data`, donc validate/new doivent s'exécuter dans la VM véhicule après le chargement des données jbeam. M.requiredExternalInertiaOutputs n'est pas défini dans ce module (shallowcopy de nil).",
-    "Bug mineur : reset ne relit pas electricsRegenThrottleName, torque/torqueCurve ni les sons ; resetSounds ne fait que réinitialiser les lisseurs quand soundConfig existe."
+    "Jbeam keys read: name, type, inputName, inputIndex, gearRatio, cumulativeGearRatio, friction (N·m), dynamicFriction (N·m per rad/s), inertia (kg·m², default 0.1), electricsThrottleName ('throttle'), electricsRegenThrottleName ('regenThrottle'), electricsThrottleFactorName ('throttleFactor'), isAffectedByIgnitionLevel (true), defaultMotorDirection (1), torqueReactionNodes_nodes (3 nodes), torque (table with rpm/torque header, required), regenTorqueCurve (rpm/torque table), regenFadeRPM (1000), maxRegenPower (kW, = maxPower), maxRegenTorque (= maxTorque), minimumWantedRegenTorque (0), maximumWantedRegenTorque (= maxRegenTorque), electricalEfficiency (number or table {load 0..1, efficiency}), energyStorage, breakTriggerBeam, soundConfig (name of a jbeam sound configuration table).",
+    "Main fields: outputAV1 (rad/s, rotor speed; with a clutch it is integrated by the motor, without a clutch it is imposed by the child), outputRPM (RPM, updated in updateGFX), outputTorque1 (N·m to the child; with a clutch = torqueDiff of the clutch), inputAV (always 0), torqueCurve (table keyed by integer RPM, N·m), regenCurve (same for regeneration), maxRPM (RPM), maxAV (rad/s), maxTorque (N·m), maxPower (hp/PS according to torqueToPower, = value from getTorqueData), maxRegenTorque, throttle (0..1 after smoothing), engineLoad and instantEngineLoad (-1..1 without clutch, 0..1 with), torqueCoef (0..1, reduces the available torque from outside), maxTorqueLimit (N·m, math.huge by default), outputTorqueState (0 or 1), isDisabled, hasEnergy, spentEnergy (J accumulated before being drawn from the batteries), grossWorkPerUpdate, frictionLossPerUpdate, motorDirection (+1 or -1), isBroken, torqueReactionNodes ({-1,-1,-1} if absent), engineNodeID.",
+    "velocityUpdate is nop: a motor does not receive a speed from its parent. Its speed comes from the clutch (updateTorqueWithClutch integrates outputAV1) or from the wheel/transmission downstream (without a clutch).",
+    "Without a clutch, the motor also applies the inertial reaction torque (inertia * dOutputAV/dt) via obj:applyTorqueAxisCouple on torqueReactionNodes; 3 valid nodes are therefore needed.",
+    "Regeneration only happens if throttle is 0 (actualTorque = throttle > 0 and torque or regenTorque) and exists only in the version without a clutch. A negative regeneration torque recharges the batteries because spentEnergy becomes negative.",
+    "Cut-off: disable() and lockUp() set outputTorqueState to 0; lockUp also sets outputAVState to 0 (locked rotor, used by onBreak). enable() is automatically called when a battery regains energy.",
+    "Power cap: the torque is limited to maxPowerThrottleMap = maxPower * 735.499 W / (speed) only in the version with a clutch.",
+    "The fields are read from `v.data`, so validate/new must run in the vehicle VM after the jbeam data is loaded. M.requiredExternalInertiaOutputs is not defined in this module (shallowcopy of nil).",
+    "Minor bug: reset does not reread electricsRegenThrottleName, torque/torqueCurve or the sounds; resetSounds only resets the smoothers when soundConfig exists."
   ],
   "fields": {
-    "outputPorts": {"type": "table<integer, boolean>", "desc": "{[1]=true} : un port de sortie."},
-    "deviceCategories": {"type": "table<string, boolean>", "desc": "{engine=true} : permet aux embrayages et boîtes de reconnaître le moteur comme parent valide."}
+    "outputPorts": {
+      "type": "table<integer, boolean>",
+      "desc": "{[1]=true}: one output port."
+    },
+    "deviceCategories": {
+      "type": "table<string, boolean>",
+      "desc": "{engine=true}: lets clutches and gearboxes recognize the motor as a valid parent."
+    }
   },
   "functions": {
     "new": {
-      "desc": "Construit le moteur électrique : lit la courbe de couple (obligatoire), la courbe de régénération (fournie ou calculée à partir de maxRegenPower/maxRegenTorque/regenFadeRPM), le rendement électrique, les nœuds de réaction de couple, et prépare les données de courbe (getTorqueData).",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
-      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "desc": "Builds the electric motor: reads the torque curve (required), the regeneration curve (provided or computed from maxRegenPower/maxRegenTorque/regenFadeRPM), the electrical efficiency, the torque reaction nodes, and prepares the curve data (getTorqueData).",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "jbeam data of the component."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The device (class `device`)."
+        }
+      ],
       "internal": true
     }
   },
   "classes": {
     "device": {
-      "desc": "Objet renvoyé par new(jbeamData). torqueUpdate est updateTorqueWithClutch ou updateTorqueWithoutClutch selon la présence d'un embrayage enfant.",
+      "desc": "Object returned by new(jbeamData). torqueUpdate is updateTorqueWithClutch or updateTorqueWithoutClutch depending on the presence of a child clutch.",
       "functions": {
         "getTorqueData": {
-          "desc": "Calcule les courbes de couple et de puissance nettes du frottement et renvoie {maxRPM, curves, maxTorque, maxPower, maxTorqueRPM, maxPowerRPM, finalCurveName, deviceName, vehicleID}. Utilisé par l'interface et par les embrayages/boîtes (maxTorque).",
+          "desc": "Computes the torque and power curves net of friction and returns {maxRPM, curves, maxTorque, maxPower, maxTorqueRPM, maxPowerRPM, finalCurveName, deviceName, vehicleID}. Used by the interface and by the clutches/gearboxes (maxTorque).",
           "params": {},
-          "returns": [{"type": "table", "desc": "Données de courbe de couple."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Torque curve data."
+            }
+          ],
           "internal": false
         },
         "sendTorqueData": {
-          "desc": "Envoie l'événement GUI 'TorqueCurveChanged' avec les données de courbe (calculées si non fournies).",
-          "params": {"data": {"type": "table|nil", "desc": "Résultat de getTorqueData ; nil pour le recalculer."}},
+          "desc": "Sends the GUI event 'TorqueCurveChanged' with the curve data (computed if not provided).",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "Result of getTorqueData; nil to recompute it."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "scaleFriction": {
-          "desc": "Multiplie le frottement du moteur (friction) par le facteur donné.",
-          "params": {"friction": {"type": "number", "desc": "Facteur multiplicatif."}},
+          "desc": "Multiplies the motor friction (friction) by the given factor.",
+          "params": {
+            "friction": {
+              "type": "number",
+              "desc": "Multiplicative factor."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "scaleOutputTorque": {
-          "desc": "Multiplie outputTorqueState (0..1) par state. Sert à réduire le couple disponible ; attention, l'effet est cumulatif.",
-          "params": {"state": {"type": "number", "desc": "Facteur multiplicatif."}},
+          "desc": "Multiplies outputTorqueState (0..1) by state. Used to reduce the available torque; note that the effect is cumulative.",
+          "params": {
+            "state": {
+              "type": "number",
+              "desc": "Multiplicative factor."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "disable": {
-          "desc": "Coupe le moteur : outputTorqueState = 0, isDisabled = true.",
+          "desc": "Cuts the motor: outputTorqueState = 0, isDisabled = true.",
           "params": {},
           "returns": [],
           "internal": false
         },
         "enable": {
-          "desc": "Réactive le moteur : outputTorqueState = 1, isDisabled = false.",
+          "desc": "Re-enables the motor: outputTorqueState = 1, isDisabled = false.",
           "params": {},
           "returns": [],
           "internal": false
         },
         "lockUp": {
-          "desc": "Bloque le moteur : couple 0, vitesse de sortie forcée à 0 (outputAVState = 0) et isDisabled = true. Appelée par onBreak.",
+          "desc": "Locks the motor: torque 0, output speed forced to 0 (outputAVState = 0) and isDisabled = true. Called by onBreak.",
           "params": {},
           "returns": [],
           "internal": false
         },
         "updateEnergyStorageRatios": {
-          "desc": "Recalcule la part d'énergie prélevée (ou rendue en régénération) par chaque batterie enregistrée selon le nombre de batteries avec énergie.",
+          "desc": "Recomputes the share of energy drawn (or returned during regeneration) by each registered battery according to the number of batteries with energy.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "updateEnergyUsage": {
-          "desc": "Retire spentEnergy des batteries enregistrées (ou y ajoute en régénération), met à jour les compteurs de batteries non vides et appelle disable/enable selon qu'il reste de l'énergie. Ne fait rien sans device.energyStorage.",
+          "desc": "Removes spentEnergy from the registered batteries (or adds to them during regeneration), updates the counters of non-empty batteries and calls disable/enable depending on whether energy remains. Does nothing without device.energyStorage.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "updateGFX": {
-          "desc": "Mise à jour par image : appelle updateEnergyUsage, calcule outputRPM et remet à zéro les compteurs de travail et de perte par friction.",
-          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+          "desc": "Per-frame update: calls updateEnergyUsage, computes outputRPM and resets the work and friction loss counters.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Frame duration in seconds."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "updateSounds": {
-          "desc": "Définie seulement si une soundConfig valide est présente (sinon nop). Lisse le régime et la charge et appelle obj:setEngineSound avec la fréquence fondamentale.",
-          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+          "desc": "Defined only if a valid soundConfig is present (otherwise nop). Smooths RPM and load and calls obj:setEngineSound with the fundamental frequency.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Frame duration in seconds."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "velocityUpdate": {
-          "desc": "Toujours nop pour un moteur : la vitesse de sortie est calculée dans torqueUpdate ou imposée par l'aval.",
+          "desc": "Always nop for a motor: the output speed is computed in torqueUpdate or imposed from downstream.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "torqueUpdate": {
-          "desc": "Appelée à chaque pas physique. Calcule le papillon lissé (avec limiteur de régime temporaire et allumage), le couple depuis la courbe, la charge, le travail brut, l'énergie dépensée et le couple de frottement. Avec embrayage : intègre outputAV1 et prend outputTorque1 = clutch.torqueDiff. Sans embrayage : inclut la régénération et applique le couple inertiel de réaction à la carrosserie.",
-          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+          "desc": "Called at each physics step. Computes the smoothed throttle (with temporary rev limiter and ignition), the torque from the curve, the load, the gross work, the spent energy and the friction torque. With a clutch: integrates outputAV1 and takes outputTorque1 = clutch.torqueDiff. Without a clutch: includes regeneration and applies the inertial reaction torque to the body.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "validate": {
-          "desc": "Détecte l'embrayage enfant (un seul enfant de catégorie clutchlike), pose clutchChild et l'inertie effective, enregistre le moteur dans powertrain.engineData et sélectionne la version de torqueUpdate. Sans enfant : clutchChild = {torqueDiff = 0}.",
+          "desc": "Detects the child clutch (a single child of category clutchlike), sets clutchChild and the effective inertia, registers the motor in powertrain.engineData and selects the torqueUpdate version. Without a child: clutchChild = {torqueDiff = 0}.",
           "params": {},
-          "returns": [{"type": "boolean", "desc": "Toujours true."}],
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Always true."
+            }
+          ],
           "internal": true
         },
         "setIgnition": {
-          "desc": "Règle le coefficient d'allumage : 1 si value > 0, sinon 0. N'a d'effet que si isAffectedByIgnitionLevel est vrai (défaut).",
-          "params": {"value": {"type": "number", "desc": "Niveau d'allumage (> 0 = allumé)."}},
+          "desc": "Sets the ignition coefficient: 1 if value > 0, otherwise 0. Only has an effect if isAffectedByIgnitionLevel is true (default).",
+          "params": {
+            "value": {
+              "type": "number",
+              "desc": "Ignition level (> 0 = on)."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "onBreak": {
-          "desc": "Appelée quand la poutre de rupture casse : appelle lockUp.",
+          "desc": "Called when the break beam breaks: calls lockUp.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "setTempRevLimiter": {
-          "desc": "Active un limiteur de régime temporaire : le papillon est réduit entre revLimiterAV et revLimiterAV + maxOvershootAV.",
+          "desc": "Enables a temporary rev limiter: the throttle is reduced between revLimiterAV and revLimiterAV + maxOvershootAV.",
           "params": {
-            "revLimiterAV": {"type": "number", "desc": "Vitesse angulaire de coupure en rad/s."},
-            "maxOvershootAV": {"type": "number|nil", "desc": "Plage de dépassement en rad/s (défaut 1 % de revLimiterAV)."}
+            "revLimiterAV": {
+              "type": "number",
+              "desc": "Cut-off angular speed in rad/s."
+            },
+            "maxOvershootAV": {
+              "type": "number|nil",
+              "desc": "Overshoot range in rad/s (default 1 % of revLimiterAV)."
+            }
           },
           "returns": [],
           "internal": false
         },
         "resetTempRevLimiter": {
-          "desc": "Désactive le limiteur de régime temporaire (valeur de coupure très haute, isTempRevLimiterActive = false).",
+          "desc": "Disables the temporary rev limiter (very high cut-off value, isTempRevLimiterActive = false).",
           "params": {},
           "returns": [],
           "internal": false
         },
         "registerStorage": {
-          "desc": "Enregistre une batterie (stockage de type electricBattery avec capacité > 0) comme source d'énergie du moteur et recalcule les ratios.",
-          "params": {"storageName": {"type": "string", "desc": "Nom du stockage d'énergie (energyStorage.getStorage)."}},
+          "desc": "Registers a battery (storage of type electricBattery with capacity > 0) as the motor's energy source and recomputes the ratios.",
+          "params": {
+            "storageName": {
+              "type": "string",
+              "desc": "Name of the energy storage (energyStorage.getStorage)."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "calculateInertia": {
-          "desc": "Prend l'inertie et le rapport cumulés du premier enfant comme cumulativeInertia et cumulativeGearRatio.",
+          "desc": "Takes the cumulative inertia and ratio of the first child as cumulativeInertia and cumulativeGearRatio.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "getSoundConfiguration": {
-          "desc": "Renvoie la table soundConfiguration (paramètres des sons moteur déjà initialisés, par référence).",
+          "desc": "Returns the soundConfiguration table (parameters of the already initialized engine sounds, by reference).",
           "params": {},
-          "returns": [{"type": "table|nil", "desc": "Configuration sonore, nil si aucun son n'a été initialisé."}],
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Sound configuration, nil if no sound has been initialized."
+            }
+          ],
           "internal": false
         },
         "reset": {
-          "desc": "Réinitialise l'état (vitesses, couple, papillon, charge, énergie, limiteur, coefficients), relit friction, dynamicFriction, inertia, defaultMotorDirection du jbeam et recalcule les données de courbe.",
-          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "desc": "Resets the state (speeds, torque, throttle, load, energy, limiter, coefficients), rereads friction, dynamicFriction, inertia, defaultMotorDirection from the jbeam and recomputes the curve data.",
+          "params": {
+            "jbeamData": {
+              "type": "table",
+              "desc": "jbeam data of the component."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "resetSounds": {
-          "desc": "Remet à zéro les lisseurs de son si la configuration sonore existe ; coupe les anciens sons moteur. Journalise une erreur si soundConfig est introuvable.",
-          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "desc": "Resets the sound smoothers if the sound configuration exists; stops the old engine sounds. Logs an error if soundConfig cannot be found.",
+          "params": {
+            "jbeamData": {
+              "type": "table",
+              "desc": "jbeam data of the component."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "initEngineSound": {
-          "desc": "Mémorise la configuration d'un échantillon sonore et demande au moteur de jeu (GE Lua) de l'initialiser : core_sounds.initEngineSound.",
+          "desc": "Stores the configuration of a sound sample and asks the game engine (GE Lua) to initialize it: core_sounds.initEngineSound.",
           "params": {
-            "soundID": {"type": "integer", "desc": "Identifiant du son moteur (powertrain.getEngineSoundID)."},
-            "samplePath": {"type": "string", "desc": "Chemin du fichier sfxBlend2D."},
-            "engineNodeIDs": {"type": "table<integer, integer>", "desc": "Nœuds d'où le son est émis."},
-            "offLoadGain": {"type": "number", "desc": "Gain hors charge."},
-            "onLoadGain": {"type": "number", "desc": "Gain en charge."},
-            "reference": {"type": "string", "desc": "Clé de rangement dans soundConfiguration."}
+            "soundID": {
+              "type": "integer",
+              "desc": "Engine sound identifier (powertrain.getEngineSoundID)."
+            },
+            "samplePath": {
+              "type": "string",
+              "desc": "Path of the sfxBlend2D file."
+            },
+            "engineNodeIDs": {
+              "type": "table<integer, integer>",
+              "desc": "Nodes from which the sound is emitted."
+            },
+            "offLoadGain": {
+              "type": "number",
+              "desc": "No-load gain."
+            },
+            "onLoadGain": {
+              "type": "number",
+              "desc": "Under-load gain."
+            },
+            "reference": {
+              "type": "string",
+              "desc": "Storage key in soundConfiguration."
+            }
           },
           "returns": [],
           "internal": true
         },
         "setEngineSoundParameterList": {
-          "desc": "Mémorise et envoie (core_sounds.setEngineSoundParameterList) une liste de paramètres sonores pour un son moteur.",
+          "desc": "Stores and sends (core_sounds.setEngineSoundParameterList) a list of sound parameters for an engine sound.",
           "params": {
-            "soundID": {"type": "integer", "desc": "Identifiant du son moteur."},
-            "params": {"type": "table<string, number>", "desc": "Paramètres FMOD (gains, fréquences EQ…)."},
-            "reference": {"type": "string", "desc": "Clé de rangement dans soundConfiguration."}
+            "soundID": {
+              "type": "integer",
+              "desc": "Engine sound identifier."
+            },
+            "params": {
+              "type": "table<string, number>",
+              "desc": "FMOD parameters (gains, EQ frequencies…)."
+            },
+            "reference": {
+              "type": "string",
+              "desc": "Storage key in soundConfiguration."
+            }
           },
           "returns": [],
           "internal": true
         },
         "initSounds": {
-          "desc": "Crée la configuration sonore depuis la table jbeam désignée par soundConfig (lisseurs, gains, EQ, échantillon) et active updateSounds. Journalise une erreur si la configuration est introuvable.",
-          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (soundConfig)."}},
+          "desc": "Creates the sound configuration from the jbeam table designated by soundConfig (smoothers, gains, EQ, sample) and enables updateSounds. Logs an error if the configuration cannot be found.",
+          "params": {
+            "jbeamData": {
+              "type": "table",
+              "desc": "jbeam data of the component (soundConfig)."
+            }
+          },
           "returns": [],
           "internal": true
         }

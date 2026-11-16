@@ -2,86 +2,86 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+--- Flowgraph node class; each instance represents a node in a graph.
 ---@class flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C
 local flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C = {}
 
---- Vide pendingValue et pendingSettings.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:115
+--- Clears pendingValue and pendingSettings.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:115
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:_executionStarted() end
 
---- Applique le choix de copilote : enregistre rallyVoicepackPick (boucle) ou recharge les assets du voicepack via rm:reloadVoicepackAssets ; logue une erreur en cas d'échec.
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:290
----@param value string Valeur du copilote choisi.
+--- Applies the co-driver choice: records rallyVoicepackPick (loop) or reloads the voicepack assets via rm:reloadVoicepackAssets; logs an error on failure.
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:290
+---@param value string Value of the chosen co-driver.
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:applyPick(value) end
 
---- Renvoie les réglages booléens de la mission retenus dans settingKeys, avec la valeur en attente si elle existe.
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:154
----@param mission table|nil Mission dont on lit getUserSettingsData().
+--- Returns the mission's boolean settings kept in settingKeys, with the pending value if it exists.
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:154
+---@param mission table|nil Mission whose getUserSettingsData() is read.
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:buildBoolSettings(mission) end
 
---- Construit la liste des copilotes pour une mission de boucle rallye (label, value, shortLabel, detail) et la valeur sélectionnée ; renvoie nil si rien n'est disponible.
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:125
----@param loopManager table Gestionnaire de boucle rallye.
+--- Builds the list of co-drivers for a rally loop mission (label, value, shortLabel, detail) and the selected value; returns nil if nothing is available.
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:125
+---@param loopManager table Rally loop manager.
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:buildLoopOptions(loopManager) end
 
---- Idem pour une spéciale rallye standard à partir du rally manager.
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:140
+--- Same for a standard rally special stage from the rally manager.
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:140
 ---@param rm table Rally manager (gameplay_rally.getRallyManager()).
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:buildStageOptions(rm) end
 
---- Renvoie la mission rallye de la boucle (loopManager:getRallyLoopMission()) ou, sans boucle, l'activité du gestionnaire.
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:120
----@param loopManager table|nil Gestionnaire de boucle rallye ou nil.
+--- Returns the rally mission of the loop (loopManager:getRallyLoopMission()) or, without a loop, the manager's activity.
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:120
+---@param loopManager table|nil Rally loop manager or nil.
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:getMission(loopManager) end
 
---- Crée le panneau {type='coDriverSelector', ...} et vide les choix en attente.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:102
+--- Creates the panel {type='coDriverSelector', ...} and clears the pending choices.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:102
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:init() end
 
---- Appelé par le panneau quand un copilote est choisi : mémorise le choix et joue un échantillon (composé, enregistré ou test d'interphone).
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:236
----@param value string Valeur choisie.
+--- Called by the panel when a co-driver is chosen: stores the choice and plays a sample (composed, recorded or intercom test).
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:236
+---@param value string Chosen value.
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:onCoDriverSelectedByPanel(value) end
 
---- Appelé quand un réglage booléen change : met à jour pendingSettings, mission.lastUserSettings et le panneau. Accepte soit (key, value), soit une table {key, value}.
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:252
----@param key string|table Clé du réglage ou table payload.
----@param value boolean|nil Nouvelle valeur.
+--- Called when a boolean setting changes: updates pendingSettings, mission.lastUserSettings and the panel. Accepts either (key, value) or a table {key, value}.
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:252
+---@param key string|table Setting key or payload table.
+---@param value boolean|nil New value.
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:onRallyStartSettingChanged(key, value) end
 
---- Hook appelé au clic sur Start : coupe l'audio, écrit les réglages en attente via settings.setValue et applique le copilote choisi (applyPick).
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:276
+--- Hook called on clicking Start: stops the audio, writes the pending settings via settings.setValue and applies the chosen co-driver (applyPick).
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:276
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:onUIStartButtonClicked() end
 
---- Appelé chaque frame comme extension ; fait avancer la file audio de l'échantillon.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:232
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulé (s).
----@param dtRaw number Delta temps brut (s).
+--- Called every frame as an extension; advances the sample audio queue.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:232
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulated time delta (s).
+---@param dtRaw number Raw time delta (s).
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:onUpdate(dtReal, dtSim, dtRaw) end
 
---- Appelé quand la case notes visuelles change ; mémorise rallyVisualPacenotes en attente.
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:243
----@param value boolean Nouvel état.
+--- Called when the visual notes checkbox changes; stores rallyVisualPacenotes as pending.
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:243
+---@param value boolean New state.
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:onVisualPacenotesChangedByPanel(value) end
 
---- Réinitialise la file audio d'échantillon puis y met les objets audio donnés (timing du voicepack de l'entrée).
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:224
----@param entry table|nil Entrée de voicepack.
----@param audioObjs table|nil Objets audio à jouer ; nil pour couper.
+--- Resets the sample audio queue then puts the given audio objects in it (voicepack timing of the entry).
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:224
+---@param entry table|nil Voicepack entry.
+---@param audioObjs table|nil Audio objects to play; nil to stop.
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:playSample(entry, audioObjs) end
 
---- Retrouve l'entrée de voicepack correspondant à la valeur choisie (mode boucle ou spéciale).
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:214
----@param value string Valeur de réglage du copilote.
+--- Finds the voicepack entry matching the chosen value (loop or special stage mode).
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:214
+---@param value string Co-driver setting value.
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:resolveEntry(value) end
 
---- Construit le panneau (options de copilote, sélection, notes visuelles, réglages booléens, note de boucle) et l'ajoute à l'UI, puis joue le test d'interphone du copilote sélectionné. Sans rally manager ou sans option, logue un avertissement et saute le panneau.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:173
+--- Builds the panel (co-driver options, selection, visual notes, boolean settings, loop note) and adds it to the UI, then plays the intercom test of the selected co-driver. Without a rally manager or without options, logs a warning and skips the panel.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua:173
 function flowgraph_nodes_ui_updatedUI_startScreenRallySettings_C:work() end
 

@@ -1,383 +1,383 @@
 # `gameplay_seatOccupants`
 
-*Fichier : `lua/ge/extensions/gameplay/seatOccupants.lua` · VM : Game Engine (GE) · 2030 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/seatOccupants.lua` · VM: Game Engine (GE) · 2030 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_seatOccupants` : `extensions.load("gameplay_seatOccupants")`, puis la globale `gameplay_seatOccupants`
+**Access:** extension `gameplay_seatOccupants`: `extensions.load("gameplay_seatOccupants")`, then the global `gameplay_seatOccupants`
 
-Système de sièges et d'occupants des véhicules. Il enregistre quel joueur (ou quel occupant factice) occupe quel siège de chaque véhicule (occupancy[vehId][seatId]) et la « présence » de chaque joueur (véhicule, siège éventuel, mode de permission). Il applique le poids des occupants au véhicule, affiche ou masque les maillages d'occupants (selon la caméra et le réglage enableSeatOccupants), gère la caméra de siège, le blocage des commandes de conduite pour un passager (masque d'action maps) et la sortie du véhicule. Les véhicules sans configuration de sièges (occupantSystem / occupantSlotsById dans les données JBeam) ne passent pas par ce système. Utile aux moddeurs pour faire monter un joueur dans un siège précis, ajouter des passagers factices lestés ou connaître qui conduit.
+Vehicle seat and occupant system. It records which player (or dummy occupant) occupies which seat of each vehicle (occupancy[vehId][seatId]) and the "presence" of each player (vehicle, optional seat, permission mode). It applies the occupants' weight to the vehicle, shows or hides occupant meshes (depending on the camera and the enableSeatOccupants setting), handles the seat camera, the blocking of driving controls for a passenger (action maps mask) and exiting the vehicle. Vehicles without a seat configuration (occupantSystem / occupantSlotsById in the JBeam data) do not go through this system. Useful to modders for putting a player in a specific seat, adding weighted dummy passengers or finding out who is driving.
 
-## Exemple
+## Example
 
 ```lua
--- installer le joueur 0 en passager sur le siège « RR »
+-- seat player 0 as a passenger in seat "RR"
 gameplay_seatOccupants.requestEnterSeat(vehId, 'RR', 0)
--- ajouter un passager factice de 80 kg
+-- add an 80 kg dummy passenger
 gameplay_seatOccupants.setDummyOccupant(vehId, 'FR', 80)
 print(dumps(gameplay_seatOccupants.getSeats(vehId)))
 ```
 
-## Remarques
+## Notes
 
-- Modes de permission (gameplay/vehiclePresencePolicy) : 'driver' (commandes de conduite), 'passenger' (aucune commande), 'unrestricted' (toutes). Sans siège, le mode par défaut est 'unrestricted' en freeroam hors multi-siège, sinon 'passenger'.
-- Poids par défaut d'un occupant : 89 (kg). cheeseburger / salad ajoutent / retirent 10 kg à tous les occupants du véhicule, borné entre 49 et 119.
-- Les identifiants de siège (seatId) viennent des groupes cargo « <seatId>Occupant » du véhicule (par exemple FL, FR). Le siège conducteur est celui dont defaultPermissionMode vaut 'driver', sinon FR (conduite à droite) ou FL.
-- Unicycle (marche à pied) exclu du système de sièges.
-- Champs de debug : debugDisableOccupantSystem remet le comportement ancien (tout le monde 'unrestricted', sans sièges) ; debugDisableOccupantWeight ; enablePresenceDebugMessages affiche les changements de présence ; enableSeatEjection (false par défaut) permet à enterSeat d'éjecter l'occupant actuel d'un siège occupé et de prendre sa place.
-- Sérialisation : version 2 ({version, playerPresence, seatClaims, occupancy}) ; la restauration accepte aussi l'ancien format « occupancy » seul.
+- Permission modes (gameplay/vehiclePresencePolicy): 'driver' (driving controls), 'passenger' (no controls), 'unrestricted' (all). Without a seat, the default mode is 'unrestricted' in freeroam outside multiseat, otherwise 'passenger'.
+- Default occupant weight: 89 (kg). cheeseburger / salad add / remove 10 kg to all occupants of the vehicle, clamped between 49 and 119.
+- Seat identifiers (seatId) come from the vehicle's "<seatId>Occupant" cargo groups (for example FL, FR). The driver seat is the one whose defaultPermissionMode is 'driver', otherwise FR (right-hand drive) or FL.
+- Unicycle (walking) is excluded from the seat system.
+- Debug fields: debugDisableOccupantSystem restores the old behavior (everyone 'unrestricted', no seats); debugDisableOccupantWeight; enablePresenceDebugMessages displays presence changes; enableSeatEjection (false by default) lets enterSeat eject the current occupant of an occupied seat and take their place.
+- Serialization: version 2 ({version, playerPresence, seatClaims, occupancy}); restoration also accepts the old "occupancy"-only format.
 
-**Dépendances (chargées avant) :** `core_camera`, `core_vehicle_manager`, `core_input_actionFilter`, `core_gamestate`, `core_multiseat`, `ui_vehicleSelector_vehicleSpecifications`
+**Dependencies (loaded first):** `core_camera`, `core_vehicle_manager`, `core_input_actionFilter`, `core_gamestate`, `core_multiseat`, `ui_vehicleSelector_vehicleSpecifications`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_seatOccupants.canEnterVehicle(vehId, player)` | Indique si le joueur peut entrer dans le véhicule (changement de véhicule ou marche autorisés). | 365 |
-| `gameplay_seatOccupants.cheeseburger(vehId)` | Ajoute 10 kg à chaque occupant (borné à 119) et affiche un message avec le poids. | 1497 |
-| `gameplay_seatOccupants.clearDummyOccupant(vehId, seatId)` | Retire l'occupant factice d'un siège. | 1422 |
-| `gameplay_seatOccupants.clearDummyOccupants(vehId)` | Retire tous les occupants factices d'un véhicule, ou de tous les véhicules si vehId est nil. | 1434 |
-| `gameplay_seatOccupants.clearOccupied(vehId, seatIdOrPlayer)` | Libère des sièges. Sans second argument : tous les occupants du véhicule. Avec un nombre : retire ce joueur de tous les véhicules. | 875 |
-| `gameplay_seatOccupants.enterSeat(vehId, triggerId, player)` | Point d'entrée du déclencheur « enterSeat » d'un siège : retrouve le siège à partir du trigger puis appelle requestEnterSeat. En mode debug, entre en 'unrestricted' sans siège. | 1597 |
-| `gameplay_seatOccupants.getDriverPlayer(vehId)` | Plus petit indice de joueur autorisé à conduire le véhicule (mode 'driver' ou 'unrestricted'). | 1388 |
-| `gameplay_seatOccupants.getOccupantSystemVersion(vehId)` | Version déclarée du système d'occupants dans les données du véhicule. | 80 |
-| `gameplay_seatOccupants.getPlayerPresence(player)` | Copie de la présence d'un joueur dans un véhicule. | 287 |
-| `gameplay_seatOccupants.getSeatExitData(player, vehId)` | Calcule où le joueur sort du véhicule : point à côté de la carrosserie, du côté du siège (exitNode/exitSide de l'emplacement, sinon côté déduit de la position), décalé de 0,7 m au-delà de la carrosserie. | 1520 |
-| `gameplay_seatOccupants.getSeats(vehId)` | Liste les sièges d'un véhicule avec leur état. | 1322 |
-| `gameplay_seatOccupants.getVehiclePresences(vehId)` | Liste des présences des joueurs dans un véhicule, triée par joueur. | 1371 |
-| `gameplay_seatOccupants.onBeforeVehicleReplaced(vehId)` | Hook avant le remplacement d'un véhicule : mémorise s'il n'avait pas de système de sièges. *(interne)* *(hook)* | 1809 |
-| `gameplay_seatOccupants.onBeforeWalkingModeToggled(enabled, _, player)` | Hook avant la bascule du mode marche : si le joueur passe à pied, lève le blocage de conduite. *(interne)* *(hook)* | 1878 |
-| `gameplay_seatOccupants.onCameraChanged(player, camName, vid)` | Hook : la caméra d'un joueur change ; met à jour la visibilité des occupants (par ex. cacher la tête en vue à la première personne). *(interne)* *(hook)* | 1756 |
-| `gameplay_seatOccupants.onClientStartMission()` | Hook : efface les forçages d'occupants et occupe le véhicule actuel du joueur 0. *(interne)* *(hook)* | 1865 |
-| `gameplay_seatOccupants.onDeserialized(data)` | Hook : restaure l'état après rechargement Lua. *(interne)* *(hook)* | 1971 |
-| `gameplay_seatOccupants.onExtensionLoaded(data)` | Hook : restaure l'état sérialisé s'il existe, sinon occupe les joueurs existants. *(interne)* *(hook)* | 1939 |
-| `gameplay_seatOccupants.onExtensionUnloaded()` | Hook : retire les forçages, restaure les caméras et libère le masque d'action maps. *(interne)* *(hook)* | 1952 |
-| `gameplay_seatOccupants.onLocalParticipantsChanged()` | Hook : recalcule présences et visuels quand les participants locaux changent. *(interne)* *(hook)* | 1870 |
-| `gameplay_seatOccupants.onSerialize()` | Hook : sérialise présences et sièges occupés avant un rechargement Lua. *(interne)* *(hook)* | 1962 |
-| `gameplay_seatOccupants.onSettingsChanged()` | Hook : réapplique les visuels des occupants (réglage enableSeatOccupants). *(interne)* *(hook)* | 1746 |
-| `gameplay_seatOccupants.onSplitScreenChanged()` | Hook : recalcule présences et visuels après changement d'écran partagé. *(interne)* *(hook)* | 1750 |
-| `gameplay_seatOccupants.onVehicleDestroyed(vehId)` | Hook : libère toutes les données d'occupation et de présence du véhicule détruit. *(interne)* *(hook)* | 1833 |
-| `gameplay_seatOccupants.onVehicleReplaced(vehId)` | Hook après remplacement : réapplique l'état et réassigne les joueurs sans siège. *(interne)* *(hook)* | 1813 |
-| `gameplay_seatOccupants.onVehicleResetted(vehId)` | Hook : réapplique poids et visuels après un reset. *(interne)* *(hook)* | 1826 |
-| `gameplay_seatOccupants.onVehicleSpawned(vehId)` | Hook : réapplique poids et visuels pour un véhicule qui vient d'apparaître. *(interne)* *(hook)* | 1793 |
-| `gameplay_seatOccupants.onVehicleSwitched(oldId, newId, player)` | Hook : le joueur change de véhicule ; met à jour son occupation. *(interne)* *(hook)* | 1612 |
-| `gameplay_seatOccupants.onVehicleTriggerActionLabel(data)` | Hook pour personnaliser le libellé et l'icône de l'action « enterSeat » d'un trigger de siège (« S'asseoir ici », siège conducteur ou passager). *(interne)* *(hook)* | 1067 |
-| `gameplay_seatOccupants.refreshOccupantMeshes(vehId)` | Réaffirme la visibilité des maillages d'occupants après une modification faite sans passer par les hooks de synchronisation (utilisé par gameplay_traffic). | 646 |
-| `gameplay_seatOccupants.requestEnterBestSeat(vehId, player, walkingPos)` | Choisit un siège libre (en tenant compte de la position de marche éventuelle) et y installe le joueur. Sans siège libre, repasse en présence sans siège si le mode par défaut est 'unrestricted', sinon affiche « véhicule plein ». | 1202 |
-| `gameplay_seatOccupants.requestEnterSeat(vehId, seatId, player, permissionOverride)` | Demande à un joueur de s'asseoir sur un siège donné, en entrant dans le véhicule si nécessaire (à pied ou en changeant de véhicule). Si le joueur est déjà sur ce siège, il sort (bascule en mode marche). Affiche un message si le siège est pris, si on ne peut pas quitter son siège, ou si le véhicule n'est pas accessible. | 1138 |
-| `gameplay_seatOccupants.requestUnseatedPresence(player, vehId, permissionMode)` | Place un joueur dans le véhicule sans siège (présence « non assise »), avec un mode de permission optionnel. | 1217 |
-| `gameplay_seatOccupants.salad(vehId)` | Retire 10 kg à chaque occupant (borné à 49) et affiche un message avec le poids. | 1501 |
-| `gameplay_seatOccupants.setDummyOccupant(vehId, seatId, weight)` | Place un occupant factice (maillage coloré aléatoire) avec un poids sur un siège libre. | 1400 |
-| `gameplay_seatOccupants.setOccupied(vehId, seatId, player, weight, permissionOverride)` | Place un joueur sur un siège (sans animation ni changement de véhicule). Libère ses autres sièges, enregistre la présence, applique le poids, met à jour les commandes et la caméra. | 842 |
-| `gameplay_seatOccupants.setPlayerPermissionMode(player, permissionMode)` | Change le mode de permission d'un joueur déjà présent dans un véhicule. | 478 |
-| `gameplay_seatOccupants.setVehicleOccupantsEnabledOverride(vehId, enabled)` | Force l'affichage (true) ou le masquage (false) des occupants d'un véhicule, indépendamment du réglage global ; nil retire le forçage. | 1718 |
-| `gameplay_seatOccupants.showVehicleFullMessage(player)` | Affiche le message UI « véhicule plein » au joueur. | 379 |
-| `gameplay_seatOccupants.switchSeat(player, direction)` | Passe au siège libre suivant (direction > 0) ou précédent (direction < 0) du véhicule actuel, le conducteur étant en tête de liste. | 1254 |
-| `gameplay_seatOccupants.toggleUnseated(player)` | Bascule entre « assis » et « sans siège » dans le véhicule actuel. | 1300 |
-| `gameplay_seatOccupants.usesSeatSystem(vehId)` | Indique si le véhicule utilise le système de sièges (occupantSystem.enabled, sinon présence d'emplacements d'occupants dans les données du véhicule). Toujours false si debugDisableOccupantSystem. | 85 |
+| `gameplay_seatOccupants.canEnterVehicle(vehId, player)` | Indicates whether the player can enter the vehicle (vehicle switching or walking allowed). | 365 |
+| `gameplay_seatOccupants.cheeseburger(vehId)` | Adds 10 kg to each occupant (clamped to 119) and displays a message with the weight. | 1497 |
+| `gameplay_seatOccupants.clearDummyOccupant(vehId, seatId)` | Removes the dummy occupant from a seat. | 1422 |
+| `gameplay_seatOccupants.clearDummyOccupants(vehId)` | Removes all dummy occupants from a vehicle, or from all vehicles if vehId is nil. | 1434 |
+| `gameplay_seatOccupants.clearOccupied(vehId, seatIdOrPlayer)` | Frees seats. Without a second argument: all occupants of the vehicle. With a number: removes that player from all vehicles. | 875 |
+| `gameplay_seatOccupants.enterSeat(vehId, triggerId, player)` | Entry point of a seat's "enterSeat" trigger: finds the seat from the trigger then calls requestEnterSeat. In debug mode, enters 'unrestricted' without a seat. | 1597 |
+| `gameplay_seatOccupants.getDriverPlayer(vehId)` | Lowest player index allowed to drive the vehicle ('driver' or 'unrestricted' mode). | 1388 |
+| `gameplay_seatOccupants.getOccupantSystemVersion(vehId)` | Declared version of the occupant system in the vehicle data. | 80 |
+| `gameplay_seatOccupants.getPlayerPresence(player)` | Copy of a player's presence in a vehicle. | 287 |
+| `gameplay_seatOccupants.getSeatExitData(player, vehId)` | Computes where the player exits the vehicle: a point beside the body, on the seat side (exitNode/exitSide of the slot, otherwise side inferred from the position), offset 0.7 m beyond the body. | 1520 |
+| `gameplay_seatOccupants.getSeats(vehId)` | Lists the seats of a vehicle with their state. | 1322 |
+| `gameplay_seatOccupants.getVehiclePresences(vehId)` | List of player presences in a vehicle, sorted by player. | 1371 |
+| `gameplay_seatOccupants.onBeforeVehicleReplaced(vehId)` | Hook before a vehicle is replaced: remembers whether it had no seat system. *(internal)* *(hook)* | 1809 |
+| `gameplay_seatOccupants.onBeforeWalkingModeToggled(enabled, _, player)` | Hook before the walking mode toggle: if the player switches to walking, lifts the driving block. *(internal)* *(hook)* | 1878 |
+| `gameplay_seatOccupants.onCameraChanged(player, camName, vid)` | Hook: a player's camera changes; updates occupant visibility (e.g. hide the head in first-person view). *(internal)* *(hook)* | 1756 |
+| `gameplay_seatOccupants.onClientStartMission()` | Hook: clears occupant overrides and occupies player 0's current vehicle. *(internal)* *(hook)* | 1865 |
+| `gameplay_seatOccupants.onDeserialized(data)` | Hook: restores the state after a Lua reload. *(internal)* *(hook)* | 1971 |
+| `gameplay_seatOccupants.onExtensionLoaded(data)` | Hook: restores the serialized state if it exists, otherwise occupies the existing players. *(internal)* *(hook)* | 1939 |
+| `gameplay_seatOccupants.onExtensionUnloaded()` | Hook: removes the overrides, restores the cameras and frees the action maps mask. *(internal)* *(hook)* | 1952 |
+| `gameplay_seatOccupants.onLocalParticipantsChanged()` | Hook: recalculates presences and visuals when the local participants change. *(internal)* *(hook)* | 1870 |
+| `gameplay_seatOccupants.onSerialize()` | Hook: serializes presences and occupied seats before a Lua reload. *(internal)* *(hook)* | 1962 |
+| `gameplay_seatOccupants.onSettingsChanged()` | Hook: reapplies the occupant visuals (enableSeatOccupants setting). *(internal)* *(hook)* | 1746 |
+| `gameplay_seatOccupants.onSplitScreenChanged()` | Hook: recalculates presences and visuals after a split-screen change. *(internal)* *(hook)* | 1750 |
+| `gameplay_seatOccupants.onVehicleDestroyed(vehId)` | Hook: frees all occupancy and presence data of the destroyed vehicle. *(internal)* *(hook)* | 1833 |
+| `gameplay_seatOccupants.onVehicleReplaced(vehId)` | Hook after replacement: reapplies the state and reassigns unseated players. *(internal)* *(hook)* | 1813 |
+| `gameplay_seatOccupants.onVehicleResetted(vehId)` | Hook: reapplies weight and visuals after a reset. *(internal)* *(hook)* | 1826 |
+| `gameplay_seatOccupants.onVehicleSpawned(vehId)` | Hook: reapplies weight and visuals for a vehicle that has just appeared. *(internal)* *(hook)* | 1793 |
+| `gameplay_seatOccupants.onVehicleSwitched(oldId, newId, player)` | Hook: the player changes vehicle; updates their occupancy. *(internal)* *(hook)* | 1612 |
+| `gameplay_seatOccupants.onVehicleTriggerActionLabel(data)` | Hook to customize the label and icon of the "enterSeat" action of a seat trigger ("Sit here", driver or passenger seat). *(internal)* *(hook)* | 1067 |
+| `gameplay_seatOccupants.refreshOccupantMeshes(vehId)` | Reasserts the visibility of occupant meshes after a change made without going through the sync hooks (used by gameplay_traffic). | 646 |
+| `gameplay_seatOccupants.requestEnterBestSeat(vehId, player, walkingPos)` | Picks a free seat (taking the walking position into account if any) and seats the player there. With no free seat, falls back to unseated presence if the default mode is 'unrestricted', otherwise shows "vehicle full". | 1202 |
+| `gameplay_seatOccupants.requestEnterSeat(vehId, seatId, player, permissionOverride)` | Asks a player to sit in a given seat, entering the vehicle if needed (on foot or by switching vehicle). If the player is already in this seat, they exit (switch to walking mode). Shows a message if the seat is taken, if the player cannot leave their seat, or if the vehicle is not accessible. | 1138 |
+| `gameplay_seatOccupants.requestUnseatedPresence(player, vehId, permissionMode)` | Places a player in the vehicle without a seat ("unseated" presence), with an optional permission mode. | 1217 |
+| `gameplay_seatOccupants.salad(vehId)` | Removes 10 kg from each occupant (clamped to 49) and displays a message with the weight. | 1501 |
+| `gameplay_seatOccupants.setDummyOccupant(vehId, seatId, weight)` | Places a dummy occupant (randomly colored mesh) with a weight in a free seat. | 1400 |
+| `gameplay_seatOccupants.setOccupied(vehId, seatId, player, weight, permissionOverride)` | Places a player in a seat (no animation or vehicle change). Frees their other seats, records the presence, applies the weight, updates the controls and the camera. | 842 |
+| `gameplay_seatOccupants.setPlayerPermissionMode(player, permissionMode)` | Changes the permission mode of a player already present in a vehicle. | 478 |
+| `gameplay_seatOccupants.setVehicleOccupantsEnabledOverride(vehId, enabled)` | Forces the display (true) or hiding (false) of a vehicle's occupants, regardless of the global setting; nil removes the override. | 1718 |
+| `gameplay_seatOccupants.showVehicleFullMessage(player)` | Shows the "vehicle full" UI message to the player. | 379 |
+| `gameplay_seatOccupants.switchSeat(player, direction)` | Moves to the next free seat (direction > 0) or the previous one (direction < 0) of the current vehicle, with the driver at the head of the list. | 1254 |
+| `gameplay_seatOccupants.toggleUnseated(player)` | Toggles between "seated" and "unseated" in the current vehicle. | 1300 |
+| `gameplay_seatOccupants.usesSeatSystem(vehId)` | Indicates whether the vehicle uses the seat system (occupantSystem.enabled, otherwise presence of occupant slots in the vehicle data). Always false if debugDisableOccupantSystem. | 85 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_seatOccupants.canEnterVehicle(vehId, player)`
 
-Indique si le joueur peut entrer dans le véhicule (changement de véhicule ou marche autorisés).
+Indicates whether the player can enter the vehicle (vehicle switching or walking allowed).
 
-- `vehId` (*integer*) : Identifiant du véhicule.
-- `player` (*integer|nil*) : Indice du joueur (0 par défaut).
-- **renvoie** : boolean true si l'entrée est possible.
+- `vehId` (*integer*) : Vehicle identifier.
+- `player` (*integer|nil*) : Player index (0 by default).
+- **returns**: boolean true if entering is possible.
 
 #### `gameplay_seatOccupants.cheeseburger(vehId)`
 
-Ajoute 10 kg à chaque occupant (borné à 119) et affiche un message avec le poids.
+Adds 10 kg to each occupant (clamped to 119) and displays a message with the weight.
 
-- `vehId` (*integer|nil*) : Véhicule ; défaut véhicule du joueur 0.
-- **renvoie** : number|nil Poids affiché, nil si aucun occupant.
+- `vehId` (*integer|nil*) : Vehicle; default the player 0 vehicle.
+- **returns**: number|nil Displayed weight, nil if no occupant.
 
 #### `gameplay_seatOccupants.clearDummyOccupant(vehId, seatId)`
 
-Retire l'occupant factice d'un siège.
+Removes the dummy occupant from a seat.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
-- `seatId` (*string*) : Siège.
-- **renvoie** : boolean true si retiré.
-- **renvoie** : string|nil 'notDummy' si rien à retirer.
+- `vehId` (*integer*) : Vehicle identifier.
+- `seatId` (*string*) : Seat.
+- **returns**: boolean true if removed.
+- **returns**: string|nil 'notDummy' if there is nothing to remove.
 
 #### `gameplay_seatOccupants.clearDummyOccupants(vehId)`
 
-Retire tous les occupants factices d'un véhicule, ou de tous les véhicules si vehId est nil.
+Removes all dummy occupants from a vehicle, or from all vehicles if vehId is nil.
 
-- `vehId` (*integer|nil*) : Véhicule ciblé.
-- **renvoie** : integer Nombre d'occupants retirés.
+- `vehId` (*integer|nil*) : Targeted vehicle.
+- **returns**: integer Number of occupants removed.
 
 #### `gameplay_seatOccupants.clearOccupied(vehId, seatIdOrPlayer)`
 
-Libère des sièges. Sans second argument : tous les occupants du véhicule. Avec un nombre : retire ce joueur de tous les véhicules.
+Frees seats. Without a second argument: all occupants of the vehicle. With a number: removes that player from all vehicles.
 
-- `vehId` (*integer|nil*) : Identifiant du véhicule.
-- `seatIdOrPlayer` (*string|integer|nil*) : Nil pour tout le véhicule, un nombre pour un joueur ; un nom de siège est géré par le reste de la fonction (déduit du code).
+- `vehId` (*integer|nil*) : Vehicle identifier.
+- `seatIdOrPlayer` (*string|integer|nil*) : Nil for the whole vehicle, a number for a player; a seat name is handled by the rest of the function (inferred from code).
 
 #### `gameplay_seatOccupants.enterSeat(vehId, triggerId, player)`
 
-Point d'entrée du déclencheur « enterSeat » d'un siège : retrouve le siège à partir du trigger puis appelle requestEnterSeat. En mode debug, entre en 'unrestricted' sans siège.
+Entry point of a seat's "enterSeat" trigger: finds the seat from the trigger then calls requestEnterSeat. In debug mode, enters 'unrestricted' without a seat.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
-- `triggerId` (*any*) : Identifiant du trigger de siège.
-- `player` (*integer|nil*) : Joueur (0 par défaut).
-- **renvoie** : boolean|nil true si assis.
+- `vehId` (*integer*) : Vehicle identifier.
+- `triggerId` (*any*) : Seat trigger identifier.
+- `player` (*integer|nil*) : Player (0 by default).
+- **returns**: boolean|nil true if seated.
 
 #### `gameplay_seatOccupants.getDriverPlayer(vehId)`
 
-Plus petit indice de joueur autorisé à conduire le véhicule (mode 'driver' ou 'unrestricted').
+Lowest player index allowed to drive the vehicle ('driver' or 'unrestricted' mode).
 
-- `vehId` (*integer*) : Identifiant du véhicule.
-- **renvoie** : integer|nil Indice du conducteur, nil s'il n'y a que des passagers.
+- `vehId` (*integer*) : Vehicle identifier.
+- **returns**: integer|nil Driver index, nil if there are only passengers.
 
 #### `gameplay_seatOccupants.getOccupantSystemVersion(vehId)`
 
-Version déclarée du système d'occupants dans les données du véhicule.
+Declared version of the occupant system in the vehicle data.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
-- **renvoie** : any|nil Version, ou nil si absente.
+- `vehId` (*integer*) : Vehicle identifier.
+- **returns**: any|nil Version, or nil if absent.
 
 #### `gameplay_seatOccupants.getPlayerPresence(player)`
 
-Copie de la présence d'un joueur dans un véhicule.
+Copy of a player's presence in a vehicle.
 
-- `player` (*integer|nil*) : Indice du joueur (0 par défaut).
-- **renvoie** : table|nil {vehicleId, seatId?, permissionMode, permissionOverride?} ou nil.
+- `player` (*integer|nil*) : Player index (0 by default).
+- **returns**: table|nil {vehicleId, seatId?, permissionMode, permissionOverride?} or nil.
 
 #### `gameplay_seatOccupants.getSeatExitData(player, vehId)`
 
-Calcule où le joueur sort du véhicule : point à côté de la carrosserie, du côté du siège (exitNode/exitSide de l'emplacement, sinon côté déduit de la position), décalé de 0,7 m au-delà de la carrosserie.
+Computes where the player exits the vehicle: a point beside the body, on the seat side (exitNode/exitSide of the slot, otherwise side inferred from the position), offset 0.7 m beyond the body.
 
-- `player` (*integer|nil*) : Joueur (0 par défaut).
-- `vehId` (*integer|nil*) : Véhicule ; défaut véhicule du joueur.
-- **renvoie** : vec3|nil Position de sortie.
-- **renvoie** : vec3|nil Position du siège.
+- `player` (*integer|nil*) : Player (0 by default).
+- `vehId` (*integer|nil*) : Vehicle; default the player's vehicle.
+- **returns**: vec3|nil Exit position.
+- **returns**: vec3|nil Seat position.
 
 #### `gameplay_seatOccupants.getSeats(vehId)`
 
-Liste les sièges d'un véhicule avec leur état.
+Lists the seats of a vehicle with their state.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
-- **renvoie** : table[] Éléments {seatId, isDriver, occupied, occupantType ('player'|'dummy'), player, weight, color, permissionMode, displayName, defaultPermissionMode, cameraName, actionMaps, seatExitNode, seatExitSide, partPath, seatPartPath}.
+- `vehId` (*integer*) : Vehicle identifier.
+- **returns**: table[] Items {seatId, isDriver, occupied, occupantType ('player'|'dummy'), player, weight, color, permissionMode, displayName, defaultPermissionMode, cameraName, actionMaps, seatExitNode, seatExitSide, partPath, seatPartPath}.
 
 #### `gameplay_seatOccupants.getVehiclePresences(vehId)`
 
-Liste des présences des joueurs dans un véhicule, triée par joueur.
+List of player presences in a vehicle, sorted by player.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
-- **renvoie** : table[] Éléments {player, seatId, permissionMode, unseated}.
+- `vehId` (*integer*) : Vehicle identifier.
+- **returns**: table[] Items {player, seatId, permissionMode, unseated}.
 
 #### `gameplay_seatOccupants.onBeforeVehicleReplaced(vehId)`
 
-Hook avant le remplacement d'un véhicule : mémorise s'il n'avait pas de système de sièges.
+Hook before a vehicle is replaced: remembers whether it had no seat system.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
+- `vehId` (*integer*) : Vehicle identifier.
 
 #### `gameplay_seatOccupants.onBeforeWalkingModeToggled(enabled, _, player)`
 
-Hook avant la bascule du mode marche : si le joueur passe à pied, lève le blocage de conduite.
+Hook before the walking mode toggle: if the player switches to walking, lifts the driving block.
 
-- `enabled` (*boolean*) : true si on passe à pied.
-- `_` (*any*) : Non utilisé.
-- `player` (*integer|nil*) : Indice du joueur.
+- `enabled` (*boolean*) : true if switching to walking.
+- `_` (*any*) : Not used.
+- `player` (*integer|nil*) : Player index.
 
 #### `gameplay_seatOccupants.onCameraChanged(player, camName, vid)`
 
-Hook : la caméra d'un joueur change ; met à jour la visibilité des occupants (par ex. cacher la tête en vue à la première personne).
+Hook: a player's camera changes; updates occupant visibility (e.g. hide the head in first-person view).
 
-- `player` (*integer|nil*) : Indice du joueur.
-- `camName` (*string*) : Nom de la caméra.
-- `vid` (*integer|nil*) : Véhicule de la caméra.
+- `player` (*integer|nil*) : Player index.
+- `camName` (*string*) : Camera name.
+- `vid` (*integer|nil*) : Camera vehicle.
 
 #### `gameplay_seatOccupants.onDeserialized(data)`
 
-Hook : restaure l'état après rechargement Lua.
+Hook: restores the state after a Lua reload.
 
-- `data` (*table*) : Données de onSerialize.
+- `data` (*table*) : Data from onSerialize.
 
 #### `gameplay_seatOccupants.onExtensionLoaded(data)`
 
-Hook : restaure l'état sérialisé s'il existe, sinon occupe les joueurs existants.
+Hook: restores the serialized state if it exists, otherwise occupies the existing players.
 
-- `data` (*table|nil*) : Données sérialisées.
+- `data` (*table|nil*) : Serialized data.
 
 #### `gameplay_seatOccupants.onSerialize()`
 
-Hook : sérialise présences et sièges occupés avant un rechargement Lua.
+Hook: serializes presences and occupied seats before a Lua reload.
 
-- **renvoie** : table {version, playerPresence, seatClaims, occupancy}.
+- **returns**: table {version, playerPresence, seatClaims, occupancy}.
 
 #### `gameplay_seatOccupants.onVehicleDestroyed(vehId)`
 
-Hook : libère toutes les données d'occupation et de présence du véhicule détruit.
+Hook: frees all occupancy and presence data of the destroyed vehicle.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
+- `vehId` (*integer*) : Vehicle identifier.
 
 #### `gameplay_seatOccupants.onVehicleReplaced(vehId)`
 
-Hook après remplacement : réapplique l'état et réassigne les joueurs sans siège.
+Hook after replacement: reapplies the state and reassigns unseated players.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
+- `vehId` (*integer*) : Vehicle identifier.
 
 #### `gameplay_seatOccupants.onVehicleResetted(vehId)`
 
-Hook : réapplique poids et visuels après un reset.
+Hook: reapplies weight and visuals after a reset.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
+- `vehId` (*integer*) : Vehicle identifier.
 
 #### `gameplay_seatOccupants.onVehicleSpawned(vehId)`
 
-Hook : réapplique poids et visuels pour un véhicule qui vient d'apparaître.
+Hook: reapplies weight and visuals for a vehicle that has just appeared.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
+- `vehId` (*integer*) : Vehicle identifier.
 
 #### `gameplay_seatOccupants.onVehicleSwitched(oldId, newId, player)`
 
-Hook : le joueur change de véhicule ; met à jour son occupation.
+Hook: the player changes vehicle; updates their occupancy.
 
-- `oldId` (*integer*) : Ancien véhicule.
-- `newId` (*integer*) : Nouveau véhicule.
-- `player` (*integer|nil*) : Indice du joueur.
+- `oldId` (*integer*) : Old vehicle.
+- `newId` (*integer*) : New vehicle.
+- `player` (*integer|nil*) : Player index.
 
 #### `gameplay_seatOccupants.onVehicleTriggerActionLabel(data)`
 
-Hook pour personnaliser le libellé et l'icône de l'action « enterSeat » d'un trigger de siège (« S'asseoir ici », siège conducteur ou passager).
+Hook to customize the label and icon of the "enterSeat" action of a seat trigger ("Sit here", driver or passenger seat).
 
-- `data` (*table*) : Table modifiée (actionName, vehicleId, player, title, icon).
+- `data` (*table*) : Modified table (actionName, vehicleId, player, title, icon).
 
 #### `gameplay_seatOccupants.refreshOccupantMeshes(vehId)`
 
-Réaffirme la visibilité des maillages d'occupants après une modification faite sans passer par les hooks de synchronisation (utilisé par gameplay_traffic).
+Reasserts the visibility of occupant meshes after a change made without going through the sync hooks (used by gameplay_traffic).
 
-- `vehId` (*integer*) : Identifiant du véhicule.
+- `vehId` (*integer*) : Vehicle identifier.
 
 #### `gameplay_seatOccupants.requestEnterBestSeat(vehId, player, walkingPos)`
 
-Choisit un siège libre (en tenant compte de la position de marche éventuelle) et y installe le joueur. Sans siège libre, repasse en présence sans siège si le mode par défaut est 'unrestricted', sinon affiche « véhicule plein ».
+Picks a free seat (taking the walking position into account if any) and seats the player there. With no free seat, falls back to unseated presence if the default mode is 'unrestricted', otherwise shows "vehicle full".
 
-- `vehId` (*integer*) : Identifiant du véhicule.
-- `player` (*integer|nil*) : Joueur.
-- `walkingPos` (*vec3|nil*) : Position du joueur à pied pour choisir le siège le plus proche.
-- **renvoie** : boolean|nil nil si le véhicule n'utilise pas le système de sièges.
+- `vehId` (*integer*) : Vehicle identifier.
+- `player` (*integer|nil*) : Player.
+- `walkingPos` (*vec3|nil*) : Position of the player on foot, used to pick the nearest seat.
+- **returns**: boolean|nil nil if the vehicle does not use the seat system.
 
 #### `gameplay_seatOccupants.requestEnterSeat(vehId, seatId, player, permissionOverride)`
 
-Demande à un joueur de s'asseoir sur un siège donné, en entrant dans le véhicule si nécessaire (à pied ou en changeant de véhicule). Si le joueur est déjà sur ce siège, il sort (bascule en mode marche). Affiche un message si le siège est pris, si on ne peut pas quitter son siège, ou si le véhicule n'est pas accessible.
+Asks a player to sit in a given seat, entering the vehicle if needed (on foot or by switching vehicle). If the player is already in this seat, they exit (switch to walking mode). Shows a message if the seat is taken, if the player cannot leave their seat, or if the vehicle is not accessible.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
-- `seatId` (*string*) : Siège visé.
-- `player` (*integer|nil*) : Joueur (0 par défaut).
-- `permissionOverride` (*string|nil*) : Mode de permission imposé.
-- **renvoie** : boolean|nil true si le joueur est au final sur ce siège (ou sort) ; nil si vehId ou seatId manquent.
+- `vehId` (*integer*) : Vehicle identifier.
+- `seatId` (*string*) : Targeted seat.
+- `player` (*integer|nil*) : Player (0 by default).
+- `permissionOverride` (*string|nil*) : Forced permission mode.
+- **returns**: boolean|nil true if the player ends up in this seat (or exits); nil if vehId or seatId is missing.
 
 #### `gameplay_seatOccupants.requestUnseatedPresence(player, vehId, permissionMode)`
 
-Place un joueur dans le véhicule sans siège (présence « non assise »), avec un mode de permission optionnel.
+Places a player in the vehicle without a seat ("unseated" presence), with an optional permission mode.
 
-- `player` (*integer|nil*) : Joueur.
-- `vehId` (*integer*) : Identifiant du véhicule.
-- `permissionMode` (*string|nil*) : 'driver', 'passenger' ou 'unrestricted'.
-- **renvoie** : boolean true si la présence sans siège est établie.
-- **renvoie** : string|nil 'invalidVehicle' ou 'invalidPermissionMode' en cas d'échec.
+- `player` (*integer|nil*) : Player.
+- `vehId` (*integer*) : Vehicle identifier.
+- `permissionMode` (*string|nil*) : 'driver', 'passenger' or 'unrestricted'.
+- **returns**: boolean true if the unseated presence is established.
+- **returns**: string|nil 'invalidVehicle' or 'invalidPermissionMode' on failure.
 
 #### `gameplay_seatOccupants.salad(vehId)`
 
-Retire 10 kg à chaque occupant (borné à 49) et affiche un message avec le poids.
+Removes 10 kg from each occupant (clamped to 49) and displays a message with the weight.
 
-- `vehId` (*integer|nil*) : Véhicule ; défaut véhicule du joueur 0.
-- **renvoie** : number|nil Poids affiché, nil si aucun occupant.
+- `vehId` (*integer|nil*) : Vehicle; default the player 0 vehicle.
+- **returns**: number|nil Displayed weight, nil if no occupant.
 
 #### `gameplay_seatOccupants.setDummyOccupant(vehId, seatId, weight)`
 
-Place un occupant factice (maillage coloré aléatoire) avec un poids sur un siège libre.
+Places a dummy occupant (randomly colored mesh) with a weight in a free seat.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
-- `seatId` (*string*) : Siège.
-- `weight` (*number|nil*) : Poids ; défaut 89, minimum 0.
-- **renvoie** : boolean true si placé.
-- **renvoie** : string|nil 'invalidVehicle', 'invalidSeat', 'occupied' ou 'reserved'.
+- `vehId` (*integer*) : Vehicle identifier.
+- `seatId` (*string*) : Seat.
+- `weight` (*number|nil*) : Weight; default 89, minimum 0.
+- **returns**: boolean true if placed.
+- **returns**: string|nil 'invalidVehicle', 'invalidSeat', 'occupied' or 'reserved'.
 
 #### `gameplay_seatOccupants.setOccupied(vehId, seatId, player, weight, permissionOverride)`
 
-Place un joueur sur un siège (sans animation ni changement de véhicule). Libère ses autres sièges, enregistre la présence, applique le poids, met à jour les commandes et la caméra.
+Places a player in a seat (no animation or vehicle change). Frees their other seats, records the presence, applies the weight, updates the controls and the camera.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
-- `seatId` (*string|nil*) : Siège ; défaut le siège conducteur.
-- `player` (*integer|nil*) : Joueur (0 par défaut).
-- `weight` (*number|nil*) : Poids de l'occupant (défaut 89).
-- `permissionOverride` (*string|nil*) : Mode de permission imposé.
-- **renvoie** : boolean false si véhicule invalide, siège invalide ou indisponible.
+- `vehId` (*integer*) : Vehicle identifier.
+- `seatId` (*string|nil*) : Seat; default the driver seat.
+- `player` (*integer|nil*) : Player (0 by default).
+- `weight` (*number|nil*) : Occupant weight (default 89).
+- `permissionOverride` (*string|nil*) : Forced permission mode.
+- **returns**: boolean false if invalid vehicle, invalid seat or unavailable seat.
 
 #### `gameplay_seatOccupants.setPlayerPermissionMode(player, permissionMode)`
 
-Change le mode de permission d'un joueur déjà présent dans un véhicule.
+Changes the permission mode of a player already present in a vehicle.
 
-- `player` (*integer|nil*) : Indice du joueur (0 par défaut).
-- `permissionMode` (*string*) : 'driver', 'passenger' ou 'unrestricted'.
-- **renvoie** : boolean true si appliqué.
-- **renvoie** : string|nil Cause d'échec : 'invalidPermissionMode' ou 'noPresence'.
+- `player` (*integer|nil*) : Player index (0 by default).
+- `permissionMode` (*string*) : 'driver', 'passenger' or 'unrestricted'.
+- **returns**: boolean true if applied.
+- **returns**: string|nil Failure cause: 'invalidPermissionMode' or 'noPresence'.
 
 #### `gameplay_seatOccupants.setVehicleOccupantsEnabledOverride(vehId, enabled)`
 
-Force l'affichage (true) ou le masquage (false) des occupants d'un véhicule, indépendamment du réglage global ; nil retire le forçage.
+Forces the display (true) or hiding (false) of a vehicle's occupants, regardless of the global setting; nil removes the override.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
-- `enabled` (*boolean|nil*) : Forçage.
-- **renvoie** : boolean false si le véhicule n'existe pas.
+- `vehId` (*integer*) : Vehicle identifier.
+- `enabled` (*boolean|nil*) : Override.
+- **returns**: boolean false if the vehicle does not exist.
 
 #### `gameplay_seatOccupants.showVehicleFullMessage(player)`
 
-Affiche le message UI « véhicule plein » au joueur.
+Shows the "vehicle full" UI message to the player.
 
-- `player` (*integer|nil*) : Indice du joueur.
+- `player` (*integer|nil*) : Player index.
 
 #### `gameplay_seatOccupants.switchSeat(player, direction)`
 
-Passe au siège libre suivant (direction > 0) ou précédent (direction < 0) du véhicule actuel, le conducteur étant en tête de liste.
+Moves to the next free seat (direction > 0) or the previous one (direction < 0) of the current vehicle, with the driver at the head of the list.
 
-- `player` (*integer|nil*) : Joueur.
-- `direction` (*integer|nil*) : Sens ; 1 par défaut.
-- **renvoie** : boolean true si un siège a été pris.
+- `player` (*integer|nil*) : Player.
+- `direction` (*integer|nil*) : Direction; 1 by default.
+- **returns**: boolean true if a seat was taken.
 
 #### `gameplay_seatOccupants.toggleUnseated(player)`
 
-Bascule entre « assis » et « sans siège » dans le véhicule actuel.
+Toggles between "seated" and "unseated" in the current vehicle.
 
-- `player` (*integer|nil*) : Joueur.
-- **renvoie** : boolean Succès.
+- `player` (*integer|nil*) : Player.
+- **returns**: boolean Success.
 
 #### `gameplay_seatOccupants.usesSeatSystem(vehId)`
 
-Indique si le véhicule utilise le système de sièges (occupantSystem.enabled, sinon présence d'emplacements d'occupants dans les données du véhicule). Toujours false si debugDisableOccupantSystem.
+Indicates whether the vehicle uses the seat system (occupantSystem.enabled, otherwise presence of occupant slots in the vehicle data). Always false if debugDisableOccupantSystem.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
-- **renvoie** : boolean true si le véhicule a des sièges gérés.
+- `vehId` (*integer*) : Vehicle identifier.
+- **returns**: boolean true if the vehicle has managed seats.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `debugDisableOccupantSystem` | boolean | Debug : désactive tout le système de sièges et revient au comportement ancien (false par défaut). |
-| `debugDisableOccupantWeight` | boolean | Debug : désactive l'ajout du poids des occupants (false par défaut). |
-| `dependencies` | string[] | Extensions chargées avant (core_camera, core_vehicle_manager, core_input_actionFilter, core_gamestate, core_multiseat, ui_vehicleSelector_vehicleSpecifications). |
-| `enablePresenceDebugMessages` | boolean | Affiche un message à chaque changement de présence (false par défaut). |
-| `enableSeatEjection` | boolean | Si true, enterSeat éjecte (mode marche) le joueur déjà assis sur ce siège (false par défaut). |
+| `debugDisableOccupantSystem` | boolean | Debug: disables the whole seat system and reverts to the old behavior (false by default). |
+| `debugDisableOccupantWeight` | boolean | Debug: disables adding the occupants' weight (false by default). |
+| `dependencies` | string[] | Extensions loaded beforehand (core_camera, core_vehicle_manager, core_input_actionFilter, core_gamestate, core_multiseat, ui_vehicleSelector_vehicleSpecifications). |
+| `enablePresenceDebugMessages` | boolean | Displays a message on each presence change (false by default). |
+| `enableSeatEjection` | boolean | If true, enterSeat ejects (walking mode) the player already seated in this seat (false by default). |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onPlayerVehiclePresenceChanged` — écouté par 2 module(s)
+- `onPlayerVehiclePresenceChanged` — listened to by 2 module(s)
 - `onResolveVehiclePresenceMode`
-- `onSeatOccupantEnter` — écouté par 2 module(s)
-- `onSeatOccupantExit` — écouté par 2 module(s)
+- `onSeatOccupantEnter` — listened to by 2 module(s)
+- `onSeatOccupantExit` — listened to by 2 module(s)
 
-**Évènements UI (guihooks.trigger) :** `Message`
+**UI events (guihooks.trigger):** `Message`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `enterVehicle`, `getObjectOOBBCenterXYZ`, `getObjectOOBBHalfAxisXYZ`, `getObjectOOBBIsInitialized`, `getPlayerVehicle`, `getPlayerVehicleID`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/seatOccupants.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/seatOccupants.lua`.*

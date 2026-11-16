@@ -1,34 +1,59 @@
 {
   "path": "lua/common/luaCore.lua",
-  "module": "Petit module de base chargé dans les deux VM, qui ajoute des utilitaires de langage utilisés partout : require_optional, unrequire, rerequire, nop, et compléments LuaJIT (table.clear, table.new, variable globale ffi). Il ne retourne pas de table : tout est global.",
-  "usage": "local ok = require_optional('some.module')   -- nil si absent\nlocal m = rerequire('mymodule')              -- force le rechargement depuis le disque\ntable.clear(t)",
+  "module": "Small base module loaded in both VMs, which adds language utilities used everywhere: require_optional, unrequire, rerequire, nop, and LuaJIT additions (table.clear, table.new, global variable ffi). It does not return a table: everything is global.",
+  "usage": "local ok = require_optional('some.module')   -- nil if absent\nlocal m = rerequire('mymodule')              -- forces a reload from disk\ntable.clear(t)",
   "notes": [
-    "Définit la globale `ffi` (= require('ffi') ou nil si indisponible).",
-    "Si les extensions LuaJIT table.clear / table.new ne se chargent pas, des remplaçants en Lua pur sont installés (table.new(...) ignore alors ses arguments et renvoie {}).",
-    "`nop` est une fonction vide globale utilisée comme valeur par défaut de hooks (ex. extensions.onSerialize = nop)."
+    "Defines the global `ffi` (= require('ffi') or nil if unavailable).",
+    "If the LuaJIT extensions table.clear / table.new fail to load, pure-Lua replacements are installed (table.new(...) then ignores its arguments and returns {}).",
+    "`nop` is a global empty function used as the default value of hooks (e.g. extensions.onSerialize = nop)."
   ],
   "fields": {},
   "functions": {
     "require_optional": {
-      "desc": "Fait require(module) dans un pcall : renvoie le module, ou nil si le chargement échoue (module absent ou erreur dans le module).",
-      "params": {"module": {"type": "string", "desc": "nom du module"}},
-      "returns": [{"type": "any|nil", "desc": "module ou nil"}],
+      "desc": "Does require(module) in a pcall: returns the module, or nil if loading fails (module absent or error in the module).",
+      "params": {
+        "module": {
+          "type": "string",
+          "desc": "module name"
+        }
+      },
+      "returns": [
+        {
+          "type": "any|nil",
+          "desc": "module or nil"
+        }
+      ],
       "internal": false
     },
     "unrequire": {
-      "desc": "Décharge un module : supprime package.loaded[m] et la globale du même nom.",
-      "params": {"m": {"type": "string", "desc": "nom du module"}},
+      "desc": "Unloads a module: removes package.loaded[m] and the global of the same name.",
+      "params": {
+        "m": {
+          "type": "string",
+          "desc": "module name"
+        }
+      },
       "returns": [],
       "internal": false
     },
     "rerequire": {
-      "desc": "Force le rechargement d'un fichier : vide package.loaded[module] puis fait require. Journalise un avertissement si le module est falsy après chargement.",
-      "params": {"module": {"type": "string", "desc": "nom du module"}},
-      "returns": [{"type": "any", "desc": "module rechargé"}],
+      "desc": "Forces a file reload: clears package.loaded[module] then does require. Logs a warning if the module is falsy after loading.",
+      "params": {
+        "module": {
+          "type": "string",
+          "desc": "module name"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "reloaded module"
+        }
+      ],
       "internal": false
     },
     "nop": {
-      "desc": "Fonction qui ne fait rien (valeur par défaut pour des callbacks).",
+      "desc": "Function that does nothing (default value for callbacks).",
       "params": {},
       "returns": [],
       "internal": false

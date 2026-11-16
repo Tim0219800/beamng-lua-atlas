@@ -1,475 +1,910 @@
 {
   "path": "lua/ge/extensions/core/vehicles.lua",
-  "module": "Catalogue et apparition des véhicules côté GE. Il lit les dossiers /vehicles/<modèle>/ (info.json, fichiers .pc, images, peintures, jbeam) pour construire la liste des modèles et des configurations avec leurs agrégats de filtrage (cache invalidé quand les fichiers changent), et fournit les fonctions de spawn/remplacement/suppression de véhicules (y compris les configurations multi-véhicules, format .pc 4 : remorques, etc.). Il suit aussi les couplages (attelages) entre véhicules, les « collections de véhicules » (véhicule principal + remorques à replacer ensemble), qui conduit quel véhicule (vehiclePlayersMap) et la plaque d'immatriculation. Un moddeur l'utilise pour lister les modèles (getModelList, getConfig), faire apparaître ou remplacer une voiture (spawnNewVehicle, replaceVehicle) et changer la plaque (setPlateText).",
-  "usage": "-- faire apparaître une pickup avec sa configuration par défaut, puis changer la plaque\nlocal veh = core_vehicles.spawnNewVehicle('pickup', {config = 'd15_4wd_A', autoEnterVehicle = true})\nif veh then core_vehicles.setPlateText('BEAM-123', veh:getID()) end\n\n-- lire les infos d'un modèle\nlocal m = core_vehicles.getModel('etk800')\nprint(m.model.Name, tableSize(m.configs))",
+  "module": "Vehicle catalog and spawning on the GE side. It reads the /vehicles/<model>/ folders (info.json, .pc files, images, paints, jbeam) to build the list of models and configurations with their filtering aggregates (cache invalidated when files change), and provides the functions to spawn/replace/delete vehicles (including multi-vehicle configurations, .pc format 4: trailers, etc.). It also tracks the couplings (hitches) between vehicles, the \"vehicle collections\" (main vehicle + trailers to be repositioned together), who drives which vehicle (vehiclePlayersMap) and the license plate. A modder uses it to list the models (getModelList, getConfig), spawn or replace a car (spawnNewVehicle, replaceVehicle) and change the plate (setPlateText).",
+  "usage": "-- spawn a pickup with its default configuration, then change the plate\nlocal veh = core_vehicles.spawnNewVehicle('pickup', {config = 'd15_4wd_A', autoEnterVehicle = true})\nif veh then core_vehicles.setPlateText('BEAM-123', veh:getID()) end\n\n-- read a model's info\nlocal m = core_vehicles.getModel('etk800')\nprint(m.model.Name, tableSize(m.configs))",
   "notes": [
-    "Format de getModel(key) : {model = table d'infos du modèle (Name, Brand, Type, preview, logo, key, default_pc, paints, aggregates…), configs = table indexée par clé de configuration (Name, key, model_key, preview, aggregates, pcFilename…)}. Une clé inconnue renvoie {} (et journalise une erreur).",
-    "Le résultat de getModel est mis en cache (clearCache vide tout). Le cache est invalidé automatiquement par onFileChanged/onFileChangedEnd si un fichier .json, .jbeam, .pc, .jpg ou .png de /vehicles/ ou /mods/ change, et par onLanguageChanged.",
-    "Le modèle par défaut (defaultVehicleModel) est 'pickup', ou 'etk800' si beamng_appname contient 'tech'.",
-    "Options usuelles de spawn (opt) : config (nom ou chemin .pc, ou table au format 4), model, paint/paint2/paint3, pos, rot, licenseText, vehicleName, autoEnterVehicle (true par défaut pour le premier véhicule, false pour les véhicules suivants d'une collection), canSpawnAnotherVehicleCheck (false pour ignorer la limite), safeSpawn, additionalVehicleData.",
-    "Collections de véhicules : vehCollections[idPrincipal] = {mainVehData, vehsData, resetState…} ; initVehCollections garde l'état initial ; vehIdToVehCollection retrouve la collection d'un véhicule. Les tables sont reconstruites (buildVehCollectionCache) après onDeserialized, et vehsData est retiré avant la sérialisation.",
-    "Plaque : le texte est stocké dans les dynData du véhicule (licenseText, licenseDesign, licenseFormats). Un guillemet double '\"' rend le texte invalide (isLicensePlateValid). Le texte est tronqué à design.vars.plate.maxLength (32 par défaut) en comptant les caractères UTF-8. Si le fichier settings/cloud/forceLicencePlate.txt existe, son contenu est utilisé comme texte.",
-    "Bug : M.removeAllWithProperty = removeAllWithProperty référence une variable locale jamais définie : le champ vaut nil.",
-    "Bug : dans spawnNewVehicle, `opt.canSpawnAnotherVehicleCheck` est lu avant `opt = deepcopy(opt) or {}` : appeler spawnNewVehicle(model) sans table opt provoque une erreur Lua (idem replaceVehicle n'a pas ce problème car la copie est faite avant).",
-    "spawnNewVehicle renvoie false si la limite de véhicules est atteinte, nil si le modèle ou le spawn échoue, sinon (premier véhicule, liste de tous les véhicules créés).",
-    "Le code du chargement du véhicule par défaut dans VariableRegistry (loadDefaultVehicle, etc.) est commenté ou en bloc commenté : « no longer used ». getDefaultVehicleParams reste exportée et lit parseArgs.args.vehicleConfig, $beamngVehicleArgs et le fichier de collection par défaut.",
-    "extractProperties et extractVehicles sont des outils de développement (impression de clés de traduction, liste des configurations dont les peintures du .pc ne correspondent pas à info) : ils ne servent pas en jeu.",
-    "Les clés listées dans getAttributesWhiteList (Drivetrain, Type, Transmission, Country, Value, Brand…) sont les attributs agrégés pour les filtres ; getAttributesConvertToRange et getAttributesConvertToDict indiquent lesquels sont convertis en plage (Value, Weight, Top Speed, 0-100 km/h…) ou en dictionnaire (Region, InsuranceClass)."
+    "Format of getModel(key): {model = table of model info (Name, Brand, Type, preview, logo, key, default_pc, paints, aggregates...), configs = table keyed by configuration key (Name, key, model_key, preview, aggregates, pcFilename...)}. An unknown key returns {} (and logs an error).",
+    "The result of getModel is cached (clearCache empties everything). The cache is invalidated automatically by onFileChanged/onFileChangedEnd if a .json, .jbeam, .pc, .jpg or .png file under /vehicles/ or /mods/ changes, and by onLanguageChanged.",
+    "The default model (defaultVehicleModel) is 'pickup', or 'etk800' if beamng_appname contains 'tech'.",
+    "Usual spawn options (opt): config (name or .pc path, or table in format 4), model, paint/paint2/paint3, pos, rot, licenseText, vehicleName, autoEnterVehicle (true by default for the first vehicle, false for the following vehicles of a collection), canSpawnAnotherVehicleCheck (false to ignore the limit), safeSpawn, additionalVehicleData.",
+    "Vehicle collections: vehCollections[mainId] = {mainVehData, vehsData, resetState...}; initVehCollections keeps the initial state; vehIdToVehCollection finds a vehicle's collection. The tables are rebuilt (buildVehCollectionCache) after onDeserialized, and vehsData is removed before serialization.",
+    "Plate: the text is stored in the vehicle's dynData (licenseText, licenseDesign, licenseFormats). A double quote '\"' makes the text invalid (isLicensePlateValid). The text is truncated to design.vars.plate.maxLength (32 by default), counting UTF-8 characters. If the file settings/cloud/forceLicencePlate.txt exists, its content is used as the text.",
+    "Bug: M.removeAllWithProperty = removeAllWithProperty references a local variable that is never defined: the field is nil.",
+    "Bug: in spawnNewVehicle, `opt.canSpawnAnotherVehicleCheck` is read before `opt = deepcopy(opt) or {}`: calling spawnNewVehicle(model) without an opt table causes a Lua error (replaceVehicle does not have this problem because the copy is made beforehand).",
+    "spawnNewVehicle returns false if the vehicle limit is reached, nil if the model or the spawn fails, otherwise (first vehicle, list of all created vehicles).",
+    "The default vehicle loading code in VariableRegistry (loadDefaultVehicle, etc.) is commented out or in a commented block: \"no longer used\". getDefaultVehicleParams remains exported and reads parseArgs.args.vehicleConfig, $beamngVehicleArgs and the default collection file.",
+    "extractProperties and extractVehicles are development tools (printing of translation keys, list of configurations whose .pc paints do not match info): they are not used in game.",
+    "The keys listed in getAttributesWhiteList (Drivetrain, Type, Transmission, Country, Value, Brand...) are the attributes aggregated for the filters; getAttributesConvertToRange and getAttributesConvertToDict indicate which ones are converted to a range (Value, Weight, Top Speed, 0-100 km/h...) or to a dictionary (Region, InsuranceClass)."
   ],
   "fields": {
-    "attachedCouplers": {"type": "table[]", "desc": "Liste des attelages actuellement attachés : {idVéhicule1, idVéhicule2, noeud1, noeud2}. Mise à jour par onCouplerAttached/onCouplerDetached."},
-    "couplerTagsOptions": {"type": "table<string, string|boolean>", "desc": "Tags d'attelage connus (tow_hitch, fifthwheel, gooseneck_hitch, pintle = 'autoCouple' ; fifthwheel_v2 = true)."},
-    "defaultVehicleModel": {"type": "string", "desc": "Modèle par défaut : 'pickup' (ou 'etk800' pour la version tech)."},
-    "dependencies": {"type": "string[]", "desc": "core_vehiclePaints, core_locales, core_skiaTemplate."},
-    "finalRanges": {"type": "string[]", "desc": "Attributs que l'interface doit lire comme plages (Years, Value, Weight, Top Speed, 0-100 km/h, 0-60 mph, Weight/Power, Off-Road Score)."},
-    "initVehCollections": {"type": "table", "desc": "Collections de véhicules dans leur état initial, indexées par id du véhicule principal."},
-    "initVehIdToVehCollection": {"type": "table", "desc": "Id de véhicule -> collection initiale (défini mais non rempli dans ce fichier)."},
-    "playerVehicleMap": {"type": "table<integer, integer>", "desc": "Index de joueur -> id du véhicule qu'il occupe."},
-    "removeAllWithProperty": {"type": "nil", "desc": "Toujours nil (référence non définie)."},
-    "resetVehCollectionEnabled": {"type": "boolean", "desc": "true : réactive le replacement des collections de véhicules au reset (sérialisé)."},
-    "vehCollections": {"type": "table", "desc": "Collections de véhicules actuelles, indexées par id du véhicule principal."},
-    "vehIdToVehCollection": {"type": "table", "desc": "Id de véhicule -> collection à laquelle il appartient."},
-    "vehiclePersonaMap": {"type": "table<integer, string>", "desc": "Id de véhicule -> id de persona (profil) du joueur qui l'occupe."},
-    "vehiclePlayersMap": {"type": "table<integer, table<integer, boolean>>", "desc": "Id de véhicule -> ensemble des index de joueurs qui l'occupent."},
-    "vehsCouplerCache": {"type": "table", "desc": "[idVéhicule][idNoeud] = copie des données du noeud d'attelage (couplerTag, tag, cid…)."},
-    "vehsCouplerOffset": {"type": "table", "desc": "[idVéhicule][idNoeud] = vec3 de décalage du noeud d'attelage par rapport au noeud de référence."},
-    "vehsCouplerTags": {"type": "table", "desc": "[idVéhicule][idNoeud] = couplerTag."},
-    "vehsCouplings": {"type": "table", "desc": "Adjacence des véhicules attelés : vehsCouplings[id][autreId] = true."}
+    "attachedCouplers": {
+      "type": "table[]",
+      "desc": "List of currently attached couplings: {vehicleId1, vehicleId2, node1, node2}. Updated by onCouplerAttached/onCouplerDetached."
+    },
+    "couplerTagsOptions": {
+      "type": "table<string, string|boolean>",
+      "desc": "Known coupler tags (tow_hitch, fifthwheel, gooseneck_hitch, pintle = 'autoCouple'; fifthwheel_v2 = true)."
+    },
+    "defaultVehicleModel": {
+      "type": "string",
+      "desc": "Default model: 'pickup' (or 'etk800' for the tech version)."
+    },
+    "dependencies": {
+      "type": "string[]",
+      "desc": "core_vehiclePaints, core_locales, core_skiaTemplate."
+    },
+    "finalRanges": {
+      "type": "string[]",
+      "desc": "Attributes that the interface must read as ranges (Years, Value, Weight, Top Speed, 0-100 km/h, 0-60 mph, Weight/Power, Off-Road Score)."
+    },
+    "initVehCollections": {
+      "type": "table",
+      "desc": "Vehicle collections in their initial state, keyed by main vehicle id."
+    },
+    "initVehIdToVehCollection": {
+      "type": "table",
+      "desc": "Vehicle id -> initial collection (defined but not populated in this file)."
+    },
+    "playerVehicleMap": {
+      "type": "table<integer, integer>",
+      "desc": "Player index -> id of the vehicle they occupy."
+    },
+    "removeAllWithProperty": {
+      "type": "nil",
+      "desc": "Always nil (undefined reference)."
+    },
+    "resetVehCollectionEnabled": {
+      "type": "boolean",
+      "desc": "true: re-enables repositioning of vehicle collections on reset (serialized)."
+    },
+    "vehCollections": {
+      "type": "table",
+      "desc": "Current vehicle collections, keyed by main vehicle id."
+    },
+    "vehIdToVehCollection": {
+      "type": "table",
+      "desc": "Vehicle id -> collection it belongs to."
+    },
+    "vehiclePersonaMap": {
+      "type": "table<integer, string>",
+      "desc": "Vehicle id -> persona (profile) id of the player occupying it."
+    },
+    "vehiclePlayersMap": {
+      "type": "table<integer, table<integer, boolean>>",
+      "desc": "Vehicle id -> set of indexes of the players occupying it."
+    },
+    "vehsCouplerCache": {
+      "type": "table",
+      "desc": "[vehicleId][nodeId] = copy of the coupler node data (couplerTag, tag, cid...)."
+    },
+    "vehsCouplerOffset": {
+      "type": "table",
+      "desc": "[vehicleId][nodeId] = vec3 offset of the coupler node relative to the reference node."
+    },
+    "vehsCouplerTags": {
+      "type": "table",
+      "desc": "[vehicleId][nodeId] = couplerTag."
+    },
+    "vehsCouplings": {
+      "type": "table",
+      "desc": "Adjacency of coupled vehicles: vehsCouplings[id][otherId] = true."
+    }
   },
   "functions": {
     "changeMeshVisibility": {
-      "desc": "Appelé par les touches de visibilité des meshes : change la transparence des pièces surlignées via core_vehicle_partmgmt. Ne pas utiliser ailleurs.",
-      "params": {"delta": {"type": "number", "desc": "Variation de visibilité."}},
+      "desc": "Called by the mesh visibility keys: changes the transparency of highlighted parts through core_vehicle_partmgmt. Do not use elsewhere.",
+      "params": {
+        "delta": {
+          "type": "number",
+          "desc": "Visibility change."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "clearCache": {
-      "desc": "Vide tous les caches (fichiers, modèles, données de modèles) ; ils sont reconstruits à la demande.",
+      "desc": "Empties all caches (files, models, model data); they are rebuilt on demand.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "cloneCurrent": {
-      "desc": "Fait apparaître une copie du véhicule du joueur 0 (même modèle, config, peintures), émet onPlayerVehicleCloned. Refuse si pas de véhicule, si la limite de véhicules est atteinte ou si le joueur marche.",
+      "desc": "Spawns a copy of player 0's vehicle (same model, config, paints), emits onPlayerVehicleCloned. Refuses if there is no vehicle, if the vehicle limit is reached or if the player is walking.",
       "params": {},
-      "returns": [{"type": "table|boolean|nil", "desc": "Résultat de spawnNewVehicle (objet véhicule) ou false si refusé."}],
+      "returns": [
+        {
+          "type": "table|boolean|nil",
+          "desc": "Result of spawnNewVehicle (vehicle object) or false if refused."
+        }
+      ],
       "internal": false
     },
     "convertVehicleInfo": {
-      "desc": "Convertit un info.json au nouveau format : les couleurs textuelles (colors) deviennent des peintures (paints), les anciennes couleurs par défaut (default_color…) deviennent defaultPaintName1/2/3.",
+      "desc": "Converts an info.json to the new format: textual colors (colors) become paints (paints), old default colors (default_color...) become defaultPaintName1/2/3.",
       "params": {
-        "info": {"type": "table", "desc": "Contenu d'un info.json (modifié sur place)."},
-        "infoFilename": {"type": "string", "desc": "Chemin du fichier (pour les messages)."}
+        "info": {
+          "type": "table",
+          "desc": "Content of an info.json (modified in place)."
+        },
+        "infoFilename": {
+          "type": "string",
+          "desc": "File path (for messages)."
+        }
       },
-      "returns": [{"type": "table", "desc": "La même table convertie."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The same table, converted."
+        }
+      ],
       "internal": false
     },
     "createFilters": {
-      "desc": "Construit les filtres de l'interface (plage min/max ou ensemble de valeurs possibles par attribut) à partir des agrégats d'une liste de modèles ou de configurations.",
-      "params": {"list": {"type": "table|nil", "desc": "Liste ou dictionnaire d'éléments possédant un champ aggregates."}},
-      "returns": [{"type": "table<string, table>", "desc": "Filtres indexés par nom d'attribut."}],
+      "desc": "Builds the interface filters (min/max range or set of possible values per attribute) from the aggregates of a list of models or configurations.",
+      "params": {
+        "list": {
+          "type": "table|nil",
+          "desc": "List or dictionary of elements that have an aggregates field."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Filters keyed by attribute name."
+        }
+      ],
       "internal": false
     },
     "enterFreecamIfNoVehicles": {
-      "desc": "Passe en caméra libre s'il n'y a plus de véhicule enterable (sauf si le joueur est l'unicycle).",
+      "desc": "Switches to free camera if there is no enterable vehicle left (unless the player is the unicycle).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "extractProperties": {
-      "desc": "Outil de développement : affiche les valeurs de propriétés de tous les modèles/configurations et les lignes de traduction correspondantes.",
+      "desc": "Development tool: displays the property values of all models/configurations and the matching translation lines.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "extractVehicles": {
-      "desc": "Outil de développement : parcourt tous les modèles et configurations pour comparer les peintures des fichiers .pc et des infos.",
+      "desc": "Development tool: goes through all models and configurations to compare the paints of the .pc files and of the infos.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "generateAttachedVehiclesTree": {
-      "desc": "Construit l'arbre des véhicules attelés à partir d'un véhicule (parents et enfants via les attelages).",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule de départ."}},
-      "returns": [{"type": "table|nil", "desc": "Entrée racine de l'arbre (déduit du code)."}],
+      "desc": "Builds the tree of coupled vehicles from a vehicle (parents and children through the couplings).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Id of the starting vehicle."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Root entry of the tree (inferred from code)."
+        }
+      ],
       "internal": false
     },
     "getAttributesConvertToDict": {
-      "desc": "Liste des attributs convertis en dictionnaire pour les agrégats (Region, InsuranceClass).",
+      "desc": "List of attributes converted to a dictionary for the aggregates (Region, InsuranceClass).",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Noms d'attributs."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Attribute names."
+        }
+      ],
       "internal": false
     },
     "getAttributesConvertToRange": {
-      "desc": "Liste des attributs convertis en plage pour les agrégats (Value, Weight, Top Speed, 0-100 km/h, 0-60 mph, Weight/Power, Off-Road Score).",
+      "desc": "List of attributes converted to a range for the aggregates (Value, Weight, Top Speed, 0-100 km/h, 0-60 mph, Weight/Power, Off-Road Score).",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Noms d'attributs."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Attribute names."
+        }
+      ],
       "internal": false
     },
     "getAttributesWhiteList": {
-      "desc": "Liste des attributs autorisés comme filtres de la liste de véhicules (Drivetrain, Type, Transmission, Country, Brand, Body Style, Source…).",
+      "desc": "List of attributes allowed as filters of the vehicle list (Drivetrain, Type, Transmission, Country, Brand, Body Style, Source...).",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Noms d'attributs."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Attribute names."
+        }
+      ],
       "internal": false
     },
     "getConfig": {
-      "desc": "Renvoie la configuration d'un modèle par sa clé.",
+      "desc": "Returns the configuration of a model by its key.",
       "params": {
-        "modelName": {"type": "string", "desc": "Clé du modèle (nom du dossier dans /vehicles)."},
-        "configKey": {"type": "string", "desc": "Clé de la configuration (nom du .pc sans extension)."}
+        "modelName": {
+          "type": "string",
+          "desc": "Model key (folder name in /vehicles)."
+        },
+        "configKey": {
+          "type": "string",
+          "desc": "Configuration key (name of the .pc without extension)."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Données de la configuration, nil si absente."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Configuration data, nil if absent."
+        }
+      ],
       "internal": false
     },
     "getConfigList": {
-      "desc": "Liste toutes les configurations de tous les modèles, avec les filtres associés.",
-      "params": {"array": {"type": "boolean|nil", "desc": "true : liste en tableau ; sinon indexée par « modèle_clé »."}},
-      "returns": [{"type": "table", "desc": "{configs, filters, displayInfo}"}],
+      "desc": "Lists all configurations of all models, with the associated filters.",
+      "params": {
+        "array": {
+          "type": "boolean|nil",
+          "desc": "true: list as an array; otherwise keyed by \"model_key\"."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{configs, filters, displayInfo}"
+        }
+      ],
       "internal": false
     },
     "getCouplerOffset": {
-      "desc": "Décalage (x, y, z) des noeuds d'attelage d'un véhicule par rapport à son noeud de référence, filtré par tag.",
+      "desc": "Offset (x, y, z) of a vehicle's coupler nodes relative to its reference node, filtered by tag.",
       "params": {
-        "vehId": {"type": "integer", "desc": "Id du véhicule."},
-        "couplerTag": {"type": "string|nil", "desc": "Tag recherché (couplerTag ou tag) ; vide ou nil = tous."}
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        },
+        "couplerTag": {
+          "type": "string|nil",
+          "desc": "Tag searched for (couplerTag or tag); empty or nil = all."
+        }
       },
-      "returns": [{"type": "table<integer, table>|nil", "desc": "Table indexée par id de noeud : {x, y, z, couplerTag, tag}."}],
+      "returns": [
+        {
+          "type": "table<integer, table>|nil",
+          "desc": "Table keyed by node id: {x, y, z, couplerTag, tag}."
+        }
+      ],
       "internal": false
     },
     "getCurrentVehicleDetails": {
-      "desc": "Détails du véhicule du joueur 0 (équivalent à getVehicleDetails(be:getPlayerVehicleID(0))). On peut aussi utiliser playerVehicle:getJBeamFilename().",
+      "desc": "Details of player 0's vehicle (equivalent to getVehicleDetails(be:getPlayerVehicleID(0))). You can also use playerVehicle:getJBeamFilename().",
       "params": {},
-      "returns": [{"type": "table", "desc": "{current = {key, pc_file, position, color, config_key}, model, configs, userDefault}"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{current = {key, pc_file, position, color, config_key}, model, configs, userDefault}"
+        }
+      ],
       "internal": false
     },
     "getDefaultVehicleParams": {
-      "desc": "Détermine le véhicule par défaut à lancer au démarrage : argument de ligne de commande vehicleConfig, sinon $beamngVehicleArgs, sinon la configuration par défaut du dossier vehicles, sinon la pickup (ou etk800).",
+      "desc": "Determines the default vehicle to launch at startup: vehicleConfig command-line argument, otherwise $beamngVehicleArgs, otherwise the default configuration of the vehicles folder, otherwise the pickup (or etk800).",
       "params": {},
-      "returns": [{"type": "table|boolean|nil", "desc": "{modèle, {config = chemin .pc}} ou true/nil selon les cas (valeur de retour hétérogène)."}],
+      "returns": [
+        {
+          "type": "table|boolean|nil",
+          "desc": "{model, {config = .pc path}} or true/nil depending on the case (heterogeneous return value)."
+        }
+      ],
       "internal": true
     },
     "getFilesJson": {
-      "desc": "Cache des fichiers info JSON des véhicules (calculé au premier appel).",
+      "desc": "Cache of the vehicles' info JSON files (computed on the first call).",
       "params": {},
-      "returns": [{"type": "table", "desc": "Liste de chemins de fichiers (déduit du code)."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of file paths (inferred from code)."
+        }
+      ],
       "internal": false
     },
     "getFilesParsed": {
-      "desc": "Cache des fichiers JSON/PC déjà lus, indexé par chemin (par ex. /vehicles/pickup/info.json).",
+      "desc": "Cache of the JSON/PC files already read, keyed by path (e.g. /vehicles/pickup/info.json).",
       "params": {},
-      "returns": [{"type": "table<string, table>", "desc": "Contenu décodé des fichiers."}],
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Decoded content of the files."
+        }
+      ],
       "internal": false
     },
     "getModel": {
-      "desc": "Toutes les infos d'un modèle : fiche du modèle, configurations, peintures, aperçus, agrégats. Résultat mis en cache. Un nom invalide (non chaîne) renvoie {} ; un modèle inconnu journalise une erreur et renvoie {}.",
-      "params": {"key": {"type": "string", "desc": "Clé du modèle (nom du dossier dans /vehicles)."}},
-      "returns": [{"type": "table", "desc": "{model = table, configs = table<string, table>}, ou {} si introuvable."}],
+      "desc": "All the info of a model: model sheet, configurations, paints, previews, aggregates. Result cached. An invalid name (non-string) returns {}; an unknown model logs an error and returns {}.",
+      "params": {
+        "key": {
+          "type": "string",
+          "desc": "Model key (folder name in /vehicles)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{model = table, configs = table<string, table>}, or {} if not found."
+        }
+      ],
       "internal": false
     },
     "getModelList": {
-      "desc": "Liste de tous les modèles disponibles avec les filtres et les informations d'affichage.",
-      "params": {"array": {"type": "boolean|nil", "desc": "true : tableau ; sinon table indexée par clé de modèle."}},
-      "returns": [{"type": "table", "desc": "{models, filters, displayInfo}"}],
+      "desc": "List of all available models with the filters and display information.",
+      "params": {
+        "array": {
+          "type": "boolean|nil",
+          "desc": "true: array; otherwise table keyed by model key."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{models, filters, displayInfo}"
+        }
+      ],
       "internal": false
     },
     "getModelsData": {
-      "desc": "Scanne /vehicles et renvoie les modèles trouvés avec leurs fichiers (info, .pc, jbeam, images). Résultat mis en cache jusqu'à clearCache.",
+      "desc": "Scans /vehicles and returns the models found with their files (info, .pc, jbeam, images). Result cached until clearCache.",
       "params": {},
-      "returns": [{"type": "table<string, table>", "desc": "Données brutes par clé de modèle."}],
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Raw data per model key."
+        }
+      ],
       "internal": false
     },
     "getPaintFiles": {
-      "desc": "Cache des fichiers de peintures trouvés.",
+      "desc": "Cache of the paint files found.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Fichiers de peintures (déduit du code)."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Paint files (inferred from code)."
+        }
+      ],
       "internal": false
     },
     "getVehicleDetails": {
-      "desc": "Détails d'un véhicule : clé du modèle, fichier .pc, position, couleur, clé de configuration, fiche du modèle et de la configuration.",
-      "params": {"id": {"type": "integer", "desc": "Id de l'objet véhicule."}},
-      "returns": [{"type": "table", "desc": "{current = {key, pc_file, position, color, config_key}, model, configs, userDefault (true si .pc est la config par défaut de l'utilisateur)}"}],
+      "desc": "Details of a vehicle: model key, .pc file, position, color, configuration key, model and configuration sheet.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Vehicle object id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{current = {key, pc_file, position, color, config_key}, model, configs, userDefault (true if the .pc is the user's default config)}"
+        }
+      ],
       "internal": false
     },
     "getVehicleLicenseText": {
-      "desc": "Texte actuel de la plaque d'un véhicule (dynData licenseText).",
-      "params": {"veh": {"type": "userdata|nil", "desc": "Objet véhicule."}},
-      "returns": [{"type": "string", "desc": "Texte de la plaque, chaîne vide sans véhicule."}],
+      "desc": "Current plate text of a vehicle (dynData licenseText).",
+      "params": {
+        "veh": {
+          "type": "userdata|nil",
+          "desc": "Vehicle object."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Plate text, empty string without a vehicle."
+        }
+      ],
       "internal": false
     },
     "getVehicleList": {
-      "desc": "Liste des véhicules (fiches complètes de chaque modèle) et filtres, format utilisé par l'ancienne interface (ui2).",
+      "desc": "List of vehicles (full sheets of each model) and filters, format used by the old interface (ui2).",
       "params": {},
-      "returns": [{"type": "table", "desc": "{vehicles, filters}"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{vehicles, filters}"
+        }
+      ],
       "internal": false
     },
     "getVehiclePersona": {
-      "desc": "Id de persona (profil de joueur) associé à un véhicule.",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
-      "returns": [{"type": "string|nil", "desc": "Id de persona ou nil."}],
+      "desc": "Persona (player profile) id associated with a vehicle.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Persona id or nil."
+        }
+      ],
       "internal": false
     },
     "isLicensePlateValid": {
-      "desc": "Vérifie qu'un texte de plaque est acceptable (nil accepté ; le guillemet double est interdit).",
-      "params": {"text": {"type": "string|nil", "desc": "Texte à vérifier."}},
-      "returns": [{"type": "boolean", "desc": "true si valide."}],
+      "desc": "Checks that a plate text is acceptable (nil accepted; the double quote is forbidden).",
+      "params": {
+        "text": {
+          "type": "string|nil",
+          "desc": "Text to check."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if valid."
+        }
+      ],
       "internal": false
     },
     "isModelListLoaded": {
-      "desc": "Indique si tous les modèles sont déjà dans le cache de getModel.",
+      "desc": "Indicates whether all models are already in the getModel cache.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si la liste est entièrement chargée."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the list is fully loaded."
+        }
+      ],
       "internal": false
     },
     "isModelsDataLoaded": {
-      "desc": "Indique si getModelsData a déjà été calculé.",
+      "desc": "Indicates whether getModelsData has already been computed.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si en cache."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if cached."
+        }
+      ],
       "internal": false
     },
     "loadCustomVehicle": {
-      "desc": "Écrit le modèle et la config dans les variables $beamngVehicle et $beamngVehicleConfig du VariableRegistry (démarrage avec un véhicule donné).",
+      "desc": "Writes the model and config into the $beamngVehicle and $beamngVehicleConfig variables of the VariableRegistry (startup with a given vehicle).",
       "params": {
-        "modelName": {"type": "string", "desc": "Clé du modèle."},
-        "data": {"type": "table", "desc": "Table avec le champ config (chemin du .pc)."}
+        "modelName": {
+          "type": "string",
+          "desc": "Model key."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Table with the config field (.pc path)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "loadModelListNoGarbage": {
-      "desc": "Charge en cache tous les modèles (getModel pour chacun) sans construire de grosse liste.",
+      "desc": "Loads all models into the cache (getModel for each) without building a large list.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true."
+        }
+      ],
       "internal": false
     },
     "makeVehicleLicenseText": {
-      "desc": "Détermine le texte de plaque d'un véhicule : texte forcé (forceLicenceStr ou fichier settings/cloud/forceLicencePlate.txt), texte déjà stocké (licenseText), nom Steam si l'option useSteamName est active en freeroam (une seule fois), sinon texte généré par core_skiaTemplate.generateText.",
+      "desc": "Determines a vehicle's plate text: forced text (forceLicenceStr or file settings/cloud/forceLicencePlate.txt), text already stored (licenseText), Steam name if the useSteamName option is active in freeroam (only once), otherwise text generated by core_skiaTemplate.generateText.",
       "params": {
-        "veh": {"type": "userdata|integer|nil", "desc": "Objet ou id du véhicule (joueur 0 par défaut)."},
-        "designPath": {"type": "string|nil", "desc": "Chemin du design de plaque (sktemplate)."}
+        "veh": {
+          "type": "userdata|integer|nil",
+          "desc": "Vehicle object or id (player 0 by default)."
+        },
+        "designPath": {
+          "type": "string|nil",
+          "desc": "Path of the plate design (sktemplate)."
+        }
       },
-      "returns": [{"type": "string", "desc": "Texte de la plaque ('' sans véhicule)."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Plate text ('' without a vehicle)."
+        }
+      ],
       "internal": false
     },
     "onCouplerAttached": {
-      "desc": "Hook appelé quand un attelage s'attache : enregistre le couple dans attachedCouplers et vehsCouplings.",
+      "desc": "Hook called when a coupler attaches: records the pair in attachedCouplers and vehsCouplings.",
       "params": {
-        "objId1": {"type": "integer", "desc": "Id du premier véhicule."},
-        "objId2": {"type": "integer", "desc": "Id du second véhicule."},
-        "nodeId": {"type": "integer", "desc": "Noeud d'attelage du premier véhicule."},
-        "obj2nodeId": {"type": "integer", "desc": "Noeud d'attelage du second véhicule."}
+        "objId1": {
+          "type": "integer",
+          "desc": "Id of the first vehicle."
+        },
+        "objId2": {
+          "type": "integer",
+          "desc": "Id of the second vehicle."
+        },
+        "nodeId": {
+          "type": "integer",
+          "desc": "Coupler node of the first vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "Coupler node of the second vehicle."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onCouplerDetached": {
-      "desc": "Hook appelé quand un attelage se détache (de n'importe quelle façon) : retire le couple des tables de suivi.",
+      "desc": "Hook called when a coupler detaches (in any way): removes the pair from the tracking tables.",
       "params": {
-        "obj1id": {"type": "integer", "desc": "Id du premier véhicule."},
-        "obj2id": {"type": "integer", "desc": "Id du second véhicule."},
-        "nodeId": {"type": "integer", "desc": "Noeud du premier véhicule."},
-        "obj2nodeId": {"type": "integer", "desc": "Noeud du second véhicule."}
+        "obj1id": {
+          "type": "integer",
+          "desc": "Id of the first vehicle."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Id of the second vehicle."
+        },
+        "nodeId": {
+          "type": "integer",
+          "desc": "Node of the first vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "Node of the second vehicle."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook appelé après un rechargement des extensions : restaure les tables de suivi (joueurs, personas, attelages, collections) et reconstruit les caches de collections.",
-      "params": {"data": {"type": "table", "desc": "Données de onSerialize."}},
+      "desc": "Hook called after an extensions reload: restores the tracking tables (players, personas, couplings, collections) and rebuilds the collection caches.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Data from onSerialize."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onFileChanged": {
-      "desc": "Hook appelé quand un fichier change sur le disque : marque le cache comme obsolète si le fichier est un .json, .jbeam, .pc, .jpg ou .png sous /vehicles/ ou /mods/.",
+      "desc": "Hook called when a file changes on disk: marks the cache as stale if the file is a .json, .jbeam, .pc, .jpg or .png under /vehicles/ or /mods/.",
       "params": {
-        "filename": {"type": "string", "desc": "Chemin du fichier modifié."},
-        "type": {"type": "string", "desc": "Type de modification (non utilisé)."}
+        "filename": {
+          "type": "string",
+          "desc": "Path of the modified file."
+        },
+        "type": {
+          "type": "string",
+          "desc": "Type of change (unused)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onFileChangedEnd": {
-      "desc": "Hook appelé après une série de changements de fichiers : vide le cache si un fichier pertinent a changé.",
+      "desc": "Hook called after a series of file changes: empties the cache if a relevant file changed.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onInstabilityDetected": {
-      "desc": "Hook appelé quand la physique d'un véhicule devient instable : si le réglage pauseGameOnInstability est actif (et hors multijoueur), réinitialise le véhicule, met le jeu en pause et marque returnData.instabilityHandled = true.",
+      "desc": "Hook called when a vehicle's physics becomes unstable: if the pauseGameOnInstability setting is active (and outside multiplayer), resets the vehicle, pauses the game and sets returnData.instabilityHandled = true.",
       "params": {
-        "vid": {"type": "integer", "desc": "Id du véhicule instable."},
-        "returnData": {"type": "table|nil", "desc": "Table de retour où instabilityHandled est mis à true."}
+        "vid": {
+          "type": "integer",
+          "desc": "Id of the unstable vehicle."
+        },
+        "returnData": {
+          "type": "table|nil",
+          "desc": "Return table where instabilityHandled is set to true."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onLanguageChanged": {
-      "desc": "Hook appelé au changement de langue : vide le cache (noms traduits).",
+      "desc": "Hook called on language change: empties the cache (translated names).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onLocalParticipantsChanged": {
-      "desc": "Hook appelé quand les participants locaux (multi-sièges) changent : resynchronise la persona de chaque véhicule occupé.",
+      "desc": "Hook called when the local participants (multi-seat) change: resynchronizes the persona of each occupied vehicle.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onPersonaSettingsChanged": {
-      "desc": "Hook appelé quand les réglages d'une persona changent : demande aux véhicules qui l'utilisent de relire leurs réglages (onSettingsChanged côté véhicule).",
-      "params": {"persona": {"type": "table|string", "desc": "Persona ou son id."}},
+      "desc": "Hook called when a persona's settings change: asks the vehicles that use it to re-read their settings (onSettingsChanged on the vehicle side).",
+      "params": {
+        "persona": {
+          "type": "table|string",
+          "desc": "Persona or its id."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onPreVehicleSpawned": {
-      "desc": "Hook appelé avant l'apparition d'un véhicule : initialise les tables d'attelage (couplings, couplerCache, couplerTags, couplerOffset) à partir des noeuds du véhicule ayant un couplerTag ou tag, et vehiclePlayersMap.",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "desc": "Hook called before a vehicle spawns: initializes the coupling tables (couplings, couplerCache, couplerTags, couplerOffset) from the vehicle's nodes that have a couplerTag or tag, and vehiclePlayersMap.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook appelé avant un rechargement des extensions : renvoie les tables de suivi des joueurs, personas, attelages et collections (sans vehsData).",
+      "desc": "Hook called before an extensions reload: returns the tracking tables of players, personas, couplings and collections (without vehsData).",
       "params": {},
-      "returns": [{"type": "table", "desc": "Données restaurées par onDeserialized."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Data restored by onDeserialized."
+        }
+      ],
       "internal": true
     },
     "onSettingsChanged": {
-      "desc": "Hook appelé quand les réglages changent : la logique showStandalonePcs est figée à true dans le code (la comparaison ne déclenche en pratique qu'au premier appel).",
+      "desc": "Hook called when settings change: the showStandalonePcs logic is frozen to true in the code (the comparison in practice only triggers on the first call).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook appelé à la destruction d'un véhicule : retire ses attelages, couplings, collections et entrées de suivi des joueurs.",
-      "params": {"vid": {"type": "integer", "desc": "Id du véhicule détruit."}},
+      "desc": "Hook called when a vehicle is destroyed: removes its couplers, couplings, collections and player tracking entries.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "Id of the destroyed vehicle."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onVehicleSwitched": {
-      "desc": "Hook appelé quand un joueur change de véhicule : met à jour vehiclePlayersMap et playerVehicleMap et resynchronise les personas.",
+      "desc": "Hook called when a player changes vehicle: updates vehiclePlayersMap and playerVehicleMap and resynchronizes the personas.",
       "params": {
-        "oldId": {"type": "integer", "desc": "Ancien véhicule (-1 si aucun)."},
-        "newId": {"type": "integer", "desc": "Nouveau véhicule (-1 si aucun)."},
-        "player": {"type": "integer", "desc": "Index du joueur."}
+        "oldId": {
+          "type": "integer",
+          "desc": "Old vehicle (-1 if none)."
+        },
+        "newId": {
+          "type": "integer",
+          "desc": "New vehicle (-1 if none)."
+        },
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        }
       },
       "returns": [],
       "internal": true
     },
     "openPartsSelectorUI": {
-      "desc": "Ouvre l'écran de configuration des pièces (route pause.vehicle.configurationcombined ou module vehicleconfig). Ne fait rien dans le menu principal ou sans véhicule joueur ; peut renvoyer false si la première conduite guidée l'interdit.",
+      "desc": "Opens the parts configuration screen (route pause.vehicle.configurationcombined or vehicleconfig module). Does nothing in the main menu or without a player vehicle; may return false if the guided first drive forbids it.",
       "params": {},
-      "returns": [{"type": "boolean|nil", "desc": "false si refusé par la session de première conduite."}],
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "false if refused by the first drive session."
+        }
+      ],
       "internal": false
     },
     "openSelectorUI": {
-      "desc": "Ouvre le sélecteur de véhicule (nouvelle interface selon le menu pause V2 ou non). Ne fait rien dans le menu principal.",
+      "desc": "Opens the vehicle selector (new interface depending on whether pause menu V2 is used). Does nothing in the main menu.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "openSelectorUI_legcay": {
-      "desc": "Ouvre l'ancien sélecteur de véhicule (guihook MenuOpenModule 'vehicleselect'). Le nom contient une faute (legcay).",
+      "desc": "Opens the old vehicle selector (guihook MenuOpenModule 'vehicleselect'). The name contains a typo (legcay).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "paintSignature": {
-      "desc": "Texte JSON identifiant une peinture (baseColor, clearcoat, clearcoatRoughness, metallic, roughness, à 5 décimales), utile pour comparer des peintures.",
-      "params": {"paint": {"type": "table", "desc": "Peinture {baseColor = {r,g,b,a}, metallic, roughness, clearcoat, clearcoatRoughness}."}},
-      "returns": [{"type": "string", "desc": "Chaîne JSON."}],
+      "desc": "JSON text identifying a paint (baseColor, clearcoat, clearcoatRoughness, metallic, roughness, to 5 decimals), useful to compare paints.",
+      "params": {
+        "paint": {
+          "type": "table",
+          "desc": "Paint {baseColor = {r,g,b,a}, metallic, roughness, clearcoat, clearcoatRoughness}."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "JSON string."
+        }
+      ],
       "internal": false
     },
     "regenerateVehicleLicenseText": {
-      "desc": "Génère un nouveau texte de plaque aléatoire pour un véhicule sans modifier le texte stocké.",
-      "params": {"veh": {"type": "userdata|nil", "desc": "Objet véhicule."}},
-      "returns": [{"type": "string", "desc": "Texte généré ('' sans véhicule)."}],
+      "desc": "Generates a new random plate text for a vehicle without changing the stored text.",
+      "params": {
+        "veh": {
+          "type": "userdata|nil",
+          "desc": "Vehicle object."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Generated text ('' without a vehicle)."
+        }
+      ],
       "internal": false
     },
     "reloadVehicle": {
-      "desc": "Appelé au rechargement du véhicule d'un joueur : libère SteamLicensePlateVehicleId si c'était ce véhicule (pour qu'un autre puisse porter le nom Steam).",
-      "params": {"playerId": {"type": "integer", "desc": "Index du joueur."}},
+      "desc": "Called when a player's vehicle is reloaded: frees SteamLicensePlateVehicleId if it was that vehicle (so another one can carry the Steam name).",
+      "params": {
+        "playerId": {
+          "type": "integer",
+          "desc": "Player index."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "removeAll": {
-      "desc": "Supprime tous les véhicules ; passe d'abord en caméra libre si le joueur 0 avait un véhicule.",
+      "desc": "Deletes all vehicles; first switches to free camera if player 0 had a vehicle.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "removeAllExceptCurrent": {
-      "desc": "Supprime tous les véhicules sauf celui du joueur 0.",
+      "desc": "Deletes all vehicles except player 0's.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "removeCurrent": {
-      "desc": "Supprime le véhicule du joueur 0 (journalise une erreur s'il n'y en a pas) ; passe en caméra libre s'il n'y a plus de véhicule enterable.",
+      "desc": "Deletes player 0's vehicle (logs an error if there is none); switches to free camera if there is no enterable vehicle left.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "replaceVehicle": {
-      "desc": "Remplace un véhicule (celui du joueur 0 par défaut) par un autre modèle/config, en réutilisant l'objet véhicule existant. Si aucun véhicule n'existe, en crée un (sous réserve de la limite). Supprime les véhicules restants de la collection remplacée. Appelée directement par l'interface.",
+      "desc": "Replaces a vehicle (player 0's by default) with another model/config, reusing the existing vehicle object. If no vehicle exists, creates one (subject to the limit). Deletes the remaining vehicles of the replaced collection. Called directly by the interface.",
       "params": {
-        "modelName": {"type": "string", "desc": "Clé du modèle."},
-        "opt": {"type": "table|nil", "desc": "Options de spawn (config, paint, pos, rot, licenseText, autoEnterVehicle…)."},
-        "otherVeh": {"type": "userdata|nil", "desc": "Véhicule à remplacer (joueur 0 par défaut)."},
-        "replaceWholeCollection": {"type": "boolean|nil", "desc": "true : réutilise tous les véhicules de la collection (remorques)."}
+        "modelName": {
+          "type": "string",
+          "desc": "Model key."
+        },
+        "opt": {
+          "type": "table|nil",
+          "desc": "Spawn options (config, paint, pos, rot, licenseText, autoEnterVehicle...)."
+        },
+        "otherVeh": {
+          "type": "userdata|nil",
+          "desc": "Vehicle to replace (player 0 by default)."
+        },
+        "replaceWholeCollection": {
+          "type": "boolean|nil",
+          "desc": "true: reuses all vehicles of the collection (trailers)."
+        }
       },
-      "returns": [{"type": "userdata|boolean|nil", "desc": "Premier véhicule ; second retour : liste de tous. false si la limite de véhicules est atteinte, nil en cas d'échec."}],
+      "returns": [
+        {
+          "type": "userdata|boolean|nil",
+          "desc": "First vehicle; second return: list of all. false if the vehicle limit is reached, nil on failure."
+        }
+      ],
       "internal": false
     },
     "requestList": {
-      "desc": "Envoie la liste des modèles et configurations à l'interface (guihook sendVehicleList). En carrière dans le menu « myCars » de garage, envoie les véhicules de l'inventaire à la place des configurations.",
+      "desc": "Sends the list of models and configurations to the interface (guihook sendVehicleList). In career in the garage \"myCars\" menu, sends the inventory vehicles instead of the configurations.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "requestListEnd": {
-      "desc": "Termine le profilage de la liste de véhicules (appelée par l'interface à la fin).",
+      "desc": "Ends the profiling of the vehicle list (called by the interface at the end).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "setMeshVisibility": {
-      "desc": "Appelé par les boutons de visibilité des meshes de la configuration : fixe la transparence des pièces surlignées via core_vehicle_partmgmt. Ne pas utiliser ailleurs.",
-      "params": {"alpha": {"type": "number", "desc": "Opacité."}},
+      "desc": "Called by the configuration's mesh visibility buttons: sets the transparency of highlighted parts through core_vehicle_partmgmt. Do not use elsewhere.",
+      "params": {
+        "alpha": {
+          "type": "number",
+          "desc": "Opacity."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setPlateText": {
-      "desc": "Définit le texte, le design et les formats de la plaque d'un véhicule, puis rend les textures de plaque via core_skiaTemplate (sauf si SkipGenerateLicencePlate, licenseNoGen ou mode headless : plaque par défaut « BEAMNG »). Émet onLicensePlateChanged(txt, vehId, designPath, formats). Les valeurs nil conservent les valeurs actuelles.",
+      "desc": "Sets a vehicle's plate text, design and formats, then renders the plate textures through core_skiaTemplate (unless SkipGenerateLicencePlate, licenseNoGen or headless mode: default plate \"BEAMNG\"). Emits onLicensePlateChanged(txt, vehId, designPath, formats). nil values keep the current values.",
       "params": {
-        "txt": {"type": "string|nil", "desc": "Texte (généré si nil ; sans guillemet double)."},
-        "vehId": {"type": "integer|nil", "desc": "Id du véhicule (joueur 0 par défaut)."},
-        "designPath": {"type": "string|nil", "desc": "Chemin du .sktemplate.json (valeur actuelle, puis design du niveau, puis design par défaut en repli)."},
-        "formats": {"type": "string[]|nil", "desc": "Formats à rendre (« 30-15 » par défaut)."}
+        "txt": {
+          "type": "string|nil",
+          "desc": "Text (generated if nil; no double quote)."
+        },
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id (player 0 by default)."
+        },
+        "designPath": {
+          "type": "string|nil",
+          "desc": "Path of the .sktemplate.json (current value, then the level's design, then the default design as a fallback)."
+        },
+        "formats": {
+          "type": "string[]|nil",
+          "desc": "Formats to render (\"30-15\" by default)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "setVehiclePersona": {
-      "desc": "Associe une persona (profil) à un véhicule et en informe le véhicule (setPlayerPersona + onSettingsChanged côté véhicule).",
+      "desc": "Associates a persona (profile) with a vehicle and informs the vehicle (setPlayerPersona + onSettingsChanged on the vehicle side).",
       "params": {
-        "vehId": {"type": "integer", "desc": "Id du véhicule."},
-        "persona": {"type": "table|string|nil", "desc": "Persona ou son id (nil pour retirer)."}
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        },
+        "persona": {
+          "type": "table|string|nil",
+          "desc": "Persona or its id (nil to remove)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si la persona était déjà celle-là, true si elle a changé."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the persona was already that one, true if it changed."
+        }
+      ],
       "internal": false
     },
     "spawnDefault": {
-      "desc": "Fait apparaître le véhicule par défaut de l'utilisateur (fichier pathDefaultConfig) ou, sinon, le modèle par défaut du jeu ; remplace le véhicule actuel s'il y en a un. Émet onSpawnDefaultVehicle.",
-      "params": {"options": {"type": "table|nil", "desc": "Options de spawn (config et licenseText sont ajoutés)."}},
-      "returns": [{"type": "userdata|boolean|nil", "desc": "Véhicule créé, false si la limite est atteinte."}],
+      "desc": "Spawns the user's default vehicle (file pathDefaultConfig) or, failing that, the game's default model; replaces the current vehicle if there is one. Emits onSpawnDefaultVehicle.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "Spawn options (config and licenseText are added)."
+        }
+      },
+      "returns": [
+        {
+          "type": "userdata|boolean|nil",
+          "desc": "Vehicle created, false if the limit is reached."
+        }
+      ],
       "internal": false
     },
     "spawnNewVehicle": {
-      "desc": "Fait apparaître un nouveau véhicule (ou plusieurs pour une configuration multi-véhicules). Passe en caméra de jeu s'il n'y avait pas de véhicule joueur. Appelée directement par l'interface.",
+      "desc": "Spawns a new vehicle (or several for a multi-vehicle configuration). Switches to the game camera if there was no player vehicle. Called directly by the interface.",
       "params": {
-        "modelName": {"type": "string", "desc": "Clé du modèle."},
-        "opt": {"type": "table", "desc": "Options de spawn : config, paint, paint2, paint3, pos, rot, licenseText, vehicleName, autoEnterVehicle, canSpawnAnotherVehicleCheck, safeSpawn, additionalVehicleData… (ne pas passer nil, voir notes)."}
+        "modelName": {
+          "type": "string",
+          "desc": "Model key."
+        },
+        "opt": {
+          "type": "table",
+          "desc": "Spawn options: config, paint, paint2, paint3, pos, rot, licenseText, vehicleName, autoEnterVehicle, canSpawnAnotherVehicleCheck, safeSpawn, additionalVehicleData... (do not pass nil, see notes)."
+        }
       },
-      "returns": [{"type": "userdata|boolean|nil", "desc": "Premier véhicule créé ; second retour : liste de tous. false si limite atteinte, nil en cas d'échec."}],
+      "returns": [
+        {
+          "type": "userdata|boolean|nil",
+          "desc": "First vehicle created; second return: list of all. false if limit reached, nil on failure."
+        }
+      ],
       "internal": false
     }
   },

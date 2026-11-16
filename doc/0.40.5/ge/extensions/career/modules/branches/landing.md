@@ -1,99 +1,99 @@
 # `career_modules_branches_landing`
 
-*Fichier : `lua/ge/extensions/career/modules/branches/landing.lua` · VM : Game Engine (GE) · 756 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/branches/landing.lua` · VM: Game Engine (GE) · 756 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_branches_landing` : `extensions.load("career_modules_branches_landing")`, puis la globale `career_modules_branches_landing`
+**Access:** extension `career_modules_branches_landing`: `extensions.load("career_modules_branches_landing")`, then the global `career_modules_branches_landing`
 
-Fournit à l'UI carrière les données de la page d'accueil de progression (domaines, branches, compétences) : titres, fils d'Ariane, niveau/XP, déblocages, ligues et missions formatées. Ajoute aussi le bouton 'landing page APM' dans le menu ordinateur. Un moddeur l'utilise surtout pour comprendre le format des tables envoyées à l'écran career.branchPage.
+Provides the career UI with the data of the progression landing page (domains, branches, skills): titles, breadcrumbs, level/XP, unlocks, leagues and formatted missions. Also adds the 'landing page APM' button to the computer menu. A modder mainly uses it to understand the format of the tables sent to the career.branchPage screen.
 
-## Exemple
+## Example
 
 ```lua
 local data = career_modules_branches_landing.getLandingPageData('apm')
 print(data.heading, #data.branches)
 ```
 
-## Remarques
+## Notes
 
-- Sans pathId (nil, '' ou 'undefined'), getLandingPageData liste les domaines (branch.isDomain) avec target 'landing' s'ils ont des branches enfants, sinon 'skillPage'.
-- Avec un pathId, la page liste les enfants (target 'skillPage'), calcule niveau/XP (career_branches.calcBranchLevelFromValue), multiplicateur de récompense hérité des parents et, pour une branche ou compétence, ses ligues avec missions formatées.
-- Le domaine par défaut des suggestions est 'apm'.
+- Without a pathId (nil, '' or 'undefined'), getLandingPageData lists the domains (branch.isDomain) with target 'landing' if they have child branches, otherwise 'skillPage'.
+- With a pathId, the page lists the children (target 'skillPage'), computes level/XP (career_branches.calcBranchLevelFromValue), the reward multiplier inherited from the parents and, for a branch or skill, its leagues with formatted missions.
+- The default domain of the suggestions is 'apm'.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_branches_landing.formatDriftSpot(ds)` | Formate un spot de drift comme une mission pour l'UI (skill 'drift', icône 'drift02', objectifs accomplis en étoiles par défaut). | 482 |
-| `career_modules_branches_landing.formatMission(m)` | Formate une mission pour l'UI : skill, id, icône, label, description, type, progression formatée, startable, aperçu, vignette, verrouillée (non visible) et canStartFromProgressScreen (déclencheur de type 'league'). | 457 |
-| `career_modules_branches_landing.getBranchSkillCardData(branchId)` | Renvoie les infos d'une carte de branche/compétence pour l'UI (nom, descriptions, niveau, libellé de niveau, niveau max atteint, débloquée, icône, couleur…). Appelle career_branches.checkUnlocks() au préalable. | 342 |
-| `career_modules_branches_landing.getLandingPageData(pathId)` | Construit toute la table de la page de progression : heading, description, branches, breadcrumbs, et pour une branche : skillInfo, skills, leagues (missions formatées), isBranch. | 603 |
-| `career_modules_branches_landing.getSuggestedMissionsForDomain(domainId)` | Parcourt récursivement les branches/compétences du domaine (hors en développement) et renvoie jusqu'à deux missions suggérées : une jamais jouée (0 étoile) et une partiellement terminée (sinon une seconde jamais jouée). | 578 |
-| `career_modules_branches_landing.onComputerAddFunctions(menuData, computerFunctions)` | Hook de career_modules_computer : si la facilité a la fonction 'apmLandingPage', ajoute un bouton général qui navigue vers 'career.branchPage' (pathId 'apm', retour 'career.computer'), désactivé tant que le véhicule de départ n'est pas acheté. *(interne)* *(hook)* | 739 |
-| `career_modules_branches_landing.openBigMapWithMissionSelected(missionId)` | Ouvre la grande carte (freeroam_bigMapMode.enterBigMap) instantanément avec la mission sélectionnée, route de retour 'career.branchPage.bigmap'. | 443 |
-| `career_modules_branches_landing.resolveBranchTitle(pathId)` | Titre traduit d'une branche (branchHeading ou name) ; si absente ou manquante, renvoie le titre traduit de la page d'accueil (ui.career.landingPage.name). | 594 |
+| `career_modules_branches_landing.formatDriftSpot(ds)` | Formats a drift spot as a mission for the UI (skill 'drift', icon 'drift02', objectives completed as stars by default). | 482 |
+| `career_modules_branches_landing.formatMission(m)` | Formats a mission for the UI: skill, id, icon, label, description, type, formatted progress, startable, preview, thumbnail, locked (not visible) and canStartFromProgressScreen ('league' type trigger). | 457 |
+| `career_modules_branches_landing.getBranchSkillCardData(branchId)` | Returns the info of a branch/skill card for the UI (name, descriptions, level, level label, max level reached, unlocked, icon, color…). Calls career_branches.checkUnlocks() beforehand. | 342 |
+| `career_modules_branches_landing.getLandingPageData(pathId)` | Builds the whole table of the progression page: heading, description, branches, breadcrumbs, and for a branch: skillInfo, skills, leagues (formatted missions), isBranch. | 603 |
+| `career_modules_branches_landing.getSuggestedMissionsForDomain(domainId)` | Recursively walks the domain's branches/skills (excluding in-development ones) and returns up to two suggested missions: one never played (0 stars) and one partially completed (otherwise a second never played). | 578 |
+| `career_modules_branches_landing.onComputerAddFunctions(menuData, computerFunctions)` | Hook of career_modules_computer: if the facility has the function 'apmLandingPage', adds a general button that navigates to 'career.branchPage' (pathId 'apm', return 'career.computer'), disabled until the starter vehicle is bought. *(internal)* *(hook)* | 739 |
+| `career_modules_branches_landing.openBigMapWithMissionSelected(missionId)` | Opens the big map (freeroam_bigMapMode.enterBigMap) instantly with the selected mission, return route 'career.branchPage.bigmap'. | 443 |
+| `career_modules_branches_landing.resolveBranchTitle(pathId)` | Translated title of a branch (branchHeading or name); if absent or missing, returns the translated title of the landing page (ui.career.landingPage.name). | 594 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_branches_landing.formatDriftSpot(ds)`
 
-Formate un spot de drift comme une mission pour l'UI (skill 'drift', icône 'drift02', objectifs accomplis en étoiles par défaut).
+Formats a drift spot as a mission for the UI (skill 'drift', icon 'drift02', objectives completed as stars by default).
 
-- `ds` (*table*) : Spot de drift (champs id, info, saveData).
-- **renvoie** : table Entrée formatée pour l'UI.
+- `ds` (*table*) : Drift spot (fields id, info, saveData).
+- **returns**: table Entry formatted for the UI.
 
 #### `career_modules_branches_landing.formatMission(m)`
 
-Formate une mission pour l'UI : skill, id, icône, label, description, type, progression formatée, startable, aperçu, vignette, verrouillée (non visible) et canStartFromProgressScreen (déclencheur de type 'league').
+Formats a mission for the UI: skill, id, icon, label, description, type, formatted progress, startable, preview, thumbnail, locked (not visible) and canStartFromProgressScreen ('league' type trigger).
 
 - `m` (*table*) : Mission (gameplay_missions_missions).
-- **renvoie** : table Mission formatée pour l'UI.
+- **returns**: table Mission formatted for the UI.
 
 #### `career_modules_branches_landing.getBranchSkillCardData(branchId)`
 
-Renvoie les infos d'une carte de branche/compétence pour l'UI (nom, descriptions, niveau, libellé de niveau, niveau max atteint, débloquée, icône, couleur…). Appelle career_branches.checkUnlocks() au préalable.
+Returns the info of a branch/skill card for the UI (name, descriptions, level, level label, max level reached, unlocked, icon, color…). Calls career_branches.checkUnlocks() beforehand.
 
-- `branchId` (*string*) : Id de la branche.
-- **renvoie** : table branchInfo pour l'UI.
+- `branchId` (*string*) : Branch id.
+- **returns**: table branchInfo for the UI.
 
 #### `career_modules_branches_landing.getLandingPageData(pathId)`
 
-Construit toute la table de la page de progression : heading, description, branches, breadcrumbs, et pour une branche : skillInfo, skills, leagues (missions formatées), isBranch.
+Builds the whole table of the progression page: heading, description, branches, breadcrumbs, and for a branch: skillInfo, skills, leagues (formatted missions), isBranch.
 
-- `pathId` (*string|nil*) : Id du domaine/branche ; nil, '' ou 'undefined' pour la page racine.
-- **renvoie** : table Données de la page pour l'UI.
+- `pathId` (*string|nil*) : Domain/branch id; nil, '' or 'undefined' for the root page.
+- **returns**: table Page data for the UI.
 
 #### `career_modules_branches_landing.getSuggestedMissionsForDomain(domainId)`
 
-Parcourt récursivement les branches/compétences du domaine (hors en développement) et renvoie jusqu'à deux missions suggérées : une jamais jouée (0 étoile) et une partiellement terminée (sinon une seconde jamais jouée).
+Recursively walks the domain's branches/skills (excluding in-development ones) and returns up to two suggested missions: one never played (0 stars) and one partially completed (otherwise a second never played).
 
-- `domainId` (*string|nil*) : Id du domaine ; 'apm' par défaut.
-- **renvoie** : table[] Missions formatées suggérées.
+- `domainId` (*string|nil*) : Domain id; 'apm' by default.
+- **returns**: table[] Suggested formatted missions.
 
 #### `career_modules_branches_landing.onComputerAddFunctions(menuData, computerFunctions)`
 
-Hook de career_modules_computer : si la facilité a la fonction 'apmLandingPage', ajoute un bouton général qui navigue vers 'career.branchPage' (pathId 'apm', retour 'career.computer'), désactivé tant que le véhicule de départ n'est pas acheté.
+Hook of career_modules_computer: if the facility has the function 'apmLandingPage', adds a general button that navigates to 'career.branchPage' (pathId 'apm', return 'career.computer'), disabled until the starter vehicle is bought.
 
-- `menuData` (*table*) : Données du menu (computerFacility, hasBoughtStarterVehicle…).
-- `computerFunctions` (*table*) : Table {general, vehicleSpecific} à compléter.
+- `menuData` (*table*) : Menu data (computerFacility, hasBoughtStarterVehicle…).
+- `computerFunctions` (*table*) : Table {general, vehicleSpecific} to fill in.
 
 #### `career_modules_branches_landing.openBigMapWithMissionSelected(missionId)`
 
-Ouvre la grande carte (freeroam_bigMapMode.enterBigMap) instantanément avec la mission sélectionnée, route de retour 'career.branchPage.bigmap'.
+Opens the big map (freeroam_bigMapMode.enterBigMap) instantly with the selected mission, return route 'career.branchPage.bigmap'.
 
-- `missionId` (*string*) : Id de la mission à sélectionner.
+- `missionId` (*string*) : Id of the mission to select.
 
 #### `career_modules_branches_landing.resolveBranchTitle(pathId)`
 
-Titre traduit d'une branche (branchHeading ou name) ; si absente ou manquante, renvoie le titre traduit de la page d'accueil (ui.career.landingPage.name).
+Translated title of a branch (branchHeading or name); if absent or missing, returns the translated title of the landing page (ui.career.landingPage.name).
 
-- `pathId` (*string|nil*) : Id de la branche.
-- **renvoie** : string Titre traduit.
+- `pathId` (*string|nil*) : Branch id.
+- **returns**: string Translated title.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onCareerProgressPageGetTasklistData` — écouté par 1 module(s)
+- `onCareerProgressPageGetTasklistData` — listened to by 1 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/branches/landing.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/branches/landing.lua`.*

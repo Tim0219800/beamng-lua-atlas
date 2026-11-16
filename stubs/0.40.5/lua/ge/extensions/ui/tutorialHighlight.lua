@@ -2,41 +2,41 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/tutorialHighlight.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère la liste des éléments d'interface à mettre en surbrillance pendant un tutoriel. Chaque élément est identifié par un id (chaîne) ; l'état (ids dans l'ordre d'apparition, options, révision) est diffusé à l'UI via le flux `tutorialHighlight` (guihooks.triggerStream). Un moddeur ou un script de tutoriel appelle show/hide pour allumer ou éteindre un repère.
---- Accès : extension `ui_tutorialHighlight` : `extensions.load("ui_tutorialHighlight")`, puis la globale `ui_tutorialHighlight`
+--- Manages the list of interface elements to highlight during a tutorial. Each element is identified by an id (string); the state (ids in order of appearance, options, revision) is broadcast to the UI via the `tutorialHighlight` stream (guihooks.triggerStream). A modder or a tutorial script calls show/hide to turn a marker on or off.
+--- Access: extension `ui_tutorialHighlight`: `extensions.load("ui_tutorialHighlight")`, then the global `ui_tutorialHighlight`
 ---@class ui_tutorialHighlight
 ui_tutorialHighlight = {}
 
---- Renvoie la charge utile courante du flux.
----Source : lua/ge/extensions/ui/tutorialHighlight.lua:17
+--- Returns the current stream payload.
+---Source: lua/ge/extensions/ui/tutorialHighlight.lua:17
 ---@return table  { ids = string[], options = table<string, table>, revision = integer }
 function ui_tutorialHighlight.getState() end
 
---- Retire l'id de la surbrillance et diffuse l'état.
----Source : lua/ge/extensions/ui/tutorialHighlight.lua:65
----@param id string Identifiant de l'élément.
----@return boolean  true si l'id était actif.
+--- Removes the id from the highlight and broadcasts the state.
+---Source: lua/ge/extensions/ui/tutorialHighlight.lua:65
+---@param id string Identifier of the element.
+---@return boolean  true if the id was active.
 function ui_tutorialHighlight.hide(id) end
 
---- Retire toutes les surbrillances et diffuse l'état.
----Source : lua/ge/extensions/ui/tutorialHighlight.lua:85
----@return boolean  false si rien n'était actif.
+--- Removes all highlights and broadcasts the state.
+---Source: lua/ge/extensions/ui/tutorialHighlight.lua:85
+---@return boolean  false if nothing was active.
 function ui_tutorialHighlight.hideAll() end
 
---- Hook d'initialisation à la création de l'extension : passe le mode de déchargement en « manual ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/tutorialHighlight.lua:100
+--- Initialization hook on extension creation: sets the unload mode to "manual".
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/tutorialHighlight.lua:100
 function ui_tutorialHighlight.onInit() end
 
---- Hook appelé quand l'UI est prête : rediffuse l'état courant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/tutorialHighlight.lua:96
+--- Hook called when the UI is ready: rebroadcasts the current state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/tutorialHighlight.lua:96
 function ui_tutorialHighlight.onUiReady() end
 
---- Active la surbrillance de l'id (ajouté en fin d'ordre s'il est nouveau), enregistre ses options et diffuse l'état.
----Source : lua/ge/extensions/ui/tutorialHighlight.lua:44
----@param id string Identifiant non vide de l'élément.
+--- Enables the highlight of the id (appended at the end of the order if new), stores its options and broadcasts the state.
+---Source: lua/ge/extensions/ui/tutorialHighlight.lua:44
+---@param id string Non-empty identifier of the element.
 ---@param options table|nil {focus = boolean, scroll = boolean}.
----@return boolean  true si l'id vient d'être ajouté ; false s'il était déjà actif ou si l'id est invalide.
+---@return boolean  true if the id was just added; false if it was already active or if the id is invalid.
 function ui_tutorialHighlight.show(id, options) end
 

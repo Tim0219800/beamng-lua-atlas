@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitParams.lua",
+  "module": "Nœud flowgraph « Pursuit Parameters » (once_instant). Règle les paramètres de la police (gameplay_police.setPursuitVars) : policeStrictness (strictness), arrestLimit (arrestTime), arrestRadius, evadeLimit (evadeTime), evadeRadius, suspectFrequency, roadblockFrequency. Seuls les pins non nil sont appliqués.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Construit la table de variables à partir des pins non nil et appelle gameplay_police.setPursuitVars.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

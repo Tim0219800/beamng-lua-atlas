@@ -1,46 +1,46 @@
 # `editor_flowgraph_examples`
 
-*Fichier : `lua/ge/extensions/editor/flowgraph/examples.lua` · VM : Game Engine (GE) · 337 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/flowgraph/examples.lua` · VM: Game Engine (GE) · 337 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/flowgraph/examples")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/flowgraph/examples")` (file under extensions/ but not a regular extension)
 
-Fenêtre « Examples » (fg_examples) de l'éditeur Flowgraph. Elle charge (une fois, mise en cache) tous les fichiers *flow.json du dossier /lua/ge/extensions/flowgraph/examples/, les range en arborescence par sous-dossier (beginner, intermediate, expert, nodes en premier), propose une recherche et, au clic sur un exemple, ouvre un nouveau projet flowgraph créé à partir de ses données (sans nom de fichier sauvegardé). Navigation possible aux flèches via l'action map « NodeLibrary ».
+"Examples" window (fg_examples) of the Flowgraph editor. It loads (once, cached) all *flow.json files from the /lua/ge/extensions/flowgraph/examples/ folder, arranges them in a tree by subfolder (beginner, intermediate, expert, nodes first), offers a search and, on clicking an example, opens a new flowgraph project created from its data (without a saved file name). Arrow-key navigation is possible via the "NodeLibrary" action map.
 
-## Remarques
+## Notes
 
-- Les exemples sont triés par exampleOrder (10^10 par défaut) ; la description vient du champ description du .flow.json.
-- Le cache examplesLookup est partagé au niveau du module : il n'est pas rechargé tant que le jeu tourne.
-- findExamples référence examplesLookup, qui doit déjà avoir été chargé par loadExamples.
+- Examples are sorted by exampleOrder (10^10 by default); the description comes from the description field of the .flow.json.
+- The examplesLookup cache is shared at module level: it is not reloaded while the game is running.
+- findExamples references examplesLookup, which must already have been loaded by loadExamples.
 
-## Classe `C`
+## Class `C`
 
-Classe de la fenêtre Examples (windowName = 'fg_examples', arrowControllable = true).
+Examples window class (windowName = 'fg_examples', arrowControllable = true).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(data)` | Désérialisation (vide). | 302 |
-| `C:_onSerialize(data)` | Sérialisation (vide). | 298 |
-| `C:arrowHelper(cursor, itemSize, doHover)` | Compte l'élément dans la liste navigable et dessine le cadre de sélection clavier. | 306 |
-| `C:attach(mgr)` | Associe le manager et réinitialise la recherche. | 13 |
-| `C:createNode()` | Demande de valider l'élément sélectionné au prochain affichage (doClick). | 76 |
-| `C:displayResults()` | Affiche les résultats de recherche (ou « No Results! »). | 178 |
-| `C:displayTreeView()` | Affiche l'arborescence complète des exemples. | 235 |
-| `C:draw()` | Dessine la fenêtre Examples (recherche ou arborescence). | 214 |
-| `C:drawSearchInput()` | Dessine le champ « Find », le bouton d'effacement et l'aide. | 91 |
-| `C:findExamples(match)` | Soumet chaque exemple à l'utilitaire de recherche. | 119 |
-| `C:findStuff()` | Relance la recherche si le texte a changé et remplit self.results. | 133 |
-| `C:getExamplesLookup()` | Renvoie l'arbre et la table plate (via loadExamples). | 72 |
-| `C:handleActionMap()` | Quand la fenêtre a le focus, empile l'action map « NodeLibrary » pour la navigation aux flèches. | 283 |
-| `C:highlightText(label, highlightText)` | Affiche un libellé en surlignant en orange les occurrences du texte cherché. | 147 |
-| `C:init()` | Enregistre la fenêtre, crée l'utilitaire de recherche et charge les exemples. | 20 |
-| `C:loadExamples()` | Parcourt FS:findFiles sur les .flow.json d'exemples, construit l'arbre (res) et la table plate (lookup) avec leur contenu JSON, puis les met en cache. | 30 |
-| `C:manageClick(result)` | Si l'élément est cliqué (ou validé au clavier), crée un manager via core_flowgraphManager.addManager et le rend actif dans l'éditeur. | 205 |
-| `C:navigateList(up)` | Déplace la sélection clavier dans la liste. | 80 |
-| `C:recursiveTreeView(element, depth)` | Affiche récursivement un nœud de l'arbre : exemples triés puis sous-dossiers. | 242 |
+| `C:_onDeserialized(data)` | Deserialization (empty). | 302 |
+| `C:_onSerialize(data)` | Serialization (empty). | 298 |
+| `C:arrowHelper(cursor, itemSize, doHover)` | Counts the item in the navigable list and draws the keyboard selection frame. | 306 |
+| `C:attach(mgr)` | Associates the manager and resets the search. | 13 |
+| `C:createNode()` | Requests validation of the selected item at the next display (doClick). | 76 |
+| `C:displayResults()` | Displays the search results (or "No Results!"). | 178 |
+| `C:displayTreeView()` | Displays the full tree of examples. | 235 |
+| `C:draw()` | Draws the Examples window (search or tree). | 214 |
+| `C:drawSearchInput()` | Draws the "Find" field, the clear button and the help. | 91 |
+| `C:findExamples(match)` | Submits each example to the search utility. | 119 |
+| `C:findStuff()` | Re-runs the search if the text has changed and fills self.results. | 133 |
+| `C:getExamplesLookup()` | Returns the tree and the flat table (via loadExamples). | 72 |
+| `C:handleActionMap()` | When the window has focus, pushes the "NodeLibrary" action map for arrow-key navigation. | 283 |
+| `C:highlightText(label, highlightText)` | Displays a label, highlighting in orange the occurrences of the searched text. | 147 |
+| `C:init()` | Registers the window, creates the search utility and loads the examples. | 20 |
+| `C:loadExamples()` | Walks FS:findFiles over the example .flow.json files, builds the tree (res) and the flat table (lookup) with their JSON content, then caches them. | 30 |
+| `C:manageClick(result)` | If the item is clicked (or validated by keyboard), creates a manager via core_flowgraphManager.addManager and makes it active in the editor. | 205 |
+| `C:navigateList(up)` | Moves the keyboard selection in the list. | 80 |
+| `C:recursiveTreeView(element, depth)` | Recursively displays a tree node: sorted examples then subfolders. | 242 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/flowgraph/examples.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/flowgraph/examples.lua`.*

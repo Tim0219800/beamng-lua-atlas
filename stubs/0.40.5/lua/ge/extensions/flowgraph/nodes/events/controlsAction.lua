@@ -2,41 +2,41 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_events_controlsAction_C
 local flowgraph_nodes_events_controlsAction_C = {}
 
---- Réinitialise l'état et appelle pushActionMap("FlowgraphActions").
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua:36
+--- Resets the state and calls pushActionMap("FlowgraphActions").
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua:36
 function flowgraph_nodes_events_controlsAction_C:_executionStarted() end
 
---- Réinitialise l'état et appelle popActionMap("FlowgraphActions").
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua:30
+--- Resets the state and calls popActionMap("FlowgraphActions").
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua:30
 function flowgraph_nodes_events_controlsAction_C:_executionStopped() end
 
---- Dessin du nœud dans l'éditeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua:47
+--- Node drawing in the editor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua:47
 ---@param builder any
 ---@param style any
 function flowgraph_nodes_events_controlsAction_C:drawMiddle(builder, style) end
 
---- Initialise self.reset = false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua:26
----@param mgr table Gestionnaire du flowgraph
+--- Initializes self.reset = false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua:26
+---@param mgr table Flowgraph manager
 ---@param ... any
 function flowgraph_nodes_events_controlsAction_C:init(mgr, ...) end
 
---- Hook appelé quand l'action est déclenchée : mémorise le numéro de frame.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua:42
+--- Hook called when the action is triggered: stores the frame number.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua:42
 function flowgraph_nodes_events_controlsAction_C:onControlsAction() end
 
---- Met flow et value à vrai pendant la frame qui suit l'appui, sinon à faux.
----Source : lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua:53
----@param args table Arguments du flowgraph
+--- Sets flow and value to true during the frame following the press, otherwise to false.
+---Source: lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua:53
+---@param args table Flowgraph arguments
 function flowgraph_nodes_events_controlsAction_C:work(args) end
 

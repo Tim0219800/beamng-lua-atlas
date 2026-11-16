@@ -1,67 +1,67 @@
 # `connector`
 
-*Fichier : `lua/common/libs/luamqtt/mqtt/luasocket.lua` · VM : Commun (GE + véhicule) · 53 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/luamqtt/mqtt/luasocket.lua` · VM: Common (GE + vehicle) · 53 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `connector`
+**Access:** global `connector`
 
-Connecteur réseau par défaut de luamqtt, basé sur luasocket. Il manipule une table de connexion 'conn' (host, port, sock, timeout) créée par le client MQTT. Chaque fonction prend conn en premier argument ; les erreurs sont renvoyées sous la forme false, 'texte'.
+Default luamqtt network connector, based on luasocket. It manipulates a connection table 'conn' (host, port, sock, timeout) created by the MQTT client. Each function takes conn as its first argument; errors are returned as false, 'text'.
 
-## Remarques
+## Notes
 
-- Utilise require('socket') (module luasocket par nom nu).
+- Uses require('socket') (the luasocket module by bare name).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `connector.connect(conn)` | Ouvre une connexion TCP vers conn.host:conn.port via socket.connect et stocke le socket dans conn.sock. | 11 |
-| `connector.receive(conn, size)` | Reçoit exactement size octets (conn.sock:receive). | 33 |
-| `connector.send(conn, data, i, j)` | Envoie des données (conn.sock:send). | 26 |
-| `connector.settimeout(conn, timeout)` | Mémorise conn.timeout et règle le délai total du socket (mode 't'). | 44 |
-| `connector.shutdown(conn)` | Ferme la connexion par conn.sock:shutdown(). | 21 |
+| `connector.connect(conn)` | Opens a TCP connection to conn.host:conn.port via socket.connect and stores the socket in conn.sock. | 11 |
+| `connector.receive(conn, size)` | Receives exactly size bytes (conn.sock:receive). | 33 |
+| `connector.send(conn, data, i, j)` | Sends data (conn.sock:send). | 26 |
+| `connector.settimeout(conn, timeout)` | Stores conn.timeout and sets the socket's total timeout (mode 't'). | 44 |
+| `connector.shutdown(conn)` | Closes the connection with conn.sock:shutdown(). | 21 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `connector.connect(conn)`
 
-Ouvre une connexion TCP vers conn.host:conn.port via socket.connect et stocke le socket dans conn.sock.
+Opens a TCP connection to conn.host:conn.port via socket.connect and stores the socket in conn.sock.
 
-- `conn` (*table*) : Table de connexion (host, port).
-- **renvoie** : boolean true si connecté, false sinon.
-- **renvoie** : string|nil Message d'erreur.
+- `conn` (*table*) : Connection table (host, port).
+- **returns**: boolean true if connected, false otherwise.
+- **returns**: string|nil Error message.
 
 #### `connector.receive(conn, size)`
 
-Reçoit exactement size octets (conn.sock:receive).
+Receives exactly size bytes (conn.sock:receive).
 
-- `conn` (*table*) : Connexion.
-- `size` (*integer*) : Octets à lire.
-- **renvoie** : string|nil Données.
-- **renvoie** : string|nil Erreur, ex. 'timeout' ou 'closed'.
+- `conn` (*table*) : Connection.
+- `size` (*integer*) : Bytes to read.
+- **returns**: string|nil Data.
+- **returns**: string|nil Error, e.g. 'timeout' or 'closed'.
 
 #### `connector.send(conn, data, i, j)`
 
-Envoie des données (conn.sock:send).
+Sends data (conn.sock:send).
 
-- `conn` (*table*) : Connexion.
-- `data` (*string*) : Données.
-- `i` (*integer|nil*) : Début de sous-chaîne.
-- `j` (*integer|nil*) : Fin de sous-chaîne.
-- **renvoie** : integer|nil Index du dernier octet envoyé.
-- **renvoie** : string|nil Erreur.
+- `conn` (*table*) : Connection.
+- `data` (*string*) : Data.
+- `i` (*integer|nil*) : Substring start.
+- `j` (*integer|nil*) : Substring end.
+- **returns**: integer|nil Index of the last byte sent.
+- **returns**: string|nil Error.
 
 #### `connector.settimeout(conn, timeout)`
 
-Mémorise conn.timeout et règle le délai total du socket (mode 't').
+Stores conn.timeout and sets the socket's total timeout (mode 't').
 
-- `conn` (*table*) : Connexion.
-- `timeout` (*number|nil*) : Secondes.
+- `conn` (*table*) : Connection.
+- `timeout` (*number|nil*) : Seconds.
 
 #### `connector.shutdown(conn)`
 
-Ferme la connexion par conn.sock:shutdown().
+Closes the connection with conn.sock:shutdown().
 
-- `conn` (*table*) : Connexion.
+- `conn` (*table*) : Connection.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luamqtt/mqtt/luasocket.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/luamqtt/mqtt/luasocket.lua`.*

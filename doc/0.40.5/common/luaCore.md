@@ -1,35 +1,35 @@
 # `luaCore`
 
-*Fichier : `lua/common/luaCore.lua` · VM : Commun (GE + véhicule) · 42 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/luaCore.lua` · VM: Common (GE + vehicle) · 42 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("luaCore")`
+**Access:** `require("luaCore")`
 
-Petit module de base chargé dans les deux VM, qui ajoute des utilitaires de langage utilisés partout : require_optional, unrequire, rerequire, nop, et compléments LuaJIT (table.clear, table.new, variable globale ffi). Il ne retourne pas de table : tout est global.
+Small base module loaded in both VMs, which adds language utilities used everywhere: require_optional, unrequire, rerequire, nop, and LuaJIT additions (table.clear, table.new, global variable ffi). It does not return a table: everything is global.
 
-## Exemple
+## Example
 
 ```lua
-local ok = require_optional('some.module')   -- nil si absent
-local m = rerequire('mymodule')              -- force le rechargement depuis le disque
+local ok = require_optional('some.module')   -- nil if absent
+local m = rerequire('mymodule')              -- forces a reload from disk
 table.clear(t)
 ```
 
-## Remarques
+## Notes
 
-- Définit la globale `ffi` (= require('ffi') ou nil si indisponible).
-- Si les extensions LuaJIT table.clear / table.new ne se chargent pas, des remplaçants en Lua pur sont installés (table.new(...) ignore alors ses arguments et renvoie {}).
-- `nop` est une fonction vide globale utilisée comme valeur par défaut de hooks (ex. extensions.onSerialize = nop).
+- Defines the global `ffi` (= require('ffi') or nil if unavailable).
+- If the LuaJIT extensions table.clear / table.new fail to load, pure-Lua replacements are installed (table.new(...) then ignores its arguments and returns {}).
+- `nop` is a global empty function used as the default value of hooks (e.g. extensions.onSerialize = nop).
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `nop()` | Fonction qui ne fait rien (valeur par défaut pour des callbacks). | 41 |
-| `require_optional(module)` | Fait require(module) dans un pcall : renvoie le module, ou nil si le chargement échoue (module absent ou erreur dans le module). | 8 |
-| `rerequire(module)` | Force le rechargement d'un fichier : vide package.loaded[module] puis fait require. Journalise un avertissement si le module est falsy après chargement. | 21 |
-| `unrequire(m)` | Décharge un module : supprime package.loaded[m] et la globale du même nom. | 15 |
+| `nop()` | Function that does nothing (default value for callbacks). | 41 |
+| `require_optional(module)` | Does require(module) in a pcall: returns the module, or nil if loading fails (module absent or error in the module). | 8 |
+| `rerequire(module)` | Forces a file reload: clears package.loaded[module] then does require. Logs a warning if the module is falsy after loading. | 21 |
+| `unrequire(m)` | Unloads a module: removes package.loaded[m] and the global of the same name. | 15 |
 
-**Globales affectées :** `ffi`
+**Globals assigned:** `ffi`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/luaCore.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/luaCore.lua`.*

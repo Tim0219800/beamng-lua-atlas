@@ -2,20 +2,20 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/masterSpline/jumpTables.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Module utilitaire de l'outil Master Spline : regroupe des tables de dispatch indexées par le type de lien d'une couche (préfixe d'outil de meshSpline, assemblySpline, decalSpline, roadSpline, treeSpline). Chaque table associe à ce type la fonction de l'outil compatible correspondant (créer, restaurer, délier, supprimer, verrouiller, sérialiser…). Utile pour comprendre comment une Master Spline pilote ses splines enfants.
---- Accès : extension `editor_masterSpline_jumpTables` : `extensions.load("editor_masterSpline_jumpTables")`, puis la globale `editor_masterSpline_jumpTables`
+--- Master Spline tool utility module: groups dispatch tables keyed by a layer's link type (tool prefix of meshSpline, assemblySpline, decalSpline, roadSpline, treeSpline). Each table maps that type to the matching tool function _anon(create, restore, unlink, delete, lock, serialize...). Useful to understand how a Master Spline drives its child splines.
+--- Access: extension `editor_masterSpline_jumpTables`: `extensions.load("editor_masterSpline_jumpTables")`, then the global `editor_masterSpline_jumpTables`
 ---@class editor_masterSpline_jumpTables
----@field createJumpTable table<string, function> Crée une nouvelle spline dans l'outil cible (addNewMeshSpline, addNewAssemblySpline, addNewDecalSpline, addNewGroup, addNewTreeSpline).
----@field eachObjectJumpTable table<string, function(id: any, fn: function)> Itère sur les objets d'une spline liée (eachObjectById), pour splineLock ; mesh et assembly seulement.
----@field getLastCreatedSplineJumpTable table<string, function> Renvoie la dernière spline de la liste de l'outil (ou nil si vide) ; optimisé pour undo/redo.
----@field removeJumpTable table<string, function> Supprime une spline liée (removeLinkedXxx de chaque outil).
----@field restoreJumpTable table<string, function(data: table)> Restaure une spline à partir de données : copie profonde, ajout à la liste de l'outil, recalcul de la table id vers indice ; renvoie la spline.
----@field serializeJumpTable table<string, function(linkedSplineId: any)> Renvoie une copie profonde de la spline liée (deepCopyXxx), ou nil si introuvable.
----@field setLinkJumpTable table<string, function> setLink de chaque outil : définit l'état de lien d'une couche.
----@field setLinkedSplineDirtyJumpTable table<string, function(id: any)> Met isDirty = true sur la spline liée, si elle existe.
----@field setLockedJumpTable table<string, function(id: any, isLocked: boolean)> Verrouille/déverrouille une spline enfant via le setLockedById de l'outil ; suit le verrou de sa Master Spline.
----@field setNameJumpTable table<string, function(id: any, splineName: string)> Renomme la spline liée (champ name) ; pour mesh, assembly et road, renomme aussi le dossier de l'arbre de scène (sceneTreeFolderId) et rafraîchit la fenêtre de l'arbre.
----@field toolNavigation table<string, table> Pour chaque type : uiModule (nom de l'extension, ex. 'editor_meshSpline'), getModeKey, getSplines et getIdToIdxMap, pour naviguer vers l'outil compatible.
----@field unlinkJumpTable table<string, function(linkedSplineId: any)> Délie la spline : isLink = false, linkId = nil, isDirty = true.
+---@field createJumpTable table<string, function> Creates a new spline in the target tool (addNewMeshSpline, addNewAssemblySpline, addNewDecalSpline, addNewGroup, addNewTreeSpline).
+---@field eachObjectJumpTable table<string, function(id: any, fn: function)> Iterates over the objects of a linked spline (eachObjectById), for splineLock; mesh and assembly only.
+---@field getLastCreatedSplineJumpTable table<string, function> Returns the last spline of the tool's list (or nil if empty); optimized for undo/redo.
+---@field removeJumpTable table<string, function> Deletes a linked spline (removeLinkedXxx of each tool).
+---@field restoreJumpTable table<string, function(data: table)> Restores a spline from data: deep copy, added to the tool's list, id-to-index table recomputed; returns the spline.
+---@field serializeJumpTable table<string, function(linkedSplineId: any)> Returns a deep copy of the linked spline (deepCopyXxx), or nil if not found.
+---@field setLinkJumpTable table<string, function> setLink of each tool: sets the link state of a layer.
+---@field setLinkedSplineDirtyJumpTable table<string, function(id: any)> Sets isDirty = true on the linked spline, if it exists.
+---@field setLockedJumpTable table<string, function(id: any, isLocked: boolean)> Locks/unlocks a child spline via the tool's setLockedById; follows the lock of its Master Spline.
+---@field setNameJumpTable table<string, function(id: any, splineName: string)> Renames the linked spline (name field); for mesh, assembly and road, also renames the scene tree folder (sceneTreeFolderId) and refreshes the tree window.
+---@field toolNavigation table<string, table> For each type: uiModule (extension name, e.g. 'editor_meshSpline'), getModeKey, getSplines and getIdToIdxMap, to navigate to the matching tool.
+---@field unlinkJumpTable table<string, function(linkedSplineId: any)> Unlinks the spline: isLink = false, linkId = nil, isDirty = true.
 editor_masterSpline_jumpTables = {}
 

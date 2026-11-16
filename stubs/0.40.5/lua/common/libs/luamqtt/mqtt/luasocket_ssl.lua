@@ -2,40 +2,40 @@
 -- tim19Atlas stub generated from lua/common/libs/luamqtt/mqtt/luasocket_ssl.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Connecteur réseau luamqtt pour connexions TLS : ouvre un socket TCP via le connecteur luasocket puis l'enveloppe avec ssl.wrap (module luasec ou compatible, nom conn.ssl_module, 'ssl' par défaut) et réalise la poignée de main. send, receive et settimeout sont ceux de luasocket.
---- Accès : globale `connector`
+--- luamqtt network connector for TLS connections: opens a TCP socket through the luasocket connector, then wraps it with ssl.wrap (luasec module or compatible, named conn.ssl_module, 'ssl' by default) and performs the handshake. send, receive and settimeout are those of luasocket.
+--- Access: global `connector`
 ---@class connector
 connector = {}
 
---- Connexion TCP + TLS. Remplace conn.sock par le socket sécurisé.
----Source : lua/common/libs/luamqtt/mqtt/luasocket_ssl.lua:13
+--- TCP + TLS connection. Replaces conn.sock with the secure socket.
+---Source: lua/common/libs/luamqtt/mqtt/luasocket_ssl.lua:13
 ---@param conn table host, port, secure_params, ssl_module.
----@return boolean  Succès.
----@return string|nil  Erreur.
+---@return boolean  Success.
+---@return string|nil  Error.
 function connector.connect(conn) end
 
---- Identique à luasocket.receive. (assignée dynamiquement)
----Source : lua/common/libs/luamqtt/mqtt/luasocket_ssl.lua:dyn
----@param conn table Connexion.
----@param size integer Octets.
+--- Same as luasocket.receive. (dynamically assigned)
+---Source: lua/common/libs/luamqtt/mqtt/luasocket_ssl.lua:dyn
+---@param conn table Connection.
+---@param size integer Bytes.
 function connector.receive(conn, size) end
 
---- Identique à luasocket.send. (assignée dynamiquement)
----Source : lua/common/libs/luamqtt/mqtt/luasocket_ssl.lua:dyn
----@param conn table Connexion.
----@param data string Données.
----@param i integer|nil Début.
----@param j integer|nil Fin.
+--- Same as luasocket.send. (dynamically assigned)
+---Source: lua/common/libs/luamqtt/mqtt/luasocket_ssl.lua:dyn
+---@param conn table Connection.
+---@param data string Data.
+---@param i integer|nil Start.
+---@param j integer|nil End.
 function connector.send(conn, data, i, j) end
 
---- Identique à luasocket.settimeout. (assignée dynamiquement)
----Source : lua/common/libs/luamqtt/mqtt/luasocket_ssl.lua:dyn
----@param conn table Connexion.
----@param timeout number|nil Secondes.
+--- Same as luasocket.settimeout. (dynamically assigned)
+---Source: lua/common/libs/luamqtt/mqtt/luasocket_ssl.lua:dyn
+---@param conn table Connection.
+---@param timeout number|nil Seconds.
 function connector.settimeout(conn, timeout) end
 
---- Ferme la connexion avec conn.sock:close().
----Source : lua/common/libs/luamqtt/mqtt/luasocket_ssl.lua:44
----@param conn table Connexion.
+--- Closes the connection with conn.sock:close().
+---Source: lua/common/libs/luamqtt/mqtt/luasocket_ssl.lua:44
+---@param conn table Connection.
 function connector.shutdown(conn) end
 

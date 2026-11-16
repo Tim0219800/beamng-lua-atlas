@@ -1,21 +1,21 @@
 # `flowgraph_nodes_events_onBeamNGTrigger`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/events/onBeamNGTrigger.lua` · VM : Game Engine (GE) · 74 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/events/onBeamNGTrigger.lua` · VM: Game Engine (GE) · 74 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/events/onBeamNGTrigger")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/events/onBeamNGTrigger")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « on BeamNGTrigger » (catégorie repeat_instant, événement). Écoute le hook onBeamNGTrigger et laisse passer le flux selon l'événement (enter ou exit). Peut filtrer par nom de trigger (data.filterName, vide = tous). Sorties : enter, exit (impulsions), vehId, triggerId, vehicleName, triggerName.
+Flowgraph node "on BeamNGTrigger" (category repeat_instant, event). Listens to the onBeamNGTrigger hook and lets flow through depending on the event (enter or exit). Can filter by trigger name (data.filterName, empty = all). Outputs: enter, exit (pulses), vehId, triggerId, vehicleName, triggerName.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Affiche le filtre actif dans le nœud. | 65 |
-| `C:init(mgr, ...)` | Initialise data.filterName = "" et les drapeaux. | 32 |
-| `C:onBeamNGTrigger(data)` | Hook appelé par le moteur à chaque événement de BeamNGTrigger. Ignore l'événement si le nom ne correspond pas au filtre, remplit les pins de sortie, lève enterFlag/exitFlag et déclenche le nœud. | 38 |
-| `C:work(args)` | Copie enterFlag/exitFlag vers les pins enter/exit puis les remet à false. | 57 |
+| `C:drawMiddle(builder, style)` | Displays the active filter in the node. | 65 |
+| `C:init(mgr, ...)` | Initializes data.filterName = "" and the flags. | 32 |
+| `C:onBeamNGTrigger(data)` | Hook called by the engine on each BeamNGTrigger event. Ignores the event if the name does not match the filter, fills the output pins, raises enterFlag/exitFlag and triggers the node. | 38 |
+| `C:work(args)` | Copies enterFlag/exitFlag to the enter/exit pins then resets them to false. | 57 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/events/onBeamNGTrigger.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/events/onBeamNGTrigger.lua`.*

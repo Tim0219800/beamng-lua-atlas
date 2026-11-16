@@ -1,319 +1,637 @@
 {
   "path": "lua/ge/extensions/core/multiseat.lua",
-  "module": "Extension GE `core_multiseat` : gestion du multi-joueur local (plusieurs joueurs sur le même PC : clavier/souris et manettes). Elle décide quel joueur (indice 0, 1, 2...) contrôle chaque périphérique d'entrée, soit par attribution manuelle (par périphérique), soit par groupes de périphériques gérés par la plateforme (comptes utilisateur de console). Elle maintient la liste des joueurs 'rejoints' (joinedPlayers) avec leur persona (nom, icône, couleur via core_playerPersonas), place les joueurs dans des véhicules, affiche des étiquettes de joueurs (render_playerTags), colore les périphériques et émet onLocalParticipantsChanged. La majorité des fonctions est appelée par core_input_bindings et par l'interface multiseat.",
-  "usage": "if settings.getValue('multiseat') then\n  for _, p in ipairs(core_multiseat.getParticipants()) do\n    log('I','', p.persona.displayName .. ' -> joueur ' .. p.assignment.playerIndex)\n  end\nend",
+  "module": "GE extension `core_multiseat`: local multiplayer management (several players on the same PC: keyboard/mouse and controllers). It decides which player (index 0, 1, 2...) controls each input device, either by manual assignment (per device), or by device groups managed by the platform (console user accounts). It maintains the list of 'joined' players (joinedPlayers) with their persona (name, icon, color via core_playerPersonas), places players in vehicles, displays player tags (render_playerTags), colors the devices and emits onLocalParticipantsChanged. Most functions are called by core_input_bindings and by the multiseat UI.",
+  "usage": "if settings.getValue('multiseat') then\n  for _, p in ipairs(core_multiseat.getParticipants()) do\n    log('I','', p.persona.displayName .. ' -> player ' .. p.assignment.playerIndex)\n  end\nend",
   "notes": [
-    "Vocabulaire : 'player' = indice de joueur (base 0, au plus 64 : maxPlayers codé en dur 'à aligner avec la limite du fast path de steering côté C++') ; 'persona' = identité numérotée à partir de 1 (core_playerPersonas) ; 'participant' = { id, persona, assignment, inputIcon } où assignment = { playerIndex, devices, deviceIds, primaryDeviceId, deviceLabel, connectedDeviceLabel, connectedInputIcon, connected }.",
-    "Appareils d'entrée : `devices` est la table fournie par core_input_bindings : nom de périphérique -> { guid, productName, pidvid, playerNumber, platformUserNumber } (indices 1 à 5). La clavier et la souris sont regroupés comme un seul 'périphérique' (id 'keyboard-mouse') dans les listes d'affectation.",
-    "Deux modes d'affectation : manuel (manuallyAssignedPlayers, un indice par périphérique, -1 = non assigné ; cycleDevicePlayer fait défiler) ou géré par la plateforme (Input.getPlatformUserCount() non nil : platformDeviceGroupPlayers, un indice par groupe d'appareils, via assignDeviceGroup). Sans réglage 'multiseat' vrai, tous les périphériques appartiennent au joueur 0.",
-    "normalizePlayerAssignments (interne) renumérote les joueurs pour qu'ils soient contigus à partir de 0, dans l'ordre des numéros de persona. getAssignedPlayers fait ce travail à chaque appel de core_input_bindings, mémorise l'assignation, met à jour activePlayers/joinedPlayers et peut replacer les joueurs à pied dans le véhicule le moins occupé (seatPlayers).",
-    "Édition de configuration : beginConfigurationEdit/endConfigurationEdit figent les affectations réelles pendant que l'interface compose une configuration. applyConfiguration(config) la valide (resolveConfiguration), prend un instantané (exportConfiguration), l'applique via core_input_bindings.applyPlayerAssignments, et restaure l'instantané en cas d'échec. Avec config.deferParticipantNotification, la notification est reportée jusqu'à finalizeConfiguration().",
-    "Hooks émis : onLocalParticipantsChanged(revision) ; évènement UI LocalParticipantsChanged(participants, revision). La 'révision' = compteur interne + révision de core_playerPersonas.",
-    "Bug/incohérence : getPlayerMarkersEnabled lit settings 'multiseatTags' comme un booléen et, si la valeur n'en est pas un (par exemple la chaîne 'always'/'smart'/'never' écrite par core_multiseatPlayerMarkers), la remplace par true/false dans les réglages (écrase l'ancienne chaîne). Les deux modules ne partagent pas le même format.",
-    "Incohérence : au chargement nextMockPlatformDeviceGroupId vaut 1 mais reset() le remet à 0 (affecte seulement le mode de débogage debugMockPlatformUsers).",
-    "M.allowTrafficDebug est défini à false et n'est utilisé nulle part dans ce fichier.",
-    "reset() (appelé à la fin du niveau) efface joueurs, personas, assignations et couleurs de périphériques, remet activePlayers = {0} et désactive le réglage 'multiseat' si cette session l'avait activé (personaOptInMode ou multiseatActive).",
-    "onSerialize ne renvoie un instantané que si multiseatActive est vrai ; sinon rien n'est sauvegardé. onDeserialized tente de restaurer la configuration exportée.",
-    "Les étiquettes de joueurs (render_playerTags) ne sont affichées que si le réglage multiseat est vrai, plus d'un joueur actif et le split-screen n'est pas chargé (render_splitScreen s'occupe alors des étiquettes)."
+    "Vocabulary: 'player' = player index (0-based, at most 64: maxPlayers hardcoded 'to be aligned with the limit of the steering fast path on the C++ side'); 'persona' = identity numbered from 1 (core_playerPersonas); 'participant' = { id, persona, assignment, inputIcon } where assignment = { playerIndex, devices, deviceIds, primaryDeviceId, deviceLabel, connectedDeviceLabel, connectedInputIcon, connected }.",
+    "Input devices: `devices` is the table provided by core_input_bindings: device name -> { guid, productName, pidvid, playerNumber, platformUserNumber } (indices 1 to 5). The keyboard and mouse are grouped as a single 'device' (id 'keyboard-mouse') in the assignment lists.",
+    "Two assignment modes: manual (manuallyAssignedPlayers, one index per device, -1 = unassigned; cycleDevicePlayer cycles through) or platform-managed (Input.getPlatformUserCount() non-nil: platformDeviceGroupPlayers, one index per device group, via assignDeviceGroup). Without a true 'multiseat' setting, all devices belong to player 0.",
+    "normalizePlayerAssignments (internal) renumbers the players so that they are contiguous from 0, in persona number order. getAssignedPlayers does this work on every call from core_input_bindings, stores the assignment, updates activePlayers/joinedPlayers and can place on-foot players in the least occupied vehicle (seatPlayers).",
+    "Configuration editing: beginConfigurationEdit/endConfigurationEdit freeze the real assignments while the UI composes a configuration. applyConfiguration(config) validates it (resolveConfiguration), takes a snapshot (exportConfiguration), applies it via core_input_bindings.applyPlayerAssignments, and restores the snapshot on failure. With config.deferParticipantNotification, the notification is postponed until finalizeConfiguration().",
+    "Emitted hooks: onLocalParticipantsChanged(revision); UI event LocalParticipantsChanged(participants, revision). The 'revision' = internal counter + core_playerPersonas revision.",
+    "Bug/inconsistency: getPlayerMarkersEnabled reads the 'multiseatTags' setting as a boolean and, if the value is not one (for example the string 'always'/'smart'/'never' written by core_multiseatPlayerMarkers), replaces it with true/false in the settings (overwriting the old string). The two modules do not share the same format.",
+    "Inconsistency: at load nextMockPlatformDeviceGroupId is 1 but reset() sets it back to 0 (only affects the debugMockPlatformUsers debug mode).",
+    "M.allowTrafficDebug is set to false and is not used anywhere in this file.",
+    "reset() (called at the end of the level) clears players, personas, assignments and device colors, sets activePlayers = {0} and disables the 'multiseat' setting if this session had enabled it (personaOptInMode or multiseatActive).",
+    "onSerialize only returns a snapshot if multiseatActive is true; otherwise nothing is saved. onDeserialized tries to restore the exported configuration.",
+    "Player tags (render_playerTags) are only displayed if the multiseat setting is true, more than one player is active and split-screen is not loaded (render_splitScreen then handles the tags)."
   ],
   "fields": {
-    "allowTrafficDebug": {"type": "boolean", "desc": "false. Non utilisé dans ce fichier."},
-    "dependencies": {"type": "string[]", "desc": "{ 'core_playerPersonas', 'render_playerTags', 'ui_multiseat_assignmentCache' }."}
+    "allowTrafficDebug": {
+      "type": "boolean",
+      "desc": "false. Not used in this file."
+    },
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{ 'core_playerPersonas', 'render_playerTags', 'ui_multiseat_assignmentCache' }."
+    }
   },
   "functions": {
     "getAssignedPlayers": {
-      "desc": "Calcule quel joueur contrôle chaque périphérique, l'applique via assignPlayerToDevice et met à jour l'état interne (joueurs actifs, personas). Pendant une édition de configuration, renvoie des affectations 'sûres' sans les modifier. Appelée par core_input_bindings.",
+      "desc": "Computes which player controls each device, applies it via assignPlayerToDevice and updates the internal state (active players, personas). During a configuration edit, returns 'safe' assignments without modifying them. Called by core_input_bindings.",
       "params": {
-        "devices": {"type": "table", "desc": "nom de périphérique -> { guid, productName, pidvid, playerNumber, platformUserNumber }."},
-        "logEnabled": {"type": "boolean|nil", "desc": "Écrit dans le log le nombre de joueurs et les affectations."},
-        "seatPlayers": {"type": "boolean|nil", "desc": "Si vrai, fait monter les joueurs à pied dans le véhicule le moins occupé et fait descendre ceux devenus inactifs."}
+        "devices": {
+          "type": "table",
+          "desc": "device name -> { guid, productName, pidvid, playerNumber, platformUserNumber }."
+        },
+        "logEnabled": {
+          "type": "boolean|nil",
+          "desc": "Writes the number of players and the assignments to the log."
+        },
+        "seatPlayers": {
+          "type": "boolean|nil",
+          "desc": "If true, makes on-foot players enter the least occupied vehicle and makes those who became inactive exit."
+        }
       },
-      "returns": [{"type": "table<string, integer>", "desc": "Périphérique -> indice de joueur (-1 = aucun)."}],
+      "returns": [
+        {
+          "type": "table<string, integer>",
+          "desc": "Device -> player index (-1 = none)."
+        }
+      ],
       "internal": true
     },
     "getPlayers": {
-      "desc": "Remplit et renvoie la liste ordonnée des indices de joueurs actuellement actifs.",
-      "params": {"result": {"type": "integer[]|nil", "desc": "Table à réutiliser (vidée puis remplie)."}},
-      "returns": [{"type": "integer[]", "desc": "Indices de joueurs."}],
+      "desc": "Fills and returns the ordered list of currently active player indices.",
+      "params": {
+        "result": {
+          "type": "integer[]|nil",
+          "desc": "Table to reuse (cleared then filled)."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer[]",
+          "desc": "Player indices."
+        }
+      ],
       "internal": false
     },
     "getDeviceAssignments": {
-      "desc": "Liste, pour l'interface, les 'périphériques' (clavier+souris regroupés, manettes) avec leur joueur assigné manuellement : { id, deviceIds, primaryDeviceId, deviceLabel, inputIcon, playerIndex, connected, deviceMetadata }.",
+      "desc": "Lists, for the UI, the 'devices' (keyboard+mouse grouped, controllers) with their manually assigned player: { id, deviceIds, primaryDeviceId, deviceLabel, inputIcon, playerIndex, connected, deviceMetadata }.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Éléments décrits ci-dessus, clavier-souris en premier."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Elements described above, keyboard-mouse first."
+        }
+      ],
       "internal": false
     },
     "getDeviceAssignmentsFor": {
-      "desc": "Version paramétrée de getDeviceAssignments pour des périphériques et affectations fournis.",
+      "desc": "Parameterized version of getDeviceAssignments for provided devices and assignments.",
       "params": {
-        "devices": {"type": "table|nil", "desc": "Périphériques."},
-        "assignedPlayers": {"type": "table<string, integer>|nil", "desc": "Périphérique -> joueur."},
-        "connectedDevices": {"type": "table|nil", "desc": "Périphériques connectés (nil = tous)."}
+        "devices": {
+          "type": "table|nil",
+          "desc": "Devices."
+        },
+        "assignedPlayers": {
+          "type": "table<string, integer>|nil",
+          "desc": "Device -> player."
+        },
+        "connectedDevices": {
+          "type": "table|nil",
+          "desc": "Connected devices (nil = all)."
+        }
       },
-      "returns": [{"type": "table[]", "desc": "Même format que getDeviceAssignments."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Same format as getDeviceAssignments."
+        }
+      ],
       "internal": false
     },
     "getDeviceGroups": {
-      "desc": "Groupes de périphériques de la plateforme (un par compte utilisateur), avec le joueur assigné ; inclut les groupes assignés mais déconnectés (connected = false).",
+      "desc": "Platform device groups (one per user account), with the assigned player; includes assigned but disconnected groups (connected = false).",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Éléments { id, groupId, playerIndex, label, devices, connected }."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Elements { id, groupId, playerIndex, label, devices, connected }."
+        }
+      ],
       "internal": false
     },
     "getDeviceGroupsFor": {
-      "desc": "Version paramétrée de getDeviceGroups.",
+      "desc": "Parameterized version of getDeviceGroups.",
       "params": {
-        "devices": {"type": "table|nil", "desc": "Périphériques."},
-        "groupAssignments": {"type": "table<integer, integer>|nil", "desc": "groupId -> joueur."}
+        "devices": {
+          "type": "table|nil",
+          "desc": "Devices."
+        },
+        "groupAssignments": {
+          "type": "table<integer, integer>|nil",
+          "desc": "groupId -> player."
+        }
       },
-      "returns": [{"type": "table[]", "desc": "Groupes triés par groupId."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Groups sorted by groupId."
+        }
+      ],
       "internal": false
     },
     "assignDeviceGroup": {
-      "desc": "Assigne un groupe de périphériques de la plateforme à un joueur (ou -1 pour le désassigner). Refuse si la plateforme ne gère pas les joueurs, si le groupe n'existe pas ou si le joueur est déjà pris par un autre groupe.",
+      "desc": "Assigns a platform device group to a player (or -1 to unassign). Refuses if the platform does not manage players, if the group does not exist or if the player is already taken by another group.",
       "params": {
-        "groupId": {"type": "integer", "desc": "Identifiant du groupe."},
-        "player": {"type": "integer", "desc": "Indice de joueur >= 0, ou -1."}
+        "groupId": {
+          "type": "integer",
+          "desc": "Group identifier."
+        },
+        "player": {
+          "type": "integer",
+          "desc": "Player index >= 0, or -1."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si l'affectation a été faite."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the assignment was made."
+        }
+      ],
       "internal": false
     },
     "getDeviceGroupForPlayer": {
-      "desc": "Renvoie le groupe de périphériques assigné à un joueur.",
-      "params": {"player": {"type": "integer", "desc": "Indice de joueur."}},
-      "returns": [{"type": "integer|nil", "desc": "groupId, ou nil."}],
+      "desc": "Returns the device group assigned to a player.",
+      "params": {
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "groupId, or nil."
+        }
+      ],
       "internal": false
     },
     "isPlatformManagingPlayers": {
-      "desc": "Indique si la plateforme (console, Steam...) gère elle-même les joueurs : Input.getPlatformUserCount() non nil (ou mode de débogage).",
+      "desc": "Indicates whether the platform (console, Steam...) manages players itself: Input.getPlatformUserCount() non-nil (or debug mode).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si géré par la plateforme."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if platform-managed."
+        }
+      ],
       "internal": false
     },
     "cycleDevicePlayer": {
-      "desc": "Fait passer un périphérique (ou le groupe clavier+souris) au joueur suivant dans le cycle (joueur 0, -1 non assigné, puis joueur précédent...), renumérote les joueurs et met à jour core_input_bindings. Refusé si la plateforme gère les joueurs.",
-      "params": {"deviceId": {"type": "string", "desc": "Id d'un périphérique."}},
-      "returns": [{"type": "boolean", "desc": "true si l'affectation a changé."}],
+      "desc": "Moves a device (or the keyboard+mouse group) to the next player in the cycle (player 0, -1 unassigned, then previous player...), renumbers the players and updates core_input_bindings. Refused if the platform manages players.",
+      "params": {
+        "deviceId": {
+          "type": "string",
+          "desc": "Id of a device."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the assignment changed."
+        }
+      ],
       "internal": false
     },
     "getParticipants": {
-      "desc": "Renvoie les participants (persona + affectation). Sans argument et s'il y a des joueurs rejoints, ce sont les joueurs rejoints ; sinon les joueurs actifs (avec persona en aperçu si non rejoints).",
-      "params": {"players": {"type": "integer[]|nil", "desc": "Liste d'indices de joueurs."}},
-      "returns": [{"type": "table[]", "desc": "Participants."}],
+      "desc": "Returns the participants (persona + assignment). With no argument and if there are joined players, these are the joined players; otherwise the active players (with a preview persona if not joined).",
+      "params": {
+        "players": {
+          "type": "integer[]|nil",
+          "desc": "List of player indices."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Participants."
+        }
+      ],
       "internal": false
     },
     "getParticipant": {
-      "desc": "Renvoie le participant d'un joueur.",
-      "params": {"player": {"type": "integer", "desc": "Indice de joueur."}},
-      "returns": [{"type": "table|nil", "desc": "Participant."}],
+      "desc": "Returns a player's participant.",
+      "params": {
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Participant."
+        }
+      ],
       "internal": false
     },
     "getAvailableParticipants": {
-      "desc": "Participants disponibles pour l'interface : pour chaque joueur actif, { id = 'local-player:N', assignment, inputIcon, joined, persona (réelle si rejoint, sinon aperçu) }.",
+      "desc": "Participants available for the UI: for each active player, { id = 'local-player:N', assignment, inputIcon, joined, persona (real if joined, otherwise preview) }.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Participants disponibles."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Available participants."
+        }
+      ],
       "internal": false
     },
     "getJoinedParticipants": {
-      "desc": "Participants des joueurs rejoints, triés par indice de joueur.",
+      "desc": "Participants of the joined players, sorted by player index.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Participants."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Participants."
+        }
+      ],
       "internal": false
     },
     "getJoinedPlayers": {
-      "desc": "Indices triés des joueurs ayant rejoint (avec persona).",
+      "desc": "Sorted indices of the players that have joined (with persona).",
       "params": {},
-      "returns": [{"type": "integer[]", "desc": "Indices de joueurs."}],
+      "returns": [
+        {
+          "type": "integer[]",
+          "desc": "Player indices."
+        }
+      ],
       "internal": false
     },
     "joinPlayer": {
-      "desc": "Fait rejoindre un joueur actif : lui attribue le premier numéro de persona libre (persona par défaut), renumérote et notifie. Renvoie true s'il est déjà rejoint.",
-      "params": {"player": {"type": "integer", "desc": "Indice de joueur actif."}},
-      "returns": [{"type": "boolean", "desc": "false si le joueur n'est pas actif ou plus de place."}],
+      "desc": "Makes an active player join: assigns it the first free persona number (default persona), renumbers and notifies. Returns true if already joined.",
+      "params": {
+        "player": {
+          "type": "integer",
+          "desc": "Active player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the player is not active or there is no room left."
+        }
+      ],
       "internal": false
     },
     "leavePlayer": {
-      "desc": "Retire un joueur rejoint : efface sa persona et libère ses périphériques ou son groupe, puis notifie.",
-      "params": {"player": {"type": "integer", "desc": "Indice de joueur."}},
-      "returns": [{"type": "boolean", "desc": "false si le joueur n'avait pas rejoint."}],
+      "desc": "Removes a joined player: clears its persona and frees its devices or group, then notifies.",
+      "params": {
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the player had not joined."
+        }
+      ],
       "internal": false
     },
     "clearJoinedPlayers": {
-      "desc": "Retire tous les joueurs rejoints et efface toutes les personas.",
+      "desc": "Removes all joined players and clears all personas.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "false s'il n'y en avait aucun."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if there were none."
+        }
+      ],
       "internal": false
     },
     "setPersonaOptInMode": {
-      "desc": "Active ou désactive le mode où les joueurs doivent rejoindre explicitement (au lieu d'obtenir une persona automatiquement). L'activer efface les joueurs rejoints.",
-      "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}},
+      "desc": "Enables or disables the mode where players must join explicitly (instead of getting a persona automatically). Enabling it clears the joined players.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to enable."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getParticipantRevision": {
-      "desc": "Renvoie la révision des participants (compteur interne + révision de core_playerPersonas), pour détecter les changements.",
+      "desc": "Returns the participants revision (internal counter + core_playerPersonas revision), to detect changes.",
       "params": {},
-      "returns": [{"type": "integer", "desc": "Révision."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Revision."
+        }
+      ],
       "internal": false
     },
     "getPlayerMarkersEnabled": {
-      "desc": "Indique si les étiquettes de joueurs sont activées (réglage 'multiseatTags' booléen, défaut true). Convertit en booléen une ancienne valeur chaîne ('never' = faux). Voir les notes sur l'incohérence avec core_multiseatPlayerMarkers.",
+      "desc": "Indicates whether player tags are enabled ('multiseatTags' boolean setting, default true). Converts an old string value to a boolean ('never' = false). See the notes on the inconsistency with core_multiseatPlayerMarkers.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si activées."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if enabled."
+        }
+      ],
       "internal": false
     },
     "setPlayerMarkersEnabled": {
-      "desc": "Enregistre le réglage booléen 'multiseatTags'.",
-      "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}},
+      "desc": "Saves the boolean 'multiseatTags' setting.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to enable."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setPlayerPersona": {
-      "desc": "Définit la persona d'un joueur rejoint (nom, icône, couleur, véhicule) et notifie.",
+      "desc": "Sets the persona of a joined player (name, icon, color, vehicle) and notifies.",
       "params": {
-        "player": {"type": "integer", "desc": "Indice de joueur."},
-        "data": {"type": "table", "desc": "{ id, displayName, icon, color, vehicle }"}
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        },
+        "data": {
+          "type": "table",
+          "desc": "{ id, displayName, icon, color, vehicle }"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si le joueur n'a pas rejoint ou données invalides."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the player has not joined or the data is invalid."
+        }
+      ],
       "internal": false
     },
     "clearPlayerPersona": {
-      "desc": "Remet la persona d'un joueur rejoint à ses valeurs par défaut et notifie.",
-      "params": {"player": {"type": "integer", "desc": "Indice de joueur."}},
-      "returns": [{"type": "boolean", "desc": "false si le joueur n'a pas rejoint."}],
+      "desc": "Resets a joined player's persona to its default values and notifies.",
+      "params": {
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the player has not joined."
+        }
+      ],
       "internal": false
     },
     "exportConfiguration": {
-      "desc": "Exporte l'état complet du multiseat (affectations, joueurs rejoints, personas, caches) sous forme de table copiable, utilisée comme instantané pour restauration ou rechargement Lua.",
+      "desc": "Exports the full multiseat state (assignments, joined players, personas, caches) as a copyable table, used as a snapshot for restoration or Lua reload.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Instantané."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Snapshot."
+        }
+      ],
       "internal": false
     },
     "resolveConfiguration": {
-      "desc": "Valide et normalise une configuration proposée par l'interface : renumérote les joueurs à partir de 0 selon l'ordre des numéros de persona et traduit les affectations de périphériques/groupes.",
+      "desc": "Validates and normalizes a configuration proposed by the UI: renumbers the players from 0 according to persona number order and translates the device/group assignments.",
       "params": {
-        "config": {"type": "table", "desc": "{ participants = [{ playerIndex, personaNumber, persona }], manualAssignments, groupAssignments, platformManagesPlayers, personaOptInMode, manualDeviceMetadata, platformDeviceGroups }."},
-        "devices": {"type": "table|nil", "desc": "Périphériques connus."}
+        "config": {
+          "type": "table",
+          "desc": "{ participants = [{ playerIndex, personaNumber, persona }], manualAssignments, groupAssignments, platformManagesPlayers, personaOptInMode, manualDeviceMetadata, platformDeviceGroups }."
+        },
+        "devices": {
+          "type": "table|nil",
+          "desc": "Known devices."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Configuration résolue { platformManagesPlayers, personaOptInMode, manualAssignments, groupAssignments, assignments, participants, personas, ... }."}, {"type": "string|nil", "desc": "Raison d'échec : 'invalid_configuration', 'invalid_player_count' ou 'invalid_participant'."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Resolved configuration { platformManagesPlayers, personaOptInMode, manualAssignments, groupAssignments, assignments, participants, personas, ... }."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Failure reason: 'invalid_configuration', 'invalid_player_count' or 'invalid_participant'."
+        }
+      ],
       "internal": false
     },
     "applyConfiguration": {
-      "desc": "Applique une configuration multiseat : active le réglage 'multiseat' et l'action map, installe les affectations, personas et joueurs, avec restauration automatique en cas d'erreur.",
-      "params": {"config": {"type": "table", "desc": "Voir resolveConfiguration ; champs en plus : multiseatActive (défaut true), deferParticipantNotification."}},
-      "returns": [{"type": "boolean", "desc": "true si appliquée."}, {"type": "string|nil", "desc": "Raison de l'échec."}],
+      "desc": "Applies a multiseat configuration: enables the 'multiseat' setting and the action map, installs the assignments, personas and players, with automatic restoration on error.",
+      "params": {
+        "config": {
+          "type": "table",
+          "desc": "See resolveConfiguration; extra fields: multiseatActive (default true), deferParticipantNotification."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if applied."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Failure reason."
+        }
+      ],
       "internal": false
     },
     "restoreConfiguration": {
-      "desc": "Restaure un instantané produit par exportConfiguration (protégé par pcall, refusé pendant un applyConfiguration) et notifie.",
-      "params": {"snapshot": {"type": "table", "desc": "Instantané."}},
-      "returns": [{"type": "boolean", "desc": "true si restauré."}],
+      "desc": "Restores a snapshot produced by exportConfiguration (protected by pcall, refused during an applyConfiguration) and notifies.",
+      "params": {
+        "snapshot": {
+          "type": "table",
+          "desc": "Snapshot."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if restored."
+        }
+      ],
       "internal": false
     },
     "finalizeConfiguration": {
-      "desc": "Termine une application différée : met à jour le cache d'affectations en attente et émet la notification des participants.",
+      "desc": "Finishes a deferred application: updates the pending assignment cache and emits the participants notification.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "false s'il n'y avait rien à finaliser."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if there was nothing to finalize."
+        }
+      ],
       "internal": false
     },
     "cachePlayerAssignments": {
-      "desc": "Construit le cache (propriétaires de périphériques/groupes par numéro de persona) à partir d'une configuration et le stocke dans ui_multiseat_assignmentCache.",
-      "params": {"config": {"type": "table", "desc": "Configuration avec participants et affectations."}},
-      "returns": [{"type": "boolean", "desc": "false si config invalide."}],
+      "desc": "Builds the cache (device/group owners by persona number) from a configuration and stores it in ui_multiseat_assignmentCache.",
+      "params": {
+        "config": {
+          "type": "table",
+          "desc": "Configuration with participants and assignments."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the config is invalid."
+        }
+      ],
       "internal": false
     },
     "getCachedPlayerAssignments": {
-      "desc": "Renvoie le cache d'affectations mémorisé dans ui_multiseat_assignmentCache.",
+      "desc": "Returns the assignment cache stored in ui_multiseat_assignmentCache.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Cache."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Cache."
+        }
+      ],
       "internal": false
     },
     "isApplyingConfiguration": {
-      "desc": "Indique si applyConfiguration est en cours.",
+      "desc": "Indicates whether applyConfiguration is in progress.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si en cours."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if in progress."
+        }
+      ],
       "internal": false
     },
     "beginConfigurationEdit": {
-      "desc": "Démarre une session d'édition : getAssignedPlayers renvoie alors des affectations figées au lieu de recalculer.",
+      "desc": "Starts an editing session: getAssignedPlayers then returns frozen assignments instead of recomputing.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "endConfigurationEdit": {
-      "desc": "Termine l'édition, et mémorise éventuellement l'état des périphériques et des affectations fournis.",
+      "desc": "Ends the editing, and optionally stores the provided device and assignment state.",
       "params": {
-        "devices": {"type": "table|nil", "desc": "Périphériques à mémoriser."},
-        "assignments": {"type": "table|nil", "desc": "Affectations à mémoriser."}
+        "devices": {
+          "type": "table|nil",
+          "desc": "Devices to store."
+        },
+        "assignments": {
+          "type": "table|nil",
+          "desc": "Assignments to store."
+        }
       },
       "returns": [],
       "internal": false
     },
     "isConfigurationEditActive": {
-      "desc": "Indique si une édition de configuration est en cours.",
+      "desc": "Indicates whether a configuration edit is in progress.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si en cours."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if in progress."
+        }
+      ],
       "internal": false
     },
     "previewDeviceColors": {
-      "desc": "Affiche sur les périphériques les couleurs des joueurs d'une configuration encore en cours d'édition (core_devices.setPlayerColors).",
-      "params": {"config": {"type": "table|nil", "desc": "Configuration à prévisualiser ; nil efface les couleurs."}},
+      "desc": "Shows on the devices the player colors of a configuration still being edited (core_devices.setPlayerColors).",
+      "params": {
+        "config": {
+          "type": "table|nil",
+          "desc": "Configuration to preview; nil clears the colors."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "clearDeviceColors": {
-      "desc": "Retire les couleurs de joueurs des périphériques, si elles avaient été appliquées.",
+      "desc": "Removes the player colors from the devices, if they had been applied.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "setMultiseatActive": {
-      "desc": "Marque le multiseat comme actif (session multiseat en cours).",
-      "params": {"active": {"type": "boolean", "desc": "Nouvel état."}},
+      "desc": "Marks multiseat as active (multiseat session in progress).",
+      "params": {
+        "active": {
+          "type": "boolean",
+          "desc": "New state."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "isMultiseatActive": {
-      "desc": "Indique si le multiseat est actif.",
+      "desc": "Indicates whether multiseat is active.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si actif."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if active."
+        }
+      ],
       "internal": false
     },
     "onUpdate": {
-      "desc": "Hook par frame (seulement quand un niveau est chargé) : synchronise les couleurs de périphériques et affiche/met à jour les étiquettes de joueurs (render_playerTags), sauf si le split-screen est chargé.",
+      "desc": "Per-frame hook (only when a level is loaded): synchronizes the device colors and displays/updates the player tags (render_playerTags), unless split-screen is loaded.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Temps réel écoulé (s)."},
-        "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s), non utilisé."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Elapsed real time (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Elapsed simulation time (s), unused."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onLanguageChanged": {
-      "desc": "Hook de changement de langue : resynchronise les joueurs rejoints, invalide les personas (noms traduits) et notifie.",
+      "desc": "Language change hook: resynchronizes the joined players, invalidates the personas (translated names) and notifies.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Fin de niveau : réinitialise tout l'état multiseat (voir notes, reset()).",
+      "desc": "End of level: resets the whole multiseat state (see notes, reset()).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Au déchargement : détruit les étiquettes de joueurs et retire les couleurs de périphériques.",
+      "desc": "On unload: destroys the player tags and removes the device colors.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Avant un rechargement Lua : détruit étiquettes et couleurs, et renvoie un instantané si le multiseat est actif.",
-      "params": {"reason": {"type": "string|nil", "desc": "Raison de la sérialisation (log)."}},
-      "returns": [{"type": "table|nil", "desc": "Instantané, ou nil si le multiseat est inactif."}],
+      "desc": "Before a Lua reload: destroys tags and colors, and returns a snapshot if multiseat is active.",
+      "params": {
+        "reason": {
+          "type": "string|nil",
+          "desc": "Serialization reason (log)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Snapshot, or nil if multiseat is inactive."
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Après un rechargement Lua : restaure la configuration à partir de l'instantané.",
-      "params": {"data": {"type": "table", "desc": "Instantané renvoyé par onSerialize."}},
+      "desc": "After a Lua reload: restores the configuration from the snapshot.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Snapshot returned by onSerialize."
+        }
+      },
       "returns": [],
       "internal": true
     }

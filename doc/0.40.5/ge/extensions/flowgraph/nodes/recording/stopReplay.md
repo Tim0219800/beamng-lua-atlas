@@ -1,18 +1,18 @@
 # `flowgraph_nodes_recording_stopReplay`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/recording/stopReplay.lua` · VM : Game Engine (GE) · 23 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/recording/stopReplay.lua` · VM: Game Engine (GE) · 23 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/recording/stopReplay")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/recording/stopReplay")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Stop Replay' (categorie repeat_instant). Arrete la relecture en cours : si core_replay.state.state vaut 'playback', appelle core_replay.stop(). Aucun pin.
+Flowgraph node 'Stop Replay' (repeat_instant category). Stops the current playback: if core_replay.state.state is 'playback', calls core_replay.stop(). No pins.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Arrete le replay s'il est en lecture. | 15 |
+| `C:work()` | Stops the replay if it is playing. | 15 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/recording/stopReplay.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/recording/stopReplay.lua`.*

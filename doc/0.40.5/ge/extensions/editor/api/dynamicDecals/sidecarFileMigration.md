@@ -1,29 +1,29 @@
 # `editor_api_dynamicDecals_sidecarFileMigration`
 
-*Fichier : `lua/ge/extensions/editor/api/dynamicDecals/sidecarFileMigration.lua` · VM : Game Engine (GE) · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/dynamicDecals/sidecarFileMigration.lua` · VM: Game Engine (GE) · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_dynamicDecals_sidecarFileMigration` : `extensions.load("editor_api_dynamicDecals_sidecarFileMigration")`, puis la globale `editor_api_dynamicDecals_sidecarFileMigration`
+**Access:** extension `editor_api_dynamicDecals_sidecarFileMigration`: `extensions.load("editor_api_dynamicDecals_sidecarFileMigration")`, then the global `editor_api_dynamicDecals_sidecarFileMigration`
 
-Migration des fichiers « sidecar » des textures de decals dynamiques. Passe un sidecar de la version 1 à la version 2 : supprime le champ path et remplace le type sdf (obsolète) par le booléen isSdfCompatible.
+Migration of the "sidecar" files of the dynamic decal textures. Upgrades a sidecar from version 1 to version 2: removes the path field and replaces the (obsolete) sdf type with the boolean isSdfCompatible.
 
-## Remarques
+## Notes
 
-- Types de texture connus : greyscale=0, color=1, sdf=2 (obsolète), fillTexture=3.
-- Seule la migration v1 -> v2 existe ; une donnée d'une autre version est laissée intacte.
+- Known texture types: greyscale=0, color=1, sdf=2 (obsolete), fillTexture=3.
+- Only the v1 -> v2 migration exists; data of another version is left untouched.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_dynamicDecals_sidecarFileMigration.migrate(data)` | Modifie la table en place : si data.version == 1, la passe en version 2 (path = nil, isSdfCompatible = (type == sdf)). | 34 |
+| `editor_api_dynamicDecals_sidecarFileMigration.migrate(data)` | Modifies the table in place: if data.version == 1, upgrades it to version 2 (path = nil, isSdfCompatible = (type == sdf)). | 34 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_dynamicDecals_sidecarFileMigration.migrate(data)`
 
-Modifie la table en place : si data.version == 1, la passe en version 2 (path = nil, isSdfCompatible = (type == sdf)).
+Modifies the table in place: if data.version == 1, upgrades it to version 2 (path = nil, isSdfCompatible = (type == sdf)).
 
-- `data` (*table*) : Contenu du sidecar décodé
+- `data` (*table*) : Decoded sidecar content
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/dynamicDecals/sidecarFileMigration.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/dynamicDecals/sidecarFileMigration.lua`.*

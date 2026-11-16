@@ -1,29 +1,37 @@
 {
   "path": "lua/ge/extensions/editor/roadTemplateEditor.lua",
-  "module": "Éditeur de modèles de routes (menu Fenêtre > Roads > « Road Template Editor »). Permet de choisir, sauvegarder (« Save », « Save as... »), créer (« New ») et supprimer un modèle de route (fichier .road.json) composé de DecalRoads, de décorations et de decals ; les champs se modifient dans la fenêtre Inspector. Dépend de editor_roadEditor et s'appuie sur editor_roadUtils (rechargement des modèles). Quand la fenêtre est masquée, le modèle courant est désélectionné et ses objets temporaires supprimés.",
+  "module": "Road template editor (Window > Roads > \"Road Template Editor\" menu). Lets you choose, save (\"Save\", \"Save as...\"), create (\"New\") and delete a road template (.road.json file) made of DecalRoads, decorations and decals; the fields are edited in the Inspector window. Depends on editor_roadEditor and relies on editor_roadUtils (template reloading). When the window is hidden, the current template is deselected and its temporary objects are deleted.",
   "notes": [
-    "Préférence roadTemplates.general.loadTemplates (bool, défaut false) : « Load road templates on startup (longer initialization time) ». Tant qu'elle est à false, editor_roadUtils ne recharge ni ne applique aucun modèle.",
-    "« Delete » supprime le fichier avec os.remove(\"roadtemplates/<nom>.road.json\") (chemin relatif au répertoire de travail du processus, alors que la sauvegarde et editor_roadUtils utilisent levels/<niveau>/roadtemplates/ : BUG probable, Delete ne supprime pas le bon fichier)."
+    "Preference roadTemplates.general.loadTemplates (bool, default false): \"Load road templates on startup (longer initialization time)\". As long as it is false, editor_roadUtils neither reloads nor applies any template.",
+    "\"Delete\" deletes the file with os.remove(\"roadtemplates/<name>.road.json\") (path relative to the process working directory, whereas saving and editor_roadUtils use levels/<level>/roadtemplates/: probable BUG, Delete does not delete the right file)."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "{\"editor_roadEditor\"} : extensions chargées avant celle-ci."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{\"editor_roadEditor\"}: extensions loaded before this one."
+    }
   },
   "functions": {
     "onEditorGui": {
-      "desc": "Appelé à chaque image : si la fenêtre « roadTemplateEditor » est masquée, désélectionne le modèle ; sinon dessine la fenêtre « Road Templates » avec les boutons Choose Template, Save, Save as..., New, Delete et le choix des routes/décorations/decals du modèle.",
+      "desc": "Called every frame: if the \"roadTemplateEditor\" window is hidden, deselects the template; otherwise draws the \"Road Templates\" window with the buttons Choose Template, Save, Save as..., New, Delete and the choice of the template's roads/decorations/decals.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Appelé à l'initialisation de l'éditeur : ajoute l'entrée de menu « Road Template Editor » (groupe Roads) et enregistre la fenêtre (200x400).",
+      "desc": "Called when the editor initializes: adds the \"Road Template Editor\" menu entry (Roads group) and registers the window (200x400).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onEditorRegisterPreferences": {
-      "desc": "Enregistre la catégorie de préférences « roadTemplates » avec la sous-catégorie « general » et la case loadTemplates (bool, false par défaut).",
-      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "desc": "Registers the \"roadTemplates\" preference category with the \"general\" subcategory and the loadTemplates checkbox (bool, false by default).",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Editor preferences registry."
+        }
+      },
       "returns": [],
       "internal": true
     }

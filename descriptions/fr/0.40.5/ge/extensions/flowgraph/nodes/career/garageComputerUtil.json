@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/garageComputerUtil.lua",
+  "module": "Nœud flowgraph « Garage Computer Util » (catégorie repeat_instant, couleur/icône ui), aide pour le tutoriel du garage. Impulsions de sortie d'une frame : computerOpened (menu de l'ordinateur ouvert), tuningStarted, tuningApplied, shoppingStarted (achat de pièces ouvert), partInstalled, transactionComplete.",
+  "notes": ["Les descriptions des pins partInstalled et transactionComplete disent « part shopping opened » (copier-coller dans le jeu)."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
+        "work": {"desc": "Chaque frame : met toutes les sorties à faux, applique les drapeaux reçus puis les efface.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
+        "onComputerMenuOpened": {"desc": "Hook : menu de l'ordinateur du garage ouvert.", "internal": true},
+        "onCareerTuningStarted": {"desc": "Hook : tuning commencé.", "internal": true},
+        "onCareerTuningApplied": {"desc": "Hook : tuning appliqué.", "internal": true},
+        "onPartShoppingStarted": {"desc": "Hook : achat de pièces ouvert.", "internal": true},
+        "onPartShoppingPartInstalled": {"desc": "Hook : pièce installée.", "params": {"data": {"type": "table", "desc": "données de la pièce (non utilisées)"}}, "internal": true},
+        "onPartShoppingTransactionComplete": {"desc": "Hook : transaction d'achat terminée.", "internal": true}
+      }
+    }
+  }
+}

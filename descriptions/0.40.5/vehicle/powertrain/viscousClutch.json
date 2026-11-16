@@ -1,55 +1,99 @@
 {
   "path": "lua/vehicle/powertrain/viscousClutch.lua",
-  "module": "Coupleur visqueux placé derrière un moteur : transmet un couple proportionnel à l'écart de vitesse angulaire entre entrée et sortie (viscousCoef, en N·m par rad/s), plafonné à viscousTorque. Peut être « engagé » progressivement au-dessus d'un régime cutInRPM (cutInRPM, stallRPM). Sert d'embrayage simple automatique (ex. petits véhicules, boîtes sans embrayage piloté). Catégories clutchlike et viscouscoupling ; un port de sortie.",
-  "usage": "-- jbeam : [\"viscousClutch\", \"clutch\", \"mainEngine\", 1, {\"viscousCoef\":20, \"cutInRPM\":1000, \"stallRPM\":300}]",
+  "module": "Viscous coupler placed behind an engine: transmits a torque proportional to the angular speed difference between input and output (viscousCoef, in N·m per rad/s), capped at viscousTorque. Can be progressively \"engaged\" above an RPM cutInRPM (cutInRPM, stallRPM). Serves as a simple automatic clutch (e.g. small vehicles, gearboxes without a driven clutch). Categories clutchlike and viscouscoupling; one output port.",
+  "usage": "-- jbeam: [\"viscousClutch\", \"clutch\", \"mainEngine\", 1, {\"viscousCoef\":20, \"cutInRPM\":1000, \"stallRPM\":300}]",
   "notes": [
-    "Clés jbeam : viscousCoef (10 N·m par rad/s), viscousTorque (N·m max ; sinon maxTorque du moteur*1.25 + maxRPM*inertie*pi/30), viscousSmoothing (25, lissage exponentiel du couple), cutInRPM (tr/min, optionnel), stallRPM (0.1 tr/min par défaut), additionalEngineInertia (0), breakTriggerBeam ('' = annulation), inputName, inputIndex.",
-    "Quand cutInRPM est défini, le coefficient d'embrayage interne vaut clamp((inputAV - cutInAV) / stallAV, 0, 1) : engagé entre cutInRPM et cutInRPM + stallRPM ; avec le défaut stallRPM = 0.1 la transition est presque instantanée.",
-    "device.clutchRatio (1 par défaut) peut être modifié de l'extérieur pour désengager ; le couple final = clamp(viscousCoef*(inputAV-outputAV1), ±viscousTorque) * min(clutchRatio, ratio interne), lissé.",
-    "Conversion rpm -> rad/s : facteur 0.104719755. Unités : AV en rad/s, couples en N·m.",
-    "Anomalie : reset() relit viscousCoef depuis jbeamData (défaut 10), donc un viscousCoef modifié dynamiquement est restauré au reset ; il n'est pas relu pour viscousTorque."
+    "jbeam keys: viscousCoef (10 N·m per rad/s), viscousTorque (max N·m; otherwise engine maxTorque*1.25 + maxRPM*inertia*pi/30), viscousSmoothing (25, exponential torque smoothing), cutInRPM (RPM, optional), stallRPM (0.1 RPM by default), additionalEngineInertia (0), breakTriggerBeam ('' = cancel), inputName, inputIndex.",
+    "When cutInRPM is defined, the internal clutch coefficient is clamp((inputAV - cutInAV) / stallAV, 0, 1): engaged between cutInRPM and cutInRPM + stallRPM; with the default stallRPM = 0.1 the transition is almost instantaneous.",
+    "device.clutchRatio (1 by default) can be modified from outside to disengage; the final torque = clamp(viscousCoef*(inputAV-outputAV1), ±viscousTorque) * min(clutchRatio, internal ratio), smoothed.",
+    "rpm -> rad/s conversion: factor 0.104719755. Units: AV in rad/s, torques in N·m.",
+    "Anomaly: reset() rereads viscousCoef from jbeamData (default 10), so a dynamically modified viscousCoef is restored on reset; it is not reread for viscousTorque."
   ],
   "fields": {
-    "outputPorts": {"type": "table<integer, boolean>", "desc": "{[1]=true}."},
-    "deviceCategories": {"type": "table<string, boolean>", "desc": "{clutchlike=true, viscouscoupling=true}."},
-    "requiredExternalInertiaOutputs": {"type": "table<integer, integer>", "desc": "{1}."}
+    "outputPorts": {
+      "type": "table<integer, boolean>",
+      "desc": "{[1]=true}."
+    },
+    "deviceCategories": {
+      "type": "table<string, boolean>",
+      "desc": "{clutchlike=true, viscouscoupling=true}."
+    },
+    "requiredExternalInertiaOutputs": {
+      "type": "table<integer, integer>",
+      "desc": "{1}."
+    }
   },
   "functions": {
     "new": {
-      "desc": "Construit le coupleur visqueux à partir du jbeam.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
-      "returns": [{"type": "table", "desc": "Objet device."}],
+      "desc": "Builds the viscous coupler from the jbeam.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "jbeam data of the component."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Device object."
+        }
+      ],
       "internal": true
     }
   },
   "classes": {
     "device": {
-      "desc": "Objet renvoyé par new(jbeamData). Champs : inputAV, outputAV1 (rad/s), outputTorque1 et torqueDiff (N·m), clutchRatio (0..1), viscousCoef, viscousTorque, cutInAV, stallAV (rad/s), isBroken, mode.",
+      "desc": "Object returned by new(jbeamData). Fields: inputAV, outputAV1 (rad/s), outputTorque1 and torqueDiff (N·m), clutchRatio (0..1), viscousCoef, viscousTorque, cutInAV, stallAV (rad/s), isBroken, mode.",
       "functions": {
         "velocityUpdate": {
-          "desc": "Pas de physique : inputAV = vitesse de sortie du parent (moteur).",
-          "params": {"dt": {"type": "number", "desc": "Pas de physique (s)."}}
+          "desc": "Physics step: inputAV = output speed of the parent (engine).",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Physics step (s)."
+            }
+          }
         },
         "torqueUpdate": {
-          "desc": "Pas de physique : calcule le couple visqueux (écart de vitesse), applique clutchRatio et l'engagement à cutInRPM, lisse et place le résultat dans torqueDiff et outputTorque1.",
-          "params": {"dt": {"type": "number", "desc": "Pas de physique (s). Non utilisé."}}
+          "desc": "Physics step: computes the viscous torque (speed difference), applies clutchRatio and the engagement at cutInRPM, smooths and places the result in torqueDiff and outputTorque1.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Physics step (s). Unused."
+            }
+          }
         },
         "setMode": {
-          "desc": "Mémorise le mode et réinstalle velocityUpdate/torqueUpdate (le mode n'a pas d'autre effet ici).",
-          "params": {"mode": {"type": "any", "desc": "Mode (non interprété)."}}
+          "desc": "Stores the mode and reinstalls velocityUpdate/torqueUpdate (the mode has no other effect here).",
+          "params": {
+            "mode": {
+              "type": "any",
+              "desc": "Mode (not interpreted)."
+            }
+          }
         },
         "validate": {
-          "desc": "Vérifie que le parent est un moteur et fixe viscousTorque par défaut.",
+          "desc": "Checks that the parent is an engine and sets the default viscousTorque.",
           "params": {},
-          "returns": [{"type": "boolean", "desc": "false si le parent n'est pas un moteur."}]
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false if the parent is not an engine."
+            }
+          ]
         },
         "calculateInertia": {
-          "desc": "Reprend inertie et rapports cumulés du premier enfant (le coupleur n'ajoute pas d'inertie).",
+          "desc": "Takes the cumulative inertia and ratios of the first child (the coupler adds no inertia).",
           "params": {}
         },
         "reset": {
-          "desc": "Remet à zéro vitesses, couple, clutchRatio=1, relit viscousCoef et réinitialise le lisseur.",
-          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}
+          "desc": "Resets speeds, torque, clutchRatio=1, rereads viscousCoef and reinitializes the smoother.",
+          "params": {
+            "jbeamData": {
+              "type": "table",
+              "desc": "Jbeam data."
+            }
+          }
         }
       }
     }

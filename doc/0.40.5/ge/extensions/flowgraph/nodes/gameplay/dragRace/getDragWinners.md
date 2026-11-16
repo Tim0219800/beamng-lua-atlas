@@ -1,24 +1,24 @@
 # `flowgraph_nodes_gameplay_dragRace_getDragWinners`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getDragWinners.lua` · VM : Game Engine (GE) · 73 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getDragWinners.lua` · VM: Game Engine (GE) · 73 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/dragRace/getDragWinners")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/dragRace/getDragWinners")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Drag Race Winner Data » (catégorie repeat_instant). Donne le résultat du joueur à la fin d'une course de dragster. Sorties : playerWin, playerPos (position), dialDiff (ET + RT du joueur moins son dial), threshold (meilleur adversaire moins joueur en ET + RT ; positif si le joueur franchit la ligne en premier). Source : dragBridge.getPlayerRaceResult ou getWinnersData.
+Flowgraph node "Get Drag Race Winner Data" (category repeat_instant). Gives the player's result at the end of a drag race. Outputs: playerWin, playerPos (position), dialDiff (player's ET + RT minus their dial), threshold (best opponent minus player in ET + RT; positive if the player crosses the line first). Source: dragBridge.getPlayerRaceResult or getWinnersData.
 
-## Remarques
+## Notes
 
-- Si les gagnants sont indisponibles ou vides, une erreur de nœud est posée et les sorties ne sont pas modifiées.
-- dialDiff et threshold ne sont renseignés que si getPlayerRaceResult existe.
+- If the winners are unavailable or empty, a node error is set and the outputs are not modified.
+- dialDiff and threshold are only filled if getPlayerRaceResult exists.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Vide data et result. | 25 |
-| `C:work()` | Lit le résultat du bridge et alimente les sorties utilisées. | 30 |
+| `C:_executionStarted()` | Clears data and result. | 25 |
+| `C:work()` | Reads the bridge result and feeds the used outputs. | 30 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getDragWinners.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getDragWinners.lua`.*

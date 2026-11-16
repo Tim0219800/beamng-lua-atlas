@@ -1,57 +1,57 @@
 # `telemetry_trackers_vehicle`
 
-*Fichier : `lua/ge/extensions/telemetry/trackers/vehicle.lua` · VM : Game Engine (GE) · 106 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/trackers/vehicle.lua` · VM: Game Engine (GE) · 106 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_trackers_vehicle` : `extensions.load("telemetry_trackers_vehicle")`, puis la globale `telemetry_trackers_vehicle`
+**Access:** extension `telemetry_trackers_vehicle`: `extensions.load("telemetry_trackers_vehicle")`, then the global `telemetry_trackers_vehicle`
 
-Traceur de télémétrie des véhicules. Il enregistre quels véhicules sont créés (événement `vehicleSpawned`), conduits et pendant combien de temps (activité `vehicleUsed`), et les réinitialisations (événement `vehicleReset`). Les configurations personnalisées sont rapportées comme ":custom" au lieu du contenu de la configuration. S'appuie sur `telemetry_core`, `telemetry_vehicleInfo` et `telemetry_configManager`.
+Vehicle telemetry tracker. It records which vehicles are spawned (`vehicleSpawned` event), driven and for how long (`vehicleUsed` activity), and resets (`vehicleReset` event). Custom configurations are reported as ":custom" instead of the configuration contents. Relies on `telemetry_core`, `telemetry_vehicleInfo` and `telemetry_configManager`.
 
-## Remarques
+## Notes
 
-- Seul le joueur 0 est suivi (`player ~= 0` est ignoré dans onVehicleSwitched). `newId == -1` signifie que le joueur n'est plus dans un véhicule.
-- Les réinitialisations sont l'événement le plus bruyant : `trackVehReset` ne fait rien si la configuration du module `vehicle` a `trackResets == false`.
-- Après un rechargement Lua, onVehicleSwitched ne se redéclenche pas ; onExtensionLoaded rouvre donc l'activité du véhicule actuellement conduit.
-- `trackVehReset` n'est appelé par aucun hook de ce fichier : l'appelant est externe (déduit du code).
+- Only player 0 is tracked (`player ~= 0` is ignored in onVehicleSwitched). `newId == -1` means the player is no longer in a vehicle.
+- Resets are the noisiest event: `trackVehReset` does nothing if the `vehicle` module config has `trackResets == false`.
+- After a Lua reload, onVehicleSwitched does not fire again; onExtensionLoaded therefore reopens the activity of the vehicle currently driven.
+- `trackVehReset` is not called by any hook in this file: the caller is external (inferred from code).
 
-**Dépendances (chargées avant) :** `telemetry_core`
+**Dependencies (loaded first):** `telemetry_core`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_trackers_vehicle.onClientEndMission()` | Hook appelé à la fin de la mission/du niveau côté client. Ferme l'activité `vehicleUsed`. *(interne)* *(hook)* | 78 |
-| `telemetry_trackers_vehicle.onExit()` | Hook appelé à la fermeture du jeu. Ferme l'activité `vehicleUsed`. *(interne)* *(hook)* | 91 |
-| `telemetry_trackers_vehicle.onExtensionLoaded()` | Hook appelé au chargement de l'extension. Passe l'extension en déchargement manuel et, si le joueur 0 conduit déjà un véhicule, ouvre son activité `vehicleUsed`. *(interne)* *(hook)* | 82 |
-| `telemetry_trackers_vehicle.onExtensionUnloaded()` | Hook appelé au déchargement de l'extension (un rechargement Lua ne passe pas par onExit). Ferme l'activité `vehicleUsed`. *(interne)* *(hook)* | 21 |
-| `telemetry_trackers_vehicle.onVehicleSpawned(vid)` | Hook appelé quand un véhicule est créé. Envoie l'événement `vehicleSpawned` avec le modèle, la configuration et le niveau courant. Ne fait rien si les infos du véhicule sont introuvables. *(interne)* *(hook)* | 37 |
-| `telemetry_trackers_vehicle.onVehicleSwitched(oldId, newId, player)` | Hook appelé quand le véhicule contrôlé change. Pour le joueur 0, ferme l'activité `vehicleUsed` en cours puis en ouvre une pour le nouveau véhicule (ou seulement la ferme si newId vaut -1). *(interne)* *(hook)* | 49 |
-| `telemetry_trackers_vehicle.trackVehReset()` | Envoie l'événement `vehicleReset` (modèle et dégâts du véhicule du joueur 0, lus dans `map.objects[vid].damage`). Désactivable via `trackResets = false` dans la configuration du module `vehicle`. Ignoré si le joueur n'a pas de véhicule. *(interne)* | 61 |
+| `telemetry_trackers_vehicle.onClientEndMission()` | Hook called at the end of the mission/level on the client side. Closes the `vehicleUsed` activity. *(internal)* *(hook)* | 78 |
+| `telemetry_trackers_vehicle.onExit()` | Hook called when the game exits. Closes the `vehicleUsed` activity. *(internal)* *(hook)* | 91 |
+| `telemetry_trackers_vehicle.onExtensionLoaded()` | Hook called when the extension loads. Sets the extension to manual unload and, if player 0 is already driving a vehicle, opens its `vehicleUsed` activity. *(internal)* *(hook)* | 82 |
+| `telemetry_trackers_vehicle.onExtensionUnloaded()` | Hook called when the extension is unloaded (a Lua reload does not go through onExit). Closes the `vehicleUsed` activity. *(internal)* *(hook)* | 21 |
+| `telemetry_trackers_vehicle.onVehicleSpawned(vid)` | Hook called when a vehicle is spawned. Sends the `vehicleSpawned` event with the model, configuration and current level. Does nothing if the vehicle info cannot be found. *(internal)* *(hook)* | 37 |
+| `telemetry_trackers_vehicle.onVehicleSwitched(oldId, newId, player)` | Hook called when the controlled vehicle changes. For player 0, closes the current `vehicleUsed` activity then opens one for the new vehicle (or only closes it if newId is -1). *(internal)* *(hook)* | 49 |
+| `telemetry_trackers_vehicle.trackVehReset()` | Sends the `vehicleReset` event (model and damage of player 0's vehicle, read from `map.objects[vid].damage`). Can be disabled via `trackResets = false` in the `vehicle` module config. Ignored if the player has no vehicle. *(internal)* | 61 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_trackers_vehicle.onVehicleSpawned(vid)`
 
-Hook appelé quand un véhicule est créé. Envoie l'événement `vehicleSpawned` avec le modèle, la configuration et le niveau courant. Ne fait rien si les infos du véhicule sont introuvables.
+Hook called when a vehicle is spawned. Sends the `vehicleSpawned` event with the model, configuration and current level. Does nothing if the vehicle info cannot be found.
 
-- `vid` (*integer*) : Id du véhicule créé.
+- `vid` (*integer*) : Id of the created vehicle.
 
 #### `telemetry_trackers_vehicle.onVehicleSwitched(oldId, newId, player)`
 
-Hook appelé quand le véhicule contrôlé change. Pour le joueur 0, ferme l'activité `vehicleUsed` en cours puis en ouvre une pour le nouveau véhicule (ou seulement la ferme si newId vaut -1).
+Hook called when the controlled vehicle changes. For player 0, closes the current `vehicleUsed` activity then opens one for the new vehicle (or only closes it if newId is -1).
 
-- `oldId` (*integer*) : Id de l'ancien véhicule.
-- `newId` (*integer*) : Id du nouveau véhicule, -1 si le joueur n'est plus dans un véhicule.
-- `player` (*integer*) : Indice du joueur ; seul 0 est traité.
+- `oldId` (*integer*) : Id of the old vehicle.
+- `newId` (*integer*) : ID of the new vehicle, -1 if the player is no longer in a vehicle.
+- `player` (*integer*) : Player index; only 0 is handled.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions à charger avant celle-ci : `{'telemetry_core'}`. |
+| `dependencies` | table<integer, string> | Extensions to load before this one: `{'telemetry_core'}`. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/trackers/vehicle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/trackers/vehicle.lua`.*

@@ -1,11 +1,33 @@
 {
   "path": "lua/ge/extensions/telemetry/trackers/mcp.lua",
-  "module": "Suiveur de télémétrie des appels d'outils MCP (serveur Model Context Protocol du jeu) : pour chaque appel d'outil, enregistre le nom de l'outil et si l'appel a échoué (évènement « mcpToolCalled »). Les arguments et résultats ne sont pas rapportés.",
+  "module": "Telemetry tracker for MCP tool calls (the game's Model Context Protocol server): for each tool call, records the tool name and whether the call failed (event \"mcpToolCalled\"). Arguments and results are not reported.",
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "telemetry_core."
+    }
   },
   "functions": {
-    "onMcpToolCalled": {"desc": "Hook appelé quand un outil MCP est appelé : émet mcpToolCalled.", "params": {"toolName": {"type": "string", "desc": "Nom de l'outil MCP."}, "isError": {"type": "boolean", "desc": "true si l'appel a échoué."}}, "returns": [], "internal": true},
-    "onExtensionLoaded": {"desc": "Hook appelé au chargement : déchargement manuel.", "params": {}, "returns": [], "internal": true}
+    "onMcpToolCalled": {
+      "desc": "Hook called when an MCP tool is called: emits mcpToolCalled.",
+      "params": {
+        "toolName": {
+          "type": "string",
+          "desc": "MCP tool name."
+        },
+        "isError": {
+          "type": "boolean",
+          "desc": "true if the call failed."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook called on load: manual unload.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
   }
 }

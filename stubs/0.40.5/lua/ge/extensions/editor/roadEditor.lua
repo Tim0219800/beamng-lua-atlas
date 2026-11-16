@@ -2,52 +2,52 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/roadEditor.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Éditeur de routes en décalque (DecalRoad) du World Editor : mode d'édition « Edit Road » (icône create_road_decal) pour créer des routes (Alt + clic gauche), sélectionner routes et nœuds (Ctrl pour la multi-sélection, Ctrl+Maj+glisser pour une sélection rectangle), déplacer nœuds, régler la largeur, dupliquer, copier/coller les propriétés, supprimer, avec historique d'annulation. Il enregistre aussi les préférences « roadEditor.general.* » et un filtre de matériaux pour DecalRoad (tag « RoadAndPath »). Le fichier est très long (environ 2 400 lignes) : presque tout est local ; seuls quelques hooks et une fonction sont exportés.
---- Accès : extension `editor_roadEditor` : `extensions.load("editor_roadEditor")`, puis la globale `editor_roadEditor`
+--- Decal road (DecalRoad) editor of the World Editor: "Edit Road" edit mode (create_road_decal icon) to create roads (Alt + left click), select roads and nodes (Ctrl for multi-selection, Ctrl+Shift+drag for rectangle selection), move nodes, adjust width, duplicate, copy/paste properties, delete, with undo history. It also registers the "roadEditor.general.*" preferences and a material filter for DecalRoad (tag "RoadAndPath"). The file is very long (about 2,400 lines): almost everything is local; only a few hooks and one function are exported.
+--- Access: extension `editor_roadEditor`: `extensions.load("editor_roadEditor")`, then the global `editor_roadEditor`
 ---@class editor_roadEditor
 editor_roadEditor = {}
 
---- Appelée par l'action map « RoadEditor » : fait défiler le choix parmi les routes survolées superposées. 1 passe à la route suivante, 0 à la précédente (boucle). Sans effet s'il n'y a aucune route survolée.
----Source : lua/ge/extensions/editor/roadEditor.lua:2150
----@param value integer 1 = suivante, 0 = précédente.
+--- Called by the "RoadEditor" action map: cycles the choice among the overlapping hovered roads. 1 moves to the next road, 0 to the previous (looping). No effect if there is no hovered road.
+---Source: lua/ge/extensions/editor/roadEditor.lua:2150
+---@param value integer 1 = next, 0 = previous.
 function editor_roadEditor.cycleHoveredRoadsAM(value) end
 
---- Hook appelé à l'initialisation de l'éditeur : crée le mode d'édition « Edit Road » avec ses raccourcis (LMB+Alt créer/ajouter un nœud, Ctrl+LMB multi-sélection, Ctrl+Maj+glisser sélection rectangle, copie/colle/duplication), enregistre le filtre de matériaux DecalRoad, la fenêtre modale d'erreur, la fenêtre de modèles de routes, recharge les modèles (editor_roadUtils.reloadTemplates) et applique la préférence updateDecalRoadsOnStaticMeshTransform si l'API C++ existe.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadEditor.lua:2315
+--- Hook called when the editor initializes: creates the "Edit Road" edit mode with its shortcuts (LMB+Alt create/add a node, Ctrl+LMB multi-selection, Ctrl+Shift+drag rectangle selection, copy/paste/duplicate), registers the DecalRoad material filter, the error modal window, the road templates window, reloads the templates (editor_roadUtils.reloadTemplates) and applies the updateDecalRoadsOnStaticMeshTransform preference if the C++ API exists.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadEditor.lua:2315
 function editor_roadEditor.onEditorInitialized() end
 
---- Hook appelé quand l'inspecteur dessine son en-tête. Si le mode « Edit Road » est actif, ajoute les champs de position et de largeur des nœuds sélectionnés (multi-édition quand toutes les valeurs sont égales) avec enregistrement dans l'historique.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadEditor.lua:1213
----@param inspectorInfo table Informations de l'inspecteur fournies par l'éditeur (déduit du code).
+--- Hook called when the inspector draws its header. If the "Edit Road" mode is active, adds the position and width fields of the selected nodes (multi-edit when all values are equal) with recording in the history.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadEditor.lua:1213
+---@param inspectorInfo table Inspector information supplied by the editor (inferred from code).
 function editor_roadEditor.onEditorInspectorHeaderGui(inspectorInfo) end
 
---- Hook appelé quand la sélection d'objets de l'éditeur change. Si le mode « Edit Road » est actif, termine la route en cours de création (si aucune sélection), reconstruit la liste des DecalRoad sélectionnés et ne conserve que les nœuds sélectionnés des routes encore sélectionnées.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadEditor.lua:2275
+--- Hook called when the editor's object selection changes. If the "Edit Road" mode is active, finishes the road being created (if no selection), rebuilds the list of selected DecalRoads and only keeps the selected nodes of the roads that are still selected.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadEditor.lua:2275
 function editor_roadEditor.onEditorObjectSelectionChanged() end
 
---- Hook appelé quand une préférence change. Pour roadEditor.general.updateDecalRoadsOnStaticMeshTransform, transmet la valeur à worldEditorCppApi.setUpdateDecalRoadsOnStaticMeshTransform (si disponible).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadEditor.lua:2220
----@param path string Chemin de la préférence.
----@param value any Nouvelle valeur.
+--- Hook called when a preference changes. For roadEditor.general.updateDecalRoadsOnStaticMeshTransform, passes the value to worldEditorCppApi.setUpdateDecalRoadsOnStaticMeshTransform (if available).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadEditor.lua:2220
+---@param path string Preference path.
+---@param value any New value.
 function editor_roadEditor.onEditorPreferenceValueChanged(path, value) end
 
---- Hook appelé pour enregistrer les préférences : crée la catégorie « roadEditor » et la sous-catégorie « general » avec ses réglages (voir notes).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadEditor.lua:2226
----@param prefsRegistry table Registre de préférences de l'éditeur.
+--- Hook called to register the preferences: creates the "roadEditor" category and the "general" subcategory with its settings (see notes).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadEditor.lua:2226
+---@param prefsRegistry table Editor preferences registry.
 function editor_roadEditor.onEditorRegisterPreferences(prefsRegistry) end
 
---- Hook appelé au chargement de l'extension ; écrit seulement un log « initialized » (niveau D).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadEditor.lua:2072
+--- Hook called when the extension is loaded; only writes an "initialized" log (level D).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadEditor.lua:2072
 function editor_roadEditor.onExtensionLoaded() end
 
---- Hook appelé avant le rendu de chaque frame ; sort immédiatement si le mode « Edit Road » n'est pas actif et ne fait rien d'autre (corps vide).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadEditor.lua:2077
+--- Hook called before the rendering of each frame; returns immediately if the "Edit Road" mode is not active and does nothing else (empty body).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadEditor.lua:2077
 function editor_roadEditor.onPreRender() end
 

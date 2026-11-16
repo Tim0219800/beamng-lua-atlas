@@ -1,15 +1,15 @@
 # `outgauge`
 
-*Fichier : `lua/vehicle/extensions/outgauge.lua` · VM : Véhicule · 7 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/outgauge.lua` · VM: Vehicle · 7 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `outgauge` : `extensions.load (VM véhicule)("outgauge")`, puis la globale `outgauge`
+**Access:** extension `outgauge`: `extensions.load (vehicle VM)("outgauge")`, then the global `outgauge`
 
-Fichier obsolète : il se contente d'écrire une erreur dans le log (avec la trace d'appel) disant que quelque chose a tenté d'utiliser l'ancienne extension outgauge, et renvoie une table vide. Le protocole OutGauge est géré ailleurs (voir https://go.beamng.com/protocols et le module protocols).
+Obsolete file: it only writes an error to the log (with the call trace) saying that something tried to use the old outgauge extension, and returns an empty table. The OutGauge protocol is handled elsewhere (see https://go.beamng.com/protocols and the protocols module).
 
-## Remarques
+## Notes
 
-- Le module renvoie {} : toute fonction appelée dessus sera nil.
-- L'erreur de log se produit au chargement du fichier (require/extensions.load).
+- The module returns {}: any function called on it will be nil.
+- The log error occurs when the file is loaded (require/extensions.load).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/outgauge.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/outgauge.lua`.*

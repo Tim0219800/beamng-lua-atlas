@@ -1,65 +1,65 @@
 # `gameplay_markers_vehicleTrigger`
 
-*Fichier : `lua/ge/extensions/gameplay/markers/vehicleTrigger.lua` · VM : Game Engine (GE) · 241 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/markers/vehicleTrigger.lua` · VM: Game Engine (GE) · 241 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_markers_vehicleTrigger` : `extensions.load("gameplay_markers_vehicleTrigger")`, puis la globale `gameplay_markers_vehicleTrigger`
+**Access:** extension `gameplay_markers_vehicleTrigger`: `extensions.load("gameplay_markers_vehicleTrigger")`, then the global `gameplay_markers_vehicleTrigger`
 
-Marqueur de « portes » pour véhicule (par exemple l'entrée d'un garage ou d'un atelier) en mode jeu. Chaque porte est une paire d'objets de scène (zone, icône) : quand la boîte englobante du véhicule du joueur recouvre une zone, l'icône monte légèrement, un écran 3D facultatif s'affiche pendant 5 s avec un son d'ordinateur de carrière, et le marqueur devient interactif. Le module renvoie {create, cluster}.
+"Doors" marker for vehicles (for example the entrance of a garage or workshop) in play mode. Each door is a pair of scene objects (zone, icon): when the bounding box of the player's vehicle overlaps a zone, the icon rises slightly, an optional 3D screen is displayed for 5 s with a career computer sound, and the marker becomes interactive. The module returns {create, cluster}.
 
-## Remarques
+## Notes
 
-- cluster : un par POI (id 'vehicleTrigger#<poi.id>'). Lit poi.markerInfo.vehicleTrigger.{doors, icon, iconLift, iconOffsetHeight, pos, radius, screens} ; icône par défaut poi_exclamationmark_round, rayon par défaut 6 m.
-- doors = liste de {nomObjetZone, nomObjetIcône, distanceVisibleMax?} ; distance visible max par défaut 15 m. screens[idx] est le nom d'un objet de scène affiché en regard de la porte idx.
-- Le test de recouvrement ne s'applique qu'au véhicule du joueur (data.veh) ; si une porte recouvre le véhicule, toutes les portes sont marquées recouvertes (anyOverlap).
-- L'icône n'est visible que si la caméra est assez proche et sans obstacle statique (castRayStatic) ; hors grande carte.
-- isInAreaChanged vaut "in"/"out" pendant une frame.
-- Sans setup préalable (doors nil), plusieurs méthodes parcourent {} par sécurité ; hide() suppose en revanche que area.iconInfo existe quand l'icon renderer est disponible.
+- cluster: one per POI (id 'vehicleTrigger#<poi.id>'). Reads poi.markerInfo.vehicleTrigger.{doors, icon, iconLift, iconOffsetHeight, pos, radius, screens}; default icon poi_exclamationmark_round, default radius 6 m.
+- doors = list of {zoneObjectName, iconObjectName, maxVisibleDistance?}; default max visible distance 15 m. screens[idx] is the name of a scene object displayed next to door idx.
+- The overlap test only applies to the player's vehicle (data.veh); if a door overlaps the vehicle, all doors are marked as overlapped (anyOverlap).
+- The icon is only visible if the camera is close enough and without a static obstacle (castRayStatic); outside the big map.
+- isInAreaChanged is "in"/"out" for one frame.
+- Without prior setup (doors nil), several methods iterate over {} for safety; hide() however assumes area.iconInfo exists when the icon renderer is available.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_markers_vehicleTrigger.cluster(pois, allClusters)` | Transforme chaque POI vehicleTrigger en un cluster distinct et l'ajoute à allClusters. *(interne)* | 216 |
-| `gameplay_markers_vehicleTrigger.create(...)` | Fabrique un marqueur de portes (instance de C). | 208 |
+| `gameplay_markers_vehicleTrigger.cluster(pois, allClusters)` | Turns each vehicleTrigger POI into a distinct cluster and adds it to allClusters. *(internal)* | 216 |
+| `gameplay_markers_vehicleTrigger.create(...)` | Builds a doors marker (instance of C). | 208 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_markers_vehicleTrigger.cluster(pois, allClusters)`
 
-Transforme chaque POI vehicleTrigger en un cluster distinct et l'ajoute à allClusters.
+Turns each vehicleTrigger POI into a distinct cluster and adds it to allClusters.
 
-- `pois` (*table[]*) : POI avec markerInfo.vehicleTrigger.
-- `allClusters` (*table[]*) : Liste de clusters complétée en place.
+- `pois` (*table[]*) : POIs with markerInfo.vehicleTrigger.
+- `allClusters` (*table[]*) : List of clusters completed in place.
 
 #### `gameplay_markers_vehicleTrigger.create(...)`
 
-Fabrique un marqueur de portes (instance de C).
+Builds a doors marker (instance of C).
 
-- `...` (*any*) : Arguments transmis à C:init (non utilisés).
-- **renvoie** : table Instance de marqueur.
+- `...` (*any*) : Arguments passed to C:init (unused).
+- **returns**: table Marker instance.
 
-## Classe `C`
+## Class `C`
 
-Marqueur de portes pour véhicule.
+Doors marker for vehicles.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearObjects()` | Retire les icônes, cache les écrans et efface la liste des portes. | 171 |
-| `C:createObjects()` | Nettoie les objets existants (n'en crée pas). | 144 |
-| `C:drawOnMinimap(td)` | Dessine un cercle sur la minimap à la position de chaque icône de porte. | 202 |
-| `C:hide()` | Passe invisible, rend les icônes transparentes et cache les écrans. | 148 |
-| `C:init()` | Initialise visible = true. | 19 |
-| `C:instantFade(visible)` | Ne fait rien. | 195 |
-| `C:interactInPlayMode(interactData, interactableElements)` | Si canInteract et qu'une porte recouvre le véhicule, ajoute les données (elemData) du cluster aux éléments interactifs. | 187 |
-| `C:setHidden(value)` | Ne fait rien. | 198 |
-| `C:setup(cluster)` | Pour chaque porte, retrouve l'objet de zone et l'objet d'icône dans la scène, calcule la boîte de la zone, cache l'écran associé et crée l'icône (id <cluster.id>-vtIcon-<idx>). | 23 |
-| `C:show()` | Repasse visible. | 166 |
-| `C:update(data)` | Chaque frame : teste le recouvrement OBB/OBB avec le véhicule, gère le minuteur et l'affichage des écrans, anime hauteur et opacité des icônes, dessine un trait, met à jour isInAreaChanged et anyOverlap. | 79 |
+| `C:clearObjects()` | Removes the icons, hides the screens and clears the door list. | 171 |
+| `C:createObjects()` | Cleans up existing objects (does not create any). | 144 |
+| `C:drawOnMinimap(td)` | Draws a circle on the minimap at the position of each door icon. | 202 |
+| `C:hide()` | Becomes invisible, makes the icons transparent and hides the screens. | 148 |
+| `C:init()` | Initializes visible = true. | 19 |
+| `C:instantFade(visible)` | Does nothing. | 195 |
+| `C:interactInPlayMode(interactData, interactableElements)` | If canInteract and a door overlaps the vehicle, adds the cluster's data (elemData) to the interactive elements. | 187 |
+| `C:setHidden(value)` | Does nothing. | 198 |
+| `C:setup(cluster)` | For each door, finds the zone object and the icon object in the scene, computes the zone's box, hides the associated screen and creates the icon (id <cluster.id>-vtIcon-<idx>). | 23 |
+| `C:show()` | Becomes visible again. | 166 |
+| `C:update(data)` | Every frame: tests the OBB/OBB overlap with the vehicle, handles the timer and the display of screens, animates the icons' height and opacity, draws a line, updates isInAreaChanged and anyOverlap. | 79 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/markers/vehicleTrigger.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/markers/vehicleTrigger.lua`.*

@@ -1,0 +1,90 @@
+{
+  "path": "lua/ge/extensions/ui/gameplaySelector/tileSorting.lua",
+  "module": "Tri centralisé des tuiles du sélecteur de gameplay. Fournit quatre modes (Name, System, GameplayAutomatic, Date), la conversion des valeurs de l'UI ('name', 'automatic', 'date', 'system') vers ces modes et un repli sur 'Name' pour toute valeur invalide (avec un log d'avertissement).",
+  "usage": "ui_gameplaySelector_tileSorting.sortTilesFromUIValue(tiles, 'date')",
+  "notes": [
+    "Ordre des systèmes (SYSTEM_ORDER) : freeroam 1, quickStartExperiences 2, challenges 3, scenarios 4, scenariosMultiplayer 5, campaigns 6, 'Other...' 7 ; système inconnu = 999 (dans GameplayAutomatic).",
+    "Name : tri alphabétique sur Name, name ou label ; l'élément dont le nom vaut _tr('ui.menu.gridSelector.other') passe toujours en dernier.",
+    "GameplayAutomatic : tuiles issues d'un clustering d'abord (par nom), puis ordre des systèmes, puis non-auxiliaires avant auxiliaires, puis propriété order (absente = math.huge), puis nom.",
+    "Date : plus récent d'abord ; sans date en dernier ; à égalité, tri par nom.",
+    "Bug : sortByGameplayAutomatic utilise OTHER_PLACEHOLDER, variable globale jamais définie (nil), donc un système absent donne nil ; l'effet est le même que 999 car SYSTEM_ORDER[nil] vaut nil.",
+    "Bug : la branche « Challenges » compare avec une majuscule alors que le système s'appelle 'challenges' ; elle n'est donc jamais prise (le tri par carrière compareCareerStatus est inutilisé).",
+    "Dans sortBySystem, un système inconnu est placé après les systèmes connus ; si les deux sont inconnus et différents, la fonction renvoie false."
+  ],
+  "fields": {
+    "SYSTEM_ORDER": {"type": "table<string, integer>", "desc": "Rang de chaque système de gameplay pour le tri."},
+    "VALID_SORT_MODES": {"type": "string[]", "desc": "{'Name', 'System', 'GameplayAutomatic', 'Date'}."},
+    "UI_TO_SORT_MODE": {"type": "table<string, string>", "desc": "Correspondance valeur UI -> mode interne (name, automatic, date, system)."},
+    "SORT_MODE_TO_UI": {"type": "table<string, string>", "desc": "Correspondance inverse, calculée au chargement."}
+  },
+  "functions": {
+    "getSortFunction": {
+      "desc": "Renvoie la fonction de comparaison d'un mode. Mode invalide ou inconnu : log d'avertissement et repli sur 'Name'.",
+      "params": {"sortMode": {"type": "string", "desc": "'Name', 'System', 'GameplayAutomatic' ou 'Date'."}},
+      "returns": [{"type": "function", "desc": "function(a, b) -> boolean utilisable par table.sort."}]
+    },
+    "isValidSortMode": {
+      "desc": "Indique si le mode de tri existe.",
+      "params": {"sortMode": {"type": "string", "desc": "Mode interne."}},
+      "returns": [{"type": "boolean", "desc": "true si valide."}]
+    },
+    "convertUIValueToSortMode": {
+      "desc": "Convertit une valeur de l'UI en mode interne ; 'Name' si nil, non-chaîne ou inconnue (avec avertissement).",
+      "params": {"uiValue": {"type": "string|nil", "desc": "'name', 'automatic', 'date' ou 'system'."}},
+      "returns": [{"type": "string", "desc": "Mode interne."}]
+    },
+    "sortTilesFromUIValue": {
+      "desc": "Trie la liste de tuiles sur place à partir d'une valeur de l'UI.",
+      "params": {
+        "tiles": {"type": "table[]", "desc": "Tuiles à trier (modifiée)."},
+        "uiSortValue": {"type": "string|nil", "desc": "Valeur de tri de l'UI."}
+      }
+    },
+    "sortTiles": {
+      "desc": "Trie la liste de tuiles sur place (table.sort) avec le mode interne donné.",
+      "params": {
+        "tiles": {"type": "table[]", "desc": "Tuiles à trier (modifiée)."},
+        "sortMode": {"type": "string", "desc": "Mode interne."}
+      }
+    },
+    "sortByNameButOtherAlwaysLast": {
+      "desc": "Comparateur alphabétique, l'élément « Autre » étant toujours en dernier.",
+      "params": {
+        "a": {"type": "table", "desc": "Tuile ou item."},
+        "b": {"type": "table", "desc": "Tuile ou item."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}]
+    },
+    "sortBySystem": {
+      "desc": "Comparateur par ordre de système, puis par nom à système égal.",
+      "params": {
+        "a": {"type": "table", "desc": "Tuile ou item (champ system)."},
+        "b": {"type": "table", "desc": "Tuile ou item (champ system)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}]
+    },
+    "sortByGameplayAutomatic": {
+      "desc": "Comparateur multicritère : clusters, système, auxiliaire, order, nom.",
+      "params": {
+        "a": {"type": "table", "desc": "Tuile ou item (isClustered, system, isAuxiliary, order, name)."},
+        "b": {"type": "table", "desc": "Tuile ou item."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}]
+    },
+    "sortByDate": {
+      "desc": "Comparateur par date décroissante ; sans date en dernier ; nom en cas d'égalité.",
+      "params": {
+        "a": {"type": "table", "desc": "Tuile ou item (champ date)."},
+        "b": {"type": "table", "desc": "Tuile ou item."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}]
+    },
+    "sortGroup": {
+      "desc": "Trie group.tiles sur place avec le mode donné.",
+      "params": {
+        "group": {"type": "table", "desc": "Groupe contenant une liste tiles."},
+        "sortMode": {"type": "string", "desc": "Mode interne."}
+      }
+    }
+  }
+}

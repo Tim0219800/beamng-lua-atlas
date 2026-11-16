@@ -1,49 +1,49 @@
 # `odometer`
 
-*Fichier : `lua/vehicle/extensions/odometer.lua` · VM : Véhicule · 78 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/odometer.lua` · VM: Vehicle · 78 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `odometer` : `extensions.load (VM véhicule)("odometer")`, puis la globale `odometer`
+**Access:** extension `odometer`: `extensions.load (vehicle VM)("odometer")`, then the global `odometer`
 
-Compteur kilométrique 'relatif' pour les statistiques : intègre la distance parcourue à partir de electrics.values.wheelspeed avec un filtre de 'corde' (±5 cm) pour ignorer les oscillations avant/arrière, puis soumet la distance à gameplayStatistic (métriques 'vehicle/odometer/<modèle>.length' et 'vehicle/total_odometer.length'). Ne compte que quand l'IA est désactivée.
+'Relative' odometer for statistics: integrates the distance traveled from electrics.values.wheelspeed with a 'rope' filter (±5 cm) to ignore back-and-forth oscillations, then submits the distance to gameplayStatistic (metrics 'vehicle/odometer/<model>.length' and 'vehicle/total_odometer.length'). Only counts when the AI is disabled.
 
-## Exemple
+## Example
 
 ```lua
-local d = extensions.odometer.getRelativeRecording()  -- distance cumulée en m
+local d = extensions.odometer.getRelativeRecording()  -- cumulative distance in m
 ```
 
-## Remarques
+## Notes
 
-- Algorithme : lead accumule |wheelspeed| * dt * signe(avgWheelAV) ; dès que |lead| dépasse ropeLength (0,05 m) l'excédent est ajouté à relativeOdometer et lead est borné.
-- submitStatistic n'envoie rien si ai.mode ~= 'disabled' ou si moins de 1 m a été accumulé depuis le dernier envoi. Si la vitesse moyenne depuis l'envoi dépasse 150 m/s (550 km/h) la distance est écartée comme incohérente. Un relativeOdometer NaN est ramené à la valeur précédente avec un log d'erreur.
-- Envoi automatique toutes les 30 s de temps accumulé (quand l'IA est désactivée) et à chaque reset. Le nom du modèle est extrait de v.vehicleDirectory (motif /vehicles/<modèle>).
-- Anomalie : submitedTime n'est remis à 0 qu'après un envoi périodique ; la vitesse moyenne testée (distance / submitedTime) est donc calculée sur du temps accumulé depuis le dernier envoi périodique, pas depuis le dernier submitStatistic.
-- startRecording est vide (la remise à zéro est commentée) ; onExtensionLoaded est vide.
+- Algorithm: lead accumulates |wheelspeed| * dt * sign(avgWheelAV); as soon as |lead| exceeds ropeLength (0.05 m) the excess is added to relativeOdometer and lead is clamped.
+- submitStatistic sends nothing if ai.mode ~= 'disabled' or if less than 1 m has been accumulated since the last send. If the average speed since the send exceeds 150 m/s (550 km/h) the distance is discarded as inconsistent. A NaN relativeOdometer is reset to the previous value with an error log.
+- Automatic send every 30 s of accumulated time (when the AI is disabled) and on each reset. The model name is extracted from v.vehicleDirectory (pattern /vehicles/<model>).
+- Anomaly: submitedTime is only reset to 0 after a periodic send; the average speed tested (distance / submitedTime) is therefore computed over time accumulated since the last periodic send, not since the last submitStatistic.
+- startRecording is empty (the reset is commented out); onExtensionLoaded is empty.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `odometer.getRelativeRecording()` | Renvoie la distance relative cumulée. | 39 |
-| `odometer.onExtensionLoaded()` | Hook de chargement ; vide. *(interne)* *(hook)* | 43 |
-| `odometer.onReset()` | Hook de reset du véhicule : soumet la distance accumulée aux statistiques. *(interne)* *(hook)* | 15 |
-| `odometer.startRecording()` | Prévu pour remettre l'enregistrement à zéro ; ne fait rien (code commenté). | 35 |
-| `odometer.submitStatistic()` | Envoie la distance non encore soumise à gameplayStatistic (conditions décrites dans les notes). | 46 |
-| `odometer.updateGFX(dt)` | Appelé chaque frame : intègre la distance et déclenche l'envoi périodique. *(interne)* | 19 |
+| `odometer.getRelativeRecording()` | Returns the cumulative relative distance. | 39 |
+| `odometer.onExtensionLoaded()` | Load hook; empty. *(internal)* *(hook)* | 43 |
+| `odometer.onReset()` | Vehicle reset hook: submits the accumulated distance to the statistics. *(internal)* *(hook)* | 15 |
+| `odometer.startRecording()` | Intended to reset the recording; does nothing (commented-out code). | 35 |
+| `odometer.submitStatistic()` | Sends the distance not yet submitted to gameplayStatistic (conditions described in the notes). | 46 |
+| `odometer.updateGFX(dt)` | Called every frame: integrates the distance and triggers the periodic send. *(internal)* | 19 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `odometer.getRelativeRecording()`
 
-Renvoie la distance relative cumulée.
+Returns the cumulative relative distance.
 
-- **renvoie** : number Distance en mètres.
+- **returns**: number Distance in meters.
 
 #### `odometer.updateGFX(dt)`
 
-Appelé chaque frame : intègre la distance et déclenche l'envoi périodique.
+Called every frame: integrates the distance and triggers the periodic send.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/odometer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/odometer.lua`.*

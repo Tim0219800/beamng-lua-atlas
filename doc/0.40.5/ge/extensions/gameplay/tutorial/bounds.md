@@ -1,147 +1,147 @@
 # `gameplay_tutorial_bounds`
 
-*Fichier : `lua/ge/extensions/gameplay/tutorial/bounds.lua` · VM : Game Engine (GE) · 287 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/tutorial/bounds.lua` · VM: Game Engine (GE) · 287 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_tutorial_bounds` : `extensions.load("gameplay_tutorial_bounds")`, puis la globale `gameplay_tutorial_bounds`
+**Access:** extension `gameplay_tutorial_bounds`: `extensions.load("gameplay_tutorial_bounds")`, then the global `gameplay_tutorial_bounds`
 
-Gère les limites de la zone du tutoriel de carrière. Il vérifie que le joueur reste dans les zones actives des sites du tutoriel ; sinon il affiche un avertissement avec un compte à rebours de 5 s dans la liste de tâches, puis déclenche un retour automatique via des callbacks (hooks onCareerTutorial...). Peut aussi dessiner les zones actives en debug.
+Manages the bounds of the career tutorial zone. It checks that the player stays within the active zones of the tutorial sites; otherwise it displays a warning with a 5 s countdown in the task list, then triggers an automatic return via callbacks (onCareerTutorial... hooks). Can also draw the active zones in debug.
 
-## Exemple
+## Example
 
 ```lua
 gameplay_tutorial_bounds.setActiveZones({'evalZone'})
 gameplay_tutorial_bounds.setDebugDrawBounds(true)
 ```
 
-## Remarques
+## Notes
 
-- Constantes : compte à rebours de 5 s (OOB_AUTO_RESET_SECONDS), message « retour automatique » affiché 1 s avant le callback de timeout.
-- Callbacks par défaut : onOutOfBoundsStarted -> hook onCareerTutorialOutOfBoundsStarted ; onOutOfBoundsEnded -> onCareerTutorialOutOfBoundsEnded ; onOutOfBoundsTimedOut(stepId) -> hook onCareerTutorialOutOfBoundsTimedOut si l'étape courante est '04timeTrial', sinon onCareerTutorialLeftBounds ; onOutOfBoundsWhileNotAllowed -> onCareerTutorialLeftBounds.
-- Sans zone active ou sans sites chargés, le joueur est toujours considéré dans les limites.
-- Les textes d'avertissement sont en anglais et codés en dur (pas de clé de traduction).
-- La position testée est celle du véhicule du joueur 0, ou de la caméra s'il n'y en a pas.
-- Le suivi est inactif tant que le getter d'activité du runtime (setRuntimeActiveGetter) renvoie false.
+- Constants: 5 s countdown (OOB_AUTO_RESET_SECONDS), "automatic return" message displayed 1 s before the timeout callback.
+- Default callbacks: onOutOfBoundsStarted -> hook onCareerTutorialOutOfBoundsStarted; onOutOfBoundsEnded -> onCareerTutorialOutOfBoundsEnded; onOutOfBoundsTimedOut(stepId) -> hook onCareerTutorialOutOfBoundsTimedOut if the current step is '04timeTrial', otherwise onCareerTutorialLeftBounds; onOutOfBoundsWhileNotAllowed -> onCareerTutorialLeftBounds.
+- Without an active zone or without loaded sites, the player is always considered within bounds.
+- The warning texts are in English and hardcoded (no translation key).
+- The tested position is that of player 0's vehicle, or the camera if there is none.
+- Tracking is inactive as long as the runtime's activity getter (setRuntimeActiveGetter) returns false.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_tutorial_bounds.cleanup()` | Quitte l'état hors limites et remet à zéro sites, zones actives, zones désactivées et debug. | 278 |
-| `gameplay_tutorial_bounds.getActiveZoneNames()` | Renvoie la liste triée des noms de zones actives. | 188 |
-| `gameplay_tutorial_bounds.getDebugDrawBounds()` | Indique si le dessin debug des zones est actif. | 205 |
-| `gameplay_tutorial_bounds.getEnabledZones()` | Renvoie la table interne zoneEnabled (nom -> booléen), référence directe. | 197 |
-| `gameplay_tutorial_bounds.getZoneEnabled(zoneName)` | Indique si une zone est activée (true par défaut si jamais réglée). | 183 |
-| `gameplay_tutorial_bounds.isInBounds()` | Indique si le joueur est dans les limites. Renvoie true si le tutoriel n'est pas actif. | 209 |
-| `gameplay_tutorial_bounds.onPreRender(dtReal, dtSim, dtRaw)` | Hook de rendu appelé chaque frame ; dessine les zones actives si le debug est activé et le tutoriel actif. *(interne)* *(hook)* | 271 |
-| `gameplay_tutorial_bounds.setActiveZones(names)` | Définit la liste des zones dans lesquelles le joueur est autorisé (remplace la liste précédente). | 170 |
-| `gameplay_tutorial_bounds.setCallbacks(newCallbacks)` | Remplace tout ou partie des callbacks de sortie de limites ; les clés absentes conservent leur callback actuel. | 71 |
-| `gameplay_tutorial_bounds.setCurrentStepGetter(getter)` | Définit la fonction qui renvoie l'identifiant de l'étape courante du tutoriel (transmis au callback de timeout). | 63 |
-| `gameplay_tutorial_bounds.setDebugDrawBounds(enabled)` | Active ou coupe le dessin debug des zones actives (jaune semi-transparent), effectué dans onPreRender. | 201 |
-| `gameplay_tutorial_bounds.setRuntimeActiveGetter(getter)` | Définit la fonction qui indique si le tutoriel est actif. Une valeur non fonctionnelle la remet à une fonction renvoyant false. | 55 |
-| `gameplay_tutorial_bounds.setSites(newSites)` | Définit l'objet de sites (avec zones) utilisé pour tester les limites. S'il est nil, update le charge depuis gameplay_tutorial_setup. | 166 |
-| `gameplay_tutorial_bounds.setZoneEnabled(zoneName, enabled)` | Active ou désactive temporairement une zone sans la retirer de la liste active. | 179 |
-| `gameplay_tutorial_bounds.update(dtReal)` | À appeler chaque frame : si le tutoriel est actif, teste les limites ; hors limites, affiche l'avertissement avec compte à rebours, et après 5 s déclenche (via un job de 1 s de pause) le callback onOutOfBoundsTimedOut. Si le retour automatique n'est pas autorisé (gameplay_tutorial_setup.isOutOfBoundsResetAllowed), appelle seulement onOutOfBoundsWhileNotAllowed. | 214 |
+| `gameplay_tutorial_bounds.cleanup()` | Leaves the out-of-bounds state and resets sites, active zones, disabled zones and debug. | 278 |
+| `gameplay_tutorial_bounds.getActiveZoneNames()` | Returns the sorted list of active zone names. | 188 |
+| `gameplay_tutorial_bounds.getDebugDrawBounds()` | Indicates whether the debug drawing of the zones is active. | 205 |
+| `gameplay_tutorial_bounds.getEnabledZones()` | Returns the internal zoneEnabled table (name -> boolean), direct reference. | 197 |
+| `gameplay_tutorial_bounds.getZoneEnabled(zoneName)` | Indicates whether a zone is enabled (true by default if never set). | 183 |
+| `gameplay_tutorial_bounds.isInBounds()` | Indicates whether the player is within bounds. Returns true if the tutorial is not active. | 209 |
+| `gameplay_tutorial_bounds.onPreRender(dtReal, dtSim, dtRaw)` | Render hook called every frame; draws the active zones if debug is enabled and the tutorial is active. *(internal)* *(hook)* | 271 |
+| `gameplay_tutorial_bounds.setActiveZones(names)` | Sets the list of zones in which the player is allowed (replaces the previous list). | 170 |
+| `gameplay_tutorial_bounds.setCallbacks(newCallbacks)` | Replaces all or some of the out-of-bounds callbacks; absent keys keep their current callback. | 71 |
+| `gameplay_tutorial_bounds.setCurrentStepGetter(getter)` | Sets the function that returns the current tutorial step identifier (passed to the timeout callback). | 63 |
+| `gameplay_tutorial_bounds.setDebugDrawBounds(enabled)` | Enables or disables the debug drawing of the active zones (semi-transparent yellow), done in onPreRender. | 201 |
+| `gameplay_tutorial_bounds.setRuntimeActiveGetter(getter)` | Sets the function that indicates whether the tutorial is active. A non-function value resets it to a function returning false. | 55 |
+| `gameplay_tutorial_bounds.setSites(newSites)` | Sets the sites object (with zones) used to test the bounds. If it is nil, update loads it from gameplay_tutorial_setup. | 166 |
+| `gameplay_tutorial_bounds.setZoneEnabled(zoneName, enabled)` | Temporarily enables or disables a zone without removing it from the active list. | 179 |
+| `gameplay_tutorial_bounds.update(dtReal)` | To call every frame: if the tutorial is active, tests the bounds; when out of bounds, displays the warning with countdown, and after 5 s triggers (via a job with a 1 s pause) the onOutOfBoundsTimedOut callback. If automatic return is not allowed (gameplay_tutorial_setup.isOutOfBoundsResetAllowed), only calls onOutOfBoundsWhileNotAllowed. | 214 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_tutorial_bounds.getActiveZoneNames()`
 
-Renvoie la liste triée des noms de zones actives.
+Returns the sorted list of active zone names.
 
-- **renvoie** : string[] Noms triés par ordre alphabétique.
+- **returns**: string[] Names sorted alphabetically.
 
 #### `gameplay_tutorial_bounds.getDebugDrawBounds()`
 
-Indique si le dessin debug des zones est actif.
+Indicates whether the debug drawing of the zones is active.
 
-- **renvoie** : boolean État du dessin debug.
+- **returns**: boolean State of the debug drawing.
 
 #### `gameplay_tutorial_bounds.getEnabledZones()`
 
-Renvoie la table interne zoneEnabled (nom -> booléen), référence directe.
+Returns the internal zoneEnabled table (name -> boolean), direct reference.
 
-- **renvoie** : table<string, boolean> Zones explicitement activées/désactivées.
+- **returns**: table<string, boolean> Zones explicitly enabled/disabled.
 
 #### `gameplay_tutorial_bounds.getZoneEnabled(zoneName)`
 
-Indique si une zone est activée (true par défaut si jamais réglée).
+Indicates whether a zone is enabled (true by default if never set).
 
-- `zoneName` (*string*) : Nom de la zone.
-- **renvoie** : boolean État d'activation.
+- `zoneName` (*string*) : Zone name.
+- **returns**: boolean Activation state.
 
 #### `gameplay_tutorial_bounds.isInBounds()`
 
-Indique si le joueur est dans les limites. Renvoie true si le tutoriel n'est pas actif.
+Indicates whether the player is within bounds. Returns true if the tutorial is not active.
 
-- **renvoie** : boolean true si dans une zone active et activée (ou si rien à contrôler).
+- **returns**: boolean true if in an active and enabled zone (or if there is nothing to check).
 
 #### `gameplay_tutorial_bounds.onPreRender(dtReal, dtSim, dtRaw)`
 
-Hook de rendu appelé chaque frame ; dessine les zones actives si le debug est activé et le tutoriel actif.
+Render hook called every frame; draws the active zones if debug is enabled and the tutorial is active.
 
-- `dtReal` (*number*) : Delta temps réel.
-- `dtSim` (*number*) : Delta temps de simulation.
-- `dtRaw` (*number*) : Delta temps brut.
+- `dtReal` (*number*) : Real-time delta.
+- `dtSim` (*number*) : Simulation time delta.
+- `dtRaw` (*number*) : Raw time delta.
 
 #### `gameplay_tutorial_bounds.setActiveZones(names)`
 
-Définit la liste des zones dans lesquelles le joueur est autorisé (remplace la liste précédente).
+Sets the list of zones in which the player is allowed (replaces the previous list).
 
-- `names` (*string[]|nil*) : Noms de zones ; nil vide la liste (plus de limite).
+- `names` (*string[]|nil*) : Zone names; nil clears the list (no more limit).
 
 #### `gameplay_tutorial_bounds.setCallbacks(newCallbacks)`
 
-Remplace tout ou partie des callbacks de sortie de limites ; les clés absentes conservent leur callback actuel.
+Replaces all or some of the out-of-bounds callbacks; absent keys keep their current callback.
 
-- `newCallbacks` (*table*) : Clés possibles : onOutOfBoundsStarted, onOutOfBoundsEnded, onOutOfBoundsTimedOut(currentStepId), onOutOfBoundsWhileNotAllowed.
+- `newCallbacks` (*table*) : Possible keys: onOutOfBoundsStarted, onOutOfBoundsEnded, onOutOfBoundsTimedOut(currentStepId), onOutOfBoundsWhileNotAllowed.
 
 #### `gameplay_tutorial_bounds.setCurrentStepGetter(getter)`
 
-Définit la fonction qui renvoie l'identifiant de l'étape courante du tutoriel (transmis au callback de timeout).
+Sets the function that returns the current tutorial step identifier (passed to the timeout callback).
 
-- `getter` (*function*) : Fonction sans argument renvoyant l'id d'étape (string) ou nil.
+- `getter` (*function*) : Function with no argument returning the step id (string) or nil.
 
 #### `gameplay_tutorial_bounds.setDebugDrawBounds(enabled)`
 
-Active ou coupe le dessin debug des zones actives (jaune semi-transparent), effectué dans onPreRender.
+Enables or disables the debug drawing of the active zones (semi-transparent yellow), done in onPreRender.
 
-- `enabled` (*boolean*) : true pour dessiner.
+- `enabled` (*boolean*) : true to draw.
 
 #### `gameplay_tutorial_bounds.setRuntimeActiveGetter(getter)`
 
-Définit la fonction qui indique si le tutoriel est actif. Une valeur non fonctionnelle la remet à une fonction renvoyant false.
+Sets the function that indicates whether the tutorial is active. A non-function value resets it to a function returning false.
 
-- `getter` (*function*) : Fonction sans argument renvoyant un booléen.
+- `getter` (*function*) : Function with no argument returning a boolean.
 
 #### `gameplay_tutorial_bounds.setSites(newSites)`
 
-Définit l'objet de sites (avec zones) utilisé pour tester les limites. S'il est nil, update le charge depuis gameplay_tutorial_setup.
+Sets the sites object (with zones) used to test the bounds. If it is nil, update loads it from gameplay_tutorial_setup.
 
-- `newSites` (*table|nil*) : Objet sites avec sites.zones.byName / sites.zones.objects ou la méthode getZonesForPosition.
+- `newSites` (*table|nil*) : Sites object with sites.zones.byName / sites.zones.objects or the getZonesForPosition method.
 
 #### `gameplay_tutorial_bounds.setZoneEnabled(zoneName, enabled)`
 
-Active ou désactive temporairement une zone sans la retirer de la liste active.
+Temporarily enables or disables a zone without removing it from the active list.
 
-- `zoneName` (*string*) : Nom de la zone.
-- `enabled` (*boolean*) : false pour ignorer cette zone.
+- `zoneName` (*string*) : Zone name.
+- `enabled` (*boolean*) : false to ignore this zone.
 
 #### `gameplay_tutorial_bounds.update(dtReal)`
 
-À appeler chaque frame : si le tutoriel est actif, teste les limites ; hors limites, affiche l'avertissement avec compte à rebours, et après 5 s déclenche (via un job de 1 s de pause) le callback onOutOfBoundsTimedOut. Si le retour automatique n'est pas autorisé (gameplay_tutorial_setup.isOutOfBoundsResetAllowed), appelle seulement onOutOfBoundsWhileNotAllowed.
+To call every frame: if the tutorial is active, tests the bounds; when out of bounds, displays the warning with countdown, and after 5 s triggers (via a job with a 1 s pause) the onOutOfBoundsTimedOut callback. If automatic return is not allowed (gameplay_tutorial_setup.isOutOfBoundsResetAllowed), only calls onOutOfBoundsWhileNotAllowed.
 
-- `dtReal` (*number*) : Delta temps réel en secondes.
+- `dtReal` (*number*) : Real-time delta in seconds.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onCareerTutorialLeftBounds` — écouté par 8 module(s)
-- `onCareerTutorialOutOfBoundsEnded` — écouté par 1 module(s)
-- `onCareerTutorialOutOfBoundsStarted` — écouté par 1 module(s)
-- `onCareerTutorialOutOfBoundsTimedOut` — écouté par 1 module(s)
+- `onCareerTutorialLeftBounds` — listened to by 8 module(s)
+- `onCareerTutorialOutOfBoundsEnded` — listened to by 1 module(s)
+- `onCareerTutorialOutOfBoundsStarted` — listened to by 1 module(s)
+- `onCareerTutorialOutOfBoundsTimedOut` — listened to by 1 module(s)
 
-**Évènements UI (guihooks.trigger) :** `DiscardTasklistItem`, `SetTasklistTask`
+**UI events (guihooks.trigger):** `DiscardTasklistItem`, `SetTasklistTask`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/tutorial/bounds.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/tutorial/bounds.lua`.*

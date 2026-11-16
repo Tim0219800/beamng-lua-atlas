@@ -1,84 +1,206 @@
 {
   "path": "lua/common/guihooks.lua",
-  "module": "Passerelle Lua vers l'interface HTML/JS (CEF). Permet de déclencher des hooks JS côté UI (guihooks.trigger) et d'envoyer des flux de données (streams) à haute fréquence pour les applications d'UI. Présent dans la VM GE (via `be`) et dans la VM véhicule (via `obj`) ; les deux envoient par queueHookJS/queueStreamDataJS. Un moddeur s'en sert pour afficher un message, mettre à jour une app UI ou tracer des valeurs dans l'app 'Generic Graph'.",
-  "usage": "guihooks.trigger('MyUiHook', {speed = 12.5, gear = 'D'})  -- côté JS : $scope.$on('MyUiHook', function(ev, data) ... end)\nguihooks.message('Hello', 5, 'myCategory')\nguihooks.graph({'vitesse', speed, 100, 'm/s'}, {'rpm', rpm, 8000})",
+  "module": "Lua gateway to the HTML/JS interface (CEF). Allows triggering JS hooks on the UI side (guihooks.trigger) and sending high-frequency data streams to UI apps. Present in the GE VM (via `be`) and in the vehicle VM (via `obj`); both send through queueHookJS/queueStreamDataJS. A modder uses it to show a message, update a UI app or plot values in the 'Generic Graph' app.",
+  "usage": "guihooks.trigger('MyUiHook', {speed = 12.5, gear = 'D'})  -- JS side: $scope.$on('MyUiHook', function(ev, data) ... end)\nguihooks.message('Hello', 5, 'myCategory')\nguihooks.graph({'speed', speed, 100, 'm/s'}, {'rpm', rpm, 8000})",
   "notes": [
-    "Les arguments nil sont supprimés de la liste envoyée à JS par trigger et triggerClient (les arguments sont compactés, pas de trou). trigger n'envoie '[]' s'il n'y a aucun argument non nil.",
-    "trigger utilise l'identifiant de contexte d'exécution execCtxWebId (global) comme cible, 0 par défaut ; triggerClient permet de viser un identifiant de client précis (targetDsmId).",
-    "Dans la VM véhicule, queueStream n'écrit dans le cache que si M.updateStreams est vrai ; reset() le remet à false. Côté GE, queueStream met toujours M.updateStreams à true. Le cache est envoyé par sendStreams.",
-    "sendStreams() doit être appelé depuis le onGraphicsStep du véhicule (indiqué dans le code) : dans la VM véhicule il appelle aussi streams.update() et déclenche VehicleChange/VehicleReset si v.data a changé.",
-    "M.queueStream et M.send sont des champs définis (alias) : l'extraction automatique les signale à tort comme nil, la variable locale queueStream est une fonction (nop si ni obj ni be n'existent).",
-    "Le commentaire du code prévoit que ce module sera revu : 'todo replace ui_message'. guihooks.message ne fait rien si le joueur n'est pas assis (playerInfo.firstPlayerSeated faux).",
-    "graph() renvoie la table values normalisée (clé, valeur, échelle, unité, renderNegatives, couleur RGBA issue de jetColor). graphWithCSV garde un fichier CSV ouvert au niveau du module : le premier appel fixe les colonnes."
+    "nil arguments are removed from the list sent to JS by trigger and triggerClient (arguments are compacted, no holes). trigger sends '[]' if there are no non-nil arguments.",
+    "trigger uses the execution context identifier execCtxWebId (global) as target, 0 by default; triggerClient lets you target a specific client identifier (targetDsmId).",
+    "In the vehicle VM, queueStream only writes to the cache if M.updateStreams is true; reset() sets it back to false. On the GE side, queueStream always sets M.updateStreams to true. The cache is sent by sendStreams.",
+    "sendStreams() must be called from the vehicle's onGraphicsStep (stated in the code): in the vehicle VM it also calls streams.update() and triggers VehicleChange/VehicleReset if v.data changed.",
+    "M.queueStream and M.send are defined fields (aliases): automatic extraction wrongly reports them as nil, the local variable queueStream is a function (nop if neither obj nor be exists).",
+    "The code comment plans for this module to be reviewed: 'todo replace ui_message'. guihooks.message does nothing if the player is not seated (playerInfo.firstPlayerSeated false).",
+    "graph() returns the normalized values table (key, value, scale, unit, renderNegatives, RGBA color from jetColor). graphWithCSV keeps a CSV file open at module level: the first call sets the columns."
   ],
   "fields": {
-    "updateStreams": {"type": "boolean", "desc": "Indique si les streams doivent être mis en cache. false après reset ; true côté GE dès qu'un stream est mis en file. Défini par reset()/queueStream, pas à l'init."},
-    "queueStream": {"type": "function", "desc": "queueStream(key, value) : met en cache la donnée de flux `key` pour envoi ultérieur par sendStreams (VM véhicule : seulement si updateStreams est vrai). nop si ni `obj` ni `be`."},
-    "send": {"type": "function", "desc": "Alias de queueStream."}
+    "updateStreams": {
+      "type": "boolean",
+      "desc": "Tells whether streams must be cached. false after reset; true on the GE side as soon as a stream is queued. Set by reset()/queueStream, not at init."
+    },
+    "queueStream": {
+      "type": "function",
+      "desc": "queueStream(key, value): caches the stream data `key` for later sending by sendStreams (vehicle VM: only if updateStreams is true). nop if neither `obj` nor `be` exists."
+    },
+    "send": {
+      "type": "function",
+      "desc": "Alias of queueStream."
+    }
   },
   "functions": {
     "trigger": {
-      "desc": "Déclenche le hook JS `hookName` côté UI avec les arguments donnés (encodés en JSON dans un tableau). Les valeurs nil sont ignorées. Sensible au ramasse-miettes (réutilise une table temporaire) : ne pas la modifier à la légère.",
-      "params": {"hookName": {"type": "string", "desc": "nom du hook JS"}, "...": {"type": "any", "desc": "arguments sérialisables en JSON (nil ignorés)"}},
+      "desc": "Triggers the JS hook `hookName` on the UI side with the given arguments (JSON-encoded in an array). nil values are ignored. Garbage-collector sensitive (reuses a temporary table): do not modify it lightly.",
+      "params": {
+        "hookName": {
+          "type": "string",
+          "desc": "JS hook name"
+        },
+        "...": {
+          "type": "any",
+          "desc": "JSON-serializable arguments (nil ignored)"
+        }
+      },
       "returns": [],
       "internal": false
     },
     "triggerClient": {
-      "desc": "Comme trigger mais pour un client UI précis identifié par targetDsmId.",
-      "params": {"targetDsmId": {"type": "integer", "desc": "identifiant du client/UI cible"}, "hookName": {"type": "string", "desc": "nom du hook JS"}, "...": {"type": "any", "desc": "arguments (nil ignorés)"}},
+      "desc": "Like trigger but for a specific UI client identified by targetDsmId.",
+      "params": {
+        "targetDsmId": {
+          "type": "integer",
+          "desc": "target client/UI identifier"
+        },
+        "hookName": {
+          "type": "string",
+          "desc": "JS hook name"
+        },
+        "...": {
+          "type": "any",
+          "desc": "arguments (nil ignored)"
+        }
+      },
       "returns": [],
       "internal": false
     },
     "triggerRawJS": {
-      "desc": "Déclenche un hook JS en passant du JS brut (inséré tel quel entre crochets, pas d'échappement ni d'encodage JSON). À n'utiliser qu'avec du texte de confiance.",
-      "params": {"hookName": {"type": "string", "desc": "nom du hook JS"}, "rawJs": {"type": "any", "desc": "code JS brut converti avec tostring"}},
+      "desc": "Triggers a JS hook by passing raw JS (inserted as is between brackets, no escaping or JSON encoding). To be used only with trusted text.",
+      "params": {
+        "hookName": {
+          "type": "string",
+          "desc": "JS hook name"
+        },
+        "rawJs": {
+          "type": "any",
+          "desc": "raw JS code converted with tostring"
+        }
+      },
       "returns": [],
       "internal": false
     },
     "triggerStream": {
-      "desc": "Envoie immédiatement une donnée de flux (stream) à l'UI sous le nom streamName (encodée en JSON).",
-      "params": {"streamName": {"type": "string", "desc": "nom du stream"}, "streamData": {"type": "any", "desc": "donnée sérialisable en JSON"}},
+      "desc": "Immediately sends stream data to the UI under the name streamName (JSON-encoded).",
+      "params": {
+        "streamName": {
+          "type": "string",
+          "desc": "stream name"
+        },
+        "streamData": {
+          "type": "any",
+          "desc": "JSON-serializable data"
+        }
+      },
       "returns": [],
       "internal": false
     },
     "sendStreams": {
-      "desc": "Envoie à l'UI tous les streams mis en cache par queueStream puis vide le cache. Appelé par le moteur (VM véhicule : depuis onGraphicsStep ; ne doit pas être appelé depuis GE d'après le commentaire du code).",
+      "desc": "Sends to the UI all streams cached by queueStream then empties the cache. Called by the engine (vehicle VM: from onGraphicsStep; must not be called from GE according to the code comment).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Remet updateStreams à false, vide le cache de streams et envoie le hook 'VehicleReset' si le premier joueur est assis. Appelé lors d'un reset du véhicule/de la VM.",
+      "desc": "Sets updateStreams back to false, empties the stream cache and sends the 'VehicleReset' hook if the first player is seated. Called on a vehicle/VM reset.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "message": {
-      "desc": "Affiche un message dans l'UI via le hook 'Message' (données {msg, ttl, category, icon, availableOptionsCount, currentOptionIndex}). Ne fait rien si playerInfo.firstPlayerSeated est faux.",
-      "params": {"msg": {"type": "string", "desc": "texte (clé de traduction possible, déduit du code UI)"}, "ttl": {"type": "number|nil", "desc": "durée d'affichage en secondes, défaut 5"}, "category": {"type": "string|nil", "desc": "catégorie du message, défaut ''"}, "icon": {"type": "string|nil", "desc": "icône"}, "availableOptionsCount": {"type": "integer|nil", "desc": "nombre d'options (menus de choix)"}, "currentOptionIndex": {"type": "integer|nil", "desc": "option courante"}},
+      "desc": "Displays a message in the UI via the 'Message' hook (data {msg, ttl, category, icon, availableOptionsCount, currentOptionIndex}). Does nothing if playerInfo.firstPlayerSeated is false.",
+      "params": {
+        "msg": {
+          "type": "string",
+          "desc": "text (possibly a translation key, inferred from the UI code)"
+        },
+        "ttl": {
+          "type": "number|nil",
+          "desc": "display duration in seconds, default 5"
+        },
+        "category": {
+          "type": "string|nil",
+          "desc": "message category, default ''"
+        },
+        "icon": {
+          "type": "string|nil",
+          "desc": "icon"
+        },
+        "availableOptionsCount": {
+          "type": "integer|nil",
+          "desc": "number of options (choice menus)"
+        },
+        "currentOptionIndex": {
+          "type": "integer|nil",
+          "desc": "current option"
+        }
+      },
       "returns": [],
       "internal": false
     },
     "messageForSeatedPlayers": {
-      "desc": "Envoie le hook 'Message' une fois pour chaque joueur assis (playerInfo.seatedPlayers), avec le champ data.player. Accepte soit les mêmes arguments que message, soit une seule table {msg=..., ...} passée en premier argument (ttl nil).",
-      "params": {"msg": {"type": "string|table", "desc": "texte ou table de données avec champ msg"}, "ttl": {"type": "number|nil", "desc": "durée, défaut 5"}, "category": {"type": "string|nil", "desc": "catégorie, défaut ''"}, "icon": {"type": "string|nil", "desc": "icône"}, "availableOptionsCount": {"type": "integer|nil", "desc": "nombre d'options"}, "currentOptionIndex": {"type": "integer|nil", "desc": "option courante"}},
+      "desc": "Sends the 'Message' hook once for each seated player (playerInfo.seatedPlayers), with the field data.player. Accepts either the same arguments as message, or a single table {msg=..., ...} passed as the first argument (ttl nil).",
+      "params": {
+        "msg": {
+          "type": "string|table",
+          "desc": "text or data table with a msg field"
+        },
+        "ttl": {
+          "type": "number|nil",
+          "desc": "duration, default 5"
+        },
+        "category": {
+          "type": "string|nil",
+          "desc": "category, default ''"
+        },
+        "icon": {
+          "type": "string|nil",
+          "desc": "icon"
+        },
+        "availableOptionsCount": {
+          "type": "integer|nil",
+          "desc": "number of options"
+        },
+        "currentOptionIndex": {
+          "type": "integer|nil",
+          "desc": "current option"
+        }
+      },
       "returns": [],
       "internal": false
     },
     "graph": {
-      "desc": "Alimente l'app UI 'Generic Graph' (stream 'genericGraphSimple'). Chaque argument est une table {clé, valeur, échelle, unité, renderNegatives, couleur}; valeurs par défaut : clé '#i', valeur 0, échelle 1, unité '', renderNegatives false, couleur RGBA dégradé jet. Renvoie la liste normalisée. Exemple : graph({'foo',foo}, {'bar',bar,100}, {'baz',baz,nil,'m/s',false,nil}).",
-      "params": {"a": {"type": "table|nil", "desc": "premier graphe {clé, valeur, échelle, unité, renderNegatives, couleur} (ignoré si nil/false)"}, "...": {"type": "table", "desc": "autres graphes, même format"}},
-      "returns": [{"type": "table[]", "desc": "liste des graphes avec valeurs par défaut remplies"}],
+      "desc": "Feeds the 'Generic Graph' UI app (stream 'genericGraphSimple'). Each argument is a table {key, value, scale, unit, renderNegatives, color}; defaults: key '#i', value 0, scale 1, unit '', renderNegatives false, color RGBA jet gradient. Returns the normalized list. Example: graph({'foo',foo}, {'bar',bar,100}, {'baz',baz,nil,'m/s',false,nil}).",
+      "params": {
+        "a": {
+          "type": "table|nil",
+          "desc": "first graph {key, value, scale, unit, renderNegatives, color} (ignored if nil/false)"
+        },
+        "...": {
+          "type": "table",
+          "desc": "other graphs, same format"
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "list of graphs with default values filled in"
+        }
+      ],
       "internal": false
     },
     "graphWithCSV": {
-      "desc": "Comme graph, et enregistre aussi chaque appel comme une ligne d'un CSV en mémoire (csvlib). Le premier appel crée le fichier et fixe les colonnes (clé + unité). Écrire sur disque avec graphWithCSVWrite().",
-      "params": {"filename": {"type": "string|nil", "desc": "nom du fichier CSV (pris au premier appel ; défaut graphcsv.<date>.csv)"}, "...": {"type": "table", "desc": "graphes, mêmes arguments que graph"}},
+      "desc": "Like graph, and also records each call as a row of an in-memory CSV (csvlib). The first call creates the file and sets the columns (key + unit). Write to disk with graphWithCSVWrite().",
+      "params": {
+        "filename": {
+          "type": "string|nil",
+          "desc": "CSV file name (taken at the first call; default graphcsv.<date>.csv)"
+        },
+        "...": {
+          "type": "table",
+          "desc": "graphs, same arguments as graph"
+        }
+      },
       "returns": [],
       "internal": false
     },
     "graphWithCSVWrite": {
-      "desc": "Écrit le CSV accumulé par graphWithCSV dans le fichier ; journalise une erreur si aucun CSV n'existe.",
+      "desc": "Writes the CSV accumulated by graphWithCSV to the file; logs an error if no CSV exists.",
       "params": {},
       "returns": [],
       "internal": false

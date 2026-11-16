@@ -1,90 +1,141 @@
 {
   "path": "lua/ge/extensions/core/cameraModes/bigMapOrtho.lua",
-  "module": "Caméra globale 'bigMapOrtho' (isGlobal, hidden) : variante orthographique de la caméra de grande carte. Même logique que bigMap (zoom, déplacement, glisser de souris, recentrage animé, limites de carte), mais la vue est orthographique via core_orthoCamera : data.res.fov est utilisé comme taille de la vue ortho (fovMin 50, fovMax 1000, puis fovMax = taille moyenne de la carte). Choix du mode : freeroam/bigMapMode.lua choisit le nom 'bigMapOrtho' si useOrthoCamera est vrai (constante locale à false dans cette version : la caméra n'est donc normalement jamais activée) et l'active avec core_camera.setByName(0, 'bigMapOrtho', false, {initialCamData = {...}}). Elle n'apparaît pas dans le cycle de caméras. Le module renvoie un constructeur : require('core/cameraModes/bigMapOrtho')(options).",
+  "module": "'bigMapOrtho' global camera (isGlobal, hidden): orthographic variant of the big map camera. Same logic as bigMap (zoom, movement, mouse drag, animated recentering, map limits), but the view is orthographic via core_orthoCamera: data.res.fov is used as the size of the ortho view (fovMin 50, fovMax 1000, then fovMax = average map size). Mode selection: freeroam/bigMapMode.lua chooses the name 'bigMapOrtho' if useOrthoCamera is true (a local constant set to false in this version: so the camera is normally never activated) and activates it with core_camera.setByName(0, 'bigMapOrtho', false, {initialCamData = {...}}). It does not appear in the camera cycle. The module returns a constructor: require('core/cameraModes/bigMapOrtho')(options).",
   "usage": "core_camera.setByName(0, 'bigMapOrtho', false, {initialCamData = {pos = vec3(0,0,500), rot = quatFromDir(vec3(0,0,-1), vec3(0,1,0))}})",
   "notes": [
-    "setCustomData exige mapBoundaries (self.mapBoundaries:getExtents()) et active core_orthoCamera.enable(true, {size = tailleMoyenneCarte}).",
-    "À la désactivation (onCameraChanged(false)), core_orthoCamera.enable(false) est appelé.",
-    "update règle core_orthoCamera.setOptions({size = fov, nearClip, farClip}) : nearClip = altitude * lerp(0.5, 0.6, 1 - zoomRelatif), farClip = altitude * 5.",
-    "Différence avec bigMap : pas de data.res.nearClip, pas de fond perspective ; le zoom de palier appelle toujours freeroam_bigMapMode.updateMergeRadius.",
-    "Le même défaut de parenthèses que bigMap existe dans setCustomData (camLookAtPoint - initialCamData.pos or ...).",
-    "L'objet n'est pas exposé sous un autre nom que celui du fichier (bigMapOrtho)."
+    "setCustomData requires mapBoundaries (self.mapBoundaries:getExtents()) and enables core_orthoCamera.enable(true, {size = averageMapSize}).",
+    "On deactivation (onCameraChanged(false)), core_orthoCamera.enable(false) is called.",
+    "update sets core_orthoCamera.setOptions({size = fov, nearClip, farClip}): nearClip = altitude * lerp(0.5, 0.6, 1 - relativeZoom), farClip = altitude * 5.",
+    "Difference from bigMap: no data.res.nearClip, no perspective blending; the step zoom still calls freeroam_bigMapMode.updateMergeRadius.",
+    "The same missing-parentheses flaw as bigMap exists in setCustomData (camLookAtPoint - initialCamData.pos or ...).",
+    "The object is not exposed under any name other than the file's (bigMapOrtho)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Instance de la caméra bigMapOrtho. Champs : fovMin (50), fovMax (1000, remplacé par la taille de carte), angle, rotAngle, posTransitionTime (2.4), movementSpeed (20), nearClipValue, drawIcons, initialCamData, mapBoundaries, manualzoom, bigMapCamPosition, bigMapCamRotation.",
+      "desc": "Instance of the bigMapOrtho camera. Fields: fovMin (50), fovMax (1000, replaced by the map size), angle, rotAngle, posTransitionTime (2.4), movementSpeed (20), nearClipValue, drawIcons, initialCamData, mapBoundaries, manualzoom, bigMapCamPosition, bigMapCamRotation.",
       "functions": {
         "init": {
-          "desc": "Initialise les paramètres par défaut, marque la caméra globale et cachée, crée le zoom manuel.",
+          "desc": "Initializes the default parameters, marks the camera as global and hidden, creates the manual zoom.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "reset": {
-          "desc": "Remet le zoom manuel à zéro.",
+          "desc": "Resets the manual zoom to zero.",
           "params": {},
           "returns": []
         },
         "setLevelProperties": {
-          "desc": "Réinitialise (appelle init) pour appliquer les propriétés du niveau.",
+          "desc": "Reinitializes (calls init) to apply the level properties.",
           "params": {},
           "returns": []
         },
         "onCameraChanged": {
-          "desc": "Gain ou perte de focus : distance de rendu du véhicule portée à 5000 (puis restaurée) ; à la perte de focus, désactive la caméra orthographique (core_orthoCamera.enable(false)) et abandonne le glisser.",
-          "params": {"focused": {"type": "boolean", "desc": "true si la caméra devient active"}},
+          "desc": "Focus gain or loss: the vehicle's render distance is raised to 5000 (then restored); on focus loss, disables the orthographic camera (core_orthoCamera.enable(false)) and abandons the drag.",
+          "params": {
+            "focused": {
+              "type": "boolean",
+              "desc": "true if the camera becomes active"
+            }
+          },
           "returns": [],
           "internal": true
         },
         "zoom": {
-          "desc": "Applique un cran de zoom (molette) avec accélération et mémorise le point de sol sous la souris.",
-          "params": {"value": {"type": "number", "desc": "Cran de molette signé"}},
+          "desc": "Applies one zoom notch (wheel) with acceleration and stores the ground point under the mouse.",
+          "params": {
+            "value": {
+              "type": "number",
+              "desc": "Signed wheel notch"
+            }
+          },
           "returns": []
         },
         "setCustomData": {
-          "desc": "Reçoit {initialCamData = {pos, rot}}, calcule le point regardé, active la caméra orthographique à la taille moyenne de la carte et règle fovMax.",
-          "params": {"data": {"type": "table|nil", "desc": "{initialCamData = {pos = vec3, rot = quat}}"}},
+          "desc": "Receives {initialCamData = {pos, rot}}, computes the point looked at, enables the orthographic camera at the average map size and sets fovMax.",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "{initialCamData = {pos = vec3, rot = quat}}"
+            }
+          },
           "returns": []
         },
         "getZoomStage": {
-          "desc": "Niveau de zoom relatif en trois étages : 0, 0.5 ou 1.",
-          "params": {"fov": {"type": "number", "desc": "Taille ortho courante"}},
-          "returns": [{"type": "number", "desc": "0, 0.5 ou 1"}]
+          "desc": "Relative zoom level in three stages: 0, 0.5 or 1.",
+          "params": {
+            "fov": {
+              "type": "number",
+              "desc": "Current ortho size"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "0, 0.5 or 1"
+            }
+          ]
         },
         "panToWorldPos": {
-          "desc": "Recentre en douceur sur une position monde (bigMapPan.setTarget).",
-          "params": {"worldPos": {"type": "vec3", "desc": "Position monde"}},
+          "desc": "Smoothly recenters on a world position (bigMapPan.setTarget).",
+          "params": {
+            "worldPos": {
+              "type": "vec3",
+              "desc": "World position"
+            }
+          },
           "returns": []
         },
         "zoomToFactor": {
-          "desc": "Zoome en douceur vers un facteur donné.",
-          "params": {"factor": {"type": "number", "desc": "Facteur de zoom"}},
+          "desc": "Smoothly zooms toward a given factor.",
+          "params": {
+            "factor": {
+              "type": "number",
+              "desc": "Zoom factor"
+            }
+          },
           "returns": []
         },
         "update": {
-          "desc": "Calcul par frame (comme bigMap) puis règle les options de la caméra ortho (size, nearClip, farClip) via core_orthoCamera.setOptions.",
-          "params": {"data": {"type": "table", "desc": "Données de frame : dtReal, res {pos, rot, fov}"}},
-          "returns": [{"type": "boolean", "desc": "Toujours true"}]
+          "desc": "Per-frame computation (like bigMap) then sets the ortho camera options (size, nearClip, farClip) via core_orthoCamera.setOptions.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Frame data: dtReal, res {pos, rot, fov}"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Always true"
+            }
+          ]
         },
         "onMouseButton": {
-          "desc": "Début/fin du glisser de carte.",
+          "desc": "Start/end of the map drag.",
           "params": {
-            "buttonDown": {"type": "boolean", "desc": "true à l'appui"},
-            "mouseDragging": {"type": "boolean", "desc": "Non utilisé"}
+            "buttonDown": {
+              "type": "boolean",
+              "desc": "true on press"
+            },
+            "mouseDragging": {
+              "type": "boolean",
+              "desc": "Unused"
+            }
           },
           "returns": [],
           "internal": true
         },
         "onSerialize": {
-          "desc": "Convertit mapBoundaries (Box3F) en table avant rechargement Lua.",
+          "desc": "Converts mapBoundaries (Box3F) to a table before Lua reload.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "onDeserialized": {
-          "desc": "Après rechargement Lua : init puis reconstruit mapBoundaries en Box3F.",
+          "desc": "After Lua reload: init then rebuilds mapBoundaries as a Box3F.",
           "params": {},
           "returns": [],
           "internal": true

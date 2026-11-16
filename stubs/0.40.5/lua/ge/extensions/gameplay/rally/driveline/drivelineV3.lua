@@ -2,14 +2,14 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Driveline V3 renvoyée par le constructeur. Attributs : missionDir, rawDrivelinePoints, spline, finalDrivelinePoints, simplificationTolerance, properties, stats.
+--- Driveline V3 returned by the constructor. Attributes: missionDir, rawDrivelinePoints, spline, finalDrivelinePoints, simplificationTolerance, properties, stats.
 ---@class gameplay_rally_driveline_drivelineV3
 local gameplay_rally_driveline_drivelineV3 = {}
 
---- Projette p1 et p2 sur les segments de la driveline finale (projection la plus proche) et renvoie la plage de segments ordonnée : startIdx, startXnorm, endIdx, endXnorm (le début vient toujours en premier). nil si non résolu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:662
----@param p1 vec3 Premier point.
+--- Projects p1 and p2 onto the final driveline's segments (closest projection) and returns the ordered segment range: startIdx, startXnorm, endIdx, endXnorm (the start always comes first). nil if unresolved.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:662
+---@param p1 vec3 First point.
 ---@param p2 vec3 Second point.
 ---@return integer|nil  startIdx.
 ---@return number|nil  startXnorm.
@@ -17,137 +17,137 @@ local gameplay_rally_driveline_drivelineV3 = {}
 ---@return number|nil  endXnorm.
 function gameplay_rally_driveline_drivelineV3:_findSegmentRange(p1, p2) end
 
---- Distance le long de la driveline finale entre les projections de p1 et p2 (segments partiels de début et de fin calculés avec xnorm).
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:724
----@param p1 vec3 Premier point.
+--- Distance along the final driveline between the projections of p1 and p2 (partial start and end segments computed with xnorm).
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:724
+---@param p1 vec3 First point.
 ---@param p2 vec3 Second point.
----@return number  Distance en mètres (0 si non résolu).
+---@return number  Distance in meters (0 if unresolved).
 function gameplay_rally_driveline_drivelineV3:calculateDistanceBetweenPoints(p1, p2) end
 
---- Convertit des points de driveline en spline : positions, largeur constante, normales ; simplification RDP (tolérance simplificationTolerance). Journalise le taux de réduction.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:335
----@param drivelinePoints table[]|nil Points {pos, normal?} ; par défaut rawDrivelinePoints. S'ils sont fournis, ils remplacent rawDrivelinePoints.
----@return boolean  false s'il y a moins de 2 points.
+--- Converts driveline points to a spline: positions, constant width, normals; RDP simplification (simplificationTolerance tolerance). Logs the reduction ratio.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:335
+---@param drivelinePoints table[]|nil Points {pos, normal?}; rawDrivelinePoints by default. If provided, they replace rawDrivelinePoints.
+---@return boolean  false if fewer than 2 points.
 function gameplay_rally_driveline_drivelineV3:convertDrivelineToSpline(drivelinePoints) end
 
---- Génère finalDrivelinePoints à partir des points subdivisés de la spline (divPoints). Met finalDrivelinePoints à nil si la spline n'est pas prête.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:481
----@return boolean  true si des points finaux existent.
+--- Generates finalDrivelinePoints from the spline's subdivided points (divPoints). Sets finalDrivelinePoints to nil if the spline is not ready.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:481
+---@return boolean  true if final points exist.
 function gameplay_rally_driveline_drivelineV3:createDrivelineFromSpline() end
 
---- Convertit une liste de positions en points complets : orientation (quatFromDir depuis la direction vers le point suivant), ts = indice/5, chaînage prev/next/id, normale (SnaproadNormals.forwardNormalVec), pacenoteDistances et cachedPacenotes vides.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:418
----@param positions vec3[] Au moins 2 positions.
----@return table[]|nil  Points, nil si moins de 2 positions.
+--- Converts a list of positions into full points: orientation (quatFromDir from the direction toward the next point), ts = index/5, prev/next/id chaining, normal (SnaproadNormals.forwardNormalVec), empty pacenoteDistances and cachedPacenotes.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:418
+---@param positions vec3[] At least 2 positions.
+---@return table[]|nil  Points, nil if fewer than 2 positions.
 function gameplay_rally_driveline_drivelineV3:createDrivelinePointsFromPositions(positions) end
 
---- Crée une table de spline vide ({name, id, isDirty, isEnabled, isLoop, nodes, widths, nmls, divPoints, divWidths, tangents, binormals, normals, discMap}). L'id est un UUID si absent.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:65
----@param name string|nil Nom ('Driveline' par défaut).
----@param isLoop boolean|nil Spline fermée.
----@param id string|nil Identifiant.
----@return table  Spline vide.
+--- Creates an empty spline table ({name, id, isDirty, isEnabled, isLoop, nodes, widths, nmls, divPoints, divWidths, tangents, binormals, normals, discMap}). The id is a UUID if absent.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:65
+---@param name string|nil Name ('Driveline' by default).
+---@param isLoop boolean|nil Closed spline.
+---@param id string|nil Identifier.
+---@return table  Empty spline.
 function gameplay_rally_driveline_drivelineV3:createEmptySpline(name, isLoop, id) end
 
---- Copie profonde de la spline (nodes, widths, nmls et métadonnées simples) pour annuler/rétablir dans l'éditeur. Ne copie pas la géométrie secondaire.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:503
----@return table|nil  Copie de la spline.
+--- Deep copy of the spline (nodes, widths, nmls and simple metadata) for undo/redo in the editor. Does not copy the secondary geometry.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:503
+---@return table|nil  Copy of the spline.
 function gameplay_rally_driveline_drivelineV3:deepCopySpline() end
 
---- Renvoie un PointList construit à partir des points finaux (nil et avertissement s'il y en a moins de 2).
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:493
----@return table|nil  Instance de PointList.
+--- Returns a PointList built from the final points (nil and a warning if there are fewer than 2).
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:493
+---@return table|nil  PointList instance.
 function gameplay_rally_driveline_drivelineV3:getFinalPointList() end
 
---- Temps alloué pour la liaison, en secondes (liaisonAllocatedTimeMins x 60).
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:654
----@return number  Secondes.
+--- Time allocated for the liaison, in seconds (liaisonAllocatedTimeMins x 60).
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:654
+---@return number  Seconds.
 function gameplay_rally_driveline_drivelineV3:getLiaisonAllocatedTimeSecs() end
 
---- Liste ordonnée des points finaux couvrant l'intervalle entre p1 et p2 (extrémités de segments incluses).
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:713
----@param p1 vec3 Premier point.
+--- Ordered list of the final points covering the interval between p1 and p2 (segment endpoints included).
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:713
+---@param p1 vec3 First point.
 ---@param p2 vec3 Second point.
----@return table[]|nil  Points, ou nil si non résolu.
+---@return table[]|nil  Points, or nil if unresolved.
 function gameplay_rally_driveline_drivelineV3:getPointsBetween(p1, p2) end
 
---- Limite de vitesse de la driveline (propriété speedLimitKph).
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:650
+--- Driveline speed limit (speedLimitKph property).
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:650
 ---@return number  km/h.
 function gameplay_rally_driveline_drivelineV3:getSpeedLimitKph() end
 
---- Mémorise le dossier de mission et initialise l'état (tolérance de simplification par défaut, propriétés par défaut, aucune donnée chargée).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:41
----@param missionDir string Dossier de la mission.
+--- Stores the mission folder and initializes the state (default simplification tolerance, default properties, no data loaded).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:41
+---@param missionDir string Mission folder.
 function gameplay_rally_driveline_drivelineV3:init(missionDir) end
 
---- Charge la driveline depuis un fichier : spline si présente, sinon driveline finale ancienne convertie en spline puis régénérée.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:266
----@return boolean  true si chargée.
+--- Loads the driveline from a file: spline if present, otherwise the old final driveline converted to a spline then regenerated.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:266
+---@return boolean  true if loaded.
 function gameplay_rally_driveline_drivelineV3:loadDrivelineFromFile() end
 
---- Charge la spline depuis son fichier, calcule sa géométrie et génère les points finaux.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:176
----@return boolean  true si tout a réussi.
+--- Loads the spline from its file, computes its geometry and generates the final points.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:176
+---@return boolean  true if everything succeeded.
 function gameplay_rally_driveline_drivelineV3:loadDrivelineSplineFromFile() end
 
---- Charge l'ancienne driveline finale (liste de points [x,y,z], au moins 2) et en fait des points complets ; lit aussi les propriétés.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:228
----@return boolean  true si chargée.
+--- Loads the old final driveline (list of [x,y,z] points, at least 2) and turns it into full points; also reads the properties.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:228
+---@return boolean  true if loaded.
 function gameplay_rally_driveline_drivelineV3:loadFinalDrivelineFromFile() end
 
---- Pipeline complet : charge l'enregistrement recce, convertit en spline, calcule la géométrie, génère les points finaux.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:306
----@return boolean  true si toutes les étapes ont réussi.
+--- Full pipeline: loads the recce recording, converts to a spline, computes the geometry, generates the final points.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:306
+---@return boolean  true if all steps succeeded.
 function gameplay_rally_driveline_drivelineV3:loadFromRecording() end
 
---- Lit data.properties (speedLimitKph, liaisonAllocatedTimeMins, useRaycast, vertRayRaise) avec valeurs par défaut.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:86
----@param data table|nil Données JSON.
+--- Reads data.properties (speedLimitKph, liaisonAllocatedTimeMins, useRaycast, vertRayRaise) with default values.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:86
+---@param data table|nil JSON data.
 function gameplay_rally_driveline_drivelineV3:loadPropertiesFromData(data) end
 
---- Charge les points bruts enregistrés pendant la reconnaissance (DrivelineRecording.load) dans rawDrivelinePoints.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:209
----@return boolean  true si chargés.
+--- Loads the raw points recorded during the recce (DrivelineRecording.load) into rawDrivelinePoints.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:209
+---@return boolean  true if loaded.
 function gameplay_rally_driveline_drivelineV3:loadRecceRecording() end
 
---- Construit la spline à partir de données JSON (nodes, widths, nmls, properties, stats). Échoue si moins de 2 nœuds ou un nœud invalide.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:120
----@param data table Données lues d'un fichier de spline.
----@return boolean  true si chargée.
+--- Builds the spline from JSON data (nodes, widths, nmls, properties, stats). Fails if fewer than 2 nodes or an invalid node.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:120
+---@param data table Data read from a spline file.
+---@return boolean  true if loaded.
 function gameplay_rally_driveline_drivelineV3:loadSplineFromData(data) end
 
---- Dessine les points finaux en cylindres rouges semi-transparents avec piquets.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:587
+--- Draws the final points as semi-transparent red cylinders with stakes.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:587
 function gameplay_rally_driveline_drivelineV3:renderFinalDriveline() end
 
---- Dessine (debugDrawer) les points bruts : cylindres rose-violet entre points et petits piquets verticaux. À appeler à chaque frame.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:537
+--- Draws (debugDrawer) the raw points: pink-purple cylinders between points and small vertical stakes. Call every frame.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:537
 function gameplay_rally_driveline_drivelineV3:renderRawDriveline() end
 
---- Dessine la courbe lissée (divPoints) comme un prisme bleu de la largeur d'un véhicule.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:563
----@param lineWidth number|nil Largeur du prisme en m (1,945 par défaut).
+--- Draws the smoothed curve (divPoints) as a blue prism the width of a vehicle.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:563
+---@param lineWidth number|nil Prism width in m (1.945 by default).
 function gameplay_rally_driveline_drivelineV3:renderSmoothCurve(lineWidth) end
 
---- Dessine la spline éditable (outils d'éditeur rSpline) avec marqueurs de début et de fin ; pour un seul nœud, dessine la sphère du nœud.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:613
----@param selectedNodeIdx integer|nil Nœud sélectionné (surligné).
+--- Draws the editable spline (rSpline editor tools) with start and end markers; for a single node, draws the node's sphere.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:613
+---@param selectedNodeIdx integer|nil Selected node (highlighted).
 function gameplay_rally_driveline_drivelineV3:renderSpline(selectedNodeIdx) end
 
---- Écrit la spline dans le fichier de spline de la mission (dossier créé au besoin).
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:145
----@return boolean  true si l'écriture a réussi.
+--- Writes the spline to the mission's spline file (folder created if needed).
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:145
+---@return boolean  true if the write succeeded.
 function gameplay_rally_driveline_drivelineV3:saveSplineToFile() end
 
---- Sérialise la spline courante en table JSON {version=1, name, isLoop, nodes, widths, nmls, properties, stats}. Renvoie nil si moins de 2 nœuds.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:97
----@return table|nil  Données de la spline.
+--- Serializes the current spline into a JSON table {version=1, name, isLoop, nodes, widths, nmls, properties, stats}. Returns nil if fewer than 2 nodes.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:97
+---@return table|nil  Spline data.
 function gameplay_rally_driveline_drivelineV3:serializeSpline() end
 
---- Recalcule la géométrie secondaire de la spline (points subdivisés divPoints, tangentes, normales...) conforme au terrain via zSnap.conformSplineGeometry, et sa longueur roadLength.
----Source : lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:383
----@return boolean  false si pas de spline ou moins de 2 nœuds.
+--- Recomputes the spline's secondary geometry (subdivided points divPoints, tangents, normals...) conforming to the terrain via zSnap.conformSplineGeometry, and its roadLength length.
+---Source: lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua:383
+---@return boolean  false if no spline or fewer than 2 nodes.
 function gameplay_rally_driveline_drivelineV3:updateSplineGeometry() end
 

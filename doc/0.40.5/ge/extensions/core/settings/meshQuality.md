@@ -1,20 +1,20 @@
 # `core_settings_meshQuality`
 
-*Fichier : `lua/ge/extensions/core/settings/meshQuality.lua` · VM : Game Engine (GE) · 34 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/settings/meshQuality.lua` · VM: Game Engine (GE) · 34 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_settings_meshQuality` : `extensions.load("core_settings_meshQuality")`, puis la globale `core_settings_meshQuality`
+**Access:** extension `core_settings_meshQuality`: `extensions.load("core_settings_meshQuality")`, then the global `core_settings_meshQuality`
 
-Préréglages de qualité des maillages (niveau de détail des shapes), consommés par graphicsQualityGroup. Chaque niveau fixe $pref::TS::detailAdjust et $pref::TS::skipRenderDLs.
+Mesh quality presets (shape level of detail), consumed by graphicsQualityGroup. Each level sets $pref::TS::detailAdjust and $pref::TS::skipRenderDLs.
 
-## Remarques
+## Notes
 
-- skipRenderDLs vaut 0 à tous les niveaux. Pas de hook onApply.
+- skipRenderDLs is 0 at all levels. No onApply hook.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `qualityLevels` | table<string, table<string, number>> | Niveaux Lowest (detailAdjust 0.5), Low (0.75), Normal (1.0), High (1.5), Ultra (2.0), clé $pref::TS::detailAdjust ; $pref::TS::skipRenderDLs = 0 partout. |
+| `qualityLevels` | table<string, table<string, number>> | Levels Lowest (detailAdjust 0.5), Low (0.75), Normal (1.0), High (1.5), Ultra (2.0), key $pref::TS::detailAdjust; $pref::TS::skipRenderDLs = 0 everywhere. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/settings/meshQuality.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/settings/meshQuality.lua`.*

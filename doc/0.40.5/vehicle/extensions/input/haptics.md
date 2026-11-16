@@ -1,90 +1,90 @@
 # `input_haptics`
 
-*Fichier : `lua/vehicle/extensions/input/haptics.lua` · VM : Véhicule · 197 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/input/haptics.lua` · VM: Vehicle · 197 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `input_haptics` : `extensions.load (VM véhicule)("input_haptics")`, puis la globale `input_haptics`
+**Access:** extension `input_haptics`: `extensions.load (vehicle VM)("input_haptics")`, then the global `input_haptics`
 
-Génère les vibrations de manette (retour haptique) à partir de la dynamique du véhicule : secousses (jerk) de l'accélération, énergie de glissement des roues, roues bloquées au freinage (gâchette de frein) et roues motrices qui patinent (gâchette d'accélérateur). Les forces sont envoyées au pilote de périphérique via hydros.getForceFeedbackFunction() sur les identifiants FFB fournis. Appelé par le système d'entrée, pas par un moddeur en général.
+Generates gamepad vibrations (haptic feedback) from vehicle dynamics: acceleration jerks, wheel slip energy, locked wheels under braking (brake trigger) and spinning driven wheels (throttle trigger). The forces are sent to the device driver via hydros.getForceFeedbackFunction() on the supplied FFB ids. Called by the input system, not by a modder in general.
 
-## Exemple
+## Example
 
 ```lua
 haptics.setFFBIDs(idMoteur, idGachetteAccel, idGachetteFrein)
 haptics.setFFBPeriod(1 / 30)
 ```
 
-## Remarques
+## Notes
 
-- La mise à jour n'a lieu que lorsque l'horloge murale (os.clockhp) dépasse nextDriverUpdate (période FFB, défaut 1/30 s) : les pilotes de manettes ne se soucient pas du temps de simulation.
-- Un identifiant FFB à -1 désactive la sortie correspondante. Les gâchettes ne reçoivent de la force que si hydros.enableThrottleForceFeedback / enableBrakeForceFeedback sont vrais ; sinon elles reçoivent 0.
-- Les vibrations démarrent à 20 % de hydros.ffbSpeedFast (vitesse normalisée) pour éviter les vibrations à l'arrêt. L'intensité globale est multipliée par hydros.wheelFFBForceCoef / 100.
-- Seuils de secousse : latéral 50, longitudinal 20, vertical 15 (unité de jerk = accélération/s). Le glissement minimal pris en compte est wheelSlipMin = 15000 (énergie de glissement).
-- Le frein ABS actif désactive le comptage des roues bloquées ; absTrigger est calculé mais n'est pas utilisé ensuite.
-- Anomalie : setJerkMin affecte la variable globale `jerkMin` qui n'est lue nulle part (les seuils réels sont jerkMinX/Y/Z) : sans effet.
-- Anomalie : setFFBSpeedFast (non exporté) affecte une variable globale ffbSpeedFast jamais utilisée ; le code lit hydros.ffbSpeedFast.
+- The update only happens when the wall clock (os.clockhp) exceeds nextDriverUpdate (FFB period, default 1/30 s): gamepad drivers do not care about simulation time.
+- An FFB id of -1 disables the corresponding output. The triggers only receive force if hydros.enableThrottleForceFeedback / enableBrakeForceFeedback are true; otherwise they receive 0.
+- Vibrations start at 20% of hydros.ffbSpeedFast (normalized speed) to avoid vibrations at standstill. The overall intensity is multiplied by hydros.wheelFFBForceCoef / 100.
+- Jerk thresholds: lateral 50, longitudinal 20, vertical 15 (jerk unit = acceleration/s). The minimum slip taken into account is wheelSlipMin = 15000 (slip energy).
+- Active ABS braking disables the locked-wheel counting; absTrigger is computed but not used afterwards.
+- Anomaly: setJerkMin sets the global variable `jerkMin` which is read nowhere (the real thresholds are jerkMinX/Y/Z): no effect.
+- Anomaly: setFFBSpeedFast (not exported) sets a global variable ffbSpeedFast that is never used; the code reads hydros.ffbSpeedFast.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `input_haptics.initHaptics()` | Recense les roues motrices (powertrain.getPoweredWheelNames) et le nombre de roues. À appeler après le chargement du véhicule. *(interne)* | 48 |
-| `input_haptics.setFFBIDs(_FFBID, _FFBID_accelerate, _FFBID_brake)` | Définit les identifiants des sorties de retour de force (-1 = désactivée). *(interne)* | 33 |
-| `input_haptics.setFFBPeriod(period)` | Définit la période entre deux envois au pilote (secondes) et programme le prochain envoi. *(interne)* | 39 |
-| `input_haptics.setJerkForceMultiplier(multiplier)` | Multiplicateur de la composante de vibration due aux secousses (debug). | 182 |
-| `input_haptics.setJerkMin(min)` | Prévu pour régler le seuil de secousse ; sans effet réel (voir notes). | 184 |
-| `input_haptics.setWheelSlipForceMultiplier(multiplier)` | Multiplicateur de la composante de vibration due au glissement des roues (debug). | 181 |
-| `input_haptics.setWheelSlipMin(min)` | Seuil minimal d'énergie de glissement pour déclencher la vibration (debug). | 183 |
-| `input_haptics.vibrationUpdate(dt)` | Calcule et envoie les forces de vibration (moteur principal, gâchette d'accélérateur, gâchette de frein) si la période FFB est écoulée. *(interne)* | 60 |
+| `input_haptics.initHaptics()` | Lists the driven wheels (powertrain.getPoweredWheelNames) and the wheel count. To be called after the vehicle has loaded. *(internal)* | 48 |
+| `input_haptics.setFFBIDs(_FFBID, _FFBID_accelerate, _FFBID_brake)` | Sets the ids of the force feedback outputs (-1 = disabled). *(internal)* | 33 |
+| `input_haptics.setFFBPeriod(period)` | Sets the period between two sends to the driver (seconds) and schedules the next send. *(internal)* | 39 |
+| `input_haptics.setJerkForceMultiplier(multiplier)` | Multiplier of the vibration component due to jerks (debug). | 182 |
+| `input_haptics.setJerkMin(min)` | Intended to set the jerk threshold; no real effect (see notes). | 184 |
+| `input_haptics.setWheelSlipForceMultiplier(multiplier)` | Multiplier of the vibration component due to wheel slip (debug). | 181 |
+| `input_haptics.setWheelSlipMin(min)` | Minimum slip energy threshold to trigger vibration (debug). | 183 |
+| `input_haptics.vibrationUpdate(dt)` | Computes and sends the vibration forces (main motor, throttle trigger, brake trigger) if the FFB period has elapsed. *(internal)* | 60 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `input_haptics.setFFBIDs(_FFBID, _FFBID_accelerate, _FFBID_brake)`
 
-Définit les identifiants des sorties de retour de force (-1 = désactivée).
+Sets the ids of the force feedback outputs (-1 = disabled).
 
-- `_FFBID` (*integer*) : Sortie de vibration principale.
-- `_FFBID_accelerate` (*integer*) : Sortie de la gâchette d'accélérateur.
-- `_FFBID_brake` (*integer*) : Sortie de la gâchette de frein.
+- `_FFBID` (*integer*) : Main vibration output.
+- `_FFBID_accelerate` (*integer*) : Throttle trigger output.
+- `_FFBID_brake` (*integer*) : Brake trigger output.
 
 #### `input_haptics.setFFBPeriod(period)`
 
-Définit la période entre deux envois au pilote (secondes) et programme le prochain envoi.
+Sets the period between two sends to the driver (seconds) and schedules the next send.
 
-- `period` (*number*) : Période en secondes (défaut 1/30).
+- `period` (*number*) : Period in seconds (default 1/30).
 
 #### `input_haptics.setJerkForceMultiplier(multiplier)`
 
-Multiplicateur de la composante de vibration due aux secousses (debug).
+Multiplier of the vibration component due to jerks (debug).
 
-- `multiplier` (*number*) : Défaut 1.
+- `multiplier` (*number*) : Default 1.
 
 #### `input_haptics.setJerkMin(min)`
 
-Prévu pour régler le seuil de secousse ; sans effet réel (voir notes).
+Intended to set the jerk threshold; no real effect (see notes).
 
-- `min` (*number*) : Seuil (non utilisé).
+- `min` (*number*) : Threshold (unused).
 
 #### `input_haptics.setWheelSlipForceMultiplier(multiplier)`
 
-Multiplicateur de la composante de vibration due au glissement des roues (debug).
+Multiplier of the vibration component due to wheel slip (debug).
 
-- `multiplier` (*number*) : Défaut 1.
+- `multiplier` (*number*) : Default 1.
 
 #### `input_haptics.setWheelSlipMin(min)`
 
-Seuil minimal d'énergie de glissement pour déclencher la vibration (debug).
+Minimum slip energy threshold to trigger vibration (debug).
 
-- `min` (*number*) : Défaut 15000.
+- `min` (*number*) : Default 15000.
 
 #### `input_haptics.vibrationUpdate(dt)`
 
-Calcule et envoie les forces de vibration (moteur principal, gâchette d'accélérateur, gâchette de frein) si la période FFB est écoulée.
+Computes and sends the vibration forces (main motor, throttle trigger, brake trigger) if the FFB period has elapsed.
 
-- `dt` (*number*) : Pas de temps de simulation en secondes.
+- `dt` (*number*) : Simulation time step in seconds.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getSmoothRefVelocityXYZ`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/input/haptics.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/input/haptics.lua`.*

@@ -1,37 +1,37 @@
 # `introspection`
 
-*Fichier : `lua/common/introspection.lua` · VM : Commun (GE + véhicule) · 86 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/introspection.lua` · VM: Common (GE + vehicle) · 86 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("introspection")`
+**Access:** `require("introspection")`
 
-Outil de debug qui parcourt _G et les modules standard (table, math, string, coroutine, os, io, debug, package) pour lister les fonctions des classes exposées par le moteur (tables ayant un champ ___type de la forme class<...> ou static_class<...>). S'utilise à la console : require('introspection').gather_methods().
+Debug tool that walks _G and the standard modules (table, math, string, coroutine, os, io, debug, package) to list the functions of the classes exposed by the engine (tables with a ___type field of the form class<...> or static_class<...>). Used from the console: require('introspection').gather_methods().
 
-## Exemple
+## Example
 
 ```lua
 local m = require('introspection').gather_methods()
 for _, e in ipairs(m) do print(e.class_name, e.method_name, e.is_static) end
 ```
 
-## Remarques
+## Notes
 
-- La globale 'extensions' est ignorée explicitement.
-- Les clés commençant par '__' sont ignorées.
-- signature vaut "nom (what)" où what vient de debug.getinfo(f, 'S') (Lua, C, main).
+- The global 'extensions' is explicitly ignored.
+- Keys starting with '__' are ignored.
+- signature is "name (what)" where what comes from debug.getinfo(f, 'S') (Lua, C, main).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `introspection.gather_methods()` | Construit et renvoie la liste des méthodes de toutes les classes C++/Lua exposées (et des modules standard), avec nom de classe, nom de méthode, signature et indicateur statique. | 10 |
+| `introspection.gather_methods()` | Builds and returns the list of methods of all exposed C++/Lua classes (and standard modules), with class name, method name, signature and static flag. | 10 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `introspection.gather_methods()`
 
-Construit et renvoie la liste des méthodes de toutes les classes C++/Lua exposées (et des modules standard), avec nom de classe, nom de méthode, signature et indicateur statique.
+Builds and returns the list of methods of all exposed C++/Lua classes (and standard modules), with class name, method name, signature and static flag.
 
-- **renvoie** : table[] Tableau d'entrées {class_name=string, method_name=string, signature=string, is_static=boolean}.
+- **returns**: table[] Array of entries {class_name=string, method_name=string, signature=string, is_static=boolean}.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/introspection.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/introspection.lua`.*

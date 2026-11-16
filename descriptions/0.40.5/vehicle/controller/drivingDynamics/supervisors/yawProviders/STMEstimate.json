@@ -1,36 +1,157 @@
 {
   "path": "lua/vehicle/controller/drivingDynamics/supervisors/yawProviders/STMEstimate.lua",
-  "module": "Fournisseur de lacet attendu (type \"auxiliary\", defaultOrder 80, providerOrder 20) pour le superviseur yawControl. Il estime le taux de lacet que le conducteur demande avec le modèle de bicyclette à rigidité de dérive (angle de roue avant, empattement, vitesse caractéristique), limité par une accélération latérale maximale. S'enregistre via yawControl.registerYawProvider ; si yawControl est absent, il se désactive.",
+  "module": "Expected yaw provider (type \"auxiliary\", defaultOrder 80, providerOrder 20) for the yawControl supervisor. It estimates the yaw rate the driver is requesting using the bicycle model with cornering stiffness (front wheel angle, wheelbase, characteristic speed), limited by a maximum lateral acceleration. Registers via yawControl.registerYawProvider; if yawControl is absent, it disables itself.",
   "notes": [
-    "Clé jbeam : maxLateralAcceleration (défaut 12 m/s²).",
-    "Formule : min( |angleRoueAvant| / empattement * v / (1 + v² / vc²), maxLateralAcceleration / v ) avec v = vitesse virtuelle si virtualSpeed est entièrement fiable (>= 1) sinon vitesse de roue. Le résultat est toujours positif (le signe est géré par yawControl).",
-    "Incohérence : yawControl appelle yawProvider.calculateExpectedYaw(speed, dt), mais la fonction est déclarée calculateExpectedYaw(dt) : le paramètre dt reçoit en fait la vitesse. Sans conséquence car il n'est pas utilisé.",
-    "Paramètres modifiables : isEnabled, maxLateralAcceleration. isEnabled n'est pas consulté dans calculateExpectedYaw (le fournisseur répond toujours)."
+    "jbeam key: maxLateralAcceleration (default 12 m/s²).",
+    "Formula: min( |frontWheelAngle| / wheelbase * v / (1 + v² / vc²), maxLateralAcceleration / v ) with v = virtual speed if virtualSpeed is fully trusted (>= 1) otherwise wheel speed. The result is always positive (the sign is handled by yawControl).",
+    "Inconsistency: yawControl calls yawProvider.calculateExpectedYaw(speed, dt), but the function is declared calculateExpectedYaw(dt): the dt parameter actually receives the speed. Harmless since it is not used.",
+    "Modifiable parameters: isEnabled, maxLateralAcceleration. isEnabled is not checked in calculateExpectedYaw (the provider always answers)."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution par défaut (80)."},
-    "providerOrder": {"type": "number", "desc": "Priorité parmi les fournisseurs de lacet (20)."},
-    "isActive": {"type": "boolean", "desc": "Vrai après init, faux si yawControl est absent."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "Default execution order (80)."
+    },
+    "providerOrder": {
+      "type": "number",
+      "desc": "Priority among the yaw providers (20)."
+    },
+    "isActive": {
+      "type": "boolean",
+      "desc": "True after init, false if yawControl is absent."
+    }
   },
   "functions": {
-    "init": {"desc": "Passe isActive à true.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "initSecondStage": {"desc": "S'enregistre auprès de yawControl et lit maxLateralAcceleration.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "initLastStage": {"desc": "Ne fait rien.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "reset": {"desc": "Ne fait rien.", "params": {}, "returns": [], "internal": true},
-    "updateGFX": {"desc": "Vide (version debug : envoie isEnabled).", "params": {"dt": {"type": "number", "desc": "Pas de temps graphique (s)."}}, "returns": [], "internal": true},
-    "calculateExpectedYaw": {
-      "desc": "Renvoie le taux de lacet attendu (rad/s, positif) d'après l'angle de roue avant et la vitesse ; appelé par yawControl à chaque pas fixe.",
-      "params": {"dt": {"type": "number", "desc": "Déclaré dt mais reçoit la vitesse (voir notes) ; non utilisé."}},
-      "returns": [{"type": "number", "desc": "Lacet attendu en rad/s."}],
+    "init": {
+      "desc": "Sets isActive to true.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "returns": [],
       "internal": true
     },
-    "setDebugMode": {"desc": "Active/désactive les paquets de debug.", "params": {"debugEnabled": {"type": "boolean", "desc": "Vrai pour activer."}}, "returns": []},
-    "registerCMU": {"desc": "Mémorise la référence au CMU.", "params": {"cmu": {"type": "table", "desc": "Contrôleur CMU."}}, "returns": [], "internal": true},
-    "shutdown": {"desc": "Désactive le fournisseur.", "params": {}, "returns": []},
-    "setParameters": {"desc": "Applique isEnabled et maxLateralAcceleration.", "params": {"parameters": {"type": "table<string, any>", "desc": "Paramètres à appliquer."}}, "returns": []},
-    "setConfig": {"desc": "Remplace la configuration.", "params": {"configTable": {"type": "table", "desc": "Table {isEnabled, maxLateralAcceleration}."}}, "returns": []},
-    "getConfig": {"desc": "Renvoie une copie de la configuration.", "params": {}, "returns": [{"type": "table", "desc": "Copie."}]},
-    "sendConfigData": {"desc": "Envoie la configuration au CMU.", "params": {}, "returns": []}
+    "initSecondStage": {
+      "desc": "Registers with yawControl and reads maxLateralAcceleration.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initLastStage": {
+      "desc": "Does nothing.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Does nothing.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Empty (debug version: sends isEnabled).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Graphics time step (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "calculateExpectedYaw": {
+      "desc": "Returns the expected yaw rate (rad/s, positive) from the front wheel angle and the speed; called by yawControl at every fixed step.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Declared as dt but receives the speed (see notes); unused."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Expected yaw in rad/s."
+        }
+      ],
+      "internal": true
+    },
+    "setDebugMode": {
+      "desc": "Enables/disables debug packets.",
+      "params": {
+        "debugEnabled": {
+          "type": "boolean",
+          "desc": "True to enable."
+        }
+      },
+      "returns": []
+    },
+    "registerCMU": {
+      "desc": "Stores the reference to the CMU.",
+      "params": {
+        "cmu": {
+          "type": "table",
+          "desc": "CMU controller."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "shutdown": {
+      "desc": "Disables the provider.",
+      "params": {},
+      "returns": []
+    },
+    "setParameters": {
+      "desc": "Applies isEnabled and maxLateralAcceleration.",
+      "params": {
+        "parameters": {
+          "type": "table<string, any>",
+          "desc": "Parameters to apply."
+        }
+      },
+      "returns": []
+    },
+    "setConfig": {
+      "desc": "Replaces the configuration.",
+      "params": {
+        "configTable": {
+          "type": "table",
+          "desc": "Table {isEnabled, maxLateralAcceleration}."
+        }
+      },
+      "returns": []
+    },
+    "getConfig": {
+      "desc": "Returns a copy of the configuration.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy."
+        }
+      ]
+    },
+    "sendConfigData": {
+      "desc": "Sends the configuration to the CMU.",
+      "params": {},
+      "returns": []
+    }
   }
 }

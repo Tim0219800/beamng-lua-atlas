@@ -1,92 +1,92 @@
 # `telemetry_trackers_level`
 
-*Fichier : `lua/ge/extensions/telemetry/trackers/level.lua` · VM : Game Engine (GE) · 135 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/trackers/level.lua` · VM: Game Engine (GE) · 135 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_trackers_level` : `extensions.load("telemetry_trackers_level")`, puis la globale `telemetry_trackers_level`
+**Access:** extension `telemetry_trackers_level`: `extensions.load("telemetry_trackers_level")`, then the global `telemetry_trackers_level`
 
-Suiveur de télémétrie des niveaux et des scénarios : quels niveaux sont joués et combien de temps (activité « levelLoaded »), plus le cycle de vie des scénarios (activité « scenarioRunning » avec le résultat). Le temps de chargement du niveau (loadMs) est ajouté à la fin de l'activité levelLoaded, car le chargement n'est terminé que bien après son ouverture. Le suivi par image des collisions et dégâts qui existait ici a été retiré (trop d'évènements).
+Levels and scenarios telemetry tracker: which levels are played and for how long (activity "levelLoaded"), plus the scenario lifecycle (activity "scenarioRunning" with the result). The level load time (loadMs) is added at the end of the levelLoaded activity, because loading is only finished well after its opening. The per-frame tracking of collisions and damage that existed here was removed (too many events).
 
-## Remarques
+## Notes
 
-- loadMs va de onClientPreStartMission à l'état 2 de onWorldReadyState. L'attente des matériaux dans l'état 2 abandonne après 5 s : un chargement très lent rapporte le moment de l'abandon. Un niveau sans véhicule joueur atteint l'état 2 immédiatement et semble rapide.
-- Entrer dans un niveau où le jeu se trouve déjà saute onClientPreStartMission : le niveau est alors rapporté sans temps de chargement plutôt qu'avec celui du précédent.
-- Les scénarios flowgraph n'atteignent jamais scenario_scenarios (onScenarioLoaded ne se déclenche pas pour eux) et n'ont pas de signal de fin : onFlowgraphScenarioStarted est le même callback que onScenarioLoaded et endLevel les clôt avec le résultat « aborted ».
-- Résultats de scénario : success, failed (pooledResults[1].failed), restarted, aborted.
-- À la fin d'un niveau, le suiveur demande l'écriture du rapport (telemetry_core.triggerReportWrite).
+- loadMs goes from onClientPreStartMission to state 2 of onWorldReadyState. The wait for materials in state 2 gives up after 5 s: a very slow load reports the moment of giving up. A level without a player vehicle reaches state 2 immediately and seems fast.
+- Entering a level the game is already in skips onClientPreStartMission: the level is then reported without a load time rather than with that of the previous one.
+- Flowgraph scenarios never reach scenario_scenarios (onScenarioLoaded does not fire for them) and have no end signal: onFlowgraphScenarioStarted is the same callback as onScenarioLoaded and endLevel closes them with the result "aborted".
+- Scenario results: success, failed (pooledResults[1].failed), restarted, aborted.
+- At the end of a level, the tracker asks for the report to be written (telemetry_core.triggerReportWrite).
 
-**Dépendances (chargées avant) :** `telemetry_core`
+**Dependencies (loaded first):** `telemetry_core`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_trackers_level.onClientEndMission(levelPath)` | Hook appelé à la sortie du niveau : termine scénario éventuel et niveau. *(interne)* *(hook)* | 84 |
-| `telemetry_trackers_level.onClientPreStartMission(levelPath)` | Hook appelé tout en haut de la chaîne de chargement (avant datablocks, objets et physique), à chaque chargement y compris les redémarrages : mémorise l'heure de début de chargement. *(interne)* *(hook)* | 57 |
-| `telemetry_trackers_level.onClientStartMission(levelPath)` | Hook appelé au démarrage du niveau (écran de chargement encore affiché) : démarre l'activité levelLoaded. *(interne)* *(hook)* | 62 |
-| `telemetry_trackers_level.onExit()` | Hook appelé à la fermeture du jeu : ferme les activités ouvertes pour ne pas laisser de débuts sans fin dans le fichier de session. *(interne)* *(hook)* | 114 |
-| `telemetry_trackers_level.onExtensionLoaded()` | Hook appelé au chargement : déchargement manuel ; si un niveau est déjà chargé, démarre l'activité immédiatement. *(interne)* *(hook)* | 103 |
-| `telemetry_trackers_level.onExtensionUnloaded()` | Hook appelé au déchargement : un rechargement Lua détruit les suiveurs sans onExit, donc les activités sont fermées ici aussi (même fonction que endLevel). *(interne)* *(hook)* | 39 |
-| `telemetry_trackers_level.onFlowgraphScenarioStarted(scenario)` | Hook appelé au démarrage d'un scénario flowgraph ; même fonction que onScenarioLoaded. *(interne)* *(hook)* | 88 |
-| `telemetry_trackers_level.onScenarioFinished(scenario)` | Hook appelé à la fin d'un scénario : termine l'activité avec « failed » ou « success » selon pooledResults[1].failed. *(interne)* *(hook)* | 93 |
-| `telemetry_trackers_level.onScenarioLoaded(scenario)` | Hook appelé au chargement d'un scénario : démarre l'activité scenarioRunning (nom et fichier source). *(interne)* *(hook)* | 88 |
-| `telemetry_trackers_level.onScenarioRestarted(scenario)` | Hook appelé au redémarrage d'un scénario : termine l'activité avec « restarted » puis en démarre une nouvelle. *(interne)* *(hook)* | 98 |
-| `telemetry_trackers_level.onWorldReadyState(state)` | Hook appelé aux changements d'état de préparation du monde. L'état 2 est le premier moment où le joueur peut conduire (caméra avec son objet de contrôle, matériaux du véhicule prêts) : calcule loadMs. *(interne)* *(hook)* | 77 |
+| `telemetry_trackers_level.onClientEndMission(levelPath)` | Hook called on leaving the level: ends any scenario and the level. *(internal)* *(hook)* | 84 |
+| `telemetry_trackers_level.onClientPreStartMission(levelPath)` | Hook called at the very top of the loading chain (before datablocks, objects and physics), on every load including restarts: stores the load start time. *(internal)* *(hook)* | 57 |
+| `telemetry_trackers_level.onClientStartMission(levelPath)` | Hook called when the level starts (loading screen still displayed): starts the levelLoaded activity. *(internal)* *(hook)* | 62 |
+| `telemetry_trackers_level.onExit()` | Hook called when the game closes: closes the open activities so as not to leave starts without ends in the session file. *(internal)* *(hook)* | 114 |
+| `telemetry_trackers_level.onExtensionLoaded()` | Hook called on load: manual unload; if a level is already loaded, starts the activity immediately. *(internal)* *(hook)* | 103 |
+| `telemetry_trackers_level.onExtensionUnloaded()` | Hook called on unload: a Lua reload destroys the trackers without onExit, so the activities are also closed here (same function as endLevel). *(internal)* *(hook)* | 39 |
+| `telemetry_trackers_level.onFlowgraphScenarioStarted(scenario)` | Hook called when a flowgraph scenario starts; same function as onScenarioLoaded. *(internal)* *(hook)* | 88 |
+| `telemetry_trackers_level.onScenarioFinished(scenario)` | Hook called at the end of a scenario: ends the activity with "failed" or "success" according to pooledResults[1].failed. *(internal)* *(hook)* | 93 |
+| `telemetry_trackers_level.onScenarioLoaded(scenario)` | Hook called when a scenario loads: starts the scenarioRunning activity (name and source file). *(internal)* *(hook)* | 88 |
+| `telemetry_trackers_level.onScenarioRestarted(scenario)` | Hook called when a scenario restarts: ends the activity with "restarted" then starts a new one. *(internal)* *(hook)* | 98 |
+| `telemetry_trackers_level.onWorldReadyState(state)` | Hook called on world readiness state changes. State 2 is the first moment the player can drive (camera with its control object, vehicle materials ready): computes loadMs. *(internal)* *(hook)* | 77 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_trackers_level.onClientEndMission(levelPath)`
 
-Hook appelé à la sortie du niveau : termine scénario éventuel et niveau.
+Hook called on leaving the level: ends any scenario and the level.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `telemetry_trackers_level.onClientPreStartMission(levelPath)`
 
-Hook appelé tout en haut de la chaîne de chargement (avant datablocks, objets et physique), à chaque chargement y compris les redémarrages : mémorise l'heure de début de chargement.
+Hook called at the very top of the loading chain (before datablocks, objects and physics), on every load including restarts: stores the load start time.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `telemetry_trackers_level.onClientStartMission(levelPath)`
 
-Hook appelé au démarrage du niveau (écran de chargement encore affiché) : démarre l'activité levelLoaded.
+Hook called when the level starts (loading screen still displayed): starts the levelLoaded activity.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `telemetry_trackers_level.onFlowgraphScenarioStarted(scenario)`
 
-Hook appelé au démarrage d'un scénario flowgraph ; même fonction que onScenarioLoaded.
+Hook called when a flowgraph scenario starts; same function as onScenarioLoaded.
 
-- `scenario` (*table*) : Scénario.
+- `scenario` (*table*) : Scenario.
 
 #### `telemetry_trackers_level.onScenarioFinished(scenario)`
 
-Hook appelé à la fin d'un scénario : termine l'activité avec « failed » ou « success » selon pooledResults[1].failed.
+Hook called at the end of a scenario: ends the activity with "failed" or "success" according to pooledResults[1].failed.
 
-- `scenario` (*table*) : Scénario terminé.
+- `scenario` (*table*) : Finished scenario.
 
 #### `telemetry_trackers_level.onScenarioLoaded(scenario)`
 
-Hook appelé au chargement d'un scénario : démarre l'activité scenarioRunning (nom et fichier source).
+Hook called when a scenario loads: starts the scenarioRunning activity (name and source file).
 
-- `scenario` (*table*) : Scénario (name, sourceFile).
+- `scenario` (*table*) : Scenario (name, sourceFile).
 
 #### `telemetry_trackers_level.onScenarioRestarted(scenario)`
 
-Hook appelé au redémarrage d'un scénario : termine l'activité avec « restarted » puis en démarre une nouvelle.
+Hook called when a scenario restarts: ends the activity with "restarted" then starts a new one.
 
-- `scenario` (*table*) : Scénario.
+- `scenario` (*table*) : Scenario.
 
 #### `telemetry_trackers_level.onWorldReadyState(state)`
 
-Hook appelé aux changements d'état de préparation du monde. L'état 2 est le premier moment où le joueur peut conduire (caméra avec son objet de contrôle, matériaux du véhicule prêts) : calcule loadMs.
+Hook called on world readiness state changes. State 2 is the first moment the player can drive (camera with its control object, vehicle materials ready): computes loadMs.
 
-- `state` (*integer*) : État de préparation (seul 2 est utilisé).
+- `state` (*integer*) : Readiness state (only 2 is used).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | telemetry_core. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/trackers/level.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/trackers/level.lua`.*

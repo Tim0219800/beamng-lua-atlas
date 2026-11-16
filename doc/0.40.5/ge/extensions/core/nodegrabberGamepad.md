@@ -1,159 +1,159 @@
 # `core_nodegrabberGamepad`
 
-*Fichier : `lua/ge/extensions/core/nodegrabberGamepad.lua` · VM : Game Engine (GE) · 262 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/nodegrabberGamepad.lua` · VM: Game Engine (GE) · 262 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_nodegrabberGamepad` : `extensions.load("core_nodegrabberGamepad")`, puis la globale `core_nodegrabberGamepad`
+**Access:** extension `core_nodegrabberGamepad`: `extensions.load("core_nodegrabberGamepad")`, then the global `core_nodegrabberGamepad`
 
-Extension GE `core_nodegrabberGamepad` : pilote le 'nodegrabber' (attraper et tirer un nœud du véhicule avec la souris ou la manette) pour les entrées manette et souris. Elle active l'action map 'Nodegrabber', bascule temporairement la caméra du joueur vers la caméra 'relative' placée comme la caméra actuelle, règle la force de traction (0 à 100) et affiche la légende des touches. Les appels sont normalement déclenchés par les actions d'entrée (nodegrabberPadMode, nodegrabberGrab, nodegrabberStrength...), pas par du code de mod.
+GE extension `core_nodegrabberGamepad`: drives the 'nodegrabber' (grab and pull a vehicle node with the mouse or controller) for controller and mouse inputs. It enables the 'Nodegrabber' action map, temporarily switches the player's camera to the 'relative' camera placed like the current camera, sets the pull strength (0 to 100) and displays the key legend. Calls are normally triggered by input actions (nodegrabberPadMode, nodegrabberGrab, nodegrabberStrength...), not by mod code.
 
-## Exemple
+## Example
 
 ```lua
--- exemple de liaison d'action (côté input) : core_nodegrabberGamepad.toggleActive() active/désactive le mode manette
+-- example action binding (input side): core_nodegrabberGamepad.toggleActive() toggles controller mode
 core_nodegrabberGamepad.addStrength(5)
 ```
 
-## Remarques
+## Notes
 
-- M.state est exporté et mutable : { active (mode manette), actionMapActive, mouseActive, grabbing, previousCameraName, previousRelativeData, vehId, strength = 30 }.
-- Le mode manette (active) place la caméra en 'relative' avec la même position/rotation/FOV que la caméra courante (relative à un repère du véhicule construit sur les nœuds ref/left/back de la caméra relative, ou 0/1/2 par défaut), et restaure la caméra précédente à la désactivation. Il ne démarre pas si une caméra globale est active.
-- La force (state.strength) est bornée à [0, 100] et se règle par boutons (pas de 5) ou axe analogique (50 unités par seconde, via onUpdate). Un message UI 'ui.nodegrabber.strength' avec le pourcentage entier est affiché quand la valeur arrondie change.
-- grab(value, deviceName) : pour un périphérique dont le nom commence par 'mouse', le bouton souris du nodegrabber est simulé ; sinon setGrab applique la force proportionnelle à value (0..1) × strength.
-- Toute interaction est annulée (resetInteraction) quand : l'extension est déchargée, le niveau finit, l'interface CEF devient visible, un menu s'ouvre, le véhicule suivi est reset/remplacé/rechargé, les actions nodegrabberRender/nodegrabberGrab deviennent bloquées, ou la caméra change (sauf vers 'relative'). onSerialize réinitialise aussi l'interaction, mais il n'y a pas d'onDeserialized : l'état renvoyé n'est pas restauré.
-- Dépendance : ui_bindingsLegend (légende des touches : priorité 8.2 pour la manette, 10.2 pour la souris).
+- M.state is exported and mutable: { active (controller mode), actionMapActive, mouseActive, grabbing, previousCameraName, previousRelativeData, vehId, strength = 30 }.
+- Controller mode (active) places the camera in 'relative' with the same position/rotation/FOV as the current camera (relative to a vehicle frame built on the ref/left/back nodes of the relative camera, or 0/1/2 by default), and restores the previous camera on deactivation. It does not start if a global camera is active.
+- The strength (state.strength) is clamped to [0, 100] and is set by buttons (steps of 5) or analog axis (50 units per second, via onUpdate). A UI message 'ui.nodegrabber.strength' with the integer percentage is displayed when the rounded value changes.
+- grab(value, deviceName): for a device whose name starts with 'mouse', the nodegrabber mouse button is simulated; otherwise setGrab applies the force proportional to value (0..1) × strength.
+- Any interaction is canceled (resetInteraction) when: the extension is unloaded, the level ends, the CEF UI becomes visible, a menu opens, the followed vehicle is reset/replaced/reloaded, the nodegrabberRender/nodegrabberGrab actions become blocked, or the camera changes (except to 'relative'). onSerialize also resets the interaction, but there is no onDeserialized: the returned state is not restored.
+- Dependency: ui_bindingsLegend (key legend: priority 8.2 for the controller, 10.2 for the mouse).
 
-**Dépendances (chargées avant) :** `ui_bindingsLegend`
+**Dependencies (loaded first):** `ui_bindingsLegend`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_nodegrabberGamepad.addStrength(value)` | Ajoute `value` à la force de traction (bornée à 0..100), l'applique au nodegrabber et affiche le message UI si la valeur arrondie a changé. | 203 |
-| `core_nodegrabberGamepad.changeStrength(value, filterType)` | Action d'entrée de réglage de la force : bouton binaire (filterType 0) = addStrength(value × 5) ; axe analogique = mémorise la valeur et onUpdate l'applique en continu. | 209 |
-| `core_nodegrabberGamepad.fixCurrentNode()` | Restaure la force normale et fixe (épingle) le nœud actuellement ciblé via be.nodeGrabber:fixCurrentNode. | 198 |
-| `core_nodegrabberGamepad.grab(value, deviceName)` | Action d'entrée 'grab' : attrape ou relâche selon le périphérique (souris = clic simulé ; autre = setGrab). | 180 |
-| `core_nodegrabberGamepad.onActionFilterUpdated()` | Quand les filtres d'actions changent : annule l'interaction si nodegrabberRender ou nodegrabberGrab est bloquée. *(interne)* *(hook)* | 253 |
-| `core_nodegrabberGamepad.onBeforeVehicleReplaced(vehicleId)` | Avant le remplacement d'un véhicule : annule l'interaction si concerné. *(interne)* *(hook)* | 251 |
-| `core_nodegrabberGamepad.onCameraModeChanged(cameraName)` | Quand le mode de caméra change : désactive le mode manette (hors grab et souris) si la nouvelle caméra n'est pas 'relative'. *(interne)* *(hook)* | 258 |
-| `core_nodegrabberGamepad.onCefVisibilityChanged(cefVisible)` | Quand l'interface CEF change de visibilité : annule l'interaction si elle devient invisible. *(interne)* *(hook)* | 245 |
-| `core_nodegrabberGamepad.onClientEndMission()` | À la fin du niveau : annule toute interaction. *(interne)* *(hook)* | 244 |
-| `core_nodegrabberGamepad.onDespawnObject(vehicleId, isReloading)` | Quand un objet est supprimé : annule l'interaction seulement s'il s'agit d'un rechargement (isReloading). *(interne)* *(hook)* | 252 |
-| `core_nodegrabberGamepad.onExtensionUnloaded()` | Au déchargement : annule toute interaction. *(interne)* *(hook)* | 243 |
-| `core_nodegrabberGamepad.onGlobalCameraSet(cameraName)` | Quand une caméra globale est activée : désactive le mode manette (hors grab et souris). *(interne)* *(hook)* | 259 |
-| `core_nodegrabberGamepad.onMenuActionMapEnabled(enabled)` | Quand l'action map de menu s'active : annule l'interaction. *(interne)* *(hook)* | 246 |
-| `core_nodegrabberGamepad.onNodegrab(grabbed)` | Appelé par le nodegrabber natif quand un nœud est attrapé ou relâché : met à jour state.grabbing, la légende souris et l'affichage des nœuds. *(interne)* *(hook)* | 169 |
-| `core_nodegrabberGamepad.onSerialize()` | Avant un rechargement Lua : annule toute interaction et renvoie M.state. *(interne)* *(hook)* | 237 |
-| `core_nodegrabberGamepad.onUpdate(dtReal)` | Hook par frame : en mode manette actif et si l'axe de force est non nul, ajoute strengthAxis × 50 × dtReal à la force. *(interne)* *(hook)* | 217 |
-| `core_nodegrabberGamepad.onVehicleResetted(vehicleId)` | Quand un véhicule est remis à zéro : annule l'interaction si c'est le véhicule suivi ou le véhicule joueur. *(interne)* *(hook)* | 250 |
-| `core_nodegrabberGamepad.setGrab(value)` | Attrape (value > 0, avec la force value × strength) ou relâche (restaure la force normale) le nœud ciblé. | 188 |
-| `core_nodegrabberGamepad.setMouseActive(enabled)` | Active ou désactive le mode souris. Activer le mode souris désactive d'abord le mode manette. | 159 |
-| `core_nodegrabberGamepad.toggleActive()` | Active ou désactive le mode manette du nodegrabber (caméra relative, mode contrôleur, action map et légende). | 176 |
+| `core_nodegrabberGamepad.addStrength(value)` | Adds `value` to the pull strength (clamped to 0..100), applies it to the nodegrabber and displays the UI message if the rounded value changed. | 203 |
+| `core_nodegrabberGamepad.changeStrength(value, filterType)` | Strength-setting input action: binary button (filterType 0) = addStrength(value × 5); analog axis = stores the value and onUpdate applies it continuously. | 209 |
+| `core_nodegrabberGamepad.fixCurrentNode()` | Restores the normal force and fixes (pins) the currently targeted node via be.nodeGrabber:fixCurrentNode. | 198 |
+| `core_nodegrabberGamepad.grab(value, deviceName)` | 'grab' input action: grabs or releases depending on the device (mouse = simulated click; other = setGrab). | 180 |
+| `core_nodegrabberGamepad.onActionFilterUpdated()` | When action filters change: cancels the interaction if nodegrabberRender or nodegrabberGrab is blocked. *(internal)* *(hook)* | 253 |
+| `core_nodegrabberGamepad.onBeforeVehicleReplaced(vehicleId)` | Before a vehicle is replaced: cancels the interaction if concerned. *(internal)* *(hook)* | 251 |
+| `core_nodegrabberGamepad.onCameraModeChanged(cameraName)` | When the camera mode changes: disables controller mode (except grab and mouse) if the new camera is not 'relative'. *(internal)* *(hook)* | 258 |
+| `core_nodegrabberGamepad.onCefVisibilityChanged(cefVisible)` | When the CEF UI changes visibility: cancels the interaction if it becomes invisible. *(internal)* *(hook)* | 245 |
+| `core_nodegrabberGamepad.onClientEndMission()` | At the end of the level: cancels any interaction. *(internal)* *(hook)* | 244 |
+| `core_nodegrabberGamepad.onDespawnObject(vehicleId, isReloading)` | When an object is deleted: cancels the interaction only if it is a reload (isReloading). *(internal)* *(hook)* | 252 |
+| `core_nodegrabberGamepad.onExtensionUnloaded()` | On unload: cancels any interaction. *(internal)* *(hook)* | 243 |
+| `core_nodegrabberGamepad.onGlobalCameraSet(cameraName)` | When a global camera is activated: disables controller mode (except grab and mouse). *(internal)* *(hook)* | 259 |
+| `core_nodegrabberGamepad.onMenuActionMapEnabled(enabled)` | When the menu action map activates: cancels the interaction. *(internal)* *(hook)* | 246 |
+| `core_nodegrabberGamepad.onNodegrab(grabbed)` | Called by the native nodegrabber when a node is grabbed or released: updates state.grabbing, the mouse legend and the node display. *(internal)* *(hook)* | 169 |
+| `core_nodegrabberGamepad.onSerialize()` | Before a Lua reload: cancels any interaction and returns M.state. *(internal)* *(hook)* | 237 |
+| `core_nodegrabberGamepad.onUpdate(dtReal)` | Per-frame hook: in active controller mode and if the strength axis is non-zero, adds strengthAxis × 50 × dtReal to the strength. *(internal)* *(hook)* | 217 |
+| `core_nodegrabberGamepad.onVehicleResetted(vehicleId)` | When a vehicle is reset: cancels the interaction if it is the followed vehicle or the player vehicle. *(internal)* *(hook)* | 250 |
+| `core_nodegrabberGamepad.setGrab(value)` | Grabs (value > 0, with force value × strength) or releases (restores the normal force) the targeted node. | 188 |
+| `core_nodegrabberGamepad.setMouseActive(enabled)` | Enables or disables mouse mode. Enabling mouse mode first disables controller mode. | 159 |
+| `core_nodegrabberGamepad.toggleActive()` | Enables or disables the nodegrabber controller mode (relative camera, controller mode, action map and legend). | 176 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_nodegrabberGamepad.addStrength(value)`
 
-Ajoute `value` à la force de traction (bornée à 0..100), l'applique au nodegrabber et affiche le message UI si la valeur arrondie a changé.
+Adds `value` to the pull strength (clamped to 0..100), applies it to the nodegrabber and displays the UI message if the rounded value changed.
 
-- `value` (*number*) : Variation de force.
+- `value` (*number*) : Strength change.
 
 #### `core_nodegrabberGamepad.changeStrength(value, filterType)`
 
-Action d'entrée de réglage de la force : bouton binaire (filterType 0) = addStrength(value × 5) ; axe analogique = mémorise la valeur et onUpdate l'applique en continu.
+Strength-setting input action: binary button (filterType 0) = addStrength(value × 5); analog axis = stores the value and onUpdate applies it continuously.
 
-- `value` (*number*) : Valeur de l'entrée.
-- `filterType` (*integer*) : 0 pour un bouton, autre pour un axe.
+- `value` (*number*) : Input value.
+- `filterType` (*integer*) : 0 for a button, other for an axis.
 
 #### `core_nodegrabberGamepad.grab(value, deviceName)`
 
-Action d'entrée 'grab' : attrape ou relâche selon le périphérique (souris = clic simulé ; autre = setGrab).
+'grab' input action: grabs or releases depending on the device (mouse = simulated click; other = setGrab).
 
-- `value` (*number*) : Valeur de l'axe ou du bouton (0 = relâché).
-- `deviceName` (*string*) : Nom du périphérique d'entrée (commençant par 'mouse' pour une souris).
+- `value` (*number*) : Axis or button value (0 = released).
+- `deviceName` (*string*) : Name of the input device (starting with 'mouse' for a mouse).
 
 #### `core_nodegrabberGamepad.onBeforeVehicleReplaced(vehicleId)`
 
-Avant le remplacement d'un véhicule : annule l'interaction si concerné.
+Before a vehicle is replaced: cancels the interaction if concerned.
 
-- `vehicleId` (*integer*) : Id du véhicule.
+- `vehicleId` (*integer*) : Vehicle id.
 
 #### `core_nodegrabberGamepad.onCameraModeChanged(cameraName)`
 
-Quand le mode de caméra change : désactive le mode manette (hors grab et souris) si la nouvelle caméra n'est pas 'relative'.
+When the camera mode changes: disables controller mode (except grab and mouse) if the new camera is not 'relative'.
 
-- `cameraName` (*string*) : Nom du nouveau mode de caméra.
+- `cameraName` (*string*) : Name of the new camera mode.
 
 #### `core_nodegrabberGamepad.onCefVisibilityChanged(cefVisible)`
 
-Quand l'interface CEF change de visibilité : annule l'interaction si elle devient invisible.
+When the CEF UI changes visibility: cancels the interaction if it becomes invisible.
 
-- `cefVisible` (*boolean*) : Interface visible.
+- `cefVisible` (*boolean*) : UI visible.
 
 #### `core_nodegrabberGamepad.onDespawnObject(vehicleId, isReloading)`
 
-Quand un objet est supprimé : annule l'interaction seulement s'il s'agit d'un rechargement (isReloading).
+When an object is deleted: cancels the interaction only if it is a reload (isReloading).
 
-- `vehicleId` (*integer*) : Id de l'objet.
-- `isReloading` (*boolean*) : true si c'est un rechargement du véhicule.
+- `vehicleId` (*integer*) : Object id.
+- `isReloading` (*boolean*) : true if it is a vehicle reload.
 
 #### `core_nodegrabberGamepad.onGlobalCameraSet(cameraName)`
 
-Quand une caméra globale est activée : désactive le mode manette (hors grab et souris).
+When a global camera is activated: disables controller mode (except grab and mouse).
 
-- `cameraName` (*string|nil*) : Nom de la caméra globale.
+- `cameraName` (*string|nil*) : Name of the global camera.
 
 #### `core_nodegrabberGamepad.onMenuActionMapEnabled(enabled)`
 
-Quand l'action map de menu s'active : annule l'interaction.
+When the menu action map activates: cancels the interaction.
 
-- `enabled` (*boolean*) : Action map de menu active.
+- `enabled` (*boolean*) : Menu action map active.
 
 #### `core_nodegrabberGamepad.onNodegrab(grabbed)`
 
-Appelé par le nodegrabber natif quand un nœud est attrapé ou relâché : met à jour state.grabbing, la légende souris et l'affichage des nœuds.
+Called by the native nodegrabber when a node is grabbed or released: updates state.grabbing, the mouse legend and the node display.
 
-- `grabbed` (*boolean*) : true si un nœud est actuellement attrapé.
+- `grabbed` (*boolean*) : true if a node is currently grabbed.
 
 #### `core_nodegrabberGamepad.onSerialize()`
 
-Avant un rechargement Lua : annule toute interaction et renvoie M.state.
+Before a Lua reload: cancels any interaction and returns M.state.
 
-- **renvoie** : table M.state.
+- **returns**: table M.state.
 
 #### `core_nodegrabberGamepad.onUpdate(dtReal)`
 
-Hook par frame : en mode manette actif et si l'axe de force est non nul, ajoute strengthAxis × 50 × dtReal à la force.
+Per-frame hook: in active controller mode and if the strength axis is non-zero, adds strengthAxis × 50 × dtReal to the strength.
 
-- `dtReal` (*number*) : Temps réel écoulé (s).
+- `dtReal` (*number*) : Elapsed real time (s).
 
 #### `core_nodegrabberGamepad.onVehicleResetted(vehicleId)`
 
-Quand un véhicule est remis à zéro : annule l'interaction si c'est le véhicule suivi ou le véhicule joueur.
+When a vehicle is reset: cancels the interaction if it is the followed vehicle or the player vehicle.
 
-- `vehicleId` (*integer*) : Id du véhicule.
+- `vehicleId` (*integer*) : Vehicle id.
 
 #### `core_nodegrabberGamepad.setGrab(value)`
 
-Attrape (value > 0, avec la force value × strength) ou relâche (restaure la force normale) le nœud ciblé.
+Grabs (value > 0, with force value × strength) or releases (restores the normal force) the targeted node.
 
-- `value` (*number*) : Intensité 0..1 (> 0 = attraper).
+- `value` (*number*) : Intensity 0..1 (> 0 = grab).
 
 #### `core_nodegrabberGamepad.setMouseActive(enabled)`
 
-Active ou désactive le mode souris. Activer le mode souris désactive d'abord le mode manette.
+Enables or disables mouse mode. Enabling mouse mode first disables controller mode.
 
-- `enabled` (*boolean*) : true pour activer.
+- `enabled` (*boolean*) : true to enable.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | { 'ui_bindingsLegend' }. |
-| `state` | table | État du nodegrabber (voir notes). |
+| `state` | table | Nodegrabber state (see notes). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/nodegrabberGamepad.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/nodegrabberGamepad.lua`.*

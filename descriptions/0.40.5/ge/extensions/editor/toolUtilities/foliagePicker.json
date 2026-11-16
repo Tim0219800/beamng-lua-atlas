@@ -1,40 +1,65 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/foliagePicker.lua",
-  "module": "Sélecteur imgui partagé d'espèces (ForestItemData du niveau) pour les outils de végétation de l'éditeur. Affiche une liste à cocher avec un curseur de poids par espèce cochée, plus des boutons (tout cocher, tout décocher, rescanner). Il lit et écrit les tables target.species et target.speciesWeights.",
-  "usage": "local picker = require('editor/toolUtilities/foliagePicker')\n-- dans le dessin imgui d'un outil :\npicker.draw(zone, {id = 'ts', onBeginEdit = snap, onCommit = commit, onChange = markDirty})",
+  "module": "Shared imgui species picker (level ForestItemData) for the editor's vegetation tools. Displays a checkbox list with a weight slider per checked species, plus buttons (check all, uncheck all, rescan). It reads and writes the tables target.species and target.speciesWeights.",
+  "usage": "local picker = require('editor/toolUtilities/foliagePicker')\n-- in a tool's imgui drawing:\npicker.draw(zone, {id = 'ts', onBeginEdit = snap, onCommit = commit, onChange = markDirty})",
   "notes": [
-    "La liste d'espèces est mise en cache et partagée entre outils ; elle est scannée au premier usage (liste vide = rescan) via foliageScatter.listForestItemData.",
-    "Si aucune espèce n'est cochée, l'interface affiche que rien ne sera planté.",
-    "L'option opts.height est documentée comme valant 150 par défaut, mais le code utilise la constante LIST_H = 180."
+    "The species list is cached and shared between tools; it is scanned on first use (empty list = rescan) via foliageScatter.listForestItemData.",
+    "If no species is checked, the interface shows that nothing will be planted.",
+    "The opts.height option is documented as being 150 by default, but the code uses the constant LIST_H = 180."
   ],
   "functions": {
     "refresh": {
-      "desc": "Rescanne les ForestItemData du niveau et remplit le cache partagé.",
+      "desc": "Rescans the level's ForestItemData and fills the shared cache.",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Liste des noms d'espèces."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "List of species names."
+        }
+      ],
       "internal": false
     },
     "getList": {
-      "desc": "Renvoie la liste d'espèces en cache, en la scannant si elle est vide.",
+      "desc": "Returns the cached species list, scanning it if it is empty.",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Noms des ForestItemData du niveau."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Names of the level's ForestItemData."
+        }
+      ],
       "internal": false
     },
     "setTicked": {
-      "desc": "Coche une espèce (avec le poids par défaut 1.0 si elle n'en a pas) ou la décoche.",
+      "desc": "Checks a species (with the default weight 1.0 if it has none) or unchecks it.",
       "params": {
-        "target": {"type": "table", "desc": "Cible avec les tables species et speciesWeights."},
-        "nm": {"type": "string", "desc": "Nom de l'espèce."},
-        "on": {"type": "boolean", "desc": "true pour cocher, false pour décocher."}
+        "target": {
+          "type": "table",
+          "desc": "Target with the species and speciesWeights tables."
+        },
+        "nm": {
+          "type": "string",
+          "desc": "Species name."
+        },
+        "on": {
+          "type": "boolean",
+          "desc": "true to check, false to uncheck."
+        }
       },
       "returns": [],
       "internal": false
     },
     "draw": {
-      "desc": "Dessine le sélecteur pour la cible : liste à cocher, curseurs de poids (0 à 1) et boutons tout cocher / tout décocher / rescanner. À appeler à chaque frame depuis le code imgui d'un outil.",
+      "desc": "Draws the picker for the target: checkbox list, weight sliders (0 to 1) and check all / uncheck all / rescan buttons. To be called every frame from a tool's imgui code.",
       "params": {
-        "target": {"type": "table", "desc": "Cible avec les tables .species et .speciesWeights."},
-        "opts": {"type": "table", "desc": "id (obligatoire, suffixe d'id imgui unique), height (px), onBeginEdit() -> jeton d'annulation, onCommit(label, jeton) pour l'historique, onChange() pour marquer l'état modifié."}
+        "target": {
+          "type": "table",
+          "desc": "Target with the .species and .speciesWeights tables."
+        },
+        "opts": {
+          "type": "table",
+          "desc": "id (required, unique imgui id suffix), height (px), onBeginEdit() -> undo token, onCommit(label, token) for the history, onChange() to mark the state as modified."
+        }
       },
       "returns": [],
       "internal": false

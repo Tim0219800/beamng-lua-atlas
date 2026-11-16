@@ -2,272 +2,272 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/screenshotCreator/settings.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Réglages et fenêtre de paramètres du créateur de captures/vignettes. Il conserve dans des pointeurs ImGui (getControls) tous les réglages : destination de sortie, résolution (préréglages thumbnail 800x448, 720p, 1080p, 4k, 8k…), supersampling, FOV, hauteur de caméra, marges de cadrage, qualité des réflexions dynamiques, exposition, feux de croisement, délai de stabilisation, gel de la physique, rig d'éclairage, SSAO. Il fabrique les contextes (getFramingContext, getCaptureContext, getJobSettings) consommés par job.lua, les modes de cadrage et la capture, applique/restaure l'environnement du showroom (exposition locale, réflexions, plaques, occupants de sièges) et dessine les surcouches de marges dans la vue 3D.
---- Accès : extension `util_screenshotCreator_settings` : `extensions.load("util_screenshotCreator_settings")`, puis la globale `util_screenshotCreator_settings`
+--- Settings and settings window of the screenshot/thumbnail creator. It keeps all the settings in ImGui pointers (getControls): output destination, resolution (presets thumbnail 800x448, 720p, 1080p, 4k, 8k…), supersampling, FOV, camera height, framing margins, dynamic reflection quality, exposure, low beams, settle delay, physics freeze, lighting rig, SSAO. It builds the contexts (getFramingContext, getCaptureContext, getJobSettings) consumed by job.lua, the framing modes and the capture, applies/restores the showroom environment (local exposure, reflections, plates, seat occupants) and draws the margin overlays in the 3D view.
+--- Access: extension `util_screenshotCreator_settings`: `extensions.load("util_screenshotCreator_settings")`, then the global `util_screenshotCreator_settings`
 ---@class util_screenshotCreator_settings
----@field dependencies string[] Extensions chargées avant : ui_imgui et core_camera.
+---@field dependencies string[] Extensions loaded before: ui_imgui and core_camera.
 util_screenshotCreator_settings = {}
 
---- Ajoute à une cible de marge la marge horizontale réglée par l'utilisateur (gauche et droite) et les marges véhicule (haut +4, bas +2).
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:205
----@param margin table|nil Cible de marge.
----@return table|nil  Nouvelle marge, ou nil si margin est nil.
+--- Adds to a margin target the horizontal margin set by the user (left and right) and the vehicle margins (top +4, bottom +2).
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:205
+---@param margin table|nil Margin target.
+---@return table|nil  New margin, or nil if margin is nil.
 function util_screenshotCreator_settings.addVehicleMargin(margin) end
 
---- Mémorise l'environnement actuel puis applique celui des captures : exposition, réflexions, plaques non générées, occupants de sièges désactivés. Ne fait rien hors showroom.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:429
----@param options table|nil {applyExposure = false} pour ne pas toucher à l'exposition.
+--- Stores the current environment then applies that of the captures: exposure, reflections, ungenerated plates, seat occupants disabled. Does nothing outside the showroom.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:429
+---@param options table|nil {applyExposure = false} to leave the exposure untouched.
 function util_screenshotCreator_settings.applyEnvironment(options) end
 
---- Réapplique un instantané d'environnement en vérifiant chaque valeur ; journalise une erreur pour chaque réglage non restauré.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:441
----@param snapshot table Instantané (voir getEnvironmentSnapshot).
----@return boolean  true si tout a été restauré.
+--- Reapplies an environment snapshot while checking each value; logs an error for each setting not restored.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:441
+---@param snapshot table Snapshot (see getEnvironmentSnapshot).
+---@return boolean  true if everything was restored.
 function util_screenshotCreator_settings.applyEnvironmentSnapshot(snapshot) end
 
---- Écrit l'exposition (auto ou manuelle en EV) dans l'objet PostEffectLocalExposureObject de la scène.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:375
----@return boolean  true si l'objet existe et a pris les valeurs demandées.
+--- Writes the exposure (auto or manual in EV) to the scene's PostEffectLocalExposureObject.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:375
+---@return boolean  true if the object exists and took the requested values.
 function util_screenshotCreator_settings.applyExposure() end
 
---- Active le réglage SkipGenerateLicencePlate (showroom uniquement).
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:388
----@return boolean  false hors showroom.
+--- Enables the SkipGenerateLicencePlate setting (showroom only).
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:388
+---@return boolean  false outside the showroom.
 function util_screenshotCreator_settings.applyLicensePlates() end
 
---- Allume les feux de croisement du véhicule (electrics.setLightsState(1)) si activé ; ne fait rien sinon.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:949
----@param vehicle table Objet véhicule.
----@param enabled boolean|nil Valeur imposée ; par défaut le réglage de l'interface.
+--- Turns on the vehicle's low beams (electrics.setLightsState(1)) if enabled; does nothing otherwise.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:949
+---@param vehicle table Vehicle object.
+---@param enabled boolean|nil Imposed value; by default the UI setting.
 function util_screenshotCreator_settings.applyLowBeams(vehicle, enabled) end
 
---- Applique la qualité de réflexion dynamique choisie via dynCaptureQuality (showroom uniquement).
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:382
----@return boolean  false hors showroom.
+--- Applies the chosen dynamic reflection quality via dynCaptureQuality (showroom only).
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:382
+---@return boolean  false outside the showroom.
 function util_screenshotCreator_settings.applyReflections() end
 
---- Début d'un travail de capture : appelle applyEnvironment.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:612
----@param options table|nil Passé à applyEnvironment.
+--- Start of a capture job: calls applyEnvironment.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:612
+---@param options table|nil Passed to applyEnvironment.
 function util_screenshotCreator_settings.beginWork(options) end
 
---- Restaure les réglages depuis une table (valeurs bornées, anciens formats acceptés), puis applique exposition et réflexions si on est dans le showroom (alias onDeserialized).
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:875
----@param data table|nil État sérialisé ; ignoré si ce n'est pas une table.
+--- Restores the settings from a table (clamped values, old formats accepted), then applies exposure and reflections if in the showroom (alias onDeserialized).
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:875
+---@param data table|nil Serialized state; ignored if it is not a table.
 function util_screenshotCreator_settings.deserialize(data) end
 
---- Dessine dans la vue 3D, devant la caméra courante, le cadre de l'image finale (rouge), les marges de sécurité (vert), les marges véhicule (bleu) et optionnellement la grille de composition (tiers et centre). À appeler à chaque frame.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:782
----@param fovOverride number|nil FOV en degrés à utiliser à la place du FOV réglé.
+--- Draws in the 3D view, in front of the current camera, the frame of the final image (red), the safety margins (green), the vehicle margins (blue) and optionally the composition grid (thirds and center). To be called every frame.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:782
+---@param fovOverride number|nil FOV in degrees to use instead of the set FOV.
 function util_screenshotCreator_settings.drawCameraOverlay(fovOverride) end
 
---- Dessine les contrôles ImGui d'éclairage : couleur du cyclorama (matériau showroom_v2_lighting_backdrop), rig relatif à la caméra, ombres et intensité par rôle, correction d'exposition, marquage de parking, mode SSAO.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:340
+--- Draws the lighting ImGui controls: cyclorama color (showroom_v2_lighting_backdrop material), camera-relative rig, shadows and intensity per role, exposure correction, parking markup, SSAO mode.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:340
 function util_screenshotCreator_settings.drawLightingControls() end
 
---- Alias de drawOutputControls.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:646
----@param options table|nil Voir drawOutputControls.
+--- Alias of drawOutputControls.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:646
+---@param options table|nil See drawOutputControls.
 function util_screenshotCreator_settings.drawOutput(options) end
 
---- Dessine les contrôles ImGui de sortie : bouton « Restore thumbnail defaults », destination, FOV et hauteur de caméra procéduraux, marge horizontale, résolutions, supersampling, réflexions, exposition, feux, délai de stabilisation, gel de la physique, et un résumé de la taille d'image.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:646
----@param options table|nil {drawToggleUiApps = function} dessiné à côté du bouton d'aperçu de résolution.
+--- Draws the output ImGui controls: "Restore thumbnail defaults" button, destination, procedural FOV and camera height, horizontal margin, resolutions, supersampling, reflections, exposure, lights, settle delay, physics freeze, and an image size summary.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:646
+---@param options table|nil {drawToggleUiApps = function} drawn next to the resolution preview button.
 function util_screenshotCreator_settings.drawOutputControls(options) end
 
---- Dessine les contrôles ImGui des surcouches : marges, boîte de cadrage, OOBB, entrées de cadrage, composition, ainsi que les cases Sample et Comparison.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:760
+--- Draws the overlay ImGui controls: margins, framing box, OOBB, framing inputs, composition, as well as the Sample and Comparison checkboxes.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:760
 function util_screenshotCreator_settings.drawOverlayControls() end
 
---- Alias de drawCameraOverlay.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:782
----@param fovOverride number|nil Voir drawCameraOverlay.
+--- Alias of drawCameraOverlay.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:782
+---@param fovOverride number|nil See drawCameraOverlay.
 function util_screenshotCreator_settings.drawOverlays(fovOverride) end
 
---- Fin d'un travail de capture : appelle restoreEnvironment.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:616
+--- End of a capture job: calls restoreEnvironment.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:616
 function util_screenshotCreator_settings.finishWork() end
 
---- Construit le contexte de capture : destination, extension de fichier, résolution, superSampling (et supersampling), internalResolution (résolution × supersampling), qualité des réflexions, feux, délai, gel de la physique, exposition, options sample/comparison.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:545
----@return table  Contexte de capture.
+--- Builds the capture context: destination, file extension, resolution, superSampling (and supersampling), internalResolution (resolution × supersampling), reflection quality, lights, delay, physics freeze, exposure, sample/comparison options.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:545
+---@return table  Capture context.
 function util_screenshotCreator_settings.getCaptureContext() end
 
---- Renvoie la table de tous les pointeurs ImGui des réglages (outputDestination, resolution, imageResolution, superSampling, fieldOfView, cameraHeight, selectedMargin, lightRoleIntensity, etc.). Modifier ces pointeurs modifie directement les réglages.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:980
+--- Returns the table of all ImGui pointers of the settings (outputDestination, resolution, imageResolution, superSampling, fieldOfView, cameraHeight, selectedMargin, lightRoleIntensity, etc.). Modifying these pointers directly modifies the settings.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:980
 ---@return table  ctrls (im.BoolPtr, im.FloatPtr, im.IntPtr, im.ArrayInt…).
 function util_screenshotCreator_settings.getControls() end
 
---- Renvoie la résolution finale choisie : celle du préréglage sélectionné, ou la résolution personnalisée si « custom ».
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:239
----@return integer[]  {largeur, hauteur}.
+--- Returns the final chosen resolution: that of the selected preset, or the custom resolution if "custom".
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:239
+---@return integer[]  {width, height}.
 function util_screenshotCreator_settings.getCurrentResolution() end
 
---- Renvoie une copie des valeurs par défaut des réglages.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:1005
----@return table  Valeurs par défaut.
+--- Returns a copy of the settings' default values.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:1005
+---@return table  Default values.
 function util_screenshotCreator_settings.getDefaults() end
 
---- Renvoie les niveaux de qualité des réflexions : Lowest, Low, Normal, High, Ultra.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:1012
----@return string[]  Niveaux de qualité.
+--- Returns the reflection quality levels: Lowest, Low, Normal, High, Ultra.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:1012
+---@return string[]  Quality levels.
 function util_screenshotCreator_settings.getDynamicReflectionQualities() end
 
---- Renvoie une copie de l'environnement mémorisé (skipLicensePlates, dynamicReflectionRuntime, autoExposure, manualExposure, seatOccupants).
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:486
----@return table|nil  Instantané, nil si rien n'a été mémorisé.
+--- Returns a copy of the stored environment (skipLicensePlates, dynamicReflectionRuntime, autoExposure, manualExposure, seatOccupants).
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:486
+---@return table|nil  Snapshot, nil if nothing was stored.
 function util_screenshotCreator_settings.getEnvironmentSnapshot() end
 
---- Construit le contexte transmis aux modes de cadrage : fieldOfView/fov, nearPlane, cameraHeight, cameraAxisDownOffset, settleDelay, resolution, aspectRatio, useMargins, margin et debug {drawBounds, drawOobb, drawInputs}. L'appelant ajoute vehicle, configName, etc.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:524
----@param resolution integer[]|nil {largeur, hauteur} ; défaut la résolution courante.
----@return table  Contexte de cadrage.
+--- Builds the context passed to the framing modes: fieldOfView/fov, nearPlane, cameraHeight, cameraAxisDownOffset, settleDelay, resolution, aspectRatio, useMargins, margin and debug {drawBounds, drawOobb, drawInputs}. The caller adds vehicle, configName, etc.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:524
+---@param resolution integer[]|nil {width, height}; default the current resolution.
+---@return table  Framing context.
 function util_screenshotCreator_settings.getFramingContext(resolution) end
 
---- Renvoie une copie des défauts de cadrage : {cameraAxisDownOffset = 0.10, cameraHeight = 1.1, settleDelay = 1}.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:1007
----@return table  Défauts de cadrage.
+--- Returns a copy of the framing defaults: {cameraAxisDownOffset = 0.10, cameraHeight = 1.1, settleDelay = 1}.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:1007
+---@return table  Framing defaults.
 function util_screenshotCreator_settings.getFramingDefaults() end
 
---- Calcule la marge de cadrage finale pour une résolution : cible choisie + marges véhicule, mise à l'échelle. Renvoie une marge nulle si « useFramingMargins » est décoché.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:517
----@param resolution integer[] {largeur, hauteur}.
+--- Computes the final framing margin for a resolution: chosen target + vehicle margins, scaled. Returns a zero margin if "useFramingMargins" is unchecked.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:517
+---@param resolution integer[] {width, height}.
 ---@return table  {left, right, top, bottom, extraBottom, ...}.
 function util_screenshotCreator_settings.getFramingMargin(resolution) end
 
---- Fusionne contexte de cadrage et de capture en un seul tableau de réglages de travail (outputFolder, resolution, fov, margin, captureTimeout min 0,1 s…). Les options remplacent certains réglages de l'interface.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:572
+--- Merges the framing and capture contexts into a single table of job settings (outputFolder, resolution, fov, margin, captureTimeout min 0.1 s…). Options override some UI settings.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:572
 ---@param options table|nil {resolution, outputFolder, lowBeamsEnabled, shippedConfigsOnly, sample, comparison, captureTimeout}.
----@return table  Réglages du travail.
+---@return table  Job settings.
 function util_screenshotCreator_settings.getJobSettings(options) end
 
---- Renvoie les réglages du rig d'éclairage lus dans l'interface : enabled, exposureCorrection, ssaoMode (« on », « reduced » ou « off »), parkingMarkup, roles[id] = {intensity, shadows} pour key, fill, rim, top, groundFill, horizonFill.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:300
----@return table  Réglages du rig.
+--- Returns the lighting rig settings read from the UI: enabled, exposureCorrection, ssaoMode ("on", "reduced" or "off"), parkingMarkup, roles[id] = {intensity, shadows} for key, fill, rim, top, groundFill, horizonFill.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:300
+---@return table  Rig settings.
 function util_screenshotCreator_settings.getLightingRig() end
 
---- Renvoie la cible de marge d'indice donné (base 0). La cible « minimal » est remplacée par le maximum de toutes les autres. Retombe sur la cible par défaut si l'indice est invalide.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:200
----@param index integer|nil Indice de cible, base 0 (défaut safeMargins.defaultTargetIndex).
----@return table  {name, left, right, top, bottom, extraBottom, color} en pixels de référence 500x281.
+--- Returns the margin target of the given index (0-based). The "minimal" target is replaced by the maximum of all the others. Falls back to the default target if the index is invalid.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:200
+---@param index integer|nil Target index, 0-based (default safeMargins.defaultTargetIndex).
+---@return table  {name, left, right, top, bottom, extraBottom, color} in 500x281 reference pixels.
 function util_screenshotCreator_settings.getMarginTarget(index) end
 
---- Renvoie le sous-ensemble des pointeurs de sortie : outputDestination, resolution, imageResolution, shippedConfigsOnly, keepAspectRatio, resolutionMultiplier.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:981
----@return table  Pointeurs ImGui.
+--- Returns the subset of output pointers: outputDestination, resolution, imageResolution, shippedConfigsOnly, keepAspectRatio, resolutionMultiplier.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:981
+---@return table  ImGui pointers.
 function util_screenshotCreator_settings.getOutputControls() end
 
---- Renvoie les noms des destinations de sortie : « Vehicle thumbnails » et « Screenshot/showroom folder ».
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:1008
+--- Returns the names of the output destinations: "Vehicle thumbnails" and "Screenshot/showroom folder".
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:1008
 ---@return string[]  Destinations.
 function util_screenshotCreator_settings.getOutputDestinations() end
 
---- Renvoie les pointeurs de rendu : superSampling, shippedConfigsOnly, fieldOfView, cameraHeight, dynamicReflectionQuality, lowBeamsEnabled, settleDelay, freezePhysics, autoExposure, manualExposure.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:991
----@return table  Pointeurs ImGui.
+--- Returns the render pointers: superSampling, shippedConfigsOnly, fieldOfView, cameraHeight, dynamicReflectionQuality, lowBeamsEnabled, settleDelay, freezePhysics, autoExposure, manualExposure.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:991
+---@return table  ImGui pointers.
 function util_screenshotCreator_settings.getRenderControls() end
 
---- Renvoie les préréglages de résolution {nom, largeur, hauteur}.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:1009
----@return table[]  Préréglages.
+--- Returns the resolution presets {name, width, height}.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:1009
+---@return table[]  Presets.
 function util_screenshotCreator_settings.getResolutions() end
 
---- Renvoie la définition des marges de sécurité : {width = 500, height = 281, defaultTargetIndex, targets = [{name, left, right, top, bottom, extraBottom, color}]}.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:1010
----@return table  Marges de référence.
+--- Returns the safety margin definition: {width = 500, height = 281, defaultTargetIndex, targets = [{name, left, right, top, bottom, extraBottom, color}]}.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:1010
+---@return table  Reference margins.
 function util_screenshotCreator_settings.getSafeMargins() end
 
---- Renvoie une copie de la config de vignette : {fileEnding = ".jpg", fov = 20, nearPlane = 0.1}.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:1006
----@return table  Config de vignette.
+--- Returns a copy of the thumbnail config: {fileEnding = ".jpg", fov = 20, nearPlane = 0.1}.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:1006
+---@return table  Thumbnail config.
 function util_screenshotCreator_settings.getThumbnailConfig() end
 
---- Renvoie la résolution correcte d'une vignette de véhicule (préréglage « thumbnail », 800 x 448).
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:234
----@return integer[]  {largeur, hauteur}.
+--- Returns the correct resolution of a vehicle thumbnail ("thumbnail" preset, 800 x 448).
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:234
+---@return integer[]  {width, height}.
 function util_screenshotCreator_settings.getThumbnailResolution() end
 
---- Renvoie la marge supplémentaire autour du véhicule : {top = 4, bottom = 2} (en pixels de référence).
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:1011
+--- Returns the extra margin around the vehicle: {top = 4, bottom = 2} (in reference pixels).
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:1011
 ---@return table  {top, bottom}.
 function util_screenshotCreator_settings.getVehicleSafeMargin() end
 
---- Indique si les réglages de sortie/rendu principaux sont aux valeurs par défaut des vignettes.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:499
----@return boolean  true si tout est par défaut.
+--- Indicates whether the main output/render settings are at the thumbnail default values.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:499
+---@return boolean  true if everything is default.
 function util_screenshotCreator_settings.isDefaultConfig() end
 
---- Vérifie que, pour la destination « Vehicle thumbnails », la résolution est bien le préréglage vignette.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:512
----@return boolean  false si la taille ne convient pas pour des vignettes du jeu.
+--- Checks that, for the "Vehicle thumbnails" destination, the resolution is indeed the thumbnail preset.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:512
+---@return boolean  false if the size is not suitable for game thumbnails.
 function util_screenshotCreator_settings.isThumbnailConfigGood() end
 
---- Hook de fin de niveau ; même fonction que onExtensionUnloaded.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:968
+--- End-of-level hook; same function as onExtensionUnloaded.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:968
 function util_screenshotCreator_settings.onClientEndMission() end
 
---- Hook appelé après le démarrage d'un niveau : dans le showroom, force les réflexions sur Ultra et applique l'environnement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:961
+--- Hook called after a level starts: in the showroom, forces reflections to Ultra and applies the environment.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:961
 function util_screenshotCreator_settings.onClientPostStartMission() end
 
---- Hook appelé après rechargement avec l'état sérialisé ; identique à deserialize.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:875
----@param data table|nil État sérialisé.
+--- Hook called after reload with the serialized state; identical to deserialize.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:875
+---@param data table|nil Serialized state.
 function util_screenshotCreator_settings.onDeserialized(data) end
 
---- Hook de fermeture du jeu ; même fonction que onExtensionUnloaded.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:968
+--- Game close hook; same function as onExtensionUnloaded.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:968
 function util_screenshotCreator_settings.onExit() end
 
---- Hook : remet les réglages par défaut et applique l'environnement (showroom).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:956
+--- Hook: resets the settings to default and applies the environment (showroom).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:956
 function util_screenshotCreator_settings.onExtensionLoaded() end
 
---- Hook : rétablit la résolution de la fenêtre si l'aperçu était actif, puis restaure l'environnement. Aussi utilisé comme onClientEndMission et onExit.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:968
+--- Hook: restores the window resolution if the preview was active, then restores the environment. Also used as onClientEndMission and onExit.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:968
 function util_screenshotCreator_settings.onExtensionUnloaded() end
 
---- Hook de sérialisation avant rechargement des extensions ; identique à serialize.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:837
----@return table  État des réglages.
+--- Serialization hook before extension reload; identical to serialize.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:837
+---@return table  Settings state.
 function util_screenshotCreator_settings.onSerialize() end
 
---- Remet aux valeurs par défaut les réglages de sortie et de rendu (pas ceux de l'éclairage ni des surcouches).
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:262
+--- Resets the output and render settings to their default values (not those of the lighting or the overlays).
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:262
 function util_screenshotCreator_settings.resetToDefaults() end
 
---- Restaure l'environnement mémorisé puis l'oublie.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:491
----@return boolean  true si tout est restauré ou si rien n'avait été mémorisé.
+--- Restores the stored environment then forgets it.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:491
+---@return boolean  true if everything is restored or if nothing had been stored.
 function util_screenshotCreator_settings.restoreEnvironment() end
 
---- Met à l'échelle une marge exprimée pour 500x281 vers la résolution donnée.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:219
----@param margin table Marge de référence.
----@param resolution integer[] {largeur, hauteur} cible.
----@return table  Marge en pixels de la résolution cible (renvoyée telle quelle si un argument est absent).
+--- Scales a margin expressed for 500x281 to the given resolution.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:219
+---@param margin table Reference margin.
+---@param resolution integer[] Target {width, height}.
+---@return table  Margin in pixels of the target resolution (returned as is if an argument is missing).
 function util_screenshotCreator_settings.scaleMargin(margin, resolution) end
 
---- Renvoie tous les réglages sous forme de table sérialisable (alias onSerialize).
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:837
----@return table  État des réglages.
+--- Returns all the settings as a serializable table (alias onSerialize).
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:837
+---@return table  Settings state.
 function util_screenshotCreator_settings.serialize() end
 
---- Fixe la résolution personnalisée (arrondie, minimum 1) et sélectionne le préréglage correspondant s'il existe, sinon « custom ».
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:247
----@param width number Largeur en pixels.
----@param height number Hauteur en pixels.
+--- Sets the custom resolution (rounded, minimum 1) and selects the matching preset if there is one, otherwise "custom".
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:247
+---@param width number Width in pixels.
+---@param height number Height in pixels.
 function util_screenshotCreator_settings.setImageResolution(width, height) end
 
---- Passe la fenêtre du jeu en mode sans bordure à la résolution finale choisie (aperçu), ou rétablit le mode vidéo d'origine.
----Source : lua/ge/extensions/util/screenshotCreator/settings.lua:620
----@param enabled boolean true pour activer l'aperçu.
+--- Switches the game window to borderless mode at the final chosen resolution (preview), or restores the original video mode.
+---Source: lua/ge/extensions/util/screenshotCreator/settings.lua:620
+---@param enabled boolean true to enable the preview.
 function util_screenshotCreator_settings.setPreviewResolution(enabled) end
 

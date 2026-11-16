@@ -1,279 +1,667 @@
 {
   "path": "lua/ge/extensions/gameplay/missions/missionTypes/editorHelper.lua",
-  "module": "Classe de base pour écrire l'éditeur d'un type de mission dans l'éditeur du jeu (interface imgui). Un type de mission déclare ses champs missionTypeData avec des méthodes addXxx (nombre, texte, booléen, transformation 3D, véhicule modèle/config, fichier, course, classement, liste déroulante...) ; le helper sait ensuite fournir les valeurs par défaut (getNewData), charger une mission (setMission), vérifier ses champs (checkMission), dessiner les widgets et les gizmos 3D (draw). Le module renvoie une fabrique `function(derivedClass, ...)` qui crée l'objet, copie les clés de la classe dérivée, initialise elements et autoAdditionalAttributes puis appelle init() s'il existe.",
-  "usage": "-- editor.lua d'un type de mission (ancien style)\nlocal C = {}\nfunction C:init()\n  self:addNumeric('Laps', 'laps', 3)\n  self:addTransform('Start', 'start', {hasScl=false}, {drawMode='vehicle'})\nend\nreturn function() return gameplay_missions_missions.editorHelper(C) end",
+  "module": "Base class for writing the editor of a mission type in the game's editor (imgui interface). A mission type declares its missionTypeData fields with addXxx methods (number, text, boolean, 3D transform, vehicle model/config, file, race, leaderboard, dropdown...); the helper can then provide the default values (getNewData), load a mission (setMission), check its fields (checkMission), draw the widgets and the 3D gizmos (draw). The module returns a factory `function(derivedClass, ...)` that creates the object, copies the keys of the derived class, initializes elements and autoAdditionalAttributes then calls init() if it exists.",
+  "usage": "-- editor.lua of a mission type (old style)\nlocal C = {}\nfunction C:init()\n  self:addNumeric('Laps', 'laps', 3)\n  self:addTransform('Start', 'start', {hasScl=false}, {drawMode='vehicle'})\nend\nreturn function() return gameplay_missions_missions.editorHelper(C) end",
   "notes": [
-    "Chaque élément est une table {type, label, fieldName, displayOptions, ...}. addElement leur donne un _id unique et convertit displayOptions.associatedStars (chaîne) en table {clé=true}.",
-    "Un élément multi-champs écrit plusieurs clés dans missionTypeData : transform -> <fieldName>Pos / Rot / Scl ; modelconfig -> <fieldName>Model / Config / ConfigPath ; leaderboard -> <fieldName>BestResult / MediumResult / WorstResult (et Count côté interface).",
-    "Gravités des problèmes de checkMission : « error » pour champ manquant, type différent ou modèle/config/fichier introuvable ; « warning » pour champ en trop (fixable = true).",
-    "Bug : newDataFunctions.reward et newDataFunctions.simpleLapConfig valent `defaultValue`, une variable non définie à cet endroit (nil) : ces deux types n'ont donc aucune valeur par défaut dans getNewData ni de contrôle dans checkMission (traités comme nop). Les fonctions de SetMission existent pour eux.",
-    "Bug : missionIdSetMission lit `mtd.value` au lieu de `mtd[e.fieldName]` : un champ missionId n'est jamais rechargé depuis la mission.",
-    "Les couleurs defaultColors.default / orange / red sont construites avec 5 composantes (par ex. ImVec4(1,0.6,0,8,0.75)), signe d'une faute de frappe (0.8 attendu) ; seules les 4 premières sont prises en compte.",
-    "gameplay_missions_missions.editorHelper(C, ...) ne renvoie pas ce fichier mais editor/util/editorElementHelper (contexte 'mission') ; ce module-ci n'est utilisé que par des appels directs (par ex. editor/missionEditor/genericTypeData.lua)."
+    "Each element is a table {type, label, fieldName, displayOptions, ...}. addElement gives them a unique _id and converts displayOptions.associatedStars (string) into a table {key=true}.",
+    "A multi-field element writes several keys in missionTypeData: transform -> <fieldName>Pos / Rot / Scl; modelconfig -> <fieldName>Model / Config / ConfigPath; leaderboard -> <fieldName>BestResult / MediumResult / WorstResult (and Count on the interface side).",
+    "Severities of checkMission problems: \"error\" for a missing field, different type or model/config/file not found; \"warning\" for an extra field (fixable = true).",
+    "Bug: newDataFunctions.reward and newDataFunctions.simpleLapConfig equal `defaultValue`, a variable undefined at this point (nil): these two types therefore have no default value in getNewData nor a check in checkMission (treated as nop). SetMission functions exist for them.",
+    "Bug: missionIdSetMission reads `mtd.value` instead of `mtd[e.fieldName]`: a missionId field is never reloaded from the mission.",
+    "The colors defaultColors.default / orange / red are built with 5 components (e.g. ImVec4(1,0.6,0,8,0.75)), a sign of a typo (0.8 expected); only the first 4 are taken into account.",
+    "gameplay_missions_missions.editorHelper(C, ...) does not return this file but editor/util/editorElementHelper (context 'mission'); this module is only used by direct calls (e.g. editor/missionEditor/genericTypeData.lua)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe d'éditeur de type de mission. Champs d'instance : elements (liste ordonnée), autoAdditionalAttributes, mission (mission en cours d'édition), mouseInfo (état de la souris pour les gizmos).",
+      "desc": "Mission type editor class. Instance fields: elements (ordered list), autoAdditionalAttributes, mission (mission being edited), mouseInfo (mouse state for the gizmos).",
       "functions": {
         "addElement": {
-          "desc": "Ajoute un élément déjà construit à la liste (attribue _id, normalise displayOptions). Toutes les méthodes addXxx passent par elle et renvoient l'élément.",
-          "params": {"element": {"type": "table", "desc": "Élément {type, ...}."}},
-          "returns": [{"type": "table", "desc": "L'élément ajouté."}]
+          "desc": "Adds an already built element to the list (assigns _id, normalizes displayOptions). All addXxx methods go through it and return the element.",
+          "params": {
+            "element": {
+              "type": "table",
+              "desc": "Element {type, ...}."
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "The added element."
+            }
+          ]
         },
         "addCustomElement": {
-          "desc": "Ajoute un élément personnalisé géré par vos propres fonctions.",
+          "desc": "Adds a custom element managed by your own functions.",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "getNewFunction": {"type": "function|nil", "desc": "function(element) -> liste {fieldName, value} des valeurs par défaut."},
-            "setMissionFunction": {"type": "function|nil", "desc": "function(element, missionTypeData) appelée au chargement d'une mission."},
-            "drawFunction": {"type": "function|nil", "desc": "function(element, missionTypeData, mission, mouseInfo) -> true si la valeur a changé."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "getNewFunction": {
+              "type": "function|nil",
+              "desc": "function(element) -> list {fieldName, value} of default values."
+            },
+            "setMissionFunction": {
+              "type": "function|nil",
+              "desc": "function(element, missionTypeData) called when a mission is loaded."
+            },
+            "drawFunction": {
+              "type": "function|nil",
+              "desc": "function(element, missionTypeData, mission, mouseInfo) -> true if the value changed."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addNumeric": {
-          "desc": "Champ numérique (flottant) ; défaut 0.",
+          "desc": "Numeric (float) field; default 0.",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "fieldName": {"type": "string", "desc": "Clé dans missionTypeData."},
-            "defaultValue": {"type": "number|nil", "desc": "Valeur par défaut."},
-            "displayOptions": {"type": "table|nil", "desc": "Options d'affichage (optional, associatedStars...)."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Key in missionTypeData."
+            },
+            "defaultValue": {
+              "type": "number|nil",
+              "desc": "Default value."
+            },
+            "displayOptions": {
+              "type": "table|nil",
+              "desc": "Display options (optional, associatedStars...)."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addString": {
-          "desc": "Champ texte (tampon de 1024 caractères par défaut) ; défaut chaîne vide.",
+          "desc": "Text field (1024-character buffer by default); default empty string.",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "fieldName": {"type": "string", "desc": "Clé dans missionTypeData."},
-            "defaultValue": {"type": "string|nil", "desc": "Valeur par défaut."},
-            "len": {"type": "integer|nil", "desc": "Taille du tampon."},
-            "displayOptions": {"type": "table|nil", "desc": "Options d'affichage."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Key in missionTypeData."
+            },
+            "defaultValue": {
+              "type": "string|nil",
+              "desc": "Default value."
+            },
+            "len": {
+              "type": "integer|nil",
+              "desc": "Buffer size."
+            },
+            "displayOptions": {
+              "type": "table|nil",
+              "desc": "Display options."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addBool": {
-          "desc": "Case à cocher ; défaut false. Si hideElementList est donné, ces éléments sont déplacés juste après et masqués quand la case est décochée.",
+          "desc": "Checkbox; default false. If hideElementList is given, these elements are moved right after it and hidden when the checkbox is unchecked.",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "fieldName": {"type": "string", "desc": "Clé dans missionTypeData."},
-            "defaultValue": {"type": "boolean|nil", "desc": "Valeur par défaut."},
-            "hideElementList": {"type": "table[]|nil", "desc": "Éléments à afficher seulement quand la case est cochée."},
-            "displayOptions": {"type": "table|nil", "desc": "Options d'affichage."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Key in missionTypeData."
+            },
+            "defaultValue": {
+              "type": "boolean|nil",
+              "desc": "Default value."
+            },
+            "hideElementList": {
+              "type": "table[]|nil",
+              "desc": "Elements to display only when the checkbox is checked."
+            },
+            "displayOptions": {
+              "type": "table|nil",
+              "desc": "Display options."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addTransform": {
-          "desc": "Position / rotation / échelle éditables dans le monde 3D (gizmo transformUtil). Stockés dans <fieldName>Pos, <fieldName>Rot, <fieldName>Scl.",
+          "desc": "Position / rotation / scale editable in the 3D world (transformUtil gizmo). Stored in <fieldName>Pos, <fieldName>Rot, <fieldName>Scl.",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "fieldName": {"type": "string", "desc": "Préfixe des clés."},
-            "valueOptions": {"type": "table|nil", "desc": "{defaultPos, defaultRot, defaultScl, hasPos, hasRot, hasScl, oneDimScale}."},
-            "displayOptions": {"type": "table|nil", "desc": "{drawMode='sphere'|'vehicle'|'sphereDir'|'halfBox'|'fullBox', drawColor={r,g,b,a}, ...}."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Key prefix."
+            },
+            "valueOptions": {
+              "type": "table|nil",
+              "desc": "{defaultPos, defaultRot, defaultScl, hasPos, hasRot, hasScl, oneDimScale}."
+            },
+            "displayOptions": {
+              "type": "table|nil",
+              "desc": "{drawMode='sphere'|'vehicle'|'sphereDir'|'halfBox'|'fullBox', drawColor={r,g,b,a}, ...}."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addModelConfig": {
-          "desc": "Choix d'un véhicule (modèle + configuration). Défaut : modèle « sbr », config « TT_RWD_S_M ». Stocké dans <fieldName>Model / Config / ConfigPath.",
+          "desc": "Vehicle choice (model + configuration). Default: model \"sbr\", config \"TT_RWD_S_M\". Stored in <fieldName>Model / Config / ConfigPath.",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "fieldName": {"type": "string", "desc": "Préfixe des clés."},
-            "defaultModel": {"type": "string|nil", "desc": "Modèle par défaut."},
-            "defaultConfig": {"type": "string|nil", "desc": "Config par défaut."},
-            "displayOptions": {"type": "table|nil", "desc": "Options d'affichage."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Key prefix."
+            },
+            "defaultModel": {
+              "type": "string|nil",
+              "desc": "Default model."
+            },
+            "defaultConfig": {
+              "type": "string|nil",
+              "desc": "Default config."
+            },
+            "displayOptions": {
+              "type": "table|nil",
+              "desc": "Display options."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addFile": {
-          "desc": "Chemin de fichier avec sélecteur de fichier.",
+          "desc": "File path with file selector.",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "fieldName": {"type": "string", "desc": "Clé dans missionTypeData."},
-            "defaultValue": {"type": "string|nil", "desc": "Chemin par défaut."},
-            "allowedExtensions": {"type": "table[]|nil", "desc": "Liste de paires {description, motif}, par ex. {\"Sites File\",\"*.sites.json\"}."},
-            "displayOptions": {"type": "table|nil", "desc": "Options (optional : le fichier n'est alors pas contrôlé)."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Key in missionTypeData."
+            },
+            "defaultValue": {
+              "type": "string|nil",
+              "desc": "Default path."
+            },
+            "allowedExtensions": {
+              "type": "table[]|nil",
+              "desc": "List of {description, pattern} pairs, e.g. {\"Sites File\",\"*.sites.json\"}."
+            },
+            "displayOptions": {
+              "type": "table|nil",
+              "desc": "Options (optional: the file is then not checked)."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addFixedFile": {
-          "desc": "Fichier attendu à un nom fixe dans le dossier de la mission (une chaîne, ou une liste dont un des fichiers est requis). Ne stocke aucune valeur.",
+          "desc": "File expected at a fixed name in the mission folder (a string, or a list of which one of the files is required). Stores no value.",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "filepathsInMissionfolder": {"type": "string|string[]", "desc": "Nom(s) de fichier."},
-            "displayOptions": {"type": "table|nil", "desc": "Options d'affichage."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "filepathsInMissionfolder": {
+              "type": "string|string[]",
+              "desc": "File name(s)."
+            },
+            "displayOptions": {
+              "type": "table|nil",
+              "desc": "Display options."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addRace": {
-          "desc": "Fichier de course (addFile filtré sur *.path.json) de type « race ».",
+          "desc": "Race file (addFile filtered on *.path.json) of type \"race\".",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "fieldName": {"type": "string", "desc": "Clé dans missionTypeData."},
-            "defaultValue": {"type": "string|nil", "desc": "Chemin par défaut."},
-            "...": {"type": "any", "desc": "displayOptions transmises à addFile."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Key in missionTypeData."
+            },
+            "defaultValue": {
+              "type": "string|nil",
+              "desc": "Default path."
+            },
+            "...": {
+              "type": "any",
+              "desc": "displayOptions passed to addFile."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addSimpleLapConfig": {
-          "desc": "Configuration simple de tours (outil editor/util/lapConfigUtil).",
+          "desc": "Simple lap configuration (editor/util/lapConfigUtil tool).",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "fieldName": {"type": "string", "desc": "Clé dans missionTypeData."},
-            "displayOptions": {"type": "table|nil", "desc": "Options d'affichage."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Key in missionTypeData."
+            },
+            "displayOptions": {
+              "type": "table|nil",
+              "desc": "Display options."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addSites": {
-          "desc": "Fichier de sites (addFile filtré sur *.sites.json) de type « sites ».",
+          "desc": "Sites file (addFile filtered on *.sites.json) of type \"sites\".",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "fieldName": {"type": "string", "desc": "Clé dans missionTypeData."},
-            "defaultValue": {"type": "string|nil", "desc": "Chemin par défaut."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Key in missionTypeData."
+            },
+            "defaultValue": {
+              "type": "string|nil",
+              "desc": "Default path."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addLeaderboard": {
-          "desc": "Réglages de classement : nombre d'entrées et résultats de référence meilleur / moyen / pire. Défauts : 10, 80, 120, 200.",
+          "desc": "Leaderboard settings: number of entries and reference results best / medium / worst. Defaults: 10, 80, 120, 200.",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "fieldName": {"type": "string", "desc": "Préfixe des clés."},
-            "defaultCount": {"type": "integer|nil", "desc": "Nombre d'entrées."},
-            "defaultBest": {"type": "number|nil", "desc": "Meilleur résultat."},
-            "defaultMedium": {"type": "number|nil", "desc": "Résultat moyen."},
-            "defaultWorst": {"type": "number|nil", "desc": "Pire résultat."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Key prefix."
+            },
+            "defaultCount": {
+              "type": "integer|nil",
+              "desc": "Number of entries."
+            },
+            "defaultBest": {
+              "type": "number|nil",
+              "desc": "Best result."
+            },
+            "defaultMedium": {
+              "type": "number|nil",
+              "desc": "Medium result."
+            },
+            "defaultWorst": {
+              "type": "number|nil",
+              "desc": "Worst result."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addReward": {
-          "desc": "Champ numérique de type « reward » (récompense).",
+          "desc": "Numeric field of type \"reward\".",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "fieldName": {"type": "string", "desc": "Clé dans missionTypeData."},
-            "defaultValue": {"type": "number|nil", "desc": "Valeur par défaut."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Key in missionTypeData."
+            },
+            "defaultValue": {
+              "type": "number|nil",
+              "desc": "Default value."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addDropdown": {
-          "desc": "Liste déroulante de valeurs ; si la liste est vide, elle contient « issues Values! ». Défaut : premier élément.",
+          "desc": "Dropdown list of values; if the list is empty, it contains \"issues Values!\". Default: first element.",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "fieldName": {"type": "string", "desc": "Clé dans missionTypeData."},
-            "values": {"type": "table", "desc": "Valeurs possibles."},
-            "defaultValue": {"type": "any", "desc": "Valeur par défaut."},
-            "valueTooltips": {"type": "table|nil", "desc": "Infobulles par valeur."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Key in missionTypeData."
+            },
+            "values": {
+              "type": "table",
+              "desc": "Possible values."
+            },
+            "defaultValue": {
+              "type": "any",
+              "desc": "Default value."
+            },
+            "valueTooltips": {
+              "type": "table|nil",
+              "desc": "Tooltips per value."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addMissionId": {
-          "desc": "Champ contenant l'id d'une autre mission ; défaut « (none) ».",
+          "desc": "Field containing the id of another mission; default \"(none)\".",
           "params": {
-            "label": {"type": "string", "desc": "Libellé."},
-            "fieldName": {"type": "string", "desc": "Clé dans missionTypeData."},
-            "defaultValue": {"type": "string|nil", "desc": "Valeur par défaut."},
-            "displayOptions": {"type": "table|nil", "desc": "Options d'affichage."}
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Key in missionTypeData."
+            },
+            "defaultValue": {
+              "type": "string|nil",
+              "desc": "Default value."
+            },
+            "displayOptions": {
+              "type": "table|nil",
+              "desc": "Display options."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addDecoHeader": {
-          "desc": "Décoration : titre coloré (default, orange, red, green, blue, white, black).",
+          "desc": "Decoration: colored title (default, orange, red, green, blue, white, black).",
           "params": {
-            "text": {"type": "string|nil", "desc": "Texte."},
-            "color": {"type": "string|nil", "desc": "Nom de couleur."}
+            "text": {
+              "type": "string|nil",
+              "desc": "Text."
+            },
+            "color": {
+              "type": "string|nil",
+              "desc": "Color name."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addDecoText": {
-          "desc": "Décoration : ligne de texte avec infobulle facultative.",
+          "desc": "Decoration: text line with optional tooltip.",
           "params": {
-            "text": {"type": "string|nil", "desc": "Texte."},
-            "tooltip": {"type": "string|nil", "desc": "Infobulle."}
+            "text": {
+              "type": "string|nil",
+              "desc": "Text."
+            },
+            "tooltip": {
+              "type": "string|nil",
+              "desc": "Tooltip."
+            }
           },
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addDecoSeparator": {
-          "desc": "Décoration : ligne de séparation.",
+          "desc": "Decoration: separator line.",
           "params": {},
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addDecoSpacer": {
-          "desc": "Décoration : espace vertical de 4 pixels.",
+          "desc": "Decoration: 4-pixel vertical space.",
           "params": {},
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "addDecoDummy": {
-          "desc": "Décoration : espace vertical de hauteur donnée (1 par défaut).",
-          "params": {"height": {"type": "number|nil", "desc": "Hauteur."}},
-          "returns": [{"type": "table", "desc": "Élément."}]
+          "desc": "Decoration: vertical space of given height (1 by default).",
+          "params": {
+            "height": {
+              "type": "number|nil",
+              "desc": "Height."
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Element."
+            }
+          ]
         },
         "clear": {
-          "desc": "Vide la liste des éléments.",
+          "desc": "Empties the list of elements.",
           "params": {},
           "returns": []
         },
         "getNewData": {
-          "desc": "Construit la table missionTypeData par défaut d'une nouvelle mission en rassemblant les valeurs par défaut de tous les éléments.",
+          "desc": "Builds the default missionTypeData table of a new mission by gathering the default values of all elements.",
           "params": {},
-          "returns": [{"type": "table<string, any>", "desc": "Champ -> valeur par défaut."}]
+          "returns": [
+            {
+              "type": "table<string, any>",
+              "desc": "Field -> default value."
+            }
+          ]
         },
         "setMission": {
-          "desc": "Charge une mission dans l'éditeur : mémorise self.mission et met à jour chaque widget depuis mission.missionTypeData, puis appelle valueChangedCallback.",
-          "params": {"m": {"type": "table", "desc": "Mission (avec missionTypeData)."}},
+          "desc": "Loads a mission into the editor: stores self.mission and updates each widget from mission.missionTypeData, then calls valueChangedCallback.",
+          "params": {
+            "m": {
+              "type": "table",
+              "desc": "Mission (with missionTypeData)."
+            }
+          },
           "returns": []
         },
         "checkMission": {
-          "desc": "Vérifie missionTypeData par rapport aux éléments : champs manquants, types différents, champs en trop, modèles/configs/fichiers inexistants. Renvoie la liste de problèmes {label, severity, fixable, data}.",
+          "desc": "Checks missionTypeData against the elements: missing fields, different types, extra fields, nonexistent models/configs/files. Returns the list of problems {label, severity, fixable, data}.",
           "params": {
-            "m": {"type": "table", "desc": "Mission."},
-            "fix": {"type": "boolean|nil", "desc": "Paramètre déclaré mais non utilisé dans la partie lue (déduit du code)."}
+            "m": {
+              "type": "table",
+              "desc": "Mission."
+            },
+            "fix": {
+              "type": "boolean|nil",
+              "desc": "Parameter declared but unused in the part read (inferred from code)."
+            }
           },
-          "returns": [{"type": "table[]", "desc": "Liste de problèmes."}]
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "List of problems."
+            }
+          ]
         },
         "updateMouseInfo": {
-          "desc": "Met à jour mouseInfo : position caméra, rayon et impact du rayon sous la souris (collision de la forêt désactivée le temps du tir), état clic/maintien/relâché, élément survolé.",
-          "params": {"mission": {"type": "table", "desc": "Mission en cours d'édition."}},
+          "desc": "Updates mouseInfo: camera position, ray and ray hit under the mouse (forest collision disabled during the cast), click/hold/release state, hovered element.",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Mission being edited."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "editingAnyTransform": {
-          "desc": "Indique si une transformation (d'un élément ou du déclencheur de départ) est en cours d'édition.",
+          "desc": "Returns whether a transform (of an element or of the start trigger) is being edited.",
           "params": {},
-          "returns": [{"type": "boolean", "desc": "true si oui."}]
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if so."
+            }
+          ]
         },
         "draw": {
-          "desc": "Dessine tous les éléments (widgets imgui et gizmos 3D) ; marque mission._dirty quand une valeur change. filterOptions.onlyStar limite l'affichage aux éléments associés à une étoile.",
-          "params": {"filterOptions": {"type": "table|nil", "desc": "{onlyStar = clé d'étoile}."}},
+          "desc": "Draws all elements (imgui widgets and 3D gizmos); marks mission._dirty when a value changes. filterOptions.onlyStar limits the display to the elements associated with a star.",
+          "params": {
+            "filterOptions": {
+              "type": "table|nil",
+              "desc": "{onlyStar = star key}."
+            }
+          },
           "returns": []
         },
         "drawTransformAsSphereDir": {
-          "desc": "Dessine une transformation comme une sphère avec une flèche de direction.",
-          "params": {"e": {"type": "table", "desc": "Élément transform."}},
+          "desc": "Draws a transform as a sphere with a direction arrow.",
+          "params": {
+            "e": {
+              "type": "table",
+              "desc": "Transform element."
+            }
+          },
           "returns": []
         },
         "drawTransformAsVehicle": {
-          "desc": "Dessine une transformation comme un boîtier de véhicule (autres fonctions d'aide de dessin).",
-          "params": {"e": {"type": "table", "desc": "Élément transform."}},
+          "desc": "Draws a transform as a vehicle box (other drawing helper functions).",
+          "params": {
+            "e": {
+              "type": "table",
+              "desc": "Transform element."
+            }
+          },
           "returns": []
         },
         "drawAxisBox": {
-          "desc": "Dessine une boîte alignée sur trois axes à partir d'un coin avec debugDrawer.",
+          "desc": "Draws a box aligned on three axes from a corner with debugDrawer.",
           "params": {
-            "corner": {"type": "vec3", "desc": "Coin."},
-            "x": {"type": "vec3", "desc": "Axe X (vecteur)."},
-            "y": {"type": "vec3", "desc": "Axe Y (vecteur)."},
-            "z": {"type": "vec3", "desc": "Axe Z (vecteur)."},
-            "clr": {"type": "ColorF", "desc": "Couleur."}
+            "corner": {
+              "type": "vec3",
+              "desc": "Corner."
+            },
+            "x": {
+              "type": "vec3",
+              "desc": "X axis (vector)."
+            },
+            "y": {
+              "type": "vec3",
+              "desc": "Y axis (vector)."
+            },
+            "z": {
+              "type": "vec3",
+              "desc": "Z axis (vector)."
+            },
+            "clr": {
+              "type": "ColorF",
+              "desc": "Color."
+            }
           },
           "returns": []
         },
         "getAllFieldNames": {
-          "desc": "Liste tous les champs missionTypeData gérés par l'éditeur, avec leur type.",
+          "desc": "Lists all missionTypeData fields handled by the editor, with their type.",
           "params": {},
-          "returns": [{"type": "table[]", "desc": "Liste de champs avec type."}]
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "List of fields with type."
+            }
+          ]
         },
         "setAutoAdditionalAttributes": {
-          "desc": "Active ou désactive la génération automatique d'un attribut additionnel de mission.",
+          "desc": "Enables or disables the automatic generation of an additional mission attribute.",
           "params": {
-            "key": {"type": "string", "desc": "Clé de l'attribut."},
-            "auto": {"type": "boolean|nil", "desc": "true par défaut."}
+            "key": {
+              "type": "string",
+              "desc": "Attribute key."
+            },
+            "auto": {
+              "type": "boolean|nil",
+              "desc": "true by default."
+            }
           },
           "returns": []
         }

@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/isWalking.lua",
+  "module": "Nœud flowgraph « Is Walking » (catégorie repeat_instant, couleur/icône « walking »). Il teste à chaque frame si le joueur est en mode marche via gameplay_walk.isWalking(). Pins de sortie : walking (flow, vrai si le joueur marche), nonWalking (flow, caché, vrai sinon), enteredWalking (flow impulsion, caché, vrai une frame à l'entrée en mode marche), exitedWalking (flow impulsion, caché, vrai une frame à la sortie). Dépend de l'extension gameplay_walk.",
+  "notes": ["Le nœud mémorise l'état initial dans self.prevWalk au démarrage de l'exécution (_executionStarted), mais work() ne met jamais prevWalk à jour : enteredWalking/exitedWalking restent donc vrais tant que l'état diffère de celui du démarrage (comportement observé dans le code, pas une vraie impulsion d'une seule frame)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud, instanciée par _flowgraph_createNode(C).",
+      "functions": {
+        "_executionStarted": {"desc": "Appelé au démarrage du graphe ; enregistre l'état de marche actuel dans self.prevWalk.", "internal": true},
+        "work": {"desc": "Chaque frame : lit gameplay_walk.isWalking() et renseigne les pins walking, nonWalking, enteredWalking, exitedWalking.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true},
+        "drawMiddle": {"desc": "Dessine dans l'éditeur une icône de marcheur, verte si le joueur marche, grisée sinon.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud imgui de l'éditeur."}, "style": {"type": "table", "desc": "Style du nœud."}}, "internal": true}
+      }
+    }
+  }
+}

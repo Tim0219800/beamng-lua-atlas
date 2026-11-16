@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/util/trackBuilder/multiTrackMerger.lua",
+  "module": "Construit le mesh de raccord (intersection) entre plusieurs segments de piste du Track Builder qui se rejoignent à un même point. Il prend l'extrémité de chaque segment, relie les extrémités consécutives par des courbes de Bézier (bords), génère pour chacune une pseudo-segment (centre 'halfRegular' + bordure) à l'aide de basicCenters et basicBorders, ajoute un remplissage central s'il y a plus de deux segments, puis crée un objet ProceduralMesh dans MissionGroup.",
+  "notes": [
+    "setReferences doit être appelé avant mergeMultiTrack : il injecte les modules basicCenters et basicBorders (list.basicCenters, list.basicBorders) ; sinon l'appel échoue sur des références nil.",
+    "mergeMultiTrack dessine des sphères de débogage (debugDrawer:drawSphere rouge pour chaque extrémité, verte pour le centre) au moment de l'appel.",
+    "Le nom de l'objet est 'procMerger-' suivi de [r]index x sub de chaque segment ; un nom identique pour la même intersection peut entrer en conflit.",
+    "L'objet créé a canSave = false.",
+    "Chaque entrée de segments est une table {segment, reverse, index, sub} ; si reverse est vrai, le premier point est utilisé avec orientation, bank et pitch inversés."
+  ],
+  "functions": {
+    "mergeMultiTrack": {
+      "desc": "Crée l'objet ProceduralMesh qui raccorde les segments donnés. Matériaux par défaut : 'track_editor_A_center', 'track_editor_A_border', bordure 'regular'.",
+      "params": {
+        "segments": {"type": "table[]", "desc": "Liste d'entrées {segment, reverse, index, sub} décrivant les extrémités à raccorder."},
+        "centerMat": {"type": "string|nil", "desc": "Matériau du centre."},
+        "borderMat": {"type": "string|nil", "desc": "Matériau de la bordure."},
+        "borderMesh": {"type": "string|nil", "desc": "Nom du profil de bordure (voir basicBorders)."}
+      },
+      "returns": [{"type": "userdata", "desc": "L'objet ProceduralMesh créé."}],
+      "internal": false
+    },
+    "setMaterials": {
+      "desc": "Change les matériaux d'un raccord déjà créé : un matériau de centre par segment, un de bordure par segment, et le matériau de remplissage s'il y a plus de deux segments.",
+      "params": {
+        "intersection": {"type": "table", "desc": "Table contenant .segments (liste) et .obj (le ProceduralMesh renvoyé par mergeMultiTrack)."},
+        "centerMat": {"type": "string|nil", "desc": "Matériau du centre ; ignoré si nil."},
+        "borderMat": {"type": "string|nil", "desc": "Matériau de la bordure ; ignoré si nil."}
+      },
+      "internal": false
+    },
+    "setReferences": {
+      "desc": "Enregistre les modules dont ce fichier dépend.",
+      "params": {"list": {"type": "table", "desc": "Table {basicCenters = module, basicBorders = module}."}},
+      "internal": true
+    }
+  }
+}

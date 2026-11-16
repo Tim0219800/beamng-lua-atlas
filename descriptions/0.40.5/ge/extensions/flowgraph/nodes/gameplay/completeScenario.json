@@ -1,13 +1,21 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/completeScenario.lua",
-  "module": "Nœud flowgraph « Complete Scenario » (catégorie once_instant). Termine le scénario courant via scenario_scenarios.finish. Pins d'entrée : reason (message final) et fail (bool, si vrai le scénario échoue). Sans reason, le message vaut « Failed » ou « Completed ».",
-  "notes": ["Ne fait rien si scenario_scenarios n'est pas chargé.", "En cas d'échec la table passée contient failed = reason, sinon msg = reason."],
+  "module": "Flowgraph node \"Complete Scenario\" (category once_instant). Ends the current scenario via scenario_scenarios.finish. Input pins: reason (final message) and fail (bool, if true the scenario fails). Without reason, the message is \"Failed\" or \"Completed\".",
+  "notes": [
+    "Does nothing if scenario_scenarios is not loaded.",
+    "On failure the table passed contains failed = reason, otherwise msg = reason."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Appelle scenario_scenarios.finish({failed=...}) ou ({msg=...}) selon fail."},
-        "drawMiddle": {"desc": "Dessin du nœud dans l'éditeur.", "internal": true}
+        "workOnce": {
+          "desc": "Calls scenario_scenarios.finish({failed=...}) or ({msg=...}) depending on fail."
+        },
+        "drawMiddle": {
+          "desc": "Node drawing in the editor.",
+          "internal": true
+        }
       }
     }
   }

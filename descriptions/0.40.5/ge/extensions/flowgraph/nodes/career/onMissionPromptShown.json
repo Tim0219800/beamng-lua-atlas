@@ -1,16 +1,45 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/career/onMissionPromptShown.lua",
-  "module": "Nœud flowgraph « On Poi Prompt Shown » (catégorie repeat_instant, couleur/icône ui). Détecte que le joueur s'est arrêté sur un point d'intérêt et que l'invite (missions, concessionnaire, garage, ravitaillement) s'affiche. Sorties en impulsion d'une frame : shownPrompt (invite affichée, y compris garage et carburant) et openedMenu (liste de missions envoyée à l'UI).",
+  "module": "Flowgraph node \"On Poi Prompt Shown\" (category repeat_instant, ui color/icon). Detects that the player has stopped at a point of interest and the prompt (missions, dealership, garage, refueling) is shown. One-frame impulse outputs: shownPrompt (prompt shown, including garage and fuel) and openedMenu (mission list sent to the UI).",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
-        "work": {"desc": "Chaque frame : remet les deux sorties à faux, applique et efface les drapeaux.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
-        "onActivityAcceptUpdate": {"desc": "Hook : lève shownPrompt.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
-        "onAvailableMissionsSentToUi": {"desc": "Hook : lève openedMenu.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true}
+        "init": {
+          "desc": "Creates the flag table.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Every frame: sets both outputs back to false, applies and clears the flags.",
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "unused"
+            }
+          }
+        },
+        "onActivityAcceptUpdate": {
+          "desc": "Hook: raises shownPrompt.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        },
+        "onAvailableMissionsSentToUi": {
+          "desc": "Hook: raises openedMenu.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

@@ -1,60 +1,60 @@
 # `editor_ezObjectSelect_transformGizmo`
 
-*Fichier : `lua/ge/extensions/editor/ezObjectSelect/transformGizmo.lua` · VM : Game Engine (GE) · 111 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ezObjectSelect/transformGizmo.lua` · VM: Game Engine (GE) · 111 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ezObjectSelect_transformGizmo` : `extensions.load("editor_ezObjectSelect_transformGizmo")`, puis la globale `editor_ezObjectSelect_transformGizmo`
+**Access:** extension `editor_ezObjectSelect_transformGizmo`: `extensions.load("editor_ezObjectSelect_transformGizmo")`, then the global `editor_ezObjectSelect_transformGizmo`
 
-Guides visuels 3D de l'outil Easy Object Select pendant une translation, une mise à l'échelle ou une rotation. Dessinés avec debugDrawer : flèches (ligne + prisme) pour la translation, lignes + sphères pour l'échelle, anneau de 64 segments et arc d'angle pour la rotation. Les couleurs sont rouge/vert/bleu pour X/Y/Z ; la longueur du guide dépend de la distance à la caméra (0.16 × distance, bornée entre 1.5 et 30 m).
+3D visual guides of the Easy Object Select tool during a translation, scaling or rotation. Drawn with debugDrawer: arrows (line + prism) for translation, lines + spheres for scale, 64-segment ring and angle arc for rotation. Colors are red/green/blue for X/Y/Z; the guide length depends on the distance to the camera (0.16 × distance, clamped between 1.5 and 30 m).
 
-## Remarques
+## Notes
 
-- Le paramètre constraint est {axis = "x"|"y"|"z", exclude = boolean} : sans exclude seul l'axe est dessiné, avec exclude les deux autres (contrainte de plan). Sans contrainte les trois axes sont dessinés.
+- The constraint parameter is {axis = "x"|"y"|"z", exclude = boolean}: without exclude only the axis is drawn, with exclude the other two (plane constraint). Without a constraint all three axes are drawn.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ezObjectSelect_transformGizmo.axisColors()` | Renvoie la table des couleurs d'axes {x, y, z} (ColorF). | 42 |
-| `editor_ezObjectSelect_transformGizmo.drawRotation(pivot, axis, startVector, angle)` | Dessine l'anneau de rotation autour de l'axe donné et, si l'angle n'est pas nul, un arc épais de l'angle parcouru depuis le vecteur de départ. | 92 |
-| `editor_ezObjectSelect_transformGizmo.drawScale(pivot, axes, constraint)` | Dessine les guides de mise à l'échelle (ligne terminée par une sphère) pour les axes concernés. | 64 |
-| `editor_ezObjectSelect_transformGizmo.drawTranslate(pivot, axes, constraint)` | Dessine les flèches de translation depuis le pivot pour les axes concernés par la contrainte. | 46 |
+| `editor_ezObjectSelect_transformGizmo.axisColors()` | Returns the axis color table {x, y, z} (ColorF). | 42 |
+| `editor_ezObjectSelect_transformGizmo.drawRotation(pivot, axis, startVector, angle)` | Draws the rotation ring around the given axis and, if the angle is not zero, a thick arc of the angle traveled from the start vector. | 92 |
+| `editor_ezObjectSelect_transformGizmo.drawScale(pivot, axes, constraint)` | Draws the scale guides (line ending in a sphere) for the concerned axes. | 64 |
+| `editor_ezObjectSelect_transformGizmo.drawTranslate(pivot, axes, constraint)` | Draws the translation arrows from the pivot for the axes concerned by the constraint. | 46 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_ezObjectSelect_transformGizmo.axisColors()`
 
-Renvoie la table des couleurs d'axes {x, y, z} (ColorF).
+Returns the axis color table {x, y, z} (ColorF).
 
-- **renvoie** : table<string, ColorF> Couleurs des axes x, y, z.
+- **returns**: table<string, ColorF> Colors of the x, y, z axes.
 
 #### `editor_ezObjectSelect_transformGizmo.drawRotation(pivot, axis, startVector, angle)`
 
-Dessine l'anneau de rotation autour de l'axe donné et, si l'angle n'est pas nul, un arc épais de l'angle parcouru depuis le vecteur de départ.
+Draws the rotation ring around the given axis and, if the angle is not zero, a thick arc of the angle traveled from the start vector.
 
-- `pivot` (*vec3*) : Centre de la rotation.
-- `axis` (*vec3*) : Axe de rotation (normalisé en interne, défaut Z).
-- `startVector` (*vec3|nil*) : Vecteur de départ projeté sur le plan de l'anneau.
-- `angle` (*number|nil*) : Angle en radians.
+- `pivot` (*vec3*) : Rotation center.
+- `axis` (*vec3*) : Rotation axis (normalized internally, default Z).
+- `startVector` (*vec3|nil*) : Start vector projected onto the ring plane.
+- `angle` (*number|nil*) : Angle in radians.
 
 #### `editor_ezObjectSelect_transformGizmo.drawScale(pivot, axes, constraint)`
 
-Dessine les guides de mise à l'échelle (ligne terminée par une sphère) pour les axes concernés.
+Draws the scale guides (line ending in a sphere) for the concerned axes.
 
-- `pivot` (*vec3*) : Centre de l'échelle.
-- `axes` (*table<string, vec3>*) : Directions des axes x, y, z.
-- `constraint` (*table|nil*) : Contrainte d'axe/plan, ou nil.
+- `pivot` (*vec3*) : Scale center.
+- `axes` (*table<string, vec3>*) : Directions of the x, y, z axes.
+- `constraint` (*table|nil*) : Axis/plane constraint, or nil.
 
 #### `editor_ezObjectSelect_transformGizmo.drawTranslate(pivot, axes, constraint)`
 
-Dessine les flèches de translation depuis le pivot pour les axes concernés par la contrainte.
+Draws the translation arrows from the pivot for the axes concerned by the constraint.
 
-- `pivot` (*vec3*) : Point d'origine des flèches.
-- `axes` (*table<string, vec3>*) : Directions des axes x, y, z (monde ou locales).
-- `constraint` (*table|nil*) : Contrainte d'axe/plan ({axis, exclude}), ou nil pour les trois axes.
+- `pivot` (*vec3*) : Origin point of the arrows.
+- `axes` (*table<string, vec3>*) : Directions of the x, y, z axes (world or local).
+- `constraint` (*table|nil*) : Axis/plane constraint ({axis, exclude}), or nil for the three axes.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLineInstance`, `drawSphere`, `drawSquarePrism`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ezObjectSelect/transformGizmo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ezObjectSelect/transformGizmo.lua`.*

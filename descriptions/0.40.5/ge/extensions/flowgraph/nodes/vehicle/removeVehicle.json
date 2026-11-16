@@ -1,17 +1,17 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/removeVehicle.lua",
-  "module": "Nœud « Remove Vehicle » (catégorie `repeat_instant`, tags gameplay/utils). Supprime un véhicule : informe l'éditeur (`editor.onRemoveSceneTreeObjects`) si présent, puis `source:delete()`. Pin d'entrée : `vehId`.",
+  "module": "Node \"Remove Vehicle\" (category `repeat_instant`, tags gameplay/utils). Deletes a vehicle: informs the editor (`editor.onRemoveSceneTreeObjects`) if present, then `source:delete()`. Input pin: `vehId`.",
   "notes": [
-    "Appelé à chaque frame tant que le flux est actif ; une fois supprimé, `scenetree.findObjectById` renvoie nil.",
-    "`vehId` nil ou 0 : aucune suppression ; le flux de sortie est mis à true.",
-    "Le flux de sortie n'est mis à true que dans le cas « pas d'id »."
+    "Called every frame while the flow is active; once deleted, `scenetree.findObjectById` returns nil.",
+    "`vehId` nil or 0: no deletion; the output flow is set to true.",
+    "The output flow is set to true only in the \"no id\" case."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "work": {
-          "desc": "Cherche le véhicule et le supprime de la scène.",
+          "desc": "Looks for the vehicle and removes it from the scene.",
           "internal": true
         }
       }

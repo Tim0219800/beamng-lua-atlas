@@ -1,24 +1,24 @@
 # `flowgraph_nodes_gameplay_traffic_signals_controller`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/controller.lua` · VM : Game Engine (GE) · 94 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/controller.lua` · VM: Game Engine (GE) · 94 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/controller")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/controller")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Signal Controller » (repeat_instant). Lit un contrôleur de feux (signalControllerData) : signalType, stateCount, duration (totalDuration) et, pour chaque état i (nombre réglable), stateName_i et stateDuration_i ('none' et 0 si absent).
+Flowgraph node "Get Signal Controller" (repeat_instant). Reads a traffic light controller (signalControllerData): signalType, stateCount, duration (totalDuration) and, for each state i (adjustable count), stateName_i and stateDuration_i ('none' and 0 if absent).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(res)` | Restaure les réglages propres au nœud à partir des données sauvegardées. | 74 |
-| `C:_onSerialize(res)` | Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe. | 70 |
-| `C:drawCustomProperties()` | Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui). | 32 |
-| `C:init()` | Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph). | 24 |
-| `C:postInit()` | Appelé après la création des pins du nœud ; sert à ajuster les pins (modèles de valeurs, filtres de fichiers, clés dynamiques). | 28 |
-| `C:updatePins(old, new)` | Ajoute ou retire les pins stateName_i / stateDuration_i et supprime leurs liens. | 50 |
-| `C:work(args)` | Recopie type, nombre d'états, durée totale et nom/durée de chaque état sur les sorties. | 79 |
+| `C:_onDeserialized(res)` | Restores the node's own settings from the saved data. | 74 |
+| `C:_onSerialize(res)` | Adds the node's own settings to the `res` table when saving the graph. | 70 |
+| `C:drawCustomProperties()` | Draws the node's custom properties in the flowgraph editor panel (ImGui). | 32 |
+| `C:init()` | Initializes the node's internal state at creation (called by the flowgraph engine). | 24 |
+| `C:postInit()` | Called after the node's pins are created; used to adjust the pins (value templates, file filters, dynamic keys). | 28 |
+| `C:updatePins(old, new)` | Adds or removes the stateName_i / stateDuration_i pins and deletes their links. | 50 |
+| `C:work(args)` | Copies type, state count, total duration and the name/duration of each state to the outputs. | 79 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/controller.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/controller.lua`.*

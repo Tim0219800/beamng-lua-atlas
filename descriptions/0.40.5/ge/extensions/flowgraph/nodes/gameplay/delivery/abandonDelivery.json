@@ -1,15 +1,28 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/delivery/abandonDelivery.lua",
-  "module": "Nœud flowgraph « Abandon Delivery » (catégorie once_instant, tags delivery/mission). Abandonne la livraison en cours et démonte le système (véhicules, éléments d'interface, état) via gameplay_freeformDelivery_freeformDelivery.teardown. Pins d'entrée : flow, reset (caché), keepVehicles (bool : garde les véhicules en les sortant des prefabs). Sorties : flow, success.",
+  "module": "Flowgraph node \"Abandon Delivery\" (category once_instant, tags delivery/mission). Abandons the current delivery and tears down the system (vehicles, UI elements, state) via gameplay_freeformDelivery_freeformDelivery.teardown. Input pins: flow, reset (hidden), keepVehicles (bool: keeps the vehicles by taking them out of the prefabs). Outputs: flow, success.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Met flow et success à faux.", "internal": true},
-        "_executionStopped": {"desc": "Appelle reset.", "internal": true},
-        "onNodeReset": {"desc": "Appelle reset.", "internal": true},
-        "reset": {"desc": "Remet flow et success à faux."},
-        "work": {"desc": "Si flow est actif : appelle teardown(keepVehicles) et signale le succès ; journalise une erreur si le système de livraison est absent."}
+        "init": {
+          "desc": "Sets flow and success to false.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Calls reset.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Calls reset.",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Resets flow and success to false."
+        },
+        "work": {
+          "desc": "If flow is active: calls teardown(keepVehicles) and signals success; logs an error if the delivery system is absent."
+        }
       }
     }
   }

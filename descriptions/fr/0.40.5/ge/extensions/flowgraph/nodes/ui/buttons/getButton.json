@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/buttons/getButton.lua",
+  "module": "Nœud flowgraph « Get Button » (catégorie once_instant) : lit l'état d'un bouton créé avec Create Button. Entrée « buttonId ». Sorties : « clicked » (impulsion au clic), « used » / « unused » (déjà cliqué ou non, cachés ; anciens noms complete/incomplete), « label », « active », « order », « style » (cachés).",
+  "notes": [
+    "Bug : la ligne 'unused' lit self.pinOut.complete.value, or le pin 's'appelle 'used' dans pinSchema (complete n'existe qu'en legacyPins) ; selon la gestion des legacyPins cela peut donner nil.",
+    "Catégorie once_instant : workOnce ne lit l'état qu'une fois ; pour surveiller un clic en continu, utiliser plutôt Get Multiple Buttons ou Simple Button."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "workOnce": {
+          "desc": "Récupère le bouton par id et recopie clicked, used, unused, label, active, order, style sur les pins de sortie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

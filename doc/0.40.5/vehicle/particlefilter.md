@@ -1,41 +1,41 @@
 # `particlefilter`
 
-*Fichier : `lua/vehicle/particlefilter.lua` · VM : Véhicule · 47 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/particlefilter.lua` · VM: Vehicle · 47 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `particlefilter`
+**Access:** global `particlefilter`
 
-Filtre d'émission de particules lors des collisions de noeuds. main.lua remplit la table partagée particlefilter.particleData à chaque onNodeCollision puis appelle nodeCollision(p) : si la vitesse perpendiculaire dépasse un seuil lié à la profondeur de pénétration, il cherche dans la table des règles de particules (particles.getMaterialsParticlesTable, issue de particles.json) les règles correspondant à la paire de matériaux et, pour celles dont compareFunc(p) est vrai, émet les particules via obj:addParticleVelWidthTypeCount.
+Particle emission filter for node collisions. main.lua fills the shared table particlefilter.particleData at each onNodeCollision then calls nodeCollision(p): if the perpendicular velocity exceeds a threshold tied to the penetration depth, it looks in the particle rules table (particles.getMaterialsParticlesTable, from particles.json) for the rules matching the material pair and, for those whose compareFunc(p) is true, emits the particles via obj:addParticleVelWidthTypeCount.
 
-## Remarques
+## Notes
 
-- Seuil : perpendicularVel > depth x (0.5 / physicsDt), où physicsDt est la globale de main.lua (pas de physique).
-- Clé de recherche : materialID1 x 10000 + materialID2 dans materialsMap. Chaque règle r fournit compareFunc, veloMult, width, particleType, count.
-- Les valeurs initiales de particleData sont des 0 (même pour pos, normal, nodeVel qui sont ensuite remplis avec des vecteurs). Le champ est nommé materialID1/materialID2 (avec D majuscule) alors que le paramètre de main.lua s'appelle materialId1/materialId2.
-- Le commentaire de debug du code mentionne p.particleType qui n'existe pas dans particleData.
+- Threshold: perpendicularVel > depth x (0.5 / physicsDt), where physicsDt is the main.lua global (physics step).
+- Lookup key: materialID1 x 10000 + materialID2 in materialsMap. Each rule r provides compareFunc, veloMult, width, particleType, count.
+- The initial values of particleData are 0s (even for pos, normal, nodeVel which are then filled with vectors). The field is named materialID1/materialID2 (capital D) whereas the main.lua parameter is called materialId1/materialId2.
+- The debug comment in the code mentions p.particleType which does not exist in particleData.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `particlefilter.nodeCollision(p)` | Évalue une collision de noeud et émet des particules si le seuil de vitesse est dépassé et si une règle de la paire de matériaux accepte (compareFunc). Appelée par main.lua:onNodeCollision à chaque collision. *(interne)* | 25 |
+| `particlefilter.nodeCollision(p)` | Evaluates a node collision and emits particles if the speed threshold is exceeded and if a rule of the material pair accepts (compareFunc). Called by main.lua:onNodeCollision on each collision. *(internal)* | 25 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `particlefilter.nodeCollision(p)`
 
-Évalue une collision de noeud et émet des particules si le seuil de vitesse est dépassé et si une règle de la paire de matériaux accepte (compareFunc). Appelée par main.lua:onNodeCollision à chaque collision.
+Evaluates a node collision and emits particles if the speed threshold is exceeded and if a rule of the material pair accepts (compareFunc). Called by main.lua:onNodeCollision on each collision.
 
-- `p` (*table*) : Données de collision au format de particleData.
+- `p` (*table*) : Collision data in particleData format.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `particleData` | table | Table réutilisée (évite des allocations) décrivant la collision courante : id1 (noeud), pos, normal, nodeVel, perpendicularVel, slipVec, slipVel, slipForce, normalForce, depth, materialID1, materialID2. Remplie par main.lua:onNodeCollision. |
+| `particleData` | table | Reused table (avoids allocations) describing the current collision: id1 (node), pos, normal, nodeVel, perpendicularVel, slipVec, slipVel, slipForce, normalForce, depth, materialID1, materialID2. Filled by main.lua:onNodeCollision. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `addParticleVelWidthTypeCount`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/particlefilter.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/particlefilter.lua`.*

@@ -1,22 +1,22 @@
 # `flowgraph_nodes_util_randomNumber`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/randomNumber.lua` · VM : Game Engine (GE) · 39 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/randomNumber.lua` · VM: Game Engine (GE) · 39 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/randomNumber")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/randomNumber")` (file under extensions/ but not a regular extension)
 
-Nœud « Random Number » (repeat_instant, icône casino). Génère un nombre aléatoire dans [rangeStart, rangeEnd] à chaque frame. Entrées : rangeStart (0), rangeEnd (10), float (caché, false : entier). Sortie : random.
+Node "Random Number" (repeat_instant, casino icon). Generates a random number in [rangeStart, rangeEnd] every frame. Inputs: rangeStart (0), rangeEnd (10), float (hidden, false: integer). Output: random.
 
-## Remarques
+## Notes
 
-- En mode entier, math.random exige des entiers et rangeStart <= rangeEnd.
+- In integer mode, math.random requires integers and rangeStart <= rangeEnd.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Si les bornes sont définies, renvoie un entier (math.random(a, b)) ou un flottant (a + random × (b-a)) selon float ; sans bornes, renvoie math.random(). | 23 |
+| `C:work()` | If the bounds are defined, returns an integer (math.random(a, b)) or a float (a + random × (b-a)) depending on float; without bounds, returns math.random(). | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/randomNumber.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/randomNumber.lua`.*

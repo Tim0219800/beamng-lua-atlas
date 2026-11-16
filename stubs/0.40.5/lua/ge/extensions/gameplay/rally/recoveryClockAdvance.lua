@@ -2,23 +2,23 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/recoveryClockAdvance.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Table des pénalités de chronomètre appliquées à chaque récupération du véhicule (reset) en rallye. Une récupération coûte un nombre fixe de secondes, indépendant de la longueur de l'étape. Sur une spéciale : 5 s pour un recovery, 0 s pour un flip (retournement). Hors spéciale (liaison) : 60 s et 10 s. Utilisé par rallyManager:addRecoveryRaceTime.
---- Accès : extension `gameplay_rally_recoveryClockAdvance` : `extensions.load("gameplay_rally_recoveryClockAdvance")`, puis la globale `gameplay_rally_recoveryClockAdvance`
+--- Table of the timer penalties applied at each vehicle recovery (reset) in rally. A recovery costs a fixed number of seconds, independent of the stage length. On a special stage: 5 s for a recovery, 0 s for a flip. Off a special stage (road section): 60 s and 10 s. Used by rallyManager:addRecoveryRaceTime.
+--- Access: extension `gameplay_rally_recoveryClockAdvance`: `extensions.load("gameplay_rally_recoveryClockAdvance")`, then the global `gameplay_rally_recoveryClockAdvance`
 ---@class gameplay_rally_recoveryClockAdvance
----@field nonSpecialStageSeconds table<string, number> Pénalités hors spéciale : recovery = 60, flip = 10.
----@field specialStageSeconds table<string, number> Pénalités sur une spéciale : recovery = 5, flip = 0 (le chemin de code est gardé mais n'ajoute rien).
+---@field nonSpecialStageSeconds table<string, number> Penalties off a special stage: recovery = 60, flip = 10.
+---@field specialStageSeconds table<string, number> Penalties on a special stage: recovery = 5, flip = 0 (the code path is kept but adds nothing).
 gameplay_rally_recoveryClockAdvance = {}
 
---- Renvoie la pénalité en secondes selon que l'étape est une spéciale ou non ; 0 si le type est inconnu.
----Source : lua/ge/extensions/gameplay/rally/recoveryClockAdvance.lua:24
----@param recoveryType string "recovery" ou "flip"
----@param isSpecialStage boolean true pour une spéciale, false pour une liaison / autre étape
----@return number  Secondes ajoutées au chrono
+--- Returns the penalty in seconds depending on whether the stage is a special stage or not; 0 if the type is unknown.
+---Source: lua/ge/extensions/gameplay/rally/recoveryClockAdvance.lua:24
+---@param recoveryType string "recovery" or "flip"
+---@param isSpecialStage boolean true for a special stage, false for a road section / other stage
+---@return number  Seconds added to the timer
 function gameplay_rally_recoveryClockAdvance.getSeconds(recoveryType, isSpecialStage) end
 
---- Renvoie la pénalité en secondes pour un type de récupération sur une spéciale ; 0 si le type est inconnu.
----Source : lua/ge/extensions/gameplay/rally/recoveryClockAdvance.lua:20
----@param recoveryType string "recovery" ou "flip"
----@return number  Secondes ajoutées au chrono
+--- Returns the penalty in seconds for a recovery type on a special stage; 0 if the type is unknown.
+---Source: lua/ge/extensions/gameplay/rally/recoveryClockAdvance.lua:20
+---@param recoveryType string "recovery" or "flip"
+---@return number  Seconds added to the timer
 function gameplay_rally_recoveryClockAdvance.getSpecialStageSeconds(recoveryType) end
 

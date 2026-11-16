@@ -1,149 +1,500 @@
 {
   "path": "lua/ge/extensions/editor/heroRoadEditor/layerMgr.lua",
-  "module": "Gestion des calques de marquage et de détail d'une route Hero Road. Un calque (group.layers[i]) décrit une bande de décalque posée sur la chaussée (matériau, largeur, position latérale, longueur de texture, fondus, priorité de rendu) et devient un ou plusieurs objets DecalRoad dans le dossier de scène du groupe, drapés sur le maillage de la route (overObjects). Le module fabrique aussi les calques automatiques (traces de pneus, fissures, réparations, asphalte endommagé, patchs, ligne centrale, lignes de rive et de voie, fondus de bord) d'après le vrai modèle de voies, et les décalques des éléments posés (barres de passage piéton, séparateurs d'élargissement, lignes de carrefour) ; il délègue les amas de réparations à repairMgr.",
+  "module": "Management of the marking and detail layers of a Hero Road. A layer (group.layers[i]) describes a decal strip laid on the roadway (material, width, lateral position, texture length, fades, render priority) and becomes one or more DecalRoad objects in the group's scene folder, draped over the road mesh (overObjects). The module also builds the automatic layers (tire tracks, cracks, repairs, damaged asphalt, patches, centerline, edge and lane lines, edge fades) from the actual lane model, and the decals of the placed elements (crosswalk bars, widening dividers, intersection lines); it delegates the repair clusters to repairMgr.",
   "notes": [
-    "Position latérale d'un calque : fraction de la demi-largeur (0 = axe, -1/+1 = bord gauche/droit, >1 = hors chaussée). Pour N = lanesLeft + lanesRight voies, la voie j est centrée en (2j-1-N)/N, la limite k entre voies en (2k-N)/N, la ligne centrale en (nL-nR)/(nL+nR).",
-    "Ligne centrale : pas de calque si une seule direction (lanesLeft ou lanesRight = 0). Lignes de voie : au moins 2 voies, et la limite entre sens opposés (k == lanesLeft) est laissée à la ligne centrale.",
-    "Découpage : une section DecalRoad est limitée à 250 m d'arc et 500 nœuds (limite d'index 16 bits du buffer GPU, au-delà l'extrémité n'est plus rendue). Les sections se raccordent en C1 grâce à des nœuds poignée (startTangent/endTangent). Rééchantillonnage : 8 m (4 m pour les lignes de rive) ; les segments de moins de 0.05 m sont soudés.",
-    "Les nœuds de décalque sont relevés de 2.0 m (decalDrapeHeight) puis projetés vers le bas sur la collision du maillage : la collision doit exister avant de créer les décalques.",
-    "Seules les lignes peintes (ligne centrale, lignes de rive et de voie) sont coupées par les nids-de-poule marqués cutMarkings (fondu de 0.4 m au bord de coupe) ; les lignes de rive et fondus de bord sont aussi interrompus à l'embouchure d'un carrefour, et suivent l'élargissement (edgeBulge).",
-    "Matériaux par défaut : traces légères 'm_tread_marks_clean', lourdes 'road_rubber_double', fissures 'm_asphalt_cracks_02', 'repair1', 'repair2', 'road_patches1', 'm_asphalt_damaged_01/02', ligne centrale 'm_line_yellow_double', rive 'm_line_white', voie 'm_line_white_discontinue', fondus 'm_road_asphalt_edge', 'm_road_edge_dirt', 'm_road_asphalt_edge_grass'. Nouveau calque manuel : matériau 'road_invisible'.",
-    "Les calques automatiques sont cachés (isHidden = true) et recréés à chaque reconstruction ; la suppression par motif (removeXxxLayers) retire tout calque dont le nom contient le texte du type (ex. 'Repair 1'), y compris un calque manuel qui porterait un nom contenant ce texte (recherche string.find avec motif).",
-    "canSave des DecalRoad : false en Edit (rien n'est écrit dans le niveau), true pour une route Live/cuite (setGroupDecalsCanSave)."
+    "Lateral position of a layer: fraction of the half-width (0 = axis, -1/+1 = left/right edge, >1 = outside the roadway). For N = lanesLeft + lanesRight lanes, lane j is centered at (2j-1-N)/N, the boundary k between lanes at (2k-N)/N, the centerline at (nL-nR)/(nL+nR).",
+    "Centerline: no layer if only one direction (lanesLeft or lanesRight = 0). Lane lines: at least 2 lanes, and the boundary between opposite directions (k == lanesLeft) is left to the centerline.",
+    "Splitting: a DecalRoad section is limited to 250 m of arc and 500 nodes (16-bit index limit of the GPU buffer, beyond which the end is no longer rendered). Sections join with C1 continuity thanks to handle nodes (startTangent/endTangent). Resampling: 8 m (4 m for edge lines); segments shorter than 0.05 m are welded.",
+    "The decal nodes are raised by 2.0 m (decalDrapeHeight) then projected downward onto the mesh collision: the collision must exist before creating the decals.",
+    "Only the painted lines (centerline, edge and lane lines) are cut by the potholes marked cutMarkings (0.4 m fade at the cut edge); the edge lines and edge fades are also interrupted at the mouth of an intersection, and follow the widening (edgeBulge).",
+    "Default materials: light tracks 'm_tread_marks_clean', heavy 'road_rubber_double', cracks 'm_asphalt_cracks_02', 'repair1', 'repair2', 'road_patches1', 'm_asphalt_damaged_01/02', centerline 'm_line_yellow_double', edge 'm_line_white', lane 'm_line_white_discontinue', fades 'm_road_asphalt_edge', 'm_road_edge_dirt', 'm_road_asphalt_edge_grass'. New manual layer: material 'road_invisible'.",
+    "Automatic layers are hidden (isHidden = true) and recreated at each rebuild; removal by pattern (removeXxxLayers) removes any layer whose name contains the type's text (e.g. 'Repair 1'), including a manual layer that happens to have a name containing that text (string.find search with pattern).",
+    "canSave of the DecalRoads: false in Edit (nothing is written to the level), true for a Live/baked road (setGroupDecalsCanSave)."
   ],
   "functions": {
     "getSliderDefaults": {
-      "desc": "Valeurs par défaut des curseurs, pour l'interface et les boutons de remise à zéro.",
+      "desc": "Default values of the sliders, for the interface and the reset buttons.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{ defaultWidth 10.0, defaultLateralPosition 0.0, defaultRenderPriority 10, defaultTexLength 10.0, defaultFadeIn 1.0, defaultFadeOut 1.0, defaultPaintMargin 0.0, defaultPaintMaterialIdx 0 }."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ defaultWidth 10.0, defaultLateralPosition 0.0, defaultRenderPriority 10, defaultTexLength 10.0, defaultFadeIn 1.0, defaultFadeOut 1.0, defaultPaintMargin 0.0, defaultPaintMaterialIdx 0 }."
+        }
+      ],
       "internal": false
     },
     "deepCopyLayer": {
-      "desc": "Copie profonde d'un calque pour l'annulation : détache temporairement les tampons de géométrie (pClipped, wClipped, pFlip, wFlip), encode/décode, puis les restaure sur la source ; la copie reçoit des tampons vides reconstruits à la prochaine mise à jour.",
-      "params": {"layer": {"type": "table", "desc": "Calque."}},
-      "returns": [{"type": "table", "desc": "Copie indépendante."}],
+      "desc": "Deep copy of a layer for undo: temporarily detaches the geometry buffers (pClipped, wClipped, pFlip, wFlip), encodes/decodes, then restores them on the source; the copy receives empty buffers rebuilt at the next update.",
+      "params": {
+        "layer": {
+          "type": "table",
+          "desc": "Layer."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Independent copy."
+        }
+      ],
       "internal": false
     },
     "deepCopyAllLayers": {
-      "desc": "Copie profonde d'une liste de calques.",
-      "params": {"layers": {"type": "table[]", "desc": "Liste de calques."}},
-      "returns": [{"type": "table[]", "desc": "Liste de copies."}],
+      "desc": "Deep copy of a list of layers.",
+      "params": {
+        "layers": {
+          "type": "table[]",
+          "desc": "List of layers."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "List of copies."
+        }
+      ],
       "internal": false
     },
     "updateAllLayers": {
-      "desc": "Met à jour tous les calques du groupe (crée/met à jour les DecalRoad des calques activés, supprime ceux des calques désactivés), puis reconstruit les barres de passages piétons, les séparateurs d'élargissement, les lignes de carrefour et les décalques de réparations.",
+      "desc": "Updates all the group's layers (creates/updates the DecalRoads of enabled layers, deletes those of disabled layers), then rebuilds the crosswalk bars, widening dividers, intersection lines and repair decals.",
       "params": {
-        "group": {"type": "table", "desc": "Groupe Hero Road."},
-        "groupIdx": {"type": "integer", "desc": "Indice du groupe (transmis aux mises à jour de calque)."}
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        },
+        "groupIdx": {
+          "type": "integer",
+          "desc": "Group index (passed to the layer updates)."
+        }
       },
       "internal": false
     },
     "updateOnlyDirtyLayers": {
-      "desc": "Met à jour seulement les calques marqués isDirty (crée/met à jour ou supprime leur DecalRoad) puis remet le drapeau à false.",
+      "desc": "Only updates the layers marked isDirty (creates/updates or deletes their DecalRoad) then resets the flag to false.",
       "params": {
-        "group": {"type": "table", "desc": "Groupe Hero Road."},
-        "groupIdx": {"type": "integer", "desc": "Indice du groupe."}
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        },
+        "groupIdx": {
+          "type": "integer",
+          "desc": "Group index."
+        }
       },
       "internal": false
     },
     "removeDecalRoadInLayer": {
-      "desc": "Supprime l'objet DecalRoad du calque (decalRoadId) et toutes ses sections découpées (decalRoadIds), s'ils existent.",
-      "params": {"layer": {"type": "table", "desc": "Calque."}},
+      "desc": "Deletes the layer's DecalRoad object (decalRoadId) and all its split sections (decalRoadIds), if they exist.",
+      "params": {
+        "layer": {
+          "type": "table",
+          "desc": "Layer."
+        }
+      },
       "internal": false
     },
     "setGroupDecalsCanSave": {
-      "desc": "Bascule canSave de tous les DecalRoad du groupe (calques simples et sections, passages piétons, séparateurs d'élargissement, lignes de carrefour) pour respecter la séparation Edit/Live : false = rien n'est écrit au niveau, true = écrit avec la route. Appelé au basculement Edit/Live et après un bake.",
+      "desc": "Toggles canSave on all the group's DecalRoads (simple layers and sections, crosswalks, widening dividers, intersection lines) to respect the Edit/Live separation: false = nothing is written to the level, true = written with the road. Called on the Edit/Live switch and after a bake.",
       "params": {
-        "group": {"type": "table", "desc": "Groupe Hero Road."},
-        "persist": {"type": "boolean", "desc": "true pour persister dans le niveau."}
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        },
+        "persist": {
+          "type": "boolean",
+          "desc": "true to persist in the level."
+        }
       },
       "internal": false
     },
     "removeLayer": {
-      "desc": "Supprime le calque d'indice idx (son DecalRoad puis l'entrée de la liste).",
-      "params": {"idx": {"type": "integer", "desc": "Indice du calque."}, "group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Deletes the layer at index idx (its DecalRoad then the list entry).",
+      "params": {
+        "idx": {
+          "type": "integer",
+          "desc": "Layer index."
+        },
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
     "removeAllLayers": {
-      "desc": "Supprime tous les calques du groupe, ainsi que les décalques de passages piétons, d'élargissements, de carrefours et de réparations.",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Deletes all the group's layers, as well as the decals of crosswalks, widenings, intersections and repairs.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
     "clearAllLayerDecals": {
-      "desc": "Masque pendant un glissement : supprime tous les décalques rendus (calques, passages piétons, élargissements, carrefours, réparations) mais garde les définitions de calques et les données des éléments posés ; la reconstruction à la fin du glissement recrée les décalques.",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Hides during a drag: deletes all rendered decals (layers, crosswalks, widenings, intersections, repairs) but keeps the layer definitions and the placed elements' data; the rebuild at the end of the drag recreates the decals.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
     "removeAllHiddenLayers": {
-      "desc": "Supprime les calques cachés (automatiques) du groupe, en laissant les calques manuels.",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Deletes the hidden (automatic) layers of the group, leaving the manual layers.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
     "addNewLayer": {
-      "desc": "Ajoute un calque manuel 'New Layer N' (matériau 'road_invisible', largeur 10 m, position 0, priorité 10, texLen 10, largeur de piste active).",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Adds a manual layer 'New Layer N' (material 'road_invisible', width 10 m, position 0, priority 10, texLen 10, track width active).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
     "duplicateLayer": {
-      "desc": "Duplique le calque d'indice idx juste après lui, avec un nouvel id et le nom '<nom> (Copy)' ; les handles DecalRoad de la source ne sont pas copiés pour que la copie construise ses propres objets.",
-      "params": {"idx": {"type": "integer", "desc": "Indice du calque à dupliquer."}, "group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Duplicates the layer at index idx right after it, with a new id and the name '<name> (Copy)'; the source's DecalRoad handles are not copied so that the copy builds its own objects.",
+      "params": {
+        "idx": {
+          "type": "integer",
+          "desc": "Index of the layer to duplicate."
+        },
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
     "switchOffAllAutoLayers": {
-      "desc": "Désactive tous les drapeaux de calques automatiques (traces, asphalte endommagé, fissures, réparations, patchs, ligne centrale, lignes de rive/voie, fondus de bord) et marque le groupe sale.",
-      "params": {"selGroup": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Disables all automatic layer flags (tracks, damaged asphalt, cracks, repairs, patches, centerline, edge/lane lines, edge fades) and marks the group dirty.",
+      "params": {
+        "selGroup": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
-    "addLightTreadMarksLayers": {"desc": "Ajoute un calque caché 'Light Tread Marks' par voie, centré dans la voie (matériau 'm_tread_marks_clean', texLen group.lightTreadTexLen ou 5).", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "removeLightTreadMarksLayers": {"desc": "Supprime les calques dont le nom contient 'Light Tread Marks'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "addHeavyTreadMarksLayers": {"desc": "Ajoute un calque caché 'Heavy Tread Marks' par voie (matériau 'road_rubber_double', texLen group.heavyTreadTexLen ou 5).", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "removeHeavyTreadMarksLayers": {"desc": "Supprime les calques dont le nom contient 'Heavy Tread Marks'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "addRoadCrackLayers": {"desc": "Ajoute un calque caché 'Road Crack' par voie (matériau 'm_asphalt_cracks_02', texLen group.roadCrackTexLen ou 15).", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "removeRoadCrackLayers": {"desc": "Supprime les calques dont le nom contient 'Road Crack'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "addRepair1Layers": {"desc": "Ajoute un calque caché 'Repair 1' par voie (matériau 'repair1', texLen group.repair1TexLen ou 25).", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "removeRepair1Layers": {"desc": "Supprime les calques dont le nom contient 'Repair 1'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "addRepair2Layers": {"desc": "Ajoute un calque caché 'Repair 2' par voie (matériau 'repair2', texLen group.repair2TexLen ou 25).", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "removeRepair2Layers": {"desc": "Supprime les calques dont le nom contient 'Repair 2'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "addPatchesLayers": {"desc": "Ajoute un calque caché 'Patches' par voie (matériau 'road_patches1', texLen group.patchesTexLen ou 45).", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "removePatchesLayers": {"desc": "Supprime les calques dont le nom contient 'Patches'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "addRoadDamageAsphalt1Layers": {"desc": "Ajoute un calque caché 'Damage Asphalt 1' par voie (matériau 'm_asphalt_damaged_01', texLen group.damageAsphalt1TexLen ou 10).", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "removeRoadDamageAsphalt1Layers": {"desc": "Supprime les calques dont le nom contient 'Damage Asphalt 1'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "addRoadDamageAsphalt2Layers": {"desc": "Ajoute un calque caché 'Damage Asphalt 2' par voie (matériau 'm_asphalt_damaged_02', texLen group.damageAsphalt2TexLen ou 25).", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "removeRoadDamageAsphalt2Layers": {"desc": "Supprime les calques dont le nom contient 'Damage Asphalt 2'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
+    "addLightTreadMarksLayers": {
+      "desc": "Adds a hidden 'Light Tread Marks' layer per lane, centered in the lane (material 'm_tread_marks_clean', texLen group.lightTreadTexLen or 5).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "removeLightTreadMarksLayers": {
+      "desc": "Deletes the layers whose name contains 'Light Tread Marks'.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "addHeavyTreadMarksLayers": {
+      "desc": "Adds a hidden 'Heavy Tread Marks' layer per lane (material 'road_rubber_double', texLen group.heavyTreadTexLen or 5).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "removeHeavyTreadMarksLayers": {
+      "desc": "Deletes the layers whose name contains 'Heavy Tread Marks'.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "addRoadCrackLayers": {
+      "desc": "Adds a hidden 'Road Crack' layer per lane (material 'm_asphalt_cracks_02', texLen group.roadCrackTexLen or 15).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "removeRoadCrackLayers": {
+      "desc": "Deletes the layers whose name contains 'Road Crack'.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "addRepair1Layers": {
+      "desc": "Adds a hidden 'Repair 1' layer per lane (material 'repair1', texLen group.repair1TexLen or 25).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "removeRepair1Layers": {
+      "desc": "Deletes the layers whose name contains 'Repair 1'.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "addRepair2Layers": {
+      "desc": "Adds a hidden 'Repair 2' layer per lane (material 'repair2', texLen group.repair2TexLen or 25).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "removeRepair2Layers": {
+      "desc": "Deletes the layers whose name contains 'Repair 2'.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "addPatchesLayers": {
+      "desc": "Adds a hidden 'Patches' layer per lane (material 'road_patches1', texLen group.patchesTexLen or 45).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "removePatchesLayers": {
+      "desc": "Deletes the layers whose name contains 'Patches'.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "addRoadDamageAsphalt1Layers": {
+      "desc": "Adds a hidden 'Damage Asphalt 1' layer per lane (material 'm_asphalt_damaged_01', texLen group.damageAsphalt1TexLen or 10).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "removeRoadDamageAsphalt1Layers": {
+      "desc": "Deletes the layers whose name contains 'Damage Asphalt 1'.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "addRoadDamageAsphalt2Layers": {
+      "desc": "Adds a hidden 'Damage Asphalt 2' layer per lane (material 'm_asphalt_damaged_02', texLen group.damageAsphalt2TexLen or 25).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "removeRoadDamageAsphalt2Layers": {
+      "desc": "Deletes the layers whose name contains 'Damage Asphalt 2'.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
     "addRoadCenterLineLayers": {
-      "desc": "Ajoute le calque caché 'Center Line' à la limite entre les voies de gauche et de droite (position (nL-nR)/(nL+nR)). Rien n'est ajouté pour une route à sens unique. Matériau group.centerLineMaterial ou 'm_line_yellow_double', largeur de la région USA (ou 0.2 m).",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Adds the hidden 'Center Line' layer at the boundary between the left and right lanes (position (nL-nR)/(nL+nR)). Nothing is added for a one-way road. Material group.centerLineMaterial or 'm_line_yellow_double', width of the USA region (or 0.2 m).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
-    "removeRoadCenterLineLayers": {"desc": "Supprime les calques dont le nom contient 'Center Line'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
+    "removeRoadCenterLineLayers": {
+      "desc": "Deletes the layers whose name contains 'Center Line'.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
     "addRoadEdgeLinesLayers": {
-      "desc": "Ajoute deux calques cachés 'Edge Line - Left' et 'Edge Line - Right' aux positions -/+ group.edgeLineOffset (défaut 1.0 = bord de chaussée), largeur group.edgeLineWidth (défaut 0.25 m), matériau group.edgeLineMaterial ou 'm_line_white'.",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Adds two hidden layers 'Edge Line - Left' and 'Edge Line - Right' at positions -/+ group.edgeLineOffset (default 1.0 = roadway edge), width group.edgeLineWidth (default 0.25 m), material group.edgeLineMaterial or 'm_line_white'.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
-    "removeRoadEdgeLinesLayers": {"desc": "Supprime les calques dont le nom contient 'Edge Line'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
+    "removeRoadEdgeLinesLayers": {
+      "desc": "Deletes the layers whose name contains 'Edge Line'.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
     "addRoadLaneLinesLayers": {
-      "desc": "Ajoute les lignes de séparation de voies d'après le vrai modèle de voies : N-1 limites à la position (2k-N)/N ; sur route à double sens, la limite k == lanesLeft est omise (c'est la ligne centrale). Rien si moins de 2 voies. Matériau group.laneLineMaterial ou 'm_line_white_discontinue', largeur 0.2 m.",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Adds the lane separation lines from the actual lane model: N-1 boundaries at position (2k-N)/N; on a two-way road, the boundary k == lanesLeft is omitted (it is the centerline). Nothing if fewer than 2 lanes. Material group.laneLineMaterial or 'm_line_white_discontinue', width 0.2 m.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
-    "removeRoadLaneLinesLayers": {"desc": "Supprime les calques dont le nom contient 'Lane Line'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "addEdgeBlend1Layers": {"desc": "Ajoute les calques 'Edge Blend 1' (fondu d'asphalte de bord, matériau 'm_road_asphalt_edge') de chaque côté, de largeur group.edgeBlend1Width (défaut 1.0 m) et décalage group.edgeBlend1Offset (défaut 1.1).", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "removeEdgeBlend1Layers": {"desc": "Supprime les calques 'Edge Blend 1'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "addEdgeBlend2Layers": {"desc": "Ajoute les calques 'Edge Blend 2' (fondu de terre, matériau 'm_road_edge_dirt') de chaque côté, largeur par défaut 2.0 m, décalage par défaut 1.25.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "removeEdgeBlend2Layers": {"desc": "Supprime les calques 'Edge Blend 2'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "addEdgeBlend3Layers": {"desc": "Ajoute les calques 'Edge Blend 3' (fondu d'herbe, matériau 'm_road_asphalt_edge_grass') de chaque côté, largeur par défaut 3.0 m, décalage par défaut 1.35.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
-    "removeEdgeBlend3Layers": {"desc": "Supprime les calques 'Edge Blend 3'.", "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}}, "internal": false},
+    "removeRoadLaneLinesLayers": {
+      "desc": "Deletes the layers whose name contains 'Lane Line'.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "addEdgeBlend1Layers": {
+      "desc": "Adds the 'Edge Blend 1' layers (edge asphalt fade, material 'm_road_asphalt_edge') on each side, with width group.edgeBlend1Width (default 1.0 m) and offset group.edgeBlend1Offset (default 1.1).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "removeEdgeBlend1Layers": {
+      "desc": "Deletes the 'Edge Blend 1' layers.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "addEdgeBlend2Layers": {
+      "desc": "Adds the 'Edge Blend 2' layers (dirt fade, material 'm_road_edge_dirt') on each side, default width 2.0 m, default offset 1.25.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "removeEdgeBlend2Layers": {
+      "desc": "Deletes the 'Edge Blend 2' layers.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "addEdgeBlend3Layers": {
+      "desc": "Adds the 'Edge Blend 3' layers (grass fade, material 'm_road_asphalt_edge_grass') on each side, default width 3.0 m, default offset 1.35.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
+    "removeEdgeBlend3Layers": {
+      "desc": "Deletes the 'Edge Blend 3' layers.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "internal": false
+    },
     "serializeLayer": {
-      "desc": "Sérialise un calque en table simple (données d'auteur : nom, id, isHidden, isEnabled, matériau, isFlip, isTrackWidth, isEdge, edgeSide, edgeOffsetM, isOverObjects, width, position, texLen, fadeIn, fadeOut, renderPriority) sans les handles ni la géométrie d'exécution.",
-      "params": {"layer": {"type": "table", "desc": "Calque."}},
-      "returns": [{"type": "table", "desc": "Table sérialisable."}],
+      "desc": "Serializes a layer to a simple table (author data: name, id, isHidden, isEnabled, material, isFlip, isTrackWidth, isEdge, edgeSide, edgeOffsetM, isOverObjects, width, position, texLen, fadeIn, fadeOut, renderPriority) without the handles or the runtime geometry.",
+      "params": {
+        "layer": {
+          "type": "table",
+          "desc": "Layer."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Serializable table."
+        }
+      ],
       "internal": false
     },
     "deserializeLayer": {
-      "desc": "Reconstitue un calque à partir d'une table (valeurs manquantes remplacées par les défauts des curseurs), marqué isDirty avec des tampons de géométrie vides ; les objets sont créés à la prochaine mise à jour.",
-      "params": {"data": {"type": "table", "desc": "Table issue de serializeLayer ou d'un fichier de session."}},
-      "returns": [{"type": "table", "desc": "Calque prêt à être ajouté à group.layers."}],
+      "desc": "Reconstitutes a layer from a table (missing values replaced by the sliders' defaults), marked isDirty with empty geometry buffers; the objects are created at the next update.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Table from serializeLayer or a session file."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Layer ready to be added to group.layers."
+        }
+      ],
       "internal": false
     }
   }

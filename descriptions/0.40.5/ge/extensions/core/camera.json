@@ -1,755 +1,1730 @@
 {
   "path": "lua/ge/extensions/core/camera.lua",
-  "module": "Extension GE (core_camera, dépend de core_vehicle_manager et core_environment) : gestionnaire central de toutes les caméras du jeu. Elle charge les modes de caméra du dossier lua/ge/extensions/core/cameraModes (un fichier par mode), crée pour chaque véhicule une instance de chaque mode (configurée par la section jbeam 'camera') et gère des instances 'globales' (free, observer, path, bigMap...) qui existent une seule fois sans véhicule. Elle décide quelle caméra est active (par joueur), gère la configuration utilisateur (ordre et activation des caméras, menu Options > Caméras, sauvegardée dans les réglages cameraConfig et freeCameraConfig), le cycle des caméras (touches), les transitions, et expose la position/orientation/FOV finaux. Le calcul par frame est dans core/cameraUpdate.lua, les entrées dans core/cameraInput.lua (ré-exposées ici). Un moddeur s'en sert pour lire la position de la caméra, changer de caméra par nom, piloter la caméra libre ou créer des vues supplémentaires (contextes).",
-  "usage": "local pos = core_camera.getPosition()\nlocal fwd = core_camera.getForward()\ncore_camera.setByName(0, 'orbit', true)          -- caméra de véhicule du joueur 0\ncore_camera.setByName('free')                    -- caméra globale\ncore_camera.setPosition(0, vec3(0,0,100))        -- seulement en caméra libre",
+  "module": "GE extension (core_camera, depends on core_vehicle_manager and core_environment): central manager of all the game's cameras. It loads the camera modes from the lua/ge/extensions/core/cameraModes folder (one file per mode), creates for each vehicle an instance of each mode (configured by the jbeam 'camera' section) and manages 'global' instances (free, observer, path, bigMap...) that exist once without a vehicle. It decides which camera is active (per player), handles the user configuration (camera order and activation, Options > Cameras menu, saved in the cameraConfig and freeCameraConfig settings), camera cycling (keys), transitions, and exposes the final position/orientation/FOV. The per-frame computation is in core/cameraUpdate.lua, the inputs in core/cameraInput.lua (re-exposed here). A modder uses it to read the camera position, change camera by name, drive the free camera or create extra views (contexts).",
+  "usage": "local pos = core_camera.getPosition()\nlocal fwd = core_camera.getForward()\ncore_camera.setByName(0, 'orbit', true)          -- vehicle camera of player 0\ncore_camera.setByName('free')                    -- global camera\ncore_camera.setPosition(0, vec3(0,0,100))        -- only in free camera",
   "notes": [
-    "Choix de la caméra active : si ctx.activeGlobalCameraName est défini (caméra globale, ex. 'free', 'observer', 'bigMap'), c'est elle qui est utilisée ; sinon c'est la caméra 'focusedCamName' du véhicule du joueur (parmi vdata.cameras, ordre de la liste 'configuration').",
-    "Contextes : une vue = un contexte. 'main' est la vue du joueur (RenderView 'main') ; createContext ajoute des vues supplémentaires (écran partagé, flux vidéo). Presque toutes les fonctions get*(ctxId) prennent un identifiant de contexte (nil = main).",
-    "Les fonctions adressées par véhicule (setRotation, setFOV, setOffset, setRef, setRefNodes, setTargetMode, setDistance, setMaxDistance, setDefaultDistance, setDefaultRotation, setSkipFovModifier, resetCameraByID, setup) agissent toujours sur la vue principale et appellent la méthode du même nom sur la caméra globale active ou la caméra focalisée du véhicule ; si cette caméra n'a pas la méthode, rien ne se passe.",
-    "Les fonctions adressées par joueur (setPosition, clearMotion, clearAngularMotion, setSmoothedCam, setNewtonRotation, setNewtonTranslation, resetCamera, hotkey) agissent sur la vue du joueur (pid) ; setPosition ne positionne la caméra que si la caméra globale 'free' est active.",
-    "Configuration des caméras : liste par défaut {orbit, driver, onboard.hood, external, relative, chase, droneChase}, remplacée par le réglage utilisateur cameraConfig si sa version >= 2 ; les autres caméras du véhicule sont ajoutées à la suite (triées par le champ order), les caméras 'occupant.*' sont insérées avant 'onboard.hood'. Un mode peut avoir disabledByDefault = true.",
-    "Les types de mode 'onboard' et 'occupant' sont 'multicam' : le jbeam peut définir plusieurs entrées, nommées '<mode>.<nom>' (ex. 'onboard.driver', 'occupant.xxx'). Le mode 'driver' hérité est un alias du constructeur 'occupant' (constructorsCache.driver).",
-    "Les modes marqués isFilter (autopoint, autozoom, bobbing...) ne deviennent jamais des caméras sélectionnables : ils sont créés mais ignorés par initCam ; d'autres modes les instancient pour traiter leur propre résultat.",
-    "Cache : l'ajout ou la suppression d'un fichier dans cameraModes (onFileChanged) invalide les constructeurs et les caches de tous les contextes (rechargement à chaud).",
-    "Incohérence : M.objectTeleported est affecté depuis la globale objectTeleported définie dans utils.lua (marqué obsolète dans le code : utiliser directement objectTeleported). L'index automatique signale à tort cette référence comme non définie.",
-    "Incohérence : setVehicleCameraByNameWithId utilise la variable `player` (inexistante dans la fonction, donc nil) dans son message d'erreur.",
-    "Incohérence : getCameraUnicycleZoom est local et non exporté (seuls setCameraUnicycleZoom et unicycleZoomToggle le sont), contrairement à getCameraDriverZoom.",
-    "L'extension remplace la globale MoveManager par sa propre table d'entrées (newMove) et la repointe vers la vue en cours de mise à jour à chaque frame."
+    "Choice of the active camera: if ctx.activeGlobalCameraName is set (global camera, e.g. 'free', 'observer', 'bigMap'), it is used; otherwise it is the player's vehicle camera 'focusedCamName' (among vdata.cameras, in the order of the 'configuration' list).",
+    "Contexts: one view = one context. 'main' is the player's view (RenderView 'main'); createContext adds extra views (split screen, video streams). Almost all get*(ctxId) functions take a context identifier (nil = main).",
+    "Per-vehicle functions (setRotation, setFOV, setOffset, setRef, setRefNodes, setTargetMode, setDistance, setMaxDistance, setDefaultDistance, setDefaultRotation, setSkipFovModifier, resetCameraByID, setup) always act on the main view and call the method of the same name on the active global camera or the vehicle's focused camera; if that camera lacks the method, nothing happens.",
+    "Per-player functions (setPosition, clearMotion, clearAngularMotion, setSmoothedCam, setNewtonRotation, setNewtonTranslation, resetCamera, hotkey) act on the player's view (pid); setPosition only positions the camera if the 'free' global camera is active.",
+    "Camera configuration: default list {orbit, driver, onboard.hood, external, relative, chase, droneChase}, replaced by the user setting cameraConfig if its version >= 2; the vehicle's other cameras are appended (sorted by the order field), 'occupant.*' cameras are inserted before 'onboard.hood'. A mode can have disabledByDefault = true.",
+    "The 'onboard' and 'occupant' mode types are 'multicam': the jbeam can define several entries, named '<mode>.<name>' (e.g. 'onboard.driver', 'occupant.xxx'). The legacy 'driver' mode is an alias of the 'occupant' constructor (constructorsCache.driver).",
+    "Modes marked isFilter (autopoint, autozoom, bobbing...) never become selectable cameras: they are created but ignored by initCam; other modes instantiate them to process their own result.",
+    "Cache: adding or removing a file in cameraModes (onFileChanged) invalidates the constructors and the caches of all contexts (hot reload).",
+    "Inconsistency: M.objectTeleported is assigned from the global objectTeleported defined in utils.lua (marked deprecated in the code: use objectTeleported directly). The automatic index wrongly reports this reference as undefined.",
+    "Inconsistency: setVehicleCameraByNameWithId uses the variable `player` (nonexistent in the function, so nil) in its error message.",
+    "Inconsistency: getCameraUnicycleZoom is local and not exported (only setCameraUnicycleZoom and unicycleZoomToggle are), unlike getCameraDriverZoom.",
+    "The extension replaces the global MoveManager with its own input table (newMove) and re-points it to the view being updated every frame."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : core_vehicle_manager, core_environment."},
-    "speedFactor": {"type": "number", "desc": "Facteur de vitesse (1 par défaut) utilisé pour corriger un mouvement de caméra trop lent/lissé lors de la création de vignettes."},
-    "previousReplayStateName": {"type": "string|nil", "desc": "Dernier état de replay vu par onReplayStateChanged (créé à la volée)."},
-    "objectTeleported": {"type": "function", "desc": "Alias obsolète de la globale objectTeleported (utils.lua)."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: core_vehicle_manager, core_environment."
+    },
+    "speedFactor": {
+      "type": "number",
+      "desc": "Speed factor (1 by default) used to correct a camera movement that is too slow/smoothed when creating thumbnails."
+    },
+    "previousReplayStateName": {
+      "type": "string|nil",
+      "desc": "Last replay state seen by onReplayStateChanged (created on the fly)."
+    },
+    "objectTeleported": {
+      "type": "function",
+      "desc": "Deprecated alias of the global objectTeleported (utils.lua)."
+    }
   },
   "functions": {
     "setInputTargetPlayer": {
-      "desc": "Force toutes les entrées caméra à cibler le joueur donné (nil pour désactiver cette redirection).",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur ciblé"}},
+      "desc": "Forces all camera inputs to target the given player (nil to disable this redirection).",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Index of the targeted player"
+        }
+      },
       "returns": []
     },
     "getGlobalCameras": {
-      "desc": "Renvoie la table nom -> instance des caméras globales (une fois par contexte, créées à la demande à partir des constructeurs où cam.isGlobal est vrai).",
-      "params": {"ctx": {"type": "table|nil", "desc": "Contexte interne (nil = main) ; les appels externes omettent généralement l'argument"}},
-      "returns": [{"type": "table<string, table>", "desc": "Caméras globales par nom"}]
+      "desc": "Returns the name -> instance table of the global cameras (once per context, created on demand from the constructors where cam.isGlobal is true).",
+      "params": {
+        "ctx": {
+          "type": "table|nil",
+          "desc": "Internal context (nil = main); external calls usually omit the argument"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Global cameras by name"
+        }
+      ]
     },
     "getGroupCams": {
-      "desc": "Liste des noms de caméras d'un groupe (ex. 'world'), dans l'ordre configuré. Les caméras 'world' désactivées sont omises sauf si includeDisabled est vrai (elles restent visibles dans les options mais sont sautées lors du cycle).",
+      "desc": "List of camera names of a group (e.g. 'world'), in the configured order. Disabled 'world' cameras are omitted unless includeDisabled is true (they remain visible in the options but are skipped when cycling).",
       "params": {
-        "ctx": {"type": "table|nil", "desc": "Contexte interne (nil = main)"},
-        "groupName": {"type": "string", "desc": "Nom du groupe, ex. 'world'"},
-        "includeDisabled": {"type": "boolean|nil", "desc": "Inclure les caméras désactivées"}
+        "ctx": {
+          "type": "table|nil",
+          "desc": "Internal context (nil = main)"
+        },
+        "groupName": {
+          "type": "string",
+          "desc": "Group name, e.g. 'world'"
+        },
+        "includeDisabled": {
+          "type": "boolean|nil",
+          "desc": "Include disabled cameras"
+        }
       },
-      "returns": [{"type": "table<integer, string>", "desc": "Noms de caméras"}]
+      "returns": [
+        {
+          "type": "table<integer, string>",
+          "desc": "Camera names"
+        }
+      ]
     },
     "getCameraGroups": {
-      "desc": "Liste triée des noms de groupes de caméras ayant au moins une caméra utilisable.",
-      "params": {"ctx": {"type": "table|nil", "desc": "Contexte interne (nil = main)"}},
-      "returns": [{"type": "table<integer, string>", "desc": "Noms de groupes"}]
+      "desc": "Sorted list of camera group names that have at least one usable camera.",
+      "params": {
+        "ctx": {
+          "type": "table|nil",
+          "desc": "Internal context (nil = main)"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, string>",
+          "desc": "Group names"
+        }
+      ]
     },
     "nextCameraGroup": {
-      "desc": "Calcule le groupe suivant dans l'anneau de cycle : caméras de jeu (active = nil) vers le premier groupe, entre groupes, puis du dernier groupe vers les caméras de jeu (nil). active = false (caméra système) renvoie nil.",
+      "desc": "Computes the next group in the cycle ring: game cameras (active = nil) to the first group, between groups, then from the last group to the game cameras (nil). active = false (system camera) returns nil.",
       "params": {
-        "groups": {"type": "table<integer, string>", "desc": "Noms de groupes"},
-        "active": {"type": "string|boolean|nil", "desc": "Groupe actif : nil = caméra de jeu, false = caméra sans groupe"}
+        "groups": {
+          "type": "table<integer, string>",
+          "desc": "Group names"
+        },
+        "active": {
+          "type": "string|boolean|nil",
+          "desc": "Active group: nil = game camera, false = camera without group"
+        }
       },
-      "returns": [{"type": "string|nil", "desc": "Groupe suivant ou nil (retour aux caméras de jeu)"}]
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Next group or nil (back to game cameras)"
+        }
+      ]
     },
     "getConfigurationReadOnly": {
-      "desc": "Copie profonde de la liste de configuration des caméras de véhicule ({name, enabled}).",
+      "desc": "Deep copy of the vehicle camera configuration list ({name, enabled}).",
       "params": {},
-      "returns": [{"type": "table", "desc": "Liste de {name, enabled}"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of {name, enabled}"
+        }
+      ]
     },
     "getFreeCameraConfigurationReadOnly": {
-      "desc": "Copie profonde de la configuration (ordre, activation) des caméras libres du groupe 'world'.",
+      "desc": "Deep copy of the configuration (order, activation) of the free cameras of the 'world' group.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Liste de {name, enabled}"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of {name, enabled}"
+        }
+      ]
     },
     "displayCameraNameUI": {
-      "desc": "Envoie à l'UI (app Messages) le nom de la caméra courante avec le nombre d'options et l'indice courant. Ne fait rien pour une unicycle (marche à pied).",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur"}},
+      "desc": "Sends the current camera name to the UI (Messages app) with the number of options and the current index. Does nothing for a unicycle (walking).",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        }
+      },
       "returns": []
     },
     "onCameraToggled": {
-      "desc": "Hook (émis par cycleCameraGroup, setCameraByNameFromOptions) : réaffiche le nom de la caméra du joueur 0.",
-      "params": {"data": {"type": "table", "desc": "{cameraType = 'FreeCam'|'GameCam'}"}},
+      "desc": "Hook (emitted by cycleCameraGroup, setCameraByNameFromOptions): redisplays player 0's camera name.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{cameraType = 'FreeCam'|'GameCam'}"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "notifyUI": {
-      "desc": "Prévient l'UI et les extensions du changement de caméra : guihooks 'onCameraNameChanged', hook onCameraModeChanged, puis mise à jour du menu d'options.",
+      "desc": "Notifies the UI and extensions of the camera change: guihooks 'onCameraNameChanged', hook onCameraModeChanged, then updates the options menu.",
       "params": {
-        "vdata": {"type": "table|nil", "desc": "Données caméra du véhicule (joueur 0 par défaut)"},
-        "forcedCamName": {"type": "string|nil", "desc": "Nom à annoncer au lieu de la caméra focalisée"}
+        "vdata": {
+          "type": "table|nil",
+          "desc": "Vehicle camera data (player 0 by default)"
+        },
+        "forcedCamName": {
+          "type": "string|nil",
+          "desc": "Name to announce instead of the focused camera"
+        }
       },
       "returns": []
     },
     "requestConfig": {
-      "desc": "Demande l'envoi de la configuration actuelle au menu Options > Caméras (guihooks CameraConfigChanged).",
-      "params": {"forcedCamName": {"type": "string|nil", "desc": "Nom de caméra à marquer comme active"}},
+      "desc": "Requests sending the current configuration to the Options > Cameras menu (guihooks CameraConfigChanged).",
+      "params": {
+        "forcedCamName": {
+          "type": "string|nil",
+          "desc": "Camera name to mark as active"
+        }
+      },
       "returns": []
     },
     "clearInputs": {
-      "desc": "Remet à zéro les entrées de rotation et de zoom (roulis, tangage, lacet, zoom) d'une structure MoveManager. Utilisé par d'autres scripts GE.",
-      "params": {"mm": {"type": "table|nil", "desc": "Structure d'entrées, MoveManager par défaut"}},
+      "desc": "Resets the rotation and zoom inputs (roll, pitch, yaw, zoom) of a MoveManager structure. Used by other GE scripts.",
+      "params": {
+        "mm": {
+          "type": "table|nil",
+          "desc": "Input structure, default MoveManager"
+        }
+      },
       "returns": []
     },
     "changeOrder": {
-      "desc": "Déplace la caméra d'indice camId de offset positions dans la liste de configuration (en sautant les caméras cachées), puis sauvegarde.",
+      "desc": "Moves the camera at index camId by offset positions in the configuration list (skipping hidden cameras), then saves.",
       "params": {
-        "camId": {"type": "integer", "desc": "Indice dans la configuration (base 1)"},
-        "offset": {"type": "integer", "desc": "Décalage, ex. -1 ou +1"}
+        "camId": {
+          "type": "integer",
+          "desc": "Index in the configuration (1-based)"
+        },
+        "offset": {
+          "type": "integer",
+          "desc": "Offset, e.g. -1 or +1"
+        }
       },
       "returns": []
     },
     "toggleEnabledById": {
-      "desc": "Active ou désactive la caméra de véhicule d'indice camId dans le cycle (compatibilité) puis sauvegarde la configuration.",
-      "params": {"camId": {"type": "integer", "desc": "Indice dans la configuration"}},
+      "desc": "Enables or disables the vehicle camera at index camId in the cycle (compatibility) then saves the configuration.",
+      "params": {
+        "camId": {
+          "type": "integer",
+          "desc": "Index in the configuration"
+        }
+      },
       "returns": []
     },
     "changeFreeCameraOrder": {
-      "desc": "Déplace une caméra libre dans la configuration des caméras 'world' et sauvegarde (réglage freeCameraConfig).",
+      "desc": "Moves a free camera in the 'world' cameras configuration and saves (freeCameraConfig setting).",
       "params": {
-        "camId": {"type": "integer", "desc": "Indice dans la configuration libre"},
-        "offset": {"type": "integer", "desc": "Décalage"}
+        "camId": {
+          "type": "integer",
+          "desc": "Index in the free configuration"
+        },
+        "offset": {
+          "type": "integer",
+          "desc": "Offset"
+        }
       },
       "returns": []
     },
     "toggleFreeCameraEnabledById": {
-      "desc": "Active/désactive une caméra libre du groupe 'world' dans le cycle et sauvegarde.",
-      "params": {"camId": {"type": "integer", "desc": "Indice dans la configuration libre"}},
+      "desc": "Enables/disables a free camera of the 'world' group in the cycle and saves.",
+      "params": {
+        "camId": {
+          "type": "integer",
+          "desc": "Index in the free configuration"
+        }
+      },
       "returns": []
     },
     "setGlobalCameraByName": {
-      "desc": "Active une caméra globale par son nom, ou repasse à la caméra du véhicule avec nil. Appelle onCameraChanged(false) sur l'ancienne et setCustomData + onCameraChanged(true) sur la nouvelle ; dans la vue principale, émet le hook onGlobalCameraSet. Sans effet si le nom est inconnu ou s'il n'y a pas de véhicule pour revenir à la caméra de véhicule.",
+      "desc": "Activates a global camera by name, or switches back to the vehicle camera with nil. Calls onCameraChanged(false) on the old one and setCustomData + onCameraChanged(true) on the new one; in the main view, emits the onGlobalCameraSet hook. No effect if the name is unknown or if there is no vehicle to return to the vehicle camera.",
       "params": {
-        "name": {"type": "string|nil", "desc": "Nom de caméra globale, nil pour quitter"},
-        "withTransition": {"type": "boolean|nil", "desc": "Non utilisé dans le code (déduit du code)"},
-        "customData": {"type": "table|nil", "desc": "Données passées à cam:setCustomData"},
-        "ctx": {"type": "table|nil", "desc": "Contexte interne (nil = main)"}
+        "name": {
+          "type": "string|nil",
+          "desc": "Global camera name, nil to leave"
+        },
+        "withTransition": {
+          "type": "boolean|nil",
+          "desc": "Not used in the code (inferred from code)"
+        },
+        "customData": {
+          "type": "table|nil",
+          "desc": "Data passed to cam:setCustomData"
+        },
+        "ctx": {
+          "type": "table|nil",
+          "desc": "Internal context (nil = main)"
+        }
       },
       "returns": []
     },
     "startCameraTransition": {
-      "desc": "Fond le point de vue actuel vers celui de la caméra de cette frame. À appeler juste après un changement de caméra. duration remplace la durée configurée.",
+      "desc": "Blends the current point of view into the camera's view for this frame. To call right after a camera change. duration overrides the configured duration.",
       "params": {
-        "duration": {"type": "number|nil", "desc": "Durée du fondu en secondes"},
-        "player": {"type": "integer|nil", "desc": "Joueur/vue (nil = main)"}
+        "duration": {
+          "type": "number|nil",
+          "desc": "Blend duration in seconds"
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player/view (nil = main)"
+        }
       },
       "returns": []
     },
     "cycleCameraGroup": {
-      "desc": "Passe au groupe de caméras suivant (caméras de jeu, puis caméras libres 'world', puis retour), entre dans la première caméra du groupe, émet onCameraToggled et affiche le nom.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur"}},
+      "desc": "Switches to the next camera group (game cameras, then 'world' free cameras, then back), enters the first camera of the group, emits onCameraToggled and displays the name.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        }
+      },
       "returns": []
     },
     "setByName": {
-      "desc": "Sélectionne une caméra par nom. Signature souple : setByName(player, camName, withTransition, customData) si le premier argument est un nombre, sinon setByName(camName, withTransition, customData). Un nom de caméra globale (ou nil) agit sur la vue globale ; sinon c'est la caméra de véhicule du joueur.",
+      "desc": "Selects a camera by name. Flexible signature: setByName(player, camName, withTransition, customData) if the first argument is a number, otherwise setByName(camName, withTransition, customData). A global camera name (or nil) acts on the global view; otherwise it is the player's vehicle camera.",
       "params": {
-        "...": {"type": "any", "desc": "[player,] camName, withTransition, customData"}
+        "...": {
+          "type": "any",
+          "desc": "[player,] camName, withTransition, customData"
+        }
       },
       "returns": []
     },
     "setCameraByNameFromOptions": {
-      "desc": "Sélection depuis le menu Options : une caméra du groupe 'world' passe par enterGroupCam (et le hook onCameraToggled FreeCam), sinon c'est une caméra de véhicule. Affiche le nom si la sélection réussit.",
+      "desc": "Selection from the Options menu: a 'world' group camera goes through enterGroupCam (and the onCameraToggled FreeCam hook), otherwise it is a vehicle camera. Displays the name if the selection succeeds.",
       "params": {
-        "player": {"type": "integer|nil", "desc": "Indice du joueur"},
-        "camName": {"type": "string", "desc": "Nom de caméra"}
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        },
+        "camName": {
+          "type": "string",
+          "desc": "Camera name"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si sélectionnée"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if selected"
+        }
+      ]
     },
     "setVehicleCameraByNameWithId": {
-      "desc": "Sélectionne une caméra de véhicule pour le véhicule d'identifiant vehId. Si les données du véhicule ne sont pas encore prêtes, la demande est mémorisée et appliquée plus tard.",
+      "desc": "Selects a vehicle camera for the vehicle with id vehId. If the vehicle data is not ready yet, the request is stored and applied later.",
       "params": {
-        "vehId": {"type": "integer", "desc": "Identifiant du véhicule"},
-        "name": {"type": "string", "desc": "Nom de caméra"},
-        "withTransition": {"type": "boolean|nil", "desc": "Lance une transition"},
-        "customData": {"type": "any", "desc": "Passé à cam:setCustomData si présent"},
-        "ctx": {"type": "table|nil", "desc": "Contexte interne (nil = main)"}
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id"
+        },
+        "name": {
+          "type": "string",
+          "desc": "Camera name"
+        },
+        "withTransition": {
+          "type": "boolean|nil",
+          "desc": "Starts a transition"
+        },
+        "customData": {
+          "type": "any",
+          "desc": "Passed to cam:setCustomData if present"
+        },
+        "ctx": {
+          "type": "table|nil",
+          "desc": "Internal context (nil = main)"
+        }
       },
-      "returns": [{"type": "boolean|nil", "desc": "true si changée, false sinon"}]
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true if changed, false otherwise"
+        }
+      ]
     },
     "setBySlotId": {
-      "desc": "Sélectionne la caméra associée à un numéro de raccourci (touches 1 à 9, slotId calculé sur les caméras visibles).",
+      "desc": "Selects the camera associated with a shortcut number (keys 1 to 9, slotId computed over the visible cameras).",
       "params": {
-        "player": {"type": "integer|nil", "desc": "Indice du joueur"},
-        "slotId": {"type": "integer", "desc": "Numéro de slot"}
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        },
+        "slotId": {
+          "type": "integer",
+          "desc": "Slot number"
+        }
       },
       "returns": []
     },
     "setVehicleCameraByIndexOffset": {
-      "desc": "Passe à la caméra suivante (offset = 1) ou précédente (-1) en sautant les cachées/désactivées. En caméra globale d'un groupe, cycle dans ce groupe. Utilisé par les actions d'entrée.",
+      "desc": "Switches to the next (offset = 1) or previous (-1) camera, skipping hidden/disabled ones. In a group's global camera, cycles within that group. Used by input actions.",
       "params": {
-        "player": {"type": "integer|nil", "desc": "Indice du joueur"},
-        "offset": {"type": "integer", "desc": "+1 ou -1"}
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        },
+        "offset": {
+          "type": "integer",
+          "desc": "+1 or -1"
+        }
       },
       "returns": []
     },
     "isCameraInside": {
-      "desc": "Teste si une position de caméra est à l'intérieur du véhicule du joueur (dans sa boîte orientée et à moins de 0,6 m d'un point de vue 'inside' d'une caméra).",
+      "desc": "Tests whether a camera position is inside the player's vehicle (within its oriented box and within 0.6 m of an 'inside' viewpoint of a camera).",
       "params": {
-        "player": {"type": "integer|nil", "desc": "Indice du joueur"},
-        "camPos": {"type": "vec3", "desc": "Position à tester (m)"}
-      },
-      "returns": [{"type": "integer", "desc": "1 si à l'intérieur, 0 sinon (0 aussi sans véhicule ou en unicycle)"}]
-    },
-    "getCameraDataById": {
-      "desc": "Renvoie les instances de caméras d'un véhicule.",
-      "params": {
-        "vid": {"type": "integer", "desc": "Identifiant du véhicule"},
-        "ctxId": {"type": "string|nil", "desc": "Identifiant de contexte (nil = main)"}
-      },
-      "returns": [{"type": "table<string, table>|nil", "desc": "Caméras par nom, nil si le véhicule est inconnu"}]
-    },
-    "getDriverCameraNameById": {
-      "desc": "Nom de la caméra conducteur : 'driver' (si 'onboard.driver' existe) ou le nom d'une caméra 'occupant.*' en mode permission 'driver'.",
-      "params": {
-        "vehId": {"type": "integer", "desc": "Identifiant du véhicule"},
-        "ctxId": {"type": "string|nil", "desc": "Contexte"}
-      },
-      "returns": [{"type": "string|nil", "desc": "Nom de caméra conducteur"}]
-    },
-    "getDriverDataById": {
-      "desc": "Données de la caméra conducteur d'un véhicule.",
-      "params": {
-        "vehId": {"type": "integer", "desc": "Identifiant du véhicule"},
-        "ctxId": {"type": "string|nil", "desc": "Contexte"}
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        },
+        "camPos": {
+          "type": "vec3",
+          "desc": "Position to test (m)"
+        }
       },
       "returns": [
-        {"type": "integer|nil", "desc": "camNodeID (noeud du point de vue conducteur)"},
-        {"type": "boolean", "desc": "rightHandCamera"},
-        {"type": "boolean", "desc": "rightHandDoor"}
+        {
+          "type": "integer",
+          "desc": "1 if inside, 0 otherwise (also 0 without a vehicle or on a unicycle)"
+        }
+      ]
+    },
+    "getCameraDataById": {
+      "desc": "Returns the camera instances of a vehicle.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "Vehicle id"
+        },
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context identifier (nil = main)"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, table>|nil",
+          "desc": "Cameras by name, nil if the vehicle is unknown"
+        }
+      ]
+    },
+    "getDriverCameraNameById": {
+      "desc": "Name of the driver camera: 'driver' (if 'onboard.driver' exists) or the name of an 'occupant.*' camera in 'driver' permission mode.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id"
+        },
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Driver camera name"
+        }
+      ]
+    },
+    "getDriverDataById": {
+      "desc": "Driver camera data of a vehicle.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id"
+        },
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "camNodeID (node of the driver viewpoint)"
+        },
+        {
+          "type": "boolean",
+          "desc": "rightHandCamera"
+        },
+        {
+          "type": "boolean",
+          "desc": "rightHandDoor"
+        }
       ]
     },
     "getDriverData": {
-      "desc": "Comme getDriverDataById à partir d'un objet véhicule.",
+      "desc": "Like getDriverDataById from a vehicle object.",
       "params": {
-        "veh": {"type": "userdata|nil", "desc": "Véhicule"},
-        "ctxId": {"type": "string|nil", "desc": "Contexte"}
+        "veh": {
+          "type": "userdata|nil",
+          "desc": "Vehicle"
+        },
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
       },
       "returns": [
-        {"type": "integer|nil", "desc": "camNodeID"},
-        {"type": "boolean", "desc": "rightHandCamera"},
-        {"type": "boolean", "desc": "rightHandDoor"}
+        {
+          "type": "integer|nil",
+          "desc": "camNodeID"
+        },
+        {
+          "type": "boolean",
+          "desc": "rightHandCamera"
+        },
+        {
+          "type": "boolean",
+          "desc": "rightHandDoor"
+        }
       ]
     },
     "getActiveCamName": {
-      "desc": "Nom de la caméra active du joueur : caméra globale si active, sinon caméra de véhicule (ou celle demandée en attente). nil si le joueur n'a pas de véhicule.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur"}},
-      "returns": [{"type": "string|nil", "desc": "Nom de la caméra"}]
+      "desc": "Name of the player's active camera: global camera if active, otherwise vehicle camera (or the pending requested one). nil if the player has no vehicle.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Camera name"
+        }
+      ]
     },
     "getActiveCamNameByVehId": {
-      "desc": "Nom de la caméra focalisée d'un véhicule (vue principale).",
-      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule"}},
-      "returns": [{"type": "string|nil", "desc": "Nom de la caméra"}]
+      "desc": "Name of a vehicle's focused camera (main view).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id"
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Camera name"
+        }
+      ]
     },
     "getActiveGlobalCameraName": {
-      "desc": "Nom de la caméra globale active pour le joueur, nil si c'est une caméra de véhicule.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur"}},
-      "returns": [{"type": "string|nil", "desc": "Nom de caméra globale"}]
+      "desc": "Name of the global camera active for the player, nil if it is a vehicle camera.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Global camera name"
+        }
+      ]
     },
     "isWorldCamera": {
-      "desc": "Teste si la caméra active du joueur appartient au groupe 'world' (caméras libres).",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur"}},
-      "returns": [{"type": "boolean", "desc": "true si caméra 'world'"}]
+      "desc": "Tests whether the player's active camera belongs to the 'world' group (free cameras).",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if 'world' camera"
+        }
+      ]
     },
     "processVehicleCameraConfigChanged": {
-      "desc": "(Re)crée les instances de caméras d'un véhicule d'après ses données jbeam (cameraData), met à jour la configuration partagée (ordre, activation, sauvegardée par le contexte principal), puis choisit la caméra : demande en attente, sinon caméra précédente, sinon première caméra activée et visible, sinon première existante. Renvoie false si les données du véhicule ne sont pas encore disponibles.",
+      "desc": "(Re)creates the camera instances of a vehicle from its jbeam data (cameraData), updates the shared configuration (order, activation, saved by the main context), then chooses the camera: pending request, otherwise previous camera, otherwise first enabled and visible camera, otherwise first existing one. Returns false if the vehicle data is not available yet.",
       "params": {
-        "vid": {"type": "integer", "desc": "Identifiant du véhicule"},
-        "vdata": {"type": "table", "desc": "Table de données caméra du véhicule (modifiée)"},
-        "focusedCamNamePrevious": {"type": "string|nil", "desc": "Nom de la caméra précédemment focalisée"},
-        "ctx": {"type": "table|nil", "desc": "Contexte interne (nil = main)"}
+        "vid": {
+          "type": "integer",
+          "desc": "Vehicle id"
+        },
+        "vdata": {
+          "type": "table",
+          "desc": "Vehicle camera data table (modified)"
+        },
+        "focusedCamNamePrevious": {
+          "type": "string|nil",
+          "desc": "Name of the previously focused camera"
+        },
+        "ctx": {
+          "type": "table|nil",
+          "desc": "Internal context (nil = main)"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si traité"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if handled"
+        }
+      ]
     },
     "resetCameraByID": {
-      "desc": "Appelle reset() sur la caméra (globale active ou focalisée du véhicule) de la vue principale.",
+      "desc": "Calls reset() on the camera (active global or the vehicle's focused one) of the main view.",
       "params": {
-        "vid": {"type": "integer|table", "desc": "Id de véhicule, ou table {vehId, camName}"},
-        "...": {"type": "any", "desc": "Arguments passés à reset"}
+        "vid": {
+          "type": "integer|table",
+          "desc": "Vehicle id, or table {vehId, camName}"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Arguments passed to reset"
+        }
       },
-      "returns": [{"type": "any", "desc": "Retour de la méthode de la caméra"}]
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera method"
+        }
+      ]
     },
     "setRotation": {
-      "desc": "Fixe l'orientation de la caméra. Si la caméra globale 'free' est active, applique aussi directement la rotation (quat) au moteur ; puis appelle cam:setRotation(...).",
+      "desc": "Sets the camera orientation. If the 'free' global camera is active, also applies the rotation (quat) directly to the engine; then calls cam:setRotation(...).",
       "params": {
-        "vid": {"type": "integer|table", "desc": "Id de véhicule ou {vehId, camName}"},
-        "...": {"type": "any", "desc": "Rotation (quat) et autres arguments"}
+        "vid": {
+          "type": "integer|table",
+          "desc": "Vehicle id or {vehId, camName}"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Rotation (quat) and other arguments"
+        }
       },
-      "returns": [{"type": "any", "desc": "Retour de la caméra"}]
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera"
+        }
+      ]
     },
     "setFOV": {
-      "desc": "Fixe le champ de vision (degrés). Si 'free' est active, l'applique aussi au moteur ; puis cam:setFOV(...).",
+      "desc": "Sets the field of view (degrees). If 'free' is active, also applies it to the engine; then cam:setFOV(...).",
       "params": {
-        "vid": {"type": "integer|table", "desc": "Id de véhicule ou {vehId, camName}"},
-        "...": {"type": "number", "desc": "FOV en degrés"}
+        "vid": {
+          "type": "integer|table",
+          "desc": "Vehicle id or {vehId, camName}"
+        },
+        "...": {
+          "type": "number",
+          "desc": "FOV in degrees"
+        }
       },
-      "returns": [{"type": "any", "desc": "Retour de la caméra"}]
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera"
+        }
+      ]
     },
     "setOffset": {
-      "desc": "Délègue cam:setOffset(...) à la caméra de la vue principale.",
-      "params": {"vid": {"type": "integer|table", "desc": "Id de véhicule ou {vehId, camName}"}, "...": {"type": "any", "desc": "Arguments du mode de caméra"}},
-      "returns": [{"type": "any", "desc": "Retour de la caméra"}]
+      "desc": "Delegates cam:setOffset(...) to the main view's camera.",
+      "params": {
+        "vid": {
+          "type": "integer|table",
+          "desc": "Vehicle id or {vehId, camName}"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Camera mode arguments"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera"
+        }
+      ]
     },
     "setRefNodes": {
-      "desc": "Délègue cam:setRefNodes(...) (noeuds de référence centre, gauche, arrière).",
-      "params": {"vid": {"type": "integer|table", "desc": "Id de véhicule ou {vehId, camName}"}, "...": {"type": "any", "desc": "Noeuds de référence"}},
-      "returns": [{"type": "any", "desc": "Retour de la caméra"}]
+      "desc": "Delegates cam:setRefNodes(...) (center, left, rear reference nodes).",
+      "params": {
+        "vid": {
+          "type": "integer|table",
+          "desc": "Vehicle id or {vehId, camName}"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Reference nodes"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera"
+        }
+      ]
     },
     "setRef": {
-      "desc": "Délègue cam:setRef(...) à la caméra.",
-      "params": {"vid": {"type": "integer|table", "desc": "Id de véhicule ou {vehId, camName}"}, "...": {"type": "any", "desc": "Arguments"}},
-      "returns": [{"type": "any", "desc": "Retour de la caméra"}]
+      "desc": "Delegates cam:setRef(...) to the camera.",
+      "params": {
+        "vid": {
+          "type": "integer|table",
+          "desc": "Vehicle id or {vehId, camName}"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Arguments"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera"
+        }
+      ]
     },
     "setTargetMode": {
-      "desc": "Délègue cam:setTargetMode(...) à la caméra.",
-      "params": {"vid": {"type": "integer|table", "desc": "Id de véhicule ou {vehId, camName}"}, "...": {"type": "any", "desc": "Arguments"}},
-      "returns": [{"type": "any", "desc": "Retour de la caméra"}]
+      "desc": "Delegates cam:setTargetMode(...) to the camera.",
+      "params": {
+        "vid": {
+          "type": "integer|table",
+          "desc": "Vehicle id or {vehId, camName}"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Arguments"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera"
+        }
+      ]
     },
     "setDefaultDistance": {
-      "desc": "Délègue cam:setDefaultDistance(...) à la caméra.",
-      "params": {"vid": {"type": "integer|table", "desc": "Id de véhicule ou {vehId, camName}"}, "...": {"type": "number", "desc": "Distance par défaut (m)"}},
-      "returns": [{"type": "any", "desc": "Retour de la caméra"}]
+      "desc": "Delegates cam:setDefaultDistance(...) to the camera.",
+      "params": {
+        "vid": {
+          "type": "integer|table",
+          "desc": "Vehicle id or {vehId, camName}"
+        },
+        "...": {
+          "type": "number",
+          "desc": "Default distance (m)"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera"
+        }
+      ]
     },
     "setDistance": {
-      "desc": "Délègue cam:setDistance(...) à la caméra.",
-      "params": {"vid": {"type": "integer|table", "desc": "Id de véhicule ou {vehId, camName}"}, "...": {"type": "number", "desc": "Distance (m)"}},
-      "returns": [{"type": "any", "desc": "Retour de la caméra"}]
+      "desc": "Delegates cam:setDistance(...) to the camera.",
+      "params": {
+        "vid": {
+          "type": "integer|table",
+          "desc": "Vehicle id or {vehId, camName}"
+        },
+        "...": {
+          "type": "number",
+          "desc": "Distance (m)"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera"
+        }
+      ]
     },
     "setMaxDistance": {
-      "desc": "Délègue cam:setMaxDistance(...) à la caméra.",
-      "params": {"vid": {"type": "integer|table", "desc": "Id de véhicule ou {vehId, camName}"}, "...": {"type": "number", "desc": "Distance maximale (m)"}},
-      "returns": [{"type": "any", "desc": "Retour de la caméra"}]
+      "desc": "Delegates cam:setMaxDistance(...) to the camera.",
+      "params": {
+        "vid": {
+          "type": "integer|table",
+          "desc": "Vehicle id or {vehId, camName}"
+        },
+        "...": {
+          "type": "number",
+          "desc": "Maximum distance (m)"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera"
+        }
+      ]
     },
     "setDefaultRotation": {
-      "desc": "Délègue cam:setDefaultRotation(...) à la caméra.",
-      "params": {"vid": {"type": "integer|table", "desc": "Id de véhicule ou {vehId, camName}"}, "...": {"type": "any", "desc": "Rotation par défaut"}},
-      "returns": [{"type": "any", "desc": "Retour de la caméra"}]
+      "desc": "Delegates cam:setDefaultRotation(...) to the camera.",
+      "params": {
+        "vid": {
+          "type": "integer|table",
+          "desc": "Vehicle id or {vehId, camName}"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Default rotation"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera"
+        }
+      ]
     },
     "setSkipFovModifier": {
-      "desc": "Délègue cam:setSkipFovModifier(...) à la caméra.",
-      "params": {"vid": {"type": "integer|table", "desc": "Id de véhicule ou {vehId, camName}"}, "...": {"type": "boolean", "desc": "Ignorer le modificateur de FOV"}},
-      "returns": [{"type": "any", "desc": "Retour de la caméra"}]
+      "desc": "Delegates cam:setSkipFovModifier(...) to the camera.",
+      "params": {
+        "vid": {
+          "type": "integer|table",
+          "desc": "Vehicle id or {vehId, camName}"
+        },
+        "...": {
+          "type": "boolean",
+          "desc": "Skip the FOV modifier"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera"
+        }
+      ]
     },
     "setPosition": {
-      "desc": "Fixe la position de la caméra (vec3 en premier argument supplémentaire). Si la caméra globale 'free' est active dans la vue principale, la position est aussi appliquée directement au moteur ; puis cam:setPosition(...) est appelé.",
+      "desc": "Sets the camera position (vec3 as the first extra argument). If the 'free' global camera is active in the main view, the position is also applied directly to the engine; then cam:setPosition(...) is called.",
       "params": {
-        "pid": {"type": "integer|nil", "desc": "Joueur/vue"},
-        "...": {"type": "vec3", "desc": "Position monde (m)"}
+        "pid": {
+          "type": "integer|nil",
+          "desc": "Player/view"
+        },
+        "...": {
+          "type": "vec3",
+          "desc": "World position (m)"
+        }
       },
-      "returns": [{"type": "any", "desc": "Retour de la caméra"}]
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera"
+        }
+      ]
     },
     "clearMotion": {
-      "desc": "Annule le mouvement (vitesse) de la caméra du joueur (cam:clearMotion).",
-      "params": {"pid": {"type": "integer|nil", "desc": "Joueur/vue"}},
+      "desc": "Cancels the movement (velocity) of the player's camera (cam:clearMotion).",
+      "params": {
+        "pid": {
+          "type": "integer|nil",
+          "desc": "Player/view"
+        }
+      },
       "returns": []
     },
     "clearAngularMotion": {
-      "desc": "Annule le mouvement angulaire de la caméra du joueur.",
-      "params": {"pid": {"type": "integer|nil", "desc": "Joueur/vue"}},
+      "desc": "Cancels the angular movement of the player's camera.",
+      "params": {
+        "pid": {
+          "type": "integer|nil",
+          "desc": "Player/view"
+        }
+      },
       "returns": []
     },
     "setSmoothedCam": {
-      "desc": "Active/désactive le lissage de la caméra libre (cam:setSmoothedCam).",
-      "params": {"pid": {"type": "integer|nil", "desc": "Joueur/vue"}, "...": {"type": "boolean", "desc": "Activer le lissage"}},
+      "desc": "Enables/disables free camera smoothing (cam:setSmoothedCam).",
+      "params": {
+        "pid": {
+          "type": "integer|nil",
+          "desc": "Player/view"
+        },
+        "...": {
+          "type": "boolean",
+          "desc": "Enable smoothing"
+        }
+      },
       "returns": []
     },
     "setNewtonRotation": {
-      "desc": "Active/désactive le mode 'Newton' (inertie) en rotation de la caméra libre.",
-      "params": {"pid": {"type": "integer|nil", "desc": "Joueur/vue"}, "...": {"type": "any", "desc": "Argument du mode"}},
+      "desc": "Enables/disables the 'Newton' (inertia) mode for free camera rotation.",
+      "params": {
+        "pid": {
+          "type": "integer|nil",
+          "desc": "Player/view"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Mode argument"
+        }
+      },
       "returns": []
     },
     "setNewtonTranslation": {
-      "desc": "Active/désactive le mode 'Newton' (inertie) en translation de la caméra libre.",
-      "params": {"pid": {"type": "integer|nil", "desc": "Joueur/vue"}, "...": {"type": "any", "desc": "Argument du mode"}},
+      "desc": "Enables/disables the 'Newton' (inertia) mode for free camera translation.",
+      "params": {
+        "pid": {
+          "type": "integer|nil",
+          "desc": "Player/view"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Mode argument"
+        }
+      },
       "returns": []
     },
     "globalCameraFunction": {
-      "desc": "Appelle la méthode functionName d'une caméra globale nommée. Loggue une erreur si la caméra ou la méthode n'existe pas.",
+      "desc": "Calls the method functionName of a named global camera. Logs an error if the camera or the method does not exist.",
       "params": {
-        "globalCameraName": {"type": "string", "desc": "Nom de caméra globale"},
-        "functionName": {"type": "string", "desc": "Nom de méthode"},
-        "...": {"type": "any", "desc": "Arguments"}
+        "globalCameraName": {
+          "type": "string",
+          "desc": "Global camera name"
+        },
+        "functionName": {
+          "type": "string",
+          "desc": "Method name"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Arguments"
+        }
       },
-      "returns": [{"type": "any", "desc": "Retour de la méthode"}]
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the method"
+        }
+      ]
     },
     "proxy_Player": {
-      "desc": "Appelle la méthode fct sur la caméra active du joueur 0 (globale ou focalisée).",
+      "desc": "Calls the method fct on player 0's active camera (global or focused).",
       "params": {
-        "fct": {"type": "string", "desc": "Nom de méthode"},
-        "...": {"type": "any", "desc": "Arguments"}
+        "fct": {
+          "type": "string",
+          "desc": "Method name"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Arguments"
+        }
       },
-      "returns": [{"type": "any", "desc": "Retour de la méthode"}]
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the method"
+        }
+      ]
     },
     "vehicleCamerasFunction": {
-      "desc": "Exécute une méthode sur toutes les caméras d'un véhicule, dans tous les contextes.",
+      "desc": "Runs a method on all cameras of a vehicle, in all contexts.",
       "params": {
-        "vid": {"type": "integer", "desc": "Identifiant du véhicule"},
-        "functionName": {"type": "string", "desc": "Nom de méthode"},
-        "...": {"type": "any", "desc": "Arguments"}
+        "vid": {
+          "type": "integer",
+          "desc": "Vehicle id"
+        },
+        "functionName": {
+          "type": "string",
+          "desc": "Method name"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Arguments"
+        }
       },
       "returns": []
     },
     "resetCamera": {
-      "desc": "Remet à zéro les entrées de la vue du joueur, émet le hook onCameraReset et appelle reset() sur la caméra active.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur"}},
-      "returns": [{"type": "any", "desc": "Retour de reset"}]
+      "desc": "Resets the player view's inputs, emits the onCameraReset hook and calls reset() on the active camera.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of reset"
+        }
+      ]
     },
     "hotkey": {
-      "desc": "Transmet une touche de raccourci à la caméra active (méthode hotkey du mode).",
+      "desc": "Forwards a shortcut key to the active camera (the mode's hotkey method).",
       "params": {
-        "player": {"type": "integer|nil", "desc": "Indice du joueur"},
-        "hotkeyid": {"type": "any", "desc": "Identifiant de raccourci"},
-        "modifier": {"type": "any", "desc": "Modificateur"}
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        },
+        "hotkeyid": {
+          "type": "any",
+          "desc": "Shortcut identifier"
+        },
+        "modifier": {
+          "type": "any",
+          "desc": "Modifier"
+        }
       },
-      "returns": [{"type": "any", "desc": "Retour de la caméra"}]
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Return of the camera"
+        }
+      ]
     },
     "resetConfiguration": {
-      "desc": "Efface les réglages cameraConfig et freeCameraConfig et recalcule la configuration pour tous les véhicules.",
+      "desc": "Clears the cameraConfig and freeCameraConfig settings and recomputes the configuration for all vehicles.",
       "params": {},
       "returns": []
     },
     "setFastSpeedModifier": {
-      "desc": "Active le modificateur de vitesse rapide (touche) de la vue principale.",
-      "params": {"enabled": {"type": "boolean", "desc": "true pour aller plus vite"}},
+      "desc": "Enables the fast speed modifier (key) of the main view.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to go faster"
+        }
+      },
       "returns": []
     },
     "setPosRot": {
-      "desc": "Place la caméra libre à une position (et orientation quaternion facultative). Sans effet si la caméra libre n'est pas active.",
+      "desc": "Places the free camera at a position (and optional quaternion orientation). No effect if the free camera is not active.",
       "params": {
-        "pid": {"type": "integer", "desc": "Joueur"},
-        "px": {"type": "number", "desc": "x (m)"},
-        "py": {"type": "number", "desc": "y (m)"},
-        "pz": {"type": "number", "desc": "z (m)"},
-        "rx": {"type": "number|nil", "desc": "Quaternion x"},
-        "ry": {"type": "number|nil", "desc": "Quaternion y"},
-        "rz": {"type": "number|nil", "desc": "Quaternion z"},
-        "rw": {"type": "number|nil", "desc": "Quaternion w"}
+        "pid": {
+          "type": "integer",
+          "desc": "Player"
+        },
+        "px": {
+          "type": "number",
+          "desc": "x (m)"
+        },
+        "py": {
+          "type": "number",
+          "desc": "y (m)"
+        },
+        "pz": {
+          "type": "number",
+          "desc": "z (m)"
+        },
+        "rx": {
+          "type": "number|nil",
+          "desc": "Quaternion x"
+        },
+        "ry": {
+          "type": "number|nil",
+          "desc": "Quaternion y"
+        },
+        "rz": {
+          "type": "number|nil",
+          "desc": "Quaternion z"
+        },
+        "rw": {
+          "type": "number|nil",
+          "desc": "Quaternion w"
+        }
       },
       "returns": []
     },
     "setFreeCameraYawPitchRollDeg": {
-      "desc": "Oriente la caméra libre (active seulement si la caméra globale 'free' est active) à partir de lacet, tangage (positif = regarder vers le bas) et roulis en degrés ; annule la vitesse angulaire.",
+      "desc": "Orients the free camera (only active if the 'free' global camera is active) from yaw, pitch (positive = looking down) and roll in degrees; cancels the angular velocity.",
       "params": {
-        "yawDeg": {"type": "number", "desc": "Lacet (0 = axe +Y)"},
-        "pitchDownDeg": {"type": "number", "desc": "Tangage vers le bas (deg)"},
-        "rollDeg": {"type": "number", "desc": "Roulis (deg)"}
+        "yawDeg": {
+          "type": "number",
+          "desc": "Yaw (0 = +Y axis)"
+        },
+        "pitchDownDeg": {
+          "type": "number",
+          "desc": "Pitch downward (deg)"
+        },
+        "rollDeg": {
+          "type": "number",
+          "desc": "Roll (deg)"
+        }
       },
       "returns": []
     },
     "getYawPitchRoll": {
-      "desc": "Lacet, tangage et roulis de la caméra principale en une seule fois.",
+      "desc": "Yaw, pitch and roll of the main camera in one call.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{yawDeg, pitchDown (positif = vers le bas), rollDeg}"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{yawDeg, pitchDown (positive = downward), rollDeg}"
+        }
+      ]
     },
     "setSpeed": {
-      "desc": "Fixe la vitesse de déplacement de la caméra libre.",
+      "desc": "Sets the movement speed of the free camera.",
       "params": {
-        "speed": {"type": "number", "desc": "Vitesse (m/s)"},
-        "ctxId": {"type": "string|nil", "desc": "Contexte"}
+        "speed": {
+          "type": "number",
+          "desc": "Speed (m/s)"
+        },
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
       },
       "returns": []
     },
     "getSpeed": {
-      "desc": "Vitesse de déplacement de la caméra libre d'un contexte (30 par défaut).",
-      "params": {"ctxId": {"type": "string|nil", "desc": "Contexte"}},
-      "returns": [{"type": "number|nil", "desc": "Vitesse"}]
+      "desc": "Movement speed of a context's free camera (30 by default).",
+      "params": {
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Speed"
+        }
+      ]
     },
     "changeSpeed": {
-      "desc": "Multiplie ou divise la vitesse de la caméra de la vue principale par (1 + 0.2*|val|) selon le signe, bornée entre 2 et 100, et affiche un message. Ignorée si le zoom caméra est désactivé dans l'éditeur.",
-      "params": {"val": {"type": "number", "desc": "Variation signée (molette)"}},
+      "desc": "Multiplies or divides the main view's camera speed by (1 + 0.2*|val|) depending on the sign, clamped between 2 and 100, and displays a message. Ignored if camera zoom is disabled in the editor.",
+      "params": {
+        "val": {
+          "type": "number",
+          "desc": "Signed change (wheel)"
+        }
+      },
       "returns": []
     },
     "setLookBack": {
-      "desc": "Active/désactive le regard vers l'arrière pour le joueur.",
+      "desc": "Enables/disables looking backward for the player.",
       "params": {
-        "player": {"type": "integer|nil", "desc": "Indice du joueur"},
-        "enabled": {"type": "boolean", "desc": "true pour regarder derrière"}
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        },
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to look behind"
+        }
       },
       "returns": []
     },
     "getLookBack": {
-      "desc": "Etat 'regard vers l'arrière' de la vue principale.",
+      "desc": "'Look backward' state of the main view.",
       "params": {},
-      "returns": [{"type": "boolean|nil", "desc": "Etat"}]
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "State"
+        }
+      ]
     },
     "setCameraUnicycleZoom": {
-      "desc": "Définit le zoom de la caméra en marche à pied (unicycle).",
+      "desc": "Sets the zoom of the walking camera (unicycle).",
       "params": {
-        "value": {"type": "number", "desc": "0 ou 1 (déduit du code : seuil à 0.5)"},
-        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+        "value": {
+          "type": "number",
+          "desc": "0 or 1 (inferred from code: threshold at 0.5)"
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        }
       },
       "returns": []
     },
     "unicycleZoomToggle": {
-      "desc": "Bascule le zoom de la caméra en marche à pied entre 0 et 1.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur"}},
+      "desc": "Toggles the walking camera zoom between 0 and 1.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        }
+      },
       "returns": []
     },
     "setCameraDriverZoom": {
-      "desc": "Définit le zoom de la caméra conducteur.",
+      "desc": "Sets the driver camera zoom.",
       "params": {
-        "value": {"type": "number", "desc": "0 ou 1 (seuil 0.5)"},
-        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+        "value": {
+          "type": "number",
+          "desc": "0 or 1 (threshold 0.5)"
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        }
       },
       "returns": []
     },
     "getCameraDriverZoom": {
-      "desc": "Zoom actuel de la caméra conducteur.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur"}},
-      "returns": [{"type": "number|nil", "desc": "Zoom"}]
+      "desc": "Current driver camera zoom.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Zoom"
+        }
+      ]
     },
     "driverZoomToggle": {
-      "desc": "Bascule le zoom de la caméra conducteur entre 0 et 1.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur"}},
+      "desc": "Toggles the driver camera zoom between 0 and 1.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        }
+      },
       "returns": []
     },
     "getPosition": {
-      "desc": "Position finale de la caméra (copie).",
-      "params": {"ctxId": {"type": "string|nil", "desc": "Contexte (nil = vue du joueur)"}},
-      "returns": [{"type": "vec3", "desc": "Position monde (m)"}]
+      "desc": "Final camera position (copy).",
+      "params": {
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context (nil = player view)"
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3",
+          "desc": "World position (m)"
+        }
+      ]
     },
     "getPositionXYZ": {
-      "desc": "Position finale en composantes séparées (évite l'allocation).",
-      "params": {"ctxId": {"type": "string|nil", "desc": "Contexte"}},
+      "desc": "Final position as separate components (avoids allocation).",
+      "params": {
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
+      },
       "returns": [
-        {"type": "number", "desc": "x"},
-        {"type": "number", "desc": "y"},
-        {"type": "number", "desc": "z"}
+        {
+          "type": "number",
+          "desc": "x"
+        },
+        {
+          "type": "number",
+          "desc": "y"
+        },
+        {
+          "type": "number",
+          "desc": "z"
+        }
       ]
     },
     "getUp": {
-      "desc": "Vecteur 'haut' de la caméra (axe z tourné par l'orientation).",
-      "params": {"ctxId": {"type": "string|nil", "desc": "Contexte"}},
-      "returns": [{"type": "vec3", "desc": "Vecteur haut"}]
+      "desc": "Camera 'up' vector (z axis rotated by the orientation).",
+      "params": {
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3",
+          "desc": "Up vector"
+        }
+      ]
     },
     "getRight": {
-      "desc": "Vecteur 'droite' de la caméra (axe x tourné par l'orientation).",
-      "params": {"ctxId": {"type": "string|nil", "desc": "Contexte"}},
-      "returns": [{"type": "vec3", "desc": "Vecteur droite"}]
+      "desc": "Camera 'right' vector (x axis rotated by the orientation).",
+      "params": {
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3",
+          "desc": "Right vector"
+        }
+      ]
     },
     "getForward": {
-      "desc": "Vecteur 'avant' de la caméra (axe y tourné par l'orientation).",
-      "params": {"ctxId": {"type": "string|nil", "desc": "Contexte"}},
-      "returns": [{"type": "vec3", "desc": "Vecteur avant"}]
+      "desc": "Camera 'forward' vector (y axis rotated by the orientation).",
+      "params": {
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3",
+          "desc": "Forward vector"
+        }
+      ]
     },
     "getForwardXYZ": {
-      "desc": "Vecteur avant en composantes séparées (utilise un vec3 interne réutilisé).",
-      "params": {"ctxId": {"type": "string|nil", "desc": "Contexte"}},
+      "desc": "Forward vector as separate components (uses a reused internal vec3).",
+      "params": {
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
+      },
       "returns": [
-        {"type": "number", "desc": "x"},
-        {"type": "number", "desc": "y"},
-        {"type": "number", "desc": "z"}
+        {
+          "type": "number",
+          "desc": "x"
+        },
+        {
+          "type": "number",
+          "desc": "y"
+        },
+        {
+          "type": "number",
+          "desc": "z"
+        }
       ]
     },
     "getQuat": {
-      "desc": "Orientation finale de la caméra (copie).",
-      "params": {"ctxId": {"type": "string|nil", "desc": "Contexte"}},
-      "returns": [{"type": "quat", "desc": "Orientation"}]
+      "desc": "Final camera orientation (copy).",
+      "params": {
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
+      },
+      "returns": [
+        {
+          "type": "quat",
+          "desc": "Orientation"
+        }
+      ]
     },
     "getQuatXYZW": {
-      "desc": "Orientation en composantes séparées.",
-      "params": {"ctxId": {"type": "string|nil", "desc": "Contexte"}},
+      "desc": "Orientation as separate components.",
+      "params": {
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
+      },
       "returns": [
-        {"type": "number", "desc": "x"},
-        {"type": "number", "desc": "y"},
-        {"type": "number", "desc": "z"},
-        {"type": "number", "desc": "w"}
+        {
+          "type": "number",
+          "desc": "x"
+        },
+        {
+          "type": "number",
+          "desc": "y"
+        },
+        {
+          "type": "number",
+          "desc": "z"
+        },
+        {
+          "type": "number",
+          "desc": "w"
+        }
       ]
     },
     "getFovDeg": {
-      "desc": "Champ de vision final en degrés.",
-      "params": {"ctxId": {"type": "string|nil", "desc": "Contexte"}},
-      "returns": [{"type": "number", "desc": "FOV (deg)"}]
+      "desc": "Final field of view in degrees.",
+      "params": {
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "FOV (deg)"
+        }
+      ]
     },
     "getFovRad": {
-      "desc": "Champ de vision final en radians.",
-      "params": {"ctxId": {"type": "string|nil", "desc": "Contexte"}},
-      "returns": [{"type": "number", "desc": "FOV (rad)"}]
+      "desc": "Final field of view in radians.",
+      "params": {
+        "ctxId": {
+          "type": "string|nil",
+          "desc": "Context"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "FOV (rad)"
+        }
+      ]
     },
     "createContext": {
-      "desc": "Crée (ou met à jour) un contexte de caméra supplémentaire = une sortie caméra avec sa propre RenderView, réutilisant tous les modes de caméra. L'identifiant 'main' (ou nil) renvoie le contexte principal. Le rendu cible (résolution, texture) est géré par l'appelant. vehiclePlayer permet à la vue d'afficher le véhicule d'un autre siège alors que player ne fait que fournir l'entrée.",
+      "desc": "Creates (or updates) an extra camera context = a camera output with its own RenderView, reusing all camera modes. The identifier 'main' (or nil) returns the main context. The render target (resolution, texture) is managed by the caller. vehiclePlayer lets the view show another seat's vehicle while player only provides the input.",
       "params": {
-        "id": {"type": "string", "desc": "Identifiant du contexte"},
-        "renderView": {"type": "string|nil", "desc": "Nom de la RenderView (par défaut id)"},
-        "player": {"type": "integer|nil", "desc": "Joueur/siège dont la vue suit les entrées (0 par défaut)"},
-        "vehiclePlayer": {"type": "integer|nil", "desc": "Siège dont on prend le véhicule (facultatif)"}
+        "id": {
+          "type": "string",
+          "desc": "Context identifier"
+        },
+        "renderView": {
+          "type": "string|nil",
+          "desc": "RenderView name (id by default)"
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player/seat whose view follows the inputs (0 by default)"
+        },
+        "vehiclePlayer": {
+          "type": "integer|nil",
+          "desc": "Seat whose vehicle is taken (optional)"
+        }
       },
-      "returns": [{"type": "table", "desc": "Contexte (table interne)"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Context (internal table)"
+        }
+      ]
     },
     "destroyContext": {
-      "desc": "Détruit un contexte supplémentaire (jamais le principal) et vide le cache des caméras du contexte principal.",
-      "params": {"id": {"type": "string", "desc": "Identifiant du contexte"}},
+      "desc": "Destroys an extra context (never the main one) and empties the main context's camera cache.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Context identifier"
+        }
+      },
       "returns": []
     },
     "getContextIds": {
-      "desc": "Liste des identifiants de contextes ('main' en premier).",
+      "desc": "List of context identifiers ('main' first).",
       "params": {},
-      "returns": [{"type": "table<integer, string>", "desc": "Identifiants"}]
+      "returns": [
+        {
+          "type": "table<integer, string>",
+          "desc": "Identifiers"
+        }
+      ]
     },
     "getContextIdForPlayer": {
-      "desc": "Identifiant de la vue par laquelle regarde ce joueur, utilisable avec les getters get*(ctxId). nil = vue principale.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur"}},
-      "returns": [{"type": "string|nil", "desc": "Identifiant de contexte ou nil"}]
+      "desc": "Identifier of the view through which this player looks, usable with the get*(ctxId) getters. nil = main view.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index"
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Context identifier or nil"
+        }
+      ]
     },
     "setContextCamera": {
-      "desc": "Sélectionne une caméra sur un contexte sans toucher au joueur. camName nil ou nom de caméra globale : caméra globale (initialisée avec la pose actuelle de la vue) ; sinon caméra de véhicule du joueur du contexte.",
+      "desc": "Selects a camera on a context without touching the player. camName nil or global camera name: global camera (initialized with the view's current pose); otherwise the vehicle camera of the context's player.",
       "params": {
-        "id": {"type": "string|nil", "desc": "Identifiant de contexte (nil = main)"},
-        "camName": {"type": "string|nil", "desc": "Nom de caméra"},
-        "withTransition": {"type": "boolean|nil", "desc": "Transition"},
-        "customData": {"type": "any", "desc": "Données passées à setCustomData"}
+        "id": {
+          "type": "string|nil",
+          "desc": "Context identifier (nil = main)"
+        },
+        "camName": {
+          "type": "string|nil",
+          "desc": "Camera name"
+        },
+        "withTransition": {
+          "type": "boolean|nil",
+          "desc": "Transition"
+        },
+        "customData": {
+          "type": "any",
+          "desc": "Data passed to setCustomData"
+        }
       },
-      "returns": [{"type": "any", "desc": "Aucun retour utile (la fonction interne ne renvoie rien)"}]
+      "returns": [
+        {
+          "type": "any",
+          "desc": "No useful return (the internal function returns nothing)"
+        }
+      ]
     },
     "getContextCameraState": {
-      "desc": "Instantané léger et sérialisable (JSON) de la caméra d'un contexte : nom, pose monde (pos, rot, fov) et état propre du mode (data, via cam:serialize) pour pouvoir la restaurer.",
-      "params": {"id": {"type": "string|nil", "desc": "Identifiant de contexte (nil = main)"}},
-      "returns": [{"type": "table|nil", "desc": "{cam, pos={x,y,z}, rot={x,y,z,w}, fov, data}"}]
+      "desc": "Lightweight serializable (JSON) snapshot of a context's camera: name, world pose (pos, rot, fov) and the mode's own state (data, via cam:serialize) so it can be restored.",
+      "params": {
+        "id": {
+          "type": "string|nil",
+          "desc": "Context identifier (nil = main)"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{cam, pos={x,y,z}, rot={x,y,z,w}, fov, data}"
+        }
+      ]
     },
     "setContextCameraState": {
-      "desc": "Restaure la caméra d'un contexte depuis un instantané de getContextCameraState. Un mode avec deserialize restaure son état ; une caméra libre/globale sans deserialize est replacée à la pose sauvegardée.",
+      "desc": "Restores a context's camera from a getContextCameraState snapshot. A mode with deserialize restores its state; a free/global camera without deserialize is put back at the saved pose.",
       "params": {
-        "id": {"type": "string|nil", "desc": "Identifiant de contexte"},
-        "state": {"type": "table", "desc": "Instantané"}
+        "id": {
+          "type": "string|nil",
+          "desc": "Context identifier"
+        },
+        "state": {
+          "type": "table",
+          "desc": "Snapshot"
+        }
       },
       "returns": []
     },
     "getContextCameraParams": {
-      "desc": "Réglages ajustables de la caméra active d'un contexte, pour l'UI de contrôle de caméra / flux vidéo. Chaque mode fournit sa liste via listParams ; descripteurs {key, title, kind ('range'|'bool'|'choice'|'slots'), type ('float'|'int'|'bool'|'enum'), value, icon, default, min, max, step, unit, options}.",
-      "params": {"id": {"type": "string|nil", "desc": "Identifiant de contexte"}},
-      "returns": [{"type": "table", "desc": "Liste de descripteurs (vide si aucun)"}]
+      "desc": "Adjustable settings of a context's active camera, for the camera control UI / video stream. Each mode provides its list via listParams; descriptors {key, title, kind ('range'|'bool'|'choice'|'slots'), type ('float'|'int'|'bool'|'enum'), value, icon, default, min, max, step, unit, options}.",
+      "params": {
+        "id": {
+          "type": "string|nil",
+          "desc": "Context identifier"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of descriptors (empty if none)"
+        }
+      ]
     },
     "setContextCameraParam": {
-      "desc": "Applique un réglage à la caméra active d'un contexte en déléguant à cam:setParam(key, value, id).",
+      "desc": "Applies a setting to a context's active camera by delegating to cam:setParam(key, value, id).",
       "params": {
-        "id": {"type": "string|nil", "desc": "Identifiant de contexte"},
-        "key": {"type": "string", "desc": "Clé de réglage (ex. 'fov')"},
-        "value": {"type": "any", "desc": "Nouvelle valeur"}
+        "id": {
+          "type": "string|nil",
+          "desc": "Context identifier"
+        },
+        "key": {
+          "type": "string",
+          "desc": "Setting key (e.g. 'fov')"
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value"
+        }
       },
       "returns": []
     },
     "exitCinematicCamera": {
-      "desc": "Compatibilité : quitte la caméra globale (setGlobalCameraByName(nil)).",
+      "desc": "Compatibility: leaves the global camera (setGlobalCameraByName(nil)).",
       "params": {},
       "returns": []
     },
     "onPreRender": {
-      "desc": "Hook appelé juste avant le rendu : met à jour la caméra (cameraUpdate.onPreRender), puis affiche le nom de caméra en attente après un changement de véhicule.",
-      "params": {"...": {"type": "any", "desc": "dtReal, dtSim, dtRaw (déduit de cameraUpdate)"}},
+      "desc": "Hook called just before rendering: updates the camera (cameraUpdate.onPreRender), then displays the pending camera name after a vehicle change.",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "dtReal, dtSim, dtRaw (inferred from cameraUpdate)"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onTrigger": {
-      "desc": "Hook appelé par les triggers BeamNG : si le sujet est le véhicule du joueur (ou le triggerOverride), 'enter' avec cameraOnEnter bascule sur la caméra globale 'observer' pointant cet objet caméra, et 'exit' avec cameraOnLeave la quitte. Pendant le démarrage d'un scénario, la demande est mise en attente jusqu'à l'état 'running'.",
-      "params": {"trigger": {"type": "table", "desc": "{subjectID, event, cameraOnEnter, cameraOnLeave, triggerOverride...}"}},
+      "desc": "Hook called by BeamNG triggers: if the subject is the player's vehicle (or the triggerOverride), 'enter' with cameraOnEnter switches to the 'observer' global camera pointing at this camera object, and 'exit' with cameraOnLeave leaves it. While a scenario is starting, the request is held until the 'running' state.",
+      "params": {
+        "trigger": {
+          "type": "table",
+          "desc": "{subjectID, event, cameraOnEnter, cameraOnLeave, triggerOverride...}"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onSettingsChanged": {
-      "desc": "Hook appelé quand les réglages changent : applique le lissage de la caméra libre et propage onSettingsChanged à toutes les caméras.",
-      "params": {"...": {"type": "any", "desc": "Arguments du hook"}},
+      "desc": "Hook called when settings change: applies free camera smoothing and propagates onSettingsChanged to all cameras.",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "Hook arguments"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onVehicleResetted": {
-      "desc": "Hook appelé quand un véhicule est réinitialisé : propage aux caméras du véhicule et réinitialise la caméra focalisée sauf si resetCameraOnVehicleReset vaut false ou si une caméra globale est active.",
-      "params": {"vid": {"type": "integer", "desc": "Identifiant du véhicule"}, "...": {"type": "any", "desc": "Arguments"}},
+      "desc": "Hook called when a vehicle is reset: propagates to the vehicle's cameras and resets the focused camera unless resetCameraOnVehicleReset is false or a global camera is active.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "Vehicle id"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Arguments"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onVehicleSpawned": {
-      "desc": "Hook appelé à la création d'un véhicule : crée ses données caméra dans chaque contexte.",
-      "params": {"vid": {"type": "integer", "desc": "Identifiant du véhicule"}},
+      "desc": "Hook called when a vehicle is created: creates its camera data in each context.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "Vehicle id"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onVehicleReplaced": {
-      "desc": "Hook appelé quand un véhicule est remplacé (nouvelle config) : recrée ses caméras.",
-      "params": {"vid": {"type": "integer", "desc": "Identifiant du véhicule"}},
+      "desc": "Hook called when a vehicle is replaced (new config): recreates its cameras.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "Vehicle id"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onVehicleSwitched": {
-      "desc": "Hook appelé quand le joueur change de véhicule : lance une transition (hors caméra globale), propage aux caméras et programme l'affichage du nom. Ignore les joueurs autres que 0.",
+      "desc": "Hook called when the player switches vehicle: starts a transition (except for a global camera), propagates to the cameras and schedules the name display. Ignores players other than 0.",
       "params": {
-        "oldId": {"type": "integer", "desc": "Ancien véhicule"},
-        "newId": {"type": "integer", "desc": "Nouveau véhicule"},
-        "player": {"type": "integer", "desc": "Joueur"}
+        "oldId": {
+          "type": "integer",
+          "desc": "Old vehicle"
+        },
+        "newId": {
+          "type": "integer",
+          "desc": "New vehicle"
+        },
+        "player": {
+          "type": "integer",
+          "desc": "Player"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onDespawnObject": {
-      "desc": "Hook appelé à la suppression d'un objet : retire ses données caméra si ce n'est pas un rechargement.",
+      "desc": "Hook called when an object is deleted: removes its camera data if it is not a reload.",
       "params": {
-        "vid": {"type": "integer", "desc": "Identifiant"},
-        "isReloading": {"type": "boolean", "desc": "true lors d'un rechargement"}
+        "vid": {
+          "type": "integer",
+          "desc": "Identifier"
+        },
+        "isReloading": {
+          "type": "boolean",
+          "desc": "true on a reload"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook appelé quand un véhicule est détruit : retire ses données caméra de tous les contextes.",
-      "params": {"vid": {"type": "integer", "desc": "Identifiant"}},
+      "desc": "Hook called when a vehicle is destroyed: removes its camera data from all contexts.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "Identifier"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onScenarioRestarted": {
-      "desc": "Hook appelé au redémarrage d'un scénario : propagé à toutes les caméras.",
-      "params": {"...": {"type": "any", "desc": "Arguments du hook"}},
+      "desc": "Hook called when a scenario restarts: propagated to all cameras.",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "Hook arguments"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onScenarioChange": {
-      "desc": "Hook appelé quand l'état du scénario change : propagé aux caméras ; si un trigger était en attente et que le scénario passe à 'running', il est rejoué.",
-      "params": {"scenario": {"type": "table", "desc": "Scénario (champ state)"}},
+      "desc": "Hook called when the scenario state changes: propagated to the cameras; if a trigger was pending and the scenario goes to 'running', it is replayed.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Scenario (state field)"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onFileChanged": {
-      "desc": "Hook appelé quand un fichier change : l'ajout/suppression d'un fichier de cameraModes invalide les caches (rechargement à chaud).",
+      "desc": "Hook called when a file changes: adding/removing a cameraModes file invalidates the caches (hot reload).",
       "params": {
-        "filePath": {"type": "string", "desc": "Chemin du fichier"},
-        "changeType": {"type": "string", "desc": "'added', 'deleted', 'modified'..."}
+        "filePath": {
+          "type": "string",
+          "desc": "File path"
+        },
+        "changeType": {
+          "type": "string",
+          "desc": "'added', 'deleted', 'modified'..."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onMouseLocked": {
-      "desc": "Hook appelé quand la souris est verrouillée/déverrouillée : transmis à la caméra active (mouseLocked), sauf en caméra libre.",
-      "params": {"locked": {"type": "boolean", "desc": "true si verrouillée"}},
+      "desc": "Hook called when the mouse is locked/unlocked: forwarded to the active camera (mouseLocked), except in free camera.",
+      "params": {
+        "locked": {
+          "type": "boolean",
+          "desc": "true if locked"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onClientPostStartMission": {
-      "desc": "Hook appelé après le démarrage du niveau : délégué à core/cameraUpdate.lua.",
+      "desc": "Hook called after the level starts: delegated to core/cameraUpdate.lua.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook appelé à la fin du niveau : détache la caméra de la RenderView 'main' pour éviter une référence morte.",
+      "desc": "Hook called at the end of the level: detaches the camera from the 'main' RenderView to avoid a dead reference.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook de sérialisation avant rechargement Lua : sérialise les caméras globales et de véhicules, la caméra globale active, le dernier véhicule, le trigger en attente et les demandes de caméra.",
+      "desc": "Serialization hook before Lua reload: serializes the global and vehicle cameras, the active global camera, the last vehicle, the pending trigger and the camera requests.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Données à restaurer"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Data to restore"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook de restauration après rechargement Lua (fusionne l'état sérialisé dans les caméras existantes).",
-      "params": {"data": {"type": "table", "desc": "Données de onSerialize"}},
+      "desc": "Restore hook after Lua reload (merges the serialized state into the existing cameras).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Data from onSerialize"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onReplayStateChanged": {
-      "desc": "Hook appelé quand l'état du replay change : à la sortie d'une lecture ('playback' vers 'inactive'), vide le cache des caméras de véhicules (les véhicules supprimés par le replay seraient sinon perdus).",
-      "params": {"newState": {"type": "table", "desc": "Table avec le champ state"}},
+      "desc": "Hook called when the replay state changes: on leaving playback ('playback' to 'inactive'), empties the vehicle camera cache (vehicles deleted by the replay would otherwise be lost).",
+      "params": {
+        "newState": {
+          "type": "table",
+          "desc": "Table with the state field"
+        }
+      },
       "returns": [],
       "internal": true
     }

@@ -1,106 +1,106 @@
 # `ui_menuManager`
 
-*Fichier : `lua/ge/extensions/ui/menuManager.lua` · VM : Game Engine (GE) · 344 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/menuManager.lua` · VM: Game Engine (GE) · 344 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_menuManager` : `extensions.load("ui_menuManager")`, puis la globale `ui_menuManager`
+**Access:** extension `ui_menuManager`: `extensions.load("ui_menuManager")`, then the global `ui_menuManager`
 
-Décide quelle route de l'interface (ui_router) afficher quand le joueur ouvre, ferme ou bascule le menu : menu principal, menu pause v2, garage, écrans de mission ou de scénario, ou retour au jeu. Il émet les hooks onBeforeMenuOpened et onMenuToggled. Un moddeur l'utilise pour ouvrir/fermer le menu par script ou pour définir la route de jeu (setGameplayRoute) ou de pause (setPauseRoute) actives.
+Decides which UI route (ui_router) to display when the player opens, closes or toggles the menu: main menu, pause menu v2, garage, mission or scenario screens, or return to the game. It emits the hooks onBeforeMenuOpened and onMenuToggled. A modder uses it to open/close the menu by script or to set the active game route (setGameplayRoute) or pause route (setPauseRoute).
 
-## Remarques
+## Notes
 
-- La plupart des fonctions renvoient une table {handled = true, targetRoute, navigation} ou {handled = false, reason = "no_current_route"} quand aucune route n'est active.
-- Sans niveau chargé (getMissionFilename vide), la seule destination « menu » valide est « menu » (menu principal) ; pause et play sont des routes de niveau.
-- Route de jeu par défaut : « play ». Routes de pause : « pause » (pause v2, ou « pause.replay:pause-replay-player » si un replay est chargé), ou « menu.careerPause » en carrière si pause v2 est désactivé.
-- pauseV2Enabled est une variable locale fixée à true ; aucune fonction ne la modifie, isPauseV2Enabled renvoie donc toujours true.
-- Quand un retour est bloqué par une garde de route (guard_blocked_exit), la sortie n'est forcée vers le menu qu'au 6e blocage consécutif (BLOCK_FORCE_THRESHOLD).
-- En mode garage, toggleMenu ouvre « garage » depuis « menu », ne fait rien si déjà sur « garage », sinon revient en arrière.
-- Pendant un scénario à l'état pre-running, toggleMenu ouvre « scenario.start » ; à l'état finished/post, l'écran de fin (scenario.end, scenario.quickrace.end ou scenario.chapter.end).
-- Des alias de routes existent pour MenuOpenModule : vehicleselect -> menu.vehicles, vehicleconfig -> menu.vehicleconfig.parts, vehicledebug -> menu.vehicleconfig.debug, appedit -> pause.hudApps.
+- Most functions return a table {handled = true, targetRoute, navigation} or {handled = false, reason = "no_current_route"} when no route is active.
+- Without a loaded level (getMissionFilename empty), the only valid "menu" destination is "menu" (main menu); pause and play are level routes.
+- Default game route: "play". Pause routes: "pause" (pause v2, or "pause.replay:pause-replay-player" if a replay is loaded), or "menu.careerPause" in career if pause v2 is disabled.
+- pauseV2Enabled is a local variable set to true; no function modifies it, so isPauseV2Enabled always returns true.
+- When a back navigation is blocked by a route guard (guard_blocked_exit), the exit is only forced to the menu on the 6th consecutive block (BLOCK_FORCE_THRESHOLD).
+- In garage mode, toggleMenu opens "garage" from "menu", does nothing if already on "garage", otherwise goes back.
+- During a scenario in the pre-running state, toggleMenu opens "scenario.start"; in the finished/post state, the end screen (scenario.end, scenario.quickrace.end or scenario.chapter.end).
+- Route aliases exist for MenuOpenModule: vehicleselect -> menu.vehicles, vehicleconfig -> menu.vehicleconfig.parts, vehicledebug -> menu.vehicleconfig.debug, appedit -> pause.hudApps.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_menuManager.MenuOpenModule(data)` | Navigue vers une route : soit une chaîne (nom de route, alias, ou « options » qui devient « pause.options » en niveau), soit une table {state, params}. Ne renvoie rien. | 318 |
-| `ui_menuManager.closeMenu()` | Revient à la route de jeu active (émet onMenuToggled(false)), sauf si on est déjà sur une route de jeu ou sur « garage » ou s'il n'y a pas de route courante. | 309 |
-| `ui_menuManager.closeToMenu()` | Navigue directement vers la route « menu » (menu principal), sans émettre onMenuToggled. | 305 |
-| `ui_menuManager.getGameplayRoute()` | Renvoie la route de jeu active. | 21 |
-| `ui_menuManager.isPauseV2Enabled()` | Indique si le menu pause v2 est actif (toujours true dans cette version, voir notes). | 339 |
-| `ui_menuManager.menuHide(showMenu)` | Affiche le menu (route de menu/pause) si showMenu est vrai, sinon la route de jeu. | 327 |
-| `ui_menuManager.openMenu()` | Ouvre le menu (route de pause ou menu principal) sauf si on y est déjà. Émet onBeforeMenuOpened puis onMenuToggled(true). | 296 |
-| `ui_menuManager.setGameplayRoute(route)` | Définit la route considérée comme « jeu » (« play » si nil). | 13 |
-| `ui_menuManager.setPauseRoute(route)` | Définit une route de pause spécifique, prioritaire sur « pause » quand un niveau est chargé (nil pour revenir au comportement par défaut). | 17 |
-| `ui_menuManager.toggleMenu()` | Bascule entre le jeu et le menu (touche Échap). Gère les cas sans niveau, garage, écrans de mission (mission.control), scénarios, jeu vers menu, menu vers jeu, sinon navigue en arrière. | 201 |
+| `ui_menuManager.MenuOpenModule(data)` | Navigates to a route: either a string (route name, alias, or "options" which becomes "pause.options" in a level), or a table {state, params}. Returns nothing. | 318 |
+| `ui_menuManager.closeMenu()` | Returns to the active game route (emits onMenuToggled(false)), unless already on a game route or on "garage" or there is no current route. | 309 |
+| `ui_menuManager.closeToMenu()` | Navigates directly to the "menu" route (main menu), without emitting onMenuToggled. | 305 |
+| `ui_menuManager.getGameplayRoute()` | Returns the active game route. | 21 |
+| `ui_menuManager.isPauseV2Enabled()` | Returns whether pause menu v2 is active (always true in this version, see notes). | 339 |
+| `ui_menuManager.menuHide(showMenu)` | Displays the menu (menu/pause route) if showMenu is true, otherwise the game route. | 327 |
+| `ui_menuManager.openMenu()` | Opens the menu (pause route or main menu) unless already there. Emits onBeforeMenuOpened then onMenuToggled(true). | 296 |
+| `ui_menuManager.setGameplayRoute(route)` | Sets the route considered as "game" ("play" if nil). | 13 |
+| `ui_menuManager.setPauseRoute(route)` | Sets a specific pause route, taking priority over "pause" when a level is loaded (nil to return to the default behavior). | 17 |
+| `ui_menuManager.toggleMenu()` | Toggles between the game and the menu (Escape key). Handles the cases of no level, garage, mission screens (mission.control), scenarios, game to menu, menu to game, otherwise navigates back. | 201 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_menuManager.MenuOpenModule(data)`
 
-Navigue vers une route : soit une chaîne (nom de route, alias, ou « options » qui devient « pause.options » en niveau), soit une table {state, params}. Ne renvoie rien.
+Navigates to a route: either a string (route name, alias, or "options" which becomes "pause.options" in a level), or a table {state, params}. Returns nothing.
 
-- `data` (*string|table*) : Nom de route ou {state = route, params = table}.
+- `data` (*string|table*) : Route name or {state = route, params = table}.
 
 #### `ui_menuManager.closeMenu()`
 
-Revient à la route de jeu active (émet onMenuToggled(false)), sauf si on est déjà sur une route de jeu ou sur « garage » ou s'il n'y a pas de route courante.
+Returns to the active game route (emits onMenuToggled(false)), unless already on a game route or on "garage" or there is no current route.
 
-- **renvoie** : table {handled = true, ...}.
+- **returns**: table {handled = true, ...}.
 
 #### `ui_menuManager.closeToMenu()`
 
-Navigue directement vers la route « menu » (menu principal), sans émettre onMenuToggled.
+Navigates directly to the "menu" route (main menu), without emitting onMenuToggled.
 
-- **renvoie** : table {handled = true, targetRoute = "menu", navigation}.
+- **returns**: table {handled = true, targetRoute = "menu", navigation}.
 
 #### `ui_menuManager.getGameplayRoute()`
 
-Renvoie la route de jeu active.
+Returns the active game route.
 
-- **renvoie** : string « play » par défaut.
+- **returns**: string "play" by default.
 
 #### `ui_menuManager.isPauseV2Enabled()`
 
-Indique si le menu pause v2 est actif (toujours true dans cette version, voir notes).
+Returns whether pause menu v2 is active (always true in this version, see notes).
 
-- **renvoie** : boolean true.
+- **returns**: boolean true.
 
 #### `ui_menuManager.menuHide(showMenu)`
 
-Affiche le menu (route de menu/pause) si showMenu est vrai, sinon la route de jeu.
+Displays the menu (menu/pause route) if showMenu is true, otherwise the game route.
 
-- `showMenu` (*boolean*) : true pour afficher le menu.
-- **renvoie** : table {handled = true, targetRoute, navigation}.
+- `showMenu` (*boolean*) : true to display the menu.
+- **returns**: table {handled = true, targetRoute, navigation}.
 
 #### `ui_menuManager.openMenu()`
 
-Ouvre le menu (route de pause ou menu principal) sauf si on y est déjà. Émet onBeforeMenuOpened puis onMenuToggled(true).
+Opens the menu (pause route or main menu) unless already there. Emits onBeforeMenuOpened then onMenuToggled(true).
 
-- **renvoie** : table {handled = true, ...}.
+- **returns**: table {handled = true, ...}.
 
 #### `ui_menuManager.setGameplayRoute(route)`
 
-Définit la route considérée comme « jeu » (« play » si nil).
+Sets the route considered as "game" ("play" if nil).
 
-- `route` (*string|nil*) : Nom de route.
+- `route` (*string|nil*) : Road name.
 
 #### `ui_menuManager.setPauseRoute(route)`
 
-Définit une route de pause spécifique, prioritaire sur « pause » quand un niveau est chargé (nil pour revenir au comportement par défaut).
+Sets a specific pause route, taking priority over "pause" when a level is loaded (nil to return to the default behavior).
 
-- `route` (*string|nil*) : Nom de route.
+- `route` (*string|nil*) : Road name.
 
 #### `ui_menuManager.toggleMenu()`
 
-Bascule entre le jeu et le menu (touche Échap). Gère les cas sans niveau, garage, écrans de mission (mission.control), scénarios, jeu vers menu, menu vers jeu, sinon navigue en arrière.
+Toggles between the game and the menu (Escape key). Handles the cases of no level, garage, mission screens (mission.control), scenarios, game to menu, menu to game, otherwise navigates back.
 
-- **renvoie** : table {handled = boolean, ...} avec targetRoute et navigation selon le cas.
+- **returns**: table {handled = boolean, ...} with targetRoute and navigation depending on the case.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onBeforeMenuOpened` — écouté par 1 module(s)
-- `onMenuToggled` — écouté par 1 module(s)
+- `onBeforeMenuOpened` — listened to by 1 module(s)
+- `onMenuToggled` — listened to by 1 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/menuManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/menuManager.lua`.*

@@ -1,30 +1,30 @@
 # `gameplay_rally_util_normalizer`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/util/normalizer.lua` · VM : Game Engine (GE) · 24 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/util/normalizer.lua` · VM: Game Engine (GE) · 24 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_util_normalizer` : `extensions.load("gameplay_rally_util_normalizer")`, puis la globale `gameplay_rally_util_normalizer`
+**Access:** extension `gameplay_rally_util_normalizer`: `extensions.load("gameplay_rally_util_normalizer")`, then the global `gameplay_rally_util_normalizer`
 
-Petit utilitaire de normalisation de texte pour les notes du rallye : applique successivement une liste de remplacements (motif, remplacement) à une chaîne.
+Small text normalization utility for rally notes: successively applies a list of replacements (pattern, replacement) to a string.
 
-## Remarques
+## Notes
 
-- Les motifs `from` sont passés à string.gsub : ce sont des motifs Lua (pas des chaînes littérales), les caractères spéciaux comme `-`, `%` ou `.` doivent être échappés.
+- The `from` patterns are passed to string.gsub: they are Lua patterns (not literal strings), special characters such as `-`, `%` or `.` must be escaped.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_util_normalizer.replaceWords(word_map, note)` | Applique dans l'ordre chaque paire {from, to} de word_map à la note via gsub et renvoie la note transformée. Si note vaut nil, la renvoie telle quelle. | 7 |
+| `gameplay_rally_util_normalizer.replaceWords(word_map, note)` | Applies in order each {from, to} pair of word_map to the note via gsub and returns the transformed note. If note is nil, returns it as is. | 7 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_util_normalizer.replaceWords(word_map, note)`
 
-Applique dans l'ordre chaque paire {from, to} de word_map à la note via gsub et renvoie la note transformée. Si note vaut nil, la renvoie telle quelle.
+Applies in order each {from, to} pair of word_map to the note via gsub and returns the transformed note. If note is nil, returns it as is.
 
-- `word_map` (*table<integer, string[]>*) : Liste de paires {motif, remplacement}.
-- `note` (*string|nil*) : Texte à normaliser.
-- **renvoie** : string|nil Texte après remplacements, ou nil si note était nil.
+- `word_map` (*table<integer, string[]>*) : List of {pattern, replacement} pairs.
+- `note` (*string|nil*) : Text to normalize.
+- **returns**: string|nil Text after replacements, or nil if note was nil.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/util/normalizer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/util/normalizer.lua`.*

@@ -1,70 +1,70 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua",
-  "module": "Noeud flowgraph « Particle Emitter » (repeat_instant, auteur BeamNG). Cree un objet ParticleEmitterNode (emetteur BNGP_confetti, dataBlock lightExampleEmitterNodeData1) ajoute au MissionGroup et le positionne. Entrees : clear (impulsion), position (vec3), rotation (quat), color. Sortie : flow.",
+  "module": "Flowgraph node \"Particle Emitter\" (repeat_instant, author BeamNG). Creates a ParticleEmitterNode object (emitter BNGP_confetti, dataBlock lightExampleEmitterNodeData1) added to the MissionGroup and positions it. Inputs: clear (impulse), position (vec3), rotation (quat), color. Output: flow.",
   "notes": [
-    "Bug : _afterTrigger appelle self:hideobject() (minuscule) alors que la methode est hideObject : erreur Lua si cette branche s'execute.",
-    "Bug : fillFields lit self.pinIn.radius, mais aucun pin 'radius' n'est declare dans pinSchema.",
-    "Bug : setPosition teste self.object.objBase qui n'est jamais defini : la position n'est donc jamais appliquee.",
-    "Les pins rotation et color ne sont pas utilises par le code."
+    "Bug: _afterTrigger calls self:hideobject() (lowercase) whereas the method is hideObject: Lua error if this branch runs.",
+    "Bug: fillFields reads self.pinIn.radius, but no 'radius' pin is declared in pinSchema.",
+    "Bug: setPosition tests self.object.objBase which is never defined: the position is therefore never applied.",
+    "The rotation and color pins are not used by the code."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Initialise position, radius, clr, object et shown.",
+          "desc": "Initializes position, radius, clr, object and shown.",
           "params": {
             "mgr": {
               "type": "any",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           },
           "internal": true
         },
         "createObject": {
-          "desc": "Cree le ParticleEmitterNode (canSave = false) et l'enregistre sous le nom donne.",
+          "desc": "Creates the ParticleEmitterNode (canSave = false) and registers it under the given name.",
           "params": {
             "objectName": {
               "type": "any",
-              "desc": "nom de l'objet dans la scene"
+              "desc": "name of the object in the scene"
             }
           },
           "internal": true
         },
         "showObject": {
-          "desc": "Affiche l'objet existant ou le cree (nom particles__<time>_<id>) et l'ajoute a scenetree.MissionGroup.",
+          "desc": "Shows the existing object or creates it (name particles__<time>_<id>) and adds it to scenetree.MissionGroup.",
           "internal": true
         },
         "hideObject": {
-          "desc": "Cache l'objet (hidden = true) et met shown a false.",
+          "desc": "Hides the object (hidden = true) and sets shown to false.",
           "internal": true
         },
         "_afterTrigger": {
-          "desc": "Apres le declenchement : si le flow d'entree est false et que l'emetteur est affiche, tente de le cacher.",
+          "desc": "After the trigger: if the input flow is false and the emitter is shown, tries to hide it.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "A l'arret : retire l'objet de l'arbre de l'editeur si possible, le supprime et remet l'etat a zero.",
+          "desc": "On stop: removes the object from the editor tree if possible, deletes it and resets the state to zero.",
           "internal": true
         },
         "fillFields": {
-          "desc": "Lit position/radius/color des pins avec des valeurs par defaut (rayon 2, couleur {1,0,0,0.8}).",
+          "desc": "Reads position/radius/color from the pins with default values (radius 2, color {1,0,0,0.8}).",
           "internal": true
         },
         "setPosition": {
-          "desc": "Positionne et met a l'echelle (radius, radius, 50) l'objet.",
+          "desc": "Positions and scales (radius, radius, 50) the object.",
           "internal": true
         },
         "work": {
-          "desc": "Cree/affiche l'emetteur ; sur flow, le montre et le positionne (flow sortie true) ; sur clear, le cache (flow sortie false).",
+          "desc": "Creates/shows the emitter; on flow, shows and positions it (flow output true); on clear, hides it (flow output false).",
           "internal": false
         },
         "onClientEndMission": {
-          "desc": "Hook de fin de mission : supprime l'emetteur.",
+          "desc": "End-of-mission hook: deletes the emitter.",
           "internal": true
         },
         "destroy": {
-          "desc": "Appele a la destruction du noeud : supprime l'emetteur.",
+          "desc": "Called when the node is destroyed: deletes the emitter.",
           "internal": true
         }
       }

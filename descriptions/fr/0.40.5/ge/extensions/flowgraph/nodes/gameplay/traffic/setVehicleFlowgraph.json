@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setVehicleFlowgraph.lua",
+  "module": "Nœud flowgraph « Set Vehicle Flowgraph » (once_instant). Lance un flowgraph personnalisé (fgFile) pour un véhicule du trafic via veh.role:setupFlowgraph(fgFile, varData). Les pins d'entrée personnalisés (types string, number, bool, any, table, vec3, quat, color ; pas flow) sont sauvegardés et transmis comme variables au flowgraph. Idéal pour des rôles et actions d'IA sur mesure. Au reset, le flowgraph du rôle est supprimé (role:clearFlowgraph).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Appelle onNodeReset().",
+          "internal": true
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Supprime le flowgraph du rôle du véhicule mémorisé (clearFlowgraph) et oublie vehId.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Copie les valeurs de tous les pins d'entrée non fixes dans varData et appelle veh.role:setupFlowgraph(fgFile, varData) pour le véhicule vehId.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

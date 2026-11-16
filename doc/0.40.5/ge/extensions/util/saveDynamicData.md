@@ -1,55 +1,55 @@
 # `util_saveDynamicData`
 
-*Fichier : `lua/ge/extensions/util/saveDynamicData.lua` · VM : Game Engine (GE) · 214 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/saveDynamicData.lua` · VM: Game Engine (GE) · 214 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_saveDynamicData` : `extensions.load("util_saveDynamicData")`, puis la globale `util_saveDynamicData`
+**Access:** extension `util_saveDynamicData`: `extensions.load("util_saveDynamicData")`, then the global `util_saveDynamicData`
 
-Outil automatisé interne : charge le niveau de test « autotest », puis fait apparaître chaque configuration de véhicule (filtrable par modèle ou par fichier .pc) et lance dans le véhicule l'extension dynamicVehicleData pour mesurer ses données dynamiques (dynamicVehicleData.performTests). Les résultats sont déposés dans vehicles/<modèle>/info_<config>.touched ; les configs déjà traitées sont sautées. Un chien de garde (20 s sans heartbeat) et une durée maximale (600 s) font passer au véhicule suivant. À la fin, le jeu est quitté (shutdown(0)).
+Internal automated tool: loads the "autotest" test level, then spawns each vehicle configuration (filterable by model or by .pc file) and runs the dynamicVehicleData extension in the vehicle to measure its dynamic data (dynamicVehicleData.performTests). Results are written to vehicles/<model>/info_<config>.touched; configs already processed are skipped. A watchdog (20 s without heartbeat) and a maximum duration (600 s) move on to the next vehicle. At the end, the game is quit (shutdown(0)).
 
-## Exemple
+## Example
 
 ```lua
 extensions.util_saveDynamicData.work('', 'pickup')
 ```
 
-## Remarques
+## Notes
 
-- Les modèles listés dans blacklist.json (ou à défaut blacklistDefault.json) sont ignorés.
-- Le travail attend que le gestionnaire de mods soit prêt et que le niveau de test soit chargé (hook onClientStartMission).
-- Le véhicule remplacé est placé en (0, 0, 0.5) et la vitesse de physique est fixée à physicsSpeedFactor (0 : valeur interne du fichier).
-- Le code contient un TODO : work ne bloque pas jusqu'à la fin du travail. Le fichier utilise la globale non déclarée newVehicle.
-- Le test de filtre sur pcFile est ignoré si la chaîne est vide ou nil ; un vehicleToTest nil teste tous les modèles.
+- Models listed in blacklist.json (or blacklistDefault.json by default) are ignored.
+- The work waits for the mod manager to be ready and the test level to be loaded (onClientStartMission hook).
+- The replaced vehicle is placed at (0, 0, 0.5) and the physics speed is set to physicsSpeedFactor (0: internal value of the file).
+- The code contains a TODO: work does not block until the work is done. The file uses the undeclared global newVehicle.
+- The filter test on pcFile is ignored if the string is empty or nil; a nil vehicleToTest tests all models.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_saveDynamicData.heartbeat()` | Appelée par le côté véhicule pendant les tests pour signaler qu'il est toujours actif (réarme le chien de garde de 20 s). *(interne)* | 197 |
-| `util_saveDynamicData.onClientStartMission(levelPath)` | Hook appelé au démarrage d'un niveau ; marque le niveau comme prêt si c'est le niveau de test autotest. *(interne)* *(hook)* | 135 |
-| `util_saveDynamicData.onExtensionLoaded()` | Appelé au chargement : décharge/recharge les extensions de base si core_camera est absent, puis charge la liste noire de véhicules (blacklist.json, sinon blacklistDefault.json). *(interne)* *(hook)* | 160 |
-| `util_saveDynamicData.onExtensionUnloaded()` | Appelé au déchargement ; ne fait que logger. *(interne)* *(hook)* | 201 |
-| `util_saveDynamicData.onInit()` | Appelé à l'initialisation du module ; ne fait que logger. *(interne)* *(hook)* | 26 |
-| `util_saveDynamicData.vehicleDone()` | Appelée par le côté véhicule (dynamicVehicleData) quand les tests de la configuration courante sont terminés ; passe à la suivante. *(interne)* | 193 |
-| `util_saveDynamicData.work(pcFile, vehicle)` | Point d'entrée : mémorise les filtres, démarre le job de test et lance le niveau autotest s'il n'est pas déjà chargé. | 142 |
+| `util_saveDynamicData.heartbeat()` | Called by the vehicle side during the tests to signal that it is still active (rearms the 20 s watchdog). *(internal)* | 197 |
+| `util_saveDynamicData.onClientStartMission(levelPath)` | Hook called when a level starts; marks the level as ready if it is the autotest test level. *(internal)* *(hook)* | 135 |
+| `util_saveDynamicData.onExtensionLoaded()` | Called on load: unloads/reloads the base extensions if core_camera is absent, then loads the vehicle blacklist (blacklist.json, otherwise blacklistDefault.json). *(internal)* *(hook)* | 160 |
+| `util_saveDynamicData.onExtensionUnloaded()` | Called on unload; only logs. *(internal)* *(hook)* | 201 |
+| `util_saveDynamicData.onInit()` | Called at module initialization; only logs. *(internal)* *(hook)* | 26 |
+| `util_saveDynamicData.vehicleDone()` | Called by the vehicle side (dynamicVehicleData) when the tests of the current configuration are finished; moves on to the next one. *(internal)* | 193 |
+| `util_saveDynamicData.work(pcFile, vehicle)` | Entry point: stores the filters, starts the test job and launches the autotest level if it is not already loaded. | 142 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_saveDynamicData.onClientStartMission(levelPath)`
 
-Hook appelé au démarrage d'un niveau ; marque le niveau comme prêt si c'est le niveau de test autotest.
+Hook called when a level starts; marks the level as ready if it is the autotest test level.
 
-- `levelPath` (*string*) : Chemin du niveau démarré
+- `levelPath` (*string*) : Path of the started level
 
 #### `util_saveDynamicData.work(pcFile, vehicle)`
 
-Point d'entrée : mémorise les filtres, démarre le job de test et lance le niveau autotest s'il n'est pas déjà chargé.
+Entry point: stores the filters, starts the test job and launches the autotest level if it is not already loaded.
 
-- `pcFile` (*string|nil*) : Clé de configuration à tester (vide ou nil = toutes)
-- `vehicle` (*string|nil*) : Clé de modèle à tester (nil = tous)
+- `pcFile` (*string|nil*) : Configuration key to test (empty or nil = all)
+- `vehicle` (*string|nil*) : Model key to test (nil = all)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicle`, `setPhysicsSpeedFactor`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/saveDynamicData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/saveDynamicData.lua`.*

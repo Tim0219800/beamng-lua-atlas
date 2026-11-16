@@ -1,0 +1,104 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/splineInput.lua",
+  "module": "Gestion partagée de la souris et du clavier pour tous les outils d'édition de splines de l'éditeur (une spline est une polyligne éditable le long d'une ligne centrale de largeur variable : routes, chemins). Gère la sélection et le glissement de nœuds, de poignées de largeur (ribs) et de hauteur (bars), le gizmo, l'ajout et l'insertion de nœuds, les jonctions et boucles, le copier-coller de profil (Ctrl+C / Ctrl+V), la suppression, l'annulation (via editor.history ou un remplacement fourni par l'outil) et la sélection entre outils. Les outils s'enregistrent avec registerSplineTool, ce qui permet de sélectionner une spline d'un autre outil en cliquant dessus.",
+  "usage": "local si = require('editor/toolUtilities/splineInput')\nsi.registerSplineTool(prefix, getSplines, getEditModeKey, deepCopy, deepCopyState, 'editor_meshSpline')\n-- chaque frame, dans onEditorGui : si.handleSplineEvents(splines, out, ...)",
+  "notes": [
+    "Constantes : largeur de spline de 3 à 200 m, hauteur de 0 à 70 m, vitesse par défaut d'un nœud 13.5 m/s (limite 70 m/s), distance max de jonction ou boucle 15 m, sensibilité de hauteur 1 m par pixel, délai d'apparition du texte d'aide 1 s.",
+    "Les jonctions et boucles ne modifient la topologie que si Ctrl est maintenu au relâchement du glisser ; l'aperçu s'affiche dès qu'un candidat existe.",
+    "Alt bascule le gizmo (out.isGizmoActive).",
+    "eventOptions de handleSplineEvents : commitHistoryOverride(name, data, undoFn, redoFn, dontCallRedoNow), preserveNodeZ (glisser un nœud sur un plan horizontal à sa propre altitude), suppressAddNode (masque l'ajout de nœud pour la frame), midJoinRefusalFn, maxWidth (largeur max d'un glisser de rib), gizmoAnchorFn(spline, node) (point d'affichage du gizmo).",
+    "Champs de `out` lus ou écrits : spline, node (indices sélectionnés), isGizmoActive, entre autres.",
+    "Un outil hébergé dans un autre mode d'édition (onglets réseau du City Builder) doit se déclarer avec setHostedTool(prefix) tant que son onglet est ouvert.",
+    "cancelDrag est exporté comme alias de clearDragState (efface tout l'état de glisser)."
+  ],
+  "functions": {
+    "registerSplineTool": {
+      "desc": "Enregistre un outil d'édition de splines pour les utilitaires d'entrée partagés. Rappelé avec le même préfixe (rechargement à chaud), il met à jour les callbacks de l'enregistrement existant ; ne fait rien si prefix est nil. Attention : à la mise à jour, getAuxNodesFn et isNodeLockedFn sont remplacés tels quels, même s'ils sont nil.",
+      "params": {
+        "prefix": {"type": "string", "desc": "Préfixe d'affichage de l'outil (de splineMgr.getToolPrefixStr())."},
+        "getSplinesFn": {"type": "function", "desc": "Renvoie le tableau de splines de l'outil."},
+        "getEditModeKeyFn": {"type": "function", "desc": "Renvoie la clé du mode d'édition de l'éditeur pour cet outil."},
+        "deepCopyFn": {"type": "function", "desc": "Copie profonde d'une spline."},
+        "deepCopyStateFn": {"type": "function", "desc": "Copie profonde de tout l'état de l'outil."},
+        "uiModuleName": {"type": "string", "desc": "Nom du module d'UI (par ex. 'editor_meshSpline'), qui expose setSelectedSplineIdx et setSelectedNodeIdx."},
+        "getAuxNodesFn": {"type": "function|nil", "desc": "Facultatif : renvoie des positions de nœuds sélectionnables supplémentaires (tableau de vec3), mêmes règles de hit que les nœuds de route."},
+        "isNodeLockedFn": {"type": "function|nil", "desc": "Facultatif : isNodeLockedFn(spline, nodeIdx) renvoie vrai pour permettre la sélection mais pas le glissement, le gizmo ni la suppression."}
+      },
+      "returns": []
+    },
+    "setHostedTool": {
+      "desc": "Déclare qu'un outil est hébergé dans un autre mode d'édition : son préfixe sert alors de nom d'outil actif à la place du displayName du mode d'édition.",
+      "params": {"prefix": {"type": "string|nil", "desc": "Préfixe de l'outil hébergé, nil pour annuler."}},
+      "returns": []
+    },
+    "handleSplineEvents": {
+      "desc": "Traite les événements d'entrée des outils de splines pour une frame : survol, sélection, ajout et insertion de nœuds, glisser de nœuds, de ribs et de bars, gizmo, jonctions, copier-coller de profil, suppression, et validation des pas d'annulation. Met à jour la table `out` (spline et nœud sélectionnés, état du gizmo, etc.).",
+      "params": {
+        "splines": {"type": "table", "desc": "Collection des splines à gérer."},
+        "out": {"type": "table", "desc": "Table mise à jour pendant l'interaction : sélection (indice de spline, de nœud, de calque pour le cas « decal placement »), isGizmoActive, etc."},
+        "isRotEnabled": {"type": "boolean", "desc": "Gizmo de rotation autorisé."},
+        "isConformToTerrain": {"type": "boolean", "desc": "La spline doit épouser la surface dessous (commande verticale du gizmo)."},
+        "useRibs": {"type": "boolean", "desc": "Utiliser les ribs (poignées de largeur)."},
+        "useBars": {"type": "boolean", "desc": "Utiliser les bars (poignées de hauteur)."},
+        "isBarsLimits": {"type": "boolean", "desc": "Les bars sont des limites (vrai) ou des vitesses (faux)."},
+        "useCopyPaste": {"type": "boolean", "desc": "Activer le copier-coller de profil."},
+        "useGizmo": {"type": "boolean", "desc": "Utiliser le gizmo."},
+        "isLockShape": {"type": "boolean", "desc": "La forme de la spline est verrouillée."},
+        "defaultSplineWidth": {"type": "number", "desc": "Largeur par défaut d'un nouveau nœud, en mètres."},
+        "deepCopyFunct": {"type": "function", "desc": "Copie profonde d'une spline."},
+        "deepCopyStateFunct": {"type": "function", "desc": "Copie profonde de l'état d'une spline."},
+        "copyProfileFunct": {"type": "function", "desc": "Copie un profil."},
+        "pasteProfileFunct": {"type": "function", "desc": "Colle un profil."},
+        "afterEndDragCallback": {"type": "function|nil", "desc": "Appelée en fin de glisser avec (selSpline, wasAuxDrag, auxIdx, dragSplineIdx, dragNodeIdx)."},
+        "joinFunct": {"type": "function|nil", "desc": "Appelée quand l'utilisateur forme une jonction."},
+        "undoFunct": {"type": "function", "desc": "Callback d'annulation d'une édition de spline."},
+        "redoFunct": {"type": "function", "desc": "Callback de rétablissement d'une édition de spline."},
+        "undoStateFunct": {"type": "function|nil", "desc": "Callback d'annulation de l'édition d'état complet."},
+        "redoStateFunct": {"type": "function|nil", "desc": "Callback de rétablissement de l'édition d'état complet."},
+        "midJoinFunct": {"type": "function|nil", "desc": "Appelée pour une jonction en milieu de spline."},
+        "canJoinFunct": {"type": "function|nil", "desc": "Dit si une jonction est permise (déduit du code)."},
+        "canJoinAuxFunct": {"type": "function|nil", "desc": "Variante de canJoinFunct pour les nœuds auxiliaires (déduit du code)."},
+        "eventOptions": {"type": "table|nil", "desc": "Options : commitHistoryOverride, preserveNodeZ, suppressAddNode, midJoinRefusalFn, maxWidth, gizmoAnchorFn."}
+      },
+      "returns": []
+    },
+    "handleNavGraphEvents": {
+      "desc": "Traite les événements d'entrée pour un chemin dans un graphe de navigation : clic sur un nœud du graphe pour l'ajouter ou le retirer du chemin (avec sa vitesse et sa limite par défaut 13.5 m/s), glisser des bars de vitesse (de 0 à 70 m/s), curseur et textes d'aide.",
+      "params": {
+        "selSpline": {"type": "table|nil", "desc": "Spline sélectionnée (graphNodes, vels, velLimits, barPoints)."},
+        "nodes": {"type": "table", "desc": "Nœuds du graphe de navigation."},
+        "deepCopyFunct": {"type": "function", "desc": "Copie profonde d'une spline."},
+        "undoFunct": {"type": "function", "desc": "Callback d'annulation."},
+        "redoFunct": {"type": "function", "desc": "Callback de rétablissement."},
+        "isBarsLimit": {"type": "boolean", "desc": "Utiliser velLimits (vrai) ou vels (faux) pour la hauteur des bars."},
+        "useBars": {"type": "boolean|nil", "desc": "Autoriser les bars (vrai par défaut)."}
+      },
+      "returns": []
+    },
+    "handleForeignNodeSelection": {
+      "desc": "Sélection de nœuds d'un autre outil, pour les outils qui n'exécutent pas handleSplineEvents (outils polygones comme l'éditeur de zones de forêt). À chaque frame, survole les nœuds de splines d'autres outils (lueur et texte « select ») et, au clic, bascule vers cet outil et sélectionne le nœud, avec démarrage d'un glisser si l'outil cible le supporte.",
+      "params": {"activePrefix": {"type": "string", "desc": "Préfixe de l'outil appelant, dont les splines sont ignorées."}},
+      "returns": [{"type": "boolean", "desc": "Vrai si un nœud étranger est sous le curseur, pour que l'appelant saute sa propre interaction de scène."}]
+    },
+    "getBestHitTarget": {
+      "desc": "Détection de hit qui départage par distance à la caméra : renvoie la meilleure cible (nœud, rib ou bar) la plus proche du rayon caméra, en vérifiant toujours les splines de tous les outils pour la sélection inter-outils. Les nœuds ont la priorité.",
+      "params": {
+        "selSpline": {"type": "table|nil", "desc": "Spline sélectionnée."},
+        "mousePos": {"type": "vec3", "desc": "Position 3D de la souris."},
+        "useRibs": {"type": "boolean", "desc": "Tester aussi les poignées de largeur."},
+        "useBars": {"type": "boolean", "desc": "Tester aussi les poignées de hauteur."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Cible : champs type ('node', 'rib', 'bar'), splineIdx, nodeIdx, toolName, entre autres ; nil si rien."}]
+    },
+    "isDragging": {
+      "desc": "Vrai si un glisser est en cours (nœud, nœud auxiliaire ou gizmo).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "Glisser actif."}]
+    },
+    "cancelDrag": {
+      "desc": "Annule l'état de glisser en cours (alias de clearDragState) : efface spline, nœud, état avant, drapeaux rib, bar et aux.",
+      "params": {},
+      "returns": []
+    }
+  }
+}

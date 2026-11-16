@@ -1,55 +1,55 @@
 # `controller_inputOutputDemo`
 
-*Fichier : `lua/vehicle/controller/inputOutputDemo.lua` · VM : Véhicule · 152 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/inputOutputDemo.lua` · VM: Vehicle · 152 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `inputOutputDemo` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `inputOutputDemo` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur de démonstration (type "auxiliary", defaultOrder 100000) montrant comment lire des données du véhicule, générer des entrées et communiquer par UDP. À chaque image il enregistre temps, accélérateur, frein, énergie de batterie et puissance moteur dans un tableau CSV en mémoire, envoie des entrées aléatoires (throttle, brake, steering en FILTER_DIRECT) et échange un message JSON avec 127.0.0.1:54812. N'est pas destiné à un véhicule jouable.
+Demo controller (type "auxiliary", defaultOrder 100000) showing how to read vehicle data, generate inputs and communicate over UDP. Every frame it records time, throttle, brake, battery energy and motor power in an in-memory CSV table, sends random inputs (throttle, brake, steering in FILTER_DIRECT) and exchanges a JSON message with 127.0.0.1:54812. Not intended for a playable vehicle.
 
-## Remarques
+## Notes
 
-- Attention : GenerateInputEvents envoie à chaque image des valeurs aléatoires de throttle (0..1), brake (0..1) et steering (-1..1) : le véhicule devient incontrôlable.
-- La communication UDP utilise socket.udp() avec un délai de réception de 5 ms, envoie {"test":123} et affiche (dump) la réponse ; le réseau bloque jusqu'à 5 ms par image.
-- saveLogToCSV écrit le fichier testLog.csv avec writeFile (chemin relatif au répertoire d'écriture du jeu, déduit du code).
-- Aucune clé jbeam n'est lue. Les noms de fonctions locales (SaveLogToDisk, LogInterestingData…) ne sont pas exportés.
+- Warning: GenerateInputEvents sends random values of throttle (0..1), brake (0..1) and steering (-1..1) every frame: the vehicle becomes uncontrollable.
+- The UDP communication uses socket.udp() with a receive timeout of 5 ms, sends {"test":123} and prints (dump) the response; the network blocks for up to 5 ms per frame.
+- saveLogToCSV writes the file testLog.csv with writeFile (path relative to the game's write directory, inferred from code).
+- No jbeam key is read. The local function names (SaveLogToDisk, LogInterestingData...) are not exported.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_inputOutputDemo.init()` | Prépare l'en-tête CSV, remet le chrono à 0 et configure le socket UDP vers 127.0.0.1:54812. *(interne)* | 125 |
-| `controller_inputOutputDemo.reset()` | Vide le journal CSV (en-tête seul) et remet le chrono à 0. *(interne)* | 119 |
-| `controller_inputOutputDemo.saveLogToCSV()` | Écrit le journal accumulé dans testLog.csv. | 37 |
-| `controller_inputOutputDemo.update(dt)` | Incrémente le chrono interne. *(interne)* | 112 |
-| `controller_inputOutputDemo.updateFixedStep(dt)` | Ne fait rien. *(interne)* | 102 |
-| `controller_inputOutputDemo.updateGFX(dt)` | Journalise les données, génère des entrées aléatoires et communique par UDP. *(interne)* | 95 |
+| `controller_inputOutputDemo.init()` | Prepares the CSV header, resets the timer to 0 and configures the UDP socket toward 127.0.0.1:54812. *(internal)* | 125 |
+| `controller_inputOutputDemo.reset()` | Clears the CSV log (header only) and resets the timer to 0. *(internal)* | 119 |
+| `controller_inputOutputDemo.saveLogToCSV()` | Writes the accumulated log to testLog.csv. | 37 |
+| `controller_inputOutputDemo.update(dt)` | Increments the internal timer. *(internal)* | 112 |
+| `controller_inputOutputDemo.updateFixedStep(dt)` | Does nothing. *(internal)* | 102 |
+| `controller_inputOutputDemo.updateGFX(dt)` | Logs the data, generates random inputs and communicates over UDP. *(internal)* | 95 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_inputOutputDemo.update(dt)`
 
-Incrémente le chrono interne.
+Increments the internal timer.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_inputOutputDemo.updateFixedStep(dt)`
 
-Ne fait rien.
+Does nothing.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_inputOutputDemo.updateGFX(dt)`
 
-Journalise les données, génère des entrées aléatoires et communique par UDP.
+Logs the data, generates random inputs and communicates over UDP.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `defaultOrder` | number | 100000 (exécuté en dernier). |
+| `defaultOrder` | number | 100000 (executed last). |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/inputOutputDemo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/inputOutputDemo.lua`.*

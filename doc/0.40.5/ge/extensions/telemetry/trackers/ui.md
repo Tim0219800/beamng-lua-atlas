@@ -1,50 +1,50 @@
 # `telemetry_trackers_ui`
 
-*Fichier : `lua/ge/extensions/telemetry/trackers/ui.lua` · VM : Game Engine (GE) · 95 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/trackers/ui.lua` · VM: Game Engine (GE) · 95 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_trackers_ui` : `extensions.load("telemetry_trackers_ui")`, puis la globale `telemetry_trackers_ui`
+**Access:** extension `telemetry_trackers_ui`: `extensions.load("telemetry_trackers_ui")`, then the global `telemetry_trackers_ui`
 
-Traceur de télémétrie de l'interface. Il suit les écrans (routes UI) que le joueur ouvre et quitte : chaque écran est une activité `uiScreen` dont la durée est le temps passé dessus, avec le champ `from` (écran d'origine) pour reconstituer le parcours dans les menus. Seuls les noms de routes sont rapportés, jamais les paramètres d'écran. Dépend de `telemetry_core`.
+UI telemetry tracker. It tracks the screens (UI routes) the player opens and leaves: each screen is a `uiScreen` activity whose duration is the time spent on it, with the `from` field (origin screen) to reconstruct the path through the menus. Only route names are reported, never screen parameters. Depends on `telemetry_core`.
 
-## Remarques
+## Notes
 
-- Le temps de chargement de l'écran (`loadMs`, `loadToMount`) est joint à la fin de l'activité plutôt que d'être un événement séparé, pour limiter le volume de données (uiScreen est déjà le plus fréquent).
-- `loadEnterMs` et `loadReadyMs` ne sont ajoutés que si le total de chargement atteint `loadDetailMs` (250 ms).
-- Une navigation annulée ou expirée n'appelle jamais onRouteTiming : cet écran est rapporté sans temps de chargement.
-- Le code utilise le hook moderne onAfterRouteChange et non l'ancien hook de compatibilité onUiChangedState.
+- The screen load time (`loadMs`, `loadToMount`) is attached at the end of the activity rather than being a separate event, to limit data volume (uiScreen is already the most frequent).
+- `loadEnterMs` and `loadReadyMs` are only added if the total load reaches `loadDetailMs` (250 ms).
+- A cancelled or expired navigation never calls onRouteTiming: that screen is reported without load time.
+- The code uses the modern hook onAfterRouteChange and not the old compatibility hook onUiChangedState.
 
-**Dépendances (chargées avant) :** `telemetry_core`
+**Dependencies (loaded first):** `telemetry_core`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_trackers_ui.onAfterRouteChange(entry)` | Hook appelé par le routeur UI une fois une navigation terminée : l'écran affiché est alors `entry.request.name`. Ferme l'activité de l'écran précédent puis ouvre `uiScreen` avec `screen` et `from` (`entry.origin.route`). Sans nom d'écran, ne fait rien. *(interne)* *(hook)* | 56 |
-| `telemetry_trackers_ui.onExit()` | Hook appelé à la fermeture du jeu. Ferme l'écran ouvert, sinon le dernier n'aurait pas de durée. *(interne)* *(hook)* | 82 |
-| `telemetry_trackers_ui.onExtensionLoaded()` | Hook appelé au chargement de l'extension. Passe l'extension en déchargement manuel. *(interne)* *(hook)* | 77 |
-| `telemetry_trackers_ui.onExtensionUnloaded()` | Hook appelé au déchargement de l'extension (un rechargement Lua ne passe pas par onExit). Ferme l'écran ouvert. *(interne)* *(hook)* | 32 |
-| `telemetry_trackers_ui.onRouteTiming(routeName, timings)` | Hook appelé par le routeur après qu'il a validé la route, donc juste après l'ouverture de l'activité. Mémorise les temps si la route correspond à l'écran courant ; ils sont envoyés à la fermeture. *(interne)* *(hook)* | 72 |
+| `telemetry_trackers_ui.onAfterRouteChange(entry)` | Hook called by the UI router once a navigation is finished: the displayed screen is then `entry.request.name`. Closes the previous screen's activity then opens `uiScreen` with `screen` and `from` (`entry.origin.route`). Without a screen name, does nothing. *(internal)* *(hook)* | 56 |
+| `telemetry_trackers_ui.onExit()` | Hook called when the game exits. Closes the open screen, otherwise the last one would have no duration. *(internal)* *(hook)* | 82 |
+| `telemetry_trackers_ui.onExtensionLoaded()` | Hook called when the extension loads. Sets the extension to manual unload. *(internal)* *(hook)* | 77 |
+| `telemetry_trackers_ui.onExtensionUnloaded()` | Hook called when the extension is unloaded (a Lua reload does not go through onExit). Closes the open screen. *(internal)* *(hook)* | 32 |
+| `telemetry_trackers_ui.onRouteTiming(routeName, timings)` | Hook called by the router after it has validated the route, so just after the activity is opened. Remembers the timings if the route matches the current screen; they are sent on close. *(internal)* *(hook)* | 72 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_trackers_ui.onAfterRouteChange(entry)`
 
-Hook appelé par le routeur UI une fois une navigation terminée : l'écran affiché est alors `entry.request.name`. Ferme l'activité de l'écran précédent puis ouvre `uiScreen` avec `screen` et `from` (`entry.origin.route`). Sans nom d'écran, ne fait rien.
+Hook called by the UI router once a navigation is finished: the displayed screen is then `entry.request.name`. Closes the previous screen's activity then opens `uiScreen` with `screen` and `from` (`entry.origin.route`). Without a screen name, does nothing.
 
-- `entry` (*table*) : Entrée de navigation du routeur ; champs lus : `request.name` et `origin.route`.
+- `entry` (*table*) : Router navigation entry; fields read: `request.name` and `origin.route`.
 
 #### `telemetry_trackers_ui.onRouteTiming(routeName, timings)`
 
-Hook appelé par le routeur après qu'il a validé la route, donc juste après l'ouverture de l'activité. Mémorise les temps si la route correspond à l'écran courant ; ils sont envoyés à la fermeture.
+Hook called by the router after it has validated the route, so just after the activity is opened. Remembers the timings if the route matches the current screen; they are sent on close.
 
-- `routeName` (*string*) : Nom de la route concernée.
-- `timings` (*table*) : Temps de la navigation ; champs lus : total, mountAcked, enter, ready.
+- `routeName` (*string*) : Name of the route concerned.
+- `timings` (*table*) : Navigation timings; fields read: total, mountAcked, enter, ready.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions à charger avant celle-ci : `{'telemetry_core'}`. |
+| `dependencies` | table<integer, string> | Extensions to load before this one: `{'telemetry_core'}`. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/trackers/ui.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/trackers/ui.lua`.*

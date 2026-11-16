@@ -1,36 +1,45 @@
 {
   "path": "lua/ge/extensions/editor/trafficDebug.lua",
-  "module": "Fenêtre d'éditeur « Traffic Debug » (menu Window > Debug) pour inspecter et régler le système de trafic de gameplay_traffic. Deux onglets : General (nombre de véhicules de trafic et de stationnement, réglages globaux via gameplay_traffic.setTrafficVars : activeAmount, spawnValue, spawnDirBias, baseAggression, speedLimit, aiAware, enableRandomEvents ; case debugMode ; bouton de dispersion) et Vehicles (données par véhicule : général, route, réapparition, poursuite, minuteries, rôle, journal d'actions, téléportation forcée). Active gameplay_traffic.debugMode à l'ouverture et le coupe à la désactivation de l'éditeur.",
+  "module": "Editor window \"Traffic Debug\" (menu Window > Debug) to inspect and tune the gameplay_traffic traffic system. Two tabs: General (number of traffic and parking vehicles, global settings via gameplay_traffic.setTrafficVars: activeAmount, spawnValue, spawnDirBias, baseAggression, speedLimit, aiAware, enableRandomEvents; debugMode checkbox; disperse button) and Vehicles (per-vehicle data: general, road, respawn, pursuit, timers, role, action log, forced teleport). Enables gameplay_traffic.debugMode on open and turns it off when the editor is deactivated.",
   "notes": [
-    "La fenêtre ne dessine rien si l'extension gameplay_traffic n'est pas chargée.",
-    "Le journal d'actions est alimenté par le hook onTrafficAction, avec au plus 100 entrées conservées par véhicule.",
-    "Les réglages sont bornés avant envoi : spawnValue 0..3, spawnDirBias -1..1, baseAggression 0.1..2, speedLimit -1..100."
+    "The window draws nothing if the gameplay_traffic extension is not loaded.",
+    "The action log is fed by the onTrafficAction hook, with at most 100 entries kept per vehicle.",
+    "The settings are clamped before sending: spawnValue 0..3, spawnDirBias -1..1, baseAggression 0.1..2, speedLimit -1..100."
   ],
   "functions": {
     "onEditorInitialized": {
-      "desc": "Hook de l'éditeur : enregistre la fenêtre 'Traffic Debug' (400x600) et son entrée de menu Window > Debug.",
+      "desc": "Editor hook: registers the 'Traffic Debug' window (400x600) and its menu entry Window > Debug.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onEditorGui": {
-      "desc": "Hook appelé à chaque frame d'interface de l'éditeur : dessine la fenêtre, active gameplay_traffic.debugMode au premier affichage, lit gameplay_traffic.getTrafficData() et dessine l'onglet courant.",
+      "desc": "Hook called every editor interface frame: draws the window, enables gameplay_traffic.debugMode on first display, reads gameplay_traffic.getTrafficData() and draws the current tab.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onEditorDeactivated": {
-      "desc": "Hook appelé à la fermeture de l'éditeur : coupe gameplay_traffic.debugMode et oublie les données de trafic.",
+      "desc": "Hook called when the editor is closed: turns off gameplay_traffic.debugMode and forgets the traffic data.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onTrafficAction": {
-      "desc": "Hook de trafic : ajoute une ligne au journal du véhicule `id`, avec l'horodatage reçu, l'action et ses données, affichée dans l'onglet Vehicles.",
+      "desc": "Traffic hook: adds a line to the log of vehicle `id`, with the received timestamp, the action and its data, displayed in the Vehicles tab.",
       "params": {
-        "id": {"type": "integer", "desc": "Id du véhicule de trafic."},
-        "action": {"type": "string", "desc": "Nom de l'action de trafic."},
-        "data": {"type": "any", "desc": "Données associées, affichées entre parenthèses si présentes."}
+        "id": {
+          "type": "integer",
+          "desc": "Id of the traffic vehicle."
+        },
+        "action": {
+          "type": "string",
+          "desc": "Name of the traffic action."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Associated data, displayed in parentheses if present."
+        }
       },
       "returns": [],
       "internal": true

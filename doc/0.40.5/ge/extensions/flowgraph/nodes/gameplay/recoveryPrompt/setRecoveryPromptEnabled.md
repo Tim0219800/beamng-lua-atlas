@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gameplay_recoveryPrompt_setRecoveryPromptEnabled`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptEnabled.lua` · VM : Game Engine (GE) · 35 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptEnabled.lua` · VM: Game Engine (GE) · 35 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptEnabled")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptEnabled")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Set Recovery Prompt Enabled » (catégorie once_instant). Active ou désactive les boutons standard du recovery prompt ; un bouton désactivé reste visible mais non sélectionnable. Pins d'entrée : flipMission, recoverMission (défaut true), submitMission, restartMission (défaut false). Dépend de gameplay_walk.
+Flowgraph node "Set Recovery Prompt Enabled" (category once_instant). Enables or disables the standard recovery prompt buttons; a disabled button stays visible but not selectable. Input pins: flipMission, recoverMission (default true), submitMission, restartMission (default false). Depends on gameplay_walk.
 
-**Dépendances (chargées avant) :** `gameplay_walk`
+**Dependencies (loaded first):** `gameplay_walk`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui). | 30 |
-| `C:workOnce(args)` | Pour chaque bouton standard dont le pin n'est pas nil, appelle core_recoveryPrompt.setButtonEnabledById. | 22 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the flowgraph editor (ImGui). | 30 |
+| `C:workOnce(args)` | For each standard button whose pin is not nil, calls core_recoveryPrompt.setButtonEnabledById. | 22 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptEnabled.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptEnabled.lua`.*

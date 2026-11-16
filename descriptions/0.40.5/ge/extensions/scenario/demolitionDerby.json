@@ -1,22 +1,32 @@
 {
   "path": "lua/ge/extensions/scenario/demolitionDerby.lua",
-  "module": "Extension de scénario de type démolition : elle déclare vainqueur le dernier véhicule encore en mouvement. Chaque seconde, elle compare la position de chaque véhicule du scénario à sa dernière position connue ; un véhicule qui bouge de 1 m ou moins pendant plus de 15 secondes est considéré à l'arrêt.",
+  "module": "Demolition-type scenario extension: it declares as winner the last vehicle still moving. Every second, it compares each scenario vehicle's position to its last known position; a vehicle that moves 1 m or less for more than 15 seconds is considered stopped.",
   "notes": [
-    "Il faut qu'un seul véhicule soit en mouvement et que tous les autres aient dépassé 15 ticks d'arrêt pour que scenario_scenarios.finish soit appelé avec le message '<nom> WINS!!!' (texte codé en dur, non traduit).",
-    "Le test de mouvement se fait environ une fois par seconde (accumulation de dt dans onPreRender), distance seuil 1 m.",
-    "L'extension ne fait rien si le scénario n'est pas à l'état 'running'. La liste des véhicules est reconstruite à chaque onScenarioChange quand scenario.state == 'running'."
+    "Only one vehicle must be moving and all the others must have exceeded 15 stopped ticks for scenario_scenarios.finish to be called with the message '<name> WINS!!!' (hard-coded text, not translated).",
+    "The movement test is done about once per second (dt accumulation in onPreRender), threshold distance 1 m.",
+    "The extension does nothing if the scenario is not in the 'running' state. The vehicle list is rebuilt on every onScenarioChange when scenario.state == 'running'."
   ],
   "fields": {},
   "functions": {
     "onScenarioChange": {
-      "desc": "Hook appelé par scenario_scenarios à chaque changement d'état du scénario. Quand le scénario passe en 'running', réinitialise le suivi et enregistre chaque véhicule de scenario.vehicles trouvé dans le scenetree. Sans scénario, remet tout à zéro.",
-      "params": {"sc": {"type": "any", "desc": "Argument transmis par le hook, non utilisé (le scénario est relu via scenario_scenarios.getScenario())."}},
+      "desc": "Hook called by scenario_scenarios on every scenario state change. When the scenario goes to 'running', resets the tracking and registers each scenario.vehicles vehicle found in the scenetree. Without a scenario, resets everything to zero.",
+      "params": {
+        "sc": {
+          "type": "any",
+          "desc": "Argument passed by the hook, unused (the scenario is re-read via scenario_scenarios.getScenario())."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onPreRender": {
-      "desc": "Hook appelé avant le rendu de chaque image. Toutes les secondes, détecte les véhicules immobiles et termine le scénario s'il ne reste qu'un véhicule en mouvement.",
-      "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+      "desc": "Hook called before rendering each frame. Every second, detects stationary vehicles and ends the scenario if only one vehicle is left moving.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Frame duration in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     }

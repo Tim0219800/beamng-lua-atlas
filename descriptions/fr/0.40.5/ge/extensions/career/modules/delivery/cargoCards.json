@@ -1,0 +1,71 @@
+{
+  "path": "lua/ge/extensions/career/modules/delivery/cargoCards.lua",
+  "module": "Aide à la présentation de l'écran de cargaison (livraison) : prépare pour l'UI les filtres (parcel, vehicle, trailer, material, all, loaner), les regroupements (par type, destination, conteneur du joueur, tâche) et les tris des « cartes » de cargaison/offres. Appelé par career_modules_delivery_cargoScreen ; ne modifie pas le jeu, il annote les tables de cartes (groupTags, filterTags, sortValues).",
+  "notes": [
+    "Les filtres sont construits paresseusement (ensureFilterTags) avec des libellés traduits ; onLanguageChanged les réinitialise.",
+    "Verrouillage : le filtre 'trailer' demande le niveau 3 et 'material' le niveau 5 de la branche 'logistics-delivery'.",
+    "Chaque filtre compte facilityCards et playerCards (remis à zéro par resetFilterCounters, incrémentés par getCardGroupSetsByKey avec usePlayerCards faux).",
+    "Bug probable : dans getFilterSets, 'filter.order = i' utilise une variable i non définie (la boucle est 'for _, filter'), donc order vaut nil.",
+    "Incohérence : dans le tri 'distance', le test de repli compare a.weight/b.weight au lieu des distances ; les commentaires disent 'high to low' pour rewardMoney et weight alors que les comparateurs trient en ordre croissant."
+  ],
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook : mémorise les modules delivery (parcelManager, cargoScreen, general, generator, progress, vehicleOfferManager, parcelMods, vehicleTasks, tutorial).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onLanguageChanged": {
+      "desc": "Hook : vide les filtres mis en cache pour régénérer les libellés dans la nouvelle langue.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "resetFilterCounters": {
+      "desc": "Remet à 0 les compteurs facilityCards et playerCards de tous les filtres et reconstruit leur index par clé.",
+      "params": {},
+      "returns": []
+    },
+    "getCardGroupSetsByKey": {
+      "desc": "Construit les ensembles de regroupement ('ungrouped', par type de cargo, par destination, par conteneur/stockage du joueur, par tâche) : renseigne card.groupTags et card.filterTags pour chaque carte, crée les groupes avec leur liste d'ids de cartes et leurs filterTags, et met à jour les compteurs de filtres.",
+      "params": {
+        "cardsById": {"type": "table<any, table>", "desc": "Cartes (parcelGroup, storage, vehicleOffer, loaner) indexées par id."},
+        "usePlayerCards": {"type": "boolean", "desc": "true : ne traiter que les cartes du joueur ; false : celles de la facilité."},
+        "playerCargoContainers": {"type": "table[]|nil", "desc": "Conteneurs du joueur (voir career_modules_delivery_general.getNearbyVehicleCargoContainers), utilisés pour les groupes de conteneurs et de stockage total."}
+      },
+      "returns": [{"type": "table<string, table>", "desc": "Ensembles de regroupement par clé, chacun avec key, label et groups."}]
+    },
+    "getCardSortingSetsByKey": {
+      "desc": "Calcule des rangs de tri (card.sortValues) pour cardId, rewardMoney, weight, distance et availablilty (ordre : limite, plus de place, verrouillé, tutoriel, expiré) et renvoie la description des tris.",
+      "params": {"cardsById": {"type": "table<any, table>", "desc": "Cartes à trier."}},
+      "returns": [{"type": "table<string, {label: string, key: string}>", "desc": "Tris disponibles par clé."}]
+    },
+    "addSortingValuesToGroups": {
+      "desc": "Donne à chaque groupe des sortValues (cardId, rewardMoney, weight, distance) égales au minimum des valeurs de ses cartes.",
+      "params": {
+        "cardsById": {"type": "table<any, table>", "desc": "Cartes avec sortValues."},
+        "groupSets": {"type": "table<string, table>", "desc": "Ensembles issus de getCardGroupSetsByKey."}
+      },
+      "returns": []
+    },
+    "getFilterSets": {
+      "desc": "Renvoie la liste des filtres pour l'UI : hasAvailableOffers si des cartes existent, lockedInfo (niveau minimal de logistics-delivery pour 'trailer' et 'material') et order.",
+      "params": {"cardsById": {"type": "table", "desc": "Non utilisé dans la fonction."}},
+      "returns": [{"type": "table[]", "desc": "Filtres."}]
+    },
+    "addFilterPlayerData": {
+      "desc": "Marque filter.noContainers pour les filtres 'parcel', 'material' et 'all' lorsque le joueur n'a aucun conteneur adapté (parcel, fluid, dryBulk).",
+      "params": {
+        "filterSets": {"type": "table[]", "desc": "Filtres de getFilterSets."},
+        "playerGroupSets": {"type": "table", "desc": "Non utilisé dans la fonction."},
+        "playerCargoContainers": {"type": "table[]", "desc": "Conteneurs du joueur avec cargoTypesLookup."}
+      },
+      "returns": []
+    },
+    "getConfirmButtonFromPlayerCards": {
+      "desc": "Compte les éléments à confirmer (cartes du joueur avec déplacements transitoires ou spawnWhenCommitingCargo ; un parcelGroup non matériau compte pour #ids) pour le bouton de confirmation de l'UI.",
+      "params": {"cardsById": {"type": "table<any, table>", "desc": "Cartes."}},
+      "returns": [{"type": "{itemCount: integer}", "desc": "Nombre d'éléments à confirmer."}]
+    }
+  }
+}

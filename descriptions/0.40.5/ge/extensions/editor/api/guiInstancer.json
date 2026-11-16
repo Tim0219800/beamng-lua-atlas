@@ -1,40 +1,62 @@
 {
   "path": "lua/ge/extensions/editor/api/guiInstancer.lua",
-  "module": "Petite classe utilitaire de l'éditeur qui gère une liste d'instances d'une fenêtre GUI (par ex. plusieurs copies d'un même panneau). Chaque instance est une table `{ locked = false }` rangée dans `instances` avec un index entier. Le module renvoie un constructeur sans argument qui crée l'objet et appelle `init`.",
+  "module": "Small editor utility class that manages a list of instances of a GUI window (e.g. several copies of the same panel). Each instance is a `{ locked = false }` table stored in `instances` with an integer index. The module returns a constructor with no arguments that creates the object and calls `init`.",
   "usage": "local instancer = require(\"editor/api/guiInstancer\")()\nlocal idx = instancer:addInstance()\ninstancer:removeInstance(idx)",
   "notes": [
-    "`nextInstanceIndex` est remis à 1 quand la table d'instances est vide au moment de `addInstance`.",
-    "`removeInstance` met seulement la case à nil : les indices ne sont pas décalés."
+    "`nextInstanceIndex` is reset to 1 when the instances table is empty at the time of `addInstance`.",
+    "`removeInstance` only sets the slot to nil: indices are not shifted."
   ],
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Objet renvoyé par le constructeur du module. Champs : `instances` (table index -> {locked}), `nextInstanceIndex` (integer).",
+      "desc": "Object returned by the module constructor. Fields: `instances` (table index -> {locked}), `nextInstanceIndex` (integer).",
       "functions": {
         "init": {
-          "desc": "Initialise `instances` à vide et `nextInstanceIndex` à 1. Appelé par le constructeur.",
+          "desc": "Initializes `instances` to empty and `nextInstanceIndex` to 1. Called by the constructor.",
           "internal": true
         },
         "addInstance": {
-          "desc": "Ajoute une instance `{ locked = false }` et renvoie son index. Repart de 1 si aucune instance n'existe.",
-          "returns": [{"type": "integer", "desc": "index de la nouvelle instance"}]
+          "desc": "Adds an instance `{ locked = false }` and returns its index. Restarts at 1 if no instance exists.",
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "index of the new instance"
+            }
+          ]
         },
         "removeInstance": {
-          "desc": "Supprime l'instance à l'index donné (met la case à nil).",
-          "params": {"instanceIndex": {"type": "integer", "desc": "index renvoyé par addInstance"}}
+          "desc": "Removes the instance at the given index (sets the slot to nil).",
+          "params": {
+            "instanceIndex": {
+              "type": "integer",
+              "desc": "index returned by addInstance"
+            }
+          }
         },
         "serialize": {
-          "desc": "Écrit `{ instances, nextInstanceIndex }` dans `state[name]` pour la sauvegarde de l'état de l'éditeur.",
+          "desc": "Writes `{ instances, nextInstanceIndex }` into `state[name]` for saving the editor state.",
           "params": {
-            "name": {"type": "string", "desc": "clé sous laquelle stocker l'état"},
-            "state": {"type": "table", "desc": "table d'état à remplir"}
+            "name": {
+              "type": "string",
+              "desc": "key under which to store the state"
+            },
+            "state": {
+              "type": "table",
+              "desc": "state table to fill"
+            }
           }
         },
         "deserialize": {
-          "desc": "Restaure `instances` et `nextInstanceIndex` depuis `state[name]` s'il existe (défauts `{}` et 1).",
+          "desc": "Restores `instances` and `nextInstanceIndex` from `state[name]` if it exists (defaults `{}` and 1).",
           "params": {
-            "name": {"type": "string", "desc": "clé de l'état sauvegardé"},
-            "state": {"type": "table", "desc": "table d'état sauvegardée"}
+            "name": {
+              "type": "string",
+              "desc": "key of the saved state"
+            },
+            "state": {
+              "type": "table",
+              "desc": "saved state table"
+            }
           }
         }
       }

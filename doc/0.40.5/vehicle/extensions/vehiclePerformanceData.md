@@ -1,86 +1,86 @@
 # `vehiclePerformanceData`
 
-*Fichier : `lua/vehicle/extensions/vehiclePerformanceData.lua` · VM : Véhicule · 363 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/vehiclePerformanceData.lua` · VM: Vehicle · 363 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `vehiclePerformanceData` : `extensions.load (VM véhicule)("vehiclePerformanceData")`, puis la globale `vehiclePerformanceData`
+**Access:** extension `vehiclePerformanceData`: `extensions.load (vehicle VM)("vehiclePerformanceData")`, then the global `vehiclePerformanceData`
 
-Collecte des données de performance du véhicule, surtout utilisée par l'UI/le jeu pour les fiches techniques et certifications. Deux volets : des données statiques (poids, répartition des roues motrices, type de boîte, carburants, type d'admission) via getStaticData, et des enregistrements dynamiques (pic de puissance, de couple, d'accélération longitudinale et latérale) démarrés par startRecording et lus par getRecordingData. L'extension n'active son updateGFX que pendant un enregistrement.
+Collection of vehicle performance data, mostly used by the UI/the game for spec sheets and certifications. Two parts: static data (weight, driven wheel distribution, gearbox type, fuels, induction type) via getStaticData, and dynamic recordings (peak power, torque, longitudinal and lateral acceleration) started by startRecording and read by getRecordingData. The extension only enables its updateGFX during a recording.
 
-## Exemple
+## Example
 
 ```lua
 local T = vehiclePerformanceData.recordingTypes
 vehiclePerformanceData.startRecording({T.power, T.torque})
--- ... accélérer ...
+-- ... accelerate ...
 local d = vehiclePerformanceData.getRecordingData({T.power})
 local power = d.power.propulsionPowerCombined
 vehiclePerformanceData.stopRecording({T.power, T.torque})
 ```
 
-## Remarques
+## Notes
 
-- recordingTypes valides : power, torque, speed (ne fait rien), longitudinalAcceleration, lateralAcceleration. Les clés sont égales aux valeurs (chaînes du même nom).
-- Résultats : power -> recordingData.power.propulsionPowerCombined = pic de somme (combustionTorque ou outputTorque1) x outputAV1 sur les dispositifs de roues motrices (W si N·m x rad/s) ; torque -> propulsionTorqueCombined (pic, N·m) ; accélérations -> maxAcceleration = pic de |sensors.gy2| (longitudinal) ou |sensors.gx2| (latéral), en m/s² d'après le nom des capteurs (déduit).
-- Bug apparent : l'accélération longitudinale utilise sensors.gy2 et la latérale sensors.gx2 ; c'est cohérent avec le repère véhicule (Y avant) mais à confirmer côté capteurs.
-- getStaticData renvoie : weight (obj:calcBeamStats().total_weight), powertrainLayout {poweredWheelsFront, poweredWheelsRear}, transmissionStyle (table type de boîte -> true), propulsionType (toujours nil : fonction vide), fuelType (table "fuelTank:<energyType>", "electricBattery" ou type de stockage -> true, n2oTank ignoré), inductionType (naturalAspiration / turbocharger / supercharger / N2O -> true).
-- startRecording remplace les données du type demandé (recordingData[type] = {}). stopRecording ne supprime pas les données, on peut les lire ensuite avec getRecordingData.
-- M.updateGFX est nil par défaut ; startRecording l'affecte et appelle extensions.hookUpdate('updateGFX') pour que le hook soit pris en compte, stopRecording le remet à nil quand plus rien n'est actif. C'est pourquoi `updateGFX` est listé comme champ nil.
-- Les fonctions de mesure dépendent de powertrain.getAllWheelPropulsionDevices() et d'un moteur à combustion (turbocharger/supercharger/nitrousOxideInjection doivent exister dans getInductionType).
+- Valid recordingTypes: power, torque, speed (does nothing), longitudinalAcceleration, lateralAcceleration. The keys are equal to the values (strings of the same name).
+- Results: power -> recordingData.power.propulsionPowerCombined = peak of the sum (combustionTorque or outputTorque1) x outputAV1 over the driven-wheel devices (W if N·m x rad/s); torque -> propulsionTorqueCombined (peak, N·m); accelerations -> maxAcceleration = peak of |sensors.gy2| (longitudinal) or |sensors.gx2| (lateral), in m/s² judging by the sensor names (inferred).
+- Apparent bug: longitudinal acceleration uses sensors.gy2 and lateral uses sensors.gx2; this is consistent with the vehicle frame (Y forward) but to be confirmed on the sensor side.
+- getStaticData returns: weight (obj:calcBeamStats().total_weight), powertrainLayout {poweredWheelsFront, poweredWheelsRear}, transmissionStyle (table gearbox type -> true), propulsionType (always nil: empty function), fuelType (table "fuelTank:<energyType>", "electricBattery" or storage type -> true, n2oTank ignored), inductionType (naturalAspiration / turbocharger / supercharger / N2O -> true).
+- startRecording replaces the data of the requested type (recordingData[type] = {}). stopRecording does not delete the data, it can be read afterwards with getRecordingData.
+- M.updateGFX is nil by default; startRecording assigns it and calls extensions.hookUpdate('updateGFX') so that the hook is taken into account, stopRecording sets it back to nil when nothing is active anymore. This is why `updateGFX` is listed as a nil field.
+- The measurement functions depend on powertrain.getAllWheelPropulsionDevices() and on a combustion engine (turbocharger/supercharger/nitrousOxideInjection must exist in getInductionType).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `vehiclePerformanceData.getRecordingData(recordingTypes)` | Renvoie les données collectées pour les types demandés. | 262 |
-| `vehiclePerformanceData.getStaticData()` | Calcule et renvoie les données statiques du véhicule (poids, layout, boîte, carburants, admission). | 270 |
-| `vehiclePerformanceData.onExtensionLoaded()` | Hook de chargement : initialise les tables d'enregistrement et associe chaque type à ses routines start/stop/update. *(interne)* *(hook)* | 281 |
-| `vehiclePerformanceData.startRecording(recordingTypes)` | Démarre les enregistrements demandés (initialise leurs données, appelle leur routine de démarrage) et active le hook updateGFX si nécessaire. | 233 |
-| `vehiclePerformanceData.stopRecording(recordingTypes)` | Arrête les enregistrements demandés ; désactive updateGFX si plus aucun n'est actif. Les données restent lisibles. | 248 |
+| `vehiclePerformanceData.getRecordingData(recordingTypes)` | Returns the data collected for the requested types. | 262 |
+| `vehiclePerformanceData.getStaticData()` | Computes and returns the vehicle's static data (weight, layout, gearbox, fuels, induction). | 270 |
+| `vehiclePerformanceData.onExtensionLoaded()` | Load hook: initializes the recording tables and associates each type with its start/stop/update routines. *(internal)* *(hook)* | 281 |
+| `vehiclePerformanceData.startRecording(recordingTypes)` | Starts the requested recordings (initializes their data, calls their start routine) and enables the updateGFX hook if needed. | 233 |
+| `vehiclePerformanceData.stopRecording(recordingTypes)` | Stops the requested recordings; disables updateGFX if none is active anymore. The data stays readable. | 248 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `vehiclePerformanceData.getRecordingData(recordingTypes)`
 
-Renvoie les données collectées pour les types demandés.
+Returns the data collected for the requested types.
 
-- `recordingTypes` (*string[]*) : Liste de valeurs de recordingTypes.
-- **renvoie** : table<string, table> Table type -> données (nil pour un type jamais démarré).
+- `recordingTypes` (*string[]*) : List of recordingTypes values.
+- **returns**: table<string, table> Table type -> data (nil for a type never started).
 
 #### `vehiclePerformanceData.getStaticData()`
 
-Calcule et renvoie les données statiques du véhicule (poids, layout, boîte, carburants, admission).
+Computes and returns the vehicle's static data (weight, layout, gearbox, fuels, induction).
 
-- **renvoie** : table Table avec les clés de staticTypes.
+- **returns**: table Table with the keys of staticTypes.
 
 #### `vehiclePerformanceData.startRecording(recordingTypes)`
 
-Démarre les enregistrements demandés (initialise leurs données, appelle leur routine de démarrage) et active le hook updateGFX si nécessaire.
+Starts the requested recordings (initializes their data, calls their start routine) and enables the updateGFX hook if needed.
 
-- `recordingTypes` (*string[]*) : Liste de valeurs de recordingTypes.
+- `recordingTypes` (*string[]*) : List of recordingTypes values.
 
 #### `vehiclePerformanceData.stopRecording(recordingTypes)`
 
-Arrête les enregistrements demandés ; désactive updateGFX si plus aucun n'est actif. Les données restent lisibles.
+Stops the requested recordings; disables updateGFX if none is active anymore. The data stays readable.
 
-- `recordingTypes` (*string[]*) : Liste de valeurs de recordingTypes.
+- `recordingTypes` (*string[]*) : List of recordingTypes values.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `recordingTypes` | table<string, string> | Types d'enregistrement dynamique : power, torque, speed, longitudinalAcceleration, lateralAcceleration. |
-| `staticTypes` | table<string, string> | Noms des données statiques : weight, powertrainLayout, transmissionStyle, propulsionType, fuelType, inductionType. |
-| `updateGFX` | function|nil | nil au repos ; défini par startRecording tant qu'un enregistrement est actif. |
+| `recordingTypes` | table<string, string> | Dynamic recording types: power, torque, speed, longitudinalAcceleration, lateralAcceleration. |
+| `staticTypes` | table<string, string> | Static data names: weight, powertrainLayout, transmissionStyle, propulsionType, fuelType, inductionType. |
+| `updateGFX` | function|nil | nil at rest; set by startRecording while a recording is active. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `updateGFX`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `calcBeamStats`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/vehiclePerformanceData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/vehiclePerformanceData.lua`.*

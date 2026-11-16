@@ -1,31 +1,192 @@
 {
   "path": "lua/ge/extensions/editor/sitesEditor/zones.lua",
-  "module": "Sous-éditeur 'Zones' de l'éditeur de sites. Le module renvoie un constructeur de classe C. Une zone est un polygone de sommets (vertices) avec éventuellement des plans haut et bas (top, bot). L'éditeur permet d'ajouter un sommet (Shift+clic), d'insérer un sommet au milieu d'une arête (Alt+clic), de sélectionner des sommets (clic, Ctrl pour en ajouter), de les déplacer avec le gizmo (avec aimantation au terrain, activée par défaut), de supprimer des sommets, de générer les plans automatiquement et de subdiviser la clôture. Il affiche aussi sommets, aire et si le joueur est dans la zone.",
+  "module": "'Zones' sub-editor of the sites editor. The module returns a class constructor C. A zone is a polygon of vertices with optional top and bottom planes (top, bot). The editor can add a vertex (Shift+click), insert a vertex in the middle of an edge (Alt+click), select vertices (click, Ctrl to add), move them with the gizmo (with terrain snapping, enabled by default), delete vertices, generate the planes automatically and subdivide the fence. It also displays vertices, area and whether the player is inside the zone.",
   "notes": [
-    "L'aimantation au terrain utilise core_terrain.getTerrainHeight ; sans core_terrain, dropToTerrain renvoie false.",
-    "Dans dragging, le déplacement du gizmo est divisé par 2 puis ajouté plusieurs fois (vertex.pos + posOffset, puis dropToTerrain(vertex.pos + posOffset)) : comportement tel que dans le code.",
-    "findZone choisit la zone dont rayIntersectsZone donne la plus petite distance.",
-    "Les actions de création, suppression et déplacement de sommets passent par editor.history."
+    "Terrain snapping uses core_terrain.getTerrainHeight; without core_terrain, dropToTerrain returns false.",
+    "In dragging, the gizmo movement is divided by 2 then added several times (vertex.pos + posOffset, then dropToTerrain(vertex.pos + posOffset)): behavior as in the code.",
+    "findZone chooses the zone for which rayIntersectsZone gives the smallest distance.",
+    "Vertex creation, deletion and move actions go through editor.history."
   ],
   "classes": {
     "C": {
-      "desc": "Objet renvoyé par le constructeur. Champs : sitesEditor, key, current (zone), currentVertices (sommets sélectionnés), currentPlane (plan top ou bot en édition).",
+      "desc": "Object returned by the constructor. Fields: sitesEditor, key, current (zone), currentVertices (selected vertices), currentPlane (top or bot plane being edited).",
       "functions": {
-        "init": {"desc": "Constructeur : mémorise sitesEditor, la clé et une sélection de sommets vide.", "params": {"sitesEditor": {"type": "table", "desc": "Module editor_sitesEditor."}, "key": {"type": "string", "desc": "'zones'."}}, "returns": [], "internal": true},
-        "setSites": {"desc": "Définit les sites édités et désélectionne.", "params": {"sites": {"type": "table", "desc": "Objet sites."}}, "returns": [], "internal": false},
-        "select": {"desc": "Sélectionne une zone, replace le gizmo et vide la sélection de sommets et de plan.", "params": {"zone": {"type": "table|nil", "desc": "Zone à sélectionner."}}, "returns": [], "internal": false},
-        "findVert": {"desc": "Dessine une sphère par sommet (orange si sélectionné) et renvoie le sommet le plus proche de la caméra touché par le rayon souris (rayon de sphère = distance caméra / 40).", "params": {"mouseInfo": {"type": "table", "desc": "Infos souris."}, "objects": {"type": "table", "desc": "Liste de sommets (ou de points d'insertion)."}}, "returns": [{"type": "table|nil", "desc": "Sommet touché."}], "internal": false},
-        "tryInsert": {"desc": "Avec Alt : teste les milieux d'arêtes et, sur clic, insère un sommet à cet endroit.", "params": {"mouseInfo": {"type": "table", "desc": "Infos souris."}}, "returns": [], "internal": false},
-        "input": {"desc": "Gère la souris : sélection d'une zone par clic (Ctrl pour basculer), ajout de sommet avec Shift, insertion avec Alt, sinon sélection de sommets.", "params": {"mouseInfo": {"type": "table", "desc": "Infos souris."}}, "returns": [], "internal": false},
-        "updateTransform": {"desc": "Place le gizmo au centroïde des sommets sélectionnés, ou sur le plan en édition (orientation locale ou monde).", "params": {}, "returns": [], "internal": false},
-        "beginDrag": {"desc": "Début de glissement : mémorise la position du gizmo, celle des sommets et la rotation du plan.", "params": {}, "returns": [], "internal": true},
-        "dragging": {"desc": "Pendant le glissement : translation ou rotation des sommets (autour de leur centroïde), du plan, avec aimantation au terrain.", "params": {}, "returns": [], "internal": true},
-        "dropToTerrain": {"desc": "Projette une position sur la hauteur du terrain.", "params": {"pos": {"type": "vec3", "desc": "Position à projeter."}}, "returns": [{"type": "vec3", "desc": "Copie de la position avec z du terrain."}, {"type": "boolean", "desc": "true si core_terrain est disponible."}], "internal": false},
-        "endDragging": {"desc": "Fin de glissement : aimante au terrain, recalcule les sommets (processVertices) et enregistre l'action annulable 'Dragged Vertices'.", "params": {}, "returns": [], "internal": true},
-        "create": {"desc": "Crée une zone (action annulable 'Create Zone') et la renvoie.", "params": {}, "returns": [{"type": "table", "desc": "Zone créée."}], "internal": false},
-        "remove": {"desc": "Supprime une zone (action annulable 'Remove Zone').", "params": {"zone": {"type": "table", "desc": "Zone à supprimer."}}, "returns": [], "internal": false},
-        "drawElement": {"desc": "Dessine l'éditeur de zone : gizmo, boutons (Select All Vertices, Delete Current Vertices, Auto Planes, Divide), cases Snap To Terrain, Top Plane, Bottom Plane, et infos (nombre de sommets, aire, temps de calcul, joueur dedans).", "params": {"zone": {"type": "table", "desc": "Zone affichée."}}, "returns": [], "internal": false},
-        "findZone": {"desc": "Renvoie la zone traversée par le rayon souris à la plus petite distance (obj:rayIntersectsZone).", "params": {"mouseInfo": {"type": "table", "desc": "Infos souris."}, "objects": {"type": "table", "desc": "Table des zones."}}, "returns": [{"type": "table|nil", "desc": "Zone touchée."}], "internal": false}
+        "init": {
+          "desc": "Constructor: stores sitesEditor, the key and an empty vertex selection.",
+          "params": {
+            "sitesEditor": {
+              "type": "table",
+              "desc": "editor_sitesEditor module."
+            },
+            "key": {
+              "type": "string",
+              "desc": "'zones'."
+            }
+          },
+          "returns": [],
+          "internal": true
+        },
+        "setSites": {
+          "desc": "Sets the edited sites and deselects.",
+          "params": {
+            "sites": {
+              "type": "table",
+              "desc": "Sites object."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "select": {
+          "desc": "Selects a zone, repositions the gizmo and clears the vertex and plane selection.",
+          "params": {
+            "zone": {
+              "type": "table|nil",
+              "desc": "Zone to select."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "findVert": {
+          "desc": "Draws a sphere per vertex (orange if selected) and returns the vertex closest to the camera hit by the mouse ray (sphere radius = camera distance / 40).",
+          "params": {
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Mouse info."
+            },
+            "objects": {
+              "type": "table",
+              "desc": "List of vertices (or insertion points)."
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Hit vertex."
+            }
+          ],
+          "internal": false
+        },
+        "tryInsert": {
+          "desc": "With Alt: tests the edge midpoints and, on click, inserts a vertex there.",
+          "params": {
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Mouse info."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "input": {
+          "desc": "Handles the mouse: zone selection by click (Ctrl to toggle), vertex addition with Shift, insertion with Alt, otherwise vertex selection.",
+          "params": {
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Mouse info."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "updateTransform": {
+          "desc": "Places the gizmo at the centroid of the selected vertices, or on the plane being edited (local or world orientation).",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "beginDrag": {
+          "desc": "Start of drag: stores the gizmo position, the vertices' position and the plane rotation.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "dragging": {
+          "desc": "During the drag: translation or rotation of the vertices (around their centroid), of the plane, with terrain snapping.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "dropToTerrain": {
+          "desc": "Projects a position onto the terrain height.",
+          "params": {
+            "pos": {
+              "type": "vec3",
+              "desc": "Position to project."
+            }
+          },
+          "returns": [
+            {
+              "type": "vec3",
+              "desc": "Copy of the position with the terrain z."
+            },
+            {
+              "type": "boolean",
+              "desc": "true if core_terrain is available."
+            }
+          ],
+          "internal": false
+        },
+        "endDragging": {
+          "desc": "End of drag: snaps to the terrain, recomputes the vertices (processVertices) and records the undoable action 'Dragged Vertices'.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "create": {
+          "desc": "Creates a zone (undoable action 'Create Zone') and returns it.",
+          "params": {},
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Created zone."
+            }
+          ],
+          "internal": false
+        },
+        "remove": {
+          "desc": "Removes a zone (undoable action 'Remove Zone').",
+          "params": {
+            "zone": {
+              "type": "table",
+              "desc": "Zone to remove."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "drawElement": {
+          "desc": "Draws the zone editor: gizmo, buttons (Select All Vertices, Delete Current Vertices, Auto Planes, Divide), checkboxes Snap To Terrain, Top Plane, Bottom Plane, and info (vertex count, area, computation time, player inside).",
+          "params": {
+            "zone": {
+              "type": "table",
+              "desc": "Displayed zone."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "findZone": {
+          "desc": "Returns the zone crossed by the mouse ray at the smallest distance (obj:rayIntersectsZone).",
+          "params": {
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Mouse info."
+            },
+            "objects": {
+              "type": "table",
+              "desc": "Table of zones."
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Hit zone."
+            }
+          ],
+          "internal": false
+        }
       }
     }
   }

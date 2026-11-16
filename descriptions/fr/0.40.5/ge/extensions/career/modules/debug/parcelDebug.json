@@ -1,0 +1,55 @@
+{
+  "path": "lua/ge/extensions/career/modules/debug/parcelDebug.lua",
+  "module": "Onglet de debug carrière « Delivery > Parcels ». Fenêtre ImGui 'Parcel Debug' montrant, pour chaque facilité de livraison (toutes, la plus proche dans un rayon de 50 m, ou une choisie), l'en-tête, les colis sortants (outCargo) et entrants (inCargo). L'entrée '> Available parcel per facility' imprime dans la console le nombre de colis disponibles par niveau (L1 à L5) et par facilité.",
+  "notes": ["Outil de développement ; les modules delivery sont référencés dans onCareerActivated.", "Les helpers drawFacilityHeader/OutCargo/InCargo sont réutilisés par cargoFluidDebug et vehOfferDebug.", "Le mode 'auto' compare des distances au carré avec le seuil 2500 (soit 50 m)."],
+  "fields": {
+    "debugOrder": {"type": "number", "desc": "Ordre de tri (10)."},
+    "debugName": {"type": "string", "desc": "'Delivery > Parcels'."}
+  },
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook : mémorise les modules delivery (parcelManager, cargoScreen, general, generator, progress, vehicleOfferManager).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "drawDebugFunctions": {
+      "desc": "Entrée '> Available parcel per facility' : compte les colis non expirés/non livrés par palier minimal (selon career_modules_delivery_parcelMods.lockedBecauseOfMods) et imprime le tableau trié.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "drawDebugMenu": {
+      "desc": "Dessine la fenêtre 'Parcel Debug' : temps de livraison, choix de facilité (all, auto, ou id) puis les tables des facilités retenues.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "drawFacilityHeader": {
+      "desc": "Dessine l'en-tête (tableau) d'une facilité de livraison : nom, stockages et informations de génération.",
+      "params": {
+        "facility": {"type": "table", "desc": "Facilité de livraison."},
+        "outCargo": {"type": "table", "desc": "Colis sortants de la facilité."},
+        "inCargo": {"type": "table", "desc": "Colis entrants de la facilité."},
+        "ignoreGenerators": {"type": "boolean|nil", "desc": "Masque les informations de générateurs si vrai."}
+      },
+      "returns": []
+    },
+    "drawFacilityOutCargo": {
+      "desc": "Dessine le tableau des colis sortants d'une facilité (Id, Name…).",
+      "params": {
+        "facility": {"type": "table", "desc": "Facilité de livraison."},
+        "outCargo": {"type": "table", "desc": "Colis sortants."}
+      },
+      "returns": []
+    },
+    "drawFacilityInCargo": {
+      "desc": "Dessine le tableau des colis entrants d'une facilité (Id, Name, Slots…).",
+      "params": {
+        "facility": {"type": "table", "desc": "Facilité de livraison."},
+        "inCargo": {"type": "table", "desc": "Colis entrants."}
+      },
+      "returns": []
+    }
+  }
+}

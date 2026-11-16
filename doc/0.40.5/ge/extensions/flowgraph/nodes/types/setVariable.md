@@ -1,32 +1,32 @@
 # `flowgraph_nodes_types_setVariable`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/types/setVariable.lua` · VM : Game Engine (GE) · 151 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/types/setVariable.lua` · VM: Game Engine (GE) · 151 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/types/setVariable")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/types/setVariable")` (file under extensions/ but not a regular extension)
 
-Noeud « Set Variable » (repeat_instant, caché des menus). Écrit une variable du graphe ou du projet à partir d'un pin d'entrée portant son nom et son type. Gère renommage et changement de type en conservant les liens compatibles ; recopie flow en sortie.
+Node "Set Variable" (repeat_instant, hidden from the menus). Writes a graph or project variable from an input pin bearing its name and type. Handles renaming and type changes while keeping compatible links; copies flow to the output.
 
-## Remarques
+## Notes
 
-- globalColor = im.ImVec4(1,0.6,0,8,0.75) : 5 arguments (« 0,8 » au lieu de « 0.8 »).
-- Le champ global est nil tant que setGlobal n'est pas appelé.
+- globalColor = im.ImVec4(1,0.6,0,8,0.75): 5 arguments ("0,8" instead of "0.8").
+- The global field is nil until setGlobal is called.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(nodeData)` | Restaure portée et variable. | 145 |
-| `C:_onSerialize(res)` | Sauvegarde l'état du noeud dans la table donnée. | 140 |
-| `C:drawCustomProperties()` | Case de portée, liste des variables et éditeur de variable. | 43 |
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du noeud dans l'éditeur. | 127 |
-| `C:init()` | varName = nil, target = variables du graphe, useSuffix = false. | 22 |
-| `C:renameVariable(source, name, newName)` | Hook : met à jour noeud et pin si la variable est renommée. | 88 |
-| `C:setGlobal(global)` | Change la portée (projet/graphe), la couleur et retire le pin courant. | 28 |
-| `C:setVar(name)` | Choisit la variable : recrée le pin d'entrée et refait les liens. | 62 |
-| `C:typeUpdated(source, name, newType)` | Hook : recrée le pin quand le type de la variable change. | 109 |
-| `C:work()` | Appelle target:change(varName, valeur du pin) et recopie flow. | 104 |
+| `C:_onDeserialized(nodeData)` | Restores scope and variable. | 145 |
+| `C:_onSerialize(res)` | Saves the node's state in the given table. | 140 |
+| `C:drawCustomProperties()` | Scope checkbox, variable list and variable editor. | 43 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the editor. | 127 |
+| `C:init()` | varName = nil, target = graph variables, useSuffix = false. | 22 |
+| `C:renameVariable(source, name, newName)` | Hook: updates node and pin if the variable is renamed. | 88 |
+| `C:setGlobal(global)` | Changes the scope (project/graph), the color and removes the current pin. | 28 |
+| `C:setVar(name)` | Chooses the variable: recreates the input pin and redoes the links. | 62 |
+| `C:typeUpdated(source, name, newType)` | Hook: recreates the pin when the variable's type changes. | 109 |
+| `C:work()` | Calls target:change(varName, pin value) and copies flow. | 104 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/types/setVariable.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/types/setVariable.lua`.*

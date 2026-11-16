@@ -2,112 +2,112 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/delivery/progress.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Suivi de progression et écran de dépôt (drop-off) de la livraison en carrière. Compte les livraisons par type (parcel, vehicle, trailer, fluid, dryBulk) globalement et par installation (deliveredFromHere / deliveredToHere), prépare les données de l'écran de dépôt (cargaisons des véhicules proches, tâches de véhicules), applique la confirmation (déplacement des cargaisons, récompenses, mise à jour des poids, sauvegarde auto) et envoie le résultat à l'UI. Gère aussi la visibilité et le déblocage des installations et des sons de progression.
---- Accès : extension `career_modules_delivery_progress` : `extensions.load("career_modules_delivery_progress")`, puis la globale `career_modules_delivery_progress`
+--- Progress tracking and drop-off screen of career delivery. Counts deliveries per type (parcel, vehicle, trailer, fluid, dryBulk) globally and per facility (deliveredFromHere / deliveredToHere), prepares the drop-off screen data (cargos of nearby vehicles, vehicle tasks), applies the confirmation (cargo moves, rewards, weight update, autosave) and sends the result to the UI. Also handles the visibility and unlocking of facilities and the progress sounds.
+--- Access: extension `career_modules_delivery_progress`: `extensions.load("career_modules_delivery_progress")`, then the global `career_modules_delivery_progress`
 ---@class career_modules_delivery_progress
 career_modules_delivery_progress = {}
 
---- Joue en boucle le son de progression 'money' ou 'progressBar' (sources audio créées à la demande) ; avec active=false, arrête tous ces sons.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:629
----@param soundLabel string 'money' ou 'progressBar'.
----@param active boolean true pour jouer, false pour tout arrêter.
+--- Plays in a loop the 'money' or 'progressBar' progress sound (audio sources created on demand); with active=false, stops all these sounds.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:629
+---@param soundLabel string 'money' or 'progressBar'.
+---@param active boolean true to play, false to stop everything.
 function career_modules_delivery_progress.activateSound(soundLabel, active) end
 
---- Devait renvoyer les déblocages obtenus depuis aggregateBefore ; actuellement renvoie une table vide et oublie l'état mémorisé.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:107
----@return table  Table vide.
+--- Was supposed to return the unlocks obtained since aggregateBefore; currently returns an empty table and forgets the stored state.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:107
+---@return table  Empty table.
 function career_modules_delivery_progress.aggregateAfter() end
 
---- Mémorise le niveau de chaque branche de carrière avant une livraison.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:98
+--- Stores the level of each career branch before a delivery.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:98
 function career_modules_delivery_progress.aggregateBefore() end
 
---- Termine le dépôt quand toutes les tâches de véhicules sont finies et la mise à jour des poids faite : somme les récompenses, les ajoute au joueur via career_modules_playerAttributes.addAttributes (tags gameplay, reward, delivery), prépare les infos de branches/réputation pour l'animation, envoie 'SetDeliveryDropOffRewardResult', joue un son, met à jour les statistiques, quitte le mode livraison si nécessaire et lance une sauvegarde auto si activée.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:366
+--- Finishes the drop-off when all vehicle tasks are finished and the weight update is done: sums the rewards, adds them to the player via career_modules_playerAttributes.addAttributes (tags gameplay, reward, delivery), prepares the branch/reputation info for the animation, sends 'SetDeliveryDropOffRewardResult', plays a sound, updates the statistics, leaves delivery mode if necessary and triggers an autosave if enabled.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:366
 function career_modules_delivery_progress.confirmDropOffCheckComplete() end
 
---- Applique le dépôt confirmé : scinde les cargaisons de matériaux si une quantité partielle est choisie, déplace les cargaisons vers la place, finalise les distances/récompenses de matériaux, calcule les récompenses, termine les tâches de véhicules, met à jour les poids des conteneurs (véhicules gelés le temps de la mise à jour) puis passe à confirmDropOffCheckComplete.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:300
+--- Applies the confirmed drop-off: splits the material cargos if a partial quantity is chosen, moves the cargos to the spot, finalizes the material distances/rewards, computes the rewards, finishes the vehicle tasks, updates the container weights (vehicles frozen during the update) then moves on to confirmDropOffCheckComplete.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:300
 ---@param confirmedDropOffs table Table {confirmedCargoIds = {{id=, amount=?}}, confirmedOfferIds = {...}}.
----@param facId string Installation.
----@param psPath string Chemin de la place de parking.
+---@param facId string Facility.
+---@param psPath string Parking spot path.
 function career_modules_delivery_progress.confirmDropOffData(confirmedDropOffs, facId, psPath) end
 
---- Compte les installations ayant au moins une livraison dans la direction donnée.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:599
----@param direction string 'deliveredFromHere' ou 'deliveredToHere' (clé de facility.progress).
----@return integer  Nombre d'installations.
+--- Counts the facilities with at least one delivery in the given direction.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:599
+---@param direction string 'deliveredFromHere' or 'deliveredToHere' (key of facility.progress).
+---@return integer  Number of facilities.
 function career_modules_delivery_progress.getFacilityCountForCargoCount(direction) end
 
---- Renvoie le multiplicateur de récompense de la branche 'logistics' (paramètres ignorés).
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:612
----@param skill string Ignoré.
----@param tier integer Ignoré.
----@return number  Multiplicateur.
+--- Returns the reward multiplier of the 'logistics' branch (parameters ignored).
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:612
+---@param skill string Ignored.
+---@param tier integer Ignored.
+---@return number  Multiplier.
 function career_modules_delivery_progress.getMoneyMultiplerForSkill(skill, tier) end
 
---- Renvoie la table de progression globale (cargoDeliveredByType).
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:37
----@return table  Progression.
+--- Returns the global progress table (cargoDeliveredByType).
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:37
+---@return table  Progress.
 function career_modules_delivery_progress.getProgress() end
 
---- Indique si l'installation est débloquée (condition 'minItemCount' sur le nombre d'objets livrés ici).
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:550
----@param facId string Identifiant de l'installation.
----@return boolean  true si débloquée.
----@return table|nil  Si verrouillée : disabledReasonHeader, disabledReasonContent et une barre de progression.
+--- Indicates whether the facility is unlocked ('minItemCount' condition on the number of items delivered here).
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:550
+---@param facId string Facility identifier.
+---@return boolean  true if unlocked.
+---@return table|nil  If locked: disabledReasonHeader, disabledReasonContent and a progress bar.
 function career_modules_delivery_progress.isFacilityUnlocked(facId) end
 
---- Indique si l'installation est visible : pendant le tutoriel de livraison seules les installations isTutorialForCargoDelivery le sont, puis la condition visibleCondition 'minItemCount' est testée.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:574
----@param facId string Identifiant de l'installation.
----@param isCargoDeliveryTutorialActive boolean Tutoriel de livraison en cours.
----@return boolean  true si visible.
+--- Indicates whether the facility is visible: during the delivery tutorial only the isTutorialForCargoDelivery facilities are, then the visibleCondition 'minItemCount' condition is tested.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:574
+---@param facId string Facility identifier.
+---@param isCargoDeliveryTutorialActive boolean Delivery tutorial in progress.
+---@return boolean  true if visible.
 function career_modules_delivery_progress.isFacilityVisible(facId, isCargoDeliveryTutorialActive) end
 
---- Hook de niveau de branche atteint : pour la compétence delivery au-delà du palier 1, débloque la branche vehicleDelivery.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:617
----@param skill string Identifiant de la compétence.
----@param tier integer Palier atteint.
+--- Branch level reached hook: for the delivery skill beyond tier 1, unlocks the vehicleDelivery branch.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:617
+---@param skill string Skill identifier.
+---@param tier integer Tier reached.
 function career_modules_delivery_progress.onBranchTierReached(skill, tier) end
 
---- Hook appelé à l'activation de la carrière : mémorise les extensions de livraison utilisées et util_stepHandler.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:7
+--- Hook called on career activation: stores the delivery extensions used and util_stepHandler.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:7
 function career_modules_delivery_progress.onCareerActivated() end
 
---- Hook interne appelé après la livraison confirmée de cargaisons : met à jour les compteurs globaux, les statistiques des installations d'origine et de destination (compte par type et somme d'argent), les statistiques des modificateurs, puis émet onDeliveryFacilityProgressStatsChanged(affectedFacilities). Pour un matériau, la quantité comptée est cargo.slots, sinon 1.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:41
----@param cargoItems table|nil Liste des cargaisons livrées.
+--- Internal hook called after the confirmed delivery of cargos: updates the global counters, the statistics of the origin and destination facilities (count per type and money sum), the modifier statistics, then emits onDeliveryFacilityProgressStatsChanged(affectedFacilities). For a material, the counted quantity is cargo.slots, otherwise 1.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:41
+---@param cargoItems table|nil List of delivered cargos.
 function career_modules_delivery_progress.onCargoDelivered(cargoItems) end
 
---- Même chose pour les livraisons de véhicules/remorques terminées (offres) ; émet onDeliveryFacilityProgressStatsChanged.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:77
----@param offers table|nil Liste d'éléments {offer=...}.
+--- Same for completed vehicle/trailer deliveries (offers); emits onDeliveryFacilityProgressStatsChanged.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:77
+---@param offers table|nil List of items {offer=...}.
 function career_modules_delivery_progress.onVehicleTasksFinished(offers) end
 
---- Appelée quand les données sont réunies (et que toutes les tâches de véhicules sont finies) : sépare dépôts automatiques et manuels (matériaux à quantité personnalisée). S'il y a des matériaux à choisir, ouvre l'écran via guihooks 'SetDeliveryDropOffCargoSelection' ; sinon confirme directement tout.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:199
+--- Called when the data is gathered (and all vehicle tasks are finished): separates automatic and manual drop-offs (materials with a custom quantity). If there are materials to choose, opens the screen via guihooks 'SetDeliveryDropOffCargoSelection'; otherwise confirms everything directly.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:199
 function career_modules_delivery_progress.openDropOffScreenGatheringComplete() end
 
---- Démarre la préparation de l'écran de dépôt à une place d'installation : demande les conteneurs des véhicules proches, retient les cargaisons dont la destination (ou l'une des destinations possibles) est cette place, calcule leurs récompenses, ajoute les tâches de véhicules à terminer, puis appelle openDropOffScreenGatheringComplete.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:124
----@param facId string Identifiant de l'installation.
----@param psPath string Chemin de la place de parking de dépôt.
+--- Starts preparing the drop-off screen at a facility spot: requests the containers of nearby vehicles, keeps the cargos whose destination (or one of the possible destinations) is this spot, computes their rewards, adds the vehicle tasks to finish, then calls openDropOffScreenGatheringComplete.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:124
+---@param facId string Facility identifier.
+---@param psPath string Path of the drop-off parking spot.
 function career_modules_delivery_progress.requestDropOffData(facId, psPath) end
 
---- Remplace la table de progression (chargement de sauvegarde), ou la réinitialise (cargoDeliveredByType à zéro pour parcel, vehicle, trailer, fluid, dryBulk) si data est nil.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:33
----@param data table|nil Progression sauvegardée.
+--- Replaces the progress table (save loading), or resets it (cargoDeliveredByType to zero for parcel, vehicle, trailer, fluid, dryBulk) if data is nil.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:33
+---@param data table|nil Saved progress.
 function career_modules_delivery_progress.setProgress(data) end
 
---- Appelée par l'UI à la fermeture du popup de déchargement : joue un son, affiche les popups d'introduction (cargoDelivered et « <clé>Unlocked » éventuels) et force la réévaluation du prompt de marqueur.
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:537
+--- Called by the UI when the unloading popup closes: plays a sound, shows the intro popups (cargoDelivered and any "<key>Unlocked") and forces the marker prompt to be re-evaluated.
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:537
 function career_modules_delivery_progress.unloadCargoPopupClosed() end
 
---- Obsolète : affiche « No longer used! ».
----Source : lua/ge/extensions/career/modules/delivery/progress.lua:193
----@param cargoId integer Inutilisé.
----@param destination table Inutilisé.
+--- Obsolete: prints "No longer used!".
+---Source: lua/ge/extensions/career/modules/delivery/progress.lua:193
+---@param cargoId integer Unused.
+---@param destination table Unused.
 function career_modules_delivery_progress.unloadMaterialsManualStart(cargoId, destination) end
 

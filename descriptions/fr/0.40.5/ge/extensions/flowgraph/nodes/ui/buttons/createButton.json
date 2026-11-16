@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/buttons/createButton.lua",
+  "module": "Nœud flowgraph « Create Button » (catégorie once_instant) : crée un bouton dans le module flowgraph 'button' (self.mgr.modules.button:addButton) et sort son identifiant. Entrées : « label » (défaut 'Button'), « active » (caché, vrai), « order » (caché, vide = ordre automatique), « style » (caché, 'default'). Sortie « buttonId » (number) à utiliser avec Get Button, Set Button Property, etc.",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "postInit": {
+          "desc": "Définit le modèle de valeur du pin style (seulement 'default').",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Crée le bouton avec label/active/order/style et écrit son id sur « buttonId ».",
+          "internal": true
+        }
+      }
+    }
+  }
+}

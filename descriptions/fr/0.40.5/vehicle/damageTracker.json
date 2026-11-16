@@ -1,0 +1,24 @@
+{
+  "path": "lua/vehicle/damageTracker.lua",
+  "module": "Registre des états de dommage du véhicule, organisés par groupe puis par nom (ex. groupe 'energyStorage', nom du réservoir). Chaque changement est mis en file et envoyé à l'UI toutes les 1/3 s via le hook `DamageData`, avec des callbacks optionnels pour d'autres modules. Un moddeur appelle setDamage pour signaler une panne et getDamage pour la lire.",
+  "usage": "damageTracker.setDamage(\"engine\", \"overheat\", true, true)   -- notifie aussi l'UI\nlocal broken = damageTracker.getDamage(\"engine\", \"overheat\")\ndamageTracker.setDamageTemporary(\"engine\", \"overheat\", true, false, 5)",
+  "notes": [
+    "Le message UI utilise la clé de traduction `vehicle.<group>.<name>.<value>` et n'est envoyé qu'aux joueurs assis (guihooks.messageForSeatedPlayers).",
+    "setDamage ne fait rien si la valeur est inchangée. Il active la boucle updateGFXDirty, qui se remet à nop dès que plus rien n'est à envoyer ni à expirer.",
+    "damageData est envoyé en entier au hook DamageData ; les callbacks reçoivent (damageData, damageDataDelta) où damageDataDelta ne contient que les changements depuis le dernier envoi.",
+    "getDamage renvoie false (et non nil) pour un couple inconnu ou une valeur nil/false.",
+    "init vide aussi la liste des callbacks (registerDamageUpdateCallback), reset ne la vide pas."
+  ],
+  "fields": {},
+  "functions": {
+    "init": {"desc": "Appelé à la création du véhicule : vide données, deltas, callbacks et temporisations.", "params": {}, "returns": [], "internal": true},
+    "reset": {"desc": "Appelé au reset : vide données, deltas et temporisations (garde les callbacks).", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Vaut nop au repos ; devient updateGFXDirty quand un dommage change ou doit expirer. Envoie périodiquement DamageData et décompte les dommages temporaires. Appelé chaque frame par la boucle principale.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true},
+    "setDamage": {"desc": "Définit l'état de dommage d'un couple groupe/nom (annule toute temporisation en cours sur ce couple).", "params": {"group": {"type": "string", "desc": "Groupe de dommage (ex. 'energyStorage')."}, "name": {"type": "string", "desc": "Nom dans le groupe."}, "value": {"type": "boolean|number|string", "desc": "Valeur du dommage (en pratique true/false)."}, "notifyUI": {"type": "boolean|nil", "desc": "Si vrai, affiche un message à l'écran."}}, "returns": [], "internal": false},
+    "setDamageTemporary": {"desc": "Comme setDamage mais programme un retour à timeoutValue après timeout secondes.", "params": {"group": {"type": "string", "desc": "Groupe."}, "name": {"type": "string", "desc": "Nom."}, "value": {"type": "any", "desc": "Valeur immédiate."}, "timeoutValue": {"type": "any", "desc": "Valeur appliquée à l'expiration."}, "timeout": {"type": "number", "desc": "Délai en secondes."}, "notifyUI": {"type": "boolean|nil", "desc": "Notifier l'UI à l'application immédiate."}}, "returns": [], "internal": false},
+    "getDamage": {"desc": "Lit l'état de dommage d'un couple groupe/nom.", "params": {"group": {"type": "string", "desc": "Groupe."}, "name": {"type": "string", "desc": "Nom."}}, "returns": [{"type": "any", "desc": "La valeur, ou false si absente."}], "internal": false},
+    "sendNow": {"desc": "Force l'envoi du hook DamageData et des callbacks à la prochaine frame (remet le minuteur à 0).", "params": {}, "returns": [], "internal": false},
+    "willSend": {"desc": "Indique si un envoi vient juste d'être armé (minuteur à sa valeur pleine) et qu'un premier joueur est assis.", "params": {}, "returns": [{"type": "boolean", "desc": "true si l'envoi est imminent."}], "internal": false},
+    "registerDamageUpdateCallback": {"desc": "Ajoute un callback appelé à chaque envoi de DamageData avec (damageData, damageDataDelta). Ignoré si nil.", "params": {"callback": {"type": "function", "desc": "function(damageData, damageDataDelta)."}}, "returns": [], "internal": false}
+  }
+}

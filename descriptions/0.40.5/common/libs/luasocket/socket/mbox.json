@@ -1,19 +1,143 @@
 {
   "path": "lua/common/libs/luasocket/socket/mbox.lua",
-  "module": "Analyseur de boîtes aux lettres au format mbox de LuaSocket : découpe un fichier mbox en messages, sépare en-têtes et corps, interprète les en-têtes et l'adresse de l'expéditeur. Utilitaire de courrier électronique sans lien direct avec le jeu.",
+  "module": "LuaSocket mbox mailbox parser: splits an mbox file into messages, separates headers and body, interprets the headers and the sender address. E-mail utility with no direct link to the game.",
   "usage": "local mbox = require('libs/luasocket/socket/mbox')\nlocal messages = mbox.parse(contenuMbox)\nprint(messages[1].headers.subject, messages[1].body)",
   "notes": [
-    "Bug : split_mbox assigne la globale 'mbox' (variable sans local), ce qui crée/écrase _G.mbox à chaque appel ; de plus, si 'module' existe, le module est lui aussi publié dans la globale mbox.",
-    "Les noms d'en-têtes de parse_headers sont passés en minuscules ; les en-têtes répétés sont joints par ', '."
+    "Bug: split_mbox assigns the global 'mbox' (variable without local), which creates/overwrites _G.mbox on each call; moreover, if 'module' exists, the module is also published in the global mbox.",
+    "The header names from parse_headers are lowercased; repeated headers are joined with ', '."
   ],
   "functions": {
-    "split_message": {"desc": "Sépare un message en en-têtes et corps (premier saut de ligne vide). Convertit CRLF en LF.", "params": {"message_s": {"type": "string", "desc": "Message brut."}}, "returns": [{"type": "string", "desc": "En-têtes bruts (chaîne vide s'il n'y en a pas)."}, {"type": "string", "desc": "Corps."}]},
-    "split_headers": {"desc": "Découpe un bloc d'en-têtes en lignes, en dépliant les lignes de continuation.", "params": {"headers_s": {"type": "string", "desc": "En-têtes bruts."}}, "returns": [{"type": "string[]", "desc": "Une chaîne par en-tête."}]},
-    "parse_header": {"desc": "Décompose une ligne d'en-tête 'Nom: valeur'.", "params": {"header_s": {"type": "string", "desc": "Ligne d'en-tête."}}, "returns": [{"type": "string|nil", "desc": "Nom."}, {"type": "string|nil", "desc": "Valeur."}]},
-    "parse_headers": {"desc": "Analyse un bloc d'en-têtes en table nom (minuscules) -> valeur.", "params": {"headers_s": {"type": "string", "desc": "En-têtes bruts."}}, "returns": [{"type": "table<string, string>", "desc": "En-têtes."}]},
-    "parse_from": {"desc": "Extrait nom et adresse d'un champ 'From' du type 'Nom <adresse>' (ou une simple adresse).", "params": {"from": {"type": "string", "desc": "Valeur du champ From."}}, "returns": [{"type": "string", "desc": "Nom (l'adresse si vide, guillemets retirés)."}, {"type": "string", "desc": "Adresse."}]},
-    "split_mbox": {"desc": "Découpe un fichier mbox en messages bruts, séparés par les lignes 'From ...' précédées d'une ligne vide.", "params": {"mbox_s": {"type": "string", "desc": "Contenu du fichier mbox."}}, "returns": [{"type": "string[]", "desc": "Messages bruts."}]},
-    "parse": {"desc": "Analyse tout un fichier mbox : liste de messages {headers, body}.", "params": {"mbox_s": {"type": "string", "desc": "Contenu mbox."}}, "returns": [{"type": "table[]", "desc": "Messages."}]},
-    "parse_message": {"desc": "Analyse un message : renvoie {headers = table des en-têtes analysés, body = corps}.", "params": {"message_s": {"type": "string", "desc": "Message brut."}}, "returns": [{"type": "table", "desc": "Message."}]}
+    "split_message": {
+      "desc": "Splits a message into headers and body (first empty line). Converts CRLF to LF.",
+      "params": {
+        "message_s": {
+          "type": "string",
+          "desc": "Raw message."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Raw headers (empty string if there are none)."
+        },
+        {
+          "type": "string",
+          "desc": "Body."
+        }
+      ]
+    },
+    "split_headers": {
+      "desc": "Splits a header block into lines, unfolding continuation lines.",
+      "params": {
+        "headers_s": {
+          "type": "string",
+          "desc": "Raw headers."
+        }
+      },
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "One string per header."
+        }
+      ]
+    },
+    "parse_header": {
+      "desc": "Splits a 'Name: value' header line.",
+      "params": {
+        "header_s": {
+          "type": "string",
+          "desc": "Header line."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Name."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Value."
+        }
+      ]
+    },
+    "parse_headers": {
+      "desc": "Parses a header block into a table name (lowercase) -> value.",
+      "params": {
+        "headers_s": {
+          "type": "string",
+          "desc": "Raw headers."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, string>",
+          "desc": "Headers."
+        }
+      ]
+    },
+    "parse_from": {
+      "desc": "Extracts name and address from a 'From' field of the form 'Name <address>' (or a plain address).",
+      "params": {
+        "from": {
+          "type": "string",
+          "desc": "Value of the From field."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Name (the address if empty, quotes removed)."
+        },
+        {
+          "type": "string",
+          "desc": "Address."
+        }
+      ]
+    },
+    "split_mbox": {
+      "desc": "Splits an mbox file into raw messages, separated by 'From ...' lines preceded by an empty line.",
+      "params": {
+        "mbox_s": {
+          "type": "string",
+          "desc": "Contents of the mbox file."
+        }
+      },
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Raw messages."
+        }
+      ]
+    },
+    "parse": {
+      "desc": "Parses a whole mbox file: list of messages {headers, body}.",
+      "params": {
+        "mbox_s": {
+          "type": "string",
+          "desc": "Mbox contents."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Messages."
+        }
+      ]
+    },
+    "parse_message": {
+      "desc": "Parses a message: returns {headers = table of parsed headers, body = body}.",
+      "params": {
+        "message_s": {
+          "type": "string",
+          "desc": "Raw message."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Message."
+        }
+      ]
+    }
   }
 }

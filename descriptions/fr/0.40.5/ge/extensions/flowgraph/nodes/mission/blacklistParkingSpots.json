@@ -1,0 +1,65 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/mission/blacklistParkingSpots.lua",
+  "module": "Noeud flowgraph 'Blacklist Parking Spots' (categorie once_instant). Marque comme 'banned' les places de parking (gameplay_parking) situees dans un rayon autour de positions donnees, pour que des voitures garees ne les utilisent pas, et teleporte les vehicules deja garees dessus. Positions : liste posList, pins pos_i (nombre reglable) et, si 'auto', les vehicules actifs de la mission (hors trafic/garees). Les marques sont retirees a l'arret ou au reset.",
+  "notes": [
+    "workOnce ajoute les positions dans la table posList du pin d'entree (si fournie), donc modifie la table de l'appelant.",
+    "updatePins teste lnk.sourcePin alors que les pins pos_i sont des entrees : les liens ne sont pas supprimes."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "count=1, bannedSpots vide.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Cree les pins pos_1..pos_count.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Appelle reset().",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Appelle reset().",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Retire le tag 'banned' des places bannies par ce noeud et vide la liste.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Panneau : nombre de pins de position (Count).",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Cree ou supprime les pins pos_i.",
+          "internal": true,
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "ancien nombre"
+            },
+            "new": {
+              "type": "integer",
+              "desc": "nouveau nombre"
+            }
+          }
+        },
+        "workOnce": {
+          "desc": "Rassemble les positions, cherche les places dans le rayon (defaut 5 m) avec gameplay_parking.findParkingSpots, ajoute le tag 'banned' et force la teleportation des vehicules qui les occupent.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde count.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Relit count et recree les pins.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

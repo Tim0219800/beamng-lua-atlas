@@ -2,117 +2,117 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/siteAssets.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Les « étagères » (bibliothèque sur disque) d'où viennent les sites posés : bâtiments, espaces ouverts, parkings. Trois éditeurs y cuisent leurs sites et un placeur les lit tous ; ce module fixe une seule fois où ils vivent et comment s'appellent leurs fichiers. Un site est un dossier nommé d'après son slug, contenant le manifeste (<kind>.json : bornes, transformations du kit, plan du sol, lampes, plantes), model.json (le document éditable, pour rouvrir le site dans l'éditeur qui l'a créé) et shell.dae (géométrie unique, LODs et collision).
---- Accès : extension `editor_toolUtilities_siteAssets` : `extensions.load("editor_toolUtilities_siteAssets")`, puis la globale `editor_toolUtilities_siteAssets`
+--- The "shelves" (on-disk library) that placed sites come from: buildings, open spaces, parking lots. Three editors bake their sites there and one placer reads them all; this module fixes once where they live and how their files are named. A site is a folder named after its slug, containing the manifest (<kind>.json: bounds, kit transforms, ground plan, lamps, plants), model.json (the editable document, to reopen the site in the editor that created it) and shell.dae (unique geometry, LODs and collision).
+--- Access: extension `editor_toolUtilities_siteAssets`: `extensions.load("editor_toolUtilities_siteAssets")`, then the global `editor_toolUtilities_siteAssets`
 ---@class editor_toolUtilities_siteAssets
----@field kinds table[] Liste des étagères : { id, noun, label, icon, root, manifest, editor }.
----@field modelFile string Nom du fichier du document éditable : 'model.json'.
----@field shellFile string Nom du fichier de géométrie unique : 'shell.dae'.
+---@field kinds table[] List of shelves: { id, noun, label, icon, root, manifest, editor }.
+---@field modelFile string File name of the editable document: 'model.json'.
+---@field shellFile string File name of the unique geometry: 'shell.dae'.
 editor_toolUtilities_siteAssets = {}
 
---- S'assure que le dossier de l'étagère existe. Le dialogue de fichiers ne fait que LISTER le chemin donné sans le créer : sans cet appel, la première cuisson d'une installation neuve ouvrirait le dialogue sur un dossier inexistant.
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:64
----@param kind string|nil Étagère.
----@return string  Chemin racine.
+--- Ensures the shelf folder exists. The file dialog only LISTS the given path without creating it: without this call, the first bake on a fresh install would open the dialog on a nonexistent folder.
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:64
+---@param kind string|nil Shelf.
+---@return string  Root path.
 function editor_toolUtilities_siteAssets.ensureRoot(kind) end
 
---- Le nom est-il déjà pris ? C'est ce que demande Save As avant d'écraser le travail de quelqu'un.
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:108
----@param kind string|nil Étagère.
+--- Is the name already taken? This is what Save As asks before overwriting someone's work.
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:108
+---@param kind string|nil Shelf.
 ---@param slug string Slug.
----@return boolean  true si le dossier existe.
+---@return boolean  true if the folder exists.
 function editor_toolUtilities_siteAssets.exists(kind, slug) end
 
---- Dossier d'un site : racine + slug + '/'.
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:56
----@param kind string|nil Étagère.
----@param slug string Slug du site.
----@return string  Chemin du dossier.
+--- Folder of a site: root + slug + '/'.
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:56
+---@param kind string|nil Shelf.
+---@param slug string Site slug.
+---@return string  Folder path.
 function editor_toolUtilities_siteAssets.folderFor(kind, slug) end
 
---- Renvoie la définition de l'étagère pour un identifiant (building par défaut).
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:40
----@param kind string|nil 'building', 'openSpace' ou 'carPark'.
----@return table  Entrée de kinds.
+--- Returns the shelf definition for an identifier (building by default).
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:40
+---@param kind string|nil 'building', 'openSpace' or 'carPark'.
+---@return table  Entry of kinds.
 function editor_toolUtilities_siteAssets.kindOf(kind) end
 
---- Tout ce qui est déjà sur une étagère, trié par nom. Ne lit que les manifestes (une petite lecture json par site, aucun maillage). Chaque entrée est le manifeste augmenté de dir (son dossier) et kind (son étagère), ce qui suffit au placeur pour le dresser.
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:126
----@param kind string|nil Étagère.
----@return table[]  Manifestes (avec slug), augmentés de dir et kind.
+--- Everything already on a shelf, sorted by name. Reads only the manifests (one small json read per site, no mesh). Each entry is the manifest augmented with dir (its folder) and kind (its shelf), which is enough for the placer to stand it up.
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:126
+---@param kind string|nil Shelf.
+---@return table[]  Manifests (with slug), augmented with dir and kind.
 function editor_toolUtilities_siteAssets.list(kind) end
 
---- Chemin du manifeste d'un site dans son dossier dir.
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:58
----@param kind string|nil Étagère.
----@param dir string Dossier du site (avec barre oblique finale).
----@return string  Chemin du manifeste.
+--- Path of a site's manifest in its folder dir.
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:58
+---@param kind string|nil Shelf.
+---@param dir string Site folder (with trailing slash).
+---@return string  Manifest path.
 function editor_toolUtilities_siteAssets.manifestPath(kind, dir) end
 
---- Chemin de model.json dans dir.
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:59
----@param dir string Dossier du site.
----@return string  Chemin.
+--- Path of model.json in dir.
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:59
+---@param dir string Site folder.
+---@return string  Path.
 function editor_toolUtilities_siteAssets.modelPath(dir) end
 
---- Enregistre un observateur appelé chaque fois qu'un site est écrit sur une étagère. Les observateurs ne sont jamais retirés.
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:95
+--- Registers an observer called each time a site is written to a shelf. Observers are never removed.
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:95
 ---@param fn function fn(kind, slug).
 function editor_toolUtilities_siteAssets.onWritten(fn) end
 
---- Crée si besoin le dossier du site, le vide et le renvoie prêt à écrire. Toute cuisson commence ici.
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:80
----@param kind string|nil Étagère.
----@param slug string Slug du site.
----@return string  Dossier du site.
+--- Creates the site folder if needed, empties it and returns it ready to write. Every bake starts here.
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:80
+---@param kind string|nil Shelf.
+---@param slug string Site slug.
+---@return string  Site folder.
 function editor_toolUtilities_siteAssets.prepare(kind, slug) end
 
---- Retire un site de l'étagère, dossier compris. Un renommage est une sauvegarde sous le nouveau nom suivie de cet appel sur l'ancien, ce qui garde honnête le nom stocké dans le manifeste.
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:114
----@param kind string|nil Étagère.
+--- Removes a site from the shelf, folder included. A rename is a save under the new name followed by this call on the old one, which keeps the name stored in the manifest honest.
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:114
+---@param kind string|nil Shelf.
 ---@param slug string Slug.
----@return boolean  true si supprimé, false si absent.
----@return string  Dossier supprimé, ou 'not in the library'.
+---@return boolean  true if deleted, false if absent.
+---@return string  Deleted folder, or 'not in the library'.
 function editor_toolUtilities_siteAssets.remove(kind, slug) end
 
---- Dossier racine d'une étagère (par exemple /assets/openSpaces/).
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:54
----@param kind string|nil Étagère.
----@return string  Chemin racine avec barre oblique finale.
+--- Root folder of a shelf (for example /assets/openSpaces/).
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:54
+---@param kind string|nil Shelf.
+---@return string  Root path with trailing slash.
 function editor_toolUtilities_siteAssets.rootOf(kind) end
 
---- Chemin de shell.dae dans dir.
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:60
----@param dir string Dossier du site.
----@return string  Chemin.
+--- Path of shell.dae in dir.
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:60
+---@param dir string Site folder.
+---@return string  Path.
 function editor_toolUtilities_siteAssets.shellPath(dir) end
 
---- Nom de dossier tiré du nom de l'objet : minuscules, tout ce qui n'est pas alphanumérique devient un tiret bas, tirets bas de bord retirés. Une nouvelle cuisson d'un site renommé mais identique écrase donc son propre dossier. Un nom vide donne le nom commun du kind.
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:46
----@param kind string|nil Étagère.
----@param name string|nil Nom du site.
+--- Folder name derived from the object's name: lowercase, everything that is not alphanumeric becomes an underscore, edge underscores removed. A new bake of a renamed but identical site therefore overwrites its own folder. An empty name gives the kind's common name.
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:46
+---@param kind string|nil Shelf.
+---@param name string|nil Site name.
 ---@return string  Slug.
 function editor_toolUtilities_siteAssets.slugify(kind, name) end
 
---- Vide un dossier avant réécriture, pour qu'une cuisson plus petite ne laisse rien de périmé ; supprime aussi les caches .cdae.
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:72
----@param dir string Dossier à vider.
+--- Empties a folder before rewriting, so that a smaller bake leaves nothing stale; also deletes the .cdae caches.
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:72
+---@param dir string Folder to empty.
 function editor_toolUtilities_siteAssets.wipe(dir) end
 
---- Écrit le manifeste (compact), puis prévient les observateurs enregistrés par onWritten avec (kind, manifest.slug).
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:101
----@param kind string|nil Étagère.
----@param dir string Dossier du site.
----@param manifest table Manifeste avec au moins le champ slug.
----@return boolean  false si l'écriture a échoué, true sinon.
+--- Writes the manifest (compact), then notifies the observers registered by onWritten with (kind, manifest.slug).
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:101
+---@param kind string|nil Shelf.
+---@param dir string Site folder.
+---@param manifest table Manifest with at least the slug field.
+---@return boolean  false if the write failed, true otherwise.
 function editor_toolUtilities_siteAssets.writeManifest(kind, dir, manifest) end
 
---- Écrit le document éditable à côté de ses maillages : { version = 1, tool, state }. tool est l'éditeur qui l'a écrit, pour qu'un dossier ouvert par le mauvais le signale.
----Source : lua/ge/extensions/editor/toolUtilities/siteAssets.lua:90
----@param dir string Dossier du site.
----@param tool string Identifiant de l'éditeur.
----@param state table État sérialisé du document.
----@return boolean  true si l'écriture a réussi.
+--- Writes the editable document next to its meshes: { version = 1, tool, state }. tool is the editor that wrote it, so that a folder opened by the wrong one reports it.
+---Source: lua/ge/extensions/editor/toolUtilities/siteAssets.lua:90
+---@param dir string Site folder.
+---@param tool string Editor identifier.
+---@param state table Serialized state of the document.
+---@return boolean  true if the write succeeded.
 function editor_toolUtilities_siteAssets.writeModel(dir, tool, state) end
 
 ---@type number

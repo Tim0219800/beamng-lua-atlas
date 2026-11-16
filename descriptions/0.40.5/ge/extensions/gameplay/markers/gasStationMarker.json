@@ -1,72 +1,148 @@
 {
   "path": "lua/ge/extensions/gameplay/markers/gasStationMarker.lua",
-  "module": "Marqueur de station-service (carburant ou recharge électrique) en mode jeu. Pour chaque pompe (paire de noms d'objets de scène : zone, icône), il crée une icône (poi_fuel_round, ou poi_charge_round pour une station électrique) qui apparaît quand le véhicule du joueur, roulant doucement, chevauche la zone de la pompe (test OBB/OBB), et rend la station interactive. Le module renvoie {create, cluster}.",
+  "module": "Gas station marker (fuel or electric charging) in play mode. For each pump (pair of scene object names: zone, icon), it creates an icon (poi_fuel_round, or poi_charge_round for an electric station) that appears when the player's vehicle, driving slowly, overlaps the pump's zone (OBB/OBB test), and makes the station interactive. The module returns {create, cluster}.",
   "notes": [
-    "cluster : un cluster par POI (id 'gasStationMarker#<poi.id>'). Lit poi.markerInfo.gasStationMarker.{pumps, electric, pos, radius} ; pumps = liste de paires {nomZone, nomIcône} d'objets de scène.",
-    "Le chevauchement n'est évalué que si data.cruisingSpeedFactor < 1, c'est-à-dire sous environ 20 km/h (hystérésis 20 à 30 km/h).",
-    "Bug probable : setup construit l'id d'icône avec cluster.clusterId, champ que cluster() ne renseigne pas (il met id) ; tous les ids d'icône deviennent « nil-gsIcon-N » et peuvent entrer en collision entre stations.",
-    "L'icône est masquée si un obstacle statique est entre la caméra et l'icône (castRayStatic).",
-    "isInAreaChanged vaut \"in\"/\"out\" pendant une frame lors d'un changement de chevauchement, sinon nil.",
-    "drawAxisBox appelle color(...) comme constructeur de couleur ; la fonction n'est utilisée nulle part dans ce fichier."
+    "cluster: one cluster per POI (id 'gasStationMarker#<poi.id>'). Reads poi.markerInfo.gasStationMarker.{pumps, electric, pos, radius}; pumps = list of {zoneName, iconName} pairs of scene objects.",
+    "The overlap is only evaluated if data.cruisingSpeedFactor < 1, i.e. below about 20 km/h (hysteresis 20 to 30 km/h).",
+    "Probable bug: setup builds the icon id with cluster.clusterId, a field that cluster() does not fill in (it sets id); all icon ids become \"nil-gsIcon-N\" and can collide between stations.",
+    "The icon is hidden if a static obstacle is between the camera and the icon (castRayStatic).",
+    "isInAreaChanged is \"in\"/\"out\" for one frame when the overlap changes, otherwise nil.",
+    "drawAxisBox calls color(...) as a color constructor; the function is not used anywhere in this file."
   ],
   "functions": {
     "create": {
-      "desc": "Fabrique un marqueur de station-service (instance de C).",
-      "params": {"...": {"type": "any", "desc": "Arguments transmis à C:init (non utilisés)."}},
-      "returns": [{"type": "table", "desc": "Instance de marqueur."}],
+      "desc": "Builds a gas station marker (instance of C).",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "Arguments passed to C:init (unused)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Marker instance."
+        }
+      ],
       "internal": false
     },
     "cluster": {
-      "desc": "Transforme chaque POI gasStationMarker en un cluster distinct (pas de fusion) et l'ajoute à allClusters.",
+      "desc": "Turns each gasStationMarker POI into a distinct cluster (no merging) and adds it to allClusters.",
       "params": {
-        "pois": {"type": "table[]", "desc": "POI avec markerInfo.gasStationMarker."},
-        "allClusters": {"type": "table[]", "desc": "Liste de clusters complétée en place."}
+        "pois": {
+          "type": "table[]",
+          "desc": "POIs with markerInfo.gasStationMarker."
+        },
+        "allClusters": {
+          "type": "table[]",
+          "desc": "List of clusters completed in place."
+        }
       },
       "internal": true
     }
   },
   "classes": {
     "C": {
-      "desc": "Marqueur de station-service avec une icône par pompe.",
+      "desc": "Gas station marker with one icon per pump.",
       "functions": {
-        "init": {"desc": "Initialise visible = true.", "internal": true},
+        "init": {
+          "desc": "Initializes visible = true.",
+          "internal": true
+        },
         "setup": {
-          "desc": "Pour chaque pompe, retrouve les objets de scène (zone et icône), calcule la boîte de la zone (position, axes mis à l'échelle) et crée l'icône d'opacité initiale 0.",
-          "params": {"cluster": {"type": "table", "desc": "Cluster issu de cluster()."}},
+          "desc": "For each pump, finds the scene objects (zone and icon), computes the zone's box (position, scaled axes) and creates the icon with initial opacity 0.",
+          "params": {
+            "cluster": {
+              "type": "table",
+              "desc": "Cluster from cluster()."
+            }
+          },
           "internal": true
         },
         "update": {
-          "desc": "Chaque frame : teste le chevauchement OBB/OBB entre le véhicule et chaque pompe, fait monter l'icône de 0.25 m et ajuste son opacité (visible si pas d'obstacle), met à jour isInAreaChanged et anyOverlap.",
-          "params": {"data": {"type": "table", "desc": "Données de frame : veh, bbCenter, bbHalfAxis0..2, camPos, dt, cruisingSpeedFactor."}},
+          "desc": "Every frame: tests the OBB/OBB overlap between the vehicle and each pump, raises the icon by 0.25 m and adjusts its opacity (visible if no obstacle), updates isInAreaChanged and anyOverlap.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Frame data: veh, bbCenter, bbHalfAxis0..2, camPos, dt, cruisingSpeedFactor."
+            }
+          },
           "internal": true
         },
-        "createObjects": {"desc": "Nettoie les objets existants (n'en crée pas).", "internal": true},
-        "hide": {"desc": "Passe invisible et met l'opacité de toutes les icônes à 0.", "internal": false},
-        "show": {"desc": "Repasse visible.", "internal": false},
-        "clearObjects": {"desc": "Retire les icônes de l'icon renderer et efface la liste des pompes.", "internal": false},
+        "createObjects": {
+          "desc": "Cleans up existing objects (does not create any).",
+          "internal": true
+        },
+        "hide": {
+          "desc": "Becomes invisible and sets the opacity of all icons to 0.",
+          "internal": false
+        },
+        "show": {
+          "desc": "Becomes visible again.",
+          "internal": false
+        },
+        "clearObjects": {
+          "desc": "Removes the icons from the icon renderer and clears the pump list.",
+          "internal": false
+        },
         "interactInPlayMode": {
-          "desc": "Si canInteract et que le véhicule est sur une pompe, ajoute les données (elemData) du cluster aux éléments interactifs.",
+          "desc": "If canInteract and the vehicle is on a pump, adds the cluster's data (elemData) to the interactive elements.",
           "params": {
-            "interactData": {"type": "table", "desc": "Données de frame avec canInteract."},
-            "interactableElements": {"type": "table[]", "desc": "Liste complétée en place."}
+            "interactData": {
+              "type": "table",
+              "desc": "Frame data with canInteract."
+            },
+            "interactableElements": {
+              "type": "table[]",
+              "desc": "List completed in place."
+            }
           },
           "internal": false
         },
-        "instantFade": {"desc": "Ne fait rien.", "params": {"visible": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
-        "drawAxisBox": {
-          "desc": "Dessine une boîte de debug (arêtes et faces) par debugDrawer.",
+        "instantFade": {
+          "desc": "Does nothing.",
           "params": {
-            "corner": {"type": "vec3", "desc": "Coin de départ."},
-            "x": {"type": "vec3", "desc": "Vecteur de l'arête X."},
-            "y": {"type": "vec3", "desc": "Vecteur de l'arête Y."},
-            "z": {"type": "vec3", "desc": "Vecteur de l'arête Z."},
-            "clr": {"type": "any", "desc": "Couleur des faces (défaut color(128,64,64,32))."}
+            "visible": {
+              "type": "boolean",
+              "desc": "Ignored."
+            }
+          },
+          "internal": false
+        },
+        "drawAxisBox": {
+          "desc": "Draws a debug box (edges and faces) via debugDrawer.",
+          "params": {
+            "corner": {
+              "type": "vec3",
+              "desc": "Starting corner."
+            },
+            "x": {
+              "type": "vec3",
+              "desc": "X edge vector."
+            },
+            "y": {
+              "type": "vec3",
+              "desc": "Y edge vector."
+            },
+            "z": {
+              "type": "vec3",
+              "desc": "Z edge vector."
+            },
+            "clr": {
+              "type": "any",
+              "desc": "Face color (default color(128,64,64,32))."
+            }
           },
           "internal": false
         },
         "drawOnMinimap": {
-          "desc": "Dessine un cercle sur la minimap pour chaque pompe.",
-          "params": {"td": {"type": "table", "desc": "Données de dessin (non utilisées)."}},
+          "desc": "Draws a circle on the minimap for each pump.",
+          "params": {
+            "td": {
+              "type": "table",
+              "desc": "Drawing data (unused)."
+            }
+          },
           "internal": false
         }
       }

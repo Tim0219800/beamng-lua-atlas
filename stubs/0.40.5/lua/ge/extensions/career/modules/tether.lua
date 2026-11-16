@@ -2,88 +2,88 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/tether.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Système de « laisses » (tethers) du mode carrière : une zone (boîte, sphère, capsule, porte ou véhicule) autour de laquelle le joueur doit rester. Quand le joueur (véhicule joueur 0, ou unicycle à pied) sort de la zone, le callback est appelé une fois et la laisse est retirée. Le hook onUpdate de l'extension n'est branché que tant qu'au moins une laisse est active.
---- Accès : extension `career_modules_tether` : `extensions.load("career_modules_tether")`, puis la globale `career_modules_tether`
+--- Career mode "tether" system: a zone (box, sphere, capsule, gate or vehicle) the player must stay around. When the player (player vehicle 0, or unicycle on foot) leaves the zone, the callback is called once and the tether is removed. The extension's onUpdate hook is wired only while at least one tether is active.
+--- Access: extension `career_modules_tether`: `extensions.load("career_modules_tether")`, then the global `career_modules_tether`
 ---@class career_modules_tether
----@field onUpdate function Vaut nop au départ ; remplacé par la vraie boucle de vérification dès qu'une laisse est ajoutée, remis à nil quand la dernière est retirée (avec extensions.hookUpdate pour (dés)enregistrer le hook).
+---@field onUpdate function Is nop at the start; replaced by the real checking loop as soon as a tether is added, set back to nil when the last one is removed (with extensions.hookUpdate to (un)register the hook).
 career_modules_tether = {}
 
---- Ajoute une table de laisse (avec checkfun et callback) à la liste active et active le hook onUpdate si c'est la première.
----Source : lua/ge/extensions/career/modules/tether.lua:205
----@param t table Laisse avec checkfun(t) et callback(t).
+--- Adds a tether table (with checkfun and callback) to the active list and enables the onUpdate hook if it is the first.
+---Source: lua/ge/extensions/career/modules/tether.lua:205
+---@param t table Tether with checkfun(t) and callback(t).
 function career_modules_tether.addTether(t) end
 
---- Dessine une boîte translucide avec debugDrawer (faces en triangles, arêtes noires), utile pour visualiser une laisse en boîte.
----Source : lua/ge/extensions/career/modules/tether.lua:228
----@param corner vec3 Coin de la boîte.
----@param x vec3 Vecteur d'arête X.
----@param y vec3 Vecteur d'arête Y.
----@param z vec3 Vecteur d'arête Z.
----@param clr any Couleur des faces, défaut color(128,64,64,32).
+--- Draws a translucent box with debugDrawer (faces as triangles, black edges), useful to visualize a box tether.
+---Source: lua/ge/extensions/career/modules/tether.lua:228
+---@param corner vec3 Corner of the box.
+---@param x vec3 X edge vector.
+---@param y vec3 Y edge vector.
+---@param z vec3 Z edge vector.
+---@param clr any Face color, default color(128,64,64,32).
 function career_modules_tether.drawAxisBox(corner, x, y, z, clr) end
 
---- Retire une laisse de la liste sans appeler son callback. Sans effet si t est nil ou absente.
----Source : lua/ge/extensions/career/modules/tether.lua:213
----@param t table|nil Laisse retournée par un start*Tether.
+--- Removes a tether from the list without calling its callback. No effect if t is nil or absent.
+---Source: lua/ge/extensions/career/modules/tether.lua:213
+---@param t table|nil Tether returned by a start*Tether.
 function career_modules_tether.removeTether(t) end
 
---- Crée une laisse en boîte orientée : se déclenche quand le joueur sort de la boîte définie par le coin p1 et les vecteurs d'arêtes x1, y1, z1.
----Source : lua/ge/extensions/career/modules/tether.lua:27
----@param p1 vec3 Coin de la boîte.
----@param x1 vec3 Vecteur d'arête X.
----@param y1 vec3 Vecteur d'arête Y.
----@param z1 vec3 Vecteur d'arête Z.
----@param callback function Appelé avec la laisse quand le joueur est sorti.
----@param data any Données libres conservées dans la laisse (t.data).
----@return table  La table de la laisse (à passer à removeTether).
+--- Creates an oriented box tether: triggers when the player leaves the box defined by corner p1 and edge vectors x1, y1, z1.
+---Source: lua/ge/extensions/career/modules/tether.lua:27
+---@param p1 vec3 Corner of the box.
+---@param x1 vec3 X edge vector.
+---@param y1 vec3 Y edge vector.
+---@param z1 vec3 Z edge vector.
+---@param callback function Called with the tether when the player has left.
+---@param data any Free-form data kept in the tether (t.data).
+---@return table  The tether table (to pass to removeTether).
 function career_modules_tether.startBoxTether(p1, x1, y1, z1, callback, data) end
 
---- Prévue pour une capsule entre un point fixe et un véhicule (p2 suit le véhicule). Voir notes : checkfun référence une fonction non définie.
----Source : lua/ge/extensions/career/modules/tether.lua:112
----@param p1 vec3 Point fixe.
----@param r1 number Rayon au point fixe.
----@param vehId integer Id du véhicule.
----@param r2 number Rayon côté véhicule.
----@param callback function Appelé quand le joueur sort.
----@param data any Données libres.
----@return table  La laisse.
+--- Intended for a capsule between a fixed point and a vehicle (p2 follows the vehicle). See notes: checkfun references an undefined function.
+---Source: lua/ge/extensions/career/modules/tether.lua:112
+---@param p1 vec3 Fixed point.
+---@param r1 number Radius at the fixed point.
+---@param vehId integer Vehicle id.
+---@param r2 number Radius on the vehicle side.
+---@param callback function Called when the player leaves.
+---@param data any Free-form data.
+---@return table  The tether.
 function career_modules_tether.startCapsuleTetherBetweenStaticAndVehicle(p1, r1, vehId, r2, callback, data) end
 
---- Crée une laisse en capsule conique entre deux points fixes, le rayon variant linéairement de r1 à r2 le long du segment.
----Source : lua/ge/extensions/career/modules/tether.lua:94
----@param p1 vec3 Premier point.
----@param r1 number Rayon au premier point.
+--- Creates a conical capsule tether between two fixed points, with the radius varying linearly from r1 to r2 along the segment.
+---Source: lua/ge/extensions/career/modules/tether.lua:94
+---@param p1 vec3 First point.
+---@param r1 number Radius at the first point.
 ---@param p2 vec3 Second point.
----@param r2 number Rayon au second point.
----@param callback function Appelé quand le joueur sort.
----@param data any Données libres.
----@return table  La laisse.
+---@param r2 number Radius at the second point.
+---@param callback function Called when the player leaves.
+---@param data any Free-form data.
+---@return table  The tether.
 function career_modules_tether.startCapsuleTetherBetweenStatics(p1, r1, p2, r2, callback, data) end
 
---- Crée une laisse en boîte à partir d'un objet de zone de la scène (door[1] = nom de l'objet), agrandie de bufferLength mètres sur chaque axe. Ne retourne rien si l'objet n'est pas trouvé.
----Source : lua/ge/extensions/career/modules/tether.lua:38
----@param door table Table dont le premier élément est le nom de l'objet de la scène.
----@param bufferLength number|nil Marge ajoutée à chaque axe, défaut 1.
----@param callback function Appelé quand le joueur sort.
----@param data any Données libres.
----@return table|nil  La laisse, ou nil si l'objet est introuvable.
+--- Creates a box tether from a zone object in the scene (door[1] = object name), enlarged by bufferLength meters on each axis. Returns nothing if the object is not found.
+---Source: lua/ge/extensions/career/modules/tether.lua:38
+---@param door table Table whose first element is the scene object name.
+---@param bufferLength number|nil Margin added to each axis, default 1.
+---@param callback function Called when the player leaves.
+---@param data any Free-form data.
+---@return table|nil  The tether, or nil if the object is not found.
 function career_modules_tether.startDoorTether(door, bufferLength, callback, data) end
 
---- Crée une laisse sphérique : se déclenche quand le véhicule du joueur est à plus de r1 mètres de p1.
----Source : lua/ge/extensions/career/modules/tether.lua:63
----@param p1 vec3 Centre.
----@param r1 number Rayon en mètres.
----@param callback function Appelé quand le joueur sort.
----@param data any Données libres.
----@return table  La laisse.
+--- Creates a spherical tether: triggers when the player's vehicle is more than r1 meters from p1.
+---Source: lua/ge/extensions/career/modules/tether.lua:63
+---@param p1 vec3 Center.
+---@param r1 number Radius in meters.
+---@param callback function Called when the player leaves.
+---@param data any Free-form data.
+---@return table  The tether.
 function career_modules_tether.startSphereTether(p1, r1, callback, data) end
 
---- Crée une laisse autour d'un véhicule : se déclenche quand le joueur est à plus de radius mètres du véhicule, ou, si inverse est vrai, quand il est à moins de radius mètres.
----Source : lua/ge/extensions/career/modules/tether.lua:156
----@param vehId integer Id du véhicule suivi.
----@param radius number Rayon en mètres.
----@param inverse boolean|nil Si vrai, déclenche à l'approche plutôt qu'à l'éloignement.
----@param callback function Appelé au déclenchement.
----@return table  La laisse.
+--- Creates a tether around a vehicle: triggers when the player is more than radius meters from the vehicle, or, if inverse is true, when they are less than radius meters away.
+---Source: lua/ge/extensions/career/modules/tether.lua:156
+---@param vehId integer Id of the tracked vehicle.
+---@param radius number Radius in meters.
+---@param inverse boolean|nil If true, triggers on approach rather than on moving away.
+---@param callback function Called on trigger.
+---@return table  The tether.
 function career_modules_tether.startVehicleTether(vehId, radius, inverse, callback) end
 

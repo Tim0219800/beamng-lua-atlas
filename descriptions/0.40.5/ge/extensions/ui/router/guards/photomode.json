@@ -1,7 +1,10 @@
 {
   "path": "lua/ge/extensions/ui/router/guards/photomode.lua",
-  "module": "Garde de sortie « confirmPhotomodeExit » : empêche de quitter le mode photo sans confirmation. Elle autorise la navigation si la route cible est encore dans le mode photo (route « <profil>.photomode » ou ses sous-routes, le profil venant de ui_photomode_shared.S.activeProfile, « pause » par défaut), si aucune session photo n'est active, si la session persistante est activée, ou si le contournement de confirmation est armé. Sinon elle demande la confirmation via ui_photomode_session.requestExitConfirmation et bloque la navigation (renvoie false).",
+  "module": "Exit guard \"confirmPhotomodeExit\": prevents leaving photo mode without confirmation. It allows navigation if the target route is still within photo mode (route \"<profile>.photomode\" or its sub-routes, the profile coming from ui_photomode_shared.S.activeProfile, \"pause\" by default), if no photo session is active, if the persistent session is enabled, or if the confirmation bypass is armed. Otherwise it requests confirmation via ui_photomode_session.requestExitConfirmation and blocks the navigation (returns false).",
   "fields": {
-    "guards": {"type": "table<string, function>", "desc": "Table des gardes exposées : {confirmPhotomodeExit = function(route, params, context) -> boolean}."}
+    "guards": {
+      "type": "table<string, function>",
+      "desc": "Table of exposed guards: {confirmPhotomodeExit = function(route, params, context) -> boolean}."
+    }
   }
 }

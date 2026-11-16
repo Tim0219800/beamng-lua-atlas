@@ -1,116 +1,116 @@
 # `ui_multiseat_freeroam`
 
-*Fichier : `lua/ge/extensions/ui/multiseat/freeroam.lua` · VM : Game Engine (GE) · 353 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/multiseat/freeroam.lua` · VM: Game Engine (GE) · 353 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_multiseat_freeroam` : `extensions.load("ui_multiseat_freeroam")`, puis la globale `ui_multiseat_freeroam`
+**Access:** extension `ui_multiseat_freeroam`: `extensions.load("ui_multiseat_freeroam")`, then the global `ui_multiseat_freeroam`
 
-Gère la session multi-sièges (écran partagé) en balade libre : choix des véhicules suggérés, plan d'apparition (positions du niveau, sinon groupe de places de parking proches, sinon route), ouverture des réglages multiseat, activation/désactivation du split screen et du trafic, sortie vers le mode solo, et restauration après rechargement de l'interface (Lua/UI). Un niveau peut fournir mainLevel.getMultiseatSuggestedVehicles(playerCount) et mainLevel.getMultiseatSpawnPositions(playerCount), ou multiseat.suggestedVehicles dans info.json.
+Manages the multi-seat session (split screen) in freeroam: choice of suggested vehicles, spawn plan (level positions, otherwise a group of nearby parking spots, otherwise road), opening the multiseat settings, enabling/disabling split screen and traffic, exit to solo mode, and restoration after a UI or Lua reload. A level can provide mainLevel.getMultiseatSuggestedVehicles(playerCount) and mainLevel.getMultiseatSpawnPositions(playerCount), or multiseat.suggestedVehicles in info.json.
 
-## Remarques
+## Notes
 
-- Les positions renvoyées par mainLevel.getMultiseatSpawnPositions peuvent être {parkingSpot}, un objet parking (avec moveResetVehicleTo) ou {pos, rot} ; il en faut au moins une par joueur, sinon le plan de repli (parking) est utilisé.
-- Le plan de parking cherche un groupe de places libres de taille standard dans un rayon de 30 m (PARKING_CLUSTER_RADIUS) assez grand pour tous les joueurs ; sinon les véhicules sont placés sur la route via reconcileFreeroamVehicles.
-- Codes de raison renvoyés par startSplitscreenFreeroam : no_players, vehicle_assignment_failed, vehicle_spawn_failed.
-- onSerialize renvoie {restoreAsFreeroam = true} seulement si la session (ou un gamemode) est active ; onUiReady rétablit alors le réglage multiseat, le split screen et la route UI « multiseat ».
-- exitMultiseat garde le véhicule du joueur 0, supprime les autres, désactive multiseat (settings multiseat = false) et décharge render_splitScreen et gameplay_traffic_source.
+- The positions returned by mainLevel.getMultiseatSpawnPositions can be {parkingSpot}, a parking object (with moveResetVehicleTo) or {pos, rot}; at least one per player is required, otherwise the fallback plan (parking) is used.
+- The parking plan looks for a group of free standard-size spots within a 30 m radius (PARKING_CLUSTER_RADIUS) large enough for all players; otherwise the vehicles are placed on the road via reconcileFreeroamVehicles.
+- Reason codes returned by startSplitscreenFreeroam: no_players, vehicle_assignment_failed, vehicle_spawn_failed.
+- onSerialize returns {restoreAsFreeroam = true} only if the session (or a gamemode) is active; onUiReady then restores the multiseat setting, the split screen and the "multiseat" UI route.
+- exitMultiseat keeps player 0's vehicle, deletes the others, disables multiseat (settings multiseat = false) and unloads render_splitScreen and gameplay_traffic_source.
 
-**Dépendances (chargées avant) :** `gameplay_city`, `gameplay_parking`, `gameplay_traffic`, `ui_multiseat_multiseatSettings`, `ui_multiseat_multiseatVehicles`
+**Dependencies (loaded first):** `gameplay_city`, `gameplay_parking`, `gameplay_traffic`, `ui_multiseat_multiseatSettings`, `ui_multiseat_multiseatVehicles`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_multiseat_freeroam.activate()` | Charge gameplay_multiseat_gamemodeManager et marque la session freeroam multiseat comme active. | 109 |
-| `ui_multiseat_freeroam.deactivate()` | Marque la session comme inactive et annule toute restauration en attente. | 114 |
-| `ui_multiseat_freeroam.exitMultiseat(options)` | Revient au freeroam solo : arrête le gamemode multiseat, applique éventuellement un cache d'affectations (options.assignmentCache), arrête les courses de drag et un crawl hors mission, supprime tous les véhicules sauf celui du joueur 0, vide la session, coupe multiseat et rend le véhicule au joueur 0 avec la caméra de jeu. | 191 |
-| `ui_multiseat_freeroam.isActive()` | Indique si la session freeroam multiseat est active. | 119 |
-| `ui_multiseat_freeroam.onClientEndMission()` | Hook appelé à la fin du niveau ; désactive la session et annule toute restauration. *(interne)* *(hook)* | 343 |
-| `ui_multiseat_freeroam.onDeserialized(data)` | Hook appelé après un rechargement Lua ; si le marqueur restoreAsFreeroam est présent, appelle restoreAfterReload. *(interne)* *(hook)* | 295 |
-| `ui_multiseat_freeroam.onMultiseatSettingsApplied(changeSet, result)` | Hook appelé quand les réglages multiseat ont été appliqués. Active la session ; avec plus d'un joueur, charge render_splitScreen, lui donne les joueurs et ajoute les joueurs aux sources de trafic ; avec un seul joueur, décharge split screen et trafic. Ferme ensuite le menu. Sans effet si result.success == false ou result.exitAfterApply == true. *(interne)* *(hook)* | 164 |
-| `ui_multiseat_freeroam.onMultiseatSettingsClosed()` | Hook appelé à la fermeture des réglages multiseat ; ne fait rien ici. *(interne)* *(hook)* | 250 |
-| `ui_multiseat_freeroam.onPauseHomeRailBuildMultiseatActions(actions, _context, registerButton)` | Hook du rail d'accueil du menu pause : ajoute les boutons « home.changeMultiseatSettings » (ouvre pause.multiseatSettings) et « home.exitMultiseat » (confirmation, puis exitMultiseat et retour à « play »). Rien n'est ajouté si ni la session ni un gamemode multiseat n'est actif. *(interne)* *(hook)* | 253 |
-| `ui_multiseat_freeroam.onSerialize(reason)` | Hook appelé avant un rechargement Lua ; renvoie {restoreAsFreeroam = true} si une session est active, sinon rien. *(interne)* *(hook)* | 280 |
-| `ui_multiseat_freeroam.onUiReady()` | Hook appelé quand l'interface est prête ; si une restauration est en attente, rétablit multiseat, le split screen, le trafic et recharge la route UI « multiseat » (définie comme route de jeu). *(interne)* *(hook)* | 304 |
-| `ui_multiseat_freeroam.openSettings()` | Démarre une configuration multiseat (source « settings ») et navigue vers la route « pause.multiseatSettings ». Si la navigation échoue, la configuration est abandonnée. | 155 |
-| `ui_multiseat_freeroam.restoreAfterReload()` | Marque la session active et met en file une restauration, exécutée au prochain onUiReady. *(interne)* | 123 |
-| `ui_multiseat_freeroam.startSplitscreenFreeroam(levelName)` | Lance le freeroam en écran partagé : attribue à chaque joueur inscrit un véhicule suggéré pour le niveau, construit un plan d'apparition (niveau, puis parking, sinon route), fait apparaître les véhicules et active la session en cas de succès. En cas d'échec d'apparition, les véhicules sont retirés. | 129 |
+| `ui_multiseat_freeroam.activate()` | Loads gameplay_multiseat_gamemodeManager and marks the multiseat freeroam session as active. | 109 |
+| `ui_multiseat_freeroam.deactivate()` | Marks the session as inactive and cancels any pending restoration. | 114 |
+| `ui_multiseat_freeroam.exitMultiseat(options)` | Returns to solo freeroam: stops the multiseat gamemode, optionally applies an assignment cache (options.assignmentCache), stops drag races and a non-mission crawl, deletes all vehicles except player 0's, clears the session, turns off multiseat and gives the vehicle back to player 0 with the game camera. | 191 |
+| `ui_multiseat_freeroam.isActive()` | Returns whether the multiseat freeroam session is active. | 119 |
+| `ui_multiseat_freeroam.onClientEndMission()` | Hook called at the end of the level; deactivates the session and cancels any restoration. *(internal)* *(hook)* | 343 |
+| `ui_multiseat_freeroam.onDeserialized(data)` | Hook called after a Lua reload; if the restoreAsFreeroam marker is present, calls restoreAfterReload. *(internal)* *(hook)* | 295 |
+| `ui_multiseat_freeroam.onMultiseatSettingsApplied(changeSet, result)` | Hook called when the multiseat settings have been applied. Activates the session; with more than one player, loads render_splitScreen, gives it the players and adds the players to the traffic sources; with a single player, unloads split screen and traffic. Then closes the menu. No effect if result.success == false or result.exitAfterApply == true. *(internal)* *(hook)* | 164 |
+| `ui_multiseat_freeroam.onMultiseatSettingsClosed()` | Hook called when the multiseat settings are closed; does nothing here. *(internal)* *(hook)* | 250 |
+| `ui_multiseat_freeroam.onPauseHomeRailBuildMultiseatActions(actions, _context, registerButton)` | Pause menu home rail hook: adds the buttons "home.changeMultiseatSettings" (opens pause.multiseatSettings) and "home.exitMultiseat" (confirmation, then exitMultiseat and return to "play"). Nothing is added if neither the session nor a multiseat gamemode is active. *(internal)* *(hook)* | 253 |
+| `ui_multiseat_freeroam.onSerialize(reason)` | Hook called before a Lua reload; returns {restoreAsFreeroam = true} if a session is active, otherwise nothing. *(internal)* *(hook)* | 280 |
+| `ui_multiseat_freeroam.onUiReady()` | Hook called when the UI is ready; if a restoration is pending, restores multiseat, the split screen, the traffic and reloads the "multiseat" UI route (set as the game route). *(internal)* *(hook)* | 304 |
+| `ui_multiseat_freeroam.openSettings()` | Starts a multiseat configuration (source "settings") and navigates to the route "pause.multiseatSettings". If navigation fails, the configuration is abandoned. | 155 |
+| `ui_multiseat_freeroam.restoreAfterReload()` | Marks the session active and queues a restoration, executed at the next onUiReady. *(internal)* | 123 |
+| `ui_multiseat_freeroam.startSplitscreenFreeroam(levelName)` | Starts freeroam in split screen: assigns each registered player a vehicle suggested for the level, builds a spawn plan (level, then parking, otherwise road), spawns the vehicles and activates the session on success. If spawning fails, the vehicles are removed. | 129 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_multiseat_freeroam.exitMultiseat(options)`
 
-Revient au freeroam solo : arrête le gamemode multiseat, applique éventuellement un cache d'affectations (options.assignmentCache), arrête les courses de drag et un crawl hors mission, supprime tous les véhicules sauf celui du joueur 0, vide la session, coupe multiseat et rend le véhicule au joueur 0 avec la caméra de jeu.
+Returns to solo freeroam: stops the multiseat gamemode, optionally applies an assignment cache (options.assignmentCache), stops drag races and a non-mission crawl, deletes all vehicles except player 0's, clears the session, turns off multiseat and gives the vehicle back to player 0 with the game camera.
 
-- `options` (*table|nil*) : Options ; assignmentCache = affectations de joueurs à mettre en cache avant la sortie.
-- **renvoie** : boolean false si la session n'était pas active ou si le cache n'a pas pu être enregistré, sinon true.
+- `options` (*table|nil*) : Options; assignmentCache = player assignments to cache before exiting.
+- **returns**: boolean false if the session was not active or the cache could not be saved, otherwise true.
 
 #### `ui_multiseat_freeroam.isActive()`
 
-Indique si la session freeroam multiseat est active.
+Returns whether the multiseat freeroam session is active.
 
-- **renvoie** : boolean true si active.
+- **returns**: boolean true if active.
 
 #### `ui_multiseat_freeroam.onDeserialized(data)`
 
-Hook appelé après un rechargement Lua ; si le marqueur restoreAsFreeroam est présent, appelle restoreAfterReload.
+Hook called after a Lua reload; if the restoreAsFreeroam marker is present, calls restoreAfterReload.
 
-- `data` (*table*) : Données renvoyées par onSerialize.
+- `data` (*table*) : Data returned by onSerialize.
 
 #### `ui_multiseat_freeroam.onMultiseatSettingsApplied(changeSet, result)`
 
-Hook appelé quand les réglages multiseat ont été appliqués. Active la session ; avec plus d'un joueur, charge render_splitScreen, lui donne les joueurs et ajoute les joueurs aux sources de trafic ; avec un seul joueur, décharge split screen et trafic. Ferme ensuite le menu. Sans effet si result.success == false ou result.exitAfterApply == true.
+Hook called when the multiseat settings have been applied. Activates the session; with more than one player, loads render_splitScreen, gives it the players and adds the players to the traffic sources; with a single player, unloads split screen and traffic. Then closes the menu. No effect if result.success == false or result.exitAfterApply == true.
 
-- `changeSet` (*table*) : Changements appliqués (non utilisé ici).
-- `result` (*table*) : Résultat de l'application (success, exitAfterApply).
+- `changeSet` (*table*) : Applied changes (unused here).
+- `result` (*table*) : Application result (success, exitAfterApply).
 
 #### `ui_multiseat_freeroam.onPauseHomeRailBuildMultiseatActions(actions, _context, registerButton)`
 
-Hook du rail d'accueil du menu pause : ajoute les boutons « home.changeMultiseatSettings » (ouvre pause.multiseatSettings) et « home.exitMultiseat » (confirmation, puis exitMultiseat et retour à « play »). Rien n'est ajouté si ni la session ni un gamemode multiseat n'est actif.
+Pause menu home rail hook: adds the buttons "home.changeMultiseatSettings" (opens pause.multiseatSettings) and "home.exitMultiseat" (confirmation, then exitMultiseat and return to "play"). Nothing is added if neither the session nor a multiseat gamemode is active.
 
-- `actions` (*table*) : Liste d'actions à compléter.
-- `_context` (*table*) : Contexte (non utilisé).
-- `registerButton` (*function*) : Fonction qui enregistre un bouton et son callback.
+- `actions` (*table*) : List of actions to complete.
+- `_context` (*table*) : Context (unused).
+- `registerButton` (*function*) : Function that registers a button and its callback.
 
 #### `ui_multiseat_freeroam.onSerialize(reason)`
 
-Hook appelé avant un rechargement Lua ; renvoie {restoreAsFreeroam = true} si une session est active, sinon rien.
+Hook called before a Lua reload; returns {restoreAsFreeroam = true} if a session is active, otherwise nothing.
 
-- `reason` (*string*) : Raison de la sérialisation (log).
-- **renvoie** : table|nil Marqueur de restauration.
+- `reason` (*string*) : Serialization reason (log).
+- **returns**: table|nil Restoration marker.
 
 #### `ui_multiseat_freeroam.openSettings()`
 
-Démarre une configuration multiseat (source « settings ») et navigue vers la route « pause.multiseatSettings ». Si la navigation échoue, la configuration est abandonnée.
+Starts a multiseat configuration (source "settings") and navigates to the route "pause.multiseatSettings". If navigation fails, the configuration is abandoned.
 
-- **renvoie** : boolean false si la navigation a échoué, sinon true.
+- **returns**: boolean false if navigation failed, otherwise true.
 
 #### `ui_multiseat_freeroam.startSplitscreenFreeroam(levelName)`
 
-Lance le freeroam en écran partagé : attribue à chaque joueur inscrit un véhicule suggéré pour le niveau, construit un plan d'apparition (niveau, puis parking, sinon route), fait apparaître les véhicules et active la session en cas de succès. En cas d'échec d'apparition, les véhicules sont retirés.
+Starts freeroam in split screen: assigns each registered player a vehicle suggested for the level, builds a spawn plan (level, then parking, otherwise road), spawns the vehicles and activates the session on success. If spawning fails, the vehicles are removed.
 
-- `levelName` (*string*) : Nom du niveau, utilisé pour trouver les véhicules suggérés.
-- **renvoie** : boolean true si tout a réussi.
-- **renvoie** : string|nil Raison de l'échec (voir notes).
+- `levelName` (*string*) : Level name, used to find the suggested vehicles.
+- **returns**: boolean true if everything succeeded.
+- **returns**: string|nil Failure reason (see notes).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : gameplay_city, gameplay_parking, gameplay_traffic, ui_multiseat_multiseatSettings, ui_multiseat_multiseatVehicles. |
+| `dependencies` | table<integer, string> | Extensions loaded before: gameplay_city, gameplay_parking, gameplay_traffic, ui_multiseat_multiseatSettings, ui_multiseat_multiseatVehicles. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onSplitScreenStartRequested` — écouté par 1 module(s)
+- `onSplitScreenStartRequested` — listened to by 1 module(s)
 
-**Évènements UI (guihooks.trigger) :** `onDragRaceTimeslipData`, `onDragReset`
+**UI events (guihooks.trigger):** `onDragRaceTimeslipData`, `onDragReset`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `enterVehicle`
 
-**Charge les extensions :** `gameplay_multiseat_gamemodeManager`, `gameplay_traffic_source`, `render_splitScreen`
+**Loads extensions:** `gameplay_multiseat_gamemodeManager`, `gameplay_traffic_source`, `render_splitScreen`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/multiseat/freeroam.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/multiseat/freeroam.lua`.*

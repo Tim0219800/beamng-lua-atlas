@@ -1,37 +1,53 @@
 {
   "path": "lua/common/utils/interactiveShell.lua",
-  "module": "Console Lua interactive (REPL) pour l'exécutable console (console.x64.exe) : require('utils/interactiveShell').start() lit des lignes sur l'entrée standard et les exécute. Sert au développement et aux tests hors interface ; un moddeur ne l'utilise normalement pas dans le jeu normal. Définit aussi des globales d'aide.",
+  "module": "Interactive Lua console (REPL) for the console executable (console.x64.exe): require('utils/interactiveShell').start() reads lines from standard input and executes them. Used for development and testing outside the UI; a modder does not normally use it in the normal game. Also defines helper globals.",
   "usage": "require('utils/interactiveShell').start()",
   "notes": [
-    "Définit les GLOBALES spawnObjects (alias sp), updateOnce, updateLoop (alias ul).",
-    "Commandes spéciales dans le shell : help, tracktime (chronomètre chaque commande), unittests / ut, reload (reloadLua()), testenv, exit/quit/Ctrl-D (caractère 4).",
-    "spawnObjects supprime TOUS les objets (BeamEngine:deleteAllObjects()) avant de recréer n objets 'vehicles/<v>' (pickup par défaut), espacés en y de 3*n. Il prévient si le nombre de slots ne correspond pas.",
-    "updateOnce et updateLoop appellent BeamEngine:update(1/2000, 1/2000) ; updateOnce ignore son paramètre n ; updateLoop exécute n+1 itérations (boucle de 0 à n).",
-    "La commande 'unittests' référence lua/tests/unittests qui peut ne pas exister dans la version livrée (déduit du code)."
+    "Defines the GLOBALS spawnObjects (alias sp), updateOnce, updateLoop (alias ul).",
+    "Special commands in the shell: help, tracktime (times each command), unittests / ut, reload (reloadLua()), testenv, exit/quit/Ctrl-D (character 4).",
+    "spawnObjects deletes ALL objects (BeamEngine:deleteAllObjects()) before recreating n objects 'vehicles/<v>' (pickup by default), spaced in y by 3*n. It warns if the number of slots does not match.",
+    "updateOnce and updateLoop call BeamEngine:update(1/2000, 1/2000); updateOnce ignores its parameter n; updateLoop runs n+1 iterations (loop from 0 to n).",
+    "The 'unittests' command references lua/tests/unittests, which may not exist in the shipped version (inferred from code)."
   ],
   "fields": {},
   "functions": {
     "start": {
-      "desc": "Boucle bloquante : affiche l'invite '> ', lit une ligne, gère les raccourcis puis exécute la ligne avec loadstring/xpcall et affiche le résultat ou l'erreur avec trace. Quitte sur fin d'entrée, 'exit', 'quit' ou Ctrl-D. Appelle updateLuaCore() à chaque tour s'il existe (nettoyage et GC).",
+      "desc": "Blocking loop: shows the '> ' prompt, reads a line, handles the shortcuts then executes the line with loadstring/xpcall and prints the result or the error with trace. Exits on end of input, 'exit', 'quit' or Ctrl-D. Calls updateLuaCore() each iteration if it exists (cleanup and GC).",
       "params": {},
       "returns": []
     },
     "spawnObjects": {
-      "desc": "GLOBALE d'aide (alias sp) : supprime tous les objets puis fait apparaître n véhicules.",
+      "desc": "Helper GLOBAL (alias sp): deletes all objects then spawns n vehicles.",
       "params": {
-        "n": {"type": "integer|nil", "desc": "Nombre de véhicules, 1 par défaut"},
-        "v": {"type": "string|nil", "desc": "Nom du dossier de véhicule sous 'vehicles/', 'pickup' par défaut"}
+        "n": {
+          "type": "integer|nil",
+          "desc": "Number of vehicles, 1 by default"
+        },
+        "v": {
+          "type": "string|nil",
+          "desc": "Name of the vehicle folder under 'vehicles/', 'pickup' by default"
+        }
       },
       "returns": []
     },
     "updateOnce": {
-      "desc": "GLOBALE d'aide : une mise à jour du moteur de simulation (BeamEngine:update(1/2000, 1/2000)).",
-      "params": {"n": {"type": "any", "desc": "Ignoré"}},
+      "desc": "Helper GLOBAL: one update of the simulation engine (BeamEngine:update(1/2000, 1/2000)).",
+      "params": {
+        "n": {
+          "type": "any",
+          "desc": "Ignored"
+        }
+      },
       "returns": []
     },
     "updateLoop": {
-      "desc": "GLOBALE d'aide (alias ul) : n+1 mises à jour du moteur de simulation à 1/2000 s.",
-      "params": {"n": {"type": "integer|nil", "desc": "Nombre d'itérations, 10 par défaut"}},
+      "desc": "Helper GLOBAL (alias ul): n+1 updates of the simulation engine at 1/2000 s.",
+      "params": {
+        "n": {
+          "type": "integer|nil",
+          "desc": "Number of iterations, 10 by default"
+        }
+      },
       "returns": []
     }
   },

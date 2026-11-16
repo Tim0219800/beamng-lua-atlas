@@ -1,43 +1,43 @@
 # `editor_crawlEditor_trails`
 
-*Fichier : `lua/ge/extensions/editor/crawlEditor/trails.lua` · VM : Game Engine (GE) · 603 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/crawlEditor/trails.lua` · VM: Game Engine (GE) · 603 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/crawlEditor/trails")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/crawlEditor/trails")` (file under extensions/ but not a regular extension)
 
-Sous-outil « Trails » de l'éditeur Crawl. Le module renvoie un constructeur de classe C. Un trail relie un chemin (pathId), une frontière (boundaryId) et des positions de départ (startingPositionId, startingPositionIdReversed) avec des prefabs, une miniature, un aperçu et des règles. L'outil affiche la liste et le détail dans ImGui (nom, fichier, description, propriétés de mission, références manquantes en couleur, prefabs, règles) et dessine dans la vue 3D la position de départ référencée.
+"Trails" subtool of the Crawl editor. The module returns a class constructor C. A trail links a path (pathId), a boundary (boundaryId) and starting positions (startingPositionId, startingPositionIdReversed) with prefabs, a thumbnail, a preview and rules. The tool shows the list and detail in ImGui (name, file, description, mission properties, missing references in color, prefabs, rules) and draws the referenced starting position in the 3D view.
 
-## Remarques
+## Notes
 
-- Le menu contextuel Delete d'un trail supprime aussi son fichier sur disque (trail._filePath) via FS:removeFile.
-- Le bouton « Test From Start » lance gameplay_crawl_general.startCrawlFreeroam(trail, véhicule joueur) ; sans véhicule joueur, un avertissement est loggé.
-- Les prefabs sont cherchés dans /levels/<niveau>/crawls/*.prefab.json (niveau courant uniquement, non récursif).
-- Les modifications marquent le trail comme modifié via editor_crawlEditor.markAsDirty("trail", index).
+- A trail's Delete context menu also deletes its file on disk (trail._filePath) via FS:removeFile.
+- The "Test From Start" button launches gameplay_crawl_general.startCrawlFreeroam(trail, player vehicle); without a player vehicle, a warning is logged.
+- Prefabs are searched in /levels/<level>/crawls/*.prefab.json (current level only, non-recursive).
+- Modifications mark the trail as modified via editor_crawlEditor.markAsDirty("trail", index).
 
-## Classe `C`
+## Class `C`
 
-Instance de l'outil. Champs : currentTab ("paths" par défaut), trail (trail édité), snapToTerrain (true), buffers ImGui (name, fileName, description, rules, thumbnail, preview, missionName, pathReversed, isFromMission).
+Tool instance. Fields: currentTab ("paths" by default), trail (edited trail), snapToTerrain (true), ImGui buffers (name, fileName, description, rules, thumbnail, preview, missionName, pathReversed, isFromMission).
 
-Le module renvoie un constructeur : `local obj = require("editor_crawlEditor_trails")(options)`.
+The module returns a constructor: `local obj = require("editor_crawlEditor_trails")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearSelection()` | Ne fait rien (aucune sélection à effacer pour les trails). | 563 |
-| `C:draw(mouseInfo)` | Dessine la sphère de zone (vert translucide) et l'icône (rouge) de la position de départ référencée par le trail, avec étiquettes. | 577 |
-| `C:drawTrailDetail(trail)` | Dessine le panneau de détail du trail : boutons Goto (caméra vers la position de départ ou le premier nœud du chemin) et Test From Start, champs, sélecteurs de miniature/aperçu, références chemin/frontière/positions, prefabs, règles. | 150 |
-| `C:drawTrailsList(allTrails, selection)` | Dessine le bouton « Add Trail » et la liste sélectionnable ; le clic droit propose Delete (efface aussi le fichier du trail). | 95 |
-| `C:getNewTrail()` | Crée un trail par défaut (nom « New Trail », références vides, pathReversed false, prefabs vide, règles par défaut, métadonnées version "1.0"). | 534 |
-| `C:getPrefabFiles()` | Liste les fichiers *.prefab.json du dossier /levels/<niveau>/crawls/ du niveau courant. | 77 |
-| `C:init()` | Initialise l'onglet courant à "paths", aucun trail sélectionné, snapToTerrain = true. | 71 |
-| `C:input(mouseInfo)` | Gestion de la souris : vide pour les trails. | 571 |
-| `C:setCurrentTab(tab)` | Mémorise l'onglet courant de l'éditeur. | 567 |
-| `C:setFields(trail)` | Remplit les buffers ImGui à partir du trail. | 138 |
-| `C:setTrail(trailParam)` | Définit le trail en cours d'édition. | 559 |
+| `C:clearSelection()` | Does nothing (no selection to clear for trails). | 563 |
+| `C:draw(mouseInfo)` | Draws the zone sphere (translucent green) and the icon (red) of the starting position referenced by the trail, with labels. | 577 |
+| `C:drawTrailDetail(trail)` | Draws the trail detail panel: Goto buttons (camera to the starting position or the first node of the path) and Test From Start, fields, thumbnail/preview selectors, path/boundary/position references, prefabs, rules. | 150 |
+| `C:drawTrailsList(allTrails, selection)` | Draws the "Add Trail" button and the selectable list; right click offers Delete (also deletes the trail's file). | 95 |
+| `C:getNewTrail()` | Creates a default trail (name "New Trail", empty references, pathReversed false, empty prefabs, default rules, metadata version "1.0"). | 534 |
+| `C:getPrefabFiles()` | Lists the *.prefab.json files of the /levels/<level>/crawls/ folder of the current level. | 77 |
+| `C:init()` | Initializes the current tab to "paths", no trail selected, snapToTerrain = true. | 71 |
+| `C:input(mouseInfo)` | Mouse handling: empty for trails. | 571 |
+| `C:setCurrentTab(tab)` | Stores the editor's current tab. | 567 |
+| `C:setFields(trail)` | Fills the ImGui buffers from the trail. | 138 |
+| `C:setTrail(trailParam)` | Sets the trail being edited. | 559 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`, `removeFile`
 - `be:` `getPlayerVehicle`
 - `debugDrawer:` `drawSphere`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/crawlEditor/trails.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/crawlEditor/trails.lua`.*

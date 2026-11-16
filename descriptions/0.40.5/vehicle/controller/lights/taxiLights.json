@@ -1,9 +1,9 @@
 {
   "path": "lua/vehicle/controller/lights/taxiLights.lua",
-  "module": "Contrôleur auxiliaire pour l'enseigne de taxi (type \"auxiliary\"). Il mémorise un état parmi available, occupied, reserved, offDuty (défaut), driverDistress et expose chaque état comme une valeur electrics nommée \"<nomContrôleur>_<état>\" valant 1 pour l'état actif et 0 pour les autres.",
+  "module": "Auxiliary controller for the taxi sign (type \"auxiliary\"). It stores a state among available, occupied, reserved, offDuty (default), driverDistress and exposes each state as an electrics value named \"<controllerName>_<state>\" equal to 1 for the active state and 0 for the others.",
   "notes": [
-    "Aucune clé jbeam n'est lue. Les noms electrics dépendent du nom du contrôleur (M.name).",
-    "setTaxiState ne valide pas l'état passé : une valeur inconnue éteint toutes les sorties."
+    "No jbeam key is read. The electrics names depend on the controller name (M.name).",
+    "setTaxiState does not validate the state passed: an unknown value turns off all outputs."
   ],
   "fields": {
     "type": {
@@ -13,74 +13,74 @@
   },
   "functions": {
     "init": {
-      "desc": "Initialise l'état offDuty et les noms d'electrics.",
+      "desc": "Initializes the offDuty state and the electrics names.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Remet l'état offDuty.",
+      "desc": "Resets to the offDuty state.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Écrit les valeurs electrics 0/1 de chaque état.",
+      "desc": "Writes the 0/1 electrics values of each state.",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "setTaxiState": {
-      "desc": "Change l'état de l'enseigne.",
+      "desc": "Changes the sign's state.",
       "params": {
         "state": {
           "type": "string",
-          "desc": "\"available\", \"occupied\", \"reserved\", \"offDuty\" ou \"driverDistress\"."
+          "desc": "\"available\", \"occupied\", \"reserved\", \"offDuty\" or \"driverDistress\"."
         }
       },
       "returns": []
     },
     "getTaxiState": {
-      "desc": "Renvoie l'état courant.",
+      "desc": "Returns the current state.",
       "params": {},
       "returns": [
         {
           "type": "string",
-          "desc": "État de l'enseigne."
+          "desc": "Sign state."
         }
       ]
     },
     "getState": {
-      "desc": "Renvoie l'état pour la sauvegarde.",
+      "desc": "Returns the state for saving.",
       "params": {},
       "returns": [
         {
           "type": "table",
-          "desc": "Table d'état (réutilisée)."
+          "desc": "State table (reused)."
         }
       ]
     },
     "setState": {
-      "desc": "Restaure l'état renvoyé par getState (si valide).",
+      "desc": "Restores the state returned by getState (if valid).",
       "params": {
         "data": {
           "type": "table|nil",
-          "desc": "Table d'état."
+          "desc": "State table."
         }
       },
       "returns": []

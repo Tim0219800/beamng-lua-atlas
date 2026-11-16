@@ -2,56 +2,56 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/cameraModes/chase.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Instance du mode 'chase' pour un véhicule. Champs principaux : defaultRotation, camRot, distance, defaultDistance, camMinDist, camDist, mode, fov, offset, refNodes {ref,left,back}, forwardLooking, rollSmoothing, collision.
+--- Instance of the 'chase' mode for a vehicle. Main fields: defaultRotation, camRot, distance, defaultDistance, camMinDist, camDist, mode, fov, offset, refNodes {ref,left,back}, forwardLooking, rollSmoothing, collision.
 ---@class core_cameraModes_chase
 local core_cameraModes_chase = {}
 
---- Initialise les lisseurs, l'état de suivi, le module de collision et applique la configuration, les réglages et un reset. Appelé par le constructeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/chase.lua:13
+--- Initializes the smoothers, the follow state, the collision module and applies the configuration, the settings and a reset. Called by the constructor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/chase.lua:13
 function core_cameraModes_chase:init() end
 
---- Renvoie la liste des réglages ajustables pour l'UI de contrôle de caméra / flux vidéo : uniquement le FOV (10 à 140 degrés, pas 1, défaut 65) car la distance est recalculée à chaque frame.
----Source : lua/ge/extensions/core/cameraModes/chase.lua:62
----@return table  Liste de descripteurs {key='fov', icon, title, kind='range', type='int', value, default, min, max, step, unit}
+--- Returns the list of adjustable settings for the camera control UI / video stream: only the FOV (10 to 140 degrees, step 1, default 65) since the distance is recomputed every frame.
+---Source: lua/ge/extensions/core/cameraModes/chase.lua:62
+---@return table  List of descriptors {key='fov', icon, title, kind='range', type='int', value, default, min, max, step, unit}
 function core_cameraModes_chase:listParams() end
 
---- Hook appelé quand la souris est verrouillée ou libérée : à la libération, remet à zéro l'entrée relative accumulée (relYaw, relPitch).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/chase.lua:261
----@param locked boolean true si la souris est verrouillée
+--- Hook called when the mouse is locked or released: on release, resets the accumulated relative input (relYaw, relPitch).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/chase.lua:261
+---@param locked boolean true if the mouse is locked
 function core_cameraModes_chase:mouseLocked(locked) end
 
---- Relit les réglages (cameraOrbitRelaxation, cameraChaseRollSmoothing), prévient le module de collision et fait un reset. Appelé quand les réglages changent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/chase.lua:54
+--- Re-reads the settings (cameraOrbitRelaxation, cameraChaseRollSmoothing), notifies the collision module and does a reset. Called when settings change.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/chase.lua:54
 function core_cameraModes_chase:onSettingsChanged() end
 
---- Applique la configuration jbeam de la caméra : defaultRotation (y inversé, défaut (0,-17,0)), distances, mode ('ref' par défaut), FOV (65 par défaut), offset. Appelé à la création et quand les données jbeam du véhicule changent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/chase.lua:35
+--- Applies the camera's jbeam configuration: defaultRotation (y inverted, default (0,-17,0)), distances, mode ('ref' by default), FOV (65 by default), offset. Called on creation and when the vehicle's jbeam data changes.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/chase.lua:35
 function core_cameraModes_chase:onVehicleCameraConfigChanged() end
 
---- Remet la caméra derrière le véhicule (rotation par défaut, x à 0, regard vers l'avant) et force un recalage au prochain frame.
----Source : lua/ge/extensions/core/cameraModes/chase.lua:72
+--- Puts the camera back behind the vehicle (default rotation, x to 0, looking forward) and forces a realignment on the next frame.
+---Source: lua/ge/extensions/core/cameraModes/chase.lua:72
 function core_cameraModes_chase:reset() end
 
---- Applique un réglage ajustable. Seule la clé 'fov' est gérée.
----Source : lua/ge/extensions/core/cameraModes/chase.lua:68
----@param key string Clé du réglage ('fov')
----@param value number|string Nouvelle valeur (convertie par tonumber)
+--- Applies an adjustable setting. Only the 'fov' key is handled.
+---Source: lua/ge/extensions/core/cameraModes/chase.lua:68
+---@param key string Setting key ('fov')
+---@param value number|string New value (converted by tonumber)
 function core_cameraModes_chase:setParam(key, value) end
 
---- Mémorise les noeuds de référence du véhicule (centre, gauche, arrière), appelé par camera.lua à la création de la caméra.
----Source : lua/ge/extensions/core/cameraModes/chase.lua:254
----@param centerNodeID integer Noeud central (ref)
----@param leftNodeID integer Noeud à gauche
----@param backNodeID integer Noeud à l'arrière
+--- Stores the vehicle's reference nodes (center, left, rear), called by camera.lua when the camera is created.
+---Source: lua/ge/extensions/core/cameraModes/chase.lua:254
+---@param centerNodeID integer Center node (ref)
+---@param leftNodeID integer Left node
+---@param backNodeID integer Rear node
 function core_cameraModes_chase:setRefNodes(centerNodeID, leftNodeID, backNodeID) end
 
---- Calcul par frame, appelé par cameraUpdate quand ce mode est la caméra focalisée : lit les entrées MoveManager, calcule la direction et le haut du véhicule depuis les noeuds de référence, positionne la caméra derrière la cible (lissage de rotation et de distance) et écrit data.res.pos, rot, fov, targetPos, puis applique la collision.
----Source : lua/ge/extensions/core/cameraModes/chase.lua:82
----@param data table Données de frame : veh, pos, dt, res {pos, rot, fov, targetPos...}
----@return boolean  true si le résultat est valide, false si les noeuds de référence sont dégénérés
+--- Per-frame computation, called by cameraUpdate when this mode is the focused camera: reads the MoveManager inputs, computes the vehicle's direction and up from the reference nodes, positions the camera behind the target (rotation and distance smoothing) and writes data.res.pos, rot, fov, targetPos, then applies collision.
+---Source: lua/ge/extensions/core/cameraModes/chase.lua:82
+---@param data table Frame data: veh, pos, dt, res {pos, rot, fov, targetPos...}
+---@return boolean  true if the result is valid, false if the reference nodes are degenerate
 function core_cameraModes_chase:update(data) end
 

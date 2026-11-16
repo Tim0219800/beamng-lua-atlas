@@ -2,75 +2,75 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/markers/zoneMarker.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Marqueur de zone sans visuel : rend un POI interactif quand le véhicule du joueur (ses quatre coins au sol de la boîte englobante) est entièrement dans l'un des polygones de zone donnés. Aucune icône ni décalque n'est dessiné. Le module renvoie {create, cluster} ; chaque POI zoneMarker forme son propre cluster.
---- Accès : extension `gameplay_markers_zoneMarker` : `extensions.load("gameplay_markers_zoneMarker")`, puis la globale `gameplay_markers_zoneMarker`
+--- Zone marker without visual: makes a POI interactive when the player's vehicle (the four ground corners of its bounding box) is entirely inside one of the given zone polygons. No icon or decal is drawn. The module returns {create, cluster}; each zoneMarker POI forms its own cluster.
+--- Access: extension `gameplay_markers_zoneMarker`: `extensions.load("gameplay_markers_zoneMarker")`, then the global `gameplay_markers_zoneMarker`
 ---@class gameplay_markers_zoneMarker
 gameplay_markers_zoneMarker = {}
 
---- Transforme chaque POI zoneMarker en un cluster distinct (pas de fusion) et l'ajoute à allClusters.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/markers/zoneMarker.lua:57
----@param pois table[] POI avec markerInfo.zoneMarker {zones, pos, radius}.
----@param allClusters table[] Liste de clusters complétée en place.
+--- Turns each zoneMarker POI into a distinct cluster (no merging) and adds it to allClusters.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/markers/zoneMarker.lua:57
+---@param pois table[] POIs with markerInfo.zoneMarker {zones, pos, radius}.
+---@param allClusters table[] List of clusters completed in place.
 function gameplay_markers_zoneMarker.cluster(pois, allClusters) end
 
---- Fabrique un marqueur de zone (instance de C).
----Source : lua/ge/extensions/gameplay/markers/zoneMarker.lua:48
----@param ... any Arguments transmis à C:init (non utilisés).
----@return table  Instance de marqueur.
+--- Builds a zone marker (instance of C).
+---Source: lua/ge/extensions/gameplay/markers/zoneMarker.lua:48
+---@param ... any Arguments passed to C:init (unused).
+---@return table  Marker instance.
 function gameplay_markers_zoneMarker.create(...) end
 
---- Marqueur de zone sans rendu.
+--- Zone marker without rendering.
 ---@class gameplay_markers_zoneMarker_C
 local gameplay_markers_zoneMarker_C = {}
 
---- Ne fait rien.
----Source : lua/ge/extensions/gameplay/markers/zoneMarker.lua:24
+--- Does nothing.
+---Source: lua/ge/extensions/gameplay/markers/zoneMarker.lua:24
 function gameplay_markers_zoneMarker_C:clearObjects() end
 
---- Ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/markers/zoneMarker.lua:20
+--- Does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/markers/zoneMarker.lua:20
 function gameplay_markers_zoneMarker_C:createObjects() end
 
---- Ne fait rien.
----Source : lua/ge/extensions/gameplay/markers/zoneMarker.lua:21
+--- Does nothing.
+---Source: lua/ge/extensions/gameplay/markers/zoneMarker.lua:21
 function gameplay_markers_zoneMarker_C:hide() end
 
---- Ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/markers/zoneMarker.lua:7
+--- Does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/markers/zoneMarker.lua:7
 function gameplay_markers_zoneMarker_C:init() end
 
---- Ne fait rien.
----Source : lua/ge/extensions/gameplay/markers/zoneMarker.lua:23
----@param visible boolean Ignoré.
+--- Does nothing.
+---Source: lua/ge/extensions/gameplay/markers/zoneMarker.lua:23
+---@param visible boolean Ignored.
 function gameplay_markers_zoneMarker_C:instantFade(visible) end
 
---- Ajoute les données (elemData) du cluster aux éléments interactifs si le véhicule est entièrement dans une zone et que canInteract est vrai ; sans effet à pied.
----Source : lua/ge/extensions/gameplay/markers/zoneMarker.lua:27
----@param interactData table Données de frame : isWalking, vehPos2d, bbPoints, canInteract.
----@param interactableElements table[] Liste complétée en place.
+--- Adds the cluster's data (elemData) to the interactive elements if the vehicle is entirely in a zone and canInteract is true; no effect on foot.
+---Source: lua/ge/extensions/gameplay/markers/zoneMarker.lua:27
+---@param interactData table Frame data: isWalking, vehPos2d, bbPoints, canInteract.
+---@param interactableElements table[] List completed in place.
 function gameplay_markers_zoneMarker_C:interactInPlayMode(interactData, interactableElements) end
 
---- Ne fait rien.
----Source : lua/ge/extensions/gameplay/markers/zoneMarker.lua:19
----@param value boolean Ignoré.
+--- Does nothing.
+---Source: lua/ge/extensions/gameplay/markers/zoneMarker.lua:19
+---@param value boolean Ignored.
 function gameplay_markers_zoneMarker_C:setHidden(value) end
 
---- Mémorise zones, cluster, centre 2D (visibilityPos avec z = 0) et rayon (visibilityRadius).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/markers/zoneMarker.lua:12
----@param cluster table Cluster issu de cluster().
+--- Stores zones, cluster, 2D center (visibilityPos with z = 0) and radius (visibilityRadius).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/markers/zoneMarker.lua:12
+---@param cluster table Cluster from cluster().
 function gameplay_markers_zoneMarker_C:setup(cluster) end
 
---- Ne fait rien.
----Source : lua/ge/extensions/gameplay/markers/zoneMarker.lua:22
+--- Does nothing.
+---Source: lua/ge/extensions/gameplay/markers/zoneMarker.lua:22
 function gameplay_markers_zoneMarker_C:show() end
 
---- Ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/markers/zoneMarker.lua:9
----@param data table Ignoré.
+--- Does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/markers/zoneMarker.lua:9
+---@param data table Ignored.
 function gameplay_markers_zoneMarker_C:update(data) end
 

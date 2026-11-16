@@ -1,48 +1,82 @@
 {
   "path": "lua/ge/extensions/editor/dynamicDecals/notification.lua",
-  "module": "Fenêtre de notifications de l'outil Dynamic Decals (« Dynamic Decals - Notifications »). Les autres modules appellent add(section, titre, message, niveau) ; les messages sont regroupés par section dans des en-têtes repliables, colorés selon le niveau (log blanc, warning jaune, error rouge), supprimables un par un ou tous ensemble. La fenêtre s'ouvre toute seule à l'ajout d'un message et se ferme quand la liste est vide.",
+  "module": "Notification window of the Dynamic Decals tool (\"Dynamic Decals - Notifications\"). Other modules call add(section, title, message, level); messages are grouped by section in collapsible headers, colored by level (log white, warning yellow, error red), deletable one by one or all together. The window opens by itself when a message is added and closes when the list is empty.",
   "usage": "local n = extensions.editor_dynamicDecals_notification\nn.add(\"Load/Save\", \"Titre\", \"Message\", n.levels.warning)",
   "notes": [
-    "`msg` peut être une chaîne ou une fonction (appelée dans la fenêtre pour dessiner un contenu ImGui personnalisé).",
-    "Si le niveau n'est pas fourni, levels.log est utilisé. Un message de type fonction n'utilise pas la couleur de niveau.",
-    "Si `msg` est ni chaîne ni fonction, rien n'est affiché pour cette entrée (seul le bouton de suppression apparaît)."
+    "`msg` can be a string or a function (called in the window to draw custom ImGui content).",
+    "If the level is not provided, levels.log is used. A function-type message does not use the level color.",
+    "If `msg` is neither a string nor a function, nothing is displayed for this entry (only the delete button appears)."
   ],
   "fields": {
-    "levels": {"type": "table<string, integer>", "desc": "Niveaux de gravité : log = 1, warning = 2, error = 3."}
+    "levels": {
+      "type": "table<string, integer>",
+      "desc": "Severity levels: log = 1, warning = 2, error = 3."
+    }
   },
   "functions": {
     "add": {
-      "desc": "Ajoute une notification dans la section donnée et marque la fenêtre à ouvrir à la prochaine frame.",
+      "desc": "Adds a notification in the given section and flags the window to open on the next frame.",
       "params": {
-        "section": {"type": "string", "desc": "Nom de la section (clé de regroupement)."},
-        "title": {"type": "string", "desc": "Titre affiché devant le message."},
-        "msg": {"type": "string|function", "desc": "Texte, ou fonction qui dessine le contenu."},
-        "level": {"type": "integer|nil", "desc": "Une valeur de levels ; défaut levels.log."}
+        "section": {
+          "type": "string",
+          "desc": "Section name (grouping key)."
+        },
+        "title": {
+          "type": "string",
+          "desc": "Title displayed before the message."
+        },
+        "msg": {
+          "type": "string|function",
+          "desc": "Text, or function that draws the content."
+        },
+        "level": {
+          "type": "integer|nil",
+          "desc": "A value of levels; default levels.log."
+        }
       },
       "returns": [],
       "internal": false
     },
     "onGui": {
-      "desc": "Dessine la fenêtre de notifications. Enregistré auprès de l'outil via tool.registerOnEditorGuiFn et appelé à chaque frame d'interface de l'éditeur.",
+      "desc": "Draws the notification window. Registered with the tool via tool.registerOnEditorGuiFn and called every editor UI frame.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "registerEditorPreferences": {
-      "desc": "Ne déclare aucune préférence (corps commenté).",
-      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "desc": "Declares no preference (body commented out).",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Editor preferences registry."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "editorPreferenceValueChanged": {
-      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
-      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "desc": "Hook called when a preference changes. Does nothing here.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "Preference path."
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setup": {
-      "desc": "Appelé par l'outil : enregistre onGui et déclare la fenêtre éditeur (450x650).",
-      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "desc": "Called by the tool: registers onGui and declares the editor window (450x650).",
+      "params": {
+        "tool_in": {
+          "type": "table",
+          "desc": "Reference to the editor_dynamicDecalsTool tool."
+        }
+      },
       "returns": [],
       "internal": true
     }

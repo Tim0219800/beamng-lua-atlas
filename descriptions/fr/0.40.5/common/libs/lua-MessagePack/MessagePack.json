@@ -1,0 +1,60 @@
+{
+  "path": "lua/common/libs/lua-MessagePack/MessagePack.lua",
+  "module": "lua-MessagePack (François Perrad, licence MIT, version de base 0.5.1, adaptée par BeamNG en 2022) : sérialisation binaire MessagePack. Cette version utilise string.buffer de LuaJIT et un tampon de travail partagé ; elle sait aussi sérialiser les vec3 et quat (cdata). Un moddeur s'en sert pour encoder/décoder des tables Lua en chaînes binaires compactes (échange réseau, fichiers).",
+  "usage": "local mp = require('libs/lua-MessagePack/MessagePack')\nlocal bin = mp.pack({a = 1, b = {1, 2, 3}})\nlocal data = mp.unpack(bin)",
+  "notes": [
+    "Tous les nombres sont écrits en double (0xCB), jamais en entier compact. À la lecture, les entiers MessagePack sont convertis en nombres Lua.",
+    "Une chaîne Lua est écrite comme binaire (bin8/16/32), pas comme str MessagePack ; à la lecture, str et bin deviennent tous deux des chaînes Lua.",
+    "Mode de tableau par défaut : 'without_hole' (appelé à la fin du fichier) : une table est écrite comme tableau si ses clés sont 1..n sans trou, sinon comme map. Changer avec set_array.",
+    "Les vec3 sont écrits en map {x,y,z} et les quat en map {x,y,z,w} ; tout autre cdata est écrit comme la chaîne '?'.",
+    "packWorkBuffer et packPrefixWorkBuffer renvoient le tampon interne partagé (bufTmp) : son contenu est écrasé à l'appel de pack suivant ; le consommer immédiatement.",
+    "Les types non gérés (function, thread) lèvent l'erreur \"pack '<type>' is unimplemented\".",
+    "Les types d'extension (ext) : build_ext renvoie nil par défaut, donc les valeurs ext lues deviennent nil sauf si build_ext est remplacée."
+  ],
+  "functions": {
+    "pack": {
+      "desc": "Sérialise une valeur Lua en chaîne MessagePack.",
+      "params": {"data": {"type": "any", "desc": "nil, boolean, number, string, table, vec3, quat, string.buffer."}},
+      "returns": [{"type": "string", "desc": "Données binaires."}]
+    },
+    "packWorkBuffer": {
+      "desc": "Comme pack, mais renvoie le tampon de travail partagé sans le convertir en chaîne (évite une copie).",
+      "params": {"data": {"type": "any", "desc": "Valeur à sérialiser."}},
+      "returns": [{"type": "userdata", "desc": "string.buffer interne, réutilisé à chaque appel."}]
+    },
+    "packPrefix": {
+      "desc": "Sérialise data précédé de la chaîne prefix.",
+      "params": {"prefix": {"type": "string", "desc": "Octets à écrire avant les données."}, "data": {"type": "any", "desc": "Valeur."}},
+      "returns": [{"type": "string", "desc": "prefix suivi des données."}]
+    },
+    "packPrefixWorkBuffer": {
+      "desc": "Comme packPrefix, mais renvoie le tampon de travail partagé.",
+      "params": {"prefix": {"type": "string", "desc": "Préfixe."}, "data": {"type": "any", "desc": "Valeur."}},
+      "returns": [{"type": "userdata", "desc": "string.buffer interne."}]
+    },
+    "set_array": {
+      "desc": "Choisit comment les tables Lua sont sérialisées : 'without_hole' (tableau si indices consécutifs sans trou, sinon map), 'with_hole' (tableau jusqu'à l'indice max si toutes les clés sont des nombres positifs), 'always_as_map' (toujours une map). Toute autre valeur lève une erreur.",
+      "params": {"array": {"type": "string", "desc": "'without_hole', 'with_hole' ou 'always_as_map'."}}
+    },
+    "unpack": {
+      "desc": "Désérialise une chaîne contenant exactement une valeur MessagePack. Lève une erreur 'missing bytes' si elle est tronquée et 'extra bytes' s'il reste des octets.",
+      "params": {"s": {"type": "string", "desc": "Données."}},
+      "returns": [{"type": "any", "desc": "Valeur décodée."}]
+    },
+    "unpack_cursor": {
+      "desc": "Décode la valeur suivante à partir d'un curseur {s, i, j, underflow}, en avançant c.i.",
+      "params": {"c": {"type": "table", "desc": "Curseur sur la chaîne source."}},
+      "returns": [{"type": "any", "desc": "Valeur décodée."}]
+    },
+    "unpacker": {
+      "desc": "Renvoie un itérateur qui décode successivement plusieurs valeurs : depuis une chaîne (renvoie la position et la valeur) ou depuis une fonction fournissant des morceaux de données (renvoie true et la valeur).",
+      "params": {"src": {"type": "string|function", "desc": "Chaîne, ou fonction renvoyant le morceau suivant (ou nil)."}},
+      "returns": [{"type": "function", "desc": "Itérateur."}]
+    },
+    "build_ext": {
+      "desc": "Crochet appelé pour chaque valeur d'extension lue ; l'implémentation par défaut renvoie nil. À remplacer pour décoder vos types d'extension.",
+      "params": {"tag": {"type": "integer", "desc": "Numéro d'extension."}, "data": {"type": "string", "desc": "Octets de l'extension."}},
+      "returns": [{"type": "any", "desc": "Valeur construite."}]
+    }
+  }
+}

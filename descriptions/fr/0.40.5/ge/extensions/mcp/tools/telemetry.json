@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/mcp/tools/telemetry.lua",
+  "module": "Outils MCP de télémétrie véhicule : valeurs électriques (régime, vitesse, rapport, carburant…), résumé de dommages, et instantané d'état global côté GE.",
+  "notes": [
+    "get_electrics est asynchrone (VM véhicule -> callback `_cb.electrics` -> shared.asyncResults.electrics) : l'appel renvoie le résultat de la demande précédente.",
+    "Sans `keys`, seules les valeurs scalaires (number, string, boolean) de electrics.values sont renvoyées.",
+    "get_status n'inclut pas rpm/gear/IA (VM véhicule) : utiliser get_electrics et get_ai."
+  ],
+  "fields": {
+    "schemas": {"type": "table<string, table>", "desc": "Schémas des outils de télémétrie."},
+    "cb": {"type": "table<string, function>", "desc": "Callback `electrics(vid, json)` : stocke le JSON dans shared.asyncResults.electrics."}
+  },
+  "functions": {
+    "get_electrics": {
+      "desc": "Récupère electrics.values d'un véhicule (asynchrone).",
+      "params": {"args": {"type": "table|nil", "desc": "{keys?: string[], id?: integer}"}},
+      "returns": [{"type": "string", "desc": "JSON précédent ou message « requested (async) »."}, {"type": "boolean", "desc": "true si le véhicule n'existe pas."}],
+      "internal": false
+    },
+    "get_vehicle_damage": {
+      "desc": "Résumé de dommages : id et damageSum (veh:getSectionDamageSum()).",
+      "params": {"args": {"type": "table|nil", "desc": "{id?: integer}"}},
+      "returns": [{"type": "string", "desc": "JSON."}, {"type": "boolean", "desc": "true si le véhicule n'existe pas."}],
+      "internal": false
+    },
+    "get_status": {
+      "desc": "Instantané : sim {physicsRunning, timeScale}, vehicleCount, level, camera {mode, pos}, vehicle joueur {id, jbeam, configKey, pos, speed (m/s), damage}.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "JSON."}, {"type": "boolean", "desc": "false."}],
+      "internal": false
+    }
+  }
+}

@@ -1,5 +1,7 @@
 # Procédure : passer l'atlas à une nouvelle version du jeu (prévue pour la 0.41)
 
+*[English version: NEW_VERSION.md](NEW_VERSION.md)*
+
 Exemple avec `0.40.5` → `0.41.0`. Remplacer par le vrai numéro (celui affiché par le jeu, sans le dernier `.0` : `0.41.0.0` → `0.41.0`).
 Toutes les commandes se lancent depuis la racine du dépôt.
 
@@ -29,7 +31,7 @@ Si `errors` n'est pas vide, un nouveau motif de code a échappé au tokenizer : 
 python -I outils/comparer.py 0.40.5 0.41.0
 ```
 
-Produit `donnees/0.41.0/diff-0.40.5.json` (lu par le vérificateur de mods) et `doc/0.41.0/changements.md`.
+Produit `donnees/0.41.0/diff-0.40.5.json` (lu par le vérificateur de mods), `doc/0.41.0/changements.md` (anglais) et `doc/fr/0.41.0/changements.md` (français).
 Relire le résumé affiché : un très grand nombre de modules retirés + ajoutés signale un changement d'arborescence
 (les déplacements ne sont reconnus que si le nom d'accès est identique).
 
@@ -39,7 +41,7 @@ Relire le résumé affiché : un très grand nombre de modules retirés + ajout�
 python -I outils/reporter_descriptions.py 0.40.5 0.41.0
 ```
 
-- copie les descriptions, suit les modules déplacés, retire les fonctions disparues ;
+- copie les descriptions des deux langues (`descriptions/0.40.5/` en anglais, `descriptions/fr/0.40.5/` en français), suit les modules déplacés, retire les fonctions disparues ;
 - marque `"aVerifier"` les fonctions dont les paramètres ont changé (affichées « ⚠ À revérifier » dans la doc) ;
 - écrit `donnees/0.41.0/lots_nouveaux.json` : modules nouveaux ou modifiés, en lots de 30.
 
@@ -49,15 +51,20 @@ Pour chaque lot de `lots_nouveaux.json`, faire rédiger selon `CONSIGNES_DESCRIP
 - si le fichier de description existe déjà : **le compléter** (fonctions ajoutées) au lieu de le sauter ;
 - pour chaque fonction marquée `aVerifier` : relire le code, corriger la description et les paramètres, puis **supprimer** le champ `aVerifier`.
 
-Contrôle : `grep -rl aVerifier descriptions/0.41.0` doit finir vide.
+Les descriptions existent en deux langues : l'anglais (`descriptions/0.41.0/`, langue principale) et le français
+(`descriptions/fr/0.41.0/`). Rédiger dans l'une, puis traduire dans l'autre en gardant exactement la même structure JSON
+(mêmes clés, mêmes types ; seuls les textes changent).
+
+Contrôle : `grep -rl aVerifier descriptions/0.41.0 descriptions/fr/0.41.0` doit finir vide.
 
 ## 6. Génération
 
 ```
-python -I outils/generer.py 0.41.0
+python -I outils/generer.py 0.41.0              # anglais : stubs/0.41.0/ et doc/0.41.0/
+python -I outils/generer.py 0.41.0 --lang fr    # français : stubs/fr/0.41.0/ et doc/fr/0.41.0/
 ```
 
-Recrée `stubs/0.41.0/` et `doc/0.41.0/` (avec `changements.md`, lié depuis l'index).
+Recrée les stubs et la doc (avec `changements.md`, lié depuis l'index). `stubs/fr/` n'est pas suivi par git : il sert seulement au zip de release.
 
 ## 7. Site, README, changelog
 
@@ -65,14 +72,14 @@ Recrée `stubs/0.41.0/` et `doc/0.41.0/` (avec `changements.md`, lié depuis l'i
   ```yaml
     - 0.41.0:
         - Index: 0.41.0/index.md
-        - Changements depuis 0.40.5: 0.41.0/changements.md
+        - Changes since 0.40.5: 0.41.0/changements.md
         - Hooks: 0.41.0/hooks.md
         - C++ objects: 0.41.0/cpp.md
   ```
-  Garder 0.40.5 dans la nav : les moddeurs qui n'ont pas mis à jour en ont encore besoin.
+  et la même chose sous `Français` avec les chemins `fr/0.41.0/...`. Garder 0.40.5 dans la nav : les moddeurs qui n'ont pas mis à jour en ont encore besoin.
 - `README.md` / `README.fr.md` : version couverte, chemins `stubs/0.41.0/...` dans l'exemple `.luarc.json`, tableau de couverture.
 - `CHANGELOG.md` : nouvelle entrée `0.41.0-1` avec le résumé du diff (nombre de ruptures, nouveaux modules notables).
-- `doc/index.md` : lien vers la nouvelle version et vers la page des changements.
+- `doc/index.md` et `doc/fr/index.md` : lien vers la nouvelle version et vers la page des changements.
 
 ## 8. Vérifier les mods installés
 
@@ -89,7 +96,7 @@ Si un mod pose problème en jeu sans qu'on sache lequel : `python -I outils/biss
 python -I outils/empaqueter.py 0.41.0
 git add -A && git commit -m "Atlas 0.41.0"
 git push
-gh release create v0.41.0-1 dist/stubs-0.41.0.zip dist/donnees-0.41.0.zip --title "0.41.0-1" --notes-file <notes>
+gh release create v0.41.0-1 dist/stubs-0.41.0.zip dist/stubs-0.41.0-fr.zip dist/donnees-0.41.0.zip --title "0.41.0-1" --notes-file <notes>
 ```
 
 Le site se redéploie tout seul (workflow `Pages`).

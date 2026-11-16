@@ -1,43 +1,43 @@
 # `editor_dynamicDecals_debugTextures`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/debugTextures.lua` · VM : Game Engine (GE) · 63 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/debugTextures.lua` · VM: Game Engine (GE) · 63 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_debugTextures` : `extensions.load("editor_dynamicDecals_debugTextures")`, puis la globale `editor_dynamicDecals_debugTextures`
+**Access:** extension `editor_dynamicDecals_debugTextures`: `extensions.load("editor_dynamicDecals_debugTextures")`, then the global `editor_dynamicDecals_debugTextures`
 
-Section de debug « Debug Textures » de l'outil Dynamic Decals. Affiche, dans des en-têtes repliables, les textures internes de l'API editor_api_dynamicDecals : dynamiques, baked, highlight, decal (entrée des brosses) et masques. La largeur maximale des aperçus vient de la préférence `dynamicDecalsTool.debugTextures.maxImageWidgetWidth` (défaut 512).
+"Debug Textures" debug section of the Dynamic Decals tool. Shows, in collapsible headers, the internal textures of the editor_api_dynamicDecals API: dynamic, baked, highlight, decal (brush input) and masks. The maximum width of the previews comes from the preference `dynamicDecalsTool.debugTextures.maxImageWidgetWidth` (default 512).
 
-## Remarques
+## Notes
 
-- La variable textureSet n'est jamais renseignée (son affectation est commentée), donc l'en-tête « Combined Textures » n'apparaît jamais.
+- The variable textureSet is never set (its assignment is commented out), so the "Combined Textures" header never appears.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_debugTextures.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 48 |
-| `editor_dynamicDecals_debugTextures.registerEditorPreferences(prefsRegistry)` | Enregistre la préférence float `dynamicDecalsTool.debugTextures.maxImageWidgetWidth` (défaut 512). *(interne)* | 42 |
-| `editor_dynamicDecals_debugTextures.setup(tool_in)` | Appelé par l'outil : récupère l'API et enregistre la section « Debug Textures » (ordre 1130). *(interne)* | 52 |
+| `editor_dynamicDecals_debugTextures.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 48 |
+| `editor_dynamicDecals_debugTextures.registerEditorPreferences(prefsRegistry)` | Registers the float preference `dynamicDecalsTool.debugTextures.maxImageWidgetWidth` (default 512). *(internal)* | 42 |
+| `editor_dynamicDecals_debugTextures.setup(tool_in)` | Called by the tool: gets the API and registers the "Debug Textures" section (order 1130). *(internal)* | 52 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_debugTextures.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_debugTextures.registerEditorPreferences(prefsRegistry)`
 
-Enregistre la préférence float `dynamicDecalsTool.debugTextures.maxImageWidgetWidth` (défaut 512).
+Registers the float preference `dynamicDecalsTool.debugTextures.maxImageWidgetWidth` (default 512).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_debugTextures.setup(tool_in)`
 
-Appelé par l'outil : récupère l'API et enregistre la section « Debug Textures » (ordre 1130).
+Called by the tool: gets the API and registers the "Debug Textures" section (order 1130).
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/debugTextures.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/debugTextures.lua`.*

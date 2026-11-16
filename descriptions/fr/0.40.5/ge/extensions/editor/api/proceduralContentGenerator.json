@@ -1,0 +1,115 @@
+{
+  "path": "lua/ge/extensions/editor/api/proceduralContentGenerator.lua",
+  "module": "Générateur de contenu procédural (PCG) pour l'éditeur : on construit un graphe de nœuds (générateurs de points, transformations, spawners) puis on l'exécute pour créer des objets dans le niveau (TSStatic, prefabs, objets d'une classe quelconque, DecalRoad). Les données circulant entre nœuds sont des « points » (pos, rot, scale, bounds, color, spawnRandomness) ou des « segments » (routes). Les graphes nommés sont mis en cache ; chaque graphe retient les ids des objets qu'il a créés pour les supprimer à la ré-exécution. L'API est exposée en M.* et, après initialize(editor), en editor.pcg et editor.proceduralContentGenerator.",
+  "usage": "local pcg = extensions.editor_api_proceduralContentGenerator\nlocal g = pcg.graph('arbres', {seed = 42})\ng:scatterDisk({center = vec3(0,0,0), radius = 50, count = 30})\n  :snapTerrain({offset = 0})\n  :randomTransform({yaw = {0, 360}, scale = {0.8, 1.2}})\n  :spawnStatic({paths = {'/art/shapes/trees/tree1.dae'}, group = 'PCG_Arbres'})\ng:run()",
+  "notes": [
+    "Types de nœuds (table nodes / M.nodes) : scatterBox, scatterGrid, scatterDisk, scatterAlongSpline, fromPoints, fromSegments (générateurs) ; randomTransform, setSpawnRandomness, snapTerrain, offset, filterBounds (transformations) ; spawnStatic, spawnPrefab, spawnClass, spawnDecalRoads (spawners).",
+    "Chaque paramètre de nœud peut être donné dans params ou arriver par un pin connecté (resolvePin : lien entrant prioritaire sur params).",
+    "Le générateur aléatoire est un LCG déterministe (graine = opts.seed de run, sinon graph.seed, défaut 1) : même graine, même résultat.",
+    "Graph:run(opts) : opts.replace ~= false (défaut) supprime d'abord les objets créés précédemment et vide les SimGroup suivis (spawnGroups) : tout le contenu du groupe, même ajouté à la main, est supprimé. Les nœuds sont exécutés en ordre topologique ; un cycle est journalisé (log E 'pcg') et les nœuds du cycle ne sont pas exécutés.",
+    "Les spawners créent les objets dans un SimGroup (défaut 'PCG_Generated', créé sous MissionGroup si absent).",
+    "Pour fromSegments, les segments acceptent {nodes = {{pos,width}}}, {path = {pos...}} ou {a, b, width}. spawnDecalRoads ignore les segments de moins de 2 nœuds ; snapTerrain vaut true par défaut, matériau par défaut 'road_asphalt_2lane', largeur 8.",
+    "Pipe:spawnStatic/spawnPrefab/spawnClass/spawnDecalRoads renvoient le Graph (pas un Pipe) : la chaîne s'arrête là.",
+    "Graph:rebuild() vide seulement la liste de nœuds (les objets spawnés restent) ; Graph:fromSegments renvoie un Pipe dont le pin est 'segments'.",
+    "scatterAlongSpline modes : 'equal' (spacing, startOffset), 'count', 'random' (count, minSpacing), 'fixed' (distances) ; alignToTangent vaut true par défaut.",
+    "M.graphs est la table de cache (nom -> Graph) partagée."
+  ],
+  "fields": {
+    "graphs": {"type": "table<string, table>", "desc": "Cache des graphes nommés (nom -> Graph)."},
+    "nodes": {"type": "table<string, function>", "desc": "Fabriques de nœuds par nom (scatterBox, spawnStatic…) ; chacune prend une table params et renvoie un nœud brut."}
+  },
+  "functions": {
+    "initialize": {
+      "desc": "Mémorise l'objet editor et expose l'API (graph, graphs, listGraphs, getGraph, removeGraph, clearAllGraphs, newPoint, nodes) sous editor.pcg et editor.proceduralContentGenerator. Appelé au chargement de l'API de l'éditeur.",
+      "params": {"editorInstance": {"type": "table", "desc": "Objet editor global."}},
+      "returns": [],
+      "internal": true
+    },
+    "newPoint": {
+      "desc": "Crée un point PCG normalisé : pos (vec3, défaut 0), rot (quat, identité), scale (vec3, défaut 1), bounds (vec3, défaut 1), color ({r,g,b,a} défaut blanc), spawnRandomness (0..1, défaut 0). Les vec3/quat peuvent être donnés en tables {x,y,z} ou {1,2,3}; un nombre seul devient un vec3 uniforme.",
+      "params": {"opts": {"type": "table|nil", "desc": "{pos, rot, scale, bounds, color, spawnRandomness}."}},
+      "returns": [{"type": "table", "desc": "Point."}]
+    },
+    "graph": {
+      "desc": "graph('nom') / graph('nom', opts) renvoie un graphe mis en cache (le crée au besoin ; opts.seed met à jour la graine d'un graphe existant). graph(opts) ou graph() crée un graphe anonyme non mis en cache.",
+      "params": {
+        "nameOrOpts": {"type": "string|table|nil", "desc": "Nom du graphe, ou table d'options pour un graphe anonyme."},
+        "opts": {"type": "table|nil", "desc": "{seed = number} (graine par défaut 1)."}
+      },
+      "returns": [{"type": "table", "desc": "Graph."}]
+    },
+    "listGraphs": {
+      "desc": "Liste triée des noms de graphes en cache.",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Noms."}]
+    },
+    "getGraph": {
+      "desc": "Renvoie le graphe en cache de ce nom ou nil.",
+      "params": {"name": {"type": "string", "desc": "Nom du graphe."}},
+      "returns": [{"type": "table|nil", "desc": "Graph."}]
+    },
+    "removeGraph": {
+      "desc": "Retire un graphe du cache. Par défaut supprime aussi les objets de la scène qu'il a créés ; avec false, les oublie sans les supprimer.",
+      "params": {
+        "name": {"type": "string", "desc": "Nom du graphe."},
+        "deleteOwnedObjects": {"type": "boolean|nil", "desc": "Défaut true ; false pour garder les objets."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si le graphe n'existe pas."}]
+    },
+    "clearAllGraphs": {
+      "desc": "Appelle removeGraph sur tous les graphes en cache, avec la même sémantique de deleteOwnedObjects.",
+      "params": {"deleteOwnedObjects": {"type": "boolean|nil", "desc": "Défaut true."}},
+      "returns": []
+    }
+  },
+  "classes": {
+    "Graph": {
+      "desc": "Graphe de nœuds (champs : name, seed, nodes, spawnedIds, spawnGroups). Les méthodes de fabrique renvoient un Pipe pour chaîner.",
+      "functions": {
+        "_addNode": {"desc": "Ajoute un nœud brut au graphe, lui donne un id et renvoie le nœud.", "params": {"node": {"type": "table", "desc": "Nœud."}}, "returns": [{"type": "table", "desc": "Le nœud."}], "internal": true},
+        "connect": {"desc": "Relie la sortie fromPin de fromNode à l'entrée toPin de toNode. Accepte aussi la forme connect(pipe, toNode, toPin).", "params": {"fromNode": {"type": "table", "desc": "Nœud source (ou Pipe)."}, "fromPin": {"type": "string", "desc": "Pin de sortie ('points', 'segments', 'objectIds')."}, "toNode": {"type": "table", "desc": "Nœud cible."}, "toPin": {"type": "string", "desc": "Pin d'entrée."}}, "returns": [{"type": "table", "desc": "Le graphe."}]},
+        "clearSpawned": {"desc": "Supprime les objets créés par le graphe (via editor.deleteObject) et vide les SimGroup suivis par nom.", "params": {}, "returns": [{"type": "table", "desc": "Le graphe."}]},
+        "clear": {"desc": "Alias de clearSpawned.", "params": {}, "returns": [{"type": "table", "desc": "Le graphe."}]},
+        "run": {"desc": "Exécute le graphe en ordre topologique. Par défaut supprime d'abord les objets précédents. Marque l'éditeur modifié.", "params": {"opts": {"type": "table|nil", "desc": "{seed = number, replace = boolean (défaut true)}."}}, "returns": [{"type": "table", "desc": "{spawnedIds = integer[], nodes = integer}."}]},
+        "scatterBox": {"desc": "Nœud générant count points aléatoires dans une boîte. Params : center, extent (défaut 10,10,0), count.", "params": {"params": {"type": "table", "desc": "{center, extent, count}."}}, "returns": [{"type": "table", "desc": "Pipe."}]},
+        "scatterGrid": {"desc": "Nœud générant une grille de points. Params : center, extent, spacing (défaut 2), jitter.", "params": {"params": {"type": "table", "desc": "{center, extent, spacing, jitter}."}}, "returns": [{"type": "table", "desc": "Pipe."}]},
+        "scatterDisk": {"desc": "Nœud générant count points répartis uniformément dans un disque/anneau. Params : center, radius (défaut 10), innerRadius, count.", "params": {"params": {"type": "table", "desc": "{center, radius, innerRadius, count}."}}, "returns": [{"type": "table", "desc": "Pipe."}]},
+        "scatterAlongSpline": {"desc": "Nœud plaçant des points le long d'un chemin polyligne. Params : path, closed, mode, count, spacing, minSpacing, distances, startOffset, lateralJitter, upJitter, alignToTangent.", "params": {"params": {"type": "table", "desc": "Voir les notes."}}, "returns": [{"type": "table", "desc": "Pipe."}]},
+        "fromPoints": {"desc": "Nœud source recopiant une liste de points donnée (params.points).", "params": {"params": {"type": "table", "desc": "{points}."}}, "returns": [{"type": "table", "desc": "Pipe."}]},
+        "fromSegments": {"desc": "Nœud source de segments de route (params.segments).", "params": {"params": {"type": "table", "desc": "{segments}."}}, "returns": [{"type": "table", "desc": "Pipe sur le pin 'segments'."}]},
+        "add": {"desc": "Ajoute un nœud par nom de fabrique (string) ou un nœud personnalisé (table avec execute(node, ctx, get)). Nom inconnu : log E et renvoie nil.", "params": {"kindOrNode": {"type": "string|table", "desc": "Nom de nœud ou nœud."}, "params": {"type": "table|nil", "desc": "Paramètres."}}, "returns": [{"type": "table|nil", "desc": "Pipe."}]},
+        "rebuild": {"desc": "Vide la liste des nœuds pour reconstruire le graphe (ne supprime pas les objets créés).", "params": {}, "returns": [{"type": "table", "desc": "Le graphe."}]},
+        "destroy": {"desc": "Détruit le graphe : le retire du cache s'il y est et supprime ses objets (sauf deleteOwnedObjects == false).", "params": {"deleteOwnedObjects": {"type": "boolean|nil", "desc": "Défaut true."}}, "returns": [{"type": "boolean", "desc": "true (ou résultat de removeGraph)."}]}
+      }
+    },
+    "Pipe": {
+      "desc": "Poignée de chaînage sur un pin de sortie d'un nœud (graph, node, pin). Chaque méthode ajoute un nœud relié à ce pin et renvoie un nouveau Pipe (sauf les spawners).",
+      "functions": {
+        "connectTo": {"desc": "Relie le pin à toNode.toPin (défaut 'points') et renvoie un Pipe sur ce nœud.", "params": {"toNode": {"type": "table", "desc": "Nœud cible."}, "toPin": {"type": "string|nil", "desc": "Pin d'entrée."}}, "returns": [{"type": "table", "desc": "Pipe."}]},
+        "randomTransform": {"desc": "Ajoute une rotation aléatoire (yaw, pitch, roll en degrés, nombre ou {min,max}) et/ou une échelle (nombre, {min,max} ou {x,y,z} de plages).", "params": {"params": {"type": "table", "desc": "{yaw, pitch, roll, scale}."}}, "returns": [{"type": "table", "desc": "Pipe."}]},
+        "setSpawnRandomness": {"desc": "Fixe spawnRandomness (0..1) de chaque point : value fixe, range tirée, sinon aléatoire. Sert à choisir l'élément dans les listes de paths/classes.", "params": {"params": {"type": "table", "desc": "{value} ou {range}."}}, "returns": [{"type": "table", "desc": "Pipe."}]},
+        "snapTerrain": {"desc": "Pose chaque point à la hauteur du terrain (core_terrain.getTerrainHeight) + offset. Sans terrain, ne change rien.", "params": {"params": {"type": "table", "desc": "{offset}."}}, "returns": [{"type": "table", "desc": "Pipe."}]},
+        "offset": {"desc": "Décale chaque point de delta, plus un décalage aléatoire +-random par axe.", "params": {"params": {"type": "table", "desc": "{delta, random}."}}, "returns": [{"type": "table", "desc": "Pipe."}]},
+        "filterBounds": {"desc": "Ne garde que les points dans la boîte min/max ou dans la sphère center/radius.", "params": {"params": {"type": "table", "desc": "{min, max} ou {center, radius}."}}, "returns": [{"type": "table", "desc": "Pipe."}]},
+        "spawnStatic": {"desc": "Crée un TSStatic par point (shape choisi dans paths selon spawnRandomness), collision 'Collision Mesh', couleur d'instance du point. Params : paths, group, namePrefix, collisionType, decalType.", "params": {"params": {"type": "table", "desc": "Voir description."}}, "returns": [{"type": "table", "desc": "Le Graph."}]},
+        "spawnPrefab": {"desc": "Instancie un prefab par point via spawnPrefab (chemin choisi dans paths). Params : paths, group, namePrefix.", "params": {"params": {"type": "table", "desc": "Voir description."}}, "returns": [{"type": "table", "desc": "Le Graph."}]},
+        "spawnClass": {"desc": "Crée un objet de classe quelconque par point (classe choisie dans classes) et applique les champs fields via setField. Params : classes, fields, group, namePrefix.", "params": {"params": {"type": "table", "desc": "Voir description."}}, "returns": [{"type": "table", "desc": "Le Graph."}]},
+        "spawnDecalRoads": {"desc": "Crée un DecalRoad par segment. Params : segments, group, namePrefix, material, width, snapTerrain, overObjects, drivability, textureLength, improvedSpline.", "params": {"params": {"type": "table", "desc": "Voir description."}}, "returns": [{"type": "table", "desc": "Le Graph."}]},
+        "run": {"desc": "Raccourci vers Graph:run.", "params": {"opts": {"type": "table|nil", "desc": "Voir Graph:run."}}, "returns": [{"type": "table", "desc": "Résultat de run."}]},
+        "clear": {"desc": "Raccourci vers Graph:clear.", "params": {}, "returns": [{"type": "table", "desc": "Le Graph."}]},
+        "rebuild": {"desc": "Raccourci vers Graph:rebuild.", "params": {}, "returns": [{"type": "table", "desc": "Le Graph."}]}
+      }
+    },
+    "api": {
+      "desc": "Table exposée comme editor.pcg / editor.proceduralContentGenerator : mêmes fonctions que le module (graph, listGraphs, getGraph, removeGraph, clearAllGraphs, newPoint) et champs graphs, nodes.",
+      "functions": {
+        "graph": {"desc": "Voir graph du module.", "params": {"nameOrOpts": {"type": "string|table|nil", "desc": "Nom ou options."}, "opts": {"type": "table|nil", "desc": "Options."}}, "returns": [{"type": "table", "desc": "Graph."}]},
+        "listGraphs": {"desc": "Voir listGraphs du module.", "params": {}, "returns": [{"type": "string[]", "desc": "Noms."}]},
+        "getGraph": {"desc": "Voir getGraph du module.", "params": {"name": {"type": "string", "desc": "Nom."}}, "returns": [{"type": "table|nil", "desc": "Graph."}]},
+        "removeGraph": {"desc": "Voir removeGraph du module.", "params": {"name": {"type": "string", "desc": "Nom."}, "deleteOwnedObjects": {"type": "boolean|nil", "desc": "Défaut true."}}, "returns": [{"type": "boolean", "desc": "Succès."}]},
+        "clearAllGraphs": {"desc": "Voir clearAllGraphs du module.", "params": {"deleteOwnedObjects": {"type": "boolean|nil", "desc": "Défaut true."}}},
+        "newPoint": {"desc": "Voir newPoint du module.", "params": {"opts": {"type": "table|nil", "desc": "Options."}}, "returns": [{"type": "table", "desc": "Point."}]}
+      }
+    }
+  }
+}

@@ -1,29 +1,29 @@
 # `flowgraph_nodes_vehicle_alignForCoupling`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/alignForCoupling.lua` · VM : Game Engine (GE) · 127 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/alignForCoupling.lua` · VM: Game Engine (GE) · 127 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/alignForCoupling")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/alignForCoupling")` (file under extensions/ but not a regular extension)
 
-Nœud « Align for Coupling » (couleur vehicle, icône link, comportement duration + once). Place une remorque derrière un véhicule tracteur pour faciliter l'attelage : aligne le point d'attelage de la remorque sur celui du tracteur avec la rotation voulue, puis active l'attelage automatique. Entrées : flow, reset, vehId (tracteur), trailerId (remorque), rot (number en degrés relatifs, ou quat ; caché), relativeRotationQuat (caché), ignoreCouple (caché, true : ne déplace pas et ne couple pas). Sortie : flow, actif uniquement quand les véhicules sont attelés.
+Node "Align for Coupling" (color vehicle, link icon, duration + once behavior). Places a trailer behind a tractor vehicle to ease coupling: aligns the trailer's coupling point with the tractor's with the desired rotation, then enables automatic coupling. Inputs: flow, reset, vehId (tractor), trailerId (trailer), rot (number in relative degrees, or quat; hidden), relativeRotationQuat (hidden), ignoreCouple (hidden, true: does not move nor couple). Output: flow, active only when the vehicles are coupled.
 
-## Remarques
+## Notes
 
-- Avec ignoreCouple à true (valeur par défaut), la remorque n'est pas déplacée : coupled est mis à true immédiatement et le flow sort sans aucun alignement.
-- Si un véhicule n'a pas de couplerOffset, le nœud retourne sans rien faire à chaque frame.
+- With ignoreCouple at true (default value), the trailer is not moved: coupled is set to true immediately and the flow goes out without any alignment.
+- If a vehicle has no couplerOffset, the node returns without doing anything on every frame.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Efface done, waitForCouple et coupled. | 33 |
-| `C:init()` | Ne fait rien. | 30 |
-| `C:work()` | Gère reset. Une fois : retrouve les deux véhicules, lit leurs couplerOffset (modules.vehicle), calcule la matrice d'alignement, puis (si ignoreCouple est faux) déplace la remorque (setTransform), réinitialise sa physique et son flexmesh et active beamstate.activateAutoCoupling() sur le tracteur. Ensuite attend l'attelage (modules.vehicle:isCoupledTo) et active flow. | 38 |
+| `C:_executionStarted()` | Clears done, waitForCouple and coupled. | 33 |
+| `C:init()` | Does nothing. | 30 |
+| `C:work()` | Handles reset. Once: finds the two vehicles, reads their couplerOffset (modules.vehicle), computes the alignment matrix, then (if ignoreCouple is false) moves the trailer (setTransform), resets its physics and its flexmesh and enables beamstate.activateAutoCoupling() on the tractor. Then waits for the coupling (modules.vehicle:isCoupledTo) and activates flow. | 38 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/alignForCoupling.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/alignForCoupling.lua`.*

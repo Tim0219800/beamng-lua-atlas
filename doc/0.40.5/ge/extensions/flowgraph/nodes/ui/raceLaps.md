@@ -1,24 +1,24 @@
 # `flowgraph_nodes_ui_raceLaps`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/raceLaps.lua` · VM : Game Engine (GE) · 45 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/raceLaps.lua` · VM: Game Engine (GE) · 45 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/raceLaps")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/raceLaps")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Set UI Race Laps » (catégorie repeat_instant, auteur BeamNG, durée) : met à jour l'app UI de tours. Entrées : « cur » (nil = efface), « max ». Envoie 'RaceLapChange' {current, count} et l'entrée de ui_apps_genericMissionData (catégorie raceLaps, order 110) ; efface avec 'RaceLapClear'.
+Flowgraph node "Set UI Race Laps" (category repeat_instant, author BeamNG, duration): updates the laps UI app. Inputs: "cur" (nil = clears), "max". Sends 'RaceLapChange' {current, count} and the ui_apps_genericMissionData entry (category raceLaps, order 110); clears with 'RaceLapClear'.
 
-## Remarques
+## Notes
 
-- Si max est nil, la concaténation provoque une erreur.
+- If max is nil, the concatenation causes an error.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Envoie ou efface le compteur de tours dans l'UI. | 24 |
+| `C:work()` | Sends or clears the lap counter in the UI. | 24 |
 
-**Évènements UI (guihooks.trigger) :** `RaceLapChange`, `RaceLapClear`
+**UI events (guihooks.trigger):** `RaceLapChange`, `RaceLapClear`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/raceLaps.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/raceLaps.lua`.*

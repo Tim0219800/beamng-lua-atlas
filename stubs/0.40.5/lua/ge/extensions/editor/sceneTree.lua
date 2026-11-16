@@ -2,143 +2,143 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/sceneTree.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre « Scene Tree » de l'éditeur de niveaux : affiche la hiérarchie des objets de la scène (MissionGroup, SimGroups, objets) sous forme d'arbre ImGui avec défilement virtuel, recherche (par nom, ID, ID persistant, classe ou tout), sélection multiple, glisser-déposer, renommage, tri, suppression, création d'objets et menus contextuels. Il met en cache l'arbre côté Lua (nœuds) et le synchronise avec le moteur via les transactions de SimSet. Il installe aussi des fonctions dans la table editor (voir classe « editor »). Un moddeur s'en sert surtout pour ajouter des entrées au menu contextuel et rafraîchir l'arbre après avoir créé/supprimé des objets par script.
---- Accès : extension `editor_sceneTree` : `extensions.load("editor_sceneTree")`, puis la globale `editor_sceneTree`
+--- "Scene Tree" window of the level editor: displays the hierarchy of scene objects (MissionGroup, SimGroups, objects) as an ImGui tree with virtual scrolling, search (by name, ID, persistent ID, class or everything), multi-selection, drag and drop, renaming, sorting, deletion, object creation and context menus. It caches the tree on the Lua side (nodes) and synchronizes it with the engine via SimSet transactions. It also installs functions in the editor table (see class "editor"). A modder mainly uses it to add entries to the context menu and refresh the tree after creating/deleting objects by script.
+--- Access: extension `editor_sceneTree`: `extensions.load("editor_sceneTree")`, then the global `editor_sceneTree`
 ---@class editor_sceneTree
 editor_sceneTree = {}
 
---- Ferme et désenregistre toutes les fenêtres Scene Tree.
----Source : lua/ge/extensions/editor/sceneTree.lua:2608
+--- Closes and unregisters all Scene Tree windows.
+---Source: lua/ge/extensions/editor/sceneTree.lua:2608
 function editor_sceneTree.closeAllInstances() end
 
---- Journalise (log niveau I) le nœud de cache correspondant à l'objet donné, dans chaque instance qui le contient.
----Source : lua/ge/extensions/editor/sceneTree.lua:2616
----@param id integer Id de l'objet.
----@param level integer|nil Profondeur passée à dumpsz.
+--- Logs (log level I) the cache node matching the given object, in each instance that contains it.
+---Source: lua/ge/extensions/editor/sceneTree.lua:2616
+---@param id integer Object id.
+---@param level integer|nil Depth passed to dumpsz.
 function editor_sceneTree.debugNode(id, level) end
 
---- Déplace la sélection d'une ligne dans l'instance qui a le focus (utilisé par les flèches de l'action map « SceneTree »).
----Source : lua/ge/extensions/editor/sceneTree.lua:1009
----@param up boolean true pour monter, false pour descendre.
+--- Moves the selection by one row in the instance that has focus (used by the arrows of the "SceneTree" action map).
+---Source: lua/ge/extensions/editor/sceneTree.lua:1009
+---@param up boolean true to move up, false to move down.
 function editor_sceneTree.moveSelectionIndex(up) end
 
---- Appelé à l'activation de l'éditeur : resynchronise la sélection de l'arbre.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2455
+--- Called when the editor is activated: resynchronizes the tree selection.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2455
 function editor_sceneTree.onEditorActivated() end
 
---- Appelé après l'ouverture d'un niveau dans l'éditeur : lève le focus lock, reconstruit le cache, vide la sélection et le filtre.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2459
+--- Called after a level is opened in the editor: releases the focus lock, rebuilds the cache, clears the selection and the filter.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2459
 function editor_sceneTree.onEditorAfterOpenLevel() end
 
---- Appelé avant la sauvegarde du niveau : remplit editor.orderTable avec les ids de tous les objets sous MissionGroup (parcours en profondeur).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2552
+--- Called before the level is saved: fills editor.orderTable with the ids of all objects under MissionGroup (depth-first traversal).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2552
 function editor_sceneTree.onEditorBeforeSaveLevel() end
 
---- Appelé à la désactivation de l'éditeur : lève le focus lock s'il est actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2470
+--- Called when the editor is deactivated: releases the focus lock if it is active.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2470
 function editor_sceneTree.onEditorDeactivated() end
 
---- Appelé quand le focus lock change : ré-enracine toutes les instances sur le groupe verrouillé (ou la racine) en gardant l'état ouvert, et force la racine ouverte.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2628
+--- Called when the focus lock changes: re-roots all instances on the locked group (or the root) while keeping the open state, and forces the root open.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2628
 function editor_sceneTree.onEditorFocusLockChanged() end
 
---- Appelé à chaque image : dessine chaque instance de fenêtre Scene Tree (arbre virtualisé, barre de recherche, menus, glisser-déposer).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2167
+--- Called every frame: draws each Scene Tree window instance (virtualized tree, search bar, menus, drag and drop).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2167
 function editor_sceneTree.onEditorGui() end
 
---- Appelé à l'initialisation de l'éditeur : récupère les icônes de classes (worldEditorCppApi.getObjectClassIcons), met en cache l'arbre, installe les fonctions editor.* (removeObjectFromSet, submitTransactions, getSelectedSceneTreeNodes, getSceneTreeSelectedGroup, refreshSceneTreeWindow, hideAll/showAllSceneTreeInstances) et ajoute l'entrée de menu « Scene Tree ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2474
+--- Called when the editor initializes: fetches the class icons (worldEditorCppApi.getObjectClassIcons), caches the tree, installs the editor.* functions (removeObjectFromSet, submitTransactions, getSelectedSceneTreeNodes, getSceneTreeSelectedGroup, refreshSceneTreeWindow, hideAll/showAllSceneTreeInstances) and adds the "Scene Tree" menu entry.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2474
 function editor_sceneTree.onEditorInitialized() end
 
---- Appelé quand un champ est modifié dans l'inspecteur : rafraîchit les noms des nœuds et, pour les objets contenus dans une instance de prefab, met à jour le décalage de transformation de l'enfant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2590
----@param selectedIds integer[] Ids des objets modifiés.
+--- Called when a field is modified in the inspector: refreshes the node names and, for objects contained in a prefab instance, updates the child's transform offset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2590
+---@param selectedIds integer[] Ids of the modified objects.
 function editor_sceneTree.onEditorInspectorFieldChanged(selectedIds) end
 
---- Restaure les instances de fenêtre Scene Tree depuis l'état sauvegardé de la disposition de l'éditeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2430
----@param state table État global du guiInstancer.
+--- Restores the Scene Tree window instances from the saved state of the editor layout.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2430
+---@param state table Global state of the guiInstancer.
 function editor_sceneTree.onEditorLoadGuiInstancerState(state) end
 
---- Appelé quand un objet est ajouté dans l'éditeur : reconstruit le cache (en gardant les groupes ouverts) et rafraîchit le cache de nœuds.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2561
+--- Called when an object is added in the editor: rebuilds the cache (keeping groups open) and refreshes the node cache.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2561
 function editor_sceneTree.onEditorObjectAdded() end
 
---- Appelé quand la sélection d'objets de l'éditeur change : met à jour les nœuds sélectionnés de chaque instance.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:821
+--- Called when the editor's object selection changes: updates the selected nodes of each instance.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:821
 function editor_sceneTree.onEditorObjectSelectionChanged() end
 
---- Sauvegarde les instances de fenêtre (sans sélection, cache ni filtre) dans l'état de disposition de l'éditeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2441
----@param state table État global à remplir.
+--- Saves the window instances (without selection, cache or filter) in the editor layout state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2441
+---@param state table Global state to fill.
 function editor_sceneTree.onEditorSaveGuiInstancerState(state) end
 
---- Appelé quand une fenêtre d'outil prend le focus : si c'est un Scene Tree, marque l'instance comme focalisée et pousse l'action map « SceneTree ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2512
----@param windowName string Nom de la fenêtre.
+--- Called when a tool window gains focus: if it is a Scene Tree, marks the instance as focused and pushes the "SceneTree" action map.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2512
+---@param windowName string Window name.
 function editor_sceneTree.onEditorToolWindowGotFocus(windowName) end
 
---- Appelé quand une fenêtre d'outil perd le focus : retire le focus de l'instance et dépile l'action map « SceneTree » quand plus aucune instance n'est focalisée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2522
----@param windowName string Nom de la fenêtre.
+--- Called when a tool window loses focus: removes the focus from the instance and pops the "SceneTree" action map when no instance is focused anymore.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2522
+---@param windowName string Window name.
 function editor_sceneTree.onEditorToolWindowLostFocus(windowName) end
 
---- Appelé au chargement de l'extension : prépare la liste des modes de recherche et installe editor.addExtendedSceneTreeObjectMenuItem.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sceneTree.lua:2409
+--- Called when the extension loads: prepares the list of search modes and installs editor.addExtendedSceneTreeObjectMenuItem.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sceneTree.lua:2409
 function editor_sceneTree.onExtensionLoaded() end
 
---- Ouvre une fenêtre Scene Tree si aucune n'existe encore (une seule instance autorisée).
----Source : lua/ge/extensions/editor/sceneTree.lua:2161
+--- Opens a Scene Tree window if none exists yet (only one instance allowed).
+---Source: lua/ge/extensions/editor/sceneTree.lua:2161
 function editor_sceneTree.openSceneTree() end
 
---- Reconstruit entièrement le cache de nœuds de toutes les instances depuis la scène Sim. Avec keepOpenStatus, l'état ouvert/fermé des groupes est conservé.
----Source : lua/ge/extensions/editor/sceneTree.lua:732
----@param keepOpenStatus boolean|nil true pour garder les groupes ouverts dans leur état actuel.
+--- Completely rebuilds the node cache of all instances from the Sim scene. With keepOpenStatus, the open/closed state of the groups is kept.
+---Source: lua/ge/extensions/editor/sceneTree.lua:732
+---@param keepOpenStatus boolean|nil true to keep the groups open in their current state.
 function editor_sceneTree.recacheAllNodes(keepOpenStatus) end
 
---- Met à jour le cache des groupes de chaque instance (à partir de sa racine) puis invalide le cache de taille ; version plus légère que recacheAllNodes.
----Source : lua/ge/extensions/editor/sceneTree.lua:1030
----@param incomingObjectIds table|nil Ids des objets entrants à intégrer (déduit du code).
+--- Updates the group cache of each instance (from its root) then invalidates the size cache; lighter version than recacheAllNodes.
+---Source: lua/ge/extensions/editor/sceneTree.lua:1030
+---@param incomingObjectIds table|nil Ids of the incoming objects to integrate (inferred from code).
 function editor_sceneTree.refreshAllNodes(incomingObjectIds) end
 
---- Recalcule le nom et le nom affiché des nœuds dont l'id est dans la liste. Ne fait rien si objectIds est nil.
----Source : lua/ge/extensions/editor/sceneTree.lua:2569
----@param objectIds integer[]|nil Ids d'objets renommés.
+--- Recomputes the name and display name of the nodes whose id is in the list. Does nothing if objectIds is nil.
+---Source: lua/ge/extensions/editor/sceneTree.lua:2569
+---@param objectIds integer[]|nil Ids of renamed objects.
 function editor_sceneTree.refreshNodeNames(objectIds) end
 
---- Fonctions ajoutées à la table globale `editor` par cette extension (et non un objet instancié). Elles sont disponibles une fois l'extension et l'éditeur initialisés. Autres ajouts non listés ici : addExtendedSceneTreeObjectMenuItem, getSelectedSceneTreeNodes, refreshSceneTreeWindow, hideAllSceneTreeInstances, showAllSceneTreeInstances.
+--- Functions added to the global `editor` table by this extension (and not an instantiated object). They are available once the extension and the editor are initialized. Other additions not listed here: addExtendedSceneTreeObjectMenuItem, getSelectedSceneTreeNodes, refreshSceneTreeWindow, hideAllSceneTreeInstances, showAllSceneTreeInstances.
 ---@class editor_sceneTree_editor
 local editor_sceneTree_editor = {}
 
---- Renvoie le groupe de la scène dans lequel ajouter de nouveaux objets : le groupe focus-locké s'il y en a un, sinon le groupe sélectionné (ou le parent du premier nœud sélectionné), sinon MissionGroup.
----Source : lua/ge/extensions/editor/sceneTree.lua:155
----@param instance table|nil Instance de Scene Tree dont on lit la sélection.
----@return userdata  Objet SimGroup.
+--- Returns the scene group in which to add new objects: the focus-locked group if there is one, otherwise the selected group (or the parent of the first selected node), otherwise MissionGroup.
+---Source: lua/ge/extensions/editor/sceneTree.lua:155
+---@param instance table|nil Scene Tree instance whose selection is read.
+---@return userdata  SimGroup object.
 function editor_sceneTree_editor.getSceneTreeSelectedGroup(instance) end
 
---- Retire l'objet des nœuds de toutes les instances et rafraîchit l'arbre (appelé quand un objet quitte un SimSet).
----Source : lua/ge/extensions/editor/sceneTree.lua:1068
----@param object userdata Objet retiré.
----@param simset userdata SimSet d'origine (non utilisé dans le code).
+--- Removes the object from the nodes of all instances and refreshes the tree (called when an object leaves a SimSet).
+---Source: lua/ge/extensions/editor/sceneTree.lua:1068
+---@param object userdata Object removed.
+---@param simset userdata Original SimSet (not used in the code).
 function editor_sceneTree_editor.removeObjectFromSet(object, simset) end
 
---- Traite le lot d'opérations de SimSet envoyé par le moteur : tableau plat de triplets (type, objId, groupId) pour ClearSet, AddObject, RemoveObject, AssignObjectName, ReorderObject, et met à jour l'arbre en conséquence (par lots).
----Source : lua/ge/extensions/editor/sceneTree.lua:1100
----@param transactions integer[] Tableau plat de triplets d'entiers.
+--- Processes the batch of SimSet operations sent by the engine: flat array of triplets (type, objId, groupId) for ClearSet, AddObject, RemoveObject, AssignObjectName, ReorderObject, and updates the tree accordingly (in batches).
+---Source: lua/ge/extensions/editor/sceneTree.lua:1100
+---@param transactions integer[] Flat array of integer triplets.
 function editor_sceneTree_editor.submitTransactions(transactions) end
 

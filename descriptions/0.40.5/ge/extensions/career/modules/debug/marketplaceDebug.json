@@ -1,23 +1,29 @@
 {
   "path": "lua/ge/extensions/career/modules/debug/marketplaceDebug.lua",
-  "module": "Onglet de debug carrière « Marketplace ». Affiche les véhicules de l'inventaire (et s'ils sont en vente via career_modules_marketplace.findVehicleListing), les annonces en cours avec leurs offres (valeur, écart, durée restante) et boutons Accept/Decline, plus un bouton 'Generate Random Offer'.",
+  "module": "\"Marketplace\" career debug tab. Shows the inventory vehicles (and whether they are for sale via career_modules_marketplace.findVehicleListing), the current listings with their offers (value, gap, remaining time) and Accept/Decline buttons, plus a 'Generate Random Offer' button.",
   "notes": [
-    "Bug probable : drawDebugMenu lit les variables globales listedVehicles et offerTTL, qui ne sont définies nulle part dans ce fichier (nil) ; la section 'Current Listings' provoque une erreur ou n'affiche rien d'utile si elles ne sont pas globales ailleurs.",
-    "Outil de développement ; debugOrder = 0."
+    "Probable bug: drawDebugMenu reads the global variables listedVehicles and offerTTL, which are not defined anywhere in this file (nil); the 'Current Listings' section raises an error or shows nothing useful unless they are global elsewhere.",
+    "Development tool; debugOrder = 0."
   ],
   "fields": {
-    "debugOrder": {"type": "number", "desc": "Ordre de tri (0)."},
-    "debugName": {"type": "string", "desc": "'Marketplace'."}
+    "debugOrder": {
+      "type": "number",
+      "desc": "Sort order (0)."
+    },
+    "debugName": {
+      "type": "string",
+      "desc": "'Marketplace'."
+    }
   },
   "functions": {
     "drawDebugMenu": {
-      "desc": "Dessine les sections 'Vehicle Inventory', 'Current Listings' (offres avec Accept/Decline via career_modules_marketplace.acceptOffer/declineOffer) et le bouton 'Generate Random Offer' (generateOffer).",
+      "desc": "Draws the 'Vehicle Inventory' and 'Current Listings' sections (offers with Accept/Decline via career_modules_marketplace.acceptOffer/declineOffer) and the 'Generate Random Offer' button (generateOffer).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onCareerActivated": {
-      "desc": "Hook de carrière ; corps vide.",
+      "desc": "Career hook; empty body.",
       "params": {},
       "returns": [],
       "internal": true

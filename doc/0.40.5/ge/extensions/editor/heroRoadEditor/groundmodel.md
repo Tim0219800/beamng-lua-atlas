@@ -1,112 +1,112 @@
 # `editor_heroRoadEditor_groundmodel`
 
-*Fichier : `lua/ge/extensions/editor/heroRoadEditor/groundmodel.lua` · VM : Game Engine (GE) · 201 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/heroRoadEditor/groundmodel.lua` · VM: Game Engine (GE) · 201 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_heroRoadEditor_groundmodel` : `extensions.load("editor_heroRoadEditor_groundmodel")`, puis la globale `editor_heroRoadEditor_groundmodel`
+**Access:** extension `editor_heroRoadEditor_groundmodel`: `extensions.load("editor_heroRoadEditor_groundmodel")`, then the global `editor_heroRoadEditor_groundmodel`
 
-Mode de peinture des groundmodels (sec, mouillé, neige, glace…) du Hero Road Editor. L'artiste peint à la souris sur la chaussée ; la peinture est stockée comme tampons en coordonnées monde dans group.surfaceStamps ({x, y, r, m}), que mesh.lua rastérise sur les quads à la construction. Le module gère l'état du mode, l'entrée pinceau (un undo par trait) et la surcouche d'éditeur (cellules colorées, curseur, fil de fer). Le rendu en jeu ne change pas ; seule la physique change.
+Groundmodel painting mode (dry, wet, snow, ice...) of the Hero Road Editor. The artist paints with the mouse on the roadway; the paint is stored as stamps in world coordinates in group.surfaceStamps ({x, y, r, m}), which mesh.lua rasterizes onto the quads at build time. The module manages the mode state, the brush input (one undo per stroke) and the editor overlay (colored cells, cursor, wireframe). In-game rendering does not change; only the physics changes.
 
-## Remarques
+## Notes
 
-- matIndex : indice dans la palette de surfaceKit ; 1 = Dry = gomme ; défaut 2 (premier non-base, Wet).
-- Rayon de pinceau par défaut 3.0 m ; l'espacement des tampons le long d'un trait est max(0.25, rayon*0.5) m.
-- La reconstruction physique est différée : la peinture met seulement le groupe dans la file pending ; groupMgr.rebuildSurfaceOnly n'est appelé qu'après requestApply (bouton Apply), via flushPending à la frame suivante.
-- Le lancer de rayon sous la souris utilise castRayStatic avec une portée de 2000 m ; la souris est ignorée si ImGui la capture ou si le gizmo d'axes est survolé.
-- Le fil de fer est limité à 90 m autour de la caméra.
+- matIndex: index in the surfaceKit palette; 1 = Dry = eraser; default 2 (first non-base, Wet).
+- Default brush radius 3.0 m; the stamp spacing along a stroke is max(0.25, radius*0.5) m.
+- The physics rebuild is deferred: painting only puts the group in the pending queue; groupMgr.rebuildSurfaceOnly is only called after requestApply (Apply button), via flushPending on the next frame.
+- The raycast under the mouse uses castRayStatic with a range of 2000 m; the mouse is ignored if ImGui captures it or if the axis gizmo is hovered.
+- The wireframe is limited to 90 m around the camera.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_heroRoadEditor_groundmodel.clearAll(group)` | Supprime toute la peinture du groupe (vide surfaceStamps) et le met en attente de reconstruction. L'appelant gère le commit d'annulation. | 78 |
-| `editor_heroRoadEditor_groundmodel.drawOverlay(group)` | Surcouche d'éditeur : teinte chaque cellule de la grille (chaussée + accotements) avec la couleur du matériau (alpha 60 pour la base, 135 pour le peint), plus un fil de fer optionnel. Lit les mêmes tampons et la même grille (group.meshGrid) que le maillage, donc cohérent avec la physique. Seulement pour la route sélectionnée. | 146 |
-| `editor_heroRoadEditor_groundmodel.flushPending()` | Reconstruit le maillage physique de chaque route peinte depuis le dernier Apply (chemin léger surface seule : maillage + collision, sans décals/mobilier/peinture terrain), puis vide la file. Sans effet si Apply n'a pas été demandé. Appelé à chaque frame depuis onEditorGui. *(interne)* | 71 |
-| `editor_heroRoadEditor_groundmodel.getBrushDefault()` | Rayon de pinceau par défaut (3.0). | 55 |
-| `editor_heroRoadEditor_groundmodel.getBrushRadius()` | Rayon actuel du pinceau. | 53 |
-| `editor_heroRoadEditor_groundmodel.getMatIndex()` | Indice de matériau de la palette actuellement peint. | 51 |
-| `editor_heroRoadEditor_groundmodel.getShowWire()` | Indique si le fil de fer de la chaussée est affiché. | 56 |
-| `editor_heroRoadEditor_groundmodel.isActive()` | Indique si le mode peinture est actif. | 50 |
-| `editor_heroRoadEditor_groundmodel.requestApply()` | Demande la reconstruction de la physique des routes peintes (bouton Apply). Consommé par flushPending à la frame suivante. | 66 |
-| `editor_heroRoadEditor_groundmodel.setActive(b)` | Active ou désactive le mode ; en désactivant, interrompt tout trait en cours. | 59 |
-| `editor_heroRoadEditor_groundmodel.setBrushRadius(r)` | Fixe le rayon du pinceau. | 54 |
-| `editor_heroRoadEditor_groundmodel.setMatIndex(i)` | Choisit le matériau peint. | 52 |
-| `editor_heroRoadEditor_groundmodel.setShowWire(b)` | Affiche ou masque le fil de fer de la chaussée. | 57 |
-| `editor_heroRoadEditor_groundmodel.updateAndPaint(group)` | À chaque frame en mode actif : dessine le curseur pinceau (sphère + disque) au point visé et, en glissant le bouton gauche, dépose des tampons {x,y,r,m} espacés régulièrement. Un seul commit d'historique 'Paint Groundmodel' par trait. | 101 |
+| `editor_heroRoadEditor_groundmodel.clearAll(group)` | Removes all the paint of the group (empties surfaceStamps) and puts it in the rebuild queue. The caller handles the undo commit. | 78 |
+| `editor_heroRoadEditor_groundmodel.drawOverlay(group)` | Editor overlay: tints each grid cell (roadway + shoulders) with the material's color (alpha 60 for the base, 135 for painted), plus an optional wireframe. Reads the same stamps and the same grid (group.meshGrid) as the mesh, so consistent with the physics. Only for the selected road. | 146 |
+| `editor_heroRoadEditor_groundmodel.flushPending()` | Rebuilds the physics mesh of each road painted since the last Apply (light surface-only path: mesh + collision, without decals/furniture/terrain paint), then empties the queue. Has no effect if Apply was not requested. Called every frame from onEditorGui. *(internal)* | 71 |
+| `editor_heroRoadEditor_groundmodel.getBrushDefault()` | Default brush radius (3.0). | 55 |
+| `editor_heroRoadEditor_groundmodel.getBrushRadius()` | Current brush radius. | 53 |
+| `editor_heroRoadEditor_groundmodel.getMatIndex()` | Index of the palette material currently being painted. | 51 |
+| `editor_heroRoadEditor_groundmodel.getShowWire()` | Indicates whether the roadway wireframe is displayed. | 56 |
+| `editor_heroRoadEditor_groundmodel.isActive()` | Indicates whether the paint mode is active. | 50 |
+| `editor_heroRoadEditor_groundmodel.requestApply()` | Requests the physics rebuild of the painted roads (Apply button). Consumed by flushPending on the next frame. | 66 |
+| `editor_heroRoadEditor_groundmodel.setActive(b)` | Enables or disables the mode; when disabling, interrupts any stroke in progress. | 59 |
+| `editor_heroRoadEditor_groundmodel.setBrushRadius(r)` | Sets the brush radius. | 54 |
+| `editor_heroRoadEditor_groundmodel.setMatIndex(i)` | Chooses the painted material. | 52 |
+| `editor_heroRoadEditor_groundmodel.setShowWire(b)` | Shows or hides the roadway wireframe. | 57 |
+| `editor_heroRoadEditor_groundmodel.updateAndPaint(group)` | Every frame in active mode: draws the brush cursor (sphere + disc) at the aimed point and, while dragging the left button, deposits stamps {x,y,r,m} at regular spacing. A single 'Paint Groundmodel' history commit per stroke. | 101 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_heroRoadEditor_groundmodel.clearAll(group)`
 
-Supprime toute la peinture du groupe (vide surfaceStamps) et le met en attente de reconstruction. L'appelant gère le commit d'annulation.
+Removes all the paint of the group (empties surfaceStamps) and puts it in the rebuild queue. The caller handles the undo commit.
 
-- `group` (*table*) : Groupe Hero Road.
+- `group` (*table*) : Hero Road group.
 
 #### `editor_heroRoadEditor_groundmodel.drawOverlay(group)`
 
-Surcouche d'éditeur : teinte chaque cellule de la grille (chaussée + accotements) avec la couleur du matériau (alpha 60 pour la base, 135 pour le peint), plus un fil de fer optionnel. Lit les mêmes tampons et la même grille (group.meshGrid) que le maillage, donc cohérent avec la physique. Seulement pour la route sélectionnée.
+Editor overlay: tints each grid cell (roadway + shoulders) with the material's color (alpha 60 for the base, 135 for painted), plus an optional wireframe. Reads the same stamps and the same grid (group.meshGrid) as the mesh, so consistent with the physics. Only for the selected road.
 
-- `group` (*table*) : Groupe Hero Road sélectionné (meshGrid requis).
+- `group` (*table*) : Selected Hero Road group (meshGrid required).
 
 #### `editor_heroRoadEditor_groundmodel.getBrushDefault()`
 
-Rayon de pinceau par défaut (3.0).
+Default brush radius (3.0).
 
-- **renvoie** : number Mètres.
+- **returns**: number Meters.
 
 #### `editor_heroRoadEditor_groundmodel.getBrushRadius()`
 
-Rayon actuel du pinceau.
+Current brush radius.
 
-- **renvoie** : number Rayon en mètres.
+- **returns**: number Radius in meters.
 
 #### `editor_heroRoadEditor_groundmodel.getMatIndex()`
 
-Indice de matériau de la palette actuellement peint.
+Index of the palette material currently being painted.
 
-- **renvoie** : integer Indice (1 = Dry/gomme).
+- **returns**: integer Index (1 = Dry/eraser).
 
 #### `editor_heroRoadEditor_groundmodel.getShowWire()`
 
-Indique si le fil de fer de la chaussée est affiché.
+Indicates whether the roadway wireframe is displayed.
 
-- **renvoie** : boolean true si affiché.
+- **returns**: boolean true if displayed.
 
 #### `editor_heroRoadEditor_groundmodel.isActive()`
 
-Indique si le mode peinture est actif.
+Indicates whether the paint mode is active.
 
-- **renvoie** : boolean true si actif.
+- **returns**: boolean true if active.
 
 #### `editor_heroRoadEditor_groundmodel.setActive(b)`
 
-Active ou désactive le mode ; en désactivant, interrompt tout trait en cours.
+Enables or disables the mode; when disabling, interrupts any stroke in progress.
 
-- `b` (*boolean*) : Nouvel état.
+- `b` (*boolean*) : New state.
 
 #### `editor_heroRoadEditor_groundmodel.setBrushRadius(r)`
 
-Fixe le rayon du pinceau.
+Sets the brush radius.
 
-- `r` (*number*) : Rayon en mètres.
+- `r` (*number*) : Radius in meters.
 
 #### `editor_heroRoadEditor_groundmodel.setMatIndex(i)`
 
-Choisit le matériau peint.
+Chooses the painted material.
 
-- `i` (*integer*) : Indice dans la palette de surfaceKit.
+- `i` (*integer*) : Index in the surfaceKit palette.
 
 #### `editor_heroRoadEditor_groundmodel.setShowWire(b)`
 
-Affiche ou masque le fil de fer de la chaussée.
+Shows or hides the roadway wireframe.
 
-- `b` (*boolean*) : Nouvel état (converti en booléen).
+- `b` (*boolean*) : New state (converted to a boolean).
 
 #### `editor_heroRoadEditor_groundmodel.updateAndPaint(group)`
 
-À chaque frame en mode actif : dessine le curseur pinceau (sphère + disque) au point visé et, en glissant le bouton gauche, dépose des tampons {x,y,r,m} espacés régulièrement. Un seul commit d'historique 'Paint Groundmodel' par trait.
+Every frame in active mode: draws the brush cursor (sphere + disc) at the aimed point and, while dragging the left button, deposits stamps {x,y,r,m} at regular spacing. A single 'Paint Groundmodel' history commit per stroke.
 
-- `group` (*table*) : Groupe Hero Road sélectionné.
-- **renvoie** : boolean true si le mode possède la souris (actif et groupe valide), false sinon.
+- `group` (*table*) : Selected Hero Road group.
+- **returns**: boolean true if the mode owns the mouse (active and valid group), false otherwise.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/heroRoadEditor/groundmodel.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/heroRoadEditor/groundmodel.lua`.*

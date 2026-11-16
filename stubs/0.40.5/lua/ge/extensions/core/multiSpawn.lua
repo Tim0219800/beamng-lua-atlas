@@ -2,105 +2,105 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/multiSpawn.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_multiSpawn` : génération et placement de groupes de véhicules. Elle peut construire un groupe aléatoire à partir des véhicules installés (avec poids de population, filtres, pays, année), le faire apparaître en formation (route devant/derrière, grille de course, trafic, lignes), ou téléporter des véhicules existants dans une nouvelle formation. L'apparition se fait via un job, un véhicule par frame, et un seul groupe à la fois (les suivants sont mis en file). Utilisée notamment par l'app trafic de l'interface et par du code de gameplay (onVehicleGroupSpawned est écouté par 5 modules).
---- Accès : extension `core_multiSpawn` : `extensions.load("core_multiSpawn")`, puis la globale `core_multiSpawn`
+--- GE extension `core_multiSpawn`: generation and placement of vehicle groups. It can build a random group from the installed vehicles (with population weights, filters, country, year), spawn it in a formation (road ahead/behind, race grid, traffic, lines), or teleport existing vehicles into a new formation. Spawning is done via a job, one vehicle per frame, and only one group at a time (subsequent ones are queued). Used notably by the UI traffic app and by gameplay code (onVehicleGroupSpawned is listened to by 5 modules).
+--- Access: extension `core_multiSpawn`: `extensions.load("core_multiSpawn")`, then the global `core_multiSpawn`
 ---@class core_multiSpawn
----@field startEngines boolean true par défaut : les véhicules d'un groupe apparaissent moteur démarré (via onSpawnCCallback).
----@field useFullData boolean false par défaut. Si vrai, createGroup ajoute modelPop et configPop dans chaque entrée du groupe.
+---@field startEngines boolean true by default: vehicles of a group spawn with the engine started (via onSpawnCCallback).
+---@field useFullData boolean false by default. If true, createGroup adds modelPop and configPop to each entry of the group.
 core_multiSpawn = {}
 
---- Crée un groupe aléatoire de `amount` véhicules (10 par défaut) à partir des véhicules installés, selon les filtres et populations.
----Source : lua/ge/extensions/core/multiSpawn.lua:291
----@param amount integer|nil Taille du groupe (10 par défaut).
+--- Creates a random group of `amount` vehicles (10 by default) from the installed vehicles, according to the filters and populations.
+---Source: lua/ge/extensions/core/multiSpawn.lua:291
+---@param amount integer|nil Group size (10 by default).
 ---@param params table|nil { allMods, allConfigs, filters, country, modelPopPower, configPopPower, popDecreaseFactor, minPop, maxYear }.
----@return table[]  Entrées { model, config } ; {} si aucun véhicule ne correspond.
+---@return table[]  Entries { model, config }; {} if no vehicle matches.
 function core_multiSpawn.createGroup(amount, params) end
 
---- Calcule `amount` positions/rotations de formation selon options.mode (voir notes), en partant du joueur, de la caméra ou de options.pos.
----Source : lua/ge/extensions/core/multiSpawn.lua:509
----@param amount integer|nil Nombre de positions (20 par défaut).
+--- Computes `amount` formation positions/rotations according to options.mode (see notes), starting from the player, the camera or options.pos.
+---Source: lua/ge/extensions/core/multiSpawn.lua:509
+---@param amount integer|nil Number of positions (20 by default).
 ---@param options table|nil { mode, gap, pos, dir, rot, startIndex, func }.
----@return table[]  Éléments { pos = vec3, rot = quat }.
+---@return table[]  Elements { pos = vec3, rot = quat }.
 function core_multiSpawn.createSpawnPositions(amount, options) end
 
---- Supprime des véhicules créés via ce module (ceux qui ont le champ vehicleGroup), en partant de la fin de la liste, avec limite et nom de groupe facultatifs. Utilisée par l'app de trafic.
----Source : lua/ge/extensions/core/multiSpawn.lua:847
----@param amount integer|nil Nombre max à supprimer ; nil = tous.
----@param groupName string|nil Ne supprime que ce groupe ; nil = tout groupe.
+--- Deletes vehicles created via this module (those with the vehicleGroup field), starting from the end of the list, with optional limit and group name. Used by the traffic app.
+---Source: lua/ge/extensions/core/multiSpawn.lua:847
+---@param amount integer|nil Max number to delete; nil = all.
+---@param groupName string|nil Only deletes this group; nil = any group.
 function core_multiSpawn.deleteVehicles(amount, groupName) end
 
---- Ajuste un groupe à `amount` éléments, en place : duplique les entrées en boucle s'il est trop petit, tronque s'il est trop grand.
----Source : lua/ge/extensions/core/multiSpawn.lua:703
----@param group table[] Groupe (modifié).
----@param amount integer|nil Taille cible.
----@return table[]  Le même groupe.
+--- Adjusts a group to `amount` elements, in place: duplicates entries in a loop if it is too small, truncates if it is too large.
+---Source: lua/ge/extensions/core/multiSpawn.lua:703
+---@param group table[] Group (modified).
+---@param amount integer|nil Target size.
+---@return table[]  The same group.
 function core_multiSpawn.fitGroup(group, amount) end
 
---- Parcourt les modèles et configs installés (core_vehicles) et construit la table de base servant à tirer un groupe : par modèle { model, country, popBase, popFactor, configData = [{ config, popBase, popFactor }] }, plus countryCounts. Par défaut seuls les contenus officiels sont pris (allMods = false).
----Source : lua/ge/extensions/core/multiSpawn.lua:140
----@param params table|nil { allMods, allConfigs, filters, minPop, maxYear, country }. filters par défaut { Type = { car = 1, truck = 1 } }. Note : si params est fourni sans allConfigs, seule la config par défaut de chaque modèle est retenue.
----@return table  Liste de modèles avec champ countryCounts.
+--- Walks through the installed models and configs (core_vehicles) and builds the base table used to draw a group: per model { model, country, popBase, popFactor, configData = [{ config, popBase, popFactor }] }, plus countryCounts. By default only official content is taken (allMods = false).
+---Source: lua/ge/extensions/core/multiSpawn.lua:140
+---@param params table|nil { allMods, allConfigs, filters, minPop, maxYear, country }. filters defaults to { Type = { car = 1, truck = 1 } }. Note: if params is provided without allConfigs, only the default config of each model is kept.
+---@return table  List of models with a countryCounts field.
 function core_multiSpawn.getInstalledVehicleData(params) end
 
---- Hook appelé à la création d'un véhicule côté C++ : pendant un spawn de groupe, demande au véhicule d'apparaître moteur tournant (selon startEngines).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/multiSpawn.lua:863
----@param id integer Id du véhicule créé.
+--- Hook called when a vehicle is created on the C++ side: during a group spawn, asks the vehicle to spawn with the engine running (according to startEngines).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/multiSpawn.lua:863
+---@param id integer Id of the created vehicle.
 function core_multiSpawn.onSpawnCCallback(id) end
 
---- Téléporte des véhicules existants dans une nouvelle formation (un par intervalle de 0.02 s via un job, ou immédiatement si options.instant). Les positions sont corrigées par le décalage du nœud de référence sauf ignoreAdjust ; safeTeleport est utilisé sauf ignoreSafe.
----Source : lua/ge/extensions/core/multiSpawn.lua:685
----@param vehIds integer[] Ids des véhicules à placer.
+--- Teleports existing vehicles into a new formation (one per 0.02 s interval via a job, or immediately if options.instant). Positions are corrected by the reference node offset unless ignoreAdjust; safeTeleport is used unless ignoreSafe.
+---Source: lua/ge/extensions/core/multiSpawn.lua:685
+---@param vehIds integer[] Ids of the vehicles to place.
 ---@param options table|nil { mode, gap, pos, dir, rot, startIndex, func, customTransforms, instant, ignoreAdjust, ignoreSafe }.
 function core_multiSpawn.placeGroup(vehIds, options) end
 
---- Prépare les données d'apparition à partir d'un groupe : copie, ajuste à la taille demandée (fitGroup), complète la config par défaut, résout les peintures (y compris aléatoires). Un modèle introuvable est remplacé par le modèle 'pickup' par défaut (erreur loggée).
----Source : lua/ge/extensions/core/multiSpawn.lua:727
----@param group table[] Groupe de véhicules.
----@param amount integer|nil Taille voulue ; nil garde la taille du groupe.
----@return table[]|nil  Données d'apparition, nil si le groupe est vide.
+--- Prepares the spawn data from a group: copies, adjusts to the requested size (fitGroup), fills in the default config, resolves paints (including random ones). A model that is not found is replaced by the default 'pickup' model (error logged).
+---Source: lua/ge/extensions/core/multiSpawn.lua:727
+---@param group table[] Vehicle group.
+---@param amount integer|nil Requested size; nil keeps the group's size.
+---@return table[]|nil  Spawn data, nil if the group is empty.
 function core_multiSpawn.setVehicleSpawnData(group, amount) end
 
---- Obsolète : crée un groupe aléatoire puis le fait apparaître. Utiliser spawnGroup.
----Source : lua/ge/extensions/core/multiSpawn.lua:842
----@param amount integer Nombre de véhicules.
----@param shuffle boolean|nil Mélange l'ordre.
----@param spawnMode string|nil Mode de formation.
----@param spawnGap number|nil Espacement en mètres.
----@return integer|nil  Id du groupe.
+--- Deprecated: creates a random group then spawns it. Use spawnGroup.
+---Source: lua/ge/extensions/core/multiSpawn.lua:842
+---@param amount integer Number of vehicles.
+---@param shuffle boolean|nil Shuffles the order.
+---@param spawnMode string|nil Formation mode.
+---@param spawnGap number|nil Spacing in meters.
+---@return integer|nil  Group id.
 function core_multiSpawn.setupVehicles(amount, shuffle, spawnMode, spawnGap) end
 
---- Fait apparaître un groupe de véhicules en formation. Si un groupe est déjà en cours, la demande est mise en file. Groupe vide : en crée un par défaut ; amount <= 0 : ne fait rien.
----Source : lua/ge/extensions/core/multiSpawn.lua:796
----@param group table[]|nil Groupe de véhicules.
----@param amount integer Nombre de véhicules.
+--- Spawns a vehicle group in formation. If a group is already in progress, the request is queued. Empty group: creates a default one; amount <= 0: does nothing.
+---Source: lua/ge/extensions/core/multiSpawn.lua:796
+---@param group table[]|nil Vehicle group.
+---@param amount integer Number of vehicles.
 ---@param options table|nil { name ('custom'), mode ('roadAhead'), gap (15), shuffle, randomPaints, cling, ignoreAdjust, canSpawnAnotherVehicleCheck, pos, dir, rot, startIndex, func, customTransforms }.
----@return integer|nil  Identifiant unique du groupe (nil si en file, refusé, ou scène sans MissionGroup).
+---@return integer|nil  Unique group identifier (nil if queued, refused, or scene without MissionGroup).
 function core_multiSpawn.spawnGroup(group, amount, options) end
 
---- Étape basse niveau de spawnGroup : affecte positions et rotations aux données d'apparition déjà préparées par setVehicleSpawnData, les assainit (sanitizeVehicleSpawnOptions) et lance le job de création (un véhicule par frame).
----Source : lua/ge/extensions/core/multiSpawn.lua:617
----@param spawnData table[] Sortie de setVehicleSpawnData.
----@param spawnOptions table Mêmes options que spawnGroup (name, mode, gap, cling, ...).
----@return integer|nil  Nouvel identifiant de groupe, nil si pas de MissionGroup ou données vides.
+--- Low-level step of spawnGroup: assigns positions and rotations to the spawn data already prepared by setVehicleSpawnData, sanitizes them (sanitizeVehicleSpawnOptions) and starts the creation job (one vehicle per frame).
+---Source: lua/ge/extensions/core/multiSpawn.lua:617
+---@param spawnData table[] Output of setVehicleSpawnData.
+---@param spawnOptions table Same options as spawnGroup (name, mode, gap, cling, ...).
+---@return integer|nil  New group identifier, nil if no MissionGroup or empty data.
 function core_multiSpawn.spawnProcessedGroup(spawnData, spawnOptions) end
 
---- Convertit tous les véhicules actuellement dans la scène (getAllVehiclesByType) en groupe, avec exclusions facultatives.
----Source : lua/ge/extensions/core/multiSpawn.lua:339
----@param ignorePlayer boolean|nil Exclut le véhicule joueur 0.
----@param ignoreTraffic boolean|nil Exclut les véhicules de trafic ou garés.
----@return table[]  Entrées de groupe.
+--- Converts all vehicles currently in the scene (getAllVehiclesByType) into a group, with optional exclusions.
+---Source: lua/ge/extensions/core/multiSpawn.lua:339
+---@param ignorePlayer boolean|nil Excludes the player vehicle 0.
+---@param ignoreTraffic boolean|nil Excludes traffic or parked vehicles.
+---@return table[]  Group entries.
 function core_multiSpawn.spawnedVehsToGroup(ignorePlayer, ignoreTraffic) end
 
---- Alias de placeGroup.
----Source : lua/ge/extensions/core/multiSpawn.lua:685
----@param vehIds integer[] Ids des véhicules.
----@param options table|nil Voir placeGroup.
+--- Alias of placeGroup.
+---Source: lua/ge/extensions/core/multiSpawn.lua:685
+---@param vehIds integer[] Vehicle ids.
+---@param options table|nil See placeGroup.
 function core_multiSpawn.teleportGroup(vehIds, options) end
 
---- Convertit des véhicules existants en entrées de groupe (modèle, config, peintures, les noms de peinture valent '(Custom)').
----Source : lua/ge/extensions/core/multiSpawn.lua:316
----@param vehIds integer[]|nil Ids de véhicules.
----@return table[]  Entrées de groupe.
+--- Converts existing vehicles into group entries (model, config, paints; paint names are '(Custom)').
+---Source: lua/ge/extensions/core/multiSpawn.lua:316
+---@param vehIds integer[]|nil Vehicle ids.
+---@return table[]  Group entries.
 function core_multiSpawn.vehIdsToGroup(vehIds) end
 

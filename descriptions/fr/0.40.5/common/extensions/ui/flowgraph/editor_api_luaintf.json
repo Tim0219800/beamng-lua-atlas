@@ -1,0 +1,129 @@
+{
+  "path": "lua/common/extensions/ui/flowgraph/editor_api_luaintf.lua",
+  "module": "Couche d'interface Lua vers l'éditeur de nœuds C++ (Engine.fge, un éditeur de graphes de type « imgui-node-editor »). Le fichier renvoie une fonction qui reçoit une table M (celle de ui_flowgraph_editor) et y ajoute : constructeurs d'identifiants (NodeIdPtr, LinkIdPtr, PinIdPtr), enums (StyleColor_*, StyleVar_*, PinKind_*, FlowDirection_*, IconType_*, Dirty_*), et wrappers des fonctions fge (éditeur courant, styles, nœuds, pins, liens, sélection, création/suppression, navigation, raccourcis, menus contextuels, conversion écran/canevas). Ce n'est pas une extension chargeable en soi.",
+  "notes": [
+    "Begin() ajuste l'échelle ImGui : SetWindowFontScale(1/FontGlobalScale) et met im.uiscale[0] à 1 ; End() restaure im.uiscale[0] et remet l'échelle de fonte à 1.",
+    "GetSelectedNodes/GetSelectedLinks sont dépréciés : ils loguent une erreur et remplissent un tableau indexé depuis 0 à partir de GetSelectedNodeIds/GetSelectedLinkIds.",
+    "M.setDebugEnabled est assigné à fge.getDebugEnabled (et non à un setter) : probable bug de copier-coller, setDebugEnabled lit au lieu d'écrire.",
+    "Les valeurs par défaut sont appliquées par les wrappers : Link (couleur blanche, épaisseur 1, isShortcut false), BeginCreate, QueryNewLink2/QueryNewNode2/AcceptNewItem2/RejectNewItem2 (épaisseur 1), AcceptDeletedItem (deleteDependencies true), SelectNode/SelectLink (id 0, append false), NavigateToContent (durée -1), NavigateToSelection (zoomIn false, durée -1).",
+    "M.ctx est initialisé avec fge.GetCurrentEditor() si un éditeur existe ; SetCurrentEditor met aussi à jour M.ctx."
+  ],
+  "functions": {
+    "PtrToId": {
+      "desc": "Renvoie l'identifiant numérique d'un objet pointeur NodeId/LinkId/PinId (appelle obj:id()).",
+      "params": {"obj": {"type": "userdata", "desc": "Objet NodeId, LinkId ou PinId."}},
+      "returns": [{"type": "integer", "desc": "Identifiant."}]
+    },
+    "NodeIdPtr": {"desc": "Crée un objet NodeId initialisé à 0.", "params": {}, "returns": [{"type": "userdata", "desc": "NodeId."}]},
+    "LinkIdPtr": {"desc": "Crée un objet LinkId initialisé à 0.", "params": {}, "returns": [{"type": "userdata", "desc": "LinkId."}]},
+    "PinIdPtr": {"desc": "Crée un objet PinId initialisé à 0.", "params": {}, "returns": [{"type": "userdata", "desc": "PinId."}]},
+    "SetCurrentEditor": {
+      "desc": "Définit l'éditeur courant (M.ctx et fge.SetCurrentEditor).",
+      "params": {"ctx": {"type": "userdata", "desc": "Contexte d'éditeur créé par CreateEditor."}},
+      "returns": []
+    },
+    "PopStyleColor": {
+      "desc": "Dépile des couleurs de style de l'éditeur (1 par défaut).",
+      "params": {"count": {"type": "integer|nil", "desc": "Nombre à dépiler, 1 si nil."}},
+      "returns": []
+    },
+    "PopStyleVar": {
+      "desc": "Dépile des variables de style de l'éditeur (1 par défaut).",
+      "params": {"count": {"type": "integer|nil", "desc": "Nombre à dépiler, 1 si nil."}},
+      "returns": []
+    },
+    "Begin": {
+      "desc": "Ouvre le canevas de l'éditeur de nœuds (fge.Begin) et neutralise l'échelle d'UI ImGui le temps de l'édition.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant ImGui du canevas."},
+        "size": {"type": "ImVec2|nil", "desc": "Taille, (0,0) par défaut."},
+        "readOnly": {"type": "boolean|nil", "desc": "Lecture seule, false par défaut."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de fge.Begin."}]
+    },
+    "End": {
+      "desc": "Ferme le canevas (fge.End) et restaure l'échelle d'UI.",
+      "params": {},
+      "returns": [{"type": "any", "desc": "Résultat de fge.End."}]
+    },
+    "Link": {
+      "desc": "Déclare un lien entre deux pins.",
+      "params": {
+        "id": {"type": "any", "desc": "Id du lien."},
+        "startPinId": {"type": "any", "desc": "Pin de départ."},
+        "endPinId": {"type": "any", "desc": "Pin d'arrivée."},
+        "color": {"type": "ImVec4|nil", "desc": "Couleur, blanc par défaut."},
+        "thickness": {"type": "number|nil", "desc": "Épaisseur, 1.0 par défaut."},
+        "isShortcut": {"type": "boolean|nil", "desc": "Lien raccourci, false par défaut."},
+        "shortCutLabel": {"type": "string|nil", "desc": "Libellé du raccourci."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de fge.Link."}]
+    },
+    "Flow": {
+      "desc": "Anime un flux sur un lien.",
+      "params": {
+        "linkId": {"type": "any", "desc": "Id du lien."},
+        "direction": {"type": "integer|nil", "desc": "FlowDirection_Forward par défaut."}
+      },
+      "returns": []
+    },
+    "BeginCreate": {
+      "desc": "Démarre la section de création interactive de liens/nœuds.",
+      "params": {
+        "color": {"type": "ImVec4|nil", "desc": "Couleur, blanc par défaut."},
+        "thickness": {"type": "number|nil", "desc": "Épaisseur, 1.0 par défaut."}
+      },
+      "returns": [{"type": "boolean", "desc": "Résultat de fge.BeginCreate."}]
+    },
+    "AcceptDeletedItem": {
+      "desc": "Accepte la suppression de l'élément interrogé.",
+      "params": {"deleteDependencies": {"type": "boolean|nil", "desc": "Supprime aussi les dépendances, true par défaut."}},
+      "returns": [{"type": "boolean", "desc": "Résultat de fge.AcceptDeletedItem."}]
+    },
+    "SelectNode": {
+      "desc": "Sélectionne un nœud (id 0 si nil).",
+      "params": {
+        "nodeId": {"type": "any|nil", "desc": "Id du nœud."},
+        "append": {"type": "boolean|nil", "desc": "Ajoute à la sélection, false par défaut."}
+      },
+      "returns": []
+    },
+    "SelectLink": {
+      "desc": "Sélectionne un lien (id 0 si nil).",
+      "params": {
+        "linkId": {"type": "any|nil", "desc": "Id du lien."},
+        "append": {"type": "boolean|nil", "desc": "Ajoute à la sélection, false par défaut."}
+      },
+      "returns": []
+    },
+    "NavigateToContent": {
+      "desc": "Centre la vue sur tout le contenu.",
+      "params": {"duration": {"type": "number|nil", "desc": "Durée de l'animation, -1.0 par défaut."}},
+      "returns": []
+    },
+    "NavigateToSelection": {
+      "desc": "Centre la vue sur la sélection.",
+      "params": {
+        "zoomIn": {"type": "boolean|nil", "desc": "Zoome, false par défaut."},
+        "duration": {"type": "number|nil", "desc": "Durée, -1.0 par défaut."}
+      },
+      "returns": []
+    },
+    "GetSelectedNodes": {
+      "desc": "Déprécié : logue une erreur ; remplit nodes (indexé depuis 0) avec les ids sélectionnés.",
+      "params": {
+        "nodes": {"type": "table", "desc": "Tableau rempli."},
+        "size": {"type": "integer", "desc": "Non utilisé."}
+      },
+      "returns": [{"type": "integer", "desc": "Nombre de nœuds."}]
+    },
+    "GetSelectedLinks": {
+      "desc": "Déprécié : logue une erreur ; remplit links (indexé depuis 0) avec les ids sélectionnés.",
+      "params": {
+        "links": {"type": "table", "desc": "Tableau rempli."},
+        "size": {"type": "integer", "desc": "Non utilisé."}
+      },
+      "returns": [{"type": "integer", "desc": "Nombre de liens."}]
+    }
+  }
+}

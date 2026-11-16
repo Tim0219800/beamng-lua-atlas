@@ -1,23 +1,23 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/file/loadData.lua",
-  "module": "Nœud « Load Data » (catégorie once_instant, couleur file). Charge des données simples depuis un fichier, réutilisables entre sessions. Entrée : file (nom sans extension). Les pins de sortie personnalisés (types string, number, bool, any, table, vec3, quat, color) portent le nom des clés lues ; chaque sortie reçoit la valeur de la clé du même nom via modules.file:read.",
+  "module": "Node \"Load Data\" (category once_instant, color file). Loads simple data from a file, reusable between sessions. Input: file (name without extension). The custom output pins (types string, number, bool, any, table, vec3, quat, color) carry the names of the keys read; each output receives the value of the key with the same name via modules.file:read.",
   "notes": [
-    "La description du pin file dit « save into » mais il s'agit ici du fichier à lire."
+    "The description of the file pin says \"save into\" but here it is the file to read."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Active la sauvegarde des pins et les pins de sortie personnalisés.",
+          "desc": "Enables pin saving and custom output pins.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Pour chaque pin de sortie (hors flow), lit la valeur correspondante dans le fichier.",
+          "desc": "For each output pin (except flow), reads the corresponding value from the file.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Force le rechargement du fichier (modules.file:forceReload).",
+          "desc": "Forces the file to reload (modules.file:forceReload).",
           "internal": true
         }
       }

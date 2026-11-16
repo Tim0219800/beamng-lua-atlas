@@ -1,0 +1,117 @@
+{
+  "path": "lua/ge/extensions/editor/missionEditor.lua",
+  "module": "Fenêtre « Mission Editor » du world editor pour créer et modifier les missions du jeu (info.json de chaque dossier de mission). Elle liste les missions avec filtres (niveau courant, procédurales, carrière, freeroam), recherche et regroupement (niveau, type, date, branche), et propose le menu File (nouvelle mission, sauvegarde, suppression). Elle instancie les sous-fenêtres du dossier missionEditor/ (general, conditions, careerSetup, additionalAttributes, startTrigger, layers, setupModules, genericTypeData, objectives, progressSingle, progressMulti, playbookUtils, issues, previewChecker) et délègue l'édition de chaque section. Dépend de gameplay_missions_missions.",
+  "usage": "extensions.load('editor_missionEditor')\neditor_missionEditor.show()\neditor_missionEditor.setMissionById('west_coast_usa/arrive/mission1')",
+  "notes": [
+    "Les modifications d'une mission sont repérées par mission._dirty = true ; « Save » appelle gameplay_missions_missions.saveMission(mission, mission.missionFolder).",
+    "La suppression d'une mission efface réellement des fichiers (FS:removeFile et FS:directoryRemove sur le dossier de la mission) : à manipuler avec précaution.",
+    "Les préférences missionEditor.general stockent groupFilter, showWindows, shortIds (identifiants courts) et alwaysShowScreenshots.",
+    "L'éditeur de dev (missionEditor/dev.lua) est commenté dans loadWindows et n'est donc pas utilisé.",
+    "Bug : getSelectedMissionId renvoie clickedMission, c'est-à-dire la table de la mission cliquée (ou nil), et non son identifiant.",
+    "onConsoleLog ne fait que print(timer) : il n'affiche ni le niveau ni la ligne du message.",
+    "onSerialize/onDeserialized conservent la dernière mission sélectionnée et le dernier onglet à travers un rechargement Lua."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'gameplay_missions_missions'} : extension chargée avant celle-ci."}
+  },
+  "functions": {
+    "show": {
+      "desc": "Ouvre la fenêtre « mission_editor » (editor.showWindow) et recharge le filtre de regroupement enregistré.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getMissionList": {
+      "desc": "Renvoie la liste des données de missions chargée par l'éditeur (gameplay_missions_missions.getFilesData), ou nil si elle n'a pas encore été chargée.",
+      "params": {},
+      "returns": [{"type": "table[]|nil", "desc": "Missions, chacune avec id, name, missionFolder, _dirty, etc."}],
+      "internal": false
+    },
+    "clickMission": {
+      "desc": "Simule un clic sur une mission : elle sera sélectionnée à la prochaine image.",
+      "params": {"m": {"type": "table", "desc": "Données de mission (élément de getMissionList)."}},
+      "returns": [],
+      "internal": false
+    },
+    "setMissionById": {
+      "desc": "Sélectionne la mission d'id donné et ouvre l'arbre. Charge la liste si nécessaire. Avec instant, les sous-fenêtres sont aussitôt mises à jour (setMission). Ne fait rien si l'id n'existe pas.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant de la mission."},
+        "instant": {"type": "boolean|nil", "desc": "true pour appliquer immédiatement aux sous-fenêtres."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getSelectedMissionId": {
+      "desc": "Renvoie la mission actuellement cliquée. Malgré le nom, c'est la table de la mission (clickedMission) et non son id.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Données de la mission cliquée."}],
+      "internal": false
+    },
+    "getMissionTypeWindow": {
+      "desc": "Renvoie la sous-fenêtre des données propres au type de mission (genericTypeData).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Objet fenêtre, table vide avant le premier affichage."}],
+      "internal": false
+    },
+    "getStartTriggerWindow": {
+      "desc": "Renvoie la sous-fenêtre de l'éditeur de déclencheur de départ (startTrigger).",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Objet fenêtre, nil avant le premier affichage."}],
+      "internal": false
+    },
+    "getCurrentEditorHelperWhenActive": {
+      "desc": "Renvoie l'assistant d'édition du type de mission courant, uniquement si la fenêtre est visible et qu'une mission est chargée ; sinon nil.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Résultat de missionTypeWindow:getCurrentEditorHelper()."}],
+      "internal": false
+    },
+    "reloadMissionSystem": {
+      "desc": "Recharge tout le système de missions (gameplay_missions_missions.reloadCompleteMissionSystem), relit la liste, retrouve la mission précédemment affichée, remet à jour les sous-fenêtres et réapplique filtre, recherche et regroupement.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onEditorGui": {
+      "desc": "Hook appelé à chaque image par le world editor : dessine la fenêtre Mission Editor (barre de menu, liste, onglets de la mission, fenêtre des problèmes) et traite les clics.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook d'initialisation du world editor : enregistre les fenêtres mission_editor (1500x700) et mission_issues (700x700), l'entrée de menu « Mission Editor » (groupe Missions), charge le filtre et restaure showWindows depuis les préférences.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Hook : enregistre la catégorie de préférences missionEditor.general (groupFilter, showWindows, shortIds, alwaysShowScreenshots).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation d'extension : mémorise l'id de la dernière mission affichée et le dernier onglet.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{lastSelectedMissionId, lastTabItemShown}."}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook de désérialisation : réélit la dernière mission (setMissionById) et force l'ouverture de l'arbre et de l'onglet mémorisés.",
+      "params": {"data": {"type": "table|nil", "desc": "Données de onSerialize."}},
+      "returns": [],
+      "internal": true
+    },
+    "onConsoleLog": {
+      "desc": "Hook appelé pour chaque ligne de la console du jeu ; n'affiche que print(timer).",
+      "params": {
+        "timer": {"type": "number", "desc": "Horodatage du message."},
+        "lvl": {"type": "string", "desc": "Niveau (non utilisé)."},
+        "origin": {"type": "string", "desc": "Origine (non utilisée)."},
+        "line": {"type": "string", "desc": "Texte (non utilisé)."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

@@ -1,20 +1,20 @@
 # `flowgraph_nodes_scene_camera_getCameraMode`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/camera/getCameraMode.lua` · VM : Game Engine (GE) · 27 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/camera/getCameraMode.lua` · VM: Game Engine (GE) · 27 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/camera/getCameraMode")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/camera/getCameraMode")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Get Camera Mode' (categorie repeat_instant). Donne le nom du mode de camera actif (core_camera.getActiveCamName(0)) sur la sortie 'mode'. Depend de core_camera.
+Flowgraph node 'Get Camera Mode' (repeat_instant category). Gives the name of the active camera mode (core_camera.getActiveCamName(0)) on the output 'mode'. Depends on core_camera.
 
-**Dépendances (chargées avant) :** `core_camera`
+**Dependencies (loaded first):** `core_camera`
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Ecrit le nom du mode de camera actif sur la sortie. | 22 |
+| `C:work()` | Writes the name of the active camera mode to the output. | 22 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/camera/getCameraMode.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/camera/getCameraMode.lua`.*

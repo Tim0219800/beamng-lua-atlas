@@ -1,0 +1,71 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/uiRows.lua",
+  "module": "Formes de lignes ImGui dont sont faits les panneaux des outils d'éditeur : un slider précédé de son bouton de réinitialisation, un libellé devant une rangée de boutons d'option, et un sous-onglet qui se ferme sur une ligne de séparation. Partagé pour que les fenêtres se ressemblent (colonne de 30 px pour le reset, libellés sur 118 px). Utilise la palette 'crystal' et util.beginSubTab/endSubTab.",
+  "usage": "local rows = require('editor/toolUtilities/uiRows')\nrows.beginSliderRow('w', width == 4, function() width = 4 end)\nim.SliderFloat('##w', widthPtr, 1, 10)\nrows.endSliderRow()",
+  "notes": [
+    "beginSliderRow pousse un style (GrabMinSize 20), ouvre 2 colonnes et un PushItemWidth(-1) ; endSliderRow doit toujours suivre pour tout refermer.",
+    "optIcon retombe sur l'icône crop_square pour un nom inconnu, car uiIconImageButton plante sur une icône nil.",
+    "mixRow accepte des lignes { id, tip, icon } ou des tableaux { id, tip, icon } positionnels."
+  ],
+  "fields": {
+    "LABEL_COL_W": {"type": "number", "desc": "Largeur de la colonne de libellés (118), pour aligner les rangées de boutons empilées."}
+  },
+  "functions": {
+    "beginSliderRow": {
+      "desc": "Icône de réinitialisation à gauche du slider (espace vide si déjà à la valeur par défaut). L'appelant dessine le slider entre beginSliderRow et endSliderRow.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant ImGui de base."},
+        "atDefault": {"type": "boolean", "desc": "Vrai : valeur par défaut, pas de bouton."},
+        "onReset": {"type": "function", "desc": "Appelée au clic sur le bouton de réinitialisation."}
+      },
+      "returns": []
+    },
+    "endSliderRow": {
+      "desc": "Referme la ligne de slider (largeur, colonnes, style).",
+      "params": {},
+      "returns": []
+    },
+    "rowLabel": {
+      "desc": "Libellé à gauche d'une rangée de boutons, suivi d'un SameLine à X fixe (au moins la largeur du libellé).",
+      "params": {
+        "label": {"type": "string", "desc": "Texte."},
+        "tip": {"type": "string|nil", "desc": "Infobulle."},
+        "col": {"type": "ImVec4|nil", "desc": "Couleur (greenB par défaut)."}
+      },
+      "returns": []
+    },
+    "optIcon": {
+      "desc": "Renvoie l'icône de l'éditeur de ce nom, ou un carré simple si elle est inconnue.",
+      "params": {"name": {"type": "string", "desc": "Nom dans editor.icons."}},
+      "returns": [{"type": "any", "desc": "Icône."}]
+    },
+    "mixRow": {
+      "desc": "Rangée de boutons dont plusieurs peuvent être allumés à la fois, pour un choix qui est un mélange. `has(id)` dit lesquels sont allumés. L'infobulle précise « In the mix » ou non.",
+      "params": {
+        "opts": {"type": "table", "desc": "Liste d'options { id, tip, icon } ou de triplets positionnels."},
+        "id": {"type": "string", "desc": "Préfixe d'identifiant ImGui."},
+        "has": {"type": "function", "desc": "has(optId) renvoie vrai si l'option est allumée."},
+        "offCol": {"type": "ImVec4", "desc": "Couleur du bouton éteint."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Identifiant de l'option cliquée, nil sinon."}]
+    },
+    "markSep": {
+      "desc": "Dessine la ligne de fin d'une liste et retient sa position, pour que le sous-onglet qui la contient n'en dessine pas une seconde juste dessous.",
+      "params": {},
+      "returns": []
+    },
+    "beginSubTab": {
+      "desc": "Ouvre un sous-onglet via util.beginSubTab et réinitialise la mémoire de séparateur.",
+      "params": {
+        "label": {"type": "string", "desc": "Titre."},
+        "flags": {"type": "integer|nil", "desc": "Drapeaux ImGui transmis à util.beginSubTab."}
+      },
+      "returns": [{"type": "boolean", "desc": "Vrai si l'onglet est ouvert (déduit du code)."}]
+    },
+    "endSubTab": {
+      "desc": "Ferme un sous-onglet par une ligne de séparation, sauf si la dernière chose dessinée en était déjà une ou s'il n'y a plus de place verticale.",
+      "params": {},
+      "returns": []
+    }
+  }
+}

@@ -1,9 +1,19 @@
 {
   "path": "lua/ge/extensions/editor/logger.lua",
-  "module": "Extension d'éditeur vide (squelette). Elle déclare onEditorGui et onExtensionLoaded sans aucun code : aucune fenêtre ni aucun comportement n'est ajouté.",
-  "notes": ["Les deux fonctions du fichier sont des coquilles vides ; le fichier est chargé comme extension d'éditeur parce qu'il contient « M.onEditor »."],
+  "module": "Empty editor extension (skeleton). It declares onEditorGui and onExtensionLoaded without any code: no window or behavior is added.",
+  "notes": [
+    "Both functions in the file are empty shells; the file is loaded as an editor extension because it contains \"M.onEditor\"."
+  ],
   "functions": {
-    "onEditorGui": {"desc": "Hook appelé à chaque frame par l'éditeur pour dessiner l'interface. Corps vide ici.", "params": {}, "internal": true},
-    "onExtensionLoaded": {"desc": "Hook appelé au chargement de l'extension. Corps vide ici.", "params": {}, "internal": true}
+    "onEditorGui": {
+      "desc": "Hook called every frame by the editor to draw the interface. Empty body here.",
+      "params": {},
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook called when the extension loads. Empty body here.",
+      "params": {},
+      "internal": true
+    }
   }
 }

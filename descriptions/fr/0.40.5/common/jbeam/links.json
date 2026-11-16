@@ -1,0 +1,39 @@
+{
+  "path": "lua/common/jbeam/links.lua",
+  "module": "Résolution des références entre lignes jbeam. Dans un fichier jbeam, une colonne dont le nom contient ':' (ex. \"id1:\", \"torqueArm:\", ou \"links:\" ) désigne le nom d'une ligne d'une autre section (nodes par défaut si rien après les deux-points, ex. \"nodeArm:\" ; \"id1:nodes\" explicite). Ce module repère ces liens (prepareLinksDestructive), les remplace par l'identifiant numérique cid de la cible (resolveLinks), et traite les liens de groupe \"[groupe]:section\" qui deviennent la liste des cid des lignes appartenant à ces groupes (resolveGroupLinks). C'est ce qui fait que les poutres référencent leurs nœuds par numéro dans les données finales.",
+  "notes": [
+    "Trois formes de liens : (a) colonne de ligne 'nom:section' = valeur chaîne, remplacée par le cid de la cible (la clé 'nom:section' est supprimée et la colonne 'nom' reçoit le cid) ; (b) colonne dont la valeur est une table (liste de noms), chaque élément est remplacé par un cid ; (c) clé de section 'nom:section' avec une liste de noms (ex. torqueReactionNodes:) renommée 'nom_section'.",
+    "sectionRenames (par ex. triggers2 -> triggers) est appliqué aux noms de section cible.",
+    "Quand une cible est introuvable : avertissement dans le journal sauf si la ligne porte optional = true (ou si la clé fait partie d'une liste interne de liens optionnels comme torqueArm:, nodeArm:, nodeCoupling:...), et la ligne est supprimée de sa section (entry[rowKey] = nil).",
+    "Une section cible inexistante provoque un avertissement et les données du lien sont abandonnées.",
+    "resolveLinks réindexe aussi chaque section déclarée dans vehicle.validTables par cid ; vehicle.validTables doit donc exister.",
+    "resolveGroupLinks : la colonne '[g1,g2]:nodes' (nom de champ de groupe entre crochets) est remplacée par une clé '_<champ>_<section>' contenant la liste de cid des lignes dont le champ de groupe correspond ; un champ de groupe de type chaîne est transformé en liste d'une chaîne."
+  ],
+  "fields": {},
+  "functions": {
+    "prepareLinksDestructive": {
+      "desc": "Parcourt toutes les sections du véhicule, détecte les liens, retire les clés de lien des lignes (modifie vehicle en place) et renvoie un journal à plat de triplets (ligne ou liste, clé, ligne cible) pour que resolveLinks écrive les cid.",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Données jbeam du véhicule (modifiées en place)."},
+        "sectionRenames": {"type": "table<string, string>", "desc": "Renommages de sections (ancien nom -> nouveau)."}
+      },
+      "returns": [{"type": "table", "desc": "Liste plate de triplets {conteneur, clé, ligneCible, ...} (indices 1,2,3 puis 4,5,6...)."}],
+      "internal": true
+    },
+    "resolveLinks": {
+      "desc": "Écrit dans chaque lien le cid de sa cible puis reconstruit les sections de vehicle.validTables en les indexant par cid.",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Données jbeam du véhicule (avec validTables)."},
+        "links": {"type": "table", "desc": "Journal renvoyé par prepareLinksDestructive."}
+      },
+      "returns": [{"type": "boolean", "desc": "Toujours true."}],
+      "internal": true
+    },
+    "resolveGroupLinks": {
+      "desc": "Remplace les colonnes '[groupe]:section' par des listes de cid de lignes appartenant aux groupes cités (clé '_groupe_section').",
+      "params": {"vehicle": {"type": "table", "desc": "Données jbeam du véhicule."}},
+      "returns": [{"type": "boolean", "desc": "Toujours true."}],
+      "internal": true
+    }
+  }
+}

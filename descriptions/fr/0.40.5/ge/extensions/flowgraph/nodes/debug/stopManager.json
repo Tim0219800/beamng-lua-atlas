@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/stopManager.lua",
+  "module": "Nœud flowgraph « Stop Project » (catégorie logic). Arrête l'exécution du projet flowgraph (graph.mgr:setRunning(false)) quand l'entrée flow a du flux.",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Appelle graph.mgr:setRunning(false)."}
+      }
+    }
+  }
+}

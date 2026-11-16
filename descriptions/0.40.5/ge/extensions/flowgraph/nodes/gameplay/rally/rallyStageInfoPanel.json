@@ -1,20 +1,108 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua",
-  "module": "Nœud flowgraph « Rally Info Panel » (catégorie repeat_instant, tag rally/ui/start/screen, icône ui). Construit le panneau consolidé de l'écran de départ rally et l'ajoute via mgr.modules.ui:addUIElement({type = 'rallyStageInfo', ...}) : statistiques (distance en km et répartition des surfaces, lues dans le fichier driveline de la mission), blurb de description de la mission, règles (récupération avec ou sans réparation, retournement, contrôle d'arrêt, ou règles de boucle : liaison, parc d'assistance, vitesse de liaison, faux départs, pénalités de contrôle horaire). Entrées : flow, isLoop (bool : règles de boucle si vrai, de spéciale seule sinon). Sortie : flow. Définit l'icône de page 'roadInfo'.",
-  "notes": ["La réparation sur recovery vient de activity.lastUserSettings.rallyRepairVehicleOnRecovery, sinon du réglage rallyRepairVehicleOnRecovery, sinon true.", "En mode boucle, affiche aussi distances SS/liaison/total (via le gestionnaire de boucle) et la liste des spéciales (stage1..4_rallyStage)."],
+  "module": "Flowgraph node \"Rally Info Panel\" (category repeat_instant, tag rally/ui/start/screen, ui icon). Builds the consolidated rally start screen panel and adds it via mgr.modules.ui:addUIElement({type = 'rallyStageInfo', ...}): statistics (distance in km and surface breakdown, read from the mission's driveline file), mission description blurb, rules (recovery with or without repair, flip, stop check, or loop rules: liaison, service park, liaison speed, false starts, time control penalties). Inputs: flow, isLoop (bool: loop rules if true, single stage rules otherwise). Output: flow. Sets the page icon 'roadInfo'.",
+  "notes": [
+    "The repair on recovery comes from activity.lastUserSettings.rallyRepairVehicleOnRecovery, otherwise from the rallyRepairVehicleOnRecovery setting, otherwise true.",
+    "In loop mode, also displays SS/liaison/total distances (via the loop manager) and the list of stages (stage1..4_rallyStage)."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "readStats": {"desc": "Lit les stats du driveline du rally manager, ou du fichier spline de la mission.", "returns": [{"type": "table|nil", "desc": "Stats (raceDistanceKms, surfacePercentages…) ou nil."}]},
-        "readStatsForFolder": {"desc": "Lit les stats du fichier driveline d'un dossier de mission.", "params": {"folder": {"type": "string|nil", "desc": "Dossier de mission."}}, "returns": [{"type": "table|nil", "desc": "Stats ou nil."}]},
-        "formatStats": {"desc": "Formate les stats : distance (« %.2f km ») et surfaces arrondies > 0 % triées par valeur décroissante.", "params": {"stats": {"type": "table|nil", "desc": "Stats brutes."}}, "returns": [{"type": "table|nil", "desc": "{distance, surfaces} ou nil."}]},
-        "buildStats": {"desc": "Stats formatées de la spéciale courante.", "returns": [{"type": "table|nil", "desc": "Voir formatStats."}]},
-        "buildLoopStats": {"desc": "Distances de spéciales, de liaison et totale de la boucle rally (formatées en km).", "returns": [{"type": "table|nil", "desc": "{specialStageDistance, liaisonDistance, totalDistance} ou nil si planning invalide."}]},
-        "buildLoopStages": {"desc": "Liste des spéciales de la boucle (nom, distance, surfaces) d'après les champs stage1..4_rallyStage de la mission.", "returns": [{"type": "table|nil", "desc": "Liste d'entrées ou nil."}]},
-        "getServiceParkSpeedLimit": {"desc": "Limite de vitesse du parc d'assistance affichable (30 km/h par défaut).", "returns": [{"type": "string", "desc": "Texte du type « 30 km/h »."}]},
-        "buildRules": {"desc": "Construit la liste des règles (clés de traduction ou {txt, context}) selon isLoop et la réparation.", "params": {"repairEnabled": {"type": "boolean", "desc": "Si la recovery répare le véhicule."}}, "returns": [{"type": "table", "desc": "Liste de règles."}]},
-        "work": {"desc": "Chaque frame : recopie flow et ajoute l'élément UI rallyStageInfo.", "internal": true}
+        "readStats": {
+          "desc": "Reads the driveline stats from the rally manager, or from the mission's spline file.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Stats (raceDistanceKms, surfacePercentages...) or nil."
+            }
+          ]
+        },
+        "readStatsForFolder": {
+          "desc": "Reads the stats from the driveline file of a mission folder.",
+          "params": {
+            "folder": {
+              "type": "string|nil",
+              "desc": "Mission folder."
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Stats or nil."
+            }
+          ]
+        },
+        "formatStats": {
+          "desc": "Formats the stats: distance (\"%.2f km\") and rounded surfaces > 0 % sorted by descending value.",
+          "params": {
+            "stats": {
+              "type": "table|nil",
+              "desc": "Raw stats."
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "{distance, surfaces} or nil."
+            }
+          ]
+        },
+        "buildStats": {
+          "desc": "Formatted stats of the current stage.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "See formatStats."
+            }
+          ]
+        },
+        "buildLoopStats": {
+          "desc": "Stage, liaison and total distances of the rally loop (formatted in km).",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "{specialStageDistance, liaisonDistance, totalDistance} or nil if the schedule is invalid."
+            }
+          ]
+        },
+        "buildLoopStages": {
+          "desc": "List of the loop's stages (name, distance, surfaces) from the stage1..4_rallyStage fields of the mission.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "List of entries or nil."
+            }
+          ]
+        },
+        "getServiceParkSpeedLimit": {
+          "desc": "Displayable service park speed limit (30 km/h by default).",
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Text like \"30 km/h\"."
+            }
+          ]
+        },
+        "buildRules": {
+          "desc": "Builds the list of rules (translation keys or {txt, context}) according to isLoop and the repair.",
+          "params": {
+            "repairEnabled": {
+              "type": "boolean",
+              "desc": "Whether the recovery repairs the vehicle."
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "List of rules."
+            }
+          ]
+        },
+        "work": {
+          "desc": "Every frame: copies flow and adds the rallyStageInfo UI element.",
+          "internal": true
+        }
       }
     }
   }

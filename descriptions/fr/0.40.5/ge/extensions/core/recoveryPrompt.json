@@ -1,0 +1,212 @@
+{
+  "path": "lua/ge/extensions/core/recoveryPrompt.lua",
+  "module": "Menu de « recovery » du joueur (remorquer sur la route, remettre sur les roues, réparer, retourner au garage, voyage rapide, réinitialiser le véhicule, recommencer ou valider une mission, rendre un véhicule de livraison ou de prêt). Il tient une table de boutons (buttonOptions) avec type de cible (vehicle, walk, none), conditions d'inclusion et d'activation, prix et fonction exécutée pendant un fondu d'écran. Les boutons sont exposés dans le menu radial (core_quickAccess) et dans les rails du menu pause. Un moddeur ajoute ses propres boutons avec addButton et pilote lesquels sont actifs.",
+  "usage": "core_recoveryPrompt.addButton('myTeleport', 'Ma téléportation', function(target) --[[ ... ]] end, 30, nil, true, true, true, 'car')\ncore_recoveryPrompt.setButtonActiveById('myTeleport', false)",
+  "notes": [
+    "Boutons intégrés : towToRoad, flipUpright, getFavoriteVehicle, flipMission, recoverMission, submitMission, restartMission, repairHere, resetVehicle, stopTestdrive, giveBackDeliveryVehicle, returnLoanedVehicle ; plus, en carrière, towTo<garage> et quickTravelTo<garage> et quickTravelToVehicle (ajoutés par setDefaultsForCareer).",
+    "Seuls les boutons ajoutés avec addButton (customButton) peuvent être retirés par removeButtonById ou écrasés par un nouvel addButton.",
+    "Déroulement : buttonPressed mémorise le bouton et sa cible ; si fadeActive, joue le son, lance ui_fadeScreen.start(0.3) ; onScreenFadeState appelle ensuite handleCurrRecoveryOption, qui émet le hook onRecoveryPromptButtonPressed(id), exécute atFadeFunction(target), incrémente le compteur, affiche le message, arrête le fondu. En carrière hors marche et hors mission, un snapshot d'état des pièces 'beforeTeleport' est créé avant.",
+    "Seuils : vehicleSlow = vitesse < 10 m/s ; vehicleStopped = vitesse < 0.5 m/s.",
+    "Prix en carrière : 50 pour flipUpright, 75 pour towToRoad, gratuits si l'assistance routière est gratuite pour le véhicule.",
+    "BUG probable : dans getButtonsForTarget, la boucle sur includeConditions écrase 'add' à chaque condition, donc seule la dernière condition compte.",
+    "BUG probable : addButton, en cas de collision d'ordre, lit o.id qui n'existe pas sur les entrées (le message de log contient nil) ; et son premier log('E', ...) passe le message à la place du tag.",
+    "BUG probable : setButtonLimits plante si une clé de limits n'est pas un identifiant de bouton existant (buttonOptions[id] est nil). createPopupData utilise la variable 'title' non définie (vaut nil, donc le titre est toujours la traduction par défaut).",
+    "Ce module appelle sans protection career_career, gameplay_walk, gameplay_missions_missionManager, etc. ; il suppose ces extensions chargées."
+  ],
+  "fields": {},
+  "functions": {
+    "isActive": {
+      "desc": "Indique si le menu de recovery est actif globalement.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "État actif."}],
+      "internal": false
+    },
+    "setActive": {
+      "desc": "Active ou désactive le menu de recovery globalement.",
+      "params": {"a": {"type": "boolean", "desc": "Nouvel état."}},
+      "returns": [],
+      "internal": false
+    },
+    "setDefaultsForFreeroam": {
+      "desc": "Réglage freeroam : désactive le menu et tous les boutons.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setDefaultsForCareer": {
+      "desc": "Réglage carrière : active le menu, ne garde actifs que towToRoad, flipUpright, getFavoriteVehicle, stopTestdrive, giveBackDeliveryVehicle, returnLoanedVehicle, et ajoute les boutons de remorquage et de voyage rapide vers les garages du niveau.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setDefaultsForTutorial": {
+      "desc": "Réglage tutoriel : active le menu avec seulement towToRoad, repairHere et flipUpright.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setEverythingActive": {
+      "desc": "Active le menu et tous les boutons.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "deactivateAllButtons": {
+      "desc": "Désactive tous les boutons (le menu reste dans son état).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setButtonActiveById": {
+      "desc": "Active ou désactive un bouton. Journalise un avertissement si l'id est inconnu.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant du bouton."},
+        "a": {"type": "boolean", "desc": "Actif ou non."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getButtonActiveById": {
+      "desc": "Indique si un bouton est actif.",
+      "params": {"id": {"type": "string", "desc": "Identifiant du bouton."}},
+      "returns": [{"type": "boolean|nil", "desc": "nil si l'id est inconnu."}],
+      "internal": false
+    },
+    "setButtonEnabledById": {
+      "desc": "Change l'état enabled d'un bouton ; si e est vrai, le bouton devient aussi actif.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant du bouton."},
+        "e": {"type": "boolean", "desc": "Enabled."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "addButton": {
+      "desc": "Ajoute un bouton personnalisé (type 'none' implicite car pas de champ type : il n'apparaît que dans la liste des cibles 'none'). Refuse d'écraser un bouton intégré.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant unique."},
+        "label": {"type": "string|nil", "desc": "Clé de traduction ; défaut 'ui.career.recovery.noLabel'."},
+        "atFadeFunction": {"type": "function|nil", "desc": "Fonction exécutée pendant le fondu ; reçoit la cible {type, vehId}."},
+        "order": {"type": "number|nil", "desc": "Ordre d'affichage ; défaut = plus grand ordre existant + 1."},
+        "message": {"type": "string|nil", "desc": "Clé de traduction du message affiché après l'action."},
+        "active": {"type": "boolean|nil", "desc": "Actif, true par défaut."},
+        "enabled": {"type": "boolean|function|nil", "desc": "Cliquable."},
+        "fadeActive": {"type": "boolean|nil", "desc": "Jouer un fondu d'écran, true par défaut."},
+        "icon": {"type": "string|nil", "desc": "Nom d'icône."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "removeButtonById": {
+      "desc": "Supprime un bouton personnalisé. Refusé pour les boutons intégrés.",
+      "params": {"id": {"type": "string", "desc": "Identifiant du bouton."}},
+      "returns": [],
+      "internal": false
+    },
+    "setButtonLimits": {
+      "desc": "Définit le nombre d'utilisations maximum par bouton (réinitialise toutes les limites d'abord ; -1 = illimité). Quand une limite existe, le libellé affiche les utilisations restantes.",
+      "params": {"limits": {"type": "table<string, integer>|nil", "desc": "Id de bouton -> limite."}},
+      "returns": [],
+      "internal": false
+    },
+    "resetButtonLimitCounters": {
+      "desc": "Remet à 0 le compteur d'utilisations des boutons.",
+      "params": {"onlyFor": {"type": "table<string, boolean>|nil", "desc": "Ensemble d'ids concernés ; nil = tous."}},
+      "returns": [],
+      "internal": false
+    },
+    "getButtonLimitsAndCounts": {
+      "desc": "Renvoie la limite et le compteur de chaque bouton.",
+      "params": {},
+      "returns": [{"type": "table<string, {limit: integer|nil, count: integer|nil}>", "desc": "Par id de bouton."}],
+      "internal": false
+    },
+    "serializeState": {
+      "desc": "Sérialise l'état (actif global et état actif de chaque bouton) pour la sauvegarde.",
+      "params": {},
+      "returns": [{"type": "{active: boolean, buttons: table<string, boolean>}", "desc": "État."}],
+      "internal": false
+    },
+    "deserializeState": {
+      "desc": "Restaure l'état produit par serializeState.",
+      "params": {"data": {"type": "table", "desc": "{active, buttons}."}},
+      "returns": [],
+      "internal": false
+    },
+    "buttonPressed": {
+      "desc": "Exécute le processus de recovery pour un bouton : snapshot de pièces éventuel, puis fondu d'écran (son de début puis ui_fadeScreen.start) avant l'action, ou action immédiate si fadeActive est faux.",
+      "params": {
+        "buttonId": {"type": "string", "desc": "Identifiant du bouton."},
+        "target": {"type": "{type: string, vehId: integer|nil}", "desc": "Cible : type 'vehicle', 'walk' ou 'none', et vehId pour un véhicule."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "handleCurrRecoveryOption": {
+      "desc": "Exécute l'option de recovery en cours (appelée à la fin du fondu) : hook onRecoveryPromptButtonPressed, atFadeFunction, compteur, message, fin du fondu et rechargement du routeur UI.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onPopupClosed": {
+      "desc": "Hook de fermeture du popup : oublie l'option courante et les données du popup.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onScreenFadeState": {
+      "desc": "Hook de ui_fadeScreen : à chaque changement d'état, appelle handleCurrRecoveryOption (qui ne fait rien s'il n'y a pas de demande en cours).",
+      "params": {"state": {"type": "any", "desc": "État du fondu (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "getPauseMissionRightRailButtons": {
+      "desc": "Boutons à afficher dans le rail droit du menu pause en mission : restartMission, flipMission, recoverMission, towToRoad (cibles véhicule joueur et none). Chaque entrée : id, title, icon, holdToClick, enabled, disableReason, order, startSlot, targetType, targetVehId.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Boutons triés par ordre."}],
+      "internal": false
+    },
+    "getPauseCareerRightRailButtons": {
+      "desc": "Boutons du rail droit du menu pause en carrière : flipUpright et towToRoad pour le véhicule du joueur.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Boutons triés par ordre."}],
+      "internal": false
+    },
+    "getCustomRecoveryOptionsActiveState": {
+      "desc": "Renvoie une liste nettoyée des options de recovery (actives ou non) : active, enabled, label (traduit si texte), icon, isRecoveryOption.",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Par id de bouton."}],
+      "internal": false
+    },
+    "onResetGameplay": {
+      "desc": "Hook appelé à la réinitialisation du gameplay : si le menu est actif et qu'aucune recovery n'est en cours, ouvre le menu rapide (core_quickAccess) sur la racine carrière, mission ou quick selon le contexte.",
+      "params": {"playerID": {"type": "integer", "desc": "Joueur concerné (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook de chargement : construit la table des boutons (setupButtonOptions).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onBeforeRadialOpened": {
+      "desc": "Hook appelé avant l'ouverture du menu radial : à la première fois, enregistre les entrées de recovery dans core_quickAccess (racine, quickTravel/, towing/).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onHideRadialMenu": {
+      "desc": "Hook : le menu radial est fermé, les données du popup sont effacées.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onQuickAccessLoaded": {
+      "desc": "Hook : core_quickAccess a été rechargé, les entrées devront être ré-enregistrées à la prochaine ouverture.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

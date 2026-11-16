@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/career/modules/reputation.lua",
+  "module": "Calcul de la réputation du joueur auprès des organisations de la carrière. Valeur comprise entre -50 et 700, convertie en niveau (-1 à 3 par défaut : questionable, neutral, reliable, preferred, partner) avec, par niveau, la part retenue sur les véhicules prêtés (loanerCut) et le bonus de livraison (deliveryBonus). La valeur brute est l'attribut <orgId>Reputation de playerAttributes.",
+  "notes": [
+    "Seuils par défaut (requiredValue) : -50, -25, 40, 175, 400. Les organisations peuvent surcharger via organization.reputationLevels.",
+    "Événements : returnLoanerDamaged = -20, discardDeliveryVehicle = -10.",
+    "addReputationToOrg modifie l'objet organisation : fusionne les valeurs par défaut dans reputationLevels, traduit label/levelLabel et écrit organization.reputation.",
+    "Le niveau renvoyé est (index trouvé - 2) ; addReputationToOrg suppose donc que reputationLevels commence au niveau -1."
+  ],
+  "functions": {
+    "addReputationToOrg": {
+      "desc": "Calcule la réputation de l'organisation et l'attache dans organization.reputation = {value, level, curLvlProgress, neededForNext, prevThreshold, nextThreshold} ; complète aussi les niveaux avec les valeurs par défaut.",
+      "params": {"organization": {"type": "table|nil", "desc": "Organisation (id, reputationLevels). Ne fait rien si nil."}},
+      "internal": false
+    },
+    "getLabel": {
+      "desc": "Libellé traduit du niveau de réputation par défaut.",
+      "params": {"lvl": {"type": "integer", "desc": "Niveau de -1 à 3."}},
+      "returns": [{"type": "string", "desc": "Libellé, ou chaîne vide si inconnu."}],
+      "internal": false
+    },
+    "getMinimumValue": {
+      "desc": "Valeur minimale de réputation.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "-50."}],
+      "internal": false
+    },
+    "getMaximumValue": {
+      "desc": "Valeur maximale de réputation.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "700."}],
+      "internal": false
+    },
+    "getValueForEvent": {
+      "desc": "Variation de réputation associée à un événement.",
+      "params": {"eventId": {"type": "string", "desc": "returnLoanerDamaged ou discardDeliveryVehicle."}},
+      "returns": [{"type": "number|nil", "desc": "Variation (négative), nil si inconnu."}],
+      "internal": false
+    }
+  }
+}

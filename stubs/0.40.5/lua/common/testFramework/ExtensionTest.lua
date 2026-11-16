@@ -2,23 +2,23 @@
 -- tim19Atlas stub generated from lua/common/testFramework/ExtensionTest.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Lanceur de tests automatiques pour les extensions Lua du jeu (dossiers /lua/common/extensions/ et /lua/<vm>/extensions/). Pour chaque extension retenue, il joue 8 vérifications : analyse du fichier (loadfile), exécution dans un bac à sable sans fuite de globales, chargement via extensions.load, tests fournis par l'extension (table `_unittests`), appel de tous ses hooks `onXxx` avec des données factices (testFramework/MockGenerators), couverture des générateurs factices, stabilité de la sérialisation, déchargement. Écrit un JSON de résultats détaillé (par défaut /junit-results/lua-extension-tests.json) et journalise un résumé.
---- Accès : `require("testFramework/ExtensionTest")`
+--- Automatic test runner for the game's Lua extensions (folders /lua/common/extensions/ and /lua/<vm>/extensions/). For each selected extension, it plays 8 checks: file parsing (loadfile), execution in a sandbox without global leaks, loading via extensions.load, tests provided by the extension (table `_unittests`), call of all its `onXxx` hooks with mock data (testFramework/MockGenerators), coverage of the mock generators, serialization stability, unloading. Writes a detailed results JSON (by default /junit-results/lua-extension-tests.json) and logs a summary.
+--- Access: `require("testFramework/ExtensionTest")`
 ---@class testFramework_ExtensionTest
 local testFramework_ExtensionTest = {}
 
---- Découvre les extensions (selon options.pattern), exécute pour chacune la série de 8 tests via testManager:run, agrège les résultats, écrit <outputPrefix>.json et journalise le bilan. Renvoie le résumé.
----Source : lua/common/testFramework/ExtensionTest.lua:322
----@param testManager table Gestionnaire de tests, normalement require('testFramework/TestManager').
+--- Discovers the extensions (according to options.pattern), runs the series of 8 tests for each via testManager:run, aggregates the results, writes <outputPrefix>.json and logs the summary. Returns the summary.
+---Source: lua/common/testFramework/ExtensionTest.lua:322
+---@param testManager table Test manager, normally require('testFramework/TestManager').
 ---@param options table|nil {pattern = string[], outputPrefix = string, serializationIterations = integer, writeAutoLog = boolean}.
----@return table  Résumé {vm, namespace, serializationIterations, extensions, testPassCount, testFailCount, failedExtensionCount, results, outputFiles}.
+---@return table  Summary {vm, namespace, serializationIterations, extensions, testPassCount, testFailCount, failedExtensionCount, results, outputFiles}.
 function testFramework_ExtensionTest.run(testManager, options) end
 
---- Raccourci : teste les extensions dont le nom correspond au motif (avec jokers). Journalise une erreur et renvoie nil si aucune ne correspond.
----Source : lua/common/testFramework/ExtensionTest.lua:395
----@param pattern string Motif de nom d'extension (ex. "gameplay_*").
----@param options table|nil Options transmises à run.
----@return table|nil  Résumé comme run, ou nil.
+--- Shortcut: tests the extensions whose name matches the pattern (with wildcards). Logs an error and returns nil if none match.
+---Source: lua/common/testFramework/ExtensionTest.lua:395
+---@param pattern string Extension name pattern (e.g. "gameplay_*").
+---@param options table|nil Options passed to run.
+---@return table|nil  Summary like run, or nil.
 function testFramework_ExtensionTest.testExtensions(pattern, options) end
 
 return testFramework_ExtensionTest

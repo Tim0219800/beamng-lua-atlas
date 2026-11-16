@@ -1,49 +1,49 @@
 # `wheels`
 
-*Fichier : `lua/common/jbeam/sections/wheels.lua` · VM : Commun (GE + véhicule) · 140 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/sections/wheels.lua` · VM: Common (GE + vehicle) · 140 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `wheels`
+**Access:** global `wheels`
 
-Répartiteur de la construction des roues lors du chargement d'un véhicule jbeam. Il parcourt les sections de roues du véhicule (wheels, monoHubWheels, hubWheelsTSV, hubWheelsTSI, hubWheels, pressureWheels) dans cet ordre, appelle pour chaque roue le gestionnaire du type (fichier jbeam/sections/wheelTypes/<section>.lua) qui crée nœuds, poutres et triangles, puis range toutes les roues dans vehicle.wheels avec un identifiant wheelID. processRotators ajoute ensuite les rotators (roues sans pneu) et renumérote les roues. Appelé par le chargeur jbeam, pas par un mod courant.
+Dispatcher for wheel construction when loading a jbeam vehicle. It goes through the vehicle's wheel sections (wheels, monoHubWheels, hubWheelsTSV, hubWheelsTSI, hubWheels, pressureWheels) in that order, calls for each wheel the type handler (file jbeam/sections/wheelTypes/<section>.lua) that creates nodes, beams and triangles, then stores all wheels in vehicle.wheels with a wheelID. processRotators then adds the rotators (wheels without a tire) and renumbers the wheels. Called by the jbeam loader, not by a typical mod.
 
-## Exemple
+## Example
 
 ```lua
--- usage interne du chargeur jbeam (jbeam/loader), dans cet ordre :
+-- internal use by the jbeam loader (jbeam/loader), in this order:
 local wheels = require('jbeam/sections/wheels')
 wheels.processWheels(vehicle)
 wheels.processRotators(vehicle)
 ```
 
-## Remarques
+## Notes
 
-- L'ordre des sections (wheels, monoHubWheels, hubWheelsTSV, hubWheelsTSI, hubWheels, pressureWheels) fixe les wheelID et les cid de nœuds ; le code dit 'do not reorder'. Le nom du fichier de gestionnaire doit être identique au nom de la section jbeam (c'est ainsi que le répartiteur le trouve par require).
-- Une roue dont numRays vaut 0 (ou négatif) est ignorée : elle reste dans sa section d'origine (pas de wheelID). Chaque roue traitée est copiée dans vehicle.wheels[wheelID] avec wheelSection = nom de la section, et supprimée de sa section d'origine.
-- processRotators supprime aussi les roues sans nœud (wheel.nodes nil ou vide) avec un avertissement, puis renumérote cid de 0 à N-1 : à appeler APRÈS processWheels. Il utilise wheel.name dans le message d'avertissement (erreur Lua si name est nil).
-- addWheelAttachments (fonction locale) ne fait rien par défaut : addStrapsToEverything vaut false (code de test inactif qui ajouterait un flexbody de sangle tire_02c_22x10_39strap autour des pneus).
-- Les tables vehicle.wheels, vehicle.nodes, etc. sont indexées à partir de 0 (parcourues avec tableSizeC).
+- The section order (wheels, monoHubWheels, hubWheelsTSV, hubWheelsTSI, hubWheels, pressureWheels) fixes the wheelIDs and the node cids; the code says 'do not reorder'. The handler file name must be identical to the jbeam section name (this is how the dispatcher finds it via require).
+- A wheel whose numRays is 0 (or negative) is ignored: it stays in its original section (no wheelID). Each processed wheel is copied into vehicle.wheels[wheelID] with wheelSection = section name, and removed from its original section.
+- processRotators also removes wheels without nodes (wheel.nodes nil or empty) with a warning, then renumbers cid from 0 to N-1: to be called AFTER processWheels. It uses wheel.name in the warning message (Lua error if name is nil).
+- addWheelAttachments (local function) does nothing by default: addStrapsToEverything is false (inactive test code that would add a tire_02c_22x10_39strap strap flexbody around the tires).
+- The vehicle.wheels, vehicle.nodes, etc. tables are 0-based (iterated with tableSizeC).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `wheels.processRotators(vehicle)` | Ajoute les rotators (vehicle.rotators) comme roues supplémentaires (wheelID, jbeamUtils.addRotator), retire les roues sans nœuds et renumérote vehicle.wheels / cid. *(interne)* | 105 |
-| `wheels.processWheels(vehicle)` | Construit toutes les roues du véhicule : réinitialise vehicle.wheels, traite chaque section de roues non vide via le gestionnaire du type de roue (require chargé à la demande puis mis en cache), assigne wheelID et range le résultat dans vehicle.wheels. *(interne)* | 81 |
+| `wheels.processRotators(vehicle)` | Adds the rotators (vehicle.rotators) as extra wheels (wheelID, jbeamUtils.addRotator), removes wheels without nodes and renumbers vehicle.wheels / cid. *(internal)* | 105 |
+| `wheels.processWheels(vehicle)` | Builds all the vehicle's wheels: resets vehicle.wheels, processes each non-empty wheel section via the wheel type handler (require loaded on demand then cached), assigns wheelID and stores the result in vehicle.wheels. *(internal)* | 81 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `wheels.processRotators(vehicle)`
 
-Ajoute les rotators (vehicle.rotators) comme roues supplémentaires (wheelID, jbeamUtils.addRotator), retire les roues sans nœuds et renumérote vehicle.wheels / cid.
+Adds the rotators (vehicle.rotators) as extra wheels (wheelID, jbeamUtils.addRotator), removes wheels without nodes and renumbers vehicle.wheels / cid.
 
-- `vehicle` (*table*) : données du véhicule
+- `vehicle` (*table*) : vehicle data
 
 #### `wheels.processWheels(vehicle)`
 
-Construit toutes les roues du véhicule : réinitialise vehicle.wheels, traite chaque section de roues non vide via le gestionnaire du type de roue (require chargé à la demande puis mis en cache), assigne wheelID et range le résultat dans vehicle.wheels.
+Builds all the vehicle's wheels: resets vehicle.wheels, processes each non-empty wheel section via the wheel type handler (require loaded on demand then cached), assigns wheelID and stores the result in vehicle.wheels.
 
-- `vehicle` (*table*) : données du véhicule en cours de construction (nodes, beams, maxIDs, sections de roues, flexbodies…)
-- **renvoie** : boolean toujours true
+- `vehicle` (*table*) : data of the vehicle being built (nodes, beams, maxIDs, wheel sections, flexbodies...)
+- **returns**: boolean always true
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/sections/wheels.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/sections/wheels.lua`.*

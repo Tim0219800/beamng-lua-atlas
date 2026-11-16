@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/resetPrefab.lua",
+  "module": "Noeud flowgraph « Reset Prefab » (once_instant, auteur BeamNG). Restaure les transformations des objets/véhicules d'un prefab via self.mgr.modules.prefab:restoreVehiclePositions(id). Entrée : id (number).",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "workOnce": {
+          "desc": "Appelle restoreVehiclePositions(id) du module prefab.",
+          "internal": false
+        }
+      }
+    }
+  }
+}

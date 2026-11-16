@@ -1,46 +1,46 @@
 # `core_licensePlateDesign`
 
-*Fichier : `lua/ge/extensions/core/licensePlateDesign.lua` · VM : Game Engine (GE) · 307 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/licensePlateDesign.lua` · VM: Game Engine (GE) · 307 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_licensePlateDesign` : `extensions.load("core_licensePlateDesign")`, puis la globale `core_licensePlateDesign`
+**Access:** extension `core_licensePlateDesign`: `extensions.load("core_licensePlateDesign")`, then the global `core_licensePlateDesign`
 
-Extension GE `core_licensePlateDesign` : charge la définition d'un design de plaque d'immatriculation et la convertit au format actuel (version 3, type 'licenseplate', fichiers *.sktemplate.json). Elle traduit aussi les anciens formats JSON (versions 0 à 2, avec des champs diffuse/bump/text/characterLayout et des motifs de type printf %d %c %l) vers des arbres de texte avec variables {plate}, {line1}, {seg1}... Un moddeur s'en sert pour lire un design de plaque, qu'il soit ancien ou nouveau.
+GE extension `core_licensePlateDesign`: loads the definition of a license plate design and converts it to the current format (version 3, type 'licenseplate', *.sktemplate.json files). It also translates the old JSON formats (versions 0 to 2, with diffuse/bump/text/characterLayout fields and printf-type patterns %d %c %l) into text trees with variables {plate}, {line1}, {seg1}... A modder uses it to read a plate design, whether old or new.
 
-## Exemple
+## Example
 
 ```lua
 local design = core_licensePlateDesign.loadDesign('/vehicles/common/licenseplate-default.json')
 if design then dump(design.format) end
 ```
 
-## Remarques
+## Notes
 
-- Le module n'a qu'une fonction publique, loadDesign ; tout le reste est local. Le format par défaut des anciens designs mono-format est la clé '30-15' (FORMAT_US).
-- loadDesign cherche d'abord le fichier *.sktemplate.json correspondant (le chemin .json est transformé en .sktemplate.json). S'il a un champ `format`, les formats absents sont complétés à partir de l'ancien .json du même nom (mergeLegacyFormats). Sinon il lit l'ancien fichier et le traduit.
-- Les motifs legacy %d, %c, %l deviennent {d}, {c}, {c} (le jeu de caractères 'l' est converti en 'c'). Jeux de caractères par défaut : d = 0-9, c = A-Z, D = 1-9. La longueur maximale du texte de plaque est 32.
-- Dimensions par défaut d'une plaque : 512 x 256 pixels ; hauteur de ligne par défaut 80 ; finition par défaut { roughness 1.0, metallic 0.0, fgRoughness 0.7, fgMetallic 0.0 }.
-- Les polices intégrées sont 'plate', 'plateIT' (chemin de layout contenant 'italy' ou '_it') et 'plateFE' (contenant 'fe' ou 'europe'). Une police de mod (.otf, .ttf, ou layout .json avec atlas) est utilisée telle quelle si les fichiers existent. Les couleurs quasi blanches (luminance >= 224) sont forcées en noir avec une police intégrée.
-- Bug probable dans resolveTextColor : `parseColor(color:gsub('%s+', ''))` passe aussi le 2e retour de gsub (nombre de remplacements) en argument ; sans conséquence, parseColor ignore le 2e argument.
-- Les fonctions locales translateLegacyFormat / translateV2ToV3 ne vérifient pas les types d'entrée : un fichier JSON mal formé peut provoquer une erreur Lua.
+- The module has only one public function, loadDesign; everything else is local. The default format of old single-format designs is the key '30-15' (FORMAT_US).
+- loadDesign first looks for the matching *.sktemplate.json file (the .json path is turned into .sktemplate.json). If it has a `format` field, the missing formats are completed from the old .json of the same name (mergeLegacyFormats). Otherwise it reads the old file and translates it.
+- The legacy patterns %d, %c, %l become {d}, {c}, {c} (the 'l' charset is converted to 'c'). Default charsets: d = 0-9, c = A-Z, D = 1-9. The maximum plate text length is 32.
+- Default plate dimensions: 512 x 256 pixels; default line height 80; default finish { roughness 1.0, metallic 0.0, fgRoughness 0.7, fgMetallic 0.0 }.
+- The built-in fonts are 'plate', 'plateIT' (layout path containing 'italy' or '_it') and 'plateFE' (containing 'fe' or 'europe'). A mod font (.otf, .ttf, or .json layout with atlas) is used as is if the files exist. Nearly white colors (luminance >= 224) are forced to black with a built-in font.
+- Probable bug in resolveTextColor: `parseColor(color:gsub('%s+', ''))` also passes the 2nd return of gsub (number of replacements) as an argument; harmless, parseColor ignores the 2nd argument.
+- The local functions translateLegacyFormat / translateV2ToV3 do not check the input types: a malformed JSON file can cause a Lua error.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_licensePlateDesign.loadDesign(path)` | Charge un design de plaque depuis un fichier JSON (ancien ou *.sktemplate.json) et renvoie une table au format version 3 : { name, version = 3, type = 'licenseplate', format = { [clé] = { size, background, emboss, finish, root, segments/limit/limit2, normal } }, vars = { plate = {...} } }. Les anciens formats sont convertis, les nouveaux sont complétés avec les formats de l'ancien fichier s'il existe. | 279 |
+| `core_licensePlateDesign.loadDesign(path)` | Loads a plate design from a JSON file (old or *.sktemplate.json) and returns a table in version 3 format: { name, version = 3, type = 'licenseplate', format = { [key] = { size, background, emboss, finish, root, segments/limit/limit2, normal } }, vars = { plate = {...} } }. The old formats are converted, the new ones are completed with the formats of the old file if it exists. | 279 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_licensePlateDesign.loadDesign(path)`
 
-Charge un design de plaque depuis un fichier JSON (ancien ou *.sktemplate.json) et renvoie une table au format version 3 : { name, version = 3, type = 'licenseplate', format = { [clé] = { size, background, emboss, finish, root, segments/limit/limit2, normal } }, vars = { plate = {...} } }. Les anciens formats sont convertis, les nouveaux sont complétés avec les formats de l'ancien fichier s'il existe.
+Loads a plate design from a JSON file (old or *.sktemplate.json) and returns a table in version 3 format: { name, version = 3, type = 'licenseplate', format = { [key] = { size, background, emboss, finish, root, segments/limit/limit2, normal } }, vars = { plate = {...} } }. The old formats are converted, the new ones are completed with the formats of the old file if it exists.
 
-- `path` (*string|nil*) : Chemin virtuel du fichier de design ; nil ou chaîne vide renvoie nil.
-- **renvoie** : table|nil Design version 3, ou nil si le fichier est introuvable ou illisible (avertissement dans le log).
+- `path` (*string|nil*) : Virtual path of the design file; nil or empty string returns nil.
+- **returns**: table|nil Version 3 design, or nil if the file is not found or unreadable (warning in the log).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/licensePlateDesign.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/licensePlateDesign.lua`.*

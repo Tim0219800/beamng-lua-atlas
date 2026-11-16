@@ -1,0 +1,69 @@
+{
+  "path": "lua/vehicle/controller/mechanics/linearToAngularTransform.lua",
+  "module": "Contrôleur de mécanique (type \"auxiliary\") qui convertit le déplacement d'une poutre capteur en rotation de poulie : la variation de longueur depuis le départ, divisée par un rayon effectif, donne un angle ; la fraction de tour (0..1, modulo 1) est multipliée par un facteur (360 par défaut) et écrite dans une valeur electrics pour animer une pièce rotative.",
+  "notes": [
+    "Clés jbeam (défaut) : sensorBeamTag (obligatoire), effectiveRadius (m, obligatoire > 0), angularOutputElectricsName (obligatoire), angularOutputElectricsMultiplier (360).",
+    "Les messages d'erreur du code mentionnent « beamSegments » et « pulleyRadius » (copier-coller) bien qu'ils concernent ce contrôleur.",
+    "Incohérence : isActiveCoef et beamBroken ne servent à rien (updateGFX ne le consulte pas) ; reset appelle obj:getBeamLength(sensorBeamId) sans vérifier que sensorBeamId existe."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "updateGFX": {
+      "type": "function|nil",
+      "desc": "Défini à l'init si la configuration est valide."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Retrouve la poutre capteur et valide la configuration.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Mémorise la longueur de départ du capteur et remet la sortie à 0.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Écrit la fraction de tour convertie dans la valeur electrics de sortie.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "beamBroken": {
+      "desc": "Hook : appelé quand une poutre casse ; marque le contrôleur inactif si c'est le capteur (sans effet réel, voir notes).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Identifiant (cid) de la poutre cassée."
+        },
+        "energy": {
+          "type": "number",
+          "desc": "Énergie de rupture."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

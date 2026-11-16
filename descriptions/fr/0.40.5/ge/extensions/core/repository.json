@@ -1,0 +1,178 @@
+{
+  "path": "lua/ge/extensions/core/repository.lua",
+  "module": "Client du dépôt de mods en ligne (repository BeamNG) côté GE. Il interroge l'API (core_online.apiCall, routes s1/v4 et s2/v4), gère les abonnements aux mods, tient une file de téléchargement/mise à jour (mods installés dans /mods/repo/) et pousse l'état à l'UI par guihooks (ModListReceived, ModReceived, UpdateQueueState, downloadStatesChanged, etc.). Il dépend de core_modmanager pour monter ou supprimer les mods.",
+  "usage": "-- depuis l'UI JS : bngApi.engineLua('extensions.core_repository.requestMods(' + bngApi.serializeToLua({query='drift'}) + ')')\ncore_repository.modSubscribe('1234')",
+  "notes": [
+    "Les résultats des requêtes ne sont pas retournés : ils sont envoyés à l'UI par guihooks.trigger (requestMods -> ModListReceived, requestMod -> ModReceived sauf si un callback est fourni, requestMyMods -> MyModsReceived).",
+    "Les pages de l'UI commencent à 1 : requestMods et requestMyMods envoient page - 1 au serveur.",
+    "Si le réglage onlineFeatures n'est pas 'enable', requestMod passe en mode hors ligne (requestModOffline, données locales du mod manager).",
+    "File de mises à jour : chaque élément a un état (waiting, updating, downloading, downloaded, done). Le nombre de téléchargements simultanés vient du réglage modNumParallelDownload (3 par défaut). Quand tout est fini, le serveur est informé (s2/v4/modUpdateSuccess) et UpdateFinished est émis.",
+    "modSubscribe consigne aussi un opt-out dans /settings/cloud/mods-optout.json ; modUnsubscribe y inscrit le mod (désabonnement volontaire). Si le gestionnaire de mods n'est pas prêt ou qu'on n'est pas authentifié, l'abonnement est mis en attente (subList) puis rejoué par runSubscription.",
+    "BUG : M.requestSubscriptions = requestSubscriptions référence une variable locale non définie, donc le champ vaut nil.",
+    "BUG probable : dans installMod, 'completeCallback' est une variable globale jamais définie dans ce fichier ; son test 'if completeCallback' est toujours faux. De plus requestMyMods utilise v.id pour 'pending' là où requestMods utilise v.tagid.",
+    "Dans installMod, un fichier du même nom à la racine /mods/ est supprimé avant le téléchargement."
+  ],
+  "fields": {
+    "requestSubscriptions": {"type": "nil", "desc": "Vaut nil : référence à une variable non définie dans le fichier."}
+  },
+  "functions": {
+    "onUpdate": {
+      "desc": "Hook de mise à jour : si la progression des téléchargements a changé, envoie 'downloadStatesChanged' à l'UI.",
+      "params": {"dt": {"type": "number", "desc": "Durée de l'image (non utilisée)."}},
+      "returns": [],
+      "internal": true
+    },
+    "uiUpdateQueue": {
+      "desc": "Envoie à l'UI 'UpdateQueueState' avec les listes updatingList, doneList, missingList et le drapeau updating.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "changeStateUpdateQueue": {
+      "desc": "Change l'état d'un élément de la file (par nom de fichier), puis notifie l'UI (UpdateQueueState et RepoModChangeStatus).",
+      "params": {
+        "fname": {"type": "string", "desc": "Nom de fichier du mod."},
+        "nstate": {"type": "string", "desc": "Nouvel état (waiting, updating, downloading, downloaded, done)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "installMod": {
+      "desc": "Télécharge un mod (s1/v4/download/mods/<uri>) vers localPath..filename et gère la fin : erreurs (notification toastr), suppression d'un ancien fichier du même mod hors du dossier repo, mise à jour de la file, rapport au serveur et lancement du téléchargement suivant.",
+      "params": {
+        "uri": {"type": "string", "desc": "'<id>/<version>/<nomdefichier>'."},
+        "filename": {"type": "string", "desc": "Nom du fichier zip à écrire."},
+        "localPath": {"type": "string|nil", "desc": "Dossier cible, '/mods/repo/' par défaut."},
+        "callback": {"type": "function|nil", "desc": "Appelé avec la réponse de téléchargement si le code HTTP est 200."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "requestMods": {
+      "desc": "Demande la liste des mods au serveur (s1/v4/getMods). Chaque entrée est enrichie de pending, unpacked et downState. Résultat envoyé à l'UI par 'ModListReceived'.",
+      "params": {
+        "query": {"type": "string|nil", "desc": "Texte de recherche."},
+        "order_by": {"type": "string|nil", "desc": "Champ de tri."},
+        "order": {"type": "string|nil", "desc": "Sens du tri."},
+        "page": {"type": "integer", "desc": "Numéro de page, à partir de 1."},
+        "categories": {"type": "any", "desc": "Filtre de catégories (transmis tel quel)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "requestMyMods": {
+      "desc": "Comme requestMods mais limité aux mods de l'utilisateur (own = 1). Résultat envoyé par 'MyModsReceived'.",
+      "params": {
+        "query": {"type": "string|nil", "desc": "Recherche."},
+        "order_by": {"type": "string|nil", "desc": "Champ de tri."},
+        "order": {"type": "string|nil", "desc": "Sens du tri."},
+        "page": {"type": "integer", "desc": "Numéro de page, à partir de 1."},
+        "categories": {"type": "any", "desc": "Filtre de catégories."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "requestMod": {
+      "desc": "Demande les détails d'un mod (s1/v4/getMod/<id>). Résultat passé au callback s'il est fourni, sinon envoyé par 'ModReceived'. Hors ligne ou en cas d'échec avec des données locales, utilise requestModOffline.",
+      "params": {
+        "mod_id": {"type": "string", "desc": "Identifiant du mod sur le dépôt."},
+        "callback": {"type": "function|nil", "desc": "Reçoit request.responseData."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "requestModOffline": {
+      "desc": "Envoie à l'UI ('ModReceived') les informations locales d'un mod installé ; ok = 1 si trouvé, 0 sinon.",
+      "params": {"mod_id": {"type": "string", "desc": "Identifiant du mod."}},
+      "returns": [],
+      "internal": false
+    },
+    "modSubscribe": {
+      "desc": "Abonne l'utilisateur à un mod : l'ajoute à la file en tant que 'subscription' et lance le téléchargement. Peut être ignoré si l'utilisateur s'est désabonné volontairement (useOptOut).",
+      "params": {
+        "mod_id": {"type": "string", "desc": "Identifiant du mod."},
+        "useOptOut": {"type": "boolean|nil", "desc": "Si vrai, ignore la demande si le mod figure dans la liste d'opt-out."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "modUnsubscribe": {
+      "desc": "Désabonne l'utilisateur : inscrit le mod dans la liste d'opt-out, le retire de la file (refusé s'il est en téléchargement), supprime le mod local via core_modmanager.deleteMod et prévient le serveur (s2/v4/modUnsubscribe) si besoin.",
+      "params": {"mod_id": {"type": "string", "desc": "Identifiant du mod."}},
+      "returns": [],
+      "internal": false
+    },
+    "addUpdateQueue": {
+      "desc": "Ajoute un mod à la file de téléchargement (sans doublon par id). Complète les champs : dirname '/mods/repo/', outfile, uri '<id>/<ver>/<filename>', icon, état initial (updating pour une subscription, waiting sinon).",
+      "params": {"data": {"type": "table", "desc": "Données du mod : id, ver, filename, reason (ex. 'subscription')."}},
+      "returns": [],
+      "internal": false
+    },
+    "updateAllMods": {
+      "desc": "Désactive le montage auto, marque tous les éléments d'action 'update' pour mise à jour et relance la file.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "updateOneMod": {
+      "desc": "Met à jour un seul mod de la file.",
+      "params": {"id": {"type": "string", "desc": "Identifiant du mod."}},
+      "returns": [],
+      "internal": false
+    },
+    "updateAllMissing": {
+      "desc": "Passe tous les éléments d'action 'missing' en mise à jour et relance la file.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setRepoMsg": {
+      "desc": "Mémorise le message du dépôt, inclus ensuite dans les listes envoyées à l'UI.",
+      "params": {"data": {"type": "table", "desc": "Message."}},
+      "returns": [],
+      "internal": false
+    },
+    "setRepoCmd": {
+      "desc": "Mémorise les ordres du serveur (forceInstall, forceRemove, forceDisable) appliqués à onModManagerReady.",
+      "params": {"cmddata": {"type": "table", "desc": "Listes d'identifiants de mods par clé."}},
+      "returns": [],
+      "internal": false
+    },
+    "setrepoAutomationMsg": {
+      "desc": "Mémorise un message d'automatisation, inclus dans les listes envoyées à l'UI (automationMsg).",
+      "params": {"data": {"type": "table", "desc": "Message."}},
+      "returns": [],
+      "internal": false
+    },
+    "onModManagerReady": {
+      "desc": "Hook appelé quand le gestionnaire de mods est prêt : rejoue les abonnements en attente, puis applique les ordres de repoCmd (installer, supprimer, désactiver des mods) et les efface.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "uiShowRepo": {
+      "desc": "Affiche le menu des mods (état UI 'menu.mods.local') après MenuHide.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "uiShowMod": {
+      "desc": "Demande à l'UI d'afficher la fiche d'un mod (évènement 'ShowMod').",
+      "params": {"modId": {"type": "string", "desc": "Identifiant du mod."}},
+      "returns": [],
+      "internal": false
+    },
+    "runSubscription": {
+      "desc": "Rejoue les abonnements mis en attente si le gestionnaire de mods est prêt et si l'utilisateur est authentifié.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onOnlineStateChanged": {
+      "desc": "Hook appelé quand l'état de connexion change : appelle runSubscription.",
+      "params": {"connected": {"type": "boolean", "desc": "Non utilisé."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

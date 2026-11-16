@@ -1,34 +1,34 @@
 # `libs_luamqtt_mqtt_tools`
 
-*Fichier : `lua/common/libs/luamqtt/mqtt/tools.lua` · VM : Commun (GE + véhicule) · 36 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/luamqtt/mqtt/tools.lua` · VM: Common (GE + vehicle) · 36 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/luamqtt/mqtt/tools")`
+**Access:** `require("libs/luamqtt/mqtt/tools")`
 
-Deux petits utilitaires de luamqtt : conversion d'une chaîne en hexadécimal et division entière. Utilisés par protocol.lua et pour le débogage.
+Two small luamqtt utilities: string-to-hexadecimal conversion and integer division. Used by protocol.lua and for debugging.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_luamqtt_mqtt_tools.div(x, y)` | Division entière : math.floor(x / y). | 28 |
-| `libs_luamqtt_mqtt_tools.hex(str)` | Encode chaque octet de la chaîne en deux chiffres hexadécimaux majuscules. | 19 |
+| `libs_luamqtt_mqtt_tools.div(x, y)` | Integer division: math.floor(x / y). | 28 |
+| `libs_luamqtt_mqtt_tools.hex(str)` | Encodes each byte of the string as two uppercase hexadecimal digits. | 19 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_luamqtt_mqtt_tools.div(x, y)`
 
-Division entière : math.floor(x / y).
+Integer division: math.floor(x / y).
 
-- `x` (*number*) : Dividende.
-- `y` (*number*) : Diviseur.
-- **renvoie** : integer Quotient arrondi à l'inférieur.
+- `x` (*number*) : Dividend.
+- `y` (*number*) : Divisor.
+- **returns**: integer Quotient rounded down.
 
 #### `libs_luamqtt_mqtt_tools.hex(str)`
 
-Encode chaque octet de la chaîne en deux chiffres hexadécimaux majuscules.
+Encodes each byte of the string as two uppercase hexadecimal digits.
 
-- `str` (*string*) : Chaîne source.
-- **renvoie** : string Chaîne hexadécimale.
+- `str` (*string*) : Source string.
+- **returns**: string Hexadecimal string.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luamqtt/mqtt/tools.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/luamqtt/mqtt/tools.lua`.*

@@ -1,27 +1,163 @@
 {
   "path": "lua/ge/extensions/flowgraph/modules/prefabModule.lua",
-  "module": "Module flowgraph (moduleOrder 50) qui fait apparaître, suit et supprime des prefabs (groupes d'objets de scène .prefab.json) pendant un projet. À l'ajout d'un prefab, il recense tous les objets enfants par classe, mémorise les transformations des véhicules, détecte si des colliders ou des waypoints / routes (navgraph) sont contenus, puis recharge la collision (be:reloadCollision) et le navgraph (map.reset) au bon moment. À l'arrêt, il supprime tous les prefabs non marqués dontDelete.",
+  "module": "Flowgraph module (moduleOrder 50) that spawns, tracks and deletes prefabs (groups of scene objects, .prefab.json) during a project. When a prefab is added, it lists all child objects by class, stores the vehicles' transforms, detects whether colliders or waypoints / roads (navgraph) are contained, then reloads the collision (be:reloadCollision) and the navgraph (map.reset) at the right time. On stop, it deletes all prefabs not marked dontDelete.",
   "notes": [
-    "spawnPrefab résout <nom>/<nom>.prefab.json relativement au projet, place le prefab en (0,0,0), canSave = false, dans MissionGroup.",
-    "Pendant un chargement de niveau, les rechargements passent par mgr.modules.level:delayOrInstantFunction ; sinon ils sont faits dans afterTrigger via des drapeaux.",
-    "Si un BeamNGGameplayArea fait partie du prefab, collision et navgraph sont rechargés immédiatement (contournement 'hacky' commenté dans le code).",
-    "Les objets non-véhicule portant un Name génèrent un avertissement : utiliser Internal Name. Les véhicules nommés 'clone...' aussi.",
-    "moreData accepte skipCollisionReload et skipNavgraphReload."
+    "spawnPrefab resolves <name>/<name>.prefab.json relative to the project, places the prefab at (0,0,0), canSave = false, in MissionGroup.",
+    "During level loading, reloads go through mgr.modules.level:delayOrInstantFunction; otherwise they are done in afterTrigger via flags.",
+    "If a BeamNGGameplayArea is part of the prefab, collision and navgraph are reloaded immediately ('hacky' workaround commented in the code).",
+    "Non-vehicle objects with a Name generate a warning: use Internal Name. Vehicles named 'clone...' too.",
+    "moreData accepts skipCollisionReload and skipNavgraphReload."
   ],
   "functions": {
-    "init": {"desc": "Crée les tables prefabs, sortedIds, flags puis appelle clear().", "internal": true},
-    "clear": {"desc": "Vide prefabs, flags et sortedIds.", "internal": true},
-    "afterTrigger": {"desc": "Appelé après le tick du graphe : recharge la collision et reconstruit le navgraph (map.reset, sauf pendant un chargement) si les drapeaux sont levés.", "internal": true},
-    "originalVehicleTransforms": {"desc": "Calcule {pos, rot, up} de chaque véhicule (BeamNGVehicle) du prefab et les ajoute au module vehicle du manager.", "params": {"data": {"type": "table", "desc": "données du prefab, avec allChildrenIds"}}, "returns": [{"type": "table<integer, table>", "desc": "transformations par id de véhicule"}]},
-    "getPrefab": {"desc": "Renvoie les données du prefab suivi, ou une table vide.", "params": {"id": {"type": "integer", "desc": "id du prefab"}}, "returns": [{"type": "table", "desc": "données du prefab"}]},
-    "spawnPrefab": {"desc": "Crée un prefab depuis <nom>.prefab.json (chemin relatif au projet), l'ajoute à MissionGroup et le suit via addPrefab.", "params": {"fileName": {"type": "string", "desc": "nom du prefab (sans extension)"}}, "returns": [{"type": "integer", "desc": "id de l'objet prefab"}]},
-    "addPrefab": {"desc": "Suit un prefab existant de la scène : recense ses enfants, ses véhicules, détecte colliders et navgraph et programme les rechargements nécessaires.", "params": {"id": {"type": "integer", "desc": "id du prefab dans la scène"}, "moreData": {"type": "table|nil", "desc": "champs copiés dans les données ; skipCollisionReload, skipNavgraphReload"}}},
-    "restoreVehiclePositions": {"desc": "Replace les véhicules du prefab à leur position et rotation d'origine et réinitialise la physique et les déformations.", "params": {"id": {"type": "integer", "desc": "id du prefab"}}},
-    "getVehicleIdsForPrefab": {"desc": "Renvoie les ids de véhicules contenus dans le prefab, triés.", "params": {"id": {"type": "integer", "desc": "id du prefab"}}, "returns": [{"type": "integer[]", "desc": "ids"}]},
-    "unpackPrefabAndDelete": {"desc": "Éclate le prefab (obj:explode), supprime le prefab puis réinsère ses véhicules dans MissionGroup à leur position courante avant de supprimer le groupe restant.", "params": {"id": {"type": "integer", "desc": "id du prefab"}, "obj": {"type": "userdata", "desc": "objet prefab de la scène"}}},
-    "setUnpackVehiclesBeforeDeletion": {"desc": "Indique si les véhicules doivent être extraits avant la suppression du prefab.", "params": {"id": {"type": "integer", "desc": "id du prefab"}, "set": {"type": "boolean", "desc": "extraire les véhicules"}}},
-    "setKeepPrefab": {"desc": "Marque le prefab comme à conserver à l'arrêt du projet (dontDelete). Avertit si le prefab n'est pas suivi.", "params": {"id": {"type": "integer", "desc": "id du prefab"}, "keep": {"type": "boolean", "desc": "conserver"}}},
-    "deletePrefab": {"desc": "Supprime le prefab (sauf dontDelete sans force), le retire du suivi et programme un rechargement de collision s'il en contenait.", "params": {"id": {"type": "integer", "desc": "id du prefab"}, "force": {"type": "boolean|nil", "desc": "ignorer dontDelete"}}},
-    "executionStopped": {"desc": "Appelé à l'arrêt du projet : supprime tous les prefabs suivis non marqués dontDelete, recharge collision et navgraph si nécessaire, puis appelle clear().", "internal": true}
+    "init": {
+      "desc": "Creates the tables prefabs, sortedIds, flags then calls clear().",
+      "internal": true
+    },
+    "clear": {
+      "desc": "Clears prefabs, flags and sortedIds.",
+      "internal": true
+    },
+    "afterTrigger": {
+      "desc": "Called after the graph tick: reloads the collision and rebuilds the navgraph (map.reset, except during loading) if the flags are raised.",
+      "internal": true
+    },
+    "originalVehicleTransforms": {
+      "desc": "Computes {pos, rot, up} for each vehicle (BeamNGVehicle) of the prefab and adds them to the manager's vehicle module.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "prefab data, with allChildrenIds"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, table>",
+          "desc": "transforms by vehicle id"
+        }
+      ]
+    },
+    "getPrefab": {
+      "desc": "Returns the data of the tracked prefab, or an empty table.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "prefab id"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "prefab data"
+        }
+      ]
+    },
+    "spawnPrefab": {
+      "desc": "Creates a prefab from <name>.prefab.json (path relative to the project), adds it to MissionGroup and tracks it via addPrefab.",
+      "params": {
+        "fileName": {
+          "type": "string",
+          "desc": "prefab name (without extension)"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "prefab object id"
+        }
+      ]
+    },
+    "addPrefab": {
+      "desc": "Tracks an existing prefab in the scene: lists its children, its vehicles, detects colliders and navgraph and schedules the necessary reloads.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "prefab id in the scene"
+        },
+        "moreData": {
+          "type": "table|nil",
+          "desc": "fields copied into the data; skipCollisionReload, skipNavgraphReload"
+        }
+      }
+    },
+    "restoreVehiclePositions": {
+      "desc": "Puts the prefab's vehicles back at their original position and rotation and resets the physics and the deformations.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "prefab id"
+        }
+      }
+    },
+    "getVehicleIdsForPrefab": {
+      "desc": "Returns the ids of the vehicles contained in the prefab, sorted.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "prefab id"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer[]",
+          "desc": "ids"
+        }
+      ]
+    },
+    "unpackPrefabAndDelete": {
+      "desc": "Explodes the prefab (obj:explode), deletes the prefab then reinserts its vehicles into MissionGroup at their current position before deleting the remaining group.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "prefab id"
+        },
+        "obj": {
+          "type": "userdata",
+          "desc": "prefab object in the scene"
+        }
+      }
+    },
+    "setUnpackVehiclesBeforeDeletion": {
+      "desc": "Indicates whether the vehicles must be extracted before the prefab is deleted.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "prefab id"
+        },
+        "set": {
+          "type": "boolean",
+          "desc": "extract the vehicles"
+        }
+      }
+    },
+    "setKeepPrefab": {
+      "desc": "Marks the prefab as to be kept when the project stops (dontDelete). Warns if the prefab is not tracked.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "prefab id"
+        },
+        "keep": {
+          "type": "boolean",
+          "desc": "keep"
+        }
+      }
+    },
+    "deletePrefab": {
+      "desc": "Deletes the prefab (except dontDelete without force), removes it from tracking and schedules a collision reload if it contained any.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "prefab id"
+        },
+        "force": {
+          "type": "boolean|nil",
+          "desc": "ignore dontDelete"
+        }
+      }
+    },
+    "executionStopped": {
+      "desc": "Called when the project stops: deletes all tracked prefabs not marked dontDelete, reloads collision and navgraph if needed, then calls clear().",
+      "internal": true
+    }
   }
 }

@@ -1,57 +1,57 @@
 # `editor_flowgraph_basewindow`
 
-*Fichier : `lua/ge/extensions/editor/flowgraph/basewindow.lua` · VM : Game Engine (GE) · 87 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/flowgraph/basewindow.lua` · VM: Game Engine (GE) · 87 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_flowgraph_basewindow` : `extensions.load("editor_flowgraph_basewindow")`, puis la globale `editor_flowgraph_basewindow`
+**Access:** extension `editor_flowgraph_basewindow`: `extensions.load("editor_flowgraph_basewindow")`, then the global `editor_flowgraph_basewindow`
 
-Classe de base des fenêtres de l'éditeur Flowgraph (legend, history, events, garbageDebug, examples, execution, main…). Elle encapsule Begin/End d'une fenêtre éditeur (editor.beginWindow avec self.windowName), le suivi du focus (hasFocus) et ouverture/fermeture/bascule. use(fgEditor, derivedClass) crée une instance de base et y copie les champs de la classe dérivée.
+Base class of the Flowgraph editor windows (legend, history, events, garbageDebug, examples, execution, main...). It wraps the Begin/End of an editor window (editor.beginWindow with self.windowName), focus tracking (hasFocus) and open/close/toggle. use(fgEditor, derivedClass) creates a base instance and copies the derived class's fields onto it.
 
-## Remarques
+## Notes
 
-- windowName doit être défini par la classe dérivée avant Begin/open/close/toggle.
-- use() ne rappelle init() que si la classe dérivée en redéfinit un ; l'init de base prend fgEditor, celui de la dérivée est appelé sans argument.
+- windowName must be defined by the derived class before Begin/open/close/toggle.
+- use() only calls init() again if the derived class overrides one; the base init takes fgEditor, the derived one is called without arguments.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_flowgraph_basewindow.createBase(...)` | Crée une instance de la classe de base et appelle init(...). | 65 |
-| `editor_flowgraph_basewindow.use(fgEditor, derivedClass)` | Crée une instance de base pour fgEditor puis copie tous les champs de derivedClass dessus (surcharges) ; appelle l'init de la dérivée s'il diffère de celui de base. | 73 |
+| `editor_flowgraph_basewindow.createBase(...)` | Creates an instance of the base class and calls init(...). | 65 |
+| `editor_flowgraph_basewindow.use(fgEditor, derivedClass)` | Creates a base instance for fgEditor then copies all fields of derivedClass onto it (overrides); calls the derived init if it differs from the base one. | 73 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_flowgraph_basewindow.createBase(...)`
 
-Crée une instance de la classe de base et appelle init(...).
+Creates an instance of the base class and calls init(...).
 
-- `...` (*any*) : Arguments passés à init (fgEditor).
-- **renvoie** : table Instance.
+- `...` (*any*) : Arguments passed to init (fgEditor).
+- **returns**: table Instance.
 
 #### `editor_flowgraph_basewindow.use(fgEditor, derivedClass)`
 
-Crée une instance de base pour fgEditor puis copie tous les champs de derivedClass dessus (surcharges) ; appelle l'init de la dérivée s'il diffère de celui de base.
+Creates a base instance for fgEditor then copies all fields of derivedClass onto it (overrides); calls the derived init if it differs from the base one.
 
-- `fgEditor` (*table*) : Éditeur Flowgraph propriétaire.
-- `derivedClass` (*table*) : Classe de la fenêtre (windowName, draw, init…).
-- **renvoie** : table Instance de fenêtre.
+- `fgEditor` (*table*) : Owning Flowgraph editor.
+- `derivedClass` (*table*) : Window class (windowName, draw, init...).
+- **returns**: table Window instance.
 
-## Classe `C`
+## Class `C`
 
-Classe de base d'une fenêtre Flowgraph.
+Base class of a Flowgraph window.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:Begin(name, flags)` | Ouvre la fenêtre éditeur self.windowName avec le titre donné. | 15 |
-| `C:End()` | Met à jour hasFocus (focus des fenêtres enfants) puis ferme la fenêtre éditeur. | 19 |
-| `C:__onDeserialized(data)` | Appelle _onDeserialized puis remet hasFocus à false. | 58 |
-| `C:__onSerialize()` | Crée une table, appelle _onSerialize et la renvoie. | 49 |
-| `C:_onDeserialized(data)` | Point d'extension de désérialisation, vide par défaut. | 55 |
-| `C:_onSerialize(res)` | Point d'extension de sérialisation, vide par défaut. | 46 |
-| `C:attach(mgr)` | Associe le gestionnaire de projet flowgraph (self.mgr). | 24 |
-| `C:close()` | Cache la fenêtre et remet hasFocus à false. | 33 |
-| `C:init(fgEditor)` | Mémorise fgEditor et initialise hasFocus à false. | 10 |
-| `C:open()` | Affiche la fenêtre. | 28 |
-| `C:toggle()` | Bascule la visibilité de la fenêtre. | 38 |
+| `C:Begin(name, flags)` | Opens the editor window self.windowName with the given title. | 15 |
+| `C:End()` | Updates hasFocus (focus of child windows) then closes the editor window. | 19 |
+| `C:__onDeserialized(data)` | Calls _onDeserialized then resets hasFocus to false. | 58 |
+| `C:__onSerialize()` | Creates a table, calls _onSerialize and returns it. | 49 |
+| `C:_onDeserialized(data)` | Deserialization extension point, empty by default. | 55 |
+| `C:_onSerialize(res)` | Serialization extension point, empty by default. | 46 |
+| `C:attach(mgr)` | Associates the flowgraph project manager (self.mgr). | 24 |
+| `C:close()` | Hides the window and resets hasFocus to false. | 33 |
+| `C:init(fgEditor)` | Stores fgEditor and initializes hasFocus to false. | 10 |
+| `C:open()` | Shows the window. | 28 |
+| `C:toggle()` | Toggles the window's visibility. | 38 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/flowgraph/basewindow.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/flowgraph/basewindow.lua`.*

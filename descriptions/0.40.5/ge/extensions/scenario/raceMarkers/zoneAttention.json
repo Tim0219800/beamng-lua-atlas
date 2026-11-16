@@ -1,31 +1,121 @@
 {
   "path": "lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua",
-  "module": "Marqueur d'attention pour une zone (polygone) : au lieu d'un objet 3D, il demande à l'objet zone de se dessiner lui-même (zone:drawDebug('faded', couleur, hauteur de clôture)). La couleur passe du bleu (normal) au jaune puis à l'orange pendant un compte à rebours, et au orange foncé quand la zone « monte » (rising) ou que le compte est terminé. Le module renvoie un constructeur : require('scenario/raceMarkers/zoneAttention')(id) donne un objet de la classe C.",
+  "module": "Attention marker for a zone (polygon): instead of a 3D object, it asks the zone object to draw itself (zone:drawDebug('faded', color, fence height)). The color goes from blue (normal) to yellow then orange during a countdown, and to dark orange when the zone is \"rising\" or the countdown is finished. The module returns a constructor: require('scenario/raceMarkers/zoneAttention')(id) gives an object of class C.",
   "notes": [
-    "setToCheckpoint(wp) accepte soit un objet zone (champs drawDebug et vertices), soit wp.zone ; sinon seuls wp.pos et wp.radius sont mémorisés et rien n'est dessiné.",
-    "Le centre est zone.center ou la position du premier sommet ; si un terrain existe, la hauteur est replaquée à terrain + 2 m (core_terrain).",
-    "La clôture est dessinée avec alpha 0.25 et hauteur fenceHeight (0.33 par défaut, réglable par setFenceHeight).",
-    "C:setCountdown a pour signature réelle (remaining, total, done) ; la page extraite affiche (total, done) car elle omet le premier paramètre : le premier argument est le temps restant.",
-    "La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim)."
+    "setToCheckpoint(wp) accepts either a zone object (fields drawDebug and vertices), or wp.zone; otherwise only wp.pos and wp.radius are stored and nothing is drawn.",
+    "The center is zone.center or the position of the first vertex; if a terrain exists, the height is snapped back to terrain + 2 m (core_terrain).",
+    "The fence is drawn with alpha 0.25 and height fenceHeight (0.33 by default, adjustable with setFenceHeight).",
+    "C:setCountdown actually has the signature (remaining, total, done); the extracted page shows (total, done) because it omits the first parameter: the first argument is the remaining time.",
+    "The extracted page shows update(dtSim); the actual signature is update(dt, dtSim)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Marqueur de zone dessiné par debug.",
+      "desc": "Zone marker drawn by debug.",
       "functions": {
-        "init": {"desc": "Constructeur : initialise l'état (invisible, mode 'hidden', couleur bleue).", "params": {"id": {"type": "integer", "desc": "Identifiant unique."}}, "internal": true},
-        "update": {"desc": "Appel par image : calcule la couleur cible (bleue, dégradé jaune vers orange pendant le compte à rebours, orange foncé si rising ou terminé), la lisse puis dessine la zone.", "params": {"dt": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}}, "internal": true},
-        "setToCheckpoint": {"desc": "Associe la zone à dessiner, ou une simple position si wp n'est pas une zone.", "params": {"wp": {"type": "table", "desc": "Objet zone {drawDebug, vertices, center?}, ou {zone = ...}, ou {pos, radius}."}}},
-        "setMode": {"desc": "'hidden' masque, autre mode affiche.", "params": {"mode": {"type": "string", "desc": "Nom du mode."}}},
-        "setFenceHeight": {"desc": "Règle la hauteur de la clôture dessinée.", "params": {"h": {"type": "number|nil", "desc": "Hauteur en mètres ; nil garde la valeur actuelle."}}},
-        "setCountdown": {"desc": "Règle l'état du compte à rebours qui pilote la couleur.", "params": {"remaining": {"type": "number|nil", "desc": "Temps restant."}, "total": {"type": "number|nil", "desc": "Durée totale."}, "done": {"type": "boolean|nil", "desc": "true quand le compte est terminé (couleur orange foncé)."}}},
-        "setRising": {"desc": "Marque la zone comme « montante » : couleur orange foncé.", "params": {"v": {"type": "boolean", "desc": "État."}}},
-        "setVisibility": {"desc": "Active ou désactive le dessin.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
-        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
-        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
-        "createMarkers": {"desc": "Conservé pour la compatibilité d'API : ne crée aucun objet.", "params": {}},
-        "clearMarkers": {"desc": "Efface la table d'identifiants.", "params": {}}
+        "init": {
+          "desc": "Constructor: initializes the state (invisible, mode 'hidden', blue color).",
+          "params": {
+            "id": {
+              "type": "integer",
+              "desc": "Unique identifier."
+            }
+          },
+          "internal": true
+        },
+        "update": {
+          "desc": "Per-frame call: computes the target color (blue, yellow-to-orange gradient during the countdown, dark orange if rising or finished), smooths it then draws the zone.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Real duration (s)."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Simulated duration (s)."
+            }
+          },
+          "internal": true
+        },
+        "setToCheckpoint": {
+          "desc": "Associates the zone to draw, or a simple position if wp is not a zone.",
+          "params": {
+            "wp": {
+              "type": "table",
+              "desc": "Zone object {drawDebug, vertices, center?}, or {zone = ...}, or {pos, radius}."
+            }
+          }
+        },
+        "setMode": {
+          "desc": "'hidden' hides, other mode shows.",
+          "params": {
+            "mode": {
+              "type": "string",
+              "desc": "Mode name."
+            }
+          }
+        },
+        "setFenceHeight": {
+          "desc": "Sets the height of the drawn fence.",
+          "params": {
+            "h": {
+              "type": "number|nil",
+              "desc": "Height in meters; nil keeps the current value."
+            }
+          }
+        },
+        "setCountdown": {
+          "desc": "Sets the countdown state that drives the color.",
+          "params": {
+            "remaining": {
+              "type": "number|nil",
+              "desc": "Remaining time."
+            },
+            "total": {
+              "type": "number|nil",
+              "desc": "Total duration."
+            },
+            "done": {
+              "type": "boolean|nil",
+              "desc": "true when the countdown is finished (dark orange color)."
+            }
+          }
+        },
+        "setRising": {
+          "desc": "Marks the zone as \"rising\": dark orange color.",
+          "params": {
+            "v": {
+              "type": "boolean",
+              "desc": "State."
+            }
+          }
+        },
+        "setVisibility": {
+          "desc": "Enables or disables drawing.",
+          "params": {
+            "v": {
+              "type": "boolean",
+              "desc": "Visibility."
+            }
+          }
+        },
+        "hide": {
+          "desc": "Calls setVisibility(false).",
+          "params": {}
+        },
+        "show": {
+          "desc": "Calls setVisibility(true).",
+          "params": {}
+        },
+        "createMarkers": {
+          "desc": "Kept for API compatibility: creates no object.",
+          "params": {}
+        },
+        "clearMarkers": {
+          "desc": "Clears the identifier table.",
+          "params": {}
+        }
       }
     }
   }

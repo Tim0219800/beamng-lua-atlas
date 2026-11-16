@@ -1,0 +1,59 @@
+{
+  "path": "lua/common/libs/luasocket/ltn12.lua",
+  "module": "LTN12 1.0.3 (Diego Nehab, bibliothèque LuaSocket) : cadre de traitement de flux de données par morceaux. Quatre notions : sources (fonctions qui renvoient le morceau suivant), sinks (fonctions qui reçoivent des morceaux), filters (transforment un morceau en un autre) et pumps (transfèrent d'une source vers un sink). Utilisé par socket.http, socket.ftp et mime ; un moddeur s'en sert pour lire/écrire des réponses HTTP en flux (table, fichier, chaîne).",
+  "usage": "local ltn12 = require('libs/luasocket/ltn12')\nlocal t = {}\nltn12.pump.all(ltn12.source.string('bonjour'), ltn12.sink.table(t))\nprint(table.concat(t))",
+  "notes": [
+    "Conventions : une source renvoie le morceau suivant, ou nil (fin) ou nil, erreur. Un sink reçoit (morceau, erreur) et renvoie 1 pour continuer, ou nil, erreur ; il reçoit nil comme morceau pour signaler la fin. Un filtre reçoit un morceau (nil = fin) et renvoie un morceau ('' = rien pour l'instant, nil = fini).",
+    "Si la globale 'module' existe (Lua 5.1 avec compat), le module est aussi publié dans _G.ltn12 via rawset.",
+    "sink.chain appelle unpack, qui n'est pas défini dans ce fichier : il fonctionne sous LuaJIT (unpack global) mais pas sous Lua 5.2+.",
+    "Les fonctions sont des champs de tables imbriquées : ltn12.source.*, ltn12.sink.*, ltn12.filter.*, ltn12.pump.* (la page auto les présente comme des classes)."
+  ],
+  "fields": {
+    "BLOCKSIZE": {"type": "integer", "desc": "Taille des morceaux lus par source.file et source.string : 2048 octets."},
+    "_VERSION": {"type": "string", "desc": "'LTN12 1.0.3'."},
+    "filter": {"type": "table", "desc": "Fonctions de filtrage : cycle, chain."},
+    "source": {"type": "table", "desc": "Fabriques de sources : empty, error, file, simplify, string, rewind, chain, cat."},
+    "sink": {"type": "table", "desc": "Fabriques de sinks : table, simplify, file, null, error, chain."},
+    "pump": {"type": "table", "desc": "Transfert de données : step, all."}
+  },
+  "classes": {
+    "filter": {
+      "desc": "ltn12.filter : construction de filtres.",
+      "functions": {
+        "cycle": {"desc": "Transforme un filtre bas niveau low(ctx, chunk, extra) -> (sortie, nouveau ctx) en filtre haut niveau qui conserve le contexte entre les appels.", "params": {"low": {"type": "function", "desc": "Filtre bas niveau."}, "ctx": {"type": "any", "desc": "Contexte initial."}, "extra": {"type": "any", "desc": "Argument supplémentaire transmis à low."}}, "returns": [{"type": "function", "desc": "Filtre haut niveau."}]},
+        "chain": {"desc": "Enchaîne plusieurs filtres en un seul.", "params": {"...": {"type": "function", "desc": "Filtres à enchaîner, dans l'ordre."}}, "returns": [{"type": "function", "desc": "Filtre composé."}]}
+      }
+    },
+    "source": {
+      "desc": "ltn12.source : fabriques de sources.",
+      "functions": {
+        "empty": {"desc": "Source vide : renvoie toujours nil.", "returns": [{"type": "function", "desc": "Source."}]},
+        "error": {"desc": "Source qui renvoie toujours nil, err.", "params": {"err": {"type": "string", "desc": "Erreur."}}, "returns": [{"type": "function", "desc": "Source."}]},
+        "file": {"desc": "Source qui lit un fichier par blocs de BLOCKSIZE et le ferme à la fin. Sans handle, renvoie une source d'erreur.", "params": {"handle": {"type": "file*|nil", "desc": "Fichier ouvert."}, "io_err": {"type": "string|nil", "desc": "Message d'erreur si handle est nil (défaut 'unable to open file')."}}, "returns": [{"type": "function", "desc": "Source."}]},
+        "simplify": {"desc": "Transforme une source 'sophistiquée' (qui peut renvoyer une nouvelle source) en source simple.", "params": {"src": {"type": "function", "desc": "Source."}}, "returns": [{"type": "function", "desc": "Source simple."}]},
+        "string": {"desc": "Source qui découpe une chaîne en morceaux de BLOCKSIZE. Sans chaîne, renvoie une source vide.", "params": {"s": {"type": "string|nil", "desc": "Chaîne."}}, "returns": [{"type": "function", "desc": "Source."}]},
+        "rewind": {"desc": "Source 'rembobinable' : appelée avec un morceau, elle le remet de côté ; sans argument, elle rend d'abord les morceaux remis de côté puis la source d'origine.", "params": {"src": {"type": "function", "desc": "Source."}}, "returns": [{"type": "function", "desc": "Source rembobinable."}]},
+        "chain": {"desc": "Source filtrée : applique un ou plusieurs filtres à une source.", "params": {"src": {"type": "function", "desc": "Source."}, "f": {"type": "function", "desc": "Filtre."}, "...": {"type": "function", "desc": "Filtres supplémentaires."}}, "returns": [{"type": "function", "desc": "Source."}]},
+        "cat": {"desc": "Concatène plusieurs sources l'une après l'autre.", "params": {"...": {"type": "function", "desc": "Sources."}}, "returns": [{"type": "function", "desc": "Source."}]}
+      }
+    },
+    "sink": {
+      "desc": "ltn12.sink : fabriques de sinks.",
+      "functions": {
+        "table": {"desc": "Sink qui range chaque morceau dans une table.", "params": {"t": {"type": "table|nil", "desc": "Table de destination (créée si absente)."}}, "returns": [{"type": "function", "desc": "Sink."}, {"type": "table", "desc": "Table utilisée."}]},
+        "simplify": {"desc": "Transforme un sink 'sophistiqué' en sink simple.", "params": {"snk": {"type": "function", "desc": "Sink."}}, "returns": [{"type": "function", "desc": "Sink simple."}]},
+        "file": {"desc": "Sink qui écrit dans un fichier et le ferme à la fin. Sans handle, renvoie un sink d'erreur.", "params": {"handle": {"type": "file*|nil", "desc": "Fichier ouvert."}, "io_err": {"type": "string|nil", "desc": "Message d'erreur (défaut 'unable to open file')."}}, "returns": [{"type": "function", "desc": "Sink."}]},
+        "null": {"desc": "Sink qui ignore les données.", "returns": [{"type": "function", "desc": "Sink."}]},
+        "error": {"desc": "Sink qui renvoie toujours nil, err.", "params": {"err": {"type": "string", "desc": "Erreur."}}, "returns": [{"type": "function", "desc": "Sink."}]},
+        "chain": {"desc": "Sink précédé d'un ou plusieurs filtres.", "params": {"f": {"type": "function", "desc": "Filtre."}, "snk": {"type": "function", "desc": "Sink (ou autre filtre suivi d'autres arguments ; le dernier argument est le sink)."}, "...": {"type": "function", "desc": "Éléments supplémentaires."}}, "returns": [{"type": "function", "desc": "Sink."}]}
+      }
+    },
+    "pump": {
+      "desc": "ltn12.pump : transfert source vers sink.",
+      "functions": {
+        "step": {"desc": "Transfère un morceau de la source au sink.", "params": {"src": {"type": "function", "desc": "Source."}, "snk": {"type": "function", "desc": "Sink."}}, "returns": [{"type": "integer|nil", "desc": "1 si un morceau a été transféré ; nil (et éventuellement l'erreur) à la fin ou en cas d'erreur."}]},
+        "all": {"desc": "Transfère toutes les données de la source vers le sink avec la fonction step.", "params": {"src": {"type": "function", "desc": "Source."}, "snk": {"type": "function", "desc": "Sink."}, "step": {"type": "function|nil", "desc": "Fonction de pas (défaut pump.step)."}}, "returns": [{"type": "integer|nil", "desc": "1 en cas de succès ; nil et l'erreur sinon."}]}
+      }
+    }
+  }
+}

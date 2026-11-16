@@ -1,48 +1,48 @@
 # `debug_advancedExternalDebug`
 
-*Fichier : `lua/vehicle/extensions/debug/advancedExternalDebug.lua` · VM : Véhicule · 139 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/debug/advancedExternalDebug.lua` · VM: Vehicle · 139 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `debug_advancedExternalDebug` : `extensions.load (VM véhicule)("debug_advancedExternalDebug")`, puis la globale `debug_advancedExternalDebug`
+**Access:** extension `debug_advancedExternalDebug`: `extensions.load (vehicle VM)("debug_advancedExternalDebug")`, then the global `debug_advancedExternalDebug`
 
-Extension de débogage qui envoie des paquets JSON par UDP à un outil externe (AED, 'Advanced External Debug') sur 127.0.0.1:43812, à 30 envois par seconde, avec un heartbeat prévu à 1 Hz. Les modules du véhicule y déposent leurs paquets via debugPacket ; l'extension y ajoute à chaque frame un paquet principal indiquant si ce véhicule est celui du joueur.
+Debug extension that sends JSON packets over UDP to an external tool (AED, 'Advanced External Debug') on 127.0.0.1:43812, at 30 sends per second, with a heartbeat planned at 1 Hz. Vehicle modules drop their packets there via debugPacket; the extension adds to each frame a main packet indicating whether this vehicle is the player's.
 
-## Exemple
+## Example
 
 ```lua
-extensions.debug_advancedExternalDebug.debugPacket({sourceType = 'MON_MODULE', packetType = 'data', valeur = 42})
+extensions.debug_advancedExternalDebug.debugPacket({sourceType = 'MY_MODULE', packetType = 'data', value = 42})
 ```
 
-## Remarques
+## Notes
 
-- Chaque paquet reçoit vehicleID = objectId. Les paquets en attente sont envoyés en un seul tableau JSON toutes les 1/30 s (jsonEncode(debugPackets)), puis la liste est vidée.
-- Au chargement et à onInit : crée un socket UDP non bloquant (si la globale `socket` existe), pointe vers 127.0.0.1:43812 (peerIP et peerPort sont codés en dur, debugSettings est une table vide) et enregistre un paquet {sourceType='AED', packetType='init'}.
-- La réception de commandes (RequestConfig, EnableDebugMode, SetConfig, SetProperty) est codée mais désactivée : l'appel receiveDebugCommands() est commenté dans updateGFX. Si elle était activée, elle utiliserait `subControllerLookup`, une variable qui n'est définie nulle part dans ce fichier.
-- sendDebugHeartbeat (envoi de la chaîne 'BNGAED') est défini mais jamais appelé.
-- Si udpSocket:send échoue, l'erreur est affichée (print) à chaque tentative.
+- Each packet receives vehicleID = objectId. Pending packets are sent as a single JSON array every 1/30 s (jsonEncode(debugPackets)), then the list is cleared.
+- At load and at onInit: creates a non-blocking UDP socket (if the global `socket` exists), points to 127.0.0.1:43812 (peerIP and peerPort are hardcoded, debugSettings is an empty table) and records a packet {sourceType='AED', packetType='init'}.
+- Receiving commands (RequestConfig, EnableDebugMode, SetConfig, SetProperty) is coded but disabled: the call receiveDebugCommands() is commented out in updateGFX. If enabled, it would use `subControllerLookup`, a variable that is not defined anywhere in this file.
+- sendDebugHeartbeat (sending the string 'BNGAED') is defined but never called.
+- If udpSocket:send fails, the error is printed (print) at each attempt.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `debug_advancedExternalDebug.debugPacket(packet)` | Ajoute un paquet à la file d'envoi (vehicleID est ajouté automatiquement). | 19 |
-| `debug_advancedExternalDebug.onExtensionLoaded()` | Appelé au chargement de l'extension : appelle onInit. *(interne)* *(hook)* | 127 |
-| `debug_advancedExternalDebug.onInit()` | Hook d'initialisation : crée la liaison UDP et signale un nouveau véhicule à l'outil. *(interne)* *(hook)* | 106 |
-| `debug_advancedExternalDebug.onReset()` | Hook de reset : vide la file de paquets. *(interne)* *(hook)* | 102 |
-| `debug_advancedExternalDebug.updateGFX(dt)` | Appelé chaque frame : ajoute le paquet principal puis envoie les paquets accumulés au rythme de 30 Hz. *(interne)* | 85 |
+| `debug_advancedExternalDebug.debugPacket(packet)` | Adds a packet to the send queue (vehicleID is added automatically). | 19 |
+| `debug_advancedExternalDebug.onExtensionLoaded()` | Called when the extension loads: calls onInit. *(internal)* *(hook)* | 127 |
+| `debug_advancedExternalDebug.onInit()` | Initialization hook: creates the UDP link and signals a new vehicle to the tool. *(internal)* *(hook)* | 106 |
+| `debug_advancedExternalDebug.onReset()` | Reset hook: clears the packet queue. *(internal)* *(hook)* | 102 |
+| `debug_advancedExternalDebug.updateGFX(dt)` | Called every frame: adds the main packet then sends the accumulated packets at 30 Hz. *(internal)* | 85 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `debug_advancedExternalDebug.debugPacket(packet)`
 
-Ajoute un paquet à la file d'envoi (vehicleID est ajouté automatiquement).
+Adds a packet to the send queue (vehicleID is added automatically).
 
-- `packet` (*table*) : Table sérialisable en JSON, avec de préférence sourceType et packetType.
+- `packet` (*table*) : JSON-serializable table, preferably with sourceType and packetType.
 
 #### `debug_advancedExternalDebug.updateGFX(dt)`
 
-Appelé chaque frame : ajoute le paquet principal puis envoie les paquets accumulés au rythme de 30 Hz.
+Called every frame: adds the main packet then sends the accumulated packets at 30 Hz.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/debug/advancedExternalDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/debug/advancedExternalDebug.lua`.*

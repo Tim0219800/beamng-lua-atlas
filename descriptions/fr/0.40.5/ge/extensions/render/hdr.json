@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/render/hdr.lua",
+  "module": "Crée au premier frame la chaîne d'effets de post-traitement HDR (exposition automatique/locale) : PostEffectBrightPass (rendu AfterPostFX à échelle 0.5) avec ses enfants PostEffectDownScale, PostEffectLuminance et PostEffectCombinePass, plus PostEffectLocalExposure (échelle 0.25) dont le biais d'exposition en EV vient du réglage GraphicEVCompensation. Aucun usage direct par un moddeur ; global : render_hdr.",
+  "notes": [
+    "Ne fait rien si l'unique adaptateur graphique est « GFX Null Device » (serveur sans GPU) : log d'erreur « Null graphics device detected ».",
+    "Chaque objet n'est créé que s'il n'existe pas déjà dans le scenetree (recherche par nom PostEffect…Object) ; seul exposureBiasEV de PostEffectLocalExposureObject est mis à jour à chaque appel.",
+    "La variable `initialized` n'est jamais mise à true dans onFirstUpdate (seulement par onDeserialized) : le garde-fou n'agit donc qu'après un rechargement Lua ; la création reste idempotente grâce aux recherches par nom."
+  ],
+  "functions": {
+    "onFirstUpdate": {
+      "desc": "Hook du premier update du jeu : crée (si absents) les objets de post-traitement HDR décrits ci-dessus et applique le biais d'exposition GraphicEVCompensation (réglage, en EV, 0 par défaut).",
+      "params": {},
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Avant rechargement Lua.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{initialized = true}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Après rechargement Lua : restaure le drapeau initialized.",
+      "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "internal": true
+    }
+  }
+}

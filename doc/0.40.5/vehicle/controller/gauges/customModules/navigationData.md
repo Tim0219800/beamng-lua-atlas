@@ -1,63 +1,63 @@
 # `controller_gauges_customModules_navigationData`
 
-*Fichier : `lua/vehicle/controller/gauges/customModules/navigationData.lua` · VM : Véhicule · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/gauges/customModules/navigationData.lua` · VM: Vehicle · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `gauges/customModules/navigationData` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `gauges/customModules/navigationData` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Module de données pour genericGauges : alimente une carte de navigation dans la page HTML. À la configuration il demande à ui_uiNavi (moteur de jeu) d'initialiser la carte du tableau de bord ; à chaque mise à jour il envoie la position (x, y) et l'orientation du véhicule (degrés) par streamJS("updateMap").
+Data module for genericGauges: feeds a navigation map in the HTML page. At setup it asks ui_uiNavi (game engine) to initialize the dashboard map; at each update it sends the vehicle's position (x, y) and orientation (degrees) via streamJS("updateMap").
 
-## Remarques
+## Notes
 
-- setupGaugeData reçoit en second argument la texture HTML fournie par genericGauges ; elle est indispensable.
-- moduleData n'est pas rempli : les données partent directement dans le flux updateMap {x, y, rotation}.
+- setupGaugeData receives as its second argument the HTML texture provided by genericGauges; it is required.
+- moduleData is not filled: the data goes directly into the updateMap stream {x, y, rotation}.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_gauges_customModules_navigationData.init(jbeamData)` | Ne fait rien. *(interne)* | 37 |
-| `controller_gauges_customModules_navigationData.reset()` | Réinitialise l'état interne du module. *(interne)* | 34 |
-| `controller_gauges_customModules_navigationData.setupGaugeData(properties, htmlTexture)` | Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : aucune propriété n'est lue. *(interne)* | 29 |
-| `controller_gauges_customModules_navigationData.updateGFX(dt)` | Ne fait rien (la mise à jour se fait par updateGaugeData). *(interne)* | 19 |
-| `controller_gauges_customModules_navigationData.updateGaugeData(moduleData, dt)` | Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées. *(interne)* | 22 |
+| `controller_gauges_customModules_navigationData.init(jbeamData)` | Does nothing. *(internal)* | 37 |
+| `controller_gauges_customModules_navigationData.reset()` | Resets the module's internal state. *(internal)* | 34 |
+| `controller_gauges_customModules_navigationData.setupGaugeData(properties, htmlTexture)` | Called by genericGauges with the properties requested in displayData.customModules: no property is read. *(internal)* | 29 |
+| `controller_gauges_customModules_navigationData.updateGFX(dt)` | Does nothing (the update is done by updateGaugeData). *(internal)* | 19 |
+| `controller_gauges_customModules_navigationData.updateGaugeData(moduleData, dt)` | Called by genericGauges before each send: fills moduleData with the requested values. *(internal)* | 22 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_gauges_customModules_navigationData.init(jbeamData)`
 
-Ne fait rien.
+Does nothing.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_gauges_customModules_navigationData.setupGaugeData(properties, htmlTexture)`
 
-Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : aucune propriété n'est lue.
+Called by genericGauges with the properties requested in displayData.customModules: no property is read.
 
-- `properties` (*table*) : Propriétés demandées (non utilisées).
-- `htmlTexture` (*table*) : Texture HTML du tableau de bord (htmlTexture.new).
+- `properties` (*table*) : Requested properties (unused).
+- `htmlTexture` (*table*) : Dashboard HTML texture (htmlTexture.new).
 
 #### `controller_gauges_customModules_navigationData.updateGFX(dt)`
 
-Ne fait rien (la mise à jour se fait par updateGaugeData).
+Does nothing (the update is done by updateGaugeData).
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_gauges_customModules_navigationData.updateGaugeData(moduleData, dt)`
 
-Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées.
+Called by genericGauges before each send: fills moduleData with the requested values.
 
-- `moduleData` (*table*) : Table de données du module, envoyée ensuite à la page HTML.
-- `dt` (*number*) : Temps écoulé depuis le dernier envoi (s).
+- `moduleData` (*table*) : Module data table, then sent to the HTML page.
+- `dt` (*number*) : Time elapsed since the last send (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getDirectionVector`, `getID`, `getPositionXYZ`, `queueGameEngineLua`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/gauges/customModules/navigationData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/gauges/customModules/navigationData.lua`.*

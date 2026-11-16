@@ -1,14 +1,23 @@
 {
   "path": "lua/ge/extensions/career/modules/debug/vehicleDebug.lua",
-  "module": "Onglet de debug carrière « Vehicles ». Permet d'ajouter le véhicule joueur à l'inventaire, de le réapparaître (career_modules_inventory.debugRespawnCurrentVehicle), de basculer sur un véhicule possédé (enterVehicle) ou de le vendre (sellVehicleFromInventory).",
-  "notes": ["Outil de développement ; debugOrder = 2.", "La vente se fait après la boucle d'affichage pour ne pas modifier la table pendant son parcours."],
+  "module": "\"Vehicles\" career debug tab. Lets you add the player vehicle to the inventory, respawn it (career_modules_inventory.debugRespawnCurrentVehicle), switch to an owned vehicle (enterVehicle) or sell it (sellVehicleFromInventory).",
+  "notes": [
+    "Development tool; debugOrder = 2.",
+    "The sale happens after the display loop so the table is not modified while being iterated."
+  ],
   "fields": {
-    "debugOrder": {"type": "number", "desc": "Ordre de tri (2)."},
-    "debugName": {"type": "string", "desc": "'Vehicles'."}
+    "debugOrder": {
+      "type": "number",
+      "desc": "Sort order (2)."
+    },
+    "debugName": {
+      "type": "string",
+      "desc": "'Vehicles'."
+    }
   },
   "functions": {
     "drawDebugMenu": {
-      "desc": "Dessine les boutons d'ajout/réapparition du véhicule courant, le véhicule actuel de l'inventaire et la liste des véhicules possédés avec boutons d'entrée et de vente.",
+      "desc": "Draws the buttons to add/respawn the current vehicle, the current inventory vehicle and the list of owned vehicles with enter and sell buttons.",
       "params": {},
       "returns": [],
       "internal": true

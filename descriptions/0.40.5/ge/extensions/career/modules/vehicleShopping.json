@@ -1,174 +1,400 @@
 {
   "path": "lua/ge/extensions/career/modules/vehicleShopping.lua",
-  "module": "Marché de véhicules de la carrière : génère et entretient la liste des véhicules en vente (concessionnaires et vendeurs privés), gère leur durée de vie, leur « vente » en l'absence du joueur, la liste de surveillance (watchlist), l'ouverture de la boutique (depuis un concessionnaire ou l'ordinateur du garage), l'inspection d'un véhicule, l'écran d'achat (frais, taxes de 7 %, reprise, remises, assurance, plaque personnalisée) et la livraison ou l'apparition du véhicule acheté. Envoie les données à l'UI via les guihooks vehicleShoppingData et vehiclePurchaseData. La liste est sauvegardée dans <profil>/career/vehicleShop.json.",
+  "module": "Career vehicle marketplace: generates and maintains the list of vehicles for sale (dealerships and private sellers), manages their lifetime, their \"sale\" while the player is away, the watchlist, opening the shop (from a dealership or the garage computer), vehicle inspection, the purchase screen (fees, 7% taxes, trade-in, discounts, insurance, custom plate) and the delivery or spawning of the purchased vehicle. Sends data to the UI via the guihooks vehicleShoppingData and vehiclePurchaseData. The list is saved in <profile>/career/vehicleShop.json.",
   "notes": [
-    "Constantes : offres valables 10 min (vehicleOfferTimeToLive), un véhicule généré par vendeur toutes les 60 s / vehicleGenerationMultiplier, véhicule vendu retiré 5 min après, livraison 60 s (1 s si moins de 500 m), taxe 0,07, plaque personnalisée 300, moduleVersion 61 (liste ignorée si info.json a une version inférieure).",
-    "Génération : util_configListGenerator.getEligibleVehicles puis getRandomVehicleInfos avec une population normalisée (facteur 0,4) ; évite les configs déjà en vente chez le même vendeur. Année tirée entre les bornes de la config, kilométrage tiré selon filter.whiteList.Mileage, valeur ajustée par career_modules_valueCalculator, prix arrondi par seller.priceRoundingType (prestige, private, dealer ou 10), négociation via career_modules_marketplace.generatePersonality. Vendeur « private » : place de parking aléatoire (tag notprivatesale exclu). Concessionnaires à staticInventory : liste fixe générée une fois.",
-    "Les offres expirées sont retirées, sauf celles de la watchlist qui passent « vendues » (soldFor, soldViewCounter) et restent 5 min visibles ; le toast watchlistVehicleSold et le succès TOO_LATE sont déclenchés dans onUpdate quand un véhicule surveillé non inspecté expire.",
-    "Types d'achat (purchaseType) : « inspect » (véhicule déjà apparu, acheté via career_modules_inspectVehicle) et « instant » (achat direct, apparition dans une place du concessionnaire ou envoi au garage avec délai si makeDelivery).",
-    "Succès liés : GOOD_DEAL / DEAL_MAKER (prix négocié < demandé, <= 80 %), SERIOUS_PURCHASE (>= 100 000).",
-    "Bug : generateShopId est censée éviter les identifiants en double, mais la boucle interne `break` puis `return shopId` retourne toujours le premier tirage sans vérification réelle.",
-    "Bug mineur : dans onComputerAddFunctions, le bloc de code d'une ancienne vérification est commenté ; seules les raisons du tutoriel (tutorialPartShoppingActive/tutorialTuningActive) et les permissions « vehicleShopping » désactivent le bouton.",
-    "Les fonctions locales (getRoundedPrice, spawnVehicle, buyVehicleAndSendToGarage, etc.) ne sont pas exportées.",
-    "onExtensionLoaded retourne false si la carrière n'est pas active (le module ne se charge pas)."
+    "Constants: offers valid for 10 min (vehicleOfferTimeToLive), one vehicle generated per seller every 60 s / vehicleGenerationMultiplier, sold vehicle removed 5 min later, delivery 60 s (1 s if under 500 m), tax 0.07, custom plate 300, moduleVersion 61 (list ignored if info.json has a lower version).",
+    "Generation: util_configListGenerator.getEligibleVehicles then getRandomVehicleInfos with a normalized population (factor 0.4); avoids configs already for sale at the same seller. Year drawn between the config's bounds, mileage drawn according to filter.whiteList.Mileage, value adjusted by career_modules_valueCalculator, price rounded by seller.priceRoundingType (prestige, private, dealer or 10), negotiation via career_modules_marketplace.generatePersonality. \"private\" seller: random parking spot (tag notprivatesale excluded). Dealerships with staticInventory: fixed list generated once.",
+    "Expired offers are removed, except those in the watchlist which become \"sold\" (soldFor, soldViewCounter) and stay visible for 5 min; the watchlistVehicleSold toast and the TOO_LATE achievement are triggered in onUpdate when a watched, uninspected vehicle expires.",
+    "Purchase types (purchaseType): \"inspect\" (vehicle already spawned, bought via career_modules_inspectVehicle) and \"instant\" (direct purchase, spawn in a dealership spot or shipping to the garage with delay if makeDelivery).",
+    "Related achievements: GOOD_DEAL / DEAL_MAKER (negotiated price < asking, <= 80%), SERIOUS_PURCHASE (>= 100,000).",
+    "Bug: generateShopId is supposed to avoid duplicate identifiers, but the inner loop `break` then `return shopId` always returns the first draw without any real check.",
+    "Minor bug: in onComputerAddFunctions, the code block of an old check is commented out; only the tutorial reasons (tutorialPartShoppingActive/tutorialTuningActive) and the \"vehicleShopping\" permissions disable the button.",
+    "The local functions (getRoundedPrice, spawnVehicle, buyVehicleAndSendToGarage, etc.) are not exported.",
+    "onExtensionLoaded returns false if the career is not active (the module does not load)."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "{'career_career', 'util_configListGenerator'}."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{'career_career', 'util_configListGenerator'}."
+    }
   },
   "functions": {
     "getShoppingData": {
-      "desc": "Construit les données de la boutique pour l'UI : véhicules en vente et vendus, concessionnaires (avec nombre de véhicules, désactivés pendant l'onboarding sauf apmStarterVehicles), vendeur courant et sélectionné, argent et attributs du joueur, places libres de l'inventaire, droits d'achat.",
-      "returns": [{"type": "table", "desc": "Données envoyées par le guihook vehicleShoppingData."}],
+      "desc": "Builds the shop data for the UI: vehicles for sale and sold, dealerships (with vehicle count, disabled during onboarding except apmStarterVehicles), current and selected seller, player's money and attributes, free inventory slots, purchase rights.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Data sent by the vehicleShoppingData guihook."
+        }
+      ],
       "internal": false
     },
-    "sendShoppingDataToUI": {"desc": "Envoie getShoppingData à l'UI (guihooks vehicleShoppingData).", "internal": false},
+    "sendShoppingDataToUI": {
+      "desc": "Sends getShoppingData to the UI (guihooks vehicleShoppingData).",
+      "internal": false
+    },
     "getVehicleInfoByShopId": {
-      "desc": "Trouve un véhicule en vente par son shopId.",
-      "params": {"shopId": {"type": "integer", "desc": "Identifiant de l'offre."}},
-      "returns": [{"type": "table|nil", "desc": "Informations de l'offre."}],
+      "desc": "Finds a vehicle for sale by its shopId.",
+      "params": {
+        "shopId": {
+          "type": "integer",
+          "desc": "Offer identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Offer information."
+        }
+      ],
       "internal": false
     },
     "getEligibleVehiclesWithoutDealershipVehicles": {
-      "desc": "Retourne une copie de la liste des configs éligibles sans celles déjà proposées par le vendeur donné.",
+      "desc": "Returns a copy of the list of eligible configs without those already offered by the given seller.",
       "params": {
-        "eligibleVehicles": {"type": "table[]", "desc": "Liste de configs éligibles (model_key, key)."},
-        "seller": {"type": "table", "desc": "Vendeur (champ id)."}
+        "eligibleVehicles": {
+          "type": "table[]",
+          "desc": "List of eligible configs (model_key, key)."
+        },
+        "seller": {
+          "type": "table",
+          "desc": "Seller (id field)."
+        }
       },
-      "returns": [{"type": "table[]", "desc": "Liste filtrée."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Filtered list."
+        }
+      ],
       "internal": false
     },
     "updateVehicleList": {
-      "desc": "Met à jour la liste des véhicules en vente : retire les offres expirées ou à modèle manquant, génère les nouveaux véhicules de chaque vendeur selon le temps écoulé.",
-      "params": {"fromScratch": {"type": "boolean|nil", "desc": "Si vrai, vide tout et regénère depuis zéro."}},
-      "internal": false
-    },
-    "getVisualValueFromMileage": {
-      "desc": "Convertit un kilométrage en facteur visuel d'usure (1 jusqu'à 10 000 000, décroissant jusqu'à 0,75 à 2 000 000 000), passé à partCondition.initConditions à l'apparition.",
-      "params": {"mileage": {"type": "number", "desc": "Odomètre en unités du jeu (mètres, déduit du code)."}},
-      "returns": [{"type": "number", "desc": "Facteur entre 0,75 et 1."}],
-      "internal": false
-    },
-    "navigateToPos": {
-      "desc": "Trace un guidage au sol vers une position et revient à l'écran de jeu (« play »).",
-      "params": {"pos": {"type": "vec3", "desc": "Position (champs x, y, z)."}},
-      "internal": false
-    },
-    "openShop": {
-      "desc": "Ouvre la boutique : met à jour la liste, calcule distances et prix de voyage rapide, crée la laisse (sphère de 4 m devant un concessionnaire, ou porte de l'ordinateur) et navigue vers l'écran de boutique. Émet le hook onVehicleShoppingMenuOpened({seller}).",
+      "desc": "Updates the list of vehicles for sale: removes expired offers or those with a missing model, generates each seller's new vehicles according to the elapsed time.",
       "params": {
-        "seller": {"type": "string|nil", "desc": "Id du concessionnaire (nil = depuis l'ordinateur)."},
-        "_originComputerId": {"type": "any", "desc": "Id de l'ordinateur d'origine."},
-        "screenTag": {"type": "string|nil", "desc": "Étiquette d'écran transmise à l'UI."}
+        "fromScratch": {
+          "type": "boolean|nil",
+          "desc": "If true, clears everything and regenerates from scratch."
+        }
       },
       "internal": false
     },
-    "endShopping": {"desc": "Ferme tous les menus de carrière et émet le hook onVehicleShoppingMenuClosed. Appelée aussi par la laisse.", "internal": false},
-    "cancelShopping": {"desc": "Retourne au menu de l'ordinateur d'origine, ou ferme tous les menus.", "internal": false},
-    "requestExit": {"desc": "Gestionnaire du bouton retour du routeur : équivaut à cancelShopping.", "internal": true},
+    "getVisualValueFromMileage": {
+      "desc": "Converts a mileage into a visual wear factor (1 up to 10,000,000, decreasing to 0.75 at 2,000,000,000), passed to partCondition.initConditions on spawn.",
+      "params": {
+        "mileage": {
+          "type": "number",
+          "desc": "Odometer in game units (meters, inferred from code)."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Factor between 0.75 and 1."
+        }
+      ],
+      "internal": false
+    },
+    "navigateToPos": {
+      "desc": "Draws ground guidance to a position and returns to the game screen (\"play\").",
+      "params": {
+        "pos": {
+          "type": "vec3",
+          "desc": "Position (fields x, y, z)."
+        }
+      },
+      "internal": false
+    },
+    "openShop": {
+      "desc": "Opens the shop: updates the list, computes quick travel distances and prices, creates the tether (4 m sphere in front of a dealership, or the computer's door) and navigates to the shop screen. Emits the onVehicleShoppingMenuOpened({seller}) hook.",
+      "params": {
+        "seller": {
+          "type": "string|nil",
+          "desc": "Dealership id (nil = from the computer)."
+        },
+        "_originComputerId": {
+          "type": "any",
+          "desc": "Originating computer id."
+        },
+        "screenTag": {
+          "type": "string|nil",
+          "desc": "Screen tag passed to the UI."
+        }
+      },
+      "internal": false
+    },
+    "endShopping": {
+      "desc": "Closes all career menus and emits the onVehicleShoppingMenuClosed hook. Also called by the tether.",
+      "internal": false
+    },
+    "cancelShopping": {
+      "desc": "Returns to the originating computer's menu, or closes all menus.",
+      "internal": false
+    },
+    "requestExit": {
+      "desc": "Router back button handler: equivalent to cancelShopping.",
+      "internal": true
+    },
     "requestVehicleListExit": {
-      "desc": "Sortie de la liste de véhicules : avec un vendeur courant, annule la boutique ; sinon désélectionne le vendeur et revient à l'écran des vendeurs.",
+      "desc": "Exit from the vehicle list: with a current seller, cancels the shop; otherwise deselects the seller and returns to the sellers screen.",
       "internal": false
     },
     "selectSeller": {
-      "desc": "L'UI a choisi un vendeur : l'enregistre, émet onVehicleShoppingSelectedSellerIdChanged, envoie les données et navigue vers la liste de véhicules.",
-      "params": {"sellerId": {"type": "string", "desc": "Id du concessionnaire ou \"private\"."}},
+      "desc": "The UI chose a seller: records it, emits onVehicleShoppingSelectedSellerIdChanged, sends the data and navigates to the vehicle list.",
+      "params": {
+        "sellerId": {
+          "type": "string",
+          "desc": "Dealership id or \"private\"."
+        }
+      },
       "internal": false
     },
     "getSelectedSellerBreadcrumbTitle": {
-      "desc": "Titre du vendeur sélectionné pour le fil d'Ariane de l'UI.",
-      "returns": [{"type": "string|nil", "desc": "Nom traduit."}],
+      "desc": "Title of the selected seller for the UI breadcrumb.",
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Translated name."
+        }
+      ],
       "internal": false
     },
-    "getCurrentSellerId": {"desc": "Retourne l'id du concessionnaire courant (nil si via l'ordinateur).", "returns": [{"type": "string|nil", "desc": "Id."}], "internal": false},
-    "getVehiclesInShop": {"desc": "Retourne la table interne des véhicules en vente.", "returns": [{"type": "table[]", "desc": "Offres courantes."}], "internal": false},
+    "getCurrentSellerId": {
+      "desc": "Returns the id of the current dealership (nil if via the computer).",
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Id."
+        }
+      ],
+      "internal": false
+    },
+    "getVehiclesInShop": {
+      "desc": "Returns the internal table of vehicles for sale.",
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Current offers."
+        }
+      ],
+      "internal": false
+    },
     "showVehicle": {
-      "desc": "Lance l'inspection d'un véhicule en vente (fondu, apparition via career_modules_inspectVehicle.startInspection). Émet onVehicleShoppingVehicleShown en cas de succès.",
-      "params": {"shopId": {"type": "integer", "desc": "Identifiant de l'offre."}},
+      "desc": "Starts the inspection of a vehicle for sale (fade, spawn via career_modules_inspectVehicle.startInspection). Emits onVehicleShoppingVehicleShown on success.",
+      "params": {
+        "shopId": {
+          "type": "integer",
+          "desc": "Offer identifier."
+        }
+      },
       "internal": false
     },
     "quickTravelToVehicle": {
-      "desc": "Comme showVehicle, mais téléporte le joueur vers le véhicule.",
-      "params": {"shopId": {"type": "integer", "desc": "Identifiant de l'offre."}},
+      "desc": "Like showVehicle, but teleports the player to the vehicle.",
+      "params": {
+        "shopId": {
+          "type": "integer",
+          "desc": "Offer identifier."
+        }
+      },
       "internal": false
     },
     "openPurchaseMenu": {
-      "desc": "Ouvre l'écran d'achat pour une offre, ajoute l'offre à la watchlist et émet onVehicleShoppingPurchaseMenuOpened({purchaseType, shopId}).",
+      "desc": "Opens the purchase screen for an offer, adds the offer to the watchlist and emits onVehicleShoppingPurchaseMenuOpened({purchaseType, shopId}).",
       "params": {
-        "purchaseType": {"type": "string", "desc": "\"inspect\" ou \"instant\"."},
-        "shopId": {"type": "integer", "desc": "Identifiant de l'offre."},
-        "insuranceId": {"type": "integer|nil", "desc": "Assurance présélectionnée."}
+        "purchaseType": {
+          "type": "string",
+          "desc": "\"inspect\" or \"instant\"."
+        },
+        "shopId": {
+          "type": "integer",
+          "desc": "Offer identifier."
+        },
+        "insuranceId": {
+          "type": "integer|nil",
+          "desc": "Preselected insurance."
+        }
       },
       "internal": false
     },
     "sendPurchaseDataToUi": {
-      "desc": "Calcule les prix (frais, remise, reprise, taxes 7 %, prix final), l'assurance, les frais de dégâts d'essai routier, puis envoie vehiclePurchaseData à l'UI.",
+      "desc": "Computes the prices (fees, discount, trade-in, 7% taxes, final price), the insurance, the test drive damage fees, then sends vehiclePurchaseData to the UI.",
       "internal": false
     },
     "updateInsuranceSelection": {
-      "desc": "Change l'assurance sélectionnée pour l'achat en cours et ré-envoie les données.",
-      "params": {"insuranceId": {"type": "integer", "desc": "Id de l'assurance."}},
+      "desc": "Changes the selected insurance for the current purchase and resends the data.",
+      "params": {
+        "insuranceId": {
+          "type": "integer",
+          "desc": "Insurance id."
+        }
+      },
       "internal": false
     },
     "buyFromPurchaseMenu": {
-      "desc": "Exécute l'achat depuis l'écran d'achat : paie, fait apparaître ou livre le véhicule, retire la reprise éventuelle de l'inventaire, facture la plaque personnalisée et retire l'offre de la liste.",
+      "desc": "Executes the purchase from the purchase screen: pays, spawns or delivers the vehicle, removes any trade-in from the inventory, charges the custom plate and removes the offer from the list.",
       "params": {
-        "purchaseType": {"type": "string", "desc": "\"inspect\" ou \"instant\"."},
-        "options": {"type": "table", "desc": "{licensePlateText, makeDelivery, insuranceId}."}
+        "purchaseType": {
+          "type": "string",
+          "desc": "\"inspect\" or \"instant\"."
+        },
+        "options": {
+          "type": "table",
+          "desc": "{licensePlateText, makeDelivery, insuranceId}."
+        }
       },
       "internal": false
     },
     "buySpawnedVehicle": {
-      "desc": "Achète le véhicule déjà apparu de l'inspection (paie, ajoute à l'inventaire, plaque, entre dedans si le joueur le conduit).",
-      "params": {"buyVehicleOptions": {"type": "table", "desc": "{licensePlateText}."}},
+      "desc": "Buys the already spawned vehicle from the inspection (pays, adds to the inventory, plate, enters it if the player is driving it).",
+      "params": {
+        "buyVehicleOptions": {
+          "type": "table",
+          "desc": "{licensePlateText}."
+        }
+      },
       "internal": false
     },
     "cancelPurchase": {
-      "desc": "Annule l'achat : ferme les menus pour « inspect », rouvre la boutique pour « instant ».",
-      "params": {"purchaseType": {"type": "string", "desc": "\"inspect\" ou \"instant\"."}},
+      "desc": "Cancels the purchase: closes the menus for \"inspect\", reopens the shop for \"instant\".",
+      "params": {
+        "purchaseType": {
+          "type": "string",
+          "desc": "\"inspect\" or \"instant\"."
+        }
+      },
       "internal": false
     },
-    "requestPurchaseExit": {"desc": "Retour depuis l'écran d'achat : ferme les menus pour « inspect », sinon retourne à la liste de véhicules.", "internal": true},
-    "removeTradeInVehicle": {"desc": "Retire le véhicule de reprise de l'achat en cours et met à jour l'UI.", "internal": false},
-    "openInventoryMenuForTradeIn": {"desc": "Ouvre le menu d'inventaire pour choisir un véhicule à donner en reprise (réparation requise, propriétaire requis) ; la valeur est calculée par valueCalculator.", "internal": false},
+    "requestPurchaseExit": {
+      "desc": "Back from the purchase screen: closes the menus for \"inspect\", otherwise returns to the vehicle list.",
+      "internal": true
+    },
+    "removeTradeInVehicle": {
+      "desc": "Removes the trade-in vehicle from the current purchase and updates the UI.",
+      "internal": false
+    },
+    "openInventoryMenuForTradeIn": {
+      "desc": "Opens the inventory menu to choose a vehicle to trade in (repair required, owner required); the value is computed by valueCalculator.",
+      "internal": false
+    },
     "onAddedVehiclePartsToInventory": {
-      "desc": "Hook de l'inventaire après l'ajout des pièces d'un véhicule acheté : enregistre année, pièces d'origine et slots modifiés, supprime l'objet véhicule si livraison, ferme la boutique, émet onVehicleAddedToInventory et sauvegarde si autosave.",
+      "desc": "Inventory hook after the parts of a purchased vehicle are added: records year, original parts and modified slots, deletes the vehicle object if delivery, closes the shop, emits onVehicleAddedToInventory and saves if autosave.",
       "params": {
-        "inventoryId": {"type": "integer", "desc": "Id d'inventaire du nouveau véhicule."},
-        "newParts": {"type": "table", "desc": "Pièces ajoutées (par nom)."}
+        "inventoryId": {
+          "type": "integer",
+          "desc": "Inventory id of the new vehicle."
+        },
+        "newParts": {
+          "type": "table",
+          "desc": "Added parts (by name)."
+        }
       },
       "internal": true
     },
     "onVehicleSpawnFinished": {
-      "desc": "Appelé par le véhicule (queueGameEngineLua) quand ses conditions de pièces sont initialisées : l'ajoute à l'inventaire, y entre si c'est le véhicule joueur, applique délai de livraison et plaque.",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "desc": "Called by the vehicle (queueGameEngineLua) when its part conditions are initialized: adds it to the inventory, enters it if it is the player vehicle, applies delivery delay and plate.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
       "internal": true
     },
     "onComputerAddFunctions": {
-      "desc": "Hook de l'ordinateur du garage : ajoute la fonction générale « vehicleShop » (marché de véhicules), désactivée pendant le tutoriel ou si les permissions refusent vehicleShopping.",
-      "params": {"menuData": {"type": "table", "desc": "Données du menu."}, "computerFunctions": {"type": "table", "desc": "Table à remplir (general)."}},
+      "desc": "Garage computer hook: adds the general function \"vehicleShop\" (vehicle marketplace), disabled during the tutorial or if permissions deny vehicleShopping.",
+      "params": {
+        "menuData": {
+          "type": "table",
+          "desc": "Menu data."
+        },
+        "computerFunctions": {
+          "type": "table",
+          "desc": "Table to fill (general)."
+        }
+      },
       "internal": true
     },
-    "onExtensionLoaded": {"desc": "Hook de chargement : charge vehicleShop.json de la sauvegarde si la version est compatible. Retourne false hors carrière active.", "returns": [{"type": "boolean|nil", "desc": "false pour refuser le chargement."}], "internal": true},
+    "onExtensionLoaded": {
+      "desc": "Load hook: loads vehicleShop.json from the save if the version is compatible. Returns false outside an active career.",
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "false to refuse loading."
+        }
+      ],
+      "internal": true
+    },
     "onSaveCurrentProfile": {
-      "desc": "Hook de sauvegarde : écrit vehicleShop.json (offres, vendeurs, watchlist, état statique).",
-      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde."}},
+      "desc": "Save hook: writes vehicleShop.json (offers, sellers, watchlist, static state).",
+      "params": {
+        "currentSavePath": {
+          "type": "string",
+          "desc": "Save folder."
+        }
+      },
       "internal": true
     },
-    "onShoppingMenuClosed": {"desc": "Hook émis à la fermeture de la boutique : retire la laisse.", "internal": true},
+    "onShoppingMenuClosed": {
+      "desc": "Hook emitted when the shop closes: removes the tether.",
+      "internal": true
+    },
     "onRouteEnter": {
-      "desc": "Hook du routeur d'UI : restaure le vendeur sélectionné depuis les paramètres de route (sellerId).",
-      "params": {"context": {"type": "any", "desc": "Contexte."}, "toRoute": {"type": "table", "desc": "Route cible (params.sellerId)."}, "fromRoute": {"type": "any", "desc": "Route d'origine."}, "data": {"type": "any", "desc": "Données de la route."}},
+      "desc": "UI router hook: restores the selected seller from the route parameters (sellerId).",
+      "params": {
+        "context": {
+          "type": "any",
+          "desc": "Context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route (params.sellerId)."
+        },
+        "fromRoute": {
+          "type": "any",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Route data."
+        }
+      },
       "internal": true
     },
     "onRouteMount": {
-      "desc": "Hook du routeur d'UI : envoie les données de boutique une fois la vue montée.",
-      "params": {"context": {"type": "any", "desc": "Contexte."}, "toRoute": {"type": "any", "desc": "Route cible."}, "fromRoute": {"type": "any", "desc": "Route d'origine."}, "data": {"type": "any", "desc": "Données de la route."}},
+      "desc": "UI router hook: sends the shop data once the view is mounted.",
+      "params": {
+        "context": {
+          "type": "any",
+          "desc": "Context."
+        },
+        "toRoute": {
+          "type": "any",
+          "desc": "Target route."
+        },
+        "fromRoute": {
+          "type": "any",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Route data."
+        }
+      },
       "internal": true
     },
-    "onUpdate": {"desc": "Hook de mise à jour (seulement en état UI « play ») : surveille la watchlist et signale par toast la vente d'un véhicule surveillé dont l'offre a expiré.", "internal": true},
+    "onUpdate": {
+      "desc": "Update hook (only in \"play\" UI state): monitors the watchlist and signals by toast the sale of a watched vehicle whose offer has expired.",
+      "internal": true
+    },
     "onUiChangedState": {
-      "desc": "Hook émis à chaque changement d'état de l'UI : mémorise l'état courant.",
-      "params": {"toState": {"type": "string", "desc": "Nouvel état (ex. \"play\")."}},
+      "desc": "Hook emitted on each UI state change: remembers the current state.",
+      "params": {
+        "toState": {
+          "type": "string",
+          "desc": "New state (e.g. \"play\")."
+        }
+      },
       "internal": true
     }
   }

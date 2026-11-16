@@ -1,0 +1,37 @@
+# `editor_toolUtilities_marchingCubes`
+
+*Fichier : `lua/ge/extensions/editor/toolUtilities/marchingCubes.lua` · VM : Game Engine (GE) · 267 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+
+**Accès :** extension `editor_toolUtilities_marchingCubes` : `extensions.load("editor_toolUtilities_marchingCubes")`, puis la globale `editor_toolUtilities_marchingCubes`
+
+Extraction de surface par marching cubes (Lorensen & Cline 1987, tables d'après Paul Bourke) : produit un maillage de triangles à partir d'un champ de densité scalaire échantillonné sur une grille 3D régulière, au croisement iso = 0, avec F > 0 = intérieur (solide). Ne calcule pas de normales : l'appelant les recalcule après soudure/décimation.
+
+## Remarques
+
+- Les tampons de travail (gVal, gEdgeCache) sont réutilisés entre appels ; les tableaux de sommets sont recréés à chaque appel car l'appelant les conserve.
+- Le champ est évalué sur une grille de nx = max(2, floor((max-min)/cell)+2) coins par axe.
+- Page .md auto : la globale 'ci' est signalée comme affectée par le module, ce qui laisse penser à une variable locale oubliée (déduit de l'analyse automatique).
+
+## Fonctions
+
+| Fonction | Description | Ligne |
+|---|---|---|
+| `editor_toolUtilities_marchingCubes.polygonize(bounds, cell, sampleFn, sampleCtx, store)` | Extrait la surface iso = 0 de sampleFn(sampleCtx, x, y, z) (positif = intérieur) sur la boîte bounds avec une grille de pas cell. Renvoie un maillage indexé en structure de tableaux { vx, vy, vz (positions), ta, tb, tc (indices 1-based des coins de triangle), nv, nt }, ou nil s'il est vide. Si 'store' est fourni, les valeurs des coins sont copiées depuis cette grille pré-échantillonnée au lieu d'appeler sampleFn, ce qui évite de réévaluer le champ sur les plans de coins partagés entre blocs voisins. | 160 |
+
+### Détail des paramètres
+
+#### `editor_toolUtilities_marchingCubes.polygonize(bounds, cell, sampleFn, sampleCtx, store)`
+
+Extrait la surface iso = 0 de sampleFn(sampleCtx, x, y, z) (positif = intérieur) sur la boîte bounds avec une grille de pas cell. Renvoie un maillage indexé en structure de tableaux { vx, vy, vz (positions), ta, tb, tc (indices 1-based des coins de triangle), nv, nt }, ou nil s'il est vide. Si 'store' est fourni, les valeurs des coins sont copiées depuis cette grille pré-échantillonnée au lieu d'appeler sampleFn, ce qui évite de réévaluer le champ sur les plans de coins partagés entre blocs voisins.
+
+- `bounds` (*table*) : Boîte { minx, miny, minz, maxx, maxy, maxz }.
+- `cell` (*number*) : Pas de la grille.
+- `sampleFn` (*function*) : sampleFn(sampleCtx, x, y, z) -> number.
+- `sampleCtx` (*any*) : Contexte passé tel quel à sampleFn.
+- `store` (*table|nil*) : Grille de valeurs partagée : sval (valeurs à plat, une colonne en z après l'autre), colBase (décalage par colonne de coins globale), colStride (colonnes par rangée = NX global + 1 ; col = gj*colStride + gi + 1), gi0, gj0, gk0 (origine globale des coins de ce bloc).
+- **renvoie** : table|nil { vx, vy, vz, ta, tb, tc, nv, nt } ou nil.
+
+**Globales affectées :** `ci`
+
+---
+*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/marchingCubes.lua`.*

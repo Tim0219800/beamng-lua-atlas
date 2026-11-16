@@ -1,12 +1,12 @@
 {
   "path": "lua/vehicle/controller/lightbar.lua",
-  "module": "Contrôleur auxiliaire de rampe lumineuse (gyrophares) à modes configurables (type \"auxiliary\"). Chaque mode définit, par nom de valeur electrics, une séquence d'états (durée, valeur) répétée en boucle tant que l'électrique principale (par défaut \"lightbar\") est > 0 ; une séquence à un seul état devient une valeur statique. Les valeurs electrics produites sont multipliées par l'intensité de la valeur principale (0..1). Un menu radial « Lightbar Modes » permet de changer de mode.",
-  "usage": "-- jbeam (extrait)\n-- \"modes\": [[\"name\", \"config\"],\n--   [\"Police\", [[\"electric\",\"duration\",\"value\"], [\"lightbar_left\",0.1,1], [\"lightbar_left\",0.1,0]]]]",
+  "module": "Auxiliary lightbar (beacon lights) controller with configurable modes (type \"auxiliary\"). Each mode defines, per electrics value name, a sequence of states (duration, value) repeated in a loop as long as the main electrics value (by default \"lightbar\") is > 0; a single-state sequence becomes a static value. The electrics values produced are multiplied by the intensity of the main value (0..1). A \"Lightbar Modes\" radial menu allows changing the mode.",
+  "usage": "-- jbeam (excerpt)\n-- \"modes\": [[\"name\", \"config\"],\n--   [\"Police\", [[\"electric\",\"duration\",\"value\"], [\"lightbar_left\",0.1,1], [\"lightbar_left\",0.1,0]]]]",
   "notes": [
-    "Clés jbeam (défaut) : lightbarElectricsName (\"lightbar\"), modes (table d'en-tête avec name et config ; config est une table d'en-tête electric/duration/value), defaultModeIndex (1), resetTriggerElectricNames (liste de noms d'electrics dont un changement remet les séquences à zéro ; lightbarElectricsName y est ajouté).",
-    "Les durées sont en secondes. Le changement de mode affiche un message d'interface.",
-    "Incohérence : init ajoute lightbarElectricsName dans la table jbeamData.resetTriggerElectricNames elle-même (modification de la table jbeam, qui accumule à chaque init si la table est réutilisée).",
-    "reset(jbeamData) réapplique defaultModeIndex ; setState/applyRemoteModeIndex change de mode sans message ni coupure des valeurs de sortie."
+    "jbeam keys (default): lightbarElectricsName (\"lightbar\"), modes (header table with name and config; config is a header table electric/duration/value), defaultModeIndex (1), resetTriggerElectricNames (list of electrics names whose change resets the sequences to zero; lightbarElectricsName is added to it).",
+    "Durations are in seconds. The mode change displays an interface message.",
+    "Inconsistency: init adds lightbarElectricsName into the jbeamData.resetTriggerElectricNames table itself (modifying the jbeam table, which accumulates at each init if the table is reused).",
+    "reset(jbeamData) reapplies defaultModeIndex; setState/applyRemoteModeIndex changes mode without a message or cutting the output values."
   ],
   "fields": {
     "type": {
@@ -16,69 +16,69 @@
   },
   "functions": {
     "init": {
-      "desc": "Construit les modes (séquences animées et valeurs statiques), enregistre l'entrée du menu radial si plusieurs modes existent.",
+      "desc": "Builds the modes (animated sequences and static values), registers the radial menu entry if several modes exist.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Rétablit le mode par défaut.",
+      "desc": "Restores the default mode.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Avance les séquences de chaque électrique selon dt et écrit electrics.values.",
+      "desc": "Advances the sequences of each electrics value according to dt and writes electrics.values.",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "toggleMode": {
-      "desc": "Passe au mode suivant (revient au premier après le dernier).",
+      "desc": "Switches to the next mode (returns to the first after the last).",
       "params": {},
       "returns": []
     },
     "setModeIndex": {
-      "desc": "Active le mode d'indice donné : remet les séquences à zéro, applique les valeurs statiques et affiche un message. Ne fait rien si l'indice n'existe pas.",
+      "desc": "Activates the mode at the given index: resets the sequences to zero, applies the static values and displays a message. Does nothing if the index does not exist.",
       "params": {
         "index": {
           "type": "integer",
-          "desc": "Indice 1..n dans modes."
+          "desc": "Index 1..n in modes."
         }
       },
       "returns": []
     },
     "getState": {
-      "desc": "Renvoie l'indice de mode courant.",
+      "desc": "Returns the current mode index.",
       "params": {},
       "returns": [
         {
           "type": "table",
-          "desc": "Table d'état (réutilisée)."
+          "desc": "State table (reused)."
         }
       ]
     },
     "setState": {
-      "desc": "Applique l'indice de mode d'une table d'état si valide.",
+      "desc": "Applies the mode index from a state table if valid.",
       "params": {
         "data": {
           "type": "table|nil",
-          "desc": "Table d'état."
+          "desc": "State table."
         }
       },
       "returns": []

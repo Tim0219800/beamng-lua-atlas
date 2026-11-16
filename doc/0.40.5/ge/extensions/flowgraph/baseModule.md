@@ -1,12 +1,12 @@
 # `flowgraph_baseModule`
 
-*Fichier : `lua/ge/extensions/flowgraph/baseModule.lua` · VM : Game Engine (GE) · 51 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/baseModule.lua` · VM: Game Engine (GE) · 51 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `flowgraph_baseModule` : `extensions.load("flowgraph_baseModule")`, puis la globale `flowgraph_baseModule`
+**Access:** extension `flowgraph_baseModule`: `extensions.load("flowgraph_baseModule")`, then the global `flowgraph_baseModule`
 
-Classe de base des modules du gestionnaire flowgraph (les « modules » attachés au manager, par opposition aux nœuds). Elle définit une classe C avec des hooks vides (clear, onUpdate, executionStarted, executionStopped) que les modules dérivés surchargent. Le fichier n'est pas une extension utilisable seule : il est utilisé par les modules flowgraph via M.use(mgr, derivedClass).
+Base class of the flowgraph manager's modules (the "modules" attached to the manager, as opposed to nodes). It defines a class C with empty hooks (clear, onUpdate, executionStarted, executionStopped) that derived modules override. The file is not a usable extension on its own: it is used by flowgraph modules via M.use(mgr, derivedClass).
 
-## Exemple
+## Example
 
 ```lua
 local base = require('/lua/ge/extensions/flowgraph/baseModule')
@@ -15,49 +15,49 @@ local module = base.use(mgr, {
 })
 ```
 
-## Remarques
+## Notes
 
-- C.moduleOrder = 0 : ordre de traitement des modules, les valeurs basses passent en premier.
-- C.hooks est une table vide, destinée à déclarer les hooks gérés par le module.
-- Les fonctions preTrigger/afterTrigger sont commentées dans le code (non disponibles).
-- M.use n'appelle o:init() une seconde fois que si la classe dérivée a redéfini init (sans argument mgr dans ce cas).
+- C.moduleOrder = 0: module processing order, lower values come first.
+- C.hooks is an empty table, meant to declare the hooks handled by the module.
+- The preTrigger/afterTrigger functions are commented out in the code (not available).
+- M.use calls o:init() a second time only if the derived class redefined init (without the mgr argument in that case).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `flowgraph_baseModule.createBase(...)` | Crée une instance de la classe de base : table avec C comme métatable, puis appelle init(...) (donc init(mgr)). *(interne)* | 27 |
-| `flowgraph_baseModule.use(mgr, derivedClass)` | Crée un module de base, copie dessus tous les champs/méthodes de derivedClass (surcharge), puis rappelle init() si la classe dérivée l'a redéfini. *(interne)* | 35 |
+| `flowgraph_baseModule.createBase(...)` | Creates an instance of the base class: a table with C as metatable, then calls init(...) (so init(mgr)). *(internal)* | 27 |
+| `flowgraph_baseModule.use(mgr, derivedClass)` | Creates a base module, copies all fields/methods of derivedClass onto it (override), then calls init() again if the derived class redefined it. *(internal)* | 35 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `flowgraph_baseModule.createBase(...)`
 
-Crée une instance de la classe de base : table avec C comme métatable, puis appelle init(...) (donc init(mgr)).
+Creates an instance of the base class: a table with C as metatable, then calls init(...) (so init(mgr)).
 
-- `...` (*any*) : arguments transmis à init, normalement le manager flowgraph mgr
-- **renvoie** : table instance du module de base
+- `...` (*any*) : arguments passed to init, normally the flowgraph manager mgr
+- **returns**: table base module instance
 
 #### `flowgraph_baseModule.use(mgr, derivedClass)`
 
-Crée un module de base, copie dessus tous les champs/méthodes de derivedClass (surcharge), puis rappelle init() si la classe dérivée l'a redéfini.
+Creates a base module, copies all fields/methods of derivedClass onto it (override), then calls init() again if the derived class redefined it.
 
-- `mgr` (*table*) : manager flowgraph propriétaire du module
-- `derivedClass` (*table*) : table de méthodes/champs qui remplacent ceux de la base
-- **renvoie** : table instance du module
+- `mgr` (*table*) : flowgraph manager that owns the module
+- `derivedClass` (*table*) : table of methods/fields that replace those of the base
+- **returns**: table module instance
 
-## Classe `C`
+## Class `C`
 
-Classe de base d'un module flowgraph. Les méthodes vides sont à surcharger.
+Base class of a flowgraph module. The empty methods are meant to be overridden.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clear()` | Hook vide « utilisable » par les modules dérivés pour vider leur état. | 15 |
-| `C:executionStarted()` | Hook vide appelé au démarrage de l'exécution du flowgraph. | 18 |
-| `C:executionStopped()` | Hook vide appelé à l'arrêt de l'exécution du flowgraph. | 17 |
-| `C:init(mgr)` | Mémorise le manager dans self.mgr. | 10 |
-| `C:onClear()` | Appelle self:executionStopped(). Sert de réaction au vidage du manager. | 19 |
-| `C:onUpdate(dtReal, dtSim, dtRaw)` | Hook vide appelé à chaque mise à jour du manager (surchargé par les modules). | 16 |
+| `C:clear()` | Empty hook "usable" by derived modules to clear their state. | 15 |
+| `C:executionStarted()` | Empty hook called when the flowgraph execution starts. | 18 |
+| `C:executionStopped()` | Empty hook called when the flowgraph execution stops. | 17 |
+| `C:init(mgr)` | Stores the manager in self.mgr. | 10 |
+| `C:onClear()` | Calls self:executionStopped(). Serves as the reaction to the manager being cleared. | 19 |
+| `C:onUpdate(dtReal, dtSim, dtRaw)` | Empty hook called on every manager update (overridden by modules). | 16 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/baseModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/baseModule.lua`.*

@@ -1,106 +1,106 @@
 # `ui_vehicleSelector_detailsInteraction`
 
-*Fichier : `lua/ge/extensions/ui/vehicleSelector/detailsInteraction.lua` · VM : Game Engine (GE) · 84 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/vehicleSelector/detailsInteraction.lua` · VM: Game Engine (GE) · 84 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_vehicleSelector_detailsInteraction` : `extensions.load("ui_vehicleSelector_detailsInteraction")`, puis la globale `ui_vehicleSelector_detailsInteraction`
+**Access:** extension `ui_vehicleSelector_detailsInteraction`: `extensions.load("ui_vehicleSelector_detailsInteraction")`, then the global `ui_vehicleSelector_detailsInteraction`
 
-Façade du panneau de détails du sélecteur de véhicules. Elle assemble les spécifications (ui_vehicleSelector_vehicleSpecifications) et les boutons d'action (ui_vehicleSelector_vehicleOperations) d'un élément, et expose quelques actions (ouvrir un dossier, aller à la page d'un mod). Un mode de boutons personnalisés permet à d'autres systèmes (mode défi) de remplacer les boutons de freeroam.
+Facade of the vehicle selector's details panel. It assembles the specifications (ui_vehicleSelector_vehicleSpecifications) and the action buttons (ui_vehicleSelector_vehicleOperations) of an item, and exposes a few actions (open a folder, go to a mod's page). A custom buttons mode lets other systems (challenge mode) replace the freeroam buttons.
 
-## Remarques
+## Notes
 
-- Si customDetailsButtons n'est pas vide, les boutons standard sont remplacés : chaque bouton appelle button.callback(modelKey, configKey, additionalData). Sans données supplémentaires, les peintures par défaut (paint, paint2, paint3) de la config, ou à défaut du modèle, sont pré-remplies.
-- Le champ managementButtonsEnabled de ce module n'est pas lu ici ; setManagementButtonsEnabled délègue à vehicleOperations.
+- If customDetailsButtons is not empty, the standard buttons are replaced: each button calls button.callback(modelKey, configKey, additionalData). Without additional data, the default paints (paint, paint2, paint3) of the config, or failing that of the model, are pre-filled.
+- The managementButtonsEnabled field of this module is not read here; setManagementButtonsEnabled delegates to vehicleOperations.
 
-**Dépendances (chargées avant) :** `ui_vehicleSelector_vehicleOperations`, `ui_vehicleSelector_vehicleSpecifications`
+**Dependencies (loaded first):** `ui_vehicleSelector_vehicleOperations`, `ui_vehicleSelector_vehicleSpecifications`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_vehicleSelector_detailsInteraction.executeButton(...)` | Délègue à ui_vehicleSelector_vehicleOperations.executeButton avec les mêmes arguments. | 79 |
-| `ui_vehicleSelector_detailsInteraction.executeDoubleClick(...)` | Délègue à ui_vehicleSelector_vehicleOperations.executeDoubleClick avec les mêmes arguments. | 80 |
-| `ui_vehicleSelector_detailsInteraction.exploreFolder(path)` | Ouvre un dossier dans l'explorateur de fichiers du système (Engine.Platform.exploreFolder). | 65 |
-| `ui_vehicleSelector_detailsInteraction.getDetails(itemDetails)` | Renvoie les détails d'un élément (spécifications issues de vehicleSpecifications) complétés de `buttonInfo` : boutons personnalisés si définis, sinon boutons de lancement standard de vehicleOperations. | 13 |
-| `ui_vehicleSelector_detailsInteraction.getManagementDetails()` | Renvoie les détails des boutons de gestion fournis par vehicleOperations.getManagementDetails(). | 55 |
-| `ui_vehicleSelector_detailsInteraction.goToMod(modId)` | Navigue vers la page de détails d'un mod dans l'interface (route 'menu.mods.details'). | 70 |
-| `ui_vehicleSelector_detailsInteraction.setCustomDetailsButtons(buttons)` | Définit la liste des boutons personnalisés qui remplacent les boutons standard dans getDetails. | 83 |
-| `ui_vehicleSelector_detailsInteraction.setDetailsButtonForFreeroam(...)` | Délègue à ui_vehicleSelector_vehicleOperations.setDetailsButtonForFreeroam. | 82 |
-| `ui_vehicleSelector_detailsInteraction.setExitCallback(callback)` | Définit la fonction appelée à la sortie ; nop si nil. | 59 |
-| `ui_vehicleSelector_detailsInteraction.setManagementButtonsEnabled(...)` | Délègue à ui_vehicleSelector_vehicleOperations.setManagementButtonsEnabled. | 81 |
+| `ui_vehicleSelector_detailsInteraction.executeButton(...)` | Delegates to ui_vehicleSelector_vehicleOperations.executeButton with the same arguments. | 79 |
+| `ui_vehicleSelector_detailsInteraction.executeDoubleClick(...)` | Delegates to ui_vehicleSelector_vehicleOperations.executeDoubleClick with the same arguments. | 80 |
+| `ui_vehicleSelector_detailsInteraction.exploreFolder(path)` | Opens a folder in the system file explorer (Engine.Platform.exploreFolder). | 65 |
+| `ui_vehicleSelector_detailsInteraction.getDetails(itemDetails)` | Returns the details of an item (specifications from vehicleSpecifications) completed with `buttonInfo`: custom buttons if defined, otherwise the standard launch buttons of vehicleOperations. | 13 |
+| `ui_vehicleSelector_detailsInteraction.getManagementDetails()` | Returns the details of the management buttons provided by vehicleOperations.getManagementDetails(). | 55 |
+| `ui_vehicleSelector_detailsInteraction.goToMod(modId)` | Navigates to a mod's details page in the interface (route 'menu.mods.details'). | 70 |
+| `ui_vehicleSelector_detailsInteraction.setCustomDetailsButtons(buttons)` | Sets the list of custom buttons that replace the standard buttons in getDetails. | 83 |
+| `ui_vehicleSelector_detailsInteraction.setDetailsButtonForFreeroam(...)` | Delegates to ui_vehicleSelector_vehicleOperations.setDetailsButtonForFreeroam. | 82 |
+| `ui_vehicleSelector_detailsInteraction.setExitCallback(callback)` | Sets the function called on exit; nop if nil. | 59 |
+| `ui_vehicleSelector_detailsInteraction.setManagementButtonsEnabled(...)` | Delegates to ui_vehicleSelector_vehicleOperations.setManagementButtonsEnabled. | 81 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_vehicleSelector_detailsInteraction.executeButton(...)`
 
-Délègue à ui_vehicleSelector_vehicleOperations.executeButton avec les mêmes arguments.
+Delegates to ui_vehicleSelector_vehicleOperations.executeButton with the same arguments.
 
-- `...` (*any*) : Arguments transmis tels quels.
-- **renvoie** : any Résultat de vehicleOperations.executeButton.
+- `...` (*any*) : Arguments passed as is.
+- **returns**: any Result of vehicleOperations.executeButton.
 
 #### `ui_vehicleSelector_detailsInteraction.executeDoubleClick(...)`
 
-Délègue à ui_vehicleSelector_vehicleOperations.executeDoubleClick avec les mêmes arguments.
+Delegates to ui_vehicleSelector_vehicleOperations.executeDoubleClick with the same arguments.
 
-- `...` (*any*) : Arguments transmis tels quels.
-- **renvoie** : any Résultat de vehicleOperations.executeDoubleClick.
+- `...` (*any*) : Arguments passed as is.
+- **returns**: any Result of vehicleOperations.executeDoubleClick.
 
 #### `ui_vehicleSelector_detailsInteraction.exploreFolder(path)`
 
-Ouvre un dossier dans l'explorateur de fichiers du système (Engine.Platform.exploreFolder).
+Opens a folder in the system file explorer (Engine.Platform.exploreFolder).
 
-- `path` (*string*) : Chemin du dossier.
+- `path` (*string*) : Folder path.
 
 #### `ui_vehicleSelector_detailsInteraction.getDetails(itemDetails)`
 
-Renvoie les détails d'un élément (spécifications issues de vehicleSpecifications) complétés de `buttonInfo` : boutons personnalisés si définis, sinon boutons de lancement standard de vehicleOperations.
+Returns the details of an item (specifications from vehicleSpecifications) completed with `buttonInfo`: custom buttons if defined, otherwise the standard launch buttons of vehicleOperations.
 
-- `itemDetails` (*table*) : Élément sélectionné (transmis à vehicleSpecifications.getDetails).
-- **renvoie** : table Détails avec champ buttonInfo.
+- `itemDetails` (*table*) : Selected item (passed to vehicleSpecifications.getDetails).
+- **returns**: table Details with a buttonInfo field.
 
 #### `ui_vehicleSelector_detailsInteraction.getManagementDetails()`
 
-Renvoie les détails des boutons de gestion fournis par vehicleOperations.getManagementDetails().
+Returns the details of the management buttons provided by vehicleOperations.getManagementDetails().
 
-- **renvoie** : table Informations de gestion (déduit du code).
+- **returns**: table Management information (inferred from code).
 
 #### `ui_vehicleSelector_detailsInteraction.goToMod(modId)`
 
-Navigue vers la page de détails d'un mod dans l'interface (route 'menu.mods.details').
+Navigates to a mod's details page in the interface (route 'menu.mods.details').
 
-- `modId` (*string*) : Identifiant du mod.
+- `modId` (*string*) : Mod identifier.
 
 #### `ui_vehicleSelector_detailsInteraction.setCustomDetailsButtons(buttons)`
 
-Définit la liste des boutons personnalisés qui remplacent les boutons standard dans getDetails.
+Sets the list of custom buttons that replace the standard buttons in getDetails.
 
-- `buttons` (*table*) : Liste d'objets {callback, meta}.
+- `buttons` (*table*) : List of {callback, meta} objects.
 
 #### `ui_vehicleSelector_detailsInteraction.setDetailsButtonForFreeroam(...)`
 
-Délègue à ui_vehicleSelector_vehicleOperations.setDetailsButtonForFreeroam.
+Delegates to ui_vehicleSelector_vehicleOperations.setDetailsButtonForFreeroam.
 
-- `...` (*any*) : Arguments transmis tels quels.
+- `...` (*any*) : Arguments passed as is.
 
 #### `ui_vehicleSelector_detailsInteraction.setExitCallback(callback)`
 
-Définit la fonction appelée à la sortie ; nop si nil.
+Sets the function called on exit; nop if nil.
 
-- `callback` (*function|nil*) : Callback de sortie.
+- `callback` (*function|nil*) : Exit callback.
 
 #### `ui_vehicleSelector_detailsInteraction.setManagementButtonsEnabled(...)`
 
-Délègue à ui_vehicleSelector_vehicleOperations.setManagementButtonsEnabled.
+Delegates to ui_vehicleSelector_vehicleOperations.setManagementButtonsEnabled.
 
-- `...` (*any*) : Arguments transmis tels quels.
+- `...` (*any*) : Arguments passed as is.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `customDetailsButtons` | table | Boutons personnalisés ({callback, meta}) ; vide par défaut. |
+| `customDetailsButtons` | table | Custom buttons ({callback, meta}); empty by default. |
 | `dependencies` | string[] | ui_vehicleSelector_vehicleOperations, ui_vehicleSelector_vehicleSpecifications. |
-| `exitCallback` | function | Callback de sortie, nop par défaut ; modifié par setExitCallback. |
-| `managementButtonsEnabled` | boolean | Valeur initiale true (configuration). |
+| `exitCallback` | function | Exit callback, nop by default; modified by setExitCallback. |
+| `managementButtonsEnabled` | boolean | Initial value true (configuration). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/vehicleSelector/detailsInteraction.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/vehicleSelector/detailsInteraction.lua`.*

@@ -1,23 +1,23 @@
 # `flowgraph_nodes_math_vector_merge`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/math/vector/merge.lua` · VM : Game Engine (GE) · 38 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/math/vector/merge.lua` · VM: Game Engine (GE) · 38 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/math/vector/merge")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/math/vector/merge")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Merge' (categorie simple). Regroupe jusqu'a 4 nombres x, y, z, w dans une table {x, y, z, w} (type vec3, color ou quat) sur la sortie 'value'.
+Flowgraph node 'Merge' (simple category). Groups up to 4 numbers x, y, z, w into a table {x, y, z, w} (type vec3, color or quat) on the 'value' output.
 
-## Remarques
+## Notes
 
-- Les entrees nil laissent des trous dans la table ; un w manquant donne une table de 3 elements (vec3).
+- Nil inputs leave holes in the table; a missing w gives a 3-element table (vec3).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Vide. | 25 |
-| `C:work()` | Construit {x, y, z, w} depuis les entrees et l'ecrit sur la sortie. | 28 |
+| `C:init()` | Empty. | 25 |
+| `C:work()` | Builds {x, y, z, w} from the inputs and writes it to the output. | 28 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/math/vector/merge.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/math/vector/merge.lua`.*

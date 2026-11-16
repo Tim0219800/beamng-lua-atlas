@@ -1,42 +1,67 @@
 {
   "path": "lua/ge/extensions/editor/missionEditor/setupModules.lua",
-  "module": "Panneau « SetupModules » de l'éditeur de missions. Il édite mission.setupModules, trois modules activables : vehicles (véhicules proposés, véhicule du joueur, réglages de différentiels), traffic (nombre de véhicules, actifs, garés, taux de réapparition, groupe personnalisé) et environment (heure du jour normalisée, échelle de temps, vent, nuages, brouillard, réglages laissés à l'utilisateur). Il contient aussi la conversion de l'ancienne heure fixe vers normalizedTime et la détection de données mal formées. Le module renvoie un constructeur : require(...)(missionEditor).",
+  "module": "\"SetupModules\" panel of the mission editor. It edits mission.setupModules, three enableable modules: vehicles (offered vehicles, player vehicle, differential settings), traffic (number of vehicles, active, parked, respawn rate, custom group) and environment (normalized time of day, time scale, wind, clouds, fog, settings left to the user). It also contains the conversion of the old fixed time to normalizedTime and the detection of malformed data. The module returns a constructor: require(...)(missionEditor).",
   "notes": [
-    "normalizedTime : 0 = midi, 0.25 = coucher du soleil, 0.5 = minuit, 0.75 = lever du soleil, 1 = midi ; une valeur négative annule le réglage de l'heure de la mission ; > 1 est une erreur.",
-    "L'ancien champ time (heure fixe) est dit « legacy » ; la conversion utilise des tables de valeurs (axisTilt) par niveau (west_coast_usa par défaut) pour passer à normalizedTime.",
-    "Si la mission d'instance bloque un module (blockedSetupModules), il est affiché désactivé avec « not available for this mission type ». Pour vehicles, enabled est forcé à not isBlocked à chaque frame.",
-    "Traffic : amount = -1 signifie quantité automatique ; respawnRate va de 0 à 3 ; timeScale à 0 ignore le réglage.",
-    "Désactiver un module vide ses données (table.clear) ; les champs obsolètes setupModules.playerVehicle et setupModules.timeOfDay sont supprimés par setBackwardsCompatibility."
+    "normalizedTime: 0 = noon, 0.25 = sunset, 0.5 = midnight, 0.75 = sunrise, 1 = noon; a negative value cancels the mission's time setting; > 1 is an error.",
+    "The old time field (fixed time) is called \"legacy\"; the conversion uses value tables (axisTilt) per level (west_coast_usa by default) to switch to normalizedTime.",
+    "If the instance mission blocks a module (blockedSetupModules), it is displayed disabled with \"not available for this mission type\". For vehicles, enabled is forced to not isBlocked every frame.",
+    "Traffic: amount = -1 means automatic quantity; respawnRate goes from 0 to 3; timeScale at 0 ignores the setting.",
+    "Disabling a module clears its data (table.clear); the obsolete fields setupModules.playerVehicle and setupModules.timeOfDay are removed by setBackwardsCompatibility."
   ],
   "classes": {
     "C": {
-      "desc": "Instance du panneau. Champs : missionEditor, name = 'SetupModules', mission, missionInstance, blockedSetupModules, ainsi que de nombreux tampons imgui (traffic*, todInput, normalizedTodInput, windSpeedInput, cloudCoverInput, fogDensityInput…).",
+      "desc": "Instance of the panel. Fields: missionEditor, name = 'SetupModules', mission, missionInstance, blockedSetupModules, as well as many imgui buffers (traffic*, todInput, normalizedTodInput, windSpeedInput, cloudCoverInput, fogDensityInput...).",
       "functions": {
         "init": {
-          "desc": "Constructeur : mémorise missionEditor et le nom du panneau.",
-          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "desc": "Constructor: remembers missionEditor and the panel name.",
+          "params": {
+            "missionEditor": {
+              "type": "table",
+              "desc": "Main editor_missionEditor module."
+            }
+          },
           "internal": true
         },
         "setMission": {
-          "desc": "Définit la mission courante, applique la compatibilité ascendante et initialise tous les tampons de saisie depuis mission.setupModules.",
-          "params": {"mission": {"type": "table", "desc": "Mission courante."}},
+          "desc": "Sets the current mission, applies backwards compatibility and initializes all the input buffers from mission.setupModules.",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Current mission."
+            }
+          },
           "internal": true
         },
         "setBackwardsCompatibility": {
-          "desc": "Copie dans la mission les modules corrigés par l'instance de jeu (ceux marqués _compatibility) et supprime les modules obsolètes playerVehicle et timeOfDay."
+          "desc": "Copies into the mission the modules fixed by the game instance (those marked _compatibility) and removes the obsolete modules playerVehicle and timeOfDay."
         },
         "getMissionIssues": {
-          "desc": "Appelle setMission(m) puis signale les modules mal formés (error), l'heure fixe legacy (minor) et un normalizedTime invalide (error).",
-          "params": {"m": {"type": "table", "desc": "Mission à vérifier."}},
-          "returns": [{"type": "table[]", "desc": "Liste d'éléments {label, severity}."}]
+          "desc": "Calls setMission(m) then reports malformed modules (error), the legacy fixed time (minor) and an invalid normalizedTime (error).",
+          "params": {
+            "m": {
+              "type": "table",
+              "desc": "Mission to check."
+            }
+          },
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "List of elements {label, severity}."
+            }
+          ]
         },
         "draw": {
-          "desc": "Dessine les trois sections Vehicles, Traffic et Environment avec leurs cases d'activation et champs. Utilise core_environment.getTimeOfDay et getTimeOfDayValueForNormalizedTime pour l'heure actuelle et la conversion.",
+          "desc": "Draws the three sections Vehicles, Traffic and Environment with their enable checkboxes and fields. Uses core_environment.getTimeOfDay and getTimeOfDayValueForNormalizedTime for the current time and the conversion.",
           "internal": true
         },
         "displayDiffSetup": {
-          "desc": "Combo de cases à cocher pour les réglages de différentiels d'un véhicule : toggleDifferentials, lockFrontDiffs, lockRearDiffs, setTransfercase (4hi), setRangebox (low), ou tous d'un coup.",
-          "params": {"veh": {"type": "table", "desc": "Données du véhicule (ou playerVehicleDiffs) modifiées sur place."}}
+          "desc": "Checkbox combo for a vehicle's differential settings: toggleDifferentials, lockFrontDiffs, lockRearDiffs, setTransfercase (4hi), setRangebox (low), or all at once.",
+          "params": {
+            "veh": {
+              "type": "table",
+              "desc": "Vehicle data (or playerVehicleDiffs) modified in place."
+            }
+          }
         }
       }
     }

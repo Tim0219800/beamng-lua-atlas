@@ -1,161 +1,161 @@
 # `ui_router_routeReference.test`
 
-*Fichier : `lua/ge/extensions/ui/router/routeReference.test.lua` · VM : Game Engine (GE) · 209 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/routeReference.test.lua` · VM: Game Engine (GE) · 209 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_routeReference.test` : `extensions.load("ui_router_routeReference.test")`, puis la globale `ui_router_routeReference.test`
+**Access:** extension `ui_router_routeReference.test`: `extensions.load("ui_router_routeReference.test")`, then the global `ui_router_routeReference.test`
 
-Tests unitaires de routeReference (analyse « route?clé=valeur:portée », décodage URL, fusion des paramètres explicites et inline) et de la propagation des paramètres effectifs aux hooks onEnter/onMount via ResolvedRoute et navigationContext. Lancement : extensions.testFramework_TestManager:runTestFiles("routeReference").
+Unit tests of routeReference (parsing "route?key=value:scope", URL decoding, merging of explicit and inline parameters) and of the propagation of effective parameters to the onEnter/onMount hooks via ResolvedRoute and navigationContext. Run with: extensions.testFramework_TestManager:runTestFiles("routeReference").
 
-## Remarques
+## Notes
 
-- Les fonctions testXxx(ctx) sont exécutées par testFramework_TestManager ; le jeu ne les appelle pas en usage normal.
+- The testXxx(ctx) functions are run by testFramework_TestManager; the game does not call them in normal use.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_routeReference.test.testBareKeyResolvesToEmptyString(ctx)` | Une clé sans '=' vaut une chaîne vide. *(interne)* | 76 |
-| `ui_router_routeReference.test.testCanonicalReferenceReparsesWithoutQuery(ctx)` | La référence canonique (sans requête) se ré-analyse sans dérive au rechargement. *(interne)* | 146 |
-| `ui_router_routeReference.test.testEmptyQuerySegmentsIgnored(ctx)` | Les segments vides de la requête (« a=1&&b=2 ») sont ignorés. *(interne)* | 106 |
-| `ui_router_routeReference.test.testExplicitParamsOverrideInline(ctx)` | mergeParams : les paramètres explicites l'emportent sur les inline. *(interne)* | 122 |
-| `ui_router_routeReference.test.testMalformedEmptyRouteTreatedAsWhole(ctx)` | Une route vide : la référence entière est traitée comme le nom de route. *(interne)* | 92 |
-| `ui_router_routeReference.test.testMalformedEmptyScopeTreatedAsPlain(ctx)` | Une portée vide est ignorée (scope = nil). *(interne)* | 85 |
-| `ui_router_routeReference.test.testMalformedLeadingQueryTreatedAsWhole(ctx)` | Une référence qui commence par '?' est traitée comme un nom de route entier. *(interne)* | 99 |
-| `ui_router_routeReference.test.testMergeWithoutExplicitKeepsInline(ctx)` | mergeParams sans explicites conserve les inline. *(interne)* | 131 |
-| `ui_router_routeReference.test.testMergeWithoutInlineKeepsExplicit(ctx)` | mergeParams sans inline conserve les explicites. *(interne)* | 138 |
-| `ui_router_routeReference.test.testNonStringReferencePassesThrough(ctx)` | Une référence non-chaîne est renvoyée telle quelle avec des params vides. *(interne)* | 113 |
-| `ui_router_routeReference.test.testOnEnterAndOnMountShareEffectiveParams(ctx)` | Reproduit la construction du routeur (parse, merge, requête, entrée) et vérifie que onEnter et onMount reçoivent les mêmes paramètres effectifs. *(interne)* | 165 |
-| `ui_router_routeReference.test.testPlainRouteHasNoDecoration(ctx)` | Une route simple n'a ni portée ni paramètres. *(interne)* | 15 |
-| `ui_router_routeReference.test.testQueryAndScopeReference(ctx)` | « route?a=1:portée » : paramètres et portée extraits. *(interne)* | 40 |
-| `ui_router_routeReference.test.testQueryOnlyReference(ctx)` | « route?a=1 » : paramètres extraits, pas de portée. *(interne)* | 31 |
-| `ui_router_routeReference.test.testRelativeRoutePreservedThroughParse(ctx)` | La partie route reste relative (« ./options ») après parse. *(interne)* | 48 |
-| `ui_router_routeReference.test.testRepeatedInlineKeyKeepsLastValue(ctx)` | Une clé répétée garde la dernière valeur. *(interne)* | 70 |
-| `ui_router_routeReference.test.testRequestPersistsEffectiveParamsWithoutQueryInFullRoute(ctx)` | La requête mémorise les paramètres effectifs et `fullRoute` ne contient plus la requête inline. *(interne)* | 196 |
-| `ui_router_routeReference.test.testScopeOnlyReference(ctx)` | « route:portée » : portée extraite, aucun paramètre. *(interne)* | 23 |
-| `ui_router_routeReference.test.testUrlDecodingOfEncodedKeyAndDelimiters(ctx)` | Les clés encodées et les délimiteurs encodés sont décodés correctement. *(interne)* | 64 |
-| `ui_router_routeReference.test.testUrlDecodingOfQueryValues(ctx)` | Décodage de '+' (espace) et des séquences %XX dans les valeurs. *(interne)* | 56 |
+| `ui_router_routeReference.test.testBareKeyResolvesToEmptyString(ctx)` | A key without '=' is an empty string. *(internal)* | 76 |
+| `ui_router_routeReference.test.testCanonicalReferenceReparsesWithoutQuery(ctx)` | The canonical reference (without query) re-parses without drift on reload. *(internal)* | 146 |
+| `ui_router_routeReference.test.testEmptyQuerySegmentsIgnored(ctx)` | Empty query segments ("a=1&&b=2") are ignored. *(internal)* | 106 |
+| `ui_router_routeReference.test.testExplicitParamsOverrideInline(ctx)` | mergeParams: explicit parameters win over inline ones. *(internal)* | 122 |
+| `ui_router_routeReference.test.testMalformedEmptyRouteTreatedAsWhole(ctx)` | An empty route: the whole reference is treated as the route name. *(internal)* | 92 |
+| `ui_router_routeReference.test.testMalformedEmptyScopeTreatedAsPlain(ctx)` | An empty scope is ignored (scope = nil). *(internal)* | 85 |
+| `ui_router_routeReference.test.testMalformedLeadingQueryTreatedAsWhole(ctx)` | A reference that starts with '?' is treated as an entire route name. *(internal)* | 99 |
+| `ui_router_routeReference.test.testMergeWithoutExplicitKeepsInline(ctx)` | mergeParams without explicit ones keeps the inline ones. *(internal)* | 131 |
+| `ui_router_routeReference.test.testMergeWithoutInlineKeepsExplicit(ctx)` | mergeParams without inline ones keeps the explicit ones. *(internal)* | 138 |
+| `ui_router_routeReference.test.testNonStringReferencePassesThrough(ctx)` | A non-string reference is returned as is with empty params. *(internal)* | 113 |
+| `ui_router_routeReference.test.testOnEnterAndOnMountShareEffectiveParams(ctx)` | Reproduces the router construction (parse, merge, query, entry) and checks that onEnter and onMount receive the same effective parameters. *(internal)* | 165 |
+| `ui_router_routeReference.test.testPlainRouteHasNoDecoration(ctx)` | A simple route has no scope and no parameters. *(internal)* | 15 |
+| `ui_router_routeReference.test.testQueryAndScopeReference(ctx)` | "route?a=1:scope": parameters and scope extracted. *(internal)* | 40 |
+| `ui_router_routeReference.test.testQueryOnlyReference(ctx)` | "route?a=1": parameters extracted, no scope. *(internal)* | 31 |
+| `ui_router_routeReference.test.testRelativeRoutePreservedThroughParse(ctx)` | The route part stays relative ("./options") after parse. *(internal)* | 48 |
+| `ui_router_routeReference.test.testRepeatedInlineKeyKeepsLastValue(ctx)` | A repeated key keeps the last value. *(internal)* | 70 |
+| `ui_router_routeReference.test.testRequestPersistsEffectiveParamsWithoutQueryInFullRoute(ctx)` | The query stores the effective parameters and `fullRoute` no longer contains the inline query. *(internal)* | 196 |
+| `ui_router_routeReference.test.testScopeOnlyReference(ctx)` | "route:scope": scope extracted, no parameters. *(internal)* | 23 |
+| `ui_router_routeReference.test.testUrlDecodingOfEncodedKeyAndDelimiters(ctx)` | Encoded keys and encoded delimiters are decoded correctly. *(internal)* | 64 |
+| `ui_router_routeReference.test.testUrlDecodingOfQueryValues(ctx)` | Decoding of '+' (space) and %XX sequences in values. *(internal)* | 56 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_routeReference.test.testBareKeyResolvesToEmptyString(ctx)`
 
-Une clé sans '=' vaut une chaîne vide.
+A key without '=' is an empty string.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testCanonicalReferenceReparsesWithoutQuery(ctx)`
 
-La référence canonique (sans requête) se ré-analyse sans dérive au rechargement.
+The canonical reference (without query) re-parses without drift on reload.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testEmptyQuerySegmentsIgnored(ctx)`
 
-Les segments vides de la requête (« a=1&&b=2 ») sont ignorés.
+Empty query segments ("a=1&&b=2") are ignored.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testExplicitParamsOverrideInline(ctx)`
 
-mergeParams : les paramètres explicites l'emportent sur les inline.
+mergeParams: explicit parameters win over inline ones.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testMalformedEmptyRouteTreatedAsWhole(ctx)`
 
-Une route vide : la référence entière est traitée comme le nom de route.
+An empty route: the whole reference is treated as the route name.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testMalformedEmptyScopeTreatedAsPlain(ctx)`
 
-Une portée vide est ignorée (scope = nil).
+An empty scope is ignored (scope = nil).
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testMalformedLeadingQueryTreatedAsWhole(ctx)`
 
-Une référence qui commence par '?' est traitée comme un nom de route entier.
+A reference that starts with '?' is treated as an entire route name.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testMergeWithoutExplicitKeepsInline(ctx)`
 
-mergeParams sans explicites conserve les inline.
+mergeParams without explicit ones keeps the inline ones.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testMergeWithoutInlineKeepsExplicit(ctx)`
 
-mergeParams sans inline conserve les explicites.
+mergeParams without inline ones keeps the explicit ones.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testNonStringReferencePassesThrough(ctx)`
 
-Une référence non-chaîne est renvoyée telle quelle avec des params vides.
+A non-string reference is returned as is with empty params.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testOnEnterAndOnMountShareEffectiveParams(ctx)`
 
-Reproduit la construction du routeur (parse, merge, requête, entrée) et vérifie que onEnter et onMount reçoivent les mêmes paramètres effectifs.
+Reproduces the router construction (parse, merge, query, entry) and checks that onEnter and onMount receive the same effective parameters.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testPlainRouteHasNoDecoration(ctx)`
 
-Une route simple n'a ni portée ni paramètres.
+A simple route has no scope and no parameters.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testQueryAndScopeReference(ctx)`
 
-« route?a=1:portée » : paramètres et portée extraits.
+"route?a=1:scope": parameters and scope extracted.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testQueryOnlyReference(ctx)`
 
-« route?a=1 » : paramètres extraits, pas de portée.
+"route?a=1": parameters extracted, no scope.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testRelativeRoutePreservedThroughParse(ctx)`
 
-La partie route reste relative (« ./options ») après parse.
+The route part stays relative ("./options") after parse.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testRepeatedInlineKeyKeepsLastValue(ctx)`
 
-Une clé répétée garde la dernière valeur.
+A repeated key keeps the last value.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testRequestPersistsEffectiveParamsWithoutQueryInFullRoute(ctx)`
 
-La requête mémorise les paramètres effectifs et `fullRoute` ne contient plus la requête inline.
+The query stores the effective parameters and `fullRoute` no longer contains the inline query.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testScopeOnlyReference(ctx)`
 
-« route:portée » : portée extraite, aucun paramètre.
+"route:scope": scope extracted, no parameters.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testUrlDecodingOfEncodedKeyAndDelimiters(ctx)`
 
-Les clés encodées et les délimiteurs encodés sont décodés correctement.
+Encoded keys and encoded delimiters are decoded correctly.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_routeReference.test.testUrlDecodingOfQueryValues(ctx)`
 
-Décodage de '+' (espace) et des séquences %XX dans les valeurs.
+Decoding of '+' (space) and %XX sequences in values.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/routeReference.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/routeReference.test.lua`.*

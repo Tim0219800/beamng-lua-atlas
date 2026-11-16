@@ -1,20 +1,59 @@
 {
   "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veTCSDebug.lua",
-  "module": "Fenêtre 'TCS Debug' du Vehicle Editor live : trace en temps réel (600 points d'historique) les données de contrôle de traction du premier contrôleur de type 'esc' du véhicule (debugData.tcs) : facteurs de freinage par roue, glissement par roue avec seuil, facteurs d'accélérateur et glissement global. Trois graphes PlotMultiLines.",
+  "module": "'TCS Debug' window of the live Vehicle Editor: plots in real time (600 history points) the traction control data of the vehicle's first 'esc' type controller (debugData.tcs): braking factors per wheel, slip per wheel with threshold, throttle factors and overall slip. Three PlotMultiLines graphs.",
   "notes": [
-    "Si le véhicule n'a pas de contrôleur esc, vEditor.tcsData est nil et rien n'est tracé.",
-    "Les historiques sont initialisés une seule fois (didInit) avec les clés vues à la première réception ; un changement de véhicule ne les réinitialise pas.",
-    "Au plus 4 couleurs de roues (5 pour le graphe 2) sont définies ; au-delà, la couleur est nil."
+    "If the vehicle has no esc controller, vEditor.tcsData is nil and nothing is plotted.",
+    "The histories are initialized only once (didInit) with the keys seen at the first reception; a vehicle change does not reinitialize them.",
+    "At most 4 wheel colors (5 for graph 2) are defined; beyond that, the color is nil."
   ],
   "fields": {
-    "menuEntry": {"type": "string", "desc": "'TCS'."}
+    "menuEntry": {
+      "type": "string",
+      "desc": "'TCS'."
+    }
   },
   "functions": {
-    "onUpdate": {"desc": "Appelé chaque frame : demande les données TCS au véhicule, met à jour les historiques et dessine les graphes.", "params": {"dt": {"type": "number", "desc": "Delta temps."}}, "internal": true},
-    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
-    "onExtensionLoaded": {"desc": "Appelé au chargement de l'extension : remplit l'historique slipThresholds de 600 zéros.", "internal": true},
-    "onExtensionUnloaded": {"desc": "Appelé au déchargement (ne fait rien).", "internal": true},
-    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
-    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+    "onUpdate": {
+      "desc": "Called every frame: requests the TCS data from the vehicle, updates the histories and draws the graphs.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time delta."
+        }
+      },
+      "internal": true
+    },
+    "open": {
+      "desc": "Opens the window.",
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Called when the extension is loaded: fills the slipThresholds history with 600 zeros.",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Called on unload (does nothing).",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Returns {windowOpen}.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{windowOpen = boolean}"
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Restores the open state.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "onSerialize table."
+        }
+      },
+      "internal": true
+    }
   }
 }

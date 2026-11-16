@@ -1,62 +1,62 @@
 # `editor_audioEventsList`
 
-*Fichier : `lua/ge/extensions/editor/audioEventsList.lua` · VM : Game Engine (GE) · 284 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/audioEventsList.lua` · VM: Game Engine (GE) · 284 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_audioEventsList` : `extensions.load("editor_audioEventsList")`, puis la globale `editor_audioEventsList`
+**Access:** extension `editor_audioEventsList`: `extensions.load("editor_audioEventsList")`, then the global `editor_audioEventsList`
 
-Fenêtre d'éditeur « SFX Previewer » (menu Audio) qui liste tous les événements sonores (FMOD « event:>... » et fichiers son) du jeu et permet de les écouter. La liste vient de Sim.getSFXTrackSet() ; elle est affichée en arborescence de dossiers ou filtrée par une recherche texte. Clic gauche sur un événement = lecture via Engine.Audio.playOnce('AudioGui', nom, {position}) à la position du véhicule joueur (ou 0,0,0) ; clic droit = copier le nom dans le presse-papiers. Utile à un moddeur pour retrouver le nom exact d'un événement à mettre dans un jbeam ou une scène.
+Editor window "SFX Previewer" (Audio menu) that lists all sound events (FMOD "event:>..." and sound files) of the game and lets you listen to them. The list comes from Sim.getSFXTrackSet(); it is displayed as a folder tree or filtered by a text search. Left click on an event = playback via Engine.Audio.playOnce('AudioGui', name, {position}) at the player vehicle position (or 0,0,0); right click = copy the name to the clipboard. Useful to a modder to find the exact name of an event to put in a jbeam or a scene.
 
-## Remarques
+## Notes
 
-- Dépend de editor_main ; aucune fonction publique en dehors des hooks de l'éditeur.
-- Les événements dont le nom commence par « event:> » sont découpés sur « > » ; les autres (objets avec getSoundFilename) sont découpés sur « / » d'après le chemin du fichier son.
-- L'arbre n'est reconstruit qu'à l'affichage de la fenêtre (onEditorToolWindowShow) ; la table eventsList n'est jamais vidée entre deux reconstructions (déduit du code : seul eventsTree est nettoyé).
-- Le son en cours est arrêté puis supprimé (stop(-1) puis delete) avant d'en lancer un autre.
+- Depends on editor_main; no public function apart from the editor hooks.
+- Events whose name starts with "event:>" are split on ">"; the others (objects with getSoundFilename) are split on "/" according to the sound file path.
+- The tree is only rebuilt when the window is shown (onEditorToolWindowShow); the eventsList table is never cleared between two rebuilds (inferred from code: only eventsTree is cleaned).
+- The sound currently playing is stopped then deleted (stop(-1) then delete) before another is started.
 
-**Dépendances (chargées avant) :** `editor_main`
+**Dependencies (loaded first):** `editor_main`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_audioEventsList.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre (500x500) et l'entrée de menu dans le groupe « Audio ». *(interne)* *(hook)* | 273 |
-| `editor_audioEventsList.onEditorToolWindowHide(windowName)` | Hook appelé quand une fenêtre d'outil est masquée ; pour « sfxPreviewer », sauvegarde l'état des fenêtres (editor.saveWindowsState). *(interne)* *(hook)* | 263 |
-| `editor_audioEventsList.onEditorToolWindowShow(windowName)` | Hook appelé quand une fenêtre d'outil de l'éditeur est affichée ; si c'est « sfxPreviewer », reconstruit la liste des événements sonores. *(interne)* *(hook)* | 257 |
-| `editor_audioEventsList.onUpdate(dtReal, dtSim, dtRaw)` | Dessine la fenêtre SFX Previewer (champ de recherche, navigation dans l'arbre des dossiers ou résultats de recherche, bouton « Stop Current Sound »). Ne fait rien si l'éditeur ou la fenêtre ne sont pas enregistrés. *(interne)* *(hook)* | 214 |
-| `editor_audioEventsList.onWindowMenuItem()` | Appelé par l'entrée de menu Audio > SFX Previewer ; affiche la fenêtre. *(interne)* *(hook)* | 269 |
+| `editor_audioEventsList.onEditorInitialized()` | Hook called at editor initialization: registers the window (500x500) and the menu entry in the "Audio" group. *(internal)* *(hook)* | 273 |
+| `editor_audioEventsList.onEditorToolWindowHide(windowName)` | Hook called when a tool window is hidden; for "sfxPreviewer", saves the window state (editor.saveWindowsState). *(internal)* *(hook)* | 263 |
+| `editor_audioEventsList.onEditorToolWindowShow(windowName)` | Hook called when an editor tool window is shown; if it is "sfxPreviewer", rebuilds the sound event list. *(internal)* *(hook)* | 257 |
+| `editor_audioEventsList.onUpdate(dtReal, dtSim, dtRaw)` | Draws the SFX Previewer window (search field, folder tree navigation or search results, "Stop Current Sound" button). Does nothing if the editor or the window are not registered. *(internal)* *(hook)* | 214 |
+| `editor_audioEventsList.onWindowMenuItem()` | Called by the Audio > SFX Previewer menu entry; shows the window. *(internal)* *(hook)* | 269 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_audioEventsList.onEditorToolWindowHide(windowName)`
 
-Hook appelé quand une fenêtre d'outil est masquée ; pour « sfxPreviewer », sauvegarde l'état des fenêtres (editor.saveWindowsState).
+Hook called when a tool window is hidden; for "sfxPreviewer", saves the window state (editor.saveWindowsState).
 
-- `windowName` (*string*) : Nom de la fenêtre masquée.
+- `windowName` (*string*) : Name of the hidden window.
 
 #### `editor_audioEventsList.onEditorToolWindowShow(windowName)`
 
-Hook appelé quand une fenêtre d'outil de l'éditeur est affichée ; si c'est « sfxPreviewer », reconstruit la liste des événements sonores.
+Hook called when an editor tool window is shown; if it is "sfxPreviewer", rebuilds the sound event list.
 
-- `windowName` (*string*) : Nom de la fenêtre affichée.
+- `windowName` (*string*) : Name of the shown window.
 
 #### `editor_audioEventsList.onUpdate(dtReal, dtSim, dtRaw)`
 
-Dessine la fenêtre SFX Previewer (champ de recherche, navigation dans l'arbre des dossiers ou résultats de recherche, bouton « Stop Current Sound »). Ne fait rien si l'éditeur ou la fenêtre ne sont pas enregistrés.
+Draws the SFX Previewer window (search field, folder tree navigation or search results, "Stop Current Sound" button). Does nothing if the editor or the window are not registered.
 
-- `dtReal` (*number*) : Durée réelle de la frame (s).
-- `dtSim` (*number*) : Durée simulée de la frame (s).
-- `dtRaw` (*number*) : Durée brute de la frame (s).
+- `dtReal` (*number*) : Real frame time (s).
+- `dtSim` (*number*) : Simulated frame time (s).
+- `dtRaw` (*number*) : Raw frame time (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions à charger avant celle-ci : {"editor_main"}. |
+| `dependencies` | table<integer, string> | Extensions to load before this one: {"editor_main"}. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `getSFXTrackSet`, `upcast`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/audioEventsList.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/audioEventsList.lua`.*

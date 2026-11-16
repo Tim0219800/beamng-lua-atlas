@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/editor/aiViz.lua",
+  "module": "Visualisation du navgraph de l'IA dans l'éditeur. Quand un mode de dessin est actif, dessine les nœuds de la carte de navigation (map.getMap().nodes) sous forme de sphères, les liens (prismes colorés selon le mode), les voies et flèches de sens (lanes ou oneWay), et surligne le nœud ou le lien survolé par la souris. Quatre modes exclusifs : drivability, type (public/private), speedLimit et hiddenInNavi. Les liens proches (moins de 100 m en distance de chemin depuis le nœud survolé) sont aussi tracés en vert. Les nœuds sont indexés dans un quadtree.",
+  "usage": "editor_aiViz.enableDrawMode(\"speedLimit\", true)\nprint(editor_aiViz.getDrawMode())",
+  "notes": [
+    "enableDrawMode désactive les autres modes quand on en active un ; avec un mode inconnu, une erreur est loggée.",
+    "Couleurs : drivability en arc-en-ciel (valeur bornée 0-1), speedLimit borné à 0-36 m/s, texte du lien en g ou « m/s » (valeur en m/s).",
+    "Les nœuds ne sont pas dessinés en sphère quand le mode d'édition courant est « Edit Road ».",
+    "Les listes de nœuds sont rechargées après le hook onNavgraphReloaded."
+  ],
+  "functions": {
+    "enableDrawMode": {
+      "desc": "Active ou désactive un mode de dessin ; activer un mode désactive les autres.",
+      "params": {
+        "mode": {"type": "string", "desc": "\"drivability\", \"type\", \"speedLimit\" ou \"hiddenInNavi\"."},
+        "enabled": {"type": "boolean", "desc": "Activer ou désactiver."}
+      },
+      "internal": false
+    },
+    "getDrawMode": {"desc": "Retourne le mode de dessin actif.", "returns": [{"type": "string|nil", "desc": "Nom du mode ou nil si rien n'est dessiné."}], "internal": false},
+    "onEditorGui": {"desc": "Hook de dessin de l'éditeur : gère le survol (rayon caméra/souris contre nœuds et liens) et dessine les nœuds proches de la caméra selon le mode.", "internal": true},
+    "onNavgraphReloaded": {"desc": "Hook émis quand le navgraph est rechargé : vide le cache de nœuds et reconstruit le quadtree.", "internal": true}
+  }
+}

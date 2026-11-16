@@ -1,22 +1,22 @@
 # `flowgraph_nodes_gameplay_sites_parkingspotByName`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/sites/parkingspotByName.lua` · VM : Game Engine (GE) · 72 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/sites/parkingspotByName.lua` · VM: Game Engine (GE) · 72 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/sites/parkingspotByName")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/sites/parkingspotByName")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Parking Spot by Name ». Cherche une place de parking par nom dans sitesData.parkingSpots.byName. Entrées : flow, sitesData, spotName ; sorties : flow (vrai si trouvée), exists (caché), spot (parkingSpotData).
+Flowgraph node "Parking Spot by Name". Looks up a parking spot by name in sitesData.parkingSpots.byName. Inputs: flow, sitesData, spotName; outputs: flow (true if found), exists (hidden), spot (parkingSpotData).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud. | 45 |
-| `C:drawCustomProperties()` | Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui). | 27 |
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui). | 66 |
-| `C:init(mgr, ...)` | Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph). | 23 |
-| `C:work(args)` | Retrouve la place par nom, publie spot et active flow/exists si elle existe et n'est pas missing. | 49 |
+| `C:_executionStarted()` | Called when the flowgraph project execution starts; resets the node's internal state. | 45 |
+| `C:drawCustomProperties()` | Draws the node's custom properties in the flowgraph editor panel (ImGui). | 27 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the flowgraph editor (ImGui). | 66 |
+| `C:init(mgr, ...)` | Initializes the node's internal state at creation (called by the flowgraph engine). | 23 |
+| `C:work(args)` | Looks up the spot by name, publishes spot and activates flow/exists if it exists and is not missing. | 49 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/sites/parkingspotByName.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/sites/parkingspotByName.lua`.*

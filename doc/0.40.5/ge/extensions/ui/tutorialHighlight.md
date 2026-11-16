@@ -1,64 +1,64 @@
 # `ui_tutorialHighlight`
 
-*Fichier : `lua/ge/extensions/ui/tutorialHighlight.lua` · VM : Game Engine (GE) · 112 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/tutorialHighlight.lua` · VM: Game Engine (GE) · 112 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_tutorialHighlight` : `extensions.load("ui_tutorialHighlight")`, puis la globale `ui_tutorialHighlight`
+**Access:** extension `ui_tutorialHighlight`: `extensions.load("ui_tutorialHighlight")`, then the global `ui_tutorialHighlight`
 
-Gère la liste des éléments d'interface à mettre en surbrillance pendant un tutoriel. Chaque élément est identifié par un id (chaîne) ; l'état (ids dans l'ordre d'apparition, options, révision) est diffusé à l'UI via le flux `tutorialHighlight` (guihooks.triggerStream). Un moddeur ou un script de tutoriel appelle show/hide pour allumer ou éteindre un repère.
+Manages the list of interface elements to highlight during a tutorial. Each element is identified by an id (string); the state (ids in order of appearance, options, revision) is broadcast to the UI via the `tutorialHighlight` stream (guihooks.triggerStream). A modder or a tutorial script calls show/hide to turn a marker on or off.
 
-## Exemple
+## Example
 
 ```lua
 ui_tutorialHighlight.show("btnGarage", {focus = true, scroll = true})
--- plus tard
+-- later
 ui_tutorialHighlight.hide("btnGarage")
 ```
 
-## Remarques
+## Notes
 
-- Seules les options focus et scroll (si true) sont conservées ; si au moins une est active, un `requestId` égal à la révision courante est ajouté.
-- L'extension est en mode de déchargement « manual » (setExtensionUnloadMode dans onInit).
-- Chaque show/hide/hideAll effectif incrémente la révision et rediffuse le flux ; show rediffuse même si l'id est déjà actif.
+- Only the focus and scroll options (if true) are kept; if at least one is active, a `requestId` equal to the current revision is added.
+- The extension is in "manual" unload mode (setExtensionUnloadMode in onInit).
+- Each effective show/hide/hideAll increments the revision and rebroadcasts the stream; show rebroadcasts even if the id is already active.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_tutorialHighlight.getState()` | Renvoie la charge utile courante du flux. | 17 |
-| `ui_tutorialHighlight.hide(id)` | Retire l'id de la surbrillance et diffuse l'état. | 65 |
-| `ui_tutorialHighlight.hideAll()` | Retire toutes les surbrillances et diffuse l'état. | 85 |
-| `ui_tutorialHighlight.onInit()` | Hook d'initialisation à la création de l'extension : passe le mode de déchargement en « manual ». *(interne)* *(hook)* | 100 |
-| `ui_tutorialHighlight.onUiReady()` | Hook appelé quand l'UI est prête : rediffuse l'état courant. *(interne)* *(hook)* | 96 |
-| `ui_tutorialHighlight.show(id, options)` | Active la surbrillance de l'id (ajouté en fin d'ordre s'il est nouveau), enregistre ses options et diffuse l'état. | 44 |
+| `ui_tutorialHighlight.getState()` | Returns the current stream payload. | 17 |
+| `ui_tutorialHighlight.hide(id)` | Removes the id from the highlight and broadcasts the state. | 65 |
+| `ui_tutorialHighlight.hideAll()` | Removes all highlights and broadcasts the state. | 85 |
+| `ui_tutorialHighlight.onInit()` | Initialization hook on extension creation: sets the unload mode to "manual". *(internal)* *(hook)* | 100 |
+| `ui_tutorialHighlight.onUiReady()` | Hook called when the UI is ready: rebroadcasts the current state. *(internal)* *(hook)* | 96 |
+| `ui_tutorialHighlight.show(id, options)` | Enables the highlight of the id (appended at the end of the order if new), stores its options and broadcasts the state. | 44 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_tutorialHighlight.getState()`
 
-Renvoie la charge utile courante du flux.
+Returns the current stream payload.
 
-- **renvoie** : table { ids = string[], options = table<string, table>, revision = integer }
+- **returns**: table { ids = string[], options = table<string, table>, revision = integer }
 
 #### `ui_tutorialHighlight.hide(id)`
 
-Retire l'id de la surbrillance et diffuse l'état.
+Removes the id from the highlight and broadcasts the state.
 
-- `id` (*string*) : Identifiant de l'élément.
-- **renvoie** : boolean true si l'id était actif.
+- `id` (*string*) : Identifier of the element.
+- **returns**: boolean true if the id was active.
 
 #### `ui_tutorialHighlight.hideAll()`
 
-Retire toutes les surbrillances et diffuse l'état.
+Removes all highlights and broadcasts the state.
 
-- **renvoie** : boolean false si rien n'était actif.
+- **returns**: boolean false if nothing was active.
 
 #### `ui_tutorialHighlight.show(id, options)`
 
-Active la surbrillance de l'id (ajouté en fin d'ordre s'il est nouveau), enregistre ses options et diffuse l'état.
+Enables the highlight of the id (appended at the end of the order if new), stores its options and broadcasts the state.
 
-- `id` (*string*) : Identifiant non vide de l'élément.
+- `id` (*string*) : Non-empty identifier of the element.
 - `options` (*table|nil*) : {focus = boolean, scroll = boolean}.
-- **renvoie** : boolean true si l'id vient d'être ajouté ; false s'il était déjà actif ou si l'id est invalide.
+- **returns**: boolean true if the id was just added; false if it was already active or if the id is invalid.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/tutorialHighlight.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/tutorialHighlight.lua`.*

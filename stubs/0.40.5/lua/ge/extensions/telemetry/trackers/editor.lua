@@ -2,41 +2,41 @@
 -- tim19Atlas stub generated from lua/ge/extensions/telemetry/trackers/editor.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Suiveur de télémétrie de l'éditeur de monde : mesure la durée d'ouverture de l'éditeur (activité « editorActive ») et enregistre les fenêtres d'outils ouvertes (évènement « editorToolWindowOpened » avec nom d'outil et point d'entrée). Seuls les noms d'outils sont rapportés, jamais les chemins de niveaux ou d'assets. Le constructeur de pistes est suivi par un autre suiveur de gameplay.
---- Accès : extension `telemetry_trackers_editor` : `extensions.load("telemetry_trackers_editor")`, puis la globale `telemetry_trackers_editor`
+--- World editor telemetry tracker: measures how long the editor is open (activity "editorActive") and records the tool windows opened (event "editorToolWindowOpened" with tool name and entry point). Only tool names are reported, never level or asset paths. The track builder is tracked by another gameplay tracker.
+--- Access: extension `telemetry_trackers_editor`: `extensions.load("telemetry_trackers_editor")`, then the global `telemetry_trackers_editor`
 ---@class telemetry_trackers_editor
 ---@field dependencies string[] telemetry_core.
 telemetry_trackers_editor = {}
 
---- Hook appelé à l'activation de l'éditeur : démarre l'activité editorActive (sans effet si déjà ouverte).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/telemetry/trackers/editor.lua:19
+--- Hook called when the editor is activated: starts the editorActive activity (no effect if already open).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/telemetry/trackers/editor.lua:19
 function telemetry_trackers_editor.onEditorActivated() end
 
---- Hook appelé à la fermeture de l'éditeur : termine l'activité editorActive.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/telemetry/trackers/editor.lua:25
+--- Hook called when the editor is closed: ends the editorActive activity.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/telemetry/trackers/editor.lua:25
 function telemetry_trackers_editor.onEditorDeactivated() end
 
---- Hook appelé à l'ouverture d'une fenêtre d'outil : enregistre l'évènement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/telemetry/trackers/editor.lua:31
----@param toolName string Nom de l'outil.
----@param entryPoint string Point d'entrée (menu, raccourci, etc., déduit du code).
+--- Hook called when a tool window is opened: records the event.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/telemetry/trackers/editor.lua:31
+---@param toolName string Tool name.
+---@param entryPoint string Entry point (menu, shortcut, etc., inferred from code).
 function telemetry_trackers_editor.onEditorToolWindowOpened(toolName, entryPoint) end
 
---- Hook appelé à la fermeture du jeu : ferme l'activité éditeur ouverte.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/telemetry/trackers/editor.lua:45
+--- Hook called when the game closes: closes the open editor activity.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/telemetry/trackers/editor.lua:45
 function telemetry_trackers_editor.onExit() end
 
---- Hook appelé au chargement : déchargement manuel, et démarre l'activité si l'éditeur est déjà actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/telemetry/trackers/editor.lua:39
+--- Hook called on load: manual unload, and starts the activity if the editor is already active.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/telemetry/trackers/editor.lua:39
 function telemetry_trackers_editor.onExtensionLoaded() end
 
---- Hook appelé au déchargement : ferme l'activité éditeur ouverte (même fonction que onExit).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/telemetry/trackers/editor.lua:45
+--- Hook called on unload: closes the open editor activity (same function as onExit).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/telemetry/trackers/editor.lua:45
 function telemetry_trackers_editor.onExtensionUnloaded() end
 

@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/gameplay/pursuit/proceduralMode.lua",
+  "module": "Squelette vide prévu pour les scénarios de poursuite générés procéduralement et les évènements aléatoires. Le commentaire du code indique qu'il faudra y déplacer la logique de suspect aléatoire du trafic. Aucune logique n'est implémentée.",
+  "notes": [
+    "Les trois hooks sont des fonctions vides."
+  ],
+  "functions": {
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image ; ne fait rien.",
+      "params": {
+        "dt": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation avant rechargement Lua ; ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook après rechargement Lua ; ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

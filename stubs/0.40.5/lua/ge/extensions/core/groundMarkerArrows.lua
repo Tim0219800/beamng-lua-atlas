@@ -2,34 +2,34 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/groundMarkerArrows.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_groundMarkerArrows` : gère les grandes flèches flottantes affichées aux intersections de l'itinéraire de navigation (modèle s_mm_arrow_floating.dae, objets TSStatic dans le SimGroup 'arrowPool'). Elle est pilotée par core_groundMarkers (createArrowPool, updateArrows, clearArrows) ; un moddeur n'a normalement pas à l'appeler directement. Elle affiche aussi le message « mauvaise direction » quand le véhicule s'éloigne du chemin.
---- Accès : extension `core_groundMarkerArrows` : `extensions.load("core_groundMarkerArrows")`, puis la globale `core_groundMarkerArrows`
+--- GE extension `core_groundMarkerArrows`: manages the large floating arrows displayed at the intersections of the navigation route (model s_mm_arrow_floating.dae, TSStatic objects in the SimGroup 'arrowPool'). It is driven by core_groundMarkers (createArrowPool, updateArrows, clearArrows); a modder normally does not need to call it directly. It also displays the "wrong way" message when the vehicle moves away from the path.
+--- Access: extension `core_groundMarkerArrows`: `extensions.load("core_groundMarkerArrows")`, then the global `core_groundMarkerArrows`
 ---@class core_groundMarkerArrows
 core_groundMarkerArrows = {}
 
---- Supprime tous les objets flèche et le SimGroup 'arrowPool', vide les tables de suivi et remet le compteur de mauvaise direction à -20.
----Source : lua/ge/extensions/core/groundMarkerArrows.lua:29
+--- Deletes all arrow objects and the SimGroup 'arrowPool', clears the tracking tables and resets the wrong way counter to -20.
+---Source: lua/ge/extensions/core/groundMarkerArrows.lua:29
 function core_groundMarkerArrows.clearArrows() end
 
---- Crée le SimGroup 'arrowPool' avec 11 flèches TSStatic cachées (sans collision, canSave = false) et leurs proxies. Si le pool existe déjà, remet tous les proxies à 'unused' et cache les flèches.
----Source : lua/ge/extensions/core/groundMarkerArrows.lua:50
----@param floatingArrowColor number[]|nil Non utilisé (la couleur vient de core_groundMarkers.floatingArrowColor).
+--- Creates the SimGroup 'arrowPool' with 11 hidden TSStatic arrows (no collision, canSave = false) and their proxies. If the pool already exists, resets all proxies to 'unused' and hides the arrows.
+---Source: lua/ge/extensions/core/groundMarkerArrows.lua:50
+---@param floatingArrowColor number[]|nil Unused (the color comes from core_groundMarkers.floatingArrowColor).
 function core_groundMarkerArrows.createArrowPool(floatingArrowColor) end
 
---- Hook de sortie du moteur : alias de clearArrows.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/groundMarkerArrows.lua:29
+--- Engine exit hook: alias of clearArrows.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/groundMarkerArrows.lua:29
 function core_groundMarkerArrows.onExit() end
 
---- Hook de rendu : applique à chaque flèche non 'unused' sa position, rotation et échelle (taille lissée x alpha) et fait passer les flèches en fondu à l'état 'unused' une fois invisibles. Cache tout en mode photo.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/groundMarkerArrows.lua:246
----@param dt number Delta temps du rendu en secondes.
+--- Render hook: applies to each non-'unused' arrow its position, rotation and scale (smoothed size x alpha) and fades arrows to the 'unused' state once invisible. Hides everything in photo mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/groundMarkerArrows.lua:246
+---@param dt number Render time delta in seconds.
 function core_groundMarkerArrows.onPreRender(dt) end
 
---- Met à jour les flèches d'après le chemin : crée/réutilise celles des intersections à guider, met en fondu celles qui ne sont plus utiles, et gère le message de mauvaise direction.
----Source : lua/ge/extensions/core/groundMarkerArrows.lua:122
----@param path table[] Chemin du routeur : éléments {pos = vec3, distToTarget, wp, linkCount}.
----@param pathLength number Distance totale du véhicule à la destination en mètres (distToVehicle = pathLength - path[i].distToTarget).
+--- Updates the arrows from the path: creates/reuses those of the intersections to guide, fades out those that are no longer useful, and handles the wrong way message.
+---Source: lua/ge/extensions/core/groundMarkerArrows.lua:122
+---@param path table[] Router path: elements {pos = vec3, distToTarget, wp, linkCount}.
+---@param pathLength number Total distance from the vehicle to the destination in meters (distToVehicle = pathLength - path[i].distToTarget).
 function core_groundMarkerArrows.updateArrows(path, pathLength) end
 

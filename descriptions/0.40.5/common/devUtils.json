@@ -1,43 +1,81 @@
 {
   "path": "lua/common/devUtils.lua",
-  "module": "Utilitaires de développement rarement nécessaires, définis comme fonctions globales : exécution de code Lua avec capture du print, analyse des upvalues d'un module, instantané (snapshot) JSON de l'état global Lua pour comparer deux états, et détection de tables partagées à plusieurs endroits d'une arborescence. Surtout utile pour déboguer les fuites ou fusions de tables entre modules.",
+  "module": "Rarely needed development utilities, defined as global functions: running Lua code with print capture, analysis of a module's upvalues, JSON snapshot of the Lua global state to compare two states, and detection of tables shared in several places of a tree. Mostly useful for debugging table leaks or merges between modules.",
   "notes": [
-    "Le fichier utilise des helpers globaux d'autres fichiers : tableMerge, tableKeysSorted, tableIsEmpty, deepcopy, flattenTable, jsonWriteFile, writeFile.",
-    "executeLuaSandboxed n'est pas un vrai bac à sable (le code reste exécuté dans l'environnement du fichier et on peut atteindre des objets cachés) ; seul print est détourné.",
-    "Bug : _createGraphviz (locale, non utilisée, appel commenté dans createGlobalSnapshot) référence une variable k non définie ; elle ne fonctionnerait pas si activée.",
-    "createGlobalSnapshot appelle gui.reset() si disponible avant de capturer pour vider les caches temporaires."
+    "The file uses global helpers from other files: tableMerge, tableKeysSorted, tableIsEmpty, deepcopy, flattenTable, jsonWriteFile, writeFile.",
+    "executeLuaSandboxed is not a real sandbox (the code still runs in the file's environment and hidden objects can be reached); only print is redirected.",
+    "Bug: _createGraphviz (local, unused, call commented out in createGlobalSnapshot) references an undefined variable k; it would not work if enabled.",
+    "createGlobalSnapshot calls gui.reset() if available before capturing, to clear temporary caches."
   ],
   "fields": {},
   "functions": {
     "executeLuaSandboxed": {
-      "desc": "Compile puis exécute la chaîne cmd avec xpcall, en remplaçant temporairement print pour capturer les sorties. En cas d'erreur de syntaxe ou d'exécution, renvoie une chaîne commençant par 'Error: '.",
+      "desc": "Compiles then runs the string cmd with xpcall, temporarily replacing print to capture output. On a syntax or runtime error, returns a string starting with 'Error: '.",
       "params": {
-        "cmd": {"type": "string", "desc": "Code Lua à exécuter."},
-        "source": {"type": "string|nil", "desc": "Nom de chunk pour les messages d'erreur (défaut 'executeLuaSandboxed')."}
+        "cmd": {
+          "type": "string",
+          "desc": "Lua code to execute."
+        },
+        "source": {
+          "type": "string|nil",
+          "desc": "Chunk name for error messages (default 'executeLuaSandboxed')."
+        }
       },
       "returns": [
-        {"type": "any", "desc": "Résultat de l'exécution (1re valeur renvoyée par le chunk), ou chaîne 'Error: ...'."},
-        {"type": "string[]|nil", "desc": "Lignes capturées par print ; nil en cas d'erreur."}
+        {
+          "type": "any",
+          "desc": "Execution result (1st value returned by the chunk), or the string 'Error: ...'."
+        },
+        {
+          "type": "string[]|nil",
+          "desc": "Lines captured by print; nil on error."
+        }
       ],
       "internal": false
     },
     "getModuleLocals": {
-      "desc": "Renvoie les variables locales (upvalues) utilisées par les fonctions d'un module, en parcourant récursivement les fonctions, leurs upvalues et la métatable. Ignore les globales, les champs du module, le module lui-même et ___locals.",
-      "params": {"moduleTbl": {"type": "table", "desc": "Table du module à inspecter."}},
-      "returns": [{"type": "table<string, any>", "desc": "Nom d'upvalue vers valeur."}],
+      "desc": "Returns the local variables (upvalues) used by a module's functions, recursively walking the functions, their upvalues and the metatable. Ignores globals, module fields, the module itself and ___locals.",
+      "params": {
+        "moduleTbl": {
+          "type": "table",
+          "desc": "Module table to inspect."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, any>",
+          "desc": "Upvalue name to value."
+        }
+      ],
       "internal": false
     },
     "createGlobalSnapshot": {
-      "desc": "Écrit en JSON un instantané des variables globales, des modules (contenu et locales) et des extensions chargées. Les fonctions et userdata sont retirés, les tables aplaties (flattenTable).",
-      "params": {"filename": {"type": "string", "desc": "Fichier JSON de sortie (via jsonWriteFile)."}},
+      "desc": "Writes as JSON a snapshot of the global variables, the modules (contents and locals) and the loaded extensions. Functions and userdata are removed, tables flattened (flattenTable).",
+      "params": {
+        "filename": {
+          "type": "string",
+          "desc": "Output JSON file (via jsonWriteFile)."
+        }
+      },
       "internal": false
     },
     "tableFindRecursion": {
-      "desc": "Parcourt tbl et détecte les sous-tables atteintes par plusieurs chemins (références partagées ou cycles).",
-      "params": {"tbl": {"type": "table", "desc": "Table à analyser."}},
+      "desc": "Walks tbl and detects sub-tables reached through several paths (shared references or cycles).",
+      "params": {
+        "tbl": {
+          "type": "table",
+          "desc": "Table to analyze."
+        }
+      },
       "returns": [
-        {"type": "integer|nil", "desc": "Nombre de tables vues plus d'une fois ; nil si tbl n'est pas une table."},
-        {"type": "table<string, string[]>", "desc": "Pour chaque table dupliquée (adresse en texte), la liste de ses chemins."}
+        {
+          "type": "integer|nil",
+          "desc": "Number of tables seen more than once; nil if tbl is not a table."
+        },
+        {
+          "type": "table<string, string[]>",
+          "desc": "For each duplicated table (address as text), the list of its paths."
+        }
       ],
       "internal": false
     }

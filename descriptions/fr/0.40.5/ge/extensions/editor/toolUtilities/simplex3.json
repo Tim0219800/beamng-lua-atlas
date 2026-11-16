@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/simplex3.lua",
+  "module": "Bruit simplex 3D (grille simpliciale de Ken Perlin, d'après la référence de Stefan Gustavson). Déterministe, continu avec dérivée première continue. Les indices de gradient (perm % 12 + 1) sont précalculés pour accélérer les appels massifs.",
+  "usage": "local simplex3 = extensions.editor_toolUtilities_simplex3\nlocal n = simplex3.noise(x * 0.05, y * 0.05, z * 0.05)",
+  "notes": [
+    "Valeur environ dans [-1, 1] (facteur d'échelle 32).",
+    "La page auto signale une globale affectée « i » : ce sont des variables de boucle d'initialisation, pas de vraie globale."
+  ],
+  "functions": {
+    "noise": {
+      "desc": "Bruit simplex 3D au point (xin, yin, zin).",
+      "params": {
+        "xin": {"type": "number", "desc": "Coordonnée x."},
+        "yin": {"type": "number", "desc": "Coordonnée y."},
+        "zin": {"type": "number", "desc": "Coordonnée z."}
+      },
+      "returns": [{"type": "number", "desc": "Valeur de bruit, environ [-1, 1]."}],
+      "internal": false
+    }
+  }
+}

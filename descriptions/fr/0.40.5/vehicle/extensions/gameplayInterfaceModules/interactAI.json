@@ -1,0 +1,19 @@
+{
+  "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactAI.lua",
+  "module": "Module de gameplayInterface pour l'IA : lit ou fixe le mode d'IA du véhicule courant et peut commander l'IA de tous les autres véhicules en les faisant fuir, suivre, poursuivre, se déplacer au hasard ou s'arrêter. Déclare ses actions et lookups à gameplayInterface au chargement (requestRegistration).",
+  "usage": "-- depuis le VM véhicule\ngameplayInterface.executeAction(0, 1, 'setAIMode', 'span')\ngameplayInterface.getSystemData(0, 2, 'aiMode')",
+  "notes": [
+    "Action 'setAIMode'(mode:string) : appelle ai.setMode(mode) du véhicule courant.",
+    "Action 'setOtherVehiclesAIMode'(mode:string) : mode parmi 'stop', 'random', 'flee', 'chase', 'follow' ; tout autre mode écrit un avertissement. Pour 'random', 'flee', 'chase', 'follow' : tous les autres véhicules (sauf celui-ci) reçoivent ai.setSpeedMode('off'), ai.driveInLane('off'), ai.setState({mode, targetObjectID = ce véhicule}) et ai.setRacing(false). 'stop' met ai.setMode('stop') sur TOUS les véhicules (celui-ci inclus), désactive gameplay_traffic et ai.setRacing(false) sur les autres.",
+    "Lookup 'aiMode'() : renvoie {aiMode = ai.mode}.",
+    "Chaque requête valide ses paramètres avec checkTableDataTypes et renvoie {failReason = ...} si le type est incorrect."
+  ],
+  "fields": {
+    "moduleActions": {"type": "table<string, function>", "desc": "Actions exposées : setAIMode, setOtherVehiclesAIMode (remplie à onExtensionLoaded)."},
+    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups exposés : aiMode."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement de l'extension : remplit moduleActions et moduleLookups.", "params": {}, "returns": [], "internal": true},
+    "requestRegistration": {"desc": "Appelé par gameplayInterface au démarrage : enregistre les actions et lookups du module.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+  }
+}

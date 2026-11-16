@@ -1,225 +1,413 @@
 {
   "path": "lua/ge/extensions/career/career.lua",
-  "module": "Point d'entrée du mode carrière. Il active et désactive la carrière : charge le niveau (west_coast_usa par défaut, ou celui de la sauvegarde), charge tous les modules de lua/ge/extensions/career/modules/ (sauf /tutorial/step), bloque certaines actions d'entrée (vehicleTeleporting, vehicleMenues, physicsControls, aiControls…), affiche un menu de debug imgui, gère les modes de départ (startingModes), le véhicule de départ, les interactions avec les organisations, la liste des profils/sauvegardes envoyée à l'UI et la sauvegarde de general.json (niveau, options de départ, boughtStarterVehicle, organizationInteraction).",
-  "usage": "career_career.createOrLoadCareerAndStart('monProfil', nil, {startMode = 'apmOnboarding'})\nif career_career.isActive() then print(career_career.getBeamXPLevel(250)) end",
+  "module": "Entry point of career mode. It activates and deactivates the career: loads the level (west_coast_usa by default, or the one from the save), loads all modules in lua/ge/extensions/career/modules/ (except /tutorial/step), blocks certain input actions (vehicleTeleporting, vehicleMenues, physicsControls, aiControls…), shows an imgui debug menu, handles the starting modes (startingModes), the starter vehicle, interactions with organizations, the profile/save list sent to the UI and the saving of general.json (level, starting options, boughtStarterVehicle, organizationInteraction).",
+  "usage": "career_career.createOrLoadCareerAndStart('myProfile', nil, {startMode = 'apmOnboarding'})\nif career_career.isActive() then print(career_career.getBeamXPLevel(250)) end",
   "notes": [
-    "Activation : activateCareer demande l'écran de chargement, émet le hook onBeforeCareerActivate, lit <sauvegarde>/career/general.json ; si le niveau courant diffère, lance freeroam_freeroam.startFreeroam et charge les modules à la fin ; sinon supprime les véhicules (core_vehicles.removeAll, ou seulement ceux hors trafic/parking si removeVehicles est faux) puis émet onCareerActive(true, newSave).",
-    "Désactivation : onCareerActive(false) est émis à tous les modules (27 l'écoutent) et les actions d'entrée sont débloquées.",
-    "Tutoriel : M.tutorialEnabled est vrai si startingOptions.startMode == « apmOnboarding » et que le véhicule de départ n'a pas encore été acheté ; l'autosave est alors désactivé.",
-    "Niveaux BeamXP (beamXPLevels) : seuils 0, 100, 300, 600 et 1000.",
-    "Bug : dans toggleCareerModules, l'appel extensions.luaPathToExtName(modulePath) utilise une variable modulePath non définie (nil) et son résultat est ignoré.",
-    "deactivateCareer et deactivateCareerAndReloadLevel acceptent saveCareer mais ne l'utilisent pas.",
-    "Le menu debug (imgui) n'existe que si debugMenuEnabled, vrai par défaut hors version shipping_build ; il est relié à M.onUpdate uniquement pendant que la carrière est active.",
-    "onSerialize désactive la carrière et note reactivate = true ; onDeserialized la réactive avec removeVehicles = false (utile lors d'un rechargement des extensions Lua).",
-    "onLoadingScreenFadeout navigue vers « play » une seule fois après une activation avec chargement de niveau (drapeau playNavigationPendingAfterActivation).",
-    "onClientEndMission désactive la carrière si le niveau qui se termine est west_coast_usa."
+    "Activation: activateCareer requests the loading screen, emits the hook onBeforeCareerActivate, reads <save>/career/general.json; if the current level differs, launches freeroam_freeroam.startFreeroam and loads the modules at the end; otherwise removes the vehicles (core_vehicles.removeAll, or only those outside traffic/parking if removeVehicles is false) then emits onCareerActive(true, newSave).",
+    "Deactivation: onCareerActive(false) is emitted to all modules (27 listen to it) and the input actions are unblocked.",
+    "Tutorial: M.tutorialEnabled is true if startingOptions.startMode == \"apmOnboarding\" and the starter vehicle has not been bought yet; autosave is then disabled.",
+    "BeamXP levels (beamXPLevels): thresholds 0, 100, 300, 600 and 1000.",
+    "Bug: in toggleCareerModules, the call extensions.luaPathToExtName(modulePath) uses an undefined variable modulePath (nil) and its result is ignored.",
+    "deactivateCareer and deactivateCareerAndReloadLevel accept saveCareer but do not use it.",
+    "The debug menu (imgui) only exists if debugMenuEnabled, true by default outside the shipping_build version; it is linked to M.onUpdate only while the career is active.",
+    "onSerialize deactivates the career and notes reactivate = true; onDeserialized reactivates it with removeVehicles = false (useful during a reload of the Lua extensions).",
+    "onLoadingScreenFadeout navigates to \"play\" only once after an activation with a level load (flag playNavigationPendingAfterActivation).",
+    "onClientEndMission deactivates the career if the level that is ending is west_coast_usa."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "career_saveSystem, core_recoveryPrompt, gameplay_traffic."},
-    "tutorialEnabled": {"type": "boolean", "desc": "Vrai pendant le tutoriel de la carrière (voir notes)."},
-    "startingOptions": {"type": "table", "desc": "Options de départ de la partie (par ex. startMode), venues de createOrLoadCareerAndStart ou de la sauvegarde."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "career_saveSystem, core_recoveryPrompt, gameplay_traffic."
+    },
+    "tutorialEnabled": {
+      "type": "boolean",
+      "desc": "True during the career tutorial (see notes)."
+    },
+    "startingOptions": {
+      "type": "table",
+      "desc": "Starting options of the game (e.g. startMode), coming from createOrLoadCareerAndStart or from the save."
+    }
   },
   "functions": {
     "activateCareer": {
-      "desc": "Active la carrière pour le profil courant (career_saveSystem.getCurrentProfile) : sans effet si déjà active ou sans profil. Charge le niveau et les modules (voir notes).",
-      "params": {"removeVehicles": {"type": "boolean|nil", "desc": "Supprimer tous les véhicules du niveau déjà chargé ; true par défaut."}},
+      "desc": "Activates the career for the current profile (career_saveSystem.getCurrentProfile): no effect if already active or without a profile. Loads the level and the modules (see notes).",
+      "params": {
+        "removeVehicles": {
+          "type": "boolean|nil",
+          "desc": "Remove all vehicles from the already loaded level; true by default."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "deactivateCareer": {
-      "desc": "Désactive la carrière : décharge les modules, débloque les actions, remet les valeurs de récupération du freeroam et cache la liste des tâches.",
-      "params": {"saveCareer": {"type": "boolean|nil", "desc": "Non utilisé."}},
+      "desc": "Deactivates the career: unloads the modules, unblocks the actions, resets the freeroam recovery values and hides the task list.",
+      "params": {
+        "saveCareer": {
+          "type": "boolean|nil",
+          "desc": "Not used."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "deactivateCareerAndReloadLevel": {
-      "desc": "Désactive la carrière puis relance le niveau courant en freeroam.",
-      "params": {"saveCareer": {"type": "boolean|nil", "desc": "Transmis à deactivateCareer."}},
+      "desc": "Deactivates the career then restarts the current level in freeroam.",
+      "params": {
+        "saveCareer": {
+          "type": "boolean|nil",
+          "desc": "Passed to deactivateCareer."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "isActive": {
-      "desc": "Indique si la carrière est active.",
+      "desc": "Indicates whether the career is active.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si active."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if active."
+        }
+      ],
       "internal": false
     },
     "createOrLoadCareerAndStart": {
-      "desc": "Sélectionne (ou crée) un profil de sauvegarde avec career_saveSystem.setProfile puis active la carrière avec les options de départ données.",
+      "desc": "Selects (or creates) a save profile with career_saveSystem.setProfile then activates the career with the given starting options.",
       "params": {
-        "name": {"type": "string", "desc": "Nom du profil."},
-        "specificAutosave": {"type": "string|nil", "desc": "Nom d'une autosave précise à charger."},
-        "startingOptions": {"type": "table|nil", "desc": "Options de départ (copiées)."}
+        "name": {
+          "type": "string",
+          "desc": "Profile name."
+        },
+        "specificAutosave": {
+          "type": "string|nil",
+          "desc": "Name of a specific autosave to load."
+        },
+        "startingOptions": {
+          "type": "table|nil",
+          "desc": "Starting options (copied)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si le profil n'a pas pu être sélectionné."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the profile could not be selected."
+        }
+      ],
       "internal": false
     },
     "getStartingModeOptions": {
-      "desc": "Liste les modes de départ (fichiers *.lua de lua/ge/extensions/career/startingModes/ exécutés par dofile, sauf ceux avec ignore) et retourne pour l'UI : id, order, tier, title, description, image, tag, triés par order puis id.",
+      "desc": "Lists the starting modes (*.lua files of lua/ge/extensions/career/startingModes/ run by dofile, except those with ignore) and returns for the UI: id, order, tier, title, description, image, tag, sorted by order then id.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Modes de départ."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Starting modes."
+        }
+      ],
       "internal": false
     },
     "getCurrentStartingModeData": {
-      "desc": "Retourne la définition complète du mode de départ de la partie courante (startingOptions.startMode), ou nil.",
+      "desc": "Returns the full definition of the current game's starting mode (startingOptions.startMode), or nil.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Données du mode de départ."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Starting mode data."
+        }
+      ],
       "internal": false
     },
     "getBeamXPLevel": {
-      "desc": "Calcule le niveau BeamXP : seuils 0, 100, 300, 600, 1000. Retourne -1 pour les valeurs de progression s'il n'y a pas de niveau suivant.",
-      "params": {"xp": {"type": "number", "desc": "Valeur de BeamXP."}},
+      "desc": "Computes the BeamXP level: thresholds 0, 100, 300, 600, 1000. Returns -1 for the progress values if there is no next level.",
+      "params": {
+        "xp": {
+          "type": "number",
+          "desc": "BeamXP value."
+        }
+      },
       "returns": [
-        {"type": "integer", "desc": "Niveau (1 à 5)."},
-        {"type": "number", "desc": "Progression dans le niveau courant (-1 au maximum)."},
-        {"type": "number", "desc": "Seuil requis pour le niveau suivant (-1 au maximum)."}
+        {
+          "type": "integer",
+          "desc": "Level (1 to 5)."
+        },
+        {
+          "type": "number",
+          "desc": "Progress within the current level (-1 at the maximum)."
+        },
+        {
+          "type": "number",
+          "desc": "Threshold required for the next level (-1 at the maximum)."
+        }
       ],
       "internal": false
     },
     "sendAllCareerProfilesData": {
-      "desc": "Construit les infos de chaque profil (argent, beamXP, vouchers, score d'assurance, branches « apm », véhicule courant, nombre de véhicules, versions) et les envoie à l'UI via guihooks « allCareerProfiles » ; trie par creationDate.",
+      "desc": "Builds the info of each profile (money, beamXP, vouchers, insurance score, \"apm\" branches, current vehicle, vehicle count, versions) and sends it to the UI via guihooks \"allCareerProfiles\"; sorts by creationDate.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Données des profils."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Profile data."
+        }
+      ],
       "internal": false
     },
     "sendCurrentProfileData": {
-      "desc": "Retourne les infos du profil courant (même format qu'un profil de sendAllCareerProfilesData). Nil si la carrière n'est pas active.",
+      "desc": "Returns the info of the current profile (same format as a profile from sendAllCareerProfilesData). Nil if the career is not active.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Données du profil."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Profile data."
+        }
+      ],
       "internal": false
     },
     "getAutosavesForProfile": {
-      "desc": "Pour chaque dossier de sauvegarde du profil, retourne le contenu de playerAttributes.json avec id et autosaveName.",
-      "params": {"profile": {"type": "string", "desc": "Nom du profil."}},
-      "returns": [{"type": "table[]", "desc": "Attributs de chaque autosave."}],
+      "desc": "For each save folder of the profile, returns the content of playerAttributes.json with id and autosaveName.",
+      "params": {
+        "profile": {
+          "type": "string",
+          "desc": "Profile name."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Attributes of each autosave."
+        }
+      ],
       "internal": false
     },
     "getSaveFoldersForProfile": {
-      "desc": "Retourne la liste des dossiers de sauvegarde d'un profil avec ce qu'il faut à l'UI pour choisir (nom, dates, version, corrupted, isCurrent, incompatibleVersion, outdatedVersion, money, beamXP, vehicleCount), triée du plus récent au plus ancien.",
-      "params": {"profile": {"type": "string|nil", "desc": "Nom du profil ; liste vide si nil."}},
-      "returns": [{"type": "table[]", "desc": "Dossiers de sauvegarde."}],
+      "desc": "Returns the list of a profile's save folders with what the UI needs to choose (name, dates, version, corrupted, isCurrent, incompatibleVersion, outdatedVersion, money, beamXP, vehicleCount), sorted from newest to oldest.",
+      "params": {
+        "profile": {
+          "type": "string|nil",
+          "desc": "Profile name; empty list if nil."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Save folders."
+        }
+      ],
       "internal": false
     },
     "hasBoughtStarterVehicle": {
-      "desc": "Indique si le joueur a acheté son véhicule de départ.",
+      "desc": "Indicates whether the player has bought their starter vehicle.",
       "params": {},
-      "returns": [{"type": "boolean|nil", "desc": "Résultat."}],
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "Result."
+        }
+      ],
       "internal": false
     },
     "hasInteractedWithOrganization": {
-      "desc": "Indique si le joueur a déjà interagi avec une organisation.",
-      "params": {"id": {"type": "string", "desc": "Identifiant de l'organisation."}},
-      "returns": [{"type": "boolean|nil", "desc": "true si déjà interagi."}],
+      "desc": "Indicates whether the player has already interacted with an organization.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Organization identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true if already interacted."
+        }
+      ],
       "internal": false
     },
     "interactWithOrganization": {
-      "desc": "Note que le joueur a interagi avec une organisation (sauvegardé dans general.json).",
-      "params": {"id": {"type": "string", "desc": "Identifiant de l'organisation."}},
+      "desc": "Notes that the player has interacted with an organization (saved in general.json).",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Organization identifier."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "closeAllMenus": {
-      "desc": "Ferme les menus en naviguant vers l'écran « play ».",
+      "desc": "Closes the menus by navigating to the \"play\" screen.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "isAutosaveEnabled": {
-      "desc": "Indique si l'autosave est autorisé.",
+      "desc": "Indicates whether autosave is allowed.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "État."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "State."
+        }
+      ],
       "internal": false
     },
     "setAutosaveEnabled": {
-      "desc": "Active ou coupe l'autosave.",
-      "params": {"enabled": {"type": "boolean", "desc": "Nouvel état."}},
+      "desc": "Enables or disables autosave.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "New state."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getAdditionalMenuButtons": {
-      "desc": "Boutons ajoutés au menu pause : carte (ou « mon chargement » en livraison), progression (si le véhicule de départ est acheté et hors tutoriel), annulation de certification, annulation d'essai routier.",
+      "desc": "Buttons added to the pause menu: map (or \"my load\" during delivery), progress (if the starter vehicle is bought and outside the tutorial), certification cancellation, road test cancellation.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Boutons {label, luaFun, showIndicator?}."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Buttons {label, luaFun, showIndicator?}."
+        }
+      ],
       "internal": false
     },
     "setDebugMenuEnabled": {
-      "desc": "Active ou coupe le menu de debug imgui de la carrière.",
-      "params": {"enabled": {"type": "boolean", "desc": "Nouvel état."}},
+      "desc": "Enables or disables the career's imgui debug menu.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "New state."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "onCareerActive": {
-      "desc": "Hook onCareerActive reçu par ce module lui-même (émis par initAfterLevelLoad et deactivateCareer). À l'activation : applique les valeurs de récupération carrière ou tutoriel, vide la liste de tâches et les POI bruts, installe M.onUpdate (menu debug), bloque les actions d'entrée et passe l'état de jeu à « career ». Ne fait rien si active est faux.",
-      "params": {"active": {"type": "boolean", "desc": "true à l'activation."}},
+      "desc": "onCareerActive hook received by this module itself (emitted by initAfterLevelLoad and deactivateCareer). On activation: applies the career or tutorial recovery values, clears the task list and raw POIs, installs M.onUpdate (debug menu), blocks the input actions and sets the game state to \"career\". Does nothing if active is false.",
+      "params": {
+        "active": {
+          "type": "boolean",
+          "desc": "true on activation."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onSaveCurrentProfile": {
-      "desc": "Hook de sauvegarde du profil : écrit career/general.json (niveau, startingOptions, boughtStarterVehicle, organizationInteraction, états des fenêtres de debug).",
-      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde."}},
+      "desc": "Profile save hook: writes career/general.json (level, startingOptions, boughtStarterVehicle, organizationInteraction, debug window states).",
+      "params": {
+        "currentSavePath": {
+          "type": "string",
+          "desc": "Save folder."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onBeforeSetProfile": {
-      "desc": "Hook appelé avant de changer de profil : désactive la carrière si elle est active.",
-      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde courant."}},
+      "desc": "Hook called before changing profile: deactivates the career if it is active.",
+      "params": {
+        "currentSavePath": {
+          "type": "string",
+          "desc": "Current save folder."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook de rechargement des extensions : désactive la carrière et note reactivate = true si elle était active.",
+      "desc": "Extension reload hook: deactivates the career and notes reactivate = true if it was active.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Données ({reactivate = true} si active)."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Data ({reactivate = true} if active)."
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook après rechargement : réactive la carrière (activateCareer(false)) si v.reactivate.",
-      "params": {"v": {"type": "table", "desc": "Données de onSerialize."}},
+      "desc": "Post-reload hook: reactivates the career (activateCareer(false)) if v.reactivate.",
+      "params": {
+        "v": {
+          "type": "table",
+          "desc": "Data from onSerialize."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook de fin de niveau : désactive la carrière si le niveau est west_coast_usa.",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau qui se termine."}},
+      "desc": "End-of-level hook: deactivates the career if the level is west_coast_usa.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Path of the level that is ending."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onClientPostStartMission": {
-      "desc": "Hook après le démarrage d'un niveau : exécute l'initialisation différée de la carrière (émet onCareerActive(true, newSave)).",
+      "desc": "Hook after a level starts: runs the career's deferred initialization (emits onCareerActive(true, newSave)).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onLoadingScreenFadeout": {
-      "desc": "Navigue vers « play » exactement une fois, à la fin du fondu de l'écran de chargement qui suit l'activation (le routeur renvoie la demande jusqu'à ce que l'UI confirme).",
+      "desc": "Navigates to \"play\" exactly once, at the end of the loading screen fade that follows the activation (the router resends the request until the UI confirms).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onAnyMissionChanged": {
-      "desc": "Hook de changement d'état d'un défi : bloque les actions d'entrée quand il s'arrête (« stopped ») et les débloque quand il démarre (« started »).",
+      "desc": "Challenge state change hook: blocks the input actions when it stops (\"stopped\") and unblocks them when it starts (\"started\").",
       "params": {
-        "state": {"type": "string", "desc": "« started » ou « stopped »."},
-        "mission": {"type": "table|nil", "desc": "Défi concerné."}
+        "state": {
+          "type": "string",
+          "desc": "\"started\" or \"stopped\"."
+        },
+        "mission": {
+          "type": "table|nil",
+          "desc": "Challenge concerned."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onVehicleAddedToInventory": {
-      "desc": "Hook d'ajout d'un véhicule à l'inventaire : marque le véhicule de départ comme acheté (sauvegarde immédiate) et débloque le succès FIRST_SET_OF_KEYS pour un achat instantané chez apmStarterVehicles.",
-      "params": {"data": {"type": "table", "desc": "Contient purchaseData et vehicleInfo."}},
+      "desc": "Hook for adding a vehicle to the inventory: marks the starter vehicle as bought (immediate save) and unlocks the FIRST_SET_OF_KEYS achievement for an instant purchase at apmStarterVehicles.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Contains purchaseData and vehicleInfo."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onCameraModeChanged": {
-      "desc": "Hook de changement de mode caméra : met à jour le blocage du nodegrabber si la carrière est active.",
-      "params": {"modeName": {"type": "string", "desc": "Nom du mode."}},
+      "desc": "Camera mode change hook: updates the nodegrabber blocking if the career is active.",
+      "params": {
+        "modeName": {
+          "type": "string",
+          "desc": "Mode name."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onGlobalCameraSet": {
-      "desc": "Hook de changement de caméra globale : met à jour le blocage du nodegrabber.",
-      "params": {"modeName": {"type": "string", "desc": "Nom du mode."}},
+      "desc": "Global camera change hook: updates the nodegrabber blocking.",
+      "params": {
+        "modeName": {
+          "type": "string",
+          "desc": "Mode name."
+        }
+      },
       "returns": [],
       "internal": true
     }

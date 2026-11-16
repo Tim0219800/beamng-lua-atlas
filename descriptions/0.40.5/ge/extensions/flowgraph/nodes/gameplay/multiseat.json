@@ -1,14 +1,32 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/multiseat.lua",
-  "module": "Nœud flowgraph « Multiseat » (catégorie once_instant, sans pin). Active le réglage 'multiseat' une fois (workOnce) en sauvegardant la valeur précédente, puis la restaure à l'arrêt de l'exécution du graphe.",
+  "module": "Flowgraph node \"Multiseat\" (category once_instant, no pin). Enables the 'multiseat' setting once (workOnce) while saving the previous value, then restores it when graph execution stops.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise self.activated à false.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
-        "_executionStarted": {"desc": "Remet self.activated à false au démarrage du graphe.", "internal": true},
-        "workOnce": {"desc": "Lit le réglage 'multiseat' (défaut false), le mémorise dans self.previous puis met 'multiseat' à true via settings.setValue.", "internal": true},
-        "_executionStopped": {"desc": "Si le nœud avait activé le multiseat, restaure la valeur d'origine du réglage.", "internal": true}
+        "init": {
+          "desc": "Initializes self.activated to false.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager."
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Resets self.activated to false when the graph starts.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Reads the 'multiseat' setting (default false), stores it in self.previous then sets 'multiseat' to true via settings.setValue.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "If the node had enabled multiseat, restores the original value of the setting.",
+          "internal": true
+        }
       }
     }
   }

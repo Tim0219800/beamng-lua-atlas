@@ -2,65 +2,65 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/firstDrive/moveOff.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Didacticiel « démarrer et rouler » de l'expérience First Drive. Une fois activé, il suit le véhicule du joueur 0 (accélérateur, frein, embrayage, rapport, moteur, régime, vitesse des roues, lus via core_vehicleBridge) et affiche dans l'application « moveOff » du conteneur « topCenter » les touches à utiliser pour chaque étape : allumer le moteur, démarrer, s'arrêter, faire marche arrière, couper le moteur. Les instructions dépendent du mode de boîte : arcade, manuelle réaliste avec embrayage automatique, ou manuelle réaliste.
---- Accès : extension `ui_firstDrive_moveOff` : `extensions.load("ui_firstDrive_moveOff")`, puis la globale `ui_firstDrive_moveOff`
+--- "Start and drive off" tutorial of the First Drive experience. Once enabled, it follows player 0's vehicle (throttle, brake, clutch, gear, engine, RPM, wheel speed, read via core_vehicleBridge) and shows in the "moveOff" application of the "topCenter" container the keys to use for each step: turn the engine on, drive off, stop, reverse, turn the engine off. The instructions depend on the gearbox mode: arcade, realistic manual with automatic clutch, or realistic manual.
+--- Access: extension `ui_firstDrive_moveOff`: `extensions.load("ui_firstDrive_moveOff")`, then the global `ui_firstDrive_moveOff`
 ---@class ui_firstDrive_moveOff
----@field dependencies string[] Extensions chargées avant celle-ci : ui_appContainers.
+---@field dependencies string[] Extensions loaded before this one: ui_appContainers.
 ui_firstDrive_moveOff = {}
 
---- Indique si le didacticiel est actif.
----Source : lua/ge/extensions/ui/firstDrive/moveOff.lua:654
----@return boolean  true si actif.
+--- Indicates whether the tutorial is active.
+---Source: lua/ge/extensions/ui/firstDrive/moveOff.lua:654
+---@return boolean  true if active.
 function ui_firstDrive_moveOff.getEnabled() end
 
---- Renvoie la dernière instruction publiée (label, steps, sectionIndex, sectionCount, active), ou nil si rien n'est affiché.
----Source : lua/ge/extensions/ui/firstDrive/moveOff.lua:588
----@return table|nil  Dernier état envoyé à l'interface.
+--- Returns the last published instruction (label, steps, sectionIndex, sectionCount, active), or nil if nothing is displayed.
+---Source: lua/ge/extensions/ui/firstDrive/moveOff.lua:588
+---@return table|nil  Last state sent to the interface.
 function ui_firstDrive_moveOff.getState() end
 
---- Hook appelé à la fin du niveau : désactive le didacticiel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/firstDrive/moveOff.lua:649
+--- Hook called at the end of the level: disables the tutorial.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/firstDrive/moveOff.lua:649
 function ui_firstDrive_moveOff.onClientEndMission() end
 
---- Hook appelé au déchargement de l'extension : désactive le didacticiel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/firstDrive/moveOff.lua:645
+--- Hook called when the extension is unloaded: disables the tutorial.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/firstDrive/moveOff.lua:645
 function ui_firstDrive_moveOff.onExtensionUnloaded() end
 
---- Hook appelé quand les réglages changent. Si actif, relance le suivi du véhicule après 0,1 s, ce qui relit le mode de boîte.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/firstDrive/moveOff.lua:636
+--- Hook called when the settings change. If active, restarts the vehicle tracking after 0.1 s, which rereads the gearbox mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/firstDrive/moveOff.lua:636
 function ui_firstDrive_moveOff.onSettingsChanged() end
 
---- Hook appelé à chaque image avec dtReal (secondes réelles). Reconfigure le suivi si le véhicule du joueur change, attend la fin des délais, calcule l'instruction courante, la publie à l'interface si elle a changé et émet onFirstDriveMoveOffSectionCompleted quand une section vient d'être validée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/firstDrive/moveOff.lua:592
----@param dtReal number Durée réelle de l'image en secondes.
+--- Hook called every frame with dtReal (real seconds). Reconfigures the tracking if the player's vehicle changes, waits for the delays to end, computes the current instruction, publishes it to the interface if it has changed and emits onFirstDriveMoveOffSectionCompleted when a section has just been validated.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/firstDrive/moveOff.lua:592
+---@param dtReal number Real frame duration in seconds.
 function ui_firstDrive_moveOff.onUpdate(dtReal) end
 
---- Hook appelé quand un véhicule est détruit : arrête le suivi si c'est le véhicule suivi.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/firstDrive/moveOff.lua:632
----@param vehicleId integer Identifiant du véhicule détruit.
+--- Hook called when a vehicle is destroyed: stops the tracking if it is the tracked vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/firstDrive/moveOff.lua:632
+---@param vehicleId integer Identifier of the destroyed vehicle.
 function ui_firstDrive_moveOff.onVehicleDestroyed(vehicleId) end
 
---- Hook appelé quand un véhicule est remplacé ; même traitement que onVehicleDestroyed.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/firstDrive/moveOff.lua:632
----@param vehicleId integer Identifiant du véhicule remplacé.
+--- Hook called when a vehicle is replaced; same handling as onVehicleDestroyed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/firstDrive/moveOff.lua:632
+---@param vehicleId integer Identifier of the replaced vehicle.
 function ui_firstDrive_moveOff.onVehicleReplaced(vehicleId) end
 
---- Hook appelé quand le véhicule du joueur change. Relance le suivi sur le nouveau véhicule (ignoré si inactif ou si player n'est pas 0).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/firstDrive/moveOff.lua:627
----@param _ any Identifiant de l'ancien véhicule (non utilisé).
----@param newVehicleId integer|nil Identifiant du nouveau véhicule.
----@param player integer|nil Indice du joueur concerné.
+--- Hook called when the player's vehicle changes. Restarts the tracking on the new vehicle (ignored if inactive or if player is not 0).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/firstDrive/moveOff.lua:627
+---@param _ any Identifier of the old vehicle (not used).
+---@param newVehicleId integer|nil Identifier of the new vehicle.
+---@param player integer|nil Index of the player concerned.
 function ui_firstDrive_moveOff.onVehicleSwitched(_, newVehicleId, player) end
 
---- Active ou désactive le didacticiel. À l'activation, commence à suivre le véhicule du joueur 0 (abonnements aux valeurs throttle_input, brake_input, clutch_input, gearIndex, engineRunning, rpm, wheelspeed) ; à la désactivation, désabonne, cache l'application et envoie { active = false }. Sans effet si l'état ne change pas.
----Source : lua/ge/extensions/ui/firstDrive/moveOff.lua:576
----@param value boolean Seul true active ; toute autre valeur désactive.
+--- Enables or disables the tutorial. On enable, starts following player 0's vehicle (subscriptions to the values throttle_input, brake_input, clutch_input, gearIndex, engineRunning, rpm, wheelspeed); on disable, unsubscribes, hides the application and sends { active = false }. No effect if the state does not change.
+---Source: lua/ge/extensions/ui/firstDrive/moveOff.lua:576
+---@param value boolean Only true enables; any other value disables.
 function ui_firstDrive_moveOff.setEnabled(value) end
 

@@ -1,0 +1,4 @@
+{
+  "path": "lua/console/servertests.lua",
+  "module": "Mini script de la console : il recharge lua/console/unittests via rerequire. Les autres lignes (benchphysics, sp, ul) sont commentées. Aucune fonction ni champ."
+}

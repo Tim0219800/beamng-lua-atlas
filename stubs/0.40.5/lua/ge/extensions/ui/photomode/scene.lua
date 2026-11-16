@@ -2,79 +2,79 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/photomode/scene.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Onglet « scène » du mode photo : lit et modifie l'environnement du niveau (heure du jour, date, nuages, brouillard, vent, décalage du nord, affichages célestes et météores) via core_environment et core_celestial. Il gère aussi la sauvegarde/restauration de l'état d'origine à l'ouverture/fermeture de la session, un bookmark d'environnement, et les presets de type « scene » (qui incluent une partie advancedRender gérée par ui_photomode_advancedRender).
---- Accès : extension `ui_photomode_scene` : `extensions.load("ui_photomode_scene")`, puis la globale `ui_photomode_scene`
+--- Photo mode "scene" tab: reads and modifies the level's environment (time of day, date, clouds, fog, wind, north offset, celestial displays and meteors) via core_environment and core_celestial. It also handles saving/restoring the original state when the session opens/closes, an environment bookmark, and "scene" type presets (which include an advancedRender part handled by ui_photomode_advancedRender).
+--- Access: extension `ui_photomode_scene`: `extensions.load("ui_photomode_scene")`, then the global `ui_photomode_scene`
 ---@class ui_photomode_scene
----@field dependencies table<integer, string> Extensions chargées avant : ui_photomode_shared, ui_photomode_advancedRender, core_celestial.
+---@field dependencies table<integer, string> Extensions loaded before: ui_photomode_shared, ui_photomode_advancedRender, core_celestial.
 ui_photomode_scene = {}
 
---- Applique un preset de scène (heure, météo, nord, éléments célestes) puis sa partie advancedRender. S'arrête au premier échec.
----Source : lua/ge/extensions/ui/photomode/scene.lua:822
+--- Applies a scene preset (time, weather, north, celestial elements) then its advancedRender part. Stops at the first failure.
+---Source: lua/ge/extensions/ui/photomode/scene.lua:822
 ---@param state table Preset {scene=..., advancedRender=...}.
----@param options table|nil options.part : all, environment, shadows, detailTerrain, weather, celestial.
----@return table  {state=...} ou {ok=false, reason}.
+---@param options table|nil options.part: all, environment, shadows, detailTerrain, weather, celestial.
+---@return table  {state=...} or {ok=false, reason}.
 function ui_photomode_scene.applyPresetState(state, options) end
 
---- Renvoie la partie scène à inclure dans les métadonnées d'une capture : time, play, year, month, day, cloudCover, fogDensity, fogAtmosphereHeight, windSpeed, cloudWindDirection, groundWind, northOverride, celestial.
----Source : lua/ge/extensions/ui/photomode/scene.lua:852
----@return table  État de scène pour métadonnées.
+--- Returns the scene part to include in a capture's metadata: time, play, year, month, day, cloudCover, fogDensity, fogAtmosphereHeight, windSpeed, cloudWindDirection, groundWind, northOverride, celestial.
+---Source: lua/ge/extensions/ui/photomode/scene.lua:852
+---@return table  Scene state for metadata.
 function ui_photomode_scene.buildMetadataState() end
 
---- Construit l'état de scène courant (valeurs bornées aux limites) à partir de core_environment et core_celestial, avec la table availability indiquant quels éléments sont lisibles.
----Source : lua/ge/extensions/ui/photomode/scene.lua:274
----@return table  État de scène (voir getSceneState).
+--- Builds the current scene state (values clamped to the limits) from core_environment and core_celestial, with the availability table indicating which elements are readable.
+---Source: lua/ge/extensions/ui/photomode/scene.lua:274
+---@return table  Scene state (see getSceneState).
 function ui_photomode_scene.buildState() end
 
---- Capture l'état par défaut de la session (état de scène restauré ou courant + rendu avancé par défaut). Renvoie nil si aucun des deux n'est disponible.
----Source : lua/ge/extensions/ui/photomode/scene.lua:812
----@return table|nil  Données de preset combinées.
+--- Captures the session's default state (restored or current scene state + default advanced render). Returns nil if neither is available.
+---Source: lua/ge/extensions/ui/photomode/scene.lua:812
+---@return table|nil  Combined preset data.
 function ui_photomode_scene.captureDefaultPresetState() end
 
---- Capture l'état courant sous forme de preset : {scene={...}, advancedRender=...} (advancedRender vient de ui_photomode_advancedRender.buildMetadataState).
----Source : lua/ge/extensions/ui/photomode/scene.lua:808
----@return table  Données de preset combinées.
+--- Captures the current state as a preset: {scene={...}, advancedRender=...} (advancedRender comes from ui_photomode_advancedRender.buildMetadataState).
+---Source: lua/ge/extensions/ui/photomode/scene.lua:808
+---@return table  Combined preset data.
 function ui_photomode_scene.capturePresetState() end
 
---- Mémorise dans S.sessionSceneRestoreState l'état de scène d'origine pour le restaurer à la fin de la session. Appelée au début de la session photo.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/scene.lua:296
+--- Stores the original scene state in S.sessionSceneRestoreState to restore it at the end of the session. Called at the start of the photo session.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/scene.lua:296
 function ui_photomode_scene.captureRestoreState() end
 
---- Lit l'état brut de scène : time, play, year, month, day, cloudCover, fogDensity, fogAtmosphereHeight, windSpeed, cloudWindDirection, groundWind (vecteurs {x,y,z}), northOverride, celestial ({meteor, display}). Les valeurs indisponibles valent nil.
----Source : lua/ge/extensions/ui/photomode/scene.lua:145
----@return table  État brut sérialisable.
+--- Reads the raw scene state: time, play, year, month, day, cloudCover, fogDensity, fogAtmosphereHeight, windSpeed, cloudWindDirection, groundWind ({x,y,z} vectors), northOverride, celestial ({meteor, display}). Unavailable values are nil.
+---Source: lua/ge/extensions/ui/photomode/scene.lua:145
+---@return table  Serializable raw state.
 function ui_photomode_scene.captureSerializableState() end
 
---- Renvoie l'état de scène courant (buildState) avec ok = session active ; reason="session_inactive" sinon.
----Source : lua/ge/extensions/ui/photomode/scene.lua:670
----@return table  État de scène : sessionActive, bookmarkAvailable, availability, time, play, year, month, day, cloudCover, fogDensity, fogAtmosphereHeight, windSpeed, cloudWindDirection, groundWind, northOverride, celestial, plus ok/reason.
+--- Returns the current scene state (buildState) with ok = session active; reason="session_inactive" otherwise.
+---Source: lua/ge/extensions/ui/photomode/scene.lua:670
+---@return table  Scene state: sessionActive, bookmarkAvailable, availability, time, play, year, month, day, cloudCover, fogDensity, fogAtmosphereHeight, windSpeed, cloudWindDirection, groundWind, northOverride, celestial, plus ok/reason.
 function ui_photomode_scene.getSceneState() end
 
---- Réapplique le bookmark d'environnement mémorisé (heure, météo, nord, éléments célestes). Exige une session active et un bookmark.
----Source : lua/ge/extensions/ui/photomode/scene.lua:609
----@return table  {ok=true, state} ou {ok=false, reason, state?}.
+--- Reapplies the stored environment bookmark (time, weather, north, celestial elements). Requires an active session and a bookmark.
+---Source: lua/ge/extensions/ui/photomode/scene.lua:609
+---@return table  {ok=true, state} or {ok=false, reason, state?}.
 function ui_photomode_scene.loadEnvironmentBookmark() end
 
---- Journalise (niveau debug) l'heure du jour sous la forme {time, play, dayLength} avec un libellé. Voir la note sur le bug isDebugEnabled.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/scene.lua:214
----@param label string Préfixe du message.
----@param sceneState table État à afficher.
+--- Logs (debug level) the time of day as {time, play, dayLength} with a label. See the note on the isDebugEnabled bug.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/scene.lua:214
+---@param label string Message prefix.
+---@param sceneState table State to display.
 function ui_photomode_scene.logTimeOfDayDebug(label, sceneState) end
 
---- Restaure l'état de scène sauvegardé par captureRestoreState (heure, environnement, nord, éléments célestes) puis l'efface. Appelée à la fin de la session photo ; ne fait rien s'il n'y a rien à restaurer.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/scene.lua:478
+--- Restores the scene state saved by captureRestoreState (time, environment, north, celestial elements) then clears it. Called at the end of the photo session; does nothing if there is nothing to restore.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/scene.lua:478
 function ui_photomode_scene.restoreState() end
 
---- Mémorise l'état d'environnement courant dans S.savedEnvironmentBookmark. Exige une session active.
----Source : lua/ge/extensions/ui/photomode/scene.lua:588
----@return table  {ok=true, state} ou {ok=false, reason}.
+--- Stores the current environment state in S.savedEnvironmentBookmark. Requires an active session.
+---Source: lua/ge/extensions/ui/photomode/scene.lua:588
+---@return table  {ok=true, state} or {ok=false, reason}.
 function ui_photomode_scene.saveEnvironmentBookmark() end
 
---- Applique un patch partiel de scène (heure, météo, nord) pendant une session photo et renvoie le nouvel état. Échoue avec scene_patch_empty si rien n'a été appliqué.
----Source : lua/ge/extensions/ui/photomode/scene.lua:523
----@param partialState table Champs possibles : time (0..1), play (booléen, avec time), year, month, day, cloudCover, fogDensity, fogAtmosphereHeight, northOverride (degrés), __lerpSeconds (secondes de transition).
----@return table  {ok=true, state=...} ou {ok=false, reason=..., state?=...}.
+--- Applies a partial scene patch (time, weather, north) during a photo session and returns the new state. Fails with scene_patch_empty if nothing was applied.
+---Source: lua/ge/extensions/ui/photomode/scene.lua:523
+---@param partialState table Possible fields: time (0..1), play (boolean, with time), year, month, day, cloudCover, fogDensity, fogAtmosphereHeight, northOverride (degrees), __lerpSeconds (transition seconds).
+---@return table  {ok=true, state=...} or {ok=false, reason=..., state?=...}.
 function ui_photomode_scene.setSceneState(partialState) end
 

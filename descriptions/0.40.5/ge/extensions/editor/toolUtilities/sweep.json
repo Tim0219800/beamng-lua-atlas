@@ -1,171 +1,522 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/sweep.lua",
-  "module": "Géométrie par balayage (loft) pour les outils de bâtiment de l'éditeur : une pièce est une section (polygone 2D en coordonnées (s, t)) et un chemin de repères (frames). Sert à tailler gouttières, tuyaux, coudes, conduits, colonnes montantes. Écrit des faces dans un accumulateur `p` via meshPart.face4 et meshPart.face3. Un repère est une origine et deux axes : le point (s, t) de la section tombe en o + a*s + b*t, donc la même section balayée le long de +X, de +Z ou d'un virage ressort bien orientée sans être réécrite.",
+  "module": "Sweep geometry (loft) for the editor's building tools: a piece is a section (2D polygon in (s, t) coordinates) and a path of frames. Used to cut gutters, pipes, elbows, ducts, risers. Writes faces into an accumulator `p` via meshPart.face4 and meshPart.face3. A frame is an origin and two axes: the section point (s, t) lands at o + a*s + b*t, so the same section swept along +X, +Z or a turn comes out correctly oriented without being rewritten.",
   "usage": "local sweep = require('editor/toolUtilities/sweep')\nlocal sect = sweep.circleSection(0.05, 12)\nlocal path = sweep.alongZ(0, 3)\nsweep.loft(p, sect, path, 1.0)\nsweep.cap(p, sect, path[1], -1, 1.0)\nsweep.cap(p, sect, path[2], 1, 1.0)",
   "notes": [
-    "Un repère est une table { ox, oy, oz, ax, ay, az, bx, by, bz } ; un point de section est { s, t }.",
-    "Le sens d'enroulement de la section détermine la normale des faces : fournir la même section inversée (reversed) tourne les faces vers l'intérieur, utile pour un alésage.",
-    "cap utilise un éventail de triangles : la section doit être convexe, sinon il faut la buter contre la pièce suivante.",
-    "Le paramètre uv est l'échelle des coordonnées de texture (U suit la longueur d'arc de la section, V la distance parcourue)."
+    "A frame is a table { ox, oy, oz, ax, ay, az, bx, by, bz }; a section point is { s, t }.",
+    "The winding direction of the section determines the face normals: providing the same section reversed (reversed) turns the faces inward, useful for a bore.",
+    "cap uses a triangle fan: the section must be convex, otherwise it must be butted against the next piece.",
+    "The uv parameter is the texture coordinate scale (U follows the arc length of the section, V the distance traveled)."
   ],
   "functions": {
     "P": {
-      "desc": "Crée un point { x, y, z }.",
-      "params": {"x": {"type": "number", "desc": "X."}, "y": {"type": "number", "desc": "Y."}, "z": {"type": "number", "desc": "Z."}},
-      "returns": [{"type": "table", "desc": "Point { x, y, z }."}]
+      "desc": "Creates a point { x, y, z }.",
+      "params": {
+        "x": {
+          "type": "number",
+          "desc": "X."
+        },
+        "y": {
+          "type": "number",
+          "desc": "Y."
+        },
+        "z": {
+          "type": "number",
+          "desc": "Z."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Point { x, y, z }."
+        }
+      ]
     },
     "fr": {
-      "desc": "Un repère d'un chemin balayé : le (s, t) de la section tombe en o + a*s + b*t.",
+      "desc": "A frame of a swept path: the section's (s, t) lands at o + a*s + b*t.",
       "params": {
-        "ox": {"type": "number", "desc": "Origine X."}, "oy": {"type": "number", "desc": "Origine Y."}, "oz": {"type": "number", "desc": "Origine Z."},
-        "ax": {"type": "number", "desc": "Axe a, X."}, "ay": {"type": "number", "desc": "Axe a, Y."}, "az": {"type": "number", "desc": "Axe a, Z."},
-        "bx": {"type": "number", "desc": "Axe b, X."}, "by": {"type": "number", "desc": "Axe b, Y."}, "bz": {"type": "number", "desc": "Axe b, Z."}
+        "ox": {
+          "type": "number",
+          "desc": "Origin X."
+        },
+        "oy": {
+          "type": "number",
+          "desc": "Origin Y."
+        },
+        "oz": {
+          "type": "number",
+          "desc": "Origin Z."
+        },
+        "ax": {
+          "type": "number",
+          "desc": "Axis a, X."
+        },
+        "ay": {
+          "type": "number",
+          "desc": "Axis a, Y."
+        },
+        "az": {
+          "type": "number",
+          "desc": "Axis a, Z."
+        },
+        "bx": {
+          "type": "number",
+          "desc": "Axis b, X."
+        },
+        "by": {
+          "type": "number",
+          "desc": "Axis b, Y."
+        },
+        "bz": {
+          "type": "number",
+          "desc": "Axis b, Z."
+        }
       },
-      "returns": [{"type": "table", "desc": "Repère."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Frame."
+        }
+      ]
     },
     "at": {
-      "desc": "Point monde correspondant au point (s, t) de la section dans le repère f.",
-      "params": {"f": {"type": "table", "desc": "Repère."}, "s": {"type": "number", "desc": "Coordonnée s."}, "t": {"type": "number", "desc": "Coordonnée t."}},
-      "returns": [{"type": "table", "desc": "Point { x, y, z }."}]
+      "desc": "World point corresponding to the section point (s, t) in frame f.",
+      "params": {
+        "f": {
+          "type": "table",
+          "desc": "Frame."
+        },
+        "s": {
+          "type": "number",
+          "desc": "Coordinate s."
+        },
+        "t": {
+          "type": "number",
+          "desc": "Coordinate t."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Point { x, y, z }."
+        }
+      ]
     },
     "loft": {
-      "desc": "Balaye une section fermée le long d'un chemin de repères : un quad par arête de section et par pas. Les UV suivent la longueur d'arc de la section en travers et la distance parcourue en long, donc une pièce étirée par le placeur reste texturée en carrelage.",
+      "desc": "Sweeps a closed section along a path of frames: one quad per section edge and per step. The UVs follow the section's arc length across and the distance traveled lengthwise, so a piece stretched by the placer stays tiled-textured.",
       "params": {
-        "p": {"type": "table", "desc": "Accumulateur de faces (meshPart)."},
-        "sect": {"type": "table", "desc": "Section fermée, liste de { s, t }."},
-        "path": {"type": "table", "desc": "Liste de repères."},
-        "uv": {"type": "number", "desc": "Échelle UV."}
+        "p": {
+          "type": "table",
+          "desc": "Face accumulator (meshPart)."
+        },
+        "sect": {
+          "type": "table",
+          "desc": "Closed section, list of { s, t }."
+        },
+        "path": {
+          "type": "table",
+          "desc": "List of frames."
+        },
+        "uv": {
+          "type": "number",
+          "desc": "UV scale."
+        }
       },
       "returns": []
     },
     "cap": {
-      "desc": "Ferme une extrémité d'un loft, orientée dans le sens du chemin (sgn 1) ou en sens inverse. Triangulation en éventail, donc section convexe uniquement.",
+      "desc": "Closes one end of a loft, oriented in the path direction (sgn 1) or the opposite direction. Fan triangulation, so convex section only.",
       "params": {
-        "p": {"type": "table", "desc": "Accumulateur de faces."},
-        "sect": {"type": "table", "desc": "Section convexe."},
-        "f": {"type": "table", "desc": "Repère de l'extrémité."},
-        "sgn": {"type": "integer", "desc": "1 ou -1 : sens de la normale."},
-        "uv": {"type": "number", "desc": "Échelle UV."}
+        "p": {
+          "type": "table",
+          "desc": "Face accumulator."
+        },
+        "sect": {
+          "type": "table",
+          "desc": "Convex section."
+        },
+        "f": {
+          "type": "table",
+          "desc": "Frame of the end."
+        },
+        "sgn": {
+          "type": "integer",
+          "desc": "1 or -1: normal direction."
+        },
+        "uv": {
+          "type": "number",
+          "desc": "UV scale."
+        }
       },
       "returns": []
     },
     "ring": {
-      "desc": "La bande plate entre deux sections de même nombre de points, à un repère : l'embouchure d'un tuyau ouvert.",
+      "desc": "The flat strip between two sections with the same number of points, at one frame: the mouth of an open pipe.",
       "params": {
-        "p": {"type": "table", "desc": "Accumulateur de faces."},
-        "inner": {"type": "table", "desc": "Section intérieure."},
-        "outer": {"type": "table", "desc": "Section extérieure."},
-        "f": {"type": "table", "desc": "Repère."},
-        "sgn": {"type": "integer", "desc": "Sens de la normale (1 ou -1)."},
-        "uv": {"type": "number", "desc": "Échelle UV."}
+        "p": {
+          "type": "table",
+          "desc": "Face accumulator."
+        },
+        "inner": {
+          "type": "table",
+          "desc": "Inner section."
+        },
+        "outer": {
+          "type": "table",
+          "desc": "Outer section."
+        },
+        "f": {
+          "type": "table",
+          "desc": "Frame."
+        },
+        "sgn": {
+          "type": "integer",
+          "desc": "Normal direction (1 or -1)."
+        },
+        "uv": {
+          "type": "number",
+          "desc": "UV scale."
+        }
       },
       "returns": []
     },
     "taper": {
-      "desc": "Balaye ENTRE deux sections de même nombre de points, un repère chacune : un rétrécissement de l'embouchure vers le col. Même quad par arête que le loft droit, mais chaque bout a sa forme.",
+      "desc": "Sweeps BETWEEN two sections with the same number of points, one frame each: a taper from the mouth to the throat. Same quad per edge as the straight loft, but each end has its own shape.",
       "params": {
-        "p": {"type": "table", "desc": "Accumulateur de faces."},
-        "s0": {"type": "table", "desc": "Section de départ."},
-        "s1": {"type": "table", "desc": "Section d'arrivée (même nombre de points)."},
-        "f0": {"type": "table", "desc": "Repère de départ."},
-        "f1": {"type": "table", "desc": "Repère d'arrivée."},
-        "uv": {"type": "number", "desc": "Échelle UV."}
+        "p": {
+          "type": "table",
+          "desc": "Face accumulator."
+        },
+        "s0": {
+          "type": "table",
+          "desc": "Start section."
+        },
+        "s1": {
+          "type": "table",
+          "desc": "End section (same number of points)."
+        },
+        "f0": {
+          "type": "table",
+          "desc": "Start frame."
+        },
+        "f1": {
+          "type": "table",
+          "desc": "End frame."
+        },
+        "uv": {
+          "type": "number",
+          "desc": "UV scale."
+        }
       },
       "returns": []
     },
     "alongX": {
-      "desc": "Course le long de +X portant une section posée en (y, z).",
-      "params": {"x0": {"type": "number", "desc": "X de départ."}, "x1": {"type": "number", "desc": "X d'arrivée."}},
-      "returns": [{"type": "table", "desc": "Deux repères."}]
+      "desc": "Run along +X carrying a section laid out in (y, z).",
+      "params": {
+        "x0": {
+          "type": "number",
+          "desc": "Start X."
+        },
+        "x1": {
+          "type": "number",
+          "desc": "End X."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Two frames."
+        }
+      ]
     },
     "alongY": {
-      "desc": "Course le long de +Y portant une section posée en (x, z).",
-      "params": {"y0": {"type": "number", "desc": "Y de départ."}, "y1": {"type": "number", "desc": "Y d'arrivée."}},
-      "returns": [{"type": "table", "desc": "Deux repères."}]
+      "desc": "Run along +Y carrying a section laid out in (x, z).",
+      "params": {
+        "y0": {
+          "type": "number",
+          "desc": "Start Y."
+        },
+        "y1": {
+          "type": "number",
+          "desc": "End Y."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Two frames."
+        }
+      ]
     },
     "alongZ": {
-      "desc": "Course montante le long de +Z portant une section posée en (x, y), éventuellement décalée de l'axe.",
+      "desc": "Upward run along +Z carrying a section laid out in (x, y), optionally offset from the axis.",
       "params": {
-        "z0": {"type": "number", "desc": "Z de départ."}, "z1": {"type": "number", "desc": "Z d'arrivée."},
-        "cx": {"type": "number|nil", "desc": "Décalage X (0 par défaut)."}, "cy": {"type": "number|nil", "desc": "Décalage Y (0 par défaut)."}
+        "z0": {
+          "type": "number",
+          "desc": "Start Z."
+        },
+        "z1": {
+          "type": "number",
+          "desc": "End Z."
+        },
+        "cx": {
+          "type": "number|nil",
+          "desc": "X offset (0 by default)."
+        },
+        "cy": {
+          "type": "number|nil",
+          "desc": "Y offset (0 by default)."
+        }
       },
-      "returns": [{"type": "table", "desc": "Deux repères."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Two frames."
+        }
+      ]
     },
     "boxX": {
-      "desc": "Boîte fermée (loft plus deux capuchons) étendue le long de X, section en (y, z).",
+      "desc": "Closed box (loft plus two caps) extended along X, section in (y, z).",
       "params": {
-        "p": {"type": "table", "desc": "Accumulateur de faces."},
-        "x0": {"type": "number", "desc": "X min."}, "x1": {"type": "number", "desc": "X max."},
-        "y0": {"type": "number", "desc": "Y min."}, "y1": {"type": "number", "desc": "Y max."},
-        "z0": {"type": "number", "desc": "Z min."}, "z1": {"type": "number", "desc": "Z max."},
-        "uv": {"type": "number", "desc": "Échelle UV."}
+        "p": {
+          "type": "table",
+          "desc": "Face accumulator."
+        },
+        "x0": {
+          "type": "number",
+          "desc": "X min."
+        },
+        "x1": {
+          "type": "number",
+          "desc": "X max."
+        },
+        "y0": {
+          "type": "number",
+          "desc": "Y min."
+        },
+        "y1": {
+          "type": "number",
+          "desc": "Y max."
+        },
+        "z0": {
+          "type": "number",
+          "desc": "Min Z."
+        },
+        "z1": {
+          "type": "number",
+          "desc": "Max Z."
+        },
+        "uv": {
+          "type": "number",
+          "desc": "UV scale."
+        }
       },
       "returns": []
     },
     "boxZ": {
-      "desc": "La même boîte, dressée et balayée sur Z. Un loft pose U autour de la section et V le long du chemin : les deux posent la texture d'une face à angle droit l'une de l'autre. À utiliser pour un matériau qui a un SENS (comme la brique, dont les assises ressortent debout avec boxX).",
+      "desc": "The same box, stood upright and swept on Z. A loft lays U around the section and V along the path: the two lay a face's texture at right angles to each other. Use it for a material that has a DIRECTION (such as brick, whose courses come out upright with boxX).",
       "params": {
-        "p": {"type": "table", "desc": "Accumulateur de faces."},
-        "x0": {"type": "number", "desc": "X min."}, "x1": {"type": "number", "desc": "X max."},
-        "y0": {"type": "number", "desc": "Y min."}, "y1": {"type": "number", "desc": "Y max."},
-        "z0": {"type": "number", "desc": "Z min."}, "z1": {"type": "number", "desc": "Z max."},
-        "uv": {"type": "number", "desc": "Échelle UV."}
+        "p": {
+          "type": "table",
+          "desc": "Face accumulator."
+        },
+        "x0": {
+          "type": "number",
+          "desc": "X min."
+        },
+        "x1": {
+          "type": "number",
+          "desc": "X max."
+        },
+        "y0": {
+          "type": "number",
+          "desc": "Y min."
+        },
+        "y1": {
+          "type": "number",
+          "desc": "Y max."
+        },
+        "z0": {
+          "type": "number",
+          "desc": "Min Z."
+        },
+        "z1": {
+          "type": "number",
+          "desc": "Max Z."
+        },
+        "uv": {
+          "type": "number",
+          "desc": "UV scale."
+        }
       },
       "returns": []
     },
     "circleSection": {
-      "desc": "Section circulaire de rayon r à n points, autour de l'origine.",
-      "params": {"r": {"type": "number", "desc": "Rayon."}, "n": {"type": "integer", "desc": "Nombre de points."}},
-      "returns": [{"type": "table", "desc": "Liste de { s, t }."}]
+      "desc": "Circular section of radius r with n points, around the origin.",
+      "params": {
+        "r": {
+          "type": "number",
+          "desc": "Radius."
+        },
+        "n": {
+          "type": "integer",
+          "desc": "Number of points."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of { s, t }."
+        }
+      ]
     },
     "boxSection": {
-      "desc": "Section carrée autour de l'origine, ou rectangulaire si on donne une seconde demi-taille.",
-      "params": {"hx": {"type": "number", "desc": "Demi-taille en s."}, "hy": {"type": "number|nil", "desc": "Demi-taille en t (= hx par défaut)."}},
-      "returns": [{"type": "table", "desc": "4 points."}]
+      "desc": "Square section around the origin, or rectangular if a second half-size is given.",
+      "params": {
+        "hx": {
+          "type": "number",
+          "desc": "Half-size in s."
+        },
+        "hy": {
+          "type": "number|nil",
+          "desc": "Half-size in t (= hx by default)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "4 points."
+        }
+      ]
     },
     "octSection": {
-      "desc": "OCTOGONE régulier autour de l'origine ; `m` va du centre à chacun des huit plats.",
-      "params": {"m": {"type": "number", "desc": "Distance du centre à un plat."}},
-      "returns": [{"type": "table", "desc": "8 points."}]
+      "desc": "Regular OCTAGON around the origin; `m` goes from the center to each of the eight flats.",
+      "params": {
+        "m": {
+          "type": "number",
+          "desc": "Distance from the center to a flat."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "8 points."
+        }
+      ]
     },
     "octPost": {
-      "desc": "Poteau octogonal dressé sur +Z entre deux hauteurs, fermé aux deux bouts (loft plus deux capuchons).",
+      "desc": "Octagonal post standing on +Z between two heights, closed at both ends (loft plus two caps).",
       "params": {
-        "p": {"type": "table", "desc": "Accumulateur de faces."},
-        "m": {"type": "number", "desc": "Distance du centre à un plat."},
-        "z0": {"type": "number", "desc": "Hauteur de départ."}, "z1": {"type": "number", "desc": "Hauteur d'arrivée."},
-        "uv": {"type": "number", "desc": "Échelle UV."}
+        "p": {
+          "type": "table",
+          "desc": "Face accumulator."
+        },
+        "m": {
+          "type": "number",
+          "desc": "Distance from the center to a flat."
+        },
+        "z0": {
+          "type": "number",
+          "desc": "Start height."
+        },
+        "z1": {
+          "type": "number",
+          "desc": "End height."
+        },
+        "uv": {
+          "type": "number",
+          "desc": "UV scale."
+        }
       },
       "returns": []
     },
     "reversed": {
-      "desc": "Renvoie la section parcourue en sens inverse (les faces regarderont à l'intérieur).",
-      "params": {"sect": {"type": "table", "desc": "Section."}},
-      "returns": [{"type": "table", "desc": "Nouvelle section inversée."}]
+      "desc": "Returns the section traversed in the opposite direction (the faces will look inward).",
+      "params": {
+        "sect": {
+          "type": "table",
+          "desc": "Section."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "New reversed section."
+        }
+      ]
     },
     "rect8": {
-      "desc": "Rectangle écrit en HUIT points (et non quatre), pris aux mêmes angles qu'un cercle de même nombre, pour fermer une plaque plate d'une section sur l'autre. Centré en (0, cy).",
+      "desc": "Rectangle written as EIGHT points (not four), taken at the same angles as a circle with the same count, to close a flat plate from one section to the other. Centered at (0, cy).",
       "params": {
-        "hx": {"type": "number", "desc": "Demi-largeur."}, "hy": {"type": "number", "desc": "Demi-hauteur."},
-        "cy": {"type": "number|nil", "desc": "Décalage du centre en t (0 par défaut)."}
+        "hx": {
+          "type": "number",
+          "desc": "Half-width."
+        },
+        "hy": {
+          "type": "number",
+          "desc": "Half-height."
+        },
+        "cy": {
+          "type": "number|nil",
+          "desc": "Center offset in t (0 by default)."
+        }
       },
-      "returns": [{"type": "table", "desc": "8 points."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "8 points."
+        }
+      ]
     },
     "turnPath": {
-      "desc": "Quart de tour en plan : entre le long de +X à l'origine, sort vers `sy` sur Y. La section est portée sans se dérouler, donc une gouttière reste droite dans le virage.",
+      "desc": "Quarter turn in plan: enters along +X at the origin, exits toward `sy` on Y. The section is carried without unrolling, so a gutter stays straight in the turn.",
       "params": {
-        "R": {"type": "number", "desc": "Rayon du virage."}, "sy": {"type": "number", "desc": "Côté du virage sur Y (signe)."},
-        "ang": {"type": "number", "desc": "Angle total en radians."}, "segs": {"type": "integer", "desc": "Nombre de segments."}
+        "R": {
+          "type": "number",
+          "desc": "Turn radius."
+        },
+        "sy": {
+          "type": "number",
+          "desc": "Side of the turn on Y (sign)."
+        },
+        "ang": {
+          "type": "number",
+          "desc": "Total angle in radians."
+        },
+        "segs": {
+          "type": "integer",
+          "desc": "Number of segments."
+        }
       },
-      "returns": [{"type": "table", "desc": "segs + 1 repères."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "segs + 1 frames."
+        }
+      ]
     },
     "kinkPath": {
-      "desc": "Un coude dans le plan vertical : entre le long de +Z à l'origine, ressort en penchant vers -Y (vers l'extérieur du mur).",
+      "desc": "An elbow in the vertical plane: enters along +Z at the origin, exits leaning toward -Y (toward the outside of the wall).",
       "params": {
-        "R": {"type": "number", "desc": "Rayon du coude."}, "ang": {"type": "number", "desc": "Angle total en radians."},
-        "segs": {"type": "integer", "desc": "Nombre de segments."}
+        "R": {
+          "type": "number",
+          "desc": "Elbow radius."
+        },
+        "ang": {
+          "type": "number",
+          "desc": "Total angle in radians."
+        },
+        "segs": {
+          "type": "integer",
+          "desc": "Number of segments."
+        }
       },
-      "returns": [{"type": "table", "desc": "segs + 1 repères."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "segs + 1 frames."
+        }
+      ]
     }
   }
 }

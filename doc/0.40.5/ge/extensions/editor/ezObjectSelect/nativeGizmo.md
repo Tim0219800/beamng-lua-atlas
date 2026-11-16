@@ -1,55 +1,55 @@
 # `editor_ezObjectSelect_nativeGizmo`
 
-*Fichier : `lua/ge/extensions/editor/ezObjectSelect/nativeGizmo.lua` · VM : Game Engine (GE) · 375 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ezObjectSelect/nativeGizmo.lua` · VM: Game Engine (GE) · 375 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ezObjectSelect_nativeGizmo` : `extensions.load("editor_ezObjectSelect_nativeGizmo")`, puis la globale `editor_ezObjectSelect_nativeGizmo`
+**Access:** extension `editor_ezObjectSelect_nativeGizmo`: `extensions.load("editor_ezObjectSelect_nativeGizmo")`, then the global `editor_ezObjectSelect_nativeGizmo`
 
-Enveloppe de l'outil Easy Select autour du gizmo d'axes natif de l'éditeur (editor.updateAxisGizmo / drawAxisGizmo). Capture les transformations/échelles de la sélection au début du glisser, applique translation (avec snap grille), rotation et échelle pendant le glisser, puis à la fin enregistre des actions d'historique annulables (SetObjectTransform / SetObjectScale, transaction « EasySelectNativeTransform » ou « EasySelectNativeScale ») et émet le hook onEditorObjectSelectionTransformChanged. Les offsets de prefab sont mis à jour pour les objets contenus dans un prefab.
+Wrapper of the Easy Select tool around the editor's native axis gizmo (editor.updateAxisGizmo / drawAxisGizmo). Captures the transforms/scales of the selection at the start of the drag, applies translation (with grid snap), rotation and scale during the drag, then at the end records undoable history actions (SetObjectTransform / SetObjectScale, transaction "EasySelectNativeTransform" or "EasySelectNativeScale") and emits the hook onEditorObjectSelectionTransformChanged. Prefab offsets are updated for objects contained in a prefab.
 
-## Remarques
+## Notes
 
-- Le snap grille/rotation natif est désactivé pendant la mise à jour du gizmo puis restauré ; Alt gauche force le snap traditionnel. Le snap grille est appliqué par ce module lui-même (options.gridSnapEnabled, gridRelative, gridSize), en relatif ou en absolu selon gridRelative.
-- Si la sélection change pendant un glisser, l'état est restauré (reset) et le gizmo ne dessine rien cette frame.
-- Un simple clic sans mouvement ne crée aucune action d'historique.
+- The native grid/rotation snap is disabled during the gizmo update then restored; left Alt forces traditional snap. Grid snap is applied by this module itself (options.gridSnapEnabled, gridRelative, gridSize), relative or absolute depending on gridRelative.
+- If the selection changes during a drag, the state is restored (reset) and the gizmo draws nothing this frame.
+- A simple click without movement creates no history action.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ezObjectSelect_nativeGizmo.consumeFinished()` | Lit et efface l'indicateur « glisser terminé cette frame ». | 355 |
-| `editor_ezObjectSelect_nativeGizmo.draw(options)` | À appeler chaque frame : vérifie que la sélection correspond au glisser capturé et que les objets supportent le mode courant (position/rotation/scale non vides, editor.canManipulateObject), met à jour le gizmo avec les options de snap puis le dessine. | 332 |
-| `editor_ezObjectSelect_nativeGizmo.isInteracting()` | Indique si un glisser du gizmo est en cours. | 351 |
-| `editor_ezObjectSelect_nativeGizmo.reset()` | Annule le glisser en cours : restaure transformations et échelles d'origine, efface les indicateurs et annule l'interaction du gizmo. | 363 |
+| `editor_ezObjectSelect_nativeGizmo.consumeFinished()` | Reads and clears the "drag ended this frame" flag. | 355 |
+| `editor_ezObjectSelect_nativeGizmo.draw(options)` | To be called every frame: checks that the selection matches the captured drag and that the objects support the current mode (non-empty position/rotation/scale, editor.canManipulateObject), updates the gizmo with the snap options then draws it. | 332 |
+| `editor_ezObjectSelect_nativeGizmo.isInteracting()` | Indicates whether a gizmo drag is in progress. | 351 |
+| `editor_ezObjectSelect_nativeGizmo.reset()` | Cancels the current drag: restores original transforms and scales, clears the flags and cancels the gizmo interaction. | 363 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_ezObjectSelect_nativeGizmo.consumeFinished()`
 
-Lit et efface l'indicateur « glisser terminé cette frame ».
+Reads and clears the "drag ended this frame" flag.
 
-- **renvoie** : boolean true si un glisser s'est terminé
-- **renvoie** : table|nil {mode, anchorDistance} (distance de translation appliquée, 0 hors translation) si des changements ont été validés
+- **returns**: boolean true if a drag ended
+- **returns**: table|nil {mode, anchorDistance} (applied translation distance, 0 outside translation) if changes were committed
 
 #### `editor_ezObjectSelect_nativeGizmo.draw(options)`
 
-À appeler chaque frame : vérifie que la sélection correspond au glisser capturé et que les objets supportent le mode courant (position/rotation/scale non vides, editor.canManipulateObject), met à jour le gizmo avec les options de snap puis le dessine.
+To be called every frame: checks that the selection matches the captured drag and that the objects support the current mode (non-empty position/rotation/scale, editor.canManipulateObject), updates the gizmo with the snap options then draws it.
 
 - `options` (*table|nil*) : {gridSnapEnabled, gridRelative, gridSize, rotateSnapEnabled, rotateSnapSize}
-- **renvoie** : boolean false si rien n'a été dessiné (sélection changée ou mode non supporté), sinon true
+- **returns**: boolean false if nothing was drawn (selection changed or mode not supported), otherwise true
 
 #### `editor_ezObjectSelect_nativeGizmo.isInteracting()`
 
-Indique si un glisser du gizmo est en cours.
+Indicates whether a gizmo drag is in progress.
 
-- **renvoie** : boolean 
+- **returns**: boolean 
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onEditorObjectSelectionTransformChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `upcast`
 - `obj:` `getField`, `getScale`, `getTransform`, `setScale`, `setTransform`
@@ -58,4 +58,4 @@ Indique si un glisser du gizmo est en cours.
 - `worldEditorCppApi.` `getAxisGizmoScaleOffset`, `getAxisGizmoTranslateOffset`, `getGridSize`, `getRotateSnapAngle`, `setAxisGizmoSelectedElement`, `setGridSnap`, `setRotateSnap`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ezObjectSelect/nativeGizmo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ezObjectSelect/nativeGizmo.lua`.*

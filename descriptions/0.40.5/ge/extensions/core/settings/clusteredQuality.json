@@ -1,21 +1,26 @@
 {
   "path": "lua/ge/extensions/core/settings/clusteredQuality.lua",
-  "module": "Préréglages de qualité pour l'éclairage « clustered » (lumières locales groupées) et leurs ombres. Chaque niveau (Lowest, Low, Normal, High, Ultra) fixe des propriétés de l'objet moteur global ClusterShading. Utilisé par le système de réglages graphiques (graphic.lua) ; un moddeur peut appeler applyLevel directement.",
+  "module": "Quality presets for \"clustered\" lighting (grouped local lights) and their shadows. Each level (Lowest, Low, Normal, High, Ultra) sets properties of the global engine object ClusterShading. Used by the graphics settings system (graphic.lua); a modder can call applyLevel directly.",
   "usage": "core_settings_clusteredQuality.applyLevel(\"High\")",
   "notes": [
-    "Si ClusterShading n'existe pas ou si le niveau est inconnu, applyLevel ne fait rien (retour silencieux).",
-    "Contrairement aux autres modules de qualité, il n'utilise pas VariableRegistry : il écrit directement dans ClusterShading."
+    "If ClusterShading does not exist or the level is unknown, applyLevel does nothing (silent return).",
+    "Unlike the other quality modules, it does not use VariableRegistry: it writes directly to ClusterShading."
   ],
   "fields": {
     "qualityLevels": {
       "type": "table<string, table>",
-      "desc": "Préréglages par nom de niveau. Chaque entrée contient minLightScreenSize (taille écran minimale d'une lumière, fraction), lightFlares (boolean), shadowMaxCasters (nombre max de lumières projetant une ombre), shadowFallbackFrames (nombre d'images), shadowOversample (facteur de suréchantillonnage), shadowBubble (facteur). Niveaux : Lowest, Low, Normal, High, Ultra."
+      "desc": "Presets by level name. Each entry contains minLightScreenSize (minimum screen size of a light, fraction), lightFlares (boolean), shadowMaxCasters (max number of lights casting a shadow), shadowFallbackFrames (number of frames), shadowOversample (oversampling factor), shadowBubble (factor). Levels: Lowest, Low, Normal, High, Ultra."
     }
   },
   "functions": {
     "applyLevel": {
-      "desc": "Copie le préréglage du niveau demandé dans les propriétés de ClusterShading (minLightScreenSize, lightFlares, shadowMaxCasters, shadowFallbackFrames, shadowOversample, shadowBubble).",
-      "params": {"level": {"type": "string", "desc": "Nom du niveau : Lowest, Low, Normal, High ou Ultra."}},
+      "desc": "Copies the preset of the requested level into the ClusterShading properties (minLightScreenSize, lightFlares, shadowMaxCasters, shadowFallbackFrames, shadowOversample, shadowBubble).",
+      "params": {
+        "level": {
+          "type": "string",
+          "desc": "Level name: Lowest, Low, Normal, High or Ultra."
+        }
+      },
       "returns": [],
       "internal": false
     }

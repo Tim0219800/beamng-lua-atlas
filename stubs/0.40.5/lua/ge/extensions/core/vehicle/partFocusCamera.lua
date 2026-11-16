@@ -2,90 +2,90 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/vehicle/partFocusCamera.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_vehicle_partFocusCamera` : pilote le mode caméra caché 'partFocus' depuis le menu de pièces. À partir des pièces sélectionnées, calcule une boîte englobante (taille d'après les meshes, position d'après les noeuds jbeam, qui suivent le véhicule en direct), règle la distance de la caméra pour la cadrer (FOV 35°, marge 1,2) et la déplace en douceur. Les demandes attendent 0,5 s que la sélection se stabilise, sauf option immediate. Rend la caméra au joueur quand la sélection reste vide.
---- Accès : extension `core_vehicle_partFocusCamera` : `extensions.load("core_vehicle_partFocusCamera")`, puis la globale `core_vehicle_partFocusCamera`
+--- GE extension `core_vehicle_partFocusCamera`: drives the hidden camera mode 'partFocus' from the parts menu. From the selected parts, computes a bounding box (size from the meshes, position from the jbeam nodes, which follow the vehicle live), sets the camera distance to frame it (FOV 35°, margin 1.2) and moves it smoothly. Requests wait 0.5 s for the selection to stabilize, unless the immediate option is set. Gives the camera back to the player when the selection stays empty.
+--- Access: extension `core_vehicle_partFocusCamera`: `extensions.load("core_vehicle_partFocusCamera")`, then the global `core_vehicle_partFocusCamera`
 ---@class core_vehicle_partFocusCamera
----@field debugDrawPivot boolean false par défaut ; true marque le centre de la boîte d'une sphère.
+---@field debugDrawPivot boolean false by default; true marks the center of the box with a sphere.
 ---@field dependencies string[] {'core_vehicle_configTarget'}
----@field onExtensionUnloaded function Alias de clear.
----@field onSerialize function Alias de clear.
----@field updateInterval number Intervalle de remesure de la boîte, en secondes (0.1).
+---@field onExtensionUnloaded function Alias of clear.
+---@field onSerialize function Alias of clear.
+---@field updateInterval number Box re-measure interval, in seconds (0.1).
 core_vehicle_partFocusCamera = {}
 
---- Annule les demandes, quitte le mode partFocus (retour à la caméra précédente, 'orbit' par défaut) et retire l'action map PartCamera.
----Source : lua/ge/extensions/core/vehicle/partFocusCamera.lua:354
+--- Cancels the requests, leaves the partFocus mode (back to the previous camera, 'orbit' by default) and removes the PartCamera action map.
+---Source: lua/ge/extensions/core/vehicle/partFocusCamera.lua:354
 function core_vehicle_partFocusCamera.clear() end
 
---- Renvoie et remet à zéro les crans de zoom accumulés (appelée par le mode caméra).
----Source : lua/ge/extensions/core/vehicle/partFocusCamera.lua:437
----@return number  crans accumulés
+--- Returns and resets the accumulated zoom notches (called by the camera mode).
+---Source: lua/ge/extensions/core/vehicle/partFocusCamera.lua:437
+---@return number  accumulated notches
 function core_vehicle_partFocusCamera.consumeZoomSteps() end
 
---- Demande à la caméra de cadrer un ensemble de pièces. Les demandes identiques répétées sont ignorées (pas de redémarrage du délai). Une liste vide revient à release().
----Source : lua/ge/extensions/core/vehicle/partFocusCamera.lua:312
----@param inVehId integer véhicule
----@param partNames table<string, boolean> [chemin de pièce] = true
----@param selectedMeshes table|nil meshes des pièces (fournis par core_vehicle_partmgmt), utilisés pour mesurer la taille
----@param playerId integer|nil joueur dont la caméra est pilotée
----@param cameraOptions table|nil voir notes : immediate, focusOffsetUp, distanceMultiplier, preserveDistance
+--- Asks the camera to frame a set of parts. Repeated identical requests are ignored (the delay is not restarted). An empty list falls back to release().
+---Source: lua/ge/extensions/core/vehicle/partFocusCamera.lua:312
+---@param inVehId integer vehicle
+---@param partNames table<string, boolean> [part path] = true
+---@param selectedMeshes table|nil part meshes (provided by core_vehicle_partmgmt), used to measure the size
+---@param playerId integer|nil player whose camera is driven
+---@param cameraOptions table|nil see notes: immediate, focusOffsetUp, distanceMultiplier, preserveDistance
 function core_vehicle_partFocusCamera.focusOnParts(inVehId, partNames, selectedMeshes, playerId, cameraOptions) end
 
---- Indique si la caméra de pièces est active (un véhicule est cadré).
----Source : lua/ge/extensions/core/vehicle/partFocusCamera.lua:429
----@return boolean  true si active
+--- Indicates whether the part camera is active (a vehicle is framed).
+---Source: lua/ge/extensions/core/vehicle/partFocusCamera.lua:429
+---@return boolean  true if active
 function core_vehicle_partFocusCamera.isActive() end
 
---- Hook par frame : décompte le délai d'attente (temps réel, car le menu de configuration tourne souvent en pause) puis applique la demande ou libère la caméra.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/vehicle/partFocusCamera.lua:477
----@param dtReal number temps réel écoulé (s)
+--- Per-frame hook: counts down the wait delay (real time, because the configuration menu often runs paused) then applies the request or releases the camera.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/vehicle/partFocusCamera.lua:477
+---@param dtReal number real elapsed time (s)
 function core_vehicle_partFocusCamera.onUpdate(dtReal) end
 
---- Hook : la cible de configuration change ; libère la caméra.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/vehicle/partFocusCamera.lua:515
+--- Hook: the configuration target changes; releases the camera.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/vehicle/partFocusCamera.lua:515
 function core_vehicle_partFocusCamera.onVehicleConfigTargetChanged() end
 
---- Hook : le véhicule cadré est détruit ; libère la caméra.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/vehicle/partFocusCamera.lua:497
----@param destroyedId integer véhicule
+--- Hook: the framed vehicle is destroyed; releases the camera.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/vehicle/partFocusCamera.lua:497
+---@param destroyedId integer vehicle
 function core_vehicle_partFocusCamera.onVehicleDestroyed(destroyedId) end
 
---- Hook : le véhicule est remis à zéro ; force une remesure immédiate de la boîte.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/vehicle/partFocusCamera.lua:490
----@param resettedId integer véhicule
+--- Hook: the vehicle is reset; forces an immediate re-measure of the box.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/vehicle/partFocusCamera.lua:490
+---@param resettedId integer vehicle
 function core_vehicle_partFocusCamera.onVehicleResetted(resettedId) end
 
---- Hook : le véhicule cadré est recréé ; garde la dernière pose de caméra.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/vehicle/partFocusCamera.lua:503
----@param spawnedId integer véhicule
+--- Hook: the framed vehicle is recreated; keeps the last camera pose.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/vehicle/partFocusCamera.lua:503
+---@param spawnedId integer vehicle
 function core_vehicle_partFocusCamera.onVehicleSpawned(spawnedId) end
 
---- Hook : le joueur piloté quitte le véhicule cadré ; libère la caméra.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/vehicle/partFocusCamera.lua:509
----@param oldId integer ancien véhicule
----@param newId integer nouveau véhicule
----@param player integer joueur
+--- Hook: the driven player leaves the framed vehicle; releases the camera.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/vehicle/partFocusCamera.lua:509
+---@param oldId integer old vehicle
+---@param newId integer new vehicle
+---@param player integer player
 function core_vehicle_partFocusCamera.onVehicleSwitched(oldId, newId, player) end
 
---- Rend la caméra au joueur une fois que la sélection reste vide pendant settleDelay (0,5 s), ou immédiatement.
----Source : lua/ge/extensions/core/vehicle/partFocusCamera.lua:343
----@param immediate boolean|nil true : libère tout de suite (clear)
+--- Gives the camera back to the player once the selection stays empty for settleDelay (0.5 s), or immediately.
+---Source: lua/ge/extensions/core/vehicle/partFocusCamera.lua:343
+---@param immediate boolean|nil true: releases right away (clear)
 function core_vehicle_partFocusCamera.release(immediate) end
 
---- Appelée par le mode caméra partFocus à chaque frame : remesure périodiquement la boîte, reconstruit la boîte en repère monde, la dessine et fixe le point de visée de la caméra.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/vehicle/partFocusCamera.lua:446
----@param dt number temps écoulé (s)
----@param cam table|nil objet mode caméra (setRef, setDefaultDistance, retarget)
+--- Called by the partFocus camera mode every frame: periodically re-measures the box, rebuilds the box in world space, draws it and sets the camera's aim point.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/vehicle/partFocusCamera.lua:446
+---@param dt number elapsed time (s)
+---@param cam table|nil camera mode object (setRef, setDefaultDistance, retarget)
 function core_vehicle_partFocusCamera.updateTarget(dt, cam) end
 
---- Ajoute des crans de molette (zoom) à appliquer par le mode caméra.
----Source : lua/ge/extensions/core/vehicle/partFocusCamera.lua:433
----@param value number nombre de crans (signe = sens)
+--- Adds mouse wheel notches (zoom) to be applied by the camera mode.
+---Source: lua/ge/extensions/core/vehicle/partFocusCamera.lua:433
+---@param value number number of notches (sign = direction)
 function core_vehicle_partFocusCamera.zoomStep(value) end
 

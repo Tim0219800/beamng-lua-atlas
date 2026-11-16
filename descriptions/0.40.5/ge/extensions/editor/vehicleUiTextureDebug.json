@@ -1,21 +1,24 @@
 {
   "path": "lua/ge/extensions/editor/vehicleUiTextureDebug.lua",
-  "module": "Outil de debug de l'éditeur (menu Window > Vehicles > « Vehicle UI Textures »). Il liste les véhicules, puis les tags de textures UI HTML (écrans CEF dessinés sur les véhicules) actifs du véhicule choisi. Pour un tag, il permet d'ouvrir/fermer la console de la texture, d'exporter la texture en PNG et d'afficher les infos de debug (fps, taille, mode d'usage, URL de départ).",
+  "module": "Editor debug tool (Window > Vehicles > \"Vehicle UI Textures\" menu). It lists the vehicles, then the active HTML UI texture tags (CEF screens drawn on vehicles) of the chosen vehicle. For a tag, it lets you open/close the texture's console, export the texture as PNG and show the debug info (fps, size, usage mode, start URL).",
   "notes": [
-    "Méthodes du véhicule utilisées : getActiveUITextureTagNames, getConsoleOpenUITexture, openConsoleUITexture(tag, bool), dumpCEFTexture(tag, fichier), getActiveUITextureDebugInfo(tag).",
-    "Le bouton « Dump texture » écrit /vehicle_ui_<tag>_<date UTC>.png dans le système de fichiers du jeu.",
-    "Bug : le code appelle log(\"I\", logTag, ...) alors que logTag n'est pas défini dans le fichier (nil sauf si une globale logTag existe)."
+    "Vehicle methods used: getActiveUITextureTagNames, getConsoleOpenUITexture, openConsoleUITexture(tag, bool), dumpCEFTexture(tag, file), getActiveUITextureDebugInfo(tag).",
+    "The \"Dump texture\" button writes /vehicle_ui_<tag>_<UTC date>.png to the game's file system.",
+    "Bug: the code calls log(\"I\", logTag, ...) while logTag is not defined in the file (nil unless a global logTag exists)."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "{'ui_imgui'} : extension chargée avant celle-ci."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "{'ui_imgui'}: extension loaded before this one."
+    }
   },
   "functions": {
     "onEditorInitialized": {
-      "desc": "Hook de l'éditeur appelé à l'initialisation. Récupère ui_imgui, enregistre la fenêtre 'Vehicle UI Textures' (520x420) et ajoute l'entrée de menu dans le groupe 'Vehicles'.",
+      "desc": "Editor hook called at initialization. Gets ui_imgui, registers the 'Vehicle UI Textures' window (520x420) and adds the menu entry in the 'Vehicles' group.",
       "internal": true
     },
     "onEditorGui": {
-      "desc": "Hook de l'éditeur appelé à chaque frame : dessine les listes déroulantes de véhicule et de tag, les boutons console/dump et les informations de debug.",
+      "desc": "Editor hook called every frame: draws the vehicle and tag dropdown lists, the console/dump buttons and the debug information.",
       "internal": true
     }
   }

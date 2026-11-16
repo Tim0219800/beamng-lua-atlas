@@ -1,59 +1,59 @@
 {
   "path": "lua/ge/extensions/core/vehicle/partpreview.lua",
-  "module": "Extension GE `core_vehicle_partpreview` : aperçu temporaire de pièces dans l'UI de configuration (survol dans les partpacks), sans respawn du véhicule. Compare les meshes (flexbodies) de la pièce actuelle d'un slot avec ceux d'une pièce candidate, masque les meshes de la pièce actuelle (alpha 0) et affiche ceux de la candidate (alpha 1), en mémorisant les alphas d'origine pour les restaurer.",
-  "usage": "-- Aperçu de deux pièces candidates (slot -> nom de pièce)\ncore_vehicle_partpreview.previewPartMeshes({['pickup_hood'] = 'pickup_hood_vented'})\n-- Retour à l'état normal\ncore_vehicle_partpreview.clearPartPreview()",
+  "module": "GE extension `core_vehicle_partpreview`: temporary preview of parts in the configuration UI (hover in partpacks), without respawning the vehicle. Compares the meshes (flexbodies) of a slot's current part with those of a candidate part, hides the current part's meshes (alpha 0) and shows the candidate's (alpha 1), remembering the original alphas to restore them.",
+  "usage": "-- Preview of two candidate parts (slot -> part name)\ncore_vehicle_partpreview.previewPartMeshes({['pickup_hood'] = 'pickup_hood_vented'})\n-- Back to normal state\ncore_vehicle_partpreview.clearPartPreview()",
   "notes": [
-    "Les clés de partsBySlot sont les identifiants de slot (id du noeud de partsTree), les valeurs sont des noms de pièces jbeam.",
-    "previewPartMeshes appelle dump(...) et getFlexmeshChanges (qui logue en niveau I) à chaque appel : sortie de log bruyante, apparemment laissée de côté lors du développement.",
-    "L'aperçu ne change que l'alpha des meshes (flexbodies et props) : aucune pièce n'est réellement installée, la physique et le jbeam du véhicule ne changent pas."
+    "The keys of partsBySlot are slot identifiers (id of the partsTree node), the values are jbeam part names.",
+    "previewPartMeshes calls dump(...) and getFlexmeshChanges (which logs at level I) on every call: noisy log output, apparently left over from development.",
+    "The preview only changes the alpha of the meshes (flexbodies and props): no part is actually installed, the vehicle's physics and jbeam do not change."
   ],
   "fields": {},
   "functions": {
     "clearPartPreview": {
-      "desc": "Restaure l'alpha d'origine de tous les meshes modifiés par l'aperçu pour le véhicule et oublie l'état.",
+      "desc": "Restores the original alpha of all meshes modified by the preview for the vehicle and forgets the state.",
       "params": {
         "inVehID": {
           "type": "integer|nil",
-          "desc": "véhicule ; nil = joueur 0"
+          "desc": "vehicle; nil = player 0"
         }
       },
       "returns": []
     },
     "getFlexmeshChanges": {
-      "desc": "Calcule quels meshes de flexbodies disparaissent ou apparaissent si les pièces candidates remplaçaient les pièces actuelles de leurs slots.",
+      "desc": "Computes which flexbody meshes disappear or appear if the candidate parts replaced the current parts of their slots.",
       "params": {
         "partsBySlot": {
           "type": "table<string, string>",
-          "desc": "[slot] = nom de pièce candidate (valeurs vides ignorées)"
+          "desc": "[slot] = candidate part name (empty values ignored)"
         },
         "inVehID": {
           "type": "integer|nil",
-          "desc": "véhicule ; nil = joueur 0"
+          "desc": "vehicle; nil = player 0"
         }
       },
       "returns": [
         {
           "type": "table[]",
-          "desc": "liste de {slotName, oldPartName, newPartName, oldMesh, newMesh} (oldMesh nil = nouveau mesh ; newMesh nil = mesh supprimé)"
+          "desc": "list of {slotName, oldPartName, newPartName, oldMesh, newMesh} (oldMesh nil = new mesh; newMesh nil = removed mesh)"
         }
       ]
     },
     "previewPartMeshes": {
-      "desc": "Affiche l'aperçu des pièces candidates : efface l'aperçu précédent, masque les meshes de la pièce actuelle de chaque slot et affiche ceux de la candidate (meshes de flexbodies et de props).",
+      "desc": "Shows the preview of the candidate parts: clears the previous preview, hides the current part's meshes for each slot and shows those of the candidate (flexbody and prop meshes).",
       "params": {
         "partsBySlot": {
           "type": "table<string, string>",
-          "desc": "[slot] = nom de pièce candidate"
+          "desc": "[slot] = candidate part name"
         },
         "inVehID": {
           "type": "integer|nil",
-          "desc": "véhicule ; nil = joueur 0"
+          "desc": "vehicle; nil = player 0"
         }
       },
       "returns": []
     },
     "reset": {
-      "desc": "Oublie tous les états d'aperçu mémorisés, sans restaurer les alphas (à utiliser quand les véhicules ont été recréés).",
+      "desc": "Forgets all stored preview states, without restoring the alphas (use when vehicles have been recreated).",
       "params": {},
       "returns": []
     }

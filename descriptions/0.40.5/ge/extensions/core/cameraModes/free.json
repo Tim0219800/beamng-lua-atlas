@@ -1,29 +1,161 @@
 {
   "path": "lua/ge/extensions/core/cameraModes/free.lua",
-  "module": "Caméra libre (vol libre, caméra globale du groupe « world », masquée, ordre 10). Position et rotation sont pilotées par MoveManager (translation right/left/forward/backward/up/down + axes absolus, rotation yaw/pitch/roll) avec une physique « newtonienne » optionnelle (force, masse, traînée) pour la translation et la rotation ; mode lissé (setSmoothedCam(true), utilisé par smoothFree) plus mou. Mode de translation planaire optionnel qui suit la hauteur du terrain (core_terrain). Un manualzoom (FOV 65 par défaut) gère le zoom. Renvoie un constructeur.",
-  "usage": "local cam = core_camera.getCameraDataById ... -- ou directement :\nlocal free = require('core/cameraModes/free')()\nfree:setPosition(vec3(0, 0, 100))\nfree:setRotation(quatFromDir(vec3(0, 1, 0)))\nfree:setFOV(70)",
-  "notes": ["Vitesse de translation : ((speed^2)/30)/40 (speed = data.speed du contexte, triplée avec data.fastSpeedModifier) ; sans physique newtonienne la vitesse vaut cette valeur * 15 m/s.", "Paramètres par défaut non lissé : angularForce 400, angularDrag 16, mass 1, translationForce 250, translationDrag 17 ; lissé : 150, 2.5, 10, 600, 2.", "self.rot est un vec3 (yaw, pitch, roll en radians), pitch limité à ±1.5706. setRotation inverse le signe de y (conversion YXZ).", "La page extraite indique setPlanarTranslationInput(active) mais le code est setPlanarTranslationInput(velocity, active)."],
+  "module": "Free camera (free flight, global camera of the 'world' group, hidden, order 10). Position and rotation are driven by MoveManager (translation right/left/forward/backward/up/down + absolute axes, rotation yaw/pitch/roll) with optional 'Newtonian' physics (force, mass, drag) for translation and rotation; a smoothed mode (setSmoothedCam(true), used by smoothFree) is softer. Optional planar translation mode that follows the terrain height (core_terrain). A manualzoom (FOV 65 by default) handles zoom. Returns a constructor.",
+  "usage": "local cam = core_camera.getCameraDataById ... -- or directly:\nlocal free = require('core/cameraModes/free')()\nfree:setPosition(vec3(0, 0, 100))\nfree:setRotation(quatFromDir(vec3(0, 1, 0)))\nfree:setFOV(70)",
+  "notes": [
+    "Translation speed: ((speed^2)/30)/40 (speed = the context's data.speed, tripled with data.fastSpeedModifier); without Newtonian physics the speed is this value * 15 m/s.",
+    "Default non-smoothed parameters: angularForce 400, angularDrag 16, mass 1, translationForce 250, translationDrag 17; smoothed: 150, 2.5, 10, 600, 2.",
+    "self.rot is a vec3 (yaw, pitch, roll in radians), pitch limited to ±1.5706. setRotation inverts the sign of y (YXZ conversion).",
+    "The extracted page says setPlanarTranslationInput(active) but the code is setPlanarTranslationInput(velocity, active)."
+  ],
   "classes": {
     "C": {
-      "desc": "Mode caméra libre. Champs : pos (vec3), rot (vec3 radians), velocity, angularVelocity, planarVelocity, manualzoom, smoothed, newtonTranslation, newtonRotation, planarTranslation (et planarTranslationScale/Drag/Response/SpeedMultiplier pour le mode planaire), group = 'world', groupOrder.",
+      "desc": "Free camera mode. Fields: pos (vec3), rot (vec3 radians), velocity, angularVelocity, planarVelocity, manualzoom, smoothed, newtonTranslation, newtonRotation, planarTranslation (and planarTranslationScale/Drag/Response/SpeedMultiplier for the planar mode), group = 'world', groupOrder.",
       "functions": {
-        "init": {"desc": "Définit les valeurs par défaut (isGlobal, group, hidden, canUseVehicleTriggerCrosshair, physique non lissée) puis reset.", "internal": true},
-        "reset": {"desc": "Annule vitesses et roulis, recrée le zoom manuel à 65 degrés."},
-        "setSmoothedCam": {"desc": "Choisit le jeu de paramètres de physique (lissé ou non lissé).", "params": {"smoothed": {"type": "boolean", "desc": "vrai pour le mode cinématique lissé"}}},
-        "setPosition": {"desc": "Fixe la position de la caméra (la table est conservée par référence).", "params": {"position": {"type": "vec3", "desc": "position monde"}}},
-        "setRotation": {"desc": "Fixe l'orientation depuis un quaternion.", "params": {"rotation": {"type": "quat", "desc": "orientation monde"}}},
-        "setFOV": {"desc": "Réinitialise le zoom manuel avec ce FOV.", "params": {"fovDeg": {"type": "number", "desc": "degrés"}}},
-        "setNewtonRotation": {"desc": "Active la rotation avec inertie.", "params": {"enabled": {"type": "boolean", "desc": "activer"}}},
-        "setNewtonTranslation": {"desc": "Active la translation avec inertie.", "params": {"enabled": {"type": "boolean", "desc": "activer"}}},
-        "listParams": {"desc": "Réglages exposés à l'UI de contrôle caméra / flux vidéo : speed (2-100 m/s, lu via core_camera.getSpeed), smooth, newtonRot, newtonTrans, fov (10-140).", "params": {"ctxId": {"type": "any", "desc": "identifiant du contexte de vue (déduit du code)"}}, "returns": [{"type": "table[]", "desc": "descripteurs de paramètres"}]},
-        "setParam": {"desc": "Modifie un réglage de listParams (speed passe par core_camera.setSpeed).", "params": {"key": {"type": "string", "desc": "speed, smooth, fov, newtonRot, newtonTrans"}, "value": {"type": "any", "desc": "nouvelle valeur"}, "ctxId": {"type": "any", "desc": "contexte de vue"}}},
-        "clearMotion": {"desc": "Annule les vitesses de translation, planaire et angulaire."},
-        "clearAngularMotion": {"desc": "Annule la vitesse angulaire."},
-        "setPlanarTranslationInput": {"desc": "Fournit une vitesse planaire externe (par exemple depuis un gamepad) pour l'image ; effacée après chaque update.", "params": {"velocity": {"type": "vec3|nil", "desc": "vitesse monde"}, "active": {"type": "boolean", "desc": "vrai pour l'appliquer (sinon remise à zéro)"}}},
-        "clearPlanarTranslationInput": {"desc": "Annule l'entrée planaire externe."},
-        "clearPlanarTranslationMotion": {"desc": "Annule la vitesse planaire et l'entrée planaire externe."},
-        "onCameraChanged": {"desc": "Hook : au gain de focus, appelle reset.", "params": {"focused": {"type": "boolean", "desc": "vrai si le mode prend le focus"}}, "internal": true},
-        "update": {"desc": "Intègre rotation et translation à partir de MoveManager et écrit data.res.pos / rot, puis applique le zoom.", "params": {"data": {"type": "table", "desc": "camData (data.speed, data.fastSpeedModifier lus)"}}, "returns": [{"type": "boolean", "desc": "true"}], "internal": true}
+        "init": {
+          "desc": "Sets the default values (isGlobal, group, hidden, canUseVehicleTriggerCrosshair, non-smoothed physics) then reset.",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Cancels velocities and roll, recreates the manual zoom at 65 degrees."
+        },
+        "setSmoothedCam": {
+          "desc": "Chooses the physics parameter set (smoothed or non-smoothed).",
+          "params": {
+            "smoothed": {
+              "type": "boolean",
+              "desc": "true for the smoothed cinematic mode"
+            }
+          }
+        },
+        "setPosition": {
+          "desc": "Sets the camera position (the table is kept by reference).",
+          "params": {
+            "position": {
+              "type": "vec3",
+              "desc": "world position"
+            }
+          }
+        },
+        "setRotation": {
+          "desc": "Sets the orientation from a quaternion.",
+          "params": {
+            "rotation": {
+              "type": "quat",
+              "desc": "world orientation"
+            }
+          }
+        },
+        "setFOV": {
+          "desc": "Resets the manual zoom with this FOV.",
+          "params": {
+            "fovDeg": {
+              "type": "number",
+              "desc": "degrees"
+            }
+          }
+        },
+        "setNewtonRotation": {
+          "desc": "Enables rotation with inertia.",
+          "params": {
+            "enabled": {
+              "type": "boolean",
+              "desc": "enable"
+            }
+          }
+        },
+        "setNewtonTranslation": {
+          "desc": "Enables translation with inertia.",
+          "params": {
+            "enabled": {
+              "type": "boolean",
+              "desc": "enable"
+            }
+          }
+        },
+        "listParams": {
+          "desc": "Settings exposed to the camera control UI / video stream: speed (2-100 m/s, read via core_camera.getSpeed), smooth, newtonRot, newtonTrans, fov (10-140).",
+          "params": {
+            "ctxId": {
+              "type": "any",
+              "desc": "view context identifier (inferred from code)"
+            }
+          },
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "parameter descriptors"
+            }
+          ]
+        },
+        "setParam": {
+          "desc": "Changes a listParams setting (speed goes through core_camera.setSpeed).",
+          "params": {
+            "key": {
+              "type": "string",
+              "desc": "speed, smooth, fov, newtonRot, newtonTrans"
+            },
+            "value": {
+              "type": "any",
+              "desc": "new value"
+            },
+            "ctxId": {
+              "type": "any",
+              "desc": "view context"
+            }
+          }
+        },
+        "clearMotion": {
+          "desc": "Cancels the translation, planar and angular velocities."
+        },
+        "clearAngularMotion": {
+          "desc": "Cancels the angular velocity."
+        },
+        "setPlanarTranslationInput": {
+          "desc": "Provides an external planar velocity (for example from a gamepad) for the frame; cleared after each update.",
+          "params": {
+            "velocity": {
+              "type": "vec3|nil",
+              "desc": "world velocity"
+            },
+            "active": {
+              "type": "boolean",
+              "desc": "true to apply it (otherwise reset to zero)"
+            }
+          }
+        },
+        "clearPlanarTranslationInput": {
+          "desc": "Cancels the external planar input."
+        },
+        "clearPlanarTranslationMotion": {
+          "desc": "Cancels the planar velocity and the external planar input."
+        },
+        "onCameraChanged": {
+          "desc": "Hook: on focus gain, calls reset.",
+          "params": {
+            "focused": {
+              "type": "boolean",
+              "desc": "true if the mode takes focus"
+            }
+          },
+          "internal": true
+        },
+        "update": {
+          "desc": "Integrates rotation and translation from MoveManager and writes data.res.pos / rot, then applies the zoom.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "camData (data.speed, data.fastSpeedModifier read)"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true"
+            }
+          ],
+          "internal": true
+        }
       }
     }
   }

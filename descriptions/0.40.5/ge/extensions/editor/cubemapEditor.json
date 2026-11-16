@@ -1,16 +1,34 @@
 {
   "path": "lua/ge/extensions/editor/cubemapEditor.lua",
-  "module": "Éditeur de cubemaps du World Editor (menu Assets > « Cubemap Editor », fenêtre « cubemapEditor »). Il liste les objets de classe CubemapData du niveau, permet de créer, enregistrer et supprimer un cubemap, d'assigner chacune des 6 faces (glisser-déposer ou bouton), et de capturer les 6 faces depuis la position de la caméra (captureCameraCubemap, résolution 128 à 2048 px, puissance de 2) avant de les assigner automatiquement. Il exporte aussi les données dans un fichier main.materials.json. Peut être ouvert par un autre outil via show(onSelectCb) pour choisir un cubemap.",
-  "usage": "editor_cubemapEditor.show(function(nom) print('cubemap choisi : '..nom) end, 'monCubemap')",
+  "module": "World Editor cubemap editor (Assets > \"Cubemap Editor\" menu, \"cubemapEditor\" window). It lists the CubemapData class objects of the level, lets you create, save and delete a cubemap, assign each of the 6 faces (drag and drop or button), and capture the 6 faces from the camera position (captureCameraCubemap, resolution 128 to 2048 px, power of 2) before assigning them automatically. It also exports the data to a main.materials.json file. Can be opened by another tool via show(onSelectCb) to pick a cubemap.",
+  "usage": "editor_cubemapEditor.show(function(name) print('chosen cubemap: '..name) end, 'myCubemap')",
   "notes": [
-    "Les fichiers de faces capturées doivent s'appeler <préfixe><0..5>.hdr.dds ; si l'un manque, l'assignation échoue avec un message d'erreur de statut.",
-    "Ordre des faces affiché : 0 +X droite, 1 -X gauche, 2 -Y arrière, 3 +Y avant, 4 +Z haut, 5 -Z bas.",
-    "Le dossier de base par défaut est <chemin du niveau>/art/cubemaps/<nom du datablock> ; il est créé s'il n'existe pas.",
-    "La position de capture est mémorisée dans le champ captureLocation (« x,y,z »), utilisé par le bouton « Go to cubemap location »."
+    "Captured face files must be named <prefix><0..5>.hdr.dds; if one is missing, the assignment fails with a status error message.",
+    "Face order displayed: 0 +X right, 1 -X left, 2 -Y back, 3 +Y front, 4 +Z up, 5 -Z down.",
+    "The default base folder is <level path>/art/cubemaps/<datablock name>; it is created if it does not exist.",
+    "The capture position is stored in the captureLocation field (\"x,y,z\"), used by the \"Go to cubemap location\" button."
   ],
   "functions": {
-    "show": {"desc": "Ouvre la fenêtre de l'éditeur de cubemaps. Charge la liste des cubemaps au premier appel, présélectionne celui dont le nom est donné (sinon le premier si rien n'est sélectionné). Si un callback est fourni, la fenêtre affiche des boutons Select/Cancel ; Select appelle le callback avec le nom du cubemap et ferme la fenêtre.", "params": {"onSelectCb": {"type": "function|nil", "desc": "appelé avec le nom (string) du cubemap choisi"}, "preselectName": {"type": "string|nil", "desc": "nom du cubemap à présélectionner"}}},
-    "onEditorInitialized": {"desc": "Hook appelé à l'initialisation du World Editor : enregistre la fenêtre (750x380, masquée) et l'entrée de menu « Cubemap Editor » dans le groupe Assets.", "internal": true},
-    "onEditorGui": {"desc": "Hook appelé à chaque frame de l'éditeur : dessine la fenêtre.", "internal": true}
+    "show": {
+      "desc": "Opens the cubemap editor window. Loads the cubemap list on the first call, preselects the one whose name is given (otherwise the first if nothing is selected). If a callback is provided, the window shows Select/Cancel buttons; Select calls the callback with the cubemap name and closes the window.",
+      "params": {
+        "onSelectCb": {
+          "type": "function|nil",
+          "desc": "called with the name (string) of the chosen cubemap"
+        },
+        "preselectName": {
+          "type": "string|nil",
+          "desc": "name of the cubemap to preselect"
+        }
+      }
+    },
+    "onEditorInitialized": {
+      "desc": "Hook called at World Editor initialization: registers the window (750x380, hidden) and the \"Cubemap Editor\" menu entry in the Assets group.",
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Hook called every editor frame: draws the window.",
+      "internal": true
+    }
   }
 }

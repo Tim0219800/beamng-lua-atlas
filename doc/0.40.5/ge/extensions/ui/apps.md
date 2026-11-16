@@ -1,47 +1,47 @@
 # `ui_apps`
 
-*Fichier : `lua/ge/extensions/ui/apps.lua` · VM : Game Engine (GE) · 252 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/apps.lua` · VM: Game Engine (GE) · 252 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_apps` : `extensions.load("ui_apps")`, puis la globale `ui_apps`
+**Access:** extension `ui_apps`: `extensions.load("ui_apps")`, then the global `ui_apps`
 
-Catalogue des apps d'interface (Vue/JS) installées. getUIAppsData parcourt /ui/modules/apps/ à la recherche de app.json, de app.vue et des variantes app.<directive>.vue, et construit une table indexée par nom d'app (types traduits, aperçus, fichiers vue/js, indicateurs interactive/essential/photomode…). Le module surveille aussi /settings/ui_apps/ et prévient l'interface quand un layout change.
+Catalog of installed interface apps (Vue/JS). getUIAppsData walks /ui/modules/apps/ looking for app.json, app.vue and the app.<directive>.vue variants, and builds a table keyed by app name (translated types, previews, vue/js files, interactive/essential/photomode flags…). The module also watches /settings/ui_apps/ and notifies the interface when a layout changes.
 
-## Remarques
+## Notes
 
-- Un app.json sans domElement ou sans directive est ignoré avec une erreur dans le log.
-- Les apps sans app.json mais avec un app.vue (ou app.<variante>.vue) sont ajoutées comme apps « sourceOnly » (catégorie Embedded, auxiliaires, cachées du navigateur d'apps).
-- Les clés de position css autorisées dans app.json sont left, right, top, bottom, width, height et margin ; les autres sont supprimées.
-- Une app dont le champ simplemenu ne correspond pas à Engine.UI.isSimpleMenu() est exclue.
-- Un avertissement est journalisé si getUIAppsData dépasse 100 ms.
+- An app.json without domElement or without directive is ignored with an error in the log.
+- Apps without app.json but with an app.vue (or app.<variant>.vue) are added as "sourceOnly" apps (Embedded category, auxiliary, hidden from the app browser).
+- The css position keys allowed in app.json are left, right, top, bottom, width, height and margin; the others are removed.
+- An app whose simplemenu field does not match Engine.UI.isSimpleMenu() is excluded.
+- A warning is logged if getUIAppsData takes more than 100 ms.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_apps.getUIAppsData()` | Construit et renvoie le catalogue des apps disponibles, indexé par appName. | 214 |
-| `ui_apps.notifyLayoutsChanged()` | Envoie l'événement UI 'UiAppLayoutsChanged' pour que l'interface relise les layouts. | 222 |
-| `ui_apps.onFilesChanged(files)` | Hook appelé quand des fichiers changent : si un fichier est sous /settings/ui_apps/, programme un rafraîchissement des layouts 0,2 s plus tard. *(interne)* *(hook)* | 228 |
-| `ui_apps.onUpdate()` | Hook de frame : déclenche notifyLayoutsChanged quand le délai programmé par onFilesChanged est écoulé. *(interne)* *(hook)* | 238 |
+| `ui_apps.getUIAppsData()` | Builds and returns the catalog of available apps, keyed by appName. | 214 |
+| `ui_apps.notifyLayoutsChanged()` | Sends the UI event 'UiAppLayoutsChanged' so that the interface rereads the layouts. | 222 |
+| `ui_apps.onFilesChanged(files)` | Hook called when files change: if a file is under /settings/ui_apps/, schedules a layout refresh 0.2 s later. *(internal)* *(hook)* | 228 |
+| `ui_apps.onUpdate()` | Frame hook: triggers notifyLayoutsChanged when the delay scheduled by onFilesChanged has elapsed. *(internal)* *(hook)* | 238 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_apps.getUIAppsData()`
 
-Construit et renvoie le catalogue des apps disponibles, indexé par appName.
+Builds and returns the catalog of available apps, keyed by appName.
 
-- **renvoie** : table<string, table> Données de chaque app (appName, directive, types, typesTranslated, folder, vueFile, hasAppVue, hasAppJs, interactive, essential, isAuxiliary, photomode, official, previews…).
+- **returns**: table<string, table> Data of each app (appName, directive, types, typesTranslated, folder, vueFile, hasAppVue, hasAppJs, interactive, essential, isAuxiliary, photomode, official, previews…).
 
 #### `ui_apps.onFilesChanged(files)`
 
-Hook appelé quand des fichiers changent : si un fichier est sous /settings/ui_apps/, programme un rafraîchissement des layouts 0,2 s plus tard.
+Hook called when files change: if a file is under /settings/ui_apps/, schedules a layout refresh 0.2 s later.
 
-- `files` (*table<integer, table>*) : Liste d'entrées avec un champ filename.
+- `files` (*table<integer, table>*) : List of entries with a filename field.
 
-**Évènements UI (guihooks.trigger) :** `UiAppLayoutsChanged`
+**UI events (guihooks.trigger):** `UiAppLayoutsChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/apps.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/apps.lua`.*

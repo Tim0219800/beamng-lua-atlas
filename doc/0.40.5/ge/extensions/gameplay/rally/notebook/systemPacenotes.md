@@ -1,54 +1,54 @@
 # `gameplay_rally_notebook_systemPacenotes`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/notebook/systemPacenotes.lua` · VM : Game Engine (GE) · 144 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/notebook/systemPacenotes.lua` · VM: Game Engine (GE) · 144 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_notebook_systemPacenotes` : `extensions.load("gameplay_rally_notebook_systemPacenotes")`, puis la globale `gameplay_rally_notebook_systemPacenotes`
+**Access:** extension `gameplay_rally_notebook_systemPacenotes`: `extensions.load("gameplay_rally_notebook_systemPacenotes")`, then the global `gameplay_rally_notebook_systemPacenotes`
 
-Détient la liste canonique des noms de pacenotes « système » du rallye (compte à rebours, avertissements de départ, vérifications radio/ceintures, faux départ…) et valide le tableau `system` d'un style de carnet. Chaque style doit fournir tous les noms de `required`, dans cet ordre ; les noms inconnus, doublons ou variantes sans texte sont rejetés. Utile à un moddeur qui écrit un style de copilote dans une nouvelle langue.
+Holds the canonical list of rally "system" pacenote names (countdown, start warnings, radio/belt checks, false start…) and validates the `system` array of a notebook style. Each style must provide all the names in `required`, in that order; unknown names, duplicates or variants without text are rejected. Useful to a modder writing a co-driver style in a new language.
 
-## Exemple
+## Example
 
 ```lua
 local sp = require('gameplay_rally_notebook_systemPacenotes')
 local system = sp.localized({ countdown5 = 'Cinq', countdowngo = {'Go', 'Partez'} })
-local ok = sp.validate(system, 'monStyle') -- false : les autres noms sont vides
+local ok = sp.validate(system, 'monStyle') -- false: the other names are empty
 ```
 
-## Remarques
+## Notes
 
-- L'ordre de M.required est imposé : validate exige que system[i].name == required[i].
-- localized() produit des entrées avec variants = {} pour les noms absents de la table ; validate les refuse ensuite (variants non vide obligatoire).
-- validate journalise l'erreur avec log('E', 'systemPacenotes', ...) et renvoie false dès la première anomalie.
+- The order of M.required is enforced: validate requires system[i].name == required[i].
+- localized() produces entries with variants = {} for names absent from the table; validate then rejects them (non-empty variants required).
+- validate logs the error with log('E', 'systemPacenotes', ...) and returns false at the first anomaly.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_notebook_systemPacenotes.localized(localized)` | Construit le tableau ordonné `system` d'un style à partir d'une table compacte nom -> texte. Chaque valeur peut être une chaîne, une table {text=...}, ou une liste de chaînes/tables (variantes). Les noms manquants ou de type invalide donnent une liste de variantes vide. | 70 |
-| `gameplay_rally_notebook_systemPacenotes.validate(systemArray, styleName)` | Vérifie qu'un tableau `system` est une liste ordonnée complète : entrées-tables avec `name` chaîne, noms reconnus, dans l'ordre de `required`, sans doublon, avec une liste `variants` non vide dont chaque élément a un `text` non vide. | 82 |
+| `gameplay_rally_notebook_systemPacenotes.localized(localized)` | Builds a style's ordered `system` array from a compact name -> text table. Each value can be a string, a {text=...} table, or a list of strings/tables (variants). Missing or invalid-type names give an empty variants list. | 70 |
+| `gameplay_rally_notebook_systemPacenotes.validate(systemArray, styleName)` | Checks that a `system` array is a complete ordered list: table entries with a string `name`, recognized names, in the order of `required`, without duplicates, with a non-empty `variants` list in which every element has a non-empty `text`. | 82 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_notebook_systemPacenotes.localized(localized)`
 
-Construit le tableau ordonné `system` d'un style à partir d'une table compacte nom -> texte. Chaque valeur peut être une chaîne, une table {text=...}, ou une liste de chaînes/tables (variantes). Les noms manquants ou de type invalide donnent une liste de variantes vide.
+Builds a style's ordered `system` array from a compact name -> text table. Each value can be a string, a {text=...} table, or a list of strings/tables (variants). Missing or invalid-type names give an empty variants list.
 
-- `localized` (*table<string, string|table>|nil*) : Textes localisés indexés par nom de pacenote système.
-- **renvoie** : table[] Liste de { name = string, variants = { {text=string,...}, ... } } dans l'ordre de `required`.
+- `localized` (*table<string, string|table>|nil*) : Localized texts keyed by system pacenote name.
+- **returns**: table[] List of { name = string, variants = { {text=string,...}, ... } } in the order of `required`.
 
 #### `gameplay_rally_notebook_systemPacenotes.validate(systemArray, styleName)`
 
-Vérifie qu'un tableau `system` est une liste ordonnée complète : entrées-tables avec `name` chaîne, noms reconnus, dans l'ordre de `required`, sans doublon, avec une liste `variants` non vide dont chaque élément a un `text` non vide.
+Checks that a `system` array is a complete ordered list: table entries with a string `name`, recognized names, in the order of `required`, without duplicates, with a non-empty `variants` list in which every element has a non-empty `text`.
 
-- `systemArray` (*table*) : Tableau à valider (typiquement renvoyé par localized).
-- `styleName` (*string|nil*) : Nom du style pour les messages de log ("?" par défaut).
-- **renvoie** : boolean true si valide, false sinon (erreur journalisée).
+- `systemArray` (*table*) : Array to validate (typically returned by localized).
+- `styleName` (*string|nil*) : Style name for log messages ("?" by default).
+- **returns**: boolean true if valid, false otherwise (error logged).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `required` | string[] | Noms obligatoires, dans l'ordre : precountdown, countdown5 à countdown1, countdowngo, warningSeconds60/30/15/10, commsCheck, beltsCheck, rescheduled, falseStart (15 entrées). |
+| `required` | string[] | Required names, in order: precountdown, countdown5 to countdown1, countdowngo, warningSeconds60/30/15/10, commsCheck, beltsCheck, rescheduled, falseStart (15 entries). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/notebook/systemPacenotes.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/notebook/systemPacenotes.lua`.*

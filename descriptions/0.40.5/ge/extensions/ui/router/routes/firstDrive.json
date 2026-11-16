@@ -1,23 +1,23 @@
 {
   "path": "lua/ge/extensions/ui/router/routes/firstDrive.lua",
-  "module": "Routes de la première conduite guidée (Vue) : introduction, onboarding, arrivée, fin, récupération, zones d'apprentissage. Les retours sont verrouillés (`firstDriveLockedHandler`) sauf onboarding (previousRouteBackHandler). Les hooks onMount/onEnter/onLeave appellent gameplay_discover_firstDrive_experience.",
+  "module": "Routes of the guided first drive (Vue): introduction, onboarding, arrival, completion, recovery, learning areas. Back is locked (`firstDriveLockedHandler`) except onboarding (previousRouteBackHandler). The onMount/onEnter/onLeave hooks call gameplay_discover_firstDrive_experience.",
   "notes": [
-    "Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = \"<nom>\" }`.",
-    "Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.",
-    "`ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change."
+    "Route configuration module: it exports no function. routeManager reads it (via the ui_router_routes_<name> extension) when routes.lua includes it with `{ include = \"<name>\" }`.",
+    "The keys of `Children` form the segments of the dotted name: \"<module>.<child>\". `children` (lowercase) in a node designates its sub-routes; `include` mounts another module there.",
+    "`ui` is inherited by child routes (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause): a child redefines it only for what changes."
   ],
   "fields": {
     "Root": {
       "type": "table",
-      "desc": "{screenId = \"firstDrive\", onMount = \"gameplay_discover_firstDrive_experience.onFirstDriveRouteMount\", back = handler firstDriveLockedHandler, scopeTree first-drive-intro, ui = Vue, barres masquées, uiApps masquées, triggerPause = false}"
+      "desc": "{screenId = \"firstDrive\", onMount = \"gameplay_discover_firstDrive_experience.onFirstDriveRouteMount\", back = handler firstDriveLockedHandler, scopeTree first-drive-intro, ui = Vue, bars hidden, uiApps hidden, triggerPause = false}"
     },
     "Children": {
       "type": "table<string, table>",
-      "desc": "onboarding (infoBar visible), arrival, completion (onMount dédiés, retour verrouillé), recovery (backTarget play, onLeave onFirstDriveRecoveryRouteLeave), learning (backTarget pause, onEnter/onLeave dédiés, triggerPause = true, scope first-drive-learning-areas)."
+      "desc": "onboarding (infoBar visible), arrival, completion (dedicated onMount, locked back), recovery (backTarget play, onLeave onFirstDriveRecoveryRouteLeave), learning (backTarget pause, dedicated onEnter/onLeave, triggerPause = true, scope first-drive-learning-areas)."
     },
     "ModuleName": {
       "type": "string",
-      "desc": "Nom du module de routes (premier segment du nom pointé)."
+      "desc": "Name of the routes module (first segment of the dotted name)."
     }
   }
 }

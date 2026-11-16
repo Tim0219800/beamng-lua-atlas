@@ -1,6 +1,8 @@
 {
   "path": "lua/common/libs/lua-websockets/websocket/server.lua",
-  "module": "Sélecteur de backend serveur WebSocket de lua-websockets. Renvoie une table dont le __index charge à la demande 'websocket/server_copas' ou 'websocket/server_ev' selon le nom demandé (server.copas, server.ev) ; tout autre nom renvoie nil.",
+  "module": "WebSocket server backend selector of lua-websockets. Returns a table whose __index loads 'websocket/server_copas' or 'websocket/server_ev' on demand according to the requested name (server.copas, server.ev); any other name returns nil.",
   "usage": "local server = require('libs/lua-websockets/websocket.server')\nserver.copas.listen({port = 8080, default = function(client) end})",
-  "notes": ["Le backend est mis en cache dans la table après le premier accès."]
+  "notes": [
+    "The backend is cached in the table after the first access."
+  ]
 }

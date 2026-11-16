@@ -1,0 +1,98 @@
+{
+  "path": "lua/vehicle/controller/drivingDynamics/actuators/electronicDiffLock.lua",
+  "module": "Actionneur de la Driving Dynamics Suite : différentiel à verrouillage électronique par freinage (EDL, « brake-based » : on freine la roue qui patine pour transférer le couple). À chaque étape physique intermédiaire, il compare les vitesses des deux sorties corrigées du rayon de braquage (`CMU.vehicleData.turningCircleSpeedRatios`) ; si l'écart dépasse `avDiffThreshold` sous accélérateur (> 0.05), un PID calcule un coefficient de freinage appliqué en `desiredBrakingTorque` aux roues du côté le plus rapide. Ordre d'appel : `defaultOrder = 80`.",
+  "notes": [
+    "Clés jbeam lues par init : `avDiffThreshold` (5 rad/s), `avThreshold` (1 rad/s : somme minimale des vitesses de sortie), `brakingPIDkP` (0), `brakingPIDkI` (0.1), `brakingPIDkD` (0), `name`. Lue par initSecondStage : `differentialName`.",
+    "Le freinage maximal est borné par `overrideMax` (1 par défaut) et par le `brakeTorque` de chaque roue ; une roue `isBroken` n'est pas freinée.",
+    "Particularité : `overrideMin` n'est jamais défini ni utilisé dans ce fichier avant un appel à resetOverride (qui le met à 0) ; seul `overrideMax` borne réellement le freinage.",
+    "Nécessite `CMU.vehicleData` ; sans CMU enregistré initSecondStage appelle shutdown. `shutdown` retire updateGFX et updateWheelsIntermediate (nil).",
+    "`reset` remet `overrideMax` à 1 mais ne touche pas aux lisseurs ni au PID."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "80."},
+    "isActive": {"type": "boolean", "desc": "true si le différentiel et ses roues ont été trouvés."},
+    "isActing": {"type": "boolean", "desc": "true si l'écart de vitesse justifie un freinage."},
+    "overrideMax": {"type": "number", "desc": "Plafond du coefficient de freinage imposé par un superviseur (1 par défaut)."}
+  },
+  "functions": {
+    "resetOverride": {
+      "desc": "Remet les bornes d'override : overrideMin = 0, overrideMax = 1.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "updateWheelsIntermediate": {
+      "desc": "Étape physique intermédiaire : calcule les vitesses de sortie corrigées, le coefficient de freinage (PID) et ajoute le couple de freinage aux roues du côté qui patine.",
+      "params": {"dt": {"type": "number", "desc": "Pas en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Chaque frame : rien d'utile. Variante debug : envoie les valeurs au CMU.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "shutdown": {
+      "desc": "Arrête l'actionneur.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet isActing à false et overrideMax à 1.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Lit les paramètres jbeam et crée le PID de freinage.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "initSecondStage": {
+      "desc": "Retrouve le différentiel (`differentialName`) et les roues de chaque sortie ; active le système.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "registerCMU": {
+      "desc": "Appelée par le CMU pour donner une référence vers lui.",
+      "params": {"cmu": {"type": "table", "desc": "Module CMU."}},
+      "returns": [],
+      "internal": true
+    },
+    "setDebugMode": {
+      "desc": "Active ou désactive l'envoi de paquets de debug.",
+      "params": {"debugEnabled": {"type": "boolean", "desc": "true pour envoyer."}},
+      "returns": [],
+      "internal": true
+    },
+    "setParameters": {
+      "desc": "Modifie à chaud avDiffThreshold, avThreshold, isEnabled et brakingPIDkP/kI/kD (via CMU.applyParameter).",
+      "params": {"parameters": {"type": "table", "desc": "Table des paramètres à changer."}},
+      "returns": [],
+      "internal": false
+    },
+    "setConfig": {
+      "desc": "Remplace toute la table de paramètres.",
+      "params": {"configTable": {"type": "table", "desc": "Nouveaux paramètres."}},
+      "returns": [],
+      "internal": true
+    },
+    "getConfig": {
+      "desc": "Renvoie une copie des paramètres.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Copie profonde."}],
+      "internal": false
+    },
+    "sendConfigData": {
+      "desc": "Envoie les paramètres au CMU dans un paquet de debug config.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

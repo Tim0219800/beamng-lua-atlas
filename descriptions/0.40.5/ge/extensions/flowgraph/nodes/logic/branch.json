@@ -1,12 +1,12 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/logic/branch.lua",
-  "module": "Noeud flowgraph 'Branch' (categorie logic) : un 'if'. Si le flux d'entree est actif, laisse passer le flux par la sortie True ou False selon le pin bool 'condition'. Le pin de sortie 'flow' (cache) suit simplement l'entree. S'execute a chaque frame.",
+  "module": "Flowgraph node 'Branch' (logic category): an 'if'. If the input flow is active, lets the flow through the True or False output depending on the bool pin 'condition'. The (hidden) 'flow' output pin simply follows the input. Runs every frame.",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "work": {
-          "desc": "Si flow est vrai : flow en sortie = flow, True = condition, False = not condition. Sinon toutes les sorties passent a false.",
+          "desc": "If flow is true: output flow = flow, True = condition, False = not condition. Otherwise all outputs go to false.",
           "internal": true
         }
       }

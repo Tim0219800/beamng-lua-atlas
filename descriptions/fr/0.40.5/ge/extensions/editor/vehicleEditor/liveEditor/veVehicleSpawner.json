@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veVehicleSpawner.lua",
+  "module": "Outil 'Other/Vehicle Spawner' du Vehicle Editor live. Au chargement de l'éditeur il mémorise jusqu'à 20 véhicules (Car ou Truck) de core_vehicles.getVehicleList. La fenêtre permet de faire apparaître un véhicule à la position/orientation de la caméra (fenêtre 'Select Vehicle'), de choisir un point sur le terrain (molette = rotation de 5°) puis d'y aligner tous les véhicules de la liste (espacés de 10 m), et de tout supprimer ('Despawn All').",
+  "notes": [
+    "Les véhicules apparaissent avec le frein à main relâché (input.event('parkingbrake', 0, 1)).",
+    "Seuls les véhicules créés par 'Spawn Vehicles' sont suivis dans vehsData et supprimés par 'Despawn All' ; ceux créés depuis 'Select Vehicle' ne sont pas enregistrés.",
+    "Bug mineur : `hit = cameraMouseRayCast(...)` est affecté sans `local` (globale `hit`).",
+    "Un bouton par véhicule de vehsList : au maximum 20 modèles proposés."
+  ],
+  "fields": {
+    "menuEntry": {"type": "string", "desc": "'Other/Vehicle Spawner'."}
+  },
+  "functions": {
+    "onUpdate": {"desc": "Appelé chaque frame : dessine la fenêtre, les repères de départ et la fenêtre de sélection de véhicule.", "internal": true},
+    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
+    "onEditorInitialized": {"desc": "Appelé à l'initialisation de l'éditeur : remplit vehsList avec les 20 premiers véhicules Car/Truck.", "internal": true},
+    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
+    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+  }
+}

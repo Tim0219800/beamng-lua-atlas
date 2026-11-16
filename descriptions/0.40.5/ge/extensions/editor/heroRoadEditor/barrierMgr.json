@@ -1,37 +1,71 @@
 {
   "path": "lua/ge/extensions/editor/heroRoadEditor/barrierMgr.lua",
-  "module": "Gestionnaire du mobilier de bord de route (glissières, clôtures, lampadaires) d'un groupe du Hero Road Editor. Il lit les bords de maillage du groupe (meshEdgeL/R, meshEdgeDirL/R, meshEdgeUp) et pose des pièces via editor/toolUtilities/roadsideProps (pools transitoires identifiés par id..'bL', 'fL', 'lL'…). Il gère les rails de toute la route (onglet Furniture) et les segments de barrière placés (onglet Features, group.barriers).",
+  "module": "Manager of the roadside furniture (guardrails, fences, lampposts) of a Hero Road Editor group. It reads the group's mesh edges (meshEdgeL/R, meshEdgeDirL/R, meshEdgeUp) and places pieces via editor/toolUtilities/roadsideProps (transient pools identified by id..'bL', 'fL', 'lL'...). It handles the rails of the whole road (Furniture tab) and the placed barrier segments (Features tab, group.barriers).",
   "notes": [
-    "Décalage vertical (enfouissement) par type de barrière : guardrail -0.35 m, jersey 0.0, plastic -0.15 m ; s'ajoute au zOffsetM du segment.",
-    "Valeurs par défaut du groupe : barrierOffsetM 0.5, fenceOffsetM 0.7, lampOffsetM 1.0 (mètres, décalage latéral vers l'extérieur depuis le bord).",
-    "Les types valent 'none' si absents ; 'none' ne pose rien. Les lampadaires sont ancrés aux deux extrémités (lockEnds) avec espacement group.lampSpacingM.",
-    "Une route cuite (baked) n'a plus de pièces dans les pools : counts renvoie alors 0."
+    "Vertical offset (burial) per barrier type: guardrail -0.35 m, jersey 0.0, plastic -0.15 m; added to the segment's zOffsetM.",
+    "Group defaults: barrierOffsetM 0.5, fenceOffsetM 0.7, lampOffsetM 1.0 (meters, lateral offset outward from the edge).",
+    "The types are 'none' if absent; 'none' places nothing. The lampposts are anchored at both ends (lockEnds) with spacing group.lampSpacingM.",
+    "A baked road no longer has pieces in the pools: counts then returns 0."
   ],
   "functions": {
     "updateGroup": {
-      "desc": "(Re)construit barrières, clôtures et lampadaires du groupe d'après les bords du maillage actuel et les sélections. Appelé après la reconstruction du maillage ; ne fait rien si le groupe n'a pas de dossier scenetree (sceneTreeFolderId).",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road (id, sceneTreeFolderId, meshEdgeL/R, barrierLeftType, fenceLeftType, lampLeftType, barriers…)."}},
+      "desc": "(Re)builds the group's barriers, fences and lampposts from the current mesh edges and the selections. Called after the mesh is rebuilt; does nothing if the group has no scenetree folder (sceneTreeFolderId).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group (id, sceneTreeFolderId, meshEdgeL/R, barrierLeftType, fenceLeftType, lampLeftType, barriers...)."
+        }
+      },
       "internal": false
     },
     "counts": {
-      "desc": "Nombre de pièces actuellement posées pour le groupe, par catégorie, côtés cumulés. Lit les pools transitoires (donc l'aperçu éditable).",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Number of pieces currently placed for the group, per category, both sides combined. Reads the transient pools (so the editable preview).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "returns": [
-        {"type": "integer", "desc": "Nombre de barrières."},
-        {"type": "integer", "desc": "Nombre de clôtures."},
-        {"type": "integer", "desc": "Nombre de lampadaires."}
+        {
+          "type": "integer",
+          "desc": "Number of barriers."
+        },
+        {
+          "type": "integer",
+          "desc": "Number of fences."
+        },
+        {
+          "type": "integer",
+          "desc": "Number of lampposts."
+        }
       ],
       "internal": false
     },
     "removeGroup": {
-      "desc": "Supprime tout le mobilier posé du groupe (démontage ou moins de 2 nœuds).",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Removes all the furniture placed for the group (teardown or fewer than 2 nodes).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
     "burnGroup": {
-      "desc": "« Burn » : rend persistantes (canSave=true) les pièces actuelles via props.commitPool et les détache des pools transitoires. Renvoie le manifeste des noms, que exportMgr stocke lors du bake.",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
-      "returns": [{"type": "table", "desc": "Tableau des identifiants/noms d'objets de scène créés (vide si le groupe est invalide)."}],
+      "desc": "\"Burn\": makes the current pieces persistent (canSave=true) via props.commitPool and detaches them from the transient pools. Returns the manifest of names, which exportMgr stores during the bake.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Array of identifiers/names of created scene objects (empty if the group is invalid)."
+        }
+      ],
       "internal": false
     }
   }

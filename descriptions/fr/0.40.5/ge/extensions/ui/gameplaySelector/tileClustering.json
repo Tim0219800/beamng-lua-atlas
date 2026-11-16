@@ -1,0 +1,67 @@
+{
+  "path": "lua/ge/extensions/ui/gameplaySelector/tileClustering.lua",
+  "module": "Regroupe les éléments du sélecteur de gameplay en « clusters » (par niveau, par type ou automatiquement selon le système) et fabrique la tuile représentant chaque cluster : nom, aperçu, nombre d'éléments, favori/récent le plus haut, chemin de navigation (gotoPath), icônes de source. Utilisé par ui_gameplaySelector_general, qui doit d'abord appeler setBackend avec un backend exposant isFavourite(key) et isRecent(key).",
+  "notes": [
+    "Modes de clustering : 'level' (item.level), 'type' (item.type), 'automatic' (selon item.system) et 'none' (tout dans « None »). Valeur par défaut d'un groupe : \"Other...\".",
+    "Mode automatic : campaigns et « Other Gameplay » -> « None » (pas de regroupement) ; freeroam, scenarios, scenariosMultiplayer -> par niveau ; challenges -> par type ; sinon par niveau si présent.",
+    "Un item est de la forme {key, name, preview, system, level, type, ...} ; un cluster est {itemsByKey, count, list}.",
+    "getClusteredItemsStats : si tous les items sont des freeroamSpawnpoint et que l'un est le point de départ par défaut, son aperçu est utilisé ; si tous ont le même missionTypeLabel, l'aperçu par défaut de la mission est utilisé ; avec sortMode 'Name' le premier par nom ; sinon le premier trouvé (ordre de pairs, non déterministe).",
+    "clusterItems appelle clusterModeFunctions[clusterMode] sans test : un mode inconnu lève une erreur Lua.",
+    "Aucun champ non défini ; M.clusterItems, createTileFromClusteredItems et getClusterModeFunction sont définis directement avec function M.x, les trois autres via la section « Public API »."
+  ],
+  "functions": {
+    "setBackend": {
+      "desc": "Enregistre le backend utilisé pour savoir si un item est favori ou récent (backend.isFavourite(key), backend.isRecent(key)).",
+      "params": {"_backend": {"type": "table", "desc": "Backend du sélecteur (ui_gameplaySelector_general ou équivalent)."}}
+    },
+    "clusterItems": {
+      "desc": "Répartit les items dans des clusters selon le mode donné.",
+      "params": {
+        "items": {"type": "table", "desc": "Items à regrouper (parcourus avec pairs), chacun avec un champ key."},
+        "clusterMode": {"type": "string", "desc": "'level', 'type', 'automatic' ou 'none'."}
+      },
+      "returns": [{"type": "table<string, {itemsByKey: table, count: integer, list: table}>", "desc": "Clusters indexés par nom de groupe."}]
+    },
+    "createTileFromClusteredItems": {
+      "desc": "Construit la tuile d'un cluster selon le mode (level, type ou automatic).",
+      "params": {
+        "clusteredItems": {"type": "table", "desc": "Un cluster {itemsByKey, count, list}."},
+        "group": {"type": "table", "desc": "Groupe parent : key, gotoParams, isRecentGroup, isFavouriteGroup."},
+        "clusterMode": {"type": "string", "desc": "'level', 'type' ou 'automatic'."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Tuile {key, name, preview, subElementCount, favouriteIdx, recentIdx, gotoPath, showFavouriteIconPercent, doubleClickDetails, doubleClickMode, sourceIcons, isAuxiliary, ...} ; nil pour un mode sans tuile ('none')."}]
+    },
+    "getClusterModeFunction": {
+      "desc": "Renvoie la fonction qui donne le nom de groupe d'un item pour un mode.",
+      "params": {"clusterMode": {"type": "string", "desc": "'level', 'type', 'automatic' ou 'none'."}},
+      "returns": [{"type": "function|nil", "desc": "function(item) -> string, nil si mode inconnu."}]
+    },
+    "getClusteredItemsFavouriteIconPercent": {
+      "desc": "Calcule les statistiques favoris/récents d'un cluster.",
+      "params": {"clusteredItems": {"type": "table", "desc": "Un cluster {itemsByKey, count, list}."}},
+      "returns": [
+        {"type": "number", "desc": "Plus haut indice de favori (0 si aucun)."},
+        {"type": "number", "desc": "Plus bas indice de récent (math.huge si aucun)."},
+        {"type": "number", "desc": "Part d'items favoris (0 à 1)."},
+        {"type": "table|nil", "desc": "Item favori au plus haut indice."},
+        {"type": "table|nil", "desc": "Item le plus récent."}
+      ]
+    },
+    "getClusteredItemsStats": {
+      "desc": "Choisit l'item représentatif d'un cluster et son aperçu (image par défaut /gameplay/default/preview.jpg).",
+      "params": {
+        "clusteredItems": {"type": "table", "desc": "Un cluster {itemsByKey, count, list}."},
+        "sortMode": {"type": "string|nil", "desc": "'Name' pour prendre le premier item par ordre alphabétique."}
+      },
+      "returns": [
+        {"type": "string", "desc": "Chemin de l'aperçu."},
+        {"type": "table", "desc": "Item représentatif."}
+      ]
+    },
+    "getSourceIcons": {
+      "desc": "Collecte les icônes de source (item.sourceIcons) d'un cluster sans doublon, triées : beamNG, camshaft, puzzleModule, cup, bug d'abord, puis les autres par nom.",
+      "params": {"clusteredItems": {"type": "table", "desc": "Un cluster {itemsByKey, count, list}."}},
+      "returns": [{"type": "table[]", "desc": "Liste de {svg = chemin} (si finit par .svg) ou {icon = nom}."}]
+    }
+  }
+}

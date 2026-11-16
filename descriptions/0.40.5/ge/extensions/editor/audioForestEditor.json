@@ -1,29 +1,39 @@
 {
   "path": "lua/ge/extensions/editor/audioForestEditor.lua",
-  "module": "Mode d'édition « Audio Forest Editor » de l'éditeur de niveaux : configure un son d'ambiance de forêt à partir des arbres de l'objet Forest. L'outil construit un graphe de noeuds (espacement minimum 20 m) à partir des instances de forêt incluses, les classe en S/M/L selon le volume de leur boîte englobante, envoie ce nuage au module runtime core/audioForest et lui indique l'événement principal (défaut 'event:>Ambient>Ambiences>Forest_Static') et un éventuel « roomtone » ('event:>Ambient>Ambiences>Roomtone'). La fenêtre permet d'exclure des types d'arbres, de choisir la classe de chaque type, de régler la visualisation des noeuds et de sélectionner un type en cliquant dans la vue. L'état est persisté avec le niveau via onSerialize / onDeserialized.",
+  "module": "\"Audio Forest Editor\" edit mode of the level editor: configures a forest ambience sound from the trees of the Forest object. The tool builds a node graph (minimum spacing 20 m) from the included forest instances, classifies them as S/M/L according to the volume of their bounding box, sends this cloud to the runtime module core/audioForest and gives it the main event (default 'event:>Ambient>Ambiences>Forest_Static') and an optional \"roomtone\" ('event:>Ambient>Ambiences>Roomtone'). The window lets you exclude tree types, choose the class of each type, adjust the node visualization and select a type by clicking in the view. The state is persisted with the level through onSerialize / onDeserialized.",
   "notes": [
-    "Le fichier ne contient pratiquement que des fonctions locales ; seules 4 fonctions sont exportées (hooks).",
-    "Dépend des modules core/audioForest, core/audioForest/audioForestCommon et editor/toolUtilities/(render/markup, render/graph, style).",
-    "Les noeuds sont dessinés dans un rayon de 1000 m par défaut, sphères de 1.5 m.",
-    "À l'activation du mode, si aucun état persisté n'existe, tous les types de forêt sont inclus."
+    "The file contains almost only local functions; only 4 functions are exported (hooks).",
+    "Depends on the modules core/audioForest, core/audioForest/audioForestCommon and editor/toolUtilities/(render/markup, render/graph, style).",
+    "Nodes are drawn within a radius of 1000 m by default, as 1.5 m spheres.",
+    "When the mode is activated, if no persisted state exists, all forest types are included."
   ],
   "functions": {
     "onSerialize": {
-      "desc": "Renvoie l'état de l'outil sous forme de table (version=1, rayons de visualisation, showNodes, mainEvent, roomtoneEnabled/Event/Z, selectedRow, includeByShape, classSelByShape, classOverrideByShape) pour la persistance du niveau et le runtime.",
-      "returns": [{"type": "table", "desc": "État sérialisable de l'éditeur."}],
+      "desc": "Returns the tool state as a table (version=1, visualization radii, showNodes, mainEvent, roomtoneEnabled/Event/Z, selectedRow, includeByShape, classSelByShape, classOverrideByShape) for level persistence and the runtime.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Serializable editor state."
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Reçoit l'état persisté après chargement du niveau ; le garde en attente, marque la liste de forêt comme à rafraîchir et reconstruit le nuage de noeuds si le mode est actif. Ignore les données qui ne sont pas une table.",
-      "params": {"data": {"type": "table", "desc": "Table renvoyée précédemment par onSerialize."}},
+      "desc": "Receives the persisted state after level load; keeps it pending, marks the forest list as to be refreshed and rebuilds the node cloud if the mode is active. Ignores data that is not a table.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Table previously returned by onSerialize."
+        }
+      },
       "internal": true
     },
     "onEditorGui": {
-      "desc": "Appelé chaque frame de l'éditeur : si le mode est actif, rafraîchit la liste des types, dessine la fenêtre, gère le survol/sélection des arbres et dessine les noeuds du graphe (et le centroïde de l'émetteur principal).",
+      "desc": "Called every editor frame: if the mode is active, refreshes the type list, draws the window, handles tree hover/selection and draws the graph nodes (and the centroid of the main emitter).",
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Enregistre le mode d'édition audioForestEditMode (icône create_forest) et la fenêtre « audioForestEditor » (520x820).",
+      "desc": "Registers the audioForestEditMode edit mode (create_forest icon) and the \"audioForestEditor\" window (520x820).",
       "internal": true
     }
   }

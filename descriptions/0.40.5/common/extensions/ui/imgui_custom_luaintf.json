@@ -1,130 +1,679 @@
 {
   "path": "lua/common/extensions/ui/imgui_custom_luaintf.lua",
-  "module": "Ajouts écrits à la main à l'API ImGui (par opposition à imgui_luaintf.lua, généré). Le fichier renvoie une fonction qui reçoit la table M d'imgui_api et y définit : constructeurs de valeurs/pointeurs (ImVec2, ImVec4, BoolPtr, IntPtr, FloatPtr, DoublePtr, ArrayChar, ArrayInt, ArrayFloat), versions personnalisées de Begin/InputText/InputTextMultiline/Combo1/OpenPopup/SetDragDropPayload, gestion de polices, d'échelle, de textures, aides (ShowHelpMarker, tooltip, tooltipWrapped, HighlightText, HeaderText, BeginDisabled), wrappers de moniteur/ini, et les widgets Knob. Il est chargé après imgui_luaintf, donc ses définitions écrasent celles du fichier généré.",
-  "usage": "local im = ui_imgui\nlocal val = im.FloatPtr(0.5)\nim.SliderFloat('x', val, 0, 1)\nim.tooltip('Aide')",
+  "module": "Hand-written additions to the ImGui API (as opposed to imgui_luaintf.lua, which is generated). The file returns a function that receives the table M of imgui_api and defines in it: value/pointer constructors (ImVec2, ImVec4, BoolPtr, IntPtr, FloatPtr, DoublePtr, ArrayChar, ArrayInt, ArrayFloat), custom versions of Begin/InputText/InputTextMultiline/Combo1/OpenPopup/SetDragDropPayload, font, scale and texture handling, helpers (ShowHelpMarker, tooltip, tooltipWrapped, HighlightText, HeaderText, BeginDisabled), monitor/ini wrappers, and the Knob widgets. It is loaded after imgui_luaintf, so its definitions override those of the generated file.",
+  "usage": "local im = ui_imgui\nlocal val = im.FloatPtr(0.5)\nim.SliderFloat('x', val, 0, 1)\nim.tooltip('Help')",
   "notes": [
-    "En GE, les « pointeurs » sont de simples tables {[0] = valeur} : lire/écrire val[0]. BoolPtr/IntPtr/FloatPtr/DoublePtr renvoient {[0]=0 ou false} si le type de l'argument est incorrect (log commenté). BoolPtr convertit 0/1 en booléen.",
-    "ArrayChar(len, val) renvoie un string.buffer pré-rempli (tampon texte pour InputText) ; ffi.string(buf) ou tostring pour relire.",
-    "Begin(): flags par défaut = WindowFlags_NoFocusOnAppearing (et non 0 comme dans la version générée). Si le nom est nil, une erreur est loguée et la fonction retourne.",
-    "InputText: buf_size par défaut 2^32, flags 0 ; le callback passé est ignoré (nil transmis).",
-    "GetKeyIndex est un no-op (renvoie l'index) depuis ImGui 1.87.",
-    "GetContentRegionAvailWidth et GetWindowContentRegionWidth sont des wrappers ajoutés car supprimés de la version récente d'ImGui.",
-    "TableSetSortSpecsDirty utilise M.TableGetSortSpecs().SpecsDirty.",
-    "Bug : headerDefaultColor est construit avec ImVec4(1,0.6,0,8,0.75), soit 5 arguments (le 5e est ignoré, w vaut 8 au lieu d'un 0.8 probable).",
-    "Alias de compatibilité : SelectableFlags_AllowItemOverlap = SelectableFlags_AllowOverlap, Mod_Shortcut = Mod_Ctrl, Key_ModCtrl/Shift/Alt/Super vers Mod_*.",
-    "uiscale = {[0] = 1} : échelle d'UI globale utilisée par ui_imguiUtils et tooltipWrapped. plotLineColor = 4288453788 et plotLineBgColor = 2323270185 sont des couleurs ImU32 par défaut."
+    "In GE, \"pointers\" are plain tables {[0] = value}: read/write val[0]. BoolPtr/IntPtr/FloatPtr/DoublePtr return {[0]=0 or false} if the argument type is wrong (log commented out). BoolPtr converts 0/1 to boolean.",
+    "ArrayChar(len, val) returns a pre-filled string.buffer (text buffer for InputText); use ffi.string(buf) or tostring to read it back.",
+    "Begin(): default flags = WindowFlags_NoFocusOnAppearing (not 0 as in the generated version). If the name is nil, an error is logged and the function returns.",
+    "InputText: buf_size defaults to 2^32, flags 0; the callback passed is ignored (nil is forwarded).",
+    "GetKeyIndex is a no-op (returns the index) since ImGui 1.87.",
+    "GetContentRegionAvailWidth and GetWindowContentRegionWidth are wrappers added because they were removed from the recent ImGui version.",
+    "TableSetSortSpecsDirty uses M.TableGetSortSpecs().SpecsDirty.",
+    "Bug: headerDefaultColor is built with ImVec4(1,0.6,0,8,0.75), i.e. 5 arguments (the 5th is ignored, w is 8 instead of a probable 0.8).",
+    "Compatibility aliases: SelectableFlags_AllowItemOverlap = SelectableFlags_AllowOverlap, Mod_Shortcut = Mod_Ctrl, Key_ModCtrl/Shift/Alt/Super to Mod_*.",
+    "uiscale = {[0] = 1}: global UI scale used by ui_imguiUtils and tooltipWrapped. plotLineColor = 4288453788 and plotLineBgColor = 2323270185 are default ImU32 colors."
   ],
   "fields": {
-    "uiscale": {"type": "table<integer, number>", "desc": "Échelle d'UI globale, valeur dans uiscale[0] (1 par défaut)."},
-    "plotLineColor": {"type": "integer", "desc": "Couleur de courbe par défaut (ImU32) : 4288453788."},
-    "plotLineBgColor": {"type": "integer", "desc": "Couleur de fond de courbe par défaut (ImU32) : 2323270185."}
+    "uiscale": {
+      "type": "table<integer, number>",
+      "desc": "Global UI scale, value in uiscale[0] (1 by default)."
+    },
+    "plotLineColor": {
+      "type": "integer",
+      "desc": "Default plot line color (ImU32): 4288453788."
+    },
+    "plotLineBgColor": {
+      "type": "integer",
+      "desc": "Default plot line background color (ImU32): 2323270185."
+    }
   },
   "functions": {
-    "ImVec2": {"desc": "Crée un ImVec2 (x, y).", "params": {"x": {"type": "number", "desc": "X."}, "y": {"type": "number", "desc": "Y."}}, "returns": [{"type": "ImVec2", "desc": "Vecteur."}]},
-    "ImVec4": {"desc": "Crée un ImVec4 (x, y, z, w).", "params": {"x": {"type": "number", "desc": "X / R."}, "y": {"type": "number", "desc": "Y / G."}, "z": {"type": "number", "desc": "Z / B."}, "w": {"type": "number", "desc": "W / A."}}, "returns": [{"type": "ImVec4", "desc": "Vecteur."}]},
-    "BoolPtr": {"desc": "Crée un pointeur booléen {[0]=bool} (0/1 convertis, autre type -> false).", "params": {"x": {"type": "boolean|number", "desc": "Valeur initiale."}}, "returns": [{"type": "table", "desc": "{[0]=bool}"}]},
-    "IntPtr": {"desc": "Crée un pointeur entier {[0]=n} (0 si x n'est pas un nombre).", "params": {"x": {"type": "number", "desc": "Valeur initiale."}}, "returns": [{"type": "table", "desc": "{[0]=n}"}]},
-    "FloatPtr": {"desc": "Crée un pointeur flottant {[0]=n} (0 si x n'est pas un nombre).", "params": {"x": {"type": "number", "desc": "Valeur initiale."}}, "returns": [{"type": "table", "desc": "{[0]=n}"}]},
-    "DoublePtr": {"desc": "Crée un pointeur double {[0]=n}.", "params": {"x": {"type": "number", "desc": "Valeur initiale."}}, "returns": [{"type": "table", "desc": "{[0]=n}"}]},
-    "ArrayChar": {
-      "desc": "Crée un tampon texte (string.buffer) de taille len, éventuellement pré-rempli avec val.",
-      "params": {"len": {"type": "integer", "desc": "Taille en octets."}, "val": {"type": "string|nil", "desc": "Texte initial."}},
-      "returns": [{"type": "userdata", "desc": "string.buffer."}]
+    "ImVec2": {
+      "desc": "Creates an ImVec2 (x, y).",
+      "params": {
+        "x": {
+          "type": "number",
+          "desc": "X."
+        },
+        "y": {
+          "type": "number",
+          "desc": "Y."
+        }
+      },
+      "returns": [
+        {
+          "type": "ImVec2",
+          "desc": "Vector."
+        }
+      ]
     },
-    "ArrayInt": {"desc": "Tableau d'entiers indexé depuis 0, initialisé à 0.", "params": {"size": {"type": "integer", "desc": "Taille."}}, "returns": [{"type": "table", "desc": "Tableau [0..size-1]."}]},
-    "ArrayFloat": {"desc": "Tableau de flottants indexé depuis 0, initialisé à 0.", "params": {"size": {"type": "integer", "desc": "Taille."}}, "returns": [{"type": "table", "desc": "Tableau [0..size-1]."}]},
+    "ImVec4": {
+      "desc": "Creates an ImVec4 (x, y, z, w).",
+      "params": {
+        "x": {
+          "type": "number",
+          "desc": "X / R."
+        },
+        "y": {
+          "type": "number",
+          "desc": "Y / G."
+        },
+        "z": {
+          "type": "number",
+          "desc": "Z / B."
+        },
+        "w": {
+          "type": "number",
+          "desc": "W / A."
+        }
+      },
+      "returns": [
+        {
+          "type": "ImVec4",
+          "desc": "Vector."
+        }
+      ]
+    },
+    "BoolPtr": {
+      "desc": "Creates a boolean pointer {[0]=bool} (0/1 converted, other type -> false).",
+      "params": {
+        "x": {
+          "type": "boolean|number",
+          "desc": "Initial value."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{[0]=bool}"
+        }
+      ]
+    },
+    "IntPtr": {
+      "desc": "Creates an integer pointer {[0]=n} (0 if x is not a number).",
+      "params": {
+        "x": {
+          "type": "number",
+          "desc": "Initial value."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{[0]=n}"
+        }
+      ]
+    },
+    "FloatPtr": {
+      "desc": "Creates a float pointer {[0]=n} (0 if x is not a number).",
+      "params": {
+        "x": {
+          "type": "number",
+          "desc": "Initial value."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{[0]=n}"
+        }
+      ]
+    },
+    "DoublePtr": {
+      "desc": "Creates a double pointer {[0]=n}.",
+      "params": {
+        "x": {
+          "type": "number",
+          "desc": "Initial value."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{[0]=n}"
+        }
+      ]
+    },
+    "ArrayChar": {
+      "desc": "Creates a text buffer (string.buffer) of size len, optionally pre-filled with val.",
+      "params": {
+        "len": {
+          "type": "integer",
+          "desc": "Size in bytes."
+        },
+        "val": {
+          "type": "string|nil",
+          "desc": "Initial text."
+        }
+      },
+      "returns": [
+        {
+          "type": "userdata",
+          "desc": "string.buffer."
+        }
+      ]
+    },
+    "ArrayInt": {
+      "desc": "0-based integer array, initialized to 0.",
+      "params": {
+        "size": {
+          "type": "integer",
+          "desc": "Size."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Array [0..size-1]."
+        }
+      ]
+    },
+    "ArrayFloat": {
+      "desc": "0-based float array, initialized to 0.",
+      "params": {
+        "size": {
+          "type": "integer",
+          "desc": "Size."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Array [0..size-1]."
+        }
+      ]
+    },
     "ImColorByRGB": {
-      "desc": "Crée un ImColor depuis des composantes 0-255 (alpha 255 par défaut) et renseigne Value en 0-1.",
-      "params": {"r": {"type": "number", "desc": "Rouge 0-255."}, "g": {"type": "number", "desc": "Vert 0-255."}, "b": {"type": "number", "desc": "Bleu 0-255."}, "a": {"type": "number|nil", "desc": "Alpha 0-255."}},
-      "returns": [{"type": "ImColor", "desc": "Couleur."}]
+      "desc": "Creates an ImColor from 0-255 components (alpha 255 by default) and sets Value in 0-1.",
+      "params": {
+        "r": {
+          "type": "number",
+          "desc": "Red 0-255."
+        },
+        "g": {
+          "type": "number",
+          "desc": "Green 0-255."
+        },
+        "b": {
+          "type": "number",
+          "desc": "Blue 0-255."
+        },
+        "a": {
+          "type": "number|nil",
+          "desc": "Alpha 0-255."
+        }
+      },
+      "returns": [
+        {
+          "type": "ImColor",
+          "desc": "Color."
+        }
+      ]
     },
     "Begin": {
-      "desc": "Ouvre une fenêtre ImGui. Flags par défaut : WindowFlags_NoFocusOnAppearing.",
-      "params": {"string_name": {"type": "string", "desc": "Titre/identifiant."}, "bool_p_open": {"type": "table|nil", "desc": "BoolPtr pour la croix de fermeture."}, "ImGuiWindowFlags_flags": {"type": "integer|nil", "desc": "Flags de fenêtre."}},
-      "returns": [{"type": "boolean", "desc": "Vrai si le contenu doit être dessiné."}]
+      "desc": "Opens an ImGui window. Default flags: WindowFlags_NoFocusOnAppearing.",
+      "params": {
+        "string_name": {
+          "type": "string",
+          "desc": "Title/identifier."
+        },
+        "bool_p_open": {
+          "type": "table|nil",
+          "desc": "BoolPtr for the close button."
+        },
+        "ImGuiWindowFlags_flags": {
+          "type": "integer|nil",
+          "desc": "Window flags."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if the content should be drawn."
+        }
+      ]
     },
     "InputText": {
-      "desc": "Champ texte sur un tampon ArrayChar ; taille par défaut 2^32, flags 0. Le callback est ignoré.",
-      "params": {"label": {"type": "string", "desc": "Libellé."}, "buf": {"type": "userdata", "desc": "Tampon ArrayChar."}, "buf_size": {"type": "integer|nil", "desc": "Taille max."}, "flags": {"type": "integer|nil", "desc": "InputTextFlags."}, "callback": {"type": "any", "desc": "Ignoré."}, "user_data": {"type": "any", "desc": "Données utilisateur."}, "editEnded": {"type": "any", "desc": "Non utilisé."}},
-      "returns": [{"type": "boolean", "desc": "Vrai si modifié."}]
+      "desc": "Text field on an ArrayChar buffer; default size 2^32, flags 0. The callback is ignored.",
+      "params": {
+        "label": {
+          "type": "string",
+          "desc": "Label."
+        },
+        "buf": {
+          "type": "userdata",
+          "desc": "ArrayChar buffer."
+        },
+        "buf_size": {
+          "type": "integer|nil",
+          "desc": "Max size."
+        },
+        "flags": {
+          "type": "integer|nil",
+          "desc": "InputTextFlags."
+        },
+        "callback": {
+          "type": "any",
+          "desc": "Ignored."
+        },
+        "user_data": {
+          "type": "any",
+          "desc": "User data."
+        },
+        "editEnded": {
+          "type": "any",
+          "desc": "Not used."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if modified."
+        }
+      ]
     },
     "InputTextMultiline": {
-      "desc": "Champ texte multiligne ; taille (0,0) et flags 0 par défaut. Le callback est ignoré.",
-      "params": {"label": {"type": "string", "desc": "Libellé."}, "buf": {"type": "userdata", "desc": "Tampon ArrayChar."}, "buf_size": {"type": "integer|nil", "desc": "Taille max."}, "size": {"type": "ImVec2|nil", "desc": "Taille."}, "flags": {"type": "integer|nil", "desc": "Flags."}, "callback": {"type": "any", "desc": "Ignoré."}, "user_data": {"type": "any", "desc": "Données utilisateur."}},
-      "returns": [{"type": "boolean", "desc": "Vrai si modifié."}]
+      "desc": "Multiline text field; size (0,0) and flags 0 by default. The callback is ignored.",
+      "params": {
+        "label": {
+          "type": "string",
+          "desc": "Label."
+        },
+        "buf": {
+          "type": "userdata",
+          "desc": "ArrayChar buffer."
+        },
+        "buf_size": {
+          "type": "integer|nil",
+          "desc": "Max size."
+        },
+        "size": {
+          "type": "ImVec2|nil",
+          "desc": "Size."
+        },
+        "flags": {
+          "type": "integer|nil",
+          "desc": "Flags."
+        },
+        "callback": {
+          "type": "any",
+          "desc": "Ignored."
+        },
+        "user_data": {
+          "type": "any",
+          "desc": "User data."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if modified."
+        }
+      ]
     },
     "Combo1": {
-      "desc": "Liste déroulante sur un tableau de chaînes ; items_count calculé avec #items si nil, hauteur max -1 par défaut.",
-      "params": {"label": {"type": "string", "desc": "Libellé."}, "current_item": {"type": "table", "desc": "IntPtr de l'élément courant."}, "items": {"type": "table", "desc": "Tableau de chaînes."}, "items_count": {"type": "integer|nil", "desc": "Nombre d'éléments."}, "popup_max_height_in_items": {"type": "integer|nil", "desc": "-1 par défaut."}},
-      "returns": [{"type": "boolean", "desc": "Vrai si changé."}]
+      "desc": "Dropdown list over an array of strings; items_count computed with #items if nil, max height -1 by default.",
+      "params": {
+        "label": {
+          "type": "string",
+          "desc": "Label."
+        },
+        "current_item": {
+          "type": "table",
+          "desc": "IntPtr of the current item."
+        },
+        "items": {
+          "type": "table",
+          "desc": "Array of strings."
+        },
+        "items_count": {
+          "type": "integer|nil",
+          "desc": "Number of elements."
+        },
+        "popup_max_height_in_items": {
+          "type": "integer|nil",
+          "desc": "-1 by default."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if changed."
+        }
+      ]
     },
     "tooltip": {
-      "desc": "Si l'élément précédent est survolé, affiche message en infobulle (SetTooltip).",
-      "params": {"message": {"type": "string", "desc": "Texte."}},
+      "desc": "If the previous item is hovered, shows message as a tooltip (SetTooltip).",
+      "params": {
+        "message": {
+          "type": "string",
+          "desc": "Text."
+        }
+      },
       "returns": []
     },
     "tooltipWrapped": {
-      "desc": "Comme tooltip mais avec retour à la ligne à wrapWidth pixels (350 par défaut, multiplié par uiscale[0]).",
-      "params": {"message": {"type": "string", "desc": "Texte."}, "wrapWidth": {"type": "number|nil", "desc": "Largeur de retour à la ligne."}},
+      "desc": "Like tooltip but with wrapping at wrapWidth pixels (350 by default, multiplied by uiscale[0]).",
+      "params": {
+        "message": {
+          "type": "string",
+          "desc": "Text."
+        },
+        "wrapWidth": {
+          "type": "number|nil",
+          "desc": "Wrap width."
+        }
+      },
       "returns": []
     },
     "ShowHelpMarker": {
-      "desc": "Affiche « (?) » grisé ; au survol, infobulle avec desc sur 35 caractères de large.",
-      "params": {"desc": {"type": "string", "desc": "Texte d'aide."}, "sameLine": {"type": "boolean|nil", "desc": "Si true, SameLine avant."}},
+      "desc": "Displays a grayed \"(?)\"; on hover, a tooltip with desc 35 characters wide.",
+      "params": {
+        "desc": {
+          "type": "string",
+          "desc": "Help text."
+        },
+        "sameLine": {
+          "type": "boolean|nil",
+          "desc": "If true, SameLine before."
+        }
+      },
       "returns": []
     },
-    "BeginDisabled": {"desc": "Début d'une zone désactivée (true par défaut).", "params": {"disable": {"type": "boolean|nil", "desc": "Désactive si vrai ou nil."}}, "returns": []},
-    "EndDisabled": {"desc": "Fin de zone désactivée.", "params": {}, "returns": []},
+    "BeginDisabled": {
+      "desc": "Start of a disabled area (true by default).",
+      "params": {
+        "disable": {
+          "type": "boolean|nil",
+          "desc": "Disables if true or nil."
+        }
+      },
+      "returns": []
+    },
+    "EndDisabled": {
+      "desc": "End of a disabled area.",
+      "params": {},
+      "returns": []
+    },
     "SetDragDropPayload": {
-      "desc": "Définit le payload de glisser-déposer ; erreur loguée si type ou data est nil ; cond 0 par défaut.",
-      "params": {"string_type": {"type": "string", "desc": "Type de payload."}, "void_data": {"type": "any", "desc": "Données."}, "size_t_sz": {"type": "integer", "desc": "Taille."}, "ImGuiCond_cond": {"type": "integer|nil", "desc": "Condition."}},
-      "returns": [{"type": "boolean", "desc": "Résultat d'imgui.SetDragDropPayload."}]
+      "desc": "Sets the drag-and-drop payload; error logged if type or data is nil; cond 0 by default.",
+      "params": {
+        "string_type": {
+          "type": "string",
+          "desc": "Payload type."
+        },
+        "void_data": {
+          "type": "any",
+          "desc": "Data."
+        },
+        "size_t_sz": {
+          "type": "integer",
+          "desc": "Size."
+        },
+        "ImGuiCond_cond": {
+          "type": "integer|nil",
+          "desc": "Condition."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Result of imgui.SetDragDropPayload."
+        }
+      ]
     },
     "ImTextureHandler": {
-      "desc": "Crée un handler de texture et lui affecte path comme identifiant.",
-      "params": {"path": {"type": "string", "desc": "Chemin de la texture."}},
-      "returns": [{"type": "userdata", "desc": "ImTextureHandler (méthodes getID, getSize…)."}]
+      "desc": "Creates a texture handler and assigns path to it as an identifier.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "Texture path."
+        }
+      },
+      "returns": [
+        {
+          "type": "userdata",
+          "desc": "ImTextureHandler (methods getID, getSize...)."
+        }
+      ]
     },
     "ImTextureHandlerIsCached": {
-      "desc": "Indique si la texture est déjà en cache.",
-      "params": {"path": {"type": "string", "desc": "Chemin."}},
-      "returns": [{"type": "boolean", "desc": "Vrai si en cache."}]
+      "desc": "Tells whether the texture is already cached.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "Path."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if cached."
+        }
+      ]
     },
     "ImGuiIO_FontGlobalScale": {
-      "desc": "Écrit io.FontGlobalScale.",
-      "params": {"io": {"type": "userdata", "desc": "Résultat de GetIO()."}, "value": {"type": "number", "desc": "Échelle."}},
+      "desc": "Writes io.FontGlobalScale.",
+      "params": {
+        "io": {
+          "type": "userdata",
+          "desc": "Result of GetIO()."
+        },
+        "value": {
+          "type": "number",
+          "desc": "Scale."
+        }
+      },
       "returns": []
     },
-    "getCurrentMonitorSize": {"desc": "Renvoie la taille du moniteur courant.", "params": {}, "returns": [{"type": "ImVec2", "desc": "Taille en pixels."}]},
-    "getMonitorIndex": {"desc": "Index du moniteur (imgui.getMonitorIndex).", "params": {}, "returns": [{"type": "integer", "desc": "Index."}]},
-    "getMainViewPortId": {"desc": "Id du viewport principal.", "params": {}, "returns": [{"type": "integer", "desc": "Id."}]},
-    "loadIniSettingsFromDisk": {"desc": "Charge les réglages ImGui (.ini) depuis un fichier.", "params": {"filename": {"type": "string", "desc": "Chemin."}}, "returns": []},
-    "saveIniSettingsToDisk": {"desc": "Enregistre les réglages ImGui (.ini) dans un fichier.", "params": {"filename": {"type": "string", "desc": "Chemin."}}, "returns": []},
-    "GetContentRegionAvailWidth": {"desc": "Largeur disponible (GetContentRegionAvail().x).", "params": {}, "returns": [{"type": "number", "desc": "Largeur."}]},
+    "getCurrentMonitorSize": {
+      "desc": "Returns the size of the current monitor.",
+      "params": {},
+      "returns": [
+        {
+          "type": "ImVec2",
+          "desc": "Size in pixels."
+        }
+      ]
+    },
+    "getMonitorIndex": {
+      "desc": "Monitor index (imgui.getMonitorIndex).",
+      "params": {},
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Index."
+        }
+      ]
+    },
+    "getMainViewPortId": {
+      "desc": "Id of the main viewport.",
+      "params": {},
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Id."
+        }
+      ]
+    },
+    "loadIniSettingsFromDisk": {
+      "desc": "Loads the ImGui settings (.ini) from a file.",
+      "params": {
+        "filename": {
+          "type": "string",
+          "desc": "Path."
+        }
+      },
+      "returns": []
+    },
+    "saveIniSettingsToDisk": {
+      "desc": "Saves the ImGui settings (.ini) to a file.",
+      "params": {
+        "filename": {
+          "type": "string",
+          "desc": "Path."
+        }
+      },
+      "returns": []
+    },
+    "GetContentRegionAvailWidth": {
+      "desc": "Available width (GetContentRegionAvail().x).",
+      "params": {},
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Width."
+        }
+      ]
+    },
     "HighlightText": {
-      "desc": "Affiche label avec la sous-chaîne highlightText en orange (matchColor). Si highlightText est vide, tout le label est coloré.",
-      "params": {"label": {"type": "string", "desc": "Texte."}, "highlightText": {"type": "string", "desc": "Sous-chaîne à surligner."}},
+      "desc": "Displays label with the substring highlightText in orange (matchColor). If highlightText is empty, the whole label is colored.",
+      "params": {
+        "label": {
+          "type": "string",
+          "desc": "Text."
+        },
+        "highlightText": {
+          "type": "string",
+          "desc": "Substring to highlight."
+        }
+      },
       "returns": []
     },
     "HighlightSelectable": {
-      "desc": "Comme HighlightText mais dessine en plus un fond de surbrillance quand l'élément est survolé (Col_HeaderHovered/HeaderActive) ou sélectionné (Col_Header). Ne renvoie rien.",
-      "params": {"label": {"type": "string", "desc": "Texte."}, "highlightText": {"type": "string", "desc": "Sous-chaîne."}, "selected": {"type": "boolean", "desc": "État sélectionné."}},
+      "desc": "Like HighlightText but also draws a highlight background when the item is hovered (Col_HeaderHovered/HeaderActive) or selected (Col_Header). Returns nothing.",
+      "params": {
+        "label": {
+          "type": "string",
+          "desc": "Text."
+        },
+        "highlightText": {
+          "type": "string",
+          "desc": "Substring."
+        },
+        "selected": {
+          "type": "boolean",
+          "desc": "Selected state."
+        }
+      },
       "returns": []
     },
     "HeaderText": {
-      "desc": "Affiche un texte d'en-tête avec la police cairo_regular_medium ; couleur par défaut ImVec4(1,0.6,0,8,0.75).",
-      "params": {"text": {"type": "string", "desc": "Texte."}, "color": {"type": "ImVec4|nil", "desc": "Couleur."}},
+      "desc": "Displays header text with the cairo_regular_medium font; default color ImVec4(1,0.6,0,8,0.75).",
+      "params": {
+        "text": {
+          "type": "string",
+          "desc": "Text."
+        },
+        "color": {
+          "type": "ImVec4|nil",
+          "desc": "Color."
+        }
+      },
       "returns": []
     },
     "Knob": {
-      "desc": "Bouton rotatif (knob) pour un flottant.",
-      "params": {"string_label": {"type": "string", "desc": "Libellé."}, "floatPtr_value": {"type": "table", "desc": "FloatPtr."}, "float_v_min": {"type": "number", "desc": "Min."}, "float_v_max": {"type": "number", "desc": "Max."}, "float_speed": {"type": "number|nil", "desc": "Vitesse."}, "string_format": {"type": "string|nil", "desc": "Format d'affichage."}, "ImGuiKnobVariant_variant": {"type": "integer|nil", "desc": "KnobVariant_*."}, "float_size": {"type": "number|nil", "desc": "Taille."}, "ImGuiKnobFlags_flags": {"type": "integer|nil", "desc": "KnobFlags_*."}, "int_steps": {"type": "integer|nil", "desc": "Nombre de crans."}},
-      "returns": [{"type": "boolean", "desc": "Vrai si la valeur change."}]
+      "desc": "Rotary button (knob) for a float.",
+      "params": {
+        "string_label": {
+          "type": "string",
+          "desc": "Label."
+        },
+        "floatPtr_value": {
+          "type": "table",
+          "desc": "FloatPtr."
+        },
+        "float_v_min": {
+          "type": "number",
+          "desc": "Min."
+        },
+        "float_v_max": {
+          "type": "number",
+          "desc": "Max."
+        },
+        "float_speed": {
+          "type": "number|nil",
+          "desc": "Speed."
+        },
+        "string_format": {
+          "type": "string|nil",
+          "desc": "Display format."
+        },
+        "ImGuiKnobVariant_variant": {
+          "type": "integer|nil",
+          "desc": "KnobVariant_*."
+        },
+        "float_size": {
+          "type": "number|nil",
+          "desc": "Size."
+        },
+        "ImGuiKnobFlags_flags": {
+          "type": "integer|nil",
+          "desc": "KnobFlags_*."
+        },
+        "int_steps": {
+          "type": "integer|nil",
+          "desc": "Number of steps."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if the value changes."
+        }
+      ]
     },
     "KnobInt": {
-      "desc": "Knob pour un entier ; mêmes paramètres que Knob avec un IntPtr.",
-      "params": {"string_label": {"type": "string", "desc": "Libellé."}, "intPtr_value": {"type": "table", "desc": "IntPtr."}, "int_v_min": {"type": "integer", "desc": "Min."}, "int_v_max": {"type": "integer", "desc": "Max."}, "float_speed": {"type": "number|nil", "desc": "Vitesse."}, "string_format": {"type": "string|nil", "desc": "Format."}, "ImGuiKnobVariant_variant": {"type": "integer|nil", "desc": "KnobVariant_*."}, "float_size": {"type": "number|nil", "desc": "Taille."}, "ImGuiKnobFlags_flags": {"type": "integer|nil", "desc": "KnobFlags_*."}, "int_steps": {"type": "integer|nil", "desc": "Crans."}},
-      "returns": [{"type": "boolean", "desc": "Vrai si la valeur change."}]
+      "desc": "Knob for an integer; same parameters as Knob with an IntPtr.",
+      "params": {
+        "string_label": {
+          "type": "string",
+          "desc": "Label."
+        },
+        "intPtr_value": {
+          "type": "table",
+          "desc": "IntPtr."
+        },
+        "int_v_min": {
+          "type": "integer",
+          "desc": "Min."
+        },
+        "int_v_max": {
+          "type": "integer",
+          "desc": "Max."
+        },
+        "float_speed": {
+          "type": "number|nil",
+          "desc": "Speed."
+        },
+        "string_format": {
+          "type": "string|nil",
+          "desc": "Format."
+        },
+        "ImGuiKnobVariant_variant": {
+          "type": "integer|nil",
+          "desc": "KnobVariant_*."
+        },
+        "float_size": {
+          "type": "number|nil",
+          "desc": "Size."
+        },
+        "ImGuiKnobFlags_flags": {
+          "type": "integer|nil",
+          "desc": "KnobFlags_*."
+        },
+        "int_steps": {
+          "type": "integer|nil",
+          "desc": "Steps."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if the value changes."
+        }
+      ]
     }
   }
 }

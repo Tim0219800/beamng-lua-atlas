@@ -1,51 +1,115 @@
 {
   "path": "lua/ge/extensions/gameplay/markers/bigmapMarker.lua",
-  "module": "Type de marqueur utilisé par la grande carte (bigmap) : pour chaque cluster de POI, affiche une icône et une colonne (icônes d'icon renderer) qui apparaissent en fondu quand la grande carte est active et qui grossissent au survol ou à la sélection. Le module renvoie une table {createMarker, merge} : createMarker crée l'objet marqueur (classe C), merge fusionne plusieurs POI proches en un seul cluster avec une icône numérotée.",
+  "module": "Marker type used by the big map (bigmap): for each POI cluster, displays an icon and a column (icon renderer icons) that fade in when the big map is active and that grow on hover or selection. The module returns a table {createMarker, merge}: createMarker creates the marker object (class C), merge merges several nearby POIs into a single cluster with a numbered icon.",
   "notes": [
-    "Ce fichier ne définit pas de champs containsAnyMission / containsAnyDelivery sur le module : ce sont des variables locales de merge (la page automatique les signale à tort comme champs).",
-    "merge : position du cluster = moyenne des positions des POI ; id = idPrefix.. '#' suivi des ids de POI ; icône par défaut = celle du dernier POI ; si count > 1, icône numérotée poi_no-NN_round_orange_green (NN = min(count, 9)), _orange_blue si tous les POI sont des missions ou tous de type logisticsParking, _orange si un POI a data.hasPlayerCargo.",
-    "Icône par défaut du cluster : mission_primary_triangle ; colonne : marker_column ; taille d'icône 20 ; hauteur de colonne 3.5 m.",
-    "Les POI doivent fournir markerInfo.bigmapMarker.{pos, icon} et data.type ; l'objet cluster fournit containedIdsLookup, utilisé pour savoir si le POI sélectionné ou survolé est dans le cluster.",
-    "setHidden et instantFade sont des méthodes vides (présentes pour respecter l'interface des marqueurs)."
+    "This file does not define containsAnyMission / containsAnyDelivery fields on the module: they are local variables of merge (the automatic page wrongly reports them as fields).",
+    "merge: cluster position = average of the POI positions; id = idPrefix.. '#' followed by the POI ids; default icon = that of the last POI; if count > 1, numbered icon poi_no-NN_round_orange_green (NN = min(count, 9)), _orange_blue if all POIs are missions or all of type logisticsParking, _orange if a POI has data.hasPlayerCargo.",
+    "Default cluster icon: mission_primary_triangle; column: marker_column; icon size 20; column height 3.5 m.",
+    "POIs must provide markerInfo.bigmapMarker.{pos, icon} and data.type; the cluster object provides containedIdsLookup, used to know whether the selected or hovered POI is in the cluster.",
+    "setHidden and instantFade are empty methods (present to satisfy the marker interface)."
   ],
   "functions": {
     "createMarker": {
-      "desc": "Fabrique un objet marqueur de grande carte (instance de la classe C) et appelle son init.",
-      "params": {"...": {"type": "any", "desc": "Arguments transmis à C:init (non utilisés)."}},
-      "returns": [{"type": "table", "desc": "Instance de marqueur."}],
+      "desc": "Builds a big map marker object (instance of class C) and calls its init.",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "Arguments passed to C:init (unused)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Marker instance."
+        }
+      ],
       "internal": false
     },
     "merge": {
-      "desc": "Fusionne une liste de POI en un seul cluster de grande carte (position moyenne, ids contenus, icône numérotée si plusieurs).",
+      "desc": "Merges a list of POIs into a single big map cluster (average position, contained ids, numbered icon if several).",
       "params": {
-        "pois": {"type": "table[]", "desc": "POI à fusionner (avec markerInfo.bigmapMarker et data)."},
-        "idPrefix": {"type": "string", "desc": "Préfixe de l'id du cluster."}
+        "pois": {
+          "type": "table[]",
+          "desc": "POIs to merge (with markerInfo.bigmapMarker and data)."
+        },
+        "idPrefix": {
+          "type": "string",
+          "desc": "Prefix of the cluster id."
+        }
       },
-      "returns": [{"type": "table", "desc": "Cluster {id, containedIds, containedIdsLookup, pos, icon}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Cluster {id, containedIds, containedIdsLookup, pos, icon}."
+        }
+      ],
       "internal": false
     }
   },
   "classes": {
     "C": {
-      "desc": "Marqueur de grande carte : une icône plus une colonne, dont l'opacité suit l'état de la grande carte.",
+      "desc": "Big map marker: an icon plus a column, whose opacity follows the big map state.",
       "functions": {
-        "init": {"desc": "Initialise l'id, le lisseur d'opacité et visible = true, sans créer d'objet.", "internal": true},
+        "init": {
+          "desc": "Initializes the id, the opacity smoother and visible = true, without creating an object.",
+          "internal": true
+        },
         "setup": {
-          "desc": "Associe le marqueur à un cluster : enregistre pos et cluster, ajoute l'icône (cluster.icon) et la colonne dans l'icon renderer de gameplay_playmodeMarkers, et remet l'opacité à 0.",
-          "params": {"cluster": {"type": "table", "desc": "Cluster issu de merge."}},
+          "desc": "Associates the marker with a cluster: stores pos and cluster, adds the icon (cluster.icon) and the column in the gameplay_playmodeMarkers icon renderer, and resets the opacity to 0.",
+          "params": {
+            "cluster": {
+              "type": "table",
+              "desc": "Cluster from merge."
+            }
+          },
           "internal": true
         },
         "update": {
-          "desc": "Appelée chaque frame : lisse l'opacité (apparition en 0.2 s quand la grande carte est active et sans transition), place l'icône et la colonne devant la caméra (ou en projection orthographique), agrandit l'icône à 1.5 si le cluster est survolé ou sélectionné.",
-          "params": {"data": {"type": "table", "desc": "Données de frame : dt, camPos, bigmapTransitionActive..."}},
+          "desc": "Called every frame: smooths the opacity (fade in over 0.2 s when the big map is active and without transition), places the icon and column in front of the camera (or in orthographic projection), enlarges the icon to 1.5 if the cluster is hovered or selected.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Frame data: dt, camPos, bigmapTransitionActive..."
+            }
+          },
           "internal": true
         },
-        "setFullAlphaInstant": {"desc": "Met l'opacité du lisseur à 1 immédiatement.", "internal": false},
-        "setHidden": {"desc": "Ne fait rien (interface commune des marqueurs).", "params": {"value": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
-        "hide": {"desc": "Marque le marqueur invisible (l'opacité retombe en fondu).", "internal": false},
-        "show": {"desc": "Marque le marqueur visible.", "internal": false},
-        "instantFade": {"desc": "Ne fait rien (interface commune des marqueurs).", "params": {"visible": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
-        "clearObjects": {"desc": "Retire les icônes de l'icon renderer et réinitialise les références internes.", "internal": false}
+        "setFullAlphaInstant": {
+          "desc": "Sets the smoother's opacity to 1 immediately.",
+          "internal": false
+        },
+        "setHidden": {
+          "desc": "Does nothing (common marker interface).",
+          "params": {
+            "value": {
+              "type": "boolean",
+              "desc": "Ignored."
+            }
+          },
+          "internal": false
+        },
+        "hide": {
+          "desc": "Marks the marker invisible (the opacity fades out).",
+          "internal": false
+        },
+        "show": {
+          "desc": "Marks the marker visible.",
+          "internal": false
+        },
+        "instantFade": {
+          "desc": "Does nothing (common marker interface).",
+          "params": {
+            "visible": {
+              "type": "boolean",
+              "desc": "Ignored."
+            }
+          },
+          "internal": false
+        },
+        "clearObjects": {
+          "desc": "Removes the icons from the icon renderer and resets the internal references.",
+          "internal": false
+        }
       }
     }
   }

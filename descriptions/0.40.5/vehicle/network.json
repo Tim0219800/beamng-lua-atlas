@@ -1,8 +1,8 @@
 {
   "path": "lua/vehicle/network.lua",
-  "module": "Fichier vide en 0.40.5 (seulement l'en-tête de licence, aucun code). Un require('network') ne renvoie donc pas de table (renvoie true selon la sémantique de require pour un module sans valeur de retour). Il n'expose ni fonction ni champ.",
+  "module": "Empty file in 0.40.5 (only the license header, no code). A require('network') therefore does not return a table (returns true per the require semantics for a module with no return value). It exposes no function or field.",
   "notes": [
-    "Ne rien attendre de ce module ; probable reliquat d'une ancienne API réseau."
+    "Expect nothing from this module; probably a leftover of an old network API."
   ],
   "fields": {},
   "functions": {}

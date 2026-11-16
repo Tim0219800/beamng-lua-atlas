@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/layerTypes/textureFill.lua",
+  "module": "Type de calque « Texture Fill » de l'outil Dynamic Decals : remplit le véhicule avec un motif basé sur une texture d'entrée, avec couleur (ou palette du véhicule), échelle et décalage (offset). Fournit la fenêtre « Add Texture Fill Layer » (OK appelle api.addTextureFillLayer), le bouton de barre d'outils (ordre 20), la GUI d'inspecteur du type textureFill (fillTexturePath, colorPaletteMapId, color, scale, offset) et la page de doc.",
+  "notes": [
+    "colorPaletteMapId : 0 = couleur du calque ; 1 = couleur du véhicule ; 2 = colorPalette0 ; 3 = colorPalette1. Avec une valeur autre que 0 le champ couleur est désactivé.",
+    "La fenêtre d'ajout réutilise les réglages « fill layer » de l'API (api.getFillLayerColor / setFillLayerColorPaletteMapId) pour la couleur, mais les propriétés de texture (api.getFillTexturePath, getTextureFillLayerScale, getTextureFillOffset) pour le reste.",
+    "Le code lit getPlayerVehicle(0) sans vérifier qu'il n'est pas nil quand une palette est choisie.",
+    "lockFillTextureLayerScaleRatio est déclaré mais jamais utilisé ; le réglage du blend mode est commenté (« heavily WIP »)."
+  ],
+  "functions": {
+    "openAddLayerWindow": {
+      "desc": "Ouvre la fenêtre « Add Texture Fill Layer ».",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "registerEditorPreferences": {
+      "desc": "Ne déclare aucune préférence (corps commenté).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : récupère les modules liés, enregistre le dessin de la fenêtre d'ajout, la GUI d'inspecteur du type textureFill, l'élément de barre d'outils « textureFill », la page de documentation et la fenêtre (450x310).",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

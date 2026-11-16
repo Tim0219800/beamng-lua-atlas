@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftBounds.lua",
+  "module": "Nœud flowgraph « Drift Bounds » (catégorie repeat_instant, drift). Utilise un fichier de sites (pin sitesPath) pour créer les limites de la mission de drift via gameplay_drift_bounds.setBounds.",
+  "notes": ["Le chemin est résolu avec mgr:getRelativeAbsolutePath ; rien n'est fait s'il est invalide.", "Appelé à chaque frame tant que le nœud est atteint."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Résout le chemin du fichier de sites puis appelle gameplay_drift_bounds.setBounds(file)."}
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/editor/api/sketch.lua",
+  "module": "Module d'API de l'éditeur pour les « sketches » (croquis dans le monde). Dans cette version il n'est qu'une coquille : initialize(editor) ajoute à l'objet editor trois fonctions (createSketch, deleteSketch, getSketches) dont le corps est vide (commentaire TODO). Les hooks prévus sont listés en commentaire : onEditorSketchCreated, onEditorSketchDelete, onEditorSketchChanged.",
+  "notes": [
+    "Les trois fonctions ne font rien et renvoient nil : elles sont encore à implémenter (TODO dans le code).",
+    "Les hooks onEditorSketchCreated/Delete/Changed sont seulement cités en commentaire, rien ne les déclenche dans ce fichier."
+  ],
+  "functions": {
+    "initialize": {
+      "desc": "Enregistre createSketch, deleteSketch et getSketches sur l'objet editor passé en argument. Appelé par le chargeur de l'API de l'éditeur.",
+      "params": {"editorInstance": {"type": "table", "desc": "Objet editor global de l'éditeur sur lequel les fonctions sont ajoutées."}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Objet editor de l'éditeur, enrichi par initialize. Toutes ces méthodes sont des stubs vides.",
+      "functions": {
+        "createSketch": {
+          "desc": "Prévu pour créer un croquis. Corps vide (TODO).",
+          "params": {"position": {"type": "any", "desc": "Position du croquis (déduit du nom)."}, "size": {"type": "any", "desc": "Taille du croquis (déduit du nom)."}},
+          "returns": []
+        },
+        "deleteSketch": {
+          "desc": "Prévu pour supprimer un croquis. Corps vide (TODO).",
+          "params": {"sketchObjectId": {"type": "integer", "desc": "Id de l'objet croquis (déduit du nom)."}},
+          "returns": []
+        },
+        "getSketches": {
+          "desc": "Prévu pour lister les croquis. Corps vide (TODO), renvoie nil.",
+          "params": {},
+          "returns": []
+        }
+      }
+    }
+  }
+}

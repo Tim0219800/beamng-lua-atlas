@@ -1,22 +1,22 @@
 # `flowgraph_nodes_mission_preClean`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/mission/preClean.lua` · VM : Game Engine (GE) · 26 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/mission/preClean.lua` · VM: Game Engine (GE) · 26 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/mission/preClean")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/mission/preClean")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Mission Cleanup' (categorie once_p_duration). Nettoie l'etat du monde avant une mission via le module mission du gestionnaire (processVehicles) avec les options keepPlayer et keepTraffic (le vehicule joueur / le trafic restent actifs au lieu d'etre mis de cote). Sortie : vehId, l'id du vehicule joueur d'origine.
+Flowgraph node 'Mission Cleanup' (once_p_duration category). Cleans up the world state before a mission via the manager's mission module (processVehicles) with the options keepPlayer and keepTraffic (the player vehicle / traffic stay active instead of being stashed). Output: vehId, the id of the original player vehicle.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Appelle self.mgr.modules.mission:processVehicles{keepPlayer, keepTraffic} puis ecrit vehId (id d'origine ou be:getPlayerVehicleID(0)). | 21 |
+| `C:workOnce()` | Calls self.mgr.modules.mission:processVehicles{keepPlayer, keepTraffic} then writes vehId (original id or be:getPlayerVehicleID(0)). | 21 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/mission/preClean.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/mission/preClean.lua`.*

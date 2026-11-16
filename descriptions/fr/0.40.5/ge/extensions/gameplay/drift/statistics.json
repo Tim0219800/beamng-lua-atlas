@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/gameplay/drift/statistics.lua",
+  "module": "Enregistre les statistiques de drift dans gameplay_statistic (clés drift/...) et débloque les succès de drift. Écoute les hooks de fin de drift, de score, de spinout et de crash ; ne contient aucune logique de détection.",
+  "notes": [
+    "Clés écrites : drift/rightDrifts, drift/leftDrifts, drift/maxDriftDistance.length, drift/maxDriftTime.time, drift/maxChainedDrifts, drift/totalScore, drift/maxDriftScore, drift/spinOuts, drift/crashes.",
+    "Succès : DRIFT_SINGLE si un seul drift rapporte >= 20000 points ; DRIFT_TOTAL si drift/totalScore atteint 1 000 000 (seulement si gameplay_achievement est chargé).",
+    "Les maxima ne sont mis à jour que si la nouvelle valeur dépasse strictement l'ancienne (setNewMaxStat)."
+  ],
+  "functions": {
+    "onDriftCompleted": {
+      "desc": "Hook : à la fin d'une chaîne de drifts, ajoute les drifts droite/gauche et met à jour les records de distance, durée et nombre de drifts chaînés. Ne fait rien sans data.chainDriftData.",
+      "params": {"data": {"type": "table", "desc": "Contient chainDriftData {rightDrifts, leftDrifts, totalDriftDistance, totalDriftTime, chainedDrifts}."}},
+      "internal": true
+    },
+    "onDriftCompletedScored": {
+      "desc": "Hook : ajoute le score gagné au total, met à jour le record de score et déclenche les succès DRIFT_SINGLE et DRIFT_TOTAL.",
+      "params": {"data": {"type": "table", "desc": "Contient addedScore (number, points ajoutés par ce drift)."}},
+      "internal": true
+    },
+    "onDriftSpinout": {
+      "desc": "Hook : incrémente drift/spinOuts.",
+      "internal": true
+    },
+    "onDriftCrash": {
+      "desc": "Hook : incrémente drift/crashes.",
+      "internal": true
+    }
+  }
+}

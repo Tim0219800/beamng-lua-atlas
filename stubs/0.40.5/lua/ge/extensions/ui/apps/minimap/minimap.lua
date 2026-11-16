@@ -2,96 +2,96 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/apps/minimap/minimap.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Minimap affichée en ImGui (API marquée expérimentale par BeamNG). Elle dessine dans une texture les routes, le joueur, les autres véhicules, la boussole, les marqueurs de playmode, etc., en forme de cercle ou de rectangle (réglage `minimapMode`). Un autre module l'active avec setDrawTransform (position et taille relatives à l'écran, entre 0 et 1) et la masque avec hide. Chaque frame, elle émet le hook `onDrawOnMinimap(td)` pour que d'autres extensions dessinent par-dessus. Contient aussi une fenêtre de réglages de debug (profilage, mesure du garbage, options d'affichage).
---- Accès : extension `ui_apps_minimap_minimap` : `extensions.load("ui_apps_minimap_minimap")`, puis la globale `ui_apps_minimap_minimap`
+--- Minimap displayed in ImGui (API marked experimental by BeamNG). It draws into a texture the roads, the player, the other vehicles, the compass, the playmode markers, etc., in a circle or rectangle shape (setting `minimapMode`). Another module activates it with setDrawTransform (position and size relative to the screen, between 0 and 1) and hides it with hide. Every frame, it emits the hook `onDrawOnMinimap(td)` so that other extensions draw on top. Also contains a debug settings window (profiling, garbage measurement, display options).
+--- Access: extension `ui_apps_minimap_minimap`: `extensions.load("ui_apps_minimap_minimap")`, then the global `ui_apps_minimap_minimap`
 ---@class ui_apps_minimap_minimap
----@field dependencies table<integer, string> Extensions chargées avant : topomap, additionalInfo, route, utils, roads, vehicles de la minimap, et gameplay_playmodeMarkers.
----@field onUpdate function|nil nil au départ ; défini par setDrawTransform (fonction de dessin), remis à nil par hide.
+---@field dependencies table<integer, string> Extensions loaded before: topomap, additionalInfo, route, utils, roads, vehicles of the minimap, and gameplay_playmodeMarkers.
+---@field onUpdate function|nil nil at start; set by setDrawTransform (drawing function), reset to nil by hide.
 ui_apps_minimap_minimap = {}
 
---- Dessine des repères de debug (coins, marges) et affiche les tailles dans ImGui.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:720
+--- Draws debug markers (corners, margins) and displays the sizes in ImGui.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:720
 function ui_apps_minimap_minimap.drawDebugOverlay() end
 
---- Dessine les masques d'occlusion et le découpage circulaire ou rectangulaire de la minimap dans la texture. Appelé par la boucle de dessin de la minimap.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:668
----@param offsetX number Décalage horizontal de dessin.
----@param offsetY number Décalage vertical de dessin.
+--- Draws the occlusion masks and the circular or rectangular cropping of the minimap into the texture. Called by the minimap's drawing loop.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:668
+---@param offsetX number Horizontal drawing offset.
+---@param offsetY number Vertical drawing offset.
 function ui_apps_minimap_minimap.drawOcclusion(offsetX, offsetY) end
 
---- Renvoie les listes de choix de la fenêtre de debug (`lookaheadValue`, `profileEveryNthFrame`).
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:832
----@return table  Tables `{name, value}` par réglage.
+--- Returns the choice lists of the debug window (`lookaheadValue`, `profileEveryNthFrame`).
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:832
+---@return table  `{name, value}` tables per setting.
 function ui_apps_minimap_minimap.getDebugSettingsData() end
 
---- Renvoie la forme de la minimap.
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:747
----@return string  "circle" ou "rect".
+--- Returns the minimap's shape.
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:747
+---@return string  "circle" or "rect".
 function ui_apps_minimap_minimap.getMode() end
 
---- Renvoie l'échelle courante de la minimap.
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:41
----@return number  Échelle en pixels par mètre.
+--- Returns the minimap's current scale.
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:41
+---@return number  Scale in pixels per meter.
 function ui_apps_minimap_minimap.getScale() end
 
---- Masque la minimap : remet la transformation à 0 et détache onUpdate.
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:812
+--- Hides the minimap: resets the transform to 0 and unhooks onUpdate.
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:812
 function ui_apps_minimap_minimap.hide() end
 
---- Hook appelé à la fin d'une mission/niveau. Masque la minimap et réinitialise les routes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:836
+--- Hook called at the end of a mission/level. Hides the minimap and resets the roads.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:836
 function ui_apps_minimap_minimap.onClientEndMission() end
 
---- Hook appelé au début d'une mission/niveau. Masque la minimap et réinitialise les routes (`ui_apps_minimap_roads.reset`).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:844
+--- Hook called at the start of a mission/level. Hides the minimap and resets the roads (`ui_apps_minimap_roads.reset`).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:844
 function ui_apps_minimap_minimap.onClientStartMission() end
 
---- Appelé à l'initialisation de l'extension. Passe en déchargement manuel et lit les réglages de minimap.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:11
+--- Called on extension initialization. Switches to manual unload and reads the minimap settings.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:11
 function ui_apps_minimap_minimap.onInit() end
 
---- Hook appelé quand les réglages de la minimap changent. Relit le mode, l'orientation, la grille et l'anticipation (lookahead) et l'état des viewports ImGui.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:758
----@param m any Argument non utilisé (déduit du code).
+--- Hook called when the minimap settings change. Rereads the mode, orientation, grid and lookahead and the state of the ImGui viewports.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:758
+---@param m any Unused argument (inferred from code).
 function ui_apps_minimap_minimap.onMinimapSettingsChanged(m) end
 
---- Supprime la zone d'occlusion portant cet id ; si l'id n'est pas une chaîne non vide, supprime toutes les zones.
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:803
----@param id string|nil Identifiant de la zone, ou nil pour tout effacer.
+--- Removes the occlusion zone with this id; if the id is not a non-empty string, removes all zones.
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:803
+---@param id string|nil Zone identifier, or nil to clear everything.
 function ui_apps_minimap_minimap.resetOcclusionTransform(id) end
 
---- Fixe des marges personnalisées autour de la minimap (gauche, droite, haut, bas). Une valeur nil devient 10.
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:771
----@param left number|nil Marge gauche.
----@param right number|nil Marge droite.
----@param top number|nil Marge haut.
----@param bottom number|nil Marge bas.
+--- Sets custom margins around the minimap (left, right, top, bottom). A nil value becomes 10.
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:771
+---@param left number|nil Left margin.
+---@param right number|nil Right margin.
+---@param top number|nil Top margin.
+---@param bottom number|nil Bottom margin.
 function ui_apps_minimap_minimap.setBuffers(left, right, top, bottom) end
 
---- Positionne la minimap et l'active (branche onUpdate). Les 4 valeurs doivent être entre 0 et 1, sinon avertissement et appel de hide.
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:778
----@param x number Position horizontale relative (0 à 1).
----@param y number Position verticale relative (0 à 1).
----@param width number Largeur relative (0 à 1).
----@param height number Hauteur relative (0 à 1).
+--- Positions the minimap and activates it (hooks onUpdate). The 4 values must be between 0 and 1, otherwise a warning and a call to hide.
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:778
+---@param x number Relative horizontal position (0 to 1).
+---@param y number Relative vertical position (0 to 1).
+---@param width number Relative width (0 to 1).
+---@param height number Relative height (0 to 1).
 function ui_apps_minimap_minimap.setDrawTransform(x, y, width, height) end
 
---- Déclare une zone qui masque une partie de la minimap (par exemple un élément d'interface posé dessus). Ignorée avec un avertissement si une valeur sort de 0..1.
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:795
----@param id string Identifiant de la zone.
----@param x number Position horizontale relative (0 à 1).
----@param y number Position verticale relative (0 à 1).
----@param width number Largeur relative (0 à 1).
----@param height number Hauteur relative (0 à 1).
+--- Declares a zone that masks part of the minimap (for example an interface element placed over it). Ignored with a warning if a value is outside 0..1.
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:795
+---@param id string Zone identifier.
+---@param x number Relative horizontal position (0 to 1).
+---@param y number Relative vertical position (0 to 1).
+---@param width number Relative width (0 to 1).
+---@param height number Relative height (0 to 1).
 function ui_apps_minimap_minimap.setOcclusionTransform(id, x, y, width, height) end
 
---- Ouvre ou ferme la fenêtre de réglages de debug.
----Source : lua/ge/extensions/ui/apps/minimap/minimap.lua:820
+--- Opens or closes the debug settings window.
+---Source: lua/ge/extensions/ui/apps/minimap/minimap.lua:820
 function ui_apps_minimap_minimap.toggledebugSettings() end
 

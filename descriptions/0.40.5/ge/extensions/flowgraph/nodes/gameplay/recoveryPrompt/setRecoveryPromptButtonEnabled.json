@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptButtonEnabled.lua",
-  "module": "Nœud flowgraph « Set Recovery Prompt Button Enabled » (catégorie once_instant). Active ou désactive un bouton du recovery prompt par id ; si le bouton était inactif et doit être activé, il est aussi activé. Pins d'entrée : id (modèles proposés : flipMission, recoverMission, submitMission, restartMission), enabled.",
+  "module": "Flowgraph node \"Set Recovery Prompt Button Enabled\" (category once_instant). Enables or disables a recovery prompt button by id; if the button was inactive and is to be enabled, it is also activated. Input pins: id (suggested templates: flipMission, recoverMission, submitMission, restartMission), enabled.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "postInit": {
-          "desc": "Définit les valeurs prédéfinies (hardTemplates) du pin id : les quatre boutons standard.",
+          "desc": "Sets the predefined values (hardTemplates) of the id pin: the four standard buttons.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Appelle core_recoveryPrompt.setButtonEnabledById(id, enabled or false).",
+          "desc": "Calls core_recoveryPrompt.setButtonEnabledById(id, enabled or false).",
           "internal": true
         }
       }

@@ -1,0 +1,47 @@
+{
+  "path": "lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua",
+  "module": "Utilitaire des sélecteurs en grille : gère les options d'affichage (tri, filtres d'affichage, bascules…), la liste des favoris et celle des éléments récents, avec persistance JSON dans un fichier (par défaut /settings/gridSelectorData.json). Une option peut être liée à un réglage du jeu via `settingsKey`. Émet les hooks onGridSelectorDisplayDataChanged et onGridSelectorFavouriteToggled.",
+  "notes": [
+    "Les données sont chargées paresseusement au premier accès (getDisplayData). Si la version du fichier est inférieure à targetVersion, `updateDisplayDataFunction(displayData, 0, targetVersion)` est appelée pour migrer.",
+    "Les clés `showAuxContent` (valeur initiale = not shipping_build) et `showCareerContent` (forcée à false en build shipping) ont un traitement spécial à l'initialisation.",
+    "Seules les options avec `save = true` sont réellement réécrites dans displayData lors de la sauvegarde ; resetDisplayDataToDefaults ne réinitialise aussi que ces options.",
+    "Les favoris stockent l'horodatage os.time() ; les éléments récents sont limités à 100 (le plus récent en tête).",
+    "Les options liées à `settingsKey` lisent et écrivent via settings.getValue/settings.setValue."
+  ],
+  "functions": {
+    "create": {
+      "desc": "Crée une instance de gestion des données d'affichage, favoris et récents.",
+      "params": {
+        "dataFile": {"type": "string|nil", "desc": "Fichier JSON de sauvegarde, défaut /settings/gridSelectorData.json."},
+        "displayDataOptions": {"type": "table[]|nil", "desc": "Liste d'options { key, type, default, label, min, max, options, showInModes, description, hideInSimpleMenu, save, settingsKey }."},
+        "updateDisplayDataFunction": {"type": "function|nil", "desc": "Migration (displayData, ancienneVersion, nouvelleVersion) -> displayData."},
+        "backendName": {"type": "string|nil", "desc": "Nom transmis aux hooks, défaut \"gridSelector\"."},
+        "targetVersion": {"type": "integer|nil", "desc": "Version courante du format de données, défaut 1."}
+      },
+      "returns": [{"type": "table", "desc": "Instance (voir classes.instance)."}]
+    }
+  },
+  "classes": {
+    "instance": {
+      "desc": "Objet renvoyé par create().",
+      "functions": {
+        "getDisplayData": {"desc": "Renvoie la table clé -> valeur des options, initialisée au premier appel.", "returns": [{"type": "table<string, any>", "desc": "Valeurs courantes."}]},
+        "setDisplayDataOption": {
+          "desc": "Change une option (convertie en nombre si son type est number), émet onGridSelectorDisplayDataChanged(backendName, key, value), répercute sur le réglage lié et sauvegarde. Les valeurs nil ou \"undefined\" sont ignorées.",
+          "params": {"key": {"type": "string", "desc": "Clé de l'option."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+          "returns": [{"type": "table<string, any>", "desc": "displayData à jour."}]
+        },
+        "resetDisplayDataToDefaults": {"desc": "Remet les options `save` à leur valeur par défaut, émet le hook pour chaque changement et sauvegarde.", "returns": [{"type": "table<string, any>", "desc": "displayData à jour."}]},
+        "toggleFavourite": {"desc": "Ajoute ou retire un favori, émet onGridSelectorFavouriteToggled(backendName, itemKey, estFavori) et sauvegarde.", "params": {"itemKey": {"type": "string", "desc": "Clé de l'élément."}}},
+        "isFavourite": {"desc": "Renvoie l'horodatage du favori ou nil.", "params": {"itemKey": {"type": "string", "desc": "Clé de l'élément."}}, "returns": [{"type": "integer|nil", "desc": "os.time() d'ajout."}]},
+        "isRecentItem": {"desc": "Renvoie la position dans la liste des récents, ou false.", "params": {"itemKey": {"type": "string", "desc": "Clé de l'élément."}}, "returns": [{"type": "integer|boolean", "desc": "Index ou false."}]},
+        "trackRecentItem": {"desc": "Place l'élément en tête des récents (max 100) et sauvegarde.", "params": {"itemKey": {"type": "string", "desc": "Clé de l'élément."}}},
+        "getRecentItems": {"desc": "Renvoie une copie profonde de la liste des récents.", "returns": [{"type": "string[]", "desc": "Clés récentes, la plus récente d'abord."}]},
+        "initializeDisplayData": {"desc": "Relit le fichier et reconstruit la table des options à partir des défauts, du fichier et des réglages liés.", "returns": [{"type": "table<string, any>", "desc": "Nouvelle table (n'écrase pas le cache interne)."}]},
+        "clearAllFavourites": {"desc": "Vide les favoris et sauvegarde."},
+        "clearAllRecentItems": {"desc": "Vide les récents et sauvegarde."},
+        "getDisplayDataOptions": {"desc": "Renvoie la liste des options pour l'UI : label, key, type, min, max, value, options, showInModes, description, hideInSimpleMenu. La valeur de `searchText` est toujours nil (gérée par le module appelant).", "returns": [{"type": "table[]", "desc": "Options avec leur valeur courante."}]}
+      }
+    }
+  }
+}

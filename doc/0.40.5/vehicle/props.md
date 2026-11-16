@@ -1,59 +1,59 @@
 # `props`
 
-*Fichier : `lua/vehicle/props.lua` · VM : Véhicule · 141 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/props.lua` · VM: Vehicle · 141 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `props`
+**Access:** global `props`
 
-Pilote les props animés du véhicule (section jbeam "props" : aiguilles, volant, pièces articulées, lumières de props). À chaque frame, chaque prop lit la valeur electrics.values[prop.func], la convertit (multiplier, min, max, offset) et l'envoie au moteur via obj:propUpdate. Gère aussi le masquage des props quand un groupe de casse (breakGroup) ou de déformation (deformGroup) est cassé.
+Drives the vehicle's animated props (jbeam "props" section: needles, steering wheel, articulated parts, prop lights). Every frame, each prop reads the value electrics.values[prop.func], converts it (multiplier, min, max, offset) and sends it to the engine via obj:propUpdate. Also handles hiding props when a break group (breakGroup) or deform group (deformGroup) is broken.
 
-## Exemple
+## Example
 
 ```lua
--- masquer à la main les props d'un groupe de casse
+-- manually hide the props of a break group
 props.hidePropsInBreakGroup('door_FL')
 ```
 
-## Remarques
+## Notes
 
-- M.updateGFX vaut nop (fonction vide) tant qu'aucun prop n'existe ; reset() la remplace par la vraie fonction updateGFX seulement si v.data.props contient au moins un prop. Si les props disparaissent après un reset, updateGFX reste sur l'ancienne fonction (pas remise à nop).
-- Les props sont indexés à partir de 0 (props[0]…props[propEnd]).
-- Valeur envoyée au moteur : clamp(val * multiplier, min, max) + offset ; les booléens sont convertis en 0/1. Le prop est caché si prop.hidden est vrai.
-- Clés jbeam de lumière de prop (lightScaling) : brightnessMinInput (déf. 0), brightnessMaxInput (1), flareScaleMinInput (0.6), flareScaleMaxInput (1), lightColorOffsetRed (0), lightColorOffsetGreen (60), lightColorOffsetBlue (80). Elles ne sont utilisées que si le prop définit aussi lightBrightness, flareScale et lightColor.
-- breakGroup et deformGroup peuvent être une chaîne ou une liste de chaînes ; les chaînes vides sont ignorées.
-- Un groupe n'est traité qu'une fois : après hidePropsInBreakGroup / disablePropsInDeformGroup, l'entrée de la table est supprimée jusqu'au prochain reset.
+- M.updateGFX is nop (empty function) as long as no prop exists; reset() replaces it with the real updateGFX function only if v.data.props contains at least one prop. If the props disappear after a reset, updateGFX stays on the old function (not set back to nop).
+- Props are 0-indexed (props[0]…props[propEnd]).
+- Value sent to the engine: clamp(val * multiplier, min, max) + offset; booleans are converted to 0/1. The prop is hidden if prop.hidden is true.
+- Prop light jbeam keys (lightScaling): brightnessMinInput (default 0), brightnessMaxInput (1), flareScaleMinInput (0.6), flareScaleMaxInput (1), lightColorOffsetRed (0), lightColorOffsetGreen (60), lightColorOffsetBlue (80). They are only used if the prop also defines lightBrightness, flareScale and lightColor.
+- breakGroup and deformGroup can be a string or a list of strings; empty strings are ignored.
+- A group is processed only once: after hidePropsInBreakGroup / disablePropsInDeformGroup, the table entry is removed until the next reset.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `props.disablePropsInDeformGroup(deformGroup)` | Désactive et cache tous les props rattachés au groupe de déformation donné, puis les remet à 0 côté moteur. Appelée par la gestion de dégâts (beamstate) quand un groupe se déforme. | 41 |
-| `props.hidePropsInBreakGroup(breakGroup)` | Désactive et cache tous les props rattachés au groupe de casse donné, puis les remet à 0 côté moteur. Appelée quand un groupe de poutres casse. | 54 |
-| `props.init()` | Identique à reset() (M.init = reset). Lit v.data.props, construit les tables breakGroup/deformGroup, normalise la config lightScaling. *(interne)* | 68 |
-| `props.reset()` | Réinitialise l'état de chaque prop (disabled=false, hidden=false, lastVal=math.huge), reconstruit les index de groupes et active updateGFX s'il y a des props. *(interne)* | 68 |
+| `props.disablePropsInDeformGroup(deformGroup)` | Disables and hides all props attached to the given deform group, then sets them back to 0 on the engine side. Called by damage handling (beamstate) when a group deforms. | 41 |
+| `props.hidePropsInBreakGroup(breakGroup)` | Disables and hides all props attached to the given break group, then sets them back to 0 on the engine side. Called when a beam group breaks. | 54 |
+| `props.init()` | Identical to reset() (M.init = reset). Reads v.data.props, builds the breakGroup/deformGroup tables, normalizes the lightScaling config. *(internal)* | 68 |
+| `props.reset()` | Resets the state of each prop (disabled=false, hidden=false, lastVal=math.huge), rebuilds the group indexes and enables updateGFX if there are props. *(internal)* | 68 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `props.disablePropsInDeformGroup(deformGroup)`
 
-Désactive et cache tous les props rattachés au groupe de déformation donné, puis les remet à 0 côté moteur. Appelée par la gestion de dégâts (beamstate) quand un groupe se déforme.
+Disables and hides all props attached to the given deform group, then sets them back to 0 on the engine side. Called by damage handling (beamstate) when a group deforms.
 
-- `deformGroup` (*string*) : Nom du groupe de déformation.
+- `deformGroup` (*string*) : Deform group name.
 
 #### `props.hidePropsInBreakGroup(breakGroup)`
 
-Désactive et cache tous les props rattachés au groupe de casse donné, puis les remet à 0 côté moteur. Appelée quand un groupe de poutres casse.
+Disables and hides all props attached to the given break group, then sets them back to 0 on the engine side. Called when a beam group breaks.
 
-- `breakGroup` (*string*) : Nom du groupe de casse.
+- `breakGroup` (*string*) : Break group name.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `updateGFX` | function | nop par défaut ; remplacée par la mise à jour des props lors de reset()/init() si le véhicule a des props. ⚠ nop est défini ailleurs (global du jeu). |
+| `updateGFX` | function | nop by default; replaced by the props update during reset()/init() if the vehicle has props. ⚠ nop is defined elsewhere (game global). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `propUpdate`, `setPropLight`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/props.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/props.lua`.*

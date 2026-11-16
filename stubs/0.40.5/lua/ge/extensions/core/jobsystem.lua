@@ -2,50 +2,50 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/jobsystem.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_jobsystem` : mini ordonnanceur de tâches coopératives basé sur des coroutines Lua. Un moddeur y met un traitement long (scan de fichiers, calcul lourd) pour l'étaler sur plusieurs images au lieu de bloquer le jeu. La fonction du job reçoit un objet `job` avec `job.yield()` (rend la main si le budget de temps est dépassé) et `job.sleep(secondes)` (pause sans bloquer le jeu). Toutes les coroutines sont reprises une fois par image dans onUpdate.
---- Accès : extension `core_jobsystem` : `extensions.load("core_jobsystem")`, puis la globale `core_jobsystem`
+--- GE extension `core_jobsystem`: mini cooperative task scheduler based on Lua coroutines. A modder puts a long task in it (file scan, heavy computation) to spread it over several frames instead of blocking the game. The job function receives a `job` object with `job.yield()` (yields if the time budget is exceeded) and `job.sleep(seconds)` (pause without blocking the game). All coroutines are resumed once per frame in onUpdate.
+--- Access: extension `core_jobsystem`: `extensions.load("core_jobsystem")`, then the global `core_jobsystem`
 ---@class core_jobsystem
 core_jobsystem = {}
 
---- Retire un job de la liste pour qu'il ne soit plus repris. N'appelle pas son exit callback ni onJobDone ; la coroutine est abandonnée.
----Source : lua/ge/extensions/core/jobsystem.lua:146
----@param jobHandle table Objet renvoyé par create.
----@return boolean  true si le job a été trouvé et retiré.
+--- Removes a job from the list so it is no longer resumed. Does not call its exit callback or onJobDone; the coroutine is abandoned.
+---Source: lua/ge/extensions/core/jobsystem.lua:146
+---@param jobHandle table Object returned by create.
+---@return boolean  true if the job was found and removed.
 function core_jobsystem.cancelJob(jobHandle) end
 
---- Crée et enregistre un job (coroutine) exécuté par morceaux à chaque image. La fonction est appelée avec (job, ...).
----Source : lua/ge/extensions/core/jobsystem.lua:43
----@param fct function Fonction de travail, fct(job, ...).
----@param maxdt number|nil Budget de temps en secondes entre deux yield effectifs ; défaut 0.01.
----@param ... any Arguments passés à fct après job.
----@return table  Objet job : {yield(), sleep(secs), setExitCallback(fn), running, fct, maxdt}. exitcbl est appelé avec le job à sa fin.
+--- Creates and registers a job (coroutine) executed in chunks every frame. The function is called with (job, ...).
+---Source: lua/ge/extensions/core/jobsystem.lua:43
+---@param fct function Work function, fct(job, ...).
+---@param maxdt number|nil Time budget in seconds between two effective yields; default 0.01.
+---@param ... any Arguments passed to fct after job.
+---@return table  Job object: {yield(), sleep(secs), setExitCallback(fn), running, fct, maxdt}. exitcbl is called with the job when it ends.
 function core_jobsystem.create(fct, maxdt, ...) end
 
---- Cherche des fichiers sous un dossier : correspondances directes à la racine, puis recherche récursive native par sous-dossier de premier niveau, avec un appel à yieldFn après chacun. À appeler depuis un job en passant job.yield.
----Source : lua/ge/extensions/core/jobsystem.lua:161
----@param rootPath string Dossier racine.
----@param pattern string Motif de fichier (ex. '*.json').
----@param yieldFn function|nil Appelée avec un texte de debug après chaque sous-dossier ; défaut nop.
----@return string[]  Chemins trouvés.
+--- Searches for files under a folder: direct matches at the root, then native recursive search per first-level subfolder, with a call to yieldFn after each. To be called from a job by passing job.yield.
+---Source: lua/ge/extensions/core/jobsystem.lua:161
+---@param rootPath string Root folder.
+---@param pattern string File pattern (e.g. '*.json').
+---@param yieldFn function|nil Called with a debug text after each subfolder; default nop.
+---@return string[]  Paths found.
 function core_jobsystem.findFilesAsync(rootPath, pattern, yieldFn) end
 
---- Nombre de jobs actuellement en cours.
----Source : lua/ge/extensions/core/jobsystem.lua:140
----@return integer  Nombre de jobs.
+--- Number of jobs currently running.
+---Source: lua/ge/extensions/core/jobsystem.lua:140
+---@return integer  Number of jobs.
 function core_jobsystem.getRunningJobCount() end
 
---- Hook par image (appelé avec les dt du jeu) : reprend chaque coroutine, loggue les erreurs, supprime les jobs terminés, appelle leur exitCallback puis émet onJobDone.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/jobsystem.lua:102
----@param dtReal number Delta temps réel en secondes.
----@param dtSim number Delta temps de simulation en secondes.
----@param dtRaw number Delta temps brut en secondes.
+--- Per-frame hook (called with the game's dt): resumes each coroutine, logs errors, removes finished jobs, calls their exitCallback then emits onJobDone.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/jobsystem.lua:102
+---@param dtReal number Real-time delta in seconds.
+---@param dtSim number Simulation time delta in seconds.
+---@param dtRaw number Raw time delta in seconds.
 function core_jobsystem.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Renvoie une fonction qui lance fct comme job, sauf si une instance de fct tourne déjà (dans ce cas l'appel est ignoré).
----Source : lua/ge/extensions/core/jobsystem.lua:89
----@param fct function Fonction de travail du job.
----@param maxdt number|nil Budget en secondes, comme pour create.
----@return function  function(...) qui crée le job ; ne renvoie rien.
+--- Returns a function that launches fct as a job, unless an instance of fct is already running (in which case the call is ignored).
+---Source: lua/ge/extensions/core/jobsystem.lua:89
+---@param fct function Work function of the job.
+---@param maxdt number|nil Budget in seconds, as for create.
+---@return function  function(...) that creates the job; returns nothing.
 function core_jobsystem.wrap(fct, maxdt) end
 

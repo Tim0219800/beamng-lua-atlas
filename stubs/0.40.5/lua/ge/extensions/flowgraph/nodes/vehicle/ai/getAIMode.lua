@@ -2,31 +2,31 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+--- Flowgraph node class; each instance represents a node in a graph.
 ---@class flowgraph_nodes_vehicle_ai_getAIMode_C
 local flowgraph_nodes_vehicle_ai_getAIMode_C = {}
 
---- Oublie le dernier mode reçu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.lua:40
+--- Forgets the last received mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.lua:40
 function flowgraph_nodes_vehicle_ai_getAIMode_C:_executionStarted() end
 
---- Rappel appelé depuis le véhicule avec le mode IA ; le mémorise dans returnedMode.
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.lua:48
----@param mode string Mode IA du véhicule (ex. manual, disabled, random...).
+--- Callback called from the vehicle with the AI mode; stores it in returnedMode.
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.lua:48
+---@param mode string AI mode of the vehicle (e.g. manual, disabled, random...).
 function flowgraph_nodes_vehicle_ai_getAIMode_C:getAIMode(mode) end
 
---- Construit la commande Lua exécutée côté véhicule : lit ai.getState().mode et rappelle n:getAIMode(mode) sur ce nœud via core_flowgraphManager.getManagerGraphNode.
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.lua:44
+--- Builds the Lua command executed on the vehicle side: reads ai.getState().mode and calls n:getAIMode(mode) back on this node via core_flowgraphManager.getManagerGraphNode.
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.lua:44
 function flowgraph_nodes_vehicle_ai_getAIMode_C:getCmd() end
 
---- Ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.lua:21
+--- Does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.lua:21
 function flowgraph_nodes_vehicle_ai_getAIMode_C:init() end
 
---- Envoie au véhicule la commande de getCmd et publie le dernier mode reçu sur aiMode (la valeur a donc au moins une frame de retard).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.lua:25
+--- Sends the getCmd command to the vehicle and publishes the last received mode on aiMode (the value is therefore at least one frame late).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.lua:25
 function flowgraph_nodes_vehicle_ai_getAIMode_C:work() end
 

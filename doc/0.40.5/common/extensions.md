@@ -1,271 +1,271 @@
 # `extensions`
 
-*Fichier : `lua/common/extensions.lua` · VM : Commun (GE + véhicule) · 1247 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/extensions.lua` · VM: Common (GE + vehicle) · 1247 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `extensions`
+**Access:** global `extensions`
 
-Gestionnaire d'extensions (global `extensions`, présent dans la VM GE et dans la VM véhicule). Il charge/décharge des modules Lua comme extensions, résout leurs dépendances (champ M.dependencies), les expose comme globales et sous extensions.<nom>, et diffuse les hooks (extensions.hook('onXxx', ...)) à tous les modules qui définissent cette fonction. Il gère aussi la sérialisation/désérialisation lors d'un rechargement de la VM Lua (Ctrl+L). Un moddeur s'en sert pour charger son extension, déclencher des hooks ou accéder à une extension par son nom.
+Extension manager (global `extensions`, present in the GE VM and in the vehicle VM). It loads/unloads Lua modules as extensions, resolves their dependencies (field M.dependencies), exposes them as globals and under extensions.<name>, and broadcasts hooks (extensions.hook('onXxx', ...)) to all modules that define that function. It also handles serialization/deserialization during a Lua VM reload (Ctrl+L). A modder uses it to load their extension, trigger hooks or access an extension by name.
 
-## Exemple
+## Example
 
 ```lua
-extensions.load('myMod_main')        -- charge lua/ge/extensions/myMod/main.lua (nom avec _ = chemin avec /)
-extensions.myMod_main.doSomething() -- accès (charge automatiquement si absent)
-extensions.hook('onMyEvent', 42)    -- appelle onMyEvent(42) dans tous les modules qui la définissent
+extensions.load('myMod_main')        -- loads lua/ge/extensions/myMod/main.lua (name with _ = path with /)
+extensions.myMod_main.doSomething() -- access (loads automatically if absent)
+extensions.hook('onMyEvent', 42)    -- calls onMyEvent(42) in all modules that define it
 extensions.unload('myMod_main')
 ```
 
-## Remarques
+## Notes
 
-- Nommage : le nom d'extension est le chemin avec '/' remplacé par '_' et '_' doublé en '__' (luaPathToExtName) ; extNameToLuaPath fait l'inverse. Exemple : 'ui_missionInfo' <-> 'ui/missionInfo'.
-- Accéder à extensions.<nom> pour un module non chargé le charge automatiquement (via __index de la métatable), la recherche étant insensible à la casse pour les modules déjà résolus.
-- Un module doit retourner sa table M, sinon il est refusé (message d'erreur). Cycle de vie : onPreLoad avant chargement des dépendances ; onExtensionLoaded(donnéesDésérialisées) après chargement (retourner false décharge le module) ; onInit(données) ensuite, uniquement dans la VM GE (vmType == 'game') ; onExtensionUnloaded au déchargement.
-- Fonctions obsolètes détectées sur un module : onLoad et init (remplacer par onExtensionLoaded), onRaceWaypoint (-> onRaceWaypointReached), onScenarioRaceCountingDone (-> onCountdownEnded), activated (-> onPlayersChanged), onUnload (-> onExtensionUnloaded). Elles sont renommées automatiquement avec un avertissement dans le journal.
-- Champs posés sur chaque module chargé : __extensionName__, __extensionPath__, __manuallyLoaded__ (true si chargé via load/loadAtRoot), __originalExtPath__ (loadAtRoot), __virtual__ (proxy).
-- Les hooks sont appelés dans l'ordre de résolution des dépendances (modules triés par nom puis dépendances d'abord). Les listes de fonctions sont mises en cache par nom de hook ; le cache est vidé au chargement/déchargement.
-- extensions.hook est hookProfiled hors version shipping_build (avec évènements profiler), sinon hookFast. setProfiler le remplace temporairement.
-- Bug probable : hookExcept compare m.__extensionsModulePath__, champ jamais défini (le champ posé est __extensionPath__) ; la liste d'exceptions n'exclut donc rien.
-- Les champs M.onSerialize, M.onDeserialize et M.onDeserialized valent nop (fonction vide) ; l'extraction automatique les signale à tort comme nil, de même pour M.hook.
-- Un avertissement est journalisé si le chargement, onExtensionLoaded, onInit ou la désérialisation d'une extension dépasse 50 ms.
+- Naming: the extension name is the path with '/' replaced by '_' and '_' doubled to '__' (luaPathToExtName); extNameToLuaPath does the reverse. Example: 'ui_missionInfo' <-> 'ui/missionInfo'.
+- Accessing extensions.<name> for a module that is not loaded loads it automatically (via the metatable's __index), the lookup being case-insensitive for modules already resolved.
+- A module must return its table M, otherwise it is rejected (error message). Lifecycle: onPreLoad before dependencies are loaded; onExtensionLoaded(deserializedData) after loading (returning false unloads the module); onInit(data) next, only in the GE VM (vmType == 'game'); onExtensionUnloaded on unload.
+- Deprecated functions detected on a module: onLoad and init (replace with onExtensionLoaded), onRaceWaypoint (-> onRaceWaypointReached), onScenarioRaceCountingDone (-> onCountdownEnded), activated (-> onPlayersChanged), onUnload (-> onExtensionUnloaded). They are renamed automatically with a warning in the log.
+- Fields set on every loaded module: __extensionName__, __extensionPath__, __manuallyLoaded__ (true if loaded via load/loadAtRoot), __originalExtPath__ (loadAtRoot), __virtual__ (proxy).
+- Hooks are called in dependency resolution order (modules sorted by name then dependencies first). Function lists are cached by hook name; the cache is cleared on load/unload.
+- extensions.hook is hookProfiled outside the shipping_build version (with profiler events), otherwise hookFast. setProfiler temporarily replaces it.
+- Probable bug: hookExcept compares m.__extensionsModulePath__, a field that is never defined (the field set is __extensionPath__); the exception list therefore excludes nothing.
+- The fields M.onSerialize, M.onDeserialize and M.onDeserialized are nop (empty function); automatic extraction wrongly reports them as nil, likewise for M.hook.
+- A warning is logged if the loading, onExtensionLoaded, onInit or deserialization of an extension takes longer than 50 ms.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `extensions.addModulePath(directory)` | Ajoute directory/?.lua en tête de package.path. | 701 |
-| `extensions.deserialize(data, filter)` | Recharge les extensions listées dans data puis restitue leurs données via onDeserialize(data) ou fusion de M.state/M (puis onDeserialized). Les données sont aussi passées à onExtensionLoaded/onInit. *(interne)* | 1015 |
-| `extensions.disableSerialization(...)` | Exclut des extensions de la sérialisation lors du rechargement de la VM Lua. | 947 |
-| `extensions.extNameToLuaPath(extName)` | Convertit un nom d'extension en chemin ('a_b__c' -> 'a/b_c'). | 64 |
-| `extensions.getLoadedExtensionsNames(excludeVirtual)` | Renvoie la liste triée des noms d'extensions chargées. | 1201 |
-| `extensions.getSerializationData(reason)` | Construit la table de données à conserver lors d'un rechargement : liste des extensions chargées (chemins) et, pour chaque module ayant onSerialize/onDeserialize(d), le retour de onSerialize(reason), sinon M.state, sinon le module entier. Si reason == 'reload', décharge ensuite toutes les extensions. *(interne)* | 965 |
-| `extensions.hookExcept(exceptionList, func, ...)` | Appelle la fonction func de tous les modules résolus sauf ceux listés. Voir notes : la comparaison utilise un champ jamais défini. | 884 |
-| `extensions.hookNotify(func, ...)` | Appelle M.hook(func, ...) puis exécute et supprime les callbacks enregistrés avec setCompletedCallback pour ce hook. | 899 |
-| `extensions.hookUpdate(funcName)` | Invalide le cache des fonctions d'un hook pour qu'il soit reconstruit au prochain appel (à utiliser quand un module ajoute ou retire dynamiquement une fonction de hook). | 94 |
-| `extensions.isExtensionLoaded(extName)` | Indique si une extension est chargée (test : _G[extName] ~= nil). | 280 |
-| `extensions.load(...)` | Charge une ou plusieurs extensions (noms au format ext_nom ou chemins contenant '/'), les marque comme chargées manuellement, résout les dépendances puis appelle onExtensionLoaded (et onInit côté GE) des modules fraîchement chargés. | 648 |
-| `extensions.loadAtRoot(extPath, rootName)` | Charge un fichier Lua comme extension en choisissant une racine de nommage : le nom devient rootName..'_'..nomDuFichier (ou le seul nom de fichier si rootName vaut ''). | 658 |
-| `extensions.loadModule(extName)` | Obsolète : appelle load avec un avertissement. | 1189 |
-| `extensions.loadModulesInDirectory(directory, excludeSubdirectories)` | Charge à la racine globale tous les .lua trouvés (récursivement) dans un dossier, avec le nom du fichier comme nom d'extension (compatibilité avec les anciens mods). | 708 |
-| `extensions.luaPathToExtName(filepath)` | Convertit un chemin ('a/b_c') en nom d'extension ('a_b__c'). | 55 |
-| `extensions.printExtensions()` | Journalise la liste des extensions chargées avec leurs dépendances. | 860 |
-| `extensions.printHooks(funcName)` | Affiche (print) les extensions qui définissent la fonction funcName. | 867 |
-| `extensions.refresh(extName)` | Réapplique le traitement de chargement à une extension déjà chargée, sans relire le disque (dépendances, hooks obsolètes, etc.). | 928 |
-| `extensions.reload(extPath)` | Décharge puis recharge une extension depuis le disque (vide le cache package.loaded). | 922 |
-| `extensions.reloadModule(modulePath)` | Obsolète : appelle reload avec un avertissement. | 942 |
-| `extensions.restoreModulePath()` | Restaure le package.path mémorisé par saveModulePath. | 917 |
-| `extensions.saveModulePath()` | Mémorise package.path courant. | 913 |
-| `extensions.setCompletedCallback(funcName, callback)` | Enregistre un callback exécuté (une seule fois) à la fin du prochain hookNotify pour ce hook. | 757 |
-| `extensions.setProfiler(p)` | Active un profiler (M.hook devient hookSingleFrameProfiled) ou, avec nil, revient au hook normal. | 851 |
-| `extensions.unload(extName)` | Décharge une extension et toutes celles qui en dépendent (et plus rien d'autre ne nécessite), en appelant onExtensionUnloaded. Ne fait rien si elle n'est pas chargée. Les extensions virtuelles ne sont pas déchargées sauf si enfants d'un module déchargé. | 284 |
-| `extensions.unloadExcept(...)` | Décharge toutes les extensions sauf celles listées et leurs dépendances. Accepte soit une liste en argument unique, soit plusieurs listes. | 337 |
-| `extensions.unloadModule(extName)` | Obsolète : appelle unload avec un avertissement. | 332 |
-| `extensions.use(key)` | Charge l'extension puis la renvoie (ancienne syntaxe ; l'accès direct extensions.nom charge déjà automatiquement). | 1194 |
-| `extensions.wrapAllExtensionsForProfiler()` | Enveloppe toutes les fonctions de toutes les extensions avec profilerPushEvent/PopEvent. Les extensions chargées ensuite sont aussi enveloppées. | 479 |
+| `extensions.addModulePath(directory)` | Prepends directory/?.lua to package.path. | 701 |
+| `extensions.deserialize(data, filter)` | Reloads the extensions listed in data then restores their data via onDeserialize(data) or by merging M.state/M (then onDeserialized). The data is also passed to onExtensionLoaded/onInit. *(internal)* | 1015 |
+| `extensions.disableSerialization(...)` | Excludes extensions from serialization during the Lua VM reload. | 947 |
+| `extensions.extNameToLuaPath(extName)` | Converts an extension name to a path ('a_b__c' -> 'a/b_c'). | 64 |
+| `extensions.getLoadedExtensionsNames(excludeVirtual)` | Returns the sorted list of loaded extension names. | 1201 |
+| `extensions.getSerializationData(reason)` | Builds the data table to keep across a reload: the list of loaded extensions (paths) and, for each module with onSerialize/onDeserialize(d), the return value of onSerialize(reason), otherwise M.state, otherwise the whole module. If reason == 'reload', then unloads all extensions. *(internal)* | 965 |
+| `extensions.hookExcept(exceptionList, func, ...)` | Calls the function func of all resolved modules except those listed. See notes: the comparison uses a field that is never defined. | 884 |
+| `extensions.hookNotify(func, ...)` | Calls M.hook(func, ...) then runs and removes the callbacks registered with setCompletedCallback for this hook. | 899 |
+| `extensions.hookUpdate(funcName)` | Invalidates a hook's function cache so it is rebuilt on the next call (use when a module dynamically adds or removes a hook function). | 94 |
+| `extensions.isExtensionLoaded(extName)` | Tells whether an extension is loaded (test: _G[extName] ~= nil). | 280 |
+| `extensions.load(...)` | Loads one or more extensions (names in ext_name format or paths containing '/'), marks them as manually loaded, resolves dependencies, then calls onExtensionLoaded (and onInit on the GE side) of the freshly loaded modules. | 648 |
+| `extensions.loadAtRoot(extPath, rootName)` | Loads a Lua file as an extension by choosing a naming root: the name becomes rootName..'_'..fileName (or just the file name if rootName is ''). | 658 |
+| `extensions.loadModule(extName)` | Deprecated: calls load with a warning. | 1189 |
+| `extensions.loadModulesInDirectory(directory, excludeSubdirectories)` | Loads at the global root all the .lua files found (recursively) in a folder, with the file name as the extension name (compatibility with old mods). | 708 |
+| `extensions.luaPathToExtName(filepath)` | Converts a path ('a/b_c') to an extension name ('a_b__c'). | 55 |
+| `extensions.printExtensions()` | Logs the list of loaded extensions with their dependencies. | 860 |
+| `extensions.printHooks(funcName)` | Prints (print) the extensions that define the function funcName. | 867 |
+| `extensions.refresh(extName)` | Reapplies the loading processing to an already loaded extension, without rereading the disk (dependencies, deprecated hooks, etc.). | 928 |
+| `extensions.reload(extPath)` | Unloads then reloads an extension from disk (clears the package.loaded cache). | 922 |
+| `extensions.reloadModule(modulePath)` | Deprecated: calls reload with a warning. | 942 |
+| `extensions.restoreModulePath()` | Restores the package.path remembered by saveModulePath. | 917 |
+| `extensions.saveModulePath()` | Remembers the current package.path. | 913 |
+| `extensions.setCompletedCallback(funcName, callback)` | Registers a callback run (once) at the end of the next hookNotify for this hook. | 757 |
+| `extensions.setProfiler(p)` | Enables a profiler (M.hook becomes hookSingleFrameProfiled) or, with nil, goes back to the normal hook. | 851 |
+| `extensions.unload(extName)` | Unloads an extension and all those that depend on it (and that nothing else requires), calling onExtensionUnloaded. Does nothing if it is not loaded. Virtual extensions are not unloaded unless they are children of an unloaded module. | 284 |
+| `extensions.unloadExcept(...)` | Unloads all extensions except those listed and their dependencies. Accepts either a single list as argument or several lists. | 337 |
+| `extensions.unloadModule(extName)` | Deprecated: calls unload with a warning. | 332 |
+| `extensions.use(key)` | Loads the extension then returns it (old syntax; direct access extensions.name already loads automatically). | 1194 |
+| `extensions.wrapAllExtensionsForProfiler()` | Wraps all functions of all extensions with profilerPushEvent/PopEvent. Extensions loaded afterwards are also wrapped. | 479 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `extensions.addModulePath(directory)`
 
-Ajoute directory/?.lua en tête de package.path.
+Prepends directory/?.lua to package.path.
 
-- `directory` (*string*) : Dossier de modules Lua.
+- `directory` (*string*) : Lua modules folder.
 
 #### `extensions.deserialize(data, filter)`
 
-Recharge les extensions listées dans data puis restitue leurs données via onDeserialize(data) ou fusion de M.state/M (puis onDeserialized). Les données sont aussi passées à onExtensionLoaded/onInit.
+Reloads the extensions listed in data then restores their data via onDeserialize(data) or by merging M.state/M (then onDeserialized). The data is also passed to onExtensionLoaded/onInit.
 
-- `data` (*table|nil*) : Données produites par getSerializationData.
-- `filter` (*string|nil*) : Nom d'extension : ne restituer que celle-ci.
+- `data` (*table|nil*) : Data produced by getSerializationData.
+- `filter` (*string|nil*) : Extension name: restore only this one.
 
 #### `extensions.disableSerialization(...)`
 
-Exclut des extensions de la sérialisation lors du rechargement de la VM Lua.
+Excludes extensions from serialization during the Lua VM reload.
 
-- `...` (*string|string[]*) : Noms d'extensions.
+- `...` (*string|string[]*) : Extension names.
 
 #### `extensions.extNameToLuaPath(extName)`
 
-Convertit un nom d'extension en chemin ('a_b__c' -> 'a/b_c').
+Converts an extension name to a path ('a_b__c' -> 'a/b_c').
 
-- `extName` (*string|nil*) : Nom d'extension.
-- **renvoie** : string|nil Chemin.
+- `extName` (*string|nil*) : Extension name.
+- **returns**: string|nil Path.
 
 #### `extensions.getLoadedExtensionsNames(excludeVirtual)`
 
-Renvoie la liste triée des noms d'extensions chargées.
+Returns the sorted list of loaded extension names.
 
-- `excludeVirtual` (*boolean|nil*) : true pour omettre les extensions virtuelles (proxies).
-- **renvoie** : string[] Noms triés.
+- `excludeVirtual` (*boolean|nil*) : true to omit virtual extensions (proxies).
+- **returns**: string[] Sorted names.
 
 #### `extensions.getSerializationData(reason)`
 
-Construit la table de données à conserver lors d'un rechargement : liste des extensions chargées (chemins) et, pour chaque module ayant onSerialize/onDeserialize(d), le retour de onSerialize(reason), sinon M.state, sinon le module entier. Si reason == 'reload', décharge ensuite toutes les extensions.
+Builds the data table to keep across a reload: the list of loaded extensions (paths) and, for each module with onSerialize/onDeserialize(d), the return value of onSerialize(reason), otherwise M.state, otherwise the whole module. If reason == 'reload', then unloads all extensions.
 
-- `reason` (*string|nil*) : Raison (défaut 'reload').
-- **renvoie** : table Données de sérialisation.
+- `reason` (*string|nil*) : Reason (default 'reload').
+- **returns**: table Serialization data.
 
 #### `extensions.hookExcept(exceptionList, func, ...)`
 
-Appelle la fonction func de tous les modules résolus sauf ceux listés. Voir notes : la comparaison utilise un champ jamais défini.
+Calls the function func of all resolved modules except those listed. See notes: the comparison uses a field that is never defined.
 
-- `exceptionList` (*string[]*) : Chemins de modules à exclure.
-- `func` (*string*) : Nom de la fonction de hook.
-- `...` (*any*) : Arguments passés à chaque module.
+- `exceptionList` (*string[]*) : Module paths to exclude.
+- `func` (*string*) : Name of the hook function.
+- `...` (*any*) : Arguments passed to each module.
 
 #### `extensions.hookNotify(func, ...)`
 
-Appelle M.hook(func, ...) puis exécute et supprime les callbacks enregistrés avec setCompletedCallback pour ce hook.
+Calls M.hook(func, ...) then runs and removes the callbacks registered with setCompletedCallback for this hook.
 
-- `func` (*string*) : Nom du hook.
+- `func` (*string*) : Hook name.
 - `...` (*any*) : Arguments.
 
 #### `extensions.hookUpdate(funcName)`
 
-Invalide le cache des fonctions d'un hook pour qu'il soit reconstruit au prochain appel (à utiliser quand un module ajoute ou retire dynamiquement une fonction de hook).
+Invalidates a hook's function cache so it is rebuilt on the next call (use when a module dynamically adds or removes a hook function).
 
-- `funcName` (*string*) : Nom du hook.
+- `funcName` (*string*) : Hook name.
 
 #### `extensions.isExtensionLoaded(extName)`
 
-Indique si une extension est chargée (test : _G[extName] ~= nil).
+Tells whether an extension is loaded (test: _G[extName] ~= nil).
 
-- `extName` (*string*) : Nom d'extension.
-- **renvoie** : boolean true si présente comme global.
+- `extName` (*string*) : Extension name.
+- **returns**: boolean true if present as a global.
 
 #### `extensions.load(...)`
 
-Charge une ou plusieurs extensions (noms au format ext_nom ou chemins contenant '/'), les marque comme chargées manuellement, résout les dépendances puis appelle onExtensionLoaded (et onInit côté GE) des modules fraîchement chargés.
+Loads one or more extensions (names in ext_name format or paths containing '/'), marks them as manually loaded, resolves dependencies, then calls onExtensionLoaded (and onInit on the GE side) of the freshly loaded modules.
 
-- `...` (*string|string[]*) : Noms ou chemins d'extensions, ou tableaux de ces chaînes.
+- `...` (*string|string[]*) : Extension names or paths, or arrays of these strings.
 
 #### `extensions.loadAtRoot(extPath, rootName)`
 
-Charge un fichier Lua comme extension en choisissant une racine de nommage : le nom devient rootName..'_'..nomDuFichier (ou le seul nom de fichier si rootName vaut '').
+Loads a Lua file as an extension by choosing a naming root: the name becomes rootName..'_'..fileName (or just the file name if rootName is '').
 
-- `extPath` (*string*) : Chemin du fichier sans .lua, contenant au moins un '/'.
-- `rootName` (*string*) : Préfixe de nom ; ne doit pas contenir '_' ('' pour l'espace global).
-- **renvoie** : string|nil Nom de l'extension, nil en cas d'erreur.
-- **renvoie** : table|nil Module chargé.
+- `extPath` (*string*) : File path without .lua, containing at least one '/'.
+- `rootName` (*string*) : Name prefix; must not contain '_' ('' for the global space).
+- **returns**: string|nil Extension name, nil on error.
+- **returns**: table|nil Loaded module.
 
 #### `extensions.loadModule(extName)`
 
-Obsolète : appelle load avec un avertissement.
+Deprecated: calls load with a warning.
 
-- `extName` (*string*) : Nom d'extension.
+- `extName` (*string*) : Extension name.
 
 #### `extensions.loadModulesInDirectory(directory, excludeSubdirectories)`
 
-Charge à la racine globale tous les .lua trouvés (récursivement) dans un dossier, avec le nom du fichier comme nom d'extension (compatibilité avec les anciens mods).
+Loads at the global root all the .lua files found (recursively) in a folder, with the file name as the extension name (compatibility with old mods).
 
-- `directory` (*string*) : Dossier à parcourir (FS:findFiles).
-- `excludeSubdirectories` (*string[]|nil*) : Motifs de sous-chemins à exclure.
+- `directory` (*string*) : Folder to walk (FS:findFiles).
+- `excludeSubdirectories` (*string[]|nil*) : Sub-path patterns to exclude.
 
 #### `extensions.luaPathToExtName(filepath)`
 
-Convertit un chemin ('a/b_c') en nom d'extension ('a_b__c').
+Converts a path ('a/b_c') to an extension name ('a_b__c').
 
-- `filepath` (*string|nil*) : Chemin sans .lua.
-- **renvoie** : string|nil Nom d'extension.
+- `filepath` (*string|nil*) : Path without .lua.
+- **returns**: string|nil Extension name.
 
 #### `extensions.printHooks(funcName)`
 
-Affiche (print) les extensions qui définissent la fonction funcName.
+Prints (print) the extensions that define the function funcName.
 
-- `funcName` (*string*) : Nom du hook.
+- `funcName` (*string*) : Hook name.
 
 #### `extensions.refresh(extName)`
 
-Réapplique le traitement de chargement à une extension déjà chargée, sans relire le disque (dépendances, hooks obsolètes, etc.).
+Reapplies the loading processing to an already loaded extension, without rereading the disk (dependencies, deprecated hooks, etc.).
 
-- `extName` (*string*) : Nom d'extension déjà chargée.
-- **renvoie** : table|false|nil Module, ou false si l'extension n'est pas chargée.
+- `extName` (*string*) : Name of an already loaded extension.
+- **returns**: table|false|nil Module, or false if the extension is not loaded.
 
 #### `extensions.reload(extPath)`
 
-Décharge puis recharge une extension depuis le disque (vide le cache package.loaded).
+Unloads then reloads an extension from disk (clears the package.loaded cache).
 
-- `extPath` (*string*) : Nom ou chemin d'extension.
+- `extPath` (*string*) : Extension name or path.
 
 #### `extensions.reloadModule(modulePath)`
 
-Obsolète : appelle reload avec un avertissement.
+Deprecated: calls reload with a warning.
 
-- `modulePath` (*string*) : Nom ou chemin.
+- `modulePath` (*string*) : Name or path.
 
 #### `extensions.setCompletedCallback(funcName, callback)`
 
-Enregistre un callback exécuté (une seule fois) à la fin du prochain hookNotify pour ce hook.
+Registers a callback run (once) at the end of the next hookNotify for this hook.
 
-- `funcName` (*string*) : Nom du hook.
-- `callback` (*function*) : Fonction appelée avec les arguments du hook.
+- `funcName` (*string*) : Hook name.
+- `callback` (*function*) : Function called with the hook arguments.
 
 #### `extensions.setProfiler(p)`
 
-Active un profiler (M.hook devient hookSingleFrameProfiled) ou, avec nil, revient au hook normal.
+Enables a profiler (M.hook becomes hookSingleFrameProfiled) or, with nil, goes back to the normal hook.
 
-- `p` (*table|nil*) : Objet profiler avec méthodes start et add.
+- `p` (*table|nil*) : Profiler object with methods start and add.
 
 #### `extensions.unload(extName)`
 
-Décharge une extension et toutes celles qui en dépendent (et plus rien d'autre ne nécessite), en appelant onExtensionUnloaded. Ne fait rien si elle n'est pas chargée. Les extensions virtuelles ne sont pas déchargées sauf si enfants d'un module déchargé.
+Unloads an extension and all those that depend on it (and that nothing else requires), calling onExtensionUnloaded. Does nothing if it is not loaded. Virtual extensions are not unloaded unless they are children of an unloaded module.
 
-- `extName` (*string*) : Nom d'extension.
+- `extName` (*string*) : Extension name.
 
 #### `extensions.unloadExcept(...)`
 
-Décharge toutes les extensions sauf celles listées et leurs dépendances. Accepte soit une liste en argument unique, soit plusieurs listes.
+Unloads all extensions except those listed and their dependencies. Accepts either a single list as argument or several lists.
 
-- `...` (*string[]*) : Liste(s) de noms d'extensions à conserver.
+- `...` (*string[]*) : List(s) of extension names to keep.
 
 #### `extensions.unloadModule(extName)`
 
-Obsolète : appelle unload avec un avertissement.
+Deprecated: calls unload with a warning.
 
-- `extName` (*string*) : Nom d'extension.
+- `extName` (*string*) : Extension name.
 
 #### `extensions.use(key)`
 
-Charge l'extension puis la renvoie (ancienne syntaxe ; l'accès direct extensions.nom charge déjà automatiquement).
+Loads the extension then returns it (old syntax; direct access extensions.name already loads automatically).
 
-- `key` (*string*) : Nom d'extension.
-- **renvoie** : table|nil Module chargé.
+- `key` (*string*) : Extension name.
+- **returns**: table|nil Loaded module.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `hook` | function | Fonction de diffusion de hook : hook(funcName, ...). Variante profilée (hookProfiled) hors build shipping, rapide (hookFast) sinon, ou hookSingleFrameProfiled si un profiler est fourni à setProfiler. |
+| `hook` | function | Hook broadcast function: hook(funcName, ...). Profiled variant (hookProfiled) outside the shipping build, fast (hookFast) otherwise, or hookSingleFrameProfiled if a profiler is provided to setProfiler. |
 | `onDeserialize` | function | nop. |
 | `onDeserialized` | function | nop. |
-| `onSerialize` | function | nop : l'extension `extensions` elle-même ne sérialise rien. |
+| `onSerialize` | function | nop: the `extensions` extension itself serializes nothing. |
 
-## Classe `ExtensionProxy`
+## Class `ExtensionProxy`
 
-Objet renvoyé par newExtensionProxy. Champs : extName, extPath, __virtual__, __manuallyLoaded__, hookProxies.
+Object returned by newExtensionProxy. Fields: extName, extPath, __virtual__, __manuallyLoaded__, hookProxies.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `ExtensionProxy:_updateHooks()` | Réenregistre le proxy comme extension virtuelle (refreshInternal) et vide le cache de hooks. | 1153 |
-| `ExtensionProxy:destroy()` | Supprime les hooks du proxy et le décharge. | 1162 |
-| `ExtensionProxy:submitEventSinks(hookableTablesInstances, dependencies)` | Enregistre des instances (avec leurs métatables) comme destinataires : toute fonction dont le nom commence par 'on' est exposée comme hook qui appelle m[k](m, ...) sur chaque instance. Met à jour les hooks et les dépendances du proxy. | 1114 |
+| `ExtensionProxy:_updateHooks()` | Re-registers the proxy as a virtual extension (refreshInternal) and clears the hook cache. | 1153 |
+| `ExtensionProxy:destroy()` | Removes the proxy's hooks and unloads it. | 1162 |
+| `ExtensionProxy:submitEventSinks(hookableTablesInstances, dependencies)` | Registers instances (with their metatables) as recipients: every function whose name starts with 'on' is exposed as a hook that calls m[k](m, ...) on each instance. Updates the proxy's hooks and dependencies. | 1114 |
 
-## Classe `MT`
+## Class `MT`
 
-Métatable du module `extensions`.
+Metatable of the `extensions` module.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `MT.__index(tbl, key)` | Résout extensions.<nom> : renvoie le module résolu (recherche insensible à la casse) ou le charge avec load puis renvoie _G[nom]. | 1169 |
+| `MT.__index(tbl, key)` | Resolves extensions.<name>: returns the resolved module (case-insensitive lookup) or loads it with load then returns _G[name]. | 1169 |
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `newExtensionProxy(parentExtension, identifierPrefix)` | Fonction GLOBALE. Crée une extension virtuelle (ExtensionProxy) qui redirige les hooks vers des instances d'objets (OOP) ; nom 'prefixe_virtual_N'. Si parentExtension est donné, le proxy est déchargé avec lui. | 1089 |
+| `newExtensionProxy(parentExtension, identifierPrefix)` | GLOBAL function. Creates a virtual extension (ExtensionProxy) that redirects hooks to object instances (OOP); name 'prefix_virtual_N'. If parentExtension is given, the proxy is unloaded along with it. | 1089 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/extensions.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/extensions.lua`.*

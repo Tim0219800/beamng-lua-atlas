@@ -1,19 +1,68 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/setDragVehicle.lua",
-  "module": "Nœud flowgraph « Set Drag Vehicles » (catégorie once_instant). Enregistre les véhicules de la course dans gameplay_drag_dragBridge.setVehicles. Les pins d'entrée par voie (vehId_i, isPlayable_i, dial_i, lane_i) sont créés dynamiquement selon le nombre choisi dans l'éditeur (count, sauvegardé). Sortie : flow (impulsion).",
-  "notes": ["Les voies sans vehId valide (> 0) sont ignorées ; si la liste est vide, le nœud ne donne pas de flux.", "Valeurs par défaut : isPlayable faux, dial -1, lane 1.", "À la suppression de pins, seuls les liens dont sourcePin correspond sont effacés (comparaison faite sur sourcePin alors que ce sont des pins d'entrée)."],
+  "module": "Flowgraph node \"Set Drag Vehicles\" (category once_instant). Registers the race vehicles in gameplay_drag_dragBridge.setVehicles. The per-lane input pins (vehId_i, isPlayable_i, dial_i, lane_i) are created dynamically according to the number chosen in the editor (count, saved). Output: flow (pulse).",
+  "notes": [
+    "Lanes without a valid vehId (> 0) are ignored; if the list is empty, the node gives no flow.",
+    "Default values: isPlayable false, dial -1, lane 1.",
+    "When pins are removed, only the links whose sourcePin matches are deleted (the comparison is made on sourcePin although these are input pins)."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "count = 1, mode = 'first'.", "internal": true},
-        "_executionStarted": {"desc": "Vide.", "internal": true},
-        "drawMiddle": {"desc": "Affiche le mode de fusion.", "internal": true},
-        "drawCustomProperties": {"desc": "Éditeur : champ count et choix de la fonction de fusion.", "internal": true},
-        "updatePins": {"desc": "Ajoute ou supprime les pins par voie pour passer de old à new.", "params": {"old": {"type": "integer", "desc": "Ancien nombre"}, "new": {"type": "integer", "desc": "Nouveau nombre"}}, "internal": true},
-        "workOnce": {"desc": "Construit la liste {id, isPlayable, dial, lane} et appelle dragBridge.setVehicles."},
-        "_onSerialize": {"desc": "Sauvegarde mode et count.", "params": {"res": {"type": "table", "desc": "Table de sérialisation"}}, "internal": true},
-        "_onDeserialized": {"desc": "Restaure mode et count et recrée les pins.", "params": {"res": {"type": "table", "desc": "Données sauvegardées"}}, "internal": true}
+        "init": {
+          "desc": "count = 1, mode = 'first'.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Empty.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Displays the merge mode.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Editor: count field and choice of the merge function.",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Adds or removes the per-lane pins to go from old to new.",
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "Old number"
+            },
+            "new": {
+              "type": "integer",
+              "desc": "New number"
+            }
+          },
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Builds the list {id, isPlayable, dial, lane} and calls dragBridge.setVehicles."
+        },
+        "_onSerialize": {
+          "desc": "Saves mode and count.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Serialization table"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restores mode and count and recreates the pins.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Saved data"
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

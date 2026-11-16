@@ -2,38 +2,38 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/ribbonInput.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gestion des événements souris et clavier pour les splines « ruban » des outils d'édition de l'éditeur. Un ruban est une spline posée en paires de nœuds gauche/droite (chaque paire a une profondeur). handleRibbonEvents (alias handlePrismEvents) dessine le curseur, l'aide à la pose des paires (premier nœud, second nœud), cherche le segment de ruban le plus proche du curseur, gère sélection, glissement de nœuds (libre ou rigide), gizmo (Alt), réglage de profondeur au glisser (0.1 m par pixel, entre 1 et 500 m), suppression (Suppr), insertion, et enregistre les modifications dans l'historique d'annulation.
---- Accès : extension `editor_toolUtilities_ribbonInput` : `extensions.load("editor_toolUtilities_ribbonInput")`, puis la globale `editor_toolUtilities_ribbonInput`
+--- Mouse and keyboard event handling for the "ribbon" splines of the editor's editing tools. A ribbon is a spline laid out in left/right node pairs (each pair has a depth). handleRibbonEvents (alias handlePrismEvents) draws the cursor, the pair placement help (first node, second node), finds the ribbon segment closest to the cursor, handles selection, node dragging (free or rigid), gizmo (Alt), depth adjustment by dragging (0.1 m per pixel, between 1 and 500 m), deletion (Delete), insertion, and records the changes in the undo history.
+--- Access: extension `editor_toolUtilities_ribbonInput`: `extensions.load("editor_toolUtilities_ribbonInput")`, then the global `editor_toolUtilities_ribbonInput`
 ---@class editor_toolUtilities_ribbonInput
 editor_toolUtilities_ribbonInput = {}
 
---- Alias de handleRibbonEvents (ancien nom, « prism » pour ruban prisme). Mêmes paramètres et valeurs de retour.
----Source : lua/ge/extensions/editor/toolUtilities/ribbonInput.lua:281
----@param ribbons table Liste des rubans.
----@param out table Table de sortie (ribbonIdx ou prismIdx, nodeIdx, isGizmoActive).
----@param useGizmo boolean Gizmo utilisable.
----@param isRigidTranslation boolean Translation rigide.
----@param masterDepth number Profondeur des nouvelles paires.
----@param updateRibbonDataFn function Callback de mise à jour.
----@param deepCopyFn function Callback de copie profonde.
----@param undoFn function Callback d'annulation.
----@param redoFn function Callback de rétablissement.
----@return integer  Indice du segment le plus proche.
----@return boolean  Glissement de nœud en cours.
+--- Alias of handleRibbonEvents (old name, "prism" for prism ribbon). Same parameters and return values.
+---Source: lua/ge/extensions/editor/toolUtilities/ribbonInput.lua:281
+---@param ribbons table List of ribbons.
+---@param out table Output table (ribbonIdx or prismIdx, nodeIdx, isGizmoActive).
+---@param useGizmo boolean Gizmo usable.
+---@param isRigidTranslation boolean Rigid translation.
+---@param masterDepth number Depth of new pairs.
+---@param updateRibbonDataFn function Update callback.
+---@param deepCopyFn function Deep copy callback.
+---@param undoFn function Undo callback.
+---@param redoFn function Redo callback.
+---@return integer  Index of the closest segment.
+---@return boolean  Node drag in progress.
 function editor_toolUtilities_ribbonInput.handlePrismEvents(ribbons, out, useGizmo, isRigidTranslation, masterDepth, updateRibbonDataFn, deepCopyFn, undoFn, redoFn) end
 
---- Gère les événements utilisateur pour les rubans, à appeler chaque frame par l'outil actif. Met à jour out, appelle updateRibbonDataFn après chaque modification et enregistre l'état complet via deepCopyFn / undoFn / redoFn. Renvoie le meilleur segment trouvé pour la recherche du segment sous le curseur, sur le ruban sélectionné.
----Source : lua/ge/extensions/editor/toolUtilities/ribbonInput.lua:281
----@param ribbons table Liste des rubans à éditer.
----@param out table Table de sortie : ribbonIdx (ruban), nodeIdx (nœud), isGizmoActive (gizmo actif).
----@param useGizmo boolean Le gizmo est-il utilisable.
----@param isRigidTranslation boolean true : le glissement déplace tous les nœuds du même vecteur ; false : chaque nœud bouge indépendamment.
----@param masterDepth number Profondeur utilisée pour les nouvelles paires de nœuds.
----@param updateRibbonDataFn function Callback pour recalculer les données du ruban après modification.
----@param deepCopyFn function Callback copiant en profondeur TOUTES les données de rubans (état complet) pour l'annulation.
----@param undoFn function Callback d'annulation de l'état complet.
----@param redoFn function Callback de rétablissement de l'état complet.
----@return integer  Indice du segment le plus proche du curseur sur le ruban sélectionné.
----@return boolean  true si un glissement de nœud est en cours (isNodeDrag).
+--- Handles user events for ribbons, to be called every frame by the active tool. Updates out, calls updateRibbonDataFn after each change and records the full state via deepCopyFn / undoFn / redoFn. Returns the best segment found by the search for the segment under the cursor, on the selected ribbon.
+---Source: lua/ge/extensions/editor/toolUtilities/ribbonInput.lua:281
+---@param ribbons table List of ribbons to edit.
+---@param out table Output table: ribbonIdx (ribbon), nodeIdx (node), isGizmoActive (gizmo active).
+---@param useGizmo boolean Whether the gizmo is usable.
+---@param isRigidTranslation boolean true: dragging moves all nodes by the same vector; false: each node moves independently.
+---@param masterDepth number Depth used for new node pairs.
+---@param updateRibbonDataFn function Callback to recompute the ribbon data after a change.
+---@param deepCopyFn function Callback deep-copying ALL ribbon data (full state) for undo.
+---@param undoFn function Callback to undo the full state.
+---@param redoFn function Callback to redo the full state.
+---@return integer  Index of the segment closest to the cursor on the selected ribbon.
+---@return boolean  true if a node drag is in progress (isNodeDrag).
 function editor_toolUtilities_ribbonInput.handleRibbonEvents(ribbons, out, useGizmo, isRigidTranslation, masterDepth, updateRibbonDataFn, deepCopyFn, undoFn, redoFn) end
 

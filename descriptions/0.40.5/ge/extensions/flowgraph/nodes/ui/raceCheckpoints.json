@@ -1,17 +1,17 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/raceCheckpoints.lua",
-  "module": "Nœud flowgraph « Set UI Race Checkpoints » (catégorie repeat_instant, auteur BeamNG, durée) : met à jour l'app UI de points de passage. Entrées : « cur » (nil = efface), « max ». Envoie 'WayPointChange' {current, count} et une entrée « checkpoint » (texte « cur / max ») dans ui_apps_genericMissionData (catégorie raceCheckpoints, order 100) ; efface avec 'WayPointReset'.",
+  "module": "Flowgraph node \"Set UI Race Checkpoints\" (category repeat_instant, author BeamNG, duration): updates the checkpoints UI app. Inputs: \"cur\" (nil = clears), \"max\". Sends 'WayPointChange' {current, count} and a \"checkpoint\" entry (text \"cur / max\") in ui_apps_genericMissionData (category raceCheckpoints, order 100); clears with 'WayPointReset'.",
   "notes": [
-    "Si max est nil, la concaténation du texte « cur / max » provoque une erreur."
+    "If max is nil, the concatenation of the \"cur / max\" text causes an error."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "work": {
-          "desc": "Envoie ou efface le compteur de points de passage dans l'UI.",
+          "desc": "Sends or clears the checkpoint counter in the UI.",
           "internal": true
         }
       }

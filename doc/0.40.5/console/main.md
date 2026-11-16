@@ -1,17 +1,17 @@
 # `main`
 
-*Fichier : `lua/console/main.lua` · VM : Console · 18 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/console/main.lua` · VM: Console · 18 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("main")`
+**Access:** `require("main")`
 
-Point d'entrée de la VM Lua « Console » (utilisée pour des outils en ligne de commande, hors jeu). Il règle package.path/cpath, charge extensions (chemins lua/ge/extensions/ et lua/common/extensions/), puis luaCore, common/cdefs, utils et mathlib. Il ne définit aucune fonction.
+Entry point of the "Console" Lua VM (used for command-line tools, outside the game). It sets package.path/cpath, loads extensions (paths lua/ge/extensions/ and lua/common/extensions/), then luaCore, common/cdefs, utils and mathlib. It defines no function.
 
-## Remarques
+## Notes
 
-- Définit la globale Engine comme un faux objet : Engine.Profiler.pushEvent et popEvent sont des nop, pour que le code partagé qui appelle le profileur fonctionne dans la console.
-- package.cpath est vidé : aucune bibliothèque native n'est chargeable depuis cette VM.
+- Defines the global Engine as a fake object: Engine.Profiler.pushEvent and popEvent are nops, so that shared code that calls the profiler works in the console.
+- package.cpath is emptied: no native library can be loaded from this VM.
 
-**Globales affectées :** `Engine`, `extensions`
+**Globals assigned:** `Engine`, `extensions`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/console/main.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/console/main.lua`.*

@@ -2,454 +2,454 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/trackBuilder/splineTrack.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Cœur du Track Builder (éditeur de pistes procédurales). Le module garde deux niveaux de données par sous-piste : subPieces (description abstraite : liste de pièces avec leurs marqueurs bank, height, width, checkpoint, murs, plafond, matériaux, obstacles) et subTracks (segments concrets avec points, mesh, markerInfo). Il convertit les pièces en segments (toSegments), calcule les points de Bézier, d'arc ou personnalisés, mesure la piste, interpole les marqueurs, génère les ProceduralMesh via segmentToProceduralMesh, place marqueurs et obstacles, gère les intersections multi-pistes, les checkpoints de scénario, la sauvegarde et le chargement en JSON (dossier trackEditor/) et le positionnement du véhicule. Il est piloté par l'application UI du Track Builder et par quickraceSetup.
---- Accès : extension `util_trackBuilder_splineTrack` : `extensions.load("util_trackBuilder_splineTrack")`, puis la globale `util_trackBuilder_splineTrack`
+--- Core of the Track Builder (procedural track editor). The module keeps two levels of data per sub-track: subPieces (abstract description: list of pieces with their bank, height, width, checkpoint, walls, ceiling, materials, obstacles markers) and subTracks (concrete segments with points, mesh, markerInfo). It converts pieces into segments (toSegments), computes Bézier, arc or custom points, measures the track, interpolates the markers, generates the ProceduralMesh objects via segmentToProceduralMesh, places markers and obstacles, handles multi-track intersections, scenario checkpoints, saving and loading in JSON (trackEditor/ folder) and vehicle positioning. It is driven by the Track Builder UI app and by quickraceSetup.
+--- Access: extension `util_trackBuilder_splineTrack`: `extensions.load("util_trackBuilder_splineTrack")`, then the global `util_trackBuilder_splineTrack`
 ---@class util_trackBuilder_splineTrack
----@field applyStack nil Toujours nil (code de pile commenté).
----@field camDistance number Distance de la caméra au segment sélectionné lors de focusMarkerOn (80 par défaut).
----@field clearStack nil Toujours nil (code de pile commenté).
----@field curve nil Toujours nil (existe dans pieces).
----@field deepcopy nil Toujours nil : la fonction est dans un bloc commenté.
----@field emptyOffset nil Toujours nil (existe dans pieces).
----@field forward nil Toujours nil (existe dans pieces).
----@field fresnelSC nil Toujours nil (existe dans pieces).
----@field getHdgVector nil Toujours nil : fonction non définie ici (existe dans pieces).
----@field getStackCount nil Toujours nil (code de pile commenté).
----@field initialTrackPiece nil Toujours nil : fonction non définie ici (existe dans pieces).
----@field interpolateField nil Toujours nil : fonction non définie.
----@field interpolateSegment nil Toujours nil : fonction non définie.
----@field loop nil Toujours nil (existe dans pieces).
----@field materialUtil table Référence vers le module util_trackBuilder_materialUtil (gestion des matériaux A à H).
----@field offsetCurve nil Toujours nil (existe dans pieces).
----@field saveHistory nil Toujours nil (historique commenté).
----@field setAllPiecesToAsphalt nil Toujours nil : fonction non définie.
----@field spiral nil Toujours nil.
----@field stack nil Toujours nil (code de pile commenté).
----@field stackToCursor nil Toujours nil (code de pile commenté).
+---@field applyStack nil Always nil (stack code commented out).
+---@field camDistance number Distance from the camera to the selected segment during focusMarkerOn (80 by default).
+---@field clearStack nil Always nil (stack code commented out).
+---@field curve nil Always nil (exists in pieces).
+---@field deepcopy nil Always nil: the function is in a commented-out block.
+---@field emptyOffset nil Always nil (exists in pieces).
+---@field forward nil Always nil (exists in pieces).
+---@field fresnelSC nil Always nil (exists in pieces).
+---@field getHdgVector nil Always nil: function not defined here (exists in pieces).
+---@field getStackCount nil Always nil (stack code commented out).
+---@field initialTrackPiece nil Always nil: function not defined here (exists in pieces).
+---@field interpolateField nil Always nil: function not defined.
+---@field interpolateSegment nil Always nil: function not defined.
+---@field loop nil Always nil (exists in pieces).
+---@field materialUtil table Reference to the util_trackBuilder_materialUtil module (management of materials A to H).
+---@field offsetCurve nil Always nil (exists in pieces).
+---@field saveHistory nil Always nil (history commented out).
+---@field setAllPiecesToAsphalt nil Always nil: function not defined.
+---@field spiral nil Always nil.
+---@field stack nil Always nil (stack code commented out).
+---@field stackToCursor nil Always nil (stack code commented out).
 util_trackBuilder_splineTrack = {}
 
---- Crée des checkpoints (BeamNGWaypoint 'gym_<n>') régulièrement répartis sur la piste (un tous les 300 m environ, au moins 3) ou aux segments marqués hasCheckPoint, et les enregistre dans scenario.lapConfig et scenario.nodes. Réinitialise lapConfig et nodes du scénario courant.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:262
----@param reverse boolean|nil Parcours dans le sens inverse.
+--- Creates checkpoints (BeamNGWaypoint 'gym_<n>') evenly distributed along the track (about one every 300 m, at least 3) or at the segments marked hasCheckPoint, and registers them in scenario.lapConfig and scenario.nodes. Resets lapConfig and nodes of the current scenario.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:262
+---@param reverse boolean|nil Travel in the reverse direction.
 function util_trackBuilder_splineTrack.addCheckPointPositions(reverse) end
 
---- Ferme la piste : ajoute une pièce freeBezier absolue vers le point de départ et copie bank, width et height de la première pièce. Ne fait rien si la piste est déjà fermée.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1092
+--- Closes the track: adds an absolute freeBezier piece toward the start point and copies bank, width and height from the first piece. Does nothing if the track is already closed.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1092
 function util_trackBuilder_splineTrack.addClosingPiece() end
 
---- Ajoute un virage hexagonal ('hexCurve').
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1604
----@param len number Taille du virage.
----@param hardness number Dureté.
----@param dir number Sens : 1 ou -1.
----@param index integer|nil Position d'insertion.
----@param replace boolean|nil Remplacer.
+--- Adds a hexagonal curve ('hexCurve').
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1604
+---@param len number Curve size.
+---@param hardness number Hardness.
+---@param dir number Direction: 1 or -1.
+---@param index integer|nil Insertion position.
+---@param replace boolean|nil Replace.
 function util_trackBuilder_splineTrack.addCurve(len, hardness, dir, index, replace) end
 
---- Ajoute un déplacement sans géométrie ('hexEmptyOffset').
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1608
----@param xOff number Décalage latéral.
----@param yOff number Décalage avant.
----@param zOff number Décalage vertical.
----@param dirOff number Rotation en pas.
----@param absolute boolean|nil Relatif à l'origine de la piste.
----@param index integer|nil Position d'insertion.
----@param replace boolean|nil Remplacer.
+--- Adds a move without geometry ('hexEmptyOffset').
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1608
+---@param xOff number Lateral offset.
+---@param yOff number Forward offset.
+---@param zOff number Vertical offset.
+---@param dirOff number Rotation in steps.
+---@param absolute boolean|nil Relative to the track origin.
+---@param index integer|nil Insertion position.
+---@param replace boolean|nil Replace.
 function util_trackBuilder_splineTrack.addEmptyOffset(xOff, yOff, zOff, dirOff, absolute, index, replace) end
 
---- Ajoute une ligne droite ('freeForward').
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1603
----@param len number Longueur.
----@param index integer|nil Position d'insertion (fin par défaut).
----@param replace boolean|nil Remplacer la pièce à cet indice.
+--- Adds a straight line ('freeForward').
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1603
+---@param len number Length.
+---@param index integer|nil Insertion position (end by default).
+---@param replace boolean|nil Replace the piece at this index.
 function util_trackBuilder_splineTrack.addForward(len, index, replace) end
 
---- Ajoute un looping hexagonal ('hexLoop').
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1607
----@param rad number Rayon.
----@param off number Décalage latéral.
----@param index integer|nil Position d'insertion.
----@param replace boolean|nil Remplacer.
+--- Adds a hexagonal loop ('hexLoop').
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1607
+---@param rad number Radius.
+---@param off number Lateral offset.
+---@param index integer|nil Insertion position.
+---@param replace boolean|nil Replace.
 function util_trackBuilder_splineTrack.addLoop(rad, off, index, replace) end
 
---- Ajoute une courbe en S hexagonale ('hexOffsetCurve').
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1605
----@param len number Longueur.
----@param off number Décalage latéral.
----@param hardness number Dureté.
----@param index integer|nil Position d'insertion.
----@param replace boolean|nil Remplacer.
+--- Adds a hexagonal S-curve ('hexOffsetCurve').
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1605
+---@param len number Length.
+---@param off number Lateral offset.
+---@param hardness number Hardness.
+---@param index integer|nil Insertion position.
+---@param replace boolean|nil Replace.
 function util_trackBuilder_splineTrack.addOffsetCurve(len, off, hardness, index, replace) end
 
---- Ajoute (ou remplace) une pièce dans subPieces à l'indice donné, l'invalide et invalide les pièces concernées. Avec replace, conserve les marqueurs, profils, matériaux et obstacles de la pièce remplacée ; sinon les profils sont copiés de la pièce précédente (défaut 'regular').
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1611
----@param params table Description de la pièce (champ piece = nom du type, plus ses paramètres ; voir pieces.toSegment).
----@param index integer|nil Position d'insertion (fin par défaut).
----@param replace boolean|nil Remplacer la pièce existante.
+--- Adds (or replaces) a piece in subPieces at the given index, invalidates it and invalidates the affected pieces. With replace, keeps the markers, profiles, materials and obstacles of the replaced piece; otherwise the profiles are copied from the previous piece (default 'regular').
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1611
+---@param params table Piece description (field piece = type name, plus its parameters; see pieces.toSegment).
+---@param index integer|nil Insertion position (end by default).
+---@param replace boolean|nil Replace the existing piece.
 function util_trackBuilder_splineTrack.addPiece(params, index, replace) end
 
---- Ajoute une spirale hexagonale ('hexSpiral').
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1606
----@param size number Taille.
----@param inside boolean Vers l'intérieur.
----@param dir number Sens : 1 ou -1.
----@param index integer|nil Position d'insertion.
----@param replace boolean|nil Remplacer.
+--- Adds a hexagonal spiral ('hexSpiral').
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1606
+---@param size number Size.
+---@param inside boolean Inward.
+---@param dir number Direction: 1 or -1.
+---@param index integer|nil Insertion position.
+---@param replace boolean|nil Replace.
 function util_trackBuilder_splineTrack.addSpiral(size, inside, dir, index, replace) end
 
---- Met à l'échelle et tourne les points personnalisés d'une pièce (loopings). Renvoie nil sans customPoints.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1263
----@param piece table Pièce avec customPoints, position et hdg.
+--- Scales and rotates the custom points of a piece (loops). Returns nil without customPoints.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1263
+---@param piece table Piece with customPoints, position and hdg.
 ---@return table[]|nil  Points {position, rot, quality}.
 function util_trackBuilder_splineTrack.calculateCustomPoints(piece) end
 
---- Pour chaque segment invalide, calcule rotation et points (Bézier, arc ou personnalisés), marque les premiers et derniers points comme toujours présents, fixe markerInfo.basePosition ; détermine ensuite si la piste est fermée (début et fin à moins de 0,1 unité).
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1111
+--- For each invalid segment, computes rotation and points (Bézier, arc or custom), marks the first and last points as always present, sets markerInfo.basePosition; then determines whether the track is closed (start and end less than 0.1 unit apart).
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1111
 function util_trackBuilder_splineTrack.convertToSpline() end
 
---- Crée le marqueur de piste ('track_marker') s'il n'existe pas et place tous les marqueurs d'édition (markers.transformMarkers pour chaque type).
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:703
+--- Creates the track marker ('track_marker') if it does not exist and places all edit markers (markers.transformMarkers for each type).
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:703
 function util_trackBuilder_splineTrack.createMarkers() end
 
---- Ajoute une nouvelle sous-piste à la position et au cap donnés (position divisée par gridScale), la rend courante et renvoie son indice.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:90
----@param position vec3 Position monde en mètres.
----@param hdg number Cap en degrés.
----@return integer  Indice de la nouvelle sous-piste.
+--- Adds a new sub-track at the given position and heading (position divided by gridScale), makes it current and returns its index.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:90
+---@param position vec3 World position in meters.
+---@param hdg number Heading in degrees.
+---@return integer  Index of the new sub-track.
 function util_trackBuilder_splineTrack.createNewSubTrack(position, hdg) end
 
---- Exporte la piste en table Lua simple (sous-pistes, positions, pièces, matériaux, matériaux de champs de materialUtil, intersections, tours, réversible, fermée).
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1736
----@return table  Table exportable en JSON.
+--- Exports the track as a simple Lua table (sub-tracks, positions, pieces, materials, materialUtil field materials, intersections, laps, reversible, closed).
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1736
+---@return table  Table exportable to JSON.
 function util_trackBuilder_splineTrack.exportTrackToTable() end
 
---- Déplace en douceur (0,3 s, via cameraTransition) la caméra libre pour regarder le segment index à la distance donnée.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:616
----@param index integer Indice du segment.
----@param distance number|nil Distance (camDistance par défaut).
----@param force boolean|nil Refait la transition même si le segment est déjà celui de la dernière fois.
+--- Smoothly moves (0.3 s, via cameraTransition) the free camera to look at segment index at the given distance.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:616
+---@param index integer Segment index.
+---@param distance number|nil Distance (camDistance by default).
+---@param force boolean|nil Redoes the transition even if the segment is the same as last time.
 function util_trackBuilder_splineTrack.focusCameraOn(index, distance, force) end
 
---- Place le marqueur de piste sur le segment index, le sélectionne (matériau 'track_editor_grid') et, si M.camActivated est vrai, recentre la caméra. Affiche les marqueurs s'ils sont cachés.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:645
----@param index integer Indice du segment.
----@param dontRefresMaterial boolean|nil Ne change pas les matériaux de sélection.
----@param force boolean|nil Forcer le recentrage de la caméra.
+--- Places the track marker on segment index, selects it (material 'track_editor_grid') and, if M.camActivated is true, recenters the camera. Shows the markers if they are hidden.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:645
+---@param index integer Segment index.
+---@param dontRefresMaterial boolean|nil Does not change the selection materials.
+---@param force boolean|nil Force the camera to recenter.
 function util_trackBuilder_splineTrack.focusMarkerOn(index, dontRefresMaterial, force) end
 
---- Liste les segments portant un checkpoint fixe.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:347
----@return table[]  Éléments {segmentIndex, checkpointSize, checkpointPosition}.
+--- Lists the segments carrying a fixed checkpoint.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:347
+---@return table[]  Items {segmentIndex, checkpointSize, checkpointPosition}.
 function util_trackBuilder_splineTrack.getAllCheckpoints() end
 
---- Calcule les points d'un arc de cercle (polyMult * pointsMultiplier points, 300 au plus).
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1175
----@param segment table Segment de type 'arc' (position, hdg, direction, angle, radius).
+--- Computes the points of a circular arc (polyMult * pointsMultiplier points, 300 at most).
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1175
+---@param segment table Segment of type 'arc' (position, hdg, direction, angle, radius).
 ---@return table[]  Points {position, rot, quality}.
 function util_trackBuilder_splineTrack.getArcPoints(segment) end
 
---- Calcule les points d'une courbe de Bézier cubique entre origin et position (échelle de grille appliquée) avec les points de contrôle du segment.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1209
----@param segment table Segment de type 'bezier'.
+--- Computes the points of a cubic Bézier curve between origin and position (grid scale applied) with the segment's control points.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1209
+---@param segment table Segment of type 'bezier'.
 ---@return table[]  Points {position, rot, quality, …}.
 function util_trackBuilder_splineTrack.getBezierPoints(segment) end
 
---- Liste les pistes JSON de trackEditor/ utilisant le format actuel (champ version présent).
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:2137
----@return string[]  Noms de pistes.
+--- Lists the JSON tracks in trackEditor/ using the current format (version field present).
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:2137
+---@return string[]  Track names.
 function util_trackBuilder_splineTrack.getCustomTracks() end
 
---- Renvoie le dernier segment de la sous-piste courante.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1534
+--- Returns the last segment of the current sub-track.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1534
 ---@return table|nil  Segment.
 function util_trackBuilder_splineTrack.getEndOfTrack() end
 
---- Renvoie la table d'une intersection par son nom.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:222
----@param name string Nom de l'intersection.
+--- Returns an intersection's table by its name.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:222
+---@param name string Intersection name.
 ---@return table|nil  {segments, centerMat, borderMat, borderMesh, name, obj}.
 function util_trackBuilder_splineTrack.getIntersection(name) end
 
---- Renvoie le dernier segment (à partir de lastIndex en remontant) qui possède le marqueur donné. Voir notes : plante sans lastIndex.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:493
----@param markerName string Nom du marqueur.
----@param lastIndex integer Indice de départ.
----@return table|nil  Segment trouvé.
+--- Returns the last segment (starting from lastIndex going backward) that has the given marker. See notes: crashes without lastIndex.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:493
+---@param markerName string Marker name.
+---@param lastIndex integer Starting index.
+---@return table|nil  Segment found.
 function util_trackBuilder_splineTrack.getLastPieceWithMarker(markerName, lastIndex) end
 
---- Avec index : renvoie la pièce abstraite. Sans index : renvoie l'état global de l'éditeur (pièces, qualité, marqueurs affichés, position, sélection, piste fermée, tours, réversible, indice de sous-piste).
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:502
----@param index integer|nil Indice de la pièce.
----@param sub integer|nil Sous-piste (courante par défaut).
----@return table  Pièce ou état global.
+--- With index: returns the abstract piece. Without index: returns the editor's global state (pieces, quality, markers shown, position, selection, closed track, laps, reversible, sub-track index).
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:502
+---@param index integer|nil Piece index.
+---@param sub integer|nil Sub-track (current by default).
+---@return table  Piece or global state.
 function util_trackBuilder_splineTrack.getPieceInfo(index, sub) end
 
---- Liste les noms des images .png et .jpg de trackEditor/ (aperçus). Les deux boucles écrivent dans les mêmes indices : les jpg écrasent les png (bug).
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:2158
----@return string[]  Noms d'aperçus.
+--- Lists the names of the .png and .jpg images in trackEditor/ (previews). The two loops write to the same indices: the jpgs overwrite the pngs (bug).
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:2158
+---@return string[]  Preview names.
 function util_trackBuilder_splineTrack.getPreviewNames() end
 
---- Renvoie le segment concret (points, mesh, markerInfo) d'indice donné.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:521
----@param index integer Indice du segment.
----@param sub integer|nil Sous-piste.
+--- Returns the concrete segment (points, mesh, markerInfo) at the given index.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:521
+---@param index integer Segment index.
+---@param sub integer|nil Sub-track.
 ---@return table|nil  Segment.
 function util_trackBuilder_splineTrack.getSegmentInfo(index, sub) end
 
---- Renvoie le segment actuellement sélectionné.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:608
----@return table|nil  Segment sélectionné.
+--- Returns the currently selected segment.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:608
+---@return table|nil  Selected segment.
 function util_trackBuilder_splineTrack.getSelectedTrackInfo() end
 
---- Renvoie la position et le cap de la sous-piste courante.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:477
+--- Returns the position and heading of the current sub-track.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:477
 ---@return table  {x, y, z, hdg, unitX, unitY}.
 function util_trackBuilder_splineTrack.getTrackPosition() end
 
---- Remplace la piste actuelle par celle de la table (format 1.0 ou 1.1) : reconstruit les sous-pistes, convertit les obstacles en vec3/quat, applique les matériaux, invalide toutes les pièces, et restaure l'heure du jour et le brouillard si le niveau correspond.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1902
----@param import table Table au format exporté par exportTrackToTable/save.
+--- Replaces the current track with the one from the table (format 1.0 or 1.1): rebuilds the sub-tracks, converts obstacles to vec3/quat, applies the materials, invalidates all pieces, and restores the time of day and fog if the level matches.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1902
+---@param import table Table in the format exported by exportTrackToTable/save.
 function util_trackBuilder_splineTrack.importTrackFromTable(import) end
 
---- (Ré)initialise la sous-piste courante : décharge tout (sauf noUnload), crée la pièce 'init' avec les matériaux 'track_editor_A_*' (G sur glow_city), positionne la piste puis ajoute un addForward(3).
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1429
----@param noUnload boolean|nil Ne pas appeler unloadAll.
+--- (Re)initializes the current sub-track: unloads everything (except noUnload), creates the 'init' piece with the 'track_editor_A_*' materials (G on glow_city), positions the track then adds an addForward(3).
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1429
+---@param noUnload boolean|nil Do not call unloadAll.
 function util_trackBuilder_splineTrack.initTrack(noUnload) end
 
---- Enregistre qu'une pièce doit être recalculée pour un type de marqueur donné, ou pour tous si types est nil (markers.addMarkerChange).
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1317
----@param index integer Indice de la pièce.
----@param types string|nil Type de marqueur.
----@param force boolean|nil Non utilisé dans le code.
+--- Records that a piece must be recomputed for a given marker type, or for all if types is nil (markers.addMarkerChange).
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1317
+---@param index integer Piece index.
+---@param types string|nil Marker type.
+---@param force boolean|nil Not used in the code.
 function util_trackBuilder_splineTrack.invalidatePiece(index, types, force) end
 
---- Charge une piste depuis le fichier trackEditor/<nom>.json ou depuis une table, la construit en haute qualité (makeTrack(true)) pour chaque sous-piste, recrée les intersections et affiche un message à l'UI sauf si silent. increasePointMult multiplie le nombre de points par 1,5 pendant la construction.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1984
----@param originalFilename string|table Nom de la piste (sans extension) ou table déjà lue.
----@param instantHighQuality boolean|nil Non utilisé dans le code (déduit du code).
----@param increasePointMult boolean|nil Augmente la densité de points (sauf si read.keepPointMultiplier).
----@param clearShapes boolean|nil Appelle mesher.clearShapes à la fin.
----@param silent boolean|nil Pas de message UI.
----@param ignoreCol boolean|nil Mémorise ignoreCollision : pas de rechargement de la collision.
+--- Loads a track from the file trackEditor/<name>.json or from a table, builds it in high quality (makeTrack(true)) for each sub-track, recreates the intersections and displays a UI message unless silent. increasePointMult multiplies the number of points by 1.5 during the build.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1984
+---@param originalFilename string|table Track name (without extension) or already-read table.
+---@param instantHighQuality boolean|nil Not used in the code (inferred from code).
+---@param increasePointMult boolean|nil Increases the point density (unless read.keepPointMultiplier).
+---@param clearShapes boolean|nil Calls mesher.clearShapes at the end.
+---@param silent boolean|nil No UI message.
+---@param ignoreCol boolean|nil Stores ignoreCollision: no collision reload.
 function util_trackBuilder_splineTrack.load(originalFilename, instantHighQuality, increasePointMult, clearShapes, silent, ignoreCol) end
 
---- Lit seulement le JSON d'une piste (pour connaître longueur, auteur, etc.) sans la construire.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:2045
----@param originalFilename string Nom de la piste sans extension.
----@return table|nil  Contenu JSON ou nil.
+--- Only reads a track's JSON (to get length, author, etc.) without building it.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:2045
+---@param originalFilename string Track name without extension.
+---@return table|nil  JSON content or nil.
 function util_trackBuilder_splineTrack.loadJSON(originalFilename) end
 
---- Génère les meshes de la piste : toSegments, convertToSpline, measureTrack, caps, interpolation des marqueurs, rotation finale des points, regénération des meshes à rafraîchir, marqueurs, obstacles. Recharge la collision si instantHighQuality est vrai et ignoreCollision faux.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:848
----@param instantHighQuality boolean|nil Générer tout de suite en qualité 1.
----@param ignoreCollision boolean|nil Ne pas recharger la collision (paramètre, masque la variable de module).
+--- Generates the track meshes: toSegments, convertToSpline, measureTrack, caps, marker interpolation, final rotation of the points, regeneration of the meshes to refresh, markers, obstacles. Reloads the collision if instantHighQuality is true and ignoreCollision false.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:848
+---@param instantHighQuality boolean|nil Generate immediately in quality 1.
+---@param ignoreCollision boolean|nil Do not reload the collision (parameter, shadows the module variable).
 function util_trackBuilder_splineTrack.makeTrack(instantHighQuality, ignoreCollision) end
 
---- Modifie un marqueur (bank, height, width, checkpoint, murs, plafond, obstacles…) d'une pièce et l'invalide ; value nil le supprime. Interdit le checkpoint sur la première pièce. Sur une piste fermée, applique aussi le changement à la première pièce.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:737
----@param type string Type de marqueur.
----@param index integer|nil Indice de la pièce (dernière par défaut).
----@param value any Valeur du marqueur (table {value, interpolation} pour bank/height/width).
+--- Modifies a marker (bank, height, width, checkpoint, walls, ceiling, obstacles…) of a piece and invalidates it; value nil deletes it. Forbids the checkpoint on the first piece. On a closed track, also applies the change to the first piece.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:737
+---@param type string Marker type.
+---@param index integer|nil Piece index (last by default).
+---@param value any Marker value (table {value, interpolation} for bank/height/width).
 function util_trackBuilder_splineTrack.markerChange(type, index, value) end
 
---- Calcule startLength, endLength et la longueur cumulée de chaque point, à partir du dernier segment valide, pour les segments invalides.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1291
+--- Computes startLength, endLength and the cumulative length of each point, from the last valid segment, for the invalid segments.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1291
 function util_trackBuilder_splineTrack.measureTrack() end
 
---- Crée une intersection (raccord de plusieurs extrémités de segments) avec multiTrackMerger et la mémorise ; les matériaux par défaut viennent du premier segment. Le nom de l'intersection est 'procMerger-…'.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:173
----@param segments table[] Liste de {segment, reverse, index, sub}.
----@param centerMat string|nil Matériau du centre.
----@param borderMat string|nil Matériau de la bordure.
----@param borderMesh string|nil Profil de bordure.
+--- Creates an intersection (junction of several segment ends) with multiTrackMerger and stores it; the default materials come from the first segment. The intersection name is 'procMerger-…'.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:173
+---@param segments table[] List of {segment, reverse, index, sub}.
+---@param centerMat string|nil Center material.
+---@param borderMat string|nil Border material.
+---@param borderMesh string|nil Border profile.
 function util_trackBuilder_splineTrack.mergeMultiTrack(segments, centerMat, borderMat, borderMesh) end
 
---- Hook appelé à la fin du niveau : appelle unloadAll pour oublier la piste.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:2172
+--- Hook called at the end of the level: calls unloadAll to forget the track.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:2172
 function util_trackBuilder_splineTrack.onClientEndMission() end
 
---- Hook appelé quand des métadonnées de capture d'écran sont collectées ; corps entièrement commenté, donc sans effet.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:2179
----@param metadata table Métadonnées de la capture.
+--- Hook called when screenshot metadata is collected; body entirely commented out, so no effect.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:2179
+---@param metadata table Screenshot metadata.
 function util_trackBuilder_splineTrack.onCollectScreenshotMetadata(metadata) end
 
---- Hook appelé avant le rendu ; relaie à cameraTransition.onPreRender(dt).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:2281
----@param dt number Temps écoulé (s).
+--- Hook called before rendering; relays to cameraTransition.onPreRender(dt).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:2281
+---@param dt number Elapsed time (s).
 function util_trackBuilder_splineTrack.onPreRender(dt) end
 
---- Hook appelé à chaque frame. Si la haute qualité et les marqueurs sont actifs, décompte (pas fixe de 0,01) le timer des segments en basse qualité et les régénère un par un en qualité 1.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:787
+--- Hook called every frame. If high quality and markers are active, counts down (fixed step of 0.01) the timer of the low-quality segments and regenerates them one by one in quality 1.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:787
 function util_trackBuilder_splineTrack.onUpdate() end
 
---- Place l'origine de la piste 15 m au-dessus du véhicule joueur. Renvoie false s'il n'y a pas de véhicule.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:422
----@return boolean  Succès.
+--- Places the track origin 15 m above the player vehicle. Returns false if there is no vehicle.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:422
+---@return boolean  Success.
 function util_trackBuilder_splineTrack.positionTrackAboveVehicle() end
 
---- Place l'origine de la piste 15 m devant la caméra. Renvoie false si la caméra n'est pas libre.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:395
----@return boolean  Succès.
+--- Places the track origin 15 m in front of the camera. Returns false if the camera is not free.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:395
+---@return boolean  Success.
 function util_trackBuilder_splineTrack.positionTrackBeforeCamera() end
 
---- Place le véhicule du joueur (ou 'thePlayer' hors scénario) 3 m derrière le début d'un segment (0,25 m au-dessus) et recharge la collision si ignoreCollision est faux. Met à jour scenario.startingTransforms['scenario_player0'].
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:362
----@param reverse boolean|nil Départ à l'autre extrémité, dans le sens inverse.
----@param index integer|nil Indice du segment de départ (1 par défaut).
+--- Places the player's vehicle ('thePlayer' outside a scenario) 3 m behind the start of a segment (0.25 m above) and reloads the collision if ignoreCollision is false. Updates scenario.startingTransforms['scenario_player0'].
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:362
+---@param reverse boolean|nil Start at the other end, in the reverse direction.
+---@param index integer|nil Index of the start segment (1 by default).
 function util_trackBuilder_splineTrack.positionVehicle(reverse, index) end
 
---- Applique les changements de matériaux en attente (materialChanged) sur tous les segments.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:836
+--- Applies the pending material changes (materialChanged) to all segments.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:836
 function util_trackBuilder_splineTrack.refreshAllMaterials() end
 
---- Supprime la pièce d'indice donné et décale les suivantes. Ignoré si la piste n'a que deux pièces ou si index <= 2.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1544
----@param index integer Indice de la pièce.
+--- Deletes the piece at the given index and shifts the following ones. Ignored if the track has only two pieces or if index <= 2.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1544
+---@param index integer Piece index.
 function util_trackBuilder_splineTrack.removeAt(index) end
 
---- Supprime une intersection (objet de scène compris) par son nom. Plante si le nom n'existe pas.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:197
----@param name string Nom de l'intersection.
+--- Deletes an intersection (scene object included) by its name. Crashes if the name does not exist.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:197
+---@param name string Intersection name.
 function util_trackBuilder_splineTrack.removeIntersection(name) end
 
---- Supprime une sous-piste (meshes compris), décale les suivantes et renomme leurs meshes. Ne fait rien s'il n'y a qu'une sous-piste.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:104
----@param index integer Indice de la sous-piste.
+--- Deletes a sub-track (meshes included), shifts the following ones and renames their meshes. Does nothing if there is only one sub-track.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:104
+---@param index integer Sub-track index.
 function util_trackBuilder_splineTrack.removeSubTrack(index) end
 
---- Supprime la piste entière : cache les marqueurs, supprime meshes, obstacles procéduraux, marqueurs et intersections, remet l'état à une sous-piste vide.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1503
+--- Deletes the entire track: hides the markers, deletes meshes, procedural obstacles, markers and intersections, resets the state to an empty sub-track.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1503
 function util_trackBuilder_splineTrack.removeTrack() end
 
---- Renomme un fichier de piste dans trackEditor/ et affiche un message à l'UI.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:2124
----@param oldName string Ancien nom (sans extension).
----@param newName string Nouveau nom.
+--- Renames a track file in trackEditor/ and displays a UI message.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:2124
+---@param oldName string Old name (without extension).
+---@param newName string New name.
 function util_trackBuilder_splineTrack.rename(oldName, newName) end
 
---- Supprime la dernière pièce (il en reste au moins deux).
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1539
+--- Deletes the last piece (at least two remain).
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1539
 function util_trackBuilder_splineTrack.revert() end
 
---- Oriente la piste dans la direction de la caméra libre. Renvoie false si la caméra n'est pas libre.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:410
----@return boolean  Succès.
+--- Orients the track in the direction of the free camera. Returns false if the camera is not free.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:410
+---@return boolean  Success.
 function util_trackBuilder_splineTrack.rotateTrackToCamera() end
 
---- Oriente la piste selon la direction du véhicule joueur. Renvoie false sans véhicule.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:434
----@return boolean  Succès.
+--- Orients the track according to the player vehicle's direction. Returns false without a vehicle.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:434
+---@return boolean  Success.
 function util_trackBuilder_splineTrack.rotateTrackToTrackVehicle() end
 
---- Fonction auxiliaire : renvoie q * v.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1727
----@param v vec3 Vecteur.
+--- Helper function: returns q * v.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1727
+---@param v vec3 Vector.
 ---@param q quat Rotation.
----@return vec3  Vecteur tourné.
+---@return vec3  Rotated vector.
 function util_trackBuilder_splineTrack.rotateVectorByQuat(v, q) end
 
---- Exporte la piste, y ajoute version, auteur (plaque du véhicule joueur), date, longueur, niveau (saveForThisMap), environnement (saveEnvironment), difficulté (37 par défaut) et description, puis l'écrit dans trackEditor/<nom>.json. Un nom vide produit un nom daté AAAA-MM-JJ_HH-MM-SS. Un nom nil ne sérialise pas.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:2062
----@param filename string|nil Nom de fichier sans extension, '' pour un nom daté, nil pour ne pas écrire.
+--- Exports the track, adds version, author (player vehicle's plate), date, length, level (saveForThisMap), environment (saveEnvironment), difficulty (37 by default) and description, then writes it to trackEditor/<name>.json. An empty name produces a dated name YYYY-MM-DD_HH-MM-SS. A nil name does not serialize.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:2062
+---@param filename string|nil File name without extension, '' for a dated name, nil to not write.
 ---@param saveOptions table|nil {saveForThisMap, saveEnvironment, difficulty, description}.
----@return table  Table exportée.
----@return string|nil  Nom utilisé si un fichier a été écrit.
+---@return table  Exported table.
+---@return string|nil  Name used if a file was written.
 function util_trackBuilder_splineTrack.save(filename, saveOptions) end
 
---- Régénère immédiatement en qualité 1 tous les segments de la sous-piste courante qui ne l'étaient pas.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:772
+--- Immediately regenerates in quality 1 all the segments of the current sub-track that were not.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:772
 function util_trackBuilder_splineTrack.setAllPiecesHighQuality() end
 
---- Définit le nombre de tours par défaut enregistré avec la piste.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:468
----@param laps integer Nombre de tours.
+--- Sets the default number of laps saved with the track.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:468
+---@param laps integer Number of laps.
 function util_trackBuilder_splineTrack.setDefaultLaps(laps) end
 
---- Active ou non la haute qualité ; marque tous les segments dont la qualité diffère pour régénération (quality 1 ou 4).
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:527
----@param hq boolean Haute qualité.
+--- Enables or disables high quality; marks all segments whose quality differs for regeneration (quality 1 or 4).
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:527
+---@param hq boolean High quality.
 function util_trackBuilder_splineTrack.setHighQuality(hq) end
 
---- Change les matériaux d'une intersection.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:205
----@param name string Nom de l'intersection.
----@param center string|nil Matériau du centre.
----@param border string|nil Matériau de la bordure.
+--- Changes the materials of an intersection.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:205
+---@param name string Intersection name.
+---@param center string|nil Center material.
+---@param border string|nil Border material.
 function util_trackBuilder_splineTrack.setIntersectionMaterial(name, center, border) end
 
---- Change le profil de bordure d'une intersection en la recréant.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:213
----@param name string Nom de l'intersection.
----@param mesh string Nom de profil (voir basicBorders).
+--- Changes the border profile of an intersection by recreating it.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:213
+---@param name string Intersection name.
+---@param mesh string Profile name (see basicBorders).
 function util_trackBuilder_splineTrack.setIntersectionMesh(name, mesh) end
 
---- Change le matériau d'un champ (centerMesh, leftMesh, rightMesh, leftWall, rightWall, ceilingMesh) d'un segment ; avec fill, étend le changement aux segments voisins qui avaient le même matériau.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:988
----@param index integer Indice du segment.
----@param sub integer|nil Sous-piste.
----@param field string Nom du champ de matériau.
----@param material string Nom du matériau.
----@param fill boolean|nil Étendre aux voisins.
----@return boolean  true si quelque chose a changé.
+--- Changes the material of a field (centerMesh, leftMesh, rightMesh, leftWall, rightWall, ceilingMesh) of a segment; with fill, extends the change to the neighboring segments that had the same material.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:988
+---@param index integer Segment index.
+---@param sub integer|nil Sub-track.
+---@param field string Material field name.
+---@param material string Material name.
+---@param fill boolean|nil Extend to the neighbors.
+---@return boolean  true if something changed.
 function util_trackBuilder_splineTrack.setMaterial(index, sub, field, material, fill) end
 
---- Change le profil (centerMesh, leftMesh, rightMesh) d'un segment ; avec fill, étend aux segments voisins identiques.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1026
----@param index integer Indice du segment.
----@param field string Champ de profil.
----@param mesh string Nom du profil.
----@param fill boolean|nil Étendre aux voisins.
----@return boolean  true si quelque chose a changé.
+--- Changes the profile (centerMesh, leftMesh, rightMesh) of a segment; with fill, extends it to identical neighboring segments.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1026
+---@param index integer Segment index.
+---@param field string Profile field.
+---@param mesh string Profile name.
+---@param fill boolean|nil Extend to the neighbors.
+---@return boolean  true if something changed.
 function util_trackBuilder_splineTrack.setMesh(index, field, mesh, fill) end
 
---- Indique si la piste peut être parcourue en sens inverse (enregistré avec la piste).
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:472
----@param rev boolean Piste réversible.
+--- Indicates whether the track can be driven in the reverse direction (saved with the track).
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:472
+---@param rev boolean Reversible track.
 function util_trackBuilder_splineTrack.setReversible(rev) end
 
---- Applique à chaque sous-mesh du segment son matériau (ou 'track_editor_grid' si sélectionné).
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1070
----@param segment table Segment avec points, mesh et submeshIndexes.
+--- Applies to each sub-mesh of the segment its material (or 'track_editor_grid' if selected).
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1070
+---@param segment table Segment with points, mesh and submeshIndexes.
 function util_trackBuilder_splineTrack.setSegmentMaterial(segment) end
 
---- Définit la position de l'origine de la sous-piste (x et y en unités de grille, z en mètres) et, si hdg est donné, son cap en degrés ; recalcule les vecteurs unitaires et invalide toutes les pièces.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:446
----@param x number x en unités de grille.
----@param y number y en unités de grille.
----@param z number Altitude en mètres.
----@param hdg number|nil Cap en degrés.
----@param sub integer|nil Sous-piste (courante par défaut).
+--- Sets the position of the sub-track origin (x and y in grid units, z in meters) and, if hdg is given, its heading in degrees; recomputes the unit vectors and invalidates all pieces.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:446
+---@param x number x in grid units.
+---@param y number y in grid units.
+---@param z number Altitude in meters.
+---@param hdg number|nil Heading in degrees.
+---@param sub integer|nil Sub-track (current by default).
 function util_trackBuilder_splineTrack.setTrackPosition(x, y, z, hdg, sub) end
 
---- Affiche (création + placement) ou cache tous les marqueurs d'édition et le marqueur de piste.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:684
----@param show boolean Afficher les marqueurs.
+--- Shows (creation + placement) or hides all edit markers and the track marker.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:684
+---@param show boolean Show the markers.
 function util_trackBuilder_splineTrack.showMarkers(show) end
 
---- Aligne un point sur la grille triangulaire (pas de sqrt(3)/2 et 0,5) de la piste, en conservant z.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1078
----@param point vec3 Point à aligner.
----@return vec3  Point aligné.
+--- Snaps a point to the track's triangular grid (steps of sqrt(3)/2 and 0.5), keeping z.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1078
+---@param point vec3 Point to snap.
+---@return vec3  Snapped point.
 function util_trackBuilder_splineTrack.snapToGrid(point) end
 
---- Change la sous-piste courante ; l'initialise si elle n'existe pas.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:96
----@param index integer Indice de la sous-piste.
+--- Changes the current sub-track; initializes it if it does not exist.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:96
+---@param index integer Sub-track index.
 function util_trackBuilder_splineTrack.switchSubTrack(index) end
 
---- Transforme les pièces invalides de subPieces en segments de subTracks (supprime les anciens meshes et obstacles) à l'aide de pieces.toSegment, et initialise meshInfo, markerInfo et les champs de marqueurs hérités.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1329
+--- Transforms the invalid pieces of subPieces into segments of subTracks (deletes the old meshes and obstacles) using pieces.toSegment, and initializes meshInfo, markerInfo and the inherited marker fields.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1329
 function util_trackBuilder_splineTrack.toSegments() end
 
---- Réinitialise tous les champs du module (pistes, pièces, intersections, marqueurs, obstacles) sans supprimer les objets de scène, force highQuality à true, markersShown à false et recharge la collision.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:1487
+--- Resets all the module's fields (tracks, pieces, intersections, markers, obstacles) without deleting the scene objects, forces highQuality to true, markersShown to false and reloads the collision.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:1487
 function util_trackBuilder_splineTrack.unloadAll() end
 
---- Désélectionne tous les segments de toutes les sous-pistes et marque leurs matériaux à rafraîchir.
----Source : lua/ge/extensions/util/trackBuilder/splineTrack.lua:634
+--- Deselects all segments of all sub-tracks and marks their materials for refresh.
+---Source: lua/ge/extensions/util/trackBuilder/splineTrack.lua:634
 function util_trackBuilder_splineTrack.unselectAll() end
 

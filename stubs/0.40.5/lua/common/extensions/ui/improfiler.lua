@@ -2,16 +2,16 @@
 -- tim19Atlas stub generated from lua/common/extensions/ui/improfiler.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Profileur LuaJIT affiché dans une fenêtre ImGui « LuaJIT Profiler ». La première partie du fichier est le module jit/p de Mike Pall (MIT, 2005-2017) adapté : échantillonnage du profileur intégré de LuaJIT (jit.profile) et formatage du résultat dans une chaîne au lieu de stdout. La fin du fichier est la partie BeamNG : toutes les 3 secondes, le profil est terminé, son texte affiché dans la fenêtre, puis un nouveau profil est lancé avec le mode « vzm0lspi0 500 -500 » (états VM, zones, minimum 0 %, split, chemins complets, intervalle 0 ms...).
---- Accès : extension `ui_improfiler` : `extensions.load("ui_improfiler")`, puis la globale `ui_improfiler`
+--- LuaJIT profiler displayed in an ImGui window "LuaJIT Profiler". The first part of the file is Mike Pall's jit/p module (MIT, 2005-2017) adapted: sampling of LuaJIT's built-in profiler (jit.profile) and formatting of the result into a string instead of stdout. The end of the file is the BeamNG part: every 3 seconds, the profile is finished, its text displayed in the window, then a new profile is started with the mode "vzm0lspi0 500 -500" (VM states, zones, minimum 0%, split, full paths, interval 0 ms...).
+--- Access: extension `ui_improfiler`: `extensions.load("ui_improfiler")`, then the global `ui_improfiler`
 ---@class ui_improfiler
 ui_improfiler = {}
 
---- Hook appelé chaque frame : dessine la fenêtre « LuaJIT Profiler » avec le dernier résultat ; toutes les 3 s de temps réel, termine le profil en cours, met à jour le texte affiché et relance le profileur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/extensions/ui/improfiler.lua:307
----@param dtReal number Delta temps réel (s), cumulé pour le minuteur de 3 s.
----@param dtSim number Non utilisé.
----@param dtRaw number Non utilisé.
+--- Hook called every frame: draws the "LuaJIT Profiler" window with the latest result; every 3 s of real time, finishes the current profile, updates the displayed text and restarts the profiler.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/extensions/ui/improfiler.lua:307
+---@param dtReal number Real delta time (s), accumulated for the 3 s timer.
+---@param dtSim number Not used.
+---@param dtRaw number Not used.
 function ui_improfiler.onUpdate(dtReal, dtSim, dtRaw) end
 

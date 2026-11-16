@@ -1,75 +1,117 @@
 {
   "path": "lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua",
-  "module": "Actionneur de la Driving Dynamics Suite : barres de torsion (anti-roulis) à raideur variable. Il regroupe des barres de torsion par nom et applique, selon un mode nommé, des coefficients multiplicatifs à leur raideur et amortissement jbeam via `obj:setTorsionbarSpringDamp`. Le mode se choisit par `setParameters({torsionBarMode = \"nom\"})`, typiquement depuis un mode `driveModes` de type \"controller\". Ordre d'appel : `defaultOrder = 80`.",
+  "module": "Driving Dynamics Suite actuator: variable-stiffness torsion bars (anti-roll). It groups torsion bars by name and, according to a named mode, applies multiplicative coefficients to their jbeam stiffness and damping via `obj:setTorsionbarSpringDamp`. The mode is chosen with `setParameters({torsionBarMode = \"name\"})`, typically from a `driveModes` mode of type \"controller\". Call order: `defaultOrder = 80`.",
   "usage": "controller.getControllerSafe(\"drivingDynamics/adaptiveTorsionBars\").setParameters({torsionBarMode = \"stiff\"})",
   "notes": [
-    "Clés jbeam lues par init : `torsionBarNames` (liste de noms de barres jbeam), `modes` (table d'en-tête : `name`, `springCoef`, `dampCoef`, 1 par défaut), `name`.",
-    "Les coefficients multiplient les valeurs de base de `v.data.torsionbars` (spring, damp) : le changement n'est pas cumulatif d'un mode à l'autre.",
-    "Aucune mise à jour périodique ; un nom de mode inconnu est logué en erreur. `shutdown` met isActive à false et retire update/updateGFX (nil) sans rétablir les valeurs de base."
+    "jbeam keys read by init: `torsionBarNames` (list of jbeam bar names), `modes` (header table: `name`, `springCoef`, `dampCoef`, 1 by default), `name`.",
+    "The coefficients multiply the base values of `v.data.torsionbars` (spring, damp): the change is not cumulative from one mode to the next.",
+    "No periodic update; an unknown mode name is logged as an error. `shutdown` sets isActive to false and removes update/updateGFX (nil) without restoring the base values."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "defaultOrder": {"type": "number", "desc": "80."},
-    "isActive": {"type": "boolean", "desc": "true après init."},
-    "isActing": {"type": "boolean", "desc": "false : jamais modifié dans ce fichier."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "80."
+    },
+    "isActive": {
+      "type": "boolean",
+      "desc": "true after init."
+    },
+    "isActing": {
+      "type": "boolean",
+      "desc": "false: never modified in this file."
+    }
   },
   "functions": {
     "reset": {
-      "desc": "Vide (les barres ne sont pas remises à l'état initial).",
+      "desc": "Empty (the bars are not restored to their initial state).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "init": {
-      "desc": "Retrouve les barres de torsion par nom et lit les modes.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "desc": "Finds the torsion bars by name and reads the modes.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "initLastStage": {
-      "desc": "Vide.",
+      "desc": "Empty.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "registerCMU": {
-      "desc": "Appelée par le CMU pour donner une référence vers lui.",
-      "params": {"cmu": {"type": "table", "desc": "Module CMU."}},
+      "desc": "Called by the CMU to give it a reference to itself.",
+      "params": {
+        "cmu": {
+          "type": "table",
+          "desc": "CMU module."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setDebugMode": {
-      "desc": "Mémorise le mode debug (sans autre effet).",
-      "params": {"debugEnabled": {"type": "boolean", "desc": "État du mode debug."}},
+      "desc": "Stores the debug mode (no other effect).",
+      "params": {
+        "debugEnabled": {
+          "type": "boolean",
+          "desc": "Debug mode state."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "shutdown": {
-      "desc": "Arrête l'actionneur (isActive = false).",
+      "desc": "Stops the actuator (isActive = false).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "setParameters": {
-      "desc": "Applique un mode de raideur si `parameters.torsionBarMode` est fourni.",
-      "params": {"parameters": {"type": "table", "desc": "Champ : torsionBarMode (nom d'un mode défini dans `modes`)."}},
+      "desc": "Applies a stiffness mode if `parameters.torsionBarMode` is provided.",
+      "params": {
+        "parameters": {
+          "type": "table",
+          "desc": "Field: torsionBarMode (name of a mode defined in `modes`)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setConfig": {
-      "desc": "Remplace la table de paramètres (sans effet sur les modes).",
-      "params": {"configTable": {"type": "table", "desc": "Nouveaux paramètres."}},
+      "desc": "Replaces the parameter table (no effect on the modes).",
+      "params": {
+        "configTable": {
+          "type": "table",
+          "desc": "New parameters."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "getConfig": {
-      "desc": "Renvoie une copie des paramètres.",
+      "desc": "Returns a copy of the parameters.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Copie profonde ({isEnabled = true} par défaut)."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Deep copy ({isEnabled = true} by default)."
+        }
+      ],
       "internal": false
     },
     "sendConfigData": {
-      "desc": "Envoie les paramètres au CMU dans un paquet de debug config.",
+      "desc": "Sends the parameters to the CMU in a config debug packet.",
       "params": {},
       "returns": [],
       "internal": true

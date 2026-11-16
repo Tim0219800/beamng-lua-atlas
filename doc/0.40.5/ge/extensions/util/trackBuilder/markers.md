@@ -1,191 +1,191 @@
 # `util_trackBuilder_markers`
 
-*Fichier : `lua/ge/extensions/util/trackBuilder/markers.lua` · VM : Game Engine (GE) · 1026 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/trackBuilder/markers.lua` · VM: Game Engine (GE) · 1026 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_trackBuilder_markers` : `extensions.load("util_trackBuilder_markers")`, puis la globale `util_trackBuilder_markers`
+**Access:** extension `util_trackBuilder_markers`: `extensions.load("util_trackBuilder_markers")`, then the global `util_trackBuilder_markers`
 
-Gère les marqueurs d'édition du Track Builder (inclinaison, hauteur, largeur, checkpoint, murs gauche et droit, plafond) et l'interpolation des valeurs qu'ils portent le long de la piste. Les marqueurs sont des objets TSStatic créés et déplacés dans la scène (canSave = false). Chaque type de marqueur déclare dans une table interne 'types' son mode d'interpolation ('points', 'segments', 'both' ou 'single'), sa fonction d'interpolation de champ et sa fonction de placement des marqueurs. Le module calcule aussi les caps de début et fin entre segments voisins.
+Manages the Track Builder edit markers (bank, height, width, checkpoint, left and right walls, ceiling) and the interpolation of the values they carry along the track. Markers are TSStatic objects created and moved in the scene (canSave = false). Each marker type declares in an internal 'types' table its interpolation mode ('points', 'segments', 'both' or 'single'), its field interpolation function and its marker placement function. The module also computes the start and end caps between neighboring segments.
 
-## Remarques
+## Notes
 
-- Les fonctions d'interpolation (step, linear, pow2, pow3, pow4, smoothSlope, smootherSlope) prennent t dans [0, 1] et renvoient deux valeurs : la valeur interpolée et sa dérivée. smoothSlope et smootherSlope ont une dérivée horizontale aux deux extrémités. Les noms d'interpolation stockés dans les marqueurs (b.interpolation) sont les noms de ces fonctions de M.
-- Les valeurs de marqueurs sont écrites dans les points du segment (point.bank, point.width, point.height…) et dans segment.markerInfo ; segment.refreshMesh est mis à true quand le mesh doit être régénéré.
-- Seuls les types listés dans names (bank, height, width, checkpoint, leftWall, rightWall, ceilingMesh) ont une liste de marqueurs ; les noms centerMesh, leftMesh et rightMesh sont commentés dans names, donc hideMarkers/clearMarkers/unloadAll ne les gèrent pas (hideMarkers('centerMesh') provoquerait une erreur sur une table nil).
-- Bug : dans linear/pow2/pow3/pow4, la dérivée renvoyée pour t >= 1 est t, 2t, 3t, 4t au lieu de la dérivée en 1 (1, 2, 3, 4 pour t=1) ; la valeur est correcte seulement si t vaut exactement 1.
-- Bug : dans compareSimpleCaps et compareWallCeilingCaps, les branches 'noPoints' testent second.startCap / first.endCap (champs du segment) au lieu de meshInfo[nameOfField].startCap / endCap.
-- Bug : dans interpolateOverSegments, la condition 'i ~= track' compare un nombre à une table (toujours vraie).
-- Un marqueur de largeur est composé de deux objets TSStatic (nom 'widthMarker<n>' et 'widthMarker<n>b').
+- The interpolation functions (step, linear, pow2, pow3, pow4, smoothSlope, smootherSlope) take t in [0, 1] and return two values: the interpolated value and its derivative. smoothSlope and smootherSlope have a horizontal derivative at both ends. The interpolation names stored in the markers (b.interpolation) are the names of these functions of M.
+- Marker values are written into the segment's points (point.bank, point.width, point.height…) and into segment.markerInfo; segment.refreshMesh is set to true when the mesh must be regenerated.
+- Only the types listed in names (bank, height, width, checkpoint, leftWall, rightWall, ceilingMesh) have a marker list; the names centerMesh, leftMesh and rightMesh are commented out in names, so hideMarkers/clearMarkers/unloadAll do not handle them (hideMarkers('centerMesh') would cause an error on a nil table).
+- Bug: in linear/pow2/pow3/pow4, the derivative returned for t >= 1 is t, 2t, 3t, 4t instead of the derivative at 1 (1, 2, 3, 4 for t=1); the value is correct only if t is exactly 1.
+- Bug: in compareSimpleCaps and compareWallCeilingCaps, the 'noPoints' branches test second.startCap / first.endCap (segment fields) instead of meshInfo[nameOfField].startCap / endCap.
+- Bug: in interpolateOverSegments, the condition 'i ~= track' compares a number to a table (always true).
+- A width marker consists of two TSStatic objects (named 'widthMarker<n>' and 'widthMarker<n>b').
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_trackBuilder_markers.addMarkerChange(name, index)` | Note que le segment d'indice index a un marqueur modifié pour le champ name ; interpolate ne recalcule alors que les zones concernées. | 999 |
-| `util_trackBuilder_markers.caps(segments, closed)` | Calcule les caps de début et de fin entre segments consécutifs pour centerMesh, leftMesh, rightMesh (si les valeurs diffèrent), et pour leftWall, rightWall, ceilingMesh (si l'état actif diffère). Le segment 1 est ignoré ; si closed est vrai, le dernier segment est comparé au deuxième. | 921 |
-| `util_trackBuilder_markers.clearMarkers(name)` | Supprime de la scène les marqueurs du type donné. | 990 |
-| `util_trackBuilder_markers.hideMarkers(name)` | Cache les marqueurs du type donné en mettant leur échelle à 0. | 982 |
-| `util_trackBuilder_markers.interpolate(nameOfField, track)` | Interpole le champ nameOfField sur toute la piste selon le mode du type ('points', 'segments', 'both' ou 'single'), puis vide la liste des changements de ce champ. | 820 |
-| `util_trackBuilder_markers.interpolateField(name, t, a, b, point, length)` | Délègue à la fonction d'interpolation propre au type (par exemple interpolateBank, interpolateWidth) pour écrire la valeur interpolée dans point. | 972 |
-| `util_trackBuilder_markers.interpolateOverPoints(nameOfField, track)` | Interpole entre deux valeurs successives de marqueurs sur les points des segments concernés (seulement s'ils sont dans markerChanges ou frais), selon la longueur parcourue. | 721 |
-| `util_trackBuilder_markers.interpolateOverSegments(nameOfField, track)` | Applique la valeur de marqueur précédente à chaque segment (mode 'segments'), à partir du premier segment qui porte le champ. | 781 |
-| `util_trackBuilder_markers.interpolatePointsOfSegment(segment, startValue, endValue, startLength, endLength, nameOfField)` | Interpole entre startValue et endValue sur les points d'un segment (fraction t = (p.length - startLength)/(endLength - startLength)) et sur son markerInfo ; sans points, ne calcule que markerInfo. Met refreshMesh à true. | 931 |
-| `util_trackBuilder_markers.interpolateSingle(nameOfField, track)` | Pour les types 'single' (checkpoint), appelle la fonction de segment seulement pour les indices enregistrés par addMarkerChange. | 808 |
-| `util_trackBuilder_markers.linear(t)` | Interpolation linéaire : valeur t, dérivée 1 (0 hors de [0, 1] à gauche, 1 à droite). | 439 |
-| `util_trackBuilder_markers.pow2(t)` | Interpolation en t². | 449 |
-| `util_trackBuilder_markers.pow3(t)` | Interpolation en t³. | 459 |
-| `util_trackBuilder_markers.pow4(t)` | Interpolation en t⁴. | 469 |
-| `util_trackBuilder_markers.smoothSlope(t)` | Interpolation lissée (3t²-2t³) : va de 0 à 1 avec une pente horizontale en 0 et en 1. | 480 |
-| `util_trackBuilder_markers.smootherSlope(t)` | Interpolation encore plus lisse (polynôme de Perlin 6t⁵-15t⁴+10t³), pente et courbure nulles aux extrémités. | 491 |
-| `util_trackBuilder_markers.step(t)` | Interpolation en escalier : renvoie toujours 0 et 0 (la valeur de départ est conservée). | 435 |
-| `util_trackBuilder_markers.transformMarkers(name, allNodes)` | Crée, supprime et repositionne les objets marqueurs du type donné pour les nœuds de la piste ; sans effet si le type n'a pas de fonction transformMarkers. | 976 |
-| `util_trackBuilder_markers.unloadAll()` | Oublie toutes les listes de marqueurs (remises à {}) sans supprimer les objets de la scène ; à utiliser après un nettoyage de scène. | 1007 |
+| `util_trackBuilder_markers.addMarkerChange(name, index)` | Notes that the segment at index index has a modified marker for the field name; interpolate then recomputes only the affected zones. | 999 |
+| `util_trackBuilder_markers.caps(segments, closed)` | Computes the start and end caps between consecutive segments for centerMesh, leftMesh, rightMesh (if the values differ), and for leftWall, rightWall, ceilingMesh (if the active state differs). Segment 1 is skipped; if closed is true, the last segment is compared to the second. | 921 |
+| `util_trackBuilder_markers.clearMarkers(name)` | Removes the markers of the given type from the scene. | 990 |
+| `util_trackBuilder_markers.hideMarkers(name)` | Hides the markers of the given type by setting their scale to 0. | 982 |
+| `util_trackBuilder_markers.interpolate(nameOfField, track)` | Interpolates the field nameOfField over the whole track according to the type's mode ('points', 'segments', 'both' or 'single'), then clears the change list for that field. | 820 |
+| `util_trackBuilder_markers.interpolateField(name, t, a, b, point, length)` | Delegates to the type-specific interpolation function (for example interpolateBank, interpolateWidth) to write the interpolated value into point. | 972 |
+| `util_trackBuilder_markers.interpolateOverPoints(nameOfField, track)` | Interpolates between two successive marker values on the points of the relevant segments (only if they are in markerChanges or fresh), according to the distance traveled. | 721 |
+| `util_trackBuilder_markers.interpolateOverSegments(nameOfField, track)` | Applies the previous marker value to each segment ('segments' mode), starting from the first segment that carries the field. | 781 |
+| `util_trackBuilder_markers.interpolatePointsOfSegment(segment, startValue, endValue, startLength, endLength, nameOfField)` | Interpolates between startValue and endValue on a segment's points (fraction t = (p.length - startLength)/(endLength - startLength)) and on its markerInfo; without points, only computes markerInfo. Sets refreshMesh to true. | 931 |
+| `util_trackBuilder_markers.interpolateSingle(nameOfField, track)` | For 'single' types (checkpoint), calls the segment function only for the indices registered by addMarkerChange. | 808 |
+| `util_trackBuilder_markers.linear(t)` | Linear interpolation: value t, derivative 1 (0 outside [0, 1] on the left, 1 on the right). | 439 |
+| `util_trackBuilder_markers.pow2(t)` | Interpolation in t². | 449 |
+| `util_trackBuilder_markers.pow3(t)` | Interpolation in t³. | 459 |
+| `util_trackBuilder_markers.pow4(t)` | Interpolation in t⁴. | 469 |
+| `util_trackBuilder_markers.smoothSlope(t)` | Smooth interpolation (3t²-2t³): goes from 0 to 1 with a horizontal slope at 0 and at 1. | 480 |
+| `util_trackBuilder_markers.smootherSlope(t)` | Even smoother interpolation (Perlin polynomial 6t⁵-15t⁴+10t³), zero slope and curvature at the ends. | 491 |
+| `util_trackBuilder_markers.step(t)` | Step interpolation: always returns 0 and 0 (the start value is kept). | 435 |
+| `util_trackBuilder_markers.transformMarkers(name, allNodes)` | Creates, deletes and repositions the marker objects of the given type for the track's nodes; has no effect if the type has no transformMarkers function. | 976 |
+| `util_trackBuilder_markers.unloadAll()` | Forgets all marker lists (reset to {}) without deleting the objects from the scene; use after a scene cleanup. | 1007 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_trackBuilder_markers.addMarkerChange(name, index)`
 
-Note que le segment d'indice index a un marqueur modifié pour le champ name ; interpolate ne recalcule alors que les zones concernées.
+Notes that the segment at index index has a modified marker for the field name; interpolate then recomputes only the affected zones.
 
-- `name` (*string*) : Type de marqueur.
-- `index` (*integer*) : Indice du segment dans la piste.
+- `name` (*string*) : Marker type.
+- `index` (*integer*) : Index of the segment in the track.
 
 #### `util_trackBuilder_markers.caps(segments, closed)`
 
-Calcule les caps de début et de fin entre segments consécutifs pour centerMesh, leftMesh, rightMesh (si les valeurs diffèrent), et pour leftWall, rightWall, ceilingMesh (si l'état actif diffère). Le segment 1 est ignoré ; si closed est vrai, le dernier segment est comparé au deuxième.
+Computes the start and end caps between consecutive segments for centerMesh, leftMesh, rightMesh (if the values differ), and for leftWall, rightWall, ceilingMesh (if the active state differs). Segment 1 is skipped; if closed is true, the last segment is compared to the second.
 
-- `segments` (*table[]*) : Segments de la piste.
-- `closed` (*boolean|nil*) : Piste en boucle fermée.
+- `segments` (*table[]*) : Track segments.
+- `closed` (*boolean|nil*) : Closed-loop track.
 
 #### `util_trackBuilder_markers.clearMarkers(name)`
 
-Supprime de la scène les marqueurs du type donné.
+Removes the markers of the given type from the scene.
 
-- `name` (*string*) : Type de marqueur présent dans names.
+- `name` (*string*) : Marker type present in names.
 
 #### `util_trackBuilder_markers.hideMarkers(name)`
 
-Cache les marqueurs du type donné en mettant leur échelle à 0.
+Hides the markers of the given type by setting their scale to 0.
 
-- `name` (*string*) : Type de marqueur présent dans names.
+- `name` (*string*) : Marker type present in names.
 
 #### `util_trackBuilder_markers.interpolate(nameOfField, track)`
 
-Interpole le champ nameOfField sur toute la piste selon le mode du type ('points', 'segments', 'both' ou 'single'), puis vide la liste des changements de ce champ.
+Interpolates the field nameOfField over the whole track according to the type's mode ('points', 'segments', 'both' or 'single'), then clears the change list for that field.
 
-- `nameOfField` (*string*) : Type de marqueur (bank, height, width, leftWall…).
-- `track` (*table[]*) : Liste ordonnée des segments.
+- `nameOfField` (*string*) : Marker type (bank, height, width, leftWall…).
+- `track` (*table[]*) : Ordered list of segments.
 
 #### `util_trackBuilder_markers.interpolateField(name, t, a, b, point, length)`
 
-Délègue à la fonction d'interpolation propre au type (par exemple interpolateBank, interpolateWidth) pour écrire la valeur interpolée dans point.
+Delegates to the type-specific interpolation function (for example interpolateBank, interpolateWidth) to write the interpolated value into point.
 
-- `name` (*string*) : Type de marqueur.
-- `t` (*number*) : Fraction dans [0, 1].
-- `a` (*table*) : Valeur de départ.
-- `b` (*table*) : Valeur d'arrivée.
-- `point` (*table*) : Point ou markerInfo à écrire.
-- `length` (*number*) : Longueur de l'intervalle.
+- `name` (*string*) : Marker type.
+- `t` (*number*) : Fraction in [0, 1].
+- `a` (*table*) : Start value.
+- `b` (*table*) : End value.
+- `point` (*table*) : Point or markerInfo to write to.
+- `length` (*number*) : Length of the interval.
 
 #### `util_trackBuilder_markers.interpolateOverPoints(nameOfField, track)`
 
-Interpole entre deux valeurs successives de marqueurs sur les points des segments concernés (seulement s'ils sont dans markerChanges ou frais), selon la longueur parcourue.
+Interpolates between two successive marker values on the points of the relevant segments (only if they are in markerChanges or fresh), according to the distance traveled.
 
-- `nameOfField` (*string*) : Type de marqueur.
-- `track` (*table[]*) : Segments de la piste.
+- `nameOfField` (*string*) : Marker type.
+- `track` (*table[]*) : Track segments.
 
 #### `util_trackBuilder_markers.interpolateOverSegments(nameOfField, track)`
 
-Applique la valeur de marqueur précédente à chaque segment (mode 'segments'), à partir du premier segment qui porte le champ.
+Applies the previous marker value to each segment ('segments' mode), starting from the first segment that carries the field.
 
-- `nameOfField` (*string*) : Type de marqueur.
-- `track` (*table[]*) : Segments de la piste.
+- `nameOfField` (*string*) : Marker type.
+- `track` (*table[]*) : Track segments.
 
 #### `util_trackBuilder_markers.interpolatePointsOfSegment(segment, startValue, endValue, startLength, endLength, nameOfField)`
 
-Interpole entre startValue et endValue sur les points d'un segment (fraction t = (p.length - startLength)/(endLength - startLength)) et sur son markerInfo ; sans points, ne calcule que markerInfo. Met refreshMesh à true.
+Interpolates between startValue and endValue on a segment's points (fraction t = (p.length - startLength)/(endLength - startLength)) and on its markerInfo; without points, only computes markerInfo. Sets refreshMesh to true.
 
-- `segment` (*table*) : Segment à mettre à jour.
-- `startValue` (*table*) : Valeur de départ (avec .value, .interpolation…).
-- `endValue` (*table|nil*) : Valeur d'arrivée ; nil pour garder startValue.
-- `startLength` (*number*) : Longueur cumulée au départ.
-- `endLength` (*number|nil*) : Longueur cumulée à l'arrivée.
-- `nameOfField` (*string*) : Type de marqueur.
+- `segment` (*table*) : Segment to update.
+- `startValue` (*table*) : Start value (with .value, .interpolation…).
+- `endValue` (*table|nil*) : End value; nil to keep startValue.
+- `startLength` (*number*) : Cumulative length at the start.
+- `endLength` (*number|nil*) : Cumulative length at the end.
+- `nameOfField` (*string*) : Marker type.
 
 #### `util_trackBuilder_markers.interpolateSingle(nameOfField, track)`
 
-Pour les types 'single' (checkpoint), appelle la fonction de segment seulement pour les indices enregistrés par addMarkerChange.
+For 'single' types (checkpoint), calls the segment function only for the indices registered by addMarkerChange.
 
-- `nameOfField` (*string*) : Type de marqueur.
-- `track` (*table[]*) : Segments de la piste.
+- `nameOfField` (*string*) : Marker type.
+- `track` (*table[]*) : Track segments.
 
 #### `util_trackBuilder_markers.linear(t)`
 
-Interpolation linéaire : valeur t, dérivée 1 (0 hors de [0, 1] à gauche, 1 à droite).
+Linear interpolation: value t, derivative 1 (0 outside [0, 1] on the left, 1 on the right).
 
 - `t` (*number*) : Position.
-- **renvoie** : number Valeur.
-- **renvoie** : number Dérivée.
+- **returns**: number Value.
+- **returns**: number Derivative.
 
 #### `util_trackBuilder_markers.pow2(t)`
 
-Interpolation en t².
+Interpolation in t².
 
 - `t` (*number*) : Position.
-- **renvoie** : number Valeur.
-- **renvoie** : number Dérivée.
+- **returns**: number Value.
+- **returns**: number Derivative.
 
 #### `util_trackBuilder_markers.pow3(t)`
 
-Interpolation en t³.
+Interpolation in t³.
 
 - `t` (*number*) : Position.
-- **renvoie** : number Valeur.
-- **renvoie** : number Dérivée.
+- **returns**: number Value.
+- **returns**: number Derivative.
 
 #### `util_trackBuilder_markers.pow4(t)`
 
-Interpolation en t⁴.
+Interpolation in t⁴.
 
 - `t` (*number*) : Position.
-- **renvoie** : number Valeur.
-- **renvoie** : number Dérivée.
+- **returns**: number Value.
+- **returns**: number Derivative.
 
 #### `util_trackBuilder_markers.smoothSlope(t)`
 
-Interpolation lissée (3t²-2t³) : va de 0 à 1 avec une pente horizontale en 0 et en 1.
+Smooth interpolation (3t²-2t³): goes from 0 to 1 with a horizontal slope at 0 and at 1.
 
 - `t` (*number*) : Position.
-- **renvoie** : number Valeur.
-- **renvoie** : number Dérivée.
+- **returns**: number Value.
+- **returns**: number Derivative.
 
 #### `util_trackBuilder_markers.smootherSlope(t)`
 
-Interpolation encore plus lisse (polynôme de Perlin 6t⁵-15t⁴+10t³), pente et courbure nulles aux extrémités.
+Even smoother interpolation (Perlin polynomial 6t⁵-15t⁴+10t³), zero slope and curvature at the ends.
 
 - `t` (*number*) : Position.
-- **renvoie** : number Valeur.
-- **renvoie** : number Dérivée.
+- **returns**: number Value.
+- **returns**: number Derivative.
 
 #### `util_trackBuilder_markers.step(t)`
 
-Interpolation en escalier : renvoie toujours 0 et 0 (la valeur de départ est conservée).
+Step interpolation: always returns 0 and 0 (the start value is kept).
 
-- `t` (*number*) : Position dans [0, 1].
-- **renvoie** : number Valeur.
-- **renvoie** : number Dérivée.
+- `t` (*number*) : Position in [0, 1].
+- **returns**: number Value.
+- **returns**: number Derivative.
 
 #### `util_trackBuilder_markers.transformMarkers(name, allNodes)`
 
-Crée, supprime et repositionne les objets marqueurs du type donné pour les nœuds de la piste ; sans effet si le type n'a pas de fonction transformMarkers.
+Creates, deletes and repositions the marker objects of the given type for the track's nodes; has no effect if the type has no transformMarkers function.
 
-- `name` (*string*) : Type de marqueur.
-- `allNodes` (*table[]*) : Tous les nœuds/segments de la piste.
+- `name` (*string*) : Marker type.
+- `allNodes` (*table[]*) : All the nodes/segments of the track.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `names` | string[] | Liste des types de marqueurs gérés : bank, height, width, checkpoint, leftWall, rightWall, ceilingMesh. |
+| `names` | string[] | List of handled marker types: bank, height, width, checkpoint, leftWall, rightWall, ceilingMesh. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/trackBuilder/markers.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/trackBuilder/markers.lua`.*

@@ -1,105 +1,105 @@
 # `editor_toolUtilities_siteDecals`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/siteDecals.lua` · VM : Game Engine (GE) · 144 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/siteDecals.lua` · VM: Game Engine (GE) · 144 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_siteDecals` : `extensions.load("editor_toolUtilities_siteDecals")`, puis la globale `editor_toolUtilities_siteDecals`
+**Access:** extension `editor_toolUtilities_siteDecals`: `extensions.load("editor_toolUtilities_siteDecals")`, then the global `editor_toolUtilities_siteDecals`
 
-Décalques estampillés tels qu'un site les porte : flèches de circulation, texte EXIT peint, rustines de réparation d'asphalte. Ce sont des glyphes pris dans une planche (atlas) et posés en un point, orientés dans une direction, et non de la peinture tracée le long d'une ligne (c'est ce qui les distingue de siteMarks). Le module crée les DecalData (modèles), pose les instances via l'éditeur, les convertit vers/depuis le format du manifeste et les rend persistantes.
+Stamped decals as a site carries them: traffic arrows, painted EXIT text, asphalt repair patches. They are glyphs taken from a sheet (atlas) and placed at a point, oriented in a direction, and not paint traced along a line (which is what distinguishes them from siteMarks). The module creates the DecalData (templates), places the instances via the editor, converts them to/from the manifest format and makes them persistent.
 
-## Remarques
+## Notes
 
-- Un enregistrement de décalque (plan) : { mat, rows, cols, prio, tplSize (taille du modèle), x, y, a (angle en radians), size, frame (cellule de l'atlas), lift (surélévation en m) }.
-- Les modèles sont nommés « SiteDecal_<tag>_<n> » par site, car graver un site rend persistants ses propres modèles et ne doit pas faire de même pour ceux d'un voisin.
-- localise arrondit les coordonnées au millimètre et écrit l'orientation en angle, de sorte que tourner le site est une addition par décalque.
-- Les instances sont créées par editor.addDecalInstanceWithTan avec la normale vers le haut, le z du terrain obtenu par terrainZ(x, y) + lift. Les deux derniers arguments de l'appel (3, 1) sont des constantes du code.
-- Les décalques sont retirés par editor.deleteDecalInstance ; commit marque les modèles « sales » dans decalPersistMan pour qu'ils survivent à la sauvegarde du niveau.
+- A decal record (plan): { mat, rows, cols, prio, tplSize (template size), x, y, a (angle in radians), size, frame (atlas cell), lift (elevation in m) }.
+- The templates are named "SiteDecal_<tag>_<n>" per site, because burning a site makes its own templates persistent and must not do the same for a neighbor's.
+- localise rounds the coordinates to the millimeter and writes the orientation as an angle, so that rotating the site is one addition per decal.
+- The instances are created by editor.addDecalInstanceWithTan with the normal pointing up, the terrain z obtained by terrainZ(x, y) + lift. The last two arguments of the call (3, 1) are constants in the code.
+- The decals are removed by editor.deleteDecalInstance; commit marks the templates "dirty" in decalPersistMan so that they survive the level save.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_siteDecals.build(plan, tag, terrainZ)` | Estampille tout un plan d'un coup, en créant les modèles requis. tag distingue ces modèles de ceux des autres sites. Renvoie les instances et les identifiants de modèles, deux choses à nettoyer différemment : une instance part avec le site, un modèle est partagé par tous les décalques du site. | 90 |
-| `editor_toolUtilities_siteDecals.commit(tplIds)` | Donne les modèles au niveau, ce qui fait survivre à la sauvegarde les décalques posés d'après eux : le gestionnaire de persistance garde les instances contre leur modèle, donc marquer les quelques modèles « sales » écrit tous les décalques. Sans effet si decalPersistMan n'existe pas. | 119 |
-| `editor_toolUtilities_siteDecals.emit(tpl, rec, terrainZ)` | Pose un décalque depuis son enregistrement : position (x, y) à la hauteur du terrain plus lift, normale vers le haut, tangente dirigée selon l'angle a. | 36 |
-| `editor_toolUtilities_siteDecals.facing(tx, ty)` | Angle de cap d'un décalque (atan2(ty, tx)) à partir du vecteur direction qu'un constructeur a déjà. | 130 |
-| `editor_toolUtilities_siteDecals.localise(plan, ox, oy)` | Convertit un plan de décalques au format du manifeste, local à l'origine de cuisson (ox, oy). Groupés par modèle (même mat, rows, cols, prio). Renvoie nil si le plan est vide. | 49 |
-| `editor_toolUtilities_siteDecals.place(rec, px, py, yaw, ox, oy)` | L'inverse de localise : les décalques du manifeste comme plan, posés là où se trouve un placement et tournés sur son cap. (ox, oy) est le point du repère du site autour duquel le placement tourne. | 69 |
-| `editor_toolUtilities_siteDecals.remove(objs)` | Retire des décalques posés (editor.deleteDecalInstance). | 110 |
-| `editor_toolUtilities_siteDecals.template(name, spec)` | Récupère ou crée le DecalData d'un groupe de décalques, nommé d'après le site qui le dresse. Champs posés : material, frame, texRows, texCols, size, renderPriority (défaut 5). | 20 |
+| `editor_toolUtilities_siteDecals.build(plan, tag, terrainZ)` | Stamps a whole plan at once, creating the required templates. tag distinguishes these templates from those of other sites. Returns the instances and the template identifiers, two things to clean up differently: an instance goes with the site, a template is shared by all the site's decals. | 90 |
+| `editor_toolUtilities_siteDecals.commit(tplIds)` | Gives the templates to the level, which makes the decals placed from them survive the save: the persistence manager keeps the instances against their template, so marking the few templates "dirty" writes all the decals. No effect if decalPersistMan does not exist. | 119 |
+| `editor_toolUtilities_siteDecals.emit(tpl, rec, terrainZ)` | Places a decal from its record: position (x, y) at terrain height plus lift, normal pointing up, tangent directed according to angle a. | 36 |
+| `editor_toolUtilities_siteDecals.facing(tx, ty)` | Heading angle of a decal (atan2(ty, tx)) from the direction vector a builder already has. | 130 |
+| `editor_toolUtilities_siteDecals.localise(plan, ox, oy)` | Converts a decal plan to the manifest format, local to the bake origin (ox, oy). Grouped by template (same mat, rows, cols, prio). Returns nil if the plan is empty. | 49 |
+| `editor_toolUtilities_siteDecals.place(rec, px, py, yaw, ox, oy)` | The inverse of localise: the manifest's decals as a plan, placed where a placement is and rotated to its heading. (ox, oy) is the point of the site's frame around which the placement rotates. | 69 |
+| `editor_toolUtilities_siteDecals.remove(objs)` | Removes placed decals (editor.deleteDecalInstance). | 110 |
+| `editor_toolUtilities_siteDecals.template(name, spec)` | Gets or creates the DecalData of a decal group, named after the site that stands it up. Fields set: material, frame, texRows, texCols, size, renderPriority (default 5). | 20 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_siteDecals.build(plan, tag, terrainZ)`
 
-Estampille tout un plan d'un coup, en créant les modèles requis. tag distingue ces modèles de ceux des autres sites. Renvoie les instances et les identifiants de modèles, deux choses à nettoyer différemment : une instance part avec le site, un modèle est partagé par tous les décalques du site.
+Stamps a whole plan at once, creating the required templates. tag distinguishes these templates from those of other sites. Returns the instances and the template identifiers, two things to clean up differently: an instance goes with the site, a template is shared by all the site's decals.
 
-- `plan` (*table|nil*) : Liste d'enregistrements de décalques.
-- `tag` (*string*) : Étiquette du site.
-- `terrainZ` (*function*) : terrainZ(x, y) renvoie la hauteur du terrain.
-- **renvoie** : table Instances de décalques.
-- **renvoie** : integer[] Identifiants des modèles DecalData créés.
+- `plan` (*table|nil*) : List of decal records.
+- `tag` (*string*) : Site label.
+- `terrainZ` (*function*) : terrainZ(x, y) returns the terrain height.
+- **returns**: table Decal instances.
+- **returns**: integer[] Identifiers of the DecalData templates created.
 
 #### `editor_toolUtilities_siteDecals.commit(tplIds)`
 
-Donne les modèles au niveau, ce qui fait survivre à la sauvegarde les décalques posés d'après eux : le gestionnaire de persistance garde les instances contre leur modèle, donc marquer les quelques modèles « sales » écrit tous les décalques. Sans effet si decalPersistMan n'existe pas.
+Gives the templates to the level, which makes the decals placed from them survive the save: the persistence manager keeps the instances against their template, so marking the few templates "dirty" writes all the decals. No effect if decalPersistMan does not exist.
 
-- `tplIds` (*integer[]|nil*) : Identifiants de modèles renvoyés par build.
+- `tplIds` (*integer[]|nil*) : Template identifiers returned by build.
 
 #### `editor_toolUtilities_siteDecals.emit(tpl, rec, terrainZ)`
 
-Pose un décalque depuis son enregistrement : position (x, y) à la hauteur du terrain plus lift, normale vers le haut, tangente dirigée selon l'angle a.
+Places a decal from its record: position (x, y) at terrain height plus lift, normal pointing up, tangent directed according to angle a.
 
-- `tpl` (*userdata*) : Modèle DecalData.
+- `tpl` (*userdata*) : DecalData template.
 - `rec` (*table*) : { x, y, a, size, frame, lift }.
-- `terrainZ` (*function*) : terrainZ(x, y) renvoie la hauteur du terrain.
-- **renvoie** : any Instance de décalque renvoyée par editor.addDecalInstanceWithTan.
+- `terrainZ` (*function*) : terrainZ(x, y) returns the terrain height.
+- **returns**: any Decal instance returned by editor.addDecalInstanceWithTan.
 
 #### `editor_toolUtilities_siteDecals.facing(tx, ty)`
 
-Angle de cap d'un décalque (atan2(ty, tx)) à partir du vecteur direction qu'un constructeur a déjà.
+Heading angle of a decal (atan2(ty, tx)) from the direction vector a builder already has.
 
-- `tx` (*number*) : Composante x de la direction.
-- `ty` (*number*) : Composante y de la direction.
-- **renvoie** : number Angle en radians.
+- `tx` (*number*) : x component of the direction.
+- `ty` (*number*) : y component of the direction.
+- **returns**: number Angle in radians.
 
 #### `editor_toolUtilities_siteDecals.localise(plan, ox, oy)`
 
-Convertit un plan de décalques au format du manifeste, local à l'origine de cuisson (ox, oy). Groupés par modèle (même mat, rows, cols, prio). Renvoie nil si le plan est vide.
+Converts a decal plan to the manifest format, local to the bake origin (ox, oy). Grouped by template (same mat, rows, cols, prio). Returns nil if the plan is empty.
 
-- `plan` (*table|nil*) : Liste d'enregistrements de décalques.
-- `ox` (*number*) : x de l'origine de cuisson.
-- `oy` (*number*) : y de l'origine de cuisson.
-- **renvoie** : table|nil { tpls = { {mat, rows, cols, prio, size}, ... }, items = { {t, x, y, a, size, frame, lift}, ... } }.
+- `plan` (*table|nil*) : List of decal records.
+- `ox` (*number*) : x of the bake origin.
+- `oy` (*number*) : y of the bake origin.
+- **returns**: table|nil { tpls = { {mat, rows, cols, prio, size}, ... }, items = { {t, x, y, a, size, frame, lift}, ... } }.
 
 #### `editor_toolUtilities_siteDecals.place(rec, px, py, yaw, ox, oy)`
 
-L'inverse de localise : les décalques du manifeste comme plan, posés là où se trouve un placement et tournés sur son cap. (ox, oy) est le point du repère du site autour duquel le placement tourne.
+The inverse of localise: the manifest's decals as a plan, placed where a placement is and rotated to its heading. (ox, oy) is the point of the site's frame around which the placement rotates.
 
-- `rec` (*table|nil*) : Enregistrement du manifeste { tpls, items }.
-- `px` (*number*) : x du placement.
-- `py` (*number*) : y du placement.
-- `yaw` (*number|nil*) : Cap en radians (défaut 0).
-- `ox` (*number|nil*) : x du pivot dans le repère du site (défaut 0).
-- `oy` (*number|nil*) : y du pivot (défaut 0).
-- **renvoie** : table|nil Plan de décalques en coordonnées monde, ou nil s'il est vide.
+- `rec` (*table|nil*) : Manifest record { tpls, items }.
+- `px` (*number*) : x of the placement.
+- `py` (*number*) : y of the placement.
+- `yaw` (*number|nil*) : Heading in radians (default 0).
+- `ox` (*number|nil*) : x of the pivot in the site's frame (default 0).
+- `oy` (*number|nil*) : y of the pivot (default 0).
+- **returns**: table|nil Decal plan in world coordinates, or nil if empty.
 
 #### `editor_toolUtilities_siteDecals.remove(objs)`
 
-Retire des décalques posés (editor.deleteDecalInstance).
+Removes placed decals (editor.deleteDecalInstance).
 
-- `objs` (*table|nil*) : Instances renvoyées par build.
+- `objs` (*table|nil*) : Instances returned by build.
 
 #### `editor_toolUtilities_siteDecals.template(name, spec)`
 
-Récupère ou crée le DecalData d'un groupe de décalques, nommé d'après le site qui le dresse. Champs posés : material, frame, texRows, texCols, size, renderPriority (défaut 5).
+Gets or creates the DecalData of a decal group, named after the site that stands it up. Fields set: material, frame, texRows, texCols, size, renderPriority (default 5).
 
-- `name` (*string*) : Nom d'objet du modèle.
+- `name` (*string*) : Object name of the template.
 - `spec` (*table*) : { mat, frame, rows, cols, size, prio }.
-- **renvoie** : userdata|nil Objet DecalData, ou nil si la création échoue.
+- **returns**: userdata|nil DecalData object, or nil if creation fails.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/siteDecals.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/siteDecals.lua`.*

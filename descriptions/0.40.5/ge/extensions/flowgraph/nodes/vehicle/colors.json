@@ -1,21 +1,21 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/colors.lua",
-  "module": "Nœud « Set Vehicle Colors » (catégorie `repeat_instant`, tags colors). Change les trois peintures du véhicule : `color1` (principale, `obj.color`), `color2` (`colorPalette0`), `color3` (`colorPalette1`). Chaque pin `color` est une table de 8 nombres : les 4 premiers = couleur de base (r,g,b,a), les 4 suivants = données métalliques passées à `createVehiclePaint`. Finit par `obj:setMetallicPaintData`. Pin `vehId` : si absent, véhicule joueur (`be:getPlayerVehicleID(0)`).",
+  "module": "Node \"Set Vehicle Colors\" (category `repeat_instant`, tags colors). Changes the three paints of the vehicle: `color1` (main, `obj.color`), `color2` (`colorPalette0`), `color3` (`colorPalette1`). Each `color` pin is a table of 8 numbers: the first 4 = base color (r,g,b,a), the next 4 = metallic data passed to `createVehiclePaint`. Ends with `obj:setMetallicPaintData`. Pin `vehId`: if absent, player vehicle (`be:getPlayerVehicleID(0)`).",
   "notes": [
-    "Appelé à chaque frame tant que le flux est actif.",
-    "Pas de test sur `obj` nil.",
-    "La couleur est convertie en linéaire (`asLinear4F`) avant d'être posée."
+    "Called every frame while the flow is active.",
+    "No test on `obj` nil.",
+    "The color is converted to linear (`asLinear4F`) before being applied."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "postInit": {
-          "desc": "Marque les trois pins couleur avec `colorSetup = {vehicleColor = true}` (sélecteur de peinture véhicule dans l'éditeur).",
+          "desc": "Marks the three color pins with `colorSetup = {vehicleColor = true}` (vehicle paint picker in the editor).",
           "internal": true
         },
         "work": {
-          "desc": "Crée une peinture par pin couleur non nil, l'applique à l'objet véhicule et envoie la liste des peintures avec `setMetallicPaintData`.",
+          "desc": "Creates a paint per non-nil color pin, applies it to the vehicle object and sends the list of paints with `setMetallicPaintData`.",
           "internal": true
         }
       }

@@ -2,55 +2,55 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/debug/comment.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud (éditeur uniquement).
+--- Node class (editor only).
 ---@class flowgraph_nodes_debug_comment_C
 local flowgraph_nodes_debug_comment_C = {}
 
---- Restaure les champs depuis les données chargées.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/debug/comment.lua:167
----@param nodeData table données sauvegardées
+--- Restores the fields from the loaded data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/debug/comment.lua:167
+---@param nodeData table saved data
 function flowgraph_nodes_debug_comment_C:_onDeserialized(nodeData) end
 
---- Ajoute au résultat les champs propres au commentaire.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/debug/comment.lua:155
----@param res table table de sérialisation du nœud
+--- Adds the comment-specific fields to the result.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/debug/comment.lua:155
+---@param res table node serialization table
 function flowgraph_nodes_debug_comment_C:_onSerialize(res) end
 
---- Dessine le cadre, le titre, le groupe redimensionnable et l'indication de groupe dans l'éditeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/debug/comment.lua:208
+--- Draws the frame, the title, the resizable group and the group hint in the editor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/debug/comment.lua:208
 function flowgraph_nodes_debug_comment_C:draw() end
 
---- Dessine le panneau de propriétés (titre, alpha, couleurs, simple, mode de déplacement, texte) et renvoie la raison de modification pour l'historique d'annulation.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/debug/comment.lua:70
----@return string|nil  description du changement
+--- Draws the properties panel (title, alpha, colors, simple, move mode, text) and returns the change reason for the undo history.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/debug/comment.lua:70
+---@return string|nil  change description
 function flowgraph_nodes_debug_comment_C:drawCustomProperties() end
 
---- Appelée à la fermeture du panneau de propriétés ; sans effet (code commenté).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/debug/comment.lua:65
+--- Called when the properties panel closes; no effect (commented-out code).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/debug/comment.lua:65
 function flowgraph_nodes_debug_comment_C:hideProperties() end
 
---- Initialise taille 200x200, titre « Comment », couleurs (fond gris 0.5, bordure 0.8, texte blanc), alpha 0.75, moveMode 'withoutNodes', simple faux.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/debug/comment.lua:23
+--- Initializes size 200x200, title "Comment", colors (background gray 0.5, border 0.8, text white), alpha 0.75, moveMode 'withoutNodes', simple false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/debug/comment.lua:23
 function flowgraph_nodes_debug_comment_C:init() end
 
---- Recalcule les ImVec4 de fond, bordure et texte depuis les tableaux de floats.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/debug/comment.lua:149
+--- Recomputes the background, border and text ImVec4 from the float arrays.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/debug/comment.lua:149
 function flowgraph_nodes_debug_comment_C:refreshColors() end
 
---- Appelée à l'ouverture du panneau de propriétés ; sans effet (code commenté).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/debug/comment.lua:60
+--- Called when the properties panel opens; no effect (commented-out code).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/debug/comment.lua:60
 function flowgraph_nodes_debug_comment_C:showProperties() end
 
---- Repositionne le nœud dans l'éditeur à l'ouverture du gestionnaire (si la position est dans des bornes valides) et force la taille.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/debug/comment.lua:198
+--- Repositions the node in the editor when the manager opens (if the position is within valid bounds) and forces the size.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/debug/comment.lua:198
 function flowgraph_nodes_debug_comment_C:updateEditorPosition() end
 

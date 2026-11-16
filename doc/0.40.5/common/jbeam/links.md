@@ -1,52 +1,52 @@
 # `jbeam_links`
 
-*Fichier : `lua/common/jbeam/links.lua` · VM : Commun (GE + véhicule) · 254 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/links.lua` · VM: Common (GE + vehicle) · 254 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/links")`
+**Access:** `require("jbeam/links")`
 
-Résolution des références entre lignes jbeam. Dans un fichier jbeam, une colonne dont le nom contient ':' (ex. "id1:", "torqueArm:", ou "links:" ) désigne le nom d'une ligne d'une autre section (nodes par défaut si rien après les deux-points, ex. "nodeArm:" ; "id1:nodes" explicite). Ce module repère ces liens (prepareLinksDestructive), les remplace par l'identifiant numérique cid de la cible (resolveLinks), et traite les liens de groupe "[groupe]:section" qui deviennent la liste des cid des lignes appartenant à ces groupes (resolveGroupLinks). C'est ce qui fait que les poutres référencent leurs nœuds par numéro dans les données finales.
+Resolution of references between jbeam rows. In a jbeam file, a column whose name contains ':' (e.g. "id1:", "torqueArm:", or "links:") designates the name of a row in another section (nodes by default if nothing follows the colon, e.g. "nodeArm:"; "id1:nodes" explicit). This module finds these links (prepareLinksDestructive), replaces them with the numeric identifier cid of the target (resolveLinks), and handles the group links "[group]:section" which become the list of cids of the rows belonging to those groups (resolveGroupLinks). This is why beams reference their nodes by number in the final data.
 
-## Remarques
+## Notes
 
-- Trois formes de liens : (a) colonne de ligne 'nom:section' = valeur chaîne, remplacée par le cid de la cible (la clé 'nom:section' est supprimée et la colonne 'nom' reçoit le cid) ; (b) colonne dont la valeur est une table (liste de noms), chaque élément est remplacé par un cid ; (c) clé de section 'nom:section' avec une liste de noms (ex. torqueReactionNodes:) renommée 'nom_section'.
-- sectionRenames (par ex. triggers2 -> triggers) est appliqué aux noms de section cible.
-- Quand une cible est introuvable : avertissement dans le journal sauf si la ligne porte optional = true (ou si la clé fait partie d'une liste interne de liens optionnels comme torqueArm:, nodeArm:, nodeCoupling:...), et la ligne est supprimée de sa section (entry[rowKey] = nil).
-- Une section cible inexistante provoque un avertissement et les données du lien sont abandonnées.
-- resolveLinks réindexe aussi chaque section déclarée dans vehicle.validTables par cid ; vehicle.validTables doit donc exister.
-- resolveGroupLinks : la colonne '[g1,g2]:nodes' (nom de champ de groupe entre crochets) est remplacée par une clé '_<champ>_<section>' contenant la liste de cid des lignes dont le champ de groupe correspond ; un champ de groupe de type chaîne est transformé en liste d'une chaîne.
+- Three forms of links: (a) row column 'name:section' = string value, replaced by the cid of the target (the key 'name:section' is removed and the column 'name' receives the cid); (b) column whose value is a table (list of names), each element is replaced by a cid; (c) section key 'name:section' with a list of names (e.g. torqueReactionNodes:) renamed 'name_section'.
+- sectionRenames (e.g. triggers2 -> triggers) is applied to the target section names.
+- When a target is not found: warning in the log unless the row carries optional = true (or the key is part of an internal list of optional links such as torqueArm:, nodeArm:, nodeCoupling:...), and the row is removed from its section (entry[rowKey] = nil).
+- A non-existent target section causes a warning and the link data is dropped.
+- resolveLinks also reindexes each section declared in vehicle.validTables by cid; vehicle.validTables must therefore exist.
+- resolveGroupLinks: the column '[g1,g2]:nodes' (group field name in brackets) is replaced by a key '_<field>_<section>' containing the list of cids of the rows whose group field matches; a group field of type string is turned into a list of one string.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_links.prepareLinksDestructive(vehicle, sectionRenames)` | Parcourt toutes les sections du véhicule, détecte les liens, retire les clés de lien des lignes (modifie vehicle en place) et renvoie un journal à plat de triplets (ligne ou liste, clé, ligne cible) pour que resolveLinks écrive les cid. *(interne)* | 15 |
-| `jbeam_links.resolveGroupLinks(vehicle)` | Remplace les colonnes '[groupe]:section' par des listes de cid de lignes appartenant aux groupes cités (clé '_groupe_section'). *(interne)* | 184 |
-| `jbeam_links.resolveLinks(vehicle, links)` | Écrit dans chaque lien le cid de sa cible puis reconstruit les sections de vehicle.validTables en les indexant par cid. *(interne)* | 159 |
+| `jbeam_links.prepareLinksDestructive(vehicle, sectionRenames)` | Walks all the vehicle's sections, detects the links, removes the link keys from the rows (modifies vehicle in place) and returns a flat journal of triplets (row or list, key, target row) so that resolveLinks writes the cids. *(internal)* | 15 |
+| `jbeam_links.resolveGroupLinks(vehicle)` | Replaces the '[group]:section' columns with lists of cids of rows belonging to the cited groups (key '_group_section'). *(internal)* | 184 |
+| `jbeam_links.resolveLinks(vehicle, links)` | Writes the cid of its target into each link then rebuilds the sections of vehicle.validTables by indexing them by cid. *(internal)* | 159 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_links.prepareLinksDestructive(vehicle, sectionRenames)`
 
-Parcourt toutes les sections du véhicule, détecte les liens, retire les clés de lien des lignes (modifie vehicle en place) et renvoie un journal à plat de triplets (ligne ou liste, clé, ligne cible) pour que resolveLinks écrive les cid.
+Walks all the vehicle's sections, detects the links, removes the link keys from the rows (modifies vehicle in place) and returns a flat journal of triplets (row or list, key, target row) so that resolveLinks writes the cids.
 
-- `vehicle` (*table*) : Données jbeam du véhicule (modifiées en place).
-- `sectionRenames` (*table<string, string>*) : Renommages de sections (ancien nom -> nouveau).
-- **renvoie** : table Liste plate de triplets {conteneur, clé, ligneCible, ...} (indices 1,2,3 puis 4,5,6...).
+- `vehicle` (*table*) : Vehicle jbeam data (modified in place).
+- `sectionRenames` (*table<string, string>*) : Section renames (old name -> new name).
+- **returns**: table Flat list of triplets {container, key, targetRow, ...} (indices 1,2,3 then 4,5,6...).
 
 #### `jbeam_links.resolveGroupLinks(vehicle)`
 
-Remplace les colonnes '[groupe]:section' par des listes de cid de lignes appartenant aux groupes cités (clé '_groupe_section').
+Replaces the '[group]:section' columns with lists of cids of rows belonging to the cited groups (key '_group_section').
 
-- `vehicle` (*table*) : Données jbeam du véhicule.
-- **renvoie** : boolean Toujours true.
+- `vehicle` (*table*) : Vehicle jbeam data.
+- **returns**: boolean Always true.
 
 #### `jbeam_links.resolveLinks(vehicle, links)`
 
-Écrit dans chaque lien le cid de sa cible puis reconstruit les sections de vehicle.validTables en les indexant par cid.
+Writes the cid of its target into each link then rebuilds the sections of vehicle.validTables by indexing them by cid.
 
-- `vehicle` (*table*) : Données jbeam du véhicule (avec validTables).
-- `links` (*table*) : Journal renvoyé par prepareLinksDestructive.
-- **renvoie** : boolean Toujours true.
+- `vehicle` (*table*) : Vehicle jbeam data (with validTables).
+- `links` (*table*) : Journal returned by prepareLinksDestructive.
+- **returns**: boolean Always true.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/links.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/links.lua`.*

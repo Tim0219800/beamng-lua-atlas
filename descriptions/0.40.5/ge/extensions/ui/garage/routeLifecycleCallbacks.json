@@ -1,42 +1,81 @@
 {
   "path": "lua/ge/extensions/ui/garage/routeLifecycleCallbacks.lua",
-  "module": "Callbacks de cycle de vie des routes UI du garage en mode photo. Pour les routes « garage.photomode » (et « garage.photomode.* »), ouvre une session photomode avec le profil « garage » à l'entrée, y joint les données de route fournies par ui_pause_providers_routeData_photomode, et ferme la session à la sortie. Les autres routes sont ignorées.",
+  "module": "Lifecycle callbacks for the garage photo mode UI routes. For the \"garage.photomode\" routes (and \"garage.photomode.*\"), opens a photomode session with the \"garage\" profile on entry, attaches the route data provided by ui_pause_providers_routeData_photomode, and closes the session on exit. Other routes are ignored.",
   "notes": [
-    "Dépend de ui_pause_providers_routeData_photomode et ui_pause_photomode (déclarées dans M.dependencies).",
-    "Les trois hooks appellent dump(...) pour journaliser le nom de la route (traces de debug laissées dans le code).",
-    "onPhotomodeLeave n'a pas de filtre sur le nom de route : il appelle onPhotomodeRouteLeave et endPhotomodeSession pour toute sortie qui lui est notifiée."
+    "Depends on ui_pause_providers_routeData_photomode and ui_pause_photomode (declared in M.dependencies).",
+    "All three hooks call dump(...) to log the route name (debug traces left in the code).",
+    "onPhotomodeLeave has no route name filter: it calls onPhotomodeRouteLeave and endPhotomodeSession for any exit notified to it."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : ui_pause_providers_routeData_photomode, ui_pause_photomode."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extensions loaded before: ui_pause_providers_routeData_photomode, ui_pause_photomode."
+    }
   },
   "functions": {
     "onPhotomodeEnter": {
-      "desc": "Hook appelé quand l'UI entre dans une route photomode. Si la route est garage.photomode[.*] : démarre la session photomode (profil « garage »), ajoute data.photomode et notifie onPhotomodeRouteEnter.",
+      "desc": "Hook called when the UI enters a photomode route. If the route is garage.photomode[.*]: starts the photomode session (\"garage\" profile), adds data.photomode and notifies onPhotomodeRouteEnter.",
       "params": {
-        "context": {"type": "table", "desc": "Contexte du changement de route (non utilisé)."},
-        "toRoute": {"type": "table", "desc": "Route cible ; seul le champ name est lu."},
-        "fromRoute": {"type": "table|nil", "desc": "Route précédente (non utilisée)."},
-        "data": {"type": "table", "desc": "Données de route, enrichies avec photomode."}
+        "context": {
+          "type": "table",
+          "desc": "Route change context (unused)."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route; only the name field is read."
+        },
+        "fromRoute": {
+          "type": "table|nil",
+          "desc": "Previous route (unused)."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Route data, enriched with photomode."
+        }
       },
       "internal": true
     },
     "onPhotomodeMount": {
-      "desc": "Hook appelé au montage de la route : ajoute data.photomode si la route est garage.photomode[.*].",
+      "desc": "Hook called when the route is mounted: adds data.photomode if the route is garage.photomode[.*].",
       "params": {
-        "context": {"type": "table", "desc": "Contexte du changement de route (non utilisé)."},
-        "toRoute": {"type": "table", "desc": "Route cible ; seul name est lu."},
-        "fromRoute": {"type": "table|nil", "desc": "Route précédente (non utilisée)."},
-        "data": {"type": "table", "desc": "Données de route, enrichies avec photomode."}
+        "context": {
+          "type": "table",
+          "desc": "Route change context (unused)."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route; only name is read."
+        },
+        "fromRoute": {
+          "type": "table|nil",
+          "desc": "Previous route (unused)."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Route data, enriched with photomode."
+        }
       },
       "internal": true
     },
     "onPhotomodeLeave": {
-      "desc": "Hook appelé à la sortie de la route : notifie onPhotomodeRouteLeave puis termine la session photomode (endPhotomodeSession).",
+      "desc": "Hook called when leaving the route: notifies onPhotomodeRouteLeave then ends the photomode session (endPhotomodeSession).",
       "params": {
-        "context": {"type": "table", "desc": "Contexte du changement de route (non utilisé)."},
-        "toRoute": {"type": "table|nil", "desc": "Route d'arrivée ; name transmis à onPhotomodeRouteLeave."},
-        "fromRoute": {"type": "table|nil", "desc": "Route quittée (utilisée pour le log)."},
-        "data": {"type": "table", "desc": "Données de route (non utilisées)."}
+        "context": {
+          "type": "table",
+          "desc": "Route change context (unused)."
+        },
+        "toRoute": {
+          "type": "table|nil",
+          "desc": "Destination route; name passed to onPhotomodeRouteLeave."
+        },
+        "fromRoute": {
+          "type": "table|nil",
+          "desc": "Route being left (used for the log)."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Route data (not used)."
+        }
       },
       "internal": true
     }

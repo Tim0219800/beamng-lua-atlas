@@ -1,34 +1,60 @@
 {
   "path": "lua/ge/extensions/editor/flowgraph/missionVariableHelper.lua",
-  "module": "Utilitaire partagé qui applique à un projet flowgraph les variables de la mission sélectionnée dans le Mission Editor (missionTypeData), et vérifie si un projet correspond à la mission. Utilisé par la fenêtre Task Manager et l'éditeur principal avant de lancer un projet.",
-  "usage": "local helper = require('/lua/ge/extensions/editor/flowgraph/missionVariableHelper')\nlocal ok = helper.applyMissionVariablesToManager(mgr, 'monOutil')",
+  "module": "Shared utility that applies to a flowgraph project the variables of the mission selected in the Mission Editor (missionTypeData), and checks whether a project matches the mission. Used by the Task Manager window and the main editor before launching a project.",
+  "usage": "local helper = require('/lua/ge/extensions/editor/flowgraph/missionVariableHelper')\nlocal ok = helper.applyMissionVariablesToManager(mgr, 'myTool')",
   "notes": [
-    "Nécessite editor_missionEditor chargé et une mission sélectionnée (editor_missionEditor.getSelectedMissionId() est traité comme un objet mission avec id, missionType, missionTypeData, fgPath).",
-    "Seules les variables qui existent déjà dans le projet (mgr.variables:variableExists) sont modifiées, via changeBase.",
-    "Les variables playerID, playerId, vehID et vehId reçoivent l'ID du véhicule joueur (getPlayerVehicle(0):getID()) ; ce code n'a pas de garde si aucun véhicule joueur n'existe (erreur possible).",
-    "Si la mission n'a pas de missionTypeData, la fonction renvoie false avant l'injection des IDs de véhicule."
+    "Requires editor_missionEditor to be loaded and a mission selected (editor_missionEditor.getSelectedMissionId() is treated as a mission object with id, missionType, missionTypeData, fgPath).",
+    "Only variables that already exist in the project (mgr.variables:variableExists) are modified, via changeBase.",
+    "The variables playerID, playerId, vehID and vehId receive the player vehicle ID (getPlayerVehicle(0):getID()); this code has no guard if no player vehicle exists (possible error).",
+    "If the mission has no missionTypeData, the function returns false before the vehicle ID injection."
   ],
   "functions": {
     "checkMissionMatch": {
-      "desc": "Compare le chemin du fichier du projet (savedDir + savedFilename, .flow.json ajouté si absent) au chemin flowgraph de la mission (fgPath, ou celui de l'instance de mission), après normalisation (/, sans / initial, minuscules).",
+      "desc": "Compares the project's file path (savedDir + savedFilename, .flow.json appended if missing) to the mission's flowgraph path (fgPath, or that of the mission instance), after normalization (/, no leading /, lowercase).",
       "params": {
-        "mgr": {"type": "table|nil", "desc": "Manager flowgraph."},
-        "selectedMission": {"type": "table|nil", "desc": "Mission sélectionnée (id, fgPath, missionType)."}
+        "mgr": {
+          "type": "table|nil",
+          "desc": "Flowgraph manager."
+        },
+        "selectedMission": {
+          "type": "table|nil",
+          "desc": "Selected mission (id, fgPath, missionType)."
+        }
       },
       "returns": [
-        {"type": "string", "desc": "\"exact\", \"missionTypeMain\" (flowgraph principal gameplay/missiontypes/<type>/<type>.flow.json), \"sameMissionType\", \"differentMissionType\" ou \"noMission\"."},
-        {"type": "string", "desc": "Chemin normalisé du projet."},
-        {"type": "string", "desc": "Chemin normalisé de la mission."}
+        {
+          "type": "string",
+          "desc": "\"exact\", \"missionTypeMain\" (main gameplay flowgraph gameplay/missiontypes/<type>/<type>.flow.json), \"sameMissionType\", \"differentMissionType\" or \"noMission\"."
+        },
+        {
+          "type": "string",
+          "desc": "Normalized project path."
+        },
+        {
+          "type": "string",
+          "desc": "Normalized mission path."
+        }
       ],
       "internal": false
     },
     "applyMissionVariablesToManager": {
-      "desc": "Copie les variables de missionTypeData de la mission sélectionnée vers le projet, puis injecte l'ID du véhicule joueur dans les variables de nom connu. Journalise le type de correspondance (avertissement si le projet n'appartient pas à la mission, mais applique quand même).",
+      "desc": "Copies the missionTypeData variables of the selected mission to the project, then injects the player vehicle ID into the variables with known names. Logs the match type (warning if the project does not belong to the mission, but applies anyway).",
       "params": {
-        "mgr": {"type": "table", "desc": "Manager flowgraph cible."},
-        "logTag": {"type": "string|nil", "desc": "Étiquette de log (défaut \"missionVariableHelper\")."}
+        "mgr": {
+          "type": "table",
+          "desc": "Target flowgraph manager."
+        },
+        "logTag": {
+          "type": "string|nil",
+          "desc": "Log label (default \"missionVariableHelper\")."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si au moins une variable a été appliquée ou injectée ; false sinon (éditeur de missions absent, aucune mission, aucune variable)."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if at least one variable was applied or injected; false otherwise (mission editor absent, no mission, no variable)."
+        }
+      ],
       "internal": false
     }
   }

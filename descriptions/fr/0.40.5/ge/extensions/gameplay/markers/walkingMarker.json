@@ -1,0 +1,74 @@
+{
+  "path": "lua/ge/extensions/gameplay/markers/walkingMarker.lua",
+  "module": "Marqueur de « portes » pour le joueur à pied (entrées de bâtiments, par exemple). Même principe que vehicleTrigger : chaque porte est une paire d'objets de scène (zone, icône) ; l'icône monte quand le personnage entre dans la zone, un écran 3D facultatif s'affiche 5 s, et le marqueur devient interactif. Contrairement à vehicleTrigger, le recouvrement n'est testé que si le joueur marche (data.isWalking) et sous la vitesse de croisière. Le module renvoie {create, cluster}.",
+  "notes": [
+    "cluster regroupe les POI dont les paires de noms de portes (nom zone + nom icône, triées) sont identiques ; id 'walkingMarker#<noms concaténés>'. Lit poi.markerInfo.walkingMarker.{doors, icon, iconLift, iconOffsetHeight, pos, radius, screens} ; icône par défaut poi_exclamationmark_round ; elemData regroupe les poi.data.",
+    "Le cluster ne renseigne pas pos ni radius : seuls visibilityPos et visibilityRadius sont définis, donc setup utilise la position nulle par défaut pour self.pos (utilisée par le son de l'écran).",
+    "Les ids d'icônes sont de la forme <cluster.id>-gsIcon-<idx> (préfixe repris de la station-service, sans conséquence fonctionnelle).",
+    "Chaque porte est évaluée séparément (overlap par porte), contrairement à vehicleTrigger où le résultat global est appliqué à toutes les portes.",
+    "drawAxisBox est un utilitaire de debug non utilisé."
+  ],
+  "functions": {
+    "create": {
+      "desc": "Fabrique un marqueur de portes pour piéton (instance de C).",
+      "params": {"...": {"type": "any", "desc": "Arguments transmis à C:init (non utilisés)."}},
+      "returns": [{"type": "table", "desc": "Instance de marqueur."}],
+      "internal": false
+    },
+    "cluster": {
+      "desc": "Regroupe les POI walkingMarker ayant les mêmes noms de portes et ajoute un cluster par groupe à allClusters.",
+      "params": {
+        "pois": {"type": "table[]", "desc": "POI avec markerInfo.walkingMarker."},
+        "allClusters": {"type": "table[]", "desc": "Liste de clusters complétée en place."}
+      },
+      "internal": true
+    }
+  },
+  "classes": {
+    "C": {
+      "desc": "Marqueur de portes pour le joueur à pied.",
+      "functions": {
+        "init": {"desc": "Initialise visible = true.", "internal": true},
+        "setup": {
+          "desc": "Pour chaque porte, retrouve l'objet de zone et l'objet d'icône, calcule la boîte de la zone, cache l'écran associé et crée l'icône.",
+          "params": {"cluster": {"type": "table", "desc": "Cluster issu de cluster()."}},
+          "internal": true
+        },
+        "update": {
+          "desc": "Chaque frame : teste, par porte, le recouvrement OBB/OBB (uniquement si le joueur marche et sous la vitesse de croisière), gère écrans, son, icônes et trait de debug, puis met à jour isInAreaChanged et anyOverlap.",
+          "params": {"data": {"type": "table", "desc": "Données de frame : isWalking, cruisingSpeedFactor, bbCenter, bbHalfAxis0..2, camPos, bigMapActive, dt."}},
+          "internal": true
+        },
+        "createObjects": {"desc": "Nettoie les objets existants (n'en crée pas).", "internal": true},
+        "hide": {"desc": "Passe invisible, rend les icônes transparentes et cache les écrans.", "internal": false},
+        "show": {"desc": "Repasse visible.", "internal": false},
+        "clearObjects": {"desc": "Retire les icônes, cache les écrans et efface la liste des portes.", "internal": false},
+        "interactInPlayMode": {
+          "desc": "Si canInteract et que le joueur est dans une porte, ajoute les données (elemData) du cluster aux éléments interactifs.",
+          "params": {
+            "interactData": {"type": "table", "desc": "Données de frame avec canInteract."},
+            "interactableElements": {"type": "table[]", "desc": "Liste complétée en place."}
+          },
+          "internal": false
+        },
+        "instantFade": {"desc": "Ne fait rien.", "params": {"visible": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
+        "drawAxisBox": {
+          "desc": "Dessine une boîte de debug (arêtes et faces) par debugDrawer ; non utilisée ici.",
+          "params": {
+            "corner": {"type": "vec3", "desc": "Coin de départ."},
+            "x": {"type": "vec3", "desc": "Vecteur de l'arête X."},
+            "y": {"type": "vec3", "desc": "Vecteur de l'arête Y."},
+            "z": {"type": "vec3", "desc": "Vecteur de l'arête Z."},
+            "clr": {"type": "ColorI|nil", "desc": "Couleur des faces (défaut 128,64,64,32)."}
+          },
+          "internal": false
+        },
+        "drawOnMinimap": {
+          "desc": "Dessine un cercle sur la minimap à la position de chaque icône de porte.",
+          "params": {"td": {"type": "table", "desc": "Données de dessin (non utilisées)."}},
+          "internal": false
+        }
+      }
+    }
+  }
+}

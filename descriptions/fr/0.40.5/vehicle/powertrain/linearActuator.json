@@ -1,0 +1,89 @@
+{
+  "path": "lua/vehicle/powertrain/linearActuator.lua",
+  "module": "Composant powertrain `linearActuator` : vérin à vis (actionneur linéaire mécanique) entraîné par un arbre. Il transforme le couple d'entrée en force axiale sur des poutres (obj:screwBeam) repérées par les tags `beamTags` et mesure la vitesse d'extension, qu'il renvoie à son parent comme vitesse de rotation (vitesse / pas de vis). Catégorie `torqueConsumer`, sans port de sortie. Utile pour benne, plateforme ou vérin électrique. Il suit l'extension (`currentExtend`, `currentExtendPercent`).",
+  "usage": "local act = powertrain.getDevice(\"tailgateActuator\")\nprint(act.currentExtend, act.currentExtendPercent, act.velocity) -- m, 0..1, m/s",
+  "notes": [
+    "Clés jbeam lues : name, type, inputName, inputIndex, gearRatio (1), friction (N·m), dynamicFriction, electricsName, virtualInertia (kg·m², 2), minExtend (m, 1), maxExtend (m, 2), frictionForce (N, 1), speedLimit (m/s, 100), movementIntentElectricsName, node, screwDiameter (m, 0.05), leadMillimeterPerRevolution (mm par tour, OBLIGATOIRE), beamTags (liste de tags de poutres), breakTriggerBeam.",
+    "Champs principaux : inputAV (rad/s côté parent = velocity / pas par radian * gearRatio), velocity (m/s, moyenne sur les poutres), currentExtend (m, moyenne des longueurs de poutre), currentExtendPercent (0..1 entre minExtend et maxExtend), minExtend, maxExtend, screwDiameter, invLeadRadian (rad/m), leadAngle (rad), actuatorBeams (liste de cid de poutres), actuatorBeamCount, speedLimit, frictionForce, cumulativeInertia (virtualInertia / gearRatio²), isBroken. outputTorque1/outputAV1 existent mais valent 0.",
+    "La force de vis = couple net * gearRatio / screwDiameter, répartie à parts égales entre les poutres. Si movementIntentElectricsName est défini et que sa valeur est exactement 0, la vitesse remontée est forcée à 0 (le vérin est considéré à l'arrêt).",
+    "Bugs / pièges : new plante si leadMillimeterPerRevolution est absent (division nil), et invActuatorBeamCount = 1 / 0 = inf si aucune poutre ne porte les tags demandés (velocity et currentExtend deviennent alors nan). onBreak ne déconnecte rien (le obj:breakBeam est commenté) : le vérin cassé continue de fonctionner. M.requiredExternalInertiaOutputs n'est pas défini dans ce module."
+  ],
+  "fields": {
+    "outputPorts": {"type": "table", "desc": "Table vide : aucun port de sortie."},
+    "deviceCategories": {"type": "table<string, boolean>", "desc": "{torqueConsumer=true}."}
+  },
+  "functions": {
+    "new": {
+      "desc": "Construit le vérin à vis : géométrie de la vis (diamètre, pas, angle d'hélice), limites d'extension, vitesse limite et liste des poutres motrices à partir des tags beamTags.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (leadMillimeterPerRevolution obligatoire)."}},
+      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "internal": true
+    }
+  },
+  "classes": {
+    "device": {
+      "desc": "Objet renvoyé par new(jbeamData).",
+      "functions": {
+        "velocityUpdate": {
+          "desc": "Appelée à chaque pas physique : inputAV = velocity * invLeadRadian * gearRatio, écrit dans le parent ; outputAV1 = 0.",
+          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (inutilisé)."}},
+          "returns": [],
+          "internal": true
+        },
+        "torqueUpdate": {
+          "desc": "Appelée à chaque pas physique : calcule la force de vis depuis le couple parent (moins frottements), l'applique à chaque poutre par obj:screwBeam avec minExtend/maxExtend/speedLimit, puis met à jour velocity, currentExtend et currentExtendPercent.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "applyDeformGroupDamage": {
+          "desc": "Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1).",
+          "params": {"damageAmount": {"type": "number", "desc": "Quantité de dégâts du groupe de déformation."}},
+          "returns": [],
+          "internal": true
+        },
+        "setPartCondition": {
+          "desc": "Applique usure (coefficient de 1 à 1.5) et dégâts selon l'odomètre et l'intégrité ; appelle onBreak si isBroken.",
+          "params": {
+            "subSystem": {"type": "any", "desc": "Non utilisé."},
+            "odometer": {"type": "number", "desc": "Distance parcourue en mètres."},
+            "integrity": {"type": "number|table", "desc": "Nombre 0..1 ou table {damageFrictionCoef, isBroken}."},
+            "visual": {"type": "any", "desc": "Non utilisé."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "getPartCondition": {
+          "desc": "Renvoie l'intégrité 0..1 (0 si cassé) et {damageFrictionCoef, isBroken}.",
+          "params": {},
+          "returns": [{"type": "number", "desc": "Intégrité 0..1."}, {"type": "table", "desc": "État sauvegardable."}],
+          "internal": true
+        },
+        "validate": {
+          "desc": "Appelée après construction du powertrain ; renvoie toujours true.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true."}],
+          "internal": true
+        },
+        "onBreak": {
+          "desc": "Marque le vérin comme cassé (isBroken = true) et réselectionne les mises à jour (sans effet réel).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "calculateInertia": {
+          "desc": "Inertie purement virtuelle : cumulativeInertia = virtualInertia / gearRatio² ; rapports cumulés = gearRatio.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "reset": {
+          "desc": "Remet à zéro vitesses, extension, coefficients d'usure/dégâts et isBroken ; relit gearRatio et friction.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "returns": [{"type": "table", "desc": "Le device."}],
+          "internal": true
+        }
+      }
+    }
+  }
+}

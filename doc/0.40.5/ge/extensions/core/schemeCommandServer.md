@@ -1,31 +1,31 @@
 # `core_schemeCommandServer`
 
-*Fichier : `lua/ge/extensions/core/schemeCommandServer.lua` · VM : Game Engine (GE) · 38 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/schemeCommandServer.lua` · VM: Game Engine (GE) · 38 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_schemeCommandServer` : `extensions.load("core_schemeCommandServer")`, puis la globale `core_schemeCommandServer`
+**Access:** extension `core_schemeCommandServer`: `extensions.load("core_schemeCommandServer")`, then the global `core_schemeCommandServer`
 
-Ancien serveur UDP local (127.0.0.1:22137) qui recevait les commandes du schéma d'URL 'beamng:' et les passait à commandhandler.onSchemeCommand. Le code est marqué OBSOLÈTE : le gestionnaire de schéma par défaut est désormais un tube Windows (pipe).
+Old local UDP server (127.0.0.1:22137) that received the commands of the 'beamng:' URL scheme and passed them to commandhandler.onSchemeCommand. The code is marked OBSOLETE: the default scheme handler is now a Windows pipe.
 
-## Remarques
+## Notes
 
-- Seuls les paquets commençant par 'beamng:' sont traités ; le préfixe de 7 caractères est retiré avant l'appel.
-- Un seul paquet (4096 octets max) est lu par image.
-- onFirstUpdate renvoie false si le port ne peut pas être ouvert, mais ce retour n'est pas utilisé par un hook.
+- Only packets starting with 'beamng:' are processed; the 7-character prefix is removed before the call.
+- Only one packet (4096 bytes max) is read per frame.
+- onFirstUpdate returns false if the port cannot be opened, but this return value is not used by a hook.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_schemeCommandServer.onFirstUpdate()` | Hook de première mise à jour : ouvre le socket UDP 127.0.0.1:22137 (non bloquant). Journalise un avertissement si l'ouverture échoue. *(interne)* *(hook)* | 11 |
-| `core_schemeCommandServer.onUpdate()` | Hook de mise à jour : lit un paquet UDP ; si le texte commence par 'beamng:', appelle commandhandler.onSchemeCommand avec la suite. *(interne)* *(hook)* | 22 |
+| `core_schemeCommandServer.onFirstUpdate()` | First-update hook: opens the UDP socket 127.0.0.1:22137 (non-blocking). Logs a warning if the opening fails. *(internal)* *(hook)* | 11 |
+| `core_schemeCommandServer.onUpdate()` | Update hook: reads a UDP packet; if the text starts with 'beamng:', calls commandhandler.onSchemeCommand with the rest. *(internal)* *(hook)* | 22 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_schemeCommandServer.onFirstUpdate()`
 
-Hook de première mise à jour : ouvre le socket UDP 127.0.0.1:22137 (non bloquant). Journalise un avertissement si l'ouverture échoue.
+First-update hook: opens the UDP socket 127.0.0.1:22137 (non-blocking). Logs a warning if the opening fails.
 
-- **renvoie** : boolean|nil false si le socket n'a pas pu être ouvert.
+- **returns**: boolean|nil false if the socket could not be opened.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/schemeCommandServer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/schemeCommandServer.lua`.*

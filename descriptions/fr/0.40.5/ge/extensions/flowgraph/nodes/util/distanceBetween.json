@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/distanceBetween.lua",
+  "module": "Nœud « Distance Between » (repeat_instant). Calcule la distance entre deux positions, chacune pouvant être un id de véhicule (number) ou un vec3. Entrées : posA, posB. Sortie : distance (number).",
+  "notes": [
+    "Le résultat de getPosition(nil) est passé à posA:set : une entrée non connectée peut provoquer une erreur.",
+    "Le test « if posA and posB » est toujours vrai (ce sont des vec3 locaux)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "work": {
+          "desc": "Résout les deux positions via getPosition et écrit la distance dans le pin distance.",
+          "internal": true
+        },
+        "getPosition": {
+          "desc": "Renvoie une position : pour un number, la position du véhicule (getObjectByID) ou vec3 nul si introuvable ; pour une table, un vec3 converti ; nil si l'entrée est vide.",
+          "params": {
+            "pinInput": {
+              "type": "number|table|nil",
+              "desc": "Id de véhicule ou position."
+            }
+          },
+          "internal": false
+        }
+      }
+    }
+  }
+}

@@ -2,39 +2,39 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/multiseatPlayerLimits.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_multiseatPlayerLimits` : calcule les limites du nombre de joueurs en multi-joueur local (multiseat). Deux sources : la limite 'douce' (recommandation matériel ou niveau, champ multiseat.maxPlayers du info.json du niveau, 4 par défaut via core_levels) et la limite 'dure' du mode de jeu multiseat en cours (gameplay_multiseat_gamemodeManager). Elle renvoie un état prêt pour l'interface : limite, atteinte, dépassée, avertissement.
---- Accès : extension `core_multiseatPlayerLimits` : `extensions.load("core_multiseatPlayerLimits")`, puis la globale `core_multiseatPlayerLimits`
+--- GE extension `core_multiseatPlayerLimits`: computes the player count limits in local multiplayer (multiseat). Two sources: the 'soft' limit (hardware or level recommendation, multiseat.maxPlayers field of the level's info.json, 4 by default via core_levels) and the 'hard' limit of the current multiseat game mode (gameplay_multiseat_gamemodeManager). It returns a UI-ready state: limit, reached, exceeded, warning.
+--- Access: extension `core_multiseatPlayerLimits`: `extensions.load("core_multiseatPlayerLimits")`, then the global `core_multiseatPlayerLimits`
 ---@class core_multiseatPlayerLimits
 core_multiseatPlayerLimits = {}
 
---- Renvoie le nombre maximal de joueurs recommandé par le niveau courant (level.multiseat.maxPlayers).
----Source : lua/ge/extensions/core/multiseatPlayerLimits.lua:17
----@return integer|nil  Limite, ou nil si aucun niveau ou valeur invalide.
+--- Returns the maximum number of players recommended by the current level (level.multiseat.maxPlayers).
+---Source: lua/ge/extensions/core/multiseatPlayerLimits.lua:17
+---@return integer|nil  Limit, or nil if no level or invalid value.
 function core_multiseatPlayerLimits.getCurrentLevelLimit() end
 
---- Raccourci : getState avec la limite du niveau courant et la limite du mode courant.
----Source : lua/ge/extensions/core/multiseatPlayerLimits.lua:51
----@param playerCount number Nombre de joueurs actuel.
----@param softIsHard boolean|nil Voir getState.
----@return table  Même structure que getState.
+--- Shortcut: getState with the current level's limit and the current mode's limit.
+---Source: lua/ge/extensions/core/multiseatPlayerLimits.lua:51
+---@param playerCount number Current number of players.
+---@param softIsHard boolean|nil See getState.
+---@return table  Same structure as getState.
 function core_multiseatPlayerLimits.getCurrentLevelState(playerCount, softIsHard) end
 
---- Renvoie le nombre maximal de joueurs du mode de jeu multiseat actif (gameplay_multiseat_gamemodeManager.getMaxPlayers) : limite dure sur toutes les plateformes.
----Source : lua/ge/extensions/core/multiseatPlayerLimits.lua:24
----@return integer|nil  Limite, ou nil.
+--- Returns the maximum number of players of the active multiseat game mode (gameplay_multiseat_gamemodeManager.getMaxPlayers): hard limit on all platforms.
+---Source: lua/ge/extensions/core/multiseatPlayerLimits.lua:24
+---@return integer|nil  Limit, or nil.
 function core_multiseatPlayerLimits.getCurrentModeLimit() end
 
---- Calcule l'état des limites de joueurs. La limite effective est celle du mode, abaissée par la limite douce si softIsHard (ou menu simple), sinon la limite douce seule si aucune limite de mode.
----Source : lua/ge/extensions/core/multiseatPlayerLimits.lua:31
----@param softLimit number|nil Limite recommandée (matériel ou niveau).
----@param playerCount number Nombre de joueurs actuel (négatif ou invalide devient 0).
----@param modeLimit number|nil Limite du mode de jeu.
----@param softIsHard boolean|nil Si vrai, la limite douce est aussi imposée.
+--- Computes the player limits state. The effective limit is the mode's, lowered by the soft limit if softIsHard (or simple menu), otherwise the soft limit alone if there is no mode limit.
+---Source: lua/ge/extensions/core/multiseatPlayerLimits.lua:31
+---@param softLimit number|nil Recommended limit (hardware or level).
+---@param playerCount number Current number of players (negative or invalid becomes 0).
+---@param modeLimit number|nil Game mode limit.
+---@param softIsHard boolean|nil If true, the soft limit is also enforced.
 ---@return table  { limit = integer|nil, hard = boolean, atLimit = boolean, exceeded = boolean, warning = table|nil }
 function core_multiseatPlayerLimits.getState(softLimit, playerCount, modeLimit, softIsHard) end
 
---- Indique si l'interface est en mode de menu simplifié (plateformes console/Steam Deck, selon Engine.UI.isSimpleMenu).
----Source : lua/ge/extensions/core/multiseatPlayerLimits.lua:13
----@return boolean  true si menu simple.
+--- Indicates whether the UI is in simplified menu mode (console/Steam Deck platforms, according to Engine.UI.isSimpleMenu).
+---Source: lua/ge/extensions/core/multiseatPlayerLimits.lua:13
+---@return boolean  true if simple menu.
 function core_multiseatPlayerLimits.isSimpleMenu() end
 

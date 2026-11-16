@@ -1,290 +1,290 @@
 # `campaign_campaigns`
 
-*Fichier : `lua/ge/extensions/campaign/campaigns.lua` · VM : Game Engine (GE) · 777 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/campaign/campaigns.lua` · VM: Game Engine (GE) · 777 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `campaign_campaigns` : `extensions.load("campaign_campaigns")`, puis la globale `campaign_campaigns`
+**Access:** extension `campaign_campaigns`: `extensions.load("campaign_campaigns")`, then the global `campaign_campaigns`
 
-Moteur d'exécution d'une campagne en cours. Il tient la campagne active (variable locale campaign = {meta, state}), enchaîne les scénarios d'après la clé « nextScenario » ou les événements onSucceed/onFail, tient le statut de chaque lieu (state ready/failed/completed, medal, attempts), vérifie les prérequis (scénarios terminés, véhicule imposé), traite les récompenses, les bandes dessinées, les succès (OnlineServiceProvider.unlockAchievement), l'écran de fin (boutons retry/next/cancel/menu/freeroam/finish) et la sérialisation. Les lieux sont dans meta.subsections[s].locations[l] ; la clé d'un lieu dans state.locationStatus est « sous-section.lieu ».
+Execution engine of a running campaign. It holds the active campaign (local variable campaign = {meta, state}), chains scenarios based on the "nextScenario" key or the onSucceed/onFail events, holds the status of each location (state ready/failed/completed, medal, attempts), checks prerequisites (completed scenarios, required vehicle), handles rewards, comics, achievements (OnlineServiceProvider.unlockAchievement), the end screen (retry/next/cancel/menu/freeroam/finish buttons) and serialization. Locations are in meta.subsections[s].locations[l]; a location's key in state.locationStatus is "subsection.location".
 
-## Remarques
+## Notes
 
-- Types de lieu (info.type / info.subtype) : « site » avec subtype transitionPoint, playerHQ ou missionGiver ; « race » avec subtype timeTrial. isScenarioLocation = type différent de « site » et subtype différent de « timeTrial ».
-- Les fins de campagne : isCampaignOver est vrai si la clé du scénario suivant est « END » ou absente ; processNextScenario affiche alors le résumé (ui_router « scenario.chapter.end ») et arrête la campagne.
-- Dans scenarioFinished, le statut d'un lieu n'est mis à jour que si le sous-type n'est pas « timeTrial » et si le lieu est « ready » ou si la nouvelle médaille est meilleure (statistics_statistics.getMedalRanking).
-- Bug : M.onDeserialized = onDeserialized exporte une variable non définie dans le fichier (nil).
-- Bug : uiEventRetry est définie mais vide et n'est pas exportée ; le bouton Retry appelle scenario_scenarios.uiEventRetry().
-- isOverallResultFail retourne toujours false ; displayCampaignSummary affiche aussi des valeurs en dur (community = 20, player = 78, achievements « Not Implemented »).
-- rewardSelectionCallback lit campaign.state.scenarioRewards.choices.vehicles : seuls les choix de la clé « vehicles » sont donc gérés.
-- scenarioStarted et scenarioFinished ignorent les scénarios dont le nom diffère de campaign.meta.scenarioName.
-- Un véhicule requis (dataType « vehicles ») est comparé avec model et config du véhicule actuel du joueur (extractVehicleData).
+- Location types (info.type / info.subtype): "site" with subtype transitionPoint, playerHQ or missionGiver; "race" with subtype timeTrial. isScenarioLocation = type different from "site" and subtype different from "timeTrial".
+- Campaign ends: isCampaignOver is true if the next scenario key is "END" or absent; processNextScenario then shows the summary (ui_router "scenario.chapter.end") and stops the campaign.
+- In scenarioFinished, a location's status is only updated if the subtype is not "timeTrial" and if the location is "ready" or if the new medal is better (statistics_statistics.getMedalRanking).
+- Bug: M.onDeserialized = onDeserialized exports a variable not defined in the file (nil).
+- Bug: uiEventRetry is defined but empty and is not exported; the Retry button calls scenario_scenarios.uiEventRetry().
+- isOverallResultFail always returns false; displayCampaignSummary also shows hardcoded values (community = 20, player = 78, achievements "Not Implemented").
+- rewardSelectionCallback reads campaign.state.scenarioRewards.choices.vehicles: only the choices under the "vehicles" key are therefore handled.
+- scenarioStarted and scenarioFinished ignore scenarios whose name differs from campaign.meta.scenarioName.
+- A required vehicle (dataType "vehicles") is compared with the model and config of the player's current vehicle (extractVehicleData).
 
-**Dépendances (chargées avant) :** `scenario_scenarios`
+**Dependencies (loaded first):** `scenario_scenarios`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `campaign_campaigns.canImproveResult(locationKey)` | Vrai si la médaille obtenue pour ce lieu n'est pas déjà « gold ». | 182 |
-| `campaign_campaigns.canStartScenario(scenarioKey)` | Vérifie les prérequis (champ requires) d'un lieu : tous les scénarios listés « completed » dans la même sous-section, et/ou véhicule du joueur dans la liste imposée. | 155 |
-| `campaign_campaigns.execEndCallback()` | Appelle une seule fois le callback de fin de campagne (meta.endCampaignCallback) s'il existe. | 189 |
-| `campaign_campaigns.getActiveSubsection()` | Retourne la sous-section active (state.activeSubsection). | 540 |
-| `campaign_campaigns.getActiveSubsectionLocationData(locationKey)` | Comme getLocationData mais dans la sous-section active. | 551 |
-| `campaign_campaigns.getCampaign()` | Retourne la campagne en cours ({meta, state}). | 529 |
-| `campaign_campaigns.getCampaignActive()` | Indique si une campagne est active (state.campaignActive). | 525 |
-| `campaign_campaigns.getCampaignTitle()` | Titre de la campagne active (meta.title). | 54 |
-| `campaign_campaigns.getCurrentLocation()` | Retourne state.currentLocation (format « sous-section.lieu ») si une campagne est active. | 555 |
-| `campaign_campaigns.getLocationData(subsectionKey, locationKey)` | Retourne les données d'un lieu dans une sous-section. | 544 |
-| `campaign_campaigns.getLocationStatusTable()` | Retourne state.locationStatus (« sous-section.lieu » vers {attempts, state, medal}). | 721 |
-| `campaign_campaigns.getOwningSubsection(locationKey)` | Retourne la sous-section de la campagne qui contient le lieu donné. | 28 |
-| `campaign_campaigns.getSubsection(subsectionKey)` | Retourne une sous-section par clé (nil si aucune campagne active). | 533 |
-| `campaign_campaigns.isCampaignOver(scenario)` | Vrai si le scénario n'a pas de scénario suivant (clé « END » ou absente) ; faux tant qu'il n'a pas de résultat. | 45 |
-| `campaign_campaigns.isLocationCompleted(locationKey)` | Vrai si le lieu a l'état « completed ». | 175 |
-| `campaign_campaigns.isMissionGiver(subsectionKey, locationKey)` | Vrai si le lieu est un site de sous-type missionGiver. | 618 |
-| `campaign_campaigns.isPlayerHQ(subsectionKey, locationKey)` | Vrai si le lieu est un site de sous-type playerHQ. | 613 |
-| `campaign_campaigns.isScenarioLocation(subsectionKey, locationKey)` | Vrai si le lieu n'est ni un « site » ni un contre-la-montre (subtype timeTrial). | 628 |
-| `campaign_campaigns.isSiteLocation(subsectionKey, locationKey)` | Vrai si le lieu est de type « site ». | 623 |
-| `campaign_campaigns.isSubsectionMarker(subsectionKey, markerName)` | Vrai si un lieu de la sous-section a entryMarker ou exitLocation égal au nom de marqueur donné. | 638 |
-| `campaign_campaigns.isTransitionPoint(subsectionKey, locationKey)` | Vrai si le lieu est un site de sous-type transitionPoint. | 608 |
-| `campaign_campaigns.markCompleted(subsection, locationKey)` | Marque un lieu comme « completed » dans locationStatus. | 445 |
-| `campaign_campaigns.onExtensionUnloaded()` | Hook appelé au déchargement de l'extension : arrête la campagne. *(interne)* *(hook)* | 701 |
-| `campaign_campaigns.onResetGameplay(playerID)` | Hook de remise à zéro du gameplay ; ne fait rien dans cette version. *(interne)* *(hook)* | 732 |
-| `campaign_campaigns.onSaveCampaign(saveCallback)` | Hook de sauvegarde : appelle saveCallback(M.__globalAlias__, campaign.state + sourceFile). *(interne)* *(hook)* | 725 |
-| `campaign_campaigns.onScenarioChange(scenario)` | Hook de changement de scénario : décharge cette extension si aucune campagne n'est active. *(interne)* *(hook)* | 705 |
-| `campaign_campaigns.onSerialize()` | Hook de sérialisation : retourne campaign.state avec sourceFile, ou {} si aucune campagne n'est active. *(interne)* *(hook)* | 562 |
-| `campaign_campaigns.resumeCampaign(campaignInProgress, data)` | Reprend une campagne sauvegardée : remplace campaign.state par data et relance l'exécution au lieu courant. | 711 |
-| `campaign_campaigns.rewardSelectionCallback(itemIndex)` | Callback appelé par l'UI quand le joueur choisit une récompense de véhicule ; mémorise l'index dans state.selectedRewardIndex. | 496 |
-| `campaign_campaigns.scenarioFinished(scenario)` | Appelé à la fin d'un scénario (état « post ») : met à jour statut et médaille du lieu, calcule les récompenses (campaign_rewards.processRewards), construit les boutons de l'écran de fin, débloque les succès et joue les événements onSucceed/onFail. | 453 |
-| `campaign_campaigns.scenarioStarted(scenario)` | Appelé par le système de scénarios au démarrage : à l'état « pre-start » joue l'événement onIntro du lieu (comic, inventaire) et incrémente le compteur attempts du lieu. | 382 |
-| `campaign_campaigns.startCampaign(newCampaign)` | Active la campagne préparée (state.campaignActive = true), fixe currentLocation à meta.startingLocation, joue onStart puis démarre l'exécution (premier scénario). Ne fait rien sans meta.startingLocation. | 686 |
-| `campaign_campaigns.startScenarioFromKey(key, processedScenario)` | Charge (si non fourni) et lance le scénario d'un lieu : met à jour currentLocation, scenarioKey, activeSubsection, sauvegarde la campagne puis appelle scenario_scenarios.executeScenario. Journalise une erreur si le lieu est inconnu. | 61 |
-| `campaign_campaigns.stop()` | Oublie la campagne en cours (variable locale mise à nil). | 113 |
-| `campaign_campaigns.uiEventCancel()` | Bouton Annuler de l'écran de fin : masque le menu (guihooks MenuHide), navigue vers « menu » et arrête le scénario. | 504 |
-| `campaign_campaigns.uiEventNext()` | Bouton Suivant de l'écran de fin : applique le choix de récompense, arrête le scénario courant et lance le suivant ; affiche le résumé et arrête la campagne s'il n'y en a plus. Ignoré (avertissement) si aucune campagne n'est active. | 512 |
+| `campaign_campaigns.canImproveResult(locationKey)` | True if the medal obtained for this location is not already "gold". | 182 |
+| `campaign_campaigns.canStartScenario(scenarioKey)` | Checks a location's prerequisites (requires field): all the listed scenarios "completed" in the same subsection, and/or the player's vehicle in the required list. | 155 |
+| `campaign_campaigns.execEndCallback()` | Calls the end-of-campaign callback (meta.endCampaignCallback) only once, if it exists. | 189 |
+| `campaign_campaigns.getActiveSubsection()` | Returns the active subsection (state.activeSubsection). | 540 |
+| `campaign_campaigns.getActiveSubsectionLocationData(locationKey)` | Like getLocationData but in the active subsection. | 551 |
+| `campaign_campaigns.getCampaign()` | Returns the current campaign ({meta, state}). | 529 |
+| `campaign_campaigns.getCampaignActive()` | Indicates whether a campaign is active (state.campaignActive). | 525 |
+| `campaign_campaigns.getCampaignTitle()` | Title of the active campaign (meta.title). | 54 |
+| `campaign_campaigns.getCurrentLocation()` | Returns state.currentLocation (format "subsection.location") if a campaign is active. | 555 |
+| `campaign_campaigns.getLocationData(subsectionKey, locationKey)` | Returns a location's data in a subsection. | 544 |
+| `campaign_campaigns.getLocationStatusTable()` | Returns state.locationStatus ("subsection.location" to {attempts, state, medal}). | 721 |
+| `campaign_campaigns.getOwningSubsection(locationKey)` | Returns the campaign subsection that contains the given location. | 28 |
+| `campaign_campaigns.getSubsection(subsectionKey)` | Returns a subsection by key (nil if no campaign is active). | 533 |
+| `campaign_campaigns.isCampaignOver(scenario)` | True if the scenario has no next scenario (key "END" or absent); false as long as it has no result. | 45 |
+| `campaign_campaigns.isLocationCompleted(locationKey)` | True if the location has the "completed" state. | 175 |
+| `campaign_campaigns.isMissionGiver(subsectionKey, locationKey)` | True if the location is a site of subtype missionGiver. | 618 |
+| `campaign_campaigns.isPlayerHQ(subsectionKey, locationKey)` | True if the location is a site of subtype playerHQ. | 613 |
+| `campaign_campaigns.isScenarioLocation(subsectionKey, locationKey)` | True if the location is neither a "site" nor a time trial (subtype timeTrial). | 628 |
+| `campaign_campaigns.isSiteLocation(subsectionKey, locationKey)` | True if the location is of type "site". | 623 |
+| `campaign_campaigns.isSubsectionMarker(subsectionKey, markerName)` | True if a location in the subsection has entryMarker or exitLocation equal to the given marker name. | 638 |
+| `campaign_campaigns.isTransitionPoint(subsectionKey, locationKey)` | True if the location is a site of subtype transitionPoint. | 608 |
+| `campaign_campaigns.markCompleted(subsection, locationKey)` | Marks a location as "completed" in locationStatus. | 445 |
+| `campaign_campaigns.onExtensionUnloaded()` | Hook called when the extension is unloaded: stops the campaign. *(internal)* *(hook)* | 701 |
+| `campaign_campaigns.onResetGameplay(playerID)` | Gameplay reset hook; does nothing in this version. *(internal)* *(hook)* | 732 |
+| `campaign_campaigns.onSaveCampaign(saveCallback)` | Save hook: calls saveCallback(M.__globalAlias__, campaign.state + sourceFile). *(internal)* *(hook)* | 725 |
+| `campaign_campaigns.onScenarioChange(scenario)` | Scenario change hook: unloads this extension if no campaign is active. *(internal)* *(hook)* | 705 |
+| `campaign_campaigns.onSerialize()` | Serialization hook: returns campaign.state with sourceFile, or {} if no campaign is active. *(internal)* *(hook)* | 562 |
+| `campaign_campaigns.resumeCampaign(campaignInProgress, data)` | Resumes a saved campaign: replaces campaign.state with data and restarts execution at the current location. | 711 |
+| `campaign_campaigns.rewardSelectionCallback(itemIndex)` | Callback called by the UI when the player chooses a vehicle reward; stores the index in state.selectedRewardIndex. | 496 |
+| `campaign_campaigns.scenarioFinished(scenario)` | Called at the end of a scenario ("post" state): updates the location's status and medal, computes the rewards (campaign_rewards.processRewards), builds the end screen buttons, unlocks achievements and plays the onSucceed/onFail events. | 453 |
+| `campaign_campaigns.scenarioStarted(scenario)` | Called by the scenario system at startup: in the "pre-start" state plays the location's onIntro event (comic, inventory) and increments the location's attempts counter. | 382 |
+| `campaign_campaigns.startCampaign(newCampaign)` | Activates the prepared campaign (state.campaignActive = true), sets currentLocation to meta.startingLocation, plays onStart then starts execution (first scenario). Does nothing without meta.startingLocation. | 686 |
+| `campaign_campaigns.startScenarioFromKey(key, processedScenario)` | Loads (if not provided) and launches a location's scenario: updates currentLocation, scenarioKey, activeSubsection, saves the campaign then calls scenario_scenarios.executeScenario. Logs an error if the location is unknown. | 61 |
+| `campaign_campaigns.stop()` | Forgets the current campaign (local variable set to nil). | 113 |
+| `campaign_campaigns.uiEventCancel()` | Cancel button of the end screen: hides the menu (guihooks MenuHide), navigates to "menu" and stops the scenario. | 504 |
+| `campaign_campaigns.uiEventNext()` | Next button of the end screen: applies the reward choice, stops the current scenario and launches the next one; shows the summary and stops the campaign if there are no more. Ignored (warning) if no campaign is active. | 512 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `campaign_campaigns.canImproveResult(locationKey)`
 
-Vrai si la médaille obtenue pour ce lieu n'est pas déjà « gold ».
+True if the medal obtained for this location is not already "gold".
 
-- `locationKey` (*string*) : Clé du lieu.
-- **renvoie** : boolean|nil Résultat.
+- `locationKey` (*string*) : Location key.
+- **returns**: boolean|nil Result.
 
 #### `campaign_campaigns.canStartScenario(scenarioKey)`
 
-Vérifie les prérequis (champ requires) d'un lieu : tous les scénarios listés « completed » dans la même sous-section, et/ou véhicule du joueur dans la liste imposée.
+Checks a location's prerequisites (requires field): all the listed scenarios "completed" in the same subsection, and/or the player's vehicle in the required list.
 
-- `scenarioKey` (*string*) : Clé du lieu.
-- **renvoie** : boolean true si le scénario peut démarrer.
+- `scenarioKey` (*string*) : Location key.
+- **returns**: boolean true if the scenario can start.
 
 #### `campaign_campaigns.getActiveSubsection()`
 
-Retourne la sous-section active (state.activeSubsection).
+Returns the active subsection (state.activeSubsection).
 
-- **renvoie** : table|nil Sous-section active.
+- **returns**: table|nil Active subsection.
 
 #### `campaign_campaigns.getActiveSubsectionLocationData(locationKey)`
 
-Comme getLocationData mais dans la sous-section active.
+Like getLocationData but in the active subsection.
 
-- `locationKey` (*string*) : Clé du lieu.
-- **renvoie** : table|nil Données du lieu.
+- `locationKey` (*string*) : Location key.
+- **returns**: table|nil Location data.
 
 #### `campaign_campaigns.getCampaign()`
 
-Retourne la campagne en cours ({meta, state}).
+Returns the current campaign ({meta, state}).
 
-- **renvoie** : table|nil Campagne.
+- **returns**: table|nil Campaign.
 
 #### `campaign_campaigns.getCampaignActive()`
 
-Indique si une campagne est active (state.campaignActive).
+Indicates whether a campaign is active (state.campaignActive).
 
-- **renvoie** : boolean|nil Vrai si active.
+- **returns**: boolean|nil True if active.
 
 #### `campaign_campaigns.getCampaignTitle()`
 
-Titre de la campagne active (meta.title).
+Title of the active campaign (meta.title).
 
-- **renvoie** : string|nil Titre.
+- **returns**: string|nil Title.
 
 #### `campaign_campaigns.getCurrentLocation()`
 
-Retourne state.currentLocation (format « sous-section.lieu ») si une campagne est active.
+Returns state.currentLocation (format "subsection.location") if a campaign is active.
 
-- **renvoie** : string|nil Lieu courant.
+- **returns**: string|nil Current location.
 
 #### `campaign_campaigns.getLocationData(subsectionKey, locationKey)`
 
-Retourne les données d'un lieu dans une sous-section.
+Returns a location's data in a subsection.
 
-- `subsectionKey` (*string*) : Clé de la sous-section.
-- `locationKey` (*string*) : Clé du lieu.
-- **renvoie** : table|nil Données du lieu.
+- `subsectionKey` (*string*) : Subsection key.
+- `locationKey` (*string*) : Location key.
+- **returns**: table|nil Location data.
 
 #### `campaign_campaigns.getLocationStatusTable()`
 
-Retourne state.locationStatus (« sous-section.lieu » vers {attempts, state, medal}).
+Returns state.locationStatus ("subsection.location" to {attempts, state, medal}).
 
-- **renvoie** : table Table des statuts.
+- **returns**: table Status table.
 
 #### `campaign_campaigns.getOwningSubsection(locationKey)`
 
-Retourne la sous-section de la campagne qui contient le lieu donné.
+Returns the campaign subsection that contains the given location.
 
-- `locationKey` (*string*) : Clé du lieu.
-- **renvoie** : table|nil La sous-section ou nil.
+- `locationKey` (*string*) : Location key.
+- **returns**: table|nil The subsection or nil.
 
 #### `campaign_campaigns.getSubsection(subsectionKey)`
 
-Retourne une sous-section par clé (nil si aucune campagne active).
+Returns a subsection by key (nil if no campaign is active).
 
-- `subsectionKey` (*string*) : Clé de la sous-section.
-- **renvoie** : table|nil Sous-section.
+- `subsectionKey` (*string*) : Subsection key.
+- **returns**: table|nil Subsection.
 
 #### `campaign_campaigns.isCampaignOver(scenario)`
 
-Vrai si le scénario n'a pas de scénario suivant (clé « END » ou absente) ; faux tant qu'il n'a pas de résultat.
+True if the scenario has no next scenario (key "END" or absent); false as long as it has no result.
 
-- `scenario` (*table*) : Scénario avec scenarioKey et result.
-- **renvoie** : boolean Fin de campagne ou non.
+- `scenario` (*table*) : Scenario with scenarioKey and result.
+- **returns**: boolean Campaign over or not.
 
 #### `campaign_campaigns.isLocationCompleted(locationKey)`
 
-Vrai si le lieu a l'état « completed ».
+True if the location has the "completed" state.
 
-- `locationKey` (*string*) : Clé du lieu.
-- **renvoie** : boolean|nil Résultat, ou nil/false si inconnu.
+- `locationKey` (*string*) : Location key.
+- **returns**: boolean|nil Result, or nil/false if unknown.
 
 #### `campaign_campaigns.isMissionGiver(subsectionKey, locationKey)`
 
-Vrai si le lieu est un site de sous-type missionGiver.
+True if the location is a site of subtype missionGiver.
 
-- `subsectionKey` (*string*) : Sous-section.
-- `locationKey` (*string*) : Lieu.
-- **renvoie** : boolean|nil Résultat.
+- `subsectionKey` (*string*) : Subsection.
+- `locationKey` (*string*) : Location.
+- **returns**: boolean|nil Result.
 
 #### `campaign_campaigns.isPlayerHQ(subsectionKey, locationKey)`
 
-Vrai si le lieu est un site de sous-type playerHQ.
+True if the location is a site of subtype playerHQ.
 
-- `subsectionKey` (*string*) : Sous-section.
-- `locationKey` (*string*) : Lieu.
-- **renvoie** : boolean|nil Résultat.
+- `subsectionKey` (*string*) : Subsection.
+- `locationKey` (*string*) : Location.
+- **returns**: boolean|nil Result.
 
 #### `campaign_campaigns.isScenarioLocation(subsectionKey, locationKey)`
 
-Vrai si le lieu n'est ni un « site » ni un contre-la-montre (subtype timeTrial).
+True if the location is neither a "site" nor a time trial (subtype timeTrial).
 
-- `subsectionKey` (*string*) : Sous-section.
-- `locationKey` (*string*) : Lieu.
-- **renvoie** : boolean|nil Résultat.
+- `subsectionKey` (*string*) : Subsection.
+- `locationKey` (*string*) : Location.
+- **returns**: boolean|nil Result.
 
 #### `campaign_campaigns.isSiteLocation(subsectionKey, locationKey)`
 
-Vrai si le lieu est de type « site ».
+True if the location is of type "site".
 
-- `subsectionKey` (*string*) : Sous-section.
-- `locationKey` (*string*) : Lieu.
-- **renvoie** : boolean|nil Résultat.
+- `subsectionKey` (*string*) : Subsection.
+- `locationKey` (*string*) : Location.
+- **returns**: boolean|nil Result.
 
 #### `campaign_campaigns.isSubsectionMarker(subsectionKey, markerName)`
 
-Vrai si un lieu de la sous-section a entryMarker ou exitLocation égal au nom de marqueur donné.
+True if a location in the subsection has entryMarker or exitLocation equal to the given marker name.
 
-- `subsectionKey` (*string*) : Sous-section.
-- `markerName` (*string*) : Nom du marqueur.
-- **renvoie** : boolean Résultat.
+- `subsectionKey` (*string*) : Subsection.
+- `markerName` (*string*) : Marker name.
+- **returns**: boolean Result.
 
 #### `campaign_campaigns.isTransitionPoint(subsectionKey, locationKey)`
 
-Vrai si le lieu est un site de sous-type transitionPoint.
+True if the location is a site of subtype transitionPoint.
 
-- `subsectionKey` (*string*) : Sous-section.
-- `locationKey` (*string*) : Lieu.
-- **renvoie** : boolean|nil Résultat.
+- `subsectionKey` (*string*) : Subsection.
+- `locationKey` (*string*) : Location.
+- **returns**: boolean|nil Result.
 
 #### `campaign_campaigns.markCompleted(subsection, locationKey)`
 
-Marque un lieu comme « completed » dans locationStatus.
+Marks a location as "completed" in locationStatus.
 
-- `subsection` (*table*) : Sous-section (clé key utilisée).
-- `locationKey` (*string*) : Clé du lieu.
+- `subsection` (*table*) : Subsection (key key used).
+- `locationKey` (*string*) : Location key.
 
 #### `campaign_campaigns.onResetGameplay(playerID)`
 
-Hook de remise à zéro du gameplay ; ne fait rien dans cette version.
+Gameplay reset hook; does nothing in this version.
 
-- `playerID` (*integer*) : Joueur concerné.
+- `playerID` (*integer*) : Player concerned.
 
 #### `campaign_campaigns.onSaveCampaign(saveCallback)`
 
-Hook de sauvegarde : appelle saveCallback(M.__globalAlias__, campaign.state + sourceFile).
+Save hook: calls saveCallback(M.__globalAlias__, campaign.state + sourceFile).
 
-- `saveCallback` (*function*) : Fournie par campaign_campaignsLoader.
+- `saveCallback` (*function*) : Provided by campaign_campaignsLoader.
 
 #### `campaign_campaigns.onScenarioChange(scenario)`
 
-Hook de changement de scénario : décharge cette extension si aucune campagne n'est active.
+Scenario change hook: unloads this extension if no campaign is active.
 
-- `scenario` (*table|nil*) : Scénario courant (non utilisé).
+- `scenario` (*table|nil*) : Current scenario (not used).
 
 #### `campaign_campaigns.onSerialize()`
 
-Hook de sérialisation : retourne campaign.state avec sourceFile, ou {} si aucune campagne n'est active.
+Serialization hook: returns campaign.state with sourceFile, or {} if no campaign is active.
 
-- **renvoie** : table Données.
+- **returns**: table Data.
 
 #### `campaign_campaigns.resumeCampaign(campaignInProgress, data)`
 
-Reprend une campagne sauvegardée : remplace campaign.state par data et relance l'exécution au lieu courant.
+Resumes a saved campaign: replaces campaign.state with data and restarts execution at the current location.
 
-- `campaignInProgress` (*table*) : Campagne traitée.
-- `data` (*table*) : State sauvegardé.
+- `campaignInProgress` (*table*) : Processed campaign.
+- `data` (*table*) : Saved state.
 
 #### `campaign_campaigns.rewardSelectionCallback(itemIndex)`
 
-Callback appelé par l'UI quand le joueur choisit une récompense de véhicule ; mémorise l'index dans state.selectedRewardIndex.
+Callback called by the UI when the player chooses a vehicle reward; stores the index in state.selectedRewardIndex.
 
-- `itemIndex` (*integer*) : Index (à partir de 1) du véhicule choisi.
+- `itemIndex` (*integer*) : Index (1-based) of the chosen vehicle.
 
 #### `campaign_campaigns.scenarioFinished(scenario)`
 
-Appelé à la fin d'un scénario (état « post ») : met à jour statut et médaille du lieu, calcule les récompenses (campaign_rewards.processRewards), construit les boutons de l'écran de fin, débloque les succès et joue les événements onSucceed/onFail.
+Called at the end of a scenario ("post" state): updates the location's status and medal, computes the rewards (campaign_rewards.processRewards), builds the end screen buttons, unlocks achievements and plays the onSucceed/onFail events.
 
-- `scenario` (*table*) : Scénario terminé avec result et stats.
+- `scenario` (*table*) : Finished scenario with result and stats.
 
 #### `campaign_campaigns.scenarioStarted(scenario)`
 
-Appelé par le système de scénarios au démarrage : à l'état « pre-start » joue l'événement onIntro du lieu (comic, inventaire) et incrémente le compteur attempts du lieu.
+Called by the scenario system at startup: in the "pre-start" state plays the location's onIntro event (comic, inventory) and increments the location's attempts counter.
 
-- `scenario` (*table*) : Scénario qui démarre.
+- `scenario` (*table*) : Scenario that is starting.
 
 #### `campaign_campaigns.startCampaign(newCampaign)`
 
-Active la campagne préparée (state.campaignActive = true), fixe currentLocation à meta.startingLocation, joue onStart puis démarre l'exécution (premier scénario). Ne fait rien sans meta.startingLocation.
+Activates the prepared campaign (state.campaignActive = true), sets currentLocation to meta.startingLocation, plays onStart then starts execution (first scenario). Does nothing without meta.startingLocation.
 
-- `newCampaign` (*table*) : Campagne traitée {meta, state}.
+- `newCampaign` (*table*) : Processed campaign {meta, state}.
 
 #### `campaign_campaigns.startScenarioFromKey(key, processedScenario)`
 
-Charge (si non fourni) et lance le scénario d'un lieu : met à jour currentLocation, scenarioKey, activeSubsection, sauvegarde la campagne puis appelle scenario_scenarios.executeScenario. Journalise une erreur si le lieu est inconnu.
+Loads (if not provided) and launches a location's scenario: updates currentLocation, scenarioKey, activeSubsection, saves the campaign then calls scenario_scenarios.executeScenario. Logs an error if the location is unknown.
 
-- `key` (*string*) : Clé du lieu/scénario.
-- `processedScenario` (*table|nil*) : Scénario déjà chargé ; sinon chargé via scenario_scenariosLoader.loadScenario(location.path).
+- `key` (*string*) : Location/scenario key.
+- `processedScenario` (*table|nil*) : Scenario already loaded; otherwise loaded via scenario_scenariosLoader.loadScenario(location.path).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {'scenario_scenarios'} |
-| `onDeserialized` | nil | Toujours nil : référence à une variable non définie dans le fichier. ⚠ référence `onDeserialized` non définie dans le fichier (vaut probablement nil) |
+| `onDeserialized` | nil | Always nil: reference to a variable not defined in the file. ⚠ reference `onDeserialized` not defined in the file (probably nil) |
 
-**Évènements UI (guihooks.trigger) :** `MenuHide`
+**UI events (guihooks.trigger):** `MenuHide`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/campaign/campaigns.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/campaign/campaigns.lua`.*

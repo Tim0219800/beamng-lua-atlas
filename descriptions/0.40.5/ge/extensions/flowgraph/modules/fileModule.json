@@ -1,20 +1,91 @@
 {
   "path": "lua/ge/extensions/flowgraph/modules/fileModule.lua",
-  "module": "Module flowgraph (moduleOrder 0) qui lit et écrit de petits fichiers de sauvegarde JSON propres aux projets flowgraph. Les fichiers sont stockés sous 'settings/cloud/flowgraphSaveData' + nom + '.save.json' avec la structure {lastModified, data}. Les fichiers sont chargés à la demande, mis en cache, et réécrits sur disque à la fin du tick (afterTrigger) s'ils ont été modifiés.",
+  "module": "Flowgraph module (moduleOrder 0) that reads and writes small JSON save files specific to flowgraph projects. The files are stored under 'settings/cloud/flowgraphSaveData' + name + '.save.json' with the structure {lastModified, data}. The files are loaded on demand, cached, and rewritten to disk at the end of the tick (afterTrigger) if they were modified.",
   "notes": [
-    "Le chemin est construit par simple concaténation savePath .. file .. ext : le nom 'file' doit donc commencer par '/' pour obtenir un chemin correct.",
-    "Si le JSON lu n'a pas de champ data, son contenu entier est enveloppé dans {lastModified = 0, data = <contenu>}.",
-    "Le cache est vidé au démarrage et à l'arrêt du projet."
+    "The path is built by simple concatenation savePath .. file .. ext: the name 'file' must therefore start with '/' to get a correct path.",
+    "If the JSON read has no data field, its entire content is wrapped in {lastModified = 0, data = <content>}.",
+    "The cache is cleared when the project starts and stops."
   ],
   "functions": {
-    "init": {"desc": "Appelé à la création du module : appelle clear().", "internal": true},
-    "clear": {"desc": "Vide le cache de fichiers et la liste des fichiers modifiés.", "internal": true},
-    "forceReload": {"desc": "Oublie le fichier mis en cache ; il sera relu au prochain accès.", "params": {"file": {"type": "string", "desc": "nom du fichier (sans préfixe de dossier ni extension)"}}},
-    "getFile": {"desc": "Renvoie la table {lastModified, data} du fichier, en le chargeant depuis le disque (ou en créant une table vide) à la première demande.", "params": {"file": {"type": "string", "desc": "nom du fichier"}}, "returns": [{"type": "table", "desc": "{lastModified = number, data = table}"}]},
-    "write": {"desc": "Écrit une valeur dans data[field], met à jour lastModified (os.time()) et marque le fichier à sauvegarder.", "params": {"file": {"type": "string", "desc": "nom du fichier"}, "field": {"type": "string", "desc": "clé"}, "value": {"type": "any", "desc": "valeur sérialisable en JSON"}}},
-    "read": {"desc": "Lit data[field] du fichier.", "params": {"file": {"type": "string", "desc": "nom du fichier"}, "field": {"type": "string", "desc": "clé"}}, "returns": [{"type": "any", "desc": "valeur ou nil"}]},
-    "afterTrigger": {"desc": "Appelé après le tick du graphe : écrit sur disque (jsonWriteFile) chaque fichier modifié et vide la liste des modifications.", "internal": true},
-    "executionStopped": {"desc": "Appelé à l'arrêt du projet : appelle clear().", "internal": true},
-    "executionStarted": {"desc": "Appelé au démarrage du projet : appelle clear().", "internal": true}
+    "init": {
+      "desc": "Called when the module is created: calls clear().",
+      "internal": true
+    },
+    "clear": {
+      "desc": "Clears the file cache and the list of modified files.",
+      "internal": true
+    },
+    "forceReload": {
+      "desc": "Forgets the cached file; it will be re-read on next access.",
+      "params": {
+        "file": {
+          "type": "string",
+          "desc": "file name (without folder prefix or extension)"
+        }
+      }
+    },
+    "getFile": {
+      "desc": "Returns the file's {lastModified, data} table, loading it from disk (or creating an empty table) on the first request.",
+      "params": {
+        "file": {
+          "type": "string",
+          "desc": "file name"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{lastModified = number, data = table}"
+        }
+      ]
+    },
+    "write": {
+      "desc": "Writes a value into data[field], updates lastModified (os.time()) and marks the file to be saved.",
+      "params": {
+        "file": {
+          "type": "string",
+          "desc": "file name"
+        },
+        "field": {
+          "type": "string",
+          "desc": "key"
+        },
+        "value": {
+          "type": "any",
+          "desc": "JSON-serializable value"
+        }
+      }
+    },
+    "read": {
+      "desc": "Reads data[field] from the file.",
+      "params": {
+        "file": {
+          "type": "string",
+          "desc": "file name"
+        },
+        "field": {
+          "type": "string",
+          "desc": "key"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "value or nil"
+        }
+      ]
+    },
+    "afterTrigger": {
+      "desc": "Called after the graph tick: writes each modified file to disk (jsonWriteFile) and clears the modification list.",
+      "internal": true
+    },
+    "executionStopped": {
+      "desc": "Called when the project stops: calls clear().",
+      "internal": true
+    },
+    "executionStarted": {
+      "desc": "Called when the project starts: calls clear().",
+      "internal": true
+    }
   }
 }

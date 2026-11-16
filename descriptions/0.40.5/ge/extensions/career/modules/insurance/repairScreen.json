@@ -1,56 +1,82 @@
 {
   "path": "lua/ge/extensions/career/modules/insurance/repairScreen.lua",
-  "module": "Prépare les données et gère l'ouverture/fermeture de l'écran de réparation (route UI career.computer.repair) accessible depuis l'ordinateur du garage en carrière. Il construit les options de réparation avec ou sans assurance (coût des dégâts, délais de réparation de instantané à 10 minutes, franchise, prime actuelle et future après réclamation, score de conducteur), ajoute la fonction « Réparer » aux fonctions de l'ordinateur et applique une laisse (tether) de 7 m autour de l'ordinateur.",
+  "module": "Prepares the data and handles opening/closing of the repair screen (UI route career.computer.repair) reachable from the garage computer in career. It builds the repair options with or without insurance (damage cost, repair delays from instant to 10 minutes, deductible, current and future premium after a claim, driver score), adds the \"Repair\" function to the computer functions and applies a 7 m tether around the computer.",
   "notes": [
-    "Délais de réparation sans assurance (premiumInfluence = supplément en argent) : instantané 500, 2 min 350, 5 min 150, 10 min 50 ; prix total = supplément + coût des dégâts.",
-    "Avec assurance, seule l'option de délai incluse dans le contrat et l'option instantanée sont proposées ; l'option incluse ne coûte que la franchise, l'instantanée coûte franchise + 500 (sauf perk instantRepair gratuit).",
-    "futureDriverScore baisse de 1 après une réclamation, sauf s'il reste des 'accidentForgiveness' sur le contrat.",
-    "startRepairInGarage bloque les appels répétés (closeMenuAfterSaving) jusqu'à onVehicleSaveFinished : une réparation instantanée enregistre une nouvelle vignette de véhicule qui masque l'UI.",
-    "Le module n'a pas de fonction d'initialisation : l'état (véhicule, ordinateur d'origine, tether) est défini par openRepairMenu.",
-    "getRepairData suppose que openRepairMenu a été appelé avant (vehicleToRepairData non nil), sinon plante."
+    "Repair delays without insurance (premiumInfluence = money surcharge): instant 500, 2 min 350, 5 min 150, 10 min 50; total price = surcharge + damage cost.",
+    "With insurance, only the delay option included in the contract and the instant option are offered; the included option costs only the deductible, the instant one costs deductible + 500 (except with the free instantRepair perk).",
+    "futureDriverScore drops by 1 after a claim, unless 'accidentForgiveness' remain on the contract.",
+    "startRepairInGarage blocks repeated calls (closeMenuAfterSaving) until onVehicleSaveFinished: an instant repair saves a new vehicle thumbnail that hides the UI.",
+    "The module has no initialization function: the state (vehicle, originating computer, tether) is set by openRepairMenu.",
+    "getRepairData assumes openRepairMenu was called before (vehicleToRepairData non-nil), otherwise it crashes."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : valueCalculator, inventory, playerAttributes, payment, insurance_insurance, tether, etc."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: valueCalculator, inventory, playerAttributes, payment, insurance_insurance, tether, etc."
+    }
   },
   "functions": {
     "openRepairMenu": {
-      "desc": "Ouvre l'écran de réparation d'un véhicule. Si un ordinateur d'origine est donné, démarre une laisse (porte ou sphère, 7 m) qui ferme les menus si le joueur s'éloigne.",
+      "desc": "Opens a vehicle's repair screen. If an originating computer is given, starts a leash (door or sphere, 7 m) that closes the menus if the player moves away.",
       "params": {
-        "vehicle": {"type": "table", "desc": "Données du véhicule d'inventaire à réparer."},
-        "_originComputerId": {"type": "string|nil", "desc": "Identifiant de l'ordinateur du garage qui a ouvert l'écran."}
+        "vehicle": {
+          "type": "table",
+          "desc": "Data of the inventory vehicle to repair."
+        },
+        "_originComputerId": {
+          "type": "string|nil",
+          "desc": "Identifier of the garage computer that opened the screen."
+        }
       }
     },
     "closeRepairMenu": {
-      "desc": "Ferme l'écran : revient au menu de l'ordinateur d'origine, ou ferme tous les menus carrière."
+      "desc": "Closes the screen: goes back to the originating computer's menu, or closes all career menus."
     },
     "closeMenu": {
-      "desc": "Appelé par l'UI pour fermer l'écran ; ignoré tant qu'une sauvegarde de véhicule après réparation est en cours."
+      "desc": "Called by the UI to close the screen; ignored while a vehicle save after repair is in progress."
     },
     "getRepairData": {
-      "desc": "Construit les données de l'écran : repairOptions (noInsuranceRepairData, insuranceRepairData avec prime, franchise, renouvellement, tolérances), vehicleData (coût des dégâts, nom, valeur initiale, vignette, assuré), attributs du joueur, paliers et score de conducteur actuel et futur.",
-      "returns": [{"type": "table", "desc": "Données pour l'UI."}]
+      "desc": "Builds the screen data: repairOptions (noInsuranceRepairData, insuranceRepairData with premium, deductible, renewal, tolerances), vehicleData (damage cost, name, initial value, thumbnail, insured), player attributes, tiers and current and future driver score.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Data for the UI."
+        }
+      ]
     },
     "startRepairInGarage": {
-      "desc": "Lance la réparation via career_modules_insurance_insurance.startRepairInGarage et attend la fin de la sauvegarde du véhicule avant de refermer l'écran.",
+      "desc": "Starts the repair via career_modules_insurance_insurance.startRepairInGarage and waits for the vehicle save to finish before closing the screen again.",
       "params": {
-        "invVehId": {"type": "integer", "desc": "Identifiant du véhicule d'inventaire."},
-        "repairOptionData": {"type": "table", "desc": "Option de réparation choisie (assurance ou non, délai)."}
+        "invVehId": {
+          "type": "integer",
+          "desc": "Inventory vehicle identifier."
+        },
+        "repairOptionData": {
+          "type": "table",
+          "desc": "Chosen repair option (insurance or not, delay)."
+        }
       }
     },
     "onComputerAddFunctions": {
-      "desc": "Hook de l'ordinateur du garage : ajoute la fonction « repair » pour chaque véhicule du garage (désactivée avant l'achat du véhicule de départ ou si les permissions 'vehicleRepair' l'interdisent).",
+      "desc": "Garage computer hook: adds the \"repair\" function for each vehicle in the garage (disabled before the starter vehicle is bought or if the 'vehicleRepair' permissions forbid it).",
       "params": {
-        "menuData": {"type": "table", "desc": "Données du menu (computerFacility, vehiclesInGarage, hasBoughtStarterVehicle)."},
-        "computerFunctions": {"type": "table", "desc": "Fonctions à compléter (vehicleSpecific[inventoryId][id])."}
+        "menuData": {
+          "type": "table",
+          "desc": "Menu data (computerFacility, vehiclesInGarage, hasBoughtStarterVehicle)."
+        },
+        "computerFunctions": {
+          "type": "table",
+          "desc": "Functions to complete (vehicleSpecific[inventoryId][id])."
+        }
       },
       "internal": true
     },
     "onMenuClosed": {
-      "desc": "Hook de fermeture de menu : retire la laisse.",
+      "desc": "Menu close hook: removes the leash.",
       "internal": true
     },
     "onVehicleSaveFinished": {
-      "desc": "Hook de fin de sauvegarde du véhicule : si une réparation attendait cette fin, referme l'écran.",
+      "desc": "Vehicle save end hook: if a repair was waiting for this, closes the screen again.",
       "internal": true
     }
   }

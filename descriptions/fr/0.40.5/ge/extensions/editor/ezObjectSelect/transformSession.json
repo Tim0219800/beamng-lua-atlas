@@ -1,0 +1,119 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/transformSession.lua",
+  "module": "Session de transformation (déplacement, rotation, échelle) des objets sélectionnés pour Easy Object Select. begin() mémorise la transformation et l'échelle initiales de chaque objet sélectionné ; les fonctions update* repositionnent les objets à partir de l'état initial (pas cumulatif) ; finish() enregistre le résultat dans l'historique de l'éditeur (SetObjectTransform / SetObjectScale, annulables, dans une transaction) ; cancel() restaure tout. Gère aussi la mise à jour des offsets de prefab et la remise à la verticale.",
+  "notes": [
+    "Une seule session à la fois (upvalue local). begin échoue si l'ancre n'est pas sélectionnée ou si un objet n'est pas manipulable (editor.canManipulateObject).",
+    "Échelle limitée à [0.01, 1000] par composante ; le facteur est identique pour tous les axes édités et borné pour que tous les objets restent dans cet intervalle.",
+    "finish() ne crée aucune action d'historique s'il n'y a aucun changement net : les objets sont alors restaurés.",
+    "Le hook onEditorObjectSelectionTransformChanged n'est émis que lors d'un undo/redo des actions (applyHistoryTransform/Scale), pas pendant la session.",
+    "finish() renvoie false sans session, nil si la transaction d'historique n'a pas pu s'ouvrir, sinon hasNetChange (boolean) puis completion."
+  ],
+  "functions": {
+    "begin": {
+      "desc": "Ouvre une session sur tous les objets de editor.selection.object. Renvoie false si une session existe déjà, si l'ancre n'est pas sélectionnée ou si un objet ne peut pas être manipulé.",
+      "params": {
+        "anchorObject": {"type": "userdata", "desc": "Objet ancre (dont la position sert de référence pour la saisie de surface et la distance)."},
+        "options": {"type": "table|nil", "desc": "historyName (string, nom de la transaction d'historique, défaut \"EasySelectDrag\")."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si la session est ouverte."}],
+      "internal": false
+    },
+    "setGrabSurface": {
+      "desc": "Définit le décalage entre le point de surface saisi et la position de l'ancre.",
+      "params": {
+        "surfacePosition": {"type": "vec3", "desc": "Point de surface saisi."},
+        "maintainRelativeZ": {"type": "boolean|nil", "desc": "Si false, le décalage vertical est mis à 0."},
+        "verticalOffset": {"type": "number|nil", "desc": "Si fourni, impose le décalage vertical (prioritaire sur maintainRelativeZ)."}
+      },
+      "returns": [{"type": "boolean", "desc": "false sans session ou sans surfacePosition."}],
+      "internal": false
+    },
+    "getDesiredAnchorPosition": {
+      "desc": "Calcule la position voulue de l'ancre pour un point de surface (surface - grabOffset), avec accrochage à la grille éventuel.",
+      "params": {
+        "surfacePosition": {"type": "vec3", "desc": "Point de surface sous le curseur."},
+        "options": {"type": "table|nil", "desc": "gridSize (m), gridRelative (boolean), snapZ (boolean)."}
+      },
+      "returns": [{"type": "vec3|boolean", "desc": "Position de l'ancre, ou false si pas de session / pas de grabOffset / pas de point."}],
+      "internal": false
+    },
+    "updateDelta": {
+      "desc": "Translate tous les objets de delta par rapport à leur position initiale, avec accrochage à la grille optionnel (masque par axe, absolu ou relatif).",
+      "params": {
+        "delta": {"type": "vec3", "desc": "Déplacement en mètres, monde."},
+        "options": {"type": "table|nil", "desc": "gridSize (m), gridPivot (vec3), gridMask ({x,y,z} booléens), gridRelative (boolean), snapZ (boolean)."}
+      },
+      "returns": [{"type": "boolean", "desc": "false sans session ou sans delta."}],
+      "internal": false
+    },
+    "updateRotation": {
+      "desc": "Fait tourner tous les objets (orientation et position) autour du pivot, à partir de l'état initial.",
+      "params": {
+        "pivot": {"type": "vec3", "desc": "Centre de rotation."},
+        "axis": {"type": "vec3", "desc": "Axe (normalisé en interne ; longueur nulle refusée)."},
+        "angle": {"type": "number", "desc": "Angle en radians."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si appliqué."}],
+      "internal": false
+    },
+    "updateScale": {
+      "desc": "Met à l'échelle les objets autour du pivot le long des axes donnés ; les positions sont étirées par rapport au pivot.",
+      "params": {
+        "pivot": {"type": "vec3", "desc": "Centre de l'échelle."},
+        "axes": {"type": "table<string, vec3>", "desc": "Axes x, y, z utilisés pour étirer les positions."},
+        "factors": {"type": "table<string, number>", "desc": "Facteurs {x, y, z} ; un axe est « édité » si son facteur diffère de 1."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si appliqué."}, {"type": "number", "desc": "Facteur effectif après bornage."}],
+      "internal": false
+    },
+    "update": {
+      "desc": "Déplace la sélection pour que l'ancre suive un point de surface ; peut aligner chaque objet sur la normale de surface et utiliser un fournisseur de position/normale individuels.",
+      "params": {
+        "surfacePosition": {"type": "vec3", "desc": "Point de surface sous le curseur."},
+        "surfaceNormal": {"type": "vec3|nil", "desc": "Normale de la surface."},
+        "options": {"type": "table", "desc": "gridSize, gridRelative, snapZ, followRotation (boolean), rotateSnapSize (degrés), rotateRelative (boolean), individualProvider (function(entry, position) -> {position, normal}|nil). Le paramètre doit être une table (déduit du code : options.followRotation est lu sans garde)."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si pas de session ou de grabOffset."}],
+      "internal": false
+    },
+    "finish": {
+      "desc": "Termine la session : s'il y a un changement net, ouvre une transaction d'historique et enregistre une action SetObjectTransform et/ou SetObjectScale par objet ; sinon restaure l'état initial.",
+      "params": {},
+      "returns": [
+        {"type": "boolean|nil", "desc": "true si changement validé, false si aucun changement (ou pas de session), nil si la transaction n'a pas pu s'ouvrir."},
+        {"type": "table|nil", "desc": "{anchorDistance} (m) lorsqu'il y a un changement."}
+      ],
+      "internal": false
+    },
+    "cancel": {
+      "desc": "Annule la session et remet transformation et échelle initiales de chaque objet.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si une session était active."}],
+      "internal": false
+    },
+    "resetRotation": {
+      "desc": "Remet les objets à la verticale (axe Z monde) en conservant leur cap, dans une transaction d'historique « ResetObjectRotation ». Refuse si une session est active.",
+      "params": {"objectIds": {"type": "integer[]", "desc": "IDs des objets à redresser."}},
+      "returns": [{"type": "boolean", "desc": "true si au moins un objet a changé."}],
+      "internal": false
+    },
+    "isActive": {
+      "desc": "Indique si une session est ouverte.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si active."}],
+      "internal": false
+    },
+    "selectionMatches": {
+      "desc": "Vérifie que la sélection de l'éditeur est toujours exactement celle de la session et que les objets restent manipulables.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true sans session ou si la sélection correspond."}],
+      "internal": false
+    },
+    "getObjectIds": {
+      "desc": "IDs des objets de la session.",
+      "params": {},
+      "returns": [{"type": "integer[]", "desc": "Liste d'IDs (vide sans session)."}],
+      "internal": false
+    }
+  }
+}

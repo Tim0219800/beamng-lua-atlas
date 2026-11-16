@@ -1,57 +1,57 @@
 # `core_ropeVisualTest`
 
-*Fichier : `lua/ge/extensions/core/ropeVisualTest.lua` · VM : Game Engine (GE) · 2137 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/ropeVisualTest.lua` · VM: Game Engine (GE) · 2137 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_ropeVisualTest` : `extensions.load("core_ropeVisualTest")`, puis la globale `core_ropeVisualTest`
+**Access:** extension `core_ropeVisualTest`: `extensions.load("core_ropeVisualTest")`, then the global `core_ropeVisualTest`
 
-Bac à sable de développement pour les cordes visuelles (rope visuals) du moteur : une interface ImGui permet de créer, cloner et régler des cordes (ancres A et B, directions, nombre de noeuds, diamètre, amortissement, rigidité de flexion, XPBD, collisions, limite d'étirement, module de Young, masse, gravité, vent, matériau), d'animer les ancres, de déplacer les noeuds à la souris et de mesurer les temps de simulation et de rendu. Il n'est pas destiné au gameplay : il sert à tester le système de cordes (fonctions globales createRopeVisual, getAllRopeVisuals, getRopeVisual).
+Development sandbox for the engine's rope visuals: an ImGui interface lets you create, clone and tune ropes (anchors A and B, directions, node count, diameter, damping, bending stiffness, XPBD, collisions, stretch limit, Young's modulus, mass, gravity, wind, material), animate the anchors, move nodes with the mouse and measure simulation and rendering times. It is not meant for gameplay: it serves to test the rope system (global functions createRopeVisual, getAllRopeVisuals, getRopeVisual).
 
-## Exemple
+## Example
 
 ```lua
-extensions.load('core_ropeVisualTest') -- la fenêtre ImGui s'affiche ensuite via onUpdate
+extensions.load('core_ropeVisualTest') -- the ImGui window is then displayed via onUpdate
 ```
 
-## Remarques
+## Notes
 
-- Presque tout le fichier (plus de 2000 lignes) est du code d'interface ImGui dans onUpdate ; l'extension n'exporte que quatre hooks et aucun champ.
-- Animations d'ancre disponibles : 0 aucune, 1 wiggle, 2 cercle, 3 route cabossée, 4 rectangle, 5 marche aléatoire, 6 sinusoïde, 7 balayage de direction (Dir Sweep, seulement la direction tourne).
-- onUpdate applique les animations à toutes les cordes suivies, gère le survol et le glisser des noeuds quand les noeuds de debug sont affichés, et dessine avec debugDrawer.
-- Les réglages de l'interface sont conservés lors d'un rechargement de Lua par onSerialize/onDeserialized (champ uiState) ; ils peuvent aussi être sauvegardés dans un JSON via l'UI (rope_parameters.json par défaut).
-- Valeurs par défaut de l'UI : 32 noeuds, diamètre 0.12 m, amortissement 0.995, rigidité de flexion 0.6, gravité (0, 0, -9.81), E = 1e7, 60 FPS de simulation, ancres A (0,0,3) et B (5,0,3).
+- Almost the whole file (over 2000 lines) is ImGui interface code in onUpdate; the extension only exports four hooks and no field.
+- Available anchor animations: 0 none, 1 wiggle, 2 circle, 3 bumpy road, 4 rectangle, 5 random walk, 6 sinusoid, 7 direction sweep (Dir Sweep, only the direction rotates).
+- onUpdate applies the animations to all tracked ropes, handles hover and dragging of nodes when the debug nodes are displayed, and draws with debugDrawer.
+- The interface settings are kept across a Lua reload by onSerialize/onDeserialized (uiState field); they can also be saved to a JSON via the UI (rope_parameters.json by default).
+- UI default values: 32 nodes, diameter 0.12 m, damping 0.995, bending stiffness 0.6, gravity (0, 0, -9.81), E = 1e7, 60 FPS simulation, anchors A (0,0,3) and B (5,0,3).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_ropeVisualTest.onDeserialized(serializedData)` | Hook appelé après rechargement : restaure l'état de l'interface depuis serializedData.uiState, remet à 0 le décalage de clonage, puis reprend les cordes déjà existantes dans le moteur (positions de base, réglages de debug désactivés) et sélectionne la première. *(interne)* *(hook)* | 2013 |
-| `core_ropeVisualTest.onExtensionUnloaded()` | Hook de déchargement : réinitialise les positions de base, les réglages de debug, le décalage de clonage et les statistiques de performance. *(interne)* *(hook)* | 700 |
-| `core_ropeVisualTest.onSerialize()` | Hook appelé avant un rechargement des extensions Lua : renvoie {uiState = ...} avec tout l'état de l'interface (ancres, directions, propriétés de corde, toggles, physique, rendu, animation, debug). *(interne)* *(hook)* | 617 |
-| `core_ropeVisualTest.onUpdate(dt)` | Hook de mise à jour par image : met à jour les statistiques de performance, le temps d'animation, les positions de base de la corde sélectionnée, applique les animations d'ancre à toutes les cordes, gère l'interaction avec les noeuds et dessine l'interface ImGui et les aides de debug. *(interne)* *(hook)* | 979 |
+| `core_ropeVisualTest.onDeserialized(serializedData)` | Hook called after reload: restores the interface state from serializedData.uiState, resets the clone offset to 0, then picks up the ropes that already exist in the engine (base positions, debug settings disabled) and selects the first one. *(internal)* *(hook)* | 2013 |
+| `core_ropeVisualTest.onExtensionUnloaded()` | Unload hook: resets the base positions, the debug settings, the clone offset and the performance statistics. *(internal)* *(hook)* | 700 |
+| `core_ropeVisualTest.onSerialize()` | Hook called before a reload of the Lua extensions: returns {uiState = ...} with the whole interface state (anchors, directions, rope properties, toggles, physics, rendering, animation, debug). *(internal)* *(hook)* | 617 |
+| `core_ropeVisualTest.onUpdate(dt)` | Per-frame update hook: updates the performance statistics, the animation time, the base positions of the selected rope, applies the anchor animations to all ropes, handles interaction with the nodes and draws the ImGui interface and the debug aids. *(internal)* *(hook)* | 979 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_ropeVisualTest.onDeserialized(serializedData)`
 
-Hook appelé après rechargement : restaure l'état de l'interface depuis serializedData.uiState, remet à 0 le décalage de clonage, puis reprend les cordes déjà existantes dans le moteur (positions de base, réglages de debug désactivés) et sélectionne la première.
+Hook called after reload: restores the interface state from serializedData.uiState, resets the clone offset to 0, then picks up the ropes that already exist in the engine (base positions, debug settings disabled) and selects the first one.
 
-- `serializedData` (*{uiState: table}|nil*) : Table produite par onSerialize.
+- `serializedData` (*{uiState: table}|nil*) : Table produced by onSerialize.
 
 #### `core_ropeVisualTest.onSerialize()`
 
-Hook appelé avant un rechargement des extensions Lua : renvoie {uiState = ...} avec tout l'état de l'interface (ancres, directions, propriétés de corde, toggles, physique, rendu, animation, debug).
+Hook called before a reload of the Lua extensions: returns {uiState = ...} with the whole interface state (anchors, directions, rope properties, toggles, physics, rendering, animation, debug).
 
-- **renvoie** : {uiState: table} État de l'interface à restaurer.
+- **returns**: {uiState: table} Interface state to restore.
 
 #### `core_ropeVisualTest.onUpdate(dt)`
 
-Hook de mise à jour par image : met à jour les statistiques de performance, le temps d'animation, les positions de base de la corde sélectionnée, applique les animations d'ancre à toutes les cordes, gère l'interaction avec les noeuds et dessine l'interface ImGui et les aides de debug.
+Per-frame update hook: updates the performance statistics, the animation time, the base positions of the selected rope, applies the anchor animations to all ropes, handles interaction with the nodes and draws the ImGui interface and the debug aids.
 
-- `dt` (*number*) : Durée de l'image en secondes.
+- `dt` (*number*) : Frame duration in seconds.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawArrow`, `drawLineInstance`, `drawSphere`, `drawText`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/ropeVisualTest.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/ropeVisualTest.lua`.*

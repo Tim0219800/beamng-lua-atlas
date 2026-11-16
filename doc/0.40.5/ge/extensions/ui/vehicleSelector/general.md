@@ -1,607 +1,607 @@
 # `ui_vehicleSelector_general`
 
-*Fichier : `lua/ge/extensions/ui/vehicleSelector/general.lua` · VM : Game Engine (GE) · 2046 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/vehicleSelector/general.lua` · VM: Game Engine (GE) · 2046 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_vehicleSelector_general` : `extensions.load("ui_vehicleSelector_general")`, puis la globale `ui_vehicleSelector_general`
+**Access:** extension `ui_vehicleSelector_general`: `extensions.load("ui_vehicleSelector_general")`, then the global `ui_vehicleSelector_general`
 
-Module central du sélecteur de véhicules (backend « vehicleSelector » de ui_gridSelector). Il construit les données UI (modèles, configs, filtres), gère les options d'affichage persistées (/settings/vehicleSelectorData.json), les filtres, la recherche, les favoris et véhicules récents, puis ouvre le sélecteur dans différents contextes (freeroam, garage, défi, configurateur, pause) en changeant les boutons et la racine du fil d'Ariane. Il pilote aussi le cycle de vie des routes pause/garage (liste racine et page détail d'un véhicule) et envoie les instantanés à l'interface. La plupart des fonctions de filtre et de détail délèguent à filterModule, displayDataModule, ui_vehicleSelector_tiles et ui_vehicleSelector_detailsInteraction.
+Central module of the vehicle selector ("vehicleSelector" backend of ui_gridSelector). It builds the UI data (models, configs, filters), manages the persisted display options (/settings/vehicleSelectorData.json), filters, search, favorites and recent vehicles, then opens the selector in various contexts (freeroam, garage, challenge, configurator, pause) by changing the buttons and the breadcrumb root. It also drives the lifecycle of the pause/garage routes (root list and a vehicle's detail page) and sends snapshots to the interface. Most filter and detail functions delegate to filterModule, displayDataModule, ui_vehicleSelector_tiles and ui_vehicleSelector_detailsInteraction.
 
-## Exemple
+## Example
 
 ```lua
--- ouvrir le sélecteur depuis un script et récupérer le choix
+-- open the selector from a script and get the choice
 ui_vehicleSelector_general.openVehicleSelectorForChallenge(function(model, config, extra)
   if model then log('I', '', model .. ' / ' .. tostring(config)) end
 end)
 ```
 
-## Remarques
+## Notes
 
-- Les instances displayData et filtres sont créées à la demande (setupInstances / ensureInstances) ; la version de format des options d'affichage est 11.
-- Les données UI (getUiData) sont reconstruites quand vehicleDataChanged vaut true (mod activé ou désactivé, gestionnaire de mods, changement de langue, clearCache).
-- Filtres : propriétés autorisées = Drivetrain, Config Type, Body Style, Transmission, Weight, Top Speed, 0-100 km/h, 0-60 mph, Power, Torque, Weight/Power, Years, Value, Brand, Country, Region, Source, Type, Derby Class, Performance Class, Off-Road Score, Propulsion, Fuel Type, Induction Type, Commercial Class. Les filtres de plage sont Value, Weight, Top Speed, 0-100 km/h, 0-60 mph, Power, Torque, Weight/Power, Off-Road Score, Years ; Region est un filtre de type dictionnaire.
-- Les configs 'Powerglow' sont exclues sauf en mode de restriction 'lightRunner' (seulement Powerglow, Car ou Truck). Le mode 'busRoute' ne garde que Body Style = Bus et Commercial Class = Transit Bus.
-- Le mode spawnOnly est remis à false en quittant la famille de routes du sélecteur, et à la fermeture (closedFromUI).
-- La plupart des fonctions qui acceptent un requestId émettent ensuite un instantané 'vehicleSelectorDisplayDataSnapshot' ; sans requestId (nil) rien n'est émis.
-- Bug probable : dans vehiclePassesFilters, le test de plage `not type(propVal) == 'number'` est toujours faux (priorité de `not`), il ne protège donc pas des valeurs non numériques.
-- Bug probable : vehiclePassesFilters lit config.infoFilename sans vérifier que config existe (le code prévoit pourtant le cas « pas de config » juste avant) : erreur si showCustomPCFiles est désactivé et config nil.
-- M.getDisplayData est défini deux fois (même comportement). Le champ M.p est un faux profileur (start, add, finish vides) ; profilerFinish ne fait rien car M.p.timer n'existe pas.
-- Traces de débogage laissées : navigateToVehicle fait des dump(), et le callback de openVehicleSelectorForFreeroamModal dump ses 4 arguments.
+- The displayData and filter instances are created on demand (setupInstances / ensureInstances); the display options format version is 11.
+- The UI data (getUiData) is rebuilt when vehicleDataChanged is true (mod enabled or disabled, mod manager, language change, clearCache).
+- Filters: allowed properties = Drivetrain, Config Type, Body Style, Transmission, Weight, Top Speed, 0-100 km/h, 0-60 mph, Power, Torque, Weight/Power, Years, Value, Brand, Country, Region, Source, Type, Derby Class, Performance Class, Off-Road Score, Propulsion, Fuel Type, Induction Type, Commercial Class. The range filters are Value, Weight, Top Speed, 0-100 km/h, 0-60 mph, Power, Torque, Weight/Power, Off-Road Score, Years; Region is a dictionary-type filter.
+- 'Powerglow' configs are excluded except in the 'lightRunner' restriction mode (only Powerglow, Car or Truck). The 'busRoute' mode keeps only Body Style = Bus and Commercial Class = Transit Bus.
+- The spawnOnly mode is reset to false when leaving the selector route family, and on close (closedFromUI).
+- Most functions that accept a requestId then emit a 'vehicleSelectorDisplayDataSnapshot' snapshot; without a requestId (nil) nothing is emitted.
+- Probable bug: in vehiclePassesFilters, the range test `not type(propVal) == 'number'` is always false (precedence of `not`), so it does not guard against non-numeric values.
+- Probable bug: vehiclePassesFilters reads config.infoFilename without checking that config exists (the code does handle the "no config" case just before): error if showCustomPCFiles is disabled and config is nil.
+- M.getDisplayData is defined twice (same behavior). The M.p field is a fake profiler (empty start, add, finish); profilerFinish does nothing because M.p.timer does not exist.
+- Debug traces left in: navigateToVehicle does dump() calls, and the openVehicleSelectorForFreeroamModal callback dumps its 4 arguments.
 
-**Dépendances (chargées avant) :** `core_vehicles`, `ui_vehicleSelector_detailsInteraction`, `ui_vehicleSelector_tiles`, `core_locales`
+**Dependencies (loaded first):** `core_vehicles`, `ui_vehicleSelector_detailsInteraction`, `ui_vehicleSelector_tiles`, `core_locales`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_vehicleSelector_general.asyncVehicleLoadComplete()` | Hook appelé par util_asyncBulkLoader quand le chargement asynchrone des véhicules est fini : construit et émet l'instantané en attente (VehicleSelectorDataLoaded), sauf si la route a changé entre-temps. *(interne)* | 1819 |
-| `ui_vehicleSelector_general.calculateActiveFilters(...)` | Recalcule la liste des filtres actifs (délègue au module de filtres). | 934 |
-| `ui_vehicleSelector_general.clearAllFilters(...)` | Efface tous les filtres non verrouillés. | 925 |
-| `ui_vehicleSelector_general.clearCache()` | Force la reconstruction des données UI et des options d'affichage au prochain accès. | 747 |
-| `ui_vehicleSelector_general.clearDrilldownSelectorState()` | Réinitialise la sélection de véhicule en attente ou active et le chemin posé par setCurrentSelectorPath, pour qu'un nouvel instantané ne se reconstruise pas sur un ancien véhicule. | 1491 |
-| `ui_vehicleSelector_general.clearLockedFilters(...)` | Supprime tous les verrous de filtres. | 933 |
-| `ui_vehicleSelector_general.closedFromUI()` | À appeler à la fermeture du sélecteur : réinitialise racine du fil d'Ariane, spawn-only, état du détail, filtres verrouillés, boutons, callback de sortie, puis émet le hook onVehicleSelectorClosed. | 832 |
-| `ui_vehicleSelector_general.consumeFocusSearchOnOpen()` | Renvoie puis remet à false l'indicateur « focaliser la recherche à l'ouverture » posé par openFromPause. | 1377 |
-| `ui_vehicleSelector_general.createFilters(...)` | Construit la liste des filtres UI (types range ou set) à partir d'une liste de configs, selon la liste blanche de propriétés. | 937 |
-| `ui_vehicleSelector_general.emitDisplayDataSnapshot(requestId)` | Reconstruit l'instantané du sélecteur pour le chemin courant et l'envoie par 'vehicleSelectorDisplayDataSnapshot'. | 2020 |
-| `ui_vehicleSelector_general.emptyProfiler()` | Crée un faux profileur dont start, add et finish ne font rien. | 588 |
-| `ui_vehicleSelector_general.executeButton(...)` | Délègue à detailsInteraction.executeButton. | 972 |
-| `ui_vehicleSelector_general.executeDoubleClick(...)` | Délègue à detailsInteraction.executeDoubleClick. | 973 |
-| `ui_vehicleSelector_general.getActiveFilters(...)` | Délègue au module de filtres : renvoie les filtres actifs. | 850 |
-| `ui_vehicleSelector_general.getDefaultVehicleInfo()` | Lit et met en cache settings/default.pc (véhicule par défaut hérité). | 766 |
-| `ui_vehicleSelector_general.getDefaultVehicleTile()` | Construit la tuile du « Legacy default.pc » pour la grille, à partir du modèle indiqué par settings/default.pc. | 780 |
-| `ui_vehicleSelector_general.getDetails(...)` | Délègue à detailsInteraction.getDetails : détails et boutons d'un élément. | 970 |
-| `ui_vehicleSelector_general.getDisplayData(...)` | Renvoie les options d'affichage effectives. En contexte freeroam, showRecentMode prend la valeur de showRecentModeFreeroamSelector. | 860 |
-| `ui_vehicleSelector_general.getDisplayDataOptions(...)` | Renvoie la liste des options d'affichage proposées à l'UI, en masquant showRecentMode ou showRecentModeFreeroamSelector selon le contexte. | 863 |
-| `ui_vehicleSelector_general.getFilters(...)` | Initialise les données UI si besoin puis renvoie les filtres (filterList, filterByProp, lockedFiltersByProp). | 849 |
-| `ui_vehicleSelector_general.getManagementDetails(...)` | Délègue à detailsInteraction.getManagementDetails. | 971 |
-| `ui_vehicleSelector_general.getRecentVehicles()` | Renvoie la liste des véhicules récents. | 955 |
-| `ui_vehicleSelector_general.getScreenHeaderTitleAndPath(path)` | Calcule le titre d'en-tête et les segments du fil d'Ariane selon le chemin courant, les filtres actifs et la recherche. Les titres sont suffixés « (filtré) » si un filtre ou une recherche est actif, et remplacés par « Spawn Vehicle » en mode spawn-only. | 979 |
-| `ui_vehicleSelector_general.getSearchText(...)` | Renvoie le texte de recherche courant (module de filtres). | 851 |
-| `ui_vehicleSelector_general.getTiles(...)` | Délègue à ui_vehicleSelector_tiles.getTiles. | 859 |
-| `ui_vehicleSelector_general.getUiData()` | Renvoie les données UI du sélecteur (models, configs, filterList, filterByProp, lockedFiltersByProp, activeFilters, displayData, displayInfo), en les recalculant si nécessaire. | 818 |
-| `ui_vehicleSelector_general.getValidFilters(...)` | Renvoie les filtres valides préparés (délègue au module de filtres). | 936 |
-| `ui_vehicleSelector_general.goToMod(...)` | Délègue à detailsInteraction.goToMod : ouvre la page du mod. | 969 |
-| `ui_vehicleSelector_general.isFavourite(model, config)` | Indique si le couple modèle/config est en favori. | 940 |
-| `ui_vehicleSelector_general.isFilterLocked(...)` | Indique si un filtre est verrouillé. | 930 |
-| `ui_vehicleSelector_general.isFreeroamVehicleSelectorContext()` | Vrai si la route UI courante est l'un des écrans du sélecteur de véhicules du freeroam ou de l'assistant freeroam (freeroamLevels.vehicles, freeroamWizard.vehicles et variantes menu./pause.). | 632 |
-| `ui_vehicleSelector_general.isOpenedFromGarage()` | Indique si le sélecteur a été ouvert depuis le garage. | 1098 |
-| `ui_vehicleSelector_general.isRecentVehicle(model, config)` | Indique si le couple modèle/config figure parmi les véhicules récents. | 945 |
-| `ui_vehicleSelector_general.isSpawnOnly()` | Indique si le mode spawn-only est actif. | 46 |
-| `ui_vehicleSelector_general.lockFilter(...)` | Verrouille un filtre pour que l'utilisateur ne puisse pas le modifier (délègue au module de filtres). | 928 |
-| `ui_vehicleSelector_general.lockFilterMode(...)` | Verrouille un filtre en mode inclusion (délègue au module de filtres). | 931 |
-| `ui_vehicleSelector_general.lockFilterModeExclusive(...)` | Verrouille un filtre en mode exclusif avec la liste de valeurs autorisées (délègue au module de filtres). | 932 |
-| `ui_vehicleSelector_general.navigateToVehicle(tile, options)` | Passe de la grille à la page détail d'un véhicule : mémorise la sélection (chemin, titre, modèle, config) et navigue vers la route enfant correspondant à la route racine courante (pause ou garage). | 1843 |
-| `ui_vehicleSelector_general.onLanguageChanged()` | Hook : la langue change ; force le rechargement (libellés traduits). *(interne)* *(hook)* | 751 |
-| `ui_vehicleSelector_general.onModActivated()` | Hook : un mod est activé ; force le rechargement des données du sélecteur. *(interne)* *(hook)* | 735 |
-| `ui_vehicleSelector_general.onModDeactivated()` | Hook : un mod est désactivé ; force le rechargement des données du sélecteur. *(interne)* *(hook)* | 731 |
-| `ui_vehicleSelector_general.onModManagerReady()` | Hook : le gestionnaire de mods est prêt ; force le rechargement des données. *(interne)* *(hook)* | 739 |
-| `ui_vehicleSelector_general.onModManagerStateChanged()` | Hook : l'état du gestionnaire de mods a changé ; force le rechargement des données. *(interne)* *(hook)* | 743 |
-| `ui_vehicleSelector_general.onRootRouteEnter(context, toRoute, fromRoute, data)` | Hook de route : entrée dans un écran racine du sélecteur (pause, garage) ; efface l'état de détail. *(interne)* *(hook)* | 1936 |
-| `ui_vehicleSelector_general.onRootRouteLeave(context, toRoute, fromRoute, data)` | Hook de route : sortie d'un écran racine ; remet spawn-only à false hors de la famille, et si ouvert depuis le garage efface verrous et filtres. *(interne)* *(hook)* | 1972 |
-| `ui_vehicleSelector_general.onRootRouteMount(context, toRoute, fromRoute, data)` | Hook de route : montage d'un écran racine ; lance le chargement asynchrone puis l'émission de l'instantané pour le chemin de la route (par défaut allModels). *(interne)* *(hook)* | 1941 |
-| `ui_vehicleSelector_general.onVehicleRouteEnter(context, toRoute, fromRoute, data)` | Hook de route : entrée dans la page détail d'un véhicule. Promeut la sélection en attente en sélection active. *(interne)* *(hook)* | 1904 |
-| `ui_vehicleSelector_general.onVehicleRouteLeave(context, toRoute, fromRoute, data)` | Hook de route : sortie de la page détail ; remet spawn-only à false si la destination est hors de la famille du sélecteur. *(interne)* *(hook)* | 1967 |
-| `ui_vehicleSelector_general.onVehicleRouteMount(context, toRoute, fromRoute, data)` | Hook de route : montage de la page détail ; lance le chargement asynchrone puis l'émission de l'instantané du chemin de la sélection active. *(interne)* *(hook)* | 1915 |
-| `ui_vehicleSelector_general.onfilechanged(filename, type)` | Hook de surveillance de fichiers : oublie le cache de settings/default.pc quand ce fichier change. *(interne)* | 759 |
-| `ui_vehicleSelector_general.openFromPause(routeName, options)` | Ouvre le sélecteur depuis le menu pause. Refusé (renvoie false) si une session de première conduite active n'autorise pas vehicleManagement. | 1345 |
-| `ui_vehicleSelector_general.openVehicleSelectorForChallenge(callback, routeName, options)` | Ouvre le sélecteur pour choisir un véhicule adverse. Sauf options.unrestricted, props et remorques sont exclus par un verrou sur le filtre Type. Le callback reçoit (model, config, additionalData) à la sélection, et aucun argument à la sortie. | 1258 |
-| `ui_vehicleSelector_general.openVehicleSelectorForFreeroam()` | Ouvre le sélecteur plein écran du menu (route 'menu.vehiclesnew') avec boutons de gestion et boutons freeroam, puis émet onVehicleSelectorOpen. | 1103 |
-| `ui_vehicleSelector_general.openVehicleSelectorForFreeroamConfigurator(callback)` | Ouvre le sélecteur pour le configurateur freeroam (route 'menu.vehiclesnew'). Le callback reçoit (model, config, additionalData) et le véhicule est enregistré comme récent. | 1315 |
-| `ui_vehicleSelector_general.openVehicleSelectorForFreeroamModal()` | Ouvre le sélecteur en mode « modal » : un bouton « Select Vehicle » (et la sortie) renvoient vers 'menu.freeroamselector'. Boutons de gestion désactivés. | 1228 |
-| `ui_vehicleSelector_general.openVehicleSelectorForFreeroamWithMod(modId)` | Comme openVehicleSelectorForFreeroam, mais filtre la source sur un mod donné. | 1119 |
-| `ui_vehicleSelector_general.openVehicleSelectorForGarage(showOwnedOnly)` | Ouvre le sélecteur depuis le garage (routes 'garage.mycars' ou 'garage.vehicles'). Un bouton « Charger » remplace le véhicule actuel (ou entre dans un véhicule d'inventaire de carrière), enregistre le récent, puis revient au garage. Verrouille la source (Custom, Mod, Career ou BeamNG - Official). | 1137 |
-| `ui_vehicleSelector_general.passesFilters(...)` | Indique si un élément passe les filtres et la recherche (délègue au module de filtres). | 938 |
-| `ui_vehicleSelector_general.profilerFinish(tag)` | Termine ou marque une étape du profileur M.p. Sans effet avec le faux profileur par défaut. | 1087 |
-| `ui_vehicleSelector_general.requestDetails(item, requestId)` | Calcule les détails d'une tuile (via getDetails) et les envoie à l'UI par 'vehicleSelectorDetails'. Les tuiles de cluster sans showDetails sont ignorées (avertissement loggé). | 1647 |
-| `ui_vehicleSelector_general.resetDisplayDataToDefaults(requestId)` | Remet les options d'affichage à leurs valeurs par défaut. | 874 |
-| `ui_vehicleSelector_general.resetRangeFilter(filterKey, requestId)` | Remet un filtre de plage à ses bornes complètes ; émet un instantané si requestId est fourni. | 911 |
-| `ui_vehicleSelector_general.resetSetFilter(filterKey, requestId)` | Remet un filtre de type ensemble à son état par défaut ; émet un instantané si requestId est fourni. | 918 |
-| `ui_vehicleSelector_general.resolveCurrentSelectorPath()` | Renvoie le chemin courant : chemin posé par setCurrentSelectorPath, sinon celui de la sélection active, sinon {keys = {'allModels'}}. | 2004 |
-| `ui_vehicleSelector_general.resolveSelectedVehicleTitle(paramTitle)` | Renvoie le titre du véhicule sélectionné (sélection active) pour le titre dynamique de la route, sinon le titre passé en paramètre. | 2036 |
-| `ui_vehicleSelector_general.setCurrentSelectorPath(path)` | Enregistre un chemin de sélecteur choisi par un assistant, utilisé par emitDisplayDataSnapshot. nil l'efface ; accepte {keys = {...}} ou une liste directe. | 1982 |
-| `ui_vehicleSelector_general.setCustomDetailsButtons(...)` | Délègue à detailsInteraction.setCustomDetailsButtons. | 976 |
-| `ui_vehicleSelector_general.setDetailsButtonForFreeroam(...)` | Délègue à detailsInteraction.setDetailsButtonForFreeroam. | 975 |
-| `ui_vehicleSelector_general.setDisplayDataOption(key, value, requestId)` | Modifie une option d'affichage (persistée si save=true) ; émet un instantané si requestId est fourni. | 866 |
-| `ui_vehicleSelector_general.setManagementButtonsEnabled(...)` | Délègue à detailsInteraction.setManagementButtonsEnabled. | 974 |
-| `ui_vehicleSelector_general.setSearchText(text, requestId)` | Définit le texte de recherche ; émet un instantané si requestId est fourni. | 852 |
-| `ui_vehicleSelector_general.setSpawnOnly(value)` | Active le mode « faire apparaître seulement » ; toute valeur autre que true le désactive. | 41 |
-| `ui_vehicleSelector_general.setVehicleRestrictionMode(restrictionMode)` | Définit une restriction dure de type de véhicule appliquée en plus des filtres : 'lightRunner', 'busRoute' ou nil (aucune). | 35 |
-| `ui_vehicleSelector_general.setupValidFilters(...)` | Prépare la liste des filtres valides pour un passage de filtrage (délègue au module de filtres). | 935 |
-| `ui_vehicleSelector_general.toggleFavourite(itemDetails)` | Ajoute ou retire un véhicule des favoris (clé 'modèle/config'). Pour settings/default.pc, bascule plutôt l'option includeDefaultConfigInFavourites. | 882 |
-| `ui_vehicleSelector_general.toggleFilter(filterKey, value, requestId)` | Active ou désactive une valeur d'un filtre de type ensemble ; émet un instantané si requestId est fourni. | 897 |
-| `ui_vehicleSelector_general.trackRecentVehicle(model, config)` | Enregistre le couple modèle/config comme véhicule récent. | 950 |
-| `ui_vehicleSelector_general.unlockFilter(...)` | Déverrouille un filtre (délègue au module de filtres). | 929 |
-| `ui_vehicleSelector_general.updateFilters(...)` | Délègue à filterInstance.updateFilters. | 896 |
-| `ui_vehicleSelector_general.updateRangeFilter(filterKey, min, max, requestId)` | Définit les bornes d'un filtre de plage ; émet un instantané si requestId est fourni. | 904 |
+| `ui_vehicleSelector_general.asyncVehicleLoadComplete()` | Hook called by util_asyncBulkLoader when the asynchronous vehicle loading is finished: builds and emits the pending snapshot (VehicleSelectorDataLoaded), unless the route changed in the meantime. *(internal)* | 1819 |
+| `ui_vehicleSelector_general.calculateActiveFilters(...)` | Recomputes the list of active filters (delegates to the filter module). | 934 |
+| `ui_vehicleSelector_general.clearAllFilters(...)` | Clears all unlocked filters. | 925 |
+| `ui_vehicleSelector_general.clearCache()` | Forces the UI data and display options to be rebuilt on next access. | 747 |
+| `ui_vehicleSelector_general.clearDrilldownSelectorState()` | Resets the pending or active vehicle selection and the path set by setCurrentSelectorPath, so that a new snapshot is not rebuilt on an old vehicle. | 1491 |
+| `ui_vehicleSelector_general.clearLockedFilters(...)` | Removes all filter locks. | 933 |
+| `ui_vehicleSelector_general.closedFromUI()` | To call when the selector closes: resets the breadcrumb root, spawn-only, detail state, locked filters, buttons, exit callback, then emits the onVehicleSelectorClosed hook. | 832 |
+| `ui_vehicleSelector_general.consumeFocusSearchOnOpen()` | Returns then resets to false the "focus the search on open" flag set by openFromPause. | 1377 |
+| `ui_vehicleSelector_general.createFilters(...)` | Builds the list of UI filters (range or set types) from a list of configs, according to the property whitelist. | 937 |
+| `ui_vehicleSelector_general.emitDisplayDataSnapshot(requestId)` | Rebuilds the selector snapshot for the current path and sends it via 'vehicleSelectorDisplayDataSnapshot'. | 2020 |
+| `ui_vehicleSelector_general.emptyProfiler()` | Creates a fake profiler whose start, add and finish do nothing. | 588 |
+| `ui_vehicleSelector_general.executeButton(...)` | Delegates to detailsInteraction.executeButton. | 972 |
+| `ui_vehicleSelector_general.executeDoubleClick(...)` | Delegates to detailsInteraction.executeDoubleClick. | 973 |
+| `ui_vehicleSelector_general.getActiveFilters(...)` | Delegates to the filter module: returns the active filters. | 850 |
+| `ui_vehicleSelector_general.getDefaultVehicleInfo()` | Reads and caches settings/default.pc (legacy default vehicle). | 766 |
+| `ui_vehicleSelector_general.getDefaultVehicleTile()` | Builds the "Legacy default.pc" tile for the grid, from the model indicated by settings/default.pc. | 780 |
+| `ui_vehicleSelector_general.getDetails(...)` | Delegates to detailsInteraction.getDetails: details and buttons of an item. | 970 |
+| `ui_vehicleSelector_general.getDisplayData(...)` | Returns the effective display options. In freeroam context, showRecentMode takes the value of showRecentModeFreeroamSelector. | 860 |
+| `ui_vehicleSelector_general.getDisplayDataOptions(...)` | Returns the list of display options offered to the UI, hiding showRecentMode or showRecentModeFreeroamSelector depending on the context. | 863 |
+| `ui_vehicleSelector_general.getFilters(...)` | Initializes the UI data if needed then returns the filters (filterList, filterByProp, lockedFiltersByProp). | 849 |
+| `ui_vehicleSelector_general.getManagementDetails(...)` | Delegates to detailsInteraction.getManagementDetails. | 971 |
+| `ui_vehicleSelector_general.getRecentVehicles()` | Returns the list of recent vehicles. | 955 |
+| `ui_vehicleSelector_general.getScreenHeaderTitleAndPath(path)` | Computes the header title and the breadcrumb segments according to the current path, the active filters and the search. Titles are suffixed "(filtered)" if a filter or search is active, and replaced by "Spawn Vehicle" in spawn-only mode. | 979 |
+| `ui_vehicleSelector_general.getSearchText(...)` | Returns the current search text (filter module). | 851 |
+| `ui_vehicleSelector_general.getTiles(...)` | Delegates to ui_vehicleSelector_tiles.getTiles. | 859 |
+| `ui_vehicleSelector_general.getUiData()` | Returns the selector's UI data (models, configs, filterList, filterByProp, lockedFiltersByProp, activeFilters, displayData, displayInfo), recomputing it if needed. | 818 |
+| `ui_vehicleSelector_general.getValidFilters(...)` | Returns the prepared valid filters (delegates to the filter module). | 936 |
+| `ui_vehicleSelector_general.goToMod(...)` | Delegates to detailsInteraction.goToMod: opens the mod's page. | 969 |
+| `ui_vehicleSelector_general.isFavourite(model, config)` | Returns whether the model/config pair is a favorite. | 940 |
+| `ui_vehicleSelector_general.isFilterLocked(...)` | Returns whether a filter is locked. | 930 |
+| `ui_vehicleSelector_general.isFreeroamVehicleSelectorContext()` | True if the current UI route is one of the freeroam vehicle selector screens or the freeroam wizard (freeroamLevels.vehicles, freeroamWizard.vehicles and menu./pause. variants). | 632 |
+| `ui_vehicleSelector_general.isOpenedFromGarage()` | Returns whether the selector was opened from the garage. | 1098 |
+| `ui_vehicleSelector_general.isRecentVehicle(model, config)` | Returns whether the model/config pair is among the recent vehicles. | 945 |
+| `ui_vehicleSelector_general.isSpawnOnly()` | Returns whether spawn-only mode is active. | 46 |
+| `ui_vehicleSelector_general.lockFilter(...)` | Locks a filter so the user cannot change it (delegates to the filter module). | 928 |
+| `ui_vehicleSelector_general.lockFilterMode(...)` | Locks a filter in inclusion mode (delegates to the filter module). | 931 |
+| `ui_vehicleSelector_general.lockFilterModeExclusive(...)` | Locks a filter in exclusive mode with the list of allowed values (delegates to the filter module). | 932 |
+| `ui_vehicleSelector_general.navigateToVehicle(tile, options)` | Goes from the grid to a vehicle's detail page: stores the selection (path, title, model, config) and navigates to the child route matching the current root route (pause or garage). | 1843 |
+| `ui_vehicleSelector_general.onLanguageChanged()` | Hook: the language changes; forces a reload (translated labels). *(internal)* *(hook)* | 751 |
+| `ui_vehicleSelector_general.onModActivated()` | Hook: a mod is activated; forces a reload of the selector data. *(internal)* *(hook)* | 735 |
+| `ui_vehicleSelector_general.onModDeactivated()` | Hook: a mod is deactivated; forces a reload of the selector data. *(internal)* *(hook)* | 731 |
+| `ui_vehicleSelector_general.onModManagerReady()` | Hook: the mod manager is ready; forces a data reload. *(internal)* *(hook)* | 739 |
+| `ui_vehicleSelector_general.onModManagerStateChanged()` | Hook: the mod manager state has changed; forces a data reload. *(internal)* *(hook)* | 743 |
+| `ui_vehicleSelector_general.onRootRouteEnter(context, toRoute, fromRoute, data)` | Route hook: entering a selector root screen (pause, garage); clears the detail state. *(internal)* *(hook)* | 1936 |
+| `ui_vehicleSelector_general.onRootRouteLeave(context, toRoute, fromRoute, data)` | Route hook: leaving a root screen; resets spawn-only to false outside the family, and if opened from the garage clears locks and filters. *(internal)* *(hook)* | 1972 |
+| `ui_vehicleSelector_general.onRootRouteMount(context, toRoute, fromRoute, data)` | Route hook: mounting a root screen; starts the asynchronous loading then the emission of the snapshot for the route's path (default allModels). *(internal)* *(hook)* | 1941 |
+| `ui_vehicleSelector_general.onVehicleRouteEnter(context, toRoute, fromRoute, data)` | Route hook: entering a vehicle's detail page. Promotes the pending selection to the active selection. *(internal)* *(hook)* | 1904 |
+| `ui_vehicleSelector_general.onVehicleRouteLeave(context, toRoute, fromRoute, data)` | Route hook: leaving the detail page; resets spawn-only to false if the destination is outside the selector family. *(internal)* *(hook)* | 1967 |
+| `ui_vehicleSelector_general.onVehicleRouteMount(context, toRoute, fromRoute, data)` | Route hook: mounting the detail page; starts the asynchronous loading then the emission of the active selection's path snapshot. *(internal)* *(hook)* | 1915 |
+| `ui_vehicleSelector_general.onfilechanged(filename, type)` | File watching hook: forgets the settings/default.pc cache when that file changes. *(internal)* | 759 |
+| `ui_vehicleSelector_general.openFromPause(routeName, options)` | Opens the selector from the pause menu. Refused (returns false) if an active first drive session does not allow vehicleManagement. | 1345 |
+| `ui_vehicleSelector_general.openVehicleSelectorForChallenge(callback, routeName, options)` | Opens the selector to choose an opposing vehicle. Unless options.unrestricted, props and trailers are excluded by a lock on the Type filter. The callback receives (model, config, additionalData) on selection, and no argument on exit. | 1258 |
+| `ui_vehicleSelector_general.openVehicleSelectorForFreeroam()` | Opens the menu's full-screen selector (route 'menu.vehiclesnew') with management buttons and freeroam buttons, then emits onVehicleSelectorOpen. | 1103 |
+| `ui_vehicleSelector_general.openVehicleSelectorForFreeroamConfigurator(callback)` | Opens the selector for the freeroam configurator (route 'menu.vehiclesnew'). The callback receives (model, config, additionalData) and the vehicle is recorded as recent. | 1315 |
+| `ui_vehicleSelector_general.openVehicleSelectorForFreeroamModal()` | Opens the selector in "modal" mode: a "Select Vehicle" button (and the exit) send back to 'menu.freeroamselector'. Management buttons disabled. | 1228 |
+| `ui_vehicleSelector_general.openVehicleSelectorForFreeroamWithMod(modId)` | Like openVehicleSelectorForFreeroam, but filters the source on a given mod. | 1119 |
+| `ui_vehicleSelector_general.openVehicleSelectorForGarage(showOwnedOnly)` | Opens the selector from the garage (routes 'garage.mycars' or 'garage.vehicles'). A "Load" button replaces the current vehicle (or enters a career inventory vehicle), records the recent, then returns to the garage. Locks the source (Custom, Mod, Career or BeamNG - Official). | 1137 |
+| `ui_vehicleSelector_general.passesFilters(...)` | Returns whether an item passes the filters and the search (delegates to the filter module). | 938 |
+| `ui_vehicleSelector_general.profilerFinish(tag)` | Ends or marks a step of the M.p profiler. No effect with the default fake profiler. | 1087 |
+| `ui_vehicleSelector_general.requestDetails(item, requestId)` | Computes the details of a tile (via getDetails) and sends them to the UI via 'vehicleSelectorDetails'. Cluster tiles without showDetails are ignored (warning logged). | 1647 |
+| `ui_vehicleSelector_general.resetDisplayDataToDefaults(requestId)` | Resets the display options to their default values. | 874 |
+| `ui_vehicleSelector_general.resetRangeFilter(filterKey, requestId)` | Resets a range filter to its full bounds; emits a snapshot if requestId is provided. | 911 |
+| `ui_vehicleSelector_general.resetSetFilter(filterKey, requestId)` | Resets a set-type filter to its default state; emits a snapshot if requestId is provided. | 918 |
+| `ui_vehicleSelector_general.resolveCurrentSelectorPath()` | Returns the current path: the path set by setCurrentSelectorPath, otherwise that of the active selection, otherwise {keys = {'allModels'}}. | 2004 |
+| `ui_vehicleSelector_general.resolveSelectedVehicleTitle(paramTitle)` | Returns the title of the selected vehicle (active selection) for the route's dynamic title, otherwise the title passed as a parameter. | 2036 |
+| `ui_vehicleSelector_general.setCurrentSelectorPath(path)` | Records a selector path chosen by a wizard, used by emitDisplayDataSnapshot. nil clears it; accepts {keys = {...}} or a direct list. | 1982 |
+| `ui_vehicleSelector_general.setCustomDetailsButtons(...)` | Delegates to detailsInteraction.setCustomDetailsButtons. | 976 |
+| `ui_vehicleSelector_general.setDetailsButtonForFreeroam(...)` | Delegates to detailsInteraction.setDetailsButtonForFreeroam. | 975 |
+| `ui_vehicleSelector_general.setDisplayDataOption(key, value, requestId)` | Modifies a display option (persisted if save=true); emits a snapshot if requestId is provided. | 866 |
+| `ui_vehicleSelector_general.setManagementButtonsEnabled(...)` | Delegates to detailsInteraction.setManagementButtonsEnabled. | 974 |
+| `ui_vehicleSelector_general.setSearchText(text, requestId)` | Sets the search text; emits a snapshot if requestId is provided. | 852 |
+| `ui_vehicleSelector_general.setSpawnOnly(value)` | Enables the "spawn only" mode; any value other than true disables it. | 41 |
+| `ui_vehicleSelector_general.setVehicleRestrictionMode(restrictionMode)` | Sets a hard vehicle type restriction applied on top of the filters: 'lightRunner', 'busRoute' or nil (none). | 35 |
+| `ui_vehicleSelector_general.setupValidFilters(...)` | Prepares the list of valid filters for a filtering pass (delegates to the filter module). | 935 |
+| `ui_vehicleSelector_general.toggleFavourite(itemDetails)` | Adds or removes a vehicle from favorites ('model/config' key). For settings/default.pc, toggles the includeDefaultConfigInFavourites option instead. | 882 |
+| `ui_vehicleSelector_general.toggleFilter(filterKey, value, requestId)` | Enables or disables a value of a set-type filter; emits a snapshot if requestId is provided. | 897 |
+| `ui_vehicleSelector_general.trackRecentVehicle(model, config)` | Records the model/config pair as a recent vehicle. | 950 |
+| `ui_vehicleSelector_general.unlockFilter(...)` | Unlocks a filter (delegates to the filter module). | 929 |
+| `ui_vehicleSelector_general.updateFilters(...)` | Delegates to filterInstance.updateFilters. | 896 |
+| `ui_vehicleSelector_general.updateRangeFilter(filterKey, min, max, requestId)` | Sets the bounds of a range filter; emits a snapshot if requestId is provided. | 904 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_vehicleSelector_general.calculateActiveFilters(...)`
 
-Recalcule la liste des filtres actifs (délègue au module de filtres).
+Recomputes the list of active filters (delegates to the filter module).
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.clearAllFilters(...)`
 
-Efface tous les filtres non verrouillés.
+Clears all unlocked filters.
 
-- `...` (*any*) : Transmis à filterInstance.clearAllFilters.
+- `...` (*any*) : Passed to filterInstance.clearAllFilters.
 
 #### `ui_vehicleSelector_general.clearLockedFilters(...)`
 
-Supprime tous les verrous de filtres.
+Removes all filter locks.
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.consumeFocusSearchOnOpen()`
 
-Renvoie puis remet à false l'indicateur « focaliser la recherche à l'ouverture » posé par openFromPause.
+Returns then resets to false the "focus the search on open" flag set by openFromPause.
 
-- **renvoie** : boolean true si la recherche doit être focalisée.
+- **returns**: boolean true if the search should be focused.
 
 #### `ui_vehicleSelector_general.createFilters(...)`
 
-Construit la liste des filtres UI (types range ou set) à partir d'une liste de configs, selon la liste blanche de propriétés.
+Builds the list of UI filters (range or set types) from a list of configs, according to the property whitelist.
 
-- `...` (*table*) : Liste de configs (premier argument), transmise à createVehicleFilters.
-- **renvoie** : table[] Données de filtres pour l'UI.
-- **renvoie** : table Valeurs trouvées par propriété.
+- `...` (*table*) : List of configs (first argument), passed to createVehicleFilters.
+- **returns**: table[] Filter data for the UI.
+- **returns**: table Values found per property.
 
 #### `ui_vehicleSelector_general.emitDisplayDataSnapshot(requestId)`
 
-Reconstruit l'instantané du sélecteur pour le chemin courant et l'envoie par 'vehicleSelectorDisplayDataSnapshot'.
+Rebuilds the selector snapshot for the current path and sends it via 'vehicleSelectorDisplayDataSnapshot'.
 
-- `requestId` (*any|nil*) : Identifiant renvoyé dans le payload.
-- **renvoie** : boolean false si la reconstruction a échoué.
+- `requestId` (*any|nil*) : Identifier returned in the payload.
+- **returns**: boolean false if the rebuild failed.
 
 #### `ui_vehicleSelector_general.emptyProfiler()`
 
-Crée un faux profileur dont start, add et finish ne font rien.
+Creates a fake profiler whose start, add and finish do nothing.
 
-- **renvoie** : table Objet {start, add, finish}.
+- **returns**: table {start, add, finish} object.
 
 #### `ui_vehicleSelector_general.executeButton(...)`
 
-Délègue à detailsInteraction.executeButton.
+Delegates to detailsInteraction.executeButton.
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.executeDoubleClick(...)`
 
-Délègue à detailsInteraction.executeDoubleClick.
+Delegates to detailsInteraction.executeDoubleClick.
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.getActiveFilters(...)`
 
-Délègue au module de filtres : renvoie les filtres actifs.
+Delegates to the filter module: returns the active filters.
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.getDefaultVehicleInfo()`
 
-Lit et met en cache settings/default.pc (véhicule par défaut hérité).
+Reads and caches settings/default.pc (legacy default vehicle).
 
-- **renvoie** : table|nil Contenu du fichier, ou nil s'il est absent ou illisible.
+- **returns**: table|nil File contents, or nil if absent or unreadable.
 
 #### `ui_vehicleSelector_general.getDefaultVehicleTile()`
 
-Construit la tuile du « Legacy default.pc » pour la grille, à partir du modèle indiqué par settings/default.pc.
+Builds the "Legacy default.pc" tile for the grid, from the model indicated by settings/default.pc.
 
-- **renvoie** : table|nil Tuile, ou nil si fichier ou modèle introuvable.
+- **returns**: table|nil Tile, or nil if the file or model is not found.
 
 #### `ui_vehicleSelector_general.getDetails(...)`
 
-Délègue à detailsInteraction.getDetails : détails et boutons d'un élément.
+Delegates to detailsInteraction.getDetails: details and buttons of an item.
 
 - `...` (*any*) : itemDetails.
 
 #### `ui_vehicleSelector_general.getDisplayData(...)`
 
-Renvoie les options d'affichage effectives. En contexte freeroam, showRecentMode prend la valeur de showRecentModeFreeroamSelector.
+Returns the effective display options. In freeroam context, showRecentMode takes the value of showRecentModeFreeroamSelector.
 
 - `...` (*any*) : 
-- **renvoie** : table Table des options d'affichage (groupMode, sortMode, clusterMode, expandGroups, displaySize, ...).
+- **returns**: table Display options table (groupMode, sortMode, clusterMode, expandGroups, displaySize, ...).
 
 #### `ui_vehicleSelector_general.getDisplayDataOptions(...)`
 
-Renvoie la liste des options d'affichage proposées à l'UI, en masquant showRecentMode ou showRecentModeFreeroamSelector selon le contexte.
+Returns the list of display options offered to the UI, hiding showRecentMode or showRecentModeFreeroamSelector depending on the context.
 
 - `...` (*any*) : 
-- **renvoie** : table[] Définitions d'options (key, label, type, options...).
+- **returns**: table[] Option definitions (key, label, type, options...).
 
 #### `ui_vehicleSelector_general.getFilters(...)`
 
-Initialise les données UI si besoin puis renvoie les filtres (filterList, filterByProp, lockedFiltersByProp).
+Initializes the UI data if needed then returns the filters (filterList, filterByProp, lockedFiltersByProp).
 
-- `...` (*any*) : Transmis à filterInstance.getFilters.
-- **renvoie** : table Données de filtres.
+- `...` (*any*) : Passed to filterInstance.getFilters.
+- **returns**: table Filter data.
 
 #### `ui_vehicleSelector_general.getManagementDetails(...)`
 
-Délègue à detailsInteraction.getManagementDetails.
+Delegates to detailsInteraction.getManagementDetails.
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.getRecentVehicles()`
 
-Renvoie la liste des véhicules récents.
+Returns the list of recent vehicles.
 
-- **renvoie** : table[] Liste de {model, config}.
+- **returns**: table[] List of {model, config}.
 
 #### `ui_vehicleSelector_general.getScreenHeaderTitleAndPath(path)`
 
-Calcule le titre d'en-tête et les segments du fil d'Ariane selon le chemin courant, les filtres actifs et la recherche. Les titres sont suffixés « (filtré) » si un filtre ou une recherche est actif, et remplacés par « Spawn Vehicle » en mode spawn-only.
+Computes the header title and the breadcrumb segments according to the current path, the active filters and the search. Titles are suffixed "(filtered)" if a filter or search is active, and replaced by "Spawn Vehicle" in spawn-only mode.
 
-- `path` (*table|nil*) : Chemin {keys = {...}} ; keys[1] vaut allModels, configsForModel ou configsForBrandSubModelOrModel.
-- **renvoie** : table {title, isFiltered, pathSegments}.
+- `path` (*table|nil*) : Path {keys = {...}}; keys[1] is allModels, configsForModel or configsForBrandSubModelOrModel.
+- **returns**: table {title, isFiltered, pathSegments}.
 
 #### `ui_vehicleSelector_general.getSearchText(...)`
 
-Renvoie le texte de recherche courant (module de filtres).
+Returns the current search text (filter module).
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.getTiles(...)`
 
-Délègue à ui_vehicleSelector_tiles.getTiles.
+Delegates to ui_vehicleSelector_tiles.getTiles.
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.getUiData()`
 
-Renvoie les données UI du sélecteur (models, configs, filterList, filterByProp, lockedFiltersByProp, activeFilters, displayData, displayInfo), en les recalculant si nécessaire.
+Returns the selector's UI data (models, configs, filterList, filterByProp, lockedFiltersByProp, activeFilters, displayData, displayInfo), recomputing it if needed.
 
-- **renvoie** : table Données UI.
+- **returns**: table UI data.
 
 #### `ui_vehicleSelector_general.getValidFilters(...)`
 
-Renvoie les filtres valides préparés (délègue au module de filtres).
+Returns the prepared valid filters (delegates to the filter module).
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.goToMod(...)`
 
-Délègue à detailsInteraction.goToMod : ouvre la page du mod.
+Delegates to detailsInteraction.goToMod: opens the mod's page.
 
 - `...` (*any*) : modId.
 
 #### `ui_vehicleSelector_general.isFavourite(model, config)`
 
-Indique si le couple modèle/config est en favori.
+Returns whether the model/config pair is a favorite.
 
-- `model` (*string*) : Clé du modèle.
-- `config` (*string*) : Clé de la config.
-- **renvoie** : boolean true si favori.
+- `model` (*string*) : Model key.
+- `config` (*string*) : Config key.
+- **returns**: boolean true if favorite.
 
 #### `ui_vehicleSelector_general.isFilterLocked(...)`
 
-Indique si un filtre est verrouillé.
+Returns whether a filter is locked.
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.isFreeroamVehicleSelectorContext()`
 
-Vrai si la route UI courante est l'un des écrans du sélecteur de véhicules du freeroam ou de l'assistant freeroam (freeroamLevels.vehicles, freeroamWizard.vehicles et variantes menu./pause.).
+True if the current UI route is one of the freeroam vehicle selector screens or the freeroam wizard (freeroamLevels.vehicles, freeroamWizard.vehicles and menu./pause. variants).
 
-- **renvoie** : boolean true en contexte freeroam.
+- **returns**: boolean true in freeroam context.
 
 #### `ui_vehicleSelector_general.isOpenedFromGarage()`
 
-Indique si le sélecteur a été ouvert depuis le garage.
+Returns whether the selector was opened from the garage.
 
-- **renvoie** : boolean true depuis le garage.
+- **returns**: boolean true from the garage.
 
 #### `ui_vehicleSelector_general.isRecentVehicle(model, config)`
 
-Indique si le couple modèle/config figure parmi les véhicules récents.
+Returns whether the model/config pair is among the recent vehicles.
 
-- `model` (*string*) : Clé du modèle.
-- `config` (*string*) : Clé de la config.
-- **renvoie** : boolean true si récent.
+- `model` (*string*) : Model key.
+- `config` (*string*) : Config key.
+- **returns**: boolean true if recent.
 
 #### `ui_vehicleSelector_general.isSpawnOnly()`
 
-Indique si le mode spawn-only est actif.
+Returns whether spawn-only mode is active.
 
-- **renvoie** : boolean État du mode.
+- **returns**: boolean Mode state.
 
 #### `ui_vehicleSelector_general.lockFilter(...)`
 
-Verrouille un filtre pour que l'utilisateur ne puisse pas le modifier (délègue au module de filtres).
+Locks a filter so the user cannot change it (delegates to the filter module).
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.lockFilterMode(...)`
 
-Verrouille un filtre en mode inclusion (délègue au module de filtres).
+Locks a filter in inclusion mode (delegates to the filter module).
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.lockFilterModeExclusive(...)`
 
-Verrouille un filtre en mode exclusif avec la liste de valeurs autorisées (délègue au module de filtres).
+Locks a filter in exclusive mode with the list of allowed values (delegates to the filter module).
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.navigateToVehicle(tile, options)`
 
-Passe de la grille à la page détail d'un véhicule : mémorise la sélection (chemin, titre, modèle, config) et navigue vers la route enfant correspondant à la route racine courante (pause ou garage).
+Goes from the grid to a vehicle's detail page: stores the selection (path, title, model, config) and navigates to the child route matching the current root route (pause or garage).
 
-- `tile` (*table*) : Tuile cliquée (config ou cluster).
-- `options` (*table|nil*) : Transmis à ui_router.navigate (par ex. {preferredScope = 'auxillary'}).
+- `tile` (*table*) : Clicked tile (config or cluster).
+- `options` (*table|nil*) : Passed to ui_router.navigate (e.g. {preferredScope = 'auxillary'}).
 
 #### `ui_vehicleSelector_general.onRootRouteEnter(context, toRoute, fromRoute, data)`
 
-Hook de route : entrée dans un écran racine du sélecteur (pause, garage) ; efface l'état de détail.
+Route hook: entering a selector root screen (pause, garage); clears the detail state.
 
-- `context` (*any*) : Contexte de cycle de vie.
-- `toRoute` (*table*) : Route d'arrivée.
-- `fromRoute` (*table*) : Route de départ.
-- `data` (*any*) : Données de route.
+- `context` (*any*) : Lifecycle context.
+- `toRoute` (*table*) : Destination route.
+- `fromRoute` (*table*) : Origin route.
+- `data` (*any*) : Route data.
 
 #### `ui_vehicleSelector_general.onRootRouteLeave(context, toRoute, fromRoute, data)`
 
-Hook de route : sortie d'un écran racine ; remet spawn-only à false hors de la famille, et si ouvert depuis le garage efface verrous et filtres.
+Route hook: leaving a root screen; resets spawn-only to false outside the family, and if opened from the garage clears locks and filters.
 
-- `context` (*any*) : Contexte de cycle de vie.
-- `toRoute` (*table*) : Route d'arrivée.
-- `fromRoute` (*table*) : Route de départ.
-- `data` (*any*) : Données de route.
+- `context` (*any*) : Lifecycle context.
+- `toRoute` (*table*) : Destination route.
+- `fromRoute` (*table*) : Origin route.
+- `data` (*any*) : Route data.
 
 #### `ui_vehicleSelector_general.onRootRouteMount(context, toRoute, fromRoute, data)`
 
-Hook de route : montage d'un écran racine ; lance le chargement asynchrone puis l'émission de l'instantané pour le chemin de la route (par défaut allModels).
+Route hook: mounting a root screen; starts the asynchronous loading then the emission of the snapshot for the route's path (default allModels).
 
-- `context` (*any*) : Contexte de cycle de vie.
-- `toRoute` (*table*) : Route d'arrivée.
-- `fromRoute` (*table*) : Route de départ.
-- `data` (*any*) : Données de route.
+- `context` (*any*) : Lifecycle context.
+- `toRoute` (*table*) : Destination route.
+- `fromRoute` (*table*) : Origin route.
+- `data` (*any*) : Route data.
 
 #### `ui_vehicleSelector_general.onVehicleRouteEnter(context, toRoute, fromRoute, data)`
 
-Hook de route : entrée dans la page détail d'un véhicule. Promeut la sélection en attente en sélection active.
+Route hook: entering a vehicle's detail page. Promotes the pending selection to the active selection.
 
-- `context` (*any*) : Contexte de cycle de vie.
-- `toRoute` (*table*) : Route d'arrivée.
-- `fromRoute` (*table*) : Route de départ.
-- `data` (*any*) : Données de route.
+- `context` (*any*) : Lifecycle context.
+- `toRoute` (*table*) : Destination route.
+- `fromRoute` (*table*) : Origin route.
+- `data` (*any*) : Route data.
 
 #### `ui_vehicleSelector_general.onVehicleRouteLeave(context, toRoute, fromRoute, data)`
 
-Hook de route : sortie de la page détail ; remet spawn-only à false si la destination est hors de la famille du sélecteur.
+Route hook: leaving the detail page; resets spawn-only to false if the destination is outside the selector family.
 
-- `context` (*any*) : Contexte de cycle de vie.
-- `toRoute` (*table*) : Route d'arrivée.
-- `fromRoute` (*table*) : Route de départ.
-- `data` (*any*) : Données de route.
+- `context` (*any*) : Lifecycle context.
+- `toRoute` (*table*) : Destination route.
+- `fromRoute` (*table*) : Origin route.
+- `data` (*any*) : Route data.
 
 #### `ui_vehicleSelector_general.onVehicleRouteMount(context, toRoute, fromRoute, data)`
 
-Hook de route : montage de la page détail ; lance le chargement asynchrone puis l'émission de l'instantané du chemin de la sélection active.
+Route hook: mounting the detail page; starts the asynchronous loading then the emission of the active selection's path snapshot.
 
-- `context` (*any*) : Contexte de cycle de vie.
-- `toRoute` (*table*) : Route d'arrivée.
-- `fromRoute` (*table*) : Route de départ.
-- `data` (*any*) : Données de route.
+- `context` (*any*) : Lifecycle context.
+- `toRoute` (*table*) : Destination route.
+- `fromRoute` (*table*) : Origin route.
+- `data` (*any*) : Route data.
 
 #### `ui_vehicleSelector_general.onfilechanged(filename, type)`
 
-Hook de surveillance de fichiers : oublie le cache de settings/default.pc quand ce fichier change.
+File watching hook: forgets the settings/default.pc cache when that file changes.
 
-- `filename` (*string*) : Fichier modifié.
-- `type` (*string*) : Type de changement.
+- `filename` (*string*) : Modified file.
+- `type` (*string*) : Change type.
 
 #### `ui_vehicleSelector_general.openFromPause(routeName, options)`
 
-Ouvre le sélecteur depuis le menu pause. Refusé (renvoie false) si une session de première conduite active n'autorise pas vehicleManagement.
+Opens the selector from the pause menu. Refused (returns false) if an active first drive session does not allow vehicleManagement.
 
-- `routeName` (*string|nil*) : Route à ouvrir, par défaut 'pause.vehicleSelector'.
-- `options` (*table|nil*) : options.spawnOnly (booléen) et options.focusSearch (focalise la recherche à l'ouverture).
-- **renvoie** : boolean false si refusé, sinon true.
+- `routeName` (*string|nil*) : Route to open, default 'pause.vehicleSelector'.
+- `options` (*table|nil*) : options.spawnOnly (boolean) and options.focusSearch (focuses the search on open).
+- **returns**: boolean false if refused, otherwise true.
 
 #### `ui_vehicleSelector_general.openVehicleSelectorForChallenge(callback, routeName, options)`
 
-Ouvre le sélecteur pour choisir un véhicule adverse. Sauf options.unrestricted, props et remorques sont exclus par un verrou sur le filtre Type. Le callback reçoit (model, config, additionalData) à la sélection, et aucun argument à la sortie.
+Opens the selector to choose an opposing vehicle. Unless options.unrestricted, props and trailers are excluded by a lock on the Type filter. The callback receives (model, config, additionalData) on selection, and no argument on exit.
 
-- `callback` (*function|nil*) : Fonction appelée avec la sélection ou sans argument si on quitte.
-- `routeName` (*string|nil*) : Route UI à ouvrir, par défaut 'mission.control.vehicleSelector'.
-- `options` (*table|nil*) : options.unrestricted = true pour effacer tous les filtres.
+- `callback` (*function|nil*) : Function called with the selection or with no argument if the user exits.
+- `routeName` (*string|nil*) : UI route to open, default 'mission.control.vehicleSelector'.
+- `options` (*table|nil*) : options.unrestricted = true to clear all filters.
 
 #### `ui_vehicleSelector_general.openVehicleSelectorForFreeroamConfigurator(callback)`
 
-Ouvre le sélecteur pour le configurateur freeroam (route 'menu.vehiclesnew'). Le callback reçoit (model, config, additionalData) et le véhicule est enregistré comme récent.
+Opens the selector for the freeroam configurator (route 'menu.vehiclesnew'). The callback receives (model, config, additionalData) and the vehicle is recorded as recent.
 
-- `callback` (*function*) : Appelée avec la sélection.
+- `callback` (*function*) : Called with the selection.
 
 #### `ui_vehicleSelector_general.openVehicleSelectorForFreeroamWithMod(modId)`
 
-Comme openVehicleSelectorForFreeroam, mais filtre la source sur un mod donné.
+Like openVehicleSelectorForFreeroam, but filters the source on a given mod.
 
-- `modId` (*string*) : Identifiant du mod (via getModById).
+- `modId` (*string*) : Mod identifier (via getModById).
 
 #### `ui_vehicleSelector_general.openVehicleSelectorForGarage(showOwnedOnly)`
 
-Ouvre le sélecteur depuis le garage (routes 'garage.mycars' ou 'garage.vehicles'). Un bouton « Charger » remplace le véhicule actuel (ou entre dans un véhicule d'inventaire de carrière), enregistre le récent, puis revient au garage. Verrouille la source (Custom, Mod, Career ou BeamNG - Official).
+Opens the selector from the garage (routes 'garage.mycars' or 'garage.vehicles'). A "Load" button replaces the current vehicle (or enters a career inventory vehicle), records the recent, then returns to the garage. Locks the source (Custom, Mod, Career or BeamNG - Official).
 
-- `showOwnedOnly` (*boolean|nil*) : true pour n'afficher que les véhicules possédés (Custom, Mod, Career).
+- `showOwnedOnly` (*boolean|nil*) : true to show only owned vehicles (Custom, Mod, Career).
 
 #### `ui_vehicleSelector_general.passesFilters(...)`
 
-Indique si un élément passe les filtres et la recherche (délègue au module de filtres).
+Returns whether an item passes the filters and the search (delegates to the filter module).
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.profilerFinish(tag)`
 
-Termine ou marque une étape du profileur M.p. Sans effet avec le faux profileur par défaut.
+Ends or marks a step of the M.p profiler. No effect with the default fake profiler.
 
-- `tag` (*string|nil*) : Étiquette de l'étape ; vide ou 'undefined' = fin.
+- `tag` (*string|nil*) : Step label; empty or 'undefined' = end.
 
 #### `ui_vehicleSelector_general.requestDetails(item, requestId)`
 
-Calcule les détails d'une tuile (via getDetails) et les envoie à l'UI par 'vehicleSelectorDetails'. Les tuiles de cluster sans showDetails sont ignorées (avertissement loggé).
+Computes the details of a tile (via getDetails) and sends them to the UI via 'vehicleSelectorDetails'. Cluster tiles without showDetails are ignored (warning logged).
 
-- `item` (*table*) : Tuile avec showDetails = {model, config}, ou directement {model, config}.
-- `requestId` (*any|nil*) : Identifiant de requête renvoyé dans le payload.
-- **renvoie** : table|nil Payload {backendName, requestId, item, details}, ou nil.
+- `item` (*table*) : Tile with showDetails = {model, config}, or directly {model, config}.
+- `requestId` (*any|nil*) : Request identifier returned in the payload.
+- **returns**: table|nil Payload {backendName, requestId, item, details}, or nil.
 
 #### `ui_vehicleSelector_general.resetDisplayDataToDefaults(requestId)`
 
-Remet les options d'affichage à leurs valeurs par défaut.
+Resets the display options to their default values.
 
-- `requestId` (*any|nil*) : Identifiant pour l'instantané de retour.
-- **renvoie** : table Options d'affichage après remise à zéro.
+- `requestId` (*any|nil*) : Identifier for the return snapshot.
+- **returns**: table Display options after reset.
 
 #### `ui_vehicleSelector_general.resetRangeFilter(filterKey, requestId)`
 
-Remet un filtre de plage à ses bornes complètes ; émet un instantané si requestId est fourni.
+Resets a range filter to its full bounds; emits a snapshot if requestId is provided.
 
-- `filterKey` (*string*) : Nom du filtre.
-- `requestId` (*any|nil*) : Identifiant pour l'instantané de retour.
+- `filterKey` (*string*) : Filter name.
+- `requestId` (*any|nil*) : Identifier for the return snapshot.
 
 #### `ui_vehicleSelector_general.resetSetFilter(filterKey, requestId)`
 
-Remet un filtre de type ensemble à son état par défaut ; émet un instantané si requestId est fourni.
+Resets a set-type filter to its default state; emits a snapshot if requestId is provided.
 
-- `filterKey` (*string*) : Nom du filtre.
-- `requestId` (*any|nil*) : Identifiant pour l'instantané de retour.
+- `filterKey` (*string*) : Filter name.
+- `requestId` (*any|nil*) : Identifier for the return snapshot.
 
 #### `ui_vehicleSelector_general.resolveCurrentSelectorPath()`
 
-Renvoie le chemin courant : chemin posé par setCurrentSelectorPath, sinon celui de la sélection active, sinon {keys = {'allModels'}}.
+Returns the current path: the path set by setCurrentSelectorPath, otherwise that of the active selection, otherwise {keys = {'allModels'}}.
 
-- **renvoie** : table {keys = string[]}.
+- **returns**: table {keys = string[]}.
 
 #### `ui_vehicleSelector_general.resolveSelectedVehicleTitle(paramTitle)`
 
-Renvoie le titre du véhicule sélectionné (sélection active) pour le titre dynamique de la route, sinon le titre passé en paramètre.
+Returns the title of the selected vehicle (active selection) for the route's dynamic title, otherwise the title passed as a parameter.
 
-- `paramTitle` (*string|nil*) : Titre de repli.
-- **renvoie** : string|nil Titre trouvé.
+- `paramTitle` (*string|nil*) : Fallback title.
+- **returns**: string|nil Title found.
 
 #### `ui_vehicleSelector_general.setCurrentSelectorPath(path)`
 
-Enregistre un chemin de sélecteur choisi par un assistant, utilisé par emitDisplayDataSnapshot. nil l'efface ; accepte {keys = {...}} ou une liste directe.
+Records a selector path chosen by a wizard, used by emitDisplayDataSnapshot. nil clears it; accepts {keys = {...}} or a direct list.
 
-- `path` (*table|nil*) : Chemin.
+- `path` (*table|nil*) : Path.
 
 #### `ui_vehicleSelector_general.setCustomDetailsButtons(...)`
 
-Délègue à detailsInteraction.setCustomDetailsButtons.
+Delegates to detailsInteraction.setCustomDetailsButtons.
 
-- `...` (*any*) : Liste de boutons personnalisés.
+- `...` (*any*) : List of custom buttons.
 
 #### `ui_vehicleSelector_general.setDetailsButtonForFreeroam(...)`
 
-Délègue à detailsInteraction.setDetailsButtonForFreeroam.
+Delegates to detailsInteraction.setDetailsButtonForFreeroam.
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.setDisplayDataOption(key, value, requestId)`
 
-Modifie une option d'affichage (persistée si save=true) ; émet un instantané si requestId est fourni.
+Modifies a display option (persisted if save=true); emits a snapshot if requestId is provided.
 
-- `key` (*string*) : Clé de l'option.
-- `value` (*any*) : Nouvelle valeur.
-- `requestId` (*any|nil*) : Identifiant de requête UI pour l'instantané de retour.
-- **renvoie** : table Options d'affichage après modification.
+- `key` (*string*) : Option key.
+- `value` (*any*) : New value.
+- `requestId` (*any|nil*) : UI request identifier for the return snapshot.
+- **returns**: table Display options after modification.
 
 #### `ui_vehicleSelector_general.setManagementButtonsEnabled(...)`
 
-Délègue à detailsInteraction.setManagementButtonsEnabled.
+Delegates to detailsInteraction.setManagementButtonsEnabled.
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.setSearchText(text, requestId)`
 
-Définit le texte de recherche ; émet un instantané si requestId est fourni.
+Sets the search text; emits a snapshot if requestId is provided.
 
-- `text` (*string*) : Texte recherché.
-- `requestId` (*any|nil*) : Identifiant pour l'instantané de retour.
+- `text` (*string*) : Searched text.
+- `requestId` (*any|nil*) : Identifier for the return snapshot.
 
 #### `ui_vehicleSelector_general.setSpawnOnly(value)`
 
-Active le mode « faire apparaître seulement » ; toute valeur autre que true le désactive.
+Enables the "spawn only" mode; any value other than true disables it.
 
-- `value` (*boolean|nil*) : true pour activer.
+- `value` (*boolean|nil*) : true to enable.
 
 #### `ui_vehicleSelector_general.setVehicleRestrictionMode(restrictionMode)`
 
-Définit une restriction dure de type de véhicule appliquée en plus des filtres : 'lightRunner', 'busRoute' ou nil (aucune).
+Sets a hard vehicle type restriction applied on top of the filters: 'lightRunner', 'busRoute' or nil (none).
 
-- `restrictionMode` (*string|nil*) : 'lightRunner', 'busRoute' ou nil.
+- `restrictionMode` (*string|nil*) : 'lightRunner', 'busRoute' or nil.
 
 #### `ui_vehicleSelector_general.setupValidFilters(...)`
 
-Prépare la liste des filtres valides pour un passage de filtrage (délègue au module de filtres).
+Prepares the list of valid filters for a filtering pass (delegates to the filter module).
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.toggleFavourite(itemDetails)`
 
-Ajoute ou retire un véhicule des favoris (clé 'modèle/config'). Pour settings/default.pc, bascule plutôt l'option includeDefaultConfigInFavourites.
+Adds or removes a vehicle from favorites ('model/config' key). For settings/default.pc, toggles the includeDefaultConfigInFavourites option instead.
 
-- `itemDetails` (*table*) : Table avec les champs model et config.
-- **renvoie** : boolean true si l'élément est maintenant favori.
+- `itemDetails` (*table*) : Table with the fields model and config.
+- **returns**: boolean true if the item is now a favorite.
 
 #### `ui_vehicleSelector_general.toggleFilter(filterKey, value, requestId)`
 
-Active ou désactive une valeur d'un filtre de type ensemble ; émet un instantané si requestId est fourni.
+Enables or disables a value of a set-type filter; emits a snapshot if requestId is provided.
 
-- `filterKey` (*string*) : Nom du filtre.
-- `value` (*any*) : Valeur à basculer.
-- `requestId` (*any|nil*) : Identifiant pour l'instantané de retour.
+- `filterKey` (*string*) : Filter name.
+- `value` (*any*) : Value to toggle.
+- `requestId` (*any|nil*) : Identifier for the return snapshot.
 
 #### `ui_vehicleSelector_general.trackRecentVehicle(model, config)`
 
-Enregistre le couple modèle/config comme véhicule récent.
+Records the model/config pair as a recent vehicle.
 
-- `model` (*string*) : Clé du modèle.
-- `config` (*string*) : Clé de la config.
+- `model` (*string*) : Model key.
+- `config` (*string*) : Config key.
 
 #### `ui_vehicleSelector_general.unlockFilter(...)`
 
-Déverrouille un filtre (délègue au module de filtres).
+Unlocks a filter (delegates to the filter module).
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.updateFilters(...)`
 
-Délègue à filterInstance.updateFilters.
+Delegates to filterInstance.updateFilters.
 
-- `...` (*any*) : Transmis tels quels.
+- `...` (*any*) : Passed through as is.
 
 #### `ui_vehicleSelector_general.updateRangeFilter(filterKey, min, max, requestId)`
 
-Définit les bornes d'un filtre de plage ; émet un instantané si requestId est fourni.
+Sets the bounds of a range filter; emits a snapshot if requestId is provided.
 
-- `filterKey` (*string*) : Nom du filtre.
-- `min` (*number*) : Borne basse.
-- `max` (*number*) : Borne haute.
-- `requestId` (*any|nil*) : Identifiant pour l'instantané de retour.
+- `filterKey` (*string*) : Filter name.
+- `min` (*number*) : Bottom bound.
+- `max` (*number*) : Top bound.
+- `requestId` (*any|nil*) : Identifier for the return snapshot.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | core_vehicles, ui_vehicleSelector_detailsInteraction, ui_vehicleSelector_tiles, core_locales. |
-| `p` | table | Profileur factice (emptyProfiler) avec start, add et finish sans effet. |
+| `p` | table | Dummy profiler (emptyProfiler) with no-op start, add and finish. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onVehicleSelectorClosed`
 - `onVehicleSelectorOpen`
 
-**Évènements UI (guihooks.trigger) :** `VehicleSelectorDataLoaded`, `gridSelectorRefreshAll`, `vehicleSelectorDetails`, `vehicleSelectorDisplayDataSnapshot`
+**UI events (guihooks.trigger):** `VehicleSelectorDataLoaded`, `gridSelectorRefreshAll`, `vehicleSelectorDetails`, `vehicleSelectorDisplayDataSnapshot`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/vehicleSelector/general.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/vehicleSelector/general.lua`.*

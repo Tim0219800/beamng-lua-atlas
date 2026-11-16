@@ -1,18 +1,33 @@
 {
   "path": "lua/ge/extensions/ui/legal.lua",
-  "module": "Vérifie si l'utilisateur a répondu à l'assistant de consentement en ligne (réglages `onlineFeatures` et `telemetry`, valeur \"ask\" = pas encore répondu). Sert au routeur d'UI pour interdire de quitter l'écran de consentement tant qu'il n'est pas validé.",
+  "module": "Checks whether the user has answered the online consent wizard (settings `onlineFeatures` and `telemetry`, value \"ask\" = not answered yet). Used by the UI router to prevent leaving the consent screen until it is validated.",
   "notes": [
-    "En menu simple (Engine.UI.isSimpleMenu()), si le consentement n'est pas donné, le module active automatiquement onlineFeatures et telemetry (\"enable\"), demande la sauvegarde des réglages et considère le consentement comme donné (les CGU sont supposées acceptées)."
+    "In simple menu (Engine.UI.isSimpleMenu()), if consent is not given, the module automatically enables onlineFeatures and telemetry (\"enable\"), requests saving the settings and considers consent as given (the terms are assumed accepted)."
   ],
   "functions": {
     "isOnlineConsentSet": {
-      "desc": "Renvoie true si telemetry et onlineFeatures sont tous deux différents de \"ask\". Effet de bord en menu simple : active les deux réglages et sauvegarde.",
-      "returns": [{"type": "boolean", "desc": "Consentement renseigné."}]
+      "desc": "Returns true if telemetry and onlineFeatures are both different from \"ask\". Side effect in simple menu: enables both settings and saves.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Consent provided."
+        }
+      ]
     },
     "canLeaveOnlineConsent": {
-      "desc": "Indique si la navigation hors de la route courante est permise : toujours true à l'intérieur de l'arbre de routes `legal.*` (pour finir l'assistant), sinon dépend de isOnlineConsentSet().",
-      "params": {"route": {"type": "table", "desc": "Route de l'UI (champ name de type « legal.xxx »)."}},
-      "returns": [{"type": "boolean", "desc": "true si on peut quitter."}]
+      "desc": "Returns whether navigating away from the current route is allowed: always true inside the `legal.*` route tree (to finish the wizard), otherwise depends on isOnlineConsentSet().",
+      "params": {
+        "route": {
+          "type": "table",
+          "desc": "UI route (name field of the form \"legal.xxx\")."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if leaving is allowed."
+        }
+      ]
     }
   }
 }

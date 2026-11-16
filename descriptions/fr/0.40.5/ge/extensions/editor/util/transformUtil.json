@@ -1,0 +1,107 @@
+{
+  "path": "lua/ge/extensions/editor/util/transformUtil.lua",
+  "module": "Classe utilitaire de l'éditeur : un « assistant de transformation » (position vec3, rotation quat, échelle vec3 ou nombre) avec gizmo d'axes, champs imgui, mode d'édition dédié et boutons d'aide (poser sur le terrain, placer devant la caméra, aligner sur la pente, téléporter le véhicule joueur…). Utile à un outil d'éditeur qui doit éditer un transform d'objet. Le module renvoie un constructeur : `local t = require('editor/util/transformUtil')(editName, objectName)`.",
+  "usage": "local tu = require('editor/util/transformUtil')('Mon outil', 'Marker')\ntu:set(vec3(0,0,0), quat(0,0,0,1), vec3(1,1,1))\n-- dans onEditorGui :\nlocal changed = tu:update(mouseInfo)\nif changed then print(tu.pos, tu.rot, tu.scl) end",
+  "notes": [
+    "Chaque instance reçoit un id unique et enregistre un edit mode `editor.editModes[\"<editName> (<id>)\"]` ; Échap ou un clic hors gizmo revient au mode objectSelect.",
+    "Maj + clic-glisser = Quick Edit : place la position au point visé et oriente (quatFromDir) dans la direction du glissement ; l'échelle 1D suit la longueur du glissement.",
+    "Si l'échelle est 1D (setOneDimensionalScale(true)), self.scl est un number ; sinon un vec3. set() convertit automatiquement.",
+    "Pendant le glissement du gizmo, des lignes de 2000 m (rouge/vert/bleu) sont tracées le long des axes locaux.",
+    "Incohérence : contextMenu() teste self.hasPos / self.hasRot qui ne sont jamais initialisés dans init() (donc nil sauf affectation externe) : le menu contextuel n'affiche alors que le séparateur.",
+    "getValidButtons() utilise `break` : dès qu'un bouton est incompatible avec allowTranslate/allowRotate, les suivants sont aussi ignorés.",
+    "Les rotations sont des quaternions (x, y, z, w) ; distances en mètres. 'Move before Camera' place le point à 15 m devant la caméra.",
+    "Le module appelle `editor.*` sans vérifier partout son existence ; init() sort tôt si `editor.editModes` est absent."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Objet renvoyé par le constructeur du module. Champs publics notables : pos (vec3), rot (quat), scl (vec3|number), allowTranslate/allowRotate/allowScale (booléens), oneDimensionalScale, showWidgets, showGizmo, widgetSettings.width, switchRotationForMouse, isDragging.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : crée l'état (pos 0, rot identité, scl 1), les champs imgui et enregistre l'edit mode de l'éditeur.",
+          "params": {
+            "editName": {"type": "string", "desc": "Nom de l'edit mode (un id unique est ajouté)."},
+            "objectName": {"type": "string|nil", "desc": "Libellé de l'objet dans l'UI, 'Object' par défaut."}
+          },
+          "internal": true
+        },
+        "setOneDimensionalScale": {
+          "desc": "Bascule entre échelle scalaire et échelle vec3 et recrée le champ d'entrée correspondant.",
+          "params": {"ods": {"type": "boolean", "desc": "true pour une échelle à une seule valeur."}}
+        },
+        "start": {"desc": "Entre dans l'edit mode de cet assistant s'il n'y est pas déjà."},
+        "stop": {"desc": "Quitte l'edit mode (editor.selectEditMode(nil)) s'il est actif."},
+        "set": {
+          "desc": "Définit position, rotation et échelle ; les arguments nil sont ignorés. Met à jour le transform du gizmo et les champs de saisie.",
+          "params": {
+            "pos": {"type": "vec3|nil", "desc": "Nouvelle position."},
+            "rot": {"type": "quat|nil", "desc": "Nouvelle rotation."},
+            "scl": {"type": "vec3|number|nil", "desc": "Nouvelle échelle (convertie selon oneDimensionalScale)."}
+          }
+        },
+        "updateTransform": {"desc": "Recalcule la matrice du gizmo à partir de pos/rot (orientation locale ou monde selon l'alignement du gizmo) et l'applique si cet edit mode est actif."},
+        "updateInputFields": {"desc": "Recopie pos, rot et scl dans les tableaux imgui (inputPos, inputRot, inputScl)."},
+        "shiftUpdate": {
+          "desc": "Gère le Quick Edit (Maj + souris) : pose la position sur le point visé et oriente l'objet selon le glissement.",
+          "params": {"mouseInfo": {"type": "table", "desc": "Infos souris de l'éditeur (rayCast, down, hold, up, valid)."}},
+          "returns": [{"type": "boolean|nil", "desc": "true si une édition a eu lieu pendant le maintien."}]
+        },
+        "update": {
+          "desc": "À appeler à chaque frame : gère les clics, les messages d'aide et le Quick Edit quand l'edit mode est actif, puis dessine les widgets (combinedWidget).",
+          "params": {"mouseInfo": {"type": "table|nil", "desc": "Infos souris de l'éditeur."}},
+          "returns": [{"type": "boolean", "desc": "true si le transform a changé."}]
+        },
+        "enableEditing": {
+          "desc": "Active l'edit mode de cet assistant, avec un délai de quelques frames avant de traiter les clics.",
+          "params": {"cooldown": {"type": "integer|nil", "desc": "Nombre de frames d'attente (1 par défaut)."}}
+        },
+        "helperFocus": {"desc": "Centre la vue de l'éditeur sur la position (editor.fitViewToSelectionSmooth)."},
+        "helperPositionToCamera": {"desc": "Place la position sur celle de la caméra."},
+        "helperPositionInFrontOfToCamera": {"desc": "Place la position 15 m devant la caméra."},
+        "helperPositionDownToTerrain": {"desc": "Pose la position à la hauteur du terrain (sans effet s'il n'y a pas de terrain)."},
+        "helperRotationToCamera": {"desc": "Copie la rotation de la caméra."},
+        "helperCameraToPosition": {"desc": "Passe en caméra libre et déplace la caméra à la position, en gardant son orientation."},
+        "helperCameraToRotation": {"desc": "Passe en caméra libre et applique la rotation à la caméra, en gardant sa position."},
+        "helperCameraToPositionRotation": {"desc": "Passe en caméra libre et applique position et rotation à la caméra."},
+        "helperMoveToTransform": {"desc": "Téléporte le véhicule joueur (spawn.safeTeleport) à la position/rotation."},
+        "helperAlignWithTerrain": {"desc": "Aligne l'axe haut sur la normale lissée du terrain en conservant la direction avant projetée (sans effet sans terrain)."},
+        "helperRotateWithCamera": {"desc": "Copie la rotation de la caméra (identique à helperRotationToCamera ; l'info-bulle du bouton dit 'face away from the camera')."},
+        "contextMenu": {
+          "desc": "Dessine le menu contextuel d'aide (position/rotation vers caméra, caméra vers position, etc.).",
+          "returns": [{"type": "boolean", "desc": "true si une action a modifié le transform."}]
+        },
+        "combinedWidget": {
+          "desc": "Dessine l'interface combinée (gizmo, boutons d'aide, champs) dans la largeur disponible.",
+          "returns": [{"type": "boolean", "desc": "true si le transform a changé."}]
+        },
+        "getValidButtons": {
+          "desc": "Renvoie la liste des boutons d'aide compatibles avec allowTranslate/allowRotate (s'arrête au premier incompatible).",
+          "returns": [{"type": "table", "desc": "Liste de définitions de boutons."}]
+        },
+        "gizmo": {
+          "desc": "Dessine le bouton 'Edit <objet>' / 'Exit Editing', le gizmo d'axes en edit mode, et le menu '...'.",
+          "returns": [{"type": "boolean", "desc": "true si le gizmo ou le menu a modifié le transform."}]
+        },
+        "widget": {
+          "desc": "Dessine les champs de saisie Position, Rotation (quaternion) et Scale selon les autorisations.",
+          "returns": [{"type": "boolean", "desc": "true si une valeur a été modifiée."}]
+        },
+        "widgetCondensed": {
+          "desc": "Version compacte de widget() (libellés Pos, Rot, Scl).",
+          "returns": [{"type": "boolean", "desc": "true si une valeur a été modifiée."}]
+        },
+        "beginDrag": {"desc": "Début de glissement du gizmo : mémorise pos/rot/scl de départ.", "internal": true},
+        "dragging": {"desc": "Pendant le glissement : met à jour pos, rot ou scl selon le mode du gizmo (translation, rotation, échelle) et trace les axes.", "internal": true},
+        "endDragging": {"desc": "Fin de glissement du gizmo.", "internal": true},
+        "resetDragging": {"desc": "Efface les valeurs de début de glissement (appel manuel)."},
+        "correctEditMode": {
+          "desc": "Indique si l'edit mode actif de l'éditeur est celui de cet assistant.",
+          "returns": [{"type": "boolean", "desc": "true si actif."}]
+        },
+        "onActivate": {"desc": "Callback d'edit mode : efface la sélection d'objets et réinitialise via set().", "internal": true},
+        "onDeactivate": {"desc": "Callback d'edit mode : efface la sélection d'objets.", "internal": true}
+      }
+    }
+  }
+}

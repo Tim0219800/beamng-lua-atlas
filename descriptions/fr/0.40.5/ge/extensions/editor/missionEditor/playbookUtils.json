@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/editor/missionEditor/playbookUtils.lua",
+  "module": "Onglet « Playbook Utils » de l'éditeur de missions. Il propose des boutons qui ajoutent à editor_missionPlaybook.book.instructions des instructions de type missionAttempt pour la mission courante, avec différentes combinaisons d'étoiles (toutes, par défaut, bonus, aléatoires, une par une). Le module renvoie un constructeur : require(...)(missionEditor).",
+  "notes": [
+    "Chaque instruction a la forme {type = 'missionAttempt', missionId = id, stars = {clé = true}}.",
+    "Utilise careerSetup._activeStarCache (sortedStars, defaultStarKeysSorted, bonusStarKeysSorted) de l'instance de mission.",
+    "« Add Random Single Star » n'ajoute une étoile que s'il y a plus d'une étoile ; sinon l'instruction est ajoutée avec stars vide."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance de l'onglet. Champs : missionEditor, tabName = 'Playbook Utils', mission, missionInstance.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : mémorise missionEditor et le nom d'onglet.",
+          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "internal": true
+        },
+        "setMission": {
+          "desc": "Définit la mission courante et son instance de jeu.",
+          "params": {"mission": {"type": "table", "desc": "Mission courante."}},
+          "internal": true
+        },
+        "draw": {
+          "desc": "Dessine les boutons d'ajout d'instructions au playbook (vide, toutes les étoiles, étoiles par défaut, bonus, une étoile aléatoire, étoiles aléatoires, ajout individuel progressif, bonus dans un ordre aléatoire).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,28 +1,28 @@
 # `flowgraph_nodes_vehicle_removeVehicle`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/removeVehicle.lua` · VM : Game Engine (GE) · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/removeVehicle.lua` · VM: Game Engine (GE) · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/removeVehicle")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/removeVehicle")` (file under extensions/ but not a regular extension)
 
-Nœud « Remove Vehicle » (catégorie `repeat_instant`, tags gameplay/utils). Supprime un véhicule : informe l'éditeur (`editor.onRemoveSceneTreeObjects`) si présent, puis `source:delete()`. Pin d'entrée : `vehId`.
+Node "Remove Vehicle" (category `repeat_instant`, tags gameplay/utils). Deletes a vehicle: informs the editor (`editor.onRemoveSceneTreeObjects`) if present, then `source:delete()`. Input pin: `vehId`.
 
-## Remarques
+## Notes
 
-- Appelé à chaque frame tant que le flux est actif ; une fois supprimé, `scenetree.findObjectById` renvoie nil.
-- `vehId` nil ou 0 : aucune suppression ; le flux de sortie est mis à true.
-- Le flux de sortie n'est mis à true que dans le cas « pas d'id ».
+- Called every frame while the flow is active; once deleted, `scenetree.findObjectById` returns nil.
+- `vehId` nil or 0: no deletion; the output flow is set to true.
+- The output flow is set to true only in the "no id" case.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Cherche le véhicule et le supprime de la scène. | 21 |
+| `C:work()` | Looks for the vehicle and removes it from the scene. | 21 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/removeVehicle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/removeVehicle.lua`.*

@@ -1,31 +1,31 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.lua",
-  "module": "Nœud « Get Powertrain Data » (catégorie `once_f_duration`). Demande une propriété d'un périphérique du powertrain (`core_vehicleBridge.requestValue(veh, cb, 'powertrainDevice', device, property)`). Pins d'entrée : `vehId`, `device` (nom du device), `property` ; sortie `value` (any). État de durée : inactive/started/finished.",
+  "module": "Node \"Get Powertrain Data\" (category `once_f_duration`). Requests a property of a powertrain device (`core_vehicleBridge.requestValue(veh, cb, 'powertrainDevice', device, property)`). Input pins: `vehId`, `device` (device name), `property`; output `value` (any). Duration state: inactive/started/finished.",
   "notes": [
-    "Le callback de requête contient `dump(val) dumpz(self, 1)` : des traces de debug sont écrites dans le log à chaque réponse."
+    "The request callback contains `dump(val) dumpz(self, 1)`: debug traces are written to the log on each response."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_executionStarted": {
-          "desc": "Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.",
+          "desc": "Called by the manager when the flowgraph project execution starts; resets the internal state to zero.",
           "internal": true
         },
         "init": {
-          "desc": "Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne.",
+          "desc": "Node constructor, called at its creation by the flowgraph editor/manager; initializes the internal state.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Efface la réponse reçue et passe en durée `inactive`.",
+          "desc": "Clears the received response and goes to `inactive` duration.",
           "internal": true
         },
         "work": {
-          "desc": "Quand la réponse est arrivée, la copie sur `value` et passe en `finished`.",
+          "desc": "When the response has arrived, copies it to `value` and goes to `finished`.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Envoie la requête powertrain au véhicule et passe en `started`.",
+          "desc": "Sends the powertrain request to the vehicle and goes to `started`.",
           "internal": true
         }
       }

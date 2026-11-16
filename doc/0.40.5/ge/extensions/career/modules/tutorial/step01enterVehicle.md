@@ -1,67 +1,67 @@
 # `career_modules_tutorial_step01enterVehicle`
 
-*Fichier : `lua/ge/extensions/career/modules/tutorial/step01enterVehicle.lua` · VM : Game Engine (GE) · 234 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/tutorial/step01enterVehicle.lua` · VM: Game Engine (GE) · 234 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_tutorial_step01enterVehicle` : `extensions.load("career_modules_tutorial_step01enterVehicle")`, puis la globale `career_modules_tutorial_step01enterVehicle`
+**Access:** extension `career_modules_tutorial_step01enterVehicle`: `extensions.load("career_modules_tutorial_step01enterVehicle")`, then the global `career_modules_tutorial_step01enterVehicle`
 
-Étape 1 du tutoriel de carrière (« enterVehicle ») : le joueur monte dans le véhicule du tutoriel, apprend les commandes de base (accélérer, freiner, tourner, objectifs validés à 0,75 / 0,75 / 0,5 de la valeur d'entrée), choisit son mode de boîte via une popup d'aides à la conduite, puis l'étape 02moveOff est activée. Fonctionne par phases : waitVehicleSetup, getInCar, waitBasicControlsPopup, controls, shiftMode, waitBeginFirstChallenge. Extension chargée par gameplay_tutorial_runtime (préfixe career_modules_tutorial_step).
+Career tutorial step 1 ("enterVehicle"): the player gets into the tutorial vehicle, learns the basic controls (accelerate, brake, steer, objectives validated at 0.75 / 0.75 / 0.5 of the input value), chooses their gearbox mode via a driving aids popup, then step 02moveOff is activated. Works in phases: waitVehicleSetup, getInCar, waitBasicControlsPopup, controls, shiftMode, waitBeginFirstChallenge. Extension loaded by gameplay_tutorial_runtime (prefix career_modules_tutorial_step).
 
-## Remarques
+## Notes
 
-- Les hooks setup, cleanup, onUpdate, onCareerTutorialLeftBounds et onDebugMenu sont appelés par le runtime du tutoriel ; onIntroPopupCareerClosed et onShiftModeSelectedViaPopup sont émis par les popups / l'UI (GearboxSelect.vue).
-- Sorties de zone : la première utilise un reset instantané au départ, les suivantes un reset avec fondu.
+- The hooks setup, cleanup, onUpdate, onCareerTutorialLeftBounds and onDebugMenu are called by the tutorial runtime; onIntroPopupCareerClosed and onShiftModeSelectedViaPopup are emitted by the popups / the UI (GearboxSelect.vue).
+- Out-of-bounds events: the first uses an instant reset at the start, the following ones a reset with fade.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_tutorial_step01enterVehicle.cleanup()` | Appelé à la fin de l'étape ou du tutoriel : retire le gestionnaire de sortie de zone et le marqueur au-dessus du véhicule. *(interne)* | 131 |
-| `career_modules_tutorial_step01enterVehicle.onCareerTutorialLeftBounds()` | Hook émis quand le joueur quitte la zone autorisée : reset de position immédiat une seule fois au démarrage, puis reset standard de l'étape. *(interne)* *(hook)* | 59 |
-| `career_modules_tutorial_step01enterVehicle.onDebugMenu(im)` | Ajoute au menu de debug un bouton « Skip Step 1 » (met le joueur au volant, allume le moteur, passe à l'étape suivante). *(interne)* *(hook)* | 226 |
-| `career_modules_tutorial_step01enterVehicle.onIntroPopupCareerClosed(id)` | Hook émis à la fermeture d'une popup d'intro. Selon l'id : v2/approachVehicle affiche l'objectif « monter dans la voiture » et un marqueur ; v2/basicControls active le suivi des entrées et allume le moteur ; v2/beginFirstChallenge active l'étape 02moveOff. *(interne)* *(hook)* | 142 |
-| `career_modules_tutorial_step01enterVehicle.onShiftModeSelectedViaPopup(data)` | Appelé depuis GearboxSelect.vue quand le joueur confirme le mode de boîte (phase shiftMode) : applique setGearboxMode sur le véhicule puis affiche la popup beginFirstChallenge. *(interne)* *(hook)* | 183 |
-| `career_modules_tutorial_step01enterVehicle.onUpdate(dtReal, dtSim, dtRaw)` | Appelé chaque frame pendant l'étape. Gère les phases : lance les popups d'introduction, détecte que le joueur est monté (gameplay_walk), puis valide les objectifs throttle/brake/steer et ouvre la popup d'aides à la conduite. *(interne)* *(hook)* | 70 |
-| `career_modules_tutorial_step01enterVehicle.setup(stepData)` | Appelé à l'activation de l'étape : remet les objectifs à zéro, passe en phase waitVehicleSetup, installe le gestionnaire de sortie de zone (retour au départ du parking), active la zone evalZone, le suivi de dégâts, les réglages de récupération du tutoriel et affiche l'app de tâches. *(interne)* | 36 |
+| `career_modules_tutorial_step01enterVehicle.cleanup()` | Called at the end of the step or the tutorial: removes the out-of-bounds handler and the marker above the vehicle. *(internal)* | 131 |
+| `career_modules_tutorial_step01enterVehicle.onCareerTutorialLeftBounds()` | Hook emitted when the player leaves the allowed zone: instant position reset only once at the start, then the step's standard reset. *(internal)* *(hook)* | 59 |
+| `career_modules_tutorial_step01enterVehicle.onDebugMenu(im)` | Adds a "Skip Step 1" button to the debug menu (puts the player in the driver's seat, starts the engine, moves to the next step). *(internal)* *(hook)* | 226 |
+| `career_modules_tutorial_step01enterVehicle.onIntroPopupCareerClosed(id)` | Hook emitted when an intro popup closes. Depending on the id: v2/approachVehicle displays the "get in the car" objective and a marker; v2/basicControls enables input tracking and starts the engine; v2/beginFirstChallenge activates step 02moveOff. *(internal)* *(hook)* | 142 |
+| `career_modules_tutorial_step01enterVehicle.onShiftModeSelectedViaPopup(data)` | Called from GearboxSelect.vue when the player confirms the gearbox mode (shiftMode phase): applies setGearboxMode on the vehicle then displays the beginFirstChallenge popup. *(internal)* *(hook)* | 183 |
+| `career_modules_tutorial_step01enterVehicle.onUpdate(dtReal, dtSim, dtRaw)` | Called every frame during the step. Handles the phases: launches the introduction popups, detects that the player got in (gameplay_walk), then validates the throttle/brake/steer objectives and opens the driving aids popup. *(internal)* *(hook)* | 70 |
+| `career_modules_tutorial_step01enterVehicle.setup(stepData)` | Called when the step is activated: resets the objectives, enters the waitVehicleSetup phase, installs the out-of-bounds handler (return to the parking start), activates the evalZone zone, damage tracking, the tutorial's recovery settings and displays the tasks app. *(internal)* | 36 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_tutorial_step01enterVehicle.onDebugMenu(im)`
 
-Ajoute au menu de debug un bouton « Skip Step 1 » (met le joueur au volant, allume le moteur, passe à l'étape suivante).
+Adds a "Skip Step 1" button to the debug menu (puts the player in the driver's seat, starts the engine, moves to the next step).
 
-- `im` (*table*) : Table ui_imgui.
+- `im` (*table*) : ui_imgui table.
 
 #### `career_modules_tutorial_step01enterVehicle.onIntroPopupCareerClosed(id)`
 
-Hook émis à la fermeture d'une popup d'intro. Selon l'id : v2/approachVehicle affiche l'objectif « monter dans la voiture » et un marqueur ; v2/basicControls active le suivi des entrées et allume le moteur ; v2/beginFirstChallenge active l'étape 02moveOff.
+Hook emitted when an intro popup closes. Depending on the id: v2/approachVehicle displays the "get in the car" objective and a marker; v2/basicControls enables input tracking and starts the engine; v2/beginFirstChallenge activates step 02moveOff.
 
-- `id` (*string*) : Id de la popup (ex. "v2/basicControls").
+- `id` (*string*) : Popup id (e.g. "v2/basicControls").
 
 #### `career_modules_tutorial_step01enterVehicle.onShiftModeSelectedViaPopup(data)`
 
-Appelé depuis GearboxSelect.vue quand le joueur confirme le mode de boîte (phase shiftMode) : applique setGearboxMode sur le véhicule puis affiche la popup beginFirstChallenge.
+Called from GearboxSelect.vue when the player confirms the gearbox mode (shiftMode phase): applies setGearboxMode on the vehicle then displays the beginFirstChallenge popup.
 
-- `data` (*table*) : Table avec le champ mode (mode de boîte choisi).
+- `data` (*table*) : Table with the mode field (chosen gearbox mode).
 
 #### `career_modules_tutorial_step01enterVehicle.onUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé chaque frame pendant l'étape. Gère les phases : lance les popups d'introduction, détecte que le joueur est monté (gameplay_walk), puis valide les objectifs throttle/brake/steer et ouvre la popup d'aides à la conduite.
+Called every frame during the step. Handles the phases: launches the introduction popups, detects that the player got in (gameplay_walk), then validates the throttle/brake/steer objectives and opens the driving aids popup.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta simulation (s).
-- `dtRaw` (*number*) : Delta brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation delta (s).
+- `dtRaw` (*number*) : Raw delta (s).
 
 #### `career_modules_tutorial_step01enterVehicle.setup(stepData)`
 
-Appelé à l'activation de l'étape : remet les objectifs à zéro, passe en phase waitVehicleSetup, installe le gestionnaire de sortie de zone (retour au départ du parking), active la zone evalZone, le suivi de dégâts, les réglages de récupération du tutoriel et affiche l'app de tâches.
+Called when the step is activated: resets the objectives, enters the waitVehicleSetup phase, installs the out-of-bounds handler (return to the parking start), activates the evalZone zone, damage tracking, the tutorial's recovery settings and displays the tasks app.
 
-- `stepData` (*any*) : Données de l'étape fournies par le runtime (non utilisées).
+- `stepData` (*any*) : Step data provided by the runtime (unused).
 
-**Évènements UI (guihooks.trigger) :** `ClearTasklist`
+**UI events (guihooks.trigger):** `ClearTasklist`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/tutorial/step01enterVehicle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/tutorial/step01enterVehicle.lua`.*

@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/decalPath.lua",
+  "module": "Nœud flowgraph « Decal Path » (catégorie repeat_instant, util/draw/route). Dessine des décalques animés (flèches de groundmarker) le long d'un itinéraire de posA à posB. Pins d'entrée : posA, posB, speed (10), spacing (15), decalColor (caché). L'itinéraire est calculé par gameplay/route/route.",
+  "notes": ["L'animation dépend de os.clock() * speed % spacing.", "Le premier et le dernier marqueur ont un alpha dégradé pour les fondus."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Vide.", "internal": true},
+        "_executionStarted": {"desc": "Réinitialise le pool de décalques.", "internal": true},
+        "getNewDecal": {"desc": "Crée un décalque (texture arrow_groundmarkers_1, échelle 8x12x4, fade 400 à 500).", "returns": [{"type": "table", "desc": "Décalque prêt à être rempli"}]},
+        "increaseDecalPool": {"desc": "Agrandit le pool de décalques jusqu'à max.", "params": {"max": {"type": "integer", "desc": "Nombre minimum de décalques"}}},
+        "work": {"desc": "Calcule la route, positionne les marqueurs espacés le long du chemin et les soumet à Engine.Render.DynamicDecalMgr.addDecals."}
+      }
+    }
+  }
+}

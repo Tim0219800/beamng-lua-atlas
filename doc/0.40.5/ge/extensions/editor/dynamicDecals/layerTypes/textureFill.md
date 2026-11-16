@@ -1,47 +1,47 @@
 # `editor_dynamicDecals_layerTypes_textureFill`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/layerTypes/textureFill.lua` · VM : Game Engine (GE) · 203 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/layerTypes/textureFill.lua` · VM: Game Engine (GE) · 203 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_layerTypes_textureFill` : `extensions.load("editor_dynamicDecals_layerTypes_textureFill")`, puis la globale `editor_dynamicDecals_layerTypes_textureFill`
+**Access:** extension `editor_dynamicDecals_layerTypes_textureFill`: `extensions.load("editor_dynamicDecals_layerTypes_textureFill")`, then the global `editor_dynamicDecals_layerTypes_textureFill`
 
-Type de calque « Texture Fill » de l'outil Dynamic Decals : remplit le véhicule avec un motif basé sur une texture d'entrée, avec couleur (ou palette du véhicule), échelle et décalage (offset). Fournit la fenêtre « Add Texture Fill Layer » (OK appelle api.addTextureFillLayer), le bouton de barre d'outils (ordre 20), la GUI d'inspecteur du type textureFill (fillTexturePath, colorPaletteMapId, color, scale, offset) et la page de doc.
+"Texture Fill" layer type of the Dynamic Decals tool: fills the vehicle with a pattern based on an input texture, with color (or vehicle palette), scale and offset. Provides the "Add Texture Fill Layer" window (OK calls api.addTextureFillLayer), the toolbar button (order 20), the inspector GUI of the textureFill type (fillTexturePath, colorPaletteMapId, color, scale, offset) and the doc page.
 
-## Remarques
+## Notes
 
-- colorPaletteMapId : 0 = couleur du calque ; 1 = couleur du véhicule ; 2 = colorPalette0 ; 3 = colorPalette1. Avec une valeur autre que 0 le champ couleur est désactivé.
-- La fenêtre d'ajout réutilise les réglages « fill layer » de l'API (api.getFillLayerColor / setFillLayerColorPaletteMapId) pour la couleur, mais les propriétés de texture (api.getFillTexturePath, getTextureFillLayerScale, getTextureFillOffset) pour le reste.
-- Le code lit getPlayerVehicle(0) sans vérifier qu'il n'est pas nil quand une palette est choisie.
-- lockFillTextureLayerScaleRatio est déclaré mais jamais utilisé ; le réglage du blend mode est commenté (« heavily WIP »).
+- colorPaletteMapId: 0 = layer color; 1 = vehicle color; 2 = colorPalette0; 3 = colorPalette1. With a value other than 0 the color field is disabled.
+- The add window reuses the API's "fill layer" settings (api.getFillLayerColor / setFillLayerColorPaletteMapId) for the color, but the texture properties (api.getFillTexturePath, getTextureFillLayerScale, getTextureFillOffset) for the rest.
+- The code reads getPlayerVehicle(0) without checking that it is not nil when a palette is chosen.
+- lockFillTextureLayerScaleRatio is declared but never used; the blend mode setting is commented out ("heavily WIP").
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_layerTypes_textureFill.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 161 |
-| `editor_dynamicDecals_layerTypes_textureFill.openAddLayerWindow()` | Ouvre la fenêtre « Add Texture Fill Layer ». | 165 |
-| `editor_dynamicDecals_layerTypes_textureFill.registerEditorPreferences(prefsRegistry)` | Ne déclare aucune préférence (corps commenté). *(interne)* | 155 |
-| `editor_dynamicDecals_layerTypes_textureFill.setup(tool_in)` | Appelé par l'outil : récupère les modules liés, enregistre le dessin de la fenêtre d'ajout, la GUI d'inspecteur du type textureFill, l'élément de barre d'outils « textureFill », la page de documentation et la fenêtre (450x310). *(interne)* | 181 |
+| `editor_dynamicDecals_layerTypes_textureFill.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 161 |
+| `editor_dynamicDecals_layerTypes_textureFill.openAddLayerWindow()` | Opens the "Add Texture Fill Layer" window. | 165 |
+| `editor_dynamicDecals_layerTypes_textureFill.registerEditorPreferences(prefsRegistry)` | Declares no preference (body commented out). *(internal)* | 155 |
+| `editor_dynamicDecals_layerTypes_textureFill.setup(tool_in)` | Called by the tool: gets the related modules, registers the drawing of the add window, the inspector GUI of the textureFill type, the "textureFill" toolbar item, the documentation page and the window (450x310). *(internal)* | 181 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_layerTypes_textureFill.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_layerTypes_textureFill.registerEditorPreferences(prefsRegistry)`
 
-Ne déclare aucune préférence (corps commenté).
+Declares no preference (body commented out).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_layerTypes_textureFill.setup(tool_in)`
 
-Appelé par l'outil : récupère les modules liés, enregistre le dessin de la fenêtre d'ajout, la GUI d'inspecteur du type textureFill, l'élément de barre d'outils « textureFill », la page de documentation et la fenêtre (450x310).
+Called by the tool: gets the related modules, registers the drawing of the add window, the inspector GUI of the textureFill type, the "textureFill" toolbar item, the documentation page and the window (450x310).
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/layerTypes/textureFill.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/layerTypes/textureFill.lua`.*

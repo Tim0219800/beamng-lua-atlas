@@ -1,48 +1,48 @@
 # `controller_hydraulics_truckCabTiltControl`
 
-*Fichier : `lua/vehicle/controller/hydraulics/truckCabTiltControl.lua` · VM : Véhicule · 56 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/hydraulics/truckCabTiltControl.lua` · VM: Vehicle · 56 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `hydraulics/truckCabTiltControl` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `hydraulics/truckCabTiltControl` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire pour la bascule de cabine d'un camion : quand au moins un verrou de cabine (contrôleur de groupe) est « attached », les vérins de bascule sont en mode de vanne "float" ; sinon "closed" (modes réglables).
+Auxiliary controller for a truck's cab tilt: when at least one cab latch (group controller) is "attached", the tilt cylinders are in "float" valve mode; otherwise "closed" (adjustable modes).
 
-## Remarques
+## Notes
 
-- Clés jbeam (défaut) : cabLatchControllers (noms de contrôleurs exposant getGroupState()), cabTiltCylinders (noms de vérins hydrauliques), tiltCylinderValveModeLatched ("float"), tiltCylinderValveModeUnlatched ("closed").
+- jbeam keys (default): cabLatchControllers (names of controllers exposing getGroupState()), cabTiltCylinders (names of hydraulic cylinders), tiltCylinderValveModeLatched ("float"), tiltCylinderValveModeUnlatched ("closed").
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_hydraulics_truckCabTiltControl.init(jbeamData)` | Lit les noms de contrôleurs de verrou, de vérins et les modes de vanne. *(interne)* | 43 |
-| `controller_hydraulics_truckCabTiltControl.reset(jbeamData)` | Ne fait rien. *(interne)* | 40 |
-| `controller_hydraulics_truckCabTiltControl.updateGFX(dt)` | Chaque image : règle le type de vanne des vérins selon l'état des verrous. *(interne)* | 16 |
+| `controller_hydraulics_truckCabTiltControl.init(jbeamData)` | Reads the latch controller names, the cylinder names and the valve modes. *(internal)* | 43 |
+| `controller_hydraulics_truckCabTiltControl.reset(jbeamData)` | Does nothing. *(internal)* | 40 |
+| `controller_hydraulics_truckCabTiltControl.updateGFX(dt)` | Every frame: sets the valve type of the cylinders according to the latch state. *(internal)* | 16 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_hydraulics_truckCabTiltControl.init(jbeamData)`
 
-Lit les noms de contrôleurs de verrou, de vérins et les modes de vanne.
+Reads the latch controller names, the cylinder names and the valve modes.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_hydraulics_truckCabTiltControl.reset(jbeamData)`
 
-Ne fait rien.
+Does nothing.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_hydraulics_truckCabTiltControl.updateGFX(dt)`
 
-Chaque image : règle le type de vanne des vérins selon l'état des verrous.
+Every frame: sets the valve type of the cylinders according to the latch state.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/hydraulics/truckCabTiltControl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/hydraulics/truckCabTiltControl.lua`.*

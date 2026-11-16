@@ -1,22 +1,33 @@
 {
   "path": "lua/ge/extensions/util/resolution.lua",
-  "module": "Aide pour lire et changer la résolution de la fenêtre du jeu via GFXDevice. getVideoModeSnapshot renvoie la largeur, la hauteur et le mode d'affichage courants ; setWindowedResolution force une résolution précise en mode fenêtré (pas sans bordure). Pratique pour les captures d'écran à taille fixe ou les tests d'interface.",
+  "module": "Helper to read and change the game window resolution via GFXDevice. getVideoModeSnapshot returns the current width, height and display mode; setWindowedResolution forces a specific resolution in windowed mode (not borderless). Handy for fixed-size screenshots or UI tests.",
   "usage": "extensions.reload('util_resolution')\nextensions.util_resolution.setWindowedResolution(1280, 720)",
   "notes": [
-    "setWindowedResolution ne fait rien (avec un log) si la résolution et le mode « Window » sont déjà actifs, et refuse les arguments non numériques."
+    "setWindowedResolution does nothing (with a log) if the resolution and the \"Window\" mode are already active, and rejects non-numeric arguments."
   ],
   "functions": {
     "getVideoModeSnapshot": {
-      "desc": "Lit le mode vidéo courant de GFXDevice.",
+      "desc": "Reads the current video mode from GFXDevice.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "{width, height, displayMode} ou nil si GFXDevice.getVideoMode est indisponible"}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{width, height, displayMode} or nil if GFXDevice.getVideoMode is unavailable"
+        }
+      ],
       "internal": false
     },
     "setWindowedResolution": {
-      "desc": "Passe la fenêtre en mode « Window » à la résolution donnée (GFXDevice.setVideoMode).",
+      "desc": "Switches the window to \"Window\" mode at the given resolution (GFXDevice.setVideoMode).",
       "params": {
-        "width": {"type": "number", "desc": "Largeur en pixels"},
-        "height": {"type": "number", "desc": "Hauteur en pixels"}
+        "width": {
+          "type": "number",
+          "desc": "Width in pixels"
+        },
+        "height": {
+          "type": "number",
+          "desc": "Height in pixels"
+        }
       },
       "returns": [],
       "internal": false

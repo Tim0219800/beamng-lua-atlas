@@ -1,67 +1,67 @@
 # `ui_gridSelectorUtils_filterModule`
 
-*Fichier : `lua/ge/extensions/ui/gridSelectorUtils/filterModule.lua` · VM : Game Engine (GE) · 777 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/gridSelectorUtils/filterModule.lua` · VM: Game Engine (GE) · 777 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_gridSelectorUtils_filterModule` : `extensions.load("ui_gridSelectorUtils_filterModule")`, puis la globale `ui_gridSelectorUtils_filterModule`
+**Access:** extension `ui_gridSelectorUtils_filterModule`: `extensions.load("ui_gridSelectorUtils_filterModule")`, then the global `ui_gridSelectorUtils_filterModule`
 
-Utilitaire des sélecteurs en grille : gère l'état des filtres (filtres à ensemble de valeurs « set » et filtres de plage « range »), le texte de recherche, le verrouillage de filtres et le calcul de la liste des filtres actifs affichée en pastilles. Les backends (véhicules, gameplay, etc.) créent une instance via `create` en lui fournissant la fonction qui construit les filtres à partir de leur liste d'éléments.
+Grid selector utility: manages filter state ("set" value-set filters and "range" filters), the search text, filter locking and the computation of the active filters list displayed as chips. Backends (vehicles, gameplay, etc.) create an instance via `create`, providing the function that builds the filters from their item list.
 
-## Remarques
+## Notes
 
-- Un filtre est décrit dans filterList par { propName, propKey, type = 'set'|'range', options, min, max }. filterByProp[propName] vaut { [option] = bool } pour un set et { min, max } pour une range.
-- toggleFilter : si toutes les options sont activées, ne garde que l'option cliquée ; sinon inverse l'option ; si tout devient false, tout est réactivé. Les options verrouillées ne sont pas modifiées.
-- Bug : unlockFilter teste `if not lockedFiltersByProp[propName] then lockedFiltersByProp[propName] = nil` (condition inversée) : elle ne déverrouille jamais rien. Seule clearLockedFilters libère les verrous.
-- Bug probable : updateFilters teste `type(lockedOptions) == 'table'` alors que lockedFiltersByProp[propName] est toujours une table ; la branche « range » n'est jamais atteinte.
-- Les caches sont invalidés par un drapeau interne (filtersDirty) ; passesFilters et getValidFilters recalculent validFilters si nécessaire. passesFilters renvoie toujours true sans customPassesFiltersFunction.
-- L'option d'un filtre peut être une table : sa valeur est option.value, sinon option.id, sinon option.name.
+- A filter is described in filterList by { propName, propKey, type = 'set'|'range', options, min, max }. filterByProp[propName] is { [option] = bool } for a set and { min, max } for a range.
+- toggleFilter: if all options are enabled, keeps only the clicked option; otherwise toggles the option; if everything becomes false, everything is re-enabled. Locked options are not modified.
+- BUG: unlockFilter tests `if not lockedFiltersByProp[propName] then lockedFiltersByProp[propName] = nil` (inverted condition): it never unlocks anything. Only clearLockedFilters releases the locks.
+- Probable BUG: updateFilters tests `type(lockedOptions) == 'table'` while lockedFiltersByProp[propName] is always a table; the "range" branch is never reached.
+- Caches are invalidated by an internal flag (filtersDirty); passesFilters and getValidFilters recompute validFilters if needed. passesFilters always returns true without customPassesFiltersFunction.
+- A filter's option can be a table: its value is option.value, otherwise option.id, otherwise option.name.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_gridSelectorUtils_filterModule.create(createFiltersFunction, commonFilters, rangeFilters, dictFilters, backendName, customPassesFiltersFunction)` | Crée une instance de gestion de filtres. | 4 |
+| `ui_gridSelectorUtils_filterModule.create(createFiltersFunction, commonFilters, rangeFilters, dictFilters, backendName, customPassesFiltersFunction)` | Creates a filter management instance. | 4 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_gridSelectorUtils_filterModule.create(createFiltersFunction, commonFilters, rangeFilters, dictFilters, backendName, customPassesFiltersFunction)`
 
-Crée une instance de gestion de filtres.
+Creates a filter management instance.
 
-- `createFiltersFunction` (*function|nil*) : (configList) -> filterList, filterByProp, commonFilters ; appelée par initializeFilters.
-- `commonFilters` (*table[]|nil*) : Liste de paires { propName, option } considérées comme filtres « communs ».
-- `rangeFilters` (*table|nil*) : Accepté mais non utilisé dans le code.
-- `dictFilters` (*table|nil*) : Accepté mais non utilisé dans le code.
-- `backendName` (*string|nil*) : Nom du backend, défaut "gridSelector" (non utilisé ensuite).
-- `customPassesFiltersFunction` (*function|nil*) : (itemData, validFilters, searchText) -> boolean ; utilisée par passesFilters.
-- **renvoie** : table Instance (voir classes.instance).
+- `createFiltersFunction` (*function|nil*) : (configList) -> filterList, filterByProp, commonFilters; called by initializeFilters.
+- `commonFilters` (*table[]|nil*) : List of { propName, option } pairs considered "common" filters.
+- `rangeFilters` (*table|nil*) : Accepted but unused in the code.
+- `dictFilters` (*table|nil*) : Accepted but unused in the code.
+- `backendName` (*string|nil*) : Backend name, default "gridSelector" (not used afterwards).
+- `customPassesFiltersFunction` (*function|nil*) : (itemData, validFilters, searchText) -> boolean; used by passesFilters.
+- **returns**: table Instance (see classes.instance).
 
-## Classe `instance`
+## Class `instance`
 
-Objet renvoyé par create().
+Object returned by create().
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `instance:calculateActiveFilters()` | Calcule les filtres différents des valeurs par défaut. | dyn |
-| `instance:clearAllFilters()` | Réinitialise tous les filtres range et set puis vide le texte de recherche. | dyn |
-| `instance:clearLockedFilters()` | Supprime tous les verrous. | dyn |
-| `instance:getActiveFilters()` | Renvoie la liste des filtres actifs (displayText, propName, propValue, isActive, iconType, type). | dyn |
-| `instance:getFilters()` | Renvoie l'état complet pour l'UI. | dyn |
-| `instance:getSearchText()` | Renvoie le texte de recherche. | dyn |
-| `instance:getValidFilters()` | Renvoie la liste des filtres restrictifs (recalculée si nécessaire). | dyn |
-| `instance:initializeFilters(configList)` | Appelle createFiltersFunction(configList) et remplace filterList, filterByProp et éventuellement commonFilters. | dyn |
-| `instance:isFilterLocked(propName, option)` | Indique si une option (ou n'importe quelle option si option est nil) d'une propriété est verrouillée. | dyn |
-| `instance:lockFilter(propName, options)` | Verrouille l'état courant d'un filtre (range : min/max ; set : options données ou toutes). | dyn |
-| `instance:lockFilterMode(propName, options)` | Verrouille un filtre dans un mode : range -> fixe min/max donnés ; set -> toutes les options à false puis celles de `options` (table option -> bool) à la valeur donnée, toutes verrouillées. | dyn |
-| `instance:lockFilterModeExclusive(propName, allowedOptions)` | Filtres set uniquement : toutes les options à false et verrouillées, sauf celles de allowedOptions mises à true et non verrouillées. | dyn |
-| `instance:passesFilters(itemData)` | Teste un élément avec customPassesFiltersFunction(itemData, validFilters, searchText) ; true si aucune fonction fournie. | dyn |
-| `instance:resetRangeFilter(propName)` | Remet un filtre de plage à ses bornes par défaut. | dyn |
-| `instance:resetSetFilter(propName)` | Réactive toutes les options d'un filtre set. | dyn |
-| `instance:setSearchText(val)` | Définit le texte de recherche (nil devient "") et invalide le cache. | dyn |
-| `instance:setupValidFilters()` | Reconstruit la liste interne des filtres effectivement restrictifs (utilisée par passesFilters). | dyn |
-| `instance:toggleFilter(propName, option)` | Bascule une option d'un filtre set (voir notes). Ignorée si l'option est verrouillée. | dyn |
-| `instance:unlockFilter(propName, options)` | Destinée à déverrouiller un filtre ; sans effet à cause d'un bug (voir notes). | dyn |
-| `instance:updateFilters(newFilters)` | Remplace filterByProp par newFilters en conservant les valeurs verrouillées. | dyn |
-| `instance:updateRangeFilter(propName, min, max)` | Fixe min et max d'un filtre de plage (ignoré si verrouillé). | dyn |
+| `instance:calculateActiveFilters()` | Computes the filters that differ from the default values. | dyn |
+| `instance:clearAllFilters()` | Resets all range and set filters then clears the search text. | dyn |
+| `instance:clearLockedFilters()` | Removes all locks. | dyn |
+| `instance:getActiveFilters()` | Returns the list of active filters (displayText, propName, propValue, isActive, iconType, type). | dyn |
+| `instance:getFilters()` | Returns the full state for the UI. | dyn |
+| `instance:getSearchText()` | Returns the search text. | dyn |
+| `instance:getValidFilters()` | Returns the list of restrictive filters (recomputed if needed). | dyn |
+| `instance:initializeFilters(configList)` | Calls createFiltersFunction(configList) and replaces filterList, filterByProp and optionally commonFilters. | dyn |
+| `instance:isFilterLocked(propName, option)` | Returns whether an option (or any option if option is nil) of a property is locked. | dyn |
+| `instance:lockFilter(propName, options)` | Locks the current state of a filter (range: min/max; set: the given options or all). | dyn |
+| `instance:lockFilterMode(propName, options)` | Locks a filter in a mode: range -> sets the given min/max; set -> all options to false then those of `options` (table option -> bool) to the given value, all locked. | dyn |
+| `instance:lockFilterModeExclusive(propName, allowedOptions)` | Set filters only: all options set to false and locked, except those of allowedOptions set to true and unlocked. | dyn |
+| `instance:passesFilters(itemData)` | Tests an item with customPassesFiltersFunction(itemData, validFilters, searchText); true if no function is provided. | dyn |
+| `instance:resetRangeFilter(propName)` | Resets a range filter to its default bounds. | dyn |
+| `instance:resetSetFilter(propName)` | Re-enables all options of a set filter. | dyn |
+| `instance:setSearchText(val)` | Sets the search text (nil becomes "") and invalidates the cache. | dyn |
+| `instance:setupValidFilters()` | Rebuilds the internal list of effectively restrictive filters (used by passesFilters). | dyn |
+| `instance:toggleFilter(propName, option)` | Toggles an option of a set filter (see notes). Ignored if the option is locked. | dyn |
+| `instance:unlockFilter(propName, options)` | Intended to unlock a filter; has no effect because of a bug (see notes). | dyn |
+| `instance:updateFilters(newFilters)` | Replaces filterByProp with newFilters while keeping the locked values. | dyn |
+| `instance:updateRangeFilter(propName, min, max)` | Sets min and max of a range filter (ignored if locked). | dyn |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/gridSelectorUtils/filterModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/gridSelectorUtils/filterModule.lua`.*

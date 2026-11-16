@@ -1,110 +1,225 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/networkState.lua",
-  "module": "Tableau d'échange entre le réseau routier de l'éditeur et les outils qui construisent contre lui (parcelles, trottoirs, parkings). Le réseau publie ses données une fois avec provide(t) au chargement de l'outil de route ; les autres outils lisent (roads, surfaces, overRoad...). Dans l'autre sens, un outil qui a pavé des bas-côtés les publie (publishFootway) et peut demander des passages piétons (crossingSites, applyCrossings). Aucun côté ne connaît l'autre.",
+  "module": "Exchange table between the editor's road network and the tools that build against it (parcels, sidewalks, parking lots). The network publishes its data once with provide(t) when the road tool loads; the other tools read (roads, surfaces, overRoad...). In the other direction, a tool that has paved verges publishes them (publishFootway) and can request pedestrian crossings (crossingSites, applyCrossings). Neither side knows the other.",
   "notes": [
-    "Tant que le réseau n'a pas appelé provide, chaque lecteur reçoit une réponse vide honnête : tables vides, 0, false ; busy() renvoie true.",
-    "busy() : vrai si le réseau n'est pas chargé, a des routes ou jonctions en attente de reconstruction (longtemps après un chargement ou un rechargement Lua) ou si un noeud est en cours de déplacement ; il faut attendre qu'il soit faux avant de poser du terrain contre les routes.",
-    "Champs attendus par provide : roads, groundSegs, surfaces, invalidate, sig, rev, features, heldPastEdge, footwayChanged (plus busy, overRoad, crossingSites, applyCrossings utilisés par les passerelles).",
-    "overRoad appelle net.overRoad sans test d'existence : avec un réseau fourni sans cette fonction, l'appel échouerait (le code ne le protège que pour 'net' nul)."
+    "As long as the network has not called provide, each reader gets an honest empty answer: empty tables, 0, false; busy() returns true.",
+    "busy(): true if the network is not loaded, has roads or junctions pending rebuild (long after a load or a Lua reload) or if a node is being moved; wait for it to be false before placing terrain against the roads.",
+    "Fields expected by provide: roads, groundSegs, surfaces, invalidate, sig, rev, features, heldPastEdge, footwayChanged (plus busy, overRoad, crossingSites, applyCrossings used by the footbridges).",
+    "overRoad calls net.overRoad without an existence test: with a network provided without this function, the call would fail (the code only guards against a nil 'net')."
   ],
   "functions": {
     "provide": {
-      "desc": "Côté réseau : enregistre la table de fonctions du réseau routier. Appelée une fois au chargement de l'outil de route ; tout le reste du module y renvoie.",
-      "params": {"t": {"type": "table", "desc": "Table avec roads, groundSegs, surfaces, invalidate, sig, rev, features, heldPastEdge, footwayChanged, etc."}},
+      "desc": "Network side: registers the road network's function table. Called once when the road tool loads; everything else in the module refers back to it.",
+      "params": {
+        "t": {
+          "type": "table",
+          "desc": "Table with roads, groundSegs, surfaces, invalidate, sig, rev, features, heldPastEdge, footwayChanged, etc."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "roads": {
-      "desc": "Toutes les routes posées, en géométrie plan : id, divPoints, tangents, binormals. Les noeuds de jonction et le reste sont exclus.",
+      "desc": "All placed roads, in plan geometry: id, divPoints, tangents, binormals. Junction nodes and the rest are excluded.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Routes (table vide partagée si le réseau n'est pas fourni)."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Roads (shared empty table if the network is not provided)."
+        }
+      ],
       "internal": false
     },
     "groundSegs": {
-      "desc": "Indique, par segment de divPoint, quels segments d'une route reposent sur le sol (et non sur un tablier ou dans un tunnel) ; les culées de pont comptent comme sol. Renvoie nil si tous les segments sont au sol.",
-      "params": {"road": {"type": "table", "desc": "Route (élément de roads())."}},
-      "returns": [{"type": "table|nil", "desc": "Marqueurs par segment, ou nil."}],
+      "desc": "Indicates, per divPoint segment, which segments of a road rest on the ground (and not on a deck or in a tunnel); bridge abutments count as ground. Returns nil if all segments are on the ground.",
+      "params": {
+        "road": {
+          "type": "table",
+          "desc": "Road (element of roads())."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Per-segment markers, or nil."
+        }
+      ],
       "internal": false
     },
     "surfaces": {
-      "desc": "Tout ce que le réseau a revêtu, en plan : les anneaux fermés de chaussée et de jonction scellée, puis les lignes de bord qui ne délimitent aucune aire propre.",
+      "desc": "Everything the network has paved, in plan: the closed rings of roadway and sealed junction, then the edge lines that bound no area of their own.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Anneaux fermés."}, {"type": "table[]", "desc": "Lignes de bord."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Closed rings."
+        },
+        {
+          "type": "table[]",
+          "desc": "Edge lines."
+        }
+      ],
       "internal": false
     },
     "overRoad": {
-      "desc": "Indique si un anneau tombe sur une surface du réseau. Demandé au réseau plutôt que calculé depuis surfaces, car une jonction est en partie bornée par des lignes.",
-      "params": {"ring": {"type": "table", "desc": "Anneau de points."}},
-      "returns": [{"type": "boolean", "desc": "true si l'anneau recouvre le réseau (false si le réseau n'est pas fourni)."}],
+      "desc": "Tells whether a ring falls on a network surface. Asked of the network rather than computed from surfaces, because a junction is partly bounded by lines.",
+      "params": {
+        "ring": {
+          "type": "table",
+          "desc": "Ring of points."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the ring overlaps the network (false if the network is not provided)."
+        }
+      ],
       "internal": false
     },
     "invalidate": {
-      "desc": "Les surfaces sont mises en cache : cet appel dit au réseau qu'un outil vient de déplacer quelque chose.",
+      "desc": "The surfaces are cached: this call tells the network that a tool has just moved something.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "sig": {
-      "desc": "Compteur incrémenté quand les surfaces du réseau changent, pour qu'un outil remarque qu'une route a bougé sous son terrain.",
+      "desc": "Counter incremented when the network's surfaces change, so that a tool notices that a road has moved under its terrain.",
       "params": {},
-      "returns": [{"type": "number", "desc": "Signature (0 sans réseau)."}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Signature (0 without a network)."
+        }
+      ],
       "internal": false
     },
     "busy": {
-      "desc": "Vrai si les réponses du réseau sont encore en cours de stabilisation (voir notes).",
+      "desc": "True if the network's answers are still stabilizing (see notes).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si le réseau n'est pas prêt."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the network is not ready."
+        }
+      ],
       "internal": false
     },
     "rev": {
-      "desc": "Compteur incrémenté à chaque reconstruction d'une route ou jonction (hauteurs comprises), pour les outils qui posent quelque chose sur la surface d'une route.",
+      "desc": "Counter incremented on each rebuild of a road or junction (heights included), for tools that place something on a road's surface.",
       "params": {},
-      "returns": [{"type": "number", "desc": "Révision (0 sans réseau)."}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Revision (0 without a network)."
+        }
+      ],
       "internal": false
     },
     "features": {
-      "desc": "Ce que le réseau a demandé au terrain : le sol qu'il a nivelé et les structures qu'il y a posées.",
+      "desc": "What the network asked of the terrain: the ground it leveled and the structures it placed there.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Éléments de sol nivelé."}, {"type": "table", "desc": "Éléments de structures."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Leveled ground items."
+        },
+        {
+          "type": "table",
+          "desc": "Structure items."
+        }
+      ],
       "internal": false
     },
     "heldPastEdge": {
-      "desc": "Distance au-delà du bord de la surface d'une route sur laquelle sa pente tient encore le terrain à la hauteur de la route, prioritaire sur ce qu'un site pose là.",
-      "params": {"paved": {"type": "boolean|nil", "desc": "Pour un bas-côté qu'un autre a déclaré trottoir : la route n'y garde pas d'accotement nu."}},
-      "returns": [{"type": "number", "desc": "Distance en mètres (0 sans réseau)."}],
+      "desc": "Distance beyond the edge of a road's surface over which its slope still holds the terrain at the road's height, taking priority over what a site places there.",
+      "params": {
+        "paved": {
+          "type": "boolean|nil",
+          "desc": "For a verge that another tool has declared a sidewalk: the road keeps no bare shoulder there."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Distance in meters (0 without a network)."
+        }
+      ],
       "internal": false
     },
     "crossingSites": {
-      "desc": "Où le réseau poserait un passage piéton : un site sur chaque approche des jonctions qui comptent. Chaque site indique la route, la position le long d'elle et les deux points que sa bande atteindrait. Les sites ayant déjà un passage sont omis.",
+      "desc": "Where the network would place a pedestrian crossing: one site on each approach of the junctions that count. Each site gives the road, the position along it and the two points its strip would reach. Sites that already have a crossing are omitted.",
       "params": {
-        "density": {"type": "number", "desc": "Proportion de sites gardés."},
-        "depthM": {"type": "number", "desc": "Profondeur de la bande (m)."}
+        "density": {
+          "type": "number",
+          "desc": "Proportion of sites kept."
+        },
+        "depthM": {
+          "type": "number",
+          "desc": "Depth of the strip (m)."
+        }
       },
-      "returns": [{"type": "table[]", "desc": "Sites de passage."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Crossing sites."
+        }
+      ],
       "internal": false
     },
     "applyCrossings": {
-      "desc": "Pose les passages voulus par ce propriétaire (liste de sites réduite à ceux retenus) à la place de sa demande précédente. Liste vide : retire ses passages. Les passages posés à la main ou demandés par un autre sont laissés.",
+      "desc": "Places the crossings wanted by this owner (list of sites reduced to those retained) in place of its previous request. Empty list: removes its crossings. Crossings placed by hand or requested by another owner are left alone.",
       "params": {
-        "owner": {"type": "any", "desc": "Nom du propriétaire (nil = rien)."},
-        "list": {"type": "table[]", "desc": "Sites retenus."}
+        "owner": {
+          "type": "any",
+          "desc": "Owner name (nil = nothing)."
+        },
+        "list": {
+          "type": "table[]",
+          "desc": "Retained sites."
+        }
       },
-      "returns": [{"type": "integer", "desc": "Nombre posés."}, {"type": "integer", "desc": "Nombre retirés (0, 0 sans réseau ou sans owner)."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number placed."
+        },
+        {
+          "type": "integer",
+          "desc": "Number removed (0, 0 without a network or without owner)."
+        }
+      ],
       "internal": false
     },
     "publishFootway": {
-      "desc": "Côté outil de pavage : publie les bas-côtés que ce propriétaire a pavés, { [groupId] = { left = spans, right = spans } }, en remplaçant sa publication précédente. Le réseau est prévenu aussitôt (footwayChanged) car le fondu sous les dalles est du terrain peint à repeindre.",
+      "desc": "Paving tool side: publishes the verges this owner has paved, { [groupId] = { left = spans, right = spans } }, replacing its previous publication. The network is notified immediately (footwayChanged) because the blend under the slabs is painted terrain that must be repainted.",
       "params": {
-        "owner": {"type": "any", "desc": "Nom du propriétaire ; nil = sans effet."},
-        "byGroup": {"type": "table", "desc": "Spans gauche/droite par id de groupe de route."}
+        "owner": {
+          "type": "any",
+          "desc": "Owner name; nil = no effect."
+        },
+        "byGroup": {
+          "type": "table",
+          "desc": "Left/right spans per road group id."
+        }
       },
       "returns": [],
       "internal": false
     },
     "footwayFor": {
-      "desc": "Tout ce qui est pavé sur les bas-côtés d'une route, fusionné entre propriétaires. Renvoie nil si personne n'y a pavé (le réseau comprend : peindre le fondu sur toute la longueur).",
-      "params": {"groupId": {"type": "any", "desc": "Id de groupe de la route."}},
-      "returns": [{"type": "table|nil", "desc": "{ left, right } listes de spans, ou nil."}],
+      "desc": "Everything paved on a road's verges, merged across owners. Returns nil if nobody has paved there (the network understands: paint the blend over the whole length).",
+      "params": {
+        "groupId": {
+          "type": "any",
+          "desc": "Road group id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{ left, right } lists of spans, or nil."
+        }
+      ],
       "internal": false
     }
   }

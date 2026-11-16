@@ -2,32 +2,32 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/apps/pointsBar.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Alimente l'app d'interface pointsBar (barre de points avec paliers). Il garde le nombre de points et les paliers (100, 200, 300 par défaut) et publie dans le flux 'pointsBar' le pourcentage de remplissage, le libellé, les paliers atteints et la position des paliers en pourcentage.
---- Accès : extension `ui_apps_pointsBar` : `extensions.load("ui_apps_pointsBar")`, puis la globale `ui_apps_pointsBar`
+--- Feeds the pointsBar interface app (points bar with thresholds). It keeps the point count and the thresholds (100, 200, 300 by default) and publishes in the 'pointsBar' stream the fill percentage, the label, the thresholds reached and the position of the thresholds as a percentage.
+--- Access: extension `ui_apps_pointsBar`: `extensions.load("ui_apps_pointsBar")`, then the global `ui_apps_pointsBar`
 ---@class ui_apps_pointsBar
 ui_apps_pointsBar = {}
 
---- Remet les paliers par défaut {100, 200, 300} et les points à 0.
----Source : lua/ge/extensions/ui/apps/pointsBar.lua:55
+--- Resets the default thresholds {100, 200, 300} and the points to 0.
+---Source: lua/ge/extensions/ui/apps/pointsBar.lua:55
 function ui_apps_pointsBar.clearData() end
 
---- Hook d'initialisation : place l'extension en déchargement manuel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/apps/pointsBar.lua:6
+--- Initialization hook: sets the extension to manual unload.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/apps/pointsBar.lua:6
 function ui_apps_pointsBar.onInit() end
 
---- Republie paliers et points courants (utile quand l'app se monte).
----Source : lua/ge/extensions/ui/apps/pointsBar.lua:60
+--- Republishes thresholds and current points (useful when the app mounts).
+---Source: lua/ge/extensions/ui/apps/pointsBar.lua:60
 function ui_apps_pointsBar.requestAllData() end
 
---- Met à jour les points courants et le libellé, recalcule remplissage et paliers atteints, puis publie dans le flux 'pointsBar'.
----Source : lua/ge/extensions/ui/apps/pointsBar.lua:26
----@param points number Points actuels.
----@param pointsLabel string|nil Texte affiché ; par défaut tostring(points).
+--- Updates the current points and the label, recomputes fill and thresholds reached, then publishes in the 'pointsBar' stream.
+---Source: lua/ge/extensions/ui/apps/pointsBar.lua:26
+---@param points number Current points.
+---@param pointsLabel string|nil Displayed text; defaults to tostring(points).
 function ui_apps_pointsBar.setPoints(points, pointsLabel) end
 
---- Définit la liste des paliers (si fournie), recalcule leur position en pourcentage et publie dans le flux.
----Source : lua/ge/extensions/ui/apps/pointsBar.lua:41
----@param thresholds table<integer, number>|nil Paliers croissants ; le dernier fixe l'échelle.
+--- Sets the threshold list (if provided), recomputes their position as a percentage and publishes in the stream.
+---Source: lua/ge/extensions/ui/apps/pointsBar.lua:41
+---@param thresholds table<integer, number>|nil Increasing thresholds; the last one sets the scale.
 function ui_apps_pointsBar.setThresholds(thresholds) end
 

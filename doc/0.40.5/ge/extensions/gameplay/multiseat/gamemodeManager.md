@@ -1,233 +1,233 @@
 # `gameplay_multiseat_gamemodeManager`
 
-*Fichier : `lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua` · VM : Game Engine (GE) · 722 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua` · VM: Game Engine (GE) · 722 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_multiseat_gamemodeManager` : `extensions.load("gameplay_multiseat_gamemodeManager")`, puis la globale `gameplay_multiseat_gamemodeManager`
+**Access:** extension `gameplay_multiseat_gamemodeManager`: `extensions.load("gameplay_multiseat_gamemodeManager")`, then the global `gameplay_multiseat_gamemodeManager`
 
-Gestionnaire des modes de jeu multi-sièges (écran partagé). Il charge les fournisseurs gameplay/discover/multiseat/*Rules.lua, collecte leurs infos via le hook onGetMultiseatGamemodeInfos, démarre/arrête/relance un mode, gère le fondu, le blocage des actions d'entrée, l'attente des véhicules, ainsi que les écrans de début et de fin (via ui_router et mission.control). Un moddeur qui ajoute un mode multi-sièges passe par lui : il appelle ext.start(settings), ext.onReady(vehicles), ext.stop(), buildStartScreen, buildEndScreen.
+Manager of multiseat game modes (split screen). It loads the gameplay/discover/multiseat/*Rules.lua providers, collects their info via the onGetMultiseatGamemodeInfos hook, starts/stops/restarts a mode, handles the fade, the blocking of input actions, the waiting for vehicles, and the start and end screens (via ui_router and mission.control). A modder adding a multiseat mode goes through it: it calls ext.start(settings), ext.onReady(vehicles), ext.stop(), buildStartScreen, buildEndScreen.
 
-## Exemple
+## Example
 
 ```lua
 gameplay_multiseat_gamemodeManager.start('monMode', nil, {withFade = false})
--- depuis le mode : gameplay_multiseat_gamemodeManager.showEndScreen({winnerPlayer = 0})
+-- from the mode: gameplay_multiseat_gamemodeManager.showEndScreen({winnerPlayer = 0})
 ```
 
-## Remarques
+## Notes
 
-- Phases de gamemodePhase : nil, 'starting', 'waiting', 'running'.
-- start() échoue (false) si le mode est inconnu, sans extensionPath, ou si plus de joueurs que playerCount.max ont rejoint.
-- Changer de véhicule en phase 'running' (hors synchronisation) relance le mode ; les actions vehicleSwitching et walkingMode restent toujours bloquées, les autres seulement si le réglage restrictScenarios est actif.
-- startScreenPendingOnPauseExit n'est jamais mis à true dans ce fichier : playPendingRound renvoie donc toujours false et isStartScreenPending toujours false.
-- Après VEHICLE_READY_TIMEOUT (5 s), le mode continue même si les véhicules ne sont pas prêts.
-- Durée du fondu : 0,35 s (FADE_DURATION).
+- gamemodePhase phases: nil, 'starting', 'waiting', 'running'.
+- start() fails (false) if the mode is unknown, has no extensionPath, or if more players than playerCount.max have joined.
+- Switching vehicles in the 'running' phase (outside synchronization) restarts the mode; the vehicleSwitching and walkingMode actions always stay blocked, the others only if the restrictScenarios setting is active.
+- startScreenPendingOnPauseExit is never set to true in this file: playPendingRound therefore always returns false and isStartScreenPending always false.
+- After VEHICLE_READY_TIMEOUT (5 s), the mode continues even if the vehicles are not ready.
+- Fade duration: 0.35 s (FADE_DURATION).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_multiseat_gamemodeManager.deferReady()` | Passe la phase de 'starting' à 'waiting' : le mode annonce qu'il notifiera lui-même qu'il est prêt avec notifyReady. | 372 |
-| `gameplay_multiseat_gamemodeManager.getGamemodeId()` | Nom du mode en cours. | 503 |
-| `gameplay_multiseat_gamemodeManager.getMaxPlayers()` | Nombre maximal de joueurs du mode en cours (info.playerCount.max). | 507 |
-| `gameplay_multiseat_gamemodeManager.getPhase()` | Phase actuelle du mode. | 512 |
-| `gameplay_multiseat_gamemodeManager.getPlayerName(playerIndex)` | Nom affiché du joueur local d'index donné, d'après le persona du participant rejoint. | 128 |
-| `gameplay_multiseat_gamemodeManager.getVehiclePool()` | Renvoie info.vehiclePool du mode en cours. | 394 |
-| `gameplay_multiseat_gamemodeManager.goToMainMenu()` | Retourne au menu principal (returnToMainMenu). | 319 |
-| `gameplay_multiseat_gamemodeManager.isActive()` | Indique si un mode est en cours. | 499 |
-| `gameplay_multiseat_gamemodeManager.isStartScreenPending()` | Indique si l'écran de début est en attente de la sortie de pause (la variable n'est jamais mise à true dans ce fichier). | 516 |
-| `gameplay_multiseat_gamemodeManager.notifyReady()` | Passe en phase 'running', termine le fondu s'il est actif et exécute le callback défini par setReadyCallback. Sans effet hors phases 'starting'/'waiting'. | 378 |
-| `gameplay_multiseat_gamemodeManager.onAfterRouteChange(context)` | Hook après changement de route UI : si un écran de début est en attente et que la route cible est 'play' ou 'multiseat', le joue. *(interne)* *(hook)* | 591 |
-| `gameplay_multiseat_gamemodeManager.onClientEndMission()` | Hook de fin de niveau : arrête le mode sans réactiver le freeroam. *(interne)* *(hook)* | 686 |
-| `gameplay_multiseat_gamemodeManager.onExtensionUnloaded()` | Hook de déchargement : débloque les actions, appelle ext.stop() et réinitialise tout l'état, y compris le registre des modes. *(interne)* *(hook)* | 599 |
-| `gameplay_multiseat_gamemodeManager.onGetIsMissionStartOrEndScreenActive(screensActive)` | Hook : ajoute le mode d'écran actif à la liste screensActive. *(interne)* *(hook)* | 581 |
-| `gameplay_multiseat_gamemodeManager.onLoadingScreenFadeout()` | Hook vide : le flux « véhicules prêts » d'onPreRender gère déjà la transition. *(interne)* *(hook)* | 587 |
-| `gameplay_multiseat_gamemodeManager.onMissionScreenButtonClicked(button)` | Hook : exécute le callback du bouton cliqué (mgrId 'multiseatGamemode'). Pour l'écran de fin, immédiatement ; pour l'écran de début, après retour à la route multiseat, onUIStartButtonClicked et 0,1 s de délai. *(interne)* *(hook)* | 557 |
-| `gameplay_multiseat_gamemodeManager.onMultiseatSettingsApplied(changeSet, result)` | Hook après application des réglages multi-sièges : relance le mode si changeSet.requiresRestart et si l'application a réussi sans exitAfterApply. *(interne)* *(hook)* | 681 |
-| `gameplay_multiseat_gamemodeManager.onPauseHomeRailBuildMultiseatActions(actions, context, registerButton)` | Hook de construction du menu pause multi-sièges : ajoute le bouton Modes de jeu s'il n'y a pas de mode actif, sinon Réglages, Quitter et Relancer le mode. *(interne)* *(hook)* | 624 |
-| `gameplay_multiseat_gamemodeManager.onPreRender(dtReal, dtSim)` | Appelé chaque image. En phase 'waiting' avec véhicules en attente : attend qu'ils soient prêts (ou le délai de 5 s), notifie prêt, appelle ext.onReady(vehicles), gèle les véhicules puis affiche l'écran de début. *(interne)* *(hook)* | 533 |
-| `gameplay_multiseat_gamemodeManager.onRequestMissionScreenData(mode)` | Hook : quand l'UI demande les données d'écran de mission (mode ne contenant pas 'test'), renvoie l'écran actif via onRequestMissionScreenDataReady et émet onMissionScreenReady. *(interne)* *(hook)* | 550 |
-| `gameplay_multiseat_gamemodeManager.onScreenFadeState(state)` | Hook de fondu d'écran : quand state vaut 1 (écran noir) et qu'un lancement est différé, lance le mode. *(interne)* *(hook)* | 527 |
-| `gameplay_multiseat_gamemodeManager.onVehicleSwitched(oldId, newId, player)` | Hook de changement de véhicule : relance le mode si en phase 'running' et hors synchronisation des véhicules. *(interne)* *(hook)* | 675 |
-| `gameplay_multiseat_gamemodeManager.playPendingRound()` | Affiche l'écran de début s'il était en attente. | 520 |
-| `gameplay_multiseat_gamemodeManager.requestGamemodeData()` | Envoie à l'UI (guihooks OnGamemodeData, context 'multiseat') la liste des modes disponibles, le mode en cours, ses réglages et la liste des joueurs. Les modes mapUnsupported ou dépassant le nombre de joueurs sont comptés mais non listés. | 144 |
-| `gameplay_multiseat_gamemodeManager.restart(name, settings)` | Relance le mode (celui en cours si name est nil) avec fondu. Si le mode demandé n'est pas le mode actif, appelle start. | 481 |
-| `gameplay_multiseat_gamemodeManager.setReadyCallback(callback)` | Définit une fonction appelée une fois, quand le mode passe à la phase 'running' (notifyReady). | 368 |
-| `gameplay_multiseat_gamemodeManager.shouldAssignVehiclePool()` | Indique si le démarrage a été demandé avec options.assignVehiclePool = true. | 399 |
-| `gameplay_multiseat_gamemodeManager.showEndScreen(resultData)` | Affiche l'écran de fin : émet onMultiseatGamemodeFinished, met le temps de simulation en pause, puis construit l'écran à partir de resultData et des surcharges de buildEndScreen du mode (header, headerColor, body, layout, pages, buttons). Par défaut : boutons Rejouer, Freeroam, Menu principal. | 252 |
-| `gameplay_multiseat_gamemodeManager.start(name, settings, options)` | Démarre un mode : charge ui_multiseat_freeroam, arrête le mode précédent, charge l'extension du mode (info.extensionPath), lui assigne ext.info, retient les réglages (défauts de info.settings si nil), désactive le freeroam multi-sièges puis lance le mode (avec fondu sauf options.withFade == false). | 432 |
-| `gameplay_multiseat_gamemodeManager.stop()` | Arrête le mode en cours, appelle ext.stop() et réactive le freeroam multi-sièges (ui_multiseat_freeroam.activate). | 364 |
+| `gameplay_multiseat_gamemodeManager.deferReady()` | Moves the phase from 'starting' to 'waiting': the mode announces that it will itself notify when it is ready with notifyReady. | 372 |
+| `gameplay_multiseat_gamemodeManager.getGamemodeId()` | Name of the current mode. | 503 |
+| `gameplay_multiseat_gamemodeManager.getMaxPlayers()` | Maximum number of players of the current mode (info.playerCount.max). | 507 |
+| `gameplay_multiseat_gamemodeManager.getPhase()` | Current phase of the mode. | 512 |
+| `gameplay_multiseat_gamemodeManager.getPlayerName(playerIndex)` | Display name of the local player with the given index, based on the joined participant's persona. | 128 |
+| `gameplay_multiseat_gamemodeManager.getVehiclePool()` | Returns info.vehiclePool of the current mode. | 394 |
+| `gameplay_multiseat_gamemodeManager.goToMainMenu()` | Returns to the main menu (returnToMainMenu). | 319 |
+| `gameplay_multiseat_gamemodeManager.isActive()` | Indicates whether a mode is running. | 499 |
+| `gameplay_multiseat_gamemodeManager.isStartScreenPending()` | Indicates whether the start screen is waiting for the pause to end (the variable is never set to true in this file). | 516 |
+| `gameplay_multiseat_gamemodeManager.notifyReady()` | Moves to the 'running' phase, ends the fade if active and runs the callback set by setReadyCallback. Has no effect outside the 'starting'/'waiting' phases. | 378 |
+| `gameplay_multiseat_gamemodeManager.onAfterRouteChange(context)` | Hook after a UI route change: if a start screen is pending and the target route is 'play' or 'multiseat', plays it. *(internal)* *(hook)* | 591 |
+| `gameplay_multiseat_gamemodeManager.onClientEndMission()` | End-of-level hook: stops the mode without reactivating freeroam. *(internal)* *(hook)* | 686 |
+| `gameplay_multiseat_gamemodeManager.onExtensionUnloaded()` | Unload hook: unblocks the actions, calls ext.stop() and resets all state, including the mode registry. *(internal)* *(hook)* | 599 |
+| `gameplay_multiseat_gamemodeManager.onGetIsMissionStartOrEndScreenActive(screensActive)` | Hook: adds the active screen mode to the screensActive list. *(internal)* *(hook)* | 581 |
+| `gameplay_multiseat_gamemodeManager.onLoadingScreenFadeout()` | Empty hook: the "vehicles ready" flow of onPreRender already handles the transition. *(internal)* *(hook)* | 587 |
+| `gameplay_multiseat_gamemodeManager.onMissionScreenButtonClicked(button)` | Hook: runs the callback of the clicked button (mgrId 'multiseatGamemode'). For the end screen, immediately; for the start screen, after returning to the multiseat route, onUIStartButtonClicked and a 0.1 s delay. *(internal)* *(hook)* | 557 |
+| `gameplay_multiseat_gamemodeManager.onMultiseatSettingsApplied(changeSet, result)` | Hook after multiseat settings are applied: restarts the mode if changeSet.requiresRestart and if the application succeeded without exitAfterApply. *(internal)* *(hook)* | 681 |
+| `gameplay_multiseat_gamemodeManager.onPauseHomeRailBuildMultiseatActions(actions, context, registerButton)` | Multiseat pause menu build hook: adds the Game modes button if there is no active mode, otherwise Settings, Quit and Restart mode. *(internal)* *(hook)* | 624 |
+| `gameplay_multiseat_gamemodeManager.onPreRender(dtReal, dtSim)` | Called every frame. In the 'waiting' phase with vehicles pending: waits for them to be ready (or the 5 s timeout), notifies ready, calls ext.onReady(vehicles), freezes the vehicles then shows the start screen. *(internal)* *(hook)* | 533 |
+| `gameplay_multiseat_gamemodeManager.onRequestMissionScreenData(mode)` | Hook: when the UI requests the mission screen data (mode not containing 'test'), returns the active screen via onRequestMissionScreenDataReady and emits onMissionScreenReady. *(internal)* *(hook)* | 550 |
+| `gameplay_multiseat_gamemodeManager.onScreenFadeState(state)` | Screen fade hook: when state is 1 (black screen) and a launch is deferred, launches the mode. *(internal)* *(hook)* | 527 |
+| `gameplay_multiseat_gamemodeManager.onVehicleSwitched(oldId, newId, player)` | Vehicle switch hook: restarts the mode if in the 'running' phase and outside vehicle synchronization. *(internal)* *(hook)* | 675 |
+| `gameplay_multiseat_gamemodeManager.playPendingRound()` | Shows the start screen if it was pending. | 520 |
+| `gameplay_multiseat_gamemodeManager.requestGamemodeData()` | Sends the UI (guihooks OnGamemodeData, context 'multiseat') the list of available modes, the current mode, its settings and the list of players. Modes that are mapUnsupported or exceed the number of players are counted but not listed. | 144 |
+| `gameplay_multiseat_gamemodeManager.restart(name, settings)` | Restarts the mode (the current one if name is nil) with fade. If the requested mode is not the active mode, calls start. | 481 |
+| `gameplay_multiseat_gamemodeManager.setReadyCallback(callback)` | Sets a function called once, when the mode enters the 'running' phase (notifyReady). | 368 |
+| `gameplay_multiseat_gamemodeManager.shouldAssignVehiclePool()` | Indicates whether the start was requested with options.assignVehiclePool = true. | 399 |
+| `gameplay_multiseat_gamemodeManager.showEndScreen(resultData)` | Shows the end screen: emits onMultiseatGamemodeFinished, pauses the simulation time, then builds the screen from resultData and the mode's buildEndScreen overrides (header, headerColor, body, layout, pages, buttons). By default: Replay, Freeroam, Main menu buttons. | 252 |
+| `gameplay_multiseat_gamemodeManager.start(name, settings, options)` | Starts a mode: loads ui_multiseat_freeroam, stops the previous mode, loads the mode's extension (info.extensionPath), assigns it ext.info, stores the settings (info.settings defaults if nil), disables multiseat freeroam then launches the mode (with fade unless options.withFade == false). | 432 |
+| `gameplay_multiseat_gamemodeManager.stop()` | Stops the current mode, calls ext.stop() and reactivates multiseat freeroam (ui_multiseat_freeroam.activate). | 364 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_multiseat_gamemodeManager.getGamemodeId()`
 
-Nom du mode en cours.
+Name of the current mode.
 
-- **renvoie** : string|nil Nom, ou nil.
+- **returns**: string|nil Name, or nil.
 
 #### `gameplay_multiseat_gamemodeManager.getMaxPlayers()`
 
-Nombre maximal de joueurs du mode en cours (info.playerCount.max).
+Maximum number of players of the current mode (info.playerCount.max).
 
-- **renvoie** : integer|nil Maximum, ou nil.
+- **returns**: integer|nil Maximum, or nil.
 
 #### `gameplay_multiseat_gamemodeManager.getPhase()`
 
-Phase actuelle du mode.
+Current phase of the mode.
 
-- **renvoie** : string|nil nil, 'starting', 'waiting' ou 'running'.
+- **returns**: string|nil nil, 'starting', 'waiting' or 'running'.
 
 #### `gameplay_multiseat_gamemodeManager.getPlayerName(playerIndex)`
 
-Nom affiché du joueur local d'index donné, d'après le persona du participant rejoint.
+Display name of the local player with the given index, based on the joined participant's persona.
 
-- `playerIndex` (*integer*) : Index du joueur (à partir de 0).
-- **renvoie** : string|nil displayName, ou nil si inconnu.
+- `playerIndex` (*integer*) : Player index (0-based).
+- **returns**: string|nil displayName, or nil if unknown.
 
 #### `gameplay_multiseat_gamemodeManager.getVehiclePool()`
 
-Renvoie info.vehiclePool du mode en cours.
+Returns info.vehiclePool of the current mode.
 
-- **renvoie** : table|nil Pool de véhicules déclaré par le mode.
+- **returns**: table|nil Vehicle pool declared by the mode.
 
 #### `gameplay_multiseat_gamemodeManager.isActive()`
 
-Indique si un mode est en cours.
+Indicates whether a mode is running.
 
-- **renvoie** : boolean true si un mode est actif.
+- **returns**: boolean true if a mode is active.
 
 #### `gameplay_multiseat_gamemodeManager.isStartScreenPending()`
 
-Indique si l'écran de début est en attente de la sortie de pause (la variable n'est jamais mise à true dans ce fichier).
+Indicates whether the start screen is waiting for the pause to end (the variable is never set to true in this file).
 
-- **renvoie** : boolean Toujours false en pratique.
+- **returns**: boolean Always false in practice.
 
 #### `gameplay_multiseat_gamemodeManager.onAfterRouteChange(context)`
 
-Hook après changement de route UI : si un écran de début est en attente et que la route cible est 'play' ou 'multiseat', le joue.
+Hook after a UI route change: if a start screen is pending and the target route is 'play' or 'multiseat', plays it.
 
-- `context` (*table*) : Contient toRoute.name.
+- `context` (*table*) : Contains toRoute.name.
 
 #### `gameplay_multiseat_gamemodeManager.onGetIsMissionStartOrEndScreenActive(screensActive)`
 
-Hook : ajoute le mode d'écran actif à la liste screensActive.
+Hook: adds the active screen mode to the screensActive list.
 
-- `screensActive` (*string[]*) : Liste remplie en place.
+- `screensActive` (*string[]*) : List filled in place.
 
 #### `gameplay_multiseat_gamemodeManager.onMissionScreenButtonClicked(button)`
 
-Hook : exécute le callback du bouton cliqué (mgrId 'multiseatGamemode'). Pour l'écran de fin, immédiatement ; pour l'écran de début, après retour à la route multiseat, onUIStartButtonClicked et 0,1 s de délai.
+Hook: runs the callback of the clicked button (mgrId 'multiseatGamemode'). For the end screen, immediately; for the start screen, after returning to the multiseat route, onUIStartButtonClicked and a 0.1 s delay.
 
-- `button` (*table*) : Bouton avec mgrId et funId.
+- `button` (*table*) : Button with mgrId and funId.
 
 #### `gameplay_multiseat_gamemodeManager.onMultiseatSettingsApplied(changeSet, result)`
 
-Hook après application des réglages multi-sièges : relance le mode si changeSet.requiresRestart et si l'application a réussi sans exitAfterApply.
+Hook after multiseat settings are applied: restarts the mode if changeSet.requiresRestart and if the application succeeded without exitAfterApply.
 
-- `changeSet` (*table*) : Changements (requiresRestart).
-- `result` (*table*) : Résultat (success, exitAfterApply).
+- `changeSet` (*table*) : Changes (requiresRestart).
+- `result` (*table*) : Result (success, exitAfterApply).
 
 #### `gameplay_multiseat_gamemodeManager.onPauseHomeRailBuildMultiseatActions(actions, context, registerButton)`
 
-Hook de construction du menu pause multi-sièges : ajoute le bouton Modes de jeu s'il n'y a pas de mode actif, sinon Réglages, Quitter et Relancer le mode.
+Multiseat pause menu build hook: adds the Game modes button if there is no active mode, otherwise Settings, Quit and Restart mode.
 
-- `actions` (*table[]*) : Liste d'actions à compléter.
-- `context` (*table*) : Contexte (inutilisé).
-- `registerButton` (*function*) : Fonction qui enregistre un bouton et son callback.
+- `actions` (*table[]*) : List of actions to complete.
+- `context` (*table*) : Context (unused).
+- `registerButton` (*function*) : Function that registers a button and its callback.
 
 #### `gameplay_multiseat_gamemodeManager.onPreRender(dtReal, dtSim)`
 
-Appelé chaque image. En phase 'waiting' avec véhicules en attente : attend qu'ils soient prêts (ou le délai de 5 s), notifie prêt, appelle ext.onReady(vehicles), gèle les véhicules puis affiche l'écran de début.
+Called every frame. In the 'waiting' phase with vehicles pending: waits for them to be ready (or the 5 s timeout), notifies ready, calls ext.onReady(vehicles), freezes the vehicles then shows the start screen.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
 
 #### `gameplay_multiseat_gamemodeManager.onRequestMissionScreenData(mode)`
 
-Hook : quand l'UI demande les données d'écran de mission (mode ne contenant pas 'test'), renvoie l'écran actif via onRequestMissionScreenDataReady et émet onMissionScreenReady.
+Hook: when the UI requests the mission screen data (mode not containing 'test'), returns the active screen via onRequestMissionScreenDataReady and emits onMissionScreenReady.
 
-- `mode` (*string*) : Mode d'écran demandé.
+- `mode` (*string*) : Requested screen mode.
 
 #### `gameplay_multiseat_gamemodeManager.onScreenFadeState(state)`
 
-Hook de fondu d'écran : quand state vaut 1 (écran noir) et qu'un lancement est différé, lance le mode.
+Screen fade hook: when state is 1 (black screen) and a launch is deferred, launches the mode.
 
-- `state` (*integer*) : État du fondu ; 1 = totalement fondu.
+- `state` (*integer*) : Fade state; 1 = fully faded.
 
 #### `gameplay_multiseat_gamemodeManager.onVehicleSwitched(oldId, newId, player)`
 
-Hook de changement de véhicule : relance le mode si en phase 'running' et hors synchronisation des véhicules.
+Vehicle switch hook: restarts the mode if in the 'running' phase and outside vehicle synchronization.
 
-- `oldId` (*integer*) : Ancien id de véhicule.
-- `newId` (*integer*) : Nouvel id.
-- `player` (*integer*) : Joueur concerné.
+- `oldId` (*integer*) : Old vehicle id.
+- `newId` (*integer*) : New id.
+- `player` (*integer*) : Player concerned.
 
 #### `gameplay_multiseat_gamemodeManager.playPendingRound()`
 
-Affiche l'écran de début s'il était en attente.
+Shows the start screen if it was pending.
 
-- **renvoie** : boolean true si l'écran a été affiché.
+- **returns**: boolean true if the screen was shown.
 
 #### `gameplay_multiseat_gamemodeManager.restart(name, settings)`
 
-Relance le mode (celui en cours si name est nil) avec fondu. Si le mode demandé n'est pas le mode actif, appelle start.
+Restarts the mode (the current one if name is nil) with fade. If the requested mode is not the active mode, calls start.
 
-- `name` (*string|nil*) : Mode à relancer.
-- `settings` (*table|nil*) : Nouveaux réglages ; nil = garder les actuels.
-- **renvoie** : boolean false s'il n'y a aucun mode à relancer.
+- `name` (*string|nil*) : Mode to restart.
+- `settings` (*table|nil*) : New settings; nil = keep the current ones.
+- **returns**: boolean false if there is no mode to restart.
 
 #### `gameplay_multiseat_gamemodeManager.setReadyCallback(callback)`
 
-Définit une fonction appelée une fois, quand le mode passe à la phase 'running' (notifyReady).
+Sets a function called once, when the mode enters the 'running' phase (notifyReady).
 
-- `callback` (*function|nil*) : Fonction sans argument.
+- `callback` (*function|nil*) : Function with no argument.
 
 #### `gameplay_multiseat_gamemodeManager.shouldAssignVehiclePool()`
 
-Indique si le démarrage a été demandé avec options.assignVehiclePool = true.
+Indicates whether the start was requested with options.assignVehiclePool = true.
 
-- **renvoie** : boolean true si le pool doit être assigné.
+- **returns**: boolean true if the pool must be assigned.
 
 #### `gameplay_multiseat_gamemodeManager.showEndScreen(resultData)`
 
-Affiche l'écran de fin : émet onMultiseatGamemodeFinished, met le temps de simulation en pause, puis construit l'écran à partir de resultData et des surcharges de buildEndScreen du mode (header, headerColor, body, layout, pages, buttons). Par défaut : boutons Rejouer, Freeroam, Menu principal.
+Shows the end screen: emits onMultiseatGamemodeFinished, pauses the simulation time, then builds the screen from resultData and the mode's buildEndScreen overrides (header, headerColor, body, layout, pages, buttons). By default: Replay, Freeroam, Main menu buttons.
 
-- `resultData` (*table|nil*) : Champs lus : title, tied, winnerPlayer (index), text.
+- `resultData` (*table|nil*) : Fields read: title, tied, winnerPlayer (index), text.
 
 #### `gameplay_multiseat_gamemodeManager.start(name, settings, options)`
 
-Démarre un mode : charge ui_multiseat_freeroam, arrête le mode précédent, charge l'extension du mode (info.extensionPath), lui assigne ext.info, retient les réglages (défauts de info.settings si nil), désactive le freeroam multi-sièges puis lance le mode (avec fondu sauf options.withFade == false).
+Starts a mode: loads ui_multiseat_freeroam, stops the previous mode, loads the mode's extension (info.extensionPath), assigns it ext.info, stores the settings (info.settings defaults if nil), disables multiseat freeroam then launches the mode (with fade unless options.withFade == false).
 
-- `name` (*string*) : Nom du mode dans le registre.
-- `settings` (*table|nil*) : Réglages ; nil = valeurs par défaut.
-- `options` (*table|nil*) : withFade (boolean, false = sans fondu), assignVehiclePool (boolean).
-- **renvoie** : boolean true si le lancement est démarré, false en cas d'erreur.
+- `name` (*string*) : Mode name in the registry.
+- `settings` (*table|nil*) : Settings; nil = default values.
+- `options` (*table|nil*) : withFade (boolean, false = no fade), assignVehiclePool (boolean).
+- **returns**: boolean true if the launch is started, false on error.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `ModuleName` | string | Nom du module : 'gamemodeManager'. |
+| `ModuleName` | string | Module name: 'gamemodeManager'. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onGetMultiseatGamemodeInfos`
-- `onMissionScreenReady` — écouté par 1 module(s)
-- `onMultiseatGamemodeFinished` — écouté par 1 module(s)
-- `onMultiseatGamemodeLaunched` — écouté par 1 module(s)
-- `onMultiseatGamemodeStopped` — écouté par 1 module(s)
-- `onStartScreenFinishedBuilding` — écouté par 1 module(s)
-- `onUIStartButtonClicked` — écouté par 2 module(s)
+- `onMissionScreenReady` — listened to by 1 module(s)
+- `onMultiseatGamemodeFinished` — listened to by 1 module(s)
+- `onMultiseatGamemodeLaunched` — listened to by 1 module(s)
+- `onMultiseatGamemodeStopped` — listened to by 1 module(s)
+- `onStartScreenFinishedBuilding` — listened to by 1 module(s)
+- `onUIStartButtonClicked` — listened to by 2 module(s)
 
-**Évènements UI (guihooks.trigger) :** `OnGamemodeData`, `onRequestMissionScreenDataReady`
+**UI events (guihooks.trigger):** `OnGamemodeData`, `onRequestMissionScreenDataReady`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`
 
-**Charge les extensions :** `ui_multiseat_freeroam`
+**Loads extensions:** `ui_multiseat_freeroam`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua`.*

@@ -1,50 +1,50 @@
 # `ui_pause_providers_routeData_gamemodes`
 
-*Fichier : `lua/ge/extensions/ui/pause/providers/routeData/gamemodes.lua` · VM : Game Engine (GE) · 53 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/pause/providers/routeData/gamemodes.lua` · VM: Game Engine (GE) · 53 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_pause_providers_routeData_gamemodes` : `extensions.load("ui_pause_providers_routeData_gamemodes")`, puis la globale `ui_pause_providers_routeData_gamemodes`
+**Access:** extension `ui_pause_providers_routeData_gamemodes`: `extensions.load("ui_pause_providers_routeData_gamemodes")`, then the global `ui_pause_providers_routeData_gamemodes`
 
-Fournisseur de données du menu pause pour les modes de jeu multijoueur : liste des modes (composant GamemodesTab), configuration d'un mode (GamemodeSetupView) et réglages du mode en cours (GamemodeSettingsView). Si le multijoueur est actif, il ajoute la liste des joueurs en panneau latéral via routeData_multiplayer.
+Pause menu data provider for multiplayer game modes: list of modes (GamemodesTab component), configuration of a mode (GamemodeSetupView) and settings of the current mode (GamemodeSettingsView). If multiplayer is active, it adds the player list as a side panel via routeData_multiplayer.
 
-**Dépendances (chargées avant) :** `ui_pause_providers_routeData_multiplayer`
+**Dependencies (loaded first):** `ui_pause_providers_routeData_multiplayer`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_pause_providers_routeData_gamemodes.getGamemodeSettingsData(context)` | Renvoie la vue des réglages du mode en cours (GamemodeSettingsView). | 42 |
-| `ui_pause_providers_routeData_gamemodes.getGamemodeSetupData(context, params)` | Renvoie la vue de configuration d'un mode (GamemodeSetupView, prop gamemodeName). | 25 |
-| `ui_pause_providers_routeData_gamemodes.getGamemodesData(context)` | Renvoie le panneau principal GamemodesTab et, si context.isMultiplayerActive, le panneau latéral de la liste des joueurs. | 16 |
+| `ui_pause_providers_routeData_gamemodes.getGamemodeSettingsData(context)` | Returns the settings view of the current mode (GamemodeSettingsView). | 42 |
+| `ui_pause_providers_routeData_gamemodes.getGamemodeSetupData(context, params)` | Returns the configuration view of a mode (GamemodeSetupView, prop gamemodeName). | 25 |
+| `ui_pause_providers_routeData_gamemodes.getGamemodesData(context)` | Returns the GamemodesTab main panel and, if context.isMultiplayerActive, the player list side panel. | 16 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_pause_providers_routeData_gamemodes.getGamemodeSettingsData(context)`
 
-Renvoie la vue des réglages du mode en cours (GamemodeSettingsView).
+Returns the settings view of the current mode (GamemodeSettingsView).
 
-- `context` (*table*) : Contexte pause.
-- **renvoie** : table {mainCardClass, mainPanelContent, sidePanelContents}
+- `context` (*table*) : Pause context.
+- **returns**: table {mainCardClass, mainPanelContent, sidePanelContents}
 
 #### `ui_pause_providers_routeData_gamemodes.getGamemodeSetupData(context, params)`
 
-Renvoie la vue de configuration d'un mode (GamemodeSetupView, prop gamemodeName).
+Returns the configuration view of a mode (GamemodeSetupView, prop gamemodeName).
 
-- `context` (*table*) : Contexte pause.
-- `params` (*table|nil*) : Champ lu : gamemodeName.
-- **renvoie** : table {mainCardClass, mainPanelContent, sidePanelContents}
+- `context` (*table*) : Pause context.
+- `params` (*table|nil*) : Field read: gamemodeName.
+- **returns**: table {mainCardClass, mainPanelContent, sidePanelContents}
 
 #### `ui_pause_providers_routeData_gamemodes.getGamemodesData(context)`
 
-Renvoie le panneau principal GamemodesTab et, si context.isMultiplayerActive, le panneau latéral de la liste des joueurs.
+Returns the GamemodesTab main panel and, if context.isMultiplayerActive, the player list side panel.
 
-- `context` (*table*) : Contexte pause (champ lu : isMultiplayerActive).
-- **renvoie** : table {mainPanelContent, sidePanelContents}
+- `context` (*table*) : Pause context (field read: isMultiplayerActive).
+- **returns**: table {mainPanelContent, sidePanelContents}
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {"ui_pause_providers_routeData_multiplayer"} |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/pause/providers/routeData/gamemodes.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/pause/providers/routeData/gamemodes.lua`.*

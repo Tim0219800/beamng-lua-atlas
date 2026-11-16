@@ -1,101 +1,101 @@
 # `editor_rallyEditor_drivelineEditSurface`
 
-*Fichier : `lua/ge/extensions/editor/rallyEditor/drivelineEditSurface.lua` · VM : Game Engine (GE) · 326 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/rallyEditor/drivelineEditSurface.lua` · VM: Game Engine (GE) · 326 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_rallyEditor_drivelineEditSurface` : `extensions.load("editor_rallyEditor_drivelineEditSurface")`, puis la globale `editor_rallyEditor_drivelineEditSurface`
+**Access:** extension `editor_rallyEditor_drivelineEditSurface`: `extensions.load("editor_rallyEditor_drivelineEditSurface")`, then the global `editor_rallyEditor_drivelineEditSurface`
 
-Boîte à outils d'édition de la spline de driveline (ligne de conduite de rallye) pour l'éditeur de rallye. Toutes les fonctions prennent un « host » (la fenêtre qui possède host.drivelineV3, host.selectedNodeIdx, host.dragState, host.path) et une table optionnelle opts de callbacks (onBeforeMutation, onSplineMutated, onCommit, onHistoryRestore, inputBlocked/isInputBlocked, generateFinal). handleSplineInteraction gère la souris : survoler/déplacer un nœud (clic glissé), insérer un nœud sur la courbe, ajouter un nœud au début ou à la fin (le plus proche), supprimer le nœud sélectionné avec la touche Suppr (si plus de 2 nœuds). Chaque modification est enregistrée dans editor.history avec une copie profonde avant/après de la spline (nodes, widths, nmls).
+Editing toolbox for the driveline spline (rally driving line) for the rally editor. All functions take a "host" (the window that owns host.drivelineV3, host.selectedNodeIdx, host.dragState, host.path) and an optional opts table of callbacks (onBeforeMutation, onSplineMutated, onCommit, onHistoryRestore, inputBlocked/isInputBlocked, generateFinal). handleSplineInteraction handles the mouse: hover/move a node (click-drag), insert a node on the curve, add a node at the start or end (the nearest), delete the selected node with the Delete key (if more than 2 nodes). Each change is recorded in editor.history with a deep before/after copy of the spline (nodes, widths, nmls).
 
-## Remarques
+## Notes
 
-- Un nœud déplacé est recollé à la surface via zSnap.snapDrivelineInPlace (options useRaycast et vertRayRaise des propriétés du driveline).
-- La tolérance de sélection d'un nœud au rayon souris est 0.5 + 0.15 × racine(distance caméra) mètres.
-- Un nouveau nœud inséré reçoit la largeur drivelineUtil.defaultSplineWidth et la normale moyenne des deux nœuds voisins ; un nœud ajouté en bout reprend la largeur et la normale du nœud d'extrémité.
-- saveFinalDriveline échoue (journal E, renvoie false) s'il y a moins de 2 nœuds, pas de host.path ou pas de dossier de mission.
+- A moved node is snapped back to the surface via zSnap.snapDrivelineInPlace (options useRaycast and vertRayRaise from the driveline properties).
+- The tolerance for selecting a node with the mouse ray is 0.5 + 0.15 × sqrt(camera distance) meters.
+- A newly inserted node receives the width drivelineUtil.defaultSplineWidth and the average normal of the two neighboring nodes; a node added at an end takes the width and normal of the end node.
+- saveFinalDriveline fails (E log, returns false) if there are fewer than 2 nodes, no host.path or no mission folder.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_rallyEditor_drivelineEditSurface.commitSplineEdit(host, actionName, oldSpline, opts)` | Enregistre dans editor.history une action avec l'ancienne spline et une copie de l'actuelle ; l'annulation et le rétablissement appellent onHistoryRestore(host, actionName, 'undo'\|'redo') s'il est fourni. Appelle ensuite opts.onCommit. | 82 |
-| `editor_rallyEditor_drivelineEditSurface.createFinalDriveline(host)` | Génère le driveline final à partir de la spline (drivelineV3:createDrivelineFromSpline). | 135 |
-| `editor_rallyEditor_drivelineEditSurface.handleSplineInteraction(host, opts)` | À appeler à chaque frame : gère la souris sur la spline (survol, glisser d'un nœud, insertion, ajout, suppression avec Suppr). Ne fait rien si ImGui capture la souris, si l'entrée est bloquée ou si la souris n'est pas sur la carte. | 162 |
-| `editor_rallyEditor_drivelineEditSurface.redoSplineEdit(host, data)` | Rétablit une édition : restaure data.new. | 77 |
-| `editor_rallyEditor_drivelineEditSurface.refreshSplineGeometry(host, opts)` | Si la spline est sale et a au moins 2 nœuds, recalcule sa géométrie, régénère le driveline final (sauf si opts.generateFinal == false) et appelle onSplineMutated. | 100 |
-| `editor_rallyEditor_drivelineEditSurface.restoreSpline(host, saved)` | Remplace le contenu de la spline du host (nodes, widths, nmls) par une copie sauvegardée, la marque sale puis recalcule la géométrie et le driveline final. | 48 |
-| `editor_rallyEditor_drivelineEditSurface.saveFinalDriveline(host)` | Enregistre la spline dans un fichier du dossier de mission du carnet de notes (drivelineV3:saveSplineToFile) après vérification des prérequis. | 140 |
-| `editor_rallyEditor_drivelineEditSurface.simplifySpline(host, tolerance, opts)` | Simplifie la spline (algorithme Ramer-Douglas-Peucker sur nœuds, largeurs et normales) avec une tolérance, met à jour la géométrie et enregistre l'action « Simplify Spline ». Sans effet avec 2 nœuds ou moins. | 115 |
-| `editor_rallyEditor_drivelineEditSurface.undoSplineEdit(host, data)` | Annule une édition : restaure data.old. | 72 |
+| `editor_rallyEditor_drivelineEditSurface.commitSplineEdit(host, actionName, oldSpline, opts)` | Records in editor.history an action with the old spline and a copy of the current one; undo and redo call onHistoryRestore(host, actionName, 'undo'\|'redo') if provided. Then calls opts.onCommit. | 82 |
+| `editor_rallyEditor_drivelineEditSurface.createFinalDriveline(host)` | Generates the final driveline from the spline (drivelineV3:createDrivelineFromSpline). | 135 |
+| `editor_rallyEditor_drivelineEditSurface.handleSplineInteraction(host, opts)` | Call every frame: handles the mouse on the spline (hover, node drag, insertion, addition, deletion with Delete). Does nothing if ImGui captures the mouse, if input is blocked or if the mouse is not over the map. | 162 |
+| `editor_rallyEditor_drivelineEditSurface.redoSplineEdit(host, data)` | Redoes an edit: restores data.new. | 77 |
+| `editor_rallyEditor_drivelineEditSurface.refreshSplineGeometry(host, opts)` | If the spline is dirty and has at least 2 nodes, recomputes its geometry, regenerates the final driveline (unless opts.generateFinal == false) and calls onSplineMutated. | 100 |
+| `editor_rallyEditor_drivelineEditSurface.restoreSpline(host, saved)` | Replaces the host spline's content (nodes, widths, nmls) with a saved copy, marks it dirty then recomputes the geometry and the final driveline. | 48 |
+| `editor_rallyEditor_drivelineEditSurface.saveFinalDriveline(host)` | Saves the spline to a file in the notebook's mission folder (drivelineV3:saveSplineToFile) after checking the prerequisites. | 140 |
+| `editor_rallyEditor_drivelineEditSurface.simplifySpline(host, tolerance, opts)` | Simplifies the spline (Ramer-Douglas-Peucker algorithm on nodes, widths and normals) with a tolerance, updates the geometry and records the "Simplify Spline" action. No effect with 2 nodes or fewer. | 115 |
+| `editor_rallyEditor_drivelineEditSurface.undoSplineEdit(host, data)` | Undoes an edit: restores data.old. | 72 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_rallyEditor_drivelineEditSurface.commitSplineEdit(host, actionName, oldSpline, opts)`
 
-Enregistre dans editor.history une action avec l'ancienne spline et une copie de l'actuelle ; l'annulation et le rétablissement appellent onHistoryRestore(host, actionName, 'undo'|'redo') s'il est fourni. Appelle ensuite opts.onCommit.
+Records in editor.history an action with the old spline and a copy of the current one; undo and redo call onHistoryRestore(host, actionName, 'undo'|'redo') if provided. Then calls opts.onCommit.
 
-- `host` (*table*) : Objet portant drivelineV3.
-- `actionName` (*string*) : Nom de l'action d'historique.
-- `oldSpline` (*table*) : Copie de la spline avant modification.
-- `opts` (*table|nil*) : Callbacks optionnels.
+- `host` (*table*) : Object carrying drivelineV3.
+- `actionName` (*string*) : History action name.
+- `oldSpline` (*table*) : Copy of the spline before modification.
+- `opts` (*table|nil*) : Optional callbacks.
 
 #### `editor_rallyEditor_drivelineEditSurface.createFinalDriveline(host)`
 
-Génère le driveline final à partir de la spline (drivelineV3:createDrivelineFromSpline).
+Generates the final driveline from the spline (drivelineV3:createDrivelineFromSpline).
 
-- `host` (*table*) : Objet portant drivelineV3.
-- **renvoie** : boolean Résultat de la génération ; false si host.drivelineV3 est absent.
+- `host` (*table*) : Object carrying drivelineV3.
+- **returns**: boolean Generation result; false if host.drivelineV3 is missing.
 
 #### `editor_rallyEditor_drivelineEditSurface.handleSplineInteraction(host, opts)`
 
-À appeler à chaque frame : gère la souris sur la spline (survol, glisser d'un nœud, insertion, ajout, suppression avec Suppr). Ne fait rien si ImGui capture la souris, si l'entrée est bloquée ou si la souris n'est pas sur la carte.
+Call every frame: handles the mouse on the spline (hover, node drag, insertion, addition, deletion with Delete). Does nothing if ImGui captures the mouse, if input is blocked or if the mouse is not over the map.
 
-- `host` (*table*) : Objet portant drivelineV3 (spline.nodes/widths/nmls, updateSplineGeometry…), selectedNodeIdx, dragState, deletePressed.
-- `opts` (*table|nil*) : Callbacks : onBeforeMutation, onSplineMutated, onCommit, onHistoryRestore, inputBlocked, isInputBlocked, generateFinal.
+- `host` (*table*) : Object carrying drivelineV3 (spline.nodes/widths/nmls, updateSplineGeometry...), selectedNodeIdx, dragState, deletePressed.
+- `opts` (*table|nil*) : Callbacks: onBeforeMutation, onSplineMutated, onCommit, onHistoryRestore, inputBlocked, isInputBlocked, generateFinal.
 
 #### `editor_rallyEditor_drivelineEditSurface.redoSplineEdit(host, data)`
 
-Rétablit une édition : restaure data.new.
+Redoes an edit: restores data.new.
 
-- `host` (*table*) : Objet portant drivelineV3.
-- `data` (*table|nil*) : Données d'action {old, new}.
+- `host` (*table*) : Object carrying drivelineV3.
+- `data` (*table|nil*) : Action data {old, new}.
 
 #### `editor_rallyEditor_drivelineEditSurface.refreshSplineGeometry(host, opts)`
 
-Si la spline est sale et a au moins 2 nœuds, recalcule sa géométrie, régénère le driveline final (sauf si opts.generateFinal == false) et appelle onSplineMutated.
+If the spline is dirty and has at least 2 nodes, recomputes its geometry, regenerates the final driveline (unless opts.generateFinal == false) and calls onSplineMutated.
 
-- `host` (*table*) : Objet portant drivelineV3.
-- `opts` (*table|nil*) : Callbacks optionnels.
-- **renvoie** : boolean true si la géométrie a été mise à jour.
+- `host` (*table*) : Object carrying drivelineV3.
+- `opts` (*table|nil*) : Optional callbacks.
+- **returns**: boolean true if the geometry was updated.
 
 #### `editor_rallyEditor_drivelineEditSurface.restoreSpline(host, saved)`
 
-Remplace le contenu de la spline du host (nodes, widths, nmls) par une copie sauvegardée, la marque sale puis recalcule la géométrie et le driveline final.
+Replaces the host spline's content (nodes, widths, nmls) with a saved copy, marks it dirty then recomputes the geometry and the final driveline.
 
-- `host` (*table*) : Objet portant drivelineV3.
-- `saved` (*table*) : Spline sauvegardée {nodes, widths, nmls} (par drivelineV3:deepCopySpline).
+- `host` (*table*) : Object carrying drivelineV3.
+- `saved` (*table*) : Saved spline {nodes, widths, nmls} (by drivelineV3:deepCopySpline).
 
 #### `editor_rallyEditor_drivelineEditSurface.saveFinalDriveline(host)`
 
-Enregistre la spline dans un fichier du dossier de mission du carnet de notes (drivelineV3:saveSplineToFile) après vérification des prérequis.
+Saves the spline to a file in the notebook's mission folder (drivelineV3:saveSplineToFile) after checking the prerequisites.
 
-- `host` (*table*) : Objet portant drivelineV3 et path (avec getMissionDir()).
-- **renvoie** : boolean true si la sauvegarde a réussi.
+- `host` (*table*) : Object carrying drivelineV3 and path (with getMissionDir()).
+- **returns**: boolean true if the save succeeded.
 
 #### `editor_rallyEditor_drivelineEditSurface.simplifySpline(host, tolerance, opts)`
 
-Simplifie la spline (algorithme Ramer-Douglas-Peucker sur nœuds, largeurs et normales) avec une tolérance, met à jour la géométrie et enregistre l'action « Simplify Spline ». Sans effet avec 2 nœuds ou moins.
+Simplifies the spline (Ramer-Douglas-Peucker algorithm on nodes, widths and normals) with a tolerance, updates the geometry and records the "Simplify Spline" action. No effect with 2 nodes or fewer.
 
-- `host` (*table*) : Objet portant drivelineV3.
-- `tolerance` (*number*) : Tolérance de simplification (mètres, déduit du code).
-- `opts` (*table|nil*) : Callbacks optionnels.
-- **renvoie** : boolean true si la spline a été simplifiée.
+- `host` (*table*) : Object carrying drivelineV3.
+- `tolerance` (*number*) : Simplification tolerance (meters, inferred from code).
+- `opts` (*table|nil*) : Optional callbacks.
+- **returns**: boolean true if the spline was simplified.
 
 #### `editor_rallyEditor_drivelineEditSurface.undoSplineEdit(host, data)`
 
-Annule une édition : restaure data.old.
+Undoes an edit: restores data.old.
 
-- `host` (*table*) : Objet portant drivelineV3.
-- `data` (*table|nil*) : Données d'action {old, new}.
+- `host` (*table*) : Object carrying drivelineV3.
+- `data` (*table|nil*) : Action data {old, new}.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/rallyEditor/drivelineEditSurface.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/rallyEditor/drivelineEditSurface.lua`.*

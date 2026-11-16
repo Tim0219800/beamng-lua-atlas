@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/pacenotes/customForm.lua",
+  "module": "Formulaire imgui de l'éditeur de pacenotes pour les pacenotes en mode audio « custom » (fichiers audio personnalisés). Il affiche la case « Slow Corner » et son type de relâchement, l'aperçu texte du pacenote (noteOutputCustom), des boutons pour ouvrir ou copier le dossier des fichiers audio, puis la liste des clips assignés avec un bouton de lecture (Engine.Audio.intercomPlayPacenote). La description affichée d'un clip vient des transcriptions du carnet, sinon du nom du fichier.",
+  "notes": [
+    "Le dossier audio est créé s'il n'existe pas quand on clique sur « ouvrir le dossier ».",
+    "Les clips dont le fichier n'existe pas ont un bouton de lecture rouge et ne jouent rien.",
+    "Les champs Slow Corner modifient les mêmes champs que le formulaire structuré et marquent la validation comme à refaire (markValidationDirty)."
+  ],
+  "functions": {
+    "draw": {
+      "desc": "Dessine le formulaire d'un pacenote en mode audio custom.",
+      "params": {"pacenote": {"type": "table", "desc": "Pacenote édité (méthodes toggleSlowCorner, getCustomAudioFiles, noteOutputCustom, customAudioFileDir…)."}},
+      "internal": false
+    },
+    "clear": {
+      "desc": "Réinitialisation d'état appelée par l'éditeur ; ne fait rien dans ce module.",
+      "internal": true
+    }
+  }
+}

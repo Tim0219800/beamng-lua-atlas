@@ -1,43 +1,43 @@
 # `telemetry_trackers_physics`
 
-*Fichier : `lua/ge/extensions/telemetry/trackers/physics.lua` · VM : Game Engine (GE) · 54 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/trackers/physics.lua` · VM: Game Engine (GE) · 54 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_trackers_physics` : `extensions.load("telemetry_trackers_physics")`, puis la globale `telemetry_trackers_physics`
+**Access:** extension `telemetry_trackers_physics`: `extensions.load("telemetry_trackers_physics")`, then the global `telemetry_trackers_physics`
 
-Suiveur de télémétrie physique : rapporte les instabilités physiques avec assez de contexte pour les reproduire (évènement « physicsInstability » : modèle, config, mod d'origine, niveau, vitesse de simulation, nombre de véhicules, position et somme des dégâts de sections du véhicule) puis demande l'écriture du rapport.
+Physics telemetry tracker: reports physics instabilities with enough context to reproduce them ("physicsInstability" event: model, config, originating mod, level, simulation speed, vehicle count, position and sum of the vehicle's section damage) then requests the report to be written.
 
-## Remarques
+## Notes
 
-- Ce suiveur ne fait qu'observer : il ne met jamais instabilityHandled, donc n'interfère pas avec ce qui traite l'instabilité.
-- Si telemetry_vehicleInfo ne connaît pas le véhicule, rien n'est envoyé.
+- This tracker only observes: it never sets instabilityHandled, so it does not interfere with whatever handles the instability.
+- If telemetry_vehicleInfo does not know the vehicle, nothing is sent.
 
-**Dépendances (chargées avant) :** `telemetry_core`
+**Dependencies (loaded first):** `telemetry_core`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_trackers_physics.onExtensionLoaded()` | Hook appelé au chargement : déchargement manuel. *(interne)* *(hook)* | 46 |
-| `telemetry_trackers_physics.onInstabilityDetected(vid, returnData)` | Hook appelé quand une instabilité physique est détectée sur un véhicule : construit et envoie l'évènement, puis appelle telemetry_core.triggerReportWrite(). *(interne)* *(hook)* | 18 |
+| `telemetry_trackers_physics.onExtensionLoaded()` | Hook called on load: manual unload. *(internal)* *(hook)* | 46 |
+| `telemetry_trackers_physics.onInstabilityDetected(vid, returnData)` | Hook called when a physics instability is detected on a vehicle: builds and sends the event, then calls telemetry_core.triggerReportWrite(). *(internal)* *(hook)* | 18 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_trackers_physics.onInstabilityDetected(vid, returnData)`
 
-Hook appelé quand une instabilité physique est détectée sur un véhicule : construit et envoie l'évènement, puis appelle telemetry_core.triggerReportWrite().
+Hook called when a physics instability is detected on a vehicle: builds and sends the event, then calls telemetry_core.triggerReportWrite().
 
-- `vid` (*integer*) : Id du véhicule instable.
-- `returnData` (*table*) : Table de retour des gestionnaires d'instabilité (non utilisée ici).
+- `vid` (*integer*) : Id of the unstable vehicle.
+- `returnData` (*table*) : Return table of the instability handlers (not used here).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | telemetry_core. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getSimulationTimeScale`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/trackers/physics.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/trackers/physics.lua`.*

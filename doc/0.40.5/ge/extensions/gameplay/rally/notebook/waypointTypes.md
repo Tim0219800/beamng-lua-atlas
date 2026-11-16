@@ -1,43 +1,43 @@
 # `gameplay_rally_notebook_waypointTypes`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/notebook/waypointTypes.lua` · VM : Game Engine (GE) · 25 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/notebook/waypointTypes.lua` · VM: Game Engine (GE) · 25 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_notebook_waypointTypes` : `extensions.load("gameplay_rally_notebook_waypointTypes")`, puis la globale `gameplay_rally_notebook_waypointTypes`
+**Access:** extension `gameplay_rally_notebook_waypointTypes`: `extensions.load("gameplay_rally_notebook_waypointTypes")`, then the global `gameplay_rally_notebook_waypointTypes`
 
-Constantes des types de waypoints d'une pacenote de rallye : début de virage ("cornerStart") et fin de virage ("cornerEnd"). Fournit aussi une fonction qui abrège ces types en "Cs" / "Ce" pour l'affichage dans l'éditeur.
+Constants for the waypoint types of a rally pacenote: corner start ("cornerStart") and corner end ("cornerEnd"). Also provides a function that abbreviates these types to "Cs" / "Ce" for display in the editor.
 
-## Exemple
+## Example
 
 ```lua
 local wpt = require('gameplay_rally_notebook_waypointTypes')
 print(wpt.shortenWaypointType(wpt.wpTypeCornerStart)) -- "Cs"
 ```
 
-## Remarques
+## Notes
 
-- shortenWaypointType renvoie nil pour tout type autre que cornerStart/cornerEnd.
+- shortenWaypointType returns nil for any type other than cornerStart/cornerEnd.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_notebook_waypointTypes.shortenWaypointType(wpType)` | Renvoie l'abréviation d'un type de waypoint : "Cs" pour cornerStart, "Ce" pour cornerEnd, nil sinon. | 15 |
+| `gameplay_rally_notebook_waypointTypes.shortenWaypointType(wpType)` | Returns the abbreviation of a waypoint type: "Cs" for cornerStart, "Ce" for cornerEnd, nil otherwise. | 15 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_notebook_waypointTypes.shortenWaypointType(wpType)`
 
-Renvoie l'abréviation d'un type de waypoint : "Cs" pour cornerStart, "Ce" pour cornerEnd, nil sinon.
+Returns the abbreviation of a waypoint type: "Cs" for cornerStart, "Ce" for cornerEnd, nil otherwise.
 
-- `wpType` (*string*) : Type de waypoint (wpTypeCornerStart ou wpTypeCornerEnd).
-- **renvoie** : string|nil Abréviation, ou nil si le type est inconnu.
+- `wpType` (*string*) : Waypoint type (wpTypeCornerStart or wpTypeCornerEnd).
+- **returns**: string|nil Abbreviation, or nil if the type is unknown.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `wpTypeCornerEnd` | string | Valeur "cornerEnd" : waypoint de fin de virage. |
-| `wpTypeCornerStart` | string | Valeur "cornerStart" : waypoint de début de virage. |
+| `wpTypeCornerEnd` | string | Value "cornerEnd": corner end waypoint. |
+| `wpTypeCornerStart` | string | Value "cornerStart": corner start waypoint. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/notebook/waypointTypes.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/notebook/waypointTypes.lua`.*

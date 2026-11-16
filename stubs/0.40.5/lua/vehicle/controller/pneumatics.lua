@@ -2,89 +2,89 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/pneumatics.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur auxiliaire de suspension/vérins pneumatiques simples (type "auxiliary") : il pilote la pression de poutres « pressurées » (obj:setBeamPressureRel) regroupées en groupes nommés, avec niveaux de pression nommés (minPressure, maxPressure, defaultPressure…), vitesses de montée/descente et sons de gonflage/dégonflage. Contrairement à pneumatics/actuators, aucune physique de gaz ni réservoir n'est modélisée : la pression suit simplement la cible à vitesse limitée. Les fonctions publiques s'appellent depuis des entrées ou d'autres contrôleurs avec une liste de noms de groupes.
---- Accès : contrôleur `pneumatics` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Simple pneumatic suspension/cylinder auxiliary controller (type "auxiliary"): it drives the pressure of "pressurized" beams (obj:setBeamPressureRel) grouped into named groups, with named pressure levels (minPressure, maxPressure, defaultPressure...), rise/fall speeds and inflation/deflation sounds. Unlike pneumatics/actuators, no gas physics or tank is modeled: the pressure simply follows the target at a limited speed. The public functions are called from inputs or other controllers with a list of group names.
+--- Access: controller `pneumatics` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_pneumatics
 ---@field type string "auxiliary".
 local controller_pneumatics = {}
 
---- Construit les groupes de poutres à partir des tables jbeam et des niveaux de pression.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/pneumatics.lua:245
----@param jbeamData table Données jbeam du contrôleur.
+--- Builds the beam groups from the jbeam tables and the pressure levels.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/pneumatics.lua:245
+---@param jbeamData table Controller jbeam data.
 function controller_pneumatics.init(jbeamData) end
 
---- Crée les sources sonores de montée/descente de chaque groupe. Appelé par le gestionnaire de contrôleurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/pneumatics.lua:317
----@param jbeamData table Données jbeam du contrôleur.
+--- Creates the rise/fall sound sources of each group. Called by the controller manager.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/pneumatics.lua:317
+---@param jbeamData table Controller jbeam data.
 function controller_pneumatics.initSounds(jbeamData) end
 
---- Indique si toutes les poutres d'un groupe sont exactement au niveau de pression nommé.
----Source : lua/vehicle/controller/pneumatics.lua:167
----@param groupName string Nom du groupe.
----@param levelName string Nom du niveau (ex. "maxPressure").
----@return boolean  Vrai si le groupe est à ce niveau ; false aussi si le groupe n'existe pas.
+--- Indicates whether all beams of a group are exactly at the named pressure level.
+---Source: lua/vehicle/controller/pneumatics.lua:167
+---@param groupName string Group name.
+---@param levelName string Level name (e.g. "maxPressure").
+---@return boolean  True if the group is at this level; also false if the group does not exist.
 function controller_pneumatics.isBeamGroupAtPressureLevel(groupName, levelName) end
 
---- Remet toutes les poutres à leur pression par défaut.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/pneumatics.lua:235
+--- Returns all beams to their default pressure.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/pneumatics.lua:235
 function controller_pneumatics.reset() end
 
---- Coupe le volume des sons et réinitialise leur état.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/pneumatics.lua:344
+--- Cuts the sound volume and resets their state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/pneumatics.lua:344
 function controller_pneumatics.resetSounds() end
 
---- Cible la pression par défaut (defaultPressure) des groupes.
----Source : lua/vehicle/controller/pneumatics.lua:104
----@param groupNames string[] Noms de groupes de poutres (groupName de la table des poutres sous pression).
+--- Targets the default pressure (defaultPressure) of the groups.
+---Source: lua/vehicle/controller/pneumatics.lua:104
+---@param groupNames string[] Beam group names (groupName of the pressurized beams table).
 function controller_pneumatics.setBeamDefault(groupNames) end
 
---- Cible la pression maximale (maxPressure) des groupes.
----Source : lua/vehicle/controller/pneumatics.lua:100
----@param groupNames string[] Noms de groupes de poutres (groupName de la table des poutres sous pression).
+--- Targets the maximum pressure (maxPressure) of the groups.
+---Source: lua/vehicle/controller/pneumatics.lua:100
+---@param groupNames string[] Beam group names (groupName of the pressurized beams table).
 function controller_pneumatics.setBeamMax(groupNames) end
 
---- Cible la pression minimale (minPressure) des groupes.
----Source : lua/vehicle/controller/pneumatics.lua:96
----@param groupNames string[] Noms de groupes de poutres (groupName de la table des poutres sous pression).
+--- Targets the minimum pressure (minPressure) of the groups.
+---Source: lua/vehicle/controller/pneumatics.lua:96
+---@param groupNames string[] Beam group names (groupName of the pressurized beams table).
 function controller_pneumatics.setBeamMin(groupNames) end
 
---- Active/désactive la diminution continue de pression des groupes ; désactive l'augmentation.
----Source : lua/vehicle/controller/pneumatics.lua:147
----@param groupNames string[] Noms de groupes de poutres (groupName de la table des poutres sous pression).
----@param enabled boolean Vrai pour diminuer.
+--- Enables/disables the continuous pressure decrease of the groups; disables the increase.
+---Source: lua/vehicle/controller/pneumatics.lua:147
+---@param groupNames string[] Beam group names (groupName of the pressurized beams table).
+---@param enabled boolean True to decrease.
 function controller_pneumatics.setBeamMomentaryDecrease(groupNames, enabled) end
 
---- Active/désactive l'augmentation continue de pression des groupes (tant que enabled est vrai) ; désactive la diminution.
----Source : lua/vehicle/controller/pneumatics.lua:127
----@param groupNames string[] Noms de groupes de poutres (groupName de la table des poutres sous pression).
----@param enabled boolean Vrai pour augmenter.
+--- Enables/disables the continuous pressure increase of the groups (as long as enabled is true); disables the decrease.
+---Source: lua/vehicle/controller/pneumatics.lua:127
+---@param groupNames string[] Beam group names (groupName of the pressurized beams table).
+---@param enabled boolean True to increase.
 function controller_pneumatics.setBeamMomentaryIncrease(groupNames, enabled) end
 
---- Fixe directement la pression cible des groupes, bornée par le min et le max de chaque poutre.
----Source : lua/vehicle/controller/pneumatics.lua:61
----@param groupNames string[] Noms de groupes de poutres (groupName de la table des poutres sous pression).
----@param pressure number Pression cible en PSI.
+--- Directly sets the target pressure of the groups, bounded by the min and max of each beam.
+---Source: lua/vehicle/controller/pneumatics.lua:61
+---@param groupNames string[] Beam group names (groupName of the pressurized beams table).
+---@param pressure number Target pressure in PSI.
 function controller_pneumatics.setBeamPressure(groupNames, pressure) end
 
---- Cible un niveau de pression nommé (clé de poutre, ex. "maxPressure" ou un niveau défini dans pressureLevels).
----Source : lua/vehicle/controller/pneumatics.lua:90
----@param groupNames string[] Noms de groupes de poutres (groupName de la table des poutres sous pression).
----@param pressureName string Nom du niveau de pression.
+--- Targets a named pressure level (beam key, e.g. "maxPressure" or a level defined in pressureLevels).
+---Source: lua/vehicle/controller/pneumatics.lua:90
+---@param groupNames string[] Beam group names (groupName of the pressurized beams table).
+---@param pressureName string Name of the pressure level.
 function controller_pneumatics.setBeamPressureLevel(groupNames, pressureName) end
 
---- Pour chaque groupe : passe au minimum si tout est au maximum, sinon au maximum.
----Source : lua/vehicle/controller/pneumatics.lua:108
----@param groupNames string[] Noms de groupes de poutres (groupName de la table des poutres sous pression).
+--- For each group: switches to the minimum if everything is at the maximum, otherwise to the maximum.
+---Source: lua/vehicle/controller/pneumatics.lua:108
+---@param groupNames string[] Beam group names (groupName of the pressurized beams table).
 function controller_pneumatics.toggleBeamMinMax(groupNames) end
 
---- Chaque image : applique les augmentations/diminutions momentanées, fait avancer la pression courante vers la cible à vitesse limitée et gère l'arrêt des sons.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/pneumatics.lua:181
----@param dt number Pas de temps (s).
+--- Every frame: applies the momentary increases/decreases, advances the current pressure toward the target at a limited speed and handles stopping the sounds.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/pneumatics.lua:181
+---@param dt number Time step (s).
 function controller_pneumatics.updateGFX(dt) end
 
 return controller_pneumatics

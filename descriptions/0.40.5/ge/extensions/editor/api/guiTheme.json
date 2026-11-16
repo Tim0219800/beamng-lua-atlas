@@ -1,10 +1,10 @@
 {
   "path": "lua/ge/extensions/editor/api/guiTheme.lua",
-  "module": "Fichier de l'éditeur : définit la palette de couleurs ImGui partagée par les outils de l'éditeur. Il n'exporte pas de table : il ajoute seulement `editor.setupEditorGuiTheme` à la globale `editor`. Appeler cette fonction remplit `editor.color` (beamng, black, buttonInactive, darkgrey, error, gold, green, grey, lightblue, lightgrey, transparent, warning, white) avec des ImColor.",
+  "module": "Editor file: defines the ImGui color palette shared by the editor tools. It does not export a table: it only adds `editor.setupEditorGuiTheme` to the `editor` global. Calling this function fills `editor.color` (beamng, black, buttonInactive, darkgrey, error, gold, green, grey, lightblue, lightgrey, transparent, warning, white) with ImColors.",
   "notes": [
-    "Le fichier ne renvoie rien (pas de `return M`) : il agit par effet de bord sur `editor` au moment du chargement.",
-    "`buttonInactive` reprend la couleur Col_Button du style ImGui courant avec l'alpha divisé par 2.",
-    "`transparent` est défini avec RGB (255,0,0) et alpha 0 : totalement transparent malgré la composante rouge."
+    "The file returns nothing (no `return M`): it acts by side effect on `editor` at load time.",
+    "`buttonInactive` takes the Col_Button color of the current ImGui style with the alpha divided by 2.",
+    "`transparent` is defined with RGB (255,0,0) and alpha 0: fully transparent despite the red component."
   ],
   "functions": {}
 }

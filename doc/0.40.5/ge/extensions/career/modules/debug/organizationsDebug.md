@@ -1,28 +1,28 @@
 # `career_modules_debug_organizationsDebug`
 
-*Fichier : `lua/ge/extensions/career/modules/debug/organizationsDebug.lua` · VM : Game Engine (GE) · 33 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/debug/organizationsDebug.lua` · VM: Game Engine (GE) · 33 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_debug_organizationsDebug` : `extensions.load("career_modules_debug_organizationsDebug")`, puis la globale `career_modules_debug_organizationsDebug`
+**Access:** extension `career_modules_debug_organizationsDebug`: `extensions.load("career_modules_debug_organizationsDebug")`, then the global `career_modules_debug_organizationsDebug`
 
-Onglet de debug carrière « Organizations ». Deux entrées de triche : donner une réputation aléatoire (-50 à 150) à environ 30 % des organisations (via career_modules_playerAttributes.addAttributes) et marquer environ 30 % des facilités de livraison comme 'interacted'.
+"Organizations" career debug tab. Two cheat entries: give a random reputation (-50 to 150) to about 30% of organizations (via career_modules_playerAttributes.addAttributes) and mark about 30% of delivery facilities as 'interacted'.
 
-## Remarques
+## Notes
 
-- Outil de développement ; debugOrder = 3.
-- La première entrée appelle aussi career_career.interactWithOrganization pour chaque organisation tirée.
+- Development tool; debugOrder = 3.
+- The first entry also calls career_career.interactWithOrganization for each organization drawn.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_debug_organizationsDebug.drawDebugFunctions()` | Dessine les entrées '> Give random reputation to 30% of organizations' et 'Interact with random facilities'. *(interne)* | 9 |
+| `career_modules_debug_organizationsDebug.drawDebugFunctions()` | Draws the entries '> Give random reputation to 30% of organizations' and 'Interact with random facilities'. *(internal)* | 9 |
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `debugName` | string | 'Organizations'. |
-| `debugOrder` | number | Ordre de tri (3). |
+| `debugOrder` | number | Sort order (3). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/debug/organizationsDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/debug/organizationsDebug.lua`.*

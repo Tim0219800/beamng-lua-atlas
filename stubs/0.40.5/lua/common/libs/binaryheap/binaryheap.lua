@@ -2,104 +2,104 @@
 -- tim19Atlas stub generated from lua/common/libs/binaryheap/binaryheap.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- binaryheap : bibliothèque tierce (Lua binary heap, utilisée notamment par copas pour ses minuteries) implémentant un tas binaire (file de priorité). Deux familles : « plain heap » (minHeap/maxHeap, gérés par position, valeurs dans heap.values) et « unique heap » (minUnique/maxUnique, chaque élément a une charge `payload` unique retrouvée en O(1) via heap.reverse). Le module renvoie la table M.
---- Accès : `require("libs/binaryheap/binaryheap")`
+--- binaryheap: third-party library (Lua binary heap, used notably by copas for its timers) implementing a binary heap (priority queue). Two families: "plain heap" (minHeap/maxHeap, managed by position, values in heap.values) and "unique heap" (minUnique/maxUnique, each element has a unique `payload` found in O(1) via heap.reverse). The module returns the table M.
+--- Access: `require("libs/binaryheap/binaryheap")`
 ---@class libs_binaryheap_binaryheap
 local libs_binaryheap_binaryheap = {}
 
---- Cœur de toutes les files : construit un tas à partir de fonctions de swap, d'effacement et de comparaison. Renvoie une table avec les méthodes bubbleUp(pos) et sinkDown(pos) et les listes values et payloads.
----Source : lua/common/libs/binaryheap/binaryheap.lua:58
----@param swap function swap(heap, idx1, idx2) échange deux éléments
----@param erase function erase(heap, position) suppression brute
----@param lt function lt(a, b) vrai quand a doit être au-dessus de b
----@return table  Tas de base
+--- Core of all the queues: builds a heap from swap, erase and comparison functions. Returns a table with the methods bubbleUp(pos) and sinkDown(pos) and the lists values and payloads.
+---Source: lua/common/libs/binaryheap/binaryheap.lua:58
+---@param swap function swap(heap, idx1, idx2) swaps two elements
+---@param erase function erase(heap, position) raw removal
+---@param lt function lt(a, b) true when a must be above b
+---@return table  Base heap
 function libs_binaryheap_binaryheap.binaryHeap(swap, erase, lt) end
 
---- Crée un tas simple dont la plus grande valeur est au sommet.
----Source : lua/common/libs/binaryheap/binaryheap.lua:227
----@param gt function|nil Comparaison « supérieur à » (défaut a > b)
----@return table  Le tas
+--- Creates a plain heap with the largest value at the top.
+---Source: lua/common/libs/binaryheap/binaryheap.lua:227
+---@param gt function|nil "Greater than" comparison (default a > b)
+---@return table  The heap
 function libs_binaryheap_binaryheap.maxHeap(gt) end
 
---- Crée un tas à payloads uniques, plus grande valeur au sommet.
----Source : lua/common/libs/binaryheap/binaryheap.lua:396
----@param gt function|nil Comparaison (défaut a > b)
----@return table  Le tas
+--- Creates a heap with unique payloads, largest value at the top.
+---Source: lua/common/libs/binaryheap/binaryheap.lua:396
+---@param gt function|nil Comparison (default a > b)
+---@return table  The heap
 function libs_binaryheap_binaryheap.maxUnique(gt) end
 
---- Crée un tas simple dont la plus petite valeur est au sommet.
----Source : lua/common/libs/binaryheap/binaryheap.lua:217
----@param lt function|nil Comparaison « inférieur à » (défaut a < b)
----@return table  Le tas
+--- Creates a plain heap with the smallest value at the top.
+---Source: lua/common/libs/binaryheap/binaryheap.lua:217
+---@param lt function|nil "Less than" comparison (default a < b)
+---@return table  The heap
 function libs_binaryheap_binaryheap.minHeap(lt) end
 
---- Crée un tas à payloads uniques, plus petite valeur au sommet.
----Source : lua/common/libs/binaryheap/binaryheap.lua:382
----@param lt function|nil Comparaison (défaut a < b)
----@return table  Le tas
+--- Creates a heap with unique payloads, smallest value at the top.
+---Source: lua/common/libs/binaryheap/binaryheap.lua:382
+---@param lt function|nil Comparison (default a < b)
+---@return table  The heap
 function libs_binaryheap_binaryheap.minUnique(lt) end
 
---- Méthodes des tas créés par minHeap/maxHeap (par position) et minUnique/maxUnique (par payload). Pour un unique heap, les paramètres désignés payload remplacent les positions.
+--- Methods of the heaps created by minHeap/maxHeap (by position) and minUnique/maxUnique (by payload). For a unique heap, the parameters named payload replace positions.
 ---@class libs_binaryheap_binaryheap_h
 local libs_binaryheap_binaryheap_h = {}
 
---- Insère un élément. Sur un unique heap, lève une erreur si le payload existe déjà.
----Source : lua/common/libs/binaryheap/binaryheap.lua:267
----@param value any Valeur de tri
----@param payload any Charge associée (unique heap)
+--- Inserts an element. On a unique heap, raises an error if the payload already exists.
+---Source: lua/common/libs/binaryheap/binaryheap.lua:267
+---@param value any Sort value
+---@param payload any Associated payload (unique heap)
 function libs_binaryheap_binaryheap_h:insert(value, payload) end
 
---- Renvoie le sommet sans le retirer.
----Source : lua/common/libs/binaryheap/binaryheap.lua:307
----@return any  Payload (unique heap), puis valeur ; nil si vide
+--- Returns the top without removing it.
+---Source: lua/common/libs/binaryheap/binaryheap.lua:307
+---@return any  Payload (unique heap), then value; nil if empty
 function libs_binaryheap_binaryheap_h:peek() end
 
---- Renvoie la valeur du sommet sans le retirer (unique heap).
----Source : lua/common/libs/binaryheap/binaryheap.lua:321
----@return any  Valeur du sommet ou nil
+--- Returns the top value without removing it (unique heap).
+---Source: lua/common/libs/binaryheap/binaryheap.lua:321
+---@return any  Top value or nil
 function libs_binaryheap_binaryheap_h:peekValue() end
 
---- Retire et renvoie le sommet du tas.
----Source : lua/common/libs/binaryheap/binaryheap.lua:295
----@return any  Payload (unique heap), puis valeur ; nil si vide
+--- Removes and returns the top of the heap.
+---Source: lua/common/libs/binaryheap/binaryheap.lua:295
+---@return any  Payload (unique heap), then value; nil if empty
 function libs_binaryheap_binaryheap_h:pop() end
 
---- Retire un élément du tas.
----Source : lua/common/libs/binaryheap/binaryheap.lua:280
----@param payload any Payload (unique heap) ou position (plain heap)
----@return any  Valeur retirée, puis payload (unique) ; nil si introuvable
+--- Removes an element from the heap.
+---Source: lua/common/libs/binaryheap/binaryheap.lua:280
+---@param payload any Payload (unique heap) or position (plain heap)
+---@return any  Removed value, then payload (unique); nil if not found
 function libs_binaryheap_binaryheap_h:remove(payload) end
 
---- Nombre d'éléments du tas.
----Source : lua/common/libs/binaryheap/binaryheap.lua:338
----@return integer  Taille
+--- Number of elements in the heap.
+---Source: lua/common/libs/binaryheap/binaryheap.lua:338
+---@return integer  Size
 function libs_binaryheap_binaryheap_h:size() end
 
---- Change la valeur d'un élément et le replace dans le tas.
----Source : lua/common/libs/binaryheap/binaryheap.lua:257
----@param payload any Payload (unique heap) ou position (plain heap)
----@param newValue any Nouvelle valeur
+--- Changes an element's value and puts it back in place in the heap.
+---Source: lua/common/libs/binaryheap/binaryheap.lua:257
+---@param payload any Payload (unique heap) or position (plain heap)
+---@param newValue any New value
 function libs_binaryheap_binaryheap_h:update(payload, newValue) end
 
---- Renvoie la valeur associée à un payload (unique heap).
----Source : lua/common/libs/binaryheap/binaryheap.lua:330
----@param payload any Payload recherché
----@return any  Valeur ou nil
+--- Returns the value associated with a payload (unique heap).
+---Source: lua/common/libs/binaryheap/binaryheap.lua:330
+---@param payload any Payload sought
+---@return any  Value or nil
 function libs_binaryheap_binaryheap_h:valueByPayload(payload) end
 
---- Méthodes de bas niveau du tas de base (déduit du code : swap et erase passés à binaryHeap).
+--- Low-level methods of the base heap (inferred from code: swap and erase passed to binaryHeap).
 ---@class libs_binaryheap_binaryheap_heap
 local libs_binaryheap_binaryheap_heap = {}
 
---- Efface brutalement l'élément à la position pos.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/binaryheap/binaryheap.lua:195
+--- Brutally erases the element at position pos.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/binaryheap/binaryheap.lua:195
 ---@param pos integer Position
 function libs_binaryheap_binaryheap_heap:erase(pos) end
 
---- Échange les éléments aux positions a et b.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/binaryheap/binaryheap.lua:191
+--- Swaps the elements at positions a and b.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/binaryheap/binaryheap.lua:191
 ---@param a integer Position
 ---@param b integer Position
 function libs_binaryheap_binaryheap_heap:swap(a, b) end

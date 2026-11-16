@@ -1,19 +1,19 @@
 # `flowgraph_nodes_ui_imgui_elemental_imText`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imText.lua` · VM : Game Engine (GE) · 35 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imText.lua` · VM: Game Engine (GE) · 35 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/imgui/elemental/imText")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/imgui/elemental/imText")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « im Text » (catégorie repeat_instant, tag imgui) : affiche un texte avec retour à la ligne automatique dans la fenêtre imgui courante. Entrée « text » (any, converti avec tostring).
+Flowgraph node "im Text" (category repeat_instant, tag imgui): displays text with automatic word wrap in the current imgui window. Input "text" (any, converted with tostring).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Vide effectif (aucune sortie). | 21 |
-| `C:work()` | Affiche le texte (TextWrapped). | 27 |
+| `C:_executionStarted()` | Effectively empty (no outputs). | 21 |
+| `C:work()` | Displays the text (TextWrapped). | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imText.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imText.lua`.*

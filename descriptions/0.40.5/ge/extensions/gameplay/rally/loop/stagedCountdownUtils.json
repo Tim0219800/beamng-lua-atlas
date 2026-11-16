@@ -1,102 +1,234 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/loop/stagedCountdownUtils.lua",
-  "module": "Fonctions communes au compte à rebours de départ de spéciale (nœud flowgraph et simulation de test) : lecture de l'horloge murale de l'environnement, réglages du compte à rebours selon les options rallyVisualPacenotes/rallyAudioPacenotes, calcul d'un compte à rebours calé sur la minute suivante, geler/dégeler le véhicule, dessin de debug du plan de départ et affichage ImGui d'état dans le nœud.",
+  "module": "Functions common to the stage start countdown (flowgraph node and test simulation): reading the environment's wall clock, countdown settings according to the rallyVisualPacenotes/rallyAudioPacenotes options, computing a countdown aligned on the next minute, freezing/unfreezing the vehicle, debug drawing of the start plane and ImGui status display in the node.",
   "notes": [
-    "Horloge murale : ((tod.time + 0.5) % 1) * 86400 secondes ; tod.time = 0 correspond à midi.",
-    "getStageCountdownSettings : le paramètre defaultMaxAnnounced est ignoré ; maxAnnounced reçoit defaultDuration.",
-    "Dans le plan de debug, l'axe Y est la normale : +Y est « back » (derrière la ligne) et -Y « front »."
+    "Wall clock: ((tod.time + 0.5) % 1) * 86400 seconds; tod.time = 0 corresponds to noon.",
+    "getStageCountdownSettings: the defaultMaxAnnounced parameter is ignored; maxAnnounced receives defaultDuration.",
+    "In the debug plane, the Y axis is the normal: +Y is \"back\" (behind the line) and -Y \"front\"."
   ],
   "functions": {
     "getEnvironmentWallClockSecs": {
-      "desc": "Heure murale actuelle de l'environnement, en secondes depuis minuit.",
-      "returns": [{"type": "number", "desc": "Secondes (0 si core_environment ou l'heure est indisponible)."}]
+      "desc": "Current wall-clock time of the environment, in seconds since midnight.",
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Seconds (0 if core_environment or the time is unavailable)."
+        }
+      ]
     },
     "getStageCountdownSettings": {
-      "desc": "Construit la table de réglages du compte à rebours : duration, maxAnnounced, showVisualCountdown (réglage rallyVisualPacenotes ou nil), playSoundEffects (vrai si rallyAudioPacenotes est désactivé), playVoiceCountdown (réglage rallyAudioPacenotes).",
+      "desc": "Builds the countdown settings table: duration, maxAnnounced, showVisualCountdown (rallyVisualPacenotes setting or nil), playSoundEffects (true if rallyAudioPacenotes is disabled), playVoiceCountdown (rallyAudioPacenotes setting).",
       "params": {
-        "defaultDuration": {"type": "number", "desc": "Durée du compte à rebours en secondes."},
-        "defaultMaxAnnounced": {"type": "number", "desc": "Non utilisé (déduit du code)."}
+        "defaultDuration": {
+          "type": "number",
+          "desc": "Countdown duration in seconds."
+        },
+        "defaultMaxAnnounced": {
+          "type": "number",
+          "desc": "Unused (inferred from code)."
+        }
       },
-      "returns": [{"type": "table", "desc": "{duration, maxAnnounced, showVisualCountdown, playSoundEffects, playVoiceCountdown}."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{duration, maxAnnounced, showVisualCountdown, playSoundEffects, playVoiceCountdown}."
+        }
+      ]
     },
     "calculateImmediateMinuteCountdown": {
-      "desc": "Prépare un compte à rebours qui se termine à la prochaine minute pleine de l'horloge murale (fenêtre de lancement = duration + 1 s).",
-      "params": {"duration": {"type": "number", "desc": "Durée du compte à rebours en secondes."}},
-      "returns": [{"type": "table", "desc": "{environmentStartTimeSecs, epochTime = 0, scheduledEventTime, targetStartTime = 1, timer}."}]
+      "desc": "Prepares a countdown that ends at the next full minute of the wall clock (launch window = duration + 1 s).",
+      "params": {
+        "duration": {
+          "type": "number",
+          "desc": "Countdown duration in seconds."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{environmentStartTimeSecs, epochTime = 0, scheduledEventTime, targetStartTime = 1, timer}."
+        }
+      ]
     },
     "getWallClockTime": {
-      "desc": "Heure murale = (environmentStartTimeSecs + epochTime) modulo 86400.",
+      "desc": "Wall-clock time = (environmentStartTimeSecs + epochTime) modulo 86400.",
       "params": {
-        "environmentStartTimeSecs": {"type": "number|nil", "desc": "Heure de départ, 0 si nil."},
-        "epochTime": {"type": "number|nil", "desc": "Secondes écoulées, 0 si nil."}
+        "environmentStartTimeSecs": {
+          "type": "number|nil",
+          "desc": "Start time, 0 if nil."
+        },
+        "epochTime": {
+          "type": "number|nil",
+          "desc": "Elapsed seconds, 0 if nil."
+        }
       },
-      "returns": [{"type": "number", "desc": "Secondes depuis minuit."}]
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Seconds since midnight."
+        }
+      ]
     },
     "buildRallyClockData": {
-      "desc": "Données d'horloge pour l'UI : wallClockSecs, wallClockTime (texte 24 h via rallyUtil.formatTime24Hour) et trois drapeaux de saut à false.",
-      "params": {"wallClockSecs": {"type": "number", "desc": "Heure murale en secondes."}},
-      "returns": [{"type": "table", "desc": "{wallClockSecs, wallClockTime, canSkipTimeControls, isTimeControlSkipAvailable, canSkipCountdown}."}]
+      "desc": "Clock data for the UI: wallClockSecs, wallClockTime (24 h text via rallyUtil.formatTime24Hour) and three skip flags set to false.",
+      "params": {
+        "wallClockSecs": {
+          "type": "number",
+          "desc": "Wall-clock time in seconds."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{wallClockSecs, wallClockTime, canSkipTimeControls, isTimeControlSkipAvailable, canSkipCountdown}."
+        }
+      ]
     },
     "drawDebugPlane": {
-      "desc": "Dessine un plan violet (deux triangles de 10 m de large) avec une sphère au point d'origine ; avec normals, ajoute les axes « back » (vert) et « front » (rouge).",
+      "desc": "Draws a purple plane (two triangles 10 m wide) with a sphere at the origin point; with normals, adds the \"back\" (green) and \"front\" (red) axes.",
       "params": {
-        "pos": {"type": "vec3", "desc": "Position du plan."},
-        "rot": {"type": "quat", "desc": "Orientation du plan."},
-        "normals": {"type": "boolean|nil", "desc": "true pour dessiner les normales."}
+        "pos": {
+          "type": "vec3",
+          "desc": "Plane position."
+        },
+        "rot": {
+          "type": "quat",
+          "desc": "Plane orientation."
+        },
+        "normals": {
+          "type": "boolean|nil",
+          "desc": "true to draw the normals."
+        }
       }
     },
     "drawVehicleToPlaneDebug": {
-      "desc": "Dessine la projection du véhicule sur le plan, une ligne et la distance signée (« past » orange si le véhicule a dépassé la ligne, « before » vert sinon). Les vec3 passés en paramètres servent de tampons pour éviter les allocations.",
+      "desc": "Draws the vehicle's projection onto the plane, a line and the signed distance (\"past\" orange if the vehicle has crossed the line, \"before\" green otherwise). The vec3 passed as parameters serve as buffers to avoid allocations.",
       "params": {
-        "vehPos": {"type": "vec3", "desc": "Position du véhicule."},
-        "planePos": {"type": "vec3", "desc": "Position du plan."},
-        "rot": {"type": "quat", "desc": "Orientation du plan."},
-        "tmpPlaneNormal": {"type": "vec3", "desc": "Tampon réutilisable."},
-        "tmpToVehicle": {"type": "vec3", "desc": "Tampon réutilisable."},
-        "tmpClosestPoint": {"type": "vec3", "desc": "Tampon réutilisable."},
-        "tmpMidPoint": {"type": "vec3", "desc": "Tampon réutilisable."}
+        "vehPos": {
+          "type": "vec3",
+          "desc": "Vehicle position."
+        },
+        "planePos": {
+          "type": "vec3",
+          "desc": "Plane position."
+        },
+        "rot": {
+          "type": "quat",
+          "desc": "Plane orientation."
+        },
+        "tmpPlaneNormal": {
+          "type": "vec3",
+          "desc": "Reusable buffer."
+        },
+        "tmpToVehicle": {
+          "type": "vec3",
+          "desc": "Reusable buffer."
+        },
+        "tmpClosestPoint": {
+          "type": "vec3",
+          "desc": "Reusable buffer."
+        },
+        "tmpMidPoint": {
+          "type": "vec3",
+          "desc": "Reusable buffer."
+        }
       }
     },
     "drawDebugVehiclePoint": {
-      "desc": "Dessine une petite sphère au véhicule : verte si inside, rouge sinon.",
+      "desc": "Draws a small sphere at the vehicle: green if inside, red otherwise.",
       "params": {
-        "vehPos": {"type": "vec3", "desc": "Position."},
-        "inside": {"type": "boolean", "desc": "Véhicule dans la zone."}
+        "vehPos": {
+          "type": "vec3",
+          "desc": "Position."
+        },
+        "inside": {
+          "type": "boolean",
+          "desc": "Vehicle in the zone."
+        }
       }
     },
     "freezeVehicle": {
-      "desc": "Gèle le véhicule (action 'setFreeze' true via core_vehicleBridge) pendant la phase de mise en place.",
+      "desc": "Freezes the vehicle ('setFreeze' action true via core_vehicleBridge) during the staging phase.",
       "params": {
-        "vehId": {"type": "integer|nil", "desc": "Id du véhicule."},
-        "logTag": {"type": "string", "desc": "Étiquette de log."}
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        },
+        "logTag": {
+          "type": "string",
+          "desc": "Log label."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si le véhicule a été trouvé."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the vehicle was found."
+        }
+      ]
     },
     "unfreezeVehicle": {
-      "desc": "Dégèle le véhicule (action 'setFreeze' false).",
+      "desc": "Unfreezes the vehicle ('setFreeze' action false).",
       "params": {
-        "vehId": {"type": "integer|nil", "desc": "Id du véhicule."},
-        "logTag": {"type": "string", "desc": "Étiquette de log."}
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        },
+        "logTag": {
+          "type": "string",
+          "desc": "Log label."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si le véhicule a été trouvé."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the vehicle was found."
+        }
+      ]
     },
     "drawMiddleInfo": {
-      "desc": "Affiche dans le nœud (drawMiddle, ImGui) : indicateur TEST MODE, horloge, époque, heure de l'évènement, temps restant, contrôle de mise en place, état, replanifications, et zone/staged. Ne fait rien si nodeData.useImgui est faux.",
+      "desc": "Displays in the node (drawMiddle, ImGui): TEST MODE indicator, clock, epoch, event time, remaining time, staging check, state, reschedulings, and zone/staged. Does nothing if nodeData.useImgui is false.",
       "params": {
-        "im": {"type": "table", "desc": "ui_imgui."},
-        "nodeData": {"type": "table", "desc": "Données du nœud (useImgui, test, wallClockSecs, currentEpochTime, scheduledEventTime, stagingCheckTime, state, rescheduleCount, maxReschedules, inZone, staged…)."},
-        "formatTimeFromSeconds": {"type": "function", "desc": "Fonction secondes -> texte."}
+        "im": {
+          "type": "table",
+          "desc": "ui_imgui."
+        },
+        "nodeData": {
+          "type": "table",
+          "desc": "Node data (useImgui, test, wallClockSecs, currentEpochTime, scheduledEventTime, stagingCheckTime, state, rescheduleCount, maxReschedules, inZone, staged...)."
+        },
+        "formatTimeFromSeconds": {
+          "type": "function",
+          "desc": "Function seconds -> text."
+        }
       }
     },
     "drawMiddleProgress": {
-      "desc": "Barre de progression du nœud : « Running » avec (duration - timer)/duration, « Done » (pleine) si terminé, « Waiting » (vide) sinon.",
+      "desc": "Node progress bar: \"Running\" with (duration - timer)/duration, \"Done\" (full) if finished, \"Waiting\" (empty) otherwise.",
       "params": {
-        "im": {"type": "table", "desc": "ui_imgui."},
-        "state": {"type": "any", "desc": "État courant du nœud."},
-        "duration": {"type": "number", "desc": "Durée totale en secondes."},
-        "timer": {"type": "number", "desc": "Temps restant en secondes."},
-        "STATE_COUNTDOWN_RUNNING": {"type": "any", "desc": "Valeur d'état « en cours »."},
-        "STATE_FINISHED": {"type": "any", "desc": "Valeur d'état « terminé »."}
+        "im": {
+          "type": "table",
+          "desc": "ui_imgui."
+        },
+        "state": {
+          "type": "any",
+          "desc": "Current state of the node."
+        },
+        "duration": {
+          "type": "number",
+          "desc": "Total duration in seconds."
+        },
+        "timer": {
+          "type": "number",
+          "desc": "Remaining time in seconds."
+        },
+        "STATE_COUNTDOWN_RUNNING": {
+          "type": "any",
+          "desc": "\"Running\" state value."
+        },
+        "STATE_FINISHED": {
+          "type": "any",
+          "desc": "\"Finished\" state value."
+        }
       }
     }
   }

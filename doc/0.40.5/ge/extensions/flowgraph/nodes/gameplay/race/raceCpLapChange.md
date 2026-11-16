@@ -1,22 +1,22 @@
 # `flowgraph_nodes_gameplay_race_raceCpLapChange`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceCpLapChange.lua` · VM : Game Engine (GE) · 68 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceCpLapChange.lua` · VM: Game Engine (GE) · 68 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/race/raceCpLapChange")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/race/raceCpLapChange")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Race CP/Lap Change » (catégorie repeat_instant). Laisse passer un flux (impulsion changed) quand le checkpoint ou le tour d'un véhicule change, d'après les events de l'état de course (rollingStarted, pathnodeReached, raceStarted, lapComplete, raceComplete). Sorties : flow, changed, curCP (index linéaire du checkpoint courant), maxCP (nombre de pathnodes), curLap (tour courant, base 1), maxLap (race.lapCount), recoveryReached et usedRecovery.
+Flowgraph node "Race CP/Lap Change" (category repeat_instant). Lets a flow (changed pulse) through when a vehicle's checkpoint or lap changes, based on the race state events (rollingStarted, pathnodeReached, raceStarted, lapComplete, raceComplete). Outputs: flow, changed, curCP (linear index of the current checkpoint), maxCP (number of pathnodes), curLap (current lap, 1-based), maxLap (race.lapCount), recoveryReached and usedRecovery.
 
-## Remarques
+## Notes
 
-- Un bloc de code est désactivé par « if false and … » (réinitialisation des race markers) : il est mort.
+- A block of code is disabled by "if false and ..." (reset of the race markers): it is dead.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Chaque frame : recopie flow, et si un évènement de checkpoint/tour a eu lieu pour vehId, met à jour curCP, maxCP, curLap, maxLap, changed, recoveryReached et usedRecovery. | 29 |
+| `C:work()` | Every frame: copies flow, and if a checkpoint/lap event occurred for vehId, updates curCP, maxCP, curLap, maxLap, changed, recoveryReached and usedRecovery. | 29 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceCpLapChange.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceCpLapChange.lua`.*

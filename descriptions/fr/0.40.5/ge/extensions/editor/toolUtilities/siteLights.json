@@ -1,0 +1,49 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/siteLights.lua",
+  "module": "Un seul endroit qui transforme un enregistrement de lumière en objet de scène, pour tous les outils de la suite. Chaque lumière est une lumière de nuit dès qu'elle est posée : sombre de jour, allumée après le crépuscule, commutée par l'environnement (core_environment). Fournit la création (spawn), la mise à jour (apply), un drapeau pour redemander à l'environnement de rescanner la scène (markDirty) et une boucle légère à appeler chaque frame (flush) qui garde les lumières neuves en phase avec le jour et la nuit.",
+  "usage": "local lights = extensions.editor_toolUtilities_siteLights\nlocal obj = lights.spawn(folder, 'MyLamp_1', {px = x, py = y, pz = z + 6, glow = lights.TONES.warm, radius = 18, brightness = 2})\n-- chaque frame de l'outil :\nlights.flush()",
+  "notes": [
+    "Enregistrement de lumière : { px, py, pz, glow ou col ({r,g,b}), brightness, radius } pour une ampoule (PointLight) ; plus { dx, dy, dz, cone } pour un projecteur (SpotLight). La classe est fixée à la création et doit correspondre à l'enregistrement. cone par défaut 70 degrés, angle intérieur = 0.6 * cone, la portée vient de radius (champ range).",
+    "Un enregistrement avec always = true est allumé jour et nuit (un tunnel est sombre à midi) et exclu de toute commutation jour/nuit.",
+    "Les lumières sont créées avec canSave = false et castShadows = false ; une lumière sans always démarre éteinte (isEnabled false) avec nightLight = 1 et est confiée à l'environnement.",
+    "Le rescan de l'environnement parcourt toute la scène (des secondes sur une carte urbaine) : markDirty sans objet attend settleMs = 250 ms de calme ; avec un objet, celui-ci est mis dans l'état jour/nuit courant sans rescan et suivi toutes les 500 ms (followMs).",
+    "Un nom nil laisse la lumière sans nom, ce qui l'enregistre environ 3 ms plus vite ; la passe de crépuscule de l'environnement les repère par id, donc elle commute quand même. Une lumière du même nom existante est supprimée avant la création.",
+    "Si l'environnement est resté sans scan (rechargement Lua), flush le détecte (nuit mais lumières non activées, sur deux vérifications consécutives) et redemande un rescan."
+  ],
+  "fields": {
+    "TONES": {"type": "table<string, number[]>", "desc": "Teintes nommées : warm {1.00, 0.72, 0.34} (sodium), white {1.00, 0.95, 0.88}, cool {0.78, 0.87, 1.00} (iodures métalliques). Évite que deux sites voisins soient éclairés de couleurs différentes."}
+  },
+  "functions": {
+    "apply": {
+      "desc": "Règle une lumière existante d'après un enregistrement : rayon (ou portée et angles pour un projecteur), luminosité, couleur, ombres désactivées, position, et rotation vers (dx, dy, dz) pour un projecteur.",
+      "params": {
+        "obj": {"type": "userdata", "desc": "Objet PointLight ou SpotLight."},
+        "lt": {"type": "table", "desc": "Enregistrement de lumière."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "spawn": {
+      "desc": "Crée un objet lumière pour un enregistrement (SpotLight s'il porte une direction, sinon PointLight), l'enregistre sous name et l'ajoute à folder. Renvoie nil si la création échoue. Sauf always, la lumière est confiée à l'environnement via markDirty.",
+      "params": {
+        "folder": {"type": "userdata|nil", "desc": "Groupe de scène parent."},
+        "name": {"type": "string|nil", "desc": "Nom d'objet (nil = sans nom)."},
+        "lt": {"type": "table", "desc": "Enregistrement de lumière."}
+      },
+      "returns": [{"type": "userdata|nil", "desc": "Objet lumière créé."}],
+      "internal": false
+    },
+    "markDirty": {
+      "desc": "Signale qu'une lumière est neuve (avec obj : elle sera mise dans l'état jour/nuit courant) ou qu'un rescan complet de la scène est dû (sans obj : fait après une pause de 250 ms). La suppression d'une lumière n'a pas besoin de rescan : l'environnement ignore celles qui ont disparu.",
+      "params": {"obj": {"type": "userdata|nil", "desc": "Lumière ou élément lumineux neuf."}},
+      "returns": [],
+      "internal": false
+    },
+    "flush": {
+      "desc": "À appeler chaque frame par chaque outil qui crée des lumières. Peu coûteux tant que rien n'est dû : effectue le rescan différé, suit l'état jour/nuit de l'environnement (core_environment.getLightState) et commute (setLightEnabled, ou couleur d'instance pour une lentille émissive) les objets marqués.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

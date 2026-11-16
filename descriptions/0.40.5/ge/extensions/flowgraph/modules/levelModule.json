@@ -1,19 +1,53 @@
 {
   "path": "lua/ge/extensions/flowgraph/modules/levelModule.lua",
-  "module": "Module flowgraph (moduleOrder 100) qui synchronise les actions d'un projet avec le chargement d'un niveau. Il permet de différer une fonction jusqu'à la fin du chargement (delayOrInstantFunction) et de recharger la collision (be:reloadCollision) après le chargement d'un niveau ou à la fin du tick quand un prefab est chargé.",
+  "module": "Flowgraph module (moduleOrder 100) that synchronizes a project's actions with level loading. It lets you defer a function until loading finishes (delayOrInstantFunction) and reload the collision (be:reloadCollision) after a level loads or at the end of the tick when a prefab is loaded.",
   "notes": [
-    "Le test de chargement se fait par core_gamestate.loading(). Le champ isLoadingLevel est commenté et inutilisé.",
-    "beginLoadingLevel est vide.",
-    "uniqueFuns est créé et vidé mais jamais utilisé ; la liste prefabs n'est que remplie."
+    "The loading test is done by core_gamestate.loading(). The isLoadingLevel field is commented out and unused.",
+    "beginLoadingLevel is empty.",
+    "uniqueFuns is created and cleared but never used; the prefabs list is only filled."
   ],
   "functions": {
-    "init": {"desc": "Crée les tables funs, uniqueFuns et prefabs, initialise les drapeaux de rechargement de collision puis appelle clear().", "internal": true},
-    "clear": {"desc": "Vide les tables et remet les drapeaux reloadCollisionOnLevelLoading / reloadCollisionOnAfterTrigger à false.", "internal": true},
-    "beginLoadingLevel": {"desc": "Prévu pour signaler le début d'un chargement de niveau (corps vide).", "internal": true},
-    "finishedLevelLoading": {"desc": "À appeler à la fin du chargement du niveau : recharge la collision si demandé, exécute puis vide les fonctions différées.", "internal": true},
-    "afterTrigger": {"desc": "Appelé après le tick du graphe : si reloadCollisionOnAfterTrigger est vrai, appelle be:reloadCollision().", "internal": true},
-    "delayOrInstantFunction": {"desc": "Exécute fun tout de suite si aucun niveau n'est en chargement, sinon la met en file jusqu'à finishedLevelLoading.", "params": {"fun": {"type": "function", "desc": "fonction sans argument"}}},
-    "prefabLoaded": {"desc": "Signale qu'un prefab a été chargé : demande un rechargement de collision (à la fin du chargement du niveau si en cours, sinon après le tick) et mémorise l'id.", "params": {"id": {"type": "integer", "desc": "id de l'objet prefab"}}},
-    "executionStopped": {"desc": "Appelé à l'arrêt du projet : appelle clear().", "internal": true}
+    "init": {
+      "desc": "Creates the tables funs, uniqueFuns and prefabs, initializes the collision reload flags then calls clear().",
+      "internal": true
+    },
+    "clear": {
+      "desc": "Clears the tables and sets the flags reloadCollisionOnLevelLoading / reloadCollisionOnAfterTrigger back to false.",
+      "internal": true
+    },
+    "beginLoadingLevel": {
+      "desc": "Intended to signal the start of a level load (empty body).",
+      "internal": true
+    },
+    "finishedLevelLoading": {
+      "desc": "To be called at the end of level loading: reloads the collision if requested, runs then clears the deferred functions.",
+      "internal": true
+    },
+    "afterTrigger": {
+      "desc": "Called after the graph tick: if reloadCollisionOnAfterTrigger is true, calls be:reloadCollision().",
+      "internal": true
+    },
+    "delayOrInstantFunction": {
+      "desc": "Runs fun immediately if no level is loading, otherwise queues it until finishedLevelLoading.",
+      "params": {
+        "fun": {
+          "type": "function",
+          "desc": "function with no arguments"
+        }
+      }
+    },
+    "prefabLoaded": {
+      "desc": "Signals that a prefab was loaded: requests a collision reload (at the end of level loading if in progress, otherwise after the tick) and stores the id.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "prefab object id"
+        }
+      }
+    },
+    "executionStopped": {
+      "desc": "Called when the project stops: calls clear().",
+      "internal": true
+    }
   }
 }

@@ -1,0 +1,11 @@
+{
+  "path": "lua/ge/extensions/editor/api/aiPath.lua",
+  "module": "Module d'API de l'éditeur « aiPath » : coquille vide. Il mémorise seulement l'instance de l'éditeur reçue à l'initialisation et ne définit aucune autre fonction dans cette version.",
+  "functions": {
+    "initialize": {
+      "desc": "Appelé par l'éditeur au chargement des modules d'API : mémorise l'instance de l'éditeur (variable locale) ; ne fait rien d'autre.",
+      "params": {"editorInstance": {"type": "table", "desc": "Instance de l'éditeur."}},
+      "internal": true
+    }
+  }
+}

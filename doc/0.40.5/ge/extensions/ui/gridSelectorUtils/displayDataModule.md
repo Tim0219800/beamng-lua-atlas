@@ -1,63 +1,63 @@
 # `ui_gridSelectorUtils_displayDataModule`
 
-*Fichier : `lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua` · VM : Game Engine (GE) · 266 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua` · VM: Game Engine (GE) · 266 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_gridSelectorUtils_displayDataModule` : `extensions.load("ui_gridSelectorUtils_displayDataModule")`, puis la globale `ui_gridSelectorUtils_displayDataModule`
+**Access:** extension `ui_gridSelectorUtils_displayDataModule`: `extensions.load("ui_gridSelectorUtils_displayDataModule")`, then the global `ui_gridSelectorUtils_displayDataModule`
 
-Utilitaire des sélecteurs en grille : gère les options d'affichage (tri, filtres d'affichage, bascules…), la liste des favoris et celle des éléments récents, avec persistance JSON dans un fichier (par défaut /settings/gridSelectorData.json). Une option peut être liée à un réglage du jeu via `settingsKey`. Émet les hooks onGridSelectorDisplayDataChanged et onGridSelectorFavouriteToggled.
+Grid selector utility: manages display options (sorting, display filters, toggles...), the favorites list and the recent items list, with JSON persistence in a file (default /settings/gridSelectorData.json). An option can be linked to a game setting via `settingsKey`. Emits the hooks onGridSelectorDisplayDataChanged and onGridSelectorFavouriteToggled.
 
-## Remarques
+## Notes
 
-- Les données sont chargées paresseusement au premier accès (getDisplayData). Si la version du fichier est inférieure à targetVersion, `updateDisplayDataFunction(displayData, 0, targetVersion)` est appelée pour migrer.
-- Les clés `showAuxContent` (valeur initiale = not shipping_build) et `showCareerContent` (forcée à false en build shipping) ont un traitement spécial à l'initialisation.
-- Seules les options avec `save = true` sont réellement réécrites dans displayData lors de la sauvegarde ; resetDisplayDataToDefaults ne réinitialise aussi que ces options.
-- Les favoris stockent l'horodatage os.time() ; les éléments récents sont limités à 100 (le plus récent en tête).
-- Les options liées à `settingsKey` lisent et écrivent via settings.getValue/settings.setValue.
+- Data is loaded lazily on first access (getDisplayData). If the file version is lower than targetVersion, `updateDisplayDataFunction(displayData, 0, targetVersion)` is called to migrate.
+- The keys `showAuxContent` (initial value = not shipping_build) and `showCareerContent` (forced to false in shipping builds) get special handling at initialization.
+- Only options with `save = true` are actually written back into displayData on save; resetDisplayDataToDefaults also resets only those options.
+- Favorites store the os.time() timestamp; recent items are limited to 100 (most recent first).
+- Options linked to `settingsKey` read and write via settings.getValue/settings.setValue.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_gridSelectorUtils_displayDataModule.create(dataFile, displayDataOptions, updateDisplayDataFunction, backendName, targetVersion)` | Crée une instance de gestion des données d'affichage, favoris et récents. | 4 |
+| `ui_gridSelectorUtils_displayDataModule.create(dataFile, displayDataOptions, updateDisplayDataFunction, backendName, targetVersion)` | Creates a display data, favorites and recents management instance. | 4 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_gridSelectorUtils_displayDataModule.create(dataFile, displayDataOptions, updateDisplayDataFunction, backendName, targetVersion)`
 
-Crée une instance de gestion des données d'affichage, favoris et récents.
+Creates a display data, favorites and recents management instance.
 
-- `dataFile` (*string|nil*) : Fichier JSON de sauvegarde, défaut /settings/gridSelectorData.json.
-- `displayDataOptions` (*table[]|nil*) : Liste d'options { key, type, default, label, min, max, options, showInModes, description, hideInSimpleMenu, save, settingsKey }.
-- `updateDisplayDataFunction` (*function|nil*) : Migration (displayData, ancienneVersion, nouvelleVersion) -> displayData.
-- `backendName` (*string|nil*) : Nom transmis aux hooks, défaut "gridSelector".
-- `targetVersion` (*integer|nil*) : Version courante du format de données, défaut 1.
-- **renvoie** : table Instance (voir classes.instance).
+- `dataFile` (*string|nil*) : JSON save file, default /settings/gridSelectorData.json.
+- `displayDataOptions` (*table[]|nil*) : List of options { key, type, default, label, min, max, options, showInModes, description, hideInSimpleMenu, save, settingsKey }.
+- `updateDisplayDataFunction` (*function|nil*) : Migration (displayData, oldVersion, newVersion) -> displayData.
+- `backendName` (*string|nil*) : Name passed to the hooks, default "gridSelector".
+- `targetVersion` (*integer|nil*) : Current data format version, default 1.
+- **returns**: table Instance (see classes.instance).
 
-## Classe `instance`
+## Class `instance`
 
-Objet renvoyé par create().
+Object returned by create().
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `instance:clearAllFavourites()` | Vide les favoris et sauvegarde. | dyn |
-| `instance:clearAllRecentItems()` | Vide les récents et sauvegarde. | dyn |
-| `instance:getDisplayData()` | Renvoie la table clé -> valeur des options, initialisée au premier appel. | dyn |
-| `instance:getDisplayDataOptions()` | Renvoie la liste des options pour l'UI : label, key, type, min, max, value, options, showInModes, description, hideInSimpleMenu. La valeur de `searchText` est toujours nil (gérée par le module appelant). | dyn |
-| `instance:getRecentItems()` | Renvoie une copie profonde de la liste des récents. | dyn |
-| `instance:initializeDisplayData()` | Relit le fichier et reconstruit la table des options à partir des défauts, du fichier et des réglages liés. | dyn |
-| `instance:isFavourite(itemKey)` | Renvoie l'horodatage du favori ou nil. | dyn |
-| `instance:isRecentItem(itemKey)` | Renvoie la position dans la liste des récents, ou false. | dyn |
-| `instance:resetDisplayDataToDefaults()` | Remet les options `save` à leur valeur par défaut, émet le hook pour chaque changement et sauvegarde. | dyn |
-| `instance:setDisplayDataOption(key, value)` | Change une option (convertie en nombre si son type est number), émet onGridSelectorDisplayDataChanged(backendName, key, value), répercute sur le réglage lié et sauvegarde. Les valeurs nil ou "undefined" sont ignorées. | dyn |
-| `instance:toggleFavourite(itemKey)` | Ajoute ou retire un favori, émet onGridSelectorFavouriteToggled(backendName, itemKey, estFavori) et sauvegarde. | dyn |
-| `instance:trackRecentItem(itemKey)` | Place l'élément en tête des récents (max 100) et sauvegarde. | dyn |
+| `instance:clearAllFavourites()` | Clears the favorites and saves. | dyn |
+| `instance:clearAllRecentItems()` | Clears the recents and saves. | dyn |
+| `instance:getDisplayData()` | Returns the key -> value table of the options, initialized on first call. | dyn |
+| `instance:getDisplayDataOptions()` | Returns the options list for the UI: label, key, type, min, max, value, options, showInModes, description, hideInSimpleMenu. The value of `searchText` is always nil (handled by the calling module). | dyn |
+| `instance:getRecentItems()` | Returns a deep copy of the recents list. | dyn |
+| `instance:initializeDisplayData()` | Re-reads the file and rebuilds the options table from the defaults, the file and the linked settings. | dyn |
+| `instance:isFavourite(itemKey)` | Returns the favorite's timestamp or nil. | dyn |
+| `instance:isRecentItem(itemKey)` | Returns the position in the recents list, or false. | dyn |
+| `instance:resetDisplayDataToDefaults()` | Resets the `save` options to their default value, emits the hook for each change and saves. | dyn |
+| `instance:setDisplayDataOption(key, value)` | Changes an option (converted to a number if its type is number), emits onGridSelectorDisplayDataChanged(backendName, key, value), propagates to the linked setting and saves. nil or "undefined" values are ignored. | dyn |
+| `instance:toggleFavourite(itemKey)` | Adds or removes a favorite, emits onGridSelectorFavouriteToggled(backendName, itemKey, isFavourite) and saves. | dyn |
+| `instance:trackRecentItem(itemKey)` | Puts the item at the head of the recents (max 100) and saves. | dyn |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onGridSelectorDisplayDataChanged`
 - `onGridSelectorFavouriteToggled`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua`.*

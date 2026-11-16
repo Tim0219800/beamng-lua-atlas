@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/ui/apps/minimap/layers.lua",
+  "module": "Constantes numériques des couches de dessin de la mini-carte. Les couches sont rendues de la plus basse (0) à la plus haute : fond, grille, routes, itinéraire, marqueurs de gameplay, véhicules, masque rond/carré, boussole, pointeurs, debug. Ce n'est pas une extension chargeable : les modules de la minimap le lisent par require(\"ui/apps/minimap/layers\").",
+  "fields": {
+    "BACKGROUND": {"type": "integer", "desc": "0 : fond (tout en bas)."},
+    "BG_GRID": {"type": "integer", "desc": "10 : grille de fond."},
+    "ROADS_BG": {"type": "integer", "desc": "20 : contour des routes."},
+    "ROADS_FG": {"type": "integer", "desc": "30 : trait des routes."},
+    "ROUTE_BG": {"type": "integer", "desc": "40 : contour de l'itinéraire."},
+    "ROUTE_FG": {"type": "integer", "desc": "50 : trait de l'itinéraire."},
+    "GAMEPLAY_MARKERS": {"type": "integer", "desc": "60 : marqueurs de gameplay."},
+    "VEHICLES_OTHER": {"type": "integer", "desc": "70 : autres véhicules."},
+    "VEHICLES_POLICE": {"type": "integer", "desc": "80 : véhicules de police."},
+    "VEHICLES_USABLE": {"type": "integer", "desc": "90 : véhicules utilisables."},
+    "VEHICLE_PLAYER": {"type": "integer", "desc": "100 : véhicule du joueur."},
+    "ROUND_OR_SQUARE_MASK": {"type": "integer", "desc": "110 : masque d'occlusion (cadre rond ou carré)."},
+    "COMPASS": {"type": "integer", "desc": "120 : boussole."},
+    "ROUTE_POINTER": {"type": "integer", "desc": "130 : pointeur vers la destination."},
+    "GAMEPLAY_POINTER": {"type": "integer", "desc": "140 : pointeur de gameplay."},
+    "DEBUG": {"type": "integer", "desc": "150 : couche de debug (tout en haut)."}
+  }
+}

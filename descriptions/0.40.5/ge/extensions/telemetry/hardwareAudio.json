@@ -1,22 +1,22 @@
 {
   "path": "lua/ge/extensions/telemetry/hardwareAudio.lua",
-  "module": "Module utilitaire de la télémétrie matérielle (chargé par require) : transforme les informations brutes du périphérique de sortie audio en un résumé anonymisé. Le nom du périphérique est classé par mots-clés (virtual, headphones, display, speakers, unknown) puis supprimé : seuls la catégorie, la fréquence d'échantillonnage, le mode haut-parleurs et le nombre de canaux sont conservés.",
+  "module": "Hardware telemetry utility module (loaded by require): turns the raw information of the audio output device into an anonymized summary. The device name is classified by keywords (virtual, headphones, display, speakers, unknown) then discarded: only the category, the sample rate, the speaker mode and the channel count are kept.",
   "notes": [
-    "Les mots-clés sont cherchés en minuscules dans le nom : virtual (virtual, voicemeeter, cable input, sonar, streaming speakers, wave link) prioritaire, puis headphones (headphone, headset, earphone, earbud, airpods), puis display (mot 'tv', hdmi, displayport, monitor, audio NVIDIA/AMD/Intel d'écran), puis speakers (speaker, soundbar)."
+    "The keywords are searched in lowercase in the name: virtual (virtual, voicemeeter, cable input, sonar, streaming speakers, wave link) takes priority, then headphones (headphone, headset, earphone, earbud, airpods), then display (word 'tv', hdmi, displayport, monitor, NVIDIA/AMD/Intel display audio), then speakers (speaker, soundbar)."
   ],
   "functions": {
     "fromDeviceInfo": {
-      "desc": "Renvoie {category, sampleRateHz, speakerMode, channels} à partir des infos du périphérique audio ; le nom brut et les champs de diagnostic (provider, driverIndex, useHardware, maxBuffers, caps) ne sont jamais repris.",
+      "desc": "Returns {category, sampleRateHz, speakerMode, channels} from the audio device info; the raw name and the diagnostic fields (provider, driverIndex, useHardware, maxBuffers, caps) are never carried over.",
       "params": {
         "info": {
           "type": "table|nil",
-          "desc": "Infos du périphérique : name, sampleRateHz, speakerMode, channels…"
+          "desc": "Device info: name, sampleRateHz, speakerMode, channels..."
         }
       },
       "returns": [
         {
           "type": "table|nil",
-          "desc": "Résumé anonymisé, ou nil si info est absent ou vide."
+          "desc": "Anonymized summary, or nil if info is absent or empty."
         }
       ],
       "internal": false

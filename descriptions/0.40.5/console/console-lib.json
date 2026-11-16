@@ -1,26 +1,41 @@
 {
   "path": "lua/console/console-lib.lua",
-  "module": "Bibliothèque d'aide de la VM console (BeamNG sans jeu) : crée des objets Lua factices pour que le code de véhicule/physique puisse tourner hors du jeu complet, fabrique des objets `ground_model` à partir de la description JSON des matériaux de sol, et lit art/groundmodels.json. Utilisée par bananabench.",
+  "module": "Helper library of the console VM (BeamNG without the game): creates dummy Lua objects so that vehicle/physics code can run outside the full game, builds `ground_model` objects from the JSON description of ground materials, and reads art/groundmodels.json. Used by bananabench.",
   "notes": [
-    "`initConsole` définit des GLOBALES factices : physicsEngineEvent, vehicleReset, map (setNameForId, objectData), gameplay_statistic (metricAdd), core_sounds (setEngineSoundParameter, setEngineSoundParameterList, initExhaustSound, setExhaustSoundNodes, initEngineSound), toutes sans effet.",
-    "`createGroundModel` est marqué TODO dans le source : code dupliqué depuis environment.lua (submitGroundModel). Valeurs par défaut : roughnessCoefficient 0, defaultDepth 0, staticFrictionCoefficient 1, slidingFrictionCoefficient 0.7, hydrodynamicFriction 0.01 (accepte aussi la clé mal orthographiée `hydrodnamicFriction`), stribeckVelocity 6, strength 1, fluidDensity 200, flowConsistencyIndex 10000, flowBehaviorIndex 0.5, dragAnisotropy 0, skidMarks false, shearStrength 0.",
-    "collisiontype : si c'est une chaîne, elle est convertie en identifiant de matériau particules (particles.getOrAddMaterialIDByName), sinon 0."
+    "`initConsole` defines dummy GLOBALS: physicsEngineEvent, vehicleReset, map (setNameForId, objectData), gameplay_statistic (metricAdd), core_sounds (setEngineSoundParameter, setEngineSoundParameterList, initExhaustSound, setExhaustSoundNodes, initEngineSound), all with no effect.",
+    "`createGroundModel` is marked TODO in the source: code duplicated from environment.lua (submitGroundModel). Default values: roughnessCoefficient 0, defaultDepth 0, staticFrictionCoefficient 1, slidingFrictionCoefficient 0.7, hydrodynamicFriction 0.01 (also accepts the misspelled key `hydrodnamicFriction`), stribeckVelocity 6, strength 1, fluidDensity 200, flowConsistencyIndex 10000, flowBehaviorIndex 0.5, dragAnisotropy 0, skidMarks false, shearStrength 0.",
+    "collisiontype: if it is a string, it is converted to a particle material identifier (particles.getOrAddMaterialIDByName), otherwise 0."
   ],
   "functions": {
     "initConsole": {
-      "desc": "Crée les globales factices nécessaires pour exécuter du code de véhicule hors du jeu (map, gameplay_statistic, core_sounds, physicsEngineEvent, vehicleReset).",
+      "desc": "Creates the dummy globals needed to run vehicle code outside the game (map, gameplay_statistic, core_sounds, physicsEngineEvent, vehicleReset).",
       "params": {},
       "returns": []
     },
     "createGroundModel": {
-      "desc": "Crée et remplit un objet natif `ground_model()` à partir d'une table de paramètres (coefficients de frottement, profondeur, rugosité, fluide…) avec les valeurs par défaut listées dans les notes.",
-      "params": {"v": {"type": "table", "desc": "Description d'un matériau de sol (entrée de art/groundmodels.json)."}},
-      "returns": [{"type": "userdata", "desc": "Objet ground_model natif."}]
+      "desc": "Creates and fills a native `ground_model()` object from a parameter table (friction coefficients, depth, roughness, fluid…) with the default values listed in the notes.",
+      "params": {
+        "v": {
+          "type": "table",
+          "desc": "Description of a ground material (entry of art/groundmodels.json)."
+        }
+      },
+      "returns": [
+        {
+          "type": "userdata",
+          "desc": "Native ground_model object."
+        }
+      ]
     },
     "readGroundModels": {
-      "desc": "Lit et renvoie le contenu de art/groundmodels.json.",
+      "desc": "Reads and returns the content of art/groundmodels.json.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Tables des modèles de sol décodées."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Decoded ground model tables."
+        }
+      ]
     }
   }
 }

@@ -1,26 +1,41 @@
 {
   "path": "lua/common/libs/luaqrcode/qrencode.lua",
-  "module": "luaqrcode (Patrick Gundlach / speedata, licence BSD 3 clauses) : générateur de QR codes en Lua pur. Il choisit la plus petite version (1 à 40) et le mode (numérique, alphanumérique, binaire), encode les données, calcule la correction d'erreur Reed-Solomon, génère les 8 masques et garde celui dont la pénalité est la plus faible. Il ne dessine rien : il renvoie une matrice de modules que le moddeur affiche lui-même (par exemple en UI ou texture).",
+  "module": "luaqrcode (Patrick Gundlach / speedata, BSD 3-clause license): pure-Lua QR code generator. It picks the smallest version (1 to 40) and the mode (numeric, alphanumeric, binary), encodes the data, computes the Reed-Solomon error correction, generates the 8 masks and keeps the one with the lowest penalty. It draws nothing: it returns a matrix of modules that the modder displays themselves (for example in UI or a texture).",
   "usage": "local qr = require('libs/luaqrcode/qrencode')\nlocal ok, matrix = qr.qrcode('https://beamng.com')\nif ok then\n  for x = 1, #matrix do for y = 1, #matrix do\n    local noir = matrix[x][y] > 0\n  end end\nend",
   "notes": [
-    "Valeurs de la matrice : positif = module noir, négatif = module blanc (1/-1 pour les données, 2/-2 pour les motifs obligatoires). La matrice est indexée matrix[x][y], en base 1, taille carrée de 4 * version + 17 ; [1][1] est en haut à gauche.",
-    "qrcode renvoie (true, matrice) en cas de succès, (false, message) si les données arrangées ne sont pas un multiple de 8 bits ; les autres cas d'échec (texte trop long pour la version 40, etc.) peuvent lever une erreur (déduit du code).",
-    "Le paramètre mode n'est pas implémenté : le passer déclenche assert(false, 'not implemented') dans get_version_eclevel_mode_bistringlength. Le mode est choisi automatiquement : numérique si que des chiffres, alphanumérique pour [0-9A-Z $%*./:+-], sinon binaire.",
-    "Niveaux de correction ec_level : 1 à 4 (L, M, Q, H). Sans valeur, la fonction prend le niveau le plus élevé qui tient dans la plus petite version.",
-    "Le fichier contient un bloc 'if testing' qui exporte des fonctions internes si la globale testing est définie ; sinon seul qrcode est exporté.",
-    "Utilise le module 'bit' (LuaJIT BitOp)."
+    "Matrix values: positive = black module, negative = white module (1/-1 for data, 2/-2 for mandatory patterns). The matrix is indexed matrix[x][y], 1-based, square of size 4 * version + 17; [1][1] is top left.",
+    "qrcode returns (true, matrix) on success, (false, message) if the arranged data is not a multiple of 8 bits; other failure cases (text too long for version 40, etc.) may raise an error (inferred from code).",
+    "The mode parameter is not implemented: passing it triggers assert(false, 'not implemented') in get_version_eclevel_mode_bistringlength. The mode is chosen automatically: numeric if only digits, alphanumeric for [0-9A-Z $%*./:+-], otherwise binary.",
+    "ec_level error correction levels: 1 to 4 (L, M, Q, H). Without a value, the function takes the highest level that fits in the smallest version.",
+    "The file contains an 'if testing' block that exports internal functions if the global testing is defined; otherwise only qrcode is exported.",
+    "Uses the 'bit' module (LuaJIT BitOp)."
   ],
   "functions": {
     "qrcode": {
-      "desc": "Génère le QR code d'une chaîne : détermine version, niveau de correction et mode, encode les données, ajoute la correction d'erreur, puis choisit le masque de moindre pénalité.",
+      "desc": "Generates the QR code of a string: determines version, error correction level and mode, encodes the data, adds the error correction, then picks the lowest-penalty mask.",
       "params": {
-        "str": {"type": "string", "desc": "Texte à encoder."},
-        "ec_level": {"type": "integer|nil", "desc": "Niveau de correction demandé, 1 à 4 (L, M, Q, H). Facultatif."},
-        "mode": {"type": "integer|nil", "desc": "Non implémenté : ne pas fournir (provoque une assertion)."}
+        "str": {
+          "type": "string",
+          "desc": "Text to encode."
+        },
+        "ec_level": {
+          "type": "integer|nil",
+          "desc": "Requested error correction level, 1 to 4 (L, M, Q, H). Optional."
+        },
+        "mode": {
+          "type": "integer|nil",
+          "desc": "Not implemented: do not provide it (causes an assertion)."
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "true si la génération a réussi."},
-        {"type": "table<integer, table<integer, integer>>|string", "desc": "Matrice [x][y] des modules (positif = noir), ou message d'erreur si le premier retour est false."}
+        {
+          "type": "boolean",
+          "desc": "true if generation succeeded."
+        },
+        {
+          "type": "table<integer, table<integer, integer>>|string",
+          "desc": "Matrix [x][y] of modules (positive = black), or error message if the first return value is false."
+        }
       ]
     }
   }

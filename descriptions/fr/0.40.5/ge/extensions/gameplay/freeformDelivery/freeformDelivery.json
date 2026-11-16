@@ -1,0 +1,114 @@
+{
+  "path": "lua/ge/extensions/gameplay/freeformDelivery/freeformDelivery.lua",
+  "module": "Module principal du mode de livraison libre (freeform delivery). Il orchestre le cycle de vie d'une livraison décrite par un fichier delivery.delivery.json : load (chargement via le loader, installation des véhicules, routes, odomètre, filtre d'actions), start (objectifs, marqueurs, tasklist, hints, chronomètre), finish (arrêt de l'UI, gel des véhicules, état « terminé »), reset (retour à l'état chargé) et teardown (suppression des véhicules et déchargement). À chaque frame il met à jour tous les sous-modules (goals, markers, tasklist, hints, routes, odometer, vehicleSleep), affiche le chrono et enregistre un menu radial (quickAccess) pour terminer la livraison ou choisir un itinéraire.",
+  "usage": "extensions.load('gameplay_freeformDelivery_freeformDelivery')\ngameplay_freeformDelivery_freeformDelivery.load('gameplay/missions/driver_training/delivery/001-deliveryIntro/delivery.delivery.json')\n-- attendre isLoaded() == true (setup asynchrone), puis :\ngameplay_freeformDelivery_freeformDelivery.start()",
+  "notes": [
+    "États : chargement en attente (setupPending), isLoaded (prêt à démarrer), isActive (en cours), isFinished (terminé ou échoué, véhicules toujours présents), isFailed + failReason. load() refuse de charger si une livraison est déjà chargée, active ou terminée : appeler teardown() d'abord.",
+    "load() lance le setup de façon asynchrone ; isLoaded passe à true dans onUpdate quand setup et odomètre sont terminés. Délai maximal 20 s (SETUP_TIMEOUT_SECONDS), sinon teardown automatique.",
+    "load() bloque pour le joueur 0 les actions : vehicleTeleporting, vehicleMenues, physicsControls, aiControls, vehicleSwitching, freeCam, funStuff (groupe freeformDeliveryBlockedActions) ; teardown() les débloque. Il appelle aussi gameplay_freeformDelivery_debug.toggleDebugWindow(), qui n'ouvre en réalité rien (voir la description du module debug).",
+    "Le temps est mesuré avec os.clock() (temps réel, pas le temps simulé) : la pause ne l'arrête pas.",
+    "La fin automatique est déclenchée par gameplay_freeformDelivery_goals.updateCompletionTimer(dtReal) ; la fin manuelle passe par le menu radial /root/sandbox/delivery/ qui émet onGameplayActivityAborted puis finish().",
+    "Le menu quickAccess n'est enregistré qu'à l'ouverture du menu radial (onBeforeRadialOpened) et est retiré dans finish/teardown.",
+    "Chaque fonction qui change d'état (start, finish, reset) renvoie false avec un avertissement si l'état ne le permet pas.",
+    "Le champ dependencies est exposé et liste 20 extensions chargées avant (core_vehicles, core_gamestate, sitesManager, flowgraphManager, quickAccess, tous les sous-modules freeformDelivery, groundMarkers, actionFilter, genericMissionData). Le commentaire indique que setExtensionUnloadMode(M, \"manual\") est désactivé."
+  ],
+  "fields": {
+    "debug": {"type": "table", "desc": "Configuration de debug lue par les sous-modules : {enabled = false, targetAreas = {location, zone, parkingSpot = true}, p = nil (LuaProfiler)}."},
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : core_vehicles, core_gamestate, gameplay_sites_sitesManager, core_flowgraphManager, core_quickAccess, gameplay_freeformDelivery_{utils, loader, setup, goals, tasklist, markers, endScreen, hints, routes, debug, odometer, vehicleSleep}, core_groundMarkers, core_input_actionFilter, ui_apps_genericMissionData."}
+  },
+  "functions": {
+    "load": {
+      "desc": "Charge une livraison : lit le fichier via gameplay_freeformDelivery_loader.load, installe véhicules et joueur (setup), prépare routes, odomètre et vehicleSleep, bloque des actions et appelle le basculement de la fenêtre de debug. Le setup se termine plus tard (voir isLoaded).",
+      "params": {"path": {"type": "string", "desc": "Chemin du fichier delivery.delivery.json."}},
+      "returns": [{"type": "boolean", "desc": "true si le chargement a démarré, false si une livraison est déjà en place ou si le fichier/setup a échoué."}]
+    },
+    "start": {
+      "desc": "Démarre la livraison chargée : reconfigure routes, odomètre et vehicleSleep, puis active objectifs, marqueurs, tasklist et hints, et lance le chronomètre. Exige que isLoaded soit vrai et que la livraison ne soit pas déjà active.",
+      "returns": [{"type": "boolean", "desc": "true si démarrée."}]
+    },
+    "finish": {
+      "desc": "Termine la livraison active (réussie ou échouée) : enregistre le temps écoulé dans currentDelivery.elapsedTime, masque marqueurs, tasklist, hints, routes et odomètre, gèle les véhicules, efface le chrono et passe à l'état terminé (isFinished). Les objectifs restent évaluables.",
+      "params": {
+        "failed": {"type": "boolean|nil", "desc": "true si la livraison est un échec."},
+        "reason": {"type": "string|nil", "desc": "Raison de l'échec, conservée dans getFailReason."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si terminée, false s'il n'y avait pas de livraison active."}]
+    },
+    "reset": {
+      "desc": "Remet une livraison active ou terminée à l'état chargé : nettoie tous les sous-modules, dégèle les véhicules, restaure leurs positions et refait le placement du joueur. Il faut rappeler start() ensuite.",
+      "returns": [{"type": "boolean", "desc": "true si réinitialisée, false s'il n'y a rien à réinitialiser."}]
+    },
+    "teardown": {
+      "desc": "Démantèle complètement la livraison : débloque les actions, nettoie les sous-modules, dégèle puis supprime les véhicules et le prefab (sauf keepVehicles), vide les POI bruts, retire le menu quickAccess et remet tous les états à zéro. Sans effet si rien n'est chargé.",
+      "params": {"keepVehicles": {"type": "boolean|nil", "desc": "true pour conserver les véhicules spawnés (faux par défaut)."}}
+    },
+    "cleanup": {
+      "desc": "Ancienne fonction de nettoyage, conservée pour compatibilité : appelle teardown() sans argument."
+    },
+    "isActive": {
+      "desc": "Indique si la livraison est en cours (objectifs et chrono actifs). Utilisé par quickAccess.",
+      "returns": [{"type": "boolean", "desc": "true si active."}]
+    },
+    "isFinished": {
+      "desc": "Indique si la livraison est terminée (réussie ou échouée) mais pas encore démantelée.",
+      "returns": [{"type": "boolean", "desc": "true si terminée."}]
+    },
+    "isFailed": {
+      "desc": "Indique si la livraison s'est terminée par un échec.",
+      "returns": [{"type": "boolean", "desc": "true si échec."}]
+    },
+    "getFailReason": {
+      "desc": "Renvoie la raison de l'échec transmise à finish.",
+      "returns": [{"type": "string|nil", "desc": "Raison, nil sinon."}]
+    },
+    "isLoaded": {
+      "desc": "Indique si le chargement et le setup sont terminés (prêt à démarrer).",
+      "returns": [{"type": "boolean", "desc": "true si prêt."}]
+    },
+    "getSetupPending": {
+      "desc": "Indique si le setup asynchrone est encore en cours.",
+      "returns": [{"type": "boolean", "desc": "true tant que le setup n'est pas terminé."}]
+    },
+    "getCurrentDelivery": {
+      "desc": "Renvoie la table de la livraison courante (données du loader, plus elapsedTime après finish).",
+      "returns": [{"type": "table|nil", "desc": "Livraison, nil si aucune."}]
+    },
+    "getStartTime": {
+      "desc": "Renvoie l'instant de démarrage (os.clock()), 0 si pas démarrée.",
+      "returns": [{"type": "number", "desc": "Instant en secondes."}]
+    },
+    "getProgress": {
+      "desc": "Renvoie l'avancement des objectifs (gameplay_freeformDelivery_goals.getProgress) quand la livraison est active ou terminée.",
+      "returns": [{"type": "table|nil", "desc": "{total, completed, required, requiredCompleted, allRequiredComplete}, nil si seulement chargée."}]
+    },
+    "getResults": {
+      "desc": "Renvoie les statistiques de fin (gameplay_freeformDelivery_endScreen.collectStatistics) quand la livraison est active ou terminée et a démarré.",
+      "returns": [{"type": "table|nil", "desc": "Statistiques (temps, objectifs, dégâts) ou nil."}]
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque frame : surveille la fin du setup (et son délai de 20 s), puis si la livraison est active met à jour le cache des véhicules, les objectifs, marqueurs, tasklist, hints, routes, odomètre et vehicleSleep, affiche le chrono via ui_apps_genericMissionData et termine la livraison quand le minuteur d'achèvement des objectifs expire.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulé."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut."}
+      },
+      "internal": true
+    },
+    "onBeforeRadialOpened": {
+      "desc": "Hook : à l'ouverture du menu radial, enregistre les entrées quickAccess de la livraison (terminer, itinéraires).",
+      "internal": true
+    },
+    "onQuickAccessLoaded": {
+      "desc": "Hook : quickAccess rechargé ; autorise un nouvel enregistrement des entrées.",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook : déchargement de l'extension ; appelle teardown().",
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook : fin de niveau ; appelle teardown().",
+      "internal": true
+    }
+  }
+}

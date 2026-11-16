@@ -1,0 +1,19 @@
+{
+  "path": "lua/vehicle/extensions/dragAi.lua",
+  "module": "Mini-IA de dragster : gaz à fond, direction proportionnelle vers un point cible, puis freinage et frein à main à l'arrivée. L'état évolue de 'ready' (gaz enclenchés, frein à main serré) à 'go' (frein à main relâché, roule vers la cible), 'stopping', 'finished'. Elle pilote le véhicule en envoyant des événements d'entrée (input.event).",
+  "usage": "extensions.dragAi.setTarget(vec3(0, 400, 0))\nextensions.dragAi.getReady()\nextensions.dragAi.go()",
+  "notes": [
+    "États internes : nil/idle, 'ready', 'go', 'stopping', 'finished'. En 'go' la direction vaut (cos - sign(cos)) * 30 * sign(côté) (sans clamp) vers targetPosition (plan horizontal) ; passage en 'stopping' à moins de 10 m de la cible.",
+    "En 'stopping' : frein et frein à main, gaz et direction à zéro ; 'finished' quand electrics.values.airspeed < 2 (m/s), puis frein à main maintenu.",
+    "Si go() est appelé sans setTarget préalable, vec3(nil) provoquera une erreur.",
+    "reset() met l'état à 'idle', coupe les gaz et serre le frein à main."
+  ],
+  "fields": {},
+  "functions": {
+    "getReady": {"desc": "Passe en état 'ready' : applique les gaz à fond.", "params": {}, "returns": [], "internal": false},
+    "go": {"desc": "Passe en état 'go' : relâche le frein à main, la boucle conduit vers la cible.", "params": {}, "returns": [], "internal": false},
+    "setTarget": {"desc": "Définit le point cible à atteindre.", "params": {"targetPos": {"type": "vec3", "desc": "Position monde de la cible (x,y utilisés)."}}, "returns": [], "internal": false},
+    "reset": {"desc": "Hook de reset du véhicule : état 'idle', gaz à zéro, frein à main serré.", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Appelé chaque frame : exécute la machine à états de conduite.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (non utilisé)."}}, "returns": [], "internal": true}
+  }
+}

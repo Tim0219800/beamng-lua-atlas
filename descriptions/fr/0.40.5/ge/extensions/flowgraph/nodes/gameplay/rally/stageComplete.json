@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/stageComplete.lua",
+  "module": "Nœud flowgraph « Rally Mode Stage Complete » (catégorie once_instant, tag rally, sans pin). Signale la fin de la spéciale (véhicule arrêté) en déclenchant extensions.hook('onRallyStageComplete').",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "workOnce": {"desc": "Émet le hook onRallyStageComplete.", "internal": true}
+      }
+    }
+  }
+}

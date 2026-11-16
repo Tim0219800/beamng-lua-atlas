@@ -1,24 +1,24 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/flipUpright.lua",
-  "module": "Nœud « Flip Upright » (catégorie `repeat_instant`, tags rotation/position/recover/move). Remet le véhicule d'aplomb sans le réparer : `spawn.safeTeleport` à la même position avec une rotation recalculée par `quatFromDir(direction)`, puis déclenche le hook `onVehicleFlippedUpright(vehId)`. Pin d'entrée : `vehId`. Si `vehId` n'est pas branché, le nœud prend le véhicule joueur (`getPlayerVehicle(0)`).",
+  "module": "Node \"Flip Upright\" (category `repeat_instant`, tags rotation/position/recover/move). Sets the vehicle upright without repairing it: `spawn.safeTeleport` at the same position with a rotation recomputed by `quatFromDir(direction)`, then triggers the `onVehicleFlippedUpright(vehId)` hook. Input pin: `vehId`. If `vehId` is not connected, the node takes the player vehicle (`getPlayerVehicle(0)`).",
   "notes": [
-    "Appelé à chaque frame tant que le flux est actif.",
-    "Le dernier argument `false` de safeTeleport désactive la réparation."
+    "Called every frame while the flow is active.",
+    "The last argument `false` of safeTeleport disables repair."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "init": {
-          "desc": "Constructeur vide.",
+          "desc": "Empty constructor.",
           "internal": true
         },
         "resetVehicle": {
-          "desc": "Téléporte le véhicule sur place, redressé, et appelle `extensions.hook('onVehicleFlippedUpright', vehId)`.",
+          "desc": "Teleports the vehicle in place, upright, and calls `extensions.hook('onVehicleFlippedUpright', vehId)`.",
           "internal": false
         },
         "work": {
-          "desc": "Appelle `resetVehicle` et recopie le flux d'entrée sur la sortie.",
+          "desc": "Calls `resetVehicle` and copies the input flow to the output.",
           "internal": true
         }
       }

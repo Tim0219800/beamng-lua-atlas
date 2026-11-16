@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua",
+  "module": "Nœud flowgraph « Controls Action » (catégorie logic, événement). Laisse passer le flux quand l'action (Ctrl + Space) est pressée. Pousse automatiquement l'action map « FlowgraphActions » au démarrage du graphe et la retire à l'arrêt. Pins : flow (entrée), flow (sortie impulsion une fois à l'appui) et value (bool caché, vrai à l'appui).",
+  "notes": ["L'événement est valide s'il date de moins de 2 frames du manager (mgr.frameCount).", "todo du code : interaction incertaine si plusieurs flowgraphs utilisent ce nœud."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise self.reset = false.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "_executionStarted": {"desc": "Réinitialise l'état et appelle pushActionMap(\"FlowgraphActions\").", "internal": true},
+        "_executionStopped": {"desc": "Réinitialise l'état et appelle popActionMap(\"FlowgraphActions\").", "internal": true},
+        "onControlsAction": {"desc": "Hook appelé quand l'action est déclenchée : mémorise le numéro de frame.", "internal": true},
+        "drawMiddle": {"desc": "Dessin du nœud dans l'éditeur.", "internal": true},
+        "work": {"desc": "Met flow et value à vrai pendant la frame qui suit l'appui, sinon à faux.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}}
+      }
+    }
+  }
+}

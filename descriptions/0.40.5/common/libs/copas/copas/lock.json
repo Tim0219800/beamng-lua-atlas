@@ -1,41 +1,81 @@
 {
   "path": "lua/common/libs/copas/copas/lock.lua",
-  "module": "Sous-module de la bibliothèque tierce Copas : verrou (mutex) entre coroutines Copas. Une coroutine qui demande un verrou déjà pris cède la main jusqu'à ce qu'il soit libéré ou que le délai expire. Par défaut le verrou est ré-entrant et le délai de 10 s. Le module renvoie la table lock.",
-  "usage": "local lock = require(\"libs/copas/copas/lock\").new(5)\nlocal ok, err = lock:get()\n-- section critique\nlock:release()",
+  "module": "Submodule of the third-party Copas library: lock (mutex) between Copas coroutines. A coroutine that requests an already-held lock yields until it is released or the timeout expires. By default the lock is re-entrant and the timeout is 10 s. The module returns the table lock.",
+  "usage": "local lock = require(\"libs/copas/copas/lock\").new(5)\nlocal ok, err = lock:get()\n-- critical section\nlock:release()",
   "notes": [
-    "get renvoie le temps d'attente en cas de succès, ou nil, erreur, temps d'attente avec l'erreur parmi \"timeout\", \"destroyed\", \"lock is not re-entrant\".",
-    "release renvoie nil + « cannot release a lock not owned » si la coroutine courante n'est pas propriétaire."
+    "get returns the wait time on success, or nil, error, wait time with the error among \"timeout\", \"destroyed\", \"lock is not re-entrant\".",
+    "release returns nil + \"cannot release a lock not owned\" if the current coroutine is not the owner."
   ],
   "fields": {
-    "__index": {"type": "table", "desc": "Métatable des objets verrou (lock lui-même)."}
+    "__index": {
+      "type": "table",
+      "desc": "Metatable of the lock objects (lock itself)."
+    }
   },
   "functions": {
     "new": {
-      "desc": "Crée un verrou.",
+      "desc": "Creates a lock.",
       "params": {
-        "seconds": {"type": "number|nil", "desc": "Délai par défaut d'acquisition en secondes (défaut 10)"},
-        "not_reentrant": {"type": "boolean|nil", "desc": "Si vrai, une coroutine ne peut pas reprendre un verrou qu'elle possède déjà"}
-      },
-      "returns": [{"type": "table", "desc": "Le verrou"}]
-    },
-    "get": {
-      "desc": "Acquiert le verrou ; cède la main tant qu'une autre coroutine le possède. Avec timeout = 0, retourne immédiatement sans céder.",
-      "params": {
-        "self": {"type": "table", "desc": "Le verrou (appel lock:get)"},
-        "timeout": {"type": "number|nil", "desc": "Délai en secondes, prioritaire sur celui de new"}
+        "seconds": {
+          "type": "number|nil",
+          "desc": "Default acquisition timeout in seconds (default 10)"
+        },
+        "not_reentrant": {
+          "type": "boolean|nil",
+          "desc": "If true, a coroutine cannot re-acquire a lock it already holds"
+        }
       },
       "returns": [
-        {"type": "number|nil", "desc": "Temps d'attente en cas de succès, sinon nil"},
-        {"type": "string|nil", "desc": "Erreur : timeout, destroyed ou lock is not re-entrant"},
-        {"type": "number|nil", "desc": "Temps d'attente en cas d'échec"}
+        {
+          "type": "table",
+          "desc": "The lock"
+        }
+      ]
+    },
+    "get": {
+      "desc": "Acquires the lock; yields while another coroutine holds it. With timeout = 0, returns immediately without yielding.",
+      "params": {
+        "self": {
+          "type": "table",
+          "desc": "The lock (call lock:get)"
+        },
+        "timeout": {
+          "type": "number|nil",
+          "desc": "Timeout in seconds, takes precedence over the one from new"
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Wait time on success, otherwise nil"
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error: timeout, destroyed or lock is not re-entrant"
+        },
+        {
+          "type": "number|nil",
+          "desc": "Wait time on failure"
+        }
       ]
     },
     "release": {
-      "desc": "Libère le verrou détenu par la coroutine courante.",
-      "params": {"self": {"type": "table", "desc": "Le verrou (appel lock:release)"}},
+      "desc": "Releases the lock held by the current coroutine.",
+      "params": {
+        "self": {
+          "type": "table",
+          "desc": "The lock (call lock:release)"
+        }
+      },
       "returns": [
-        {"type": "boolean|nil", "desc": "true si libéré"},
-        {"type": "string|nil", "desc": "Message d'erreur"}
+        {
+          "type": "boolean|nil",
+          "desc": "true if released"
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error message"
+        }
       ]
     }
   }

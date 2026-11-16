@@ -1,0 +1,212 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/occupancy.lua",
+  "module": "Grille d'occupation 2D grossière (cellules de 1 m) partagée par l'écartement des piles de pont et celui de la végétation. Les routes (groupes à divPoints/binormales) et les jonctions sont fournies à rebuild ; le Rail Network poste ses voies et jonctions via setRail ; tout est estampillé ensemble, avec les obstacles statiques (rivières, bâtiments, clôtures, lacs), les terrains revendiqués par d'autres outils (groundClaims) et une couche propre aux plantes (setPlantKeepOut). Chaque cellule garde un propriétaire (chaîne), ou false si plusieurs se la partagent. Les requêtes (occupiedAt, transportAt, blocked, overhangAt…) répondent « y a-t-il quelque chose ici ».",
+  "notes": [
+    "Propriétaires (premier caractère) : 'g' route/rail, 'p' chemin, 'j' jonction, 'b' bâtiment ; suffixe 'b' = tronçon de pont d'une liaison (une pile peut se tenir sous son propre tablier), suffixe 't' = souterrain (tunnel, jonction en tunnel, terrain réclamé pour la couverture) ; les rails sont 'gr', 'jr'. Les plantes se tiennent sur ce qui est enterré, tout le reste l'évite.",
+    "Marges : rubans de route 0.5 m, rivières +1 m au-delà du demi-largeur, bâtiments +1 m, clôtures 0.5 m, lacs +1 m, terrains revendiqués 0.5 m ; accotement stabilisé compté en largeur constante.",
+    "Les requêtes rafraîchissent la grille à la demande (freshen) : elle est restampillée si la révision du rail ou des revendications a changé. revision() change à chaque restampillage.",
+    "Les rayons radius valent 0 si nil. Hors de la grille, toutes les requêtes répondent false.",
+    "setRivers/setBuildings/setFences/setLakes remplacent chacun leur liste ; les listes survivent à rebuild() pour que le remaillage des piles continue de les éviter.",
+    "Structures attendues : rivières { pts = {{x,y},...}, halfW = n } ; bâtiments et lacs = listes d'anneaux {x,y} remplis ; clôtures = polylignes {x,y}."
+  ],
+  "functions": {
+    "rebuild": {
+      "desc": "Restampille la grille depuis les routes et jonctions. Mémorise les entrées pour pouvoir estampiller plus tard un terrain revendiqué sans remaillage du réseau.",
+      "params": {
+        "groups": {"type": "table", "desc": "Liste de groupes (routes) avec id, divPoints, binormales, divWidths, leftExtM, rightExtM, isEnabled."},
+        "jcts": {"type": "table", "desc": "Liste de jonctions."},
+        "clearSegs": {"type": "function|nil", "desc": "clearSegs(g, kind) renvoie le masque par segment d'une liaison (false sur ses portées de ce type, 'bridge' ou 'tunnel'), ou nil si elle n'en a pas. Fournie par le réseau qui possède les portées."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "pointInPoly": {
+      "desc": "Test point dans polygone en 2D (lancer de rayon, règle pair-impair).",
+      "params": {
+        "px": {"type": "number", "desc": "x du point."},
+        "py": {"type": "number", "desc": "y du point."},
+        "poly": {"type": "table", "desc": "Liste de sommets {x,y}."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si le point est à l'intérieur."}],
+      "internal": false
+    },
+    "blocked": {
+      "desc": "Vrai si une cellule de l'empreinte alignée sur les axes appartient à un propriétaire hors du cluster. pass(owner), si fourni, laisse passer d'autres propriétaires.",
+      "params": {
+        "cluster": {"type": "table", "desc": "Cluster (avec _pierAllow mis en cache) ; voir railCluster."},
+        "x": {"type": "number", "desc": "x du centre."},
+        "y": {"type": "number", "desc": "y du centre."},
+        "halfX": {"type": "number", "desc": "Demi-étendue en x."},
+        "halfY": {"type": "number", "desc": "Demi-étendue en y."},
+        "pass": {"type": "function|nil", "desc": "pass(owner) renvoie true pour tolérer ce propriétaire."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si l'empreinte est bloquée."}],
+      "internal": false
+    },
+    "heightAt": {
+      "desc": "Hauteur de la route (à son point le plus proche de x, y) ou de la jonction estampillée sous ce propriétaire ; nil pour tout autre propriétaire.",
+      "params": {
+        "owner": {"type": "string", "desc": "Chaîne propriétaire."},
+        "x": {"type": "number", "desc": "x."},
+        "y": {"type": "number", "desc": "y."}
+      },
+      "returns": [{"type": "number|nil", "desc": "Hauteur z."}],
+      "internal": false
+    },
+    "roadBetween": {
+      "desc": "Vrai si une route ou jonction autre que celle de skip (son ownerFor, tronçons de tablier compris) est estampillée dans le rayon autour de (x, y) à une hauteur strictement comprise entre zLo et zHi.",
+      "params": {
+        "x": {"type": "number", "desc": "x."},
+        "y": {"type": "number", "desc": "y."},
+        "radius": {"type": "number", "desc": "Rayon de recherche en mètres."},
+        "zLo": {"type": "number", "desc": "Hauteur minimale."},
+        "zHi": {"type": "number", "desc": "Hauteur maximale."},
+        "skip": {"type": "string|nil", "desc": "Propriétaire à ignorer (ainsi que ses suffixes b et t)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si une route se trouve entre ces hauteurs."}],
+      "internal": false
+    },
+    "occupiedAt": {
+      "desc": "Vrai si quelque chose est estampillé dans le rayon (tous propriétaires, couche des plantes comprise) hors souterrain : un arbre se tient sur la colline au-dessus d'un tunnel. Sert à l'écartement de la végétation.",
+      "params": {
+        "x": {"type": "number", "desc": "x."},
+        "y": {"type": "number", "desc": "y."},
+        "radius": {"type": "number|nil", "desc": "Rayon (0 si nil)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si occupé."}],
+      "internal": false
+    },
+    "revision": {
+      "desc": "Compteur qui change chaque fois que la grille change : un outil qui garde des choses hors de la grille compare cette valeur au lieu de redemander pour chaque point.",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Révision de la grille."}],
+      "internal": false
+    },
+    "occupiedAtExcluding": {
+      "desc": "Comme occupiedAt mais IGNORE les cellules appartenant uniquement à ownerId (le ruban de l'appelant, tronçons de tablier et de tunnel compris). Ne tient pas compte de la couche des plantes.",
+      "params": {
+        "x": {"type": "number", "desc": "x."},
+        "y": {"type": "number", "desc": "y."},
+        "radius": {"type": "number|nil", "desc": "Rayon (0 si nil)."},
+        "ownerId": {"type": "string|nil", "desc": "Propriétaire à ignorer, voir ownerFor."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si autre chose occupe la zone."}],
+      "internal": false
+    },
+    "ownerFor": {
+      "desc": "Chaîne propriétaire d'un groupe (« g » suivi de son id), à passer à occupiedAtExcluding.",
+      "params": {"g": {"type": "table", "desc": "Groupe (route) avec un champ id."}},
+      "returns": [{"type": "string", "desc": "Propriétaire."}],
+      "internal": false
+    },
+    "transportAt": {
+      "desc": "Vrai si une cellule de TRANSPORT (route 'g', chemin 'p', jonction 'j', ou cellule multi-propriétaire) se trouve dans le rayon.",
+      "params": {
+        "x": {"type": "number", "desc": "x."},
+        "y": {"type": "number", "desc": "y."},
+        "radius": {"type": "number|nil", "desc": "Rayon (0 si nil)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si du transport est présent."}],
+      "internal": false
+    },
+    "roadRailAt": {
+      "desc": "Comme transportAt mais les CHEMINS sont ignorés : vrai seulement pour un ruban de route ou de rail 'g' ou une jonction 'j' (ou une cellule multi-propriétaire, gardée par prudence car ses propriétaires sont perdus).",
+      "params": {
+        "x": {"type": "number", "desc": "x."},
+        "y": {"type": "number", "desc": "y."},
+        "radius": {"type": "number|nil", "desc": "Rayon (0 si nil)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si une route, un rail ou une jonction est présent."}],
+      "internal": false
+    },
+    "overhangAt": {
+      "desc": "Vrai si le centre d'une cellule de route, de rail ou de jonction, ou une cellule CONSTRUITE de la couche des plantes, se trouve dans le rayon : ce qu'une couronne de cette largeur surplomberait ou traverserait en poussant. Un disque (et non la boîte de roadRailAt), exact sur les cellules partagées. Les blocs sans route ni construction sont sautés d'un coup, donc un point éloigné coûte quelques lectures quel que soit le rayon. Le milieu rempli d'une jonction ne marque aucun bloc, mais rien d'extérieur ne l'atteint sans traverser la peau du bord, qui en marque.",
+      "params": {
+        "x": {"type": "number", "desc": "x."},
+        "y": {"type": "number", "desc": "y."},
+        "radius": {"type": "number", "desc": "Rayon de la couronne en mètres."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si une couronne de ce rayon surplomberait quelque chose."}],
+      "internal": false
+    },
+    "setPlantKeepOut": {
+      "desc": "Source du terrain que les plantes évitent en plus du reste : get() renvoie `paved, built` où paved = { { ring = r, holes = { r, ... } }, ... } (un tronc ne peut pas s'y tenir) et built = { r, ... } (une couronne ne peut pas non plus l'atteindre). rev() change quand l'un ou l'autre change. Source unique ; voir occupiedAt et overhangAt.",
+      "params": {
+        "get": {"type": "function", "desc": "Renvoie paved, built."},
+        "rev": {"type": "function", "desc": "Renvoie la révision de la source."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "buildingAt": {
+      "desc": "Vrai si une cellule de BÂTIMENT (propriétaire 'b', empreinte estampillée + 1 m) se trouve dans le rayon.",
+      "params": {
+        "x": {"type": "number", "desc": "x."},
+        "y": {"type": "number", "desc": "y."},
+        "radius": {"type": "number|nil", "desc": "Rayon (0 si nil)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si un bâtiment est présent."}],
+      "internal": false
+    },
+    "clearClusterCache": {
+      "desc": "Efface l'ensemble de propriétaires autorisés mis en cache dans un cluster (_pierAllow), à appeler quand le cluster change.",
+      "params": {"cluster": {"type": "table|nil", "desc": "Cluster concerné."}},
+      "returns": [],
+      "internal": false
+    },
+    "setRail": {
+      "desc": "Côté Rail Network : get() renvoie ses voies (lues comme des groupes de route), ses plates-formes de jonction ({ id, pos, lines = { { pts, halfW } } }) et les clearSegs de ses voies ; rev() est incrémentée à chaque changement.",
+      "params": {
+        "get": {"type": "function", "desc": "Fournit voies, jonctions et clearSegs."},
+        "rev": {"type": "function", "desc": "Renvoie la révision du rail."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "railRev": {
+      "desc": "Révision du rail (0 si non enregistré). Les routes restampillent la grille elles-mêmes une fois stabilisées ; les changements du rail sont repérés à partir de cette révision.",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Révision du rail."}],
+      "internal": false
+    },
+    "railCluster": {
+      "desc": "Construit le cluster de ce sous lequel les piles d'un pont ferroviaire peuvent se tenir, pour blocked : les tronçons de pont de ces voies et ces jonctions.",
+      "params": {
+        "trackIds": {"type": "table", "desc": "Identifiants de voies."},
+        "jctIds": {"type": "table", "desc": "Identifiants de jonctions."}
+      },
+      "returns": [{"type": "table", "desc": "Cluster { _pierAllow = ensemble de propriétaires }."}],
+      "internal": false
+    },
+    "setRivers": {
+      "desc": "Enregistre les rivières comme obstacles statiques (importeur). Remplace la liste précédente ; la liste survit à rebuild().",
+      "params": {"list": {"type": "table|nil", "desc": "Liste de { pts = {{x,y},...}, halfW = n }."}},
+      "returns": [],
+      "internal": false
+    },
+    "setBuildings": {
+      "desc": "Enregistre les bâtiments (polygones remplis) comme obstacles statiques.",
+      "params": {"list": {"type": "table|nil", "desc": "Liste d'anneaux {x,y}."}},
+      "returns": [],
+      "internal": false
+    },
+    "setFences": {
+      "desc": "Enregistre les clôtures, murs et haies (polylignes fines) comme obstacles statiques.",
+      "params": {"list": {"type": "table|nil", "desc": "Liste de polylignes {x,y}."}},
+      "returns": [],
+      "internal": false
+    },
+    "setLakes": {
+      "desc": "Enregistre les lacs (polygones de rivage remplis) comme obstacles statiques.",
+      "params": {"list": {"type": "table|nil", "desc": "Liste d'anneaux {x,y}."}},
+      "returns": [],
+      "internal": false
+    },
+    "clearStatics": {
+      "desc": "Efface tous les obstacles statiques (rivières, bâtiments, clôtures, lacs).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

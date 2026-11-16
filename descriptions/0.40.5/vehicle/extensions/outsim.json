@@ -1,9 +1,9 @@
 {
   "path": "lua/vehicle/extensions/outsim.lua",
-  "module": "Fichier obsolète : il se contente d'écrire une erreur dans le log (avec la trace d'appel) disant que quelque chose a tenté d'utiliser l'ancienne extension outsim, et renvoie une table vide. Le protocole OutSim est géré ailleurs (voir https://go.beamng.com/protocols et le module protocols).",
+  "module": "Obsolete file: it only writes an error to the log (with the call trace) saying that something tried to use the old outsim extension, and returns an empty table. The OutSim protocol is handled elsewhere (see https://go.beamng.com/protocols and the protocols module).",
   "notes": [
-    "Le module renvoie {} : toute fonction appelée dessus sera nil.",
-    "L'erreur de log se produit au chargement du fichier."
+    "The module returns {}: any function called on it will be nil.",
+    "The log error occurs when the file is loaded."
   ],
   "fields": {},
   "functions": {}

@@ -2,112 +2,112 @@
 -- tim19Atlas stub generated from lua/vehicle/powertrain/sequentialGearbox.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Composant powertrain `sequentialGearbox` : boîte séquentielle (type course) dont le rapport ne peut changer que d'un cran à la fois (plus un, moins un). Pas de synchroniseurs ni de craquement : le passage de vitesse prend effet à la mise à jour par image suivante (updateGFX). Comme manualGearbox, le parent doit être un embrayage. Gère le neutre (masse virtuelle), le verrouillage (setLock), l'usure/dégâts et des sons d'engrenage de type « droit » (straight-cut). Un contrôleur de boîte séquentielle appelle setGearIndex.
---- Accès : type de composant powertrain `sequentialGearbox` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+--- Powertrain component `sequentialGearbox`: sequential gearbox (racing type) whose gear can only change one step at a time (plus one, minus one). No synchronizers or grinding: the gear shift takes effect at the next per-frame update (updateGFX). Like manualGearbox, the parent must be a clutch. Handles neutral (virtual mass), locking (setLock), wear/damage and "straight-cut" type gear sounds. A sequential gearbox controller calls setGearIndex.
+--- Access: powertrain device type `sequentialGearbox` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 ---@class powertrain_sequentialGearbox
 ---@field deviceCategories table<string, boolean> {gearbox=true}.
 ---@field outputPorts table<integer, boolean> {[1]=true}.
 ---@field requiredExternalInertiaOutputs table<integer, integer> {1}.
 local powertrain_sequentialGearbox = {}
 
---- Construit la boîte séquentielle : table des rapports avant et arrière, coefficients de bruit d'engrenage, nœud de la transmission, puis passe au neutre.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:306
----@param jbeamData table Données jbeam du composant (gearRatios obligatoire).
----@return table  Le device (classe `device`).
+--- Builds the sequential gearbox: forward and reverse ratio table, gear whine coefficients, transmission node, then goes to neutral.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:306
+---@param jbeamData table jbeam data of the component (gearRatios required).
+---@return table  The device (class `device`).
 function powertrain_sequentialGearbox.new(jbeamData) end
 
---- Objet renvoyé par new(jbeamData). velocityUpdate/torqueUpdate dépendent du rapport (normal ou neutre).
+--- Object returned by new(jbeamData). velocityUpdate/torqueUpdate depend on the gear (normal or neutral).
 ---@class powertrain_sequentialGearbox_device
 local powertrain_sequentialGearbox_device = {}
 
---- Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:146
----@param damageAmount number Quantité de dégâts du groupe de déformation.
+--- Increases the damage friction coefficient (0.01 of damage = +0.1).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:146
+---@param damageAmount number Amount of damage of the deformation group.
 function powertrain_sequentialGearbox_device:applyDeformGroupDamage(damageAmount) end
 
---- Prend l'inertie et les rapports cumulés du premier enfant ; cumulativeInertia = inertie / gearRatio² (2 * maxGearRatio si neutre).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:216
+--- Takes the inertia and cumulative ratios of the first child; cumulativeInertia = inertia / gearRatio² (2 * maxGearRatio in neutral).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:216
 function powertrain_sequentialGearbox_device:calculateInertia() end
 
---- Renvoie l'intégrité 0..1 (0 si cassée) et {damageFrictionCoef, isBroken}.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:165
----@return number  Intégrité 0..1.
----@return table  État sauvegardable.
+--- Returns the integrity 0..1 (0 if broken) and {damageFrictionCoef, isBroken}.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:165
+---@return number  Integrity 0..1.
+---@return table  Saveable state.
 function powertrain_sequentialGearbox_device:getPartCondition() end
 
---- Crée les boucles sonores d'engrenage (entrée et sortie), les lisseurs et les coefficients de hauteur, et règle le paramètre FMOD c_gearboxMaxPower.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:247
----@param jbeamData table Données jbeam du composant.
+--- Creates the gear sound loops (input and output), the smoothers and the pitch coefficients, and sets the FMOD parameter c_gearboxMaxPower.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:247
+---@param jbeamData table jbeam data of the component.
 function powertrain_sequentialGearbox_device:initSounds(jbeamData) end
 
---- Marque la boîte comme cassée et passe en mode neutre (masse virtuelle).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:134
+--- Marks the gearbox as broken and switches to neutral mode (virtual mass).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:134
 function powertrain_sequentialGearbox_device:onBreak() end
 
---- Réinitialise l'état (vitesses, couple, coefficients, verrouillage) et repasse au neutre.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:281
----@param jbeamData table Données jbeam du composant.
+--- Resets the state (speeds, torque, coefficients, locking) and goes back to neutral.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:281
+---@param jbeamData table jbeam data of the component.
 function powertrain_sequentialGearbox_device:reset(jbeamData) end
 
---- Remet à zéro les lisseurs et valeurs de son d'engrenage.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:235
+--- Resets the gear sound smoothers and values.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:235
 function powertrain_sequentialGearbox_device:resetSounds() end
 
---- Demande un rapport. Le rapport est borné à ±1 cran autour du rapport courant et à [minGearIndex, maxGearIndex]. Depuis le neutre, il est appliqué immédiatement ; sinon différé à la prochaine updateGFX.
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:112
----@param index integer Indice de rapport voulu (0 neutre, >0 avant, <0 arrière).
+--- Requests a gear. The gear is clamped to ±1 step around the current gear and to [minGearIndex, maxGearIndex]. From neutral, it is applied immediately; otherwise deferred to the next updateGFX.
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:112
+---@param index integer Desired gear index (0 neutral, >0 forward, <0 reverse).
 function powertrain_sequentialGearbox_device:setGearIndex(index) end
 
---- Verrouille (lockCoef = 0) ou déverrouille (1) la transmission et propage l'appel au parent s'il a setLock.
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:139
----@param enabled boolean true pour verrouiller.
+--- Locks (lockCoef = 0) or unlocks (1) the transmission and propagates the call to the parent if it has setLock.
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:139
+---@param enabled boolean true to lock.
 function powertrain_sequentialGearbox_device:setLock(enabled) end
 
---- Applique l'usure (odomètre, coefficient de 1 à 2) et les dégâts (intégrité nombre 0..1 ou table) ; appelle onBreak si isBroken.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:150
----@param subSystem any Non utilisé.
----@param odometer number Distance parcourue en mètres.
----@param integrity number|table Nombre 0..1 ou table {damageFrictionCoef, isBroken}.
----@param visual any Non utilisé.
+--- Applies wear (odometer, coefficient from 1 to 2) and damage (integrity number 0..1 or table); calls onBreak if isBroken.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:150
+---@param subSystem any Not used.
+---@param odometer number Distance traveled in meters.
+---@param integrity number|table Number 0..1 or table {damageFrictionCoef, isBroken}.
+---@param visual any Not used.
 function powertrain_sequentialGearbox_device:setPartCondition(subSystem, odometer, integrity, visual) end
 
---- Appelée à chaque pas physique : outputTorque1 = (couple parent - frottements) * gearRatio * lockCoef, et alimente les lisseurs de son. Au neutre, intègre la masse virtuelle et met le couple de sortie à 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:71
----@param dt number Pas de temps en secondes (utilisé au neutre).
+--- Called at each physics step: outputTorque1 = (parent torque - friction) * gearRatio * lockCoef, and feeds the sound smoothers. In neutral, integrates the virtual mass and sets the output torque to 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:71
+---@param dt number Time step in seconds (used in neutral).
 function powertrain_sequentialGearbox_device:torqueUpdate(dt) end
 
---- Mise à jour par image : applique le changement de rapport en attente (targetGearIndex), met à jour gearRatio, invMaxExpectedOutputTorque et l'inertie du groupe motopropulseur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:95
----@param dt number Durée de l'image en secondes (inutilisé).
+--- Per-frame update: applies the pending gear change (targetGearIndex), updates gearRatio, invMaxExpectedOutputTorque and the powertrain inertia.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:95
+---@param dt number Frame duration in seconds (unused).
 function powertrain_sequentialGearbox_device:updateGFX(dt) end
 
---- Met à jour volume et hauteur des boucles sonores d'engrenage (entrée et sortie) d'après vitesses et couples lissés. Appelée à chaque image.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:19
----@param dt number Durée de l'image en secondes.
+--- Updates the volume and pitch of the gear sound loops (input and output) from smoothed speeds and torques. Called every frame.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:19
+---@param dt number Frame duration in seconds.
 function powertrain_sequentialGearbox_device:updateSounds(dt) end
 
---- Vérifie que le parent est un embrayage (ou un faux), sinon journalise des erreurs et renvoie false. Détermine transmissionNodeID et les valeurs attendues (couple, vitesse, puissance max) pour normaliser les sons.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:174
----@return boolean  false si le parent n'est pas un embrayage.
+--- Checks that the parent is a clutch (or a fake one), otherwise logs errors and returns false. Determines transmissionNodeID and the expected values (max torque, speed, power) to normalize the sounds.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:174
+---@return boolean  false if the parent is not a clutch.
 function powertrain_sequentialGearbox_device:validate() end
 
---- Appelée à chaque pas physique : inputAV = outputAV1 * gearRatio * lockCoef (ou masse virtuelle au neutre), écrit dans le parent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/sequentialGearbox.lua:66
----@param dt number Pas de temps en secondes (inutilisé).
+--- Called at each physics step: inputAV = outputAV1 * gearRatio * lockCoef (or virtual mass in neutral), written to the parent.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/sequentialGearbox.lua:66
+---@param dt number Time step in seconds (unused).
 function powertrain_sequentialGearbox_device:velocityUpdate(dt) end
 
 return powertrain_sequentialGearbox

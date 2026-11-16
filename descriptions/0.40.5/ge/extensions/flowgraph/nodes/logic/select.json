@@ -1,53 +1,53 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/logic/select.lua",
-  "module": "Noeud flowgraph 'Select' (categorie logic). Choisit une valeur parmi N entrees value_i selon les pins flow select_i actifs, et combine les valeurs selectionnees avec une fonction de fusion (fg_utils.mergeFuns.any : mode 'first' par defaut). Si le pin flow d'entree n'est pas connecte, la valeur n'est pas conservee. Le nombre de choix se regle dans les proprietes.",
+  "module": "Flowgraph node 'Select' (logic category). Chooses a value among N inputs value_i according to the active select_i flow pins, and combines the selected values with a merge function (fg_utils.mergeFuns.any: 'first' mode by default). If the input flow pin is not connected, the value is not kept. The number of choices is set in the properties.",
   "notes": [
-    "updatePins teste lnk.sourcePin alors que select_i/value_i sont des pins d'entree (targetPin) : les liens vers les pins retires ne sont donc pas supprimes."
+    "updatePins tests lnk.sourcePin whereas select_i/value_i are input pins (targetPin): the links to the removed pins are therefore not deleted."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
           "desc": "count=1, mode='first'.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche le mode de fusion.",
+          "desc": "Displays the merge mode.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Panneau : nombre de choix (Count) et liste deroulante des fonctions de fusion (hors 'readOnly') avec infobulle.",
+          "desc": "Panel: number of choices (Count) and dropdown of merge functions (excluding 'readOnly') with tooltip.",
           "internal": true
         },
         "updatePins": {
-          "desc": "Cree ou supprime les paires de pins select_i / value_i et les liens associes.",
+          "desc": "Creates or deletes the select_i / value_i pin pairs and the associated links.",
           "internal": true,
           "params": {
             "old": {
               "type": "integer",
-              "desc": "ancien nombre"
+              "desc": "old count"
             },
             "new": {
               "type": "integer",
-              "desc": "nouveau nombre"
+              "desc": "new count"
             }
           }
         },
         "work": {
-          "desc": "Initialise la fusion, merge les value_i dont select_i est actif (si flow), finalise. Si au moins un choix : flow=true et value=resultat ; sinon flow suit l'entree et value=nil.",
+          "desc": "Initializes the merge, merges the value_i whose select_i is active (if flow), finalizes. If at least one choice: flow=true and value=result; otherwise flow follows the input and value=nil.",
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde mode et count.",
+          "desc": "Saves mode and count.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Relit mode ('first' par defaut) et count, recree les pins.",
+          "desc": "Reads back mode ('first' by default) and count, recreates the pins.",
           "internal": true
         }
       }

@@ -1,87 +1,87 @@
 # `controller_hydraulics_hydraulicTrailerFeet`
 
-*Fichier : `lua/vehicle/controller/hydraulics/hydraulicTrailerFeet.lua` · VM : Véhicule · 139 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/hydraulics/hydraulicTrailerFeet.lua` · VM: Vehicle · 139 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `hydraulics/hydraulicTrailerFeet` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `hydraulics/hydraulicTrailerFeet` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire pour les béquilles hydrauliques d'une remorque (type "auxiliary"). Il mémorise la position du vérin quand la remorque est attelée et détachée (par réglage manuel) et ramène automatiquement les béquilles à la bonne position lors d'un attelage ou dételage, en écrivant la direction de vérin dans electrics (directionElectricsName du vérin).
+Auxiliary controller for a trailer's hydraulic landing legs (type "auxiliary"). It stores the cylinder position when the trailer is attached and detached (by manual adjustment) and automatically brings the legs back to the right position on coupling or uncoupling, by writing the cylinder direction into electrics (the cylinder's directionElectricsName).
 
-## Remarques
+## Notes
 
-- Clés jbeam (défaut) : powertrainHydroName (nom du vérin, obligatoire : erreur Lua si introuvable), attachedDefaultPosition (0), detachedDefaultPosition (1), startValue (0, valeur initiale de la commande de direction).
-- États internes : detached, attached, detachedMoveFeet, attachedMoveFeet. Les mouvements manuels (|entrée| > 0.05) mémorisent la position courante pour l'état en cours.
-- Les hooks onCouplerAttached/onCouplerDetached ne réagissent que si l'autre objet (obj2id) est différent de ce véhicule.
+- jbeam keys (default): powertrainHydroName (cylinder name, required: Lua error if not found), attachedDefaultPosition (0), detachedDefaultPosition (1), startValue (0, initial value of the direction command).
+- Internal states: detached, attached, detachedMoveFeet, attachedMoveFeet. Manual movements (|input| > 0.05) store the current position for the current state.
+- The onCouplerAttached/onCouplerDetached hooks only react if the other object (obj2id) is different from this vehicle.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_hydraulics_hydraulicTrailerFeet.getState()` | Renvoie l'état (positions mémorisées, entrée manuelle, état d'attelage). | 95 |
-| `controller_hydraulics_hydraulicTrailerFeet.init(jbeamData)` | Retrouve le vérin et initialise les positions et états. *(interne)* | 73 |
-| `controller_hydraulics_hydraulicTrailerFeet.moveFeet(input)` | Commande manuelle des béquilles : -1 à 1 (la direction est écrite dans electrics). Interrompt un déplacement automatique en cours. | 27 |
-| `controller_hydraulics_hydraulicTrailerFeet.onCouplerAttached(nodeId, obj2id, obj2nodeId)` | Hook appelé par le moteur quand un coupleur du véhicule s'attache ; lance le mouvement vers la position « attaché » si l'autre objet est un autre véhicule. *(interne)* *(hook)* | 61 |
-| `controller_hydraulics_hydraulicTrailerFeet.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook appelé quand un coupleur se détache ; lance le mouvement vers la position « détaché ». *(interne)* *(hook)* | 67 |
-| `controller_hydraulics_hydraulicTrailerFeet.setState(data)` | Restaure l'état renvoyé par getState. | 103 |
-| `controller_hydraulics_hydraulicTrailerFeet.updateGFX(dt)` | Écrit la direction du vérin (manuelle ou automatique vers la position mémorisée). *(interne)* | 36 |
+| `controller_hydraulics_hydraulicTrailerFeet.getState()` | Returns the state (stored positions, manual input, coupling state). | 95 |
+| `controller_hydraulics_hydraulicTrailerFeet.init(jbeamData)` | Finds the cylinder and initializes the positions and states. *(internal)* | 73 |
+| `controller_hydraulics_hydraulicTrailerFeet.moveFeet(input)` | Manual command of the legs: -1 to 1 (the direction is written into electrics). Interrupts an ongoing automatic movement. | 27 |
+| `controller_hydraulics_hydraulicTrailerFeet.onCouplerAttached(nodeId, obj2id, obj2nodeId)` | Hook called by the engine when a coupler of the vehicle attaches; starts the movement toward the "attached" position if the other object is another vehicle. *(internal)* *(hook)* | 61 |
+| `controller_hydraulics_hydraulicTrailerFeet.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook called when a coupler detaches; starts the movement toward the "detached" position. *(internal)* *(hook)* | 67 |
+| `controller_hydraulics_hydraulicTrailerFeet.setState(data)` | Restores the state returned by getState. | 103 |
+| `controller_hydraulics_hydraulicTrailerFeet.updateGFX(dt)` | Writes the cylinder direction (manual or automatic toward the stored position). *(internal)* | 36 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_hydraulics_hydraulicTrailerFeet.getState()`
 
-Renvoie l'état (positions mémorisées, entrée manuelle, état d'attelage).
+Returns the state (stored positions, manual input, coupling state).
 
-- **renvoie** : table Table d'état (réutilisée).
+- **returns**: table State table (reused).
 
 #### `controller_hydraulics_hydraulicTrailerFeet.init(jbeamData)`
 
-Retrouve le vérin et initialise les positions et états.
+Finds the cylinder and initializes the positions and states.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_hydraulics_hydraulicTrailerFeet.moveFeet(input)`
 
-Commande manuelle des béquilles : -1 à 1 (la direction est écrite dans electrics). Interrompt un déplacement automatique en cours.
+Manual command of the legs: -1 to 1 (the direction is written into electrics). Interrupts an ongoing automatic movement.
 
-- `input` (*number*) : Entrée de direction -1..1.
+- `input` (*number*) : Direction input -1..1.
 
 #### `controller_hydraulics_hydraulicTrailerFeet.onCouplerAttached(nodeId, obj2id, obj2nodeId)`
 
-Hook appelé par le moteur quand un coupleur du véhicule s'attache ; lance le mouvement vers la position « attaché » si l'autre objet est un autre véhicule.
+Hook called by the engine when a coupler of the vehicle attaches; starts the movement toward the "attached" position if the other object is another vehicle.
 
-- `nodeId` (*integer*) : Nœud de ce véhicule.
-- `obj2id` (*integer*) : Id du véhicule partenaire.
-- `obj2nodeId` (*integer*) : Nœud du partenaire.
+- `nodeId` (*integer*) : This vehicle's node.
+- `obj2id` (*integer*) : Partner vehicle id.
+- `obj2nodeId` (*integer*) : Partner's node.
 
 #### `controller_hydraulics_hydraulicTrailerFeet.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)`
 
-Hook appelé quand un coupleur se détache ; lance le mouvement vers la position « détaché ».
+Hook called when a coupler detaches; starts the movement toward the "detached" position.
 
-- `nodeId` (*integer*) : Nœud de ce véhicule.
-- `obj2id` (*integer*) : Id du véhicule partenaire.
-- `obj2nodeId` (*integer*) : Nœud du partenaire.
-- `breakForce` (*number*) : Force de rupture (non utilisée).
+- `nodeId` (*integer*) : This vehicle's node.
+- `obj2id` (*integer*) : Partner vehicle id.
+- `obj2nodeId` (*integer*) : Partner's node.
+- `breakForce` (*number*) : Breaking force (unused).
 
 #### `controller_hydraulics_hydraulicTrailerFeet.setState(data)`
 
-Restaure l'état renvoyé par getState.
+Restores the state returned by getState.
 
-- `data` (*table|nil*) : Table d'état.
+- `data` (*table|nil*) : State table.
 
 #### `controller_hydraulics_hydraulicTrailerFeet.updateGFX(dt)`
 
-Écrit la direction du vérin (manuelle ou automatique vers la position mémorisée).
+Writes the cylinder direction (manual or automatic toward the stored position).
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getId`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/hydraulics/hydraulicTrailerFeet.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/hydraulics/hydraulicTrailerFeet.lua`.*

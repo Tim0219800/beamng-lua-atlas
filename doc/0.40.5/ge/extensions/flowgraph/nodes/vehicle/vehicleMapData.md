@@ -1,29 +1,29 @@
 # `flowgraph_nodes_vehicle_vehicleMapData`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleMapData.lua` · VM : Game Engine (GE) · 74 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleMapData.lua` · VM: Game Engine (GE) · 74 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/vehicleMapData")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/vehicleMapData")` (file under extensions/ but not a regular extension)
 
-Nœud « Get Vehicle Data » (catégorie `repeat_instant`). Fournit position, directions, rotation, vitesse, activité et dommages depuis `map.objects[vehId]`. Sorties : `position`, `dirVec`, `dirVecUp`, `rotation`, `velocity` (m/s), `velocityVector`, `active`, `damage`, `newAPIDamage` (`getSectionDamageSum`). Les sorties non branchées ne sont pas calculées (`isUsed`). Pin d'entrée : `vehId` (défaut 0, sinon joueur).
+"Get Vehicle Data" node (category `repeat_instant`). Provides position, directions, rotation, speed, activity and damage from `map.objects[vehId]`. Outputs: `position`, `dirVec`, `dirVecUp`, `rotation`, `velocity` (m/s), `velocityVector`, `active`, `damage`, `newAPIDamage` (`getSectionDamageSum`). Unconnected outputs are not computed (`isUsed`). Input pin: `vehId` (default 0, otherwise player).
 
-## Remarques
+## Notes
 
-- Si `vehId` désigne un objet inexistant, `vehId` reste à -1 et rien n'est écrit.
-- Le test `if not vehId` est inutile car `vehId` est toujours défini.
+- If `vehId` refers to a nonexistent object, `vehId` stays at -1 and nothing is written.
+- The `if not vehId` test is useless because `vehId` is always defined.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr, ...)` | Constructeur vide. | 30 |
-| `C:work(args)` | Lit `map.objects[vehId]` et remplit les sorties branchées. | 36 |
+| `C:init(mgr, ...)` | Empty constructor. | 30 |
+| `C:work(args)` | Reads `map.objects[vehId]` and fills the connected outputs. | 36 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleMapData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleMapData.lua`.*

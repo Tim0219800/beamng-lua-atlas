@@ -2,103 +2,103 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/playerDriving.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère la conduite du joueur en carrière : mise en place du trafic et des véhicules garés, suivi de l'état du joueur (stationné, trafic, poursuite de police), amendes d'arrestation, phases du tutoriel (trafic masqué puis restauré), téléportation au garage (avec remorque), récupération du véhicule favori et affichage d'une position par caméra. Utilise gameplay_traffic, gameplay_parking et gameplay_police.
---- Accès : extension `career_modules_playerDriving` : `extensions.load("career_modules_playerDriving")`, puis la globale `career_modules_playerDriving`
+--- Handles the player's driving in career: setup of traffic and parked vehicles, tracking of the player state (parked, traffic, police pursuit), arrest fines, tutorial phases (traffic hidden then restored), teleport to the garage (with trailer), retrieval of the favorite vehicle and display of a position by camera. Uses gameplay_traffic, gameplay_parking and gameplay_police.
+--- Access: extension `career_modules_playerDriving`: `extensions.load("career_modules_playerDriving")`, then the global `career_modules_playerDriving`
 ---@class career_modules_playerDriving
----@field debugMode boolean not shipping_build : true hors build de distribution.
----@field dependencies table<integer, string> Extensions chargées avant : career_career.
+---@field debugMode boolean not shipping_build: true outside distribution builds.
+---@field dependencies table<integer, string> Extensions loaded before: career_career.
 career_modules_playerDriving = {}
 
---- Renvoie la table d'état du joueur (trafic, stationnement, quantités maximales).
----Source : lua/ge/extensions/career/modules/playerDriving.lua:15
----@return table  playerData (référence directe).
+--- Returns the player state table (traffic, parking, maximum amounts).
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:15
+---@return table  playerData (direct reference).
 function career_modules_playerDriving.getPlayerData() end
 
---- Hook : lance setupTraffic si la carrière est active et le trafic jamais préparé ; active les déclencheurs spéciaux pendant le chargement pour précalculer l'éclairage des garages.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/playerDriving.lua:315
----@param active boolean État d'activation.
+--- Hook: starts setupTraffic if the career is active and traffic was never prepared; enables special triggers during loading to precompute garage lighting.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:315
+---@param active boolean Activation state.
 function career_modules_playerDriving.onCareerActive(active) end
 
---- Hook de poursuite : désactive le suivi de stationnement au début, le réactive à reset/evade, et inflige une amende à l'arrestation (message UI).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/playerDriving.lua:262
----@param vehId integer Id du véhicule.
----@param action string start, reset, evade ou arrest.
----@param data table Données de poursuite (mode, uniqueOffensesCount).
+--- Pursuit hook: disables parking tracking at start, re-enables it on reset/evade, and issues a fine on arrest (UI message).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:262
+---@param vehId integer Vehicle id.
+---@param action string start, reset, evade or arrest.
+---@param data table Pursuit data (mode, uniqueOffensesCount).
 function career_modules_playerDriving.onPursuitAction(vehId, action, data) end
 
---- Hook : quand le trafic et les voitures garées sont prêts, ferme l'écran de chargement careerVehicles et désactive les déclencheurs spéciaux ; pendant le tutoriel, les masque et mémorise leurs quantités.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/playerDriving.lua:283
+--- Hook: when traffic and parked cars are ready, closes the careerVehicles loading screen and disables special triggers; during the tutorial, hides them and remembers their amounts.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:283
 function career_modules_playerDriving.onTrafficOrParkingReady() end
 
---- Hook : à l'activation du trafic, mémorise les quantités maximales et réinitialise l'état du joueur (hors tutoriel et mission).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/playerDriving.lua:245
+--- Hook: when traffic activates, remembers the maximum amounts and resets the player state (outside the tutorial and missions).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:245
 function career_modules_playerDriving.onTrafficStarted() end
 
---- Hook : vide les données de trafic du joueur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/playerDriving.lua:258
+--- Hook: clears the player's traffic data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:258
 function career_modules_playerDriving.onTrafficStopped() end
 
---- Hook de frame : vide en pratique (« career police logic » non implémentée).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/playerDriving.lua:309
----@param dtReal number Temps réel (s).
----@param dtSim number Temps simulé (s).
----@param dtRaw number Temps brut (s).
+--- Frame hook: effectively empty ("career police logic" not implemented).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:309
+---@param dtReal number Real time (s).
+---@param dtSim number Simulated time (s).
+---@param dtRaw number Raw time (s).
 function career_modules_playerDriving.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook de stationnement : met playerData.isParked à true (événement valid) ou false (exit) pour le véhicule joueur, hors mission et tutoriel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/playerDriving.lua:233
----@param vehId integer Id du véhicule.
----@param data table Données d'événement (event).
+--- Parking hook: sets playerData.isParked to true (valid event) or false (exit) for the player vehicle, outside missions and the tutorial.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:233
+---@param vehId integer Vehicle id.
+---@param data table Event data (event).
 function career_modules_playerDriving.onVehicleParkingStatus(vehId, data) end
 
---- Hook : met à jour les données du joueur pour le nouveau véhicule (hors tutoriel et mission).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/playerDriving.lua:303
----@param oldId integer Ancien véhicule.
----@param newId integer Nouveau véhicule.
+--- Hook: updates the player data for the new vehicle (outside the tutorial and missions).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:303
+---@param oldId integer Old vehicle.
+---@param newId integer New vehicle.
 function career_modules_playerDriving.onVehicleSwitched(oldId, newId) end
 
---- Indique si le joueur est poursuivi par la police (pursuit.mode différent de 0).
----Source : lua/ge/extensions/career/modules/playerDriving.lua:107
----@return boolean|nil  true si poursuite en cours, faux ou nil sinon.
+--- Indicates whether the player is being pursued by the police (pursuit.mode different from 0).
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:107
+---@return boolean|nil  true if a pursuit is in progress, false or nil otherwise.
 function career_modules_playerDriving.playerPursuitActive() end
 
---- Recalcule les données du joueur pour le véhicule actuel, règle les variables du trafic, de la police (rayon d'arrestation 15, temps d'évasion 30) et du stationnement (précision 0.2), et remet à zéro le suivi de trafic du joueur.
----Source : lua/ge/extensions/career/modules/playerDriving.lua:111
+--- Recomputes the player data for the current vehicle, sets the traffic variables, police (arrest radius 15, evasion time 30) and parking (precision 0.2), and resets the player's traffic tracking.
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:111
 function career_modules_playerDriving.resetPlayerState() end
 
---- Réactive le trafic si coupé, restaure les quantités actives mémorisées (ou celles des réglages si nulles) puis appelle setTrafficAfterTutorial.
----Source : lua/ge/extensions/career/modules/playerDriving.lua:141
+--- Re-enables traffic if it was turned off, restores the remembered active amounts (or those from the settings if null) then calls setTrafficAfterTutorial.
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:141
 function career_modules_playerDriving.restoreTrafficAfterTutorialPhase() end
 
---- Amène le véhicule favori de l'inventaire à la position du joueur : le téléporte s'il existe, sinon le fait apparaître s'il est accessible et n'a pas besoin de réparation.
----Source : lua/ge/extensions/career/modules/playerDriving.lua:157
+--- Brings the inventory's favorite vehicle to the player's position: teleports it if it exists, otherwise spawns it if it is accessible and does not need repair.
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:157
 function career_modules_playerDriving.retrieveFavoriteVehicle() end
 
---- Fin de phase tutoriel : disperse trafic et voitures garées, réinitialise l'état du joueur et met la probabilité de police à 0.15.
----Source : lua/ge/extensions/career/modules/playerDriving.lua:125
+--- End of tutorial phase: disperses traffic and parked cars, resets the player state and sets the police probability to 0.15.
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:125
 function career_modules_playerDriving.setTrafficAfterTutorial() end
 
---- Phase tutoriel : disperse les voitures garées et le trafic, masque les garées (quantité 0), règle le trafic actif sur maxTrafficAmount et met la police à 0.
----Source : lua/ge/extensions/career/modules/playerDriving.lua:117
+--- Tutorial phase: disperses parked cars and traffic, hides the parked ones (amount 0), sets active traffic to maxTrafficAmount and sets police to 0.
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:117
 function career_modules_playerDriving.setTrafficForTutorial() end
 
---- Oriente le joueur (mode marche) vers pos ; si un obstacle statique bloque la vue, joue un court trajet de caméra (5,5 s) qui montre la position puis revient à la caméra véhicule.
----Source : lua/ge/extensions/career/modules/playerDriving.lua:340
----@param pos vec3 Position à montrer.
+--- Orients the player (walking mode) toward pos; if a static obstacle blocks the view, plays a short camera path (5.5 s) that shows the position then returns to the vehicle camera.
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:340
+---@param pos vec3 Position to show.
 function career_modules_playerDriving.showPosition(pos) end
 
---- Téléporte le véhicule au garage, annule la navigation de mission, coupe le contact, gère une éventuelle remorque (téléportation différée, puis suppression après mise à jour des conditions de pièces) et vérifie le carburant minimal.
----Source : lua/ge/extensions/career/modules/playerDriving.lua:205
----@param garageId string Identifiant du garage.
----@param veh userdata Objet véhicule.
----@param resetVeh boolean|nil Si vrai, réinitialise le véhicule à la téléportation.
+--- Teleports the vehicle to the garage, cancels mission navigation, turns off the ignition, handles a possible trailer (deferred teleport, then deletion after part conditions are updated) and checks the minimum fuel.
+---Source: lua/ge/extensions/career/modules/playerDriving.lua:205
+---@param garageId string Garage identifier.
+---@param veh userdata Vehicle object.
+---@param resetVeh boolean|nil If true, resets the vehicle on teleport.
 function career_modules_playerDriving.teleportToGarage(garageId, veh, resetVeh) end
 

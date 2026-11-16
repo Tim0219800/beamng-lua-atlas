@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/editor/roadArchitect/sumoImport.lua",
+  "module": "Petit module d'aiguillage pour l'import SUMO (fichiers .nod.xml / .edg.xml) dans le Road Architect. Il ne contient pas de logique : il réexporte la fonction networkImport.importSumoFromFile sous deux noms. La fenêtre Road Network Import/Exporter l'appelle via require('editor/roadArchitect/sumoImport').importFromFile(filePath, options).",
+  "notes": [
+    "importFromFile et importFromPrefix pointent vers la même fonction (networkImport.importSumoFromFile) ; importFromPrefix n'a donc pas de comportement propre.",
+    "Le module est chargé avec require() par roadNetworkExporter, pas comme extension."
+  ],
+  "fields": {
+    "importFromFile": {"type": "function", "desc": "Alias de networkImport.importSumoFromFile : importe un réseau SUMO depuis un fichier (signature réelle dans editor/roadArchitect/networkImport ; roadNetworkExporter l'appelle avec (filePath, options))."},
+    "importFromPrefix": {"type": "function", "desc": "Alias identique de importFromFile."}
+  }
+}

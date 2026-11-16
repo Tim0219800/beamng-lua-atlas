@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/partFocus.lua",
+  "module": "Caméra qui cadre une pièce du véhicule quand le menu des pièces la met en évidence. Masquée (absente du cycle de caméras) : core_vehicle_partFocusCamera l'active et la désactive lui-même, et lui pousse le point visé (setRef) et la distance (setDefaultDistance). Le décalage par rapport au véhicule est lissé (le mouvement du véhicule est suivi exactement, seul le changement de pièce glisse). Orbite et zoom à la souris/clavier. update renvoie false quand le pilote n'est plus actif, ce qui fait retomber sur la caméra du véhicule. Renvoie un constructeur.",
+  "notes": ["Valeurs : lacet 135 degrés, tangage -14, FOV 35, distance de 0.6 à 80 m (4 par défaut), easeRate 3. Le zoom est proportionnel à la distance courante (0.007 par ms de pression, 0.12 par cran de molette).", "collisionCompatible = false (le point d'intérêt est souvent dans le véhicule). dt est plafonné à 0.1 s.", "La page extraite indique retarget(duration, brisk) ; le code est retarget(snap, duration, brisk)."],
+  "classes": {
+    "C": {
+      "desc": "Mode de cadrage de pièce. Champs : camRot, targetPos, currentPos, targetDistance, currentDistance, fov, transitionElapsed/Duration, hopDistance.",
+      "functions": {
+        "init": {"desc": "Valeurs par défaut (voir notes).", "internal": true},
+        "retarget": {"desc": "Prépare le passage à la pièce suivante : snap saute directement (quand la transition de caméra globale fait le fondu) ; sinon la vue glisse depuis sa position actuelle pendant duration, avec un départ plus rapide si brisk. Pendant le glissement la caméra recule en proportion de la distance parcourue (jusqu'à 6 m).", "params": {"snap": {"type": "boolean", "desc": "saut direct sans glissement"}, "duration": {"type": "number|nil", "desc": "secondes (min 0.001)"}, "brisk": {"type": "boolean|nil", "desc": "courbe d'accélération rapide"}}},
+        "setRef": {"desc": "Définit le point visé ; si la pièce s'est déplacée de plus de 5 m d'un coup hors glissement (reset/téléportation du véhicule), la vue saute dessus.", "params": {"pos": {"type": "vec3|nil", "desc": "point monde ; nil est ignoré"}}},
+        "setDefaultDistance": {"desc": "Définit la distance cible, bornée à [0.6, 80] m.", "params": {"d": {"type": "number|nil", "desc": "mètres (> 0)"}}},
+        "reset": {"desc": "Oublie le décalage et la distance courants (prochain update : saut) et remet l'orbite par défaut."},
+        "update": {"desc": "Appelle extensions.core_vehicle_partFocusCamera.updateTarget(dt, self), lisse la position, gère orbite/zoom et écrit data.res.pos/rot/fov.", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "true tant que le pilote core_vehicle_partFocusCamera est actif, sinon false"}], "internal": true}
+      }
+    }
+  }
+}

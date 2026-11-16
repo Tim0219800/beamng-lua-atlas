@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/audio/playOnce.lua",
+  "module": "Nœud flowgraph « Play Sound » (catégorie dynamic_p_duration, mode dynamique 'repeat', tags sound/audio/volume). Joue un échantillon audio avec Engine.Audio.playOnce. Entrées : file (source, défaut 'event:UI_Checkpoint'), channel (caché, défaut 'AudioGui'), et pins cachés volume (défaut 1), pitch (1), fadeInTime (-1), fadeOutTime (-1), unique (false). En mode 'repeat', le son est rejoué à chaque frame de flux ; sinon une seule fois.",
+  "notes": [
+    "Le pin file accepte aussi des fichiers « .prefab.json » dans le sélecteur de l'éditeur (reste du modèle, sans rapport avec l'audio).",
+    "Ancien pin renommé : source -> file.",
+    "Le résultat de playOnce est stocké dans une variable locale et non utilisé."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "postInit": {"desc": "Configure l'éditeur : filtre de fichiers du pin file et curseur 0-1 pour volume.", "internal": true},
+        "workOnce": {"desc": "Joue le son une fois (playSound)."},
+        "work": {"desc": "Si dynamicMode vaut 'repeat', rejoue le son à chaque frame."},
+        "playSound": {"desc": "Construit les données (volume, pitch, fades, unique, sampleSource, channel) depuis les pins et appelle Engine.Audio.playOnce(channel, source, data).", "internal": true}
+      }
+    }
+  }
+}

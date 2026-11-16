@@ -1,29 +1,53 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/nativeGizmo.lua",
-  "module": "Enveloppe de l'outil Easy Select autour du gizmo d'axes natif de l'éditeur (editor.updateAxisGizmo / drawAxisGizmo). Capture les transformations/échelles de la sélection au début du glisser, applique translation (avec snap grille), rotation et échelle pendant le glisser, puis à la fin enregistre des actions d'historique annulables (SetObjectTransform / SetObjectScale, transaction « EasySelectNativeTransform » ou « EasySelectNativeScale ») et émet le hook onEditorObjectSelectionTransformChanged. Les offsets de prefab sont mis à jour pour les objets contenus dans un prefab.",
+  "module": "Wrapper of the Easy Select tool around the editor's native axis gizmo (editor.updateAxisGizmo / drawAxisGizmo). Captures the transforms/scales of the selection at the start of the drag, applies translation (with grid snap), rotation and scale during the drag, then at the end records undoable history actions (SetObjectTransform / SetObjectScale, transaction \"EasySelectNativeTransform\" or \"EasySelectNativeScale\") and emits the hook onEditorObjectSelectionTransformChanged. Prefab offsets are updated for objects contained in a prefab.",
   "notes": [
-    "Le snap grille/rotation natif est désactivé pendant la mise à jour du gizmo puis restauré ; Alt gauche force le snap traditionnel. Le snap grille est appliqué par ce module lui-même (options.gridSnapEnabled, gridRelative, gridSize), en relatif ou en absolu selon gridRelative.",
-    "Si la sélection change pendant un glisser, l'état est restauré (reset) et le gizmo ne dessine rien cette frame.",
-    "Un simple clic sans mouvement ne crée aucune action d'historique."
+    "The native grid/rotation snap is disabled during the gizmo update then restored; left Alt forces traditional snap. Grid snap is applied by this module itself (options.gridSnapEnabled, gridRelative, gridSize), relative or absolute depending on gridRelative.",
+    "If the selection changes during a drag, the state is restored (reset) and the gizmo draws nothing this frame.",
+    "A simple click without movement creates no history action."
   ],
   "functions": {
     "draw": {
-      "desc": "À appeler chaque frame : vérifie que la sélection correspond au glisser capturé et que les objets supportent le mode courant (position/rotation/scale non vides, editor.canManipulateObject), met à jour le gizmo avec les options de snap puis le dessine.",
-      "params": {"options": {"type": "table|nil", "desc": "{gridSnapEnabled, gridRelative, gridSize, rotateSnapEnabled, rotateSnapSize}"}},
-      "returns": [{"type": "boolean", "desc": "false si rien n'a été dessiné (sélection changée ou mode non supporté), sinon true"}]
+      "desc": "To be called every frame: checks that the selection matches the captured drag and that the objects support the current mode (non-empty position/rotation/scale, editor.canManipulateObject), updates the gizmo with the snap options then draws it.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "{gridSnapEnabled, gridRelative, gridSize, rotateSnapEnabled, rotateSnapSize}"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if nothing was drawn (selection changed or mode not supported), otherwise true"
+        }
+      ]
     },
     "isInteracting": {
-      "desc": "Indique si un glisser du gizmo est en cours.",
+      "desc": "Indicates whether a gizmo drag is in progress.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": ""}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": ""
+        }
+      ]
     },
     "consumeFinished": {
-      "desc": "Lit et efface l'indicateur « glisser terminé cette frame ».",
+      "desc": "Reads and clears the \"drag ended this frame\" flag.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si un glisser s'est terminé"}, {"type": "table|nil", "desc": "{mode, anchorDistance} (distance de translation appliquée, 0 hors translation) si des changements ont été validés"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a drag ended"
+        },
+        {
+          "type": "table|nil",
+          "desc": "{mode, anchorDistance} (applied translation distance, 0 outside translation) if changes were committed"
+        }
+      ]
     },
     "reset": {
-      "desc": "Annule le glisser en cours : restaure transformations et échelles d'origine, efface les indicateurs et annule l'interaction du gizmo.",
+      "desc": "Cancels the current drag: restores original transforms and scales, clears the flags and cancels the gizmo interaction.",
       "params": {}
     }
   }

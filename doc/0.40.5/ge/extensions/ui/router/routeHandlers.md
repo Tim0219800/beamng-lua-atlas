@@ -1,31 +1,31 @@
 # `ui_router_routeHandlers`
 
-*Fichier : `lua/ge/extensions/ui/router/routeHandlers.lua` · VM : Game Engine (GE) · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/routeHandlers.lua` · VM: Game Engine (GE) · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_routeHandlers` : `extensions.load("ui_router_routeHandlers")`, puis la globale `ui_router_routeHandlers`
+**Access:** extension `ui_router_routeHandlers`: `extensions.load("ui_router_routeHandlers")`, then the global `ui_router_routeHandlers`
 
-Registre des gestionnaires de retour/sortie nommés des routes. Une route dont le retour est en mode « handler » désigne un nom (par exemple garageExitHandler) ; router.back() le récupère via getHandler et l'appelle. La plupart des gestionnaires sont définis dans routeHandlers/*ExitHandlers.lua ou délèguent à des modules de gameplay (carrière, inventaire, achat de véhicules, garde de configuration de véhicule).
+Registry of the routes' named back/exit handlers. A route whose back is in "handler" mode designates a name (for example garageExitHandler); router.back() fetches it via getHandler and calls it. Most handlers are defined in routeHandlers/*ExitHandlers.lua or delegate to gameplay modules (career, inventory, vehicle purchase, vehicle configuration guard).
 
-## Remarques
+## Notes
 
-- Gestionnaires enregistrés : firstDriveLockedHandler (échec first_drive_locked), previousRouteBackHandler (retour à l'entrée précédente avec restoreLastScope, sinon « menu »), garageExitHandler, mainmenuExitHandler, missionDetailsExitHandler, pauseExitHandler, vehicleConfigurationBackHandler, missionVehicleSelectorBackHandler, careerProfilesExitHandler, careerBranchPageBackHandler, radialBackHandler, partShoppingExitHandler, partInventoryExitHandler, vehicleShoppingExitHandler, vehicleShoppingVehicleListExitHandler, vehiclePurchaseExitHandler, negotiationExitHandler, vehicleInventoryExitHandler.
-- Les gestionnaires qui délèguent à un module (vehicleConfigurationBackHandler, part/vehicle Shopping, partInventory, vehicleInventory) sont des fonctions enveloppes qui résolvent le module au moment de l'appel ; les autres sont lus dans extensions.ui_router_routeHandlers_* au chargement du fichier.
-- Ce module n'exporte que getHandler ; la table de gestionnaires est locale.
+- Registered handlers: firstDriveLockedHandler (first_drive_locked failure), previousRouteBackHandler (back to the previous entry with restoreLastScope, otherwise "menu"), garageExitHandler, mainmenuExitHandler, missionDetailsExitHandler, pauseExitHandler, vehicleConfigurationBackHandler, missionVehicleSelectorBackHandler, careerProfilesExitHandler, careerBranchPageBackHandler, radialBackHandler, partShoppingExitHandler, partInventoryExitHandler, vehicleShoppingExitHandler, vehicleShoppingVehicleListExitHandler, vehiclePurchaseExitHandler, negotiationExitHandler, vehicleInventoryExitHandler.
+- Handlers that delegate to a module (vehicleConfigurationBackHandler, part/vehicle Shopping, partInventory, vehicleInventory) are wrapper functions that resolve the module at call time; the others are read from extensions.ui_router_routeHandlers_* when the file loads.
+- This module exports only getHandler; the handler table is local.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_routeHandlers.getHandler(handlerName)` | Renvoie le gestionnaire enregistré sous ce nom. | 36 |
+| `ui_router_routeHandlers.getHandler(handlerName)` | Returns the handler registered under this name. | 36 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_routeHandlers.getHandler(handlerName)`
 
-Renvoie le gestionnaire enregistré sous ce nom.
+Returns the handler registered under this name.
 
-- `handlerName` (*string*) : Nom du gestionnaire déclaré dans la route (back.handler).
-- **renvoie** : function|nil Gestionnaire, ou nil si le nom est inconnu.
+- `handlerName` (*string*) : Handler name declared in the route (back.handler).
+- **returns**: function|nil Handler, or nil if the name is unknown.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/routeHandlers.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/routeHandlers.lua`.*

@@ -1,38 +1,38 @@
 # `jbeamWriter`
 
-*Fichier : `lua/common/jbeamWriter.lua` · VM : Commun (GE + véhicule) · 109 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeamWriter.lua` · VM: Common (GE + vehicle) · 109 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeamWriter")`
+**Access:** `require("jbeamWriter")`
 
-Variante de l'encodeur JSON 'joli' qui n'indente (met en forme multi-lignes) que jusqu'à une certaine profondeur, pour écrire des fichiers jbeam lisibles. Elle n'est pas fusionnée avec l'encodeur principal pour des raisons de performance. Un moddeur l'utilise pour sauvegarder une table Lua en fichier .jbeam.
+Variant of the 'pretty' JSON encoder that only indents (multi-line formatting) down to a certain depth, to write readable jbeam files. It is not merged with the main encoder for performance reasons. A modder uses it to save a Lua table to a .jbeam file.
 
-## Exemple
+## Example
 
 ```lua
-local ok = require('jbeamWriter').writeFile('mods/unpacked/mon.jbeam', jbeamTable)
+local ok = require('jbeamWriter').writeFile('mods/unpacked/my.jbeam', jbeamTable)
 ```
 
-## Remarques
+## Notes
 
-- writeFile encode avec maxLevel = 2 : au-delà de la profondeur 2, les sous-tables sont écrites en une ligne via la globale jsonEncode. Exception : la clé 'components' du niveau 1 est toujours mise en forme complètement (maxLevel 999).
-- Les clés des objets sont triées (tableKeysSorted). Les nombres utilisent %.10g ; les NaN/infinis deviennent 9e999 / -9e999. Les vec3/quat (cdata) sont écrits {"x":..,"y":..,"z":..[,"w":..]}.
-- Le fichier est ouvert en écriture ('w') et écrasé. Il dépend de globales du jeu : jsonEncode, tableKeysSorted, ffi, log, dumps. Le paramètre numberPrecision passé à l'encodeur est une variable globale `numberPrecision` (nil sauf définition ailleurs), donc normalement indéfini.
+- writeFile encodes with maxLevel = 2: beyond depth 2, sub-tables are written on one line via the global jsonEncode. Exception: the 'components' key at level 1 is always fully formatted (maxLevel 999).
+- Object keys are sorted (tableKeysSorted). Numbers use %.10g; NaN/infinities become 9e999 / -9e999. vec3/quat (cdata) are written {"x":..,"y":..,"z":..[,"w":..]}.
+- The file is opened for writing ('w') and overwritten. It depends on game globals: jsonEncode, tableKeysSorted, ffi, log, dumps. The numberPrecision parameter passed to the encoder is a global variable `numberPrecision` (nil unless defined elsewhere), so normally undefined.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeamWriter.writeFile(filename, obj)` | Écrit la table obj dans filename au format JSON joli limité en profondeur. Renvoie true si réussi ; en cas d'échec d'ouverture, journalise une erreur et renvoie false. | 93 |
+| `jbeamWriter.writeFile(filename, obj)` | Writes the table obj to filename in depth-limited pretty JSON format. Returns true on success; if opening fails, logs an error and returns false. | 93 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeamWriter.writeFile(filename, obj)`
 
-Écrit la table obj dans filename au format JSON joli limité en profondeur. Renvoie true si réussi ; en cas d'échec d'ouverture, journalise une erreur et renvoie false.
+Writes the table obj to filename in depth-limited pretty JSON format. Returns true on success; if opening fails, logs an error and returns false.
 
-- `filename` (*string*) : chemin du fichier à écrire (écrasé)
-- `obj` (*table*) : données à écrire
-- **renvoie** : boolean succès
+- `filename` (*string*) : path of the file to write (overwritten)
+- `obj` (*table*) : data to write
+- **returns**: boolean success
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeamWriter.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeamWriter.lua`.*

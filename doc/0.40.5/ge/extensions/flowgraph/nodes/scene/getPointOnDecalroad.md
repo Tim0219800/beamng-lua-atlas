@@ -1,29 +1,29 @@
 # `flowgraph_nodes_scene_getPointOnDecalroad`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/getPointOnDecalroad.lua` · VM : Game Engine (GE) · 80 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/getPointOnDecalroad.lua` · VM: Game Engine (GE) · 80 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/getPointOnDecalroad")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/getPointOnDecalroad")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Get Point on Decalroad » (repeat_instant). Donne la position d'un point de controle d'une DecalRoad (roadId, idx) et une approximation de sa direction (quat). Si la route est en boucle ('looped'), les voisins du premier/dernier point bouclent ; sinon ils sont clampes. Le calcul n'est refait que si roadId ou idx change.
+Flowgraph node "Get Point on Decalroad" (repeat_instant). Gives the position of a control point of a DecalRoad (roadId, idx) and an approximation of its direction (quat). If the road is looped ('looped'), the neighbors of the first/last point wrap around; otherwise they are clamped. The computation is only redone if roadId or idx changes.
 
-## Remarques
+## Notes
 
-- idx est base 0, borne a [0, getNodeCount()-1] ; hors bornes le noeud ne fait rien.
-- La direction est calculee comme position(precedent) - position(suivant) : verifier le sens si la rotation semble inversee. Le code la dit approximative.
+- idx is 0-based, clamped to [0, getNodeCount()-1]; out of bounds the node does nothing.
+- The direction is computed as position(previous) - position(next): check the direction if the rotation seems inverted. The code says it is approximate.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Reinitialise le cache (oldRoadId, oldIdx, roadObj) et vide les pins de sortie. | 28 |
-| `C:init()` | Rien a initialiser. | 24 |
-| `C:work()` | Cherche la route, calcule pos ({x,y,z} du noeud idx) et rot (quatFromDir de la direction suivant->precedent, vecteur haut Z). | 37 |
+| `C:_executionStarted()` | Resets the cache (oldRoadId, oldIdx, roadObj) and empties the output pins. | 28 |
+| `C:init()` | Nothing to initialize. | 24 |
+| `C:work()` | Looks up the road, computes pos ({x,y,z} of node idx) and rot (quatFromDir of the next->previous direction, Z up vector). | 37 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/getPointOnDecalroad.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/getPointOnDecalroad.lua`.*

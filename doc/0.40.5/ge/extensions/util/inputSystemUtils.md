@@ -1,34 +1,34 @@
 # `util_inputSystemUtils`
 
-*Fichier : `lua/ge/extensions/util/inputSystemUtils.lua` · VM : Game Engine (GE) · 132 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/inputSystemUtils.lua` · VM: Game Engine (GE) · 132 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_inputSystemUtils` : `extensions.load("util_inputSystemUtils")`, puis la globale `util_inputSystemUtils`
+**Access:** extension `util_inputSystemUtils`: `extensions.load("util_inputSystemUtils")`, then the global `util_inputSystemUtils`
 
-Outils de maintenance pour les fichiers inputmaps (profils de contrôleurs dans /settings/inputmaps/, format JSON). printStats compte les liaisons et affiche les 20 actions les plus utilisées ; resave relit tous les inputmaps, complète vidpid et vendorName (d'après vendorNames.json), trie les liaisons par contrôle puis action et les réécrit avec un formatage JSON personnalisé. Destiné aux développeurs du jeu et aux créateurs de profils de contrôleurs.
+Maintenance tools for inputmaps files (controller profiles in /settings/inputmaps/, JSON format). printStats counts the bindings and prints the 20 most used actions; resave re-reads all inputmaps, completes vidpid and vendorName (from vendorNames.json), sorts the bindings by control then action and rewrites them with custom JSON formatting. Intended for game developers and controller profile creators.
 
-## Exemple
+## Example
 
 ```lua
 extensions.util_inputSystemUtils.printStats()
 extensions.util_inputSystemUtils.resave()
 ```
 
-## Remarques
+## Notes
 
-- resave écrit directement dans les fichiers trouvés sous un dossier inputmaps/ ; à utiliser avec précaution.
-- Le vidpid est déduit du nom de fichier si le champ est absent ; il est supprimé s'il n'est pas composé de 8 caractères hexadécimaux. L'identifiant fabricant est constitué des caractères 5 à 8.
-- Si une liaison n'a pas de champ control, le tri retombe sur la comparaison de tostring(table), ce qui n'est pas stable.
+- resave writes directly to the files found under an inputmaps/ folder; use with caution.
+- The vidpid is inferred from the file name if the field is missing; it is removed if it is not made of 8 hexadecimal characters. The vendor id is made of characters 5 to 8.
+- If a binding has no control field, the sort falls back to comparing tostring(table), which is not stable.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_inputSystemUtils.printStats()` | Parcourt tous les fichiers JSON dont le chemin contient inputmaps/, affiche le nombre total de liaisons et les 20 actions les plus fréquentes. | 20 |
-| `util_inputSystemUtils.resave()` | Réécrit tous les inputmaps avec un formatage normalisé (clé control en tête, bindings en dernier, petites tables repliées sur une ligne) ; n'écrit le fichier que si le contenu change, et affiche le résultat par fichier. | 77 |
+| `util_inputSystemUtils.printStats()` | Walks all JSON files whose path contains inputmaps/, prints the total number of bindings and the 20 most frequent actions. | 20 |
+| `util_inputSystemUtils.resave()` | Rewrites all inputmaps with normalized formatting (control key first, bindings last, small tables folded onto one line); writes the file only if the content changes, and prints the result per file. | 77 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/inputSystemUtils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/inputSystemUtils.lua`.*

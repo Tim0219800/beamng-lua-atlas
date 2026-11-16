@@ -2,100 +2,100 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/asyncBulkLoader.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Chargeur asynchrone de gros jeux de données (véhicules, missions, sélecteur de gameplay, niveaux, profils de sauvegarde carrière). Chaque loadXxx lance un job (core_jobsystem, intervalle 1/30 s) qui exécute le chargement lourd en cédant la main au fil des étapes, publie la progression dans le flux 'asyncBulkLoaderProgress' et signale la fin par guihooks et extensions.hook. Les variantes xxxDirect chargent de façon synchrone avec mesure du temps.
---- Accès : extension `util_asyncBulkLoader` : `extensions.load("util_asyncBulkLoader")`, puis la globale `util_asyncBulkLoader`
+--- Asynchronous loader for large datasets (vehicles, missions, gameplay selector, levels, career save profiles). Each loadXxx starts a job (core_jobsystem, 1/30 s interval) that runs the heavy loading while yielding between steps, publishes progress in the 'asyncBulkLoaderProgress' stream and signals completion via guihooks and extensions.hook. The xxxDirect variants load synchronously with time measurement.
+--- Access: extension `util_asyncBulkLoader`: `extensions.load("util_asyncBulkLoader")`, then the global `util_asyncBulkLoader`
 ---@class util_asyncBulkLoader
----@field yield function|nil Fonction de cession (job.yield) posée par setupYield ; nop au départ. Appelée par le code de chargement pour laisser respirer le jeu.
+---@field yield function|nil Yield function _anon(job.yield) set by setupYield; nop at start. Called by the loading code to let the game breathe.
 util_asyncBulkLoader = {}
 
---- Ajoute au nombre d'éléments déjà traités et publie la progression.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:30
----@param count number Éléments traités à ajouter.
+--- Adds to the number of items already processed and publishes the progress.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:30
+---@param count number Processed items to add.
 function util_asyncBulkLoader.addCount(count) end
 
---- Ajoute au total d'éléments à charger et publie la progression.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:23
----@param total number Éléments à ajouter au total.
+--- Adds to the total number of items to load and publishes the progress.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:23
+---@param total number Items to add to the total.
 function util_asyncBulkLoader.addTotal(total) end
 
---- Indique si les données du sélecteur de gameplay sont chargées.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:102
----@return boolean  true si chargées.
+--- Returns whether the gameplay selector data is loaded.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:102
+---@return boolean  true if loaded.
 function util_asyncBulkLoader.isGameplaySelectorLoaded() end
 
---- Indique si la liste des niveaux est chargée (core_levels.isListLoaded).
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:106
----@return boolean  true si chargée.
+--- Returns whether the level list is loaded (core_levels.isListLoaded).
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:106
+---@return boolean  true if loaded.
 function util_asyncBulkLoader.isLevelsLoaded() end
 
---- Indique si un chargement asynchrone est en cours.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:135
----@return boolean  true si en cours.
+--- Returns whether an asynchronous load is in progress.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:135
+---@return boolean  true if in progress.
 function util_asyncBulkLoader.isLoading() end
 
---- Indique si toutes les missions sont chargées.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:98
----@return boolean  true si chargées.
+--- Returns whether all missions are loaded.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:98
+---@return boolean  true if loaded.
 function util_asyncBulkLoader.isMissionsLoaded() end
 
---- Indique si les données des modèles de véhicules sont chargées (core_vehicles.isModelsDataLoaded).
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:94
----@return boolean  true si chargées.
+--- Returns whether the vehicle model data is loaded (core_vehicles.isModelsDataLoaded).
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:94
+---@return boolean  true if loaded.
 function util_asyncBulkLoader.isVehiclesLoaded() end
 
---- Construit en asynchrone les données du sélecteur de gameplay, puis émet 'asyncGameplaySelectorLoadComplete'.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:228
----@return string  'alreadyLoaded', 'alreadyLoading' ou 'startLoading'.
+--- Builds the gameplay selector data asynchronously, then emits 'asyncGameplaySelectorLoadComplete'.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:228
+---@return string  'alreadyLoaded', 'alreadyLoading' or 'startLoading'.
 function util_asyncBulkLoader.loadGameplaySelector() end
 
---- Construit les tuiles du sélecteur de gameplay de façon synchrone et affiche le temps.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:122
+--- Builds the gameplay selector tiles synchronously and prints the time.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:122
 function util_asyncBulkLoader.loadGameplaySelectorDirect() end
 
---- Charge en asynchrone la liste des niveaux, puis émet 'asyncLevelLoadComplete'.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:268
----@return string  'alreadyLoaded', 'alreadyLoading' ou 'startLoading'.
+--- Loads the level list asynchronously, then emits 'asyncLevelLoadComplete'.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:268
+---@return string  'alreadyLoaded', 'alreadyLoading' or 'startLoading'.
 function util_asyncBulkLoader.loadLevels() end
 
---- Charge la liste des niveaux de façon synchrone et affiche le temps.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:128
+--- Loads the level list synchronously and prints the time.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:128
 function util_asyncBulkLoader.loadLevelsDirect() end
 
---- Charge en asynchrone toutes les missions, puis émet le guihook 'asyncMissionLoadComplete'.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:193
----@return string  'alreadyLoaded', 'alreadyLoading' ou 'startLoading'.
+--- Loads all missions asynchronously, then emits the guihook 'asyncMissionLoadComplete'.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:193
+---@return string  'alreadyLoaded', 'alreadyLoading' or 'startLoading'.
 function util_asyncBulkLoader.loadMissions() end
 
---- Charge toutes les missions de façon synchrone et affiche le temps.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:116
+--- Loads all missions synchronously and prints the time.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:116
 function util_asyncBulkLoader.loadMissionsDirect() end
 
---- Charge en asynchrone les données des modèles de véhicules, puis émet 'asyncVehicleLoadComplete' (UI et extensions). Utilisé par le sélecteur de véhicules.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:155
----@return string  'alreadyLoaded', 'alreadyLoading' ou 'startLoading'.
+--- Loads the vehicle model data asynchronously, then emits 'asyncVehicleLoadComplete' (UI and extensions). Used by the vehicle selector.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:155
+---@return string  'alreadyLoaded', 'alreadyLoading' or 'startLoading'.
 function util_asyncBulkLoader.loadVehicles() end
 
---- Charge la liste des modèles de véhicules de façon synchrone (core_vehicles.loadModelListNoGarbage) et affiche le temps.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:110
+--- Loads the vehicle model list synchronously (core_vehicles.loadModelListNoGarbage) and prints the time.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:110
 function util_asyncBulkLoader.loadVehiclesDirect() end
 
---- Met à jour le pourcentage de l'analyse de fichiers (décodage des véhicules) et publie la progression.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:18
----@param percent number 0 à 100 déterminé, -1 indéterminé.
+--- Updates the percentage of file parsing (decoding of vehicles) and publishes the progress.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:18
+---@param percent number 0 to 100 determinate, -1 indeterminate.
 function util_asyncBulkLoader.reportScanPercent(percent) end
 
---- Envoie l'état de progression courant dans le flux 'asyncBulkLoaderProgress'.
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:13
+--- Sends the current progress state in the 'asyncBulkLoaderProgress' stream.
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:13
 function util_asyncBulkLoader.reportStream() end
 
---- Dans un job, envoie à l'UI les données de tous les emplacements de sauvegarde carrière (career_career.sendAllCareerProfilesData).
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:304
+--- In a job, sends the UI the data of all career save slots (career_career.sendAllCareerProfilesData).
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:304
 ---@return string  'startLoading'.
 function util_asyncBulkLoader.sendAllCareerSaveSlotsDataAsync() end
 
---- Prépare M.yield à partir d'un job : job.yield, ou une version avec profilage si le seuil est abaissé.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/asyncBulkLoader.lua:139
----@param job table Job de core_jobsystem.
+--- Prepares M.yield from a job: job.yield, or a profiled version if the threshold is lowered.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/asyncBulkLoader.lua:139
+---@param job table core_jobsystem job.
 function util_asyncBulkLoader.setupYield(job) end
 

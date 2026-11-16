@@ -1,66 +1,66 @@
 # `core_vehicleTriggersDebug`
 
-*Fichier : `lua/ge/extensions/core/vehicleTriggersDebug.lua` · VM : Game Engine (GE) · 496 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/vehicleTriggersDebug.lua` · VM: Game Engine (GE) · 496 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_vehicleTriggersDebug` : `extensions.load("core_vehicleTriggersDebug")`, puis la globale `core_vehicleTriggersDebug`
+**Access:** extension `core_vehicleTriggersDebug`: `extensions.load("core_vehicleTriggersDebug")`, then the global `core_vehicleTriggersDebug`
 
-Fenêtre imgui « Vehicle event debug » pour inspecter les triggers de véhicule : affiche l'état de core_vehicleTriggers (caméra, trigger tenu, position survolée, libellés), liste les véhicules avec leurs triggers, leurs liens d'action et les événements JBeam, et permet de les déclencher à la souris. Chargée par core_vehicleTriggers.enableDebugUI() et déchargée par disableDebugUI(). Un moddeur de véhicule s'en sert pour vérifier ses sections triggers et triggerEventLinks.
+"Vehicle event debug" ImGui window to inspect vehicle triggers: shows the state of core_vehicleTriggers (camera, held trigger, hovered position, labels), lists vehicles with their triggers, action links and JBeam events, and lets you fire them with the mouse. Loaded by core_vehicleTriggers.enableDebugUI() and unloaded by disableDebugUI(). A vehicle modder uses it to check their triggers and triggerEventLinks sections.
 
-## Exemple
+## Example
 
 ```lua
-core_vehicleTriggers.enableDebugUI()  -- ouvre la fenêtre
-core_vehicleTriggers.disableDebugUI() -- la ferme
+core_vehicleTriggers.enableDebugUI()  -- opens the window
+core_vehicleTriggers.disableDebugUI() -- closes it
 ```
 
-## Remarques
+## Notes
 
-- Ne s'utilise pas directement : elle dépend de core_vehicleTriggers et core_vehicle_vehicleTriggerHighlight et lit core_vehicleTriggers.state.
-- Les boutons « trigger » exécutent les chaînes Lua onDown/onUp des événements dans le véhicule (queueLuaCommand) ; les liens passent par une copie locale de executeLink qui force le joueur 0 (différence avec la fonction locale executeLink de vehicleTriggers.lua, qui transmet le joueur).
-- La copie locale de executeLink ne déclenche pas le hook onVehicleTriggersExecuteLink.
+- Not to be used directly: it depends on core_vehicleTriggers and core_vehicle_vehicleTriggerHighlight and reads core_vehicleTriggers.state.
+- The "trigger" buttons execute the Lua onDown/onUp strings of the events in the vehicle (queueLuaCommand); links go through a local copy of executeLink that forces player 0 (a difference from the local executeLink function of vehicleTriggers.lua, which passes the player).
+- The local copy of executeLink does not fire the onVehicleTriggersExecuteLink hook.
 
-**Dépendances (chargées avant) :** `core_vehicleTriggers`, `core_vehicle_vehicleTriggerHighlight`
+**Dependencies (loaded first):** `core_vehicleTriggers`, `core_vehicle_vehicleTriggerHighlight`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_vehicleTriggersDebug.onDeserialized(data)` | Hook appelé après un rechargement des extensions : restaure les triggers surlignés via core_vehicle_vehicleTriggerHighlight.setSerializedHighlightedTriggerData. *(interne)* *(hook)* | 485 |
-| `core_vehicleTriggersDebug.onSerialize()` | Hook appelé avant un rechargement des extensions : sauvegarde les triggers surlignés. *(interne)* *(hook)* | 475 |
-| `core_vehicleTriggersDebug.onUpdate(dtReal, dtSim, dtRaw)` | Hook appelé à chaque image : dessine la fenêtre imgui de debug. *(interne)* *(hook)* | 471 |
+| `core_vehicleTriggersDebug.onDeserialized(data)` | Hook called after an extensions reload: restores the highlighted triggers through core_vehicle_vehicleTriggerHighlight.setSerializedHighlightedTriggerData. *(internal)* *(hook)* | 485 |
+| `core_vehicleTriggersDebug.onSerialize()` | Hook called before an extensions reload: saves the highlighted triggers. *(internal)* *(hook)* | 475 |
+| `core_vehicleTriggersDebug.onUpdate(dtReal, dtSim, dtRaw)` | Hook called every frame: draws the debug ImGui window. *(internal)* *(hook)* | 471 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_vehicleTriggersDebug.onDeserialized(data)`
 
-Hook appelé après un rechargement des extensions : restaure les triggers surlignés via core_vehicle_vehicleTriggerHighlight.setSerializedHighlightedTriggerData.
+Hook called after an extensions reload: restores the highlighted triggers through core_vehicle_vehicleTriggerHighlight.setSerializedHighlightedTriggerData.
 
-- `data` (*table|nil*) : Données de onSerialize ({highLightedTriggerData}).
+- `data` (*table|nil*) : Data from onSerialize ({highLightedTriggerData}).
 
 #### `core_vehicleTriggersDebug.onSerialize()`
 
-Hook appelé avant un rechargement des extensions : sauvegarde les triggers surlignés.
+Hook called before an extensions reload: saves the highlighted triggers.
 
-- **renvoie** : table {highLightedTriggerData = données de surbrillance ou nil}
+- **returns**: table {highLightedTriggerData = highlight data or nil}
 
 #### `core_vehicleTriggersDebug.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé à chaque image : dessine la fenêtre imgui de debug.
+Hook called every frame: draws the debug ImGui window.
 
-- `dtReal` (*number*) : Temps réel écoulé (s).
-- `dtSim` (*number*) : Temps de simulation écoulé (s).
-- `dtRaw` (*number*) : Temps brut écoulé (s).
+- `dtReal` (*number*) : Elapsed real time (s).
+- `dtSim` (*number*) : Simulation elapsed time (s).
+- `dtRaw` (*number*) : Raw elapsed time (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | core_vehicleTriggers et core_vehicle_vehicleTriggerHighlight. |
+| `dependencies` | string[] | core_vehicleTriggers and core_vehicle_vehicleTriggerHighlight. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObject`, `getObjectCount`, `getPlayerVehicleID`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/vehicleTriggersDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/vehicleTriggersDebug.lua`.*

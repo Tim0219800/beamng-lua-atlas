@@ -1,119 +1,210 @@
 {
   "path": "lua/ge/extensions/gameplay/race/startPosition.lua",
-  "module": "Classe d'une position de départ d'une course : position et rotation d'une ligne de départ, avec un groupe ('start', 'rollingStart', 'recovery' ou 'other'). Elle sait placer un véhicule dessus en conservant son décalage relatif, se calquer sur un véhicule et fournir les coins avant pour les tests de franchissement. Le module renvoie une fabrique : require('/lua/ge/extensions/gameplay/race/startPosition')(race, name). Contrairement aux autres classes de course, son premier argument s'appelle race.",
+  "module": "Class of a race start position: position and rotation of a start line, with a group ('start', 'rollingStart', 'recovery' or 'other'). It can place a vehicle on it while keeping its relative offset, copy a vehicle's placement and provide the front corners for crossing tests. The module returns a factory: require('/lua/ge/extensions/gameplay/race/startPosition')(race, name). Unlike the other race classes, its first argument is named race.",
   "notes": [
-    "Le rôle des groupes est celui indiqué par le commentaire du code : start, rollingStart, recovery, other. Sans groupe dans les données, le nom contenant 'Recovery' donne 'recovery', sinon 'start'.",
-    "moveResetVehicleTo utilise une variable logTag non définie dans le fichier (nil, sans conséquence sur le log).",
-    "Sans réparation (repair = false), le véhicule est téléporté avec spawn.safeTeleport et une rotation corrigée.",
-    "calculateVehiclePosRot utilise la boîte englobante OOBB d'apparition : en lowPrecision (véhicule chargé à la première image), le véhicule est placé 2 m derrière et 0,5 m au-dessus de la position.",
-    "Le véhicule est orienté face à la ligne (rotation de la ligne composée d'un demi-tour sur Z).",
-    "setToVehicle ajuste la hauteur et la pente au terrain s'il existe un TerrainBlock."
+    "The groups' role is the one given by the code comment: start, rollingStart, recovery, other. Without a group in the data, a name containing 'Recovery' gives 'recovery', otherwise 'start'.",
+    "moveResetVehicleTo uses a logTag variable not defined in the file (nil, with no consequence on the log).",
+    "Without repair (repair = false), the vehicle is teleported with spawn.safeTeleport and a corrected rotation.",
+    "calculateVehiclePosRot uses the spawn OOBB bounding box: in lowPrecision (vehicle loaded on the first frame), the vehicle is placed 2 m behind and 0.5 m above the position.",
+    "The vehicle is oriented facing the line (the line's rotation composed with a half turn on Z).",
+    "setToVehicle adjusts the height and slope to the terrain if a TerrainBlock exists."
   ],
   "classes": {
     "C": {
-      "desc": "Position de départ. Champs : race, id (race:getNextUniqueIdentifier()), name (« Start Position <id> » par défaut), group, pos (vec3), rot (quat), sortOrder, routePoint, originalDistToTarget, staticRoutePoint, staticOriginalDistToTarget.",
+      "desc": "Start position. Fields: race, id (race:getNextUniqueIdentifier()), name (\"Start Position <id>\" by default), group, pos (vec3), rot (quat), sortOrder, routePoint, originalDistToTarget, staticRoutePoint, staticOriginalDistToTarget.",
       "functions": {
         "init": {
-          "desc": "Constructeur : id, nom, groupe 'start', position et rotation nulles.",
+          "desc": "Constructor: id, name, group 'start', null position and rotation.",
           "params": {
-            "race": {"type": "table", "desc": "Course ou chemin propriétaire."},
-            "name": {"type": "string|nil", "desc": "Nom."}
+            "race": {
+              "type": "table",
+              "desc": "Owning race or path."
+            },
+            "name": {
+              "type": "string|nil",
+              "desc": "Name."
+            }
           },
           "returns": [],
           "internal": true
         },
         "onSerialize": {
-          "desc": "Sérialise name, group, pos, rot (x,y,z,w) et oldId.",
+          "desc": "Serializes name, group, pos, rot (x,y,z,w) and oldId.",
           "params": {},
-          "returns": [{"type": "table", "desc": "Données JSON."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "JSON data."
+            }
+          ],
           "internal": false
         },
         "onDeserialized": {
-          "desc": "Restaure la position à partir de données sérialisées (groupe déduit du nom si absent).",
-          "params": {"data": {"type": "table", "desc": "Données de onSerialize."}},
+          "desc": "Restores the position from serialized data (group inferred from the name if absent).",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Data from onSerialize."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "set": {
-          "desc": "Définit la position et la rotation.",
+          "desc": "Sets the position and rotation.",
           "params": {
-            "pos": {"type": "vec3", "desc": "Position."},
-            "rot": {"type": "quat", "desc": "Rotation."}
+            "pos": {
+              "type": "vec3",
+              "desc": "Position."
+            },
+            "rot": {
+              "type": "quat",
+              "desc": "Rotation."
+            }
           },
           "returns": [],
           "internal": false
         },
         "getFrontCorners": {
-          "desc": "Coins de la zone devant la position : deux listes, l'une de quatre points (largeur et longueur, vers l'arrière de la ligne selon -Y), l'autre de deux points à 0,4 m.",
+          "desc": "Corners of the area in front of the position: two lists, one of four points (width and length, toward the back of the line along -Y), the other of two points at 0.4 m.",
           "params": {
-            "width": {"type": "number|nil", "desc": "Demi-largeur (défaut 1)."},
-            "length": {"type": "number|nil", "desc": "Longueur (défaut 1)."}
+            "width": {
+              "type": "number|nil",
+              "desc": "Half-width (default 1)."
+            },
+            "length": {
+              "type": "number|nil",
+              "desc": "Length (default 1)."
+            }
           },
-          "returns": [{"type": "table", "desc": "{ {4 vec3}, {2 vec3} }"}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "{ {4 vec3}, {2 vec3} }"
+            }
+          ],
           "internal": false
         },
         "drawDebug": {
-          "desc": "Dessine la ligne de départ (triangles pleins), un prisme rouge en mode highlight et le nom.",
+          "desc": "Draws the start line (filled triangles), a red prism in highlight mode and the name.",
           "params": {
-            "drawMode": {"type": "string|nil", "desc": "'none', 'faded', 'normal', 'highlight'."},
-            "clr": {"type": "number[]|nil", "desc": "Couleur {r,g,b,a} entre 0 et 1."}
+            "drawMode": {
+              "type": "string|nil",
+              "desc": "'none', 'faded', 'normal', 'highlight'."
+            },
+            "clr": {
+              "type": "number[]|nil",
+              "desc": "Color {r,g,b,a} between 0 and 1."
+            }
           },
           "returns": [],
           "internal": false
         },
         "calculateVehiclePosRot": {
-          "desc": "Calcule la position et la rotation à donner à un véhicule pour qu'il garde son décalage relatif par rapport à sa boîte d'apparition, centrée sur la ligne.",
+          "desc": "Computes the position and rotation to give a vehicle so that it keeps its relative offset from its spawn box, centered on the line.",
           "params": {
-            "vehId": {"type": "integer", "desc": "Id du véhicule."},
-            "lowPrecision": {"type": "boolean|nil", "desc": "true pour un véhicule chargé à la première image."}
+            "vehId": {
+              "type": "integer",
+              "desc": "Vehicle id."
+            },
+            "lowPrecision": {
+              "type": "boolean|nil",
+              "desc": "true for a vehicle loaded on the first frame."
+            }
           },
           "returns": [
-            {"type": "vec3|nil", "desc": "Nouvelle position."},
-            {"type": "quat|nil", "desc": "Nouvelle rotation."}
+            {
+              "type": "vec3|nil",
+              "desc": "New position."
+            },
+            {
+              "type": "quat|nil",
+              "desc": "New rotation."
+            }
           ],
           "internal": false
         },
         "moveResetVehicleTo": {
-          "desc": "Déplace un véhicule sur la position de départ. Par défaut avec réparation (setPositionRotation) ; avec repair = false, téléportation sûre.",
+          "desc": "Moves a vehicle to the start position. By default with repair (setPositionRotation); with repair = false, safe teleport.",
           "params": {
-            "vehId": {"type": "integer", "desc": "Id du véhicule."},
-            "lowPrecision": {"type": "boolean|nil", "desc": "Voir calculateVehiclePosRot."},
-            "repair": {"type": "boolean|nil", "desc": "Défaut true ; false = téléportation sûre sans réparation."}
+            "vehId": {
+              "type": "integer",
+              "desc": "Vehicle id."
+            },
+            "lowPrecision": {
+              "type": "boolean|nil",
+              "desc": "See calculateVehiclePosRot."
+            },
+            "repair": {
+              "type": "boolean|nil",
+              "desc": "Default true; false = safe teleport without repair."
+            }
           },
           "returns": [
-            {"type": "vec3|nil", "desc": "Position appliquée."},
-            {"type": "quat|nil", "desc": "Rotation calculée."}
+            {
+              "type": "vec3|nil",
+              "desc": "Applied position."
+            },
+            {
+              "type": "quat|nil",
+              "desc": "Computed rotation."
+            }
           ],
           "internal": false
         },
         "setToVehicle": {
-          "desc": "Aligne la position de départ sur un véhicule : centre de son avant, orientation du véhicule (ou du terrain sous lui).",
-          "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+          "desc": "Aligns the start position on a vehicle: center of its front, orientation of the vehicle (or of the terrain under it).",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "Vehicle id."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "setRoutePoint": {
-          "desc": "Mémorise le point de route associé et sa distance d'origine à la cible (distToTarget).",
-          "params": {"rp": {"type": "table", "desc": "Point de route."}},
+          "desc": "Stores the associated road point and its original distance to the target (distToTarget).",
+          "params": {
+            "rp": {
+              "type": "table",
+              "desc": "Road point."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "getRoutePoint": {
-          "desc": "Point de route associé.",
+          "desc": "Associated road point.",
           "params": {},
-          "returns": [{"type": "table|nil", "desc": "Point de route."}],
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Road point."
+            }
+          ],
           "internal": false
         },
         "setStaticRoutePoint": {
-          "desc": "Mémorise le point de route statique et sa distance d'origine.",
-          "params": {"rp": {"type": "table", "desc": "Point de route."}},
+          "desc": "Stores the static road point and its original distance.",
+          "params": {
+            "rp": {
+              "type": "table",
+              "desc": "Road point."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "getStaticRoutePoint": {
-          "desc": "Point de route statique.",
+          "desc": "Static road point.",
           "params": {},
-          "returns": [{"type": "table|nil", "desc": "Point de route."}],
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Road point."
+            }
+          ],
           "internal": false
         }
       }

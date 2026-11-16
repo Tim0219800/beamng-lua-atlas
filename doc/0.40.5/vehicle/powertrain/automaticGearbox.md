@@ -1,74 +1,74 @@
 # `powertrain_automaticGearbox`
 
-*Fichier : `lua/vehicle/powertrain/automaticGearbox.lua` · VM : Véhicule · 514 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/automaticGearbox.lua` · VM: Vehicle · 514 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `automaticGearbox` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `automaticGearbox` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Type de device powertrain `automaticGearbox` : boîte automatique à train planétaire/hydraulique simplifié. Elle a des rapports indexés (gearIndex), des modes drive / neutral / park, une interpolation progressive du rapport lors des changements (simule l'ouverture/fermeture des embrayages internes), un frottement, une perte à la montée en rapport, un verrouillage de parking, un amortisseur visqueux anti-recul et des sons de sifflement d'engrenages. Le parent doit être un dispositif de couplage visqueux (catégorie viscouscoupling, en pratique un convertisseur de couple). Le choix des rapports est piloté par un contrôleur (gearbox controller), pas par ce module.
+Powertrain device type `automaticGearbox`: simplified planetary/hydraulic automatic gearbox. It has indexed gears (gearIndex), drive / neutral / park modes, a progressive interpolation of the ratio during shifts (simulates the opening/closing of internal clutches), friction, a loss on upshifts, a parking lock, an anti-rollback viscous damper and gear whine sounds. The parent must be a viscous coupling device (category viscouscoupling, in practice a torque converter). Gear selection is driven by a controller (gearbox controller), not by this module.
 
-## Exemple
+## Example
 
 ```lua
 local gb = powertrain.getDevice('transmission')
-gb:setGearIndex(2, 0.3)   -- 2e rapport, changement en au moins 0.3 s
+gb:setGearIndex(2, 0.3)   -- 2nd gear, shift lasting at least 0.3 s
 powertrain.setDeviceMode('transmission', 'neutral')
 ```
 
-## Remarques
+## Notes
 
-- CLÉS JBEAM : gearRatios (liste ; les valeurs >= 0 deviennent les rapports avant d'indice 0, 1, 2… dans l'ordre, les négatives les marches arrière), gearRatio (initial, défaut 1), friction (0), dynamicFriction (0), torqueLossCoef (0..1), shiftEfficiency (0.5 : fraction du couple transmis pendant un changement), gearChangeTime (0.5 s, durée minimale d'interpolation), parkLockTorque (1000 N·m), parkLockSpring, parkLockDampRatio (0.4), oneWayViscousCoef (5), oneWayViscousTorque (coef x 25), oneWayViscousSmoothing (50), gearboxNode_nodes (noeud de la boîte pour les sons), breakTriggerBeam, gearWhineCoefs / gearWhineCoefsInput / gearWhineCoefsOutput, gearWhineFixedCoefInput (0.4) / Output (0.7), gearWhineInputEvent / gearWhineOutputEvent, forward/reverse Input/OutputPitchCoef (1 / 0.7), gearWhine*Smoothing.
-- INDEXATION : gearIndex 0 = neutre (rapport 0 ou premier élément), 1..N avant, -1..-M arrière, bornés par minGearIndex / maxGearIndex. Attention : pour les rapports arrière la boucle de new() associe gearRatios[-k] dans un ordre particulier (avec 2 marches arrière, [-2] reçoit la 1re valeur négative de la liste jbeam et [-1] la 2e), à vérifier avant de s'y fier.
-- CHAMPS : gearRatio (rapport courant interpolé), desiredGearRatio, gearIndex, mode, isShifting / isShiftingUp / isShiftingDown, inputAV, outputAV1 (rad/s), outputTorque1 (N·m), virtualMassAV (vitesse de la masse virtuelle en neutre/park), lockCoef (1 normal, 0 verrouillé par setLock), shiftLossCoef, parkClutchAngle / parkEngaged, wear/damage coefs, cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, transmissionNodeID.
-- Physique : en drive, inputAV = outputAV1 x gearRatio x lockCoef et outputTorque = ((couple d'entrée x shiftLossCoef - frottement) x gearRatio - couple anti-recul) x lockCoef. En neutral/park, une masse virtuelle prend la place (la boîte se déconnecte de la sortie) et le parking verrouille la sortie par un ressort quand le véhicule est quasi à l'arrêt (|outputAV1| < 100 rad/s).
-- Incohérences repérées : le device n'a pas de méthode onBreak ; powertrain.breakDevice (poutre breakTriggerBeam cassée) et setPartCondition avec isBroken appellent device:onBreak(), ce qui planterait. En outre, powertrain.setDeviceMode / toggleDeviceMode utilisent device.availableModes (non défini ici) : les changements de mode passent par setMode appelé par le contrôleur de boîte.
-- Catégorie du device : gearbox (le moteur ne l'accepte pas comme enfant direct : il faut un couplage visqueux ou un embrayage entre les deux).
+- JBEAM KEYS: gearRatios (list; values >= 0 become the forward ratios of index 0, 1, 2… in order, negative ones the reverse gears), gearRatio (initial, default 1), friction (0), dynamicFriction (0), torqueLossCoef (0..1), shiftEfficiency (0.5: fraction of the torque transmitted during a shift), gearChangeTime (0.5 s, minimum interpolation duration), parkLockTorque (1000 N·m), parkLockSpring, parkLockDampRatio (0.4), oneWayViscousCoef (5), oneWayViscousTorque (coef x 25), oneWayViscousSmoothing (50), gearboxNode_nodes (gearbox node for the sounds), breakTriggerBeam, gearWhineCoefs / gearWhineCoefsInput / gearWhineCoefsOutput, gearWhineFixedCoefInput (0.4) / Output (0.7), gearWhineInputEvent / gearWhineOutputEvent, forward/reverse Input/OutputPitchCoef (1 / 0.7), gearWhine*Smoothing.
+- INDEXING: gearIndex 0 = neutral (ratio 0 or first element), 1..N forward, -1..-M reverse, bounded by minGearIndex / maxGearIndex. Careful: for the reverse gears the loop in new() maps gearRatios[-k] in a particular order (with 2 reverse gears, [-2] receives the 1st negative value of the jbeam list and [-1] the 2nd), to be checked before relying on it.
+- FIELDS: gearRatio (current interpolated ratio), desiredGearRatio, gearIndex, mode, isShifting / isShiftingUp / isShiftingDown, inputAV, outputAV1 (rad/s), outputTorque1 (N·m), virtualMassAV (speed of the virtual mass in neutral/park), lockCoef (1 normal, 0 locked by setLock), shiftLossCoef, parkClutchAngle / parkEngaged, wear/damage coefs, cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, transmissionNodeID.
+- Physics: in drive, inputAV = outputAV1 x gearRatio x lockCoef and outputTorque = ((input torque x shiftLossCoef - friction) x gearRatio - anti-rollback torque) x lockCoef. In neutral/park, a virtual mass takes its place (the gearbox disconnects from the output) and park locks the output with a spring when the vehicle is almost stopped (|outputAV1| < 100 rad/s).
+- Inconsistencies spotted: the device has no onBreak method; powertrain.breakDevice (breakTriggerBeam beam broken) and setPartCondition with isBroken call device:onBreak(), which would crash. Moreover, powertrain.setDeviceMode / toggleDeviceMode use device.availableModes (not defined here): mode changes go through setMode called by the gearbox controller.
+- Device category: gearbox (the engine does not accept it as a direct child: a viscous coupling or a clutch is needed between the two).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_automaticGearbox.new(jbeamData)` | Fabrique du device appelée par powertrain.init pour le type 'automaticGearbox'. Construit les tables de rapports, de sons, de verrouillage de parking et d'anti-recul, puis sélectionne le rapport 0. *(interne)* | 366 |
+| `powertrain_automaticGearbox.new(jbeamData)` | Device factory called by powertrain.init for the type 'automaticGearbox'. Builds the ratio, sound, parking lock and anti-rollback tables, then selects gear 0. *(internal)* | 366 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_automaticGearbox.new(jbeamData)`
 
-Fabrique du device appelée par powertrain.init pour le type 'automaticGearbox'. Construit les tables de rapports, de sons, de verrouillage de parking et d'anti-recul, puis sélectionne le rapport 0.
+Device factory called by powertrain.init for the type 'automaticGearbox'. Builds the ratio, sound, parking lock and anti-rollback tables, then selects gear 0.
 
-- `jbeamData` (*table*) : Données jbeam ; gearRatios est obligatoire.
-- **renvoie** : table Le device automaticGearbox.
+- `jbeamData` (*table*) : jbeam data; gearRatios is mandatory.
+- **returns**: table The automaticGearbox device.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `deviceCategories` | table<string, boolean> | {gearbox = true}. |
 | `outputPorts` | table<integer, boolean> | {[1] = true}. |
-| `requiredExternalInertiaOutputs` | integer[] | {1} : powertrain ajoute un arbre factice sur ce port si rien n'y est connecté. |
+| `requiredExternalInertiaOutputs` | integer[] | {1}: powertrain adds a dummy shaft on this port if nothing is connected to it. |
 
-## Classe `device`
+## Class `device`
 
-Objet renvoyé par new(jbeamData).
+Object returned by new(jbeamData).
 
-Objet `device` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `device` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `device:applyDeformGroupDamage(damageAmount)` | Applique un dégât de déformation : augmente le frottement, réduit la vitesse de changement de rapport (plancher 0.2). | 161 |
-| `device:calculateInertia()` | Calcule l'inertie cumulée ramenée à l'entrée (inertie de l'enfant / rapport²), les paramètres du verrou de parking et les rapports cumulés. | 257 |
-| `device:getPartCondition()` | Renvoie l'intégrité 0..1 (0 si cassé) et la table d'état {damageFrictionCoef, damageGearRatioChangeRateCoef, isBroken}. | 188 |
-| `device:initSounds(jbeamData)` | Crée les boucles sonores de sifflement (entrée/sortie) et leurs lisseurs d'après les clés jbeam gearWhine*. | 292 |
-| `device:reset(jbeamData)` | Remet tout à l'état initial (vitesses, mode 'drive', usure, dégâts, parking) et sélectionne le rapport 0. | 328 |
-| `device:resetSounds()` | Remet à zéro les lisseurs et valeurs de bruit d'engrenages. | 280 |
-| `device:setGearIndex(index, gearChangeTime)` | Choisit un rapport par son indice (borné à [minGearIndex, maxGearIndex]). Le rapport réel est ensuite interpolé dans updateGFX ; pendant le changement le couple est réduit par shiftEfficiency. | 241 |
-| `device:setLock(enabled)` | Active (true) ou désactive le verrouillage : lockCoef = 0 déconnecte l'entrée et laisse seul le verrou de parking, 1 fonctionnement normal ; remet parkClutchAngle à 0. | 252 |
-| `device:setMode(mode)` | Change le mode ('drive', 'neutral' ou 'park') et sélectionne les fonctions de mise à jour correspondantes. | 236 |
-| `device:setPartCondition(subSystem, odometer, integrity, visual)` | Applique usure et intégrité (nombre ou table) : coefficients de friction et de vitesse de changement de rapport ; appelle onBreak si isBroken (méthode inexistante, voir notes). | 166 |
-| `device:torqueUpdate(dt)` | Pas de physique (couples). Calcule outputTorque1 selon le mode, le frottement, le verrouillage de parking et l'anti-recul, et alimente les lisseurs de bruit d'engrenages. | 79 |
-| `device:updateGFX(dt)` | Une fois par frame : fait progresser gearRatio vers desiredGearRatio à la vitesse gearRatioChangeRate (influencée par usure/dégâts), recalcule l'inertie quand le rapport est atteint, met à jour isShifting*, et engage le parking si mode 'park' et vitesse basse. | 115 |
-| `device:updateSounds(dt)` | Appelée par powertrain.updateGFX : met à jour volume et hauteur des boucles de sifflement d'engrenages d'entrée et de sortie. | 19 |
-| `device:validate()` | Vérifie que le parent est un couplage visqueux (viscouscoupling) ; calcule les couples/vitesses attendus (depuis le moteur grand-parent si présent, sinon 100 N·m et 6000 tr/min) pour normaliser les sons. | 204 |
-| `device:velocityUpdate(dt)` | Pas de physique (vitesses). Fonction sélectionnée selon le mode : updateVelocity (drive), neutralUpdateVelocity ou parkUpdateVelocity (masse virtuelle). Écrit la vitesse d'entrée dans le parent. | 74 |
+| `device:applyDeformGroupDamage(damageAmount)` | Applies deformation damage: increases friction, reduces the shift speed (floor 0.2). | 161 |
+| `device:calculateInertia()` | Computes the cumulative inertia referred to the input (child inertia / ratio²), the parking lock parameters and the cumulative ratios. | 257 |
+| `device:getPartCondition()` | Returns the integrity 0..1 (0 if broken) and the state table {damageFrictionCoef, damageGearRatioChangeRateCoef, isBroken}. | 188 |
+| `device:initSounds(jbeamData)` | Creates the whine sound loops (input/output) and their smoothers from the gearWhine* jbeam keys. | 292 |
+| `device:reset(jbeamData)` | Resets everything to the initial state (speeds, 'drive' mode, wear, damage, parking) and selects gear 0. | 328 |
+| `device:resetSounds()` | Resets the gear noise smoothers and values. | 280 |
+| `device:setGearIndex(index, gearChangeTime)` | Selects a gear by its index (bounded to [minGearIndex, maxGearIndex]). The real ratio is then interpolated in updateGFX; during the shift the torque is reduced by shiftEfficiency. | 241 |
+| `device:setLock(enabled)` | Enables (true) or disables the lock: lockCoef = 0 disconnects the input and leaves only the parking lock, 1 normal operation; resets parkClutchAngle to 0. | 252 |
+| `device:setMode(mode)` | Changes the mode ('drive', 'neutral' or 'park') and selects the corresponding update functions. | 236 |
+| `device:setPartCondition(subSystem, odometer, integrity, visual)` | Applies wear and integrity (number or table): friction and shift speed coefficients; calls onBreak if isBroken (nonexistent method, see notes). | 166 |
+| `device:torqueUpdate(dt)` | Physics step (torques). Computes outputTorque1 according to the mode, the friction, the parking lock and the anti-rollback, and feeds the gear noise smoothers. | 79 |
+| `device:updateGFX(dt)` | Once per frame: advances gearRatio toward desiredGearRatio at the speed gearRatioChangeRate (influenced by wear/damage), recomputes the inertia when the ratio is reached, updates isShifting*, and engages park if mode is 'park' and speed is low. | 115 |
+| `device:updateSounds(dt)` | Called by powertrain.updateGFX: updates volume and pitch of the input and output gear whine loops. | 19 |
+| `device:validate()` | Checks that the parent is a viscous coupling (viscouscoupling); computes the expected torques/speeds (from the grandparent engine if present, otherwise 100 N·m and 6000 RPM) to normalize the sounds. | 204 |
+| `device:velocityUpdate(dt)` | Physics step (velocities). Function selected according to the mode: updateVelocity (drive), neutralUpdateVelocity or parkUpdateVelocity (virtual mass). Writes the input speed into the parent. | 74 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/automaticGearbox.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/automaticGearbox.lua`.*

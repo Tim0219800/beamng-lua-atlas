@@ -1,20 +1,20 @@
 # `flowgraph_nodes_gameplay_traffic_trafficParams`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficParams.lua` · VM : Game Engine (GE) · 77 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficParams.lua` · VM: Game Engine (GE) · 77 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/trafficParams")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/trafficParams")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Traffic Parameters » (once_instant). Règle le système de trafic via gameplay_traffic.setTrafficVars : aiMode (traffic, random, flee, chase, follow, stop ; défaut traffic), spawnRate (spawnValue, 0 à 3), directionBias (spawnDirBias, -1 à 1 ; -1 = loin du joueur), risk (baseAggression), poolActiveAmount (activeAmount ; avec data.usePoolInactiveAmount, vaut le nombre de véhicules de trafic moins la valeur), enableRandomEvents. Seuls les pins non nil sont appliqués. Ancien pin poolAmount renommé poolActiveAmount.
+Flowgraph node "Traffic Parameters" (once_instant). Sets the traffic system via gameplay_traffic.setTrafficVars: aiMode (traffic, random, flee, chase, follow, stop; default traffic), spawnRate (spawnValue, 0 to 3), directionBias (spawnDirBias, -1 to 1; -1 = away from the player), risk (baseAggression), poolActiveAmount (activeAmount; with data.usePoolInactiveAmount, equals the number of traffic vehicles minus the value), enableRandomEvents. Only non-nil pins are applied. Legacy pin poolAmount renamed poolActiveAmount.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph). | 33 |
-| `C:postInit()` | Définit les valeurs prédéfinies du pin aiMode. | 38 |
-| `C:workOnce()` | Construit la table de variables à partir des pins non nil et appelle gameplay_traffic.setTrafficVars. | 46 |
+| `C:init()` | Initializes the node's internal state at creation (called by the flowgraph engine). | 33 |
+| `C:postInit()` | Defines the preset values of the aiMode pin. | 38 |
+| `C:workOnce()` | Builds the variables table from the non-nil pins and calls gameplay_traffic.setTrafficVars. | 46 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficParams.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficParams.lua`.*

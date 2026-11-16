@@ -1,0 +1,84 @@
+{
+  "path": "lua/ge/extensions/editor/api/material.lua",
+  "module": "API de l'éditeur pour manipuler les matériaux (objets `Material`, fichiers materials.json) : création, copie, déplacement vers un autre fichier, modification d'une propriété, suppression. `initialize` installe les fonctions sur l'objet `editor`. Les écritures disque passent par le PersistenceManager `scenetree.matLuaEd_PersistMan` ; la suppression d'une entrée JSON se fait par manipulation de texte pour ne pas réordonner tout le fichier (jsonWriteFile trie les clés).",
+  "usage": "editor.createMaterial(\"mon_mat\", \"levels/mymap/art/materials.json\", \"mon_mat\")\neditor.setMaterialProperty(\"mon_mat\", \"diffuseColor\", 0, \"1 0 0 1\")",
+  "notes": [
+    "Les fonctions acceptent un objet Material ou son nom (string), résolu par scenetree.findObject.",
+    "Matériaux v1.5 : 4 couches maximum (copie des champs sur les couches 0 à 3).",
+    "Champs non copiés par copyMaterial/copyMaterialAsNew : name, mapTo, persistentId, parentGroup, internalName, class, className, superClass, hidden, locked, canSave, canSaveDynamicFields.",
+    "Incohérence : `initialize` crée l'objet `materialPersistMan` s'il manque, mais toutes les fonctions utilisent `scenetree.matLuaEd_PersistMan` (créé ailleurs).",
+    "Les messages d'erreur utilisent `logTag`, qui n'est pas défini dans ce fichier (nil sauf global ailleurs).",
+    "`createMaterial` annonce materialMapTo comme `number` mais le traite comme une chaîne (`#materialMapTo`) ; passer une string.",
+    "`setMaterialProperty` et `deleteMaterial` plantent si le nom ne correspond à aucun objet (material nil indexé)."
+  ],
+  "functions": {
+    "initialize": {
+      "desc": "Enregistre un PersistenceManager 'materialPersistMan' s'il n'existe pas, mémorise l'éditeur et y installe createMaterial, setMaterialProperty, removeMaterialFromJson, moveMaterial, copyMaterial, copyMaterialAsNew, deleteMaterial.",
+      "params": {"editorInstance": {"type": "table", "desc": "objet `editor`"}},
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Fonctions ajoutées à `editor` par initialize.",
+      "functions": {
+        "createMaterial": {
+          "desc": "Crée un nouveau Material (version 1.5) et l'écrit sur disque. Échoue si le nom est vide, déjà pris, ou si le dossier n'existe pas. Si mapTo est vide, le nom du matériau est utilisé.",
+          "params": {
+            "materialName": {"type": "string", "desc": "nom du matériau"},
+            "materialFilename": {"type": "string", "desc": "chemin du materials.json à écrire"},
+            "materialMapTo": {"type": "string", "desc": "valeur mapTo (nom de matériau du mesh)"}
+          },
+          "returns": [{"type": "boolean", "desc": "true si créé"}]
+        },
+        "setMaterialProperty": {
+          "desc": "Fixe un champ du matériau sur une couche puis recharge le matériau (ne sauvegarde pas sur disque).",
+          "params": {
+            "material": {"type": "table|string", "desc": "Material ou son nom"},
+            "property": {"type": "string", "desc": "nom du champ"},
+            "layer": {"type": "integer", "desc": "index de couche (0 à 3)"},
+            "value": {"type": "string", "desc": "valeur au format texte du champ"}
+          },
+          "returns": [{"type": "boolean", "desc": "true si l'objet est un Material"}]
+        },
+        "removeMaterialFromJson": {
+          "desc": "Supprime l'entrée de premier niveau `materialName` d'un fichier materials.json par édition de texte (gère les virgules, indépendant de l'indentation) et réécrit le fichier. Logue une erreur/avertissement et ne renvoie rien si le fichier ou l'entrée est introuvable.",
+          "params": {
+            "materialName": {"type": "string", "desc": "clé du matériau à retirer"},
+            "materialFilename": {"type": "string", "desc": "chemin du fichier JSON"}
+          }
+        },
+        "moveMaterial": {
+          "desc": "Déplace un matériau vers un autre fichier (le sauvegarde dans le nouveau) puis retire son entrée de l'ancien fichier s'il s'agissait d'un .json existant.",
+          "params": {
+            "material": {"type": "table|string", "desc": "Material ou son nom"},
+            "newFilename": {"type": "string", "desc": "fichier de destination (dossier existant requis)"}
+          },
+          "returns": [{"type": "boolean", "desc": "false si pas un Material, même fichier ou dossier inexistant"}]
+        },
+        "copyMaterial": {
+          "desc": "Copie tous les paramètres (toutes couches et champs dynamiques) d'un matériau source sur un matériau cible existant, en gardant nom, mapTo et fichier de la cible. La cible doit être dans un .json ; elle est rechargée et sauvegardée.",
+          "params": {
+            "source": {"type": "table|string", "desc": "Material source ou nom"},
+            "target": {"type": "table|string", "desc": "Material cible ou nom"}
+          },
+          "returns": [{"type": "boolean", "desc": "false si l'un n'est pas un Material, si source = cible ou si la cible n'est pas dans un json"}]
+        },
+        "copyMaterialAsNew": {
+          "desc": "Copie un matériau dans un nouveau matériau (name et mapTo = newName) écrit dans le fichier donné.",
+          "params": {
+            "source": {"type": "table|string", "desc": "Material source ou nom"},
+            "newName": {"type": "string", "desc": "nom du nouveau matériau (non vide, non utilisé)"},
+            "newFilename": {"type": "string", "desc": "fichier materials.json de destination (dossier existant)"}
+          },
+          "returns": [{"type": "boolean", "desc": "true si créé"}]
+        },
+        "deleteMaterial": {
+          "desc": "Supprime l'objet Material de la scène et son entrée dans son fichier JSON (via removeMaterialFromJson).",
+          "params": {"material": {"type": "table|string", "desc": "Material ou son nom"}},
+          "returns": [{"type": "boolean", "desc": "true si c'était un Material"}]
+        }
+      }
+    }
+  }
+}

@@ -1,45 +1,45 @@
 # `gameplay_rally_tools_loopToolbox`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/tools/loopToolbox.lua` · VM : Game Engine (GE) · 1129 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/tools/loopToolbox.lua` · VM: Game Engine (GE) · 1129 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/tools/loopToolbox")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/tools/loopToolbox")` (file under extensions/ but not a regular extension)
 
-Fenêtre imgui de debug « Rally Loop Debug » (Loop Toolbox) pour la boucle de rallye, ouverte par gameplay_rallyLoop.toggleDebug(). Elle permet de choisir une mission `rallyLoop` du niveau courant, de la charger ou décharger (gameplay_rallyLoop.setup/unload), de sauter le compte à rebours ou la liaison (Skip), d'avancer ou reculer l'horloge de ±10 s et ±1 min, de mettre l'horloge en pause, et affiche validation, données de proximité, indices de mission, distances, durées, pénalités et planning. Les options de dessin (route, étiquettes, z au premier plan, panneaux, infos de debug) sont sauvegardées dans `/settings/rally/loopToolbox.json`. Le module renvoie un constructeur : `require(...)()`.
+imgui debug window "Rally Loop Debug" (Loop Toolbox) for the rally loop, opened by gameplay_rallyLoop.toggleDebug(). It lets you pick a `rallyLoop` mission of the current level, load or unload it (gameplay_rallyLoop.setup/unload), skip the countdown or the road section (Skip), move the clock forward or back by ±10 s and ±1 min, pause the clock, and displays validation, proximity data, mission indices, distances, durations, penalties and the schedule. The drawing options (route, labels, z on top, signboards, debug info) are saved in `/settings/rally/loopToolbox.json`. The module returns a constructor: `require(...)()`.
 
-## Remarques
+## Notes
 
-- Le bouton Skip n'est actif que si manager:canSkip() ; il émet le hook onGameplayInteract.
-- Les cases « Vehicle BB » et « Leading Point » sont commentées dans l'interface, mais les champs drawVehBB et drawLeadingPoint sont toujours sauvegardés.
-- Les panneaux de rallye (signboards) sont des objets de la scène dont la shapeName contient `s_rally_signboard_` ; findSignboards les repère et drawSignboardsDebug écrit leur nom au-dessus.
+- The Skip button is only active if manager:canSkip(); it emits the onGameplayInteract hook.
+- The "Vehicle BB" and "Leading Point" checkboxes are commented out in the interface, but the drawVehBB and drawLeadingPoint fields are still saved.
+- The rally signboards are scene objects whose shapeName contains `s_rally_signboard_`; findSignboards locates them and drawSignboardsDebug writes their name above them.
 
-## Classe `C`
+## Class `C`
 
-Fenêtre d'outils de la boucle de rallye. Champs principaux : missionDropdownItems, selectedMissionIndex, selectedMissionId, selectedMissionDir, drawRoute, drawLabels, drawZOnTop, drawSignboards, drawVehBB, drawLeadingPoint, showDebugInfo (BoolPtr imgui), signboards, syncedManager.
+Rally loop tools window. Main fields: missionDropdownItems, selectedMissionIndex, selectedMissionId, selectedMissionDir, drawRoute, drawLabels, drawZOnTop, drawSignboards, drawVehBB, drawLeadingPoint, showDebugInfo (imgui BoolPtr), signboards, syncedManager.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_tools_loopToolbox")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_tools_loopToolbox")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:applyManagerDrawFlags(manager)` | Transmet l'option showDebugInfo au manager de boucle (setDrawFlag) et retient ce manager comme synchronisé. | 102 |
-| `C:draw(manager)` | Dessine tout le contenu de la fenêtre (à appeler entre im.Begin et im.End). | 384 |
-| `C:drawDebug()` | Dessin 3D de debug : délègue à gameplay_rallyLoop.drawDebug avec les options zOnTop, route et étiquettes. | 1076 |
-| `C:drawSignboardsDebug()` | Dessine le nom court de chaque panneau trouvé au-dessus de sa position (debugDrawer:drawTextAdvanced). | 1081 |
-| `C:drawValidation(manager)` | Affiche les problèmes de validation du planning (bloquants en rouge, autres en orange) ou « Validation: OK ». | 356 |
-| `C:findSignboards()` | Cherche dans la scène les panneaux de rallye et les mémorise dans self.signboards, avec leur position, shapeName et champ dynamique `flag`. | 150 |
-| `C:formatDuration(seconds, showSubseconds)` | Formate une durée en [h:]mm:ss (ou avec dixièmes). | 332 |
-| `C:getSelectedMissionId()` | Id de la mission choisie dans le menu (extrait de « Nom (id) »). | 139 |
-| `C:init()` | Constructeur : initialise les options, charge les réglages sauvegardés et la liste des missions. | 21 |
-| `C:loadSettings()` | Relit ce fichier et applique les options ; si le fichier est absent, crée des réglages par défaut tout à faux. Recherche les panneaux si leur affichage était activé. | 62 |
-| `C:refreshMissionList()` | Remplit le menu déroulant avec les missions de type rallyLoop du niveau courant (« Nom (id) ») et sélectionne la mission sauvegardée si elle existe. | 108 |
-| `C:saveSettings()` | Écrit la mission choisie et les options de dessin dans /settings/rally/loopToolbox.json. | 48 |
+| `C:applyManagerDrawFlags(manager)` | Passes the showDebugInfo option to the loop manager (setDrawFlag) and remembers this manager as synced. | 102 |
+| `C:draw(manager)` | Draws the whole content of the window (to be called between im.Begin and im.End). | 384 |
+| `C:drawDebug()` | 3D debug drawing: delegates to gameplay_rallyLoop.drawDebug with the zOnTop, route and labels options. | 1076 |
+| `C:drawSignboardsDebug()` | Draws the short name of each signboard found above its position (debugDrawer:drawTextAdvanced). | 1081 |
+| `C:drawValidation(manager)` | Displays the schedule's validation problems (blocking ones in red, others in orange) or "Validation: OK". | 356 |
+| `C:findSignboards()` | Looks in the scene for the rally signboards and stores them in self.signboards, with their position, shapeName and `flag` dynamic field. | 150 |
+| `C:formatDuration(seconds, showSubseconds)` | Formats a duration as [h:]mm:ss (or with tenths). | 332 |
+| `C:getSelectedMissionId()` | Id of the mission chosen in the menu (extracted from "Name (id)"). | 139 |
+| `C:init()` | Constructor: initializes the options, loads the saved settings and the mission list. | 21 |
+| `C:loadSettings()` | Rereads this file and applies the options; if the file is absent, creates default settings all set to false. Looks for the signboards if their display was enabled. | 62 |
+| `C:refreshMissionList()` | Fills the dropdown with the rallyLoop missions of the current level ("Name (id)") and selects the saved mission if it exists. | 108 |
+| `C:saveSettings()` | Writes the chosen mission and the drawing options to /settings/rally/loopToolbox.json. | 48 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onGameplayInteract` — écouté par 2 module(s)
+- `onGameplayInteract` — listened to by 2 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `upcast`
 - `debugDrawer:` `drawTextAdvanced`
@@ -47,4 +47,4 @@ Le module renvoie un constructeur : `local obj = require("gameplay_rally_tools_l
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/tools/loopToolbox.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/tools/loopToolbox.lua`.*

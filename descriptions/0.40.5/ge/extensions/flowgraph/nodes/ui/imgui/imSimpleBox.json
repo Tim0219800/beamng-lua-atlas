@@ -1,28 +1,28 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/imSimpleBox.lua",
-  "module": "Nœud flowgraph « im Simple Text Box » (catégorie repeat_instant, tag imgui) : fenêtre imgui minimale avec un titre et un texte. Entrées : « title » (défaut 'Some Title'), « text » (défaut 'Some Text').",
+  "module": "Flowgraph node \"im Simple Text Box\" (category repeat_instant, tag imgui): minimal imgui window with a title and a text. Inputs: \"title\" (default 'Some Title'), \"text\" (default 'Some Text').",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "drawMiddle": {
-          "desc": "Zone centrale vide.",
+          "desc": "Empty central area.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale)."
+              "desc": "Editor node builder (builder:Middle() opens the central area)."
             },
             "style": {
               "type": "any",
-              "desc": "Style d'affichage du nœud fourni par l'éditeur."
+              "desc": "Node display style provided by the editor."
             }
           },
           "internal": true
         },
         "work": {
-          "desc": "Ouvre une fenêtre imgui, affiche le texte et la ferme.",
+          "desc": "Opens an imgui window, displays the text and closes it.",
           "internal": true
         }
       }

@@ -1,89 +1,89 @@
 # `editor_toolUtilities_siteWater`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/siteWater.lua` · VM : Game Engine (GE) · 438 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/siteWater.lua` · VM: Game Engine (GE) · 438 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_siteWater` : `extensions.load("editor_toolUtilities_siteWater")`, puis la globale `editor_toolUtilities_siteWater`
+**Access:** extension `editor_toolUtilities_siteWater`: `extensions.load("editor_toolUtilities_siteWater")`, then the global `editor_toolUtilities_siteWater`
 
-Eau stagnante et en chute d'un « site » (open space editor) : bassins d'une cascade, nappes qui débordent entre eux, jets, gerbes et jets d'écume (émetteur de particules BNGP_sprinkler). L'eau n'est pas un mesh et ne peut donc pas être cuite dans une coque ; le manifeste du site la porte sous forme de chiffres et tout ce qui monte le site recrée les objets (WaterBlock, River, ParticleEmitterNode). Tout part d'un enregistrement unique, exprimé dans le repère du site : un point d'ancrage et un angle règlent tout le placement.
+Standing and falling water of a "site" (open space editor): waterfall basins, sheets that overflow between them, jets, sprays and foam jets (particle emitter BNGP_sprinkler). Water is not a mesh and therefore cannot be baked into a shell; the site manifest carries it as numbers and everything that assembles the site recreates the objects (WaterBlock, River, ParticleEmitterNode). Everything starts from a single record, expressed in the site's frame: an anchor point and an angle set the whole placement.
 
-## Exemple
+## Example
 
 ```lua
 local sw = extensions.editor_toolUtilities_siteWater
-local rec = sw.localise(ca, ox, oy, oz)      -- vers le manifeste
-local ca2 = sw.place(rec, px, py, pz, yaw, ox, oy) -- depuis le manifeste
+local rec = sw.localise(ca, ox, oy, oz)      -- to the manifest
+local ca2 = sw.place(rec, px, py, pz, yaw, ox, oy) -- from the manifest
 local ids, names = sw.build(ca2, folder, 'site1')
 ```
 
-## Remarques
+## Notes
 
-- build() commence par appeler remove(folder), donc reconstruit tout depuis zéro.
-- remove() balaie par classe (WaterBlock, River, ParticleEmitterNode) plutôt que par liste d'ids, car l'annulation restaure un document dont les ids peuvent désigner des objets supprimés.
-- Une nappe (fall) part de chacune des 8 arêtes du bord d'un bassin (4 plats et 4 coins coupés) ; le nombre de gerbes est plafonné à 8 par arête.
-- Les valeurs flow, sprayPow et sprayVar sont bornées à 0..1 dans build ; flow vaut 0.55 par défaut, sprayPow et sprayVar 0.5.
-- Les altitudes (z, jetZ, spoutZ, zTop, zBot) sont relatives à oz/pz dans le manifeste et absolues dans l'enregistrement de l'éditeur.
+- build() starts by calling remove(folder), so it rebuilds everything from scratch.
+- remove() sweeps by class (WaterBlock, River, ParticleEmitterNode) rather than by id list, because undo restores a document whose ids may refer to deleted objects.
+- A sheet (fall) starts from each of the 8 edges of a basin's rim (4 flat and 4 cut corners); the number of sprays is capped at 8 per edge.
+- The flow, sprayPow and sprayVar values are clamped to 0..1 in build; flow is 0.55 by default, sprayPow and sprayVar 0.5.
+- The altitudes (z, jetZ, spoutZ, zTop, zBot) are relative to oz/pz in the manifest and absolute in the editor record.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_siteWater.build(ca, folder, tag)` | Inonde ce que le centre d'intérêt a posé (bassins), puis accroche une nappe sur chaque face de chaque bassin qui déborde, avec gerbes d'écume, puis les couronnes (jets et déversoirs). Vide d'abord le dossier. | 305 |
-| `editor_toolUtilities_siteWater.commit(ids)` | Passe chaque objet en persistant (canSave et cansave à true) et renvoie leurs noms, ce qui sert à l'annulation d'une gravure. | 338 |
-| `editor_toolUtilities_siteWater.localise(ca, ox, oy, oz)` | Produit l'enregistrement du manifeste, dans le repère du site : seulement ce que build lit (bassins, couronnes, nappes, débit, gerbes). Positions relatives à (ox, oy, oz), bassins et couronnes relatifs à l'ancre. | 356 |
-| `editor_toolUtilities_siteWater.place(rec, px, py, pz, yaw, ox, oy)` | Opération inverse : place un enregistrement de manifeste à une position et un cap, prêt pour build. L'ancre pivote autour du placement et l'angle s'ajoute au sien. (ox, oy) est le point du repère du site autour duquel pivote le placement (le milieu de l'emprise). | 391 |
-| `editor_toolUtilities_siteWater.remove(folder)` | Supprime tout ce qui est mouillé sous un dossier : objets des classes WaterBlock, River et ParticleEmitterNode. | 293 |
+| `editor_toolUtilities_siteWater.build(ca, folder, tag)` | Floods what the point of interest has placed (basins), then attaches a sheet to each face of each basin that overflows, with foam sprays, then the crowns (jets and weirs). Empties the folder first. | 305 |
+| `editor_toolUtilities_siteWater.commit(ids)` | Makes each object persistent (canSave and cansave set to true) and returns their names, which is used to undo a burn. | 338 |
+| `editor_toolUtilities_siteWater.localise(ca, ox, oy, oz)` | Produces the manifest record, in the site's frame: only what build reads (basins, crowns, sheets, flow, sprays). Positions relative to (ox, oy, oz), basins and crowns relative to the anchor. | 356 |
+| `editor_toolUtilities_siteWater.place(rec, px, py, pz, yaw, ox, oy)` | Inverse operation: places a manifest record at a position and heading, ready for build. The anchor rotates around the placement and the angle is added to its own. (ox, oy) is the point of the site's frame around which the placement rotates (the middle of the footprint). | 391 |
+| `editor_toolUtilities_siteWater.remove(folder)` | Removes everything wet under a folder: objects of the WaterBlock, River and ParticleEmitterNode classes. | 293 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_siteWater.build(ca, folder, tag)`
 
-Inonde ce que le centre d'intérêt a posé (bassins), puis accroche une nappe sur chaque face de chaque bassin qui déborde, avec gerbes d'écume, puis les couronnes (jets et déversoirs). Vide d'abord le dossier.
+Floods what the point of interest has placed (basins), then attaches a sheet to each face of each basin that overflows, with foam sprays, then the crowns (jets and weirs). Empties the folder first.
 
-- `ca` (*table|nil*) : Enregistrement de l'éditeur : pools, falls, crowns, flow, sprayPow, sprayVar, spraySeed.
-- `folder` (*userdata|nil*) : Dossier de scène (SimGroup) qui reçoit les objets.
-- `tag` (*string|nil*) : Nom du site qui monte l'eau, pour que deux sites identiques sur une carte n'aient pas les mêmes noms d'objets (défaut 'site').
-- **renvoie** : table|nil Ids des objets créés (nil si pas de bassins ou de dossier).
-- **renvoie** : table|nil Noms des objets créés.
+- `ca` (*table|nil*) : Editor record: pools, falls, crowns, flow, sprayPow, sprayVar, spraySeed.
+- `folder` (*userdata|nil*) : Scene folder (SimGroup) that receives the objects.
+- `tag` (*string|nil*) : Name of the site that assembles the water, so that two identical sites on a map do not have the same object names (default 'site').
+- **returns**: table|nil Ids of the created objects (nil if no basins or no folder).
+- **returns**: table|nil Names of the created objects.
 
 #### `editor_toolUtilities_siteWater.commit(ids)`
 
-Passe chaque objet en persistant (canSave et cansave à true) et renvoie leurs noms, ce qui sert à l'annulation d'une gravure.
+Makes each object persistent (canSave and cansave set to true) and returns their names, which is used to undo a burn.
 
-- `ids` (*table|nil*) : Ids renvoyés par build.
-- **renvoie** : table<integer, string> Noms des objets retrouvés et nommés.
+- `ids` (*table|nil*) : Ids returned by build.
+- **returns**: table<integer, string> Names of the objects found and named.
 
 #### `editor_toolUtilities_siteWater.localise(ca, ox, oy, oz)`
 
-Produit l'enregistrement du manifeste, dans le repère du site : seulement ce que build lit (bassins, couronnes, nappes, débit, gerbes). Positions relatives à (ox, oy, oz), bassins et couronnes relatifs à l'ancre.
+Produces the manifest record, in the site's frame: only what build reads (basins, crowns, sheets, flow, sprays). Positions relative to (ox, oy, oz), basins and crowns relative to the anchor.
 
-- `ca` (*table|nil*) : Enregistrement de l'éditeur (doit avoir pools non vide).
-- `ox` (*number*) : X de l'origine du site.
-- `oy` (*number*) : Y de l'origine du site.
-- `oz` (*number*) : Z de l'origine du site.
-- **renvoie** : table|nil Enregistrement du manifeste, nil s'il n'y a pas de bassin.
+- `ca` (*table|nil*) : Editor record (must have non-empty pools).
+- `ox` (*number*) : X of the site origin.
+- `oy` (*number*) : Y of the site origin.
+- `oz` (*number*) : Z of the site origin.
+- **returns**: table|nil Manifest record, nil if there is no basin.
 
 #### `editor_toolUtilities_siteWater.place(rec, px, py, pz, yaw, ox, oy)`
 
-Opération inverse : place un enregistrement de manifeste à une position et un cap, prêt pour build. L'ancre pivote autour du placement et l'angle s'ajoute au sien. (ox, oy) est le point du repère du site autour duquel pivote le placement (le milieu de l'emprise).
+Inverse operation: places a manifest record at a position and heading, ready for build. The anchor rotates around the placement and the angle is added to its own. (ox, oy) is the point of the site's frame around which the placement rotates (the middle of the footprint).
 
-- `rec` (*table|nil*) : Enregistrement du manifeste (avec pools).
-- `px` (*number*) : X monde du placement.
-- `py` (*number*) : Y monde du placement.
-- `pz` (*number*) : Z monde de base.
-- `yaw` (*number|nil*) : Cap en radians (0 par défaut).
-- `ox` (*number|nil*) : X du point pivot dans le repère du site (0 par défaut).
-- `oy` (*number|nil*) : Y du point pivot dans le repère du site (0 par défaut).
-- **renvoie** : table|nil Enregistrement monde, avec ct et sn (cosinus et sinus du cap) ; nil si rec invalide.
+- `rec` (*table|nil*) : Manifest record (with pools).
+- `px` (*number*) : World X of the placement.
+- `py` (*number*) : World Y of the placement.
+- `pz` (*number*) : Base world Z.
+- `yaw` (*number|nil*) : Heading in radians (0 by default).
+- `ox` (*number|nil*) : X of the pivot point in the site's frame (0 by default).
+- `oy` (*number|nil*) : Y of the pivot point in the site's frame (0 by default).
+- **returns**: table|nil World record, with ct and sn (cosine and sine of the heading); nil if rec is invalid.
 
 #### `editor_toolUtilities_siteWater.remove(folder)`
 
-Supprime tout ce qui est mouillé sous un dossier : objets des classes WaterBlock, River et ParticleEmitterNode.
+Removes everything wet under a folder: objects of the WaterBlock, River and ParticleEmitterNode classes.
 
-- `folder` (*userdata|nil*) : Dossier de scène ; sans effet si nil.
+- `folder` (*userdata|nil*) : Scene folder; no effect if nil.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/siteWater.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/siteWater.lua`.*

@@ -1,23 +1,23 @@
 # `flowgraph_nodes_gameplay_dragRace_getRacerStatus`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerStatus.lua` · VM : Game Engine (GE) · 99 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerStatus.lua` · VM: Game Engine (GE) · 99 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/dragRace/getRacerStatus")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/dragRace/getRacerStatus")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Drag Racer Status » (catégorie repeat_instant). Donne l'état d'un pilote (pin vehId) : isPlayable, lane, isDesqualified, desqualifiedReason, isFinished. Quand les données manquent, les sorties utilisées valent faux, 0 ou chaîne vide.
+Flowgraph node "Get Drag Racer Status" (category repeat_instant). Gives the state of a driver (vehId pin): isPlayable, lane, isDesqualified, desqualifiedReason, isFinished. When data is missing, the used outputs are false, 0 or empty string.
 
-## Remarques
+## Notes
 
-- L'orthographe « desqualified » est celle du jeu.
+- The spelling "desqualified" is the game's.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Vide data et dragData. | 26 |
-| `C:work()` | Lit dragBridge.getData et getRacerData(vehId) puis écrit les pins utilisés. | 31 |
+| `C:_executionStarted()` | Clears data and dragData. | 26 |
+| `C:work()` | Reads dragBridge.getData and getRacerData(vehId) then writes the used pins. | 31 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerStatus.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerStatus.lua`.*

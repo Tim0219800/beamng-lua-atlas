@@ -1,76 +1,121 @@
 {
   "path": "lua/vehicle/controller/braking/compressionBrake.lua",
-  "module": "Contrôleur auxiliaire de frein moteur à décompression (« Jake brake » de camion). Il maintient un coefficient de 0 à 1 et des niveaux préréglés, transmet au moteur `setCompressionBrakeCoef` quand l'accélérateur est relâché, et publie quatre electrics (réglage, valeur réelle, activé, index de niveau). Il force aussi l'agressivité de conduite du contrôleur principal à 1 pendant que le frein est actif.",
+  "module": "Auxiliary compression engine brake controller (truck \"Jake brake\"). It maintains a coefficient from 0 to 1 and preset levels, passes `setCompressionBrakeCoef` to the engine when the throttle is released, and publishes four electrics (setting, actual value, enabled, level index). It also forces the main controller's driving aggression to 1 while the brake is active.",
   "usage": "local cb = controller.getControllerSafe(\"compressionBrake\")\ncb.changeCompressionBrakeLevel(1)\ncb.toggleCompressionBrakeState()",
   "notes": [
-    "Clés jbeam lues par init : `controlledEngine` (\"mainEngine\"), `electricsNameActual`, `electricsNameSetting`, `electricsNameIsEnabled`, `electricsNameLevelIndex` (par défaut `<moteur>_compressionBrake_actual|setting|isEnabled|levelIndex`), `compressionBrakeLevels` ({0.33, 0.66, 1.0}), `clutchDisableElectricsName` (\"clutchRatio\").",
-    "Valeur réelle = coefficient × (1 - sign(requestedThrottle)) : à 0 dès que l'accélérateur est demandé ; forcée à 0 aussi si l'electrics du débrayage est inférieur à 1.",
-    "Si le moteur est introuvable, init log une erreur et remplace `updateGFX` par `nop`.",
-    "Au démarrage, le niveau actif est le dernier (le plus fort) et le coefficient est à 0 (frein éteint).",
-    "Ce contrôleur est déplacé : l'ancien nom `compressionBrake` est redirigé vers `braking/compressionBrake`.",
-    "État sauvegardé sous les clés `<nom>Coef` et `<nom>LevelIndex`."
+    "Jbeam keys read by init: `controlledEngine` (\"mainEngine\"), `electricsNameActual`, `electricsNameSetting`, `electricsNameIsEnabled`, `electricsNameLevelIndex` (by default `<engine>_compressionBrake_actual|setting|isEnabled|levelIndex`), `compressionBrakeLevels` ({0.33, 0.66, 1.0}), `clutchDisableElectricsName` (\"clutchRatio\").",
+    "Actual value = coefficient × (1 - sign(requestedThrottle)): 0 as soon as the throttle is requested; also forced to 0 if the clutch electrics is below 1.",
+    "If the engine is not found, init logs an error and replaces `updateGFX` with `nop`.",
+    "At startup, the active level is the last (strongest) and the coefficient is 0 (brake off).",
+    "This controller is relocated: the old name `compressionBrake` is redirected to `braking/compressionBrake`.",
+    "State saved under the keys `<name>Coef` and `<name>LevelIndex`."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
   },
   "functions": {
     "setCompressionBrakeCoef": {
-      "desc": "Fixe directement le coefficient du frein moteur (borné à 0..1) et affiche un message UI sauf si silent.",
+      "desc": "Directly sets the engine brake coefficient (clamped to 0..1) and displays a UI message unless silent.",
       "params": {
-        "coef": {"type": "number", "desc": "Coefficient 0 à 1."},
-        "silent": {"type": "boolean|nil", "desc": "true pour ne pas afficher de message."}
+        "coef": {
+          "type": "number",
+          "desc": "Coefficient 0 to 1."
+        },
+        "silent": {
+          "type": "boolean|nil",
+          "desc": "true to not display a message."
+        }
       },
       "returns": [],
       "internal": false
     },
     "changeCompressionBrakeLevel": {
-      "desc": "Monte ou descend d'un nombre de niveaux (borné) et applique le coefficient du niveau.",
-      "params": {"indexChange": {"type": "integer", "desc": "Variation d'index (+1, -1...)."}},
+      "desc": "Goes up or down by a number of levels (clamped) and applies the level's coefficient.",
+      "params": {
+        "indexChange": {
+          "type": "integer",
+          "desc": "Index change (+1, -1...)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setCompressionBrakeLevel": {
-      "desc": "Choisit un niveau par son index (borné à 1..nombre de niveaux) et applique son coefficient.",
+      "desc": "Chooses a level by its index (clamped to 1..number of levels) and applies its coefficient.",
       "params": {
-        "level": {"type": "integer", "desc": "Index de niveau (1 = premier)."},
-        "silent": {"type": "boolean|nil", "desc": "true pour ne pas afficher de message."}
+        "level": {
+          "type": "integer",
+          "desc": "Level index (1 = first)."
+        },
+        "silent": {
+          "type": "boolean|nil",
+          "desc": "true to not display a message."
+        }
       },
       "returns": [],
       "internal": false
     },
     "toggleCompressionBrakeState": {
-      "desc": "Coupe le frein s'il est actif, sinon l'active au niveau mémorisé.",
+      "desc": "Turns the brake off if it is active, otherwise activates it at the stored level.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "updateGFX": {
-      "desc": "Chaque frame : calcule le coefficient réel, le transmet au moteur quand il change, gère l'override d'agressivité du contrôleur principal et met à jour les electrics.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "desc": "Every frame: computes the actual coefficient, passes it to the engine when it changes, handles the main controller's aggression override and updates the electrics.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Force la prochaine transmission du coefficient au moteur.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "desc": "Forces the next transmission of the coefficient to the engine.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "getState": {
-      "desc": "Renvoie le coefficient et l'index de niveau pour la sauvegarde d'état.",
+      "desc": "Returns the coefficient and the level index for the state save.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Table d'état (clés `<nom>Coef`, `<nom>LevelIndex`)."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "State table (keys `<name>Coef`, `<name>LevelIndex`)."
+        }
+      ],
       "internal": false
     },
     "setState": {
-      "desc": "Restaure l'index de niveau et le coefficient (valeurs validées, silencieusement).",
-      "params": {"data": {"type": "table|nil", "desc": "Table d'état."}},
+      "desc": "Restores the level index and the coefficient (validated values, silently).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "State table."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "init": {
-      "desc": "Retrouve le moteur contrôlé, les noms d'electrics et les niveaux depuis le jbeam.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "desc": "Finds the controlled engine, the electrics names and the levels from the jbeam.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     }

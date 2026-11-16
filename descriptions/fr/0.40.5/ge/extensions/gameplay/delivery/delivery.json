@@ -1,0 +1,83 @@
+{
+  "path": "lua/ge/extensions/gameplay/delivery/delivery.lua",
+  "module": "Classe d'une livraison chronométrée (ancien système de livraison). Une instance choisit au hasard des lieux d'un objet sites portant un tag, calcule la distance d'un aller-retour par les routes (map.getPath) depuis un point de ramassage, en déduit un temps imparti (baseTime + timePerKm × km), puis suit l'avancement (états disabled, start, active, return, failed). En état active, elle échoue si les dégâts du véhicule dépassent 5000 ou si le temps tombe à 0. Le module renvoie un constructeur : require(...)().",
+  "usage": "local d = require('/lua/ge/extensions/gameplay/delivery/delivery')()\nd.vehId = be:getPlayerVehicleID(0)\nd:setTimeParameters(60, 90)\nd:setup(sites, pickupPos, 5, 'delivery', 3)\nd:startDelivery()",
+  "notes": [
+    "Il faut appeler setTimeParameters avant setup, sinon baseTime est nil et setup plante.",
+    "Bug probable : init met self.vehId = {} (une table) ; checkFail utilise self.vehId comme id dans scenetree.findObjectById et map.objects[self.vehId] : l'appelant doit assigner vehId (entier) avant update.",
+    "Bug probable : dans selectLocations, le tri par distance utilise la variable globale 'position' (nil) donc ne s'exécute jamais, et il trierait 'locations' après la sélection de toute façon (le résultat selected n'est pas trié).",
+    "selectLocations : s'il y a moins de lieux taggés que count, insère des nil (la table selected reste tronquée).",
+    "isPartiallyInsideLocationOneFrame n'est jamais mis à vrai dans ce fichier : le chronomètre ne se met en pause que si l'appelant pose ce champ à chaque image avant update.",
+    "update n'appelle pas clearEvents (appel commenté) : events.proceedDelivery reste vrai jusqu'à clearEvents.",
+    "Paramètres de échec : maxDamage 5000, stoppedMaxDuration 10 (stoppedTimer non utilisés dans ce fichier), locationRewardFactor 0.5.",
+    "checkFail laisse un dump(\"No vData?!\") dans le code si le véhicule n'est pas dans map.objects."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet livraison renvoyé par le constructeur du module. Champs : vehId, state ('disabled' au départ), timer (s), events, pickup {pos, radius}, locations, roundtripDistance (m), locationIndex, failReason, sites, baseTime, timePerKm.",
+      "functions": {
+        "init": {
+          "desc": "Initialise l'état (disabled, timer 0, listes vides) et les paramètres d'échec. Appelée par le constructeur.",
+          "internal": true
+        },
+        "getCurrentRewardFactor": {
+          "desc": "Facteur de récompense proportionnel à l'avancement : ((locationIndex - 1) / nombre de lieux) × locationRewardFactor (0.5).",
+          "returns": [{"type": "number", "desc": "Facteur entre 0 et 0.5 ; 0 s'il n'y a pas de lieux."}]
+        },
+        "selectLocations": {
+          "desc": "Choisit count lieux de self.sites.locations dont customFields.tags contient le tag ; mélange la liste s'il y en a plus que count.",
+          "params": {
+            "tag": {"type": "string", "desc": "Tag recherché dans customFields.tags."},
+            "count": {"type": "integer", "desc": "Nombre de lieux à choisir."}
+          },
+          "returns": [{"type": "table", "desc": "Lieux choisis (voir notes sur les cas limites)."}]
+        },
+        "calculateRoundtrip": {
+          "desc": "Calcule la distance en mètres du trajet ramassage -> lieux dans l'ordre -> ramassage, en additionnant la longueur des chemins sur le graphe routier et les distances au point de route le plus proche.",
+          "returns": [{"type": "number", "desc": "Distance totale en mètres."}]
+        },
+        "setTimeParameters": {
+          "desc": "Définit les paramètres du temps imparti.",
+          "params": {
+            "baseTime": {"type": "number", "desc": "Temps de base en secondes."},
+            "timePerKm": {"type": "number", "desc": "Secondes supplémentaires par kilomètre d'aller-retour."}
+          }
+        },
+        "setup": {
+          "desc": "Prépare la livraison : mémorise sites et point de ramassage, choisit les lieux, calcule la distance et le chronomètre, puis passe à l'état 'start'.",
+          "params": {
+            "sites": {"type": "table", "desc": "Objet sites avec locations.objects."},
+            "pickupPos": {"type": "vec3|table", "desc": "Position de ramassage."},
+            "pickupRadius": {"type": "number", "desc": "Rayon de ramassage (m)."},
+            "tag": {"type": "string", "desc": "Tag des lieux de livraison."},
+            "count": {"type": "integer", "desc": "Nombre de livraisons."}
+          }
+        },
+        "startDelivery": {
+          "desc": "Passe à l'état 'active' et sélectionne le premier lieu (locationIndex = 1).",
+          "params": {}
+        },
+        "proceedDelivery": {
+          "desc": "Valide la livraison courante : lève l'évènement proceedDelivery et passe au lieu suivant ; après le dernier, passe à l'état 'return'.",
+          "returns": [{"type": "boolean", "desc": "true si toutes les livraisons sont faites (état 'return')."}]
+        },
+        "update": {
+          "desc": "Mise à jour par image : en état 'active', vérifie les conditions d'échec. Sans effet si l'état est 'disabled'.",
+          "params": {"dt": {"type": "number", "desc": "Delta temps (s)."}}
+        },
+        "clearEvents": {
+          "desc": "Vide la table d'évènements.",
+          "params": {}
+        },
+        "checkFail": {
+          "desc": "Teste l'échec : dégâts supérieurs à maxDamage (failReason 'damage') ou temps écoulé (failReason 'time') ; le chronomètre ne décroît pas si isPartiallyInsideLocationOneFrame est vrai. En cas d'échec, state = 'failed'.",
+          "params": {"dt": {"type": "number", "desc": "Delta temps (s)."}}
+        },
+        "getCurrentLocation": {
+          "desc": "Retourne le lieu de livraison courant, uniquement en état 'active'.",
+          "returns": [{"type": "table|nil", "desc": "Lieu (objet de sites), nil sinon."}]
+        }
+      }
+    }
+  }
+}

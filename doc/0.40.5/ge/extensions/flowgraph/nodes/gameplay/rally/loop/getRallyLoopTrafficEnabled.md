@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_rally_loop_getRallyLoopTrafficEnabled`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopTrafficEnabled.lua` · VM : Game Engine (GE) · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopTrafficEnabled.lua` · VM: Game Engine (GE) · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopTrafficEnabled")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopTrafficEnabled")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Get Traffic Enabled » (catégorie once_instant, tags rally et traffic). Indique dans trafficEnabled (bool) si le trafic doit être activé pour la boucle rally : rm:getTrafficEnabled() si disponible, sinon true sauf pour une mission de dev (devMission) dont missionTypeData.devDisableTraffic est vrai.
+Flowgraph node "Rally Get Traffic Enabled" (category once_instant, tags rally and traffic). Indicates in trafficEnabled (bool) whether traffic must be enabled for the rally loop: rm:getTrafficEnabled() if available, otherwise true except for a dev mission (devMission) whose missionTypeData.devDisableTraffic is true.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Écrit trafficEnabled depuis le gestionnaire de boucle, ou la valeur de repli. | 35 |
+| `C:workOnce()` | Writes trafficEnabled from the loop manager, or the fallback value. | 35 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopTrafficEnabled.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopTrafficEnabled.lua`.*

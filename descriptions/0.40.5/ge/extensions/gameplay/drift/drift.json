@@ -1,247 +1,571 @@
 {
   "path": "lua/ge/extensions/gameplay/drift/drift.lua",
-  "module": "Moteur de détection du drift. Pour chaque véhicule suivi (un état par vehId, le véhicule du joueur 0 est suivi automatiquement), calcule à chaque frame l'angle de dérive, le survirage, la vitesse, la distance aux murs (raycasts avant/arrière), les crashs et spinouts, et décide si le véhicule drifte. Gère les structures driftActiveData (drift en cours) et driftChainActiveData (chaîne de drifts) et émet les hooks onDriftChainStarted, onDriftStatusChanged, onDriftTransition, onDriftActiveDataFinished, onDriftCompleted, onDriftCrash et onDriftSpinout que consomment scoring, display, quickMessages, statistics, etc. C'est le module à lire pour savoir si le joueur drifte et avec quel angle.",
+  "module": "Drift detection engine. For each tracked vehicle (one state per vehId, player 0's vehicle is tracked automatically), computes every frame the drift angle, oversteer, speed, distance to walls (front/rear raycasts), crashes and spinouts, and decides whether the vehicle is drifting. Manages the driftActiveData (drift in progress) and driftChainActiveData (drift chain) structures and emits the hooks onDriftChainStarted, onDriftStatusChanged, onDriftTransition, onDriftActiveDataFinished, onDriftCompleted, onDriftCrash and onDriftSpinout that scoring, display, quickMessages, statistics, etc. consume. This is the module to read to know whether the player is drifting and at what angle.",
   "usage": "if gameplay_drift_drift.getIsDrifting() then\n  local d = gameplay_drift_drift.getDriftActiveData()\n  print(d.currDegAngle, gameplay_drift_drift.getAirSpeed())\nend",
   "notes": [
-    "Condition de drift (isDrifting) : survirage détecté, pas de marche arrière « cheesing » (angle > 120° avec accélération lissée > -0.07), minAngle (7°) < angle < maxAngle (165°), vitesse moyenne des points de référence > minAirSpeed (4 km/h), pas en mode marche, véhicule au sol, pas de cooldown d'échec (1.65 s), pas de timer de reset (0.1 s), pas de crash en cours.",
-    "Unités : angles en degrés ; getAirSpeed et kphAirSpeed en km/h (vel * 3.6) ; getVehVel renvoie la DIRECTION normalisée de la vitesse (velDir), pas la vitesse ; distances en mètres.",
-    "Une chaîne de drifts se termine (hook onDriftCompleted) quand le temps de confirmation s'écoule sans drift et que le score en cache est > 0 ; ce temps va de 1.2 s (combo <= 5) à 2.25 s (combo >= 20). Les zones de cascade remettent ce temps au maximum.",
-    "Les fonctions get* sans vehId utilisent le véhicule du joueur 0 s'il est suivi, sinon n'importe quel véhicule suivi ; avec un vehId inconnu elles renvoient nil/false/0.",
-    "Crash : onVehicleCrashStarted marque le véhicule comme crashé seulement si son score en cache est > 0 ; le hook onDriftCrash est émis 0.3 s plus tard. Spinout : vitesse < 1.5 km/h avec angle > 110° après un drift avec score en cache > 0.",
-    "Les murs sont détectés avec castRayStatic sur wallDetectionLength = 3 m, depuis l'avant et l'arrière du véhicule, avec un bruit bleu pour balayer la largeur ; les valeurs sont closestWallDistanceFront/Rear dans driftActiveData.",
-    "driftActiveData : {driftDuration, driftDistance, closestWallDistanceFront/Rear, currDegAngle, direction (\"left\"/\"right\"), totalDriftAngle, totalDriftTime, angleVelocity, startPos, lastPos, score, totalAngles, totalSpeeds, totalPerformanceFactors, totalSteps, ...}. driftChainActiveData : {totalDriftDistance, totalDriftTime, rightDrifts, leftDrifts, chainedDrifts, currentCircleDrift = {totalAngle}}.",
-    "Pas de détection pendant le tutoriel firstDrive, en marche à pied, en pause, quand dtSim <= 0, ni en multiseat hors contexte inSplitscreen.",
-    "simulateADrift(data) (debug audio) force angle, vitesse, distance au mur et crash simulé ; passer nil arrête la simulation.",
-    "Le champ driftDuration de driftActiveData n'est jamais mis à jour (reste 0) : utiliser totalDriftTime ou getCurrentDriftDuration.",
-    "getVehCorners renvoie une nouvelle table de 4 vec3 partagés (réutilisés à chaque frame, ne pas les modifier)."
+    "Drift condition (isDrifting): oversteer detected, no reverse \"cheesing\" (angle > 120° with smoothed acceleration > -0.07), minAngle (7°) < angle < maxAngle (165°), average speed of the reference points > minAirSpeed (4 km/h), not in walking mode, vehicle on the ground, no failure cooldown (1.65 s), no reset timer (0.1 s), no crash in progress.",
+    "Units: angles in degrees; getAirSpeed and kphAirSpeed in km/h (vel * 3.6); getVehVel returns the normalized DIRECTION of the velocity (velDir), not the speed; distances in meters.",
+    "A drift chain ends (onDriftCompleted hook) when the confirmation time runs out with no drift and the cached score is > 0; this time ranges from 1.2 s (combo <= 5) to 2.25 s (combo >= 20). Cascade zones reset this time to the maximum.",
+    "The get* functions without vehId use player 0's vehicle if it is tracked, otherwise any tracked vehicle; with an unknown vehId they return nil/false/0.",
+    "Crash: onVehicleCrashStarted marks the vehicle as crashed only if its cached score is > 0; the onDriftCrash hook is emitted 0.3 s later. Spinout: speed < 1.5 km/h with angle > 110° after a drift with cached score > 0.",
+    "Walls are detected with castRayStatic over wallDetectionLength = 3 m, from the front and rear of the vehicle, with blue noise to sweep the width; the values are closestWallDistanceFront/Rear in driftActiveData.",
+    "driftActiveData: {driftDuration, driftDistance, closestWallDistanceFront/Rear, currDegAngle, direction (\"left\"/\"right\"), totalDriftAngle, totalDriftTime, angleVelocity, startPos, lastPos, score, totalAngles, totalSpeeds, totalPerformanceFactors, totalSteps, ...}. driftChainActiveData: {totalDriftDistance, totalDriftTime, rightDrifts, leftDrifts, chainedDrifts, currentCircleDrift = {totalAngle}}.",
+    "No detection during the firstDrive tutorial, when walking, when paused, when dtSim <= 0, nor in multiseat outside the inSplitscreen context.",
+    "simulateADrift(data) (audio debug) forces angle, speed, wall distance and simulated crash; passing nil stops the simulation.",
+    "The driftDuration field of driftActiveData is never updated (stays 0): use totalDriftTime or getCurrentDriftDuration.",
+    "getVehCorners returns a new table of 4 shared vec3 (reused every frame, do not modify them)."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "gameplay_walk, chargé avant."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "gameplay_walk, loaded beforehand."
+    }
   },
   "functions": {
     "addTrackedVehicle": {
-      "desc": "Ajoute un véhicule au suivi de drift (crée son état) et renvoie cet état. Avec opts.playerId, associe le véhicule à un joueur et retire tout autre véhicule suivi pour ce même joueur.",
+      "desc": "Adds a vehicle to the drift tracking (creates its state) and returns that state. With opts.playerId, associates the vehicle with a player and removes any other vehicle tracked for that same player.",
       "params": {
-        "vehId": {"type": "integer", "desc": "Id du véhicule (ignoré si nil ou < 0)."},
-        "opts": {"type": "table|nil", "desc": "{playerId = integer}."}
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id (ignored if nil or < 0)."
+        },
+        "opts": {
+          "type": "table|nil",
+          "desc": "{playerId = integer}."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "État de drift du véhicule."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Drift state of the vehicle."
+        }
+      ]
     },
     "removeTrackedVehicle": {
-      "desc": "Retire un véhicule du suivi de drift et du suivi de crash (gameplay_util_crashDetection).",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}}
+      "desc": "Removes a vehicle from the drift tracking and from the crash tracking (gameplay_util_crashDetection).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      }
     },
     "getTrackedVehicles": {
-      "desc": "Renvoie la table des états de drift, indexée par vehId (table vivante).",
-      "returns": [{"type": "table<integer, table>", "desc": "États de drift."}]
+      "desc": "Returns the table of drift states, keyed by vehId (live table).",
+      "returns": [
+        {
+          "type": "table<integer, table>",
+          "desc": "Drift states."
+        }
+      ]
     },
     "getPlayerIdForVehicle": {
-      "desc": "Renvoie l'id de joueur associé à un véhicule suivi.",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
-      "returns": [{"type": "integer", "desc": "playerId, 0 si inconnu."}]
+      "desc": "Returns the player id associated with a tracked vehicle.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "playerId, 0 if unknown."
+        }
+      ]
     },
     "setVehId": {
-      "desc": "Ne suit plus que ce véhicule : retire tous les autres véhicules suivis puis l'ajoute.",
-      "params": {"newVehId": {"type": "integer", "desc": "Id du véhicule à suivre."}}
+      "desc": "Tracks only this vehicle: removes all the other tracked vehicles then adds it.",
+      "params": {
+        "newVehId": {
+          "type": "integer",
+          "desc": "Id of the vehicle to track."
+        }
+      }
     },
     "getVehId": {
-      "desc": "Renvoie l'id du véhicule principal suivi (joueur 0 si possible).",
-      "returns": [{"type": "integer|nil", "desc": "Id du véhicule."}]
+      "desc": "Returns the id of the main tracked vehicle (player 0 if possible).",
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      ]
     },
     "getPlVeh": {
-      "desc": "Renvoie l'objet véhicule principal suivi.",
-      "returns": [{"type": "userdata|nil", "desc": "Objet véhicule de la scène."}]
+      "desc": "Returns the main tracked vehicle object.",
+      "returns": [
+        {
+          "type": "userdata|nil",
+          "desc": "Scene vehicle object."
+        }
+      ]
     },
     "getVehData": {
-      "desc": "Renvoie les données de map.objects du véhicule (pos, vel, dirVec, ...).",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "table|nil", "desc": "Entrée map.objects."}]
+      "desc": "Returns the vehicle's map.objects data (pos, vel, dirVec, ...).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "map.objects entry."
+        }
+      ]
     },
     "getVehPos": {
-      "desc": "Renvoie la position du véhicule suivie par le module.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "vec3|nil", "desc": "Position (vec3 partagé, à ne pas modifier)."}]
+      "desc": "Returns the vehicle position tracked by the module.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3|nil",
+          "desc": "Position (shared vec3, do not modify)."
+        }
+      ]
     },
     "getVehVel": {
-      "desc": "Renvoie la direction normalisée de la vitesse du véhicule (velDir), pas son module.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "vec3|nil", "desc": "Direction unitaire de la vitesse."}]
+      "desc": "Returns the normalized direction of the vehicle's velocity (velDir), not its magnitude.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3|nil",
+          "desc": "Unit direction of the velocity."
+        }
+      ]
     },
     "getAirSpeed": {
-      "desc": "Renvoie la vitesse du véhicule en km/h (norme de la vitesse * 3.6).",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "number|nil", "desc": "Vitesse en km/h."}]
+      "desc": "Returns the vehicle speed in km/h (velocity norm * 3.6).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Speed in km/h."
+        }
+      ]
     },
     "getVehCorners": {
-      "desc": "Renvoie les 4 coins de la boîte englobante utilisée pour les raycasts (avant droit, arrière droit, arrière gauche, avant gauche), à hauteur raycastHeight.",
-      "returns": [{"type": "vec3[]", "desc": "{corner_FR, corner_BR, corner_BL, corner_FL}"}]
+      "desc": "Returns the 4 corners of the bounding box used for the raycasts (front right, rear right, rear left, front left), at raycastHeight.",
+      "returns": [
+        {
+          "type": "vec3[]",
+          "desc": "{corner_FR, corner_BR, corner_BL, corner_FL}"
+        }
+      ]
     },
     "doesPlHaveVeh": {
-      "desc": "Indique si le véhicule suivi a des données de map valides.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "boolean|nil", "desc": "true si vehData existe."}]
+      "desc": "Indicates whether the tracked vehicle has valid map data.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true if vehData exists."
+        }
+      ]
     },
     "getIsDrifting": {
-      "desc": "Indique si le véhicule est en train de drifter.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "boolean", "desc": "État de drift."}]
+      "desc": "Indicates whether the vehicle is drifting.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Drift state."
+        }
+      ]
     },
     "getIsOverSteering": {
-      "desc": "Indique si le véhicule est en survirage (avant et centre vont dans le même sens que l'arrière).",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "boolean", "desc": "État de survirage."}]
+      "desc": "Indicates whether the vehicle is oversteering (front and center go the same way as the rear).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Oversteer state."
+        }
+      ]
     },
     "getIsOverMinSpeedForDrift": {
-      "desc": "Indique si la vitesse moyenne des points de référence dépasse minAirSpeed (4 km/h).",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "boolean", "desc": "true si assez rapide."}]
+      "desc": "Indicates whether the average speed of the reference points exceeds minAirSpeed (4 km/h).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if fast enough."
+        }
+      ]
     },
     "getIsInTheAir": {
-      "desc": "Indique si le véhicule n'est pas sur ses roues.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "boolean", "desc": "true en l'air."}]
+      "desc": "Indicates whether the vehicle is not on its wheels.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true in the air."
+        }
+      ]
     },
     "getIsCrashing": {
-      "desc": "Indique si le véhicule est en train de crasher (gameplay_util_crashDetection).",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "boolean", "desc": "État de crash."}]
+      "desc": "Indicates whether the vehicle is crashing (gameplay_util_crashDetection).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Crash state."
+        }
+      ]
     },
     "getDriftActiveData": {
-      "desc": "Renvoie les données du drift en cours (nil s'il n'y en a pas).",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "table|nil", "desc": "driftActiveData."}]
+      "desc": "Returns the data of the current drift (nil if there is none).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "driftActiveData."
+        }
+      ]
     },
     "getDriftChainActiveData": {
-      "desc": "Renvoie les données de la chaîne de drifts en cours (nil si aucune).",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "table|nil", "desc": "driftChainActiveData."}]
+      "desc": "Returns the data of the current drift chain (nil if none).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "driftChainActiveData."
+        }
+      ]
     },
     "getDriftChainChainedDrifts": {
-      "desc": "Renvoie le nombre de drifts enchaînés dans la chaîne en cours.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "integer", "desc": "Nombre de drifts, 0 si aucune chaîne."}]
+      "desc": "Returns the number of drifts chained in the current chain.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of drifts, 0 if no chain."
+        }
+      ]
     },
     "getCurrDegAngleSigned": {
-      "desc": "Renvoie l'angle de dérive actuel en degrés, signé (le signe donne le côté).",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "number", "desc": "Angle en degrés."}]
+      "desc": "Returns the current drift angle in degrees, signed (the sign gives the side).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Angle in degrees."
+        }
+      ]
     },
     "getAngleDiff": {
-      "desc": "Renvoie la variation d'angle de la direction de vitesse depuis la frame précédente (degrés), calculée pendant un drift.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "number|nil", "desc": "Variation en degrés."}]
+      "desc": "Returns the change in angle of the velocity direction since the previous frame (degrees), computed during a drift.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Change in degrees."
+        }
+      ]
     },
     "getCurrDriftCompletedTime": {
-      "desc": "Renvoie la fraction (0..1) restante du temps de confirmation de la chaîne de drifts (1 = le drift vient d'avoir lieu, 0 = confirmé).",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "number", "desc": "Fraction du temps restant."}]
+      "desc": "Returns the remaining fraction (0..1) of the drift chain's confirmation time (1 = the drift just happened, 0 = confirmed).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Fraction of the remaining time."
+        }
+      ]
     },
     "getDistSinceLastFrame": {
-      "desc": "Renvoie la distance parcourue depuis la frame précédente, en mètres.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "number", "desc": "Distance en m."}]
+      "desc": "Returns the distance traveled since the previous frame, in meters.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Distance in m."
+        }
+      ]
     },
     "getCurrentDriftDuration": {
-      "desc": "Renvoie la durée du drift en cours (totalDriftTime), 0 s'il ne drifte pas.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "number", "desc": "Durée en secondes."}]
+      "desc": "Returns the duration of the current drift (totalDriftTime), 0 if not drifting.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Duration in seconds."
+        }
+      ]
     },
     "getDriftOptions": {
-      "desc": "Renvoie la table des réglages de détection : minAngle 7, maxAngle 165, allowDonut, allowTightDrifts, raycastHeight 0.5, wallDetectionLength 3, baseDriftCompleteTime 1.2, failPointsCooldown 1.65, minAirSpeed 4, maxWasDriftingTime 4, crashDamageThreshold 150, etc. Table vivante, modifiable.",
-      "returns": [{"type": "table", "desc": "driftOptions."}]
+      "desc": "Returns the table of detection settings: minAngle 7, maxAngle 165, allowDonut, allowTightDrifts, raycastHeight 0.5, wallDetectionLength 3, baseDriftCompleteTime 1.2, failPointsCooldown 1.65, minAirSpeed 4, maxWasDriftingTime 4, crashDamageThreshold 150, etc. Live table, modifiable.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "driftOptions."
+        }
+      ]
     },
     "setAllowDonut": {
-      "desc": "Active/désactive la prise en compte des donuts (driftOptions.allowDonut), lue par les zones de cascade.",
-      "params": {"value": {"type": "boolean", "desc": "true pour autoriser."}}
+      "desc": "Enables/disables taking donuts into account (driftOptions.allowDonut), read by the cascade zones.",
+      "params": {
+        "value": {
+          "type": "boolean",
+          "desc": "true to allow."
+        }
+      }
     },
     "setAllowTightDrift": {
-      "desc": "Active/désactive les drifts serrés (driftOptions.allowTightDrifts).",
-      "params": {"value": {"type": "boolean", "desc": "true pour autoriser."}}
+      "desc": "Enables/disables tight drifts (driftOptions.allowTightDrifts).",
+      "params": {
+        "value": {
+          "type": "boolean",
+          "desc": "true to allow."
+        }
+      }
     },
     "setBalanceMode": {
-      "desc": "Active le mode « équilibre » : tant qu'il est actif le temps de confirmation reste figé à 1 et la chaîne de drifts n'est pas conclue.",
+      "desc": "Enables \"balance\" mode: while it is active the confirmation time stays frozen at 1 and the drift chain is not concluded.",
       "params": {
-        "_balanceMode": {"type": "boolean", "desc": "true pour activer."},
-        "vehId": {"type": "integer|nil", "desc": "Id du véhicule."}
+        "_balanceMode": {
+          "type": "boolean",
+          "desc": "true to enable."
+        },
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
       }
     },
     "reset": {
-      "desc": "Réinitialise l'état de drift d'un véhicule (ou de tous si vehId est nil) : supprime drift/chaîne en cours, remet à zéro les données de crash.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Véhicule ; nil pour tous."}}
+      "desc": "Resets a vehicle's drift state (or all if vehId is nil): removes the drift/chain in progress, resets the crash data.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle; nil for all."
+        }
+      }
     },
     "simulateADrift": {
-      "desc": "Active une simulation de drift pour le debug audio ; nil l'arrête.",
-      "params": {"data": {"type": "table|nil", "desc": "{currDegAngle, airSpeed, wallDistance, isCrashing}."}}
+      "desc": "Enables a drift simulation for audio debug; nil stops it.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "{currDegAngle, airSpeed, wallDistance, isCrashing}."
+        }
+      }
     },
     "getGC": {
-      "desc": "Renvoie la quantité de garbage mesurée par le profileur.",
-      "returns": [{"type": "number|nil", "desc": "nil tant que le debug général n'a jamais été actif."}]
+      "desc": "Returns the amount of garbage measured by the profiler.",
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "nil as long as general debug has never been active."
+        }
+      ]
     },
     "getDriftDebugInfo": {
-      "desc": "Renvoie {default=true, canBeChanged=true} pour la fenêtre de debug drift.",
-      "returns": [{"type": "table", "desc": "{default = true, canBeChanged = true}"}]
+      "desc": "Returns {default=true, canBeChanged=true} for the drift debug window.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{default = true, canBeChanged = true}"
+        }
+      ]
     },
     "onUpdate": {
-      "desc": "Appelé à chaque frame : suit automatiquement le véhicule du joueur 0 si rien n'est suivi, puis met à jour la détection pour chaque véhicule suivi. Sauté pendant firstDrive, la marche, la pause ou dtSim <= 0.",
+      "desc": "Called every frame: automatically tracks player 0's vehicle if nothing is tracked, then updates the detection for each tracked vehicle. Skipped during firstDrive, walking, pause or dtSim <= 0.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (inutilisé)."},
-        "_dtSim": {"type": "number", "desc": "Delta temps simulé."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut (inutilisé)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (unused)."
+        },
+        "_dtSim": {
+          "type": "number",
+          "desc": "Simulated time delta."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (unused)."
+        }
       },
       "internal": true
     },
     "onVehicleSwitched": {
-      "desc": "Hook : changement de véhicule d'un joueur ; retire l'ancien véhicule s'il appartenait à ce joueur et suit le nouveau (timer de reset 0.1 s).",
+      "desc": "Hook: a player's vehicle change; removes the old vehicle if it belonged to this player and tracks the new one (reset timer 0.1 s).",
       "params": {
-        "oldId": {"type": "integer", "desc": "Ancien véhicule (-1 si aucun)."},
-        "newVehId": {"type": "integer", "desc": "Nouveau véhicule."},
-        "player": {"type": "integer|nil", "desc": "Index du joueur (0 par défaut)."}
+        "oldId": {
+          "type": "integer",
+          "desc": "Old vehicle (-1 if none)."
+        },
+        "newVehId": {
+          "type": "integer",
+          "desc": "New vehicle."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index (0 by default)."
+        }
       },
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook : retire le véhicule détruit du suivi.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule détruit."}},
+      "desc": "Hook: removes the destroyed vehicle from the tracking.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Destroyed vehicle."
+        }
+      },
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook : fin de niveau ; vide la liste des véhicules suivis.",
+      "desc": "Hook: level end; empties the list of tracked vehicles.",
       "internal": true
     },
     "onAnyStuntZoneAccomplished": {
-      "desc": "Hook : une zone de cascade est réussie ; remet le temps de confirmation de la chaîne de drifts au maximum.",
+      "desc": "Hook: a cascade zone is completed; resets the drift chain's confirmation time to the maximum.",
       "internal": true
     },
     "onDriftContextChanged": {
-      "desc": "Hook : à un changement de contexte, ajoute les véhicules au suivi de crash (sauf en inAnotherMissionType, où ils en sont retirés).",
+      "desc": "Hook: on a context change, adds the vehicles to the crash tracking (except in inAnotherMissionType, where they are removed from it).",
       "params": {
-        "context": {"type": "string", "desc": "Nouveau contexte."},
-        "oldContext": {"type": "string|nil", "desc": "Ancien contexte."}
+        "context": {
+          "type": "string",
+          "desc": "New context."
+        },
+        "oldContext": {
+          "type": "string|nil",
+          "desc": "Old context."
+        }
       },
       "internal": true
     },
     "onDriftChallengeFinished": {
-      "desc": "Hook : fin d'un défi de drift ; émet onDriftCompleted pour les chaînes en cours et onDriftActiveDataFinished pour les drifts en cours.",
+      "desc": "Hook: end of a drift challenge; emits onDriftCompleted for the chains in progress and onDriftActiveDataFinished for the drifts in progress.",
       "internal": true
     },
     "onDriftPlVehReset": {
-      "desc": "Hook : véhicule remis en place ; réinitialise son état et active un timer de reset de 0.1 s pendant lequel il ne drifte pas.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Véhicule ; nil pour tous."}},
+      "desc": "Hook: vehicle put back in place; resets its state and activates a 0.1 s reset timer during which it does not drift.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle; nil for all."
+        }
+      },
       "internal": true
     },
     "onVehicleCrashStarted": {
-      "desc": "Hook : début de crash détecté par gameplay_util_crashDetection ; marque le véhicule comme crashé si son score en cache est > 0 (hors pause, gel, marche).",
-      "params": {"crashStartData": {"type": "table", "desc": "Contient vehId."}},
+      "desc": "Hook: crash start detected by gameplay_util_crashDetection; marks the vehicle as crashed if its cached score is > 0 (outside pause, freeze, walking).",
+      "params": {
+        "crashStartData": {
+          "type": "table",
+          "desc": "Contains vehId."
+        }
+      },
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook : sauvegarde la case de debug avant rechargement Lua.",
-      "returns": [{"type": "table", "desc": "{debugToggleSmothnessGraph}"}],
+      "desc": "Hook: saves the debug checkbox before Lua reload.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{debugToggleSmothnessGraph}"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook : restaure la case de debug.",
-      "params": {"data": {"type": "table", "desc": "Table de onSerialize."}},
+      "desc": "Hook: restores the debug checkbox.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "onSerialize table."
+        }
+      },
       "internal": true
     }
   }

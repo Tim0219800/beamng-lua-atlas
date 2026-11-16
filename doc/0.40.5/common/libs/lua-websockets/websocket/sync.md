@@ -1,45 +1,45 @@
 # `libs_lua_websockets_websocket_sync`
 
-*Fichier : `lua/common/libs/lua-websockets/websocket/sync.lua` · VM : Commun (GE + véhicule) · 216 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lua-websockets/websocket/sync.lua` · VM: Common (GE + vehicle) · 216 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/lua-websockets/websocket/sync")`
+**Access:** `require("libs/lua-websockets/websocket/sync")`
 
-Cœur synchrone de lua-websockets : extend(obj) ajoute à un objet disposant de sock_send, sock_receive, sock_close (et sock_connect côté client) les méthodes connect, send, receive et close. Gère la poignée de main, le réassemblage de messages fragmentés, la réponse automatique aux PING (client) et la fermeture propre. Utilisé par client_sync, client_copas et server_copas.
+Synchronous core of lua-websockets: extend(obj) adds to an object having sock_send, sock_receive, sock_close (and sock_connect on the client side) the methods connect, send, receive and close. Handles the handshake, reassembly of fragmented messages, automatic reply to PINGs (client) and clean closing. Used by client_sync, client_copas and server_copas.
 
-## Remarques
+## Notes
 
-- extend lève une assertion si l'objet possède déjà receive, send, close, connect ou is_closing.
-- receive renvoie (nil, nil, was_clean, code, reason) à la fermeture ; sinon (message, opcode).
-- Dans receive, le message d'erreur 'frame was not masked' est émis quand une trame reçue côté client EST masquée (message inversé par rapport à la condition).
-- Pour 'wss', connect appelle self:dohandshake ; avec client_sync, ssl est nil donc cela échoue.
+- extend raises an assertion if the object already has receive, send, close, connect or is_closing.
+- receive returns (nil, nil, was_clean, code, reason) on close; otherwise (message, opcode).
+- In receive, the error message 'frame was not masked' is emitted when a frame received on the client side IS masked (message inverted relative to the condition).
+- For 'wss', connect calls self:dohandshake; with client_sync, ssl is nil so this fails.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_lua_websockets_websocket_sync.extend(obj)` | Ajoute les méthodes WebSocket à obj et initialise obj.state à 'CLOSED' s'il est absent. | 186 |
+| `libs_lua_websockets_websocket_sync.extend(obj)` | Adds the WebSocket methods to obj and initializes obj.state to 'CLOSED' if absent. | 186 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_lua_websockets_websocket_sync.extend(obj)`
 
-Ajoute les méthodes WebSocket à obj et initialise obj.state à 'CLOSED' s'il est absent.
+Adds the WebSocket methods to obj and initializes obj.state to 'CLOSED' if absent.
 
-- `obj` (*table*) : Objet avec sock_send, sock_receive, sock_close (et sock_connect s'il n'est pas serveur).
-- **renvoie** : table Le même objet, étendu.
+- `obj` (*table*) : Object with sock_send, sock_receive, sock_close (and sock_connect if it is not a server).
+- **returns**: table The same object, extended.
 
-## Classe `obj`
+## Class `obj`
 
-Objet étendu par extend. Champs : state ('CLOSED', 'OPEN'), is_server, is_closing, callback facultatif on_close.
+Object extended by extend. Fields: state ('CLOSED', 'OPEN'), is_server, is_closing, optional on_close callback.
 
-Objet `obj` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `obj` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `obj:close(code, reason)` | Envoie une trame CLOSE, attend la réponse, ferme le socket, appelle on_close s'il existe et passe state à 'CLOSED'. Renvoie false si l'état n'est pas 'OPEN'. | 95 |
-| `obj:connect(ws_url, ws_protocol, options)` | Connexion client : analyse l'URL, connecte le socket, fait la poignée de main HTTP et vérifie Sec-WebSocket-Accept. Passe state à 'OPEN' en cas de succès. | 126 |
-| `obj:receive()` | Bloque jusqu'à réception d'un message complet. Réassemble les fragments, répond aux PING côté client, répond à CLOSE par un écho. | 8 |
-| `obj:send(data, opcode)` | Envoie un message (masqué si l'objet n'est pas un serveur). Ferme la connexion si l'envoi échoue. | 83 |
+| `obj:close(code, reason)` | Sends a CLOSE frame, waits for the reply, closes the socket, calls on_close if it exists and sets state to 'CLOSED'. Returns false if the state is not 'OPEN'. | 95 |
+| `obj:connect(ws_url, ws_protocol, options)` | Client connection: parses the URL, connects the socket, performs the HTTP handshake and checks Sec-WebSocket-Accept. Sets state to 'OPEN' on success. | 126 |
+| `obj:receive()` | Blocks until a complete message is received. Reassembles fragments, replies to PINGs on the client side, replies to CLOSE with an echo. | 8 |
+| `obj:send(data, opcode)` | Sends a message (masked if the object is not a server). Closes the connection if the send fails. | 83 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lua-websockets/websocket/sync.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lua-websockets/websocket/sync.lua`.*

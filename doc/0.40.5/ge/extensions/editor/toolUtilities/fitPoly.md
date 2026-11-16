@@ -1,37 +1,37 @@
 # `editor_toolUtilities_fitPoly`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/fitPoly.lua` · VM : Game Engine (GE) · 155 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/fitPoly.lua` · VM: Game Engine (GE) · 155 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_fitPoly` : `extensions.load("editor_toolUtilities_fitPoly")`, puis la globale `editor_toolUtilities_fitPoly`
+**Access:** extension `editor_toolUtilities_fitPoly`: `extensions.load("editor_toolUtilities_fitPoly")`, then the global `editor_toolUtilities_fitPoly`
 
-Utilitaire qui ordonne un ensemble non ordonné d'objets en une polyligne. Pour chaque point de départ possible, il construit un chemin glouton (point le plus proche, bonus si la direction continue), puis garde le chemin au meilleur score (lissé de direction, longueur courte). Utile aux outils de l'éditeur qui reçoivent des objets sélectionnés sans ordre.
+Utility that orders an unordered set of objects into a polyline. For each possible starting point, it builds a greedy path (nearest point, bonus if the direction continues), then keeps the path with the best score (direction smoothing, short length). Useful for editor tools that receive selected objects without order.
 
-## Exemple
+## Example
 
 ```lua
 local fitPoly = require('editor/toolUtilities/fitPoly')
 local ordered = fitPoly.fitPoly(components) -- components[i].obj:getPosition()
 ```
 
-## Remarques
+## Notes
 
-- Distance maximale entre deux points voisins : 50 m (constante maxDist) ; au-delà, les points ne sont pas chaînés et les points restants sont ajoutés à la fin du chemin dans l'ordre d'origine.
-- Complexité O(n^3) environ (chaque départ, chaque pas parcourt tous les points) : prévu pour de petits ensembles.
+- Maximum distance between two neighboring points: 50 m (constant maxDist); beyond that, the points are not chained and the remaining points are appended at the end of the path in their original order.
+- Complexity roughly O(n^3) (each start, each step goes through all the points): intended for small sets.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_fitPoly.fitPoly(components)` | Réordonne les composants pour former la meilleure polyligne. Chaque composant doit avoir un champ obj avec getPosition(). Renvoie components tel quel s'il y en a moins de deux. | 118 |
+| `editor_toolUtilities_fitPoly.fitPoly(components)` | Reorders the components to form the best polyline. Each component must have an obj field with getPosition(). Returns components as is if there are fewer than two. | 118 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_fitPoly.fitPoly(components)`
 
-Réordonne les composants pour former la meilleure polyligne. Chaque composant doit avoir un champ obj avec getPosition(). Renvoie components tel quel s'il y en a moins de deux.
+Reorders the components to form the best polyline. Each component must have an obj field with getPosition(). Returns components as is if there are fewer than two.
 
-- `components` (*table[]*) : Liste de tables { obj = objet avec getPosition() }.
-- **renvoie** : table[] Nouvelle liste des mêmes composants, dans l'ordre de la polyligne.
+- `components` (*table[]*) : List of tables { obj = object with getPosition() }.
+- **returns**: table[] New list of the same components, in polyline order.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/fitPoly.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/fitPoly.lua`.*

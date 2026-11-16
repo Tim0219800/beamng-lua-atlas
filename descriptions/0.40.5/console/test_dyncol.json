@@ -1,12 +1,19 @@
 {
   "path": "lua/console/test_dyncol.lua",
-  "module": "Script de test de la console pour les collisions dynamiques : supprime tous les objets, fait apparaître un pickup en (0, 0, 0.1) puis lance test(5000), soit 5001 pas de BeamEngine:update(1/2000, 1/2000). Les spawns supplémentaires (hatch, second pickup) sont commentés.",
-  "notes": ["Définit la globale v. Le chronométrage dans test() est commenté (et contient une faute : hp:stop().-\" ms\")."],
+  "module": "Console test script for dynamic collisions: deletes all objects, spawns a pickup at (0, 0, 0.1) then runs test(5000), i.e. 5001 steps of BeamEngine:update(1/2000, 1/2000). The additional spawns (hatch, second pickup) are commented out.",
+  "notes": [
+    "Defines the global v. The timing in test() is commented out (and contains a mistake: hp:stop().-\" ms\")."
+  ],
   "fields": {},
   "functions": {
     "test": {
-      "desc": "Exécute n+1 pas de simulation de 0,5 ms (BeamEngine:update(1/2000, 1/2000)).",
-      "params": {"n": {"type": "integer", "desc": "Nombre de pas (boucle de 0 à n inclus)."}},
+      "desc": "Runs n+1 simulation steps of 0.5 ms (BeamEngine:update(1/2000, 1/2000)).",
+      "params": {
+        "n": {
+          "type": "integer",
+          "desc": "Number of steps (loop from 0 to n inclusive)."
+        }
+      },
       "returns": [],
       "internal": false
     }

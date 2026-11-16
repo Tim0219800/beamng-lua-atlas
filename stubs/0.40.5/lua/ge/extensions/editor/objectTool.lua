@@ -2,84 +2,84 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/objectTool.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Mode d'édition principal du World Editor, « Manipulate Object(s) » (editor.editModes.objectSelect, icône crayon). Il gère la sélection d'objets (clic, rectangle, survol), le gizmo d'axes (déplacement, rotation, échelle, alignement local/monde, snapping, glisser-dupliquer avec Shift, alignement sur surface avec Ctrl+Alt), les boîtes englobantes dessinées (orange, rouge si verrouillé ; pour un véhicule, la sphère et les axes du nœud de référence), copier/coller/dupliquer/supprimer avec annulation (editor.history), ainsi que l'enregistrement des préférences « gizmos » (général, pinceau, icônes d'objets) et « snapping » (général, terrain, grille). Il ajoute aussi au menu de l'arbre de scène « Move Selection At Camera » et « Align Objects Individually To The Grid ». À l'initialisation il enregistre des fonctions sur la table globale editor (voir classe « editor »).
---- Accès : extension `editor_objectTool` : `extensions.load("editor_objectTool")`, puis la globale `editor_objectTool`
+--- Main edit mode of the World Editor, "Manipulate Object(s)" (editor.editModes.objectSelect, pencil icon). It handles object selection (click, rectangle, hover), the axis gizmo (move, rotate, scale, local/world alignment, snapping, Shift drag-duplicate, surface alignment with Ctrl+Alt), the drawn bounding boxes (orange, red if locked; for a vehicle, the sphere and axes of the reference node), copy/paste/duplicate/delete with undo (editor.history), as well as the registration of the "gizmos" (general, brush, object icons) and "snapping" (general, terrain, grid) preferences. It also adds "Move Selection At Camera" and "Align Objects Individually To The Grid" to the scene tree menu. At initialization it registers functions on the global editor table (see class "editor").
+--- Access: extension `editor_objectTool`: `extensions.load("editor_objectTool")`, then the global `editor_objectTool`
 ---@class editor_objectTool
 editor_objectTool = {}
 
---- Hook appelé quand l'alignement du gizmo change (nom avec faute dans le jeu : « Aligment »). Si le mode d'édition courant est « Manipulate Object(s) », replace le gizmo sur la sélection.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/objectTool.lua:1134
+--- Hook called when the gizmo alignment changes (name with a typo in the game: "Aligment"). If the current edit mode is "Manipulate Object(s)", repositions the gizmo on the selection.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/objectTool.lua:1134
 function editor_objectTool.onEditorAxisGizmoAligmentChanged() end
 
---- Hook appelé quand un mode d'édition est activé : restaure l'état de gizmo (editMode.axisGizmoRestoreState) mémorisé à sa dernière désactivation.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/objectTool.lua:1503
----@param editMode table Mode d'édition activé.
+--- Hook called when an edit mode is activated: restores the gizmo state (editMode.axisGizmoRestoreState) remembered at its last deactivation.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/objectTool.lua:1503
+---@param editMode table Edit mode activated.
 function editor_objectTool.onEditorEditModeActivated(editMode) end
 
---- Hook appelé quand un mode d'édition est désactivé : mémorise l'état du gizmo dans editMode.axisGizmoRestoreState.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/objectTool.lua:1520
----@param editMode table Mode d'édition désactivé.
+--- Hook called when an edit mode is deactivated: remembers the gizmo state in editMode.axisGizmoRestoreState.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/objectTool.lua:1520
+---@param editMode table Edit mode deactivated.
 function editor_objectTool.onEditorEditModeDeactivated(editMode) end
 
---- Hook appelé à l'initialisation de l'éditeur : crée editor.editModes.objectSelect (action map ObjectTool, raccourcis de copie, collage, duplication, suppression), enregistre l'API sur editor, applique l'alignement local par défaut si la préférence est active et ajoute deux entrées au menu contextuel de l'arbre de scène.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/objectTool.lua:1427
+--- Hook called at editor initialization: creates editor.editModes.objectSelect (action map ObjectTool, shortcuts for copy, paste, duplicate, delete), registers the API on editor, applies the default local alignment if the preference is active and adds two entries to the scene tree context menu.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/objectTool.lua:1427
 function editor_objectTool.onEditorInitialized() end
 
---- Hook appelé quand un champ de l'inspecteur est modifié. Ne traite que le champ startTime d'un TimeOfDay.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/objectTool.lua:1489
----@param selectedIds integer[] Identifiants des objets sélectionnés ; seul le premier est examiné.
----@param fieldName string Nom du champ modifié.
----@param fieldValue any Nouvelle valeur (non utilisée).
----@param arrayIndex integer|nil Indice dans un champ tableau (non utilisé).
+--- Hook called when an inspector field is modified. Only handles the startTime field of a TimeOfDay.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/objectTool.lua:1489
+---@param selectedIds integer[] Ids of the selected objects; only the first is examined.
+---@param fieldName string Name of the modified field.
+---@param fieldValue any New value (unused).
+---@param arrayIndex integer|nil Index in an array field (unused).
 function editor_objectTool.onEditorInspectorFieldChanged(selectedIds, fieldName, fieldValue, arrayIndex) end
 
---- Hook appelé quand une préférence change : répercute les réglages gizmos.* (icônes d'objets, couleurs, échelles, snapping fin, etc.) vers worldEditorCppApi.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/objectTool.lua:1258
----@param path string Chemin de la préférence, par ex. « gizmos.general.drawObjectIcons ».
----@param value any Nouvelle valeur.
+--- Hook called when a preference changes: forwards the gizmos.* settings (object icons, colors, scales, fine snapping, etc.) to worldEditorCppApi.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/objectTool.lua:1258
+---@param path string Preference path, e.g. "gizmos.general.drawObjectIcons".
+---@param value any New value.
 function editor_objectTool.onEditorPreferenceValueChanged(path, value) end
 
---- Hook d'enregistrement des préférences : crée les catégories gizmos et snapping et leurs préférences (surbrillance de la sélection, icônes d'objets, couleurs, tailles de gizmo, grille, etc.).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/objectTool.lua:1326
----@param prefsRegistry table Registre de préférences de l'éditeur.
+--- Preferences registration hook: creates the gizmos and snapping categories and their preferences (selection highlight, object icons, colors, gizmo sizes, grid, etc.).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/objectTool.lua:1326
+---@param prefsRegistry table Editor preferences registry.
 function editor_objectTool.onEditorRegisterPreferences(prefsRegistry) end
 
---- Pas une classe : fonctions que ce module ajoute à la table globale editor lors de onEditorInitialized (registerApi).
+--- Not a class: functions that this module adds to the global editor table during onEditorInitialized (registerApi).
 ---@class editor_objectTool_editor
 local editor_objectTool_editor = {}
 
---- Dessine la boîte englobante d'un objet de scène (ignore les objets sans getTransform). Pour un BeamNGVehicle, dessine à la place une sphère magenta et trois cylindres (axes rouge, bleu, vert) au nœud de référence, dont la taille suit la distance caméra sauf si gizmos.general.fixedRefnodeVisualization est actif.
----Source : lua/ge/extensions/editor/objectTool.lua:72
----@param obj userdata Objet de scène (SimObject).
----@param color ColorF Couleur de la boîte (non utilisée pour un véhicule).
+--- Draws the bounding box of a scene object (ignores objects without getTransform). For a BeamNGVehicle, instead draws a magenta sphere and three cylinders (red, blue, green axes) at the reference node, whose size follows the camera distance unless gizmos.general.fixedRefnodeVisualization is active.
+---Source: lua/ge/extensions/editor/objectTool.lua:72
+---@param obj userdata Scene object (SimObject).
+---@param color ColorF Box color (unused for a vehicle).
 function editor_objectTool_editor.drawSelectedObjectBBox(obj, color) end
 
---- Dessine avec debugDrawer:drawLineInstance les 12 arêtes d'une boîte unité transformée par la matrice donnée.
----Source : lua/ge/extensions/editor/objectTool.lua:47
----@param objMat MatrixF Matrice de transformation (position, rotation, échelle de la boîte).
----@param color ColorF Couleur des lignes.
+--- Draws with debugDrawer:drawLineInstance the 12 edges of a unit box transformed by the given matrix.
+---Source: lua/ge/extensions/editor/objectTool.lua:47
+---@param objMat MatrixF Transform matrix (position, rotation, scale of the box).
+---@param color ColorF Line color.
 function editor_objectTool_editor.drawSelectionBBox(objMat, color) end
 
---- Duplique la sélection : si le bouton gauche de la souris est enfoncé, colle immédiatement une copie des objets manipulables et passe en glisser-dupliquer ; sinon enregistre une action annulable « DuplicateObjects ».
----Source : lua/ge/extensions/editor/objectTool.lua:1198
+--- Duplicates the selection: if the left mouse button is held down, immediately pastes a copy of the manipulable objects and switches to drag-duplicate; otherwise records an undoable "DuplicateObjects" action.
+---Source: lua/ge/extensions/editor/objectTool.lua:1198
 function editor_objectTool_editor.duplicateSceneObjects() end
 
---- Crée, avec annulation possible (action « DuplicateObjectsAtCamera »), une copie de la sélection déplacée pour que le gizmo se retrouve à 10 m devant la caméra.
----Source : lua/ge/extensions/editor/objectTool.lua:238
+--- Creates, with possible undo (action "DuplicateObjectsAtCamera"), a copy of the selection moved so the gizmo ends up 10 m in front of the camera.
+---Source: lua/ge/extensions/editor/objectTool.lua:238
 function editor_objectTool_editor.duplicateSelectionAtCamera() end
 
---- Déplace la sélection (hors SimGroup) à 10 m devant la caméra, avec annulation possible (action « MoveSelectionAtCamera »).
----Source : lua/ge/extensions/editor/objectTool.lua:272
+--- Moves the selection (outside SimGroup) 10 m in front of the camera, with possible undo (action "MoveSelectionAtCamera").
+---Source: lua/ge/extensions/editor/objectTool.lua:272
 function editor_objectTool_editor.moveSelectionAtCamera() end
 
---- Place le gizmo d'axes sur la sélection d'objets : orientation du dernier objet en mode local, position du dernier objet, du centre de la boîte de sélection ou du centroïde selon les préférences (snapping et gizmos.general.useObjectBoxCenter).
----Source : lua/ge/extensions/editor/objectTool.lua:108
+--- Places the axis gizmo on the object selection: orientation of the last object in local mode, position of the last object, of the selection box center or of the centroid depending on the preferences (snapping and gizmos.general.useObjectBoxCenter).
+---Source: lua/ge/extensions/editor/objectTool.lua:108
 function editor_objectTool_editor.updateObjectSelectionAxisGizmo() end
 

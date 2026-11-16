@@ -1,30 +1,30 @@
 # `jbeam_groups`
 
-*Fichier : `lua/common/jbeam/groups.lua` · VM : Commun (GE + véhicule) · 58 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/groups.lua` · VM: Common (GE + vehicle) · 58 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/groups")`
+**Access:** `require("jbeam/groups")`
 
-Étape de post-traitement du chargement jbeam pour la colonne/champ « group » des lignes (nœuds, poutres, etc.). Convertit chaque liste group = {"a","b"} en table indexée par un numéro de groupe global et attribue à la ligne firstGroup (numéro du premier groupe non vide). Produit vehicle.groups, la table nom de groupe vers numéro (numérotation à partir de 0).
+Jbeam loading post-processing step for the "group" column/field of rows (nodes, beams, etc.). Converts each list group = {"a","b"} into a table indexed by a global group number and assigns the row firstGroup (number of the first non-empty group). Produces vehicle.groups, the table group name to number (numbering starting at 0).
 
-## Remarques
+## Notes
 
-- Parcourt toutes les sections (tables) du véhicule et toutes leurs lignes (tables) ayant un champ group de type table ; les chaînes vides sont ignorées.
-- Après traitement, row.group devient un dictionnaire {numéro = nom} et row.firstGroup le numéro du premier groupe ; si la ligne n'a aucun groupe non vide, elle reste inchangée.
-- Les numéros de groupe sont attribués dans l'ordre de découverte lors du parcours (pairs), donc non stables d'une exécution à l'autre.
+- Walks all the vehicle's sections (tables) and all their rows (tables) that have a group field of type table; empty strings are ignored.
+- After processing, row.group becomes a dictionary {number = name} and row.firstGroup the number of the first group; if the row has no non-empty group, it stays unchanged.
+- Group numbers are assigned in discovery order during the traversal (pairs), so they are not stable from one run to another.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_groups.process(vehicle)` | Numérote les groupes jbeam du véhicule : remplit vehicle.groups (nom -> numéro) et transforme les champs group des lignes. *(interne)* | 10 |
+| `jbeam_groups.process(vehicle)` | Numbers the vehicle's jbeam groups: fills vehicle.groups (name -> number) and transforms the group fields of the rows. *(internal)* | 10 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_groups.process(vehicle)`
 
-Numérote les groupes jbeam du véhicule : remplit vehicle.groups (nom -> numéro) et transforme les champs group des lignes.
+Numbers the vehicle's jbeam groups: fills vehicle.groups (name -> number) and transforms the group fields of the rows.
 
-- `vehicle` (*table*) : Données jbeam fusionnées du véhicule (modifiées en place).
+- `vehicle` (*table*) : Merged jbeam data of the vehicle (modified in place).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/groups.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/groups.lua`.*

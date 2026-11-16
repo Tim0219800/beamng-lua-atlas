@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/setFuelLevel.lua",
+  "module": "Nœud flowgraph « Set Fuel Level » (catégorie once_f_duration, couleur/icône career). Règle le niveau de carburant d'un véhicule au même pourcentage dans tous ses réservoirs. Entrées : vehId (number, sinon véhicule du joueur 0), mult (number 0-1, fraction du maximum). Demande d'abord l'énergie des réservoirs (core_vehicleBridge 'energyStorage'), puis exécute l'action setEnergyStorageEnergy avec maxEnergy * mult pour chaque réservoir ; l'état passe à finished.",
+  "notes": ["_executionStarted est défini deux fois (identiques).", "La variable locale allowedTypes (gasoline, diesel, electricEnergy) et fuelType ne sont pas utilisées : tous les réservoirs sont réglés.", "Le code ne vérifie pas que mult est non nil."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Appelle onNodeReset.", "internal": true},
+        "_executionStarted": {"desc": "Appelle onNodeReset au démarrage du graphe.", "internal": true},
+        "onNodeReset": {"desc": "Réinitialise les données reçues, le drapeau d'envoi et l'état de durée ('inactive').", "internal": true},
+        "workOnce": {"desc": "Trouve le véhicule, demande les données d'énergie et passe à l'état 'started'."},
+        "work": {"desc": "Quand les données sont arrivées, règle chaque réservoir à maxEnergy*mult et passe à 'finished'."}
+      }
+    }
+  }
+}

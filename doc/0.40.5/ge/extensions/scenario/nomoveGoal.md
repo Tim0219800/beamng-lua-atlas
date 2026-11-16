@@ -1,66 +1,66 @@
 # `scenario_nomoveGoal`
 
-*Fichier : `lua/ge/extensions/scenario/nomoveGoal.lua` · VM : Game Engine (GE) · 74 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/nomoveGoal.lua` · VM: Game Engine (GE) · 74 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_nomoveGoal` : `extensions.load("scenario_nomoveGoal")`, puis la globale `scenario_nomoveGoal`
+**Access:** extension `scenario_nomoveGoal`: `extensions.load("scenario_nomoveGoal")`, then the global `scenario_nomoveGoal`
 
-Objectif de scénario « nomove » (goals.vehicles avec id = 'nomove') : le véhicule ne doit pas bouger de plus de 0.1 m par rapport à sa position de départ. Appelé par le système de goals de scenario_scenarios.
+"nomove" scenario goal (goals.vehicles with id = 'nomove'): the vehicle must not move more than 0.1 m from its starting position. Called by the scenario_scenarios goal system.
 
-## Exemple
+## Example
 
 ```lua
--- JSON du scénario :
+-- scenario JSON:
 -- {"id":"nomove", "value":{"msg":"Ne bougez pas", "triggerEndOnly":false}}
 ```
 
-## Remarques
+## Notes
 
-- Options de instance.value : msg (message d'échec), triggerEndOnly (boolean).
-- La position de départ est relevée à init puis rafraîchie sur l'état 'onCountdownEnded'.
-- Contrôle sur 'onRaceTick' et 'onRaceResult' : si le véhicule s'est éloigné de plus de 0.1 m, échec (scenario_scenarios.finish({failed = msg})). Avec triggerEndOnly, le mouvement termine simplement le scénario via scenario_scenarios.endScenario(0.25) et aucun résultat n'est enregistré.
-- Si le véhicule n'est pas présent (vId absent), une erreur est loguée une seule fois et l'instance est ignorée ; à l'init elle n'est pas ajoutée.
+- instance.value options: msg (failure message), triggerEndOnly (boolean).
+- The starting position is captured at init then refreshed on the 'onCountdownEnded' state.
+- Checked on 'onRaceTick' and 'onRaceResult': if the vehicle has moved more than 0.1 m away, failure (scenario_scenarios.finish({failed = msg})). With triggerEndOnly, movement simply ends the scenario via scenario_scenarios.endScenario(0.25) and no result is recorded.
+- If the vehicle is not present (vId absent), an error is logged only once and the instance is ignored; at init it is not added.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_nomoveGoal.init(scenario)` | Réinitialise instances et ajoute chaque goal id='nomove' dont le véhicule existe, en mémorisant sa position de départ. *(interne)* | 45 |
-| `scenario_nomoveGoal.processState(scenario, state, stateData)` | Appelé à chaque état du scénario. Met à jour la position de départ sur 'onCountdownEnded' puis vérifie l'immobilité sur 'onRaceTick' et 'onRaceResult'. *(interne)* | 9 |
-| `scenario_nomoveGoal.updateFinalStatus(scenario, instance)` | Sauf si triggerEndOnly, envoie le résultat à statistics_statistics.setGoalProgress pour le véhicule du goal et pour le véhicule du joueur 0. *(interne)* | 61 |
+| `scenario_nomoveGoal.init(scenario)` | Resets instances and adds each goal id='nomove' whose vehicle exists, remembering its starting position. *(internal)* | 45 |
+| `scenario_nomoveGoal.processState(scenario, state, stateData)` | Called on every scenario state. Updates the starting position on 'onCountdownEnded' then checks immobility on 'onRaceTick' and 'onRaceResult'. *(internal)* | 9 |
+| `scenario_nomoveGoal.updateFinalStatus(scenario, instance)` | Unless triggerEndOnly, sends the result to statistics_statistics.setGoalProgress for the goal's vehicle and for player 0's vehicle. *(internal)* | 61 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_nomoveGoal.init(scenario)`
 
-Réinitialise instances et ajoute chaque goal id='nomove' dont le véhicule existe, en mémorisant sa position de départ.
+Resets instances and adds each goal id='nomove' whose vehicle exists, remembering its starting position.
 
-- `scenario` (*table*) : Scénario courant.
+- `scenario` (*table*) : Current scenario.
 
 #### `scenario_nomoveGoal.processState(scenario, state, stateData)`
 
-Appelé à chaque état du scénario. Met à jour la position de départ sur 'onCountdownEnded' puis vérifie l'immobilité sur 'onRaceTick' et 'onRaceResult'.
+Called on every scenario state. Updates the starting position on 'onCountdownEnded' then checks immobility on 'onRaceTick' and 'onRaceResult'.
 
-- `scenario` (*table*) : Scénario courant.
-- `state` (*string*) : Nom de l'état.
-- `stateData` (*table*) : Données de l'état (non utilisées).
+- `scenario` (*table*) : Current scenario.
+- `state` (*string*) : State name.
+- `stateData` (*table*) : State data (unused).
 
 #### `scenario_nomoveGoal.updateFinalStatus(scenario, instance)`
 
-Sauf si triggerEndOnly, envoie le résultat à statistics_statistics.setGoalProgress pour le véhicule du goal et pour le véhicule du joueur 0.
+Unless triggerEndOnly, sends the result to statistics_statistics.setGoalProgress for the goal's vehicle and for player 0's vehicle.
 
-- `scenario` (*table*) : Scénario courant.
-- `instance` (*table|nil*) : Non utilisé.
+- `scenario` (*table*) : Current scenario.
+- `instance` (*table|nil*) : Not used.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `instances` | table | Liste des goals 'nomove' valides, remplie par init(). |
+| `instances` | table | List of valid 'nomove' goals, filled by init(). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/nomoveGoal.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/nomoveGoal.lua`.*

@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/gizmo.lua",
+  "module": "Gestion partagée du gizmo d'axes pour les outils d'édition de splines de l'éditeur. Place le gizmo sur le noeud sélectionné (ou sur une position d'ancrage d'affichage), déplace le noeud en translation (ou tous les noeuds en mode rigide), fait tourner les normales autour de la tangente locale, et enregistre le glissement dans l'historique d'annulation.",
+  "notes": [
+    "L'état (splines, indices, callbacks) est gardé dans des variables du module : il est réécrit à chaque appel de handleGizmo.",
+    "La rotation n'est possible qu'autour de la tangente locale ; le gizmo est forcé en alignement local en rotation et en alignement monde au passage en translation.",
+    "setAxisGizmoTranslateLock(true, true, not isConformToTerrain) : la translation verticale (Z) dépend du mode conformité au terrain (verrou Z = non conforme, tel qu'écrit dans le code).",
+    "À la fin du glissement, spline.isDirty est remis à true pour que le dernier état déclenche une reconstruction."
+  ],
+  "functions": {
+    "handleGizmo": {
+      "desc": "À appeler chaque frame : positionne, met à jour et dessine le gizmo sur le noeud sélectionné d'une spline, et configure les verrous d'axes. Pendant un glissement, le noeud suit le curseur ; relâcher valide l'action 'Gizmo Drag' dans l'historique.",
+      "params": {
+        "isRotEnabledIn": {"type": "boolean", "desc": "Active la rotation (axe tangent)."},
+        "selectedSplineIdx": {"type": "integer", "desc": "Indice de la spline sélectionnée."},
+        "selectedNodeIdx": {"type": "integer", "desc": "Indice du noeud sélectionné."},
+        "splinesIn": {"type": "table[]", "desc": "Liste des splines (chacune avec nodes, nmls, isDirty)."},
+        "isConformToTerrainIn": {"type": "boolean", "desc": "Spline conforme au terrain (Z non libre au gizmo)."},
+        "isRigidIn": {"type": "boolean", "desc": "Translation/rotation rigide appliquée à tous les noeuds."},
+        "deepCopyFunctIn": {"type": "function", "desc": "Copie profonde de l'état d'une spline, pour l'historique."},
+        "undoFunctIn": {"type": "function", "desc": "Callback d'annulation."},
+        "redoFunctIn": {"type": "function", "desc": "Callback de rétablissement."},
+        "commitHistoryOverrideIn": {"type": "function|nil", "desc": "Remplace editor.history:commitAction pour regrouper le glissement dans une action plus large."},
+        "anchorPosIn": {"type": "vec3|nil", "desc": "Position d'affichage du gizmo à la place du noeud ; nil = sur le noeud."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "isDragging": {
+      "desc": "Vrai tant qu'un glissement du gizmo (translation ou rotation) est en cours ; permet de différer les reconstructions lourdes.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "État du glissement."}],
+      "internal": false
+    }
+  }
+}

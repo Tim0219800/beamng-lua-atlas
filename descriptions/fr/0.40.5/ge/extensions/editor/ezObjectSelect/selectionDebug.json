@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/selectionDebug.lua",
+  "module": "Dessin de debug et de retour visuel de l'outil Easy Select dans le monde 3D (debugDrawer) : boîtes des objets découverts, de la pile de candidats, de l'objet choisi, des objets sélectionnés ou en cours de glisser, objets filtrés car trop grands, axes de la sélection (X rouge, Y vert, Z bleu) et anneau de distance maximale autour de la caméra. Le dessin 2D de debug est délégué au module selectionScreenDebug.",
+  "functions": {
+    "drawWorld": {
+      "desc": "Dessine dans le monde les boîtes et axes décrits par le snapshot de sélection et les options. Les boîtes sont tracées en lignes si options.outlineMode == 1 (sinon remplies).",
+      "params": {
+        "snapshot": {"type": "table|nil", "desc": "État de sélection : discovery, candidates, pick, filteredLarge, camera"},
+        "options": {"type": "table", "desc": "outlineMode, selectedIds, draggingIds, depthTest, dragDepthTest, selectedDepthTest, showFilteredLarge, debugEnabled, maxDiscoveryOutlines, maxStackOutlines, showSelectionAxes, axisLocal, axisLengthScale, axisLineWidth, showDistanceRing, maxDistance"}
+      }
+    },
+    "drawScreen": {
+      "desc": "Délègue à selectionScreenDebug.draw(snapshot, options) le debug en overlay 2D.",
+      "params": {"snapshot": {"type": "table|nil", "desc": "Snapshot"}, "options": {"type": "table", "desc": "Options"}}
+    },
+    "reset": {
+      "desc": "Réinitialise l'état de selectionScreenDebug.",
+      "params": {}
+    }
+  }
+}

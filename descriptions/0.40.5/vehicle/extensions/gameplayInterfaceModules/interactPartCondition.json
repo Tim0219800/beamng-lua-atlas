@@ -1,23 +1,44 @@
 {
   "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactPartCondition.lua",
-  "module": "Module de gameplayInterface pour partCondition : initialiser ou lire les conditions des pièces (odomètre, intégrité, visuel, peintures par défaut), lire l'odomètre de la pièce racine et gérer les instantanés (snapshots) de condition, y compris celui utilisé au reset.",
+  "module": "gameplayInterface module for partCondition: initializes or reads part conditions (odometer, integrity, visual, default paints), reads the root part's odometer and manages condition snapshots, including the one used on reset.",
   "usage": "gameplayInterface.executeAction(0, 16, 'createPartConditionSnapshot', 'avantCourse')\ngameplayInterface.executeAction(0, 17, 'applyPartConditionSnapshot', 'avantCourse')",
   "notes": [
-    "Action 'initPartConditions'(conditions?:table, fallbackOdometer?:number, fallbackIntegrityValue?:number, fallbackVisualValue?:number, defaultPaints?:table) : partCondition.initConditions(...).",
-    "Action 'ensurePartConditionsInit'(fallbackOdometer, fallbackIntegrityValue, fallbackVisualValue : number) : partCondition.ensureConditionsInit(...).",
-    "Action 'createPartConditionSnapshot'(key:string) : partCondition.createConditionSnapshot(key).",
-    "Action 'applyPartConditionSnapshot'(key:string) : partCondition.applyConditionSnapshot(key).",
-    "Action 'deletePartConditionSnapshots'() : partCondition.deleteConditionSnapshots().",
-    "Action 'setPartConditionResetSnapshotKey'(key:string) : partCondition.setResetSnapshotKey(key).",
-    "Action 'createAndSetPartConditionResetSnapshotKey'(key:string) : crée l'instantané puis le désigne comme instantané de reset.",
-    "Lookup 'getPartConditions'() : renvoie {result = partCondition.getConditions()}. Lookup 'getRootPartOdometer'() : renvoie {result = partCondition.getRootPartOdometerValue()}."
+    "Action 'initPartConditions'(conditions?:table, fallbackOdometer?:number, fallbackIntegrityValue?:number, fallbackVisualValue?:number, defaultPaints?:table): partCondition.initConditions(...).",
+    "Action 'ensurePartConditionsInit'(fallbackOdometer, fallbackIntegrityValue, fallbackVisualValue : number): partCondition.ensureConditionsInit(...).",
+    "Action 'createPartConditionSnapshot'(key:string): partCondition.createConditionSnapshot(key).",
+    "Action 'applyPartConditionSnapshot'(key:string): partCondition.applyConditionSnapshot(key).",
+    "Action 'deletePartConditionSnapshots'(): partCondition.deleteConditionSnapshots().",
+    "Action 'setPartConditionResetSnapshotKey'(key:string): partCondition.setResetSnapshotKey(key).",
+    "Action 'createAndSetPartConditionResetSnapshotKey'(key:string): creates the snapshot, then designates it as the reset snapshot.",
+    "Lookup 'getPartConditions'(): returns {result = partCondition.getConditions()}. Lookup 'getRootPartOdometer'(): returns {result = partCondition.getRootPartOdometerValue()}."
   ],
   "fields": {
-    "moduleActions": {"type": "table<string, function>", "desc": "Actions : initPartConditions, ensurePartConditionsInit, createPartConditionSnapshot, applyPartConditionSnapshot, deletePartConditionSnapshots, setPartConditionResetSnapshotKey, createAndSetPartConditionResetSnapshotKey."},
-    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups : getPartConditions, getRootPartOdometer."}
+    "moduleActions": {
+      "type": "table<string, function>",
+      "desc": "Actions: initPartConditions, ensurePartConditionsInit, createPartConditionSnapshot, applyPartConditionSnapshot, deletePartConditionSnapshots, setPartConditionResetSnapshotKey, createAndSetPartConditionResetSnapshotKey."
+    },
+    "moduleLookups": {
+      "type": "table<string, function>",
+      "desc": "Lookups: getPartConditions, getRootPartOdometer."
+    }
   },
   "functions": {
-    "onExtensionLoaded": {"desc": "Appelé au chargement : remplit moduleActions et moduleLookups.", "params": {}, "returns": [], "internal": true},
-    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+    "onExtensionLoaded": {
+      "desc": "Called at load: fills moduleActions and moduleLookups.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "requestRegistration": {
+      "desc": "Registers the actions and lookups with gameplayInterface.",
+      "params": {
+        "gi": {
+          "type": "table",
+          "desc": "The gameplayInterface module."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

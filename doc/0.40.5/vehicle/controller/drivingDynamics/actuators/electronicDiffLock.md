@@ -1,102 +1,102 @@
 # `controller_drivingDynamics_actuators_electronicDiffLock`
 
-*Fichier : `lua/vehicle/controller/drivingDynamics/actuators/electronicDiffLock.lua` · VM : Véhicule · 269 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/drivingDynamics/actuators/electronicDiffLock.lua` · VM: Vehicle · 269 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `drivingDynamics/actuators/electronicDiffLock` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `drivingDynamics/actuators/electronicDiffLock` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Actionneur de la Driving Dynamics Suite : différentiel à verrouillage électronique par freinage (EDL, « brake-based » : on freine la roue qui patine pour transférer le couple). À chaque étape physique intermédiaire, il compare les vitesses des deux sorties corrigées du rayon de braquage (`CMU.vehicleData.turningCircleSpeedRatios`) ; si l'écart dépasse `avDiffThreshold` sous accélérateur (> 0.05), un PID calcule un coefficient de freinage appliqué en `desiredBrakingTorque` aux roues du côté le plus rapide. Ordre d'appel : `defaultOrder = 80`.
+Driving Dynamics Suite actuator: electronic brake-based locking differential (EDL, "brake-based": the slipping wheel is braked to transfer torque). At each intermediate physics step, it compares the speeds of the two outputs corrected for the turning radius (`CMU.vehicleData.turningCircleSpeedRatios`); if the difference exceeds `avDiffThreshold` under throttle (> 0.05), a PID computes a braking coefficient applied as `desiredBrakingTorque` to the wheels on the faster side. Call order: `defaultOrder = 80`.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues par init : `avDiffThreshold` (5 rad/s), `avThreshold` (1 rad/s : somme minimale des vitesses de sortie), `brakingPIDkP` (0), `brakingPIDkI` (0.1), `brakingPIDkD` (0), `name`. Lue par initSecondStage : `differentialName`.
-- Le freinage maximal est borné par `overrideMax` (1 par défaut) et par le `brakeTorque` de chaque roue ; une roue `isBroken` n'est pas freinée.
-- Particularité : `overrideMin` n'est jamais défini ni utilisé dans ce fichier avant un appel à resetOverride (qui le met à 0) ; seul `overrideMax` borne réellement le freinage.
-- Nécessite `CMU.vehicleData` ; sans CMU enregistré initSecondStage appelle shutdown. `shutdown` retire updateGFX et updateWheelsIntermediate (nil).
-- `reset` remet `overrideMax` à 1 mais ne touche pas aux lisseurs ni au PID.
+- jbeam keys read by init: `avDiffThreshold` (5 rad/s), `avThreshold` (1 rad/s: minimum sum of the output speeds), `brakingPIDkP` (0), `brakingPIDkI` (0.1), `brakingPIDkD` (0), `name`. Read by initSecondStage: `differentialName`.
+- The maximum braking is bounded by `overrideMax` (1 by default) and by each wheel's `brakeTorque`; a wheel that is `isBroken` is not braked.
+- Quirk: `overrideMin` is never defined or used in this file before a call to resetOverride (which sets it to 0); only `overrideMax` actually bounds the braking.
+- Requires `CMU.vehicleData`; without a registered CMU, initSecondStage calls shutdown. `shutdown` removes updateGFX and updateWheelsIntermediate (nil).
+- `reset` sets `overrideMax` back to 1 but does not touch the smoothers or the PID.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_drivingDynamics_actuators_electronicDiffLock.getConfig()` | Renvoie une copie des paramètres. | 241 |
-| `controller_drivingDynamics_actuators_electronicDiffLock.init(jbeamData)` | Lit les paramètres jbeam et crée le PID de freinage. *(interne)* | 152 |
-| `controller_drivingDynamics_actuators_electronicDiffLock.initSecondStage(jbeamData)` | Retrouve le différentiel (`differentialName`) et les roues de chaque sortie ; active le système. *(interne)* | 175 |
-| `controller_drivingDynamics_actuators_electronicDiffLock.registerCMU(cmu)` | Appelée par le CMU pour donner une référence vers lui. *(interne)* | 215 |
-| `controller_drivingDynamics_actuators_electronicDiffLock.reset()` | Remet isActing à false et overrideMax à 1. *(interne)* | 147 |
-| `controller_drivingDynamics_actuators_electronicDiffLock.resetOverride()` | Remet les bornes d'override : overrideMin = 0, overrideMax = 1. | 48 |
-| `controller_drivingDynamics_actuators_electronicDiffLock.sendConfigData()` | Envoie les paramètres au CMU dans un paquet de debug config. *(interne)* | 245 |
-| `controller_drivingDynamics_actuators_electronicDiffLock.setConfig(configTable)` | Remplace toute la table de paramètres. *(interne)* | 237 |
-| `controller_drivingDynamics_actuators_electronicDiffLock.setDebugMode(debugEnabled)` | Active ou désactive l'envoi de paquets de debug. *(interne)* | 209 |
-| `controller_drivingDynamics_actuators_electronicDiffLock.setParameters(parameters)` | Modifie à chaud avDiffThreshold, avThreshold, isEnabled et brakingPIDkP/kI/kD (via CMU.applyParameter). | 219 |
-| `controller_drivingDynamics_actuators_electronicDiffLock.shutdown()` | Arrête l'actionneur. *(interne)* | 140 |
-| `controller_drivingDynamics_actuators_electronicDiffLock.updateGFX(dt)` | Chaque frame : rien d'utile. Variante debug : envoie les valeurs au CMU. *(interne)* | 110 |
-| `controller_drivingDynamics_actuators_electronicDiffLock.updateWheelsIntermediate(dt)` | Étape physique intermédiaire : calcule les vitesses de sortie corrigées, le coefficient de freinage (PID) et ajoute le couple de freinage aux roues du côté qui patine. *(interne)* | 53 |
+| `controller_drivingDynamics_actuators_electronicDiffLock.getConfig()` | Returns a copy of the parameters. | 241 |
+| `controller_drivingDynamics_actuators_electronicDiffLock.init(jbeamData)` | Reads the jbeam parameters and creates the braking PID. *(internal)* | 152 |
+| `controller_drivingDynamics_actuators_electronicDiffLock.initSecondStage(jbeamData)` | Finds the differential (`differentialName`) and the wheels of each output; enables the system. *(internal)* | 175 |
+| `controller_drivingDynamics_actuators_electronicDiffLock.registerCMU(cmu)` | Called by the CMU to give it a reference to itself. *(internal)* | 215 |
+| `controller_drivingDynamics_actuators_electronicDiffLock.reset()` | Sets isActing to false and overrideMax to 1. *(internal)* | 147 |
+| `controller_drivingDynamics_actuators_electronicDiffLock.resetOverride()` | Resets the override bounds: overrideMin = 0, overrideMax = 1. | 48 |
+| `controller_drivingDynamics_actuators_electronicDiffLock.sendConfigData()` | Sends the parameters to the CMU in a config debug packet. *(internal)* | 245 |
+| `controller_drivingDynamics_actuators_electronicDiffLock.setConfig(configTable)` | Replaces the whole parameter table. *(internal)* | 237 |
+| `controller_drivingDynamics_actuators_electronicDiffLock.setDebugMode(debugEnabled)` | Enables or disables sending debug packets. *(internal)* | 209 |
+| `controller_drivingDynamics_actuators_electronicDiffLock.setParameters(parameters)` | Changes avDiffThreshold, avThreshold, isEnabled and brakingPIDkP/kI/kD at runtime (via CMU.applyParameter). | 219 |
+| `controller_drivingDynamics_actuators_electronicDiffLock.shutdown()` | Stops the actuator. *(internal)* | 140 |
+| `controller_drivingDynamics_actuators_electronicDiffLock.updateGFX(dt)` | Every frame: nothing useful. Debug variant: sends the values to the CMU. *(internal)* | 110 |
+| `controller_drivingDynamics_actuators_electronicDiffLock.updateWheelsIntermediate(dt)` | Intermediate physics step: computes the corrected output speeds, the braking coefficient (PID) and adds the braking torque to the wheels on the slipping side. *(internal)* | 53 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_drivingDynamics_actuators_electronicDiffLock.getConfig()`
 
-Renvoie une copie des paramètres.
+Returns a copy of the parameters.
 
-- **renvoie** : table Copie profonde.
+- **returns**: table Deep copy.
 
 #### `controller_drivingDynamics_actuators_electronicDiffLock.init(jbeamData)`
 
-Lit les paramètres jbeam et crée le PID de freinage.
+Reads the jbeam parameters and creates the braking PID.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_actuators_electronicDiffLock.initSecondStage(jbeamData)`
 
-Retrouve le différentiel (`differentialName`) et les roues de chaque sortie ; active le système.
+Finds the differential (`differentialName`) and the wheels of each output; enables the system.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_actuators_electronicDiffLock.registerCMU(cmu)`
 
-Appelée par le CMU pour donner une référence vers lui.
+Called by the CMU to give it a reference to itself.
 
-- `cmu` (*table*) : Module CMU.
+- `cmu` (*table*) : CMU module.
 
 #### `controller_drivingDynamics_actuators_electronicDiffLock.setConfig(configTable)`
 
-Remplace toute la table de paramètres.
+Replaces the whole parameter table.
 
-- `configTable` (*table*) : Nouveaux paramètres.
+- `configTable` (*table*) : New parameters.
 
 #### `controller_drivingDynamics_actuators_electronicDiffLock.setDebugMode(debugEnabled)`
 
-Active ou désactive l'envoi de paquets de debug.
+Enables or disables sending debug packets.
 
-- `debugEnabled` (*boolean*) : true pour envoyer.
+- `debugEnabled` (*boolean*) : true to send.
 
 #### `controller_drivingDynamics_actuators_electronicDiffLock.setParameters(parameters)`
 
-Modifie à chaud avDiffThreshold, avThreshold, isEnabled et brakingPIDkP/kI/kD (via CMU.applyParameter).
+Changes avDiffThreshold, avThreshold, isEnabled and brakingPIDkP/kI/kD at runtime (via CMU.applyParameter).
 
-- `parameters` (*table*) : Table des paramètres à changer.
+- `parameters` (*table*) : Table of parameters to change.
 
 #### `controller_drivingDynamics_actuators_electronicDiffLock.updateGFX(dt)`
 
-Chaque frame : rien d'utile. Variante debug : envoie les valeurs au CMU.
+Every frame: nothing useful. Debug variant: sends the values to the CMU.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
 #### `controller_drivingDynamics_actuators_electronicDiffLock.updateWheelsIntermediate(dt)`
 
-Étape physique intermédiaire : calcule les vitesses de sortie corrigées, le coefficient de freinage (PID) et ajoute le couple de freinage aux roues du côté qui patine.
+Intermediate physics step: computes the corrected output speeds, the braking coefficient (PID) and adds the braking torque to the wheels on the slipping side.
 
-- `dt` (*number*) : Pas en secondes.
+- `dt` (*number*) : Step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `defaultOrder` | number | 80. |
-| `isActing` | boolean | true si l'écart de vitesse justifie un freinage. |
-| `isActive` | boolean | true si le différentiel et ses roues ont été trouvés. |
-| `overrideMax` | number | Plafond du coefficient de freinage imposé par un superviseur (1 par défaut). |
+| `isActing` | boolean | true if the speed difference justifies braking. |
+| `isActive` | boolean | true if the differential and its wheels were found. |
+| `overrideMax` | number | Ceiling of the braking coefficient imposed by a supervisor (1 by default). |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/drivingDynamics/actuators/electronicDiffLock.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/drivingDynamics/actuators/electronicDiffLock.lua`.*

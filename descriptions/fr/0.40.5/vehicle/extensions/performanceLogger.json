@@ -1,0 +1,21 @@
+{
+  "path": "lua/vehicle/extensions/performanceLogger.lua",
+  "module": "Petit outil de profilage : mesure des durées en millisecondes avec HighPerfTimer, soit une mesure unique (startMeasurement / stopMeasurement), soit une moyenne sur N mesures écrite dans le log (measureAverage).",
+  "usage": "local pl = extensions.performanceLogger\npl.startMeasurement('monCode')\n-- ... code à mesurer ...\npl.measureAverage('monCode', 100)  -- log après 100 mesures",
+  "notes": [
+    "measureAverage arrête le chronomètre nommé, accumule, puis après stopCount mesures écrit un log 'name: x ms (avg over N measurements)' et réinitialise l'accumulation. Il faut rappeler startMeasurement avant chaque mesure (il remet le chronomètre à zéro).",
+    "showMin = true affiche le minimum des moyennes déjà observées au lieu de la moyenne courante.",
+    "Anomalie : le résultat est mis en forme avec '%.5f' à partir d'une chaîne (tostring) ; fonctionne grâce à la conversion de chaîne numérique de LuaJIT.",
+    "Les noms mal orthographiés sont tels quels dans le code : stopAvergage (sans 'a' avant 'g').",
+    "measureAverage/stopMeasurement lèvent une erreur Lua si startMeasurement n'a pas été appelé avec ce nom."
+  ],
+  "fields": {},
+  "functions": {
+    "onInit": {"desc": "Hook d'initialisation : efface chronomètres et mesures.", "params": {}, "returns": [], "internal": true},
+    "onReset": {"desc": "Même fonction que onInit.", "params": {}, "returns": [], "internal": true},
+    "startMeasurement": {"desc": "Crée (ou remet à zéro) le chronomètre nommé.", "params": {"name": {"type": "string", "desc": "Nom de la mesure."}}, "returns": [], "internal": false},
+    "stopMeasurement": {"desc": "Arrête le chronomètre et renvoie la durée mesurée.", "params": {"name": {"type": "string", "desc": "Nom de la mesure."}}, "returns": [{"type": "number", "desc": "Durée en millisecondes."}], "internal": false},
+    "measureAverage": {"desc": "Arrête le chronomètre, ajoute la mesure à la moyenne et, après stopCount mesures, écrit la moyenne dans le log.", "params": {"name": {"type": "string", "desc": "Nom de la mesure."}, "stopCount": {"type": "integer", "desc": "Nombre de mesures avant affichage."}, "showMin": {"type": "boolean|nil", "desc": "Afficher le minimum des moyennes."}}, "returns": [], "internal": false},
+    "stopAvergage": {"desc": "Termine la moyenne nommée et renvoie la moyenne accumulée (supprime le chronomètre).", "params": {"name": {"type": "string", "desc": "Nom de la mesure."}}, "returns": [{"type": "number", "desc": "Moyenne en millisecondes."}], "internal": false}
+  }
+}

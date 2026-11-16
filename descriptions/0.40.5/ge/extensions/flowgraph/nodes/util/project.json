@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/project.lua",
-  "module": "Nœud « Get Project Info » (once_instant, icône event_note). Donne des informations sur le projet flowgraph courant. Sorties : name, description, flow, et pins cachés id, hasFilename, filename (sans .flow.json), filepath, hasLevel, level (niveau dont le dossier contient le projet), graph, graphId.",
+  "module": "Node \"Get Project Info\" (once_instant, event_note icon). Gives information about the current flowgraph project. Outputs: name, description, flow, and hidden pins id, hasFilename, filename (without .flow.json), filepath, hasLevel, level (level whose folder contains the project), graph, graphId.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Désactive clearOutPinsOnStart.",
+          "desc": "Disables clearOutPinsOnStart.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Lit mgr.id/name/description, savedFilename/savedDir (via path.splitWithoutExt, path.levelFromPath) et le graphe courant, puis écrit les pins et active flow.",
+          "desc": "Reads mgr.id/name/description, savedFilename/savedDir (via path.splitWithoutExt, path.levelFromPath) and the current graph, then writes the pins and activates flow.",
           "internal": true
         }
       }

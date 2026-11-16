@@ -1,23 +1,33 @@
 {
   "path": "lua/ge/extensions/gameplay/skidpadTest.lua",
-  "module": "Extension de test de skidpad : téléporte un véhicule au point de départ « skidpadSpawn » puis lui fait suivre par l'IA le circuit défini par les waypoints skidpadWP1 à skidpadWP4 (2 tours). Utilise util_stepHandler pour enchaîner les étapes. Le niveau doit contenir ces objets de scène.",
+  "module": "Skidpad test extension: teleports a vehicle to the \"skidpadSpawn\" start point then makes the AI follow the circuit defined by the waypoints skidpadWP1 to skidpadWP4 (2 laps). Uses util_stepHandler to chain the steps. The level must contain these scene objects.",
   "usage": "extensions.load('gameplay_skidpadTest')\ngameplay_skidpadTest.startTest(be:getPlayerVehicleID(0))",
   "notes": [
-    "testResults n'est jamais renseigné par ce fichier : getData() renvoie toujours nil (remis à nil au démarrage).",
-    "cancelTest ne fait que lever un drapeau cancelTestRequested qui n'est lu nulle part : l'annulation n'a aucun effet.",
-    "startTest suppose que l'objet « skidpadSpawn » existe, sinon erreur Lua (spawnPoint nil)."
+    "testResults is never filled by this file: getData() always returns nil (reset to nil at start).",
+    "cancelTest only raises a cancelTestRequested flag that is read nowhere: cancellation has no effect.",
+    "startTest assumes the \"skidpadSpawn\" object exists, otherwise Lua error (spawnPoint nil)."
   ],
   "functions": {
     "startTest": {
-      "desc": "Lance la séquence : téléportation sûre du véhicule sur skidpadSpawn (orientation retournée de 180°), attente 0,2 s, puis ai.driveUsingPath sur les waypoints skidpadWP1..4, WP1 avec noOfLaps = 2 et aggression = 1.",
-      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule à tester."}}
+      "desc": "Starts the sequence: safe teleport of the vehicle onto skidpadSpawn (orientation flipped 180°), wait 0.2 s, then ai.driveUsingPath on the waypoints skidpadWP1..4, WP1 with noOfLaps = 2 and aggression = 1.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Identifier of the vehicle to test."
+        }
+      }
     },
     "getData": {
-      "desc": "Renvoie les résultats du test (testResults).",
-      "returns": [{"type": "table|nil", "desc": "Toujours nil dans cette version (jamais rempli)."}]
+      "desc": "Returns the test results (testResults).",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Always nil in this version (never filled)."
+        }
+      ]
     },
     "cancelTest": {
-      "desc": "Lève le drapeau d'annulation (sans effet réel, voir notes)."
+      "desc": "Raises the cancel flag (no real effect, see notes)."
     }
   }
 }

@@ -1,35 +1,57 @@
 {
   "path": "lua/ge/extensions/scenario/finishRaceGoal.lua",
-  "module": "Objectif de scénario « finishRace » (goals.vehicles avec id = 'finishRace') : le véhicule doit terminer la course. Il écoute le dernier waypoint atteint, puis, à l'état 'onRaceResult', termine le scénario en réussite ou en échec.",
-  "usage": "-- JSON du scénario :\n-- {\"id\":\"finishRace\", \"value\":{\"mustWin\":true, \"passed\":\"Victoire !\", \"failed\":\"Perdu\"}}",
+  "module": "\"finishRace\" scenario goal (goals.vehicles with id = 'finishRace'): the vehicle must finish the race. It listens for the last waypoint reached, then, on the 'onRaceResult' state, ends the scenario in success or failure.",
+  "usage": "-- scenario JSON:\n-- {\"id\":\"finishRace\", \"value\":{\"mustWin\":true, \"passed\":\"Victoire !\", \"failed\":\"Perdu\"}}",
   "notes": [
-    "Options de instance.value : mustWin (boolean : le véhicule doit être le premier à franchir le dernier waypoint), passed et failed (messages finaux).",
-    "Sur 'onRaceWaypointReached', quand stateData.next est nil (dernier waypoint), le résultat est 'passed' pour le véhicule stateData.vehicleId et 'failed' pour les autres. Avec mustWin, seul le premier arrivé est évalué (le résultat n'est plus écrasé).",
-    "Sur 'onRaceResult', chaque instance sans résultat ou en échec appelle failedGoal (message par défaut anglais 'You failed to finish the race.'), sinon passedGoal ; chacun appelle scenario_scenarios.finish."
+    "instance.value options: mustWin (boolean: the vehicle must be the first to cross the last waypoint), passed and failed (final messages).",
+    "On 'onRaceWaypointReached', when stateData.next is nil (last waypoint), the result is 'passed' for vehicle stateData.vehicleId and 'failed' for the others. With mustWin, only the first to arrive is evaluated (the result is no longer overwritten).",
+    "On 'onRaceResult', each instance with no result or a failed one calls failedGoal (default English message 'You failed to finish the race.'), otherwise passedGoal; each calls scenario_scenarios.finish."
   ],
   "fields": {
-    "instances": {"type": "table", "desc": "Liste des goals 'finishRace', remplie par init()."}
+    "instances": {
+      "type": "table",
+      "desc": "List of 'finishRace' goals, filled by init()."
+    }
   },
   "functions": {
     "init": {
-      "desc": "Réinitialise instances et ajoute chaque goal id='finishRace' en remettant status.result à nil.",
-      "params": {"scenario": {"type": "table", "desc": "Scénario courant."}},
+      "desc": "Resets instances and adds each goal id='finishRace', resetting status.result to nil.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Current scenario."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "processState": {
-      "desc": "Appelé à chaque état du scénario. Traite 'onRaceWaypointReached' (stateData.next, stateData.vehicleId) et 'onRaceResult'.",
+      "desc": "Called on every scenario state. Handles 'onRaceWaypointReached' (stateData.next, stateData.vehicleId) and 'onRaceResult'.",
       "params": {
-        "scenario": {"type": "table", "desc": "Scénario courant."},
-        "state": {"type": "string", "desc": "Nom de l'état."},
-        "stateData": {"type": "table", "desc": "Pour 'onRaceWaypointReached' : next (prochain waypoint, nil si dernier) et vehicleId."}
+        "scenario": {
+          "type": "table",
+          "desc": "Current scenario."
+        },
+        "state": {
+          "type": "string",
+          "desc": "State name."
+        },
+        "stateData": {
+          "type": "table",
+          "desc": "For 'onRaceWaypointReached': next (next waypoint, nil if last) and vehicleId."
+        }
       },
       "returns": [],
       "internal": true
     },
     "updateFinalStatus": {
-      "desc": "Envoie le résultat de chaque instance à statistics_statistics.setGoalProgress en fin de scénario.",
-      "params": {"scenario": {"type": "table", "desc": "Scénario courant."}},
+      "desc": "Sends each instance's result to statistics_statistics.setGoalProgress at the end of the scenario.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Current scenario."
+        }
+      },
       "returns": [],
       "internal": true
     }

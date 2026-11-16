@@ -1,0 +1,17 @@
+{
+  "path": "lua/vehicle/controller/pneumatics/crossFlowValve.lua",
+  "module": "Contrôleur auxiliaire simulant une vanne de transfert d'air entre deux réservoirs (energyStorage) : l'air passe du réservoir source vers le réservoir cible tant que la pression source dépasse un minimum et celle de la cible. Le débit dépend de la section de la vanne et de la différence de pression (équation d'orifice).",
+  "notes": [
+    "Clés jbeam lues dans init : sourceTankName (\"mainAirTank\"), targetTankName (\"auxAirTank\"), flowPipeRadius (0.0075 m), flowValveRadius (0.2 x flowPipeRadius), sourceTankMinPressure (Pa, 0) ou sourceTankMinPressurePSI (converti en Pa absolus : psi x 6894.757 + 101325), pressureDiffForFullFlow (34473.8 Pa = 5 psi) ou pressureDiffForFullFlowPSI (différence, sans pression atmosphérique).",
+    "Si un des deux réservoirs est introuvable, un log D est écrit et updateFixedStep est remplacé par nop (la vanne ne fait rien).",
+    "Le transfert est à sens unique source -> cible."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Récupère les réservoirs source/cible et calcule les sections et seuils de pression à partir des clés jbeam.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "reset": {"desc": "Ne fait rien.", "internal": true},
+    "updateFixedStep": {"desc": "Pas physique : calcule le débit d'air entre les réservoirs et transfère l'énergie stockée de la source vers la cible, en mettant à jour currentPressure des deux.", "params": {"dt": {"type": "number", "desc": "Pas physique en secondes."}}, "internal": true}
+  }
+}

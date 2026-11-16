@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gameplay_traffic_signals_trafficSignalsSettings`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/trafficSignalsSettings.lua` · VM : Game Engine (GE) · 37 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/trafficSignalsSettings.lua` · VM: Game Engine (GE) · 37 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/trafficSignalsSettings")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/trafficSignalsSettings")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Traffic Signals Settings » (once_instant, dépend de core_trafficSignals). Pins : signalsActive (core_trafficSignals.setActive) et simpleLights (debugLevel 1 si vrai, sinon 0 : visuels simples des états). À l'arrêt, réactive les signaux et remet debugLevel à 0.
+Flowgraph node "Traffic Signals Settings" (once_instant, depends on core_trafficSignals). Pins: signalsActive (core_trafficSignals.setActive) and simpleLights (debugLevel 1 if true, otherwise 0: simple state visuals). On stop, reactivates the signals and resets debugLevel to 0.
 
-**Dépendances (chargées avant) :** `core_trafficSignals`
+**Dependencies (loaded first):** `core_trafficSignals`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Réactive les signaux et remet core_trafficSignals.debugLevel à 0. | 23 |
-| `C:workOnce(args)` | Applique signalsActive et simpleLights si non nil. | 28 |
+| `C:_executionStopped()` | Reactivates the signals and resets core_trafficSignals.debugLevel to 0. | 23 |
+| `C:workOnce(args)` | Applies signalsActive and simpleLights if not nil. | 28 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/trafficSignalsSettings.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/trafficSignalsSettings.lua`.*

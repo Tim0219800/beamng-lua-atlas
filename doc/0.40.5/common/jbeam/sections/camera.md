@@ -1,33 +1,33 @@
 # `jbeam_sections_camera`
 
-*Fichier : `lua/common/jbeam/sections/camera.lua` · VM : Commun (GE + véhicule) · 276 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/sections/camera.lua` · VM: Common (GE + vehicle) · 276 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/sections/camera")`
+**Access:** `require("jbeam/sections/camera")`
 
-Traite les sections jbeam de caméras du véhicule (cameras, et les anciennes camerasInternal/cameraExternal/camerasRelative/cameraChase). Migre l'ancien format vers vehicle.cameras.{onboard, orbit, relative, chase}, crée pour chaque caméra embarquée un nœud de caméra relié par des poutres aux nœuds id1..id8, convertit les caméras 'driver' en occupants, construit les caméras par place d'occupant (cameras.occupant) à partir des occupantSlots, calcule les caméras relatives par rapport au nœud de référence et produit vehicle.cameraData, une copie allégée (indices 1..N) envoyée à l'extension de caméra. Appelé dans la VM GE seulement.
+Processes the vehicle's jbeam camera sections (cameras, and the old camerasInternal/cameraExternal/camerasRelative/cameraChase). Migrates the old format to vehicle.cameras.{onboard, orbit, relative, chase}, creates for each onboard camera a camera node linked by beams to the nodes id1..id8, converts 'driver' cameras to occupants, builds the cameras per occupant seat (cameras.occupant) from the occupantSlots, computes the relative cameras with respect to the reference node and produces vehicle.cameraData, a lightened copy (indices 1..N) sent to the camera extension. Called in the GE VM only.
 
-## Remarques
+## Notes
 
-- Migrations : camerasInternal -> cameras.onboard, cameraExternal -> cameras.orbit, camerasRelative -> cameras.relative, cameraChase -> cameras.chase. Dans les anciennes caméras, 'type' devient 'name', 'dash' devient 'driver', un cockpitCamera=true sans nom devient 'driver' (une seule fois), et rightHandDoor reprend rightHandCamera par défaut.
-- Caméras onboard : si x, y, z sont numériques, un nœud est créé à cette position (après rotation/déplacement du composant) avec des poutres vers id1..id8, et camNodeID est le nœud créé ; sinon camNodeID = idCam ou idRef. Les caméras sans nom reçoivent 'onboard_N' (avec order = N+20), fov par défaut 75, isInside = true pour 'driver' et 'rider'. Un nom en double est signalé en erreur.
-- Caméras relatives : position recalculée par rapport au nœud de référence refNodes[0].ref, avec inversion de x et y, fov par défaut 70, rotation décalée de 180 degrés sur y. Cette émulation convertit aussi les caméras onboard si cameras.relative est absent.
-- processOccupantCameras : une caméra onboard est associée à une place par occupantSlotId ; elle est copiée sous cameras.occupant[seatId] puis retirée de onboard. Si aucune ancre n'existe pour une place, un avertissement est journalisé.
-- cameraData : copie profonde des caméras avec les clés techniques retirées (group, firstGroup, partPath, partName, slotType, cid, collision, nodeWeight, beamSpring...) pour alléger les messages.
+- Migrations: camerasInternal -> cameras.onboard, cameraExternal -> cameras.orbit, camerasRelative -> cameras.relative, cameraChase -> cameras.chase. In the old cameras, 'type' becomes 'name', 'dash' becomes 'driver', a cockpitCamera=true without a name becomes 'driver' (only once), and rightHandDoor takes rightHandCamera by default.
+- Onboard cameras: if x, y, z are numeric, a node is created at this position (after the component's rotation/translation) with beams to id1..id8, and camNodeID is the created node; otherwise camNodeID = idCam or idRef. Cameras without a name receive 'onboard_N' (with order = N+20), default fov 75, isInside = true for 'driver' and 'rider'. A duplicate name is reported as an error.
+- Relative cameras: position recomputed relative to the reference node refNodes[0].ref, with x and y inverted, default fov 70, rotation offset by 180 degrees on y. This emulation also converts the onboard cameras if cameras.relative is absent.
+- processOccupantCameras: an onboard camera is associated with a seat by occupantSlotId; it is copied under cameras.occupant[seatId] then removed from onboard. If no anchor exists for a seat, a warning is logged.
+- cameraData: deep copy of the cameras with the technical keys removed (group, firstGroup, partPath, partName, slotType, cid, collision, nodeWeight, beamSpring...) to lighten the messages.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_sections_camera.process(objID, vehicle)` | Effectue toutes les conversions et créations liées aux caméras du véhicule (vehicle.cameras, vehicle.cameraRefNodes, vehicle.cameraData). *(interne)* | 244 |
+| `jbeam_sections_camera.process(objID, vehicle)` | Performs all the conversions and creations related to the vehicle's cameras (vehicle.cameras, vehicle.cameraRefNodes, vehicle.cameraData). *(internal)* | 244 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_sections_camera.process(objID, vehicle)`
 
-Effectue toutes les conversions et créations liées aux caméras du véhicule (vehicle.cameras, vehicle.cameraRefNodes, vehicle.cameraData).
+Performs all the conversions and creations related to the vehicle's cameras (vehicle.cameras, vehicle.cameraRefNodes, vehicle.cameraData).
 
-- `objID` (*integer*) : Identifiant du véhicule (non utilisé).
-- `vehicle` (*table*) : Données jbeam du véhicule (modifiées en place).
+- `objID` (*integer*) : Vehicle identifier (unused).
+- `vehicle` (*table*) : Vehicle jbeam data (modified in place).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/sections/camera.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/sections/camera.lua`.*

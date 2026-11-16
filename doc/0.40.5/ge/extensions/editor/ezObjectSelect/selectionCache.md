@@ -1,54 +1,54 @@
 # `editor_ezObjectSelect_selectionCache`
 
-*Fichier : `lua/ge/extensions/editor/ezObjectSelect/selectionCache.lua` · VM : Game Engine (GE) · 110 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ezObjectSelect/selectionCache.lua` · VM: Game Engine (GE) · 110 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ezObjectSelect_selectionCache` : `extensions.load("editor_ezObjectSelect_selectionCache")`, puis la globale `editor_ezObjectSelect_selectionCache`
+**Access:** extension `editor_ezObjectSelect_selectionCache`: `extensions.load("editor_ezObjectSelect_selectionCache")`, then the global `editor_ezObjectSelect_selectionCache`
 
-Cache de sélection de l'outil Easy Select. Il ne reconstruit les données de sélection (liste de « proxies » projetés) qu'une fois la caméra immobile depuis 0,12 s, ou après une invalidation ou un changement de configuration. États possibles : waiting, moving, building, ready.
+Selection cache of the Easy Select tool. It only rebuilds the selection data (list of projected "proxies") once the camera has been still for 0.12 s, or after an invalidation or a configuration change. Possible states: waiting, moving, building, ready.
 
-## Remarques
+## Notes
 
-- La caméra est comparée à la précédente (position, rangeOrigin, forward, up, halfTan, largeur/hauteur) ; le moindre changement remet l'état à « moving » et supprime les données.
-- Les temps sont mesurés avec hptimer ; buildTime est la valeur retournée par timer:stopAndReset() (secondes ou ms selon hptimer, non précisé ici).
+- The camera is compared with the previous one (position, rangeOrigin, forward, up, halfTan, width/height); the slightest change resets the state to "moving" and deletes the data.
+- Times are measured with hptimer; buildTime is the value returned by timer:stopAndReset() (seconds or ms depending on hptimer, not specified here).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ezObjectSelect_selectionCache.activate()` | Réinitialise complètement l'état du cache (statut waiting). | 45 |
-| `editor_ezObjectSelect_selectionCache.getStatus()` | Renvoie un instantané de l'état du cache pour le debug. | 97 |
-| `editor_ezObjectSelect_selectionCache.invalidate(reason)` | Supprime les données en cache et relance le délai de stabilisation. | 49 |
-| `editor_ezObjectSelect_selectionCache.setClassificationTime(milliseconds)` | Enregistre la durée de classification pour l'affichage de debug. | 93 |
-| `editor_ezObjectSelect_selectionCache.update(camera, configKey, build)` | À appeler à chaque frame. Renvoie nil tant que la caméra bouge, que la configuration vient de changer ou que le délai de 0,12 s n'est pas écoulé ; ensuite appelle build() une seule fois et renvoie ses données, puis les renvoie telles quelles. | 56 |
+| `editor_ezObjectSelect_selectionCache.activate()` | Completely resets the cache state (status waiting). | 45 |
+| `editor_ezObjectSelect_selectionCache.getStatus()` | Returns a snapshot of the cache state for debug. | 97 |
+| `editor_ezObjectSelect_selectionCache.invalidate(reason)` | Deletes the cached data and restarts the stabilization delay. | 49 |
+| `editor_ezObjectSelect_selectionCache.setClassificationTime(milliseconds)` | Records the classification duration for the debug display. | 93 |
+| `editor_ezObjectSelect_selectionCache.update(camera, configKey, build)` | To be called every frame. Returns nil while the camera is moving, the configuration has just changed or the 0.12 s delay has not elapsed; then calls build() only once and returns its data, then returns them as-is. | 56 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_ezObjectSelect_selectionCache.getStatus()`
 
-Renvoie un instantané de l'état du cache pour le debug.
+Returns a snapshot of the cache state for debug.
 
-- **renvoie** : table {status, reason, targetCount (nombre de proxies), buildTime, classificationTime}
+- **returns**: table {status, reason, targetCount (number of proxies), buildTime, classificationTime}
 
 #### `editor_ezObjectSelect_selectionCache.invalidate(reason)`
 
-Supprime les données en cache et relance le délai de stabilisation.
+Deletes the cached data and restarts the stabilization delay.
 
-- `reason` (*string|nil*) : Raison, stockée pour le debug (défaut « invalidated »)
+- `reason` (*string|nil*) : Reason, stored for debug (default "invalidated")
 
 #### `editor_ezObjectSelect_selectionCache.setClassificationTime(milliseconds)`
 
-Enregistre la durée de classification pour l'affichage de debug.
+Records the classification duration for the debug display.
 
-- `milliseconds` (*number|nil*) : Durée en ms (0 si nil)
+- `milliseconds` (*number|nil*) : Duration in ms (0 if nil)
 
 #### `editor_ezObjectSelect_selectionCache.update(camera, configKey, build)`
 
-À appeler à chaque frame. Renvoie nil tant que la caméra bouge, que la configuration vient de changer ou que le délai de 0,12 s n'est pas écoulé ; ensuite appelle build() une seule fois et renvoie ses données, puis les renvoie telles quelles.
+To be called every frame. Returns nil while the camera is moving, the configuration has just changed or the 0.12 s delay has not elapsed; then calls build() only once and returns its data, then returns them as-is.
 
-- `camera` (*table*) : Contexte caméra (pos, rangeOrigin, forward, up, halfTan, width, height)
-- `configKey` (*any*) : Clé de configuration ; si elle change, le cache est invalidé (raison « settings »)
-- `build` (*function*) : Fonction sans argument qui construit les données (attend une table pouvant contenir proxies)
-- **renvoie** : table|nil Données construites ou nil si non prêtes
+- `camera` (*table*) : Camera context (pos, rangeOrigin, forward, up, halfTan, width, height)
+- `configKey` (*any*) : Configuration key; if it changes, the cache is invalidated (reason "settings")
+- `build` (*function*) : Function with no arguments that builds the data (expects a table that may contain proxies)
+- **returns**: table|nil Built data or nil if not ready
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ezObjectSelect/selectionCache.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ezObjectSelect/selectionCache.lua`.*

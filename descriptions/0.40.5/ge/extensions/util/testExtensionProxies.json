@@ -1,32 +1,41 @@
 {
   "path": "lua/ge/extensions/util/testExtensionProxies.lua",
-  "module": "Extension de test du système d'ExtensionProxy. Au chargement, elle crée 11 objets ExtensionProxyTester (id 0 à 10) et les soumet comme « event sinks » à un proxy créé par newExtensionProxy(M), de sorte que les hooks de l'extension (comme onUpdate) soient redistribués à chaque instance. Utile seulement pour comprendre ce mécanisme ou le déboguer.",
+  "module": "Test extension of the ExtensionProxy system. On load, it creates 11 ExtensionProxyTester objects (id 0 to 10) and submits them as \"event sinks\" to a proxy created by newExtensionProxy(M), so that the extension's hooks (such as onUpdate) are redistributed to each instance. Only useful to understand or debug this mechanism.",
   "notes": [
-    "onExtensionUnloaded appelle extProxy:destroy() ; le commentaire précise que le système d'extensions nettoie de toute façon.",
-    "Dans onExtensionLoaded, newExtensionProxyTester(id) reçoit une variable globale id (nil) que la fonction ignore : l'id est ensuite fixé à la main (e.id = i)."
+    "onExtensionUnloaded calls extProxy:destroy(); the comment states that the extension system cleans up anyway.",
+    "In onExtensionLoaded, newExtensionProxyTester(id) receives a global variable id (nil) that the function ignores: the id is then set by hand (e.id = i)."
   ],
   "functions": {
     "onExtensionLoaded": {
-      "desc": "Appelé au chargement de l'extension. Crée 11 testeurs, un proxy d'extension, et lui soumet les testeurs avec submitEventSinks.",
+      "desc": "Called on extension load. Creates 11 testers, an extension proxy, and submits the testers to it with submitEventSinks.",
       "params": {},
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Appelé au déchargement de l'extension. Détruit le proxy d'extension.",
+      "desc": "Called on extension unload. Destroys the extension proxy.",
       "params": {},
       "internal": true
     }
   },
   "classes": {
     "ExtensionProxyTester": {
-      "desc": "Objet de test avec un champ id ; reçoit les hooks redistribués par le proxy.",
+      "desc": "Test object with an id field; receives the hooks redistributed by the proxy.",
       "functions": {
         "onUpdate": {
-          "desc": "Hook de mise à jour : affiche dans la console l'id du testeur et dtReal.",
+          "desc": "Update hook: prints the tester's id and dtReal to the console.",
           "params": {
-            "dtReal": {"type": "number", "desc": "Temps réel écoulé (s)."},
-            "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s)."},
-            "dtRaw": {"type": "number", "desc": "Temps brut écoulé (s)."}
+            "dtReal": {
+              "type": "number",
+              "desc": "Elapsed real time (s)."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Simulation elapsed time (s)."
+            },
+            "dtRaw": {
+              "type": "number",
+              "desc": "Raw elapsed time (s)."
+            }
           },
           "internal": true
         }

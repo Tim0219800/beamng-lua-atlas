@@ -1,22 +1,103 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPlane.lua",
-  "module": "Nœud flowgraph « Stopped Near Plane? » (catégorie repeat, icône timer, comportement once + duration, tag rally). Vérifie qu'un véhicule est à l'arrêt à moins de distance mètres d'un plan (position pos, rotation rot ; la normale du plan est l'axe Y local) pendant au moins duration secondes. Le véhicule doit être devant le plan (distance signée >= 0) et dans une zone latérale finie de 10 m ; il est à l'arrêt si sa vitesse est inférieure à speedThreshold. Entrées : flow, reset (impulsion), vehId, pos (vec3 ou table), rot (quat ou table), duration (4 s par défaut), distance (1 m), speedThreshold (0,08 m/s). Sorties : flow (vrai une fois la durée atteinte), impulse. Diffuse chaque frame l'état de proximité à l'UI via onRallyDataUpdated (isNear, distance d'affichage, distanceToPlane, isStopped, usingGroundMarkerDistance, timer, duration). Sert pour les contrôles d'arrêt rally (arrivée de spéciale, etc.).",
-  "notes": ["La mesure part du centre avant du véhicule (RallyUtil.getVehFrontCenter).", "Hors de la zone latérale, la distance affichée vient de core_groundMarkers.getPathLength() si un marqueur au sol est actif.", "Le chrono utilise dtReal. Il repart de zéro si le véhicule n'est plus près du plan ou bouge dans la zone ; reset l'annule aussi.", "Option data.drawDebug (false) ou drapeau 'stopZones' du gestionnaire de boucle : dessine plan, ligne véhicule-plan et point du véhicule."],
+  "module": "Flowgraph node \"Stopped Near Plane?\" (category repeat, timer icon, once + duration behavior, tag rally). Checks that a vehicle is stopped within distance meters of a plane (position pos, rotation rot; the plane normal is the local Y axis) for at least duration seconds. The vehicle must be in front of the plane (signed distance >= 0) and within a finite lateral zone of 10 m; it is stopped if its speed is below speedThreshold. Inputs: flow, reset (pulse), vehId, pos (vec3 or table), rot (quat or table), duration (4 s by default), distance (1 m), speedThreshold (0.08 m/s). Outputs: flow (true once the duration is reached), impulse. Every frame broadcasts the proximity state to the UI via onRallyDataUpdated (isNear, display distance, distanceToPlane, isStopped, usingGroundMarkerDistance, timer, duration). Used for rally stop controls (stage finish, etc.).",
+  "notes": [
+    "The measurement starts from the vehicle's front center (RallyUtil.getVehFrontCenter).",
+    "Outside the lateral zone, the displayed distance comes from core_groundMarkers.getPathLength() if a ground marker is active.",
+    "The timer uses dtReal. It restarts from zero if the vehicle is no longer near the plane or moves within the zone; reset also cancels it.",
+    "Option data.drawDebug (false) or 'stopZones' flag of the loop manager: draws the plane, the vehicle-plane line and the vehicle point."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise le chrono et l'état de proximité mis en cache.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
-        "_executionStarted": {"desc": "Remet à zéro chrono, cache et état de proximité.", "internal": true},
-        "updateTimer": {"desc": "Avance le chrono ; à la durée atteinte, arrête le chrono et émet l'impulsion.", "internal": true},
-        "drawMiddle": {"desc": "Affiche une barre de progression du chrono.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud."}, "style": {"type": "table", "desc": "Style."}}, "internal": true},
-        "updateVehicleData": {"desc": "Met à jour position avant et vitesse du véhicule suivi à partir de map.objects.", "returns": [{"type": "boolean", "desc": "Vrai si les données sont valides."}], "internal": true},
-        "updateProximityState": {"desc": "Calcule distance signée au plan, distance latérale, zone finie, arrêt, proximité, distance d'affichage et état « staged ».", "internal": true},
-        "shouldDrawDebug": {"desc": "Vrai si data.drawDebug ou le drapeau stopZones de la boucle rally est actif.", "returns": [{"type": "boolean", "desc": "Dessiner le debug."}]},
-        "getRallyLoopManager": {"desc": "Renvoie le gestionnaire de boucle rally si gameplay_rallyLoop existe.", "returns": [{"type": "table|nil", "desc": "Gestionnaire."}]},
-        "isNearPlane": {"desc": "Renvoie l'état de proximité mis en cache.", "returns": [{"type": "boolean", "desc": "Près du plan."}]},
-        "drawDebugVisualization": {"desc": "Dessine le plan et les repères de debug via StagedCountdownUtils.", "internal": true},
-        "work": {"desc": "Chaque frame : lit pos/rot, met à jour le véhicule et la proximité, gère chrono et reset, diffuse l'UI, renseigne flow et impulse.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+        "init": {
+          "desc": "Initializes the timer and the cached proximity state.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager."
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Resets the timer, the cache and the proximity state to zero.",
+          "internal": true
+        },
+        "updateTimer": {
+          "desc": "Advances the timer; when the duration is reached, stops the timer and emits the pulse.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Displays a progress bar of the timer.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Node constructor."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style."
+            }
+          },
+          "internal": true
+        },
+        "updateVehicleData": {
+          "desc": "Updates the front position and speed of the tracked vehicle from map.objects.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "True if the data is valid."
+            }
+          ],
+          "internal": true
+        },
+        "updateProximityState": {
+          "desc": "Computes signed distance to the plane, lateral distance, finite zone, stop, proximity, display distance and \"staged\" state.",
+          "internal": true
+        },
+        "shouldDrawDebug": {
+          "desc": "True if data.drawDebug or the rally loop's stopZones flag is active.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Draw the debug."
+            }
+          ]
+        },
+        "getRallyLoopManager": {
+          "desc": "Returns the rally loop manager if gameplay_rallyLoop exists.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Manager."
+            }
+          ]
+        },
+        "isNearPlane": {
+          "desc": "Returns the cached proximity state.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Near the plane."
+            }
+          ]
+        },
+        "drawDebugVisualization": {
+          "desc": "Draws the plane and the debug markers via StagedCountdownUtils.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Every frame: reads pos/rot, updates the vehicle and the proximity, handles timer and reset, broadcasts the UI, fills flow and impulse.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph engine arguments (unused)."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

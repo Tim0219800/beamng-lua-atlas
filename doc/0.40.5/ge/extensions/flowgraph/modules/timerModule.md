@@ -1,122 +1,122 @@
 # `flowgraph_modules_timerModule`
 
-*Fichier : `lua/ge/extensions/flowgraph/modules/timerModule.lua` · VM : Game Engine (GE) · 138 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/modules/timerModule.lua` · VM: Game Engine (GE) · 138 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/modules/timerModule")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/modules/timerModule")` (file under extensions/ but not a regular extension)
 
-Module flowgraph (moduleOrder 0) qui gère des minuteurs. Il tient trois horloges globales cumulées (real, sim, raw) mises à jour par onUpdate avec dtReal, dtSim et dtRaw ; chaque minuteur référence l'une d'elles (mode 'dtSim', 'dtReal' ou 'dtRaw'), a un temps de départ, une durée (défaut 5 s) et peut être mis en pause. Les valeurs sont stockées dans un variableStorage et finalisées à la fin du tick.
+Flowgraph module (moduleOrder 0) that manages timers. It keeps three cumulative global clocks (real, sim, raw) updated by onUpdate with dtReal, dtSim and dtRaw; each timer references one of them (mode 'dtSim', 'dtReal' or 'dtRaw'), has a start time, a duration (default 5 s) and can be paused. The values are stored in a variableStorage and finalized at the end of the tick.
 
-## Remarques
+## Notes
 
-- Unités : secondes. Mode par défaut : 'dtSim' (temps de simulation, affecté par le ralenti et la pause).
-- Les pauses sont différées : setPause pose un drapeau (pauseFlag) appliqué dans afterTrigger.
-- Bug probable : clear() fait C.idCounter = 0 sur la classe et non sur self ; l'instance garde son compteur d'ids si self.idCounter a déjà été créé.
-- setMode utilise variables:set alors que les autres fonctions utilisent variables:change ; le comportement exact dépend de variableStorage (non vérifié ici).
-- setPause provoque une erreur si l'id est inconnu.
+- Units: seconds. Default mode: 'dtSim' (simulation time, affected by slow motion and pause).
+- Pauses are deferred: setPause sets a flag (pauseFlag) applied in afterTrigger.
+- Probable bug: clear() does C.idCounter = 0 on the class and not on self; the instance keeps its id counter if self.idCounter was already created.
+- setMode uses variables:set whereas the other functions use variables:change; the exact behavior depends on variableStorage (not checked here).
+- setPause raises an error if the id is unknown.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `flowgraph_modules_timerModule.addTimer(data)` | Crée un minuteur et renvoie son id. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_timerModule.afterTrigger()` | Appelé après le tick du graphe : applique les pauses ou reprises en attente puis finalise les variables. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_timerModule.clear()` | Vide variables et minuteurs, remet les horloges globales à 0. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_timerModule.executionStopped()` | Appelé à l'arrêt du projet : appelle clear(). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_timerModule.getElapsedTime(id)` | Renvoie le temps écoulé : valeur figée si en pause, sinon horloge du mode moins le départ. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_timerModule.getFreeId()` | Incrémente et renvoie un id de minuteur. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_timerModule.getGlobalTime(mode)` | Renvoie l'horloge globale du mode demandé. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_timerModule.getTimer(id)` | Renvoie l'objet minuteur complet (start, mode, duration, isPaused…). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_timerModule.init()` | Crée le variableStorage et appelle clear(). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_timerModule.isComplete(id)` | Vrai si le temps écoulé a atteint la durée. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_timerModule.onUpdate(dtReal, dtSim, dtRaw)` | Appelé à chaque mise à jour du manager : ajoute dtReal, dtSim et dtRaw aux horloges globales. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `flowgraph_modules_timerModule.set(id, field, val)` | Change un champ du minuteur (start, mode, duration) via le variableStorage. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_timerModule.setElapsedTime(id, time)` | Fixe le temps écoulé d'un minuteur (en pause : mémorise la valeur ; sinon recalcule le départ). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_timerModule.setMode(id, mode)` | Change le mode d'horloge du minuteur en conservant le temps écoulé (si non en pause). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_timerModule.setPause(id, val)` | Met en pause ou reprend un minuteur ; l'effet est appliqué dans afterTrigger. Ne fait rien si l'état demandé est déjà l'état actuel ; avertit si un drapeau est déjà posé. (assignée dynamiquement) | dyn |
+| `flowgraph_modules_timerModule.addTimer(data)` | Creates a timer and returns its id. (dynamically assigned) | dyn |
+| `flowgraph_modules_timerModule.afterTrigger()` | Called after the graph tick: applies the pending pauses or resumes then finalizes the variables. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_timerModule.clear()` | Clears variables and timers, resets the global clocks to 0. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_timerModule.executionStopped()` | Called when the project stops: calls clear(). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_timerModule.getElapsedTime(id)` | Returns the elapsed time: frozen value if paused, otherwise the mode's clock minus the start. (dynamically assigned) | dyn |
+| `flowgraph_modules_timerModule.getFreeId()` | Increments and returns a timer id. (dynamically assigned) | dyn |
+| `flowgraph_modules_timerModule.getGlobalTime(mode)` | Returns the global clock of the requested mode. (dynamically assigned) | dyn |
+| `flowgraph_modules_timerModule.getTimer(id)` | Returns the full timer object (start, mode, duration, isPaused...). (dynamically assigned) | dyn |
+| `flowgraph_modules_timerModule.init()` | Creates the variableStorage and calls clear(). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_timerModule.isComplete(id)` | True if the elapsed time has reached the duration. (dynamically assigned) | dyn |
+| `flowgraph_modules_timerModule.onUpdate(dtReal, dtSim, dtRaw)` | Called on every manager update: adds dtReal, dtSim and dtRaw to the global clocks. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `flowgraph_modules_timerModule.set(id, field, val)` | Changes a timer field (start, mode, duration) via the variableStorage. (dynamically assigned) | dyn |
+| `flowgraph_modules_timerModule.setElapsedTime(id, time)` | Sets a timer's elapsed time (paused: stores the value; otherwise recomputes the start). (dynamically assigned) | dyn |
+| `flowgraph_modules_timerModule.setMode(id, mode)` | Changes the timer's clock mode while keeping the elapsed time (if not paused). (dynamically assigned) | dyn |
+| `flowgraph_modules_timerModule.setPause(id, val)` | Pauses or resumes a timer; the effect is applied in afterTrigger. Does nothing if the requested state is already the current one; warns if a flag is already set. (dynamically assigned) | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `flowgraph_modules_timerModule.addTimer(data)`
 
-Crée un minuteur et renvoie son id. (assignée dynamiquement)
+Creates a timer and returns its id. (dynamically assigned)
 
-- `data` (*table*) : mode (défaut 'dtSim'), time (temps déjà écoulé, défaut 0), duration (défaut 5)
-- **renvoie** : integer id du minuteur
+- `data` (*table*) : mode (default 'dtSim'), time (time already elapsed, default 0), duration (default 5)
+- **returns**: integer timer id
 
 #### `flowgraph_modules_timerModule.getElapsedTime(id)`
 
-Renvoie le temps écoulé : valeur figée si en pause, sinon horloge du mode moins le départ. (assignée dynamiquement)
+Returns the elapsed time: frozen value if paused, otherwise the mode's clock minus the start. (dynamically assigned)
 
-- `id` (*integer*) : id du minuteur
-- **renvoie** : number temps écoulé (s)
+- `id` (*integer*) : timer id
+- **returns**: number elapsed time (s)
 
 #### `flowgraph_modules_timerModule.getFreeId()`
 
-Incrémente et renvoie un id de minuteur. (assignée dynamiquement)
+Increments and returns a timer id. (dynamically assigned)
 
-- **renvoie** : integer id
+- **returns**: integer id
 
 #### `flowgraph_modules_timerModule.getGlobalTime(mode)`
 
-Renvoie l'horloge globale du mode demandé. (assignée dynamiquement)
+Returns the global clock of the requested mode. (dynamically assigned)
 
-- `mode` (*string*) : 'dtSim', 'dtReal' ou 'dtRaw'
-- **renvoie** : number temps cumulé (s), 0 si mode inconnu
+- `mode` (*string*) : 'dtSim', 'dtReal' or 'dtRaw'
+- **returns**: number cumulative time (s), 0 if the mode is unknown
 
 #### `flowgraph_modules_timerModule.getTimer(id)`
 
-Renvoie l'objet minuteur complet (start, mode, duration, isPaused…). (assignée dynamiquement)
+Returns the full timer object (start, mode, duration, isPaused...). (dynamically assigned)
 
-- `id` (*integer*) : id du minuteur
-- **renvoie** : table|nil minuteur
+- `id` (*integer*) : timer id
+- **returns**: table|nil timer
 
 #### `flowgraph_modules_timerModule.isComplete(id)`
 
-Vrai si le temps écoulé a atteint la durée. (assignée dynamiquement)
+True if the elapsed time has reached the duration. (dynamically assigned)
 
-- `id` (*integer*) : id du minuteur
-- **renvoie** : boolean terminé
+- `id` (*integer*) : timer id
+- **returns**: boolean completed
 
 #### `flowgraph_modules_timerModule.onUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé à chaque mise à jour du manager : ajoute dtReal, dtSim et dtRaw aux horloges globales. (assignée dynamiquement)
+Called on every manager update: adds dtReal, dtSim and dtRaw to the global clocks. (dynamically assigned)
 
-- `dtReal` (*number*) : delta temps réel (s)
-- `dtSim` (*number*) : delta temps de simulation (s)
-- `dtRaw` (*number*) : delta temps brut (s)
+- `dtReal` (*number*) : real time delta (s)
+- `dtSim` (*number*) : simulation time delta (s)
+- `dtRaw` (*number*) : raw time delta (s)
 
 #### `flowgraph_modules_timerModule.set(id, field, val)`
 
-Change un champ du minuteur (start, mode, duration) via le variableStorage. (assignée dynamiquement)
+Changes a timer field (start, mode, duration) via the variableStorage. (dynamically assigned)
 
-- `id` (*integer*) : id du minuteur
-- `field` (*string*) : start, mode ou duration
-- `val` (*any*) : nouvelle valeur
+- `id` (*integer*) : timer id
+- `field` (*string*) : start, mode or duration
+- `val` (*any*) : new value
 
 #### `flowgraph_modules_timerModule.setElapsedTime(id, time)`
 
-Fixe le temps écoulé d'un minuteur (en pause : mémorise la valeur ; sinon recalcule le départ). (assignée dynamiquement)
+Sets a timer's elapsed time (paused: stores the value; otherwise recomputes the start). (dynamically assigned)
 
-- `id` (*integer*) : id du minuteur
-- `time` (*number*) : temps écoulé (s)
+- `id` (*integer*) : timer id
+- `time` (*number*) : elapsed time (s)
 
 #### `flowgraph_modules_timerModule.setMode(id, mode)`
 
-Change le mode d'horloge du minuteur en conservant le temps écoulé (si non en pause). (assignée dynamiquement)
+Changes the timer's clock mode while keeping the elapsed time (if not paused). (dynamically assigned)
 
-- `id` (*integer*) : id du minuteur
-- `mode` (*string*) : 'dtSim', 'dtReal' ou 'dtRaw'
+- `id` (*integer*) : timer id
+- `mode` (*string*) : 'dtSim', 'dtReal' or 'dtRaw'
 
 #### `flowgraph_modules_timerModule.setPause(id, val)`
 
-Met en pause ou reprend un minuteur ; l'effet est appliqué dans afterTrigger. Ne fait rien si l'état demandé est déjà l'état actuel ; avertit si un drapeau est déjà posé. (assignée dynamiquement)
+Pauses or resumes a timer; the effect is applied in afterTrigger. Does nothing if the requested state is already the current one; warns if a flag is already set. (dynamically assigned)
 
-- `id` (*integer*) : id du minuteur
-- `val` (*boolean*) : true = pause, false = reprise
+- `id` (*integer*) : timer id
+- `val` (*boolean*) : true = pause, false = resume
 
-## Classe `C`
+## Class `C`
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:addTimer(data)` | adds a new timer. | 38 |
 | `C:afterTrigger()` | called at the end, finalizing all the merge strats. | 112 |
@@ -135,4 +135,4 @@ Met en pause ou reprend un minuteur ; l'effet est appliqué dans afterTrigger. N
 | `C:setPause(id, val)` | pauses or unpauses a timer. | 64 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/modules/timerModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/modules/timerModule.lua`.*

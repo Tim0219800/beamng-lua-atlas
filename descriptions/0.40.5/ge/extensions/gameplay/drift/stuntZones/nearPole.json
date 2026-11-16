@@ -1,44 +1,80 @@
 {
   "path": "lua/ge/extensions/gameplay/drift/stuntZones/nearPole.lua",
-  "module": "Type de zone de cascade « nearPole » : un poteau rayé (delineator, config vehicles/delineator/stripes.pc) est spawné à pos ; le joueur marque des points en le frôlant en drift sans le toucher. Le module renvoie un constructeur appelé par gameplay_drift_stuntZones.setStuntZones ; ce n'est pas une extension. Émet onAnyStuntZoneAccomplished avec le sous-hook onNearPoleAccomplished (angle, closeness et points de base nearPole).",
+  "module": "\"nearPole\" stunt zone type: a striped pole (delineator, config vehicles/delineator/stripes.pc) is spawned at pos; the player scores points by drifting close to it without touching it. The module returns a constructor called by gameplay_drift_stuntZones.setStuntZones; it is not an extension. Emits onAnyStuntZoneAccomplished with the sub-hook onNearPoleAccomplished (angle, closeness and nearPole base points).",
   "notes": [
-    "Un coin du véhicule doit passer à moins de maxDist = 4 m du poteau ; le score est donné quand le véhicule s'éloigne (distance centre-poteau supérieure à celle de la frame précédente) et que le poteau n'a pas été touché.",
-    "closeness = 1 - (minCornerDist / 4), avec minCornerDist la distance minimale d'un coin du véhicule au poteau ; plus c'est proche, plus le score est élevé (score = angle * closeness / 90 * points, dans scoring).",
-    "Toucher le poteau (collision lue dans objectCollisions) met hitPole à vrai et supprime le marqueur : la zone ne peut alors plus être validée.",
-    "Comme hitPole, reset() remet le poteau en place et recrée le marqueur après 0.1 s."
+    "A corner of the vehicle must come within maxDist = 4 m of the pole; the score is awarded when the vehicle moves away (center-to-pole distance greater than in the previous frame) and the pole has not been hit.",
+    "closeness = 1 - (minCornerDist / 4), where minCornerDist is the minimum distance from a vehicle corner to the pole; the closer, the higher the score (score = angle * closeness / 90 * points, in scoring).",
+    "Hitting the pole (collision read from objectCollisions) sets hitPole to true and removes the marker: the zone can then no longer be validated.",
+    "Like hitPole, reset() puts the pole back in place and recreates the marker after 0.1 s."
   ],
   "classes": {
     "C": {
-      "desc": "Zone nearPole. Champs : data = {id, zoneData = {pos}}, marker, activeData = {veh, hitPole, lastFrameHitPole, available, resetFlag, lastFramePlDist, minCornerDist}.",
+      "desc": "nearPole zone. Fields: data = {id, zoneData = {pos}}, marker, activeData = {veh, hitPole, lastFrameHitPole, available, resetFlag, lastFramePlDist, minCornerDist}.",
       "functions": {
-        "clear": {"desc": "Supprime le véhicule poteau et son marqueur."},
-        "clearMarker": {"desc": "Supprime le marqueur de course s'il existe."},
-        "createMarker": {"desc": "Crée un marqueur de course « overhead » (rayon 5) 2.5 m au-dessus du poteau."},
-        "resetData": {"desc": "Remet à zéro activeData (available = true, distances à l'infini).", "internal": true},
-        "reset": {"desc": "Remet le poteau en place (reset physique et mesh), réinitialise les données puis recrée le marqueur après 0.1 s via un job."},
-        "init": {
-          "desc": "Constructeur interne : mémorise les données, spawne le poteau rayé à zoneData.pos, crée le marqueur.",
-          "params": {"data": {"type": "table", "desc": "{id, zoneData = {pos}, nearDist}."}},
+        "clear": {
+          "desc": "Removes the pole vehicle and its marker."
+        },
+        "clearMarker": {
+          "desc": "Removes the race marker if it exists."
+        },
+        "createMarker": {
+          "desc": "Creates an \"overhead\" race marker (radius 5) 2.5 m above the pole."
+        },
+        "resetData": {
+          "desc": "Resets activeData (available = true, distances to infinity).",
           "internal": true
         },
-        "accomplish": {"desc": "Réussite : supprime le marqueur, rend la zone indisponible et émet onAnyStuntZoneAccomplished (sous-hook onNearPoleAccomplished avec currDegAngle, closeness, points)."},
-        "detectStunt": {"desc": "Parcourt les 4 coins du véhicule (getVehCorners), mémorise la distance minimale et marque la zone comme réussie quand le véhicule s'éloigne du poteau sans l'avoir touché."},
-        "onUpdate": {
-          "desc": "Appelé à chaque frame : met à jour le marqueur et détecte une collision entre le véhicule du drift et le poteau.",
+        "reset": {
+          "desc": "Puts the pole back in place (physics and mesh reset), reinitializes the data, then recreates the marker after 0.1 s via a job."
+        },
+        "init": {
+          "desc": "Internal constructor: stores the data, spawns the striped pole at zoneData.pos, creates the marker.",
           "params": {
-            "dtReal": {"type": "number", "desc": "Delta temps réel."},
-            "dtSim": {"type": "number", "desc": "Delta temps simulé."}
+            "data": {
+              "type": "table",
+              "desc": "{id, zoneData = {pos}, nearDist}."
+            }
+          },
+          "internal": true
+        },
+        "accomplish": {
+          "desc": "Success: removes the marker, makes the zone unavailable and emits onAnyStuntZoneAccomplished (sub-hook onNearPoleAccomplished with currDegAngle, closeness, points)."
+        },
+        "detectStunt": {
+          "desc": "Iterates over the vehicle's 4 corners (getVehCorners), stores the minimum distance and marks the zone as accomplished when the vehicle moves away from the pole without having hit it."
+        },
+        "onUpdate": {
+          "desc": "Called every frame: updates the marker and detects a collision between the drift vehicle and the pole.",
+          "params": {
+            "dtReal": {
+              "type": "number",
+              "desc": "Real-time delta."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Simulated time delta."
+            }
           },
           "internal": true
         },
         "onVehicleDestroyed": {
-          "desc": "Si le véhicule détruit est le poteau, oublie le poteau et retire la zone du gestionnaire.",
-          "params": {"vehId": {"type": "integer", "desc": "Véhicule détruit."}},
+          "desc": "If the destroyed vehicle is the pole, forgets the pole and removes the zone from the manager.",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "Destroyed vehicle."
+            }
+          },
           "internal": true
         },
         "isAvailable": {
-          "desc": "Indique si le poteau peut encore rapporter des points.",
-          "returns": [{"type": "boolean", "desc": "true tant que la zone n'a pas été réussie."}]
+          "desc": "Returns whether the pole can still earn points.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true as long as the zone has not been accomplished."
+            }
+          ]
         }
       }
     }

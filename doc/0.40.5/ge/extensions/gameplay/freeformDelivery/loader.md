@@ -1,40 +1,40 @@
 # `gameplay_freeformDelivery_loader`
 
-*Fichier : `lua/ge/extensions/gameplay/freeformDelivery/loader.lua` · VM : Game Engine (GE) · 251 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/freeformDelivery/loader.lua` · VM: Game Engine (GE) · 251 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_freeformDelivery_loader` : `extensions.load("gameplay_freeformDelivery_loader")`, puis la globale `gameplay_freeformDelivery_loader`
+**Access:** extension `gameplay_freeformDelivery_loader`: `extensions.load("gameplay_freeformDelivery_loader")`, then the global `gameplay_freeformDelivery_loader`
 
-Charge un fichier de définition de livraison libre (JSON) : lit les données, charge le fichier de sites (sitesFile), fait apparaître les prefabs (prefabFile ou prefabFiles) à l'origine du monde, indexe les véhicules qu'ils contiennent par leur internalName, puis recharge la collision et le navgraph si les prefabs en contiennent. Utilisé par gameplay_freeformDelivery_freeformDelivery.load.
+Loads a freeform delivery definition file (JSON): reads the data, loads the sites file (sitesFile), spawns the prefabs (prefabFile or prefabFiles) at the world origin, indexes the vehicles they contain by their internalName, then reloads collision and the navgraph if the prefabs contain any. Used by gameplay_freeformDelivery_freeformDelivery.load.
 
-## Remarques
+## Notes
 
-- Champs ajoutés à la table renvoyée : _basePath (chemin du fichier), sites (objet Sites), _prefabIds (ids des prefabs spawnés), _vehicleIndex (internalName -> id de véhicule), _hasColliders. Les champs vehicles et targetAreas sont remplacés par {} s'ils manquent.
-- Les chemins relatifs du fichier sont résolus par gameplay_freeformDelivery_utils.resolvePath.
-- Les prefabs sont spawnés avec canSave = false, ajoutés à MissionGroup, et un systemYield() est fait après chaque prefab (à appeler dans un job/coroutine).
-- be:reloadCollision() est appelé si un TSStatic a un collisionType différent de None ; map.reset() est appelé si un BeamNGWaypoint (sans excludeFromMap) ou un DecalRoad avec drivability > 0 est trouvé. Pendant le chargement du niveau (core_gamestate.loading()), ces rechargements sont seulement loggués.
-- Deux véhicules avec le même internalName : le dernier écrase le précédent (avertissement loggué).
-- Dans findAllObjectsRecursive, le test obj.size est fait sur une méthode d'objet C++ : une erreur de chargement d'un sous-objet fait échouer tout le chargement (retour nil).
+- Fields added to the returned table: _basePath (file path), sites (Sites object), _prefabIds (ids of spawned prefabs), _vehicleIndex (internalName -> vehicle id), _hasColliders. The vehicles and targetAreas fields are replaced by {} if missing.
+- The file's relative paths are resolved by gameplay_freeformDelivery_utils.resolvePath.
+- Prefabs are spawned with canSave = false, added to MissionGroup, and a systemYield() is done after each prefab (to be called in a job/coroutine).
+- be:reloadCollision() is called if a TSStatic has a collisionType other than None; map.reset() is called if a BeamNGWaypoint (without excludeFromMap) or a DecalRoad with drivability > 0 is found. During level loading (core_gamestate.loading()), these reloads are only logged.
+- Two vehicles with the same internalName: the last one overwrites the previous one (logged warning).
+- In findAllObjectsRecursive, the obj.size test is done on a C++ object method: a loading error of a sub-object makes the whole loading fail (returns nil).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_freeformDelivery_loader.load(deliveryPath)` | Charge une livraison : renvoie la table de données du JSON enrichie des sites, prefabs et index de véhicules. Renvoie nil (erreur loggée) si le fichier, les sites ou un prefab ne peuvent pas être chargés. | 142 |
+| `gameplay_freeformDelivery_loader.load(deliveryPath)` | Loads a delivery: returns the JSON data table enriched with sites, prefabs and vehicle index. Returns nil (logged error) if the file, the sites or a prefab cannot be loaded. | 142 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_freeformDelivery_loader.load(deliveryPath)`
 
-Charge une livraison : renvoie la table de données du JSON enrichie des sites, prefabs et index de véhicules. Renvoie nil (erreur loggée) si le fichier, les sites ou un prefab ne peuvent pas être chargés.
+Loads a delivery: returns the JSON data table enriched with sites, prefabs and vehicle index. Returns nil (logged error) if the file, the sites or a prefab cannot be loaded.
 
-- `deliveryPath` (*string*) : Chemin du fichier JSON de la livraison.
-- **renvoie** : table|nil Données de la livraison (vehicles, targetAreas, sites, _prefabIds, _vehicleIndex, ...).
+- `deliveryPath` (*string*) : Path of the delivery's JSON file.
+- **returns**: table|nil Delivery data (vehicles, targetAreas, sites, _prefabIds, _vehicleIndex, ...).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `reloadCollision`
 - `obj:` `at`, `getClassName`, `getId`, `getInternalName`, `isSubClassOf`, `size`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/freeformDelivery/loader.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/freeformDelivery/loader.lua`.*

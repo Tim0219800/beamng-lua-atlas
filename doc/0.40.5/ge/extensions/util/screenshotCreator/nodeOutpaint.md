@@ -1,256 +1,256 @@
 # `util_screenshotCreator_nodeOutpaint`
 
-*Fichier : `lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua` · VM : Game Engine (GE) · 581 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua` · VM: Game Engine (GE) · 581 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_screenshotCreator_nodeOutpaint` : `extensions.load("util_screenshotCreator_nodeOutpaint")`, puis la globale `util_screenshotCreator_nodeOutpaint`
+**Access:** extension `util_screenshotCreator_nodeOutpaint`: `extensions.load("util_screenshotCreator_nodeOutpaint")`, then the global `util_screenshotCreator_nodeOutpaint`
 
-Outil de « peinture » des nœuds de cadrage pour les vignettes de véhicules. Il permet de désactiver (ou réactiver) des nœuds du véhicule avec un pinceau circulaire dans la vue 3D de l'éditeur, afin qu'ils soient ignorés par le cadrage procédural (antennes, pièces qui dépassent…). La liste des nœuds désactivés est enregistrée par configuration (clé « modèle/config ») dans /settings/thumbnailNodeOutpaintConfig.json, dans la table configs. Il fournit aussi les données de nœuds utilisées par framing/procedural (position monde, nom, marque ignoreForThumbnailFraming, détection automatique des rétroviseurs externes), l'historique annuler/refaire de l'éditeur et des fonctions de dessin de débogage.
+Framing node "painting" tool for vehicle thumbnails. It lets you disable (or re-enable) vehicle nodes with a circular brush in the editor's 3D view, so that they are ignored by procedural framing (antennas, protruding parts…). The list of disabled nodes is saved per configuration (key "model/config") in /settings/thumbnailNodeOutpaintConfig.json, in the configs table. It also provides the node data used by framing/procedural (world position, name, ignoreForThumbnailFraming mark, automatic detection of external mirrors), the editor's undo/redo history and debug drawing functions.
 
-## Exemple
+## Example
 
 ```lua
 local veh = getPlayerVehicle(0)
 local key = util_screenshotCreator_nodeOutpaint.getVehicleOutpaintKey(veh)
-local disabled = util_screenshotCreator_nodeOutpaint.getDisabledNodes(key) -- {["12"] = "nom du nœud", ...}
+local disabled = util_screenshotCreator_nodeOutpaint.getDisabledNodes(key) -- {["12"] = "node name", ...}
 ```
 
-## Remarques
+## Notes
 
-- Format du fichier de config : {configs = {["modèle/config"] = {[cid en string] = nom du nœud}}}. Une config sans nœud désactivé est supprimée de la table.
-- La clé de config est normalisée : le dernier segment du chemin, sans extension .pc ni .jpg.
-- Le pinceau (updateBrush) n'agit que si l'onglet est actif, que la case « Enable node brush » est cochée, qu'aucun travail de capture ne tourne et que la souris survole la vue 3D de l'éditeur ; Ctrl + clic gauche réactive les nœuds. Rayon : 4 à 80 px.
-- Couleurs de débogage : cyan = actif, rouge = désactivé à la main, violet = ignoré par la pièce (ignoreForThumbnailFraming), orange = rétroviseur externe automatique.
-- Les modifications passent par editor.history (annuler/refaire) quand l'éditeur est chargé ; la config est écrite sur disque à chaque modification.
-- Les nœuds sont des tables {cid, key, name, ignoreForThumbnailFraming, automaticMirrorOutpaint, point} ; key est le cid converti en string.
+- Config file format: {configs = {["model/config"] = {[cid as string] = node name}}}. A config with no disabled node is removed from the table.
+- The config key is normalized: the last path segment, without the .pc or .jpg extension.
+- The brush (updateBrush) acts only if the tab is active, the "Enable node brush" box is checked, no capture job is running and the mouse hovers the editor's 3D view; Ctrl + left click re-enables nodes. Radius: 4 to 80 px.
+- Debug colors: cyan = active, red = manually disabled, purple = ignored by the part (ignoreForThumbnailFraming), orange = automatic external mirror.
+- Changes go through editor.history (undo/redo) when the editor is loaded; the config is written to disk on every change.
+- Nodes are tables {cid, key, name, ignoreForThumbnailFraming, automaticMirrorOutpaint, point}; key is the cid converted to a string.
 
-**Dépendances (chargées avant) :** `ui_imgui`, `ui_imguiUtils`, `core_camera`, `core_vehicle_manager`, `util_screenshotCreator_settings`
+**Dependencies (loaded first):** `ui_imgui`, `ui_imguiUtils`, `core_camera`, `core_vehicle_manager`, `util_screenshotCreator_settings`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_screenshotCreator_nodeOutpaint.applySnapshot(configKey, snapshot)` | Remplace les nœuds désactivés d'une config par un instantané (ou supprime l'entrée si vide) et sauvegarde. Utilisé par annuler/refaire. | 171 |
-| `util_screenshotCreator_nodeOutpaint.beginUiFrame()` | Remet tabActive à false au début de chaque frame d'interface ; drawTab le remet à true si l'onglet est affiché. *(interne)* | 424 |
-| `util_screenshotCreator_nodeOutpaint.deserialize(data)` | Restaure l'état du pinceau (accepte aussi les anciennes clés nodeOutpaintEnabled et nodeOutpaintBrushRadius) ; rayon borné à 4..80. | 525 |
-| `util_screenshotCreator_nodeOutpaint.drawFramingDebug(framingData, options)` | Dessine en debug 3D les données de cadrage : boîte des bornes (orange), OOBB du véhicule (cyan), centre, point de visée, axes, points de cadrage, nœuds de rétroviseurs et nœuds désactivés, avec libellés. Les options par défaut viennent de settings.getFramingContext().debug. | 433 |
-| `util_screenshotCreator_nodeOutpaint.drawTab(options)` | Dessine le contenu ImGui de l'onglet : case du pinceau, rayon, légende des couleurs, bouton « Auto-frame vehicle » (si options.autoFrame existe), liste des nœuds désactivés avec bouton Enable et « Enable all ». | 358 |
-| `util_screenshotCreator_nodeOutpaint.drawVehicleNodes(vehicle, explicitConfigName)` | Dessine une petite sphère de debug sur chaque nœud du véhicule, colorée selon son état (ignoré, désactivé, rétroviseur, actif). | 499 |
-| `util_screenshotCreator_nodeOutpaint.enableAll(vehicleOrKey, explicitConfigName)` | Réactive tous les nœuds d'une config (supprime son entrée) avec historique et sauvegarde. | 241 |
-| `util_screenshotCreator_nodeOutpaint.finishStroke()` | Termine le coup de pinceau en cours : s'il a modifié des nœuds, enregistre l'action « Paint Thumbnail Framing Nodes » dans l'historique et sauvegarde. | 251 |
-| `util_screenshotCreator_nodeOutpaint.getConfigPath()` | Renvoie le chemin du fichier de configuration (/settings/thumbnailNodeOutpaintConfig.json). | 543 |
-| `util_screenshotCreator_nodeOutpaint.getControls()` | Renvoie les pointeurs ImGui de l'interface. | 566 |
-| `util_screenshotCreator_nodeOutpaint.getDisabledNodes(vehicleOrKey, explicitConfigName, create)` | Renvoie la table des nœuds désactivés d'une config ({cid string = nom}). Renvoie une table vide non enregistrée si la config n'existe pas, sauf si create vaut true. | 67 |
-| `util_screenshotCreator_nodeOutpaint.getDisabledNodesForKey(configKey, create)` | Raccourci de getDisabledNodes pour une clé de config. | 551 |
-| `util_screenshotCreator_nodeOutpaint.getVehicleNode(vehicle, nodeIdentifier)` | Cherche un nœud du véhicule par clé (cid en string), par nom ou par cid. | 162 |
-| `util_screenshotCreator_nodeOutpaint.getVehicleNodeData(vehicle)` | Liste tous les nœuds physiques du véhicule avec leur position monde et leurs marques. Lance au premier appel le selfCheck de détection de rétroviseurs. | 118 |
-| `util_screenshotCreator_nodeOutpaint.getVehicleOutpaintKey(vehicle, explicitConfigName)` | Calcule la clé « modèle/config » d'un véhicule, à partir de son jbeam et de explicitConfigName ou de vehicle.partConfig (normalisé). | 36 |
-| `util_screenshotCreator_nodeOutpaint.isTabActive()` | Indique si l'onglet du pinceau est actif. | 559 |
-| `util_screenshotCreator_nodeOutpaint.loadConfig(force)` | Charge le fichier de configuration en mémoire (une seule fois sauf force) ; crée une table vide si le fichier est absent ou invalide. | 45 |
-| `util_screenshotCreator_nodeOutpaint.onDeserialized(data)` | Hook après rechargement ; identique à deserialize. *(interne)* *(hook)* | 525 |
-| `util_screenshotCreator_nodeOutpaint.onExtensionLoaded()` | Hook : charge la configuration au chargement de l'extension. *(interne)* *(hook)* | 531 |
-| `util_screenshotCreator_nodeOutpaint.onExtensionUnloaded()` | Hook : termine le coup de pinceau en cours au déchargement. *(interne)* *(hook)* | 535 |
-| `util_screenshotCreator_nodeOutpaint.onSerialize()` | Hook de sérialisation ; identique à serialize. *(interne)* *(hook)* | 518 |
-| `util_screenshotCreator_nodeOutpaint.onVehicleSpawned()` | Hook appelé quand un véhicule apparaît : termine le coup de pinceau en cours. *(interne)* *(hook)* | 539 |
-| `util_screenshotCreator_nodeOutpaint.redo(actionData)` | Refait une modification : applique actionData.new. Callback d'editor.history. *(interne)* | 188 |
-| `util_screenshotCreator_nodeOutpaint.saveConfig()` | Écrit la configuration sur disque (jsonWriteFile, indentée). | 57 |
-| `util_screenshotCreator_nodeOutpaint.selfCheck()` | Test par assertions de la détection des rétroviseurs externes. *(interne)* | 104 |
-| `util_screenshotCreator_nodeOutpaint.serialize()` | Renvoie {enabled, brushRadius} pour la sauvegarde de l'état. | 518 |
-| `util_screenshotCreator_nodeOutpaint.setNodeDisabled(vehicleOrKey, node, disabled, explicitConfigName)` | Désactive ou réactive un nœud pour une config, avec entrée d'historique annuler/refaire et sauvegarde sur disque. | 222 |
-| `util_screenshotCreator_nodeOutpaint.setTabActive(value)` | Force l'état « onglet actif » ; en le désactivant, termine le coup de pinceau en cours. | 428 |
-| `util_screenshotCreator_nodeOutpaint.undo(actionData)` | Annule une modification : applique actionData.old. Callback d'editor.history. *(interne)* | 183 |
-| `util_screenshotCreator_nodeOutpaint.updateBrush(options)` | Met à jour le pinceau chaque frame : dessine le cercle, colore les nœuds dans la vue 3D (debugDrawer), et pendant un clic gauche désactive les nœuds sous le pinceau (Ctrl : les réactive). Le coup de pinceau est enregistré comme une action d'historique à la fin. | 263 |
-| `util_screenshotCreator_nodeOutpaint.updateNodeOutpainting(options)` | Alias de updateBrush. | 263 |
+| `util_screenshotCreator_nodeOutpaint.applySnapshot(configKey, snapshot)` | Replaces the disabled nodes of a config with a snapshot (or removes the entry if empty) and saves. Used by undo/redo. | 171 |
+| `util_screenshotCreator_nodeOutpaint.beginUiFrame()` | Resets tabActive to false at the start of each UI frame; drawTab sets it back to true if the tab is displayed. *(internal)* | 424 |
+| `util_screenshotCreator_nodeOutpaint.deserialize(data)` | Restores the brush state (also accepts the old keys nodeOutpaintEnabled and nodeOutpaintBrushRadius); radius clamped to 4..80. | 525 |
+| `util_screenshotCreator_nodeOutpaint.drawFramingDebug(framingData, options)` | Draws the framing data as 3D debug: bounds box (orange), vehicle OOBB (cyan), center, look-at point, axes, framing points, mirror nodes and disabled nodes, with labels. Default options come from settings.getFramingContext().debug. | 433 |
+| `util_screenshotCreator_nodeOutpaint.drawTab(options)` | Draws the tab's ImGui content: brush checkbox, radius, color legend, "Auto-frame vehicle" button (if options.autoFrame exists), list of disabled nodes with an Enable button and "Enable all". | 358 |
+| `util_screenshotCreator_nodeOutpaint.drawVehicleNodes(vehicle, explicitConfigName)` | Draws a small debug sphere on each vehicle node, colored according to its state (ignored, disabled, mirror, active). | 499 |
+| `util_screenshotCreator_nodeOutpaint.enableAll(vehicleOrKey, explicitConfigName)` | Re-enables all the nodes of a config (removes its entry) with history and saving. | 241 |
+| `util_screenshotCreator_nodeOutpaint.finishStroke()` | Ends the brush stroke in progress: if it modified nodes, records the "Paint Thumbnail Framing Nodes" action in the history and saves. | 251 |
+| `util_screenshotCreator_nodeOutpaint.getConfigPath()` | Returns the path of the configuration file (/settings/thumbnailNodeOutpaintConfig.json). | 543 |
+| `util_screenshotCreator_nodeOutpaint.getControls()` | Returns the UI's ImGui pointers. | 566 |
+| `util_screenshotCreator_nodeOutpaint.getDisabledNodes(vehicleOrKey, explicitConfigName, create)` | Returns the table of disabled nodes of a config ({cid string = name}). Returns an unregistered empty table if the config does not exist, unless create is true. | 67 |
+| `util_screenshotCreator_nodeOutpaint.getDisabledNodesForKey(configKey, create)` | Shortcut of getDisabledNodes for a config key. | 551 |
+| `util_screenshotCreator_nodeOutpaint.getVehicleNode(vehicle, nodeIdentifier)` | Looks up a vehicle node by key (cid as string), by name or by cid. | 162 |
+| `util_screenshotCreator_nodeOutpaint.getVehicleNodeData(vehicle)` | Lists all the vehicle's physical nodes with their world position and marks. On the first call, runs the mirror detection selfCheck. | 118 |
+| `util_screenshotCreator_nodeOutpaint.getVehicleOutpaintKey(vehicle, explicitConfigName)` | Computes the "model/config" key of a vehicle, from its jbeam and explicitConfigName or vehicle.partConfig (normalized). | 36 |
+| `util_screenshotCreator_nodeOutpaint.isTabActive()` | Indicates whether the brush tab is active. | 559 |
+| `util_screenshotCreator_nodeOutpaint.loadConfig(force)` | Loads the configuration file into memory (only once unless force); creates an empty table if the file is missing or invalid. | 45 |
+| `util_screenshotCreator_nodeOutpaint.onDeserialized(data)` | Hook after reload; identical to deserialize. *(internal)* *(hook)* | 525 |
+| `util_screenshotCreator_nodeOutpaint.onExtensionLoaded()` | Hook: loads the configuration when the extension is loaded. *(internal)* *(hook)* | 531 |
+| `util_screenshotCreator_nodeOutpaint.onExtensionUnloaded()` | Hook: ends the brush stroke in progress on unload. *(internal)* *(hook)* | 535 |
+| `util_screenshotCreator_nodeOutpaint.onSerialize()` | Serialization hook; identical to serialize. *(internal)* *(hook)* | 518 |
+| `util_screenshotCreator_nodeOutpaint.onVehicleSpawned()` | Hook called when a vehicle spawns: ends the brush stroke in progress. *(internal)* *(hook)* | 539 |
+| `util_screenshotCreator_nodeOutpaint.redo(actionData)` | Redoes a change: applies actionData.new. editor.history callback. *(internal)* | 188 |
+| `util_screenshotCreator_nodeOutpaint.saveConfig()` | Writes the configuration to disk (jsonWriteFile, indented). | 57 |
+| `util_screenshotCreator_nodeOutpaint.selfCheck()` | Assertion test of the external mirror detection. *(internal)* | 104 |
+| `util_screenshotCreator_nodeOutpaint.serialize()` | Returns {enabled, brushRadius} for state saving. | 518 |
+| `util_screenshotCreator_nodeOutpaint.setNodeDisabled(vehicleOrKey, node, disabled, explicitConfigName)` | Disables or re-enables a node for a config, with an undo/redo history entry and saving to disk. | 222 |
+| `util_screenshotCreator_nodeOutpaint.setTabActive(value)` | Forces the "tab active" state; disabling it ends the brush stroke in progress. | 428 |
+| `util_screenshotCreator_nodeOutpaint.undo(actionData)` | Undoes a change: applies actionData.old. editor.history callback. *(internal)* | 183 |
+| `util_screenshotCreator_nodeOutpaint.updateBrush(options)` | Updates the brush every frame: draws the circle, colors the nodes in the 3D view (debugDrawer), and during a left click disables the nodes under the brush (Ctrl: re-enables them). The brush stroke is recorded as a history action at the end. | 263 |
+| `util_screenshotCreator_nodeOutpaint.updateNodeOutpainting(options)` | Alias of updateBrush. | 263 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_screenshotCreator_nodeOutpaint.applySnapshot(configKey, snapshot)`
 
-Remplace les nœuds désactivés d'une config par un instantané (ou supprime l'entrée si vide) et sauvegarde. Utilisé par annuler/refaire.
+Replaces the disabled nodes of a config with a snapshot (or removes the entry if empty) and saves. Used by undo/redo.
 
-- `configKey` (*string*) : Clé « modèle/config ».
-- `snapshot` (*table|nil*) : Table {cid = nom}.
-- **renvoie** : boolean false si configKey est nil.
+- `configKey` (*string*) : "model/config" key.
+- `snapshot` (*table|nil*) : Table {cid = name}.
+- **returns**: boolean false if configKey is nil.
 
 #### `util_screenshotCreator_nodeOutpaint.deserialize(data)`
 
-Restaure l'état du pinceau (accepte aussi les anciennes clés nodeOutpaintEnabled et nodeOutpaintBrushRadius) ; rayon borné à 4..80.
+Restores the brush state (also accepts the old keys nodeOutpaintEnabled and nodeOutpaintBrushRadius); radius clamped to 4..80.
 
-- `data` (*table|nil*) : État sauvegardé.
+- `data` (*table|nil*) : Saved state.
 
 #### `util_screenshotCreator_nodeOutpaint.drawFramingDebug(framingData, options)`
 
-Dessine en debug 3D les données de cadrage : boîte des bornes (orange), OOBB du véhicule (cyan), centre, point de visée, axes, points de cadrage, nœuds de rétroviseurs et nœuds désactivés, avec libellés. Les options par défaut viennent de settings.getFramingContext().debug.
+Draws the framing data as 3D debug: bounds box (orange), vehicle OOBB (cyan), center, look-at point, axes, framing points, mirror nodes and disabled nodes, with labels. Default options come from settings.getFramingContext().debug.
 
-- `framingData` (*table|nil*) : framingData renvoyé par un mode de cadrage.
+- `framingData` (*table|nil*) : framingData returned by a framing mode.
 - `options` (*table|nil*) : {drawBounds, drawOobb, drawInputs}.
 
 #### `util_screenshotCreator_nodeOutpaint.drawTab(options)`
 
-Dessine le contenu ImGui de l'onglet : case du pinceau, rayon, légende des couleurs, bouton « Auto-frame vehicle » (si options.autoFrame existe), liste des nœuds désactivés avec bouton Enable et « Enable all ».
+Draws the tab's ImGui content: brush checkbox, radius, color legend, "Auto-frame vehicle" button (if options.autoFrame exists), list of disabled nodes with an Enable button and "Enable all".
 
 - `options` (*table|nil*) : {vehicle, configName, autoFrame = function}.
 
 #### `util_screenshotCreator_nodeOutpaint.drawVehicleNodes(vehicle, explicitConfigName)`
 
-Dessine une petite sphère de debug sur chaque nœud du véhicule, colorée selon son état (ignoré, désactivé, rétroviseur, actif).
+Draws a small debug sphere on each vehicle node, colored according to its state (ignored, disabled, mirror, active).
 
-- `vehicle` (*table*) : Objet véhicule.
-- `explicitConfigName` (*string|nil*) : Nom de config imposé.
+- `vehicle` (*table*) : Vehicle object.
+- `explicitConfigName` (*string|nil*) : Imposed config name.
 
 #### `util_screenshotCreator_nodeOutpaint.enableAll(vehicleOrKey, explicitConfigName)`
 
-Réactive tous les nœuds d'une config (supprime son entrée) avec historique et sauvegarde.
+Re-enables all the nodes of a config (removes its entry) with history and saving.
 
-- `vehicleOrKey` (*table|string*) : Véhicule ou clé de config.
-- `explicitConfigName` (*string|nil*) : Nom de config imposé.
-- **renvoie** : boolean false s'il n'y avait aucun nœud désactivé ou pas de clé.
+- `vehicleOrKey` (*table|string*) : Vehicle or config key.
+- `explicitConfigName` (*string|nil*) : Imposed config name.
+- **returns**: boolean false if there were no disabled nodes or no key.
 
 #### `util_screenshotCreator_nodeOutpaint.getConfigPath()`
 
-Renvoie le chemin du fichier de configuration (/settings/thumbnailNodeOutpaintConfig.json).
+Returns the path of the configuration file (/settings/thumbnailNodeOutpaintConfig.json).
 
-- **renvoie** : string Chemin du fichier.
+- **returns**: string File path.
 
 #### `util_screenshotCreator_nodeOutpaint.getControls()`
 
-Renvoie les pointeurs ImGui de l'interface.
+Returns the UI's ImGui pointers.
 
-- **renvoie** : table {enabled = BoolPtr, brushRadius = FloatPtr}.
+- **returns**: table {enabled = BoolPtr, brushRadius = FloatPtr}.
 
 #### `util_screenshotCreator_nodeOutpaint.getDisabledNodes(vehicleOrKey, explicitConfigName, create)`
 
-Renvoie la table des nœuds désactivés d'une config ({cid string = nom}). Renvoie une table vide non enregistrée si la config n'existe pas, sauf si create vaut true.
+Returns the table of disabled nodes of a config ({cid string = name}). Returns an unregistered empty table if the config does not exist, unless create is true.
 
-- `vehicleOrKey` (*table|string*) : Véhicule ou clé « modèle/config ».
-- `explicitConfigName` (*string|nil*) : Nom de config imposé quand le premier argument est un véhicule.
-- `create` (*boolean|nil*) : true pour créer et enregistrer en mémoire la table de la config.
-- **renvoie** : table<string, string> Nœuds désactivés.
+- `vehicleOrKey` (*table|string*) : Vehicle or "model/config" key.
+- `explicitConfigName` (*string|nil*) : Imposed config name when the first argument is a vehicle.
+- `create` (*boolean|nil*) : true to create and register the config's table in memory.
+- **returns**: table<string, string> Disabled nodes.
 
 #### `util_screenshotCreator_nodeOutpaint.getDisabledNodesForKey(configKey, create)`
 
-Raccourci de getDisabledNodes pour une clé de config.
+Shortcut of getDisabledNodes for a config key.
 
-- `configKey` (*string*) : Clé « modèle/config ».
-- `create` (*boolean|nil*) : true pour créer la table si absente.
-- **renvoie** : table<string, string> Nœuds désactivés.
+- `configKey` (*string*) : "model/config" key.
+- `create` (*boolean|nil*) : true to create the table if absent.
+- **returns**: table<string, string> Disabled nodes.
 
 #### `util_screenshotCreator_nodeOutpaint.getVehicleNode(vehicle, nodeIdentifier)`
 
-Cherche un nœud du véhicule par clé (cid en string), par nom ou par cid.
+Looks up a vehicle node by key (cid as string), by name or by cid.
 
-- `vehicle` (*table*) : Objet véhicule.
-- `nodeIdentifier` (*string|integer*) : Clé, nom ou cid du nœud.
-- **renvoie** : table|nil Nœud trouvé (voir getVehicleNodeData), sinon nil.
+- `vehicle` (*table*) : Vehicle object.
+- `nodeIdentifier` (*string|integer*) : Node key, name or cid.
+- **returns**: table|nil Node found (see getVehicleNodeData), otherwise nil.
 
 #### `util_screenshotCreator_nodeOutpaint.getVehicleNodeData(vehicle)`
 
-Liste tous les nœuds physiques du véhicule avec leur position monde et leurs marques. Lance au premier appel le selfCheck de détection de rétroviseurs.
+Lists all the vehicle's physical nodes with their world position and marks. On the first call, runs the mirror detection selfCheck.
 
-- `vehicle` (*table*) : Objet véhicule.
-- **renvoie** : table[] Tableau de {cid, key, name, ignoreForThumbnailFraming, automaticMirrorOutpaint, point (vec3 monde)}.
+- `vehicle` (*table*) : Vehicle object.
+- **returns**: table[] Array of {cid, key, name, ignoreForThumbnailFraming, automaticMirrorOutpaint, point (world vec3)}.
 
 #### `util_screenshotCreator_nodeOutpaint.getVehicleOutpaintKey(vehicle, explicitConfigName)`
 
-Calcule la clé « modèle/config » d'un véhicule, à partir de son jbeam et de explicitConfigName ou de vehicle.partConfig (normalisé).
+Computes the "model/config" key of a vehicle, from its jbeam and explicitConfigName or vehicle.partConfig (normalized).
 
-- `vehicle` (*table*) : Objet véhicule.
-- `explicitConfigName` (*string|nil*) : Nom de config imposé (prioritaire sur partConfig).
-- **renvoie** : string|nil Clé « modèle/config », nil si le modèle ou la config manque.
-- **renvoie** : string|nil Nom du modèle.
-- **renvoie** : string|nil Nom de config normalisé.
+- `vehicle` (*table*) : Vehicle object.
+- `explicitConfigName` (*string|nil*) : Imposed config name (takes priority over partConfig).
+- **returns**: string|nil "model/config" key, nil if the model or the config is missing.
+- **returns**: string|nil Model name.
+- **returns**: string|nil Normalized config name.
 
 #### `util_screenshotCreator_nodeOutpaint.isTabActive()`
 
-Indique si l'onglet du pinceau est actif.
+Indicates whether the brush tab is active.
 
-- **renvoie** : boolean tabActive.
+- **returns**: boolean tabActive.
 
 #### `util_screenshotCreator_nodeOutpaint.loadConfig(force)`
 
-Charge le fichier de configuration en mémoire (une seule fois sauf force) ; crée une table vide si le fichier est absent ou invalide.
+Loads the configuration file into memory (only once unless force); creates an empty table if the file is missing or invalid.
 
-- `force` (*boolean|nil*) : true pour relire le fichier même s'il est déjà chargé.
-- **renvoie** : table Config {configs = {...}}.
+- `force` (*boolean|nil*) : true to reread the file even if it is already loaded.
+- **returns**: table Config {configs = {...}}.
 
 #### `util_screenshotCreator_nodeOutpaint.onDeserialized(data)`
 
-Hook après rechargement ; identique à deserialize.
+Hook after reload; identical to deserialize.
 
-- `data` (*table|nil*) : État sauvegardé.
+- `data` (*table|nil*) : Saved state.
 
 #### `util_screenshotCreator_nodeOutpaint.onSerialize()`
 
-Hook de sérialisation ; identique à serialize.
+Serialization hook; identical to serialize.
 
-- **renvoie** : table État.
+- **returns**: table State.
 
 #### `util_screenshotCreator_nodeOutpaint.redo(actionData)`
 
-Refait une modification : applique actionData.new. Callback d'editor.history.
+Redoes a change: applies actionData.new. editor.history callback.
 
 - `actionData` (*table*) : {configKey, old, new}.
 
 #### `util_screenshotCreator_nodeOutpaint.saveConfig()`
 
-Écrit la configuration sur disque (jsonWriteFile, indentée).
+Writes the configuration to disk (jsonWriteFile, indented).
 
-- **renvoie** : boolean Résultat de jsonWriteFile.
+- **returns**: boolean Result of jsonWriteFile.
 
 #### `util_screenshotCreator_nodeOutpaint.selfCheck()`
 
-Test par assertions de la détection des rétroviseurs externes.
+Assertion test of the external mirror detection.
 
-- **renvoie** : boolean Toujours true (sinon une assertion échoue).
+- **returns**: boolean Always true (otherwise an assertion fails).
 
 #### `util_screenshotCreator_nodeOutpaint.serialize()`
 
-Renvoie {enabled, brushRadius} pour la sauvegarde de l'état.
+Returns {enabled, brushRadius} for state saving.
 
-- **renvoie** : table État du pinceau.
+- **returns**: table Brush state.
 
 #### `util_screenshotCreator_nodeOutpaint.setNodeDisabled(vehicleOrKey, node, disabled, explicitConfigName)`
 
-Désactive ou réactive un nœud pour une config, avec entrée d'historique annuler/refaire et sauvegarde sur disque.
+Disables or re-enables a node for a config, with an undo/redo history entry and saving to disk.
 
-- `vehicleOrKey` (*table|string*) : Véhicule ou clé de config.
-- `node` (*table*) : Nœud (avec key et name), tel que renvoyé par getVehicleNode.
-- `disabled` (*boolean*) : true pour désactiver, false pour réactiver.
-- `explicitConfigName` (*string|nil*) : Nom de config imposé.
-- **renvoie** : boolean true si l'état a changé.
+- `vehicleOrKey` (*table|string*) : Vehicle or config key.
+- `node` (*table*) : Node (with key and name), as returned by getVehicleNode.
+- `disabled` (*boolean*) : true to disable, false to re-enable.
+- `explicitConfigName` (*string|nil*) : Imposed config name.
+- **returns**: boolean true if the state changed.
 
 #### `util_screenshotCreator_nodeOutpaint.setTabActive(value)`
 
-Force l'état « onglet actif » ; en le désactivant, termine le coup de pinceau en cours.
+Forces the "tab active" state; disabling it ends the brush stroke in progress.
 
-- `value` (*boolean*) : true si l'onglet est actif.
+- `value` (*boolean*) : true if the tab is active.
 
 #### `util_screenshotCreator_nodeOutpaint.undo(actionData)`
 
-Annule une modification : applique actionData.old. Callback d'editor.history.
+Undoes a change: applies actionData.old. editor.history callback.
 
 - `actionData` (*table*) : {configKey, old, new}.
 
 #### `util_screenshotCreator_nodeOutpaint.updateBrush(options)`
 
-Met à jour le pinceau chaque frame : dessine le cercle, colore les nœuds dans la vue 3D (debugDrawer), et pendant un clic gauche désactive les nœuds sous le pinceau (Ctrl : les réactive). Le coup de pinceau est enregistré comme une action d'historique à la fin.
+Updates the brush every frame: draws the circle, colors the nodes in the 3D view (debugDrawer), and during a left click disables the nodes under the brush (Ctrl: re-enables them). The brush stroke is recorded as a history action at the end.
 
 - `options` (*table|nil*) : {active, workerRunning, vehicle, configName}.
 
 #### `util_screenshotCreator_nodeOutpaint.updateNodeOutpainting(options)`
 
-Alias de updateBrush.
+Alias of updateBrush.
 
-- `options` (*table|nil*) : Voir updateBrush.
+- `options` (*table|nil*) : See updateBrush.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant : ui_imgui, ui_imguiUtils, core_camera, core_vehicle_manager, util_screenshotCreator_settings. |
+| `dependencies` | string[] | Extensions loaded before: ui_imgui, ui_imguiUtils, core_camera, core_vehicle_manager, util_screenshotCreator_settings. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLineInstance`, `drawSphere`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua`.*

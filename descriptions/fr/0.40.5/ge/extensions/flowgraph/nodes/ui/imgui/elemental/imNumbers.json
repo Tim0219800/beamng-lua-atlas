@@ -1,0 +1,53 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imNumbers.lua",
+  "module": "Nœud flowgraph « im Number » (catégorie repeat_instant, tag imgui) : champ numérique imgui. Mode choisi dans les propriétés : Int, Float, SliderInt, SliderFloat, DragInt, DragFloat. Entrées : « text », « set » (impulsion : réapplique setVal), « setVal » (0), « min » (0), « max » (10), « step » (1), « format » (%0.2f), « power » (1). Sorties : « value » et « changed » (impulsion).",
+  "notes": [
+    "La valeur est bornée à min/max même en mode Int/Float libre.",
+    "Sans valeur initiale (setVal nil), rien n'est dessiné."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Efface les sorties et la valeur.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure le mode (défaut 'Int').",
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "Données sauvegardées du nœud."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde le mode.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Combo du mode d'édition.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Liste des modes et mode = 'Int'.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Dessine le widget du mode choisi, borne la valeur et écrit value/changed.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

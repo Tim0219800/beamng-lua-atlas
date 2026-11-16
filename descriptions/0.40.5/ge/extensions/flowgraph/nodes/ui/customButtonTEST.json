@@ -1,44 +1,44 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/customButtonTEST.lua",
-  "module": "Nœud flowgraph « Custom Button TEST » (catégorie once_instant, description « TEST ») : nœud d'essai qui affiche un bouton « Click me! » via le hook UI 'CustomFGButtons'. Sortie « btn_1 » (flux) mise à true quand le bouton est cliqué. Ne pas utiliser en production.",
+  "module": "Flowgraph node \"Custom Button TEST\" (category once_instant, description \"TEST\"): test node that displays a \"Click me!\" button via the UI hook 'CustomFGButtons'. Output \"btn_1\" (flow) set to true when the button is clicked. Do not use in production.",
   "notes": [
-    "Nœud de test : openDialogue/closeDialogue référencent self.open mais workOnce n'ouvre pas via openDialogue ; self.open reste false, donc le dialogue n'est pas fermé à l'arrêt.",
-    "Dépend de core_input_bindings."
+    "Test node: openDialogue/closeDialogue reference self.open but workOnce does not open via openDialogue; self.open stays false, so the dialogue is not closed on stop.",
+    "Depends on core_input_bindings."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStarted": {
           "desc": "open = false.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Ferme le dialogue s'il est ouvert.",
+          "desc": "Closes the dialogue if it is open.",
           "internal": true
         },
         "buttonPushed": {
-          "desc": "Met à true le pin de sortie correspondant au bouton cliqué, les autres à false.",
+          "desc": "Sets the output pin matching the clicked button to true, the others to false.",
           "params": {
             "action": {
               "type": "string",
-              "desc": "Nom du bouton ou du pin de sortie activé."
+              "desc": "Name of the activated button or output pin."
             }
           },
           "internal": false
         },
         "closeDialogue": {
-          "desc": "Envoie une liste vide à 'CustomFGButtons' (cache les boutons).",
+          "desc": "Sends an empty list to 'CustomFGButtons' (hides the buttons).",
           "internal": false
         },
         "getCmd": {
-          "desc": "Construit la commande Lua rappelant buttonPushed(action) sur ce nœud.",
+          "desc": "Builds the Lua command that calls buttonPushed(action) back on this node.",
           "params": {
             "action": {
               "type": "string",
-              "desc": "Nom du bouton ou du pin de sortie activé."
+              "desc": "Name of the activated button or output pin."
             }
           },
           "internal": false
@@ -48,15 +48,15 @@
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Ferme le dialogue s'il est ouvert.",
+          "desc": "Closes the dialogue if it is open.",
           "internal": true
         },
         "openDialogue": {
-          "desc": "Envoie le bouton « Click me! » à l'UI et met done = true.",
+          "desc": "Sends the \"Click me!\" button to the UI and sets done = true.",
           "internal": false
         },
         "workOnce": {
-          "desc": "Envoie le bouton « Click me! » à l'UI (guihooks 'CustomFGButtons').",
+          "desc": "Sends the \"Click me!\" button to the UI (guihooks 'CustomFGButtons').",
           "internal": true
         }
       }

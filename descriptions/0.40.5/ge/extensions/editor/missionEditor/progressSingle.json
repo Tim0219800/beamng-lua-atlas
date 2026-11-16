@@ -1,30 +1,40 @@
 {
   "path": "lua/ge/extensions/editor/missionEditor/progressSingle.lua",
-  "module": "Onglet « Progress Single » de l'éditeur de missions : montre la progression sauvegardée d'une mission (étoiles débloquées par défaut et au total, clé de progression par défaut, tableau des tentatives par clé). Les données viennent de gameplay_missions_progress.formatSaveDataForUi(mission.id). Un mode « Raw » permet d'éditer le JSON de saveData, et un bouton « Reload » relit les données. Le module renvoie un constructeur : require(...)(missionEditor).",
+  "module": "\"Progress Single\" tab of the mission editor: shows a mission's saved progress (stars unlocked by default and in total, default progress key, table of attempts per key). The data comes from gameplay_missions_progress.formatSaveDataForUi(mission.id). A \"Raw\" mode lets you edit the saveData JSON, and a \"Reload\" button rereads the data. The module returns a constructor: require(...)(missionEditor).",
   "notes": [
-    "Le mode Raw affiche missionInstance.saveData mais écrit le JSON validé dans mission.saveData.",
-    "Dans le mode Raw, pushStyle/popStyle sont définies localement ici (contrairement à objectives.lua).",
-    "Les cases à cocher des étoiles sont créées avec une copie (im.BoolPtr) : cliquer dessus ne modifie pas la sauvegarde."
+    "Raw mode displays missionInstance.saveData but writes the validated JSON into mission.saveData.",
+    "In Raw mode, pushStyle/popStyle are defined locally here (unlike objectives.lua).",
+    "The star checkboxes are created with a copy (im.BoolPtr): clicking them does not modify the save."
   ],
   "classes": {
     "C": {
-      "desc": "Instance de l'onglet. Champs : missionEditor, tabName = 'Progress Single', mission, missionInstance, formattedSaveData, currentProgressKey.",
+      "desc": "Instance of the tab. Fields: missionEditor, tabName = 'Progress Single', mission, missionInstance, formattedSaveData, currentProgressKey.",
       "functions": {
         "init": {
-          "desc": "Constructeur.",
-          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "desc": "Constructor.",
+          "params": {
+            "missionEditor": {
+              "type": "table",
+              "desc": "Main editor_missionEditor module."
+            }
+          },
           "internal": true
         },
         "setMission": {
-          "desc": "Définit la mission courante, son instance et les données de progression formatées.",
-          "params": {"mission": {"type": "table", "desc": "Mission courante."}},
+          "desc": "Sets the current mission, its instance and the formatted progress data.",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Current mission."
+            }
+          },
           "internal": true
         },
         "drawProgress": {
-          "desc": "Affiche le nombre d'étoiles débloquées, la clé de progression par défaut, un combo de clés et le tableau des tentatives (ou un dump brut si aucune tentative n'est disponible)."
+          "desc": "Displays the number of unlocked stars, the default progress key, a key combo and the attempts table (or a raw dump if no attempt is available)."
         },
         "draw": {
-          "desc": "Dessine l'en-tête (case Raw, bouton Reload) puis drawProgress ou l'éditeur JSON brut.",
+          "desc": "Draws the header (Raw checkbox, Reload button) then drawProgress or the raw JSON editor.",
           "internal": true
         }
       }

@@ -2,32 +2,32 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+--- Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 ---@class flowgraph_nodes_mission_stageLightsDragRace_C
 local flowgraph_nodes_mission_stageLightsDragRace_C = {}
 
---- Vide la table lights.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua:43
+--- Empties the lights table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua:43
 function flowgraph_nodes_mission_stageLightsDragRace_C:_executionStarted() end
 
---- Vide la table lights.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua:47
+--- Empties the lights table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua:47
 function flowgraph_nodes_mission_stageLightsDragRace_C:init() end
 
---- Recherche les quatre objets lumineux dans la scene.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua:32
+--- Searches the scene for the four light objects.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua:32
 function flowgraph_nodes_mission_stageLightsDragRace_C:initLights() end
 
---- Definit les valeurs proposees des pins side (left/right) et light (Pre Stage/Stage).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua:21
+--- Defines the offered values of the pins side (left/right) and light (Pre Stage/Stage).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua:21
 function flowgraph_nodes_mission_stageLightsDragRace_C:postInit() end
 
---- Sur reset : retrouve les lumieres et les cache. Sinon rend visible la lumiere choisie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua:51
+--- On reset: finds the lights again and hides them. Otherwise makes the chosen light visible.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua:51
 function flowgraph_nodes_mission_stageLightsDragRace_C:work() end
 

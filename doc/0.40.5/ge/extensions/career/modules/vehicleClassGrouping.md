@@ -1,58 +1,58 @@
 # `career_modules_vehicleClassGrouping`
 
-*Fichier : `lua/ge/extensions/career/modules/vehicleClassGrouping.lua` · VM : Game Engine (GE) · 139 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/vehicleClassGrouping.lua` · VM: Game Engine (GE) · 139 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_vehicleClassGrouping` : `extensions.load("career_modules_vehicleClassGrouping")`, puis la globale `career_modules_vehicleClassGrouping`
+**Access:** extension `career_modules_vehicleClassGrouping`: `extensions.load("career_modules_vehicleClassGrouping")`, then the global `career_modules_vehicleClassGrouping`
 
-Génère des groupes de véhicules par classe de performance (S, A, B, C, D) pour le système core_multiSpawn (adversaires, courses). Parcourt tous les modèles Car/Truck et leurs configs, filtre par modèle, config et type de config, garde ceux dont la classe (gameplay_vehiclePerformance.getClassFromConfig) correspond, puis mélange le résultat. Fournit aussi un coefficient d'agressivité de l'IA par classe.
+Generates vehicle groups by performance class (S, A, B, C, D) for the core_multiSpawn system (opponents, races). Walks through all Car/Truck models and their configs, filters by model, config and config type, keeps those whose class (gameplay_vehiclePerformance.getClassFromConfig) matches, then shuffles the result. Also provides an AI aggression coefficient per class.
 
-## Remarques
+## Notes
 
-- Coefficients d'agressivité : S 1, A 0,9, B 0,8, C 0,7, D 0,6 ; classe par défaut B.
-- Filtres par défaut : modèles exclus atv, utv, us_semi, midtruck, citybus, racetruck, rockbouncer, simple_traffic ; types de config exclus Police, Service, Powerglow.
-- Avec performanceIndexTarget, ne garde que les configs dans la fenêtre ±performanceIndexWindow (5 par défaut) ; si aucune, prend les 10 plus proches. Si le groupe reste vide, une entrée de secours {model='midsize'} est ajoutée.
-- Le « smart shuffle » entrelace les modèles pour éviter les doublons successifs du même modèle.
-- L'argument mode (« default » ou « drag ») est lu mais n'a pas d'effet dans le code.
+- Aggression coefficients: S 1, A 0.9, B 0.8, C 0.7, D 0.6; default class B.
+- Default filters: excluded models atv, utv, us_semi, midtruck, citybus, racetruck, rockbouncer, simple_traffic; excluded config types Police, Service, Powerglow.
+- With performanceIndexTarget, keeps only configs within the ±performanceIndexWindow window (5 by default); if none, takes the 10 closest. If the group remains empty, a fallback entry {model='midsize'} is added.
+- The "smart shuffle" interleaves models to avoid successive duplicates of the same model.
+- The mode argument ("default" or "drag") is read but has no effect in the code.
 
-**Dépendances (chargées avant) :** `gameplay_vehiclePerformance`
+**Dependencies (loaded first):** `gameplay_vehiclePerformance`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_vehicleClassGrouping.generateGroup(class, mode, modelFilter, configFilter, configTypeFilter, invertedFilters, randomizePaint, smartShuffle, performanceIndexTarget, performanceIndexWindow)` | Construit un groupe de véhicules d'une classe donnée, utilisable par core_multiSpawn. | 50 |
-| `career_modules_vehicleClassGrouping.getAggressionMultiplier(class)` | Retourne le coefficient d'agressivité de l'IA pour une classe. | 37 |
+| `career_modules_vehicleClassGrouping.generateGroup(class, mode, modelFilter, configFilter, configTypeFilter, invertedFilters, randomizePaint, smartShuffle, performanceIndexTarget, performanceIndexWindow)` | Builds a vehicle group of a given class, usable by core_multiSpawn. | 50 |
+| `career_modules_vehicleClassGrouping.getAggressionMultiplier(class)` | Returns the AI aggression coefficient for a class. | 37 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_vehicleClassGrouping.generateGroup(class, mode, modelFilter, configFilter, configTypeFilter, invertedFilters, randomizePaint, smartShuffle, performanceIndexTarget, performanceIndexWindow)`
 
-Construit un groupe de véhicules d'une classe donnée, utilisable par core_multiSpawn.
+Builds a vehicle group of a given class, usable by core_multiSpawn.
 
-- `class` (*string|nil*) : Classe de performance, défaut "B".
-- `mode` (*string|nil*) : "default" ou "drag" (sans effet).
-- `modelFilter` (*table<string, any>|nil*) : Modèles à exclure (clé = modèle).
-- `configFilter` (*table<string, any>|nil*) : Configs à exclure (clé "modèle/config").
-- `configTypeFilter` (*table<string, any>|nil*) : Types de config à exclure.
-- `invertedFilters` (*table<string, boolean>|nil*) : Ex. {modelFilter = true} inverse le filtre (liste blanche).
-- `randomizePaint` (*boolean|nil*) : Peinture « (Random) », vrai par défaut.
-- `smartShuffle` (*boolean|nil*) : Entrelacer les modèles, vrai par défaut.
-- `performanceIndexTarget` (*number|nil*) : Indice de performance visé.
-- `performanceIndexWindow` (*number|nil*) : Tolérance autour de la cible, défaut 5.
-- **renvoie** : table {name = "Class X", type = "custom", data = {{model, config, paintName}, ...}}.
+- `class` (*string|nil*) : Performance class, default "B".
+- `mode` (*string|nil*) : "default" or "drag" (no effect).
+- `modelFilter` (*table<string, any>|nil*) : Models to exclude (key = model).
+- `configFilter` (*table<string, any>|nil*) : Configs to exclude (key "model/config").
+- `configTypeFilter` (*table<string, any>|nil*) : Config types to exclude.
+- `invertedFilters` (*table<string, boolean>|nil*) : E.g. {modelFilter = true} inverts the filter (whitelist).
+- `randomizePaint` (*boolean|nil*) : "(Random)" paint, true by default.
+- `smartShuffle` (*boolean|nil*) : Interleave models, true by default.
+- `performanceIndexTarget` (*number|nil*) : Target performance index.
+- `performanceIndexWindow` (*number|nil*) : Tolerance around the target, default 5.
+- **returns**: table {name = "Class X", type = "custom", data = {{model, config, paintName}, ...}}.
 
 #### `career_modules_vehicleClassGrouping.getAggressionMultiplier(class)`
 
-Retourne le coefficient d'agressivité de l'IA pour une classe.
+Returns the AI aggression coefficient for a class.
 
-- `class` (*string|nil*) : Classe S/A/B/C/D, défaut "B".
-- **renvoie** : number Coefficient (1 si classe inconnue).
+- `class` (*string|nil*) : Class S/A/B/C/D, default "B".
+- **returns**: number Coefficient (1 if the class is unknown).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {"gameplay_vehiclePerformance"}. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/vehicleClassGrouping.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/vehicleClassGrouping.lua`.*

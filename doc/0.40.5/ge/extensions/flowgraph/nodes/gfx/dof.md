@@ -1,30 +1,30 @@
 # `flowgraph_nodes_gfx_dof`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gfx/dof.lua` · VM : Game Engine (GE) · 115 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gfx/dof.lua` · VM: Game Engine (GE) · 115 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gfx/dof")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gfx/dof")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « DOF » (catégorie par défaut, tags gfx/dof). Fait apparaître (blurIn) ou disparaître (blurOut) un flou de profondeur de champ en fadeTime secondes (défaut 1) en pilotant les variables $DOFPostFx::BlurMin, BlurMax, BlurCurveFar (cible 430) et FocusRangeMax (3), puis rafraîchit DOFPostEffect. Sortie blurDone quand le fondu est terminé. Les valeurs d'origine sont sauvegardées et restaurées au reset ou à l'arrêt.
+Flowgraph node "DOF" (default category, tags gfx/dof). Fades in (blurIn) or out (blurOut) a depth-of-field blur over fadeTime seconds (default 1) by driving the variables $DOFPostFx::BlurMin, BlurMax, BlurCurveFar (target 430) and FocusRangeMax (3), then refreshes DOFPostEffect. Output blurDone when the fade is finished. The original values are saved and restored on reset or stop.
 
-## Remarques
+## Notes
 
-- Les sauvegardes savedBlurMin/Max/... sont lues puis réécrites à chaque changement de mode, sans être remises à nil.
+- The savedBlurMin/Max/... backups are read then rewritten on every mode change, without being reset to nil.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelle reset(). | 61 |
-| `C:init(mgr, ...)` | Appelle reset(). | 57 |
-| `C:reset()` | Remet le timer et le mode à zéro et restaure les variables DOF sauvegardées. | 33 |
-| `C:updateSettings()` | Appelle DOFPostEffect.updateDOFSettings() si l'effet existe. | 26 |
-| `C:work()` | Détecte le mode (in/out), sauvegarde les réglages DOF puis fait avancer le fondu avec dtSim ; met blurDone à true à la fin. | 65 |
+| `C:_executionStopped()` | Calls reset(). | 61 |
+| `C:init(mgr, ...)` | Calls reset(). | 57 |
+| `C:reset()` | Resets the timer and the mode to zero and restores the saved DOF variables. | 33 |
+| `C:updateSettings()` | Calls DOFPostEffect.updateDOFSettings() if the effect exists. | 26 |
+| `C:work()` | Detects the mode (in/out), saves the DOF settings then advances the fade with dtSim; sets blurDone to true at the end. | 65 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gfx/dof.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gfx/dof.lua`.*

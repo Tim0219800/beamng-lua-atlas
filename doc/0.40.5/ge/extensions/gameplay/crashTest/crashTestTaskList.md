@@ -1,57 +1,57 @@
 # `gameplay_crashTest_crashTestTaskList`
 
-*Fichier : `lua/ge/extensions/gameplay/crashTest/crashTestTaskList.lua` · VM : Game Engine (GE) · 165 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/crashTest/crashTestTaskList.lua` · VM: Game Engine (GE) · 165 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_crashTest_crashTestTaskList` : `extensions.load("gameplay_crashTest_crashTestTaskList")`, puis la globale `gameplay_crashTest_crashTestTaskList`
+**Access:** extension `gameplay_crashTest_crashTestTaskList`: `extensions.load("gameplay_crashTest_crashTestTaskList")`, then the global `gameplay_crashTest_crashTestTaskList`
 
-Alimente la liste de tâches de l'UI (évènements SetTasklistHeader et SetTasklistTask) pour le scénario de crash test. Chaque étape devient une tâche de type 'goal' identifiée par l'id du véhicule joueur (plVehId) ; libellé et sous-texte sont construits depuis l'objectif, la vitesse d'impact et les conditions de dégâts. Les hooks marquent la tâche active, échouée ou terminée.
+Feeds the UI's task list (SetTasklistHeader and SetTasklistTask events) for the crash test scenario. Each step becomes a 'goal'-type task identified by the player vehicle's id (plVehId); label and subtext are built from the objective, the impact speed and the damage conditions. The hooks mark the task as active, failed or completed.
 
-## Remarques
+## Notes
 
-- L'id de tâche est stepData.plVehId : si plusieurs étapes ont le même véhicule joueur, elles partagent la même id côté UI.
-- Libellé : 'Simple crash' -> « Crash into the marked target(s) » ; 'Crash target vehicle into target area' -> « Redirect the target into the highlighted area » ; autre objectif -> nil.
-- Sous-texte : vitesse d'impact convertie par translateVelocity (unité du joueur), suivie du texte sur les dégâts (« Minimize damage », « Maximize damage », « At least X damage », « Not more than X damage »). Aucun espace n'est inséré entre la vitesse et le texte de dégâts.
-- resetTasklist est défini mais jamais appelé ni exporté.
-- clearTasklist et reset plantent si setCrashTestDataAndInit n'a pas été appelé (crashTestData nil).
+- The task id is stepData.plVehId: if several steps have the same player vehicle, they share the same id on the UI side.
+- Label: 'Simple crash' -> "Crash into the marked target(s)"; 'Crash target vehicle into target area' -> "Redirect the target into the highlighted area"; other objective -> nil.
+- Subtext: impact speed converted by translateVelocity (player's unit), followed by the damage text ("Minimize damage", "Maximize damage", "At least X damage", "Not more than X damage"). No space is inserted between the speed and the damage text.
+- resetTasklist is defined but never called nor exported.
+- clearTasklist and reset crash if setCrashTestDataAndInit has not been called (crashTestData nil).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_crashTest_crashTestTaskList.finishedCurrentTask(stepData)` | Marque la tâche de l'étape comme terminée (done = true). | 134 |
-| `gameplay_crashTest_crashTestTaskList.onCrashTestStepFailed(stepData)` | Hook appelé quand une étape échoue : marque la tâche comme échouée (fail = true). Sans effet si stepData est nil. *(interne)* *(hook)* | 118 |
-| `gameplay_crashTest_crashTestTaskList.onExtensionUnloaded()` | Hook appelé au déchargement de l'extension : retire toutes les tâches de l'UI. *(interne)* *(hook)* | 148 |
-| `gameplay_crashTest_crashTestTaskList.onNewCrashTestStep(stepData)` | Hook appelé au début d'une étape : envoie la tâche correspondante comme active (ni terminée ni échouée). *(interne)* *(hook)* | 104 |
-| `gameplay_crashTest_crashTestTaskList.reset()` | Retire toutes les tâches de l'UI (clear = true pour chaque étape). | 152 |
-| `gameplay_crashTest_crashTestTaskList.setCrashTestDataAndInit(crashTestData_)` | Mémorise la liste des étapes, affiche l'en-tête « Crash analysis steps » et crée la première tâche (inactive). | 97 |
+| `gameplay_crashTest_crashTestTaskList.finishedCurrentTask(stepData)` | Marks the step's task as completed (done = true). | 134 |
+| `gameplay_crashTest_crashTestTaskList.onCrashTestStepFailed(stepData)` | Hook called when a step fails: marks the task as failed (fail = true). No effect if stepData is nil. *(internal)* *(hook)* | 118 |
+| `gameplay_crashTest_crashTestTaskList.onExtensionUnloaded()` | Hook called when the extension unloads: removes all tasks from the UI. *(internal)* *(hook)* | 148 |
+| `gameplay_crashTest_crashTestTaskList.onNewCrashTestStep(stepData)` | Hook called at the start of a step: sends the corresponding task as active (neither completed nor failed). *(internal)* *(hook)* | 104 |
+| `gameplay_crashTest_crashTestTaskList.reset()` | Removes all tasks from the UI (clear = true for each step). | 152 |
+| `gameplay_crashTest_crashTestTaskList.setCrashTestDataAndInit(crashTestData_)` | Stores the step list, displays the "Crash analysis steps" header and creates the first task (inactive). | 97 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_crashTest_crashTestTaskList.finishedCurrentTask(stepData)`
 
-Marque la tâche de l'étape comme terminée (done = true).
+Marks the step's task as completed (done = true).
 
-- `stepData` (*table*) : Données de l'étape.
+- `stepData` (*table*) : Step data.
 
 #### `gameplay_crashTest_crashTestTaskList.onCrashTestStepFailed(stepData)`
 
-Hook appelé quand une étape échoue : marque la tâche comme échouée (fail = true). Sans effet si stepData est nil.
+Hook called when a step fails: marks the task as failed (fail = true). No effect if stepData is nil.
 
-- `stepData` (*table|nil*) : Données de l'étape.
+- `stepData` (*table|nil*) : Step data.
 
 #### `gameplay_crashTest_crashTestTaskList.onNewCrashTestStep(stepData)`
 
-Hook appelé au début d'une étape : envoie la tâche correspondante comme active (ni terminée ni échouée).
+Hook called at the start of a step: sends the corresponding task as active (neither completed nor failed).
 
-- `stepData` (*table*) : Données de l'étape.
+- `stepData` (*table*) : Step data.
 
 #### `gameplay_crashTest_crashTestTaskList.setCrashTestDataAndInit(crashTestData_)`
 
-Mémorise la liste des étapes, affiche l'en-tête « Crash analysis steps » et crée la première tâche (inactive).
+Stores the step list, displays the "Crash analysis steps" header and creates the first task (inactive).
 
-- `crashTestData_` (*table<integer, table>*) : Liste des données d'étapes du crash test.
+- `crashTestData_` (*table<integer, table>*) : List of the crash test's step data.
 
-**Évènements UI (guihooks.trigger) :** `SetTasklistHeader`, `SetTasklistTask`
+**UI events (guihooks.trigger):** `SetTasklistHeader`, `SetTasklistTask`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/crashTest/crashTestTaskList.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/crashTest/crashTestTaskList.lua`.*

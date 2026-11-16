@@ -2,138 +2,138 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/photomode/camera.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Caméra du mode photo : FOV, vitesse de la caméra libre, roulis, exposition (auto ou EV manuel), mouvement lissé, visibilité des nœuds fixes du NodeGrabber, signets de caméra (absolus dans le monde ou relatifs au véhicule du joueur) et presets de caméra. Le module passe par core_camera (via ui_photomode_shared.getCoreCameraFunction) et par commands.setFreeCamera pour basculer en caméra libre, et mémorise l'état d'entrée pour le restaurer à la sortie du mode photo. Il sert de backend au panneau caméra de l'UI du mode photo.
---- Accès : extension `ui_photomode_camera` : `extensions.load("ui_photomode_camera")`, puis la globale `ui_photomode_camera`
+--- Photo mode camera: FOV, free camera speed, roll, exposure (auto or manual EV), smoothed movement, visibility of the NodeGrabber's fixed nodes, camera bookmarks (absolute in the world or relative to the player vehicle) and camera presets. The module goes through core_camera (via ui_photomode_shared.getCoreCameraFunction) and commands.setFreeCamera to switch to the free camera, and stores the entry state to restore it when leaving photo mode. It serves as the backend of the photo mode UI camera panel.
+--- Access: extension `ui_photomode_camera`: `extensions.load("ui_photomode_camera")`, then the global `ui_photomode_camera`
 ---@class ui_photomode_camera
 ---@field dependencies string[] {"ui_photomode_shared"}
 ui_photomode_camera = {}
 
---- Passe en caméra libre au début de la session (sauf si la caméra d'entrée est « path » ou si la caméra libre est déjà active) et note qu'il faudra restaurer la caméra d'entrée à la sortie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/camera.lua:485
+--- Switches to the free camera at the start of the session (unless the entry camera is "path" or the free camera is already active) and notes that the entry camera must be restored on exit.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/camera.lua:485
 function ui_photomode_camera.activateSessionFreeCamera() end
 
---- Applique un preset de caméra : refuse un preset de scène d'un autre niveau (preset_level_mismatch), restaure le signet ou applique FOV et roulis, puis vitesse, lissage et exposition.
----Source : lua/ge/extensions/ui/photomode/camera.lua:1225
----@param state table État de preset
----@return table  {state} ou {ok = false, reason}
+--- Applies a camera preset: refuses a scene preset from another level (preset_level_mismatch), restores the bookmark or applies FOV and roll, then speed, smoothing and exposure.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:1225
+---@param state table Preset state
+---@return table  {state} or {ok = false, reason}
 function ui_photomode_camera.applyPresetState(state) end
 
---- Sous-ensemble de l'état à écrire dans les métadonnées d'une photo : pos, rot, fov, speed, yawDeg, pitchDown, rollDeg.
----Source : lua/ge/extensions/ui/photomode/camera.lua:784
----@return table  Données de caméra
+--- Subset of the state to write into a photo's metadata: pos, rot, fov, speed, yawDeg, pitchDown, rollDeg.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:784
+---@return table  Camera data
 function ui_photomode_camera.buildMetadataState() end
 
---- Construit l'état de la caméra : sessionActive, disponibilité des signets, availability (exposure, nodeGrabber, smoothMovement), pos, rot, fov, speed, yawDeg, pitchDown, rollDeg, autoExposure, manualEV, nodeGrabberVisible, smoothMovement.
----Source : lua/ge/extensions/ui/photomode/camera.lua:751
----@return table  État de la caméra
+--- Builds the camera state: sessionActive, bookmark availability, availability (exposure, nodeGrabber, smoothMovement), pos, rot, fov, speed, yawDeg, pitchDown, rollDeg, autoExposure, manualEV, nodeGrabberVisible, smoothMovement.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:751
+---@return table  Camera state
 function ui_photomode_camera.buildState() end
 
---- Preset « par défaut » construit à partir de l'état capturé à l'entrée de la session (fov, roulis, vitesse, lissage, exposition, levelId), ou nil si aucune session n'a été capturée.
----Source : lua/ge/extensions/ui/photomode/camera.lua:1207
----@return table|nil  État par défaut
+--- "Default" preset built from the state captured at session entry (fov, roll, speed, smoothing, exposure, levelId), or nil if no session was captured.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:1207
+---@return table|nil  Default state
 function ui_photomode_camera.captureDefaultPresetState() end
 
---- Mémorise la visibilité des nœuds fixes du NodeGrabber puis les masque pour la session.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/camera.lua:436
+--- Stores the visibility of the NodeGrabber's fixed nodes then hides them for the session.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/camera.lua:436
 function ui_photomode_camera.captureNodeGrabberRestoreState() end
 
---- État de caméra à enregistrer dans un preset. Type « vehicle » : signet relatif au véhicule (nil s'il est indisponible) ; type « scene » (défaut) : position absolue et levelId. Inclut aussi speed, smoothMovement, autoExposure, manualEV.
----Source : lua/ge/extensions/ui/photomode/camera.lua:1170
+--- Camera state to save in a preset. "vehicle" type: bookmark relative to the vehicle (nil if unavailable); "scene" type (default): absolute position and levelId. Also includes speed, smoothMovement, autoExposure, manualEV.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:1170
 ---@param options table|nil {cameraPresetType = "vehicle"|"scene"}
----@return table|nil  État du preset
+---@return table|nil  Preset state
 function ui_photomode_camera.capturePresetState(options) end
 
---- Capture l'état de la caméra à l'entrée de la session (pos, rot, fov, vitesse, roulis, lissage, exposition, nom de la caméra active). Appelée au début d'une session du mode photo.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/camera.lua:467
+--- Captures the camera state at session entry (pos, rot, fov, speed, roll, smoothing, exposure, name of the active camera). Called at the start of a photo mode session.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/camera.lua:467
 function ui_photomode_camera.captureRestoreState() end
 
---- Renvoie l'état courant de la caméra (identique à buildState).
----Source : lua/ge/extensions/ui/photomode/camera.lua:1166
----@return table  État de la caméra
+--- Returns the current camera state (same as buildState).
+---Source: lua/ge/extensions/ui/photomode/camera.lua:1166
+---@return table  Camera state
 function ui_photomode_camera.getCameraState() end
 
---- Convertit les objets CameraBookmark de la scène (scenetree.findClassObjects) en presets temporaires de type camera (id __cameraBookmark_<id>, source cameraBookmark, position absolue). Liste vide si l'API est indisponible.
----Source : lua/ge/extensions/ui/photomode/camera.lua:1314
----@return table[]  Presets temporaires
+--- Converts the scene's CameraBookmark objects (scenetree.findClassObjects) into temporary presets of type camera (id __cameraBookmark_<id>, source cameraBookmark, absolute position). Empty list if the API is unavailable.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:1314
+---@return table[]  Temporary presets
 function ui_photomode_camera.getTemporaryPresetList() end
 
---- Remet les valeurs par défaut : mouvement lissé coupé, vitesse 15, roulis 0, exposition automatique avec EV manuel 10. Passe en caméra libre si nécessaire.
----Source : lua/ge/extensions/ui/photomode/camera.lua:1129
----@return table  {state} ou {ok = false, reason}
+--- Resets to default values: smoothed movement off, speed 15, roll 0, automatic exposure with manual EV 10. Switches to the free camera if necessary.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:1129
+---@return table  {state} or {ok = false, reason}
 function ui_photomode_camera.resetCameraDefaults() end
 
---- Déplace la caméra libre vers un signet (absolu : pos, rot, fov ; ou relatif : offset, rotOffset, fov calculés par rapport au véhicule joueur). Bascule en caméra libre si besoin. Accepte un signet {camera = {...}} ou directement le contenu.
----Source : lua/ge/extensions/ui/photomode/camera.lua:985
----@param bookmark table Signet absolu ou relatif
----@return table  {state} ou {ok = false, reason}
+--- Moves the free camera to a bookmark (absolute: pos, rot, fov; or relative: offset, rotOffset, fov computed relative to the player vehicle). Switches to the free camera if needed. Accepts a {camera = {...}} bookmark or the content directly.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:985
+---@param bookmark table Absolute or relative bookmark
+---@return table  {state} or {ok = false, reason}
 function ui_photomode_camera.restoreCameraBookmark(bookmark) end
 
---- Rétablit la visibilité des nœuds fixes mémorisée au début de la session.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/camera.lua:452
+--- Restores the fixed nodes visibility stored at the start of the session.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/camera.lua:452
 function ui_photomode_camera.restoreNodeGrabberState() end
 
---- Restaure le signet absolu enregistré.
----Source : lua/ge/extensions/ui/photomode/camera.lua:1106
----@return table  Résultat de restoreCameraBookmark, ou {ok = false, reason = "bookmark_unavailable"}
+--- Restores the saved absolute bookmark.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:1106
+---@return table  Result of restoreCameraBookmark, or {ok = false, reason = "bookmark_unavailable"}
 function ui_photomode_camera.restoreSavedFreeCameraBookmark() end
 
---- Restaure le signet relatif au véhicule enregistré ; l'efface s'il est invalide.
----Source : lua/ge/extensions/ui/photomode/camera.lua:1117
----@return table  Résultat de restoreCameraBookmark, ou {ok = false, reason = "bookmark_unavailable"}
+--- Restores the saved vehicle-relative bookmark; clears it if invalid.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:1117
+---@return table  Result of restoreCameraBookmark, or {ok = false, reason = "bookmark_unavailable"}
 function ui_photomode_camera.restoreSavedRelativeCameraBookmark() end
 
---- Replace la caméra libre à la position/rotation (et FOV) capturées au début de la session.
----Source : lua/ge/extensions/ui/photomode/camera.lua:797
----@return table  {state} ou {ok = false, reason}
+--- Puts the free camera back at the position/rotation (and FOV) captured at the start of the session.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:797
+---@return table  {state} or {ok = false, reason}
 function ui_photomode_camera.restoreSessionCameraTransformState() end
 
---- Restaure le mode de caméra d'entrée, le FOV, la vitesse, le roulis, le lissage et l'exposition capturés. Appelée à la fin de la session.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/camera.lua:703
+--- Restores the captured entry camera mode, FOV, speed, roll, smoothing and exposure. Called at the end of the session.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/camera.lua:703
 function ui_photomode_camera.restoreState() end
 
---- Enregistre la position actuelle de la caméra comme signet de session : un signet absolu, et un signet relatif au véhicule joueur s'il est calculable.
----Source : lua/ge/extensions/ui/photomode/camera.lua:899
----@return table  {state} ou {ok = false, reason = "camera_state_unavailable", state}
+--- Saves the current camera position as the session bookmark: an absolute bookmark, and a bookmark relative to the player vehicle if it can be computed.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:899
+---@return table  {state} or {ok = false, reason = "camera_state_unavailable", state}
 function ui_photomode_camera.saveCurrentCameraBookmark() end
 
---- Modifie l'exposition de la caméra : autoExposure (booléen) et/ou manualEV (-20 à 20).
----Source : lua/ge/extensions/ui/photomode/camera.lua:930
+--- Changes the camera's exposure: autoExposure (boolean) and/or manualEV (-20 to 20).
+---Source: lua/ge/extensions/ui/photomode/camera.lua:930
 ---@param partialState table {autoExposure?, manualEV?}
----@return table  {state} ou {ok = false, reason, state}
+---@return table  {state} or {ok = false, reason, state}
 function ui_photomode_camera.setCameraExposureState(partialState) end
 
---- Règle le FOV (borné à 10-120 degrés). Utilise la caméra libre (id 0) ou le véhicule joueur. Refusé avec la caméra « path ».
----Source : lua/ge/extensions/ui/photomode/camera.lua:914
----@param value number FOV en degrés
----@return table  {value} en cas de succès, sinon {ok = false, reason, value}
+--- Sets the FOV (clamped to 10-120 degrees). Uses the free camera (id 0) or the player vehicle. Refused with the "path" camera.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:914
+---@param value number FOV in degrees
+---@return table  {value} on success, otherwise {ok = false, reason, value}
 function ui_photomode_camera.setCameraFov(value) end
 
---- Règle le roulis de la caméra libre (-90 à 90 degrés) en conservant lacet et tangage actuels.
----Source : lua/ge/extensions/ui/photomode/camera.lua:969
----@param value number Roulis en degrés
----@return table  {value} ou {ok = false, reason, value}
+--- Sets the free camera's roll (-90 to 90 degrees) keeping the current yaw and pitch.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:969
+---@param value number Roll in degrees
+---@return table  {value} or {ok = false, reason, value}
 function ui_photomode_camera.setCameraRoll(value) end
 
---- Active ou coupe le mouvement lissé de la caméra libre (réglage cameraFreeSmoothMovement) et prévient l'UI des réglages.
----Source : lua/ge/extensions/ui/photomode/camera.lua:1349
----@param value boolean|table Booléen, ou table dont le champ smoothMovement est lu
----@return table  {value, state} ou {ok = false, reason, state}
+--- Enables or disables the free camera's smoothed movement (setting cameraFreeSmoothMovement) and notifies the UI of the settings.
+---Source: lua/ge/extensions/ui/photomode/camera.lua:1349
+---@param value boolean|table Boolean, or table whose smoothMovement field is read
+---@return table  {value, state} or {ok = false, reason, state}
 function ui_photomode_camera.setCameraSmoothMovement(value) end
 
---- Règle la vitesse de déplacement de la caméra (bornée à 2-300).
----Source : lua/ge/extensions/ui/photomode/camera.lua:953
----@param value number Vitesse de la caméra
----@return table  {value} ou {ok = false, reason, value}
+--- Sets the camera's movement speed (clamped to 2-300).
+---Source: lua/ge/extensions/ui/photomode/camera.lua:953
+---@param value number Camera speed
+---@return table  {value} or {ok = false, reason, value}
 function ui_photomode_camera.setCameraSpeed(value) end
 
---- Affiche ou masque les nœuds fixes du NodeGrabber (Engine.NodeGrabber_setFixedNodesVisible).
----Source : lua/ge/extensions/ui/photomode/camera.lua:1329
----@param value boolean|table Booléen, ou table dont le champ nodeGrabberVisible est lu
----@return table  {value, state} ou {ok = false, reason, state}
+--- Shows or hides the NodeGrabber's fixed nodes (Engine.NodeGrabber_setFixedNodesVisible).
+---Source: lua/ge/extensions/ui/photomode/camera.lua:1329
+---@param value boolean|table Boolean, or table whose nodeGrabberVisible field is read
+---@return table  {value, state} or {ok = false, reason, state}
 function ui_photomode_camera.setNodeGrabberVisible(value) end
 

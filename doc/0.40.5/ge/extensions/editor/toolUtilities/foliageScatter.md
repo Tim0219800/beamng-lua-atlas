@@ -1,187 +1,187 @@
 # `editor_toolUtilities_foliageScatter`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/foliageScatter.lua` · VM : Game Engine (GE) · 659 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/foliageScatter.lua` · VM: Game Engine (GE) · 659 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_foliageScatter` : `extensions.load("editor_toolUtilities_foliageScatter")`, puis la globale `editor_toolUtilities_foliageScatter`
+**Access:** extension `editor_toolUtilities_foliageScatter`: `extensions.load("editor_toolUtilities_foliageScatter")`, then the global `editor_toolUtilities_foliageScatter`
 
-Moteur de plantation de végétation (objets Forest, ForestItemData) pour les outils de l'éditeur. Il disperse des instances dans un polygone (scatterArea, avec espacement type Poisson), le long d'une ligne (scatterLine) ou sur des points précis (scatterPoints), pose chaque plante sur le terrain (core_terrain.getTerrainHeight) en retirant le plancher du mesh, et gère le retrait, la mise en attente pendant une sauvegarde de niveau (lift/relay) et le re-calage sur le terrain (redrape).
+Vegetation planting engine (Forest, ForestItemData objects) for the editor tools. It scatters instances in a polygon (scatterArea, with Poisson-type spacing), along a line (scatterLine) or on specific points (scatterPoints), places each plant on the terrain (core_terrain.getTerrainHeight) while removing the mesh floor, and handles removal, holding aside during a level save (lift/relay) and re-draping onto the terrain (redrape).
 
-## Exemple
+## Example
 
 ```lua
 local fs = require('editor/toolUtilities/foliageScatter')
 local items, n = fs.scatterArea({ring = ring, species = fs.defaultSpeciesSelection(), spacingM = 6, seed = 1337})
--- plus tard :
+-- later:
 fs.removeItems(select(2, fs.ensureForest()), items)
 ```
 
-## Remarques
+## Notes
 
-- Les espèces sont des noms d'objets ForestItemData de la scène ; 'species' est un ensemble { nom = true } (ou un tableau de noms) et 'speciesWeights' des poids par nom (défaut 1.0 ; poids tous nuls = poids égaux).
-- Les fonctions scatter* renvoient (items, nombrePlacé) ; la liste items contient des poignées d'items Forest, qu'il faut retirer avec removeItems avant de re-disperser la même zone.
-- Plafond de sécurité : 60000 instances par zone (params.maxInstances pour le changer).
-- Presets de classe : forest (6 m, variance 0.20), dense (4 m, 0.18), sparse (12 m, 0.22), shrub (2.5 m, 0.20), orchard (7 m, 0.08). Distribution par défaut : spacingM 6, densityScale 1, scaleVariance 0.20, slopeMaxDeg 35, seed 1337.
-- Le résultat dépend de params.seed (hash déterministe) : même graine et mêmes paramètres donnent la même plantation.
-- Si le niveau n'a pas d'objet Forest, ensureForest en crée un ('theForest') dans MissionGroup et marque l'éditeur modifié.
+- Species are names of ForestItemData objects of the scene; 'species' is a set { name = true } (or an array of names) and 'speciesWeights' are weights per name (default 1.0; all-zero weights = equal weights).
+- The scatter* functions return (items, placedCount); the items list contains Forest item handles, which must be removed with removeItems before re-scattering the same area.
+- Safety cap: 60000 instances per area (params.maxInstances to change it).
+- Class presets: forest (6 m, variance 0.20), dense (4 m, 0.18), sparse (12 m, 0.22), shrub (2.5 m, 0.20), orchard (7 m, 0.08). Default distribution: spacingM 6, densityScale 1, scaleVariance 0.20, slopeMaxDeg 35, seed 1337.
+- The result depends on params.seed (deterministic hash): the same seed and the same parameters give the same planting.
+- If the level has no Forest object, ensureForest creates one ('theForest') in MissionGroup and marks the editor as modified.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_foliageScatter.addDraped(fn)` | Enregistre un fournisseur de listes d'items pour le re-calage au terrain : fn(out) doit ajouter à out chaque liste d'items (un slot peut être false). Sert aux outils dont les plantes doivent rester posées sur le sol quand il bouge. | 602 |
-| `editor_toolUtilities_foliageScatter.defaultShrubSelection()` | Comme defaultSpeciesSelection mais orientée arbuste : première espèce dont le nom contient bush, shrub, fern, hedge, flower, plant, grass ou reed, sinon la première de la liste. | 124 |
-| `editor_toolUtilities_foliageScatter.defaultSpeciesSelection()` | Choisit une sélection d'espèces par défaut parmi celles du niveau : la première trouvée parmi tree_oak_forest_a, tree_beech_forest_a, tree_aspen_forest_a, sinon la première espèce de la liste. | 111 |
-| `editor_toolUtilities_foliageScatter.ensureForest()` | Renvoie l'objet Forest du niveau et ses données, en créant un Forest vide si le niveau n'en a pas. En cas d'échec, journalise une erreur et renvoie nil, nil. | 81 |
-| `editor_toolUtilities_foliageScatter.getClassOrder()` | Renvoie l'ordre stable des classes pour l'interface : forest, dense, sparse, shrub, orchard. | 545 |
-| `editor_toolUtilities_foliageScatter.getClassPresets()` | Renvoie la table des presets par classe (forest, dense, sparse, shrub, orchard) avec spacingM et scaleVariance. C'est la table interne, non copiée. | 542 |
-| `editor_toolUtilities_foliageScatter.getDefaultDistribution()` | Renvoie une copie fraîche des paramètres de distribution par défaut, pour initialiser une nouvelle zone. | 539 |
-| `editor_toolUtilities_foliageScatter.itemCrownR(fd, obj)` | Rayon de couronne d'un ForestItemData à l'échelle 1 : plus grand côté horizontal de sa boîte englobante autour de l'origine, valable quelle que soit l'orientation. Plante un item temporaire pour obtenir sa boîte, puis le retire. | 70 |
-| `editor_toolUtilities_foliageScatter.lift(lists)` | Sort du forest la plantation vivante d'un outil avant une sauvegarde de niveau (qui écrit le forest tel quel). Mémorise donnée, transform et échelle de chaque item et conserve les emplacements. Renvoie nil s'il n'y a pas de forest. | 169 |
-| `editor_toolUtilities_foliageScatter.listForestItemData()` | Liste triée des noms de ForestItemData du niveau, c'est-à-dire les espèces plantables par les outils. | 96 |
-| `editor_toolUtilities_foliageScatter.plantOne(it, fd, byName)` | Plante un item déjà décidé (espèce, échelle, rotation, position) en le posant sur le terrain, plancher du mesh retiré. Renvoie nil si l'espèce n'existe pas dans le niveau. | 551 |
-| `editor_toolUtilities_foliageScatter.redrape(x0, y0, x1, y1)` | Remet sur le terrain toutes les plantes enregistrées via addDraped situées dans la boîte monde donnée, si leur hauteur diffère de plus de 0.005 m. L'item déplacé est réécrit dans sa liste (updateItem). | 606 |
-| `editor_toolUtilities_foliageScatter.relay(held)` | Remet en place les items retirés par lift, dans les mêmes slots des mêmes listes (nouvelles poignées créées avec createNewItem), une fois la sauvegarde faite. Sans effet si held est nil. | 188 |
-| `editor_toolUtilities_foliageScatter.removeItems(fd, items)` | Retire du forest les items listés (issus d'une dispersion précédente) et vide la table items. | 159 |
-| `editor_toolUtilities_foliageScatter.scatterArea(params)` | Disperse des instances dans un polygone (avec trous éventuels) par candidats à faible discrépance (suite R2) filtrés par espacement minimal, pente maximale et occupation. L'espèce est tirée au hasard pondéré pour chaque instance. Renvoie ({}, 0) si l'anneau a moins de 3 points ou si aucune espèce n'est résolue. | 243 |
-| `editor_toolUtilities_foliageScatter.scatterLine(params)` | Dispose une rangée de plantes régulièrement espacées le long d'une ligne centrale ré-échantillonnée, avec dispersion latérale optionnelle. | 372 |
-| `editor_toolUtilities_foliageScatter.scatterPoints(params)` | Plante exactement une instance à chaque point monde fourni. Par défaut la plante se pose sur le terrain ; avec onPointZ elle se pose sur le z du point (+ zLift), par exemple des buissons dans un bac. | 489 |
-| `editor_toolUtilities_foliageScatter.sowGroups(groups, fd)` | Sème un plan complet : liste de groupes d'ancrage. Un groupe avec items est planté tel quel (plantOne) ; un groupe avec points et species passe par scatterPoints (size -> scaleBase, vary -> scaleVariance, seed défaut 1, drape faux = z du point). | 581 |
+| `editor_toolUtilities_foliageScatter.addDraped(fn)` | Registers an item list provider for re-draping onto the terrain: fn(out) must add to out each item list (a slot can be false). Used by tools whose plants must stay on the ground when it moves. | 602 |
+| `editor_toolUtilities_foliageScatter.defaultShrubSelection()` | Like defaultSpeciesSelection but shrub-oriented: first species whose name contains bush, shrub, fern, hedge, flower, plant, grass or reed, otherwise the first of the list. | 124 |
+| `editor_toolUtilities_foliageScatter.defaultSpeciesSelection()` | Chooses a default species selection among those of the level: the first found among tree_oak_forest_a, tree_beech_forest_a, tree_aspen_forest_a, otherwise the first species of the list. | 111 |
+| `editor_toolUtilities_foliageScatter.ensureForest()` | Returns the level's Forest object and its data, creating an empty Forest if the level has none. On failure, logs an error and returns nil, nil. | 81 |
+| `editor_toolUtilities_foliageScatter.getClassOrder()` | Returns the stable order of the classes for the interface: forest, dense, sparse, shrub, orchard. | 545 |
+| `editor_toolUtilities_foliageScatter.getClassPresets()` | Returns the table of class presets (forest, dense, sparse, shrub, orchard) with spacingM and scaleVariance. It is the internal table, not copied. | 542 |
+| `editor_toolUtilities_foliageScatter.getDefaultDistribution()` | Returns a fresh copy of the default distribution parameters, to initialize a new area. | 539 |
+| `editor_toolUtilities_foliageScatter.itemCrownR(fd, obj)` | Crown radius of a ForestItemData at scale 1: largest horizontal side of its bounding box around the origin, valid whatever the orientation. Plants a temporary item to get its box, then removes it. | 70 |
+| `editor_toolUtilities_foliageScatter.lift(lists)` | Takes a tool's live planting out of the forest before a level save (which writes the forest as is). Stores the data, transform and scale of each item and keeps the slots. Returns nil if there is no forest. | 169 |
+| `editor_toolUtilities_foliageScatter.listForestItemData()` | Sorted list of the level's ForestItemData names, i.e. the species that the tools can plant. | 96 |
+| `editor_toolUtilities_foliageScatter.plantOne(it, fd, byName)` | Plants an already decided item (species, scale, rotation, position) by placing it on the terrain, mesh floor removed. Returns nil if the species does not exist in the level. | 551 |
+| `editor_toolUtilities_foliageScatter.redrape(x0, y0, x1, y1)` | Puts back on the terrain all the plants registered via addDraped located in the given world box, if their height differs by more than 0.005 m. The moved item is rewritten in its list (updateItem). | 606 |
+| `editor_toolUtilities_foliageScatter.relay(held)` | Puts back the items removed by lift, in the same slots of the same lists (new handles created with createNewItem), once the save is done. No effect if held is nil. | 188 |
+| `editor_toolUtilities_foliageScatter.removeItems(fd, items)` | Removes the listed items (from a previous scatter) from the forest and empties the items table. | 159 |
+| `editor_toolUtilities_foliageScatter.scatterArea(params)` | Scatters instances in a polygon (with optional holes) using low-discrepancy candidates (R2 sequence) filtered by minimum spacing, maximum slope and occupancy. The species is drawn by weighted random for each instance. Returns ({}, 0) if the ring has fewer than 3 points or if no species is resolved. | 243 |
+| `editor_toolUtilities_foliageScatter.scatterLine(params)` | Lays out a row of evenly spaced plants along a resampled centerline, with optional lateral scatter. | 372 |
+| `editor_toolUtilities_foliageScatter.scatterPoints(params)` | Plants exactly one instance at each supplied world point. By default the plant is placed on the terrain; with onPointZ it is placed at the point's z (+ zLift), e.g. bushes in a planter. | 489 |
+| `editor_toolUtilities_foliageScatter.sowGroups(groups, fd)` | Sows a complete plan: list of anchor groups. A group with items is planted as is (plantOne); a group with points and species goes through scatterPoints (size -> scaleBase, vary -> scaleVariance, seed default 1, drape false = z of the point). | 581 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_foliageScatter.addDraped(fn)`
 
-Enregistre un fournisseur de listes d'items pour le re-calage au terrain : fn(out) doit ajouter à out chaque liste d'items (un slot peut être false). Sert aux outils dont les plantes doivent rester posées sur le sol quand il bouge.
+Registers an item list provider for re-draping onto the terrain: fn(out) must add to out each item list (a slot can be false). Used by tools whose plants must stay on the ground when it moves.
 
-- `fn` (*function*) : Fonction fn(out) qui ajoute ses listes à out.
+- `fn` (*function*) : Function fn(out) that adds its lists to out.
 
 #### `editor_toolUtilities_foliageScatter.defaultShrubSelection()`
 
-Comme defaultSpeciesSelection mais orientée arbuste : première espèce dont le nom contient bush, shrub, fern, hedge, flower, plant, grass ou reed, sinon la première de la liste.
+Like defaultSpeciesSelection but shrub-oriented: first species whose name contains bush, shrub, fern, hedge, flower, plant, grass or reed, otherwise the first of the list.
 
-- **renvoie** : table<string, boolean> Ensemble { nom = true }.
+- **returns**: table<string, boolean> Set { name = true }.
 
 #### `editor_toolUtilities_foliageScatter.defaultSpeciesSelection()`
 
-Choisit une sélection d'espèces par défaut parmi celles du niveau : la première trouvée parmi tree_oak_forest_a, tree_beech_forest_a, tree_aspen_forest_a, sinon la première espèce de la liste.
+Chooses a default species selection among those of the level: the first found among tree_oak_forest_a, tree_beech_forest_a, tree_aspen_forest_a, otherwise the first species of the list.
 
-- **renvoie** : table<string, boolean> Ensemble { nom = true } (vide si le niveau n'a aucune espèce).
+- **returns**: table<string, boolean> Set { name = true } (empty if the level has no species).
 
 #### `editor_toolUtilities_foliageScatter.ensureForest()`
 
-Renvoie l'objet Forest du niveau et ses données, en créant un Forest vide si le niveau n'en a pas. En cas d'échec, journalise une erreur et renvoie nil, nil.
+Returns the level's Forest object and its data, creating an empty Forest if the level has none. On failure, logs an error and returns nil, nil.
 
-- **renvoie** : userdata|nil Objet Forest.
-- **renvoie** : userdata|nil ForestData (forest:getData()).
+- **returns**: userdata|nil Forest object.
+- **returns**: userdata|nil ForestData (forest:getData()).
 
 #### `editor_toolUtilities_foliageScatter.getClassOrder()`
 
-Renvoie l'ordre stable des classes pour l'interface : forest, dense, sparse, shrub, orchard.
+Returns the stable order of the classes for the interface: forest, dense, sparse, shrub, orchard.
 
-- **renvoie** : string[] Noms de classes.
+- **returns**: string[] Class names.
 
 #### `editor_toolUtilities_foliageScatter.getClassPresets()`
 
-Renvoie la table des presets par classe (forest, dense, sparse, shrub, orchard) avec spacingM et scaleVariance. C'est la table interne, non copiée.
+Returns the table of class presets (forest, dense, sparse, shrub, orchard) with spacingM and scaleVariance. It is the internal table, not copied.
 
-- **renvoie** : table<string, table> Presets.
+- **returns**: table<string, table> Presets.
 
 #### `editor_toolUtilities_foliageScatter.getDefaultDistribution()`
 
-Renvoie une copie fraîche des paramètres de distribution par défaut, pour initialiser une nouvelle zone.
+Returns a fresh copy of the default distribution parameters, to initialize a new area.
 
-- **renvoie** : table { class, spacingM, densityScale, scaleVariance, alignToNormal, slopeMaxDeg, seed }.
+- **returns**: table { class, spacingM, densityScale, scaleVariance, alignToNormal, slopeMaxDeg, seed }.
 
 #### `editor_toolUtilities_foliageScatter.itemCrownR(fd, obj)`
 
-Rayon de couronne d'un ForestItemData à l'échelle 1 : plus grand côté horizontal de sa boîte englobante autour de l'origine, valable quelle que soit l'orientation. Plante un item temporaire pour obtenir sa boîte, puis le retire.
+Crown radius of a ForestItemData at scale 1: largest horizontal side of its bounding box around the origin, valid whatever the orientation. Plants a temporary item to get its box, then removes it.
 
-- `fd` (*userdata*) : ForestData du niveau (celui de forest:getData()).
-- `obj` (*userdata*) : Objet ForestItemData de l'espèce.
-- **renvoie** : number Rayon en mètres, 0 si indisponible.
+- `fd` (*userdata*) : Level ForestData (the one from forest:getData()).
+- `obj` (*userdata*) : ForestItemData object of the species.
+- **returns**: number Radius in meters, 0 if unavailable.
 
 #### `editor_toolUtilities_foliageScatter.lift(lists)`
 
-Sort du forest la plantation vivante d'un outil avant une sauvegarde de niveau (qui écrit le forest tel quel). Mémorise donnée, transform et échelle de chaque item et conserve les emplacements. Renvoie nil s'il n'y a pas de forest.
+Takes a tool's live planting out of the forest before a level save (which writes the forest as is). Stores the data, transform and scale of each item and keeps the slots. Returns nil if there is no forest.
 
-- `lists` (*table[]*) : Liste de listes d'items ; un slot peut être false.
-- **renvoie** : table|nil Jeton 'held' à repasser à relay.
+- `lists` (*table[]*) : List of item lists; a slot can be false.
+- **returns**: table|nil 'held' token to pass back to relay.
 
 #### `editor_toolUtilities_foliageScatter.listForestItemData()`
 
-Liste triée des noms de ForestItemData du niveau, c'est-à-dire les espèces plantables par les outils.
+Sorted list of the level's ForestItemData names, i.e. the species that the tools can plant.
 
-- **renvoie** : string[] Noms triés.
+- **returns**: string[] Sorted names.
 
 #### `editor_toolUtilities_foliageScatter.plantOne(it, fd, byName)`
 
-Plante un item déjà décidé (espèce, échelle, rotation, position) en le posant sur le terrain, plancher du mesh retiré. Renvoie nil si l'espèce n'existe pas dans le niveau.
+Plants an already decided item (species, scale, rotation, position) by placing it on the terrain, mesh floor removed. Returns nil if the species does not exist in the level.
 
-- `it` (*table*) : { x, y, sp (nom d'espèce), s (échelle, défaut 1), rx, ry, a (angles Euler en rad, défaut 0) }.
+- `it` (*table*) : { x, y, sp (species name), s (scale, default 1), rx, ry, a (Euler angles in rad, default 0) }.
 - `fd` (*userdata*) : ForestData.
-- `byName` (*table*) : Cache des espèces entre appels (à fournir, par exemple {}).
-- **renvoie** : userdata|nil Poignée de l'item créé.
+- `byName` (*table*) : Species cache between calls (to be supplied, e.g. {}).
+- **returns**: userdata|nil Handle of the created item.
 
 #### `editor_toolUtilities_foliageScatter.redrape(x0, y0, x1, y1)`
 
-Remet sur le terrain toutes les plantes enregistrées via addDraped situées dans la boîte monde donnée, si leur hauteur diffère de plus de 0.005 m. L'item déplacé est réécrit dans sa liste (updateItem).
+Puts back on the terrain all the plants registered via addDraped located in the given world box, if their height differs by more than 0.005 m. The moved item is rewritten in its list (updateItem).
 
-- `x0` (*number*) : X minimal de la boîte.
-- `y0` (*number*) : Y minimal.
-- `x1` (*number*) : X maximal.
-- `y1` (*number*) : Y maximal.
-- **renvoie** : integer Nombre de plantes déplacées (0 s'il n'y a pas de forest).
+- `x0` (*number*) : Minimum X of the box.
+- `y0` (*number*) : Minimum Y.
+- `x1` (*number*) : Maximum X.
+- `y1` (*number*) : Maximum Y.
+- **returns**: integer Number of moved plants (0 if there is no forest).
 
 #### `editor_toolUtilities_foliageScatter.relay(held)`
 
-Remet en place les items retirés par lift, dans les mêmes slots des mêmes listes (nouvelles poignées créées avec createNewItem), une fois la sauvegarde faite. Sans effet si held est nil.
+Puts back the items removed by lift, in the same slots of the same lists (new handles created with createNewItem), once the save is done. No effect if held is nil.
 
-- `held` (*table|nil*) : Résultat de lift.
+- `held` (*table|nil*) : Result of lift.
 
 #### `editor_toolUtilities_foliageScatter.removeItems(fd, items)`
 
-Retire du forest les items listés (issus d'une dispersion précédente) et vide la table items.
+Removes the listed items (from a previous scatter) from the forest and empties the items table.
 
-- `fd` (*userdata|nil*) : ForestData ; sans effet si nil.
-- `items` (*table|nil*) : Liste de poignées d'items ; les slots false sont ignorés.
+- `fd` (*userdata|nil*) : ForestData; no effect if nil.
+- `items` (*table|nil*) : List of item handles; false slots are ignored.
 
 #### `editor_toolUtilities_foliageScatter.scatterArea(params)`
 
-Disperse des instances dans un polygone (avec trous éventuels) par candidats à faible discrépance (suite R2) filtrés par espacement minimal, pente maximale et occupation. L'espèce est tirée au hasard pondéré pour chaque instance. Renvoie ({}, 0) si l'anneau a moins de 3 points ou si aucune espèce n'est résolue.
+Scatters instances in a polygon (with optional holes) using low-discrepancy candidates (R2 sequence) filtered by minimum spacing, maximum slope and occupancy. The species is drawn by weighted random for each instance. Returns ({}, 0) if the ring has fewer than 3 points or if no species is resolved.
 
-- `params` (*table*) : ring (points du contour, z ignoré), holes (anneaux de trous), forestData (sinon ensureForest), species, speciesWeights, spacingM (min 0.5, défaut 6), densityScale (min 0.01), scaleVariance, scaleBase (min 0.05), alignToNormal (booléen), slopeMaxDeg (défaut 35), seed, occupiedFn, holdFn (true = l'emplacement reste dans le plan mais rien n'est planté, slot false), maxInstances, record (table remplie avec { x, y, sp, s, a, ... } de ce qui est planté).
-- **renvoie** : table Liste des items placés (slots possibles à false avec holdFn).
-- **renvoie** : integer Nombre d'instances placées.
+- `params` (*table*) : ring (outline points, z ignored), holes (hole rings), forestData (otherwise ensureForest), species, speciesWeights, spacingM (min 0.5, default 6), densityScale (min 0.01), scaleVariance, scaleBase (min 0.05), alignToNormal (boolean), slopeMaxDeg (default 35), seed, occupiedFn, holdFn (true = the location stays in the plan but nothing is planted, slot false), maxInstances, record (table filled with { x, y, sp, s, a, ... } of what is planted).
+- **returns**: table List of placed items (slots can be false with holdFn).
+- **returns**: integer Number of placed instances.
 
 #### `editor_toolUtilities_foliageScatter.scatterLine(params)`
 
-Dispose une rangée de plantes régulièrement espacées le long d'une ligne centrale ré-échantillonnée, avec dispersion latérale optionnelle.
+Lays out a row of evenly spaced plants along a resampled centerline, with optional lateral scatter.
 
-- `params` (*table*) : divPoints (ligne), binormals, forestData, species, speciesWeights, spacingM (min 0.5), posVariance (m, dispersion de position), scaleVariance, scaleBase, alignToNormal, slopeMaxDeg (défaut 89), seed, occupiedFn, maxInstances.
-- **renvoie** : table Items placés.
-- **renvoie** : integer Nombre d'instances placées.
+- `params` (*table*) : divPoints (line), binormals, forestData, species, speciesWeights, spacingM (min 0.5), posVariance (m, position scatter), scaleVariance, scaleBase, alignToNormal, slopeMaxDeg (default 89), seed, occupiedFn, maxInstances.
+- **returns**: table Placed items.
+- **returns**: integer Number of placed instances.
 
 #### `editor_toolUtilities_foliageScatter.scatterPoints(params)`
 
-Plante exactement une instance à chaque point monde fourni. Par défaut la plante se pose sur le terrain ; avec onPointZ elle se pose sur le z du point (+ zLift), par exemple des buissons dans un bac.
+Plants exactly one instance at each supplied world point. By default the plant is placed on the terrain; with onPointZ it is placed at the point's z (+ zLift), e.g. bushes in a planter.
 
-- `params` (*table*) : points, forestData, species, speciesWeights, scaleVariance, scaleBase, seed, occupiedFn, onPointZ, zLift, record (voir scatterArea).
-- **renvoie** : table Items placés.
-- **renvoie** : integer Nombre d'instances placées.
+- `params` (*table*) : points, forestData, species, speciesWeights, scaleVariance, scaleBase, seed, occupiedFn, onPointZ, zLift, record (see scatterArea).
+- **returns**: table Placed items.
+- **returns**: integer Number of placed instances.
 
 #### `editor_toolUtilities_foliageScatter.sowGroups(groups, fd)`
 
-Sème un plan complet : liste de groupes d'ancrage. Un groupe avec items est planté tel quel (plantOne) ; un groupe avec points et species passe par scatterPoints (size -> scaleBase, vary -> scaleVariance, seed défaut 1, drape faux = z du point).
+Sows a complete plan: list of anchor groups. A group with items is planted as is (plantOne); a group with points and species goes through scatterPoints (size -> scaleBase, vary -> scaleVariance, seed default 1, drape false = z of the point).
 
-- `groups` (*table[]|nil*) : Groupes { items } ou { points, species, speciesWeights, size, vary, seed, drape }.
-- `fd` (*userdata|nil*) : ForestData (sinon ensureForest).
-- **renvoie** : table Tous les items plantés.
+- `groups` (*table[]|nil*) : Groups { items } or { points, species, speciesWeights, size, vary, seed, drape }.
+- `fd` (*userdata|nil*) : ForestData (otherwise ensureForest).
+- **returns**: table All the planted items.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getObjBox`
 - `scenetree.` `findClassObjects`, `findObject`
 - `worldEditorCppApi.` `createObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/foliageScatter.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/foliageScatter.lua`.*

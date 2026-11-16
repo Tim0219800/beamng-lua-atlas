@@ -1,66 +1,66 @@
 # `telemetry_performanceSpatialConfig.test`
 
-*Fichier : `lua/ge/extensions/telemetry/performanceSpatialConfig.test.lua` · VM : Game Engine (GE) · 89 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/performanceSpatialConfig.test.lua` · VM: Game Engine (GE) · 89 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_performanceSpatialConfig.test` : `extensions.load("telemetry_performanceSpatialConfig.test")`, puis la globale `telemetry_performanceSpatialConfig.test`
+**Access:** extension `telemetry_performanceSpatialConfig.test`: `extensions.load("telemetry_performanceSpatialConfig.test")`, then the global `telemetry_performanceSpatialConfig.test`
 
-Tests unitaires de telemetry/performanceSpatialConfig (runTestFiles("performanceSpatialConfig")).
+Unit tests of telemetry/performanceSpatialConfig (runTestFiles("performanceSpatialConfig")).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_performanceSpatialConfig.test.testAdvancedCollectionDefaultsOff(ctx)` | Vérifie qu'avec une config vide, intervalle 0 et tous les suivis avancés sont désactivés. *(interne)* | 11 |
-| `telemetry_performanceSpatialConfig.test.testDetailedMetricsAreExplicit(ctx)` | Vérifie que sceneComplexityTrackingEnabled et renderTimingTrackingEnabled doivent être activés explicitement. *(interne)* | 48 |
-| `telemetry_performanceSpatialConfig.test.testDipSettingsAreClamped(ctx)` | Vérifie que les seuils de chute hors limites sont ramenés dans leurs bornes. *(interne)* | 71 |
-| `telemetry_performanceSpatialConfig.test.testGameplayExitTrackingIsExplicit(ctx)` | Vérifie que gameplayExitTrackingEnabled doit être mis à true explicitement. *(interne)* | 34 |
-| `telemetry_performanceSpatialConfig.test.testLevelFilterBecomesLookup(ctx)` | Vérifie que la liste levels devient une table de recherche nom -> true. *(interne)* | 60 |
-| `telemetry_performanceSpatialConfig.test.testRecoveryTrackingIsExplicit(ctx)` | Vérifie que recoveryTrackingEnabled doit être mis à true explicitement. *(interne)* | 28 |
-| `telemetry_performanceSpatialConfig.test.testShaderGenerationTrackingIsExplicit(ctx)` | Vérifie que shaderGenerationTrackingEnabled doit être mis à true explicitement. *(interne)* | 41 |
+| `telemetry_performanceSpatialConfig.test.testAdvancedCollectionDefaultsOff(ctx)` | Checks that with an empty config, the interval is 0 and all advanced tracking is disabled. *(internal)* | 11 |
+| `telemetry_performanceSpatialConfig.test.testDetailedMetricsAreExplicit(ctx)` | Checks that sceneComplexityTrackingEnabled and renderTimingTrackingEnabled must be explicitly enabled. *(internal)* | 48 |
+| `telemetry_performanceSpatialConfig.test.testDipSettingsAreClamped(ctx)` | Checks that out-of-range dip thresholds are brought back within their bounds. *(internal)* | 71 |
+| `telemetry_performanceSpatialConfig.test.testGameplayExitTrackingIsExplicit(ctx)` | Checks that gameplayExitTrackingEnabled must be explicitly set to true. *(internal)* | 34 |
+| `telemetry_performanceSpatialConfig.test.testLevelFilterBecomesLookup(ctx)` | Checks that the levels list becomes a lookup table name -> true. *(internal)* | 60 |
+| `telemetry_performanceSpatialConfig.test.testRecoveryTrackingIsExplicit(ctx)` | Checks that recoveryTrackingEnabled must be explicitly set to true. *(internal)* | 28 |
+| `telemetry_performanceSpatialConfig.test.testShaderGenerationTrackingIsExplicit(ctx)` | Checks that shaderGenerationTrackingEnabled must be explicitly set to true. *(internal)* | 41 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_performanceSpatialConfig.test.testAdvancedCollectionDefaultsOff(ctx)`
 
-Vérifie qu'avec une config vide, intervalle 0 et tous les suivis avancés sont désactivés.
+Checks that with an empty config, the interval is 0 and all advanced tracking is disabled.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialConfig.test.testDetailedMetricsAreExplicit(ctx)`
 
-Vérifie que sceneComplexityTrackingEnabled et renderTimingTrackingEnabled doivent être activés explicitement.
+Checks that sceneComplexityTrackingEnabled and renderTimingTrackingEnabled must be explicitly enabled.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialConfig.test.testDipSettingsAreClamped(ctx)`
 
-Vérifie que les seuils de chute hors limites sont ramenés dans leurs bornes.
+Checks that out-of-range dip thresholds are brought back within their bounds.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialConfig.test.testGameplayExitTrackingIsExplicit(ctx)`
 
-Vérifie que gameplayExitTrackingEnabled doit être mis à true explicitement.
+Checks that gameplayExitTrackingEnabled must be explicitly set to true.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialConfig.test.testLevelFilterBecomesLookup(ctx)`
 
-Vérifie que la liste levels devient une table de recherche nom -> true.
+Checks that the levels list becomes a lookup table name -> true.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialConfig.test.testRecoveryTrackingIsExplicit(ctx)`
 
-Vérifie que recoveryTrackingEnabled doit être mis à true explicitement.
+Checks that recoveryTrackingEnabled must be explicitly set to true.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialConfig.test.testShaderGenerationTrackingIsExplicit(ctx)`
 
-Vérifie que shaderGenerationTrackingEnabled doit être mis à true explicitement.
+Checks that shaderGenerationTrackingEnabled must be explicitly set to true.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/performanceSpatialConfig.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/performanceSpatialConfig.test.lua`.*

@@ -1,191 +1,191 @@
 # `gameplay_missions_missionManager`
 
-*Fichier : `lua/ge/extensions/gameplay/missions/missionManager.lua` · VM : Game Engine (GE) · 1544 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/missions/missionManager.lua` · VM: Game Engine (GE) · 1544 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_missions_missionManager` : `extensions.load("gameplay_missions_missionManager")`, puis la globale `gameplay_missions_missionManager`
+**Access:** extension `gameplay_missions_missionManager`: `extensions.load("gameplay_missions_missionManager")`, then the global `gameplay_missions_missionManager`
 
-Chef d'orchestre du démarrage et de l'arrêt des missions. Chaque démarrage ou arrêt est une suite d'étapes (taskData.steps) exécutées image par image dans onUpdate : fondu d'écran, retrait/mise de côté (stash) des véhicules, création du véhicule de la mission, trafic, configuration de l'environnement (heure, nuages, vent, brouillard), puis mission:onStart(). L'arrêt restaure les véhicules, le trafic et l'environnement. Une seule mission « de premier plan » (foreground) peut tourner à la fois. Un moddeur l'appelle pour lancer ou arrêter une mission depuis le code.
+Orchestrator of mission start and stop. Each start or stop is a sequence of steps (taskData.steps) executed frame by frame in onUpdate: screen fade, removal/stashing of vehicles, creation of the mission vehicle, traffic, environment configuration (time, clouds, wind, fog), then mission:onStart(). Stopping restores the vehicles, traffic and environment. Only one "foreground" mission can run at a time. A modder calls it to start or stop a mission from code.
 
-## Exemple
+## Example
 
 ```lua
-local m = gameplay_missions_missions.getMissionById('gridmap_v2/timeTrial/monCircuit')
+local m = gameplay_missions_missions.getMissionById('gridmap_v2/timeTrial/myCircuit')
 gameplay_missions_missionManager.startWithFade(m, {}, {})
--- plus tard
+-- later
 gameplay_missions_missionManager.stop(m, {})
 ```
 
-## Remarques
+## Notes
 
-- Les fonctions de démarrage et d'arrêt renvoient true en cas d'erreur (mission nil, déjà en cours, pas en cours) et nil si une tâche est déjà active (simple avertissement dans le log) ; un nouveau démarrage ou arrêt est refusé tant que taskData.active est vrai (voir isCurrentlyProcessingStep).
-- Chaque étape a un timeout (120 s par défaut, 10 s pour le fondu de départ, 5 s pour le fondu de fin) ; passé ce délai elle est marquée terminée avec une erreur dans le log.
-- Dans taskStartMissionStep, si mission:onStart() renvoie une valeur vraie, _isOngoing est remis à false et une erreur est loguée, mais l'exécution continue : foregroundMissionId est tout de même fixé (sauf mission.background) et le hook onAnyMissionChanged("started") est émis.
-- Hook onAnyMissionChanged : ("started", mission, userSettings, startedFrom) au démarrage ; ("stopped", mission) à l'arrêt. onAnyMissionWillChange : ("stopped", mission, abandoned) juste avant l'arrêt effectif.
-- L'environnement n'est modifié que si mission.setupModules.environment.enabled ; les valeurs d'origine (heure, nuages, vent des nuages, brouillard) sont sauvegardées dans setupModules.environment._original* pour être restaurées. Le vent appliqué aux véhicules est _windVec = (sin(windDirAngle), cos(windDirAngle), 0) * windSpeed.
-- Les véhicules mis de côté peuvent être supprimés puis recréés depuis leurs données de spawn (despawnStashedVehiclesForMission=true) ; en carrière, un véhicule trop endommagé est rangé dans l'inventaire et n'est pas réapparu (toast « vehStoredMission »).
-- startInstant n'a ni vérification mission nil, ni garde « déjà en cours », ni garde « tâche active » contrairement à startWithFade / startAsScenario.
-- allowMissionInteraction est un WIP : renvoie false si core_gamestate.state.state n'est pas « freeroam », true sinon (l'appel dans onUpdate est commenté).
-- Le hook onUpdate de ce module appelle mission:onUpdate pour toutes les missions _isOngoing, seulement quand une mission de premier plan existe, en parcourant gameplay_missions_missions.getAllMissions().
+- The start and stop functions return true on error (mission nil, already running, not running) and nil if a task is already active (simple warning in the log); a new start or stop is refused as long as taskData.active is true (see isCurrentlyProcessingStep).
+- Each step has a timeout (120 s by default, 10 s for the start fade, 5 s for the end fade); after this delay it is marked finished with an error in the log.
+- In taskStartMissionStep, if mission:onStart() returns a truthy value, _isOngoing is set back to false and an error is logged, but execution continues: foregroundMissionId is still set (unless mission.background) and the onAnyMissionChanged("started") hook is emitted.
+- Hook onAnyMissionChanged: ("started", mission, userSettings, startedFrom) on start; ("stopped", mission) on stop. onAnyMissionWillChange: ("stopped", mission, abandoned) just before the actual stop.
+- The environment is only modified if mission.setupModules.environment.enabled; the original values (time, clouds, cloud wind, fog) are saved in setupModules.environment._original* to be restored. The wind applied to vehicles is _windVec = (sin(windDirAngle), cos(windDirAngle), 0) * windSpeed.
+- Stashed vehicles can be removed then recreated from their spawn data (despawnStashedVehiclesForMission=true); in career, a vehicle that is too damaged is put in the inventory and is not respawned ("vehStoredMission" toast).
+- startInstant has no nil mission check, no "already running" guard, and no "active task" guard, unlike startWithFade / startAsScenario.
+- allowMissionInteraction is a WIP: returns false if core_gamestate.state.state is not "freeroam", true otherwise (the call in onUpdate is commented out).
+- This module's onUpdate hook calls mission:onUpdate for all _isOngoing missions, only when a foreground mission exists, iterating over gameplay_missions_missions.getAllMissions().
 
-**Dépendances (chargées avant) :** `gameplay_traffic`, `gameplay_police`, `gameplay_parking`, `ui_fadeScreen`
+**Dependencies (loaded first):** `gameplay_traffic`, `gameplay_police`, `gameplay_parking`, `ui_fadeScreen`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_missions_missionManager.allowMissionInteraction()` | WIP : indique si l'interaction avec les missions est autorisée (true seulement si l'état de jeu est « freeroam »). | 1425 |
-| `gameplay_missions_missionManager.attemptAbandonMissionWithFade(mission, force, abandonButtonPressed)` | Demande l'abandon d'une mission. Émet onGameplayActivityAborted (si abandonButtonPressed) puis onMissionAbandoned(mission, abandonButtonPressed). Si la mission gère elle-même l'abandon (mission:attemptAbandonMission() vrai, p. ex. un flowgraph avec onRequestAbandon), s'arrête là ; sinon lance la séquence d'arrêt avec fondu. | 1301 |
-| `gameplay_missions_missionManager.getCurrentTaskdataTypeOrNil()` | Renvoie le type de tâche en cours ("start" ou "stop"), "start" aussi si un démarrage depuis l'intérieur d'une mission est différé, nil si aucune tâche. | 1529 |
-| `gameplay_missions_missionManager.getForegroundMissionId()` | Id de la mission de premier plan en cours (exclusivité : une seule à la fois), ou nil. | 1541 |
-| `gameplay_missions_missionManager.isCurrentlyProcessingStep()` | Indique si une suite d'étapes de démarrage/arrêt est en cours de traitement. | 1542 |
-| `gameplay_missions_missionManager.onCareerActive()` | Hook appelé à l'activation de la carrière : arrête immédiatement la mission de premier plan (alias de stopForegroundMissionInstantly). *(interne)* *(hook)* | 1513 |
-| `gameplay_missions_missionManager.onClientEndMission()` | Hook appelé à la fin du niveau courant (changement de niveau) : arrête immédiatement la mission de premier plan sans nettoyage (alias de stopForegroundMissionInstantly). Sans rapport avec une fin de mission de gameplay. *(interne)* *(hook)* | 1513 |
-| `gameplay_missions_missionManager.onParkingVehiclesActivated()` | Hook appelé quand des véhicules garés apparaissent sans trafic : même effet que onTrafficStarted. *(interne)* *(hook)* | 1060 |
-| `gameplay_missions_missionManager.onScreenFadeState(state)` | Hook de ui_fadeScreen appelé à chaque phase du fondu. Débloque l'étape qui attend le fondu (fadeState<state> = true) et déclenche l'arrêt de la mission courante pour un démarrage différé. *(interne)* *(hook)* | 1071 |
-| `gameplay_missions_missionManager.onTrafficStarted()` | Hook appelé quand le trafic démarre : valide l'étape qui attend le trafic (waitForTraffic). *(interne)* *(hook)* | 1060 |
-| `gameplay_missions_missionManager.onUpdate(dtReal, dtSim, dtRaw)` | Appelé chaque frame. Avance les étapes de la tâche active (timeouts compris), lance le démarrage différé de startFromWithinMission quand l'arrêt est fini, et appelle mission:onUpdate des missions en cours. Contient une fenêtre de debug imgui (désactivée par défaut). *(interne)* *(hook)* | 1434 |
-| `gameplay_missions_missionManager.start(mission, userSettings, startingOptions)` | Alias de startWithFade : démarre une mission avec fondu d'écran. | 1088 |
-| `gameplay_missions_missionManager.startAsScenario(mission, userSettings)` | Démarre une mission sans fondu ni retrait de véhicules : pré-mission, mise de côté des véhicules, véhicule, trafic, onStart (utilisé quand la mission est lancée comme scénario). | 1153 |
-| `gameplay_missions_missionManager.startFromWithinMission(mission, userSettings, instant)` | Arrête la mission de premier plan puis en démarre une autre (ou la même, reconfigurée) : avec fondu (par défaut) ou instantanément. Le démarrage réel est différé jusqu'à la fin de l'arrêt (traité dans onUpdate). Émet onMissionReconfigured si c'est la même mission. | 1193 |
-| `gameplay_missions_missionManager.startInstant(mission, userSettings, startingOptions)` | Démarre une mission immédiatement avec seulement les étapes pré-mission et onStart (sans toucher aux véhicules). Émet le hook startFromWithinMissionInstant(mission, userSettings, startingOptions). | 1222 |
-| `gameplay_missions_missionManager.startWithFade(mission, userSettings, startingOptions)` | Démarre une mission avec la suite d'étapes complète : fondu, retrait des véhicules, préparation (pré-mission), réparation de départ, instantané de l'état des pièces (sauf skipPartConditionSnapshot), mise de côté des véhicules, véhicule de mission, trafic, puis onStart. Émet le hook onMissionStartWithFade(mission, userSettings). | 1088 |
-| `gameplay_missions_missionManager.startWithLoadingLevel(mission, userSettings, level, startedFrom)` | Charge d'abord le niveau (celui de la mission par défaut), arrête toute mission de premier plan, puis exécute pré-mission, mise de côté des véhicules, véhicule, trafic et onStart. | 1248 |
-| `gameplay_missions_missionManager.stop(mission, data)` | Arrête une mission en cours : onStop de la mission, restauration des véhicules mis de côté, post-traitement, retrait de véhicules, réapparition du véhicule du joueur et du trafic, puis fondu (sauf data.ignoreFade). Émet le hook onMissionStopped(mission). | 1371 |
-| `gameplay_missions_missionManager.stopForegroundMissionInstantly()` | Arrête immédiatement la mission de premier plan (taskStopMissionStep avec stopInstant) sans restaurer véhicules ni environnement. Appelé aussi à la fin du chargement d'un niveau et à l'activation de la carrière. | 1513 |
+| `gameplay_missions_missionManager.allowMissionInteraction()` | WIP: indicates whether interaction with missions is allowed (true only if the game state is "freeroam"). | 1425 |
+| `gameplay_missions_missionManager.attemptAbandonMissionWithFade(mission, force, abandonButtonPressed)` | Requests the abandonment of a mission. Emits onGameplayActivityAborted (if abandonButtonPressed) then onMissionAbandoned(mission, abandonButtonPressed). If the mission handles abandonment itself (mission:attemptAbandonMission() true, e.g. a flowgraph with onRequestAbandon), stops there; otherwise launches the stop sequence with fade. | 1301 |
+| `gameplay_missions_missionManager.getCurrentTaskdataTypeOrNil()` | Returns the type of the current task ("start" or "stop"), "start" also if a start from within a mission is deferred, nil if no task. | 1529 |
+| `gameplay_missions_missionManager.getForegroundMissionId()` | Id of the current foreground mission (exclusive: only one at a time), or nil. | 1541 |
+| `gameplay_missions_missionManager.isCurrentlyProcessingStep()` | Returns whether a start/stop sequence of steps is currently being processed. | 1542 |
+| `gameplay_missions_missionManager.onCareerActive()` | Hook called on career activation: immediately stops the foreground mission (alias of stopForegroundMissionInstantly). *(internal)* *(hook)* | 1513 |
+| `gameplay_missions_missionManager.onClientEndMission()` | Hook called at the end of the current level (level change): immediately stops the foreground mission without cleanup (alias of stopForegroundMissionInstantly). Unrelated to the end of a gameplay mission. *(internal)* *(hook)* | 1513 |
+| `gameplay_missions_missionManager.onParkingVehiclesActivated()` | Hook called when parked vehicles appear without traffic: same effect as onTrafficStarted. *(internal)* *(hook)* | 1060 |
+| `gameplay_missions_missionManager.onScreenFadeState(state)` | ui_fadeScreen hook called at each phase of the fade. Unblocks the step waiting for the fade (fadeState<state> = true) and triggers the stop of the current mission for a deferred start. *(internal)* *(hook)* | 1071 |
+| `gameplay_missions_missionManager.onTrafficStarted()` | Hook called when traffic starts: validates the step waiting for traffic (waitForTraffic). *(internal)* *(hook)* | 1060 |
+| `gameplay_missions_missionManager.onUpdate(dtReal, dtSim, dtRaw)` | Called every frame. Advances the steps of the active task (timeouts included), launches the deferred start of startFromWithinMission when the stop is finished, and calls mission:onUpdate of the running missions. Contains an imgui debug window (disabled by default). *(internal)* *(hook)* | 1434 |
+| `gameplay_missions_missionManager.start(mission, userSettings, startingOptions)` | Alias of startWithFade: starts a mission with a screen fade. | 1088 |
+| `gameplay_missions_missionManager.startAsScenario(mission, userSettings)` | Starts a mission without fade or vehicle removal: pre-mission, vehicle stashing, vehicle, traffic, onStart (used when the mission is launched as a scenario). | 1153 |
+| `gameplay_missions_missionManager.startFromWithinMission(mission, userSettings, instant)` | Stops the foreground mission then starts another (or the same, reconfigured): with a fade (default) or instantly. The actual start is deferred until the stop finishes (handled in onUpdate). Emits onMissionReconfigured if it is the same mission. | 1193 |
+| `gameplay_missions_missionManager.startInstant(mission, userSettings, startingOptions)` | Starts a mission immediately with only the pre-mission and onStart steps (without touching vehicles). Emits the hook startFromWithinMissionInstant(mission, userSettings, startingOptions). | 1222 |
+| `gameplay_missions_missionManager.startWithFade(mission, userSettings, startingOptions)` | Starts a mission with the full sequence of steps: fade, vehicle removal, preparation (pre-mission), starting repair, snapshot of part condition (except skipPartConditionSnapshot), vehicle stashing, mission vehicle, traffic, then onStart. Emits the hook onMissionStartWithFade(mission, userSettings). | 1088 |
+| `gameplay_missions_missionManager.startWithLoadingLevel(mission, userSettings, level, startedFrom)` | First loads the level (the mission's by default), stops any foreground mission, then runs pre-mission, vehicle stashing, vehicle, traffic and onStart. | 1248 |
+| `gameplay_missions_missionManager.stop(mission, data)` | Stops a running mission: the mission's onStop, restoration of stashed vehicles, post-processing, vehicle removal, respawn of the player's vehicle and traffic, then fade (unless data.ignoreFade). Emits the hook onMissionStopped(mission). | 1371 |
+| `gameplay_missions_missionManager.stopForegroundMissionInstantly()` | Immediately stops the foreground mission (taskStopMissionStep with stopInstant) without restoring vehicles or environment. Also called at the end of a level load and on career activation. | 1513 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_missions_missionManager.allowMissionInteraction()`
 
-WIP : indique si l'interaction avec les missions est autorisée (true seulement si l'état de jeu est « freeroam »).
+WIP: indicates whether interaction with missions is allowed (true only if the game state is "freeroam").
 
-- **renvoie** : boolean true si autorisée.
+- **returns**: boolean true if allowed.
 
 #### `gameplay_missions_missionManager.attemptAbandonMissionWithFade(mission, force, abandonButtonPressed)`
 
-Demande l'abandon d'une mission. Émet onGameplayActivityAborted (si abandonButtonPressed) puis onMissionAbandoned(mission, abandonButtonPressed). Si la mission gère elle-même l'abandon (mission:attemptAbandonMission() vrai, p. ex. un flowgraph avec onRequestAbandon), s'arrête là ; sinon lance la séquence d'arrêt avec fondu.
+Requests the abandonment of a mission. Emits onGameplayActivityAborted (if abandonButtonPressed) then onMissionAbandoned(mission, abandonButtonPressed). If the mission handles abandonment itself (mission:attemptAbandonMission() true, e.g. a flowgraph with onRequestAbandon), stops there; otherwise launches the stop sequence with fade.
 
-- `mission` (*table*) : Mission en cours.
-- `force` (*boolean|nil*) : Non utilisé dans le code.
-- `abandonButtonPressed` (*boolean|nil*) : true si le joueur a appuyé sur le bouton d'abandon (data.abandoned = true).
-- **renvoie** : boolean|nil true en cas d'erreur ou si la mission gère l'abandon elle-même.
+- `mission` (*table*) : Running mission.
+- `force` (*boolean|nil*) : Not used in the code.
+- `abandonButtonPressed` (*boolean|nil*) : true if the player pressed the abandon button (data.abandoned = true).
+- **returns**: boolean|nil true on error or if the mission handles abandonment itself.
 
 #### `gameplay_missions_missionManager.getCurrentTaskdataTypeOrNil()`
 
-Renvoie le type de tâche en cours ("start" ou "stop"), "start" aussi si un démarrage depuis l'intérieur d'une mission est différé, nil si aucune tâche.
+Returns the type of the current task ("start" or "stop"), "start" also if a start from within a mission is deferred, nil if no task.
 
-- **renvoie** : string|nil "start", "stop" ou nil.
+- **returns**: string|nil "start", "stop" or nil.
 
 #### `gameplay_missions_missionManager.getForegroundMissionId()`
 
-Id de la mission de premier plan en cours (exclusivité : une seule à la fois), ou nil.
+Id of the current foreground mission (exclusive: only one at a time), or nil.
 
-- **renvoie** : string|nil Id de mission.
+- **returns**: string|nil Mission id.
 
 #### `gameplay_missions_missionManager.isCurrentlyProcessingStep()`
 
-Indique si une suite d'étapes de démarrage/arrêt est en cours de traitement.
+Returns whether a start/stop sequence of steps is currently being processed.
 
-- **renvoie** : boolean true si taskData.active.
+- **returns**: boolean true if taskData.active.
 
 #### `gameplay_missions_missionManager.onScreenFadeState(state)`
 
-Hook de ui_fadeScreen appelé à chaque phase du fondu. Débloque l'étape qui attend le fondu (fadeState<state> = true) et déclenche l'arrêt de la mission courante pour un démarrage différé.
+ui_fadeScreen hook called at each phase of the fade. Unblocks the step waiting for the fade (fadeState<state> = true) and triggers the stop of the current mission for a deferred start.
 
-- `state` (*integer*) : Numéro de phase du fondu (1, 2, 3).
+- `state` (*integer*) : Fade phase number (1, 2, 3).
 
 #### `gameplay_missions_missionManager.onUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé chaque frame. Avance les étapes de la tâche active (timeouts compris), lance le démarrage différé de startFromWithinMission quand l'arrêt est fini, et appelle mission:onUpdate des missions en cours. Contient une fenêtre de debug imgui (désactivée par défaut).
+Called every frame. Advances the steps of the active task (timeouts included), launches the deferred start of startFromWithinMission when the stop is finished, and calls mission:onUpdate of the running missions. Contains an imgui debug window (disabled by default).
 
-- `dtReal` (*number*) : Temps réel (s).
-- `dtSim` (*number*) : Temps de simulation (s).
-- `dtRaw` (*number*) : Temps brut (s).
+- `dtReal` (*number*) : Real time (s).
+- `dtSim` (*number*) : Simulation time (s).
+- `dtRaw` (*number*) : Raw time (s).
 
 #### `gameplay_missions_missionManager.start(mission, userSettings, startingOptions)`
 
-Alias de startWithFade : démarre une mission avec fondu d'écran.
+Alias of startWithFade: starts a mission with a screen fade.
 
-- `mission` (*table*) : Mission construite (gameplay_missions_missions.getMissionById).
-- `userSettings` (*table|nil*) : Réglages utilisateur choisis ({} par défaut).
-- `startingOptions` (*table|nil*) : Options : startedFrom, skipPartConditionSnapshot, etc.
-- **renvoie** : boolean|nil true en cas d'erreur.
+- `mission` (*table*) : Built mission (gameplay_missions_missions.getMissionById).
+- `userSettings` (*table|nil*) : Chosen user settings ({} by default).
+- `startingOptions` (*table|nil*) : Options: startedFrom, skipPartConditionSnapshot, etc.
+- **returns**: boolean|nil true on error.
 
 #### `gameplay_missions_missionManager.startAsScenario(mission, userSettings)`
 
-Démarre une mission sans fondu ni retrait de véhicules : pré-mission, mise de côté des véhicules, véhicule, trafic, onStart (utilisé quand la mission est lancée comme scénario).
+Starts a mission without fade or vehicle removal: pre-mission, vehicle stashing, vehicle, traffic, onStart (used when the mission is launched as a scenario).
 
-- `mission` (*table*) : Mission construite.
-- `userSettings` (*table|nil*) : Réglages utilisateur.
-- **renvoie** : boolean|nil true en cas d'erreur, nil si une tâche est active.
+- `mission` (*table*) : Built mission.
+- `userSettings` (*table|nil*) : User settings.
+- **returns**: boolean|nil true on error, nil if a task is active.
 
 #### `gameplay_missions_missionManager.startFromWithinMission(mission, userSettings, instant)`
 
-Arrête la mission de premier plan puis en démarre une autre (ou la même, reconfigurée) : avec fondu (par défaut) ou instantanément. Le démarrage réel est différé jusqu'à la fin de l'arrêt (traité dans onUpdate). Émet onMissionReconfigured si c'est la même mission.
+Stops the foreground mission then starts another (or the same, reconfigured): with a fade (default) or instantly. The actual start is deferred until the stop finishes (handled in onUpdate). Emits onMissionReconfigured if it is the same mission.
 
-- `mission` (*table*) : Mission à démarrer.
-- `userSettings` (*table|nil*) : Réglages utilisateur.
-- `instant` (*boolean|nil*) : true pour éviter le fondu.
+- `mission` (*table*) : Mission to start.
+- `userSettings` (*table|nil*) : User settings.
+- `instant` (*boolean|nil*) : true to skip the fade.
 
 #### `gameplay_missions_missionManager.startInstant(mission, userSettings, startingOptions)`
 
-Démarre une mission immédiatement avec seulement les étapes pré-mission et onStart (sans toucher aux véhicules). Émet le hook startFromWithinMissionInstant(mission, userSettings, startingOptions).
+Starts a mission immediately with only the pre-mission and onStart steps (without touching vehicles). Emits the hook startFromWithinMissionInstant(mission, userSettings, startingOptions).
 
-- `mission` (*table*) : Mission construite.
-- `userSettings` (*table|nil*) : Réglages utilisateur.
-- `startingOptions` (*table|nil*) : Options de démarrage.
+- `mission` (*table*) : Built mission.
+- `userSettings` (*table|nil*) : User settings.
+- `startingOptions` (*table|nil*) : Start options.
 
 #### `gameplay_missions_missionManager.startWithFade(mission, userSettings, startingOptions)`
 
-Démarre une mission avec la suite d'étapes complète : fondu, retrait des véhicules, préparation (pré-mission), réparation de départ, instantané de l'état des pièces (sauf skipPartConditionSnapshot), mise de côté des véhicules, véhicule de mission, trafic, puis onStart. Émet le hook onMissionStartWithFade(mission, userSettings).
+Starts a mission with the full sequence of steps: fade, vehicle removal, preparation (pre-mission), starting repair, snapshot of part condition (except skipPartConditionSnapshot), vehicle stashing, mission vehicle, traffic, then onStart. Emits the hook onMissionStartWithFade(mission, userSettings).
 
-- `mission` (*table*) : Mission construite.
-- `userSettings` (*table|nil*) : Réglages utilisateur.
-- `startingOptions` (*table|nil*) : Options de démarrage.
-- **renvoie** : boolean|nil true en cas d'erreur (mission nil ou déjà en cours), nil si une tâche est déjà active.
+- `mission` (*table*) : Built mission.
+- `userSettings` (*table|nil*) : User settings.
+- `startingOptions` (*table|nil*) : Start options.
+- **returns**: boolean|nil true on error (mission nil or already running), nil if a task is already active.
 
 #### `gameplay_missions_missionManager.startWithLoadingLevel(mission, userSettings, level, startedFrom)`
 
-Charge d'abord le niveau (celui de la mission par défaut), arrête toute mission de premier plan, puis exécute pré-mission, mise de côté des véhicules, véhicule, trafic et onStart.
+First loads the level (the mission's by default), stops any foreground mission, then runs pre-mission, vehicle stashing, vehicle, traffic and onStart.
 
-- `mission` (*table*) : Mission construite.
-- `userSettings` (*table|nil*) : Réglages utilisateur.
-- `level` (*string|nil*) : Niveau à charger ; par défaut mission.startTrigger.level.
-- `startedFrom` (*string|nil*) : Origine du démarrage (transmise aux hooks).
-- **renvoie** : boolean|nil true en cas d'erreur.
+- `mission` (*table*) : Built mission.
+- `userSettings` (*table|nil*) : User settings.
+- `level` (*string|nil*) : Level to load; mission.startTrigger.level by default.
+- `startedFrom` (*string|nil*) : Origin of the start (passed to the hooks).
+- **returns**: boolean|nil true on error.
 
 #### `gameplay_missions_missionManager.stop(mission, data)`
 
-Arrête une mission en cours : onStop de la mission, restauration des véhicules mis de côté, post-traitement, retrait de véhicules, réapparition du véhicule du joueur et du trafic, puis fondu (sauf data.ignoreFade). Émet le hook onMissionStopped(mission).
+Stops a running mission: the mission's onStop, restoration of stashed vehicles, post-processing, vehicle removal, respawn of the player's vehicle and traffic, then fade (unless data.ignoreFade). Emits the hook onMissionStopped(mission).
 
-- `mission` (*table*) : Mission en cours.
-- `data` (*table|nil*) : Données d'arrêt : ignoreFade, abandoned, attempt, stopInstant...
-- **renvoie** : boolean|nil true en cas d'erreur (mission nil ou non en cours), nil si une tâche est active.
+- `mission` (*table*) : Running mission.
+- `data` (*table|nil*) : Stop data: ignoreFade, abandoned, attempt, stopInstant...
+- **returns**: boolean|nil true on error (mission nil or not running), nil if a task is active.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant : gameplay_traffic, gameplay_police, gameplay_parking, ui_fadeScreen. |
-| `fadeDuration` | number | Durée (s) du fondu d'écran, 0.75 par défaut ; utilisée pour le fondu de démarrage dans startFromWithinMission. |
+| `dependencies` | string[] | Extensions loaded beforehand: gameplay_traffic, gameplay_police, gameplay_parking, ui_fadeScreen. |
+| `fadeDuration` | number | Duration (s) of the screen fade, 0.75 by default; used for the start fade in startFromWithinMission. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onAnyMissionChanged` — écouté par 19 module(s)
-- `onAnyMissionWillChange` — écouté par 2 module(s)
-- `onClientStartMission` — écouté par 40 module(s)
+- `onAnyMissionChanged` — listened to by 19 module(s)
+- `onAnyMissionWillChange` — listened to by 2 module(s)
+- `onClientStartMission` — listened to by 40 module(s)
 - `onGameplayActivityAborted`
-- `onMissionAbandoned` — écouté par 1 module(s)
-- `onMissionReconfigured` — écouté par 1 module(s)
+- `onMissionAbandoned` — listened to by 1 module(s)
+- `onMissionReconfigured` — listened to by 1 module(s)
 - `onMissionStartWithFade`
 - `onMissionStopped`
 - `startFromWithinMissionInstant`
 
-**Évènements UI (guihooks.trigger) :** `toastrMsg`
+**UI events (guihooks.trigger):** `toastrMsg`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 - `be:` `enterVehicle`, `resetTireMarks`
@@ -193,7 +193,7 @@ Arrête une mission en cours : onStop de la mission, restauration des véhicules
 - `obj:` `delete`, `getActive`, `getDirectionVector`, `getDirectionVectorUp`, `getDynDataFieldbyName`, `getField`, `getId`, `getMetallicPaintData`, `getPosition`, `setActive`
 - `scenetree.` `findClassObjects`, `findObject`
 
-**Charge les extensions :** `gameplay_vehiclePerformance`
+**Loads extensions:** `gameplay_vehiclePerformance`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/missions/missionManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/missions/missionManager.lua`.*

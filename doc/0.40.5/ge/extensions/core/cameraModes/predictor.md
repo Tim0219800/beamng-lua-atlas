@@ -1,21 +1,21 @@
 # `core_cameraModes_predictor`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/predictor.lua` · VM : Game Engine (GE) · 26 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/predictor.lua` · VM: Game Engine (GE) · 26 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/predictor")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/predictor")` (file under extensions/ but not a regular extension)
 
-Filtre qui anticipe le mouvement du véhicule : décale data.res.targetPos de dtFuture * data.vel (vitesse du véhicule) puis recalcule la rotation vers cette cible. Masqué. Renvoie un constructeur.
+Filter that anticipates the vehicle's movement: shifts data.res.targetPos by dtFuture * data.vel (vehicle velocity) then recomputes the rotation toward that target. Hidden. Returns a constructor.
 
-## Classe `C`
+## Class `C`
 
-Filtre de prédiction de cible.
+Target prediction filter.
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_predictor")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_predictor")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(dtFuture)` | Définit isFilter, hidden et dtFuture. | 8 |
-| `C:update(data)` | Avance targetPos et met data.res.rot à jour. | 14 |
+| `C:init(dtFuture)` | Sets isFilter, hidden and dtFuture. | 8 |
+| `C:update(data)` | Advances targetPos and updates data.res.rot. | 14 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/predictor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/predictor.lua`.*

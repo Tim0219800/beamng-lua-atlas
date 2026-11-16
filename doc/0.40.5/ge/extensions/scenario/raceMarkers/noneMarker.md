@@ -1,33 +1,33 @@
 # `scenario_raceMarkers_noneMarker`
 
-*Fichier : `lua/ge/extensions/scenario/raceMarkers/noneMarker.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/raceMarkers/noneMarker.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/scenario/raceMarkers/noneMarker")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/scenario/raceMarkers/noneMarker")` (file under extensions/ but not a regular extension)
 
-Marqueur de checkpoint « vide » : il implémente l'interface commune des marqueurs de course (init, update, setToCheckpoint, setMode, setVisibility, hide, show, createMarkers, clearMarkers) sans rien afficher. Sert à désactiver les marqueurs visuels. Le module renvoie un constructeur : require('scenario/raceMarkers/noneMarker')(id) donne un objet de la classe C.
+"Empty" checkpoint marker: it implements the common race marker interface (init, update, setToCheckpoint, setMode, setVisibility, hide, show, createMarkers, clearMarkers) without displaying anything. Used to disable visual markers. The module returns a constructor: require('scenario/raceMarkers/noneMarker')(id) gives an object of class C.
 
-## Remarques
+## Notes
 
-- C:init n'enregistre pas l'identifiant : self.id reste nil. Utilisé via scenario_race_marker.createRaceMarker (qui range le marqueur dans idToMarker[marker.id]), cela produit une clé nil et une erreur Lua : probable bug.
-- Toutes les méthodes sont vides, sauf hide et show qui appellent setVisibility (vide).
+- C:init does not store the identifier: self.id stays nil. Used via scenario_race_marker.createRaceMarker (which stores the marker in idToMarker[marker.id]), this produces a nil key and a Lua error: probable bug.
+- All methods are empty, except hide and show which call setVisibility (empty).
 
-## Classe `C`
+## Class `C`
 
-Marqueur sans effet visuel, interface identique aux autres marqueurs de course.
+Marker with no visual effect, same interface as the other race markers.
 
-Le module renvoie un constructeur : `local obj = require("scenario_raceMarkers_noneMarker")(options)`.
+The module returns a constructor: `local obj = require("scenario_raceMarkers_noneMarker")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearMarkers()` | Ne supprime rien. | 35 |
-| `C:createMarkers()` | Ne crée aucun objet. | 31 |
-| `C:hide()` | Appelle setVisibility(false). | 27 |
-| `C:init(id)` | Constructeur appelé par le module : ne fait rien (l'id n'est pas mémorisé). | 8 |
-| `C:setMode(mode)` | Ne fait rien. | 20 |
-| `C:setToCheckpoint(wp, mode)` | Ne fait rien. | 17 |
-| `C:setVisibility(v)` | Ne fait rien. | 24 |
-| `C:show()` | Appelle setVisibility(true). | 28 |
-| `C:update()` | Appel par image : ne fait rien. | 12 |
+| `C:clearMarkers()` | Removes nothing. | 35 |
+| `C:createMarkers()` | Creates no object. | 31 |
+| `C:hide()` | Calls setVisibility(false). | 27 |
+| `C:init(id)` | Constructor called by the module: does nothing (the id is not stored). | 8 |
+| `C:setMode(mode)` | Does nothing. | 20 |
+| `C:setToCheckpoint(wp, mode)` | Does nothing. | 17 |
+| `C:setVisibility(v)` | Does nothing. | 24 |
+| `C:show()` | Calls setVisibility(true). | 28 |
+| `C:update()` | Per-frame call: does nothing. | 12 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/raceMarkers/noneMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/raceMarkers/noneMarker.lua`.*

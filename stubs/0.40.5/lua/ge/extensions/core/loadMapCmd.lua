@@ -2,60 +2,60 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/loadMapCmd.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_loadMapCmd` : exécute la commande de lancement 'openMap' (lien du type beamng:v1/openMap/{level:"levels/gridmap/info.json",camPos:[x,y,z],camRot:[x,y,z,w]}). Elle attend que le gestionnaire de mods soit prêt, démarre le niveau demandé en freeroam, puis, une fois le monde prêt, place la caméra libre, règle le FOV, l'heure et charge éventuellement une piste (trackBuilder). Le moddeur s'en sert rarement directement, mais peut appeler set() pour ouvrir une carte avec une caméra donnée.
---- Accès : extension `core_loadMapCmd` : `extensions.load("core_loadMapCmd")`, puis la globale `core_loadMapCmd`
+--- GE extension `core_loadMapCmd`: executes the 'openMap' launch command (link of the form beamng:v1/openMap/{level:"levels/gridmap/info.json",camPos:[x,y,z],camRot:[x,y,z,w]}). It waits for the mod manager to be ready, starts the requested level in freeroam, then, once the world is ready, places the free camera, sets the FOV, the time and optionally loads a track (trackBuilder). A modder rarely uses it directly, but can call set() to open a map with a given camera.
+--- Access: extension `core_loadMapCmd`: `extensions.load("core_loadMapCmd")`, then the global `core_loadMapCmd`
 ---@class core_loadMapCmd
 core_loadMapCmd = {}
 
---- Hook appelé après le démarrage d'un niveau ; ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/loadMapCmd.lua:89
+--- Hook called after a level starts; does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/loadMapCmd.lua:89
 function core_loadMapCmd.onClientPostStartMission() end
 
---- Après un rechargement Lua : restaure le drapeau ignoreStartupCmd.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/loadMapCmd.lua:133
----@param d table Table renvoyée par onSerialize.
+--- After a Lua reload: restores the ignoreStartupCmd flag.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/loadMapCmd.lua:133
+---@param d table Table returned by onSerialize.
 function core_loadMapCmd.onDeserialized(d) end
 
---- Hook appelé au chargement de l'extension ; ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/loadMapCmd.lua:79
+--- Hook called when the extension loads; does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/loadMapCmd.lua:79
 function core_loadMapCmd.onExtensionLoaded() end
 
---- Hook appelé au déchargement de l'extension ; ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/loadMapCmd.lua:82
+--- Hook called when the extension unloads; does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/loadMapCmd.lua:82
 function core_loadMapCmd.onExtensionUnloaded() end
 
---- Hook émis par core_modmanager quand les mods sont montés : relance la tentative de changement de carte.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/loadMapCmd.lua:85
+--- Hook emitted by core_modmanager when the mods are mounted: retries the map change.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/loadMapCmd.lua:85
 function core_loadMapCmd.onModManagerReady() end
 
---- Avant un rechargement Lua : renvoie { ignoreStartupCmd = true } pour ne pas rejouer la commande de lancement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/loadMapCmd.lua:129
+--- Before a Lua reload: returns { ignoreStartupCmd = true } so the launch command is not replayed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/loadMapCmd.lua:129
 ---@return table  { ignoreStartupCmd = true }
 function core_loadMapCmd.onSerialize() end
 
---- Hook appelé à chaque frame : retente le changement de carte tant qu'il est en attente.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/loadMapCmd.lua:93
----@param dtReal number Temps réel écoulé (s), non utilisé.
----@param dtSim number Temps de simulation écoulé (s), non utilisé.
----@param dtRaw number Temps brut (s), non utilisé.
+--- Hook called on every frame: retries the map change as long as it is pending.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/loadMapCmd.lua:93
+---@param dtReal number Elapsed real time (s), unused.
+---@param dtSim number Elapsed simulation time (s), unused.
+---@param dtRaw number Raw time (s), unused.
 function core_loadMapCmd.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook appelé quand l'état du monde change. À l'état 2 (monde prêt), applique camPos/camRot (caméra libre), fov, timeOfDay et charge la piste demandée, puis oublie la commande.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/loadMapCmd.lua:97
----@param state integer Étape de chargement ; seule la valeur 2 déclenche l'action.
+--- Hook called when the world state changes. At state 2 (world ready), applies camPos/camRot (free camera), fov, timeOfDay and loads the requested track, then forgets the command.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/loadMapCmd.lua:97
+---@param state integer Loading step; only the value 2 triggers the action.
 function core_loadMapCmd.onWorldReadyState(state) end
 
---- Enregistre une commande d'ouverture de carte et tente de la lancer (la carte démarre dès que la cible existe et que les mods sont prêts).
----Source : lua/ge/extensions/core/loadMapCmd.lua:64
----@param data table|nil Voir notes : { level, camPos, camRot, fov, timeOfDay, track }. nil : ne fait rien.
----@param startCmd boolean|nil Vrai si la commande vient de la ligne de commande de démarrage : ignorée après un rechargement Lua.
+--- Registers a map opening command and tries to launch it (the map starts as soon as the target exists and the mods are ready).
+---Source: lua/ge/extensions/core/loadMapCmd.lua:64
+---@param data table|nil See notes: { level, camPos, camRot, fov, timeOfDay, track }. nil: does nothing.
+---@param startCmd boolean|nil True if the command comes from the startup command line: ignored after a Lua reload.
 function core_loadMapCmd.set(data, startCmd) end
 

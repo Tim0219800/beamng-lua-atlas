@@ -1,0 +1,53 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/pathFromFile.lua",
+  "module": "Nœud « AI Path from File » (catégorie provider, couleur ai). Fournit un chemin ScriptAI chargé depuis un fichier de piste /replays/scriptai/tracks/*.track.json choisi dans l'inspecteur (bouton « Refresh Files » pour relister). Sortie : path (type aiPath), c'est le champ « recording » du fichier. À brancher sur « AI Follow Path from Data ».",
+  "notes": [
+    "Si aucun fichier n'est choisi ou si la lecture échoue, loadedFile reste nil et work lève une erreur (loadedFile.recording).",
+    "jsonReadFile reçoit le premier retour de mgr:getRelativeAbsolutePath (le chemin résolu)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Liste les fichiers de piste (FS:findFiles) et initialise nom et fichier chargé.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Ne fait rien.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine le bouton « Refresh Files » et la liste déroulante des fichiers de piste.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Charge le fichier avec jsonReadFile s'il ne l'est pas encore et publie loadedFile.recording sur path.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche le nom court du fichier et son état de chargement.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Constructeur de nœud."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style du nœud."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde le nom de fichier.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure le nom de fichier et recalcule le nom court.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,60 +1,60 @@
 # `editor_roadDecorations`
 
-*Fichier : `lua/ge/extensions/editor/roadDecorations.lua` · VM : Game Engine (GE) · 183 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadDecorations.lua` · VM: Game Engine (GE) · 183 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadDecorations` : `extensions.load("editor_roadDecorations")`, puis la globale `editor_roadDecorations`
+**Access:** extension `editor_roadDecorations`: `extensions.load("editor_roadDecorations")`, then the global `editor_roadDecorations`
 
-Place automatiquement des objets décoratifs (TSStatic, par exemple des réflecteurs ou des poteaux) de chaque côté d'un DecalRoad, à intervalle régulier. Les objets sont posés sur la hauteur du terrain, enregistrés sous « decoration.<route>.<fichier>.<n> » et regroupés dans un SimGroup ajouté à MissionGroup. Un moddeur l'appelle depuis un script d'éditeur.
+Automatically places decorative objects (TSStatic, for example reflectors or posts) on each side of a DecalRoad, at regular intervals. The objects are placed at terrain height, registered under "decoration.<road>.<file>.<n>" and grouped in a SimGroup added to MissionGroup. A modder calls it from an editor script.
 
-## Exemple
+## Example
 
 ```lua
--- un réflecteur à 2 m du bord, tous les 25 m, côtés gauche/droit alignés
+-- a reflector 2 m from the edge, every 25 m, left/right sides aligned
 local grp = editor_roadDecorations.decorateProps('myRoad', 'levels/driver_training/art/shapes/objects/reflector.dae', 2, 25, nil, 0, true)
 ```
 
-## Remarques
+## Notes
 
-- BUG : le nom du groupe est construit avec string.format('decorations.%d', tostring(roadName)) ; %d exige un nombre, donc un nom de route non numérique (chaîne) fait lever une erreur. Seul un nom numérique (ex. "9459") fonctionne.
-- La documentation du code dit que la fonction renvoie la table des objets créés, mais elle renvoie en fait group:getID() (identifiant du SimGroup) ; la table props est construite mais jamais renvoyée. Renvoie nil si la route n'existe pas.
-- Les props sont orientés parallèlement à la route (quatFromDir de la direction à plat) ; le paramètre rotation est un quaternion multiplié à cette rotation (déduit du code), nil pour aucune.
-- Chaque ligne a 2 objets (droite puis gauche) par pas ; la boucle s'arrête quand l'un des deux côtés dépasse la fin de la route.
+- BUG: the group name is built with string.format('decorations.%d', tostring(roadName)); %d requires a number, so a non-numeric road name (string) raises an error. Only a numeric name (e.g. "9459") works.
+- The code documentation says the function returns the table of created objects, but it actually returns group:getID() (the SimGroup identifier); the props table is built but never returned. Returns nil if the road does not exist.
+- The props are oriented parallel to the road (quatFromDir of the flattened direction); the rotation parameter is a quaternion multiplied with this rotation (inferred from code), nil for none.
+- Each row has 2 objects (right then left) per step; the loop stops when either side goes past the end of the road.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadDecorations.decorateProps(roadName, shapeName, distance, period, rotation, zOff, align)` | Crée un SimGroup et y place, tous les `period` mètres, un TSStatic de chaque côté de la route (collisionType 'Collision Mesh', échelle 1). Les positions sont recalées sur le terrain (core_terrain.getTerrainHeight) puis décalées de zOff. | 112 |
-| `editor_roadDecorations.findOffsetPoint(spline, length, distance, left)` | Cherche sur une polyligne (bord de route) le point situé à la longueur donnée depuis le début, puis le décale latéralement. Renvoie nil si la longueur dépasse la polyligne. | 7 |
+| `editor_roadDecorations.decorateProps(roadName, shapeName, distance, period, rotation, zOff, align)` | Creates a SimGroup and places in it, every `period` meters, a TSStatic on each side of the road (collisionType 'Collision Mesh', scale 1). The positions are snapped to the terrain (core_terrain.getTerrainHeight) then offset by zOff. | 112 |
+| `editor_roadDecorations.findOffsetPoint(spline, length, distance, left)` | Searches a polyline (road edge) for the point located at the given length from the start, then offsets it laterally. Returns nil if the length exceeds the polyline. | 7 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadDecorations.decorateProps(roadName, shapeName, distance, period, rotation, zOff, align)`
 
-Crée un SimGroup et y place, tous les `period` mètres, un TSStatic de chaque côté de la route (collisionType 'Collision Mesh', échelle 1). Les positions sont recalées sur le terrain (core_terrain.getTerrainHeight) puis décalées de zOff.
+Creates a SimGroup and places in it, every `period` meters, a TSStatic on each side of the road (collisionType 'Collision Mesh', scale 1). The positions are snapped to the terrain (core_terrain.getTerrainHeight) then offset by zOff.
 
-- `roadName` (*string|integer*) : Nom unique du DecalRoad (voir bug : doit être numérique).
-- `shapeName` (*string*) : Chemin du fichier .dae à placer.
-- `distance` (*number*) : Décalage latéral par rapport au bord de la route, en mètres.
-- `period` (*number*) : Intervalle entre deux paires d'objets, en mètres.
-- `rotation` (*quat|nil*) : Rotation supplémentaire appliquée aux objets (nil = aucune).
-- `zOff` (*number*) : Décalage vertical ajouté à la hauteur du terrain.
-- `align` (*boolean*) : true : le côté gauche est placé à l'opposé exact du côté droit (même longueur de route).
-- **renvoie** : integer|nil Identifiant du SimGroup créé, ou nil si la route n'existe pas.
+- `roadName` (*string|integer*) : Unique name of the DecalRoad (see bug: must be numeric).
+- `shapeName` (*string*) : Path of the .dae file to place.
+- `distance` (*number*) : Lateral offset from the road edge, in meters.
+- `period` (*number*) : Interval between two pairs of objects, in meters.
+- `rotation` (*quat|nil*) : Extra rotation applied to the objects (nil = none).
+- `zOff` (*number*) : Vertical offset added to the terrain height.
+- `align` (*boolean*) : true: the left side is placed as the exact opposite of the right side (same road length).
+- **returns**: integer|nil Identifier of the created SimGroup, or nil if the road does not exist.
 
 #### `editor_roadDecorations.findOffsetPoint(spline, length, distance, left)`
 
-Cherche sur une polyligne (bord de route) le point situé à la longueur donnée depuis le début, puis le décale latéralement. Renvoie nil si la longueur dépasse la polyligne.
+Searches a polyline (road edge) for the point located at the given length from the start, then offsets it laterally. Returns nil if the length exceeds the polyline.
 
-- `spline` (*table<integer, vec3>*) : Points du bord de la route (au moins 2).
-- `length` (*number*) : Distance depuis le début, en mètres.
-- `distance` (*number*) : Décalage latéral vers l'extérieur de la route, en mètres.
-- `left` (*boolean*) : true pour le bord gauche (direction inversée), false pour le bord droit.
-- **renvoie** : table|nil {point = vec3 décalé, rotation = quat, edgePos = vec3 sur le bord, edgeIdx = integer (indice C++, base 0)} ou nil.
+- `spline` (*table<integer, vec3>*) : Points of the road edge (at least 2).
+- `length` (*number*) : Distance from the start, in meters.
+- `distance` (*number*) : Lateral offset toward the outside of the road, in meters.
+- `left` (*boolean*) : true for the left edge (reversed direction), false for the right edge.
+- **returns**: table|nil {point = offset vec3, rotation = quat, edgePos = vec3 on the edge, edgeIdx = integer (C++ index, 0-based)} or nil.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadDecorations.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadDecorations.lua`.*

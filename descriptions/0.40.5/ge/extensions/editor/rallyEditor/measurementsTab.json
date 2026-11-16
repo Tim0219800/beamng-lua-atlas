@@ -1,167 +1,306 @@
 {
   "path": "lua/ge/extensions/editor/rallyEditor/measurementsTab.lua",
-  "module": "Onglet « Measurements » de l'éditeur de rallye : outil de mesure de distances le long de la route (snaproad). L'utilisateur crée des mesures, y clique des points dans la vue 3D (accrochés à la snaproad à moins de 5 m), les réordonne, les déplace par glisser, et lit la distance totale, soit en suivant la route (option « Follow Route »), soit en ligne droite. Les mesures sont sauvegardées automatiquement dans <mission>/measurements.json. Le module renvoie un constructeur (classe C).",
+  "module": "\"Measurements\" tab of the rally editor: a tool for measuring distances along the road (snaproad). The user creates measurements, clicks points in the 3D view (snapped to the snaproad within 5 m), reorders them, moves them by dragging, and reads the total distance, either following the road (\"Follow Route\" option) or in a straight line. Measurements are saved automatically in <mission>/measurements.json. The module returns a constructor (class C).",
   "notes": [
-    "Format du fichier measurements.json : { measurements = { [\"id\"] = {id, name, points = [{x,y,z}], followRoute, color = {r,g,b}, textColor = {r,g,b}} }, nextMeasurementId, updatedAt }.",
-    "Distances en mètres. La couleur d'une nouvelle mesure est aléatoire (HSV vive) et la couleur du texte est noire ou blanche selon la luminance.",
-    "Rayon de sélection d'un point : 8 m (pointSelectRadius). Sans snaproad, les points ne sont pas accrochés.",
-    "Chaque modification (création, suppression, ajout/retrait/déplacement de point) appelle saveMeasurements(). updateMeasurement (renommage) ne sauvegarde pas immédiatement.",
-    "getMeasurementsFilePath() utilise rallyEditor.getMissionDir(), alors que les autres onglets utilisent getCurrentMissionDir()."
+    "Format of the measurements.json file: { measurements = { [\"id\"] = {id, name, points = [{x,y,z}], followRoute, color = {r,g,b}, textColor = {r,g,b}} }, nextMeasurementId, updatedAt }.",
+    "Distances in meters. A new measurement's color is random (vivid HSV) and the text color is black or white depending on luminance.",
+    "Point selection radius: 8 m (pointSelectRadius). Without a snaproad, points are not snapped.",
+    "Each modification (creation, deletion, point add/remove/move) calls saveMeasurements(). updateMeasurement (renaming) does not save immediately.",
+    "getMeasurementsFilePath() uses rallyEditor.getMissionDir(), whereas the other tabs use getCurrentMissionDir()."
   ],
   "classes": {
     "C": {
-      "desc": "Objet onglet renvoyé par le constructeur (new(rallyEditor)). Champs : measurements (table id -> mesure {id, name, points (vec3), totalDistance, followRoute, color, textColor}), selectedMeasurementId, selectedPointIndex, nextMeasurementId, snaproad, updatedAt. windowDescription = 'Measurements'.",
+      "desc": "Tab object returned by the constructor (new(rallyEditor)). Fields: measurements (table id -> measurement {id, name, points (vec3), totalDistance, followRoute, color, textColor}), selectedMeasurementId, selectedPointIndex, nextMeasurementId, snaproad, updatedAt. windowDescription = 'Measurements'.",
       "functions": {
         "init": {
-          "desc": "Constructeur interne : initialise les mesures et l'état d'interaction (survol, glisser).",
-          "params": {"rallyEditor": {"type": "table", "desc": "Instance de l'éditeur de rallye."}},
+          "desc": "Internal constructor: initializes the measurements and the interaction state (hover, drag).",
+          "params": {
+            "rallyEditor": {
+              "type": "table",
+              "desc": "Rally editor instance."
+            }
+          },
           "internal": true
         },
         "clearState": {
-          "desc": "Vide les mesures, la sélection et l'état d'interaction.",
+          "desc": "Clears the measurements, the selection and the interaction state.",
           "internal": true
         },
         "getMeasurementsFilePath": {
-          "desc": "Chemin du fichier measurements.json dans le dossier de la mission.",
-          "returns": [{"type": "string|nil", "desc": "Chemin, ou nil (avec erreur au log) sans dossier de mission."}],
+          "desc": "Path of the measurements.json file in the mission folder.",
+          "returns": [
+            {
+              "type": "string|nil",
+              "desc": "Path, or nil (with a log error) without a mission folder."
+            }
+          ],
           "internal": false
         },
         "serialize": {
-          "desc": "Convertit les mesures en table compatible JSON (les points vec3 deviennent {x,y,z}).",
-          "returns": [{"type": "table", "desc": "{measurements, nextMeasurementId, updatedAt}."}],
+          "desc": "Converts the measurements to a JSON-compatible table (vec3 points become {x,y,z}).",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "{measurements, nextMeasurementId, updatedAt}."
+            }
+          ],
           "internal": false
         },
         "deserialize": {
-          "desc": "Reconstruit les mesures depuis les données JSON, avec couleurs par défaut (jaune / noir), et recalcule nextMeasurementId (plus grand id + 1).",
-          "params": {"data": {"type": "table|nil", "desc": "Données lues du fichier ; rien n'est fait si nil."}},
+          "desc": "Rebuilds the measurements from the JSON data, with default colors (yellow / black), and recomputes nextMeasurementId (largest id + 1).",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "Data read from the file; nothing is done if nil."
+            }
+          },
           "internal": false
         },
         "saveMeasurements": {
-          "desc": "Met à jour updatedAt et écrit le fichier measurements.json (sauvegarde automatique).",
-          "returns": [{"type": "boolean", "desc": "false si le chemin du fichier est inconnu."}],
+          "desc": "Updates updatedAt and writes the measurements.json file (automatic save).",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false if the file path is unknown."
+            }
+          ],
           "internal": false
         },
         "loadMeasurements": {
-          "desc": "Lit measurements.json s'il existe (updatedAt pris dans la date du fichier s'il manque), désérialise puis recalcule les distances.",
-          "returns": [{"type": "boolean", "desc": "true si le fichier a été chargé."}],
+          "desc": "Reads measurements.json if it exists (updatedAt taken from the file date if missing), deserializes then recomputes the distances.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if the file was loaded."
+            }
+          ],
           "internal": false
         },
         "setPath": {
-          "desc": "Définit le carnet courant (le commentaire du code note que « path » désigne en fait le carnet).",
-          "params": {"path": {"type": "table", "desc": "Carnet."}},
+          "desc": "Sets the current notebook (the code comment notes that \"path\" actually refers to the notebook).",
+          "params": {
+            "path": {
+              "type": "table",
+              "desc": "Notebook."
+            }
+          },
           "internal": true
         },
         "setSnaproad": {
-          "desc": "Définit la snaproad utilisée pour l'accrochage et le calcul des distances.",
-          "params": {"snaproad": {"type": "table|nil", "desc": "Objet snaproad."}},
+          "desc": "Sets the snaproad used for snapping and distance computation.",
+          "params": {
+            "snaproad": {
+              "type": "table|nil",
+              "desc": "Snaproad object."
+            }
+          },
           "internal": false
         },
         "selected": {
-          "desc": "Appelée par l'éditeur quand l'onglet est sélectionné : récupère la snaproad de la fenêtre pacenotes, charge measurements.json et émet onEditorEditModeChanged(nil, nil).",
+          "desc": "Called by the editor when the tab is selected: fetches the snaproad from the pacenotes window, loads measurements.json and emits onEditorEditModeChanged(nil, nil).",
           "internal": true
         },
         "unselect": {
-          "desc": "Appelée quand l'onglet est quitté : émet onEditorEditModeChanged(nil, nil).",
+          "desc": "Called when the tab is left: emits onEditorEditModeChanged(nil, nil).",
           "internal": true
         },
         "drawDebugEntrypoint": {
-          "desc": "Rendu 3D appelé à chaque image : dessine la snaproad (noire) puis les points et lignes de mesure.",
+          "desc": "3D rendering called every frame: draws the snaproad (black) then the measurement points and lines.",
           "internal": true
         },
         "drawMeasurementPoints": {
-          "desc": "Dessine en 3D les points (sphères), les segments, le suivi de route et les libellés de distance de chaque mesure.",
+          "desc": "Draws in 3D the points (spheres), segments, route following and distance labels of each measurement.",
           "internal": true
         },
         "createMeasurement": {
-          "desc": "Crée une mesure vide (followRoute = true, couleur aléatoire), la sélectionne et sauvegarde.",
-          "params": {"name": {"type": "string|nil", "desc": "Nom ; par défaut « Measurement <id> »."}},
-          "returns": [{"type": "table", "desc": "La mesure créée."}],
+          "desc": "Creates an empty measurement (followRoute = true, random color), selects it and saves.",
+          "params": {
+            "name": {
+              "type": "string|nil",
+              "desc": "Name; default \"Measurement <id>\"."
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "The created measurement."
+            }
+          ],
           "internal": false
         },
         "getMeasurement": {
-          "desc": "Renvoie une mesure par identifiant.",
-          "params": {"measurementId": {"type": "integer", "desc": "Identifiant."}},
-          "returns": [{"type": "table|nil", "desc": "Mesure, ou nil."}],
+          "desc": "Returns a measurement by identifier.",
+          "params": {
+            "measurementId": {
+              "type": "integer",
+              "desc": "Identifier."
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Measurement, or nil."
+            }
+          ],
           "internal": false
         },
         "updateMeasurement": {
-          "desc": "Renomme une mesure (sans sauvegarde immédiate).",
+          "desc": "Renames a measurement (no immediate save).",
           "params": {
-            "measurementId": {"type": "integer", "desc": "Identifiant."},
-            "name": {"type": "string", "desc": "Nouveau nom."}
+            "measurementId": {
+              "type": "integer",
+              "desc": "Identifier."
+            },
+            "name": {
+              "type": "string",
+              "desc": "New name."
+            }
           },
           "internal": false
         },
         "deleteMeasurement": {
-          "desc": "Supprime une mesure, désélectionne si besoin, recalcule nextMeasurementId et sauvegarde.",
-          "params": {"measurementId": {"type": "integer", "desc": "Identifiant."}},
+          "desc": "Deletes a measurement, deselects if needed, recomputes nextMeasurementId and saves.",
+          "params": {
+            "measurementId": {
+              "type": "integer",
+              "desc": "Identifier."
+            }
+          },
           "internal": false
         },
         "selectMeasurement": {
-          "desc": "Sélectionne une mesure et annule la sélection de point.",
-          "params": {"measurementId": {"type": "integer|nil", "desc": "Identifiant."}},
+          "desc": "Selects a measurement and clears the point selection.",
+          "params": {
+            "measurementId": {
+              "type": "integer|nil",
+              "desc": "Identifier."
+            }
+          },
           "internal": false
         },
         "addPointToMeasurement": {
-          "desc": "Ajoute un point en fin de mesure, le sélectionne, recalcule la distance et sauvegarde.",
+          "desc": "Adds a point at the end of the measurement, selects it, recomputes the distance and saves.",
           "params": {
-            "measurementId": {"type": "integer", "desc": "Identifiant."},
-            "point": {"type": "vec3", "desc": "Position monde."}
+            "measurementId": {
+              "type": "integer",
+              "desc": "Identifier."
+            },
+            "point": {
+              "type": "vec3",
+              "desc": "World position."
+            }
           },
           "internal": false
         },
         "removePointFromMeasurement": {
-          "desc": "Retire un point (ajuste l'indice sélectionné), recalcule la distance et sauvegarde.",
+          "desc": "Removes a point (adjusts the selected index), recomputes the distance and saves.",
           "params": {
-            "measurementId": {"type": "integer", "desc": "Identifiant."},
-            "pointIndex": {"type": "integer", "desc": "Indice du point (à partir de 1)."}
+            "measurementId": {
+              "type": "integer",
+              "desc": "Identifier."
+            },
+            "pointIndex": {
+              "type": "integer",
+              "desc": "Point index (1-based)."
+            }
           },
           "internal": false
         },
         "movePointUp": {
-          "desc": "Échange le point avec le précédent (indice - 1), recalcule et sauvegarde.",
+          "desc": "Swaps the point with the previous one (index - 1), recomputes and saves.",
           "params": {
-            "measurementId": {"type": "integer", "desc": "Identifiant."},
-            "pointIndex": {"type": "integer", "desc": "Indice du point."}
+            "measurementId": {
+              "type": "integer",
+              "desc": "Identifier."
+            },
+            "pointIndex": {
+              "type": "integer",
+              "desc": "Point index."
+            }
           },
           "internal": false
         },
         "movePointDown": {
-          "desc": "Échange le point avec le suivant (indice + 1), recalcule et sauvegarde.",
+          "desc": "Swaps the point with the next one (index + 1), recomputes and saves.",
           "params": {
-            "measurementId": {"type": "integer", "desc": "Identifiant."},
-            "pointIndex": {"type": "integer", "desc": "Indice du point."}
+            "measurementId": {
+              "type": "integer",
+              "desc": "Identifier."
+            },
+            "pointIndex": {
+              "type": "integer",
+              "desc": "Point index."
+            }
           },
           "internal": false
         },
         "calculateMeasurementDistance": {
-          "desc": "Calcule et stocke totalDistance en mètres. Avec followRoute et une snaproad, la distance suit la route entre points consécutifs ; sinon c'est la somme des distances directes. 0 s'il y a moins de 2 points.",
-          "params": {"measurementId": {"type": "integer", "desc": "Identifiant."}},
-          "returns": [{"type": "number", "desc": "Distance totale en mètres."}],
+          "desc": "Computes and stores totalDistance in meters. With followRoute and a snaproad, the distance follows the road between consecutive points; otherwise it is the sum of the direct distances. 0 if there are fewer than 2 points.",
+          "params": {
+            "measurementId": {
+              "type": "integer",
+              "desc": "Identifier."
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Total distance in meters."
+            }
+          ],
           "internal": false
         },
         "findNearestPoint": {
-          "desc": "Cherche, toutes mesures confondues, le point le plus proche d'une position.",
-          "params": {"mousePos": {"type": "vec3", "desc": "Position de référence."}},
+          "desc": "Searches, across all measurements, for the point closest to a position.",
+          "params": {
+            "mousePos": {
+              "type": "vec3",
+              "desc": "Reference position."
+            }
+          },
           "returns": [
-            {"type": "integer|nil", "desc": "Identifiant de la mesure."},
-            {"type": "integer|nil", "desc": "Indice du point."},
-            {"type": "vec3|nil", "desc": "Point."},
-            {"type": "number", "desc": "Distance (math.huge s'il n'y a aucun point)."}
+            {
+              "type": "integer|nil",
+              "desc": "Measurement identifier."
+            },
+            {
+              "type": "integer|nil",
+              "desc": "Point index."
+            },
+            {
+              "type": "vec3|nil",
+              "desc": "Point."
+            },
+            {
+              "type": "number",
+              "desc": "Distance (math.huge if there are no points)."
+            }
           ],
           "internal": false
         },
         "handleMouseInput": {
-          "desc": "Gère la souris dans la vue 3D : survol, sélection, glisser-déplacer et ajout de points accrochés à la snaproad (distance < 5 m).",
+          "desc": "Handles the mouse in the 3D view: hover, selection, drag-and-drop and adding points snapped to the snaproad (distance < 5 m).",
           "internal": true
         },
         "draw": {
-          "desc": "Dessine l'interface imgui : création/suppression de mesures, liste, options (Follow Route, couleurs), distance totale, liste des points et boutons Move Up / Move Down / Delete Point.",
+          "desc": "Draws the imgui interface: creating/deleting measurements, list, options (Follow Route, colors), total distance, point list and Move Up / Move Down / Delete Point buttons.",
           "params": {
-            "mouseInfo": {"type": "table", "desc": "Informations souris."},
-            "dtReal": {"type": "number", "desc": "Delta temps réel."},
-            "dtSim": {"type": "number", "desc": "Delta temps simulation."},
-            "dtRaw": {"type": "number", "desc": "Delta temps brut."}
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Mouse information."
+            },
+            "dtReal": {
+              "type": "number",
+              "desc": "Real-time delta."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Simulation time delta."
+            },
+            "dtRaw": {
+              "type": "number",
+              "desc": "Raw time delta."
+            }
           },
           "internal": true
         }

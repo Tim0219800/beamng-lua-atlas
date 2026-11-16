@@ -1,0 +1,8 @@
+{
+  "path": "lua/ge/extensions/editor/renderTest.lua",
+  "module": "Outil de debug de l'éditeur (fenêtre « Render test ») destiné à afficher une vue de la scène rendue dans une texture (vues dessus/dessous/gauche/droite/avant/arrière/3d, ortho, near/far clip, fov, suivi du véhicule joueur) via renderCameraToTexture. Il est désactivé : le module exporte une table vide.",
+  "notes": [
+    "Les exports M.onEditorInitialized et M.onEditorGui sont commentés dans le code (« renderCameraToTexture does not exist ») : l'extension ne fait donc rien.",
+    "Dans onEditorGui, la variable locale « rot » est redéfinie (quatFromEuler(pi/2, 0, 0)) et masque celle calculée avant ; la vue est donc toujours la même."
+  ]
+}

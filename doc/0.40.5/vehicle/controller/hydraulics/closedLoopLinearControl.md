@@ -1,63 +1,63 @@
 # `controller_hydraulics_closedLoopLinearControl`
 
-*Fichier : `lua/vehicle/controller/hydraulics/closedLoopLinearControl.lua` · VM : Véhicule · 82 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/hydraulics/closedLoopLinearControl.lua` · VM: Vehicle · 82 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `hydraulics/closedLoopLinearControl` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `hydraulics/closedLoopLinearControl` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Régulateur en boucle fermée de vérin hydraulique linéaire (type "auxiliary"). Un PID compare l'extension moyenne des vérins (hydraulic consumers du powertrain) à une cible et écrit la commande de vanne dans electrics.values. Un moddeur fixe la cible avec setCylinderTargetExtendPercent.
+Closed-loop regulator of a linear hydraulic cylinder (type "auxiliary"). A PID compares the average extension of the cylinders (powertrain hydraulic consumers) to a target and writes the valve command into electrics.values. A modder sets the target with setCylinderTargetExtendPercent.
 
-## Exemple
+## Example
 
 ```lua
 local c = controller.getControllerSafe('hydraulics/closedLoopLinearControl')
 c.setCylinderTargetExtendPercent(0.5)
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam (défaut) : cylinders (liste de noms de consommateurs hydrauliques), cylinderValveElectricsName ("cylinderValve"), cylinderPositionMin (0), cylinderPositionMax (1), targetExtendPercentInitial (0), cylinderPIDKp (0.5), cylinderPIDKi (0.3), cylinderPIDKd (0.01).
-- Sortie du PID bornée à -1..1 et remise à 0 sous 0.001. Si aucun vérin n'est trouvé, updateFixedStep est mis à nil.
+- jbeam keys (default): cylinders (list of hydraulic consumer names), cylinderValveElectricsName ("cylinderValve"), cylinderPositionMin (0), cylinderPositionMax (1), targetExtendPercentInitial (0), cylinderPIDKp (0.5), cylinderPIDKi (0.3), cylinderPIDKd (0.01).
+- PID output bounded to -1..1 and reset to 0 below 0.001. If no cylinder is found, updateFixedStep is set to nil.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_hydraulics_closedLoopLinearControl.init(jbeamData)` | Crée le PID, retrouve les vérins et lit les paramètres. *(interne)* | 47 |
-| `controller_hydraulics_closedLoopLinearControl.reset(jbeamData)` | Remet la vanne à 0, la cible à la valeur initiale et le PID à zéro. *(interne)* | 41 |
-| `controller_hydraulics_closedLoopLinearControl.setCylinderTargetExtendPercent(extendPercent)` | Fixe l'extension cible des vérins. | 20 |
-| `controller_hydraulics_closedLoopLinearControl.updateFixedStep(dt)` | Calcule la commande de vanne à partir de l'extension moyenne des vérins et l'écrit dans electrics.values. *(interne)* | 24 |
+| `controller_hydraulics_closedLoopLinearControl.init(jbeamData)` | Creates the PID, finds the cylinders and reads the parameters. *(internal)* | 47 |
+| `controller_hydraulics_closedLoopLinearControl.reset(jbeamData)` | Resets the valve to 0, the target to the initial value and the PID to zero. *(internal)* | 41 |
+| `controller_hydraulics_closedLoopLinearControl.setCylinderTargetExtendPercent(extendPercent)` | Sets the target extension of the cylinders. | 20 |
+| `controller_hydraulics_closedLoopLinearControl.updateFixedStep(dt)` | Computes the valve command from the average extension of the cylinders and writes it into electrics.values. *(internal)* | 24 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_hydraulics_closedLoopLinearControl.init(jbeamData)`
 
-Crée le PID, retrouve les vérins et lit les paramètres.
+Creates the PID, finds the cylinders and reads the parameters.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_hydraulics_closedLoopLinearControl.reset(jbeamData)`
 
-Remet la vanne à 0, la cible à la valeur initiale et le PID à zéro.
+Resets the valve to 0, the target to the initial value and the PID to zero.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_hydraulics_closedLoopLinearControl.setCylinderTargetExtendPercent(extendPercent)`
 
-Fixe l'extension cible des vérins.
+Sets the target extension of the cylinders.
 
-- `extendPercent` (*number*) : Extension 0..1, bornée par cylinderPositionMin/Max.
+- `extendPercent` (*number*) : Extension 0..1, bounded by cylinderPositionMin/Max.
 
 #### `controller_hydraulics_closedLoopLinearControl.updateFixedStep(dt)`
 
-Calcule la commande de vanne à partir de l'extension moyenne des vérins et l'écrit dans electrics.values.
+Computes the valve command from the average extension of the cylinders and writes it into electrics.values.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/hydraulics/closedLoopLinearControl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/hydraulics/closedLoopLinearControl.lua`.*

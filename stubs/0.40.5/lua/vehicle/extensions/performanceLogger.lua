@@ -2,42 +2,42 @@
 -- tim19Atlas stub generated from lua/vehicle/extensions/performanceLogger.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Petit outil de profilage : mesure des durées en millisecondes avec HighPerfTimer, soit une mesure unique (startMeasurement / stopMeasurement), soit une moyenne sur N mesures écrite dans le log (measureAverage).
---- Accès : extension `performanceLogger` : `extensions.load (VM véhicule)("performanceLogger")`, puis la globale `performanceLogger`
+--- Small profiling tool: measures durations in milliseconds with HighPerfTimer, either a single measurement (startMeasurement / stopMeasurement) or an average over N measurements written to the log (measureAverage).
+--- Access: extension `performanceLogger`: `extensions.load (vehicle VM)("performanceLogger")`, then the global `performanceLogger`
 ---@class performanceLogger
 performanceLogger = {}
 
---- Arrête le chronomètre, ajoute la mesure à la moyenne et, après stopCount mesures, écrit la moyenne dans le log.
----Source : lua/vehicle/extensions/performanceLogger.lua:28
----@param name string Nom de la mesure.
----@param stopCount integer Nombre de mesures avant affichage.
----@param showMin boolean|nil Afficher le minimum des moyennes.
+--- Stops the timer, adds the measurement to the average and, after stopCount measurements, writes the average to the log.
+---Source: lua/vehicle/extensions/performanceLogger.lua:28
+---@param name string Name of the measurement.
+---@param stopCount integer Number of measurements before display.
+---@param showMin boolean|nil Display the minimum of the averages.
 function performanceLogger.measureAverage(name, stopCount, showMin) end
 
---- Hook d'initialisation : efface chronomètres et mesures.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/performanceLogger.lua:48
+--- Initialization hook: clears timers and measurements.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/performanceLogger.lua:48
 function performanceLogger.onInit() end
 
---- Même fonction que onInit.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/performanceLogger.lua:48
+--- Same function as onInit.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/performanceLogger.lua:48
 function performanceLogger.onReset() end
 
---- Crée (ou remet à zéro) le chronomètre nommé.
----Source : lua/vehicle/extensions/performanceLogger.lua:12
----@param name string Nom de la mesure.
+--- Creates (or resets) the named timer.
+---Source: lua/vehicle/extensions/performanceLogger.lua:12
+---@param name string Name of the measurement.
 function performanceLogger.startMeasurement(name) end
 
---- Termine la moyenne nommée et renvoie la moyenne accumulée (supprime le chronomètre).
----Source : lua/vehicle/extensions/performanceLogger.lua:22
----@param name string Nom de la mesure.
----@return number  Moyenne en millisecondes.
+--- Ends the named average and returns the accumulated average (removes the timer).
+---Source: lua/vehicle/extensions/performanceLogger.lua:22
+---@param name string Name of the measurement.
+---@return number  Average in milliseconds.
 function performanceLogger.stopAvergage(name) end
 
---- Arrête le chronomètre et renvoie la durée mesurée.
----Source : lua/vehicle/extensions/performanceLogger.lua:41
----@param name string Nom de la mesure.
----@return number  Durée en millisecondes.
+--- Stops the timer and returns the measured duration.
+---Source: lua/vehicle/extensions/performanceLogger.lua:41
+---@param name string Name of the measurement.
+---@return number  Duration in milliseconds.
 function performanceLogger.stopMeasurement(name) end
 

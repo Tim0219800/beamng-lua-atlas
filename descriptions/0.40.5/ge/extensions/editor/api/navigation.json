@@ -1,30 +1,99 @@
 {
   "path": "lua/ge/extensions/editor/api/navigation.lua",
-  "module": "Module d'API de l'éditeur prévu pour gérer les maillages de navigation (NavMesh), les liens hors-maillage et les couvertures (cover) pour l'IA. Dans 0.40.5 c'est une coquille vide : toutes les fonctions sont des `--TODO` sans corps. `initialize` les attache à l'objet `editor` (editor.createNavMesh, etc.).",
+  "module": "Editor API module intended to manage navigation meshes (NavMesh), off-mesh links and covers for AI. In 0.40.5 it is an empty shell: all the functions are `--TODO` with no body. `initialize` attaches them to the `editor` object (editor.createNavMesh, etc.).",
   "notes": [
-    "Toutes les fonctions installées sur `editor` ne font rien et renvoient nil (corps = TODO).",
-    "Les paramètres `navMeshInfo`, `linkInfo`, `coverInfo` n'ont aucune structure définie dans le code."
+    "All the functions installed on `editor` do nothing and return nil (body = TODO).",
+    "The `navMeshInfo`, `linkInfo`, `coverInfo` parameters have no structure defined in the code."
   ],
   "functions": {
     "initialize": {
-      "desc": "Mémorise l'instance de l'éditeur et y installe les neuf fonctions navmesh/cover/offmeshlink (non implémentées).",
-      "params": {"editorInstance": {"type": "table", "desc": "objet `editor` sur lequel poser les fonctions"}},
+      "desc": "Remembers the editor instance and installs the nine navmesh/cover/offmeshlink functions on it (not implemented).",
+      "params": {
+        "editorInstance": {
+          "type": "table",
+          "desc": "`editor` object on which to place the functions"
+        }
+      },
       "internal": true
     }
   },
   "classes": {
     "editor": {
-      "desc": "Fonctions ajoutées à l'objet `editor` par `initialize`. Toutes sont des stubs vides (TODO).",
+      "desc": "Functions added to the `editor` object by `initialize`. All are empty stubs (TODO).",
       "functions": {
-        "createNavMesh": {"desc": "Stub : devrait créer un navmesh.", "params": {"navMeshInfo": {"type": "any", "desc": "description du navmesh (déduit du nom)"}}},
-        "deleteNavMesh": {"desc": "Stub : devrait supprimer un navmesh.", "params": {"navMeshObjectId": {"type": "integer", "desc": "id de l'objet navmesh (déduit du nom)"}}},
-        "createOffMeshLink": {"desc": "Stub : devrait créer un lien hors-maillage.", "params": {"navMeshObjectId": {"type": "integer", "desc": "id du navmesh (déduit du nom)"}, "linkInfo": {"type": "any", "desc": "description du lien"}}},
-        "deleteOffMeshLink": {"desc": "Stub : devrait supprimer un lien hors-maillage.", "params": {"linkId": {"type": "any", "desc": "identifiant du lien"}}},
-        "createCover": {"desc": "Stub : devrait créer une couverture.", "params": {"coverInfo": {"type": "any", "desc": "description de la couverture"}}},
-        "deleteCover": {"desc": "Stub : devrait supprimer une couverture.", "params": {"coverObjectId": {"type": "integer", "desc": "id de l'objet cover (déduit du nom)"}}},
-        "getNavMeshes": {"desc": "Stub : devrait lister les navmeshes."},
-        "getCovers": {"desc": "Stub : devrait lister les couvertures d'un navmesh.", "params": {"navMeshObjectId": {"type": "integer", "desc": "id du navmesh"}}},
-        "getOffMeshLinks": {"desc": "Stub : devrait lister les liens hors-maillage."}
+        "createNavMesh": {
+          "desc": "Stub: should create a navmesh.",
+          "params": {
+            "navMeshInfo": {
+              "type": "any",
+              "desc": "navmesh description (inferred from the name)"
+            }
+          }
+        },
+        "deleteNavMesh": {
+          "desc": "Stub: should delete a navmesh.",
+          "params": {
+            "navMeshObjectId": {
+              "type": "integer",
+              "desc": "navmesh object id (inferred from the name)"
+            }
+          }
+        },
+        "createOffMeshLink": {
+          "desc": "Stub: should create an off-mesh link.",
+          "params": {
+            "navMeshObjectId": {
+              "type": "integer",
+              "desc": "navmesh id (inferred from the name)"
+            },
+            "linkInfo": {
+              "type": "any",
+              "desc": "link description"
+            }
+          }
+        },
+        "deleteOffMeshLink": {
+          "desc": "Stub: should delete an off-mesh link.",
+          "params": {
+            "linkId": {
+              "type": "any",
+              "desc": "link identifier"
+            }
+          }
+        },
+        "createCover": {
+          "desc": "Stub: should create a cover.",
+          "params": {
+            "coverInfo": {
+              "type": "any",
+              "desc": "cover description"
+            }
+          }
+        },
+        "deleteCover": {
+          "desc": "Stub: should delete a cover.",
+          "params": {
+            "coverObjectId": {
+              "type": "integer",
+              "desc": "cover object id (inferred from the name)"
+            }
+          }
+        },
+        "getNavMeshes": {
+          "desc": "Stub: should list the navmeshes."
+        },
+        "getCovers": {
+          "desc": "Stub: should list the covers of a navmesh.",
+          "params": {
+            "navMeshObjectId": {
+              "type": "integer",
+              "desc": "navmesh id"
+            }
+          }
+        },
+        "getOffMeshLinks": {
+          "desc": "Stub: should list the off-mesh links."
+        }
       }
     }
   }

@@ -1,14 +1,14 @@
 # `client_postFx_screenSpaceShadows`
 
-*Fichier : `lua/ge/client/postFx/screenSpaceShadows.lua` · VM : Game Engine (GE) · 8 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/client/postFx/screenSpaceShadows.lua` · VM: Game Engine (GE) · 8 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("client/postFx/screenSpaceShadows")`
+**Access:** `require("client/postFx/screenSpaceShadows")`
 
-Crée, s'il n'existe pas, l'objet natif « ScreenSpaceShadowsPostFx » (type PostFxScreenSpaceShadows) pour les ombres en espace écran. Aucune fonction exportée ; toute la logique est côté C++.
+Creates, if it does not exist, the native object "ScreenSpaceShadowsPostFx" (type PostFxScreenSpaceShadows) for screen-space shadows. No exported function; all the logic is on the C++ side.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/client/postFx/screenSpaceShadows.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/client/postFx/screenSpaceShadows.lua`.*

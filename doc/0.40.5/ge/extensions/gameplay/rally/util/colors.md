@@ -1,28 +1,28 @@
 # `gameplay_rally_util_colors`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/util/colors.lua` · VM : Game Engine (GE) · 156 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/util/colors.lua` · VM: Game Engine (GE) · 156 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_util_colors` : `extensions.load("gameplay_rally_util_colors")`, puis la globale `gameplay_rally_util_colors`
+**Access:** extension `gameplay_rally_util_colors`: `extensions.load("gameplay_rally_util_colors")`, then the global `gameplay_rally_util_colors`
 
-Palette de couleurs et constantes d'affichage (alphas, rayons, largeurs) partagées par les outils de rallye : snaproads, notes d'allure (pacenotes), waypoints et curseur de l'éditeur. Ne contient aucune fonction, uniquement des champs. Les couleurs sont des tables {r, g, b} entre 0 et 1, sauf clr_error et clr_no_error qui sont des ImVec4 (ui_imgui).
+Color palette and display constants (alphas, radii, widths) shared by the rally tools: snaproads, pacenotes, waypoints and the editor cursor. Contains no functions, only fields. The colors are {r, g, b} tables between 0 and 1, except clr_error and clr_no_error which are ImVec4 (ui_imgui).
 
-## Remarques
+## Notes
 
-- Les couleurs sont des tables {r,g,b} sans alpha : l'alpha est fourni séparément (champs *_alpha*).
-- clr_error (1, 0.2, 0.2, 1) et clr_no_error (0.2, 1, 0.2, 1) sont des ImVec4 pour imgui, pas des tables.
-- Autres champs non listés individuellement : snaproads_* (rayon 0.7, 0.5 recce, 0.2 conduite ; alphas 0.8/0.2/0.5 ; couleurs recce rouge, route orange), recce_* (driveline rouge, cut teal), pacenote_* (alphas, largeurs de lien 1.5 -> 0.25, couleur interlink rose), waypoint_* (cs vert, ce rouge, variantes adjacentes et fonds, alphas de survol 0.95/1.0), new_pacenote_cursor_* (lien blanc, cs vert clair, ce rouge clair, alpha 0.8).
+- The colors are {r,g,b} tables without alpha: the alpha is provided separately (*_alpha* fields).
+- clr_error (1, 0.2, 0.2, 1) and clr_no_error (0.2, 1, 0.2, 1) are ImVec4 for imgui, not tables.
+- Other fields not listed individually: snaproads_* (radius 0.7, 0.5 recce, 0.2 driving; alphas 0.8/0.2/0.5; recce colors red, route orange), recce_* (driveline red, cut teal), pacenote_* (alphas, link widths 1.5 -> 0.25, interlink color pink), waypoint_* (cs green, ce red, adjacent variants and backgrounds, hover alphas 0.95/1.0), new_pacenote_cursor_* (link white, cs light green, ce light red, alpha 0.8).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `cam_last_pos_alpha` | number | Alpha de cette sphère (0.8). |
-| `cam_last_pos_radius` | number | Rayon de la sphère de dernière position caméra : snaproads_radius x 2 = 1.4 m. |
+| `cam_last_pos_alpha` | number | Alpha of this sphere (0.8). |
+| `cam_last_pos_radius` | number | Radius of the last camera position sphere: snaproads_radius x 2 = 1.4 m. |
 | `clr_aqua` | number[] | {0, 0.8, 0.8}. |
 | `clr_black` | number[] | {0, 0, 0}. |
 | `clr_blue` | number[] | {0, 0, 1}. |
 | `clr_blue_light` | number[] | {0.392, 0.612, 1}. |
-| `clr_error` | ImVec4 | Rouge d'erreur pour imgui (1, 0.2, 0.2, 1). |
+| `clr_error` | ImVec4 | Error red for imgui (1, 0.2, 0.2, 1). |
 | `clr_green` | number[] | {0, 1, 0}. |
 | `clr_green_dark` | number[] | {0, 0.5, 0}. |
 | `clr_green_pastel` | number[] | {0.718, 1, 0.455}. |
@@ -33,7 +33,7 @@ Palette de couleurs et constantes d'affichage (alphas, rayons, largeurs) partag�
 | `clr_light_green` | number[] | {0.5, 1, 0.5}. |
 | `clr_light_red` | number[] | {1, 0.5, 0.5}. |
 | `clr_lime_green` | number[] | {0.66, 1, 0}. |
-| `clr_no_error` | ImVec4 | Vert « pas d'erreur » pour imgui (0.2, 1, 0.2, 1). |
+| `clr_no_error` | ImVec4 | "No error" green for imgui (0.2, 1, 0.2, 1). |
 | `clr_orange` | number[] | {1, 0.64, 0}. |
 | `clr_pink` | number[] | {1, 0, 1} (magenta). |
 | `clr_purple` | number[] | {0.73, 0, 1}. |
@@ -44,9 +44,9 @@ Palette de couleurs et constantes d'affichage (alphas, rayons, largeurs) partag�
 | `clr_teal_2` | number[] | {0, 1, 0.58}. |
 | `clr_white` | number[] | {1, 1, 1}. |
 | `clr_yellow` | number[] | {1, 1, 0}. |
-| `new_pacenote_cursor_alpha` | number | Alpha du curseur de nouvelle note d'allure dans l'éditeur (0.8). |
-| `new_pacenote_cursor_clr_ce` | number[] | Couleur du point d'arrivée (CE) du curseur : clr_light_red. |
-| `new_pacenote_cursor_clr_cs` | number[] | Couleur du point de départ (CS) du curseur : clr_light_green. |
+| `new_pacenote_cursor_alpha` | number | Alpha of the new pacenote cursor in the editor (0.8). |
+| `new_pacenote_cursor_clr_ce` | number[] | Color of the cursor's end point (CE): clr_light_red. |
+| `new_pacenote_cursor_clr_cs` | number[] | Color of the cursor's start point (CS): clr_light_green. |
 | `new_pacenote_cursor_clr_link` | any | rallyEditor/pacenotes.lua |
 | `new_pacenote_cursor_linkFromWidth` | number |  |
 | `new_pacenote_cursor_linkHeightRadiusShinkFactor` | number |  |
@@ -100,4 +100,4 @@ Palette de couleurs et constantes d'affichage (alphas, rayons, largeurs) partag�
 | `waypoint_textAlpha_hover` | number |  |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/util/colors.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/util/colors.lua`.*

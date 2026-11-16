@@ -1,0 +1,109 @@
+{
+  "path": "lua/ge/extensions/ui/router/transitionRecovery.test.lua",
+  "module": "Tests ciblés du contrat de reprise au démarrage de Vue pour le routeur : renvoi de la transition toutes les secondes sans limite (phase startup), accusés de réception qui ne servent que de télémétrie (routeChangeReceived), arrêt des renvois par routeNavigationStarted, rejet des accusés à identifiant de transition périmé, conservation de l'identifiant à l'annulation et nettoyage de l'entrée en attente. Utilise Config, TransitionManager et NavigationState. Lancement : extensions.testFramework_TestManager:runTestFiles(\"transitionRecovery\").",
+  "notes": [
+    "Les fonctions testXxx(ctx) sont exécutées par testFramework_TestManager ; le jeu ne les appelle pas en usage normal."
+  ],
+  "functions": {
+    "testStartupResendIntervalIsOneSecond": {
+      "desc": "L'intervalle de renvoi au démarrage dans Config vaut une seconde.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testStartupResendsEverySecondIndefinitely": {
+      "desc": "En phase startup, la transition est renvoyée chaque seconde, indéfiniment.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testReceivedDoesNotStopStartupResends": {
+      "desc": "routeChangeReceived est de la télémétrie : il n'arrête pas les renvois.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testNavigationStartedStopsResends": {
+      "desc": "routeNavigationStarted arrête les renvois.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testPostStartTimersResetAfterLongStartup": {
+      "desc": "Après un long démarrage, les minuteurs de fin de transition repartent à zéro une fois la navigation démarrée.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testStaleTransitionIdIsRejectedOnProgress": {
+      "desc": "Un accusé de progression avec un identifiant de transition périmé est rejeté.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testStaleTransitionIdIsRejectedOnComplete": {
+      "desc": "Un accusé de fin avec un identifiant périmé est rejeté.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testCancelReturnsStartedTransitionId": {
+      "desc": "L'annulation renvoie l'identifiant de la transition démarrée (utilisé dans la charge utile d'annulation).",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testCancelWhenIdleReturnsNilId": {
+      "desc": "Annuler sans transition en cours renvoie un identifiant nil.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testClearPendingEntryRemovesUncommittedEntry": {
+      "desc": "NavigationState efface l'entrée en attente non validée.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    }
+  }
+}

@@ -1,97 +1,97 @@
 # `libs_lua_websockets_websocket_frame`
 
-*Fichier : `lua/common/libs/lua-websockets/websocket/frame.lua` · VM : Commun (GE + véhicule) · 214 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lua-websockets/websocket/frame.lua` · VM: Common (GE + vehicle) · 214 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/lua-websockets/websocket/frame")`
+**Access:** `require("libs/lua-websockets/websocket/frame")`
 
-Encodage et décodage des trames WebSocket (RFC 6455) pour lua-websockets : en-têtes 7/16/64 bits de longueur, masquage XOR côté client, trames de fermeture (code + raison). Utilisé par sync, ev_common et les backends client/serveur. Exporte aussi les constantes d'opcodes.
+Encoding and decoding of WebSocket frames (RFC 6455) for lua-websockets: 7/16/64-bit length headers, client-side XOR masking, close frames (code + reason). Used by sync, ev_common and the client/server backends. Also exports the opcode constants.
 
-## Remarques
+## Notes
 
-- Le décodage d'une longueur 64 bits échoue par assert si la longueur est inférieure à 0xffff ou supérieure à 2^53.
-- xor_mask est marqué 'TODO: improve performance' dans le code : le masquage se fait octet par octet en Lua.
+- Decoding a 64-bit length fails via assert if the length is less than 0xffff or greater than 2^53.
+- xor_mask is marked 'TODO: improve performance' in the code: masking is done byte by byte in Lua.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_lua_websockets_websocket_frame.decode(encoded)` | Décode une trame depuis un tampon. Si les données sont incomplètes, renvoie nil et le nombre d'octets manquants. | 106 |
-| `libs_lua_websockets_websocket_frame.decode_close(data)` | Extrait code et raison de la charge utile d'une trame CLOSE. | 186 |
-| `libs_lua_websockets_websocket_frame.encode(data, opcode, masked, fin)` | Construit une trame WebSocket complète : en-tête, longueur, éventuel masque aléatoire (math.random) et données masquées. | 69 |
-| `libs_lua_websockets_websocket_frame.encode_close(code, reason)` | Construit la charge utile d'une trame CLOSE : code sur 2 octets suivi de la raison. Renvoie une chaîne vide si code est nil. | 175 |
-| `libs_lua_websockets_websocket_frame.encode_header_big(header, payload, high, low)` | En-tête avec longueur sur 64 bits (deux entiers 32 bits). | 65 |
-| `libs_lua_websockets_websocket_frame.encode_header_medium(header, payload, len)` | En-tête avec longueur sur 16 bits (126..65535). | 61 |
-| `libs_lua_websockets_websocket_frame.encode_header_small(header, payload)` | Deux octets d'en-tête (longueur < 126). | 57 |
+| `libs_lua_websockets_websocket_frame.decode(encoded)` | Decodes a frame from a buffer. If the data is incomplete, returns nil and the number of missing bytes. | 106 |
+| `libs_lua_websockets_websocket_frame.decode_close(data)` | Extracts code and reason from the payload of a CLOSE frame. | 186 |
+| `libs_lua_websockets_websocket_frame.encode(data, opcode, masked, fin)` | Builds a complete WebSocket frame: header, length, optional random mask (math.random) and masked data. | 69 |
+| `libs_lua_websockets_websocket_frame.encode_close(code, reason)` | Builds the payload of a CLOSE frame: 2-byte code followed by the reason. Returns an empty string if code is nil. | 175 |
+| `libs_lua_websockets_websocket_frame.encode_header_big(header, payload, high, low)` | Header with a 64-bit length (two 32-bit integers). | 65 |
+| `libs_lua_websockets_websocket_frame.encode_header_medium(header, payload, len)` | Header with a 16-bit length (126..65535). | 61 |
+| `libs_lua_websockets_websocket_frame.encode_header_small(header, payload)` | Two header bytes (length < 126). | 57 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_lua_websockets_websocket_frame.decode(encoded)`
 
-Décode une trame depuis un tampon. Si les données sont incomplètes, renvoie nil et le nombre d'octets manquants.
+Decodes a frame from a buffer. If the data is incomplete, returns nil and the number of missing bytes.
 
-- `encoded` (*string*) : Octets reçus (peut contenir plusieurs trames).
-- **renvoie** : string|nil Charge utile démasquée, ou nil si incomplet.
-- **renvoie** : boolean|integer fin (bit FIN), ou octets manquants si incomplet.
-- **renvoie** : integer opcode.
-- **renvoie** : string Octets restants après la trame.
-- **renvoie** : boolean true si la trame était masquée.
+- `encoded` (*string*) : Bytes received (may contain several frames).
+- **returns**: string|nil Unmasked payload, or nil if incomplete.
+- **returns**: boolean|integer fin (FIN bit), or missing bytes if incomplete.
+- **returns**: integer opcode.
+- **returns**: string Bytes remaining after the frame.
+- **returns**: boolean true if the frame was masked.
 
 #### `libs_lua_websockets_websocket_frame.decode_close(data)`
 
-Extrait code et raison de la charge utile d'une trame CLOSE.
+Extracts code and reason from the payload of a CLOSE frame.
 
-- `data` (*string|nil*) : Charge utile.
-- **renvoie** : integer|nil Code.
-- **renvoie** : string|nil Raison.
+- `data` (*string|nil*) : Payload.
+- **returns**: integer|nil Code.
+- **returns**: string|nil Reason.
 
 #### `libs_lua_websockets_websocket_frame.encode(data, opcode, masked, fin)`
 
-Construit une trame WebSocket complète : en-tête, longueur, éventuel masque aléatoire (math.random) et données masquées.
+Builds a complete WebSocket frame: header, length, optional random mask (math.random) and masked data.
 
-- `data` (*string*) : Charge utile.
-- `opcode` (*integer*) : Opcode (1 = TEXT par défaut).
-- `masked` (*boolean*) : true pour masquer (obligatoire côté client).
-- `fin` (*boolean|nil*) : Bit FIN ; nil ou true = trame finale.
-- **renvoie** : string Octets de la trame.
+- `data` (*string*) : Payload.
+- `opcode` (*integer*) : Opcode (1 = TEXT by default).
+- `masked` (*boolean*) : true to mask (required on the client side).
+- `fin` (*boolean|nil*) : FIN bit; nil or true = final frame.
+- **returns**: string Frame bytes.
 
 #### `libs_lua_websockets_websocket_frame.encode_close(code, reason)`
 
-Construit la charge utile d'une trame CLOSE : code sur 2 octets suivi de la raison. Renvoie une chaîne vide si code est nil.
+Builds the payload of a CLOSE frame: 2-byte code followed by the reason. Returns an empty string if code is nil.
 
-- `code` (*integer|nil*) : Code de fermeture (ex. 1000).
-- `reason` (*string|nil*) : Raison.
-- **renvoie** : string Charge utile.
+- `code` (*integer|nil*) : Close code (e.g. 1000).
+- `reason` (*string|nil*) : Reason.
+- **returns**: string Payload.
 
 #### `libs_lua_websockets_websocket_frame.encode_header_big(header, payload, high, low)`
 
-En-tête avec longueur sur 64 bits (deux entiers 32 bits).
+Header with a 64-bit length (two 32-bit integers).
 
-- `header` (*integer*) : Premier octet.
-- `payload` (*integer*) : Second octet.
-- `high` (*integer*) : 32 bits de poids fort.
-- `low` (*integer*) : 32 bits de poids faible.
-- **renvoie** : string En-tête.
+- `header` (*integer*) : First byte.
+- `payload` (*integer*) : Second byte.
+- `high` (*integer*) : High 32 bits.
+- `low` (*integer*) : Low 32 bits.
+- **returns**: string Header.
 
 #### `libs_lua_websockets_websocket_frame.encode_header_medium(header, payload, len)`
 
-En-tête avec longueur sur 16 bits (126..65535).
+Header with a 16-bit length (126..65535).
 
-- `header` (*integer*) : Premier octet.
-- `payload` (*integer*) : Second octet.
-- `len` (*integer*) : Longueur.
-- **renvoie** : string En-tête.
+- `header` (*integer*) : First byte.
+- `payload` (*integer*) : Second byte.
+- `len` (*integer*) : Length.
+- **returns**: string Header.
 
 #### `libs_lua_websockets_websocket_frame.encode_header_small(header, payload)`
 
-Deux octets d'en-tête (longueur < 126).
+Two header bytes (length < 126).
 
-- `header` (*integer*) : Premier octet (FIN + opcode).
-- `payload` (*integer*) : Second octet (bit masque + longueur).
-- **renvoie** : string En-tête.
+- `header` (*integer*) : First byte (FIN + opcode).
+- `payload` (*integer*) : Second byte (mask bit + length).
+- **returns**: string Header.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `BINARY` | integer | 2. |
 | `CLOSE` | integer | 8. |
@@ -101,4 +101,4 @@ Deux octets d'en-tête (longueur < 126).
 | `TEXT` | integer | 1. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lua-websockets/websocket/frame.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lua-websockets/websocket/frame.lua`.*

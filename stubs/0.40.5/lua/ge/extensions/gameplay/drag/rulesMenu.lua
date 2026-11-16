@@ -2,63 +2,63 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/drag/rulesMenu.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contexte de l'écran de règles de drag (interface Vue « mission.dragRules »). Il retrouve la piste associée à une installation (facility.id, avec suffixe « Rules » retiré), fournit à l'UI les options (dragType heads-up/bracket, arbre .400/.500, timers disponibles, valeurs par défaut et sauvegardées) et enregistre ou restaure les règles choisies pour une piste. Il pose aussi une laisse de 12 m autour de la porte de l'installation : le menu se ferme tout seul si le véhicule du joueur s'éloigne.
---- Accès : extension `gameplay_drag_rulesMenu` : `extensions.load("gameplay_drag_rulesMenu")`, puis la globale `gameplay_drag_rulesMenu`
+--- Context of the drag rules screen (Vue interface "mission.dragRules"). It finds the track associated with a facility (facility.id, with the "Rules" suffix removed), provides the UI with the options (heads-up/bracket dragType, .400/.500 tree, available timers, default and saved values) and saves or restores the chosen rules for a track. It also places a 12 m tether around the facility's door: the menu closes by itself if the player's vehicle moves away.
+--- Access: extension `gameplay_drag_rulesMenu`: `extensions.load("gameplay_drag_rulesMenu")`, then the global `gameplay_drag_rulesMenu`
 ---@class gameplay_drag_rulesMenu
----@field dependencies string[] Liste vide.
+---@field dependencies string[] Empty list.
 gameplay_drag_rulesMenu = {}
 
---- Renvoie les règles sauvegardées d'une piste pour que l'UI puisse les restaurer (bouton Restore).
----Source : lua/ge/extensions/gameplay/drag/rulesMenu.lua:192
----@param levelId string Identifiant de niveau.
----@param stripId string Identifiant de piste.
----@return table|nil  {dragType, treeType, importantTimerId} ou nil.
+--- Returns the saved rules of a track so that the UI can restore them (Restore button).
+---Source: lua/ge/extensions/gameplay/drag/rulesMenu.lua:192
+---@param levelId string Level identifier.
+---@param stripId string Track identifier.
+---@return table|nil  {dragType, treeType, importantTimerId} or nil.
 function gameplay_drag_rulesMenu.applyRulesRestore(levelId, stripId) end
 
---- Enregistre les règles d'une piste (bouton Save de l'UI). Ne fait rien si un argument manque.
----Source : lua/ge/extensions/gameplay/drag/rulesMenu.lua:186
----@param levelId string Identifiant de niveau.
----@param stripId string Identifiant de piste.
+--- Saves the rules of a track (UI Save button). Does nothing if an argument is missing.
+---Source: lua/ge/extensions/gameplay/drag/rulesMenu.lua:186
+---@param levelId string Level identifier.
+---@param stripId string Track identifier.
 ---@param rules table {dragType, treeType, importantTimerId}.
 function gameplay_drag_rulesMenu.applyRulesSave(levelId, stripId, rules) end
 
---- Ferme le contexte de règles : supprime la laisse, oublie l'installation et les données de piste.
----Source : lua/ge/extensions/gameplay/drag/rulesMenu.lua:113
+--- Closes the rules context: removes the tether, forgets the facility and the track data.
+---Source: lua/ge/extensions/gameplay/drag/rulesMenu.lua:113
 function gameplay_drag_rulesMenu.closeMenu() end
 
---- Installation ouverte via un POI d'installation.
----Source : lua/ge/extensions/gameplay/drag/rulesMenu.lua:126
----@return table|nil  Installation ou nil.
+--- Facility opened via a facility POI.
+---Source: lua/ge/extensions/gameplay/drag/rulesMenu.lua:126
+---@return table|nil  Facility or nil.
 function gameplay_drag_rulesMenu.getCurrentFacility() end
 
---- Données pour l'écran Vue des règles : levelId, stripId, stripName, location (titre du niveau), numLanes, timers (id, label, labelKey, shortLabel, type, distance), dragTypeOptions, treeTypeOptions, defaults (issus de la piste) et saved (préréglage sauvegardé ou créé).
----Source : lua/ge/extensions/gameplay/drag/rulesMenu.lua:136
----@param facilityIdOrStripId string Identifiant d'installation (par ex. 'alderStripRules') ou de piste.
----@return table|nil  Données, nil si la piste est introuvable dans le niveau courant.
+--- Data for the Vue rules screen: levelId, stripId, stripName, location (level title), numLanes, timers (id, label, labelKey, shortLabel, type, distance), dragTypeOptions, treeTypeOptions, defaults (from the track) and saved (saved or created preset).
+---Source: lua/ge/extensions/gameplay/drag/rulesMenu.lua:136
+---@param facilityIdOrStripId string Facility identifier (e.g. 'alderStripRules') or track identifier.
+---@return table|nil  Data, nil if the track is not found in the current level.
 function gameplay_drag_rulesMenu.getRulesScreenData(facilityIdOrStripId) end
 
---- Règles sauvegardées d'une piste (dragType, treeType, importantTimerId), utilisées par poi.applyUserRulesToData au démarrage depuis un POI.
----Source : lua/ge/extensions/gameplay/drag/rulesMenu.lua:131
----@param levelId string Identifiant de niveau.
----@param stripId string Identifiant de piste.
----@return table|nil  Règles ou nil.
+--- Saved rules of a track (dragType, treeType, importantTimerId), used by poi.applyUserRulesToData when starting from a POI.
+---Source: lua/ge/extensions/gameplay/drag/rulesMenu.lua:131
+---@param levelId string Level identifier.
+---@param stripId string Track identifier.
+---@return table|nil  Rules or nil.
 function gameplay_drag_rulesMenu.getSavedRulesForStrip(levelId, stripId) end
 
---- Vrai si le contexte de règles est actif.
----Source : lua/ge/extensions/gameplay/drag/rulesMenu.lua:121
----@return boolean  Menu ouvert ou non.
+--- True if the rules context is active.
+---Source: lua/ge/extensions/gameplay/drag/rulesMenu.lua:121
+---@return boolean  Whether the menu is open.
 function gameplay_drag_rulesMenu.isMenuOpen() end
 
---- Hook par frame : ferme le menu si le véhicule du joueur (joueur 0) sort de la laisse de 12 m (ou n'existe plus).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drag/rulesMenu.lua:197
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulé (s).
----@param dtRaw number Delta brut (s).
+--- Per-frame hook: closes the menu if the player's vehicle (player 0) leaves the 12 m tether (or no longer exists).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drag/rulesMenu.lua:197
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulated time delta (s).
+---@param dtRaw number Raw delta (s).
 function gameplay_drag_rulesMenu.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Ouvre le contexte de règles pour une installation : charge les données de la piste correspondante et pose la laisse sur la porte la plus proche (freeroam_facilities).
----Source : lua/ge/extensions/gameplay/drag/rulesMenu.lua:104
----@param facility table Installation (champ id).
+--- Opens the rules context for a facility: loads the data of the matching track and places the tether on the nearest door (freeroam_facilities).
+---Source: lua/ge/extensions/gameplay/drag/rulesMenu.lua:104
+---@param facility table Facility (id field).
 function gameplay_drag_rulesMenu.openMenu(facility) end
 

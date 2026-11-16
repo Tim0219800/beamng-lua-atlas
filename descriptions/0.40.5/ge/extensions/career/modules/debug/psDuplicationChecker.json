@@ -1,31 +1,40 @@
 {
   "path": "lua/ge/extensions/career/modules/debug/psDuplicationChecker.lua",
-  "module": "Outil de debug « Parking Spot Duplication Checker » pour level designers : compare les places de parking (parkingSpots) de deux fichiers .sites.json (par défaut city.sites.json et facilities/delivery/mixed.sites.json de west_coast_usa) et liste celles dont les boîtes orientées (OBB) se recouvrent, en les dessinant en 3D avec leur nom.",
+  "module": "\"Parking Spot Duplication Checker\" debug tool for level designers: compares the parking spots (parkingSpots) of two .sites.json files (by default city.sites.json and facilities/delivery/mixed.sites.json of west_coast_usa) and lists those whose oriented boxes (OBB) overlap, drawing them in 3D with their name.",
   "usage": "extensions.load(\"career/modules/debug/psDuplicationChecker\")\ncareer_modules_debug_psDuplicationChecker.show()",
-  "notes": ["Les fichiers A et B se choisissent avec editor_fileDialog (filtre .sites.json).", "Le test de recouvrement utilise overlapsOBB_OBB sur pos/rot/scl de chaque parking spot."],
+  "notes": [
+    "Files A and B are chosen with editor_fileDialog (filter .sites.json).",
+    "The overlap test uses overlapsOBB_OBB on the pos/rot/scl of each parking spot."
+  ],
   "fields": {
-    "debugOrder": {"type": "number", "desc": "Ordre de tri (11)."},
-    "debugName": {"type": "string", "desc": "'Parking Spot Duplication Checker'."}
+    "debugOrder": {
+      "type": "number",
+      "desc": "Sort order (11)."
+    },
+    "debugName": {
+      "type": "string",
+      "desc": "'Parking Spot Duplication Checker'."
+    }
   },
   "functions": {
     "drawDebugFunctions": {
-      "desc": "Sous-menu de fonctions de debug ; vide.",
+      "desc": "Debug functions submenu; empty.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "compareFiles": {
-      "desc": "Charge les deux fichiers sites (gameplay_sites_sitesManager.loadSites) et remplit la liste de résultats avec chaque paire de parking spots dont les OBB se chevauchent.",
+      "desc": "Loads the two sites files (gameplay_sites_sitesManager.loadSites) and fills the result list with each pair of parking spots whose OBBs overlap.",
       "params": {},
       "returns": []
     },
     "drawDebugMenu": {
-      "desc": "Dessine la fenêtre 'PS Duplication Checker' : sélecteurs de fichiers A/B, bouton Compare et liste des doublons, dessinés en 3D (orange pour A, bleu pour B) avec leur nom.",
+      "desc": "Draws the 'PS Duplication Checker' window: file selectors A/B, Compare button and the list of duplicates, drawn in 3D (orange for A, blue for B) with their name.",
       "params": {},
       "returns": []
     },
     "show": {
-      "desc": "Ouvre l'outil : M.onUpdate = drawDebugMenu puis extensions.hookUpdate('onUpdate').",
+      "desc": "Opens the tool: M.onUpdate = drawDebugMenu then extensions.hookUpdate('onUpdate').",
       "params": {},
       "returns": []
     }

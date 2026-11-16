@@ -1,49 +1,82 @@
 {
   "path": "lua/ge/extensions/core/snapshot.lua",
-  "module": "Sauvegarde et chargement de « snapshots » (position et rotation de caméra) via le service en ligne BeamNG (s2/v4/saveSnapshot et getSnapshot). Un snapshot peut être chargé depuis une commande de schéma d'URL (loadSnapshot). Émet les hooks onSnapshotCreate et onSnapshotLoad.",
+  "module": "Saving and loading of \"snapshots\" (camera position and rotation) via the BeamNG online service (s2/v4/saveSnapshot and getSnapshot). A snapshot can be loaded from a URL scheme command (loadSnapshot). Emits the hooks onSnapshotCreate and onSnapshotLoad.",
   "notes": [
-    "BUG : la fonction locale save(data) est une copie de load(data) (elle repositionne la caméra et émet onSnapshotLoad). createSnapshot appelle save() sans argument, donc data est nil et data.camPos provoque une erreur : la création de snapshot est cassée.",
-    "createSnapshot ignore ses paramètres scheme et saveToServer.",
-    "Le champ ignoreStartupCmd est conservé au rechargement des extensions (onSerialize renvoie true) pour ne pas rejouer la commande de démarrage."
+    "BUG: the local function save(data) is a copy of load(data) (it repositions the camera and emits onSnapshotLoad). createSnapshot calls save() with no argument, so data is nil and data.camPos causes an error: snapshot creation is broken.",
+    "createSnapshot ignores its scheme and saveToServer parameters.",
+    "The ignoreStartupCmd field is kept across extension reloads (onSerialize returns true) so as not to replay the startup command."
   ],
   "fields": {
-    "ignoreStartupCmd": {"type": "boolean|nil", "desc": "Si vrai, onSnapshotSchemeCommand ignore les commandes passées en argument de démarrage."}
+    "ignoreStartupCmd": {
+      "type": "boolean|nil",
+      "desc": "If true, onSnapshotSchemeCommand ignores commands passed as a startup argument."
+    }
   },
   "functions": {
     "createSnapshot": {
-      "desc": "Prévu pour construire les données de snapshot, émettre onSnapshotCreate(data) puis les envoyer au serveur avec core_online.apiCall('s2/v4/saveSnapshot'). Journalise l'id reçu ou une erreur.",
+      "desc": "Intended to build the snapshot data, emit onSnapshotCreate(data) then send it to the server with core_online.apiCall('s2/v4/saveSnapshot'). Logs the id received or an error.",
       "params": {
-        "scheme": {"type": "any", "desc": "Non utilisé."},
-        "saveToServer": {"type": "any", "desc": "Non utilisé."}
+        "scheme": {
+          "type": "any",
+          "desc": "Not used."
+        },
+        "saveToServer": {
+          "type": "any",
+          "desc": "Not used."
+        }
       },
       "returns": [],
       "internal": false
     },
     "loadSnapshot": {
-      "desc": "Télécharge le snapshot (s2/v4/getSnapshot) puis passe en caméra libre, place la caméra à data.camPos/camRot, émet onSnapshotLoad(data) et appelle changeMap() si core_modmanager.isReady().",
-      "params": {"snapshotId": {"type": "string|number", "desc": "Identifiant du snapshot sur le serveur."}},
+      "desc": "Downloads the snapshot (s2/v4/getSnapshot) then switches to free camera, places the camera at data.camPos/camRot, emits onSnapshotLoad(data) and calls changeMap() if core_modmanager.isReady().",
+      "params": {
+        "snapshotId": {
+          "type": "string|number",
+          "desc": "Snapshot identifier on the server."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "onSnapshotSchemeCommand": {
-      "desc": "Hook appelé quand une commande de schéma d'URL arrive. Pour la commande \"loadSnapshot\", appelle loadSnapshot(data). Ignoré si isStartingArg et ignoreStartupCmd.",
+      "desc": "Hook called when a URL scheme command arrives. For the \"loadSnapshot\" command, calls loadSnapshot(data). Ignored if isStartingArg and ignoreStartupCmd.",
       "params": {
-        "command": {"type": "string", "desc": "Nom de la commande."},
-        "data": {"type": "any", "desc": "Argument de la commande (id du snapshot)."},
-        "isStartingArg": {"type": "boolean", "desc": "Vrai si la commande vient des arguments de lancement."}
+        "command": {
+          "type": "string",
+          "desc": "Command name."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Command argument (snapshot id)."
+        },
+        "isStartingArg": {
+          "type": "boolean",
+          "desc": "True if the command comes from the launch arguments."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook appelé avant un rechargement des extensions Lua. Renvoie {ignoreStartupCmd = true}.",
+      "desc": "Hook called before a reload of the Lua extensions. Returns {ignoreStartupCmd = true}.",
       "params": {},
-      "returns": [{"type": "table", "desc": "État à conserver."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "State to keep."
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook appelé après rechargement. Restaure ignoreStartupCmd.",
-      "params": {"d": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "desc": "Hook called after reload. Restores ignoreStartupCmd.",
+      "params": {
+        "d": {
+          "type": "table",
+          "desc": "Table returned by onSerialize."
+        }
+      },
       "returns": [],
       "internal": true
     }

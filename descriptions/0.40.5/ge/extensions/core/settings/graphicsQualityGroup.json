@@ -1,49 +1,80 @@
 {
   "path": "lua/ge/extensions/core/settings/graphicsQualityGroup.lua",
-  "module": "Classe de base d'un groupe de qualité graphique. Elle charge un module de préréglages (par ex. meshQuality, terrainQuality), garde le niveau courant et applique un niveau en écrivant chaque clé dans VariableRegistry ; si une valeur a changé, elle appelle le hook onApply du module. Utilisée par graphic.lua, pas par les extensions classiques.",
+  "module": "Base class of a graphics quality group. It loads a presets module (e.g. meshQuality, terrainQuality), keeps the current level and applies a level by writing each key to VariableRegistry; if a value changed, it calls the module's onApply hook. Used by graphic.lua, not by regular extensions.",
   "usage": "local group = require(\"extensions/core/settings/graphicsQualityGroup\")(\"core_settings_meshQuality\", \"mesh\")\ngroup:applyLevel(\"High\")",
   "notes": [
-    "Le module renvoie une fonction fabrique (qualityLevelsFilename, groupName, options) et non une table d'extension.",
-    "La page auto indique init(groupName) mais le code réel est init(qualitiyLevelsFilename, groupName).",
-    "applyLevel avec un niveau inconnu applique une table vide (aucun changement) mais mémorise tout de même le nom comme niveau courant.",
-    "getCurrentLevel ignore son paramètre levelString et renvoie la table du niveau courant (nil si inconnu)."
+    "The module returns a factory function (qualityLevelsFilename, groupName, options) and not an extension table.",
+    "The auto-generated page says init(groupName) but the actual code is init(qualitiyLevelsFilename, groupName).",
+    "applyLevel with an unknown level applies an empty table (no change) but still stores the name as the current level.",
+    "getCurrentLevel ignores its levelString parameter and returns the current level's table (nil if unknown)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Groupe de qualité. Champs d'instance : currentQualityLevel (string, \"\" au départ), qualityLevels (copie de group.qualityLevels), name (string, 'unnamed_quality_group' par défaut), onApply (fonction du module, nop sinon).",
+      "desc": "Quality group. Instance fields: currentQualityLevel (string, \"\" at start), qualityLevels (copy of group.qualityLevels), name (string, 'unnamed_quality_group' by default), onApply (module function, nop otherwise).",
       "functions": {
         "init": {
-          "desc": "Constructeur appelé par la fabrique : require(qualityLevelsFilename) puis copie qualityLevels et récupère onApply. Sans nom de fichier, le groupe est vide.",
+          "desc": "Constructor called by the factory: require(qualityLevelsFilename) then copies qualityLevels and gets onApply. Without a file name, the group is empty.",
           "params": {
-            "qualitiyLevelsFilename": {"type": "string|nil", "desc": "Nom du module à charger (chemin require ou nom d'extension)."},
-            "groupName": {"type": "string|nil", "desc": "Nom du groupe."}
+            "qualitiyLevelsFilename": {
+              "type": "string|nil",
+              "desc": "Name of the module to load (require path or extension name)."
+            },
+            "groupName": {
+              "type": "string|nil",
+              "desc": "Group name."
+            }
           },
           "returns": [],
           "internal": true
         },
         "applyLevel": {
-          "desc": "Applique le niveau nommé (via apply) puis le mémorise comme niveau courant. Ne fait rien si levelString est nil.",
-          "params": {"levelString": {"type": "string|nil", "desc": "Nom du niveau, clé de qualityLevels."}},
+          "desc": "Applies the named level (via apply) then stores it as the current level. Does nothing if levelString is nil.",
+          "params": {
+            "levelString": {
+              "type": "string|nil",
+              "desc": "Level name, key of qualityLevels."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "getCurrentLevel": {
-          "desc": "Renvoie la table de préréglage du niveau courant.",
-          "params": {"levelString": {"type": "any", "desc": "Ignoré."}},
-          "returns": [{"type": "table|nil", "desc": "Préréglage courant."}],
+          "desc": "Returns the preset table of the current level.",
+          "params": {
+            "levelString": {
+              "type": "any",
+              "desc": "Ignored."
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Current preset."
+            }
+          ],
           "internal": false
         },
         "getCurrentLevelId": {
-          "desc": "Renvoie le nom du niveau courant.",
+          "desc": "Returns the name of the current level.",
           "params": {},
-          "returns": [{"type": "string", "desc": "Nom du niveau, \"\" si aucun appliqué."}],
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Level name, \"\" if none applied."
+            }
+          ],
           "internal": false
         },
         "apply": {
-          "desc": "Pour chaque paire clé/valeur du préréglage, lit VariableRegistry.get(clé), compare par tostring, puis VariableRegistry.set(clé, valeur). Si au moins une valeur a changé, appelle self:onApply().",
-          "params": {"qualityLevel": {"type": "table", "desc": "Table clé VariableRegistry -> valeur."}},
+          "desc": "For each key/value pair of the preset, reads VariableRegistry.get(key), compares by tostring, then VariableRegistry.set(key, value). If at least one value changed, calls self:onApply().",
+          "params": {
+            "qualityLevel": {
+              "type": "table",
+              "desc": "Table VariableRegistry key -> value."
+            }
+          },
           "returns": [],
           "internal": false
         }

@@ -1,102 +1,102 @@
 # `controller_vehicleController_shiftLogic_dummy`
 
-*Fichier : `lua/vehicle/controller/vehicleController/shiftLogic/dummy.lua` · VM : Véhicule · 148 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/vehicleController/shiftLogic/dummy.lua` · VM: Vehicle · 148 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `vehicleController/shiftLogic/dummy` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `vehicleController/shiftLogic/dummy` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Module de logique de boîte « neutre » chargé par vehicleController quand le véhicule n'a pas de device « gearbox » (ou via jbeam shiftLogicName = "dummy"). Il recopie simplement les entrées throttle/brake du conducteur, lit le régime du moteur « mainEngine » s'il existe et remplit les valeurs (températures, charge, couples, état moteur) que vehicleController publie dans electrics. Aucun passage de rapport.
+"Neutral" gearbox logic module loaded by vehicleController when the vehicle has no "gearbox" device (or via jbeam shiftLogicName = "dummy"). It simply copies the driver's throttle/brake inputs, reads the speed of the "mainEngine" engine if it exists and fills in the values (temperatures, load, torques, engine state) that vehicleController publishes in electrics. No gear changes.
 
-## Remarques
+## Notes
 
-- Contrat commun à tous les modules shiftLogic : vehicleController injecte avant chaque frame gearboxHandling, timer, timerConstants, inputValues, shiftPreventionData, shiftBehavior et smoothedValues (nil à la création du module), puis lit throttle, brake, clutchRatio, rpm, etc.
-- gearboxBehaviorChanged, shiftUp, shiftDown et shiftToGearIndex valent `nop` (global du moteur, non défini dans ce fichier) : ne font rien.
-- updateGearboxGFX écrit aussi M.running et M.isShifting, qui ne sont pas déclarés dans le tableau initial du module (vehicleController ne lit pas M.running ; il lit isShifting).
-- Le clutchRatio reste à 0 et le moteur reçoit la valeur de throttle brute (0 si moteur désactivé).
+- Contract common to all shiftLogic modules: before each frame vehicleController injects gearboxHandling, timer, timerConstants, inputValues, shiftPreventionData, shiftBehavior and smoothedValues (nil at module creation), then reads throttle, brake, clutchRatio, rpm, etc.
+- gearboxBehaviorChanged, shiftUp, shiftDown and shiftToGearIndex are `nop` (engine global, not defined in this file): they do nothing.
+- updateGearboxGFX also writes M.running and M.isShifting, which are not declared in the module's initial table (vehicleController does not read M.running; it reads isShifting).
+- clutchRatio stays at 0 and the engine receives the raw throttle value (0 if engine disabled).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_vehicleController_shiftLogic_dummy.areShiftLEDsInUse()` | Toujours false : pas de LEDs de changement de rapport. *(interne)* | 55 |
-| `controller_vehicleController_shiftLogic_dummy.getGearName()` | Nom de rapport affiché : chaîne vide. | 59 |
-| `controller_vehicleController_shiftLogic_dummy.getGearPosition()` | Position du levier pour animation : 0, 0. | 63 |
-| `controller_vehicleController_shiftLogic_dummy.init(jbeamData, sharedFunctionTable)` | Mémorise sharedFunctions, récupère les devices mainEngine et gearbox, remet les valeurs à zéro et lit maxRPM/idleRPM/énergie du moteur. Appelé par vehicleController à l'init et au reset. *(interne)* | 94 |
-| `controller_vehicleController_shiftLogic_dummy.sendTorqueData()` | Demande au moteur d'envoyer ses courbes de couple à l'UI (si un moteur existe). *(interne)* | 88 |
-| `controller_vehicleController_shiftLogic_dummy.updateGearboxGFX(dt)` | Chaque frame : recopie les entrées et met à jour rpm, températures, charge, couples, ignition et état du moteur. *(interne)* | 67 |
+| `controller_vehicleController_shiftLogic_dummy.areShiftLEDsInUse()` | Always false: no shift LEDs. *(internal)* | 55 |
+| `controller_vehicleController_shiftLogic_dummy.getGearName()` | Displayed gear name: empty string. | 59 |
+| `controller_vehicleController_shiftLogic_dummy.getGearPosition()` | Lever position for animation: 0, 0. | 63 |
+| `controller_vehicleController_shiftLogic_dummy.init(jbeamData, sharedFunctionTable)` | Stores sharedFunctions, gets the mainEngine and gearbox devices, resets values to zero and reads the engine's maxRPM/idleRPM/energy. Called by vehicleController at init and reset. *(internal)* | 94 |
+| `controller_vehicleController_shiftLogic_dummy.sendTorqueData()` | Asks the engine to send its torque curves to the UI (if an engine exists). *(internal)* | 88 |
+| `controller_vehicleController_shiftLogic_dummy.updateGearboxGFX(dt)` | Every frame: copies the inputs and updates rpm, temperatures, load, torques, ignition and engine state. *(internal)* | 67 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_vehicleController_shiftLogic_dummy.areShiftLEDsInUse()`
 
-Toujours false : pas de LEDs de changement de rapport.
+Always false: no shift LEDs.
 
-- **renvoie** : boolean false
+- **returns**: boolean false
 
 #### `controller_vehicleController_shiftLogic_dummy.getGearName()`
 
-Nom de rapport affiché : chaîne vide.
+Displayed gear name: empty string.
 
-- **renvoie** : string ""
+- **returns**: string ""
 
 #### `controller_vehicleController_shiftLogic_dummy.getGearPosition()`
 
-Position du levier pour animation : 0, 0.
+Lever position for animation: 0, 0.
 
-- **renvoie** : number gear_A
-- **renvoie** : number gearModeIndex
+- **returns**: number gear_A
+- **returns**: number gearModeIndex
 
 #### `controller_vehicleController_shiftLogic_dummy.init(jbeamData, sharedFunctionTable)`
 
-Mémorise sharedFunctions, récupère les devices mainEngine et gearbox, remet les valeurs à zéro et lit maxRPM/idleRPM/énergie du moteur. Appelé par vehicleController à l'init et au reset.
+Stores sharedFunctions, gets the mainEngine and gearbox devices, resets values to zero and reads the engine's maxRPM/idleRPM/energy. Called by vehicleController at init and reset.
 
-- `jbeamData` (*table*) : Données jbeam (non utilisées).
-- `sharedFunctionTable` (*table*) : Utilitaires sharedFunctions de vehicleController.
+- `jbeamData` (*table*) : Jbeam data (unused).
+- `sharedFunctionTable` (*table*) : sharedFunctions utilities of vehicleController.
 
 #### `controller_vehicleController_shiftLogic_dummy.updateGearboxGFX(dt)`
 
-Chaque frame : recopie les entrées et met à jour rpm, températures, charge, couples, ignition et état du moteur.
+Every frame: copies the inputs and updates rpm, temperatures, load, torques, ignition and engine state.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `brake` | number | Recopie de inputValues.brake. |
-| `checkEngine` | boolean | Vrai si le moteur est désactivé (isDisabled). |
-| `clutchRatio` | number | Toujours 0. |
-| `currentGearIndex` | integer | Toujours 0. |
-| `energyStorages` | table<integer, string> | Noms des réservoirs du moteur (sharedFunctions.getEnergyStorages). |
-| `engineLoad` | number | Charge instantanée du moteur. |
-| `engineThrottle` | number | Gaz envoyés au moteur (0 si moteur désactivé). |
-| `engineTorque` | number | Couple de combustion du moteur. |
-| `flywheelTorque` | number | Couple de sortie du moteur (outputTorque1). |
+| `brake` | number | Copy of inputValues.brake. |
+| `checkEngine` | boolean | True if the engine is disabled (isDisabled). |
+| `clutchRatio` | number | Always 0. |
+| `currentGearIndex` | integer | Always 0. |
+| `energyStorages` | table<integer, string> | Engine tank names (sharedFunctions.getEnergyStorages). |
+| `engineLoad` | number | Instantaneous engine load. |
+| `engineThrottle` | number | Throttle sent to the engine (0 if engine disabled). |
+| `engineTorque` | number | Engine combustion torque. |
+| `flywheelTorque` | number | Engine output torque (outputTorque1). |
 | `gearboxBehaviorChanged` | function | nop. |
-| `gearboxHandling` | table|nil | Injecté par vehicleController. |
-| `gearboxTorque` | number | Couple de sortie du device gearbox. |
-| `idleRPM` | number | Ralenti du moteur (tr/min) lu à l'init. |
-| `ignition` | boolean | Vrai si electrics.values.ignitionLevel > 1. |
-| `inputValues` | table|nil | Injecté : {throttle, clutch} bornés 0..1 (ou overrides electrics). |
-| `isArcadeSwitched` | boolean | Toujours false. |
-| `isEngineRunning` | number | 1 si le moteur tourne (régime > 80% de starterMaxAV et démarreur dégagé) ou s'il n'a pas de démarreur, sinon 0. |
-| `isSportModeActive` | boolean | Toujours false. |
-| `maxGearIndex` | integer | Toujours 0. |
-| `maxRPM` | number | Régime max du moteur lu à l'init. |
-| `minGearIndex` | integer | Toujours 0. |
-| `oilTemp` | number | Température d'huile du moteur. |
-| `rpm` | number | Régime moteur en tr/min (outputAV1 du mainEngine). |
-| `shiftBehavior` | table|nil | Injecté par vehicleController. |
+| `gearboxHandling` | table|nil | Injected by vehicleController. |
+| `gearboxTorque` | number | Gearbox device output torque. |
+| `idleRPM` | number | Engine idle (RPM) read at init. |
+| `ignition` | boolean | True if electrics.values.ignitionLevel > 1. |
+| `inputValues` | table|nil | Injected: {throttle, clutch} bounded 0..1 (or electrics overrides). |
+| `isArcadeSwitched` | boolean | Always false. |
+| `isEngineRunning` | number | 1 if the engine is running (speed > 80% of starterMaxAV and starter disengaged) or if it has no starter, otherwise 0. |
+| `isSportModeActive` | boolean | Always false. |
+| `maxGearIndex` | integer | Always 0. |
+| `maxRPM` | number | Engine max RPM read at init. |
+| `minGearIndex` | integer | Always 0. |
+| `oilTemp` | number | Engine oil temperature. |
+| `rpm` | number | Engine speed in RPM (outputAV1 of the mainEngine). |
+| `shiftBehavior` | table|nil | Injected by vehicleController. |
 | `shiftDown` | function | nop. |
-| `shiftPreventionData` | table|nil | Injecté par vehicleController. |
+| `shiftPreventionData` | table|nil | Injected by vehicleController. |
 | `shiftToGearIndex` | function | nop. |
 | `shiftUp` | function | nop. |
-| `shiftingAggression` | number | Toujours 0. |
-| `smoothedAvgAVInput` | number | Vitesse angulaire (rad/s) de sortie du device « gearbox » (0 si absent). |
-| `smoothedValues` | table|nil | Injecté par vehicleController. |
-| `throttle` | number | Recopie de inputValues.throttle. |
-| `timer` | table|nil | Injecté par vehicleController. |
-| `timerConstants` | table|nil | Injecté par vehicleController. |
-| `waterTemp` | number | Température de liquide de refroidissement (ou d'huile à défaut). |
+| `shiftingAggression` | number | Always 0. |
+| `smoothedAvgAVInput` | number | Angular velocity (rad/s) of the "gearbox" device output (0 if absent). |
+| `smoothedValues` | table|nil | Injected by vehicleController. |
+| `throttle` | number | Copy of inputValues.throttle. |
+| `timer` | table|nil | Injected by vehicleController. |
+| `timerConstants` | table|nil | Injected by vehicleController. |
+| `waterTemp` | number | Coolant temperature (or oil temperature as a fallback). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/vehicleController/shiftLogic/dummy.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/vehicleController/shiftLogic/dummy.lua`.*

@@ -1,19 +1,19 @@
 # `client_postFx_glow`
 
-*Fichier : `lua/ge/client/postFx/glow.lua` · VM : Game Engine (GE) · 90 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/client/postFx/glow.lua` · VM: Game Engine (GE) · 90 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("client/postFx/glow")`
+**Access:** `require("client/postFx/glow")`
 
-Effet de lueur (glow). Crée les shaders de flou séparable PFX_GlowBlurVertShader et PFX_GlowBlurHorzShader, le shader de combinaison PFX_GlowCombineShader et le PostEffect « GlowPostFx » (rendu après GlowBin, résolution 0,5x0,5, lit #glowbuffer) auquel sont ajoutés trois sous-effets : flou vertical, flou horizontal puis combinaison avec $backBuffer. Aucune fonction exportée.
+Glow effect. Creates the separable blur shaders PFX_GlowBlurVertShader and PFX_GlowBlurHorzShader, the combine shader PFX_GlowCombineShader and the PostEffect "GlowPostFx" (rendered after GlowBin, resolution 0.5x0.5, reads #glowbuffer) to which three sub-effects are added: vertical blur, horizontal blur then combination with $backBuffer. No exported function.
 
-## Remarques
+## Notes
 
-- Dans le code, le flou « Vert » a BLUR_DIR=(0,1) et le « Horz » BLUR_DIR=(1,0).
-- La variable locale du PostEffect principal s'appelle gammaPostFX (nom hérité d'un copier-coller) mais l'objet enregistré est GlowPostFx.
+- In the code, the "Vert" blur has BLUR_DIR=(0,1) and the "Horz" one BLUR_DIR=(1,0).
+- The local variable of the main PostEffect is named gammaPostFX (name inherited from a copy-paste) but the registered object is GlowPostFx.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/client/postFx/glow.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/client/postFx/glow.lua`.*

@@ -1,24 +1,24 @@
 # `flowgraph_nodes_gameplay_rally_loop_rallyPositionGetter`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyPositionGetter.lua` · VM : Game Engine (GE) · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyPositionGetter.lua` · VM: Game Engine (GE) · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/loop/rallyPositionGetter")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/loop/rallyPositionGetter")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Position Getter » (catégorie repeat_instant, tag rally). Cherche dans un pathData la position de départ portant le nom donné (pathData:findStartPositionByName) et renvoie sa position (pos) et sa rotation (rot). La sortie flow vaut true quand la position est trouvée.
+Flowgraph node "Rally Position Getter" (category repeat_instant, tag rally). Looks in a pathData for the start position with the given name (pathData:findStartPositionByName) and returns its position (pos) and rotation (rot). The flow output is true when the position is found.
 
-## Remarques
+## Notes
 
-- Malgré la description (« from the current rally loop manager »), le nœud n'utilise pas le gestionnaire de boucle : seul pathData compte.
-- pos et rot sont renvoyés tels quels (vec3 et quat du chemin, pas des tables).
+- Despite the description ("from the current rally loop manager"), the node does not use the loop manager: only pathData matters.
+- pos and rot are returned as is (vec3 and quat of the path, not tables).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Met la sortie flow à false au démarrage. | 23 |
-| `C:work()` | Cherche la position nommée et renseigne pos, rot et flow. | 27 |
+| `C:_executionStarted()` | Sets the flow output to false at start. | 23 |
+| `C:work()` | Looks for the named position and fills pos, rot and flow. | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyPositionGetter.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyPositionGetter.lua`.*

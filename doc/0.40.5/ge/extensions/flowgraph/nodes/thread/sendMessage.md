@@ -1,26 +1,26 @@
 # `flowgraph_nodes_thread_sendMessage`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/thread/sendMessage.lua` · VM : Game Engine (GE) · 81 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/thread/sendMessage.lua` · VM: Game Engine (GE) · 81 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/thread/sendMessage")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/thread/sendMessage")` (file under extensions/ but not a regular extension)
 
-Noeud « Send Message » (thread). Envoie un message (table des pins d'entrée non fixes) au projet flowgraph d'id donné (-1 = parent) via modules.thread:sendMessage, ou sendNetworkedMessage si le pin networked est vrai. Envoie une seule fois jusqu'au reset. Pins fixes : flow, reset, networked, id, name ; sortie flow.
+Node "Send Message" (thread). Sends a message (table of the non-fixed input pins) to the flowgraph project with the given id (-1 = parent) via modules.thread:sendMessage, or sendNetworkedMessage if the networked pin is true. Sends only once until reset. Fixed pins: flow, reset, networked, id, name; output flow.
 
-## Remarques
+## Notes
 
-- Le pin name (nom du message) est fixe donc n'est pas ajouté au contenu du message.
-- Le résultat de sendMessage n'est pas utilisé.
+- The name pin (message name) is fixed so it is not added to the message content.
+- The result of sendMessage is not used.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:_executionStarted()` | done = false. | 71 |
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du noeud dans l'éditeur. | 75 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the editor. | 75 |
 | `C:init()` | savePins = true, allowCustomInPins = true. | 41 |
-| `C:work()` | Sur reset, done = false ; sinon, au flow avec un id, assemble les pins non fixes en table et envoie le message, puis recopie flow. | 47 |
+| `C:work()` | On reset, done = false; otherwise, on flow with an id, assembles the non-fixed pins into a table and sends the message, then copies flow. | 47 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/thread/sendMessage.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/thread/sendMessage.lua`.*

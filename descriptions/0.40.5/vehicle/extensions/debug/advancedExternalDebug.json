@@ -1,20 +1,55 @@
 {
   "path": "lua/vehicle/extensions/debug/advancedExternalDebug.lua",
-  "module": "Extension de débogage qui envoie des paquets JSON par UDP à un outil externe (AED, 'Advanced External Debug') sur 127.0.0.1:43812, à 30 envois par seconde, avec un heartbeat prévu à 1 Hz. Les modules du véhicule y déposent leurs paquets via debugPacket ; l'extension y ajoute à chaque frame un paquet principal indiquant si ce véhicule est celui du joueur.",
-  "usage": "extensions.debug_advancedExternalDebug.debugPacket({sourceType = 'MON_MODULE', packetType = 'data', valeur = 42})",
+  "module": "Debug extension that sends JSON packets over UDP to an external tool (AED, 'Advanced External Debug') on 127.0.0.1:43812, at 30 sends per second, with a heartbeat planned at 1 Hz. Vehicle modules drop their packets there via debugPacket; the extension adds to each frame a main packet indicating whether this vehicle is the player's.",
+  "usage": "extensions.debug_advancedExternalDebug.debugPacket({sourceType = 'MY_MODULE', packetType = 'data', value = 42})",
   "notes": [
-    "Chaque paquet reçoit vehicleID = objectId. Les paquets en attente sont envoyés en un seul tableau JSON toutes les 1/30 s (jsonEncode(debugPackets)), puis la liste est vidée.",
-    "Au chargement et à onInit : crée un socket UDP non bloquant (si la globale `socket` existe), pointe vers 127.0.0.1:43812 (peerIP et peerPort sont codés en dur, debugSettings est une table vide) et enregistre un paquet {sourceType='AED', packetType='init'}.",
-    "La réception de commandes (RequestConfig, EnableDebugMode, SetConfig, SetProperty) est codée mais désactivée : l'appel receiveDebugCommands() est commenté dans updateGFX. Si elle était activée, elle utiliserait `subControllerLookup`, une variable qui n'est définie nulle part dans ce fichier.",
-    "sendDebugHeartbeat (envoi de la chaîne 'BNGAED') est défini mais jamais appelé.",
-    "Si udpSocket:send échoue, l'erreur est affichée (print) à chaque tentative."
+    "Each packet receives vehicleID = objectId. Pending packets are sent as a single JSON array every 1/30 s (jsonEncode(debugPackets)), then the list is cleared.",
+    "At load and at onInit: creates a non-blocking UDP socket (if the global `socket` exists), points to 127.0.0.1:43812 (peerIP and peerPort are hardcoded, debugSettings is an empty table) and records a packet {sourceType='AED', packetType='init'}.",
+    "Receiving commands (RequestConfig, EnableDebugMode, SetConfig, SetProperty) is coded but disabled: the call receiveDebugCommands() is commented out in updateGFX. If enabled, it would use `subControllerLookup`, a variable that is not defined anywhere in this file.",
+    "sendDebugHeartbeat (sending the string 'BNGAED') is defined but never called.",
+    "If udpSocket:send fails, the error is printed (print) at each attempt."
   ],
   "fields": {},
   "functions": {
-    "onInit": {"desc": "Hook d'initialisation : crée la liaison UDP et signale un nouveau véhicule à l'outil.", "params": {}, "returns": [], "internal": true},
-    "onReset": {"desc": "Hook de reset : vide la file de paquets.", "params": {}, "returns": [], "internal": true},
-    "onExtensionLoaded": {"desc": "Appelé au chargement de l'extension : appelle onInit.", "params": {}, "returns": [], "internal": true},
-    "updateGFX": {"desc": "Appelé chaque frame : ajoute le paquet principal puis envoie les paquets accumulés au rythme de 30 Hz.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true},
-    "debugPacket": {"desc": "Ajoute un paquet à la file d'envoi (vehicleID est ajouté automatiquement).", "params": {"packet": {"type": "table", "desc": "Table sérialisable en JSON, avec de préférence sourceType et packetType."}}, "returns": [], "internal": false}
+    "onInit": {
+      "desc": "Initialization hook: creates the UDP link and signals a new vehicle to the tool.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onReset": {
+      "desc": "Reset hook: clears the packet queue.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Called when the extension loads: calls onInit.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Called every frame: adds the main packet then sends the accumulated packets at 30 Hz.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "debugPacket": {
+      "desc": "Adds a packet to the send queue (vehicleID is added automatically).",
+      "params": {
+        "packet": {
+          "type": "table",
+          "desc": "JSON-serializable table, preferably with sourceType and packetType."
+        }
+      },
+      "returns": [],
+      "internal": false
+    }
   }
 }

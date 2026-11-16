@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/fitPoly.lua",
+  "module": "Utilitaire qui ordonne un ensemble non ordonné d'objets en une polyligne. Pour chaque point de départ possible, il construit un chemin glouton (point le plus proche, bonus si la direction continue), puis garde le chemin au meilleur score (lissé de direction, longueur courte). Utile aux outils de l'éditeur qui reçoivent des objets sélectionnés sans ordre.",
+  "usage": "local fitPoly = require('editor/toolUtilities/fitPoly')\nlocal ordered = fitPoly.fitPoly(components) -- components[i].obj:getPosition()",
+  "notes": [
+    "Distance maximale entre deux points voisins : 50 m (constante maxDist) ; au-delà, les points ne sont pas chaînés et les points restants sont ajoutés à la fin du chemin dans l'ordre d'origine.",
+    "Complexité O(n^3) environ (chaque départ, chaque pas parcourt tous les points) : prévu pour de petits ensembles."
+  ],
+  "functions": {
+    "fitPoly": {
+      "desc": "Réordonne les composants pour former la meilleure polyligne. Chaque composant doit avoir un champ obj avec getPosition(). Renvoie components tel quel s'il y en a moins de deux.",
+      "params": {"components": {"type": "table[]", "desc": "Liste de tables { obj = objet avec getPosition() }."}},
+      "returns": [{"type": "table[]", "desc": "Nouvelle liste des mêmes composants, dans l'ordre de la polyligne."}],
+      "internal": false
+    }
+  }
+}

@@ -1,59 +1,59 @@
 # `campaign_photoSafari`
 
-*Fichier : `lua/ge/extensions/campaign/photoSafari.lua` · VM : Game Engine (GE) · 188 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/campaign/photoSafari.lua` · VM: Game Engine (GE) · 188 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `campaign_photoSafari` : `extensions.load("campaign_photoSafari")`, puis la globale `campaign_photoSafari`
+**Access:** extension `campaign_photoSafari`: `extensions.load("campaign_photoSafari")`, then the global `campaign_photoSafari`
 
-Logique de la mission « photo safari » de la campagne : le joueur doit photographier des lieux. À l'acceptation, un fichier JSON liste les lieux (clés = noms de triggers) avec leurs indices (hints), l'objet cible (objectName) et le trigger closeToPhoto. Les triggers BeamNG (onBeamNGTrigger) débloquent des indices et ouvrent le mode photo ; takepiccheck, appelée par photomode.js, vérifie que la cible est entièrement dans le champ de la caméra et assez proche.
+Logic of the campaign's "photo safari" mission: the player must photograph places. On acceptance, a JSON file lists the places (keys = trigger names) with their hints, the target object (objectName) and the closeToPhoto trigger. BeamNG triggers (onBeamNGTrigger) unlock hints and open photo mode; takepiccheck, called by photomode.js, checks that the target is entirely within the camera's field of view and close enough.
 
-## Remarques
+## Notes
 
-- Les triggers d'indices sont codés en dur : prototype_2_trigger_CD, prototype_2_shady_trigger, prototype_2_ranger_trigger, prototype_2_stuntman_trigger, prototype_2_police_trigger. Le lieu spécial « on_site » utilise le trigger « on_site_obj » et l'objet « camtrig ».
-- Valeurs lues dans le champ M : accept, photomodeOpen, location, targetObj, closeToPhoto, cameraDistanceToObject, msg, showhint, count, description, foundLocation, photoSafarimissions, photoSafariData.
-- Bug : dans onBeamNGTrigger, logTag n'est pas défini dans ce fichier (nil) et le message d'erreur lit M.photoSafariData.objectName au lieu de l'objectName du lieu ; le message sera donc faux ou provoquera une erreur de concaténation.
-- Pour une photo hors lieu « on_site », la photo est valide si la boîte englobante de l'objet est entièrement dans le frustum et si camdis <= M.cameraDistanceToObject.
-- Pour « on_site », on_siteLocation exige que la caméra soit à moins de 5 m de l'objet « camtrig », et que le véhicule soit dans la zone (trigger on_site_obj).
-- takepiccheck affiche le message via guihooks.trigger('ScenarioFlashMessage', {{msg, 2}}), retourne au menu (ui_router.navigate('menu')) et relance la simulation (simTimeAuthority.pause(false)).
+- The hint triggers are hardcoded: prototype_2_trigger_CD, prototype_2_shady_trigger, prototype_2_ranger_trigger, prototype_2_stuntman_trigger, prototype_2_police_trigger. The special place "on_site" uses the trigger "on_site_obj" and the object "camtrig".
+- Values read in the field M: accept, photomodeOpen, location, targetObj, closeToPhoto, cameraDistanceToObject, msg, showhint, count, description, foundLocation, photoSafarimissions, photoSafariData.
+- Bug: in onBeamNGTrigger, logTag is not defined in this file (nil) and the error message reads M.photoSafariData.objectName instead of the place's objectName; the message will therefore be wrong or cause a concatenation error.
+- For a photo outside the "on_site" place, the photo is valid if the object's bounding box is entirely within the frustum and if camdis <= M.cameraDistanceToObject.
+- For "on_site", on_siteLocation requires the camera to be within 5 m of the object "camtrig", and the vehicle to be in the zone (trigger on_site_obj).
+- takepiccheck displays the message via guihooks.trigger('ScenarioFlashMessage', {{msg, 2}}), returns to the menu (ui_router.navigate('menu')) and resumes the simulation (simTimeAuthority.pause(false)).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `campaign_photoSafari.missionaccepted(file)` | Charge le fichier JSON de la mission (jsonReadFile), met accept à true, remet à zéro indices, lieux trouvés et vus, et mémorise les hints de chaque lieu. Ne fait rien si le fichier n'existe pas. | 22 |
-| `campaign_photoSafari.onBeamNGTrigger(data)` | Hook appelé quand un trigger est franchi. Ignore tout sauf le véhicule du joueur. À l'entrée dans un trigger d'indice : débloque l'indice suivant de chaque lieu non trouvé ; dans un trigger de lieu : mémorise location/targetObj et ouvre le mode photo ; dans closeToPhoto : calcule la distance caméra-objet. À la sortie, referme le mode photo ou closeToPhoto. *(interne)* *(hook)* | 40 |
-| `campaign_photoSafari.takepiccheck()` | Vérifie la photo : refuse si le joueur n'est pas assez proche, sinon teste la distance de la caméra à l'objet et que la boîte englobante de l'objet est entièrement dans le frustum (Engine.sceneGetCameraFrustum). En cas de succès, marque le lieu comme trouvé. Affiche le message résultat. | 144 |
+| `campaign_photoSafari.missionaccepted(file)` | Loads the mission's JSON file (jsonReadFile), sets accept to true, resets hints, found and seen places, and stores each place's hints. Does nothing if the file does not exist. | 22 |
+| `campaign_photoSafari.onBeamNGTrigger(data)` | Hook called when a trigger is crossed. Ignores everything except the player's vehicle. On entering a hint trigger: unlocks the next hint of each place not yet found; in a place trigger: stores location/targetObj and opens photo mode; in closeToPhoto: computes the camera-object distance. On exit, closes photo mode or closeToPhoto. *(internal)* *(hook)* | 40 |
+| `campaign_photoSafari.takepiccheck()` | Checks the photo: refuses if the player is not close enough, otherwise tests the camera's distance to the object and that the object's bounding box is entirely within the frustum (Engine.sceneGetCameraFrustum). On success, marks the place as found. Displays the result message. | 144 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `campaign_photoSafari.missionaccepted(file)`
 
-Charge le fichier JSON de la mission (jsonReadFile), met accept à true, remet à zéro indices, lieux trouvés et vus, et mémorise les hints de chaque lieu. Ne fait rien si le fichier n'existe pas.
+Loads the mission's JSON file (jsonReadFile), sets accept to true, resets hints, found and seen places, and stores each place's hints. Does nothing if the file does not exist.
 
-- `file` (*string*) : Chemin du JSON de la mission photo safari.
+- `file` (*string*) : Path of the photo safari mission's JSON.
 
 #### `campaign_photoSafari.onBeamNGTrigger(data)`
 
-Hook appelé quand un trigger est franchi. Ignore tout sauf le véhicule du joueur. À l'entrée dans un trigger d'indice : débloque l'indice suivant de chaque lieu non trouvé ; dans un trigger de lieu : mémorise location/targetObj et ouvre le mode photo ; dans closeToPhoto : calcule la distance caméra-objet. À la sortie, referme le mode photo ou closeToPhoto.
+Hook called when a trigger is crossed. Ignores everything except the player's vehicle. On entering a hint trigger: unlocks the next hint of each place not yet found; in a place trigger: stores location/targetObj and opens photo mode; in closeToPhoto: computes the camera-object distance. On exit, closes photo mode or closeToPhoto.
 
-- `data` (*table*) : Données du trigger : subjectID, event ('enter'/'exit'), triggerName.
+- `data` (*table*) : Trigger data: subjectID, event ('enter'/'exit'), triggerName.
 
 #### `campaign_photoSafari.takepiccheck()`
 
-Vérifie la photo : refuse si le joueur n'est pas assez proche, sinon teste la distance de la caméra à l'objet et que la boîte englobante de l'objet est entièrement dans le frustum (Engine.sceneGetCameraFrustum). En cas de succès, marque le lieu comme trouvé. Affiche le message résultat.
+Checks the photo: refuses if the player is not close enough, otherwise tests the camera's distance to the object and that the object's bounding box is entirely within the frustum (Engine.sceneGetCameraFrustum). On success, marks the place as found. Displays the result message.
 
-- **renvoie** : boolean|nil true si la photo est valide, false sinon, nil si le lieu est déjà trouvé ou si le joueur est trop loin.
+- **returns**: boolean|nil true if the photo is valid, false otherwise, nil if the place is already found or if the player is too far.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `accept` | boolean | Vrai quand la mission a été acceptée et son JSON chargé. |
-| `photomodeOpen` | boolean | Vrai quand le joueur est dans le trigger d'un lieu et peut prendre la photo. |
-| `targetObj` | string|nil | Nom de l'objet de scène à photographier. |
+| `accept` | boolean | True when the mission has been accepted and its JSON loaded. |
+| `photomodeOpen` | boolean | True when the player is in a place's trigger and can take the photo. |
+| `targetObj` | string|nil | Name of the scene object to photograph. |
 
-**Évènements UI (guihooks.trigger) :** `ScenarioFlashMessage`
+**UI events (guihooks.trigger):** `ScenarioFlashMessage`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `sceneGetCameraFrustum`
 - `FS:` `fileExists`
@@ -61,4 +61,4 @@ Vérifie la photo : refuse si le joueur n'est pas assez proche, sinon teste la d
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/campaign/photoSafari.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/campaign/photoSafari.lua`.*

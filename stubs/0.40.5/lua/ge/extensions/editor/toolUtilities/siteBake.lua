@@ -2,106 +2,106 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/siteBake.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Transforme ce qu'un éditeur vient de construire dans le monde en ce que porte un manifeste de site. Un site est conçu à un endroit de la carte et placé ailleurs : toutes les cuissons soustraient donc leur origine (ox, oy, oz) à tout avant d'écrire (géométrie, transformations du kit, lampes, plantations, plan du sol). L'origine choisie importe peu au placeur (il se recale sur les bornes lues) mais doit être la MÊME pour toutes les listes d'un manifeste. Les coordonnées de plan sont arrondies au millimètre.
---- Accès : extension `editor_toolUtilities_siteBake` : `extensions.load("editor_toolUtilities_siteBake")`, puis la globale `editor_toolUtilities_siteBake`
+--- Transforms what an editor has just built in the world into what a site manifest carries. A site is designed at one place on the map and placed elsewhere: all bakes therefore subtract their origin (ox, oy, oz) from everything before writing (geometry, kit transforms, lamps, plantings, ground plan). The chosen origin matters little to the placer (it realigns on the bounds read) but must be the SAME for all lists of a manifest. Plan coordinates are rounded to the millimeter.
+--- Access: extension `editor_toolUtilities_siteBake`: `extensions.load("editor_toolUtilities_siteBake")`, then the global `editor_toolUtilities_siteBake`
 ---@class editor_toolUtilities_siteBake
 editor_toolUtilities_siteBake = {}
 
---- L'étendue de tout ce que la cuisson place (sommets des parts et positions des instances, relatifs à l'origine), pour que le placeur cadre un site, le choisisse sous le curseur et sache la place qu'il lui faut avant de charger un maillage. Renvoie deux coins nuls si rien.
----Source : lua/ge/extensions/editor/toolUtilities/siteBake.lua:253
----@param parts table|nil Parts de maillage avec verts.
----@param instances table|nil Instances avec px, py, pz.
----@param ox number x de l'origine.
----@param oy number y de l'origine.
----@param oz number z de l'origine.
----@return table  Coin minimal {x,y,z}.
----@return table  Coin maximal {x,y,z}.
+--- The extent of everything the bake places (part vertices and instance positions, relative to the origin), so that the placer can frame a site, pick it under the cursor and know the room it needs before loading a mesh. Returns two null corners if nothing.
+---Source: lua/ge/extensions/editor/toolUtilities/siteBake.lua:253
+---@param parts table|nil Mesh parts with verts.
+---@param instances table|nil Instances with px, py, pz.
+---@param ox number x of the origin.
+---@param oy number y of the origin.
+---@param oz number z of the origin.
+---@return table  Minimum corner {x,y,z}.
+---@return table  Maximum corner {x,y,z}.
 function editor_toolUtilities_siteBake.bounds(parts, instances, ox, oy, oz) end
 
---- Regroupe les placements du kit par forme. Un groupe par maillage distinct devient un seul dessin instancié à l'arrivée : une place avec deux cents bornes identiques coûte une forme et deux cents transformations.
----Source : lua/ge/extensions/editor/toolUtilities/siteBake.lua:109
----@param instances table|nil Liste d'instances { shape, px, py, pz, ax, ay, az, ux, uy, uz, scl, glow, street, stand }.
----@param ox number x de l'origine.
----@param oy number y de l'origine.
----@param oz number z de l'origine.
----@return table  Liste de groupes { shape, xf (12 nombres par instance), glow, street, stand }.
+--- Groups the kit's placements by shape. One group per distinct mesh becomes a single instanced draw on arrival: a square with two hundred identical bollards costs one shape and two hundred transforms.
+---Source: lua/ge/extensions/editor/toolUtilities/siteBake.lua:109
+---@param instances table|nil List of instances { shape, px, py, pz, ax, ay, az, ux, uy, uz, scl, glow, street, stand }.
+---@param ox number x of the origin.
+---@param oy number y of the origin.
+---@param oz number z of the origin.
+---@return table  List of groups { shape, xf (12 numbers per instance), glow, street, stand }.
 function editor_toolUtilities_siteBake.groupInstances(instances, ox, oy, oz) end
 
---- Relit les repères de pièces du kit déjà posées dans la scène et les ajoute à out comme des enregistrements d'instance acceptés par groupInstances. Accepte indifféremment des entrées de kit (champ obj) ou les objets eux-mêmes ; les objets disparus ou sans shapeName sont ignorés ; la lueur nocturne (nightEmissive) est relue.
----Source : lua/ge/extensions/editor/toolUtilities/siteBake.lua:153
----@param list table|nil Liste d'entrées { obj } ou d'objets de scène.
----@param out table|nil Liste à compléter (créée si nil).
----@return table  Enregistrements { shape, glow, px, py, pz, ax.., ux.., scl = {x,y,z} }.
+--- Rereads the frames of kit pieces already placed in the scene and adds them to out as instance records accepted by groupInstances. Accepts either kit entries (obj field) or the objects themselves; vanished objects or those without shapeName are skipped; the night glow (nightEmissive) is reread.
+---Source: lua/ge/extensions/editor/toolUtilities/siteBake.lua:153
+---@param list table|nil List of { obj } entries or scene objects.
+---@param out table|nil List to complete (created if nil).
+---@return table  Records { shape, glow, px, py, pz, ax.., ux.., scl = {x,y,z} }.
 function editor_toolUtilities_siteBake.harvestKit(list, out) end
 
---- Nombre de pièces que dresse une liste de groupes (taille de xf divisée par 12), pour un affichage avant écriture.
----Source : lua/ge/extensions/editor/toolUtilities/siteBake.lua:183
----@param groups table|nil Groupes renvoyés par groupInstances.
----@return number  Nombre de pièces.
+--- Number of pieces that a list of groups stands up (size of xf divided by 12), for display before writing.
+---Source: lua/ge/extensions/editor/toolUtilities/siteBake.lua:183
+---@param groups table|nil Groups returned by groupInstances.
+---@return number  Number of pieces.
 function editor_toolUtilities_siteBake.instanceCount(groups) end
 
---- Les formes auxquelles le site demande que le sol soit taillé, dans son repère. Chaque feature devient { quad = 4 coins {x,y,z locaux}, mode, band } ou { rings, z, mode, band }. Ignore tout ce à quoi sert la feature (palier, rampe, mur de soutènement).
----Source : lua/ge/extensions/editor/toolUtilities/siteBake.lua:59
----@param features table|nil Liste de features { quad } ou { rings, z }, avec mode ('carve' par défaut) et band.
----@param ox number x de l'origine.
----@param oy number y de l'origine.
----@param oz number z de l'origine.
----@return table|nil  Liste de features locales, nil s'il n'y en a pas.
+--- The shapes the site asks the ground to be carved to, in its frame. Each feature becomes { quad = 4 corners {local x,y,z}, mode, band } or { rings, z, mode, band }. Ignores what the feature is used for (landing, ramp, retaining wall).
+---Source: lua/ge/extensions/editor/toolUtilities/siteBake.lua:59
+---@param features table|nil List of features { quad } or { rings, z }, with mode ('carve' by default) and band.
+---@param ox number x of the origin.
+---@param oy number y of the origin.
+---@param oz number z of the origin.
+---@return table|nil  List of local features, nil if there are none.
 function editor_toolUtilities_siteBake.localFeatures(features, ox, oy, oz) end
 
---- Les lampes qui accompagnent les pièces, dans le repère du site. La couleur vient de glow ou de col (blanc par défaut). Un projecteur (dx présent) sort avec dir et cone ; une ampoule non.
----Source : lua/ge/extensions/editor/toolUtilities/siteBake.lua:190
----@param lights table|nil Liste d'enregistrements de lumière { px, py, pz, radius, brightness, glow|col, street, dx, dy, dz, cone }.
----@param ox number x de l'origine.
----@param oy number y de l'origine.
----@param oz number z de l'origine.
----@return table|nil  Liste de lampes locales, nil si vide.
+--- The lamps that accompany the pieces, in the site's frame. The color comes from glow or col (white by default). A spotlight (dx present) comes out with dir and cone; a bulb does not.
+---Source: lua/ge/extensions/editor/toolUtilities/siteBake.lua:190
+---@param lights table|nil List of light records { px, py, pz, radius, brightness, glow|col, street, dx, dy, dz, cone }.
+---@param ox number x of the origin.
+---@param oy number y of the origin.
+---@param oz number z of the origin.
+---@return table|nil  List of local lamps, nil if empty.
 function editor_toolUtilities_siteBake.localLamps(lights, ox, oy, oz) end
 
---- La peinture de terrain qu'un site pose, dans son repère. Chaque couche { m, ring } ou { m, xs, ys } (cellule par cellule) sort nommée par couche de matériau du terrain.
----Source : lua/ge/extensions/editor/toolUtilities/siteBake.lua:87
----@param coats table|nil Liste de couches : m = indice de matériau, ring ou xs/ys.
----@param ox number x de l'origine.
----@param oy number y de l'origine.
----@return table|nil  Liste { layer, ring } ou { layer, cells = {x1,y1,x2,y2,...} } ; nil si aucun bloc de terrain ou rien à peindre.
+--- The terrain paint a site lays, in its frame. Each layer { m, ring } or { m, xs, ys } (cell by cell) comes out named by terrain material layer.
+---Source: lua/ge/extensions/editor/toolUtilities/siteBake.lua:87
+---@param coats table|nil List of layers: m = material index, ring or xs/ys.
+---@param ox number x of the origin.
+---@param oy number y of the origin.
+---@return table|nil  List { layer, ring } or { layer, cells = {x1,y1,x2,y2,...} }; nil if no terrain block or nothing to paint.
 function editor_toolUtilities_siteBake.localPaint(coats, ox, oy) end
 
---- Plantation sous forme d'ancres : { items } pour des plantes déjà dispersées (x, y, sp, s, a), ou { points, species, speciesWeights, size, vary, seed, drape, street } pour une dispersion à refaire (la graine est déjà calculée, pour obtenir les mêmes plantes aux mêmes endroits).
----Source : lua/ge/extensions/editor/toolUtilities/siteBake.lua:211
----@param anchors table|nil Ancres de l'éditeur.
----@param ox number x de l'origine.
----@param oy number y de l'origine.
----@param oz number z de l'origine.
----@return table|nil  Liste d'ancres locales, nil si vide.
+--- Planting as anchors: { items } for already scattered plants (x, y, sp, s, a), or { points, species, speciesWeights, size, vary, seed, drape, street } for a scatter to redo (the seed is already computed, to obtain the same plants at the same places).
+---Source: lua/ge/extensions/editor/toolUtilities/siteBake.lua:211
+---@param anchors table|nil Editor anchors.
+---@param ox number x of the origin.
+---@param oy number y of the origin.
+---@param oz number z of the origin.
+---@return table|nil  List of local anchors, nil if empty.
 function editor_toolUtilities_siteBake.localPlants(anchors, ox, oy, oz) end
 
---- Une polyligne de la même façon (sans minimum de points). Sert aussi pour des normales unitaires avec une origine nulle.
----Source : lua/ge/extensions/editor/toolUtilities/siteBake.lua:34
----@param pts table|nil Liste de points {x,y}.
----@param ox number x de l'origine.
----@param oy number y de l'origine.
----@return table  Polyligne locale.
+--- A polyline in the same way (no minimum number of points). Also used for unit normals with a null origin.
+---Source: lua/ge/extensions/editor/toolUtilities/siteBake.lua:34
+---@param pts table|nil List of {x,y} points.
+---@param ox number x of the origin.
+---@param oy number y of the origin.
+---@return table  Local polyline.
 function editor_toolUtilities_siteBake.localPts(pts, ox, oy) end
 
---- Un polygone de plan, local à l'origine de cuisson, arrondi au millimètre. Renvoie nil si moins de 3 points, pour qu'un appelant puisse collecter le retour directement dans une liste.
----Source : lua/ge/extensions/editor/toolUtilities/siteBake.lua:26
----@param ring table|nil Liste de points {x,y}.
----@param ox number x de l'origine.
----@param oy number y de l'origine.
----@return table|nil  Anneau local.
+--- A plan polygon, local to the bake origin, rounded to the millimeter. Returns nil if fewer than 3 points, so that a caller can collect the return directly into a list.
+---Source: lua/ge/extensions/editor/toolUtilities/siteBake.lua:26
+---@param ring table|nil List of {x,y} points.
+---@param ox number x of the origin.
+---@param oy number y of the origin.
+---@return table|nil  Local ring.
 function editor_toolUtilities_siteBake.localRing(ring, ox, oy) end
 
---- Une liste d'anneaux locaux ; nil si aucun n'était un polygone (une clé absente du manifeste signifie « ce site n'en a pas »).
----Source : lua/ge/extensions/editor/toolUtilities/siteBake.lua:42
----@param rings table|nil Liste d'anneaux.
----@param ox number x de l'origine.
----@param oy number y de l'origine.
----@return table|nil  Liste d'anneaux locaux.
+--- A list of local rings; nil if none was a polygon (a key absent from the manifest means "this site has none").
+---Source: lua/ge/extensions/editor/toolUtilities/siteBake.lua:42
+---@param rings table|nil List of rings.
+---@param ox number x of the origin.
+---@param oy number y of the origin.
+---@return table|nil  List of local rings.
 function editor_toolUtilities_siteBake.localRings(rings, ox, oy) end
 
---- Nombre de plantes qu'une cuisson porterait, sur toutes les ancres (items ou points). Uniquement pour un affichage.
----Source : lua/ge/extensions/editor/toolUtilities/siteBake.lua:242
----@param anchors table|nil Ancres de plantation.
----@return integer  Nombre de plantes.
+--- Number of plants that a bake would carry, over all anchors (items or points). For display only.
+---Source: lua/ge/extensions/editor/toolUtilities/siteBake.lua:242
+---@param anchors table|nil Planting anchors.
+---@return integer  Number of plants.
 function editor_toolUtilities_siteBake.plantCount(anchors) end
 

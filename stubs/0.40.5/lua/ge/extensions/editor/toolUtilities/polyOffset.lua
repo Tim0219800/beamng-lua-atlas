@@ -2,53 +2,53 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/polyOffset.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Décalage latéral d'une polyligne 2D dont chaque arête porte une normale sortante. Gère les coins par jonction en onglet (miter), en chanfrein ou par intersection de droites, avec une limite d'onglet pour les angles aigus. run construit un ruban fermé entre la ligne et son décalage.
---- Accès : extension `editor_toolUtilities_polyOffset` : `extensions.load("editor_toolUtilities_polyOffset")`, puis la globale `editor_toolUtilities_polyOffset`
+--- Lateral offset of a 2D polyline whose every edge carries an outward normal. Handles corners by miter join, bevel (chamfer) or line intersection, with a miter limit for sharp angles. run builds a closed ribbon between the line and its offset.
+--- Access: extension `editor_toolUtilities_polyOffset`: `extensions.load("editor_toolUtilities_polyOffset")`, then the global `editor_toolUtilities_polyOffset`
 ---@class editor_toolUtilities_polyOffset
----@field MITER_LIMIT number Facteur maximal (4.0) de longueur d'onglet par rapport à |d|.
+---@field MITER_LIMIT number Maximum factor (4.0) of miter length relative to |d|.
 editor_toolUtilities_polyOffset = {}
 
---- Intersection de deux droites P + t*D et Q + s*E en 2D. Renvoie nil si elles sont parallèles (déterminant < 1e-9).
----Source : lua/ge/extensions/editor/toolUtilities/polyOffset.lua:15
----@param px number x du point de la première droite.
----@param py number y du point de la première droite.
----@param dx number x de la direction de la première droite.
----@param dy number y de la direction de la première droite.
----@param qx number x du point de la seconde droite.
----@param qy number y du point de la seconde droite.
----@param ex number x de la direction de la seconde droite.
----@param ey number y de la direction de la seconde droite.
----@return number|nil  x de l'intersection.
----@return number|nil  y de l'intersection.
+--- Intersection of two 2D lines P + t*D and Q + s*E. Returns nil if they are parallel (determinant < 1e-9).
+---Source: lua/ge/extensions/editor/toolUtilities/polyOffset.lua:15
+---@param px number x of the point of the first line.
+---@param py number y of the point of the first line.
+---@param dx number x of the direction of the first line.
+---@param dy number y of the direction of the first line.
+---@param qx number x of the point of the second line.
+---@param qy number y of the point of the second line.
+---@param ex number x of the direction of the second line.
+---@param ey number y of the direction of the second line.
+---@return number|nil  x of the intersection.
+---@return number|nil  y of the intersection.
 function editor_toolUtilities_polyOffset.lineIntersect(px, py, dx, dy, qx, qy, ex, ey) end
 
---- Point décalé d'un sommet entre deux normales d'arêtes : l'onglet, ramené le long de sa bissectrice quand l'angle est trop aigu (limite MITER_LIMIT * |d|).
----Source : lua/ge/extensions/editor/toolUtilities/polyOffset.lua:24
----@param cx number x du sommet.
----@param cy number y du sommet.
----@param n1 table Normale {x,y} de l'arête entrante.
----@param n2 table Normale {x,y} de l'arête sortante.
----@param d number Distance de décalage signée.
----@return number  x du point décalé.
----@return number  y du point décalé.
+--- Offset point of a vertex between two edge normals: the miter, brought back along its bisector when the angle is too sharp (limit MITER_LIMIT * |d|).
+---Source: lua/ge/extensions/editor/toolUtilities/polyOffset.lua:24
+---@param cx number x of the vertex.
+---@param cy number y of the vertex.
+---@param n1 table Normal {x,y} of the incoming edge.
+---@param n2 table Normal {x,y} of the outgoing edge.
+---@param d number Signed offset distance.
+---@return number  x of the offset point.
+---@return number  y of the offset point.
 function editor_toolUtilities_polyOffset.mitrePt(cx, cy, n1, n2, d) end
 
---- Décale une polyligne latéralement de la distance signée d. Le type de jonction aux coins est choisi par join : 'chamfer' (deux points), 'miter' (un point par sommet) ou autre/nil (intersection des arêtes décalées, repli en deux points si trop loin).
----Source : lua/ge/extensions/editor/toolUtilities/polyOffset.lua:37
----@param pts table Liste de points {x,y}.
----@param nrm table Normales {x,y} unitaires, une par arête.
----@param d number Distance de décalage signée, en mètres.
----@param join string|nil 'chamfer', 'miter' ou nil pour la jonction par intersection.
----@return table  Liste de points {x,y} décalés.
+--- Offsets a polyline laterally by the signed distance d. The corner join type is chosen by join: 'chamfer' (two points), 'miter' (one point per vertex) or other/nil (intersection of the offset edges, falling back to two points if too far).
+---Source: lua/ge/extensions/editor/toolUtilities/polyOffset.lua:37
+---@param pts table List of {x,y} points.
+---@param nrm table Unit {x,y} normals, one per edge.
+---@param d number Signed offset distance, in meters.
+---@param join string|nil 'chamfer', 'miter' or nil for the intersection join.
+---@return table  List of offset {x,y} points.
 function editor_toolUtilities_polyOffset.polyline(pts, nrm, d, join) end
 
---- Construit un anneau fermé allant de la ligne à son décalage : la base est enfoncée de overlap dans la masse derrière (côté opposé), puis le bord extérieur est parcouru en sens inverse.
----Source : lua/ge/extensions/editor/toolUtilities/polyOffset.lua:75
----@param pts table Liste de points {x,y}.
----@param nrm table Normales par arête.
----@param d number Distance de décalage signée.
----@param join string|nil Type de jonction, voir polyline.
----@param overlap number|nil Enfoncement de la base (défaut 0.05 m).
----@return table|nil  Anneau de points {x,y}, ou nil si moins de 2 points ou |d| < 1e-4.
+--- Builds a closed ring going from the line to its offset: the base is sunk by overlap into the mass behind (opposite side), then the outer edge is traversed in reverse.
+---Source: lua/ge/extensions/editor/toolUtilities/polyOffset.lua:75
+---@param pts table List of {x,y} points.
+---@param nrm table Normals per edge.
+---@param d number Signed offset distance.
+---@param join string|nil Join type, see polyline.
+---@param overlap number|nil Sinking of the base (default 0.05 m).
+---@return table|nil  Ring of {x,y} points, or nil if fewer than 2 points or |d| < 1e-4.
 function editor_toolUtilities_polyOffset.run(pts, nrm, d, join, overlap) end
 

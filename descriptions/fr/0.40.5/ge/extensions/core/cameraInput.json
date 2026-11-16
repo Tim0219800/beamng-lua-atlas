@@ -1,0 +1,240 @@
+{
+  "path": "lua/ge/extensions/core/cameraInput.lua",
+  "module": "Gestionnaires d'entrées caméra du joueur (regarder, se déplacer, zoomer, axes absolus de souris 3D/SpaceMouse), extraits de core/camera.lua. Ce n'est pas une extension : camera.lua fait require('core/cameraInput'), lui injecte moveFor et getFovDeg via setup(), puis ré-expose ces fonctions sur core_camera (les actions d'entrée appellent core_camera.rotate_yaw, etc.). Elles écrivent dans la structure MoveManager du joueur (champs yawLeft, yawRight, pitchUp, pitchDown, rollLeft, rollRight, forward, backward, left, right, up, down, zoomIn, zoomOut, yawRelative, pitchRelative, rollRelative, absXAxis, absYAxis, absZAxis), lue ensuite par les modes de caméra.",
+  "usage": "-- Normalement appelé par les bindings d'entrée :\ncore_camera.rotate_yaw(0.5, FILTER_PAD, 0)  -- tourner à droite à 50 %\ncore_camera.moveforward(1, 0)",
+  "notes": [
+    "L'argument player est l'indice du joueur (0 par défaut) ; moveFor(player) renvoie la structure MoveManager de la vue de ce joueur.",
+    "Les rotations 'relatives' (souris) sont mises à l'échelle du champ de vision : delta = fovDeg * val / 4500.",
+    "Pour les axes absolus 3D : facteur de rotation 0.0005, facteur de translation 0.02 ; la valeur est la différence entre la valeur précédente et la nouvelle (donc un delta).",
+    "yAxisMoveStep fait avancer à la vitesse val pendant 0.05 s (tickAbsAxes remet ensuite les axes à 0).",
+    "yAxisMoveStep est sans effet si editor.disableCameraZoom est vrai ou si un contrôleur de cameraControllerRegistry consomme onEditorMouseWheel.",
+    "Incohérence : yawAbs/rollAbs/pitchAbs/xAxisAbs/yAxisAbs/zAxisAbs écrivent dans la globale MoveManager (pas dans moveFor(player)) : ils ne gèrent donc pas plusieurs joueurs.",
+    "Incohérence : les fonctions moveleft/moveright/moveforward/... (en minuscules) assignent la valeur directement, alors que moveForwardBackward/moveLeftRight gèrent un axe signé."
+  ],
+  "fields": {},
+  "functions": {
+    "setup": {
+      "desc": "Injection des dépendances par camera.lua : fonctions moveFor(player) et getFovDeg().",
+      "params": {"deps": {"type": "table", "desc": "{moveFor = function(player), getFovDeg = function()}"}},
+      "returns": [],
+      "internal": true
+    },
+    "getLastFilter": {
+      "desc": "Dernier type de source d'entrée utilisé pour tourner la caméra (FILTER_KBD clavier, FILTER_PAD manette, FILTER_MOUSE souris). Lu par les modes de caméra et l'UI.",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Constante FILTER_*"}]
+    },
+    "timeSinceLastRotation": {
+      "desc": "Temps écoulé depuis la dernière rotation de la caméra par ce joueur.",
+      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur, 0 par défaut"}},
+      "returns": [{"type": "number", "desc": "Durée en millisecondes (horloge système)"}]
+    },
+    "getLastCameraMovementType": {
+      "desc": "Type de la dernière rotation caméra : 'absolute' (axes/touches), 'relative' (souris) ou 'none'.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "'absolute', 'relative' ou 'none'"}]
+    },
+    "rotate_yaw_left": {
+      "desc": "Fixe l'entrée de lacet gauche et mémorise le filtre et l'instant de rotation.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur de l'axe [0..1]"},
+        "filter": {"type": "integer", "desc": "Source d'entrée FILTER_*"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "rotate_yaw_right": {
+      "desc": "Fixe l'entrée de lacet droite.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur de l'axe [0..1]"},
+        "filter": {"type": "integer", "desc": "Source d'entrée FILTER_*"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "rotate_yaw": {
+      "desc": "Axe signé de lacet : val > 0 règle yawRight et annule yawLeft, val <= 0 l'inverse.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur signée [-1..1]"},
+        "filter": {"type": "integer", "desc": "Source d'entrée FILTER_*"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "rotate_pitch_up": {
+      "desc": "Fixe l'entrée de tangage vers le haut.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur de l'axe [0..1]"},
+        "filter": {"type": "integer", "desc": "Source d'entrée FILTER_*"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "rotate_pitch_down": {
+      "desc": "Fixe l'entrée de tangage vers le bas.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur de l'axe [0..1]"},
+        "filter": {"type": "integer", "desc": "Source d'entrée FILTER_*"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "rotate_pitch": {
+      "desc": "Axe signé de tangage : val > 0 règle pitchUp et annule pitchDown, sinon l'inverse.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur signée [-1..1]"},
+        "filter": {"type": "integer", "desc": "Source d'entrée FILTER_*"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "rotate_roll_right": {
+      "desc": "Fixe l'entrée de roulis vers la droite.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur de l'axe [0..1]"},
+        "filter": {"type": "integer", "desc": "Source d'entrée FILTER_*"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "rotate_roll_left": {
+      "desc": "Fixe l'entrée de roulis vers la gauche.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur de l'axe [0..1]"},
+        "filter": {"type": "integer", "desc": "Source d'entrée FILTER_*"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "moveForwardBackward": {
+      "desc": "Axe signé avant/arrière : val > 0 règle forward, sinon backward = -val.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur signée"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "moveLeftRight": {
+      "desc": "Axe signé gauche/droite : val > 0 règle right, sinon left = -val.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur signée"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "cameraZoom": {
+      "desc": "Axe signé de zoom : val > 0 règle zoomIn, sinon zoomOut = -val.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur signée"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "rotate_yaw_relative": {
+      "desc": "Rotation relative (souris) en lacet. Offre d'abord l'évènement au registre de contrôleurs (onRelativeInput 'yaw') ; s'il n'est pas consommé, ajoute fov*val/4500 à yawRelative.",
+      "params": {
+        "val": {"type": "number", "desc": "Delta de souris"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "rotate_pitch_relative": {
+      "desc": "Rotation relative (souris) en tangage, même principe que rotate_yaw_relative avec 'pitch'.",
+      "params": {
+        "val": {"type": "number", "desc": "Delta de souris"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "moveleft": {
+      "desc": "Touche de déplacement à gauche (caméra libre ou réglage du siège conducteur) : fixe moveFor(player).left.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur [0..1]"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "moveright": {
+      "desc": "Touche de déplacement à droite : fixe moveFor(player).right.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur [0..1]"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "moveforward": {
+      "desc": "Touche de déplacement vers l'avant : fixe moveFor(player).forward.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur [0..1]"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "movebackward": {
+      "desc": "Touche de déplacement vers l'arrière : fixe moveFor(player).backward.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur [0..1]"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "moveup": {
+      "desc": "Touche de déplacement vers le haut : fixe moveFor(player).up.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur [0..1]"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "movedown": {
+      "desc": "Touche de déplacement vers le bas : fixe moveFor(player).down.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur [0..1]"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur"}
+      },
+      "returns": []
+    },
+    "yawAbs": {
+      "desc": "Axe absolu de lacet (souris 3D) : MoveManager.yawRelative = (précédent - val) * 0.0005.",
+      "params": {"val": {"type": "number", "desc": "Position absolue de l'axe"}},
+      "returns": []
+    },
+    "rollAbs": {
+      "desc": "Axe absolu de roulis (souris 3D), même principe que yawAbs sur rollRelative.",
+      "params": {"val": {"type": "number", "desc": "Position absolue de l'axe"}},
+      "returns": []
+    },
+    "pitchAbs": {
+      "desc": "Axe absolu de tangage (souris 3D), même principe sur pitchRelative.",
+      "params": {"val": {"type": "number", "desc": "Position absolue de l'axe"}},
+      "returns": []
+    },
+    "xAxisAbs": {
+      "desc": "Axe absolu de translation X (souris 3D) : MoveManager.absXAxis = (précédent - val) * 0.02.",
+      "params": {"val": {"type": "number", "desc": "Position absolue de l'axe"}},
+      "returns": []
+    },
+    "yAxisAbs": {
+      "desc": "Axe absolu de translation Y (souris 3D) : MoveManager.absYAxis = (précédent - val) * 0.02.",
+      "params": {"val": {"type": "number", "desc": "Position absolue de l'axe"}},
+      "returns": []
+    },
+    "zAxisAbs": {
+      "desc": "Axe absolu de translation Z (souris 3D) : MoveManager.absZAxis = (précédent - val) * 0.02.",
+      "params": {"val": {"type": "number", "desc": "Position absolue de l'axe"}},
+      "returns": []
+    },
+    "yAxisMoveStep": {
+      "desc": "Déplacement par petit pas (zoom molette de souris 3D) : avance à la vitesse val pendant 0.05 s. Ignoré si le zoom caméra est désactivé dans l'éditeur ou consommé par un contrôleur (onEditorMouseWheel, val/20).",
+      "params": {"val": {"type": "number", "desc": "Vitesse du pas"}},
+      "returns": []
+    },
+    "tickAbsAxes": {
+      "desc": "Appelée à chaque frame par la vue principale : remet à zéro les axes de translation absolus une fois la fenêtre de 0.05 s écoulée.",
+      "params": {"dtReal": {"type": "number", "desc": "Pas de temps réel (s)"}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

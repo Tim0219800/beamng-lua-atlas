@@ -2,47 +2,47 @@
 -- tim19Atlas stub generated from lua/common/libs/copas/copas/semaphore.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Sous-module de la bibliothèque tierce Copas : sémaphore à compteur pour coroutines Copas. take demande des ressources (et attend si elles manquent), give en rend. Le module renvoie la table semaphore.
---- Accès : `require("libs/copas/copas/semaphore")`
+--- Submodule of the third-party Copas library: counting semaphore for Copas coroutines. take requests resources (and waits if they are lacking), give returns them. The module returns the table semaphore.
+--- Access: `require("libs/copas/copas/semaphore")`
 ---@class libs_copas_copas_semaphore
----@field __index table Métatable des objets sémaphore.
+---@field __index table Metatable of the semaphore objects.
 local libs_copas_copas_semaphore = {}
 
---- Nombre de ressources actuellement disponibles.
----Source : lua/common/libs/copas/copas/semaphore.lua:154
----@param self table Le sémaphore
----@return integer  Compteur
+--- Number of resources currently available.
+---Source: lua/common/libs/copas/copas/semaphore.lua:154
+---@param self table The semaphore
+---@return integer  Counter
 function libs_copas_copas_semaphore.get_count(self) end
 
---- Manque total de ressources demandées par les coroutines en attente.
----Source : lua/common/libs/copas/copas/semaphore.lua:159
----@param self table Le sémaphore
----@return integer  Déficit total
+--- Total shortfall of resources requested by the waiting coroutines.
+---Source: lua/common/libs/copas/copas/semaphore.lua:159
+---@param self table The semaphore
+---@return integer  Total deficit
 function libs_copas_copas_semaphore.get_wait(self) end
 
---- Rend des ressources au sémaphore (et réveille les coroutines en attente).
----Source : lua/common/libs/copas/copas/semaphore.lua:44
----@param self table Le sémaphore
----@param given integer|nil Nombre de ressources (défaut 1)
----@return boolean|nil  true en cas de succès
----@return string|nil  "too many" si le maximum est dépassé (le compteur est plafonné)
+--- Gives resources back to the semaphore (and wakes the waiting coroutines).
+---Source: lua/common/libs/copas/copas/semaphore.lua:44
+---@param self table The semaphore
+---@param given integer|nil Number of resources (default 1)
+---@return boolean|nil  true on success
+---@return string|nil  "too many" if the maximum is exceeded (the counter is capped)
 function libs_copas_copas_semaphore.give(self, given) end
 
---- Crée un sémaphore.
----Source : lua/common/libs/copas/copas/semaphore.lua:17
----@param max integer Nombre maximal de ressources (doit être supérieur à 0)
----@param start integer|nil Ressources disponibles au départ (défaut 0)
----@param seconds number|nil Timeout par défaut en secondes (défaut 10)
----@return table  Le sémaphore
+--- Creates a semaphore.
+---Source: lua/common/libs/copas/copas/semaphore.lua:17
+---@param max integer Maximum number of resources (must be greater than 0)
+---@param start integer|nil Resources available at the start (default 0)
+---@param seconds number|nil Default timeout in seconds (default 10)
+---@return table  The semaphore
 function libs_copas_copas_semaphore.new(max, start, seconds) end
 
---- Demande des ressources ; attend (en cédant la main) tant qu'il n'y en a pas assez. Avec timeout = 0, réussit ou échoue tout de suite avec « timeout ».
----Source : lua/common/libs/copas/copas/semaphore.lua:111
----@param self table Le sémaphore
----@param requested integer|nil Nombre demandé (défaut 1)
----@param timeout number|nil Délai en secondes (défaut : celui du sémaphore)
----@return boolean|nil  true en cas de succès
----@return string|nil  Erreur, ex. "timeout"
+--- Requests resources; waits (yielding) as long as there are not enough. With timeout = 0, succeeds or fails immediately with "timeout".
+---Source: lua/common/libs/copas/copas/semaphore.lua:111
+---@param self table The semaphore
+---@param requested integer|nil Number requested (default 1)
+---@param timeout number|nil Timeout in seconds (default: the semaphore's)
+---@return boolean|nil  true on success
+---@return string|nil  Error, e.g. "timeout"
 function libs_copas_copas_semaphore.take(self, requested, timeout) end
 
 return libs_copas_copas_semaphore

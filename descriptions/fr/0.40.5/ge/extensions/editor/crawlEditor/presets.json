@@ -1,0 +1,60 @@
+{
+  "path": "lua/ge/extensions/editor/crawlEditor/presets.lua",
+  "module": "Gestionnaire de presets et de composants de l'éditeur Crawl (trails, frontières/boundaries, chemins/pathnodes). Le module renvoie une classe C (constructeur) et n'est pas une extension classique. Les presets sont stockés dans un fichier JSON par niveau (/levels/<niveau>/crawls/presets.json, ou settings/cloud/crawls/presets.json si aucun niveau n'est chargé) ; les « composants » sont délégués au module gameplay/crawl/saveSystem. Fournit aussi le menu ImGui « Components » et les dialogues de sauvegarde/gestion.",
+  "notes": [
+    "Le chemin du fichier de presets (self.PRESETS_FILE) est calculé une seule fois dans init() à partir du niveau courant ; si le niveau change, il faut recréer l'objet.",
+    "Les fonctions save/delete/import/export renvoient (boolean, chemin|nil) ; les fonctions load*Preset renvoient (objet|nil, chemin du fichier|nil).",
+    "Un preset stocké est une table {name, category, data, created, modified} ; category vaut \"trails\", \"boundaries\" ou \"pathnodes\" (self.PRESET_CATEGORIES).",
+    "Fichier d'export/import individuel : extension prévue self.PRESET_EXTENSION = \".preset.json\"."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet presets de l'éditeur Crawl. Champs principaux : presets (categories + metadata), PRESETS_FILE, PRESET_CATEGORIES, showSave*Dialog, showPresetManager(Ptr), *PresetName (buffers ImGui de 256 caractères).",
+      "functions": {
+        "init": {"desc": "Initialise la table de presets vide, les états des dialogues et les buffers ImGui, calcule le chemin du fichier de presets pour le niveau courant puis appelle loadPresets().", "internal": true},
+        "loadPresets": {"desc": "Lit le fichier JSON de presets ; s'il n'existe pas, écrit immédiatement un fichier vide via savePresets()."},
+        "savePresets": {"desc": "Met à jour la date de modification, crée le dossier si besoin (FS:directoryCreate) et écrit tout le fichier de presets.", "returns": [{"type": "boolean", "desc": "succès"}, {"type": "string|nil", "desc": "chemin écrit"}]},
+        "saveBoundaryPreset": {"desc": "Sérialise une frontière (boundary:onSerialize) et l'enregistre comme preset de catégorie boundaries, puis sauvegarde le fichier. Échoue si le nom est vide ou si la frontière n'a aucun sommet.", "params": {"name": {"type": "string", "desc": "nom du preset"}, "boundary": {"type": "table", "desc": "objet frontière avec méthode onSerialize"}}, "returns": [{"type": "boolean", "desc": "succès"}, {"type": "string|nil", "desc": "chemin du fichier"}]},
+        "savePathnodePreset": {"desc": "Enregistre un chemin (nom, description, nœuds avec position, rotation, rayon par défaut 6.0, flags) comme preset pathnodes.", "params": {"name": {"type": "string", "desc": "nom du preset"}, "path": {"type": "table", "desc": "chemin avec liste nodes"}}, "returns": [{"type": "boolean", "desc": "succès"}, {"type": "string|nil", "desc": "chemin du fichier"}]},
+        "saveTrailPreset": {"desc": "Sérialise un trail complet (chemin + frontière) et l'enregistre comme preset trails.", "params": {"name": {"type": "string", "desc": "nom du preset"}, "trail": {"type": "table", "desc": "trail à sauvegarder"}}, "returns": [{"type": "boolean", "desc": "succès"}, {"type": "string|nil", "desc": "chemin du fichier"}]},
+        "loadBoundaryPreset": {"desc": "Valide puis désérialise le preset de frontière nommé.", "params": {"name": {"type": "string", "desc": "nom du preset"}}, "returns": [{"type": "table|nil", "desc": "frontière reconstruite"}, {"type": "string|nil", "desc": "fichier de presets"}]},
+        "loadPathnodePreset": {"desc": "Valide puis désérialise le preset de chemin nommé.", "params": {"name": {"type": "string", "desc": "nom du preset"}}, "returns": [{"type": "table|nil", "desc": "chemin reconstruit"}, {"type": "string|nil", "desc": "fichier de presets"}]},
+        "loadTrailPreset": {"desc": "Valide puis désérialise le preset de trail nommé.", "params": {"name": {"type": "string", "desc": "nom du preset"}}, "returns": [{"type": "table|nil", "desc": "trail reconstruit"}, {"type": "string|nil", "desc": "fichier de presets"}]},
+        "deleteBoundaryPreset": {"desc": "Supprime le preset de frontière et sauvegarde le fichier. Renvoie false, nil si le preset n'existe pas.", "params": {"name": {"type": "string", "desc": "nom du preset"}}, "returns": [{"type": "boolean", "desc": "succès"}, {"type": "string|nil", "desc": "chemin du fichier"}]},
+        "deletePathnodePreset": {"desc": "Supprime le preset de chemin et sauvegarde le fichier.", "params": {"name": {"type": "string", "desc": "nom du preset"}}, "returns": [{"type": "boolean", "desc": "succès"}, {"type": "string|nil", "desc": "chemin du fichier"}]},
+        "deleteTrailPreset": {"desc": "Supprime le preset de trail et sauvegarde le fichier.", "params": {"name": {"type": "string", "desc": "nom du preset"}}, "returns": [{"type": "boolean", "desc": "succès"}, {"type": "string|nil", "desc": "chemin du fichier"}]},
+        "getBoundaryPresets": {"desc": "Liste les presets de frontières sous forme de tableau {name, preset} (ordre non garanti, issu de pairs).", "returns": [{"type": "table[]", "desc": "liste de {name, preset}"}]},
+        "getPathnodePresets": {"desc": "Liste les presets de chemins sous forme de {name, preset}.", "returns": [{"type": "table[]", "desc": "liste de {name, preset}"}]},
+        "getTrailPresets": {"desc": "Liste les presets de trails sous forme de {name, preset}.", "returns": [{"type": "table[]", "desc": "liste de {name, preset}"}]},
+        "getAllTrailComponents": {"desc": "Liste les composants de trail du niveau courant via saveSystem (dossier /levels/<niveau>/crawls/).", "returns": [{"type": "table", "desc": "liste de composants (avec id et name)"}]},
+        "getAllBoundaryComponents": {"desc": "Liste les composants de frontière du niveau courant via saveSystem.", "returns": [{"type": "table", "desc": "liste de composants"}]},
+        "getAllPathnodeComponents": {"desc": "Liste les composants de chemin du niveau courant via saveSystem.", "returns": [{"type": "table", "desc": "liste de composants"}]},
+        "loadTrailComponent": {"desc": "Charge un composant de trail par id via saveSystem.", "params": {"id": {"type": "any", "desc": "identifiant du composant"}}, "returns": [{"type": "table|nil", "desc": "trail chargé"}]},
+        "loadBoundaryComponent": {"desc": "Charge un composant de frontière par id via saveSystem.", "params": {"id": {"type": "any", "desc": "identifiant du composant"}}, "returns": [{"type": "table|nil", "desc": "frontière chargée"}]},
+        "loadPathnodeComponent": {"desc": "Charge un composant de chemin par id via saveSystem.", "params": {"id": {"type": "any", "desc": "identifiant du composant"}}, "returns": [{"type": "table|nil", "desc": "chemin chargé"}]},
+        "saveTrailComponent": {"desc": "Renomme le trail (trail.name = name) puis l'enregistre comme composant via saveSystem.", "params": {"name": {"type": "string", "desc": "nom, non vide"}, "trail": {"type": "table", "desc": "trail à sauvegarder"}}, "returns": [{"type": "boolean", "desc": "succès"}, {"type": "any", "desc": "résultat de saveSystem"}]},
+        "saveBoundaryComponent": {"desc": "Renomme la frontière puis l'enregistre comme composant via saveSystem.", "params": {"name": {"type": "string", "desc": "nom, non vide"}, "boundary": {"type": "table", "desc": "frontière"}}, "returns": [{"type": "boolean", "desc": "succès"}, {"type": "any", "desc": "résultat de saveSystem"}]},
+        "savePathnodeComponent": {"desc": "Renomme le chemin puis l'enregistre comme composant via saveSystem.", "params": {"name": {"type": "string", "desc": "nom, non vide"}, "path": {"type": "table", "desc": "chemin"}}, "returns": [{"type": "boolean", "desc": "succès"}, {"type": "any", "desc": "résultat de saveSystem"}]},
+        "deleteTrailComponent": {"desc": "Supprime un composant de trail via saveSystem.", "params": {"id": {"type": "any", "desc": "identifiant du composant"}}},
+        "deleteBoundaryComponent": {"desc": "Supprime un composant de frontière via saveSystem.", "params": {"id": {"type": "any", "desc": "identifiant du composant"}}},
+        "deletePathnodeComponent": {"desc": "Supprime un composant de chemin via saveSystem.", "params": {"id": {"type": "any", "desc": "identifiant du composant"}}},
+        "exportPreset": {"desc": "Écrit un preset (table complète) dans un fichier JSON indépendant.", "params": {"category": {"type": "string", "desc": "trails, boundaries ou pathnodes"}, "name": {"type": "string", "desc": "nom du preset"}, "filepath": {"type": "string", "desc": "fichier de destination"}}, "returns": [{"type": "boolean", "desc": "succès"}, {"type": "string|nil", "desc": "filepath"}]},
+        "importPreset": {"desc": "Lit un fichier de preset, vérifie nom, catégorie et données, l'ajoute à la catégorie (écrase un preset de même nom) et sauvegarde.", "params": {"filepath": {"type": "string", "desc": "fichier à lire"}, "category": {"type": "string", "desc": "catégorie attendue"}}, "returns": [{"type": "boolean", "desc": "succès"}, {"type": "string|nil", "desc": "fichier de presets"}]},
+        "getShowSaveBoundaryDialog": {"desc": "Indique si le dialogue de sauvegarde de frontière est affiché.", "returns": [{"type": "boolean", "desc": "état"}]},
+        "setShowSaveBoundaryDialog": {"desc": "Affiche/masque le dialogue de sauvegarde de frontière.", "params": {"show": {"type": "boolean", "desc": "afficher"}}},
+        "getShowSavePathnodeDialog": {"desc": "Indique si le dialogue de sauvegarde de chemin est affiché.", "returns": [{"type": "boolean", "desc": "état"}]},
+        "setShowSavePathnodeDialog": {"desc": "Affiche/masque le dialogue de sauvegarde de chemin.", "params": {"show": {"type": "boolean", "desc": "afficher"}}},
+        "getShowSaveTrailDialog": {"desc": "Indique si le dialogue de sauvegarde de trail est affiché.", "returns": [{"type": "boolean", "desc": "état"}]},
+        "setShowSaveTrailDialog": {"desc": "Affiche/masque le dialogue de sauvegarde de trail.", "params": {"show": {"type": "boolean", "desc": "afficher"}}},
+        "getShowPresetManager": {"desc": "Indique si la fenêtre de gestion des composants est affichée.", "returns": [{"type": "boolean", "desc": "état"}]},
+        "setShowPresetManager": {"desc": "Affiche/masque la fenêtre de gestion et synchronise le pointeur ImGui.", "params": {"show": {"type": "boolean", "desc": "afficher"}}},
+        "getShowPresetManagerPtr": {"desc": "Renvoie le BoolPtr ImGui lié à la fenêtre de gestion.", "returns": [{"type": "userdata", "desc": "im.BoolPtr"}]},
+        "getBoundaryPresetName": {"desc": "Renvoie le buffer ImGui (256 caractères) du nom saisi pour une frontière.", "returns": [{"type": "userdata", "desc": "im.ArrayChar"}]},
+        "getPathnodePresetName": {"desc": "Renvoie le buffer ImGui du nom saisi pour un chemin.", "returns": [{"type": "userdata", "desc": "im.ArrayChar"}]},
+        "getTrailPresetName": {"desc": "Renvoie le buffer ImGui du nom saisi pour un trail.", "returns": [{"type": "userdata", "desc": "im.ArrayChar"}]},
+        "drawMenu": {"desc": "Dessine les sous-menus ImGui listant les composants de trail, frontière et chemin (clic = chargement dans crawlData) et l'entrée « Manage Components... ». Mémorise crawlData, trails et waypoints pour les dialogues.", "params": {"crawlData": {"type": "table", "desc": "données crawl courantes (champ trails)"}, "trails": {"type": "table", "desc": "module trails de l'éditeur"}, "waypoints": {"type": "table", "desc": "module waypoints de l'éditeur"}}, "internal": true},
+        "drawDialogs": {"desc": "Dessine les fenêtres ImGui de sauvegarde (frontière, chemin, trail) et le gestionnaire de composants ; appelé à chaque frame par l'éditeur Crawl.", "internal": true}
+      }
+    }
+  }
+}

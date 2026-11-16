@@ -2,52 +2,52 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_career_onVehicleShoppingEvent_C
 local flowgraph_nodes_career_onVehicleShoppingEvent_C = {}
 
---- Crée la table de drapeaux.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:26
+--- Creates the flag table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:26
 function flowgraph_nodes_career_onVehicleShoppingEvent_C:init() end
 
---- Hook : lève closedMenu quand le joueur revient en jeu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:64
----@param enteredPlay boolean vrai si on entre dans l'état de jeu
+--- Hook: raises closedMenu when the player returns to the game.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:64
+---@param enteredPlay boolean true if entering the play state
 function flowgraph_nodes_career_onVehicleShoppingEvent_C:onUIPlayStateChanged(enteredPlay) end
 
---- Hook : lève vehicleBought et convertit data.inventoryId en id de véhicule (vehId).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:55
----@param data table contient inventoryId
+--- Hook: raises vehicleBought and converts data.inventoryId into a vehicle id (vehId).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:55
+---@param data table contains inventoryId
 function flowgraph_nodes_career_onVehicleShoppingEvent_C:onVehicleAddedToInventory(data) end
 
---- Hook : lève closedMenu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:60
+--- Hook: raises closedMenu.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:60
 function flowgraph_nodes_career_onVehicleShoppingEvent_C:onVehicleShoppingMenuClosed() end
 
---- Hook : lève openedMenu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:43
----@param data any non utilisé
+--- Hook: raises openedMenu.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:43
+---@param data any unused
 function flowgraph_nodes_career_onVehicleShoppingEvent_C:onVehicleShoppingMenuOpened(data) end
 
---- Hook : lève openedDetail.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:51
----@param data any non utilisé
+--- Hook: raises openedDetail.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:51
+---@param data any unused
 function flowgraph_nodes_career_onVehicleShoppingEvent_C:onVehicleShoppingPurchaseMenuOpened(data) end
 
---- Hook : lève vehicleSpawned.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:47
----@param data any non utilisé
+--- Hook: raises vehicleSpawned.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:47
+---@param data any unused
 function flowgraph_nodes_career_onVehicleShoppingEvent_C:onVehicleShoppingVehicleShown(data) end
 
---- Chaque frame : remet à faux cinq sorties flow, applique et efface les drapeaux, met à jour testDriveActive.
----Source : lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:30
----@param args any non utilisé
+--- Every frame: sets five flow outputs back to false, applies and clears the flags, updates testDriveActive.
+---Source: lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua:30
+---@param args any unused
 function flowgraph_nodes_career_onVehicleShoppingEvent_C:work(args) end
 

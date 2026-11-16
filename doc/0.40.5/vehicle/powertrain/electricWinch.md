@@ -1,59 +1,59 @@
 # `powertrain_electricWinch`
 
-*Fichier : `lua/vehicle/powertrain/electricWinch.lua` · VM : Véhicule · 115 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/electricWinch.lua` · VM: Vehicle · 115 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `electricWinch` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `electricWinch` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Composant powertrain `electricWinch` : treuil électrique très sommaire, de catégorie `winch` et `torqueConsumer`, sans port de sortie. Son code est un prototype : à chaque pas physique il tire sur la poutre étiquetée `ropeTest` avec une force fixe de 500000 N multipliée par le niveau d'allumage, sans paramètre jbeam de réglage. Un moddeur ne s'en sert pas en pratique ; voir hydraulicWinch (vide) et linearActuator pour des actionneurs réels.
+Powertrain component `electricWinch`: very basic electric winch, of category `winch` and `torqueConsumer`, without an output port. Its code is a prototype: at each physics step it pulls on the beam tagged `ropeTest` with a fixed force of 500000 N multiplied by the ignition level, with no jbeam tuning parameter. A modder does not use it in practice; see hydraulicWinch (empty) and linearActuator for real actuators.
 
-## Remarques
+## Notes
 
-- Aucune clé jbeam propre au treuil n'est lue, hormis name, type, inputName, inputIndex, gearRatio (1), friction et dynamicFriction.
-- Le comportement est codé en dur : torqueUpdate appelle obj:actuateBeam(beamstate.tagBeamMap.ropeTest[1], force, 10, 0, 0, 10, 0, 100, 0, 0) avec force = -electrics.values.ignitionLevel * 500000. Si aucune poutre n'est taguée 'ropeTest', beamstate.tagBeamMap.ropeTest est nil et une erreur Lua se produit.
-- outputTorque1 est toujours 0. inputAV = outputAV1 * gearRatio ; la valeur est écrite dans le champ de vitesse du parent (device.parent[parentOutputAVName]).
-- Incohérences : calculateInertia lit device.maxGearRatio qui n'est jamais défini (maxCumulativeGearRatio devient nil) et la division par gearRatio² avec une inertie de sortie 0 donne 0 ; new ne définit ni onBreak ni validate, alors que setPartCondition appelle device:onBreak() si isBroken. M.requiredExternalInertiaOutputs n'est pas défini dans ce module.
+- No winch-specific jbeam key is read, apart from name, type, inputName, inputIndex, gearRatio (1), friction and dynamicFriction.
+- The behavior is hardcoded: torqueUpdate calls obj:actuateBeam(beamstate.tagBeamMap.ropeTest[1], force, 10, 0, 0, 10, 0, 100, 0, 0) with force = -electrics.values.ignitionLevel * 500000. If no beam is tagged 'ropeTest', beamstate.tagBeamMap.ropeTest is nil and a Lua error occurs.
+- outputTorque1 is always 0. inputAV = outputAV1 * gearRatio; the value is written into the parent's speed field (device.parent[parentOutputAVName]).
+- Inconsistencies: calculateInertia reads device.maxGearRatio, which is never defined (maxCumulativeGearRatio becomes nil) and the division by gearRatio² with an output inertia of 0 gives 0; new defines neither onBreak nor validate, whereas setPartCondition calls device:onBreak() if isBroken. M.requiredExternalInertiaOutputs is not defined in this module.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_electricWinch.new(jbeamData)` | Construit le device treuil avec les champs standard (gearRatio, friction, coefficients d'usure/dégâts, inertie) et les fonctions de mise à jour. Il n'appelle pas selectUpdates : velocityUpdate et torqueUpdate sont posées directement. *(interne)* | 77 |
+| `powertrain_electricWinch.new(jbeamData)` | Builds the winch device with the standard fields (gearRatio, friction, wear/damage coefficients, inertia) and the update functions. It does not call selectUpdates: velocityUpdate and torqueUpdate are set directly. *(internal)* | 77 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_electricWinch.new(jbeamData)`
 
-Construit le device treuil avec les champs standard (gearRatio, friction, coefficients d'usure/dégâts, inertie) et les fonctions de mise à jour. Il n'appelle pas selectUpdates : velocityUpdate et torqueUpdate sont posées directement.
+Builds the winch device with the standard fields (gearRatio, friction, wear/damage coefficients, inertia) and the update functions. It does not call selectUpdates: velocityUpdate and torqueUpdate are set directly.
 
-- `jbeamData` (*table*) : Données jbeam du composant.
-- **renvoie** : table Le device (classe `device`).
+- `jbeamData` (*table*) : jbeam data of the component.
+- **returns**: table The device (class `device`).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `deviceCategories` | table<string, boolean> | {winch=true, torqueConsumer=true}. |
-| `outputPorts` | table | Table vide : aucun port de sortie. |
+| `outputPorts` | table | Empty table: no output port. |
 
-## Classe `device`
+## Class `device`
 
-Objet renvoyé par new(jbeamData).
+Object returned by new(jbeamData).
 
-Objet `device` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `device` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `device:applyDeformGroupDamage(damageAmount)` | Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1). | 24 |
-| `device:calculateInertia()` | Pose cumulativeInertia = 0 (inertie de sortie nulle) et les rapports cumulés (maxCumulativeGearRatio reste nil, voir notes). | 52 |
-| `device:getPartCondition()` | Renvoie l'intégrité 0..1 (0 si cassé) et la table {damageFrictionCoef, isBroken}. | 43 |
-| `device:reset(jbeamData)` | Remet à zéro vitesses, couple, inertie cumulée, coefficients d'usure/dégâts et isBroken ; relit friction. | 61 |
-| `device:setPartCondition(subSystem, odometer, integrity, visual)` | Applique usure et dégâts selon l'odomètre et l'intégrité ; appelle onBreak si l'état indique isBroken, mais ce device ne définit pas onBreak. | 28 |
-| `device:torqueUpdate()` | Appelée à chaque pas physique : met outputTorque1 à 0 et actionne la première poutre étiquetée 'ropeTest' avec une force de -ignitionLevel * 500000 N, vitesse limite 10 et course 0 à 100. | 15 |
-| `device:velocityUpdate(dt)` | Appelée à chaque pas physique : inputAV = outputAV1 * gearRatio, écrit dans le parent. | 10 |
+| `device:applyDeformGroupDamage(damageAmount)` | Increases the damage friction coefficient (0.01 of damage = +0.1). | 24 |
+| `device:calculateInertia()` | Sets cumulativeInertia = 0 (zero output inertia) and the cumulative ratios (maxCumulativeGearRatio stays nil, see notes). | 52 |
+| `device:getPartCondition()` | Returns the integrity 0..1 (0 if broken) and the table {damageFrictionCoef, isBroken}. | 43 |
+| `device:reset(jbeamData)` | Resets speeds, torque, cumulative inertia, wear/damage coefficients and isBroken; rereads friction. | 61 |
+| `device:setPartCondition(subSystem, odometer, integrity, visual)` | Applies wear and damage according to the odometer and the integrity; calls onBreak if the state indicates isBroken, but this device does not define onBreak. | 28 |
+| `device:torqueUpdate()` | Called at each physics step: sets outputTorque1 to 0 and actuates the first beam tagged 'ropeTest' with a force of -ignitionLevel * 500000 N, speed limit 10 and stroke 0 to 100. | 15 |
+| `device:velocityUpdate(dt)` | Called at each physics step: inputAV = outputAV1 * gearRatio, written to the parent. | 10 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `actuateBeam`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/electricWinch.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/electricWinch.lua`.*

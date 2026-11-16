@@ -1,61 +1,61 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/types/color.lua",
-  "module": "Noeud « Color » (provider). Fournit une couleur (table RGBA {r,g,b,a}, avec 4 valeurs PBR supplémentaires aux index 5-8 en mode custom) sur le pin color. Modes : 'custom' (sélecteur dans l'éditeur) ou 'from Pin' (pins r, g, b, a de type number).",
+  "module": "Node \"Color\" (provider). Provides a color (RGBA table {r,g,b,a}, with 4 extra PBR values at indices 5-8 in custom mode) on the color pin. Modes: 'custom' (picker in the editor) or 'from Pin' (pins r, g, b, a of type number).",
   "notes": [
-    "En mode 'from Pin', la sortie est {r,g,b,a} sans les valeurs PBR."
+    "In 'from Pin' mode, the output is {r,g,b,a} without the PBR values."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
           "desc": "clr = {1,1,1,1}, mode = 'custom', modes = {'custom','from Pin'}.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Choix du mode, création/suppression des pins r/g/b/a et sélecteur de couleur (editor.uiColorEdit8).",
+          "desc": "Mode choice, creation/deletion of the r/g/b/a pins and color picker (editor.uiColorEdit8).",
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde l'état du noeud dans la table donnée.",
+          "desc": "Saves the node's state in the given table.",
           "params": {
             "res": {
               "type": "any",
-              "desc": "table de sauvegarde"
+              "desc": "save table"
             }
           },
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure clr (complété à 8 valeurs) et mode.",
+          "desc": "Restores clr (padded to 8 values) and mode.",
           "params": {
             "nodeData": {
               "type": "any",
-              "desc": "données sauvegardées"
+              "desc": "saved data"
             }
           },
           "internal": true
         },
         "work": {
-          "desc": "Écrit la couleur (depuis les pins en mode 'from Pin', sinon clr).",
+          "desc": "Writes the color (from the pins in 'from Pin' mode, otherwise clr).",
           "internal": false
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "desc": "Draws the central content of the node in the editor.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true
         },
         "createColorPins": {
-          "desc": "Crée les pins d'entrée number r, g, b, a.",
+          "desc": "Creates the number input pins r, g, b, a.",
           "internal": true
         }
       }

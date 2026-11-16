@@ -1,40 +1,40 @@
 # `util_resaveMaterials`
 
-*Fichier : `lua/ge/extensions/util/resaveMaterials.lua` · VM : Game Engine (GE) · 73 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/resaveMaterials.lua` · VM: Game Engine (GE) · 73 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_resaveMaterials` : `extensions.load("util_resaveMaterials")`, puis la globale `util_resaveMaterials`
+**Access:** extension `util_resaveMaterials`: `extensions.load("util_resaveMaterials")`, then the global `util_resaveMaterials`
 
-Outil de migration pour les développeurs : charge d'anciens fichiers de matériaux TorqueScript (materials.cs), puis les resauvegarde au nouveau format (JSON) via un PersistenceManager, en supprimant ensuite les objets chargés. Le traitement démarre dès le chargement de l'extension, dans un job asynchrone.
+Migration tool for developers: loads old TorqueScript material files (materials.cs), then resaves them in the new (JSON) format via a PersistenceManager, then deletes the loaded objects. Processing starts as soon as the extension is loaded, in an asynchronous job.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('util_resaveMaterials')
 ```
 
-## Remarques
+## Notes
 
-- Au chargement, l'extension modifie les réglages IngameConsoleLogBlacklist et WinConsoleLogBlacklist (valeur "DA") pour réduire le bruit de la console ; ils ne sont pas restaurés.
-- Le motif de recherche de fichiers est 'materials.cs\tmanaged*Data.csNOP' : le second motif (« .csNOP ») ne correspond à rien, donc seuls les fichiers materials.cs sont traités.
-- Les fichiers materials.cs sont exécutés avec TorqueScriptLua.exec puis réécrits sur disque (saveDirtyNewFormat) : opération destructive à n'utiliser que sur une copie des données.
-- L'appel shutdown(0) final est commenté : le jeu ne quitte pas automatiquement.
+- On load, the extension changes the IngameConsoleLogBlacklist and WinConsoleLogBlacklist settings (value "DA") to reduce console noise; they are not restored.
+- The file search pattern is 'materials.cs\tmanaged*Data.csNOP': the second pattern (".csNOP") matches nothing, so only materials.cs files are processed.
+- The materials.cs files are executed with TorqueScriptLua.exec then rewritten to disk (saveDirtyNewFormat): destructive operation, to be used only on a copy of the data.
+- The final shutdown(0) call is commented out: the game does not quit automatically.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_resaveMaterials.onExtensionLoaded()` | Appelé au chargement de l'extension : désactive des catégories de logs console et crée le job work (yield toutes les secondes). *(interne)* *(hook)* | 62 |
-| `util_resaveMaterials.work(job)` | Corps du job : pour chaque materials.cs trouvé, exécute le script, repère les objets créés à partir de ce fichier, les marque modifiés, les sauvegarde au nouveau format puis les supprime. Logue DONE à la fin. | 25 |
+| `util_resaveMaterials.onExtensionLoaded()` | Called on extension load: disables console log categories and creates the work job (yield every second). *(internal)* *(hook)* | 62 |
+| `util_resaveMaterials.work(job)` | Job body: for each materials.cs found, runs the script, identifies the objects created from that file, marks them modified, saves them in the new format then deletes them. Logs DONE at the end. | 25 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_resaveMaterials.work(job)`
 
-Corps du job : pour chaque materials.cs trouvé, exécute le script, repère les objets créés à partir de ce fichier, les marque modifiés, les sauvegarde au nouveau format puis les supprime. Logue DONE à la fin.
+Job body: for each materials.cs found, runs the script, identifies the objects created from that file, marks them modified, saves them in the new format then deletes them. Logs DONE at the end.
 
-- `job` (*table*) : Objet job du core_jobsystem (non utilisé directement)
+- `job` (*table*) : core_jobsystem job object (not used directly)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `TorqueScriptLua.` `exec`
@@ -42,4 +42,4 @@ Corps du job : pour chaque materials.cs trouvé, exécute le script, repère les
 - `scenetree.` `findObject`, `getAllObjects`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/resaveMaterials.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/resaveMaterials.lua`.*

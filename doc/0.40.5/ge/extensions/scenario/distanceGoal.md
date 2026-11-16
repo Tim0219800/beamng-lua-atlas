@@ -1,67 +1,67 @@
 # `scenario_distanceGoal`
 
-*Fichier : `lua/ge/extensions/scenario/distanceGoal.lua` · VM : Game Engine (GE) · 129 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/distanceGoal.lua` · VM: Game Engine (GE) · 129 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_distanceGoal` : `extensions.load("scenario_distanceGoal")`, puis la globale `scenario_distanceGoal`
+**Access:** extension `scenario_distanceGoal`: `extensions.load("scenario_distanceGoal")`, then the global `scenario_distanceGoal`
 
-Objectif de scénario « distance » (goals.vehicles avec id = 'distance') : la distance entre le véhicule du goal et un objet cible du scenetree ne doit pas sortir de [minDistance, maxDistance]. Utile pour des scénarios de poursuite ou de convoi. Appelé par le système de goals de scenario_scenarios.
+"distance" scenario goal (goals.vehicles with id = 'distance'): the distance between the goal's vehicle and a target scenetree object must not leave [minDistance, maxDistance]. Useful for chase or convoy scenarios. Called by the scenario_scenarios goal system.
 
-## Exemple
+## Example
 
 ```lua
--- JSON du scénario :
+-- scenario JSON:
 -- {"id":"distance", "value":{"target":"police", "maxDistance":80, "minDistance":5, "distanceEnable":60, "purpose":"fail", "msg":"Trop loin"}}
 ```
 
-## Remarques
+## Notes
 
-- Options de instance.value : target (nom d'un objet du scenetree, obligatoire en pratique), maxDistance, minDistance, distanceEnable (tous number, mètres), purpose ('fail' par défaut ou 'win'), msg.
-- distanceEnable : tant que le véhicule n'est jamais passé sous cette distance de la cible, les limites ne sont pas contrôlées. Une fois passé en dessous, status.checkForCarDistance reste true.
-- Les contrôles se font sur l'état 'onRaceTick'.
-- Si scenario.targetName existe, le goal échoue en plus dès que le véhicule est à 5 m ou moins de cet objet (message 'DistanceBetweenSceneObjects.fail.msg'), sinon status.result = 'passed'.
-- Bug probable : si target est nil, le log d'erreur concatène instance.value.target (nil) et plante ; getVehicleByName(nil) est aussi appelé sans garde.
-- Dans showMsg, l'expression {txt = ...} or {...} ne se rabat jamais sur le message par défaut de victoire.
+- instance.value options: target (name of a scenetree object, required in practice), maxDistance, minDistance, distanceEnable (all numbers, meters), purpose ('fail' by default or 'win'), msg.
+- distanceEnable: as long as the vehicle has never gone below this distance from the target, the limits are not checked. Once it has gone below, status.checkForCarDistance stays true.
+- Checks are done on the 'onRaceTick' state.
+- If scenario.targetName exists, the goal also fails as soon as the vehicle is within 5 m or less of that object (message 'DistanceBetweenSceneObjects.fail.msg'), otherwise status.result = 'passed'.
+- Probable bug: if target is nil, the error log concatenates instance.value.target (nil) and crashes; getVehicleByName(nil) is also called without a guard.
+- In showMsg, the expression {txt = ...} or {...} never falls back to the default victory message.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_distanceGoal.init(scenario)` | Réinitialise instances et ajoute chaque goal id='distance' dont les options numériques sont valides ; purpose vaut 'fail' si absent ; checkForCarDistance est mis à false. *(interne)* | 88 |
-| `scenario_distanceGoal.processState(scenario, state, stateData)` | Appelé à chaque état du scénario ; sur 'onRaceTick' mesure la distance au véhicule cible et termine le scénario (victoire ou défaite selon purpose) si elle sort des bornes. *(interne)* | 37 |
-| `scenario_distanceGoal.updateFinalStatus(scenario, instance)` | Envoie le résultat de chaque instance à statistics_statistics.setGoalProgress en fin de scénario. *(interne)* | 118 |
+| `scenario_distanceGoal.init(scenario)` | Resets instances and adds each goal id='distance' whose numeric options are valid; purpose is 'fail' if absent; checkForCarDistance is set to false. *(internal)* | 88 |
+| `scenario_distanceGoal.processState(scenario, state, stateData)` | Called on every scenario state; on 'onRaceTick' measures the distance to the target vehicle and ends the scenario (victory or defeat depending on purpose) if it leaves the bounds. *(internal)* | 37 |
+| `scenario_distanceGoal.updateFinalStatus(scenario, instance)` | Sends each instance's result to statistics_statistics.setGoalProgress at the end of the scenario. *(internal)* | 118 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_distanceGoal.init(scenario)`
 
-Réinitialise instances et ajoute chaque goal id='distance' dont les options numériques sont valides ; purpose vaut 'fail' si absent ; checkForCarDistance est mis à false.
+Resets instances and adds each goal id='distance' whose numeric options are valid; purpose is 'fail' if absent; checkForCarDistance is set to false.
 
-- `scenario` (*table*) : Scénario courant.
+- `scenario` (*table*) : Current scenario.
 
 #### `scenario_distanceGoal.processState(scenario, state, stateData)`
 
-Appelé à chaque état du scénario ; sur 'onRaceTick' mesure la distance au véhicule cible et termine le scénario (victoire ou défaite selon purpose) si elle sort des bornes.
+Called on every scenario state; on 'onRaceTick' measures the distance to the target vehicle and ends the scenario (victory or defeat depending on purpose) if it leaves the bounds.
 
-- `scenario` (*table*) : Scénario courant.
-- `state` (*string*) : Nom de l'état ; 'onRaceTick' traité.
-- `stateData` (*table*) : Données de l'état (non utilisées).
+- `scenario` (*table*) : Current scenario.
+- `state` (*string*) : State name; 'onRaceTick' handled.
+- `stateData` (*table*) : State data (unused).
 
 #### `scenario_distanceGoal.updateFinalStatus(scenario, instance)`
 
-Envoie le résultat de chaque instance à statistics_statistics.setGoalProgress en fin de scénario.
+Sends each instance's result to statistics_statistics.setGoalProgress at the end of the scenario.
 
-- `scenario` (*table*) : Scénario courant.
-- `instance` (*table|nil*) : Non utilisé.
+- `scenario` (*table*) : Current scenario.
+- `instance` (*table|nil*) : Not used.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `instances` | table | Liste des goals 'distance' valides, remplie par init(). |
+| `instances` | table | List of valid 'distance' goals, filled by init(). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/distanceGoal.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/distanceGoal.lua`.*

@@ -2,100 +2,100 @@
 -- tim19Atlas stub generated from lua/ge/extensions/scenario/waypoints.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Système de waypoints d'un scénario de course : à partir de scenario.lapConfig (liste ordonnée de waypoints/triggers) et des branches (lapConfigBranches), construit un graphe de successeurs, affiche les marqueurs (raceMarker) et détecte chaque frame le passage des roues des véhicules du joueur ou pilotés par IA à travers le prochain waypoint. Émet les hooks de course (onRaceWaypointReached, onRaceWaypoint, onRaceLap, onRaceBranchChosen) et termine la course quand le dernier waypoint du dernier tour est franchi. Chargé par scenario_scenariosLoader avec scenario_scenarios.
---- Accès : extension `scenario_waypoints` : `extensions.load("scenario_waypoints")`, puis la globale `scenario_waypoints`
+--- Waypoint system of a race scenario: from scenario.lapConfig (ordered list of waypoints/triggers) and the branches (lapConfigBranches), builds a successor graph, displays the markers (raceMarker) and detects every frame the passage of the wheels of the player's or AI-driven vehicles through the next waypoint. Emits the race hooks (onRaceWaypointReached, onRaceWaypoint, onRaceLap, onRaceBranchChosen) and ends the race when the last waypoint of the last lap is crossed. Loaded by scenario_scenariosLoader with scenario_scenarios.
+--- Access: extension `scenario_waypoints`: `extensions.load("scenario_waypoints")`, then the global `scenario_waypoints`
 ---@class scenario_waypoints
----@field addWaypointBranch nil Exporté mais vaut nil (variable locale non définie dans le fichier).
+---@field addWaypointBranch nil Exported but is nil (local variable not defined in the file).
 ---@field dependencies table<integer, string> {'scenario_scenarios'}
----@field onUpdate nil Exporté mais vaut nil (variable locale non définie dans le fichier).
----@field state table État du système (voir notes) : vehicleWaypointsData, nextWpForVehicle, waypointBranches, currentWaypointChoice, currentBranch, waypointsConfigData, branchGraph, pathnodes.
+---@field onUpdate nil Exported but is nil (local variable not defined in the file).
+---@field state table System state (see notes): vehicleWaypointsData, nextWpForVehicle, waypointBranches, currentWaypointChoice, currentBranch, waypointsConfigData, branchGraph, pathnodes.
 scenario_waypoints = {}
 
---- Insère dans la liste de waypoints du véhicule les waypoints de la branche choisie, après le waypoint courant, puis émet onRaceBranchChosen({branchName, time, vehicleId, vehicleName}).
----Source : lua/ge/extensions/scenario/waypoints.lua:324
----@param branchName string nom de la branche (clé de lapConfigBranches)
----@param vehicleId integer id du véhicule
----@param dtOff number correction de temps (s)
+--- Inserts into the vehicle's waypoint list the waypoints of the chosen branch, after the current waypoint, then emits onRaceBranchChosen({branchName, time, vehicleId, vehicleName}).
+---Source: lua/ge/extensions/scenario/waypoints.lua:324
+---@param branchName string branch name (key of lapConfigBranches)
+---@param vehicleId integer vehicle id
+---@param dtOff number time correction (s)
 function scenario_waypoints.activateWaypointBranch(branchName, vehicleId, dtOff) end
 
---- Ne fait rien (retourne immédiatement).
----Source : lua/ge/extensions/scenario/waypoints.lua:309
----@param branchName string nom de la branche
+--- Does nothing (returns immediately).
+---Source: lua/ge/extensions/scenario/waypoints.lua:309
+---@param branchName string branch name
 function scenario_waypoints.deactivateWaypointBranch(branchName) end
 
---- Renvoie une copie profonde des données de waypoint d'un véhicule (cur, next, lap, waypointConfig, nextWps, historicalLapConfig, coins de roues…).
----Source : lua/ge/extensions/scenario/waypoints.lua:680
----@param vehicleId integer id du véhicule
----@return table|nil  données ou nil
+--- Returns a deep copy of a vehicle's waypoint data (cur, next, lap, waypointConfig, nextWps, historicalLapConfig, wheel corners...).
+---Source: lua/ge/extensions/scenario/waypoints.lua:680
+---@param vehicleId integer vehicle id
+---@return table|nil  data or nil
 function scenario_waypoints.getVehicleWaypointData(vehicleId) end
 
---- Appelée par scenario_scenarios en 'pre-running' : réinitialise l'état, construit les branches et le graphe des successeurs, crée un pathnode par waypoint, configure les marqueurs (raceMarker.setupMarkers) et initialise les données de chaque véhicule du scénario. Ne fait rien si lapConfig est vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/waypoints.lua:518
+--- Called by scenario_scenarios in 'pre-running': resets the state, builds the branches and the successor graph, creates a pathnode per waypoint, configures the markers (raceMarker.setupMarkers) and initializes the data of each vehicle in the scenario. Does nothing if lapConfig is empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/waypoints.lua:518
 function scenario_waypoints.initialise() end
 
---- Censée dire si un waypoint est le dernier ; renvoie toujours false (corps commenté dans le code).
----Source : lua/ge/extensions/scenario/waypoints.lua:665
----@param vehicleId integer id du véhicule
----@param waypointName string nom du waypoint
----@return boolean  toujours false
+--- Supposed to tell whether a waypoint is the last one; always returns false (body commented out in the code).
+---Source: lua/ge/extensions/scenario/waypoints.lua:665
+---@param vehicleId integer vehicle id
+---@param waypointName string waypoint name
+---@return boolean  always false
 function scenario_waypoints.isFinalWaypoint(vehicleId, waypointName) end
 
---- Hook de fin de niveau : efface l'état.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/waypoints.lua:724
+--- Level end hook: clears the state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/waypoints.lua:724
 function scenario_waypoints.onClientEndMission() end
 
---- Hook de désérialisation : restaure l'état en reconvertissant les noms de véhicules en ids.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/waypoints.lua:697
----@param data table données de onSerialize
+--- Deserialization hook: restores the state by converting vehicle names back to ids.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/waypoints.lua:697
+---@param data table data from onSerialize
 function scenario_waypoints.onDeserialized(data) end
 
---- Hook chaque frame (luaPreRender) : met à jour les coins des roues de chaque véhicule suivi et détecte le franchissement du prochain waypoint.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/waypoints.lua:606
----@param dtReal number temps réel (s)
----@param dtSim number temps simulé (s)
----@param dtRaw number temps brut (s)
+--- Per-frame hook (luaPreRender): updates the wheel corners of each tracked vehicle and detects the crossing of the next waypoint.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/waypoints.lua:606
+---@param dtReal number real time (s)
+---@param dtSim number simulated time (s)
+---@param dtRaw number raw time (s)
 function scenario_waypoints.onPreRender(dtReal, dtSim, dtRaw) end
 
---- Hook émis par scenario_scenarios à chaque changement d'état ; efface l'état du système quand le scénario est nil (arrêt).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/waypoints.lua:267
----@param scenario table|nil scénario ou nil
+--- Hook emitted by scenario_scenarios on each state change; clears the system state when the scenario is nil (stop).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/waypoints.lua:267
+---@param scenario table|nil scenario or nil
 function scenario_waypoints.onScenarioChange(scenario) end
 
---- Hook émis au redémarrage d'un scénario : restaure lapConfig, vide l'état, reconstruit branches et graphe de successeurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/waypoints.lua:495
----@param scenario table scénario
+--- Hook emitted when a scenario restarts: restores lapConfig, clears the state, rebuilds branches and the successor graph.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/waypoints.lua:495
+---@param scenario table scenario
 function scenario_waypoints.onScenarioRestarted(scenario) end
 
---- Appelée en interne quand un véhicule traverse son waypoint cible : traite le waypoint (marqueurs, suivant), émet onRaceWaypointReached(data) (et onRaceWaypoint pour les véhicules playerUsable, avec un son), gère la fin de course (scenario_scenarios.endRace) et les tours (onRaceLap). Marquée « private » dans le code.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/waypoints.lua:205
----@param vid integer id du véhicule
----@param wpData table noeud du scénario {pos, radius, rot}
----@param dtOff number correction de temps (s)
+--- Called internally when a vehicle crosses its target waypoint: processes the waypoint (markers, next), emits onRaceWaypointReached(data) (and onRaceWaypoint for playerUsable vehicles, with a sound), handles the end of the race (scenario_scenarios.endRace) and the laps (onRaceLap). Marked "private" in the code.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/waypoints.lua:205
+---@param vid integer vehicle id
+---@param wpData table scenario node {pos, radius, rot}
+---@param dtOff number time correction (s)
 function scenario_waypoints.onScenarioVehicleTrigger(vid, wpData, dtOff) end
 
---- Hook de sérialisation avant rechargement Lua : renvoie les données par nom de véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/waypoints.lua:685
----@return table  données sérialisées
+--- Serialization hook before Lua reload: returns the data per vehicle name.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/waypoints.lua:685
+---@return table  serialized data
 function scenario_waypoints.onSerialize() end
 
---- Hook émis par scenario_scenarios : initialise le suivi des waypoints d'un véhicule dont l'IA vient d'être activée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/waypoints.lua:706
+--- Hook emitted by scenario_scenarios: initializes waypoint tracking for a vehicle whose AI has just been enabled.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/waypoints.lua:706
 ---@param data table {vehicleId, vehicleName, aiControlled}
 function scenario_waypoints.onVehicleAIStateChanged(data) end
 
---- Réinitialise les données de waypoint d'un véhicule remis en place : sans curWpIndex (ou données absentes) les recrée, sinon positionne cur = curWpIndex - 1 et next = nextWpIndex - 1 et retraite le waypoint. Utilisée par checkpoints.lua selon le code.
----Source : lua/ge/extensions/scenario/waypoints.lua:712
----@param vehicleId integer id du véhicule
----@param curWpIndex integer|nil index (base 1) du waypoint courant
----@param nextWpIndex integer|nil index (base 1) du prochain waypoint
+--- Resets the waypoint data of a vehicle that was put back in place: without curWpIndex (or with missing data) recreates them, otherwise sets cur = curWpIndex - 1 and next = nextWpIndex - 1 and reprocesses the waypoint. Used by checkpoints.lua according to the code.
+---Source: lua/ge/extensions/scenario/waypoints.lua:712
+---@param vehicleId integer vehicle id
+---@param curWpIndex integer|nil (1-based) index of the current waypoint
+---@param nextWpIndex integer|nil (1-based) index of the next waypoint
 function scenario_waypoints.updateResetVehicleData(vehicleId, curWpIndex, nextWpIndex) end
 

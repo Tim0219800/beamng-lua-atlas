@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/setObjectField.lua",
-  "module": "Noeud flowgraph « Set Object Field » (repeat_instant). Modifie un champ d'un objet de la scène par id. Entrées : objectId, fieldName, fieldArrayNum (caché, 0), value (any ; une table est convertie en chaîne séparée par des espaces). Sortie : objectFound. Utilise setField si le champ est déclaré, sinon setDynDataFieldbyName, puis updateInstanceRenderData si dispo.",
+  "module": "Flowgraph node \"Set Object Field\" (repeat_instant). Modifies a field of a scene object by id. Inputs: objectId, fieldName, fieldArrayNum (hidden, 0), value (any; a table is converted to a space-separated string). Output: objectFound. Uses setField if the field is declared, otherwise setDynDataFieldbyName, then updateInstanceRenderData if available.",
   "notes": [
-    "Ne fait rien si value est nil ou false (test `not value`) : impossible d'écrire false avec ce noeud.",
-    "Les tables sont concaténées par table.concat : seulement valable pour des listes de nombres/chaînes."
+    "Does nothing if value is nil or false (test `not value`): impossible to write false with this node.",
+    "Tables are concatenated by table.concat: only valid for lists of numbers/strings."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "work": {
-          "desc": "Cherche l'objet, convertit la valeur et l'écrit dans le champ (déclaré ou dynamique).",
+          "desc": "Looks up the object, converts the value and writes it to the field (declared or dynamic).",
           "internal": false
         }
       }

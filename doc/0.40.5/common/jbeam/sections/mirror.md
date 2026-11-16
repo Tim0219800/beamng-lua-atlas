@@ -1,32 +1,32 @@
 # `jbeam_sections_mirror`
 
-*Fichier : `lua/common/jbeam/sections/mirror.lua` · VM : Commun (GE + véhicule) · 62 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/sections/mirror.lua` · VM: Common (GE + vehicle) · 62 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/sections/mirror")`
+**Access:** `require("jbeam/sections/mirror")`
 
-Traite la section jbeam « mirrors » (rétroviseurs). Pour chaque entrée ayant un champ mesh, enregistre le rétroviseur dans le moteur (addMirror avec mesh, idRef, id1, id2) et récupère l'id obtenu dans v.id, puis configure l'objet miroir : offset (refBaseTranslation ou offset), normal (déduite de baseRotationGlobal en degrés ou de normal) et offsetNormal (champs dépréciés). Les entrées sans mesh sont considérées comme de vieilles données.
+Processes the jbeam "mirrors" section. For each entry with a mesh field, registers the mirror in the engine (addMirror with mesh, idRef, id1, id2) and gets the resulting id in v.id, then configures the mirror object: offset (refBaseTranslation or offset), normal (deduced from baseRotationGlobal in degrees or from normal) and offsetNormal (deprecated fields). Entries without mesh are considered old data.
 
-## Remarques
+## Notes
 
-- baseRotationGlobal est en degrés {x, y, z} ; la normale est obtenue en tournant le vecteur (0,1,0).
-- Les champs offsetRotationGlobal et offsetNormal sont dépréciés : ils déclenchent un message d'erreur de migration dans le journal mais restent appliqués. Un normal fourni directement journalise aussi un message de migration.
-- Si addMirror renvoie un id négatif, l'entrée est ignorée.
+- baseRotationGlobal is in degrees {x, y, z}; the normal is obtained by rotating the vector (0,1,0).
+- The fields offsetRotationGlobal and offsetNormal are deprecated: they trigger a migration error message in the log but are still applied. A directly provided normal also logs a migration message.
+- If addMirror returns a negative id, the entry is ignored.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_sections_mirror.process(objID, vehicleObj, vehicle)` | Crée et configure les rétroviseurs déclarés dans vehicle.mirrors. *(interne)* | 11 |
+| `jbeam_sections_mirror.process(objID, vehicleObj, vehicle)` | Creates and configures the mirrors declared in vehicle.mirrors. *(internal)* | 11 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_sections_mirror.process(objID, vehicleObj, vehicle)`
 
-Crée et configure les rétroviseurs déclarés dans vehicle.mirrors.
+Creates and configures the mirrors declared in vehicle.mirrors.
 
-- `objID` (*integer*) : Identifiant du véhicule (non utilisé).
-- `vehicleObj` (*userdata*) : Objet véhicule moteur (addMirror, getMirror).
-- `vehicle` (*table*) : Données jbeam (section mirrors).
+- `objID` (*integer*) : Vehicle identifier (unused).
+- `vehicleObj` (*userdata*) : Engine vehicle object (addMirror, getMirror).
+- `vehicle` (*table*) : Jbeam data (mirrors section).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/sections/mirror.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/sections/mirror.lua`.*

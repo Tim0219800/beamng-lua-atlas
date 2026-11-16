@@ -1,0 +1,73 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/customUiLayout.lua",
+  "module": "Nœud flowgraph « Custom UI Layout » (catégorie provider) : enregistre une disposition d'apps UI (layout) dans le nœud pour la réutiliser. Sortie « layout » (table layoutData : {apps, layoutName = 'procedural Layout <id>'}) à brancher sur Set UI Layout. Propriétés : Capture (lit le layout courant via 'getCurrentLayoutToLua'), Clear, Load Stored Layout, Load Freeroam layout.",
+  "notes": [
+    "La liste « Copy Layout from... » est vide (layouts = {} , appel à ui_apps.getLayouts commenté).",
+    "setLayout est appelée par l'UI via getCmd(), qui renvoie un nom de fonction sans parenthèses (commande qui reçoit les données de l'UI)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Écrit {apps = storedLayout, layoutName = ...} sur « layout ».",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure storedLayout.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Données sauvegardées / reçues."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde storedLayout.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Boutons Capture, Clear, Load Stored Layout, Load Freeroam layout et liste de copie.",
+          "internal": true
+        },
+        "getCmd": {
+          "desc": "Renvoie la chaîne de la fonction Lua de rappel (setLayout) de ce nœud.",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du bouton ou du pin de sortie activé."
+            }
+          },
+          "internal": false
+        },
+        "init": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "setLayout": {
+          "desc": "Reçoit le layout capturé par l'UI et mémorise data.apps dans storedLayout.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Données sauvegardées / reçues."
+            }
+          },
+          "internal": false
+        },
+        "uniqueId": {
+          "desc": "Renvoie « <idManager>_<idNœud> », utilisé pour nommer l'état de jeu temporaire.",
+          "internal": false
+        }
+      }
+    }
+  }
+}

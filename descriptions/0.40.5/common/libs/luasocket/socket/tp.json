@@ -1,25 +1,49 @@
 {
   "path": "lua/common/libs/luasocket/socket/tp.lua",
-  "module": "Bibliothèque tierce LuaSocket (Diego Nehab) : sous-système commun aux protocoles texte SMTP/FTP (« Telnet-like Protocol »). `connect` ouvre une connexion TCP et renvoie un objet dont les méthodes lisent les réponses du serveur à code numérique à trois chiffres (réponses multilignes comprises) et envoient des commandes. Utilisé par socket.smtp.",
+  "module": "Third-party LuaSocket library (Diego Nehab): common subsystem of the SMTP/FTP text protocols (\"Telnet-like Protocol\"). `connect` opens a TCP connection and returns an object whose methods read the server's three-digit numeric-code responses (multiline responses included) and send commands. Used by socket.smtp.",
   "notes": [
-    "L'objet renvoyé par connect expose : check(ok), command(cmd, arg), send(data), receive(pat), source(source, step), sink(snk, pat), getfd, dirty, getcontrol et close.",
-    "`check(ok)` accepte un motif Lua (ex. \"2..\"), une liste de motifs, ou une fonction (code, réponse) ; renvoie le code numérique et le texte, ou nil et la réponse si le code ne correspond pas.",
-    "Bug du code : la méthode `sink` utilise une variable `c` non définie (elle devrait utiliser self.c) ; elle échoue si on l'appelle.",
-    "TIMEOUT par défaut : 60 s."
+    "The object returned by connect exposes: check(ok), command(cmd, arg), send(data), receive(pat), source(source, step), sink(snk, pat), getfd, dirty, getcontrol and close.",
+    "`check(ok)` accepts a Lua pattern (e.g. \"2..\"), a list of patterns, or a function (code, response); returns the numeric code and the text, or nil and the response if the code does not match.",
+    "Code bug: the `sink` method uses an undefined variable `c` (it should use self.c); it fails if called.",
+    "Default TIMEOUT: 60 s."
   ],
   "fields": {
-    "TIMEOUT": {"type": "number", "desc": "Délai par défaut des opérations réseau en secondes (60)."}
+    "TIMEOUT": {
+      "type": "number",
+      "desc": "Default timeout of network operations in seconds (60)."
+    }
   },
   "functions": {
     "connect": {
-      "desc": "Crée un socket (create ou socket.tcp), fixe le délai, se connecte et renvoie l'objet de contrôle. En cas d'échec, ferme le socket et renvoie nil et l'erreur.",
+      "desc": "Creates a socket (create or socket.tcp), sets the timeout, connects and returns the control object. On failure, closes the socket and returns nil and the error.",
       "params": {
-        "host": {"type": "string", "desc": "Hôte du serveur."},
-        "port": {"type": "integer", "desc": "Port du serveur."},
-        "timeout": {"type": "number|nil", "desc": "Délai en secondes ; défaut TIMEOUT."},
-        "create": {"type": "function|nil", "desc": "Fabrique de socket ; défaut socket.tcp."}
+        "host": {
+          "type": "string",
+          "desc": "Server host."
+        },
+        "port": {
+          "type": "integer",
+          "desc": "Server port."
+        },
+        "timeout": {
+          "type": "number|nil",
+          "desc": "Timeout in seconds; default TIMEOUT."
+        },
+        "create": {
+          "type": "function|nil",
+          "desc": "Socket factory; default socket.tcp."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Objet de contrôle du protocole, ou nil."}, {"type": "string|nil", "desc": "Message d'erreur."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Protocol control object, or nil."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error message."
+        }
+      ]
     }
   }
 }

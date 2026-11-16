@@ -1,0 +1,104 @@
+{
+  "path": "lua/ge/extensions/career/modules/testDrive.lua",
+  "module": "Essai routier d'un véhicule chez un concessionnaire en carrière. start() fait monter le joueur dans le véhicule, crée un instantané des conditions de pièces (clé \"beforeTestDrive\"), désactive l'autosauvegarde et active l'essai. À chaque frame, onUpdate décompte le temps limite (timeLimit), vérifie que le joueur reste à moins de 10 m du véhicule (sinon abandon avec frais) et détecte les dégâts toutes les 2 s. stop() ramène le véhicule au point de départ avec un fondu et remet le joueur à pied.",
+  "usage": "career_modules_testDrive.start(vehId, {timeLimit = 120, abandonFees = 50, dealershipName = \"x\", route = \"y\"})\nif career_modules_testDrive.isActive() then print(career_modules_testDrive.getTimeLeft()) end",
+  "notes": [
+    "Champs de testDriveInfo utilisés dans le code : timeLimit (s), abandonFees, endParkingSpot, endParkingSpotCreated, dealershipName, route, dealershipPreview.",
+    "Le temps limite est décompté en temps de simulation (dtSim). Quand il est écoulé, stop(false) est appelé (sans le hook onGameplayActivityAborted).",
+    "abandonTestDrive : si abandonFees > 0, paie les frais (canBeNegative = true) ; les ventes privées n'ont pas de frais. Appelle ensuite career_modules_inspectVehicle.onTestDriveAbandoned().",
+    "stop(userAborted) émet onGameplayActivityAborted sauf si userAborted == false ; il relance l'autosauvegarde et lance le job de fin (téléportation au point de départ, vitesse du temps 0.5 puis 1, navigation vers l'écran play, hook onTestDriveEndedAfterFade).",
+    "Hooks émis : onTestDriveStarted (au démarrage), onTestDriveEndedAfterFade (fin).",
+    "Le POI de fin d'essai (type testDriveEnd) est ajouté à la liste des POI bruts et une action « stopTestDrive » est ajoutée au menu radial (niveau /root/sandbox/career/) à la première ouverture."
+  ],
+  "fields": {
+    "dependencies": {"type": "table", "desc": "Table vide : aucune dépendance."}
+  },
+  "functions": {
+    "start": {
+      "desc": "Démarre l'essai : copie testDriveInfo, fait monter le joueur dans le véhicule, mémorise sa position/rotation de départ, crée et sélectionne l'instantané de pièces beforeTestDrive, dégèle le véhicule, émet onTestDriveStarted, vide les POI bruts et désactive l'autosauvegarde.",
+      "params": {
+        "_vehicleId": {"type": "integer", "desc": "Id d'objet du véhicule d'essai."},
+        "testDriveInfo": {"type": "table", "desc": "Paramètres de l'essai (timeLimit, abandonFees, endParkingSpot, dealershipName, route...)."}
+      },
+      "internal": false
+    },
+    "stop": {
+      "desc": "Termine l'essai normalement (sans effet si inactif) : réactive l'autosauvegarde et lance le job de fin qui téléporte le véhicule au départ avec fondu.",
+      "params": {"userAborted": {"type": "boolean|nil", "desc": "Émet onGameplayActivityAborted sauf si false."}},
+      "internal": false
+    },
+    "abandonTestDrive": {
+      "desc": "Abandonne l'essai (sans effet si inactif) : désactive l'essai, réactive l'autosauvegarde, puis après 0,2 s affiche et paie les frais d'abandon éventuels, réinitialise les données et prévient inspectVehicle.",
+      "params": {},
+      "internal": false
+    },
+    "resetData": {
+      "desc": "Désactive l'essai et vide les POI bruts.",
+      "params": {},
+      "internal": false
+    },
+    "isActive": {
+      "desc": "Indique si un essai est en cours.",
+      "params": {},
+      "returns": [{"type": "boolean|nil", "desc": "true si actif."}],
+      "internal": false
+    },
+    "getTimeLeft": {
+      "desc": "Temps restant de l'essai en secondes (nil s'il n'y a pas d'essai ou pas de limite).",
+      "params": {},
+      "returns": [{"type": "number|nil", "desc": "Secondes restantes."}],
+      "internal": false
+    },
+    "isDamageDetected": {
+      "desc": "Indique si des dégâts ont été détectés sur le véhicule pendant l'essai (détection par career_modules_insurance_insurance.genericVehNeedsRepair).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si dégâts détectés."}],
+      "internal": false
+    },
+    "formatTestDriveToRawPoi": {
+      "desc": "Ajoute à elements le POI de fin d'essai (id testDrive-<concession>-<route>-parkingEnd, marqueur de parking et marqueur de grande carte) si un emplacement de fin existe et a été créé.",
+      "params": {"elements": {"type": "table[]", "desc": "Liste de POI bruts à compléter."}},
+      "internal": false
+    },
+    "onUpdate": {
+      "desc": "Hook de frame : si un essai est actif, gère le temps limite, l'éloignement du joueur et la détection de dégâts.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Temps de simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onVehicleRepairedByInsurance": {
+      "desc": "Hook appelé après une réparation par l'assurance : affiche après 1,8 s le coût de la réparation (message temps réel et son d'achat).",
+      "params": {"amount": {"type": "number", "desc": "Montant de la réparation."}},
+      "internal": true
+    },
+    "onGetRawPoiListForLevel": {
+      "desc": "Hook de la liste de POI : ajoute le POI de fin d'essai via formatTestDriveToRawPoi.",
+      "params": {
+        "levelIdentifier": {"type": "string", "desc": "Niveau (non utilisé)."},
+        "elements": {"type": "table[]", "desc": "Liste de POI à compléter."}
+      },
+      "internal": true
+    },
+    "onPoiDetailPromptOpening": {
+      "desc": "Hook d'ouverture du détail d'un POI : si c'est le POI testDriveEnd, ajoute un bouton « arrêter l'essai » appelant stop(false).",
+      "params": {
+        "elemData": {"type": "table[]", "desc": "Éléments du POI."},
+        "promptData": {"type": "table[]", "desc": "Boutons à compléter."}
+      },
+      "internal": true
+    },
+    "onCareerActive": {
+      "desc": "Hook : réinitialise les données de l'essai à l'activation de la carrière.",
+      "params": {"active": {"type": "boolean", "desc": "Rien si false."}},
+      "internal": true
+    },
+    "onBeforeRadialOpened": {
+      "desc": "Hook avant l'ouverture du menu radial : une seule fois, ajoute une entrée « arrêter l'essai » (visible seulement pendant un essai) au menu rapide.",
+      "params": {},
+      "internal": true
+    }
+  }
+}

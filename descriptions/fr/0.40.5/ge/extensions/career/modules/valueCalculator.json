@@ -1,0 +1,79 @@
+{
+  "path": "lua/ge/extensions/career/modules/valueCalculator.lua",
+  "module": "Calcul de la valeur et de l'état de réparation des véhicules et pièces de la carrière : dépréciation par année d'âge (table depreciationByYear), perte liée au kilométrage (odomètre), valeur de ferraille (5 % de la valeur), valeur d'un véhicule d'inventaire en tenant compte des pièces ajoutées/retirées et des dégâts, coût et durée de réparation (pièces à intégrité 0).",
+  "notes": [
+    "Constantes : perte de 0,0000025 par km relatif, ferraille 5 %, 20 s de réparation par pièce, seuil de 3 pièces cassées pour considérer le véhicule à réparer, valeur minimale min(500, 5 % de la valeur neuve).",
+    "L'année de référence est codée en dur à 2023 (âge = 2023 - année) dans getPartValue et getVehicleValue.",
+    "Prix de réparation : 60 % de part.value (700 par défaut) pour chaque pièce dont integrityValue vaut 0.",
+    "Dans la valeur d'un véhicule, les pièces ajoutées comptent pour 50 % de leur valeur et les pièces retirées sont soustraites à 50 %.",
+    "partConditionsNeedRepair ne tient pas compte des exceptions (pare-chocs, portes, rétroviseurs, face avant) : l'ancienne logique est en commentaire."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'career_career'}."}
+  },
+  "functions": {
+    "getVehicleMileageById": {
+      "desc": "Retourne le kilométrage (odomètre de la pièce principale) d'un véhicule d'inventaire. 0 si introuvable.",
+      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire."}},
+      "returns": [{"type": "number", "desc": "Odomètre (unité du jeu pour partCondition.odometer, déduit du code)."}],
+      "internal": false
+    },
+    "getAdjustedVehicleBaseValue": {
+      "desc": "Valeur ajustée d'un objet selon son âge et son kilométrage : dépréciation annuelle, perte par kilométrage, plus la valeur de ferraille.",
+      "params": {
+        "value": {"type": "number", "desc": "Valeur de base."},
+        "vehicleCondition": {"type": "table", "desc": "{age = années, mileage = odomètre}."}
+      },
+      "returns": [{"type": "number", "desc": "Valeur ajustée."}],
+      "internal": false
+    },
+    "getPartDifference": {
+      "desc": "Compare les pièces d'origine d'un véhicule aux pièces actuelles et retourne les pièces ajoutées et retirées par emplacement.",
+      "params": {
+        "originalParts": {"type": "table<string, table>", "desc": "Pièces d'origine par slot (avec .name)."},
+        "newParts": {"type": "table<string, string>", "desc": "Noms des pièces actuelles par slot."},
+        "changedSlots": {"type": "table<string, boolean>", "desc": "Slots modifiés (pour détecter une pièce identique remplacée)."}
+      },
+      "returns": [{"type": "table<string, string>", "desc": "addedParts (slot -> nom)."}, {"type": "table", "desc": "removedParts."}],
+      "internal": false
+    },
+    "getPartValue": {
+      "desc": "Valeur d'une pièce : valeur ajustée par âge et kilométrage, -5 % si apprêtée (primered), réduite selon le nombre de réparations.",
+      "params": {"part": {"type": "table", "desc": "Pièce avec value, year, partCondition.odometer, primered, repairCount."}},
+      "returns": [{"type": "number", "desc": "Valeur de la pièce."}],
+      "internal": false
+    },
+    "getRepairDetails": {
+      "desc": "API dégâts : calcule prix, durée et nombre de pièces à remplacer pour un véhicule d'inventaire.",
+      "params": {"invVehInfo": {"type": "table", "desc": "Véhicule d'inventaire (id, partConditions, config.partsTree)."}},
+      "returns": [{"type": "table", "desc": "{price, repairTime, partsCountToBeReplaced}."}],
+      "internal": false
+    },
+    "getInventoryVehicleValue": {
+      "desc": "Valeur actuelle d'un véhicule d'inventaire (base ajustée + pièces - réparations, plancher à la valeur minimale).",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "ignoreDamage": {"type": "boolean|nil", "desc": "Si vrai, ne déduit pas le coût de réparation."}
+      },
+      "returns": [{"type": "number|nil", "desc": "Valeur, ou nil si le véhicule n'existe pas."}],
+      "internal": false
+    },
+    "getNumberOfBrokenParts": {
+      "desc": "Compte les pièces dont integrityValue vaut 0.",
+      "params": {"partConditions": {"type": "table|nil", "desc": "Conditions par chemin de pièce."}},
+      "returns": [{"type": "integer", "desc": "Nombre de pièces cassées (0 si l'argument n'est pas une table)."}],
+      "internal": false
+    },
+    "partConditionsNeedRepair": {
+      "desc": "Indique si le nombre de pièces cassées atteint le seuil (3).",
+      "params": {"partConditions": {"type": "table|nil", "desc": "Conditions par chemin de pièce."}},
+      "returns": [{"type": "boolean", "desc": "true si le véhicule doit être réparé."}],
+      "internal": false
+    },
+    "getBrokenPartsThreshold": {
+      "desc": "Retourne le seuil de pièces cassées (3).",
+      "returns": [{"type": "integer", "desc": "Seuil."}],
+      "internal": false
+    }
+  }
+}

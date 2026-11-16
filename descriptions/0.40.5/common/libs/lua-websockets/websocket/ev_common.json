@@ -1,20 +1,60 @@
 {
   "path": "lua/common/libs/lua-websockets/websocket/ev_common.lua",
-  "module": "Fonctions communes aux backends client_ev et server_ev de lua-websockets (boucle d'événements lua-ev) : envoi asynchrone avec tampon et lecture/décodage de trames WebSocket sur un socket. Nécessite le module 'ev' (non fourni par le jeu).",
+  "module": "Functions common to the client_ev and server_ev backends of lua-websockets (lua-ev event loop): asynchronous buffered sending and reading/decoding of WebSocket frames on a socket. Requires the 'ev' module (not provided by the game).",
   "notes": [
-    "Le fichier est une table de retour {async_send, message_io} ; le doc auto liste des noms 'message_io' en globale, mais ce sont des variables locales.",
-    "Une partie de async_send est tronquée dans l'extraction auto (corps réel : fonction send/stop/send_async plus bas dans le fichier)."
+    "The file is a return table {async_send, message_io}; the auto doc lists 'message_io' names as global, but they are local variables.",
+    "Part of async_send is truncated in the automatic extraction (real body: send/stop/send_async function further down in the file)."
   ],
   "functions": {
     "async_send": {
-      "desc": "Prépare l'envoi asynchrone sur un socket : crée un IO d'écriture ev et renvoie deux fonctions, send_async(data, on_sent, on_err) qui ajoute les données au tampon et renvoie le nombre d'octets en attente, et stop() qui arrête l'IO et vide le tampon. on_sent reçoit les données envoyées ; on_err reçoit l'erreur.",
-      "params": {"sock": {"type": "table", "desc": "Socket luasocket."}, "loop": {"type": "table", "desc": "Boucle ev (défaut ev.Loop.default)."}},
-      "returns": [{"type": "function", "desc": "send_async(data, on_sent, on_err)."}, {"type": "function", "desc": "stop()."}]
+      "desc": "Prepares asynchronous sending on a socket: creates an ev write IO and returns two functions, send_async(data, on_sent, on_err) which adds the data to the buffer and returns the number of bytes pending, and stop() which stops the IO and empties the buffer. on_sent receives the data sent; on_err receives the error.",
+      "params": {
+        "sock": {
+          "type": "table",
+          "desc": "luasocket socket."
+        },
+        "loop": {
+          "type": "table",
+          "desc": "ev loop (default ev.Loop.default)."
+        }
+      },
+      "returns": [
+        {
+          "type": "function",
+          "desc": "send_async(data, on_sent, on_err)."
+        },
+        {
+          "type": "function",
+          "desc": "stop()."
+        }
+      ]
     },
     "message_io": {
-      "desc": "Surveille la lecture d'un socket, reconstitue les trames WebSocket (via frame.decode), concatène les fragments et appelle on_message pour chaque message complet. Appelle on_error à la déconnexion ou à une erreur autre que timeout.",
-      "params": {"sock": {"type": "table", "desc": "Socket luasocket avec descripteur valide."}, "loop": {"type": "table", "desc": "Boucle ev."}, "on_message": {"type": "function", "desc": "fonction(message, opcode)."}, "on_error": {"type": "function", "desc": "fonction(err, io, sock)."}},
-      "returns": [{"type": "table", "desc": "L'IO ev de lecture (arrêt avec :stop(loop))."}]
+      "desc": "Watches a socket for reading, reassembles the WebSocket frames (via frame.decode), concatenates the fragments and calls on_message for each complete message. Calls on_error on disconnect or on an error other than timeout.",
+      "params": {
+        "sock": {
+          "type": "table",
+          "desc": "luasocket socket with a valid descriptor."
+        },
+        "loop": {
+          "type": "table",
+          "desc": "ev loop."
+        },
+        "on_message": {
+          "type": "function",
+          "desc": "function(message, opcode)."
+        },
+        "on_error": {
+          "type": "function",
+          "desc": "function(err, io, sock)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The ev read IO (stop with :stop(loop))."
+        }
+      ]
     }
   }
 }

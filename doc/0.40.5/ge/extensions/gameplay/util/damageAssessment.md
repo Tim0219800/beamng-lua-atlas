@@ -1,12 +1,12 @@
 # `gameplay_util_damageAssessment`
 
-*Fichier : `lua/ge/extensions/gameplay/util/damageAssessment.lua` · VM : Game Engine (GE) · 444 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/util/damageAssessment.lua` · VM: Game Engine (GE) · 444 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_util_damageAssessment` : `extensions.load("gameplay_util_damageAssessment")`, puis la globale `gameplay_util_damageAssessment`
+**Access:** extension `gameplay_util_damageAssessment`: `extensions.load("gameplay_util_damageAssessment")`, then the global `gameplay_util_damageAssessment`
 
-Évalue les dégâts d'un véhicule : niveau global (aucun, léger, modéré, sévère) d'après map.objects[id].damage, et répartition par zone. Pour la répartition, la boîte orientée du véhicule est découpée en 27 cellules (3x3x3) dont on lit les dégâts de poutres et de collision ; les cellules sont regroupées en zones nommées (Front, Front Left, Rear, Top, Left…). Utilisé par gameplay_util_crashDetection pour dire où un impact a eu lieu.
+Assesses a vehicle's damage: overall level (none, light, moderate, severe) based on map.objects[id].damage, and per-zone breakdown. For the breakdown, the vehicle's oriented box is split into 27 cells (3x3x3) whose beam and collision damage is read; the cells are grouped into named zones (Front, Front Left, Rear, Top, Left...). Used by gameplay_util_crashDetection to tell where an impact occurred.
 
-## Exemple
+## Example
 
 ```lua
 local lvl = gameplay_util_damageAssessment.getOverallDamageLevel(be:getPlayerVehicleID(0))
@@ -17,92 +17,92 @@ local res = gameplay_util_damageAssessment.getTextualCollisionDamageLocations({v
 print(res.mostDamagedLocation)
 ```
 
-## Remarques
+## Notes
 
-- Seuils de getOverallDamageLevel : <= 50 « No damage » (gravité 0) ; au-dessus, Minor jusqu'à 10000, Moderate dès 10000, Severe dès 30000 (et au-delà de 50000).
-- Les cellules sont indexées de 0 à 26 ; x = floor((i%9)/3), y = floor(i/9), z = i%3.
-- BUG probable : damageLocationScore n'est jamais renseigné (seul damageScore l'est), donc bestDamageLocation vaut toujours nil et bestDamageScore 0 ; seul mostDamagedLocation est exploitable.
-- BUG probable : la clé de zone s'appelle `fontLeft` (faute de frappe, sans effet sur le nom affiché « Front Left »). Les ids 7 sont dupliqués (rearCenter et top) et le nom « Rear » est utilisé à la fois par rearCenter et rear : dans damagedLocations, la seconde entrée écrase la première.
-- Si aucune cellule n'a subi de dégât, intensity divise par 0 (maxCellDamage = 0) et peut produire NaN.
-- getTextualCollisionDamageLocations / getTextualBeamDamageLocations modifient la table `data` reçue : ses oldSectionsDamageRaw (et newSectionsDamageInfoRaw s'il est fourni) sont remplacés par de simples nombres par cellule.
-- Sans oldSectionsDamageRaw, l'état précédent est supposé à 0 pour toutes les cellules ; sans vehId, le véhicule du joueur 0 est utilisé.
-- Les dégâts affichés en debug (setDebug(true)) dessinent les 27 cellules en magenta chaque image.
+- getOverallDamageLevel thresholds: <= 50 "No damage" (severity 0); above that, Minor up to 10000, Moderate from 10000, Severe from 30000 (and beyond 50000).
+- Cells are indexed from 0 to 26; x = floor((i%9)/3), y = floor(i/9), z = i%3.
+- Probable BUG: damageLocationScore is never set (only damageScore is), so bestDamageLocation is always nil and bestDamageScore 0; only mostDamagedLocation is usable.
+- Probable BUG: the zone key is named `fontLeft` (typo, with no effect on the displayed name "Front Left"). The ids 7 are duplicated (rearCenter and top) and the name "Rear" is used by both rearCenter and rear: in damagedLocations, the second entry overwrites the first.
+- If no cell has taken damage, intensity divides by 0 (maxCellDamage = 0) and can produce NaN.
+- getTextualCollisionDamageLocations / getTextualBeamDamageLocations modify the received `data` table: its oldSectionsDamageRaw (and newSectionsDamageInfoRaw if provided) are replaced by plain per-cell numbers.
+- Without oldSectionsDamageRaw, the previous state is assumed to be 0 for all cells; without vehId, player 0's vehicle is used.
+- Damage shown in debug (setDebug(true)) draws the 27 cells in magenta every frame.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_util_damageAssessment.calculateDamageVariation(tableNumbers, maxValue)` | Mesure l'hétérogénéité d'une série de dégâts : écart-type divisé par la moitié de maxValue, plafonné à 1. | 272 |
-| `gameplay_util_damageAssessment.getOverallDamageLevel(vehId)` | Renvoie le niveau de dégâts global d'un véhicule d'après map.objects[vehId].damage. | 149 |
-| `gameplay_util_damageAssessment.getSectionsDamageInfoRaw(vehId)` | Lit les dégâts de poutres et de collision des 27 cellules du véhicule. | 182 |
-| `gameplay_util_damageAssessment.getTextualBeamDamageLocations(data)` | Identique à getTextualCollisionDamageLocations mais sur les dégâts de poutres (déformation), pour savoir où le véhicule s'est abîmé. | 408 |
-| `gameplay_util_damageAssessment.getTextualCollisionDamageLocations(data)` | Compare les dégâts de collision actuels à un état précédent et renvoie, par zone nommée, total, maximum, moyenne, variation, intensité et score. Sert à savoir où un impact a eu lieu. | 403 |
-| `gameplay_util_damageAssessment.onDeserialized(data)` | Hook appelé après rechargement : restaure le drapeau debug. *(interne)* *(hook)* | 418 |
-| `gameplay_util_damageAssessment.onSerialize()` | Hook appelé lors du rechargement des extensions : sauvegarde le drapeau debug. *(interne)* *(hook)* | 412 |
-| `gameplay_util_damageAssessment.onUpdate()` | Hook appelé à chaque image ; en mode debug, redessine les cellules du véhicule du joueur. *(interne)* *(hook)* | 422 |
-| `gameplay_util_damageAssessment.setDebug(newDebug)` | Active ou désactive le dessin de debug des cellules de dégâts. | 428 |
+| `gameplay_util_damageAssessment.calculateDamageVariation(tableNumbers, maxValue)` | Measures the heterogeneity of a damage series: standard deviation divided by half of maxValue, capped at 1. | 272 |
+| `gameplay_util_damageAssessment.getOverallDamageLevel(vehId)` | Returns a vehicle's overall damage level based on map.objects[vehId].damage. | 149 |
+| `gameplay_util_damageAssessment.getSectionsDamageInfoRaw(vehId)` | Reads the beam and collision damage of the vehicle's 27 cells. | 182 |
+| `gameplay_util_damageAssessment.getTextualBeamDamageLocations(data)` | Same as getTextualCollisionDamageLocations but on beam damage (deformation), to know where the vehicle was damaged. | 408 |
+| `gameplay_util_damageAssessment.getTextualCollisionDamageLocations(data)` | Compares current collision damage to a previous state and returns, per named zone, total, maximum, average, variation, intensity and score. Used to know where an impact occurred. | 403 |
+| `gameplay_util_damageAssessment.onDeserialized(data)` | Hook called after reload: restores the debug flag. *(internal)* *(hook)* | 418 |
+| `gameplay_util_damageAssessment.onSerialize()` | Hook called when extensions are reloaded: saves the debug flag. *(internal)* *(hook)* | 412 |
+| `gameplay_util_damageAssessment.onUpdate()` | Hook called every frame; in debug mode, redraws the player vehicle's cells. *(internal)* *(hook)* | 422 |
+| `gameplay_util_damageAssessment.setDebug(newDebug)` | Enables or disables debug drawing of the damage cells. | 428 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_util_damageAssessment.calculateDamageVariation(tableNumbers, maxValue)`
 
-Mesure l'hétérogénéité d'une série de dégâts : écart-type divisé par la moitié de maxValue, plafonné à 1.
+Measures the heterogeneity of a damage series: standard deviation divided by half of maxValue, capped at 1.
 
-- `tableNumbers` (*number[]*) : Dégâts par cellule.
-- `maxValue` (*number|nil*) : Valeur de référence (500000 par défaut).
-- **renvoie** : number 0 (uniforme ou moins de 2 valeurs) à 1.
+- `tableNumbers` (*number[]*) : Damage per cell.
+- `maxValue` (*number|nil*) : Reference value (500000 by default).
+- **returns**: number 0 (uniform or fewer than 2 values) to 1.
 
 #### `gameplay_util_damageAssessment.getOverallDamageLevel(vehId)`
 
-Renvoie le niveau de dégâts global d'un véhicule d'après map.objects[vehId].damage.
+Returns a vehicle's overall damage level based on map.objects[vehId].damage.
 
-- `vehId` (*integer*) : Id du véhicule (doit exister dans map.objects).
-- **renvoie** : table {damageName = "No damage"|"Minor"|"Moderate"|"Severe", damageSeverity = 0..3}
+- `vehId` (*integer*) : Vehicle id (must exist in map.objects).
+- **returns**: table {damageName = "No damage"|"Minor"|"Moderate"|"Severe", damageSeverity = 0..3}
 
 #### `gameplay_util_damageAssessment.getSectionsDamageInfoRaw(vehId)`
 
-Lit les dégâts de poutres et de collision des 27 cellules du véhicule.
+Reads the beam and collision damage of the vehicle's 27 cells.
 
-- `vehId` (*integer|nil*) : Id du véhicule ; joueur 0 si nil.
-- **renvoie** : table<integer, table> Indices 0 à 26 -> {sectionBeamDamage, sectionCollisionDamage}.
+- `vehId` (*integer|nil*) : Vehicle id; player 0 if nil.
+- **returns**: table<integer, table> Indices 0 to 26 -> {sectionBeamDamage, sectionCollisionDamage}.
 
 #### `gameplay_util_damageAssessment.getTextualBeamDamageLocations(data)`
 
-Identique à getTextualCollisionDamageLocations mais sur les dégâts de poutres (déformation), pour savoir où le véhicule s'est abîmé.
+Same as getTextualCollisionDamageLocations but on beam damage (deformation), to know where the vehicle was damaged.
 
-- `data` (*table|nil*) : Même format.
-- **renvoie** : table Même format.
+- `data` (*table|nil*) : Same format.
+- **returns**: table Same format.
 
 #### `gameplay_util_damageAssessment.getTextualCollisionDamageLocations(data)`
 
-Compare les dégâts de collision actuels à un état précédent et renvoie, par zone nommée, total, maximum, moyenne, variation, intensité et score. Sert à savoir où un impact a eu lieu.
+Compares current collision damage to a previous state and returns, per named zone, total, maximum, average, variation, intensity and score. Used to know where an impact occurred.
 
-- `data` (*table|nil*) : {vehId, oldSectionsDamageRaw (sortie de getSectionsDamageInfoRaw), newSectionsDamageInfoRaw (facultatif)}.
-- **renvoie** : table {damagedLocations (par nom de zone), mostDamagedLocation, totalDamage, bestDamageLocation, bestDamageScore}
+- `data` (*table|nil*) : {vehId, oldSectionsDamageRaw (output of getSectionsDamageInfoRaw), newSectionsDamageInfoRaw (optional)}.
+- **returns**: table {damagedLocations (by zone name), mostDamagedLocation, totalDamage, bestDamageLocation, bestDamageScore}
 
 #### `gameplay_util_damageAssessment.onDeserialized(data)`
 
-Hook appelé après rechargement : restaure le drapeau debug.
+Hook called after reload: restores the debug flag.
 
-- `data` (*table*) : Table de onSerialize.
+- `data` (*table*) : onSerialize table.
 
 #### `gameplay_util_damageAssessment.onSerialize()`
 
-Hook appelé lors du rechargement des extensions : sauvegarde le drapeau debug.
+Hook called when extensions are reloaded: saves the debug flag.
 
-- **renvoie** : table {debug}
+- **returns**: table {debug}
 
 #### `gameplay_util_damageAssessment.setDebug(newDebug)`
 
-Active ou désactive le dessin de debug des cellules de dégâts.
+Enables or disables debug drawing of the damage cells.
 
-- `newDebug` (*boolean*) : true pour activer.
+- `newDebug` (*boolean*) : true to enable.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `debugDrawer:` `drawLine`, `drawText`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/util/damageAssessment.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/util/damageAssessment.lua`.*

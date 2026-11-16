@@ -1,80 +1,80 @@
 # `util_screenshotCreator_framing_procedural`
 
-*Fichier : `lua/ge/extensions/util/screenshotCreator/framing/procedural.lua` · VM : Game Engine (GE) · 539 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/screenshotCreator/framing/procedural.lua` · VM: Game Engine (GE) · 539 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_screenshotCreator_framing_procedural` : `extensions.load("util_screenshotCreator_framing_procedural")`, puis la globale `util_screenshotCreator_framing_procedural`
+**Access:** extension `util_screenshotCreator_framing_procedural`: `extensions.load("util_screenshotCreator_framing_procedural")`, then the global `util_screenshotCreator_framing_procedural`
 
-Mode de cadrage « Procedural » (mode par défaut) du créateur de captures. À partir des nœuds du véhicule, il calcule la caméra qui fait tenir le véhicule dans l'image avec des marges données : les nœuds désactivés par le module nodeOutpaint sont ignorés, ceux sous le sol et les rétroviseurs automatiques sont traités à part, puis une recherche par dichotomie trouve la distance minimale le long d'un rail de caméra. S'il n'y a aucune solution, une position de repli et une rotation optimisée sont utilisées. S'enregistre via le hook onScreenshotCreatorCollectFramingModes (id « procedural », ordre 100).
+"Procedural" framing mode (default mode) of the screenshot creator. From the vehicle's nodes, it computes the camera that makes the vehicle fit in the image with given margins: nodes disabled by the nodeOutpaint module are ignored, those below the ground and automatic mirrors are handled separately, then a bisection search finds the minimum distance along a camera rail. If there is no solution, a fallback position and an optimized rotation are used. Registers via the onScreenshotCreatorCollectFramingModes hook (id "procedural", order 100).
 
-## Exemple
+## Example
 
 ```lua
 local res, err = util_screenshotCreator_framing_procedural.resolve({vehicle = veh, resolution = {1280, 720}, fov = 20, useFramingMargins = true})
 if not res then log('E', 'framing', err) end
 ```
 
-## Remarques
+## Notes
 
-- Valeurs par défaut : fov 20°, nearPlane 0,1, résolution {500, 281}, hauteur de caméra 1,6 m au-dessus du sol, décalage de l'axe de 0,10 m vers le bas.
-- Erreurs renvoyées : résolution non positive, fov hors de ]0,180[, nearPlane négatif ou aspectRatio non positif, aucun point de cadrage au-dessus du sol.
-- Marges nulles sauf si context.useFramingMargins (ou useMargins) vaut true ; alors context.margin ou settings.getFramingMargin(resolution) est utilisé. Les rétroviseurs ont une marge fixe de 2 pixels.
-- Un selfCheck() (assertions) est exécuté une seule fois au premier resolve ; une assertion échouée lèverait une erreur Lua.
+- Default values: fov 20°, nearPlane 0.1, resolution {500, 281}, camera height 1.6 m above the ground, axis offset of 0.10 m downward.
+- Errors returned: non-positive resolution, fov outside ]0,180[, negative nearPlane or non-positive aspectRatio, no framing point above ground.
+- Zero margins unless context.useFramingMargins (or useMargins) is true; then context.margin or settings.getFramingMargin(resolution) is used. Mirrors have a fixed margin of 2 pixels.
+- A selfCheck() (assertions) runs only once at the first resolve; a failed assertion would raise a Lua error.
 
-**Dépendances (chargées avant) :** `util_screenshotCreator_thumbnailConfig`, `util_screenshotCreator_nodeOutpaint`, `util_screenshotCreator_settings`, `util_screenshotCreator_vehicleSetup`
+**Dependencies (loaded first):** `util_screenshotCreator_thumbnailConfig`, `util_screenshotCreator_nodeOutpaint`, `util_screenshotCreator_settings`, `util_screenshotCreator_vehicleSetup`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_screenshotCreator_framing_procedural.frame(context)` | Alias de resolve (même fonction). | 438 |
-| `util_screenshotCreator_framing_procedural.getVehicleFramingData(context)` | Prépare les données de cadrage : classe les nœuds du véhicule (activés, désactivés, sous le sol, rétroviseurs), calcule la boîte englobante, le point visé, le rail de caméra et les points d'extrémité servant au cadrage et à la rotation. Se replie sur les coins de la boîte du véhicule si aucun nœud n'est activé. | 135 |
-| `util_screenshotCreator_framing_procedural.onScreenshotCreatorCollectFramingModes(modes)` | Hook appelé par framingManager lors de la collecte des modes. Ajoute {id = "procedural", label = "Procedural", order = 100, supportsFixedRotation = true, resolve}. *(interne)* *(hook)* | 522 |
-| `util_screenshotCreator_framing_procedural.resolve(context)` | Calcule la caméra de cadrage procédural pour context.vehicle. Renvoie {pos, rot, name = "procedural camera", debugData, framingData}, ou nil et un message d'erreur. | 438 |
-| `util_screenshotCreator_framing_procedural.selfCheck()` | Test interne par assertions sur la sélection des nœuds de rotation (nœuds sous le sol et rétroviseurs conservés, nœuds désactivés exclus, repli sur les points de secours). Renvoie true. *(interne)* | 107 |
+| `util_screenshotCreator_framing_procedural.frame(context)` | Alias of resolve (same function). | 438 |
+| `util_screenshotCreator_framing_procedural.getVehicleFramingData(context)` | Prepares the framing data: classifies the vehicle's nodes (enabled, disabled, below ground, mirrors), computes the bounding box, the look-at point, the camera rail and the extreme points used for framing and rotation. Falls back to the corners of the vehicle's box if no node is enabled. | 135 |
+| `util_screenshotCreator_framing_procedural.onScreenshotCreatorCollectFramingModes(modes)` | Hook called by framingManager when collecting modes. Adds {id = "procedural", label = "Procedural", order = 100, supportsFixedRotation = true, resolve}. *(internal)* *(hook)* | 522 |
+| `util_screenshotCreator_framing_procedural.resolve(context)` | Computes the procedural framing camera for context.vehicle. Returns {pos, rot, name = "procedural camera", debugData, framingData}, or nil and an error message. | 438 |
+| `util_screenshotCreator_framing_procedural.selfCheck()` | Internal assertion-based test on the selection of rotation nodes (below-ground nodes and mirrors kept, disabled nodes excluded, fallback to backup points). Returns true. *(internal)* | 107 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_screenshotCreator_framing_procedural.frame(context)`
 
-Alias de resolve (même fonction).
+Alias of resolve (same function).
 
-- `context` (*table*) : Voir resolve.
-- **renvoie** : table|nil Voir resolve.
-- **renvoie** : string|nil Message d'erreur.
+- `context` (*table*) : See resolve.
+- **returns**: table|nil See resolve.
+- **returns**: string|nil Error message.
 
 #### `util_screenshotCreator_framing_procedural.getVehicleFramingData(context)`
 
-Prépare les données de cadrage : classe les nœuds du véhicule (activés, désactivés, sous le sol, rétroviseurs), calcule la boîte englobante, le point visé, le rail de caméra et les points d'extrémité servant au cadrage et à la rotation. Se replie sur les coins de la boîte du véhicule si aucun nœud n'est activé.
+Prepares the framing data: classifies the vehicle's nodes (enabled, disabled, below ground, mirrors), computes the bounding box, the look-at point, the camera rail and the extreme points used for framing and rotation. Falls back to the corners of the vehicle's box if no node is enabled.
 
-- `context` (*table*) : Même contexte que resolve (vehicle, configName, cameraHeight, cameraAxisDownOffset).
-- **renvoie** : table|nil framingData.
-- **renvoie** : string|nil « No above-ground framing points » si rien n'est exploitable.
+- `context` (*table*) : Same context as resolve (vehicle, configName, cameraHeight, cameraAxisDownOffset).
+- **returns**: table|nil framingData.
+- **returns**: string|nil "No above-ground framing points" if nothing is usable.
 
 #### `util_screenshotCreator_framing_procedural.onScreenshotCreatorCollectFramingModes(modes)`
 
-Hook appelé par framingManager lors de la collecte des modes. Ajoute {id = "procedural", label = "Procedural", order = 100, supportsFixedRotation = true, resolve}.
+Hook called by framingManager when collecting modes. Adds {id = "procedural", label = "Procedural", order = 100, supportsFixedRotation = true, resolve}.
 
-- `modes` (*table[]*) : Liste à compléter.
+- `modes` (*table[]*) : List to fill.
 
 #### `util_screenshotCreator_framing_procedural.resolve(context)`
 
-Calcule la caméra de cadrage procédural pour context.vehicle. Renvoie {pos, rot, name = "procedural camera", debugData, framingData}, ou nil et un message d'erreur.
+Computes the procedural framing camera for context.vehicle. Returns {pos, rot, name = "procedural camera", debugData, framingData}, or nil and an error message.
 
-- `context` (*table*) : vehicle (obligatoire), resolution, fov/fieldOfView, nearPlane, aspectRatio, fixedRotation (quat), configName, cameraHeight, cameraAxisDownOffset, useFramingMargins/useMargins, margin ({left,right,top,bottom}).
-- **renvoie** : table|nil Résultat de cadrage (pos: vec3, rot: quat, name, debugData, framingData).
-- **renvoie** : string|nil Message d'erreur.
+- `context` (*table*) : vehicle (required), resolution, fov/fieldOfView, nearPlane, aspectRatio, fixedRotation (quat), configName, cameraHeight, cameraAxisDownOffset, useFramingMargins/useMargins, margin ({left,right,top,bottom}).
+- **returns**: table|nil Framing result (pos: vec3, rot: quat, name, debugData, framingData).
+- **returns**: string|nil Error message.
 
 #### `util_screenshotCreator_framing_procedural.selfCheck()`
 
-Test interne par assertions sur la sélection des nœuds de rotation (nœuds sous le sol et rétroviseurs conservés, nœuds désactivés exclus, repli sur les points de secours). Renvoie true.
+Internal assertion-based test on the selection of rotation nodes (below-ground nodes and mirrors kept, disabled nodes excluded, fallback to backup points). Returns true.
 
-- **renvoie** : boolean Toujours true (sinon une assertion échoue).
+- **returns**: boolean Always true (otherwise an assertion fails).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant : thumbnailConfig, nodeOutpaint, settings, vehicleSetup (préfixe util_screenshotCreator_). |
+| `dependencies` | string[] | Extensions loaded before: thumbnailConfig, nodeOutpaint, settings, vehicleSetup (prefix util_screenshotCreator_). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/screenshotCreator/framing/procedural.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/screenshotCreator/framing/procedural.lua`.*

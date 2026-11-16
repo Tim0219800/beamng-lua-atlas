@@ -1,32 +1,32 @@
 # `testFramework_JUnitXMLWriter`
 
-*Fichier : `lua/common/testFramework/JUnitXMLWriter.lua` · VM : Commun (GE + véhicule) · 101 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/testFramework/JUnitXMLWriter.lua` · VM: Common (GE + vehicle) · 101 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("testFramework/JUnitXMLWriter")`
+**Access:** `require("testFramework/JUnitXMLWriter")`
 
-Écrivain de résultats de tests au format XML JUnit pour testFramework/TestManager. Construit un DOM (testsuites > testsuite > testcase, avec un élément failure pour chaque test en échec) avec libs/slaxml/slaxdom, le sérialise avec indentation de 2 espaces et l'écrit avec writeFile.
+JUnit XML test result writer for testFramework/TestManager. Builds a DOM (testsuites > testsuite > testcase, with a failure element for each failed test) with libs/slaxml/slaxdom, serializes it with 2-space indentation and writes it with writeFile.
 
-## Remarques
+## Notes
 
-- Le nom de la suite est `suiteName`, ou `results.suiteName`, ou "LuaUnitTests" par défaut.
-- Un test en échec porte un élément <failure type="ExpectedFailure"|"Failure"> dont le texte est errorMessage.
-- Appelé par TestManager:run seulement si options.writeXml == true et qu'un fichier de sortie est donné.
+- The suite name is `suiteName`, or `results.suiteName`, or "LuaUnitTests" by default.
+- A failed test carries a <failure type="ExpectedFailure"|"Failure"> element whose text is errorMessage.
+- Called by TestManager:run only if options.writeXml == true and an output file is given.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `testFramework_JUnitXMLWriter.write(results, outputFile, suiteName)` | Écrit les résultats de tests dans un fichier XML JUnit et logue le chemin. | 23 |
+| `testFramework_JUnitXMLWriter.write(results, outputFile, suiteName)` | Writes the test results to a JUnit XML file and logs the path. | 23 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `testFramework_JUnitXMLWriter.write(results, outputFile, suiteName)`
 
-Écrit les résultats de tests dans un fichier XML JUnit et logue le chemin.
+Writes the test results to a JUnit XML file and logs the path.
 
 - `results` (*table*) : {testResults = {{name, duration, passed, expectedToFail, errorMessage}}, testFailCount, totalDuration, suiteName?}.
-- `outputFile` (*string*) : Chemin du fichier XML (writeFile).
-- `suiteName` (*string|nil*) : Nom de la suite de tests.
+- `outputFile` (*string*) : XML file path (writeFile).
+- `suiteName` (*string|nil*) : Test suite name.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/testFramework/JUnitXMLWriter.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/testFramework/JUnitXMLWriter.lua`.*

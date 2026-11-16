@@ -1,12 +1,12 @@
 # `libs_copas_copas_limit`
 
-*Fichier : `lua/common/libs/copas/copas/limit.lua` · VM : Commun (GE + véhicule) · 137 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/copas/copas/limit.lua` · VM: Common (GE + vehicle) · 137 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/copas/copas/limit")`
+**Access:** `require("libs/copas/copas/limit")`
 
-Sous-module de la bibliothèque tierce Copas : limite le nombre de tâches exécutées simultanément. Chaque tâche ajoutée est planifiée tout de suite s'il y a de la place (sinon mise en file) ; wait permet d'attendre la fin de toutes. Le module renvoie { new = new }.
+Submodule of the third-party Copas library: limits the number of tasks run simultaneously. Each added task is scheduled right away if there is room (otherwise queued); wait lets you wait for all of them to finish. The module returns { new = new }.
 
-## Exemple
+## Example
 
 ```lua
 local limit = require("libs/copas/copas/limit")
@@ -15,36 +15,36 @@ r:addthread(function(url) --[[ ... ]] end, "http://...")
 r:wait()
 ```
 
-## Remarques
+## Notes
 
-- L'objet renvoyé par new a les méthodes addthread(task, ...), removethread(coro), next() et wait() ; addthread renvoie la coroutine, et relance l'erreur d'une tâche qui échoue.
-- Valeur par défaut de maxt : 99999.
+- The object returned by new has the methods addthread(task, ...), removethread(coro), next() and wait(); addthread returns the coroutine, and rethrows the error of a task that fails.
+- Default value of maxt: 99999.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_copas_copas_limit.new(maxt)` | Crée un exécuteur de tâches avec au plus maxt tâches simultanées. | 121 |
+| `libs_copas_copas_limit.new(maxt)` | Creates a task runner with at most maxt simultaneous tasks. | 121 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_copas_copas_limit.new(maxt)`
 
-Crée un exécuteur de tâches avec au plus maxt tâches simultanées.
+Creates a task runner with at most maxt simultaneous tasks.
 
-- `maxt` (*integer|nil*) : Maximum de tâches simultanées (défaut 99999)
-- **renvoie** : table Exécuteur avec addthread, removethread, next, wait
+- `maxt` (*integer|nil*) : Maximum simultaneous tasks (default 99999)
+- **returns**: table Runner with addthread, removethread, next, wait
 
-## Classe `ll`
+## Class `ll`
 
-Liste chaînée interne servant de file d'attente des tâches.
+Internal linked list serving as the task queue.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `ll.new()` | Crée une liste vide. | 57 |
-| `ll:pop()` | Retire et renvoie le premier élément (nil si vide). | 28 |
-| `ll:push(item)` | Ajoute un élément en fin de liste. | 20 |
-| `ll:remove(item)` | Retire un élément donné de la liste. | 41 |
+| `ll.new()` | Creates an empty list. | 57 |
+| `ll:pop()` | Removes and returns the first element (nil if empty). | 28 |
+| `ll:push(item)` | Adds an element at the end of the list. | 20 |
+| `ll:remove(item)` | Removes a given element from the list. | 41 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/copas/copas/limit.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/copas/copas/limit.lua`.*

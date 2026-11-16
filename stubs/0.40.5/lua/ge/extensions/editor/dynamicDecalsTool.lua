@@ -2,189 +2,189 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/dynamicDecalsTool.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre principale de l'outil Dynamic Decals de l'éditeur (peinture de décalcomanies sur le véhicule). Charge ses 33 sous-modules via M.dependencies (api editor_api_dynamicDecals, widgets, layerStack, inspector, brushes, gizmo, vehicleColorPalette, loadSave, layerTypes_*, etc.) et sert de hub : les sous-modules s'enregistrent auprès de lui par setup(tool) avec registerSection, registerToolbarToolItem, registerToolbarActionItem, registerEditorOnUpdateFn et registerOnEditorGuiFn. Expose aussi l'interface publique appelée par les actions clavier/souris (applyDecal, undo/redo, changeDecalSize/Rotation, verrouillage profondeur/normale, mode pinceau, calque chemin).
---- Accès : extension `editor_dynamicDecalsTool` : `extensions.load("editor_dynamicDecalsTool")`, puis la globale `editor_dynamicDecalsTool`
+--- Main window of the editor's Dynamic Decals tool (painting decals on the vehicle). Loads its 33 submodules via M.dependencies (editor_api_dynamicDecals API, widgets, layerStack, inspector, brushes, gizmo, vehicleColorPalette, loadSave, layerTypes_*, etc.) and acts as a hub: submodules register with it through setup(tool) using registerSection, registerToolbarToolItem, registerToolbarActionItem, registerEditorOnUpdateFn and registerOnEditorGuiFn. Also exposes the public interface called by keyboard/mouse actions (applyDecal, undo/redo, changeDecalSize/Rotation, depth/normal locking, brush mode, path layer).
+--- Access: extension `editor_dynamicDecalsTool`: `extensions.load("editor_dynamicDecalsTool")`, then the global `editor_dynamicDecalsTool`
 ---@class editor_dynamicDecalsTool
----@field dependencies string[] Liste des extensions chargées avant ce module.
----@field directoryPath string Dossier des données : "/art/dynamicDecals/".
----@field doApiUpdate boolean Si true (défaut), l'outil appelle la mise à jour de l'API chaque frame ; modifiable par une case de debug.
----@field toolMode integer Mode courant (decal par défaut).
+---@field dependencies string[] List of extensions loaded before this module.
+---@field directoryPath string Data folder: "/art/dynamicDecals/".
+---@field doApiUpdate boolean If true (default), the tool calls the API update every frame; can be changed via a debug checkbox.
+---@field toolMode integer Current mode (decal by default).
 ---@field toolModes table<string, integer> none=0, decal=1, brushStroke=2, path=3.
----@field version integer[] Version {1,1,0} de l'outil.
+---@field version integer[] Tool version {1,1,0}.
 editor_dynamicDecalsTool = {}
 
---- Interface publique du pinceau : pose un décalque, un point de chemin, un trait de pinceau ou un décalque de masque selon le mode courant.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:883
----@param value integer 1 à l'appui, autre (0) au relâchement
+--- Public brush interface: places a decal, a path point, a brush stroke or a mask decal depending on the current mode.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:883
+---@param value integer 1 on press, other (0) on release
 function editor_dynamicDecalsTool.applyDecal(value) end
 
---- Fait tourner le décalque courant.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:910
----@param clockwise boolean Sens horaire
----@param mod number|nil Multiplicateur du pas (défaut 1)
+--- Rotates the current decal.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:910
+---@param clockwise boolean Clockwise
+---@param mod number|nil Step multiplier (default 1)
 function editor_dynamicDecalsTool.changeDecalRotation(clockwise, mod) end
 
---- Agrandit ou réduit le décalque courant.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:909
----@param increase boolean true pour agrandir
----@param mod number|nil Multiplicateur du pas (défaut 1)
+--- Enlarges or shrinks the current decal.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:909
+---@param increase boolean true to enlarge
+---@param mod number|nil Step multiplier (default 1)
 function editor_dynamicDecalsTool.changeDecalSize(increase, mod) end
 
---- Hook de l'API appelé quand un calque est déplacé : rafraîchit le calque parent de destination s'il est sélectionné.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:939
----@param from integer Position d'origine
----@param fromParentUid any Parent d'origine
----@param to integer Position de destination
----@param toParentUid any Parent de destination
+--- API hook called when a layer is moved: refreshes the destination parent layer if it is selected.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:939
+---@param from integer Original position
+---@param fromParentUid any Original parent
+---@param to integer Destination position
+---@param toParentUid any Destination parent
 function editor_dynamicDecalsTool.dynamicDecals_moveLayer(from, fromParentUid, to, toParentUid) end
 
---- Hook de l'API : quand un calque est modifié, recopie ses données dans la sélection de l'inspecteur s'il y est affiché.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:930
----@param layerUid string|integer Identifiant du calque modifié (type déduit du code)
+--- API hook: when a layer is modified, copies its data into the inspector selection if it is displayed there.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:930
+---@param layerUid string|integer Identifier of the modified layer (type inferred from code)
 function editor_dynamicDecalsTool.dynamicDecals_onLayerUpdated(layerUid) end
 
---- Active/désactive le trait de pinceau ; à la désactivation, ajoute un calque de trait (api.addBrushStrokeLayer).
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:955
----@param value integer 1 pour activer
+--- Enables/disables the brush stroke; on disabling, adds a stroke layer (api.addBrushStrokeLayer).
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:955
+---@param value integer 1 to enable
 function editor_dynamicDecalsTool.enableBrushStroke(value) end
 
---- Active/désactive le mode calque chemin.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:963
----@param value integer 1 pour activer
+--- Enables/disables the path layer mode.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:963
+---@param value integer 1 to enable
 function editor_dynamicDecalsTool.enablePathLayer(value) end
 
---- Termine le calque chemin en cours.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:967
+--- Finishes the current path layer.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:967
 function editor_dynamicDecalsTool.finishPathLayer() end
 
---- Uid du calque dont le masque est édité, ou nil.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:997
+--- Uid of the layer whose mask is being edited, or nil.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:997
 ---@return any|nil
 function editor_dynamicDecalsTool.getCurrentMaskEditingLayerUid() end
 
---- Taille d'icône (entier, 20 par défaut).
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:981
+--- Icon size (integer, 20 by default).
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:981
 ---@return number
 function editor_dynamicDecalsTool.getIconSize() end
 
---- Taille d'icône sous forme d'ImVec2.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:985
+--- Icon size as an ImVec2.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:985
 ---@return ImVec2
 function editor_dynamicDecalsTool.getIconSizeVec2() end
 
---- Défilement vertical courant de la fenêtre principale.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:989
+--- Current vertical scroll of the main window.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:989
 ---@return number
 function editor_dynamicDecalsTool.getMainScrollY() end
 
---- État ouvert d'une section (ou de « Advanced »).
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:827
----@param name string Nom de la section
----@return boolean|nil  nil si la section est inconnue
+--- Open state of a section (or of "Advanced").
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:827
+---@param name string Section name
+---@return boolean|nil  nil if the section is unknown
 function editor_dynamicDecalsTool.getSectionOpenState(name) end
 
---- Nom de la fenêtre imgui d'une section : « Dynamic Decals Tool - <section.windowName> ».
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:146
----@param section table Section avec windowName
+--- ImGui window name of a section: "Dynamic Decals Tool - <section.windowName>".
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:146
+---@param section table Section with windowName
 ---@return string
 function editor_dynamicDecalsTool.getSectionWindowName(section) end
 
---- Verrouille ou libère la profondeur de projection du décalque.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:947
----@param value integer 1 pour verrouiller
+--- Locks or releases the decal projection depth.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:947
+---@param value integer 1 to lock
 function editor_dynamicDecalsTool.lockDepth(value) end
 
---- Verrouille ou libère la normale de surface utilisée pour la projection.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:951
----@param value integer 1 pour verrouiller
+--- Locks or releases the surface normal used for projection.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:951
+---@param value integer 1 to lock
 function editor_dynamicDecalsTool.lockSurfaceNormal(value) end
 
---- Hook de désérialisation : ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:864
----@param data table Données
+--- Deserialization hook: does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:864
+---@param data table Data
 function editor_dynamicDecalsTool.onDeserialized(data) end
 
---- Hook de sérialisation du rechargement Lua : renvoie une table vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:859
+--- Lua reload serialization hook: returns an empty table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:859
 ---@return table  {}
 function editor_dynamicDecalsTool.onSerialize() end
 
---- Hook appelé au changement de véhicule : met à jour les matériaux (settings.updateMaterials).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:975
+--- Hook called on vehicle switch: updates the materials (settings.updateMaterials).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:975
 function editor_dynamicDecalsTool.onVehicleSwitched() end
 
---- Rétablit l'action annulée et rafraîchit les calques sélectionnés.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:921
+--- Redoes the undone action and refreshes the selected layers.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:921
 function editor_dynamicDecalsTool.redo() end
 
---- Enregistre une fonction de mise à jour appelée chaque frame par l'outil (clé = name).
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:780
----@param name string Clé unique
----@param onUpdateFn function Appelée avec (dtReal, dtSim, dtRaw)
+--- Registers an update function called every frame by the tool (key = name).
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:780
+---@param name string Unique key
+---@param onUpdateFn function Called with (dtReal, dtSim, dtRaw)
 function editor_dynamicDecalsTool.registerEditorOnUpdateFn(name, onUpdateFn) end
 
---- Enregistre une fonction de dessin supplémentaire exécutée avec l'interface de l'éditeur.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:848
----@param name string Clé unique
----@param guiFn function Fonction de dessin
+--- Registers an additional draw function executed with the editor UI.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:848
+---@param name string Unique key
+---@param guiFn function Draw function
 function editor_dynamicDecalsTool.registerOnEditorGuiFn(name, guiFn) end
 
---- Enregistre une section de l'interface (et éventuellement une fenêtre dédiée). Les sections sont triées par order ; celles >= 1000 vont dans « Advanced ».
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:801
----@param name string Nom de la section
----@param guiFn function Fonction de dessin, appelée avec un guiId (dans la section comme dans la fenêtre)
----@param order number|nil Position (plus petit = plus haut), défaut 1000
----@param defaultOpen boolean|nil Ouverte par défaut
----@param window table|nil {windowSize = ImVec2} pour créer une fenêtre dédiée avec bouton d'ouverture
----@param buttons table|nil Boutons d'en-tête {icon, tooltip, fn}
+--- Registers a UI section (and optionally a dedicated window). Sections are sorted by order; those >= 1000 go into "Advanced".
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:801
+---@param name string Section name
+---@param guiFn function Draw function, called with a guiId (both in the section and in the window)
+---@param order number|nil Position (smaller = higher), default 1000
+---@param defaultOpen boolean|nil Open by default
+---@param window table|nil {windowSize = ImVec2} to create a dedicated window with an open button
+---@param buttons table|nil Header buttons {icon, tooltip, fn}
 function editor_dynamicDecalsTool.registerSection(name, guiFn, order, defaultOpen, window, buttons) end
 
---- Ajoute un élément à la barre d'outils (partie actions), trié par order.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:843
+--- Adds an item to the toolbar (actions part), sorted by order.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:843
 ---@param name string
----@param guiFn function Fonction de dessin
----@param order number|nil Défaut 1000
+---@param guiFn function Draw function
+---@param order number|nil Default 1000
 function editor_dynamicDecalsTool.registerToolbarActionItem(name, guiFn, order) end
 
---- Ajoute un élément à la barre d'outils (partie outils), trié par order.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:838
+--- Adds an item to the toolbar (tools part), sorted by order.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:838
 ---@param name string
----@param guiFn function Fonction de dessin
----@param order number|nil Défaut 1000
+---@param guiFn function Draw function
+---@param order number|nil Default 1000
 function editor_dynamicDecalsTool.registerToolbarToolItem(name, guiFn, order) end
 
---- Supprime le dernier point du chemin en cours.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:971
+--- Removes the last point of the current path.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:971
 function editor_dynamicDecalsTool.removeLastPathLayerPoint() end
 
---- Définit le calque dont le masque est en cours d'édition (nil pour quitter ce mode).
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:993
----@param uid any|nil Uid du calque
+--- Sets the layer whose mask is being edited (nil to leave this mode).
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:993
+---@param uid any|nil Layer uid
 function editor_dynamicDecalsTool.setCurrentMaskEditingLayerUid(uid) end
 
---- Ouvre ou ferme une section par son nom (ouvrir une section avancée ouvre aussi « Advanced »).
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:805
----@param name string Nom de la section
----@param newState boolean Ouvert ou fermé
----@param setScroll boolean|nil Fait défiler jusqu'à la section
+--- Opens or closes a section by its name (opening an advanced section also opens "Advanced").
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:805
+---@param name string Section name
+---@param newState boolean Open or closed
+---@param setScroll boolean|nil Scrolls to the section
 function editor_dynamicDecalsTool.setSectionOpenState(name, newState, setScroll) end
 
---- Annule la dernière action de l'API dynamicDecals, puis rafraîchit les calques sélectionnés dans editor.selection.dynamicDecalLayer.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:912
+--- Undoes the last action of the dynamicDecals API, then refreshes the layers selected in editor.selection.dynamicDecalLayer.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:912
 function editor_dynamicDecalsTool.undo() end
 
---- Retire une fonction de mise à jour enregistrée.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:784
----@param name string Clé
+--- Removes a registered update function.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:784
+---@param name string Key
 function editor_dynamicDecalsTool.unregisterEditorOnUpdateFn(name) end
 
---- Retire une fonction de dessin enregistrée.
----Source : lua/ge/extensions/editor/dynamicDecalsTool.lua:852
----@param name string Clé
+--- Removes a registered draw function.
+---Source: lua/ge/extensions/editor/dynamicDecalsTool.lua:852
+---@param name string Key
 function editor_dynamicDecalsTool.unregisterOnEditorGuiFn(name) end
 

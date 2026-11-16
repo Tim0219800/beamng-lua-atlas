@@ -1,27 +1,27 @@
 # `flowgraph_nodes_gameplay_timers_simpleTimer`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/timers/simpleTimer.lua` · VM : Game Engine (GE) · 70 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/timers/simpleTimer.lua` · VM: Game Engine (GE) · 70 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/timers/simpleTimer")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/timers/simpleTimer")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Simple Timer » (catégorie once_f_duration). Timer tout-en-un : crée un timer (duration, ref dtSim/dtReal/dtRaw) au déclenchement puis publie chaque frame elapsed, remaining, duration, elapsedPercent (0 à 1) ; capTime borne ces valeurs une fois terminé. Passe en état de durée 'started' puis 'finished' quand le timer est complet. Les valeurs ne peuvent pas être modifiées après création.
+Flowgraph node "Simple Timer" (category once_f_duration). All-in-one timer: creates a timer (duration, ref dtSim/dtReal/dtRaw) on trigger, then publishes elapsed, remaining, duration, elapsedPercent (0 to 1) every frame; capTime clamps these values once finished. Goes to duration state 'started' then 'finished' when the timer is complete. Values cannot be modified after creation.
 
-## Remarques
+## Notes
 
-- onNodeReset contient des print de débogage (message « setting timer back »).
-- elapsedPercent divise par la durée : durée 0 donne inf/NaN.
+- onNodeReset contains debug prints (message "setting timer back").
+- elapsedPercent divides by the duration: a duration of 0 gives inf/NaN.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Met l'état de durée à 'inactive'. | 25 |
-| `C:onNodeReset()` | Remet le temps écoulé du timer à 0 et l'état de durée à 'inactive'. | 33 |
-| `C:postInit()` | Définit les valeurs prédéfinies du pin ref (dtSim, dtReal, dtRaw). | 29 |
-| `C:work()` | Met à jour elapsed/remaining/duration/elapsedPercent, passe à 'finished' quand le timer est complet. | 47 |
-| `C:workOnce()` | Crée le timer via self.mgr.modules.timer:addTimer, publie timerId et passe l'état de durée à 'started'. | 42 |
+| `C:_executionStarted()` | Sets the duration state to 'inactive'. | 25 |
+| `C:onNodeReset()` | Resets the timer's elapsed time to 0 and the duration state to 'inactive'. | 33 |
+| `C:postInit()` | Defines the preset values of the ref pin (dtSim, dtReal, dtRaw). | 29 |
+| `C:work()` | Updates elapsed/remaining/duration/elapsedPercent, switches to 'finished' when the timer is complete. | 47 |
+| `C:workOnce()` | Creates the timer via self.mgr.modules.timer:addTimer, publishes timerId and sets the duration state to 'started'. | 42 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/timers/simpleTimer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/timers/simpleTimer.lua`.*

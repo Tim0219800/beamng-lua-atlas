@@ -1,70 +1,70 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/customUiLayout.lua",
-  "module": "Nœud flowgraph « Custom UI Layout » (catégorie provider) : enregistre une disposition d'apps UI (layout) dans le nœud pour la réutiliser. Sortie « layout » (table layoutData : {apps, layoutName = 'procedural Layout <id>'}) à brancher sur Set UI Layout. Propriétés : Capture (lit le layout courant via 'getCurrentLayoutToLua'), Clear, Load Stored Layout, Load Freeroam layout.",
+  "module": "Flowgraph node \"Custom UI Layout\" (category provider): stores a UI apps layout in the node for reuse. Output \"layout\" (table layoutData: {apps, layoutName = 'procedural Layout <id>'}) to connect to Set UI Layout. Properties: Capture (reads the current layout via 'getCurrentLayoutToLua'), Clear, Load Stored Layout, Load Freeroam layout.",
   "notes": [
-    "La liste « Copy Layout from... » est vide (layouts = {} , appel à ui_apps.getLayouts commenté).",
-    "setLayout est appelée par l'UI via getCmd(), qui renvoie un nom de fonction sans parenthèses (commande qui reçoit les données de l'UI)."
+    "The \"Copy Layout from...\" list is empty (layouts = {} , call to ui_apps.getLayouts commented out).",
+    "setLayout is called by the UI via getCmd(), which returns a function name without parentheses (command that receives the data from the UI)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStarted": {
-          "desc": "Écrit {apps = storedLayout, layoutName = ...} sur « layout ».",
+          "desc": "Writes {apps = storedLayout, layoutName = ...} to \"layout\".",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure storedLayout.",
+          "desc": "Restores storedLayout.",
           "params": {
             "data": {
               "type": "table",
-              "desc": "Données sauvegardées / reçues."
+              "desc": "Saved / received data."
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde storedLayout.",
+          "desc": "Saves storedLayout.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Boutons Capture, Clear, Load Stored Layout, Load Freeroam layout et liste de copie.",
+          "desc": "Capture, Clear, Load Stored Layout, Load Freeroam layout buttons and copy list.",
           "internal": true
         },
         "getCmd": {
-          "desc": "Renvoie la chaîne de la fonction Lua de rappel (setLayout) de ce nœud.",
+          "desc": "Returns the string of this node's Lua callback function (setLayout).",
           "params": {
             "action": {
               "type": "string",
-              "desc": "Nom du bouton ou du pin de sortie activé."
+              "desc": "Name of the activated button or output pin."
             }
           },
           "internal": false
         },
         "init": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         },
         "setLayout": {
-          "desc": "Reçoit le layout capturé par l'UI et mémorise data.apps dans storedLayout.",
+          "desc": "Receives the layout captured by the UI and stores data.apps in storedLayout.",
           "params": {
             "data": {
               "type": "table",
-              "desc": "Données sauvegardées / reçues."
+              "desc": "Saved / received data."
             }
           },
           "internal": false
         },
         "uniqueId": {
-          "desc": "Renvoie « <idManager>_<idNœud> », utilisé pour nommer l'état de jeu temporaire.",
+          "desc": "Returns \"<idManager>_<nodeId>\", used to name the temporary game state.",
           "internal": false
         }
       }

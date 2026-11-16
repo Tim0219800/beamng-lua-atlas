@@ -1,86 +1,86 @@
 # `mcp_tools_world`
 
-*Fichier : `lua/ge/extensions/mcp/tools/world.lua` · VM : Game Engine (GE) · 117 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/mcp/tools/world.lua` · VM: Game Engine (GE) · 117 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `mcp_tools_world` : `extensions.load("mcp_tools_world")`, puis la globale `mcp_tools_world`
+**Access:** extension `mcp_tools_world`: `extensions.load("mcp_tools_world")`, then the global `mcp_tools_world`
 
-Outils MCP « monde » : lister et charger des niveaux, déclencher une action d'entrée liée (comme une touche), récupérer ou supprimer un véhicule, et interroger le sol (hauteur, adhérence/drivabilité) en un point.
+MCP "world" tools: list and load levels, trigger a bound input action (like a key press), recover or delete a vehicle, and query the ground (height, grip/drivability) at a point.
 
-## Remarques
+## Notes
 
-- Incohérence : list_levels renvoie la clé `file` pour chaque niveau, alors que la description du schéma annonce `[{name, title, path}]`.
-- load_level est disruptif (recharge le monde). Il cherche le niveau par levelName dans core_levels.getList(), sinon par path.getPathLevelMain(name).
-- trigger_action utilise core_input_actions.triggerDown/triggerUp/triggerDownUp ; sans state c'est un appui bref.
+- Inconsistency: list_levels returns the key `file` for each level, whereas the schema description announces `[{name, title, path}]`.
+- load_level is disruptive (reloads the world). It looks up the level by levelName in core_levels.getList(), otherwise by path.getPathLevelMain(name).
+- trigger_action uses core_input_actions.triggerDown/triggerUp/triggerDownUp; without state it is a brief press.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mcp_tools_world.get_ground_at_point(args)` | Hauteur de surface sous un point (be:getSurfaceHeightBelow) et drivabilité du terrain (be:getTerrainDrivability) dans un rayon. | 67 |
-| `mcp_tools_world.list_levels()` | Liste les niveaux installés : name (levelName), title, file (fullfilename ou misFilePath). | 12 |
-| `mcp_tools_world.load_level(args)` | Charge un niveau (core_levels.startLevel) par chemin ou par nom. | 22 |
-| `mcp_tools_world.recover_vehicle(args)` | Replace le véhicule sur la dernière route et le répare (spawn.teleportToLastRoad avec resetVehicle). | 49 |
-| `mcp_tools_world.remove_vehicle(args)` | Supprime un véhicule (veh:delete()). | 58 |
-| `mcp_tools_world.trigger_action(args)` | Déclenche une action d'entrée du jeu par son nom (ex. recover_vehicle, toggleCamera, switch_next_vehicle). | 38 |
+| `mcp_tools_world.get_ground_at_point(args)` | Surface height under a point (be:getSurfaceHeightBelow) and terrain drivability (be:getTerrainDrivability) within a radius. | 67 |
+| `mcp_tools_world.list_levels()` | Lists the installed levels: name (levelName), title, file (fullfilename or misFilePath). | 12 |
+| `mcp_tools_world.load_level(args)` | Loads a level (core_levels.startLevel) by path or by name. | 22 |
+| `mcp_tools_world.recover_vehicle(args)` | Puts the vehicle back on the last road and repairs it (spawn.teleportToLastRoad with resetVehicle). | 49 |
+| `mcp_tools_world.remove_vehicle(args)` | Deletes a vehicle (veh:delete()). | 58 |
+| `mcp_tools_world.trigger_action(args)` | Triggers a game input action by its name (e.g. recover_vehicle, toggleCamera, switch_next_vehicle). | 38 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mcp_tools_world.get_ground_at_point(args)`
 
-Hauteur de surface sous un point (be:getSurfaceHeightBelow) et drivabilité du terrain (be:getTerrainDrivability) dans un rayon.
+Surface height under a point (be:getSurfaceHeightBelow) and terrain drivability (be:getTerrainDrivability) within a radius.
 
-- `args` (*table|nil*) : {pos?: {x,y,z} (défaut position du véhicule joueur), radius?: number m (défaut 2)}
-- **renvoie** : string JSON {pos, surfaceHeight, drivability}.
-- **renvoie** : boolean true si aucun point.
+- `args` (*table|nil*) : {pos?: {x,y,z} (default player vehicle position), radius?: number m (default 2)}
+- **returns**: string JSON {pos, surfaceHeight, drivability}.
+- **returns**: boolean true if no point.
 
 #### `mcp_tools_world.list_levels()`
 
-Liste les niveaux installés : name (levelName), title, file (fullfilename ou misFilePath).
+Lists the installed levels: name (levelName), title, file (fullfilename or misFilePath).
 
-- **renvoie** : string JSON.
-- **renvoie** : boolean true si core_levels indisponible.
+- **returns**: string JSON.
+- **returns**: boolean true if core_levels is unavailable.
 
 #### `mcp_tools_world.load_level(args)`
 
-Charge un niveau (core_levels.startLevel) par chemin ou par nom.
+Loads a level (core_levels.startLevel) by path or by name.
 
 - `args` (*table*) : {path?: string, name?: string}
-- **renvoie** : string « loading level: … ».
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string "loading level: …".
+- **returns**: boolean true on error.
 
 #### `mcp_tools_world.recover_vehicle(args)`
 
-Replace le véhicule sur la dernière route et le répare (spawn.teleportToLastRoad avec resetVehicle).
+Puts the vehicle back on the last road and repairs it (spawn.teleportToLastRoad with resetVehicle).
 
 - `args` (*table|nil*) : {id?: integer}
-- **renvoie** : string Message.
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string Message.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_world.remove_vehicle(args)`
 
-Supprime un véhicule (veh:delete()).
+Deletes a vehicle (veh:delete()).
 
 - `args` (*table|nil*) : {id?: integer}
-- **renvoie** : string Message.
-- **renvoie** : boolean true si le véhicule n'existe pas.
+- **returns**: string Message.
+- **returns**: boolean true if the vehicle does not exist.
 
 #### `mcp_tools_world.trigger_action(args)`
 
-Déclenche une action d'entrée du jeu par son nom (ex. recover_vehicle, toggleCamera, switch_next_vehicle).
+Triggers a game input action by its name (e.g. recover_vehicle, toggleCamera, switch_next_vehicle).
 
 - `args` (*table*) : {action: string, state?: 'down'|'up'}
-- **renvoie** : string Message.
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string Message.
+- **returns**: boolean true on error.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `schemas` | table<string, table> | Schémas des outils monde. |
+| `schemas` | table<string, table> | Schemas of the world tools. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicle`, `getSurfaceHeightBelow`, `getTerrainDrivability`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/mcp/tools/world.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/mcp/tools/world.lua`.*

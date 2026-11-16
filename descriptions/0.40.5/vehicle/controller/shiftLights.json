@@ -1,18 +1,39 @@
 {
   "path": "lua/vehicle/controller/shiftLights.lua",
-  "module": "Contrôleur auxiliaire de LEDs de changement de rapport (shift lights). Découpe la plage de régime [minRPM, maxRPM] en paliers (un par electric listé dans outputElectrics) et met chaque electric à 1 quand le régime atteint son palier ; au-dessus de maxRPM (ou moteur calé si hasStallWarning), les LEDs « flashing » clignotent et electrics.values.shouldShift passe à vrai.",
-  "usage": "-- jbeam : \"outputElectrics\":[\"shiftLight1\",\"shiftLight2\",\"shiftLight3\"], \"maxRPM\":6800, \"rpmRange\":1500",
+  "module": "Auxiliary shift light LED controller. Splits the RPM range [minRPM, maxRPM] into steps (one per electric listed in outputElectrics) and sets each electric to 1 when the RPM reaches its step; above maxRPM (or engine stalled if hasStallWarning), the \"flashing\" LEDs blink and electrics.values.shouldShift becomes true.",
+  "usage": "-- jbeam: \"outputElectrics\":[\"shiftLight1\",\"shiftLight2\",\"shiftLight3\"], \"maxRPM\":6800, \"rpmRange\":1500",
   "notes": [
-    "Clés jbeam lues : rpmRange (3000), engineName et maxEngineRPMOffset (maxRPM = engine.maxRPM - offset), hasStallWarning (false), maxRPM (7000 par défaut sans moteur), minRPM (maxRPM - rpmRange), inputElectricsName (\"rpm\"), keepLEDsActive (true : les LEDs inférieures restent allumées), flashDuration (0.1 s), outputElectrics (liste ordonnée des electrics des paliers), flashingOutputElectrics et flashingAlternateOutputElectrics (électrics qui clignotent en phase / en opposition).",
-    "Chaque pas écrit electrics.values[nom] = 0 ou 1 (nombres, pas booléens) ; shouldShift est un booléen.",
-    "L'alerte de calage n'existe que si engineName ET maxEngineRPMOffset sont définis et hasStallWarning vrai.",
-    "Si outputElectrics est vide, stepCount = 0 et le calcul rpmStep divise par zéro (inf), sans effet ensuite car aucun palier n'est créé."
+    "jbeam keys read: rpmRange (3000), engineName and maxEngineRPMOffset (maxRPM = engine.maxRPM - offset), hasStallWarning (false), maxRPM (7000 by default without an engine), minRPM (maxRPM - rpmRange), inputElectricsName (\"rpm\"), keepLEDsActive (true: the lower LEDs stay lit), flashDuration (0.1 s), outputElectrics (ordered list of the step electrics), flashingOutputElectrics and flashingAlternateOutputElectrics (electrics that blink in phase / in opposition).",
+    "Each step writes electrics.values[name] = 0 or 1 (numbers, not booleans); shouldShift is a boolean.",
+    "The stall warning exists only if engineName AND maxEngineRPMOffset are defined and hasStallWarning is true.",
+    "If outputElectrics is empty, stepCount = 0 and the rpmStep computation divides by zero (inf), with no effect afterwards since no step is created."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
   },
   "functions": {
-    "init": {"desc": "Lit les clés jbeam et construit les paliers de régime et les listes de LEDs clignotantes.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
-    "updateGFX": {"desc": "Chaque frame : met à jour les electrics des paliers, shouldShift et le clignotement.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+    "init": {
+      "desc": "Reads the jbeam keys and builds the RPM steps and the flashing LED lists.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Every frame: updates the step electrics, shouldShift and the blinking.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
+      "internal": true
+    }
   }
 }

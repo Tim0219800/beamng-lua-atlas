@@ -1,30 +1,30 @@
 # `util_trackBuilder_quickraceSetup`
 
-*Fichier : `lua/ge/extensions/util/trackBuilder/quickraceSetup.lua` · VM : Game Engine (GE) · 31 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/trackBuilder/quickraceSetup.lua` · VM: Game Engine (GE) · 31 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_trackBuilder_quickraceSetup` : `extensions.load("util_trackBuilder_quickraceSetup")`, puis la globale `util_trackBuilder_quickraceSetup`
+**Access:** extension `util_trackBuilder_quickraceSetup`: `extensions.load("util_trackBuilder_quickraceSetup")`, then the global `util_trackBuilder_quickraceSetup`
 
-Extension de liaison entre le mode course rapide (scénario) et le Track Builder : quand un scénario est chargé, elle décharge les pistes en place, charge la piste personnalisée du scénario (sc.track.customData.name) via util_trackBuilder_splineTrack, ajoute les checkpoints et positionne le véhicule, éventuellement dans le sens inverse.
+Link extension between quick race mode (scenario) and the Track Builder: when a scenario is loaded, it unloads the tracks in place, loads the scenario's custom track (sc.track.customData.name) via util_trackBuilder_splineTrack, adds the checkpoints and positions the vehicle, optionally in the reverse direction.
 
-## Remarques
+## Notes
 
-- Un drapeau done évite de refaire l'installation tant que onClientStartMission n'a pas été rappelé.
-- Les arguments passés à load(…, true, true, true) ne sont pas nommés dans ce fichier ; voir splineTrack.
+- A done flag avoids redoing the setup until onClientStartMission has been called again.
+- The arguments passed to load(…, true, true, true) are not named in this file; see splineTrack.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_trackBuilder_quickraceSetup.onClientStartMission()` | Hook appelé au début du chargement d'un niveau ; réinitialise le drapeau done pour permettre une nouvelle installation. *(interne)* *(hook)* | 23 |
-| `util_trackBuilder_quickraceSetup.onScenarioLoaded(sc)` | Hook appelé quand un scénario est chargé. Si l'installation n'est pas déjà faite : unloadAll, load de la piste du scénario, addCheckPointPositions(reverse), positionVehicle(reverse). *(interne)* *(hook)* | 10 |
+| `util_trackBuilder_quickraceSetup.onClientStartMission()` | Hook called at the start of a level load; resets the done flag to allow a new setup. *(internal)* *(hook)* | 23 |
+| `util_trackBuilder_quickraceSetup.onScenarioLoaded(sc)` | Hook called when a scenario is loaded. If the setup is not already done: unloadAll, load of the scenario's track, addCheckPointPositions(reverse), positionVehicle(reverse). *(internal)* *(hook)* | 10 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_trackBuilder_quickraceSetup.onScenarioLoaded(sc)`
 
-Hook appelé quand un scénario est chargé. Si l'installation n'est pas déjà faite : unloadAll, load de la piste du scénario, addCheckPointPositions(reverse), positionVehicle(reverse).
+Hook called when a scenario is loaded. If the setup is not already done: unloadAll, load of the scenario's track, addCheckPointPositions(reverse), positionVehicle(reverse).
 
-- `sc` (*table*) : Scénario ; utilise sc.track.customData.name (nom de la piste) et sc.track.reverse (sens inverse).
+- `sc` (*table*) : Scenario; uses sc.track.customData.name (track name) and sc.track.reverse (reverse direction).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/trackBuilder/quickraceSetup.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/trackBuilder/quickraceSetup.lua`.*

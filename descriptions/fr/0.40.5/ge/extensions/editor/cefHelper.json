@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/editor/cefHelper.lua",
+  "module": "Petit outil prévu pour masquer l'interface CEF (scenetree.maincef) quand l'éditeur imgui est actif. Dans la version 0.40.5 le code est commenté (« disabled for release due to bugs with the track editor »), donc le module ne fait rien.",
+  "notes": [
+    "Les deux hooks sont vides : les lignes scenetree.maincef.visible = true/false sont en commentaire."
+  ],
+  "functions": {
+    "onEditorActivated": {
+      "desc": "Appelé à l'activation de l'éditeur. Devrait cacher l'UI CEF mais est désactivé (corps commenté).",
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Appelé à la désactivation de l'éditeur. Devrait réafficher l'UI CEF mais est désactivé (corps commenté).",
+      "internal": true
+    }
+  }
+}

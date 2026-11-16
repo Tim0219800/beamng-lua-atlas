@@ -2,86 +2,86 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Actionneur de la Driving Dynamics Suite : verrouillage actif d'un différentiel d'essieu. À 100 Hz (updateFixedStep) il compare les vitesses des deux sorties corrigées du rayon de braquage (`CMU.vehicleData.turningCircleSpeedRatios`) ; sous accélérateur, un PID règle un coefficient de verrouillage 0..1 qui monte quand l'écart de vitesse dépasse `avDiffThreshold`. Le coefficient est écrit dans `relevantDifferential.activeLockCoef`. Les superviseurs peuvent le borner par `overrideMin`/`overrideMax`. Ordre d'appel : `defaultOrder = 80`.
---- Accès : contrôleur `drivingDynamics/actuators/activeDiffLock` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Driving Dynamics Suite actuator: active locking of an axle differential. At 100 Hz (updateFixedStep) it compares the speeds of the two outputs corrected for the turning radius (`CMU.vehicleData.turningCircleSpeedRatios`); under throttle, a PID sets a locking coefficient 0..1 that rises when the speed difference exceeds `avDiffThreshold`. The coefficient is written to `relevantDifferential.activeLockCoef`. Supervisors can bound it with `overrideMin`/`overrideMax`. Call order: `defaultOrder = 80`.
+--- Access: controller `drivingDynamics/actuators/activeDiffLock` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_drivingDynamics_actuators_activeDiffLock
 ---@field defaultOrder number 80.
----@field isActing boolean true si le coefficient de verrouillage est > 0.
----@field isActive boolean true si le différentiel et ses roues ont été trouvés.
----@field overrideMax number Borne haute du verrouillage (1 par défaut).
----@field overrideMin number Borne basse du verrouillage (0 par défaut).
+---@field isActing boolean true if the locking coefficient is > 0.
+---@field isActive boolean true if the differential and its wheels were found.
+---@field overrideMax number Upper bound of the locking (1 by default).
+---@field overrideMin number Lower bound of the locking (0 by default).
 ---@field type string "auxiliary".
 local controller_drivingDynamics_actuators_activeDiffLock = {}
 
---- Renvoie une copie des paramètres.
----Source : lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:217
----@return table  Copie profonde.
+--- Returns a copy of the parameters.
+---Source: lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:217
+---@return table  Deep copy.
 function controller_drivingDynamics_actuators_activeDiffLock.getConfig() end
 
---- Lit les paramètres jbeam et crée le PID.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:132
----@param jbeamData table Données jbeam.
+--- Reads the jbeam parameters and creates the PID.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:132
+---@param jbeamData table Jbeam data.
 function controller_drivingDynamics_actuators_activeDiffLock.init(jbeamData) end
 
---- Retrouve le différentiel (`differentialName`) et les roues de chaque sortie ; active le système.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:154
----@param jbeamData table Données jbeam.
+--- Finds the differential (`differentialName`) and the wheels of each output; enables the system.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:154
+---@param jbeamData table Jbeam data.
 function controller_drivingDynamics_actuators_activeDiffLock.initSecondStage(jbeamData) end
 
---- Appelée par le CMU pour donner une référence vers lui.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:192
----@param cmu table Module CMU.
+--- Called by the CMU to give it a reference to itself.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:192
+---@param cmu table CMU module.
 function controller_drivingDynamics_actuators_activeDiffLock.registerCMU(cmu) end
 
---- Remet isActing à false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:128
+--- Sets isActing to false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:128
 function controller_drivingDynamics_actuators_activeDiffLock.reset() end
 
---- Remet les bornes d'override à 0 et 1.
----Source : lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:46
+--- Resets the override bounds to 0 and 1.
+---Source: lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:46
 function controller_drivingDynamics_actuators_activeDiffLock.resetOverride() end
 
---- Envoie les paramètres au CMU dans un paquet de debug config.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:221
+--- Sends the parameters to the CMU in a config debug packet.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:221
 function controller_drivingDynamics_actuators_activeDiffLock.sendConfigData() end
 
---- Remplace toute la table de paramètres.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:213
----@param configTable table Nouveaux paramètres.
+--- Replaces the whole parameter table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:213
+---@param configTable table New parameters.
 function controller_drivingDynamics_actuators_activeDiffLock.setConfig(configTable) end
 
---- Active ou désactive l'envoi de paquets de debug.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:186
----@param debugEnabled boolean true pour envoyer.
+--- Enables or disables sending debug packets.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:186
+---@param debugEnabled boolean true to send.
 function controller_drivingDynamics_actuators_activeDiffLock.setDebugMode(debugEnabled) end
 
---- Modifie à chaud avDiffThreshold, isEnabled et lockingPIDkP/kI/kD (via CMU.applyParameter).
----Source : lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:196
----@param parameters table Table des paramètres à changer.
+--- Changes avDiffThreshold, isEnabled and lockingPIDkP/kI/kD at runtime (via CMU.applyParameter).
+---Source: lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:196
+---@param parameters table Table of parameters to change.
 function controller_drivingDynamics_actuators_activeDiffLock.setParameters(parameters) end
 
---- Arrête l'actionneur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:121
+--- Stops the actuator.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:121
 function controller_drivingDynamics_actuators_activeDiffLock.shutdown() end
 
---- Pas fixe (100 Hz) : calcule l'écart de vitesse corrigé, le coefficient de verrouillage (PID lissé, borné par l'override) et l'écrit dans `activeLockCoef` du différentiel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:51
----@param dt number Pas en secondes.
+--- Fixed step (100 Hz): computes the corrected speed difference and the locking coefficient (smoothed PID, bounded by the override) and writes it to the differential's `activeLockCoef`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:51
+---@param dt number Step in seconds.
 function controller_drivingDynamics_actuators_activeDiffLock.updateFixedStep(dt) end
 
---- Chaque frame : rien d'utile. Variante debug : envoie les valeurs au CMU.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:93
----@param dt number Pas de temps en secondes.
+--- Every frame: nothing useful. Debug variant: sends the values to the CMU.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua:93
+---@param dt number Time step in seconds.
 function controller_drivingDynamics_actuators_activeDiffLock.updateGFX(dt) end
 
 return controller_drivingDynamics_actuators_activeDiffLock

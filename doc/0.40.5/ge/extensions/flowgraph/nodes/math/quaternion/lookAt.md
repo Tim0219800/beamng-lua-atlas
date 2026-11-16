@@ -1,19 +1,19 @@
 # `flowgraph_nodes_math_quaternion_lookAt`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/math/quaternion/lookAt.lua` · VM : Game Engine (GE) · 47 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/math/quaternion/lookAt.lua` · VM: Game Engine (GE) · 47 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/math/quaternion/lookAt")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/math/quaternion/lookAt")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Look At' (categorie simple). Calcule le quaternion qui oriente une direction allant du point 'from' vers 'to', avec le vecteur 'up' (cache, defaut (0,0,1)). Utilise quat:setFromDir.
+Flowgraph node 'Look At' (simple category). Computes the quaternion that orients a direction going from point 'from' to 'to', with the 'up' vector (hidden, default (0,0,1)). Uses quat:setFromDir.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Vide. | 26 |
-| `C:work()` | Si from et to existent : direction = to - from, up = pin up ou (0,0,1), ecrit la table du quaternion sur 'value'. Sinon ne fait rien. | 29 |
+| `C:init()` | Empty. | 26 |
+| `C:work()` | If from and to exist: direction = to - from, up = pin up or (0,0,1), writes the quaternion table to 'value'. Otherwise does nothing. | 29 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/math/quaternion/lookAt.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/math/quaternion/lookAt.lua`.*

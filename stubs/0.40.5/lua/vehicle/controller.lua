@@ -2,162 +2,162 @@
 -- tim19Atlas stub generated from lua/vehicle/controller.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gestionnaire des contrôleurs jbeam du véhicule (VM véhicule, globale `controller`). Au chargement, il lit la section `controller` du jbeam (`v.data.controller`), charge chaque fichier `lua/vehicle/controller/<fileName>.lua` avec `rerequire`, appelle son `init(jbeamData)` puis les étapes `initSecondStage`, `initSounds`, `initLastStage`. Il trie les contrôleurs (par rang du périphérique powertrain `relevantDevice`, puis `manualOrder`, puis `defaultOrder`, puis nom) et construit des listes de fonctions mises en cache pour appeler tous les `update`, `updateGFX`, `updateFixedStep`, etc. sans test à chaque frame. Un moddeur l'utilise surtout pour retrouver un contrôleur (`controller.getController("nom")`) ou en charger un à chaud (`loadControllerExternal`).
---- Accès : globale `controller`
+--- Manager of the vehicle's jbeam controllers (vehicle VM, global `controller`). On load, it reads the `controller` section of the jbeam (`v.data.controller`), loads each `lua/vehicle/controller/<fileName>.lua` file with `rerequire`, calls its `init(jbeamData)` then the stages `initSecondStage`, `initSounds`, `initLastStage`. It sorts the controllers (by rank of the powertrain device `relevantDevice`, then `manualOrder`, then `defaultOrder`, then name) and builds cached function lists to call all the `update`, `updateGFX`, `updateFixedStep`, etc. without a test every frame. A modder mainly uses it to find a controller (`controller.getController("name")`) or to load one on the fly (`loadControllerExternal`).
+--- Access: global `controller`
 ---@class controller
----@field beamBroke function Diffuse beamBroken(id, energy) aux contrôleurs qui l'ont.
----@field beamDeformed function Diffuse beamDeformed(id, ratio) aux contrôleurs qui l'ont.
----@field debugDraw function Diffuse debugDraw(focusPos) aux contrôleurs qui l'ont.
----@field isFrozen boolean true si setFreeze(1) a été appelé.
----@field mainController table|nil Contrôleur dont `type == "main"` (un seul), ou le contrôleur `dummy` si aucun. nil avant init().
----@field nilController table|nil Objet 'nul' créé par init() : toute indexation ou appel renvoie lui-même, l'écriture est ignorée. Renvoyé par getControllerSafe quand le contrôleur est introuvable.
----@field nodeCollision function Diffuse nodeCollision(p) aux contrôleurs qui l'ont (p : paramètre venant du moteur).
----@field onCouplerAttached function Diffuse onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy).
----@field onCouplerDetached function Diffuse onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce).
----@field onCouplerFound function Diffuse onCouplerFound(nodeId, obj2id, obj2nodeId, nodeDist).
----@field onGameplayEvent function Diffuse onGameplayEvent(eventName, ...) aux contrôleurs qui l'ont.
----@field update function Appelle update(dt) de chaque contrôleur puis, avec l'accumulateur 100 Hz, updateFixedStep. Vaut nop s'il n'y a rien à appeler. Appelée par la boucle physique.
----@field updateGFX function Appelle updateGFX(dt) de chaque contrôleur, une fois par frame graphique.
----@field updateWheelsIntermediate function Appelle updateWheelsIntermediate(dt) de chaque contrôleur concerné (étape physique intermédiaire des roues).
+---@field beamBroke function Broadcasts beamBroken(id, energy) to the controllers that have it.
+---@field beamDeformed function Broadcasts beamDeformed(id, ratio) to the controllers that have it.
+---@field debugDraw function Broadcasts debugDraw(focusPos) to the controllers that have it.
+---@field isFrozen boolean true if setFreeze(1) has been called.
+---@field mainController table|nil Controller whose `type == "main"` (only one), or the `dummy` controller if none. nil before init().
+---@field nilController table|nil 'Null' object created by init(): any indexing or call returns itself, writing is ignored. Returned by getControllerSafe when the controller is not found.
+---@field nodeCollision function Broadcasts nodeCollision(p) to the controllers that have it (p: parameter coming from the engine).
+---@field onCouplerAttached function Broadcasts onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy).
+---@field onCouplerDetached function Broadcasts onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce).
+---@field onCouplerFound function Broadcasts onCouplerFound(nodeId, obj2id, obj2nodeId, nodeDist).
+---@field onGameplayEvent function Broadcasts onGameplayEvent(eventName, ...) to the controllers that have it.
+---@field update function Calls update(dt) of each controller then, with the 100 Hz accumulator, updateFixedStep. Is nop if there is nothing to call. Called by the physics loop.
+---@field updateGFX function Calls updateGFX(dt) on each controller, once per graphics frame.
+---@field updateWheelsIntermediate function Calls updateWheelsIntermediate(dt) on each relevant controller (intermediate physics step for the wheels).
 controller = {}
 
---- Reconstruit les listes de fonctions appelées par update, updateGFX, updateFixedStep, updateWheelsIntermediate et les hooks, d'après les fonctions présentes sur chaque contrôleur trié. À rappeler si un contrôleur ajoute ou retire dynamiquement une de ces fonctions (ex. M.update = ...).
----Source : lua/vehicle/controller.lua:708
+--- Rebuilds the function lists called by update, updateGFX, updateFixedStep, updateWheelsIntermediate and the hooks, based on the functions present on each sorted controller. To be called again if a controller dynamically adds or removes one of these functions (e.g. M.update = ...).
+---Source: lua/vehicle/controller.lua:708
 function controller.cacheAllControllerFunctions() end
 
---- Renvoie la table réelle (non copiée) de tous les contrôleurs chargés, indexée par nom.
----Source : lua/vehicle/controller.lua:228
----@return table<string, table>  nom -> module du contrôleur.
+--- Returns the actual table (not a copy) of all loaded controllers, keyed by name.
+---Source: lua/vehicle/controller.lua:228
+---@return table<string, table>  name -> controller module.
 function controller.getAllControllers() end
 
---- Renvoie le contrôleur de ce nom, ou nil s'il n'existe pas (à tester avant d'indexer, sinon erreur).
----Source : lua/vehicle/controller.lua:232
----@param name string Nom du contrôleur (par défaut le fileName, sinon la clé `name` du jbeam).
----@return table|nil  Le module du contrôleur.
+--- Returns the controller with this name, or nil if it does not exist (test before indexing, otherwise error).
+---Source: lua/vehicle/controller.lua:232
+---@param name string Controller name (by default the fileName, otherwise the jbeam `name` key).
+---@return table|nil  The controller module.
 function controller.getController(name) end
 
---- Comme getController mais ne renvoie jamais nil : gère les contrôleurs déplacés et, si rien n'est trouvé, renvoie `nilController` qui accepte tout index ou appel sans erreur. Pratique pour les appels du type `controller.getControllerSafe("x").fonction()`.
----Source : lua/vehicle/controller.lua:236
----@param name string Nom du contrôleur.
----@return table  Le contrôleur, ou nilController.
+--- Like getController but never returns nil: handles relocated controllers and, if nothing is found, returns `nilController`, which accepts any index or call without error. Handy for calls like `controller.getControllerSafe("x").function()`.
+---Source: lua/vehicle/controller.lua:236
+---@param name string Controller name.
+---@return table  The controller, or nilController.
 function controller.getControllerSafe(name) end
 
---- Liste les contrôleurs dont le type (fileName) vaut typeName, en tenant compte des contrôleurs déplacés sans nom personnalisé.
----Source : lua/vehicle/controller.lua:259
----@param typeName string Chemin de fichier, ex. "braking/transbrake".
----@return table[]  Liste (ordre non garanti) des contrôleurs.
+--- Lists the controllers whose type (fileName) equals typeName, taking into account relocated controllers without a custom name.
+---Source: lua/vehicle/controller.lua:259
+---@param typeName string File path, e.g. "braking/transbrake".
+---@return table[]  List (order not guaranteed) of controllers.
 function controller.getControllersByType(typeName) end
 
---- Liste les contrôleurs dont le typeName commence par le préfixe donné (recherche par dossier).
----Source : lua/vehicle/controller.lua:272
----@param path string Préfixe, ex. "braking/".
----@return table[]  Liste des contrôleurs correspondants.
+--- Lists the controllers whose typeName starts with the given prefix (search by folder).
+---Source: lua/vehicle/controller.lua:272
+---@param path string Prefix, e.g. "braking/".
+---@return table[]  List of matching controllers.
 function controller.getControllersFromPath(path) end
 
---- Fusionne récursivement les résultats de `getState()` de chaque contrôleur qui la définit.
----Source : lua/vehicle/controller.lua:995
----@return table|nil  État fusionné, nil s'il est vide.
+--- Recursively merges the results of `getState()` from each controller that defines it.
+---Source: lua/vehicle/controller.lua:995
+---@return table|nil  Merged state, nil if empty.
 function controller.getState() end
 
---- Charge tous les contrôleurs du jbeam (ou dummy), crée le nilController, enregistre les contrôleurs déplacés, ignore la liste noire, fusionne les données `v.data[nom]` avec la déclaration, appelle `init(data)`, désigne le contrôleur principal et trie les contrôleurs. Les erreurs d'un contrôleur sont loguées sans bloquer les autres.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller.lua:436
+--- Loads all controllers from the jbeam (or dummy), creates the nilController, registers relocated controllers, skips the blacklist, merges the `v.data[name]` data with the declaration, calls `init(data)`, designates the main controller and sorts the controllers. A controller's errors are logged without blocking the others.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller.lua:436
 function controller.init() end
 
---- Appelle `initLastStage(jbeamData)` de chaque contrôleur puis reconstruit les caches.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller.lua:743
+--- Calls `initLastStage(jbeamData)` on each controller then rebuilds the caches.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller.lua:743
 function controller.initLastStage() end
 
---- Appelle `initSecondStage(jbeamData)` de chaque contrôleur puis reconstruit les caches. Appelée après l'init de tous les systèmes du véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller.lua:733
+--- Calls `initSecondStage(jbeamData)` on each controller then rebuilds the caches. Called after the init of all the vehicle's systems.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller.lua:733
 function controller.initSecondStage() end
 
---- Appelle `initSounds(jbeamData)` de chaque contrôleur puis reconstruit les caches.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller.lua:753
+--- Calls `initSounds(jbeamData)` on each controller then rebuilds the caches.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller.lua:753
 function controller.initSounds() end
 
---- Indique si au moins un contrôleur a besoin de la boucle physique (update, updateFixedStep ou updateWheelsIntermediate).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller.lua:1006
----@return boolean  true si un de ces hooks existe.
+--- Indicates whether at least one controller needs the physics loop (update, updateFixedStep or updateWheelsIntermediate).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller.lua:1006
+---@return boolean  true if one of these hooks exists.
 function controller.isPhysicsStepUsed() end
 
---- Charge un contrôleur à chaud, en dehors du jbeam. Refuse un nom déjà pris et les contrôleurs de type `main`. Appelle ensuite init, initSecondStage, initSounds, initLastStage, retrie les contrôleurs et reconstruit les caches d'appel. Les erreurs sont loguées sans planter.
----Source : lua/vehicle/controller.lua:297
----@param fileName string Chemin du fichier relatif à controller/ (sans .lua).
----@param controllerName string|nil Nom d'instance ; par défaut fileName.
----@param controllerData table|nil Données passées à init comme jbeamData ; {} par défaut.
----@return table|nil  Le contrôleur chargé, nil en cas d'échec.
+--- Loads a controller on the fly, outside the jbeam. Refuses a name already taken and controllers of type `main`. Then calls init, initSecondStage, initSounds, initLastStage, re-sorts the controllers and rebuilds the call caches. Errors are logged without crashing.
+---Source: lua/vehicle/controller.lua:297
+---@param fileName string File path relative to controller/ (without .lua).
+---@param controllerName string|nil Instance name; defaults to fileName.
+---@param controllerData table|nil Data passed to init as jbeamData; {} by default.
+---@return table|nil  The loaded controller, nil on failure.
 function controller.loadControllerExternal(fileName, controllerName, controllerData) end
 
---- Hook appelé au rechargement d'un état sauvegardé : passe à chaque contrôleur nommé dans `data` sa part via `deserialize(controllerData)`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller.lua:961
----@param data table<string, any>|nil nom du contrôleur -> données retournées auparavant par son serialize().
+--- Hook called when a saved state is reloaded: passes to each controller named in `data` its share via `deserialize(controllerData)`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller.lua:961
+---@param data table<string, any>|nil controller name -> data previously returned by its serialize().
 function controller.onDeserialize(data) end
 
---- Hook appelé à la sauvegarde d'état : collecte `serialize()` de chaque contrôleur qui la définit.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller.lua:973
----@return table<string, any>  nom du contrôleur -> données sérialisées.
+--- Hook called on state save: collects `serialize()` from each controller that defines it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller.lua:973
+---@return table<string, any>  controller name -> serialized data.
 function controller.onSerialize() end
 
---- Outil de développement : imprime du code Lua listant les appels directs (par index de sortedControllers) à coller en haut de controller.lua pour remplacer les boucles.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller.lua:807
----@param callType string|nil "update", "updateGFX", "updateWheelsIntermediate", "beamBroke", "beamDeformed", "nodeCollision", "onCouplerFound", "onCouplerAttached", "onCouplerDetached", "onGameplayEvent", "debugDraw", "settingsChanged" ; nil = tous.
+--- Development tool: prints Lua code listing the direct calls (by sortedControllers index) to paste at the top of controller.lua to replace the loops.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller.lua:807
+---@param callType string|nil "update", "updateGFX", "updateWheelsIntermediate", "beamBroke", "beamDeformed", "nodeCollision", "onCouplerFound", "onCouplerAttached", "onCouplerDetached", "onGameplayEvent", "debugDraw", "settingsChanged"; nil = all.
 function controller.printDebugMethodCalls(callType) end
 
---- Déclare qu'un ancien chemin/nom de contrôleur est maintenant à un nouveau chemin, pour que les anciens jbeam continuent de fonctionner.
----Source : lua/vehicle/controller.lua:62
----@param originalPath string Ancien nom (ex. "transbrake") ou chemin ("controller/transbrake").
----@param newPath string Nouveau chemin relatif au dossier controller/ (ex. "braking/transbrake") ; pour loadControllerExternal c'est le chemin complet sans extension.
+--- Declares that an old controller path/name is now at a new path, so that old jbeam files keep working.
+---Source: lua/vehicle/controller.lua:62
+---@param originalPath string Old name (e.g. "transbrake") or path ("controller/transbrake").
+---@param newPath string New path relative to the controller/ folder (e.g. "braking/transbrake"); for loadControllerExternal it is the full path without extension.
 function controller.registerRelocatedController(originalPath, newPath) end
 
---- Remet l'accumulateur du pas fixe à 0 et rappelle `init(jbeamData)` des contrôleurs qui n'ont pas de fonction `reset` (ceux qui en ont un sont traités dans resetSecondStage).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller.lua:763
+--- Resets the fixed-step accumulator to 0 and calls `init(jbeamData)` again on controllers that have no `reset` function _anon(those that have one are handled in resetSecondStage).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller.lua:763
 function controller.reset() end
 
---- Pour chaque contrôleur : `resetLastStage()` s'il existe, sinon `initLastStage(jbeamData)` ; puis reconstruit les caches.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller.lua:785
+--- For each controller: `resetLastStage()` if it exists, otherwise `initLastStage(jbeamData)`; then rebuilds the caches.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller.lua:785
 function controller.resetLastStage() end
 
---- Pour chaque contrôleur : `reset(jbeamData)` s'il existe, sinon `initSecondStage(jbeamData)` ; puis reconstruit les caches.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller.lua:773
+--- For each controller: `reset(jbeamData)` if it exists, otherwise `initSecondStage(jbeamData)`; then rebuilds the caches.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller.lua:773
 function controller.resetSecondStage() end
 
---- Appelle `resetSounds()` des contrôleurs qui la définissent puis reconstruit les caches.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller.lua:797
+--- Calls `resetSounds()` on the controllers that define it then rebuilds the caches.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller.lua:797
 function controller.resetSounds() end
 
---- Met `isFrozen` à `mode == 1` et transmet l'appel au contrôleur principal.
----Source : lua/vehicle/controller.lua:282
----@param mode integer 1 = gelé, autre = non gelé.
+--- Sets `isFrozen` to `mode == 1` and forwards the call to the main controller.
+---Source: lua/vehicle/controller.lua:282
+---@param mode integer 1 = frozen, other = not frozen.
 function controller.setFreeze(mode) end
 
---- Passe `data` à la fonction `setState(data)` de chaque contrôleur qui la définit.
----Source : lua/vehicle/controller.lua:983
----@param data table|nil État à appliquer ; nil ne fait rien.
+--- Passes `data` to the `setState(data)` function of each controller that defines it.
+---Source: lua/vehicle/controller.lua:983
+---@param data table|nil State to apply; nil does nothing.
 function controller.setState(data) end
 
---- Appelle `settingsChanged()` sur chaque contrôleur qui la définit. Appelée quand les réglages du jeu changent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller.lua:220
+--- Calls `settingsChanged()` on each controller that defines it. Called when the game settings change.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller.lua:220
 function controller.settingsChanged() end
 
---- Retire un contrôleur chargé du gestionnaire (sans appeler de fonction de nettoyage) et reconstruit les caches d'appel.
----Source : lua/vehicle/controller.lua:376
----@param controllerName string Nom d'instance.
+--- Removes a loaded controller from the manager (without calling any cleanup function) and rebuilds the call caches.
+---Source: lua/vehicle/controller.lua:376
+---@param controllerName string Instance name.
 function controller.unloadControllerExternal(controllerName) end
 
---- Appelle `updateSimpleControlButtons()` sur chaque contrôleur qui la possède (rafraîchit les boutons de contrôle simplifiés de l'UI).
----Source : lua/vehicle/controller.lua:289
+--- Calls `updateSimpleControlButtons()` on each controller that has it (refreshes the UI's simplified control buttons).
+---Source: lua/vehicle/controller.lua:289
 function controller.updateSimpleControlButtons() end
 

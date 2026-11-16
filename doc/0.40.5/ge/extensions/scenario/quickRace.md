@@ -1,125 +1,125 @@
 # `scenario_quickRace`
 
-*Fichier : `lua/ge/extensions/scenario/quickRace.lua` · VM : Game Engine (GE) · 410 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/quickRace.lua` · VM: Game Engine (GE) · 410 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_quickRace` : `extensions.load("scenario_quickRace")`, puis la globale `scenario_quickRace`
+**Access:** extension `scenario_quickRace`: `extensions.load("scenario_quickRace")`, then the global `scenario_quickRace`
 
-Logique d'une course rapide (quickrace) : charge les prefabs et le flowgraph de la piste, crée le véhicule du joueur à la position de départ, convertit le chemin de course (fichier raceFile) en noeuds et configuration de tour (lapConfig) pour le système de scénario, puis enregistre les temps et les highscores. Elle ne s'active que pour les scénarios fabriqués par scenario_quickRaceLoader (scenario.isQuickRace).
+Quick race (quickrace) logic: loads the track's prefabs and flowgraph, creates the player's vehicle at the start position, converts the race path (raceFile file) into nodes and lap configuration (lapConfig) for the scenario system, then records times and highscores. It only activates for scenarios built by scenario_quickRaceLoader (scenario.isQuickRace).
 
-## Remarques
+## Notes
 
-- Les hooks onRaceWaypointReached et onRaceResult sortent immédiatement si le scénario courant n'a pas isQuickRace.
-- M.addCheckPoint et M.loadCheckpoints sont exportés mais valent nil (variables locales jamais définies) : à ne pas utiliser.
-- Dans onRaceWaypointReached, le temps de chaque tour est obtenu en retranchant les temps cumulés précédents ; les highscores du tour seul utilisent la clé getConfigKey(false, nil, 0).
-- Dans onRaceWaypointReached, la boucle qui incrémente scenario.highscores.singleRound utilise l'index k au lieu de v : comportement douteux.
+- The onRaceWaypointReached and onRaceResult hooks exit immediately if the current scenario does not have isQuickRace.
+- M.addCheckPoint and M.loadCheckpoints are exported but are nil (local variables never defined): do not use.
+- In onRaceWaypointReached, each lap's time is obtained by subtracting the previous cumulative times; single-lap highscores use the key getConfigKey(false, nil, 0).
+- In onRaceWaypointReached, the loop that increments scenario.highscores.singleRound uses the index k instead of v: questionable behavior.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_quickRace.changeTimeTrialConfig()` | Bascule l'écran de configuration quickrace en cours de course : ouvre le menu 'menu.quickrace' en mettant la simulation en pause, ou ferme et reprend (simTimeAuthority.pause). | 365 |
-| `scenario_quickRace.getConfigKey(rolling, reverse, laps)` | Construit la clé de configuration utilisée pour les highscores : 'standing' ou 'rolling', suffixe 'Reverse' si reverse, puis le nombre de tours. Les arguments nil se rabattent sur scenario.rollingStart, scenario.isReverse et scenario.lapCount. | 238 |
-| `scenario_quickRace.getNodesOnBranch(segment, config)` | Parcourt récursivement les segments d'un chemin de course et renvoie la liste des noms de noeuds générés (_generatedName) ; aux embranchements, ajoute une sous-liste de marqueurs '__b<id>' et remplit config.branches. *(interne)* | 67 |
-| `scenario_quickRace.getVehicleBrand(scenario)` | Renvoie la marque du véhicule du scénario (scenario.vehicle.file.Brand). | 310 |
-| `scenario_quickRace.getVehicleName(scenario)` | Renvoie le nom du véhicule du scénario (scenario.vehicle.file.Name). | 314 |
-| `scenario_quickRace.loadVehicle(scenario)` | Crée le véhicule du joueur (scenario.vehicle) nommé 'scenario_player0' avec core_vehicles.spawnNewVehicle, à la position de départ calculée (startTransform du raceFile, ou à défaut la spawnSphere standing/rolling[/Reverse] de la piste), puis l'ajoute au groupe ScenarioObjectsGroup. Si la spawnSphere est introuvable, utilise 0/0/0 avec une erreur dans le log. | 167 |
-| `scenario_quickRace.onClientEndMission()` | Hook de fin de mission : arrête et supprime le flowgraph de la piste s'il existe. *(interne)* *(hook)* | 140 |
-| `scenario_quickRace.onCountdownEnded()` | Hook appelé par l'UI à la fin du compte à rebours : dégèle le véhicule joueur (controller.setFreeze(0)) et vide la liste des temps. *(interne)* *(hook)* | 227 |
-| `scenario_quickRace.onCustomWaypoints(sc)` | Hook appelé par le chargeur de scénario. Inverse le chemin si track.reverse, lance path:autoConfig(), génère sc.generatedNodes (noeuds nommés '__generated_from_path__<id>' avec pos, radius, rot), sc.startTimerCheckpoint, sc.lapConfig, sc.initialLapConfig, et éventuellement sc.BranchLapConfig et sc.lapConfigBranches, puis les fusionne dans sc.nodes. *(interne)* *(hook)* | 89 |
-| `scenario_quickRace.onLoadCustomPrefabs(sc)` | Hook appelé par le chargeur de scénario. Si la piste (sc.track) définit un flowgraph, le charge et le lance en mode transitoire ; si elle définit raceFile, lit le JSON, construit un gameplay/race/path dans sc.path et calcule sc.track.startTransform selon rollingStart et reverse. Termine par loadVehicle(sc). *(interne)* *(hook)* | 17 |
-| `scenario_quickRace.onRaceResult(final)` | Hook appelé à la fin de la course. Enregistre le temps final (final.finalTime en secondes, converti en ms) dans les highscores, remplit scenario.highscores (scores, place, singleScores) et scenario.detailedRecord pour l'écran de résultats. *(interne)* *(hook)* | 318 |
-| `scenario_quickRace.onRaceWaypointReached(wpInfo)` | Hook appelé par le système de course à chaque waypoint. Au dernier waypoint (ou retour au premier), calcule le temps du tour, l'enregistre dans les highscores (core_highscores.setScenarioHighscoresCustom) et met à jour scenario.highscores.singleRound. *(interne)* *(hook)* | 260 |
-| `scenario_quickRace.onScenarioLoaded(sc)` | Hook appelé quand le scénario est chargé. Allume les antibrouillards et les feux du véhicule joueur si track.tod vaut 0, 1 ou 8 (nuit), et inverse la direction (rot) des noeuds si track.reverse. *(interne)* *(hook)* | 148 |
-| `scenario_quickRace.onUiChangedState(curUIState, prevUIState)` | Hook appelé quand l'état de l'UI change : si on revient de 'menu.quickrace' vers 'menu' alors que timeTrialOpen est vrai, referme la configuration. *(interne)* *(hook)* | 381 |
+| `scenario_quickRace.changeTimeTrialConfig()` | Toggles the quickrace configuration screen during a race: opens the 'menu.quickrace' menu while pausing the simulation, or closes it and resumes (simTimeAuthority.pause). | 365 |
+| `scenario_quickRace.getConfigKey(rolling, reverse, laps)` | Builds the configuration key used for highscores: 'standing' or 'rolling', suffix 'Reverse' if reverse, then the lap count. nil arguments fall back to scenario.rollingStart, scenario.isReverse and scenario.lapCount. | 238 |
+| `scenario_quickRace.getNodesOnBranch(segment, config)` | Recursively walks the segments of a race path and returns the list of generated node names (_generatedName); at forks, adds a sub-list of '__b<id>' markers and fills config.branches. *(internal)* | 67 |
+| `scenario_quickRace.getVehicleBrand(scenario)` | Returns the make of the scenario's vehicle (scenario.vehicle.file.Brand). | 310 |
+| `scenario_quickRace.getVehicleName(scenario)` | Returns the name of the scenario's vehicle (scenario.vehicle.file.Name). | 314 |
+| `scenario_quickRace.loadVehicle(scenario)` | Creates the player's vehicle (scenario.vehicle) named 'scenario_player0' with core_vehicles.spawnNewVehicle, at the computed start position (startTransform of the raceFile, or failing that the track's standing/rolling[/Reverse] spawnSphere), then adds it to the ScenarioObjectsGroup group. If the spawnSphere is not found, uses 0/0/0 with an error in the log. | 167 |
+| `scenario_quickRace.onClientEndMission()` | End-of-mission hook: stops and deletes the track's flowgraph if it exists. *(internal)* *(hook)* | 140 |
+| `scenario_quickRace.onCountdownEnded()` | Hook called by the UI at the end of the countdown: unfreezes the player vehicle (controller.setFreeze(0)) and clears the times list. *(internal)* *(hook)* | 227 |
+| `scenario_quickRace.onCustomWaypoints(sc)` | Hook called by the scenario loader. Reverses the path if track.reverse, runs path:autoConfig(), generates sc.generatedNodes (nodes named '__generated_from_path__<id>' with pos, radius, rot), sc.startTimerCheckpoint, sc.lapConfig, sc.initialLapConfig, and optionally sc.BranchLapConfig and sc.lapConfigBranches, then merges them into sc.nodes. *(internal)* *(hook)* | 89 |
+| `scenario_quickRace.onLoadCustomPrefabs(sc)` | Hook called by the scenario loader. If the track (sc.track) defines a flowgraph, loads it and runs it in transient mode; if it defines raceFile, reads the JSON, builds a gameplay/race/path in sc.path and computes sc.track.startTransform according to rollingStart and reverse. Ends with loadVehicle(sc). *(internal)* *(hook)* | 17 |
+| `scenario_quickRace.onRaceResult(final)` | Hook called at the end of the race. Records the final time (final.finalTime in seconds, converted to ms) in the highscores, fills scenario.highscores (scores, place, singleScores) and scenario.detailedRecord for the results screen. *(internal)* *(hook)* | 318 |
+| `scenario_quickRace.onRaceWaypointReached(wpInfo)` | Hook called by the race system at each waypoint. At the last waypoint (or return to the first), computes the lap time, records it in the highscores (core_highscores.setScenarioHighscoresCustom) and updates scenario.highscores.singleRound. *(internal)* *(hook)* | 260 |
+| `scenario_quickRace.onScenarioLoaded(sc)` | Hook called when the scenario is loaded. Turns on the fog lights and lights of the player vehicle if track.tod is 0, 1 or 8 (night), and reverses the direction (rot) of the nodes if track.reverse. *(internal)* *(hook)* | 148 |
+| `scenario_quickRace.onUiChangedState(curUIState, prevUIState)` | Hook called when the UI state changes: if returning from 'menu.quickrace' to 'menu' while timeTrialOpen is true, closes the configuration again. *(internal)* *(hook)* | 381 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_quickRace.getConfigKey(rolling, reverse, laps)`
 
-Construit la clé de configuration utilisée pour les highscores : 'standing' ou 'rolling', suffixe 'Reverse' si reverse, puis le nombre de tours. Les arguments nil se rabattent sur scenario.rollingStart, scenario.isReverse et scenario.lapCount.
+Builds the configuration key used for highscores: 'standing' or 'rolling', suffix 'Reverse' if reverse, then the lap count. nil arguments fall back to scenario.rollingStart, scenario.isReverse and scenario.lapCount.
 
-- `rolling` (*boolean|nil*) : Départ lancé.
-- `reverse` (*boolean|nil*) : Sens inverse.
-- `laps` (*integer|nil*) : Nombre de tours.
-- **renvoie** : string Par exemple 'rollingReverse3'.
+- `rolling` (*boolean|nil*) : Rolling start.
+- `reverse` (*boolean|nil*) : Reverse direction.
+- `laps` (*integer|nil*) : Number of laps.
+- **returns**: string For example 'rollingReverse3'.
 
 #### `scenario_quickRace.getNodesOnBranch(segment, config)`
 
-Parcourt récursivement les segments d'un chemin de course et renvoie la liste des noms de noeuds générés (_generatedName) ; aux embranchements, ajoute une sous-liste de marqueurs '__b<id>' et remplit config.branches.
+Recursively walks the segments of a race path and returns the list of generated node names (_generatedName); at forks, adds a sub-list of '__b<id>' markers and fills config.branches.
 
-- `segment` (*table*) : Segment de départ (objet de path.segments).
-- `config` (*table*) : Table de configuration modifiée : reçoit config.branches.
-- **renvoie** : table Liste ordonnée de noms de noeuds (pouvant contenir des sous-listes pour les embranchements).
+- `segment` (*table*) : Start segment (object of path.segments).
+- `config` (*table*) : Configuration table modified: receives config.branches.
+- **returns**: table Ordered list of node names (may contain sub-lists for forks).
 
 #### `scenario_quickRace.getVehicleBrand(scenario)`
 
-Renvoie la marque du véhicule du scénario (scenario.vehicle.file.Brand).
+Returns the make of the scenario's vehicle (scenario.vehicle.file.Brand).
 
-- `scenario` (*table*) : Scénario quickrace.
-- **renvoie** : string Marque.
+- `scenario` (*table*) : Quickrace scenario.
+- **returns**: string Make.
 
 #### `scenario_quickRace.getVehicleName(scenario)`
 
-Renvoie le nom du véhicule du scénario (scenario.vehicle.file.Name).
+Returns the name of the scenario's vehicle (scenario.vehicle.file.Name).
 
-- `scenario` (*table*) : Scénario quickrace.
-- **renvoie** : string Nom.
+- `scenario` (*table*) : Quickrace scenario.
+- **returns**: string Name.
 
 #### `scenario_quickRace.loadVehicle(scenario)`
 
-Crée le véhicule du joueur (scenario.vehicle) nommé 'scenario_player0' avec core_vehicles.spawnNewVehicle, à la position de départ calculée (startTransform du raceFile, ou à défaut la spawnSphere standing/rolling[/Reverse] de la piste), puis l'ajoute au groupe ScenarioObjectsGroup. Si la spawnSphere est introuvable, utilise 0/0/0 avec une erreur dans le log.
+Creates the player's vehicle (scenario.vehicle) named 'scenario_player0' with core_vehicles.spawnNewVehicle, at the computed start position (startTransform of the raceFile, or failing that the track's standing/rolling[/Reverse] spawnSphere), then adds it to the ScenarioObjectsGroup group. If the spawnSphere is not found, uses 0/0/0 with an error in the log.
 
-- `scenario` (*table*) : Scénario quickrace (scenario.vehicle, scenario.track).
+- `scenario` (*table*) : Quickrace scenario (scenario.vehicle, scenario.track).
 
 #### `scenario_quickRace.onCustomWaypoints(sc)`
 
-Hook appelé par le chargeur de scénario. Inverse le chemin si track.reverse, lance path:autoConfig(), génère sc.generatedNodes (noeuds nommés '__generated_from_path__<id>' avec pos, radius, rot), sc.startTimerCheckpoint, sc.lapConfig, sc.initialLapConfig, et éventuellement sc.BranchLapConfig et sc.lapConfigBranches, puis les fusionne dans sc.nodes.
+Hook called by the scenario loader. Reverses the path if track.reverse, runs path:autoConfig(), generates sc.generatedNodes (nodes named '__generated_from_path__<id>' with pos, radius, rot), sc.startTimerCheckpoint, sc.lapConfig, sc.initialLapConfig, and optionally sc.BranchLapConfig and sc.lapConfigBranches, then merges them into sc.nodes.
 
-- `sc` (*table*) : Scénario quickrace.
+- `sc` (*table*) : Quickrace scenario.
 
 #### `scenario_quickRace.onLoadCustomPrefabs(sc)`
 
-Hook appelé par le chargeur de scénario. Si la piste (sc.track) définit un flowgraph, le charge et le lance en mode transitoire ; si elle définit raceFile, lit le JSON, construit un gameplay/race/path dans sc.path et calcule sc.track.startTransform selon rollingStart et reverse. Termine par loadVehicle(sc).
+Hook called by the scenario loader. If the track (sc.track) defines a flowgraph, loads it and runs it in transient mode; if it defines raceFile, reads the JSON, builds a gameplay/race/path in sc.path and computes sc.track.startTransform according to rollingStart and reverse. Ends with loadVehicle(sc).
 
-- `sc` (*table*) : Scénario quickrace (sc.track, sc.vehicle).
+- `sc` (*table*) : Quickrace scenario (sc.track, sc.vehicle).
 
 #### `scenario_quickRace.onRaceResult(final)`
 
-Hook appelé à la fin de la course. Enregistre le temps final (final.finalTime en secondes, converti en ms) dans les highscores, remplit scenario.highscores (scores, place, singleScores) et scenario.detailedRecord pour l'écran de résultats.
+Hook called at the end of the race. Records the final time (final.finalTime in seconds, converted to ms) in the highscores, fills scenario.highscores (scores, place, singleScores) and scenario.detailedRecord for the results screen.
 
-- `final` (*table*) : Résultat final, avec finalTime en secondes.
+- `final` (*table*) : Final result, with finalTime in seconds.
 
 #### `scenario_quickRace.onRaceWaypointReached(wpInfo)`
 
-Hook appelé par le système de course à chaque waypoint. Au dernier waypoint (ou retour au premier), calcule le temps du tour, l'enregistre dans les highscores (core_highscores.setScenarioHighscoresCustom) et met à jour scenario.highscores.singleRound.
+Hook called by the race system at each waypoint. At the last waypoint (or return to the first), computes the lap time, records it in the highscores (core_highscores.setScenarioHighscoresCustom) and updates scenario.highscores.singleRound.
 
-- `wpInfo` (*table*) : Informations de waypoint : next, time (temps cumulé).
+- `wpInfo` (*table*) : Waypoint information: next, time (cumulative time).
 
 #### `scenario_quickRace.onScenarioLoaded(sc)`
 
-Hook appelé quand le scénario est chargé. Allume les antibrouillards et les feux du véhicule joueur si track.tod vaut 0, 1 ou 8 (nuit), et inverse la direction (rot) des noeuds si track.reverse.
+Hook called when the scenario is loaded. Turns on the fog lights and lights of the player vehicle if track.tod is 0, 1 or 8 (night), and reverses the direction (rot) of the nodes if track.reverse.
 
-- `sc` (*table*) : Scénario quickrace.
+- `sc` (*table*) : Quickrace scenario.
 
 #### `scenario_quickRace.onUiChangedState(curUIState, prevUIState)`
 
-Hook appelé quand l'état de l'UI change : si on revient de 'menu.quickrace' vers 'menu' alors que timeTrialOpen est vrai, referme la configuration.
+Hook called when the UI state changes: if returning from 'menu.quickrace' to 'menu' while timeTrialOpen is true, closes the configuration again.
 
-- `curUIState` (*string*) : Nouvel état de l'UI.
-- `prevUIState` (*string*) : État précédent.
+- `curUIState` (*string*) : New UI state.
+- `prevUIState` (*string*) : Previous state.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `addCheckPoint` | any |  ⚠ référence `addCheckPoint` non définie dans le fichier (vaut probablement nil) |
-| `loadCheckpoints` | any |  ⚠ référence `loadCheckpoints` non définie dans le fichier (vaut probablement nil) |
+| `addCheckPoint` | any |  ⚠ reference `addCheckPoint` not defined in the file (probably nil) |
+| `loadCheckpoints` | any |  ⚠ reference `loadCheckpoints` not defined in the file (probably nil) |
 
-**Évènements UI (guihooks.trigger) :** `MenuItemNavigation`
+**UI events (guihooks.trigger):** `MenuItemNavigation`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/quickRace.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/quickRace.lua`.*

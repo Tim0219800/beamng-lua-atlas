@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/regionStyles.lua",
+  "module": "Style de peinture de marquage routier pour une région. Pour l'instant une seule région est définie : USA (circulation à droite). Donne les matériaux et largeurs des lignes centrales, de voie, de rive, d'arrêt et de cédez-le-passage, ainsi que de la zone de séparation hachurée.",
+  "notes": [
+    "Le cédez-le-passage (dents de requin) n'existe pas comme matériau DecalRoad : c'est une barre blanche pleine.",
+    "getRegion ignore tout argument et renvoie toujours la table USA."
+  ],
+  "functions": {
+    "getRegion": {
+      "desc": "Renvoie la table de style de marquage de la région courante (toujours USA) : centerLineMaterial, centerLineWidthM, centerLineTexLen, laneLineMaterial, edgeLineMaterial, leftEdgeLineMaterial, stopLineMaterial, giveWayMaterial, stopLineWidthM, giveWayWidthM, goreSepMaterial, goreSepTexLen.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Table de style (matériaux en string, largeurs et longueurs de texture en mètres)."}],
+      "internal": false
+    }
+  }
+}

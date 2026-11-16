@@ -2,94 +2,94 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/rallyEditor/zSnap.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Aide de l'éditeur de rallye pour « coller » la hauteur (z) d'un point au terrain. Trois méthodes : aucune, hauteur du terrain (core_terrain.getTerrainHeight) ou lancer de rayon vertical (editorUtil.vertRaycast). La méthode courante vient de la préférence de l'éditeur de rallye (editor_rallyEditor.getPrefWaypointSnapMethod). Sert aussi à adapter la géométrie d'une spline au terrain.
---- Accès : extension `editor_rallyEditor_zSnap` : `extensions.load("editor_rallyEditor_zSnap")`, puis la globale `editor_rallyEditor_zSnap`
+--- Rally editor helper to "snap" a point's height (z) to the terrain. Three methods: none, terrain height (core_terrain.getTerrainHeight) or vertical raycast (editorUtil.vertRaycast). The current method comes from the rally editor preference (editor_rallyEditor.getPrefWaypointSnapMethod). Also used to fit a spline's geometry to the terrain.
+--- Access: extension `editor_rallyEditor_zSnap`: `extensions.load("editor_rallyEditor_zSnap")`, then the global `editor_rallyEditor_zSnap`
 ---@class editor_rallyEditor_zSnap
----@field defaultMethod string Méthode par défaut : methods.getTerrainHeight.
----@field methodValues string[] Liste ordonnée des libellés de méthodes (pour un menu déroulant).
----@field methods table<string, string> Noms des méthodes : noSnapping, getTerrainHeight, vertRaycast (valeurs = libellés affichables).
+---@field defaultMethod string Default method: methods.getTerrainHeight.
+---@field methodValues string[] Ordered list of method labels (for a dropdown).
+---@field methods table<string, string> Method names: noSnapping, getTerrainHeight, vertRaycast (values = displayable labels).
 editor_rallyEditor_zSnap = {}
 
---- Génère la géométrie d'une spline Catmull-Rom collée au terrain, par raycast (geom.catmullRomRaycast) ou par hauteur du terrain (geom.catmullRomConformToTerrain).
----Source : lua/ge/extensions/editor/rallyEditor/zSnap.lua:81
----@param spline table Spline source.
----@param useRaycast boolean Choix de la méthode.
----@param minNumDivisions integer Nombre minimal de subdivisions (transmis à geom).
----@param minSpacing number Espacement minimal (transmis à geom).
----@param rayRaise number|nil Relèvement du rayon.
----@return table  Résultat de la fonction geom appelée.
+--- Generates the geometry of a Catmull-Rom spline snapped to the terrain, by raycast (geom.catmullRomRaycast) or by terrain height (geom.catmullRomConformToTerrain).
+---Source: lua/ge/extensions/editor/rallyEditor/zSnap.lua:81
+---@param spline table Source spline.
+---@param useRaycast boolean Method choice.
+---@param minNumDivisions integer Minimum number of subdivisions (passed to geom).
+---@param minSpacing number Minimum spacing (passed to geom).
+---@param rayRaise number|nil Ray raise.
+---@return table  Result of the geom function called.
 function editor_rallyEditor_zSnap.conformSplineGeometry(spline, useRaycast, minNumDivisions, minSpacing, rayRaise) end
 
---- Renvoie la méthode choisie dans les préférences de l'éditeur de rallye, ou defaultMethod si absente/invalide.
----Source : lua/ge/extensions/editor/rallyEditor/zSnap.lua:60
----@return string  Libellé de méthode.
+--- Returns the method chosen in the rally editor preferences, or defaultMethod if absent/invalid.
+---Source: lua/ge/extensions/editor/rallyEditor/zSnap.lua:60
+---@return string  Method label.
 function editor_rallyEditor_zSnap.getCurrentMethod() end
 
---- Indique si le libellé est une méthode connue.
----Source : lua/ge/extensions/editor/rallyEditor/zSnap.lua:47
----@param method string Libellé de méthode.
----@return boolean  true si valide.
+--- Returns whether the label is a known method.
+---Source: lua/ge/extensions/editor/rallyEditor/zSnap.lua:47
+---@param method string Method label.
+---@return boolean  true if valid.
 function editor_rallyEditor_zSnap.isValidMethod(method) end
 
---- Convertit un booléen en méthode : vertRaycast si true, sinon getTerrainHeight.
----Source : lua/ge/extensions/editor/rallyEditor/zSnap.lua:73
----@param useRaycast boolean Utiliser le raycast.
----@return string  Libellé de méthode.
+--- Converts a boolean to a method: vertRaycast if true, otherwise getTerrainHeight.
+---Source: lua/ge/extensions/editor/rallyEditor/zSnap.lua:73
+---@param useRaycast boolean Use the raycast.
+---@return string  Method label.
 function editor_rallyEditor_zSnap.methodForUseRaycast(useRaycast) end
 
---- Ne fait rien, renvoie pos tel quel.
----Source : lua/ge/extensions/editor/rallyEditor/zSnap.lua:24
+--- Does nothing, returns pos as is.
+---Source: lua/ge/extensions/editor/rallyEditor/zSnap.lua:24
 ---@param pos vec3 Position.
----@return vec3  pos inchangé.
+---@return vec3  pos unchanged.
 function editor_rallyEditor_zSnap.noSnappingInPlace(pos) end
 
---- Colle un point de driveline au terrain avec la méthode déduite de useRaycast.
----Source : lua/ge/extensions/editor/rallyEditor/zSnap.lua:77
----@param pos vec3 Position modifiée en place.
----@param useRaycast boolean true = raycast, false = hauteur du terrain.
----@param rayRaise number|nil Relèvement du rayon.
+--- Snaps a driveline point to the terrain with the method inferred from useRaycast.
+---Source: lua/ge/extensions/editor/rallyEditor/zSnap.lua:77
+---@param pos vec3 Position modified in place.
+---@param useRaycast boolean true = raycast, false = terrain height.
+---@param rayRaise number|nil Ray raise.
 ---@return vec3  pos.
 function editor_rallyEditor_zSnap.snapDrivelineInPlace(pos, useRaycast, rayRaise) end
 
---- Applique la méthode choisie (ou la méthode par défaut si inconnue) à pos, en place.
----Source : lua/ge/extensions/editor/rallyEditor/zSnap.lua:51
----@param pos vec3 Position modifiée en place.
----@param method string Libellé de méthode.
----@param rayRaise number|nil Relèvement du rayon (méthode raycast).
+--- Applies the chosen method (or the default method if unknown) to pos, in place.
+---Source: lua/ge/extensions/editor/rallyEditor/zSnap.lua:51
+---@param pos vec3 Position modified in place.
+---@param method string Method label.
+---@param rayRaise number|nil Ray raise (raycast method).
 ---@return vec3  pos.
 function editor_rallyEditor_zSnap.snapInPlace(pos, method, rayRaise) end
 
---- snapInPlace avec la méthode courante.
----Source : lua/ge/extensions/editor/rallyEditor/zSnap.lua:69
----@param pos vec3 Position modifiée en place.
----@param rayRaise number|nil Relèvement du rayon.
+--- snapInPlace with the current method.
+---Source: lua/ge/extensions/editor/rallyEditor/zSnap.lua:69
+---@param pos vec3 Position modified in place.
+---@param rayRaise number|nil Ray raise.
 ---@return vec3  pos.
 function editor_rallyEditor_zSnap.snapInPlaceWithCurrentMethod(pos, rayRaise) end
 
---- Ajuste pos.z par un lancer de rayon vertical (editorUtil.vertRaycast).
----Source : lua/ge/extensions/editor/rallyEditor/zSnap.lua:36
----@param pos vec3 Position modifiée en place.
----@param rayRaise number|nil Hauteur dont le rayon est relevé avant de tirer (transmis à vertRaycast).
+--- Adjusts pos.z by a vertical raycast (editorUtil.vertRaycast).
+---Source: lua/ge/extensions/editor/rallyEditor/zSnap.lua:36
+---@param pos vec3 Position modified in place.
+---@param rayRaise number|nil Height the ray is raised by before firing (passed to vertRaycast).
 ---@return vec3  pos.
 function editor_rallyEditor_zSnap.snapRaycastInPlace(pos, rayRaise) end
 
---- Met pos.z à la hauteur du terrain en (x, y) si disponible.
----Source : lua/ge/extensions/editor/rallyEditor/zSnap.lua:28
----@param pos vec3 Position modifiée en place.
+--- Sets pos.z to the terrain height at (x, y) if available.
+---Source: lua/ge/extensions/editor/rallyEditor/zSnap.lua:28
+---@param pos vec3 Position modified in place.
 ---@return vec3  pos.
 function editor_rallyEditor_zSnap.snapTerrainHeightInPlace(pos) end
 
---- Comme snapInPlace mais sur une copie de pos.
----Source : lua/ge/extensions/editor/rallyEditor/zSnap.lua:56
----@param pos vec3 Position source (non modifiée).
----@param method string Libellé de méthode.
----@param rayRaise number|nil Relèvement du rayon.
----@return vec3  Nouvelle position.
+--- Like snapInPlace but on a copy of pos.
+---Source: lua/ge/extensions/editor/rallyEditor/zSnap.lua:56
+---@param pos vec3 Source position (not modified).
+---@param method string Method label.
+---@param rayRaise number|nil Ray raise.
+---@return vec3  New position.
 function editor_rallyEditor_zSnap.zSnap(pos, method, rayRaise) end
 
---- zSnap avec la méthode courante, sur une copie.
----Source : lua/ge/extensions/editor/rallyEditor/zSnap.lua:65
----@param pos vec3 Position source.
----@return vec3  Nouvelle position.
+--- zSnap with the current method, on a copy.
+---Source: lua/ge/extensions/editor/rallyEditor/zSnap.lua:65
+---@param pos vec3 Source position.
+---@return vec3  New position.
 function editor_rallyEditor_zSnap.zSnapWithCurrentMethod(pos) end
 

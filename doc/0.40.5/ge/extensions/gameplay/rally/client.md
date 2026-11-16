@@ -1,39 +1,39 @@
 # `gameplay_rally_client`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/client.lua` · VM : Game Engine (GE) · 196 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/client.lua` · VM: Game Engine (GE) · 196 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_client` : `extensions.load("gameplay_rally_client")`, puis la globale `gameplay_rally_client`
+**Access:** extension `gameplay_rally_client`: `extensions.load("gameplay_rally_client")`, then the global `gameplay_rally_client`
 
-Client HTTP très léger vers un service local de transcription vocale (http://localhost:27872) utilisé pour la reconnaissance des notes parlées pendant la reconnaissance (recce) d'un rallye. Il expose l'envoi d'une demande de coupure d'enregistrement et la lecture des dernières transcriptions. Le délai HTTP est de 0,5 s. Beaucoup d'autres appels (start/stop d'enregistrement, audio distant, proxy) sont commentés dans le code.
+Very lightweight HTTP client for a local speech transcription service (http://localhost:27872) used to recognize spoken notes during a rally recce. It exposes sending a request to cut the recording and reading the latest transcripts. The HTTP timeout is 0.5 s. Many other calls (recording start/stop, remote audio, proxy) are commented out in the code.
 
-## Remarques
+## Notes
 
-- Un code HTTP différent de 200 donne {ok=false, error=<code>} et une erreur dans le log ; sinon la réponse JSON du serveur est renvoyée telle quelle.
-- Le service externe doit tourner sur le port 27872 : sans lui, chaque appel échoue après le timeout de 0,5 s.
-- En cas d'échec, client_msg est ajouté à la réponse (copie de error). Si le serveur répond 200 mais un JSON sans champ ok, resp.ok est nil et client_msg est aussi défini.
+- An HTTP code other than 200 yields {ok=false, error=<code>} and an error in the log; otherwise the server's JSON response is returned as is.
+- The external service must be running on port 27872: without it, every call fails after the 0.5 s timeout.
+- On failure, client_msg is added to the response (copy of error). If the server answers 200 but with JSON lacking an ok field, resp.ok is nil and client_msg is also set.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_client.transcribe_recording_cut(requestBody)` | Envoie en POST JSON la demande de coupure d'enregistrement à /recordings/actions/cut. | 96 |
-| `gameplay_rally_client.transcribe_transcripts_get(count)` | Récupère en GET les transcriptions à /transcripts/<count>. | 112 |
+| `gameplay_rally_client.transcribe_recording_cut(requestBody)` | Sends the recording cut request as a JSON POST to /recordings/actions/cut. | 96 |
+| `gameplay_rally_client.transcribe_transcripts_get(count)` | Fetches the transcripts with a GET to /transcripts/<count>. | 112 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_client.transcribe_recording_cut(requestBody)`
 
-Envoie en POST JSON la demande de coupure d'enregistrement à /recordings/actions/cut.
+Sends the recording cut request as a JSON POST to /recordings/actions/cut.
 
-- `requestBody` (*table*) : Corps de la requête, encodé en JSON (contenu défini par le service externe).
-- **renvoie** : table Réponse décodée du serveur, ou {ok=false, error, client_msg} en cas d'échec.
+- `requestBody` (*table*) : Request body, JSON-encoded (content defined by the external service).
+- **returns**: table Decoded server response, or {ok=false, error, client_msg} on failure.
 
 #### `gameplay_rally_client.transcribe_transcripts_get(count)`
 
-Récupère en GET les transcriptions à /transcripts/<count>.
+Fetches the transcripts with a GET to /transcripts/<count>.
 
-- `count` (*integer*) : Nombre de transcriptions demandées (inséré dans l'URL).
-- **renvoie** : table Réponse décodée du serveur, ou {ok=false, error, client_msg} en cas d'échec.
+- `count` (*integer*) : Number of transcripts requested (inserted in the URL).
+- **returns**: table Decoded server response, or {ok=false, error, client_msg} on failure.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/client.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/client.lua`.*

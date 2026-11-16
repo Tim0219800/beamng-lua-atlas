@@ -1,0 +1,47 @@
+{
+  "path": "lua/ge/extensions/core/dynamicProps.lua",
+  "module": "Remplace à la volée des objets de la forêt (théForest) par de vrais véhicules « props » physiques (ex. lampadaire, poubelle) quand le joueur s'en approche, pour qu'ils puissent être heurtés et déformés. Un pool de véhicules désactivés est créé ; à chaque image, les emplacements de forêt les plus proches du joueur (dans spawnInViewRange) reçoivent un véhicule du pool et l'objet de forêt est déplacé sous la carte (z = -999) ; les emplacements trop loin sont rendus à la forêt. Module expérimental : il contient des appels dump() de débogage.",
+  "usage": "extensions.load('core_dynamicProps')\ncore_dynamicProps.createDynamicProps({forestItemName = 'postbox_blue', propName = 'trashbin', poolSize = 9, spawnInViewRange = 150, spawnOffset = vec3(0,0,0)})\n-- ... plus tard\ncore_dynamicProps.unloadAll()",
+  "notes": [
+    "Paramètres de createDynamicProps : name (défaut « DynamicPropsId<n> »), forestItemName (nom de la donnée de forêt à remplacer), propName (modèle de véhicule à spawner), poolSize (défaut 10), spawnInViewRange en mètres (défaut 100), spawnOffset vec3 (défaut 0,0,0), artifacts (table, non utilisée).",
+    "onUpdate suppose que le joueur 0 a un véhicule (getPlayerVehicle(0):getPosition()) et que core_camera existe ; sans véhicule joueur, erreur Lua.",
+    "Bugs/incohérences : unloadAll renseigne tempCopy = deepcopy(...) puis DynamicProps:unload fait tempCopy[self] = nil (clé objet qui n'existe pas dans une liste) ; l'appel d'unload() après deepcopy reconstruit dynamicPropsObjs depuis cette copie, donc l'état n'est pas vraiment vidé. spawnProp/despawnProp appellent dump(\"Spawning\"/\"Despawning\") à chaque bascule. checkVisibility (local, inutilisée) est pleine de dump().",
+    "Les props sont des véhicules : ils apparaissent dans les listes de véhicules et sont nommés <propName><i> (avec licenseText identique)."
+  ],
+  "functions": {
+    "createDynamicProps": {
+      "desc": "Crée un gestionnaire de props dynamiques : indexe les objets de forêt portant forestItemName dans un quadtree, spawne poolSize véhicules désactivés (setActive(0)), recharge la collision (be:reloadCollision) et l'ajoute à la liste mise à jour par onUpdate.",
+      "params": {"data": {"type": "table", "desc": "forestItemName, propName, poolSize, spawnInViewRange, spawnOffset, name, artifacts (voir notes). Une table vide est refusée (journal d'erreur, aucun objet créé)."}}
+    },
+    "onUpdate": {"desc": "Hook par image : mémorise la position de la caméra et du joueur 0, puis met à jour chaque gestionnaire (échange objets de forêt <-> props).", "internal": true},
+    "unloadAll": {"desc": "Renvoie tous les objets de forêt échangés à leur place, supprime les véhicules props du pool et recharge la collision (voir notes sur l'état conservé).", "internal": false},
+    "westCoastPole": {"desc": "Préréglage pour West Coast USA : remplace « pole_city1 » par le véhicule « streetlight » (pool 1, portée 100 m, décalage z -0.22).", "internal": false},
+    "westCoastBin": {"desc": "Préréglage pour West Coast USA : remplace « postbox_blue » par le véhicule « trashbin » (pool 9, portée 150 m).", "internal": false}
+  },
+  "classes": {
+    "DynamicProps": {
+      "desc": "Un gestionnaire (pool) de props dynamiques pour un type d'objet de forêt. Champs : name, forestItemName, propName, poolSize, spawnInViewRange, spawnOffset, props (table<vehId, boolean> : true = utilisé), locationsInfo (liste d'emplacements {forestItem, switched, originPos, distance, linkedPropId, id}), forestQt (quadtree).",
+      "functions": {
+        "new": {
+          "desc": "Constructeur ; renvoie nil (journal d'erreur) si data est vide.",
+          "params": {"data": {"type": "table", "desc": "mêmes clés que createDynamicProps"}},
+          "returns": [{"type": "DynamicProps|nil", "desc": "objet créé"}]
+        },
+        "__tostring": {"desc": "Texte « Pool name : ... Forest item : ... Prop Item : ... »."},
+        "spawnProps": {"desc": "Spawne poolSize véhicules propName (nommés propName..i, désactivés, sans entrer dedans) et les marque libres."},
+        "findForestItems": {"desc": "Cherche l'objet « theForest », liste ses items dont le nom de donnée vaut forestItemName et construit le quadtree des emplacements (journal si pas de forêt)."},
+        "getFirstPropAvailable": {"desc": "Prend le premier véhicule libre du pool et le marque utilisé.", "returns": [{"type": "integer|nil", "desc": "id du véhicule, nil si le pool est épuisé"}]},
+        "spawnProp": {
+          "desc": "Cache l'objet de forêt (le déplace sous la carte), active le véhicule et le place à la position d'origine + spawnOffset avec la rotation de l'objet de forêt.",
+          "params": {"locationInfo": {"type": "table", "desc": "emplacement de locationsInfo"}, "propId": {"type": "integer", "desc": "id du véhicule du pool"}}
+        },
+        "despawnProp": {
+          "desc": "Remet le véhicule à neuf (resetBrokenFlexMesh), le désactive et rend l'objet de forêt à sa position d'origine.",
+          "params": {"locationInfo": {"type": "table", "desc": "emplacement actuellement échangé"}}
+        },
+        "onUpdate": {"desc": "Choisit les emplacements dans la portée du joueur, les trie par distance, rend à la forêt ceux qui sortent de portée ou excèdent le pool, et donne un véhicule aux plus proches.", "internal": true},
+        "unload": {"desc": "Rend tous les emplacements échangés puis supprime les véhicules du pool (retire aussi de l'éditeur si présent)."}
+      }
+    }
+  }
+}

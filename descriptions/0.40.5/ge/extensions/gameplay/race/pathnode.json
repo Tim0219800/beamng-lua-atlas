@@ -1,168 +1,320 @@
 {
   "path": "lua/ge/extensions/gameplay/race/pathnode.lua",
-  "module": "Classe d'un point de passage (pathnode) d'un chemin de course : sphère avec rayon et normale optionnelle, positionnée manuellement ou sur un nœud du navgraph. Gère les zones de récupération (recovery/reverseRecovery), le remplissage latéral (sidePadding), des champs personnalisés, les points de route associés et la génération de transformations de décor sur les côtés. Le module renvoie une fabrique : require('/lua/ge/extensions/gameplay/race/pathnode')(path, name, forceId).",
+  "module": "Class of a race path checkpoint (pathnode): a sphere with radius and optional normal, positioned manually or on a navgraph node. Handles the recovery zones (recovery/reverseRecovery), side padding (sidePadding), custom fields, associated road points and the generation of scenery transforms on the sides. The module returns a factory: require('/lua/ge/extensions/gameplay/race/pathnode')(path, name, forceId).",
   "notes": [
-    "Champs : id, name, mode ('manual' ou 'navgraph'), pos, normal (nil sans direction), hasNormal, radius, navRadiusScale (1), visible (true), useAsSplit (true, compte comme temps intermédiaire), recovery et reverseRecovery (id de startPosition, -1 si aucun), sidePadding (vec3 : x = gauche, y = droite), customFields, sortOrder.",
-    "getSideTransforms désactive temporairement la collision de la forêt pendant ses lancers de rayon (core_forest).",
-    "getPaddedCenter utilise self.normal : erreur si le pathnode n'a pas de normale (hasNormal false).",
-    "setNavRadiusScale lit map.getMap().nodes[navgraphName] sans vérifier que le nœud existe.",
-    "onSerialize n'enregistre pas la liste des points de route (ils sont recalculés)."
+    "Fields: id, name, mode ('manual' or 'navgraph'), pos, normal (nil without direction), hasNormal, radius, navRadiusScale (1), visible (true), useAsSplit (true, counts as a split time), recovery and reverseRecovery (startPosition id, -1 if none), sidePadding (vec3: x = left, y = right), customFields, sortOrder.",
+    "getSideTransforms temporarily disables forest collision during its raycasts (core_forest).",
+    "getPaddedCenter uses self.normal: error if the pathnode has no normal (hasNormal false).",
+    "setNavRadiusScale reads map.getMap().nodes[navgraphName] without checking that the node exists.",
+    "onSerialize does not save the list of road points (they are recomputed)."
   ],
   "classes": {
     "C": {
-      "desc": "Point de passage de course. Les angles passés à getSideTransforms sont en radians.",
+      "desc": "Race checkpoint. The angles passed to getSideTransforms are in radians.",
       "functions": {
         "init": {
-          "desc": "Constructeur : id, nom par défaut « Pathnode <id> », mode manuel, valeurs par défaut des champs.",
+          "desc": "Constructor: id, default name \"Pathnode <id>\", manual mode, default field values.",
           "params": {
-            "path": {"type": "table", "desc": "Chemin de course propriétaire."},
-            "name": {"type": "string|nil", "desc": "Nom."},
-            "forceId": {"type": "integer|nil", "desc": "Id imposé."}
+            "path": {
+              "type": "table",
+              "desc": "Owning race path."
+            },
+            "name": {
+              "type": "string|nil",
+              "desc": "Name."
+            },
+            "forceId": {
+              "type": "integer|nil",
+              "desc": "Forced id."
+            }
           },
           "returns": [],
           "internal": true
         },
         "setNormal": {
-          "desc": "Définit la normale (longueur > 0,9 requise, puis normalisée, hasNormal true) ; sinon l'efface.",
-          "params": {"normal": {"type": "vec3|nil", "desc": "Direction de passage."}},
+          "desc": "Sets the normal (length > 0.9 required, then normalized, hasNormal true); otherwise clears it.",
+          "params": {
+            "normal": {
+              "type": "vec3|nil",
+              "desc": "Crossing direction."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "setManual": {
-          "desc": "Passe en mode manuel avec position, rayon et normale données.",
+          "desc": "Switches to manual mode with the given position, radius and normal.",
           "params": {
-            "pos": {"type": "vec3", "desc": "Position."},
-            "radius": {"type": "number", "desc": "Rayon (m)."},
-            "normal": {"type": "vec3|nil", "desc": "Normale (optionnelle)."}
+            "pos": {
+              "type": "vec3",
+              "desc": "Position."
+            },
+            "radius": {
+              "type": "number",
+              "desc": "Radius (m)."
+            },
+            "normal": {
+              "type": "vec3|nil",
+              "desc": "Normal (optional)."
+            }
           },
           "returns": [],
           "internal": false
         },
         "setNavgraph": {
-          "desc": "Passe en mode navgraph : position et rayon (× navRadiusScale) du nœud de la carte routière, ou de fallback si le nœud n'existe pas. Efface la normale.",
+          "desc": "Switches to navgraph mode: position and radius (× navRadiusScale) of the road map node, or from fallback if the node does not exist. Clears the normal.",
           "params": {
-            "navgraphName": {"type": "string", "desc": "Nom du nœud."},
-            "fallback": {"type": "table|nil", "desc": "{pos, radius} utilisé si le nœud est absent."}
+            "navgraphName": {
+              "type": "string",
+              "desc": "Node name."
+            },
+            "fallback": {
+              "type": "table|nil",
+              "desc": "{pos, radius} used if the node is absent."
+            }
           },
           "returns": [],
           "internal": false
         },
         "setNavRadiusScale": {
-          "desc": "Change l'échelle du rayon navgraph et recalcule le rayon en mode navgraph.",
-          "params": {"scl": {"type": "number|nil", "desc": "Échelle (défaut 1)."}},
+          "desc": "Changes the navgraph radius scale and recomputes the radius in navgraph mode.",
+          "params": {
+            "scl": {
+              "type": "number|nil",
+              "desc": "Scale (default 1)."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "inside": {
-          "desc": "Indique si un point est dans la sphère (et devant le plan de la normale si hasNormal).",
-          "params": {"pos": {"type": "vec3", "desc": "Point à tester."}},
-          "returns": [{"type": "boolean", "desc": "true si dedans."}],
+          "desc": "Indicates whether a point is inside the sphere (and in front of the normal's plane if hasNormal).",
+          "params": {
+            "pos": {
+              "type": "vec3",
+              "desc": "Point to test."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if inside."
+            }
+          ],
           "internal": false
         },
         "getRecovery": {
-          "desc": "Position de départ de récupération associée (path.startPositions.objects[recovery]).",
+          "desc": "Associated recovery start position (path.startPositions.objects[recovery]).",
           "params": {},
-          "returns": [{"type": "table|nil", "desc": "startPosition ou nil."}],
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "startPosition or nil."
+            }
+          ],
           "internal": false
         },
         "getReverseRecovery": {
-          "desc": "Position de départ de récupération en marche arrière (reverseRecovery).",
+          "desc": "Reverse recovery start position (reverseRecovery).",
           "params": {},
-          "returns": [{"type": "table|nil", "desc": "startPosition ou nil."}],
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "startPosition or nil."
+            }
+          ],
           "internal": false
         },
         "intersectCorners": {
-          "desc": "Teste si un segment reliant les coins d'un véhicule traverse le pathnode : le plan de la normale dans la sphère si hasNormal, sinon la sphère elle-même.",
+          "desc": "Tests whether a segment connecting a vehicle's corners crosses the pathnode: the normal's plane within the sphere if hasNormal, otherwise the sphere itself.",
           "params": {
-            "fromCorners": {"type": "vec3[]", "desc": "Coins à l'image précédente."},
-            "toCorners": {"type": "vec3[]", "desc": "Coins à l'image actuelle."}
+            "fromCorners": {
+              "type": "vec3[]",
+              "desc": "Corners at the previous frame."
+            },
+            "toCorners": {
+              "type": "vec3[]",
+              "desc": "Corners at the current frame."
+            }
           },
           "returns": [
-            {"type": "boolean", "desc": "true si traversé."},
-            {"type": "number", "desc": "Plus petit paramètre t (0..1), math.huge sinon."}
+            {
+              "type": "boolean",
+              "desc": "true if crossed."
+            },
+            {
+              "type": "number",
+              "desc": "Smallest parameter t (0..1), math.huge otherwise."
+            }
           ],
           "internal": false
         },
         "onSerialize": {
-          "desc": "Sérialise le pathnode (nom, mode, échelle, position, rayon, normale, navgraphName, recovery, visible, useAsSplit, sidePadding, customFields).",
+          "desc": "Serializes the pathnode (name, mode, scale, position, radius, normal, navgraphName, recovery, visible, useAsSplit, sidePadding, customFields).",
           "params": {},
-          "returns": [{"type": "table", "desc": "Données JSON."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "JSON data."
+            }
+          ],
           "internal": false
         },
         "onDeserialized": {
-          "desc": "Restaure le pathnode à partir de données sérialisées ; convertit les ids de récupération avec oldIdMap.",
+          "desc": "Restores the pathnode from serialized data; converts the recovery ids with oldIdMap.",
           "params": {
-            "data": {"type": "table", "desc": "Données de onSerialize."},
-            "oldIdMap": {"type": "table<integer, integer>|nil", "desc": "Correspondance ancien id -> nouvel id."}
+            "data": {
+              "type": "table",
+              "desc": "Data from onSerialize."
+            },
+            "oldIdMap": {
+              "type": "table<integer, integer>|nil",
+              "desc": "Old id -> new id mapping."
+            }
           },
           "returns": [],
           "internal": false
         },
         "getPaddedCenter": {
-          "desc": "Centre et largeur de la zone utile du pathnode une fois retirés les remplissages latéraux sidePadding.",
+          "desc": "Center and width of the pathnode's useful area once the sidePadding side paddings are removed.",
           "params": {},
           "returns": [
-            {"type": "vec3", "desc": "Centre décalé."},
-            {"type": "number", "desc": "Largeur utile (m)."}
+            {
+              "type": "vec3",
+              "desc": "Offset center."
+            },
+            {
+              "type": "number",
+              "desc": "Useful width (m)."
+            }
           ],
           "internal": false
         },
         "drawDebug": {
-          "desc": "Dessine sphère, libellé (préfixe '*' si useAsSplit, entre parenthèses si invisible), champs personnalisés numériques (si la préférence de l'éditeur raceEditor.general.showCustomFields est active) et flèches de normale.",
+          "desc": "Draws sphere, label (prefix '*' if useAsSplit, in parentheses if invisible), numeric custom fields (if the editor preference raceEditor.general.showCustomFields is active) and normal arrows.",
           "params": {
-            "drawMode": {"type": "string|nil", "desc": "'none', 'faded', 'normal', 'highlight' (défaut self._drawMode)."},
-            "clr": {"type": "number[]|nil", "desc": "Couleur {r,g,b,a}."},
-            "extraText": {"type": "string|nil", "desc": "Texte ajouté au libellé."}
+            "drawMode": {
+              "type": "string|nil",
+              "desc": "'none', 'faded', 'normal', 'highlight' (default self._drawMode)."
+            },
+            "clr": {
+              "type": "number[]|nil",
+              "desc": "Color {r,g,b,a}."
+            },
+            "extraText": {
+              "type": "string|nil",
+              "desc": "Text appended to the label."
+            }
           },
           "returns": [],
           "internal": false
         },
         "convertRayHitToTransform": {
-          "desc": "Convertit le résultat d'un lancer de rayon en transformation d'objet de décor : position décalée de zOff le long de la normale du sol, échelle, rotation selon alignMode.",
+          "desc": "Converts the result of a raycast into a scenery object transform: position offset by zOff along the ground normal, scale, rotation according to alignMode.",
           "params": {
-            "hit": {"type": "table|nil", "desc": "Résultat de Engine.castRay (pt, norm)."},
-            "pRot": {"type": "quat", "desc": "Rotation de décalage."},
-            "zOff": {"type": "number", "desc": "Décalage selon la normale du sol (m)."},
-            "scl": {"type": "vec3", "desc": "Échelle."},
-            "side": {"type": "string", "desc": "'l' ou 'r'."},
-            "alignMode": {"type": "string", "desc": "'terrain', 'pathnode' ou 'absolute'."}
+            "hit": {
+              "type": "table|nil",
+              "desc": "Result of Engine.castRay (pt, norm)."
+            },
+            "pRot": {
+              "type": "quat",
+              "desc": "Offset rotation."
+            },
+            "zOff": {
+              "type": "number",
+              "desc": "Offset along the ground normal (m)."
+            },
+            "scl": {
+              "type": "vec3",
+              "desc": "Scale."
+            },
+            "side": {
+              "type": "string",
+              "desc": "'l' or 'r'."
+            },
+            "alignMode": {
+              "type": "string",
+              "desc": "'terrain', 'pathnode' or 'absolute'."
+            }
           },
-          "returns": [{"type": "table|nil", "desc": "{pos, scl, rot, side}, nil si pas d'impact."}],
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "{pos, scl, rot, side}, nil if no hit."
+            }
+          ],
           "internal": false
         },
         "getSideTransforms": {
-          "desc": "Calcule deux transformations de décor, à gauche et à droite du pathnode, en lançant des rayons vers le sol de chaque côté (rayon de 10 m). Renvoie une table vide si le pathnode n'a pas de normale.",
+          "desc": "Computes two scenery transforms, to the left and right of the pathnode, by casting rays toward the ground on each side (10 m radius). Returns an empty table if the pathnode has no normal.",
           "params": {
-            "posOffset": {"type": "vec3", "desc": "Décalage de position (x, y latéral, z hauteur)."},
-            "rotOffset": {"type": "vec3", "desc": "Rotation d'Euler de décalage, symétrique entre les côtés."},
-            "sclOffset": {"type": "vec3", "desc": "Échelle."},
-            "alignMode": {"type": "string|nil", "desc": "'terrain' (défaut), 'pathnode' ou 'absolute'."}
+            "posOffset": {
+              "type": "vec3",
+              "desc": "Position offset (x, y lateral, z height)."
+            },
+            "rotOffset": {
+              "type": "vec3",
+              "desc": "Offset Euler rotation, symmetric between the sides."
+            },
+            "sclOffset": {
+              "type": "vec3",
+              "desc": "Scale."
+            },
+            "alignMode": {
+              "type": "string|nil",
+              "desc": "'terrain' (default), 'pathnode' or 'absolute'."
+            }
           },
-          "returns": [{"type": "table", "desc": "{transformGauche, transformDroite} (chacun peut être nil sans impact)."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "{leftTransform, rightTransform} (each can be nil without a hit)."
+            }
+          ],
           "internal": false
         },
         "setRoutePoint": {
-          "desc": "Mémorise le point de route associé (suivi du véhicule).",
-          "params": {"rp": {"type": "table", "desc": "Point de route."}},
+          "desc": "Stores the associated road point (vehicle tracking).",
+          "params": {
+            "rp": {
+              "type": "table",
+              "desc": "Road point."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "getRoutePoint": {
-          "desc": "Point de route associé.",
+          "desc": "Associated road point.",
           "params": {},
-          "returns": [{"type": "table|nil", "desc": "Point de route."}],
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Road point."
+            }
+          ],
           "internal": false
         },
         "setStaticRoutePoint": {
-          "desc": "Mémorise le point de route statique (non modifié par le suivi du véhicule).",
-          "params": {"rp": {"type": "table", "desc": "Point de route."}},
+          "desc": "Stores the static road point (not modified by vehicle tracking).",
+          "params": {
+            "rp": {
+              "type": "table",
+              "desc": "Road point."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "getStaticRoutePoint": {
-          "desc": "Point de route statique.",
+          "desc": "Static road point.",
           "params": {},
-          "returns": [{"type": "table|nil", "desc": "Point de route."}],
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Road point."
+            }
+          ],
           "internal": false
         }
       }

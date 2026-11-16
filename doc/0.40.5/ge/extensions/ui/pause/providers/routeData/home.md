@@ -1,63 +1,63 @@
 # `ui_pause_providers_routeData_home`
 
-*Fichier : `lua/ge/extensions/ui/pause/providers/routeData/home.lua` · VM : Game Engine (GE) · 278 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/pause/providers/routeData/home.lua` · VM: Game Engine (GE) · 278 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_pause_providers_routeData_home` : `extensions.load("ui_pause_providers_routeData_home")`, puis la globale `ui_pause_providers_routeData_home`
+**Access:** extension `ui_pause_providers_routeData_home`: `extensions.load("ui_pause_providers_routeData_home")`, then the global `ui_pause_providers_routeData_home`
 
-Fournit les données de l'écran d'accueil du menu pause (route « pause »). Selon le mode de jeu (career, mission, multiplayer, freeroam, freeroamTutorial, scenario) et l'état de la première conduite, il compose le contenu du panneau principal et des panneaux latéraux (composants Vue par nom), ajoute les boutons de carrière et le rail de boutons de ui_pause_features_homeRail. Fournit aussi les données de détail du véhicule sélectionné.
+Provides the data of the pause menu home screen (route "pause"). Depending on the game mode (career, mission, multiplayer, freeroam, freeroamTutorial, scenario) and the first drive state, it composes the content of the main panel and the side panels (Vue components by name), adds the career buttons and the button rail from ui_pause_features_homeRail. Also provides the detail data of the selected vehicle.
 
-## Remarques
+## Notes
 
-- Chaque élément de panneau est une table {id, type = "component", componentName, props}.
-- Priorité dans getHomeData : le récapitulatif des aides à la conduite (si activé), puis la première conduite guidée, puis le mode normal ; en mode multiplayer, la réponse est celle de ui_pause_providers_routeData_multiplayer.getMultiplayerData.
-- En freeroam avec multiseat actif, le composant PauseMultiseatVehiclesDigest remplace PauseNearbyVehicles et PauseNearbyActivitiesTab.
-- Bug mineur : getHomeData renvoie un champ panels = panels, mais panels est une variable globale jamais définie ; le champ vaut donc nil (absent de la table).
-- Un bloc if vide (livraison de carrière) subsiste dans getHomeData sans effet.
+- Each panel element is a table {id, type = "component", componentName, props}.
+- Priority in getHomeData: the driving assists summary (if enabled), then the guided first drive, then normal mode; in multiplayer mode, the response is that of ui_pause_providers_routeData_multiplayer.getMultiplayerData.
+- In freeroam with multiseat active, the PauseMultiseatVehiclesDigest component replaces PauseNearbyVehicles and PauseNearbyActivitiesTab.
+- Minor BUG: getHomeData returns a field panels = panels, but panels is a global variable that is never defined; the field is therefore nil (absent from the table).
+- An empty if block (career delivery) remains in getHomeData with no effect.
 
-**Dépendances (chargées avant) :** `career_career`, `career_saveSystem`, `ui_pause_providers_nearbyActivities`, `ui_pause_providers_missionObjectives`, `ui_pause_providers_routeData_multiplayer`, `ui_pause_providers_vehicleTabInteractions`, `ui_pause_features_homeRail`, `ui_vehicleSelector_general`
+**Dependencies (loaded first):** `career_career`, `career_saveSystem`, `ui_pause_providers_nearbyActivities`, `ui_pause_providers_missionObjectives`, `ui_pause_providers_routeData_multiplayer`, `ui_pause_providers_vehicleTabInteractions`, `ui_pause_features_homeRail`, `ui_vehicleSelector_general`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_pause_providers_routeData_home.getHomeData(context)` | Construit les données de la route d'accueil du pause : mode, mainPanelContent, sidePanelContents, rail, et selon le cas heading, mainCardClass, nearbyActivities et missionObjectives. En carrière, ajoute des boutons (carte du chargement, annuler la certification, annuler l'essai) ; en mission, la liste de tâches et les objectifs. | 117 |
-| `ui_pause_providers_routeData_home.getHomeVehicleDetailsData(context)` | Données de la route de détails du véhicule apparu sélectionné : titre (label), composant PauseVehicleSpawnedSelected et spawnedVehicleSelected. | 262 |
-| `ui_pause_providers_routeData_home.isDrivingAssistsDigestEnabled()` | Indique si le récapitulatif des aides à la conduite est actif (faux par défaut). | 94 |
-| `ui_pause_providers_routeData_home.setDrivingAssistsDigestEnabled(enabled)` | Active ou désactive l'affichage du récapitulatif des aides à la conduite (composant DrivingAssistsDigest) à la place de l'accueil normal. | 90 |
+| `ui_pause_providers_routeData_home.getHomeData(context)` | Builds the pause home route data: mode, mainPanelContent, sidePanelContents, rail, and depending on the case heading, mainCardClass, nearbyActivities and missionObjectives. In career, adds buttons (loading map, cancel certification, cancel trial); in mission, the task list and the objectives. | 117 |
+| `ui_pause_providers_routeData_home.getHomeVehicleDetailsData(context)` | Data of the selected spawned vehicle's details route: title (label), PauseVehicleSpawnedSelected component and spawnedVehicleSelected. | 262 |
+| `ui_pause_providers_routeData_home.isDrivingAssistsDigestEnabled()` | Returns whether the driving assists summary is active (false by default). | 94 |
+| `ui_pause_providers_routeData_home.setDrivingAssistsDigestEnabled(enabled)` | Enables or disables the display of the driving assists summary (DrivingAssistsDigest component) in place of the normal home. | 90 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_pause_providers_routeData_home.getHomeData(context)`
 
-Construit les données de la route d'accueil du pause : mode, mainPanelContent, sidePanelContents, rail, et selon le cas heading, mainCardClass, nearbyActivities et missionObjectives. En carrière, ajoute des boutons (carte du chargement, annuler la certification, annuler l'essai) ; en mission, la liste de tâches et les objectifs.
+Builds the pause home route data: mode, mainPanelContent, sidePanelContents, rail, and depending on the case heading, mainCardClass, nearbyActivities and missionObjectives. In career, adds buttons (loading map, cancel certification, cancel trial); in mission, the task list and the objectives.
 
-- `context` (*table*) : Contexte du pause : mode, isFirstDriveGuided, isFirstDriveActive, isMultiseatActive, isCareerActive…
-- **renvoie** : table Données de la route d'accueil.
+- `context` (*table*) : Pause context: mode, isFirstDriveGuided, isFirstDriveActive, isMultiseatActive, isCareerActive...
+- **returns**: table Home route data.
 
 #### `ui_pause_providers_routeData_home.getHomeVehicleDetailsData(context)`
 
-Données de la route de détails du véhicule apparu sélectionné : titre (label), composant PauseVehicleSpawnedSelected et spawnedVehicleSelected.
+Data of the selected spawned vehicle's details route: title (label), PauseVehicleSpawnedSelected component and spawnedVehicleSelected.
 
-- `context` (*table*) : Contexte du pause, transmis à vehicleTabInteractions.
-- **renvoie** : table {heading, mainPanelContent, spawnedVehicleSelected}.
+- `context` (*table*) : Pause context, passed to vehicleTabInteractions.
+- **returns**: table {heading, mainPanelContent, spawnedVehicleSelected}.
 
 #### `ui_pause_providers_routeData_home.isDrivingAssistsDigestEnabled()`
 
-Indique si le récapitulatif des aides à la conduite est actif (faux par défaut).
+Returns whether the driving assists summary is active (false by default).
 
-- **renvoie** : boolean true si actif.
+- **returns**: boolean true if active.
 
 #### `ui_pause_providers_routeData_home.setDrivingAssistsDigestEnabled(enabled)`
 
-Active ou désactive l'affichage du récapitulatif des aides à la conduite (composant DrivingAssistsDigest) à la place de l'accueil normal.
+Enables or disables the display of the driving assists summary (DrivingAssistsDigest component) in place of the normal home.
 
-- `enabled` (*boolean*) : true pour activer (toute autre valeur désactive).
+- `enabled` (*boolean*) : true to enable (any other value disables).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_career, career_saveSystem, ui_pause_providers_nearbyActivities, ui_pause_providers_missionObjectives, ui_pause_providers_routeData_multiplayer, ui_pause_providers_vehicleTabInteractions, ui_pause_features_homeRail, ui_vehicleSelector_general. |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_career, career_saveSystem, ui_pause_providers_nearbyActivities, ui_pause_providers_missionObjectives, ui_pause_providers_routeData_multiplayer, ui_pause_providers_vehicleTabInteractions, ui_pause_features_homeRail, ui_vehicleSelector_general. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/pause/providers/routeData/home.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/pause/providers/routeData/home.lua`.*

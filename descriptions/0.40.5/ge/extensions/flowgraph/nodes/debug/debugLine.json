@@ -1,14 +1,19 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/debug/debugLine.lua",
-  "module": "Nœud flowgraph « Debug Line » (catégorie repeat_instant, tags util/draw). Dessine chaque frame une ligne de débogage (debugDrawer:drawLine) de posA à posB. Entrées : posA, posB (vec3, requis), color (caché, rose {0.91,0.05,0.48,0.5} par défaut).",
+  "module": "Flowgraph node \"Debug Line\" (category repeat_instant, tags util/draw). Draws a debug line (debugDrawer:drawLine) from posA to posB every frame. Inputs: posA, posB (vec3, required), color (hidden, pink {0.91,0.05,0.48,0.5} by default).",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Vide.", "internal": true},
-        "work": {"desc": "Si posA et posB sont définis, trace la ligne avec la couleur donnée."}
+        "init": {
+          "desc": "Empty.",
+          "internal": true
+        },
+        "work": {
+          "desc": "If posA and posB are set, draws the line with the given color."
+        }
       }
     }
   }

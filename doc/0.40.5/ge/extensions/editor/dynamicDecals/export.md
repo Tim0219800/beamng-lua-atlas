@@ -1,51 +1,51 @@
 # `editor_dynamicDecals_export`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/export.lua` · VM : Game Engine (GE) · 219 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/export.lua` · VM: Game Engine (GE) · 219 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_export` : `extensions.load("editor_dynamicDecals_export")`, puis la globale `editor_dynamicDecals_export`
+**Access:** extension `editor_dynamicDecals_export`: `extensions.load("editor_dynamicDecals_export")`, then the global `editor_dynamicDecals_export`
 
-Section « Export » de l'outil Dynamic Decals. Deux blocs : « Export Skin » (nom du véhicule du joueur + nom de skin, appelle api.exportSkin pour générer textures, matériau et JBeam) et « Export Textures » (nom, dossier, par défaut /art/dynamicDecals/export/textures, puis api.exportTextures en PNG). Affiche les chemins de sortie et avertit si un fichier existe déjà.
+"Export" section of the Dynamic Decals tool. Two blocks: "Export Skin" (player vehicle name + skin name, calls api.exportSkin to generate textures, material and JBeam) and "Export Textures" (name, folder, default /art/dynamicDecals/export/textures, then api.exportTextures as PNG). Displays the output paths and warns if a file already exists.
 
-## Remarques
+## Notes
 
-- Les fichiers exportés pour les textures sont <dossier>/<nom>_color, _metallic, _roughness, _colorPalette en .png ; _normal est désactivé.
-- Le format DDS est désactivé : exportTextures force « png » quel que soit le format passé.
-- Les espaces du nom de skin / d'export sont remplacés par « _ ».
-- Le nom de véhicule est lu depuis getPlayerVehicle(0).jbeam et le champ est en lecture seule ; si aucun véhicule n'existe, la dernière valeur (vide au départ) est conservée.
-- La valeur par défaut skinExport_Vehicle (« vivace ») n'est pas utilisée.
+- The files exported for textures are <folder>/<name>_color, _metallic, _roughness, _colorPalette as .png; _normal is disabled.
+- The DDS format is disabled: exportTextures forces "png" regardless of the format passed.
+- Spaces in the skin / export name are replaced by "_".
+- The vehicle name is read from getPlayerVehicle(0).jbeam and the field is read-only; if no vehicle exists, the last value (empty initially) is kept.
+- The default value skinExport_Vehicle ("vivace") is not used.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_export.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 191 |
-| `editor_dynamicDecals_export.registerEditorPreferences(prefsRegistry)` | Ne déclare aucune préférence (corps commenté). *(interne)* | 185 |
-| `editor_dynamicDecals_export.setup(tool_in)` | Appelé par l'outil : récupère l'API et docs, prépare la liste des formats (dds, png) pour ImGui, calcule les chemins d'export, enregistre la section « Export » (ordre 25) et sa page de documentation. *(interne)* | 196 |
+| `editor_dynamicDecals_export.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 191 |
+| `editor_dynamicDecals_export.registerEditorPreferences(prefsRegistry)` | Declares no preference (body commented out). *(internal)* | 185 |
+| `editor_dynamicDecals_export.setup(tool_in)` | Called by the tool: gets the API and docs, prepares the format list (dds, png) for ImGui, computes the export paths, registers the "Export" section (order 25) and its documentation page. *(internal)* | 196 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_export.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_export.registerEditorPreferences(prefsRegistry)`
 
-Ne déclare aucune préférence (corps commenté).
+Declares no preference (body commented out).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_export.setup(tool_in)`
 
-Appelé par l'outil : récupère l'API et docs, prépare la liste des formats (dds, png) pour ImGui, calcule les chemins d'export, enregistre la section « Export » (ordre 25) et sa page de documentation.
+Called by the tool: gets the API and docs, prepares the format list (dds, png) for ImGui, computes the export paths, registers the "Export" section (order 25) and its documentation page.
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/export.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/export.lua`.*

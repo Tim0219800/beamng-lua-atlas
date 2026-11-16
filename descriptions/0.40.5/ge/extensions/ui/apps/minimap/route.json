@@ -1,26 +1,43 @@
 {
   "path": "lua/ge/extensions/ui/apps/minimap/route.lua",
-  "module": "Dessine sur la mini-carte l'itinéraire de navigation (core_groundMarkers.routePlanner.path) et le pointeur de destination. L'itinéraire est un trait bleu sur contour blanc qui devient plus clair près de la position courante (mélange sur 75 m). Les autres extensions peuvent remplacer l'itinéraire via le hook onMinimapRouteOverride. Module utilitaire de la minimap, chargé par require.",
+  "module": "Draws the navigation route (core_groundMarkers.routePlanner.path) and the destination pointer on the minimap. The route is a blue stroke on a white outline that gets lighter near the current position (blend over 75 m). Other extensions can replace the route via the hook onMinimapRouteOverride. Utility module of the minimap, loaded by require.",
   "notes": [
-    "L'itinéraire est tronqué à 3000 points (routeMaxLength).",
-    "onMinimapRouteOverride(routes) : chaque extension peut ajouter des routes (listes de points avec pos et distToTarget) à la table fournie ; si elle n'est pas vide, elle remplace l'itinéraire normal.",
-    "Les segments hors du carré camPos ± cullRadius sont ignorés."
+    "The route is truncated to 3000 points (routeMaxLength).",
+    "onMinimapRouteOverride(routes): each extension can add routes (lists of points with pos and distToTarget) to the supplied table; if it is not empty, it replaces the normal route.",
+    "Segments outside the square camPos ± cullRadius are ignored."
   ],
   "functions": {
     "drawNavigationRoute": {
-      "desc": "Dessine l'itinéraire : les routes de remplacement si une extension en fournit via onMinimapRouteOverride, sinon le chemin du routePlanner.",
+      "desc": "Draws the route: the replacement routes if an extension supplies any via onMinimapRouteOverride, otherwise the routePlanner's path.",
       "params": {
-        "td": {"type": "table", "desc": "Objet de dessin de la minimap (lineRoundEndWithBackground)."},
-        "dpi": {"type": "number|nil", "desc": "Facteur d'échelle d'écran, 1 par défaut."},
-        "camPos": {"type": "vec3|nil", "desc": "Position de la caméra pour le culling."},
-        "cullRadius": {"type": "number|nil", "desc": "Demi-côté du carré de culling, en mètres ; sans lui, aucun culling."}
+        "td": {
+          "type": "table",
+          "desc": "Minimap drawing object (lineRoundEndWithBackground)."
+        },
+        "dpi": {
+          "type": "number|nil",
+          "desc": "Screen scale factor, 1 by default."
+        },
+        "camPos": {
+          "type": "vec3|nil",
+          "desc": "Camera position for culling."
+        },
+        "cullRadius": {
+          "type": "number|nil",
+          "desc": "Half-side of the culling square, in meters; without it, no culling."
+        }
       },
       "returns": [],
       "internal": false
     },
     "drawRoutePointer": {
-      "desc": "Dessine un pointeur circulaire sur le dernier point de l'itinéraire (la destination) via ui_apps_minimap_utils.simpleCircleWithEdgePointer ; ne fait rien s'il n'y a pas de route.",
-      "params": {"td": {"type": "table", "desc": "Objet de dessin (non utilisé directement)."}},
+      "desc": "Draws a circular pointer on the last point of the route (the destination) via ui_apps_minimap_utils.simpleCircleWithEdgePointer; does nothing if there is no route.",
+      "params": {
+        "td": {
+          "type": "table",
+          "desc": "Drawing object (not used directly)."
+        }
+      },
       "returns": [],
       "internal": false
     }

@@ -1,85 +1,85 @@
 # `gameplay_crawl_debug`
 
-*Fichier : `lua/ge/extensions/gameplay/crawl/debug.lua` · VM : Game Engine (GE) · 363 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/crawl/debug.lua` · VM: Game Engine (GE) · 363 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_crawl_debug` : `extensions.load("gameplay_crawl_debug")`, puis la globale `gameplay_crawl_debug`
+**Access:** extension `gameplay_crawl_debug`: `extensions.load("gameplay_crawl_debug")`, then the global `gameplay_crawl_debug`
 
-Fenêtre de debug ImGui « Crawl Debug Window » du mode crawl, réservée aux développeurs (désactivée par défaut). Une fois activée, elle affiche pour le premier crawler actif : infos du parcours, position et vitesse du véhicule, statut dans la zone, points de pénalité (seuil DNF à 50), cooldowns d'infractions, point de récupération, point de sortie de zone (DNF à 10 m), liste des noeuds avec temps, journal des 20 derniers évènements et statut du parcours. Les données viennent de gameplay_crawl_utils.getCrawlState.
+ImGui debug window "Crawl Debug Window" of crawl mode, reserved for developers (disabled by default). Once enabled, it displays for the first active crawler: trail info, vehicle position and speed, status in the zone, penalty points (DNF threshold 50), infraction cooldowns, recovery point, zone exit point (DNF at 10 m), list of nodes with times, log of the last 20 events and trail status. The data comes from gameplay_crawl_utils.getCrawlState.
 
-## Exemple
+## Example
 
 ```lua
 gameplay_crawl_debug.setEnableDebugWindow(true)
 ```
 
-## Remarques
+## Notes
 
-- La fenêtre s'ouvre à onCrawlStarted seulement si enableDebugWindow est vrai.
-- Dans drawDebugWindow, im.Begin reçoit une nouvelle im.BoolPtr(debugWindowOpen) à chaque image : le bouton de fermeture de la fenêtre ne modifie donc pas debugWindowOpen (la fermeture n'est détectée que par la valeur de retour).
-- getBoundaryStatus lit gameplay_crawl_general.activeTrail.boundary et appelle boundary:containsPoint2D.
-- Seul le premier crawler actif trouvé est affiché.
+- The window opens on onCrawlStarted only if enableDebugWindow is true.
+- In drawDebugWindow, im.Begin receives a new im.BoolPtr(debugWindowOpen) every frame: the window's close button therefore does not modify debugWindowOpen (closing is only detected through the return value).
+- getBoundaryStatus reads gameplay_crawl_general.activeTrail.boundary and calls boundary:containsPoint2D.
+- Only the first active crawler found is displayed.
 
-**Dépendances (chargées avant) :** `ui_imgui`
+**Dependencies (loaded first):** `ui_imgui`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_crawl_debug.clearDebugData()` | Vide les données affichées. | 351 |
-| `gameplay_crawl_debug.getEnableDebugWindow()` | Indique si la fenêtre de debug est activée. | 347 |
-| `gameplay_crawl_debug.onCrawlComplete(eventData)` | Hook appelé à la fin d'un crawl : marque les données comme terminées (isFinished). *(interne)* *(hook)* | 292 |
-| `gameplay_crawl_debug.onCrawlDisqualified(eventData)` | Hook appelé en cas de disqualification : marque les données comme terminées et disqualifiées. *(interne)* *(hook)* | 299 |
-| `gameplay_crawl_debug.onCrawlStarted(eventData)` | Hook appelé au début d'un crawl : ouvre la fenêtre si le debug est activé. *(interne)* *(hook)* | 285 |
-| `gameplay_crawl_debug.onExtensionLoaded()` | Hook appelé au chargement de l'extension : réinitialise l'état de la fenêtre. *(interne)* *(hook)* | 307 |
-| `gameplay_crawl_debug.onExtensionUnloaded()` | Hook appelé au déchargement de l'extension : réinitialise l'état de la fenêtre. *(interne)* *(hook)* | 313 |
-| `gameplay_crawl_debug.onPreRender(dtReal, dtSim, dtRaw)` | Hook appelé avant le rendu : met à jour les données depuis le premier crawler actif et dessine la fenêtre. *(interne)* *(hook)* | 319 |
-| `gameplay_crawl_debug.setEnableDebugWindow(enabled)` | Active ou désactive la fenêtre de debug ; la désactivation la ferme et vide les données. | 338 |
+| `gameplay_crawl_debug.clearDebugData()` | Empties the displayed data. | 351 |
+| `gameplay_crawl_debug.getEnableDebugWindow()` | Tells whether the debug window is enabled. | 347 |
+| `gameplay_crawl_debug.onCrawlComplete(eventData)` | Hook called at the end of a crawl: marks the data as finished (isFinished). *(internal)* *(hook)* | 292 |
+| `gameplay_crawl_debug.onCrawlDisqualified(eventData)` | Hook called on disqualification: marks the data as finished and disqualified. *(internal)* *(hook)* | 299 |
+| `gameplay_crawl_debug.onCrawlStarted(eventData)` | Hook called at the start of a crawl: opens the window if debug is enabled. *(internal)* *(hook)* | 285 |
+| `gameplay_crawl_debug.onExtensionLoaded()` | Hook called when the extension loads: resets the window state. *(internal)* *(hook)* | 307 |
+| `gameplay_crawl_debug.onExtensionUnloaded()` | Hook called when the extension unloads: resets the window state. *(internal)* *(hook)* | 313 |
+| `gameplay_crawl_debug.onPreRender(dtReal, dtSim, dtRaw)` | Hook called before rendering: updates the data from the first active crawler and draws the window. *(internal)* *(hook)* | 319 |
+| `gameplay_crawl_debug.setEnableDebugWindow(enabled)` | Enables or disables the debug window; disabling it closes it and empties the data. | 338 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_crawl_debug.getEnableDebugWindow()`
 
-Indique si la fenêtre de debug est activée.
+Tells whether the debug window is enabled.
 
-- **renvoie** : boolean État.
+- **returns**: boolean State.
 
 #### `gameplay_crawl_debug.onCrawlComplete(eventData)`
 
-Hook appelé à la fin d'un crawl : marque les données comme terminées (isFinished).
+Hook called at the end of a crawl: marks the data as finished (isFinished).
 
-- `eventData` (*table*) : Données de l'évènement (non utilisées).
+- `eventData` (*table*) : Event data (unused).
 
 #### `gameplay_crawl_debug.onCrawlDisqualified(eventData)`
 
-Hook appelé en cas de disqualification : marque les données comme terminées et disqualifiées.
+Hook called on disqualification: marks the data as finished and disqualified.
 
-- `eventData` (*table*) : Données de l'évènement (non utilisées).
+- `eventData` (*table*) : Event data (unused).
 
 #### `gameplay_crawl_debug.onCrawlStarted(eventData)`
 
-Hook appelé au début d'un crawl : ouvre la fenêtre si le debug est activé.
+Hook called at the start of a crawl: opens the window if debug is enabled.
 
-- `eventData` (*table*) : Données de l'évènement (non utilisées).
+- `eventData` (*table*) : Event data (unused).
 
 #### `gameplay_crawl_debug.onPreRender(dtReal, dtSim, dtRaw)`
 
-Hook appelé avant le rendu : met à jour les données depuis le premier crawler actif et dessine la fenêtre.
+Hook called before rendering: updates the data from the first active crawler and draws the window.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulation (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
 #### `gameplay_crawl_debug.setEnableDebugWindow(enabled)`
 
-Active ou désactive la fenêtre de debug ; la désactivation la ferme et vide les données.
+Enables or disables the debug window; disabling it closes it and empties the data.
 
-- `enabled` (*boolean*) : true pour activer.
+- `enabled` (*boolean*) : true to enable.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : {'ui_imgui'}. |
+| `dependencies` | table<integer, string> | Extensions loaded before: {'ui_imgui'}. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/crawl/debug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/crawl/debug.lua`.*

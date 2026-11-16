@@ -1,84 +1,84 @@
 # `ui_vehicleSelector_tileSorting`
 
-*Fichier : `lua/ge/extensions/ui/vehicleSelector/tileSorting.lua` · VM : Game Engine (GE) · 181 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/vehicleSelector/tileSorting.lua` · VM: Game Engine (GE) · 181 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_vehicleSelector_tileSorting` : `extensions.load("ui_vehicleSelector_tileSorting")`, puis la globale `ui_vehicleSelector_tileSorting`
+**Access:** extension `ui_vehicleSelector_tileSorting`: `extensions.load("ui_vehicleSelector_tileSorting")`, then the global `ui_vehicleSelector_tileSorting`
 
-Fonctions de tri des tuiles du sélecteur de véhicules selon le mode « Trier par » : Name, Value, Years, Weight, Top Speed, Power, Weight/Power, 0-60 mph, 0-100 km/h, Config Type. Chaque comparateur départage les égalités par nom, en plaçant « Autre » en dernier.
+Tile sorting functions of the vehicle selector according to the "Sort by" mode: Name, Value, Years, Weight, Top Speed, Power, Weight/Power, 0-60 mph, 0-100 km/h, Config Type. Each comparator breaks ties by name, placing "Other" last.
 
-## Remarques
+## Notes
 
-- Les comparateurs sont de type table.sort : fonction (a, b) -> boolean, sur des tuiles ou configs (champs Name/name/label, Value, Years, Weight, ...).
-- Sens de tri : Weight, Top Speed, Power, Value, Years sont croissants. Weight/Power et les temps 0-60 mph / 0-100 km/h sont triés en ordre décroissant de la valeur (d'après le code : `>`), les valeurs absentes valant math.huge.
-- Config Type suit l'ordre fixe Factory, Service, Race, Drift, Rally, Police, Custom, Powerglow, Other... ; les types inconnus passent après.
-- Un sortMode inconnu (y compris 'Automatic') retombe sur le tri par nom.
+- The comparators are table.sort style: function (a, b) -> boolean, on tiles or configs (fields Name/name/label, Value, Years, Weight, ...).
+- Sort direction: Weight, Top Speed, Power, Value, Years are ascending. Weight/Power and the 0-60 mph / 0-100 km/h times are sorted in descending order of the value (from the code: `>`), with missing values being math.huge.
+- Config Type follows the fixed order Factory, Service, Race, Drift, Rally, Police, Custom, Powerglow, Other...; unknown types come after.
+- An unknown sortMode (including 'Automatic') falls back to sorting by name.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_vehicleSelector_tileSorting.getSortFunction(sortMode)` | Renvoie le comparateur d'un mode de tri ; par défaut le tri par nom. | 150 |
-| `ui_vehicleSelector_tileSorting.sortByConfigTypeName(a, b)` | Compare par type de config selon l'ordre prédéfini, puis par nom. | 171 |
-| `ui_vehicleSelector_tileSorting.sortByNameButOtherAlwaysLast(a, b)` | Compare par nom (Name, name ou label) ; l'élément nommé comme le libellé « Autre » (traduit) est toujours placé en dernier. | 159 |
-| `ui_vehicleSelector_tileSorting.sortByValue(a, b)` | Compare par prix (Value, ou sa borne min si c'est une plage), puis par nom. | 163 |
-| `ui_vehicleSelector_tileSorting.sortByYears(a, b)` | Compare par année (Years, ou sa borne min), puis par nom ; année absente = math.huge. | 167 |
-| `ui_vehicleSelector_tileSorting.sortGroup(group, sortMode)` | Trie les tuiles d'un groupe (group.tiles) en place selon le mode de tri. | 176 |
-| `ui_vehicleSelector_tileSorting.sortTiles(tiles, sortMode)` | Trie une liste de tuiles en place avec le comparateur du mode. | 154 |
+| `ui_vehicleSelector_tileSorting.getSortFunction(sortMode)` | Returns the comparator of a sort mode; defaults to sorting by name. | 150 |
+| `ui_vehicleSelector_tileSorting.sortByConfigTypeName(a, b)` | Compares by config type according to the predefined order, then by name. | 171 |
+| `ui_vehicleSelector_tileSorting.sortByNameButOtherAlwaysLast(a, b)` | Compares by name (Name, name or label); the item named like the (translated) "Other" label is always placed last. | 159 |
+| `ui_vehicleSelector_tileSorting.sortByValue(a, b)` | Compares by price (Value, or its min bound if it is a range), then by name. | 163 |
+| `ui_vehicleSelector_tileSorting.sortByYears(a, b)` | Compares by year (Years, or its min bound), then by name; missing year = math.huge. | 167 |
+| `ui_vehicleSelector_tileSorting.sortGroup(group, sortMode)` | Sorts the tiles of a group (group.tiles) in place according to the sort mode. | 176 |
+| `ui_vehicleSelector_tileSorting.sortTiles(tiles, sortMode)` | Sorts a list of tiles in place with the mode's comparator. | 154 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_vehicleSelector_tileSorting.getSortFunction(sortMode)`
 
-Renvoie le comparateur d'un mode de tri ; par défaut le tri par nom.
+Returns the comparator of a sort mode; defaults to sorting by name.
 
-- `sortMode` (*string*) : Name, Value, Years, Weight, Top Speed, Power, Weight/Power, 0-60 mph, 0-100 km/h ou Config Type.
-- **renvoie** : function Comparateur (a, b) -> boolean.
+- `sortMode` (*string*) : Name, Value, Years, Weight, Top Speed, Power, Weight/Power, 0-60 mph, 0-100 km/h or Config Type.
+- **returns**: function Comparator (a, b) -> boolean.
 
 #### `ui_vehicleSelector_tileSorting.sortByConfigTypeName(a, b)`
 
-Compare par type de config selon l'ordre prédéfini, puis par nom.
+Compares by config type according to the predefined order, then by name.
 
-- `a` (*table*) : Premier élément.
-- `b` (*table*) : Second élément.
-- **renvoie** : boolean true si a doit précéder b.
+- `a` (*table*) : First item.
+- `b` (*table*) : Second item.
+- **returns**: boolean true if a must come before b.
 
 #### `ui_vehicleSelector_tileSorting.sortByNameButOtherAlwaysLast(a, b)`
 
-Compare par nom (Name, name ou label) ; l'élément nommé comme le libellé « Autre » (traduit) est toujours placé en dernier.
+Compares by name (Name, name or label); the item named like the (translated) "Other" label is always placed last.
 
-- `a` (*table*) : Premier élément.
-- `b` (*table*) : Second élément.
-- **renvoie** : boolean true si a doit précéder b.
+- `a` (*table*) : First item.
+- `b` (*table*) : Second item.
+- **returns**: boolean true if a must come before b.
 
 #### `ui_vehicleSelector_tileSorting.sortByValue(a, b)`
 
-Compare par prix (Value, ou sa borne min si c'est une plage), puis par nom.
+Compares by price (Value, or its min bound if it is a range), then by name.
 
-- `a` (*table*) : Premier élément.
-- `b` (*table*) : Second élément.
-- **renvoie** : boolean true si a doit précéder b.
+- `a` (*table*) : First item.
+- `b` (*table*) : Second item.
+- **returns**: boolean true if a must come before b.
 
 #### `ui_vehicleSelector_tileSorting.sortByYears(a, b)`
 
-Compare par année (Years, ou sa borne min), puis par nom ; année absente = math.huge.
+Compares by year (Years, or its min bound), then by name; missing year = math.huge.
 
-- `a` (*table*) : Premier élément.
-- `b` (*table*) : Second élément.
-- **renvoie** : boolean true si a doit précéder b.
+- `a` (*table*) : First item.
+- `b` (*table*) : Second item.
+- **returns**: boolean true if a must come before b.
 
 #### `ui_vehicleSelector_tileSorting.sortGroup(group, sortMode)`
 
-Trie les tuiles d'un groupe (group.tiles) en place selon le mode de tri.
+Sorts the tiles of a group (group.tiles) in place according to the sort mode.
 
-- `group` (*table*) : Groupe avec un champ tiles.
-- `sortMode` (*string*) : Mode de tri.
+- `group` (*table*) : Group with a tiles field.
+- `sortMode` (*string*) : Sort mode.
 
 #### `ui_vehicleSelector_tileSorting.sortTiles(tiles, sortMode)`
 
-Trie une liste de tuiles en place avec le comparateur du mode.
+Sorts a list of tiles in place with the mode's comparator.
 
-- `tiles` (*table[]*) : Tuiles à trier.
-- `sortMode` (*string*) : Mode de tri.
+- `tiles` (*table[]*) : Tiles to sort.
+- `sortMode` (*string*) : Sort mode.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/vehicleSelector/tileSorting.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/vehicleSelector/tileSorting.lua`.*

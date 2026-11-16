@@ -1,14 +1,14 @@
 # `motionSim`
 
-*Fichier : `lua/vehicle/motionSim.lua` · VM : Véhicule · 8 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/motionSim.lua` · VM: Vehicle · 8 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("motionSim")`
+**Access:** `require("motionSim")`
 
-Fichier obsolète conservé pour compatibilité : le require('motionSim') ne fait que loguer une erreur (renvoie vers https://go.beamng.com/protocols, le système de protocoles de télémétrie/simulateur de mouvement), affiche une trace de la pile (debug.tracesimple) pour retrouver le code fautif, et renvoie une table vide.
+Obsolete file kept for compatibility: require('motionSim') only logs an error (points to https://go.beamng.com/protocols, the telemetry/motion simulator protocol system), prints a stack trace (debug.tracesimple) to find the faulty code, and returns an empty table.
 
-## Remarques
+## Notes
 
-- Aucune fonction ni champ : tout accès à une fonction de ce module donnera nil. Utiliser le système de protocoles (module `protocols`) à la place.
+- No function or field: any access to a function of this module will give nil. Use the protocols system (module `protocols`) instead.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/motionSim.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/motionSim.lua`.*

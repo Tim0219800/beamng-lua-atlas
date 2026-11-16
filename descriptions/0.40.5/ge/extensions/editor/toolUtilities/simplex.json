@@ -1,17 +1,31 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/simplex.lua",
-  "module": "Bruit simplex 2D (grille simpliciale de Perlin) avec table de permutation fixe, donc déterministe. Optimisé pour des millions d'échantillons (facteurs de déformation précalculés, gradients dans deux tableaux plats, indices de gradient précalculés). Utilisé par les outils de l'éditeur pour des variations pseudo-aléatoires reproductibles.",
+  "module": "2D simplex noise (Perlin's simplicial grid) with a fixed permutation table, hence deterministic. Optimized for millions of samples (precomputed skew factors, gradients in two flat arrays, precomputed gradient indices). Used by editor tools for reproducible pseudo-random variations.",
   "usage": "local simplex = extensions.editor_toolUtilities_simplex\nlocal n = simplex.noise(x * 0.05, y * 0.05)",
   "notes": [
-    "Valeur continue, environ dans [-1, 1] (facteur d'échelle 70).",
-    "Périodique de 256 cellules en i et j (i % 256, j % 256).",
-    "La page auto signale une globale affectée « i » : ce sont des variables de boucle `for i = ...`, pas de vraie globale."
+    "Continuous value, roughly in [-1, 1] (scale factor 70).",
+    "Periodic with 256 cells in i and j (i % 256, j % 256).",
+    "The auto page flags an assigned global \"i\": these are `for i = ...` loop variables, not a real global."
   ],
   "functions": {
     "noise": {
-      "desc": "Bruit simplex 2D au point (xin, yin).",
-      "params": {"xin": {"type": "number", "desc": "Coordonnée x."}, "yin": {"type": "number", "desc": "Coordonnée y."}},
-      "returns": [{"type": "number", "desc": "Valeur de bruit, environ [-1, 1]."}],
+      "desc": "2D simplex noise at point (xin, yin).",
+      "params": {
+        "xin": {
+          "type": "number",
+          "desc": "x coordinate."
+        },
+        "yin": {
+          "type": "number",
+          "desc": "y coordinate."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Noise value, roughly [-1, 1]."
+        }
+      ],
       "internal": false
     }
   }

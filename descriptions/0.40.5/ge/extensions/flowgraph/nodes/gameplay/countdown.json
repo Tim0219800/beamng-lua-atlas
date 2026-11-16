@@ -1,21 +1,79 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/countdown.lua",
-  "module": "Nœud flowgraph « Countdown » (tag scenario). Gère un compte à rebours affiché à l'écran via le hook ScenarioFlashMessage (et Message si data.useMessages). Pins d'entrée : flow, reset (impulsion), duration (3 s par défaut), countdownMsg (caché, '%d'), finishMsg ('Go!'), finishMsgDuration (caché, 1 s). Sorties : flow (vrai une fois terminé), finished (impulsion), ongoing (en cours). Le décompte démarre quand flow est actif, et utilise mgr.dtSim.",
-  "notes": ["data.playSounds (vrai par défaut) joue UI_Countdown1 à chaque seconde et UI_CountdownGo à la fin.", "Si core_flowgraphManager.skipCountdowns est vrai, le timer démarre à 0 (fin immédiate).", "Si finishMsg est nil, le message vaut la clé de traduction « ui.scenarios.go »."],
+  "module": "Flowgraph node \"Countdown\" (tag scenario). Manages a countdown displayed on screen via the ScenarioFlashMessage hook (and Message if data.useMessages). Input pins: flow, reset (pulse), duration (3 s by default), countdownMsg (hidden, '%d'), finishMsg ('Go!'), finishMsgDuration (hidden, 1 s). Outputs: flow (true once finished), finished (pulse), ongoing (in progress). The countdown starts when flow is active, and uses mgr.dtSim.",
+  "notes": [
+    "data.playSounds (true by default) plays UI_Countdown1 every second and UI_CountdownGo at the end.",
+    "If core_flowgraphManager.skipCountdowns is true, the timer starts at 0 (immediate end).",
+    "If finishMsg is nil, the message is the translation key \"ui.scenarios.go\"."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise les options data (useImgui, useMessages, playSounds, bigFinishMsg) et l'état.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "onExecutionStarted": {"desc": "Remet durée, timer et message par défaut.", "internal": true},
-        "_executionStopped": {"desc": "Appelle stopTimer.", "internal": true},
-        "reset": {"desc": "Arrête le compte à rebours et remet les sorties à faux."},
-        "stopTimer": {"desc": "Arrête le timer et efface done et flags."},
-        "startTimer": {"desc": "Lit la durée, arme le timer, vide le message flash précédent et démarre."},
-        "show": {"desc": "Affiche un message flash (ScenarioFlashMessage), et un Message si data.useMessages.", "params": {"msg": {"type": "string", "desc": "Texte"}, "big": {"type": "boolean", "desc": "Grande taille"}, "duration": {"type": "number|nil", "desc": "Durée en s (1.4 grand, 0.95 petit par défaut)"}, "luaCall": {"type": "string|nil", "desc": "Code Lua exécuté par l'UI (son)"}}},
-        "countdown": {"desc": "Décrémente le timer de mgr.dtSim, affiche chaque seconde et signale la fin."},
-        "drawMiddle": {"desc": "Barre de progression et état (Running, Done, Stopped) dans l'éditeur.", "internal": true},
-        "work": {"desc": "Gère reset, démarre le timer si flow est actif, appelle countdown et remplit les sorties.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}}
+        "init": {
+          "desc": "Initializes the data options (useImgui, useMessages, playSounds, bigFinishMsg) and the state.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "onExecutionStarted": {
+          "desc": "Resets duration, timer and message to defaults.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Calls stopTimer.",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Stops the countdown and resets the outputs to false."
+        },
+        "stopTimer": {
+          "desc": "Stops the timer and clears done and flags."
+        },
+        "startTimer": {
+          "desc": "Reads the duration, arms the timer, clears the previous flash message and starts."
+        },
+        "show": {
+          "desc": "Displays a flash message (ScenarioFlashMessage), and a Message if data.useMessages.",
+          "params": {
+            "msg": {
+              "type": "string",
+              "desc": "Text"
+            },
+            "big": {
+              "type": "boolean",
+              "desc": "Large size"
+            },
+            "duration": {
+              "type": "number|nil",
+              "desc": "Duration in s (1.4 large, 0.95 small by default)"
+            },
+            "luaCall": {
+              "type": "string|nil",
+              "desc": "Lua code executed by the UI (sound)"
+            }
+          }
+        },
+        "countdown": {
+          "desc": "Decrements the timer by mgr.dtSim, displays every second and signals the end."
+        },
+        "drawMiddle": {
+          "desc": "Progress bar and state (Running, Done, Stopped) in the editor.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Handles reset, starts the timer if flow is active, calls countdown and fills the outputs.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph arguments"
+            }
+          }
+        }
       }
     }
   }

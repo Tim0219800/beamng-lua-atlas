@@ -1,29 +1,29 @@
 # `editor_levelSettings`
 
-*Fichier : `lua/ge/extensions/editor/levelSettings.lua` · VM : Game Engine (GE) · 34 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/levelSettings.lua` · VM: Game Engine (GE) · 34 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_levelSettings` : `extensions.load("editor_levelSettings")`, puis la globale `editor_levelSettings`
+**Access:** extension `editor_levelSettings`: `extensions.load("editor_levelSettings")`, then the global `editor_levelSettings`
 
-Extension d'éditeur minimale : enregistre un gestionnaire d'inspecteur pour le type de sélection « level_settings » (qui n'affiche que le texte « Level Settings ») et ajoute editor.showLevelSettings() pour sélectionner ce pseudo-objet.
+Minimal editor extension: registers an inspector handler for the "level_settings" selection type (which only displays the text "Level Settings") and adds editor.showLevelSettings() to select this pseudo-object.
 
-## Exemple
+## Example
 
 ```lua
-editor.showLevelSettings() -- ouvre dans l'inspecteur le panneau « Level Settings »
+editor.showLevelSettings() -- opens the "Level Settings" panel in the inspector
 ```
 
-## Remarques
+## Notes
 
-- Le panneau ne contient qu'un texte : aucun réglage n'est réellement exposé par ce fichier.
-- showLevelSettings remplace editor.selection par une table vide puis met editor.selection.level_settings = {1}.
+- The panel only contains text: no setting is actually exposed by this file.
+- showLevelSettings replaces editor.selection with an empty table then sets editor.selection.level_settings = {1}.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_levelSettings.onEditorActivated()` | Appelé à l'activation de l'éditeur : enregistre le type d'inspecteur « level_settings » et définit editor.showLevelSettings. *(interne)* *(hook)* | 21 |
-| `editor_levelSettings.onEditorDeactivated()` | Appelé à la désactivation de l'éditeur : retire le type d'inspecteur « level_settings ». *(interne)* *(hook)* | 26 |
-| `editor_levelSettings.onExtensionLoaded()` | Hook appelé au chargement de l'extension. Corps vide. *(interne)* *(hook)* | 13 |
+| `editor_levelSettings.onEditorActivated()` | Called when the editor is activated: registers the "level_settings" inspector type and defines editor.showLevelSettings. *(internal)* *(hook)* | 21 |
+| `editor_levelSettings.onEditorDeactivated()` | Called when the editor is deactivated: removes the "level_settings" inspector type. *(internal)* *(hook)* | 26 |
+| `editor_levelSettings.onExtensionLoaded()` | Hook called when the extension loads. Empty body. *(internal)* *(hook)* | 13 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/levelSettings.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/levelSettings.lua`.*

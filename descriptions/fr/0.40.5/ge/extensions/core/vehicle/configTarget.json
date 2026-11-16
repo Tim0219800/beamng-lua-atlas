@@ -1,0 +1,73 @@
+{
+  "path": "lua/ge/extensions/core/vehicle/configTarget.lua",
+  "module": "Extension GE `core_vehicle_configTarget` : mémorise quel véhicule (et quel joueur) est la cible du menu de configuration du véhicule, pour que partmgmt, colors, mirror, thumbnail, etc. n'agissent pas toujours sur le véhicule du joueur 0. Sert aussi de résolveur : resolveVehicleId prend un id explicite, sinon la cible, sinon le véhicule du joueur 0. Émet onVehicleConfigTargetChanged à chaque changement.",
+  "usage": "core_vehicle_configTarget.begin(vehId, {playerId = 0, returnRoute = 'pause.vehicle'})\nlocal id = core_vehicle_configTarget.resolveVehicleId()   -- vehId\ncore_vehicle_configTarget.clear('done')",
+  "notes": [
+    "returnRoute n'est accepté que parmi 'pause' et 'pause.vehicle' (sinon 'pause.vehicle').",
+    "La cible est effacée automatiquement une frame après la destruction du véhicule si celui-ci n'a pas été recréé entre-temps (spawn du même id), à la fin du niveau ou au déchargement de l'extension.",
+    "Les fonctions de lecture (get) renvoient une copie ; le hook onVehicleConfigTargetChanged reçoit (cibleActuelle, cibleAvant, raison) en copies : raison = 'begin', 'clear' ou la raison passée à clear ('vehicleDestroyed', 'missionEnded', 'extensionUnloaded')."
+  ],
+  "fields": {},
+  "functions": {
+    "begin": {
+      "desc": "Définit le véhicule cible. Refuse un id invalide ou un véhicule inexistant. Émet onVehicleConfigTargetChanged(courant, précédent, 'begin').",
+      "params": {
+        "vehId": {"type": "integer", "desc": "id du véhicule (>= 0)"},
+        "context": {"type": "table|nil", "desc": "{playerId?, returnRoute?}"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si la cible a été définie"}]
+    },
+    "clear": {
+      "desc": "Efface la cible et émet onVehicleConfigTargetChanged.",
+      "params": {"reason": {"type": "string|nil", "desc": "raison transmise au hook, défaut 'clear'"}},
+      "returns": [{"type": "boolean", "desc": "false s'il n'y avait pas de cible"}]
+    },
+    "isActive": {
+      "desc": "Indique si une cible est définie.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si active"}]
+    },
+    "get": {
+      "desc": "Copie de la cible courante.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "{vehId, playerId, returnRoute} ou nil"}]
+    },
+    "getTargetVehicleId": {
+      "desc": "Id du véhicule cible.",
+      "params": {},
+      "returns": [{"type": "integer|nil", "desc": "vehId ou nil"}]
+    },
+    "getTargetPlayerId": {
+      "desc": "Index du joueur qui configure.",
+      "params": {},
+      "returns": [{"type": "integer|nil", "desc": "playerId ou nil"}]
+    },
+    "getReturnRoute": {
+      "desc": "Route d'interface où revenir après la configuration.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "'pause' ou 'pause.vehicle' (défaut)"}]
+    },
+    "resolveVehicleId": {
+      "desc": "Détermine l'id du véhicule à utiliser : l'id explicite s'il est donné et valide, sinon la cible, sinon le véhicule du joueur 0. Renvoie nil si l'objet n'existe pas.",
+      "params": {"explicitVehicleId": {"type": "integer|nil", "desc": "id imposé par l'appelant (nil = automatique ; un id invalide donne nil, sans repli)"}},
+      "returns": [{"type": "integer|nil", "desc": "id du véhicule"}]
+    },
+    "resolveVehicle": {
+      "desc": "Comme resolveVehicleId mais renvoie l'objet véhicule.",
+      "params": {"explicitVehicleId": {"type": "integer|nil", "desc": "id imposé"}},
+      "returns": [{"type": "userdata|nil", "desc": "objet véhicule"}]
+    },
+    "resolveVehicleData": {
+      "desc": "Comme resolveVehicleId mais renvoie les données de core_vehicle_manager.getVehicleData.",
+      "params": {"explicitVehicleId": {"type": "integer|nil", "desc": "id imposé"}},
+      "returns": [{"type": "table|nil", "desc": "données du véhicule (vdata, config, vehicleDirectory, ioCtx…)"}]
+    },
+    "onVehicleDestroyed": {"desc": "Hook : si le véhicule cible est détruit, note qu'il faudra effacer la cible à la prochaine frame.", "params": {"vehId": {"type": "integer", "desc": "véhicule"}}, "returns": [], "internal": true},
+    "onVehicleSpawned": {"desc": "Hook : annule l'effacement prévu si le même id est recréé (remplacement de véhicule).", "params": {"vehId": {"type": "integer", "desc": "véhicule"}}, "returns": [], "internal": true},
+    "onUpdate": {"desc": "Hook par frame : efface la cible si le véhicule détruit n'existe toujours pas.", "params": {}, "returns": [], "internal": true},
+    "onClientEndMission": {"desc": "Hook : fin du niveau ; efface la cible ('missionEnded').", "params": {}, "returns": [], "internal": true},
+    "onExtensionUnloaded": {"desc": "Hook : extension déchargée ; efface la cible ('extensionUnloaded').", "params": {}, "returns": [], "internal": true},
+    "onSerialize": {"desc": "Hook : sauvegarde la cible avant rechargement Lua.", "params": {}, "returns": [{"type": "table", "desc": "{target}"}], "internal": true},
+    "onDeserialized": {"desc": "Hook : restaure la cible si son véhicule existe encore.", "params": {"data": {"type": "table", "desc": "données de onSerialize"}}, "returns": [], "internal": true}
+  }
+}

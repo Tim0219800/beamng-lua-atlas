@@ -1,0 +1,70 @@
+{
+  "path": "lua/ge/extensions/editor/preferences.lua",
+  "module": "Fenêtre « Preferences » de l'éditeur de monde. Elle affiche à gauche la liste des pages (catégories du registre editor.preferencesRegistry) et à droite les préférences de la page choisie via un valueInspector, avec un filtre de recherche et un bouton « Reset All To Defaults ». Le module enregistre aussi les catégories general, camera et ui avec leurs préférences par défaut (échelle UI, vitesse de la caméra libre, etc.) et réagit aux changements de valeur. Un moddeur d'outil d'éditeur peut ouvrir la fenêtre avec editor.showPreferences(categorie).",
+  "usage": "editor.showPreferences('camera')  -- ouvre la fenêtre sur la page Camera\nlocal v = editor.getPreference('ui.general.scale')",
+  "notes": [
+    "Préférences déclarées : general.internal (cleanExit, lastLevel, cachées), ui.general (floatDigitCount, hexColorInput, scale 0.92 par défaut [0.4 à 3], dpiAware, iconButtonSize 28, singleLineToolbar, enableVehicleControls, sceneMetric, useSlidersInInspector, showCompleteSceneTree, showInternalName, playSoundOnNotifications, muteGameAudioOnEditorActivate, lockedObjectTextColor, inspectorFieldNameHoverCopyPaste, forceExpandWindowOnFirstShow, recentWindowMenuCount), camera.general (freeCameraMoveSmoothness 0.3, freeCameraRotateSmoothness 0.3, freeCameraMoveSpeed 30, smoothCameraMove, smoothCameraRotate, setVehicleCameraWhenExitingEditor).",
+    "Les modifications de préférence passent par editor.setPreference sans support d'annulation (commentaire TODO dans le code).",
+    "Le « Reset All To Defaults » est irréversible (confirmation modale)."
+  ],
+  "functions": {
+    "onDeserialized": {
+      "desc": "Appelé au rechargement de l'extension (après un rechargement Lua) avec l'état sauvegardé ; restaure la page de préférences courante (currentCategoryName).",
+      "params": {"state": {"type": "table", "desc": "Table renvoyée par onSerialize ({currentCategoryName})."}},
+      "internal": true
+    },
+    "onEditorActivated": {
+      "desc": "Appelé à l'ouverture de l'éditeur ; applique l'échelle UI de la préférence ui.general.scale.",
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Appelé à la fermeture de l'éditeur ; remet l'échelle UI à 1 et, si la préférence camera.general.setVehicleCameraWhenExitingEditor est vraie (et que ce n'est pas la caméra libre du jeu ni editor.skipCameraOnExit), repasse sur la caméra de jeu.",
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Appelé à chaque frame par l'éditeur. Dessine la fenêtre Preferences : liste des pages, recherche, contenu de la page (ou de toutes les pages si « All ») et bouton de réinitialisation.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Enregistre la fenêtre (800x600), configure le valueInspector (nom « preferencesInspector », classe « Preferences », callback d'écriture via editor.setPreference), construit les pages et installe editor.showPreferences et editor.updatePreferencePages.",
+      "internal": true
+    },
+    "onEditorPreferenceValueChanged": {
+      "desc": "Appelé quand une préférence change. Répercute immédiatement certaines valeurs : ui.general.scale / dpiAware (échelle UI), iconButtonSize, showCompleteSceneTree (rafraîchit l'arbre de scène), et les réglages de la caméra libre (vitesse, lissage de déplacement et de rotation).",
+      "params": {
+        "path": {"type": "string", "desc": "Chemin de la préférence, ex. « camera.general.freeCameraMoveSpeed »."},
+        "value": {"type": "any", "desc": "Nouvelle valeur."}
+      },
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Appelé lors de l'enregistrement des préférences : déclare les catégories general, camera, ui (« User Interface ») et leurs sous-catégories avec valeurs par défaut, descriptions et bornes.",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur (registerCategory, registerSubCategory)."}},
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Appelé au chargement de l'extension ; ne fait rien.",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Appelé avant un rechargement Lua ; renvoie {currentCategoryName = ...} pour conserver la page affichée.",
+      "params": {"state": {"type": "table", "desc": "Non utilisé."}},
+      "returns": [{"type": "table", "desc": "État à sauvegarder."}],
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "La table globale editor (pas créée ici) : le module y installe deux fonctions pendant onEditorInitialized.",
+      "functions": {
+        "showPreferences": {
+          "desc": "Ouvre la fenêtre Preferences. Si categoryName est donné, sélectionne cette page.",
+          "params": {"categoryName": {"type": "string|nil", "desc": "Nom de catégorie (ex. « ui », « camera », « all »)."}}
+        },
+        "updatePreferencePages": {
+          "desc": "Reconstruit la liste des pages à partir du registre : enregistre la catégorie « general », ne garde que les catégories ayant au moins un élément non caché, et ajoute la page « All »."
+        }
+      }
+    }
+  }
+}

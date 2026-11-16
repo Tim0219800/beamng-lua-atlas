@@ -1,12 +1,12 @@
 # `libs_lunajson_lunajson_sax`
 
-*Fichier : `lua/common/libs/lunajson/lunajson/sax.lua` · VM : Commun (GE + véhicule) · 719 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lunajson/lunajson/sax.lua` · VM: Common (GE + vehicle) · 719 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/lunajson/lunajson/sax")`
+**Access:** `require("libs/lunajson/lunajson/sax")`
 
-Bibliothèque tierce lunajson : analyseur JSON de type SAX (événementiel). On lui fournit une table de callbacks ; il les appelle au fil de la lecture sans construire l'arbre complet, ce qui permet de traiter de gros fichiers ou des flux découpés en morceaux.
+Third-party library lunajson: SAX-type (event-driven) JSON parser. You give it a table of callbacks; it calls them as it reads without building the full tree, which allows processing large files or streams split into chunks.
 
-## Exemple
+## Example
 
 ```lua
 local sax = require('libs/lunajson/lunajson.sax')
@@ -19,36 +19,36 @@ local p = sax.newparser('{"a":[1,2]}', {
 p.run()
 ```
 
-## Remarques
+## Notes
 
-- Callbacks reconnus dans `saxtbl` (tous facultatifs) : startobject, key, endobject, startarray, endarray, string, number, boolean, null.
-- L'objet renvoyé par newparser contient run() (lance l'analyse), tryc() (lit un caractère non blanc suivant), read(n) (lit n octets bruts, n >= 0) et tellpos() (position absolue dans le flux).
-- `src` peut être une chaîne ou une fonction sans argument qui renvoie successivement des morceaux de texte (nil à la fin).
+- Callbacks recognized in `saxtbl` (all optional): startobject, key, endobject, startarray, endarray, string, number, boolean, null.
+- The object returned by newparser contains run() (starts parsing), tryc() (reads the next non-blank character), read(n) (reads n raw bytes, n >= 0) and tellpos() (absolute position in the stream).
+- `src` can be a string or a no-argument function that successively returns pieces of text (nil at the end).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_lunajson_lunajson_sax.newfileparser(fn, saxtbl)` | Comme newparser, mais lit le fichier `fn` par blocs de 8192 octets (le fichier est ouvert avec io.open puis refermé en fin de lecture). | 700 |
-| `libs_lunajson_lunajson_sax.newparser(src, saxtbl)` | Crée un analyseur SAX sur une chaîne JSON ou sur une fonction source qui fournit le texte par morceaux. | 30 |
+| `libs_lunajson_lunajson_sax.newfileparser(fn, saxtbl)` | Like newparser, but reads the file `fn` in 8192-byte blocks (the file is opened with io.open then closed at the end of reading). | 700 |
+| `libs_lunajson_lunajson_sax.newparser(src, saxtbl)` | Creates a SAX parser on a JSON string or on a source function that supplies the text in pieces. | 30 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_lunajson_lunajson_sax.newfileparser(fn, saxtbl)`
 
-Comme newparser, mais lit le fichier `fn` par blocs de 8192 octets (le fichier est ouvert avec io.open puis refermé en fin de lecture).
+Like newparser, but reads the file `fn` in 8192-byte blocks (the file is opened with io.open then closed at the end of reading).
 
-- `fn` (*string*) : Chemin du fichier JSON (io.open, chemin disque réel).
-- `saxtbl` (*table*) : Table de callbacks (voir newparser).
-- **renvoie** : table Objet {run, tryc, read, tellpos}.
+- `fn` (*string*) : Path of the JSON file (io.open, real disk path).
+- `saxtbl` (*table*) : Callback table (see newparser).
+- **returns**: table Object {run, tryc, read, tellpos}.
 
 #### `libs_lunajson_lunajson_sax.newparser(src, saxtbl)`
 
-Crée un analyseur SAX sur une chaîne JSON ou sur une fonction source qui fournit le texte par morceaux.
+Creates a SAX parser on a JSON string or on a source function that supplies the text in pieces.
 
-- `src` (*string|function*) : Texte JSON, ou fonction renvoyant le morceau suivant (nil quand terminé).
-- `saxtbl` (*table*) : Table de callbacks : startobject, key, endobject, startarray, endarray, string, number, boolean, null.
-- **renvoie** : table Objet {run, tryc, read, tellpos}.
+- `src` (*string|function*) : JSON text, or function returning the next piece (nil when done).
+- `saxtbl` (*table*) : Callback table: startobject, key, endobject, startarray, endarray, string, number, boolean, null.
+- **returns**: table Object {run, tryc, read, tellpos}.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lunajson/lunajson/sax.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lunajson/lunajson/sax.lua`.*

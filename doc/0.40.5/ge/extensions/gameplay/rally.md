@@ -1,12 +1,12 @@
 # `gameplay_rally`
 
-*Fichier : `lua/ge/extensions/gameplay/rally.lua` · VM : Game Engine (GE) · 538 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally.lua` · VM: Game Engine (GE) · 538 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally` : `extensions.load("gameplay_rally")`, puis la globale `gameplay_rally`
+**Access:** extension `gameplay_rally`: `extensions.load("gameplay_rally")`, then the global `gameplay_rally`
 
-Point d'entrée du mode rallye (extension gameplay_rally). Il possède le gestionnaire de rallye (RallyManager) chargé pour une mission, relaye les mises à jour vers l'application de reconnaissance (RecceApp) et vers le gestionnaire, fournit la boîte à outils de debug (ImGui), place un copilote fictif dans le siège miroir du conducteur, transmet les actions d'entrée (reconnaissance, calage du copilote) et gère la couleur de thème des flux d'interface. Un moddeur de rallye l'utilise pour charger/décharger un rallye, lire son état ou régler le calage du copilote.
+Entry point of rally mode (gameplay_rally extension). It owns the rally manager (RallyManager) loaded for a mission, relays updates to the recce app (RecceApp) and to the manager, provides the debug toolbox (ImGui), places a dummy co-driver in the driver's mirror seat, forwards input actions (recce, co-driver pacing) and handles the theme color of the UI streams. A rally modder uses it to load/unload a rally, read its state or adjust the co-driver pacing.
 
-## Exemple
+## Example
 
 ```lua
 local ok, err = gameplay_rally.loadMission(missionId, missionDir, nil, nil, {owner = 'mission'})
@@ -14,237 +14,237 @@ if gameplay_rally.isReady() then local rm = gameplay_rally.getRallyManager() end
 gameplay_rally.setUiColor('#ff0000')
 ```
 
-## Remarques
+## Notes
 
-- Propriétaire du gestionnaire (options.owner) : 'mission', 'recce' ou 'external' (défaut). Un propriétaire 'mission' est toujours autorisé ; 'recce' seulement en freeroam ; les autres sont refusés si une mission est au premier plan ou si le gestionnaire appartient à une mission.
-- loadMission et unloadMission renvoient false et une raison quand l'opération est refusée ou échoue ; getErrorMsgForUser conserve le message destiné à l'utilisateur.
-- Le copilote fictif n'est placé que si le propriétaire est 'mission' : siège miroir du conducteur (L<->R) via gameplay_seatOccupants, replacé aux hooks onSeatOccupantEnter/Exit.
-- onUpdate ne met pas à jour le gestionnaire pendant l'enregistrement de la reconnaissance (RecceApp.isRecording).
-- Le mode d'autorité du runtime d'étape vaut 'shadow' par défaut quand aucun gestionnaire n'est chargé.
-- Les réglages Booléens de mission (rallyRepairVehicleOnRecovery) sont lus dans mission.lastUserSettings, puis dans les réglages du jeu, puis la valeur par défaut true.
-- Le fichier contient beaucoup de hooks commentés (onRaceStarted, onRallyStageStart…) : seuls ceux listés ici sont actifs.
-- Le calage du copilote se règle par pas de 0,1 s (CodriverTiming.nudge) et affiche un message UI (catégorie 'rally').
+- Manager owner (options.owner): 'mission', 'recce' or 'external' (default). A 'mission' owner is always allowed; 'recce' only in freeroam; the others are refused if a mission is in the foreground or if the manager belongs to a mission.
+- loadMission and unloadMission return false and a reason when the operation is refused or fails; getErrorMsgForUser keeps the message intended for the user.
+- The dummy co-driver is only placed if the owner is 'mission': the driver's mirror seat (L<->R) via gameplay_seatOccupants, replaced at the onSeatOccupantEnter/Exit hooks.
+- onUpdate does not update the manager while the recce recording is in progress (RecceApp.isRecording).
+- The stage runtime's authority mode defaults to 'shadow' when no manager is loaded.
+- The boolean mission settings (rallyRepairVehicleOnRecovery) are read from mission.lastUserSettings, then from the game settings, then the default value true.
+- The file contains many commented-out hooks (onRaceStarted, onRallyStageStart...): only those listed here are active.
+- The co-driver pacing is adjusted in steps of 0.1 s (CodriverTiming.nudge) and shows a UI message (category 'rally').
 
-**Dépendances (chargées avant) :** `gameplay_seatOccupants`
+**Dependencies (loaded first):** `gameplay_seatOccupants`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally.actionCodriverCallsEarlier()` | Action d'entrée : avance les annonces du copilote de 0,1 s (décale la plage de délai) et affiche un message. | 307 |
-| `gameplay_rally.actionCodriverCallsLater()` | Action d'entrée : retarde les annonces du copilote de 0,1 s et affiche un message. | 311 |
-| `gameplay_rally.actionRecceMoveVehicleBackward()` | Action d'entrée : si la reconnaissance est active, envoie rallyInputActionRecceMoveVehicleBackward à l'UI. | 266 |
-| `gameplay_rally.actionRecceMoveVehicleForward()` | Action d'entrée : si la reconnaissance est active, envoie rallyInputActionRecceMoveVehicleForward à l'UI. | 261 |
-| `gameplay_rally.actionToggleMouseLikeVehicle()` | Action d'entrée : bascule la souris comme un véhicule dans la reconnaissance (si RecceApp est activée). | 252 |
-| `gameplay_rally.actionTranscribeRecordingCut()` | Action d'entrée : envoie à l'UI rallyInputActionCutRecording (coupe l'enregistrement de transcription). | 257 |
-| `gameplay_rally.canManageMission(owner)` | Indique si le propriétaire donné a le droit de gérer le gestionnaire de rallye. | 79 |
-| `gameplay_rally.enableRecceApp(val)` | Active ou désactive l'application de reconnaissance (RecceApp.setEnabled). | 179 |
-| `gameplay_rally.getDebugLogging()` | Indique si les logs de debug du rallye sont actifs. | 457 |
-| `gameplay_rally.getErrorMsgForUser()` | Dernier message d'erreur destiné à l'utilisateur (échec de chargement). | 432 |
-| `gameplay_rally.getRace()` | Données de course enregistrées par le hook onRallyRegisterRace. | 498 |
-| `gameplay_rally.getRallyManager()` | Gestionnaire de rallye courant. | 430 |
-| `gameplay_rally.getRallyManagerOwner()` | Propriétaire du gestionnaire courant. | 431 |
-| `gameplay_rally.getRallyToolbox()` | Objet de la boîte à outils de debug (nil tant que toggleDebug n'a pas été appelé). | 303 |
-| `gameplay_rally.getRecoveryRepairVehicle()` | Indique si le véhicule doit être réparé lors d'une récupération : demande au gestionnaire de boucle (gameplay_rallyLoop) s'il existe, sinon lit rallyRepairVehicleOnRecovery (réglage de mission, puis réglage du jeu, défaut true). | 433 |
-| `gameplay_rally.getStageObserverState()` | État de l'observateur d'étape du gestionnaire. | 452 |
-| `gameplay_rally.getStageRuntimeAuthorityMode()` | Mode d'autorité du runtime d'étape du gestionnaire, ou 'shadow' sans gestionnaire. | 449 |
-| `gameplay_rally.getUiColor()` | Couleur de thème actuelle : surcharge si définie, sinon couleur du gestionnaire de boucle (gameplay_rallyLoop), sinon du flux autonome, sinon '#009a1a'. | 487 |
-| `gameplay_rally.getUiColorOverride()` | Surcharge de couleur définie par setUiColor. | 490 |
-| `gameplay_rally.isRallyToolboxVisible()` | Indique si la fenêtre Rally Toolbox est ouverte. | 496 |
-| `gameplay_rally.isReady()` | Indique si un gestionnaire de rallye est chargé. | 171 |
-| `gameplay_rally.loadMission(missionId, missionDir, drivelineMode, voicepackPick, options)` | Crée un RallyManager pour le dossier de mission, règle le voicepack, reconstruit les assets et, en cas de succès, le met en place et place le copilote. Ne remplace pas l'ancien gestionnaire en cas d'échec. | 130 |
-| `gameplay_rally.onExtensionLoaded()` | Hook de chargement : charge ExtHelper et envoie rally.onExtensionLoaded à l'UI. *(interne)* *(hook)* | 233 |
-| `gameplay_rally.onExtensionUnloaded()` | Hook de déchargement : retire le copilote fictif et décharge ExtHelper. *(interne)* *(hook)* | 240 |
-| `gameplay_rally.onRacePathnodeReached(event)` | Hook de course : enregistre un temps intermédiaire (recordSplit) pour le pathnode atteint ; logue un avertissement si event.pathnode manque. *(interne)* *(hook)* | 320 |
-| `gameplay_rally.onRallyRegisterRace(raceData)` | Hook : mémorise les données de course et les transmet au gestionnaire (setRaceData). *(interne)* *(hook)* | 380 |
-| `gameplay_rally.onRallyVehicleRecovery(recoveryType)` | Hook : ajoute le temps de récupération au gestionnaire (addRecoveryRaceTime). *(interne)* *(hook)* | 388 |
-| `gameplay_rally.onSeatOccupantEnter()` | Hook de siège : replace le copilote fictif (alias de la fonction interne seatCodriver). *(interne)* *(hook)* | 111 |
-| `gameplay_rally.onSeatOccupantExit()` | Hook de siège : replace le copilote fictif après un départ d'occupant (le système de sièges supprime les occupants fictifs lors des respawns de configuration). *(interne)* *(hook)* | 111 |
-| `gameplay_rally.onSettingsChanged()` | Hook de changement de réglages : prévient le gestionnaire de rallye. *(interne)* *(hook)* | 417 |
-| `gameplay_rally.onUpdate(dtReal, dtSim, dtRaw)` | Appelé à chaque image : met à jour RecceApp et le gestionnaire de rallye (sauf pendant l'enregistrement de reconnaissance) et dessine la Rally Toolbox si visible. *(interne)* *(hook)* | 183 |
-| `gameplay_rally.onVehicleResetted(vehicleID)` | Hook : quand le véhicule du joueur 0 est réinitialisé, prévient le gestionnaire de rallye. *(interne)* *(hook)* | 210 |
-| `gameplay_rally.setDebugLogging(val)` | Active ou désactive les logs de debug du rallye. | 458 |
-| `gameplay_rally.setStageRuntimeAuthorityMode(mode)` | Transmet au gestionnaire le mode d'autorité du runtime d'étape. | 444 |
-| `gameplay_rally.setUiColor(hex)` | Surcharge la couleur du thème des flux Stage Timing / Progress. nil ou chaîne vide efface la surcharge. | 484 |
-| `gameplay_rally.toggleDebug()` | Affiche ou masque la fenêtre ImGui « Rally Toolbox » (créée au premier appel). | 291 |
-| `gameplay_rally.unloadMission(options)` | Décharge le gestionnaire de rallye si le propriétaire correspond. | 156 |
+| `gameplay_rally.actionCodriverCallsEarlier()` | Input action: advances the co-driver's calls by 0.1 s (shifts the delay range) and shows a message. | 307 |
+| `gameplay_rally.actionCodriverCallsLater()` | Input action: delays the co-driver's calls by 0.1 s and shows a message. | 311 |
+| `gameplay_rally.actionRecceMoveVehicleBackward()` | Input action: if the recce is active, sends rallyInputActionRecceMoveVehicleBackward to the UI. | 266 |
+| `gameplay_rally.actionRecceMoveVehicleForward()` | Input action: if the recce is active, sends rallyInputActionRecceMoveVehicleForward to the UI. | 261 |
+| `gameplay_rally.actionToggleMouseLikeVehicle()` | Input action: toggles the mouse like a vehicle in the recce (if RecceApp is enabled). | 252 |
+| `gameplay_rally.actionTranscribeRecordingCut()` | Input action: sends rallyInputActionCutRecording to the UI (cuts the transcription recording). | 257 |
+| `gameplay_rally.canManageMission(owner)` | Indicates whether the given owner is allowed to manage the rally manager. | 79 |
+| `gameplay_rally.enableRecceApp(val)` | Enables or disables the recce app (RecceApp.setEnabled). | 179 |
+| `gameplay_rally.getDebugLogging()` | Indicates whether the rally debug logs are active. | 457 |
+| `gameplay_rally.getErrorMsgForUser()` | Last user-facing error message (load failure). | 432 |
+| `gameplay_rally.getRace()` | Race data recorded by the onRallyRegisterRace hook. | 498 |
+| `gameplay_rally.getRallyManager()` | Current rally manager. | 430 |
+| `gameplay_rally.getRallyManagerOwner()` | Owner of the current manager. | 431 |
+| `gameplay_rally.getRallyToolbox()` | Debug toolbox object (nil until toggleDebug has been called). | 303 |
+| `gameplay_rally.getRecoveryRepairVehicle()` | Indicates whether the vehicle must be repaired on recovery: asks the loop manager (gameplay_rallyLoop) if it exists, otherwise reads rallyRepairVehicleOnRecovery (mission setting, then game setting, default true). | 433 |
+| `gameplay_rally.getStageObserverState()` | State of the manager's stage observer. | 452 |
+| `gameplay_rally.getStageRuntimeAuthorityMode()` | Stage runtime authority mode of the manager, or 'shadow' without a manager. | 449 |
+| `gameplay_rally.getUiColor()` | Current theme color: override if set, otherwise the loop manager's color (gameplay_rallyLoop), otherwise the standalone stream's, otherwise '#009a1a'. | 487 |
+| `gameplay_rally.getUiColorOverride()` | Color override set by setUiColor. | 490 |
+| `gameplay_rally.isRallyToolboxVisible()` | Indicates whether the Rally Toolbox window is open. | 496 |
+| `gameplay_rally.isReady()` | Indicates whether a rally manager is loaded. | 171 |
+| `gameplay_rally.loadMission(missionId, missionDir, drivelineMode, voicepackPick, options)` | Creates a RallyManager for the mission folder, sets the voicepack, rebuilds the assets and, on success, installs it and places the co-driver. Does not replace the old manager on failure. | 130 |
+| `gameplay_rally.onExtensionLoaded()` | Load hook: loads ExtHelper and sends rally.onExtensionLoaded to the UI. *(internal)* *(hook)* | 233 |
+| `gameplay_rally.onExtensionUnloaded()` | Unload hook: removes the dummy co-driver and unloads ExtHelper. *(internal)* *(hook)* | 240 |
+| `gameplay_rally.onRacePathnodeReached(event)` | Race hook: records a split time (recordSplit) for the pathnode reached; logs a warning if event.pathnode is missing. *(internal)* *(hook)* | 320 |
+| `gameplay_rally.onRallyRegisterRace(raceData)` | Hook: stores the race data and passes it to the manager (setRaceData). *(internal)* *(hook)* | 380 |
+| `gameplay_rally.onRallyVehicleRecovery(recoveryType)` | Hook: adds the recovery time to the manager (addRecoveryRaceTime). *(internal)* *(hook)* | 388 |
+| `gameplay_rally.onSeatOccupantEnter()` | Seat hook: replaces the dummy co-driver (alias of the internal function seatCodriver). *(internal)* *(hook)* | 111 |
+| `gameplay_rally.onSeatOccupantExit()` | Seat hook: replaces the dummy co-driver after an occupant leaves (the seat system removes dummy occupants on configuration respawns). *(internal)* *(hook)* | 111 |
+| `gameplay_rally.onSettingsChanged()` | Settings change hook: notifies the rally manager. *(internal)* *(hook)* | 417 |
+| `gameplay_rally.onUpdate(dtReal, dtSim, dtRaw)` | Called every frame: updates RecceApp and the rally manager (except during the recce recording) and draws the Rally Toolbox if visible. *(internal)* *(hook)* | 183 |
+| `gameplay_rally.onVehicleResetted(vehicleID)` | Hook: when player 0's vehicle is reset, notifies the rally manager. *(internal)* *(hook)* | 210 |
+| `gameplay_rally.setDebugLogging(val)` | Enables or disables the rally debug logs. | 458 |
+| `gameplay_rally.setStageRuntimeAuthorityMode(mode)` | Passes the stage runtime authority mode to the manager. | 444 |
+| `gameplay_rally.setUiColor(hex)` | Overrides the theme color of the Stage Timing / Progress streams. nil or an empty string clears the override. | 484 |
+| `gameplay_rally.toggleDebug()` | Shows or hides the "Rally Toolbox" ImGui window (created on the first call). | 291 |
+| `gameplay_rally.unloadMission(options)` | Unloads the rally manager if the owner matches. | 156 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally.canManageMission(owner)`
 
-Indique si le propriétaire donné a le droit de gérer le gestionnaire de rallye.
+Indicates whether the given owner is allowed to manage the rally manager.
 
-- `owner` (*string|nil*) : 'mission', 'recce' ou 'external' (défaut).
-- **renvoie** : boolean true si autorisé.
-- **renvoie** : string|nil Raison du refus.
+- `owner` (*string|nil*) : 'mission', 'recce' or 'external' (default).
+- **returns**: boolean true if allowed.
+- **returns**: string|nil Reason for the refusal.
 
 #### `gameplay_rally.enableRecceApp(val)`
 
-Active ou désactive l'application de reconnaissance (RecceApp.setEnabled).
+Enables or disables the recce app (RecceApp.setEnabled).
 
-- `val` (*boolean*) : true pour activer.
+- `val` (*boolean*) : true to enable.
 
 #### `gameplay_rally.getDebugLogging()`
 
-Indique si les logs de debug du rallye sont actifs.
+Indicates whether the rally debug logs are active.
 
-- **renvoie** : boolean true si actifs.
+- **returns**: boolean true if active.
 
 #### `gameplay_rally.getErrorMsgForUser()`
 
-Dernier message d'erreur destiné à l'utilisateur (échec de chargement).
+Last user-facing error message (load failure).
 
-- **renvoie** : string|nil Message.
+- **returns**: string|nil Message.
 
 #### `gameplay_rally.getRace()`
 
-Données de course enregistrées par le hook onRallyRegisterRace.
+Race data recorded by the onRallyRegisterRace hook.
 
-- **renvoie** : table|nil raceData.
+- **returns**: table|nil raceData.
 
 #### `gameplay_rally.getRallyManager()`
 
-Gestionnaire de rallye courant.
+Current rally manager.
 
-- **renvoie** : table|nil RallyManager ou nil.
+- **returns**: table|nil RallyManager or nil.
 
 #### `gameplay_rally.getRallyManagerOwner()`
 
-Propriétaire du gestionnaire courant.
+Owner of the current manager.
 
-- **renvoie** : string|nil 'mission', 'recce', 'external' ou nil.
+- **returns**: string|nil 'mission', 'recce', 'external' or nil.
 
 #### `gameplay_rally.getRallyToolbox()`
 
-Objet de la boîte à outils de debug (nil tant que toggleDebug n'a pas été appelé).
+Debug toolbox object (nil until toggleDebug has been called).
 
-- **renvoie** : table|nil RallyToolbox.
+- **returns**: table|nil RallyToolbox.
 
 #### `gameplay_rally.getRecoveryRepairVehicle()`
 
-Indique si le véhicule doit être réparé lors d'une récupération : demande au gestionnaire de boucle (gameplay_rallyLoop) s'il existe, sinon lit rallyRepairVehicleOnRecovery (réglage de mission, puis réglage du jeu, défaut true).
+Indicates whether the vehicle must be repaired on recovery: asks the loop manager (gameplay_rallyLoop) if it exists, otherwise reads rallyRepairVehicleOnRecovery (mission setting, then game setting, default true).
 
-- **renvoie** : boolean true si réparation.
+- **returns**: boolean true if repair.
 
 #### `gameplay_rally.getStageObserverState()`
 
-État de l'observateur d'étape du gestionnaire.
+State of the manager's stage observer.
 
-- **renvoie** : table|nil État, nil sans gestionnaire.
+- **returns**: table|nil State, nil without a manager.
 
 #### `gameplay_rally.getStageRuntimeAuthorityMode()`
 
-Mode d'autorité du runtime d'étape du gestionnaire, ou 'shadow' sans gestionnaire.
+Stage runtime authority mode of the manager, or 'shadow' without a manager.
 
-- **renvoie** : string Mode.
+- **returns**: string Mode.
 
 #### `gameplay_rally.getUiColor()`
 
-Couleur de thème actuelle : surcharge si définie, sinon couleur du gestionnaire de boucle (gameplay_rallyLoop), sinon du flux autonome, sinon '#009a1a'.
+Current theme color: override if set, otherwise the loop manager's color (gameplay_rallyLoop), otherwise the standalone stream's, otherwise '#009a1a'.
 
-- **renvoie** : string Couleur hexadécimale.
+- **returns**: string Hexadecimal color.
 
 #### `gameplay_rally.getUiColorOverride()`
 
-Surcharge de couleur définie par setUiColor.
+Color override set by setUiColor.
 
-- **renvoie** : string|nil Couleur ou nil.
+- **returns**: string|nil Color or nil.
 
 #### `gameplay_rally.isRallyToolboxVisible()`
 
-Indique si la fenêtre Rally Toolbox est ouverte.
+Indicates whether the Rally Toolbox window is open.
 
-- **renvoie** : boolean true si visible.
+- **returns**: boolean true if visible.
 
 #### `gameplay_rally.isReady()`
 
-Indique si un gestionnaire de rallye est chargé.
+Indicates whether a rally manager is loaded.
 
-- **renvoie** : boolean true si chargé.
+- **returns**: boolean true if loaded.
 
 #### `gameplay_rally.loadMission(missionId, missionDir, drivelineMode, voicepackPick, options)`
 
-Crée un RallyManager pour le dossier de mission, règle le voicepack, reconstruit les assets et, en cas de succès, le met en place et place le copilote. Ne remplace pas l'ancien gestionnaire en cas d'échec.
+Creates a RallyManager for the mission folder, sets the voicepack, rebuilds the assets and, on success, installs it and places the co-driver. Does not replace the old manager on failure.
 
-- `missionId` (*string*) : Id de la mission.
-- `missionDir` (*string*) : Dossier de la mission de rallye.
-- `drivelineMode` (*any*) : Non utilisé (code commenté).
-- `voicepackPick` (*any*) : Voicepack ; nil = choix lu dans les réglages utilisateur de la mission (rallyVoicepackPick).
-- `options` (*table|nil*) : owner : 'mission', 'recce' ou 'external'.
-- **renvoie** : boolean true si chargé.
-- **renvoie** : string|nil Message d'erreur en cas d'échec.
+- `missionId` (*string*) : Mission id.
+- `missionDir` (*string*) : Rally mission folder.
+- `drivelineMode` (*any*) : Not used (commented-out code).
+- `voicepackPick` (*any*) : Voicepack; nil = choice read from the mission's user settings (rallyVoicepackPick).
+- `options` (*table|nil*) : owner: 'mission', 'recce' or 'external'.
+- **returns**: boolean true if loaded.
+- **returns**: string|nil Error message on failure.
 
 #### `gameplay_rally.onRacePathnodeReached(event)`
 
-Hook de course : enregistre un temps intermédiaire (recordSplit) pour le pathnode atteint ; logue un avertissement si event.pathnode manque.
+Race hook: records a split time (recordSplit) for the pathnode reached; logs a warning if event.pathnode is missing.
 
 - `event` (*table*) : {pathnode, time, race}
 
 #### `gameplay_rally.onRallyRegisterRace(raceData)`
 
-Hook : mémorise les données de course et les transmet au gestionnaire (setRaceData).
+Hook: stores the race data and passes it to the manager (setRaceData).
 
-- `raceData` (*table*) : Données de la course.
+- `raceData` (*table*) : Race data.
 
 #### `gameplay_rally.onRallyVehicleRecovery(recoveryType)`
 
-Hook : ajoute le temps de récupération au gestionnaire (addRecoveryRaceTime).
+Hook: adds the recovery time to the manager (addRecoveryRaceTime).
 
-- `recoveryType` (*string*) : Type de récupération.
+- `recoveryType` (*string*) : Recovery type.
 
 #### `gameplay_rally.onUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé à chaque image : met à jour RecceApp et le gestionnaire de rallye (sauf pendant l'enregistrement de reconnaissance) et dessine la Rally Toolbox si visible.
+Called every frame: updates RecceApp and the rally manager (except during the recce recording) and draws the Rally Toolbox if visible.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
 #### `gameplay_rally.onVehicleResetted(vehicleID)`
 
-Hook : quand le véhicule du joueur 0 est réinitialisé, prévient le gestionnaire de rallye.
+Hook: when player 0's vehicle is reset, notifies the rally manager.
 
-- `vehicleID` (*integer*) : Véhicule réinitialisé.
+- `vehicleID` (*integer*) : Vehicle reset.
 
 #### `gameplay_rally.setDebugLogging(val)`
 
-Active ou désactive les logs de debug du rallye.
+Enables or disables the rally debug logs.
 
-- `val` (*boolean*) : Nouvel état.
+- `val` (*boolean*) : New state.
 
 #### `gameplay_rally.setStageRuntimeAuthorityMode(mode)`
 
-Transmet au gestionnaire le mode d'autorité du runtime d'étape.
+Passes the stage runtime authority mode to the manager.
 
-- `mode` (*string*) : Mode (valeur par défaut 'shadow' ; autres valeurs définies par le gestionnaire).
+- `mode` (*string*) : Mode (default value 'shadow'; other values defined by the manager).
 
 #### `gameplay_rally.setUiColor(hex)`
 
-Surcharge la couleur du thème des flux Stage Timing / Progress. nil ou chaîne vide efface la surcharge.
+Overrides the theme color of the Stage Timing / Progress streams. nil or an empty string clears the override.
 
-- `hex` (*string|nil*) : Couleur hexadécimale, ex. '#ff0000'.
+- `hex` (*string|nil*) : Hexadecimal color, e.g. '#ff0000'.
 
 #### `gameplay_rally.unloadMission(options)`
 
-Décharge le gestionnaire de rallye si le propriétaire correspond.
+Unloads the rally manager if the owner matches.
 
-- `options` (*table|nil*) : owner (défaut 'external').
-- **renvoie** : boolean true si déchargé.
-- **renvoie** : string|nil Raison du refus.
+- `options` (*table|nil*) : owner (default 'external').
+- **returns**: boolean true if unloaded.
+- **returns**: string|nil Reason for the refusal.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | {'gameplay_seatOccupants'}, extension chargée avant. |
-| `recceApp` | table | Module RecceApp (application de reconnaissance de rallye) exposé tel quel. |
+| `dependencies` | string[] | {'gameplay_seatOccupants'}, extension loaded beforehand. |
+| `recceApp` | table | RecceApp module (rally recce app) exposed as is. |
 
-**Évènements UI (guihooks.trigger) :** `Message`, `rally.onExtensionLoaded`, `rallyInputActionCutRecording`, `rallyInputActionRecceMoveVehicleBackward`, `rallyInputActionRecceMoveVehicleForward`
+**UI events (guihooks.trigger):** `Message`, `rally.onExtensionLoaded`, `rallyInputActionCutRecording`, `rallyInputActionRecceMoveVehicleBackward`, `rallyInputActionRecceMoveVehicleForward`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally.lua`.*

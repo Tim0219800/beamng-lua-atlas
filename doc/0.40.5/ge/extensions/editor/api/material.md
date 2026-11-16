@@ -1,62 +1,62 @@
 # `editor_api_material`
 
-*Fichier : `lua/ge/extensions/editor/api/material.lua` · VM : Game Engine (GE) · 388 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/material.lua` · VM: Game Engine (GE) · 388 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_material` : `extensions.load("editor_api_material")`, puis la globale `editor_api_material`
+**Access:** extension `editor_api_material`: `extensions.load("editor_api_material")`, then the global `editor_api_material`
 
-API de l'éditeur pour manipuler les matériaux (objets `Material`, fichiers materials.json) : création, copie, déplacement vers un autre fichier, modification d'une propriété, suppression. `initialize` installe les fonctions sur l'objet `editor`. Les écritures disque passent par le PersistenceManager `scenetree.matLuaEd_PersistMan` ; la suppression d'une entrée JSON se fait par manipulation de texte pour ne pas réordonner tout le fichier (jsonWriteFile trie les clés).
+Editor API for manipulating materials (`Material` objects, materials.json files): creation, copy, move to another file, property modification, deletion. `initialize` installs the functions on the `editor` object. Disk writes go through the PersistenceManager `scenetree.matLuaEd_PersistMan`; deleting a JSON entry is done by text manipulation so as not to reorder the whole file (jsonWriteFile sorts the keys).
 
-## Exemple
+## Example
 
 ```lua
 editor.createMaterial("mon_mat", "levels/mymap/art/materials.json", "mon_mat")
 editor.setMaterialProperty("mon_mat", "diffuseColor", 0, "1 0 0 1")
 ```
 
-## Remarques
+## Notes
 
-- Les fonctions acceptent un objet Material ou son nom (string), résolu par scenetree.findObject.
-- Matériaux v1.5 : 4 couches maximum (copie des champs sur les couches 0 à 3).
-- Champs non copiés par copyMaterial/copyMaterialAsNew : name, mapTo, persistentId, parentGroup, internalName, class, className, superClass, hidden, locked, canSave, canSaveDynamicFields.
-- Incohérence : `initialize` crée l'objet `materialPersistMan` s'il manque, mais toutes les fonctions utilisent `scenetree.matLuaEd_PersistMan` (créé ailleurs).
-- Les messages d'erreur utilisent `logTag`, qui n'est pas défini dans ce fichier (nil sauf global ailleurs).
-- `createMaterial` annonce materialMapTo comme `number` mais le traite comme une chaîne (`#materialMapTo`) ; passer une string.
-- `setMaterialProperty` et `deleteMaterial` plantent si le nom ne correspond à aucun objet (material nil indexé).
+- The functions accept a Material object or its name (string), resolved by scenetree.findObject.
+- Materials v1.5: 4 layers maximum (fields copied on layers 0 to 3).
+- Fields not copied by copyMaterial/copyMaterialAsNew: name, mapTo, persistentId, parentGroup, internalName, class, className, superClass, hidden, locked, canSave, canSaveDynamicFields.
+- Inconsistency: `initialize` creates the `materialPersistMan` object if missing, but all the functions use `scenetree.matLuaEd_PersistMan` (created elsewhere).
+- The error messages use `logTag`, which is not defined in this file (nil unless a global elsewhere).
+- `createMaterial` declares materialMapTo as `number` but treats it as a string (`#materialMapTo`); pass a string.
+- `setMaterialProperty` and `deleteMaterial` crash if the name matches no object (nil material indexed).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_material.initialize(editorInstance)` | Enregistre un PersistenceManager 'materialPersistMan' s'il n'existe pas, mémorise l'éditeur et y installe createMaterial, setMaterialProperty, removeMaterialFromJson, moveMaterial, copyMaterial, copyMaterialAsNew, deleteMaterial. *(interne)* | 369 |
+| `editor_api_material.initialize(editorInstance)` | Registers a 'materialPersistMan' PersistenceManager if it does not exist, remembers the editor and installs createMaterial, setMaterialProperty, removeMaterialFromJson, moveMaterial, copyMaterial, copyMaterialAsNew, deleteMaterial on it. *(internal)* | 369 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_material.initialize(editorInstance)`
 
-Enregistre un PersistenceManager 'materialPersistMan' s'il n'existe pas, mémorise l'éditeur et y installe createMaterial, setMaterialProperty, removeMaterialFromJson, moveMaterial, copyMaterial, copyMaterialAsNew, deleteMaterial.
+Registers a 'materialPersistMan' PersistenceManager if it does not exist, remembers the editor and installs createMaterial, setMaterialProperty, removeMaterialFromJson, moveMaterial, copyMaterial, copyMaterialAsNew, deleteMaterial on it.
 
-- `editorInstance` (*table*) : objet `editor`
+- `editorInstance` (*table*) : `editor` object
 
-## Classe `editor`
+## Class `editor`
 
-Fonctions ajoutées à `editor` par initialize.
+Functions added to `editor` by initialize.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.copyMaterial(source, target)` | Copie tous les paramètres (toutes couches et champs dynamiques) d'un matériau source sur un matériau cible existant, en gardant nom, mapTo et fichier de la cible. La cible doit être dans un .json ; elle est rechargée et sauvegardée. | 285 |
-| `editor.copyMaterialAsNew(source, newName, newFilename)` | Copie un matériau dans un nouveau matériau (name et mapTo = newName) écrit dans le fichier donné. | 315 |
-| `editor.createMaterial(materialName, materialFilename, materialMapTo)` | Crée un nouveau Material (version 1.5) et l'écrit sur disque. Échoue si le nom est vide, déjà pris, ou si le dossier n'existe pas. Si mapTo est vide, le nom du matériau est utilisé. | 12 |
-| `editor.deleteMaterial(material)` | Supprime l'objet Material de la scène et son entrée dans son fichier JSON (via removeMaterialFromJson). | 351 |
-| `editor.moveMaterial(material, newFilename)` | Déplace un matériau vers un autre fichier (le sauvegarde dans le nouveau) puis retire son entrée de l'ancien fichier s'il s'agissait d'un .json existant. | 188 |
-| `editor.removeMaterialFromJson(materialName, materialFilename)` | Supprime l'entrée de premier niveau `materialName` d'un fichier materials.json par édition de texte (gère les virgules, indépendant de l'indentation) et réécrit le fichier. Logue une erreur/avertissement et ne renvoie rien si le fichier ou l'entrée est introuvable. | 79 |
-| `editor.setMaterialProperty(material, property, layer, value)` | Fixe un champ du matériau sur une couche puis recharge le matériau (ne sauvegarde pas sur disque). | 60 |
+| `editor.copyMaterial(source, target)` | Copies all the parameters (all layers and dynamic fields) of a source material onto an existing target material, keeping the target's name, mapTo and file. The target must be in a .json; it is reloaded and saved. | 285 |
+| `editor.copyMaterialAsNew(source, newName, newFilename)` | Copies a material into a new material (name and mapTo = newName) written to the given file. | 315 |
+| `editor.createMaterial(materialName, materialFilename, materialMapTo)` | Creates a new Material (version 1.5) and writes it to disk. Fails if the name is empty, already taken, or if the folder does not exist. If mapTo is empty, the material name is used. | 12 |
+| `editor.deleteMaterial(material)` | Deletes the Material object from the scene and its entry in its JSON file (via removeMaterialFromJson). | 351 |
+| `editor.moveMaterial(material, newFilename)` | Moves a material to another file (saves it in the new one) then removes its entry from the old file if it was an existing .json. | 188 |
+| `editor.removeMaterialFromJson(materialName, materialFilename)` | Deletes the top-level `materialName` entry of a materials.json file by text editing (handles commas, independent of indentation) and rewrites the file. Logs an error/warning and returns nothing if the file or the entry is not found. | 79 |
+| `editor.setMaterialProperty(material, property, layer, value)` | Sets a material field on a layer then reloads the material (does not save to disk). | 60 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryExists`, `fileExists`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/material.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/material.lua`.*

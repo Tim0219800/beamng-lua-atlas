@@ -1,73 +1,73 @@
 # `career_modules_unlockFlags`
 
-*Fichier : `lua/ge/extensions/career/modules/unlockFlags.lua` · VM : Game Engine (GE) · 70 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/unlockFlags.lua` · VM: Game Engine (GE) · 70 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_unlockFlags` : `extensions.load("career_modules_unlockFlags")`, puis la globale `career_modules_unlockFlags`
+**Access:** extension `career_modules_unlockFlags`: `extensions.load("career_modules_unlockFlags")`, then the global `career_modules_unlockFlags`
 
-Drapeaux de déblocage de la carrière. Les définitions viennent des autres extensions via le hook onGetUnlockFlagDefinitions (chacune ajoute {unlockedFunction, icon, level, label} dans la table reçue) ; la valeur d'un drapeau est calculée à la demande avec unlockedFunction puis mise en cache, ou forcée avec setFlag.
+Career unlock flags. The definitions come from other extensions via the onGetUnlockFlagDefinitions hook (each adds {unlockedFunction, icon, level, label} to the received table); a flag's value is computed on demand with unlockedFunction then cached, or forced with setFlag.
 
-## Remarques
+## Notes
 
-- Les définitions sont rechargées et le cache vidé à chaque onCareerActivated.
-- getFlag ne met pas en cache la valeur false (la condition `not flagCache[flagName]` est vraie) : unlockedFunction est donc ré-évaluée à chaque appel tant que le drapeau est faux. Une définition manquante donne false.
-- setFlag émet le hook onUnlockFlagChanged(flagName, value).
-- onSaveCurrentProfile est vide (rien n'est sauvegardé par ce module).
-- getFlagLockedReason existe dans le code mais n'est pas exporté.
+- The definitions are reloaded and the cache cleared on each onCareerActivated.
+- getFlag does not cache the false value (the condition `not flagCache[flagName]` is true): unlockedFunction is therefore re-evaluated on every call as long as the flag is false. A missing definition gives false.
+- setFlag emits the onUnlockFlagChanged(flagName, value) hook.
+- onSaveCurrentProfile is empty (nothing is saved by this module).
+- getFlagLockedReason exists in the code but is not exported.
 
-**Dépendances (chargées avant) :** `career_saveSystem`
+**Dependencies (loaded first):** `career_saveSystem`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_unlockFlags.getFlag(flagName)` | Retourne la valeur d'un drapeau (en l'évaluant via sa définition si besoin). false si le drapeau n'a pas de définition. | 29 |
-| `career_modules_unlockFlags.getFlagDefinition(flagName)` | Retourne la définition enregistrée d'un drapeau. | 38 |
-| `career_modules_unlockFlags.onCareerActivated()` | Hook appelé à l'activation de la carrière : vide le cache et recharge les définitions via le hook onGetUnlockFlagDefinitions. *(interne)* *(hook)* | 59 |
-| `career_modules_unlockFlags.onSaveCurrentProfile(currentSavePath)` | Hook de sauvegarde du profil ; ne fait rien dans cette version. *(interne)* *(hook)* | 23 |
-| `career_modules_unlockFlags.resetFlags()` | Vide le cache des valeurs de drapeaux (les définitions restent). | 55 |
-| `career_modules_unlockFlags.setFlag(flagName, value)` | Force la valeur d'un drapeau dans le cache et émet onUnlockFlagChanged. | 49 |
+| `career_modules_unlockFlags.getFlag(flagName)` | Returns a flag's value (evaluating it via its definition if needed). false if the flag has no definition. | 29 |
+| `career_modules_unlockFlags.getFlagDefinition(flagName)` | Returns the registered definition of a flag. | 38 |
+| `career_modules_unlockFlags.onCareerActivated()` | Hook called when the career is activated: clears the cache and reloads the definitions via the onGetUnlockFlagDefinitions hook. *(internal)* *(hook)* | 59 |
+| `career_modules_unlockFlags.onSaveCurrentProfile(currentSavePath)` | Profile save hook; does nothing in this version. *(internal)* *(hook)* | 23 |
+| `career_modules_unlockFlags.resetFlags()` | Clears the flag value cache (definitions remain). | 55 |
+| `career_modules_unlockFlags.setFlag(flagName, value)` | Forces a flag's value in the cache and emits onUnlockFlagChanged. | 49 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_unlockFlags.getFlag(flagName)`
 
-Retourne la valeur d'un drapeau (en l'évaluant via sa définition si besoin). false si le drapeau n'a pas de définition.
+Returns a flag's value (evaluating it via its definition if needed). false if the flag has no definition.
 
-- `flagName` (*string*) : Nom du drapeau.
-- **renvoie** : boolean Valeur du drapeau.
+- `flagName` (*string*) : Flag name.
+- **returns**: boolean Flag value.
 
 #### `career_modules_unlockFlags.getFlagDefinition(flagName)`
 
-Retourne la définition enregistrée d'un drapeau.
+Returns the registered definition of a flag.
 
-- `flagName` (*string*) : Nom du drapeau.
-- **renvoie** : table|nil Définition {unlockedFunction, icon, level, label} ou nil.
+- `flagName` (*string*) : Flag name.
+- **returns**: table|nil Definition {unlockedFunction, icon, level, label} or nil.
 
 #### `career_modules_unlockFlags.onSaveCurrentProfile(currentSavePath)`
 
-Hook de sauvegarde du profil ; ne fait rien dans cette version.
+Profile save hook; does nothing in this version.
 
-- `currentSavePath` (*string*) : Dossier de sauvegarde du profil.
+- `currentSavePath` (*string*) : Profile save folder.
 
 #### `career_modules_unlockFlags.setFlag(flagName, value)`
 
-Force la valeur d'un drapeau dans le cache et émet onUnlockFlagChanged.
+Forces a flag's value in the cache and emits onUnlockFlagChanged.
 
-- `flagName` (*string*) : Nom du drapeau.
-- `value` (*boolean*) : Nouvelle valeur.
+- `flagName` (*string*) : Flag name.
+- `value` (*boolean*) : New value.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {"career_saveSystem"}. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onGetUnlockFlagDefinitions` — écouté par 1 module(s)
+- `onGetUnlockFlagDefinitions` — listened to by 1 module(s)
 - `onUnlockFlagChanged`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/unlockFlags.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/unlockFlags.lua`.*

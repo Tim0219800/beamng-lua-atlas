@@ -1,0 +1,73 @@
+{
+  "path": "lua/common/interpolateScatteredMap.lua",
+  "module": "Interpolation 2D sur points non structurés par triangulation de Delaunay (Bowyer-Watson). loadData construit la triangulation une fois ; get(x, y) cherche le triangle contenant le point en marchant de triangle voisin en triangle voisin (sans allocation) et interpole en coordonnées barycentriques. Utile pour des cartes z(x, y) dont les échantillons ne forment pas une grille.",
+  "usage": "local m = require('interpolateScatteredMap').new()\nm:loadData({{0,0,1},{1,0,2},{0,1,3},{1,1,4}}, {outsideMode = 'clamp'})\nlocal z = m:get(0.3, 0.4)",
+  "notes": [
+    "Points acceptés : {x, y, value} ou {x=..., y=..., value=...}. Les points sans les trois champs sont ignorés.",
+    "opts : outsideMode ('default' = defaultValue, 'nil', 'clamp' = valeur interpolée sur l'arête de l'enveloppe la plus proche, 'extrapolate' = prolongement du plan du triangle courant), defaultValue (défaut 0), xScale/yScale/zScale, joggle (perturbation des points, défaut 0, désactivé), dedupTol (tolérance de dédoublonnage, défaut 1e-9, sur coordonnées normalisées).",
+    "Il faut au moins 3 points distincts et une étendue non nulle en x et en y ; sinon loadData renvoie self avec valid == false et get renvoie defaultValue.",
+    "Les coordonnées sont normalisées dans [0,1]² pour la triangulation ; le dédoublonnage est en O(n²) donc coûteux sur beaucoup de points.",
+    "Le résultat du dernier appel (x, y, mode, defaultValue) est mis en cache."
+  ],
+  "fields": {},
+  "functions": {
+    "new": {
+      "desc": "Crée un objet d'interpolation vide (valid = false, outsideMode 'default', defaultValue 0).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Objet avec méthodes loadData, get, validate, outsideValue, bruteForce, exportTriangles."}],
+      "internal": false
+    }
+  },
+  "classes": {
+    "interpolateScatteredMap": {
+      "desc": "Objet renvoyé par new(). Champs : tris, triCount, hullEdges, valid, outsideMode, defaultValue, minX/maxX/minY/maxY, sx, sy.",
+      "functions": {
+        "loadData": {
+          "desc": "Charge les points, normalise, dédoublonne, triangule et prépare le voisinage des triangles.",
+          "params": {
+            "inputData": {"type": "table[]", "desc": "Liste de points {x, y, value} ou {x=, y=, value=}."},
+            "opts": {"type": "table|nil", "desc": "Options (voir notes)."}
+          },
+          "returns": [{"type": "table", "desc": "self ; vérifier self.valid."}]
+        },
+        "get": {
+          "desc": "Renvoie la valeur interpolée au point (x, y). Hors de l'enveloppe convexe, dépend de outsideMode.",
+          "params": {
+            "x": {"type": "number", "desc": "Abscisse, dans les mêmes unités que les points après application de xScale (déduit du code : get n'applique pas xScale)."},
+            "y": {"type": "number", "desc": "Ordonnée."}
+          },
+          "returns": [{"type": "number|nil", "desc": "Valeur ; nil seulement si outsideMode == 'nil' et point hors enveloppe."}]
+        },
+        "validate": {
+          "desc": "Teste la carte sur les points d'entrée et renvoie l'erreur maximale.",
+          "params": {
+            "inputData": {"type": "table[]", "desc": "Les points d'origine."},
+            "tolerance": {"type": "number|nil", "desc": "Erreur tolérée (défaut 1e-4)."}
+          },
+          "returns": [{"type": "number", "desc": "Erreur absolue maximale."}, {"type": "boolean", "desc": "true si <= tolérance."}]
+        },
+        "outsideValue": {
+          "desc": "Valeur à renvoyer pour un point hors enveloppe selon outsideMode (normalement appelée par get ; px, py en coordonnées normalisées).",
+          "params": {
+            "px": {"type": "number", "desc": "x normalisé."},
+            "py": {"type": "number", "desc": "y normalisé."},
+            "ti": {"type": "integer", "desc": "Indice du triangle courant (utilisé en mode extrapolate)."}
+          },
+          "returns": [{"type": "number|nil", "desc": "Valeur extérieure."}],
+          "internal": true
+        },
+        "bruteForce": {
+          "desc": "Recherche linéaire du triangle contenant (x, y) ; repli quand la marche échoue.",
+          "params": {"x": {"type": "number", "desc": "Abscisse."}, "y": {"type": "number", "desc": "Ordonnée."}},
+          "returns": [{"type": "integer", "desc": "Indice du triangle, 0 si aucun."}],
+          "internal": true
+        },
+        "exportTriangles": {
+          "desc": "Reconstruit les triangles en coordonnées d'entrée pour debug/visualisation.",
+          "params": {},
+          "returns": [{"type": "table[]", "desc": "Liste {ax, ay, bx, by, cx, cy, va, vb, vc}."}]
+        }
+      }
+    }
+  }
+}

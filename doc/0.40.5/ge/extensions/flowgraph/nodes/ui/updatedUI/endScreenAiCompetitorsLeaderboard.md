@@ -1,23 +1,23 @@
 # `flowgraph_nodes_ui_updatedUI_endScreenAiCompetitorsLeaderboard`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenAiCompetitorsLeaderboard.lua` · VM : Game Engine (GE) · 92 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenAiCompetitorsLeaderboard.lua` · VM: Game Engine (GE) · 92 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/updatedUI/endScreenAiCompetitorsLeaderboard")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/updatedUI/endScreenAiCompetitorsLeaderboard")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « EndScreen AI Competitors Leaderboard » (catégorie once_instant, tags end/finish/rally) : ajoute au écran de fin de mission un onglet de classement des concurrents IA (rallye). Entrées : flow (chaînage), « leaderboard » (table issue du nœud Rally AI Competitors Leaderboard). Mono-étape : colonnes temps et écart ; multi-étapes : une colonne par étape plus le final. Ajoute un élément UI 'textPanel' via self.mgr.modules.ui:addUIElement avec header 'missions.aiCompetitorsLeaderboard.title'.
+Flowgraph node "EndScreen AI Competitors Leaderboard" (category once_instant, tags end/finish/rally): adds an AI competitors leaderboard tab to the mission end screen (rally). Inputs: flow (chaining), "leaderboard" (table from the Rally AI Competitors Leaderboard node). Single stage: time and gap columns; multi-stage: one column per stage plus the final. Adds a UI element 'textPanel' via self.mgr.modules.ui:addUIElement with header 'missions.aiCompetitorsLeaderboard.title'.
 
-## Remarques
+## Notes
 
-- Ignoré silencieusement si le tableau est vide ; journalise une erreur et ignore si la structure multi-étapes est invalide (stageCount, stageLabels, stageCells).
-- Le nom du joueur vient d'OnlineServiceProvider.playerName, sinon 'Player' (useDefaultPlayerName = true).
+- Silently ignored if the table is empty; logs an error and ignores if the multi-stage structure is invalid (stageCount, stageLabels, stageCells).
+- The player name comes from OnlineServiceProvider.playerName, otherwise 'Player' (useDefaultPlayerName = true).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Valide les données du classement et ajoute le panneau 'textPanel' à l'écran de fin. | 41 |
+| `C:workOnce()` | Validates the leaderboard data and adds the 'textPanel' panel to the end screen. | 41 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenAiCompetitorsLeaderboard.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenAiCompetitorsLeaderboard.lua`.*

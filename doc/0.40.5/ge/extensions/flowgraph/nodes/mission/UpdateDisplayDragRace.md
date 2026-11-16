@@ -1,33 +1,33 @@
 # `flowgraph_nodes_mission_UpdateDisplayDragRace`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/mission/UpdateDisplayDragRace.lua` · VM : Game Engine (GE) · 129 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/mission/UpdateDisplayDragRace.lua` · VM: Game Engine (GE) · 129 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/mission/UpdateDisplayDragRace")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/mission/UpdateDisplayDragRace")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Update Display Drag Race' (categorie repeat_instant) pour la mission de drag race : affiche sur le panneau du quart de mile le temps et la vitesse du joueur en changeant la forme (shapeName) des objets scene display_time_i_l/r et display_speed_i_l/r (modeles art/shapes/quarter_mile_display/display_<chiffre>.dae). Le pin 'side' ('l' ou 'r') choisit le cote ; la vitesse en m/s est convertie en mph (x2,237).
+Flowgraph node 'Update Display Drag Race' (repeat_instant category) for the drag race mission: displays the player's time and speed on the quarter-mile board by changing the shape (shapeName) of the scene objects display_time_i_l/r and display_speed_i_l/r (models art/shapes/quarter_mile_display/display_<digit>.dae). The 'side' pin ('l' or 'r') chooses the side; the speed in m/s is converted to mph (x2.237).
 
-## Remarques
+## Notes
 
-- La description des pins 'side' et 'velocity' est identique ('Velocity of the players vehicle') : copie-colle dans le code.
-- La conversion m/s vers mph est faite avec une condition 'velocity == 0 and velocity or velocity*2.237'.
-- Si la scene n'a pas les objets display_*, les indexations de nil provoquent une erreur.
+- The description of the 'side' and 'velocity' pins is identical ('Velocity of the players vehicle'): copy-paste in the code.
+- The m/s to mph conversion is done with a condition 'velocity == 0 and velocity or velocity*2.237'.
+- If the scene does not have the display_* objects, indexing nil raises an error.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Vide les listes d'afficheurs et met la sortie flow a false. | 96 |
-| `C:init()` | Meme initialisation. | 104 |
-| `C:insertDigits()` | Recherche dans la scene les 20 objets display_time_i_l/r et display_speed_i_l/r (i de 1 a 5) et les stocke. | 80 |
-| `C:postInit()` | Definit les valeurs proposees pour le pin 'side' : left=l, right=r. | 22 |
-| `C:updateDisplay(side, finishTime, finishSpeed)` | Construit la liste des chiffres (temps avec 3 decimales, vitesse avec 2) et applique le bon modele sur chacun des 5 afficheurs du cote voulu ; un 'empty' est ajoute pour le zero de tete. | 29 |
-| `C:work()` | Sur reset : retrouve les afficheurs et remet l'affichage a 0. Sinon, si time, velocity et side sont fournis, met a jour l'affichage ; flow=true. | 112 |
+| `C:_executionStarted()` | Clears the display lists and sets the flow output to false. | 96 |
+| `C:init()` | Same initialization. | 104 |
+| `C:insertDigits()` | Searches the scene for the 20 objects display_time_i_l/r and display_speed_i_l/r (i from 1 to 5) and stores them. | 80 |
+| `C:postInit()` | Defines the offered values for the 'side' pin: left=l, right=r. | 22 |
+| `C:updateDisplay(side, finishTime, finishSpeed)` | Builds the list of digits (time with 3 decimals, speed with 2) and applies the right model to each of the 5 displays of the chosen side; an 'empty' is added for the leading zero. | 29 |
+| `C:work()` | On reset: finds the displays again and resets the display to 0. Otherwise, if time, velocity and side are provided, updates the display; flow=true. | 112 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/mission/UpdateDisplayDragRace.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/mission/UpdateDisplayDragRace.lua`.*

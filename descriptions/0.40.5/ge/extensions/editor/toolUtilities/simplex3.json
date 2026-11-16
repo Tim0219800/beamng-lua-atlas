@@ -1,20 +1,34 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/simplex3.lua",
-  "module": "Bruit simplex 3D (grille simpliciale de Ken Perlin, d'après la référence de Stefan Gustavson). Déterministe, continu avec dérivée première continue. Les indices de gradient (perm % 12 + 1) sont précalculés pour accélérer les appels massifs.",
+  "module": "3D simplex noise (Ken Perlin's simplicial grid, after Stefan Gustavson's reference). Deterministic, continuous with continuous first derivative. The gradient indices (perm % 12 + 1) are precomputed to speed up massive calls.",
   "usage": "local simplex3 = extensions.editor_toolUtilities_simplex3\nlocal n = simplex3.noise(x * 0.05, y * 0.05, z * 0.05)",
   "notes": [
-    "Valeur environ dans [-1, 1] (facteur d'échelle 32).",
-    "La page auto signale une globale affectée « i » : ce sont des variables de boucle d'initialisation, pas de vraie globale."
+    "Value roughly in [-1, 1] (scale factor 32).",
+    "The auto page flags an assigned global \"i\": these are initialization loop variables, not a real global."
   ],
   "functions": {
     "noise": {
-      "desc": "Bruit simplex 3D au point (xin, yin, zin).",
+      "desc": "3D simplex noise at point (xin, yin, zin).",
       "params": {
-        "xin": {"type": "number", "desc": "Coordonnée x."},
-        "yin": {"type": "number", "desc": "Coordonnée y."},
-        "zin": {"type": "number", "desc": "Coordonnée z."}
+        "xin": {
+          "type": "number",
+          "desc": "x coordinate."
+        },
+        "yin": {
+          "type": "number",
+          "desc": "y coordinate."
+        },
+        "zin": {
+          "type": "number",
+          "desc": "z coordinate."
+        }
       },
-      "returns": [{"type": "number", "desc": "Valeur de bruit, environ [-1, 1]."}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Noise value, roughly [-1, 1]."
+        }
+      ],
       "internal": false
     }
   }

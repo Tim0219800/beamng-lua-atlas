@@ -1,17 +1,31 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/perlin.lua",
-  "module": "Bruit de Perlin 2D classique (table de permutation fixe de 256 entrées, courbe fade de Perlin améliorée), déterministe. Sert aux outils de l'éditeur pour générer des variations pseudo-aléatoires reproductibles.",
-  "usage": "local perlin = extensions.editor_toolUtilities_perlin\nlocal n = perlin.noise(x * 0.1, y * 0.1) -- valeur lissée",
+  "module": "Classic 2D Perlin noise (fixed 256-entry permutation table, Perlin's improved fade curve), deterministic. Used by editor tools to generate reproducible pseudo-random variations.",
+  "usage": "local perlin = extensions.editor_toolUtilities_perlin\nlocal n = perlin.noise(x * 0.1, y * 0.1) -- smoothed value",
   "notes": [
-    "Le résultat est périodique de période 256 en x et en y (masque band(floor(x),255)).",
-    "Utilise la fonction globale lerp du jeu.",
-    "La page auto signale une globale affectée « i » : la boucle d'initialisation est en réalité `for i = 0, 255` (variable locale de boucle), donc fausse alerte."
+    "The result is periodic with period 256 in x and in y (mask band(floor(x),255)).",
+    "Uses the game's global lerp function.",
+    "The auto page flags an assigned global \"i\": the initialization loop is actually `for i = 0, 255` (local loop variable), so it is a false alarm."
   ],
   "functions": {
     "noise": {
-      "desc": "Renvoie le bruit de Perlin 2D au point (x, y). Valeur continue, nulle aux coordonnées entières, d'amplitude voisine de [-1, 1] environ.",
-      "params": {"x": {"type": "number", "desc": "Coordonnée x."}, "y": {"type": "number", "desc": "Coordonnée y."}},
-      "returns": [{"type": "number", "desc": "Valeur de bruit."}],
+      "desc": "Returns 2D Perlin noise at point (x, y). Continuous value, zero at integer coordinates, with amplitude around [-1, 1] approximately.",
+      "params": {
+        "x": {
+          "type": "number",
+          "desc": "x coordinate."
+        },
+        "y": {
+          "type": "number",
+          "desc": "y coordinate."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Noise value."
+        }
+      ],
       "internal": false
     }
   }

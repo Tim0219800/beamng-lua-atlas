@@ -1,128 +1,218 @@
 {
   "path": "lua/ge/extensions/core/audioForest.lua",
-  "module": "Extension GE (core_audioForest) : coordinateur d'exécution des émetteurs audio de forêt. À partir des arbres/objets du Forest du niveau, elle construit un nuage de noeuds audio éclaircis (audioForestCommon), puis à chaque frame calcule la position moyenne pondérée des noeuds autour de l'auditeur (rayon 150 m) et déplace un émetteur SFX unique (le 'main emitter') à ce point en réglant ses paramètres FMOD (RTPC). Un émetteur 'roomtone' indépendant peut aussi jouer une ambiance. Les réglages par niveau sont lus dans levels/<niveau>/dynamicAudioEmitters/forestData.audioSFX.json (créé par l'éditeur). Les RTPC : volume = intensité, pitch = densité de noeuds, color = taille de la végétation, texture = inutilisé ; le paramètre global g_ForestHeight = hauteur de l'auditeur par rapport au barycentre de la forêt (ou au terrain).",
-  "usage": "-- Piloté par l'éditeur ou par le fichier de niveau. Contrôle manuel :\ncore_audioForest.setMainEvent('event:>Ambiance>Forest>Mon_event')\ncore_audioForest.setEnabled(true)",
+  "module": "GE extension (core_audioForest): runtime coordinator of forest audio emitters. From the level's Forest trees/objects, it builds a thinned cloud of audio nodes (audioForestCommon), then every frame computes the weighted average position of the nodes around the listener (radius 150 m) and moves a single SFX emitter (the 'main emitter') to that point while setting its FMOD parameters (RTPC). An independent 'roomtone' emitter can also play an ambience. Per-level settings are read from levels/<level>/dynamicAudioEmitters/forestData.audioSFX.json (created by the editor). The RTPCs: volume = intensity, pitch = node density, color = vegetation size, texture = unused; the global parameter g_ForestHeight = listener height relative to the forest centroid (or the terrain).",
+  "usage": "-- Driven by the editor or by the level file. Manual control:\ncore_audioForest.setMainEvent('event:>Ambiance>Forest>Mon_event')\ncore_audioForest.setEnabled(true)",
   "notes": [
-    "Format du fichier de niveau : JSON lignes (une ligne 'meta' puis une ligne 'shape' par modèle de forêt avec include, classSel, classOvr).",
-    "Au chargement du niveau (onClientCustomObjectSpawning) et après un rechargement Lua (onDeserialized), l'état est reconstruit depuis le fichier ; onSerialize ne renvoie rien d'utile ({}).",
-    "Le calcul du nuage de noeuds est étalé sur plusieurs frames (runtimeLoadStepCount = 10000 objets par frame) via startRuntimePrepass/stepRuntimePrepass.",
-    "Constantes internes : rayon d'écoute 150 m, gain de volume 30, seuil d'écriture de g_ForestHeight 0,05 m, émetteur surélevé de 0,05 m.",
-    "Risque : onUpdate appelle em:setPosition / em:setVolumePitchCT sans tester que l'émetteur principal existe ; si enabled est vrai alors que mainEventName est vide (donc pas d'émetteur), cela déclenche une erreur sur nil (déduit du code).",
-    "Les coordonnées de noeuds sont en mètres monde ; la profondeur d'un noeud (nodeDepth) est la hauteur de l'objet multipliée par nodeHeightBlend (0,5)."
+    "Level file format: JSON lines (one 'meta' line, then one 'shape' line per forest model with include, classSel, classOvr).",
+    "When the level loads (onClientCustomObjectSpawning) and after a Lua reload (onDeserialized), the state is rebuilt from the file; onSerialize returns nothing useful ({}).",
+    "The node cloud computation is spread over several frames (runtimeLoadStepCount = 10000 objects per frame) via startRuntimePrepass/stepRuntimePrepass.",
+    "Internal constants: listening radius 150 m, volume gain 30, g_ForestHeight write threshold 0.05 m, emitter raised by 0.05 m.",
+    "Risk: onUpdate calls em:setPosition / em:setVolumePitchCT without checking that the main emitter exists; if enabled is true while mainEventName is empty (so there is no emitter), this raises a nil error (inferred from code).",
+    "Node coordinates are in world meters; a node's depth (nodeDepth) is the object height multiplied by nodeHeightBlend (0.5)."
   ],
   "fields": {},
   "functions": {
     "setEnabled": {
-      "desc": "Active ou désactive le système. À l'activation, crée l'émetteur principal s'il y a un événement et des noeuds ; à la désactivation, le supprime.",
-      "params": {"v": {"type": "boolean", "desc": "true pour activer"}},
+      "desc": "Enables or disables the system. On enable, creates the main emitter if there is an event and nodes; on disable, removes it.",
+      "params": {
+        "v": {
+          "type": "boolean",
+          "desc": "true to enable"
+        }
+      },
       "returns": []
     },
     "setNodeCloud": {
-      "desc": "Installe un nuage de noeuds produit par audioForestCommon.buildNodeCloudFromForest (utilisé par l'éditeur ou le runtime). Récupère le terrain (core_terrain.getTerrain) et les paramètres globaux audio ; renvoie false et vide l'état si le nuage est invalide ou s'il n'y a pas de terrain.",
-      "params": {"cloud": {"type": "table", "desc": "Nuage : nodeCount, nodeX, nodeY, nodeZ, nodeDepth, nodeAvgNormVol, nodeSourceCount, pitchDensityInv, kdNodes"}},
-      "returns": [{"type": "boolean", "desc": "true si installé"}]
+      "desc": "Installs a node cloud produced by audioForestCommon.buildNodeCloudFromForest (used by the editor or the runtime). Fetches the terrain (core_terrain.getTerrain) and the global audio parameters; returns false and clears the state if the cloud is invalid or there is no terrain.",
+      "params": {
+        "cloud": {
+          "type": "table",
+          "desc": "Cloud: nodeCount, nodeX, nodeY, nodeZ, nodeDepth, nodeAvgNormVol, nodeSourceCount, pitchDensityInv, kdNodes"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if installed"
+        }
+      ]
     },
     "setMainEvent": {
-      "desc": "Définit l'événement FMOD de l'émetteur principal (sans toucher à la roomtone). Chaîne vide : supprime l'émetteur. Sinon met à jour l'émetteur existant ou le crée si le système est actif et a des noeuds.",
-      "params": {"eventName": {"type": "string|nil", "desc": "Nom de l'événement FMOD"}},
+      "desc": "Sets the FMOD event of the main emitter (without touching the roomtone). Empty string: removes the emitter. Otherwise updates the existing emitter or creates it if the system is enabled and has nodes.",
+      "params": {
+        "eventName": {
+          "type": "string|nil",
+          "desc": "FMOD event name"
+        }
+      },
       "returns": []
     },
     "setRoomtoneEnabled": {
-      "desc": "Active ou coupe l'émetteur 'roomtone' indépendant (le crée s'il y a un événement roomtone).",
-      "params": {"v": {"type": "boolean", "desc": "true pour activer"}},
+      "desc": "Enables or disables the independent 'roomtone' emitter (creates it if there is a roomtone event).",
+      "params": {
+        "v": {
+          "type": "boolean",
+          "desc": "true to enable"
+        }
+      },
       "returns": []
     },
     "setRoomtoneEvent": {
-      "desc": "Définit l'événement de la roomtone. Sans effet visible tant que la roomtone n'est pas activée ; chaîne vide : supprime l'émetteur.",
-      "params": {"eventName": {"type": "string|nil", "desc": "Nom de l'événement FMOD"}},
+      "desc": "Sets the roomtone event. No visible effect until the roomtone is enabled; empty string: removes the emitter.",
+      "params": {
+        "eventName": {
+          "type": "string|nil",
+          "desc": "FMOD event name"
+        }
+      },
       "returns": []
     },
     "setRoomtoneZ": {
-      "desc": "Fixe l'altitude de l'émetteur roomtone (positionné en x=0, y=0).",
-      "params": {"v": {"type": "number|nil", "desc": "Altitude en mètres, 0 par défaut"}},
+      "desc": "Sets the altitude of the roomtone emitter (positioned at x=0, y=0).",
+      "params": {
+        "v": {
+          "type": "number|nil",
+          "desc": "Altitude in meters, 0 by default"
+        }
+      },
       "returns": []
     },
     "setPitchDensityInv": {
-      "desc": "Remplace la normalisation automatique du pitch (inverse du nombre de sources de référence). nil ou valeur <= 0 : revient à l'automatique.",
-      "params": {"v": {"type": "number|nil", "desc": "Facteur 1 / nombre de sources"}},
+      "desc": "Overrides the automatic pitch normalization (inverse of the number of reference sources). nil or value <= 0: reverts to automatic.",
+      "params": {
+        "v": {
+          "type": "number|nil",
+          "desc": "Factor 1 / number of sources"
+        }
+      },
       "returns": []
     },
     "getEmitterNodeIds": {
-      "desc": "Pour l'éditeur : renvoie la table {[1] = id du noeud représentatif le plus proche} et la taille 1.",
+      "desc": "For the editor: returns the table {[1] = id of the nearest representative node} and size 1.",
       "params": {},
       "returns": [
-        {"type": "table<integer, integer>", "desc": "Tableau d'ids de noeuds (0 si aucun)"},
-        {"type": "integer", "desc": "Nombre d'émetteurs (toujours 1)"}
+        {
+          "type": "table<integer, integer>",
+          "desc": "Array of node ids (0 if none)"
+        },
+        {
+          "type": "integer",
+          "desc": "Number of emitters (always 1)"
+        }
       ]
     },
     "getMainEmitterDebugState": {
-      "desc": "Pour la visualisation éditeur : état actuel de l'émetteur principal.",
+      "desc": "For editor visualization: current state of the main emitter.",
       "params": {},
       "returns": [
-        {"type": "boolean", "desc": "true si l'émetteur est actif (des noeuds sont dans le rayon)"},
-        {"type": "number", "desc": "x (m)"},
-        {"type": "number", "desc": "y (m)"},
-        {"type": "number", "desc": "z (m)"},
-        {"type": "integer", "desc": "id du noeud représentatif"}
+        {
+          "type": "boolean",
+          "desc": "true if the emitter is active (nodes are within the radius)"
+        },
+        {
+          "type": "number",
+          "desc": "x (m)"
+        },
+        {
+          "type": "number",
+          "desc": "y (m)"
+        },
+        {
+          "type": "number",
+          "desc": "z (m)"
+        },
+        {
+          "type": "integer",
+          "desc": "id of the representative node"
+        }
       ]
     },
     "clearMainAudio": {
-      "desc": "Supprime uniquement le chemin audio principal (émetteur et nom d'événement).",
+      "desc": "Removes only the main audio path (emitter and event name).",
       "params": {},
       "returns": []
     },
     "clear": {
-      "desc": "Réinitialise tout l'état d'exécution (émetteurs, noeuds, état d'outil, réglages).",
+      "desc": "Resets the whole runtime state (emitters, nodes, tool state, settings).",
       "params": {},
       "returns": []
     },
     "setPersistedToolState": {
-      "desc": "Mémorise l'état de l'outil d'édition pour la sauvegarde du niveau.",
-      "params": {"st": {"type": "table|nil", "desc": "Etat : version, mainEvent, roomtoneEnabled, roomtoneEvent, roomtoneZ, includeByShape, classSelByShape, classOverrideByShape, nodeVisDrawRadius, nodeVisSphereRadius, showNodes, selectedRow"}},
+      "desc": "Stores the editing tool state for saving the level.",
+      "params": {
+        "st": {
+          "type": "table|nil",
+          "desc": "State: version, mainEvent, roomtoneEnabled, roomtoneEvent, roomtoneZ, includeByShape, classSelByShape, classOverrideByShape, nodeVisDrawRadius, nodeVisSphereRadius, showNodes, selectedRow"
+        }
+      },
       "returns": []
     },
     "getPersistedToolState": {
-      "desc": "Renvoie l'état d'outil actuellement chargé.",
+      "desc": "Returns the currently loaded tool state.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "État d'outil (voir setPersistedToolState)"}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Tool state (see setPersistedToolState)"
+        }
+      ]
     },
     "onUpdate": {
-      "desc": "Hook appelé à chaque frame par le système d'extensions : fait avancer la pré-passe de chargement, puis déplace l'émetteur principal et règle ses RTPC selon les noeuds proches de l'auditeur (SFXSystem.getPositionXYZ).",
+      "desc": "Hook called every frame by the extension system: advances the loading prepass, then moves the main emitter and sets its RTPCs according to the nodes near the listener (SFXSystem.getPositionXYZ).",
       "params": {
-        "dtReal": {"type": "number", "desc": "Pas de temps réel (s)"},
-        "dtSim": {"type": "number", "desc": "Pas de temps simulation (s)"},
-        "dtRaw": {"type": "number", "desc": "Pas de temps brut (s)"}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time step (s)"
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time step (s)"
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time step (s)"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onClientCustomObjectSpawning": {
-      "desc": "Hook appelé quand les objets du niveau sont créés : charge la configuration du niveau et lance la pré-passe.",
+      "desc": "Hook called when the level objects are created: loads the level configuration and starts the prepass.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook appelé à la fin d'un niveau : réinitialise tout l'état.",
+      "desc": "Hook called at the end of a level: resets the whole state.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onEditorBeforeSaveLevel": {
-      "desc": "Hook appelé par l'éditeur avant la sauvegarde du niveau : écrit l'état d'outil mémorisé dans levels/<niveau>/dynamicAudioEmitters/forestData.audioSFX.json.",
+      "desc": "Hook called by the editor before the level is saved: writes the stored tool state to levels/<level>/dynamicAudioEmitters/forestData.audioSFX.json.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook de sérialisation avant rechargement Lua : renvoie une table vide.",
+      "desc": "Serialization hook before Lua reload: returns an empty table.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{}"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{}"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook après rechargement Lua : relit la configuration du niveau et reconstruit l'état.",
-      "params": {"data": {"type": "table", "desc": "Données de onSerialize (ignorées)"}},
+      "desc": "Hook after Lua reload: re-reads the level configuration and rebuilds the state.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Data from onSerialize (ignored)"
+        }
+      },
       "returns": [],
       "internal": true
     }

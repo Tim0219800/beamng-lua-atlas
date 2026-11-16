@@ -1,83 +1,83 @@
 # `gameplay_backgroundActivities_g2g`
 
-*Fichier : `lua/ge/extensions/gameplay/backgroundActivities/g2g.lua` · VM : Game Engine (GE) · 146 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/backgroundActivities/g2g.lua` · VM: Game Engine (GE) · 146 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_backgroundActivities_g2g` : `extensions.load("gameplay_backgroundActivities_g2g")`, puis la globale `gameplay_backgroundActivities_g2g`
+**Access:** extension `gameplay_backgroundActivities_g2g`: `extensions.load("gameplay_backgroundActivities_g2g")`, then the global `gameplay_backgroundActivities_g2g`
 
-Activité de fond « g2g » : à l'activation, fondu au noir, apparition d'un véhicule aléatoire (voiture ou camion avec Top Speed > 10), puis fondu depuis le noir, le tout via util_stepHandler. À la désactivation, les véhicules créés sont supprimés. getVehicleOptions construit (et met en cache) la liste des modèles et configs candidats à partir de core_vehicles.getVehicleList().
+"g2g" background activity: on activation, fade to black, spawn of a random vehicle (car or truck with Top Speed > 10), then fade from black, all via util_stepHandler. On deactivation, the created vehicles are deleted. getVehicleOptions builds (and caches) the list of candidate models and configs from core_vehicles.getVehicleList().
 
-## Exemple
+## Example
 
 ```lua
 gameplay_backgroundActivities_g2g.toggleActive()
 ```
 
-## Remarques
+## Notes
 
-- vehicleCount vaut 1 : un seul véhicule est créé.
-- Le mode de filtrage est figé à 'Default' dans getVehicleOptions ; les autres modes (Old Cars, Race and Rally, Off-road…) ne sont jamais actifs.
-- activate() met active = true dès le début, activateFinished le remet à true à la fin de la séquence.
-- deactivate() ne remet pas active à false : après une désactivation, isActive() reste true et toggleActive()/activate() ne recréent rien (activate retourne si active est vrai). Bug probable du jeu.
-- onUpdate et onDeserialized sont des fonctions vides ; onVehicleSwitched ne fait rien (appel commenté).
-- Typo « backrgound » dans les logs.
+- vehicleCount is 1: only one vehicle is created.
+- The filter mode is frozen to 'Default' in getVehicleOptions; the other modes (Old Cars, Race and Rally, Off-road...) are never active.
+- activate() sets active = true right at the start, activateFinished sets it to true again at the end of the sequence.
+- deactivate() does not set active back to false: after a deactivation, isActive() stays true and toggleActive()/activate() recreate nothing (activate returns if active is true). Probable game bug.
+- onUpdate and onDeserialized are empty functions; onVehicleSwitched does nothing (call commented out).
+- Typo "backrgound" in the logs.
 
-**Dépendances (chargées avant) :** `util_stepHandler`
+**Dependencies (loaded first):** `util_stepHandler`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_backgroundActivities_g2g.activate()` | Active l'activité : sans effet si déjà active. Lance une séquence de pas (fondu au noir, spawn d'un véhicule aléatoire parmi getVehicleOptions, fondu depuis le noir) qui appelle activateFinished à la fin. Les ids des véhicules créés sont mémorisés. | 13 |
-| `gameplay_backgroundActivities_g2g.activateFinished()` | Callback de fin de la séquence d'activation : journalise et force active = true. *(interne)* | 30 |
-| `gameplay_backgroundActivities_g2g.deactivate()` | Supprime les véhicules créés (notifie l'éditeur si présent, puis obj:delete()) et vide la liste d'ids. Sans effet si l'activité n'est pas active. | 35 |
-| `gameplay_backgroundActivities_g2g.getVehicleOptions()` | Retourne (et met en cache) la liste des véhicules candidats : modèles de type Car ou Truck, hors bus et auxiliaires, avec au moins une config dont Top Speed > 10 et non auxiliaire. | 89 |
-| `gameplay_backgroundActivities_g2g.isActive()` | Indique si l'activité est active. | 70 |
-| `gameplay_backgroundActivities_g2g.onCareerActive(enabled)` | Hook appelé quand le mode carrière change d'état ; désactive l'activité si la carrière devient active. *(interne)* *(hook)* | 81 |
-| `gameplay_backgroundActivities_g2g.onClientEndMission()` | Hook appelé à la fin d'un niveau : désactive l'activité. *(interne)* *(hook)* | 62 |
-| `gameplay_backgroundActivities_g2g.onDeserialized()` | Hook appelé après le rechargement des extensions : corps vide. *(interne)* *(hook)* | 78 |
-| `gameplay_backgroundActivities_g2g.onSerialize()` | Hook appelé avant le rechargement des extensions : désactive l'activité. *(interne)* *(hook)* | 74 |
-| `gameplay_backgroundActivities_g2g.onUpdate(dtReal, dtSim, dtRaw)` | Hook de mise à jour : corps vide. *(interne)* *(hook)* | 59 |
-| `gameplay_backgroundActivities_g2g.onVehicleSwitched()` | Hook appelé au changement de véhicule contrôlé : ne fait rien. *(interne)* *(hook)* | 66 |
-| `gameplay_backgroundActivities_g2g.toggleActive()` | Désactive l'activité si elle est active, sinon l'active. | 50 |
+| `gameplay_backgroundActivities_g2g.activate()` | Activates the activity: no effect if already active. Launches a sequence of steps (fade to black, spawn of a random vehicle among getVehicleOptions, fade from black) that calls activateFinished at the end. The ids of the created vehicles are stored. | 13 |
+| `gameplay_backgroundActivities_g2g.activateFinished()` | End callback of the activation sequence: logs and forces active = true. *(internal)* | 30 |
+| `gameplay_backgroundActivities_g2g.deactivate()` | Deletes the created vehicles (notifies the editor if present, then obj:delete()) and empties the id list. No effect if the activity is not active. | 35 |
+| `gameplay_backgroundActivities_g2g.getVehicleOptions()` | Returns (and caches) the list of candidate vehicles: models of type Car or Truck, excluding buses and auxiliaries, with at least one config whose Top Speed > 10 and that is not auxiliary. | 89 |
+| `gameplay_backgroundActivities_g2g.isActive()` | Tells whether the activity is active. | 70 |
+| `gameplay_backgroundActivities_g2g.onCareerActive(enabled)` | Hook called when career mode changes state; deactivates the activity if career becomes active. *(internal)* *(hook)* | 81 |
+| `gameplay_backgroundActivities_g2g.onClientEndMission()` | Hook called at the end of a level: deactivates the activity. *(internal)* *(hook)* | 62 |
+| `gameplay_backgroundActivities_g2g.onDeserialized()` | Hook called after the extensions reload: empty body. *(internal)* *(hook)* | 78 |
+| `gameplay_backgroundActivities_g2g.onSerialize()` | Hook called before the extensions reload: deactivates the activity. *(internal)* *(hook)* | 74 |
+| `gameplay_backgroundActivities_g2g.onUpdate(dtReal, dtSim, dtRaw)` | Update hook: empty body. *(internal)* *(hook)* | 59 |
+| `gameplay_backgroundActivities_g2g.onVehicleSwitched()` | Hook called when the controlled vehicle changes: does nothing. *(internal)* *(hook)* | 66 |
+| `gameplay_backgroundActivities_g2g.toggleActive()` | Deactivates the activity if it is active, otherwise activates it. | 50 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_backgroundActivities_g2g.getVehicleOptions()`
 
-Retourne (et met en cache) la liste des véhicules candidats : modèles de type Car ou Truck, hors bus et auxiliaires, avec au moins une config dont Top Speed > 10 et non auxiliaire.
+Returns (and caches) the list of candidate vehicles: models of type Car or Truck, excluding buses and auxiliaries, with at least one config whose Top Speed > 10 and that is not auxiliary.
 
-- **renvoie** : table<integer, {model: string, configs: table[], paints: string[]}> Chaque entrée : clé du modèle, configs {config, name} et noms de peintures.
+- **returns**: table<integer, {model: string, configs: table[], paints: string[]}> Each entry: model key, configs {config, name} and paint names.
 
 #### `gameplay_backgroundActivities_g2g.isActive()`
 
-Indique si l'activité est active.
+Tells whether the activity is active.
 
-- **renvoie** : boolean|nil true si active ; nil tant qu'elle n'a jamais été activée.
+- **returns**: boolean|nil true if active; nil as long as it has never been activated.
 
 #### `gameplay_backgroundActivities_g2g.onCareerActive(enabled)`
 
-Hook appelé quand le mode carrière change d'état ; désactive l'activité si la carrière devient active.
+Hook called when career mode changes state; deactivates the activity if career becomes active.
 
-- `enabled` (*boolean*) : true si la carrière est activée.
+- `enabled` (*boolean*) : true if career is enabled.
 
 #### `gameplay_backgroundActivities_g2g.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook de mise à jour : corps vide.
+Update hook: empty body.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulation (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : {"util_stepHandler"}. |
+| `dependencies` | table<integer, string> | Extensions loaded before: {"util_stepHandler"}. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `delete`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/backgroundActivities/g2g.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/backgroundActivities/g2g.lua`.*

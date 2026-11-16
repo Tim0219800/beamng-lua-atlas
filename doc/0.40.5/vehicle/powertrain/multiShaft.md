@@ -1,62 +1,62 @@
 # `powertrain_multiShaft`
 
-*Fichier : `lua/vehicle/powertrain/multiShaft.lua` · VM : Véhicule · 143 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/multiShaft.lua` · VM: Vehicle · 143 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `multiShaft` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `multiShaft` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Composant powertrain `multiShaft` : répartiteur de couple à N sorties (N = clé jbeam `numberOfOutputPorts`), par exemple pour un pont à plusieurs essieux ou une boîte de transfert à plus de deux sorties. Catégories `shaft` et `differential`. Le couple d'entrée est réparti à parts égales entre les sorties, corrigé par un couplage visqueux qui rapproche les vitesses de sortie de la moyenne. La vitesse d'entrée est la moyenne des vitesses de sortie. Il n'a ni mode, ni gestion des dégâts/usure, ni état sauvegardable.
+Powertrain component `multiShaft`: torque splitter with N outputs (N = jbeam key `numberOfOutputPorts`), for example for a multi-axle drive or a transfer case with more than two outputs. Categories `shaft` and `differential`. The input torque is split equally between the outputs, corrected by a viscous coupling that brings the output speeds closer to the average. The input speed is the average of the output speeds. It has no mode, no damage/wear handling and no saveable state.
 
-## Exemple
+## Example
 
 ```lua
--- jbeam : ["transferCase", "multiShaft", "gearbox", 1, {"numberOfOutputPorts":3, "viscousCoef":50}]
+-- jbeam: ["transferCase", "multiShaft", "gearbox", 1, {"numberOfOutputPorts":3, "viscousCoef":50}]
 local d = powertrain.getDevice("transferCase")
 print(d.outputTorque1, d.outputTorque2, d.outputTorque3)
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : name, type, inputName, inputIndex, gearRatio (1), friction (lu mais non utilisé dans les calculs), electricsName, visualShaftAVName, viscousCoef (N·m par rad/s ; si absent : 100 * inertie de sortie totale, calculé dans calculateInertia), viscousSmoothing (25), defaultVirtualInertia, numberOfOutputPorts (défaut 0 !).
-- Champs principaux : inputAV (rad/s côté parent), outputAV1..outputAV<N> (rad/s, posés par les enfants), outputTorque1..outputTorque<N> (N·m), torqueDiff[i] (N·m de couple de couplage visqueux par sortie), numberOfOutputPorts, outputPorts (table {[i]=true}), outputAVNames et outputTorqueNames (tableaux de noms), requiredExternalInertiaOutputs ({1..N}), viscousCoef, gearRatio, cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, mode ('connected' uniquement).
-- Couple de sortie i = (couple parent * gearRatio) / N - lissage((outputAV_i - inputAV/gearRatio) * viscousCoef). Il n'y a pas de limite de couple de couplage.
-- Pièges : numberOfOutputPorts vaut 0 par défaut, ce qui donne un device sans sortie et une division par zéro dans velocityUpdate (inputAV = nan). calculateInertia suppose que cumulativeGearRatio et maxCumulativeGearRatio ont été trouvés (erreur Lua 'attempt to perform arithmetic on nil' s'il n'y a aucun enfant) et invCumulativeInertia = 1 / cumulativeInertia n'est pas protégé contre 0. Les fonctions applyDeformGroupDamage, setPartCondition, getPartCondition, setMode et onBreak n'existent pas sur ce device. Le frottement (friction) n'intervient pas dans le couple.
-- Les enfants de numéros 1..N doivent exister (children[i]) ; les gear ratios cumulés des enfants doivent être identiques, sinon un avertissement 'non-matching gear ratios' est logué.
+- Jbeam keys read: name, type, inputName, inputIndex, gearRatio (1), friction (read but not used in the calculations), electricsName, visualShaftAVName, viscousCoef (N·m per rad/s; if absent: 100 * total output inertia, computed in calculateInertia), viscousSmoothing (25), defaultVirtualInertia, numberOfOutputPorts (default 0!).
+- Main fields: inputAV (rad/s parent side), outputAV1..outputAV<N> (rad/s, set by the children), outputTorque1..outputTorque<N> (N·m), torqueDiff[i] (N·m of viscous coupling torque per output), numberOfOutputPorts, outputPorts (table {[i]=true}), outputAVNames and outputTorqueNames (arrays of names), requiredExternalInertiaOutputs ({1..N}), viscousCoef, gearRatio, cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, mode ('connected' only).
+- Output torque i = (parent torque * gearRatio) / N - smoothing((outputAV_i - inputAV/gearRatio) * viscousCoef). There is no limit on the coupling torque.
+- Pitfalls: numberOfOutputPorts is 0 by default, which gives a device without outputs and a division by zero in velocityUpdate (inputAV = nan). calculateInertia assumes that cumulativeGearRatio and maxCumulativeGearRatio have been found (Lua error 'attempt to perform arithmetic on nil' if there is no child) and invCumulativeInertia = 1 / cumulativeInertia is not protected against 0. The functions applyDeformGroupDamage, setPartCondition, getPartCondition, setMode and onBreak do not exist on this device. The friction (friction) does not take part in the torque.
+- The children numbered 1..N must exist (children[i]); the cumulative gear ratios of the children must be identical, otherwise a 'non-matching gear ratios' warning is logged.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_multiShaft.new(jbeamData)` | Construit le répartiteur : crée les N ports de sortie, les noms outputAV<i>/outputTorque<i>, les lisseurs de couplage visqueux et la liste requiredExternalInertiaOutputs. *(interne)* | 87 |
+| `powertrain_multiShaft.new(jbeamData)` | Builds the splitter: creates the N output ports, the names outputAV<i>/outputTorque<i>, the viscous coupling smoothers and the requiredExternalInertiaOutputs list. *(internal)* | 87 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_multiShaft.new(jbeamData)`
 
-Construit le répartiteur : crée les N ports de sortie, les noms outputAV<i>/outputTorque<i>, les lisseurs de couplage visqueux et la liste requiredExternalInertiaOutputs.
+Builds the splitter: creates the N output ports, the names outputAV<i>/outputTorque<i>, the viscous coupling smoothers and the requiredExternalInertiaOutputs list.
 
-- `jbeamData` (*table*) : Données jbeam du composant (numberOfOutputPorts requis).
-- **renvoie** : table Le device (classe `device`).
+- `jbeamData` (*table*) : jbeam data of the component (numberOfOutputPorts required).
+- **returns**: table The device (class `device`).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `deviceCategories` | table<string, boolean> | {shaft=true, differential=true}. |
-| `outputPorts` | table<integer, boolean> | Valeur par défaut du module {[1]=true}, remplacée dans chaque device par {[1..N]=true} selon numberOfOutputPorts. |
+| `outputPorts` | table<integer, boolean> | Default value of the module {[1]=true}, replaced in each device by {[1..N]=true} according to numberOfOutputPorts. |
 
-## Classe `device`
+## Class `device`
 
-Objet renvoyé par new(jbeamData).
+Object returned by new(jbeamData).
 
-Objet `device` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `device` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `device:calculateInertia()` | Somme les inerties cumulées des N enfants (journalise un avertissement si leurs rapports cumulés diffèrent), puis calcule cumulativeInertia, viscousCoef (si non fourni) et les rapports cumulés. | 41 |
-| `device:reset(jbeamData)` | Remet à zéro vitesses, couples, torqueDiff, lisseurs, mode 'connected' et relit gearRatio et friction. | 64 |
-| `device:torqueUpdate(dt)` | Appelée à chaque pas physique : répartit le couple d'entrée (* gearRatio) à parts égales et soustrait le couple visqueux lissé de chaque sortie. | 20 |
-| `device:validate()` | Appelée après construction du powertrain ; renvoie toujours true. | 37 |
-| `device:velocityUpdate(dt)` | Appelée à chaque pas physique : inputAV = moyenne des vitesses de sortie * gearRatio, écrit dans le champ de vitesse du parent. | 10 |
+| `device:calculateInertia()` | Sums the cumulative inertias of the N children (logs a warning if their cumulative ratios differ), then computes cumulativeInertia, viscousCoef (if not provided) and the cumulative ratios. | 41 |
+| `device:reset(jbeamData)` | Resets speeds, torques, torqueDiff, smoothers, mode 'connected' and rereads gearRatio and friction. | 64 |
+| `device:torqueUpdate(dt)` | Called at each physics step: splits the input torque (* gearRatio) equally and subtracts the smoothed viscous torque from each output. | 20 |
+| `device:validate()` | Called after the powertrain is built; always returns true. | 37 |
+| `device:velocityUpdate(dt)` | Called at each physics step: inputAV = average of the output speeds * gearRatio, written into the parent's speed field. | 10 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/multiShaft.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/multiShaft.lua`.*

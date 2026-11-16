@@ -1,28 +1,187 @@
 {
   "path": "lua/ge/extensions/flowgraph/modules/timerModule.lua",
-  "module": "Module flowgraph (moduleOrder 0) qui gère des minuteurs. Il tient trois horloges globales cumulées (real, sim, raw) mises à jour par onUpdate avec dtReal, dtSim et dtRaw ; chaque minuteur référence l'une d'elles (mode 'dtSim', 'dtReal' ou 'dtRaw'), a un temps de départ, une durée (défaut 5 s) et peut être mis en pause. Les valeurs sont stockées dans un variableStorage et finalisées à la fin du tick.",
+  "module": "Flowgraph module (moduleOrder 0) that manages timers. It keeps three cumulative global clocks (real, sim, raw) updated by onUpdate with dtReal, dtSim and dtRaw; each timer references one of them (mode 'dtSim', 'dtReal' or 'dtRaw'), has a start time, a duration (default 5 s) and can be paused. The values are stored in a variableStorage and finalized at the end of the tick.",
   "notes": [
-    "Unités : secondes. Mode par défaut : 'dtSim' (temps de simulation, affecté par le ralenti et la pause).",
-    "Les pauses sont différées : setPause pose un drapeau (pauseFlag) appliqué dans afterTrigger.",
-    "Bug probable : clear() fait C.idCounter = 0 sur la classe et non sur self ; l'instance garde son compteur d'ids si self.idCounter a déjà été créé.",
-    "setMode utilise variables:set alors que les autres fonctions utilisent variables:change ; le comportement exact dépend de variableStorage (non vérifié ici).",
-    "setPause provoque une erreur si l'id est inconnu."
+    "Units: seconds. Default mode: 'dtSim' (simulation time, affected by slow motion and pause).",
+    "Pauses are deferred: setPause sets a flag (pauseFlag) applied in afterTrigger.",
+    "Probable bug: clear() does C.idCounter = 0 on the class and not on self; the instance keeps its id counter if self.idCounter was already created.",
+    "setMode uses variables:set whereas the other functions use variables:change; the exact behavior depends on variableStorage (not checked here).",
+    "setPause raises an error if the id is unknown."
   ],
   "functions": {
-    "getFreeId": {"desc": "Incrémente et renvoie un id de minuteur.", "returns": [{"type": "integer", "desc": "id"}]},
-    "init": {"desc": "Crée le variableStorage et appelle clear().", "internal": true},
-    "clear": {"desc": "Vide variables et minuteurs, remet les horloges globales à 0.", "internal": true},
-    "getGlobalTime": {"desc": "Renvoie l'horloge globale du mode demandé.", "params": {"mode": {"type": "string", "desc": "'dtSim', 'dtReal' ou 'dtRaw'"}}, "returns": [{"type": "number", "desc": "temps cumulé (s), 0 si mode inconnu"}]},
-    "addTimer": {"desc": "Crée un minuteur et renvoie son id.", "params": {"data": {"type": "table", "desc": "mode (défaut 'dtSim'), time (temps déjà écoulé, défaut 0), duration (défaut 5)"}}, "returns": [{"type": "integer", "desc": "id du minuteur"}]},
-    "getTimer": {"desc": "Renvoie l'objet minuteur complet (start, mode, duration, isPaused…).", "params": {"id": {"type": "integer", "desc": "id du minuteur"}}, "returns": [{"type": "table|nil", "desc": "minuteur"}]},
-    "set": {"desc": "Change un champ du minuteur (start, mode, duration) via le variableStorage.", "params": {"id": {"type": "integer", "desc": "id du minuteur"}, "field": {"type": "string", "desc": "start, mode ou duration"}, "val": {"type": "any", "desc": "nouvelle valeur"}}},
-    "setPause": {"desc": "Met en pause ou reprend un minuteur ; l'effet est appliqué dans afterTrigger. Ne fait rien si l'état demandé est déjà l'état actuel ; avertit si un drapeau est déjà posé.", "params": {"id": {"type": "integer", "desc": "id du minuteur"}, "val": {"type": "boolean", "desc": "true = pause, false = reprise"}}},
-    "setElapsedTime": {"desc": "Fixe le temps écoulé d'un minuteur (en pause : mémorise la valeur ; sinon recalcule le départ).", "params": {"id": {"type": "integer", "desc": "id du minuteur"}, "time": {"type": "number", "desc": "temps écoulé (s)"}}},
-    "setMode": {"desc": "Change le mode d'horloge du minuteur en conservant le temps écoulé (si non en pause).", "params": {"id": {"type": "integer", "desc": "id du minuteur"}, "mode": {"type": "string", "desc": "'dtSim', 'dtReal' ou 'dtRaw'"}}},
-    "getElapsedTime": {"desc": "Renvoie le temps écoulé : valeur figée si en pause, sinon horloge du mode moins le départ.", "params": {"id": {"type": "integer", "desc": "id du minuteur"}}, "returns": [{"type": "number", "desc": "temps écoulé (s)"}]},
-    "isComplete": {"desc": "Vrai si le temps écoulé a atteint la durée.", "params": {"id": {"type": "integer", "desc": "id du minuteur"}}, "returns": [{"type": "boolean", "desc": "terminé"}]},
-    "onUpdate": {"desc": "Appelé à chaque mise à jour du manager : ajoute dtReal, dtSim et dtRaw aux horloges globales.", "params": {"dtReal": {"type": "number", "desc": "delta temps réel (s)"}, "dtSim": {"type": "number", "desc": "delta temps de simulation (s)"}, "dtRaw": {"type": "number", "desc": "delta temps brut (s)"}}, "internal": true},
-    "afterTrigger": {"desc": "Appelé après le tick du graphe : applique les pauses ou reprises en attente puis finalise les variables.", "internal": true},
-    "executionStopped": {"desc": "Appelé à l'arrêt du projet : appelle clear().", "internal": true}
+    "getFreeId": {
+      "desc": "Increments and returns a timer id.",
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "id"
+        }
+      ]
+    },
+    "init": {
+      "desc": "Creates the variableStorage and calls clear().",
+      "internal": true
+    },
+    "clear": {
+      "desc": "Clears variables and timers, resets the global clocks to 0.",
+      "internal": true
+    },
+    "getGlobalTime": {
+      "desc": "Returns the global clock of the requested mode.",
+      "params": {
+        "mode": {
+          "type": "string",
+          "desc": "'dtSim', 'dtReal' or 'dtRaw'"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "cumulative time (s), 0 if the mode is unknown"
+        }
+      ]
+    },
+    "addTimer": {
+      "desc": "Creates a timer and returns its id.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "mode (default 'dtSim'), time (time already elapsed, default 0), duration (default 5)"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "timer id"
+        }
+      ]
+    },
+    "getTimer": {
+      "desc": "Returns the full timer object (start, mode, duration, isPaused...).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "timer id"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "timer"
+        }
+      ]
+    },
+    "set": {
+      "desc": "Changes a timer field (start, mode, duration) via the variableStorage.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "timer id"
+        },
+        "field": {
+          "type": "string",
+          "desc": "start, mode or duration"
+        },
+        "val": {
+          "type": "any",
+          "desc": "new value"
+        }
+      }
+    },
+    "setPause": {
+      "desc": "Pauses or resumes a timer; the effect is applied in afterTrigger. Does nothing if the requested state is already the current one; warns if a flag is already set.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "timer id"
+        },
+        "val": {
+          "type": "boolean",
+          "desc": "true = pause, false = resume"
+        }
+      }
+    },
+    "setElapsedTime": {
+      "desc": "Sets a timer's elapsed time (paused: stores the value; otherwise recomputes the start).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "timer id"
+        },
+        "time": {
+          "type": "number",
+          "desc": "elapsed time (s)"
+        }
+      }
+    },
+    "setMode": {
+      "desc": "Changes the timer's clock mode while keeping the elapsed time (if not paused).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "timer id"
+        },
+        "mode": {
+          "type": "string",
+          "desc": "'dtSim', 'dtReal' or 'dtRaw'"
+        }
+      }
+    },
+    "getElapsedTime": {
+      "desc": "Returns the elapsed time: frozen value if paused, otherwise the mode's clock minus the start.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "timer id"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "elapsed time (s)"
+        }
+      ]
+    },
+    "isComplete": {
+      "desc": "True if the elapsed time has reached the duration.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "timer id"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "completed"
+        }
+      ]
+    },
+    "onUpdate": {
+      "desc": "Called on every manager update: adds dtReal, dtSim and dtRaw to the global clocks.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "real time delta (s)"
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "simulation time delta (s)"
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "raw time delta (s)"
+        }
+      },
+      "internal": true
+    },
+    "afterTrigger": {
+      "desc": "Called after the graph tick: applies the pending pauses or resumes then finalizes the variables.",
+      "internal": true
+    },
+    "executionStopped": {
+      "desc": "Called when the project stops: calls clear().",
+      "internal": true
+    }
   }
 }

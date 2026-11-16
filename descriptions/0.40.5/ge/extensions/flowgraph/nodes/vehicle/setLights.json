@@ -1,20 +1,20 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/setLights.lua",
-  "module": "Nœud « Set Lights » (catégorie `repeat_instant`). Règle l'état des phares avant : `core_vehicleBridge.executeAction(veh,'setLightMode', mode)`. `mode` : 0 éteint, 1 allumé, 2 pleins phares. Pins d'entrée : `vehId`, `mode`.",
+  "module": "Node \"Set Lights\" (category `repeat_instant`). Sets the state of the headlights: `core_vehicleBridge.executeAction(veh,'setLightMode', mode)`. `mode`: 0 off, 1 on, 2 high beams. Input pins: `vehId`, `mode`.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "init": {
-          "desc": "Constructeur vide.",
+          "desc": "Empty constructor.",
           "internal": true
         },
         "postInit": {
-          "desc": "Définit les modèles de `mode` (Off, On, Highbeams).",
+          "desc": "Defines the templates of `mode` (Off, On, Highbeams).",
           "internal": true
         },
         "work": {
-          "desc": "Envoie `setLightMode` au véhicule.",
+          "desc": "Sends `setLightMode` to the vehicle.",
           "internal": true
         }
       }

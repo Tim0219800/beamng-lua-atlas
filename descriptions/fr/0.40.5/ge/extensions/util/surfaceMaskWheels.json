@@ -1,0 +1,128 @@
+{
+  "path": "lua/ge/extensions/util/surfaceMaskWheels.lua",
+  "module": "Fait laisser aux roues du véhicule du joueur une trace dans le « surface mask » (SurfaceMaskClipmap, objet C++ qui garde un masque dynamique de la surface du terrain, par exemple l'herbe aplatie). Toutes les 0,05 s, pour chaque roue, il convertit la position (nœud d'axe de roue) en monde et appelle maskCircleWorld (premier contact) ou maskLineWorld (segment depuis la dernière position) avec une largeur de 1,8 m (3,2 m en mode tondeuse). Il possède aussi le cycle de vie du clipmap : stockage des tuiles sous /temp/levels/<niveau>/dynamicTiles, recentrage sur le véhicule, effacement. Il offre un mode tondeuse (particules d'herbe coupée) et des outils de débogage (ligne de console, fenêtre ImGui « SurfaceMask Pages », contours 3D des pages de 16 m). D'autres extensions (par exemple util_lawnMower) s'en servent comme service via isReady, setCenter, maskCircleWorld et maskLineWorld.",
+  "usage": "extensions.load('util_surfaceMaskWheels') -- actif dès le chargement (onExtensionLoaded appelle setEnabled(true))\nutil_surfaceMaskWheels.setMowingEnabled(true)\nutil_surfaceMaskWheels.setDebugMode(1) -- ligne de statistiques dans la console toutes les secondes",
+  "notes": [
+    "Seul le véhicule du joueur 0 est traité ; les données (décalages des roues, positions précédentes) sont gardées par identifiant de véhicule et supprimées à onVehicleDestroyed et onVehicleResetted (reconstruction après reset ou changement de pièces).",
+    "Paramètres internes (non exposés mais sérialisés) : maskInterval 0,05 s, maskWidth 1,8 m, mowerWidth 3,2 m, flattenStrength 1, markStrength 0,75, mowerMarkStrength 1, seuils de déplacement par intervalle minMoveSq 0,04 (0,2 m) et maxMoveSq 100 (10 m ; au-delà la roue est considérée comme téléportée et ignorée), pageWorldSize 16 m.",
+    "Le mode tondeuse envoie à chaque tronçon marqué la commande obj:addParticleByNodesRelative (type de particule 21, 3 particules) au véhicule.",
+    "Modes de débogage : 0 aucun, 1 ligne de console (tag surfaceMask) throttlée à 1 Hz, 2 fenêtre ImGui complète plus contours 3D des pages autour du véhicule. setDebugMode active la collecte de statistiques côté C++ seulement quand le mode est > 0.",
+    "M.enabled vaut false à la déclaration mais onExtensionLoaded le met à true aussitôt ; onSerialize/onDeserialized conservent l'état entre rechargements (wheelMaskEnabled, interrupteur interne de test, n'est pas sérialisé).",
+    "Toutes les fonctions qui touchent SurfaceMaskClipmap ne font rien si ce global n'existe pas (build sans clipmap) ; isReady() le vérifie."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extension chargée avant : ui_imgui."},
+    "enabled": {"type": "boolean", "desc": "true quand le marquage par les roues est actif (modifié par setEnabled/toggle)."}
+  },
+  "functions": {
+    "setEnabled": {
+      "desc": "Active ou désactive le marquage par les roues et remet à zéro le minuteur.",
+      "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}}
+    },
+    "toggle": {
+      "desc": "Inverse l'état d'activation."
+    },
+    "clear": {
+      "desc": "Efface tout le surface mask (SurfaceMaskClipmap:clear())."
+    },
+    "isReady": {
+      "desc": "Indique si l'objet SurfaceMaskClipmap existe. Permet aux modules consommateurs de sauter leur travail.",
+      "returns": [{"type": "boolean", "desc": "true si SurfaceMaskClipmap est disponible."}]
+    },
+    "setCenter": {
+      "desc": "Recentre le clipmap : le C++ sauvegarde les tuiles modifiées qui sortent et charge celles qui entrent.",
+      "params": {
+        "x": {"type": "number", "desc": "Coordonnée X monde (m)."},
+        "y": {"type": "number", "desc": "Coordonnée Y monde (m)."}
+      }
+    },
+    "maskCircleWorld": {
+      "desc": "Estampille un disque dans le masque.",
+      "params": {
+        "x": {"type": "number", "desc": "X monde du centre (m)."},
+        "y": {"type": "number", "desc": "Y monde du centre (m)."},
+        "radius": {"type": "number", "desc": "Rayon (m)."},
+        "flatten": {"type": "number", "desc": "Force d'aplatissement de l'herbe (0 à 1 d'après les valeurs utilisées)."},
+        "mark": {"type": "number", "desc": "Force de marquage (0 à 1 d'après les valeurs utilisées)."}
+      }
+    },
+    "maskLineWorld": {
+      "desc": "Estampille un segment épais dans le masque.",
+      "params": {
+        "x1": {"type": "number", "desc": "X monde du début (m)."},
+        "y1": {"type": "number", "desc": "Y monde du début (m)."},
+        "x2": {"type": "number", "desc": "X monde de la fin (m)."},
+        "y2": {"type": "number", "desc": "Y monde de la fin (m)."},
+        "width": {"type": "number", "desc": "Largeur du trait (m)."},
+        "flatten": {"type": "number", "desc": "Force d'aplatissement."},
+        "mark": {"type": "number", "desc": "Force de marquage."}
+      }
+    },
+    "setMowingEnabled": {
+      "desc": "Active ou désactive le mode tondeuse (largeur 3,2 m, marquage 1, particules d'herbe).",
+      "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}}
+    },
+    "toggleMowing": {
+      "desc": "Inverse le mode tondeuse."
+    },
+    "setMowerWidth": {
+      "desc": "Fixe la largeur de coupe de la tondeuse.",
+      "params": {"width": {"type": "number|nil", "desc": "Largeur en mètres ; nil conserve la valeur actuelle."}}
+    },
+    "setDebugMode": {
+      "desc": "Choisit le mode de débogage (0 aucun, 1 console, 2 fenêtre + 3D) ; la valeur est bornée à 0..2 et la première ligne de console est émise tout de suite.",
+      "params": {"mode": {"type": "integer|nil", "desc": "Mode de débogage."}}
+    },
+    "setDebug": {
+      "desc": "Compatibilité : true active le mode 2, false le mode 0.",
+      "params": {"enabled": {"type": "boolean", "desc": "Activer le débogage complet."}}
+    },
+    "cycleDebug": {
+      "desc": "Passe au mode de débogage suivant (0, 1, 2, puis retour à 0)."
+    },
+    "setDebugPageRadius": {
+      "desc": "Fixe le rayon (en pages) de la grille de débogage affichée autour du véhicule (0 = page courante seulement).",
+      "params": {"radius": {"type": "integer|nil", "desc": "Rayon en pages, minimum 0."}}
+    },
+    "getPerformanceStats": {
+      "desc": "Renvoie une copie des statistiques de performance côté Lua.",
+      "returns": [{"type": "table", "desc": "{maskTicks, lastLuaFrameMs, avgLuaFrameMs, lastLuaMaskMs, avgLuaMaskMs, lastWheelCount, lastMovedWheels, lastSkippedWheels, lastMaskCalls, lastParticleCalls}."}]
+    },
+    "onPreRender": {
+      "desc": "Hook appelé à chaque frame avant le rendu : accumule le temps simulé, exécute le marquage des roues du véhicule du joueur à chaque maskInterval, puis le débogage éventuel.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Durée réelle de la frame (s)."},
+        "dtSim": {"type": "number", "desc": "Durée simulée (s), prioritaire sur dtReal."}
+      },
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement de l'extension : active le module, coupe le débogage et initialise le stockage des tuiles.",
+      "internal": true
+    },
+    "onClientStartMission": {
+      "desc": "Hook appelé au démarrage d'un niveau : repointe le stockage des tuiles du clipmap vers le niveau courant.",
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook appelé quand un véhicule est détruit : supprime ses données de roues.",
+      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook appelé après un reset de véhicule : supprime ses données de roues pour les reconstruire.",
+      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation avant rechargement des extensions : renvoie l'état et les paramètres (enabled, largeurs, forces, seuils, mode de débogage, tondeuse, particules).",
+      "returns": [{"type": "table", "desc": "État à restaurer."}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après rechargement avec l'état sérialisé ; restaure les paramètres (taille de tuile de débogage limitée à 36).",
+      "params": {"data": {"type": "table|nil", "desc": "État sérialisé."}},
+      "internal": true
+    }
+  }
+}

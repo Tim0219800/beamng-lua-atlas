@@ -1,23 +1,23 @@
 # `flowgraph_nodes_util_getTableValueByKey`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/getTableValueByKey.lua` · VM : Game Engine (GE) · 33 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/getTableValueByKey.lua` · VM: Game Engine (GE) · 33 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/getTableValueByKey")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/getTableValueByKey")` (file under extensions/ but not a regular extension)
 
-Nœud « Get Table Value By Key » (repeat_instant). Lit une valeur dans une table à partir d'une clé (string ou number). Entrées : value (table), key. Sortie : value (any).
+Node "Get Table Value By Key" (repeat_instant). Reads a value from a table using a key (string or number). Inputs: value (table), key. Output: value (any).
 
-## Remarques
+## Notes
 
-- Si la clé est absente ou vaut false, la sortie garde sa valeur précédente au lieu d'être vidée.
-- Les pins d'entrée et de sortie s'appellent tous deux « value ».
+- If the key is absent or is false, the output keeps its previous value instead of being cleared.
+- The input and output pins are both named "value".
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Si la table est connectée, écrit table[key] dans la sortie value seulement si le résultat est non nil/false ; sinon met la sortie à nil. | 21 |
+| `C:work()` | If the table is connected, writes table[key] to the output value only if the result is non-nil/false; otherwise sets the output to nil. | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/getTableValueByKey.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/getTableValueByKey.lua`.*

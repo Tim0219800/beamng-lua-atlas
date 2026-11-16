@@ -1,32 +1,32 @@
 # `libs_LuaIRC_util`
 
-*Fichier : `lua/common/libs/LuaIRC/util.lua` · VM : Commun (GE + véhicule) · 137 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/LuaIRC/util.lua` · VM: Common (GE + vehicle) · 137 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/LuaIRC/util")`
+**Access:** `require("libs/LuaIRC/util")`
 
-Partie de la bibliothèque tierce LuaIRC (client IRC). Module "irc" : analyse des lignes du protocole IRC (parse), des pseudos et préfixes (parseNick, parsePrefix, parseAccess), validation de pseudo, générateur de pseudo de secours, et mise en forme mIRC (couleurs, gras, souligné).
+Part of the third-party LuaIRC library (IRC client). Module "irc": parsing of IRC protocol lines (parse), nicknames and prefixes (parseNick, parsePrefix, parseAccess), nickname validation, fallback nickname generator, and mIRC formatting (colors, bold, underline).
 
-## Exemple
+## Example
 
 ```lua
-local prefix, cmd, params = irc.parse(":nick!user@host PRIVMSG #chan :salut")
--- prefix = "nick!user@host", cmd = "PRIVMSG", params = {"#chan", "salut"}
+local prefix, cmd, params = irc.parse(":nick!user@host PRIVMSG #chan :hello")
+-- prefix = "nick!user@host", cmd = "PRIVMSG", params = {"#chan", "hello"}
 ```
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `bold(text)` | Entoure le texte de l'octet de contrôle gras mIRC (0x02). | 105 |
-| `checkNick(nick)` | Vérifie qu'un pseudo ne contient que des caractères IRC valides et ne commence pas par un chiffre ou un tiret. | 114 |
-| `defaultNickGenerator(nick)` | Génère un pseudo de remplacement en incrémentant le code d'un caractère choisi au hasard (revient à 65 si hors de 65..125). Utilisé quand le pseudo est refusé (codes 432/433). | 118 |
-| `parse(line)` | Découpe une ligne IRC brute en préfixe (sans le ':' initial), commande et liste de paramètres. Le paramètre final introduit par ' :' est ajouté en dernier. | 14 |
-| `parseAccess(accessString)` | Convertit une chaîne de symboles en table {op, halfop, voice} (@ = op, % = halfop, + = voice). | 67 |
-| `parseNick(nick)` | Sépare les symboles d'accès (@, +) du pseudo, comme dans une liste NAMES. | 53 |
-| `parsePrefix(prefix)` | Analyse un préfixe nick!user@host en table {access, nick, username, host}. Sans préfixe valide, seuls les droits d'accès par défaut sont remplis. | 58 |
-| `underline(text)` | Entoure le texte de l'octet de contrôle souligné mIRC (0x1F). | 110 |
+| `bold(text)` | Surrounds the text with the mIRC bold control byte (0x02). | 105 |
+| `checkNick(nick)` | Checks that a nickname only contains valid IRC characters and does not start with a digit or a hyphen. | 114 |
+| `defaultNickGenerator(nick)` | Generates a replacement nickname by incrementing the code of a randomly chosen character (goes back to 65 if outside 65..125). Used when the nickname is refused (codes 432/433). | 118 |
+| `parse(line)` | Splits a raw IRC line into prefix (without the leading ':'), command and parameter list. The final parameter introduced by ' :' is added last. | 14 |
+| `parseAccess(accessString)` | Converts a string of symbols into a table {op, halfop, voice} (@ = op, % = halfop, + = voice). | 67 |
+| `parseNick(nick)` | Separates the access symbols (@, +) from the nickname, as in a NAMES list. | 53 |
+| `parsePrefix(prefix)` | Parses a nick!user@host prefix into a table {access, nick, username, host}. Without a valid prefix, only the default access rights are filled in. | 58 |
+| `underline(text)` | Surrounds the text with the mIRC underline control byte (0x1F). | 110 |
 
-**Globales affectées :** `color`
+**Globals assigned:** `color`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/LuaIRC/util.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/LuaIRC/util.lua`.*

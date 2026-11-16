@@ -1,154 +1,154 @@
 # `electrics`
 
-*Fichier : `lua/vehicle/electrics.lua` · VM : Véhicule · 1114 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/electrics.lua` · VM: Vehicle · 1114 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `electrics`
+**Access:** global `electrics`
 
-Table de valeurs électriques du véhicule (`electrics.values`) partagée par tous les contrôleurs, l'UI et les extensions, plus la logique des feux, clignotants, warning, barre lumineuse, klaxon et du niveau d'allumage (ignition). Un moddeur lit `electrics.values.xxx` pour connaître l'état du véhicule (régime, vitesse, feux…) et appelle les fonctions `toggle_*`/`set_*` pour agir sur les feux ou la clé de contact. Les contrôleurs et le jbeam (sections `electrics`/`components.electrics`) écrivent leurs propres clés dans cette table.
+Table of vehicle electrical values (`electrics.values`) shared by all controllers, the UI and extensions, plus the logic of lights, turn signals, warning, light bar, horn and ignition level. A modder reads `electrics.values.xxx` to know the vehicle state (RPM, speed, lights...) and calls the `toggle_*`/`set_*` functions to act on the lights or the ignition key. Controllers and the jbeam (`electrics`/`components.electrics` sections) write their own keys in this table.
 
-## Exemple
+## Example
 
 ```lua
--- Dans un contrôleur ou une extension véhicule
+-- In a controller or a vehicle extension
 local rpm = electrics.values.rpm
-electrics.setIgnitionLevel(2)      -- contact mis, démarreur non engagé
-electrics.set_warn_signal(true)     -- feux de détresse
-electrics.values.myCustomValue = 1 -- valeur lue ensuite par l'UI / les streams
+electrics.setIgnitionLevel(2)      -- ignition on, starter not engaged
+electrics.set_warn_signal(true)     -- hazard lights
+electrics.values.myCustomValue = 1 -- value then read by the UI / streams
 ```
 
-## Remarques
+## Notes
 
-- Boucle de mise à jour : electrics.updateGFX(dt) (1re étape) -> les contrôleurs écrivent leurs valeurs -> electrics.updateGFXSecondStep(dt) (2e étape : brakelights, valeurs importées du réseau, surcharge par niveau d'allumage, valeurs custom jbeam, lisseurs).
-- À la fin de updateGFX, tous les booléens de electrics.values sont convertis en 0/1 (les clés listées dans M.disabledState sont mises à nil). Les valeurs écrites après (seconde étape, contrôleurs) peuvent rester booléennes : tester avec `== 1` ou `> 0` ne marche pas pour true.
-- Clés initialisées dans le fichier : throttle, brake, steering, clutch, wheelspeed, odometer, avgWheelAV, airspeed, horn, rpmspin, rpm, boost, boostMax. init/reset ajoutent aussi airflowspeed et electricalLoadCoef (=1) et ignitionLevel.
-- Clés écrites par updateGFX : accXSmooth/accYSmooth/accZSmooth (sensors.gx2/gy2/gz2), odometer et trip (partCondition, voir ce module pour l'unité), nop (=0), parkingbrake (copie de parkingbrake_input), parkingbrakelight, lights et lights_state (0 éteint, 1 croisement, 2 route), turnsignal (-1 gauche, 0, 1 droite), airspeed (obj:getGroundSpeed(), nom trompeur : vitesse sol), airflowspeed (obj:getAirflowSpeed()), altitude (obj:getAltitude()), parking (toujours 0, TODO dans le code), reverse (gearIndex < 0), signal_L/signal_R (clignotant allumé pendant l'impulsion), hazard, hazard_enabled, lightbar (0 éteint, 1 lumières, 2 lumières+sirène), lowpressure (beamstate.lowpressure), oil (oiltemp >= 130), lowhighbeam, lowbeam, highbeam, fog, horn, lowhighbeam_signal_R/L (style américain), highbeam_wigwag_R/L, reverse_wigwag_R/L, rpmTacho (rpm lissé par un sigmoïde temporel), rpmspin (angle en degrés de la 'roue' de régime, modulo 360), signal_right_input/signal_left_input (état de commande des clignotants), boost (turboBoost + superchargerBoost), boostMax (max de turboBoostMax et superchargerBoostMax).
-- Clés écrites par updateGFXSecondStep : brakelights (ceil(brake) si non fourni par un contrôleur), brakelight_signal_R/L.
-- Clés LUES mais écrites ailleurs : ignitionLevel (écrit ici aussi), gearIndex, oiltemp, watertemp, fuel, wigwag_R, wigwag_L, parkingbrake_input, turboBoost, turboBoostMax, superchargerBoost, superchargerBoostMax, steering (en degrés brut du volant : seuils 60 et 10 pour l'arrêt auto des clignotants), rpm. Clés remises à 0 par la surcharge 'european' quand ignitionLevel == 0 : brakelights, parkingbrakelight, brakelight_signal_R/L, parking, reverse, lights, lights_state, turnsignal, signal_L/R, hazard, hazard_enabled, lowpressure, oil, lowhighbeam, lowbeam, highbeam, fog, horn, lowhighbeam_signal_R/L, highbeam_wigwag_R/L, reverse_wigwag_R/L, signal_right_input, signal_left_input, fuel, lowfuel, abs, esc, tcs, oiltemp, watertemp, checkengine, ignition, running, engineRunning.
-- Lisseurs par défaut (exponentiels) : wheelspeed, gear_A, rpm, lights, turnsignal, airspeed, airflowspeed, altitude (paramètre 10) ; fuel, oiltemp, watertemp (paramètre 100). Le jbeam peut les remplacer via electrics.smoothers (types exponential, temporal, temporalNonLinear). Les lisseurs sont appliqués en tout dernier, après les valeurs custom.
-- Niveaux d'allumage : 0 arrêt, 1 accessoires, 2 marche (moteur autorisé à tourner), 3 démarreur. Les niveaux interdits par jbeam (allowedIgnitionLevels, défaut {0,1,2,3}) sont remplacés par le plus proche niveau supérieur autorisé, sinon inférieur. Le niveau initial vient du réglage spawnVehicleIgnitionLevel (défaut 3) ou de config.additionalVehicleData.spawnWithEngineRunning (true => 3, false => 0).
-- Jbeam : electrics.indicatorCycleTime (défaut 0.8 s, un demi-cycle = durée d'un état on/off), electrics.ignitionLevelOverrideType (seul 'european' existe), electrics.allowedIgnitionLevels, electrics.smoothers, electrics.customValues (voir electricsCustomValueParser).
-- Le clignotant s'arrête tout seul (autoCancel) quand le volant a dépassé 60 dans le sens du virage puis est revenu vers le neutre (seuil 10), pour toggle_left/right_signal et pour set_*_signal(state, true).
-- Incohérence : M.resetLastStage pointe sur la même fonction que M.initLastStage (qui force le niveau 3 vers 2).
-- Risque d'erreur : updateGFX évalue `vals.parkingbrake > 0` ; si parkingbrake_input n'a jamais été écrit par un contrôleur/input, la comparaison est faite sur nil (erreur Lua).
-- toggle_lights fait tourner lightsState 0 -> 1 -> 2 -> 0 ; setLightsState n'a aucune validation.
+- Update loop: electrics.updateGFX(dt) (1st step) -> controllers write their values -> electrics.updateGFXSecondStep(dt) (2nd step: brakelights, values imported from the network, override by ignition level, jbeam custom values, smoothers).
+- At the end of updateGFX, all booleans in electrics.values are converted to 0/1 (the keys listed in M.disabledState are set to nil). Values written afterwards (second step, controllers) may remain booleans: testing with `== 1` or `> 0` does not work for true.
+- Keys initialized in the file: throttle, brake, steering, clutch, wheelspeed, odometer, avgWheelAV, airspeed, horn, rpmspin, rpm, boost, boostMax. init/reset also add airflowspeed and electricalLoadCoef (=1) and ignitionLevel.
+- Keys written by updateGFX: accXSmooth/accYSmooth/accZSmooth (sensors.gx2/gy2/gz2), odometer and trip (partCondition, see that module for the unit), nop (=0), parkingbrake (copy of parkingbrake_input), parkingbrakelight, lights and lights_state (0 off, 1 low beam, 2 high beam), turnsignal (-1 left, 0, 1 right), airspeed (obj:getGroundSpeed(), misleading name: ground speed), airflowspeed (obj:getAirflowSpeed()), altitude (obj:getAltitude()), parking (always 0, TODO in the code), reverse (gearIndex < 0), signal_L/signal_R (turn signal on during the pulse), hazard, hazard_enabled, lightbar (0 off, 1 lights, 2 lights+siren), lowpressure (beamstate.lowpressure), oil (oiltemp >= 130), lowhighbeam, lowbeam, highbeam, fog, horn, lowhighbeam_signal_R/L (US style), highbeam_wigwag_R/L, reverse_wigwag_R/L, rpmTacho (rpm smoothed by a temporal sigmoid), rpmspin (angle in degrees of the RPM 'wheel', modulo 360), signal_right_input/signal_left_input (turn signal command state), boost (turboBoost + superchargerBoost), boostMax (max of turboBoostMax and superchargerBoostMax).
+- Keys written by updateGFXSecondStep: brakelights (ceil(brake) if not provided by a controller), brakelight_signal_R/L.
+- Keys READ but written elsewhere: ignitionLevel (also written here), gearIndex, oiltemp, watertemp, fuel, wigwag_R, wigwag_L, parkingbrake_input, turboBoost, turboBoostMax, superchargerBoost, superchargerBoostMax, steering (raw steering wheel degrees: thresholds 60 and 10 for the turn signal auto-cancel), rpm. Keys reset to 0 by the 'european' override when ignitionLevel == 0: brakelights, parkingbrakelight, brakelight_signal_R/L, parking, reverse, lights, lights_state, turnsignal, signal_L/R, hazard, hazard_enabled, lowpressure, oil, lowhighbeam, lowbeam, highbeam, fog, horn, lowhighbeam_signal_R/L, highbeam_wigwag_R/L, reverse_wigwag_R/L, signal_right_input, signal_left_input, fuel, lowfuel, abs, esc, tcs, oiltemp, watertemp, checkengine, ignition, running, engineRunning.
+- Default smoothers (exponential): wheelspeed, gear_A, rpm, lights, turnsignal, airspeed, airflowspeed, altitude (parameter 10); fuel, oiltemp, watertemp (parameter 100). The jbeam can replace them via electrics.smoothers (types exponential, temporal, temporalNonLinear). The smoothers are applied last, after the custom values.
+- Ignition levels: 0 off, 1 accessories, 2 run (engine allowed to run), 3 starter. Levels forbidden by jbeam (allowedIgnitionLevels, default {0,1,2,3}) are replaced by the nearest allowed higher level, otherwise lower. The initial level comes from the spawnVehicleIgnitionLevel setting (default 3) or from config.additionalVehicleData.spawnWithEngineRunning (true => 3, false => 0).
+- Jbeam: electrics.indicatorCycleTime (default 0.8 s, a half-cycle = duration of an on/off state), electrics.ignitionLevelOverrideType (only 'european' exists), electrics.allowedIgnitionLevels, electrics.smoothers, electrics.customValues (see electricsCustomValueParser).
+- The turn signal stops by itself (autoCancel) when the steering wheel has gone beyond 60 in the direction of the turn then returned toward neutral (threshold 10), for toggle_left/right_signal and for set_*_signal(state, true).
+- Inconsistency: M.resetLastStage points to the same function as M.initLastStage (which forces level 3 to 2).
+- Error risk: updateGFX evaluates `vals.parkingbrake > 0`; if parkingbrake_input was never written by a controller/input, the comparison is made on nil (Lua error).
+- toggle_lights cycles lightsState 0 -> 1 -> 2 -> 0; setLightsState has no validation.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `electrics.horn(state)` | Active ou coupe le klaxon (electrics.values.horn) et joue/arrête le son 'horn' (deux emplacements alternés pour éviter la coupure brutale). | 1034 |
-| `electrics.init()` | Appelé à la création du véhicule : lit la config jbeam (lisseurs, valeurs custom, niveaux d'allumage, cycle de clignotant), compile les valeurs custom, fixe le niveau d'allumage de départ et enregistre les entrées du menu radial (core_quickAccess). *(interne)* | 824 |
-| `electrics.initLastStage()` | Appelé en fin d'initialisation : si le niveau d'allumage est 3, le ramène à 2 (en mémorisant 3 comme niveau précédent) pour ne pas rester en démarreur. *(interne)* | 948 |
-| `electrics.light_flash_highbeams(enabled)` | Appel de phares : à true, mémorise l'état courant et passe en feux de route ; à false, restaure l'état mémorisé. | 996 |
-| `electrics.reset()` | Appelé au reset du véhicule : vide disabledState, remet les lisseurs et les valeurs de base à 0, restaure les valeurs custom par défaut, l'impulsion de clignotant et le niveau d'allumage de spawn. *(interne)* | 774 |
-| `electrics.resetLastStage()` | Même fonction que initLastStage (voir notes). *(interne)* | 948 |
-| `electrics.setAllowedIgnitionLevels(newAllowedIgnitionLevels)` | Définit la liste des niveaux d'allumage autorisés et reconstruit la table de substitution (niveau interdit -> niveau supérieur autorisé le plus proche, sinon inférieur). Une liste vide devient {0}. | 740 |
-| `electrics.setIgnitionLevel(ignitionLevel)` | Fixe le niveau d'allumage après filtrage par les niveaux autorisés, affiche un message UI (niveaux 0 à 2) et commande le contrôleur principal : niveaux 0/1 coupent allumage et démarreur, 2 allume sans démarreur, 3 allume et active le démarreur. Met à jour la surcharge des valeurs. | 348 |
-| `electrics.setLightsState(newval)` | Fixe directement l'état des phares sans validation (utilisé par le menu radial). | 1022 |
-| `electrics.set_fog_lights(state)` | Fixe l'état des antibrouillards (valeur stockée telle quelle puis lue dans electrics.values.fog). | 1030 |
-| `electrics.set_left_signal(state, autoCancel)` | Allume ou éteint le clignotant gauche de façon explicite (coupe droit et warning à l'allumage). | 187 |
-| `electrics.set_lightbar_signal(state)` | Fixe l'état de la barre lumineuse. La valeur est prise modulo 3 (modulo 2 si le véhicule n'a pas de son 'siren'). L'état 2 joue la sirène. | 1005 |
-| `electrics.set_right_signal(state, autoCancel)` | Allume ou éteint le clignotant droit de façon explicite. | 242 |
-| `electrics.set_warn_signal(value)` | Active ou coupe les feux de détresse ; met aussi les états gauche et droite à la même valeur et désactive l'arrêt automatique. | 955 |
-| `electrics.stop_turn_signal()` | Éteint les deux clignotants (sauf si le warning est actif, dans ce cas ne fait rien) et joue le son d'arrêt. | 143 |
-| `electrics.toggleIgnitionLevelOnDown()` | Début de l'appui sur la touche de contact : arme le compteur ; au-delà de 0,5 s maintenu, passe au niveau 3 (démarreur). | 1054 |
-| `electrics.toggleIgnitionLevelOnUp()` | Relâchement de la touche de contact : fait avancer le niveau 0 -> 1 -> 2, puis 2 -> 1, 1 -> 0 (selon le sens précédent) ; le niveau 3 retombe à 2. | 1058 |
-| `electrics.toggle_fog_lights()` | Bascule les antibrouillards. | 1026 |
-| `electrics.toggle_highbeams()` | Bascule entre croisement (1) et route (2). Sans effet si les phares sont éteints. | 983 |
-| `electrics.toggle_left_signal()` | Bascule le clignotant gauche (entrée utilisateur). Coupe le droit et le warning quand il s'active ; si le warning est actif, force le gauche à true. Joue les sons si ignitionLevel > 0 et active l'arrêt automatique. | 159 |
-| `electrics.toggle_lightbar_signal()` | Passe à l'état suivant de la barre lumineuse (0 éteinte, 1 lumières, 2 lumières + sirène si le son 'siren' existe ; sinon 0/1). | 1018 |
-| `electrics.toggle_lights()` | Fait tourner l'état des phares : 0 éteint -> 1 croisement -> 2 route -> 0, avec son d'allumage/extinction. | 968 |
-| `electrics.toggle_right_signal()` | Bascule le clignotant droit (même logique que toggle_left_signal). | 214 |
-| `electrics.toggle_warn_signal()` | Bascule les feux de détresse (warning). | 964 |
-| `electrics.updateGFX(dt)` | 1re étape de mise à jour par frame : gère le démarreur maintenu, l'impulsion de clignotant, calcule les valeurs dérivées (feux, vitesse sol, altitude, régime lissé…), injecte les electrics distants (beamstate.updateRemoteElectrics(true)), puis convertit les booléens en 0/1 et efface les clés de disabledState. *(interne)* | 384 |
-| `electrics.updateGFXSecondStep(dt)` | 2e étape, appelée après les contrôleurs : calcule brakelights, brakelight_signal_R/L, réinjecte les electrics distants, applique la surcharge selon le niveau d'allumage (valeurs à 0 si ignitionLevel == 0), exécute les valeurs custom du jbeam puis les lisseurs. *(interne)* | 476 |
+| `electrics.horn(state)` | Enables or cuts the horn (electrics.values.horn) and plays/stops the 'horn' sound (two alternating slots to avoid an abrupt cut). | 1034 |
+| `electrics.init()` | Called at vehicle creation: reads the jbeam config (smoothers, custom values, ignition levels, turn signal cycle), compiles the custom values, sets the starting ignition level and registers the radial menu entries (core_quickAccess). *(internal)* | 824 |
+| `electrics.initLastStage()` | Called at the end of initialization: if the ignition level is 3, brings it back to 2 (storing 3 as the previous level) so as not to stay in starter. *(internal)* | 948 |
+| `electrics.light_flash_highbeams(enabled)` | Headlight flash: at true, stores the current state and switches to high beam; at false, restores the stored state. | 996 |
+| `electrics.reset()` | Called at vehicle reset: clears disabledState, resets the smoothers and base values to 0, restores the default custom values, the turn signal pulse and the spawn ignition level. *(internal)* | 774 |
+| `electrics.resetLastStage()` | Same function as initLastStage (see notes). *(internal)* | 948 |
+| `electrics.setAllowedIgnitionLevels(newAllowedIgnitionLevels)` | Defines the list of allowed ignition levels and rebuilds the substitution table (forbidden level -> nearest allowed higher level, otherwise lower). An empty list becomes {0}. | 740 |
+| `electrics.setIgnitionLevel(ignitionLevel)` | Sets the ignition level after filtering by the allowed levels, displays a UI message (levels 0 to 2) and commands the main controller: levels 0/1 cut ignition and starter, 2 turns ignition on without starter, 3 turns ignition on and engages the starter. Updates the values override. | 348 |
+| `electrics.setLightsState(newval)` | Directly sets the headlight state without validation (used by the radial menu). | 1022 |
+| `electrics.set_fog_lights(state)` | Sets the fog light state (value stored as is then read in electrics.values.fog). | 1030 |
+| `electrics.set_left_signal(state, autoCancel)` | Explicitly turns the left turn signal on or off (cuts right and warning on activation). | 187 |
+| `electrics.set_lightbar_signal(state)` | Sets the light bar state. The value is taken modulo 3 (modulo 2 if the vehicle has no 'siren' sound). State 2 plays the siren. | 1005 |
+| `electrics.set_right_signal(state, autoCancel)` | Explicitly turns the right turn signal on or off. | 242 |
+| `electrics.set_warn_signal(value)` | Enables or cuts the hazard lights; also sets the left and right states to the same value and disables auto-cancel. | 955 |
+| `electrics.stop_turn_signal()` | Turns off both turn signals (unless the warning is active, in which case does nothing) and plays the off sound. | 143 |
+| `electrics.toggleIgnitionLevelOnDown()` | Start of the ignition key press: arms the counter; beyond 0.5 s held, goes to level 3 (starter). | 1054 |
+| `electrics.toggleIgnitionLevelOnUp()` | Ignition key release: advances the level 0 -> 1 -> 2, then 2 -> 1, 1 -> 0 (depending on the previous direction); level 3 falls back to 2. | 1058 |
+| `electrics.toggle_fog_lights()` | Toggles the fog lights. | 1026 |
+| `electrics.toggle_highbeams()` | Toggles between low beam (1) and high beam (2). No effect if the headlights are off. | 983 |
+| `electrics.toggle_left_signal()` | Toggles the left turn signal (user input). Cuts the right one and the warning when it activates; if the warning is active, forces the left to true. Plays the sounds if ignitionLevel > 0 and enables auto-cancel. | 159 |
+| `electrics.toggle_lightbar_signal()` | Moves to the next light bar state (0 off, 1 lights, 2 lights + siren if the 'siren' sound exists; otherwise 0/1). | 1018 |
+| `electrics.toggle_lights()` | Cycles the headlight state: 0 off -> 1 low beam -> 2 high beam -> 0, with on/off sound. | 968 |
+| `electrics.toggle_right_signal()` | Toggles the right turn signal (same logic as toggle_left_signal). | 214 |
+| `electrics.toggle_warn_signal()` | Toggles the hazard lights (warning). | 964 |
+| `electrics.updateGFX(dt)` | 1st update step per frame: handles the held starter, the turn signal pulse, computes derived values (lights, ground speed, altitude, smoothed RPM...), injects remote electrics (beamstate.updateRemoteElectrics(true)), then converts booleans to 0/1 and clears the disabledState keys. *(internal)* | 384 |
+| `electrics.updateGFXSecondStep(dt)` | 2nd step, called after the controllers: computes brakelights, brakelight_signal_R/L, reinjects remote electrics, applies the override according to the ignition level (values set to 0 if ignitionLevel == 0), runs the jbeam custom values then the smoothers. *(internal)* | 476 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `electrics.horn(state)`
 
-Active ou coupe le klaxon (electrics.values.horn) et joue/arrête le son 'horn' (deux emplacements alternés pour éviter la coupure brutale).
+Enables or cuts the horn (electrics.values.horn) and plays/stops the 'horn' sound (two alternating slots to avoid an abrupt cut).
 
-- `state` (*boolean*) : true klaxonne.
+- `state` (*boolean*) : true sounds the horn.
 
 #### `electrics.light_flash_highbeams(enabled)`
 
-Appel de phares : à true, mémorise l'état courant et passe en feux de route ; à false, restaure l'état mémorisé.
+Headlight flash: at true, stores the current state and switches to high beam; at false, restores the stored state.
 
-- `enabled` (*boolean*) : true commence l'appel de phares, false le termine.
+- `enabled` (*boolean*) : true starts the headlight flash, false ends it.
 
 #### `electrics.setAllowedIgnitionLevels(newAllowedIgnitionLevels)`
 
-Définit la liste des niveaux d'allumage autorisés et reconstruit la table de substitution (niveau interdit -> niveau supérieur autorisé le plus proche, sinon inférieur). Une liste vide devient {0}.
+Defines the list of allowed ignition levels and rebuilds the substitution table (forbidden level -> nearest allowed higher level, otherwise lower). An empty list becomes {0}.
 
-- `newAllowedIgnitionLevels` (*table<integer, integer>*) : Liste de niveaux parmi 0 à 3.
+- `newAllowedIgnitionLevels` (*table<integer, integer>*) : List of levels among 0 to 3.
 
 #### `electrics.setIgnitionLevel(ignitionLevel)`
 
-Fixe le niveau d'allumage après filtrage par les niveaux autorisés, affiche un message UI (niveaux 0 à 2) et commande le contrôleur principal : niveaux 0/1 coupent allumage et démarreur, 2 allume sans démarreur, 3 allume et active le démarreur. Met à jour la surcharge des valeurs.
+Sets the ignition level after filtering by the allowed levels, displays a UI message (levels 0 to 2) and commands the main controller: levels 0/1 cut ignition and starter, 2 turns ignition on without starter, 3 turns ignition on and engages the starter. Updates the values override.
 
-- `ignitionLevel` (*integer*) : 0 arrêt, 1 accessoires, 2 marche, 3 démarreur.
+- `ignitionLevel` (*integer*) : 0 off, 1 accessories, 2 run, 3 starter.
 
 #### `electrics.setLightsState(newval)`
 
-Fixe directement l'état des phares sans validation (utilisé par le menu radial).
+Directly sets the headlight state without validation (used by the radial menu).
 
-- `newval` (*integer*) : 0 éteint, 1 croisement, 2 route.
+- `newval` (*integer*) : 0 off, 1 low beam, 2 high beam.
 
 #### `electrics.set_fog_lights(state)`
 
-Fixe l'état des antibrouillards (valeur stockée telle quelle puis lue dans electrics.values.fog).
+Sets the fog light state (value stored as is then read in electrics.values.fog).
 
-- `state` (*boolean*) : true allume.
+- `state` (*boolean*) : true turns on.
 
 #### `electrics.set_left_signal(state, autoCancel)`
 
-Allume ou éteint le clignotant gauche de façon explicite (coupe droit et warning à l'allumage).
+Explicitly turns the left turn signal on or off (cuts right and warning on activation).
 
-- `state` (*boolean*) : true allume, false éteint.
-- `autoCancel` (*boolean|nil*) : Si true (à l'allumage), le clignotant s'arrête quand le volant est revenu au neutre après avoir tourné.
+- `state` (*boolean*) : true turns on, false turns off.
+- `autoCancel` (*boolean|nil*) : If true (on activation), the turn signal stops when the steering wheel has returned to neutral after turning.
 
 #### `electrics.set_lightbar_signal(state)`
 
-Fixe l'état de la barre lumineuse. La valeur est prise modulo 3 (modulo 2 si le véhicule n'a pas de son 'siren'). L'état 2 joue la sirène.
+Sets the light bar state. The value is taken modulo 3 (modulo 2 if the vehicle has no 'siren' sound). State 2 plays the siren.
 
-- `state` (*integer*) : 0 éteinte, 1 lumières, 2 lumières + sirène.
+- `state` (*integer*) : 0 off, 1 lights, 2 lights + siren.
 
 #### `electrics.set_right_signal(state, autoCancel)`
 
-Allume ou éteint le clignotant droit de façon explicite.
+Explicitly turns the right turn signal on or off.
 
-- `state` (*boolean*) : true allume, false éteint.
-- `autoCancel` (*boolean|nil*) : Arrêt automatique après virage, comme set_left_signal.
+- `state` (*boolean*) : true turns on, false turns off.
+- `autoCancel` (*boolean|nil*) : Auto-cancel after a turn, like set_left_signal.
 
 #### `electrics.set_warn_signal(value)`
 
-Active ou coupe les feux de détresse ; met aussi les états gauche et droite à la même valeur et désactive l'arrêt automatique.
+Enables or cuts the hazard lights; also sets the left and right states to the same value and disables auto-cancel.
 
-- `value` (*boolean*) : true active le warning.
+- `value` (*boolean*) : true enables the warning.
 
 #### `electrics.updateGFX(dt)`
 
-1re étape de mise à jour par frame : gère le démarreur maintenu, l'impulsion de clignotant, calcule les valeurs dérivées (feux, vitesse sol, altitude, régime lissé…), injecte les electrics distants (beamstate.updateRemoteElectrics(true)), puis convertit les booléens en 0/1 et efface les clés de disabledState.
+1st update step per frame: handles the held starter, the turn signal pulse, computes derived values (lights, ground speed, altitude, smoothed RPM...), injects remote electrics (beamstate.updateRemoteElectrics(true)), then converts booleans to 0/1 and clears the disabledState keys.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
 #### `electrics.updateGFXSecondStep(dt)`
 
-2e étape, appelée après les contrôleurs : calcule brakelights, brakelight_signal_R/L, réinjecte les electrics distants, applique la surcharge selon le niveau d'allumage (valeurs à 0 si ignitionLevel == 0), exécute les valeurs custom du jbeam puis les lisseurs.
+2nd step, called after the controllers: computes brakelights, brakelight_signal_R/L, reinjects remote electrics, applies the override according to the ignition level (values set to 0 if ignitionLevel == 0), runs the jbeam custom values then the smoothers.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `disabledState` | table<string, any> | Ensemble de clés d'electrics.values à forcer à nil à chaque updateGFX (présence de la clé suffit). Remis à {} par init et reset. |
-| `values` | table<string, number|boolean|nil> | Table des valeurs électriques courantes (voir notes pour les clés usuelles). Lue par l'UI, les streams, les capteurs. Les booléens sont convertis en 0/1 à la fin de la 1re étape. |
+| `disabledState` | table<string, any> | Set of electrics.values keys to force to nil at each updateGFX (presence of the key is enough). Reset to {} by init and reset. |
+| `values` | table<string, number|boolean|nil> | Table of current electrical values (see notes for the usual keys). Read by the UI, streams, sensors. Booleans are converted to 0/1 at the end of the 1st step. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getAirflowSpeed`, `getAltitude`, `getGroundSpeed`, `playSFX`, `setVolume`, `stopSFX`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/electrics.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/electrics.lua`.*

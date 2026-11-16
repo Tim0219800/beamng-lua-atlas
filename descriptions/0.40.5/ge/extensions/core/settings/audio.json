@@ -1,41 +1,61 @@
 {
   "path": "lua/ge/extensions/core/settings/audio.lua",
-  "module": "Réglages audio : choix du fournisseur/périphérique de sortie, volumes par canal (maître, moteur, suspension, musique, UI…) et mode casque stéréo. Fournit les « option helpers » (get/set) utilisés par core_settings_settings, et une fonction de remise aux valeurs par défaut.",
+  "module": "Audio settings: choice of output provider/device, per-channel volumes (master, engine, suspension, music, UI...) and stereo headphone mode. Provides the \"option helpers\" (get/set) used by core_settings_settings, and a function to reset to default values.",
   "notes": [
-    "Les set de volume bornent la valeur entre 0 et 1 puis appellent Engine.Audio.setChannelVolume('AudioChannelXxx', valeur).",
-    "BUG probable : dans createAudioDevice, le message d'erreur utilise audioProviderName qui n'est pas défini dans cette fonction (variable globale nil) : la concaténation lèverait une erreur si la création du périphérique échoue.",
-    "AudioEnableStereoHeadphones.set référence AudioInterfaceVol et AudioAmbienceVol qui n'existent pas dans les helpers (ignorés par le test if).",
-    "switchOutputDevice dump les fournisseurs dans le log et n'agit que sur le fournisseur 'FMOD'."
+    "The volume setters clamp the value between 0 and 1 then call Engine.Audio.setChannelVolume('AudioChannelXxx', value).",
+    "Probable BUG: in createAudioDevice, the error message uses audioProviderName which is not defined in this function (nil global variable): the concatenation would raise an error if device creation fails.",
+    "AudioEnableStereoHeadphones.set references AudioInterfaceVol and AudioAmbienceVol which do not exist in the helpers (ignored by the if test).",
+    "switchOutputDevice dumps the providers to the log and only acts on the 'FMOD' provider."
   ],
   "fields": {},
   "functions": {
     "buildOptionHelpers": {
-      "desc": "Crée et renvoie (et mémorise) la table d'options. Clés : AudioProvider (get/set/getModes ; set crée le périphérique audio), AudioMasterVol, AudioPowerVol, AudioForcedInductionVol, AudioTransmissionVol, AudioSuspensionVol, AudioSurfaceVol, AudioCollisionVol, AudioAeroVol, AudioEnvironmentVol, AudioMusicVol, AudioUiVol, AudioOtherVol, AudioLfeVol, AudioIntercomVol (get lit $pref::SFX::AudioChannelXxx), AudioEnableStereoHeadphones (au changement : écrit $pref::SFX::enableHeadphonesMode, appelle core_audio.triggerBankHotloading() et ré-applique les volumes).",
+      "desc": "Creates and returns (and stores) the options table. Keys: AudioProvider (get/set/getModes; set creates the audio device), AudioMasterVol, AudioPowerVol, AudioForcedInductionVol, AudioTransmissionVol, AudioSuspensionVol, AudioSurfaceVol, AudioCollisionVol, AudioAeroVol, AudioEnvironmentVol, AudioMusicVol, AudioUiVol, AudioOtherVol, AudioLfeVol, AudioIntercomVol (get reads $pref::SFX::AudioChannelXxx), AudioEnableStereoHeadphones (on change: writes $pref::SFX::enableHeadphonesMode, calls core_audio.triggerBankHotloading() and reapplies the volumes).",
       "params": {},
-      "returns": [{"type": "table<string, table>", "desc": "Helpers avec get/set (et getModes pour AudioProvider)."}],
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Helpers with get/set (and getModes for AudioProvider)."
+        }
+      ],
       "internal": false
     },
     "getOptions": {
-      "desc": "Renvoie la table d'options mémorisée par buildOptionHelpers.",
+      "desc": "Returns the options table stored by buildOptionHelpers.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "nil tant que buildOptionHelpers n'a pas été appelé."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "nil until buildOptionHelpers has been called."
+        }
+      ],
       "internal": false
     },
     "restoreDefaults": {
-      "desc": "Remet tous les volumes à leurs valeurs par défaut : maître 1.0, LFE 0.5, tous les autres 0.8. Puis settings.refreshTSState(true), settings.notifyUI() et settings.requestSave(). Nécessite buildOptionHelpers déjà appelé.",
+      "desc": "Resets all volumes to their default values: master 1.0, LFE 0.5, all others 0.8. Then settings.refreshTSState(true), settings.notifyUI() and settings.requestSave(). Requires buildOptionHelpers to have been called.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "onFirstUpdateSettings": {
-      "desc": "Hook appelé à la première mise à jour des réglages : crée le périphérique audio du fournisseur choisi ($pref::SFX::providerName), avec repli sur le premier fournisseur non Null si le nom est invalide.",
-      "params": {"data": {"type": "any", "desc": "Non utilisé."}},
+      "desc": "Hook called at the first settings update: creates the audio device of the chosen provider ($pref::SFX::providerName), falling back to the first non-Null provider if the name is invalid.",
+      "params": {
+        "data": {
+          "type": "any",
+          "desc": "Not used."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "switchOutputDevice": {
-      "desc": "Change le périphérique de sortie FMOD : prend le périphérique d'indice donné dans la liste FMOD de Engine.Audio.getInfo() et crée le périphérique audio correspondant.",
-      "params": {"index": {"type": "integer", "desc": "Indice dans la liste des périphériques FMOD."}},
+      "desc": "Changes the FMOD output device: takes the device with the given index in the FMOD list of Engine.Audio.getInfo() and creates the matching audio device.",
+      "params": {
+        "index": {
+          "type": "integer",
+          "desc": "Index in the FMOD device list."
+        }
+      },
       "returns": [],
       "internal": false
     }

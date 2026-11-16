@@ -1,29 +1,29 @@
 # `flowgraph_nodes_gameplay_zone`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/zone.lua` · VM : Game Engine (GE) · 52 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/zone.lua` · VM: Game Engine (GE) · 52 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/zone")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/zone")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « In Zone » (repeat_instant, couleur sites). Détecte si un véhicule (vehId) est dans les zones de sitesData : teste des points de la boîte englobante orientée de spawn (getSpawnWorldOOBB) avec sites:getZonesForPosition, publie inside, et dessine les zones en debug (rouge pulsé si dehors, blanc si dedans).
+Flowgraph node "In Zone" (repeat_instant, sites color). Detects whether a vehicle (vehId) is inside the zones of sitesData: tests points of the oriented spawn bounding box (getSpawnWorldOOBB) with sites:getZonesForPosition, publishes inside, and draws the zones in debug (pulsing red if outside, white if inside).
 
-## Remarques
+## Notes
 
-- Bug : work lit self.pinIn.flow, mais aucun pin d'entrée « flow » n'est déclaré dans pinSchema ; self.pinIn.flow est donc nil et l'indexation provoque une erreur Lua.
-- Bug : la boucle `for i = 0, 8` teste toujours oobb:getPoint(0) au lieu de getPoint(i).
-- Le pin sitesData n'a pas de tableType.
+- Bug: work reads self.pinIn.flow, but no input pin "flow" is declared in pinSchema; self.pinIn.flow is therefore nil and indexing it raises a Lua error.
+- Bug: the loop `for i = 0, 8` always tests oobb:getPoint(0) instead of getPoint(i).
+- The sitesData pin has no tableType.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Initialise les couleurs rouge et blanc de dessin. | 46 |
-| `C:work(args)` | Teste si le véhicule est dans une zone, dessine les zones en debug et écrit inside. | 19 |
+| `C:_executionStarted()` | Initializes the red and white drawing colors. | 46 |
+| `C:work(args)` | Tests whether the vehicle is in a zone, draws the zones in debug and writes inside. | 19 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/zone.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/zone.lua`.*

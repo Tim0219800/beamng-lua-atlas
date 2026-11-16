@@ -1,36 +1,51 @@
 {
   "path": "lua/vehicle/extensions/simpleTripApp.lua",
-  "module": "Alimente l'appli UI « trip » : cumule distance et temps de simulation, estime la consommation de carburant et l'autonomie, et envoie le résultat à l'UI environ chaque seconde réelle via guihooks.trigger('tripData', data). Lit electrics.values.fuelVolume, wheelspeed et airspeed.",
+  "module": "Feeds the \"trip\" UI app: accumulates distance and simulation time, estimates fuel consumption and range, and sends the result to the UI about every real second via guihooks.trigger('tripData', data). Reads electrics.values.fuelVolume, wheelspeed and airspeed.",
   "notes": [
-    "L'événement tripData contient : totalDistance (m), avgSpeed (m/s), avgFuelConsumptionRate (volume de carburant par mètre, sur tout le trajet), fuelConsumptionRate (volume par mètre sur la dernière seconde), range (distance restante, math.huge si aucune consommation et vitesse > 0.1, 0 à l'arrêt).",
-    "La vitesse utilisée est electrics.values.wheelspeed si le véhicule a des roues (wheels.wheels non vide), sinon airspeed.",
-    "Le timer d'envoi est décompté en temps réel (obj:getRealdt), les cumuls en temps de simulation (dtSim).",
-    "onExtensionLoaded renvoie false (ce qui décharge l'extension) si le véhicule n'a ni roues ni dispositif de powertrain ; onPlayersChanged la décharge si plus aucun joueur n'est assis ou si le véhicule est inadapté.",
-    "Division par zéro possible dans fuelConsumptionRate/avgFuelConsumptionRate quand speed ou totalDistance valent 0 (résultat inf/nan envoyé à l'UI)."
+    "The tripData event contains: totalDistance (m), avgSpeed (m/s), avgFuelConsumptionRate (fuel volume per meter, over the whole trip), fuelConsumptionRate (volume per meter over the last second), range (remaining distance, math.huge if no consumption and speed > 0.1, 0 at standstill).",
+    "The speed used is electrics.values.wheelspeed if the vehicle has wheels (wheels.wheels not empty), otherwise airspeed.",
+    "The send timer is counted down in real time (obj:getRealdt), the accumulations in simulation time (dtSim).",
+    "onExtensionLoaded returns false (which unloads the extension) if the vehicle has neither wheels nor a powertrain device; onPlayersChanged unloads it if no player is seated anymore or if the vehicle is unsuitable.",
+    "Possible division by zero in fuelConsumptionRate/avgFuelConsumptionRate when speed or totalDistance is 0 (inf/nan result sent to the UI)."
   ],
   "fields": {},
   "functions": {
     "reset": {
-      "desc": "Remet à zéro distance, temps, timer d'envoi (1 s), carburant précédent et carburant de départ. Appelé au chargement ; utilisable pour redémarrer un trajet.",
+      "desc": "Resets distance, time, send timer (1 s), previous fuel and starting fuel. Called on load; can be used to restart a trip.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "updateGFX": {
-      "desc": "Appelé à chaque frame graphique via extensions.hook('updateGFX'). Intègre distance et temps, puis toutes les ~1 s réelle calcule les statistiques et appelle guihooks.trigger('tripData', data).",
-      "params": {"dtSim": {"type": "number", "desc": "Pas de temps de simulation en secondes."}},
+      "desc": "Called every graphics frame via extensions.hook('updateGFX'). Integrates distance and time, then about every real second computes the statistics and calls guihooks.trigger('tripData', data).",
+      "params": {
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook de chargement : renvoie false (déchargement) si le véhicule n'a ni roue ni dispositif powertrain, sinon appelle reset().",
+      "desc": "Load hook: returns false (unload) if the vehicle has neither wheels nor a powertrain device, otherwise calls reset().",
       "params": {},
-      "returns": [{"type": "boolean|nil", "desc": "false pour demander le déchargement, nil sinon."}],
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "false to request unloading, nil otherwise."
+        }
+      ],
       "internal": true
     },
     "onPlayersChanged": {
-      "desc": "Hook appelé par main.lua quand les joueurs assis changent ; décharge l'extension (extensions.unload) s'il n'y a plus de joueur ou si le véhicule est inadapté.",
-      "params": {"anyPlayerSeated": {"type": "boolean", "desc": "true si au moins un joueur est assis dans ce véhicule."}},
+      "desc": "Hook called by main.lua when the seated players change; unloads the extension (extensions.unload) if there is no player left or if the vehicle is unsuitable.",
+      "params": {
+        "anyPlayerSeated": {
+          "type": "boolean",
+          "desc": "true if at least one player is seated in this vehicle."
+        }
+      },
       "returns": [],
       "internal": true
     }

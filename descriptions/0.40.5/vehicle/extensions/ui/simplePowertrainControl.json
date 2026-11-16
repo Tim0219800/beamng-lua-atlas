@@ -1,43 +1,67 @@
 {
   "path": "lua/vehicle/extensions/ui/simplePowertrainControl.lua",
-  "module": "Pont entre le véhicule et les boutons de contrôle simplifié du groupe motopropulseur affichés dans l'UI. setButton envoie l'événement UI `ChangePowerTrainButtons` (créer, mettre à jour ou retirer un bouton) ; updateButtons demande à powertrain et aux contrôleurs de republier leurs boutons. Les modules powertrain/controller s'en servent, un moddeur peut y ajouter ses propres boutons.",
+  "module": "Bridge between the vehicle and the simplified powertrain control buttons shown in the UI. setButton sends the UI event `ChangePowerTrainButtons` (create, update or remove a button); updateButtons asks powertrain and the controllers to republish their buttons. The powertrain/controller modules use it, a modder can add their own buttons to it.",
   "usage": "ui_simplePowertrainControl.setButton('myBtn', 'Mon bouton', 'iconId', '#ff8800', 0.5, 'controller.getController(\"x\").toggle()', false, true)",
   "notes": [
-    "Le champ `players` envoyé à l'UI est la liste triée des index de joueurs assis (playerInfo.seatedPlayers).",
-    "La couleur est normalisée : si c'est une chaîne non vide sans '#' initial, un '#' est ajouté ; sinon (nil ou autre type) elle devient nil.",
-    "onClickCallback est transmis tel quel à l'UI (champ onClick) ; il s'agit d'une valeur que l'UI renverra, vraisemblablement une chaîne de code Lua (déduit du code, non vérifié ici)."
+    "The `players` field sent to the UI is the sorted list of seated player indices (playerInfo.seatedPlayers).",
+    "The color is normalized: if it is a non-empty string without a leading '#', a '#' is added; otherwise (nil or other type) it becomes nil.",
+    "onClickCallback is passed as is to the UI (onClick field); it is a value the UI will send back, presumably a Lua code string (inferred from code, not verified here)."
   ],
   "fields": {},
   "functions": {
     "setButton": {
-      "desc": "Publie un bouton de contrôle simplifié vers l'UI via guihooks.trigger('ChangePowerTrainButtons', {...}).",
+      "desc": "Publishes a simplified control button to the UI via guihooks.trigger('ChangePowerTrainButtons', {...}).",
       "params": {
-        "id": {"type": "string", "desc": "Identifiant du bouton."},
-        "uiName": {"type": "string", "desc": "Texte d'infobulle (champ tooltip)."},
-        "icon": {"type": "string", "desc": "Identifiant d'icône."},
-        "color": {"type": "string|nil", "desc": "Couleur hexadécimale ; '#' ajouté si absent."},
-        "ringValue": {"type": "number|any", "desc": "Valeur de l'anneau de progression du bouton (transmise telle quelle)."},
-        "onClickCallback": {"type": "string|any", "desc": "Callback transmis à l'UI (champ onClick)."},
-        "remove": {"type": "boolean|nil", "desc": "true pour retirer le bouton."},
-        "active": {"type": "boolean|nil", "desc": "État actif du bouton."}
+        "id": {
+          "type": "string",
+          "desc": "Button identifier."
+        },
+        "uiName": {
+          "type": "string",
+          "desc": "Tooltip text (tooltip field)."
+        },
+        "icon": {
+          "type": "string",
+          "desc": "Icon identifier."
+        },
+        "color": {
+          "type": "string|nil",
+          "desc": "Hexadecimal color; '#' added if missing."
+        },
+        "ringValue": {
+          "type": "number|any",
+          "desc": "Value of the button's progress ring (passed as is)."
+        },
+        "onClickCallback": {
+          "type": "string|any",
+          "desc": "Callback passed to the UI (onClick field)."
+        },
+        "remove": {
+          "type": "boolean|nil",
+          "desc": "true to remove the button."
+        },
+        "active": {
+          "type": "boolean|nil",
+          "desc": "Active state of the button."
+        }
       },
       "returns": [],
       "internal": false
     },
     "updateButtons": {
-      "desc": "Appelle powertrain.updateSimpleControlButtons() puis controller.updateSimpleControlButtons() pour que chaque module republie ses boutons.",
+      "desc": "Calls powertrain.updateSimpleControlButtons() then controller.updateSimpleControlButtons() so that each module republishes its buttons.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "onInit": {
-      "desc": "Hook d'initialisation du véhicule ; corps vide.",
+      "desc": "Vehicle initialization hook; empty body.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onReset": {
-      "desc": "Hook de reset du véhicule ; corps vide.",
+      "desc": "Vehicle reset hook; empty body.",
       "params": {},
       "returns": [],
       "internal": true

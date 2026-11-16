@@ -1,12 +1,12 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceSettings.lua",
-  "module": "Nœud flowgraph « Signal Sequence Settings » (once_instant). Règle une séquence de feux : active (setActive), timed (enableTimer), stepIndex (setStep, prioritaire) ou phaseIndex (setPhase). Seuls les pins non nil sont appliqués.",
+  "module": "Flowgraph node \"Signal Sequence Settings\" (once_instant). Sets a traffic light sequence: active (setActive), timed (enableTimer), stepIndex (setStep, takes priority) or phaseIndex (setPhase). Only non-nil pins are applied.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "workOnce": {
-          "desc": "Applique activation, minuterie, puis saute à l'étape (ou, à défaut, à la phase) demandée.",
+          "desc": "Applies activation, timer, then jumps to the requested step (or, failing that, phase).",
           "internal": true
         }
       }

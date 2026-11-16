@@ -1,35 +1,133 @@
 {
   "path": "lua/ge/extensions/scenario/raceMarkers/crawlMarker.lua",
-  "module": "Marqueur de checkpoint pour les parcours de franchissement (crawl) : une flèche flottante qui regarde la caméra, deux drapeaux orange plantés de part et d'autre du passage (posés sur le terrain), et une grande colonne visible de loin. Il a ses propres modes (inactive, current, recovery, bonus, skipped, final, finished). La flèche monte jusqu'à une hauteur d'où elle reste visible de la caméra (lancers de rayon statiques). Compatible avec l'écran partagé (setRenderViewPlayer). Le module renvoie un constructeur : require('scenario/raceMarkers/crawlMarker')(id) donne un objet de la classe C.",
+  "module": "Checkpoint marker for crawl courses: a floating arrow that looks at the camera, two orange flags planted on either side of the passage (placed on the terrain), and a tall column visible from afar. It has its own modes (inactive, current, recovery, bonus, skipped, final, finished). The arrow rises to a height from which it stays visible to the camera (static raycasts). Compatible with split screen (setRenderViewPlayer). The module returns a constructor: require('scenario/raceMarkers/crawlMarker')(id) gives an object of class C.",
   "notes": [
-    "Couleurs par mode : default blanc, inactive gris (0.5), current orange (1, 0.5, 0), recovery jaune (1, 0.85, 0), bonus violet (0.8, 0.2, 1), skipped rouge (1, 0.07, 0), final bleu (0.1, 0.3, 1), finished vert (0.4, 1, 0.2), hidden noir. Le mode 'finished' masque la base.",
-    "Les modes actifs (current, recovery, bonus, final) ont une colonne visible dès 40 m au lieu de 200 m et la flèche cherche un point dégagé jusqu'à 100 m de hauteur.",
-    "setToCheckpoint(wp) lit wp.pos (le point est replaqué au sol : core_terrain.getTerrainHeight ou be:getSurfaceHeightBelow), wp.radius, wp.fadeNear (5 par défaut), wp.fadeFar (25), wp.delay (secondes avant que la flèche monte), wp.dir (direction du passage) ou wp.nextPos (le sens se déduit alors du checkpoint suivant).",
-    "Les drapeaux sont décalés de 2.5 m de chaque côté de la direction de passage et alignés sur la normale du terrain.",
-    "drawOnMinimap(td) dessine un cercle coloré avec ui_apps_minimap_utils.simpleCircle (si le mode n'est pas 'hidden') ; il est appelé par scenario_race_marker.drawOnMinimap.",
-    "Le premier paramètre de update est dt (durée réelle), le second dtSim (durée simulée, utilisée pour le délai et les ressorts de hauteur et d'échelle).",
-    "La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim)."
+    "Colors per mode: default white, inactive gray (0.5), current orange (1, 0.5, 0), recovery yellow (1, 0.85, 0), bonus purple (0.8, 0.2, 1), skipped red (1, 0.07, 0), final blue (0.1, 0.3, 1), finished green (0.4, 1, 0.2), hidden black. The 'finished' mode hides the base.",
+    "The active modes (current, recovery, bonus, final) have a column visible from 40 m instead of 200 m, and the arrow looks for a clear spot up to 100 m high.",
+    "setToCheckpoint(wp) reads wp.pos (the point is snapped back to the ground: core_terrain.getTerrainHeight or be:getSurfaceHeightBelow), wp.radius, wp.fadeNear (5 by default), wp.fadeFar (25), wp.delay (seconds before the arrow rises), wp.dir (passage direction) or wp.nextPos (the direction is then inferred from the next checkpoint).",
+    "The flags are offset by 2.5 m on each side of the passage direction and aligned to the terrain normal.",
+    "drawOnMinimap(td) draws a colored circle with ui_apps_minimap_utils.simpleCircle (if the mode is not 'hidden'); it is called by scenario_race_marker.drawOnMinimap.",
+    "The first parameter of update is dt (real duration), the second dtSim (simulated duration, used for the delay and the height and scale springs).",
+    "The extracted page shows update(dtSim); the actual signature is update(dt, dtSim)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Marqueur crawl avec flèche, drapeaux et colonne.",
+      "desc": "Crawl marker with arrow, flags and column.",
       "functions": {
-        "init": {"desc": "Constructeur : initialise l'état, les lisseurs et les couleurs.", "params": {"id": {"type": "integer", "desc": "Identifiant unique."}}, "internal": true},
-        "placeFlags": {"desc": "Place les deux drapeaux de part et d'autre de la position selon pathDirection, au sol.", "params": {}},
-        "update": {"desc": "Appel par image : couleur, alpha selon la distance, orientation et hauteur de la flèche, échelle, colonne.", "params": {"dt": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}}, "internal": true},
-        "setToCheckpoint": {"desc": "Place le marqueur sur un checkpoint et réinitialise les caches de hauteur.", "params": {"wp": {"type": "table", "desc": "{pos, radius?, fadeNear?, fadeFar?, delay?, dir?, nextPos?}."}}},
-        "drawOnMinimap": {"desc": "Dessine un cercle sur la minicarte à la position du marqueur, avec la couleur du mode.", "params": {"td": {"type": "any", "desc": "Contexte de dessin (non utilisé)."}}},
-        "setMode": {"desc": "Change de mode : affiche (sauf 'hidden'), mémorise l'ancien mode et relance le fondu ; ne fait rien de plus si le mode est inchangé.", "params": {"mode": {"type": "string", "desc": "default, inactive, current, recovery, bonus, skipped, final, finished ou hidden."}}},
-        "setVisibility": {"desc": "Affiche ou cache flèche, drapeaux et colonne.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
-        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
-        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
-        "applyRenderViewMask": {"desc": "Cache les objets du marqueur dans les vues d'écran partagé des autres joueurs que renderViewPlayer.", "params": {}},
-        "setRenderViewPlayer": {"desc": "Réserve ce marqueur à la vue d'un joueur (nil pour tous) et applique le masque.", "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur."}}},
-        "createObject": {"desc": "Crée un TSStatic caché enregistré sous objectName.", "params": {"shapeName": {"type": "string", "desc": "Chemin du modèle."}, "objectName": {"type": "string", "desc": "Nom d'enregistrement."}}, "returns": [{"type": "table", "desc": "L'objet créé."}]},
-        "createMarkers": {"desc": "Supprime les anciens objets puis crée flèche, deux drapeaux et colonne.", "params": {}},
-        "clearMarkers": {"desc": "Supprime les objets créés (en effaçant leur masque de vue).", "params": {}}
+        "init": {
+          "desc": "Constructor: initializes the state, the smoothers and the colors.",
+          "params": {
+            "id": {
+              "type": "integer",
+              "desc": "Unique identifier."
+            }
+          },
+          "internal": true
+        },
+        "placeFlags": {
+          "desc": "Places the two flags on either side of the position according to pathDirection, on the ground.",
+          "params": {}
+        },
+        "update": {
+          "desc": "Per-frame call: color, alpha depending on distance, arrow orientation and height, scale, column.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Real duration (s)."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Simulated duration (s)."
+            }
+          },
+          "internal": true
+        },
+        "setToCheckpoint": {
+          "desc": "Places the marker on a checkpoint and resets the height caches.",
+          "params": {
+            "wp": {
+              "type": "table",
+              "desc": "{pos, radius?, fadeNear?, fadeFar?, delay?, dir?, nextPos?}."
+            }
+          }
+        },
+        "drawOnMinimap": {
+          "desc": "Draws a circle on the minimap at the marker's position, with the mode's color.",
+          "params": {
+            "td": {
+              "type": "any",
+              "desc": "Drawing context (unused)."
+            }
+          }
+        },
+        "setMode": {
+          "desc": "Changes mode: shows (except 'hidden'), remembers the old mode and restarts the fade; does nothing more if the mode is unchanged.",
+          "params": {
+            "mode": {
+              "type": "string",
+              "desc": "default, inactive, current, recovery, bonus, skipped, final, finished or hidden."
+            }
+          }
+        },
+        "setVisibility": {
+          "desc": "Shows or hides arrow, flags and column.",
+          "params": {
+            "v": {
+              "type": "boolean",
+              "desc": "Visibility."
+            }
+          }
+        },
+        "hide": {
+          "desc": "Calls setVisibility(false).",
+          "params": {}
+        },
+        "show": {
+          "desc": "Calls setVisibility(true).",
+          "params": {}
+        },
+        "applyRenderViewMask": {
+          "desc": "Hides the marker's objects in the split-screen views of players other than renderViewPlayer.",
+          "params": {}
+        },
+        "setRenderViewPlayer": {
+          "desc": "Reserves this marker for one player's view (nil for all) and applies the mask.",
+          "params": {
+            "player": {
+              "type": "integer|nil",
+              "desc": "Player index."
+            }
+          }
+        },
+        "createObject": {
+          "desc": "Creates a hidden TSStatic registered under objectName.",
+          "params": {
+            "shapeName": {
+              "type": "string",
+              "desc": "Model path."
+            },
+            "objectName": {
+              "type": "string",
+              "desc": "Registration name."
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "The created object."
+            }
+          ]
+        },
+        "createMarkers": {
+          "desc": "Removes the old objects then creates the arrow, two flags and column.",
+          "params": {}
+        },
+        "clearMarkers": {
+          "desc": "Removes the created objects (clearing their view mask).",
+          "params": {}
+        }
       }
     }
   }

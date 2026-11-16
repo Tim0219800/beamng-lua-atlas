@@ -1,25 +1,25 @@
 # `flowgraph_nodes_debug_aiDebug`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/debug/aiDebug.lua` · VM : Game Engine (GE) · 61 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/debug/aiDebug.lua` · VM: Game Engine (GE) · 61 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/debug/aiDebug")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/debug/aiDebug")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « AI Debug Display » (catégorie dynamic_p_duration, tags target/trajectory/route/debug). Affiche ou masque les visualisations de débogage de l'IA d'un véhicule en appelant ai.setVehicleDebugMode côté véhicule. Entrées : vehId (number, 0 ou vide = véhicule du joueur) et mode (string : off, target, trajectory, speeds, route ; 'off' par défaut). En mode dynamique 'repeat' la commande est renvoyée à chaque frame.
+Flowgraph node "AI Debug Display" (category dynamic_p_duration, tags target/trajectory/route/debug). Shows or hides the AI debug visualizations of a vehicle by calling ai.setVehicleDebugMode on the vehicle side. Inputs: vehId (number, 0 or empty = player vehicle) and mode (string: off, target, trajectory, speeds, route; 'off' by default). In 'repeat' dynamic mode the command is resent every frame.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:SetAIDebugMode()` | Trouve le véhicule (vehId ou joueur) et lui envoie ai.setVehicleDebugMode({debugMode = mode}) par queueLuaCommand. | 42 |
-| `C:postInit()` | Propose la liste des modes comme modèles du pin mode dans l'éditeur. | 24 |
-| `C:work()` | Si dynamicMode vaut 'repeat', réapplique le mode à chaque frame. | 36 |
-| `C:workOnce()` | Applique le mode une fois. | 32 |
+| `C:SetAIDebugMode()` | Finds the vehicle (vehId or player) and sends it ai.setVehicleDebugMode({debugMode = mode}) via queueLuaCommand. | 42 |
+| `C:postInit()` | Provides the list of modes as templates for the mode pin in the editor. | 24 |
+| `C:work()` | If dynamicMode is 'repeat', reapplies the mode every frame. | 36 |
+| `C:workOnce()` | Applies the mode once. | 32 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/debug/aiDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/debug/aiDebug.lua`.*

@@ -1,12 +1,12 @@
 # `ui_pause_providers_routeData_environment`
 
-*Fichier : `lua/ge/extensions/ui/pause/providers/routeData/environment.lua` · VM : Game Engine (GE) · 247 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/pause/providers/routeData/environment.lua` · VM: Game Engine (GE) · 247 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_pause_providers_routeData_environment` : `extensions.load("ui_pause_providers_routeData_environment")`, puis la globale `ui_pause_providers_routeData_environment`
+**Access:** extension `ui_pause_providers_routeData_environment`: `extensions.load("ui_pause_providers_routeData_environment")`, then the global `ui_pause_providers_routeData_environment`
 
-Fournisseur de données du menu pause pour la page Environnement : résumé (météo, circulation, autres), page météo/heure, page simulation (gravité, vitesse) et page circulation. Il décide si l'édition est permise (freeroam, multiplayer, freeroamTutorial, ou si le réglage restrictScenarios est désactivé) et tient compte des capacités de la session First Drive. Les mods peuvent ajouter des boutons à la page via le hook onEnvironmentGetOtherButtons.
+Pause menu data provider for the Environment page: summary (weather, traffic, others), weather/time page, simulation page (gravity, speed) and traffic page. It decides whether editing is allowed (freeroam, multiplayer, freeroamTutorial, or if the restrictScenarios setting is disabled) and takes the First Drive session's capabilities into account. Mods can add buttons to the page via the hook onEnvironmentGetOtherButtons.
 
-## Exemple
+## Example
 
 ```lua
 function M.onEnvironmentGetOtherButtons(buttons, actionState)
@@ -14,76 +14,76 @@ function M.onEnvironmentGetOtherButtons(buttons, actionState)
 end
 ```
 
-## Remarques
+## Notes
 
-- Le hook onEnvironmentGetOtherButtons(candidates, actionState) n'est émis que si showOther est vrai (donc pas pendant une session First Drive). Chaque bouton candidat doit avoir id, label et callback, sinon une erreur est loguée et il est ignoré ; icon et routeTarget sont facultatifs.
-- Les « autres » boutons sont triés par label (comparaison de chaînes) ; le bouton Simulation en fait partie.
-- getEnvironmentWeatherData et getEnvironmentTrafficData appellent core_environment sans test de nil (getTimeOfDayOptions, getInitState).
+- The hook onEnvironmentGetOtherButtons(candidates, actionState) is only emitted if showOther is true (so not during a First Drive session). Each candidate button must have id, label and callback, otherwise an error is logged and it is ignored; icon and routeTarget are optional.
+- The "other" buttons are sorted by label (string comparison); the Simulation button is one of them.
+- getEnvironmentWeatherData and getEnvironmentTrafficData call core_environment without a nil check (getTimeOfDayOptions, getInitState).
 
-**Dépendances (chargées avant) :** `ui_pause_providers_trafficControls`
+**Dependencies (loaded first):** `ui_pause_providers_trafficControls`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_pause_providers_routeData_environment.getEnvironmentData(context)` | Renvoie la page résumé Environnement : composant PauseEnvironmentDigest avec boutons météo, circulation et autres (simulation incluse), états d'action, options d'heure du jour, valeurs initiales du niveau et nom du niveau courant. | 79 |
-| `ui_pause_providers_routeData_environment.getEnvironmentSimulationData(context)` | Renvoie la page simulation (composant PauseEnvironmentSimulation). Pendant une session First Drive, renvoie une page vide non éditable. | 194 |
-| `ui_pause_providers_routeData_environment.getEnvironmentTrafficData(context)` | Renvoie la page circulation (composant PauseEnvironmentTraffic) avec les données de ui_pause_providers_trafficControls.getData({editable = ...}). | 217 |
-| `ui_pause_providers_routeData_environment.getEnvironmentWeatherData(context)` | Renvoie la page météo/heure (composant PauseEnvironmentWeather) avec gravityPresets, simSpeedPresets, timeOfDayOptions et levelDefaults de core_environment. | 163 |
-| `ui_pause_providers_routeData_environment.requestEnvironmentTrafficPayload(payload)` | Redirige vers ui_pause_providers_trafficControls.getData(payload), pour rafraîchir uniquement les données de circulation. | 242 |
+| `ui_pause_providers_routeData_environment.getEnvironmentData(context)` | Returns the Environment summary page: PauseEnvironmentDigest component with weather, traffic and other buttons (simulation included), action states, time of day options, the level's initial values and the current level name. | 79 |
+| `ui_pause_providers_routeData_environment.getEnvironmentSimulationData(context)` | Returns the simulation page (PauseEnvironmentSimulation component). During a First Drive session, returns an empty non-editable page. | 194 |
+| `ui_pause_providers_routeData_environment.getEnvironmentTrafficData(context)` | Returns the traffic page (PauseEnvironmentTraffic component) with the data from ui_pause_providers_trafficControls.getData({editable = ...}). | 217 |
+| `ui_pause_providers_routeData_environment.getEnvironmentWeatherData(context)` | Returns the weather/time page (PauseEnvironmentWeather component) with gravityPresets, simSpeedPresets, timeOfDayOptions and levelDefaults from core_environment. | 163 |
+| `ui_pause_providers_routeData_environment.requestEnvironmentTrafficPayload(payload)` | Redirects to ui_pause_providers_trafficControls.getData(payload), to refresh only the traffic data. | 242 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_pause_providers_routeData_environment.getEnvironmentData(context)`
 
-Renvoie la page résumé Environnement : composant PauseEnvironmentDigest avec boutons météo, circulation et autres (simulation incluse), états d'action, options d'heure du jour, valeurs initiales du niveau et nom du niveau courant.
+Returns the Environment summary page: PauseEnvironmentDigest component with weather, traffic and other buttons (simulation included), action states, time of day options, the level's initial values and the current level name.
 
-- `context` (*table*) : Contexte pause (champ lu : mode).
-- **renvoie** : table {editable, mainPanelContent, actions, timeOfDayOptions, levelDefaults, currentLevelName}
+- `context` (*table*) : Pause context (field read: mode).
+- **returns**: table {editable, mainPanelContent, actions, timeOfDayOptions, levelDefaults, currentLevelName}
 
 #### `ui_pause_providers_routeData_environment.getEnvironmentSimulationData(context)`
 
-Renvoie la page simulation (composant PauseEnvironmentSimulation). Pendant une session First Drive, renvoie une page vide non éditable.
+Returns the simulation page (PauseEnvironmentSimulation component). During a First Drive session, returns an empty non-editable page.
 
-- `context` (*table*) : Contexte pause.
-- **renvoie** : table {editable, disabledReason, mainPanelContent}
+- `context` (*table*) : Pause context.
+- **returns**: table {editable, disabledReason, mainPanelContent}
 
 #### `ui_pause_providers_routeData_environment.getEnvironmentTrafficData(context)`
 
-Renvoie la page circulation (composant PauseEnvironmentTraffic) avec les données de ui_pause_providers_trafficControls.getData({editable = ...}).
+Returns the traffic page (PauseEnvironmentTraffic component) with the data from ui_pause_providers_trafficControls.getData({editable = ...}).
 
-- `context` (*table*) : Contexte pause.
-- **renvoie** : table {editable, disabledReason, traffic, mainPanelContent}
+- `context` (*table*) : Pause context.
+- **returns**: table {editable, disabledReason, traffic, mainPanelContent}
 
 #### `ui_pause_providers_routeData_environment.getEnvironmentWeatherData(context)`
 
-Renvoie la page météo/heure (composant PauseEnvironmentWeather) avec gravityPresets, simSpeedPresets, timeOfDayOptions et levelDefaults de core_environment.
+Returns the weather/time page (PauseEnvironmentWeather component) with gravityPresets, simSpeedPresets, timeOfDayOptions and levelDefaults from core_environment.
 
-- `context` (*table*) : Contexte pause.
-- **renvoie** : table {editable, disabledReason, mainCardClass, mainPanelContent, gravityPresets, simSpeedPresets, timeOfDayOptions, levelDefaults}
+- `context` (*table*) : Pause context.
+- **returns**: table {editable, disabledReason, mainCardClass, mainPanelContent, gravityPresets, simSpeedPresets, timeOfDayOptions, levelDefaults}
 
 #### `ui_pause_providers_routeData_environment.requestEnvironmentTrafficPayload(payload)`
 
-Redirige vers ui_pause_providers_trafficControls.getData(payload), pour rafraîchir uniquement les données de circulation.
+Redirects to ui_pause_providers_trafficControls.getData(payload), to refresh only the traffic data.
 
-- `payload` (*table*) : Charge utile transmise (champ lu : editable).
-- **renvoie** : table Données de circulation.
+- `payload` (*table*) : Payload passed (field read: editable).
+- **returns**: table Traffic data.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {"ui_pause_providers_trafficControls"} |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onEnvironmentGetOtherButtons`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `core_environment.` `getInitState`, `getTimeOfDayOptions`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/pause/providers/routeData/environment.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/pause/providers/routeData/environment.lua`.*

@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua",
+  "module": "Fenêtre 'Prop Transformer' du Vehicle Editor live : permet de choisir un prop (pièce visuelle comme un rétroviseur ou une lampe) du véhicule en visant son nœud de référence ('Pick Prop', molette pour parcourir les props superposés) puis de modifier sa transformation en direct : baseTranslation, baseTranslationGlobal (m), baseRotation, baseRotationGlobal (affichées en degrés, converties en radians pour le moteur), soit par champs numériques, soit avec le gizmo d'axes. Les valeurs « sans nodeRotate/Offset/Move » peuvent être copiées dans le presse-papiers au format JSON \"x\":…, \"y\":…, \"z\":… pour les coller dans le jbeam.",
+  "notes": [
+    "Les modifications ne s'appliquent qu'à la session live ; il faut recopier les valeurs dans le jbeam.",
+    "Les valeurs du presse-papiers ignorent les transformations de nœuds (nodeRotate/nodeOffset/nodeMove) : ce sont celles du jbeam d'origine.",
+    "Les rotations sont saisies en degrés (champs EnterReturnsTrue : validées avec Entrée) mais stockées en radians côté moteur.",
+    "État conservé par ID de véhicule (copie de vehData) ; onVehicleSpawned le supprime et le recrée.",
+    "Utilise les mêmes gizmos que nodeTransformer (setAxisGizmoRenderPlane, MoveGrid, PlaneHashes)."
+  ],
+  "fields": {
+    "menuEntry": {"type": "string", "desc": "'Prop Transformer'."}
+  },
+  "functions": {
+    "onVehicleEditorRenderJBeams": {
+      "desc": "Hook de rendu émis par editor_veMain : initialise l'état si besoin, dessine le prop choisi, applique la transformation via gizmo et exécute le picking de prop (mode 2).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onUpdate": {"desc": "Appelé chaque frame : dessine la fenêtre (bouton Pick Prop, champs de translation/rotation, boutons de copie et de gizmo).", "params": {"dt": {"type": "number", "desc": "Delta temps."}}, "internal": true},
+    "onVehicleSwitched": {
+      "desc": "Au changement de véhicule, bascule vers l'état du nouveau véhicule.",
+      "params": {
+        "oldVehicle": {"type": "integer", "desc": "ID de l'ancien véhicule."},
+        "newVehicle": {"type": "integer", "desc": "ID du nouveau véhicule."},
+        "player": {"type": "integer", "desc": "Index du joueur."}
+      },
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Quand un véhicule apparaît, oublie puis recrée son état.",
+      "params": {"id": {"type": "integer", "desc": "ID du véhicule."}},
+      "internal": true
+    },
+    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
+    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
+    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+  }
+}

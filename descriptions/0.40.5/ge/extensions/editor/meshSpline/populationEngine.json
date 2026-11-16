@@ -1,56 +1,128 @@
 {
   "path": "lua/ge/extensions/editor/meshSpline/populationEngine.lua",
-  "module": "Petit moteur de géométrie utilisé par l'outil Mesh Spline : il calcule la géométrie dérivée d'une spline (points subdivisés, largeurs, tangentes, normales) à partir de ses nœuds de contrôle (Catmull-Rom, libre, projetée sur le terrain ou par raycast), puis échantillonne des positions le long de cette courbe pour placer des meshes. S'appuie sur editor/toolUtilities/geom et util. Appelé par splineMgr et populate, pas par un moddeur directement.",
+  "module": "Small geometry engine used by the Mesh Spline tool: it computes the derived geometry of a spline (subdivided points, widths, tangents, normals) from its control nodes (Catmull-Rom, free, projected onto the terrain or by raycast), then samples positions along this curve to place meshes. Relies on editor/toolUtilities/geom and util. Called by splineMgr and populate, not by a modder directly.",
   "notes": [
-    "Les tables de sortie (outPositions, outTangents, outNormals) sont réutilisées et modifiées en place pour éviter les allocations ; elles sont vidées si la spline n'a pas au moins 2 points subdivisés.",
-    "Si spline.isConformToTerrain est vrai, les nœuds sont modifiés en z (hauteur du terrain + rayPostFloat, ou raycast vertical)."
+    "The output tables (outPositions, outTangents, outNormals) are reused and modified in place to avoid allocations; they are cleared if the spline does not have at least 2 subdivided points.",
+    "If spline.isConformToTerrain is true, the nodes are modified in z (terrain height + rayPostFloat, or vertical raycast)."
   ],
   "functions": {
     "clearDerivedGeometry": {
-      "desc": "Vide les tables dérivées de la spline : divPoints, divWidths, tangents, binormals, normals et discMap.",
-      "params": {"spline": {"type": "table", "desc": "Spline de l'outil Mesh Spline."}},
+      "desc": "Clears the spline's derived tables: divPoints, divWidths, tangents, binormals, normals and discMap.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Mesh Spline tool spline."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "updateGeometry": {
-      "desc": "Recalcule la géométrie dérivée de la spline. Avec moins de 2 nœuds, vide la géométrie et renvoie false. Si isConformToTerrain : abaisse les nœuds sur le terrain (terrainOnly) ou par raycast vertical, puis utilise catmullRomConformToTerrain / catmullRomRaycast ; sinon catmullRomFree.",
+      "desc": "Recomputes the spline's derived geometry. With fewer than 2 nodes, clears the geometry and returns false. If isConformToTerrain: lowers the nodes onto the terrain (terrainOnly) or by vertical raycast, then uses catmullRomConformToTerrain / catmullRomRaycast; otherwise catmullRomFree.",
       "params": {
-        "spline": {"type": "table", "desc": "Spline avec nodes, widths, nmls, isConformToTerrain, terrainOnly, rayPostFloat."},
-        "minimumDivisions": {"type": "integer", "desc": "Nombre minimal de subdivisions par segment (transmis à geom)."}
+        "spline": {
+          "type": "table",
+          "desc": "Spline with nodes, widths, nmls, isConformToTerrain, terrainOnly, rayPostFloat."
+        },
+        "minimumDivisions": {
+          "type": "integer",
+          "desc": "Minimum number of subdivisions per segment (passed to geom)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si la spline a au moins 2 points subdivisés après calcul."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the spline has at least 2 subdivided points after computation."
+        }
+      ],
       "internal": false
     },
     "sample": {
-      "desc": "Échantillonne la spline à intervalle régulier. Avec useEvenFit, spacing est une cible : un élément est verrouillé aux deux extrémités et l'intérieur est espacé le plus uniformément possible (geom.sampleSplineEvenFit, tient compte de isLoop). Sinon marche à période fixe (geom.sampleSpline).",
+      "desc": "Samples the spline at regular intervals. With useEvenFit, spacing is a target: an element is locked at both ends and the interior is spaced as uniformly as possible (geom.sampleSplineEvenFit, accounts for isLoop). Otherwise walks at a fixed period (geom.sampleSpline).",
       "params": {
-        "spline": {"type": "table", "desc": "Spline avec divPoints, tangents, normals, isLoop."},
-        "spacing": {"type": "number", "desc": "Période en mètres entre deux positions."},
-        "outPositions": {"type": "table", "desc": "Table remplie avec les positions."},
-        "outTangents": {"type": "table", "desc": "Table remplie avec les tangentes."},
-        "outNormals": {"type": "table", "desc": "Table remplie avec les normales."},
-        "useEvenFit": {"type": "boolean|nil", "desc": "Active l'échantillonnage extrémités verrouillées."}
+        "spline": {
+          "type": "table",
+          "desc": "Spline with divPoints, tangents, normals, isLoop."
+        },
+        "spacing": {
+          "type": "number",
+          "desc": "Period in meters between two positions."
+        },
+        "outPositions": {
+          "type": "table",
+          "desc": "Table filled with the positions."
+        },
+        "outTangents": {
+          "type": "table",
+          "desc": "Table filled with the tangents."
+        },
+        "outNormals": {
+          "type": "table",
+          "desc": "Table filled with the normals."
+        },
+        "useEvenFit": {
+          "type": "boolean|nil",
+          "desc": "Enables end-locked sampling."
+        }
       },
       "returns": [
-        {"type": "table", "desc": "outPositions."},
-        {"type": "table", "desc": "outTangents."},
-        {"type": "table", "desc": "outNormals."}
+        {
+          "type": "table",
+          "desc": "outPositions."
+        },
+        {
+          "type": "table",
+          "desc": "outTangents."
+        },
+        {
+          "type": "table",
+          "desc": "outNormals."
+        }
       ],
       "internal": false
     },
     "intervalFrame": {
-      "desc": "Calcule le repère local (position, tangente, vecteur haut) de l'intervalle entre les échantillons index et index+1 (geom.ribbonIntervalFrame).",
+      "desc": "Computes the local frame (position, tangent, up vector) of the interval between samples index and index+1 (geom.ribbonIntervalFrame).",
       "params": {
-        "positions": {"type": "table", "desc": "Positions échantillonnées."},
-        "tangents": {"type": "table", "desc": "Tangentes échantillonnées."},
-        "normals": {"type": "table", "desc": "Normales échantillonnées."},
-        "index": {"type": "integer", "desc": "Indice de départ de l'intervalle (base 1)."},
-        "outPosition": {"type": "vec3", "desc": "Reçoit la position (déduit du code)."},
-        "outTangent": {"type": "vec3", "desc": "Reçoit la tangente (déduit du code)."},
-        "outUp": {"type": "vec3", "desc": "Reçoit le vecteur haut (déduit du code)."},
-        "previousAcross": {"type": "vec3|nil", "desc": "Vecteur transversal de l'intervalle précédent, pour la continuité (déduit du code)."}
+        "positions": {
+          "type": "table",
+          "desc": "Sampled positions."
+        },
+        "tangents": {
+          "type": "table",
+          "desc": "Sampled tangents."
+        },
+        "normals": {
+          "type": "table",
+          "desc": "Sampled normals."
+        },
+        "index": {
+          "type": "integer",
+          "desc": "Start index of the interval (1-based)."
+        },
+        "outPosition": {
+          "type": "vec3",
+          "desc": "Receives the position (inferred from code)."
+        },
+        "outTangent": {
+          "type": "vec3",
+          "desc": "Receives the tangent (inferred from code)."
+        },
+        "outUp": {
+          "type": "vec3",
+          "desc": "Receives the up vector (inferred from code)."
+        },
+        "previousAcross": {
+          "type": "vec3|nil",
+          "desc": "Transverse vector of the previous interval, for continuity (inferred from code)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si positions[index] ou positions[index+1] n'existe pas, sinon true."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if positions[index] or positions[index+1] does not exist, otherwise true."
+        }
+      ],
       "internal": false
     }
   }

@@ -1,25 +1,25 @@
 # `flowgraph_nodes_gameplay_dragRace_getRacerData`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerData.lua` · VM : Game Engine (GE) · 85 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerData.lua` · VM: Game Engine (GE) · 85 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/dragRace/getRacerData")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/dragRace/getRacerData")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Drag Racer Data » (catégorie repeat_instant, LEGACY). Nœud de commodité qui donne l'état d'un pilote (vehId) : isPlayable, lane, isDesqualified, desqualifiedReason, isFinished. Le code recommande plutôt « Get Drag Racer Status » et « Get Drag Racer Spawn Point ».
+Flowgraph node "Get Drag Racer Data" (category repeat_instant, LEGACY). Convenience node that gives the state of a driver (vehId): isPlayable, lane, isDesqualified, desqualifiedReason, isFinished. The code recommends "Get Drag Racer Status" and "Get Drag Racer Spawn Point" instead.
 
-## Remarques
+## Notes
 
-- Écrit les sorties seulement si elles sont utilisées (isUsed).
-- Si les données ne sont pas prêtes, les sorties gardent leur valeur précédente.
-- L'orthographe « desqualified » (sans i) est celle du jeu.
+- Writes the outputs only if they are used (isUsed).
+- If the data is not ready, the outputs keep their previous value.
+- The spelling "desqualified" (without i) is the game's.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Vide data et dragData. | 27 |
-| `C:work()` | Lit dragBridge.getData et getRacerData(vehId), puis alimente les pins utilisés. | 32 |
+| `C:_executionStarted()` | Clears data and dragData. | 27 |
+| `C:work()` | Reads dragBridge.getData and getRacerData(vehId), then feeds the used pins. | 32 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerData.lua`.*

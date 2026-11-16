@@ -1,22 +1,22 @@
 # `flowgraph_nodes_timetrials_onRaceStart`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua` · VM : Game Engine (GE) · 46 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua` · VM: Game Engine (GE) · 46 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/timetrials/onRaceStart")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/timetrials/onRaceStart")` (file under extensions/ but not a regular extension)
 
-Noeud « Race Started » (logic, tag input). Pins de sortie : started (flow quand la course a démarré) et stopped (flow avant le départ). Passe à démarré sur le hook onRaceStart.
+Node "Race Started" (logic, tag input). Output pins: started (flow when the race has started) and stopped (flow before the start). Switches to started on the onRaceStart hook.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:_executionStarted()` | started = false. | 28 |
 | `C:init(mgr, ...)` | started = false. | 24 |
-| `C:onRaceStart()` | Hook de départ de course : started = true. | 37 |
-| `C:onScenarioRestarted()` | Hook de redémarrage : réinitialise. | 41 |
-| `C:work()` | Écrit started et stopped. | 32 |
+| `C:onRaceStart()` | Race start hook: started = true. | 37 |
+| `C:onScenarioRestarted()` | Restart hook: resets. | 41 |
+| `C:work()` | Writes started and stopped. | 32 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua`.*

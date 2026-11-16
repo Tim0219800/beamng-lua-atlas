@@ -1,24 +1,24 @@
 # `flowgraph_nodes_gameplay_vehiclePool_addGroup`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/addGroup.lua` · VM : Game Engine (GE) · 31 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/addGroup.lua` · VM: Game Engine (GE) · 31 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/vehiclePool/addGroup")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/vehiclePool/addGroup")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Add Vehicle Group To Pool » (once_instant). Insère dans le pool tous les ids de la table vehGroup (pool:insertVeh pour chacun). Nécessite le module core_vehicleActivePooling ; l'objet pool vient du nœud Create Vehicle Pool.
+Flowgraph node "Add Vehicle Group To Pool" (once_instant). Inserts all ids of the vehGroup table into the pool (pool:insertVeh for each). Requires the core_vehicleActivePooling module; the pool object comes from the Create Vehicle Pool node.
 
-## Remarques
+## Notes
 
-- La description du nœud (« Activates or deactivates a vehicle object in the pool ») ne correspond pas au code, qui ajoute un groupe au pool.
+- The node's description ("Activates or deactivates a vehicle object in the pool") does not match the code, which adds a group to the pool.
 
-**Dépendances (chargées avant) :** `core_vehicleActivePooling`
+**Dependencies (loaded first):** `core_vehicleActivePooling`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Appelle insertVeh pour chaque id du groupe. | 23 |
+| `C:workOnce()` | Calls insertVeh for each id in the group. | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/addGroup.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/addGroup.lua`.*

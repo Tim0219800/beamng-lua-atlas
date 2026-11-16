@@ -2,114 +2,114 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/terrainGenerator.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Utilitaire (encore en chantier selon le commentaire du fichier) qui génère un bloc de terrain (TerrainBlock) à partir d'une carte de hauteur : un tableau Lua de hauteurs ou un PNG. Il gère aussi les cartes de trous, les cartes de couches (layerMap) et les matériaux de terrain lus depuis un JSON. Un moddeur l'utilise depuis la console pour créer ou remplacer le terrain d'un niveau (par exemple smallgrid). Le module n'expose que new(data), qui renvoie un objet dont les méthodes sont décrites dans la classe C.
---- Accès : extension `util_terrainGenerator` : `extensions.load("util_terrainGenerator")`, puis la globale `util_terrainGenerator`
+--- Utility (still a work in progress according to the file comment) that generates a terrain block (TerrainBlock) from a height map: a Lua array of heights or a PNG. It also handles hole maps, layer maps (layerMap) and terrain materials read from a JSON. A modder uses it from the console to create or replace a level's terrain (for example smallgrid). The module only exposes new(data), which returns an object whose methods are described in the class C.
+--- Access: extension `util_terrainGenerator`: `extensions.load("util_terrainGenerator")`, then the global `util_terrainGenerator`
 ---@class util_terrainGenerator
 util_terrainGenerator = {}
 
---- Crée un générateur de terrain et appelle init(data). Renvoie l'objet (classe C) sur lequel on appelle les méthodes.
----Source : lua/ge/extensions/util/terrainGenerator.lua:468
----@param data table|nil Options facultatives : terrainScale (taille de maille, 1 par défaut), terrainHeight, name ('temp'), terrainName ('theTerrain'), userDir ('temp/'), heightMap, holeMap, textureMaps, materials.
----@return table  Instance du générateur de terrain.
+--- Creates a terrain generator and calls init(data). Returns the object (class C) on which the methods are called.
+---Source: lua/ge/extensions/util/terrainGenerator.lua:468
+---@param data table|nil Optional options: terrainScale (cell size, 1 by default), terrainHeight, name ('temp'), terrainName ('theTerrain'), userDir ('temp/'), heightMap, holeMap, textureMaps, materials.
+---@return table  Terrain generator instance.
 function util_terrainGenerator.new(data) end
 
---- Objet renvoyé par new(data) : conserve la carte de hauteur (GBitmap), l'échelle, la hauteur max, le dossier utilisateur, les matériaux et les cartes de couches.
+--- Object returned by new(data): keeps the height map (GBitmap), the scale, the max height, the user folder, the materials and the layer maps.
 ---@class util_terrainGenerator_C
 local util_terrainGenerator_C = {}
 
---- Place le terrain pour que l'origine du monde soit au centre du bloc (décalage de -taille/2 en x et y).
----Source : lua/ge/extensions/util/terrainGenerator.lua:105
+--- Places the terrain so that the world origin is at the center of the block (offset of -size/2 in x and y).
+---Source: lua/ge/extensions/util/terrainGenerator.lua:105
 function util_terrainGenerator_C:centerTerrain() end
 
---- Crée le terrain à partir des paramètres enregistrés : supprime l'ancien, crée un TerrainBlock, applique le TextureSet éventuel, ajoute les matériaux, importe les cartes (importMaps) et sauvegarde le fichier terrain. Logue une erreur et sort si le PNG de hauteur est introuvable ou si matériaux et cartes diffèrent en nombre.
----Source : lua/ge/extensions/util/terrainGenerator.lua:380
+--- Creates the terrain from the saved parameters: deletes the old one, creates a TerrainBlock, applies the TextureSet if any, adds the materials, imports the maps (importMaps) and saves the terrain file. Logs an error and exits if the height PNG is not found or if materials and maps differ in number.
+---Source: lua/ge/extensions/util/terrainGenerator.lua:380
 function util_terrainGenerator_C:createTerrain() end
 
---- Exporte en PNG la carte de hauteur, les cartes de trous et les cartes de couches du terrain actuel (fonctionne sur n'importe quel terrain existant).
----Source : lua/ge/extensions/util/terrainGenerator.lua:188
----@param dir string|nil Dossier de sortie ; userDir par défaut. Doit se terminer par '/' (concaténation directe).
----@param prefix string|nil Préfixe des fichiers ; name par défaut.
+--- Exports as PNG the height map, hole maps and layer maps of the current terrain (works on any existing terrain).
+---Source: lua/ge/extensions/util/terrainGenerator.lua:188
+---@param dir string|nil Output folder; userDir by default. Must end with '/' (direct concatenation).
+---@param prefix string|nil File prefix; name by default.
 function util_terrainGenerator_C:exportTerrainMaps(dir, prefix) end
 
---- Renvoie la hauteur utilisateur (getHeightScaleUser) du terrain actuel, ou 0 s'il n'y a pas de terrain.
----Source : lua/ge/extensions/util/terrainGenerator.lua:90
----@return number  Hauteur maximale en mètres.
+--- Returns the user height (getHeightScaleUser) of the current terrain, or 0 if there is no terrain.
+---Source: lua/ge/extensions/util/terrainGenerator.lua:90
+---@return number  Maximum height in meters.
 function util_terrainGenerator_C:getMaxHeight() end
 
---- Construit l'entrée de données d'une carte de couche pour un matériau (canal R, materialId = nombre de cartes déjà présentes).
----Source : lua/ge/extensions/util/terrainGenerator.lua:184
----@param path string Chemin du PNG de la couche.
----@param matName string|nil Nom du matériau.
+--- Builds the data entry of a layer map for a material (channel R, materialId = number of maps already present).
+---Source: lua/ge/extensions/util/terrainGenerator.lua:184
+---@param path string Path of the layer's PNG.
+---@param matName string|nil Material name.
 ---@return table  {path, selected, material, materialId, channel, channelId}.
 function util_terrainGenerator_C:getTextureMap(path, matName) end
 
---- Initialise les champs depuis data (échelle, hauteur, noms, chemins, matériaux), crée un GBitmap vide et vide le dossier temp/. Appelée par new().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/terrainGenerator.lua:39
----@param data table|nil Options (voir new).
+--- Initializes the fields from data (scale, height, names, paths, materials), creates an empty GBitmap and empties the temp/ folder. Called by new().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/terrainGenerator.lua:39
+---@param data table|nil Options (see new).
 function util_terrainGenerator_C:init(data) end
 
---- Charge un PNG de hauteur dans le bitmap, met à jour heightMap et bitmapWidth.
----Source : lua/ge/extensions/util/terrainGenerator.lua:73
----@param path string|nil Chemin du fichier ; self.heightMap par défaut.
+--- Loads a height PNG into the bitmap, updates heightMap and bitmapWidth.
+---Source: lua/ge/extensions/util/terrainGenerator.lua:73
+---@param path string|nil File path; self.heightMap by default.
 function util_terrainGenerator_C:loadBitmap(path) end
 
---- Supprime le terrain actuel puis, sauf si deleteOnly, crée un nouveau TerrainBlock nommé terrainName, rattaché au dossier du niveau courant et ajouté à MissionGroup.
----Source : lua/ge/extensions/util/terrainGenerator.lua:172
----@param deleteOnly boolean|nil Si vrai, supprime seulement le terrain.
+--- Deletes the current terrain then, unless deleteOnly, creates a new TerrainBlock named terrainName, attached to the current level's folder and added to MissionGroup.
+---Source: lua/ge/extensions/util/terrainGenerator.lua:172
+---@param deleteOnly boolean|nil If true, only deletes the terrain.
 function util_terrainGenerator_C:resetTerrain(deleteOnly) end
 
---- Supprime dans le dossier les fichiers *heightMap.png, *holeMap.png et *layerMap_*.png.
----Source : lua/ge/extensions/util/terrainGenerator.lua:159
----@param dir string|nil Dossier ; self.userDir par défaut.
+--- Deletes the *heightMap.png, *holeMap.png and *layerMap_*.png files in the folder.
+---Source: lua/ge/extensions/util/terrainGenerator.lua:159
+---@param dir string|nil Folder; self.userDir by default.
 function util_terrainGenerator_C:resetUserDir(dir) end
 
---- Sauvegarde le bitmap de hauteur en PNG (ajoute .png si absent) et mémorise le chemin dans heightMap. Logue une erreur et sort si la sauvegarde échoue.
----Source : lua/ge/extensions/util/terrainGenerator.lua:57
----@param path string|nil Chemin du fichier ; self.heightMap par défaut.
+--- Saves the height bitmap as a PNG (adds .png if missing) and stores the path in heightMap. Logs an error and exits if the save fails.
+---Source: lua/ge/extensions/util/terrainGenerator.lua:57
+---@param path string|nil File path; self.heightMap by default.
 function util_terrainGenerator_C:saveBitmap(path) end
 
---- Construit le bitmap R16 depuis un tableau 2D array[x][y] (indices à partir de 1), complète les trous avec 0, arrondit la taille au multiple de 128 et sauvegarde le PNG. Met terrainHeight à la hauteur max du tableau.
----Source : lua/ge/extensions/util/terrainGenerator.lua:118
----@param array table<integer, table<integer, number>> Hauteurs en mètres. Modifié en place (remplissage).
+--- Builds the R16 bitmap from a 2D array array[x][y] (1-based indices), fills the gaps with 0, rounds the size up to a multiple of 128 and saves the PNG. Sets terrainHeight to the array's max height.
+---Source: lua/ge/extensions/util/terrainGenerator.lua:118
+---@param array table<integer, table<integer, number>> Heights in meters. Modified in place (filling).
 function util_terrainGenerator_C:setBitmapFromArray(array) end
 
---- Crée le matériau de terrain 'default' (grille du niveau smallgrid) et en fait le seul matériau de l'objet.
----Source : lua/ge/extensions/util/terrainGenerator.lua:233
+--- Creates the 'default' terrain material (smallgrid level grid) and makes it the object's only material.
+---Source: lua/ge/extensions/util/terrainGenerator.lua:233
 function util_terrainGenerator_C:setDefaultMaterial() end
 
---- Définit les matériaux de terrain avant création. Sans argument, reprend ceux du terrain existant (hors 'warning_material'). Avec matData.filePath, lit un JSON de matériaux et crée les TerrainMaterial correspondants (champs v1 et v1.5, TextureSet). Avec matData.materials, utilise directement la liste. Retombe sur le matériau par défaut si rien n'est défini.
----Source : lua/ge/extensions/util/terrainGenerator.lua:249
----@param matData table|nil {filePath = chemin JSON} ou {materials = liste de noms}.
+--- Defines the terrain materials before creation. With no argument, takes those of the existing terrain (excluding 'warning_material'). With matData.filePath, reads a materials JSON and creates the matching TerrainMaterials (v1 and v1.5 fields, TextureSet). With matData.materials, uses the list directly. Falls back to the default material if nothing is defined.
+---Source: lua/ge/extensions/util/terrainGenerator.lua:249
+---@param matData table|nil {filePath = JSON path} or {materials = list of names}.
 function util_terrainGenerator_C:setMaterials(matData) end
 
---- Renseigne directement le PNG de hauteur et ses paramètres.
----Source : lua/ge/extensions/util/terrainGenerator.lua:203
----@param path string Chemin du PNG de hauteur.
----@param size integer Largeur du bitmap en pixels.
----@param height number Hauteur maximale du terrain.
----@param scale number Taille de maille.
----@param flipY boolean Inverse l'axe Y des cartes.
+--- Directly sets the height PNG and its parameters.
+---Source: lua/ge/extensions/util/terrainGenerator.lua:203
+---@param path string Path of the height PNG.
+---@param size integer Bitmap width in pixels.
+---@param height number Maximum terrain height.
+---@param scale number Cell size.
+---@param flipY boolean Flips the Y axis of the maps.
 function util_terrainGenerator_C:setPngData(path, size, height, scale, flipY) end
 
---- Écrit un pixel de la carte de hauteur. x et y commencent à 0 ; z est normalisé par terrainHeight et borné à [0, 1].
----Source : lua/ge/extensions/util/terrainGenerator.lua:112
----@param x integer Colonne du pixel (à partir de 0).
----@param y integer Ligne du pixel (à partir de 0).
----@param z number Hauteur en mètres.
+--- Writes a pixel of the height map. x and y start at 0; z is normalized by terrainHeight and clamped to [0, 1].
+---Source: lua/ge/extensions/util/terrainGenerator.lua:112
+---@param x integer Pixel column (0-based).
+---@param y integer Pixel row (0-based).
+---@param z number Height in meters.
 function util_terrainGenerator_C:setPoint(x, y, z) end
 
---- Déplace le bloc de terrain à la position donnée (vec3(0,0,0) correspond au coin du bloc) et recharge la collision.
----Source : lua/ge/extensions/util/terrainGenerator.lua:98
----@param vec vec3 Nouvelle position du terrain.
+--- Moves the terrain block to the given position (vec3(0,0,0) corresponds to the block's corner) and reloads collision.
+---Source: lua/ge/extensions/util/terrainGenerator.lua:98
+---@param vec vec3 New terrain position.
 function util_terrainGenerator_C:setTerrainOffset(vec) end
 
---- Associe chaque matériau à son PNG *_layerMap_*.png trouvé dans userDir, et génère un PNG vide (blanc pour le matériau par défaut, noir sinon) pour ceux qui n'en ont pas.
----Source : lua/ge/extensions/util/terrainGenerator.lua:339
+--- Associates each material with its *_layerMap_*.png PNG found in userDir, and generates an empty PNG (white for the default material, black otherwise) for those that have none.
+---Source: lua/ge/extensions/util/terrainGenerator.lua:339
 function util_terrainGenerator_C:setTextureMaps() end
 
---- Définit le dossier de projet et, s'il existe, repère automatiquement le PNG de hauteur, le PNG de trous et le fichier *materials.json (qu'il charge via setMaterials).
----Source : lua/ge/extensions/util/terrainGenerator.lua:211
----@param dir string|nil Dossier ; 'temp/' par défaut. Un '/' final est ajouté si absent.
+--- Sets the project folder and, if it exists, automatically locates the height PNG, the hole PNG and the *materials.json file (which it loads via setMaterials).
+---Source: lua/ge/extensions/util/terrainGenerator.lua:211
+---@param dir string|nil Folder; 'temp/' by default. A trailing '/' is added if missing.
 function util_terrainGenerator_C:setUserDir(dir) end
 

@@ -2,40 +2,40 @@
 -- tim19Atlas stub generated from lua/common/libs/lua-websockets/websocket/client_sync.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Backend client WebSocket synchrone (bloquant) de lua-websockets, basé sur luasocket. Le module renvoie une fonction constructeur (aussi accessible par websocket.client.new). L'objet est étendu par websocket/sync, ce qui lui donne connect, send, receive et close. À utiliser pour un client WebSocket simple dans un script Lua du jeu.
---- Accès : `require("libs/lua-websockets/websocket/client_sync")`
+--- Synchronous (blocking) WebSocket client backend of lua-websockets, based on luasocket. The module returns a constructor function _anon(also accessible via websocket.client.new). The object is extended by websocket/sync, which gives it connect, send, receive and close. To be used for a simple WebSocket client in a game Lua script.
+--- Access: `require("libs/lua-websockets/websocket/client_sync")`
 ---@class libs_lua_websockets_websocket_client_sync
 local libs_lua_websockets_websocket_client_sync = {}
 
---- Objet renvoyé par le constructeur new(ws). ws est une table d'options facultative (timeout en secondes). connect/send/receive/close proviennent de websocket/sync.
+--- Object returned by the constructor new(ws). ws is an optional options table (timeout in seconds). connect/send/receive/close come from websocket/sync.
 ---@class libs_lua_websockets_websocket_client_sync_client
 local libs_lua_websockets_websocket_client_sync_client = {}
 
---- Enveloppe le socket avec ssl.wrap puis lance la négociation TLS. Inutilisable en pratique car ssl vaut nil.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lua-websockets/websocket/client_sync.lua:dyn
----@param ssl_params table Paramètres TLS.
+--- Wraps the socket with ssl.wrap then starts the TLS negotiation. Unusable in practice because ssl is nil.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lua-websockets/websocket/client_sync.lua:dyn
+---@param ssl_params table TLS parameters.
 function libs_lua_websockets_websocket_client_sync_client:dohandshake(ssl_params) end
 
---- Ferme le socket.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lua-websockets/websocket/client_sync.lua:dyn
+--- Closes the socket.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lua-websockets/websocket/client_sync.lua:dyn
 function libs_lua_websockets_websocket_client_sync_client:sock_close() end
 
---- Crée un socket TCP luasocket, applique ws.timeout et se connecte. Renvoie nil et l'erreur en cas d'échec.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lua-websockets/websocket/client_sync.lua:dyn
----@param host string Hôte.
+--- Creates a luasocket TCP socket, applies ws.timeout and connects. Returns nil and the error on failure.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lua-websockets/websocket/client_sync.lua:dyn
+---@param host string Host.
 ---@param port integer Port.
 function libs_lua_websockets_websocket_client_sync_client:sock_connect(host, port) end
 
---- Lit des données sur le socket (luasocket receive).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lua-websockets/websocket/client_sync.lua:dyn
+--- Reads data on the socket (luasocket receive).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lua-websockets/websocket/client_sync.lua:dyn
 function libs_lua_websockets_websocket_client_sync_client:sock_receive() end
 
---- Envoie des données sur le socket (luasocket send).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lua-websockets/websocket/client_sync.lua:dyn
+--- Sends data on the socket (luasocket send).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lua-websockets/websocket/client_sync.lua:dyn
 function libs_lua_websockets_websocket_client_sync_client:sock_send() end
 

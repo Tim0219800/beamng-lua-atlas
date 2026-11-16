@@ -1,12 +1,12 @@
 # `career_modules_insurance_insurance`
 
-*Fichier : `lua/ge/extensions/career/modules/insurance/insurance.lua` · VM : Game Engine (GE) · 2056 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/insurance/insurance.lua` · VM: Game Engine (GE) · 2056 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_insurance_insurance` : `extensions.load("career_modules_insurance_insurance")`, puis la globale `career_modules_insurance_insurance`
+**Access:** extension `career_modules_insurance_insurance`: `extensions.load("career_modules_insurance_insurance")`, then the global `career_modules_insurance_insurance`
 
-Système d'assurance et de réparation de véhicules du mode carrière. Il charge les définitions de gameplay/insurance (fournisseurs, classes, options de couverture, perks, paliers de score de conducteur), enregistre pour chaque véhicule d'inventaire (invVehs) son assurance et ses options, suit la distance parcourue pour renouveler la police tous les 100 km, accorder des gestes commerciaux (réparation gratuite) et faire monter le score de conducteur, calcule les primes (valeur du véhicule x taux de classe x options x remise de groupe x multiplicateur du palier de score), traite les réclamations et les réparations (instantanées ou différées, franchise, assistance routière) et alimente l'UI (guihooks insurancesData, chooseInsuranceData).
+Career mode vehicle insurance and repair system. It loads the definitions from gameplay/insurance (providers, classes, coverage options, perks, driver score tiers), records for each inventory vehicle (invVehs) its insurance and options, tracks the distance driven to renew the policy every 100 km, grant goodwill gestures (free repair) and raise the driver score, computes the premiums (vehicle value x class rate x options x group discount x score tier multiplier), processes claims and repairs (instant or delayed, deductible, roadside assistance) and feeds the UI (guihooks insurancesData, chooseInsuranceData).
 
-## Exemple
+## Example
 
 ```lua
 local ins = career_modules_insurance_insurance
@@ -15,534 +15,534 @@ local needs = ins.inventoryVehNeedsRepair(inventoryId)
 ins.startRepair(inventoryId, {isInsuranceRepair = true, cost = {money = 300}, repairTime = 0})
 ```
 
-## Remarques
+## Notes
 
-- Constantes : renouvellement tous les 100 000 m de conduite assurée ; score de conducteur de 0 à 100 (64 par défaut dans defaultDriverScore, 65 à la toute première initialisation) ; -1 par réclamation (sauf indulgence d'accident) ; +2 tous les 50 000 m sans réclamation ; au plus 5 indulgences d'accident ; délai de 600 s entre modifications de couverture ; pénalité de résiliation anticipée 25 % ; supplément de réparation rapide 1000 ; réclamation d'essai de véhicule 500.
-- Remise de groupe selon la valeur totale des véhicules assurés chez le même assureur (plus d'un véhicule) : 10 % (< 50 000), 15 %, 20 %, 25 %, 30 % (>= 500 000).
-- Les options de couverture sont soit à portée de l'assureur (isInsuranceWide, stockées dans plInsurancesData), soit par véhicule (stockées dans invVehs[id].insuranceData). Un insuranceId de -1 signifie non assuré.
-- Les perks de fournisseur modifient les options au chargement : reduceDeductible (franchise réduite), freeRepaintDuringRepair, freeTowing, repairTimeDiscount, instantRepair, accidentForgivenessAtRenewal, fuelDiscount (utilisé par le module fuel).
-- Bug : onEnterVehicleFinished lit startRepairVehInfo.vehId alors que startRepairDelayed stocke inventoryId : l'indice est nil et la réparation différée après avoir quitté le véhicule n'aboutit pas comme prévu.
-- Bug : changeInvVehInsuranceCoverageOptions lit plInsurancesData[...].coverageOptions[...] (champ inexistant, la structure réelle est coverageOptionsData.currentCoverageOptions) : la fonction ne semble pas utilisable telle quelle ; l'UI passe par saveNewInsuranceCoverageOptions et saveNewVehicleCoverageOptions.
-- makeTestDriveDamageClaim met toujours vehName = 'ibishu n' (valeur codée en dur) dans l'historique, et ignore son paramètre vehId.
-- renewActiveInsurance journalise concernedInsuranceName avec activeInsuranceId et non avec insuranceId passé en paramètre (identiques en pratique : appelée avec activeInsuranceId).
-- getTotalInsuranceVehsValue est défini deux fois dans le fichier (même code) ; sans conséquence.
-- onVehicleRemoved est exporté sous ce nom mais la fonction locale s'appelle onVehicleRemovedFromInventory.
-- loadInsurancesData lit saveInfo.version même si savePath est nil : prudence si la sauvegarde n'existe pas.
+- Constants: renewal every 100,000 m of insured driving; driver score from 0 to 100 (64 by default in defaultDriverScore, 65 at the very first initialization); -1 per claim (except accident forgiveness); +2 every 50,000 m without a claim; at most 5 accident forgivenesses; 600 s delay between coverage changes; early termination penalty 25%; quick repair surcharge 1000; vehicle test drive claim 500.
+- Group discount according to the total value of the vehicles insured with the same insurer (more than one vehicle): 10% (< 50,000), 15%, 20%, 25%, 30% (>= 500,000).
+- Coverage options are either insurer-wide (isInsuranceWide, stored in plInsurancesData) or per vehicle (stored in invVehs[id].insuranceData). An insuranceId of -1 means uninsured.
+- Provider perks modify the options on load: reduceDeductible (reduced deductible), freeRepaintDuringRepair, freeTowing, repairTimeDiscount, instantRepair, accidentForgivenessAtRenewal, fuelDiscount (used by the fuel module).
+- Bug: onEnterVehicleFinished reads startRepairVehInfo.vehId whereas startRepairDelayed stores inventoryId: the index is nil and the delayed repair after leaving the vehicle does not complete as intended.
+- Bug: changeInvVehInsuranceCoverageOptions reads plInsurancesData[...].coverageOptions[...] (nonexistent field, the real structure is coverageOptionsData.currentCoverageOptions): the function does not seem usable as is; the UI goes through saveNewInsuranceCoverageOptions and saveNewVehicleCoverageOptions.
+- makeTestDriveDamageClaim always sets vehName = 'ibishu n' (hardcoded value) in the history, and ignores its vehId parameter.
+- renewActiveInsurance logs concernedInsuranceName with activeInsuranceId and not with the insuranceId passed as a parameter (identical in practice: called with activeInsuranceId).
+- getTotalInsuranceVehsValue is defined twice in the file (same code); harmless.
+- onVehicleRemoved is exported under this name but the local function is called onVehicleRemovedFromInventory.
+- loadInsurancesData reads saveInfo.version even if savePath is nil: be careful if the save does not exist.
 
-**Dépendances (chargées avant) :** `career_career`, `career_modules_payment`, `career_modules_playerAttributes`, `career_modules_insurance_history`, `career_modules_tether`, `career_modules_log`
+**Dependencies (loaded first):** `career_career`, `career_modules_payment`, `career_modules_playerAttributes`, `career_modules_insurance_history`, `career_modules_tether`, `career_modules_log`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_insurance_insurance.addToPlHistory(data)` | Raccourci vers career_modules_insurance_history.addToPlHistory. | 2035 |
-| `career_modules_insurance_insurance.calculateAddVehiclePrice(insuranceId, vehValue)` | Prix à payer pour ajouter un véhicule à un assureur : prime totale si c'est le premier, sinon prime du véhicule au prorata de la distance restante avant renouvellement. | 1143 |
-| `career_modules_insurance_insurance.calculateInsurancePremium(insuranceId, potentialCoverageOptions, potentialVehiclesCoverageOptions, potentialNewVehValue)` | Prime totale d'un assureur : somme des primes de ses véhicules plus options à portée de l'assureur, puis totalPriceWithDriverScore (x multiplicateur du palier de score). | 1064 |
-| `career_modules_insurance_insurance.calculateVehiclePremium(invVehId, nonInvVehInfo, potentialCoverageOptions)` | Prime d'un véhicule : valeur x coverageRate de la classe x produit des influences des options x (1 - remise de groupe). Fournir invVehId (véhicule possédé) ou nonInvVehInfo ({vehValue, insuranceId}). | 1013 |
-| `career_modules_insurance_insurance.changeInvVehInsurance(invVehId, newInsuranceId)` | Changement d'assurance déclenché par le joueur : refusé si le véhicule a besoin de réparation ; calcule le coût net (remboursement moins pénalité moins prix d'ajout), applique le nouvel assureur, paie ou reçoit la différence, journalise et débloque le succès POLICY_REVIEW. | 1551 |
-| `career_modules_insurance_insurance.changeInvVehInsuranceCoverageOptions(invVehId, changedCoverageOptions)` | Ancienne voie de modification des options de couverture d'un véhicule : enregistre l'historique et fait payer les frais de dossier (voir bug dans notes). | 1642 |
-| `career_modules_insurance_insurance.closeMenu(_closeMenuAfterSaving)` | Ferme le menu des assurances (retour à l'ordinateur ou fermeture de tous les menus). Avec sauvegarde auto, peut attendre la fin de la sauvegarde. | 1670 |
-| `career_modules_insurance_insurance.doesInsuranceExist(insuranceId)` | Indique si l'identifiant correspond à un assureur défini. | 1953 |
-| `career_modules_insurance_insurance.expediteRepair(inventoryId, price)` | Paie pour accéder immédiatement à un véhicule en réparation différée (supprime timeToAccess et delayReason). | 1803 |
-| `career_modules_insurance_insurance.formatPerkIconData(smallText, tooltipText, discount, isSignaturePerk)` | Construit la table d'icône de perk pour l'UI. | 958 |
-| `career_modules_insurance_insurance.genericVehNeedsRepair(vehId, callback)` | Demande au véhicule (objet) ses conditions de pièces et appelle callback(needsRepair) à la réponse ; sert aux véhicules hors inventaire (par exemple d'essai). | 655 |
-| `career_modules_insurance_insurance.getAccidentForgivenessCount(insuranceId)` | Nombre d'indulgences d'accident restantes chez un assureur. | 1961 |
-| `career_modules_insurance_insurance.getActualRepairPrice(invVehId)` | Usage interne : franchise de réparation du véhicule (valeur de l'option deductible). *(interne)* | 805 |
-| `career_modules_insurance_insurance.getDefaultInsuranceForClassId(insuranceClassId)` | Assureur par défaut d'une classe : celui de plus petit id. | 1889 |
-| `career_modules_insurance_insurance.getDriverScore()` | Score de conducteur actuel (0 à 100). | 562 |
-| `career_modules_insurance_insurance.getDriverScoreResetCost()` | Coût pour remettre le score à la valeur par défaut (64) : 0 si le score est déjà au moins égal, sinon 500 + proportion x 19500, arrondi. | 1738 |
-| `career_modules_insurance_insurance.getDriverScoreTierData(score)` | Palier de score (min, max, multiplicateur de prime…) pour un score ; le dernier palier si aucun ne correspond. | 552 |
-| `career_modules_insurance_insurance.getInsuranceClassFromVehicleShoppingData(data)` | Détermine la classe d'assurance requise pour une annonce selon la classe JSON, la valeur, la population, la carrosserie et la classe commerciale (la priorité la plus haute l'emporte). | 923 |
-| `career_modules_insurance_insurance.getInsuranceDataById(insuranceId)` | Définition d'un assureur chargée depuis les fichiers du jeu. | 1930 |
-| `career_modules_insurance_insurance.getInsuranceName(insuranceId)` | Nom de l'assureur, ou le libellé « pas d'assurance » si inconnu. | 1957 |
-| `career_modules_insurance_insurance.getInvVehFuelDiscountData(invVehId)` | Données de remise carburant d'un véhicule (hasFuelDiscount, fuelDiscount fraction, nom de l'assureur, icône de perk) ; utilisé par le module fuel. | 1907 |
-| `career_modules_insurance_insurance.getInvVehRepairTime(vehInvId)` | Délai de réparation inclus dans la police du véhicule (secondes ; 0 = instantané). | 1782 |
-| `career_modules_insurance_insurance.getInvVehs()` | Table des entrées d'assurance des véhicules d'inventaire (insuranceId, name, id, initialValue, requiredInsuranceClass, insuranceData). | 1965 |
-| `career_modules_insurance_insurance.getPerkValueByInsuranceId(insuranceId, perkId)` | Valeur d'un perk d'un assureur. | 1876 |
-| `career_modules_insurance_insurance.getPerkValueByInvVehId(invVehId, perkId)` | Valeur d'un perk de l'assureur d'un véhicule. | 1883 |
-| `career_modules_insurance_insurance.getPlCoverageOptionValue(invVehId, coverageOptionName)` | Valeur de l'option de couverture actuellement choisie pour un véhicule (ex. deductible, repairTime, paintRepair, roadsideAssistance). Ne renvoie rien si le véhicule n'est pas assuré. | 116 |
-| `career_modules_insurance_insurance.getPlHistory()` | Raccourci vers career_modules_insurance_history.getPlHistory. | 1996 |
-| `career_modules_insurance_insurance.getPlayerAbstractData()` | Résumé du joueur pour l'UI : score et palier, distances (totale, assurée, non assurée), nombre de réparations, coût de remise à zéro du score, bilan financier (primes, franchises, réparations privées, dégâts couverts). | 1333 |
-| `career_modules_insurance_insurance.getPlayerInsurancesData()` | Données sauvegardées par assureur (metersDriven, accidentForgiveness, roadsideAssistance, loyalty, coverageOptionsData…). | 1786 |
-| `career_modules_insurance_insurance.getQuickRepairExtraPrice()` | Supplément pour une réparation rapide (1000). | 1790 |
-| `career_modules_insurance_insurance.getRenewsIn(insuranceId)` | Kilomètres restants avant le renouvellement de l'assureur (0 pour -1 ou assureur inconnu). | 1127 |
-| `career_modules_insurance_insurance.getTestDriveClaimPrice()` | Montant facturé en cas de dégâts pendant un essai de véhicule (500). | 1872 |
-| `career_modules_insurance_insurance.getVehInsuranceInfo(vehInvId)` | Infos d'assurance d'un véhicule : assuré ou non, définition de l'assureur et classe requise. | 1794 |
-| `career_modules_insurance_insurance.inventoryVehNeedsRepair(vehInvId)` | Indique si un véhicule d'inventaire a des pièces à réparer (partConditions). | 374 |
-| `career_modules_insurance_insurance.isRoadSideAssistanceFree(invVehId)` | Indique s'il reste des remorquages gratuits d'assistance routière pour l'assureur du véhicule. | 1853 |
-| `career_modules_insurance_insurance.makeRepairClaim(invVehId, costs, vehInfo)` | Enregistre une réclamation de réparation : consomme une indulgence d'accident ou baisse le score de 1, ajoute l'historique (argent, bons, score, franchise, valeur des dégâts), émet onInsuranceRepairClaim et débloque le succès CLAIM_FILED. Sans effet si le véhicule n'est pas assuré. | 462 |
-| `career_modules_insurance_insurance.makeTestDriveDamageClaim(vehId)` | Facture les dégâts d'un essai (500), affiche un message et ajoute une entrée 'testDriveClaim' à l'historique (voir notes : nom de véhicule codé en dur). | 441 |
-| `career_modules_insurance_insurance.missionStartRepairCallback(vehInfo)` | Callback de réparation avant mission : rouvre le menu de missions carrière et envoie l'état de dégâts du véhicule à l'UI. | 566 |
-| `career_modules_insurance_insurance.onCareerActive(active)` | Hook appelé quand la carrière devient active : charge les données d'assurance (fichiers du jeu et sauvegarde insurance.json). *(interne)* *(hook)* | 949 |
-| `career_modules_insurance_insurance.onComputerAddFunctions(menuData, computerFunctions)` | Hook de l'ordinateur du garage : ajoute la fonction « Assurances » (désactivée avant l'achat du véhicule de départ). *(interne)* *(hook)* | 1721 |
-| `career_modules_insurance_insurance.onEnterVehicleFinished(invVehId)` | Hook après entrée dans un véhicule : reprend une réparation différée mise en attente (voir bug dans notes). *(interne)* *(hook)* | 936 |
-| `career_modules_insurance_insurance.onExitInsurancesComputerScreen()` | Hook : l'écran des assurances est quitté ; cesse l'envoi de mises à jour à l'UI. *(interne)* *(hook)* | 1717 |
-| `career_modules_insurance_insurance.onMenuClosed()` | Hook de fermeture de menu : retire la laisse (tether). *(interne)* *(hook)* | 1713 |
-| `career_modules_insurance_insurance.onSaveCurrentProfile(currentSavePath)` | Hook de sauvegarde : écrit career/insurance.json (score, distances, plInsurancesData, invVehs, historique). *(interne)* *(hook)* | 954 |
-| `career_modules_insurance_insurance.onUpdate(dtReal, dtSim, dtRaw)` | Hook par image : hors mission au premier plan et hors marche à pied, cumule la distance, vérifie renouvellement, gestes et hausse du score de conducteur du véhicule assuré actif ; décompte aussi les minuteries d'édition de couverture. *(interne)* *(hook)* | 864 |
-| `career_modules_insurance_insurance.onVehicleAddedToInventory(data)` | Hook : un véhicule entre dans l'inventaire. Crée son entrée invVehs (valeur initiale, classe d'assurance requise selon valeur, population, carrosserie, classe commerciale) et applique l'assurance choisie à l'achat (ou -1). *(interne)* *(hook)* | 1590 |
-| `career_modules_insurance_insurance.onVehicleRemoved(invVehId)` | Hook : un véhicule est retiré de l'inventaire ; supprime son entrée d'assurance. *(interne)* *(hook)* | 1508 |
-| `career_modules_insurance_insurance.onVehicleSaveFinished()` | Hook de fin de sauvegarde de véhicule : referme le menu si sa fermeture attendait la sauvegarde. *(interne)* *(hook)* | 1683 |
-| `career_modules_insurance_insurance.onVehicleSwitched()` | Hook de changement de véhicule contrôlé : met à jour l'assurance active. *(interne)* *(hook)* | 945 |
-| `career_modules_insurance_insurance.openChooseInsuranceScreen(mode, params)` | Navigue vers l'écran de choix d'assurance : 'purchase' (achat en boutique) ou 'change' (changement depuis l'ordinateur). | 1940 |
-| `career_modules_insurance_insurance.openMenu(_originComputerId)` | Ouvre le menu des assurances depuis un ordinateur (laisse de 7 m) et émet onComputerInsurance. Ne fait rien sans identifiant d'ordinateur. | 1691 |
-| `career_modules_insurance_insurance.repairPartConditions(data)` | Remet les pièces cassées à neuf dans data.partConditions (intégrité 1, repeinture ou apprêt selon paintRepair, compteur de réparations des pièces d'inventaire, réservoirs d'énergie conservés). | 380 |
-| `career_modules_insurance_insurance.resetDriverScore()` | Paie le coût de remise à zéro et rétablit le score par défaut, avec entrée d'historique et mise à jour de l'UI. | 1754 |
-| `career_modules_insurance_insurance.resetPlPolicyData()` | Fonction de debug de carrière : recharge les données d'assurance en réinitialisant certaines données (loadInsurancesData(true)). *(interne)* | 2051 |
-| `career_modules_insurance_insurance.sanitizeCoverageOption(insuranceId, coverageOptionId, invVehId)` | Prépare une option de couverture pour l'UI : clé, nom, choix, type de choix, texte de perk, ordre d'affichage et identifiant de la valeur actuelle. | 716 |
-| `career_modules_insurance_insurance.saveNewInsuranceCoverageOptions(insuranceId, newCoverageOptions)` | Enregistre les options de couverture propres à l'assureur (franchise, assistance routière…) contre les frais de dossier (paperworkFees) ; recharge l'assistance routière si elle change. | 1813 |
-| `career_modules_insurance_insurance.saveNewVehicleCoverageOptions(vehicleId, newCoverageOptions)` | Enregistre les options de couverture propres à un véhicule contre les frais de dossier de son assureur. | 1835 |
-| `career_modules_insurance_insurance.sendChangeInsuranceDataToTheUI(invVehId)` | Envoie 'chooseInsuranceData' pour le changement d'assurance d'un véhicule déjà possédé (coût net de changement, remboursement). | 1425 |
-| `career_modules_insurance_insurance.sendChooseInsuranceDataToTheUI(purchaseType, vehShopId, defaultInsuranceId)` | Envoie 'chooseInsuranceData' pour l'achat d'un véhicule en boutique : cartes des assureurs de la bonne classe (prime d'ajout, remise de groupe) plus la carte « sans assurance ». | 1441 |
-| `career_modules_insurance_insurance.sendUIData()` | Envoie à l'UI (guihook 'insurancesData') l'historique, le score, les véhicules non assurés, les tuiles de véhicules et toutes les classes avec leurs assureurs. | 1454 |
-| `career_modules_insurance_insurance.setDriverScore(score)` | Fixe le score de conducteur sans aucune vérification (outils/debug). | 1949 |
-| `career_modules_insurance_insurance.startRepair(vehInvId, repairOptionData, callback)` | Répare un véhicule d'inventaire : paie le coût, enregistre une réclamation (isInsuranceRepair) ou une réparation privée, répare les pièces, puis lance une réparation différée (repairTime > 0) ou instantanée. | 587 |
-| `career_modules_insurance_insurance.startRepairInGarage(invVehId, repairOptionData)` | Réparation depuis le garage : émet onRepairInGarage puis startRepair ; pour une réparation instantanée, téléporte le véhicule au garage le plus proche. | 644 |
-| `career_modules_insurance_insurance.startRepairInstant(vehInfo, callback, skipSound)` | Réparation instantanée : joue un son, respawn le véhicule s'il est présent, puis marque le véhicule modifié, recharge le carburant minimum et sauvegarde. | 571 |
-| `career_modules_insurance_insurance.topUpRoadsideAssistance(insuranceId)` | Recharge le nombre de remorquages gratuits selon l'option roadsideAssistance choisie (au renouvellement ou à la modification). | 1847 |
-| `career_modules_insurance_insurance.useRoadsideAssistance(invVehId)` | Consomme un remorquage gratuit de l'assureur du véhicule. | 1861 |
+| `career_modules_insurance_insurance.addToPlHistory(data)` | Shortcut to career_modules_insurance_history.addToPlHistory. | 2035 |
+| `career_modules_insurance_insurance.calculateAddVehiclePrice(insuranceId, vehValue)` | Price to pay to add a vehicle to an insurer: total premium if it is the first, otherwise the vehicle's premium prorated by the distance remaining before renewal. | 1143 |
+| `career_modules_insurance_insurance.calculateInsurancePremium(insuranceId, potentialCoverageOptions, potentialVehiclesCoverageOptions, potentialNewVehValue)` | Total premium of an insurer: sum of the premiums of its vehicles plus the insurer-wide options, then totalPriceWithDriverScore (x score tier multiplier). | 1064 |
+| `career_modules_insurance_insurance.calculateVehiclePremium(invVehId, nonInvVehInfo, potentialCoverageOptions)` | Premium of a vehicle: value x class coverageRate x product of the option influences x (1 - group discount). Provide invVehId (owned vehicle) or nonInvVehInfo ({vehValue, insuranceId}). | 1013 |
+| `career_modules_insurance_insurance.changeInvVehInsurance(invVehId, newInsuranceId)` | Insurance change triggered by the player: refused if the vehicle needs repair; computes the net cost (refund minus penalty minus add-on price), applies the new insurer, pays or receives the difference, logs and unlocks the POLICY_REVIEW achievement. | 1551 |
+| `career_modules_insurance_insurance.changeInvVehInsuranceCoverageOptions(invVehId, changedCoverageOptions)` | Old way of changing a vehicle's coverage options: records the history and charges the paperwork fees (see the bug in the notes). | 1642 |
+| `career_modules_insurance_insurance.closeMenu(_closeMenuAfterSaving)` | Closes the insurance menu (back to the computer or closing all menus). With autosave, may wait for the end of the save. | 1670 |
+| `career_modules_insurance_insurance.doesInsuranceExist(insuranceId)` | Indicates whether the identifier matches a defined insurer. | 1953 |
+| `career_modules_insurance_insurance.expediteRepair(inventoryId, price)` | Pays to get immediate access to a vehicle under delayed repair (removes timeToAccess and delayReason). | 1803 |
+| `career_modules_insurance_insurance.formatPerkIconData(smallText, tooltipText, discount, isSignaturePerk)` | Builds the perk icon table for the UI. | 958 |
+| `career_modules_insurance_insurance.genericVehNeedsRepair(vehId, callback)` | Asks the vehicle (object) for its part conditions and calls callback(needsRepair) on reply; used for non-inventory vehicles (for example test drive). | 655 |
+| `career_modules_insurance_insurance.getAccidentForgivenessCount(insuranceId)` | Number of accident forgivenesses remaining with an insurer. | 1961 |
+| `career_modules_insurance_insurance.getActualRepairPrice(invVehId)` | Internal use: the vehicle's repair deductible (value of the deductible option). *(internal)* | 805 |
+| `career_modules_insurance_insurance.getDefaultInsuranceForClassId(insuranceClassId)` | Default insurer of a class: the one with the smallest id. | 1889 |
+| `career_modules_insurance_insurance.getDriverScore()` | Current driver score (0 to 100). | 562 |
+| `career_modules_insurance_insurance.getDriverScoreResetCost()` | Cost to reset the score to the default value (64): 0 if the score is already at least equal, otherwise 500 + proportion x 19500, rounded. | 1738 |
+| `career_modules_insurance_insurance.getDriverScoreTierData(score)` | Score tier (min, max, premium multiplier…) for a score; the last tier if none matches. | 552 |
+| `career_modules_insurance_insurance.getInsuranceClassFromVehicleShoppingData(data)` | Determines the insurance class required for a listing according to the JSON class, the value, the population, the body style and the commercial class (the highest priority wins). | 923 |
+| `career_modules_insurance_insurance.getInsuranceDataById(insuranceId)` | Definition of an insurer loaded from the game files. | 1930 |
+| `career_modules_insurance_insurance.getInsuranceName(insuranceId)` | Name of the insurer, or the "no insurance" label if unknown. | 1957 |
+| `career_modules_insurance_insurance.getInvVehFuelDiscountData(invVehId)` | Fuel discount data of a vehicle (hasFuelDiscount, fuelDiscount fraction, insurer name, perk icon); used by the fuel module. | 1907 |
+| `career_modules_insurance_insurance.getInvVehRepairTime(vehInvId)` | Repair time included in the vehicle's policy (seconds; 0 = instant). | 1782 |
+| `career_modules_insurance_insurance.getInvVehs()` | Table of the insurance entries of the inventory vehicles (insuranceId, name, id, initialValue, requiredInsuranceClass, insuranceData). | 1965 |
+| `career_modules_insurance_insurance.getPerkValueByInsuranceId(insuranceId, perkId)` | Value of an insurer's perk. | 1876 |
+| `career_modules_insurance_insurance.getPerkValueByInvVehId(invVehId, perkId)` | Value of a perk of a vehicle's insurer. | 1883 |
+| `career_modules_insurance_insurance.getPlCoverageOptionValue(invVehId, coverageOptionName)` | Value of the coverage option currently chosen for a vehicle (e.g. deductible, repairTime, paintRepair, roadsideAssistance). Returns nothing if the vehicle is not insured. | 116 |
+| `career_modules_insurance_insurance.getPlHistory()` | Shortcut to career_modules_insurance_history.getPlHistory. | 1996 |
+| `career_modules_insurance_insurance.getPlayerAbstractData()` | Player summary for the UI: score and tier, distances (total, insured, uninsured), number of repairs, cost of resetting the score, financial summary (premiums, deductibles, private repairs, damage covered). | 1333 |
+| `career_modules_insurance_insurance.getPlayerInsurancesData()` | Data saved per insurer (metersDriven, accidentForgiveness, roadsideAssistance, loyalty, coverageOptionsData…). | 1786 |
+| `career_modules_insurance_insurance.getQuickRepairExtraPrice()` | Surcharge for a quick repair (1000). | 1790 |
+| `career_modules_insurance_insurance.getRenewsIn(insuranceId)` | Kilometers remaining before the insurer's renewal (0 for -1 or an unknown insurer). | 1127 |
+| `career_modules_insurance_insurance.getTestDriveClaimPrice()` | Amount charged for damage during a vehicle test drive (500). | 1872 |
+| `career_modules_insurance_insurance.getVehInsuranceInfo(vehInvId)` | A vehicle's insurance info: insured or not, insurer definition and required class. | 1794 |
+| `career_modules_insurance_insurance.inventoryVehNeedsRepair(vehInvId)` | Indicates whether an inventory vehicle has parts to repair (partConditions). | 374 |
+| `career_modules_insurance_insurance.isRoadSideAssistanceFree(invVehId)` | Indicates whether free roadside assistance tows remain for the vehicle's insurer. | 1853 |
+| `career_modules_insurance_insurance.makeRepairClaim(invVehId, costs, vehInfo)` | Records a repair claim: consumes an accident forgiveness or lowers the score by 1, adds the history (money, vouchers, score, deductible, damage value), emits onInsuranceRepairClaim and unlocks the CLAIM_FILED achievement. No effect if the vehicle is not insured. | 462 |
+| `career_modules_insurance_insurance.makeTestDriveDamageClaim(vehId)` | Charges the damage of a test drive (500), shows a message and adds a 'testDriveClaim' entry to the history (see notes: hardcoded vehicle name). | 441 |
+| `career_modules_insurance_insurance.missionStartRepairCallback(vehInfo)` | Pre-mission repair callback: reopens the career missions menu and sends the vehicle's damage state to the UI. | 566 |
+| `career_modules_insurance_insurance.onCareerActive(active)` | Hook called when career becomes active: loads the insurance data (game files and the insurance.json save). *(internal)* *(hook)* | 949 |
+| `career_modules_insurance_insurance.onComputerAddFunctions(menuData, computerFunctions)` | Garage computer hook: adds the "Insurances" function (disabled before the starter vehicle is bought). *(internal)* *(hook)* | 1721 |
+| `career_modules_insurance_insurance.onEnterVehicleFinished(invVehId)` | Hook after entering a vehicle: resumes a delayed repair that was put on hold (see the bug in the notes). *(internal)* *(hook)* | 936 |
+| `career_modules_insurance_insurance.onExitInsurancesComputerScreen()` | Hook: the insurance screen is left; stops sending updates to the UI. *(internal)* *(hook)* | 1717 |
+| `career_modules_insurance_insurance.onMenuClosed()` | Menu close hook: removes the leash (tether). *(internal)* *(hook)* | 1713 |
+| `career_modules_insurance_insurance.onSaveCurrentProfile(currentSavePath)` | Save hook: writes career/insurance.json (score, distances, plInsurancesData, invVehs, history). *(internal)* *(hook)* | 954 |
+| `career_modules_insurance_insurance.onUpdate(dtReal, dtSim, dtRaw)` | Per-frame hook: outside a foreground mission and outside walking, accumulates the distance, checks renewal, gestures and rise of the active insured vehicle's driver score; also counts down the coverage edit timers. *(internal)* *(hook)* | 864 |
+| `career_modules_insurance_insurance.onVehicleAddedToInventory(data)` | Hook: a vehicle enters the inventory. Creates its invVehs entry (initial value, required insurance class according to value, population, body style, commercial class) and applies the insurance chosen at purchase (or -1). *(internal)* *(hook)* | 1590 |
+| `career_modules_insurance_insurance.onVehicleRemoved(invVehId)` | Hook: a vehicle is removed from the inventory; deletes its insurance entry. *(internal)* *(hook)* | 1508 |
+| `career_modules_insurance_insurance.onVehicleSaveFinished()` | Vehicle save end hook: closes the menu again if its closing was waiting for the save. *(internal)* *(hook)* | 1683 |
+| `career_modules_insurance_insurance.onVehicleSwitched()` | Controlled vehicle change hook: updates the active insurance. *(internal)* *(hook)* | 945 |
+| `career_modules_insurance_insurance.openChooseInsuranceScreen(mode, params)` | Navigates to the insurance choice screen: 'purchase' (shop purchase) or 'change' (change from the computer). | 1940 |
+| `career_modules_insurance_insurance.openMenu(_originComputerId)` | Opens the insurance menu from a computer (7 m leash) and emits onComputerInsurance. Does nothing without a computer identifier. | 1691 |
+| `career_modules_insurance_insurance.repairPartConditions(data)` | Restores the broken parts to new in data.partConditions (integrity 1, repaint or primer according to paintRepair, repair counter of inventory parts, energy tanks kept). | 380 |
+| `career_modules_insurance_insurance.resetDriverScore()` | Pays the reset cost and restores the default score, with a history entry and UI update. | 1754 |
+| `career_modules_insurance_insurance.resetPlPolicyData()` | Career debug function: reloads the insurance data while resetting some data (loadInsurancesData(true)). *(internal)* | 2051 |
+| `career_modules_insurance_insurance.sanitizeCoverageOption(insuranceId, coverageOptionId, invVehId)` | Prepares a coverage option for the UI: key, name, choices, choice type, perk text, display order and identifier of the current value. | 716 |
+| `career_modules_insurance_insurance.saveNewInsuranceCoverageOptions(insuranceId, newCoverageOptions)` | Records the insurer-specific coverage options (deductible, roadside assistance…) against the paperwork fees (paperworkFees); recharges roadside assistance if it changes. | 1813 |
+| `career_modules_insurance_insurance.saveNewVehicleCoverageOptions(vehicleId, newCoverageOptions)` | Records the vehicle-specific coverage options against the paperwork fees of its insurer. | 1835 |
+| `career_modules_insurance_insurance.sendChangeInsuranceDataToTheUI(invVehId)` | Sends 'chooseInsuranceData' for changing the insurance of an already owned vehicle (net change cost, refund). | 1425 |
+| `career_modules_insurance_insurance.sendChooseInsuranceDataToTheUI(purchaseType, vehShopId, defaultInsuranceId)` | Sends 'chooseInsuranceData' for buying a vehicle in the shop: cards of the insurers of the right class (add-on premium, group discount) plus the "no insurance" card. | 1441 |
+| `career_modules_insurance_insurance.sendUIData()` | Sends to the UI (guihook 'insurancesData') the history, the score, the uninsured vehicles, the vehicle tiles and all the classes with their insurers. | 1454 |
+| `career_modules_insurance_insurance.setDriverScore(score)` | Sets the driver score without any check (tools/debug). | 1949 |
+| `career_modules_insurance_insurance.startRepair(vehInvId, repairOptionData, callback)` | Repairs an inventory vehicle: pays the cost, records a claim (isInsuranceRepair) or a private repair, repairs the parts, then starts a delayed (repairTime > 0) or instant repair. | 587 |
+| `career_modules_insurance_insurance.startRepairInGarage(invVehId, repairOptionData)` | Repair from the garage: emits onRepairInGarage then startRepair; for an instant repair, teleports the vehicle to the nearest garage. | 644 |
+| `career_modules_insurance_insurance.startRepairInstant(vehInfo, callback, skipSound)` | Instant repair: plays a sound, respawns the vehicle if present, then marks the vehicle as modified, reloads the minimum fuel and saves. | 571 |
+| `career_modules_insurance_insurance.topUpRoadsideAssistance(insuranceId)` | Recharges the number of free tows according to the chosen roadsideAssistance option (on renewal or on modification). | 1847 |
+| `career_modules_insurance_insurance.useRoadsideAssistance(invVehId)` | Consumes a free tow of the vehicle's insurer. | 1861 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_insurance_insurance.addToPlHistory(data)`
 
-Raccourci vers career_modules_insurance_history.addToPlHistory.
+Shortcut to career_modules_insurance_history.addToPlHistory.
 
-- `data` (*table*) : Entrée d'historique.
+- `data` (*table*) : History entry.
 
 #### `career_modules_insurance_insurance.calculateAddVehiclePrice(insuranceId, vehValue)`
 
-Prix à payer pour ajouter un véhicule à un assureur : prime totale si c'est le premier, sinon prime du véhicule au prorata de la distance restante avant renouvellement.
+Price to pay to add a vehicle to an insurer: total premium if it is the first, otherwise the vehicle's premium prorated by the distance remaining before renewal.
 
-- `insuranceId` (*integer*) : Assureur.
-- `vehValue` (*number*) : Valeur du véhicule.
-- **renvoie** : number Montant.
+- `insuranceId` (*integer*) : Insurer.
+- `vehValue` (*number*) : Vehicle value.
+- **returns**: number Amount.
 
 #### `career_modules_insurance_insurance.calculateInsurancePremium(insuranceId, potentialCoverageOptions, potentialVehiclesCoverageOptions, potentialNewVehValue)`
 
-Prime totale d'un assureur : somme des primes de ses véhicules plus options à portée de l'assureur, puis totalPriceWithDriverScore (x multiplicateur du palier de score).
+Total premium of an insurer: sum of the premiums of its vehicles plus the insurer-wide options, then totalPriceWithDriverScore (x score tier multiplier).
 
-- `insuranceId` (*integer*) : Assureur.
-- `potentialCoverageOptions` (*table|nil*) : Options hypothétiques (une table vide est ignorée).
-- `potentialVehiclesCoverageOptions` (*table|nil*) : Options hypothétiques par véhicule, indexées par id en chaîne.
-- `potentialNewVehValue` (*number|nil*) : Valeur d'un véhicule supplémentaire à inclure.
-- **renvoie** : table {items, totalPrice, totalPriceWithDriverScore, groupDiscountSavings}.
+- `insuranceId` (*integer*) : Insurer.
+- `potentialCoverageOptions` (*table|nil*) : Hypothetical options (an empty table is ignored).
+- `potentialVehiclesCoverageOptions` (*table|nil*) : Hypothetical options per vehicle, keyed by string id.
+- `potentialNewVehValue` (*number|nil*) : Value of an additional vehicle to include.
+- **returns**: table {items, totalPrice, totalPriceWithDriverScore, groupDiscountSavings}.
 
 #### `career_modules_insurance_insurance.calculateVehiclePremium(invVehId, nonInvVehInfo, potentialCoverageOptions)`
 
-Prime d'un véhicule : valeur x coverageRate de la classe x produit des influences des options x (1 - remise de groupe). Fournir invVehId (véhicule possédé) ou nonInvVehInfo ({vehValue, insuranceId}).
+Premium of a vehicle: value x class coverageRate x product of the option influences x (1 - group discount). Provide invVehId (owned vehicle) or nonInvVehInfo ({vehValue, insuranceId}).
 
-- `invVehId` (*integer|nil*) : Véhicule d'inventaire.
-- `nonInvVehInfo` (*table|nil*) : Véhicule hypothétique {vehValue, insuranceId}.
-- `potentialCoverageOptions` (*table|nil*) : Options hypothétiques à la place des options actuelles.
-- **renvoie** : table {cost, costWithoutGroupDiscount}.
+- `invVehId` (*integer|nil*) : Inventory vehicle.
+- `nonInvVehInfo` (*table|nil*) : Hypothetical vehicle {vehValue, insuranceId}.
+- `potentialCoverageOptions` (*table|nil*) : Hypothetical options instead of the current options.
+- **returns**: table {cost, costWithoutGroupDiscount}.
 
 #### `career_modules_insurance_insurance.changeInvVehInsurance(invVehId, newInsuranceId)`
 
-Changement d'assurance déclenché par le joueur : refusé si le véhicule a besoin de réparation ; calcule le coût net (remboursement moins pénalité moins prix d'ajout), applique le nouvel assureur, paie ou reçoit la différence, journalise et débloque le succès POLICY_REVIEW.
+Insurance change triggered by the player: refused if the vehicle needs repair; computes the net cost (refund minus penalty minus add-on price), applies the new insurer, pays or receives the difference, logs and unlocks the POLICY_REVIEW achievement.
 
-- `invVehId` (*integer*) : Identifiant d'inventaire.
-- `newInsuranceId` (*integer*) : Nouvel assureur ; -1 ou moins pour aucune assurance.
+- `invVehId` (*integer*) : Inventory identifier.
+- `newInsuranceId` (*integer*) : New insurer; -1 or less for no insurance.
 
 #### `career_modules_insurance_insurance.changeInvVehInsuranceCoverageOptions(invVehId, changedCoverageOptions)`
 
-Ancienne voie de modification des options de couverture d'un véhicule : enregistre l'historique et fait payer les frais de dossier (voir bug dans notes).
+Old way of changing a vehicle's coverage options: records the history and charges the paperwork fees (see the bug in the notes).
 
-- `invVehId` (*integer*) : Identifiant d'inventaire.
-- `changedCoverageOptions` (*table*) : Options modifiées (nom -> valeur).
+- `invVehId` (*integer*) : Inventory identifier.
+- `changedCoverageOptions` (*table*) : Modified options (name -> value).
 
 #### `career_modules_insurance_insurance.closeMenu(_closeMenuAfterSaving)`
 
-Ferme le menu des assurances (retour à l'ordinateur ou fermeture de tous les menus). Avec sauvegarde auto, peut attendre la fin de la sauvegarde.
+Closes the insurance menu (back to the computer or closing all menus). With autosave, may wait for the end of the save.
 
-- `_closeMenuAfterSaving` (*boolean|nil*) : Attendre onVehicleSaveFinished avant de fermer.
+- `_closeMenuAfterSaving` (*boolean|nil*) : Wait for onVehicleSaveFinished before closing.
 
 #### `career_modules_insurance_insurance.doesInsuranceExist(insuranceId)`
 
-Indique si l'identifiant correspond à un assureur défini.
+Indicates whether the identifier matches a defined insurer.
 
-- `insuranceId` (*integer*) : Identifiant.
-- **renvoie** : boolean true si défini.
+- `insuranceId` (*integer*) : Identifier.
+- **returns**: boolean true if defined.
 
 #### `career_modules_insurance_insurance.expediteRepair(inventoryId, price)`
 
-Paie pour accéder immédiatement à un véhicule en réparation différée (supprime timeToAccess et delayReason).
+Pays to get immediate access to a vehicle under delayed repair (removes timeToAccess and delayReason).
 
-- `inventoryId` (*integer*) : Identifiant d'inventaire.
-- `price` (*number*) : Prix à payer.
+- `inventoryId` (*integer*) : Inventory identifier.
+- `price` (*number*) : Price to pay.
 
 #### `career_modules_insurance_insurance.formatPerkIconData(smallText, tooltipText, discount, isSignaturePerk)`
 
-Construit la table d'icône de perk pour l'UI.
+Builds the perk icon table for the UI.
 
-- `smallText` (*string*) : Texte court.
-- `tooltipText` (*string*) : Info-bulle.
-- `discount` (*number|nil*) : Remise liée.
-- `isSignaturePerk` (*boolean*) : Perk phare de l'assureur.
-- **renvoie** : table {smallText, tooltipText, discount, isSignaturePerk}.
+- `smallText` (*string*) : Short text.
+- `tooltipText` (*string*) : Tooltip.
+- `discount` (*number|nil*) : Related discount.
+- `isSignaturePerk` (*boolean*) : Insurer's signature perk.
+- **returns**: table {smallText, tooltipText, discount, isSignaturePerk}.
 
 #### `career_modules_insurance_insurance.genericVehNeedsRepair(vehId, callback)`
 
-Demande au véhicule (objet) ses conditions de pièces et appelle callback(needsRepair) à la réponse ; sert aux véhicules hors inventaire (par exemple d'essai).
+Asks the vehicle (object) for its part conditions and calls callback(needsRepair) on reply; used for non-inventory vehicles (for example test drive).
 
-- `vehId` (*integer*) : Identifiant d'objet véhicule.
-- `callback` (*function*) : fonction(needsRepair: boolean).
+- `vehId` (*integer*) : Vehicle object identifier.
+- `callback` (*function*) : function(needsRepair: boolean).
 
 #### `career_modules_insurance_insurance.getAccidentForgivenessCount(insuranceId)`
 
-Nombre d'indulgences d'accident restantes chez un assureur.
+Number of accident forgivenesses remaining with an insurer.
 
-- `insuranceId` (*integer*) : Assureur.
-- **renvoie** : integer Nombre (0 si inconnu).
+- `insuranceId` (*integer*) : Insurer.
+- **returns**: integer Number (0 if unknown).
 
 #### `career_modules_insurance_insurance.getActualRepairPrice(invVehId)`
 
-Usage interne : franchise de réparation du véhicule (valeur de l'option deductible).
+Internal use: the vehicle's repair deductible (value of the deductible option).
 
-- `invVehId` (*integer*) : Identifiant d'inventaire.
-- **renvoie** : number|nil Franchise.
+- `invVehId` (*integer*) : Inventory identifier.
+- **returns**: number|nil Deductible.
 
 #### `career_modules_insurance_insurance.getDefaultInsuranceForClassId(insuranceClassId)`
 
-Assureur par défaut d'une classe : celui de plus petit id.
+Default insurer of a class: the one with the smallest id.
 
-- `insuranceClassId` (*string*) : Identifiant de classe.
-- **renvoie** : table|nil Données d'assureur.
+- `insuranceClassId` (*string*) : Class identifier.
+- **returns**: table|nil Insurer data.
 
 #### `career_modules_insurance_insurance.getDriverScore()`
 
-Score de conducteur actuel (0 à 100).
+Current driver score (0 to 100).
 
-- **renvoie** : number Score.
+- **returns**: number Score.
 
 #### `career_modules_insurance_insurance.getDriverScoreResetCost()`
 
-Coût pour remettre le score à la valeur par défaut (64) : 0 si le score est déjà au moins égal, sinon 500 + proportion x 19500, arrondi.
+Cost to reset the score to the default value (64): 0 if the score is already at least equal, otherwise 500 + proportion x 19500, rounded.
 
-- **renvoie** : integer Montant.
+- **returns**: integer Amount.
 
 #### `career_modules_insurance_insurance.getDriverScoreTierData(score)`
 
-Palier de score (min, max, multiplicateur de prime…) pour un score ; le dernier palier si aucun ne correspond.
+Score tier (min, max, premium multiplier…) for a score; the last tier if none matches.
 
-- `score` (*number|nil*) : Score ; défaut : le score actuel.
-- **renvoie** : table Données de palier.
+- `score` (*number|nil*) : Score; default: the current score.
+- **returns**: table Tier data.
 
 #### `career_modules_insurance_insurance.getInsuranceClassFromVehicleShoppingData(data)`
 
-Détermine la classe d'assurance requise pour une annonce selon la classe JSON, la valeur, la population, la carrosserie et la classe commerciale (la priorité la plus haute l'emporte).
+Determines the insurance class required for a listing according to the JSON class, the value, the population, the body style and the commercial class (the highest priority wins).
 
-- `data` (*table*) : Annonce de boutique (Value, Population, BodyStyle, aggregates, 'Commercial Class').
-- **renvoie** : table|nil Données de classe.
+- `data` (*table*) : Shop listing (Value, Population, BodyStyle, aggregates, 'Commercial Class').
+- **returns**: table|nil Class data.
 
 #### `career_modules_insurance_insurance.getInsuranceDataById(insuranceId)`
 
-Définition d'un assureur chargée depuis les fichiers du jeu.
+Definition of an insurer loaded from the game files.
 
-- `insuranceId` (*integer*) : Assureur.
-- **renvoie** : table|nil Définition.
+- `insuranceId` (*integer*) : Insurer.
+- **returns**: table|nil Definition.
 
 #### `career_modules_insurance_insurance.getInsuranceName(insuranceId)`
 
-Nom de l'assureur, ou le libellé « pas d'assurance » si inconnu.
+Name of the insurer, or the "no insurance" label if unknown.
 
-- `insuranceId` (*integer*) : Identifiant.
-- **renvoie** : string Nom.
+- `insuranceId` (*integer*) : Identifier.
+- **returns**: string Name.
 
 #### `career_modules_insurance_insurance.getInvVehFuelDiscountData(invVehId)`
 
-Données de remise carburant d'un véhicule (hasFuelDiscount, fuelDiscount fraction, nom de l'assureur, icône de perk) ; utilisé par le module fuel.
+Fuel discount data of a vehicle (hasFuelDiscount, fuelDiscount fraction, insurer name, perk icon); used by the fuel module.
 
-- `invVehId` (*integer*) : Identifiant d'inventaire.
-- **renvoie** : table {hasFuelDiscount, fuelDiscount, perkData, insuranceName?}.
+- `invVehId` (*integer*) : Inventory identifier.
+- **returns**: table {hasFuelDiscount, fuelDiscount, perkData, insuranceName?}.
 
 #### `career_modules_insurance_insurance.getInvVehRepairTime(vehInvId)`
 
-Délai de réparation inclus dans la police du véhicule (secondes ; 0 = instantané).
+Repair time included in the vehicle's policy (seconds; 0 = instant).
 
-- `vehInvId` (*integer*) : Identifiant d'inventaire.
-- **renvoie** : number|nil Secondes.
+- `vehInvId` (*integer*) : Inventory identifier.
+- **returns**: number|nil Seconds.
 
 #### `career_modules_insurance_insurance.getInvVehs()`
 
-Table des entrées d'assurance des véhicules d'inventaire (insuranceId, name, id, initialValue, requiredInsuranceClass, insuranceData).
+Table of the insurance entries of the inventory vehicles (insuranceId, name, id, initialValue, requiredInsuranceClass, insuranceData).
 
-- **renvoie** : table<integer, table> invVehs (référence).
+- **returns**: table<integer, table> invVehs (reference).
 
 #### `career_modules_insurance_insurance.getPerkValueByInsuranceId(insuranceId, perkId)`
 
-Valeur d'un perk d'un assureur.
+Value of an insurer's perk.
 
-- `insuranceId` (*integer*) : Assureur.
+- `insuranceId` (*integer*) : Insurer.
 - `perkId` (*string*) : Perk (reduceDeductible, fuelDiscount, instantRepair…).
-- **renvoie** : number|boolean|nil Valeur ou nil.
+- **returns**: number|boolean|nil Value or nil.
 
 #### `career_modules_insurance_insurance.getPerkValueByInvVehId(invVehId, perkId)`
 
-Valeur d'un perk de l'assureur d'un véhicule.
+Value of a perk of a vehicle's insurer.
 
-- `invVehId` (*integer*) : Identifiant d'inventaire.
+- `invVehId` (*integer*) : Inventory identifier.
 - `perkId` (*string*) : Perk.
-- **renvoie** : number|boolean|nil Valeur ou nil.
+- **returns**: number|boolean|nil Value or nil.
 
 #### `career_modules_insurance_insurance.getPlCoverageOptionValue(invVehId, coverageOptionName)`
 
-Valeur de l'option de couverture actuellement choisie pour un véhicule (ex. deductible, repairTime, paintRepair, roadsideAssistance). Ne renvoie rien si le véhicule n'est pas assuré.
+Value of the coverage option currently chosen for a vehicle (e.g. deductible, repairTime, paintRepair, roadsideAssistance). Returns nothing if the vehicle is not insured.
 
-- `invVehId` (*integer*) : Identifiant d'inventaire.
-- `coverageOptionName` (*string*) : Nom de l'option.
-- **renvoie** : number|boolean|nil Valeur du choix.
+- `invVehId` (*integer*) : Inventory identifier.
+- `coverageOptionName` (*string*) : Option name.
+- **returns**: number|boolean|nil Choice value.
 
 #### `career_modules_insurance_insurance.getPlHistory()`
 
-Raccourci vers career_modules_insurance_history.getPlHistory.
+Shortcut to career_modules_insurance_history.getPlHistory.
 
-- **renvoie** : table Historique.
+- **returns**: table History.
 
 #### `career_modules_insurance_insurance.getPlayerAbstractData()`
 
-Résumé du joueur pour l'UI : score et palier, distances (totale, assurée, non assurée), nombre de réparations, coût de remise à zéro du score, bilan financier (primes, franchises, réparations privées, dégâts couverts).
+Player summary for the UI: score and tier, distances (total, insured, uninsured), number of repairs, cost of resetting the score, financial summary (premiums, deductibles, private repairs, damage covered).
 
-- **renvoie** : table Données de synthèse.
+- **returns**: table Summary data.
 
 #### `career_modules_insurance_insurance.getPlayerInsurancesData()`
 
-Données sauvegardées par assureur (metersDriven, accidentForgiveness, roadsideAssistance, loyalty, coverageOptionsData…).
+Data saved per insurer (metersDriven, accidentForgiveness, roadsideAssistance, loyalty, coverageOptionsData…).
 
-- **renvoie** : table plInsurancesData (référence).
+- **returns**: table plInsurancesData (reference).
 
 #### `career_modules_insurance_insurance.getQuickRepairExtraPrice()`
 
-Supplément pour une réparation rapide (1000).
+Surcharge for a quick repair (1000).
 
-- **renvoie** : number Montant.
+- **returns**: number Amount.
 
 #### `career_modules_insurance_insurance.getRenewsIn(insuranceId)`
 
-Kilomètres restants avant le renouvellement de l'assureur (0 pour -1 ou assureur inconnu).
+Kilometers remaining before the insurer's renewal (0 for -1 or an unknown insurer).
 
-- `insuranceId` (*integer*) : Assureur.
-- **renvoie** : integer Kilomètres (arrondi supérieur).
+- `insuranceId` (*integer*) : Insurer.
+- **returns**: integer Kilometers (rounded up).
 
 #### `career_modules_insurance_insurance.getTestDriveClaimPrice()`
 
-Montant facturé en cas de dégâts pendant un essai de véhicule (500).
+Amount charged for damage during a vehicle test drive (500).
 
-- **renvoie** : number Montant.
+- **returns**: number Amount.
 
 #### `career_modules_insurance_insurance.getVehInsuranceInfo(vehInvId)`
 
-Infos d'assurance d'un véhicule : assuré ou non, définition de l'assureur et classe requise.
+A vehicle's insurance info: insured or not, insurer definition and required class.
 
-- `vehInvId` (*integer*) : Identifiant d'inventaire.
-- **renvoie** : table|nil {isInsured, insuranceInfo, insuranceClass}.
+- `vehInvId` (*integer*) : Inventory identifier.
+- **returns**: table|nil {isInsured, insuranceInfo, insuranceClass}.
 
 #### `career_modules_insurance_insurance.inventoryVehNeedsRepair(vehInvId)`
 
-Indique si un véhicule d'inventaire a des pièces à réparer (partConditions).
+Indicates whether an inventory vehicle has parts to repair (partConditions).
 
-- `vehInvId` (*integer*) : Identifiant d'inventaire.
-- **renvoie** : boolean|nil nil si le véhicule n'existe pas.
+- `vehInvId` (*integer*) : Inventory identifier.
+- **returns**: boolean|nil nil if the vehicle does not exist.
 
 #### `career_modules_insurance_insurance.isRoadSideAssistanceFree(invVehId)`
 
-Indique s'il reste des remorquages gratuits d'assistance routière pour l'assureur du véhicule.
+Indicates whether free roadside assistance tows remain for the vehicle's insurer.
 
-- `invVehId` (*integer*) : Identifiant d'inventaire.
-- **renvoie** : boolean true s'il en reste.
+- `invVehId` (*integer*) : Inventory identifier.
+- **returns**: boolean true if any remain.
 
 #### `career_modules_insurance_insurance.makeRepairClaim(invVehId, costs, vehInfo)`
 
-Enregistre une réclamation de réparation : consomme une indulgence d'accident ou baisse le score de 1, ajoute l'historique (argent, bons, score, franchise, valeur des dégâts), émet onInsuranceRepairClaim et débloque le succès CLAIM_FILED. Sans effet si le véhicule n'est pas assuré.
+Records a repair claim: consumes an accident forgiveness or lowers the score by 1, adds the history (money, vouchers, score, deductible, damage value), emits onInsuranceRepairClaim and unlocks the CLAIM_FILED achievement. No effect if the vehicle is not insured.
 
-- `invVehId` (*integer*) : Identifiant d'inventaire.
-- `costs` (*table*) : Coûts (nombres ou {money, vouchers}) et éventuellement deductible.
-- `vehInfo` (*table|nil*) : Véhicule, pour estimer le prix des dégâts.
+- `invVehId` (*integer*) : Inventory identifier.
+- `costs` (*table*) : Costs (numbers or {money, vouchers}) and possibly deductible.
+- `vehInfo` (*table|nil*) : Vehicle, to estimate the damage price.
 
 #### `career_modules_insurance_insurance.makeTestDriveDamageClaim(vehId)`
 
-Facture les dégâts d'un essai (500), affiche un message et ajoute une entrée 'testDriveClaim' à l'historique (voir notes : nom de véhicule codé en dur).
+Charges the damage of a test drive (500), shows a message and adds a 'testDriveClaim' entry to the history (see notes: hardcoded vehicle name).
 
-- `vehId` (*integer|nil*) : Ignoré.
+- `vehId` (*integer|nil*) : Ignored.
 
 #### `career_modules_insurance_insurance.missionStartRepairCallback(vehInfo)`
 
-Callback de réparation avant mission : rouvre le menu de missions carrière et envoie l'état de dégâts du véhicule à l'UI.
+Pre-mission repair callback: reopens the career missions menu and sends the vehicle's damage state to the UI.
 
-- `vehInfo` (*table*) : Véhicule d'inventaire.
+- `vehInfo` (*table*) : Inventory vehicle.
 
 #### `career_modules_insurance_insurance.onCareerActive(active)`
 
-Hook appelé quand la carrière devient active : charge les données d'assurance (fichiers du jeu et sauvegarde insurance.json).
+Hook called when career becomes active: loads the insurance data (game files and the insurance.json save).
 
-- `active` (*boolean*) : true à l'activation.
+- `active` (*boolean*) : true on activation.
 
 #### `career_modules_insurance_insurance.onComputerAddFunctions(menuData, computerFunctions)`
 
-Hook de l'ordinateur du garage : ajoute la fonction « Assurances » (désactivée avant l'achat du véhicule de départ).
+Garage computer hook: adds the "Insurances" function (disabled before the starter vehicle is bought).
 
-- `menuData` (*table*) : Données du menu (computerFacility, hasBoughtStarterVehicle).
-- `computerFunctions` (*table*) : Fonctions à compléter.
+- `menuData` (*table*) : Menu data (computerFacility, hasBoughtStarterVehicle).
+- `computerFunctions` (*table*) : Functions to complete.
 
 #### `career_modules_insurance_insurance.onEnterVehicleFinished(invVehId)`
 
-Hook après entrée dans un véhicule : reprend une réparation différée mise en attente (voir bug dans notes).
+Hook after entering a vehicle: resumes a delayed repair that was put on hold (see the bug in the notes).
 
-- `invVehId` (*integer*) : Identifiant d'inventaire (non utilisé).
+- `invVehId` (*integer*) : Inventory identifier (unused).
 
 #### `career_modules_insurance_insurance.onSaveCurrentProfile(currentSavePath)`
 
-Hook de sauvegarde : écrit career/insurance.json (score, distances, plInsurancesData, invVehs, historique).
+Save hook: writes career/insurance.json (score, distances, plInsurancesData, invVehs, history).
 
-- `currentSavePath` (*string*) : Dossier du profil de sauvegarde.
+- `currentSavePath` (*string*) : Save profile folder.
 
 #### `career_modules_insurance_insurance.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook par image : hors mission au premier plan et hors marche à pied, cumule la distance, vérifie renouvellement, gestes et hausse du score de conducteur du véhicule assuré actif ; décompte aussi les minuteries d'édition de couverture.
+Per-frame hook: outside a foreground mission and outside walking, accumulates the distance, checks renewal, gestures and rise of the active insured vehicle's driver score; also counts down the coverage edit timers.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulation (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
 #### `career_modules_insurance_insurance.onVehicleAddedToInventory(data)`
 
-Hook : un véhicule entre dans l'inventaire. Crée son entrée invVehs (valeur initiale, classe d'assurance requise selon valeur, population, carrosserie, classe commerciale) et applique l'assurance choisie à l'achat (ou -1).
+Hook: a vehicle enters the inventory. Creates its invVehs entry (initial value, required insurance class according to value, population, body style, commercial class) and applies the insurance chosen at purchase (or -1).
 
 - `data` (*table*) : {inventoryId, vehicleInfo, purchaseData = {insuranceId}}.
 
 #### `career_modules_insurance_insurance.onVehicleRemoved(invVehId)`
 
-Hook : un véhicule est retiré de l'inventaire ; supprime son entrée d'assurance.
+Hook: a vehicle is removed from the inventory; deletes its insurance entry.
 
-- `invVehId` (*integer*) : Identifiant d'inventaire.
+- `invVehId` (*integer*) : Inventory identifier.
 
 #### `career_modules_insurance_insurance.openChooseInsuranceScreen(mode, params)`
 
-Navigue vers l'écran de choix d'assurance : 'purchase' (achat en boutique) ou 'change' (changement depuis l'ordinateur).
+Navigates to the insurance choice screen: 'purchase' (shop purchase) or 'change' (change from the computer).
 
-- `mode` (*string*) : 'purchase' ou 'change'.
-- `params` (*table*) : Paramètres de route (achat : purchaseType, shopId, insuranceId? ; changement : vehicleId).
-- **renvoie** : table Résultat de navigation, ou {result=false, success=false, reason='unknown_mode'}.
+- `mode` (*string*) : 'purchase' or 'change'.
+- `params` (*table*) : Route parameters (purchase: purchaseType, shopId, insuranceId? ; change: vehicleId).
+- **returns**: table Navigation result, or {result=false, success=false, reason='unknown_mode'}.
 
 #### `career_modules_insurance_insurance.openMenu(_originComputerId)`
 
-Ouvre le menu des assurances depuis un ordinateur (laisse de 7 m) et émet onComputerInsurance. Ne fait rien sans identifiant d'ordinateur.
+Opens the insurance menu from a computer (7 m leash) and emits onComputerInsurance. Does nothing without a computer identifier.
 
-- `_originComputerId` (*string*) : Identifiant de l'ordinateur du garage.
+- `_originComputerId` (*string*) : Garage computer identifier.
 
 #### `career_modules_insurance_insurance.repairPartConditions(data)`
 
-Remet les pièces cassées à neuf dans data.partConditions (intégrité 1, repeinture ou apprêt selon paintRepair, compteur de réparations des pièces d'inventaire, réservoirs d'énergie conservés).
+Restores the broken parts to new in data.partConditions (integrity 1, repaint or primer according to paintRepair, repair counter of inventory parts, energy tanks kept).
 
 - `data` (*table*) : {partConditions, paintRepair?, inventoryId?}.
 
 #### `career_modules_insurance_insurance.resetDriverScore()`
 
-Paie le coût de remise à zéro et rétablit le score par défaut, avec entrée d'historique et mise à jour de l'UI.
+Pays the reset cost and restores the default score, with a history entry and UI update.
 
-- **renvoie** : boolean true si réussi ; false si coût nul ou fonds insuffisants.
+- **returns**: boolean true if successful; false if the cost is zero or funds are insufficient.
 
 #### `career_modules_insurance_insurance.sanitizeCoverageOption(insuranceId, coverageOptionId, invVehId)`
 
-Prépare une option de couverture pour l'UI : clé, nom, choix, type de choix, texte de perk, ordre d'affichage et identifiant de la valeur actuelle.
+Prepares a coverage option for the UI: key, name, choices, choice type, perk text, display order and identifier of the current value.
 
-- `insuranceId` (*integer*) : Assureur.
-- `coverageOptionId` (*string*) : Nom de l'option.
-- `invVehId` (*integer|nil*) : Véhicule (requis pour les options par véhicule).
-- **renvoie** : table|nil Données d'option.
+- `insuranceId` (*integer*) : Insurer.
+- `coverageOptionId` (*string*) : Option name.
+- `invVehId` (*integer|nil*) : Vehicle (required for per-vehicle options).
+- **returns**: table|nil Option data.
 
 #### `career_modules_insurance_insurance.saveNewInsuranceCoverageOptions(insuranceId, newCoverageOptions)`
 
-Enregistre les options de couverture propres à l'assureur (franchise, assistance routière…) contre les frais de dossier (paperworkFees) ; recharge l'assistance routière si elle change.
+Records the insurer-specific coverage options (deductible, roadside assistance…) against the paperwork fees (paperworkFees); recharges roadside assistance if it changes.
 
-- `insuranceId` (*integer*) : Assureur.
-- `newCoverageOptions` (*table<string, integer>*) : Nom de l'option -> identifiant du choix.
+- `insuranceId` (*integer*) : Insurer.
+- `newCoverageOptions` (*table<string, integer>*) : Option name -> choice identifier.
 
 #### `career_modules_insurance_insurance.saveNewVehicleCoverageOptions(vehicleId, newCoverageOptions)`
 
-Enregistre les options de couverture propres à un véhicule contre les frais de dossier de son assureur.
+Records the vehicle-specific coverage options against the paperwork fees of its insurer.
 
-- `vehicleId` (*integer*) : Identifiant d'inventaire.
-- `newCoverageOptions` (*table<string, integer>*) : Nom de l'option -> identifiant du choix.
+- `vehicleId` (*integer*) : Inventory identifier.
+- `newCoverageOptions` (*table<string, integer>*) : Option name -> choice identifier.
 
 #### `career_modules_insurance_insurance.sendChangeInsuranceDataToTheUI(invVehId)`
 
-Envoie 'chooseInsuranceData' pour le changement d'assurance d'un véhicule déjà possédé (coût net de changement, remboursement).
+Sends 'chooseInsuranceData' for changing the insurance of an already owned vehicle (net change cost, refund).
 
-- `invVehId` (*integer*) : Identifiant d'inventaire.
+- `invVehId` (*integer*) : Inventory identifier.
 
 #### `career_modules_insurance_insurance.sendChooseInsuranceDataToTheUI(purchaseType, vehShopId, defaultInsuranceId)`
 
-Envoie 'chooseInsuranceData' pour l'achat d'un véhicule en boutique : cartes des assureurs de la bonne classe (prime d'ajout, remise de groupe) plus la carte « sans assurance ».
+Sends 'chooseInsuranceData' for buying a vehicle in the shop: cards of the insurers of the right class (add-on premium, group discount) plus the "no insurance" card.
 
-- `purchaseType` (*string*) : Type d'achat transmis à l'UI.
-- `vehShopId` (*string|integer*) : Identifiant de l'annonce.
-- `defaultInsuranceId` (*integer|nil*) : Assureur présélectionné.
+- `purchaseType` (*string*) : Purchase type passed to the UI.
+- `vehShopId` (*string|integer*) : Listing identifier.
+- `defaultInsuranceId` (*integer|nil*) : Preselected insurer.
 
 #### `career_modules_insurance_insurance.setDriverScore(score)`
 
-Fixe le score de conducteur sans aucune vérification (outils/debug).
+Sets the driver score without any check (tools/debug).
 
-- `score` (*number*) : Nouveau score.
+- `score` (*number*) : New score.
 
 #### `career_modules_insurance_insurance.startRepair(vehInvId, repairOptionData, callback)`
 
-Répare un véhicule d'inventaire : paie le coût, enregistre une réclamation (isInsuranceRepair) ou une réparation privée, répare les pièces, puis lance une réparation différée (repairTime > 0) ou instantanée.
+Repairs an inventory vehicle: pays the cost, records a claim (isInsuranceRepair) or a private repair, repairs the parts, then starts a delayed (repairTime > 0) or instant repair.
 
-- `vehInvId` (*integer|nil*) : Véhicule ; défaut : véhicule actuel.
+- `vehInvId` (*integer|nil*) : Vehicle; default: current vehicle.
 - `repairOptionData` (*table|nil*) : {cost, isInsuranceRepair, repairTime}.
-- `callback` (*function|nil*) : Appelé après une réparation instantanée avec vehInfo.
+- `callback` (*function|nil*) : Called after an instant repair with vehInfo.
 
 #### `career_modules_insurance_insurance.startRepairInGarage(invVehId, repairOptionData)`
 
-Réparation depuis le garage : émet onRepairInGarage puis startRepair ; pour une réparation instantanée, téléporte le véhicule au garage le plus proche.
+Repair from the garage: emits onRepairInGarage then startRepair; for an instant repair, teleports the vehicle to the nearest garage.
 
-- `invVehId` (*integer*) : Identifiant d'inventaire.
+- `invVehId` (*integer*) : Inventory identifier.
 - `repairOptionData` (*table*) : {cost, isInsuranceRepair, repairTime}.
-- **renvoie** : any Valeur de startRepair (nil).
+- **returns**: any Value of startRepair (nil).
 
 #### `career_modules_insurance_insurance.startRepairInstant(vehInfo, callback, skipSound)`
 
-Réparation instantanée : joue un son, respawn le véhicule s'il est présent, puis marque le véhicule modifié, recharge le carburant minimum et sauvegarde.
+Instant repair: plays a sound, respawns the vehicle if present, then marks the vehicle as modified, reloads the minimum fuel and saves.
 
-- `vehInfo` (*table*) : Véhicule d'inventaire.
-- `callback` (*function|nil*) : Appelé après le respawn.
-- `skipSound` (*boolean|nil*) : Ne pas jouer le son.
+- `vehInfo` (*table*) : Inventory vehicle.
+- `callback` (*function|nil*) : Called after the respawn.
+- `skipSound` (*boolean|nil*) : Do not play the sound.
 
 #### `career_modules_insurance_insurance.topUpRoadsideAssistance(insuranceId)`
 
-Recharge le nombre de remorquages gratuits selon l'option roadsideAssistance choisie (au renouvellement ou à la modification).
+Recharges the number of free tows according to the chosen roadsideAssistance option (on renewal or on modification).
 
-- `insuranceId` (*integer*) : Assureur.
+- `insuranceId` (*integer*) : Insurer.
 
 #### `career_modules_insurance_insurance.useRoadsideAssistance(invVehId)`
 
-Consomme un remorquage gratuit de l'assureur du véhicule.
+Consumes a free tow of the vehicle's insurer.
 
-- `invVehId` (*integer*) : Identifiant d'inventaire.
+- `invVehId` (*integer*) : Inventory identifier.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_career, payment, playerAttributes, insurance_history, tether, etc. |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_career, payment, playerAttributes, insurance_history, tether, etc. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onComputerInsurance`
-- `onInsuranceRepairClaim` — écouté par 1 module(s)
-- `onRepairInGarage` — écouté par 1 module(s)
-- `onVehicleRepaired` — écouté par 1 module(s)
+- `onInsuranceRepairClaim` — listened to by 1 module(s)
+- `onRepairInGarage` — listened to by 1 module(s)
+- `onVehicleRepaired` — listened to by 1 module(s)
 
-**Évènements UI (guihooks.trigger) :** `MenuOpenModule`, `chooseInsuranceData`, `gameContextPlayerVehicleDamageInfo`, `insurancesData`
+**UI events (guihooks.trigger):** `MenuOpenModule`, `chooseInsuranceData`, `gameContextPlayerVehicleDamageInfo`, `insurancesData`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `be:` `getPlayerVehicleID`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/insurance/insurance.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/insurance/insurance.lua`.*

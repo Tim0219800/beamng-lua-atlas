@@ -1,241 +1,241 @@
 # `editor_resourceChecker_resourceUtil`
 
-*Fichier : `lua/ge/extensions/editor/resourceChecker/resourceUtil.lua` · VM : Game Engine (GE) · 2942 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/resourceChecker/resourceUtil.lua` · VM: Game Engine (GE) · 2942 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_resourceChecker_resourceUtil` : `extensions.load("editor_resourceChecker_resourceUtil")`, puis la globale `editor_resourceChecker_resourceUtil`
+**Access:** extension `editor_resourceChecker_resourceUtil`: `extensions.load("editor_resourceChecker_resourceUtil")`, then the global `editor_resourceChecker_resourceUtil`
 
-Moteur de l'outil Resource Checker de l'éditeur : analyse les matériaux, textures, meshes et assets d'un niveau ou d'un véhicule (versions de matériaux, doublons, persistentId, textures manquantes ou non puissance de deux, matériaux/modèles/textures inutilisés, dummies, colmeshes, export DDS vers PNG, statistiques de taille). Chaque vérification tourne dans un job (extensions.core_jobsystem.create) qui met à jour une progression et renvoie son résultat à l'UI via extensions.editor_resourceChecker.jobData(canal, {type, compte, ..., isDone}). Plusieurs fonctions modifient ou suppriment des fichiers (fixPID, removeDummy, removeUnused, textureExporter) : à utiliser avec précaution.
+Engine of the editor's Resource Checker tool: analyzes the materials, textures, meshes and assets of a level or vehicle (material versions, duplicates, persistentId, missing or non-power-of-two textures, unused materials/models/textures, dummies, colmeshes, DDS to PNG export, size statistics). Each check runs in a job (extensions.core_jobsystem.create) that updates a progress value and returns its result to the UI via extensions.editor_resourceChecker.jobData(channel, {type, count, ..., isDone}). Several functions modify or delete files (fixPID, removeDummy, removeUnused, textureExporter): use with caution.
 
-## Exemple
+## Example
 
 ```lua
 local ru = extensions.editor_resourceChecker_resourceUtil
 ru.verifyVersion('/levels/mon_niveau/')
--- plus tard, dans l'UI :
+-- later, in the UI:
 local p = ru.getProgress()
-if p then print(p) end -- 0..100, nil si aucun job ne tourne
+if p then print(p) end -- 0..100, nil if no job is running
 ```
 
-## Remarques
+## Notes
 
-- Les fonctions de vérification ne renvoient rien : le résultat arrive de façon asynchrone via extensions.editor_resourceChecker.jobData(...). Ce module dépend donc de l'extension editor_resourceChecker.
-- isDone vaut 1 en cas de succès et 2 en cas d'erreur (chemin invalide ou nom de niveau absent) dans les données renvoyées.
-- Les chemins de matériaux doivent contenir un « / » sinon la fonction journalise une erreur (ensureValidPath).
-- Les champs xxxworkJob exportés valent nil au chargement du module (copie de variables locales non encore assignées) : les jobs eux-mêmes sont des locales privées, getProgress et stopProgress sont la seule interface fiable.
-- removeUnusedworkJob n'est pas exporté, mais getProgress/stopProgress le gèrent. checkColData accepte un paramètre removal qui n'est pas transmis au job (déduit du code).
-- textureExporter : les messages log('E'/'I', 'texte') passent le message comme tag (appel à deux arguments avec un seul message) ; en cas d'échec de convertDDSToPNG, le fichier est tout de même compté et listé.
-- Les fonctions qui parsent des fichiers matériaux gèrent materials.cs (TorqueScript, parseur maison) et *materials.json.
+- The check functions return nothing: the result arrives asynchronously via extensions.editor_resourceChecker.jobData(...). This module therefore depends on the editor_resourceChecker extension.
+- isDone is 1 on success and 2 on error (invalid path or missing level name) in the returned data.
+- Material paths must contain a "/" otherwise the function logs an error (ensureValidPath).
+- The exported xxxworkJob fields are nil when the module loads (copy of local variables not yet assigned): the jobs themselves are private locals, getProgress and stopProgress are the only reliable interface.
+- removeUnusedworkJob is not exported, but getProgress/stopProgress handle it. checkColData accepts a removal parameter that is not passed to the job (inferred from code).
+- textureExporter: the log('E'/'I', 'text') calls pass the message as the tag (two-argument call with a single message); if convertDDSToPNG fails, the file is still counted and listed.
+- The functions that parse material files handle materials.cs (TorqueScript, home-made parser) and *materials.json.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_resourceChecker_resourceUtil.assetStats(levelname)` | Job : calcule des statistiques de taille des assets d'un niveau (textures, meshes sources et cache, terrains, audio, datablocks, autres) et la liste des fichiers avec leur taille. jobData(3, {typeId, breakdown, totals, sceneCounts, isDone, {files = ...}}). | 2778 |
-| `editor_resourceChecker_resourceUtil.checkColData(levelname, removal)` | Job : cherche les colmeshes (collision) utilisés dans un niveau (prefabs, forêt, TSStatic). jobData(3, {9, ...}). | 1739 |
-| `editor_resourceChecker_resourceUtil.checkForest()` | Job : liste les ForestItemData de la scène. Résultat via jobData(3, {2, ...}). | 944 |
-| `editor_resourceChecker_resourceUtil.checkMatTex(convertdata)` | Job : vérifie les textures référencées par les matériaux (fichiers manquants, chemins incorrects). Résultat via jobData(2, {6, ...}). | 588 |
-| `editor_resourceChecker_resourceUtil.checkStatic()` | Job : liste les shapes utilisées par les TSStatic de la scène. Résultat via jobData(3, {1, ...}). | 875 |
-| `editor_resourceChecker_resourceUtil.checkTerrains()` | Job : liste les TerrainBlock de la scène. Résultat via jobData(3, {3, ...}). | 993 |
-| `editor_resourceChecker_resourceUtil.checkTex(convertdata)` | Job : vérifie les fichiers de texture eux-mêmes (par ex. dimensions puissance de deux, voir powerOfTwo). Résultat via jobData(2, {7, ...}). | 715 |
-| `editor_resourceChecker_resourceUtil.checkUnusedMats(levelname, removal)` | Job : détermine les matériaux d'un niveau qui ne sont utilisés par aucun objet (prefabs, forêt, TSStatic, terrains, GroundPlane, GroundCover, DecalRoad, MeshRoad, DecalData). Stocke le résultat dans matstoRemove. jobData(3, {4, ...}). | 1277 |
-| `editor_resourceChecker_resourceUtil.checkUnusedModels(levelname, removal)` | Job : trouve les modèles (shapes) du niveau non utilisés (prefabs, TSStatic, forêt, GroundCover). Stocke le résultat dans shapestoRemove. jobData(3, {5, ...}). | 1937 |
-| `editor_resourceChecker_resourceUtil.checkUsedMats(levelname, removal)` | Job : même parcours que checkUnusedMats mais pour lister les matériaux utilisés. jobData(3, {8, ...}). | 1593 |
-| `editor_resourceChecker_resourceUtil.checkmissingMats(convertdata)` | Job : cherche dans les meshes les matériaux référencés mais absents des fichiers de matériaux. Résultat via jobData(2, {8, ...}). | 803 |
-| `editor_resourceChecker_resourceUtil.duplicateData(material)` | Job : parcourt les matériaux de /levels, /vehicles, /art et /core pour trouver les doublons d'un matériau donné. | 2378 |
-| `editor_resourceChecker_resourceUtil.findDuplicates(duplicatelist)` | Détecte les noms de matériaux en double et les mapTo en double (hors unmapped_mat) dans une liste. Le résultat est stocké dans un état interne du module utilisé par verifyDuplicate. | 236 |
-| `editor_resourceChecker_resourceUtil.fixPID(convertdata, skipCommon)` | Job : retire les persistentId des matériaux JSON en les resauvegardant (resaveMaterial). Modifie les fichiers. Résultat via jobData(2, {5, nombre, "", fichiersModifiés, isDone}). | 448 |
-| `editor_resourceChecker_resourceUtil.getMaterialTexFields(mat)` | Pour un objet Material, renvoie ses champs de type filename non vides, par couche (4 couches pour version 0 ou 1, activeLayers pour 1.5, sinon 1). | 206 |
-| `editor_resourceChecker_resourceUtil.getProgress()` | Renvoie la progression du job en cours (parmi tous les jobs du module), ou nil si aucun ne tourne. | 2783 |
-| `editor_resourceChecker_resourceUtil.getSimObjects(fileName)` | Parcourt tous les objets de la scène (scenetree.getAllObjects) et renvoie ceux dont getFileName() égale le fichier donné. Sert à retrouver les objets créés en chargeant un fichier de matériaux. | 145 |
-| `editor_resourceChecker_resourceUtil.onExtensionLoaded()` | Hook de chargement de l'extension ; ne fait rien. *(interne)* *(hook)* | 2897 |
-| `editor_resourceChecker_resourceUtil.onExtensionUnloaded()` | Hook de déchargement ; appelle extensions.unload('extensions.editor_resourceChecker_resourceUtil'). *(interne)* *(hook)* | 140 |
-| `editor_resourceChecker_resourceUtil.powerOfTwo(x)` | Teste si un nombre est une puissance de deux (utile pour les dimensions de texture). | 177 |
-| `editor_resourceChecker_resourceUtil.removeDummy(convertdata, skipCommon)` | Job : supprime des fichiers materials.json les matériaux « dummy » (sans Stages ou Stages[1] vide) et réécrit les fichiers. jobData(2, {9, nombre, "dummy", liste, isDone}). | 2447 |
-| `editor_resourceChecker_resourceUtil.removeFromForestJson(shape, foresData)` | Ouvre un fichier JSON de ForestItemData, retire l'entrée dont shapeFile correspond à shape et réécrit le fichier. Journalise un avertissement si introuvable. | 186 |
-| `editor_resourceChecker_resourceUtil.removeUnused(levelname, item, selected)` | Job : supprime les éléments inutilisés sélectionnés. item 1 retire des matériaux (matstoRemove), 2 des shapes (shapestoRemove, et entrées forest), 3 des textures (textoRemove). Supprime des fichiers : irréversible. jobData(3, {7, ...}). | 2329 |
-| `editor_resourceChecker_resourceUtil.resaveMaterial(file)` | Recharge un fichier materials.json, vide le persistentId de chaque Material puis le sauvegarde via un PersistenceManager temporaire. Réécrit le fichier. | 157 |
-| `editor_resourceChecker_resourceUtil.stopProgress()` | Demande l'arrêt de tous les jobs en cours en mettant job.stop = true ; les jobs s'arrêtent à leur prochain point de contrôle (abort). | 2840 |
-| `editor_resourceChecker_resourceUtil.textureExporter(convertdata, exportpath)` | Job : convertit les fichiers .dds trouvés sous un dossier en .png (convertDDSToPNG) pour ceux qui n'ont pas déjà un .png, en écrivant sous exportpath. jobData(2, {10, nombre, "dummy", fichiers, isDone}). | 2492 |
-| `editor_resourceChecker_resourceUtil.unusedTextures(levelname, removal)` | Job : trouve les textures non référencées (matériaux, TerrainMaterials, WaterPlane/Block, River, CloudLayer, ScatterSky, Cubemap, Info). Stocke le résultat dans textoRemove. jobData(3, {6, ...}). | 2176 |
-| `editor_resourceChecker_resourceUtil.verifyDuplicate(convertdata, skipCommon)` | Job : repère les matériaux dont le nom ou le mapTo est en double. Avec skipCommon == false, inclut /vehicles/common, /art et /core. Résultat via jobData(2, {3, nombre, "dummy", liste, isDone}). | 394 |
-| `editor_resourceChecker_resourceUtil.verifyVersion(convertdata)` | Job : compte les matériaux de version < 1.5 (anciens) et ceux en 1.5 (PBR) sous un dossier, et liste les anciens avec leur fichier. Charge réellement les fichiers matériaux dans le jeu. Résultat via jobData(2, {2, nbAnciens, liste, nbPBR, isDone}). | 326 |
+| `editor_resourceChecker_resourceUtil.assetStats(levelname)` | Job: computes size statistics of a level's assets (textures, source and cached meshes, terrains, audio, datablocks, others) and the list of files with their size. jobData(3, {typeId, breakdown, totals, sceneCounts, isDone, {files = ...}}). | 2778 |
+| `editor_resourceChecker_resourceUtil.checkColData(levelname, removal)` | Job: looks for the colmeshes (collision) used in a level (prefabs, forest, TSStatic). jobData(3, {9, ...}). | 1739 |
+| `editor_resourceChecker_resourceUtil.checkForest()` | Job: lists the scene's ForestItemData. Result via jobData(3, {2, ...}). | 944 |
+| `editor_resourceChecker_resourceUtil.checkMatTex(convertdata)` | Job: checks the textures referenced by the materials (missing files, incorrect paths). Result via jobData(2, {6, ...}). | 588 |
+| `editor_resourceChecker_resourceUtil.checkStatic()` | Job: lists the shapes used by the scene's TSStatics. Result via jobData(3, {1, ...}). | 875 |
+| `editor_resourceChecker_resourceUtil.checkTerrains()` | Job: lists the scene's TerrainBlocks. Result via jobData(3, {3, ...}). | 993 |
+| `editor_resourceChecker_resourceUtil.checkTex(convertdata)` | Job: checks the texture files themselves (e.g. power-of-two dimensions, see powerOfTwo). Result via jobData(2, {7, ...}). | 715 |
+| `editor_resourceChecker_resourceUtil.checkUnusedMats(levelname, removal)` | Job: determines which of a level's materials are not used by any object (prefabs, forest, TSStatic, terrains, GroundPlane, GroundCover, DecalRoad, MeshRoad, DecalData). Stores the result in matstoRemove. jobData(3, {4, ...}). | 1277 |
+| `editor_resourceChecker_resourceUtil.checkUnusedModels(levelname, removal)` | Job: finds the level's unused models (shapes) (prefabs, TSStatic, forest, GroundCover). Stores the result in shapestoRemove. jobData(3, {5, ...}). | 1937 |
+| `editor_resourceChecker_resourceUtil.checkUsedMats(levelname, removal)` | Job: same traversal as checkUnusedMats but to list the used materials. jobData(3, {8, ...}). | 1593 |
+| `editor_resourceChecker_resourceUtil.checkmissingMats(convertdata)` | Job: looks in the meshes for materials that are referenced but absent from the material files. Result via jobData(2, {8, ...}). | 803 |
+| `editor_resourceChecker_resourceUtil.duplicateData(material)` | Job: walks through the materials in /levels, /vehicles, /art and /core to find duplicates of a given material. | 2378 |
+| `editor_resourceChecker_resourceUtil.findDuplicates(duplicatelist)` | Detects duplicate material names and duplicate mapTo (excluding unmapped_mat) in a list. The result is stored in an internal module state used by verifyDuplicate. | 236 |
+| `editor_resourceChecker_resourceUtil.fixPID(convertdata, skipCommon)` | Job: removes persistentIds from JSON materials by re-saving them (resaveMaterial). Modifies files. Result via jobData(2, {5, count, "", modifiedFiles, isDone}). | 448 |
+| `editor_resourceChecker_resourceUtil.getMaterialTexFields(mat)` | For a Material object, returns its non-empty filename-type fields, per layer (4 layers for version 0 or 1, activeLayers for 1.5, otherwise 1). | 206 |
+| `editor_resourceChecker_resourceUtil.getProgress()` | Returns the progress of the current job (among all the module's jobs), or nil if none is running. | 2783 |
+| `editor_resourceChecker_resourceUtil.getSimObjects(fileName)` | Walks through all scene objects (scenetree.getAllObjects) and returns those whose getFileName() equals the given file. Used to find the objects created by loading a materials file. | 145 |
+| `editor_resourceChecker_resourceUtil.onExtensionLoaded()` | Extension load hook; does nothing. *(internal)* *(hook)* | 2897 |
+| `editor_resourceChecker_resourceUtil.onExtensionUnloaded()` | Unload hook; calls extensions.unload('extensions.editor_resourceChecker_resourceUtil'). *(internal)* *(hook)* | 140 |
+| `editor_resourceChecker_resourceUtil.powerOfTwo(x)` | Tests whether a number is a power of two (useful for texture dimensions). | 177 |
+| `editor_resourceChecker_resourceUtil.removeDummy(convertdata, skipCommon)` | Job: removes "dummy" materials (without Stages or with empty Stages[1]) from the materials.json files and rewrites the files. jobData(2, {9, count, "dummy", list, isDone}). | 2447 |
+| `editor_resourceChecker_resourceUtil.removeFromForestJson(shape, foresData)` | Opens a ForestItemData JSON file, removes the entry whose shapeFile matches shape and rewrites the file. Logs a warning if not found. | 186 |
+| `editor_resourceChecker_resourceUtil.removeUnused(levelname, item, selected)` | Job: deletes the selected unused items. item 1 removes materials (matstoRemove), 2 shapes (shapestoRemove, and forest entries), 3 textures (textoRemove). Deletes files: irreversible. jobData(3, {7, ...}). | 2329 |
+| `editor_resourceChecker_resourceUtil.resaveMaterial(file)` | Reloads a materials.json file, clears the persistentId of each Material then saves it via a temporary PersistenceManager. Rewrites the file. | 157 |
+| `editor_resourceChecker_resourceUtil.stopProgress()` | Requests all running jobs to stop by setting job.stop = true; the jobs stop at their next checkpoint (abort). | 2840 |
+| `editor_resourceChecker_resourceUtil.textureExporter(convertdata, exportpath)` | Job: converts the .dds files found under a folder to .png (convertDDSToPNG) for those that do not already have a .png, writing under exportpath. jobData(2, {10, count, "dummy", files, isDone}). | 2492 |
+| `editor_resourceChecker_resourceUtil.unusedTextures(levelname, removal)` | Job: finds the unreferenced textures (materials, TerrainMaterials, WaterPlane/Block, River, CloudLayer, ScatterSky, Cubemap, Info). Stores the result in textoRemove. jobData(3, {6, ...}). | 2176 |
+| `editor_resourceChecker_resourceUtil.verifyDuplicate(convertdata, skipCommon)` | Job: finds materials whose name or mapTo is duplicated. With skipCommon == false, includes /vehicles/common, /art and /core. Result via jobData(2, {3, count, "dummy", list, isDone}). | 394 |
+| `editor_resourceChecker_resourceUtil.verifyVersion(convertdata)` | Job: counts the materials of version < 1.5 (old) and those at 1.5 (PBR) under a folder, and lists the old ones with their file. Actually loads the material files into the game. Result via jobData(2, {2, nbOld, list, nbPBR, isDone}). | 326 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_resourceChecker_resourceUtil.assetStats(levelname)`
 
-Job : calcule des statistiques de taille des assets d'un niveau (textures, meshes sources et cache, terrains, audio, datablocks, autres) et la liste des fichiers avec leur taille. jobData(3, {typeId, breakdown, totals, sceneCounts, isDone, {files = ...}}).
+Job: computes size statistics of a level's assets (textures, source and cached meshes, terrains, audio, datablocks, others) and the list of files with their size. jobData(3, {typeId, breakdown, totals, sceneCounts, isDone, {files = ...}}).
 
-- `levelname` (*string*) : Nom du niveau.
+- `levelname` (*string*) : Level name.
 
 #### `editor_resourceChecker_resourceUtil.checkColData(levelname, removal)`
 
-Job : cherche les colmeshes (collision) utilisés dans un niveau (prefabs, forêt, TSStatic). jobData(3, {9, ...}).
+Job: looks for the colmeshes (collision) used in a level (prefabs, forest, TSStatic). jobData(3, {9, ...}).
 
-- `levelname` (*string*) : Nom du niveau.
-- `removal` (*any*) : Non transmis au job (voir notes).
+- `levelname` (*string*) : Level name.
+- `removal` (*any*) : Not passed to the job (see notes).
 
 #### `editor_resourceChecker_resourceUtil.checkMatTex(convertdata)`
 
-Job : vérifie les textures référencées par les matériaux (fichiers manquants, chemins incorrects). Résultat via jobData(2, {6, ...}).
+Job: checks the textures referenced by the materials (missing files, incorrect paths). Result via jobData(2, {6, ...}).
 
-- `convertdata` (*string*) : Dossier à analyser.
+- `convertdata` (*string*) : Folder to analyze.
 
 #### `editor_resourceChecker_resourceUtil.checkTex(convertdata)`
 
-Job : vérifie les fichiers de texture eux-mêmes (par ex. dimensions puissance de deux, voir powerOfTwo). Résultat via jobData(2, {7, ...}).
+Job: checks the texture files themselves (e.g. power-of-two dimensions, see powerOfTwo). Result via jobData(2, {7, ...}).
 
-- `convertdata` (*string*) : Dossier à analyser.
+- `convertdata` (*string*) : Folder to analyze.
 
 #### `editor_resourceChecker_resourceUtil.checkUnusedMats(levelname, removal)`
 
-Job : détermine les matériaux d'un niveau qui ne sont utilisés par aucun objet (prefabs, forêt, TSStatic, terrains, GroundPlane, GroundCover, DecalRoad, MeshRoad, DecalData). Stocke le résultat dans matstoRemove. jobData(3, {4, ...}).
+Job: determines which of a level's materials are not used by any object (prefabs, forest, TSStatic, terrains, GroundPlane, GroundCover, DecalRoad, MeshRoad, DecalData). Stores the result in matstoRemove. jobData(3, {4, ...}).
 
-- `levelname` (*string*) : Nom du niveau.
-- `removal` (*any*) : Option de suppression (déduit du code).
+- `levelname` (*string*) : Level name.
+- `removal` (*any*) : Removal option (inferred from code).
 
 #### `editor_resourceChecker_resourceUtil.checkUnusedModels(levelname, removal)`
 
-Job : trouve les modèles (shapes) du niveau non utilisés (prefabs, TSStatic, forêt, GroundCover). Stocke le résultat dans shapestoRemove. jobData(3, {5, ...}).
+Job: finds the level's unused models (shapes) (prefabs, TSStatic, forest, GroundCover). Stores the result in shapestoRemove. jobData(3, {5, ...}).
 
-- `levelname` (*string*) : Nom du niveau.
-- `removal` (*any*) : Option (déduit du code).
+- `levelname` (*string*) : Level name.
+- `removal` (*any*) : Option (inferred from code).
 
 #### `editor_resourceChecker_resourceUtil.checkUsedMats(levelname, removal)`
 
-Job : même parcours que checkUnusedMats mais pour lister les matériaux utilisés. jobData(3, {8, ...}).
+Job: same traversal as checkUnusedMats but to list the used materials. jobData(3, {8, ...}).
 
-- `levelname` (*string*) : Nom du niveau.
-- `removal` (*any*) : Option (déduit du code).
+- `levelname` (*string*) : Level name.
+- `removal` (*any*) : Option (inferred from code).
 
 #### `editor_resourceChecker_resourceUtil.checkmissingMats(convertdata)`
 
-Job : cherche dans les meshes les matériaux référencés mais absents des fichiers de matériaux. Résultat via jobData(2, {8, ...}).
+Job: looks in the meshes for materials that are referenced but absent from the material files. Result via jobData(2, {8, ...}).
 
-- `convertdata` (*string*) : Dossier à analyser.
+- `convertdata` (*string*) : Folder to analyze.
 
 #### `editor_resourceChecker_resourceUtil.duplicateData(material)`
 
-Job : parcourt les matériaux de /levels, /vehicles, /art et /core pour trouver les doublons d'un matériau donné.
+Job: walks through the materials in /levels, /vehicles, /art and /core to find duplicates of a given material.
 
-- `material` (*string*) : Matériau à rechercher ; log E si nil.
+- `material` (*string*) : Material to search for; E log if nil.
 
 #### `editor_resourceChecker_resourceUtil.findDuplicates(duplicatelist)`
 
-Détecte les noms de matériaux en double et les mapTo en double (hors unmapped_mat) dans une liste. Le résultat est stocké dans un état interne du module utilisé par verifyDuplicate.
+Detects duplicate material names and duplicate mapTo (excluding unmapped_mat) in a list. The result is stored in an internal module state used by verifyDuplicate.
 
-- `duplicatelist` (*table*) : Table de {nom, mapTo, fichier}.
+- `duplicatelist` (*table*) : Table of {name, mapTo, file}.
 
 #### `editor_resourceChecker_resourceUtil.fixPID(convertdata, skipCommon)`
 
-Job : retire les persistentId des matériaux JSON en les resauvegardant (resaveMaterial). Modifie les fichiers. Résultat via jobData(2, {5, nombre, "", fichiersModifiés, isDone}).
+Job: removes persistentIds from JSON materials by re-saving them (resaveMaterial). Modifies files. Result via jobData(2, {5, count, "", modifiedFiles, isDone}).
 
-- `convertdata` (*string*) : Dossier à traiter.
-- `skipCommon` (*boolean*) : false pour inclure les dossiers communs.
+- `convertdata` (*string*) : Folder to process.
+- `skipCommon` (*boolean*) : false to include the common folders.
 
 #### `editor_resourceChecker_resourceUtil.getMaterialTexFields(mat)`
 
-Pour un objet Material, renvoie ses champs de type filename non vides, par couche (4 couches pour version 0 ou 1, activeLayers pour 1.5, sinon 1).
+For a Material object, returns its non-empty filename-type fields, per layer (4 layers for version 0 or 1, activeLayers for 1.5, otherwise 1).
 
-- `mat` (*userdata*) : Objet de classe Material.
-- **renvoie** : table<string, string>|nil Clés « champ.couche » vers chemin de fichier ; nil (et log E) si ce n'est pas un Material.
+- `mat` (*userdata*) : Object of class Material.
+- **returns**: table<string, string>|nil "field.layer" keys to file path; nil (and E log) if it is not a Material.
 
 #### `editor_resourceChecker_resourceUtil.getProgress()`
 
-Renvoie la progression du job en cours (parmi tous les jobs du module), ou nil si aucun ne tourne.
+Returns the progress of the current job (among all the module's jobs), or nil if none is running.
 
-- **renvoie** : number|nil Progression de 0 à 100.
+- **returns**: number|nil Progress from 0 to 100.
 
 #### `editor_resourceChecker_resourceUtil.getSimObjects(fileName)`
 
-Parcourt tous les objets de la scène (scenetree.getAllObjects) et renvoie ceux dont getFileName() égale le fichier donné. Sert à retrouver les objets créés en chargeant un fichier de matériaux.
+Walks through all scene objects (scenetree.getAllObjects) and returns those whose getFileName() equals the given file. Used to find the objects created by loading a materials file.
 
-- `fileName` (*string*) : Chemin du fichier source de l'objet (ex. un materials.json).
-- **renvoie** : table Liste d'objets SimObject.
+- `fileName` (*string*) : Path of the object's source file (e.g. a materials.json).
+- **returns**: table List of SimObjects.
 
 #### `editor_resourceChecker_resourceUtil.powerOfTwo(x)`
 
-Teste si un nombre est une puissance de deux (utile pour les dimensions de texture).
+Tests whether a number is a power of two (useful for texture dimensions).
 
-- `x` (*number*) : Valeur à tester.
-- **renvoie** : boolean false si x est nil ou <= 0 ou n'est pas une puissance de deux.
+- `x` (*number*) : Value to test.
+- **returns**: boolean false if x is nil or <= 0 or is not a power of two.
 
 #### `editor_resourceChecker_resourceUtil.removeDummy(convertdata, skipCommon)`
 
-Job : supprime des fichiers materials.json les matériaux « dummy » (sans Stages ou Stages[1] vide) et réécrit les fichiers. jobData(2, {9, nombre, "dummy", liste, isDone}).
+Job: removes "dummy" materials (without Stages or with empty Stages[1]) from the materials.json files and rewrites the files. jobData(2, {9, count, "dummy", list, isDone}).
 
-- `convertdata` (*string*) : Dossier à traiter.
-- `skipCommon` (*boolean*) : false pour inclure les dossiers communs.
+- `convertdata` (*string*) : Folder to process.
+- `skipCommon` (*boolean*) : false to include the common folders.
 
 #### `editor_resourceChecker_resourceUtil.removeFromForestJson(shape, foresData)`
 
-Ouvre un fichier JSON de ForestItemData, retire l'entrée dont shapeFile correspond à shape et réécrit le fichier. Journalise un avertissement si introuvable.
+Opens a ForestItemData JSON file, removes the entry whose shapeFile matches shape and rewrites the file. Logs a warning if not found.
 
-- `shape` (*string*) : Valeur de shapeFile à supprimer.
-- `foresData` (*string*) : Chemin du fichier JSON forest.
+- `shape` (*string*) : shapeFile value to remove.
+- `foresData` (*string*) : Path of the forest JSON file.
 
 #### `editor_resourceChecker_resourceUtil.removeUnused(levelname, item, selected)`
 
-Job : supprime les éléments inutilisés sélectionnés. item 1 retire des matériaux (matstoRemove), 2 des shapes (shapestoRemove, et entrées forest), 3 des textures (textoRemove). Supprime des fichiers : irréversible. jobData(3, {7, ...}).
+Job: deletes the selected unused items. item 1 removes materials (matstoRemove), 2 shapes (shapestoRemove, and forest entries), 3 textures (textoRemove). Deletes files: irreversible. jobData(3, {7, ...}).
 
-- `levelname` (*string*) : Nom du niveau.
-- `item` (*integer*) : 1 matériaux, 2 modèles, 3 textures.
-- `selected` (*table*) : Table dont les clés sont les entrées sélectionnées à supprimer.
+- `levelname` (*string*) : Level name.
+- `item` (*integer*) : 1 materials, 2 models, 3 textures.
+- `selected` (*table*) : Table whose keys are the selected entries to delete.
 
 #### `editor_resourceChecker_resourceUtil.resaveMaterial(file)`
 
-Recharge un fichier materials.json, vide le persistentId de chaque Material puis le sauvegarde via un PersistenceManager temporaire. Réécrit le fichier.
+Reloads a materials.json file, clears the persistentId of each Material then saves it via a temporary PersistenceManager. Rewrites the file.
 
-- `file` (*string*) : Chemin d'un fichier de matériaux existant.
+- `file` (*string*) : Path of an existing materials file.
 
 #### `editor_resourceChecker_resourceUtil.textureExporter(convertdata, exportpath)`
 
-Job : convertit les fichiers .dds trouvés sous un dossier en .png (convertDDSToPNG) pour ceux qui n'ont pas déjà un .png, en écrivant sous exportpath. jobData(2, {10, nombre, "dummy", fichiers, isDone}).
+Job: converts the .dds files found under a folder to .png (convertDDSToPNG) for those that do not already have a .png, writing under exportpath. jobData(2, {10, count, "dummy", files, isDone}).
 
-- `convertdata` (*string*) : Dossier contenant les .dds.
-- `exportpath` (*string*) : Préfixe du chemin de sortie des PNG (concaténé avec le dossier et le nom).
+- `convertdata` (*string*) : Folder containing the .dds files.
+- `exportpath` (*string*) : Prefix of the PNG output path (concatenated with the folder and the name).
 
 #### `editor_resourceChecker_resourceUtil.unusedTextures(levelname, removal)`
 
-Job : trouve les textures non référencées (matériaux, TerrainMaterials, WaterPlane/Block, River, CloudLayer, ScatterSky, Cubemap, Info). Stocke le résultat dans textoRemove. jobData(3, {6, ...}).
+Job: finds the unreferenced textures (materials, TerrainMaterials, WaterPlane/Block, River, CloudLayer, ScatterSky, Cubemap, Info). Stores the result in textoRemove. jobData(3, {6, ...}).
 
-- `levelname` (*string*) : Nom du niveau.
-- `removal` (*any*) : Option (déduit du code).
+- `levelname` (*string*) : Level name.
+- `removal` (*any*) : Option (inferred from code).
 
 #### `editor_resourceChecker_resourceUtil.verifyDuplicate(convertdata, skipCommon)`
 
-Job : repère les matériaux dont le nom ou le mapTo est en double. Avec skipCommon == false, inclut /vehicles/common, /art et /core. Résultat via jobData(2, {3, nombre, "dummy", liste, isDone}).
+Job: finds materials whose name or mapTo is duplicated. With skipCommon == false, includes /vehicles/common, /art and /core. Result via jobData(2, {3, count, "dummy", list, isDone}).
 
-- `convertdata` (*string*) : Dossier à analyser.
-- `skipCommon` (*boolean*) : false pour inclure les dossiers communs.
+- `convertdata` (*string*) : Folder to analyze.
+- `skipCommon` (*boolean*) : false to include the common folders.
 
 #### `editor_resourceChecker_resourceUtil.verifyVersion(convertdata)`
 
-Job : compte les matériaux de version < 1.5 (anciens) et ceux en 1.5 (PBR) sous un dossier, et liste les anciens avec leur fichier. Charge réellement les fichiers matériaux dans le jeu. Résultat via jobData(2, {2, nbAnciens, liste, nbPBR, isDone}).
+Job: counts the materials of version < 1.5 (old) and those at 1.5 (PBR) under a folder, and lists the old ones with their file. Actually loads the material files into the game. Result via jobData(2, {2, nbOld, list, nbPBR, isDone}).
 
-- `convertdata` (*string*) : Dossier à analyser (niveau ou véhicule).
+- `convertdata` (*string*) : Folder to analyze (level or vehicle).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `checkColDataworkJob` | any | Exporté mais nil (voir notes) : handle du job checkColData. |
-| `checkUnusedMatsworkJob` | any | Exporté mais nil (voir notes) : handle du job checkUnusedMats. |
-| `checkUnusedModelsworkJob` | any | Exporté mais nil (voir notes) : handle du job checkUnusedModels. |
-| `checkUsedMatsworkJob` | any | Exporté mais nil (voir notes) : handle du job checkUsedMats. |
-| `duplicateDataworkJob` | any | Exporté mais nil (voir notes) : handle du job duplicateData. |
-| `matstoRemove` | table | Liste des matériaux inutilisés trouvés par checkUnusedMats ; remplacée par M.matstoRemove à la fin du job. Utilisée ensuite par removeUnused (item 1). |
-| `removeDummyworkJob` | any | Exporté mais nil (voir notes) : handle du job removeDummy. |
-| `shapestoRemove` | table | Liste des modèles (shapes) inutilisés trouvés par checkUnusedModels ; utilisée par removeUnused (item 2). |
-| `textoRemove` | table | Liste des textures inutilisées trouvées par unusedTextures ; utilisée par removeUnused (item 3). |
-| `textureExporterworkJob` | any | Exporté mais nil (voir notes) : handle du job textureExporter. |
-| `unusedTexturesworkJob` | any | Exporté mais nil (voir notes) : handle du job unusedTextures. |
+| `checkColDataworkJob` | any | Exported but nil (see notes): handle of the checkColData job. |
+| `checkUnusedMatsworkJob` | any | Exported but nil (see notes): handle of the checkUnusedMats job. |
+| `checkUnusedModelsworkJob` | any | Exported but nil (see notes): handle of the checkUnusedModels job. |
+| `checkUsedMatsworkJob` | any | Exported but nil (see notes): handle of the checkUsedMats job. |
+| `duplicateDataworkJob` | any | Exported but nil (see notes): handle of the duplicateData job. |
+| `matstoRemove` | table | List of unused materials found by checkUnusedMats; replaced by M.matstoRemove at the end of the job. Then used by removeUnused (item 1). |
+| `removeDummyworkJob` | any | Exported but nil (see notes): handle of the removeDummy job. |
+| `shapestoRemove` | table | List of unused models (shapes) found by checkUnusedModels; used by removeUnused (item 2). |
+| `textoRemove` | table | List of unused textures found by unusedTextures; used by removeUnused (item 3). |
+| `textureExporterworkJob` | any | Exported but nil (see notes): handle of the textureExporter job. |
+| `unusedTexturesworkJob` | any | Exported but nil (see notes): handle of the unusedTextures job. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `fileSize`, `findFiles`, `getFileRealPath`, `getUserPath`, `isLinkFile`, `removeFile`, `stat`
 - `obj:` `getField`, `getFields`, `getFileName`, `getName`
 - `scenetree.` `findClassObjects`, `findObject`, `getAllObjects`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/resourceChecker/resourceUtil.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/resourceChecker/resourceUtil.lua`.*

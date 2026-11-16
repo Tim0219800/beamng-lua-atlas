@@ -1,0 +1,19 @@
+{
+  "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactMisc.lua",
+  "module": "Module de gameplayInterface fourre-tout : test de connexion (ping) et ouverture/fermeture des verrous des contrôleurs de coupleurs avancés (advancedCouplerControl).",
+  "usage": "gameplayInterface.getSystemData(0, 14, 'ping')   -- renvoie {ping = true}\ngameplayInterface.executeAction(0, 15, 'latchesOpen')",
+  "notes": [
+    "Lookup 'ping'() : renvoie {ping = true}.",
+    "Action 'latchesOpen'() : appelle detachGroup() sur chaque contrôleur de type advancedCouplerControl.",
+    "Action 'latchesClose'() : appelle tryAttachGroupImpulse() sur chaque contrôleur de type advancedCouplerControl.",
+    "latchesOpen/latchesClose ne vérifient pas les paramètres."
+  ],
+  "fields": {
+    "moduleActions": {"type": "table<string, function>", "desc": "Actions : latchesOpen, latchesClose."},
+    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups : ping."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : remplit moduleActions et moduleLookups.", "params": {}, "returns": [], "internal": true},
+    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+  }
+}

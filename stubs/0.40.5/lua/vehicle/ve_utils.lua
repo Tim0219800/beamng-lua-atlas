@@ -2,78 +2,78 @@
 -- tim19Atlas stub generated from lua/vehicle/ve_utils.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Chronomètre renvoyé par HighPerfTimer(). Stocke l'instant de départ en secondes dans self[1].
+--- Timer returned by HighPerfTimer(). Stores the start time in seconds in self[1].
 ---@class ve_utils__HighPerfTimer
 local ve_utils__HighPerfTimer = {}
 
---- Renvoie l'horloge haute précision absolue en millisecondes (pas la durée écoulée).
----Source : lua/vehicle/ve_utils.lua:33
+--- Returns the absolute high-precision clock in milliseconds (not the elapsed duration).
+---Source: lua/vehicle/ve_utils.lua:33
 ---@return number  os.clockhp()*1000.
 function ve_utils__HighPerfTimer:getTime() end
 
---- Redémarre le chronomètre à l'instant présent.
----Source : lua/vehicle/ve_utils.lua:18
+--- Restarts the timer at the present moment.
+---Source: lua/vehicle/ve_utils.lua:18
 function ve_utils__HighPerfTimer:reset() end
 
---- Renvoie le temps écoulé depuis le départ, en millisecondes, sans redémarrer.
----Source : lua/vehicle/ve_utils.lua:22
----@return number  Durée en ms.
+--- Returns the time elapsed since the start, in milliseconds, without restarting.
+---Source: lua/vehicle/ve_utils.lua:22
+---@return number  Duration in ms.
 function ve_utils__HighPerfTimer:stop() end
 
---- Renvoie le temps écoulé en millisecondes et redémarre le chronomètre.
----Source : lua/vehicle/ve_utils.lua:26
----@return number  Durée en ms.
+--- Returns the elapsed time in milliseconds and restarts the timer.
+---Source: lua/vehicle/ve_utils.lua:26
+---@return number  Duration in ms.
 function ve_utils__HighPerfTimer:stopAndReset() end
 
---- Crée un chronomètre haute précision démarré à l'instant de création (basé sur os.clockhp).
----Source : lua/vehicle/ve_utils.lua:14
----@return table  Objet _HighPerfTimer avec les méthodes reset, stop, stopAndReset, getTime.
+--- Creates a high-precision timer started at the moment of creation (based on os.clockhp).
+---Source: lua/vehicle/ve_utils.lua:14
+---@return table  _HighPerfTimer object with the methods reset, stop, stopAndReset, getTime.
 function HighPerfTimer() end
 
---- Convertit une pression relative en psi en pression absolue en pascals : psi * 6894.757 + 101325.
----Source : lua/vehicle/ve_utils.lua:290
----@param psi number Pression relative en psi.
----@return number  Pression absolue en Pa.
+--- Converts a relative pressure in psi to an absolute pressure in pascals: psi * 6894.757 + 101325.
+---Source: lua/vehicle/ve_utils.lua:290
+---@param psi number Relative pressure in psi.
+---@return number  Absolute pressure in Pa.
 function PSItoPascal(psi) end
 
---- Construit une table de recherche dense à partir de points {x, y} : un tableau dont l'index est x (entier) et la valeur y interpolée. Droite pour 2 points, spline Catmull-Rom pour 3 ou plus. Sert par exemple aux courbes de couple moteur.
----Source : lua/vehicle/ve_utils.lua:265
----@param points table Liste de {x, y} avec x entiers croissants.
----@param returnArray boolean|nil Si vrai et ffi disponible, renvoie un tableau C float[] (indexé à partir de 0) au lieu d'une table Lua.
----@return table|cdata|nil  Table indexée par x, ou nil si moins de 2 points.
+--- Builds a dense lookup table from points {x, y}: an array whose index is x (integer) and whose value is the interpolated y. Straight line for 2 points, Catmull-Rom spline for 3 or more. Used for example for engine torque curves.
+---Source: lua/vehicle/ve_utils.lua:265
+---@param points table List of {x, y} with increasing integer x.
+---@param returnArray boolean|nil If true and ffi is available, returns a C float[] array (0-based) instead of a Lua table.
+---@return table|cdata|nil  Table keyed by x, or nil if fewer than 2 points.
 function createCurve(points, returnArray) end
 
---- Renvoie une couleur du jeu tirée de la palette jet selon l'indice, pour distinguer des courbes ou des éléments de debug.
----Source : lua/vehicle/ve_utils.lua:224
----@param i integer Indice ; la couleur est jetColor((i % 17) / 16).
----@param a number|nil Alpha transmis à jetColor.
----@return color  Couleur du jeu.
+--- Returns a game color taken from the jet palette according to the index, to distinguish curves or debug elements.
+---Source: lua/vehicle/ve_utils.lua:224
+---@param i integer Index; the color is jetColor((i % 17) / 16).
+---@param a number|nil Alpha passed to jetColor.
+---@return color  Game color.
 function getContrastColor(i, a) end
 
---- Même palette que getContrastColor mais renvoie une chaîne hexadécimale CSS.
----Source : lua/vehicle/ve_utils.lua:228
----@param i integer Indice (modulo 17).
----@return string  Couleur au format "#rrggbb".
+--- Same palette as getContrastColor but returns a CSS hexadecimal string.
+---Source: lua/vehicle/ve_utils.lua:228
+---@param i integer Index (modulo 17).
+---@return string  Color in "#rrggbb" format.
 function getContrastColorStringRGB(i) end
 
---- Sauvegarde des données jbeam compilées dans un fichier texte (ouvre, écrit via saveCompiledJBeamRecursive, ferme). Sert au débogage.
----Source : lua/vehicle/ve_utils.lua:211
----@param data table Données à sauvegarder.
----@param filename string Chemin du fichier de sortie.
----@param lvl integer|nil Niveau initial (0 par défaut).
----@return boolean  false si le fichier n'a pas pu être ouvert (avertissement loggé), sinon true.
+--- Saves compiled jbeam data to a text file (opens, writes via saveCompiledJBeamRecursive, closes). Used for debugging.
+---Source: lua/vehicle/ve_utils.lua:211
+---@param data table Data to save.
+---@param filename string Output file path.
+---@param lvl integer|nil Initial level (0 by default).
+---@return boolean  false if the file could not be opened (warning logged), otherwise true.
 function saveCompiledJBeam(data, filename, lvl) end
 
---- Écrit récursivement une table de données au format texte type JSON dans un fichier ouvert, avec une indentation dépendant du niveau et un commentaire d'en-tête pour chaque table ayant un partPath.
----Source : lua/vehicle/ve_utils.lua:119
----@param f file Fichier ouvert en écriture (io.open).
----@param data table Données à écrire.
----@param level integer Niveau de récursion courant (0 au départ).
+--- Recursively writes a data table in JSON-like text format to an open file, with indentation depending on the level and a header comment for each table having a partPath.
+---Source: lua/vehicle/ve_utils.lua:119
+---@param f file File open for writing (io.open).
+---@param data table Data to write.
+---@param level integer Current recursion level (0 at the start).
 function saveCompiledJBeamRecursive(f, data, level) end
 
---- Convertit une table jbeam au format « première ligne = en-tête, lignes suivantes = valeurs » en liste de dictionnaires {colonne=valeur}. Une ligne qui est un dictionnaire seul définit des options communes appliquées aux lignes suivantes ; un dictionnaire placé en dernière colonne fusionne ses options dans la ligne. Si une ligne a un champ id, il est renommé name.
----Source : lua/vehicle/ve_utils.lua:37
----@param entry table Table jbeam brute (entry[1] = en-tête).
----@return table|boolean  Liste de lignes (table vide si entry est vide), ou false si l'en-tête/une ligne est invalide (un avertissement est loggé).
+--- Converts a jbeam table in the "first row = header, following rows = values" format into a list of dictionaries {column=value}. A row that is a lone dictionary defines common options applied to the following rows; a dictionary placed in the last column merges its options into the row. If a row has an id field, it is renamed name.
+---Source: lua/vehicle/ve_utils.lua:37
+---@param entry table Raw jbeam table (entry[1] = header).
+---@return table|boolean  List of rows (empty table if entry is empty), or false if the header/a row is invalid (a warning is logged).
 function tableFromHeaderTable(entry) end
 

@@ -1,12 +1,104 @@
 {
   "path": "lua/common/libs/luamqtt/mqtt/luasocket.lua",
-  "module": "Connecteur réseau par défaut de luamqtt, basé sur luasocket. Il manipule une table de connexion 'conn' (host, port, sock, timeout) créée par le client MQTT. Chaque fonction prend conn en premier argument ; les erreurs sont renvoyées sous la forme false, 'texte'.",
-  "notes": ["Utilise require('socket') (module luasocket par nom nu)."],
+  "module": "Default luamqtt network connector, based on luasocket. It manipulates a connection table 'conn' (host, port, sock, timeout) created by the MQTT client. Each function takes conn as its first argument; errors are returned as false, 'text'.",
+  "notes": [
+    "Uses require('socket') (the luasocket module by bare name)."
+  ],
   "functions": {
-    "connect": {"desc": "Ouvre une connexion TCP vers conn.host:conn.port via socket.connect et stocke le socket dans conn.sock.", "params": {"conn": {"type": "table", "desc": "Table de connexion (host, port)."}}, "returns": [{"type": "boolean", "desc": "true si connecté, false sinon."}, {"type": "string|nil", "desc": "Message d'erreur."}]},
-    "shutdown": {"desc": "Ferme la connexion par conn.sock:shutdown().", "params": {"conn": {"type": "table", "desc": "Connexion."}}},
-    "send": {"desc": "Envoie des données (conn.sock:send).", "params": {"conn": {"type": "table", "desc": "Connexion."}, "data": {"type": "string", "desc": "Données."}, "i": {"type": "integer|nil", "desc": "Début de sous-chaîne."}, "j": {"type": "integer|nil", "desc": "Fin de sous-chaîne."}}, "returns": [{"type": "integer|nil", "desc": "Index du dernier octet envoyé."}, {"type": "string|nil", "desc": "Erreur."}]},
-    "receive": {"desc": "Reçoit exactement size octets (conn.sock:receive).", "params": {"conn": {"type": "table", "desc": "Connexion."}, "size": {"type": "integer", "desc": "Octets à lire."}}, "returns": [{"type": "string|nil", "desc": "Données."}, {"type": "string|nil", "desc": "Erreur, ex. 'timeout' ou 'closed'."}]},
-    "settimeout": {"desc": "Mémorise conn.timeout et règle le délai total du socket (mode 't').", "params": {"conn": {"type": "table", "desc": "Connexion."}, "timeout": {"type": "number|nil", "desc": "Secondes."}}}
+    "connect": {
+      "desc": "Opens a TCP connection to conn.host:conn.port via socket.connect and stores the socket in conn.sock.",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "Connection table (host, port)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if connected, false otherwise."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error message."
+        }
+      ]
+    },
+    "shutdown": {
+      "desc": "Closes the connection with conn.sock:shutdown().",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "Connection."
+        }
+      }
+    },
+    "send": {
+      "desc": "Sends data (conn.sock:send).",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "Connection."
+        },
+        "data": {
+          "type": "string",
+          "desc": "Data."
+        },
+        "i": {
+          "type": "integer|nil",
+          "desc": "Substring start."
+        },
+        "j": {
+          "type": "integer|nil",
+          "desc": "Substring end."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Index of the last byte sent."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error."
+        }
+      ]
+    },
+    "receive": {
+      "desc": "Receives exactly size bytes (conn.sock:receive).",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "Connection."
+        },
+        "size": {
+          "type": "integer",
+          "desc": "Bytes to read."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Data."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error, e.g. 'timeout' or 'closed'."
+        }
+      ]
+    },
+    "settimeout": {
+      "desc": "Stores conn.timeout and sets the socket's total timeout (mode 't').",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "Connection."
+        },
+        "timeout": {
+          "type": "number|nil",
+          "desc": "Seconds."
+        }
+      }
+    }
   }
 }

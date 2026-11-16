@@ -1,29 +1,29 @@
 # `jbeam_scaling`
 
-*Fichier : `lua/common/jbeam/scaling.lua` · VM : Commun (GE + véhicule) · 52 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/scaling.lua` · VM: Common (GE + vehicle) · 52 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/scaling")`
+**Access:** `require("jbeam/scaling")`
 
-Étape de post-traitement jbeam qui applique les clés « scaleXxx » : pour toute clé numérique nommée scale suivie d'un nom (ex. scaleNodeWeight), multiplie la valeur de la clé voisine Xxx (ex. NodeWeight) par ce facteur, puis supprime la clé scale. Parcourt récursivement toutes les sections de type dictionnaire, sauf celles ignorées par jbeam/utils (ignoreSections).
+Jbeam post-processing step that applies the "scaleXxx" keys: for any numeric key named scale followed by a name (e.g. scaleNodeWeight), multiplies the value of the neighboring key Xxx (e.g. NodeWeight) by this factor, then removes the scale key. Recursively walks all dictionary-type sections, except those ignored by jbeam/utils (ignoreSections).
 
-## Remarques
+## Notes
 
-- Le test de la clé est strict : elle doit commencer par 'scale' (minuscules) et avoir au moins un caractère après ; 'scale' seul n'est pas traité.
-- Si la clé cible n'existe pas ou n'est pas un nombre, la clé scale est quand même supprimée sans effet.
+- The key test is strict: it must start with 'scale' (lowercase) and have at least one character after; 'scale' alone is not handled.
+- If the target key does not exist or is not a number, the scale key is still removed with no effect.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_scaling.process(vehicle)` | Applique les clés scaleXxx sur tout le véhicule (en place). *(interne)* | 12 |
+| `jbeam_scaling.process(vehicle)` | Applies the scaleXxx keys across the whole vehicle (in place). *(internal)* | 12 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_scaling.process(vehicle)`
 
-Applique les clés scaleXxx sur tout le véhicule (en place).
+Applies the scaleXxx keys across the whole vehicle (in place).
 
-- `vehicle` (*table*) : Données jbeam du véhicule.
+- `vehicle` (*table*) : Vehicle jbeam data.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/scaling.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/scaling.lua`.*

@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gameplay_crawl_stopCrawl`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/stopCrawl.lua` · VM : Game Engine (GE) · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/stopCrawl.lua` · VM: Game Engine (GE) · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/crawl/stopCrawl")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/crawl/stopCrawl")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Stop Crawl » (catégorie once_instant, crawl). Arrête le crawl actif. Sorties : success, failed (aucun crawl actif) et isActive (toujours faux).
+Flowgraph node "Stop Crawl" (category once_instant, crawl). Stops the active crawl. Outputs: success, failed (no active crawl) and isActive (always false).
 
-**Dépendances (chargées avant) :** `gameplay_crawl_flowgraphBridge`
+**Dependencies (loaded first):** `gameplay_crawl_flowgraphBridge`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr)` | Charge le bridge du crawl. | 23 |
-| `C:work()` | Appelle bridge.stopCrawl() et renseigne success/failed ; isActive = false. | 27 |
+| `C:init(mgr)` | Loads the crawl bridge. | 23 |
+| `C:work()` | Calls bridge.stopCrawl() and fills success/failed; isActive = false. | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/stopCrawl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/stopCrawl.lua`.*

@@ -1,0 +1,21 @@
+{
+  "path": "lua/vehicle/electricsCustomValueParser.lua",
+  "module": "Compile et exécute les valeurs électriques personnalisées déclarées dans le jbeam (electrics.customValues : champs electricsName, electricsFunction, electricsDefault). Chaque expression est évaluée chaque frame dans un environnement bac à sable (fonctions math, round, clamp, smoothstep, case, pwm…, et une copie de `electrics`) puis le résultat est recopié dans electrics.values. Utilisé uniquement par electrics.lua.",
+  "usage": "-- jbeam (section electrics.customValues)\n-- [\"electricsName\", \"electricsFunction\", \"electricsDefault\"],\n-- [\"myBlink\", \"pwm(1, 2, 0.5)\", 0],\n-- [\"throttleHalf\", \"clamp(electrics.throttle * 0.5, 0, 1)\", 0]",
+  "notes": [
+    "Une expression est de la forme `electrics.<nom> = <expression>` : les affectations (signe = isolé) sont refusées dans l'expression elle-même.",
+    "Variables disponibles dans l'expression : electrics (copie des valeurs courantes), dt, fonctions de math.*, dump, dumpz, round, square, clamp, smoothstep, smootherstep, smoothmin, sign, case, pwm, logValue.",
+    "case(selector, ...) : avec un booléen, agit comme un ternaire (true -> 1er argument, false -> 2e) ; avec un nombre n, renvoie le (n)ème argument (indexé depuis 1 après floor, avec n=0 renvoyant le dernier faute d'index 0), ou le dernier argument si hors plage.",
+    "pwm(input, frequency, dutyCycle, timeOffset) : renvoie input quand une sinusoïde (fréquence en Hz) normalisée dépasse 1 - dutyCycle, sinon 0. Le temps pwm repart à 0 toutes les 3600 s.",
+    "logValue(value, label) affiche la valeur et la renvoie (aide au débogage).",
+    "Bug/anomalie : `pwm` est déclarée comme fonction globale (function pwm sans local), elle fuit dans l'environnement global du VM véhicule.",
+    "Si la compilation du bloc complet échoue, updateCustomElectricsFunction reste nil et M.updateGFX lèvera une erreur à chaque frame (non protégé).",
+    "L'expression 'electricsFunction' (valeur littérale en-tête de table jbeam mal fusionné) est ignorée volontairement."
+  ],
+  "fields": {},
+  "functions": {
+    "compileCustomValueUpdates": {"desc": "Construit l'environnement bac à sable, analyse chaque valeur custom, initialise electrics.values avec electricsDefault et compile une fonction unique exécutant toutes les affectations.", "params": {"customValueData": {"type": "table<integer, table>", "desc": "Liste d'entrées {electricsName, electricsFunction?, electricsDefault?}."}}, "returns": [{"type": "nil", "desc": "Rien (nil aussi si la compilation échoue, erreur journalisée)."}], "internal": true},
+    "resetCustomValues": {"desc": "Remet dans electrics.values les valeurs electricsDefault de toutes les valeurs custom (appelé au reset).", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Copie electrics.values dans l'environnement, exécute la fonction compilée puis recopie dans electrics.values les clés personnalisées. Appelé par electrics.updateGFXSecondStep.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true}
+  }
+}

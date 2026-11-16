@@ -1,148 +1,148 @@
 # `mathlib_test`
 
-*Fichier : `lua/common/mathlib.test.lua` · VM : Commun (GE + véhicule) · 750 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/mathlib.test.lua` · VM: Common (GE + vehicle) · 750 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("mathlib.test")`
+**Access:** `require("mathlib.test")`
 
-Tests unitaires de mathlib (vec3, quat, helpers scalaires, courbes, géométrie, StackVec3/push3), à exécuter avec testFramework/TestManager. Contient aussi des tests de performance en boucle et des tests « sans garbage » qui vérifient que les opérations en place n'allouent pas de mémoire. Lancement : `require('testFramework/TestManager'):runTestFiles('mathlib')` dans la console GE. Utile à un moddeur comme catalogue d'exemples d'utilisation des fonctions mathlib.
+Unit tests of mathlib (vec3, quat, scalar helpers, curves, geometry, StackVec3/push3), to be run with testFramework/TestManager. Also contains loop performance tests and "no garbage" tests that verify that in-place operations allocate no memory. Launch: `require('testFramework/TestManager'):runTestFiles('mathlib')` in the GE console. Useful to a modder as a catalog of usage examples of the mathlib functions.
 
-## Exemple
+## Example
 
 ```lua
 require('testFramework/TestManager'):runTestFiles('mathlib')
 ```
 
-## Remarques
+## Notes
 
-- Chaque fonction prend un contexte `ctx` fourni par TestManager et n'est pas destinée à être appelée directement.
-- Constante EPS = 1e-6 pour les comparaisons de flottants ; assertVec3 compare x, y, z et assertFinite rejette NaN et ±inf.
-- Les tests « Perf » font 10000 itérations ; les tests « NoGarbage » imposent un budget d'allocation (allowGarbage 0 à 1024 octets, checkGarbage(0)).
+- Each function takes a context `ctx` provided by TestManager and is not meant to be called directly.
+- Constant EPS = 1e-6 for float comparisons; assertVec3 compares x, y, z and assertFinite rejects NaN and ±inf.
+- The "Perf" tests do 10000 iterations; the "NoGarbage" tests impose an allocation budget (allowGarbage 0 to 1024 bytes, checkGarbage(0)).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mathlib_test.testMathlibCurves(ctx)` | Teste les helpers d'interpolation de courbes (familles spline, Catmull-Rom, Bézier). *(interne)* | 455 |
-| `mathlib_test.testMathlibGeneric(ctx)` | Teste les helpers scalaires génériques : signe, clamp, interpolation, médianes, bornes. *(interne)* | 399 |
-| `mathlib_test.testMathlibGeom(ctx)` | Teste les familles de helpers de chevauchement, d'inclusion et d'intersection géométriques. *(interne)* | 472 |
-| `mathlib_test.testMathlibPush3(ctx)` | Teste StackVec3 (push3) : parité avec les opérations vec3 de base. *(interne)* | 271 |
-| `mathlib_test.testMathlibQuat(ctx)` | Teste la construction de quaternions, l'algèbre, l'interpolation et les conversions. *(interne)* | 298 |
-| `mathlib_test.testMathlibSpecialValuesAndOddities(ctx)` | Teste le comportement sur NaN, infini et division par zéro dans les helpers mathématiques. *(interne)* | 505 |
-| `mathlib_test.testMathlibVec3Core(ctx)` | Teste les constructeurs de vec3, l'arithmétique de base, la normalisation et les helpers. *(interne)* | 33 |
-| `mathlib_test.testMathlibVec3Geom(ctx)` | Teste les méthodes géométriques de vec3 : distances, coordonnées barycentriques, projection, base orthonormée, mutateurs. *(interne)* | 122 |
-| `mathlib_test.testMathlibVec3NoiseAndHelpers(ctx)` | Teste les générateurs de bruit/aléatoire de vec3 et les helpers d'axes et de lignes. *(interne)* | 230 |
-| `mathlib_test.testNoGarbageQuatInPlace(ctx)` | Vérifie que les opérations de quaternion en place (setMul2, setInvMul2, setMulInv2, normalize) n'allouent rien. *(interne)* | 712 |
-| `mathlib_test.testNoGarbageScalarMathHelpers(ctx)` | Vérifie que la boucle de helpers scalaires (sign, clamp, lerp, smoothstep, biasFun…) n'alloue rien (budget 512 octets, checkGarbage(0)). *(interne)* | 662 |
-| `mathlib_test.testNoGarbageScalarSingleShot(ctx)` | Vérifie que clamp, lerp, inverseLerp et smoothstep appelés une seule fois n'allouent aucune mémoire (budget 0). *(interne)* | 734 |
-| `mathlib_test.testNoGarbageVec3InPlace(ctx)` | Vérifie que les opérations vec3 en place (setAdd2, setSub, setScaled, setComponentMul, setLerp, setCross) n'allouent rien. *(interne)* | 687 |
-| `mathlib_test.testPerfGeometryBatch(ctx)` | Benchmark : requêtes géométriques représentatives en boucle serrée. *(interne)* | 636 |
-| `mathlib_test.testPerfQuatBatch(ctx)` | Benchmark : opérations de quaternions sur 10000 itérations. *(interne)* | 591 |
-| `mathlib_test.testPerfScalarBatch(ctx)` | Benchmark : helpers mathématiques scalaires en boucle serrée. *(interne)* | 617 |
-| `mathlib_test.testPerfVec3Batch(ctx)` | Benchmark : arithmétique vec3 (dot, length, cross, normalized, somme) sur 10000 itérations. *(interne)* | 567 |
+| `mathlib_test.testMathlibCurves(ctx)` | Tests the curve interpolation helpers (spline families, Catmull-Rom, Bézier). *(internal)* | 455 |
+| `mathlib_test.testMathlibGeneric(ctx)` | Tests the generic scalar helpers: sign, clamp, interpolation, medians, bounds. *(internal)* | 399 |
+| `mathlib_test.testMathlibGeom(ctx)` | Tests the families of geometric overlap, containment and intersection helpers. *(internal)* | 472 |
+| `mathlib_test.testMathlibPush3(ctx)` | Tests StackVec3 (push3): parity with the basic vec3 operations. *(internal)* | 271 |
+| `mathlib_test.testMathlibQuat(ctx)` | Tests quaternion construction, algebra, interpolation and conversions. *(internal)* | 298 |
+| `mathlib_test.testMathlibSpecialValuesAndOddities(ctx)` | Tests behavior on NaN, infinity and division by zero in the math helpers. *(internal)* | 505 |
+| `mathlib_test.testMathlibVec3Core(ctx)` | Tests the vec3 constructors, basic arithmetic, normalization and the helpers. *(internal)* | 33 |
+| `mathlib_test.testMathlibVec3Geom(ctx)` | Tests the geometric methods of vec3: distances, barycentric coordinates, projection, orthonormal basis, mutators. *(internal)* | 122 |
+| `mathlib_test.testMathlibVec3NoiseAndHelpers(ctx)` | Tests the noise/random generators of vec3 and the axis and line helpers. *(internal)* | 230 |
+| `mathlib_test.testNoGarbageQuatInPlace(ctx)` | Verifies that the in-place quaternion operations (setMul2, setInvMul2, setMulInv2, normalize) allocate nothing. *(internal)* | 712 |
+| `mathlib_test.testNoGarbageScalarMathHelpers(ctx)` | Verifies that the scalar helpers loop (sign, clamp, lerp, smoothstep, biasFun...) allocates nothing (budget 512 bytes, checkGarbage(0)). *(internal)* | 662 |
+| `mathlib_test.testNoGarbageScalarSingleShot(ctx)` | Verifies that clamp, lerp, inverseLerp and smoothstep called once allocate no memory (budget 0). *(internal)* | 734 |
+| `mathlib_test.testNoGarbageVec3InPlace(ctx)` | Verifies that the in-place vec3 operations (setAdd2, setSub, setScaled, setComponentMul, setLerp, setCross) allocate nothing. *(internal)* | 687 |
+| `mathlib_test.testPerfGeometryBatch(ctx)` | Benchmark: representative geometric queries in a tight loop. *(internal)* | 636 |
+| `mathlib_test.testPerfQuatBatch(ctx)` | Benchmark: quaternion operations over 10000 iterations. *(internal)* | 591 |
+| `mathlib_test.testPerfScalarBatch(ctx)` | Benchmark: scalar math helpers in a tight loop. *(internal)* | 617 |
+| `mathlib_test.testPerfVec3Batch(ctx)` | Benchmark: vec3 arithmetic (dot, length, cross, normalized, sum) over 10000 iterations. *(internal)* | 567 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mathlib_test.testMathlibCurves(ctx)`
 
-Teste les helpers d'interpolation de courbes (familles spline, Catmull-Rom, Bézier).
+Tests the curve interpolation helpers (spline families, Catmull-Rom, Bézier).
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testMathlibGeneric(ctx)`
 
-Teste les helpers scalaires génériques : signe, clamp, interpolation, médianes, bornes.
+Tests the generic scalar helpers: sign, clamp, interpolation, medians, bounds.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testMathlibGeom(ctx)`
 
-Teste les familles de helpers de chevauchement, d'inclusion et d'intersection géométriques.
+Tests the families of geometric overlap, containment and intersection helpers.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testMathlibPush3(ctx)`
 
-Teste StackVec3 (push3) : parité avec les opérations vec3 de base.
+Tests StackVec3 (push3): parity with the basic vec3 operations.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testMathlibQuat(ctx)`
 
-Teste la construction de quaternions, l'algèbre, l'interpolation et les conversions.
+Tests quaternion construction, algebra, interpolation and conversions.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testMathlibSpecialValuesAndOddities(ctx)`
 
-Teste le comportement sur NaN, infini et division par zéro dans les helpers mathématiques.
+Tests behavior on NaN, infinity and division by zero in the math helpers.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testMathlibVec3Core(ctx)`
 
-Teste les constructeurs de vec3, l'arithmétique de base, la normalisation et les helpers.
+Tests the vec3 constructors, basic arithmetic, normalization and the helpers.
 
-- `ctx` (*table*) : Contexte de test (TestManager).
+- `ctx` (*table*) : Test context (TestManager).
 
 #### `mathlib_test.testMathlibVec3Geom(ctx)`
 
-Teste les méthodes géométriques de vec3 : distances, coordonnées barycentriques, projection, base orthonormée, mutateurs.
+Tests the geometric methods of vec3: distances, barycentric coordinates, projection, orthonormal basis, mutators.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testMathlibVec3NoiseAndHelpers(ctx)`
 
-Teste les générateurs de bruit/aléatoire de vec3 et les helpers d'axes et de lignes.
+Tests the noise/random generators of vec3 and the axis and line helpers.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testNoGarbageQuatInPlace(ctx)`
 
-Vérifie que les opérations de quaternion en place (setMul2, setInvMul2, setMulInv2, normalize) n'allouent rien.
+Verifies that the in-place quaternion operations (setMul2, setInvMul2, setMulInv2, normalize) allocate nothing.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testNoGarbageScalarMathHelpers(ctx)`
 
-Vérifie que la boucle de helpers scalaires (sign, clamp, lerp, smoothstep, biasFun…) n'alloue rien (budget 512 octets, checkGarbage(0)).
+Verifies that the scalar helpers loop (sign, clamp, lerp, smoothstep, biasFun...) allocates nothing (budget 512 bytes, checkGarbage(0)).
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testNoGarbageScalarSingleShot(ctx)`
 
-Vérifie que clamp, lerp, inverseLerp et smoothstep appelés une seule fois n'allouent aucune mémoire (budget 0).
+Verifies that clamp, lerp, inverseLerp and smoothstep called once allocate no memory (budget 0).
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testNoGarbageVec3InPlace(ctx)`
 
-Vérifie que les opérations vec3 en place (setAdd2, setSub, setScaled, setComponentMul, setLerp, setCross) n'allouent rien.
+Verifies that the in-place vec3 operations (setAdd2, setSub, setScaled, setComponentMul, setLerp, setCross) allocate nothing.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testPerfGeometryBatch(ctx)`
 
-Benchmark : requêtes géométriques représentatives en boucle serrée.
+Benchmark: representative geometric queries in a tight loop.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testPerfQuatBatch(ctx)`
 
-Benchmark : opérations de quaternions sur 10000 itérations.
+Benchmark: quaternion operations over 10000 iterations.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testPerfScalarBatch(ctx)`
 
-Benchmark : helpers mathématiques scalaires en boucle serrée.
+Benchmark: scalar math helpers in a tight loop.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `mathlib_test.testPerfVec3Batch(ctx)`
 
-Benchmark : arithmétique vec3 (dot, length, cross, normalized, somme) sur 10000 itérations.
+Benchmark: vec3 arithmetic (dot, length, cross, normalized, sum) over 10000 iterations.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/mathlib.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/mathlib.test.lua`.*

@@ -1,52 +1,77 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/panCamera.lua",
-  "module": "Caméra « pan » partagée par les outils de splines de l'éditeur. Elle prend la main sur la caméra libre de l'éditeur (via toolCamera), passe en vue de dessus et permet de se déplacer au clic droit et de zoomer à la molette. Un outil hôte l'enregistre avec configure, l'appelle chaque frame avec drive, et peut lui faire cadrer la sélection courante.",
-  "usage": "local pan = extensions.editor_toolUtilities_panCamera\npan.configure({focusProvider = function() return selectedPoints end})\npan.toggle()\n-- à chaque frame de l'outil :\npan.drive(isDraggingNode)",
+  "module": "\"Pan\" camera shared by the editor's spline tools. It takes over the editor's free camera (via toolCamera), switches to a top-down view and allows moving with right-click and zooming with the mouse wheel. A host tool registers it with configure, calls it every frame with drive, and can have it frame the current selection.",
+  "usage": "local pan = extensions.editor_toolUtilities_panCamera\npan.configure({focusProvider = function() return selectedPoints end})\npan.toggle()\n-- every frame of the tool:\npan.drive(isDraggingNode)",
   "notes": [
-    "L'état (on, focusProvider) est local au module : une seule caméra pan à la fois.",
-    "gotoPoints renvoie false si ni la caméra pan ni toolCamera ne sont actives : l'appelant doit alors faire son propre saut de caméra libre.",
-    "Le cadrage passe par util.splineFocus puis toolCamera.flyPan ; l'altitude est relative au terrain."
+    "The state (on, focusProvider) is local to the module: only one pan camera at a time.",
+    "gotoPoints returns false if neither the pan camera nor toolCamera is active: the caller must then do its own free-camera jump.",
+    "Framing goes through util.splineFocus then toolCamera.flyPan; the altitude is relative to the terrain."
   ],
   "functions": {
     "configure": {
-      "desc": "Enregistre un callback fournissant les points de la sélection courante, utilisé pour cadrer à l'ouverture de la caméra.",
-      "params": {"opts": {"type": "table|nil", "desc": "Table avec le champ focusProvider : fonction sans argument renvoyant une liste de points {x,y,z} ou nil."}},
+      "desc": "Registers a callback supplying the points of the current selection, used to frame them when the camera opens.",
+      "params": {
+        "opts": {
+          "type": "table|nil",
+          "desc": "Table with the focusProvider field: function with no argument returning a list of {x,y,z} points or nil."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "isOn": {
-      "desc": "Indique si la caméra pan est active.",
+      "desc": "Tells whether the pan camera is active.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si la caméra pan pilote la vue."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the pan camera drives the view."
+        }
+      ],
       "internal": false
     },
     "open": {
-      "desc": "Active la caméra pan (toolCamera.takeOver) et passe en vue de dessus : cadre la sélection fournie par focusProvider s'il y en a une, sinon bascule en vue de dessus à la position et à la hauteur actuelles de la caméra.",
+      "desc": "Activates the pan camera (toolCamera.takeOver) and switches to top-down view: frames the selection supplied by focusProvider if there is one, otherwise switches to top-down view at the camera's current position and height.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "close": {
-      "desc": "Désactive la caméra pan et rend la caméra libre à l'éditeur (toolCamera.handBack).",
+      "desc": "Deactivates the pan camera and hands the free camera back to the editor (toolCamera.handBack).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "toggle": {
-      "desc": "Bascule : ferme la caméra pan si elle est active, sinon l'ouvre.",
+      "desc": "Toggle: closes the pan camera if it is active, otherwise opens it.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "gotoPoints": {
-      "desc": "Routage du « aller à » : si la caméra pan (ou toolCamera) est active, la fait voler vers les points donnés et renvoie true ; sinon renvoie false et l'appelant fait son saut normal.",
-      "params": {"points": {"type": "table", "desc": "Liste de points {x,y,z} à cadrer."}},
-      "returns": [{"type": "boolean", "desc": "true si la demande a été traitée par la caméra pan."}],
+      "desc": "\"Go to\" routing: if the pan camera (or toolCamera) is active, makes it fly to the given points and returns true; otherwise returns false and the caller does its normal jump.",
+      "params": {
+        "points": {
+          "type": "table",
+          "desc": "List of {x,y,z} points to frame."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the request was handled by the pan camera."
+        }
+      ],
       "internal": false
     },
     "drive": {
-      "desc": "À appeler à chaque frame : applique le déplacement (glisser clic droit) et le zoom (molette) via toolCamera.drive.",
-      "params": {"blocked": {"type": "boolean|nil", "desc": "true pour suspendre le mouvement pendant les interactions modales de l'outil (dessin de polygone, glissement de nœud, placement…)."}},
+      "desc": "To be called every frame: applies movement (right-click drag) and zoom (mouse wheel) via toolCamera.drive.",
+      "params": {
+        "blocked": {
+          "type": "boolean|nil",
+          "desc": "true to suspend movement during the tool's modal interactions (polygon drawing, node dragging, placement...)."
+        }
+      },
       "returns": [],
       "internal": false
     }

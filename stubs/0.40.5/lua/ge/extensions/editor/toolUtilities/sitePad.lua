@@ -2,91 +2,91 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/sitePad.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Une plate-forme de terrain plane (« pad ») sur laquelle un outil de site peut dessiner, et le sol propre du site taillé dedans. enter aplatit un carré de 300 m à 50 m d'altitude (niveau de référence du site) en mémorisant le sol réel ; leave le remet tel qu'il était ; carve y taille le plan de sol du site (terrasse, rampe, marches, sous-sol) pour qu'on le voie en dessinant ; suspend/resume l'enlèvent le temps d'une sauvegarde de niveau. Un seul pad à la fois (un seul outil tient l'écran).
---- Accès : extension `editor_toolUtilities_sitePad` : `extensions.load("editor_toolUtilities_sitePad")`, puis la globale `editor_toolUtilities_sitePad`
+--- A flat terrain platform ("pad") on which a site tool can draw, and the site's own ground carved into it. enter flattens a 300 m square at 50 m altitude (the site's reference level) while remembering the real ground; leave puts it back as it was; carve carves the site's ground plan into it (terrace, ramp, steps, basement) so that it can be seen while drawing; suspend/resume remove it for the duration of a level save. Only one pad at a time (only one tool holds the screen).
+--- Access: extension `editor_toolUtilities_sitePad`: `extensions.load("editor_toolUtilities_sitePad")`, then the global `editor_toolUtilities_sitePad`
 ---@class editor_toolUtilities_sitePad
 editor_toolUtilities_sitePad = {}
 
---- Taille le plan de sol du site dans le pad, pour qu'une place en contrebas, une terrasse ou un escalier soient VISIBLES pendant le dessin. features est la même liste que celle cuite pour le placeur. La dernière coupe est d'abord annulée (une coupe se fond dans le sol autour, et se fondre dans un sol déjà abaissé grignoterait le pad à chaque fois) ; sans features, c'est tout ce que fait l'appel.
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:150
----@param features table|nil Liste de features { quad } ou { rings, z } avec mode et band.
----@param prio number|nil Sur sol réel, bande de priorité du site ; ce qui l'emporte à proximité entre dans la même passe à sa propre priorité.
----@return boolean  false s'il n'y a pas de pad.
+--- Carves the site's ground plan into the pad, so that a sunken square, a terrace or a staircase are VISIBLE during drawing. features is the same list as the one baked for the placer. The last cut is first undone (a cut blends into the ground around it, and blending into an already lowered ground would nibble the pad each time); without features, that is all the call does.
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:150
+---@param features table|nil List of features { quad } or { rings, z } with mode and band.
+---@param prio number|nil On real ground, the site's priority band; what takes precedence nearby enters the same pass at its own priority.
+---@return boolean  false if there is no pad.
 function editor_toolUtilities_sitePad.carve(features, prio) end
 
---- Hauteur d'origine d'une cellule de la grille de hauteurs du pad (avant la pose), dans les unités de la grille (depuis la base du bloc) ; nil hors du pad.
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:206
----@param gx integer Colonne de la grille.
----@param gy integer Ligne de la grille.
----@return number|nil  Hauteur en repère de grille.
+--- Original height of a cell of the pad's height grid (before placement), in grid units (from the base of the block); nil outside the pad.
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:206
+---@param gx integer Grid column.
+---@param gy integer Grid row.
+---@return number|nil  Height in grid frame.
 function editor_toolUtilities_sitePad.cellZ(gx, gy) end
 
---- Où un outil doit centrer son pad d'après les bornes de ce qu'il tient déjà (centre de la boîte englobante des points). Sans points, la visée de la caméra (util.lookAtGround), là où les outils posent une forme de départ.
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:126
----@param ring table|nil Liste de points {x,y}.
----@return number  x du centre.
----@return number  y du centre.
+--- Where a tool should center its pad according to the bounds of what it already holds (center of the points' bounding box). Without points, the camera's aim (util.lookAtGround), where the tools place a starting shape.
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:126
+---@param ring table|nil List of {x,y} points.
+---@return number  x of the center.
+---@return number  y of the center.
 function editor_toolUtilities_sitePad.centreFor(ring) end
 
---- De combien le sol du pad est sous le niveau de référence ; nil sans pad.
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:229
----@return number|nil  Abaissement en mètres.
+--- How far the pad's ground is below the reference level; nil without a pad.
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:229
+---@return number|nil  Lowering in meters.
 function editor_toolUtilities_sitePad.drop() end
 
---- Aplatit le carré centré sur (cx, cy) en mémorisant ce qui s'y trouvait, pour que leave le remette. Un pad déjà posé est d'abord remis (deux pads qui se chevauchent perdraient le sol réel). Appelle d'abord beforeEnterFn s'il n'y avait pas de pad.
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:89
----@param cx number x du centre.
----@param cy number y du centre.
----@param drop number|nil Abaisse le sol de cette distance SOUS le niveau de référence (un outil dont le site a du sol propre dessous, sous-sol ou cour anglaise, peut ainsi voir dedans). Le site reste à level() : le niveau de référence et la surface taillée se séparent.
----@param real boolean|nil Laisse le sol tel quel et ne fait que le mémoriser : un site dessiné autour de sa parcelle est conçu sur le sol où il se tiendra. Un tel pad n'a pas de niveau de référence ; level n'est pas pour lui.
----@return boolean  true si le pad est posé.
+--- Flattens the square centered on (cx, cy) while remembering what was there, so that leave puts it back. A pad already in place is first put back (two overlapping pads would lose the real ground). Calls beforeEnterFn first if there was no pad.
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:89
+---@param cx number x of the center.
+---@param cy number y of the center.
+---@param drop number|nil Lowers the ground by this distance BELOW the reference level (a tool whose site has its own ground below, basement or sunken courtyard, can thus see inside). The site stays at level(): the reference level and the carved surface separate.
+---@param real boolean|nil Leaves the ground as is and only remembers it: a site drawn around its plot is designed on the ground where it will stand. Such a pad has no reference level; level is not for it.
+---@return boolean  true if the pad is placed.
 function editor_toolUtilities_sitePad.enter(cx, cy, drop, real) end
 
---- Le sol en (x, y) tel qu'il était avant la pose du pad ou toute coupe ; nil hors du pad. Ce dont un niveau se mesure : mesuré sur la coupe, chaque coupe déplacerait le niveau de la suivante.
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:219
----@param x number x monde.
----@param y number y monde.
----@return number|nil  Hauteur z monde.
+--- The ground at (x, y) as it was before the pad was placed or any cut; nil outside the pad. What a level is measured from: measured on the cut, each cut would shift the level of the next.
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:219
+---@param x number World x.
+---@param y number World y.
+---@return number|nil  World z height.
 function editor_toolUtilities_sitePad.groundZ(x, y) end
 
---- Vrai si un pad est posé.
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:203
----@return boolean  true si pad posé.
+--- True if a pad is placed.
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:203
+---@return boolean  true if pad placed.
 function editor_toolUtilities_sitePad.isDown() end
 
---- Remet le sol comme il était. Seulement les hauteurs : ce que l'outil a construit sur le pad part par son propre démontage. Tout ce qui a été taillé DANS le pad part avec lui.
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:61
----@return boolean  false s'il n'y avait pas de pad.
+--- Puts the ground back as it was. Only the heights: what the tool built on the pad goes away through its own teardown. Everything carved INTO the pad goes with it.
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:61
+---@return boolean  false if there was no pad.
 function editor_toolUtilities_sitePad.leave() end
 
---- Le niveau monde (50 m) contre lequel un site posé sur le pad est TRACÉ. À utiliser pour tout ce qui se tient sur la planche à dessin à la place d'un échantillonnage du sol, qui n'est plus plat une fois que le site y a taillé ses formes.
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:239
----@return number  Niveau de référence (PAD_Z = 50).
+--- The world level (50 m) against which a site placed on the pad is DRAWN. To be used for everything that stands on the drawing board instead of sampling the ground, which is no longer flat once the site has carved its shapes into it.
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:239
+---@return number  Reference level (PAD_Z = 50).
 function editor_toolUtilities_sitePad.level() end
 
---- Recoupe le pad à un autre abaissement, là où il se trouve. Sa coupe tombe avec lui : elle avait été taillée dans l'ancien sol. Renvoie false sans pad ou si l'abaissement est inchangé.
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:232
----@param d number Nouvel abaissement en mètres.
----@return boolean  true si le pad a été refait.
+--- Recuts the pad at a different lowering, where it stands. Its cut falls with it: it had been carved into the old ground. Returns false without a pad or if the lowering is unchanged.
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:232
+---@param d number New lowering in meters.
+---@return boolean  true if the pad was redone.
 function editor_toolUtilities_sitePad.redrop(d) end
 
---- Remet le pad en place après suspend, avec la même taille de coupe.
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:195
----@return boolean  true si le pad et sa coupe sont rétablis.
+--- Puts the pad back in place after suspend, with the same cut size.
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:195
+---@return boolean  true if the pad and its cut are restored.
 function editor_toolUtilities_sitePad.resume() end
 
---- Enregistre qui rend une dernière fois le sol réel avant qu'un pad ne le mémorise : fn() s'exécute à l'entrée d'un éditeur (seulement s'il n'y avait pas déjà de pad).
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:215
----@param fn function fn() sans argument.
+--- Registers who restores the real ground one last time before a pad remembers it: fn() runs on entering an editor (only if there was no pad already).
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:215
+---@param fn function fn() with no argument.
 function editor_toolUtilities_sitePad.setBeforeEnter(fn) end
 
---- Enregistre qui répond à ce qui l'emporte sur un site en sol réel : fn(x0, y0, x1, y1) renvoie ces features, chacune avec sa bande.
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:212
----@param fn function fn(x0, y0, x1, y1) -> liste de features.
+--- Registers who answers for what takes precedence over a site on real ground: fn(x0, y0, x1, y1) returns those features, each with its band.
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:212
+---@param fn function fn(x0, y0, x1, y1) -> list of features.
 function editor_toolUtilities_sitePad.setHeld(fn) end
 
---- Enlève le pad du sol le temps d'une sauvegarde de niveau, en retenant sa position et ce qui y était taillé. Une sauvegarde écrit le terrain tel qu'elle le trouve : une planche à dessin restée là serait écrite comme vrai sol.
----Source : lua/ge/extensions/editor/toolUtilities/sitePad.lua:186
----@return boolean  false s'il n'y avait pas de pad.
+--- Removes the pad from the ground for the duration of a level save, retaining its position and what was carved into it. A save writes the terrain as it finds it: a drawing board left there would be written as real ground.
+---Source: lua/ge/extensions/editor/toolUtilities/sitePad.lua:186
+---@return boolean  false if there was no pad.
 function editor_toolUtilities_sitePad.suspend() end
 

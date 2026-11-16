@@ -1,73 +1,73 @@
 # `controller_jato`
 
-*Fichier : `lua/vehicle/controller/jato.lua` · VM : Véhicule · 181 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/jato.lua` · VM: Vehicle · 181 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `jato` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `jato` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de propulseurs JATO (fusées d'appoint, type "auxiliary", defaultOrder 1100). Quand electrics.values.jatoInput > 0, ou quand l'accélérateur est à fond en mode manette/direct et en avant, il consomme du carburant (fuel), émet des particules aux nœuds des tuyères et joue un son de boucle. Écrit electrics.values.jato (0..1) et jatofuel (carburant restant, ratio 0..1). Un bouton « JATO » est ajouté au panneau de contrôle simplifié du groupe motopropulseur.
+Auxiliary controller for JATO thrusters (booster rockets, type "auxiliary", defaultOrder 1100). When electrics.values.jatoInput > 0, or when the throttle is fully pressed in gamepad/direct mode and moving forward, it consumes fuel, emits particles at the thruster nodes and plays a loop sound. Writes electrics.values.jato (0..1) and jatofuel (remaining fuel, ratio 0..1). A "JATO" button is added to the powertrain simplified control panel.
 
-## Remarques
+## Notes
 
-- Clés jbeam (défaut) : fuel (20, unités de temps de poussée à pleine consommation), thrusterNodes_nodes (liste plate de paires de nœuds : nœud d'émission, nœud de direction ; le nombre d'éléments doit être pair sinon erreur journalisée), thrusterLoopName ("event:>Vehicle>Thrusters").
-- La poussée elle-même (force) n'est pas appliquée par ce fichier : il ne produit que fumée, son et valeurs electrics (jato, jatofuel) ; la force doit venir d'autres éléments jbeam qui lisent electrics.values.jato.
-- Fonction cachée : le code Konami « uuddlrlrba » saisi enregistré par extensions.inputAnalyzer.registerInputString bascule fuelCoef entre 1 et 0 (carburant infini quand 0) et affiche "When in doubt, JATO".
-- Le bouton de l'interface met electrics.values.jatoInput à 1 - jatoInput. Le champ M.fuelCoef (1 par défaut) multiplie la consommation.
+- jbeam keys (default): fuel (20, units of thrust time at full consumption), thrusterNodes_nodes (flat list of node pairs: emission node, direction node; the number of elements must be even otherwise an error is logged), thrusterLoopName ("event:>Vehicle>Thrusters").
+- The thrust itself (force) is not applied by this file: it only produces smoke, sound and electrics values (jato, jatofuel); the force must come from other jbeam elements that read electrics.values.jato.
+- Hidden function: the Konami code "uuddlrlrba" entered, registered by extensions.inputAnalyzer.registerInputString, toggles fuelCoef between 1 and 0 (infinite fuel when 0) and displays "When in doubt, JATO".
+- The interface button sets electrics.values.jatoInput to 1 - jatoInput. The field M.fuelCoef (1 by default) multiplies the consumption.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_jato.getState()` | Renvoie fuel et fuelCoef pour la sauvegarde. | 148 |
-| `controller_jato.init(jbeamData)` | Lit fuel et les nœuds de tuyères, initialise electrics.values.jatoInput/jato et enregistre le code secret. *(interne)* | 114 |
-| `controller_jato.inputStringCallback(string)` | Appelé par inputAnalyzer quand le code secret est saisi : alterne fuelCoef entre 1 et 0. *(interne)* | 34 |
-| `controller_jato.reset()` | Remet le carburant au niveau initial, arrête les sons et remet jatoInput/jato à 0. *(interne)* | 100 |
-| `controller_jato.setState(data)` | Restaure fuel (borné 0..fuel initial) et fuelCoef (0..1). | 154 |
-| `controller_jato.updateGFX(dt)` | Consomme le carburant, émet particules et sons, écrit electrics.values.jato et jatofuel. *(interne)* | 45 |
-| `controller_jato.updateSimpleControlButtons()` | (Re)crée le bouton « JATO » du panneau simplifié avec le ratio de carburant restant. | 41 |
+| `controller_jato.getState()` | Returns fuel and fuelCoef for saving. | 148 |
+| `controller_jato.init(jbeamData)` | Reads fuel and the thruster nodes, initializes electrics.values.jatoInput/jato and registers the secret code. *(internal)* | 114 |
+| `controller_jato.inputStringCallback(string)` | Called by inputAnalyzer when the secret code is entered: toggles fuelCoef between 1 and 0. *(internal)* | 34 |
+| `controller_jato.reset()` | Resets the fuel to the initial level, stops the sounds and sets jatoInput/jato back to 0. *(internal)* | 100 |
+| `controller_jato.setState(data)` | Restores fuel (bounded 0..initial fuel) and fuelCoef (0..1). | 154 |
+| `controller_jato.updateGFX(dt)` | Consumes fuel, emits particles and sounds, writes electrics.values.jato and jatofuel. *(internal)* | 45 |
+| `controller_jato.updateSimpleControlButtons()` | (Re)creates the "JATO" button of the simplified panel with the remaining fuel ratio. | 41 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_jato.getState()`
 
-Renvoie fuel et fuelCoef pour la sauvegarde.
+Returns fuel and fuelCoef for saving.
 
-- **renvoie** : table Table d'état (réutilisée).
+- **returns**: table State table (reused).
 
 #### `controller_jato.init(jbeamData)`
 
-Lit fuel et les nœuds de tuyères, initialise electrics.values.jatoInput/jato et enregistre le code secret.
+Reads fuel and the thruster nodes, initializes electrics.values.jatoInput/jato and registers the secret code.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_jato.inputStringCallback(string)`
 
-Appelé par inputAnalyzer quand le code secret est saisi : alterne fuelCoef entre 1 et 0.
+Called by inputAnalyzer when the secret code is entered: toggles fuelCoef between 1 and 0.
 
-- `string` (*string*) : Chaîne saisie.
+- `string` (*string*) : Entered string.
 
 #### `controller_jato.setState(data)`
 
-Restaure fuel (borné 0..fuel initial) et fuelCoef (0..1).
+Restores fuel (bounded 0..initial fuel) and fuelCoef (0..1).
 
-- `data` (*table|nil*) : Table d'état.
+- `data` (*table|nil*) : State table.
 
 #### `controller_jato.updateGFX(dt)`
 
-Consomme le carburant, émet particules et sons, écrit electrics.values.jato et jatofuel.
+Consumes fuel, emits particles and sounds, writes electrics.values.jato and jatofuel.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `defaultOrder` | number | 1100. |
-| `fuelCoef` | number | Coefficient de consommation de carburant (1 normal, 0 = infini). |
+| `fuelCoef` | number | Fuel consumption coefficient (1 normal, 0 = infinite). |
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `addParticleByNodes`, `createSFXSource2`, `playSFX`, `setVolume`, `stopSFX`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/jato.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/jato.lua`.*

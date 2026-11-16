@@ -2,38 +2,38 @@
 -- tim19Atlas stub generated from lua/vehicle/extensions/perfectLaunch.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Aide au départ arrêté 'parfait' (launch control) pour dragsters : gaz à fond, puis contrôle PI de la patinage des roues motrices et du lacet en modulant les gaz, avec maintien de la trajectoire via l'extension straightLine. Séquence : prepare(cible) (véhicule gelé, gaz à fond), go() (dégel, départ), stop() (remise à zéro).
---- Accès : extension `perfectLaunch` : `extensions.load (VM véhicule)("perfectLaunch")`, puis la globale `perfectLaunch`
+--- 'Perfect' standing-start aid (launch control) for dragsters: full throttle, then PI control of driven-wheel slip and yaw by modulating the throttle, with trajectory holding via the straightLine extension. Sequence: prepare(target) (vehicle frozen, full throttle), go() (unfreeze, launch), stop() (reset).
+--- Access: extension `perfectLaunch`: `extensions.load (vehicle VM)("perfectLaunch")`, then the global `perfectLaunch`
 ---@class perfectLaunch
----@field launchFailed boolean true si un tête-à-queue (lacet lissé > 0,5) a été détecté pendant le départ.
+---@field launchFailed boolean true if a spin-out (smoothed yaw > 0.5) was detected during the launch.
 perfectLaunch = {}
 
---- Lance le départ : dégèle le véhicule et passe en état 'go'.
----Source : lua/vehicle/extensions/perfectLaunch.lua:35
+--- Starts the launch: unfreezes the vehicle and switches to the 'go' state.
+---Source: lua/vehicle/extensions/perfectLaunch.lua:35
 function perfectLaunch.go() end
 
---- Hook d'initialisation : état 'idle', remise à zéro des régulations, mode de boîte 'arcade' et rechargement de straightLine.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/perfectLaunch.lua:18
+--- Initialization hook: 'idle' state, resets the controllers, gearbox mode 'arcade' and reloads straightLine.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/perfectLaunch.lua:18
 function perfectLaunch.onInit() end
 
---- Même fonction que onInit.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/perfectLaunch.lua:18
+--- Same function as onInit.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/perfectLaunch.lua:18
 function perfectLaunch.onReset() end
 
---- Prépare le départ : gèle le véhicule, gaz à fond, donne la direction cible à straightLine.
----Source : lua/vehicle/extensions/perfectLaunch.lua:40
----@param target vec3|table Cible ou direction passée à straightLine.setTargetDirection (déduit du code).
+--- Prepares the launch: freezes the vehicle, full throttle, gives the target direction to straightLine.
+---Source: lua/vehicle/extensions/perfectLaunch.lua:40
+---@param target vec3|table Target or direction passed to straightLine.setTargetDirection (inferred from code).
 function perfectLaunch.prepare(target) end
 
---- Arrête tout : relâche frein à main, frein et gaz, dégèle, arrête straightLine et réinitialise.
----Source : lua/vehicle/extensions/perfectLaunch.lua:50
+--- Stops everything: releases parking brake, brake and throttle, unfreezes, stops straightLine and resets.
+---Source: lua/vehicle/extensions/perfectLaunch.lua:50
 function perfectLaunch.stop() end
 
---- Appelé chaque frame : exécute la machine à états et le contrôle des gaz, puis straightLine.updateGFX.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/perfectLaunch.lua:59
----@param dt number Pas de temps en secondes.
+--- Called every frame: runs the state machine and the throttle control, then straightLine.updateGFX.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/perfectLaunch.lua:59
+---@param dt number Time step in seconds.
 function perfectLaunch.updateGFX(dt) end
 

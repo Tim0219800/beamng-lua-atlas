@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/file/saveData.lua",
-  "module": "Nœud « Save Data » (once_instant, couleur file). Sauvegarde des données simples dans un fichier réutilisable entre sessions. Entrée : file (nom sans extension) ; les pins d'entrée personnalisés (types string, number, bool, any, table, vec3, quat, color) sont écrits comme clés du fichier via modules.file:write.",
+  "module": "Node \"Save Data\" (once_instant, color file). Saves simple data to a file reusable between sessions. Input: file (name without extension); the custom input pins (types string, number, bool, any, table, vec3, quat, color) are written as keys of the file via modules.file:write.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Active la sauvegarde des pins et les pins d'entrée personnalisés.",
+          "desc": "Enables pin saving and custom input pins.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Écrit dans le fichier la valeur de chaque pin d'entrée sauf flow, reset et file.",
+          "desc": "Writes to the file the value of each input pin except flow, reset and file.",
           "internal": true
         }
       }

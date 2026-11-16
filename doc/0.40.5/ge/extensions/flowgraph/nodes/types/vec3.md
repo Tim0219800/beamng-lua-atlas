@@ -1,27 +1,27 @@
 # `flowgraph_nodes_types_vec3`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/types/vec3.lua` · VM : Game Engine (GE) · 52 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/types/vec3.lua` · VM: Game Engine (GE) · 52 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/types/vec3")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/types/vec3")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Vec3 » (catégorie repeat_instant, tags vec3/vector/direction) : construit un vecteur 3D. Entrées number « x », « y », « z » (0 par défaut) ; entrée cachée « rot » (quat) : si elle est reliée, la sortie « value » est le vecteur (0,1,0) tourné par ce quaternion (direction avant). Sortie « value » (vec3 sous forme de table {x,y,z}).
+Flowgraph node "Vec3" (repeat_instant category, tags vec3/vector/direction): builds a 3D vector. Number inputs "x", "y", "z" (0 by default); hidden input "rot" (quat): if it is linked, the output "value" is the vector (0,1,0) rotated by this quaternion (forward direction). Output "value" (vec3 as an {x,y,z} table).
 
-## Remarques
+## Notes
 
-- Si 'rot' a une valeur, x/y/z sont ignorés.
-- drawMiddle affiche le vecteur construit à partir de x/y/z (même si rot est utilisé).
+- If 'rot' has a value, x/y/z are ignored.
+- drawMiddle displays the vector built from x/y/z (even if rot is used).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(nodeData)` | Vide. | 48 |
-| `C:_onSerialize(res)` | Vide (rien à sauvegarder). | 45 |
-| `C:drawMiddle(builder, style)` | Affiche le texte du vecteur (x,y,z) au centre du nœud. | 37 |
-| `C:drawProperties()` | Vide. | 42 |
-| `C:work()` | Calcule la sortie : direction (0,1,0) tournée par 'rot' si présent, sinon {x,y,z}. | 26 |
+| `C:_onDeserialized(nodeData)` | Empty. | 48 |
+| `C:_onSerialize(res)` | Empty (nothing to save). | 45 |
+| `C:drawMiddle(builder, style)` | Displays the vector text (x,y,z) at the center of the node. | 37 |
+| `C:drawProperties()` | Empty. | 42 |
+| `C:work()` | Computes the output: direction (0,1,0) rotated by 'rot' if present, otherwise {x,y,z}. | 26 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/types/vec3.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/types/vec3.lua`.*

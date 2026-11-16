@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/enterVehicle.lua",
+  "module": "Nœud « Enter Vehicle » (catégorie `dynamic_instant`, dépend de `gameplay_walk`). Fait entrer le joueur dans un véhicule (`gameplay_walk.getInVehicle(veh)`) puis remet la caméra de jeu (`commands.setGameCamera()`). Pin d'entrée : `vehId`. Si `vehId` n'est pas branché, le nœud prend le véhicule joueur (`getPlayerVehicle(0)`).",
+  "notes": [
+    "Catégorie dynamique : en mode `repeat`, `work` répète l'entrée à chaque frame ; sinon seul `workOnce` agit."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "enterVehicle": {
+          "desc": "Trouve le véhicule (`vehId` ou joueur), appelle `gameplay_walk.getInVehicle` et `commands.setGameCamera`.",
+          "internal": false
+        },
+        "work": {
+          "desc": "Si `dynamicMode == 'repeat'`, répète l'entrée dans le véhicule à chaque frame.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Fait entrer le joueur dans le véhicule une fois.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

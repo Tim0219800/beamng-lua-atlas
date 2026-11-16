@@ -2,58 +2,58 @@
 -- tim19Atlas stub generated from lua/ge/extensions/campaign/dealer.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Concessionnaire de la campagne : tient un stock (M.state.stock) indexé par type d'objet en majuscules. Un stock est soit une liste de tables (véhicules {model, config}), soit un nombre cumulé. Sauvegardé et restauré avec la campagne (onSaveCampaign / onResumeCampaign). La fonction buy est vide (non implémentée).
---- Accès : extension `campaign_dealer` : `extensions.load("campaign_dealer")`, puis la globale `campaign_dealer`
+--- Campaign dealer: holds a stock (M.state.stock) keyed by uppercase item type. A stock is either a list of tables (vehicles {model, config}) or an accumulated number. Saved and restored with the campaign (onSaveCampaign / onResumeCampaign). The buy function is empty (not implemented).
+--- Access: extension `campaign_dealer`: `extensions.load("campaign_dealer")`, then the global `campaign_dealer`
 ---@class campaign_dealer
----@field state table État sauvegardé : {stock = table<string, table|number>}.
+---@field state table Saved state: {stock = table<string, table|number>}.
 campaign_dealer = {}
 
---- Ajoute un objet (table, sans doublon selon existItem) ou une quantité (nombre) au stock du type donné. Crée l'entrée si besoin.
----Source : lua/ge/extensions/campaign/dealer.lua:32
----@param itemType string Type du stock (converti en majuscules).
----@param valueObj table|number Objet à ajouter ou quantité.
+--- Adds an object (table, no duplicates according to existItem) or a quantity (number) to the stock of the given type. Creates the entry if needed.
+---Source: lua/ge/extensions/campaign/dealer.lua:32
+---@param itemType string Stock type (converted to uppercase).
+---@param valueObj table|number Object to add or quantity.
 function campaign_dealer.addToStock(itemType, valueObj) end
 
---- Prévue pour acheter un objet du stock ; le corps est vide dans cette version.
----Source : lua/ge/extensions/campaign/dealer.lua:98
----@param itemType string Type de stock.
----@param index integer Position de l'objet (déduit du nom).
+--- Intended to buy an object from the stock; the body is empty in this version.
+---Source: lua/ge/extensions/campaign/dealer.lua:98
+---@param itemType string Stock type.
+---@param index integer Position of the object (inferred from the name).
 function campaign_dealer.buy(itemType, index) end
 
---- Retourne une copie profonde du stock d'un type (crée une liste vide si absent).
----Source : lua/ge/extensions/campaign/dealer.lua:61
----@param itemType string Type de stock, tel qu'enregistré (majuscules).
----@return table|number  Copie du stock.
+--- Returns a deep copy of the stock of a type (creates an empty list if absent).
+---Source: lua/ge/extensions/campaign/dealer.lua:61
+---@param itemType string Stock type, as registered (uppercase).
+---@return table|number  Copy of the stock.
 function campaign_dealer.getStock(itemType) end
 
---- Hook appelé après désérialisation ; ne fait que journaliser.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/campaign/dealer.lua:108
----@param data table Données désérialisées (non utilisées).
+--- Hook called after deserialization; only logs.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/campaign/dealer.lua:108
+---@param data table Deserialized data (not used).
 function campaign_dealer.onDeserialized(data) end
 
---- Hook de reprise de campagne : remplace M.state par data.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/campaign/dealer.lua:118
----@param campaignInProgress any Campagne en cours (non utilisé).
----@param data table État sauvegardé.
+--- Campaign resume hook: replaces M.state with data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/campaign/dealer.lua:118
+---@param campaignInProgress any Current campaign (not used).
+---@param data table Saved state.
 function campaign_dealer.onResumeCampaign(campaignInProgress, data) end
 
---- Hook de sauvegarde de la campagne : appelle saveCallback(M.__globalAlias__, copie de l'état).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/campaign/dealer.lua:113
----@param saveCallback function Reçoit (alias global du module, données).
+--- Campaign save hook: calls saveCallback(M.__globalAlias__, copy of the state).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/campaign/dealer.lua:113
+---@param saveCallback function Receives (module global alias, data).
 function campaign_dealer.onSaveCampaign(saveCallback) end
 
---- Hook de sérialisation : retourne une copie profonde de M.state.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/campaign/dealer.lua:102
----@return table  Copie de l'état.
+--- Serialization hook: returns a deep copy of M.state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/campaign/dealer.lua:102
+---@return table  Copy of the state.
 function campaign_dealer.onSerialize() end
 
---- Retire du stock la première entrée dont model et config correspondent (valeur table) ou soustrait la quantité (valeur nombre).
----Source : lua/ge/extensions/campaign/dealer.lua:68
----@param itemType string Type du stock (converti en majuscules).
----@param valueObj table|number Objet {model, config} à retirer ou quantité.
+--- Removes from the stock the first entry whose model and config match (table value) or subtracts the quantity (number value).
+---Source: lua/ge/extensions/campaign/dealer.lua:68
+---@param itemType string Stock type (converted to uppercase).
+---@param valueObj table|number Object {model, config} to remove or quantity.
 function campaign_dealer.removeFromStock(itemType, valueObj) end
 

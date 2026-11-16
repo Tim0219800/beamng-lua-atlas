@@ -1,28 +1,52 @@
 {
   "path": "lua/ge/extensions/career/modules/payment.lua",
-  "module": "Paiement générique en carrière : vérifie qu'un prix (table de devises) est payable avec les attributs du joueur et le débite via career_modules_playerAttributes.",
-  "usage": "if career_modules_payment.pay({money = {amount = 500}}, {tags = {\"buying\"}, label = \"Achat\"}) then ... end",
+  "module": "Generic career payment: checks that a price (currency table) is payable with the player's attributes and debits it via career_modules_playerAttributes.",
+  "usage": "if career_modules_payment.pay({money = {amount = 500}}, {tags = {\"buying\"}, label = \"Purchase\"}) then ... end",
   "notes": [
-    "Le prix est une table {devise = {amount = n, canBeNegative = bool}}. Une devise avec canBeNegative = true n'est jamais bloquante.",
-    "pay renvoie false sans rien débiter si canPay échoue."
+    "The price is a table {currency = {amount = n, canBeNegative = bool}}. A currency with canBeNegative = true is never blocking.",
+    "pay returns false without debiting anything if canPay fails."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: career_career."
+    }
   },
   "functions": {
     "canPay": {
-      "desc": "Teste si le joueur possède assez de chaque devise du prix (sauf devises canBeNegative ou montant <= 0).",
-      "params": {"price": {"type": "table<string, {amount: number, canBeNegative: boolean|nil}>", "desc": "Prix par devise."}},
-      "returns": [{"type": "boolean", "desc": "true si payable."}],
+      "desc": "Tests whether the player has enough of each currency of the price (except canBeNegative currencies or amount <= 0).",
+      "params": {
+        "price": {
+          "type": "table<string, {amount: number, canBeNegative: boolean|nil}>",
+          "desc": "Price per currency."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if payable."
+        }
+      ],
       "internal": false
     },
     "pay": {
-      "desc": "Débite le prix (montants négatifs) via playerAttributes.addAttributes si canPay.",
+      "desc": "Debits the price (negative amounts) via playerAttributes.addAttributes if canPay.",
       "params": {
-        "price": {"type": "table", "desc": "Prix par devise, comme pour canPay."},
-        "reason": {"type": "table|nil", "desc": "Raison passée au journal des attributs (tags, label)."}
+        "price": {
+          "type": "table",
+          "desc": "Price per currency, as for canPay."
+        },
+        "reason": {
+          "type": "table|nil",
+          "desc": "Reason passed to the attributes log (tags, label)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si le paiement a eu lieu."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the payment took place."
+        }
+      ],
       "internal": false
     }
   }

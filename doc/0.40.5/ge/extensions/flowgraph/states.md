@@ -1,56 +1,56 @@
 # `flowgraph_states`
 
-*Fichier : `lua/ge/extensions/flowgraph/states.lua` · VM : Game Engine (GE) · 591 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/states.lua` · VM: Game Engine (GE) · 591 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/states")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/states")` (file under extensions/ but not a regular extension)
 
-Gestion des états (« state machine ») d'un projet flowgraph basé sur des graphes d'états (nœuds `states/stateNode`, `states/stateEntry`, `states/stateExit` et groupes d'états). Le module renvoie un constructeur : `require('flowgraph_states')(mgr)`. Il aplatit la hiérarchie de graphes d'états en liens directs entre états (`buildStates`), crée pour chaque état un proxy d'extension qui ne reçoit les hooks que quand l'état est actif, met en file les transitions demandées par les nœuds et les résout à la fin de la frame (`resolveTransitions`, via un proxy `_StateResolver` sur `onUpdate`).
+State management ("state machine") for a flowgraph project based on state graphs (`states/stateNode`, `states/stateEntry`, `states/stateExit` nodes and state groups). The module returns a constructor: `require('flowgraph_states')(mgr)`. It flattens the hierarchy of state graphs into direct links between states (`buildStates`), creates for each state an extension proxy that only receives hooks while the state is active, queues the transitions requested by nodes and resolves them at the end of the frame (`resolveTransitions`, via a `_StateResolver` proxy on `onUpdate`).
 
-## Remarques
+## Notes
 
-- Cycle : `buildStates` → `startAutoStartStates` → pendant l'exécution, `transition(...)` met en file → `resolveTransitions` (dans `onUpdate`) arrête les états source, démarre les cibles, fusionne les données de transition dans `transitionStack`.
-- Un état atteignant un `stateExit` racine arrête le projet (`mgr:setRunning(false)`), sauf si un autre état démarre dans la même frame.
-- Un lien direct entre `stateEntry` et `stateExit` rend le groupe invalide et il est ignoré (log E).
-- Bug : `resolveTransitions` appelle `self:startState(id, transData)` alors que `transData` n'est défini nulle part (global nil) ; les données de transition ne sont donc pas transmises au callback `onFlowgraphStateStarted` de l'activité.
-- Bug : `getStateNode(id)` renvoie `self.states[id].node`, champ jamais renseigné par `addStateFromPortedNode` : renvoie toujours nil.
-- Bug : dans `addStateFromPortedNode`, si `node.targetGraph` est nil, le code appelle ensuite `node.targetGraph:plan()` (erreur).
-- `getStateNodeByNode` est dépréciée (log d'erreur, ne renvoie rien).
-- `table.sort(transitions)` dans `getTransitions` n'a aucun effet (table à clés texte).
+- Cycle: `buildStates` → `startAutoStartStates` → while running, `transition(...)` queues → `resolveTransitions` (in `onUpdate`) stops the source states, starts the targets, merges transition data into `transitionStack`.
+- A state reaching a root `stateExit` stops the project (`mgr:setRunning(false)`), unless another state starts in the same frame.
+- A direct link between `stateEntry` and `stateExit` makes the group invalid and it is ignored (E log).
+- Bug: `resolveTransitions` calls `self:startState(id, transData)` while `transData` is not defined anywhere (nil global); transition data is therefore not passed to the activity's `onFlowgraphStateStarted` callback.
+- Bug: `getStateNode(id)` returns `self.states[id].node`, a field never set by `addStateFromPortedNode`: always returns nil.
+- Bug: in `addStateFromPortedNode`, if `node.targetGraph` is nil, the code then calls `node.targetGraph:plan()` (error).
+- `getStateNodeByNode` is deprecated (error log, returns nothing).
+- `table.sort(transitions)` in `getTransitions` has no effect (table with string keys).
 
-## Classe `C`
+## Class `C`
 
-Gestionnaire d'états d'un projet flowgraph. Champs : mgr, states (id de nœud -> état {id, depth, graph, name, autoStart, extProxy, active, ports, transitionStack, extHooks, extDeps}), queuedTransitions, hookExists, resolveExtProxy, stateGraph.
+State manager of a flowgraph project. Fields: mgr, states (node id -> state {id, depth, graph, name, autoStart, extProxy, active, ports, transitionStack, extHooks, extDeps}), queuedTransitions, hookExists, resolveExtProxy, stateGraph.
 
-Le module renvoie un constructeur : `local obj = require("flowgraph_states")(options)`.
+The module returns a constructor: `local obj = require("flowgraph_states")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:addStateFromPortedNode(pnode)` | Crée un état à partir d'un nœud avec ports : proxy d'extension dédié, collecte des hooks et dépendances du graphe cible (`getRecursiveHooksAndDependencies`), mémorise les hooks `onXxx` existants dans `hookExists`. | 64 |
-| `C:broadcastCall(functionName, ...)` | Appelle le hook `functionName` sur le proxy de chaque état qui le possède. | 560 |
-| `C:broadcastCallReturn(functionName, results, ...)` | Comme `broadcastCall`, mais passe en premier argument la table `results` pour que les états y déposent des résultats. | 568 |
-| `C:buildPortsAndStarts(nodes, links)` | Remplit pour chaque nœud ses ports (nom de transition -> cibles, profondeur d'arrêt, arrêt du projet) et marque les états de départ (reliés aux nœuds racine). | 347 |
-| `C:buildStates()` | Construit tous les états du projet (collecte, aplatissement, ports) et le proxy `_StateResolver` qui résout les transitions à chaque `onUpdate` tant que le projet tourne. | 385 |
-| `C:clear()` | Détruit le proxy de résolution et tous les proxys d'extension des états, rafraîchit les dépendances de `core_flowgraphManager` et vide `states` et `hookExists`. | 21 |
-| `C:destroy()` | Détruit le gestionnaire (appelle `clear`). | 17 |
-| `C:findStateNodeInStateGraph(targetGraphId)` | Cherche dans le graphe d'états racine le nœud `states/stateNode` dont le graphe cible a l'id donné. | 440 |
-| `C:findStateNodeInStateGraphRecursive(graph, id)` | Version récursive de la recherche, sur un graphe et ses enfants. | 444 |
-| `C:gatherNodesAndLinks()` | Vide l'état puis parcourt récursivement le graphe d'états racine pour lister nœuds, liens et groupes. | 159 |
-| `C:gatherNodesAndLinksRecursion(graph, nodes, links, group, depth)` | Parcours récursif d'un graphe : ignore les commentaires, marque connecteurs (groupes, entrée/sortie), racines et liens à raccourcir ; ignore un groupe invalide (entrée reliée directement à une sortie). | 167 |
-| `C:getStateIdForNode(node)` | Renvoie l'id de l'état dont le graphe est le graphe racine du nœud donné, ou -1. | 424 |
-| `C:getStateIdsForDepth(depth)` | Renvoie les ids des états contenus dans le groupe correspondant à la profondeur donnée (dernier id de la liste). | 547 |
-| `C:getStateNode(id)` | Censé renvoyer le nœud d'un état ; renvoie `states[id].node`, champ jamais renseigné (toujours nil). | 431 |
-| `C:getStateNodeByNode(node)` | Dépréciée : log une erreur et ne renvoie rien. | 435 |
-| `C:getTransitionStack(id)` | Renvoie la pile de données de transition d'un état (table vide si inconnu). | 420 |
-| `C:getTransitions(node)` | Pour un nœud d'état, regroupe par nom de transition (nom du pin source) les liens sortants de son graphe : {nom -> [{targetName, link}]}. | 48 |
-| `C:hasNodeForHook(functionName)` | Dit si au moins un nœud d'un état possède une méthode correspondant à ce hook (`onXxx`). | 577 |
-| `C:init(mgr)` | Constructeur : mémorise le manager et initialise les tables. | 9 |
-| `C:isRunning(id)` | Dit si l'état est actif. | 581 |
-| `C:resolveInterHops(nodes, links, group)` | Aplatit les liens qui traversent des connecteurs (groupes d'états, entrées/sorties) en liens virtuels directs entre états réels. | 247 |
-| `C:resolveTransitions()` | Résout toutes les transitions en file : détermine les états à arrêter et à démarrer, applique les profondeurs d'arrêt de groupes, met à jour les `transitionStack`, arrête le projet si un état final est atteint sans autre démarrage, puis vide la file. Appelé à chaque `onUpdate` tant que le projet tourne. | 466 |
-| `C:startAutoStartStates()` | Démarre tous les états marqués `autoStart` (ceux reliés à l'entrée racine). | 109 |
-| `C:startState(id, transData)` | Active un état : branche son proxy aux hooks et dépendances, appelle `onStateStarted` et `onStateStartedTrigger` du proxy, puis `activity:onFlowgraphStateStarted(nom, état, transData)` si le projet est lié à une activité. | 117 |
-| `C:stopState(id)` | Désactive un état : appelle `onStateStopped`, `onStateStoppedTrigger`, `activity:onFlowgraphStateStopped`, puis débranche son proxy. | 138 |
-| `C:transition(sourceStateId, transitionName, transitionData, sourceNode)` | Met en file une transition qui sera résolue à la fin de la frame ; la consigne dans les événements du manager. | 458 |
+| `C:addStateFromPortedNode(pnode)` | Creates a state from a node with ports: dedicated extension proxy, collects the hooks and dependencies of the target graph (`getRecursiveHooksAndDependencies`), records the existing `onXxx` hooks in `hookExists`. | 64 |
+| `C:broadcastCall(functionName, ...)` | Calls the `functionName` hook on the proxy of every state that has it. | 560 |
+| `C:broadcastCallReturn(functionName, results, ...)` | Like `broadcastCall`, but passes the `results` table as first argument so the states can put results in it. | 568 |
+| `C:buildPortsAndStarts(nodes, links)` | Fills in each node's ports (transition name -> targets, stop depth, project stop) and marks the starting states (connected to the root nodes). | 347 |
+| `C:buildStates()` | Builds all the project's states (collection, flattening, ports) and the `_StateResolver` proxy that resolves transitions on every `onUpdate` while the project is running. | 385 |
+| `C:clear()` | Destroys the resolver proxy and all the states' extension proxies, refreshes the dependencies of `core_flowgraphManager` and empties `states` and `hookExists`. | 21 |
+| `C:destroy()` | Destroys the manager (calls `clear`). | 17 |
+| `C:findStateNodeInStateGraph(targetGraphId)` | Searches the root state graph for the `states/stateNode` node whose target graph has the given id. | 440 |
+| `C:findStateNodeInStateGraphRecursive(graph, id)` | Recursive version of the search, on a graph and its children. | 444 |
+| `C:gatherNodesAndLinks()` | Clears the state then recursively walks the root state graph to list nodes, links and groups. | 159 |
+| `C:gatherNodesAndLinksRecursion(graph, nodes, links, group, depth)` | Recursive walk of a graph: skips comments, marks connectors (groups, entry/exit), roots and links to shorten; skips an invalid group (entry connected directly to an exit). | 167 |
+| `C:getStateIdForNode(node)` | Returns the id of the state whose graph is the root graph of the given node, or -1. | 424 |
+| `C:getStateIdsForDepth(depth)` | Returns the ids of the states contained in the group matching the given depth (last id of the list). | 547 |
+| `C:getStateNode(id)` | Supposed to return a state's node; returns `states[id].node`, a field never set (always nil). | 431 |
+| `C:getStateNodeByNode(node)` | Deprecated: logs an error and returns nothing. | 435 |
+| `C:getTransitionStack(id)` | Returns a state's transition data stack (empty table if unknown). | 420 |
+| `C:getTransitions(node)` | For a state node, groups the outgoing links of its graph by transition name (name of the source pin): {name -> [{targetName, link}]}. | 48 |
+| `C:hasNodeForHook(functionName)` | Tells whether at least one node of a state has a method matching this hook (`onXxx`). | 577 |
+| `C:init(mgr)` | Constructor: stores the manager and initializes the tables. | 9 |
+| `C:isRunning(id)` | Tells whether the state is active. | 581 |
+| `C:resolveInterHops(nodes, links, group)` | Flattens the links that cross connectors (state groups, entries/exits) into direct virtual links between real states. | 247 |
+| `C:resolveTransitions()` | Resolves all queued transitions: determines the states to stop and start, applies group stop depths, updates the `transitionStack`s, stops the project if a final state is reached with no other start, then empties the queue. Called on every `onUpdate` while the project is running. | 466 |
+| `C:startAutoStartStates()` | Starts all states marked `autoStart` (those connected to the root entry). | 109 |
+| `C:startState(id, transData)` | Activates a state: connects its proxy to the hooks and dependencies, calls the proxy's `onStateStarted` and `onStateStartedTrigger`, then `activity:onFlowgraphStateStarted(name, state, transData)` if the project is linked to an activity. | 117 |
+| `C:stopState(id)` | Deactivates a state: calls `onStateStopped`, `onStateStoppedTrigger`, `activity:onFlowgraphStateStopped`, then disconnects its proxy. | 138 |
+| `C:transition(sourceStateId, transitionName, transitionData, sourceNode)` | Queues a transition that will be resolved at the end of the frame; records it in the manager's events. | 458 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/states.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/states.lua`.*

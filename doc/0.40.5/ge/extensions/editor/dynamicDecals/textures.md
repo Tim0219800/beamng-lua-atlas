@@ -1,72 +1,72 @@
 # `editor_dynamicDecals_textures`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/textures.lua` · VM : Game Engine (GE) · 595 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/textures.lua` · VM: Game Engine (GE) · 595 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_textures` : `extensions.load("editor_dynamicDecals_textures")`, puis la globale `editor_dynamicDecals_textures`
+**Access:** extension `editor_dynamicDecals_textures`: `extensions.load("editor_dynamicDecals_textures")`, then the global `editor_dynamicDecals_textures`
 
-Navigateur de textures de decals de l'outil Dynamic Decals (interface). Ajoute dans le navigateur les onglets « Textures » (ordre 10) et « Tags » (ordre 20), un inspecteur pour la sélection `editor.selection["dynamicDecalTexture"]` (édition des métadonnées/tags du fichier sidecar), la sélection multiple (Maj = plage, Ctrl = ajout), un menu contextuel pour affecter une texture à une propriété et une notification quand des fichiers de métadonnées manquants ont été créés. La logique de fichiers est dans editor_api_dynamicDecals_textures.
+Decal texture browser of the Dynamic Decals tool (interface). Adds the "Textures" (order 10) and "Tags" (order 20) tabs to the browser, an inspector for the selection `editor.selection["dynamicDecalTexture"]` (editing of the sidecar file's metadata/tags), multiple selection (Shift = range, Ctrl = add), a context menu to assign a texture to a property and a notification when missing metadata files have been created. The file logic is in editor_api_dynamicDecals_textures.
 
-## Remarques
+## Notes
 
-- Les fichiers dont le nom commence par « _ » sont exclus de la liste.
-- Préférences `dynamicDecalsTool.textureBrowser` : loadImagesPerFrameCount (int 3), enableVirtualScrolling (bool true : seules les textures visibles sont chargées), texturePreviewSize (float 128, de 32 à 512).
-- setup crée le dossier des textures (FS:directoryCreate) et appelle textures.setup() de l'API.
-- Le même bloc de notification est dupliqué dans setup et dans onTextureFileAdded.
-- onTextureFileDeleted modifie la liste pendant ipairs ; sans conséquence pour un seul fichier supprimé.
+- Files whose name starts with "_" are excluded from the list.
+- Preferences `dynamicDecalsTool.textureBrowser`: loadImagesPerFrameCount (int 3), enableVirtualScrolling (bool true: only visible textures are loaded), texturePreviewSize (float 128, from 32 to 512).
+- setup creates the textures folder (FS:directoryCreate) and calls the API's textures.setup().
+- The same notification block is duplicated in setup and in onTextureFileAdded.
+- onTextureFileDeleted modifies the list during ipairs; harmless for a single deleted file.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_textures.dynamicDecals_onTextureFileAdded(filepath)` | Hook appelé quand un fichier texture est ajouté au dossier surveillé : si des fichiers de métadonnées manquants ont été créés, ajoute une notification avec boutons de sélection. *(interne)* | 544 |
-| `editor_dynamicDecals_textures.dynamicDecals_onTextureFileDeleted(filepath)` | Hook appelé quand un fichier texture est supprimé : le retire de la sélection `dynamicDecalTexture` (qui devient nil si elle est vide). *(interne)* | 572 |
-| `editor_dynamicDecals_textures.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 257 |
-| `editor_dynamicDecals_textures.getTexturesDirectoryPath()` | Renvoie le dossier des textures de decals (délègue à editor_api_dynamicDecals_textures). | 585 |
-| `editor_dynamicDecals_textures.registerEditorPreferences(prefsRegistry)` | Enregistre la sous-catégorie `dynamicDecalsTool.textureBrowser` (loadImagesPerFrameCount, enableVirtualScrolling, texturePreviewSize). *(interne)* | 249 |
-| `editor_dynamicDecals_textures.setup(tool_in)` | Appelé par l'outil : récupère les modules liés, enregistre les onglets Textures et Tags, la page de doc « Browser / Textures » et l'inspecteur du type dynamicDecalTexture, crée le dossier des textures, initialise l'API de textures et notifie les fichiers de métadonnées manquants. *(interne)* | 492 |
+| `editor_dynamicDecals_textures.dynamicDecals_onTextureFileAdded(filepath)` | Hook called when a texture file is added to the watched folder: if missing metadata files were created, adds a notification with selection buttons. *(internal)* | 544 |
+| `editor_dynamicDecals_textures.dynamicDecals_onTextureFileDeleted(filepath)` | Hook called when a texture file is deleted: removes it from the `dynamicDecalTexture` selection (which becomes nil if empty). *(internal)* | 572 |
+| `editor_dynamicDecals_textures.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 257 |
+| `editor_dynamicDecals_textures.getTexturesDirectoryPath()` | Returns the decal textures folder (delegates to editor_api_dynamicDecals_textures). | 585 |
+| `editor_dynamicDecals_textures.registerEditorPreferences(prefsRegistry)` | Registers the subcategory `dynamicDecalsTool.textureBrowser` (loadImagesPerFrameCount, enableVirtualScrolling, texturePreviewSize). *(internal)* | 249 |
+| `editor_dynamicDecals_textures.setup(tool_in)` | Called by the tool: gets the related modules, registers the Textures and Tags tabs, the "Browser / Textures" doc page and the inspector of the dynamicDecalTexture type, creates the textures folder, initializes the textures API and notifies about missing metadata files. *(internal)* | 492 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_textures.dynamicDecals_onTextureFileAdded(filepath)`
 
-Hook appelé quand un fichier texture est ajouté au dossier surveillé : si des fichiers de métadonnées manquants ont été créés, ajoute une notification avec boutons de sélection.
+Hook called when a texture file is added to the watched folder: if missing metadata files were created, adds a notification with selection buttons.
 
-- `filepath` (*string*) : Chemin du fichier ajouté (non utilisé directement).
+- `filepath` (*string*) : Path of the added file (not used directly).
 
 #### `editor_dynamicDecals_textures.dynamicDecals_onTextureFileDeleted(filepath)`
 
-Hook appelé quand un fichier texture est supprimé : le retire de la sélection `dynamicDecalTexture` (qui devient nil si elle est vide).
+Hook called when a texture file is deleted: removes it from the `dynamicDecalTexture` selection (which becomes nil if empty).
 
-- `filepath` (*string*) : Chemin du fichier supprimé.
+- `filepath` (*string*) : Path of the deleted file.
 
 #### `editor_dynamicDecals_textures.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_textures.getTexturesDirectoryPath()`
 
-Renvoie le dossier des textures de decals (délègue à editor_api_dynamicDecals_textures).
+Returns the decal textures folder (delegates to editor_api_dynamicDecals_textures).
 
-- **renvoie** : string Chemin du dossier de textures.
+- **returns**: string Path of the textures folder.
 
 #### `editor_dynamicDecals_textures.registerEditorPreferences(prefsRegistry)`
 
-Enregistre la sous-catégorie `dynamicDecalsTool.textureBrowser` (loadImagesPerFrameCount, enableVirtualScrolling, texturePreviewSize).
+Registers the subcategory `dynamicDecalsTool.textureBrowser` (loadImagesPerFrameCount, enableVirtualScrolling, texturePreviewSize).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_textures.setup(tool_in)`
 
-Appelé par l'outil : récupère les modules liés, enregistre les onglets Textures et Tags, la page de doc « Browser / Textures » et l'inspecteur du type dynamicDecalTexture, crée le dossier des textures, initialise l'API de textures et notifie les fichiers de métadonnées manquants.
+Called by the tool: gets the related modules, registers the Textures and Tags tabs, the "Browser / Textures" doc page and the inspector of the dynamicDecalTexture type, creates the textures folder, initializes the textures API and notifies about missing metadata files.
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/textures.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/textures.lua`.*

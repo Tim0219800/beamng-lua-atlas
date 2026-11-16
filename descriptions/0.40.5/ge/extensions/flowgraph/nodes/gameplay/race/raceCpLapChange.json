@@ -1,12 +1,17 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/raceCpLapChange.lua",
-  "module": "Nœud flowgraph « Race CP/Lap Change » (catégorie repeat_instant). Laisse passer un flux (impulsion changed) quand le checkpoint ou le tour d'un véhicule change, d'après les events de l'état de course (rollingStarted, pathnodeReached, raceStarted, lapComplete, raceComplete). Sorties : flow, changed, curCP (index linéaire du checkpoint courant), maxCP (nombre de pathnodes), curLap (tour courant, base 1), maxLap (race.lapCount), recoveryReached et usedRecovery.",
-  "notes": ["Un bloc de code est désactivé par « if false and … » (réinitialisation des race markers) : il est mort."],
+  "module": "Flowgraph node \"Race CP/Lap Change\" (category repeat_instant). Lets a flow (changed pulse) through when a vehicle's checkpoint or lap changes, based on the race state events (rollingStarted, pathnodeReached, raceStarted, lapComplete, raceComplete). Outputs: flow, changed, curCP (linear index of the current checkpoint), maxCP (number of pathnodes), curLap (current lap, 1-based), maxLap (race.lapCount), recoveryReached and usedRecovery.",
+  "notes": [
+    "A block of code is disabled by \"if false and ...\" (reset of the race markers): it is dead."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Chaque frame : recopie flow, et si un évènement de checkpoint/tour a eu lieu pour vehId, met à jour curCP, maxCP, curLap, maxLap, changed, recoveryReached et usedRecovery.", "internal": true}
+        "work": {
+          "desc": "Every frame: copies flow, and if a checkpoint/lap event occurred for vehId, updates curCP, maxCP, curLap, maxLap, changed, recoveryReached and usedRecovery.",
+          "internal": true
+        }
       }
     }
   }

@@ -1,129 +1,129 @@
 # `controller_drivingDynamics_supervisors_components_aeroControl`
 
-*Fichier : `lua/vehicle/controller/drivingDynamics/supervisors/components/aeroControl.lua` · VM : Véhicule · 167 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/drivingDynamics/supervisors/components/aeroControl.lua` · VM: Vehicle · 167 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `drivingDynamics/supervisors/components/aeroControl` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `drivingDynamics/supervisors/components/aeroControl` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Composant de contrôle de lacet (type "auxiliary", defaultOrder 70) pour l'aérodynamique active. Il s'enregistre auprès du superviseur yawControl (ordre 30) ; quand le véhicule survire (angle de dérive de caisse de signe opposé au lacet et supérieur à un seuil), il écrit electrics.values.yawControlRequestReduceOversteer (1 ou 0) que les éléments aéro (ailerons, volets) du véhicule peuvent lire pour réduire le survirage. Ne sert pas à l'antipatinage ni à l'ABS.
+Yaw control component (type "auxiliary", defaultOrder 70) for active aerodynamics. It registers with the yawControl supervisor (order 30); when the vehicle oversteers (body slip angle of opposite sign to the yaw and above a threshold), it writes electrics.values.yawControlRequestReduceOversteer (1 or 0), which the vehicle's aero elements (wings, flaps) can read to reduce oversteer. Not used for traction control or ABS.
 
-## Remarques
+## Notes
 
-- Clé jbeam : slipAngleThreshold (défaut 0.2 rad) = seuil de dérive de caisse au-delà duquel l'aéro est demandée.
-- Paramètres modifiables (setParameters) : yawControl, yawControl.isEnabled, yawControl.slipAngleThreshold.
-- L'indicateur electrics.values.yawControlRequestReduceOversteer est lissé (temporalSmoothing 1 / 1000, montée lente de 1 s, retombée quasi immédiate) puis ramené à son signe (0 ou 1) : il reste à 1 pendant la montée du lisseur même après la fin de la demande.
-- actAsTractionControl est remplacée par nop à initSecondStage ; actAsABSControl est nop. componentOrderTractionControl et componentOrderABSControl valent 1000 (inutilisés).
-- Le composant ne s'enregistre auprès de yawControl que si ce superviseur existe (CMU.getSupervisor("yawControl")).
+- jbeam key: slipAngleThreshold (default 0.2 rad) = body slip threshold beyond which aero is requested.
+- Modifiable parameters (setParameters): yawControl, yawControl.isEnabled, yawControl.slipAngleThreshold.
+- The electrics.values.yawControlRequestReduceOversteer flag is smoothed (temporalSmoothing 1 / 1000, slow 1 s rise, almost immediate fall) then reduced to its sign (0 or 1): it stays at 1 during the smoother's rise even after the request ends.
+- actAsTractionControl is replaced by nop at initSecondStage; actAsABSControl is nop. componentOrderTractionControl and componentOrderABSControl are 1000 (unused).
+- The component only registers with yawControl if that supervisor exists (CMU.getSupervisor("yawControl")).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_drivingDynamics_supervisors_components_aeroControl.actAsTractionControl(wheelGroup, dt)` | Appelé par tractionControl ; ne fait rien (renvoie false, remplacée par nop à l'init). *(interne)* | 34 |
-| `controller_drivingDynamics_supervisors_components_aeroControl.actAsYawControl(measuredYaw, expectedYaw, yawDifference, bodySlipAngle, frontSlipAngle, rearSlipAngle, dt)` | Appelé par yawControl à chaque pas fixe : détecte le survirage via l'angle de dérive de caisse et met à jour electrics.values.yawControlRequestReduceOversteer. *(interne)* | 41 |
-| `controller_drivingDynamics_supervisors_components_aeroControl.getConfig()` | Renvoie une copie de la configuration. | 137 |
-| `controller_drivingDynamics_supervisors_components_aeroControl.init(jbeamData)` | Remet à false les indicateurs d'action. *(interne)* | 90 |
-| `controller_drivingDynamics_supervisors_components_aeroControl.initLastStage(jbeamData)` | Ne fait rien. *(interne)* | 112 |
-| `controller_drivingDynamics_supervisors_components_aeroControl.initSecondStage(jbeamData)` | S'enregistre auprès de yawControl, lit slipAngleThreshold et passe isActive à true. *(interne)* | 96 |
-| `controller_drivingDynamics_supervisors_components_aeroControl.registerCMU(cmu)` | Mémorise la référence au CMU. *(interne)* | 76 |
-| `controller_drivingDynamics_supervisors_components_aeroControl.reset()` | Remet à zéro les indicateurs et le lisseur. *(interne)* | 83 |
-| `controller_drivingDynamics_supervisors_components_aeroControl.sendConfigData()` | Envoie la configuration au CMU (paquet de debug). | 141 |
-| `controller_drivingDynamics_supervisors_components_aeroControl.setConfig(configTable)` | Remplace la configuration complète. | 132 |
-| `controller_drivingDynamics_supervisors_components_aeroControl.setDebugMode(debugEnabled)` | Active/désactive les paquets de debug. | 70 |
-| `controller_drivingDynamics_supervisors_components_aeroControl.setParameters(parameters)` | Applique des paramètres (voir notes) via CMU.applyParameter. | 124 |
-| `controller_drivingDynamics_supervisors_components_aeroControl.shutdown()` | Désactive le composant. | 115 |
-| `controller_drivingDynamics_supervisors_components_aeroControl.updateGFX(dt)` | Vide (version debug : envoie un paquet d'état au CMU). *(interne)* | 57 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.actAsTractionControl(wheelGroup, dt)` | Called by tractionControl; does nothing (returns false, replaced by nop at init). *(internal)* | 34 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.actAsYawControl(measuredYaw, expectedYaw, yawDifference, bodySlipAngle, frontSlipAngle, rearSlipAngle, dt)` | Called by yawControl at every fixed step: detects oversteer via the body slip angle and updates electrics.values.yawControlRequestReduceOversteer. *(internal)* | 41 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.getConfig()` | Returns a copy of the configuration. | 137 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.init(jbeamData)` | Resets the action flags to false. *(internal)* | 90 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.initLastStage(jbeamData)` | Does nothing. *(internal)* | 112 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.initSecondStage(jbeamData)` | Registers with yawControl, reads slipAngleThreshold and sets isActive to true. *(internal)* | 96 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.registerCMU(cmu)` | Stores the reference to the CMU. *(internal)* | 76 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.reset()` | Resets the flags and the smoother. *(internal)* | 83 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.sendConfigData()` | Sends the configuration to the CMU (debug packet). | 141 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.setConfig(configTable)` | Replaces the entire configuration. | 132 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.setDebugMode(debugEnabled)` | Enables/disables debug packets. | 70 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.setParameters(parameters)` | Applies parameters (see notes) via CMU.applyParameter. | 124 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.shutdown()` | Disables the component. | 115 |
+| `controller_drivingDynamics_supervisors_components_aeroControl.updateGFX(dt)` | Empty (debug version: sends a state packet to the CMU). *(internal)* | 57 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_drivingDynamics_supervisors_components_aeroControl.actAsTractionControl(wheelGroup, dt)`
 
-Appelé par tractionControl ; ne fait rien (renvoie false, remplacée par nop à l'init).
+Called by tractionControl; does nothing (returns false, replaced by nop at init).
 
-- `wheelGroup` (*table*) : Groupe de roues.
-- `dt` (*number*) : Pas de temps (s).
-- **renvoie** : boolean false.
+- `wheelGroup` (*table*) : Wheel group.
+- `dt` (*number*) : Time step (s).
+- **returns**: boolean false.
 
 #### `controller_drivingDynamics_supervisors_components_aeroControl.actAsYawControl(measuredYaw, expectedYaw, yawDifference, bodySlipAngle, frontSlipAngle, rearSlipAngle, dt)`
 
-Appelé par yawControl à chaque pas fixe : détecte le survirage via l'angle de dérive de caisse et met à jour electrics.values.yawControlRequestReduceOversteer.
+Called by yawControl at every fixed step: detects oversteer via the body slip angle and updates electrics.values.yawControlRequestReduceOversteer.
 
-- `measuredYaw` (*number*) : Lacet mesuré (rad/s).
-- `expectedYaw` (*number*) : Lacet attendu (rad/s), non utilisé.
-- `yawDifference` (*number*) : Écart de lacet, non utilisé.
-- `bodySlipAngle` (*number*) : Angle de dérive de caisse ajusté (rad).
-- `frontSlipAngle` (*number*) : Angle de dérive avant (rad), non utilisé.
-- `rearSlipAngle` (*number*) : Angle de dérive arrière (rad), non utilisé.
-- `dt` (*number*) : Pas de temps (s).
-- **renvoie** : boolean Vrai si la réduction de survirage est demandée.
+- `measuredYaw` (*number*) : Measured yaw (rad/s).
+- `expectedYaw` (*number*) : Expected yaw (rad/s), unused.
+- `yawDifference` (*number*) : Yaw error, unused.
+- `bodySlipAngle` (*number*) : Adjusted body slip angle (rad).
+- `frontSlipAngle` (*number*) : Front slip angle (rad), unused.
+- `rearSlipAngle` (*number*) : Rear slip angle (rad), unused.
+- `dt` (*number*) : Time step (s).
+- **returns**: boolean True if oversteer reduction is requested.
 
 #### `controller_drivingDynamics_supervisors_components_aeroControl.getConfig()`
 
-Renvoie une copie de la configuration.
+Returns a copy of the configuration.
 
-- **renvoie** : table Copie de la configuration.
+- **returns**: table Copy of the configuration.
 
 #### `controller_drivingDynamics_supervisors_components_aeroControl.init(jbeamData)`
 
-Remet à false les indicateurs d'action.
+Resets the action flags to false.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_supervisors_components_aeroControl.initLastStage(jbeamData)`
 
-Ne fait rien.
+Does nothing.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_supervisors_components_aeroControl.initSecondStage(jbeamData)`
 
-S'enregistre auprès de yawControl, lit slipAngleThreshold et passe isActive à true.
+Registers with yawControl, reads slipAngleThreshold and sets isActive to true.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_supervisors_components_aeroControl.registerCMU(cmu)`
 
-Mémorise la référence au CMU.
+Stores the reference to the CMU.
 
-- `cmu` (*table*) : Contrôleur CMU.
+- `cmu` (*table*) : CMU controller.
 
 #### `controller_drivingDynamics_supervisors_components_aeroControl.setConfig(configTable)`
 
-Remplace la configuration complète.
+Replaces the entire configuration.
 
 - `configTable` (*table*) : Table {yawControl = {isEnabled, slipAngleThreshold}}.
 
 #### `controller_drivingDynamics_supervisors_components_aeroControl.setDebugMode(debugEnabled)`
 
-Active/désactive les paquets de debug.
+Enables/disables debug packets.
 
-- `debugEnabled` (*boolean*) : Vrai pour activer.
+- `debugEnabled` (*boolean*) : True to enable.
 
 #### `controller_drivingDynamics_supervisors_components_aeroControl.setParameters(parameters)`
 
-Applique des paramètres (voir notes) via CMU.applyParameter.
+Applies parameters (see notes) via CMU.applyParameter.
 
-- `parameters` (*table<string, any>*) : Ex. {["yawControl.slipAngleThreshold"] = 0.3}.
+- `parameters` (*table<string, any>*) : E.g. {["yawControl.slipAngleThreshold"] = 0.3}.
 
 #### `controller_drivingDynamics_supervisors_components_aeroControl.updateGFX(dt)`
 
-Vide (version debug : envoie un paquet d'état au CMU).
+Empty (debug version: sends a state packet to the CMU).
 
-- `dt` (*number*) : Pas de temps graphique (s).
+- `dt` (*number*) : Graphics time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `actAsABSControl` | function | nop. |
-| `componentOrderABSControl` | number | 1000 : jamais utilisé comme ABS. |
-| `componentOrderTractionControl` | number | 1000 : jamais utilisé comme antipatinage. |
-| `componentOrderYawControl` | number | 30 : ordre d'appel par yawControl. |
-| `defaultOrder` | number | Ordre d'exécution par défaut (70). |
-| `isActingAsABS` | boolean | Toujours false. |
-| `isActingAsTC` | boolean | Toujours false. |
-| `isActingAsYC` | boolean | Vrai quand la réduction de survirage est demandée. |
-| `isActive` | boolean | Vrai après initSecondStage. |
+| `componentOrderABSControl` | number | 1000: never used as ABS. |
+| `componentOrderTractionControl` | number | 1000: never used as traction control. |
+| `componentOrderYawControl` | number | 30: call order by yawControl. |
+| `defaultOrder` | number | Default execution order (70). |
+| `isActingAsABS` | boolean | Always false. |
+| `isActingAsTC` | boolean | Always false. |
+| `isActingAsYC` | boolean | True when oversteer reduction is requested. |
+| `isActive` | boolean | True after initSecondStage. |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/drivingDynamics/supervisors/components/aeroControl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/drivingDynamics/supervisors/components/aeroControl.lua`.*

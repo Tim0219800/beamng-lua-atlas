@@ -1,43 +1,43 @@
 # `editor_dynamicDecals_history`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/history.lua` · VM : Game Engine (GE) · 104 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/history.lua` · VM: Game Engine (GE) · 104 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_history` : `extensions.load("editor_dynamicDecals_history")`, puis la globale `editor_dynamicDecals_history`
+**Access:** extension `editor_dynamicDecals_history`: `extensions.load("editor_dynamicDecals_history")`, then the global `editor_dynamicDecals_history`
 
-Section « History » de l'outil Dynamic Decals. Affiche les piles d'annulation (Undo) et de rétablissement (Redo) de l'objet d'historique de l'API (api.getHistory()), permet d'annuler/rétablir jusqu'à une entrée choisie, de vider l'historique, et montre le contenu d'une action en info-bulle (dump tronqué à 20 lignes de 100 caractères).
+"History" section of the Dynamic Decals tool. Displays the undo (Undo) and redo (Redo) stacks of the API's history object (api.getHistory()), lets you undo/redo up to a chosen entry, clear the history, and shows the content of an action in a tooltip (dump truncated to 20 lines of 100 characters).
 
-## Remarques
+## Notes
 
-- « Delete All History » vide seulement les piles : les modifications déjà faites restent, et l'action est irréversible.
+- "Delete All History" only clears the stacks: the changes already made remain, and the action is irreversible.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_history.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 89 |
-| `editor_dynamicDecals_history.registerEditorPreferences(prefsRegistry)` | Enregistre la préférence float `dynamicDecalsTool.history.sectionHeight` (défaut 256, de 64 à 1024). *(interne)* | 83 |
-| `editor_dynamicDecals_history.setup(tool_in)` | Appelé par l'outil : récupère l'API et enregistre la section « History » (ordre 1045). *(interne)* | 93 |
+| `editor_dynamicDecals_history.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 89 |
+| `editor_dynamicDecals_history.registerEditorPreferences(prefsRegistry)` | Registers the float preference `dynamicDecalsTool.history.sectionHeight` (default 256, from 64 to 1024). *(internal)* | 83 |
+| `editor_dynamicDecals_history.setup(tool_in)` | Called by the tool: gets the API and registers the "History" section (order 1045). *(internal)* | 93 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_history.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_history.registerEditorPreferences(prefsRegistry)`
 
-Enregistre la préférence float `dynamicDecalsTool.history.sectionHeight` (défaut 256, de 64 à 1024).
+Registers the float preference `dynamicDecalsTool.history.sectionHeight` (default 256, from 64 to 1024).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_history.setup(tool_in)`
 
-Appelé par l'outil : récupère l'API et enregistre la section « History » (ordre 1045).
+Called by the tool: gets the API and registers the "History" section (order 1045).
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/history.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/history.lua`.*

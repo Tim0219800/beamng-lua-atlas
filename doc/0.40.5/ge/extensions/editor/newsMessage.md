@@ -1,31 +1,31 @@
 # `editor_newsMessage`
 
-*Fichier : `lua/ge/extensions/editor/newsMessage.lua` · VM : Game Engine (GE) · 62 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/newsMessage.lua` · VM: Game Engine (GE) · 62 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_newsMessage` : `extensions.load("editor_newsMessage")`, puis la globale `editor_newsMessage`
+**Access:** extension `editor_newsMessage`: `extensions.load("editor_newsMessage")`, then the global `editor_newsMessage`
 
-Extension d'éditeur qui affiche une fenêtre modale « World Editor News » avec les notes de version importantes, une seule fois par version de message (EditorNewsMessageVersion = 5), avec des liens vers le support et le forum BeamNG. Elle mémorise l'affichage dans deux préférences cachées (newsMessage.general.newsMessageShown et newsMessageVersion).
+Editor extension that displays a "World Editor News" modal window with the important release notes, only once per message version (EditorNewsMessageVersion = 5), with links to the BeamNG support and forum. It remembers the display in two hidden preferences (newsMessage.general.newsMessageShown and newsMessageVersion).
 
-## Remarques
+## Notes
 
-- Dans 0.40.5, newsText est vide : onEditorGui retourne tout de suite et la fenêtre ne s'affiche jamais.
-- Pour que le message s'affiche de nouveau, il faut augmenter EditorNewsMessageVersion et remplir newsText.
+- In 0.40.5, newsText is empty: onEditorGui returns immediately and the window is never displayed.
+- For the message to be displayed again, EditorNewsMessageVersion must be increased and newsText filled in.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_newsMessage.onEditorGui()` | Hook d'éditeur appelé à chaque frame : ouvre la fenêtre modale si le message n'a pas encore été vu pour cette version, puis la dessine (texte, liens, bouton Close). *(interne)* *(hook)* | 13 |
-| `editor_newsMessage.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre modale « newsModalDlg ». *(interne)* *(hook)* | 54 |
-| `editor_newsMessage.onEditorRegisterPreferences(prefsRegistry)` | Hook d'enregistrement des préférences : crée la catégorie newsMessage avec les préférences cachées newsMessageShown (bool) et newsMessageVersion (int). *(interne)* *(hook)* | 43 |
+| `editor_newsMessage.onEditorGui()` | Editor hook called every frame: opens the modal window if the message has not yet been seen for this version, then draws it (text, links, Close button). *(internal)* *(hook)* | 13 |
+| `editor_newsMessage.onEditorInitialized()` | Hook called at editor initialization: registers the "newsModalDlg" modal window. *(internal)* *(hook)* | 54 |
+| `editor_newsMessage.onEditorRegisterPreferences(prefsRegistry)` | Preferences registration hook: creates the newsMessage category with the hidden preferences newsMessageShown (bool) and newsMessageVersion (int). *(internal)* *(hook)* | 43 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_newsMessage.onEditorRegisterPreferences(prefsRegistry)`
 
-Hook d'enregistrement des préférences : crée la catégorie newsMessage avec les préférences cachées newsMessageShown (bool) et newsMessageVersion (int).
+Preferences registration hook: creates the newsMessage category with the hidden preferences newsMessageShown (bool) and newsMessageVersion (int).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/newsMessage.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/newsMessage.lua`.*

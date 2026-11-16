@@ -1,12 +1,12 @@
 # `powertrain_electricServo`
 
-*Fichier : `lua/vehicle/powertrain/electricServo.lua` · VM : Véhicule · 230 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/electricServo.lua` · VM: Vehicle · 230 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `electricServo` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `electricServo` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Composant powertrain `electricServo` : servomoteur électrique qui fait tourner une roue « rotor » (clé jbeam `connectedRotator`, une roue déclarée comme rotator) vers un angle cible, avec un régulateur proportionnel (angularSpring) et un couple limité (stallTorque). Catégorie `engine` mais sans port de sortie : il n'a pas de parent powertrain et applique directement `propulsionTorque` à la roue. L'angle cible se règle par setTargetAngle ou par une valeur electrics (`electricsTargetAngleName`). Un moddeur l'utilise pour des bras, bennes ou articulations motorisés.
+Powertrain component `electricServo`: electric servo that turns a "rotor" wheel (jbeam key `connectedRotator`, a wheel declared as a rotator) toward a target angle, with a proportional regulator (angularSpring) and a limited torque (stallTorque). Category `engine` but without an output port: it has no powertrain parent and directly applies `propulsionTorque` to the wheel. The target angle is set by setTargetAngle or by an electrics value (`electricsTargetAngleName`). A modder uses it for motorized arms, dump beds or joints.
 
-## Exemple
+## Example
 
 ```lua
 local servo = powertrain.getDevice("armServo")
@@ -14,57 +14,57 @@ servo:setMinMaxAngles(-math.pi/2, math.pi/2)
 servo:setTargetAngle(math.rad(45)) -- radians
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : name, type, inputName, inputIndex, gearRatio (1), friction (N·m), dynamicFriction (N·m par rad/s), angularSpring (1, gain en 1/rad : le « papillon » vaut min(|erreur| * angularSpring, 1)), rotationMode ('absolute' par défaut ou 'shortest'), electricsTargetAngleName (si absent, le servo se pilote uniquement par l'API), stallTorque (N·m, 1000), maxRPM (OBLIGATOIRE), connectedRotator, canDisconnect, isDisconnected, breakTriggerBeam.
-- Tous les angles sont en radians. En mode 'absolute', currentAngle est le cumul de rotation de la roue depuis le reset (pas de repli). En mode 'shortest', l'angle cible est ramené dans ]-2π, 2π[ avec le signe conservé, borné par minAngle/maxAngle si définis, et currentAngle est replié pour prendre le chemin le plus court.
-- Champs principaux : targetAngle, currentAngle (rad), torqueDirection (+1 ou -1), outputTorque1 (N·m, couple appliqué à la roue avant wheelDirection), outputAV1 (toujours 0), maxTorque (= stallTorque), maxRPM, maxAV (rad/s), wheel, wheelObj, wheelDirection, connectedRotator, mode ('connected' ou 'disconnected'), isBroken, rotationMode, minAngle, maxAngle.
-- Le couple diminue avec la vitesse de la roue (effet « back-EMF ») quand il va dans le sens du mouvement : coefficient 1 - min(|wheelAV| / maxAV, 1) ; il n'est pas atténué s'il freine la roue.
-- updateGFX n'existe que si electricsTargetAngleName est défini : il lit electrics.values[nom] (0 par défaut) et appelle setTargetAngle.
-- Bug : new suppose maxRPM défini (device.maxRPM * rpmToAV) : une erreur Lua survient si la clé jbeam maxRPM est absente. M.outputPorts = {} (aucun port). M.requiredExternalInertiaOutputs n'est pas défini dans ce module. reset ne remet pas virtualMassAV, isBroken ni le mode ; si la roue n'est pas trouvée (connectedRotator invalide) device.wheel est nil et torqueUpdate plante.
-- setTargetAngle accepte n'importe quel nombre : en mode 'shortest', l'angle ≥ 2π est replié (un angle de 2π devient 0).
+- Jbeam keys read: name, type, inputName, inputIndex, gearRatio (1), friction (N·m), dynamicFriction (N·m per rad/s), angularSpring (1, gain in 1/rad: the "throttle" is min(|error| * angularSpring, 1)), rotationMode ('absolute' by default or 'shortest'), electricsTargetAngleName (if absent, the servo is driven only through the API), stallTorque (N·m, 1000), maxRPM (REQUIRED), connectedRotator, canDisconnect, isDisconnected, breakTriggerBeam.
+- All angles are in radians. In 'absolute' mode, currentAngle is the cumulative rotation of the wheel since the reset (no wrapping). In 'shortest' mode, the target angle is brought into ]-2π, 2π[ with the sign preserved, clamped by minAngle/maxAngle if defined, and currentAngle is wrapped to take the shortest path.
+- Main fields: targetAngle, currentAngle (rad), torqueDirection (+1 or -1), outputTorque1 (N·m, torque applied to the wheel before wheelDirection), outputAV1 (always 0), maxTorque (= stallTorque), maxRPM, maxAV (rad/s), wheel, wheelObj, wheelDirection, connectedRotator, mode ('connected' or 'disconnected'), isBroken, rotationMode, minAngle, maxAngle.
+- The torque decreases with the wheel speed ("back-EMF" effect) when it goes in the direction of the motion: coefficient 1 - min(|wheelAV| / maxAV, 1); it is not attenuated if it brakes the wheel.
+- updateGFX only exists if electricsTargetAngleName is defined: it reads electrics.values[name] (0 by default) and calls setTargetAngle.
+- Bug: new assumes maxRPM is defined (device.maxRPM * rpmToAV): a Lua error occurs if the jbeam key maxRPM is absent. M.outputPorts = {} (no port). M.requiredExternalInertiaOutputs is not defined in this module. reset does not reset virtualMassAV, isBroken or the mode; if the wheel is not found (invalid connectedRotator) device.wheel is nil and torqueUpdate crashes.
+- setTargetAngle accepts any number: in 'shortest' mode, an angle ≥ 2π is wrapped (an angle of 2π becomes 0).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_electricServo.new(jbeamData)` | Construit le servo, le relie à la roue rotor connectedRotator (déclarée via wheels.setWheelRotatorType(wheelID, 'rotator')), calcule maxTorque et maxAV, détermine les modes disponibles. *(interne)* | 147 |
+| `powertrain_electricServo.new(jbeamData)` | Builds the servo, links it to the rotor wheel connectedRotator (declared via wheels.setWheelRotatorType(wheelID, 'rotator')), computes maxTorque and maxAV, determines the available modes. *(internal)* | 147 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_electricServo.new(jbeamData)`
 
-Construit le servo, le relie à la roue rotor connectedRotator (déclarée via wheels.setWheelRotatorType(wheelID, 'rotator')), calcule maxTorque et maxAV, détermine les modes disponibles.
+Builds the servo, links it to the rotor wheel connectedRotator (declared via wheels.setWheelRotatorType(wheelID, 'rotator')), computes maxTorque and maxAV, determines the available modes.
 
-- `jbeamData` (*table*) : Données jbeam du composant (maxRPM obligatoire).
-- **renvoie** : table Le device (classe `device`).
+- `jbeamData` (*table*) : jbeam data of the component (maxRPM required).
+- **returns**: table The device (class `device`).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `deviceCategories` | table<string, boolean> | {engine=true}. |
-| `outputPorts` | table | Table vide : aucun port de sortie (le servo agit directement sur la roue). |
+| `outputPorts` | table | Empty table: no output port (the servo acts directly on the wheel). |
 
-## Classe `device`
+## Class `device`
 
-Objet renvoyé par new(jbeamData). velocityUpdate vaut nop (ou une fonction vide si déconnecté) ; torqueUpdate est servoUpdateTorque ou la version déconnectée.
+Object returned by new(jbeamData). velocityUpdate is nop (or an empty function if disconnected); torqueUpdate is servoUpdateTorque or the disconnected version.
 
-Objet `device` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `device` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `device:calculateInertia()` | Calcule l'inertie de la roue rotor autour de son axe (somme masse * distance² des nœuds de la roue) puis cumulativeInertia = inertie / gearRatio². Appelée à l'initialisation du powertrain. | 118 |
-| `device:onBreak()` | Marque le servo comme cassé, met le couple de sortie et le couple de la roue à 0 et passe aux fonctions déconnectées. | 107 |
-| `device:reset(jbeamData)` | Remet à zéro le couple, la vitesse de sortie et les angles cible et courant. | 140 |
-| `device:setMinMaxAngles(minAngle, maxAngle)` | Définit les bornes d'angle utilisées par le mode 'shortest' (sans effet en mode 'absolute'). | 68 |
-| `device:setMode(mode)` | Change le mode ('connected' ou 'disconnected') sans vérifier availableModes, puis réselectionne les fonctions de mise à jour. 'disconnected' : couple nul. | 102 |
-| `device:setTargetAngle(angle)` | Fixe l'angle cible en radians. Mode 'absolute' : valeur telle quelle. Mode 'shortest' : repliée sur ]-2π, 2π[, bornée à [minAngle, maxAngle] si définis, et currentAngle est ajusté pour choisir le chemin le plus court. | 47 |
-| `device:setTargetAngleRelative(angle)` | Ajoute angle à l'angle cible actuel (via setTargetAngle). | 64 |
-| `device:torqueUpdate(dt)` | Appelée à chaque pas physique : intègre l'angle courant avec la vitesse de la roue, calcule l'erreur d'angle, un couple proportionnel borné par stallTorque et atténué par la vitesse, soustrait le frottement, et écrit wheel.propulsionTorque. Déconnecté ou cassé : couple 0. | 39 |
-| `device:updateGFX(dt)` | Défini seulement si electricsTargetAngleName est renseigné. Lit l'angle cible dans electrics.values et appelle setTargetAngle. Appelée à chaque image. | 73 |
-| `device:validate()` | Appelée après construction du powertrain ; renvoie toujours true. | 98 |
-| `device:velocityUpdate()` | Appelée à chaque pas physique ; ne fait rien (nop ou fonction vide en mode déconnecté ou cassé). | 36 |
+| `device:calculateInertia()` | Computes the inertia of the rotor wheel around its axis (sum of mass * distance² of the wheel nodes) then cumulativeInertia = inertia / gearRatio². Called at powertrain initialization. | 118 |
+| `device:onBreak()` | Marks the servo as broken, sets the output torque and the wheel torque to 0 and switches to the disconnected functions. | 107 |
+| `device:reset(jbeamData)` | Resets the torque, the output speed and the target and current angles. | 140 |
+| `device:setMinMaxAngles(minAngle, maxAngle)` | Defines the angle limits used by the 'shortest' mode (no effect in 'absolute' mode). | 68 |
+| `device:setMode(mode)` | Changes the mode ('connected' or 'disconnected') without checking availableModes, then reselects the update functions. 'disconnected': zero torque. | 102 |
+| `device:setTargetAngle(angle)` | Sets the target angle in radians. 'absolute' mode: value as is. 'shortest' mode: wrapped into ]-2π, 2π[, clamped to [minAngle, maxAngle] if defined, and currentAngle is adjusted to choose the shortest path. | 47 |
+| `device:setTargetAngleRelative(angle)` | Adds angle to the current target angle (via setTargetAngle). | 64 |
+| `device:torqueUpdate(dt)` | Called at each physics step: integrates the current angle with the wheel speed, computes the angle error, a proportional torque clamped by stallTorque and attenuated by the speed, subtracts the friction, and writes wheel.propulsionTorque. Disconnected or broken: torque 0. | 39 |
+| `device:updateGFX(dt)` | Defined only if electricsTargetAngleName is set. Reads the target angle from electrics.values and calls setTargetAngle. Called every frame. | 73 |
+| `device:validate()` | Called after the powertrain is built; always returns true. | 98 |
+| `device:velocityUpdate()` | Called at each physics step; does nothing (nop or empty function in disconnected or broken mode). | 36 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/electricServo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/electricServo.lua`.*

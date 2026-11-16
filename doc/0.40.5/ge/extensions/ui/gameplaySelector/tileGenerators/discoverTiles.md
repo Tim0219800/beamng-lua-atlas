@@ -1,57 +1,57 @@
 # `ui_gameplaySelector_tileGenerators_discoverTiles`
 
-*Fichier : `lua/ge/extensions/ui/gameplaySelector/tileGenerators/discoverTiles.lua` · VM : Game Engine (GE) · 206 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/gameplaySelector/tileGenerators/discoverTiles.lua` · VM: Game Engine (GE) · 206 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_gameplaySelector_tileGenerators_discoverTiles` : `extensions.load("ui_gameplaySelector_tileGenerators_discoverTiles")`, puis la globale `ui_gameplaySelector_tileGenerators_discoverTiles`
+**Access:** extension `ui_gameplaySelector_tileGenerators_discoverTiles`: `extensions.load("ui_gameplaySelector_tileGenerators_discoverTiles")`, then the global `ui_gameplaySelector_tileGenerators_discoverTiles`
 
-Générateur de tuiles du sélecteur de gameplay pour les « expériences de démarrage rapide » (système quickStartExperiences). Il lit les pages et cartes de gameplay_discover.getDiscoverPages(), crée une tuile par page, regroupe les cartes d'une page en « Experiences » et « Challenges » (missions), et fournit les détails et le bouton de lancement d'une carte.
+Tile generator of the gameplay selector for "quick-start experiences" (quickStartExperiences system). It reads the pages and cards from gameplay_discover.getDiscoverPages(), creates one tile per page, groups a page's cards into "Experiences" and "Challenges" (missions), and provides the details and the launch button of a card.
 
-## Remarques
+## Notes
 
-- Les pages avec showMultiseatControllers ou sans carte ne produisent pas de tuile.
-- Une carte de type mission avec missionId reçoit la clé mission_<id> et un showDetails.missionId (détails gérés par missionTiles) ; les autres reçoivent discover_<discoverId>.
-- Le bouton de lancement navigue vers card.preStartRoute si elle existe, sinon appelle gameplay_discover.startDiscover(discoverId) avec écran de chargement.
+- Pages with showMultiseatControllers or without cards produce no tile.
+- A mission-type card with missionId receives the key mission_<id> and a showDetails.missionId (details handled by missionTiles); the others receive discover_<discoverId>.
+- The launch button navigates to card.preStartRoute if it exists, otherwise calls gameplay_discover.startDiscover(discoverId) with a loading screen.
 
-**Dépendances (chargées avant) :** `gameplay_discover`
+**Dependencies (loaded first):** `gameplay_discover`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_gameplaySelector_tileGenerators_discoverTiles.getPageGroups(pageKey)` | Renvoie les groupes de tuiles d'une page découverte : un groupe « discoverExperiences » (cartes non mission) et un groupe « discoverChallenges » (cartes mission), chacun seulement s'il n'est pas vide. Renvoie une table vide si la page est introuvable. | 106 |
-| `ui_gameplaySelector_tileGenerators_discoverTiles.onGameplaySelectorGetDetails(itemDetails, details, buttonInstance, backend)` | Hook appelé à l'ouverture des détails. Si itemDetails.discoverId désigne une carte connue, ajoute dans details un bloc (titre, description, aperçu, favori, étiquettes) avec un bouton « play » qui enregistre l'élément comme récent puis lance la carte. *(interne)* *(hook)* | 164 |
-| `ui_gameplaySelector_tileGenerators_discoverTiles.onGameplaySelectorGetTiles(items, backend)` | Hook appelé quand le sélecteur collecte ses tuiles. Pour le backend gameplaySelector uniquement, ajoute une tuile de type discoverPage par page contenant au moins une carte, avec gotoPath, nombre de sous-éléments et icônes officiel ou mod. *(interne)* *(hook)* | 142 |
+| `ui_gameplaySelector_tileGenerators_discoverTiles.getPageGroups(pageKey)` | Returns the tile groups of a discover page: a "discoverExperiences" group (non-mission cards) and a "discoverChallenges" group (mission cards), each only if it is not empty. Returns an empty table if the page is not found. | 106 |
+| `ui_gameplaySelector_tileGenerators_discoverTiles.onGameplaySelectorGetDetails(itemDetails, details, buttonInstance, backend)` | Hook called when the details are opened. If itemDetails.discoverId designates a known card, adds to details a block (title, description, preview, favorite, labels) with a "play" button that records the item as recent then launches the card. *(internal)* *(hook)* | 164 |
+| `ui_gameplaySelector_tileGenerators_discoverTiles.onGameplaySelectorGetTiles(items, backend)` | Hook called when the selector collects its tiles. For the gameplaySelector backend only, adds a discoverPage tile per page containing at least one card, with gotoPath, sub-element count and official or mod icons. *(internal)* *(hook)* | 142 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_gameplaySelector_tileGenerators_discoverTiles.getPageGroups(pageKey)`
 
-Renvoie les groupes de tuiles d'une page découverte : un groupe « discoverExperiences » (cartes non mission) et un groupe « discoverChallenges » (cartes mission), chacun seulement s'il n'est pas vide. Renvoie une table vide si la page est introuvable.
+Returns the tile groups of a discover page: a "discoverExperiences" group (non-mission cards) and a "discoverChallenges" group (mission cards), each only if it is not empty. Returns an empty table if the page is not found.
 
-- `pageKey` (*string*) : Clé de la page (page.folder, sinon page.title, sinon son index).
-- **renvoie** : table[] Liste de groupes {key, label, tiles}.
+- `pageKey` (*string*) : Page key (page.folder, otherwise page.title, otherwise its index).
+- **returns**: table[] List of groups {key, label, tiles}.
 
 #### `ui_gameplaySelector_tileGenerators_discoverTiles.onGameplaySelectorGetDetails(itemDetails, details, buttonInstance, backend)`
 
-Hook appelé à l'ouverture des détails. Si itemDetails.discoverId désigne une carte connue, ajoute dans details un bloc (titre, description, aperçu, favori, étiquettes) avec un bouton « play » qui enregistre l'élément comme récent puis lance la carte.
+Hook called when the details are opened. If itemDetails.discoverId designates a known card, adds to details a block (title, description, preview, favorite, labels) with a "play" button that records the item as recent then launches the card.
 
-- `itemDetails` (*table*) : Données showDetails (discoverId, key).
-- `details` (*table*) : Liste de blocs de détails à compléter.
-- `buttonInstance` (*table*) : Objet fournissant addButton.
-- `backend` (*table*) : Backend offrant isFavourite et trackRecent.
+- `itemDetails` (*table*) : showDetails data (discoverId, key).
+- `details` (*table*) : List of details blocks to complete.
+- `buttonInstance` (*table*) : Object providing addButton.
+- `backend` (*table*) : Backend offering isFavourite and trackRecent.
 
 #### `ui_gameplaySelector_tileGenerators_discoverTiles.onGameplaySelectorGetTiles(items, backend)`
 
-Hook appelé quand le sélecteur collecte ses tuiles. Pour le backend gameplaySelector uniquement, ajoute une tuile de type discoverPage par page contenant au moins une carte, avec gotoPath, nombre de sous-éléments et icônes officiel ou mod.
+Hook called when the selector collects its tiles. For the gameplaySelector backend only, adds a discoverPage tile per page containing at least one card, with gotoPath, sub-element count and official or mod icons.
 
-- `items` (*table*) : Liste de tuiles à compléter.
-- `backend` (*table*) : Backend appelant.
+- `items` (*table*) : List of tiles to complete.
+- `backend` (*table*) : Calling backend.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant celle-ci : gameplay_discover. |
+| `dependencies` | string[] | Extensions loaded before this one: gameplay_discover. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/gameplaySelector/tileGenerators/discoverTiles.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/gameplaySelector/tileGenerators/discoverTiles.lua`.*

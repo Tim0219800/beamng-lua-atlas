@@ -1,35 +1,35 @@
 # `flowgraph_nodes_ui_customButtonTEST`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/customButtonTEST.lua` · VM : Game Engine (GE) · 78 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/customButtonTEST.lua` · VM: Game Engine (GE) · 78 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/customButtonTEST")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/customButtonTEST")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Custom Button TEST » (catégorie once_instant, description « TEST ») : nœud d'essai qui affiche un bouton « Click me! » via le hook UI 'CustomFGButtons'. Sortie « btn_1 » (flux) mise à true quand le bouton est cliqué. Ne pas utiliser en production.
+Flowgraph node "Custom Button TEST" (category once_instant, description "TEST"): test node that displays a "Click me!" button via the UI hook 'CustomFGButtons'. Output "btn_1" (flow) set to true when the button is clicked. Do not use in production.
 
-## Remarques
+## Notes
 
-- Nœud de test : openDialogue/closeDialogue référencent self.open mais workOnce n'ouvre pas via openDialogue ; self.open reste false, donc le dialogue n'est pas fermé à l'arrêt.
-- Dépend de core_input_bindings.
+- Test node: openDialogue/closeDialogue reference self.open but workOnce does not open via openDialogue; self.open stays false, so the dialogue is not closed on stop.
+- Depends on core_input_bindings.
 
-**Dépendances (chargées avant) :** `core_input_bindings`
+**Dependencies (loaded first):** `core_input_bindings`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:_executionStarted()` | open = false. | 25 |
-| `C:_executionStopped()` | Ferme le dialogue s'il est ouvert. | 29 |
-| `C:buttonPushed(action)` | Met à true le pin de sortie correspondant au bouton cliqué, les autres à false. | 35 |
-| `C:closeDialogue()` | Envoie une liste vide à 'CustomFGButtons' (cache les boutons). | 45 |
-| `C:getCmd(action)` | Construit la commande Lua rappelant buttonPushed(action) sur ce nœud. | 41 |
+| `C:_executionStopped()` | Closes the dialogue if it is open. | 29 |
+| `C:buttonPushed(action)` | Sets the output pin matching the clicked button to true, the others to false. | 35 |
+| `C:closeDialogue()` | Sends an empty list to 'CustomFGButtons' (hides the buttons). | 45 |
+| `C:getCmd(action)` | Builds the Lua command that calls buttonPushed(action) back on this node. | 41 |
 | `C:init()` | open = false. | 21 |
-| `C:onNodeReset()` | Ferme le dialogue s'il est ouvert. | 60 |
-| `C:openDialogue()` | Envoie le bouton « Click me! » à l'UI et met done = true. | 49 |
-| `C:workOnce()` | Envoie le bouton « Click me! » à l'UI (guihooks 'CustomFGButtons'). | 66 |
+| `C:onNodeReset()` | Closes the dialogue if it is open. | 60 |
+| `C:openDialogue()` | Sends the "Click me!" button to the UI and sets done = true. | 49 |
+| `C:workOnce()` | Sends the "Click me!" button to the UI (guihooks 'CustomFGButtons'). | 66 |
 
-**Évènements UI (guihooks.trigger) :** `CustomFGButtons`
+**UI events (guihooks.trigger):** `CustomFGButtons`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/customButtonTEST.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/customButtonTEST.lua`.*

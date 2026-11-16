@@ -1,0 +1,22 @@
+# `backwardsCompatibility`
+
+*Fichier : `lua/vehicle/backwardsCompatibility.lua` · VM : Véhicule · 404 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+
+**Accès :** globale `backwardsCompatibility`
+
+Convertit à l'initialisation les anciennes données de véhicule (v.data) vers le format actuel : ancienne chaîne de transmission (engine/differentials) vers un powertrain, ESC codé en dur (escConfig) vers un contrôleur 'esc', et détection heuristique des remorques pour limiter les niveaux d'allumage. Un moddeur n'a pas à l'appeler : il sert aux vieux véhicules/mods dont le jbeam n'a pas été migré. Il modifie v.data en place.
+
+## Remarques
+
+- Ordre dans init : checkOldESC, puis checkOldDrivetrain, puis checkTrailerIgnitionStates (doit venir après la conversion drivetrain->powertrain car il utilise les données powertrain).
+- Remorque présumée (aucune source de couple ni vehicleController) : v.data.electrics.allowedIgnitionLevels = {0} et ignitionLevelOverrideType = 'none', sauf si le jbeam fournit déjà allowedIgnitionLevels.
+- Incohérence possible : checkOldESC teste `v.filename == "esc"` alors que le contrôleur est inséré avec la clé `fileName` ; la détection d'un contrôleur esc existant peut donc échouer et dupliquer le contrôleur. De plus la boucle masque la variable globale `v` par la variable de boucle.
+
+## Fonctions
+
+| Fonction | Description | Ligne |
+|---|---|---|
+| `backwardsCompatibility.init()` | Applique toutes les conversions de rétrocompatibilité sur v.data (ESC, drivetrain, états d'allumage des remorques). Appelée par le chargement du véhicule avant l'initialisation des systèmes. *(interne)* | 393 |
+
+---
+*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/backwardsCompatibility.lua`.*

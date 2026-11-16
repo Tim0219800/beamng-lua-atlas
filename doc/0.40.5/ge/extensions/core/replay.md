@@ -1,342 +1,342 @@
 # `core_replay`
 
-*Fichier : `lua/ge/extensions/core/replay.lua` · VM : Game Engine (GE) · 1109 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/replay.lua` · VM: Game Engine (GE) · 1109 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_replay` : `extensions.load("core_replay")`, puis la globale `core_replay`
+**Access:** extension `core_replay`: `extensions.load("core_replay")`, then the global `core_replay`
 
-Interface Lua du système de replays (fichiers .rpl sous replays/). Elle pilote le flux de fichier C++ (be:getFileStream) : enregistrement manuel ou de mission, lecture, pause, vitesse, saut, renommage, suppression. Elle reçoit l'état du moteur par stateChanged, le republie à l'UI (guihooks replayStateChanged) et aux extensions (hooks onReplayStateChanged et onReplayCoreEvent), et active ou désactive les action maps de lecture. Gère aussi les replays automatiques de mission (replays/missionReplays/ et replays/userSavedMissionReplays/).
+Lua interface of the replay system (.rpl files under replays/). It drives the C++ file stream (be:getFileStream): manual or mission recording, playback, pause, speed, seek, rename, delete. It receives the engine state through stateChanged, republishes it to the UI (guihooks replayStateChanged) and to extensions (hooks onReplayStateChanged and onReplayCoreEvent), and enables or disables the playback action maps. Also handles automatic mission replays (replays/missionReplays/ and replays/userSavedMissionReplays/).
 
-## Exemple
+## Example
 
 ```lua
 core_replay.startRecording()
--- plus tard
+-- later
 core_replay.stopRecording({autoplayAfterStopping = true})
 local list = core_replay.getRecordings()
 core_replay.loadFile(list[1].filename, true)
 ```
 
-## Remarques
+## Notes
 
-- M.state contient : loadedFile, positionSeconds, totalSeconds, speed (arrondi au millième), paused, fpsPlay, fpsRec, state ('inactive', 'playback' ou 'recording'), framePositionSeconds.
-- Tous les noms de fichiers sont validés : relatifs au jeu, sous replays/, avec extension .rpl, sans '..', sans ':' ni caractères interdits. Sinon les fonctions renvoient un résultat d'échec avec code 'invalidFilename' ou un message.
-- Beaucoup de fonctions renvoient un résultat {success, filename, message?, code?, ...} (replayOperationResult). Codes vus : ok, queued, invalidFilename, fileNotFound, streamUnavailable, streamPlayFailed, recordStartFailed, recordingActive, notRecording, playbackActive.
-- loadFile ne lance pas la lecture tout de suite : il met la demande en attente et affiche 'app:waiting' ; la lecture démarre dans onUiWaitingState. Un nouvel appel remplace la demande en attente.
-- Vitesses accessibles par toggleSpeed : 1/1000, 1/500, 1/200, 1/100, 1/50, 1/32, 1/16, 1/8, 1/4, 1/2, 3/4, 1, 1.5, 2, 4, 8.
-- Le commentaire de setSpeed dit '1=realtime, 0.5=slowmo, 2=fastmotion'. Le changement est instantané, sans lissage.
-- Un enregistrement manuel est refusé pendant qu'un enregistrement de mission est actif (message ui replay.cantManualRecording).
-- BUG probable : getMissionReplayFiles appelle career_saveSystem.getCurrentProfile() sans tester que career_saveSystem existe (le test career_career vient après). Hors carrière, si career_saveSystem n'est pas chargé, cela lève une erreur.
-- Les fonctions saveMissionReplay et removeMissionSavedReplay copient puis suppriment les fichiers .rpl et .rplMeta.json, et supposent que le meta existe (meta.missionId).
+- M.state contains: loadedFile, positionSeconds, totalSeconds, speed (rounded to the thousandth), paused, fpsPlay, fpsRec, state ('inactive', 'playback' or 'recording'), framePositionSeconds.
+- All file names are validated: relative to the game, under replays/, with the .rpl extension, without '..', without ':' or forbidden characters. Otherwise the functions return a failure result with code 'invalidFilename' or a message.
+- Many functions return a result {success, filename, message?, code?, ...} (replayOperationResult). Codes seen: ok, queued, invalidFilename, fileNotFound, streamUnavailable, streamPlayFailed, recordStartFailed, recordingActive, notRecording, playbackActive.
+- loadFile does not start playback right away: it queues the request and displays 'app:waiting'; playback starts in onUiWaitingState. A new call replaces the pending request.
+- Speeds reachable by toggleSpeed: 1/1000, 1/500, 1/200, 1/100, 1/50, 1/32, 1/16, 1/8, 1/4, 1/2, 3/4, 1, 1.5, 2, 4, 8.
+- The comment of setSpeed says '1=realtime, 0.5=slowmo, 2=fastmotion'. The change is instantaneous, without smoothing.
+- A manual recording is refused while a mission recording is active (UI message replay.cantManualRecording).
+- Probable BUG: getMissionReplayFiles calls career_saveSystem.getCurrentProfile() without testing that career_saveSystem exists (the career_career test comes after). Outside career, if career_saveSystem is not loaded, this raises an error.
+- The functions saveMissionReplay and removeMissionSavedReplay copy then delete the .rpl and .rplMeta.json files, and assume the meta exists (meta.missionId).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_replay._getReplayVehicleData(id)` | Appelé par le C++ : renvoie les données du véhicule (core_vehicle_manager.getVehicleData) encodées en JSON. *(interne)* | 1054 |
-| `core_replay.acceptRename(oldFilename, newFilename)` | Renomme un replay (et son .rplMeta.json). Un nouveau nom sans '/' reste dans le même dossier ; refusé si la cible existe. Si le replay était chargé, il est rechargé sous son nouveau nom. | 909 |
-| `core_replay.cancelRecording()` | Si un enregistrement est en cours : l'arrête et supprime le fichier, puis publie l'état vide. | 689 |
-| `core_replay.displayMsg(level, msg, context)` | Affiche une notification (toastrMsg) 'Replay <level>' et écrit un log. | 546 |
-| `core_replay.getDebugEnabled()` | Indique si les logs de debug du replay sont actifs. | 40 |
-| `core_replay.getLoadedFile()` | Nom du fichier replay chargé. | 483 |
-| `core_replay.getMissionReplayFiles(mission, returnOnlyWithAttempt)` | Liste les replays de mission (automatiques et sauvegardés par l'utilisateur pour la carrière/freeroam courante) correspondant à une mission, triés par meta.time. | 971 |
-| `core_replay.getMissionReplaysPath()` | Renvoie le dossier des replays de mission automatiques. | 1104 |
-| `core_replay.getPlaybackContext(filename)` | Indique si un replay peut être lu et s'il faut d'abord charger son niveau. | 298 |
-| `core_replay.getPositionSeconds()` | Position de lecture courante en secondes. | 458 |
-| `core_replay.getRecordings()` | Liste les .rpl du dossier replays/ (sans sous-dossiers). Chaque entrée : filename, path, key, basename, displayName, size, sortTime, map, levelName, metadataAvailable, missingMetadataFields. Le niveau est deviné en scannant le début du fichier (jusqu'à 1 Mo) ; tri : niveau courant d'abord, puis le plus récent. | 261 |
-| `core_replay.getState()` | État du système de replay. | 466 |
-| `core_replay.getTotalSeconds()` | Durée totale du replay chargé en secondes. | 462 |
-| `core_replay.isGameplayAllowed()` | Indique si le gameplay est autorisé pendant le replay. Renvoie toujours true actuellement (un TODO dans le code prévoit une option). | 470 |
-| `core_replay.isPaused()` | Indique si la lecture est en pause. | 479 |
-| `core_replay.jump(offset)` | Alias de jumpFrames (ancien nom). | 842 |
-| `core_replay.jumpFrames(offset)` | Avance ou recule d'un nombre d'images (stream:stepFrames) et affiche un message UI. | 842 |
-| `core_replay.jumpTime(timeDiffInSeconds)` | Avance ou recule d'une durée (stream:stepTime) et affiche un message UI. | 849 |
-| `core_replay.loadFile(filename, autoplay, options)` | Met en attente le chargement d'un replay (affiche l'écran d'attente ; la lecture démarre dans onUiWaitingState). Valide le nom de fichier. | 631 |
-| `core_replay.logUiAction(scope, data)` | Écrit dans le log de debug (si actif) une action venue de l'UI, avec le préfixe 'ui.'. | 36 |
-| `core_replay.onClientEndMission(levelPath)` | Hook appelé à la fin d'un niveau : si une lecture est en cours et que le changement de niveau n'a pas été demandé par startLevel, la lecture est arrêtée avec un message. *(interne)* *(hook)* | 863 |
-| `core_replay.onInit()` | Hook d'initialisation de l'extension : demande au flux de fichier de renvoyer son état (stream:requestState). *(interne)* *(hook)* | 254 |
-| `core_replay.onUiWaitingState(state)` | Hook appelé quand l'écran d'attente de l'UI est affiché. Lance alors la lecture du fichier mis en attente par loadFile (stop du flux puis play). *(interne)* *(hook)* | 608 |
-| `core_replay.openMissionReplayFolder(replayFileName)` | Ouvre l'emplacement d'un fichier replay dans l'explorateur ; journalise une erreur s'il n'existe pas. | 1044 |
-| `core_replay.openReplayFolderInExplorer()` | Ouvre le dossier replays/ dans l'explorateur de fichiers (le crée s'il manque). | 856 |
-| `core_replay.pause(v)` | Met en pause ou relance la lecture. Sans effet hors 'playback'. | 538 |
-| `core_replay.removeMissionSavedReplay(replayFileName)` | Opération inverse : déplace un replay sauvegardé vers replays/missionReplays/ (pour qu'il soit de nouveau géré automatiquement), puis notifie l'UI. | 1028 |
-| `core_replay.removeRecording(filename)` | Supprime un replay et son fichier .rplMeta.json ; l'arrête d'abord s'il est chargé ; met à jour le catalogue. | 882 |
-| `core_replay.saveMissionReplay(replayFileName)` | Déplace un replay de mission automatique vers le dossier des replays sauvegardés par l'utilisateur (carrière/<slot>/ ou freeroam/) avec son .rplMeta.json, puis notifie l'UI (recordingFilesUpdated). | 1011 |
-| `core_replay.seek(percent)` | Se place à une position normalisée du replay. Sans effet hors playback. | 834 |
-| `core_replay.setDebugEnabled(enabled)` | Active ou désactive les logs de debug du replay (tag core_replay.debug). | 31 |
-| `core_replay.setSpeed(speed)` | Fixe la vitesse de lecture (1 = temps réel, 0.5 = ralenti, 2 = accéléré), sans lissage. Ne fait rien si la vitesse est déjà celle-ci. | 487 |
-| `core_replay.startLevel(levelPath)` | Lance le niveau donné en freeroam sans faire apparaître de véhicule (freeroam_freeroam.startFreeroamByName), en marquant requestedStartLevel pour ne pas arrêter la lecture. | 873 |
-| `core_replay.startRecording()` | Démarre un enregistrement manuel dans replays/ (nom 'AAAA-MM-JJ_HH-MM-SS <niveau>.rpl'). Refusé si déjà en enregistrement, en lecture, ou si un enregistrement de mission est actif. | 774 |
-| `core_replay.stateChanged(loadedFile, positionSeconds, totalSeconds, speed, paused, fpsPlay, fpsRec, statestr, framePositionSeconds)` | Appelé par le C++ à chaque changement d'état du flux de replay. À l'entrée en 'playback', désactive les action maps VehicleCommon/VehicleSpecific et pousse ReplayPlaybackActionMap ; à la sortie, l'inverse. Met à jour M.state, déclenche guihooks 'replayStateChanged', hook 'onReplayStateChanged'(state) et 'onReplayCoreEvent'({event, state, ...}) avec event parmi playbackStarted, playbackStopped, recordingStarted, recordingStopped, playbackPaused, playbackResumed, loadedFileChanged. *(interne)* | 376 |
-| `core_replay.stop()` | Annule un chargement en attente et arrête le flux (lecture ou enregistrement). | 662 |
-| `core_replay.stopAndUnload()` | Arrête la lecture et publie un état vide 'inactive'. Refusé pendant un enregistrement (code recordingActive). | 672 |
-| `core_replay.stopRecording(options)` | Arrête l'enregistrement manuel et met à jour le catalogue (guihooks replayRecordingsUpdated). | 790 |
-| `core_replay.toggleMissionRecording()` | Raccourci de toggleRecording(false, true) : bascule l'enregistrement du replay de mission. | 830 |
-| `core_replay.togglePlay()` | Bascule lecture/pause du replay chargé. Si l'état est 'inactive', recharge et lance le fichier ; hors playback et inactive, journalise une erreur. | 552 |
-| `core_replay.toggleRecording(autoplayAfterStopping, isMissionReplay)` | Bascule l'enregistrement : en enregistrement, l'arrête ; en lecture, arrête la lecture ; sinon démarre un enregistrement. | 808 |
-| `core_replay.toggleSpeed(val)` | Change la vitesse. 'realtime' alterne entre 1 et la dernière autre vitesse (1/8 au départ) ; 'slowmotion' met 1/8 ; un nombre positif ou négatif monte ou descend d'autant de crans dans la liste des vitesses. Informe simTimeAuthority. | 496 |
+| `core_replay._getReplayVehicleData(id)` | Called by C++: returns the vehicle data (core_vehicle_manager.getVehicleData) encoded as JSON. *(internal)* | 1054 |
+| `core_replay.acceptRename(oldFilename, newFilename)` | Renames a replay (and its .rplMeta.json). A new name without '/' stays in the same folder; refused if the target exists. If the replay was loaded, it is reloaded under its new name. | 909 |
+| `core_replay.cancelRecording()` | If a recording is in progress: stops it and deletes the file, then publishes the empty state. | 689 |
+| `core_replay.displayMsg(level, msg, context)` | Displays a notification (toastrMsg) 'Replay <level>' and writes a log. | 546 |
+| `core_replay.getDebugEnabled()` | Indicates whether the replay debug logs are active. | 40 |
+| `core_replay.getLoadedFile()` | Name of the loaded replay file. | 483 |
+| `core_replay.getMissionReplayFiles(mission, returnOnlyWithAttempt)` | Lists the mission replays (automatic and user-saved for the current career/freeroam) matching a mission, sorted by meta.time. | 971 |
+| `core_replay.getMissionReplaysPath()` | Returns the folder of automatic mission replays. | 1104 |
+| `core_replay.getPlaybackContext(filename)` | Indicates whether a replay can be played and whether its level must be loaded first. | 298 |
+| `core_replay.getPositionSeconds()` | Current playback position in seconds. | 458 |
+| `core_replay.getRecordings()` | Lists the .rpl files of the replays/ folder (without subfolders). Each entry: filename, path, key, basename, displayName, size, sortTime, map, levelName, metadataAvailable, missingMetadataFields. The level is guessed by scanning the start of the file (up to 1 MB); sort: current level first, then most recent. | 261 |
+| `core_replay.getState()` | State of the replay system. | 466 |
+| `core_replay.getTotalSeconds()` | Total duration of the loaded replay in seconds. | 462 |
+| `core_replay.isGameplayAllowed()` | Indicates whether gameplay is allowed during the replay. Currently always returns true (a TODO in the code plans an option). | 470 |
+| `core_replay.isPaused()` | Indicates whether playback is paused. | 479 |
+| `core_replay.jump(offset)` | Alias of jumpFrames (old name). | 842 |
+| `core_replay.jumpFrames(offset)` | Moves forward or backward by a number of frames (stream:stepFrames) and displays a UI message. | 842 |
+| `core_replay.jumpTime(timeDiffInSeconds)` | Moves forward or backward by a duration (stream:stepTime) and displays a UI message. | 849 |
+| `core_replay.loadFile(filename, autoplay, options)` | Queues the loading of a replay (displays the waiting screen; playback starts in onUiWaitingState). Validates the file name. | 631 |
+| `core_replay.logUiAction(scope, data)` | Writes to the debug log (if active) an action coming from the UI, with the prefix 'ui.'. | 36 |
+| `core_replay.onClientEndMission(levelPath)` | Hook called at the end of a level: if playback is in progress and the level change was not requested by startLevel, playback is stopped with a message. *(internal)* *(hook)* | 863 |
+| `core_replay.onInit()` | Extension initialization hook: asks the file stream to send back its state (stream:requestState). *(internal)* *(hook)* | 254 |
+| `core_replay.onUiWaitingState(state)` | Hook called when the UI waiting screen is displayed. It then starts playback of the file queued by loadFile (stream stop then play). *(internal)* *(hook)* | 608 |
+| `core_replay.openMissionReplayFolder(replayFileName)` | Opens the location of a replay file in the explorer; logs an error if it does not exist. | 1044 |
+| `core_replay.openReplayFolderInExplorer()` | Opens the replays/ folder in the file explorer (creates it if missing). | 856 |
+| `core_replay.pause(v)` | Pauses or resumes playback. No effect outside 'playback'. | 538 |
+| `core_replay.removeMissionSavedReplay(replayFileName)` | Reverse operation: moves a saved replay to replays/missionReplays/ (so that it is managed automatically again), then notifies the UI. | 1028 |
+| `core_replay.removeRecording(filename)` | Deletes a replay and its .rplMeta.json file; stops it first if it is loaded; updates the catalog. | 882 |
+| `core_replay.saveMissionReplay(replayFileName)` | Moves an automatic mission replay to the user-saved replays folder (career/<slot>/ or freeroam/) with its .rplMeta.json, then notifies the UI (recordingFilesUpdated). | 1011 |
+| `core_replay.seek(percent)` | Jumps to a normalized position of the replay. No effect outside playback. | 834 |
+| `core_replay.setDebugEnabled(enabled)` | Enables or disables the replay debug logs (tag core_replay.debug). | 31 |
+| `core_replay.setSpeed(speed)` | Sets the playback speed (1 = realtime, 0.5 = slow motion, 2 = fast motion), without smoothing. Does nothing if the speed is already this value. | 487 |
+| `core_replay.startLevel(levelPath)` | Starts the given level in freeroam without spawning a vehicle (freeroam_freeroam.startFreeroamByName), marking requestedStartLevel so as not to stop playback. | 873 |
+| `core_replay.startRecording()` | Starts a manual recording in replays/ (name 'YYYY-MM-DD_HH-MM-SS <level>.rpl'). Refused if already recording, playing back, or if a mission recording is active. | 774 |
+| `core_replay.stateChanged(loadedFile, positionSeconds, totalSeconds, speed, paused, fpsPlay, fpsRec, statestr, framePositionSeconds)` | Called by C++ on every change of the replay stream state. On entering 'playback', disables the VehicleCommon/VehicleSpecific action maps and pushes ReplayPlaybackActionMap; on leaving, the reverse. Updates M.state, triggers guihooks 'replayStateChanged', hook 'onReplayStateChanged'(state) and 'onReplayCoreEvent'({event, state, ...}) with event among playbackStarted, playbackStopped, recordingStarted, recordingStopped, playbackPaused, playbackResumed, loadedFileChanged. *(internal)* | 376 |
+| `core_replay.stop()` | Cancels a pending load and stops the stream (playback or recording). | 662 |
+| `core_replay.stopAndUnload()` | Stops playback and publishes an empty 'inactive' state. Refused during a recording (code recordingActive). | 672 |
+| `core_replay.stopRecording(options)` | Stops the manual recording and updates the catalog (guihooks replayRecordingsUpdated). | 790 |
+| `core_replay.toggleMissionRecording()` | Shortcut for toggleRecording(false, true): toggles mission replay recording. | 830 |
+| `core_replay.togglePlay()` | Toggles play/pause of the loaded replay. If the state is 'inactive', reloads and starts the file; outside playback and inactive, logs an error. | 552 |
+| `core_replay.toggleRecording(autoplayAfterStopping, isMissionReplay)` | Toggles recording: while recording, stops it; during playback, stops playback; otherwise starts a recording. | 808 |
+| `core_replay.toggleSpeed(val)` | Changes the speed. 'realtime' alternates between 1 and the last other speed (1/8 at start); 'slowmotion' sets 1/8; a positive or negative number goes up or down that many steps in the speed list. Informs simTimeAuthority. | 496 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_replay._getReplayVehicleData(id)`
 
-Appelé par le C++ : renvoie les données du véhicule (core_vehicle_manager.getVehicleData) encodées en JSON.
+Called by C++: returns the vehicle data (core_vehicle_manager.getVehicleData) encoded as JSON.
 
-- `id` (*integer*) : Id du véhicule.
-- **renvoie** : string JSON ; doit être une chaîne.
+- `id` (*integer*) : Vehicle id.
+- **returns**: string JSON; must be a string.
 
 #### `core_replay.acceptRename(oldFilename, newFilename)`
 
-Renomme un replay (et son .rplMeta.json). Un nouveau nom sans '/' reste dans le même dossier ; refusé si la cible existe. Si le replay était chargé, il est rechargé sous son nouveau nom.
+Renames a replay (and its .rplMeta.json). A new name without '/' stays in the same folder; refused if the target exists. If the replay was loaded, it is reloaded under its new name.
 
-- `oldFilename` (*string*) : Ancien chemin sous replays/.
-- `newFilename` (*string*) : Nouveau nom ou chemin.
-- **renvoie** : table {success, filename, newFilename?, message?}.
+- `oldFilename` (*string*) : Old path under replays/.
+- `newFilename` (*string*) : New name or path.
+- **returns**: table {success, filename, newFilename?, message?}.
 
 #### `core_replay.displayMsg(level, msg, context)`
 
-Affiche une notification (toastrMsg) 'Replay <level>' et écrit un log.
+Displays a notification (toastrMsg) 'Replay <level>' and writes a log.
 
-- `level` (*string*) : Catégorie toastr : error, info, warning…
-- `msg` (*string*) : Clé de traduction ou texte.
-- `context` (*table|nil*) : Variables de traduction.
+- `level` (*string*) : Toastr category: error, info, warning...
+- `msg` (*string*) : Translation key or text.
+- `context` (*table|nil*) : Translation variables.
 
 #### `core_replay.getDebugEnabled()`
 
-Indique si les logs de debug du replay sont actifs.
+Indicates whether the replay debug logs are active.
 
-- **renvoie** : boolean État du debug.
+- **returns**: boolean Debug state.
 
 #### `core_replay.getLoadedFile()`
 
-Nom du fichier replay chargé.
+Name of the loaded replay file.
 
-- **renvoie** : string|nil Chemin du fichier.
+- **returns**: string|nil File path.
 
 #### `core_replay.getMissionReplayFiles(mission, returnOnlyWithAttempt)`
 
-Liste les replays de mission (automatiques et sauvegardés par l'utilisateur pour la carrière/freeroam courante) correspondant à une mission, triés par meta.time.
+Lists the mission replays (automatic and user-saved for the current career/freeroam) matching a mission, sorted by meta.time.
 
-- `mission` (*table*) : Mission, avec champ id.
-- `returnOnlyWithAttempt` (*boolean|nil*) : Si vrai, ne garde que ceux dont le meta contient attempt.
-- **renvoie** : table[] Entrées {replayFile, replayFileName, meta, userSaved}.
+- `mission` (*table*) : Mission, with an id field.
+- `returnOnlyWithAttempt` (*boolean|nil*) : If true, keeps only those whose meta contains attempt.
+- **returns**: table[] Entries {replayFile, replayFileName, meta, userSaved}.
 
 #### `core_replay.getMissionReplaysPath()`
 
-Renvoie le dossier des replays de mission automatiques.
+Returns the folder of automatic mission replays.
 
-- **renvoie** : string "replays/missionReplays/".
+- **returns**: string "replays/missionReplays/".
 
 #### `core_replay.getPlaybackContext(filename)`
 
-Indique si un replay peut être lu et s'il faut d'abord charger son niveau.
+Indicates whether a replay can be played and whether its level must be loaded first.
 
-- `filename` (*string*) : Fichier replay (sous replays/).
-- **renvoie** : table {success, filename, code, recordedLevel, currentLevel, levelKnown, requiresLevelLoad} ou échec avec code invalidFilename / fileNotFound.
+- `filename` (*string*) : Replay file (under replays/).
+- **returns**: table {success, filename, code, recordedLevel, currentLevel, levelKnown, requiresLevelLoad} or failure with code invalidFilename / fileNotFound.
 
 #### `core_replay.getPositionSeconds()`
 
-Position de lecture courante en secondes.
+Current playback position in seconds.
 
-- **renvoie** : number|nil Position (nil avant le premier stateChanged).
+- **returns**: number|nil Position (nil before the first stateChanged).
 
 #### `core_replay.getRecordings()`
 
-Liste les .rpl du dossier replays/ (sans sous-dossiers). Chaque entrée : filename, path, key, basename, displayName, size, sortTime, map, levelName, metadataAvailable, missingMetadataFields. Le niveau est deviné en scannant le début du fichier (jusqu'à 1 Mo) ; tri : niveau courant d'abord, puis le plus récent.
+Lists the .rpl files of the replays/ folder (without subfolders). Each entry: filename, path, key, basename, displayName, size, sortTime, map, levelName, metadataAvailable, missingMetadataFields. The level is guessed by scanning the start of the file (up to 1 MB); sort: current level first, then most recent.
 
-- **renvoie** : table[] Liste d'enregistrements.
+- **returns**: table[] List of recordings.
 
 #### `core_replay.getState()`
 
-État du système de replay.
+State of the replay system.
 
-- **renvoie** : string|nil 'inactive', 'playback' ou 'recording'.
+- **returns**: string|nil 'inactive', 'playback' or 'recording'.
 
 #### `core_replay.getTotalSeconds()`
 
-Durée totale du replay chargé en secondes.
+Total duration of the loaded replay in seconds.
 
-- **renvoie** : number|nil Durée.
+- **returns**: number|nil Duration.
 
 #### `core_replay.isGameplayAllowed()`
 
-Indique si le gameplay est autorisé pendant le replay. Renvoie toujours true actuellement (un TODO dans le code prévoit une option).
+Indicates whether gameplay is allowed during the replay. Currently always returns true (a TODO in the code plans an option).
 
-- **renvoie** : boolean Toujours true.
+- **returns**: boolean Always true.
 
 #### `core_replay.isPaused()`
 
-Indique si la lecture est en pause.
+Indicates whether playback is paused.
 
-- **renvoie** : boolean|nil État de pause.
+- **returns**: boolean|nil Pause state.
 
 #### `core_replay.jump(offset)`
 
-Alias de jumpFrames (ancien nom).
+Alias of jumpFrames (old name).
 
-- `offset` (*integer*) : Nombre d'images.
+- `offset` (*integer*) : Number of frames.
 
 #### `core_replay.jumpFrames(offset)`
 
-Avance ou recule d'un nombre d'images (stream:stepFrames) et affiche un message UI.
+Moves forward or backward by a number of frames (stream:stepFrames) and displays a UI message.
 
-- `offset` (*integer*) : Nombre d'images (négatif = recul).
+- `offset` (*integer*) : Number of frames (negative = backward).
 
 #### `core_replay.jumpTime(timeDiffInSeconds)`
 
-Avance ou recule d'une durée (stream:stepTime) et affiche un message UI.
+Moves forward or backward by a duration (stream:stepTime) and displays a UI message.
 
-- `timeDiffInSeconds` (*number*) : Durée en secondes (négatif = recul).
+- `timeDiffInSeconds` (*number*) : Duration in seconds (negative = backward).
 
 #### `core_replay.loadFile(filename, autoplay, options)`
 
-Met en attente le chargement d'un replay (affiche l'écran d'attente ; la lecture démarre dans onUiWaitingState). Valide le nom de fichier.
+Queues the loading of a replay (displays the waiting screen; playback starts in onUiWaitingState). Validates the file name.
 
-- `filename` (*string*) : Chemin sous replays/ (extension .rpl).
-- `autoplay` (*boolean|nil*) : Si vrai, la lecture démarre immédiatement ; sinon elle démarre en pause.
-- `options` (*table|nil*) : options.pauseWhenReady = true : remet en pause au début quand le monde est prêt.
-- **renvoie** : table {success, filename, code = 'queued'} ou échec.
+- `filename` (*string*) : Path under replays/ (.rpl extension).
+- `autoplay` (*boolean|nil*) : If true, playback starts immediately; otherwise it starts paused.
+- `options` (*table|nil*) : options.pauseWhenReady = true: pauses again at the start when the world is ready.
+- **returns**: table {success, filename, code = 'queued'} or failure.
 
 #### `core_replay.logUiAction(scope, data)`
 
-Écrit dans le log de debug (si actif) une action venue de l'UI, avec le préfixe 'ui.'.
+Writes to the debug log (if active) an action coming from the UI, with the prefix 'ui.'.
 
-- `scope` (*string*) : Nom de l'action.
-- `data` (*any*) : Données à journaliser.
+- `scope` (*string*) : Name of the action.
+- `data` (*any*) : Data to log.
 
 #### `core_replay.onClientEndMission(levelPath)`
 
-Hook appelé à la fin d'un niveau : si une lecture est en cours et que le changement de niveau n'a pas été demandé par startLevel, la lecture est arrêtée avec un message.
+Hook called at the end of a level: if playback is in progress and the level change was not requested by startLevel, playback is stopped with a message.
 
-- `levelPath` (*string*) : Chemin du niveau quitté (déduit du code).
+- `levelPath` (*string*) : Path of the level being left (inferred from code).
 
 #### `core_replay.onUiWaitingState(state)`
 
-Hook appelé quand l'écran d'attente de l'UI est affiché. Lance alors la lecture du fichier mis en attente par loadFile (stop du flux puis play).
+Hook called when the UI waiting screen is displayed. It then starts playback of the file queued by loadFile (stream stop then play).
 
-- `state` (*boolean*) : Vrai quand l'attente est active ; sinon ignoré.
+- `state` (*boolean*) : True when waiting is active; otherwise ignored.
 
 #### `core_replay.openMissionReplayFolder(replayFileName)`
 
-Ouvre l'emplacement d'un fichier replay dans l'explorateur ; journalise une erreur s'il n'existe pas.
+Opens the location of a replay file in the explorer; logs an error if it does not exist.
 
-- `replayFileName` (*string*) : Chemin du fichier.
+- `replayFileName` (*string*) : File path.
 
 #### `core_replay.pause(v)`
 
-Met en pause ou relance la lecture. Sans effet hors 'playback'.
+Pauses or resumes playback. No effect outside 'playback'.
 
 - `v` (*boolean*) : true = pause.
 
 #### `core_replay.removeMissionSavedReplay(replayFileName)`
 
-Opération inverse : déplace un replay sauvegardé vers replays/missionReplays/ (pour qu'il soit de nouveau géré automatiquement), puis notifie l'UI.
+Reverse operation: moves a saved replay to replays/missionReplays/ (so that it is managed automatically again), then notifies the UI.
 
-- `replayFileName` (*string*) : Chemin du .rpl.
+- `replayFileName` (*string*) : Path of the .rpl.
 
 #### `core_replay.removeRecording(filename)`
 
-Supprime un replay et son fichier .rplMeta.json ; l'arrête d'abord s'il est chargé ; met à jour le catalogue.
+Deletes a replay and its .rplMeta.json file; stops it first if it is loaded; updates the catalog.
 
-- `filename` (*string*) : Fichier sous replays/.
-- **renvoie** : table {success, filename, message?}.
+- `filename` (*string*) : File under replays/.
+- **returns**: table {success, filename, message?}.
 
 #### `core_replay.saveMissionReplay(replayFileName)`
 
-Déplace un replay de mission automatique vers le dossier des replays sauvegardés par l'utilisateur (carrière/<slot>/ ou freeroam/) avec son .rplMeta.json, puis notifie l'UI (recordingFilesUpdated).
+Moves an automatic mission replay to the user-saved replays folder (career/<slot>/ or freeroam/) with its .rplMeta.json, then notifies the UI (recordingFilesUpdated).
 
-- `replayFileName` (*string*) : Chemin du .rpl.
+- `replayFileName` (*string*) : Path of the .rpl.
 
 #### `core_replay.seek(percent)`
 
-Se place à une position normalisée du replay. Sans effet hors playback.
+Jumps to a normalized position of the replay. No effect outside playback.
 
-- `percent` (*number*) : Position entre 0 et 1 (borné).
+- `percent` (*number*) : Position between 0 and 1 (clamped).
 
 #### `core_replay.setDebugEnabled(enabled)`
 
-Active ou désactive les logs de debug du replay (tag core_replay.debug).
+Enables or disables the replay debug logs (tag core_replay.debug).
 
-- `enabled` (*boolean*) : Vrai pour activer.
+- `enabled` (*boolean*) : True to enable.
 
 #### `core_replay.setSpeed(speed)`
 
-Fixe la vitesse de lecture (1 = temps réel, 0.5 = ralenti, 2 = accéléré), sans lissage. Ne fait rien si la vitesse est déjà celle-ci.
+Sets the playback speed (1 = realtime, 0.5 = slow motion, 2 = fast motion), without smoothing. Does nothing if the speed is already this value.
 
-- `speed` (*number*) : Facteur de vitesse.
+- `speed` (*number*) : Speed factor.
 
 #### `core_replay.startLevel(levelPath)`
 
-Lance le niveau donné en freeroam sans faire apparaître de véhicule (freeroam_freeroam.startFreeroamByName), en marquant requestedStartLevel pour ne pas arrêter la lecture.
+Starts the given level in freeroam without spawning a vehicle (freeroam_freeroam.startFreeroamByName), marking requestedStartLevel so as not to stop playback.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `core_replay.startRecording()`
 
-Démarre un enregistrement manuel dans replays/ (nom 'AAAA-MM-JJ_HH-MM-SS <niveau>.rpl'). Refusé si déjà en enregistrement, en lecture, ou si un enregistrement de mission est actif.
+Starts a manual recording in replays/ (name 'YYYY-MM-DD_HH-MM-SS <level>.rpl'). Refused if already recording, playing back, or if a mission recording is active.
 
-- **renvoie** : table {success, filename, code, ...}.
+- **returns**: table {success, filename, code, ...}.
 
 #### `core_replay.stateChanged(loadedFile, positionSeconds, totalSeconds, speed, paused, fpsPlay, fpsRec, statestr, framePositionSeconds)`
 
-Appelé par le C++ à chaque changement d'état du flux de replay. À l'entrée en 'playback', désactive les action maps VehicleCommon/VehicleSpecific et pousse ReplayPlaybackActionMap ; à la sortie, l'inverse. Met à jour M.state, déclenche guihooks 'replayStateChanged', hook 'onReplayStateChanged'(state) et 'onReplayCoreEvent'({event, state, ...}) avec event parmi playbackStarted, playbackStopped, recordingStarted, recordingStopped, playbackPaused, playbackResumed, loadedFileChanged.
+Called by C++ on every change of the replay stream state. On entering 'playback', disables the VehicleCommon/VehicleSpecific action maps and pushes ReplayPlaybackActionMap; on leaving, the reverse. Updates M.state, triggers guihooks 'replayStateChanged', hook 'onReplayStateChanged'(state) and 'onReplayCoreEvent'({event, state, ...}) with event among playbackStarted, playbackStopped, recordingStarted, recordingStopped, playbackPaused, playbackResumed, loadedFileChanged.
 
-- `loadedFile` (*string*) : Fichier chargé.
-- `positionSeconds` (*number*) : Position de lecture (s).
-- `totalSeconds` (*number*) : Durée totale (s).
-- `speed` (*number*) : Vitesse de lecture.
-- `paused` (*boolean*) : En pause.
-- `fpsPlay` (*number*) : Images par seconde en lecture.
-- `fpsRec` (*number*) : Images par seconde à l'enregistrement.
-- `statestr` (*string*) : 'inactive', 'playback' ou 'recording'.
-- `framePositionSeconds` (*number*) : Position de l'image courante (s).
+- `loadedFile` (*string*) : Loaded file.
+- `positionSeconds` (*number*) : Playback position (s).
+- `totalSeconds` (*number*) : Total duration (s).
+- `speed` (*number*) : Playback speed.
+- `paused` (*boolean*) : Paused.
+- `fpsPlay` (*number*) : Frames per second in playback.
+- `fpsRec` (*number*) : Frames per second when recording.
+- `statestr` (*string*) : 'inactive', 'playback' or 'recording'.
+- `framePositionSeconds` (*number*) : Position of the current frame (s).
 
 #### `core_replay.stopAndUnload()`
 
-Arrête la lecture et publie un état vide 'inactive'. Refusé pendant un enregistrement (code recordingActive).
+Stops playback and publishes an empty 'inactive' state. Refused during a recording (code recordingActive).
 
-- **renvoie** : table Résultat {success, filename, message?, code}.
+- **returns**: table Result {success, filename, message?, code}.
 
 #### `core_replay.stopRecording(options)`
 
-Arrête l'enregistrement manuel et met à jour le catalogue (guihooks replayRecordingsUpdated).
+Stops the manual recording and updates the catalog (guihooks replayRecordingsUpdated).
 
-- `options` (*table|nil*) : options.autoplayAfterStopping = true : charge le replay à l'arrêt.
-- **renvoie** : table {success, filename, code, playbackResult?}.
+- `options` (*table|nil*) : options.autoplayAfterStopping = true: loads the replay on stop.
+- **returns**: table {success, filename, code, playbackResult?}.
 
 #### `core_replay.toggleMissionRecording()`
 
-Raccourci de toggleRecording(false, true) : bascule l'enregistrement du replay de mission.
+Shortcut for toggleRecording(false, true): toggles mission replay recording.
 
-- **renvoie** : string|nil Nom du fichier si un enregistrement vient de démarrer.
+- **returns**: string|nil File name if a recording has just started.
 
 #### `core_replay.toggleRecording(autoplayAfterStopping, isMissionReplay)`
 
-Bascule l'enregistrement : en enregistrement, l'arrête ; en lecture, arrête la lecture ; sinon démarre un enregistrement.
+Toggles recording: while recording, stops it; during playback, stops playback; otherwise starts a recording.
 
-- `autoplayAfterStopping` (*boolean|nil*) : Lire le replay après l'arrêt. Si nil : vrai pour un enregistrement manuel, faux pour un replay de mission.
-- `isMissionReplay` (*boolean|nil*) : Replay automatique de mission (dossier replays/missionReplays/).
-- **renvoie** : string|nil Nom du fichier si un enregistrement vient de démarrer.
+- `autoplayAfterStopping` (*boolean|nil*) : Play the replay after stopping. If nil: true for a manual recording, false for a mission replay.
+- `isMissionReplay` (*boolean|nil*) : Automatic mission replay (replays/missionReplays/ folder).
+- **returns**: string|nil File name if a recording has just started.
 
 #### `core_replay.toggleSpeed(val)`
 
-Change la vitesse. 'realtime' alterne entre 1 et la dernière autre vitesse (1/8 au départ) ; 'slowmotion' met 1/8 ; un nombre positif ou négatif monte ou descend d'autant de crans dans la liste des vitesses. Informe simTimeAuthority.
+Changes the speed. 'realtime' alternates between 1 and the last other speed (1/8 at start); 'slowmotion' sets 1/8; a positive or negative number goes up or down that many steps in the speed list. Informs simTimeAuthority.
 
-- `val` (*string|integer*) : 'realtime', 'slowmotion', ou nombre de crans (+1, -1…).
+- `val` (*string|integer*) : 'realtime', 'slowmotion', or number of steps (+1, -1...).
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onReplayCoreEvent` — écouté par 1 module(s)
-- `onReplayStateChanged` — écouté par 3 module(s)
+- `onReplayCoreEvent` — listened to by 1 module(s)
+- `onReplayStateChanged` — listened to by 3 module(s)
 
-**Évènements UI (guihooks.trigger) :** `Message`, `app:waiting`, `recordingFilesUpdated`, `replayStateChanged`, `toastrMsg`
+**UI events (guihooks.trigger):** `Message`, `app:waiting`, `recordingFilesUpdated`, `replayStateChanged`, `toastrMsg`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `copyFile`, `directoryCreate`, `directoryExists`, `fileExists`, `fileSize`, `findFiles`, `removeFile`, `renameFile`, `stat`
 - `be:` `getEnterableObjectCount`, `getFileStream`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/replay.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/replay.lua`.*

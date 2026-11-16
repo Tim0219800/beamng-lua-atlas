@@ -2,40 +2,40 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/freeformDelivery/markers.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Sous-module du mode livraison libre (freeformDelivery) qui affiche les repères visuels des zones cibles : décalques au sol pour les places de parking (couleur selon l'état de stationnement), sphères/rectangles de debug pour les lieux, zones et places, et les marqueurs d'attention 3D de la route active. Il est piloté par freeformDelivery (setup, update chaque frame, cleanup).
---- Accès : extension `gameplay_freeformDelivery_markers` : `extensions.load("gameplay_freeformDelivery_markers")`, puis la globale `gameplay_freeformDelivery_markers`
+--- Submodule of the freeform delivery mode (freeformDelivery) that displays the visual markers of target areas: ground decals for parking spots (color depending on parking state), debug spheres/rectangles for locations, zones and spots, and the 3D attention markers of the active route. It is driven by freeformDelivery (setup, update every frame, cleanup).
+--- Access: extension `gameplay_freeformDelivery_markers`: `extensions.load("gameplay_freeformDelivery_markers")`, then the global `gameplay_freeformDelivery_markers`
 ---@class gameplay_freeformDelivery_markers
 gameplay_freeformDelivery_markers = {}
 
---- Vide les marqueurs, décalques et caches, oublie la livraison active et détruit les marqueurs de route.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/freeformDelivery/markers.lua:435
+--- Clears the markers, decals and caches, forgets the active delivery and destroys the route markers.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/freeformDelivery/markers.lua:435
 function gameplay_freeformDelivery_markers.cleanup() end
 
---- Cache les marqueurs de route (principal, zone, parking) sans les détruire.
----Source : lua/ge/extensions/gameplay/freeformDelivery/markers.lua:230
+--- Hides the route markers (main, zone, parking) without destroying them.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/markers.lua:230
 function gameplay_freeformDelivery_markers.hideRouteMarker() end
 
---- Crée (en remplaçant les précédents) le marqueur d'attention de la route à la position donnée, plus éventuellement un marqueur de zone et un marqueur de place de parking, puis les affiche.
----Source : lua/ge/extensions/gameplay/freeformDelivery/markers.lua:176
----@param pos vec3 Position du marqueur principal (relevée de 2 m).
----@param zone table|nil Données de checkpoint de zone passées à setToCheckpoint du marqueur de zone.
----@param parkingSpot table|nil Données de place de parking passées au marqueur de parking.
----@return boolean  false si pos est nil ou si le marqueur n'a pas pu être créé, sinon true.
+--- Creates (replacing the previous ones) the route attention marker at the given position, plus optionally a zone marker and a parking spot marker, then displays them.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/markers.lua:176
+---@param pos vec3 Position of the main marker (raised by 2 m).
+---@param zone table|nil Zone checkpoint data passed to the zone marker's setToCheckpoint.
+---@param parkingSpot table|nil Parking spot data passed to the parking marker.
+---@return boolean  false if pos is nil or if the marker could not be created, otherwise true.
 function gameplay_freeformDelivery_markers.setRouteMarker(pos, zone, parkingSpot) end
 
---- Mémorise la livraison active, crée un marqueur par zone cible (targetAreas) retrouvée dans delivery.sites, prépare les données de décalque des places de parking et pré-calcule quels véhicules sont associés à quelle place via les goals de type placement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/freeformDelivery/markers.lua:242
----@param delivery table Données de la livraison (goals, targetAreas, sites, vehicles).
+--- Stores the active delivery, creates one marker per target area (targetAreas) found in delivery.sites, prepares the parking spot decal data and precomputes which vehicles are associated with which spot via the placement-type goals.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/freeformDelivery/markers.lua:242
+---@param delivery table Delivery data (goals, targetAreas, sites, vehicles).
 function gameplay_freeformDelivery_markers.setup(delivery) end
 
---- Appelée chaque frame : met à jour l'état de stationnement des places, dessine les repères de debug, ajoute les décalques au sol via Engine.Render.DynamicDecalMgr.addDecals et met à jour les marqueurs de route.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/freeformDelivery/markers.lua:292
----@param dtReal number Delta temps réel en secondes.
----@param dtSim number Delta temps de simulation en secondes.
----@param dtRaw number Delta temps brut (non utilisé directement).
----@param profiler table|nil Profileur optionnel (méthode add) pour mesurer les sections.
+--- Called every frame: updates the parking state of the spots, draws the debug markers, adds the ground decals via Engine.Render.DynamicDecalMgr.addDecals and updates the route markers.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/freeformDelivery/markers.lua:292
+---@param dtReal number Real-time delta in seconds.
+---@param dtSim number Simulation time delta in seconds.
+---@param dtRaw number Raw delta time (not used directly).
+---@param profiler table|nil Optional profiler (add method) to measure sections.
 function gameplay_freeformDelivery_markers.update(dtReal, dtSim, dtRaw, profiler) end
 

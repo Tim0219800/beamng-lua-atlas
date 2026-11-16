@@ -1,142 +1,142 @@
 # `util_screenshotCreator_job`
 
-*Fichier : `lua/ge/extensions/util/screenshotCreator/job.lua` · VM : Game Engine (GE) · 860 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/screenshotCreator/job.lua` · VM: Game Engine (GE) · 860 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_screenshotCreator_job` : `extensions.load("util_screenshotCreator_job")`, puis la globale `util_screenshotCreator_job`
+**Access:** extension `util_screenshotCreator_job`: `extensions.load("util_screenshotCreator_job")`, then the global `util_screenshotCreator_job`
 
-Orchestrateur du créateur de vignettes (thumbnails) de véhicules. Il lance, dans une coroutine pilotée par onPreRender, la boucle complète : remplacer/placer le véhicule, le laisser se stabiliser, geler la physique, calculer la caméra (cadrage via framingManager ou caméra enregistrée), ajuster l'éclairage, attendre 2 s, capturer l'image avec util_screenshotCreator_capture, vérifier le fichier produit puis restaurer l'environnement et la physique. Il gère aussi l'aperçu de la caméra (startPreview) et expose la progression et le compte rendu pour l'interface. Un moddeur l'utilise pour générer en lot les images vehicles/<modèle>/<config>.jpg.
+Orchestrator of the vehicle thumbnail creator. It runs, in a coroutine driven by onPreRender, the complete loop: replace/place the vehicle, let it settle, freeze the physics, compute the camera (framing via framingManager or saved camera), adjust the lighting, wait 2 s, capture the image with util_screenshotCreator_capture, check the produced file then restore the environment and the physics. It also handles the camera preview (startPreview) and exposes progress and the report for the UI. A modder uses it to batch-generate the vehicles/<model>/<config>.jpg images.
 
-## Exemple
+## Example
 
 ```lua
 util_screenshotCreator_job.startWork({selection = 'selectedModels', onlyMissingThumbnails = true})
--- puis, à chaque frame de l'UI :
+-- then, every UI frame:
 local p = util_screenshotCreator_job.getProgress() -- {completed, total, current}
 if util_screenshotCreator_job.consumeRunDone() then dump(util_screenshotCreator_job.getReviewData()) end
 ```
 
-## Remarques
+## Notes
 
-- Le travail avance d'un pas de coroutine par appel de onPreRender ; un seul travail à la fois (startWork et startPreview renvoient false si une coroutine existe déjà).
-- Options de startWork : selection (« selectedModels » par défaut, « selectedModelDefaults », ou nom de config pour le véhicule courant), targets (liste {model, config}, max 2000), onlyMissingThumbnails, shippedConfigsOnly (vrai par défaut sauf si shippedOnly == false), lowBeamsEnabled, sample (écrit dans screenshots/thumbnailSamples/<date>/), comparison (copie la vignette existante en *_existing), cameraOverridePolicy (« useSaved » ou « ignore »), framingModeId, vehicleId, configName, outputPath, onDoneHook (nom d'évènement guihooks déclenché à la fin).
-- Dossier de sortie : vehicles/ par défaut (vehicles/<modèle>/<config><ext>), screenshots/showroom/ si le réglage de destination vaut 1 ; pour le véhicule courant, dans son vehicleDirectory. Si la config est celle par défaut (hors mode sample), la vignette est aussi copiée en vehicles/<modèle>/default<ext>.
-- La physique est gelée pendant le cadrage et la capture ; son état (running, speedFactor) est sauvegardé puis restauré à la fin ou lors du déchargement de l'extension.
-- Une capture échouée met forceQuit : le lot s'arrête (abortRun) sauf si c'était le dernier élément. Délai d'attente de la capture : 5 s, puis 2 s d'attente du fichier.
-- En ligne de commande, si les arguments contiennent deux fois -onLevelLoad_ext / 'util/createThumbnails', le jeu est fermé (shutdown(0)) à la fin du travail.
-- Les véhicules sont remplacés par core_vehicles.replaceVehicle (plaque « BeamNG »), frein de stationnement serré et moteur coupé.
+- The work advances by one coroutine step per onPreRender call; only one job at a time (startWork and startPreview return false if a coroutine already exists).
+- startWork options: selection ("selectedModels" by default, "selectedModelDefaults", or a config name for the current vehicle), targets (list {model, config}, max 2000), onlyMissingThumbnails, shippedConfigsOnly (true by default unless shippedOnly == false), lowBeamsEnabled, sample (writes to screenshots/thumbnailSamples/<date>/), comparison (copies the existing thumbnail to *_existing), cameraOverridePolicy ("useSaved" or "ignore"), framingModeId, vehicleId, configName, outputPath, onDoneHook (guihooks event name triggered at the end).
+- Output folder: vehicles/ by default (vehicles/<model>/<config><ext>), screenshots/showroom/ if the destination setting is 1; for the current vehicle, in its vehicleDirectory. If the config is the default one (outside sample mode), the thumbnail is also copied to vehicles/<model>/default<ext>.
+- Physics is frozen during framing and capture; its state (running, speedFactor) is saved then restored at the end or when the extension is unloaded.
+- A failed capture sets forceQuit: the batch stops (abortRun) unless it was the last item. Capture wait timeout: 5 s, then 2 s waiting for the file.
+- On the command line, if the arguments contain -onLevelLoad_ext / 'util/createThumbnails' twice, the game is closed (shutdown(0)) at the end of the job.
+- Vehicles are replaced by core_vehicles.replaceVehicle (plate "BeamNG"), parking brake engaged and engine off.
 
-**Dépendances (chargées avant) :** `core_camera`, `core_vehicles`, `core_vehicle_manager`, `ui_vehicleSelector_general`, `util_screenshotCreator_settings`, `util_screenshotCreator_thumbnailConfig`, `util_screenshotCreator_vehicleSetup`, `util_screenshotCreator_capture`, `util_screenshotCreator_lightingSetup`, `util_screenshotCreator_framing_configured`, `util_screenshotCreator_framingManager`, `util_screenshotCreator_modelSelection`, `util_screenshotCreator_shippedConfigs`
+**Dependencies (loaded first):** `core_camera`, `core_vehicles`, `core_vehicle_manager`, `ui_vehicleSelector_general`, `util_screenshotCreator_settings`, `util_screenshotCreator_thumbnailConfig`, `util_screenshotCreator_vehicleSetup`, `util_screenshotCreator_capture`, `util_screenshotCreator_lightingSetup`, `util_screenshotCreator_framing_configured`, `util_screenshotCreator_framingManager`, `util_screenshotCreator_modelSelection`, `util_screenshotCreator_shippedConfigs`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_screenshotCreator_job.clearRunDone()` | Remet l'indicateur « travail terminé » à false sans le lire. | 810 |
-| `util_screenshotCreator_job.consumeRunDone()` | Lit puis remet à false l'indicateur « travail terminé ». | 804 |
-| `util_screenshotCreator_job.getProgress()` | Renvoie la progression du travail. | 846 |
-| `util_screenshotCreator_job.getReviewData()` | Renvoie le compte rendu du dernier travail. | 847 |
-| `util_screenshotCreator_job.isCameraSet()` | Indique si un aperçu a déplacé la caméra (cameraSet). | 851 |
-| `util_screenshotCreator_job.isRunning()` | Indique si une coroutine de travail existe. | 845 |
-| `util_screenshotCreator_job.onClientEndMission()` | Hook appelé à la fin de la mission/niveau ; même fonction que onExtensionUnloaded. *(interne)* *(hook)* | 833 |
-| `util_screenshotCreator_job.onDeserialized(data)` | Hook appelé après rechargement avec l'état sérialisé. *(interne)* *(hook)* | 824 |
-| `util_screenshotCreator_job.onExit()` | Hook appelé à la fermeture du jeu ; même fonction que onExtensionUnloaded. *(interne)* *(hook)* | 833 |
-| `util_screenshotCreator_job.onExtensionUnloaded()` | Hook appelé au déchargement de l'extension : arrête le travail, restaure l'éclairage, les réglages et l'état de la physique. Aussi utilisé comme onClientEndMission et onExit. *(interne)* *(hook)* | 833 |
-| `util_screenshotCreator_job.onPreRender()` | Hook appelé à chaque frame avant le rendu : fait avancer la coroutine de travail. En cas d'erreur Lua, la trace est journalisée et le travail est abandonné ; à la fin, l'éclairage et la physique sont restaurés. *(interne)* *(hook)* | 785 |
-| `util_screenshotCreator_job.onSerialize()` | Hook appelé avant un rechargement des extensions : renvoie progress, review, runDone, previousFov et cameraSet. La coroutine n'est pas sauvegardée. *(interne)* *(hook)* | 814 |
-| `util_screenshotCreator_job.resetCamera()` | Rend la caméra du joueur au mode « orbit » et restaure le FOV mémorisé avant l'aperçu (60 par défaut). | 117 |
-| `util_screenshotCreator_job.startPreview(vehicle, configName, modeOrOptions, fixedRotation)` | Place le véhicule comme pour une vignette, attend qu'il se stabilise puis positionne la caméra libre du joueur sur le cadrage calculé, sans capturer d'image. Renvoie false si un travail tourne ou si vehicle est nil. | 765 |
-| `util_screenshotCreator_job.startPreviewWithDelay(vehicle, configName, modeOrOptions, fixedRotation)` | Comme startPreview, mais pour les véhicules dont thumbnailConfig.getPauseDelay est > 0 : la physique tourne pendant ce délai avant le gel. Renvoie false si le modèle est inconnu ou si le délai est nul. | 769 |
-| `util_screenshotCreator_job.startWork(workOptions)` | Démarre la génération de vignettes. Normalise les options, construit la liste des éléments (modèles sélectionnés, cibles explicites ou véhicule courant), prend le contrôle de la physique, active les réglages d'environnement (settings.beginWork) et crée la coroutine de travail. Renvoie false si un travail est déjà en cours, si les cibles sont invalides ou si l'API de physique manque. | 654 |
-| `util_screenshotCreator_job.stop()` | Demande l'arrêt du travail en cours (forceQuit) ; la coroutine s'arrête à son prochain point de contrôle. | 779 |
+| `util_screenshotCreator_job.clearRunDone()` | Resets the "job done" flag to false without reading it. | 810 |
+| `util_screenshotCreator_job.consumeRunDone()` | Reads then resets the "job done" flag to false. | 804 |
+| `util_screenshotCreator_job.getProgress()` | Returns the job progress. | 846 |
+| `util_screenshotCreator_job.getReviewData()` | Returns the report of the last job. | 847 |
+| `util_screenshotCreator_job.isCameraSet()` | Indicates whether a preview moved the camera (cameraSet). | 851 |
+| `util_screenshotCreator_job.isRunning()` | Indicates whether a work coroutine exists. | 845 |
+| `util_screenshotCreator_job.onClientEndMission()` | Hook called at the end of the mission/level; same function as onExtensionUnloaded. *(internal)* *(hook)* | 833 |
+| `util_screenshotCreator_job.onDeserialized(data)` | Hook called after reload with the serialized state. *(internal)* *(hook)* | 824 |
+| `util_screenshotCreator_job.onExit()` | Hook called when the game closes; same function as onExtensionUnloaded. *(internal)* *(hook)* | 833 |
+| `util_screenshotCreator_job.onExtensionUnloaded()` | Hook called when the extension is unloaded: stops the job, restores the lighting, the settings and the physics state. Also used as onClientEndMission and onExit. *(internal)* *(hook)* | 833 |
+| `util_screenshotCreator_job.onPreRender()` | Hook called every frame before rendering: advances the work coroutine. On a Lua error, the trace is logged and the job is abandoned; at the end, the lighting and the physics are restored. *(internal)* *(hook)* | 785 |
+| `util_screenshotCreator_job.onSerialize()` | Hook called before an extension reload: returns progress, review, runDone, previousFov and cameraSet. The coroutine is not saved. *(internal)* *(hook)* | 814 |
+| `util_screenshotCreator_job.resetCamera()` | Returns the player's camera to "orbit" mode and restores the FOV saved before the preview (60 by default). | 117 |
+| `util_screenshotCreator_job.startPreview(vehicle, configName, modeOrOptions, fixedRotation)` | Places the vehicle as for a thumbnail, waits for it to settle then positions the player's free camera on the computed framing, without capturing an image. Returns false if a job is running or if vehicle is nil. | 765 |
+| `util_screenshotCreator_job.startPreviewWithDelay(vehicle, configName, modeOrOptions, fixedRotation)` | Like startPreview, but for vehicles whose thumbnailConfig.getPauseDelay is > 0: the physics runs during this delay before freezing. Returns false if the model is unknown or if the delay is zero. | 769 |
+| `util_screenshotCreator_job.startWork(workOptions)` | Starts thumbnail generation. Normalizes the options, builds the list of items (selected models, explicit targets or the current vehicle), takes control of the physics, enables the environment settings (settings.beginWork) and creates the work coroutine. Returns false if a job is already in progress, if the targets are invalid or if the physics API is missing. | 654 |
+| `util_screenshotCreator_job.stop()` | Requests the current job to stop (forceQuit); the coroutine stops at its next checkpoint. | 779 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_screenshotCreator_job.consumeRunDone()`
 
-Lit puis remet à false l'indicateur « travail terminé ».
+Reads then resets the "job done" flag to false.
 
-- **renvoie** : boolean true une seule fois après la fin d'un travail (ou d'un échec au démarrage faute de véhicule).
+- **returns**: boolean true only once after a job ends (or a startup failure for lack of a vehicle).
 
 #### `util_screenshotCreator_job.getProgress()`
 
-Renvoie la progression du travail.
+Returns the job progress.
 
-- **renvoie** : table {completed = integer, total = integer, current = string « modèle/config »}.
+- **returns**: table {completed = integer, total = integer, current = string "model/config"}.
 
 #### `util_screenshotCreator_job.getReviewData()`
 
-Renvoie le compte rendu du dernier travail.
+Returns the report of the last job.
 
-- **renvoie** : table|nil {onlyMissingThumbnails, shippedConfigsOnly, lowBeamsEnabled, selection, framingModeId, cameraOverridePolicy, sampleOutputFolder, configs = [{vehName, camName, status (done/failed/skipped), thumbnailPath}]} ; nil avant tout travail.
+- **returns**: table|nil {onlyMissingThumbnails, shippedConfigsOnly, lowBeamsEnabled, selection, framingModeId, cameraOverridePolicy, sampleOutputFolder, configs = [{vehName, camName, status (done/failed/skipped), thumbnailPath}]}; nil before any job.
 
 #### `util_screenshotCreator_job.isCameraSet()`
 
-Indique si un aperçu a déplacé la caméra (cameraSet).
+Indicates whether a preview moved the camera (cameraSet).
 
-- **renvoie** : boolean true tant que resetCamera n'a pas été appelé.
+- **returns**: boolean true as long as resetCamera has not been called.
 
 #### `util_screenshotCreator_job.isRunning()`
 
-Indique si une coroutine de travail existe.
+Indicates whether a work coroutine exists.
 
-- **renvoie** : boolean true pendant un travail ou un aperçu.
+- **returns**: boolean true during a job or a preview.
 
 #### `util_screenshotCreator_job.onDeserialized(data)`
 
-Hook appelé après rechargement avec l'état sérialisé.
+Hook called after reload with the serialized state.
 
-- `data` (*table*) : État renvoyé par onSerialize.
+- `data` (*table*) : State returned by onSerialize.
 
 #### `util_screenshotCreator_job.onSerialize()`
 
-Hook appelé avant un rechargement des extensions : renvoie progress, review, runDone, previousFov et cameraSet. La coroutine n'est pas sauvegardée.
+Hook called before an extension reload: returns progress, review, runDone, previousFov and cameraSet. The coroutine is not saved.
 
-- **renvoie** : table État à restaurer.
+- **returns**: table State to restore.
 
 #### `util_screenshotCreator_job.startPreview(vehicle, configName, modeOrOptions, fixedRotation)`
 
-Place le véhicule comme pour une vignette, attend qu'il se stabilise puis positionne la caméra libre du joueur sur le cadrage calculé, sans capturer d'image. Renvoie false si un travail tourne ou si vehicle est nil.
+Places the vehicle as for a thumbnail, waits for it to settle then positions the player's free camera on the computed framing, without capturing an image. Returns false if a job is running or if vehicle is nil.
 
-- `vehicle` (*table*) : Objet véhicule.
-- `configName` (*string*) : Nom de la configuration.
-- `modeOrOptions` (*string|table|nil*) : Id du mode de cadrage, ou table d'options {framingModeId, fixedRotation, delayedPreview}.
-- `fixedRotation` (*quat|nil*) : Rotation de caméra imposée (ignoré si modeOrOptions est une table).
-- **renvoie** : boolean true si l'aperçu a démarré.
+- `vehicle` (*table*) : Vehicle object.
+- `configName` (*string*) : Configuration name.
+- `modeOrOptions` (*string|table|nil*) : Framing mode id, or options table {framingModeId, fixedRotation, delayedPreview}.
+- `fixedRotation` (*quat|nil*) : Imposed camera rotation (ignored if modeOrOptions is a table).
+- **returns**: boolean true if the preview started.
 
 #### `util_screenshotCreator_job.startPreviewWithDelay(vehicle, configName, modeOrOptions, fixedRotation)`
 
-Comme startPreview, mais pour les véhicules dont thumbnailConfig.getPauseDelay est > 0 : la physique tourne pendant ce délai avant le gel. Renvoie false si le modèle est inconnu ou si le délai est nul.
+Like startPreview, but for vehicles whose thumbnailConfig.getPauseDelay is > 0: the physics runs during this delay before freezing. Returns false if the model is unknown or if the delay is zero.
 
-- `vehicle` (*table*) : Objet véhicule.
-- `configName` (*string*) : Nom de la configuration.
-- `modeOrOptions` (*string|table|nil*) : Id du mode de cadrage ou table d'options.
-- `fixedRotation` (*quat|nil*) : Rotation de caméra imposée.
-- **renvoie** : boolean true si l'aperçu a démarré.
+- `vehicle` (*table*) : Vehicle object.
+- `configName` (*string*) : Configuration name.
+- `modeOrOptions` (*string|table|nil*) : Framing mode id or options table.
+- `fixedRotation` (*quat|nil*) : Imposed camera rotation.
+- **returns**: boolean true if the preview started.
 
 #### `util_screenshotCreator_job.startWork(workOptions)`
 
-Démarre la génération de vignettes. Normalise les options, construit la liste des éléments (modèles sélectionnés, cibles explicites ou véhicule courant), prend le contrôle de la physique, active les réglages d'environnement (settings.beginWork) et crée la coroutine de travail. Renvoie false si un travail est déjà en cours, si les cibles sont invalides ou si l'API de physique manque.
+Starts thumbnail generation. Normalizes the options, builds the list of items (selected models, explicit targets or the current vehicle), takes control of the physics, enables the environment settings (settings.beginWork) and creates the work coroutine. Returns false if a job is already in progress, if the targets are invalid or if the physics API is missing.
 
-- `workOptions` (*table|nil*) : Options du travail (voir notes). Si ce n'est pas une table : selection = « selectedModels », onlyMissingThumbnails = false.
-- **renvoie** : boolean true si le travail a démarré.
+- `workOptions` (*table|nil*) : Job options (see notes). If it is not a table: selection = "selectedModels", onlyMissingThumbnails = false.
+- **returns**: boolean true if the job started.
 
 #### `util_screenshotCreator_job.stop()`
 
-Demande l'arrêt du travail en cours (forceQuit) ; la coroutine s'arrête à son prochain point de contrôle.
+Requests the current job to stop (forceQuit); the coroutine stops at its next checkpoint.
 
-- **renvoie** : boolean false s'il n'y a pas de travail en cours, sinon true.
+- **returns**: boolean false if there is no job in progress, otherwise true.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant : core_camera, core_vehicles, core_vehicle_manager, ui_vehicleSelector_general et plusieurs util_screenshotCreator_* (settings, thumbnailConfig, vehicleSetup, capture, lightingSetup, framing_configured, framingManager, modelSelection, shippedConfigs). |
+| `dependencies` | string[] | Extensions loaded before: core_camera, core_vehicles, core_vehicle_manager, ui_vehicleSelector_general and several util_screenshotCreator_* (settings, thumbnailConfig, vehicleSetup, capture, lightingSetup, framing_configured, framingManager, modelSelection, shippedConfigs). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `getStartingArgs`
 - `FS:` `copyFile`, `directoryCreate`, `fileExists`, `fileSize`, `removeFile`
 - `be:` `getPhysicsRunning`, `getPhysicsSpeedFactor`, `setPhysicsRunning`, `setPhysicsSpeedFactor`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/screenshotCreator/job.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/screenshotCreator/job.lua`.*

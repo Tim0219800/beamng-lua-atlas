@@ -1,42 +1,42 @@
 # `scenario_raceMarkers_sideMarker`
 
-*Fichier : `lua/ge/extensions/scenario/raceMarkers/sideMarker.lua` · VM : Game Engine (GE) · 320 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/raceMarkers/sideMarker.lua` · VM: Game Engine (GE) · 320 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/scenario/raceMarkers/sideMarker")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/scenario/raceMarkers/sideMarker")` (file under extensions/ but not a regular extension)
 
-Marqueur de checkpoint « courbes latérales » : une base au sol (checkpoint_curve_base.dae), des courbes latérales actives (checkpoint_curve_active.dae, ou _finish pour lap et final) et une version « distante » (checkpoint_curve_distant.dae) qui apparaît en fondu quand on est loin (bascule entre 50 m et 75 m par défaut). Orientation selon la normale du checkpoint ou la caméra. Le module renvoie un constructeur : require('scenario/raceMarkers/sideMarker')(id) donne un objet de la classe C.
+"Side curves" checkpoint marker: a ground base (checkpoint_curve_base.dae), active side curves (checkpoint_curve_active.dae, or _finish for lap and final) and a "distant" version (checkpoint_curve_distant.dae) that fades in when far away (switches between 50 m and 75 m by default). Oriented along the checkpoint normal or the camera. The module returns a constructor: require('scenario/raceMarkers/sideMarker')(id) gives an object of class C.
 
-## Remarques
+## Notes
 
-- Couleurs par mode : default rouge (1, 0.07, 0), next noir, start et lap vert (0.4, 1, 0.2), final bleu (0.1, 0.3, 1), branch orange (1, 0.6, 0), hidden noir. Changement de mode avec fondu de couleur de 0.3 s.
-- setToCheckpoint(wp) lit wp.pos, wp.radius, wp.normal (facultatif), wp.fadeNear, wp.fadeFar, wp.mode (choix du modèle).
-- La bascule proche/lointain dure 0.8 s (blendDuration) avec hystérésis entre fadeNear et fadeFar.
-- Le champ self.sides et la fonction C:hide/C:show utilisent des couleurs (oldColor/newColor) mémorisées mais jamais lues par update : code résiduel.
-- La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim).
+- Colors per mode: default red (1, 0.07, 0), next black, start and lap green (0.4, 1, 0.2), final blue (0.1, 0.3, 1), branch orange (1, 0.6, 0), hidden black. Mode change with a 0.3 s color fade.
+- setToCheckpoint(wp) reads wp.pos, wp.radius, wp.normal (optional), wp.fadeNear, wp.fadeFar, wp.mode (model choice).
+- The near/far switch lasts 0.8 s (blendDuration) with hysteresis between fadeNear and fadeFar.
+- The self.sides field and the C:hide/C:show functions use stored colors (oldColor/newColor) that update never reads: leftover code.
+- The extracted page shows update(dtSim); the actual signature is update(dt, dtSim).
 
-## Classe `C`
+## Class `C`
 
-Marqueur à courbes latérales.
+Side curves marker.
 
-Le module renvoie un constructeur : `local obj = require("scenario_raceMarkers_sideMarker")(options)`.
+The module returns a constructor: `local obj = require("scenario_raceMarkers_sideMarker")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearMarkers()` | Supprime les objets créés. | 301 |
-| `C:createMarkers()` | Supprime les anciens objets puis crée base, côtés et version distante. | 283 |
-| `C:createObject(shapeName, objectName)` | Crée un TSStatic caché enregistré sous objectName et ajouté à ScenarioObjectsGroup. | 261 |
-| `C:hide()` | Masque et mémorise la couleur 'hidden'. | 248 |
-| `C:init(id)` | Constructeur : initialise l'état et copie la table des modes. | 69 |
-| `C:setMode(mode)` | Change de mode : affiche (sauf 'hidden'), lance le fondu de couleur et change le modèle des côtés. | 212 |
-| `C:setToCheckpoint(wp)` | Place base, côtés et marqueur distant sur un checkpoint. | 187 |
-| `C:setVisibility(v)` | Affiche ou cache les trois objets. | 235 |
-| `C:show()` | Affiche en restaurant la couleur mémorisée. | 254 |
-| `C:update(dt, dtSim)` | Appel par image : gère le fondu proche/lointain, la rotation vers la normale ou la caméra, les couleurs et l'alpha de la base, des côtés et de la version distante. | 104 |
+| `C:clearMarkers()` | Removes the created objects. | 301 |
+| `C:createMarkers()` | Removes the old objects then creates base, sides and distant version. | 283 |
+| `C:createObject(shapeName, objectName)` | Creates a hidden TSStatic registered under objectName and added to ScenarioObjectsGroup. | 261 |
+| `C:hide()` | Hides and stores the 'hidden' color. | 248 |
+| `C:init(id)` | Constructor: initializes the state and copies the mode table. | 69 |
+| `C:setMode(mode)` | Changes mode: shows (except 'hidden'), starts the color fade and changes the sides' model. | 212 |
+| `C:setToCheckpoint(wp)` | Places base, sides and distant marker on a checkpoint. | 187 |
+| `C:setVisibility(v)` | Shows or hides the three objects. | 235 |
+| `C:show()` | Shows, restoring the stored color. | 254 |
+| `C:update(dt, dtSim)` | Per-frame call: handles the near/far fade, the rotation toward the normal or the camera, the colors and the alpha of the base, the sides and the distant version. | 104 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `delete`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/raceMarkers/sideMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/raceMarkers/sideMarker.lua`.*

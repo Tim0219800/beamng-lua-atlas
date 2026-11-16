@@ -1,33 +1,59 @@
 {
   "path": "lua/ge/extensions/gameplay/statisticModules/watchJturn.lua",
-  "module": "Module de statistiques qui détecte les « J-turns » (demi-tour en marche arrière puis marche avant) du véhicule joueur et incrémente la métrique « vehicle/jturn » via gameplay_statistic.metricAdd. Il est appelé par gameplay_statistic avec la fonction workload à chaque tour de surveillance.",
+  "module": "Statistics module that detects \"J-turns\" (reverse-then-forward U-turn) of the player vehicle and increments the metric \"vehicle/jturn\" via gameplay_statistic.metricAdd. It is called by gameplay_statistic with the workload function on each watch round.",
   "notes": [
-    "Condition : vitesse > 8 m/s ; direction du véhicule opposée à la vitesse (produit scalaire < -0,96) = marche arrière ; puis retour à l'avant (> 0,96) avec direction initiale de recul opposée à la vitesse actuelle (< -0,90) pendant plus d'1 s. Délai max de 4 s après le dernier recul, sinon annulé.",
-    "Le commentaire du code indique que simTime « is probably broken » : il est cumulé à partir de dtSim.",
-    "La fonction onPreRender (debug) est commentée à l'export et référence une variable vpos non définie : ne pas l'activer."
+    "Condition: speed > 8 m/s; vehicle direction opposite to the velocity (dot product < -0.96) = reverse; then back to forward (> 0.96) with the initial reverse direction opposite to the current velocity (< -0.90) for more than 1 s. Max delay of 4 s after the last reverse, otherwise canceled.",
+    "The code comment indicates that simTime \"is probably broken\": it is accumulated from dtSim.",
+    "The onPreRender function (debug) is commented out on export and references an undefined variable vpos: do not enable it."
   ],
   "functions": {
     "workload": {
-      "desc": "Analyse un véhicule à chaque appel (vitesse, direction) et compte un J-turn quand la séquence recul puis marche avant est détectée.",
+      "desc": "Analyzes a vehicle on each call (speed, direction) and counts a J-turn when the reverse-then-forward sequence is detected.",
       "params": {
-        "v": {"type": "userdata", "desc": "Objet véhicule."},
-        "vid": {"type": "integer", "desc": "Identifiant du véhicule ; un changement de véhicule annule la détection."},
-        "dtSim": {"type": "number", "desc": "Temps simulé écoulé en secondes."}
+        "v": {
+          "type": "userdata",
+          "desc": "Vehicle object."
+        },
+        "vid": {
+          "type": "integer",
+          "desc": "Vehicle identifier; a vehicle change cancels the detection."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time elapsed in seconds."
+        }
       },
       "internal": true
     },
     "onVehicleResetted": {
-      "desc": "Hook appelé quand un véhicule est réinitialisé : annule la détection s'il s'agit du véhicule suivi.",
-      "params": {"vid": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "desc": "Hook called when a vehicle is reset: cancels the detection if it is the tracked vehicle.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
       "internal": true
     },
-    "onExtensionLoaded": {"desc": "Hook appelé au chargement de l'extension ; ne fait rien.", "internal": true},
+    "onExtensionLoaded": {
+      "desc": "Hook called when the extension loads; does nothing.",
+      "internal": true
+    },
     "onVehicleSwitched": {
-      "desc": "Hook appelé au changement de véhicule contrôlé : annule la détection.",
+      "desc": "Hook called when the controlled vehicle changes: cancels the detection.",
       "params": {
-        "oldid": {"type": "integer", "desc": "Ancien véhicule."},
-        "newid": {"type": "integer", "desc": "Nouveau véhicule."},
-        "player": {"type": "integer", "desc": "Indice du joueur."}
+        "oldid": {
+          "type": "integer",
+          "desc": "Old vehicle."
+        },
+        "newid": {
+          "type": "integer",
+          "desc": "New vehicle."
+        },
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        }
       },
       "internal": true
     }

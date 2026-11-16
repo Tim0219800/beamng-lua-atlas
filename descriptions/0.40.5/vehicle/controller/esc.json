@@ -1,127 +1,223 @@
 {
   "path": "lua/vehicle/controller/esc.lua",
-  "module": "Contrôleur auxiliaire (type \"auxiliary\", defaultOrder 50) qui implémente le contrôle de stabilité (ESC) et l'antipatinage (TCS) de la voiture. L'ESC compare le taux de lacet mesuré à un taux de lacet désiré (calculé depuis l'angle des roues avant, la vitesse, une vitesse caractéristique et une accélération latérale max) et freine une roue pour corriger survirage ou sous-virage. Le TCS compare la vitesse de chaque roue motrice à celle de la roue diagonale et réduit la poussée du moteur (facteurs d'accélérateur écrits dans electrics.values) et/ou freine la roue qui patine. Un moddeur s'en sert en déclarant le contrôleur dans le jbeam avec un bloc de configurations, ou le pilote par ses fonctions de mode (toggleESCMode, setESCMode). Il écrit electrics.values.esc, tcs, escActive, tcsActive, hasESC, hasTCS et un ou plusieurs facteurs d'accélérateur (par défaut electrics.values.throttleFactor), qui doivent être lus par le moteur/l'accélérateur pour que le TCS agisse.",
-  "usage": "local esc = controller.getControllerSafe('esc')\nif esc then\n  esc.setESCMode(1)       -- 1 = première configuration triée par 'order'\n  esc.toggleESCMode()    -- configuration suivante (revient à 1 après la dernière)\n  esc.pauseESCAction = true -- suspend l'action de l'ESC et du TCS\nend",
+  "module": "Auxiliary controller (type \"auxiliary\", defaultOrder 50) that implements the car's stability control (ESC) and traction control (TCS). The ESC compares the measured yaw rate to a desired yaw rate (computed from the front wheel angle, the speed, a characteristic speed and a max lateral acceleration) and brakes one wheel to correct oversteer or understeer. The TCS compares the speed of each driven wheel to that of the diagonal wheel and reduces engine thrust (throttle factors written into electrics.values) and/or brakes the slipping wheel. A modder uses it by declaring the controller in the jbeam with a block of configurations, or drives it with its mode functions (toggleESCMode, setESCMode). It writes electrics.values.esc, tcs, escActive, tcsActive, hasESC, hasTCS and one or more throttle factors (by default electrics.values.throttleFactor), which must be read by the engine/throttle for the TCS to act.",
+  "usage": "local esc = controller.getControllerSafe('esc')\nif esc then\n  esc.setESCMode(1)       -- 1 = first configuration sorted by 'order'\n  esc.toggleESCMode()    -- next configuration (back to 1 after the last)\n  esc.pauseESCAction = true -- suspends the ESC and TCS action\nend",
   "notes": [
-    "Clés jbeam lues (jbeamData, table de configuration) : actionedWheels (liste de noms de roues, obligatoire, 4 roues attendues : avant/arrière gauche/droite déduites de leur position), offColor (couleur LED éteinte, défaut \"343434\"), throttleFactorAssingment (table d'en-tête wheelName/throttleFactorName ; l'orthographe « Assingment » est celle du code ; défaut : un facteur \"throttleFactor\" pour toutes les roues), defaultConfig (index de la configuration par défaut, 1 sinon), isDebugMode (nombre ; le code compare isDebugMode > 0 sans valeur par défaut, donc nil provoquerait une erreur), blacklistedEngines (liste de noms de moteurs exclus de la limitation temporaire du régime), configurations (table nom -> configuration).",
-    "Clés d'une configuration (seulement celles avec escConfigurationEnabled vrai sont gardées, triées par le champ order croissant) : escEnabled (false par défaut), activeColor (\"98FB00\"), characteristicSpeed (0 = calculée depuis skewStiffnessFront/Rear et la géométrie), proportionalFactor (1), integralFactor (0), maxIntegralPart (2), maxSideAcceleration (0), brakeForceMultiplier (0), escThreshold (999), skewStiffnessFront/Rear (1), desiredYawRateSmoothing (500), slipThreshold (0), tcsWheelSpeedThreshold (10), throttleProportionalFactor (1.5), throttleIntegralFactor (1), throttleIntegralReductionFactor (2*slipThreshold), brakingProportionalFactor (1.2), brakingIntegralFactor (0), maxBrakingFactor (0, borné 0..1), minThrottleFactor (1, borné 0..1), brakeThrottleSwitchThreshold (10), overrideESCPulse/overrideTCSPulse (force la valeur de electrics.values.esc/tcs).",
-    "Les réglages utilisateur v.userSettings.escConfig sont fusionnés récursivement dans la configuration au initSecondStage.",
-    "L'ESC n'agit que si la vitesse dépasse 6 m/s (escEnableThreshold) et si l'écart de lacet dépasse escThreshold ; les valeurs de lacet sont en rad/s, la vitesse en m/s. Le TCS est désactivé si vitesse < 0.55 m/s ou accélérateur < 0.01 (sauf pendant un changement de rapport), ou si pauseESCAction est vrai.",
-    "L'ESC est totalement désactivé en marche arrière (electrics.values.gearIndex < 0) ou si escEnabled est faux dans la configuration courante : les facteurs d'accélérateur sont remis à 1.",
-    "Si le nombre de roues change (roue arrachée), escFailure passe à true : updateWheelsIntermediate est remplacé par nop, les voyants esc et tcs restent allumés (1) et les modes ne sont plus modifiables jusqu'au prochain initSecondStage (reset du véhicule).",
-    "En cas de roue actionnée introuvable, initSecondStage met M.update et M.graphicsStep à nop (noms qui ne sont pas ceux utilisés par le contrôleur, qui n'a que updateWheelsIntermediate/updateGFX) et sort sans définir updateGFX : probable incohérence du code du jeu.",
-    "Les champs M.stiffnessFront/Rear, calibrationMeasurementReady, calibrationSettled, doMeasure, doSettle servent à une procédure interne de calibration (startESCCalibration) ; M.wheelAngleFront/Rear sont l'angle réel des roues avant/arrière en rad (signe positif = virage à gauche).",
-    "Hook : updateWheelsIntermediate(dt) est appelé par la boucle des contrôleurs après la mise à jour des roues ; updateGFX(dt) est appelé à chaque image graphique. Les deux sont à nil tant que initSecondStage n'a pas réussi."
+    "jbeam keys read (jbeamData, configuration table): actionedWheels (list of wheel names, required, 4 wheels expected: front/rear left/right deduced from their position), offColor (LED off color, default \"343434\"), throttleFactorAssingment (header table wheelName/throttleFactorName; the spelling \"Assingment\" is the code's; default: one \"throttleFactor\" factor for all wheels), defaultConfig (index of the default configuration, 1 otherwise), isDebugMode (number; the code compares isDebugMode > 0 without a default value, so nil would cause an error), blacklistedEngines (list of engine names excluded from the temporary RPM limitation), configurations (table name -> configuration).",
+    "Keys of a configuration (only those with escConfigurationEnabled true are kept, sorted by the order field ascending): escEnabled (false by default), activeColor (\"98FB00\"), characteristicSpeed (0 = computed from skewStiffnessFront/Rear and the geometry), proportionalFactor (1), integralFactor (0), maxIntegralPart (2), maxSideAcceleration (0), brakeForceMultiplier (0), escThreshold (999), skewStiffnessFront/Rear (1), desiredYawRateSmoothing (500), slipThreshold (0), tcsWheelSpeedThreshold (10), throttleProportionalFactor (1.5), throttleIntegralFactor (1), throttleIntegralReductionFactor (2*slipThreshold), brakingProportionalFactor (1.2), brakingIntegralFactor (0), maxBrakingFactor (0, bounded 0..1), minThrottleFactor (1, bounded 0..1), brakeThrottleSwitchThreshold (10), overrideESCPulse/overrideTCSPulse (forces the value of electrics.values.esc/tcs).",
+    "The user settings v.userSettings.escConfig are recursively merged into the configuration at initSecondStage.",
+    "The ESC only acts if the speed exceeds 6 m/s (escEnableThreshold) and if the yaw difference exceeds escThreshold; yaw values are in rad/s, speed in m/s. The TCS is disabled if speed < 0.55 m/s or throttle < 0.01 (except during a gear change), or if pauseESCAction is true.",
+    "The ESC is completely disabled in reverse (electrics.values.gearIndex < 0) or if escEnabled is false in the current configuration: the throttle factors are reset to 1.",
+    "If the number of wheels changes (wheel torn off), escFailure becomes true: updateWheelsIntermediate is replaced by nop, the esc and tcs lights stay on (1) and the modes can no longer be changed until the next initSecondStage (vehicle reset).",
+    "If an actioned wheel is not found, initSecondStage sets M.update and M.graphicsStep to nop (names that are not the ones used by the controller, which only has updateWheelsIntermediate/updateGFX) and exits without defining updateGFX: probable inconsistency in the game's code.",
+    "The fields M.stiffnessFront/Rear, calibrationMeasurementReady, calibrationSettled, doMeasure, doSettle are used for an internal calibration procedure (startESCCalibration); M.wheelAngleFront/Rear are the actual angle of the front/rear wheels in rad (positive sign = left turn).",
+    "Hook: updateWheelsIntermediate(dt) is called by the controller loop after the wheels update; updateGFX(dt) is called every graphics frame. Both are nil until initSecondStage has succeeded."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "Toujours \"auxiliary\"."},
-    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution par défaut du contrôleur (50)."},
-    "pauseESCAction": {"type": "boolean", "desc": "Si vrai, l'ESC ne freine plus et le TCS est traité comme désactivé. Remis à false à initSecondStage."},
-    "isExisting": {"type": "boolean", "desc": "Toujours true : sert de marqueur indiquant qu'un ESC existe."},
-    "calibrationMeasurementReady": {"type": "boolean", "desc": "Vrai quand la mesure de rigidité de calibration est terminée."},
-    "calibrationSettled": {"type": "boolean", "desc": "Vrai quand la phase de stabilisation de la calibration est terminée."},
-    "doMeasure": {"type": "boolean", "desc": "À mettre à true pour lancer la phase de mesure de la calibration (3500 pas) ; repasse à false à la fin."},
-    "doSettle": {"type": "boolean", "desc": "À mettre à true pour lancer la phase de stabilisation de la calibration (1500 pas) ; repasse à false à la fin."},
-    "stiffnessFront": {"type": "number", "desc": "Rigidité de dérive moyenne estimée de l'essieu avant par la calibration."},
-    "stiffnessRear": {"type": "number", "desc": "Rigidité de dérive moyenne estimée de l'essieu arrière par la calibration."},
-    "wheelAngleFront": {"type": "number", "desc": "Angle de braquage réel des roues avant (rad), mis à jour à chaque pas."},
-    "wheelAngleRear": {"type": "number", "desc": "Angle de braquage réel des roues arrière (rad), mis à jour à chaque pas."},
-    "debugData": {"type": "table", "desc": "Données pour l'appli de debug : debugData.esc (steeringAngle, yawRate, desiredYawRate, difference, desiredYawRateAcceleration, desiredYawRateSteering, speed) et debugData.tcs (wheelBrakeFactors, wheelSlips, slipThreshold, throttleFactors, allWheelSlips). Seuls yawRate, desiredYawRate, difference et les champs tcs sont mis à jour ; steeringAngle, desiredYawRateAcceleration/Steering et speed restent à 0."},
-    "updateWheelsIntermediate": {"type": "nil", "desc": "Défini en fonction par initSecondStage (nil avant ou en cas d'échec)."},
-    "updateGFX": {"type": "nil", "desc": "Défini en fonction par initSecondStage (nil avant ou en cas d'échec)."}
+    "type": {
+      "type": "string",
+      "desc": "Always \"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "Default execution order of the controller (50)."
+    },
+    "pauseESCAction": {
+      "type": "boolean",
+      "desc": "If true, the ESC no longer brakes and the TCS is treated as disabled. Reset to false at initSecondStage."
+    },
+    "isExisting": {
+      "type": "boolean",
+      "desc": "Always true: serves as a marker indicating that an ESC exists."
+    },
+    "calibrationMeasurementReady": {
+      "type": "boolean",
+      "desc": "True when the calibration stiffness measurement is finished."
+    },
+    "calibrationSettled": {
+      "type": "boolean",
+      "desc": "True when the calibration settling phase is finished."
+    },
+    "doMeasure": {
+      "type": "boolean",
+      "desc": "Set to true to start the calibration measurement phase (3500 steps); returns to false at the end."
+    },
+    "doSettle": {
+      "type": "boolean",
+      "desc": "Set to true to start the calibration settling phase (1500 steps); returns to false at the end."
+    },
+    "stiffnessFront": {
+      "type": "number",
+      "desc": "Average cornering stiffness of the front axle estimated by the calibration."
+    },
+    "stiffnessRear": {
+      "type": "number",
+      "desc": "Average cornering stiffness of the rear axle estimated by the calibration."
+    },
+    "wheelAngleFront": {
+      "type": "number",
+      "desc": "Actual steering angle of the front wheels (rad), updated every step."
+    },
+    "wheelAngleRear": {
+      "type": "number",
+      "desc": "Actual steering angle of the rear wheels (rad), updated every step."
+    },
+    "debugData": {
+      "type": "table",
+      "desc": "Data for the debug app: debugData.esc (steeringAngle, yawRate, desiredYawRate, difference, desiredYawRateAcceleration, desiredYawRateSteering, speed) and debugData.tcs (wheelBrakeFactors, wheelSlips, slipThreshold, throttleFactors, allWheelSlips). Only yawRate, desiredYawRate, difference and the tcs fields are updated; steeringAngle, desiredYawRateAcceleration/Steering and speed stay at 0."
+    },
+    "updateWheelsIntermediate": {
+      "type": "nil",
+      "desc": "Defined as a function by initSecondStage (nil before or on failure)."
+    },
+    "updateGFX": {
+      "type": "nil",
+      "desc": "Defined as a function by initSecondStage (nil before or on failure)."
+    }
   },
   "functions": {
     "init": {
-      "desc": "Mémorise les données jbeam, crée la table d'état pour la sauvegarde et réinitialise la couleur de LED. Appelé par le chargement des contrôleurs.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données du contrôleur dans le jbeam (voir notes)."}},
+      "desc": "Stores the jbeam data, creates the state table for saving and resets the LED color. Called by the controller loading.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller data in the jbeam (see notes)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "initSecondStage": {
-      "desc": "Construit les caches de roues, identifie par géométrie les roues avant/arrière gauche/droite, charge et trie les configurations, calcule empattement, répartition de masse, vitesse caractéristique, enregistre l'entrée du menu radial et installe updateWheelsIntermediate et updateGFX. Appelé après l'init de tous les contrôleurs.",
+      "desc": "Builds the wheel caches, identifies the front/rear left/right wheels by geometry, loads and sorts the configurations, computes wheelbase, mass distribution, characteristic speed, registers the radial menu entry and installs updateWheelsIntermediate and updateGFX. Called after the init of all controllers.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "updateWheelsIntermediate": {
-      "desc": "Boucle ESC + TCS + décision à chaque pas physique (voir notes du module). Défini dynamiquement par initSecondStage.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "desc": "ESC + TCS + decision loop at every physics step (see the module notes). Dynamically defined by initSecondStage.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Fait clignoter les voyants esc/tcs (période 0.15 s quand actifs), écrit electrics.values.esc/tcs/escActive/tcsActive et remplit debugData. Défini dynamiquement par initSecondStage.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps graphique en secondes."}},
+      "desc": "Blinks the esc/tcs lights (0.15 s period when active), writes electrics.values.esc/tcs/escActive/tcsActive and fills debugData. Dynamically defined by initSecondStage.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Graphics time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "updateSimpleControlButtons": {
-      "desc": "Force la (re)création du bouton « ESC & TC » dans le panneau de contrôle simplifié du groupe motopropulseur (ui_simplePowertrainControl), avec la couleur de la configuration courante.",
+      "desc": "Forces the (re)creation of the \"ESC & TC\" button in the powertrain simplified control panel (ui_simplePowertrainControl), with the color of the current configuration.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "toggleESCMode": {
-      "desc": "Passe à la configuration ESC suivante ; après la dernière, revient à la première. Appelé par le bouton de l'interface.",
+      "desc": "Switches to the next ESC configuration; after the last, returns to the first. Called by the interface button.",
       "params": {},
       "returns": []
     },
     "nextESCMode": {
-      "desc": "Passe à la configuration suivante, sans boucler (reste sur la dernière).",
+      "desc": "Switches to the next configuration, without wrapping (stays on the last).",
       "params": {},
       "returns": []
     },
     "previousESCMode": {
-      "desc": "Passe à la configuration précédente, sans boucler (reste sur la première).",
+      "desc": "Switches to the previous configuration, without wrapping (stays on the first).",
       "params": {},
       "returns": []
     },
     "setESCMode": {
-      "desc": "Active la configuration d'indice key (retombe à 1 si key dépasse le nombre de configurations), recalcule les valeurs précalculées et affiche un message d'interface sauf si silent. Ne fait rien si le véhicule n'a pas d'ESC ou a perdu une roue.",
+      "desc": "Activates the configuration at index key (falls back to 1 if key exceeds the number of configurations), recomputes the precomputed values and shows a UI message unless silent. Does nothing if the vehicle has no ESC or lost a wheel.",
       "params": {
-        "key": {"type": "integer", "desc": "Indice 1..n dans la liste de configurations triée par order."},
-        "silent": {"type": "boolean|nil", "desc": "Si vrai, pas de message guihooks."}
+        "key": {
+          "type": "integer",
+          "desc": "Index 1..n in the configuration list sorted by order."
+        },
+        "silent": {
+          "type": "boolean|nil",
+          "desc": "If true, no guihooks message."
+        }
       },
       "returns": []
     },
     "getCarData": {
-      "desc": "Renvoie la géométrie calculée du véhicule, ou nil si la masse est nulle.",
+      "desc": "Returns the computed vehicle geometry, or nil if the mass is zero.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "{wheels, frontLeftWheelId, frontRightWheelId, rearLeftWheelId, rearRightWheelId, wheelBase (m), trackWidth (m), distanceCOGRearAxle (m), distanceCOGFrontAxle (m), mass (kg)}"}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{wheels, frontLeftWheelId, frontRightWheelId, rearLeftWheelId, rearRightWheelId, wheelBase (m), trackWidth (m), distanceCOGRearAxle (m), distanceCOGFrontAxle (m), mass (kg)}"
+        }
+      ]
     },
     "getCurrentConfigData": {
-      "desc": "Renvoie la table de la configuration ESC courante (champs sanitisés, avec name).",
+      "desc": "Returns the table of the current ESC configuration (sanitized fields, with name).",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Configuration courante ; nil si pas d'ESC."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Current configuration; nil if no ESC."
+        }
+      ]
     },
     "startESCCalibration": {
-      "desc": "Remet à zéro les compteurs et résultats de calibration puis active le calcul de rigidité de dérive à chaque pas (à utiliser avec doMeasure/doSettle).",
+      "desc": "Resets the calibration counters and results then enables the cornering stiffness computation at every step (to be used with doMeasure/doSettle).",
       "params": {},
       "returns": []
     },
     "stopESCCalibration": {
-      "desc": "Désactive le calcul de calibration.",
+      "desc": "Disables the calibration computation.",
       "params": {},
       "returns": []
     },
     "serialize": {
-      "desc": "Renvoie l'état à sauvegarder : l'indice de configuration courant.",
+      "desc": "Returns the state to save: the current configuration index.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{escConfigKey = integer}"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{escConfigKey = integer}"
+        }
+      ]
     },
     "deserialize": {
-      "desc": "Restaure la configuration à partir de serialize().",
-      "params": {"data": {"type": "table|nil", "desc": "Table renvoyée par serialize."}},
+      "desc": "Restores the configuration from serialize().",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Table returned by serialize."
+        }
+      },
       "returns": []
     },
     "getState": {
-      "desc": "Renvoie la table d'état (clé \"<nomContrôleur>ConfigKey\" = indice courant) pour la sauvegarde/synchronisation du véhicule.",
+      "desc": "Returns the state table (key \"<controllerName>ConfigKey\" = current index) for saving/synchronizing the vehicle.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Table d'état partagée (réutilisée)."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Shared state table (reused)."
+        }
+      ]
     },
     "setState": {
-      "desc": "Applique un état renvoyé par getState si l'indice est un entier valide et différent de l'actuel (sans message).",
-      "params": {"data": {"type": "table|nil", "desc": "Table d'état."}},
+      "desc": "Applies a state returned by getState if the index is a valid integer and differs from the current one (no message).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "State table."
+        }
+      },
       "returns": []
     }
   }

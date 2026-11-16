@@ -1,0 +1,54 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/mission/UpdateDisplayDragRace.lua",
+  "module": "Noeud flowgraph 'Update Display Drag Race' (categorie repeat_instant) pour la mission de drag race : affiche sur le panneau du quart de mile le temps et la vitesse du joueur en changeant la forme (shapeName) des objets scene display_time_i_l/r et display_speed_i_l/r (modeles art/shapes/quarter_mile_display/display_<chiffre>.dae). Le pin 'side' ('l' ou 'r') choisit le cote ; la vitesse en m/s est convertie en mph (x2,237).",
+  "notes": [
+    "La description des pins 'side' et 'velocity' est identique ('Velocity of the players vehicle') : copie-colle dans le code.",
+    "La conversion m/s vers mph est faite avec une condition 'velocity == 0 and velocity or velocity*2.237'.",
+    "Si la scene n'a pas les objets display_*, les indexations de nil provoquent une erreur."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "postInit": {
+          "desc": "Definit les valeurs proposees pour le pin 'side' : left=l, right=r.",
+          "internal": true
+        },
+        "updateDisplay": {
+          "desc": "Construit la liste des chiffres (temps avec 3 decimales, vitesse avec 2) et applique le bon modele sur chacun des 5 afficheurs du cote voulu ; un 'empty' est ajoute pour le zero de tete.",
+          "internal": true,
+          "params": {
+            "side": {
+              "type": "string",
+              "desc": "'l' ou 'r'"
+            },
+            "finishTime": {
+              "type": "number",
+              "desc": "temps en secondes"
+            },
+            "finishSpeed": {
+              "type": "number",
+              "desc": "vitesse en mph"
+            }
+          }
+        },
+        "insertDigits": {
+          "desc": "Recherche dans la scene les 20 objets display_time_i_l/r et display_speed_i_l/r (i de 1 a 5) et les stocke.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Vide les listes d'afficheurs et met la sortie flow a false.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Meme initialisation.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sur reset : retrouve les afficheurs et remet l'affichage a 0. Sinon, si time, velocity et side sont fournis, met a jour l'affichage ; flow=true.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

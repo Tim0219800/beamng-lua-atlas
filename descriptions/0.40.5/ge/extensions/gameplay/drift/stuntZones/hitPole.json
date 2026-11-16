@@ -1,44 +1,80 @@
 {
   "path": "lua/ge/extensions/gameplay/drift/stuntZones/hitPole.lua",
-  "module": "Type de zone de cascade « hitPole » : un poteau (véhicule delineator, config vehicles/delineator/pole.pc) est spawné à pos, avec un marqueur de course au-dessus ; le joueur marque des points en le percutant pendant qu'il drifte. Le module renvoie un constructeur appelé par gameplay_drift_stuntZones.setStuntZones ; ce n'est pas une extension. Émet onAnyStuntZoneAccomplished avec le sous-hook onHitPoleAccomplished (angle, vitesse, points de base hitPole).",
+  "module": "\"hitPole\" stunt zone type: a pole (delineator vehicle, config vehicles/delineator/pole.pc) is spawned at pos, with a race marker above it; the player scores points by hitting it while drifting. The module returns a constructor called by gameplay_drift_stuntZones.setStuntZones; it is not an extension. Emits onAnyStuntZoneAccomplished with the sub-hook onHitPoleAccomplished (angle, speed, hitPole base points).",
   "notes": [
-    "La collision est lue dans map.objects[vehId].objectCollisions du véhicule du drift ; le point est donné à la frame où la collision apparaît (hitPole vrai et lastFrameHitPole faux) et seulement si le joueur drifte (detectStunt est appelé par le gestionnaire).",
-    "Une fois réussi, le poteau n'est plus disponible (available = false) jusqu'à reset() ; le reset remet physiquement le poteau en place (requestReset, resetBrokenFlexMesh) et recrée le marqueur après 0.1 s.",
-    "Si le poteau est détruit, la zone se retire elle-même via gameplay_drift_stuntZones.clearStuntZone.",
-    "Valeurs de secours pour les tests UI : angle 50°, vitesse 30."
+    "The collision is read from map.objects[vehId].objectCollisions of the drift vehicle; the point is awarded on the frame the collision appears (hitPole true and lastFrameHitPole false) and only if the player is drifting (detectStunt is called by the manager).",
+    "Once accomplished, the pole is no longer available (available = false) until reset(); the reset physically puts the pole back in place (requestReset, resetBrokenFlexMesh) and recreates the marker after 0.1 s.",
+    "If the pole is destroyed, the zone removes itself via gameplay_drift_stuntZones.clearStuntZone.",
+    "Fallback values for UI tests: angle 50°, speed 30."
   ],
   "classes": {
     "C": {
-      "desc": "Zone hitPole. Champs : data = {id, zoneData = {pos}}, marker (marqueur de course), activeData = {veh (poteau), hitPole, lastFrameHitPole, available, resetFlag}.",
+      "desc": "hitPole zone. Fields: data = {id, zoneData = {pos}}, marker (race marker), activeData = {veh (pole), hitPole, lastFrameHitPole, available, resetFlag}.",
       "functions": {
-        "clear": {"desc": "Supprime le véhicule poteau et son marqueur."},
-        "clearMarker": {"desc": "Supprime le marqueur de course s'il existe."},
-        "createMarker": {"desc": "Crée un marqueur de course « overhead » (rayon 5) 2.5 m au-dessus du poteau."},
-        "resetData": {"desc": "Remet à zéro activeData (available = true, pas de collision), en perdant la référence au poteau.", "internal": true},
-        "reset": {"desc": "Remet le poteau en place (reset physique et mesh), réinitialise les données puis recrée le marqueur après 0.1 s via un job."},
-        "init": {
-          "desc": "Constructeur interne : mémorise les données, spawne le poteau delineator (pole.pc) à zoneData.pos sans y faire entrer le joueur, crée le marqueur.",
-          "params": {"data": {"type": "table", "desc": "{id, zoneData = {pos}, nearDist}."}},
+        "clear": {
+          "desc": "Removes the pole vehicle and its marker."
+        },
+        "clearMarker": {
+          "desc": "Removes the race marker if it exists."
+        },
+        "createMarker": {
+          "desc": "Creates an \"overhead\" race marker (radius 5) 2.5 m above the pole."
+        },
+        "resetData": {
+          "desc": "Resets activeData (available = true, no collision), losing the reference to the pole.",
           "internal": true
         },
-        "accomplish": {"desc": "Réussite : supprime le marqueur, rend la zone indisponible et émet onAnyStuntZoneAccomplished (sous-hook onHitPoleAccomplished)."},
-        "detectStunt": {"desc": "Appelé quand le joueur drifte : appelle accomplish si le poteau vient d'être touché."},
-        "onUpdate": {
-          "desc": "Appelé à chaque frame : met à jour le marqueur, mémorise l'état de collision précédent et détecte une collision entre le véhicule du drift et le poteau.",
+        "reset": {
+          "desc": "Puts the pole back in place (physics and mesh reset), reinitializes the data, then recreates the marker after 0.1 s via a job."
+        },
+        "init": {
+          "desc": "Internal constructor: stores the data, spawns the delineator pole (pole.pc) at zoneData.pos without making the player enter it, creates the marker.",
           "params": {
-            "dtReal": {"type": "number", "desc": "Delta temps réel."},
-            "dtSim": {"type": "number", "desc": "Delta temps simulé."}
+            "data": {
+              "type": "table",
+              "desc": "{id, zoneData = {pos}, nearDist}."
+            }
+          },
+          "internal": true
+        },
+        "accomplish": {
+          "desc": "Success: removes the marker, makes the zone unavailable and emits onAnyStuntZoneAccomplished (sub-hook onHitPoleAccomplished)."
+        },
+        "detectStunt": {
+          "desc": "Called when the player drifts: calls accomplish if the pole was just hit."
+        },
+        "onUpdate": {
+          "desc": "Called every frame: updates the marker, stores the previous collision state and detects a collision between the drift vehicle and the pole.",
+          "params": {
+            "dtReal": {
+              "type": "number",
+              "desc": "Real-time delta."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Simulated time delta."
+            }
           },
           "internal": true
         },
         "onVehicleDestroyed": {
-          "desc": "Si le véhicule détruit est le poteau, oublie le poteau et retire la zone du gestionnaire.",
-          "params": {"vehId": {"type": "integer", "desc": "Véhicule détruit."}},
+          "desc": "If the destroyed vehicle is the pole, forgets the pole and removes the zone from the manager.",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "Destroyed vehicle."
+            }
+          },
           "internal": true
         },
         "isAvailable": {
-          "desc": "Indique si le poteau peut encore rapporter des points.",
-          "returns": [{"type": "boolean", "desc": "true tant qu'il n'a pas été touché."}]
+          "desc": "Returns whether the pole can still earn points.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true as long as it has not been hit."
+            }
+          ]
         }
       }
     }

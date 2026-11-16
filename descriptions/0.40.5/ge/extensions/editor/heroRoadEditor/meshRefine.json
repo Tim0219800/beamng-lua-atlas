@@ -1,36 +1,82 @@
 {
   "path": "lua/ge/extensions/editor/heroRoadEditor/meshRefine.lua",
-  "module": "Décimation de maillage pour le Hero Road Editor, par l'algorithme de Ramer-Douglas-Peucker (RDP). decimateStations réduit le nombre de stations (tranches transversales) le long de la route ; decimateCols réduit le nombre de colonnes (points latéraux d'une coupe). Utilisé par mesh.lua pour construire les niveaux de détail (LOD) et le maillage de collision.",
+  "module": "Mesh decimation for the Hero Road Editor, using the Ramer-Douglas-Peucker (RDP) algorithm. decimateStations reduces the number of stations (transverse slices) along the road; decimateCols reduces the number of columns (lateral points of a cross-section). Used by mesh.lua to build the levels of detail (LOD) and the collision mesh.",
   "notes": [
-    "Les deux fonctions renvoient des indices (1-based) triés des éléments conservés, jamais les points eux-mêmes.",
-    "Les tolérances sont en mètres.",
-    "colMaxDev et splitDev sont des fonctions locales de niveau module (non exportées) afin que LuaJIT puisse les compiler."
+    "Both functions return sorted (1-based) indices of the kept elements, never the points themselves.",
+    "Tolerances are in meters.",
+    "colMaxDev and splitDev are module-level local functions (not exported) so that LuaJIT can compile them."
   ],
   "functions": {
     "decimateStations": {
-      "desc": "RDP multi-canal sur les stations 1..m : une station est conservée si la ligne centrale, le bord gauche (colonne 1) ou le bord droit (colonne numCols) dévie de plus que la tolérance par rapport à la corde. Garde toujours les stations 1 et m et celles de mustKeep. Avec tolZM, tolM ne borne que l'écart en plan et tolZM l'écart vertical (une corde en plan décale seulement un bord, une corde verticale crée une bosse). Un plafond maxSegM réinsère des stations d'origine pour couper les segments trop longs en sous-segments à peu près égaux (au mieux jusqu'à l'espacement d'origine).",
+      "desc": "Multi-channel RDP over stations 1..m: a station is kept if the centerline, the left edge (column 1) or the right edge (column numCols) deviates by more than the tolerance from the chord. Always keeps stations 1 and m and those in mustKeep. With tolZM, tolM only bounds the in-plane deviation and tolZM the vertical deviation (a plan chord only shifts an edge, a vertical chord creates a bump). A maxSegM cap reinserts original stations to cut overly long segments into roughly equal sub-segments (at best down to the original spacing).",
       "params": {
-        "centres": {"type": "table", "desc": "Points de la ligne centrale par station (x, y, z)."},
-        "W": {"type": "table", "desc": "Grille de points monde W[station][colonne]; seules les colonnes 1 et numCols sont lues."},
-        "numCols": {"type": "integer", "desc": "Nombre de colonnes de la grille."},
-        "tolM": {"type": "number", "desc": "Tolérance en mètres (plan seul si tolZM est fourni, sinon écart 3D)."},
-        "m": {"type": "integer", "desc": "Nombre de stations."},
-        "maxSegM": {"type": "number|nil", "desc": "Longueur d'arc maximale entre deux stations conservées, en mètres ; nil ou 0 pour désactiver."},
-        "mustKeep": {"type": "table<integer, boolean>|nil", "desc": "Ensemble des indices de stations à conserver obligatoirement."},
-        "tolZM": {"type": "number|nil", "desc": "Tolérance verticale en mètres ; active le mode à deux tolérances."}
+        "centres": {
+          "type": "table",
+          "desc": "Centerline points per station (x, y, z)."
+        },
+        "W": {
+          "type": "table",
+          "desc": "Grid of world points W[station][column]; only columns 1 and numCols are read."
+        },
+        "numCols": {
+          "type": "integer",
+          "desc": "Number of columns in the grid."
+        },
+        "tolM": {
+          "type": "number",
+          "desc": "Tolerance in meters (in-plane only if tolZM is provided, otherwise 3D deviation)."
+        },
+        "m": {
+          "type": "integer",
+          "desc": "Number of stations."
+        },
+        "maxSegM": {
+          "type": "number|nil",
+          "desc": "Maximum arc length between two kept stations, in meters; nil or 0 to disable."
+        },
+        "mustKeep": {
+          "type": "table<integer, boolean>|nil",
+          "desc": "Set of station indices that must be kept."
+        },
+        "tolZM": {
+          "type": "number|nil",
+          "desc": "Vertical tolerance in meters; enables the two-tolerance mode."
+        }
       },
-      "returns": [{"type": "integer[]", "desc": "Indices triés des stations conservées."}],
+      "returns": [
+        {
+          "type": "integer[]",
+          "desc": "Sorted indices of the kept stations."
+        }
+      ],
       "internal": false
     },
     "decimateCols": {
-      "desc": "Décimation latérale des colonnes. Force la conservation de la colonne 1, de la dernière et de toute frontière entre bandes de matériaux différents, puis applique RDP aux colonnes intérieures avec l'écart (o, dz) MAXIMAL sur toutes les stations : une colonne reste si le profil plie à n'importe quelle station (par exemple un bombé qui apparaît progressivement garde ses colonnes de sommet).",
+      "desc": "Lateral decimation of the columns. Forces keeping column 1, the last one and any boundary between bands of different materials, then applies RDP to the interior columns with the MAXIMUM (o, dz) deviation over all stations: a column stays if the profile bends at any station (for example a crown that appears gradually keeps its apex columns).",
       "params": {
-        "ptsA": {"type": "table", "desc": "ptsA[s] = coupe de la station s, un tableau de {o, dz} par colonne (décalage latéral, écart vertical)."},
-        "bandMat": {"type": "table", "desc": "Un matériau par bande (entre les colonnes c et c+1)."},
-        "tolM": {"type": "number", "desc": "Tolérance en mètres."},
-        "m": {"type": "integer", "desc": "Nombre de stations."}
+        "ptsA": {
+          "type": "table",
+          "desc": "ptsA[s] = cross-section of station s, an array of {o, dz} per column (lateral offset, vertical deviation)."
+        },
+        "bandMat": {
+          "type": "table",
+          "desc": "One material per band (between columns c and c+1)."
+        },
+        "tolM": {
+          "type": "number",
+          "desc": "Tolerance in meters."
+        },
+        "m": {
+          "type": "integer",
+          "desc": "Number of stations."
+        }
       },
-      "returns": [{"type": "integer[]", "desc": "Indices triés des colonnes conservées."}],
+      "returns": [
+        {
+          "type": "integer[]",
+          "desc": "Sorted indices of the kept columns."
+        }
+      ],
       "internal": false
     }
   }

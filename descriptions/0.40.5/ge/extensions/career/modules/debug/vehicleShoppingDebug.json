@@ -1,14 +1,24 @@
 {
   "path": "lua/ge/extensions/career/modules/debug/vehicleShoppingDebug.lua",
-  "module": "Onglet de debug carrière « Vehicle Shopping ». Relit les fichiers *.facilities.json du niveau courant pour obtenir les concessionnaires, simule le tirage de véhicules (util/configListGenerator) et affiche, par concessionnaire et par sous-filtre, les configurations qui correspondent (modèle, config, nom) avec probabilité normalisée, nombre d'éligibles et temps de calcul.",
-  "notes": ["Outil de développement ; debugOrder = 0.", "Charge util/configListGenerator et freeroam/facilities au besoin.", "Le champ de recherche filtre par sous-chaîne sur modèle, config et nom."],
+  "module": "\"Vehicle Shopping\" career debug tab. Re-reads the current level's *.facilities.json files to get the dealerships, simulates the vehicle draw (util/configListGenerator) and shows, per dealership and per subfilter, the matching configurations (model, config, name) with normalized probability, number of eligible entries and computation time.",
+  "notes": [
+    "Development tool; debugOrder = 0.",
+    "Loads util/configListGenerator and freeroam/facilities as needed.",
+    "The search field filters by substring on model, config and name."
+  ],
   "fields": {
-    "debugOrder": {"type": "number", "desc": "Ordre de tri (0)."},
-    "debugName": {"type": "string", "desc": "'Vehicle Shopping'."}
+    "debugOrder": {
+      "type": "number",
+      "desc": "Sort order (0)."
+    },
+    "debugName": {
+      "type": "string",
+      "desc": "'Vehicle Shopping'."
+    }
   },
   "functions": {
     "drawDebugMenu": {
-      "desc": "Dessine la fenêtre 'Vehicle Shopping - SubFilter Matches' : bouton Refresh (recalcul), compteurs, champ Search et résultats par concessionnaire/sous-filtre.",
+      "desc": "Draws the 'Vehicle Shopping - SubFilter Matches' window: Refresh button (recompute), counters, Search field and results per dealership/subfilter.",
       "params": {},
       "returns": [],
       "internal": true

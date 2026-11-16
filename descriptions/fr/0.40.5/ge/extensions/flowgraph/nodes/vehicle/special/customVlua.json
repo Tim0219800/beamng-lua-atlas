@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/special/customVlua.lua",
+  "module": "Nœud « Custom Vehicle Lua » (catégorie `repeat_p_duration`, tags lua/vlua/command/code). Exécute du code Lua dans la VM du véhicule avec `veh:queueLuaCommand(func)`. Pins d'entrée : `vehId` (défaut : joueur), `func` (string, code à exécuter). Sortie : `flow`, `vehId` (caché).",
+  "notes": [
+    "Exécuté à chaque frame tant que le flux est actif.",
+    "Le code est exécuté tel quel : c'est de l'exécution arbitraire, donc pas de source non fiable."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_onDeserialized": {
+          "desc": "Migration des anciens projets : déplace `data.func` vers un pin codé en dur `func`.",
+          "internal": true,
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "Données sauvegardées du nœud."
+            }
+          }
+        },
+        "drawMiddle": {
+          "desc": "Affichage central vide.",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+            },
+            "style": {
+              "type": "any",
+              "desc": "Style ImGui de l'éditeur."
+            }
+          }
+        },
+        "work": {
+          "desc": "Envoie `func` au véhicule et recopie `vehId` sur la sortie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

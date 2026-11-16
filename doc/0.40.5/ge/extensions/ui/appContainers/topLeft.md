@@ -1,28 +1,28 @@
 # `ui_appContainers_topLeft`
 
-*Fichier : `lua/ge/extensions/ui/appContainers/topLeft.lua` · VM : Game Engine (GE) · 26 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/appContainers/topLeft.lua` · VM: Game Engine (GE) · 26 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_appContainers_topLeft` : `extensions.load("ui_appContainers_topLeft")`, puis la globale `ui_appContainers_topLeft`
+**Access:** extension `ui_appContainers_topLeft`: `extensions.load("ui_appContainers_topLeft")`, then the global `ui_appContainers_topLeft`
 
-Déclare le conteneur d'apps « topLeft » (coin haut-gauche de l'interface) auprès de ui_appContainers. Le trigger UI est setTopLeftAppVisibility. Apps déclarées : messages et tasks (visibles par défaut), scoreboard, driftScores, dragInfo et dragDialControl (cachées par défaut).
+Declares the "topLeft" app container (top-left corner of the interface) with ui_appContainers. The UI trigger is setTopLeftAppVisibility. Declared apps: messages and tasks (visible by default), scoreboard, driftScores, dragInfo and dragDialControl (hidden by default).
 
-## Remarques
+## Notes
 
-- Remplace l'ancien identifiant utilityApps (voir ui_appContainers.resolveContainerId).
+- Replaces the old identifier utilityApps (see ui_appContainers.resolveContainerId).
 
-**Dépendances (chargées avant) :** `ui_appContainers`
+**Dependencies (loaded first):** `ui_appContainers`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_appContainers_topLeft.onExtensionLoaded()` | Appelé au chargement de l'extension : enregistre le conteneur topLeft via ui_appContainers.registerContainer. *(interne)* *(hook)* | 8 |
+| `ui_appContainers_topLeft.onExtensionLoaded()` | Called when the extension loads: registers the topLeft container via ui_appContainers.registerContainer. *(internal)* *(hook)* | 8 |
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | { "ui_appContainers" } : chargé avant ce module. |
+| `dependencies` | table<integer, string> | { "ui_appContainers" }: loaded before this module. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/appContainers/topLeft.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/appContainers/topLeft.lua`.*

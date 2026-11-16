@@ -1,12 +1,12 @@
 # `gameplay_rally_aiCompetitors`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/aiCompetitors.lua` · VM : Game Engine (GE) · 560 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/aiCompetitors.lua` · VM: Game Engine (GE) · 560 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_aiCompetitors` : `extensions.load("gameplay_rally_aiCompetitors")`, puis la globale `gameplay_rally_aiCompetitors`
+**Access:** extension `gameplay_rally_aiCompetitors`: `extensions.load("gameplay_rally_aiCompetitors")`, then the global `gameplay_rally_aiCompetitors`
 
-Simule des concurrents IA pour le classement (leaderboard) d'une spéciale ou d'une boucle de rallye. Les paramètres des concurrents (skill, consistency, risk, name) et les coefficients du modèle sont lus dans gameplay/rally/aiCompetitorsConfig.json au chargement du module. Pour chaque concurrent, un résultat (safe, push, minor_incident, major_incident, dnf) est tiré au hasard, puis un temps est échantillonné selon une loi normale ancrée sur un temps de référence (par défaut la médaille 'silverTime'). Le module formate aussi les temps et construit les lignes du tableau affiché à l'UI.
+Simulates AI competitors for the leaderboard of a rally special stage or loop. The competitors' parameters (skill, consistency, risk, name) and the model coefficients are read from gameplay/rally/aiCompetitorsConfig.json when the module loads. For each competitor, a result (safe, push, minor_incident, major_incident, dnf) is drawn at random, then a time is sampled from a normal distribution anchored on a reference time (by default the 'silverTime' medal). The module also formats the times and builds the rows of the table shown in the UI.
 
-## Exemple
+## Example
 
 ```lua
 local lb = gameplay_rally_aiCompetitors.computeLeaderboard(playerTime, silverTime, 'Moi')
@@ -14,80 +14,80 @@ local lb = gameplay_rally_aiCompetitors.computeLeaderboard(playerTime, silverTim
 gameplay_rally_aiCompetitors.applyOfficialPlayerTotalSeconds(lb, 312.4)
 ```
 
-## Remarques
+## Notes
 
-- Les temps sont en secondes ; les textes sont formatés 'h:mm:ss.d' / 'm:ss.d' / 's.d' (un seul chiffre de dixième, arrondi à 0,1 s).
-- Les résultats sont aléatoires (math.random) : chaque appel à computeLeaderboard donne un classement différent pour les IA.
-- Chaque incident (minor : 1 à 2, major : 2 à 5) ajoute 5 s au temps d'un concurrent ; un DNF donne un temps nil.
-- En multi-spéciales, un DNF sur une spéciale force le DNF sur toutes les suivantes ; le tri place d'abord ceux qui ont le moins de colonnes DNF.
-- Si aiCompetitorsConfig.json est introuvable, PARAMS vaut nil : la liste de concurrents est vide mais les fonctions de densité/poids (qui utilisent PARAMS) provoqueraient une erreur si paramTable n'est pas fourni.
-- Le sous-objet 'general' du JSON de config est aplati dans la table des paramètres ; la liste des concurrents est lue dans 'competitors' (ou 'drivers').
+- Times are in seconds; the texts are formatted 'h:mm:ss.d' / 'm:ss.d' / 's.d' (a single tenth digit, rounded to 0.1 s).
+- The results are random (math.random): each call to computeLeaderboard gives a different ranking for the AIs.
+- Each incident (minor: 1 to 2, major: 2 to 5) adds 5 s to a competitor's time; a DNF gives a nil time.
+- In multi-stage, a DNF on one special stage forces the DNF on all following ones; the sort first places those with the fewest DNF columns.
+- If aiCompetitorsConfig.json is not found, PARAMS is nil: the competitor list is empty but the density/weight functions (which use PARAMS) would raise an error if paramTable is not provided.
+- The 'general' sub-object of the config JSON is flattened into the parameter table; the competitor list is read from 'competitors' (or 'drivers').
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_aiCompetitors.applyOfficialPlayerTotalSeconds(leaderboard, totalSecs)` | Écrase le temps total de la ligne du joueur avec le total officiel du journal d'évènements du rallye (temps de toutes les spéciales + pénalités). En multi-spéciales met à jour finalTime/finalDnf, en spéciale seule time/dnf ; les écarts (deltas) ne sont pas recalculés. | 521 |
-| `gameplay_rally_aiCompetitors.computeLeaderboard(playerTimeOrTimes, silverTimeOrTimes, playerName, playerFinalSortSecs)` | Construit le classement joueur + concurrents IA. Avec deux nombres : une spéciale seule. Avec deux tableaux de même longueur (>= 1) : plusieurs spéciales (boucle). Renvoie {rows = {}} si les entrées sont invalides. | 548 |
-| `gameplay_rally_aiCompetitors.computeMixtureWeights(paramTable, skill, risk)` | Calcule les poids normalisés des 5 résultats possibles (safe, push, minor_incident, major_incident, dnf) pour un niveau de compétence et de risque donnés. Utilise une consistance fixe de 0,5 (sans effet sur les poids). | 212 |
-| `gameplay_rally_aiCompetitors.getReferenceTime(missionTypeData)` | Renvoie le temps de référence (médaille désignée par referenceStarKey) d'une mission, ou nil s'il est absent ou non strictement positif. | 14 |
-| `gameplay_rally_aiCompetitors.mixtureDensityTimes(paramTable, referenceSec, skill, consistency, risk, timeLo, timeHi, sampleCount, precomputedWeights)` | Calcule la densité du mélange de gaussiennes des temps d'arrivée (aperçu pour l'éditeur). Utilise les mêmes poids et moyennes/écarts-types que l'échantillonnage ; le DNF n'a pas de densité. | 177 |
+| `gameplay_rally_aiCompetitors.applyOfficialPlayerTotalSeconds(leaderboard, totalSecs)` | Overwrites the player row's total time with the official total from the rally event log (time of all special stages + penalties). In multi-stage updates finalTime/finalDnf, in single stage time/dnf; the deltas are not recomputed. | 521 |
+| `gameplay_rally_aiCompetitors.computeLeaderboard(playerTimeOrTimes, silverTimeOrTimes, playerName, playerFinalSortSecs)` | Builds the player + AI competitors ranking. With two numbers: a single special stage. With two arrays of the same length (>= 1): several special stages (loop). Returns {rows = {}} if the inputs are invalid. | 548 |
+| `gameplay_rally_aiCompetitors.computeMixtureWeights(paramTable, skill, risk)` | Computes the normalized weights of the 5 possible results (safe, push, minor_incident, major_incident, dnf) for a given skill and risk level. Uses a fixed consistency of 0.5 (with no effect on the weights). | 212 |
+| `gameplay_rally_aiCompetitors.getReferenceTime(missionTypeData)` | Returns the reference time (medal designated by referenceStarKey) of a mission, or nil if it is absent or not strictly positive. | 14 |
+| `gameplay_rally_aiCompetitors.mixtureDensityTimes(paramTable, referenceSec, skill, consistency, risk, timeLo, timeHi, sampleCount, precomputedWeights)` | Computes the density of the Gaussian mixture of finish times (preview for the editor). Uses the same weights and means/standard deviations as the sampling; the DNF has no density. | 177 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_aiCompetitors.applyOfficialPlayerTotalSeconds(leaderboard, totalSecs)`
 
-Écrase le temps total de la ligne du joueur avec le total officiel du journal d'évènements du rallye (temps de toutes les spéciales + pénalités). En multi-spéciales met à jour finalTime/finalDnf, en spéciale seule time/dnf ; les écarts (deltas) ne sont pas recalculés.
+Overwrites the player row's total time with the official total from the rally event log (time of all special stages + penalties). In multi-stage updates finalTime/finalDnf, in single stage time/dnf; the deltas are not recomputed.
 
-- `leaderboard` (*table*) : Résultat de computeLeaderboard (doit avoir rows et playerRowIndex).
-- `totalSecs` (*number*) : Total officiel en secondes (> 0).
+- `leaderboard` (*table*) : Result of computeLeaderboard (must have rows and playerRowIndex).
+- `totalSecs` (*number*) : Official total in seconds (> 0).
 
 #### `gameplay_rally_aiCompetitors.computeLeaderboard(playerTimeOrTimes, silverTimeOrTimes, playerName, playerFinalSortSecs)`
 
-Construit le classement joueur + concurrents IA. Avec deux nombres : une spéciale seule. Avec deux tableaux de même longueur (>= 1) : plusieurs spéciales (boucle). Renvoie {rows = {}} si les entrées sont invalides.
+Builds the player + AI competitors ranking. With two numbers: a single special stage. With two arrays of the same length (>= 1): several special stages (loop). Returns {rows = {}} if the inputs are invalid.
 
-- `playerTimeOrTimes` (*number|number[]*) : Temps du joueur (ou liste de temps par spéciale).
-- `silverTimeOrTimes` (*number|number[]*) : Temps de référence (silver) de la spéciale, ou liste par spéciale ; doivent être > 0.
-- `playerName` (*string|nil*) : Nom affiché ; nil = 'Player' avec clé de traduction missions.aiCompetitorsLeaderboard.player.
-- `playerFinalSortSecs` (*number|nil*) : Total officiel (spéciales + pénalités) utilisé pour classer le joueur.
-- **renvoie** : table {rows, playerRowIndex} ; en multi : aussi multiStage=true et stageCount, lignes avec stageCells/finalTime/finalDnf ; en simple : lignes avec time/delta/deltaVsLeader/deltaVsAhead/dnf.
+- `playerTimeOrTimes` (*number|number[]*) : Player time (or list of times per special stage).
+- `silverTimeOrTimes` (*number|number[]*) : Reference (silver) time of the special stage, or list per special stage; must be > 0.
+- `playerName` (*string|nil*) : Display name; nil = 'Player' with translation key missions.aiCompetitorsLeaderboard.player.
+- `playerFinalSortSecs` (*number|nil*) : Official total (special stages + penalties) used to rank the player.
+- **returns**: table {rows, playerRowIndex}; in multi: also multiStage=true and stageCount, rows with stageCells/finalTime/finalDnf; in single: rows with time/delta/deltaVsLeader/deltaVsAhead/dnf.
 
 #### `gameplay_rally_aiCompetitors.computeMixtureWeights(paramTable, skill, risk)`
 
-Calcule les poids normalisés des 5 résultats possibles (safe, push, minor_incident, major_incident, dnf) pour un niveau de compétence et de risque donnés. Utilise une consistance fixe de 0,5 (sans effet sur les poids).
+Computes the normalized weights of the 5 possible results (safe, push, minor_incident, major_incident, dnf) for a given skill and risk level. Uses a fixed consistency of 0.5 (with no effect on the weights).
 
-- `paramTable` (*table|nil*) : Coefficients du modèle (safe_weight_base, push_weight_floor, etc.) ; nil = ceux du fichier de config.
-- `skill` (*number*) : Compétence du concurrent (0 à 1 attendu, déduit du code).
-- `risk` (*number*) : Propension au risque (0 à 1 attendu, déduit du code).
-- **renvoie** : number[] 5 poids dont la somme vaut 1, dans l'ordre safe, push, minor_incident, major_incident, dnf.
+- `paramTable` (*table|nil*) : Model coefficients (safe_weight_base, push_weight_floor, etc.); nil = those of the config file.
+- `skill` (*number*) : Competitor skill (0 to 1 expected, inferred from code).
+- `risk` (*number*) : Risk propensity (0 to 1 expected, inferred from code).
+- **returns**: number[] 5 weights summing to 1, in the order safe, push, minor_incident, major_incident, dnf.
 
 #### `gameplay_rally_aiCompetitors.getReferenceTime(missionTypeData)`
 
-Renvoie le temps de référence (médaille désignée par referenceStarKey) d'une mission, ou nil s'il est absent ou non strictement positif.
+Returns the reference time (medal designated by referenceStarKey) of a mission, or nil if it is absent or not strictly positive.
 
-- `missionTypeData` (*table|nil*) : Données de type de mission contenant par exemple silverTime.
-- **renvoie** : number|nil Temps de référence en secondes.
+- `missionTypeData` (*table|nil*) : Mission type data containing for example silverTime.
+- **returns**: number|nil Reference time in seconds.
 
 #### `gameplay_rally_aiCompetitors.mixtureDensityTimes(paramTable, referenceSec, skill, consistency, risk, timeLo, timeHi, sampleCount, precomputedWeights)`
 
-Calcule la densité du mélange de gaussiennes des temps d'arrivée (aperçu pour l'éditeur). Utilise les mêmes poids et moyennes/écarts-types que l'échantillonnage ; le DNF n'a pas de densité.
+Computes the density of the Gaussian mixture of finish times (preview for the editor). Uses the same weights and means/standard deviations as the sampling; the DNF has no density.
 
-- `paramTable` (*table|nil*) : Coefficients du modèle ; nil = config du fichier.
-- `referenceSec` (*number*) : Temps de référence en secondes.
-- `skill` (*number*) : Compétence.
-- `consistency` (*number*) : Régularité (1 = très régulier : écart-type réduit).
-- `risk` (*number*) : Propension au risque.
-- `timeLo` (*number*) : Borne basse de l'axe des temps.
-- `timeHi` (*number*) : Borne haute de l'axe des temps.
-- `sampleCount` (*integer|nil*) : Nombre de points (minimum 2, 500 par défaut).
-- `precomputedWeights` (*number[]|nil*) : Poids déjà calculés, pour éviter de les recalculer.
-- **renvoie** : table {times, mixture, weights, components (5 tableaux de densités par résultat), sampleCount}.
+- `paramTable` (*table|nil*) : Model coefficients; nil = file config.
+- `referenceSec` (*number*) : Reference time in seconds.
+- `skill` (*number*) : Skill.
+- `consistency` (*number*) : Consistency (1 = very consistent: reduced standard deviation).
+- `risk` (*number*) : Risk propensity.
+- `timeLo` (*number*) : Lower bound of the time axis.
+- `timeHi` (*number*) : Upper bound of the time axis.
+- `sampleCount` (*integer|nil*) : Number of points (minimum 2, 500 by default).
+- `precomputedWeights` (*number[]|nil*) : Weights already computed, to avoid recomputing them.
+- **returns**: table {times, mixture, weights, components (5 density arrays per result), sampleCount}.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `referenceStarKey` | string | Clé du temps de médaille utilisée comme référence de rythme des concurrents simulés. Vaut 'silverTime' par défaut ; getReferenceTime la lit dans missionTypeData. |
+| `referenceStarKey` | string | Key of the medal time used as the pace reference for the simulated competitors. Is 'silverTime' by default; getReferenceTime reads it from missionTypeData. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/aiCompetitors.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/aiCompetitors.lua`.*

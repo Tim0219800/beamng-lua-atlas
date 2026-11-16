@@ -1,95 +1,95 @@
 # `util_lawnMower`
 
-*Fichier : `lua/ge/extensions/util/lawnMower.lua` · VM : Game Engine (GE) · 270 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/lawnMower.lua` · VM: Game Engine (GE) · 270 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_lawnMower` : `extensions.load("util_lawnMower")`, puis la globale `util_lawnMower`
+**Access:** extension `util_lawnMower`: `extensions.load("util_lawnMower")`, then the global `util_lawnMower`
 
-Tondeuse à gazon pilotée par les props JBeam (côté GE uniquement). Il cherche dans le JBeam analysé de chaque véhicule les props portant l'option mowerRadius et, tant que le plateau de coupe est bas et à plat au-dessus d'un terrain, coupe l'herbe dans le masque de surface partagé (util_surfaceMaskWheels) en traçant un disque puis des segments, et lance des particules de brins d'herbe sur les matériaux de terrain dont le nom contient « grass ». Aucun Lua côté véhicule n'est nécessaire. La partie JBeam déclare "gameEngineExtensions": {"util_lawnMower": true} pour charger l'extension automatiquement.
+Lawn mower driven by JBeam props (GE side only). It searches each vehicle's parsed JBeam for props with the mowerRadius option and, while the cutting deck is low and flat above terrain, cuts the grass in the shared surface mask (util_surfaceMaskWheels) by drawing a disc then segments, and spawns grass blade particles on terrain materials whose name contains "grass". No vehicle-side Lua is needed. The JBeam part declares "gameEngineExtensions": {"util_lawnMower": true} to load the extension automatically.
 
-## Exemple
+## Example
 
 ```lua
--- Dans la partie JBeam de la tondeuse :
+-- In the mower's JBeam part:
 -- "gameEngineExtensions": {"util_lawnMower": true},
 -- "props": [["func","mesh","idRef:","idX:","idY:","baseRotation","rotation","translation"],
 --   ["mower_deck","deck.dae","deck_ref","deck_x","deck_y",{"x":0,"y":0,"z":0},{"x":0,"y":0,"z":0},{"x":0,"y":0,"z":0},{"mowerRadius":0.9,"mowerGroundDistance":0.4}]]
 extensions.util_lawnMower.toggle()
 ```
 
-## Remarques
+## Notes
 
-- Options de prop : mowerRadius (m, obligatoire, rayon du passage coupé) ; mowerGroundDistance (m, défaut 0,5 : hauteur maximale du centre du plateau au-dessus du terrain pour couper).
-- Le plateau coupe seulement s'il est bas ET posé à plat : le plan défini par les nœuds idRef/idX/idY doit être à peu près parallèle au terrain (|cos| >= 0,85, environ 31 degrés). Pour que relever ou replier le plateau coupe la coupe, il doit être monté sur de vrais nœuds physiques ; une simple animation de prop n'est pas détectée.
-- Le centre de coupe est le centroïde de idRef, idX, idY (repli sur idRef seul si idX/idY manquent).
-- Mise à jour toutes les 0,05 s. Seuls le véhicule joueur et les tondeuses proches (fenêtre du clipmap) coupent ; la fenêtre est centrée sur le véhicule joueur (setCenter).
-- Les brins d'herbe ne sont lancés qu'à la première coupe d'une cellule de 0,5 m (cache mownCells), sur matériau « grass » (heuristique sur le nom). Le masque est sur GPU et ne peut pas être relu.
-- Un déplacement de plus de 10 m entre deux mises à jour est traité comme une téléportation (pas de trait) ; sous 0,2 m rien n'est tracé.
+- Prop options: mowerRadius (m, required, radius of the cut swath); mowerGroundDistance (m, default 0.5: maximum height of the deck center above the terrain for cutting).
+- The deck cuts only if it is low AND flat: the plane defined by the idRef/idX/idY nodes must be roughly parallel to the terrain (|cos| >= 0.85, about 31 degrees). For raising or folding the deck to stop the cutting, it must be mounted on real physical nodes; a simple prop animation is not detected.
+- The cutting center is the centroid of idRef, idX, idY (falls back to idRef alone if idX/idY are missing).
+- Updated every 0.05 s. Only the player vehicle and nearby mowers (clipmap window) cut; the window is centered on the player vehicle (setCenter).
+- Grass blades are spawned only on the first cut of a 0.5 m cell (mownCells cache), on a "grass" material (name-based heuristic). The mask is on the GPU and cannot be read back.
+- A displacement of more than 10 m between two updates is treated as a teleport (no stroke); below 0.2 m nothing is drawn.
 
-**Dépendances (chargées avant) :** `util_surfaceMaskWheels`, `core_vehicle_manager`
+**Dependencies (loaded first):** `util_surfaceMaskWheels`, `core_vehicle_manager`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_lawnMower.onClientStartMission()` | Hook appelé au démarrage d'un niveau : vide les caches de cellules coupées, de matériaux d'herbe et d'objet terrain. *(interne)* *(hook)* | 233 |
-| `util_lawnMower.onDeserialized(data)` | Hook de désérialisation après rechargement : restaure l'état enabled. *(interne)* *(hook)* | 264 |
-| `util_lawnMower.onExtensionLoaded()` | Appelé au chargement : active la tondeuse et scanne les véhicules déjà présents. *(interne)* *(hook)* | 244 |
-| `util_lawnMower.onPreRender(dtReal, dtSim)` | Hook appelé chaque frame avant le rendu : si activé et si des tondeuses existent, centre le clipmap du masque et fait couper chaque tondeuse (toutes les 0,05 s). Supprime l'état des véhicules disparus. *(interne)* *(hook)* | 164 |
-| `util_lawnMower.onSerialize()` | Hook de sérialisation avant un rechargement d'extensions : sauvegarde l'état enabled. *(interne)* *(hook)* | 260 |
-| `util_lawnMower.onVehicleDestroyed(vehId)` | Hook appelé quand un véhicule est détruit : oublie ses tondeuses. *(interne)* *(hook)* | 239 |
-| `util_lawnMower.onVehicleSpawned(vehId)` | Hook appelé quand un véhicule apparaît (ou est réapparu après un changement de pièce) : relit ses props JBeam à la recherche de mowerRadius. *(interne)* *(hook)* | 229 |
-| `util_lawnMower.setEnabled(enabled)` | Active ou désactive la coupe et remet le chronomètre à zéro. | 251 |
-| `util_lawnMower.toggle()` | Inverse l'état activé/désactivé. | 256 |
+| `util_lawnMower.onClientStartMission()` | Hook called at level start: clears the caches of mown cells, grass materials and terrain object. *(internal)* *(hook)* | 233 |
+| `util_lawnMower.onDeserialized(data)` | Deserialization hook after reload: restores the enabled state. *(internal)* *(hook)* | 264 |
+| `util_lawnMower.onExtensionLoaded()` | Called on load: enables the mower and scans the vehicles already present. *(internal)* *(hook)* | 244 |
+| `util_lawnMower.onPreRender(dtReal, dtSim)` | Hook called every frame before rendering: if enabled and mowers exist, centers the mask clipmap and makes each mower cut (every 0.05 s). Removes the state of vehicles that have disappeared. *(internal)* *(hook)* | 164 |
+| `util_lawnMower.onSerialize()` | Serialization hook before an extension reload: saves the enabled state. *(internal)* *(hook)* | 260 |
+| `util_lawnMower.onVehicleDestroyed(vehId)` | Hook called when a vehicle is destroyed: forgets its mowers. *(internal)* *(hook)* | 239 |
+| `util_lawnMower.onVehicleSpawned(vehId)` | Hook called when a vehicle spawns (or respawned after a part change): rereads its JBeam props looking for mowerRadius. *(internal)* *(hook)* | 229 |
+| `util_lawnMower.setEnabled(enabled)` | Enables or disables cutting and resets the timer. | 251 |
+| `util_lawnMower.toggle()` | Toggles the enabled/disabled state. | 256 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_lawnMower.onDeserialized(data)`
 
-Hook de désérialisation après rechargement : restaure l'état enabled.
+Deserialization hook after reload: restores the enabled state.
 
-- `data` (*table|nil*) : Données renvoyées par onSerialize
+- `data` (*table|nil*) : Data returned by onSerialize
 
 #### `util_lawnMower.onPreRender(dtReal, dtSim)`
 
-Hook appelé chaque frame avant le rendu : si activé et si des tondeuses existent, centre le clipmap du masque et fait couper chaque tondeuse (toutes les 0,05 s). Supprime l'état des véhicules disparus.
+Hook called every frame before rendering: if enabled and mowers exist, centers the mask clipmap and makes each mower cut (every 0.05 s). Removes the state of vehicles that have disappeared.
 
-- `dtReal` (*number*) : Delta de temps réel en secondes
-- `dtSim` (*number*) : Delta de temps de simulation en secondes (prioritaire pour le chronomètre)
+- `dtReal` (*number*) : Real-time delta in seconds
+- `dtSim` (*number*) : Simulation time delta in seconds (takes priority for the timer)
 
 #### `util_lawnMower.onSerialize()`
 
-Hook de sérialisation avant un rechargement d'extensions : sauvegarde l'état enabled.
+Serialization hook before an extension reload: saves the enabled state.
 
-- **renvoie** : table {enabled = boolean}
+- **returns**: table {enabled = boolean}
 
 #### `util_lawnMower.onVehicleDestroyed(vehId)`
 
-Hook appelé quand un véhicule est détruit : oublie ses tondeuses.
+Hook called when a vehicle is destroyed: forgets its mowers.
 
-- `vehId` (*integer*) : Identifiant du véhicule
+- `vehId` (*integer*) : Vehicle id
 
 #### `util_lawnMower.onVehicleSpawned(vehId)`
 
-Hook appelé quand un véhicule apparaît (ou est réapparu après un changement de pièce) : relit ses props JBeam à la recherche de mowerRadius.
+Hook called when a vehicle spawns (or respawned after a part change): rereads its JBeam props looking for mowerRadius.
 
-- `vehId` (*integer*) : Identifiant du véhicule
+- `vehId` (*integer*) : Vehicle id
 
 #### `util_lawnMower.setEnabled(enabled)`
 
-Active ou désactive la coupe et remet le chronomètre à zéro.
+Enables or disables cutting and resets the timer.
 
-- `enabled` (*boolean*) : true pour activer
+- `enabled` (*boolean*) : true to enable
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions requises : util_surfaceMaskWheels (service de masque) et core_vehicle_manager (données JBeam analysées) |
-| `enabled` | boolean | Active ou non la coupe ; true après onExtensionLoaded |
+| `dependencies` | string[] | Required extensions: util_surfaceMaskWheels (mask service) and core_vehicle_manager (parsed JBeam data) |
+| `enabled` | boolean | Enables or disables cutting; true after onExtensionLoaded |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicle`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/lawnMower.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/lawnMower.lua`.*

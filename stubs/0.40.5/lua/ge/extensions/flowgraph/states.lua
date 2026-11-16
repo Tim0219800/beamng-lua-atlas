@@ -2,175 +2,175 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/states.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gestionnaire d'états d'un projet flowgraph. Champs : mgr, states (id de nœud -> état {id, depth, graph, name, autoStart, extProxy, active, ports, transitionStack, extHooks, extDeps}), queuedTransitions, hookExists, resolveExtProxy, stateGraph.
+--- State manager of a flowgraph project. Fields: mgr, states (node id -> state {id, depth, graph, name, autoStart, extProxy, active, ports, transitionStack, extHooks, extDeps}), queuedTransitions, hookExists, resolveExtProxy, stateGraph.
 ---@class flowgraph_states
 local flowgraph_states = {}
 
---- Crée un état à partir d'un nœud avec ports : proxy d'extension dédié, collecte des hooks et dépendances du graphe cible (`getRecursiveHooksAndDependencies`), mémorise les hooks `onXxx` existants dans `hookExists`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:64
----@param pnode table Élément {node, depth, ports, startingState}.
+--- Creates a state from a node with ports: dedicated extension proxy, collects the hooks and dependencies of the target graph (`getRecursiveHooksAndDependencies`), records the existing `onXxx` hooks in `hookExists`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:64
+---@param pnode table Item {node, depth, ports, startingState}.
 function flowgraph_states:addStateFromPortedNode(pnode) end
 
---- Appelle le hook `functionName` sur le proxy de chaque état qui le possède.
----Source : lua/ge/extensions/flowgraph/states.lua:560
----@param functionName string Nom du hook.
----@param ... any Arguments passés au hook.
+--- Calls the `functionName` hook on the proxy of every state that has it.
+---Source: lua/ge/extensions/flowgraph/states.lua:560
+---@param functionName string Hook name.
+---@param ... any Arguments passed to the hook.
 function flowgraph_states:broadcastCall(functionName, ...) end
 
---- Comme `broadcastCall`, mais passe en premier argument la table `results` pour que les états y déposent des résultats.
----Source : lua/ge/extensions/flowgraph/states.lua:568
----@param functionName string Nom du hook.
----@param results table Table de résultats partagée.
----@param ... any Arguments supplémentaires.
+--- Like `broadcastCall`, but passes the `results` table as first argument so the states can put results in it.
+---Source: lua/ge/extensions/flowgraph/states.lua:568
+---@param functionName string Hook name.
+---@param results table Shared results table.
+---@param ... any Extra arguments.
 function flowgraph_states:broadcastCallReturn(functionName, results, ...) end
 
---- Remplit pour chaque nœud ses ports (nom de transition -> cibles, profondeur d'arrêt, arrêt du projet) et marque les états de départ (reliés aux nœuds racine).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:347
----@param nodes table Nœuds.
----@param links table Liens aplatis.
----@return table  Nœuds valides (hors connecteurs).
+--- Fills in each node's ports (transition name -> targets, stop depth, project stop) and marks the starting states (connected to the root nodes).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:347
+---@param nodes table Nodes.
+---@param links table Flattened links.
+---@return table  Valid nodes (excluding connectors).
 function flowgraph_states:buildPortsAndStarts(nodes, links) end
 
---- Construit tous les états du projet (collecte, aplatissement, ports) et le proxy `_StateResolver` qui résout les transitions à chaque `onUpdate` tant que le projet tourne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:385
+--- Builds all the project's states (collection, flattening, ports) and the `_StateResolver` proxy that resolves transitions on every `onUpdate` while the project is running.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:385
 function flowgraph_states:buildStates() end
 
---- Détruit le proxy de résolution et tous les proxys d'extension des états, rafraîchit les dépendances de `core_flowgraphManager` et vide `states` et `hookExists`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:21
+--- Destroys the resolver proxy and all the states' extension proxies, refreshes the dependencies of `core_flowgraphManager` and empties `states` and `hookExists`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:21
 function flowgraph_states:clear() end
 
---- Détruit le gestionnaire (appelle `clear`).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:17
+--- Destroys the manager (calls `clear`).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:17
 function flowgraph_states:destroy() end
 
---- Cherche dans le graphe d'états racine le nœud `states/stateNode` dont le graphe cible a l'id donné.
----Source : lua/ge/extensions/flowgraph/states.lua:440
----@param targetGraphId integer Id du graphe cible.
----@return table|nil  Nœud trouvé.
+--- Searches the root state graph for the `states/stateNode` node whose target graph has the given id.
+---Source: lua/ge/extensions/flowgraph/states.lua:440
+---@param targetGraphId integer Target graph id.
+---@return table|nil  Node found.
 function flowgraph_states:findStateNodeInStateGraph(targetGraphId) end
 
---- Version récursive de la recherche, sur un graphe et ses enfants.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:444
----@param graph table Graphe où chercher.
----@param id integer Id du graphe cible.
----@return table|nil  Nœud trouvé.
+--- Recursive version of the search, on a graph and its children.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:444
+---@param graph table Graph to search in.
+---@param id integer Target graph id.
+---@return table|nil  Node found.
 function flowgraph_states:findStateNodeInStateGraphRecursive(graph, id) end
 
---- Vide l'état puis parcourt récursivement le graphe d'états racine pour lister nœuds, liens et groupes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:159
+--- Clears the state then recursively walks the root state graph to list nodes, links and groups.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:159
 ---@return table  nodes.
 ---@return table  links.
----@return table  group (groupes d'états).
+---@return table  group (state groups).
 function flowgraph_states:gatherNodesAndLinks() end
 
---- Parcours récursif d'un graphe : ignore les commentaires, marque connecteurs (groupes, entrée/sortie), racines et liens à raccourcir ; ignore un groupe invalide (entrée reliée directement à une sortie).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:167
----@param graph table Graphe courant.
----@param nodes table Table de sortie des nœuds.
----@param links table Liste de sortie des liens.
----@param group table Table des groupes.
----@param depth table Liste des ids de graphes parents.
+--- Recursive walk of a graph: skips comments, marks connectors (groups, entry/exit), roots and links to shorten; skips an invalid group (entry connected directly to an exit).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:167
+---@param graph table Current graph.
+---@param nodes table Output table of nodes.
+---@param links table Output list of links.
+---@param group table Table of groups.
+---@param depth table List of parent graph ids.
 function flowgraph_states:gatherNodesAndLinksRecursion(graph, nodes, links, group, depth) end
 
---- Renvoie l'id de l'état dont le graphe est le graphe racine du nœud donné, ou -1.
----Source : lua/ge/extensions/flowgraph/states.lua:424
----@param node table Nœud quelconque.
----@return integer  Id d'état ou -1.
+--- Returns the id of the state whose graph is the root graph of the given node, or -1.
+---Source: lua/ge/extensions/flowgraph/states.lua:424
+---@param node table Any node.
+---@return integer  State id or -1.
 function flowgraph_states:getStateIdForNode(node) end
 
---- Renvoie les ids des états contenus dans le groupe correspondant à la profondeur donnée (dernier id de la liste).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:547
----@param depth table Liste d'ids de graphes.
----@return integer[]  Ids d'états.
+--- Returns the ids of the states contained in the group matching the given depth (last id of the list).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:547
+---@param depth table List of graph ids.
+---@return integer[]  State ids.
 function flowgraph_states:getStateIdsForDepth(depth) end
 
---- Censé renvoyer le nœud d'un état ; renvoie `states[id].node`, champ jamais renseigné (toujours nil).
----Source : lua/ge/extensions/flowgraph/states.lua:431
----@param id integer Id de l'état.
----@return table|nil  Toujours nil dans le code actuel.
+--- Supposed to return a state's node; returns `states[id].node`, a field never set (always nil).
+---Source: lua/ge/extensions/flowgraph/states.lua:431
+---@param id integer State id.
+---@return table|nil  Always nil in the current code.
 function flowgraph_states:getStateNode(id) end
 
---- Dépréciée : log une erreur et ne renvoie rien.
----Source : lua/ge/extensions/flowgraph/states.lua:435
----@param node table Nœud.
+--- Deprecated: logs an error and returns nothing.
+---Source: lua/ge/extensions/flowgraph/states.lua:435
+---@param node table Node.
 function flowgraph_states:getStateNodeByNode(node) end
 
---- Renvoie la pile de données de transition d'un état (table vide si inconnu).
----Source : lua/ge/extensions/flowgraph/states.lua:420
----@param id integer Id de l'état.
+--- Returns a state's transition data stack (empty table if unknown).
+---Source: lua/ge/extensions/flowgraph/states.lua:420
+---@param id integer State id.
 ---@return table  transitionStack.
 function flowgraph_states:getTransitionStack(id) end
 
---- Pour un nœud d'état, regroupe par nom de transition (nom du pin source) les liens sortants de son graphe : {nom -> [{targetName, link}]}.
----Source : lua/ge/extensions/flowgraph/states.lua:48
----@param node table Nœud d'état.
----@return table<string, table[]>  Transitions par nom.
+--- For a state node, groups the outgoing links of its graph by transition name (name of the source pin): {name -> [{targetName, link}]}.
+---Source: lua/ge/extensions/flowgraph/states.lua:48
+---@param node table State node.
+---@return table<string, table[]>  Transitions by name.
 function flowgraph_states:getTransitions(node) end
 
---- Dit si au moins un nœud d'un état possède une méthode correspondant à ce hook (`onXxx`).
----Source : lua/ge/extensions/flowgraph/states.lua:577
----@param functionName string Nom du hook.
----@return boolean|nil  true si existe.
+--- Tells whether at least one node of a state has a method matching this hook (`onXxx`).
+---Source: lua/ge/extensions/flowgraph/states.lua:577
+---@param functionName string Hook name.
+---@return boolean|nil  true if it exists.
 function flowgraph_states:hasNodeForHook(functionName) end
 
---- Constructeur : mémorise le manager et initialise les tables.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:9
----@param mgr table Manager de flowgraph.
+--- Constructor: stores the manager and initializes the tables.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:9
+---@param mgr table Flowgraph manager.
 function flowgraph_states:init(mgr) end
 
---- Dit si l'état est actif.
----Source : lua/ge/extensions/flowgraph/states.lua:581
----@param id integer Id de l'état.
----@return boolean  true si actif.
+--- Tells whether the state is active.
+---Source: lua/ge/extensions/flowgraph/states.lua:581
+---@param id integer State id.
+---@return boolean  true if active.
 function flowgraph_states:isRunning(id) end
 
---- Aplatit les liens qui traversent des connecteurs (groupes d'états, entrées/sorties) en liens virtuels directs entre états réels.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:247
----@param nodes table Nœuds collectés.
----@param links table Liens collectés.
----@param group table Groupes.
----@return table  Liste de liens aplatis.
+--- Flattens the links that cross connectors (state groups, entries/exits) into direct virtual links between real states.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:247
+---@param nodes table Collected nodes.
+---@param links table Collected links.
+---@param group table Groups.
+---@return table  List of flattened links.
 function flowgraph_states:resolveInterHops(nodes, links, group) end
 
---- Résout toutes les transitions en file : détermine les états à arrêter et à démarrer, applique les profondeurs d'arrêt de groupes, met à jour les `transitionStack`, arrête le projet si un état final est atteint sans autre démarrage, puis vide la file. Appelé à chaque `onUpdate` tant que le projet tourne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:466
+--- Resolves all queued transitions: determines the states to stop and start, applies group stop depths, updates the `transitionStack`s, stops the project if a final state is reached with no other start, then empties the queue. Called on every `onUpdate` while the project is running.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:466
 function flowgraph_states:resolveTransitions() end
 
---- Démarre tous les états marqués `autoStart` (ceux reliés à l'entrée racine).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:109
+--- Starts all states marked `autoStart` (those connected to the root entry).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:109
 function flowgraph_states:startAutoStartStates() end
 
---- Active un état : branche son proxy aux hooks et dépendances, appelle `onStateStarted` et `onStateStartedTrigger` du proxy, puis `activity:onFlowgraphStateStarted(nom, état, transData)` si le projet est lié à une activité.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:117
----@param id integer Id du nœud d'état.
----@param transData table|nil Données de transition (voir bug dans les notes).
+--- Activates a state: connects its proxy to the hooks and dependencies, calls the proxy's `onStateStarted` and `onStateStartedTrigger`, then `activity:onFlowgraphStateStarted(name, state, transData)` if the project is linked to an activity.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:117
+---@param id integer State node id.
+---@param transData table|nil Transition data (see the bug in the notes).
 function flowgraph_states:startState(id, transData) end
 
---- Désactive un état : appelle `onStateStopped`, `onStateStoppedTrigger`, `activity:onFlowgraphStateStopped`, puis débranche son proxy.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/states.lua:138
----@param id integer Id de l'état.
+--- Deactivates a state: calls `onStateStopped`, `onStateStoppedTrigger`, `activity:onFlowgraphStateStopped`, then disconnects its proxy.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/states.lua:138
+---@param id integer State id.
 function flowgraph_states:stopState(id) end
 
---- Met en file une transition qui sera résolue à la fin de la frame ; la consigne dans les événements du manager.
----Source : lua/ge/extensions/flowgraph/states.lua:458
----@param sourceStateId integer Id de l'état source.
----@param transitionName string Nom du pin/transition à suivre.
----@param transitionData table|nil Données ajoutées à la pile de transition de la cible.
----@param sourceNode table|nil Nœud d'origine, pour le journal.
+--- Queues a transition that will be resolved at the end of the frame; records it in the manager's events.
+---Source: lua/ge/extensions/flowgraph/states.lua:458
+---@param sourceStateId integer Source state id.
+---@param transitionName string Name of the pin/transition to follow.
+---@param transitionData table|nil Data added to the target's transition stack.
+---@param sourceNode table|nil Originating node, for the log.
 function flowgraph_states:transition(sourceStateId, transitionName, transitionData, sourceNode) end
 

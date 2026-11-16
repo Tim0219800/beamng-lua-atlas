@@ -1,82 +1,82 @@
 # `editor_trafficGatedRoadsEditor`
 
-*Fichier : `lua/ge/extensions/editor/trafficGatedRoadsEditor.lua` · VM : Game Engine (GE) · 444 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/trafficGatedRoadsEditor.lua` · VM: Game Engine (GE) · 444 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_trafficGatedRoadsEditor` : `extensions.load("editor_trafficGatedRoadsEditor")`, puis la globale `editor_trafficGatedRoadsEditor`
+**Access:** extension `editor_trafficGatedRoadsEditor`: `extensions.load("editor_trafficGatedRoadsEditor")`, then the global `editor_trafficGatedRoadsEditor`
 
-Éditeur « Traffic Gated Roads » (menu Traffic) : place des sphères (affichées comme des cylindres verticaux de 20 m de haut, rayon réglable) dans le monde et les enregistre dans un JSON, par défaut /gameplay/trafficGatedRoads.json. Chaque sphère a id, name, pos {x,y,z}, quat {x,y,z,w} et radius (10 par défaut). Ctrl+clic ajoute une sphère, Maj+clic duplique la sélection, clic sélectionne, Suppr supprime ; un gizmo déplace, tourne ou redimensionne. Le rôle de ces données dans le trafic n'est pas défini dans ce fichier.
+Editor "Traffic Gated Roads" (Traffic menu): places spheres (displayed as vertical cylinders 20 m high, adjustable radius) in the world and saves them to a JSON file, by default /gameplay/trafficGatedRoads.json. Each sphere has id, name, pos {x,y,z}, quat {x,y,z,w} and radius (10 by default). Ctrl+click adds a sphere, Shift+click duplicates the selection, click selects, Del deletes; a gizmo moves, rotates or scales. The role of this data in traffic is not defined in this file.
 
-## Remarques
+## Notes
 
-- Le bouton SAVE et le menu Save sont désactivés tant que le chemin est celui par défaut : il faut passer par Save As.
-- Le déplacement avec « Snap to Terrain » lance un raycast statique vers le bas depuis 50 m au-dessus du point.
-- L'état (data, filePath, sélection, nextId) est conservé lors d'un rechargement Lua via onSerialize / onDeserialized.
-- Quitter la fenêtre rebascule l'éditeur en mode objectSelect ; reprendre le focus réactive le mode d'édition.
-- M.allowGizmo renvoie false (et non nil) hors mode d'édition, alors que la fonction locale du même nom peut renvoyer nil.
+- The SAVE button and the Save menu are disabled as long as the path is the default one: you must go through Save As.
+- Moving with "Snap to Terrain" fires a static raycast downward from 50 m above the point.
+- The state (data, filePath, selection, nextId) is kept across a Lua reload via onSerialize / onDeserialized.
+- Leaving the window switches the editor back to objectSelect mode; regaining focus re-enables the edit mode.
+- M.allowGizmo returns false (not nil) outside the edit mode, whereas the local function of the same name may return nil.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_trafficGatedRoadsEditor.allowGizmo()` | Vrai quand le mode d'édition courant est « Edit Traffic Gated Roads » : le gizmo n'est alors autorisé. | 441 |
-| `editor_trafficGatedRoadsEditor.loadData(fp)` | Charge un fichier JSON de sphères (jsonReadFile). En cas d'échec, logue une erreur et ne change rien. Sinon remplace les données, mémorise le chemin, efface la sélection et recalcule nextId. | 209 |
-| `editor_trafficGatedRoadsEditor.onDeserialized(d)` | Hook appelé après un rechargement Lua : restaure l'état renvoyé par onSerialize. *(interne)* *(hook)* | 423 |
-| `editor_trafficGatedRoadsEditor.onEditorGui()` | Hook appelé chaque frame d'interface : dessine la fenêtre (menu File, SAVE, liste de sphères, nom, position, rayon, case Snap to Terrain), traite la souris, dessine les cylindres avec debugDrawer:drawCylinder et le gizmo (déplacement, rotation, échelle). *(interne)* *(hook)* | 230 |
-| `editor_trafficGatedRoadsEditor.onEditorInitialized()` | Hook de l'éditeur : crée le mode d'édition trafficGatedRoadsEditMode (clic gauche = Select), enregistre la fenêtre (400x500) et l'entrée de menu Traffic. *(interne)* *(hook)* | 389 |
-| `editor_trafficGatedRoadsEditor.onEditorToolWindowHide(windowName)` | Hook appelé quand une fenêtre d'outil est masquée : si c'est celle-ci, revient au mode objectSelect. *(interne)* *(hook)* | 402 |
-| `editor_trafficGatedRoadsEditor.onSerialize()` | Hook appelé avant un rechargement Lua : renvoie l'état à conserver. *(interne)* *(hook)* | 414 |
-| `editor_trafficGatedRoadsEditor.onWindowGotFocus(windowName)` | Hook appelé quand une fenêtre prend le focus : si c'est celle-ci, réactive le mode d'édition. *(interne)* *(hook)* | 408 |
-| `editor_trafficGatedRoadsEditor.saveData(fp)` | Écrit les données dans un fichier JSON (jsonWriteFile, mise en forme lisible) et mémorise le chemin. | 203 |
-| `editor_trafficGatedRoadsEditor.show()` | Efface la sélection d'objets, affiche la fenêtre et passe en mode d'édition trafficGatedRoadsEditMode. | 375 |
+| `editor_trafficGatedRoadsEditor.allowGizmo()` | True when the current edit mode is "Edit Traffic Gated Roads": the gizmo is then allowed. | 441 |
+| `editor_trafficGatedRoadsEditor.loadData(fp)` | Loads a JSON file of spheres (jsonReadFile). On failure, logs an error and changes nothing. Otherwise replaces the data, remembers the path, clears the selection and recomputes nextId. | 209 |
+| `editor_trafficGatedRoadsEditor.onDeserialized(d)` | Hook called after a Lua reload: restores the state returned by onSerialize. *(internal)* *(hook)* | 423 |
+| `editor_trafficGatedRoadsEditor.onEditorGui()` | Hook called every interface frame: draws the window (File menu, SAVE, sphere list, name, position, radius, Snap to Terrain checkbox), handles the mouse, draws the cylinders with debugDrawer:drawCylinder and the gizmo (move, rotate, scale). *(internal)* *(hook)* | 230 |
+| `editor_trafficGatedRoadsEditor.onEditorInitialized()` | Editor hook: creates the trafficGatedRoadsEditMode edit mode (left click = Select), registers the window (400x500) and the Traffic menu entry. *(internal)* *(hook)* | 389 |
+| `editor_trafficGatedRoadsEditor.onEditorToolWindowHide(windowName)` | Hook called when a tool window is hidden: if it is this one, returns to objectSelect mode. *(internal)* *(hook)* | 402 |
+| `editor_trafficGatedRoadsEditor.onSerialize()` | Hook called before a Lua reload: returns the state to keep. *(internal)* *(hook)* | 414 |
+| `editor_trafficGatedRoadsEditor.onWindowGotFocus(windowName)` | Hook called when a window gains focus: if it is this one, re-enables the edit mode. *(internal)* *(hook)* | 408 |
+| `editor_trafficGatedRoadsEditor.saveData(fp)` | Writes the data to a JSON file (jsonWriteFile, human-readable formatting) and remembers the path. | 203 |
+| `editor_trafficGatedRoadsEditor.show()` | Clears the object selection, shows the window and switches to the trafficGatedRoadsEditMode edit mode. | 375 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_trafficGatedRoadsEditor.allowGizmo()`
 
-Vrai quand le mode d'édition courant est « Edit Traffic Gated Roads » : le gizmo n'est alors autorisé.
+True when the current edit mode is "Edit Traffic Gated Roads": the gizmo is then allowed.
 
-- **renvoie** : boolean Mode d'édition actif.
+- **returns**: boolean Active edit mode.
 
 #### `editor_trafficGatedRoadsEditor.loadData(fp)`
 
-Charge un fichier JSON de sphères (jsonReadFile). En cas d'échec, logue une erreur et ne change rien. Sinon remplace les données, mémorise le chemin, efface la sélection et recalcule nextId.
+Loads a JSON file of spheres (jsonReadFile). On failure, logs an error and changes nothing. Otherwise replaces the data, remembers the path, clears the selection and recomputes nextId.
 
-- `fp` (*string|nil*) : Chemin du fichier ; sans effet si nil.
+- `fp` (*string|nil*) : File path; no effect if nil.
 
 #### `editor_trafficGatedRoadsEditor.onDeserialized(d)`
 
-Hook appelé après un rechargement Lua : restaure l'état renvoyé par onSerialize.
+Hook called after a Lua reload: restores the state returned by onSerialize.
 
-- `d` (*table|nil*) : État sérialisé.
+- `d` (*table|nil*) : Serialized state.
 
 #### `editor_trafficGatedRoadsEditor.onEditorToolWindowHide(windowName)`
 
-Hook appelé quand une fenêtre d'outil est masquée : si c'est celle-ci, revient au mode objectSelect.
+Hook called when a tool window is hidden: if it is this one, returns to objectSelect mode.
 
-- `windowName` (*string*) : Nom de la fenêtre masquée.
+- `windowName` (*string*) : Name of the hidden window.
 
 #### `editor_trafficGatedRoadsEditor.onSerialize()`
 
-Hook appelé avant un rechargement Lua : renvoie l'état à conserver.
+Hook called before a Lua reload: returns the state to keep.
 
-- **renvoie** : table { data, filePath, selectedIdx, nextId }.
+- **returns**: table { data, filePath, selectedIdx, nextId }.
 
 #### `editor_trafficGatedRoadsEditor.onWindowGotFocus(windowName)`
 
-Hook appelé quand une fenêtre prend le focus : si c'est celle-ci, réactive le mode d'édition.
+Hook called when a window gains focus: if it is this one, re-enables the edit mode.
 
-- `windowName` (*string*) : Nom de la fenêtre.
+- `windowName` (*string*) : Window name.
 
 #### `editor_trafficGatedRoadsEditor.saveData(fp)`
 
-Écrit les données dans un fichier JSON (jsonWriteFile, mise en forme lisible) et mémorise le chemin.
+Writes the data to a JSON file (jsonWriteFile, human-readable formatting) and remembers the path.
 
-- `fp` (*string|nil*) : Chemin ; par défaut le chemin courant.
+- `fp` (*string|nil*) : Path; defaults to the current path.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawCylinder`
 - `worldEditorCppApi.` `getAxisGizmoScale`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/trafficGatedRoadsEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/trafficGatedRoadsEditor.lua`.*

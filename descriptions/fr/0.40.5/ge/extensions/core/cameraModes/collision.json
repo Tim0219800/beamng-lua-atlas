@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/collision.lua",
+  "module": "Filtre anti-traversée des décors : lance des rayons statiques (castRayStatic) depuis la cible vers les quatre coins du plan proche de la caméra et rapproche la caméra de la cible si un mur gêne (distance minimale 0.5 m). En l'absence d'obstacle, un seul coin est testé par image (tour de rôle) ; au premier contact, les quatre le sont à chaque image jusqu'à une image libre. Actif seulement si le réglage 'cameraCollision' est vrai. Renvoie un constructeur.",
+  "notes": ["État par instance (chaque vue/split-screen a son filtre). Marge de sécurité 0.1 m ; plan proche supposé 0.4 x 0.2 m. Le lissage n'agit que quand la caméra s'éloigne (retour progressif) ; le rapprochement est immédiat.", "La page extraite indique isObstacleInFrontOfCam(cornerIdx) mais le code prend (rayDestinations, cornerIdx)."],
+  "classes": {
+    "C": {
+      "desc": "Filtre de collision de caméra.",
+      "functions": {
+        "init": {"desc": "Réinitialise l'état (distances, indice de rayon, lissage) et lit le réglage cameraCollision.", "internal": true},
+        "onSettingsChanged": {"desc": "Hook : relit le réglage 'cameraCollision' (true par défaut).", "internal": true},
+        "isObstacleInFrontOfCam": {"desc": "Détecte une géométrie que les rayons de coin ne voient pas : traversée complète d'un mur en une image, ou arête du plan proche qui coupe une surface.", "params": {"rayDestinations": {"type": "vec3[]", "desc": "les 4 coins du plan proche"}, "cornerIdx": {"type": "integer", "desc": "coin 1 à 4 à tester"}}, "returns": [{"type": "boolean", "desc": "true si obstacle"}], "internal": true},
+        "update": {"desc": "Calcule la nouvelle position de caméra sur l'axe cible -> caméra et écrit data.res.pos.", "params": {"data": {"type": "table", "desc": "camData"}}, "internal": true},
+        "onVehicleSwitched": {"desc": "Hook : réinitialise le filtre (appelle init).", "internal": true},
+        "collidingCamDistance": {"desc": "Distance cible -> caméra imposée par la collision.", "returns": [{"type": "number|nil", "desc": "distance en mètres, nil s'il n'y a pas de collision"}]}
+      }
+    }
+  }
+}

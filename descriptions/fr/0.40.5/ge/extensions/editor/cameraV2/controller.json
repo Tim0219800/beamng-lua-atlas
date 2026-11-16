@@ -1,0 +1,64 @@
+{
+  "path": "lua/ge/extensions/editor/cameraV2/controller.lua",
+  "module": "Contrôleur de Camera V2 : traite l'entrée souris routée vers Camera V2 et l'applique à la caméra libre existante (core_camera, caméra globale « free »). Il gère le panoramique à la souris (clic droit ou milieu selon la préférence swapPanOrbitButtons), délègue l'orbite à editor/cameraV2/orbit et le zoom à editor/cameraV2/zoom, anime la focalisation par double clic gauche (centrage sur le point visé avec un easing à dépassement), et règle la translation planaire WASD de la caméra libre. Il s'appuie sur core/cameraControllerRegistry (acquire/release/isOwner avec l'id « editor.cameraV2 ») pour qu'un geste ne soit traité que par un seul chemin d'entrée.",
+  "notes": [
+    "Le contrôleur n'est disponible que si : il est activé (activate()), l'éditeur est actif, la caméra d'éditeur est de type Free et la caméra globale active est « free », la vue est survolée et imgui ne capte pas la souris (cameraAvailable).",
+    "Boutons : par défaut (swapPanOrbitButtons = true) pan = bouton droit (1), orbite = bouton milieu (2) ; sinon pan = milieu, orbite = droit. Le curseur est caché pendant une orbite au bouton milieu.",
+    "Le panoramique à la souris est borné à 4000 unités/s de vitesse, ignore les deltas de souris > 250 px (saut de curseur), et met à l'échelle les pixels selon la distance au point touché (distance bornée à [1 ; 5000]) et le FOV.",
+    "La focalisation (double clic gauche sans Ctrl/Shift/Alt, sans item imgui actif) dure entre 0,35 et 1 s selon la distance latérale à parcourir ; la caméra reste à sa profondeur, elle se translate latéralement, puis le pivot d'orbite est fixé sur le point visé (source « focus »).",
+    "Pour la translation planaire WASD, le contrôleur écrit sur la caméra libre : planarTranslation, planarTranslationScale, planarTranslationDrag, planarTranslationResponse, planarTranslationSpeedMultiplier, planarTranslationFastSpeedMultiplier. Traînée = -ln(0,05) / inertiaDuration.",
+    "Dans le code, onEditorMouseWheel est un hook de l'éditeur (valeur de molette) ; update() lit aussi im.GetIO().MouseWheel et le cumul pendingWheel, et ignore la molette si l'action « editorCameraZoom » est bloquée ou si editor.disableCameraZoom est vrai (ou Ctrl+Alt)."
+  ],
+  "functions": {
+    "activate": {
+      "desc": "Active le contrôleur et annule tout mouvement en cours. Appelé par cameraV2 à l'enregistrement.",
+      "internal": true
+    },
+    "deactivate": {
+      "desc": "Désactive le contrôleur, annule tout et réinitialise l'orbite.",
+      "internal": true
+    },
+    "cancel": {
+      "desc": "Annule pan, zoom, orbite et focalisation en cours, remet à zéro la molette en attente, ré-affiche le curseur si besoin et libère la propriété du registre de contrôleurs."
+    },
+    "update": {
+      "desc": "Boucle principale appelée à chaque frame par cameraV2.onUpdate : met à jour l'échelle de translation planaire, traite le double clic de focalisation, la molette (zoom), l'acquisition du contrôleur, le zoom lissé, le pan, l'orbite et la focalisation, puis libère le registre quand plus rien ne bouge.",
+      "params": {"deltaTime": {"type": "number|nil", "desc": "Secondes ; limité à [0 ; 0,05]"}},
+      "internal": true
+    },
+    "consumeFocusDoubleClick": {
+      "desc": "Détecte (une seule fois par frame, résultat mis en cache) un double clic gauche valide et, si le raycast touche un point raisonnable devant la caméra, démarre la transition de focalisation. Appelé aussi depuis cameraV2.consumeFocusDoubleClick pour que l'éditeur ne traite pas ce clic comme une sélection.",
+      "returns": [{"type": "boolean", "desc": "true si le double clic a été consommé et la focalisation lancée"}]
+    },
+    "onEditorMouseWheel": {
+      "desc": "Hook de molette de l'éditeur : si Camera V2 est actif, que la caméra libre est active et que la vue est survolée, annule pan/orbite/focalisation, prend la main sur le registre et accumule la valeur dans pendingWheel pour update().",
+      "params": {"value": {"type": "number", "desc": "Crans de molette"}},
+      "returns": [{"type": "boolean", "desc": "true si l'événement est consommé ; false si le contrôleur est inactif ou non acquis"}]
+    },
+    "onRelativeInput": {
+      "desc": "Hook d'entrée relative (mouvement souris) : si le bouton de pan est enfoncé, acquiert le registre ; si le bouton d'orbite est enfoncé, passe les axes à orbit.onMouseInput ; sinon bloque ou laisse passer l'entrée selon l'état. Ne traite que le joueur 0.",
+      "params": {
+        "axis": {"type": "string|integer", "desc": "Axe d'entrée relatif (transmis tel quel à orbit.onMouseInput)"},
+        "value": {"type": "number", "desc": "Valeur du mouvement"},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur (nil = 0)"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si Camera V2 consomme l'entrée"}]
+    },
+    "lastZoomUsedTerrainOnly": {
+      "desc": "Relaie zoom.lastZoomUsedTerrainOnly() (debug).",
+      "returns": [{"type": "boolean", "desc": "voir zoom"}]
+    },
+    "orbitDebugState": {
+      "desc": "Relaie orbit.getDebugState() (pivot d'orbite, distance, source, mouvement en cours) pour la fenêtre de debug.",
+      "returns": [{"type": "table|nil", "desc": "État de debug d'orbite"}]
+    },
+    "panDebugState": {
+      "desc": "État de debug du pan : point touché et distance au point, soit du geste en cours, soit du dernier calcul d'échelle planaire.",
+      "returns": [{"type": "table|nil", "desc": "{point = vec3, distance = number|nil}, ou nil"}]
+    },
+    "setPlanarTranslation": {
+      "desc": "Active ou désactive la translation WASD dans le plan XY sur la caméra libre (mode WASD « pan »). Efface les mouvements et entrées planaires résiduels et remet à zéro les paramètres planarTranslation* de la caméra libre.",
+      "params": {"planar": {"type": "boolean", "desc": "true pour le mode planaire (tout le reste vaut false)"}}
+    }
+  }
+}

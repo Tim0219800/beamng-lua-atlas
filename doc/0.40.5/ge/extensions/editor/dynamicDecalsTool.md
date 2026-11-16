@@ -1,245 +1,245 @@
 # `editor_dynamicDecalsTool`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecalsTool.lua` · VM : Game Engine (GE) · 1003 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecalsTool.lua` · VM: Game Engine (GE) · 1003 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecalsTool` : `extensions.load("editor_dynamicDecalsTool")`, puis la globale `editor_dynamicDecalsTool`
+**Access:** extension `editor_dynamicDecalsTool`: `extensions.load("editor_dynamicDecalsTool")`, then the global `editor_dynamicDecalsTool`
 
-Fenêtre principale de l'outil Dynamic Decals de l'éditeur (peinture de décalcomanies sur le véhicule). Charge ses 33 sous-modules via M.dependencies (api editor_api_dynamicDecals, widgets, layerStack, inspector, brushes, gizmo, vehicleColorPalette, loadSave, layerTypes_*, etc.) et sert de hub : les sous-modules s'enregistrent auprès de lui par setup(tool) avec registerSection, registerToolbarToolItem, registerToolbarActionItem, registerEditorOnUpdateFn et registerOnEditorGuiFn. Expose aussi l'interface publique appelée par les actions clavier/souris (applyDecal, undo/redo, changeDecalSize/Rotation, verrouillage profondeur/normale, mode pinceau, calque chemin).
+Main window of the editor's Dynamic Decals tool (painting decals on the vehicle). Loads its 33 submodules via M.dependencies (editor_api_dynamicDecals API, widgets, layerStack, inspector, brushes, gizmo, vehicleColorPalette, loadSave, layerTypes_*, etc.) and acts as a hub: submodules register with it through setup(tool) using registerSection, registerToolbarToolItem, registerToolbarActionItem, registerEditorOnUpdateFn and registerOnEditorGuiFn. Also exposes the public interface called by keyboard/mouse actions (applyDecal, undo/redo, changeDecalSize/Rotation, depth/normal locking, brush mode, path layer).
 
-## Remarques
+## Notes
 
-- Les hooks onEditorGui, onEditorInitialized, onEditorActivated, etc. sont commentés dans le code (« DISABLED, SPAMS LOG, DEPENDENCIES NOT FOUND ») : ils ne sont pas exportés par ce module.
-- applyDecal(value) attend 1 à l'appui et autre valeur au relâchement. Priorité : édition de masque (currentMaskEditingLayerUid), calque chemin actif, mode brushStroke, sinon décalque simple (ajoute aussi la couleur à l'historique de couleurs).
-- Les sections ayant un order >= 1000 sont rangées dans la section « Advanced ».
-- M.toolModes = {none = 0, decal = 1, brushStroke = 2, path = 3} ; toolMode vaut decal au départ. M.version = {1,1,0}. M.directoryPath = "/art/dynamicDecals/".
-- changeDecalSize/Rotation multiplient les pas des préférences dynamicDecalsTool.decalProperties.scaleStep et rotationStep (degrés convertis en radians) par mod.
+- The hooks onEditorGui, onEditorInitialized, onEditorActivated, etc. are commented out in the code ("DISABLED, SPAMS LOG, DEPENDENCIES NOT FOUND"): they are not exported by this module.
+- applyDecal(value) expects 1 on press and another value on release. Priority: mask editing (currentMaskEditingLayerUid), active path layer, brushStroke mode, otherwise a simple decal (also adds the color to the color history).
+- Sections with an order >= 1000 are placed in the "Advanced" section.
+- M.toolModes = {none = 0, decal = 1, brushStroke = 2, path = 3}; toolMode is decal initially. M.version = {1,1,0}. M.directoryPath = "/art/dynamicDecals/".
+- changeDecalSize/Rotation multiply the steps of the preferences dynamicDecalsTool.decalProperties.scaleStep and rotationStep (degrees converted to radians) by mod.
 
-**Dépendances (chargées avant) :** `editor_api_dynamicDecals`, `editor_dynamicDecals_docs`, `editor_dynamicDecals_helper`, `editor_dynamicDecals_widgets`, `editor_dynamicDecals_notification`, `editor_dynamicDecals_news`, `editor_dynamicDecals_layerStack`, `editor_dynamicDecals_selection`, `editor_dynamicDecals_inspector`, `editor_dynamicDecals_inspector_utils`, `editor_dynamicDecals_browser`, `editor_dynamicDecals_textures`, `editor_dynamicDecals_export`, `editor_dynamicDecals_fonts`, `editor_dynamicDecals_brushes`, `editor_dynamicDecals_gizmo`, `editor_dynamicDecals_vehicleColorPalette`, `editor_dynamicDecals_colorPresets`, `editor_dynamicDecals_colorHistory`, `editor_dynamicDecals_camera`, `editor_dynamicDecals_loadSave`, `editor_dynamicDecals_settings`, `editor_dynamicDecals_history`, `editor_dynamicDecals_meshes`, `editor_dynamicDecals_layerTypes_decal`, `editor_dynamicDecals_layerTypes_brushStroke`, `editor_dynamicDecals_layerTypes_path`, `editor_dynamicDecals_layerTypes_fill`, `editor_dynamicDecals_layerTypes_textureFill`, `editor_dynamicDecals_layerTypes_group`, `editor_dynamicDecals_layerTypes_linkedSet`, `editor_dynamicDecals_debugTextures`, `editor_dynamicDecals_debugSection`
+**Dependencies (loaded first):** `editor_api_dynamicDecals`, `editor_dynamicDecals_docs`, `editor_dynamicDecals_helper`, `editor_dynamicDecals_widgets`, `editor_dynamicDecals_notification`, `editor_dynamicDecals_news`, `editor_dynamicDecals_layerStack`, `editor_dynamicDecals_selection`, `editor_dynamicDecals_inspector`, `editor_dynamicDecals_inspector_utils`, `editor_dynamicDecals_browser`, `editor_dynamicDecals_textures`, `editor_dynamicDecals_export`, `editor_dynamicDecals_fonts`, `editor_dynamicDecals_brushes`, `editor_dynamicDecals_gizmo`, `editor_dynamicDecals_vehicleColorPalette`, `editor_dynamicDecals_colorPresets`, `editor_dynamicDecals_colorHistory`, `editor_dynamicDecals_camera`, `editor_dynamicDecals_loadSave`, `editor_dynamicDecals_settings`, `editor_dynamicDecals_history`, `editor_dynamicDecals_meshes`, `editor_dynamicDecals_layerTypes_decal`, `editor_dynamicDecals_layerTypes_brushStroke`, `editor_dynamicDecals_layerTypes_path`, `editor_dynamicDecals_layerTypes_fill`, `editor_dynamicDecals_layerTypes_textureFill`, `editor_dynamicDecals_layerTypes_group`, `editor_dynamicDecals_layerTypes_linkedSet`, `editor_dynamicDecals_debugTextures`, `editor_dynamicDecals_debugSection`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecalsTool.applyDecal(value)` | Interface publique du pinceau : pose un décalque, un point de chemin, un trait de pinceau ou un décalque de masque selon le mode courant. | 883 |
-| `editor_dynamicDecalsTool.changeDecalRotation(clockwise, mod)` | Fait tourner le décalque courant. | 910 |
-| `editor_dynamicDecalsTool.changeDecalSize(increase, mod)` | Agrandit ou réduit le décalque courant. | 909 |
-| `editor_dynamicDecalsTool.dynamicDecals_moveLayer(from, fromParentUid, to, toParentUid)` | Hook de l'API appelé quand un calque est déplacé : rafraîchit le calque parent de destination s'il est sélectionné. *(interne)* | 939 |
-| `editor_dynamicDecalsTool.dynamicDecals_onLayerUpdated(layerUid)` | Hook de l'API : quand un calque est modifié, recopie ses données dans la sélection de l'inspecteur s'il y est affiché. *(interne)* | 930 |
-| `editor_dynamicDecalsTool.enableBrushStroke(value)` | Active/désactive le trait de pinceau ; à la désactivation, ajoute un calque de trait (api.addBrushStrokeLayer). | 955 |
-| `editor_dynamicDecalsTool.enablePathLayer(value)` | Active/désactive le mode calque chemin. | 963 |
-| `editor_dynamicDecalsTool.finishPathLayer()` | Termine le calque chemin en cours. | 967 |
-| `editor_dynamicDecalsTool.getCurrentMaskEditingLayerUid()` | Uid du calque dont le masque est édité, ou nil. | 997 |
-| `editor_dynamicDecalsTool.getIconSize()` | Taille d'icône (entier, 20 par défaut). | 981 |
-| `editor_dynamicDecalsTool.getIconSizeVec2()` | Taille d'icône sous forme d'ImVec2. | 985 |
-| `editor_dynamicDecalsTool.getMainScrollY()` | Défilement vertical courant de la fenêtre principale. | 989 |
-| `editor_dynamicDecalsTool.getSectionOpenState(name)` | État ouvert d'une section (ou de « Advanced »). | 827 |
-| `editor_dynamicDecalsTool.getSectionWindowName(section)` | Nom de la fenêtre imgui d'une section : « Dynamic Decals Tool - <section.windowName> ». | 146 |
-| `editor_dynamicDecalsTool.lockDepth(value)` | Verrouille ou libère la profondeur de projection du décalque. | 947 |
-| `editor_dynamicDecalsTool.lockSurfaceNormal(value)` | Verrouille ou libère la normale de surface utilisée pour la projection. | 951 |
-| `editor_dynamicDecalsTool.onDeserialized(data)` | Hook de désérialisation : ne fait rien. *(interne)* *(hook)* | 864 |
-| `editor_dynamicDecalsTool.onSerialize()` | Hook de sérialisation du rechargement Lua : renvoie une table vide. *(interne)* *(hook)* | 859 |
-| `editor_dynamicDecalsTool.onVehicleSwitched()` | Hook appelé au changement de véhicule : met à jour les matériaux (settings.updateMaterials). *(interne)* *(hook)* | 975 |
-| `editor_dynamicDecalsTool.redo()` | Rétablit l'action annulée et rafraîchit les calques sélectionnés. | 921 |
-| `editor_dynamicDecalsTool.registerEditorOnUpdateFn(name, onUpdateFn)` | Enregistre une fonction de mise à jour appelée chaque frame par l'outil (clé = name). | 780 |
-| `editor_dynamicDecalsTool.registerOnEditorGuiFn(name, guiFn)` | Enregistre une fonction de dessin supplémentaire exécutée avec l'interface de l'éditeur. | 848 |
-| `editor_dynamicDecalsTool.registerSection(name, guiFn, order, defaultOpen, window, buttons)` | Enregistre une section de l'interface (et éventuellement une fenêtre dédiée). Les sections sont triées par order ; celles >= 1000 vont dans « Advanced ». | 801 |
-| `editor_dynamicDecalsTool.registerToolbarActionItem(name, guiFn, order)` | Ajoute un élément à la barre d'outils (partie actions), trié par order. | 843 |
-| `editor_dynamicDecalsTool.registerToolbarToolItem(name, guiFn, order)` | Ajoute un élément à la barre d'outils (partie outils), trié par order. | 838 |
-| `editor_dynamicDecalsTool.removeLastPathLayerPoint()` | Supprime le dernier point du chemin en cours. | 971 |
-| `editor_dynamicDecalsTool.setCurrentMaskEditingLayerUid(uid)` | Définit le calque dont le masque est en cours d'édition (nil pour quitter ce mode). | 993 |
-| `editor_dynamicDecalsTool.setSectionOpenState(name, newState, setScroll)` | Ouvre ou ferme une section par son nom (ouvrir une section avancée ouvre aussi « Advanced »). | 805 |
-| `editor_dynamicDecalsTool.undo()` | Annule la dernière action de l'API dynamicDecals, puis rafraîchit les calques sélectionnés dans editor.selection.dynamicDecalLayer. | 912 |
-| `editor_dynamicDecalsTool.unregisterEditorOnUpdateFn(name)` | Retire une fonction de mise à jour enregistrée. | 784 |
-| `editor_dynamicDecalsTool.unregisterOnEditorGuiFn(name)` | Retire une fonction de dessin enregistrée. | 852 |
+| `editor_dynamicDecalsTool.applyDecal(value)` | Public brush interface: places a decal, a path point, a brush stroke or a mask decal depending on the current mode. | 883 |
+| `editor_dynamicDecalsTool.changeDecalRotation(clockwise, mod)` | Rotates the current decal. | 910 |
+| `editor_dynamicDecalsTool.changeDecalSize(increase, mod)` | Enlarges or shrinks the current decal. | 909 |
+| `editor_dynamicDecalsTool.dynamicDecals_moveLayer(from, fromParentUid, to, toParentUid)` | API hook called when a layer is moved: refreshes the destination parent layer if it is selected. *(internal)* | 939 |
+| `editor_dynamicDecalsTool.dynamicDecals_onLayerUpdated(layerUid)` | API hook: when a layer is modified, copies its data into the inspector selection if it is displayed there. *(internal)* | 930 |
+| `editor_dynamicDecalsTool.enableBrushStroke(value)` | Enables/disables the brush stroke; on disabling, adds a stroke layer (api.addBrushStrokeLayer). | 955 |
+| `editor_dynamicDecalsTool.enablePathLayer(value)` | Enables/disables the path layer mode. | 963 |
+| `editor_dynamicDecalsTool.finishPathLayer()` | Finishes the current path layer. | 967 |
+| `editor_dynamicDecalsTool.getCurrentMaskEditingLayerUid()` | Uid of the layer whose mask is being edited, or nil. | 997 |
+| `editor_dynamicDecalsTool.getIconSize()` | Icon size (integer, 20 by default). | 981 |
+| `editor_dynamicDecalsTool.getIconSizeVec2()` | Icon size as an ImVec2. | 985 |
+| `editor_dynamicDecalsTool.getMainScrollY()` | Current vertical scroll of the main window. | 989 |
+| `editor_dynamicDecalsTool.getSectionOpenState(name)` | Open state of a section (or of "Advanced"). | 827 |
+| `editor_dynamicDecalsTool.getSectionWindowName(section)` | ImGui window name of a section: "Dynamic Decals Tool - <section.windowName>". | 146 |
+| `editor_dynamicDecalsTool.lockDepth(value)` | Locks or releases the decal projection depth. | 947 |
+| `editor_dynamicDecalsTool.lockSurfaceNormal(value)` | Locks or releases the surface normal used for projection. | 951 |
+| `editor_dynamicDecalsTool.onDeserialized(data)` | Deserialization hook: does nothing. *(internal)* *(hook)* | 864 |
+| `editor_dynamicDecalsTool.onSerialize()` | Lua reload serialization hook: returns an empty table. *(internal)* *(hook)* | 859 |
+| `editor_dynamicDecalsTool.onVehicleSwitched()` | Hook called on vehicle switch: updates the materials (settings.updateMaterials). *(internal)* *(hook)* | 975 |
+| `editor_dynamicDecalsTool.redo()` | Redoes the undone action and refreshes the selected layers. | 921 |
+| `editor_dynamicDecalsTool.registerEditorOnUpdateFn(name, onUpdateFn)` | Registers an update function called every frame by the tool (key = name). | 780 |
+| `editor_dynamicDecalsTool.registerOnEditorGuiFn(name, guiFn)` | Registers an additional draw function executed with the editor UI. | 848 |
+| `editor_dynamicDecalsTool.registerSection(name, guiFn, order, defaultOpen, window, buttons)` | Registers a UI section (and optionally a dedicated window). Sections are sorted by order; those >= 1000 go into "Advanced". | 801 |
+| `editor_dynamicDecalsTool.registerToolbarActionItem(name, guiFn, order)` | Adds an item to the toolbar (actions part), sorted by order. | 843 |
+| `editor_dynamicDecalsTool.registerToolbarToolItem(name, guiFn, order)` | Adds an item to the toolbar (tools part), sorted by order. | 838 |
+| `editor_dynamicDecalsTool.removeLastPathLayerPoint()` | Removes the last point of the current path. | 971 |
+| `editor_dynamicDecalsTool.setCurrentMaskEditingLayerUid(uid)` | Sets the layer whose mask is being edited (nil to leave this mode). | 993 |
+| `editor_dynamicDecalsTool.setSectionOpenState(name, newState, setScroll)` | Opens or closes a section by its name (opening an advanced section also opens "Advanced"). | 805 |
+| `editor_dynamicDecalsTool.undo()` | Undoes the last action of the dynamicDecals API, then refreshes the layers selected in editor.selection.dynamicDecalLayer. | 912 |
+| `editor_dynamicDecalsTool.unregisterEditorOnUpdateFn(name)` | Removes a registered update function. | 784 |
+| `editor_dynamicDecalsTool.unregisterOnEditorGuiFn(name)` | Removes a registered draw function. | 852 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecalsTool.applyDecal(value)`
 
-Interface publique du pinceau : pose un décalque, un point de chemin, un trait de pinceau ou un décalque de masque selon le mode courant.
+Public brush interface: places a decal, a path point, a brush stroke or a mask decal depending on the current mode.
 
-- `value` (*integer*) : 1 à l'appui, autre (0) au relâchement
+- `value` (*integer*) : 1 on press, other (0) on release
 
 #### `editor_dynamicDecalsTool.changeDecalRotation(clockwise, mod)`
 
-Fait tourner le décalque courant.
+Rotates the current decal.
 
-- `clockwise` (*boolean*) : Sens horaire
-- `mod` (*number|nil*) : Multiplicateur du pas (défaut 1)
+- `clockwise` (*boolean*) : Clockwise
+- `mod` (*number|nil*) : Step multiplier (default 1)
 
 #### `editor_dynamicDecalsTool.changeDecalSize(increase, mod)`
 
-Agrandit ou réduit le décalque courant.
+Enlarges or shrinks the current decal.
 
-- `increase` (*boolean*) : true pour agrandir
-- `mod` (*number|nil*) : Multiplicateur du pas (défaut 1)
+- `increase` (*boolean*) : true to enlarge
+- `mod` (*number|nil*) : Step multiplier (default 1)
 
 #### `editor_dynamicDecalsTool.dynamicDecals_moveLayer(from, fromParentUid, to, toParentUid)`
 
-Hook de l'API appelé quand un calque est déplacé : rafraîchit le calque parent de destination s'il est sélectionné.
+API hook called when a layer is moved: refreshes the destination parent layer if it is selected.
 
-- `from` (*integer*) : Position d'origine
-- `fromParentUid` (*any*) : Parent d'origine
-- `to` (*integer*) : Position de destination
-- `toParentUid` (*any*) : Parent de destination
+- `from` (*integer*) : Original position
+- `fromParentUid` (*any*) : Original parent
+- `to` (*integer*) : Destination position
+- `toParentUid` (*any*) : Destination parent
 
 #### `editor_dynamicDecalsTool.dynamicDecals_onLayerUpdated(layerUid)`
 
-Hook de l'API : quand un calque est modifié, recopie ses données dans la sélection de l'inspecteur s'il y est affiché.
+API hook: when a layer is modified, copies its data into the inspector selection if it is displayed there.
 
-- `layerUid` (*string|integer*) : Identifiant du calque modifié (type déduit du code)
+- `layerUid` (*string|integer*) : Identifier of the modified layer (type inferred from code)
 
 #### `editor_dynamicDecalsTool.enableBrushStroke(value)`
 
-Active/désactive le trait de pinceau ; à la désactivation, ajoute un calque de trait (api.addBrushStrokeLayer).
+Enables/disables the brush stroke; on disabling, adds a stroke layer (api.addBrushStrokeLayer).
 
-- `value` (*integer*) : 1 pour activer
+- `value` (*integer*) : 1 to enable
 
 #### `editor_dynamicDecalsTool.enablePathLayer(value)`
 
-Active/désactive le mode calque chemin.
+Enables/disables the path layer mode.
 
-- `value` (*integer*) : 1 pour activer
+- `value` (*integer*) : 1 to enable
 
 #### `editor_dynamicDecalsTool.getCurrentMaskEditingLayerUid()`
 
-Uid du calque dont le masque est édité, ou nil.
+Uid of the layer whose mask is being edited, or nil.
 
-- **renvoie** : any|nil 
+- **returns**: any|nil 
 
 #### `editor_dynamicDecalsTool.getIconSize()`
 
-Taille d'icône (entier, 20 par défaut).
+Icon size (integer, 20 by default).
 
-- **renvoie** : number 
+- **returns**: number 
 
 #### `editor_dynamicDecalsTool.getIconSizeVec2()`
 
-Taille d'icône sous forme d'ImVec2.
+Icon size as an ImVec2.
 
-- **renvoie** : ImVec2 
+- **returns**: ImVec2 
 
 #### `editor_dynamicDecalsTool.getMainScrollY()`
 
-Défilement vertical courant de la fenêtre principale.
+Current vertical scroll of the main window.
 
-- **renvoie** : number 
+- **returns**: number 
 
 #### `editor_dynamicDecalsTool.getSectionOpenState(name)`
 
-État ouvert d'une section (ou de « Advanced »).
+Open state of a section (or of "Advanced").
 
-- `name` (*string*) : Nom de la section
-- **renvoie** : boolean|nil nil si la section est inconnue
+- `name` (*string*) : Section name
+- **returns**: boolean|nil nil if the section is unknown
 
 #### `editor_dynamicDecalsTool.getSectionWindowName(section)`
 
-Nom de la fenêtre imgui d'une section : « Dynamic Decals Tool - <section.windowName> ».
+ImGui window name of a section: "Dynamic Decals Tool - <section.windowName>".
 
-- `section` (*table*) : Section avec windowName
-- **renvoie** : string 
+- `section` (*table*) : Section with windowName
+- **returns**: string 
 
 #### `editor_dynamicDecalsTool.lockDepth(value)`
 
-Verrouille ou libère la profondeur de projection du décalque.
+Locks or releases the decal projection depth.
 
-- `value` (*integer*) : 1 pour verrouiller
+- `value` (*integer*) : 1 to lock
 
 #### `editor_dynamicDecalsTool.lockSurfaceNormal(value)`
 
-Verrouille ou libère la normale de surface utilisée pour la projection.
+Locks or releases the surface normal used for projection.
 
-- `value` (*integer*) : 1 pour verrouiller
+- `value` (*integer*) : 1 to lock
 
 #### `editor_dynamicDecalsTool.onDeserialized(data)`
 
-Hook de désérialisation : ne fait rien.
+Deserialization hook: does nothing.
 
-- `data` (*table*) : Données
+- `data` (*table*) : Data
 
 #### `editor_dynamicDecalsTool.onSerialize()`
 
-Hook de sérialisation du rechargement Lua : renvoie une table vide.
+Lua reload serialization hook: returns an empty table.
 
-- **renvoie** : table {}
+- **returns**: table {}
 
 #### `editor_dynamicDecalsTool.registerEditorOnUpdateFn(name, onUpdateFn)`
 
-Enregistre une fonction de mise à jour appelée chaque frame par l'outil (clé = name).
+Registers an update function called every frame by the tool (key = name).
 
-- `name` (*string*) : Clé unique
-- `onUpdateFn` (*function*) : Appelée avec (dtReal, dtSim, dtRaw)
+- `name` (*string*) : Unique key
+- `onUpdateFn` (*function*) : Called with (dtReal, dtSim, dtRaw)
 
 #### `editor_dynamicDecalsTool.registerOnEditorGuiFn(name, guiFn)`
 
-Enregistre une fonction de dessin supplémentaire exécutée avec l'interface de l'éditeur.
+Registers an additional draw function executed with the editor UI.
 
-- `name` (*string*) : Clé unique
-- `guiFn` (*function*) : Fonction de dessin
+- `name` (*string*) : Unique key
+- `guiFn` (*function*) : Draw function
 
 #### `editor_dynamicDecalsTool.registerSection(name, guiFn, order, defaultOpen, window, buttons)`
 
-Enregistre une section de l'interface (et éventuellement une fenêtre dédiée). Les sections sont triées par order ; celles >= 1000 vont dans « Advanced ».
+Registers a UI section (and optionally a dedicated window). Sections are sorted by order; those >= 1000 go into "Advanced".
 
-- `name` (*string*) : Nom de la section
-- `guiFn` (*function*) : Fonction de dessin, appelée avec un guiId (dans la section comme dans la fenêtre)
-- `order` (*number|nil*) : Position (plus petit = plus haut), défaut 1000
-- `defaultOpen` (*boolean|nil*) : Ouverte par défaut
-- `window` (*table|nil*) : {windowSize = ImVec2} pour créer une fenêtre dédiée avec bouton d'ouverture
-- `buttons` (*table|nil*) : Boutons d'en-tête {icon, tooltip, fn}
+- `name` (*string*) : Section name
+- `guiFn` (*function*) : Draw function, called with a guiId (both in the section and in the window)
+- `order` (*number|nil*) : Position (smaller = higher), default 1000
+- `defaultOpen` (*boolean|nil*) : Open by default
+- `window` (*table|nil*) : {windowSize = ImVec2} to create a dedicated window with an open button
+- `buttons` (*table|nil*) : Header buttons {icon, tooltip, fn}
 
 #### `editor_dynamicDecalsTool.registerToolbarActionItem(name, guiFn, order)`
 
-Ajoute un élément à la barre d'outils (partie actions), trié par order.
+Adds an item to the toolbar (actions part), sorted by order.
 
 - `name` (*string*) : 
-- `guiFn` (*function*) : Fonction de dessin
-- `order` (*number|nil*) : Défaut 1000
+- `guiFn` (*function*) : Draw function
+- `order` (*number|nil*) : Default 1000
 
 #### `editor_dynamicDecalsTool.registerToolbarToolItem(name, guiFn, order)`
 
-Ajoute un élément à la barre d'outils (partie outils), trié par order.
+Adds an item to the toolbar (tools part), sorted by order.
 
 - `name` (*string*) : 
-- `guiFn` (*function*) : Fonction de dessin
-- `order` (*number|nil*) : Défaut 1000
+- `guiFn` (*function*) : Draw function
+- `order` (*number|nil*) : Default 1000
 
 #### `editor_dynamicDecalsTool.setCurrentMaskEditingLayerUid(uid)`
 
-Définit le calque dont le masque est en cours d'édition (nil pour quitter ce mode).
+Sets the layer whose mask is being edited (nil to leave this mode).
 
-- `uid` (*any|nil*) : Uid du calque
+- `uid` (*any|nil*) : Layer uid
 
 #### `editor_dynamicDecalsTool.setSectionOpenState(name, newState, setScroll)`
 
-Ouvre ou ferme une section par son nom (ouvrir une section avancée ouvre aussi « Advanced »).
+Opens or closes a section by its name (opening an advanced section also opens "Advanced").
 
-- `name` (*string*) : Nom de la section
-- `newState` (*boolean*) : Ouvert ou fermé
-- `setScroll` (*boolean|nil*) : Fait défiler jusqu'à la section
+- `name` (*string*) : Section name
+- `newState` (*boolean*) : Open or closed
+- `setScroll` (*boolean|nil*) : Scrolls to the section
 
 #### `editor_dynamicDecalsTool.unregisterEditorOnUpdateFn(name)`
 
-Retire une fonction de mise à jour enregistrée.
+Removes a registered update function.
 
-- `name` (*string*) : Clé
+- `name` (*string*) : Key
 
 #### `editor_dynamicDecalsTool.unregisterOnEditorGuiFn(name)`
 
-Retire une fonction de dessin enregistrée.
+Removes a registered draw function.
 
-- `name` (*string*) : Clé
+- `name` (*string*) : Key
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Liste des extensions chargées avant ce module. |
-| `directoryPath` | string | Dossier des données : "/art/dynamicDecals/". |
-| `doApiUpdate` | boolean | Si true (défaut), l'outil appelle la mise à jour de l'API chaque frame ; modifiable par une case de debug. |
-| `toolMode` | integer | Mode courant (decal par défaut). |
+| `dependencies` | string[] | List of extensions loaded before this module. |
+| `directoryPath` | string | Data folder: "/art/dynamicDecals/". |
+| `doApiUpdate` | boolean | If true (default), the tool calls the API update every frame; can be changed via a debug checkbox. |
+| `toolMode` | integer | Current mode (decal by default). |
 | `toolModes` | table<string, integer> | none=0, decal=1, brushStroke=2, path=3. |
-| `version` | integer[] | Version {1,1,0} de l'outil. |
+| `version` | integer[] | Tool version {1,1,0}. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecalsTool.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecalsTool.lua`.*

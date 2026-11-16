@@ -1,22 +1,22 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/flashMessage.lua",
-  "module": "Nœud flowgraph « Flash Message » (catégorie repeat_instant, durée) : affiche un message au centre de l'écran via scenario/scenariohelper.flashUiMessage. Entrées : flow, « message » (any), « duration » (3 s), « instant » (caché, efface les précédents), « biggerText » (caché, vrai). Sortie : flow. Nécessite un layout UI qui contient l'app des messages.",
+  "module": "Flowgraph node \"Flash Message\" (category repeat_instant, duration): displays a message in the center of the screen via scenario/scenariohelper.flashUiMessage. Inputs: flow, \"message\" (any), \"duration\" (3 s), \"instant\" (hidden, clears previous ones), \"biggerText\" (hidden, true). Output: flow. Requires a UI layout that contains the messages app.",
   "notes": [
-    "Les tables sont transmises telles quelles, le reste est converti avec tostring.",
-    "work() renvoie le message à chaque frame où le flux est actif."
+    "Tables are passed as is, everything else is converted with tostring.",
+    "work() returns the message on every frame where the flow is active."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "init": {
-          "desc": "Charge scenario/scenariohelper.",
+          "desc": "Loads scenario/scenariohelper.",
           "internal": true
         },
         "work": {
-          "desc": "Si 'instant', envoie 'ScenarioFlashMessageClear', puis affiche le message et recopie le flux d'entrée en sortie.",
+          "desc": "If 'instant', sends 'ScenarioFlashMessageClear', then displays the message and copies the input flow to the output.",
           "internal": true
         }
       }

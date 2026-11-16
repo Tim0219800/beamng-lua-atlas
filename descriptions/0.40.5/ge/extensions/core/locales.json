@@ -1,150 +1,287 @@
 {
   "path": "lua/ge/extensions/core/locales.lua",
-  "module": "Extension GE `core_locales` : traduction des textes côté Lua. Elle charge les fichiers *.translation(s).json du dossier /locales/translations/<langue>/ (anglais en-US toujours chargé comme langue de repli), traduit des clés comme 'ui.radialmenu2.Save', gère les sous-traductions imbriquées ({{ 'clé' | translate }}), les variables de contexte, et le séparateur entre nombre et unité (selon /locales/unit_spacing_policies.json). Un moddeur s'en sert pour afficher des textes traduits ; l'alias global `_tr` pointe sur translate.",
+  "module": "GE extension `core_locales`: translation of texts on the Lua side. It loads the *.translation(s).json files from the /locales/translations/<language>/ folder (English en-US is always loaded as the fallback language), translates keys like 'ui.radialmenu2.Save', handles nested sub-translations ({{ 'key' | translate }}), context variables, and the separator between number and unit (according to /locales/unit_spacing_policies.json). A modder uses it to display translated texts; the global alias `_tr` points to translate.",
   "usage": "local txt = core_locales.translate('ui.common.default', 'Default')\nlocal t2 = core_locales.contextTranslate('ui.some.key', { name = 'Bob' })\nlocal s = core_locales.withUnit('120', 'km/h')",
   "notes": [
-    "Au chargement (onExtensionLoaded), le module charge l'anglais (en-US), définit le global `_tr = translate` et appelle dump(parseArgs) : ce dump est un reste de débogage qui écrit les arguments de démarrage dans le log.",
-    "Ordre de recherche d'une clé : langue courante (tous ses fichiers, dans l'ordre alphabétique), puis en-US, puis le paramètre fallback, puis la clé elle-même. translate met le résultat en cache (clearTranslateCache le vide, ce que font aussi un changement de langue et le rechargement des fichiers).",
-    "Pour un même id de langue, getLocale fusionne les fichiers du dernier au premier : les fichiers dont le nom est alphabétiquement plus tôt l'emportent. Si aucun fichier *.translation.json / *.translations.json n'est trouvé, le fichier ancien <id>/<id>.json est utilisé.",
-    "Le mode 'scramble debug' (argument de démarrage translationScrambleDebug ou setScrambleTranslationDebugEnabled) remplace les premières lettres de chaque mot par des lettres aléatoires et ajoute '✓', pour repérer les textes non traduits. Il est mémorisé à travers un rechargement Lua. Les textes déjà mis en cache côté Lua demandent un rechargement Lua pour être mis à jour.",
-    "Les anciens noms de variables {{ nom }} dans contextTranslate : les filtres ' | translate' et ' | contextTranslate' sont retirés, un nom entre apostrophes est traduit comme une clé s'il n'est pas dans varsTable ; une variable absente donne une chaîne vide.",
-    "translateWithOrWithoutContext accepte une chaîne (clé) ou une table { txt, prefix, ctx|context } et renvoie '' si data est nil/faux. Avec prefix, la clé prefix..txt est essayée d'abord.",
-    "Les langues disponibles sont les sous-dossiers de /locales/translations/. La langue courante vient de Lua:getSelectedLanguage() (réglage utilisateur), sinon en-US.",
-    "Incohérence mineure : onUpdate et reloadChangedFiles utilisent un délai de 0.1 s (temps réel) pour regrouper les changements de fichiers de traduction (rechargement à chaud)."
+    "On load (onExtensionLoaded), the module loads English (en-US), defines the global `_tr = translate` and calls dump(parseArgs): this dump is leftover debugging that writes the startup arguments to the log.",
+    "Search order for a key: current language (all its files, in alphabetical order), then en-US, then the fallback parameter, then the key itself. translate caches the result (clearTranslateCache empties it, which a language change and the reloading of the files also do).",
+    "For a given language id, getLocale merges the files from last to first: files whose name is alphabetically earlier win. If no *.translation.json / *.translations.json file is found, the old file <id>/<id>.json is used.",
+    "The 'scramble debug' mode (startup argument translationScrambleDebug or setScrambleTranslationDebugEnabled) replaces the first letters of each word with random letters and adds '✓', to spot untranslated texts. It is kept across a Lua reload. Texts already cached on the Lua side require a Lua reload to be updated.",
+    "The old variable names {{ name }} in contextTranslate: the ' | translate' and ' | contextTranslate' filters are removed, a name between apostrophes is translated as a key if it is not in varsTable; a missing variable gives an empty string.",
+    "translateWithOrWithoutContext accepts a string (key) or a table { txt, prefix, ctx|context } and returns '' if data is nil/false. With prefix, the key prefix..txt is tried first.",
+    "The available languages are the subfolders of /locales/translations/. The current language comes from Lua:getSelectedLanguage() (user setting), otherwise en-US.",
+    "Minor inconsistency: onUpdate and reloadChangedFiles use a 0.1 s delay (real time) to group translation file changes (hot reload)."
   ],
   "fields": {},
   "functions": {
     "translate": {
-      "desc": "Traduit une clé dans la langue courante (avec repli en-US), résout les traductions imbriquées et met le résultat en cache.",
+      "desc": "Translates a key in the current language (with en-US fallback), resolves nested translations and caches the result.",
       "params": {
-        "key": {"type": "string", "desc": "Clé de traduction. Une valeur non chaîne est renvoyée telle quelle (ou 'Missing Translation Key!' si nil)."},
-        "fallback": {"type": "string|nil", "desc": "Texte renvoyé si la clé est introuvable (sinon la clé)."}
+        "key": {
+          "type": "string",
+          "desc": "Translation key. A non-string value is returned as is (or 'Missing Translation Key!' if nil)."
+        },
+        "fallback": {
+          "type": "string|nil",
+          "desc": "Text returned if the key is not found (otherwise the key)."
+        }
       },
-      "returns": [{"type": "string", "desc": "Texte traduit."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Translated text."
+        }
+      ],
       "internal": false
     },
     "translateWithPrefixFallback": {
-      "desc": "Essaie la clé prefix..name ; si elle n'existe pas (résultat vide), traduit name seul.",
+      "desc": "Tries the key prefix..name; if it does not exist (empty result), translates name alone.",
       "params": {
-        "name": {"type": "string", "desc": "Clé de base."},
-        "prefix": {"type": "string|nil", "desc": "Préfixe à essayer en premier."}
+        "name": {
+          "type": "string",
+          "desc": "Base key."
+        },
+        "prefix": {
+          "type": "string|nil",
+          "desc": "Prefix to try first."
+        }
       },
-      "returns": [{"type": "string", "desc": "Texte traduit."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Translated text."
+        }
+      ],
       "internal": false
     },
     "contextTranslate": {
-      "desc": "Traduit une clé contenant des variables {{nom}} et les remplace par les valeurs de varsTable (traduites elles-mêmes). Une valeur table { txt, prefix, ctx|context } est traduite récursivement.",
+      "desc": "Translates a key containing variables {{name}} and replaces them with the values of varsTable (themselves translated). A table value { txt, prefix, ctx|context } is translated recursively.",
       "params": {
-        "key": {"type": "string", "desc": "Clé de traduction."},
-        "varsTable": {"type": "table|nil", "desc": "Variables nom -> valeur."}
+        "key": {
+          "type": "string",
+          "desc": "Translation key."
+        },
+        "varsTable": {
+          "type": "table|nil",
+          "desc": "Variables name -> value."
+        }
       },
-      "returns": [{"type": "string", "desc": "Texte traduit avec variables."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Translated text with variables."
+        }
+      ],
       "internal": false
     },
     "translateWithOrWithoutContext": {
-      "desc": "Traduit une chaîne ou une table { txt, prefix, ctx|context } en choisissant la bonne fonction.",
-      "params": {"data": {"type": "string|table|nil", "desc": "Clé ou table de description."}},
-      "returns": [{"type": "string", "desc": "Texte traduit, '' si data est vide."}],
+      "desc": "Translates a string or a table { txt, prefix, ctx|context } by choosing the right function.",
+      "params": {
+        "data": {
+          "type": "string|table|nil",
+          "desc": "Key or description table."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Translated text, '' if data is empty."
+        }
+      ],
       "internal": false
     },
     "getLocale": {
-      "desc": "Renvoie toutes les traductions d'une langue fusionnées en une seule table clé -> texte (charge la langue si besoin).",
-      "params": {"id": {"type": "string", "desc": "Identifiant de langue, ex. 'fr-FR'."}},
-      "returns": [{"type": "table<string, string>", "desc": "Table fusionnée ; {} si id n'est pas une chaîne."}],
+      "desc": "Returns all the translations of a language merged into a single table key -> text (loads the language if needed).",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Language identifier, e.g. 'fr-FR'."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, string>",
+          "desc": "Merged table; {} if id is not a string."
+        }
+      ],
       "internal": false
     },
     "getAvailableLanguages": {
-      "desc": "Liste les langues disponibles (sous-dossiers de /locales/translations/), triées par clé.",
+      "desc": "Lists the available languages (subfolders of /locales/translations/), sorted by key.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Éléments { key, path }."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Elements { key, path }."
+        }
+      ],
       "internal": false
     },
     "getLanguage": {
-      "desc": "Renvoie la langue courante : celle mémorisée, sinon celle du réglage utilisateur, sinon en-US.",
+      "desc": "Returns the current language: the stored one, otherwise that of the user setting, otherwise en-US.",
       "params": {},
-      "returns": [{"type": "string", "desc": "Identifiant de langue."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Language identifier."
+        }
+      ],
       "internal": false
     },
     "getUnitSeparator": {
-      "desc": "Renvoie le séparateur à mettre entre un nombre et son unité selon la politique de la langue : espace, espace insécable (U+00A0) ou rien.",
+      "desc": "Returns the separator to put between a number and its unit according to the language's policy: space, non-breaking space (U+00A0) or nothing.",
       "params": {
-        "unit": {"type": "string", "desc": "Unité, ex. 'km/h'."},
-        "locale": {"type": "string|nil", "desc": "Langue ; défaut la langue courante."}
+        "unit": {
+          "type": "string",
+          "desc": "Unit, e.g. 'km/h'."
+        },
+        "locale": {
+          "type": "string|nil",
+          "desc": "Language; default the current language."
+        }
       },
-      "returns": [{"type": "string", "desc": "' ', espace insécable ou ''."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "' ', non-breaking space or ''."
+        }
+      ],
       "internal": false
     },
     "withUnit": {
-      "desc": "Colle une valeur déjà formatée et son unité avec le bon séparateur.",
+      "desc": "Joins an already formatted value and its unit with the right separator.",
       "params": {
-        "formattedValue": {"type": "string", "desc": "Nombre formaté."},
-        "unit": {"type": "string", "desc": "Unité."},
-        "locale": {"type": "string|nil", "desc": "Langue ; défaut la langue courante."}
+        "formattedValue": {
+          "type": "string",
+          "desc": "Formatted number."
+        },
+        "unit": {
+          "type": "string",
+          "desc": "Unit."
+        },
+        "locale": {
+          "type": "string|nil",
+          "desc": "Language; default the current language."
+        }
       },
-      "returns": [{"type": "string", "desc": "Valeur + séparateur + unité."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Value + separator + unit."
+        }
+      ],
       "internal": false
     },
     "clearTranslateCache": {
-      "desc": "Vide le cache des traductions.",
+      "desc": "Clears the translation cache.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getScrambleTranslationDebugEnabled": {
-      "desc": "Indique si le mode de débogage 'scramble' des traductions est actif.",
+      "desc": "Indicates whether the translation 'scramble' debug mode is active.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si actif."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if active."
+        }
+      ],
       "internal": false
     },
     "setScrambleTranslationDebugEnabled": {
-      "desc": "Active ou désactive le mode scramble, vide le cache et prévient l'interface (onTranslationsReloaded).",
-      "params": {"enabled": {"type": "boolean", "desc": "true pour activer (toute autre valeur désactive)."}},
-      "returns": [{"type": "boolean", "desc": "Nouvel état."}],
+      "desc": "Enables or disables the scramble mode, clears the cache and notifies the interface (onTranslationsReloaded).",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to enable (any other value disables)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "New state."
+        }
+      ],
       "internal": false
     },
     "selfTest": {
-      "desc": "Outil de test interne : lance extensions.test_locales_run.run(lang) si le fichier de test existe, puis le décharge.",
-      "params": {"lang": {"type": "string|boolean|nil", "desc": "Langue à tester, ou true pour toutes ; nil ne fait rien."}},
-      "returns": [{"type": "any", "desc": "Résultat du test, nil en cas d'échec ou si le test est absent."}],
+      "desc": "Internal test tool: runs extensions.test_locales_run.run(lang) if the test file exists, then unloads it.",
+      "params": {
+        "lang": {
+          "type": "string|boolean|nil",
+          "desc": "Language to test, or true for all; nil does nothing."
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Test result, nil on failure or if the test is absent."
+        }
+      ],
       "internal": false
     },
     "onExtensionLoaded": {
-      "desc": "Hook de chargement : lit l'argument de démarrage translationScrambleDebug, charge en-US et définit le global _tr.",
+      "desc": "Load hook: reads the startup argument translationScrambleDebug, loads en-US and defines the global _tr.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onFilesChanged": {
-      "desc": "Hook de changement de fichiers : invalide les politiques d'unités si leur fichier change, et planifie (délai 0.1 s) le rechargement des fichiers .json de /locales/translations/ modifiés.",
-      "params": {"files": {"type": "table[]", "desc": "Éléments avec un champ filename."}},
+      "desc": "File change hook: invalidates the unit policies if their file changes, and schedules (0.1 s delay) the reload of the modified .json files of /locales/translations/.",
+      "params": {
+        "files": {
+          "type": "table[]",
+          "desc": "Elements with a filename field."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook par frame : décompte le délai de rechargement à chaud des fichiers de traduction puis les recharge (émet onReloadLocales et onTranslationsReloaded).",
+      "desc": "Per-frame hook: counts down the hot reload delay of the translation files then reloads them (emits onReloadLocales and onTranslationsReloaded).",
       "params": {
-        "_": {"type": "number", "desc": "dtReal, non utilisé."},
-        "_2": {"type": "number", "desc": "dtSim, non utilisé."},
-        "dtRaw": {"type": "number", "desc": "Temps brut écoulé en secondes."}
+        "_": {
+          "type": "number",
+          "desc": "dtReal, unused."
+        },
+        "_2": {
+          "type": "number",
+          "desc": "dtSim, unused."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw elapsed time in seconds."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onSettingsChanged": {
-      "desc": "Hook appelé quand les réglages changent : charge la nouvelle langue ; si elle a changé, vide le cache et émet le hook onLanguageChanged.",
+      "desc": "Hook called when the settings change: loads the new language; if it changed, clears the cache and emits the onLanguageChanged hook.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Avant un rechargement Lua : mémorise l'état du mode scramble.",
+      "desc": "Before a Lua reload: stores the scramble mode state.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{ scrambleTranslationDebugEnabled }"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ scrambleTranslationDebugEnabled }"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Après un rechargement Lua : restaure le mode scramble.",
-      "params": {"data": {"type": "table|nil", "desc": "Table renvoyée par onSerialize."}},
+      "desc": "After a Lua reload: restores the scramble mode.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Table returned by onSerialize."
+        }
+      },
       "returns": [],
       "internal": true
     }

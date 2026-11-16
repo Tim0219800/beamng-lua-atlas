@@ -1,74 +1,74 @@
 # `gameplay_drift_quickMessages`
 
-*Fichier : `lua/ge/extensions/gameplay/drift/quickMessages.lua` · VM : Game Engine (GE) · 456 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drift/quickMessages.lua` · VM: Game Engine (GE) · 456 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drift_quickMessages` : `extensions.load("gameplay_drift_quickMessages")`, puis la globale `gameplay_drift_quickMessages`
+**Access:** extension `gameplay_drift_quickMessages`: `extensions.load("gameplay_drift_quickMessages")`, then the global `gameplay_drift_quickMessages`
 
-Détecte les « quick messages » de drift (petits bonus affichés pendant le drift : grand angle, drift inversé, long drift, frôlement, chaîne longue, drift de précision) et leur attribue une récompense qui s'ajoute au score en cache. Chaque message est décrit par des conditions primaires (toutes à remplir en même temps), éventuellement des conditions de confirmation (ex. pas de crash ensuite) et des conditions de remise à zéro. Émet onDriftQuickMessageDisplay pour l'interface et onDriftQuickMessageReached pour le scoreboard.
+Detects the drift "quick messages" (small bonuses shown during the drift: big angle, reverse drift, long drift, close call, long chain, precision drift) and gives them a reward that is added to the cached score. Each message is described by primary conditions (all to be met at the same time), possibly confirmation conditions (e.g. no crash afterwards) and reset conditions. Emits onDriftQuickMessageDisplay for the interface and onDriftQuickMessageReached for the scoreboard.
 
-## Remarques
+## Notes
 
-- Messages et réglages : bigAngle (angle > 80°, +15), reverseDrift (angle > 105°, +30), longDrift (durée > 4 s et vitesse > 30, +20), closeCall (angle > 25°, vitesse > 30 km/h, distance au mur < 1.5 m, confirmé si pas de crash pendant 1 s, remise à zéro après 4 s, +80), longDriftChain (>= 10 drifts chaînés, +160), precisionDrifting (3 closeCalls dans une chaîne et plus en train de drifter, +150).
-- Le texte vient de la traduction missions.drift.quickMessage.<id> et est affiché sous la forme « texte +récompense ».
-- Les conditions ne sont pas évaluées quand le drift général est gelé (gameplay_drift_general.getFrozen()).
-- Optimisation : après 2 s sans drift, ni chaîne ni confirmation en attente, le module passe en mode idle et saute les vérifications jusqu'au prochain drift.
-- Un crash, un spinout ou la remise en place du véhicule du joueur appellent reset() et annulent tout message en attente.
+- Messages and settings: bigAngle (angle > 80°, +15), reverseDrift (angle > 105°, +30), longDrift (duration > 4 s and speed > 30, +20), closeCall (angle > 25°, speed > 30 km/h, wall distance < 1.5 m, confirmed if no crash for 1 s, reset after 4 s, +80), longDriftChain (>= 10 chained drifts, +160), precisionDrifting (3 closeCalls in a chain and no longer drifting, +150).
+- The text comes from the translation missions.drift.quickMessage.<id> and is displayed in the form "text +reward".
+- The conditions are not evaluated when general drift is frozen (gameplay_drift_general.getFrozen()).
+- Optimization: after 2 s without drift, with no chain or confirmation pending, the module goes into idle mode and skips the checks until the next drift.
+- A crash, a spinout or the reset of the player's vehicle call reset() and cancel any pending message.
 
-**Dépendances (chargées avant) :** `gameplay_drift_general`, `gameplay_drift_drift`, `gameplay_drift_scoring`
+**Dependencies (loaded first):** `gameplay_drift_general`, `gameplay_drift_drift`, `gameplay_drift_scoring`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drift_quickMessages.getDriftDebugInfo()` | Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift. | 422 |
-| `gameplay_drift_quickMessages.getGC()` | Renvoie la quantité de garbage mesurée par le profileur à la dernière frame (0 hors debug). | 426 |
-| `gameplay_drift_quickMessages.getQuickMessages()` | Retraduit puis renvoie la table des quick messages (utilisée par le scoreboard et l'écran de fin). | 416 |
-| `gameplay_drift_quickMessages.onDriftActiveDataFinished()` | Hook : un drift individuel vient de se terminer (déclenche les remises à zéro de type onDriftEnd). *(interne)* *(hook)* | 402 |
-| `gameplay_drift_quickMessages.onDriftCompleted()` | Hook : une chaîne de drifts est terminée (déclenche les remises à zéro de type onChainEnd). *(interne)* *(hook)* | 412 |
-| `gameplay_drift_quickMessages.onDriftCrash()` | Hook : crash, appelle reset(). *(interne)* *(hook)* | 434 |
-| `gameplay_drift_quickMessages.onDriftPlVehReset()` | Hook : le véhicule de drift du joueur a été remis en place ; appelle reset(). *(interne)* *(hook)* | 407 |
-| `gameplay_drift_quickMessages.onDriftSpinout()` | Hook : spinout, appelle reset(). *(interne)* *(hook)* | 438 |
-| `gameplay_drift_quickMessages.onUpdate(dt)` | Appelé à chaque frame : lit l'état de drift du véhicule suivi, vérifie conditions primaires, confirmations et remises à zéro, gère le mode idle. *(interne)* *(hook)* | 345 |
-| `gameplay_drift_quickMessages.reset()` | Vide les messages en attente de confirmation et déjà déclenchés, remet le compteur de frôlements et le mode idle à zéro. | 393 |
+| `gameplay_drift_quickMessages.getDriftDebugInfo()` | Returns {default=false, canBeChanged=true} for the drift debug window. | 422 |
+| `gameplay_drift_quickMessages.getGC()` | Returns the amount of garbage measured by the profiler at the last frame (0 outside debug). | 426 |
+| `gameplay_drift_quickMessages.getQuickMessages()` | Re-translates then returns the quick messages table (used by the scoreboard and the end screen). | 416 |
+| `gameplay_drift_quickMessages.onDriftActiveDataFinished()` | Hook: an individual drift just ended (triggers the onDriftEnd type resets). *(internal)* *(hook)* | 402 |
+| `gameplay_drift_quickMessages.onDriftCompleted()` | Hook: a drift chain has ended (triggers the onChainEnd type resets). *(internal)* *(hook)* | 412 |
+| `gameplay_drift_quickMessages.onDriftCrash()` | Hook: crash, calls reset(). *(internal)* *(hook)* | 434 |
+| `gameplay_drift_quickMessages.onDriftPlVehReset()` | Hook: the player's drift vehicle was put back in place; calls reset(). *(internal)* *(hook)* | 407 |
+| `gameplay_drift_quickMessages.onDriftSpinout()` | Hook: spinout, calls reset(). *(internal)* *(hook)* | 438 |
+| `gameplay_drift_quickMessages.onUpdate(dt)` | Called every frame: reads the tracked vehicle's drift state, checks primary conditions, confirmations and resets, handles idle mode. *(internal)* *(hook)* | 345 |
+| `gameplay_drift_quickMessages.reset()` | Empties the messages awaiting confirmation and already triggered, resets the close call counter and idle mode to zero. | 393 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drift_quickMessages.getDriftDebugInfo()`
 
-Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift.
+Returns {default=false, canBeChanged=true} for the drift debug window.
 
-- **renvoie** : table {default = false, canBeChanged = true}
+- **returns**: table {default = false, canBeChanged = true}
 
 #### `gameplay_drift_quickMessages.getGC()`
 
-Renvoie la quantité de garbage mesurée par le profileur à la dernière frame (0 hors debug).
+Returns the amount of garbage measured by the profiler at the last frame (0 outside debug).
 
-- **renvoie** : number Garbage de la section « Drift quick messages ».
+- **returns**: number Garbage of the "Drift quick messages" section.
 
 #### `gameplay_drift_quickMessages.getQuickMessages()`
 
-Retraduit puis renvoie la table des quick messages (utilisée par le scoreboard et l'écran de fin).
+Re-translates then returns the quick messages table (used by the scoreboard and the end screen).
 
-- **renvoie** : table<string, {msg:string, reward:number, primaryConditions:table}> Quick messages indexés par id (precisionDrifting, bigAngle, reverseDrift, longDrift, closeCall, longDriftChain).
+- **returns**: table<string, {msg:string, reward:number, primaryConditions:table}> Quick messages keyed by id (precisionDrifting, bigAngle, reverseDrift, longDrift, closeCall, longDriftChain).
 
 #### `gameplay_drift_quickMessages.onUpdate(dt)`
 
-Appelé à chaque frame : lit l'état de drift du véhicule suivi, vérifie conditions primaires, confirmations et remises à zéro, gère le mode idle.
+Called every frame: reads the tracked vehicle's drift state, checks primary conditions, confirmations and resets, handles idle mode.
 
-- `dt` (*number*) : Delta temps (premier argument de onUpdate, dtReal).
+- `dt` (*number*) : Time delta (first argument of onUpdate, dtReal).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | gameplay_drift_general, gameplay_drift_drift, gameplay_drift_scoring. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onDriftQuickMessageDisplay` — écouté par 1 module(s)
-- `onDriftQuickMessageReached` — écouté par 1 module(s)
+- `onDriftQuickMessageDisplay` — listened to by 1 module(s)
+- `onDriftQuickMessageReached` — listened to by 1 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drift/quickMessages.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drift/quickMessages.lua`.*

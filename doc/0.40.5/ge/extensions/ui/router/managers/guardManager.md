@@ -1,70 +1,70 @@
 # `ui_router_managers_guardManager`
 
-*Fichier : `lua/ge/extensions/ui/router/managers/guardManager.lua` · VM : Game Engine (GE) · 66 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/managers/guardManager.lua` · VM: Game Engine (GE) · 66 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_managers_guardManager` : `extensions.load("ui_router_managers_guardManager")`, puis la globale `ui_router_managers_guardManager`
+**Access:** extension `ui_router_managers_guardManager`: `extensions.load("ui_router_managers_guardManager")`, then the global `ui_router_managers_guardManager`
 
-Registre des gardes de navigation du routeur. reloadGuards parcourt le dossier lua/ge/extensions/ui/router/guards/, charge chaque fichier et enregistre les fonctions de sa table M.guards sous leur clé. Les routes référencent ces clés dans leurs listes de gardes (enterGuards, exitGuards) ; executeGuards les exécute dans l'ordre. Un moddeur peut ajouter ses propres gardes avec addGuard.
+Registry of the router's navigation guards. reloadGuards scans the lua/ge/extensions/ui/router/guards/ folder, loads each file and registers the functions of its M.guards table under their key. Routes reference these keys in their guard lists (enterGuards, exitGuards); executeGuards runs them in order. A modder can add their own guards with addGuard.
 
-## Exemple
+## Example
 
 ```lua
-extensions.ui_router_managers_guardManager.addGuard("monGarde", function(route, params, context)
-  return true -- false bloque la navigation
+extensions.ui_router_managers_guardManager.addGuard("myGuard", function(route, params, context)
+  return true -- false blocks the navigation
 end)
 ```
 
-## Remarques
+## Notes
 
-- Une garde est appelée avec (route, params, context) ; seule la valeur exacte false bloque (result.failedGuard = clé de la garde) : un retour nil laisse passer. Les clés de garde inconnues sont ignorées avec un avertissement.
-- addGuard n'écrase pas une clé existante (avertissement) ; updateGuard exige qu'elle existe.
-- Les gardes sont chargées avec require("ge/extensions/ui/router/guards/<fichier>") après FS:findFiles("/lua/ge/extensions/ui/router/guards/", "*.lua") : un fichier de ce dossier sans table M.guards est chargé mais ne fournit rien (cas de guards/default.lua).
+- A guard is called with (route, params, context); only the exact value false blocks (result.failedGuard = guard key): a nil return lets it through. Unknown guard keys are ignored with a warning.
+- addGuard does not overwrite an existing key (warning); updateGuard requires it to exist.
+- Guards are loaded with require("ge/extensions/ui/router/guards/<file>") after FS:findFiles("/lua/ge/extensions/ui/router/guards/", "*.lua"): a file in this folder without an M.guards table is loaded but provides nothing (case of guards/default.lua).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_managers_guardManager.addGuard(key, fn)` | Ajoute une garde sous la clé donnée ; ne fait rien (avertissement) si la clé existe déjà. | 26 |
-| `ui_router_managers_guardManager.executeGuards(specifiedGuards, route, params, context)` | Exécute dans l'ordre les gardes listées ; s'arrête à la première qui renvoie false. | 46 |
-| `ui_router_managers_guardManager.reloadGuards()` | Vide le registre puis recharge toutes les gardes des fichiers du dossier guards/. Appelée au chargement de ui_router. | 9 |
-| `ui_router_managers_guardManager.removeGuard(key)` | Supprime la garde de clé donnée. | 42 |
-| `ui_router_managers_guardManager.updateGuard(key, fn)` | Remplace une garde existante ; ne fait rien (avertissement) si la clé est inconnue. | 34 |
+| `ui_router_managers_guardManager.addGuard(key, fn)` | Adds a guard under the given key; does nothing (warning) if the key already exists. | 26 |
+| `ui_router_managers_guardManager.executeGuards(specifiedGuards, route, params, context)` | Runs the listed guards in order; stops at the first one that returns false. | 46 |
+| `ui_router_managers_guardManager.reloadGuards()` | Empties the registry then reloads all guards from the files of the guards/ folder. Called when ui_router loads. | 9 |
+| `ui_router_managers_guardManager.removeGuard(key)` | Removes the guard with the given key. | 42 |
+| `ui_router_managers_guardManager.updateGuard(key, fn)` | Replaces an existing guard; does nothing (warning) if the key is unknown. | 34 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_managers_guardManager.addGuard(key, fn)`
 
-Ajoute une garde sous la clé donnée ; ne fait rien (avertissement) si la clé existe déjà.
+Adds a guard under the given key; does nothing (warning) if the key already exists.
 
-- `key` (*string*) : Clé de la garde.
-- `fn` (*function*) : Fonction (route, params, context) -> boolean.
+- `key` (*string*) : Guard key.
+- `fn` (*function*) : Function (route, params, context) -> boolean.
 
 #### `ui_router_managers_guardManager.executeGuards(specifiedGuards, route, params, context)`
 
-Exécute dans l'ordre les gardes listées ; s'arrête à la première qui renvoie false.
+Runs the listed guards in order; stops at the first one that returns false.
 
-- `specifiedGuards` (*string[]*) : Clés de gardes à exécuter.
-- `route` (*table*) : Route visée (ou de la route courante pour les gardes de sortie).
-- `params` (*table|nil*) : Paramètres de route.
-- `context` (*table|nil*) : Contexte (par exemple {routeName, options} pour les gardes de sortie).
-- **renvoie** : table {result = valeur de la dernière garde exécutée (true par défaut), failedGuard = clé de la garde bloquante}.
+- `specifiedGuards` (*string[]*) : Keys of the guards to run.
+- `route` (*table*) : Target route (or the current route for exit guards).
+- `params` (*table|nil*) : Route parameters.
+- `context` (*table|nil*) : Context (for example {routeName, options} for exit guards).
+- **returns**: table {result = value of the last guard run (true by default), failedGuard = key of the blocking guard}.
 
 #### `ui_router_managers_guardManager.removeGuard(key)`
 
-Supprime la garde de clé donnée.
+Removes the guard with the given key.
 
-- `key` (*string*) : Clé de la garde.
+- `key` (*string*) : Guard key.
 
 #### `ui_router_managers_guardManager.updateGuard(key, fn)`
 
-Remplace une garde existante ; ne fait rien (avertissement) si la clé est inconnue.
+Replaces an existing guard; does nothing (warning) if the key is unknown.
 
-- `key` (*string*) : Clé de la garde.
-- `fn` (*function*) : Nouvelle fonction.
+- `key` (*string*) : Guard key.
+- `fn` (*function*) : New function.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/managers/guardManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/managers/guardManager.lua`.*

@@ -1,0 +1,20 @@
+{
+  "path": "lua/common/libs/lua-websockets/websocket/client_ev.lua",
+  "module": "Backend client WebSocket asynchrone de lua-websockets pour la boucle d'événements lua-ev (module 'ev', non fourni par le jeu). Le module renvoie une fonction constructeur ; l'objet fonctionne par callbacks (on_open, on_message, on_error, on_close) et gère connexion non bloquante, poignée de main et fermeture avec délai.",
+  "usage": "local newClient = require('libs/lua-websockets/websocket/client_ev')\nlocal ws = newClient()\nws:on_open(function() ws:send('hello') end)\nws:on_message(function(_, msg, opcode) end)\nws:connect('ws://127.0.0.1:8080', 'proto')",
+  "notes": ["Nécessite le module 'ev' (lua-ev) ; probablement non utilisé dans le jeu (déduit du code)."],
+  "classes": {
+    "client": {
+      "desc": "Objet renvoyé par le constructeur new(ws). ws est une table d'options facultative (loop : boucle ev, défaut ev.Loop.default). L'état self.state vaut 'CLOSED', 'CONNECTING', 'OPEN' ou 'CLOSING'.",
+      "functions": {
+        "connect": {"desc": "Lance une connexion asynchrone, puis la poignée de main WebSocket.", "params": {"url": {"type": "string", "desc": "URL ws:// ou wss://."}, "ws_protocol": {"type": "string|string[]", "desc": "Sous-protocole(s) demandé(s)."}, "options": {"type": "table", "desc": "Options (ex. extra_http_headers, ssl_params) — déduit du code."}}},
+        "send": {"desc": "Envoie un message (trame masquée côté client).", "params": {"message": {"type": "string", "desc": "Données."}, "opcode": {"type": "integer", "desc": "Opcode (TEXT par défaut)."}}},
+        "on_open": {"desc": "Définit le callback appelé quand la connexion est ouverte.", "params": {"f": {"type": "function", "desc": "Callback."}}},
+        "on_message": {"desc": "Définit le callback de réception.", "params": {"f": {"type": "function", "desc": "fonction(client, message, opcode)."}}},
+        "on_close": {"desc": "Définit le callback de fermeture.", "params": {"f": {"type": "function", "desc": "Callback."}}},
+        "on_error": {"desc": "Définit le callback d'erreur.", "params": {"f": {"type": "function", "desc": "Callback."}}},
+        "close": {"desc": "Ferme la connexion : annule la connexion en cours ou envoie une trame CLOSE puis attend l'écho jusqu'au délai (3 s par défaut), sinon ferme avec le code 1006 'timeout'.", "params": {"code": {"type": "integer", "desc": "Code (défaut 1000)."}, "reason": {"type": "string", "desc": "Raison."}, "timeout": {"type": "number", "desc": "Délai en secondes."}}}
+      }
+    }
+  }
+}

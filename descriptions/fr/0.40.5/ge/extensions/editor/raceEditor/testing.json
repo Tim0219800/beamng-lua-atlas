@@ -1,0 +1,64 @@
+{
+  "path": "lua/ge/extensions/editor/raceEditor/testing.lua",
+  "module": "Fenêtre « Race Test » de l'éditeur de course : permet d'essayer la course en cours d'édition. Elle crée un objet gameplay/race/race à partir du chemin courant (debug draw activé), propose nombre de tours, téléportation du véhicule sur une position de départ, départ normal ou lancé (Start / Start Rolling, qui désactive l'éditeur), tests de conduite IA (véhicule courant ou tous), puis affiche temps et journal d'événements. Machine à états : setup, race, stopped. Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/testing')(raceEditor).",
+  "notes": [
+    "C:draw n'est appelé que quand la fenêtre est ouverte (editor_raceEditor.onUpdate) ; en état « race », elle appelle race:onUpdate(dt) à chaque frame.",
+    "« AI Drive Test All Vehicles » ne retient que les véhicules à moins de 100 m (distance au carré ≤ 10000) de la position de départ par défaut, si elle existe ; sinon tous les véhicules.",
+    "L'IA est lancée avec startAiVehicle(id, 0.8).",
+    "Les fonctions drawSetup, drawRace, drawStopped utilisent self.race : setupRace doit avoir été appelé avant draw, sinon self.race est nil."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Fenêtre de test de course (windowDescription = 'General'). Instanciée avec init(raceEditor). Champs : race (objet gameplay/race/race), state ('setup', 'race' ou 'stopped'), path.",
+      "functions": {
+        "init": {
+          "desc": "Mémorise raceEditor, startIndex = -1 et l'état 'setup'.",
+          "params": {"raceEditor": {"type": "table", "desc": "Module editor_raceEditor (utilise show())."}},
+          "internal": true
+        },
+        "setPath": {
+          "desc": "Définit le chemin de course à tester.",
+          "params": {"path": {"type": "table", "desc": "Objet gameplay/race/path."}}
+        },
+        "setupRace": {
+          "desc": "Crée un nouvel objet race pour le chemin (en conservant le nombre de tours précédent, sinon 1), active useDebugDraw, assigne le véhicule joueur et passe à l'état 'setup'.",
+          "internal": false
+        },
+        "startRace": {
+          "desc": "Démarre la course : applique config.rollingStart au chemin, assigne les véhicules, appelle race:startRace(), passe à l'état 'race' et, si enableAi, lance l'IA sur chaque véhicule (vitesse relative 0.8).",
+          "params": {
+            "vehIds": {"type": "table<integer, integer>|nil", "desc": "IDs des véhicules ; par défaut le véhicule joueur (be:getPlayerVehicleID(0))."},
+            "enableAi": {"type": "boolean", "desc": "true pour que l'IA conduise les véhicules."},
+            "rollingStart": {"type": "boolean", "desc": "true pour un départ lancé (rollingStart)."}
+          }
+        },
+        "draw": {
+          "desc": "Dessine l'interface selon l'état (setup, race avec mise à jour de la course, stopped).",
+          "params": {"dt": {"type": "number", "desc": "Delta temps de simulation (secondes)."}},
+          "internal": true
+        },
+        "drawSetup": {
+          "desc": "Interface de préparation : nombre de tours, boutons « Move to <départ> », Start, Start Rolling, déplacer tous les véhicules aux positions de départ, tests IA.",
+          "internal": true
+        },
+        "drawRace": {
+          "desc": "Interface en course : boutons Stop (abandonne la course pour tous les véhicules et rouvre l'éditeur), State (dump de l'état), Recover (requestRecover), puis temps et journal.",
+          "params": {"dt": {"type": "number|nil", "desc": "Non utilisé."}},
+          "internal": true
+        },
+        "drawStopped": {
+          "desc": "Interface après arrêt : bouton Restart (retour à la préparation), temps et journal.",
+          "internal": true
+        },
+        "drawTimes": {
+          "desc": "Affiche les temps du premier véhicule via race:inDrawTimes ; un clic bascule l'affichage détaillé.",
+          "internal": true
+        },
+        "drawEventLog": {
+          "desc": "Affiche le journal d'événements du premier véhicule via race:inDrawEventlog.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

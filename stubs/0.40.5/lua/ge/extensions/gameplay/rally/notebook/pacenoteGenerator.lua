@@ -2,16 +2,16 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/notebook/pacenoteGenerator.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Générateur simple de pacenotes : à partir d'une liste de points de la ligne de conduite (driveline), il détecte les virages gauche/droite en calculant, pour chaque point, le cercle passant par trois points (le point et ceux situés `lookAheadContext` indices avant/après, en 2D). Les zones quasi droites sont filtrées, puis les segments consécutifs de même direction sont fusionnés. Sert à l'outil de génération de l'éditeur de rallye.
---- Accès : extension `gameplay_rally_notebook_pacenoteGenerator` : `extensions.load("gameplay_rally_notebook_pacenoteGenerator")`, puis la globale `gameplay_rally_notebook_pacenoteGenerator`
+--- Simple pacenote generator: from a list of driveline points, it detects left/right corners by computing, for each point, the circle through three points (the point and those `lookAheadContext` indices before/after, in 2D). Nearly straight areas are filtered out, then consecutive segments of the same direction are merged. Used by the rally editor's generation tool.
+--- Access: extension `gameplay_rally_notebook_pacenoteGenerator`: `extensions.load("gameplay_rally_notebook_pacenoteGenerator")`, then the global `gameplay_rally_notebook_pacenoteGenerator`
 ---@class gameplay_rally_notebook_pacenoteGenerator
----@field defaultParams table Paramètres par défaut : lookAheadContext = 7 (nombre de points avant/après pour le cercle), straightThreshold = 5.0 (angle en degrés sous lequel un tronçon est considéré droit), mergeDistanceThreshold = 0.2 (m, distance à la droite pour fusionner des tronçons droits), maxSimplifyIterations = 10.
+---@field defaultParams table Default parameters: lookAheadContext = 7 (number of points before/after for the circle), straightThreshold = 5.0 (angle in degrees below which a section is considered straight), mergeDistanceThreshold = 0.2 (m, distance to the line for merging straight sections), maxSimplifyIterations = 10.
 gameplay_rally_notebook_pacenoteGenerator = {}
 
---- Détecte les virages le long d'une ligne de conduite. Renvoie `sections` (tous les tronçons, droits inclus, pour le dessin de débogage) et `corners` (seulement ceux ayant une direction, candidats à une pacenote). Chaque section contient pos, posEnd, direction, angle, length et nodes.
----Source : lua/ge/extensions/gameplay/rally/notebook/pacenoteGenerator.lua:218
----@param pointList table Liste de points : tables avec un champ .pos, ou directement des vec3.
----@param params table|nil Surcharge de defaultParams (lookAheadContext, straightThreshold, mergeDistanceThreshold, maxSimplifyIterations).
+--- Detects corners along a driveline. Returns `sections` (all sections, straights included, for debug drawing) and `corners` (only those with a direction, pacenote candidates). Each section contains pos, posEnd, direction, angle, length and nodes.
+---Source: lua/ge/extensions/gameplay/rally/notebook/pacenoteGenerator.lua:218
+---@param pointList table List of points: tables with a .pos field, or vec3s directly.
+---@param params table|nil Override of defaultParams (lookAheadContext, straightThreshold, mergeDistanceThreshold, maxSimplifyIterations).
 ---@return table  { sections = table[], corners = table[] }.
 function gameplay_rally_notebook_pacenoteGenerator.detectCorners(pointList, params) end
 

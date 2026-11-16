@@ -1,176 +1,289 @@
 {
   "path": "lua/ge/extensions/core/repository.lua",
-  "module": "Client du dépôt de mods en ligne (repository BeamNG) côté GE. Il interroge l'API (core_online.apiCall, routes s1/v4 et s2/v4), gère les abonnements aux mods, tient une file de téléchargement/mise à jour (mods installés dans /mods/repo/) et pousse l'état à l'UI par guihooks (ModListReceived, ModReceived, UpdateQueueState, downloadStatesChanged, etc.). Il dépend de core_modmanager pour monter ou supprimer les mods.",
-  "usage": "-- depuis l'UI JS : bngApi.engineLua('extensions.core_repository.requestMods(' + bngApi.serializeToLua({query='drift'}) + ')')\ncore_repository.modSubscribe('1234')",
+  "module": "Client of the online mod repository (BeamNG repository) on the GE side. It queries the API (core_online.apiCall, routes s1/v4 and s2/v4), manages mod subscriptions, keeps a download/update queue (mods installed in /mods/repo/) and pushes the state to the UI through guihooks (ModListReceived, ModReceived, UpdateQueueState, downloadStatesChanged, etc.). It depends on core_modmanager to mount or delete mods.",
+  "usage": "-- from the JS UI: bngApi.engineLua('extensions.core_repository.requestMods(' + bngApi.serializeToLua({query='drift'}) + ')')\ncore_repository.modSubscribe('1234')",
   "notes": [
-    "Les résultats des requêtes ne sont pas retournés : ils sont envoyés à l'UI par guihooks.trigger (requestMods -> ModListReceived, requestMod -> ModReceived sauf si un callback est fourni, requestMyMods -> MyModsReceived).",
-    "Les pages de l'UI commencent à 1 : requestMods et requestMyMods envoient page - 1 au serveur.",
-    "Si le réglage onlineFeatures n'est pas 'enable', requestMod passe en mode hors ligne (requestModOffline, données locales du mod manager).",
-    "File de mises à jour : chaque élément a un état (waiting, updating, downloading, downloaded, done). Le nombre de téléchargements simultanés vient du réglage modNumParallelDownload (3 par défaut). Quand tout est fini, le serveur est informé (s2/v4/modUpdateSuccess) et UpdateFinished est émis.",
-    "modSubscribe consigne aussi un opt-out dans /settings/cloud/mods-optout.json ; modUnsubscribe y inscrit le mod (désabonnement volontaire). Si le gestionnaire de mods n'est pas prêt ou qu'on n'est pas authentifié, l'abonnement est mis en attente (subList) puis rejoué par runSubscription.",
-    "BUG : M.requestSubscriptions = requestSubscriptions référence une variable locale non définie, donc le champ vaut nil.",
-    "BUG probable : dans installMod, 'completeCallback' est une variable globale jamais définie dans ce fichier ; son test 'if completeCallback' est toujours faux. De plus requestMyMods utilise v.id pour 'pending' là où requestMods utilise v.tagid.",
-    "Dans installMod, un fichier du même nom à la racine /mods/ est supprimé avant le téléchargement."
+    "Request results are not returned: they are sent to the UI by guihooks.trigger (requestMods -> ModListReceived, requestMod -> ModReceived unless a callback is provided, requestMyMods -> MyModsReceived).",
+    "UI pages start at 1: requestMods and requestMyMods send page - 1 to the server.",
+    "If the onlineFeatures setting is not 'enable', requestMod switches to offline mode (requestModOffline, local mod manager data).",
+    "Update queue: each element has a state (waiting, updating, downloading, downloaded, done). The number of simultaneous downloads comes from the modNumParallelDownload setting (3 by default). When everything is finished, the server is informed (s2/v4/modUpdateSuccess) and UpdateFinished is emitted.",
+    "modSubscribe also records an opt-out in /settings/cloud/mods-optout.json; modUnsubscribe registers the mod there (voluntary unsubscription). If the mod manager is not ready or the user is not authenticated, the subscription is put on hold (subList) then replayed by runSubscription.",
+    "BUG: M.requestSubscriptions = requestSubscriptions references an undefined local variable, so the field is nil.",
+    "Probable BUG: in installMod, 'completeCallback' is a global variable never defined in this file; its test 'if completeCallback' is always false. Also requestMyMods uses v.id for 'pending' where requestMods uses v.tagid.",
+    "In installMod, a file with the same name at the root of /mods/ is deleted before the download."
   ],
   "fields": {
-    "requestSubscriptions": {"type": "nil", "desc": "Vaut nil : référence à une variable non définie dans le fichier."}
+    "requestSubscriptions": {
+      "type": "nil",
+      "desc": "Is nil: reference to a variable not defined in the file."
+    }
   },
   "functions": {
     "onUpdate": {
-      "desc": "Hook de mise à jour : si la progression des téléchargements a changé, envoie 'downloadStatesChanged' à l'UI.",
-      "params": {"dt": {"type": "number", "desc": "Durée de l'image (non utilisée)."}},
+      "desc": "Update hook: if the download progress has changed, sends 'downloadStatesChanged' to the UI.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Frame duration (unused)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "uiUpdateQueue": {
-      "desc": "Envoie à l'UI 'UpdateQueueState' avec les listes updatingList, doneList, missingList et le drapeau updating.",
+      "desc": "Sends 'UpdateQueueState' to the UI with the lists updatingList, doneList, missingList and the updating flag.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "changeStateUpdateQueue": {
-      "desc": "Change l'état d'un élément de la file (par nom de fichier), puis notifie l'UI (UpdateQueueState et RepoModChangeStatus).",
+      "desc": "Changes the state of a queue element (by file name), then notifies the UI (UpdateQueueState and RepoModChangeStatus).",
       "params": {
-        "fname": {"type": "string", "desc": "Nom de fichier du mod."},
-        "nstate": {"type": "string", "desc": "Nouvel état (waiting, updating, downloading, downloaded, done)."}
+        "fname": {
+          "type": "string",
+          "desc": "File name of the mod."
+        },
+        "nstate": {
+          "type": "string",
+          "desc": "New state (waiting, updating, downloading, downloaded, done)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "installMod": {
-      "desc": "Télécharge un mod (s1/v4/download/mods/<uri>) vers localPath..filename et gère la fin : erreurs (notification toastr), suppression d'un ancien fichier du même mod hors du dossier repo, mise à jour de la file, rapport au serveur et lancement du téléchargement suivant.",
+      "desc": "Downloads a mod (s1/v4/download/mods/<uri>) to localPath..filename and handles the end: errors (toastr notification), deletion of an old file of the same mod outside the repo folder, queue update, report to the server and start of the next download.",
       "params": {
-        "uri": {"type": "string", "desc": "'<id>/<version>/<nomdefichier>'."},
-        "filename": {"type": "string", "desc": "Nom du fichier zip à écrire."},
-        "localPath": {"type": "string|nil", "desc": "Dossier cible, '/mods/repo/' par défaut."},
-        "callback": {"type": "function|nil", "desc": "Appelé avec la réponse de téléchargement si le code HTTP est 200."}
+        "uri": {
+          "type": "string",
+          "desc": "'<id>/<version>/<filename>'."
+        },
+        "filename": {
+          "type": "string",
+          "desc": "Name of the zip file to write."
+        },
+        "localPath": {
+          "type": "string|nil",
+          "desc": "Target folder, '/mods/repo/' by default."
+        },
+        "callback": {
+          "type": "function|nil",
+          "desc": "Called with the download response if the HTTP code is 200."
+        }
       },
       "returns": [],
       "internal": false
     },
     "requestMods": {
-      "desc": "Demande la liste des mods au serveur (s1/v4/getMods). Chaque entrée est enrichie de pending, unpacked et downState. Résultat envoyé à l'UI par 'ModListReceived'.",
+      "desc": "Requests the mod list from the server (s1/v4/getMods). Each entry is enriched with pending, unpacked and downState. Result sent to the UI via 'ModListReceived'.",
       "params": {
-        "query": {"type": "string|nil", "desc": "Texte de recherche."},
-        "order_by": {"type": "string|nil", "desc": "Champ de tri."},
-        "order": {"type": "string|nil", "desc": "Sens du tri."},
-        "page": {"type": "integer", "desc": "Numéro de page, à partir de 1."},
-        "categories": {"type": "any", "desc": "Filtre de catégories (transmis tel quel)."}
+        "query": {
+          "type": "string|nil",
+          "desc": "Search text."
+        },
+        "order_by": {
+          "type": "string|nil",
+          "desc": "Sort field."
+        },
+        "order": {
+          "type": "string|nil",
+          "desc": "Sort direction."
+        },
+        "page": {
+          "type": "integer",
+          "desc": "Page number, starting at 1."
+        },
+        "categories": {
+          "type": "any",
+          "desc": "Category filter (passed as is)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "requestMyMods": {
-      "desc": "Comme requestMods mais limité aux mods de l'utilisateur (own = 1). Résultat envoyé par 'MyModsReceived'.",
+      "desc": "Like requestMods but limited to the user's mods (own = 1). Result sent via 'MyModsReceived'.",
       "params": {
-        "query": {"type": "string|nil", "desc": "Recherche."},
-        "order_by": {"type": "string|nil", "desc": "Champ de tri."},
-        "order": {"type": "string|nil", "desc": "Sens du tri."},
-        "page": {"type": "integer", "desc": "Numéro de page, à partir de 1."},
-        "categories": {"type": "any", "desc": "Filtre de catégories."}
+        "query": {
+          "type": "string|nil",
+          "desc": "Search."
+        },
+        "order_by": {
+          "type": "string|nil",
+          "desc": "Sort field."
+        },
+        "order": {
+          "type": "string|nil",
+          "desc": "Sort direction."
+        },
+        "page": {
+          "type": "integer",
+          "desc": "Page number, starting at 1."
+        },
+        "categories": {
+          "type": "any",
+          "desc": "Category filter."
+        }
       },
       "returns": [],
       "internal": false
     },
     "requestMod": {
-      "desc": "Demande les détails d'un mod (s1/v4/getMod/<id>). Résultat passé au callback s'il est fourni, sinon envoyé par 'ModReceived'. Hors ligne ou en cas d'échec avec des données locales, utilise requestModOffline.",
+      "desc": "Requests a mod's details (s1/v4/getMod/<id>). Result passed to the callback if provided, otherwise sent via 'ModReceived'. Offline or on failure with local data, uses requestModOffline.",
       "params": {
-        "mod_id": {"type": "string", "desc": "Identifiant du mod sur le dépôt."},
-        "callback": {"type": "function|nil", "desc": "Reçoit request.responseData."}
+        "mod_id": {
+          "type": "string",
+          "desc": "Mod identifier on the repository."
+        },
+        "callback": {
+          "type": "function|nil",
+          "desc": "Receives request.responseData."
+        }
       },
       "returns": [],
       "internal": false
     },
     "requestModOffline": {
-      "desc": "Envoie à l'UI ('ModReceived') les informations locales d'un mod installé ; ok = 1 si trouvé, 0 sinon.",
-      "params": {"mod_id": {"type": "string", "desc": "Identifiant du mod."}},
+      "desc": "Sends to the UI ('ModReceived') the local information of an installed mod; ok = 1 if found, 0 otherwise.",
+      "params": {
+        "mod_id": {
+          "type": "string",
+          "desc": "Mod identifier."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "modSubscribe": {
-      "desc": "Abonne l'utilisateur à un mod : l'ajoute à la file en tant que 'subscription' et lance le téléchargement. Peut être ignoré si l'utilisateur s'est désabonné volontairement (useOptOut).",
+      "desc": "Subscribes the user to a mod: adds it to the queue as a 'subscription' and starts the download. May be ignored if the user voluntarily unsubscribed (useOptOut).",
       "params": {
-        "mod_id": {"type": "string", "desc": "Identifiant du mod."},
-        "useOptOut": {"type": "boolean|nil", "desc": "Si vrai, ignore la demande si le mod figure dans la liste d'opt-out."}
+        "mod_id": {
+          "type": "string",
+          "desc": "Mod identifier."
+        },
+        "useOptOut": {
+          "type": "boolean|nil",
+          "desc": "If true, ignores the request if the mod is in the opt-out list."
+        }
       },
       "returns": [],
       "internal": false
     },
     "modUnsubscribe": {
-      "desc": "Désabonne l'utilisateur : inscrit le mod dans la liste d'opt-out, le retire de la file (refusé s'il est en téléchargement), supprime le mod local via core_modmanager.deleteMod et prévient le serveur (s2/v4/modUnsubscribe) si besoin.",
-      "params": {"mod_id": {"type": "string", "desc": "Identifiant du mod."}},
+      "desc": "Unsubscribes the user: registers the mod in the opt-out list, removes it from the queue (refused if it is downloading), deletes the local mod via core_modmanager.deleteMod and notifies the server (s2/v4/modUnsubscribe) if needed.",
+      "params": {
+        "mod_id": {
+          "type": "string",
+          "desc": "Mod identifier."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "addUpdateQueue": {
-      "desc": "Ajoute un mod à la file de téléchargement (sans doublon par id). Complète les champs : dirname '/mods/repo/', outfile, uri '<id>/<ver>/<filename>', icon, état initial (updating pour une subscription, waiting sinon).",
-      "params": {"data": {"type": "table", "desc": "Données du mod : id, ver, filename, reason (ex. 'subscription')."}},
+      "desc": "Adds a mod to the download queue (no duplicates by id). Fills in the fields: dirname '/mods/repo/', outfile, uri '<id>/<ver>/<filename>', icon, initial state (updating for a subscription, waiting otherwise).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Mod data: id, ver, filename, reason (e.g. 'subscription')."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "updateAllMods": {
-      "desc": "Désactive le montage auto, marque tous les éléments d'action 'update' pour mise à jour et relance la file.",
+      "desc": "Disables auto-mount, marks all elements with action 'update' for update and restarts the queue.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "updateOneMod": {
-      "desc": "Met à jour un seul mod de la file.",
-      "params": {"id": {"type": "string", "desc": "Identifiant du mod."}},
+      "desc": "Updates a single mod of the queue.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Mod identifier."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "updateAllMissing": {
-      "desc": "Passe tous les éléments d'action 'missing' en mise à jour et relance la file.",
+      "desc": "Sets all elements with action 'missing' to update and restarts the queue.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "setRepoMsg": {
-      "desc": "Mémorise le message du dépôt, inclus ensuite dans les listes envoyées à l'UI.",
-      "params": {"data": {"type": "table", "desc": "Message."}},
+      "desc": "Stores the repository message, then included in the lists sent to the UI.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Message."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setRepoCmd": {
-      "desc": "Mémorise les ordres du serveur (forceInstall, forceRemove, forceDisable) appliqués à onModManagerReady.",
-      "params": {"cmddata": {"type": "table", "desc": "Listes d'identifiants de mods par clé."}},
+      "desc": "Stores the server's orders (forceInstall, forceRemove, forceDisable) applied at onModManagerReady.",
+      "params": {
+        "cmddata": {
+          "type": "table",
+          "desc": "Lists of mod identifiers by key."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setrepoAutomationMsg": {
-      "desc": "Mémorise un message d'automatisation, inclus dans les listes envoyées à l'UI (automationMsg).",
-      "params": {"data": {"type": "table", "desc": "Message."}},
+      "desc": "Stores an automation message, included in the lists sent to the UI (automationMsg).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Message."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "onModManagerReady": {
-      "desc": "Hook appelé quand le gestionnaire de mods est prêt : rejoue les abonnements en attente, puis applique les ordres de repoCmd (installer, supprimer, désactiver des mods) et les efface.",
+      "desc": "Hook called when the mod manager is ready: replays the pending subscriptions, then applies the repoCmd orders (install, delete, disable mods) and clears them.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "uiShowRepo": {
-      "desc": "Affiche le menu des mods (état UI 'menu.mods.local') après MenuHide.",
+      "desc": "Displays the mods menu (UI state 'menu.mods.local') after MenuHide.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "uiShowMod": {
-      "desc": "Demande à l'UI d'afficher la fiche d'un mod (évènement 'ShowMod').",
-      "params": {"modId": {"type": "string", "desc": "Identifiant du mod."}},
+      "desc": "Asks the UI to display a mod's page ('ShowMod' event).",
+      "params": {
+        "modId": {
+          "type": "string",
+          "desc": "Mod identifier."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "runSubscription": {
-      "desc": "Rejoue les abonnements mis en attente si le gestionnaire de mods est prêt et si l'utilisateur est authentifié.",
+      "desc": "Replays the pending subscriptions if the mod manager is ready and the user is authenticated.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "onOnlineStateChanged": {
-      "desc": "Hook appelé quand l'état de connexion change : appelle runSubscription.",
-      "params": {"connected": {"type": "boolean", "desc": "Non utilisé."}},
+      "desc": "Hook called when the connection state changes: calls runSubscription.",
+      "params": {
+        "connected": {
+          "type": "boolean",
+          "desc": "Not used."
+        }
+      },
       "returns": [],
       "internal": true
     }

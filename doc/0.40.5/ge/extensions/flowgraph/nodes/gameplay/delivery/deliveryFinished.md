@@ -1,23 +1,23 @@
 # `flowgraph_nodes_gameplay_delivery_deliveryFinished`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/deliveryFinished.lua` · VM : Game Engine (GE) · 88 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/deliveryFinished.lua` · VM: Game Engine (GE) · 88 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/delivery/deliveryFinished")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/delivery/deliveryFinished")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Delivery Finished » (catégorie repeat_instant, livraison). Détecte la fin de la livraison (tous les objectifs atteints ou fin manuelle via le menu rapide). Pins d'entrée : flow. Sorties : finished (impulsion unique), isActive, failed, failReason (chaîne vide si réussite). Utilise isActive, isFinished, isFailed et getFailReason du module freeformDelivery.
+Flowgraph node "Delivery Finished" (category repeat_instant, delivery). Detects the end of the delivery (all objectives reached or manual end via the quick menu). Input pins: flow. Outputs: finished (single pulse), isActive, failed, failReason (empty string on success). Uses isActive, isFinished, isFailed and getFailReason of the freeformDelivery module.
 
-**Dépendances (chargées avant) :** `gameplay_freeformDelivery_freeformDelivery`
+**Dependencies (loaded first):** `gameplay_freeformDelivery_freeformDelivery`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Réinitialise les états et sorties. | 44 |
-| `C:_executionStopped()` | Réinitialise les états et sorties. | 35 |
-| `C:init()` | Initialise les états et sorties. | 26 |
-| `C:work()` | Si flow est actif, compare l'état fini à l'état précédent pour émettre finished une seule fois et renseigne failed/failReason. | 53 |
+| `C:_executionStarted()` | Resets the states and outputs. | 44 |
+| `C:_executionStopped()` | Resets the states and outputs. | 35 |
+| `C:init()` | Initializes the states and outputs. | 26 |
+| `C:work()` | If flow is active, compares the finished state with the previous state to emit finished only once and fills failed/failReason. | 53 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/deliveryFinished.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/deliveryFinished.lua`.*

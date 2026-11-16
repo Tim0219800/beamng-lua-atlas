@@ -1,47 +1,97 @@
 {
   "path": "lua/vehicle/htmlTexture.lua",
-  "module": "Aide pour afficher une page web (HTML/JS) sur une texture du véhicule (écran de tableau de bord, afficheur). `create` ou `new` crée une vue web (obj:createWebView) liée à un tag de matériau/texture ; `call` ou la méthode callJS exécutent ensuite une fonction JavaScript dans cette page avec des données encodées en JSON. À utiliser depuis un contrôleur ou une extension du véhicule.",
-  "usage": "local htmlTexture = require('htmlTexture')\nlocal screen = htmlTexture.new('@dashScreen', 'local://local/vehicles/mycar/dash.html', 512, 256, 30)\nscreen:callJS('setSpeed', {kmh = 90})\n-- ou sans objet :\nhtmlTexture.create('@dashScreen', uri, 512, 256, nil, 'automatic')\nhtmlTexture.call('@dashScreen', 'setSpeed', {kmh = 90})",
+  "module": "Helper to display a web page (HTML/JS) on a vehicle texture (dashboard screen, display). `create` or `new` creates a web view (obj:createWebView) bound to a material/texture tag; `call` or the callJS method then run a JavaScript function in that page with JSON-encoded data. To be used from a vehicle controller or extension.",
+  "usage": "local htmlTexture = require('htmlTexture')\nlocal screen = htmlTexture.new('@dashScreen', 'local://local/vehicles/mycar/dash.html', 512, 256, 30)\nscreen:callJS('setSpeed', {kmh = 90})\n-- or without an object:\nhtmlTexture.create('@dashScreen', uri, 512, 256, nil, 'automatic')\nhtmlTexture.call('@dashScreen', 'setSpeed', {kmh = 90})",
   "notes": [
-    "usagemode : nil ou 'automatic' (id 1, rafraîchissement continu, fps = fps ou 25 par défaut), 'once' (id 0, rendu une seule fois, fps forcé à 0), 'manual' (id 2, rendu à la demande, fps forcé à 0). Une autre valeur laisse l'id à 0 mais conserve fps tel quel.",
-    "Le code JS exécuté est la chaîne `jsMethod(<JSON de data>)` : jsMethod doit être un nom de fonction JavaScript global (ou chemin) existant dans la page ; data est encodé avec jsonEncode.",
-    "Les objets créés par new ont les champs webViewTag, uri, width, height, fps, usageModeID et les méthodes callJS(jsMethod, data) et streamJS(streamName, jsMethod, data) (file d'attente de flux JS via obj:queueWebViewStreamJS).",
-    "Le commentaire du code indique que create n'est utilisable que pour son propre véhicule."
+    "usagemode: nil or 'automatic' (id 1, continuous refresh, fps = fps or 25 by default), 'once' (id 0, rendered once, fps forced to 0), 'manual' (id 2, rendered on demand, fps forced to 0). Any other value leaves the id at 0 but keeps fps as is.",
+    "The JS code executed is the string `jsMethod(<JSON of data>)`: jsMethod must be the name of an existing global JavaScript function (or path) in the page; data is encoded with jsonEncode.",
+    "Objects created by new have the fields webViewTag, uri, width, height, fps, usageModeID and the methods callJS(jsMethod, data) and streamJS(streamName, jsMethod, data) (JS stream queue via obj:queueWebViewStreamJS).",
+    "The code comment says that create can only be used for one's own vehicle."
   ],
   "fields": {},
   "functions": {
     "new": {
-      "desc": "Crée une vue web et renvoie un objet pratique avec les méthodes callJS et streamJS.",
+      "desc": "Creates a web view and returns a convenience object with the methods callJS and streamJS.",
       "params": {
-        "webViewTag": {"type": "string", "desc": "Identifiant/tag de la texture web du matériau."},
-        "uri": {"type": "string", "desc": "Adresse de la page HTML à afficher."},
-        "width": {"type": "integer", "desc": "Largeur de la texture en pixels."},
-        "height": {"type": "integer", "desc": "Hauteur de la texture en pixels."},
-        "fps": {"type": "number|nil", "desc": "Images par seconde (mode automatic uniquement, 25 par défaut)."},
-        "usagemode": {"type": "string|nil", "desc": "'automatic' (défaut), 'once' ou 'manual'."}
+        "webViewTag": {
+          "type": "string",
+          "desc": "Identifier/tag of the material's web texture."
+        },
+        "uri": {
+          "type": "string",
+          "desc": "Address of the HTML page to display."
+        },
+        "width": {
+          "type": "integer",
+          "desc": "Texture width in pixels."
+        },
+        "height": {
+          "type": "integer",
+          "desc": "Texture height in pixels."
+        },
+        "fps": {
+          "type": "number|nil",
+          "desc": "Frames per second (automatic mode only, 25 by default)."
+        },
+        "usagemode": {
+          "type": "string|nil",
+          "desc": "'automatic' (default), 'once' or 'manual'."
+        }
       },
-      "returns": [{"type": "table", "desc": "Objet {webViewTag, uri, width, height, fps, usageModeID} avec callJS(jsMethod, data) et streamJS(streamName, jsMethod, data)."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Object {webViewTag, uri, width, height, fps, usageModeID} with callJS(jsMethod, data) and streamJS(streamName, jsMethod, data)."
+        }
+      ],
       "internal": false
     },
     "create": {
-      "desc": "Crée une vue web sans renvoyer d'objet (même logique de usagemode que new). Prévu pour le véhicule propriétaire.",
+      "desc": "Creates a web view without returning an object (same usagemode logic as new). Intended for the owning vehicle.",
       "params": {
-        "webViewTag": {"type": "string", "desc": "Tag de la texture web."},
-        "uri": {"type": "string", "desc": "Adresse de la page HTML."},
-        "width": {"type": "integer", "desc": "Largeur en pixels."},
-        "height": {"type": "integer", "desc": "Hauteur en pixels."},
-        "fps": {"type": "number|nil", "desc": "Images par seconde (25 par défaut en mode automatic)."},
-        "usagemode": {"type": "string|nil", "desc": "'automatic' (défaut), 'once' ou 'manual'."}
+        "webViewTag": {
+          "type": "string",
+          "desc": "Tag of the web texture."
+        },
+        "uri": {
+          "type": "string",
+          "desc": "Address of the HTML page."
+        },
+        "width": {
+          "type": "integer",
+          "desc": "Width in pixels."
+        },
+        "height": {
+          "type": "integer",
+          "desc": "Height in pixels."
+        },
+        "fps": {
+          "type": "number|nil",
+          "desc": "Frames per second (25 by default in automatic mode)."
+        },
+        "usagemode": {
+          "type": "string|nil",
+          "desc": "'automatic' (default), 'once' or 'manual'."
+        }
       },
       "returns": [],
       "internal": false
     },
     "call": {
-      "desc": "Met en file l'exécution de `jsMethod(<JSON>)` dans la vue web identifiée par son tag (obj:queueWebViewJS).",
+      "desc": "Queues the execution of `jsMethod(<JSON>)` in the web view identified by its tag (obj:queueWebViewJS).",
       "params": {
-        "webViewTag": {"type": "string", "desc": "Tag de la vue web."},
-        "jsMethod": {"type": "string", "desc": "Nom de la fonction JavaScript à appeler."},
-        "data": {"type": "any", "desc": "Argument encodé en JSON (jsonEncode)."}
+        "webViewTag": {
+          "type": "string",
+          "desc": "Tag of the web view."
+        },
+        "jsMethod": {
+          "type": "string",
+          "desc": "Name of the JavaScript function to call."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Argument encoded as JSON (jsonEncode)."
+        }
       },
       "returns": [],
       "internal": false

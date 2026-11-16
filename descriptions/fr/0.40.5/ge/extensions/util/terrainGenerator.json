@@ -1,0 +1,123 @@
+{
+  "path": "lua/ge/extensions/util/terrainGenerator.lua",
+  "module": "Utilitaire (encore en chantier selon le commentaire du fichier) qui génère un bloc de terrain (TerrainBlock) à partir d'une carte de hauteur : un tableau Lua de hauteurs ou un PNG. Il gère aussi les cartes de trous, les cartes de couches (layerMap) et les matériaux de terrain lus depuis un JSON. Un moddeur l'utilise depuis la console pour créer ou remplacer le terrain d'un niveau (par exemple smallgrid). Le module n'expose que new(data), qui renvoie un objet dont les méthodes sont décrites dans la classe C.",
+  "usage": "extensions.load('util/terrainGenerator')\nlocal obj = util_terrainGenerator.new()\nlocal arr = {}\nfor x = 1, 256 do\n  arr[x] = {}\n  for y = 1, 256 do arr[x][y] = randomGauss3() / 5 end\nend\nobj:setBitmapFromArray(arr)\nobj:createTerrain()\nobj:centerTerrain()",
+  "notes": [
+    "Les dimensions de la carte doivent être multiples de 128 : setBitmapFromArray arrondit la taille au multiple de 128 supérieur et complète avec des 0.",
+    "Les hauteurs sont écrites dans un bitmap GFXFormatR16 : z est ramené à [0, terrainHeight] puis multiplié par 65535. Les hauteurs négatives sont donc écrasées à 0.",
+    "setBitmapFromArray remplace terrainHeight par la hauteur maximale du tableau et sauvegarde le PNG (self.heightMap, par défaut 'temp/temp_heightMap.png').",
+    "init appelle resetUserDir('temp/') : tous les fichiers *heightMap.png, *holeMap.png et *layerMap_*.png du dossier temp/ sont supprimés à chaque création d'objet.",
+    "createTerrain supprime le terrain existant (resetTerrain) avant d'en créer un nouveau, puis sauvegarde le fichier .ter du niveau.",
+    "createTerrain exige autant de matériaux que de cartes de couches ; sinon il supprime le terrain et sort sur une erreur (le terrain est alors perdu).",
+    "Dans init, terrainHeight est initialisé avec getMaxHeight() qui appelle core_terrain.getTerrain() : sans terrain chargé la valeur est 0.",
+    "Dans setUserDir, les fichiers sont recherchés dans le dossier ; la première correspondance de chaque type (*heightMap.png, *holeMap.png, *materials.json) est retenue.",
+    "Incohérence : setPngData ne contrôle pas ses arguments et écrase flipYAxis avec flipY, qui vaut nil si omis."
+  ],
+  "functions": {
+    "new": {
+      "desc": "Crée un générateur de terrain et appelle init(data). Renvoie l'objet (classe C) sur lequel on appelle les méthodes.",
+      "params": {
+        "data": {"type": "table|nil", "desc": "Options facultatives : terrainScale (taille de maille, 1 par défaut), terrainHeight, name ('temp'), terrainName ('theTerrain'), userDir ('temp/'), heightMap, holeMap, textureMaps, materials."}
+      },
+      "returns": [{"type": "table", "desc": "Instance du générateur de terrain."}],
+      "internal": false
+    }
+  },
+  "classes": {
+    "C": {
+      "desc": "Objet renvoyé par new(data) : conserve la carte de hauteur (GBitmap), l'échelle, la hauteur max, le dossier utilisateur, les matériaux et les cartes de couches.",
+      "functions": {
+        "init": {
+          "desc": "Initialise les champs depuis data (échelle, hauteur, noms, chemins, matériaux), crée un GBitmap vide et vide le dossier temp/. Appelée par new().",
+          "params": {"data": {"type": "table|nil", "desc": "Options (voir new)."}},
+          "internal": true
+        },
+        "saveBitmap": {
+          "desc": "Sauvegarde le bitmap de hauteur en PNG (ajoute .png si absent) et mémorise le chemin dans heightMap. Logue une erreur et sort si la sauvegarde échoue.",
+          "params": {"path": {"type": "string|nil", "desc": "Chemin du fichier ; self.heightMap par défaut."}}
+        },
+        "loadBitmap": {
+          "desc": "Charge un PNG de hauteur dans le bitmap, met à jour heightMap et bitmapWidth.",
+          "params": {"path": {"type": "string|nil", "desc": "Chemin du fichier ; self.heightMap par défaut."}}
+        },
+        "getMaxHeight": {
+          "desc": "Renvoie la hauteur utilisateur (getHeightScaleUser) du terrain actuel, ou 0 s'il n'y a pas de terrain.",
+          "returns": [{"type": "number", "desc": "Hauteur maximale en mètres."}]
+        },
+        "setTerrainOffset": {
+          "desc": "Déplace le bloc de terrain à la position donnée (vec3(0,0,0) correspond au coin du bloc) et recharge la collision.",
+          "params": {"vec": {"type": "vec3", "desc": "Nouvelle position du terrain."}}
+        },
+        "centerTerrain": {
+          "desc": "Place le terrain pour que l'origine du monde soit au centre du bloc (décalage de -taille/2 en x et y).",
+          "params": {}
+        },
+        "setPoint": {
+          "desc": "Écrit un pixel de la carte de hauteur. x et y commencent à 0 ; z est normalisé par terrainHeight et borné à [0, 1].",
+          "params": {
+            "x": {"type": "integer", "desc": "Colonne du pixel (à partir de 0)."},
+            "y": {"type": "integer", "desc": "Ligne du pixel (à partir de 0)."},
+            "z": {"type": "number", "desc": "Hauteur en mètres."}
+          }
+        },
+        "setBitmapFromArray": {
+          "desc": "Construit le bitmap R16 depuis un tableau 2D array[x][y] (indices à partir de 1), complète les trous avec 0, arrondit la taille au multiple de 128 et sauvegarde le PNG. Met terrainHeight à la hauteur max du tableau.",
+          "params": {"array": {"type": "table<integer, table<integer, number>>", "desc": "Hauteurs en mètres. Modifié en place (remplissage)."}}
+        },
+        "resetUserDir": {
+          "desc": "Supprime dans le dossier les fichiers *heightMap.png, *holeMap.png et *layerMap_*.png.",
+          "params": {"dir": {"type": "string|nil", "desc": "Dossier ; self.userDir par défaut."}}
+        },
+        "resetTerrain": {
+          "desc": "Supprime le terrain actuel puis, sauf si deleteOnly, crée un nouveau TerrainBlock nommé terrainName, rattaché au dossier du niveau courant et ajouté à MissionGroup.",
+          "params": {"deleteOnly": {"type": "boolean|nil", "desc": "Si vrai, supprime seulement le terrain."}}
+        },
+        "getTextureMap": {
+          "desc": "Construit l'entrée de données d'une carte de couche pour un matériau (canal R, materialId = nombre de cartes déjà présentes).",
+          "params": {
+            "path": {"type": "string", "desc": "Chemin du PNG de la couche."},
+            "matName": {"type": "string|nil", "desc": "Nom du matériau."}
+          },
+          "returns": [{"type": "table", "desc": "{path, selected, material, materialId, channel, channelId}."}]
+        },
+        "exportTerrainMaps": {
+          "desc": "Exporte en PNG la carte de hauteur, les cartes de trous et les cartes de couches du terrain actuel (fonctionne sur n'importe quel terrain existant).",
+          "params": {
+            "dir": {"type": "string|nil", "desc": "Dossier de sortie ; userDir par défaut. Doit se terminer par '/' (concaténation directe)."},
+            "prefix": {"type": "string|nil", "desc": "Préfixe des fichiers ; name par défaut."}
+          }
+        },
+        "setPngData": {
+          "desc": "Renseigne directement le PNG de hauteur et ses paramètres.",
+          "params": {
+            "path": {"type": "string", "desc": "Chemin du PNG de hauteur."},
+            "size": {"type": "integer", "desc": "Largeur du bitmap en pixels."},
+            "height": {"type": "number", "desc": "Hauteur maximale du terrain."},
+            "scale": {"type": "number", "desc": "Taille de maille."},
+            "flipY": {"type": "boolean", "desc": "Inverse l'axe Y des cartes."}
+          }
+        },
+        "setUserDir": {
+          "desc": "Définit le dossier de projet et, s'il existe, repère automatiquement le PNG de hauteur, le PNG de trous et le fichier *materials.json (qu'il charge via setMaterials).",
+          "params": {"dir": {"type": "string|nil", "desc": "Dossier ; 'temp/' par défaut. Un '/' final est ajouté si absent."}}
+        },
+        "setDefaultMaterial": {
+          "desc": "Crée le matériau de terrain 'default' (grille du niveau smallgrid) et en fait le seul matériau de l'objet.",
+          "params": {}
+        },
+        "setMaterials": {
+          "desc": "Définit les matériaux de terrain avant création. Sans argument, reprend ceux du terrain existant (hors 'warning_material'). Avec matData.filePath, lit un JSON de matériaux et crée les TerrainMaterial correspondants (champs v1 et v1.5, TextureSet). Avec matData.materials, utilise directement la liste. Retombe sur le matériau par défaut si rien n'est défini.",
+          "params": {"matData": {"type": "table|nil", "desc": "{filePath = chemin JSON} ou {materials = liste de noms}."}}
+        },
+        "setTextureMaps": {
+          "desc": "Associe chaque matériau à son PNG *_layerMap_*.png trouvé dans userDir, et génère un PNG vide (blanc pour le matériau par défaut, noir sinon) pour ceux qui n'en ont pas.",
+          "params": {}
+        },
+        "createTerrain": {
+          "desc": "Crée le terrain à partir des paramètres enregistrés : supprime l'ancien, crée un TerrainBlock, applique le TextureSet éventuel, ajoute les matériaux, importe les cartes (importMaps) et sauvegarde le fichier terrain. Logue une erreur et sort si le PNG de hauteur est introuvable ou si matériaux et cartes diffèrent en nombre.",
+          "params": {}
+        }
+      }
+    }
+  }
+}

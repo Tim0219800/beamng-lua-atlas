@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/environment/directionalGravity.lua",
+  "module": "Nœud flowgraph « Directional Gravity » (catégorie dynamic_p_duration, couleur/icône vehicle). Donne à un véhicule une gravité directionnelle en simulant une planète énorme et très lointaine : place une « planète » de rayon 1 000 000 m à 1 000 000 m du véhicule dans la direction donnée, avec la masse qui produit l'accélération voulue (masse = magnitude * rayon² / G), via obj:setPlanets côté véhicule. Entrées : vehId (number, sinon véhicule du joueur), direction (vec3, normalisé par le nœud, défaut {0,0,-1}), magnitude (m/s², défaut 1). À l'arrêt du graphe les planètes du véhicule sont supprimées (obj:setPlanets({})). En mode 'repeat', recalculée à chaque frame (utile car l'origine suit le véhicule).",
+  "notes": [
+    "Bug (éditeur) : drawMiddle lit self.pinIn.mass et self.pinIn.radius qui n'existent pas sur ce nœud (copié de Planet) : provoque une erreur d'indexation d'un nil lors du dessin.",
+    "data.showDebug (true par défaut) dessine une ligne et la force de gravité (texte) dans le monde depuis drawMiddle.",
+    "Ancien pin renommé : vehID -> vehId.",
+    "Constante C.gConst = 6.6742e-11 (m³ s⁻² kg⁻¹)."
+  ],
+  "fields": {
+    "gConst": {"type": "number", "desc": "Constante gravitationnelle universelle, 6.6742e-11."}
+  },
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Active showDebug et crée la table planet.", "internal": true},
+        "_executionStopped": {"desc": "Supprime les planètes du véhicule (obj:setPlanets({})).", "internal": true},
+        "workOnce": {"desc": "Applique la gravité directionnelle une fois."},
+        "work": {"desc": "Si dynamicMode vaut 'repeat', réapplique la gravité à chaque frame."},
+        "setDirectionalGravity": {"desc": "Calcule origine, rayon et masse de la planète et envoie obj:setPlanets au véhicule. Ne fait rien si direction ou magnitude est nil.", "internal": true},
+        "drawMiddle": {"desc": "Éditeur : affichage de debug (ligne, force) et gravité de surface.", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true}
+      }
+    }
+  }
+}

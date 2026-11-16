@@ -1,57 +1,57 @@
 # `controller_dragTimer`
 
-*Fichier : `lua/vehicle/controller/dragTimer.lua` · VM : Véhicule · 110 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/dragTimer.lua` · VM: Vehicle · 110 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `dragTimer` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `dragTimer` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de chronométrage de drag (accélération). Machine à états ready, countdown, measuring, done : quand le transbrake est actif et l'accélérateur appuyé, un compte à rebours de 3 s démarre ; à la fin, il relâche le transbrake (contrôleur nommé "transbrake") et mesure les temps au 60 pieds (18,288 m), 1/8 de mile (201,168 m) et 1/4 de mile (402,336 m) ainsi que les vitesses à ces deux derniers repères, puis affiche les résultats dans la console (en mph). Ordre lié au périphérique `gearbox`.
+Auxiliary drag (acceleration) timing controller. State machine ready, countdown, measuring, done: when the transbrake is active and the throttle pressed, a 3 s countdown starts; at the end, it releases the transbrake (controller named "transbrake") and measures the times at 60 feet (18.288 m), 1/8 mile (201.168 m) and 1/4 mile (402.336 m) as well as the speeds at these last two marks, then displays the results in the console (in mph). Order tied to the `gearbox` device.
 
-## Remarques
+## Notes
 
-- `M.relevantDevice = "gearbox"`. Aucune clé jbeam n'est lue.
-- Utilise `electrics.values.transbrake` et `electrics.values.throttle`. Le relâchement du compte à rebours (accélérateur lâché ou transbrake coupé) revient à `ready`.
-- Dépend de l'existence d'un contrôleur nommé exactement "transbrake" : `controller.getController("transbrake").setTransbrake(false)` est appelé sans test (erreur s'il n'existe pas).
-- La mesure s'arrête après 25 s même sans avoir atteint le quart de mile. Les résultats sont seulement imprimés (print) et un message UI « Results are in! » est affiché ; ils ne sont pas stockés dans electrics.
-- Pas de fonction `reset` : controller.reset rappelle init (état ready).
+- `M.relevantDevice = "gearbox"`. No jbeam key is read.
+- Uses `electrics.values.transbrake` and `electrics.values.throttle`. Releasing during the countdown (throttle released or transbrake cut) goes back to `ready`.
+- Depends on the existence of a controller named exactly "transbrake": `controller.getController("transbrake").setTransbrake(false)` is called without a test (error if it does not exist).
+- Measurement stops after 25 s even without having reached the quarter mile. The results are only printed (print) and a UI message "Results are in!" is displayed; they are not stored in electrics.
+- No `reset` function: controller.reset calls init again (ready state).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_dragTimer.init(jbeamData)` | Remet la machine à l'état ready et tous les temps à 0. *(interne)* | 93 |
-| `controller_dragTimer.update(dt)` | Pas physique : fait avancer la machine à états (armement, compte à rebours, mesure, affichage des résultats). *(interne)* | 28 |
-| `controller_dragTimer.updateGFX(dt)` | Vide (le travail est fait dans update). *(interne)* | 25 |
+| `controller_dragTimer.init(jbeamData)` | Puts the state machine back to ready and all times to 0. *(internal)* | 93 |
+| `controller_dragTimer.update(dt)` | Physics step: advances the state machine (arming, countdown, measurement, results display). *(internal)* | 28 |
+| `controller_dragTimer.updateGFX(dt)` | Empty (the work is done in update). *(internal)* | 25 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_dragTimer.init(jbeamData)`
 
-Remet la machine à l'état ready et tous les temps à 0.
+Puts the state machine back to ready and all times to 0.
 
-- `jbeamData` (*table*) : Données jbeam (non utilisées).
+- `jbeamData` (*table*) : Jbeam data (unused).
 
 #### `controller_dragTimer.update(dt)`
 
-Pas physique : fait avancer la machine à états (armement, compte à rebours, mesure, affichage des résultats).
+Physics step: advances the state machine (arming, countdown, measurement, results display).
 
-- `dt` (*number*) : Pas physique en secondes.
+- `dt` (*number*) : Physics step in seconds.
 
 #### `controller_dragTimer.updateGFX(dt)`
 
-Vide (le travail est fait dans update).
+Empty (the work is done in update).
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `relevantDevice` | string | "gearbox" : périphérique powertrain utilisé pour l'ordre d'appel. |
+| `relevantDevice` | string | "gearbox": powertrain device used for the call order. |
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getPosition`, `getVelocity`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/dragTimer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/dragTimer.lua`.*

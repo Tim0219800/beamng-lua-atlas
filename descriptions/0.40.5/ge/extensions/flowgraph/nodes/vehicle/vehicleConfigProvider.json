@@ -1,54 +1,54 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/vehicleConfigProvider.lua",
-  "module": "Nœud fournisseur « Vehicle Config Provider » (comportement `simple`, catégorie `provider`). Permet de choisir un modèle et une config de véhicule dans l'éditeur (`ui_flowgraph_editor.vehicleSelector`). Sorties : `model`, `config` (chemin de la config), `modelName` et `configName` (cachées).",
+  "module": "\"Vehicle Config Provider\" provider node (`simple` behavior, category `provider`). Lets the user pick a vehicle model and config in the editor (`ui_flowgraph_editor.vehicleSelector`). Outputs: `model`, `config` (config path), `modelName` and `configName` (hidden).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_onDeserialized": {
-          "desc": "Restaure modèle, config, chemin, type et noms.",
+          "desc": "Restores model, config, path, type and names.",
           "internal": true,
           "params": {
             "nodeData": {
               "type": "table",
-              "desc": "Données sauvegardées du nœud."
+              "desc": "Saved node data."
             }
           }
         },
         "_onSerialize": {
-          "desc": "Sauvegarde modèle, config, chemin, type et noms.",
+          "desc": "Saves model, config, path, type and names.",
           "internal": true,
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde à remplir."
+              "desc": "Save table to fill."
             }
           }
         },
         "drawCustomProperties": {
-          "desc": "Affiche le sélecteur de véhicule.",
+          "desc": "Displays the vehicle selector.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affichage central vide.",
+          "desc": "Empty central display.",
           "internal": true,
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+              "desc": "Editor node builder (builder:Middle())."
             },
             "style": {
               "type": "any",
-              "desc": "Style ImGui de l'éditeur."
+              "desc": "Editor ImGui style."
             }
           }
         },
         "init": {
-          "desc": "Constructeur ; vide les champs modèle/config.",
+          "desc": "Constructor; clears the model/config fields.",
           "internal": true
         },
         "work": {
-          "desc": "Écrit le modèle et la config choisis sur les sorties.",
+          "desc": "Writes the chosen model and config to the outputs.",
           "internal": true
         }
       }

@@ -2,106 +2,106 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/input/actionFilter.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_input_actionFilter` : bloque ou autorise des actions d'entrée par « filtre » nommé (ex. scénario, mode compétitif). Gère des groupes d'actions, des modèles d'actions prédéfinis (téléportation, menus véhicule, caméras, triche…) et des masques de joueurs par ActionMap (pour le split-screen). Un moddeur l'utilise pour désactiver temporairement des touches (reset, menus, caméra libre) pendant une activité.
---- Accès : extension `core_input_actionFilter` : `extensions.load("core_input_actionFilter")`, puis la globale `core_input_actionFilter`
+--- GE extension `core_input_actionFilter`: blocks or allows input actions by named "filter" (e.g. scenario, competitive mode). Manages action groups, predefined action templates (teleportation, vehicle menus, cameras, cheats…) and player masks per ActionMap (for split-screen). A modder uses it to temporarily disable keys (reset, menus, free camera) during an activity.
+--- Access: extension `core_input_actionFilter`: `extensions.load("core_input_actionFilter")`, then the global `core_input_actionFilter`
 ---@class core_input_actionFilter
 core_input_actionFilter = {}
 
---- Ajoute (ou retire si filtered = false) une action ou un groupe au filtre, puis reconstruit entièrement ce filtre côté C++ et émet onActionFilterUpdated.
----Source : lua/ge/extensions/core/input/actionFilter.lua:96
----@param filter string Nom du filtre.
----@param actionName string Nom d'action, ou nom d'un groupe défini par setGroup.
----@param filtered boolean true = bloquer, false/nil = ne plus bloquer.
+--- Adds (or removes if filtered = false) an action or a group to the filter, then fully rebuilds this filter on the C++ side and emits onActionFilterUpdated.
+---Source: lua/ge/extensions/core/input/actionFilter.lua:96
+---@param filter string Filter name.
+---@param actionName string Action name, or name of a group defined by setGroup.
+---@param filtered boolean true = block, false/nil = no longer block.
 function core_input_actionFilter.addAction(filter, actionName, filtered) end
 
---- Supprime tous les blocages d'un filtre (ActionMap.clearFilters). N'émet pas onActionFilterUpdated.
----Source : lua/ge/extensions/core/input/actionFilter.lua:102
----@param filter string Nom du filtre.
+--- Removes all blocks of a filter (ActionMap.clearFilters). Does not emit onActionFilterUpdated.
+---Source: lua/ge/extensions/core/input/actionFilter.lua:102
+---@param filter string Filter name.
 function core_input_actionFilter.clear(filter) end
 
---- Retire le masque d'un propriétaire pour une ActionMap et réapplique.
----Source : lua/ge/extensions/core/input/actionFilter.lua:146
----@param owner string Propriétaire.
----@param mapName string Nom de l'ActionMap.
+--- Removes an owner's mask for an ActionMap and re-applies.
+---Source: lua/ge/extensions/core/input/actionFilter.lua:146
+---@param owner string Owner.
+---@param mapName string ActionMap name.
 function core_input_actionFilter.clearActionMapPlayerMask(owner, mapName) end
 
---- Retire tous les masques d'un propriétaire sur toutes les ActionMap.
----Source : lua/ge/extensions/core/input/actionFilter.lua:155
----@param owner string Propriétaire.
+--- Removes all masks of an owner on all ActionMaps.
+---Source: lua/ge/extensions/core/input/actionFilter.lua:155
+---@param owner string Owner.
 function core_input_actionFilter.clearActionMapPlayerMasks(owner) end
 
---- Fabrique une liste d'actions à partir de modèles existants. Voir notes : les noms des paramètres facultatifs sont inversés par rapport à leur effet.
----Source : lua/ge/extensions/core/input/actionFilter.lua:13
----@param templateNames string[] Noms de modèles à concaténer.
----@param actionWhitelist string[]|nil Si fourni : actions à EXCLURE des modèles (déduit du code).
----@param actionBlackList string[]|nil Actions ajoutées à la fin du résultat.
----@return string[]  Liste d'actions.
+--- Builds an action list from existing templates. See notes: the names of the optional parameters are inverted relative to their effect.
+---Source: lua/ge/extensions/core/input/actionFilter.lua:13
+---@param templateNames string[] Template names to concatenate.
+---@param actionWhitelist string[]|nil If provided: actions to EXCLUDE from the templates (inferred from code).
+---@param actionBlackList string[]|nil Actions added at the end of the result.
+---@return string[]  List of actions.
 function core_input_actionFilter.createActionTemplate(templateNames, actionWhitelist, actionBlackList) end
 
---- Renvoie la table des modèles d'actions (clé = nom du modèle, valeur = liste d'actions).
----Source : lua/ge/extensions/core/input/actionFilter.lua:212
----@return table<string, string[]>  Modèles.
+--- Returns the action templates table (key = template name, value = list of actions).
+---Source: lua/ge/extensions/core/input/actionFilter.lua:212
+---@return table<string, string[]>  Templates.
 function core_input_actionFilter.getActionTemplates() end
 
---- Debug : table filtre -> {action = true} des actions réellement bloquées côté C++.
----Source : lua/ge/extensions/core/input/actionFilter.lua:216
----@return table<string, table<string, boolean>>  Blocages.
+--- Debug: table filter -> {action = true} of the actions actually blocked on the C++ side.
+---Source: lua/ge/extensions/core/input/actionFilter.lua:216
+---@return table<string, table<string, boolean>>  Blocks.
 function core_input_actionFilter.getBlockedActions() end
 
---- Renvoie la liste d'un groupe.
----Source : lua/ge/extensions/core/input/actionFilter.lua:111
----@param name string Nom du groupe.
----@return string[]|nil  Actions du groupe.
+--- Returns the list of a group.
+---Source: lua/ge/extensions/core/input/actionFilter.lua:111
+---@param name string Group name.
+---@return string[]|nil  Actions of the group.
 function core_input_actionFilter.getGroup(name) end
 
---- Indique si une action est bloquée par au moins un filtre.
----Source : lua/ge/extensions/core/input/actionFilter.lua:115
----@param actionName string Nom d'action (pas un groupe).
----@return boolean|nil  true si bloquée, sinon nil.
+--- Indicates whether an action is blocked by at least one filter.
+---Source: lua/ge/extensions/core/input/actionFilter.lua:115
+---@param actionName string Action name (not a group).
+---@return boolean|nil  true if blocked, otherwise nil.
 function core_input_actionFilter.isActionBlocked(actionName) end
 
---- Hook de restauration : recharge les données sauvegardées et réapplique les masques de joueurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/actionFilter.lua:190
----@param v table Table renvoyée par onSerialize.
+--- Restore hook: reloads the saved data and re-applies the player masks.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/actionFilter.lua:190
+---@param v table Table returned by onSerialize.
 function core_input_actionFilter.onDeserialized(v) end
 
---- Hook de déchargement de l'extension : remet playerMask à -1 sur les ActionMap touchées.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/actionFilter.lua:205
+--- Extension unload hook: resets playerMask to -1 on the affected ActionMaps.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/actionFilter.lua:205
 function core_input_actionFilter.onExtensionUnloaded() end
 
---- Hook appelé quand les bindings changent : réapplique les masques de joueurs (les ActionMap ont pu être recréées).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/actionFilter.lua:199
+--- Hook called when the bindings change: re-applies the player masks (the ActionMaps may have been recreated).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/actionFilter.lua:199
 function core_input_actionFilter.onInputBindingsChanged() end
 
---- Hook de sauvegarde avant rechargement : renvoie groupes, blocages et masques.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/actionFilter.lua:182
+--- Save hook before reload: returns groups, blocks and masks.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/actionFilter.lua:182
 ---@return table  {actionGroups, blockedActionGroups, actionMapPlayerMasks}.
 function core_input_actionFilter.onSerialize() end
 
---- Bloque ou débloque un joueur (un bit) dans le masque d'un propriétaire pour une ActionMap.
----Source : lua/ge/extensions/core/input/actionFilter.lua:168
----@param owner string Propriétaire.
----@param mapName string Nom de l'ActionMap.
----@param player integer Indice du joueur (0, 1…).
----@param blocked boolean true = retire le bit du joueur, false = le remet.
----@return boolean  false si arguments invalides.
+--- Blocks or unblocks a player (one bit) in an owner's mask for an ActionMap.
+---Source: lua/ge/extensions/core/input/actionFilter.lua:168
+---@param owner string Owner.
+---@param mapName string ActionMap name.
+---@param player integer Player index (0, 1…).
+---@param blocked boolean true = removes the player's bit, false = puts it back.
+---@return boolean  false if invalid arguments.
 function core_input_actionFilter.setActionMapPlayerBlocked(owner, mapName, player, blocked) end
 
---- Définit le masque de joueurs autorisés d'une ActionMap pour un propriétaire et applique le ET de tous les masques à actionMap.playerMask.
----Source : lua/ge/extensions/core/input/actionFilter.lua:137
----@param owner string Nom du propriétaire du masque.
----@param mapName string Nom de l'ActionMap (suffixe 'ActionMap' ajouté si absent).
----@param playerMask integer Masque binaire (bit n = joueur n), -1 = tous.
----@return boolean  false si un argument est invalide.
+--- Sets the allowed player mask of an ActionMap for an owner and applies the AND of all masks to actionMap.playerMask.
+---Source: lua/ge/extensions/core/input/actionFilter.lua:137
+---@param owner string Name of the mask owner.
+---@param mapName string ActionMap name ('ActionMap' suffix added if missing).
+---@param playerMask integer Bit mask (bit n = player n), -1 = all.
+---@return boolean  false if an argument is invalid.
 function core_input_actionFilter.setActionMapPlayerMask(owner, mapName, playerMask) end
 
---- Définit un groupe d'actions nommé, utilisable ensuite dans addAction.
----Source : lua/ge/extensions/core/input/actionFilter.lua:107
----@param name string Nom du groupe.
----@param arrayValues string[] Noms d'actions du groupe.
+--- Defines a named action group, usable afterwards in addAction.
+---Source: lua/ge/extensions/core/input/actionFilter.lua:107
+---@param name string Group name.
+---@param arrayValues string[] Action names of the group.
 function core_input_actionFilter.setGroup(name, arrayValues) end
 

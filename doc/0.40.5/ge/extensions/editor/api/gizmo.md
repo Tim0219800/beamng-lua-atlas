@@ -1,95 +1,95 @@
 # `editor_api_gizmo`
 
-*Fichier : `lua/ge/extensions/editor/api/gizmo.lua` · VM : Game Engine (GE) · 586 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/gizmo.lua` · VM: Game Engine (GE) · 586 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_gizmo` : `extensions.load("editor_api_gizmo")`, puis la globale `editor_api_gizmo`
+**Access:** extension `editor_api_gizmo`: `extensions.load("editor_api_gizmo")`, then the global `editor_api_gizmo`
 
-API de l'éditeur pour le gizmo d'axes 3D (déplacer / tourner / mettre à l'échelle) et pour les icônes d'objets dans la vue monde. Il enveloppe `worldEditorCppApi` : choix du mode et de l'alignement, verrous par axe, magnétisme (snap) de translation/rotation/échelle, détection du survol/glisser à la souris, et calcul des transformations d'objets pendant un déplacement avec accrochage au terrain (raycast ou core_terrain). `initialize` installe tout sur l'objet `editor` et définit les constantes `editor.AxisGizmoMode_*` et `editor.AxisGizmoAlignment_*`.
+Editor API for the 3D axis gizmo (move / rotate / scale) and for object icons in the world view. It wraps `worldEditorCppApi`: mode and alignment selection, per-axis locks, translation/rotation/scale snapping, mouse hover/drag detection, and computation of object transforms during a move with terrain snapping (raycast or core_terrain). `initialize` installs everything on the `editor` object and defines the `editor.AxisGizmoMode_*` and `editor.AxisGizmoAlignment_*` constants.
 
-## Exemple
+## Example
 
 ```lua
 editor.setAxisGizmoMode(editor.AxisGizmoMode_Translate)
 editor.setAxisGizmoTransform(myMatrix)
--- chaque frame :
+-- every frame:
 editor.updateAxisGizmo(onStart, onEnd, onDragging)
 editor.drawAxisGizmo()
 ```
 
-## Remarques
+## Notes
 
-- Constantes définies : editor.AxisX/Y/Z/W = 0/1/2/3 ; AxisGizmoMode_Translate/Rotate/Scale = 1/2/3 ; AxisGizmoAlignment_World = 0, _Local = 1 ; editor.objectIconHitId = 0 au départ.
-- `updateAxisGizmo` et `drawAxisGizmo` doivent être appelés ensemble à chaque frame. Pendant un glisser, la simulation est mise en pause (simTimeAuthority.pause) puis restaurée à la fin ou à l'annulation.
-- onEndGizmoDragFunc n'est appelée que si le gizmo a réellement été glissé (objectSelectionManipulated).
-- Les verrous setAxisGizmo*Lock(x, y, z) : true = l'axe est autorisé (le commentaire dit « allow »).
-- Accrochage au terrain (beginGizmoTranslate/getTransformsGizmoTranslate) piloté par les préférences snapping.terrain.* : enabled, useRayCast, indObjects, relRotation, keepHeight, snapToCenter, snapToBB.
-- Dans getTransformsGizmoTranslate, la hauteur de chaque objet utilise core_terrain.getTerrainHeight même en mode raycast (appelée avant de tester le raycast) : sans terrain, ces appels peuvent renvoyer nil (déduit du code, une valeur 0 de repli est utilisée avec `or`).
-- Le commentaire de code signale que getTransformsGizmoTranslate n'a pas d'équivalent pour la rotation (TODO).
+- Constants defined: editor.AxisX/Y/Z/W = 0/1/2/3; AxisGizmoMode_Translate/Rotate/Scale = 1/2/3; AxisGizmoAlignment_World = 0, _Local = 1; editor.objectIconHitId = 0 initially.
+- `updateAxisGizmo` and `drawAxisGizmo` must be called together every frame. During a drag, the simulation is paused (simTimeAuthority.pause) then restored at the end or on cancel.
+- onEndGizmoDragFunc is only called if the gizmo was actually dragged (objectSelectionManipulated).
+- The setAxisGizmo*Lock(x, y, z) locks: true = the axis is allowed (the comment says "allow").
+- Terrain snapping (beginGizmoTranslate/getTransformsGizmoTranslate) driven by the snapping.terrain.* preferences: enabled, useRayCast, indObjects, relRotation, keepHeight, snapToCenter, snapToBB.
+- In getTransformsGizmoTranslate, each object's height uses core_terrain.getTerrainHeight even in raycast mode (called before testing the raycast): without a terrain, these calls may return nil (inferred from code, a fallback value of 0 is used with `or`).
+- The code comment notes that getTransformsGizmoTranslate has no rotation equivalent (TODO).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_gizmo.initialize(editorInstance)` | Mémorise l'éditeur, définit les constantes d'axe/mode/alignement et installe toutes les fonctions gizmo/icônes sur `editor`. *(interne)* | 533 |
+| `editor_api_gizmo.initialize(editorInstance)` | Remembers the editor, defines the axis/mode/alignment constants and installs all the gizmo/icon functions on `editor`. *(internal)* | 533 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_gizmo.initialize(editorInstance)`
 
-Mémorise l'éditeur, définit les constantes d'axe/mode/alignement et installe toutes les fonctions gizmo/icônes sur `editor`.
+Remembers the editor, defines the axis/mode/alignment constants and installs all the gizmo/icon functions on `editor`.
 
-- `editorInstance` (*table*) : objet `editor`
+- `editorInstance` (*table*) : `editor` object
 
-## Classe `editor`
+## Class `editor`
 
-Fonctions ajoutées à `editor` par initialize.
+Functions added to `editor` by initialize.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.beginGizmoTranslate(objectTransforms, objectBBs, objectHeights, objects)` | À appeler une fois au début du glissement : mémorise les transformations de départ et, si l'accrochage au terrain est activé, les décalages au sol, normales et boîtes englobantes (collision des objets désactivée temporairement pour le raycast). | 96 |
-| `editor.cancelAxisGizmoInteraction()` | Annule une interaction en cours : relâche virtuellement la souris, restaure la pause de la simulation et désélectionne l'élément du gizmo. | 349 |
-| `editor.drawAxisGizmo()` | Dessine le gizmo avec sa transformation et son mode actuels (si la caméra de l'éditeur existe). | 364 |
-| `editor.drawObjectIcons()` | Dessine les icônes des objets les plus proches si la caméra existe et que editor.hideObjectIcons n'est pas vrai. | 14 |
-| `editor.getAxisGizmoAlignment()` | Renvoie l'alignement actuel du gizmo. | 423 |
-| `editor.getAxisGizmoMode()` | Renvoie le mode actuel du gizmo. | 417 |
-| `editor.getAxisGizmoScale()` | Renvoie l'échelle actuelle du gizmo. | 54 |
-| `editor.getAxisGizmoSelectedElement()` | Renvoie l'élément du gizmo sélectionné (axe ou plan). | 433 |
-| `editor.getAxisGizmoTransform()` | Renvoie la transformation actuelle du gizmo. | 49 |
-| `editor.getTransformsGizmoTranslate(objects, objectHeights)` | À appeler à chaque frame du glissement après beginGizmoTranslate : renvoie les nouvelles transformations des objets (translation du gizmo, avec accrochage terrain et rotation relative selon les préférences). Renvoie {} si beginGizmoTranslate n'a pas été appelé. | 170 |
-| `editor.isAxisGizmoHovered()` | Indique si un élément (axe ou plan) du gizmo est survolé/sélectionné. | 428 |
-| `editor.modifyFadeIconsDistance(deltaValue)` | Ajuste la distance de fondu des icônes d'objets (préférence gizmos.objectIcons.fadeIconsDistance += delta x fadeIconsDistanceModifySpeed, bornée à 1..50000) et affiche une notification. | 499 |
-| `editor.setAxisGizmoAlignment(alignment)` | Choisit l'alignement du gizmo et émet onEditorAxisGizmoAligmentChanged. | 385 |
-| `editor.setAxisGizmoMode(mode)` | Choisit le mode du gizmo et émet onEditorAxisGizmoModeChanged(mode). | 376 |
-| `editor.setAxisGizmoRotateLock(x, y, z)` | Autorise ou non la rotation par axe. | 403 |
-| `editor.setAxisGizmoRotateSnap(enabled, rotationSnap)` | Règle le magnétisme de rotation. | 447 |
-| `editor.setAxisGizmoScaleLock(x, y, z)` | Autorise ou non la mise à l'échelle par axe. | 411 |
-| `editor.setAxisGizmoScaleSnap(enabled, scaleSnap)` | Règle le magnétisme d'échelle. | 454 |
-| `editor.setAxisGizmoTransform(matrix, scale)` | Place le gizmo dans le monde (pour éditer des parties d'objet ou des poignées personnalisées). | 44 |
-| `editor.setAxisGizmoTranslateLock(x, y, z)` | Autorise ou non la translation par axe. | 395 |
-| `editor.setAxisGizmoTranslateSnap(enabled, gridSize)` | Règle le magnétisme de translation. | 440 |
-| `editor.toggleAxisGizmoAlignment()` | Bascule entre alignement monde et local. | 459 |
-| `editor.toggleDrawGizmoPlane()` | Inverse la préférence gizmos.general.drawGizmoPlane et active/désactive plan, hachures et grille de déplacement du gizmo. | 468 |
-| `editor.toggleDrawObjectIcons()` | Inverse la préférence gizmos.general.drawObjectIcons et l'applique au C++. | 482 |
-| `editor.toggleDrawObjectText()` | Inverse la préférence gizmos.general.drawObjectText (affichage des noms d'objets) et l'applique au C++. | 488 |
-| `editor.toggleSelectionHighlight()` | Inverse la préférence gizmos.general.highlightSelectedMeshes. | 494 |
-| `editor.toggleSnapping(value)` | Active/désactive le magnétisme de rotation et de translation selon les préférences snapping.general.* (rotateSnapSize, gridSize), sauf si la préférence rotateSnapEnabled / snapToGrid correspondante est déjà vraie. | 513 |
-| `editor.updateAxisGizmo(onStartGizmoDragFunc, onEndGizmoDragFunc, onGizmoDraggingFunc)` | Traite les événements souris du gizmo (début, glissement, fin, survol), relaie les modificateurs clavier au C++ et émet onEditorAxisGizmoAligmentChanged si l'alignement a changé côté C++. À appeler avec drawAxisGizmo. | 289 |
-| `editor.updateObjectIcons()` | Met à jour editor.objectIconHitId (icône d'objet sous la souris, 0 si icônes masquées ou préférence gizmos.general.drawObjectIcons == false) et editor.objectIconHoverId (seulement si aucun bouton souris n'est enfoncé et que l'UI ne capture pas la souris). À appeler à chaque frame. | 24 |
+| `editor.beginGizmoTranslate(objectTransforms, objectBBs, objectHeights, objects)` | To be called once at the start of the drag: remembers the starting transforms and, if terrain snapping is enabled, the ground offsets, normals and bounding boxes (object collision temporarily disabled for the raycast). | 96 |
+| `editor.cancelAxisGizmoInteraction()` | Cancels an ongoing interaction: virtually releases the mouse, restores the simulation pause and deselects the gizmo element. | 349 |
+| `editor.drawAxisGizmo()` | Draws the gizmo with its current transform and mode (if the editor camera exists). | 364 |
+| `editor.drawObjectIcons()` | Draws the closest objects' icons if the camera exists and editor.hideObjectIcons is not true. | 14 |
+| `editor.getAxisGizmoAlignment()` | Returns the current gizmo alignment. | 423 |
+| `editor.getAxisGizmoMode()` | Returns the current gizmo mode. | 417 |
+| `editor.getAxisGizmoScale()` | Returns the current gizmo scale. | 54 |
+| `editor.getAxisGizmoSelectedElement()` | Returns the selected gizmo element (axis or plane). | 433 |
+| `editor.getAxisGizmoTransform()` | Returns the current gizmo transform. | 49 |
+| `editor.getTransformsGizmoTranslate(objects, objectHeights)` | To be called every frame of the drag after beginGizmoTranslate: returns the new object transforms (gizmo translation, with terrain snapping and relative rotation according to the preferences). Returns {} if beginGizmoTranslate was not called. | 170 |
+| `editor.isAxisGizmoHovered()` | Returns whether a gizmo element (axis or plane) is hovered/selected. | 428 |
+| `editor.modifyFadeIconsDistance(deltaValue)` | Adjusts the object icons fade distance (preference gizmos.objectIcons.fadeIconsDistance += delta x fadeIconsDistanceModifySpeed, clamped to 1..50000) and shows a notification. | 499 |
+| `editor.setAxisGizmoAlignment(alignment)` | Sets the gizmo alignment and emits onEditorAxisGizmoAligmentChanged. | 385 |
+| `editor.setAxisGizmoMode(mode)` | Sets the gizmo mode and emits onEditorAxisGizmoModeChanged(mode). | 376 |
+| `editor.setAxisGizmoRotateLock(x, y, z)` | Allows or not rotation per axis. | 403 |
+| `editor.setAxisGizmoRotateSnap(enabled, rotationSnap)` | Sets rotation snapping. | 447 |
+| `editor.setAxisGizmoScaleLock(x, y, z)` | Allows or not scaling per axis. | 411 |
+| `editor.setAxisGizmoScaleSnap(enabled, scaleSnap)` | Sets scale snapping. | 454 |
+| `editor.setAxisGizmoTransform(matrix, scale)` | Places the gizmo in the world (to edit object parts or custom handles). | 44 |
+| `editor.setAxisGizmoTranslateLock(x, y, z)` | Allows or not translation per axis. | 395 |
+| `editor.setAxisGizmoTranslateSnap(enabled, gridSize)` | Sets translation snapping. | 440 |
+| `editor.toggleAxisGizmoAlignment()` | Toggles between world and local alignment. | 459 |
+| `editor.toggleDrawGizmoPlane()` | Toggles the gizmos.general.drawGizmoPlane preference and enables/disables the gizmo's plane, hatching and move grid. | 468 |
+| `editor.toggleDrawObjectIcons()` | Toggles the gizmos.general.drawObjectIcons preference and applies it to C++. | 482 |
+| `editor.toggleDrawObjectText()` | Toggles the gizmos.general.drawObjectText preference (display of object names) and applies it to C++. | 488 |
+| `editor.toggleSelectionHighlight()` | Toggles the gizmos.general.highlightSelectedMeshes preference. | 494 |
+| `editor.toggleSnapping(value)` | Enables/disables rotation and translation snapping according to the snapping.general.* preferences (rotateSnapSize, gridSize), unless the corresponding rotateSnapEnabled / snapToGrid preference is already true. | 513 |
+| `editor.updateAxisGizmo(onStartGizmoDragFunc, onEndGizmoDragFunc, onGizmoDraggingFunc)` | Handles the gizmo's mouse events (start, drag, end, hover), relays keyboard modifiers to C++ and emits onEditorAxisGizmoAligmentChanged if the alignment changed on the C++ side. To be called together with drawAxisGizmo. | 289 |
+| `editor.updateObjectIcons()` | Updates editor.objectIconHitId (object icon under the mouse, 0 if icons are hidden or the gizmos.general.drawObjectIcons preference == false) and editor.objectIconHoverId (only if no mouse button is pressed and the UI does not capture the mouse). To be called every frame. | 24 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onEditorAxisGizmoAligmentChanged` — écouté par 4 module(s)
-- `onEditorAxisGizmoModeChanged` — écouté par 2 module(s)
+- `onEditorAxisGizmoAligmentChanged` — listened to by 4 module(s)
+- `onEditorAxisGizmoModeChanged` — listened to by 2 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `castRay`
 - `debugDrawer:` `drawAxisGizmo`
 - `worldEditorCppApi.` `checkObjectIconHit`, `drawClosestObjectIcons`, `getAxisGizmoAlignment`, `getAxisGizmoMode`, `getAxisGizmoScale`, `getAxisGizmoSelectedElement`, `getAxisGizmoTotalRotateOffset`, `getAxisGizmoTransform`, `getAxisGizmoTranslateOffset`, `onAxisGizmoMouseDown`, `onAxisGizmoMouseDragged`, `onAxisGizmoMouseMove`, `onAxisGizmoMouseUp`, `setAxisGizmoAlignment`, `setAxisGizmoMode`, `setAxisGizmoRenderMoveGrid`, `setAxisGizmoRenderPlane`, `setAxisGizmoRenderPlaneHashes`, `setAxisGizmoRotateLock`, `setAxisGizmoScaleLock`, `setAxisGizmoSelectedElement`, `setAxisGizmoTransform`, `setAxisGizmoTranslateLock`, `setDrawObjectIcons`, `setDrawObjectsText`, `setEventControlModifiers`, `setGridSnap`, `setRotateSnap`, `setScaleSnap`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/gizmo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/gizmo.lua`.*

@@ -1,52 +1,52 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/types/genericValue.lua",
-  "module": "Noeud « Generic Set/Get Variable » (repeat_instant). Lit ou écrit une variable du flowgraph par nom (varName, + suffix numérique optionnel concaténé). Source : variables du projet (mgr.variables) ou du graphe courant. En mode getter : pin de sortie val (any) ; en mode setter : pin d'entrée val. Le flow est recopié en sortie.",
+  "module": "Node \"Generic Set/Get Variable\" (repeat_instant). Reads or writes a flowgraph variable by name (varName, + optional numeric suffix concatenated). Source: project variables (mgr.variables) or those of the current graph. In getter mode: output pin val (any); in setter mode: input pin val. The flow is copied to the output.",
   "notes": [
-    "En mode getter, la sortie n'est écrite que si la valeur lue est « vraie » : une variable valant false ou nil ne met pas à jour la sortie.",
-    "Le champ C.value = nil n'est pas utilisé."
+    "In getter mode, the output is only written if the value read is \"truthy\": a variable equal to false or nil does not update the output.",
+    "The field C.value = nil is not used."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "getter = true, global = true et pins getter.",
+          "desc": "getter = true, global = true and getter pins.",
           "internal": true
         },
         "work": {
-          "desc": "Choisit la table de variables, construit le nom, puis lit (target:get) ou écrit (target:change) la variable.",
+          "desc": "Chooses the variables table, builds the name, then reads (target:get) or writes (target:change) the variable.",
           "internal": false
         },
         "_onSerialize": {
-          "desc": "Sauvegarde l'état du noeud dans la table donnée.",
+          "desc": "Saves the node's state in the given table.",
           "params": {
             "res": {
               "type": "any",
-              "desc": "table de sauvegarde"
+              "desc": "save table"
             }
           },
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure getter/global et recrée les pins.",
+          "desc": "Restores getter/global and recreates the pins.",
           "params": {
             "nodeData": {
               "type": "any",
-              "desc": "données sauvegardées"
+              "desc": "saved data"
             }
           },
           "internal": true
         },
         "setupGetPins": {
-          "desc": "Passe en mode « Generic Getter » : pin de sortie val.",
+          "desc": "Switches to \"Generic Getter\" mode: output pin val.",
           "internal": true
         },
         "setupSetPins": {
-          "desc": "Passe en mode « Generic Setter » : pin d'entrée val.",
+          "desc": "Switches to \"Generic Setter\" mode: input pin val.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Cases « Use Project as Source » et « Is Getter ».",
+          "desc": "\"Use Project as Source\" and \"Is Getter\" checkboxes.",
           "internal": true
         }
       }

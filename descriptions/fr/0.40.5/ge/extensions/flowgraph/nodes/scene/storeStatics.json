@@ -1,0 +1,114 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/storeStatics.lua",
+  "module": "Noeud flowgraph « Store Statics » (auteur BeamNG). Mémorise la position, rotation, échelle et shape des TSStatic sélectionnés dans l'éditeur (stockage dans le noeud, sauvegardé avec le graphe) puis les fait apparaître au flow. Dans l'éditeur, le panneau permet de stocker la sélection, tout faire apparaître/disparaître, sélectionner ou vider. Entrées : flow, reset ; sortie : flow.",
+  "notes": [
+    "La description du noeud (« Creates and manages spawning TSStatic objects ») est copiée de Spawn TSStatic."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise objets et storedObjects.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Panneau de l'éditeur : liste des objets stockés, boutons Store Selected, Spawn All, Despawn All, Select All, Clear Storage.",
+          "internal": true
+        },
+        "updateStoredObjects": {
+          "desc": "Remplace le stockage par les TSStatic donnés (relève leur transformation), supprime les originaux puis les recrée.",
+          "params": {
+            "ids": {
+              "type": "any",
+              "desc": "liste d'ids d'objets de la scène"
+            }
+          },
+          "internal": true
+        },
+        "createObject": {
+          "desc": "Crée un TSStatic depuis les données stockées et renvoie son id.",
+          "params": {
+            "pos": {
+              "type": "any",
+              "desc": "table {x,y,z}"
+            },
+            "rot": {
+              "type": "any",
+              "desc": "table {x,y,z,w}"
+            },
+            "scl": {
+              "type": "any",
+              "desc": "table {x,y,z}"
+            },
+            "shape": {
+              "type": "any",
+              "desc": "chemin de la shape"
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Détecte si des objets stockés existent déjà dans la scène.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Supprime les objets sauf s'ils existaient avant le démarrage.",
+          "internal": true
+        },
+        "clearObjects": {
+          "desc": "Supprime tous les objets créés et oublie leurs ids.",
+          "internal": true
+        },
+        "spawnObjects": {
+          "desc": "Crée tous les objets stockés (si aucun n'existe ou si force).",
+          "params": {
+            "force": {
+              "type": "any",
+              "desc": "boolean : recrée même s'ils existent"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Sur reset, supprime ; sur flow, fait apparaître les objets stockés et active flow en sortie.",
+          "internal": false
+        },
+        "onClientEndMission": {
+          "desc": "Hook de fin de mission : nettoie les objets créés par le noeud.",
+          "internal": true
+        },
+        "destroy": {
+          "desc": "Supprime les objets sauf s'ils existaient avant le démarrage.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde storedObjects.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure storedObjects et oublie les ids courants.",
+          "params": {
+            "nodeData": {
+              "type": "any",
+              "desc": "données sauvegardées"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

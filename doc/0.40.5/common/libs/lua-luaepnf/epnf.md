@@ -1,12 +1,12 @@
 # `epnf`
 
-*Fichier : `lua/common/libs/lua-luaepnf/epnf.lua` · VM : Commun (GE + véhicule) · 219 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lua-luaepnf/epnf.lua` · VM: Common (GE + vehicle) · 219 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `epnf`
+**Access:** global `epnf`
 
-lua-luaepnf : bibliothèque tierce (Gerhard Lipp) qui facilite la définition de grammaires LPeg en syntaxe EBNF-like, avec arbre syntaxique (AST) automatique et messages d'erreur de parsing. Ici elle repose sur LuLPeg (libs/LuLPeg/lulpeg), une réimplémentation de LPeg en Lua pur. Rôle limité pour un moddeur : analyser un langage ou un format texte personnalisé.
+lua-luaepnf: third-party library (Gerhard Lipp) that makes it easy to define LPeg grammars in an EBNF-like syntax, with an automatic syntax tree (AST) and parsing error messages. Here it relies on LuLPeg (libs/LuLPeg/lulpeg), a pure-Lua reimplementation of LPeg. Limited role for a modder: parsing a custom language or text format.
 
-## Exemple
+## Example
 
 ```lua
 local epnf = require('libs/lua-luaepnf/epnf')
@@ -17,94 +17,94 @@ end)
 local ast = epnf.parsestring(g, 'a+b')
 ```
 
-## Remarques
+## Notes
 
-- Dans le fichier, 'epnf' est une variable locale du module (le doc auto la dit globale).
-- raise (et les erreurs de parsing) écrivent le message avec print() dans la sortie standard (la ligne fautive et un marqueur ^), sans lever d'exception ; seul define lève une assertion 'no start rule defined' si aucune règle START n'est définie.
-- Les noms de règles sont créés par assignation dans l'environnement ; ceux déclarés par SUPPRESS ne génèrent pas de nœud d'AST.
+- In the file, 'epnf' is a local variable of the module (the auto doc says it is global).
+- raise (and parsing errors) write the message with print() to standard output (the faulty line and a ^ marker), without raising an exception; only define raises an assertion 'no start rule defined' if no START rule is defined.
+- Rule names are created by assignment in the environment; those declared by SUPPRESS do not generate an AST node.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `epnf.define(func, g, e)` | Prépare un environnement où l'on définit des règles de grammaire par simple assignation (nom = motif) avec des raccourcis LPeg (majuscules) et les assistants START, SUPPRESS, E, EOF, ID, W, WS. Chaque règle produit un nœud d'AST {id=nom, pos=position, ...}. | 108 |
-| `epnf.dumpast(node)` | Écrit une représentation indentée de l'AST sur stderr (débogage). | 208 |
-| `epnf.parse(g, name, input, ...)` | Applique une grammaire à une chaîne et renvoie l'AST. | 158 |
-| `epnf.parsefile(g, fname, ...)` | Lit un fichier entier puis applique la grammaire. Lève une erreur si le fichier ne peut pas être ouvert. | 164 |
-| `epnf.parsestring(g, str, ...)` | Comme parse, avec un nom d'entrée généré à partir des 20 premiers caractères du texte. | 174 |
-| `epnf.raise(n, msg, s, p)` | Signale une erreur de validation sémantique de l'AST : affiche 'nom:ligne: message', la ligne fautive et un marqueur sous la position (assert p <= #s). | 51 |
+| `epnf.define(func, g, e)` | Prepares an environment where grammar rules are defined by simple assignment (name = pattern) with LPeg shortcuts (uppercase) and the helpers START, SUPPRESS, E, EOF, ID, W, WS. Each rule produces an AST node {id=name, pos=position, ...}. | 108 |
+| `epnf.dumpast(node)` | Writes an indented representation of the AST to stderr (debugging). | 208 |
+| `epnf.parse(g, name, input, ...)` | Applies a grammar to a string and returns the AST. | 158 |
+| `epnf.parsefile(g, fname, ...)` | Reads a whole file then applies the grammar. Raises an error if the file cannot be opened. | 164 |
+| `epnf.parsestring(g, str, ...)` | Like parse, with an input name generated from the first 20 characters of the text. | 174 |
+| `epnf.raise(n, msg, s, p)` | Reports a semantic validation error of the AST: prints 'name:line: message', the faulty line and a marker under the position (assert p <= #s). | 51 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `epnf.define(func, g, e)`
 
-Prépare un environnement où l'on définit des règles de grammaire par simple assignation (nom = motif) avec des raccourcis LPeg (majuscules) et les assistants START, SUPPRESS, E, EOF, ID, W, WS. Chaque règle produit un nœud d'AST {id=nom, pos=position, ...}.
+Prepares an environment where grammar rules are defined by simple assignment (name = pattern) with LPeg shortcuts (uppercase) and the helpers START, SUPPRESS, E, EOF, ID, W, WS. Each rule produces an AST node {id=name, pos=position, ...}.
 
-- `func` (*function*) : Fonction de définition ; reçoit l'environnement en argument (et son environnement est remplacé sous Lua 5.1).
-- `g` (*table|nil*) : Table de grammaire existante à compléter.
-- `e` (*table|nil*) : Environnement de repli pour les noms inconnus (défaut : environnement de func, ou _G).
-- **renvoie** : table Grammaire utilisable avec parse/parsestring/parsefile.
+- `func` (*function*) : Definition function; receives the environment as argument (and its environment is replaced under Lua 5.1).
+- `g` (*table|nil*) : Existing grammar table to complete.
+- `e` (*table|nil*) : Fallback environment for unknown names (default: func's environment, or _G).
+- **returns**: table Grammar usable with parse/parsestring/parsefile.
 
 #### `epnf.dumpast(node)`
 
-Écrit une représentation indentée de l'AST sur stderr (débogage).
+Writes an indented representation of the AST to stderr (debugging).
 
-- `node` (*table*) : Nœud racine.
+- `node` (*table*) : Root node.
 
 #### `epnf.parse(g, name, input, ...)`
 
-Applique une grammaire à une chaîne et renvoie l'AST.
+Applies a grammar to a string and returns the AST.
 
-- `g` (*table*) : Grammaire.
-- `name` (*string*) : Nom de l'entrée pour les messages d'erreur.
-- `input` (*string*) : Texte à analyser.
-- `...` (*any*) : Arguments supplémentaires passés à la correspondance.
-- **renvoie** : table|nil AST.
-- **renvoie** : string name.
-- **renvoie** : string input.
+- `g` (*table*) : Grammar.
+- `name` (*string*) : Input name for error messages.
+- `input` (*string*) : Text to parse.
+- `...` (*any*) : Extra arguments passed to the matching.
+- **returns**: table|nil AST.
+- **returns**: string name.
+- **returns**: string input.
 
 #### `epnf.parsefile(g, fname, ...)`
 
-Lit un fichier entier puis applique la grammaire. Lève une erreur si le fichier ne peut pas être ouvert.
+Reads a whole file then applies the grammar. Raises an error if the file cannot be opened.
 
-- `g` (*table*) : Grammaire.
-- `fname` (*string*) : Chemin du fichier.
-- `...` (*any*) : Arguments supplémentaires.
-- **renvoie** : table|nil AST.
-- **renvoie** : string Nom (le chemin).
-- **renvoie** : string Contenu.
+- `g` (*table*) : Grammar.
+- `fname` (*string*) : File path.
+- `...` (*any*) : Extra arguments.
+- **returns**: table|nil AST.
+- **returns**: string Name (the path).
+- **returns**: string Content.
 
 #### `epnf.parsestring(g, str, ...)`
 
-Comme parse, avec un nom d'entrée généré à partir des 20 premiers caractères du texte.
+Like parse, with an input name generated from the first 20 characters of the text.
 
-- `g` (*table*) : Grammaire.
-- `str` (*string*) : Texte.
-- `...` (*any*) : Arguments supplémentaires.
-- **renvoie** : table|nil AST.
-- **renvoie** : string Nom généré.
-- **renvoie** : string Texte.
+- `g` (*table*) : Grammar.
+- `str` (*string*) : Text.
+- `...` (*any*) : Extra arguments.
+- **returns**: table|nil AST.
+- **returns**: string Generated name.
+- **returns**: string Text.
 
 #### `epnf.raise(n, msg, s, p)`
 
-Signale une erreur de validation sémantique de l'AST : affiche 'nom:ligne: message', la ligne fautive et un marqueur sous la position (assert p <= #s).
+Reports a semantic validation error of the AST: prints 'name:line: message', the faulty line and a marker under the position (assert p <= #s).
 
-- `n` (*string*) : Nom de l'entrée.
+- `n` (*string*) : Input name.
 - `msg` (*string*) : Message.
-- `s` (*string*) : Texte analysé.
-- `p` (*integer*) : Position dans le texte.
+- `s` (*string*) : Parsed text.
+- `p` (*integer*) : Position in the text.
 
-## Classe `env_index`
+## Class `env_index`
 
-Table d'assistants visibles dans la fonction passée à define (avec START et SUPPRESS en plus).
+Table of helpers visible in the function passed to define (with START and SUPPRESS in addition).
 
-Objet `env_index` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `env_index` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `env_index.E(msg)` | Motif LPeg qui signale une erreur de parsing avec le message donné. | 91 |
-| `env_index.EOF(msg)` | Motif LPeg : fin de l'entrée, sinon erreur avec le message donné. | 94 |
-| `env_index.W(s)` | Motif LPeg : mot-clé s, non suivi d'une lettre, chiffre ou _ . | 100 |
+| `env_index.E(msg)` | LPeg pattern that reports a parsing error with the given message. | 91 |
+| `env_index.EOF(msg)` | LPeg pattern: end of input, otherwise error with the given message. | 94 |
+| `env_index.W(s)` | LPeg pattern: keyword s, not followed by a letter, digit or _ . | 100 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lua-luaepnf/epnf.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lua-luaepnf/epnf.lua`.*

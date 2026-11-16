@@ -1,33 +1,33 @@
 # `career_modules_rentals`
 
-*Fichier : `lua/ge/extensions/career/modules/rentals.lua` · VM : Game Engine (GE) · 106 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/rentals.lua` · VM: Game Engine (GE) · 106 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_rentals` : `extensions.load("career_modules_rentals")`, puis la globale `career_modules_rentals`
+**Access:** extension `career_modules_rentals`: `extensions.load("career_modules_rentals")`, then the global `career_modules_rentals`
 
-Ébauche non terminée d'un système de location de véhicules en carrière : la plupart des fonctions ne contiennent que des commentaires, et les hooks (onExtensionLoaded, onSaveCurrentProfile, onUpdate) sont commentés. Seule isRenting est exportée.
+Unfinished draft of a vehicle rental system in career: most functions contain only comments, and the hooks (onExtensionLoaded, onSaveCurrentProfile, onUpdate) are commented out. Only isRenting is exported.
 
-## Remarques
+## Notes
 
-- Code inactif : currRentalVeh n'est jamais assigné (beginRenting déclare une variable locale du même nom et utilise shopId non défini), donc isRenting renvoie toujours false.
-- playAbandonTimer et trackAbandonVeh utilisent currAbandonTime alors que la variable déclarée s'appelle currAbandonTimer : bug si le code était activé.
+- Inactive code: currRentalVeh is never assigned (beginRenting declares a local variable of the same name and uses an undefined shopId), so isRenting always returns false.
+- playAbandonTimer and trackAbandonVeh use currAbandonTime while the declared variable is named currAbandonTimer: bug if the code were enabled.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_rentals.isRenting()` | API UI : indique si un véhicule de location est en cours (currRentalVeh non nil). | 42 |
+| `career_modules_rentals.isRenting()` | UI API: indicates whether a rental vehicle is in progress (currRentalVeh not nil). | 42 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_rentals.isRenting()`
 
-API UI : indique si un véhicule de location est en cours (currRentalVeh non nil).
+UI API: indicates whether a rental vehicle is in progress (currRentalVeh not nil).
 
-- **renvoie** : boolean Toujours false en l'état.
+- **returns**: boolean Always false as it stands.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/rentals.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/rentals.lua`.*

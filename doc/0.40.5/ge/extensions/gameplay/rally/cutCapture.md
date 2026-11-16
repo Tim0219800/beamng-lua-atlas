@@ -1,31 +1,31 @@
 # `gameplay_rally_cutCapture`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/cutCapture.lua` · VM : Game Engine (GE) · 85 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/cutCapture.lua` · VM: Game Engine (GE) · 85 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/cutCapture")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/cutCapture")` (file under extensions/ but not a regular extension)
 
-Enregistre les 'coupures' (cuts) pendant la reconnaissance (recce) d'un rallye : à chaque capture, la position, l'orientation et l'angle de volant du véhicule sont ajoutés en ligne JSON dans le fichier cuts.json du dossier recce de la mission. Gère aussi le fichier transcripts.json associé. Le module renvoie un constructeur : require(...)(vehicle, missionDir).
+Records 'cuts' during a rally recce: on each capture, the vehicle's position, orientation and steering angle are appended as a JSON line to the cuts.json file in the mission's recce folder. Also manages the associated transcripts.json file. The module returns a constructor: require(...)(vehicle, missionDir).
 
-## Remarques
+## Notes
 
-- Le fichier cuts.json contient un objet JSON par ligne (JSON Lines), ouvert en ajout.
-- La position est celle du véhicule (le code indique qu'elle est centrée au-dessus du haut du pare-brise).
-- La valeur 'steering' est lue depuis le cache de core_vehicleBridge ; elle reste nil tant qu'aucune valeur n'a été reçue.
-- Les fichiers sont ouverts sans vérification d'erreur : si io.open échoue, self.f est nil et l'appel plante.
+- The cuts.json file contains one JSON object per line (JSON Lines), opened in append mode.
+- The position is the vehicle's (the code states it is centered above the top of the windshield).
+- The 'steering' value is read from the core_vehicleBridge cache; it stays nil until a value has been received.
+- Files are opened without error checking: if io.open fails, self.f is nil and the call crashes.
 
-## Classe `C`
+## Class `C`
 
-Objet de capture renvoyé par le constructeur du module. Attributs : vehicle, fname, fname_transcripts, cut_id.
+Capture object returned by the module constructor. Attributes: vehicle, fname, fname_transcripts, cut_id.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_cutCapture")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_cutCapture")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:capture()` | Capture l'état courant du véhicule (id incrémental, horodatage rallyUtil.getTime(), pos {x,y,z}, quat {x,y,z,w} calculé depuis les vecteurs direction/haut, steering) et l'écrit via writeCut. | 40 |
-| `C:init(vehicle, missionDir)` | Initialise : mémorise le véhicule, s'abonne aux changements de la valeur 'steering' (core_vehicleBridge) et calcule les chemins cuts.json et transcripts.json. L'identifiant de coupure repart à 1. | 12 |
-| `C:truncateCapturesFile()` | Vide le fichier cuts.json (ouverture en écriture). | 22 |
-| `C:truncateTranscriptsFile()` | Vide le fichier transcripts.json. | 27 |
-| `C:writeCut(cutCapture)` | Ajoute une capture encodée en JSON, suivie d'un saut de ligne, à cuts.json. | 32 |
+| `C:capture()` | Captures the vehicle's current state (incremental id, timestamp rallyUtil.getTime(), pos {x,y,z}, quat {x,y,z,w} computed from the direction/up vectors, steering) and writes it via writeCut. | 40 |
+| `C:init(vehicle, missionDir)` | Initializes: stores the vehicle, subscribes to changes of the 'steering' value (core_vehicleBridge) and computes the cuts.json and transcripts.json paths. The cut identifier restarts at 1. | 12 |
+| `C:truncateCapturesFile()` | Empties the cuts.json file (opens it for writing). | 22 |
+| `C:truncateTranscriptsFile()` | Empties the transcripts.json file. | 27 |
+| `C:writeCut(cutCapture)` | Appends a JSON-encoded capture, followed by a newline, to cuts.json. | 32 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/cutCapture.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/cutCapture.lua`.*

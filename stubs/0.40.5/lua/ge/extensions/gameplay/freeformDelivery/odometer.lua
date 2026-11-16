@@ -2,47 +2,47 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/freeformDelivery/odometer.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Sous-module de la livraison libre qui suit l'odomètre des véhicules marqués trackOdometer dans la définition de livraison. Il lit la valeur via core_vehicleBridge (getRootPartOdometer), calcule la distance parcourue depuis le départ, affiche un message dans la liste de tâches et fait échouer la livraison si la distance dépasse maxOdometer.
---- Accès : extension `gameplay_freeformDelivery_odometer` : `extensions.load("gameplay_freeformDelivery_odometer")`, puis la globale `gameplay_freeformDelivery_odometer`
+--- Freeform delivery submodule that tracks the odometer of vehicles marked trackOdometer in the delivery definition. It reads the value via core_vehicleBridge (getRootPartOdometer), computes the distance traveled since the start, displays a message in the task list and fails the delivery if the distance exceeds maxOdometer.
+--- Access: extension `gameplay_freeformDelivery_odometer`: `extensions.load("gameplay_freeformDelivery_odometer")`, then the global `gameplay_freeformDelivery_odometer`
 ---@class gameplay_freeformDelivery_odometer
 ---@field dependencies string[] core_vehicleBridge, gameplay_freeformDelivery_utils, gameplay_freeformDelivery_setup.
 gameplay_freeformDelivery_odometer = {}
 
---- Vide le suivi et retire le message d'odomètre de la liste de tâches (DiscardTasklistItem).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:242
+--- Clears the tracking and removes the odometer message from the task list (DiscardTasklistItem).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:242
 function gameplay_freeformDelivery_odometer.cleanup() end
 
---- Renvoie les données de suivi d'un véhicule.
----Source : lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:181
----@param vehId integer ID d'objet du véhicule dans le jeu.
----@return table|nil  {deliveryVehicleId, startingOdometer, currentOdometer, maxOdometer, requestPending} ou nil.
+--- Returns the tracking data of a vehicle.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:181
+---@param vehId integer Object ID of the vehicle in the game.
+---@return table|nil  {deliveryVehicleId, startingOdometer, currentOdometer, maxOdometer, requestPending} or nil.
 function gameplay_freeformDelivery_odometer.getOdometerData(vehId) end
 
---- Comme getOdometerData mais en cherchant par l'ID du véhicule dans la définition de livraison.
----Source : lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:186
----@param deliveryVehicleId string ID du véhicule dans la livraison (déduit du code).
----@return table|nil  Données de suivi ou nil.
+--- Like getOdometerData but searching by the vehicle's ID in the delivery definition.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:186
+---@param deliveryVehicleId string Vehicle ID in the delivery (inferred from code).
+---@return table|nil  Tracking data or nil.
 function gameplay_freeformDelivery_odometer.getOdometerDataByDeliveryId(deliveryVehicleId) end
 
---- Indique si toutes les requêtes d'odomètre initiales ont reçu une réponse.
----Source : lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:130
----@return boolean  true quand aucune requête n'est en attente.
+--- Returns whether all initial odometer requests have received a response.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:130
+---@return boolean  true when no request is pending.
 function gameplay_freeformDelivery_odometer.isSetupComplete() end
 
---- Réinitialise le suivi puis, pour chaque véhicule de delivery.vehicles ayant trackOdometer, demande l'odomètre de départ au véhicule. maxOdometer (optionnel) vient de la définition du véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:92
----@param delivery table Données de livraison avec le tableau vehicles.
+--- Resets the tracking then, for each vehicle of delivery.vehicles with trackOdometer, requests the starting odometer from the vehicle. maxOdometer (optional) comes from the vehicle definition.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:92
+---@param delivery table Delivery data with the vehicles array.
 function gameplay_freeformDelivery_odometer.setup(delivery) end
 
---- Appelée chaque frame ; toutes les 1/8 s, redemande l'odomètre de chaque véhicule suivi et fait échouer la livraison si la distance parcourue dépasse maxOdometer.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:135
----@param dtReal number Delta temps réel en secondes.
+--- Called every frame; every 1/8 s, requests the odometer of each tracked vehicle again and fails the delivery if the distance traveled exceeds maxOdometer.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:135
+---@param dtReal number Real-time delta in seconds.
 function gameplay_freeformDelivery_odometer.update(dtReal) end
 
---- Met à jour (ou retire) le message d'odomètre de la liste de tâches pour le véhicule du joueur. N'envoie SetTasklistTask que si le texte a changé.
----Source : lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:197
+--- Updates (or removes) the odometer message in the task list for the player's vehicle. Only sends SetTasklistTask if the text has changed.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/odometer.lua:197
 function gameplay_freeformDelivery_odometer.updateTasklistMessage() end
 

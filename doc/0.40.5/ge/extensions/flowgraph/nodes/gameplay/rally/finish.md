@@ -1,24 +1,24 @@
 # `flowgraph_nodes_gameplay_rally_finish`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/finish.lua` · VM : Game Engine (GE) · 23 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/finish.lua` · VM: Game Engine (GE) · 23 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/finish")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/finish")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Mode Finish » (catégorie once_instant, tag rally, sans pin). Quand il reçoit du flux, déclenche une fois le hook extensions.hook('onRallyStageFlyingFinish') signalant que le véhicule a franchi l'arrivée lancée de la spéciale.
+Flowgraph node "Rally Mode Finish" (category once_instant, tag rally, no pin). When it receives flow, triggers once the hook extensions.hook('onRallyStageFlyingFinish') signaling that the vehicle has crossed the flying finish of the stage.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Appelle extensions.hook('onRallyStageFlyingFinish'). | 18 |
+| `C:workOnce()` | Calls extensions.hook('onRallyStageFlyingFinish'). | 18 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onRallyStageFlyingFinish`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/finish.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/finish.lua`.*

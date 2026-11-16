@@ -1,24 +1,24 @@
 {
   "path": "lua/ge/extensions/mcp/tools/perf.lua",
-  "module": "Outils MCP de performance : métriques de la dernière frame, raison du limiteur de FPS, usage de la VRAM, et captures du profileur Optick (builds BNG_PROFILER=OPTICK seulement).",
+  "module": "MCP performance tools: metrics of the last frame, FPS limiter reason, VRAM usage, and Optick profiler captures (BNG_PROFILER=OPTICK builds only).",
   "notes": [
-    "profiler_run n'est pas bloquant : un job (core_jobsystem) attend delay puis capture pendant duration secondes puis sauvegarde le .opt ; un seul à la fois (« already running »).",
-    "Chemin de sortie : par défaut <dossier utilisateur>/optick/optick_AAAA-MM-JJ_HH-MM-SS.opt ; un chemin relatif est placé sous optick/ ; un chemin absolu (lecteur ou UNC) est utilisé tel quel."
+    "profiler_run is non-blocking: a job (core_jobsystem) waits delay then captures for duration seconds then saves the .opt; only one at a time (\"already running\").",
+    "Output path: by default <user folder>/optick/optick_YYYY-MM-DD_HH-MM-SS.opt; a relative path is placed under optick/; an absolute path (drive or UNC) is used as is."
   ],
   "fields": {
     "schemas": {
       "type": "table<string, table>",
-      "desc": "Schémas des outils de performance."
+      "desc": "Schemas of the performance tools."
     }
   },
   "functions": {
     "get_performance_metrics": {
-      "desc": "Métriques de la dernière frame (timings, mémoire, compteurs) via Engine.Debug.getLastPerformanceMetrics, en JSON.",
+      "desc": "Metrics of the last frame (timings, memory, counters) via Engine.Debug.getLastPerformanceMetrics, as JSON.",
       "params": {},
       "returns": [
         {
           "type": "string",
-          "desc": "JSON (objet vide si l'API manque)."
+          "desc": "JSON (empty object if the API is missing)."
         },
         {
           "type": "boolean",
@@ -28,62 +28,62 @@
       "internal": false
     },
     "get_fps_limit_reason": {
-      "desc": "Sources et plafonds actuels du limiteur de FPS (vsync, limites avant/arrière-plan, focus), via Engine.getCurrentFpsLimitReason.",
+      "desc": "Current sources and caps of the FPS limiter (vsync, foreground/background limits, focus), via Engine.getCurrentFpsLimitReason.",
       "params": {},
       "returns": [
         {
           "type": "string",
-          "desc": "JSON ou erreur."
+          "desc": "JSON or error."
         },
         {
           "type": "boolean",
-          "desc": "true si indisponible."
+          "desc": "true if unavailable."
         }
       ],
       "internal": false
     },
     "get_vram_usage": {
-      "desc": "Usage de la mémoire vidéo via Engine.Render.getVRAMUsage.",
+      "desc": "Video memory usage via Engine.Render.getVRAMUsage.",
       "params": {},
       "returns": [
         {
           "type": "string",
-          "desc": "JSON (ou tostring si ce n'est pas une table)."
+          "desc": "JSON (or tostring if it is not a table)."
         },
         {
           "type": "boolean",
-          "desc": "true si indisponible."
+          "desc": "true if unavailable."
         }
       ],
       "internal": false
     },
     "profiler_run": {
-      "desc": "Déclenche une capture Optick de `duration` secondes après `delay` et enregistre un fichier .opt ; renvoie son chemin et le délai de disponibilité.",
+      "desc": "Triggers an Optick capture of `duration` seconds after `delay` and saves a .opt file; returns its path and the availability delay.",
       "params": {
         "args": {
           "type": "table|nil",
-          "desc": "{duration?: number s (défaut 5), delay?: number s (défaut 0), path?: string}"
+          "desc": "{duration?: number s (default 5), delay?: number s (default 0), path?: string}"
         }
       },
       "returns": [
         {
           "type": "string",
-          "desc": "JSON {ok, path, duration, delay, readyInSeconds, note} ou erreur."
+          "desc": "JSON {ok, path, duration, delay, readyInSeconds, note} or error."
         },
         {
           "type": "boolean",
-          "desc": "true en cas d'erreur."
+          "desc": "true on error."
         }
       ],
       "internal": false
     },
     "run_optick_ui": {
-      "desc": "Lance l'interface externe Optick (comme le raccourci Ctrl+Alt+O) en appelant la fonction globale launchOptick si elle existe.",
+      "desc": "Launches the external Optick interface (like the Ctrl+Alt+O shortcut) by calling the global function launchOptick if it exists.",
       "params": {},
       "returns": [
         {
           "type": "string",
-          "desc": "JSON {ok=true} (même si launchOptick est absent)."
+          "desc": "JSON {ok=true} (even if launchOptick is missing)."
         },
         {
           "type": "boolean",

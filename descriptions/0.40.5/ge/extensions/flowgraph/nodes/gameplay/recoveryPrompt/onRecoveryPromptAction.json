@@ -1,53 +1,53 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/onRecoveryPromptAction.lua",
-  "module": "Nœud flowgraph « On Recovery Prompt Action » (catégorie logic). Laisse passer le flux quand un bouton du menu de récupération (recovery prompt) a été pressé. Pins : entrée flow ; sorties flow, flipMission, recoverMission, submitMission, restartMission (chacune vraie une fois quand le bouton correspondant est pressé). Les pins de sortie flow personnalisés sont autorisés (allowCustomOutPins) et sauvegardés. Reçoit l'événement via le hook onRecoveryPromptButtonPressed.",
+  "module": "Flowgraph node \"On Recovery Prompt Action\" (category logic). Lets flow through when a button of the recovery prompt menu has been pressed. Pins: input flow; outputs flow, flipMission, recoverMission, submitMission, restartMission (each true once when the corresponding button is pressed). Custom flow output pins are allowed (allowCustomOutPins) and saved. Receives the event via the onRecoveryPromptButtonPressed hook.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_afterTrigger": {
-          "desc": "Vide self.flags après le déclenchement du nœud.",
+          "desc": "Clears self.flags after the node is triggered.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Crée la table self.flags vide au démarrage de l'exécution.",
+          "desc": "Creates the empty self.flags table when execution starts.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui).",
+          "desc": "Draws the central content of the node in the flowgraph editor (ImGui).",
           "internal": true,
           "params": {
             "builder": {
               "type": "table",
-              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+              "desc": "editor node constructor (builder:Middle())"
             },
             "style": {
               "type": "table",
-              "desc": "style de dessin du nœud"
+              "desc": "node drawing style"
             }
           }
         },
         "init": {
-          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "desc": "Initializes the node's internal state at creation (called by the flowgraph engine).",
           "internal": true
         },
         "onRecoveryPromptButtonPressed": {
-          "desc": "Hook appelé quand un bouton du recovery prompt est pressé ; mémorise l'identifiant dans self.flags pour le prochain work.",
+          "desc": "Hook called when a recovery prompt button is pressed; stores the identifier in self.flags for the next work.",
           "internal": false,
           "params": {
             "id": {
               "type": "any",
-              "desc": "identifiant du bouton pressé (flipMission, recoverMission, submitMission, restartMission ou personnalisé)"
+              "desc": "identifier of the pressed button (flipMission, recoverMission, submitMission, restartMission or custom)"
             }
           }
         },
         "work": {
-          "desc": "Remet toutes les sorties à false, recopie l'entrée flow sur la sortie flow, puis active les sorties dont l'identifiant de bouton figure dans self.flags, et vide les flags.",
+          "desc": "Resets all outputs to false, copies the flow input to the flow output, then activates the outputs whose button identifier is in self.flags, and clears the flags.",
           "internal": true,
           "params": {
             "args": {
               "type": "table",
-              "desc": "arguments transmis par le moteur (non utilisés)"
+              "desc": "arguments passed by the engine (unused)"
             }
           }
         }

@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_traffic_trafficScatter`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficScatter.lua` · VM : Game Engine (GE) · 25 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficScatter.lua` · VM: Game Engine (GE) · 25 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/trafficScatter")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/trafficScatter")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Scatter Traffic » (once_instant). Téléporte tous les véhicules de trafic loin du joueur ou de la caméra avec gameplay_traffic.scatterTraffic(nil, minDist, maxDist) ; minDist et maxDist sont optionnels.
+Flowgraph node "Scatter Traffic" (once_instant). Teleports all traffic vehicles away from the player or the camera with gameplay_traffic.scatterTraffic(nil, minDist, maxDist); minDist and maxDist are optional.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Appelle gameplay_traffic.scatterTraffic(nil, minDist, maxDist). | 21 |
+| `C:workOnce()` | Calls gameplay_traffic.scatterTraffic(nil, minDist, maxDist). | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficScatter.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficScatter.lua`.*

@@ -1,34 +1,34 @@
 # `flowgraph_nodes_util_timedSequence`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/timedSequence.lua` · VM : Game Engine (GE) · 168 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/timedSequence.lua` · VM: Game Engine (GE) · 168 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/timedSequence")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/timedSequence")` (file under extensions/ but not a regular extension)
 
-Nœud « Timed Sequence » (once_f_duration, icône timer). Enchaîne N parties chronométrées (réglable dans l'inspecteur, 1 minimum). Pour chaque partie i : pin d'entrée duration_i (s, 5 par défaut) et pins de sortie start_i (impulsion au début), active_i (pendant la partie), complete_i (impulsion à la fin). Le temps avance avec le temps simulé (mgr.dtSim). Pin hérité : allComplete devenu complete.
+Node "Timed Sequence" (once_f_duration, timer icon). Chains N timed parts (adjustable in the inspector, minimum 1). For each part i: input pin duration_i (s, 5 by default) and output pins start_i (pulse at the start), active_i (during the part), complete_i (pulse at the end). Time advances with the simulated time (mgr.dtSim). Legacy pin: allComplete became complete.
 
-## Remarques
+## Notes
 
-- Bug : _executionStarted est défini deux fois ; la seconde définition remplace la première (identiques).
-- Dans updatePins, la suppression des liens teste lnk.sourcePin contre des pins d'entrée (pinInLocal) ; ces liens ne sont donc probablement jamais supprimés.
-- Le champ mode est sauvegardé mais jamais utilisé.
+- Bug: _executionStarted is defined twice; the second definition replaces the first (identical).
+- In updatePins, the removal of links tests lnk.sourcePin against input pins (pinInLocal); these links are therefore probably never removed.
+- The mode field is saved but never used.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet index, endTime, time et current à zéro (la fonction est définie deux fois dans le fichier, à l'identique). | 35 |
-| `C:_onDeserialized(res)` | Restaure mode (« loop » par défaut) et count puis recrée les pins. | 161 |
-| `C:_onSerialize(res)` | Sauvegarde mode et count. | 156 |
-| `C:drawCustomProperties()` | Dessine le champ « Count » ; le modifier appelle updatePins. Renvoie la raison du changement. | 48 |
-| `C:drawMiddle(builder, style)` | Affiche le temps écoulé et la section courante. | 145 |
-| `C:init()` | Initialise count, index, endTime, time et current. | 23 |
-| `C:onNodeReset()` | Remet le temps à zéro et l'état à « inactive ». | 98 |
-| `C:postInit()` | Crée les pins de la première partie (updatePins(0, 1)). | 31 |
-| `C:updatePins(old, new)` | Ajoute ou retire les pins duration_/start_/active_/complete_ pour passer de old à new parties et met à jour count. | 65 |
-| `C:work()` | Tant que l'état est started, avance le temps, active start/active/complete selon la partie courante ; quand le temps total est écoulé, passe à « finished » et active complete de la dernière partie. | 103 |
-| `C:workOnce()` | Passe l'état de durée à « started ». | 94 |
+| `C:_executionStarted()` | Resets index, endTime, time and current to zero (the function is defined twice in the file, identically). | 35 |
+| `C:_onDeserialized(res)` | Restores mode ("loop" by default) and count then recreates the pins. | 161 |
+| `C:_onSerialize(res)` | Saves mode and count. | 156 |
+| `C:drawCustomProperties()` | Draws the "Count" field; changing it calls updatePins. Returns the reason for the change. | 48 |
+| `C:drawMiddle(builder, style)` | Displays the elapsed time and the current section. | 145 |
+| `C:init()` | Initializes count, index, endTime, time and current. | 23 |
+| `C:onNodeReset()` | Resets the time to zero and the state to "inactive". | 98 |
+| `C:postInit()` | Creates the pins of the first part (updatePins(0, 1)). | 31 |
+| `C:updatePins(old, new)` | Adds or removes the duration_/start_/active_/complete_ pins to go from old to new parts and updates count. | 65 |
+| `C:work()` | While the state is started, advances the time, activates start/active/complete according to the current part; when the total time has elapsed, goes to "finished" and activates complete of the last part. | 103 |
+| `C:workOnce()` | Sets the duration state to "started". | 94 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/timedSequence.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/timedSequence.lua`.*

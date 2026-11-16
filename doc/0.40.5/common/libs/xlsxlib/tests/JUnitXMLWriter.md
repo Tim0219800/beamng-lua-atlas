@@ -1,30 +1,30 @@
 # `libs_xlsxlib_tests_JUnitXMLWriter`
 
-*Fichier : `lua/common/libs/xlsxlib/tests/JUnitXMLWriter.lua` · VM : Commun (GE + véhicule) · 96 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/xlsxlib/tests/JUnitXMLWriter.lua` · VM: Common (GE + vehicle) · 96 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/xlsxlib/tests/JUnitXMLWriter")`
+**Access:** `require("libs/xlsxlib/tests/JUnitXMLWriter")`
 
-Écrivain de résultats de tests au format XML JUnit pour les tests de xlsxlib. Construit un DOM (testsuites > testsuite > testcase, avec un élément failure pour chaque test en échec) puis le sérialise et l'écrit avec writeFile. Utilisé par libs/xlsxlib/tests/TestManager.
+JUnit XML test result writer for the xlsxlib tests. Builds a DOM (testsuites > testsuite > testcase, with a failure element for each failed test) then serializes it and writes it with writeFile. Used by libs/xlsxlib/tests/TestManager.
 
-## Remarques
+## Notes
 
-- Le fichier requiert `libs/slaxml/slaxml` (pas slaxdom) mais appelle `SLAXML:xml`, qui n'est défini que par slaxdom ; cela fonctionne seulement si slaxdom a déjà été chargé quelque part (il l'est via xlsxlib). Isolé, l'appel échouerait.
-- Le nom de la suite est fixé à "LuaUnitTests". Les tests en échec ont type "ExpectedFailure" si le test devait échouer, sinon "Failure".
+- The file requires `libs/slaxml/slaxml` (not slaxdom) but calls `SLAXML:xml`, which is only defined by slaxdom; this works only if slaxdom has already been loaded somewhere (it is, via xlsxlib). In isolation, the call would fail.
+- The suite name is fixed to "LuaUnitTests". Failed tests have type "ExpectedFailure" if the test was supposed to fail, otherwise "Failure".
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_xlsxlib_tests_JUnitXMLWriter.write(results, outputFile)` | Écrit les résultats dans un fichier XML JUnit (indentation 2) et logue le chemin. | 19 |
+| `libs_xlsxlib_tests_JUnitXMLWriter.write(results, outputFile)` | Writes the results to a JUnit XML file (indentation 2) and logs the path. | 19 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_xlsxlib_tests_JUnitXMLWriter.write(results, outputFile)`
 
-Écrit les résultats dans un fichier XML JUnit (indentation 2) et logue le chemin.
+Writes the results to a JUnit XML file (indentation 2) and logs the path.
 
 - `results` (*table*) : {testResults = {{name, duration, passed, expectedToFail, errorMessage}}, testFailCount, totalDuration}.
-- `outputFile` (*string*) : Chemin du fichier XML à écrire (writeFile).
+- `outputFile` (*string*) : Path of the XML file to write (writeFile).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/xlsxlib/tests/JUnitXMLWriter.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/xlsxlib/tests/JUnitXMLWriter.lua`.*

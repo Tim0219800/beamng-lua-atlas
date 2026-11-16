@@ -1,42 +1,42 @@
 # `editor_toolUtilities_statsFooter`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/statsFooter.lua` · VM : Game Engine (GE) · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/statsFooter.lua` · VM: Game Engine (GE) · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_statsFooter` : `extensions.load("editor_toolUtilities_statsFooter")`, puis la globale `editor_toolUtilities_statsFooter`
+**Access:** extension `editor_toolUtilities_statsFooter`: `extensions.load("editor_toolUtilities_statsFooter")`, then the global `editor_toolUtilities_statsFooter`
 
-Pied de page de statistiques partagé par les outils « kit » de l'éditeur : affiche des stats « Libellé N » en ImGui et la ligne dynamique des triangles dessinés, de la distance et du nombre de pièces affichées (calculés par triLive). Utilise la palette 'crystal' de style.lua.
+Statistics footer shared by the editor's "kit" tools: displays "Label N" stats in ImGui and the dynamic row of drawn triangles, distance and number of displayed pieces (computed by triLive). Uses the 'crystal' palette from style.lua.
 
-## Remarques
+## Notes
 
-- À appeler dans une fenêtre ImGui ; les fonctions dessinent directement avec im.TextColored et im.SameLine.
-- Tant que triLive a des formes à mesurer (toScan > 0), liveRow n'affiche que « Drawn tris : scanning N shapes ».
+- To be called inside an ImGui window; the functions draw directly with im.TextColored and im.SameLine.
+- As long as triLive has shapes to measure (toScan > 0), liveRow only displays "Drawn tris : scanning N shapes".
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_statsFooter.item(label, val, col, lead, tip)` | Dessine une stat « Libellé N » : libellé terne, nombre coloré, barre « \| » ternie devant (sauf en début de ligne). | 16 |
-| `editor_toolUtilities_statsFooter.liveRow(instances, unique, fresh)` | Affiche triangles dessinés (« Drawn tris »), portée (« Range », en mètres) et pièces dessinées sur placées (« Drawing »). `unique` est ajouté tel quel aux triangles car sans LOD. Met à jour triLive (note si fresh, scanStep, update). | 26 |
+| `editor_toolUtilities_statsFooter.item(label, val, col, lead, tip)` | Draws a "Label N" stat: dim label, colored number, dimmed "\|" bar in front (except at the start of a line). | 16 |
+| `editor_toolUtilities_statsFooter.liveRow(instances, unique, fresh)` | Displays drawn triangles ("Drawn tris"), range ("Range", in meters) and drawn pieces out of placed ones ("Drawing"). `unique` is added as is to the triangles because it has no LOD. Updates triLive (note if fresh, scanStep, update). | 26 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_statsFooter.item(label, val, col, lead, tip)`
 
-Dessine une stat « Libellé N » : libellé terne, nombre coloré, barre « | » ternie devant (sauf en début de ligne).
+Draws a "Label N" stat: dim label, colored number, dimmed "|" bar in front (except at the start of a line).
 
-- `label` (*string*) : Libellé.
-- `val` (*any*) : Valeur affichée via tostring ; 0 si nil/false.
-- `col` (*ImVec4*) : Couleur du nombre.
-- `lead` (*boolean|nil*) : Vrai : début de ligne, pas de barre.
-- `tip` (*string|nil*) : Infobulle.
+- `label` (*string*) : Label.
+- `val` (*any*) : Value displayed via tostring; 0 if nil/false.
+- `col` (*ImVec4*) : Number color.
+- `lead` (*boolean|nil*) : True: start of line, no bar.
+- `tip` (*string|nil*) : Tooltip.
 
 #### `editor_toolUtilities_statsFooter.liveRow(instances, unique, fresh)`
 
-Affiche triangles dessinés (« Drawn tris »), portée (« Range », en mètres) et pièces dessinées sur placées (« Drawing »). `unique` est ajouté tel quel aux triangles car sans LOD. Met à jour triLive (note si fresh, scanStep, update).
+Displays drawn triangles ("Drawn tris"), range ("Range", in meters) and drawn pieces out of placed ones ("Drawing"). `unique` is added as is to the triangles because it has no LOD. Updates triLive (note if fresh, scanStep, update).
 
-- `instances` (*table*) : Entrées triLive.
-- `unique` (*number*) : Triangles de la géométrie unique, ajoutés en entier.
-- `fresh` (*boolean|nil*) : La liste a changé depuis la dernière fois (peut contenir une forme jamais mesurée).
+- `instances` (*table*) : triLive entries.
+- `unique` (*number*) : Triangles of the unique geometry, added in full.
+- `fresh` (*boolean|nil*) : The list has changed since last time (may contain a shape never measured).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/statsFooter.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/statsFooter.lua`.*

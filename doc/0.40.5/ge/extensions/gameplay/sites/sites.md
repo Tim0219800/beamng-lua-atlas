@@ -1,12 +1,12 @@
 # `gameplay_sites_sites`
 
-*Fichier : `lua/ge/extensions/gameplay/sites/sites.lua` · VM : Game Engine (GE) · 233 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/sites/sites.lua` · VM: Game Engine (GE) · 233 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/sites/sites")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/sites/sites")` (file under extensions/ but not a regular extension)
 
-Classe « Sites » : conteneur d'un fichier *.sites.json. Regroupe trois listes triées (locations, zones, parkingSpots), des index par tag et des arbres spatiaux (kd-trees) pour les requêtes par position. Le module renvoie un constructeur ; on l'obtient en général via gameplay_sites_sitesManager.loadSites. Après chargement, finalizeSites() calcule les liens zone/lieu/place et les index.
+"Sites" class: container of a *.sites.json file. Groups three sorted lists (locations, zones, parkingSpots), tag indexes and spatial trees (kd-trees) for position queries. The module returns a constructor; it is usually obtained via gameplay_sites_sitesManager.loadSites. After loading, finalizeSites() computes the zone/location/spot links and the indexes.
 
-## Exemple
+## Example
 
 ```lua
 local sites = gameplay_sites_sitesManager.loadSites(path)
@@ -14,33 +14,33 @@ local list = sites:getRadialParkingSpots(pos, 0, 50)
 for _, e in ipairs(list) do print(e.ps.name, math.sqrt(e.squaredDistance)) end
 ```
 
-## Remarques
+## Notes
 
-- Le compteur d'identifiants _uid est local au module et partagé par tous les objets sites : les identifiants sont uniques globalement, pas par fichier.
-- onDeserialized vide locations et zones mais pas parkingSpots avant de recharger.
-- Les requêtes radiales travaillent en 2D (z ignoré) ; les distances renvoyées sont au carré.
-- Les requêtes spatiales (getRadial*, getClosestParkingSpot, getZonesForPosition) ne fonctionnent qu'après finalizeSites().
+- The _uid identifier counter is local to the module and shared by all sites objects: identifiers are globally unique, not per file.
+- onDeserialized clears locations and zones but not parkingSpots before reloading.
+- Radial queries work in 2D (z ignored); the returned distances are squared.
+- Spatial queries (getRadial*, getClosestParkingSpot, getZonesForPosition) only work after finalizeSites().
 
-## Classe `C`
+## Class `C`
 
-Objet sites. Champs : name, description, id, locations / zones / parkingSpots (gameplay/util/sortedList, avec .sorted et .objects), tags, sortedTags, tagsToZones, tagsToLocations, quadtreeLocations, quadtreeZones, quadtreeParkingSpots, dir, filename.
+Sites object. Fields: name, description, id, locations / zones / parkingSpots (gameplay/util/sortedList, with .sorted and .objects), tags, sortedTags, tagsToZones, tagsToLocations, quadtreeLocations, quadtreeZones, quadtreeParkingSpots, dir, filename.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_sites_sites")(options)`.
+The module returns a constructor: `local obj = require("gameplay_sites_sites")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawDebug()` | Dessine en debug toutes les locations, zones et places de parking. | 26 |
-| `C:finalizeSites()` | À appeler après chargement. Génère les places multiples, trie, construit les index de noms et de tags, rattache les locations et places aux zones qui les contiennent (test 2D) et construit les kd-trees. | 59 |
-| `C:getClosestParkingSpot(pos)` | Place de parking la plus proche de pos (kd-tree 3D). | 173 |
-| `C:getNextUniqueIdentifier()` | Incrémente et renvoie le compteur global d'identifiants d'objets de sites. | 11 |
-| `C:getRadialLocations(pos, minRadius, maxRadius)` | Liste les locations dont la distance 2D à pos est comprise entre minRadius et maxRadius. | 135 |
-| `C:getRadialParkingSpots(pos, minRadius, maxRadius)` | Liste les places de parking dont la distance 2D à pos est comprise entre minRadius et maxRadius. | 155 |
-| `C:getTagsForZonesAtPosition(pos)` | Réunit les tags de toutes les zones qui contiennent pos. | 209 |
-| `C:getZonesForPosition(pos)` | Zones dont le contour 2D contient pos. | 178 |
-| `C:init(name)` | Constructeur : crée les trois listes triées et un nom par défaut « Sites ». | 16 |
-| `C:onDeserialized(data, oldIdMap)` | Recharge le jeu de sites depuis une table sérialisée (les « \n » littéraux de la description deviennent de vrais retours à la ligne). | 45 |
-| `C:onSerialize()` | Sérialise name, description, les trois listes, dir et filename. | 32 |
-| `C:zonesForPositionIterator(pos, ctx)` | Itérateur générique sur les zones contenant pos, à utiliser dans un for : for id, zone in sites:zonesForPositionIterator(pos) do. Évite d'allouer une table ; ctx peut être réutilisé. | 201 |
+| `C:drawDebug()` | Draws all locations, zones and parking spots in debug. | 26 |
+| `C:finalizeSites()` | To call after loading. Generates multiple spots, sorts, builds the name and tag indexes, attaches locations and spots to the zones that contain them (2D test) and builds the kd-trees. | 59 |
+| `C:getClosestParkingSpot(pos)` | Parking spot closest to pos (3D kd-tree). | 173 |
+| `C:getNextUniqueIdentifier()` | Increments and returns the global counter of sites object identifiers. | 11 |
+| `C:getRadialLocations(pos, minRadius, maxRadius)` | Lists the locations whose 2D distance to pos is between minRadius and maxRadius. | 135 |
+| `C:getRadialParkingSpots(pos, minRadius, maxRadius)` | Lists the parking spots whose 2D distance to pos is between minRadius and maxRadius. | 155 |
+| `C:getTagsForZonesAtPosition(pos)` | Gathers the tags of all zones that contain pos. | 209 |
+| `C:getZonesForPosition(pos)` | Zones whose 2D outline contains pos. | 178 |
+| `C:init(name)` | Constructor: creates the three sorted lists and a default name "Sites". | 16 |
+| `C:onDeserialized(data, oldIdMap)` | Reloads the sites set from a serialized table (literal "\n" in the description become real line breaks). | 45 |
+| `C:onSerialize()` | Serializes name, description, the three lists, dir and filename. | 32 |
+| `C:zonesForPositionIterator(pos, ctx)` | Generic iterator over the zones containing pos, to use in a for: for id, zone in sites:zonesForPositionIterator(pos) do. Avoids allocating a table; ctx can be reused. | 201 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/sites/sites.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/sites/sites.lua`.*

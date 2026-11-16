@@ -1,60 +1,60 @@
 # `controller_gauges_customModules_combustionEngineData`
 
-*Fichier : `lua/vehicle/controller/gauges/customModules/combustionEngineData.lua` · VM : Véhicule · 145 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/gauges/customModules/combustionEngineData.lua` · VM: Vehicle · 145 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `gauges/customModules/combustionEngineData` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `gauges/customModules/combustionEngineData` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Module de données pour genericGauges : calcule consommation de carburant (l/100 km), affichage de consommation, puissance et couple des moteurs à combustion et autonomie restante. Les calculs ne sont faits que pour les propriétés demandées.
+Data module for genericGauges: computes fuel consumption (l/100 km), consumption display, power and torque of combustion engines and remaining range. Computations are only done for the requested properties.
 
-## Remarques
+## Notes
 
-- La consommation instantanée vient de la variation de electrics.values.fuelVolume divisée par dt*wheelspeed, bornée à 0..50 l/100 km ; la moyenne est lissée sur ~10 minutes et initialisée à 10 l/100 km.
-- Puissance = somme de outputTorque1 * outputAV1 des dispositifs "combustionEngine", convertie en ch (W * 0.001 * 1.35962). Le véhicule est considéré en mouvement au-dessus de 0.5 m/s (wheelspeed).
-- setupGaugeData ajoute les réservoirs de chaque moteur dans fuelTanks sans vider la liste : un second appel les duplique.
-- updateGaugeData lit electrics.values.wheelspeed sans valeur par défaut : erreur Lua si nil.
+- The instantaneous consumption comes from the variation of electrics.values.fuelVolume divided by dt*wheelspeed, bounded to 0..50 l/100 km; the average is smoothed over ~10 minutes and initialized to 10 l/100 km.
+- Power = sum of outputTorque1 * outputAV1 of the "combustionEngine" devices, converted to hp (W * 0.001 * 1.35962). The vehicle is considered moving above 0.5 m/s (wheelspeed).
+- setupGaugeData adds each engine's tanks to fuelTanks without clearing the list: a second call duplicates them.
+- updateGaugeData reads electrics.values.wheelspeed without a default value: Lua error if nil.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_gauges_customModules_combustionEngineData.init(jbeamData)` | Initialise la consommation moyenne lissée à 10 l/100 km. *(interne)* | 133 |
-| `controller_gauges_customModules_combustionEngineData.reset()` | Réinitialise l'état interne du module. *(interne)* | 123 |
-| `controller_gauges_customModules_combustionEngineData.setupGaugeData(properties)` | Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : fuelConsumption (averageFuelConsumption, currentFuelConsumption), fuelDisplay (fuelDisplay, -1..3), currentPower (currentPower et averagePower en ch, currentTorque en N·m), remainingRange (remainingRange ; active aussi fuelConsumption). *(interne)* | 107 |
-| `controller_gauges_customModules_combustionEngineData.updateGFX(dt)` | Ne fait rien (la mise à jour se fait par updateGaugeData). *(interne)* | 40 |
-| `controller_gauges_customModules_combustionEngineData.updateGaugeData(moduleData, dt)` | Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées. *(interne)* | 43 |
+| `controller_gauges_customModules_combustionEngineData.init(jbeamData)` | Initializes the smoothed average consumption to 10 l/100 km. *(internal)* | 133 |
+| `controller_gauges_customModules_combustionEngineData.reset()` | Resets the module's internal state. *(internal)* | 123 |
+| `controller_gauges_customModules_combustionEngineData.setupGaugeData(properties)` | Called by genericGauges with the properties requested in displayData.customModules: fuelConsumption (averageFuelConsumption, currentFuelConsumption), fuelDisplay (fuelDisplay, -1..3), currentPower (currentPower and averagePower in hp, currentTorque in N·m), remainingRange (remainingRange; also enables fuelConsumption). *(internal)* | 107 |
+| `controller_gauges_customModules_combustionEngineData.updateGFX(dt)` | Does nothing (the update is done by updateGaugeData). *(internal)* | 40 |
+| `controller_gauges_customModules_combustionEngineData.updateGaugeData(moduleData, dt)` | Called by genericGauges before each send: fills moduleData with the requested values. *(internal)* | 43 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_gauges_customModules_combustionEngineData.init(jbeamData)`
 
-Initialise la consommation moyenne lissée à 10 l/100 km.
+Initializes the smoothed average consumption to 10 l/100 km.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_gauges_customModules_combustionEngineData.setupGaugeData(properties)`
 
-Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : fuelConsumption (averageFuelConsumption, currentFuelConsumption), fuelDisplay (fuelDisplay, -1..3), currentPower (currentPower et averagePower en ch, currentTorque en N·m), remainingRange (remainingRange ; active aussi fuelConsumption).
+Called by genericGauges with the properties requested in displayData.customModules: fuelConsumption (averageFuelConsumption, currentFuelConsumption), fuelDisplay (fuelDisplay, -1..3), currentPower (currentPower and averagePower in hp, currentTorque in N·m), remainingRange (remainingRange; also enables fuelConsumption).
 
-- `properties` (*table<string, boolean>*) : Ensemble des propriétés demandées (clé = nom, valeur = true).
+- `properties` (*table<string, boolean>*) : Set of requested properties (key = name, value = true).
 
 #### `controller_gauges_customModules_combustionEngineData.updateGFX(dt)`
 
-Ne fait rien (la mise à jour se fait par updateGaugeData).
+Does nothing (the update is done by updateGaugeData).
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_gauges_customModules_combustionEngineData.updateGaugeData(moduleData, dt)`
 
-Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées.
+Called by genericGauges before each send: fills moduleData with the requested values.
 
-- `moduleData` (*table*) : Table de données du module, envoyée ensuite à la page HTML.
-- `dt` (*number*) : Temps écoulé depuis le dernier envoi (s).
+- `moduleData` (*table*) : Module data table, then sent to the HTML page.
+- `dt` (*number*) : Time elapsed since the last send (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/gauges/customModules/combustionEngineData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/gauges/customModules/combustionEngineData.lua`.*

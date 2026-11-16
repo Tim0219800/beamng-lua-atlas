@@ -1,0 +1,112 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/endScreen.lua",
+  "module": "Nœud flowgraph « End Screen » (catégorie once_instant, singleActive) : affiche l'écran de fin d'un scénario avec boutons personnalisables (navigation UI 'scenario.end'). Entrées : « title », « text » (string ou table), « progress », « timeStr » (texte ou secondes -> MM:SS.ss), « successString », « failString », « failed », « medal », « autoPoints », « points », « maxPoints », « portraitSuccess », « portraitFail », « stats » (endStats), « change », « attempt », « progressKey ». Chaque option de bouton (liste modifiable, défaut « cont ») crée un pin d'entrée string (libellé) et un pin de sortie flux mis à true au clic. Boutons ajoutés automatiquement : Retry (data.includeRetryButton), Scénarios (data.includeScenarioButton) et « Start Next Mission » pour chaque mission suivante de l'activité.",
+  "notes": [
+    "Showing two of these at the same time will break everything (todo du code).",
+    "Bug : avec autoPoints, 'points + v.points or 0' et 'max + v.maxPoints or 0' ont une priorité d'opérateurs erronée (le 'or' s'applique à la somme), donc une statistique sans points donne une erreur d'addition avec nil.",
+    "Si failed est vrai, la médaille est forcée à 'wood'.",
+    "Le bloc missionData (progression, leaderboard, étoiles) n'est construit que si une activité est en cours et que le pin « change » est connecté.",
+    "Un bloc commenté en fin de openDialogue référence une variable 'change' non définie."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_afterTrigger": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet tous les pins de sortie à false et open = false.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Ferme l'écran.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure l'état du nœud depuis les données sauvegardées.",
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "Données sauvegardées du nœud."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Écrit l'état du nœud dans la table de sauvegarde.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "buttonPushed": {
+          "desc": "Appelé par l'UI quand un bouton est cliqué ; met à true le pin de sortie portant le nom du bouton (les autres à false) et ferme le dialogue.",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du bouton ou du pin de sortie activé."
+            }
+          },
+          "internal": false
+        },
+        "closeDialogue": {
+          "desc": "Si l'écran est ouvert, navigue vers l'état UI 'play' et open = false.",
+          "internal": false
+        },
+        "drawCustomProperties": {
+          "desc": "Édition de la liste des boutons (renommer, supprimer si texte vide, add, rem).",
+          "internal": true
+        },
+        "getCmd": {
+          "desc": "Renvoie la commande Lua qui retrouve ce nœud et appelle buttonPushed(action).",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du bouton ou du pin de sortie activé."
+            }
+          },
+          "internal": false
+        },
+        "init": {
+          "desc": "Initialise options, oldOptions, open = false et data.includeRetryButton = true.",
+          "internal": true
+        },
+        "onClientEndMission": {
+          "desc": "Hook : ferme l'écran à la fin du niveau.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Ferme l'écran et remet les sorties à false.",
+          "internal": true
+        },
+        "onResetGameplay": {
+          "desc": "Hook : ferme l'écran si le bouton Retry est actif.",
+          "internal": true
+        },
+        "openDialogue": {
+          "desc": "Assemble boutons, texte, temps, médaille, points, stats, portraits et données de mission puis navigue vers 'scenario.end'.",
+          "internal": false
+        },
+        "postInit": {
+          "desc": "Crée l'option « cont » (Continuer), les pins correspondants et les modèles du pin medal.",
+          "internal": true
+        },
+        "updateButtons": {
+          "desc": "Recrée les pins des boutons selon options en rétablissant les liens existants.",
+          "internal": false
+        },
+        "workOnce": {
+          "desc": "Ouvre l'écran de fin.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

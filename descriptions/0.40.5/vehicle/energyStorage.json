@@ -1,34 +1,235 @@
 {
   "path": "lua/vehicle/energyStorage.lua",
-  "module": "Gestionnaire des réservoirs d'énergie du véhicule (carburant, batterie, N2O, air comprimé…). Au init il charge dynamiquement chaque type depuis lua/vehicle/energyStorage/<type>.lua pour chaque entrée de la section jbeam `energyStorage`, enregistre les stockages auprès des périphériques du groupe motopropulseur (device.energyStorage), met à jour `remainingRatio` à chaque frame et relaie les événements de rupture de poutre, d'attelage et de condition de pièce. Un moddeur l'utilise pour retrouver un stockage par son nom (getStorage/getStorageSafe) et lire/modifier son énergie stockée.",
-  "usage": "local tank = energyStorage.getStorage(\"mainTank\")\nif tank then\n  print(tank.storedEnergy, tank.remainingRatio)\nend\n-- appel sans risque d'erreur : renvoie un faux objet si le nom n'existe pas\nenergyStorage.getStorageSafe(\"nope\"):setRemainingVolume(0)",
+  "module": "Manager of the vehicle's energy tanks (fuel, battery, N2O, compressed air...). At init it dynamically loads each type from lua/vehicle/energyStorage/<type>.lua for each entry of the jbeam `energyStorage` section, registers the storages with the powertrain devices (device.energyStorage), updates `remainingRatio` every frame and relays beam break, coupling and part condition events. A modder uses it to find a storage by name (getStorage/getStorageSafe) and read/modify its stored energy.",
+  "usage": "local tank = energyStorage.getStorage(\"mainTank\")\nif tank then\n  print(tank.storedEnergy, tank.remainingRatio)\nend\n-- call safe from errors: returns a fake object if the name does not exist\nenergyStorage.getStorageSafe(\"nope\"):setRemainingVolume(0)",
   "notes": [
-    "Chaque stockage est créé par `<factory>.new(jbeamData)` avec jbeamData = entrée jbeam fusionnée avec la section jbeam du même nom (v.data[name]). Le champ `type` choisit le fichier (electricBattery, fuelTank, n2oTank, pressureTank, ou tout .lua du dossier energyStorage).",
-    "Un type inconnu provoque un log d'erreur et un `return` immédiat de init : les stockages suivants et le câblage des périphériques ne sont alors pas initialisés.",
-    "Chaque stockage expose au minimum name, storedEnergy, initialStoredEnergy et remainingRatio (recalculé ici à chaque frame = storedEnergy / initialStoredEnergy, ou 0 si l'énergie initiale est 0). Méthodes optionnelles reconnues : updateGFX, reset, onBreak, onCouplerFound, onCouplerAttached, onCouplerDetached, setPartCondition, getPartCondition, serialize.",
-    "breakTriggerBeam (nom ou liste de noms de poutres) : à la rupture de l'une d'elles, beamBroke appelle storage:onBreak() et marque damageTracker('energyStorage', name) à true.",
-    "M.updateGFX vaut nop tant qu'aucun stockage n'existe ; init le remplace par la vraie fonction seulement si storageCount > 0.",
-    "onDeserialize est vide (le code de restauration est commenté) : l'état sérialisé par onSerialize n'est pas relu.",
-    "onCouplerAttached reçoit attachSpeed mais ne le transmet pas aux stockages (ils reçoivent nodeId, obj2id, obj2nodeId, attachEnergy).",
-    "getPartCondition ne fournit jamais de condition visuelle (canProvideVisualCondition reste false)."
+    "Each storage is created by `<factory>.new(jbeamData)` with jbeamData = the jbeam entry merged with the jbeam section of the same name (v.data[name]). The `type` field chooses the file (electricBattery, fuelTank, n2oTank, pressureTank, or any .lua in the energyStorage folder).",
+    "An unknown type causes an error log and an immediate `return` from init: the following storages and the device wiring are then not initialized.",
+    "Each storage exposes at least name, storedEnergy, initialStoredEnergy and remainingRatio (recomputed here every frame = storedEnergy / initialStoredEnergy, or 0 if the initial energy is 0). Recognized optional methods: updateGFX, reset, onBreak, onCouplerFound, onCouplerAttached, onCouplerDetached, setPartCondition, getPartCondition, serialize.",
+    "breakTriggerBeam (beam name or list of names): when one of them breaks, beamBroke calls storage:onBreak() and sets damageTracker('energyStorage', name) to true.",
+    "M.updateGFX is nop as long as no storage exists; init replaces it with the real function only if storageCount > 0.",
+    "onDeserialize is empty (the restore code is commented out): the state serialized by onSerialize is not read back.",
+    "onCouplerAttached receives attachSpeed but does not pass it to the storages (they receive nodeId, obj2id, obj2nodeId, attachEnergy).",
+    "getPartCondition never provides a visual condition (canProvideVisualCondition stays false)."
   ],
   "fields": {
-    "nilStorage": {"type": "table", "desc": "Faux stockage 'magique' créé dans init : toute indexation ou tout appel renvoie lui-même, l'écriture est ignorée. Renvoyé par getStorageSafe quand le nom n'existe pas. Vaut {} (sans métatable) avant le premier init."},
-    "updateGFX": {"type": "function", "desc": "Vaut nop (variable globale nop) tant qu'il n'y a aucun stockage ; remplacé dans init par la fonction de mise à jour par frame. (Le .md d'extraction signale nop comme non défini : c'est une globale du moteur.)"}
+    "nilStorage": {
+      "type": "table",
+      "desc": "'Magic' fake storage created in init: any indexing or call returns itself, writes are ignored. Returned by getStorageSafe when the name does not exist. Is {} (without a metatable) before the first init."
+    },
+    "updateGFX": {
+      "type": "function",
+      "desc": "Is nop (global variable nop) as long as there is no storage; replaced in init by the per-frame update function. (The extraction .md flags nop as undefined: it is an engine global.)"
+    }
   },
   "functions": {
-    "init": {"desc": "Appelé à l'initialisation du véhicule : découvre les types disponibles, instancie les stockages du jbeam, les enregistre dans les périphériques du powertrain, construit la table des poutres déclencheuses de rupture et crée nilStorage.", "params": {}, "returns": [], "internal": true},
-    "reset": {"desc": "Appelé au reset du véhicule : appelle reset() de chaque stockage, remet leur dommage à false dans damageTracker et ré-enregistre les stockages auprès des périphériques.", "params": {}, "returns": [], "internal": true},
-    "beamBroke": {"desc": "Appelé par le moteur quand une poutre casse. Si la poutre est un déclencheur d'un stockage, appelle storage:onBreak() et marque le dommage dans damageTracker.", "params": {"id": {"type": "integer", "desc": "Identifiant (cid) de la poutre cassée."}}, "returns": [], "internal": true},
-    "onCouplerFound": {"desc": "Hook appelé quand un coupleur trouve un partenaire proche ; relayé à storage:onCouplerFound.", "params": {"nodeId": {"type": "integer", "desc": "Nœud du coupleur de ce véhicule."}, "obj2id": {"type": "integer", "desc": "Identifiant de l'autre véhicule."}, "obj2nodeId": {"type": "integer", "desc": "Nœud de l'autre véhicule."}, "nodeDist": {"type": "number", "desc": "Distance entre les deux nœuds (m)."}}, "returns": [], "internal": true},
-    "onCouplerAttached": {"desc": "Hook appelé quand un coupleur s'attache ; relayé à storage:onCouplerAttached sans attachSpeed.", "params": {"nodeId": {"type": "integer", "desc": "Nœud du coupleur."}, "obj2id": {"type": "integer", "desc": "Autre véhicule."}, "obj2nodeId": {"type": "integer", "desc": "Nœud de l'autre véhicule."}, "attachSpeed": {"type": "number", "desc": "Vitesse d'attache (non transmise)."}, "attachEnergy": {"type": "number", "desc": "Énergie d'attache."}}, "returns": [], "internal": true},
-    "onCouplerDetached": {"desc": "Hook appelé quand un coupleur se détache ; relayé à storage:onCouplerDetached.", "params": {"nodeId": {"type": "integer", "desc": "Nœud du coupleur."}, "obj2id": {"type": "integer", "desc": "Autre véhicule."}, "obj2nodeId": {"type": "integer", "desc": "Nœud de l'autre véhicule."}, "breakForce": {"type": "number", "desc": "Force de rupture."}}, "returns": [], "internal": true},
-    "getStorages": {"desc": "Renvoie la table de tous les stockages indexée par nom.", "params": {}, "returns": [{"type": "table<string, table>", "desc": "Stockages par nom."}], "internal": false},
-    "getStorage": {"desc": "Renvoie le stockage portant ce nom, ou nil s'il n'existe pas.", "params": {"name": {"type": "string", "desc": "Nom du stockage (champ name du jbeam)."}}, "returns": [{"type": "table|nil", "desc": "Le stockage ou nil."}], "internal": false},
-    "getStorageSafe": {"desc": "Comme getStorage mais renvoie nilStorage (objet qui absorbe tous les accès et appels) si le nom est inconnu, avec un log de debug.", "params": {"name": {"type": "string", "desc": "Nom du stockage."}}, "returns": [{"type": "table", "desc": "Le stockage ou nilStorage."}], "internal": false},
-    "getPartCondition": {"desc": "Agrège la condition d'intégrité des stockages liés à la pièce (types 'energyStorage:<nom>'). integrityValue est le minimum des valeurs des stockages, integrityState une table par nom.", "params": {"partTypeData": {"type": "table<integer, string>", "desc": "Liste de types de pièce, ex. {\"energyStorage:mainTank\"}."}}, "returns": [{"type": "table", "desc": "{integrityValue, integrityState, visualValue, visualState}."}, {"type": "boolean", "desc": "true si au moins un stockage sait fournir une condition d'intégrité."}, {"type": "boolean", "desc": "Condition visuelle disponible (toujours false)."}], "internal": true},
-    "setPartCondition": {"desc": "Applique la condition de pièce (odomètre, intégrité, visuel) aux stockages liés à la pièce ; si integrity est une table avec la clé energyStorage, la valeur du stockage est prise par son nom.", "params": {"partTypeData": {"type": "table<integer, string>", "desc": "Types de pièce 'energyStorage:<nom>'."}, "odometer": {"type": "number", "desc": "Odomètre de la pièce (déduit du code)."}, "integrity": {"type": "number|table", "desc": "Intégrité ou table {energyStorage = {nom = valeur}}."}, "visual": {"type": "any", "desc": "Condition visuelle transmise telle quelle."}}, "returns": [], "internal": true},
-    "onDeserialize": {"desc": "Hook de désérialisation (sauvegarde) ; actuellement sans effet (code commenté).", "params": {"data": {"type": "table", "desc": "Données sérialisées."}}, "returns": [], "internal": true},
-    "onSerialize": {"desc": "Hook de sérialisation : renvoie {nom = storage:serialize()} pour les stockages qui ont serialize().", "params": {}, "returns": [{"type": "table<string, any>", "desc": "Données sérialisées par nom de stockage."}], "internal": true}
+    "init": {
+      "desc": "Called at vehicle initialization: discovers the available types, instantiates the jbeam storages, registers them in the powertrain devices, builds the table of beams that trigger a break and creates nilStorage.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Called at vehicle reset: calls reset() of each storage, sets their damage back to false in damageTracker and re-registers the storages with the devices.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "beamBroke": {
+      "desc": "Called by the engine when a beam breaks. If the beam is a trigger of a storage, calls storage:onBreak() and sets the damage in damageTracker.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Identifier (cid) of the broken beam."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerFound": {
+      "desc": "Hook called when a coupler finds a nearby partner; relayed to storage:onCouplerFound.",
+      "params": {
+        "nodeId": {
+          "type": "integer",
+          "desc": "Coupler node of this vehicle."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Identifier of the other vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "Node of the other vehicle."
+        },
+        "nodeDist": {
+          "type": "number",
+          "desc": "Distance between the two nodes (m)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerAttached": {
+      "desc": "Hook called when a coupler attaches; relayed to storage:onCouplerAttached without attachSpeed.",
+      "params": {
+        "nodeId": {
+          "type": "integer",
+          "desc": "Coupler node."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Other vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "Node of the other vehicle."
+        },
+        "attachSpeed": {
+          "type": "number",
+          "desc": "Attach speed (not passed on)."
+        },
+        "attachEnergy": {
+          "type": "number",
+          "desc": "Attach energy."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerDetached": {
+      "desc": "Hook called when a coupler detaches; relayed to storage:onCouplerDetached.",
+      "params": {
+        "nodeId": {
+          "type": "integer",
+          "desc": "Coupler node."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Other vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "Node of the other vehicle."
+        },
+        "breakForce": {
+          "type": "number",
+          "desc": "Break force."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "getStorages": {
+      "desc": "Returns the table of all storages keyed by name.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Storages by name."
+        }
+      ],
+      "internal": false
+    },
+    "getStorage": {
+      "desc": "Returns the storage with this name, or nil if it does not exist.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Storage name (jbeam name field)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "The storage or nil."
+        }
+      ],
+      "internal": false
+    },
+    "getStorageSafe": {
+      "desc": "Like getStorage but returns nilStorage (object that absorbs all accesses and calls) if the name is unknown, with a debug log.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Storage name."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The storage or nilStorage."
+        }
+      ],
+      "internal": false
+    },
+    "getPartCondition": {
+      "desc": "Aggregates the integrity condition of the storages linked to the part ('energyStorage:<name>' types). integrityValue is the minimum of the storage values, integrityState a table by name.",
+      "params": {
+        "partTypeData": {
+          "type": "table<integer, string>",
+          "desc": "List of part types, e.g. {\"energyStorage:mainTank\"}."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{integrityValue, integrityState, visualValue, visualState}."
+        },
+        {
+          "type": "boolean",
+          "desc": "true if at least one storage can provide an integrity condition."
+        },
+        {
+          "type": "boolean",
+          "desc": "Visual condition available (always false)."
+        }
+      ],
+      "internal": true
+    },
+    "setPartCondition": {
+      "desc": "Applies the part condition (odometer, integrity, visual) to the storages linked to the part; if integrity is a table with the key energyStorage, the storage value is taken by its name.",
+      "params": {
+        "partTypeData": {
+          "type": "table<integer, string>",
+          "desc": "Part types 'energyStorage:<name>'."
+        },
+        "odometer": {
+          "type": "number",
+          "desc": "Part odometer (inferred from code)."
+        },
+        "integrity": {
+          "type": "number|table",
+          "desc": "Integrity or table {energyStorage = {name = value}}."
+        },
+        "visual": {
+          "type": "any",
+          "desc": "Visual condition passed as is."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onDeserialize": {
+      "desc": "Deserialization (save) hook; currently without effect (code commented out).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Serialized data."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Serialization hook: returns {name = storage:serialize()} for the storages that have serialize().",
+      "params": {},
+      "returns": [
+        {
+          "type": "table<string, any>",
+          "desc": "Serialized data by storage name."
+        }
+      ],
+      "internal": true
+    }
   }
 }

@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/logic/xor.lua",
+  "module": "Noeud flowgraph 'Xor' (categorie logic). Le flux sort si exactement une des deux entrees a et b a du flux.",
+  "notes": [
+    "Compare les valeurs par ~= : si une entree vaut nil et l'autre false, le resultat est true (nil ~= false)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "work": {
+          "desc": "pinOut.flow = (a ~= b).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

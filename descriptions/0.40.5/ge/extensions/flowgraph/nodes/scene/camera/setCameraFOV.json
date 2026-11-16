@@ -1,35 +1,35 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraFOV.lua",
-  "module": "Noeud flowgraph « Set Camera FOV » (categorie repeat_instant, couleur/icone camera). Pin d'entree : value (number), le champ de vision en degres. A chaque execution (work), passe en camera libre si ce n'est pas deja le cas puis appelle core_camera.setFOV(0, value). Au demarrage du graphe il memorise le FOV courant (core_camera.getFovDeg) et le restaure a l'arret.",
+  "module": "Flowgraph node \"Set Camera FOV\" (repeat_instant category, camera color/icon). Input pin: value (number), the field of view in degrees. On each execution (work), switches to the free camera if not already, then calls core_camera.setFOV(0, value). When the graph starts it stores the current FOV (core_camera.getFovDeg) and restores it on stop.",
   "notes": [
-    "Si le pin value n'a pas de valeur, core_camera.setFOV est quand meme appele avec nil (pas de garde dans le code)."
+    "If the value pin has no value, core_camera.setFOV is still called with nil (no guard in the code)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "work": {
-          "desc": "Force la camera libre (commands.setFreeCamera) si besoin, puis applique le FOV du pin value via core_camera.setFOV(0, ...).",
+          "desc": "Forces the free camera (commands.setFreeCamera) if needed, then applies the FOV of the value pin via core_camera.setFOV(0, ...).",
           "internal": false
         },
         "_executionStarted": {
-          "desc": "Appele au demarrage du graphe : memorise le FOV actuel dans self._storedFov.",
+          "desc": "Called when the graph starts: stores the current FOV in self._storedFov.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Appele a l'arret du graphe : restaure le FOV memorise puis l'oublie.",
+          "desc": "Called when the graph stops: restores the stored FOV then forgets it.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine la valeur du FOV (2 decimales) au milieu du noeud dans l'editeur.",
+          "desc": "Draws the FOV value (2 decimals) in the middle of the node in the editor.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true

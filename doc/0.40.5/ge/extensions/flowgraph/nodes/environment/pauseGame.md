@@ -1,24 +1,24 @@
 # `flowgraph_nodes_environment_pauseGame`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/environment/pauseGame.lua` · VM : Game Engine (GE) · 42 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/environment/pauseGame.lua` · VM: Game Engine (GE) · 42 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/environment/pauseGame")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/environment/pauseGame")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Pause Game » (catégorie once_p_duration, auteur BeamNG, tags pause/freeze/halt/stop/interrupt). Met la simulation en pause via simTimeAuthority.pause. L'action est différée à _afterTrigger (après le déclenchement de tous les nœuds de la frame).
+Flowgraph node "Pause Game" (category once_p_duration, author BeamNG, tags pause/freeze/halt/stop/interrupt). Pauses the simulation via simTimeAuthority.pause. The action is deferred to _afterTrigger (after all nodes have triggered in the frame).
 
-## Remarques
+## Notes
 
-- Bug : le pin d'entrée « value » (« si le jeu doit être en pause ») n'est jamais lu. workOnce met toujours _pauseGame à true, donc le nœud ne fait que mettre en pause, jamais reprendre.
+- Bug: the input pin "value" ("whether the game should be paused") is never read. workOnce always sets _pauseGame to true, so the node only pauses, never resumes.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_afterTrigger()` | Si demandé et si le jeu n'est pas déjà en pause, appelle simTimeAuthority.pause(true), puis remet le drapeau à faux. | 31 |
-| `C:_executionStarted()` | Remet le drapeau interne à faux. | 23 |
-| `C:workOnce()` | Demande la pause (drapeau à true). | 27 |
+| `C:_afterTrigger()` | If requested and the game is not already paused, calls simTimeAuthority.pause(true), then resets the flag to false. | 31 |
+| `C:_executionStarted()` | Resets the internal flag to false. | 23 |
+| `C:workOnce()` | Requests the pause (flag set to true). | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/environment/pauseGame.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/environment/pauseGame.lua`.*

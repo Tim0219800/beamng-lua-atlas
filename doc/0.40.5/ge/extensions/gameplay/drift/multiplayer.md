@@ -1,56 +1,56 @@
 # `gameplay_drift_multiplayer`
 
-*Fichier : `lua/ge/extensions/gameplay/drift/multiplayer.lua` · VM : Game Engine (GE) · 88 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drift/multiplayer.lua` · VM: Game Engine (GE) · 88 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drift_multiplayer` : `extensions.load("gameplay_drift_multiplayer")`, puis la globale `gameplay_drift_multiplayer`
+**Access:** extension `gameplay_drift_multiplayer`: `extensions.load("gameplay_drift_multiplayer")`, then the global `gameplay_drift_multiplayer`
 
-Pont entre le gameplay de drift et le tableau de scores multijoueur (multiplayer_multiplayerScoreboard). Quand un spot de drift démarre, crée un scoreboard avec les colonnes potentialScore, driftLevel et score ; ensuite pousse le score du joueur, son niveau de drift, son statut (finishLine / disqualified) et pulse en rouge lors d'un crash. Ne fait rien si multiplayer_multiplayerScoreboard n'existe pas.
+Bridge between the drift gameplay and the multiplayer scoreboard (multiplayer_multiplayerScoreboard). When a drift spot starts, creates a scoreboard with the columns potentialScore, driftLevel and score; then pushes the player's score, drift level, status (finishLine / disqualified) and pulses red on a crash. Does nothing if multiplayer_multiplayerScoreboard does not exist.
 
-## Remarques
+## Notes
 
-- Les mises à jour de score ne sont envoyées que si le contexte drift est "inFreeroamChallenge".
-- Le niveau de drift (driftLevel) est renvoyé à chaque frame seulement quand la valeur de gameplay_drift_scoring.getDriftPerformanceFactor() change.
-- functionDriftSpotEnded (nom local mal formé) remet driftLevel à 0 et hasDriftSpotStarted à false ; scoreboardHandle n'est jamais remis à nil.
+- Score updates are only sent if the drift context is "inFreeroamChallenge".
+- The drift level (driftLevel) is sent every frame only when the value of gameplay_drift_scoring.getDriftPerformanceFactor() changes.
+- functionDriftSpotEnded (badly formed local name) sets driftLevel back to 0 and hasDriftSpotStarted to false; scoreboardHandle is never set back to nil.
 
-**Dépendances (chargées avant) :** `gameplay_drift_general`
+**Dependencies (loaded first):** `gameplay_drift_general`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drift_multiplayer.getDriftDebugInfo()` | Renvoie la table {default=false, canBeChanged=false} décrivant le réglage de debug de ce module (utilisée par la fenêtre de debug drift). | 59 |
-| `gameplay_drift_multiplayer.onDriftCrash()` | Hook : crash pendant un défi, fait pulser la couleur du joueur en rouge dans le scoreboard. *(interne)* *(hook)* | 53 |
-| `gameplay_drift_multiplayer.onDriftScoreChanged(data)` | Hook : pousse au scoreboard le score potentiel, le score et le niveau de drift courants, en contexte inFreeroamChallenge. *(interne)* *(hook)* | 18 |
-| `gameplay_drift_multiplayer.onDriftSpotFailed()` | Hook : spot échoué, pousse le statut "disqualified" au scoreboard. *(interne)* *(hook)* | 46 |
-| `gameplay_drift_multiplayer.onDriftSpotFinishLineCrossed()` | Hook : ligne d'arrivée franchie, pousse le statut "finishLine" au scoreboard. *(interne)* *(hook)* | 39 |
-| `gameplay_drift_multiplayer.onDriftSpotStarted(data)` | Hook : à l'entrée dans un spot de drift, crée un nouveau scoreboard multijoueur trié par score décroissant. *(interne)* *(hook)* | 25 |
-| `gameplay_drift_multiplayer.onUpdate()` | Appelé à chaque frame : envoie le niveau de drift au scoreboard s'il a changé depuis la dernière frame. *(interne)* *(hook)* | 72 |
+| `gameplay_drift_multiplayer.getDriftDebugInfo()` | Returns the table {default=false, canBeChanged=false} describing this module's debug setting (used by the drift debug window). | 59 |
+| `gameplay_drift_multiplayer.onDriftCrash()` | Hook: crash during a challenge, makes the player's color pulse red in the scoreboard. *(internal)* *(hook)* | 53 |
+| `gameplay_drift_multiplayer.onDriftScoreChanged(data)` | Hook: pushes to the scoreboard the current potential score, score and drift level, in the inFreeroamChallenge context. *(internal)* *(hook)* | 18 |
+| `gameplay_drift_multiplayer.onDriftSpotFailed()` | Hook: spot failed, pushes the "disqualified" status to the scoreboard. *(internal)* *(hook)* | 46 |
+| `gameplay_drift_multiplayer.onDriftSpotFinishLineCrossed()` | Hook: finish line crossed, pushes the "finishLine" status to the scoreboard. *(internal)* *(hook)* | 39 |
+| `gameplay_drift_multiplayer.onDriftSpotStarted(data)` | Hook: when entering a drift spot, creates a new multiplayer scoreboard sorted by descending score. *(internal)* *(hook)* | 25 |
+| `gameplay_drift_multiplayer.onUpdate()` | Called every frame: sends the drift level to the scoreboard if it changed since the last frame. *(internal)* *(hook)* | 72 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drift_multiplayer.getDriftDebugInfo()`
 
-Renvoie la table {default=false, canBeChanged=false} décrivant le réglage de debug de ce module (utilisée par la fenêtre de debug drift).
+Returns the table {default=false, canBeChanged=false} describing this module's debug setting (used by the drift debug window).
 
-- **renvoie** : table {default = false, canBeChanged = false}
+- **returns**: table {default = false, canBeChanged = false}
 
 #### `gameplay_drift_multiplayer.onDriftScoreChanged(data)`
 
-Hook : pousse au scoreboard le score potentiel, le score et le niveau de drift courants, en contexte inFreeroamChallenge.
+Hook: pushes to the scoreboard the current potential score, score and drift level, in the inFreeroamChallenge context.
 
-- `data` (*table*) : Données du changement de score (inutilisées ici : le score est relu via gameplay_drift_scoring.getScore()).
+- `data` (*table*) : Score change data (unused here: the score is re-read via gameplay_drift_scoring.getScore()).
 
 #### `gameplay_drift_multiplayer.onDriftSpotStarted(data)`
 
-Hook : à l'entrée dans un spot de drift, crée un nouveau scoreboard multijoueur trié par score décroissant.
+Hook: when entering a drift spot, creates a new multiplayer scoreboard sorted by descending score.
 
-- `data` (*table*) : Contient lineId, passé à startNewScoreboard.
+- `data` (*table*) : Contains lineId, passed to startNewScoreboard.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | gameplay_drift_general, chargé avant. |
+| `dependencies` | string[] | gameplay_drift_general, loaded beforehand. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drift/multiplayer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drift/multiplayer.lua`.*

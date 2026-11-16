@@ -8,3 +8,6 @@ donnees/
 # Build outputs
 site/
 dist/
+
+# French stubs: generated, shipped only as a release asset (stubs-<version>-fr.zip)
+stubs/fr/

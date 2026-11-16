@@ -1,0 +1,126 @@
+{
+  "path": "lua/ge/extensions/editor/api/roadRiver.lua",
+  "module": "API de l'éditeur pour créer, modifier et supprimer des routes (DecalRoad) et des maillages à nœuds comme les rivières (River, via createMesh). Elle tient aussi une liste locale des routes du niveau (allRoads) et, si la préférence roadTemplates.general.loadTemplates est active, leurs points médians (roadSplines). initialize(editor) ajoute toutes ces fonctions à l'objet editor. Chaque modification appelle editor.setDirty().",
+  "usage": "local id = editor.createRoad({{pos = vec3(0,0,0), width = 4}, {pos = vec3(20,0,0), width = 4}}, {overObjects = true})\neditor.addRoadNode(id, {pos = vec3(40,5,0), width = 4, index = 2})",
+  "notes": [
+    "addRoadNode lit nodeInfo.pos alors que sa doc-commentaire dit « position » : la clé réelle est pos (width et index aussi).",
+    "createRoad lit roadInfo.overObjects avant de tester roadInfo : plante si roadInfo est nil et qu'un terrain existe.",
+    "Dans deleteRoad, la boucle sur decorationIDs ne teste pas que scenetree.findObjectById renvoie un objet (décoration déjà supprimée : erreur possible).",
+    "updateRoadVertices et removeRoadFromList (local) ne sont pas tous exposés : seul updateRoadVertices l'est."
+  ],
+  "functions": {
+    "initialize": {
+      "desc": "Enregistre toutes les fonctions du module sur l'objet editor. Appelé au chargement de l'API de l'éditeur.",
+      "params": {"editorInstance": {"type": "table", "desc": "Objet editor global."}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Fonctions ajoutées à l'objet editor par initialize.",
+      "functions": {
+        "updateRoadVertices": {
+          "desc": "Enregistre la route dans allRoads et, si les templates de route sont activés, mémorise les positions médianes de ses arêtes (roadSplines). Journalise une erreur si road est nil.",
+          "params": {"road": {"type": "table", "desc": "Objet DecalRoad."}},
+          "returns": []
+        },
+        "resetRoadList": {
+          "desc": "Vide les listes locales allRoads et roadSplines.",
+          "params": {},
+          "returns": []
+        },
+        "addRoadNode": {
+          "desc": "Insère un nœud dans une route et met à jour ses sommets.",
+          "params": {
+            "roadObjectId": {"type": "integer", "desc": "Id de la route."},
+            "nodeInfo": {"type": "table", "desc": "{pos = vec3, width = number, index = integer} ; index U32_MAX pour insérer à la fin."}
+          },
+          "returns": [{"type": "integer", "desc": "Id du nouveau nœud (valeur renvoyée par insertNode)."}]
+        },
+        "setNodeWidth": {
+          "desc": "Change la largeur d'un nœud de route ou de maillage.",
+          "params": {"object": {"type": "table", "desc": "Objet route/maillage."}, "nodeID": {"type": "integer", "desc": "Index du nœud."}, "width": {"type": "number", "desc": "Largeur."}},
+          "returns": []
+        },
+        "setNodeDepth": {
+          "desc": "Change la profondeur d'un nœud (maillages type rivière).",
+          "params": {"object": {"type": "table", "desc": "Objet maillage."}, "nodeID": {"type": "integer", "desc": "Index du nœud."}, "depth": {"type": "number", "desc": "Profondeur."}},
+          "returns": []
+        },
+        "setNodePosition": {
+          "desc": "Déplace un nœud.",
+          "params": {"object": {"type": "table", "desc": "Objet route/maillage."}, "nodeID": {"type": "integer", "desc": "Index du nœud."}, "position": {"type": "vec3", "desc": "Nouvelle position."}},
+          "returns": []
+        },
+        "createRoad": {
+          "desc": "Crée un DecalRoad (improvedSpline, matériau BlankWhite), l'enregistre, applique roadInfo via editor.pasteFields, l'ajoute à MissionGroup puis ajoute les nœuds. Sans terrain dans le niveau, overObjects est forcé à true.",
+          "params": {
+            "nodes": {"type": "table", "desc": "Liste de {pos = vec3, width = number}."},
+            "roadInfo": {"type": "table", "desc": "Champs à appliquer à la route (ex. overObjects)."}
+          },
+          "returns": [{"type": "integer", "desc": "Id de la route créée."}]
+        },
+        "deleteRoad": {
+          "desc": "Supprime une route, récursivement ses routes enfants (champ childRoads) et ses décorations (decorationIDs), la retire des listes et marque l'éditeur modifié.",
+          "params": {"roadObjectId": {"type": "integer", "desc": "Id de la route."}},
+          "returns": []
+        },
+        "deleteRoadNode": {
+          "desc": "Supprime un nœud de route et met à jour ses sommets.",
+          "params": {"roadObjectId": {"type": "integer", "desc": "Id de la route."}, "nodeID": {"type": "integer", "desc": "Index du nœud."}},
+          "returns": []
+        },
+        "getNodes": {
+          "desc": "Lit tous les nœuds d'un objet : pos, width, et depth/normal si l'objet fournit getNodeDepth/getNodeNormal.",
+          "params": {"object": {"type": "table", "desc": "Objet route/maillage."}},
+          "returns": [{"type": "table", "desc": "Liste de {pos, width, depth?, normal?}."}]
+        },
+        "addMeshNode": {
+          "desc": "Insère un nœud dans un maillage (rivière, etc.).",
+          "params": {"meshObjectId": {"type": "integer", "desc": "Id du maillage."}, "nodeInfo": {"type": "table", "desc": "{pos, width, depth, normal, index}."}},
+          "returns": [{"type": "integer", "desc": "Résultat de insertNode (id du nœud)."}]
+        },
+        "deleteMeshNode": {
+          "desc": "Supprime un nœud d'un maillage.",
+          "params": {"mesh": {"type": "table", "desc": "Objet maillage."}, "nodeID": {"type": "integer", "desc": "Index du nœud."}},
+          "returns": []
+        },
+        "createMesh": {
+          "desc": "Crée un maillage à nœuds du type donné. Pour 'River', pose des valeurs par défaut (ondulations, vitesses, couleur de base 45 108 171 255, textures d'eau). Applique fields via editor.pasteFields, l'enregistre sous un nom unique « New<type> », l'ajoute à MissionGroup, positionne l'objet sur le premier nœud et ajoute les nœuds.",
+          "params": {
+            "type": {"type": "string", "desc": "Classe de l'objet, ex. 'River'."},
+            "nodes": {"type": "table", "desc": "Liste de {pos, width, depth, normal}."},
+            "fields": {"type": "table", "desc": "Champs à appliquer."}
+          },
+          "returns": [{"type": "integer", "desc": "Id du maillage."}]
+        },
+        "deleteMesh": {
+          "desc": "Supprime un maillage via editor.deleteObject.",
+          "params": {"meshObjectId": {"type": "integer", "desc": "Id du maillage."}},
+          "returns": []
+        },
+        "getAllRoads": {
+          "desc": "Renvoie la table des routes connues (clé = id, valeur true).",
+          "params": {},
+          "returns": [{"type": "table<integer, boolean>", "desc": "allRoads."}]
+        },
+        "getAllSplines": {
+          "desc": "Renvoie les points médians mémorisés par route (rempli seulement si roadTemplates.general.loadTemplates est actif).",
+          "params": {},
+          "returns": [{"type": "table<integer, table>", "desc": "roadSplines."}]
+        },
+        "initializeLevelRoadsVertices": {
+          "desc": "Réinitialise les listes puis parcourt tous les DecalRoad du niveau pour les enregistrer. Journalise une erreur pour un nom invalide (commençant par des chiffres).",
+          "params": {},
+          "returns": []
+        },
+        "regenerateAllDecalRoads": {
+          "desc": "Appelle regenerate() sur toutes les routes connues.",
+          "params": {},
+          "returns": []
+        }
+      }
+    }
+  }
+}

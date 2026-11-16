@@ -1,10 +1,22 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/driveline/util.lua",
-  "module": "Constantes d'édition de la driveline de rallye (spline éditable construite à partir de l'enregistrement de reconnaissance). Utilisées par drivelineV3 : largeur par défaut des nœuds, tolérance de simplification RDP, nombre minimal de subdivisions et espacement minimal de la spline.",
+  "module": "Editing constants of the rally driveline (editable spline built from the recce recording). Used by drivelineV3: default node width, RDP simplification tolerance, minimum number of subdivisions and minimum spline spacing.",
   "fields": {
-    "defaultSplineWidth": {"type": "number", "desc": "Largeur par défaut d'un nœud de spline : 10.0 m."},
-    "defaultSimplificationTolerance": {"type": "number", "desc": "Tolérance de l'algorithme RDP lors de la simplification des points enregistrés : 1.0 (m)."},
-    "minSplineDivisions": {"type": "number", "desc": "Nombre minimal de subdivisions de la spline : 10."},
-    "minSplineSpacing": {"type": "number", "desc": "Espacement minimal entre points subdivisés : 2.0 m."}
+    "defaultSplineWidth": {
+      "type": "number",
+      "desc": "Default width of a spline node: 10.0 m."
+    },
+    "defaultSimplificationTolerance": {
+      "type": "number",
+      "desc": "RDP algorithm tolerance when simplifying the recorded points: 1.0 (m)."
+    },
+    "minSplineDivisions": {
+      "type": "number",
+      "desc": "Minimum number of spline subdivisions: 10."
+    },
+    "minSplineSpacing": {
+      "type": "number",
+      "desc": "Minimum spacing between subdivided points: 2.0 m."
+    }
   }
 }

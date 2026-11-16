@@ -2,39 +2,39 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/missionEditor/setupModules.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Instance du panneau. Champs : missionEditor, name = 'SetupModules', mission, missionInstance, blockedSetupModules, ainsi que de nombreux tampons imgui (traffic*, todInput, normalizedTodInput, windSpeedInput, cloudCoverInput, fogDensityInput…).
+--- Instance of the panel. Fields: missionEditor, name = 'SetupModules', mission, missionInstance, blockedSetupModules, as well as many imgui buffers (traffic*, todInput, normalizedTodInput, windSpeedInput, cloudCoverInput, fogDensityInput...).
 ---@class editor_missionEditor_setupModules
 local editor_missionEditor_setupModules = {}
 
---- Combo de cases à cocher pour les réglages de différentiels d'un véhicule : toggleDifferentials, lockFrontDiffs, lockRearDiffs, setTransfercase (4hi), setRangebox (low), ou tous d'un coup.
----Source : lua/ge/extensions/editor/missionEditor/setupModules.lua:762
----@param veh table Données du véhicule (ou playerVehicleDiffs) modifiées sur place.
+--- Checkbox combo for a vehicle's differential settings: toggleDifferentials, lockFrontDiffs, lockRearDiffs, setTransfercase (4hi), setRangebox (low), or all at once.
+---Source: lua/ge/extensions/editor/missionEditor/setupModules.lua:762
+---@param veh table Vehicle data (or playerVehicleDiffs) modified in place.
 function editor_missionEditor_setupModules:displayDiffSetup(veh) end
 
---- Dessine les trois sections Vehicles, Traffic et Environment avec leurs cases d'activation et champs. Utilise core_environment.getTimeOfDay et getTimeOfDayValueForNormalizedTime pour l'heure actuelle et la conversion.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/missionEditor/setupModules.lua:226
+--- Draws the three sections Vehicles, Traffic and Environment with their enable checkboxes and fields. Uses core_environment.getTimeOfDay and getTimeOfDayValueForNormalizedTime for the current time and the conversion.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/missionEditor/setupModules.lua:226
 function editor_missionEditor_setupModules:draw() end
 
---- Appelle setMission(m) puis signale les modules mal formés (error), l'heure fixe legacy (minor) et un normalizedTime invalide (error).
----Source : lua/ge/extensions/editor/missionEditor/setupModules.lua:163
----@param m table Mission à vérifier.
----@return table[]  Liste d'éléments {label, severity}.
+--- Calls setMission(m) then reports malformed modules (error), the legacy fixed time (minor) and an invalid normalizedTime (error).
+---Source: lua/ge/extensions/editor/missionEditor/setupModules.lua:163
+---@param m table Mission to check.
+---@return table[]  List of elements {label, severity}.
 function editor_missionEditor_setupModules:getMissionIssues(m) end
 
---- Constructeur : mémorise missionEditor et le nom du panneau.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/missionEditor/setupModules.lua:8
----@param missionEditor table Module principal editor_missionEditor.
+--- Constructor: remembers missionEditor and the panel name.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/missionEditor/setupModules.lua:8
+---@param missionEditor table Main editor_missionEditor module.
 function editor_missionEditor_setupModules:init(missionEditor) end
 
---- Copie dans la mission les modules corrigés par l'instance de jeu (ceux marqués _compatibility) et supprime les modules obsolètes playerVehicle et timeOfDay.
----Source : lua/ge/extensions/editor/missionEditor/setupModules.lua:149
+--- Copies into the mission the modules fixed by the game instance (those marked _compatibility) and removes the obsolete modules playerVehicle and timeOfDay.
+---Source: lua/ge/extensions/editor/missionEditor/setupModules.lua:149
 function editor_missionEditor_setupModules:setBackwardsCompatibility() end
 
---- Définit la mission courante, applique la compatibilité ascendante et initialise tous les tampons de saisie depuis mission.setupModules.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/missionEditor/setupModules.lua:114
----@param mission table Mission courante.
+--- Sets the current mission, applies backwards compatibility and initializes all the input buffers from mission.setupModules.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/missionEditor/setupModules.lua:114
+---@param mission table Current mission.
 function editor_missionEditor_setupModules:setMission(mission) end
 

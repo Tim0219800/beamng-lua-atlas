@@ -1,21 +1,21 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/hideEditor.lua",
-  "module": "Nœud flowgraph « Show Editor » (catégorie once_instant, auteur BeamNG) : affiche ou masque le World Editor. Entrée « value » (bool, vrai = visible). L'action est appliquée après le déclenchement (_afterTrigger) via editor.setEditorActive si l'état change.",
+  "module": "Flowgraph node \"Show Editor\" (category once_instant, author BeamNG): shows or hides the World Editor. Input \"value\" (bool, true = visible). The action is applied after the trigger (_afterTrigger) via editor.setEditorActive if the state changes.",
   "notes": [
-    "Le nom du fichier (hideEditor) diffère du nom du nœud (Show Editor)."
+    "The file name (hideEditor) differs from the node name (Show Editor)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_afterTrigger": {
-          "desc": "Applique editor.setEditorActive si différent de editor.active.",
+          "desc": "Applies editor.setEditorActive if different from editor.active.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Mémorise la valeur demandée.",
+          "desc": "Stores the requested value.",
           "internal": true
         }
       }

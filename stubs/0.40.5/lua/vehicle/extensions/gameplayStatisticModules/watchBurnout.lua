@@ -2,19 +2,19 @@
 -- tim19Atlas stub generated from lua/vehicle/extensions/gameplayStatisticModules/watchBurnout.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Module de gameplayStatistic qui détecte les burnouts : une roue motrice intacte patine (vitesse de roue > 2 et > 1,5 x vitesse sol, glissement pondéré par la charge > 4) tout en touchant le sol. À la fin, si la durée dépasse 0,1 s, ajoute la métrique 'vehicle/burnout.time' (agrégée).
---- Accès : extension `gameplayStatisticModules_watchBurnout` : `extensions.load (VM véhicule)("gameplayStatisticModules_watchBurnout")`, puis la globale `gameplayStatisticModules_watchBurnout`
+--- gameplayStatistic module that detects burnouts: an intact driven wheel spins (wheel speed > 2 and > 1.5 x ground speed, load-weighted slip > 4) while touching the ground. At the end, if the duration exceeds 0.1 s, adds the metric 'vehicle/burnout.time' (aggregated).
+--- Access: extension `gameplayStatisticModules_watchBurnout`: `extensions.load (vehicle VM)("gameplayStatisticModules_watchBurnout")`, then the global `gameplayStatisticModules_watchBurnout`
 ---@class gameplayStatisticModules_watchBurnout
 gameplayStatisticModules_watchBurnout = {}
 
---- Appelé au chargement : liste les roues motrices ; renvoie false pour se décharger si le véhicule ne convient pas.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/gameplayStatisticModules/watchBurnout.lua:42
----@return boolean|nil  false pour demander le déchargement.
+--- Called on load: lists the driven wheels; returns false to unload if the vehicle is not suitable.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/gameplayStatisticModules/watchBurnout.lua:42
+---@return boolean|nil  false to request unloading.
 function gameplayStatisticModules_watchBurnout.onExtensionLoaded() end
 
---- Fonction de surveillance exécutée à tour de rôle par gameplayStatistic : détecte début/fin de burnout et envoie la métrique.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/gameplayStatisticModules/watchBurnout.lua:15
+--- Watch function run in turn by gameplayStatistic: detects burnout start/end and sends the metric.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/gameplayStatisticModules/watchBurnout.lua:15
 function gameplayStatisticModules_watchBurnout.workload() end
 

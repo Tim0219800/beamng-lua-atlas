@@ -1,339 +1,689 @@
 {
   "path": "lua/ge/extensions/ui/gameplaySelector/general.lua",
-  "module": "Backend « gameplaySelector » du sélecteur en grille : l'écran qui liste missions, scénarios, campagnes, expériences de démarrage rapide et sélecteurs de rallye. Il collecte les tuiles par le hook onGameplaySelectorGetTiles (validBackends doit contenir gameplaySelector), gère filtres, recherche, favoris, récents et options d'affichage (sauvegardées dans /settings/gameplaySelectorData.json), construit les détails via onGameplaySelectorGetDetails et envoie à l'interface des instantanés (GameplaySelectorDataLoaded, gameplaySelectorDisplayDataSnapshot, gameplaySelectorDetails). Il applique aussi des préréglages selon la route (menu.gameplay, menu.rallySelector, menu.experiencesSelector) et gère la navigation vers les « clusters ».",
-  "usage": "-- ouvrir le sélecteur de rallye (applique les filtres rallyStage et rallyLoop)\nui_gameplaySelector_general.openRallySelector()",
+  "module": "\"gameplaySelector\" backend of the grid selector: the screen that lists missions, scenarios, campaigns, quick-start experiences and rally selectors. It collects the tiles through the hook onGameplaySelectorGetTiles (validBackends must contain gameplaySelector), handles filters, search, favorites, recents and display options (saved in /settings/gameplaySelectorData.json), builds the details via onGameplaySelectorGetDetails and sends snapshots to the interface (GameplaySelectorDataLoaded, gameplaySelectorDisplayDataSnapshot, gameplaySelectorDetails). It also applies presets according to the route (menu.gameplay, menu.rallySelector, menu.experiencesSelector) and handles navigation to \"clusters\".",
+  "usage": "-- open the rally selector (applies the rallyStage and rallyLoop filters)\nui_gameplaySelector_general.openRallySelector()",
   "notes": [
-    "Routes gérées : menu.gameplay (et menu.gameplay.type pour un cluster), menu.rallySelector, menu.experiencesSelector (et menu.experiencesSelector.type). Pour le rallye, groupMode et clusterMode viennent de groupModeRally (défaut « type ») et clusterModeRally (défaut « none ») ; pour les expériences, groupMode vaut « system » et clusterMode « automatic ».",
-    "Les préréglages de route (GAMEPLAY_ROUTE_PRESETS) effacent filtres et recherche puis activent le système quickStartExperiences (expériences) ou les types bigMap.missionLabels.rallyStage et rallyLoop (rallye).",
-    "Au montage d'une route, le chargement lourd passe par util_asyncBulkLoader.loadGameplaySelector ; l'instantané n'est émis qu'à la fin (hook asyncGameplaySelectorLoadComplete) et seulement si la route courante est toujours celle demandée. Sans asyncBulkLoader, ou s'il répond « alreadyLoaded », l'instantané est émis tout de suite.",
-    "Les données sont recalculées au prochain accès après onModActivated, onModDeactivated, onModManagerReady, onModManagerStateChanged ou onSettingsChanged. Contrairement au backend freeroam, onLanguageChanged n'est pas écouté ici.",
-    "Plusieurs fonctions acceptent un requestId optionnel : s'il est fourni, un instantané est émis pour que l'interface ignore les réponses périmées. clearAllFilters n'a pas ce paramètre.",
-    "Options d'affichage : groupMode, clusterMode, groupModeRally, clusterModeRally, displaySize, showAuxContent, showCareerContent (faux par défaut), sorting, showRecentMode, showFavouritesMode, defaultFreeroamAction. La version des données est 12.",
-    "Le filtre « system » propose des valeurs rapides : quickStartExperiences, challenges, scenarios, scenariosMultiplayer et, hors menu simplifié, campaigns.",
-    "Débogage laissé dans le code : navigateToCluster et onClusterRouteMount appellent dump(), et les étapes du montage asynchrone écrivent avec print().",
-    "Incohérences dans le filtrage de plage : le test « not type(propVal) == 'number' » est toujours faux à cause de la priorité de not (il faudrait type(propVal) ~= 'number'), et une affectation propVal = item[propKey] est répétée sans effet dans la création des filtres.",
-    "exploreFolder, goToMod, closedFromUI, exitCallback et profilerFinish sont des coquilles (journal ou TODO) ; getManagementDetails renvoie toujours { buttons = {} }.",
-    "Le champ M.displayDataInstance est exposé après la première initialisation."
+    "Routes handled: menu.gameplay (and menu.gameplay.type for a cluster), menu.rallySelector, menu.experiencesSelector (and menu.experiencesSelector.type). For rally, groupMode and clusterMode come from groupModeRally (default \"type\") and clusterModeRally (default \"none\"); for experiences, groupMode is \"system\" and clusterMode \"automatic\".",
+    "The route presets (GAMEPLAY_ROUTE_PRESETS) clear filters and search then enable the quickStartExperiences system (experiences) or the types bigMap.missionLabels.rallyStage and rallyLoop (rally).",
+    "When a route is mounted, the heavy loading goes through util_asyncBulkLoader.loadGameplaySelector; the snapshot is only emitted at the end (hook asyncGameplaySelectorLoadComplete) and only if the current route is still the requested one. Without asyncBulkLoader, or if it answers \"alreadyLoaded\", the snapshot is emitted right away.",
+    "The data is recomputed on next access after onModActivated, onModDeactivated, onModManagerReady, onModManagerStateChanged or onSettingsChanged. Unlike the freeroam backend, onLanguageChanged is not listened to here.",
+    "Several functions accept an optional requestId: if provided, a snapshot is emitted so that the interface ignores stale responses. clearAllFilters does not have this parameter.",
+    "Display options: groupMode, clusterMode, groupModeRally, clusterModeRally, displaySize, showAuxContent, showCareerContent (false by default), sorting, showRecentMode, showFavouritesMode, defaultFreeroamAction. The data version is 12.",
+    "The \"system\" filter offers quick values: quickStartExperiences, challenges, scenarios, scenariosMultiplayer and, outside the simplified menu, campaigns.",
+    "Debug left in the code: navigateToCluster and onClusterRouteMount call dump(), and the steps of the asynchronous mount write with print().",
+    "Inconsistencies in range filtering: the test \"not type(propVal) == 'number'\" is always false because of the precedence of not (it should be type(propVal) ~= 'number'), and an assignment propVal = item[propKey] is repeated with no effect in the filter creation.",
+    "exploreFolder, goToMod, closedFromUI, exitCallback and profilerFinish are shells (log or TODO); getManagementDetails always returns { buttons = {} }.",
+    "The field M.displayDataInstance is exposed after the first initialization."
   ],
   "fields": {
-    "backendName": {"type": "string", "desc": "Nom du backend : « gameplaySelector »."},
-    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant celle-ci : ui_gameplaySelector_tiles et core_locales."}
+    "backendName": {
+      "type": "string",
+      "desc": "Backend name: \"gameplaySelector\"."
+    },
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extensions loaded before this one: ui_gameplaySelector_tiles and core_locales."
+    }
   },
   "functions": {
     "getUiData": {
-      "desc": "Renvoie les données du sélecteur : items, displayData (adaptées à la route : rallye ou expériences), filterList, activeFilters, lockedFiltersByProp et backendName. Charge les tuiles si nécessaire.",
-      "params": {"routeName": {"type": "string|nil", "desc": "Nom de la route, pour adapter groupMode et clusterMode."}},
-      "returns": [{"type": "table", "desc": "Table de données d'interface."}],
+      "desc": "Returns the selector data: items, displayData (adapted to the route: rally or experiences), filterList, activeFilters, lockedFiltersByProp and backendName. Loads the tiles if needed.",
+      "params": {
+        "routeName": {
+          "type": "string|nil",
+          "desc": "Route name, to adapt groupMode and clusterMode."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Interface data table."
+        }
+      ],
       "internal": false
     },
     "getGameplayData": {
-      "desc": "Renvoie les données du sélecteur (tuiles dont validBackends contient gameplaySelector, filtres, options d'affichage), les recalcule si les mods ou les réglages ont changé, et les crée à la première demande.",
-      "returns": [{"type": "table", "desc": "Table items, filterList, activeFilters, lockedFiltersByProp, displayData."}],
+      "desc": "Returns the selector data (tiles whose validBackends contains gameplaySelector, filters, display options), recomputes them if the mods or settings have changed, and creates them on first request.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Table items, filterList, activeFilters, lockedFiltersByProp, displayData."
+        }
+      ],
       "internal": false
     },
     "isGameplayDataLoaded": {
-      "desc": "Indique si les données ont déjà été construites et sont à jour.",
-      "returns": [{"type": "boolean|nil", "desc": "Vrai si chargées et non invalidées (nil ou false sinon)."}],
+      "desc": "Indicates whether the data has already been built and is up to date.",
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "True if loaded and not invalidated (nil or false otherwise)."
+        }
+      ],
       "internal": false
     },
     "getTiles": {
-      "desc": "Renvoie les groupes de tuiles pour un chemin, via ui_gameplaySelector_tiles.getTiles.",
+      "desc": "Returns the tile groups for a path, via ui_gameplaySelector_tiles.getTiles.",
       "params": {
-        "path": {"type": "table", "desc": "Chemin de navigation { keys = {...} }."},
-        "routeName": {"type": "string|nil", "desc": "Nom de la route."}
+        "path": {
+          "type": "table",
+          "desc": "Navigation path { keys = {...} }."
+        },
+        "routeName": {
+          "type": "string|nil",
+          "desc": "Name of the road."
+        }
       },
-      "returns": [{"type": "table[]", "desc": "Groupes de tuiles."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Tile groups."
+        }
+      ],
       "internal": false
     },
     "navigateToCluster": {
-      "desc": "Prépare puis ouvre l'écran d'un cluster de tuiles. Calcule les clés du chemin (gotoPath, keys ou la table elle-même) et un titre, mémorise la sélection en attente et navigue vers menu.gameplay.type (ou menu.experiencesSelector.type depuis le sélecteur d'expériences).",
-      "params": {"input": {"type": "table", "desc": "Table de tuile ou de chemin : gotoPath, keys, ou liste de clés ; name, label ou title pour le titre."}},
-      "returns": [{"type": "any", "desc": "Résultat de ui_router.navigate."}],
+      "desc": "Prepares then opens a tile cluster's screen. Computes the path keys (gotoPath, keys or the table itself) and a title, stores the pending selection and navigates to menu.gameplay.type (or menu.experiencesSelector.type from the experiences selector).",
+      "params": {
+        "input": {
+          "type": "table",
+          "desc": "Tile or path table: gotoPath, keys, or list of keys; name, label or title for the title."
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of ui_router.navigate."
+        }
+      ],
       "internal": false
     },
     "requestDetails": {
-      "desc": "Construit les détails d'une tuile et les envoie à l'interface par l'évènement gameplaySelectorDetails avec backendName, requestId, item et details.",
+      "desc": "Builds a tile's details and sends them to the interface via the event gameplaySelectorDetails with backendName, requestId, item and details.",
       "params": {
-        "item": {"type": "table", "desc": "Données showDetails de la tuile."},
-        "requestId": {"type": "any", "desc": "Identifiant de requête de l'interface."}
+        "item": {
+          "type": "table",
+          "desc": "The tile's showDetails data."
+        },
+        "requestId": {
+          "type": "any",
+          "desc": "Interface request identifier."
+        }
       },
-      "returns": [{"type": "table", "desc": "Le payload envoyé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The payload sent."
+        }
+      ],
       "internal": false
     },
     "passesFilters": {
-      "desc": "Indique si une tuile passe les filtres et la recherche ; une tuile isCareerOnly est refusée tant que displayData.showCareerContent est faux.",
-      "params": {"item": {"type": "table", "desc": "Tuile testée."}},
-      "returns": [{"type": "boolean", "desc": "true si la tuile est affichée."}],
+      "desc": "Indicates whether a tile passes the filters and the search; an isCareerOnly tile is refused as long as displayData.showCareerContent is false.",
+      "params": {
+        "item": {
+          "type": "table",
+          "desc": "Tile tested."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the tile is displayed."
+        }
+      ],
       "internal": false
     },
     "getDisplayData": {
-      "desc": "Renvoie les options d'affichage effectives, adaptées à la route (rallye ou expériences).",
-      "params": {"routeName": {"type": "string|nil", "desc": "Nom de la route."}},
-      "returns": [{"type": "table", "desc": "Valeurs d'options par clé."}],
+      "desc": "Returns the effective display options, adapted to the route (rally or experiences).",
+      "params": {
+        "routeName": {
+          "type": "string|nil",
+          "desc": "Name of the road."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Option values by key."
+        }
+      ],
       "internal": false
     },
     "updateDisplayData": {
-      "desc": "Modifie une option d'affichage (displayDataInstance.setDisplayDataOption).",
+      "desc": "Changes a display option (displayDataInstance.setDisplayDataOption).",
       "params": {
-        "key": {"type": "string", "desc": "Clé de l'option."},
-        "value": {"type": "any", "desc": "Nouvelle valeur."}
+        "key": {
+          "type": "string",
+          "desc": "Option key."
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value."
+        }
       },
       "internal": false
     },
     "updateFilterData": {
-      "desc": "Met à jour une donnée interne du module de filtres (filterInstance.updateData).",
+      "desc": "Updates an internal datum of the filters module (filterInstance.updateData).",
       "params": {
-        "key": {"type": "string", "desc": "Clé de donnée."},
-        "value": {"type": "any", "desc": "Valeur."}
+        "key": {
+          "type": "string",
+          "desc": "Data key."
+        },
+        "value": {
+          "type": "any",
+          "desc": "Value."
+        }
       },
       "internal": false
     },
     "clearAllFilters": {
-      "desc": "Efface tous les filtres.",
+      "desc": "Clears all filters.",
       "internal": false
     },
     "isFavourite": {
-      "desc": "Indique si une tuile est en favori.",
-      "params": {"itemKey": {"type": "string", "desc": "Clé de la tuile."}},
-      "returns": [{"type": "boolean", "desc": "true si favori."}],
+      "desc": "Indicates whether a tile is a favorite.",
+      "params": {
+        "itemKey": {
+          "type": "string",
+          "desc": "Tile key."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if favorite."
+        }
+      ],
       "internal": false
     },
     "toggleFavourite": {
-      "desc": "Bascule le statut de favori d'une tuile et renvoie le nouvel état.",
-      "params": {"itemDetails": {"type": "table", "desc": "Table avec le champ key."}},
-      "returns": [{"type": "boolean", "desc": "Nouvel état de favori."}],
+      "desc": "Toggles a tile's favorite status and returns the new state.",
+      "params": {
+        "itemDetails": {
+          "type": "table",
+          "desc": "Table with the field key."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "New favorite state."
+        }
+      ],
       "internal": false
     },
     "isRecent": {
-      "desc": "Indique si une tuile fait partie des éléments récents.",
-      "params": {"itemKey": {"type": "string", "desc": "Clé de la tuile."}},
-      "returns": [{"type": "boolean", "desc": "true si récente."}],
+      "desc": "Indicates whether a tile is among the recent items.",
+      "params": {
+        "itemKey": {
+          "type": "string",
+          "desc": "Tile key."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if recent."
+        }
+      ],
       "internal": false
     },
     "trackRecent": {
-      "desc": "Enregistre une tuile comme récemment utilisée.",
-      "params": {"itemKey": {"type": "string", "desc": "Clé de la tuile."}},
+      "desc": "Records a tile as recently used.",
+      "params": {
+        "itemKey": {
+          "type": "string",
+          "desc": "Tile key."
+        }
+      },
       "internal": false
     },
     "getFilters": {
-      "desc": "Renvoie la définition des filtres après avoir chargé les données.",
-      "returns": [{"type": "table", "desc": "Résultat de filterInstance.getFilters()."}],
+      "desc": "Returns the filter definition after loading the data.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Result of filterInstance.getFilters()."
+        }
+      ],
       "internal": false
     },
     "getActiveFilters": {
-      "desc": "Renvoie les filtres actifs.",
-      "returns": [{"type": "table", "desc": "Filtres actifs."}],
+      "desc": "Returns the active filters.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Active filters."
+        }
+      ],
       "internal": false
     },
     "toggleFilter": {
-      "desc": "Active ou désactive une valeur de filtre. Émet un instantané si requestId est fourni.",
+      "desc": "Enables or disables a filter value. Emits a snapshot if requestId is provided.",
       "params": {
-        "filterKey": {"type": "string", "desc": "Nom du filtre."},
-        "value": {"type": "any", "desc": "Valeur de l'option."},
-        "requestId": {"type": "any|nil", "desc": "Identifiant de requête."}
+        "filterKey": {
+          "type": "string",
+          "desc": "Filter name."
+        },
+        "value": {
+          "type": "any",
+          "desc": "Option value."
+        },
+        "requestId": {
+          "type": "any|nil",
+          "desc": "Request identifier."
+        }
       },
-      "returns": [{"type": "any", "desc": "Résultat de filterInstance.toggleFilter."}],
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of filterInstance.toggleFilter."
+        }
+      ],
       "internal": false
     },
     "updateRangeFilter": {
-      "desc": "Fixe les bornes d'un filtre de plage. Émet un instantané si requestId est fourni.",
+      "desc": "Sets the bounds of a range filter. Emits a snapshot if requestId is provided.",
       "params": {
-        "filterKey": {"type": "string", "desc": "Nom du filtre."},
-        "min": {"type": "number", "desc": "Borne basse."},
-        "max": {"type": "number", "desc": "Borne haute."},
-        "requestId": {"type": "any|nil", "desc": "Identifiant de requête."}
+        "filterKey": {
+          "type": "string",
+          "desc": "Filter name."
+        },
+        "min": {
+          "type": "number",
+          "desc": "Bottom bound."
+        },
+        "max": {
+          "type": "number",
+          "desc": "Top bound."
+        },
+        "requestId": {
+          "type": "any|nil",
+          "desc": "Request identifier."
+        }
       },
-      "returns": [{"type": "any", "desc": "Résultat de filterInstance.updateRangeFilter."}],
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of filterInstance.updateRangeFilter."
+        }
+      ],
       "internal": false
     },
     "resetRangeFilter": {
-      "desc": "Réinitialise un filtre de plage. Émet un instantané si requestId est fourni.",
+      "desc": "Resets a range filter. Emits a snapshot if requestId is provided.",
       "params": {
-        "filterKey": {"type": "string", "desc": "Nom du filtre."},
-        "requestId": {"type": "any|nil", "desc": "Identifiant de requête."}
+        "filterKey": {
+          "type": "string",
+          "desc": "Filter name."
+        },
+        "requestId": {
+          "type": "any|nil",
+          "desc": "Request identifier."
+        }
       },
-      "returns": [{"type": "any", "desc": "Résultat de filterInstance.resetRangeFilter."}],
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of filterInstance.resetRangeFilter."
+        }
+      ],
       "internal": false
     },
     "resetSetFilter": {
-      "desc": "Réinitialise un filtre à choix multiples. Émet un instantané si requestId est fourni.",
+      "desc": "Resets a multiple-choice filter. Emits a snapshot if requestId is provided.",
       "params": {
-        "filterKey": {"type": "string", "desc": "Nom du filtre."},
-        "requestId": {"type": "any|nil", "desc": "Identifiant de requête."}
+        "filterKey": {
+          "type": "string",
+          "desc": "Filter name."
+        },
+        "requestId": {
+          "type": "any|nil",
+          "desc": "Request identifier."
+        }
       },
-      "returns": [{"type": "any", "desc": "Résultat de filterInstance.resetSetFilter."}],
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of filterInstance.resetSetFilter."
+        }
+      ],
       "internal": false
     },
     "getSearchText": {
-      "desc": "Renvoie le texte de recherche courant.",
-      "returns": [{"type": "string|nil", "desc": "Texte saisi."}],
+      "desc": "Returns the current search text.",
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Entered text."
+        }
+      ],
       "internal": false
     },
     "setSearchText": {
-      "desc": "Définit le texte de recherche. Émet un instantané si requestId est fourni.",
+      "desc": "Sets the search text. Emits a snapshot if requestId is provided.",
       "params": {
-        "text": {"type": "string", "desc": "Texte de recherche."},
-        "requestId": {"type": "any|nil", "desc": "Identifiant de requête."}
+        "text": {
+          "type": "string",
+          "desc": "Search text."
+        },
+        "requestId": {
+          "type": "any|nil",
+          "desc": "Request identifier."
+        }
       },
-      "returns": [{"type": "any", "desc": "Résultat de filterInstance.setSearchText."}],
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of filterInstance.setSearchText."
+        }
+      ],
       "internal": false
     },
     "getDisplayDataOptions": {
-      "desc": "Renvoie la définition des options d'affichage adaptée à la route : masque groupMode et clusterMode en mode rallye ou expériences, et masque groupModeRally et clusterModeRally ailleurs.",
-      "params": {"routeName": {"type": "string|nil", "desc": "Nom de la route (par défaut la route active)."}},
-      "returns": [{"type": "table[]", "desc": "Options visibles."}],
+      "desc": "Returns the display options definition adapted to the route: hides groupMode and clusterMode in rally or experiences mode, and hides groupModeRally and clusterModeRally elsewhere.",
+      "params": {
+        "routeName": {
+          "type": "string|nil",
+          "desc": "Route name (the active route by default)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Visible options."
+        }
+      ],
       "internal": false
     },
     "setDisplayDataOption": {
-      "desc": "Définit une option d'affichage et renvoie les données d'affichage à jour. Émet un instantané si requestId est fourni.",
+      "desc": "Sets a display option and returns the updated display data. Emits a snapshot if requestId is provided.",
       "params": {
-        "key": {"type": "string", "desc": "Clé de l'option."},
-        "value": {"type": "any", "desc": "Valeur."},
-        "requestId": {"type": "any|nil", "desc": "Identifiant de requête."}
+        "key": {
+          "type": "string",
+          "desc": "Option key."
+        },
+        "value": {
+          "type": "any",
+          "desc": "Value."
+        },
+        "requestId": {
+          "type": "any|nil",
+          "desc": "Request identifier."
+        }
       },
-      "returns": [{"type": "table", "desc": "Données d'affichage."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Display data."
+        }
+      ],
       "internal": false
     },
     "resetDisplayDataToDefaults": {
-      "desc": "Remet les options d'affichage à leurs valeurs par défaut. Émet un instantané si requestId est fourni.",
-      "params": {"requestId": {"type": "any|nil", "desc": "Identifiant de requête."}},
-      "returns": [{"type": "table", "desc": "Données d'affichage."}],
+      "desc": "Resets the display options to their default values. Emits a snapshot if requestId is provided.",
+      "params": {
+        "requestId": {
+          "type": "any|nil",
+          "desc": "Request identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Display data."
+        }
+      ],
       "internal": false
     },
     "getScreenHeaderTitleAndPath": {
-      "desc": "Construit le titre de l'écran et le fil d'Ariane (menu, sélecteur de gameplay, segment de filtres ou recherche, cluster ou page découverte). Ajoute « (filtré) » au titre si des filtres ou une recherche sont actifs.",
-      "params": {"path": {"type": "table", "desc": "Chemin courant { keys = {...} }."}},
-      "returns": [{"type": "table", "desc": "Table title, isFiltered, pathSegments."}],
+      "desc": "Builds the screen title and the breadcrumb (menu, gameplay selector, filters or search segment, cluster or discover page). Adds \"(filtered)\" to the title if filters or a search are active.",
+      "params": {
+        "path": {
+          "type": "table",
+          "desc": "Current path { keys = {...} }."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Table title, isFiltered, pathSegments."
+        }
+      ],
       "internal": false
     },
     "profilerFinish": {
-      "desc": "Ne fait rien (TODO dans le code).",
+      "desc": "Does nothing (TODO in the code).",
       "internal": true
     },
     "closedFromUI": {
-      "desc": "Appelé quand l'interface ferme le sélecteur. Ne fait rien pour l'instant (TODO).",
+      "desc": "Called when the interface closes the selector. Does nothing for now (TODO).",
       "internal": true
     },
     "getDetails": {
-      "desc": "Construit les détails d'une tuile en émettant le hook onGameplaySelectorGetDetails et renvoie le premier bloc.",
-      "params": {"item": {"type": "table", "desc": "Données showDetails de la tuile."}},
-      "returns": [{"type": "table|nil", "desc": "Bloc de détails, nil si aucun générateur n'a répondu."}],
+      "desc": "Builds a tile's details by emitting the hook onGameplaySelectorGetDetails and returns the first block.",
+      "params": {
+        "item": {
+          "type": "table",
+          "desc": "The tile's showDetails data."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Details block, nil if no generator responded."
+        }
+      ],
       "internal": false
     },
     "executeButton": {
-      "desc": "Exécute le bouton de détails d'identifiant donné via le buttonModule.",
+      "desc": "Runs the details button with the given identifier via the buttonModule.",
       "params": {
-        "buttonId": {"type": "any", "desc": "Identifiant du bouton."},
-        "additionalData": {"type": "any", "desc": "Données supplémentaires passées au callback."}
+        "buttonId": {
+          "type": "any",
+          "desc": "Button identifier."
+        },
+        "additionalData": {
+          "type": "any",
+          "desc": "Extra data passed to the callback."
+        }
       },
-      "returns": [{"type": "any", "desc": "Résultat de buttonInstance.executeButton."}],
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of buttonInstance.executeButton."
+        }
+      ],
       "internal": false
     },
     "getManagementDetails": {
-      "desc": "Renvoie toujours { buttons = {} } (TODO dans le code).",
-      "returns": [{"type": "table", "desc": "Table avec buttons vide."}],
+      "desc": "Always returns { buttons = {} } (TODO in the code).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Table with empty buttons."
+        }
+      ],
       "internal": false
     },
     "exitCallback": {
-      "desc": "Ne fait rien (TODO).",
+      "desc": "Does nothing (TODO).",
       "internal": true
     },
     "executeDoubleClick": {
-      "desc": "Exécute le bouton marqué isDoubleClickAction des détails d'une tuile (ou l'unique bouton s'il n'y en a qu'un).",
-      "params": {"item": {"type": "table", "desc": "Données showDetails de la tuile."}},
+      "desc": "Runs the button marked isDoubleClickAction in a tile's details (or the only button if there is just one).",
+      "params": {
+        "item": {
+          "type": "table",
+          "desc": "The tile's showDetails data."
+        }
+      },
       "internal": false
     },
     "exploreFolder": {
-      "desc": "Journalise seulement le chemin (non implémenté).",
-      "params": {"path": {"type": "string", "desc": "Chemin de dossier."}},
+      "desc": "Only logs the path (not implemented).",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "Folder path."
+        }
+      },
       "internal": false
     },
     "goToMod": {
-      "desc": "Journalise seulement l'id du mod (non implémenté).",
-      "params": {"modId": {"type": "string", "desc": "Identifiant du mod."}},
+      "desc": "Only logs the mod id (not implemented).",
+      "params": {
+        "modId": {
+          "type": "string",
+          "desc": "Mod identifier."
+        }
+      },
       "internal": false
     },
     "asyncGameplaySelectorLoadComplete": {
-      "desc": "Hook de fin du chargement asynchrone (util_asyncBulkLoader). Émet l'instantané GameplaySelectorDataLoaded de la route en attente, sauf si l'utilisateur a changé de route entre-temps.",
+      "desc": "End hook of the asynchronous loading (util_asyncBulkLoader). Emits the GameplaySelectorDataLoaded snapshot of the pending route, unless the user changed route in the meantime.",
       "internal": true
     },
     "resolveCurrentSelectorPath": {
-      "desc": "Renvoie le chemin de la vue courante : celui du cluster actif, sinon le chemin racine { keys = {\"allGameplay\"} }.",
-      "returns": [{"type": "table", "desc": "Chemin { keys = {...} }."}],
+      "desc": "Returns the current view's path: that of the active cluster, otherwise the root path { keys = {\"allGameplay\"} }.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Path { keys = {...} }."
+        }
+      ],
       "internal": false
     },
     "emitDisplayDataSnapshot": {
-      "desc": "Reconstruit l'instantané de la vue courante (groupes, filtres, options d'affichage, détails de gestion, texte de recherche, en-tête) et l'envoie par l'évènement gameplaySelectorDisplayDataSnapshot avec le requestId. Renvoie false et journalise une erreur en cas d'échec.",
-      "params": {"requestId": {"type": "any", "desc": "Identifiant de requête de l'interface."}},
-      "returns": [{"type": "boolean", "desc": "true si l'évènement a été envoyé."}],
+      "desc": "Rebuilds the current view's snapshot (groups, filters, display options, management details, search text, header) and sends it via the event gameplaySelectorDisplayDataSnapshot with the requestId. Returns false and logs an error on failure.",
+      "params": {
+        "requestId": {
+          "type": "any",
+          "desc": "Interface request identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the event was sent."
+        }
+      ],
       "internal": false
     },
     "onRouteMount": {
-      "desc": "Hook de route appelé au montage d'une route racine du sélecteur. Réinitialise la sélection de cluster, mémorise la route active et démarre le chargement asynchrone avec le chemin allGameplay.",
+      "desc": "Route hook called when a root route of the selector is mounted. Resets the cluster selection, stores the active route and starts the asynchronous loading with the allGameplay path.",
       "params": {
-        "context": {"type": "any", "desc": "Contexte du routeur."},
-        "toRoute": {"type": "table", "desc": "Route d'arrivée (name utilisé)."},
-        "fromRoute": {"type": "table|nil", "desc": "Route de départ."},
-        "data": {"type": "table", "desc": "Données de route (non utilisées)."}
+        "context": {
+          "type": "any",
+          "desc": "Router context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Destination route (name used)."
+        },
+        "fromRoute": {
+          "type": "table|nil",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Route data (not used)."
+        }
       },
       "internal": true
     },
     "onClusterRouteEnter": {
-      "desc": "Hook de route appelé à l'entrée dans une route de cluster. Promeut la sélection préparée par navigateToCluster, sinon retombe sur le cluster par défaut.",
+      "desc": "Route hook called on entering a cluster route. Promotes the selection prepared by navigateToCluster, otherwise falls back to the default cluster.",
       "params": {
-        "context": {"type": "any", "desc": "Contexte du routeur."},
-        "toRoute": {"type": "table", "desc": "Route d'arrivée."},
-        "fromRoute": {"type": "table|nil", "desc": "Route de départ."},
-        "data": {"type": "table", "desc": "Données de route."}
+        "context": {
+          "type": "any",
+          "desc": "Router context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Destination route."
+        },
+        "fromRoute": {
+          "type": "table|nil",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Route data."
+        }
       },
       "internal": true
     },
     "onClusterRouteMount": {
-      "desc": "Hook de route appelé au montage d'une route de cluster. Démarre le chargement asynchrone avec les clés et le titre du cluster actif.",
+      "desc": "Route hook called when a cluster route is mounted. Starts the asynchronous loading with the active cluster's keys and title.",
       "params": {
-        "context": {"type": "any", "desc": "Contexte du routeur."},
-        "toRoute": {"type": "table", "desc": "Route d'arrivée (name utilisé)."},
-        "fromRoute": {"type": "table|nil", "desc": "Route de départ."},
-        "data": {"type": "table", "desc": "Données de route."}
+        "context": {
+          "type": "any",
+          "desc": "Router context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Destination route (name used)."
+        },
+        "fromRoute": {
+          "type": "table|nil",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Route data."
+        }
       },
       "internal": true
     },
     "resolveClusterTitle": {
-      "desc": "Renvoie le titre du cluster actif, sinon clusterTitle s'il est une chaîne non vide, sinon nil.",
-      "params": {"clusterTitle": {"type": "string|nil", "desc": "Titre de repli."}},
-      "returns": [{"type": "string|nil", "desc": "Titre résolu."}],
+      "desc": "Returns the active cluster's title, otherwise clusterTitle if it is a non-empty string, otherwise nil.",
+      "params": {
+        "clusterTitle": {
+          "type": "string|nil",
+          "desc": "Fallback title."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Resolved title."
+        }
+      ],
       "internal": false
     },
     "openGameplaySelector": {
-      "desc": "Applique le préréglage de la route menu.gameplay (efface filtres et recherche) puis y navigue.",
+      "desc": "Applies the preset of the menu.gameplay route (clears filters and search) then navigates to it.",
       "internal": false
     },
     "openRallySelector": {
-      "desc": "Ouvre menu.rallySelector avec les filtres de type rallyStage et rallyLoop.",
+      "desc": "Opens menu.rallySelector with the type filters rallyStage and rallyLoop.",
       "internal": false
     },
     "openExperiencesSelector": {
-      "desc": "Ouvre menu.experiencesSelector avec le filtre système quickStartExperiences.",
+      "desc": "Opens menu.experiencesSelector with the system filter quickStartExperiences.",
       "internal": false
     },
     "onModDeactivated": {
-      "desc": "Hook appelé quand un mod est désactivé : marque les données comme à recalculer.",
+      "desc": "Hook called when a mod is deactivated: marks the data as needing recomputation.",
       "internal": true
     },
     "onModActivated": {
-      "desc": "Hook appelé quand un mod est activé : marque les données comme à recalculer.",
+      "desc": "Hook called when a mod is activated: marks the data as needing recomputation.",
       "internal": true
     },
     "onModManagerReady": {
-      "desc": "Hook appelé quand le gestionnaire de mods est prêt : marque les données comme à recalculer.",
+      "desc": "Hook called when the mod manager is ready: marks the data as needing recomputation.",
       "internal": true
     },
     "onModManagerStateChanged": {
-      "desc": "Hook appelé quand l'état du gestionnaire de mods change : marque les données comme à recalculer.",
+      "desc": "Hook called when the mod manager state changes: marks the data as needing recomputation.",
       "internal": true
     },
     "onSettingsChanged": {
-      "desc": "Hook appelé quand les réglages changent : marque les données comme à recalculer.",
+      "desc": "Hook called when the settings change: marks the data as needing recomputation.",
       "internal": true
     }
   }

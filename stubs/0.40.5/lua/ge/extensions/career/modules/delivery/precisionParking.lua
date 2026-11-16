@@ -2,52 +2,52 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/delivery/precisionParking.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Évalue la précision de stationnement du véhicule du joueur à la destination d'une livraison (colis, matériaux ou véhicule) et applique des bonus ou pénalités de récompenses. Le score (2 à 20) combine l'alignement angulaire, l'écart latéral et l'écart longitudinal du centre de la boîte englobante par rapport à la place de parking ; il donne un niveau perfect/great/good/bad/horrible. Les bonus touchent l'argent, l'XP logistique, l'XP de compétence et la réputation de l'organisation.
---- Accès : extension `career_modules_delivery_precisionParking` : `extensions.load("career_modules_delivery_precisionParking")`, puis la globale `career_modules_delivery_precisionParking`
+--- Evaluates the player vehicle's parking precision at a delivery's destination (parcel, materials or vehicle) and applies reward bonuses or penalties. The score (2 to 20) combines the angular alignment, the lateral offset and the longitudinal offset of the bounding box center relative to the parking spot; it gives a perfect/great/good/bad/horrible level. The bonuses affect money, logistics XP, skill XP and the organization's reputation.
+--- Access: extension `career_modules_delivery_precisionParking`: `extensions.load("career_modules_delivery_precisionParking")`, then the global `career_modules_delivery_precisionParking`
 ---@class career_modules_delivery_precisionParking
----@field dependencies table<integer, string> Extensions chargées avant : util_stepHandler.
+---@field dependencies table<integer, string> Extensions loaded before: util_stepHandler.
 career_modules_delivery_precisionParking = {}
 
---- Pour un colis ou des matériaux : évalue le véhicule du joueur à la place targetLocation.psPath et applique le bonus à cargo.rewards (money, logistics-materials ou logistics-delivery, réputation de l'organisation) ; stocke le détail dans cargo.precisionParking.
----Source : lua/ge/extensions/career/modules/delivery/precisionParking.lua:400
----@param cargo table Colis à livrer (rewards, organization, materialType).
----@param targetLocation table Destination contenant psPath, le chemin de la place de parking.
----@return table  Le colis, modifié si le score a pu être calculé.
+--- For a parcel or materials: evaluates the player vehicle at the spot targetLocation.psPath and applies the bonus to cargo.rewards (money, logistics-materials or logistics-delivery, organization reputation); stores the detail in cargo.precisionParking.
+---Source: lua/ge/extensions/career/modules/delivery/precisionParking.lua:400
+---@param cargo table Parcel to deliver (rewards, organization, materialType).
+---@param targetLocation table Destination containing psPath, the parking spot path.
+---@return table  The parcel, modified if the score could be computed.
 function career_modules_delivery_precisionParking.calculateCargoPrecisionParking(cargo, targetLocation) end
 
---- Pour une livraison de véhicule : calcule la précision à taskData.dropOffPsPath et ajoute le bonus à taskData.adjustedRewards, avec le détail dans taskData.breakdown.precisionParking. Renvoie taskData inchangé si les données manquent.
----Source : lua/ge/extensions/career/modules/delivery/precisionParking.lua:380
----@param taskData table Tâche de livraison avec dropOffPsPath, vehId, originalRewards, adjustedRewards, breakdown et offer.organization.
----@return table  taskData modifié.
+--- For a vehicle delivery: computes the precision at taskData.dropOffPsPath and adds the bonus to taskData.adjustedRewards, with the detail in taskData.breakdown.precisionParking. Returns taskData unchanged if data is missing.
+---Source: lua/ge/extensions/career/modules/delivery/precisionParking.lua:380
+---@param taskData table Delivery task with dropOffPsPath, vehId, originalRewards, adjustedRewards, breakdown and offer.organization.
+---@return table  Modified taskData.
 function career_modules_delivery_precisionParking.calculateVehiclePrecisionParking(taskData) end
 
---- Calcule le score de stationnement d'un véhicule par rapport à une place (position, rotation, largeur et longueur optionnelles), selon la logique de parkingPointsNode.lua.
----Source : lua/ge/extensions/career/modules/delivery/precisionParking.lua:64
----@param vehId integer Identifiant du véhicule.
----@param targetParkingSpot table Place de parking avec pos (vec3), rot (quat) et optionnellement width, length.
----@return table|nil  Table avec precisionLevel, totalScore, angle, adjustedAngle, sideDist, forwardDist, sous-scores et tolérances ; nil si le véhicule est introuvable.
+--- Computes a vehicle's parking score relative to a spot (position, rotation, optional width and length), following the logic of parkingPointsNode.lua.
+---Source: lua/ge/extensions/career/modules/delivery/precisionParking.lua:64
+---@param vehId integer Vehicle identifier.
+---@param targetParkingSpot table Parking spot with pos (vec3), rot (quat) and optionally width, length.
+---@return table|nil  Table with precisionLevel, totalScore, angle, adjustedAngle, sideDist, forwardDist, sub-scores and tolerances; nil if the vehicle cannot be found.
 function career_modules_delivery_precisionParking.calculateVehiclePrecisionScore(vehId, targetParkingSpot) end
 
---- Fonction de débogage : renvoie le score de précision d'un véhicule pour une place (le log est commenté dans le code).
----Source : lua/ge/extensions/career/modules/delivery/precisionParking.lua:426
----@param vehId integer Identifiant du véhicule.
----@param targetParkingSpot table Place de parking (pos, rot, width, length).
----@return table|nil  Données de précision.
+--- Debug function: returns a vehicle's precision score for a spot (the log is commented out in the code).
+---Source: lua/ge/extensions/career/modules/delivery/precisionParking.lua:426
+---@param vehId integer Vehicle identifier.
+---@param targetParkingSpot table Parking spot (pos, rot, width, length).
+---@return table|nil  Precision data.
 function career_modules_delivery_precisionParking.debugPrecisionParking(vehId, targetParkingSpot) end
 
---- Convertit un résultat de précision en bonus : montants fixes et pourcentages pour l'argent (positif ou négatif), l'XP logistique, l'XP de compétence (good/great/perfect) et la réputation (bonus great/perfect, pénalité horrible). Sans donnée, renvoie un bonus nul de niveau 'none'.
----Source : lua/ge/extensions/career/modules/delivery/precisionParking.lua:171
----@param precisionData table|nil Résultat de calculateVehiclePrecisionScore.
----@return table  Table avec precisionLevel, totalScore, mesures et champs moneyFlat/Percent, logisticsFlat/Percent, skillFlat/Percent, reputationFlat/Percent.
+--- Converts a precision result into a bonus: fixed amounts and percentages for money (positive or negative), logistics XP, skill XP (good/great/perfect) and reputation (great/perfect bonus, horrible penalty). With no data, returns a zero bonus of level 'none'.
+---Source: lua/ge/extensions/career/modules/delivery/precisionParking.lua:171
+---@param precisionData table|nil Result of calculateVehiclePrecisionScore.
+---@return table  Table with precisionLevel, totalScore, measurements and fields moneyFlat/Percent, logisticsFlat/Percent, skillFlat/Percent, reputationFlat/Percent.
 function career_modules_delivery_precisionParking.getPrecisionParkingBonus(precisionData) end
 
---- Renvoie la table de configuration (seuils de score et montants/pourcentages de récompense) pour l'UI ou le débogage.
----Source : lua/ge/extensions/career/modules/delivery/precisionParking.lua:415
----@return table  Table PRECISION_PARKING_CONFIG (référence, non copiée).
+--- Returns the configuration table (score thresholds and reward amounts/percentages) for the UI or debugging.
+---Source: lua/ge/extensions/career/modules/delivery/precisionParking.lua:415
+---@return table  Table PRECISION_PARKING_CONFIG (reference, not copied).
 function career_modules_delivery_precisionParking.getPrecisionParkingConfig() end
 
---- Hook appelé à l'activation de la carrière : mémorise les références vers parcelManager, general, generator et vehicleTasks.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/delivery/precisionParking.lua:9
+--- Hook called on career activation: stores the references to parcelManager, general, generator and vehicleTasks.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/delivery/precisionParking.lua:9
 function career_modules_delivery_precisionParking.onCareerActivated() end
 

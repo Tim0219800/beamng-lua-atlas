@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/client.lua",
+  "module": "Client HTTP très léger vers un service local de transcription vocale (http://localhost:27872) utilisé pour la reconnaissance des notes parlées pendant la reconnaissance (recce) d'un rallye. Il expose l'envoi d'une demande de coupure d'enregistrement et la lecture des dernières transcriptions. Le délai HTTP est de 0,5 s. Beaucoup d'autres appels (start/stop d'enregistrement, audio distant, proxy) sont commentés dans le code.",
+  "notes": [
+    "Un code HTTP différent de 200 donne {ok=false, error=<code>} et une erreur dans le log ; sinon la réponse JSON du serveur est renvoyée telle quelle.",
+    "Le service externe doit tourner sur le port 27872 : sans lui, chaque appel échoue après le timeout de 0,5 s.",
+    "En cas d'échec, client_msg est ajouté à la réponse (copie de error). Si le serveur répond 200 mais un JSON sans champ ok, resp.ok est nil et client_msg est aussi défini."
+  ],
+  "functions": {
+    "transcribe_recording_cut": {
+      "desc": "Envoie en POST JSON la demande de coupure d'enregistrement à /recordings/actions/cut.",
+      "params": {"requestBody": {"type": "table", "desc": "Corps de la requête, encodé en JSON (contenu défini par le service externe)."}},
+      "returns": [{"type": "table", "desc": "Réponse décodée du serveur, ou {ok=false, error, client_msg} en cas d'échec."}],
+      "internal": false
+    },
+    "transcribe_transcripts_get": {
+      "desc": "Récupère en GET les transcriptions à /transcripts/<count>.",
+      "params": {"count": {"type": "integer", "desc": "Nombre de transcriptions demandées (inséré dans l'URL)."}},
+      "returns": [{"type": "table", "desc": "Réponse décodée du serveur, ou {ok=false, error, client_msg} en cas d'échec."}],
+      "internal": false
+    }
+  }
+}

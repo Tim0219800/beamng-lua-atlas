@@ -2,25 +2,25 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/router/runtimeRouteRegistry.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Registre pur des routes d'exécution et analyseur de routes Vue brutes, sans effet de bord côté jeu. Il transforme un tableau de routes Vue en surcharges de configuration du routeur et mémorise quelle source possède chaque nom de route. routeManager en consomme les « gagnants » pour les superposer à l'arbre Lua statique. Chaque instance (M.new()) garde des instantanés par sourceId, un ordre stable d'enregistrement et la dérivation par nom (la source la plus récente gagne, sans composition).
---- Accès : extension `ui_router_runtimeRouteRegistry` : `extensions.load("ui_router_runtimeRouteRegistry")`, puis la globale `ui_router_runtimeRouteRegistry`
+--- Pure registry of runtime routes and parser of raw Vue routes, with no game-side effects. It turns a Vue route array into router configuration overrides and remembers which source owns each route name. routeManager consumes its "winners" to overlay them on the static Lua tree. Each instance (M.new()) keeps snapshots per sourceId, a stable registration order and per-name derivation (the most recent source wins, no composition).
+--- Access: extension `ui_router_runtimeRouteRegistry`: `extensions.load("ui_router_runtimeRouteRegistry")`, then the global `ui_router_runtimeRouteRegistry`
 ---@class ui_router_runtimeRouteRegistry
 ui_router_runtimeRouteRegistry = {}
 
---- Vérifie qu'une référence de hook est une chaîne « module.func » (séparation au dernier point, deux parties non vides).
----Source : lua/ge/extensions/ui/router/runtimeRouteRegistry.lua:44
----@param ref string|any Référence à tester.
----@return boolean  true si valide.
+--- Checks that a hook reference is a "module.func" string (split at the last dot, two non-empty parts).
+---Source: lua/ge/extensions/ui/router/runtimeRouteRegistry.lua:44
+---@param ref string|any Reference to test.
+---@return boolean  true if valid.
 function ui_router_runtimeRouteRegistry.isValidHookRef(ref) end
 
---- Crée une instance de registre isolée (routeManager en détient une ; les tests en créent à volonté). Méthodes de l'instance : register(sourceId, rawRoutes) -> {success, isNew, names, added, removed, changed} ou {success=false, errors} ; unregister(sourceId) -> {success, existed, added, removed, changed} ; getEffectiveRoutes() ; getEffectiveNames() (triés) ; getRoute(name) ; getRouteSource(name) ; hasRoute(name) ; hasSource(sourceId) ; getSourceOrder() ; clear().
----Source : lua/ge/extensions/ui/router/runtimeRouteRegistry.lua:389
----@return table  Instance de registre.
+--- Creates an isolated registry instance (routeManager holds one; tests create as many as needed). Instance methods: register(sourceId, rawRoutes) -> {success, isNew, names, added, removed, changed} or {success=false, errors}; unregister(sourceId) -> {success, existed, added, removed, changed}; getEffectiveRoutes(); getEffectiveNames() (sorted); getRoute(name); getRouteSource(name); hasRoute(name); hasSource(sourceId); getSourceOrder(); clear().
+---Source: lua/ge/extensions/ui/router/runtimeRouteRegistry.lua:389
+---@return table  Registry instance.
 function ui_router_runtimeRouteRegistry.new() end
 
---- Analyse un tableau de routes Vue brut en liste ordonnée de noms et table nom -> surcharge de configuration. Descend dans `children` des nœuds nommés ou non. Toute erreur rejette l'ensemble.
----Source : lua/ge/extensions/ui/router/runtimeRouteRegistry.lua:155
----@param rawRoutes table Tableau de routes Vue (name, meta, children).
+--- Parses a raw Vue route array into an ordered list of names and a name -> configuration override table. Descends into the `children` of named or unnamed nodes. Any error rejects the whole.
+---Source: lua/ge/extensions/ui/router/runtimeRouteRegistry.lua:155
+---@param rawRoutes table Vue route array (name, meta, children).
 ---@return table  { ok = boolean, errors = string[], names = string[], definitions = table<string, table> }
 function ui_router_runtimeRouteRegistry.parseRawRoutes(rawRoutes) end
 

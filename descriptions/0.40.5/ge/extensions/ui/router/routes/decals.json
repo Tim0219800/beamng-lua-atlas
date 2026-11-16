@@ -1,11 +1,11 @@
 {
   "path": "lua/ge/extensions/ui/router/routes/decals.lua",
-  "module": "Sous-arbre de routes de l'éditeur de décalcomanies de livrées (inclus par liveries.edit.decals). Flux d'ajout : decals -> camera (choix de la vue) -> selector (grille de décalcomanies) -> transform -> settings ; branches séparées pour material, mirror et transform d'une décalcomanie déjà sélectionnée. Les hooks pointent vers ui_liveries_routeLifecycleCallbacks.",
+  "module": "Route subtree of the livery decal editor (included by liveries.edit.decals). Add flow: decals -> camera (view choice) -> selector (decal grid) -> transform -> settings; separate branches for material, mirror and transform of an already selected decal. The hooks point to ui_liveries_routeLifecycleCallbacks.",
   "notes": [
-    "Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = \"<nom>\" }`.",
-    "Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.",
-    "`ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change.",
-    "Le screenId commence par « liveries.edit.decals » pour que la préparation et le nettoyage de ui_liveries_decal restent valides sur toute la branche (commentaire du code)."
+    "Route configuration module: it exports no function. routeManager reads it (via the ui_router_routes_<name> extension) when routes.lua includes it with `{ include = \"<name>\" }`.",
+    "The keys of `Children` form the segments of the dotted name: \"<module>.<child>\". `children` (lowercase) in a node designates its sub-routes; `include` mounts another module there.",
+    "`ui` is inherited by child routes (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause): a child redefines it only for what changes.",
+    "The screenId starts with \"liveries.edit.decals\" so that the preparation and cleanup of ui_liveries_decal remain valid across the whole branch (code comment)."
   ],
   "fields": {
     "Root": {
@@ -14,11 +14,11 @@
     },
     "Children": {
       "type": "table<string, table>",
-      "desc": "camera (> selector > transform > settings), material, mirror, transform (> settings), chacun avec backTarget vers le niveau précédent."
+      "desc": "camera (> selector > transform > settings), material, mirror, transform (> settings), each with a backTarget to the previous level."
     },
     "ModuleName": {
       "type": "string",
-      "desc": "Nom du module de routes (premier segment du nom pointé)."
+      "desc": "Name of the routes module (first segment of the dotted name)."
     }
   }
 }

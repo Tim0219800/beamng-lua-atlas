@@ -1,18 +1,23 @@
 {
   "path": "lua/ge/extensions/editor/prefabInstanceEditor.lua",
-  "module": "Ajoute une section « PrefabInstance » en tête de l'inspecteur de l'éditeur quand tous les objets sélectionnés sont des PrefabInstance. Si au moins une instance ne correspond plus à son modèle parent (matchesParentTemplate), il affiche les boutons « Make new template » et « Apply to parent ».",
+  "module": "Adds a \"PrefabInstance\" section at the top of the editor inspector when all the selected objects are PrefabInstance. If at least one instance no longer matches its parent template (matchesParentTemplate), it displays the \"Make new template\" and \"Apply to parent\" buttons.",
   "notes": [
-    "Les deux boutons n'ont aucune action associée dans le code (blocs if vides) : la fonctionnalité est un squelette non terminé.",
-    "Le module ne lit que inspectorInfo.previousSelectedIds."
+    "The two buttons have no associated action in the code (empty if blocks): the feature is an unfinished skeleton.",
+    "The module only reads inspectorInfo.previousSelectedIds."
   ],
   "functions": {
     "onEditorInitialized": {
-      "desc": "Appelé à l'initialisation de l'éditeur ; écrit seulement une ligne de log (niveau I).",
+      "desc": "Called at editor initialization; only writes a log line (level I).",
       "internal": true
     },
     "onEditorInspectorHeaderGui": {
-      "desc": "Appelé à chaque frame en tête de l'inspecteur. Affiche l'en-tête repliable « PrefabInstance » seulement si toute la sélection est composée de PrefabInstance ; les boutons n'apparaissent que si une instance diffère de son parent.",
-      "params": {"inspectorInfo": {"type": "table", "desc": "Informations de l'inspecteur ; le champ previousSelectedIds (liste d'IDs d'objets) est utilisé."}},
+      "desc": "Called every frame at the top of the inspector. Displays the collapsible \"PrefabInstance\" header only if the whole selection is made of PrefabInstance; the buttons only appear if an instance differs from its parent.",
+      "params": {
+        "inspectorInfo": {
+          "type": "table",
+          "desc": "Inspector information; the previousSelectedIds field (list of object IDs) is used."
+        }
+      },
       "internal": true
     }
   }

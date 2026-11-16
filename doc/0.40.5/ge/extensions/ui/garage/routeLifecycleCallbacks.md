@@ -1,61 +1,61 @@
 # `ui_garage_routeLifecycleCallbacks`
 
-*Fichier : `lua/ge/extensions/ui/garage/routeLifecycleCallbacks.lua` · VM : Game Engine (GE) · 70 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/garage/routeLifecycleCallbacks.lua` · VM: Game Engine (GE) · 70 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_garage_routeLifecycleCallbacks` : `extensions.load("ui_garage_routeLifecycleCallbacks")`, puis la globale `ui_garage_routeLifecycleCallbacks`
+**Access:** extension `ui_garage_routeLifecycleCallbacks`: `extensions.load("ui_garage_routeLifecycleCallbacks")`, then the global `ui_garage_routeLifecycleCallbacks`
 
-Callbacks de cycle de vie des routes UI du garage en mode photo. Pour les routes « garage.photomode » (et « garage.photomode.* »), ouvre une session photomode avec le profil « garage » à l'entrée, y joint les données de route fournies par ui_pause_providers_routeData_photomode, et ferme la session à la sortie. Les autres routes sont ignorées.
+Lifecycle callbacks for the garage photo mode UI routes. For the "garage.photomode" routes (and "garage.photomode.*"), opens a photomode session with the "garage" profile on entry, attaches the route data provided by ui_pause_providers_routeData_photomode, and closes the session on exit. Other routes are ignored.
 
-## Remarques
+## Notes
 
-- Dépend de ui_pause_providers_routeData_photomode et ui_pause_photomode (déclarées dans M.dependencies).
-- Les trois hooks appellent dump(...) pour journaliser le nom de la route (traces de debug laissées dans le code).
-- onPhotomodeLeave n'a pas de filtre sur le nom de route : il appelle onPhotomodeRouteLeave et endPhotomodeSession pour toute sortie qui lui est notifiée.
+- Depends on ui_pause_providers_routeData_photomode and ui_pause_photomode (declared in M.dependencies).
+- All three hooks call dump(...) to log the route name (debug traces left in the code).
+- onPhotomodeLeave has no route name filter: it calls onPhotomodeRouteLeave and endPhotomodeSession for any exit notified to it.
 
-**Dépendances (chargées avant) :** `ui_pause_providers_routeData_photomode`, `ui_pause_photomode`
+**Dependencies (loaded first):** `ui_pause_providers_routeData_photomode`, `ui_pause_photomode`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_garage_routeLifecycleCallbacks.onPhotomodeEnter(context, toRoute, fromRoute, data)` | Hook appelé quand l'UI entre dans une route photomode. Si la route est garage.photomode[.*] : démarre la session photomode (profil « garage »), ajoute data.photomode et notifie onPhotomodeRouteEnter. *(interne)* *(hook)* | 35 |
-| `ui_garage_routeLifecycleCallbacks.onPhotomodeLeave(context, toRoute, fromRoute, data)` | Hook appelé à la sortie de la route : notifie onPhotomodeRouteLeave puis termine la session photomode (endPhotomodeSession). *(interne)* *(hook)* | 57 |
-| `ui_garage_routeLifecycleCallbacks.onPhotomodeMount(context, toRoute, fromRoute, data)` | Hook appelé au montage de la route : ajoute data.photomode si la route est garage.photomode[.*]. *(interne)* *(hook)* | 52 |
+| `ui_garage_routeLifecycleCallbacks.onPhotomodeEnter(context, toRoute, fromRoute, data)` | Hook called when the UI enters a photomode route. If the route is garage.photomode[.*]: starts the photomode session ("garage" profile), adds data.photomode and notifies onPhotomodeRouteEnter. *(internal)* *(hook)* | 35 |
+| `ui_garage_routeLifecycleCallbacks.onPhotomodeLeave(context, toRoute, fromRoute, data)` | Hook called when leaving the route: notifies onPhotomodeRouteLeave then ends the photomode session (endPhotomodeSession). *(internal)* *(hook)* | 57 |
+| `ui_garage_routeLifecycleCallbacks.onPhotomodeMount(context, toRoute, fromRoute, data)` | Hook called when the route is mounted: adds data.photomode if the route is garage.photomode[.*]. *(internal)* *(hook)* | 52 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_garage_routeLifecycleCallbacks.onPhotomodeEnter(context, toRoute, fromRoute, data)`
 
-Hook appelé quand l'UI entre dans une route photomode. Si la route est garage.photomode[.*] : démarre la session photomode (profil « garage »), ajoute data.photomode et notifie onPhotomodeRouteEnter.
+Hook called when the UI enters a photomode route. If the route is garage.photomode[.*]: starts the photomode session ("garage" profile), adds data.photomode and notifies onPhotomodeRouteEnter.
 
-- `context` (*table*) : Contexte du changement de route (non utilisé).
-- `toRoute` (*table*) : Route cible ; seul le champ name est lu.
-- `fromRoute` (*table|nil*) : Route précédente (non utilisée).
-- `data` (*table*) : Données de route, enrichies avec photomode.
+- `context` (*table*) : Route change context (unused).
+- `toRoute` (*table*) : Target route; only the name field is read.
+- `fromRoute` (*table|nil*) : Previous route (unused).
+- `data` (*table*) : Route data, enriched with photomode.
 
 #### `ui_garage_routeLifecycleCallbacks.onPhotomodeLeave(context, toRoute, fromRoute, data)`
 
-Hook appelé à la sortie de la route : notifie onPhotomodeRouteLeave puis termine la session photomode (endPhotomodeSession).
+Hook called when leaving the route: notifies onPhotomodeRouteLeave then ends the photomode session (endPhotomodeSession).
 
-- `context` (*table*) : Contexte du changement de route (non utilisé).
-- `toRoute` (*table|nil*) : Route d'arrivée ; name transmis à onPhotomodeRouteLeave.
-- `fromRoute` (*table|nil*) : Route quittée (utilisée pour le log).
-- `data` (*table*) : Données de route (non utilisées).
+- `context` (*table*) : Route change context (unused).
+- `toRoute` (*table|nil*) : Destination route; name passed to onPhotomodeRouteLeave.
+- `fromRoute` (*table|nil*) : Route being left (used for the log).
+- `data` (*table*) : Route data (not used).
 
 #### `ui_garage_routeLifecycleCallbacks.onPhotomodeMount(context, toRoute, fromRoute, data)`
 
-Hook appelé au montage de la route : ajoute data.photomode si la route est garage.photomode[.*].
+Hook called when the route is mounted: adds data.photomode if the route is garage.photomode[.*].
 
-- `context` (*table*) : Contexte du changement de route (non utilisé).
-- `toRoute` (*table*) : Route cible ; seul name est lu.
-- `fromRoute` (*table|nil*) : Route précédente (non utilisée).
-- `data` (*table*) : Données de route, enrichies avec photomode.
+- `context` (*table*) : Route change context (unused).
+- `toRoute` (*table*) : Target route; only name is read.
+- `fromRoute` (*table|nil*) : Previous route (unused).
+- `data` (*table*) : Route data, enriched with photomode.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant : ui_pause_providers_routeData_photomode, ui_pause_photomode. |
+| `dependencies` | string[] | Extensions loaded before: ui_pause_providers_routeData_photomode, ui_pause_photomode. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/garage/routeLifecycleCallbacks.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/garage/routeLifecycleCallbacks.lua`.*

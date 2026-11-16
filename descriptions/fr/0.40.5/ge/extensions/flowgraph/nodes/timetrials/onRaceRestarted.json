@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/timetrials/onRaceRestarted.lua",
+  "module": "Noeud « Race Restarted » (logic, tag input). Doit lever une impulsion de sortie 'restart' quand la course est relancée (hook onScenarioRestarted).",
+  "notes": [
+    "Bug : work écrit pinOut.restart.value = self.started, champ jamais défini dans ce noeud (nil), au lieu de self.restart : le pin restart ne s'active jamais."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "restart = false.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "restart = false.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Écrit pinOut.restart avec self.started, puis restart = false.",
+          "internal": false
+        },
+        "onScenarioRestarted": {
+          "desc": "Hook de redémarrage du scénario : restart = true.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,82 +1,82 @@
 # `controller_axleLift`
 
-*Fichier : `lua/vehicle/controller/axleLift.lua` · VM : Véhicule · 176 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/axleLift.lua` · VM: Vehicle · 176 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `axleLift` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `axleLift` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire qui lève ou abaisse des essieux (typiquement les essieux relevables d'un camion) pour gagner de la garde au sol. Il écrit une position cible dans deux valeurs `electrics.values` (avant et arrière) que lit le jbeam. Trois modes : auto (lève sauf si vitesse trop haute, vitesse trop basse, frein à main serré ou accélération latérale trop forte), manual (toujours levé) et off (toujours abaissé).
+Auxiliary controller that raises or lowers axles (typically a truck's liftable axles) to gain ground clearance. It writes a target position into two `electrics.values` (front and rear) that the jbeam reads. Three modes: auto (raises unless speed is too high, speed is too low, the parking brake is applied or lateral acceleration is too strong), manual (always raised) and off (always lowered).
 
-## Exemple
+## Example
 
 ```lua
 controller.getControllerSafe("axleLift").setMode("manual", true)
 controller.getControllerSafe("axleLift").setParameters({velocityThresholdDisable = 10})
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues par init : `velocityThresholdDisable` (14 m/s, au-dessus l'essieu redescend), `velocityThresholdEnable` (0.1 m/s, en dessous il redescend), `accelerationThreshold` (3 m/s², sur |sensors.gy2|), `frontLoweredPosition`/`rearLoweredPosition` (0), `frontRaisedPosition`/`rearRaisedPosition` (1), `frontAxleLiftElectricsName` ("strut_F_axleLift"), `rearAxleLiftElectricsName` ("strut_R_axleLift").
-- Le mode d'état est sauvegardé sous la clé `<nom du contrôleur>Mode` dans getState/setState.
-- Après `reset`, les electrics sont remis à 0 mais le mode n'est pas réinitialisé (init n'est pas rappelé car `reset` existe).
-- Le menu radial n'est ajouté qu'une fois (hasBuiltPie).
+- Jbeam keys read by init: `velocityThresholdDisable` (14 m/s, above it the axle comes back down), `velocityThresholdEnable` (0.1 m/s, below it it comes back down), `accelerationThreshold` (3 m/s², on |sensors.gy2|), `frontLoweredPosition`/`rearLoweredPosition` (0), `frontRaisedPosition`/`rearRaisedPosition` (1), `frontAxleLiftElectricsName` ("strut_F_axleLift"), `rearAxleLiftElectricsName` ("strut_R_axleLift").
+- The mode state is saved under the key `<controller name>Mode` in getState/setState.
+- After `reset`, the electrics are set back to 0 but the mode is not reinitialized (init is not called again because `reset` exists).
+- The radial menu is added only once (hasBuiltPie).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_axleLift.getState()` | Renvoie le mode courant sous la clé `<nom>Mode`. | 148 |
-| `controller_axleLift.init(jbeamData)` | Lit les paramètres jbeam, met les electrics à 0, passe en mode auto et ajoute l'entrée du menu radial. *(interne)* | 90 |
-| `controller_axleLift.reset()` | Remet les deux valeurs electrics d'essieu à 0. *(interne)* | 85 |
-| `controller_axleLift.setMode(mode, silent)` | Change le mode ("auto", "manual" ou "off"). Un mode inconnu est ignoré. Affiche un message UI sauf si silent. | 60 |
-| `controller_axleLift.setParameters(parameters)` | Modifie à chaud les seuils et le mode ; seuls les champs présents sont appliqués. | 133 |
-| `controller_axleLift.setState(data)` | Restaure le mode depuis une table d'état (silencieusement) si la valeur est valide. | 153 |
-| `controller_axleLift.toggleMode()` | Passe au mode suivant dans l'ordre auto, manual, off, auto. | 81 |
-| `controller_axleLift.updateGFX(dt)` | Chaque frame : choisit la position levée ou abaissée selon le mode (en auto : vitesse lissée, vitesse de roue, frein à main, accélération latérale) et l'écrit dans les deux electrics d'essieu. *(interne)* | 34 |
+| `controller_axleLift.getState()` | Returns the current mode under the key `<name>Mode`. | 148 |
+| `controller_axleLift.init(jbeamData)` | Reads the jbeam parameters, sets the electrics to 0, switches to auto mode and adds the radial menu entry. *(internal)* | 90 |
+| `controller_axleLift.reset()` | Resets the two axle electrics values to 0. *(internal)* | 85 |
+| `controller_axleLift.setMode(mode, silent)` | Changes the mode ("auto", "manual" or "off"). An unknown mode is ignored. Displays a UI message unless silent. | 60 |
+| `controller_axleLift.setParameters(parameters)` | Modifies the thresholds and the mode on the fly; only the fields present are applied. | 133 |
+| `controller_axleLift.setState(data)` | Restores the mode from a state table (silently) if the value is valid. | 153 |
+| `controller_axleLift.toggleMode()` | Switches to the next mode in the order auto, manual, off, auto. | 81 |
+| `controller_axleLift.updateGFX(dt)` | Every frame: chooses the raised or lowered position depending on the mode (in auto: smoothed speed, wheel speed, parking brake, lateral acceleration) and writes it to the two axle electrics. *(internal)* | 34 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_axleLift.getState()`
 
-Renvoie le mode courant sous la clé `<nom>Mode`.
+Returns the current mode under the key `<name>Mode`.
 
-- **renvoie** : table<string, string> Table d'état.
+- **returns**: table<string, string> State table.
 
 #### `controller_axleLift.init(jbeamData)`
 
-Lit les paramètres jbeam, met les electrics à 0, passe en mode auto et ajoute l'entrée du menu radial.
+Reads the jbeam parameters, sets the electrics to 0, switches to auto mode and adds the radial menu entry.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_axleLift.setMode(mode, silent)`
 
-Change le mode ("auto", "manual" ou "off"). Un mode inconnu est ignoré. Affiche un message UI sauf si silent.
+Changes the mode ("auto", "manual" or "off"). An unknown mode is ignored. Displays a UI message unless silent.
 
-- `mode` (*string*) : "auto", "manual" ou "off".
-- `silent` (*boolean|nil*) : true pour ne pas afficher de message.
+- `mode` (*string*) : "auto", "manual" or "off".
+- `silent` (*boolean|nil*) : true to not display a message.
 
 #### `controller_axleLift.setParameters(parameters)`
 
-Modifie à chaud les seuils et le mode ; seuls les champs présents sont appliqués.
+Modifies the thresholds and the mode on the fly; only the fields present are applied.
 
-- `parameters` (*table*) : Champs facultatifs : mode, accelerationThreshold, velocityThresholdDisable, velocityThresholdEnable.
+- `parameters` (*table*) : Optional fields: mode, accelerationThreshold, velocityThresholdDisable, velocityThresholdEnable.
 
 #### `controller_axleLift.setState(data)`
 
-Restaure le mode depuis une table d'état (silencieusement) si la valeur est valide.
+Restores the mode from a state table (silently) if the value is valid.
 
-- `data` (*table|nil*) : Table contenant la clé `<nom>Mode`.
+- `data` (*table|nil*) : Table containing the key `<name>Mode`.
 
 #### `controller_axleLift.updateGFX(dt)`
 
-Chaque frame : choisit la position levée ou abaissée selon le mode (en auto : vitesse lissée, vitesse de roue, frein à main, accélération latérale) et l'écrit dans les deux electrics d'essieu.
+Every frame: chooses the raised or lowered position depending on the mode (in auto: smoothed speed, wheel speed, parking brake, lateral acceleration) and writes it to the two axle electrics.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/axleLift.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/axleLift.lua`.*

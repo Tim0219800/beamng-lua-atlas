@@ -1,49 +1,49 @@
 # `gameplay_rally_starThresholds`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/starThresholds.lua` · VM : Game Engine (GE) · 51 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/starThresholds.lua` · VM: Game Engine (GE) · 51 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_starThresholds` : `extensions.load("gameplay_rally_starThresholds")`, puis la globale `gameplay_rally_starThresholds`
+**Access:** extension `gameplay_rally_starThresholds`: `extensions.load("gameplay_rally_starThresholds")`, then the global `gameplay_rally_starThresholds`
 
-Calcule les seuils de temps des étoiles (or, argent, bronze) d'une spéciale de rallye à partir d'un temps de référence créé à la main (baseline) et de la longueur de l'étape. Or = baseline x 1,03 (rythme serré, aucune marge pour les resets). Argent et bronze = baseline x multiplicateur d'allure + une marge additive qui pardonne un certain nombre de resets par km.
+Computes the star time thresholds (gold, silver, bronze) of a rally special stage from a hand-made reference time (baseline) and the stage length. Gold = baseline x 1.03 (tight pace, no margin for resets). Silver and bronze = baseline x pace multiplier + an additive margin that forgives a certain number of resets per km.
 
-## Exemple
+## Example
 
 ```lua
 local t = gameplay_rally_starThresholds.compute(600, 12.5)
--- t.gold, t.silver, t.bronze en secondes (arrondis au dixième)
+-- t.gold, t.silver, t.bronze in seconds (rounded to the tenth)
 ```
 
-## Remarques
+## Notes
 
-- Formules : gold = base*goldMult ; silver = base*silverPaceMult + silverResetsPerKm*lengthKm*perResetSeconds ; bronze = base*bronzePaceMult + bronzeResetsPerKm*lengthKm*perResetSeconds.
-- Si la longueur est absente ou nulle, la marge de resets vaut 0 (seuils d'allure uniquement).
+- Formulas: gold = base*goldMult; silver = base*silverPaceMult + silverResetsPerKm*lengthKm*perResetSeconds; bronze = base*bronzePaceMult + bronzeResetsPerKm*lengthKm*perResetSeconds.
+- If the length is absent or zero, the reset margin is 0 (pace thresholds only).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_starThresholds.compute(baselineSeconds, lengthKm)` | Calcule les seuils or/argent/bronze en secondes, arrondis au dixième. | 39 |
+| `gameplay_rally_starThresholds.compute(baselineSeconds, lengthKm)` | Computes the gold/silver/bronze thresholds in seconds, rounded to the tenth. | 39 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_starThresholds.compute(baselineSeconds, lengthKm)`
 
-Calcule les seuils or/argent/bronze en secondes, arrondis au dixième.
+Computes the gold/silver/bronze thresholds in seconds, rounded to the tenth.
 
-- `baselineSeconds` (*number|string*) : Temps de référence de l'étape en secondes (converti par tonumber, 0 si invalide)
-- `lengthKm` (*number|string*) : Longueur de l'étape en km (0 si invalide)
-- **renvoie** : table {gold=number, silver=number, bronze=number} en secondes
+- `baselineSeconds` (*number|string*) : Stage reference time in seconds (converted by tonumber, 0 if invalid)
+- `lengthKm` (*number|string*) : Stage length in km (0 if invalid)
+- **returns**: table {gold=number, silver=number, bronze=number} in seconds
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `bronzePaceMult` | number | Multiplicateur d'allure du bronze (1.23). |
-| `bronzeResetsPerKm` | number | Resets par km pardonnés pour le bronze (2.233, soit ~5 resets sur les plus courtes spéciales). |
-| `goldMult` | number | Multiplicateur d'allure de l'or (1.03), volontairement serré. |
-| `perResetSeconds` | number | Secondes ajoutées par reset dans la marge : pénalité de chrono (~5 s) plus perte d'élan (~3,5 s), soit 8.5. |
-| `silverPaceMult` | number | Multiplicateur d'allure de l'argent (1.13). |
-| `silverResetsPerKm` | number | Resets par km pardonnés pour l'argent (0.9, soit ~2 resets sur les plus courtes spéciales d'environ 2,2 km). |
+| `bronzePaceMult` | number | Bronze pace multiplier (1.23). |
+| `bronzeResetsPerKm` | number | Resets per km forgiven for bronze (2.233, i.e. ~5 resets on the shortest special stages). |
+| `goldMult` | number | Gold pace multiplier (1.03), deliberately tight. |
+| `perResetSeconds` | number | Seconds added per reset in the margin: timer penalty (~5 s) plus loss of momentum (~3.5 s), i.e. 8.5. |
+| `silverPaceMult` | number | Silver pace multiplier (1.13). |
+| `silverResetsPerKm` | number | Resets per km forgiven for silver (0.9, i.e. ~2 resets on the shortest special stages of about 2.2 km). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/starThresholds.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/starThresholds.lua`.*

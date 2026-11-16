@@ -1,32 +1,32 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/getCamPath.lua",
-  "module": "Noeud flowgraph 'Get Cam Path' (categorie once_f_duration). Renseigne sur l'etat d'une trajectoire de camera (par 'id', sinon celle qui est active) : sorties inactive, complete, completed (impulsion une fois), incomplete et duration. Utile avec Simple Cam Path ou les noeuds de trajectoire procedurale.",
+  "module": "Flowgraph node 'Get Cam Path' (once_f_duration category). Gives information on the state of a camera path (by 'id', otherwise the active one): outputs inactive, complete, completed (impulse once), incomplete and duration. Useful with Simple Cam Path or the procedural path nodes.",
   "notes": [
-    "La description du code ('Lets the camera follow the path...') est copiee de Simple Cam Path ; ce noeud ne fait que lire l'etat.",
-    "Si 'id' est fourni mais ne correspond pas a la trajectoire active, le noeud est considere inactif."
+    "The code's description ('Lets the camera follow the path...') is copied from Simple Cam Path; this node only reads the state.",
+    "If 'id' is provided but does not match the active path, the node is considered inactive."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Remet done et completedFlag a zero.",
+          "desc": "Resets done and completedFlag to zero.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         },
         "work": {
-          "desc": "Sur reset, repart de zero. flow suit l'entree. Avec du flux, determine si la trajectoire est active, puis calcule inactive/complete/completed/incomplete/duration via camera:isPathComplete et getPathDuration.",
+          "desc": "On reset, starts again from zero. flow follows the input. With flow, determines whether the path is active, then computes inactive/complete/completed/incomplete/duration via camera:isPathComplete and getPathDuration.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine le milieu du noeud (vide).",
+          "desc": "Draws the middle of the node (empty).",
           "internal": true
         }
       }

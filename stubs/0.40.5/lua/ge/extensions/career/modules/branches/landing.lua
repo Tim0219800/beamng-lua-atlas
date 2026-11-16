@@ -2,56 +2,56 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/branches/landing.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fournit à l'UI carrière les données de la page d'accueil de progression (domaines, branches, compétences) : titres, fils d'Ariane, niveau/XP, déblocages, ligues et missions formatées. Ajoute aussi le bouton 'landing page APM' dans le menu ordinateur. Un moddeur l'utilise surtout pour comprendre le format des tables envoyées à l'écran career.branchPage.
---- Accès : extension `career_modules_branches_landing` : `extensions.load("career_modules_branches_landing")`, puis la globale `career_modules_branches_landing`
+--- Provides the career UI with the data of the progression landing page (domains, branches, skills): titles, breadcrumbs, level/XP, unlocks, leagues and formatted missions. Also adds the 'landing page APM' button to the computer menu. A modder mainly uses it to understand the format of the tables sent to the career.branchPage screen.
+--- Access: extension `career_modules_branches_landing`: `extensions.load("career_modules_branches_landing")`, then the global `career_modules_branches_landing`
 ---@class career_modules_branches_landing
 career_modules_branches_landing = {}
 
---- Formate un spot de drift comme une mission pour l'UI (skill 'drift', icône 'drift02', objectifs accomplis en étoiles par défaut).
----Source : lua/ge/extensions/career/modules/branches/landing.lua:482
----@param ds table Spot de drift (champs id, info, saveData).
----@return table  Entrée formatée pour l'UI.
+--- Formats a drift spot as a mission for the UI (skill 'drift', icon 'drift02', objectives completed as stars by default).
+---Source: lua/ge/extensions/career/modules/branches/landing.lua:482
+---@param ds table Drift spot (fields id, info, saveData).
+---@return table  Entry formatted for the UI.
 function career_modules_branches_landing.formatDriftSpot(ds) end
 
---- Formate une mission pour l'UI : skill, id, icône, label, description, type, progression formatée, startable, aperçu, vignette, verrouillée (non visible) et canStartFromProgressScreen (déclencheur de type 'league').
----Source : lua/ge/extensions/career/modules/branches/landing.lua:457
+--- Formats a mission for the UI: skill, id, icon, label, description, type, formatted progress, startable, preview, thumbnail, locked (not visible) and canStartFromProgressScreen ('league' type trigger).
+---Source: lua/ge/extensions/career/modules/branches/landing.lua:457
 ---@param m table Mission (gameplay_missions_missions).
----@return table  Mission formatée pour l'UI.
+---@return table  Mission formatted for the UI.
 function career_modules_branches_landing.formatMission(m) end
 
---- Renvoie les infos d'une carte de branche/compétence pour l'UI (nom, descriptions, niveau, libellé de niveau, niveau max atteint, débloquée, icône, couleur…). Appelle career_branches.checkUnlocks() au préalable.
----Source : lua/ge/extensions/career/modules/branches/landing.lua:342
----@param branchId string Id de la branche.
----@return table  branchInfo pour l'UI.
+--- Returns the info of a branch/skill card for the UI (name, descriptions, level, level label, max level reached, unlocked, icon, color…). Calls career_branches.checkUnlocks() beforehand.
+---Source: lua/ge/extensions/career/modules/branches/landing.lua:342
+---@param branchId string Branch id.
+---@return table  branchInfo for the UI.
 function career_modules_branches_landing.getBranchSkillCardData(branchId) end
 
---- Construit toute la table de la page de progression : heading, description, branches, breadcrumbs, et pour une branche : skillInfo, skills, leagues (missions formatées), isBranch.
----Source : lua/ge/extensions/career/modules/branches/landing.lua:603
----@param pathId string|nil Id du domaine/branche ; nil, '' ou 'undefined' pour la page racine.
----@return table  Données de la page pour l'UI.
+--- Builds the whole table of the progression page: heading, description, branches, breadcrumbs, and for a branch: skillInfo, skills, leagues (formatted missions), isBranch.
+---Source: lua/ge/extensions/career/modules/branches/landing.lua:603
+---@param pathId string|nil Domain/branch id; nil, '' or 'undefined' for the root page.
+---@return table  Page data for the UI.
 function career_modules_branches_landing.getLandingPageData(pathId) end
 
---- Parcourt récursivement les branches/compétences du domaine (hors en développement) et renvoie jusqu'à deux missions suggérées : une jamais jouée (0 étoile) et une partiellement terminée (sinon une seconde jamais jouée).
----Source : lua/ge/extensions/career/modules/branches/landing.lua:578
----@param domainId string|nil Id du domaine ; 'apm' par défaut.
----@return table[]  Missions formatées suggérées.
+--- Recursively walks the domain's branches/skills (excluding in-development ones) and returns up to two suggested missions: one never played (0 stars) and one partially completed (otherwise a second never played).
+---Source: lua/ge/extensions/career/modules/branches/landing.lua:578
+---@param domainId string|nil Domain id; 'apm' by default.
+---@return table[]  Suggested formatted missions.
 function career_modules_branches_landing.getSuggestedMissionsForDomain(domainId) end
 
---- Hook de career_modules_computer : si la facilité a la fonction 'apmLandingPage', ajoute un bouton général qui navigue vers 'career.branchPage' (pathId 'apm', retour 'career.computer'), désactivé tant que le véhicule de départ n'est pas acheté.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/branches/landing.lua:739
----@param menuData table Données du menu (computerFacility, hasBoughtStarterVehicle…).
----@param computerFunctions table Table {general, vehicleSpecific} à compléter.
+--- Hook of career_modules_computer: if the facility has the function 'apmLandingPage', adds a general button that navigates to 'career.branchPage' (pathId 'apm', return 'career.computer'), disabled until the starter vehicle is bought.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/branches/landing.lua:739
+---@param menuData table Menu data (computerFacility, hasBoughtStarterVehicle…).
+---@param computerFunctions table Table {general, vehicleSpecific} to fill in.
 function career_modules_branches_landing.onComputerAddFunctions(menuData, computerFunctions) end
 
---- Ouvre la grande carte (freeroam_bigMapMode.enterBigMap) instantanément avec la mission sélectionnée, route de retour 'career.branchPage.bigmap'.
----Source : lua/ge/extensions/career/modules/branches/landing.lua:443
----@param missionId string Id de la mission à sélectionner.
+--- Opens the big map (freeroam_bigMapMode.enterBigMap) instantly with the selected mission, return route 'career.branchPage.bigmap'.
+---Source: lua/ge/extensions/career/modules/branches/landing.lua:443
+---@param missionId string Id of the mission to select.
 function career_modules_branches_landing.openBigMapWithMissionSelected(missionId) end
 
---- Titre traduit d'une branche (branchHeading ou name) ; si absente ou manquante, renvoie le titre traduit de la page d'accueil (ui.career.landingPage.name).
----Source : lua/ge/extensions/career/modules/branches/landing.lua:594
----@param pathId string|nil Id de la branche.
----@return string  Titre traduit.
+--- Translated title of a branch (branchHeading or name); if absent or missing, returns the translated title of the landing page (ui.career.landingPage.name).
+---Source: lua/ge/extensions/career/modules/branches/landing.lua:594
+---@param pathId string|nil Branch id.
+---@return string  Translated title.
 function career_modules_branches_landing.resolveBranchTitle(pathId) end
 

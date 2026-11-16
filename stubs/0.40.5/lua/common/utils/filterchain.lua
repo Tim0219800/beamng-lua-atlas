@@ -2,114 +2,114 @@
 -- tim19Atlas stub generated from lua/common/utils/filterchain.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Preuve de concept de 'chaîne de filtres' fonctionnelle : on décrit une chaîne par des textes comme 'smooth(2)' ou 'interval(0.1, 0.1)' qui sont compilés (load) en une fonction update chaînant les filtres. Les filtres sont dans la table locale F (smooth, interval, scale, digitize, floor, clamp, examine, startdelay) ; chaque filtre est un objet avec une méthode get(self, dt, ...). Se charge avec require('utils/filterchain') mais seule la fonction de test est exportée : la fabrique newFilterchain est locale et inaccessible. Le fichier définit aussi deux globales de debug (locals, getVarByName).
---- Accès : `require("utils/filterchain")`
+--- Proof of concept of a functional 'filter chain': a chain is described by text strings like 'smooth(2)' or 'interval(0.1, 0.1)' that are compiled (load) into an update function chaining the filters. The filters are in the local table F (smooth, interval, scale, digitize, floor, clamp, examine, startdelay); each filter is an object with a get(self, dt, ...) method. Loaded with require('utils/filterchain') but only the test function is exported: the newFilterchain factory is local and inaccessible. The file also defines two debug globals (locals, getVarByName).
+--- Access: `require("utils/filterchain")`
 ---@class utils_filterchain
 local utils_filterchain = {}
 
---- Exemple d'utilisation : crée une chaîne avec le filtre 'interval(0.1, 0.1)' en mode debug (examine) et appelle update 30 fois avec dt = 0.02, en affichant la sortie par dump.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/utils/filterchain.lua:234
+--- Usage example: creates a chain with the filter 'interval(0.1, 0.1)' in debug mode (examine) and calls update 30 times with dt = 0.02, printing the output via dump.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/utils/filterchain.lua:234
 function utils_filterchain.test() end
 
---- Table locale des fabriques de filtres (non exportée). Chaque fonction renvoie un objet filtre avec get(self, dt, ...).
+--- Local table of filter factories (not exported). Each function returns a filter object with get(self, dt, ...).
 ---@class utils_filterchain_F
 local utils_filterchain_F = {}
 
---- Filtre qui borne la valeur entre minval et maxval.
----Source : lua/common/utils/filterchain.lua:123
----@param minval number|nil Minimum, 0 par défaut
----@param maxval number|nil Maximum, 1 par défaut
----@return table  Filtre {get}
+--- Filter that clamps the value between minval and maxval.
+---Source: lua/common/utils/filterchain.lua:123
+---@param minval number|nil Minimum, 0 by default
+---@param maxval number|nil Maximum, 1 by default
+---@return table  Filter {get}
 function utils_filterchain_F.clamp(minval, maxval) end
 
---- Filtre qui renvoie 1 si la valeur dépasse le seuil, sinon 0.
----Source : lua/common/utils/filterchain.lua:108
----@param threshold number|nil Seuil, 0.5 par défaut
----@return table  Filtre {get}
+--- Filter that returns 1 if the value exceeds the threshold, otherwise 0.
+---Source: lua/common/utils/filterchain.lua:108
+---@param threshold number|nil Threshold, 0.5 by default
+---@return table  Filter {get}
 function utils_filterchain_F.digitize(threshold) end
 
---- Filtre de debug : loggue (niveau D, origine filterchain.examine) le texte str suivi des arguments, et renvoie les arguments à partir de commonArgumentsCount+1 (retire les arguments communs comme dt).
----Source : lua/common/utils/filterchain.lua:145
----@param str string Étiquette du log
----@param commonArgumentsCount integer|nil Nombre d'arguments communs à ne pas renvoyer, 0 par défaut
----@return table  Filtre {get}
+--- Debug filter: logs (level D, origin filterchain.examine) the text str followed by the arguments, and returns the arguments starting from commonArgumentsCount+1 (removes common arguments like dt).
+---Source: lua/common/utils/filterchain.lua:145
+---@param str string Log label
+---@param commonArgumentsCount integer|nil Number of common arguments not to return, 0 by default
+---@return table  Filter {get}
 function utils_filterchain_F.examine(str, commonArgumentsCount) end
 
---- Filtre qui renvoie math.floor(valeur).
----Source : lua/common/utils/filterchain.lua:117
----@return table  Filtre {get}
+--- Filter that returns math.floor(value).
+---Source: lua/common/utils/filterchain.lua:117
+---@return table  Filter {get}
 function utils_filterchain_F.floor() end
 
---- Fabrique un filtre clignotant (Interval) : alterne état actif et inactif.
----Source : lua/common/utils/filterchain.lua:67
----@param offsetTime number|nil Décalage de phase, 0 par défaut (stocké mais non utilisé dans get)
----@param timeOn number|nil Durée à l'état actif en s, 0.1 par défaut
----@param timeOff number|nil Durée à l'état inactif en s, 0.1 par défaut
----@return table  Objet Interval
+--- Builds a blinking filter (Interval): alternates between active and inactive states.
+---Source: lua/common/utils/filterchain.lua:67
+---@param offsetTime number|nil Phase offset, 0 by default (stored but not used in get)
+---@param timeOn number|nil Duration in the active state in s, 0.1 by default
+---@param timeOff number|nil Duration in the inactive state in s, 0.1 by default
+---@return table  Interval object
 function utils_filterchain_F.interval(offsetTime, timeOn, timeOff) end
 
---- Filtre qui multiplie la valeur par scaleVal.
----Source : lua/common/utils/filterchain.lua:102
----@param scaleVal number Facteur
----@return table  Filtre {get}
+--- Filter that multiplies the value by scaleVal.
+---Source: lua/common/utils/filterchain.lua:102
+---@param scaleVal number Factor
+---@return table  Filter {get}
 function utils_filterchain_F.scale(scaleVal) end
 
---- Fabrique un filtre de lissage à vitesse limitée (Smooth).
----Source : lua/common/utils/filterchain.lua:44
----@param rate number|nil Variation maximale par seconde, 1 par défaut
----@return table  Objet Smooth
+--- Builds a rate-limited smoothing filter (Smooth).
+---Source: lua/common/utils/filterchain.lua:44
+---@param rate number|nil Maximum change per second, 1 by default
+---@return table  Smooth object
 function utils_filterchain_F.smooth(rate) end
 
---- Fabrique un filtre (Startdelay) qui retarde une montée de valeur : tant que l'entrée croît depuis moins de startdelay secondes, la sortie reste à l'ancienne valeur.
----Source : lua/common/utils/filterchain.lua:158
----@param startdelay number|nil Délai en secondes, 0 par défaut
----@return table  Objet Startdelay
+--- Builds a filter (Startdelay) that delays a rise in value: as long as the input has been rising for less than startdelay seconds, the output stays at the old value.
+---Source: lua/common/utils/filterchain.lua:158
+---@param startdelay number|nil Delay in seconds, 0 by default
+---@return table  Startdelay object
 function utils_filterchain_F.startdelay(startdelay) end
 
---- Objet renvoyé par F.interval : alterne un état actif (onTime) et inactif (offTime).
+--- Object returned by F.interval: alternates an active state (onTime) and an inactive state (offTime).
 ---@class utils_filterchain_Interval
 local utils_filterchain_Interval = {}
 
---- Fait avancer le chronomètre interne de dt. Quand l'état est actif, renvoie {dt, ...} (arguments inchangés), sinon {dt, 0, 0, ...} (autant de zéros que d'arguments).
----Source : lua/common/utils/filterchain.lua:79
----@param dt number Pas de temps (s)
----@param ... number Valeurs à transmettre ou annuler (la première décide, déduit du code)
----@return table  {dt, valeurs...}
+--- Advances the internal timer by dt. When the state is active, returns {dt, ...} (arguments unchanged), otherwise {dt, 0, 0, ...} (as many zeros as arguments).
+---Source: lua/common/utils/filterchain.lua:79
+---@param dt number Time step (s)
+---@param ... number Values to pass through or zero out (the first one decides, inferred from code)
+---@return table  {dt, values...}
 function utils_filterchain_Interval:get(dt, ...) end
 
---- Objet renvoyé par F.smooth : rapproche son état de l'échantillon à vitesse maximale rate (unités par seconde).
+--- Object returned by F.smooth: moves its state toward the sample at maximum rate `rate` (units per second).
 ---@class utils_filterchain_Smooth
 local utils_filterchain_Smooth = {}
 
---- Fait avancer l'état vers sample d'au plus dt*rate et le renvoie. Au premier appel l'état est initialisé à sample.
----Source : lua/common/utils/filterchain.lua:52
----@param dt number Pas de temps (s)
----@param sample number Valeur cible
----@return number  Valeur lissée
+--- Advances the state toward sample by at most dt*rate and returns it. On the first call the state is initialized to sample.
+---Source: lua/common/utils/filterchain.lua:52
+---@param dt number Time step (s)
+---@param sample number Target value
+---@return number  Smoothed value
 function utils_filterchain_Smooth:get(dt, sample) end
 
---- Objet renvoyé par F.startdelay.
+--- Object returned by F.startdelay.
 ---@class utils_filterchain_Startdelay
 local utils_filterchain_Startdelay = {}
 
---- Si l'échantillon ne dépasse pas la valeur précédente, la mémorise et la renvoie. S'il la dépasse, renvoie l'ancienne valeur tant que le temps de montée cumulé est inférieur à startdelay, puis l'échantillon.
----Source : lua/common/utils/filterchain.lua:167
----@param dt number Pas de temps (s)
----@param sample number Valeur d'entrée
----@return number  Valeur filtrée
+--- If the sample does not exceed the previous value, stores it and returns it. If it exceeds it, returns the old value as long as the accumulated rise time is below startdelay, then the sample.
+---Source: lua/common/utils/filterchain.lua:167
+---@param dt number Time step (s)
+---@param sample number Input value
+---@return number  Filtered value
 function utils_filterchain_Startdelay:get(dt, sample) end
 
---- GLOBALE de debug : retrouve une variable à partir d'un nom pointé (ex. 'mv.foo') dans une portée (par défaut _G). Le motif utilisé ('([^.]*).(.*)') découpe seulement en deux morceaux au premier séparateur ; fonctionne pour des noms à un ou deux niveaux (déduit du code).
----Source : lua/common/utils/filterchain.lua:37
----@param name string Nom pointé, ex. 'a.b'
----@param scope table|nil Table de départ, _G par défaut
----@return any  Valeur trouvée
+--- Debug GLOBAL: finds a variable from a dotted name (e.g. 'mv.foo') in a scope (default _G). The pattern used ('([^.]*).(.*)') only splits into two pieces at the first separator; works for names with one or two levels (inferred from code).
+---Source: lua/common/utils/filterchain.lua:37
+---@param name string Dotted name, e.g. 'a.b'
+---@param scope table|nil Starting table, _G by default
+---@return any  Value found
 function getVarByName(name, scope) end
 
---- GLOBALE de debug : renvoie une table {nomLocal = valeur} des variables locales de la fonction appelante (debug.getlocal au niveau 2).
----Source : lua/common/utils/filterchain.lua:22
----@return table<string, any>  Variables locales de l'appelant
+--- Debug GLOBAL: returns a table {localName = value} of the local variables of the calling function _anon(debug.getlocal at level 2).
+---Source: lua/common/utils/filterchain.lua:22
+---@return table<string, any>  Local variables of the caller
 function locals() end
 
 return utils_filterchain

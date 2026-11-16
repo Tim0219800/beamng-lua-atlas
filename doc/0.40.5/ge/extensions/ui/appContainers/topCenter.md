@@ -1,220 +1,220 @@
 # `ui_appContainers_topCenter`
 
-*Fichier : `lua/ge/extensions/ui/appContainers/topCenter.lua` · VM : Game Engine (GE) · 326 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/appContainers/topCenter.lua` · VM: Game Engine (GE) · 326 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_appContainers_topCenter` : `extensions.load("ui_appContainers_topCenter")`, puis la globale `ui_appContainers_topCenter`
+**Access:** extension `ui_appContainers_topCenter`: `extensions.load("ui_appContainers_topCenter")`, then the global `ui_appContainers_topCenter`
 
-Conteneur d'apps « topCenter » (haut-centre de l'interface : arrowGPS, rally, drift, drag, pointsBar, speedTargetBar, flashMessage, countdown, moveOff ; trigger UI setTopCenterAppVisibility). Il délègue la visibilité à ui_appContainers et ajoute une file de messages flash (événement TopCenterAppsFlashMessage), la gestion du compte à rebours de scénario et la cible de vitesse de la barre speedTargetBar. Un moddeur l'utilise surtout pour afficher un message flash ou une cible de vitesse.
+"topCenter" app container (top-center of the interface: arrowGPS, rally, drift, drag, pointsBar, speedTargetBar, flashMessage, countdown, moveOff; UI trigger setTopCenterAppVisibility). It delegates visibility to ui_appContainers and adds a flash message queue (event TopCenterAppsFlashMessage), scenario countdown handling and the speed target of the speedTargetBar. A modder mostly uses it to show a flash message or a speed target.
 
-## Exemple
+## Example
 
 ```lua
-ui_appContainers_topCenter.showFlashMessage('Bien joué !', 4, true)
+ui_appContainers_topCenter.showFlashMessage('Well done!', 4, true)
 ui_appContainers_topCenter.showApp('topCenter', 'pointsBar')
 ```
 
-## Remarques
+## Notes
 
-- Toutes les fonctions de visibilité (setAppVisibility, showApp, hideApp, toggleApp, hideAllApps, getVisibleApps, getAvailableApps) sont de simples passe-plats vers ui_appContainers.
-- setContainerContext, getContainerContext, resetContainerContext et getAvailableContexts sont dépréciées (avertissement uniquement si setVerboseLogging(true)) : un « contexte » équivaut à une seule app visible.
-- clearSpeedTarget remet seulement la valeur locale à nil : elle n'envoie rien à l'interface, contrairement à setSpeedTarget.
-- onGameplayFlashMessage ignore le message si l'app correspondante (drift ou drag) n'est pas visible au moment de l'appel.
-- La durée d'un message de la file est celle de messageData[1][2] (3 s par défaut) ; elle est décomptée en temps de simulation (dtSim), alors que showFlashMessage décompte en temps réel (dtReal).
-- La file est limitée à 50 messages : au-delà, le plus ancien est supprimé.
-- Le compte à rebours est détecté quand un message de scénario commence par un nombre ou par la clé 'ui.scenarios.go' ; l'app countdown est alors affichée puis cachée après le ttl du « go » (champ M._countdownHideTimer).
+- All the visibility functions (setAppVisibility, showApp, hideApp, toggleApp, hideAllApps, getVisibleApps, getAvailableApps) are simple pass-throughs to ui_appContainers.
+- setContainerContext, getContainerContext, resetContainerContext and getAvailableContexts are deprecated (warning only if setVerboseLogging(true)): a "context" equals a single visible app.
+- clearSpeedTarget only resets the local value to nil: it sends nothing to the interface, unlike setSpeedTarget.
+- onGameplayFlashMessage ignores the message if the matching app (drift or drag) is not visible at the time of the call.
+- The duration of a queued message is messageData[1][2] (3 s by default); it is counted down in simulation time (dtSim), whereas showFlashMessage counts down in real time (dtReal).
+- The queue is limited to 50 messages: beyond that, the oldest is removed.
+- The countdown is detected when a scenario message starts with a number or with the key 'ui.scenarios.go'; the countdown app is then shown and hidden after the "go" ttl (field M._countdownHideTimer).
 
-**Dépendances (chargées avant) :** `ui_appContainers`, `ui_firstDrive_moveOff`
+**Dependencies (loaded first):** `ui_appContainers`, `ui_firstDrive_moveOff`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_appContainers_topCenter.clearAllFlashMessages()` | Vide la file, le message courant et le message actif, et cache l'app flashMessage. | 183 |
-| `ui_appContainers_topCenter.clearMessagesFromSource(source)` | Supprime de la file les messages d'une source donnée (drift, drag…) ; si le message en cours en provient, passe au suivant ou cache flashMessage. | 166 |
-| `ui_appContainers_topCenter.clearSpeedTarget()` | Oublie la cible de vitesse mémorisée (sans prévenir l'interface). | 60 |
-| `ui_appContainers_topCenter.getActiveFlashMessage()` | Utilisé par l'app HUD pour rattraper un message envoyé avant son montage : renvoie le message actif avec le ttl restant, ou nil s'il n'y en a pas ou si l'app flashMessage est cachée. | 200 |
-| `ui_appContainers_topCenter.getAppVisibility(containerId, appId)` | Passe-plat vers ui_appContainers.getAppVisibility. | 27 |
-| `ui_appContainers_topCenter.getAvailableApps(containerId)` | Renvoie la copie des apps déclarées du conteneur avec leur visibilité. | 64 |
-| `ui_appContainers_topCenter.getAvailableContexts(containerId)` | Alias déprécié de getAvailableApps. | 64 |
-| `ui_appContainers_topCenter.getContainerContext(containerId)` | Déprécié : renvoie la première app visible de la liste (l'ordre n'est pas garanti s'il y en a plusieurs). | 87 |
-| `ui_appContainers_topCenter.getSpeedTarget()` | Renvoie la dernière cible de vitesse mémorisée. | 56 |
-| `ui_appContainers_topCenter.getVisibleApps(containerId)` | Liste les apps visibles du conteneur (via ui_appContainers). | 47 |
-| `ui_appContainers_topCenter.hideAllApps(containerId)` | Cache toutes les apps du conteneur (via ui_appContainers). | 31 |
-| `ui_appContainers_topCenter.hideApp(containerId, appId)` | Cache une app du conteneur. | 39 |
-| `ui_appContainers_topCenter.onExtensionLoaded()` | Hook de chargement : enregistre le conteneur topCenter et ses neuf apps (toutes cachées au départ). *(interne)* *(hook)* | 267 |
-| `ui_appContainers_topCenter.onExtensionUnloaded()` | Hook de déchargement : vide la file et les messages actifs. *(interne)* *(hook)* | 285 |
-| `ui_appContainers_topCenter.onGameplayFlashMessage(data)` | Hook : message flash de gameplay. Accepte seulement les sources 'drift' et 'drag', et seulement si l'app du même nom est visible ; met alors le message en file et lance le suivant. *(interne)* *(hook)* | 206 |
-| `ui_appContainers_topCenter.onScenarioFlashMessage(data)` | Hook : message flash de scénario. Affiche flashMessage si la liste n'est pas vide, et countdown si un élément commence par un nombre ou 'ui.scenarios.go' (dans ce dernier cas, masque countdown après le ttl). *(interne)* *(hook)* | 103 |
-| `ui_appContainers_topCenter.onScenarioFlashMessageClear()` | Hook : cache l'app flashMessage quand le scénario efface ses messages. *(interne)* *(hook)* | 130 |
-| `ui_appContainers_topCenter.onScenarioNotRunning()` | Hook : cache flashMessage quand aucun scénario ne tourne. *(interne)* *(hook)* | 134 |
-| `ui_appContainers_topCenter.onUpdate(dtReal, dtSim, dtRaw)` | Hook de frame : décompte le message actif, fait avancer la file de messages, gère le masquage différé du compte à rebours et dessine la fenêtre de debug. *(interne)* *(hook)* | 229 |
-| `ui_appContainers_topCenter.resetContainerContext(containerId)` | Déprécié : équivaut à hideAllApps. | 80 |
-| `ui_appContainers_topCenter.setAppVisibility(containerId, appId, visible)` | Passe-plat vers ui_appContainers.setAppVisibility. | 23 |
-| `ui_appContainers_topCenter.setContainerContext(containerId, context)` | Déprécié. Cache toutes les apps puis affiche seulement l'app nommée par context (si context est nil, tout est caché). | 68 |
-| `ui_appContainers_topCenter.setDebug(enabled)` | Active une petite fenêtre ImGui « TopCenter App Containers Debug » (taille de la file, message actif). | 95 |
-| `ui_appContainers_topCenter.setSpeedTarget(data)` | Mémorise la cible de vitesse active et l'envoie à l'interface via guihooks.trigger('TechDriverTrainingSpeedBarTarget', data) pour la barre speedTargetBar. | 51 |
-| `ui_appContainers_topCenter.setVerboseLogging(enabled)` | Active les avertissements de dépréciation et les logs de messages invalides. | 99 |
-| `ui_appContainers_topCenter.showApp(containerId, appId)` | Affiche une app du conteneur. | 35 |
-| `ui_appContainers_topCenter.showFlashMessage(msg, ttl, big)` | Affiche un message flash unique, affiche l'app flashMessage et envoie {msg, ttl, big} sur l'événement TopCenterAppsFlashMessage. Le message est mémorisé pendant ttl pour qu'une app montée en retard puisse le récupérer. | 191 |
-| `ui_appContainers_topCenter.toggleApp(containerId, appId)` | Inverse la visibilité d'une app du conteneur. | 43 |
+| `ui_appContainers_topCenter.clearAllFlashMessages()` | Empties the queue, the current message and the active message, and hides the flashMessage app. | 183 |
+| `ui_appContainers_topCenter.clearMessagesFromSource(source)` | Removes from the queue the messages of a given source (drift, drag…); if the current message comes from it, moves on to the next or hides flashMessage. | 166 |
+| `ui_appContainers_topCenter.clearSpeedTarget()` | Forgets the stored speed target (without notifying the interface). | 60 |
+| `ui_appContainers_topCenter.getActiveFlashMessage()` | Used by the HUD app to catch up on a message sent before it was mounted: returns the active message with the remaining ttl, or nil if there is none or if the flashMessage app is hidden. | 200 |
+| `ui_appContainers_topCenter.getAppVisibility(containerId, appId)` | Pass-through to ui_appContainers.getAppVisibility. | 27 |
+| `ui_appContainers_topCenter.getAvailableApps(containerId)` | Returns a copy of the container's declared apps with their visibility. | 64 |
+| `ui_appContainers_topCenter.getAvailableContexts(containerId)` | Deprecated alias of getAvailableApps. | 64 |
+| `ui_appContainers_topCenter.getContainerContext(containerId)` | Deprecated: returns the first visible app in the list (order not guaranteed if there are several). | 87 |
+| `ui_appContainers_topCenter.getSpeedTarget()` | Returns the last stored speed target. | 56 |
+| `ui_appContainers_topCenter.getVisibleApps(containerId)` | Lists the visible apps of the container (via ui_appContainers). | 47 |
+| `ui_appContainers_topCenter.hideAllApps(containerId)` | Hides all apps of the container (via ui_appContainers). | 31 |
+| `ui_appContainers_topCenter.hideApp(containerId, appId)` | Hides an app of the container. | 39 |
+| `ui_appContainers_topCenter.onExtensionLoaded()` | Load hook: registers the topCenter container and its nine apps (all hidden at start). *(internal)* *(hook)* | 267 |
+| `ui_appContainers_topCenter.onExtensionUnloaded()` | Unload hook: empties the queue and the active messages. *(internal)* *(hook)* | 285 |
+| `ui_appContainers_topCenter.onGameplayFlashMessage(data)` | Hook: gameplay flash message. Only accepts the sources 'drift' and 'drag', and only if the app of the same name is visible; then queues the message and starts the next one. *(internal)* *(hook)* | 206 |
+| `ui_appContainers_topCenter.onScenarioFlashMessage(data)` | Hook: scenario flash message. Shows flashMessage if the list is not empty, and countdown if an item starts with a number or 'ui.scenarios.go' (in the latter case, hides countdown after the ttl). *(internal)* *(hook)* | 103 |
+| `ui_appContainers_topCenter.onScenarioFlashMessageClear()` | Hook: hides the flashMessage app when the scenario clears its messages. *(internal)* *(hook)* | 130 |
+| `ui_appContainers_topCenter.onScenarioNotRunning()` | Hook: hides flashMessage when no scenario is running. *(internal)* *(hook)* | 134 |
+| `ui_appContainers_topCenter.onUpdate(dtReal, dtSim, dtRaw)` | Frame hook: counts down the active message, advances the message queue, handles the deferred hiding of the countdown and draws the debug window. *(internal)* *(hook)* | 229 |
+| `ui_appContainers_topCenter.resetContainerContext(containerId)` | Deprecated: equivalent to hideAllApps. | 80 |
+| `ui_appContainers_topCenter.setAppVisibility(containerId, appId, visible)` | Pass-through to ui_appContainers.setAppVisibility. | 23 |
+| `ui_appContainers_topCenter.setContainerContext(containerId, context)` | Deprecated. Hides all apps then shows only the app named by context (if context is nil, everything is hidden). | 68 |
+| `ui_appContainers_topCenter.setDebug(enabled)` | Enables a small "TopCenter App Containers Debug" ImGui window (queue size, active message). | 95 |
+| `ui_appContainers_topCenter.setSpeedTarget(data)` | Stores the active speed target and sends it to the interface via guihooks.trigger('TechDriverTrainingSpeedBarTarget', data) for the speedTargetBar. | 51 |
+| `ui_appContainers_topCenter.setVerboseLogging(enabled)` | Enables deprecation warnings and logs of invalid messages. | 99 |
+| `ui_appContainers_topCenter.showApp(containerId, appId)` | Shows an app of the container. | 35 |
+| `ui_appContainers_topCenter.showFlashMessage(msg, ttl, big)` | Shows a single flash message, shows the flashMessage app and sends {msg, ttl, big} on the TopCenterAppsFlashMessage event. The message is kept for ttl so that an app mounted late can retrieve it. | 191 |
+| `ui_appContainers_topCenter.toggleApp(containerId, appId)` | Toggles the visibility of an app of the container. | 43 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_appContainers_topCenter.clearMessagesFromSource(source)`
 
-Supprime de la file les messages d'une source donnée (drift, drag…) ; si le message en cours en provient, passe au suivant ou cache flashMessage.
+Removes from the queue the messages of a given source (drift, drag…); if the current message comes from it, moves on to the next or hides flashMessage.
 
-- `source` (*string*) : Nom de la source.
+- `source` (*string*) : Source name.
 
 #### `ui_appContainers_topCenter.getActiveFlashMessage()`
 
-Utilisé par l'app HUD pour rattraper un message envoyé avant son montage : renvoie le message actif avec le ttl restant, ou nil s'il n'y en a pas ou si l'app flashMessage est cachée.
+Used by the HUD app to catch up on a message sent before it was mounted: returns the active message with the remaining ttl, or nil if there is none or if the flashMessage app is hidden.
 
-- **renvoie** : table|nil {msg, ttl (restant), big}.
+- **returns**: table|nil {msg, ttl (remaining), big}.
 
 #### `ui_appContainers_topCenter.getAppVisibility(containerId, appId)`
 
-Passe-plat vers ui_appContainers.getAppVisibility.
+Pass-through to ui_appContainers.getAppVisibility.
 
-- `containerId` (*string*) : Conteneur.
+- `containerId` (*string*) : Container.
 - `appId` (*string*) : App.
-- **renvoie** : boolean true si visible.
+- **returns**: boolean true if visible.
 
 #### `ui_appContainers_topCenter.getAvailableApps(containerId)`
 
-Renvoie la copie des apps déclarées du conteneur avec leur visibilité.
+Returns a copy of the container's declared apps with their visibility.
 
-- `containerId` (*string*) : Conteneur.
-- **renvoie** : table<string, table> {[appId]={visible=boolean}}.
+- `containerId` (*string*) : Container.
+- **returns**: table<string, table> {[appId]={visible=boolean}}.
 
 #### `ui_appContainers_topCenter.getAvailableContexts(containerId)`
 
-Alias déprécié de getAvailableApps.
+Deprecated alias of getAvailableApps.
 
-- `containerId` (*string*) : Conteneur.
-- **renvoie** : table<string, table> Voir getAvailableApps.
+- `containerId` (*string*) : Container.
+- **returns**: table<string, table> See getAvailableApps.
 
 #### `ui_appContainers_topCenter.getContainerContext(containerId)`
 
-Déprécié : renvoie la première app visible de la liste (l'ordre n'est pas garanti s'il y en a plusieurs).
+Deprecated: returns the first visible app in the list (order not guaranteed if there are several).
 
-- `containerId` (*string*) : Conteneur.
-- **renvoie** : string|nil appId ou nil.
+- `containerId` (*string*) : Container.
+- **returns**: string|nil appId or nil.
 
 #### `ui_appContainers_topCenter.getSpeedTarget()`
 
-Renvoie la dernière cible de vitesse mémorisée.
+Returns the last stored speed target.
 
-- **renvoie** : table|nil Dernière valeur passée à setSpeedTarget.
+- **returns**: table|nil Last value passed to setSpeedTarget.
 
 #### `ui_appContainers_topCenter.getVisibleApps(containerId)`
 
-Liste les apps visibles du conteneur (via ui_appContainers).
+Lists the visible apps of the container (via ui_appContainers).
 
-- `containerId` (*string*) : Conteneur.
-- **renvoie** : table<integer, string> Identifiants des apps visibles.
+- `containerId` (*string*) : Container.
+- **returns**: table<integer, string> Identifiers of the visible apps.
 
 #### `ui_appContainers_topCenter.hideAllApps(containerId)`
 
-Cache toutes les apps du conteneur (via ui_appContainers).
+Hides all apps of the container (via ui_appContainers).
 
-- `containerId` (*string*) : Conteneur.
+- `containerId` (*string*) : Container.
 
 #### `ui_appContainers_topCenter.hideApp(containerId, appId)`
 
-Cache une app du conteneur.
+Hides an app of the container.
 
-- `containerId` (*string*) : Conteneur.
+- `containerId` (*string*) : Container.
 - `appId` (*string*) : App.
 
 #### `ui_appContainers_topCenter.onGameplayFlashMessage(data)`
 
-Hook : message flash de gameplay. Accepte seulement les sources 'drift' et 'drag', et seulement si l'app du même nom est visible ; met alors le message en file et lance le suivant.
+Hook: gameplay flash message. Only accepts the sources 'drift' and 'drag', and only if the app of the same name is visible; then queues the message and starts the next one.
 
-- `data` (*table*) : {source='drift'|'drag', data=liste de messages (data[1][2] = durée)}.
+- `data` (*table*) : {source='drift'|'drag', data=list of messages (data[1][2] = duration)}.
 
 #### `ui_appContainers_topCenter.onScenarioFlashMessage(data)`
 
-Hook : message flash de scénario. Affiche flashMessage si la liste n'est pas vide, et countdown si un élément commence par un nombre ou 'ui.scenarios.go' (dans ce dernier cas, masque countdown après le ttl).
+Hook: scenario flash message. Shows flashMessage if the list is not empty, and countdown if an item starts with a number or 'ui.scenarios.go' (in the latter case, hides countdown after the ttl).
 
-- `data` (*table*) : Liste de messages {texte|nombre, ttl, …}.
+- `data` (*table*) : List of messages {text|number, ttl, …}.
 
 #### `ui_appContainers_topCenter.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook de frame : décompte le message actif, fait avancer la file de messages, gère le masquage différé du compte à rebours et dessine la fenêtre de debug.
+Frame hook: counts down the active message, advances the message queue, handles the deferred hiding of the countdown and draws the debug window.
 
-- `dtReal` (*number*) : Temps réel écoulé (s).
-- `dtSim` (*number*) : Temps de simulation écoulé (s).
-- `dtRaw` (*number*) : Temps brut (non utilisé).
+- `dtReal` (*number*) : Elapsed real time (s).
+- `dtSim` (*number*) : Simulation elapsed time (s).
+- `dtRaw` (*number*) : Raw time (not used).
 
 #### `ui_appContainers_topCenter.resetContainerContext(containerId)`
 
-Déprécié : équivaut à hideAllApps.
+Deprecated: equivalent to hideAllApps.
 
-- `containerId` (*string*) : Conteneur.
+- `containerId` (*string*) : Container.
 
 #### `ui_appContainers_topCenter.setAppVisibility(containerId, appId, visible)`
 
-Passe-plat vers ui_appContainers.setAppVisibility.
+Pass-through to ui_appContainers.setAppVisibility.
 
-- `containerId` (*string*) : Conteneur (normalement 'topCenter').
+- `containerId` (*string*) : Container (normally 'topCenter').
 - `appId` (*string*) : App.
-- `visible` (*boolean*) : Visibilité.
+- `visible` (*boolean*) : Visibility.
 
 #### `ui_appContainers_topCenter.setContainerContext(containerId, context)`
 
-Déprécié. Cache toutes les apps puis affiche seulement l'app nommée par context (si context est nil, tout est caché).
+Deprecated. Hides all apps then shows only the app named by context (if context is nil, everything is hidden).
 
-- `containerId` (*string*) : Conteneur.
-- `context` (*string|nil*) : appId à afficher.
+- `containerId` (*string*) : Container.
+- `context` (*string|nil*) : appId to show.
 
 #### `ui_appContainers_topCenter.setDebug(enabled)`
 
-Active une petite fenêtre ImGui « TopCenter App Containers Debug » (taille de la file, message actif).
+Enables a small "TopCenter App Containers Debug" ImGui window (queue size, active message).
 
-- `enabled` (*boolean*) : true pour afficher.
+- `enabled` (*boolean*) : true to show.
 
 #### `ui_appContainers_topCenter.setSpeedTarget(data)`
 
-Mémorise la cible de vitesse active et l'envoie à l'interface via guihooks.trigger('TechDriverTrainingSpeedBarTarget', data) pour la barre speedTargetBar.
+Stores the active speed target and sends it to the interface via guihooks.trigger('TechDriverTrainingSpeedBarTarget', data) for the speedTargetBar.
 
-- `data` (*table*) : Données de la cible, transmises telles quelles à l'interface (structure non définie ici).
+- `data` (*table*) : Target data, passed as is to the interface (structure not defined here).
 
 #### `ui_appContainers_topCenter.setVerboseLogging(enabled)`
 
-Active les avertissements de dépréciation et les logs de messages invalides.
+Enables deprecation warnings and logs of invalid messages.
 
-- `enabled` (*boolean*) : true pour activer.
+- `enabled` (*boolean*) : true to enable.
 
 #### `ui_appContainers_topCenter.showApp(containerId, appId)`
 
-Affiche une app du conteneur.
+Shows an app of the container.
 
-- `containerId` (*string*) : Conteneur.
+- `containerId` (*string*) : Container.
 - `appId` (*string*) : App.
 
 #### `ui_appContainers_topCenter.showFlashMessage(msg, ttl, big)`
 
-Affiche un message flash unique, affiche l'app flashMessage et envoie {msg, ttl, big} sur l'événement TopCenterAppsFlashMessage. Le message est mémorisé pendant ttl pour qu'une app montée en retard puisse le récupérer.
+Shows a single flash message, shows the flashMessage app and sends {msg, ttl, big} on the TopCenterAppsFlashMessage event. The message is kept for ttl so that an app mounted late can retrieve it.
 
-- `msg` (*string*) : Texte (ou clé de traduction) du message.
-- `ttl` (*number|nil*) : Durée en secondes, 3 par défaut.
-- `big` (*boolean|nil*) : Affichage en grand.
+- `msg` (*string*) : Message text (or translation key).
+- `ttl` (*number|nil*) : Duration in seconds, 3 by default.
+- `big` (*boolean|nil*) : Display in large size.
 
 #### `ui_appContainers_topCenter.toggleApp(containerId, appId)`
 
-Inverse la visibilité d'une app du conteneur.
+Toggles the visibility of an app of the container.
 
-- `containerId` (*string*) : Conteneur.
+- `containerId` (*string*) : Container.
 - `appId` (*string*) : App.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | { "ui_appContainers", "ui_firstDrive_moveOff" } : chargés avant ce module. |
+| `dependencies` | table<integer, string> | { "ui_appContainers", "ui_firstDrive_moveOff" }: loaded before this module. |
 
-**Évènements UI (guihooks.trigger) :** `TechDriverTrainingSpeedBarTarget`
+**UI events (guihooks.trigger):** `TechDriverTrainingSpeedBarTarget`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/appContainers/topCenter.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/appContainers/topCenter.lua`.*

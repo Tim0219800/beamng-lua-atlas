@@ -1,35 +1,35 @@
 # `util_wsTest`
 
-*Fichier : `lua/ge/extensions/util/wsTest.lua` · VM : Game Engine (GE) · 103 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/wsTest.lua` · VM: Game Engine (GE) · 103 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_wsTest` : `extensions.load("util_wsTest")`, puis la globale `util_wsTest`
+**Access:** extension `util_wsTest`: `extensions.load("util_wsTest")`, then the global `util_wsTest`
 
-Outil de développement : démarre un serveur web/WebSocket (port 8083, protocole « bng-test », page ./ui/entrypoints/util_wsTest/) écoutant sur toutes les adresses. Un client distant peut exécuter du code Lua GE, recharger le Lua, recharger l'interface CEF, ouvrir la console de développement CEF et mesurer la bande passante. Sert aux tests d'outils externes.
+Development tool: starts a web/WebSocket server (port 8083, "bng-test" protocol, page ./ui/entrypoints/util_wsTest/) listening on all addresses. A remote client can run GE Lua code, reload Lua, reload the CEF UI, open the CEF developer console and measure bandwidth. Used for testing external tools.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('util_wsTest')
 ```
 
-## Remarques
+## Notes
 
-- Sécurité : la commande execGELua évalue du Lua arbitraire envoyé par n'importe quel client connecté, sur toutes les interfaces réseau. À n'utiliser qu'en local de confiance.
-- Commandes JSON reconnues (champ type) : execGELua (cmd), reloadGELua, reloadCEF, toggleCEFDevConsole, bandwidthDown, bandwidthUpStart (size). Le message texte « ping » répond « pong ».
-- Bug mineur : en cas d'échec du décodage JSON, le message d'erreur utilise la variable `e`, non définie (nil), au lieu de evt.msg.
-- Le résultat de execGELua est renvoyé tel quel dans jsonEncode({result = ...}) ; une erreur donne une chaîne « Error: ... ».
+- Security: the execGELua command evaluates arbitrary Lua sent by any connected client, on all network interfaces. Use only in a trusted local environment.
+- Recognized JSON commands (field type): execGELua (cmd), reloadGELua, reloadCEF, toggleCEFDevConsole, bandwidthDown, bandwidthUpStart (size). The text message "ping" answers "pong".
+- Minor bug: if JSON decoding fails, the error message uses the variable `e`, which is undefined (nil), instead of evt.msg.
+- The result of execGELua is returned as is in jsonEncode({result = ...}); an error gives an "Error: ..." string.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_wsTest.onExtensionLoaded()` | Crée (ou récupère) le serveur WebSocket via utils/wsUtils sur le port 8083 et affiche son adresse dans la console. *(interne)* *(hook)* | 17 |
-| `util_wsTest.onExtensionUnloaded()` | Détruit le serveur WebSocket (BNGWebWSServer.destroy) s'il existe. *(interne)* *(hook)* | 23 |
-| `util_wsTest.onUpdate()` | Chaque image : lit les évènements des clients, répond au ping, décode les commandes JSON et les traite, puis met à jour le serveur. *(interne)* *(hook)* | 73 |
+| `util_wsTest.onExtensionLoaded()` | Creates (or retrieves) the WebSocket server via utils/wsUtils on port 8083 and prints its address in the console. *(internal)* *(hook)* | 17 |
+| `util_wsTest.onExtensionUnloaded()` | Destroys the WebSocket server (BNGWebWSServer.destroy) if it exists. *(internal)* *(hook)* | 23 |
+| `util_wsTest.onUpdate()` | Each frame: reads the clients' events, answers ping, decodes the JSON commands and processes them, then updates the server. *(internal)* *(hook)* | 73 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Lua:` `requestReload`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/wsTest.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/wsTest.lua`.*

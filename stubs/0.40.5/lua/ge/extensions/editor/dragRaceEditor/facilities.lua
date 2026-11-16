@@ -2,76 +2,76 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/dragRaceEditor/facilities.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère les facilities (installations de drag) dans l'éditeur de drag race : liste chargée via gameplay_drag_saveSystem, sélection, création, suppression, sauvegarde en <id>.facility.json dans le dossier dragstrips du niveau (avec renommage du fichier si l'id change), et panneaux ImGui (liste, détails, ajout/retrait de strips). Une facility regroupe des chemins de fichiers strip (stripIds).
---- Accès : extension `editor_dragRaceEditor_facilities` : `extensions.load("editor_dragRaceEditor_facilities")`, puis la globale `editor_dragRaceEditor_facilities`
+--- Manages facilities (drag installations) in the drag race editor: list loaded via gameplay_drag_saveSystem, selection, creation, deletion, saving as <id>.facility.json in the level's dragstrips folder (with file renaming if the id changes), and ImGui panels (list, details, adding/removing strips). A facility groups strip file paths (stripIds).
+--- Access: extension `editor_dragRaceEditor_facilities`: `extensions.load("editor_dragRaceEditor_facilities")`, then the global `editor_dragRaceEditor_facilities`
 ---@class editor_dragRaceEditor_facilities
 editor_dragRaceEditor_facilities = {}
 
---- Crée une facility « New Facility » (id new_facility_N, stripIds vide, _dirty=true), l'ajoute et la sélectionne.
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:91
+--- Creates a "New Facility" facility (id new_facility_N, empty stripIds, _dirty=true), adds it and selects it.
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:91
 function editor_dragRaceEditor_facilities.addFacility() end
 
---- Dessine la liste ImGui avec boutons Add, Remove, Save, Refresh ; les entrées non sauvées sont en orange.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:197
+--- Draws the ImGui list with Add, Remove, Save, Refresh buttons; unsaved entries are shown in orange.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:197
 function editor_dragRaceEditor_facilities.drawFacilitiesList() end
 
---- Dessine en debug 3D le nom de la facility sélectionnée à l'origine.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:386
+--- Draws the name of the selected facility at the origin as 3D debug.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:386
 function editor_dragRaceEditor_facilities.drawFacilitiesPreview() end
 
---- Dessine l'édition de la facility sélectionnée : id, nom, description, ajout (liste déroulante avec recherche) et retrait de strips.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:248
+--- Draws the editing UI for the selected facility: id, name, description, adding (dropdown with search) and removing strips.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:248
 function editor_dragRaceEditor_facilities.drawFacilityDetails() end
 
---- Renvoie la liste des facilities.
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:32
----@return table  tableau de facilities
+--- Returns the list of facilities.
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:32
+---@return table  array of facilities
 function editor_dragRaceEditor_facilities.getAllFacilities() end
 
---- Renvoie la facility sélectionnée.
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:53
----@return table|nil  facility ou nil
+--- Returns the selected facility.
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:53
+---@return table|nil  facility or nil
 function editor_dragRaceEditor_facilities.getSelectedFacility() end
 
---- Index (base 1) de la facility sélectionnée, -1 si aucune.
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:45
+--- Index (1-based) of the selected facility, -1 if none.
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:45
 ---@return integer  index
 function editor_dragRaceEditor_facilities.getSelectedFacilityIndex() end
 
---- Indique si au moins une facility a un fichier et n'est pas modifiée.
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:36
----@return boolean  résultat
+--- Indicates whether at least one facility has a file and is not modified.
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:36
+---@return boolean  result
 function editor_dragRaceEditor_facilities.hasSavedFacilities() end
 
---- Charge toutes les facilities avec dragSaveSystem.getAllFacilities(), remet _dirty à false et complète _filePath depuis le dossier drag du niveau.
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:18
+--- Loads all facilities with dragSaveSystem.getAllFacilities(), resets _dirty to false and fills in _filePath from the level's drag folder.
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:18
 function editor_dragRaceEditor_facilities.loadAllFacilities() end
 
---- Retire de la liste la facility sélectionnée (le fichier sur disque n'est pas supprimé) et ajuste la sélection.
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:111
+--- Removes the selected facility from the list (the file on disk is not deleted) and adjusts the selection.
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:111
 function editor_dragRaceEditor_facilities.removeSelectedFacility() end
 
---- Sauve toutes les facilities modifiées dans le dossier drag du niveau, qu'elle crée si besoin.
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:125
----@return boolean  false si aucun niveau ou dossier non créable, sinon true (même si une sauvegarde individuelle a échoué)
+--- Saves all modified facilities in the level's drag folder, creating it if needed.
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:125
+---@return boolean  false if there is no level or the folder cannot be created, otherwise true (even if an individual save failed)
 function editor_dragRaceEditor_facilities.saveAllFacilities() end
 
---- Sauve une facility dans <niveau>/<id>.facility.json. Si l'id a changé, renomme d'abord l'ancien fichier (échoue si le nouveau existe déjà).
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:154
----@param facility table facility à sauver
----@return boolean  succès
+--- Saves a facility to <level>/<id>.facility.json. If the id changed, first renames the old file (fails if the new one already exists).
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:154
+---@param facility table facility to save
+---@return boolean  success
 function editor_dragRaceEditor_facilities.saveFacility(facility) end
 
---- Sélectionne une facility : quitte l'édition de zone, désélectionne strip et réglages, met facilityId dans les réglages de drag courants et marque des changements non sauvés.
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:60
----@param index integer index base 1
+--- Selects a facility: leaves zone editing, deselects strip and settings, puts facilityId in the current drag settings and marks unsaved changes.
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:60
+---@param index integer 1-based index
 function editor_dragRaceEditor_facilities.selectFacility(index) end
 
---- Fixe l'index sélectionné sans effets de bord.
----Source : lua/ge/extensions/editor/dragRaceEditor/facilities.lua:49
----@param index integer index base 1
+--- Sets the selected index without side effects.
+---Source: lua/ge/extensions/editor/dragRaceEditor/facilities.lua:49
+---@param index integer 1-based index
 function editor_dragRaceEditor_facilities.setSelectedFacilityIndex(index) end
 

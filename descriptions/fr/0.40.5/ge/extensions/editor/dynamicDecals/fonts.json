@@ -1,0 +1,52 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/fonts.lua",
+  "module": "Gestion des polices de l'outil Dynamic Decals. Génère, via FontRasterizer.createFontBitmap, des atlas de glyphes (bitmaps de 256 px de haut, option SDF avec padding, valeur onedge et échelle de distance) dans /art/dynamicDecals/fonts/ à partir d'un fichier de police (dossier source par défaut /ui/common/). Les atlas générés (`<nom>.font.json` avec header et glyphs) sont listés, prévisualisés dans la section « Fonts », dans une fenêtre d'aperçu et dans un onglet « Fonts » du navigateur ; un glyphe choisi peut servir de texture de decal (api.setDecalLayerFontPath / setDecalLayerFontCharacter). Les calques à texte (path layers) s'en servent.",
+  "notes": [
+    "Un atlas n'est listé que si son fichier `.font.json` contient une clé `header`.",
+    "checkOrGenerateFontBitmaps renvoie true si le chemin est vide (≤ 1 caractère) ou si l'atlas existe déjà, sinon le résultat de la génération.",
+    "En cas d'échec de génération, un message est ajouté dans les notifications (niveau error) et dans le log.",
+    "Le code lit la liste des atlas dans destinationDirectory (« /art/dynamicDecals/fonts/ ») avec une profondeur de 1.",
+    "editModeUpdate retire des éléments de fontGenNotifications pendant ipairs : un élément peut être sauté."
+  ],
+  "fields": {
+    "supportedFontFileFormats": {"type": "table", "desc": "Filtres de la boîte de fichier pour choisir une police : tous les fichiers, fichiers police (.ttf, .TTF) et fichiers TTF."}
+  },
+  "functions": {
+    "checkOrGenerateFontBitmaps": {
+      "desc": "S'assure qu'un atlas existe pour la police donnée, le génère sinon (nom de l'atlas = nom du fichier sans extension).",
+      "params": {"fontPath": {"type": "string", "desc": "Chemin du fichier .ttf."}},
+      "returns": [{"type": "boolean", "desc": "false si la création a échoué, true sinon."}],
+      "internal": false
+    },
+    "getFontDirectory": {
+      "desc": "Renvoie le dossier source des polices (/ui/common/).",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Chemin du dossier."}],
+      "internal": false
+    },
+    "getGeneratedFontAtlases": {
+      "desc": "Renvoie la liste (triée sans casse) des noms d'atlas de police déjà générés.",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Noms de polices."}],
+      "internal": false
+    },
+    "registerEditorPreferences": {
+      "desc": "Enregistre `dynamicDecalsTool.fonts` : glyphPreviewSize et glyphPreviewSizeInPreviewWindow (float, défaut 128, de 32 à 1024) et markMissingGlyphs (bool, vrai).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : liste les atlas existants, enregistre la section « Fonts » (ordre 1030), l'onglet « Fonts » du navigateur (ordre 40), la fenêtre d'aperçu, les callbacks d'update et d'interface, puis indique à l'API le dossier des atlas (api.setFontTextureAtlasPath).",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

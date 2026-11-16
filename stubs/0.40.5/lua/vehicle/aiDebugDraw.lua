@@ -2,40 +2,40 @@
 -- tim19Atlas stub generated from lua/vehicle/aiDebugDraw.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Dessin de debug de l'IA véhicule (sphères, cylindres, textes via obj.debugDrawProxy). Chargé par ai.lua (require 'aiDebugDraw') ; ai.setVehicleDebugMode l'active ou le coupe selon ai.debugMode. Il lit un contexte (ego, twt, route courante, carte, scriptai…) fourni par ai.lua via setContextBinder, et n'écrit que dans ai.debugDraw (fonction appelée par la boucle principale pour dessiner). Un moddeur ne l'appelle normalement pas directement.
---- Accès : `require("aiDebugDraw")`
+--- Debug drawing for the vehicle AI (spheres, cylinders, texts via obj.debugDrawProxy). Loaded by ai.lua (require 'aiDebugDraw'); ai.setVehicleDebugMode enables or disables it depending on ai.debugMode. It reads a context (ego, twt, current route, map, scriptai...) provided by ai.lua via setContextBinder, and only writes to ai.debugDraw (function called by the main loop to draw). A modder does not normally call it directly.
+--- Access: `require("aiDebugDraw")`
 ---@class aiDebugDraw
 local aiDebugDraw = {}
 
---- Désactive le dessin debug (ai.debugDraw = nop).
----Source : lua/vehicle/aiDebugDraw.lua:442
+--- Disables debug drawing (ai.debugDraw = nop).
+---Source: lua/vehicle/aiDebugDraw.lua:442
 function aiDebugDraw.disable() end
 
---- Active le dessin debug : lie le contexte si nécessaire puis place la fonction de dessin dans ai.debugDraw.
----Source : lua/vehicle/aiDebugDraw.lua:435
+--- Enables debug drawing: binds the context if necessary then puts the drawing function in ai.debugDraw.
+---Source: lua/vehicle/aiDebugDraw.lua:435
 function aiDebugDraw.enable() end
 
---- Stocke le contexte utilisé par le dessin.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/aiDebugDraw.lua:409
----@param context table Table avec ego, twt, lastCommand, player (fonction), getCurrentRoute, getMapData, getScriptai, roadNaturalContinuation, castRay, populateOBBinRange.
+--- Stores the context used by the drawing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/aiDebugDraw.lua:409
+---@param context table Table with ego, twt, lastCommand, player (function), getCurrentRoute, getMapData, getScriptai, roadNaturalContinuation, castRay, populateOBBinRange.
 function aiDebugDraw.init(context) end
 
---- Hook appelé par ai.setVehicleDebugMode quand le mode debug change : vide les historiques de dessin (trajectoire, route) qui ne correspondent plus au mode choisi.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/aiDebugDraw.lua:413
----@param debugMode string Nouveau ai.debugMode ('off', 'target', 'route', 'speeds', 'trajectory', 'rays', 'all').
+--- Hook called by ai.setVehicleDebugMode when the debug mode changes: empties the drawing histories (trajectory, route) that no longer match the chosen mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/aiDebugDraw.lua:413
+---@param debugMode string New ai.debugMode ('off', 'target', 'route', 'speeds', 'trajectory', 'rays', 'all').
 function aiDebugDraw.onDebugModeChanged(debugMode) end
 
---- Vide les historiques de dessin (trajectoire et route). Appelée par ai.setMode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/aiDebugDraw.lua:428
+--- Empties the drawing histories (trajectory and route). Called by ai.setMode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/aiDebugDraw.lua:428
 function aiDebugDraw.reset() end
 
---- Enregistre la fonction qui construira le contexte (ego, twt, accès route/carte/scriptai, castRay…) au premier enable().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/aiDebugDraw.lua:405
----@param fn function Fonction sans argument qui appelle aiDebugDraw.init(context).
+--- Registers the function that will build the context (ego, twt, route/map/scriptai access, castRay...) at the first enable().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/aiDebugDraw.lua:405
+---@param fn function Function with no argument that calls aiDebugDraw.init(context).
 function aiDebugDraw.setContextBinder(fn) end
 
 return aiDebugDraw

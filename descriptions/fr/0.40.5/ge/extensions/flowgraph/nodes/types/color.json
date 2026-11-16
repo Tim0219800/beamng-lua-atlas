@@ -1,0 +1,64 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/types/color.lua",
+  "module": "Noeud « Color » (provider). Fournit une couleur (table RGBA {r,g,b,a}, avec 4 valeurs PBR supplémentaires aux index 5-8 en mode custom) sur le pin color. Modes : 'custom' (sélecteur dans l'éditeur) ou 'from Pin' (pins r, g, b, a de type number).",
+  "notes": [
+    "En mode 'from Pin', la sortie est {r,g,b,a} sans les valeurs PBR."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "clr = {1,1,1,1}, mode = 'custom', modes = {'custom','from Pin'}.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Choix du mode, création/suppression des pins r/g/b/a et sélecteur de couleur (editor.uiColorEdit8).",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde l'état du noeud dans la table donnée.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure clr (complété à 8 valeurs) et mode.",
+          "params": {
+            "nodeData": {
+              "type": "any",
+              "desc": "données sauvegardées"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Écrit la couleur (depuis les pins en mode 'from Pin', sinon clr).",
+          "internal": false
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        },
+        "createColorPins": {
+          "desc": "Crée les pins d'entrée number r, g, b, a.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

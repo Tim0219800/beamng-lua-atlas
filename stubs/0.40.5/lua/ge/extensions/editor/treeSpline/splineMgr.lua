@@ -2,193 +2,193 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/treeSpline/splineMgr.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gestionnaire de données de l'outil Tree Spline : détient la liste des splines d'arbres (treeSplines) et la table id -> index (splineMap), crée/supprime/copie/divise les splines, gère la sérialisation (rechargement Lua et fichiers de session JSON), l'annulation/rétablissement, les liens avec la Master Spline et la reconstruction des splines sales (géométrie puis replantage via editor/treeSpline/populate). Utilisé par editor/treeSpline.lua et par les outils partagés (splineInput, session).
---- Accès : extension `editor_treeSpline_splineMgr` : `extensions.load("editor_treeSpline_splineMgr")`, puis la globale `editor_treeSpline_splineMgr`
+--- Data manager of the Tree Spline tool: holds the list of tree splines (treeSplines) and the id -> index table (splineMap), creates/deletes/copies/splits splines, handles serialization (Lua reload and JSON session files), undo/redo, the links with the Master Spline and the rebuild of dirty splines (geometry then replanting via editor/treeSpline/populate). Used by editor/treeSpline.lua and by the shared tools (splineInput, session).
+--- Access: extension `editor_treeSpline_splineMgr`: `extensions.load("editor_treeSpline_splineMgr")`, then the global `editor_treeSpline_splineMgr`
 ---@class editor_treeSpline_splineMgr
 editor_treeSpline_splineMgr = {}
 
---- Ajoute une nouvelle spline vide (nom unique, UUID Engine.generateUUID, isConformToTerrain = true) ; l'utilisateur place ensuite ses nœuds en cliquant sur le terrain.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:83
----@return integer  Index de la nouvelle spline.
+--- Adds a new empty spline (unique name, UUID Engine.generateUUID, isConformToTerrain = true); the user then places its nodes by clicking on the terrain.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:83
+---@return integer  Index of the new spline.
 function editor_treeSpline_splineMgr.addNewTreeSpline() end
 
---- Copie le profil (paramètres de feuillage seulement, pas la géométrie) ; callback requis par splineInput.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:259
----@param spline table Spline source.
----@return table  Profil copié.
+--- Copies the profile (foliage parameters only, not the geometry); callback required by splineInput.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:259
+---@param spline table Source spline.
+---@return table  Copied profile.
 function editor_treeSpline_splineMgr.copyTreeSplineProfile(spline) end
 
---- Copie profonde d'une spline, sans la géométrie dérivée ni les poignées runtime (reconstruites depuis les nœuds et paramètres).
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:142
----@param spline table Spline à copier.
----@return table  Copie.
+--- Deep copy of a spline, without the derived geometry or the runtime handles (rebuilt from the nodes and parameters).
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:142
+---@param spline table Spline to copy.
+---@return table  Copy.
 function editor_treeSpline_splineMgr.deepCopyTreeSpline(spline) end
 
---- Copie profonde de toute la liste (pour l'annulation/rétablissement inter-splines).
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:162
----@return table  Liste copiée.
+--- Deep copy of the whole list (for cross-spline undo/redo).
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:162
+---@return table  Copied list.
 function editor_treeSpline_splineMgr.deepCopyTreeSplineState() end
 
---- Reconstruit une spline depuis un blob encodé (string) ou une table JSON. Réinitialise les tables dérivées, marque la spline sale, réhydrate les vec3 (nodes, nmls) et reprend les arbres conservés (keptObjects) via pop.adopt.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:296
----@param data string|table Blob de l'éditeur ou table issue d'un fichier de session.
----@return table  Spline reconstruite.
+--- Rebuilds a spline from an encoded blob (string) or a JSON table. Resets the derived tables, marks the spline dirty, rehydrates the vec3 (nodes, nmls) and takes back the kept trees (keptObjects) via pop.adopt.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:296
+---@param data string|table Editor blob or table from a session file.
+---@return table  Rebuilt spline.
 function editor_treeSpline_splineMgr.deserializeTreeSpline(data) end
 
---- Liste des splines actives sous forme {name, id, type} pour le lien avec la Master Spline.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:364
----@return table[]  Entrées {name, id, type = préfixe de l'outil}.
+--- List of active splines as {name, id, type} for the link with the Master Spline.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:364
+---@return table[]  Entries {name, id, type = tool prefix}.
 function editor_treeSpline_splineMgr.getCurrentTreeSplineList() end
 
---- Renvoie la clé du mode d'édition de l'outil.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:49
----@return string  Clé du mode d'édition.
+--- Returns the tool's edit mode key.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:49
+---@return string  Edit mode key.
 function editor_treeSpline_splineMgr.getEditModeKey() end
 
---- Valeurs numériques de distribution par défaut pour une nouvelle spline (sans accès au scenetree, sûr au chargement du module).
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:58
+--- Default numeric distribution values for a new spline (no scenetree access, safe at module load).
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:58
 ---@return table  class, spacingM, posVariance, scaleVariance, alignToNormal, slopeMaxDeg, seed.
 function editor_treeSpline_splineMgr.getFoliageParamDefaults() end
 
---- Renvoie la table id -> index des splines.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:55
----@return table<string, integer>  Table id vers index.
+--- Returns the id -> index table of the splines.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:55
+---@return table<string, integer>  Table id to index.
 function editor_treeSpline_splineMgr.getSplineMap() end
 
---- Instantané complet (toutes les splines) en données simples, pour onSerialize.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:317
----@return table  Liste de blobs sérialisés.
+--- Full snapshot (all splines) as plain data, for onSerialize.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:317
+---@return table  List of serialized blobs.
 function editor_treeSpline_splineMgr.getState() end
 
---- Renvoie le préfixe de nom de l'outil (utilisé pour nommer les splines et identifier le type dans la Master Spline).
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:46
----@return string  Préfixe de l'outil.
+--- Returns the tool's name prefix (used to name splines and identify the type in the Master Spline).
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:46
+---@return string  Tool prefix.
 function editor_treeSpline_splineMgr.getToolPrefixStr() end
 
---- Renvoie la liste (vivante, non copiée) des tree splines.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:52
----@return table  Liste de splines.
+--- Returns the list (live, not copied) of tree splines.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:52
+---@return table  List of splines.
 function editor_treeSpline_splineMgr.getTreeSplines() end
 
---- Indique si la spline d'identifiant donné est liée à une Master Spline.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:377
----@param id string Identifiant de la spline.
----@return boolean  Vrai si liée.
+--- Tells whether the spline with the given identifier is linked to a Master Spline.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:377
+---@param id string Spline identifier.
+---@return boolean  True if linked.
 function editor_treeSpline_splineMgr.isLinked(id) end
 
---- Construit la distribution de feuillage par défaut d'une nouvelle spline : les valeurs numériques plus une espèce cochée (species) avec son poids 1.0 (speciesWeights).
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:72
----@return table  Paramètres de feuillage.
+--- Builds the default foliage distribution of a new spline: the numeric values plus one checked species (species) with its weight 1.0 (speciesWeights).
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:72
+---@return table  Foliage parameters.
 function editor_treeSpline_splineMgr.makeFoliageDefaults() end
 
---- Applique un profil de feuillage à une spline ; la géométrie reste inchangée.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:265
----@param spline table Spline cible.
----@param profile table Profil renvoyé par copyTreeSplineProfile.
+--- Applies a foliage profile to a spline; the geometry stays unchanged.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:265
+---@param spline table Target spline.
+---@param profile table Profile returned by copyTreeSplineProfile.
 function editor_treeSpline_splineMgr.pasteTreeSplineProfile(spline, profile) end
 
---- Recalcule la table id -> index ; appelé par l'aide de session après un chargement qui ajoute des splines.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:314
+--- Recomputes the id -> index table; called by the session helper after a load that adds splines.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:314
 function editor_treeSpline_splineMgr.recomputeIdMap() end
 
---- Supprime toutes les splines (et leurs arbres). Sans isIncludeDisabled, seules les splines actives et non liées sont supprimées.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:131
----@param isIncludeDisabled boolean Vrai pour inclure les splines verrouillées ou liées.
+--- Deletes all splines (and their trees). Without isIncludeDisabled, only active, non-linked splines are deleted.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:131
+---@param isIncludeDisabled boolean True to include locked or linked splines.
 function editor_treeSpline_splineMgr.removeAllTreeSplines(isIncludeDisabled) end
 
---- Supprime une spline liée par id (appelé quand un calque de la Master Spline est retiré).
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:414
----@param splineId string Identifiant.
+--- Deletes a linked spline by id (called when a Master Spline layer is removed).
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:414
+---@param splineId string Identifier.
 function editor_treeSpline_splineMgr.removeLinkedTreeSpline(splineId) end
 
---- Supprime la spline à l'index donné et retire ses arbres plantés. Sans effet si l'index est invalide.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:122
----@param idx integer Index de la spline.
+--- Deletes the spline at the given index and removes its planted trees. No effect if the index is invalid.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:122
+---@param idx integer Spline index.
 function editor_treeSpline_splineMgr.removeTreeSpline(idx) end
 
---- Sérialise une spline (liste blanche des champs primaires, sans géométrie dérivée) en blob encodé, pour la persistance au rechargement Lua.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:274
+--- Serializes a spline (whitelist of primary fields, without derived geometry) into an encoded blob, for persistence across Lua reload.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:274
 ---@param spline table Spline.
----@return string  Blob encodé.
+---@return string  Encoded blob.
 function editor_treeSpline_splineMgr.serializeTreeSpline(spline) end
 
---- Table simple portable pour un fichier de session (toolUtilities/session) : décode le blob de serializeTreeSpline ; jsonWriteFile aplatit les nœuds vec3.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:290
+--- Plain portable table for a session file (toolUtilities/session): decodes the blob from serializeTreeSpline; jsonWriteFile flattens the vec3 nodes.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:290
 ---@param spline table Spline.
----@return table  Table sérialisable en JSON.
+---@return table  JSON-serializable table.
 function editor_treeSpline_splineMgr.serializeTreeSplineToTable(spline) end
 
---- Lie ou délie la spline à un groupe de Master Spline (linkId), retire ses arbres et la marque sale.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:383
----@param id string Identifiant de la spline.
----@param groupId string Identifiant du groupe Master Spline.
----@param isLink boolean Vrai pour lier.
+--- Links or unlinks the spline to a Master Spline group (linkId), removes its trees and marks it dirty.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:383
+---@param id string Spline identifier.
+---@param groupId string Master Spline group identifier.
+---@param isLink boolean True to link.
 function editor_treeSpline_splineMgr.setLink(id, groupId, isLink) end
 
---- Restaure toute la liste depuis un instantané (supprime d'abord tout) ; les splines sont marquées sales et replantées.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:324
----@param state table|nil Instantané de getState.
+--- Restores the whole list from a snapshot (deletes everything first); the splines are marked dirty and replanted.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:324
+---@param state table|nil Snapshot from getState.
 function editor_treeSpline_splineMgr.setState(state) end
 
---- Remplace l'enregistrement d'une spline (chemin d'annulation de la sélection d'objet dans splineInput).
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:203
----@param spline table Nouvelle spline.
----@param idx integer Index à remplacer.
+--- Replaces a spline's record (undo path of object selection in splineInput).
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:203
+---@param spline table New spline.
+---@param idx integer Index to replace.
 function editor_treeSpline_splineMgr.setTreeSpline(spline, idx) end
 
---- Remplace toute la liste des splines (annulation/rétablissement inter-splines).
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:215
----@param splines table Nouvelle liste.
+--- Replaces the whole list of splines (cross-spline undo/redo).
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:215
+---@param splines table New list.
 function editor_treeSpline_splineMgr.setTreeSplines(splines) end
 
---- Rétablit l'édition d'une seule spline (callback d'historique).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:244
----@param splineData table Données {old, new} de l'action.
+--- Redoes the edit of a single spline (history callback).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:244
+---@param splineData table Action data {old, new}.
 function editor_treeSpline_splineMgr.singleSplineEditRedo(splineData) end
 
---- Annule l'édition d'une seule spline (callback d'historique de l'éditeur).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:243
----@param splineData table Données {old, new} de l'action.
+--- Undoes the edit of a single spline (editor history callback).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:243
+---@param splineData table Action data {old, new}.
 function editor_treeSpline_splineMgr.singleSplineEditUndo(splineData) end
 
---- Coupe la spline sélectionnée en deux au nœud choisi (splines ouvertes), ou déroule une boucle sur place. Les deux moitiés héritent des paramètres de feuillage et du réglage de conformité.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:180
----@param selIdx integer Index de la spline.
----@param nodeIdx integer Index du nœud de coupe.
----@return integer  Nouvel index sélectionné.
+--- Cuts the selected spline in two at the chosen node (open splines), or unrolls a loop in place. Both halves inherit the foliage parameters and the conformity setting.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:180
+---@param selIdx integer Spline index.
+---@param nodeIdx integer Index of the split node.
+---@return integer  New selected index.
 function editor_treeSpline_splineMgr.splitTreeSpline(selIdx, nodeIdx) end
 
---- Rétablit une édition inter-splines.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:252
----@param data table Données {old, new} de l'action.
+--- Redoes a cross-spline edit.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:252
+---@param data table Action data {old, new}.
 function editor_treeSpline_splineMgr.transSplineEditRedo(data) end
 
---- Annule une édition inter-splines (ajout, suppression, réordonnancement sur toute la liste).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:247
----@param data table Données {old, new} de l'action.
+--- Undoes a cross-spline edit (add, delete, reorder across the whole list).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:247
+---@param data table Action data {old, new}.
 function editor_treeSpline_splineMgr.transSplineEditUndo(data) end
 
---- Délie toutes les splines liées et les marque sales.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:422
+--- Unlinks all linked splines and marks them dirty.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:422
 function editor_treeSpline_splineMgr.unlinkAll() end
 
---- Reconstruit la géométrie et replante les splines sales ; peut être appelée à chaque frame. Signale l'édition à la session (session.markEdited).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:332
+--- Rebuilds the geometry and replants dirty splines; may be called every frame. Reports the edit to the session (session.markEdited).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:332
 function editor_treeSpline_splineMgr.updateDirtyTreeSplines() end
 
---- Met à jour une spline liée avec la géométrie poussée par la Master Spline (nœuds, largeurs, normales, boucle) ; vide la géométrie dérivée et les arbres si moins de 2 points. Le paramètre isConformToTerrain est ignoré.
----Source : lua/ge/extensions/editor/treeSpline/splineMgr.lua:395
----@param id string Identifiant.
----@param points table Nœuds.
----@param widths table Largeurs.
----@param nmls table Normales.
----@param isLoop boolean Spline fermée.
----@param isConformToTerrain boolean Ignoré.
+--- Updates a linked spline with the geometry pushed by the Master Spline (nodes, widths, normals, loop); empties the derived geometry and the trees if fewer than 2 points. The isConformToTerrain parameter is ignored.
+---Source: lua/ge/extensions/editor/treeSpline/splineMgr.lua:395
+---@param id string Identifier.
+---@param points table Nodes.
+---@param widths table Widths.
+---@param nmls table Normals.
+---@param isLoop boolean Closed spline.
+---@param isConformToTerrain boolean Ignored.
 function editor_treeSpline_splineMgr.updateLinkedTreeSpline(id, points, widths, nmls, isLoop, isConformToTerrain) end
 

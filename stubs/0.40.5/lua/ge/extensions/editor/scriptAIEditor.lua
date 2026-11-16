@@ -2,43 +2,43 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/scriptAIEditor.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Éditeur de scénarios ScriptAI : mode d'édition 'Edit ScriptAI Scenario' (icône BNGMicrochip de la barre d'outils) pour créer, éditer et exécuter des trajectoires de véhicules scriptées et un chemin de caméra. Il ouvre plusieurs fenêtres : Script AI Editor (barre de temps lecture/pause/boucle), Scene Vehicles (véhicules et enregistrement), Scene Trajectories (liste), jusqu'à trois fenêtres de trajectoire individuelle, Camera Trajectory et Draw Trajectory. Les trajectoires sont soit basées sur le temps (nodes x, y, z, t), soit sur la vitesse (nodes x, y, z, v). À l'exécution, chaque trajectoire est envoyée au véhicule par ai.startFollowing(...) et le chemin de caméra est joué par core_paths.playPath.
---- Accès : extension `editor_scriptAIEditor` : `extensions.load("editor_scriptAIEditor")`, puis la globale `editor_scriptAIEditor`
+--- ScriptAI scenario editor: 'Edit ScriptAI Scenario' edit mode (BNGMicrochip toolbar icon) to create, edit and run scripted vehicle trajectories and a camera path. It opens several windows: Script AI Editor (play/pause/loop timeline), Scene Vehicles (vehicles and recording), Scene Trajectories (list), up to three individual trajectory windows, Camera Trajectory and Draw Trajectory. Trajectories are either time-based (nodes x, y, z, t) or speed-based (nodes x, y, z, v). At run time, each trajectory is sent to the vehicle by ai.startFollowing(...) and the camera path is played by core_paths.playPath.
+--- Access: extension `editor_scriptAIEditor`: `extensions.load("editor_scriptAIEditor")`, then the global `editor_scriptAIEditor`
 ---@class editor_scriptAIEditor
 editor_scriptAIEditor = {}
 
---- Hook de restauration après rechargement Lua : décode data.d et restaure trajectoires, caméra, temps, identifiants uniques et état des fenêtres.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIEditor.lua:3203
----@param dataIn table Table renvoyée par onSerialize ({d = ...}).
+--- Restoration hook after Lua reload: decodes data.d and restores trajectories, camera, time, unique identifiers and window state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIEditor.lua:3203
+---@param dataIn table Table returned by onSerialize ({d = ...}).
 function editor_scriptAIEditor.onDeserialized(dataIn) end
 
---- Hook de dessin appelé chaque frame de l'UI de l'éditeur : gère souris et gizmos (sélection, glisser, dessin libre), dessine les trajectoires et toutes les fenêtres de l'outil (principale, véhicules, liste, trajectoires, caméra, dessin).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIEditor.lua:1989
+--- Drawing hook called every editor UI frame: handles mouse and gizmos (selection, drag, free drawing), draws the trajectories and all the tool's windows (main, vehicles, list, trajectories, camera, drawing).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIEditor.lua:1989
 function editor_scriptAIEditor.onEditorGui() end
 
---- Hook appelé à l'initialisation du monde-éditeur : crée le mode d'édition scriptAIEditMode (onActivate/onDeactivate, icône, hideObjectIcons) et enregistre les huit fenêtres ; ré-affiche celles qui étaient visibles avant un rechargement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIEditor.lua:3128
+--- Hook called when the editor world initializes: creates the scriptAIEditMode edit mode (onActivate/onDeactivate, icon, hideObjectIcons) and registers the eight windows; shows again those that were visible before a reload.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIEditor.lua:3128
 function editor_scriptAIEditor.onEditorInitialized() end
 
---- Hook de sérialisation (rechargement Lua) : renvoie {d = lpack.encode{...}} avec trajectoires, caméra, temps, sélections et alphas de boutons ; les fenêtres sont notées non visibles.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIEditor.lua:3186
----@return table  Table {d = chaîne encodée}.
+--- Serialization hook (Lua reload): returns {d = lpack.encode{...}} with trajectories, camera, time, selections and button alphas; the windows are noted as not visible.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIEditor.lua:3186
+---@return table  Table {d = encoded string}.
 function editor_scriptAIEditor.onSerialize() end
 
---- Hook appelé quand un véhicule est remplacé : met à jour le texte et le jBeam des trajectoires liées à cet id.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIEditor.lua:3169
----@param vid integer Id du véhicule remplacé.
+--- Hook called when a vehicle is replaced: updates the text and jBeam of the trajectories linked to this id.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIEditor.lua:3169
+---@param vid integer Id of the replaced vehicle.
 function editor_scriptAIEditor.onVehicleReplaced(vid) end
 
---- Hook appelé quand l'enregistrement d'un véhicule s'arrête (ai.stopRecording renvoyé à la GE) : détache l'ancienne trajectoire du véhicule et crée une nouvelle trajectoire 'recorded_N' à partir de data.path.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIEditor.lua:3153
----@param vid integer Id du véhicule enregistré.
----@param data table Enregistrement contenant path (noeuds avec t ou v).
+--- Hook called when a vehicle's recording stops (ai.stopRecording returned to the GE): detaches the vehicle's old trajectory and creates a new trajectory 'recorded_N' from data.path.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIEditor.lua:3153
+---@param vid integer Id of the recorded vehicle.
+---@param data table Recording containing path (nodes with t or v).
 function editor_scriptAIEditor.onVehicleSubmitRecording(vid, data) end
 

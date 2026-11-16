@@ -1,0 +1,79 @@
+{
+  "path": "lua/vehicle/controller/drivingDynamics/actuators/adaptiveDampers.lua",
+  "module": "Actionneur de la Driving Dynamics Suite : amortisseurs à amortissement variable. Il regroupe des poutres d'amortisseur (par nom) et applique, selon un mode nommé (Comfort, Sport...), des coefficients multiplicatifs à leurs valeurs jbeam d'amortissement via `obj:setBoundedBeamDamp`. Le mode se choisit par `setParameters({damperMode = \"nom\"})`, typiquement depuis un mode `driveModes` de type \"controller\". Ordre d'appel : `defaultOrder = 80`.",
+  "usage": "controller.getControllerSafe(\"drivingDynamics/adaptiveDampers\").setParameters({damperMode = \"sport\"})",
+  "notes": [
+    "Clés jbeam lues par init : `dampBeamNames` (liste de noms de poutres jbeam), `modes` (table d'en-tête : `name`, `beamDampCoef`, `beamDampFastCoef`, `beamDampReboundCoef`, `beamDampReboundFastCoef`, `beamDampVelocitySplitCoef`, tous à 1 par défaut), `name`.",
+    "Les coefficients multiplient les valeurs de base de `v.data.beams` (beamDamp, beamDampRebound, beamDampFast, beamDampReboundFast, beamDampVelocitySplit) : le changement n'est donc pas cumulatif d'un mode à l'autre. La même valeur de seuil de vitesse (VelocitySplit) sert pour compression et détente.",
+    "Aucune mise à jour périodique : ni update ni updateGFX. `controlParameters.isEnabled` n'est pas utilisé. Un nom de mode inconnu est logué en erreur.",
+    "`shutdown` met isActive à false et retire update/updateGFX (nil) mais ne rétablit pas l'amortissement."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "80."},
+    "isActive": {"type": "boolean", "desc": "true après init."},
+    "isActing": {"type": "boolean", "desc": "false : jamais modifié dans ce fichier."}
+  },
+  "functions": {
+    "reset": {
+      "desc": "Vide (l'amortissement n'est pas remis à l'état initial).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Retrouve les poutres d'amortisseur par nom et lit les modes.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "initLastStage": {
+      "desc": "Vide.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "registerCMU": {
+      "desc": "Appelée par le CMU pour donner une référence vers lui.",
+      "params": {"cmu": {"type": "table", "desc": "Module CMU."}},
+      "returns": [],
+      "internal": true
+    },
+    "setDebugMode": {
+      "desc": "Mémorise le mode debug (sans autre effet).",
+      "params": {"debugEnabled": {"type": "boolean", "desc": "État du mode debug."}},
+      "returns": [],
+      "internal": true
+    },
+    "shutdown": {
+      "desc": "Arrête l'actionneur (isActive = false).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "setParameters": {
+      "desc": "Applique un mode d'amortissement si `parameters.damperMode` est fourni.",
+      "params": {"parameters": {"type": "table", "desc": "Champ : damperMode (nom d'un mode défini dans `modes`)."}},
+      "returns": [],
+      "internal": false
+    },
+    "setConfig": {
+      "desc": "Remplace la table de paramètres (sans effet sur les modes).",
+      "params": {"configTable": {"type": "table", "desc": "Nouveaux paramètres."}},
+      "returns": [],
+      "internal": true
+    },
+    "getConfig": {
+      "desc": "Renvoie une copie des paramètres.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Copie profonde ({isEnabled = true} par défaut)."}],
+      "internal": false
+    },
+    "sendConfigData": {
+      "desc": "Envoie les paramètres au CMU dans un paquet de debug config.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

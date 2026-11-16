@@ -2,84 +2,84 @@
 -- tim19Atlas stub generated from lua/vehicle/powertrain/supercharger.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Sous-système de compresseur mécanique (supercharger) rattaché à un moteur : le compresseur est entraîné par le vilebrequin (rapport gearRatio, avec un embrayage progressif entre clutchEngageRPM et clutchDisengageRPM). Trois types : 'roots', 'screws', 'centrifugal', chacun avec sa courbe d'efficacité et son niveau de pulsation. Calcule la pression de suralimentation (psi/1000 tr/min, courbe boostController selon l'ouverture des gaz, soupape de décharge), l'applique à engine.forcedInductionCoef et prélève une perte de couple proportionnelle au régime (crankLossPer1kRPM). Génère aussi le sifflement du compresseur.
---- Accès : type de composant powertrain `supercharger` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+--- Mechanical supercharger subsystem attached to an engine: the supercharger is driven by the crankshaft (ratio gearRatio, with a progressive clutch between clutchEngageRPM and clutchDisengageRPM). Three types: 'roots', 'screws', 'centrifugal', each with its own efficiency curve and pulsation level. Computes the boost pressure (psi/1000 RPM, boostController curve according to throttle opening, blow-off valve), applies it to engine.forcedInductionCoef and takes a torque loss proportional to engine speed (crankLossPer1kRPM). Also generates the supercharger whine.
+--- Access: powertrain device type `supercharger` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 ---@class powertrain_supercharger
----@field isExisting boolean Toujours true : indique au moteur qu'un compresseur existe.
+---@field isExisting boolean Always true: tells the engine that a supercharger exists.
 local powertrain_supercharger = {}
 
---- Réduit la pression délivrée (damagePressureCoef, jusqu'à -0.1) quand un groupe de déformation est endommagé, et signale 'inductionSystemDamaged'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/supercharger.lua:72
----@param damageAmount number Quantité de dégât.
+--- Reduces the delivered pressure (damagePressureCoef, down to -0.1) when a deform group is damaged, and reports 'inductionSystemDamaged'.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/supercharger.lua:72
+---@param damageAmount number Damage amount.
 function powertrain_supercharger.applyDeformGroupDamage(damageAmount) end
 
---- Renvoie l'intégrité du compresseur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/supercharger.lua:91
----@return number  Intégrité 0..1.
+--- Returns the supercharger integrity.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/supercharger.lua:91
+---@return number  Integrity 0..1.
 ---@return table  {damagePressureCoef}.
 function powertrain_supercharger.getPartCondition() end
 
---- Estime le coefficient de gain de couple du compresseur pour chaque régime de la courbe de couple du moteur (embrayage et rapport pris en compte).
----Source : lua/vehicle/powertrain/supercharger.lua:320
----@return table<integer, number>  Table indexée par rpm+1 : coefficient (1 = aucun gain).
+--- Estimates the supercharger torque gain coefficient for each RPM of the engine torque curve (clutch and ratio taken into account).
+---Source: lua/vehicle/powertrain/supercharger.lua:320
+---@return table<integer, number>  Table keyed by rpm+1: coefficient (1 = no gain).
 function powertrain_supercharger.getTorqueCoefs() end
 
---- Initialise le compresseur pour un moteur : lit le jbeam, génère la courbe de pression et celle du boostController, calcule la vitesse maximale du compresseur et installe updateGFX/updateFixedStep. Si jbeamData est nil, désactive updateGFX.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/supercharger.lua:209
----@param device table Device moteur.
----@param jbeamData table|nil Table jbeam 'supercharger'.
+--- Initializes the supercharger for an engine: reads the jbeam, generates the pressure curve and the boostController curve, computes the maximum supercharger speed and installs updateGFX/updateFixedStep. If jbeamData is nil, disables updateGFX.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/supercharger.lua:209
+---@param device table Engine device.
+---@param jbeamData table|nil 'supercharger' jbeam table.
 function powertrain_supercharger.init(device, jbeamData) end
 
---- Crée le son de sifflement du compresseur (soundObj) sur le noeud du moteur et calcule les coefficients de volume et de pitch.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/supercharger.lua:183
----@param jbeamData table Table jbeam 'supercharger'.
+--- Creates the supercharger whine sound (soundObj) on the engine node and computes the volume and pitch coefficients.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/supercharger.lua:183
+---@param jbeamData table 'supercharger' jbeam table.
 function powertrain_supercharger.initSounds(jbeamData) end
 
---- Remet à zéro le lisseur de pression et les coefficients de dégâts et d'usure, et efface 'superchargerDamaged'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/supercharger.lua:202
----@param jbeamData table Non utilisé.
+--- Resets the pressure smoother and the damage and wear coefficients, and clears 'superchargerDamaged'.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/supercharger.lua:202
+---@param jbeamData table Not used.
 function powertrain_supercharger.reset(jbeamData) end
 
---- Ne fait rien (fonction vide).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/supercharger.lua:180
----@param jbeamData table Non utilisé.
+--- Does nothing (empty function).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/supercharger.lua:180
+---@param jbeamData table Not used.
 function powertrain_supercharger.resetSounds(jbeamData) end
 
---- Règle la pression à partir de laquelle la soupape de décharge limite la pression du compresseur.
----Source : lua/vehicle/powertrain/supercharger.lua:102
----@param pressurePSI number Pression de décharge en psi.
+--- Sets the pressure above which the blow-off valve limits the supercharger pressure.
+---Source: lua/vehicle/powertrain/supercharger.lua:102
+---@param pressurePSI number Blow-off pressure in psi.
 function powertrain_supercharger.setBypassPressure(pressurePSI) end
 
---- Applique l'usure (odomètre : pression jusqu'à 50 % à 1e9) et l'intégrité d'une pièce chargée depuis une sauvegarde. Voir le bug noté sur damagePressureCoef.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/supercharger.lua:77
----@param odometer number Odomètre de la pièce.
----@param integrity number|table Intégrité 0..1 ou table d'état.
----@param visual any Non utilisé.
+--- Applies wear (odometer: pressure down to 50% at 1e9) and integrity of a part loaded from a save. See the bug noted on damagePressureCoef.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/supercharger.lua:77
+---@param odometer number Part odometer.
+---@param integrity number|table Integrity 0..1 or state table.
+---@param visual any Not used.
 function powertrain_supercharger.setPartCondition(odometer, integrity, visual) end
 
---- Pas de physique : multiplie assignedEngine.forcedInductionCoef par le gain de couple du compresseur (pression) moins la perte au vilebrequin. (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/supercharger.lua:dyn
----@param dt number Pas de physique (s). Non utilisé.
+--- Physics step: multiplies assignedEngine.forcedInductionCoef by the supercharger torque gain (pressure) minus the crankshaft loss. (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/supercharger.lua:dyn
+---@param dt number Physics step (s). Unused.
 function powertrain_supercharger.updateFixedStep(dt) end
 
---- Frame graphique : état de l'embrayage progressif, vitesse et régime du compresseur, pulsations, pression avec soupape de décharge et lissage, perte de couple, electrics.superchargerBoost et flux 'forcedInductionInfo'. (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/supercharger.lua:dyn
----@param dt number Pas de temps de la frame (s).
+--- Graphics frame: progressive clutch state, supercharger speed and RPM, pulsations, pressure with blow-off valve and smoothing, torque loss, electrics.superchargerBoost and 'forcedInductionInfo' stream. (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/supercharger.lua:dyn
+---@param dt number Frame time step (s).
 function powertrain_supercharger.updateGFX(dt) end
 
---- Règle volume et pitch du sifflement selon la pression et le régime du compresseur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/supercharger.lua:106
----@param dt number Pas de temps (s). Non utilisé.
+--- Sets the whine volume and pitch according to the supercharger pressure and speed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/supercharger.lua:106
+---@param dt number Time step (s). Unused.
 function powertrain_supercharger.updateSounds(dt) end
 
 return powertrain_supercharger

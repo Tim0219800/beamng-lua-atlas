@@ -1,59 +1,59 @@
 # `telemetry_hardwareInput.test`
 
-*Fichier : `lua/ge/extensions/telemetry/hardwareInput.test.lua` · VM : Game Engine (GE) · 128 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/hardwareInput.test.lua` · VM: Game Engine (GE) · 128 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_hardwareInput.test` : `extensions.load("telemetry_hardwareInput.test")`, puis la globale `telemetry_hardwareInput.test`
+**Access:** extension `telemetry_hardwareInput.test`: `extensions.load("telemetry_hardwareInput.test")`, then the global `telemetry_hardwareInput.test`
 
-Tests unitaires de telemetry/hardwareInput (runTestFiles("hardwareInput")).
+Unit tests of telemetry/hardwareInput (runTestFiles("hardwareInput")).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_hardwareInput.test.testEnglishNameComesOnlyFromOfficialInputMap(ctx)` | Vérifie que le nom anglais est lu dans /settings/inputmaps/<vidpid>.json quand le fichier est officiel. *(interne)* | 69 |
-| `telemetry_hardwareInput.test.testMapsEveryAvailableWheelField(ctx)` | Vérifie que tous les champs d'un volant (noms, vidpid, productId/vendorId, GUID, FFB, révisions, controls, controlCounts) sont repris. *(interne)* | 34 |
-| `telemetry_hardwareInput.test.testNonWheelsKeepOnlyCommonIdentity(ctx)` | Vérifie qu'un périphérique qui n'est pas un volant ne garde que type, productName, vidpid et forceFeedback. *(interne)* | 100 |
-| `telemetry_hardwareInput.test.testSymbolicDeviceIdentityKeepsItsCase(ctx)` | Vérifie qu'un identifiant symbolique (ex. 'XIDevice') n'est pas mis en majuscules. *(interne)* | 117 |
-| `telemetry_hardwareInput.test.testUnknownDefaultUpdateRateStaysAbsent(ctx)` | Vérifie que sans période d'échantillonnage FFB valide, ni la période ni maxRawFfbUpdateRateHz ne sont renseignées. *(interne)* | 61 |
-| `telemetry_hardwareInput.test.testUnofficialInputMapCannotSupplyTelemetryName(ctx)` | Vérifie qu'une table d'entrée non officielle ne peut pas fournir de nom. *(interne)* | 87 |
+| `telemetry_hardwareInput.test.testEnglishNameComesOnlyFromOfficialInputMap(ctx)` | Checks that the English name is read from /settings/inputmaps/<vidpid>.json when the file is official. *(internal)* | 69 |
+| `telemetry_hardwareInput.test.testMapsEveryAvailableWheelField(ctx)` | Checks that all the fields of a wheel (names, vidpid, productId/vendorId, GUID, FFB, revisions, controls, controlCounts) are carried over. *(internal)* | 34 |
+| `telemetry_hardwareInput.test.testNonWheelsKeepOnlyCommonIdentity(ctx)` | Checks that a device that is not a wheel only keeps type, productName, vidpid and forceFeedback. *(internal)* | 100 |
+| `telemetry_hardwareInput.test.testSymbolicDeviceIdentityKeepsItsCase(ctx)` | Checks that a symbolic identifier (e.g. 'XIDevice') is not uppercased. *(internal)* | 117 |
+| `telemetry_hardwareInput.test.testUnknownDefaultUpdateRateStaysAbsent(ctx)` | Checks that without a valid FFB sampling period, neither the period nor maxRawFfbUpdateRateHz is set. *(internal)* | 61 |
+| `telemetry_hardwareInput.test.testUnofficialInputMapCannotSupplyTelemetryName(ctx)` | Checks that an unofficial input table cannot provide a name. *(internal)* | 87 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_hardwareInput.test.testEnglishNameComesOnlyFromOfficialInputMap(ctx)`
 
-Vérifie que le nom anglais est lu dans /settings/inputmaps/<vidpid>.json quand le fichier est officiel.
+Checks that the English name is read from /settings/inputmaps/<vidpid>.json when the file is official.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_hardwareInput.test.testMapsEveryAvailableWheelField(ctx)`
 
-Vérifie que tous les champs d'un volant (noms, vidpid, productId/vendorId, GUID, FFB, révisions, controls, controlCounts) sont repris.
+Checks that all the fields of a wheel (names, vidpid, productId/vendorId, GUID, FFB, revisions, controls, controlCounts) are carried over.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_hardwareInput.test.testNonWheelsKeepOnlyCommonIdentity(ctx)`
 
-Vérifie qu'un périphérique qui n'est pas un volant ne garde que type, productName, vidpid et forceFeedback.
+Checks that a device that is not a wheel only keeps type, productName, vidpid and forceFeedback.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_hardwareInput.test.testSymbolicDeviceIdentityKeepsItsCase(ctx)`
 
-Vérifie qu'un identifiant symbolique (ex. 'XIDevice') n'est pas mis en majuscules.
+Checks that a symbolic identifier (e.g. 'XIDevice') is not uppercased.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_hardwareInput.test.testUnknownDefaultUpdateRateStaysAbsent(ctx)`
 
-Vérifie que sans période d'échantillonnage FFB valide, ni la période ni maxRawFfbUpdateRateHz ne sont renseignées.
+Checks that without a valid FFB sampling period, neither the period nor maxRawFfbUpdateRateHz is set.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_hardwareInput.test.testUnofficialInputMapCannotSupplyTelemetryName(ctx)`
 
-Vérifie qu'une table d'entrée non officielle ne peut pas fournir de nom.
+Checks that an unofficial input table cannot provide a name.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/hardwareInput.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/hardwareInput.test.lua`.*

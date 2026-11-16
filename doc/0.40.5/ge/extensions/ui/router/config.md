@@ -1,29 +1,29 @@
 # `ui_router_config`
 
-*Fichier : `lua/ge/extensions/ui/router/config.lua` · VM : Game Engine (GE) · 46 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/config.lua` · VM: Game Engine (GE) · 46 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_config` : `extensions.load("ui_router_config")`, puis la globale `ui_router_config`
+**Access:** extension `ui_router_config`: `extensions.load("ui_router_config")`, then the global `ui_router_config`
 
-Constantes de configuration du routeur d'interface (ui_router) : route principale par défaut, délais des transitions (plat pour Angular/legacy, par phases pour le flux d'accusés Vue), source du décorateur de contexte et valeurs d'interface par défaut fusionnées dans la configuration d'une route. Module de données pur, sans fonction.
+Configuration constants of the UI router (ui_router): default main route, transition timeouts (flat for Angular/legacy, per phase for the Vue acknowledgment flow), source of the context decorator and default UI values merged into a route's configuration. Pure data module, no function.
 
-## Remarques
+## Notes
 
-- Timeout = 3 s : délai plat de forçage de fin pour les transitions non phasées (Angular/legacy).
-- PhaseTimeouts (secondes) : startupResendInterval = 1.0 (la phase startup renvoie l'évènement de changement de route à intervalle fixe, sans jamais expirer, car des routes Vue de mods peuvent s'enregistrer tard), routeCommit = 3.0, mountReady = 3.0, total = 8.0 (plafond d'urgence sur les phases après démarrage ; l'attente de startup n'y compte pas).
-- Les phases : startup (attend routeNavigationStarted), routeCommit (attend routeChangeComplete), mountReady (attend routeMounted quand un accusé de montage est requis).
-- RouteUiDefaults = {uiNav = true} : la navigation manette/clavier est activée sauf si la route (ou ses parents) la désactive.
-- MainRoute vaut "menu" (valeur d'origine ; aucune utilisation n'est visible dans ce fichier).
+- Timeout = 3 s: flat forced-end delay for non-phased transitions (Angular/legacy).
+- PhaseTimeouts (seconds): startupResendInterval = 1.0 (the startup phase resends the route change event at a fixed interval, never expiring, because mod Vue routes may register late), routeCommit = 3.0, mountReady = 3.0, total = 8.0 (emergency cap on the phases after startup; the startup wait does not count toward it).
+- The phases: startup (waits for routeNavigationStarted), routeCommit (waits for routeChangeComplete), mountReady (waits for routeMounted when a mount acknowledgment is required).
+- RouteUiDefaults = {uiNav = true}: gamepad/keyboard navigation is enabled unless the route (or its parents) disables it.
+- MainRoute is "menu" (original value; no use is visible in this file).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `ContextDecoratorDefaultSource` | string | Source par défaut du décorateur de contexte : "core_gamestate.gameStateDecorator". |
-| `MainRoute` | string | Route par défaut quand aucune route n'est précisée : "menu". |
-| `PhaseTimeouts` | table<string, number> | Délais des transitions par phases (Vue) : startupResendInterval, routeCommit, mountReady, total (secondes). |
-| `RouteUiDefaults` | table | Valeurs d'interface par défaut ajoutées à la configuration de route si elle ne les définit pas : {uiNav = true}. |
-| `ShowContextDecoratorInBreadcrumbs` | boolean | false : le décorateur de contexte n'est pas affiché par défaut dans le fil d'Ariane. |
-| `Timeout` | number | Délai en secondes (3) avant forçage de fin d'une transition non phasée (Angular/legacy). |
+| `ContextDecoratorDefaultSource` | string | Default source of the context decorator: "core_gamestate.gameStateDecorator". |
+| `MainRoute` | string | Default route when no route is specified: "menu". |
+| `PhaseTimeouts` | table<string, number> | Phased transition (Vue) timeouts: startupResendInterval, routeCommit, mountReady, total (seconds). |
+| `RouteUiDefaults` | table | Default UI values added to the route configuration if it does not define them: {uiNav = true}. |
+| `ShowContextDecoratorInBreadcrumbs` | boolean | false: the context decorator is not shown by default in the breadcrumb. |
+| `Timeout` | number | Delay in seconds (3) before forced end of a non-phased transition (Angular/legacy). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/config.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/config.lua`.*

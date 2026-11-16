@@ -2,45 +2,45 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+--- Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 ---@class flowgraph_nodes_scene_camera_setCameraRotation_C
 local flowgraph_nodes_scene_camera_setCameraRotation_C = {}
 
---- Appelle core_camera.setPosRot(0, ...) avec la position courante de la camera et la rotation du noeud.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:88
+--- Calls core_camera.setPosRot(0, ...) with the camera's current position and the node's rotation.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:88
 function flowgraph_nodes_scene_camera_setCameraRotation_C:SetCamera() end
 
---- Restaure rotation et mode ; recree le pin 'rot' si besoin.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:102
----@param nodeData any donnees sauvegardees
+--- Restores rotation and mode; recreates the 'rot' pin if needed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:102
+---@param nodeData any saved data
 function flowgraph_nodes_scene_camera_setCameraRotation_C:_onDeserialized(nodeData) end
 
---- Sauvegarde la rotation (res.rot) et le mode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:97
----@param res any table de sauvegarde
+--- Saves the rotation (res.rot) and the mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:97
+---@param res any save table
 function flowgraph_nodes_scene_camera_setCameraRotation_C:_onSerialize(res) end
 
---- Panneau de proprietes de l'editeur : choix du mode, champs x/y/z/w (normalises), boutons « Set from camera » et « Preview ». Cree/supprime le pin 'rot'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:28
+--- Editor properties panel: mode choice, x/y/z/w fields (normalized), buttons "Set from camera" and "Preview". Creates/deletes the 'rot' pin.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:28
 function flowgraph_nodes_scene_camera_setCameraRotation_C:drawCustomProperties() end
 
---- Zone centrale du noeud (rien d'affiche).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:84
----@param builder any constructeur de noeud imgui
----@param style any style du noeud
+--- Central area of the node (nothing displayed).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:84
+---@param builder any imgui node builder
+---@param style any node style
 function flowgraph_nodes_scene_camera_setCameraRotation_C:drawMiddle(builder, style) end
 
---- Initialise la rotation a quat(0,0,0,0), le mode a 'custom' et la liste des modes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:22
+--- Initializes the rotation to quat(0,0,0,0), the mode to 'custom' and the mode list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:22
 function flowgraph_nodes_scene_camera_setCameraRotation_C:init() end
 
---- Passe en camera libre si besoin, lit le pin 'rot' en mode 'from Pin', applique la rotation (SetCamera) et ecrit le pin value.
----Source : lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:73
+--- Switches to the free camera if needed, reads the 'rot' pin in 'from Pin' mode, applies the rotation (SetCamera) and writes the value pin.
+---Source: lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua:73
 function flowgraph_nodes_scene_camera_setCameraRotation_C:work() end
 

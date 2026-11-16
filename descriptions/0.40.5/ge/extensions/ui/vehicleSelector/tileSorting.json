@@ -1,62 +1,128 @@
 {
   "path": "lua/ge/extensions/ui/vehicleSelector/tileSorting.lua",
-  "module": "Fonctions de tri des tuiles du sélecteur de véhicules selon le mode « Trier par » : Name, Value, Years, Weight, Top Speed, Power, Weight/Power, 0-60 mph, 0-100 km/h, Config Type. Chaque comparateur départage les égalités par nom, en plaçant « Autre » en dernier.",
+  "module": "Tile sorting functions of the vehicle selector according to the \"Sort by\" mode: Name, Value, Years, Weight, Top Speed, Power, Weight/Power, 0-60 mph, 0-100 km/h, Config Type. Each comparator breaks ties by name, placing \"Other\" last.",
   "notes": [
-    "Les comparateurs sont de type table.sort : fonction (a, b) -> boolean, sur des tuiles ou configs (champs Name/name/label, Value, Years, Weight, ...).",
-    "Sens de tri : Weight, Top Speed, Power, Value, Years sont croissants. Weight/Power et les temps 0-60 mph / 0-100 km/h sont triés en ordre décroissant de la valeur (d'après le code : `>`), les valeurs absentes valant math.huge.",
-    "Config Type suit l'ordre fixe Factory, Service, Race, Drift, Rally, Police, Custom, Powerglow, Other... ; les types inconnus passent après.",
-    "Un sortMode inconnu (y compris 'Automatic') retombe sur le tri par nom."
+    "The comparators are table.sort style: function (a, b) -> boolean, on tiles or configs (fields Name/name/label, Value, Years, Weight, ...).",
+    "Sort direction: Weight, Top Speed, Power, Value, Years are ascending. Weight/Power and the 0-60 mph / 0-100 km/h times are sorted in descending order of the value (from the code: `>`), with missing values being math.huge.",
+    "Config Type follows the fixed order Factory, Service, Race, Drift, Rally, Police, Custom, Powerglow, Other...; unknown types come after.",
+    "An unknown sortMode (including 'Automatic') falls back to sorting by name."
   ],
   "functions": {
     "getSortFunction": {
-      "desc": "Renvoie le comparateur d'un mode de tri ; par défaut le tri par nom.",
-      "params": {"sortMode": {"type": "string", "desc": "Name, Value, Years, Weight, Top Speed, Power, Weight/Power, 0-60 mph, 0-100 km/h ou Config Type."}},
-      "returns": [{"type": "function", "desc": "Comparateur (a, b) -> boolean."}]
+      "desc": "Returns the comparator of a sort mode; defaults to sorting by name.",
+      "params": {
+        "sortMode": {
+          "type": "string",
+          "desc": "Name, Value, Years, Weight, Top Speed, Power, Weight/Power, 0-60 mph, 0-100 km/h or Config Type."
+        }
+      },
+      "returns": [
+        {
+          "type": "function",
+          "desc": "Comparator (a, b) -> boolean."
+        }
+      ]
     },
     "sortTiles": {
-      "desc": "Trie une liste de tuiles en place avec le comparateur du mode.",
+      "desc": "Sorts a list of tiles in place with the mode's comparator.",
       "params": {
-        "tiles": {"type": "table[]", "desc": "Tuiles à trier."},
-        "sortMode": {"type": "string", "desc": "Mode de tri."}
+        "tiles": {
+          "type": "table[]",
+          "desc": "Tiles to sort."
+        },
+        "sortMode": {
+          "type": "string",
+          "desc": "Sort mode."
+        }
       }
     },
     "sortByNameButOtherAlwaysLast": {
-      "desc": "Compare par nom (Name, name ou label) ; l'élément nommé comme le libellé « Autre » (traduit) est toujours placé en dernier.",
+      "desc": "Compares by name (Name, name or label); the item named like the (translated) \"Other\" label is always placed last.",
       "params": {
-        "a": {"type": "table", "desc": "Premier élément."},
-        "b": {"type": "table", "desc": "Second élément."}
+        "a": {
+          "type": "table",
+          "desc": "First item."
+        },
+        "b": {
+          "type": "table",
+          "desc": "Second item."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a must come before b."
+        }
+      ]
     },
     "sortByValue": {
-      "desc": "Compare par prix (Value, ou sa borne min si c'est une plage), puis par nom.",
+      "desc": "Compares by price (Value, or its min bound if it is a range), then by name.",
       "params": {
-        "a": {"type": "table", "desc": "Premier élément."},
-        "b": {"type": "table", "desc": "Second élément."}
+        "a": {
+          "type": "table",
+          "desc": "First item."
+        },
+        "b": {
+          "type": "table",
+          "desc": "Second item."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a must come before b."
+        }
+      ]
     },
     "sortByYears": {
-      "desc": "Compare par année (Years, ou sa borne min), puis par nom ; année absente = math.huge.",
+      "desc": "Compares by year (Years, or its min bound), then by name; missing year = math.huge.",
       "params": {
-        "a": {"type": "table", "desc": "Premier élément."},
-        "b": {"type": "table", "desc": "Second élément."}
+        "a": {
+          "type": "table",
+          "desc": "First item."
+        },
+        "b": {
+          "type": "table",
+          "desc": "Second item."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a must come before b."
+        }
+      ]
     },
     "sortByConfigTypeName": {
-      "desc": "Compare par type de config selon l'ordre prédéfini, puis par nom.",
+      "desc": "Compares by config type according to the predefined order, then by name.",
       "params": {
-        "a": {"type": "table", "desc": "Premier élément."},
-        "b": {"type": "table", "desc": "Second élément."}
+        "a": {
+          "type": "table",
+          "desc": "First item."
+        },
+        "b": {
+          "type": "table",
+          "desc": "Second item."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a must come before b."
+        }
+      ]
     },
     "sortGroup": {
-      "desc": "Trie les tuiles d'un groupe (group.tiles) en place selon le mode de tri.",
+      "desc": "Sorts the tiles of a group (group.tiles) in place according to the sort mode.",
       "params": {
-        "group": {"type": "table", "desc": "Groupe avec un champ tiles."},
-        "sortMode": {"type": "string", "desc": "Mode de tri."}
+        "group": {
+          "type": "table",
+          "desc": "Group with a tiles field."
+        },
+        "sortMode": {
+          "type": "string",
+          "desc": "Sort mode."
+        }
       }
     }
   }

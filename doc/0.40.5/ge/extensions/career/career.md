@@ -1,277 +1,277 @@
 # `career_career`
 
-*Fichier : `lua/ge/extensions/career/career.lua` · VM : Game Engine (GE) · 790 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/career.lua` · VM: Game Engine (GE) · 790 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_career` : `extensions.load("career_career")`, puis la globale `career_career`
+**Access:** extension `career_career`: `extensions.load("career_career")`, then the global `career_career`
 
-Point d'entrée du mode carrière. Il active et désactive la carrière : charge le niveau (west_coast_usa par défaut, ou celui de la sauvegarde), charge tous les modules de lua/ge/extensions/career/modules/ (sauf /tutorial/step), bloque certaines actions d'entrée (vehicleTeleporting, vehicleMenues, physicsControls, aiControls…), affiche un menu de debug imgui, gère les modes de départ (startingModes), le véhicule de départ, les interactions avec les organisations, la liste des profils/sauvegardes envoyée à l'UI et la sauvegarde de general.json (niveau, options de départ, boughtStarterVehicle, organizationInteraction).
+Entry point of career mode. It activates and deactivates the career: loads the level (west_coast_usa by default, or the one from the save), loads all modules in lua/ge/extensions/career/modules/ (except /tutorial/step), blocks certain input actions (vehicleTeleporting, vehicleMenues, physicsControls, aiControls…), shows an imgui debug menu, handles the starting modes (startingModes), the starter vehicle, interactions with organizations, the profile/save list sent to the UI and the saving of general.json (level, starting options, boughtStarterVehicle, organizationInteraction).
 
-## Exemple
+## Example
 
 ```lua
-career_career.createOrLoadCareerAndStart('monProfil', nil, {startMode = 'apmOnboarding'})
+career_career.createOrLoadCareerAndStart('myProfile', nil, {startMode = 'apmOnboarding'})
 if career_career.isActive() then print(career_career.getBeamXPLevel(250)) end
 ```
 
-## Remarques
+## Notes
 
-- Activation : activateCareer demande l'écran de chargement, émet le hook onBeforeCareerActivate, lit <sauvegarde>/career/general.json ; si le niveau courant diffère, lance freeroam_freeroam.startFreeroam et charge les modules à la fin ; sinon supprime les véhicules (core_vehicles.removeAll, ou seulement ceux hors trafic/parking si removeVehicles est faux) puis émet onCareerActive(true, newSave).
-- Désactivation : onCareerActive(false) est émis à tous les modules (27 l'écoutent) et les actions d'entrée sont débloquées.
-- Tutoriel : M.tutorialEnabled est vrai si startingOptions.startMode == « apmOnboarding » et que le véhicule de départ n'a pas encore été acheté ; l'autosave est alors désactivé.
-- Niveaux BeamXP (beamXPLevels) : seuils 0, 100, 300, 600 et 1000.
-- Bug : dans toggleCareerModules, l'appel extensions.luaPathToExtName(modulePath) utilise une variable modulePath non définie (nil) et son résultat est ignoré.
-- deactivateCareer et deactivateCareerAndReloadLevel acceptent saveCareer mais ne l'utilisent pas.
-- Le menu debug (imgui) n'existe que si debugMenuEnabled, vrai par défaut hors version shipping_build ; il est relié à M.onUpdate uniquement pendant que la carrière est active.
-- onSerialize désactive la carrière et note reactivate = true ; onDeserialized la réactive avec removeVehicles = false (utile lors d'un rechargement des extensions Lua).
-- onLoadingScreenFadeout navigue vers « play » une seule fois après une activation avec chargement de niveau (drapeau playNavigationPendingAfterActivation).
-- onClientEndMission désactive la carrière si le niveau qui se termine est west_coast_usa.
+- Activation: activateCareer requests the loading screen, emits the hook onBeforeCareerActivate, reads <save>/career/general.json; if the current level differs, launches freeroam_freeroam.startFreeroam and loads the modules at the end; otherwise removes the vehicles (core_vehicles.removeAll, or only those outside traffic/parking if removeVehicles is false) then emits onCareerActive(true, newSave).
+- Deactivation: onCareerActive(false) is emitted to all modules (27 listen to it) and the input actions are unblocked.
+- Tutorial: M.tutorialEnabled is true if startingOptions.startMode == "apmOnboarding" and the starter vehicle has not been bought yet; autosave is then disabled.
+- BeamXP levels (beamXPLevels): thresholds 0, 100, 300, 600 and 1000.
+- Bug: in toggleCareerModules, the call extensions.luaPathToExtName(modulePath) uses an undefined variable modulePath (nil) and its result is ignored.
+- deactivateCareer and deactivateCareerAndReloadLevel accept saveCareer but do not use it.
+- The debug menu (imgui) only exists if debugMenuEnabled, true by default outside the shipping_build version; it is linked to M.onUpdate only while the career is active.
+- onSerialize deactivates the career and notes reactivate = true; onDeserialized reactivates it with removeVehicles = false (useful during a reload of the Lua extensions).
+- onLoadingScreenFadeout navigates to "play" only once after an activation with a level load (flag playNavigationPendingAfterActivation).
+- onClientEndMission deactivates the career if the level that is ending is west_coast_usa.
 
-**Dépendances (chargées avant) :** `career_saveSystem`, `core_recoveryPrompt`, `gameplay_traffic`
+**Dependencies (loaded first):** `career_saveSystem`, `core_recoveryPrompt`, `gameplay_traffic`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_career.activateCareer(removeVehicles)` | Active la carrière pour le profil courant (career_saveSystem.getCurrentProfile) : sans effet si déjà active ou sans profil. Charge le niveau et les modules (voir notes). | 257 |
-| `career_career.closeAllMenus()` | Ferme les menus en naviguant vers l'écran « play ». | 715 |
-| `career_career.createOrLoadCareerAndStart(name, specificAutosave, startingOptions)` | Sélectionne (ou crée) un profil de sauvegarde avec career_saveSystem.setProfile puis active la carrière avec les options de départ données. | 342 |
-| `career_career.deactivateCareer(saveCareer)` | Désactive la carrière : décharge les modules, débloque les actions, remet les valeurs de récupération du freeroam et cache la liste des tâches. | 317 |
-| `career_career.deactivateCareerAndReloadLevel(saveCareer)` | Désactive la carrière puis relance le niveau courant en freeroam. | 332 |
-| `career_career.getAdditionalMenuButtons()` | Boutons ajoutés au menu pause : carte (ou « mon chargement » en livraison), progression (si le véhicule de départ est acheté et hors tutoriel), annulation de certification, annulation d'essai routier. | 728 |
-| `career_career.getAutosavesForProfile(profile)` | Pour chaque dossier de sauvegarde du profil, retourne le contenu de playerAttributes.json avec id et autosaveName. | 599 |
-| `career_career.getBeamXPLevel(xp)` | Calcule le niveau BeamXP : seuils 0, 100, 300, 600, 1000. Retourne -1 pour les valeurs de progression s'il n'y a pas de niveau suivant. | 451 |
-| `career_career.getCurrentStartingModeData()` | Retourne la définition complète du mode de départ de la partie courante (startingOptions.startMode), ou nil. | 398 |
-| `career_career.getSaveFoldersForProfile(profile)` | Retourne la liste des dossiers de sauvegarde d'un profil avec ce qu'il faut à l'UI pour choisir (nom, dates, version, corrupted, isCurrent, incompatibleVersion, outdatedVersion, money, beamXP, vehicleCount), triée du plus récent au plus ancien. | 614 |
-| `career_career.getStartingModeOptions()` | Liste les modes de départ (fichiers *.lua de lua/ge/extensions/career/startingModes/ exécutés par dofile, sauf ceux avec ignore) et retourne pour l'UI : id, order, tier, title, description, image, tag, triés par order puis id. | 359 |
-| `career_career.hasBoughtStarterVehicle()` | Indique si le joueur a acheté son véhicule de départ. | 688 |
-| `career_career.hasInteractedWithOrganization(id)` | Indique si le joueur a déjà interagi avec une organisation. | 692 |
-| `career_career.interactWithOrganization(id)` | Note que le joueur a interagi avec une organisation (sauvegardé dans general.json). | 696 |
-| `career_career.isActive()` | Indique si la carrière est active. | 338 |
-| `career_career.isAutosaveEnabled()` | Indique si l'autosave est autorisé. | 720 |
-| `career_career.onAnyMissionChanged(state, mission)` | Hook de changement d'état d'un défi : bloque les actions d'entrée quand il s'arrête (« stopped ») et les débloque quand il démarre (« started »). *(interne)* *(hook)* | 677 |
-| `career_career.onBeforeSetProfile(currentSavePath)` | Hook appelé avant de changer de profil : désactive la carrière si elle est active. *(interne)* *(hook)* | 438 |
-| `career_career.onCameraModeChanged(modeName)` | Hook de changement de mode caméra : met à jour le blocage du nodegrabber si la carrière est active. *(interne)* *(hook)* | 69 |
-| `career_career.onCareerActive(active)` | Hook onCareerActive reçu par ce module lui-même (émis par initAfterLevelLoad et deactivateCareer). À l'activation : applique les valeurs de récupération carrière ou tutoriel, vide la liste de tâches et les POI bruts, installe M.onUpdate (menu debug), bloque les actions d'entrée et passe l'état de jeu à « career ». Ne fait rien si active est faux. *(interne)* *(hook)* | 158 |
-| `career_career.onClientEndMission(levelPath)` | Hook de fin de niveau : désactive la carrière si le niveau est west_coast_usa. *(interne)* *(hook)* | 654 |
-| `career_career.onClientPostStartMission()` | Hook après le démarrage d'un niveau : exécute l'initialisation différée de la carrière (émet onCareerActive(true, newSave)). *(interne)* *(hook)* | 240 |
-| `career_career.onDeserialized(v)` | Hook après rechargement : réactive la carrière (activateCareer(false)) si v.reactivate. *(interne)* *(hook)* | 671 |
-| `career_career.onGlobalCameraSet(modeName)` | Hook de changement de caméra globale : met à jour le blocage du nodegrabber. *(interne)* *(hook)* | 74 |
-| `career_career.onLoadingScreenFadeout()` | Navigue vers « play » exactement une fois, à la fin du fondu de l'écran de chargement qui suit l'activation (le routeur renvoie la demande jusqu'à ce que l'UI confirme). *(interne)* *(hook)* | 250 |
-| `career_career.onSaveCurrentProfile(currentSavePath)` | Hook de sauvegarde du profil : écrit career/general.json (niveau, startingOptions, boughtStarterVehicle, organizationInteraction, états des fenêtres de debug). *(interne)* *(hook)* | 417 |
-| `career_career.onSerialize()` | Hook de rechargement des extensions : désactive la carrière et note reactivate = true si elle était active. *(interne)* *(hook)* | 662 |
-| `career_career.onVehicleAddedToInventory(data)` | Hook d'ajout d'un véhicule à l'inventaire : marque le véhicule de départ comme acheté (sauvegarde immédiate) et débloque le succès FIRST_SET_OF_KEYS pour un achat instantané chez apmStarterVehicles. *(interne)* *(hook)* | 701 |
-| `career_career.sendAllCareerProfilesData()` | Construit les infos de chaque profil (argent, beamXP, vouchers, score d'assurance, branches « apm », véhicule courant, nombre de véhicules, versions) et les envoie à l'UI via guihooks « allCareerProfiles » ; trie par creationDate. | 569 |
-| `career_career.sendCurrentProfileData()` | Retourne les infos du profil courant (même format qu'un profil de sendAllCareerProfilesData). Nil si la carrière n'est pas active. | 591 |
-| `career_career.setAutosaveEnabled(enabled)` | Active ou coupe l'autosave. | 724 |
-| `career_career.setDebugMenuEnabled(enabled)` | Active ou coupe le menu de debug imgui de la carrière. | 749 |
+| `career_career.activateCareer(removeVehicles)` | Activates the career for the current profile (career_saveSystem.getCurrentProfile): no effect if already active or without a profile. Loads the level and the modules (see notes). | 257 |
+| `career_career.closeAllMenus()` | Closes the menus by navigating to the "play" screen. | 715 |
+| `career_career.createOrLoadCareerAndStart(name, specificAutosave, startingOptions)` | Selects (or creates) a save profile with career_saveSystem.setProfile then activates the career with the given starting options. | 342 |
+| `career_career.deactivateCareer(saveCareer)` | Deactivates the career: unloads the modules, unblocks the actions, resets the freeroam recovery values and hides the task list. | 317 |
+| `career_career.deactivateCareerAndReloadLevel(saveCareer)` | Deactivates the career then restarts the current level in freeroam. | 332 |
+| `career_career.getAdditionalMenuButtons()` | Buttons added to the pause menu: map (or "my load" during delivery), progress (if the starter vehicle is bought and outside the tutorial), certification cancellation, road test cancellation. | 728 |
+| `career_career.getAutosavesForProfile(profile)` | For each save folder of the profile, returns the content of playerAttributes.json with id and autosaveName. | 599 |
+| `career_career.getBeamXPLevel(xp)` | Computes the BeamXP level: thresholds 0, 100, 300, 600, 1000. Returns -1 for the progress values if there is no next level. | 451 |
+| `career_career.getCurrentStartingModeData()` | Returns the full definition of the current game's starting mode (startingOptions.startMode), or nil. | 398 |
+| `career_career.getSaveFoldersForProfile(profile)` | Returns the list of a profile's save folders with what the UI needs to choose (name, dates, version, corrupted, isCurrent, incompatibleVersion, outdatedVersion, money, beamXP, vehicleCount), sorted from newest to oldest. | 614 |
+| `career_career.getStartingModeOptions()` | Lists the starting modes (*.lua files of lua/ge/extensions/career/startingModes/ run by dofile, except those with ignore) and returns for the UI: id, order, tier, title, description, image, tag, sorted by order then id. | 359 |
+| `career_career.hasBoughtStarterVehicle()` | Indicates whether the player has bought their starter vehicle. | 688 |
+| `career_career.hasInteractedWithOrganization(id)` | Indicates whether the player has already interacted with an organization. | 692 |
+| `career_career.interactWithOrganization(id)` | Notes that the player has interacted with an organization (saved in general.json). | 696 |
+| `career_career.isActive()` | Indicates whether the career is active. | 338 |
+| `career_career.isAutosaveEnabled()` | Indicates whether autosave is allowed. | 720 |
+| `career_career.onAnyMissionChanged(state, mission)` | Challenge state change hook: blocks the input actions when it stops ("stopped") and unblocks them when it starts ("started"). *(internal)* *(hook)* | 677 |
+| `career_career.onBeforeSetProfile(currentSavePath)` | Hook called before changing profile: deactivates the career if it is active. *(internal)* *(hook)* | 438 |
+| `career_career.onCameraModeChanged(modeName)` | Camera mode change hook: updates the nodegrabber blocking if the career is active. *(internal)* *(hook)* | 69 |
+| `career_career.onCareerActive(active)` | onCareerActive hook received by this module itself (emitted by initAfterLevelLoad and deactivateCareer). On activation: applies the career or tutorial recovery values, clears the task list and raw POIs, installs M.onUpdate (debug menu), blocks the input actions and sets the game state to "career". Does nothing if active is false. *(internal)* *(hook)* | 158 |
+| `career_career.onClientEndMission(levelPath)` | End-of-level hook: deactivates the career if the level is west_coast_usa. *(internal)* *(hook)* | 654 |
+| `career_career.onClientPostStartMission()` | Hook after a level starts: runs the career's deferred initialization (emits onCareerActive(true, newSave)). *(internal)* *(hook)* | 240 |
+| `career_career.onDeserialized(v)` | Post-reload hook: reactivates the career (activateCareer(false)) if v.reactivate. *(internal)* *(hook)* | 671 |
+| `career_career.onGlobalCameraSet(modeName)` | Global camera change hook: updates the nodegrabber blocking. *(internal)* *(hook)* | 74 |
+| `career_career.onLoadingScreenFadeout()` | Navigates to "play" exactly once, at the end of the loading screen fade that follows the activation (the router resends the request until the UI confirms). *(internal)* *(hook)* | 250 |
+| `career_career.onSaveCurrentProfile(currentSavePath)` | Profile save hook: writes career/general.json (level, startingOptions, boughtStarterVehicle, organizationInteraction, debug window states). *(internal)* *(hook)* | 417 |
+| `career_career.onSerialize()` | Extension reload hook: deactivates the career and notes reactivate = true if it was active. *(internal)* *(hook)* | 662 |
+| `career_career.onVehicleAddedToInventory(data)` | Hook for adding a vehicle to the inventory: marks the starter vehicle as bought (immediate save) and unlocks the FIRST_SET_OF_KEYS achievement for an instant purchase at apmStarterVehicles. *(internal)* *(hook)* | 701 |
+| `career_career.sendAllCareerProfilesData()` | Builds the info of each profile (money, beamXP, vouchers, insurance score, "apm" branches, current vehicle, vehicle count, versions) and sends it to the UI via guihooks "allCareerProfiles"; sorts by creationDate. | 569 |
+| `career_career.sendCurrentProfileData()` | Returns the info of the current profile (same format as a profile from sendAllCareerProfilesData). Nil if the career is not active. | 591 |
+| `career_career.setAutosaveEnabled(enabled)` | Enables or disables autosave. | 724 |
+| `career_career.setDebugMenuEnabled(enabled)` | Enables or disables the career's imgui debug menu. | 749 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_career.activateCareer(removeVehicles)`
 
-Active la carrière pour le profil courant (career_saveSystem.getCurrentProfile) : sans effet si déjà active ou sans profil. Charge le niveau et les modules (voir notes).
+Activates the career for the current profile (career_saveSystem.getCurrentProfile): no effect if already active or without a profile. Loads the level and the modules (see notes).
 
-- `removeVehicles` (*boolean|nil*) : Supprimer tous les véhicules du niveau déjà chargé ; true par défaut.
+- `removeVehicles` (*boolean|nil*) : Remove all vehicles from the already loaded level; true by default.
 
 #### `career_career.createOrLoadCareerAndStart(name, specificAutosave, startingOptions)`
 
-Sélectionne (ou crée) un profil de sauvegarde avec career_saveSystem.setProfile puis active la carrière avec les options de départ données.
+Selects (or creates) a save profile with career_saveSystem.setProfile then activates the career with the given starting options.
 
-- `name` (*string*) : Nom du profil.
-- `specificAutosave` (*string|nil*) : Nom d'une autosave précise à charger.
-- `startingOptions` (*table|nil*) : Options de départ (copiées).
-- **renvoie** : boolean false si le profil n'a pas pu être sélectionné.
+- `name` (*string*) : Profile name.
+- `specificAutosave` (*string|nil*) : Name of a specific autosave to load.
+- `startingOptions` (*table|nil*) : Starting options (copied).
+- **returns**: boolean false if the profile could not be selected.
 
 #### `career_career.deactivateCareer(saveCareer)`
 
-Désactive la carrière : décharge les modules, débloque les actions, remet les valeurs de récupération du freeroam et cache la liste des tâches.
+Deactivates the career: unloads the modules, unblocks the actions, resets the freeroam recovery values and hides the task list.
 
-- `saveCareer` (*boolean|nil*) : Non utilisé.
+- `saveCareer` (*boolean|nil*) : Not used.
 
 #### `career_career.deactivateCareerAndReloadLevel(saveCareer)`
 
-Désactive la carrière puis relance le niveau courant en freeroam.
+Deactivates the career then restarts the current level in freeroam.
 
-- `saveCareer` (*boolean|nil*) : Transmis à deactivateCareer.
+- `saveCareer` (*boolean|nil*) : Passed to deactivateCareer.
 
 #### `career_career.getAdditionalMenuButtons()`
 
-Boutons ajoutés au menu pause : carte (ou « mon chargement » en livraison), progression (si le véhicule de départ est acheté et hors tutoriel), annulation de certification, annulation d'essai routier.
+Buttons added to the pause menu: map (or "my load" during delivery), progress (if the starter vehicle is bought and outside the tutorial), certification cancellation, road test cancellation.
 
-- **renvoie** : table[] Boutons {label, luaFun, showIndicator?}.
+- **returns**: table[] Buttons {label, luaFun, showIndicator?}.
 
 #### `career_career.getAutosavesForProfile(profile)`
 
-Pour chaque dossier de sauvegarde du profil, retourne le contenu de playerAttributes.json avec id et autosaveName.
+For each save folder of the profile, returns the content of playerAttributes.json with id and autosaveName.
 
-- `profile` (*string*) : Nom du profil.
-- **renvoie** : table[] Attributs de chaque autosave.
+- `profile` (*string*) : Profile name.
+- **returns**: table[] Attributes of each autosave.
 
 #### `career_career.getBeamXPLevel(xp)`
 
-Calcule le niveau BeamXP : seuils 0, 100, 300, 600, 1000. Retourne -1 pour les valeurs de progression s'il n'y a pas de niveau suivant.
+Computes the BeamXP level: thresholds 0, 100, 300, 600, 1000. Returns -1 for the progress values if there is no next level.
 
-- `xp` (*number*) : Valeur de BeamXP.
-- **renvoie** : integer Niveau (1 à 5).
-- **renvoie** : number Progression dans le niveau courant (-1 au maximum).
-- **renvoie** : number Seuil requis pour le niveau suivant (-1 au maximum).
+- `xp` (*number*) : BeamXP value.
+- **returns**: integer Level (1 to 5).
+- **returns**: number Progress within the current level (-1 at the maximum).
+- **returns**: number Threshold required for the next level (-1 at the maximum).
 
 #### `career_career.getCurrentStartingModeData()`
 
-Retourne la définition complète du mode de départ de la partie courante (startingOptions.startMode), ou nil.
+Returns the full definition of the current game's starting mode (startingOptions.startMode), or nil.
 
-- **renvoie** : table|nil Données du mode de départ.
+- **returns**: table|nil Starting mode data.
 
 #### `career_career.getSaveFoldersForProfile(profile)`
 
-Retourne la liste des dossiers de sauvegarde d'un profil avec ce qu'il faut à l'UI pour choisir (nom, dates, version, corrupted, isCurrent, incompatibleVersion, outdatedVersion, money, beamXP, vehicleCount), triée du plus récent au plus ancien.
+Returns the list of a profile's save folders with what the UI needs to choose (name, dates, version, corrupted, isCurrent, incompatibleVersion, outdatedVersion, money, beamXP, vehicleCount), sorted from newest to oldest.
 
-- `profile` (*string|nil*) : Nom du profil ; liste vide si nil.
-- **renvoie** : table[] Dossiers de sauvegarde.
+- `profile` (*string|nil*) : Profile name; empty list if nil.
+- **returns**: table[] Save folders.
 
 #### `career_career.getStartingModeOptions()`
 
-Liste les modes de départ (fichiers *.lua de lua/ge/extensions/career/startingModes/ exécutés par dofile, sauf ceux avec ignore) et retourne pour l'UI : id, order, tier, title, description, image, tag, triés par order puis id.
+Lists the starting modes (*.lua files of lua/ge/extensions/career/startingModes/ run by dofile, except those with ignore) and returns for the UI: id, order, tier, title, description, image, tag, sorted by order then id.
 
-- **renvoie** : table[] Modes de départ.
+- **returns**: table[] Starting modes.
 
 #### `career_career.hasBoughtStarterVehicle()`
 
-Indique si le joueur a acheté son véhicule de départ.
+Indicates whether the player has bought their starter vehicle.
 
-- **renvoie** : boolean|nil Résultat.
+- **returns**: boolean|nil Result.
 
 #### `career_career.hasInteractedWithOrganization(id)`
 
-Indique si le joueur a déjà interagi avec une organisation.
+Indicates whether the player has already interacted with an organization.
 
-- `id` (*string*) : Identifiant de l'organisation.
-- **renvoie** : boolean|nil true si déjà interagi.
+- `id` (*string*) : Organization identifier.
+- **returns**: boolean|nil true if already interacted.
 
 #### `career_career.interactWithOrganization(id)`
 
-Note que le joueur a interagi avec une organisation (sauvegardé dans general.json).
+Notes that the player has interacted with an organization (saved in general.json).
 
-- `id` (*string*) : Identifiant de l'organisation.
+- `id` (*string*) : Organization identifier.
 
 #### `career_career.isActive()`
 
-Indique si la carrière est active.
+Indicates whether the career is active.
 
-- **renvoie** : boolean true si active.
+- **returns**: boolean true if active.
 
 #### `career_career.isAutosaveEnabled()`
 
-Indique si l'autosave est autorisé.
+Indicates whether autosave is allowed.
 
-- **renvoie** : boolean État.
+- **returns**: boolean State.
 
 #### `career_career.onAnyMissionChanged(state, mission)`
 
-Hook de changement d'état d'un défi : bloque les actions d'entrée quand il s'arrête (« stopped ») et les débloque quand il démarre (« started »).
+Challenge state change hook: blocks the input actions when it stops ("stopped") and unblocks them when it starts ("started").
 
-- `state` (*string*) : « started » ou « stopped ».
-- `mission` (*table|nil*) : Défi concerné.
+- `state` (*string*) : "started" or "stopped".
+- `mission` (*table|nil*) : Challenge concerned.
 
 #### `career_career.onBeforeSetProfile(currentSavePath)`
 
-Hook appelé avant de changer de profil : désactive la carrière si elle est active.
+Hook called before changing profile: deactivates the career if it is active.
 
-- `currentSavePath` (*string*) : Dossier de sauvegarde courant.
+- `currentSavePath` (*string*) : Current save folder.
 
 #### `career_career.onCameraModeChanged(modeName)`
 
-Hook de changement de mode caméra : met à jour le blocage du nodegrabber si la carrière est active.
+Camera mode change hook: updates the nodegrabber blocking if the career is active.
 
-- `modeName` (*string*) : Nom du mode.
+- `modeName` (*string*) : Mode name.
 
 #### `career_career.onCareerActive(active)`
 
-Hook onCareerActive reçu par ce module lui-même (émis par initAfterLevelLoad et deactivateCareer). À l'activation : applique les valeurs de récupération carrière ou tutoriel, vide la liste de tâches et les POI bruts, installe M.onUpdate (menu debug), bloque les actions d'entrée et passe l'état de jeu à « career ». Ne fait rien si active est faux.
+onCareerActive hook received by this module itself (emitted by initAfterLevelLoad and deactivateCareer). On activation: applies the career or tutorial recovery values, clears the task list and raw POIs, installs M.onUpdate (debug menu), blocks the input actions and sets the game state to "career". Does nothing if active is false.
 
-- `active` (*boolean*) : true à l'activation.
+- `active` (*boolean*) : true on activation.
 
 #### `career_career.onClientEndMission(levelPath)`
 
-Hook de fin de niveau : désactive la carrière si le niveau est west_coast_usa.
+End-of-level hook: deactivates the career if the level is west_coast_usa.
 
-- `levelPath` (*string*) : Chemin du niveau qui se termine.
+- `levelPath` (*string*) : Path of the level that is ending.
 
 #### `career_career.onDeserialized(v)`
 
-Hook après rechargement : réactive la carrière (activateCareer(false)) si v.reactivate.
+Post-reload hook: reactivates the career (activateCareer(false)) if v.reactivate.
 
-- `v` (*table*) : Données de onSerialize.
+- `v` (*table*) : Data from onSerialize.
 
 #### `career_career.onGlobalCameraSet(modeName)`
 
-Hook de changement de caméra globale : met à jour le blocage du nodegrabber.
+Global camera change hook: updates the nodegrabber blocking.
 
-- `modeName` (*string*) : Nom du mode.
+- `modeName` (*string*) : Mode name.
 
 #### `career_career.onSaveCurrentProfile(currentSavePath)`
 
-Hook de sauvegarde du profil : écrit career/general.json (niveau, startingOptions, boughtStarterVehicle, organizationInteraction, états des fenêtres de debug).
+Profile save hook: writes career/general.json (level, startingOptions, boughtStarterVehicle, organizationInteraction, debug window states).
 
-- `currentSavePath` (*string*) : Dossier de sauvegarde.
+- `currentSavePath` (*string*) : Save folder.
 
 #### `career_career.onSerialize()`
 
-Hook de rechargement des extensions : désactive la carrière et note reactivate = true si elle était active.
+Extension reload hook: deactivates the career and notes reactivate = true if it was active.
 
-- **renvoie** : table Données ({reactivate = true} si active).
+- **returns**: table Data ({reactivate = true} if active).
 
 #### `career_career.onVehicleAddedToInventory(data)`
 
-Hook d'ajout d'un véhicule à l'inventaire : marque le véhicule de départ comme acheté (sauvegarde immédiate) et débloque le succès FIRST_SET_OF_KEYS pour un achat instantané chez apmStarterVehicles.
+Hook for adding a vehicle to the inventory: marks the starter vehicle as bought (immediate save) and unlocks the FIRST_SET_OF_KEYS achievement for an instant purchase at apmStarterVehicles.
 
-- `data` (*table*) : Contient purchaseData et vehicleInfo.
+- `data` (*table*) : Contains purchaseData and vehicleInfo.
 
 #### `career_career.sendAllCareerProfilesData()`
 
-Construit les infos de chaque profil (argent, beamXP, vouchers, score d'assurance, branches « apm », véhicule courant, nombre de véhicules, versions) et les envoie à l'UI via guihooks « allCareerProfiles » ; trie par creationDate.
+Builds the info of each profile (money, beamXP, vouchers, insurance score, "apm" branches, current vehicle, vehicle count, versions) and sends it to the UI via guihooks "allCareerProfiles"; sorts by creationDate.
 
-- **renvoie** : table[] Données des profils.
+- **returns**: table[] Profile data.
 
 #### `career_career.sendCurrentProfileData()`
 
-Retourne les infos du profil courant (même format qu'un profil de sendAllCareerProfilesData). Nil si la carrière n'est pas active.
+Returns the info of the current profile (same format as a profile from sendAllCareerProfilesData). Nil if the career is not active.
 
-- **renvoie** : table|nil Données du profil.
+- **returns**: table|nil Profile data.
 
 #### `career_career.setAutosaveEnabled(enabled)`
 
-Active ou coupe l'autosave.
+Enables or disables autosave.
 
-- `enabled` (*boolean*) : Nouvel état.
+- `enabled` (*boolean*) : New state.
 
 #### `career_career.setDebugMenuEnabled(enabled)`
 
-Active ou coupe le menu de debug imgui de la carrière.
+Enables or disables the career's imgui debug menu.
 
-- `enabled` (*boolean*) : Nouvel état.
+- `enabled` (*boolean*) : New state.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | career_saveSystem, core_recoveryPrompt, gameplay_traffic. |
-| `startingOptions` | table | Options de départ de la partie (par ex. startMode), venues de createOrLoadCareerAndStart ou de la sauvegarde. |
-| `tutorialEnabled` | boolean | Vrai pendant le tutoriel de la carrière (voir notes). |
+| `startingOptions` | table | Starting options of the game (e.g. startMode), coming from createOrLoadCareerAndStart or from the save. |
+| `tutorialEnabled` | boolean | True during the career tutorial (see notes). |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onBeforeCareerActivate` — écouté par 1 module(s)
-- `onCareerActive` — écouté par 27 module(s)
+- `onBeforeCareerActivate` — listened to by 1 module(s)
+- `onCareerActive` — listened to by 27 module(s)
 
-**Évènements UI (guihooks.trigger) :** `ClearTasklist`, `HideCareerTasklist`, `allCareerProfiles`
+**UI events (guihooks.trigger):** `ClearTasklist`, `HideCareerTasklist`, `allCareerProfiles`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `be:` `getObject`, `getObjectCount`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/career.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/career.lua`.*

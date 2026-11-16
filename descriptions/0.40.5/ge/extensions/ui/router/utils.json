@@ -1,45 +1,92 @@
 {
   "path": "lua/ge/extensions/ui/router/utils.lua",
-  "module": "Petits utilitaires du routeur UI : détection et résolution de noms de routes relatifs (styles Angular « ^. » et Vue « ./ », « ../ »), fusion profonde de tables et résolution d'une référence de fonction « module.func » en fonction Lua appelable. Utilisé par le routeur et ses services.",
+  "module": "Small UI router utilities: detection and resolution of relative route names (Angular \"^.\" and Vue \"./\", \"../\" styles), deep table merging and resolution of a \"module.func\" function reference into a callable Lua function. Used by the router and its services.",
   "notes": [
-    "Le code signale lui-même (TODO) que les fonctions de résolution relative devraient être nettoyées ou supprimées ; routeManager.resolveRouteName est la version plus récente.",
-    "resolveFunctionReference charge l'extension à la volée : `extensions[moduleName]` déclenche le chargement automatique."
+    "The code itself flags (TODO) that the relative resolution functions should be cleaned up or removed; routeManager.resolveRouteName is the newer version.",
+    "resolveFunctionReference loads the extension on the fly: `extensions[moduleName]` triggers automatic loading."
   ],
   "functions": {
     "isRelativeRoute": {
-      "desc": "Indique si le nom de route est relatif : commence par '^' (Angular) ou par '.' (Vue).",
-      "params": {"route": {"type": "string|any", "desc": "Nom de route."}},
-      "returns": [{"type": "boolean", "desc": "true si relatif ; false pour un non-string."}],
+      "desc": "Returns whether the route name is relative: starts with '^' (Angular) or '.' (Vue).",
+      "params": {
+        "route": {
+          "type": "string|any",
+          "desc": "Road name."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if relative; false for a non-string."
+        }
+      ],
       "internal": false
     },
     "resolveRelativeRoute": {
-      "desc": "Convertit une route relative en nom absolu pointé par rapport à l'état courant. « ^^.x » ou « ../../x » remontent de n niveaux ; « ./x » reste au même niveau (ajoute un enfant) ; les '/' deviennent des '.'. Une route absolue est renvoyée telle quelle.",
+      "desc": "Converts a relative route into a dotted absolute name relative to the current state. \"^^.x\" or \"../../x\" go up n levels; \"./x\" stays at the same level (adds a child); '/' become '.'. An absolute route is returned as is.",
       "params": {
-        "route": {"type": "string", "desc": "Route relative ou absolue."},
-        "currentState": {"type": "string", "desc": "Nom pointé de la route courante."}
+        "route": {
+          "type": "string",
+          "desc": "Relative or absolute route."
+        },
+        "currentState": {
+          "type": "string",
+          "desc": "Dotted name of the current route."
+        }
       },
-      "returns": [{"type": "string", "desc": "Nom pointé résolu."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Resolved dotted name."
+        }
+      ],
       "internal": false
     },
     "deepMerge": {
-      "desc": "Fusionne récursivement `source` dans `target` (modifié sur place) : les tables communes sont fusionnées, les autres valeurs écrasées par celles de source. Si source n'est pas une table, renvoie source (ou target si source est nil).",
+      "desc": "Recursively merges `source` into `target` (modified in place): common tables are merged, other values are overwritten by those from source. If source is not a table, returns source (or target if source is nil).",
       "params": {
-        "target": {"type": "table", "desc": "Table modifiée."},
-        "source": {"type": "table", "desc": "Table à fusionner."}
+        "target": {
+          "type": "table",
+          "desc": "Table to modify."
+        },
+        "source": {
+          "type": "table",
+          "desc": "Table to merge."
+        }
       },
-      "returns": [{"type": "table", "desc": "La table target fusionnée."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The merged target table."
+        }
+      ],
       "internal": false
     },
     "resolveFunctionReference": {
-      "desc": "Résout une chaîne « module.func » (séparation au dernier point) en fonction de l'extension correspondante.",
+      "desc": "Resolves a \"module.func\" string (split at the last dot) into a function of the matching extension.",
       "params": {
-        "reference": {"type": "string|nil", "desc": "Référence « module.func » ; nil donne trois nil."},
-        "contextLabel": {"type": "string|nil", "desc": "Libellé utilisé dans les messages d'erreur (défaut « Function reference »)."}
+        "reference": {
+          "type": "string|nil",
+          "desc": "\"module.func\" reference; nil gives three nils."
+        },
+        "contextLabel": {
+          "type": "string|nil",
+          "desc": "Label used in error messages (default \"Function reference\")."
+        }
       },
       "returns": [
-        {"type": "function|nil", "desc": "La fonction trouvée."},
-        {"type": "string|nil", "desc": "Message d'erreur."},
-        {"type": "boolean|nil", "desc": "true en cas d'erreur."}
+        {
+          "type": "function|nil",
+          "desc": "The function found."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error message."
+        },
+        {
+          "type": "boolean|nil",
+          "desc": "true on error."
+        }
       ],
       "internal": false
     }

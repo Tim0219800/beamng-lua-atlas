@@ -1,9 +1,9 @@
 {
   "path": "lua/console/bananabench-csv.lua",
-  "module": "Script de la VM console : exécute le benchmark bananabench (bench.physics()) puis écrit les résultats au format CSV (colonnes Vehicle, Count, MBeams, RealTime, SpawnTime, ExecTime) à l'écran et dans un fichier. Le nom du fichier est le deuxième argument de la ligne de commande (`args[2]`), sinon `bananabench.csv`.",
+  "module": "Console VM script: runs the bananabench benchmark (bench.physics()) then writes the results in CSV format (columns Vehicle, Count, MBeams, RealTime, SpawnTime, ExecTime) to the screen and to a file. The file name is the second command-line argument (`args[2]`), otherwise `bananabench.csv`.",
   "notes": [
-    "Bug : les en-têtes sont `SpawnTime,ExecTime` mais les valeurs écrites sont, dans l'ordre, r.time (temps de simulation) puis r.spawntime (temps d'apparition) : les deux colonnes sont inversées par rapport à leur titre.",
-    "Le script s'exécute au chargement (pas de fonction exportée) et utilise la globale `args` fournie par le lanceur de la console.",
-    "Le fichier est ouvert avec io.open (chemin disque)."
+    "Bug: the headers are `SpawnTime,ExecTime` but the values written are, in order, r.time (simulation time) then r.spawntime (spawn time): the two columns are swapped relative to their titles.",
+    "The script runs on load (no exported function) and uses the global `args` provided by the console launcher.",
+    "The file is opened with io.open (disk path)."
   ]
 }

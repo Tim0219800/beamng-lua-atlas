@@ -1,18 +1,48 @@
 {
   "path": "lua/vehicle/controller/propAnimation/singleAxisLever.lua",
-  "module": "Contrôleur auxiliaire d'animation d'un levier de vitesses à un seul axe (levier de boîte automatique). Convertit electrics.values.gearModeIndex en position de levier lissée (électrique de sortie) grâce à une table de coordonnées par index de mode, et joue un son de levier au début de chaque déplacement.",
+  "module": "Auxiliary controller animating a single-axis gear lever (automatic gearbox lever). Converts electrics.values.gearModeIndex into a smoothed lever position (output electric) using a coordinate table keyed by mode index, and plays a lever sound at the start of each movement.",
   "notes": [
-    "Clés jbeam lues : gearCoordinates (table d'en-tête avec colonnes gearIndex, value), electricsNamePosition (\"gearModeIndex\" par défaut : attention, le défaut écrase l'electric lu en entrée), shiftSoundNode_nodes (premier élément = nœud du son ; sinon nœud 0 et log W), shiftSoundEventSingleAxisLever (\"event:>Vehicle>Interior>Gearshift>automatic_01_in\"), shiftSoundVolumeSingleAxisLever (0.5).",
-    "Lit electrics.values.gearModeIndex (alimenté par vehicleController à partir de getGearPosition du module de boîte).",
-    "Un index absent de la table utilise la coordonnée du plus grand ou du plus petit index existant.",
-    "Piège : avec electricsNamePosition par défaut identique à l'entrée, le contrôleur réécrit gearModeIndex avec la position du levier, ce qui perturbe sa propre lecture au frame suivant. Définir un autre nom en jbeam."
+    "jbeam keys read: gearCoordinates (header table with columns gearIndex, value), electricsNamePosition (\"gearModeIndex\" by default: note that the default overwrites the electric read as input), shiftSoundNode_nodes (first element = sound node; otherwise node 0 and log W), shiftSoundEventSingleAxisLever (\"event:>Vehicle>Interior>Gearshift>automatic_01_in\"), shiftSoundVolumeSingleAxisLever (0.5).",
+    "Reads electrics.values.gearModeIndex (fed by vehicleController from getGearPosition of the gearbox module).",
+    "An index missing from the table uses the coordinate of the largest or smallest existing index.",
+    "Pitfall: with the default electricsNamePosition identical to the input, the controller overwrites gearModeIndex with the lever position, which disturbs its own reading on the next frame. Define another name in the jbeam."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
   },
   "functions": {
-    "init": {"desc": "Lit la table de coordonnées, le nœud/évènement du son et le nom de l'electric de sortie.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
-    "reset": {"desc": "Remet la position du levier à 0 et le lisseur à zéro.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
-    "updateGFX": {"desc": "Chaque frame : lisse la position vers la coordonnée du mode courant, joue le son au début du mouvement et publie la position.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+    "init": {
+      "desc": "Reads the coordinate table, the sound node/event and the output electric name.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "reset": {
+      "desc": "Resets the lever position to 0 and the smoother to zero.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Every frame: smooths the position toward the coordinate of the current mode, plays the sound at the start of the movement and publishes the position.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
+      "internal": true
+    }
   }
 }

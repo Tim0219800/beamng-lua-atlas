@@ -1,0 +1,57 @@
+{
+  "path": "lua/ge/extensions/editor/fileDialog.lua",
+  "module": "Boîte de dialogue de fichiers ImGui de l'éditeur (ouvrir / enregistrer un fichier ou choisir un dossier) sur le système de fichiers virtuel du jeu (FS). Elle offre navigation, dossiers récents, favoris, tri par colonnes, recherche, filtres par type de fichier, aperçu d'images (jpg, jpeg, png, dds), création de dossier et confirmation d'écrasement. Un moddeur d'outil d'éditeur l'appelle via openFile / saveFile avec un callback.",
+  "usage": "extensions.load(\"editor_fileDialog\")\neditor_fileDialog.openFile(function(data)\n  print(data.filepath)\nend, {{\"Any files\", \"*\"}, {\"JSON\", \".json\"}}, false, \"/art/\", false)",
+  "notes": [
+    "Une seule boîte à la fois : si la fenêtre est déjà visible, openFile/saveFile renvoient false (erreur loguée). Le callback doit être une function sinon false.",
+    "defaultPath vide ou nil est remplacé par \"/\" avec un avertissement.",
+    "filenameSuffix est une liste de paires {libellé, motif} ; le motif est une chaîne (ex. \".json\", \"*\") ou une table d'extensions. Si le premier filtre est \"*\" et qu'il y en a plusieurs, le deuxième est sélectionné par défaut.",
+    "Le callback reçoit une table {path, action (\"Open\"/\"Save\"), filename, filepath, filetype} ; il est appelé via pcall (une erreur dans le callback est interceptée).",
+    "Préférences enregistrées : files.fileDialog.maxFilePreviewSize (128-1024), gridLines, favourites, columns."
+  ],
+  "functions": {
+    "openFile": {
+      "desc": "Ouvre la boîte de dialogue en mode « Open ». Appelle callbackFn avec les informations du fichier (ou dossier) choisi.",
+      "params": {
+        "callbackFn": {"type": "function", "desc": "function(data) ; data = {path, action, filename, filepath, filetype}."},
+        "filenameSuffix": {"type": "table|nil", "desc": "Filtres {{libellé, motif}, …} ; défaut {{\"Any files\", \"*\"}}. Ignoré si selectFolder."},
+        "selectFolder": {"type": "boolean|nil", "desc": "true pour choisir un dossier."},
+        "defaultPath": {"type": "string|nil", "desc": "Dossier de départ (défaut \"/\")."},
+        "preview": {"type": "boolean|nil", "desc": "Afficher un aperçu des fichiers."},
+        "caseSensitivePattern": {"type": "boolean|nil", "desc": "Filtre de motif sensible à la casse."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si la boîte s'ouvre, false si déjà ouverte ou callback invalide."}],
+      "internal": false
+    },
+    "saveFile": {
+      "desc": "Ouvre la boîte de dialogue en mode « Save » (pas d'aperçu). Ajoute l'extension du filtre choisi au nom saisi si elle manque et demande confirmation en cas d'écrasement.",
+      "params": {
+        "callbackFn": {"type": "function", "desc": "function(data), même format que openFile."},
+        "filenameSuffix": {"type": "table|nil", "desc": "Filtres {{libellé, motif}, …}."},
+        "selectFolder": {"type": "boolean|nil", "desc": "true pour choisir un dossier."},
+        "defaultPath": {"type": "string|nil", "desc": "Dossier de départ."},
+        "overwriteDialogText": {"type": "string|nil", "desc": "Texte de la confirmation d'écrasement (défaut : « Are you sure you want to overwrite this file »)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si la boîte s'ouvre."}],
+      "internal": false
+    },
+    "onEditorGui": {
+      "desc": "Hook appelé chaque frame GUI de l'éditeur : dessine la fenêtre « fileDialog » si elle est visible (la masque si aucun cache de fichiers n'existe), plus la fenêtre de recherche intelligente.",
+      "params": {},
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook appelé à l'initialisation de l'éditeur : enregistre les fenêtres (fileDialog 640x480, recentDirsWindow, smartSearchItems), les icônes d'images, restaure la visibilité des colonnes et masque la fenêtre.",
+      "params": {},
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Hook appelé pour déclarer les préférences de la catégorie « files / fileDialog ».",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "internal": true
+    },
+    "onEditorActivated": {"desc": "Hook d'activation de l'éditeur ; vide.", "params": {}, "internal": true},
+    "onEditorDeactivated": {"desc": "Hook de désactivation de l'éditeur ; vide.", "params": {}, "internal": true},
+    "onExtensionLoaded": {"desc": "Hook de chargement de l'extension ; vide.", "params": {}, "internal": true}
+  }
+}

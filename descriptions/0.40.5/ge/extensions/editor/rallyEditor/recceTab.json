@@ -1,26 +1,95 @@
 {
   "path": "lua/ge/extensions/editor/rallyEditor/recceTab.lua",
-  "module": "Onglet « Recce » de l'éditeur de rallye. Il charge l'enregistrement de reconnaissance de la mission (driveline + « cuts », via gameplay/rally/recce), affiche le nombre de points et la longueur de la driveline, permet de la sous-échantillonner (seuil de rectitude entre 0.98 et 1.0) et d'importer un pacenote par cut dans le notebook. Peut dessiner en 3D les étiquettes de timestamp de la driveline. Le module renvoie un constructeur de classe C.",
+  "module": "\"Recce\" tab of the rally editor. It loads the mission's recce recording (driveline + \"cuts\", via gameplay/rally/recce), displays the number of points and the length of the driveline, lets you downsample it (straightness threshold between 0.98 and 1.0) and import one pacenote per cut into the notebook. Can draw the driveline's timestamp labels in 3D. The module returns a class C constructor.",
   "notes": [
-    "Aucune fonction exportée : on obtient une instance avec require(...)(rallyEditor).",
-    "Plus le seuil de rectitude est proche de 1, plus on garde de points (infobulle de l'interface).",
-    "Dans drawSectionV3, self.originalDrivelineSize et self.recce.driveline sont utilisés sans test si refresh() a échoué : erreur possible dans ce cas."
+    "No exported function: you get an instance with require(...)(rallyEditor).",
+    "The closer the straightness threshold is to 1, the more points are kept (UI tooltip).",
+    "In drawSectionV3, self.originalDrivelineSize and self.recce.driveline are used without a check if refresh() failed: possible error in that case."
   ],
   "classes": {
     "C": {
-      "desc": "Instance de l'onglet Recce (windowDescription = 'Recce').",
+      "desc": "Recce tab instance (windowDescription = 'Recce').",
       "functions": {
-        "init": {"desc": "Constructeur : mémorise rallyEditor ; recce = nil, drawLabels = false.", "params": {"rallyEditor": {"type": "table", "desc": "Éditeur de rallye parent."}}, "internal": true},
-        "setPath": {"desc": "Définit le notebook courant.", "params": {"path": {"type": "table|nil", "desc": "Notebook."}}, "internal": true},
-        "selected": {"desc": "Appelé quand l'onglet est sélectionné : recharge le recce (refresh) et émet onEditorEditModeChanged(nil, nil).", "internal": true},
-        "unselect": {"desc": "Appelé quand l'onglet est quitté : émet onEditorEditModeChanged(nil, nil).", "internal": true},
-        "formatDistance": {"desc": "Formate une distance en « 123.456m », ou en km au-delà de 950 m.", "params": {"dist": {"type": "number", "desc": "Distance en mètres."}}, "returns": [{"type": "string", "desc": "Texte avec 3 décimales et unité."}], "internal": false},
-        "downsample": {"desc": "Remplace la driveline du recce par une version sous-échantillonnée selon straightnessThreshold.", "internal": false},
-        "drawSectionV3": {"desc": "Dessine l'interface : rafraîchir, étiquettes, infos driveline/cuts, bouton Import, bouton Downsample et curseur de seuil.", "internal": true},
-        "refresh": {"desc": "Recrée l'objet Recce pour le dossier de la mission et charge driveline et cuts ; mémorise la taille d'origine. Log d'erreur en cas d'échec.", "internal": false},
-        "import": {"desc": "Crée les données de pacenotes depuis les cuts, les ajoute au notebook (appendPacenotes) et affiche l'onglet Pacenotes.", "internal": false},
-        "draw": {"desc": "Dessine l'onglet (ne fait rien sans notebook).", "params": {"mouseInfo": {"type": "table", "desc": "Informations souris de l'éditeur (non utilisé ici)."}}, "internal": true},
-        "drawDebugEntrypoint": {"desc": "Dessin debug 3D : appelle recce:drawDebugRecce avec l'option d'étiquettes.", "params": {"mouseInfo": {"type": "table", "desc": "Informations souris transmises au recce."}}, "internal": true}
+        "init": {
+          "desc": "Constructor: stores rallyEditor; recce = nil, drawLabels = false.",
+          "params": {
+            "rallyEditor": {
+              "type": "table",
+              "desc": "Parent rally editor."
+            }
+          },
+          "internal": true
+        },
+        "setPath": {
+          "desc": "Sets the current notebook.",
+          "params": {
+            "path": {
+              "type": "table|nil",
+              "desc": "Notebook."
+            }
+          },
+          "internal": true
+        },
+        "selected": {
+          "desc": "Called when the tab is selected: reloads the recce (refresh) and emits onEditorEditModeChanged(nil, nil).",
+          "internal": true
+        },
+        "unselect": {
+          "desc": "Called when the tab is left: emits onEditorEditModeChanged(nil, nil).",
+          "internal": true
+        },
+        "formatDistance": {
+          "desc": "Formats a distance as \"123.456m\", or in km above 950 m.",
+          "params": {
+            "dist": {
+              "type": "number",
+              "desc": "Distance in meters."
+            }
+          },
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Text with 3 decimals and unit."
+            }
+          ],
+          "internal": false
+        },
+        "downsample": {
+          "desc": "Replaces the recce's driveline with a version downsampled according to straightnessThreshold.",
+          "internal": false
+        },
+        "drawSectionV3": {
+          "desc": "Draws the UI: refresh, labels, driveline/cuts info, Import button, Downsample button and threshold slider.",
+          "internal": true
+        },
+        "refresh": {
+          "desc": "Recreates the Recce object for the mission folder and loads the driveline and cuts; stores the original size. Logs an error on failure.",
+          "internal": false
+        },
+        "import": {
+          "desc": "Creates the pacenote data from the cuts, adds them to the notebook (appendPacenotes) and displays the Pacenotes tab.",
+          "internal": false
+        },
+        "draw": {
+          "desc": "Draws the tab (does nothing without a notebook).",
+          "params": {
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Editor mouse information (not used here)."
+            }
+          },
+          "internal": true
+        },
+        "drawDebugEntrypoint": {
+          "desc": "3D debug drawing: calls recce:drawDebugRecce with the labels option.",
+          "params": {
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Mouse information passed to the recce."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

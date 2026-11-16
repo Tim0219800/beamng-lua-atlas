@@ -1,26 +1,42 @@
 {
   "path": "lua/vehicle/controller/beamNavigator.lua",
-  "module": "Contrôleur auxiliaire qui affiche une carte de navigation en direct sur un écran du véhicule. Il crée une texture HTML (module `htmlTexture`) sur un matériau d'écran, demande au jeu la carte du tableau de bord (`ui_uinavi.requestVehicleDashboardMap`) et lui envoie 15 fois par seconde la position, l'orientation, la vitesse et l'allumage du véhicule, tant qu'un joueur est assis.",
+  "module": "Auxiliary controller that displays a live navigation map on a vehicle screen. It creates an HTML texture (`htmlTexture` module) on a screen material, asks the game for the dashboard map (`ui_uinavi.requestVehicleDashboardMap`) and sends it 15 times per second the vehicle's position, orientation, speed and ignition, as long as a player is seated.",
   "notes": [
-    "Clés jbeam lues par init : `screenMaterialName` (\"@screen_gps\"), `htmlFilePath` (\"local://local/vehicles/common/navi_screen.html\"), `textureWidth` (256), `textureHeight` (128), `textureFPS` (30), `bootscreenImage` (URL facultative de l'écran de démarrage).",
-    "Données envoyées à `map.updateData` : x, y, rotation (degrés = direction + 180), speed (km/h = airspeed × 3.6), zoom (min(150 + vitesse × 1.5, 250), inutilisé sur le tableau de bord), ignitionLevel.",
-    "`M.reset = nop` (fonction vide) : sans cela controller.reset rappellerait init et recréerait la texture. Le champ `reset` n'est donc pas nil.",
-    "L'appel utilise `obj:getID()` pour l'identifiant du véhicule."
+    "Jbeam keys read by init: `screenMaterialName` (\"@screen_gps\"), `htmlFilePath` (\"local://local/vehicles/common/navi_screen.html\"), `textureWidth` (256), `textureHeight` (128), `textureFPS` (30), `bootscreenImage` (optional URL of the boot screen).",
+    "Data sent to `map.updateData`: x, y, rotation (degrees = direction + 180), speed (km/h = airspeed × 3.6), zoom (min(150 + speed × 1.5, 250), unused on the dashboard), ignitionLevel.",
+    "`M.reset = nop` (empty function): without it controller.reset would call init again and recreate the texture. The `reset` field is therefore not nil.",
+    "The call uses `obj:getID()` for the vehicle identifier."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "reset": {"type": "function", "desc": "nop : évite de rappeler init au reset du véhicule."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "reset": {
+      "type": "function",
+      "desc": "nop: avoids calling init again on vehicle reset."
+    }
   },
   "functions": {
     "updateGFX": {
-      "desc": "Envoie les données GPS à la texture HTML à 15 Hz quand un joueur est assis.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "desc": "Sends the GPS data to the HTML texture at 15 Hz when a player is seated.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "init": {
-      "desc": "Crée la texture HTML de l'écran, demande la carte au jeu et affiche l'image de démarrage si `bootscreenImage` est fournie.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "desc": "Creates the screen's HTML texture, asks the game for the map and displays the boot image if `bootscreenImage` is provided.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     }

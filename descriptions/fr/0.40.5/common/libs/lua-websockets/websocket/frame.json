@@ -1,0 +1,41 @@
+{
+  "path": "lua/common/libs/lua-websockets/websocket/frame.lua",
+  "module": "Encodage et décodage des trames WebSocket (RFC 6455) pour lua-websockets : en-têtes 7/16/64 bits de longueur, masquage XOR côté client, trames de fermeture (code + raison). Utilisé par sync, ev_common et les backends client/serveur. Exporte aussi les constantes d'opcodes.",
+  "notes": [
+    "Le décodage d'une longueur 64 bits échoue par assert si la longueur est inférieure à 0xffff ou supérieure à 2^53.",
+    "xor_mask est marqué 'TODO: improve performance' dans le code : le masquage se fait octet par octet en Lua."
+  ],
+  "fields": {
+    "CONTINUATION": {"type": "integer", "desc": "0."},
+    "TEXT": {"type": "integer", "desc": "1."},
+    "BINARY": {"type": "integer", "desc": "2."},
+    "CLOSE": {"type": "integer", "desc": "8."},
+    "PING": {"type": "integer", "desc": "9."},
+    "PONG": {"type": "integer", "desc": "10."}
+  },
+  "functions": {
+    "encode": {
+      "desc": "Construit une trame WebSocket complète : en-tête, longueur, éventuel masque aléatoire (math.random) et données masquées.",
+      "params": {"data": {"type": "string", "desc": "Charge utile."}, "opcode": {"type": "integer", "desc": "Opcode (1 = TEXT par défaut)."}, "masked": {"type": "boolean", "desc": "true pour masquer (obligatoire côté client)."}, "fin": {"type": "boolean|nil", "desc": "Bit FIN ; nil ou true = trame finale."}},
+      "returns": [{"type": "string", "desc": "Octets de la trame."}]
+    },
+    "decode": {
+      "desc": "Décode une trame depuis un tampon. Si les données sont incomplètes, renvoie nil et le nombre d'octets manquants.",
+      "params": {"encoded": {"type": "string", "desc": "Octets reçus (peut contenir plusieurs trames)."}},
+      "returns": [{"type": "string|nil", "desc": "Charge utile démasquée, ou nil si incomplet."}, {"type": "boolean|integer", "desc": "fin (bit FIN), ou octets manquants si incomplet."}, {"type": "integer", "desc": "opcode."}, {"type": "string", "desc": "Octets restants après la trame."}, {"type": "boolean", "desc": "true si la trame était masquée."}]
+    },
+    "encode_close": {
+      "desc": "Construit la charge utile d'une trame CLOSE : code sur 2 octets suivi de la raison. Renvoie une chaîne vide si code est nil.",
+      "params": {"code": {"type": "integer|nil", "desc": "Code de fermeture (ex. 1000)."}, "reason": {"type": "string|nil", "desc": "Raison."}},
+      "returns": [{"type": "string", "desc": "Charge utile."}]
+    },
+    "decode_close": {
+      "desc": "Extrait code et raison de la charge utile d'une trame CLOSE.",
+      "params": {"data": {"type": "string|nil", "desc": "Charge utile."}},
+      "returns": [{"type": "integer|nil", "desc": "Code."}, {"type": "string|nil", "desc": "Raison."}]
+    },
+    "encode_header_small": {"desc": "Deux octets d'en-tête (longueur < 126).", "params": {"header": {"type": "integer", "desc": "Premier octet (FIN + opcode)."}, "payload": {"type": "integer", "desc": "Second octet (bit masque + longueur)."}}, "returns": [{"type": "string", "desc": "En-tête."}]},
+    "encode_header_medium": {"desc": "En-tête avec longueur sur 16 bits (126..65535).", "params": {"header": {"type": "integer", "desc": "Premier octet."}, "payload": {"type": "integer", "desc": "Second octet."}, "len": {"type": "integer", "desc": "Longueur."}}, "returns": [{"type": "string", "desc": "En-tête."}]},
+    "encode_header_big": {"desc": "En-tête avec longueur sur 64 bits (deux entiers 32 bits).", "params": {"header": {"type": "integer", "desc": "Premier octet."}, "payload": {"type": "integer", "desc": "Second octet."}, "high": {"type": "integer", "desc": "32 bits de poids fort."}, "low": {"type": "integer", "desc": "32 bits de poids faible."}}, "returns": [{"type": "string", "desc": "En-tête."}]}
+  }
+}

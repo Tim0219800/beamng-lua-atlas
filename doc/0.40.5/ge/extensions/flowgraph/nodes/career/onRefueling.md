@@ -1,28 +1,28 @@
 # `flowgraph_nodes_career_onRefueling`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/career/onRefueling.lua` · VM : Game Engine (GE) · 74 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/career/onRefueling.lua` · VM: Game Engine (GE) · 74 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/career/onRefueling")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/career/onRefueling")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « On Refueling » (catégorie repeat_instant, couleur/icône ui). Détecte les évènements de ravitaillement en carrière. Sorties : openedMenu, tankFilled, paidPrice, closedMenu (impulsions d'une frame), currentlyFueling (flow tant que le plein est en cours, via career_modules_fuel.isCurrentlyFueling) et tankPercent (number, énergie actuelle / énergie max sommées sur tous les réservoirs).
+Flowgraph node "On Refueling" (category repeat_instant, ui color/icon). Detects career refueling events. Outputs: openedMenu, tankFilled, paidPrice, closedMenu (one-frame impulses), currentlyFueling (flow while filling is in progress, via career_modules_fuel.isCurrentlyFueling) and tankPercent (number, current energy / max energy summed over all tanks).
 
-## Remarques
+## Notes
 
-- tankPercent n'est pas mis à jour si getFuelData() renvoie nil (garde sa dernière valeur) ; division par max sans protection si max vaut 0.
-- Utilise career_modules_fuel : nécessite la carrière.
+- tankPercent is not updated if getFuelData() returns nil (keeps its last value); division by max without protection if max is 0.
+- Uses career_modules_fuel: requires career.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Crée la table de drapeaux. | 26 |
-| `C:onPaidRefuelling(data)` | Hook : lève paidPrice. | 66 |
-| `C:onRefuelingEndTransaction()` | Hook : lève closedMenu. | 70 |
-| `C:onRefuelingStartTransaction(data)` | Hook : lève openedMenu. | 54 |
-| `C:onRefuelingStopFueling(data)` | Hook : lève tankFilled. | 58 |
-| `C:work(args)` | Chaque frame : remet à faux les pins flow, applique les drapeaux, met à jour currentlyFueling et tankPercent, efface les drapeaux. | 30 |
+| `C:init()` | Creates the flag table. | 26 |
+| `C:onPaidRefuelling(data)` | Hook: raises paidPrice. | 66 |
+| `C:onRefuelingEndTransaction()` | Hook: raises closedMenu. | 70 |
+| `C:onRefuelingStartTransaction(data)` | Hook: raises openedMenu. | 54 |
+| `C:onRefuelingStopFueling(data)` | Hook: raises tankFilled. | 58 |
+| `C:work(args)` | Every frame: sets the flow pins back to false, applies the flags, updates currentlyFueling and tankPercent, clears the flags. | 30 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/career/onRefueling.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/career/onRefueling.lua`.*

@@ -1,0 +1,83 @@
+{
+  "path": "lua/ge/extensions/career/modules/delivery/parcelMods.lua",
+  "module": "Définit les modificateurs (« mods ») de colis du mode carrière : timed, post, precious, supplies, large, fluid, dryBulk, parcel, hazardous. Chaque mod a un drapeau de déblocage (unlockFlag), une priorité de tri, une icône, des textes traduits et un gabarit (makeTemplate) qui produit la table attachée au colis. Sert à générer les mods d'un colis (generateModifiers), savoir s'ils sont débloqués et compter les statistiques de livraison par mod.",
+  "notes": [
+    "Dans generateModifiers, la condition `item.slots >= largeSlotThreshold or item.weight >= heavyWeightThreshold and not parcelTemplate.modChance.large` est évaluée avec la priorité Lua (and avant or) : le test `not modChance.large` ne s'applique qu'au poids, pas aux slots. Un colis de 65 slots ou plus reçoit donc toujours un mod large, même si le gabarit a déjà une chance large (doublon possible).",
+    "generateModifiers appelle math.randomseed(item.groupSeed) : la génération est déterministe par groupe, mais elle réinitialise le générateur aléatoire global.",
+    "progressTemplate utilise la clé 'delivieries' (faute de frappe), alors que trackModifierStats incrémente 'delivered' : les compteurs 'delivieries' du gabarit ne sont jamais incrémentés.",
+    "Les mods timed ont moneyMultipler (sic) 1.5, post 1.2, precious 2.5, large 1.2, supplies 1.0 ; le temps timed vaut distance/13 + 30*random + 30 secondes (timeUntilDelayed), timeUntilLate = 1.25 * ce temps + 15.",
+    "calculateTimedModifierTime (distance/13 + 30*(1+random)) n'est pas utilisée par le mod timed lui-même, qui recalcule son propre temps dans makeTemplate.",
+    "getModifierIcon, getLabelAndShortDescription et isImportant plantent si la clé n'existe pas (indexation de modifiers[key] sans test), contrairement à getModData."
+  ],
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook appelé à l'activation de la carrière : mémorise les références vers les autres extensions de livraison (parcelManager, cargoScreen, general, generator, progress, tutorial).",
+      "internal": true
+    },
+    "setProgress": {
+      "desc": "Remplace les statistiques de progression par mod (chargement de sauvegarde). Sans argument, revient à une copie du gabarit par défaut.",
+      "params": {"data": {"type": "table|nil", "desc": "Table de progression sauvegardée, ou nil pour réinitialiser."}}
+    },
+    "getProgress": {
+      "desc": "Renvoie la table de progression (compteurs par type de mod : delivered, onTimeDeliveries, delayedDeliveries, lateDeliveries, lost…), utilisée pour la sauvegarde.",
+      "returns": [{"type": "table", "desc": "Table de progression, par type de mod."}]
+    },
+    "getModData": {
+      "desc": "Renvoie une copie des données d'un mod avec unlockLabel, label et shortDescription déjà traduits via _tr.",
+      "params": {"key": {"type": "string", "desc": "Clé du mod (timed, post, precious, supplies, large, fluid, dryBulk, parcel, hazardous)."}},
+      "returns": [{"type": "table|nil", "desc": "Données du mod, ou nil si la clé est inconnue."}]
+    },
+    "getModifierIcon": {
+      "desc": "Renvoie le nom d'icône UI du mod.",
+      "params": {"key": {"type": "string", "desc": "Clé du mod."}},
+      "returns": [{"type": "string", "desc": "Identifiant d'icône."}]
+    },
+    "getLabelAndShortDescription": {
+      "desc": "Renvoie le libellé traduit et la courte description traduite (chaîne vide si le mod n'en a pas).",
+      "params": {"key": {"type": "string", "desc": "Clé du mod."}},
+      "returns": [{"type": "string", "desc": "Libellé traduit."}, {"type": "string", "desc": "Description courte traduite ou ''."}]
+    },
+    "isImportant": {
+      "desc": "Indique si le mod est marqué important (timed et precious).",
+      "params": {"key": {"type": "string", "desc": "Clé du mod."}},
+      "returns": [{"type": "boolean", "desc": "true si important."}]
+    },
+    "calculateTimedModifierTime": {
+      "desc": "Calcule un délai de livraison en secondes : distance/13 + 30 * (1 + random).",
+      "params": {"distance": {"type": "number", "desc": "Distance du trajet en mètres."}},
+      "returns": [{"type": "number", "desc": "Temps en secondes."}]
+    },
+    "generateModifiers": {
+      "desc": "Tire les mods d'un colis selon les probabilités parcelTemplate.modChance (une pioche par clé, clés triées), ajoute le mod large pour les colis très gros ou très lourds (65 slots, poids 80), puis trie par priorité.",
+      "params": {
+        "item": {"type": "table", "desc": "Colis en cours de génération ; utilise groupSeed (graine), slots et weight."},
+        "parcelTemplate": {"type": "table", "desc": "Gabarit de colis avec la table modChance[modKey] = probabilité 0..1."},
+        "distance": {"type": "number", "desc": "Distance du trajet, transmise à makeTemplate (utile pour timed)."}
+      },
+      "returns": [{"type": "table", "desc": "Liste de tables de mod triée par priorité croissante."}]
+    },
+    "isParcelModUnlocked": {
+      "desc": "Indique si le drapeau de déblocage du mod est actif dans career_modules_unlockFlags.",
+      "params": {"modKey": {"type": "string", "desc": "Clé du mod."}},
+      "returns": [{"type": "boolean", "desc": "false si le mod est inconnu ou sans drapeau."}]
+    },
+    "lockedBecauseOfMods": {
+      "desc": "Pour un ensemble de mods, dit si au moins un est verrouillé et renvoie la définition du drapeau de plus haut niveau parmi ceux examinés.",
+      "params": {"modKeys": {"type": "table<string, any>", "desc": "Table dont les clés sont des clés de mod."}},
+      "returns": [{"type": "boolean", "desc": "true si au moins un mod est verrouillé."}, {"type": "table|nil", "desc": "Définition de drapeau (level le plus haut), ou nil."}]
+    },
+    "getParcelModUnlockStatusSimple": {
+      "desc": "Renvoie l'état de déblocage de chaque mod.",
+      "returns": [{"type": "table<string, boolean>", "desc": "modKey -> débloqué."}]
+    },
+    "getParcelModProgressLabel": {
+      "desc": "Renvoie le texte traduit décrivant comment débloquer le mod.",
+      "params": {"key": {"type": "string", "desc": "Clé du mod."}},
+      "returns": [{"type": "string", "desc": "Libellé traduit."}]
+    },
+    "trackModifierStats": {
+      "desc": "Met à jour les statistiques à la livraison d'un colis : incrémente progress[type].delivered pour chaque mod, et pour timed classe la livraison à l'heure, retardée ou en retard selon le temps écoulé depuis cargo.loadedAtTimeStamp.",
+      "params": {"cargo": {"type": "table", "desc": "Colis livré, avec modifiers et loadedAtTimeStamp."}}
+    }
+  }
+}

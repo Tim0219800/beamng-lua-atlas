@@ -1,29 +1,39 @@
 {
   "path": "lua/ge/extensions/editor/missionEditor/dev.lua",
-  "module": "Section « Dev Notes » du Mission Editor : édite mission.devNotes (texte libre, mode silent/info/warning/error, case « Dev Mission » qui cache la mission hors mode développeur). Le module renvoie un constructeur. Chaque modification met mission._dirty = true.",
+  "module": "\"Dev Notes\" section of the Mission Editor: edits mission.devNotes (free text, silent/info/warning/error mode, \"Dev Mission\" checkbox that hides the mission outside developer mode). The module returns a constructor. Each modification sets mission._dirty = true.",
   "notes": [
-    "Dans missionEditor.lua la ligne qui crée cette fenêtre est commentée : le module n'est actuellement pas instancié.",
-    "mission.devNotes doit exister (setMission lit devNotes.text et devNotes.devMission sans test) sinon erreur.",
-    "Modes : silent, info, warning, error (icônes visibility_off, info, warning, error, déclarées mais non affichées ici)."
+    "In missionEditor.lua the line that creates this window is commented out: the module is currently not instantiated.",
+    "mission.devNotes must exist (setMission reads devNotes.text and devNotes.devMission without a test) otherwise error.",
+    "Modes: silent, info, warning, error (icons visibility_off, info, warning, error, declared but not displayed here)."
   ],
   "classes": {
     "C": {
-      "desc": "Sous-fenêtre des notes de développement.",
+      "desc": "Dev notes sub-window.",
       "functions": {
         "init": {
-          "desc": "Constructeur : mémorise la référence au missionEditor.",
-          "params": {"missionEditor": {"type": "table", "desc": "Module editor_missionEditor."}},
+          "desc": "Constructor: remembers the reference to the missionEditor.",
+          "params": {
+            "missionEditor": {
+              "type": "table",
+              "desc": "editor_missionEditor module."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "setMission": {
-          "desc": "Sélectionne la mission : crée le tampon du texte (2048 caractères) et la case devMission à partir de mission.devNotes.",
-          "params": {"mission": {"type": "table", "desc": "Données de mission avec devNotes."}},
+          "desc": "Selects the mission: creates the text buffer (2048 characters) and the devMission checkbox from mission.devNotes.",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Mission data with devNotes."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "draw": {
-          "desc": "Dessine le texte multiligne, le sélecteur de mode et la case « Dev Mission » (infobulle : la mission n'apparaît que si le mode dev est activé).",
+          "desc": "Draws the multiline text, the mode selector and the \"Dev Mission\" checkbox (tooltip: the mission only appears if dev mode is enabled).",
           "params": {},
           "returns": [],
           "internal": false

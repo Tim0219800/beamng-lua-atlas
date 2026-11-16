@@ -1,61 +1,61 @@
 {
   "path": "lua/ge/extensions/ui/router/routeFailure.test.lua",
-  "module": "Tests du contrat d'échec de transition de router.lua : routeMounted refusé avant la validation, retour arrière de routeChangeFailed pour une navigation non validée, rejets sans transition active, après validation ou avec un identifiant périmé. Fichier lancé par le framework de tests, pas une API pour moddeur.",
+  "module": "Tests of the transition failure contract of router.lua: routeMounted rejected before commit, routeChangeFailed rollback for an uncommitted navigation, rejections with no active transition, after commit or with a stale identifier. File run by the test framework, not an API for modders.",
   "notes": [
-    "Lancement : extensions.testFramework_TestManager:runTestFiles(\"routeFailure\").",
-    "Les tests pilotent le singleton ui_router réel avec une transition fabriquée, puis réinitialisent TransitionManager et restaurent l'éventuelle entrée en attente."
+    "Run with: extensions.testFramework_TestManager:runTestFiles(\"routeFailure\").",
+    "The tests drive the real ui_router singleton with a fabricated transition, then reset TransitionManager and restore any pending entry."
   ],
   "functions": {
     "testRouteMountedRejectedBeforeCommit": {
-      "desc": "routeMounted est rejeté avec not_committed tant que le changement de route n'est pas validé.",
+      "desc": "routeMounted is rejected with not_committed until the route change is committed.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "returns": [],
       "internal": true
     },
     "testRouteChangeFailedRollsBackUncommittedNavigation": {
-      "desc": "routeChangeFailed efface l'entrée en attente et termine la transition.",
+      "desc": "routeChangeFailed clears the pending entry and ends the transition.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "returns": [],
       "internal": true
     },
     "testRouteChangeFailedRejectedWithoutActiveTransition": {
-      "desc": "routeChangeFailed est rejeté s'il n'y a aucune transition active.",
+      "desc": "routeChangeFailed is rejected if there is no active transition.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "returns": [],
       "internal": true
     },
     "testRouteChangeFailedRejectedAfterCommit": {
-      "desc": "routeChangeFailed est rejeté une fois la route déjà validée.",
+      "desc": "routeChangeFailed is rejected once the route is already committed.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "returns": [],
       "internal": true
     },
     "testRouteChangeFailedRejectsStaleTransitionId": {
-      "desc": "routeChangeFailed rejette un identifiant de transition différent pour ne pas annuler une navigation plus récente.",
+      "desc": "routeChangeFailed rejects a different transition identifier so as not to cancel a more recent navigation.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "returns": [],

@@ -1,90 +1,90 @@
 # `damageTracker`
 
-*Fichier : `lua/vehicle/damageTracker.lua` · VM : Véhicule · 127 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/damageTracker.lua` · VM: Vehicle · 127 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `damageTracker`
+**Access:** global `damageTracker`
 
-Registre des états de dommage du véhicule, organisés par groupe puis par nom (ex. groupe 'energyStorage', nom du réservoir). Chaque changement est mis en file et envoyé à l'UI toutes les 1/3 s via le hook `DamageData`, avec des callbacks optionnels pour d'autres modules. Un moddeur appelle setDamage pour signaler une panne et getDamage pour la lire.
+Registry of vehicle damage states, organized by group then by name (e.g. group 'energyStorage', tank name). Each change is queued and sent to the UI every 1/3 s via the `DamageData` hook, with optional callbacks for other modules. A modder calls setDamage to report a failure and getDamage to read it.
 
-## Exemple
+## Example
 
 ```lua
-damageTracker.setDamage("engine", "overheat", true, true)   -- notifie aussi l'UI
+damageTracker.setDamage("engine", "overheat", true, true)   -- also notifies the UI
 local broken = damageTracker.getDamage("engine", "overheat")
 damageTracker.setDamageTemporary("engine", "overheat", true, false, 5)
 ```
 
-## Remarques
+## Notes
 
-- Le message UI utilise la clé de traduction `vehicle.<group>.<name>.<value>` et n'est envoyé qu'aux joueurs assis (guihooks.messageForSeatedPlayers).
-- setDamage ne fait rien si la valeur est inchangée. Il active la boucle updateGFXDirty, qui se remet à nop dès que plus rien n'est à envoyer ni à expirer.
-- damageData est envoyé en entier au hook DamageData ; les callbacks reçoivent (damageData, damageDataDelta) où damageDataDelta ne contient que les changements depuis le dernier envoi.
-- getDamage renvoie false (et non nil) pour un couple inconnu ou une valeur nil/false.
-- init vide aussi la liste des callbacks (registerDamageUpdateCallback), reset ne la vide pas.
+- The UI message uses the translation key `vehicle.<group>.<name>.<value>` and is only sent to seated players (guihooks.messageForSeatedPlayers).
+- setDamage does nothing if the value is unchanged. It enables the updateGFXDirty loop, which resets to nop as soon as there is nothing left to send or expire.
+- damageData is sent in full to the DamageData hook; callbacks receive (damageData, damageDataDelta) where damageDataDelta only contains the changes since the last send.
+- getDamage returns false (not nil) for an unknown pair or a nil/false value.
+- init also clears the callback list (registerDamageUpdateCallback), reset does not clear it.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `damageTracker.getDamage(group, name)` | Lit l'état de dommage d'un couple groupe/nom. | 78 |
-| `damageTracker.init()` | Appelé à la création du véhicule : vide données, deltas, callbacks et temporisations. *(interne)* | 106 |
-| `damageTracker.registerDamageUpdateCallback(callback)` | Ajoute un callback appelé à chaque envoi de DamageData avec (damageData, damageDataDelta). Ignoré si nil. | 91 |
-| `damageTracker.reset()` | Appelé au reset : vide données, deltas et temporisations (garde les callbacks). *(interne)* | 98 |
-| `damageTracker.sendNow()` | Force l'envoi du hook DamageData et des callbacks à la prochaine frame (remet le minuteur à 0). | 82 |
-| `damageTracker.setDamage(group, name, value, notifyUI)` | Définit l'état de dommage d'un couple groupe/nom (annule toute temporisation en cours sur ce couple). | 46 |
-| `damageTracker.setDamageTemporary(group, name, value, timeoutValue, timeout, notifyUI)` | Comme setDamage mais programme un retour à timeoutValue après timeout secondes. | 72 |
-| `damageTracker.updateGFX(dt)` | Vaut nop au repos ; devient updateGFXDirty quand un dommage change ou doit expirer. Envoie périodiquement DamageData et décompte les dommages temporaires. Appelé chaque frame par la boucle principale. (assignée dynamiquement) *(interne)* | dyn |
-| `damageTracker.willSend()` | Indique si un envoi vient juste d'être armé (minuteur à sa valeur pleine) et qu'un premier joueur est assis. | 87 |
+| `damageTracker.getDamage(group, name)` | Reads the damage state of a group/name pair. | 78 |
+| `damageTracker.init()` | Called at vehicle creation: clears data, deltas, callbacks and timeouts. *(internal)* | 106 |
+| `damageTracker.registerDamageUpdateCallback(callback)` | Adds a callback called on each DamageData send with (damageData, damageDataDelta). Ignored if nil. | 91 |
+| `damageTracker.reset()` | Called at reset: clears data, deltas and timeouts (keeps the callbacks). *(internal)* | 98 |
+| `damageTracker.sendNow()` | Forces the sending of the DamageData hook and callbacks on the next frame (resets the timer to 0). | 82 |
+| `damageTracker.setDamage(group, name, value, notifyUI)` | Sets the damage state of a group/name pair (cancels any ongoing timeout on this pair). | 46 |
+| `damageTracker.setDamageTemporary(group, name, value, timeoutValue, timeout, notifyUI)` | Like setDamage but schedules a return to timeoutValue after timeout seconds. | 72 |
+| `damageTracker.updateGFX(dt)` | Is nop at rest; becomes updateGFXDirty when a damage changes or must expire. Periodically sends DamageData and counts down temporary damages. Called every frame by the main loop. (dynamically assigned) *(internal)* | dyn |
+| `damageTracker.willSend()` | Indicates whether a send has just been armed (timer at its full value) and a first player is seated. | 87 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `damageTracker.getDamage(group, name)`
 
-Lit l'état de dommage d'un couple groupe/nom.
+Reads the damage state of a group/name pair.
 
-- `group` (*string*) : Groupe.
-- `name` (*string*) : Nom.
-- **renvoie** : any La valeur, ou false si absente.
+- `group` (*string*) : Group.
+- `name` (*string*) : Name.
+- **returns**: any The value, or false if absent.
 
 #### `damageTracker.registerDamageUpdateCallback(callback)`
 
-Ajoute un callback appelé à chaque envoi de DamageData avec (damageData, damageDataDelta). Ignoré si nil.
+Adds a callback called on each DamageData send with (damageData, damageDataDelta). Ignored if nil.
 
 - `callback` (*function*) : function(damageData, damageDataDelta).
 
 #### `damageTracker.setDamage(group, name, value, notifyUI)`
 
-Définit l'état de dommage d'un couple groupe/nom (annule toute temporisation en cours sur ce couple).
+Sets the damage state of a group/name pair (cancels any ongoing timeout on this pair).
 
-- `group` (*string*) : Groupe de dommage (ex. 'energyStorage').
-- `name` (*string*) : Nom dans le groupe.
-- `value` (*boolean|number|string*) : Valeur du dommage (en pratique true/false).
-- `notifyUI` (*boolean|nil*) : Si vrai, affiche un message à l'écran.
+- `group` (*string*) : Damage group (e.g. 'energyStorage').
+- `name` (*string*) : Name in the group.
+- `value` (*boolean|number|string*) : Damage value (in practice true/false).
+- `notifyUI` (*boolean|nil*) : If true, displays an on-screen message.
 
 #### `damageTracker.setDamageTemporary(group, name, value, timeoutValue, timeout, notifyUI)`
 
-Comme setDamage mais programme un retour à timeoutValue après timeout secondes.
+Like setDamage but schedules a return to timeoutValue after timeout seconds.
 
-- `group` (*string*) : Groupe.
-- `name` (*string*) : Nom.
-- `value` (*any*) : Valeur immédiate.
-- `timeoutValue` (*any*) : Valeur appliquée à l'expiration.
-- `timeout` (*number*) : Délai en secondes.
-- `notifyUI` (*boolean|nil*) : Notifier l'UI à l'application immédiate.
+- `group` (*string*) : Group.
+- `name` (*string*) : Name.
+- `value` (*any*) : Immediate value.
+- `timeoutValue` (*any*) : Value applied at expiry.
+- `timeout` (*number*) : Timeout in seconds.
+- `notifyUI` (*boolean|nil*) : Notify the UI on immediate application.
 
 #### `damageTracker.updateGFX(dt)`
 
-Vaut nop au repos ; devient updateGFXDirty quand un dommage change ou doit expirer. Envoie périodiquement DamageData et décompte les dommages temporaires. Appelé chaque frame par la boucle principale. (assignée dynamiquement)
+Is nop at rest; becomes updateGFXDirty when a damage changes or must expire. Periodically sends DamageData and counts down temporary damages. Called every frame by the main loop. (dynamically assigned)
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
 #### `damageTracker.willSend()`
 
-Indique si un envoi vient juste d'être armé (minuteur à sa valeur pleine) et qu'un premier joueur est assis.
+Indicates whether a send has just been armed (timer at its full value) and a first player is seated.
 
-- **renvoie** : boolean true si l'envoi est imminent.
+- **returns**: boolean true if the send is imminent.
 
-**Évènements UI (guihooks.trigger) :** `DamageData`
+**UI events (guihooks.trigger):** `DamageData`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/damageTracker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/damageTracker.lua`.*

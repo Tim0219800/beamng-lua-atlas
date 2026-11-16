@@ -1,71 +1,71 @@
 # `quadtree`
 
-*Fichier : `lua/common/quadtree.lua` · VM : Commun (GE + véhicule) · 392 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/quadtree.lua` · VM: Common (GE + vehicle) · 392 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("quadtree")`
+**Access:** `require("quadtree")`
 
-Quadtree 2D pour boîtes (insertion, suppression, requête, compression). Contrairement aux arbres k-d, on peut insérer et retirer des éléments après la construction, et une requête en cours n'est pas perturbée par une suppression. Chaque élément est (id, xmin, ymin, xmax, ymax). Flux : newQuadtree -> preLoad (pour dimensionner le canevas) -> build(maxDepth) -> [compress] -> insert/remove/query.
+2D quadtree for boxes (insertion, removal, query, compression). Unlike k-d trees, elements can be inserted and removed after construction, and an ongoing query is not disturbed by a removal. Each element is (id, xmin, ymin, xmax, ymax). Flow: newQuadtree -> preLoad (to size the canvas) -> build(maxDepth) -> [compress] -> insert/remove/query.
 
-## Exemple
+## Example
 
 ```lua
 local tree = require('quadtree')
 local q = tree.newQuadtree()
 for _, it in ipairs(items) do q:preLoad(it.id, it.xmin, it.ymin, it.xmax, it.ymax) end
-q:build(10) -- profondeur max facultative (10 par défaut)
+q:build(10) -- optional max depth (10 by default)
 q:insert(id, xmin, ymin, xmax, ymax)
 q:remove(id, centerX, centerY)
 for id in q:queryNotNested(xmin, ymin, xmax, ymax) do ... end
 ```
 
-## Remarques
+## Notes
 
-- Le canevas (boîte de la racine) est calculé par preLoad comme l'union des boîtes préchargées et ne change plus après build ; des éléments hors canevas peuvent être insérés/retirés/interrogés (ils restent dans les noeuds proches de la racine).
-- Structure : self.tree[i] est la table des éléments du noeud i (5 valeurs par élément : id, xmin, ymin, xmax, ymax — le commentaire de tête mentionne un autre ordre xmin/xmax) avec itemCount ; self.children[i] est l'indice du premier de 4 enfants.
-- remove(itm_id, itm_x, itm_y) a besoin du CENTRE de l'élément pour le retrouver (descente dans l'arbre selon ce point) ; la suppression remplace la table du noeud (supporte les requêtes actives). Un élément qui dépasse les bords d'un quadrant reste dans le noeud parent : la suppression teste d'abord le noeud courant avant de descendre.
-- queryNotNested réutilise l'état de l'arbre (pas d'imbrication) ; query alloue un état par requête et supporte l'imbrication. Les deux renvoient les ids des éléments dont la boîte intersecte la boîte de requête.
-- build(maxDepth) insère les éléments préchargés puis libère la liste préchargée (itm_preld = nil) : on ne peut plus appeler preLoad après build (utiliser insert).
-- compress() recopie les tables de noeuds pour réduire la mémoire ; des insertions ultérieures peuvent être plus lentes (note du code).
-- Les champs M.pointBBox et M.lineBBox sont des références aux fonctions globales pointBB2d et lineBB2d de mathlib (l'extraction automatique les marque inconnus).
+- The canvas (root box) is computed by preLoad as the union of the preloaded boxes and no longer changes after build; elements outside the canvas can be inserted/removed/queried (they stay in the nodes close to the root).
+- Structure: self.tree[i] is the table of the elements of node i (5 values per element: id, xmin, ymin, xmax, ymax — the header comment mentions another xmin/xmax order) with itemCount; self.children[i] is the index of the first of 4 children.
+- remove(itm_id, itm_x, itm_y) needs the element's CENTER to find it (descent in the tree according to this point); the removal replaces the node's table (supports active queries). An element that overflows the edges of a quadrant stays in the parent node: the removal tests the current node first before descending.
+- queryNotNested reuses the tree state (no nesting); query allocates a state per query and supports nesting. Both return the ids of the elements whose box intersects the query box.
+- build(maxDepth) inserts the preloaded elements then frees the preloaded list (itm_preld = nil): preLoad can no longer be called after build (use insert).
+- compress() copies the node tables to reduce memory; later insertions may be slower (code note).
+- The fields M.pointBBox and M.lineBBox are references to the global functions pointBB2d and lineBB2d of mathlib (the automatic extraction marks them unknown).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `quadtree.newQuadtree(numOfItems)` | Crée un quadtree vide. Profondeur max par défaut 10 (la racine est la profondeur 1). | 81 |
+| `quadtree.newQuadtree(numOfItems)` | Creates an empty quadtree. Default max depth 10 (the root is depth 1). | 81 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `quadtree.newQuadtree(numOfItems)`
 
-Crée un quadtree vide. Profondeur max par défaut 10 (la racine est la profondeur 1).
+Creates an empty quadtree. Default max depth 10 (the root is depth 1).
 
-- `numOfItems` (*integer|nil*) : nombre d'éléments prévus pour préallouer (facultatif)
-- **renvoie** : quadTree quadtree vide
+- `numOfItems` (*integer|nil*) : number of expected elements for preallocation (optional)
+- **returns**: quadTree empty quadtree
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `lineBBox` | function | Alias de lineBB2d (mathlib) : boîte englobante d'un segment élargi d'un rayon. |
-| `pointBBox` | function | Alias de pointBB2d (mathlib) : boîte englobante d'un point élargi d'un rayon. |
+| `lineBBox` | function | Alias of lineBB2d (mathlib): bounding box of a segment expanded by a radius. |
+| `pointBBox` | function | Alias of pointBB2d (mathlib): bounding box of a point expanded by a radius. |
 
-## Classe `quadTree`
+## Class `quadTree`
 
-Objet renvoyé par newQuadtree().
+Object returned by newQuadtree().
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `quadTree:analytics()` | Affiche (print) la profondeur, le nombre de noeuds et d'éléments occupés. | 361 |
-| `quadTree:build(maxDepth)` | Insère tous les éléments préchargés dans l'arbre. maxDepth (défaut 10) borne la profondeur. | 244 |
-| `quadTree:compress()` | Réduit la mémoire en recopiant les tables de noeuds à la taille exacte. Optionnel après build. | 347 |
-| `quadTree:export()` | Renvoie les données de l'arbre {tree, children, nodeCount, maxDepth, xmin, xmax, ymin, ymax} (références). | 101 |
-| `quadTree:import(quadTreeData)` | Charge des données produites par export() (et abandonne la liste préchargée). | 114 |
-| `quadTree:insert(itm_id, itm_xmin, itm_ymin, itm_xmax, itm_ymax)` | Insère un élément (après build ou en cours d'utilisation) dans le noeud le plus profond qui le contient entièrement. | 144 |
-| `quadTree:preLoad(itm_id, itm_xmin, itm_ymin, itm_xmax, itm_ymax)` | Mémorise un élément et agrandit le canevas de l'arbre ; à utiliser avant build(). | 124 |
-| `quadTree:query(query_xmin, query_ymin, query_xmax, query_ymax)` | Itérateur sur les ids des éléments intersectant la boîte de requête ; supporte les requêtes imbriquées et les suppressions pendant l'itération. | 310 |
-| `quadTree:queryNotNested(query_xmin, query_ymin, query_xmax, query_ymax)` | Comme query sans allocation ; ne pas imbriquer. | 329 |
-| `quadTree:remove(itm_id, itm_x, itm_y)` | Retire l'élément d'identifiant itm_id en le cherchant le long du chemin menant à son centre (itm_x, itm_y). Sans effet s'il n'est pas trouvé. | 194 |
+| `quadTree:analytics()` | Prints (print) the depth, the number of nodes and of occupied elements. | 361 |
+| `quadTree:build(maxDepth)` | Inserts all the preloaded elements into the tree. maxDepth (default 10) bounds the depth. | 244 |
+| `quadTree:compress()` | Reduces memory by copying the node tables to their exact size. Optional after build. | 347 |
+| `quadTree:export()` | Returns the tree data {tree, children, nodeCount, maxDepth, xmin, xmax, ymin, ymax} (references). | 101 |
+| `quadTree:import(quadTreeData)` | Loads data produced by export() (and discards the preloaded list). | 114 |
+| `quadTree:insert(itm_id, itm_xmin, itm_ymin, itm_xmax, itm_ymax)` | Inserts an element (after build or during use) into the deepest node that fully contains it. | 144 |
+| `quadTree:preLoad(itm_id, itm_xmin, itm_ymin, itm_xmax, itm_ymax)` | Stores an element and enlarges the tree's canvas; to be used before build(). | 124 |
+| `quadTree:query(query_xmin, query_ymin, query_xmax, query_ymax)` | Iterator over the ids of the elements intersecting the query box; supports nested queries and removals during iteration. | 310 |
+| `quadTree:queryNotNested(query_xmin, query_ymin, query_xmax, query_ymax)` | Like query without allocation; do not nest. | 329 |
+| `quadTree:remove(itm_id, itm_x, itm_y)` | Removes the element with identifier itm_id by searching along the path leading to its center (itm_x, itm_y). No effect if it is not found. | 194 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/quadtree.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/quadtree.lua`.*

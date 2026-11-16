@@ -1,12 +1,17 @@
 {
   "path": "lua/ge/extensions/util/renderComponentsAPI.lua",
-  "module": "Petit module d'aide pour l'interface des composants de rendu : liste les fichiers PNG de correction colorimétrique (LUT) présents dans art/postfx, utilisables pour le post-traitement.",
+  "module": "Small helper module for the render components UI: lists the color correction (LUT) PNG files present in art/postfx, usable for post-processing.",
   "usage": "dump(extensions.util_renderComponentsAPI.getColorCorrections())",
   "functions": {
     "getColorCorrections": {
-      "desc": "Liste les fichiers *.png du dossier art/postfx (non récursif).",
+      "desc": "Lists the *.png files in the art/postfx folder (non-recursive).",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Liste de tables {filename = chemin du PNG}"}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "List of tables {filename = PNG path}"
+        }
+      ],
       "internal": false
     }
   }

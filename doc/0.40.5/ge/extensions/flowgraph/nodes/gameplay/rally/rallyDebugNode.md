@@ -1,27 +1,27 @@
 # `flowgraph_nodes_gameplay_rally_rallyDebugNode`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyDebugNode.lua` · VM : Game Engine (GE) · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyDebugNode.lua` · VM: Game Engine (GE) · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/rallyDebugNode")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/rallyDebugNode")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Debug Draw » (catégorie repeat_instant, tag rally). Dessine à chaque frame des infos de debug pour un véhicule : sa boîte englobante (RallyUtil.drawVehBB), une sphère de 0,1 m magenta à l'avant-bas, une jaune à la position du véhicule et une verte à la position pos reçue. Entrées : vehId, pos (vec3), rot (quat, non utilisée).
+Flowgraph node "Rally Debug Draw" (category repeat_instant, tag rally). Draws debug info for a vehicle every frame: its bounding box (RallyUtil.drawVehBB), a 0.1 m magenta sphere at the front-bottom, a yellow one at the vehicle position and a green one at the received position pos. Inputs: vehId, pos (vec3), rot (quat, unused).
 
-## Remarques
+## Notes
 
-- La pin pos doit être renseignée quand vehId l'est, sinon vec3(nil) peut échouer.
+- The pos pin must be set when vehId is, otherwise vec3(nil) can fail.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work(args)` | Dessine via debugDrawer les repères du véhicule et de la position cible. | 22 |
+| `C:work(args)` | Draws via debugDrawer the markers of the vehicle and of the target position. | 22 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyDebugNode.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyDebugNode.lua`.*

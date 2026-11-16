@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/core/vehicle/triggerLabelPlacement.lua",
+  "module": "Extension GE `core_vehicle_triggerLabelPlacement` : calcule où placer l'étiquette d'UI d'un trigger de véhicule (zones d'interaction jbeam) autour de sa boîte projetée à l'écran. Reconstruit la base (axes) du trigger à partir des noeuds idRef/idX/idY et de ses rotations (en reproduisant la séquence du code C++), en déduit les demi-dimensions, projette les 8 coins à l'écran et choisit le côté (droite, gauche, haut, bas) avec le plus de place. Fonctions utilitaires sans état persistant, utilisées par les outils d'UI/debug des triggers et par core_vehicle_vehicleTriggerHighlight.",
+  "notes": [
+    "Les coordonnées d'écran sont des fractions 0..1 (worldToScreenPercent01 doit renvoyer une table {x, y} dans cet intervalle). Les tables renvoyées par computeForTrigger sont réutilisées d'un appel à l'autre (pas de copie) : l'appelant doit consommer ou copier le résultat tout de suite.",
+    "Le côté est 'bottom' si la boîte projetée tient entièrement dans la zone centrale 15 %-85 % de l'écran ; sinon c'est le côté qui offre le plus d'espace libre.",
+    "Taille du trigger : un nombre donne une sphère de demi-dimension |size| ; une table/vecteur est lue comme dimensions complètes (converties en demi-dimensions, défaut 0.2). Les angles dont la valeur dépasse 2π sont considérés comme des degrés.",
+    "Si idRef/idX/idY sont absents ou dégénérés, la base retombe sur les axes monde (1,0,0), (0,1,0), (0,0,1)."
+  ],
+  "fields": {},
+  "functions": {
+    "computeForTrigger": {
+      "desc": "Calcule le placement de l'étiquette d'un trigger : projette la boîte du trigger à l'écran et choisit le côté de l'étiquette avec sa position (labelX, labelY en fraction d'écran) et décalages CSS (labelTx, labelTy, avec 0.6em de marge).",
+      "params": {
+        "vehicleObj": {"type": "userdata", "desc": "véhicule portant le trigger"},
+        "triggerObj": {"type": "userdata|nil", "desc": "objet trigger (méthode getCenter) ; inutile si centerWorld est fourni"},
+        "triggerData": {"type": "table", "desc": "données jbeam du trigger (idRef, idX, idY, size, baseRotation, rotation…)"},
+        "worldToScreenPercent01": {"type": "function|nil", "desc": "fonction(posMonde, sortie) -> {x, y} en fractions d'écran"},
+        "p": {"type": "table|nil", "desc": "profileur optionnel (méthode add) pour mesurer les étapes"},
+        "centerWorld": {"type": "vec3|nil", "desc": "centre du trigger en repère monde (sinon triggerObj:getCenter())"},
+        "centerScreen": {"type": "table|nil", "desc": "centre à l'écran, déjà calculé (sinon calculé via worldToScreenPercent01)"}
+      },
+      "returns": [{"type": "table|nil", "desc": "{labelX, labelY, labelTx, labelTy, labelSide ('right'|'left'|'top'|'bottom'), bounds = {minX, maxX, minY, maxY, centerX, centerY}} ; nil si la projection est impossible"}]
+    },
+    "computeTriggerBasisAndHalfExtents": {
+      "desc": "Renvoie la base orthonormée du trigger et ses demi-dimensions, partagées avec les dessins debug/surbrillance pour rester cohérentes avec le placement.",
+      "params": {
+        "vehicleObj": {"type": "userdata", "desc": "véhicule portant le trigger"},
+        "triggerData": {"type": "table", "desc": "données du trigger"}
+      },
+      "returns": [
+        {"type": "vec3", "desc": "axe X"},
+        {"type": "vec3", "desc": "axe Y"},
+        {"type": "vec3", "desc": "axe Z"},
+        {"type": "number", "desc": "demi-dimension X"},
+        {"type": "number", "desc": "demi-dimension Y"},
+        {"type": "number", "desc": "demi-dimension Z"}
+      ]
+    }
+  }
+}

@@ -1,46 +1,46 @@
 {
   "path": "lua/ge/extensions/telemetry/hardwareChanges.test.lua",
-  "module": "Tests unitaires de telemetry/hardwareChanges (runTestFiles(\"hardwareChanges\")).",
+  "module": "Unit tests of telemetry/hardwareChanges (runTestFiles(\"hardwareChanges\")).",
   "functions": {
     "testControllerSnapshotFiltersNonControllerDevices": {
-      "desc": "Vérifie que l'instantané ne garde que wheel, joystick, gamepad et xinput (4 entrées sur 8 périphériques).",
+      "desc": "Checks that the snapshot only keeps wheel, joystick, gamepad and xinput (4 entries out of 8 devices).",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testConnectionChangesContainAddedAndRemovedDevices": {
-      "desc": "Vérifie qu'un périphérique ajouté et un retiré donnent deux événements, connexion d'abord.",
+      "desc": "Checks that an added device and a removed one give two events, connection first.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testReplacedDeviceSlotReportsBothTransitions": {
-      "desc": "Vérifie qu'un volant remplacé dans le même emplacement signale la connexion du nouveau et la déconnexion de l'ancien.",
+      "desc": "Checks that a wheel replaced in the same slot reports the connection of the new one and the disconnection of the old one.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testOnlyDirectWindowFullscreenTransitionsAreTracked": {
-      "desc": "Vérifie que seules les transitions Window/Fullscreen directes sont suivies.",
+      "desc": "Checks that only direct Window/Fullscreen transitions are tracked.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],

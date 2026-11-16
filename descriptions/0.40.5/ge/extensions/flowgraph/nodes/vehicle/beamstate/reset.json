@@ -1,15 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/reset.lua",
-  "module": "Nœud « Reset Vehicle » (catégorie `repeat_p_duration`, tag reset). Remet le véhicule à son état initial : `veh:requestReset(RESET_PHYSICS)` puis `veh:resetBrokenFlexMesh()`. Pin d'entrée : `vehId`. Si `vehId` n'est pas branché, le nœud prend le véhicule joueur (`getPlayerVehicle(0)`).",
+  "module": "Node \"Reset Vehicle\" (category `repeat_p_duration`, tag reset). Resets the vehicle to its initial state: `veh:requestReset(RESET_PHYSICS)` then `veh:resetBrokenFlexMesh()`. Input pin: `vehId`. If `vehId` is not connected, the node takes the player vehicle (`getPlayerVehicle(0)`).",
   "notes": [
-    "Appelé à chaque frame tant que le flux est actif : utiliser une impulsion pour un seul reset."
+    "Called every frame while the flow is active: use a pulse for a single reset."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "work": {
-          "desc": "Demande un reset physique du véhicule et remet à zéro ses flexmeshes cassés.",
+          "desc": "Requests a physics reset of the vehicle and resets its broken flexmeshes to zero.",
           "internal": true
         }
       }

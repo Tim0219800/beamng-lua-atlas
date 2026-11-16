@@ -1,27 +1,27 @@
 # `flowgraph_nodes_scene_raycast`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/raycast.lua` · VM : Game Engine (GE) · 53 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/raycast.lua` · VM: Game Engine (GE) · 53 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/raycast")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/raycast")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Raycast » (repeat_instant, tags util/draw). Lance un rayon depuis pos dans la direction dir et touche le premier objet de collision statique (TSStatic, terrain) via castRayStatic. Entrées : pos, dir (vec3), dist (cachée, 1000 par défaut ; sinon longueur de dir). Sorties : hit/miss (flow), pos (point d'impact) et dist (distance parcourue). data.debug dessine sphères, ligne et texte.
+Flowgraph node "Raycast" (repeat_instant, tags util/draw). Casts a ray from pos in direction dir and hits the first static collision object (TSStatic, terrain) via castRayStatic. Inputs: pos, dir (vec3), dist (hidden, 1000 by default; otherwise the length of dir). Outputs: hit/miss (flow), pos (impact point) and dist (distance traveled). data.debug draws spheres, line and text.
 
-## Remarques
+## Notes
 
-- En cas d'absence d'impact, castRayStatic renvoie une distance >= dist et pos vaut alors le bout du rayon.
+- If there is no impact, castRayStatic returns a distance >= dist and pos is then the end of the ray.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Désactive le debug (self.data.debug = false). | 28 |
-| `C:work()` | Appelle castRayStatic(pos, dir, dist), calcule le point d'impact et écrit hit, miss, pos et dist. | 32 |
+| `C:init()` | Disables debug (self.data.debug = false). | 28 |
+| `C:work()` | Calls castRayStatic(pos, dir, dist), computes the impact point and writes hit, miss, pos and dist. | 32 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawSphere`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/raycast.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/raycast.lua`.*

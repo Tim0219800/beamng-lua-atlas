@@ -1,62 +1,62 @@
 # `editor_toolUtilities_foliagePicker`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/foliagePicker.lua` · VM : Game Engine (GE) · 150 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/foliagePicker.lua` · VM: Game Engine (GE) · 150 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_foliagePicker` : `extensions.load("editor_toolUtilities_foliagePicker")`, puis la globale `editor_toolUtilities_foliagePicker`
+**Access:** extension `editor_toolUtilities_foliagePicker`: `extensions.load("editor_toolUtilities_foliagePicker")`, then the global `editor_toolUtilities_foliagePicker`
 
-Sélecteur imgui partagé d'espèces (ForestItemData du niveau) pour les outils de végétation de l'éditeur. Affiche une liste à cocher avec un curseur de poids par espèce cochée, plus des boutons (tout cocher, tout décocher, rescanner). Il lit et écrit les tables target.species et target.speciesWeights.
+Shared imgui species picker (level ForestItemData) for the editor's vegetation tools. Displays a checkbox list with a weight slider per checked species, plus buttons (check all, uncheck all, rescan). It reads and writes the tables target.species and target.speciesWeights.
 
-## Exemple
+## Example
 
 ```lua
 local picker = require('editor/toolUtilities/foliagePicker')
--- dans le dessin imgui d'un outil :
+-- in a tool's imgui drawing:
 picker.draw(zone, {id = 'ts', onBeginEdit = snap, onCommit = commit, onChange = markDirty})
 ```
 
-## Remarques
+## Notes
 
-- La liste d'espèces est mise en cache et partagée entre outils ; elle est scannée au premier usage (liste vide = rescan) via foliageScatter.listForestItemData.
-- Si aucune espèce n'est cochée, l'interface affiche que rien ne sera planté.
-- L'option opts.height est documentée comme valant 150 par défaut, mais le code utilise la constante LIST_H = 180.
+- The species list is cached and shared between tools; it is scanned on first use (empty list = rescan) via foliageScatter.listForestItemData.
+- If no species is checked, the interface shows that nothing will be planted.
+- The opts.height option is documented as being 150 by default, but the code uses the constant LIST_H = 180.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_foliagePicker.draw(target, opts)` | Dessine le sélecteur pour la cible : liste à cocher, curseurs de poids (0 à 1) et boutons tout cocher / tout décocher / rescanner. À appeler à chaque frame depuis le code imgui d'un outil. | 53 |
-| `editor_toolUtilities_foliagePicker.getList()` | Renvoie la liste d'espèces en cache, en la scannant si elle est vide. | 32 |
-| `editor_toolUtilities_foliagePicker.refresh()` | Rescanne les ForestItemData du niveau et remplit le cache partagé. | 26 |
-| `editor_toolUtilities_foliagePicker.setTicked(target, nm, on)` | Coche une espèce (avec le poids par défaut 1.0 si elle n'en a pas) ou la décoche. | 38 |
+| `editor_toolUtilities_foliagePicker.draw(target, opts)` | Draws the picker for the target: checkbox list, weight sliders (0 to 1) and check all / uncheck all / rescan buttons. To be called every frame from a tool's imgui code. | 53 |
+| `editor_toolUtilities_foliagePicker.getList()` | Returns the cached species list, scanning it if it is empty. | 32 |
+| `editor_toolUtilities_foliagePicker.refresh()` | Rescans the level's ForestItemData and fills the shared cache. | 26 |
+| `editor_toolUtilities_foliagePicker.setTicked(target, nm, on)` | Checks a species (with the default weight 1.0 if it has none) or unchecks it. | 38 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_foliagePicker.draw(target, opts)`
 
-Dessine le sélecteur pour la cible : liste à cocher, curseurs de poids (0 à 1) et boutons tout cocher / tout décocher / rescanner. À appeler à chaque frame depuis le code imgui d'un outil.
+Draws the picker for the target: checkbox list, weight sliders (0 to 1) and check all / uncheck all / rescan buttons. To be called every frame from a tool's imgui code.
 
-- `target` (*table*) : Cible avec les tables .species et .speciesWeights.
-- `opts` (*table*) : id (obligatoire, suffixe d'id imgui unique), height (px), onBeginEdit() -> jeton d'annulation, onCommit(label, jeton) pour l'historique, onChange() pour marquer l'état modifié.
+- `target` (*table*) : Target with the .species and .speciesWeights tables.
+- `opts` (*table*) : id (required, unique imgui id suffix), height (px), onBeginEdit() -> undo token, onCommit(label, token) for the history, onChange() to mark the state as modified.
 
 #### `editor_toolUtilities_foliagePicker.getList()`
 
-Renvoie la liste d'espèces en cache, en la scannant si elle est vide.
+Returns the cached species list, scanning it if it is empty.
 
-- **renvoie** : string[] Noms des ForestItemData du niveau.
+- **returns**: string[] Names of the level's ForestItemData.
 
 #### `editor_toolUtilities_foliagePicker.refresh()`
 
-Rescanne les ForestItemData du niveau et remplit le cache partagé.
+Rescans the level's ForestItemData and fills the shared cache.
 
-- **renvoie** : string[] Liste des noms d'espèces.
+- **returns**: string[] List of species names.
 
 #### `editor_toolUtilities_foliagePicker.setTicked(target, nm, on)`
 
-Coche une espèce (avec le poids par défaut 1.0 si elle n'en a pas) ou la décoche.
+Checks a species (with the default weight 1.0 if it has none) or unchecks it.
 
-- `target` (*table*) : Cible avec les tables species et speciesWeights.
-- `nm` (*string*) : Nom de l'espèce.
-- `on` (*boolean*) : true pour cocher, false pour décocher.
+- `target` (*table*) : Target with the species and speciesWeights tables.
+- `nm` (*string*) : Species name.
+- `on` (*boolean*) : true to check, false to uncheck.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/foliagePicker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/foliagePicker.lua`.*

@@ -1,0 +1,18 @@
+{
+  "path": "lua/vehicle/controller/shiftLights.lua",
+  "module": "Contrôleur auxiliaire de LEDs de changement de rapport (shift lights). Découpe la plage de régime [minRPM, maxRPM] en paliers (un par electric listé dans outputElectrics) et met chaque electric à 1 quand le régime atteint son palier ; au-dessus de maxRPM (ou moteur calé si hasStallWarning), les LEDs « flashing » clignotent et electrics.values.shouldShift passe à vrai.",
+  "usage": "-- jbeam : \"outputElectrics\":[\"shiftLight1\",\"shiftLight2\",\"shiftLight3\"], \"maxRPM\":6800, \"rpmRange\":1500",
+  "notes": [
+    "Clés jbeam lues : rpmRange (3000), engineName et maxEngineRPMOffset (maxRPM = engine.maxRPM - offset), hasStallWarning (false), maxRPM (7000 par défaut sans moteur), minRPM (maxRPM - rpmRange), inputElectricsName (\"rpm\"), keepLEDsActive (true : les LEDs inférieures restent allumées), flashDuration (0.1 s), outputElectrics (liste ordonnée des electrics des paliers), flashingOutputElectrics et flashingAlternateOutputElectrics (électrics qui clignotent en phase / en opposition).",
+    "Chaque pas écrit electrics.values[nom] = 0 ou 1 (nombres, pas booléens) ; shouldShift est un booléen.",
+    "L'alerte de calage n'existe que si engineName ET maxEngineRPMOffset sont définis et hasStallWarning vrai.",
+    "Si outputElectrics est vide, stepCount = 0 et le calcul rpmStep divise par zéro (inf), sans effet ensuite car aucun palier n'est créé."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Lit les clés jbeam et construit les paliers de régime et les listes de LEDs clignotantes.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "updateGFX": {"desc": "Chaque frame : met à jour les electrics des paliers, shouldShift et le clignotement.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+  }
+}

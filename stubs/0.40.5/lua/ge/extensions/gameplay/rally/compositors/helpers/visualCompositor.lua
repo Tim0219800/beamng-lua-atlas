@@ -2,28 +2,28 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/compositors/helpers/visualCompositor.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Compositeur visuel renvoyé par le constructeur du module.
+--- Visual compositor returned by the module constructor.
 ---@class gameplay_rally_compositors_helpers_visualCompositor
 local gameplay_rally_compositors_helpers_visualCompositor = {}
 
---- Distance maximale (seuil du dernier lien) en dessous de laquelle deux notes sont enchaînées ('into').
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/compositors/helpers/visualCompositor.lua:24
----@return number  Distance en mètres.
+--- Maximum distance (threshold of the last link) below which two notes are chained ('into').
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/compositors/helpers/visualCompositor.lua:24
+---@return number  Distance in meters.
 function gameplay_rally_compositors_helpers_visualCompositor:_getMaxLinkDistance() end
 
---- Construit la liste de visuels d'une note structurée.
----Source : lua/ge/extensions/gameplay/rally/compositors/helpers/visualCompositor.lua:204
----@param pacenote table Note (name, id) pour les identifiants des visuels.
----@param structured table Contenu structuré de la note (éléments par emplacement).
----@param distBeforeMeters number|nil Distance depuis la note précédente en mètres.
----@param distAfterMeters number|nil Distance jusqu'à la note suivante en mètres (affichée sous le dernier visuel).
----@return table[]  Visuels (4 au plus).
+--- Builds the list of visuals for a structured note.
+---Source: lua/ge/extensions/gameplay/rally/compositors/helpers/visualCompositor.lua:204
+---@param pacenote table Note (name, id) for the visuals' identifiers.
+---@param structured table Structured content of the note (elements by slot).
+---@param distBeforeMeters number|nil Distance from the previous note in meters.
+---@param distAfterMeters number|nil Distance to the next note in meters (shown under the last visual).
+---@return table[]  Visuals (4 at most).
 function gameplay_rally_compositors_helpers_visualCompositor:compositeVisual(pacenote, structured, distBeforeMeters, distAfterMeters) end
 
---- Mémorise le compositeur de texte dont on lit la configuration.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/compositors/helpers/visualCompositor.lua:20
----@param textCompositor table Instance de textCompositor.
+--- Stores the text compositor whose configuration is read.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/compositors/helpers/visualCompositor.lua:20
+---@param textCompositor table textCompositor instance.
 function gameplay_rally_compositors_helpers_visualCompositor:init(textCompositor) end
 

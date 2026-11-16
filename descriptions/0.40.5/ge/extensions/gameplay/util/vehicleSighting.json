@@ -1,35 +1,84 @@
 {
   "path": "lua/ge/extensions/gameplay/util/vehicleSighting.lua",
-  "module": "Détermine si un observateur (la caméra du joueur ou un véhicule) peut « voir » un véhicule cible. La portée dépend de l'angle : portée maximale (80 m) droit devant, portée minimale (5 m) hors du cône périphérique (90°), interpolée entre les deux. Un rayon optionnel vérifie l'absence d'obstacle.",
+  "module": "Determines whether an observer (the player camera or a vehicle) can \"see\" a target vehicle. The range depends on the angle: maximum range (80 m) straight ahead, minimum range (5 m) outside the peripheral cone (90°), interpolated between the two. An optional ray checks for the absence of obstacles.",
   "usage": "if gameplay_util_vehicleSighting.canPlayerSeeVehicle(vehId, {maxDistDirectSight = 120, needDirectVisualContact = false}) then ... end",
   "notes": [
-    "Paramètres par défaut : maxDistDirectSight 80 (m), minDistPeriphSight 5 (m), periphSightAngle 90 (degrés), needDirectVisualContact true.",
-    "Si `params` est fourni, seules les clés présentes sont lues ; les clés manquantes retombent sur les valeurs par défaut.",
-    "Le test de visibilité lance castRay entre les deux positions relevées de 1 m ; tout obstacle trouvé (statique ou dynamique) bloque la vue.",
-    "Deux positions confondues (distance < 1e-6) renvoient true sans autre test."
+    "Default parameters: maxDistDirectSight 80 (m), minDistPeriphSight 5 (m), periphSightAngle 90 (degrees), needDirectVisualContact true.",
+    "If `params` is provided, only the keys present are read; missing keys fall back to the default values.",
+    "The visibility test casts castRay between the two positions raised by 1 m; any obstacle found (static or dynamic) blocks the view.",
+    "Two coincident positions (distance < 1e-6) return true with no further test."
   ],
   "functions": {
     "checkSighting": {
-      "desc": "Test de visibilité générique à partir de positions : distance, angle par rapport à la direction d'observation, puis rayon d'occultation.",
+      "desc": "Generic visibility test from positions: distance, angle relative to the viewing direction, then occlusion ray.",
       "params": {
-        "observerPos": {"type": "vec3", "desc": "Position de l'observateur."},
-        "observerDir": {"type": "vec3", "desc": "Direction de regard normalisée."},
-        "targetPos": {"type": "vec3", "desc": "Position de la cible."},
-        "params": {"type": "table", "desc": "maxDistDirectSight, minDistPeriphSight, periphSightAngle, needDirectVisualContact (table obligatoire)."}
+        "observerPos": {
+          "type": "vec3",
+          "desc": "Observer position."
+        },
+        "observerDir": {
+          "type": "vec3",
+          "desc": "Normalized viewing direction."
+        },
+        "targetPos": {
+          "type": "vec3",
+          "desc": "Target position."
+        },
+        "params": {
+          "type": "table",
+          "desc": "maxDistDirectSight, minDistPeriphSight, periphSightAngle, needDirectVisualContact (table required)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si la cible est visible."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the target is visible."
+        }
+      ],
       "internal": false
     },
     "canPlayerSeeVehicle": {
-      "desc": "Teste si la caméra du joueur voit le véhicule cible (position et direction de core_camera).",
-      "params": {"targetVehId": {"type": "integer", "desc": "Id du véhicule cible."}, "params": {"type": "table|nil", "desc": "Réglages, voir checkSighting."}},
-      "returns": [{"type": "boolean", "desc": "false si core_camera ou le véhicule n'existe pas."}],
+      "desc": "Tests whether the player camera sees the target vehicle (position and direction from core_camera).",
+      "params": {
+        "targetVehId": {
+          "type": "integer",
+          "desc": "Id of the target vehicle."
+        },
+        "params": {
+          "type": "table|nil",
+          "desc": "Settings, see checkSighting."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if core_camera or the vehicle does not exist."
+        }
+      ],
       "internal": false
     },
     "canVehicleSeeVehicle": {
-      "desc": "Teste si un véhicule voit un autre véhicule (position et direction avant de l'observateur).",
-      "params": {"observerVehId": {"type": "integer", "desc": "Id de l'observateur."}, "targetVehId": {"type": "integer", "desc": "Id de la cible."}, "params": {"type": "table|nil", "desc": "Réglages, voir checkSighting."}},
-      "returns": [{"type": "boolean", "desc": "false si l'un des véhicules n'existe pas."}],
+      "desc": "Tests whether a vehicle sees another vehicle (observer's position and forward direction).",
+      "params": {
+        "observerVehId": {
+          "type": "integer",
+          "desc": "Observer id."
+        },
+        "targetVehId": {
+          "type": "integer",
+          "desc": "Target id."
+        },
+        "params": {
+          "type": "table|nil",
+          "desc": "Settings, see checkSighting."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if either vehicle does not exist."
+        }
+      ],
       "internal": false
     }
   }

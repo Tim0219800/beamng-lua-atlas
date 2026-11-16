@@ -1,41 +1,41 @@
 # `core_settings_clusteredQuality`
 
-*Fichier : `lua/ge/extensions/core/settings/clusteredQuality.lua` · VM : Game Engine (GE) · 70 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/settings/clusteredQuality.lua` · VM: Game Engine (GE) · 70 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_settings_clusteredQuality` : `extensions.load("core_settings_clusteredQuality")`, puis la globale `core_settings_clusteredQuality`
+**Access:** extension `core_settings_clusteredQuality`: `extensions.load("core_settings_clusteredQuality")`, then the global `core_settings_clusteredQuality`
 
-Préréglages de qualité pour l'éclairage « clustered » (lumières locales groupées) et leurs ombres. Chaque niveau (Lowest, Low, Normal, High, Ultra) fixe des propriétés de l'objet moteur global ClusterShading. Utilisé par le système de réglages graphiques (graphic.lua) ; un moddeur peut appeler applyLevel directement.
+Quality presets for "clustered" lighting (grouped local lights) and their shadows. Each level (Lowest, Low, Normal, High, Ultra) sets properties of the global engine object ClusterShading. Used by the graphics settings system (graphic.lua); a modder can call applyLevel directly.
 
-## Exemple
+## Example
 
 ```lua
 core_settings_clusteredQuality.applyLevel("High")
 ```
 
-## Remarques
+## Notes
 
-- Si ClusterShading n'existe pas ou si le niveau est inconnu, applyLevel ne fait rien (retour silencieux).
-- Contrairement aux autres modules de qualité, il n'utilise pas VariableRegistry : il écrit directement dans ClusterShading.
+- If ClusterShading does not exist or the level is unknown, applyLevel does nothing (silent return).
+- Unlike the other quality modules, it does not use VariableRegistry: it writes directly to ClusterShading.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_settings_clusteredQuality.applyLevel(level)` | Copie le préréglage du niveau demandé dans les propriétés de ClusterShading (minLightScreenSize, lightFlares, shadowMaxCasters, shadowFallbackFrames, shadowOversample, shadowBubble). | 50 |
+| `core_settings_clusteredQuality.applyLevel(level)` | Copies the preset of the requested level into the ClusterShading properties (minLightScreenSize, lightFlares, shadowMaxCasters, shadowFallbackFrames, shadowOversample, shadowBubble). | 50 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_settings_clusteredQuality.applyLevel(level)`
 
-Copie le préréglage du niveau demandé dans les propriétés de ClusterShading (minLightScreenSize, lightFlares, shadowMaxCasters, shadowFallbackFrames, shadowOversample, shadowBubble).
+Copies the preset of the requested level into the ClusterShading properties (minLightScreenSize, lightFlares, shadowMaxCasters, shadowFallbackFrames, shadowOversample, shadowBubble).
 
-- `level` (*string*) : Nom du niveau : Lowest, Low, Normal, High ou Ultra.
+- `level` (*string*) : Level name: Lowest, Low, Normal, High or Ultra.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `qualityLevels` | table<string, table> | Préréglages par nom de niveau. Chaque entrée contient minLightScreenSize (taille écran minimale d'une lumière, fraction), lightFlares (boolean), shadowMaxCasters (nombre max de lumières projetant une ombre), shadowFallbackFrames (nombre d'images), shadowOversample (facteur de suréchantillonnage), shadowBubble (facteur). Niveaux : Lowest, Low, Normal, High, Ultra. |
+| `qualityLevels` | table<string, table> | Presets by level name. Each entry contains minLightScreenSize (minimum screen size of a light, fraction), lightFlares (boolean), shadowMaxCasters (max number of lights casting a shadow), shadowFallbackFrames (number of frames), shadowOversample (oversampling factor), shadowBubble (factor). Levels: Lowest, Low, Normal, High, Ultra. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/settings/clusteredQuality.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/settings/clusteredQuality.lua`.*

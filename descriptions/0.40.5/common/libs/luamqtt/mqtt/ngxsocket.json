@@ -1,12 +1,85 @@
 {
   "path": "lua/common/libs/luamqtt/mqtt/ngxsocket.lua",
-  "module": "Connecteur réseau luamqtt pour OpenResty/nginx (ngx.socket.tcp). Inutilisable dans BeamNG : le fichier lit la globale ngx à son chargement, qui n'existe pas dans le jeu. Même interface que les autres connecteurs.",
-  "notes": ["Le chargement du module lève une erreur hors OpenResty (ngx est nil : ngx.socket.tcp).", "settimeout convertit les secondes en millisecondes ; sans délai, il utilise 0x7FFFFFFF."],
+  "module": "luamqtt network connector for OpenResty/nginx (ngx.socket.tcp). Unusable in BeamNG: the file reads the global ngx at load time, which does not exist in the game. Same interface as the other connectors.",
+  "notes": [
+    "Loading the module raises an error outside OpenResty (ngx is nil: ngx.socket.tcp).",
+    "settimeout converts seconds to milliseconds; without a timeout, it uses 0x7FFFFFFF."
+  ],
   "functions": {
-    "connect": {"desc": "Ouvre un socket ngx, se connecte à conn.host:conn.port (timeout très long), fait sslhandshake si conn.secure, stocke dans conn.sock.", "params": {"conn": {"type": "table", "desc": "host, port, secure."}}, "returns": [{"type": "boolean", "desc": "Succès."}, {"type": "string|nil", "desc": "Erreur."}]},
-    "shutdown": {"desc": "Ferme le socket.", "params": {"conn": {"type": "table", "desc": "Connexion."}}},
-    "send": {"desc": "Envoie les données (sous-chaîne i..j si i est donné).", "params": {"conn": {"type": "table", "desc": "Connexion."}, "data": {"type": "string", "desc": "Données."}, "i": {"type": "integer|nil", "desc": "Début."}, "j": {"type": "integer|nil", "desc": "Fin."}}},
-    "receive": {"desc": "Reçoit size octets.", "params": {"conn": {"type": "table", "desc": "Connexion."}, "size": {"type": "integer", "desc": "Octets."}}},
-    "settimeout": {"desc": "Règle le délai du socket.", "params": {"conn": {"type": "table", "desc": "Connexion."}, "timeout": {"type": "number|nil", "desc": "Secondes."}}}
+    "connect": {
+      "desc": "Opens an ngx socket, connects to conn.host:conn.port (very long timeout), performs sslhandshake if conn.secure, stores it in conn.sock.",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "host, port, secure."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Success."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error."
+        }
+      ]
+    },
+    "shutdown": {
+      "desc": "Closes the socket.",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "Connection."
+        }
+      }
+    },
+    "send": {
+      "desc": "Sends the data (substring i..j if i is given).",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "Connection."
+        },
+        "data": {
+          "type": "string",
+          "desc": "Data."
+        },
+        "i": {
+          "type": "integer|nil",
+          "desc": "Start."
+        },
+        "j": {
+          "type": "integer|nil",
+          "desc": "End."
+        }
+      }
+    },
+    "receive": {
+      "desc": "Receives size bytes.",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "Connection."
+        },
+        "size": {
+          "type": "integer",
+          "desc": "Bytes."
+        }
+      }
+    },
+    "settimeout": {
+      "desc": "Sets the socket timeout.",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "Connection."
+        },
+        "timeout": {
+          "type": "number|nil",
+          "desc": "Seconds."
+        }
+      }
+    }
   }
 }

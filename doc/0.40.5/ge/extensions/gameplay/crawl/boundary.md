@@ -1,100 +1,100 @@
 # `gameplay_crawl_boundary`
 
-*Fichier : `lua/ge/extensions/gameplay/crawl/boundary.lua` · VM : Game Engine (GE) · 512 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/crawl/boundary.lua` · VM: Game Engine (GE) · 512 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_crawl_boundary` : `extensions.load("gameplay_crawl_boundary")`, puis la globale `gameplay_crawl_boundary`
+**Access:** extension `gameplay_crawl_boundary`: `extensions.load("gameplay_crawl_boundary")`, then the global `gameplay_crawl_boundary`
 
-Gestion de la limite de zone du mode « crawl » (franchissement lent). Il fait apparaître des drapeaux (TSStatic flagMarker.dae) le long du contour d'une zone, les anime (apparition avec mise à l'échelle et fondu, disparition en fondu) quand un crawler actif ou la caméra est à moins de visibilityRadius mètres, via un quadtree 2D, et vérifie si un crawler est sorti de la zone. Une sortie est enregistrée ; si le crawler s'éloigne d'au moins 10 m du point de sortie (tous les coins dehors), la pénalité 'dnf' est appliquée une seule fois via gameplay_crawl_utils.applyPenalty ; sinon onBoundaryViolation est appelé.
+Zone boundary management for "crawl" mode (slow traversal). It spawns flags (TSStatic flagMarker.dae) along a zone's outline, animates them (appearing with scaling and fade, disappearing with fade) when an active crawler or the camera is within visibilityRadius meters, via a 2D quadtree, and checks whether a crawler has left the zone. An exit is recorded; if the crawler moves at least 10 m away from the exit point (all corners outside), the 'dnf' penalty is applied only once via gameplay_crawl_utils.applyPenalty; otherwise onBoundaryViolation is called.
 
-## Remarques
+## Notes
 
-- Distances en mètres, durées d'animation en secondes. Valeurs par défaut : visibilityRadius 100, animationDuration 0.5, fadeIn 0.3, fadeOut 0.2, scaleUp 0.4, échelle de 0.1 à 1.0.
-- Bug probable : setVisibilityRadius(nil) remet 200 alors que la valeur initiale est 100.
-- Bug probable : getQuadtreeStats et le log de buildBoundaryQuadtree utilisent #boundaryObjects ; boundaryObjects est indexé par id d'objet (pas une séquence), donc # peut valoir 0 ou une valeur erronée.
-- checkBoundary appelle gameplay_crawl_utils.onBoundaryViolation sans tester que gameplay_crawl_utils existe dans certaines branches (erreur si le module n'est pas chargé).
-- Dans checkBoundary, sans coins disponibles (currentCorners vide), la position bbCenter est testée avec site:containsPoint2D ; retourne true tant que le crawler n'est pas disqualifié.
-- Un marqueur n'est placé que si la normale du terrain a un produit scalaire >= 0.5 avec l'axe Z.
-- Les objets de marqueurs sont dans un SimGroup 'BoundaryMarkers' ajouté à MissionGroup, avec canSave = false.
+- Distances in meters, animation durations in seconds. Default values: visibilityRadius 100, animationDuration 0.5, fadeIn 0.3, fadeOut 0.2, scaleUp 0.4, scale from 0.1 to 1.0.
+- Probable bug: setVisibilityRadius(nil) resets to 200 while the initial value is 100.
+- Probable bug: getQuadtreeStats and the buildBoundaryQuadtree log use #boundaryObjects; boundaryObjects is keyed by object id (not a sequence), so # can be 0 or a wrong value.
+- checkBoundary calls gameplay_crawl_utils.onBoundaryViolation without testing that gameplay_crawl_utils exists in some branches (error if the module is not loaded).
+- In checkBoundary, without available corners (currentCorners empty), the bbCenter position is tested with site:containsPoint2D; returns true as long as the crawler is not disqualified.
+- A marker is only placed if the terrain normal has a dot product >= 0.5 with the Z axis.
+- The marker objects are in a 'BoundaryMarkers' SimGroup added to MissionGroup, with canSave = false.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_crawl_boundary.checkBoundary(site, crawler, crawlStates)` | Teste si un crawler est dans la zone (coins du véhicule ou centre de sa boîte). Enregistre le point de sortie, applique la pénalité 'dnf' (une fois) si tous les coins sont dehors à 10 m ou plus du point de sortie, ou signale une violation de limite. | 318 |
-| `gameplay_crawl_boundary.cleanupBoundaryMarkers()` | Supprime le groupe de marqueurs et vide le suivi. | 306 |
-| `gameplay_crawl_boundary.clearAllExitPoints()` | Efface tous les points de sortie et drapeaux DNF. | 431 |
-| `gameplay_crawl_boundary.clearCrawlerExitPoint(crawlerId)` | Efface le point de sortie et le drapeau DNF d'un crawler. | 422 |
-| `gameplay_crawl_boundary.getCrawlerExitPoint(crawlerId)` | Retourne le point où le crawler est sorti de la zone. | 417 |
-| `gameplay_crawl_boundary.getQuadtreeStats()` | Retourne l'état du quadtree pour le debug. | 460 |
-| `gameplay_crawl_boundary.rebuildQuadtree()` | Reconstruit le quadtree à partir des drapeaux suivis (utile si ces objets changent). | 455 |
-| `gameplay_crawl_boundary.resetBoundaryObjects()` | Cache tous les drapeaux suivis (hidden, échelle minimale, couleur transparente) puis vide la table de suivi. | 189 |
-| `gameplay_crawl_boundary.setAnimationTiming(duration, fadeIn, fadeOut, scaleUp)` | Règle les durées d'animation des drapeaux (valeurs par défaut si nil). | 444 |
-| `gameplay_crawl_boundary.setVisibilityRadius(radius)` | Définit le rayon (m) dans lequel les drapeaux sont visibles. | 438 |
-| `gameplay_crawl_boundary.spawnBoundaryMarkers(boundary, spacing)` | Supprime les marqueurs précédents, puis crée des drapeaux le long du contour (un tous les spacing mètres, posés sur le terrain et orientés selon le segment) et construit le quadtree de visibilité. Les drapeaux démarrent cachés. | 204 |
-| `gameplay_crawl_boundary.triggerAppearingAnimation()` | Relance l'animation d'apparition pour les drapeaux actuellement non cachés. | 473 |
-| `gameplay_crawl_boundary.updateBoundaryAnimations(dtSim, crawlStates)` | Met à jour la visibilité et l'animation des drapeaux de limite : ceux proches d'un crawler actif (ou de la caméra si aucun n'est actif) apparaissent, les autres disparaissent. À appeler à chaque image. | 63 |
+| `gameplay_crawl_boundary.checkBoundary(site, crawler, crawlStates)` | Tests whether a crawler is in the zone (vehicle corners or center of its box). Records the exit point, applies the 'dnf' penalty (once) if all corners are outside at 10 m or more from the exit point, or reports a boundary violation. | 318 |
+| `gameplay_crawl_boundary.cleanupBoundaryMarkers()` | Deletes the markers group and empties the tracking. | 306 |
+| `gameplay_crawl_boundary.clearAllExitPoints()` | Clears all exit points and DNF flags. | 431 |
+| `gameplay_crawl_boundary.clearCrawlerExitPoint(crawlerId)` | Clears a crawler's exit point and DNF flag. | 422 |
+| `gameplay_crawl_boundary.getCrawlerExitPoint(crawlerId)` | Returns the point where the crawler left the zone. | 417 |
+| `gameplay_crawl_boundary.getQuadtreeStats()` | Returns the quadtree state for debug. | 460 |
+| `gameplay_crawl_boundary.rebuildQuadtree()` | Rebuilds the quadtree from the tracked flags (useful if these objects change). | 455 |
+| `gameplay_crawl_boundary.resetBoundaryObjects()` | Hides all tracked flags (hidden, minimum scale, transparent color) then empties the tracking table. | 189 |
+| `gameplay_crawl_boundary.setAnimationTiming(duration, fadeIn, fadeOut, scaleUp)` | Sets the flags' animation durations (default values if nil). | 444 |
+| `gameplay_crawl_boundary.setVisibilityRadius(radius)` | Sets the radius (m) within which the flags are visible. | 438 |
+| `gameplay_crawl_boundary.spawnBoundaryMarkers(boundary, spacing)` | Removes the previous markers, then creates flags along the outline (one every spacing meters, placed on the terrain and oriented along the segment) and builds the visibility quadtree. The flags start hidden. | 204 |
+| `gameplay_crawl_boundary.triggerAppearingAnimation()` | Restarts the appearance animation for the flags that are currently not hidden. | 473 |
+| `gameplay_crawl_boundary.updateBoundaryAnimations(dtSim, crawlStates)` | Updates the visibility and animation of the boundary flags: those close to an active crawler (or to the camera if none is active) appear, the others disappear. To be called every frame. | 63 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_crawl_boundary.checkBoundary(site, crawler, crawlStates)`
 
-Teste si un crawler est dans la zone (coins du véhicule ou centre de sa boîte). Enregistre le point de sortie, applique la pénalité 'dnf' (une fois) si tous les coins sont dehors à 10 m ou plus du point de sortie, ou signale une violation de limite.
+Tests whether a crawler is in the zone (vehicle corners or center of its box). Records the exit point, applies the 'dnf' penalty (once) if all corners are outside at 10 m or more from the exit point, or reports a boundary violation.
 
-- `site` (*table*) : Zone avec la méthode containsPoint2D(pos).
-- `crawler` (*table*) : Crawler : id, dynamicData (currentCorners, bbCenter).
-- `crawlStates` (*table<any, table>*) : États des crawlers indexés par id (champ active).
-- **renvoie** : boolean false si le crawler est inactif, disqualifié (DNF) ou si aucun site n'est donné ; true sinon.
+- `site` (*table*) : Zone with the containsPoint2D(pos) method.
+- `crawler` (*table*) : Crawler: id, dynamicData (currentCorners, bbCenter).
+- `crawlStates` (*table<any, table>*) : Crawler states keyed by id (active field).
+- **returns**: boolean false if the crawler is inactive, disqualified (DNF) or if no site is given; true otherwise.
 
 #### `gameplay_crawl_boundary.clearCrawlerExitPoint(crawlerId)`
 
-Efface le point de sortie et le drapeau DNF d'un crawler.
+Clears a crawler's exit point and DNF flag.
 
-- `crawlerId` (*any*) : Id du crawler.
+- `crawlerId` (*any*) : Crawler id.
 
 #### `gameplay_crawl_boundary.getCrawlerExitPoint(crawlerId)`
 
-Retourne le point où le crawler est sorti de la zone.
+Returns the point where the crawler left the zone.
 
-- `crawlerId` (*any*) : Id du crawler.
-- **renvoie** : vec3|nil Point de sortie, ou nil si le crawler est dans la zone.
+- `crawlerId` (*any*) : Crawler id.
+- **returns**: vec3|nil Exit point, or nil if the crawler is in the zone.
 
 #### `gameplay_crawl_boundary.getQuadtreeStats()`
 
-Retourne l'état du quadtree pour le debug.
+Returns the quadtree state for debug.
 
-- **renvoie** : table {built, objectCount, bounds?} (voir notes sur objectCount).
+- **returns**: table {built, objectCount, bounds?} (see notes about objectCount).
 
 #### `gameplay_crawl_boundary.setAnimationTiming(duration, fadeIn, fadeOut, scaleUp)`
 
-Règle les durées d'animation des drapeaux (valeurs par défaut si nil).
+Sets the flags' animation durations (default values if nil).
 
-- `duration` (*number|nil*) : Durée totale d'apparition (s), 0.5 par défaut.
-- `fadeIn` (*number|nil*) : Durée du fondu d'entrée (s), 0.3 par défaut.
-- `fadeOut` (*number|nil*) : Durée du fondu de sortie (s), 0.2 par défaut.
-- `scaleUp` (*number|nil*) : Durée de la montée en échelle (s), 0.4 par défaut.
+- `duration` (*number|nil*) : Total appearance duration (s), 0.5 by default.
+- `fadeIn` (*number|nil*) : Fade-in duration (s), 0.3 by default.
+- `fadeOut` (*number|nil*) : Fade-out duration (s), 0.2 by default.
+- `scaleUp` (*number|nil*) : Scale-up duration (s), 0.4 by default.
 
 #### `gameplay_crawl_boundary.setVisibilityRadius(radius)`
 
-Définit le rayon (m) dans lequel les drapeaux sont visibles.
+Sets the radius (m) within which the flags are visible.
 
-- `radius` (*number|nil*) : Rayon en mètres ; 200 si nil.
+- `radius` (*number|nil*) : Radius in meters; 200 if nil.
 
 #### `gameplay_crawl_boundary.spawnBoundaryMarkers(boundary, spacing)`
 
-Supprime les marqueurs précédents, puis crée des drapeaux le long du contour (un tous les spacing mètres, posés sur le terrain et orientés selon le segment) et construit le quadtree de visibilité. Les drapeaux démarrent cachés.
+Removes the previous markers, then creates flags along the outline (one every spacing meters, placed on the terrain and oriented along the segment) and builds the visibility quadtree. The flags start hidden.
 
-- `boundary` (*table*) : Contour avec vertices (au moins 3), chacun avec pos (vec3) et éventuellement next.
-- `spacing` (*number|nil*) : Distance entre drapeaux en mètres (2.0 par défaut).
-- **renvoie** : integer|nil Id du SimGroup de marqueurs ; nil si le contour est invalide.
+- `boundary` (*table*) : Outline with vertices (at least 3), each with pos (vec3) and optionally next.
+- `spacing` (*number|nil*) : Distance between flags in meters (2.0 by default).
+- **returns**: integer|nil Id of the markers SimGroup; nil if the outline is invalid.
 
 #### `gameplay_crawl_boundary.updateBoundaryAnimations(dtSim, crawlStates)`
 
-Met à jour la visibilité et l'animation des drapeaux de limite : ceux proches d'un crawler actif (ou de la caméra si aucun n'est actif) apparaissent, les autres disparaissent. À appeler à chaque image.
+Updates the visibility and animation of the boundary flags: those close to an active crawler (or to the camera if none is active) appear, the others disappear. To be called every frame.
 
-- `dtSim` (*number*) : Delta temps simulation (s).
-- `crawlStates` (*table<any, table>|nil*) : États des crawlers (active, crawlerData.dynamicData.vehPos).
+- `dtSim` (*number*) : Simulation time delta (s).
+- `crawlStates` (*table<any, table>|nil*) : Crawler states (active, crawlerData.dynamicData.vehPos).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `getUniqueName`
 - `be:` `getSurfaceHeightBelow`
@@ -102,4 +102,4 @@ Met à jour la visibilité et l'animation des drapeaux de limite : ceux proches 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/crawl/boundary.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/crawl/boundary.lua`.*

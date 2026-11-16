@@ -1,0 +1,39 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/touchingStatic.lua",
+  "module": "Nœud « Static Object Touch » (catégorie `repeat_instant`, tags collision/static). Détecte une intersection du véhicule avec des objets statiques ou le terrain, par rayons (`castRayStatic`) lancés depuis le centre vers 8 points (FL, F, FR, R, BR, B, BL, L) de l'OOBB, décalés. Pins d'entrée : `vehId`, `widthOffset`, `lengthOffset`, `heightOffset` (défaut 0,5), `debugMode`. Sorties : `touching`, flux `touchFL/F/FR/R/BR/B/BL/L` (cachés), `isTouching`.",
+  "notes": [
+    "Pas de flux d'entrée ni de sortie `flow` : seulement les sorties de touches.",
+    "Debug : sphères rouge (touché) ou verte dessinées dans `onPreRender`."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Crée les 8 points et les vecteurs de travail.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Libère les points et réinitialise les sorties.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Constructeur ; appelle `reset`.",
+          "internal": true
+        },
+        "onPreRender": {
+          "desc": "Hook de rendu : dessine les sphères de debug si `debugMode` est actif.",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Met toutes les sorties à false et désactive le nœud.",
+          "internal": false
+        },
+        "work": {
+          "desc": "Calcule les 8 points, lance les rayons et remplit les sorties.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

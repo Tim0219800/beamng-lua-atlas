@@ -1,25 +1,25 @@
 # `core_quickAccess`
 
-*Fichier : `lua/ge/extensions/core/quickAccess.lua` · VM : Game Engine (GE) · 2782 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/quickAccess.lua` · VM: Game Engine (GE) · 2782 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_quickAccess` : `extensions.load("core_quickAccess")`, puis la globale `core_quickAccess`
+**Access:** extension `core_quickAccess`: `extensions.load("core_quickAccess")`, then the global `core_quickAccess`
 
-Extension GE `core_quickAccess` : le menu radial (menu rapide) du jeu. Elle garde un arbre de menus (chemins du type '/root/sandbox/other/'), l'assemble à l'ouverture (entrées statiques, générateurs, entrées demandées au véhicule joueur), le positionne sur les 8 emplacements du cercle puis l'envoie à l'interface (guihooks 'radialMenuUpdated', route UI 'radial'). Elle ralentit le temps pendant que le menu est ouvert, mémorise les actions récentes et la configuration des emplacements dynamiques (settings/radialRecentActions.json et settings/radialDynamicSlotSettings.json). Un mod ajoute ses propres boutons avec core_quickAccess.addEntry, de préférence dans le hook onRegisterQuickAccessMenus.
+GE extension `core_quickAccess`: the game's radial menu (quick menu). It keeps a menu tree (paths like '/root/sandbox/other/'), assembles it on opening (static entries, generators, entries requested from the player vehicle), positions it on the 8 slots of the circle then sends it to the UI (guihooks 'radialMenuUpdated', UI route 'radial'). It slows down time while the menu is open, remembers recent actions and the dynamic slot configuration (settings/radialRecentActions.json and settings/radialDynamicSlotSettings.json). A mod adds its own buttons with core_quickAccess.addEntry, preferably in the onRegisterQuickAccessMenus hook.
 
-## Exemple
+## Example
 
 ```lua
--- dans l'extension du mod (GE)
+-- in the mod's extension (GE)
 local M = {}
 local function onRegisterQuickAccessMenus()
   if not core_quickAccess then return end
   core_quickAccess.addEntry({
-    level = '/root/sandbox/other/',   -- sous-menu "Autres"
-    uniqueID = 'monModAction',        -- remplace l'entrée si déjà présente, permet les actions récentes
-    generator = function(entries)     -- appelé à chaque ouverture, ajoute des boutons à `entries`
+    level = '/root/sandbox/other/',   -- "Other" submenu
+    uniqueID = 'monModAction',        -- replaces the entry if already present, enables recent actions
+    generator = function(entries)     -- called on every opening, adds buttons to `entries`
       table.insert(entries, {
-        title = 'Mon action', icon = 'wrench', uniqueID = 'monModAction',
-        onSelect = function() log('I','','clic') return {'hide'} end,
+        title = 'My action', icon = 'wrench', uniqueID = 'monModAction',
+        onSelect = function() log('I','','click') return {'hide'} end,
       })
     end,
   })
@@ -28,265 +28,265 @@ M.onRegisterQuickAccessMenus = onRegisterQuickAccessMenus
 return M
 ```
 
-## Remarques
+## Notes
 
-- COMMENT UN MOD AJOUTE DES ENTRÉES : (1) définir dans son extension GE le hook onRegisterQuickAccessMenus (appelé par registerDefaultMenus au premier onInit de core_quickAccess, après les menus de base) et y appeler core_quickAccess.addEntry(...). (2) Si l'extension est chargée plus tard, appeler addEntry directement ou écouter onQuickAccessLoaded (émis à onExtensionLoaded de quickAccess). Les entrées ajoutées après le premier onInit ne sont prises en compte qu'à la prochaine ouverture du menu (l'arbre est recopié à chaque show). core_quickAccess.registerMenu est obsolète : il se contente de logger une erreur.
-- Arguments de addEntry : `level` (chemin du menu ; défaut '/root/sandbox/general/' ; s'il ne commence pas par '/root/' il est préfixé par '/root/sandbox' ; un '/' final est ajouté) ; soit `generator = function(entries)` qui insère des tables-boutons dans `entries`, soit directement `title` + (`onSelect` ou `goto`). Si `uniqueID` est donné, une entrée existante du même level avec le même uniqueID est remplacée. L'argument est copié par deepcopy : ne pas y mettre d'objets partagés dont l'identité compte, mais les fonctions sont conservées.
-- Champs d'un bouton (lus dans le code) : title (clé de traduction ou texte), desc, icon (nom d'icône ; les anciens noms listés dans ui/assets/iconMappings/iconTags.json sont remplacés avec un avertissement), goto (chemin d'un sous-menu : le bouton devient un dossier), onSelect/onSecondarySelect/onTertiarySelect(item) pour les actions 1, 2, 3, onDeselect/onSecondaryDeselect/onTertiaryDeselect(item) au relâchement, startSlot/endSlot (position), priority, uniqueID, enabled (défaut true), categoryOrder (pour les catégories), ignoreAsRecentAction, ignoreForCheckingIfMenuIsEmpty, contextAction (fonction, appelée par contextAction()), dynamicSlot = {id=...}.
-- Valeur de retour de onSelect/onDeselect : une table dont le 1er élément est l'ordre : {'hide'} ferme le menu, {'reload'} le reconstruit, {'goto', chemin} ouvre un sous-menu, {'back'} revient, {'hideMeOnly'} ferme, {'temporaryHide'} masque l'interface en remettant le temps normal (pour viser/cliquer), {'temporaryUnhide'} la réaffiche et ralentit de nouveau, {'hideAndIgnoreSlowmotion'} ferme sans restaurer le temps. Tout autre retour (nil compris) est loggé comme erreur 'invalid item result args' : toujours renvoyer une table.
-- Emplacements du cercle (maxSlotAmount = 8) : 1 gauche, 3 haut, 5 droite, 7 bas, 2/4/6/8 diagonales. startSlot seul = 1 case ; startSlot + endSlot = bouton large couvrant la plage. Deux boutons aux emplacements qui se chevauchent : le second perd sa position avec un avertissement. Les boutons sans emplacement sont répartis dans les trous. Plus de boutons que de place restent possibles (ils rétrécissent).
-- Les niveaux racines valides sont '/root/playerVehicle/' (actions véhicule, défaut '/root/playerVehicle/general/') et '/root/sandbox/' (défaut '/root/sandbox/quick/'; remplacé par '/root/sandbox/career/' en carrière et '/root/sandbox/mission/' pendant un défi). Catégories sandbox de base : other, funStuff, repair, quick, mission, career, vehicles, traffic, ai. Les boutons goto manquants entre niveaux sont ajoutés automatiquement (titre via toNiceName, icône 'material_traffic'). Un niveau vide (aucun bouton utile) est retiré de l'arbre sauf les chemins protégés.
-- Les entrées côté véhicule (VM véhicule) passent par vehicle/extensions core_quickAccess.requestItems : à l'ouverture le GE envoie requestItems(level) au véhicule joueur et attend jusqu'à 4 frames GFX (vehicleWaitFrames). Au-delà, onUpdate affiche le menu quand même avec une erreur 'vehicle didn't respond in time'. Le véhicule rappelle vehicleItemsCallback(objID, level, tree). Les sélections d'items venant du véhicule sont renvoyées à son extension via selectItem.
-- Emplacements dynamiques (dynamicSlot) : emplacements configurables par le joueur (ids comme root_up, sandbox_left, vehicle_down, funstuff_left...) avec un mode 'recentActions', 'uniqueAction' (action précise identifiée par level + uniqueID) ou 'empty'. Seules les actions ayant un uniqueID et sans ignoreAsRecentAction sont mémorisées comme actions récentes (10 max pour 'all'). Donner un uniqueID stable permet donc à un mod d'apparaître dans ces emplacements.
-- Bug probable : dans _assembleMenuComplete, `if not item.title then item.title = toNiceName(str) end` utilise une variable `str` jamais définie (nil), donc une catégorie sans title provoquerait une erreur dans toNiceName (déduit du code).
-- Incohérence : au chargement, `recentActions` ne contient que la catégorie 'all', mais clearRecentActions() la remplace par une table avec playerVehicle, sandbox, other et all.
-- Dans selectItem et contextAction, si l'item n'existe pas, l'erreur est loggée mais le code continue : selectItem appelle itemAction(nil) (ignoré) mais contextAction lit m.contextAction sur nil et plante.
-- Dépendances chargées avant : core_vehicleTriggers, core_funstuff. Le module utilise aussi le global ui_imgui (im) et lit settings/radialFavorites.json comme nom (variable safeFile non utilisée dans les parties lues).
+- HOW A MOD ADDS ENTRIES: (1) define the onRegisterQuickAccessMenus hook in your GE extension (called by registerDefaultMenus at the first onInit of core_quickAccess, after the base menus) and call core_quickAccess.addEntry(...) in it. (2) If the extension is loaded later, call addEntry directly or listen to onQuickAccessLoaded (emitted at quickAccess's onExtensionLoaded). Entries added after the first onInit are only taken into account the next time the menu is opened (the tree is copied on every show). core_quickAccess.registerMenu is deprecated: it just logs an error.
+- Arguments of addEntry: `level` (menu path; default '/root/sandbox/general/'; if it does not start with '/root/' it is prefixed with '/root/sandbox'; a trailing '/' is added); either `generator = function(entries)` which inserts button tables into `entries`, or directly `title` + (`onSelect` or `goto`). If `uniqueID` is given, an existing entry of the same level with the same uniqueID is replaced. The argument is copied by deepcopy: do not put shared objects whose identity matters in it, but functions are kept.
+- Button fields (read in the code): title (translation key or text), desc, icon (icon name; old names listed in ui/assets/iconMappings/iconTags.json are replaced with a warning), goto (submenu path: the button becomes a folder), onSelect/onSecondarySelect/onTertiarySelect(item) for actions 1, 2, 3, onDeselect/onSecondaryDeselect/onTertiaryDeselect(item) on release, startSlot/endSlot (position), priority, uniqueID, enabled (default true), categoryOrder (for categories), ignoreAsRecentAction, ignoreForCheckingIfMenuIsEmpty, contextAction (function, called by contextAction()), dynamicSlot = {id=...}.
+- Return value of onSelect/onDeselect: a table whose 1st element is the command: {'hide'} closes the menu, {'reload'} rebuilds it, {'goto', path} opens a submenu, {'back'} goes back, {'hideMeOnly'} closes, {'temporaryHide'} hides the UI while restoring normal time (to aim/click), {'temporaryUnhide'} shows it again and slows down again, {'hideAndIgnoreSlowmotion'} closes without restoring time. Any other return (nil included) is logged as an 'invalid item result args' error: always return a table.
+- Circle slots (maxSlotAmount = 8): 1 left, 3 top, 5 right, 7 bottom, 2/4/6/8 diagonals. startSlot alone = 1 slot; startSlot + endSlot = wide button covering the range. Two buttons at overlapping slots: the second loses its position with a warning. Buttons without a slot are distributed in the gaps. More buttons than room are still possible (they shrink).
+- The valid root levels are '/root/playerVehicle/' (vehicle actions, default '/root/playerVehicle/general/') and '/root/sandbox/' (default '/root/sandbox/quick/'; replaced by '/root/sandbox/career/' in career and '/root/sandbox/mission/' during a challenge). Base sandbox categories: other, funStuff, repair, quick, mission, career, vehicles, traffic, ai. Missing goto buttons between levels are added automatically (title via toNiceName, icon 'material_traffic'). An empty level (no useful button) is removed from the tree except protected paths.
+- Vehicle-side entries (vehicle VM) go through vehicle/extensions core_quickAccess.requestItems: on opening the GE sends requestItems(level) to the player vehicle and waits up to 4 GFX frames (vehicleWaitFrames). After that, onUpdate displays the menu anyway with a 'vehicle didn't respond in time' error. The vehicle calls back vehicleItemsCallback(objID, level, tree). Item selections coming from the vehicle are sent back to its extension via selectItem.
+- Dynamic slots (dynamicSlot): slots configurable by the player (ids like root_up, sandbox_left, vehicle_down, funstuff_left...) with a mode 'recentActions', 'uniqueAction' (specific action identified by level + uniqueID) or 'empty'. Only actions with a uniqueID and without ignoreAsRecentAction are remembered as recent actions (10 max for 'all'). Giving a stable uniqueID therefore lets a mod appear in these slots.
+- Probable bug: in _assembleMenuComplete, `if not item.title then item.title = toNiceName(str) end` uses a variable `str` that is never defined (nil), so a category without a title would cause an error in toNiceName (inferred from code).
+- Inconsistency: at load, `recentActions` only contains the 'all' category, but clearRecentActions() replaces it with a table with playerVehicle, sandbox, other and all.
+- In selectItem and contextAction, if the item does not exist, the error is logged but the code continues: selectItem calls itemAction(nil) (ignored) but contextAction reads m.contextAction on nil and crashes.
+- Dependencies loaded beforehand: core_vehicleTriggers, core_funstuff. The module also uses the global ui_imgui (im) and reads settings/radialFavorites.json as a name (variable safeFile not used in the parts read).
 
-**Dépendances (chargées avant) :** `core_vehicleTriggers`, `core_funstuff`
+**Dependencies (loaded first):** `core_vehicleTriggers`, `core_funstuff`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_quickAccess.addEntry(_args)` | Ajoute (ou remplace, si uniqueID identique au même level) une entrée dans l'arbre du menu radial. Voir notes pour tous les champs. Renvoie false seulement si `level` n'est pas une chaîne ; un avertissement est loggé si l'entrée n'a ni générateur, ni title avec onSelect/goto, mais l'entrée est quand même ajoutée. | 619 |
-| `core_quickAccess.adjustCruiseSpeed(direction)` | Callback de l'interface : demande au véhicule joueur d'ajuster la vitesse du régulateur (extension côté véhicule). *(interne)* | 2480 |
-| `core_quickAccess.back()` | Revient au niveau précédent (historique), ou au niveau parent selon le chemin si l'historique est vide. | 2182 |
-| `core_quickAccess.beginRouteHandoff()` | Marque le passage du menu radial vers un écran enfant (ex. radial.mirrors) sans vraie fermeture, et masque temporairement l'interface. *(interne)* | 2219 |
-| `core_quickAccess.clearRecentActions()` | Efface l'historique des actions récentes et émet onQuickAccessClearRecentActions. | 2279 |
-| `core_quickAccess.contextAction(id, buttonDown, actionIndex)` | Appelée par l'interface pour l'action contextuelle d'un bouton (ex. ouvrir la configuration d'un emplacement dynamique). *(interne)* | 2499 |
-| `core_quickAccess.endRouteHandoff()` | Termine le handoff et réaffiche le menu (temps ralenti de nouveau). *(interne)* | 2224 |
-| `core_quickAccess.finishRouteHandoffExit()` | Nettoie l'état radial quand un écran enfant retourne directement au jeu, sans renaviguer vers 'play'. *(interne)* | 2237 |
-| `core_quickAccess.getDynamicSlotConfigurationData()` | Prépare pour l'interface les données de configuration de l'emplacement ouvert par openDynamicSlotConfigurator (arbre de menus et réglage courant). Plante si aucun emplacement n'a été ouvert. *(interne)* | 467 |
-| `core_quickAccess.getMostRecentAvailableActions(category, limit, dynamicItems)` | Renvoie les actions récentes (de la catégorie donnée) encore disponibles dans le menu, hors celles déjà affectées à un emplacement 'uniqueAction', limitées à `limit`. *(interne)* | 1897 |
-| `core_quickAccess.getMovedRadialLastTimeMs()` | Renvoie l'instant (ms système) du dernier appel de moved(). *(interne)* | 2537 |
-| `core_quickAccess.getUiData()` | Renvoie les données envoyées à l'interface du menu : canGoBack, items, categories, pathBeforeCategory, selectedCategory, backButtonIndex, currentLevel, breadcrumbs, menuIcon, hasLRShoulderButtons, tutorialHighlightTargets. *(interne)* | 1765 |
-| `core_quickAccess.getVehicleName(veh)` | Construit un nom lisible du véhicule : marque, nom et configuration d'après core_vehicles.getModel ; sinon le nom JBeam. | 2660 |
-| `core_quickAccess.gotoLevel(level)` | Va vers un autre niveau de menu en empilant le niveau actuel dans l'historique (pour back). | 2138 |
-| `core_quickAccess.isEnabled()` | Indique si le menu radial est actuellement affiché. | 275 |
-| `core_quickAccess.isRouteHandoffActive()` | Indique si un handoff vers un écran enfant est en cours. *(interne)* | 2230 |
-| `core_quickAccess.moved()` | Enregistre l'instant actuel comme dernier mouvement du curseur radial (appelé par l'interface). *(interne)* | 2541 |
-| `core_quickAccess.onBeforeBigMapActivated()` | Avant l'ouverture de la grande carte : ferme le menu radial. *(interne)* *(hook)* | 2656 |
-| `core_quickAccess.onClientEndMission()` | À la fin d'un niveau : sauvegarde les actions récentes. *(interne)* *(hook)* | 2632 |
-| `core_quickAccess.onExit()` | À la fermeture du jeu : sauvegarde les actions récentes. *(interne)* *(hook)* | 2628 |
-| `core_quickAccess.onExtensionLoaded()` | Au chargement : émet onQuickAccessLoaded, lit les actions récentes et les réglages d'emplacements dynamiques. *(interne)* *(hook)* | 2618 |
-| `core_quickAccess.onExtensionUnloaded()` | Au déchargement : sauvegarde les actions récentes. *(interne)* *(hook)* | 2624 |
-| `core_quickAccess.onInit()` | Hook d'initialisation de l'extension : au premier appel enregistre les menus par défaut (puis émet onRegisterQuickAccessMenus), puis ferme le menu. *(interne)* *(hook)* | 2471 |
-| `core_quickAccess.onSerialize()` | Avant un rechargement Lua : ferme le menu et sauvegarde actions récentes et emplacements dynamiques. *(interne)* *(hook)* | 2650 |
-| `core_quickAccess.onUiChangedState(toState)` | Quand la route UI change : si une autre route prend le dessus pendant que le menu est visible, le ferme sans naviguer ; termine aussi un handoff quand l'état devient 'play'. *(interne)* *(hook)* | 2640 |
-| `core_quickAccess.onUpdate()` | Appelé à chaque frame GFX : gère le délai d'attente des entrées du véhicule (4 frames) et force l'assemblage si le véhicule ne répond pas. *(interne)* *(hook)* | 2590 |
-| `core_quickAccess.onVehicleSpawned()` | Quand un véhicule apparaît : sauvegarde les actions récentes. *(interne)* *(hook)* | 2636 |
-| `core_quickAccess.onVehicleSwitched()` | Au changement de véhicule joueur : recharge le menu s'il est ouvert. *(interne)* *(hook)* | 2611 |
-| `core_quickAccess.openDynamicSlotConfigurator(dynamicSlotKey)` | Ouvre l'écran de configuration d'un emplacement dynamique (guihooks 'OpenDynamicSlotConfigurator', hook onOpenDynamicSlotConfigurator). | 460 |
-| `core_quickAccess.registerMenu()` | Obsolète : logge une erreur demandant d'utiliser addEntry, ne fait rien d'autre. | 2754 |
-| `core_quickAccess.reload()` | Reconstruit et réaffiche le niveau courant (si le menu est ouvert). | 2178 |
-| `core_quickAccess.resetDynamicSlotSettings()` | Restaure la configuration par défaut des emplacements dynamiques, la sauvegarde et émet onQuickAccessResetDynamicSlotSettings. | 347 |
-| `core_quickAccess.resetSlowMoFactor()` | Remet le facteur de ralenti à sa valeur d'origine (0.01). | 26 |
-| `core_quickAccess.selectItem(id, buttonDown, actionIndex)` | Appelée par l'interface quand le joueur appuie/relâche un bouton : exécute l'action de l'item d'index id dans le menu courant. *(interne)* | 2488 |
-| `core_quickAccess.setDynamicSlotConfiguration(dynamicSlotKey, data)` | Enregistre le choix du joueur pour un emplacement dynamique (modes uniqueAction, recentActions ou empty), émet les hooks onQuickAccessSetUniqueAction / SetRecentActions / SetEmpty puis onQuickAccessSetDynamicSlotConfiguration, sauvegarde et recharge le menu. | 534 |
-| `core_quickAccess.setEnabled(enabled, level, force)` | Ouvre ou ferme le menu. L'ouverture n'a lieu que si l'état UI est 'play' ou inconnu, ou si le menu est déjà visible, ou si force. Émet le hook onQuickAccessOpened(level). La fermeture est ignorée pendant un route handoff. | 2511 |
-| `core_quickAccess.setSlowMoFactor(factor)` | Définit le facteur de temps (simTimeAuthority) appliqué pendant que le menu radial est ouvert. 0.01 par défaut. | 25 |
-| `core_quickAccess.setTutorialHighlightTargets(targets)` | Définit la liste d'identifiants à mettre en évidence dans le menu (tutoriel). Les valeurs non chaînes, vides ou en double sont filtrées. Rafraîchit l'interface si visible. | 1769 |
-| `core_quickAccess.toNiceName(str)` | Transforme un identifiant en nom lisible : '_' devient espace, espace avant chaque majuscule collée à une minuscule, première lettre de chaque mot en majuscule, reste en minuscules. | 562 |
-| `core_quickAccess.toggle(level)` | Ouvre le menu s'il est fermé, le ferme sinon. Utilisée par l'action 'toggleRadialMenuMulti'. | 2528 |
-| `core_quickAccess.tryAction(action)` | Exécute une action liée aux touches du menu parmi : toggleBigMap, toggleRadialMenuMulti, recoverVehicle, resetVehicle, activateStarterMotor. Ignorée si core_input_actionFilter la bloque ; une action inconnue est loggée en erreur. | 2719 |
-| `core_quickAccess.vehicleItemSelectCallback(objID, args)` | Rappel du véhicule après exécution d'une action d'item : traite l'ordre renvoyé ({'hide'}, {'goto', ...}, etc.). *(interne)* | 2605 |
-| `core_quickAccess.vehicleItemsCallback(objID, level, vehicleMenuTree)` | Rappel du véhicule joueur avec ses entrées de menu pour un niveau : les mémorise et affiche le menu. *(interne)* | 2125 |
+| `core_quickAccess.addEntry(_args)` | Adds (or replaces, if same uniqueID at the same level) an entry in the radial menu tree. See notes for all fields. Returns false only if `level` is not a string; a warning is logged if the entry has neither generator, nor title with onSelect/goto, but the entry is still added. | 619 |
+| `core_quickAccess.adjustCruiseSpeed(direction)` | UI callback: asks the player vehicle to adjust the cruise control speed (vehicle-side extension). *(internal)* | 2480 |
+| `core_quickAccess.back()` | Goes back to the previous level (history), or to the parent level according to the path if the history is empty. | 2182 |
+| `core_quickAccess.beginRouteHandoff()` | Marks the transition from the radial menu to a child screen (e.g. radial.mirrors) without a real close, and temporarily hides the UI. *(internal)* | 2219 |
+| `core_quickAccess.clearRecentActions()` | Clears the recent actions history and emits onQuickAccessClearRecentActions. | 2279 |
+| `core_quickAccess.contextAction(id, buttonDown, actionIndex)` | Called by the UI for a button's context action (e.g. opening the configuration of a dynamic slot). *(internal)* | 2499 |
+| `core_quickAccess.endRouteHandoff()` | Ends the handoff and shows the menu again (time slowed down again). *(internal)* | 2224 |
+| `core_quickAccess.finishRouteHandoffExit()` | Cleans up the radial state when a child screen returns directly to the game, without navigating back to 'play'. *(internal)* | 2237 |
+| `core_quickAccess.getDynamicSlotConfigurationData()` | Prepares for the UI the configuration data of the slot opened by openDynamicSlotConfigurator (menu tree and current setting). Crashes if no slot has been opened. *(internal)* | 467 |
+| `core_quickAccess.getMostRecentAvailableActions(category, limit, dynamicItems)` | Returns the recent actions (of the given category) still available in the menu, excluding those already assigned to a 'uniqueAction' slot, limited to `limit`. *(internal)* | 1897 |
+| `core_quickAccess.getMovedRadialLastTimeMs()` | Returns the time (system ms) of the last call to moved(). *(internal)* | 2537 |
+| `core_quickAccess.getUiData()` | Returns the data sent to the menu UI: canGoBack, items, categories, pathBeforeCategory, selectedCategory, backButtonIndex, currentLevel, breadcrumbs, menuIcon, hasLRShoulderButtons, tutorialHighlightTargets. *(internal)* | 1765 |
+| `core_quickAccess.getVehicleName(veh)` | Builds a readable vehicle name: brand, name and configuration from core_vehicles.getModel; otherwise the JBeam name. | 2660 |
+| `core_quickAccess.gotoLevel(level)` | Goes to another menu level, pushing the current level onto the history (for back). | 2138 |
+| `core_quickAccess.isEnabled()` | Indicates whether the radial menu is currently displayed. | 275 |
+| `core_quickAccess.isRouteHandoffActive()` | Indicates whether a handoff to a child screen is in progress. *(internal)* | 2230 |
+| `core_quickAccess.moved()` | Records the current time as the last movement of the radial cursor (called by the UI). *(internal)* | 2541 |
+| `core_quickAccess.onBeforeBigMapActivated()` | Before the big map opens: closes the radial menu. *(internal)* *(hook)* | 2656 |
+| `core_quickAccess.onClientEndMission()` | At the end of a level: saves the recent actions. *(internal)* *(hook)* | 2632 |
+| `core_quickAccess.onExit()` | When the game closes: saves the recent actions. *(internal)* *(hook)* | 2628 |
+| `core_quickAccess.onExtensionLoaded()` | On load: emits onQuickAccessLoaded, reads the recent actions and the dynamic slot settings. *(internal)* *(hook)* | 2618 |
+| `core_quickAccess.onExtensionUnloaded()` | On unload: saves the recent actions. *(internal)* *(hook)* | 2624 |
+| `core_quickAccess.onInit()` | Extension initialization hook: on the first call registers the default menus (then emits onRegisterQuickAccessMenus), then closes the menu. *(internal)* *(hook)* | 2471 |
+| `core_quickAccess.onSerialize()` | Before a Lua reload: closes the menu and saves recent actions and dynamic slots. *(internal)* *(hook)* | 2650 |
+| `core_quickAccess.onUiChangedState(toState)` | When the UI route changes: if another route takes over while the menu is visible, closes it without navigating; also ends a handoff when the state becomes 'play'. *(internal)* *(hook)* | 2640 |
+| `core_quickAccess.onUpdate()` | Called every GFX frame: handles the wait delay for the vehicle's entries (4 frames) and forces assembly if the vehicle does not respond. *(internal)* *(hook)* | 2590 |
+| `core_quickAccess.onVehicleSpawned()` | When a vehicle spawns: saves the recent actions. *(internal)* *(hook)* | 2636 |
+| `core_quickAccess.onVehicleSwitched()` | When the player vehicle changes: reloads the menu if it is open. *(internal)* *(hook)* | 2611 |
+| `core_quickAccess.openDynamicSlotConfigurator(dynamicSlotKey)` | Opens the configuration screen of a dynamic slot (guihooks 'OpenDynamicSlotConfigurator', hook onOpenDynamicSlotConfigurator). | 460 |
+| `core_quickAccess.registerMenu()` | Deprecated: logs an error asking to use addEntry, does nothing else. | 2754 |
+| `core_quickAccess.reload()` | Rebuilds and redisplays the current level (if the menu is open). | 2178 |
+| `core_quickAccess.resetDynamicSlotSettings()` | Restores the default configuration of the dynamic slots, saves it and emits onQuickAccessResetDynamicSlotSettings. | 347 |
+| `core_quickAccess.resetSlowMoFactor()` | Resets the slow-motion factor to its original value (0.01). | 26 |
+| `core_quickAccess.selectItem(id, buttonDown, actionIndex)` | Called by the UI when the player presses/releases a button: runs the action of the item with index id in the current menu. *(internal)* | 2488 |
+| `core_quickAccess.setDynamicSlotConfiguration(dynamicSlotKey, data)` | Saves the player's choice for a dynamic slot (modes uniqueAction, recentActions or empty), emits the hooks onQuickAccessSetUniqueAction / SetRecentActions / SetEmpty then onQuickAccessSetDynamicSlotConfiguration, saves and reloads the menu. | 534 |
+| `core_quickAccess.setEnabled(enabled, level, force)` | Opens or closes the menu. Opening only happens if the UI state is 'play' or unknown, or if the menu is already visible, or if force. Emits the onQuickAccessOpened(level) hook. Closing is ignored during a route handoff. | 2511 |
+| `core_quickAccess.setSlowMoFactor(factor)` | Sets the time factor (simTimeAuthority) applied while the radial menu is open. 0.01 by default. | 25 |
+| `core_quickAccess.setTutorialHighlightTargets(targets)` | Sets the list of identifiers to highlight in the menu (tutorial). Non-string, empty or duplicate values are filtered out. Refreshes the UI if visible. | 1769 |
+| `core_quickAccess.toNiceName(str)` | Turns an identifier into a readable name: '_' becomes a space, a space before each capital stuck to a lowercase letter, first letter of each word capitalized, the rest lowercase. | 562 |
+| `core_quickAccess.toggle(level)` | Opens the menu if it is closed, closes it otherwise. Used by the 'toggleRadialMenuMulti' action. | 2528 |
+| `core_quickAccess.tryAction(action)` | Runs an action tied to the menu keys among: toggleBigMap, toggleRadialMenuMulti, recoverVehicle, resetVehicle, activateStarterMotor. Ignored if core_input_actionFilter blocks it; an unknown action is logged as an error. | 2719 |
+| `core_quickAccess.vehicleItemSelectCallback(objID, args)` | Callback from the vehicle after an item action has run: processes the returned command ({'hide'}, {'goto', ...}, etc.). *(internal)* | 2605 |
+| `core_quickAccess.vehicleItemsCallback(objID, level, vehicleMenuTree)` | Callback from the player vehicle with its menu entries for a level: stores them and displays the menu. *(internal)* | 2125 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_quickAccess.addEntry(_args)`
 
-Ajoute (ou remplace, si uniqueID identique au même level) une entrée dans l'arbre du menu radial. Voir notes pour tous les champs. Renvoie false seulement si `level` n'est pas une chaîne ; un avertissement est loggé si l'entrée n'a ni générateur, ni title avec onSelect/goto, mais l'entrée est quand même ajoutée.
+Adds (or replaces, if same uniqueID at the same level) an entry in the radial menu tree. See notes for all fields. Returns false only if `level` is not a string; a warning is logged if the entry has neither generator, nor title with onSelect/goto, but the entry is still added.
 
 - `_args` (*table*) : { level, generator | (title, onSelect|goto, icon, desc, uniqueID, priority, startSlot, endSlot, ... ) }
-- **renvoie** : boolean true si ajoutée, false si level invalide.
+- **returns**: boolean true if added, false if level is invalid.
 
 #### `core_quickAccess.adjustCruiseSpeed(direction)`
 
-Callback de l'interface : demande au véhicule joueur d'ajuster la vitesse du régulateur (extension côté véhicule).
+UI callback: asks the player vehicle to adjust the cruise control speed (vehicle-side extension).
 
-- `direction` (*number*) : Positif = augmenter, négatif = diminuer ; 0 ou non-nombre ignoré.
+- `direction` (*number*) : Positive = increase, negative = decrease; 0 or non-number ignored.
 
 #### `core_quickAccess.back()`
 
-Revient au niveau précédent (historique), ou au niveau parent selon le chemin si l'historique est vide.
+Goes back to the previous level (history), or to the parent level according to the path if the history is empty.
 
-- **renvoie** : boolean true si on a changé de niveau, false sinon (menu fermé ou déjà en haut).
+- **returns**: boolean true if the level changed, false otherwise (menu closed or already at the top).
 
 #### `core_quickAccess.contextAction(id, buttonDown, actionIndex)`
 
-Appelée par l'interface pour l'action contextuelle d'un bouton (ex. ouvrir la configuration d'un emplacement dynamique).
+Called by the UI for a button's context action (e.g. opening the configuration of a dynamic slot).
 
-- `id` (*integer*) : Indice de l'item.
-- `buttonDown` (*boolean*) : Non utilisé (déduit du code).
-- `actionIndex` (*integer|nil*) : Non utilisé (déduit du code).
+- `id` (*integer*) : Item index.
+- `buttonDown` (*boolean*) : Unused (inferred from code).
+- `actionIndex` (*integer|nil*) : Unused (inferred from code).
 
 #### `core_quickAccess.getDynamicSlotConfigurationData()`
 
-Prépare pour l'interface les données de configuration de l'emplacement ouvert par openDynamicSlotConfigurator (arbre de menus et réglage courant). Plante si aucun emplacement n'a été ouvert.
+Prepares for the UI the configuration data of the slot opened by openDynamicSlotConfigurator (menu tree and current setting). Crashes if no slot has been opened.
 
-- **renvoie** : table Données pour l'interface.
+- **returns**: table Data for the UI.
 
 #### `core_quickAccess.getMostRecentAvailableActions(category, limit, dynamicItems)`
 
-Renvoie les actions récentes (de la catégorie donnée) encore disponibles dans le menu, hors celles déjà affectées à un emplacement 'uniqueAction', limitées à `limit`.
+Returns the recent actions (of the given category) still available in the menu, excluding those already assigned to a 'uniqueAction' slot, limited to `limit`.
 
-- `category` (*string*) : Catégorie (ex. 'all').
-- `limit` (*integer|nil*) : Nombre max ; nil ou 0 renvoie {}.
-- `dynamicItems` (*table[]|nil*) : Items de type dynamicSlot du niveau courant.
-- **renvoie** : table[] Enregistrements { uniqueID, level, title, timestamp, icon }.
+- `category` (*string*) : Category (e.g. 'all').
+- `limit` (*integer|nil*) : Max number; nil or 0 returns {}.
+- `dynamicItems` (*table[]|nil*) : dynamicSlot-type items of the current level.
+- **returns**: table[] Records { uniqueID, level, title, timestamp, icon }.
 
 #### `core_quickAccess.getMovedRadialLastTimeMs()`
 
-Renvoie l'instant (ms système) du dernier appel de moved().
+Returns the time (system ms) of the last call to moved().
 
-- **renvoie** : number Millisecondes (0 si jamais).
+- **returns**: number Milliseconds (0 if never).
 
 #### `core_quickAccess.getUiData()`
 
-Renvoie les données envoyées à l'interface du menu : canGoBack, items, categories, pathBeforeCategory, selectedCategory, backButtonIndex, currentLevel, breadcrumbs, menuIcon, hasLRShoulderButtons, tutorialHighlightTargets.
+Returns the data sent to the menu UI: canGoBack, items, categories, pathBeforeCategory, selectedCategory, backButtonIndex, currentLevel, breadcrumbs, menuIcon, hasLRShoulderButtons, tutorialHighlightTargets.
 
-- **renvoie** : table|nil uiData, nil avant la première ouverture.
+- **returns**: table|nil uiData, nil before the first opening.
 
 #### `core_quickAccess.getVehicleName(veh)`
 
-Construit un nom lisible du véhicule : marque, nom et configuration d'après core_vehicles.getModel ; sinon le nom JBeam.
+Builds a readable vehicle name: brand, name and configuration from core_vehicles.getModel; otherwise the JBeam name.
 
-- `veh` (*userdata|nil*) : Objet véhicule ; nil renvoie la clé de traduction 'ui.radialmenu2.noVehicle'.
-- **renvoie** : string Nom du véhicule.
+- `veh` (*userdata|nil*) : Vehicle object; nil returns the translation key 'ui.radialmenu2.noVehicle'.
+- **returns**: string Vehicle name.
 
 #### `core_quickAccess.gotoLevel(level)`
 
-Va vers un autre niveau de menu en empilant le niveau actuel dans l'historique (pour back).
+Goes to another menu level, pushing the current level onto the history (for back).
 
-- `level` (*string*) : Chemin du niveau cible.
+- `level` (*string*) : Path of the target level.
 
 #### `core_quickAccess.isEnabled()`
 
-Indique si le menu radial est actuellement affiché.
+Indicates whether the radial menu is currently displayed.
 
-- **renvoie** : boolean true si l'interface radiale est visible.
+- **returns**: boolean true if the radial UI is visible.
 
 #### `core_quickAccess.isRouteHandoffActive()`
 
-Indique si un handoff vers un écran enfant est en cours.
+Indicates whether a handoff to a child screen is in progress.
 
-- **renvoie** : boolean true si actif.
+- **returns**: boolean true if active.
 
 #### `core_quickAccess.onUiChangedState(toState)`
 
-Quand la route UI change : si une autre route prend le dessus pendant que le menu est visible, le ferme sans naviguer ; termine aussi un handoff quand l'état devient 'play'.
+When the UI route changes: if another route takes over while the menu is visible, closes it without navigating; also ends a handoff when the state becomes 'play'.
 
-- `toState` (*string*) : Nouvel état/route UI.
+- `toState` (*string*) : New UI state/route.
 
 #### `core_quickAccess.openDynamicSlotConfigurator(dynamicSlotKey)`
 
-Ouvre l'écran de configuration d'un emplacement dynamique (guihooks 'OpenDynamicSlotConfigurator', hook onOpenDynamicSlotConfigurator).
+Opens the configuration screen of a dynamic slot (guihooks 'OpenDynamicSlotConfigurator', hook onOpenDynamicSlotConfigurator).
 
-- `dynamicSlotKey` (*string*) : Id de l'emplacement (ex. 'root_up').
+- `dynamicSlotKey` (*string*) : Slot id (e.g. 'root_up').
 
 #### `core_quickAccess.selectItem(id, buttonDown, actionIndex)`
 
-Appelée par l'interface quand le joueur appuie/relâche un bouton : exécute l'action de l'item d'index id dans le menu courant.
+Called by the UI when the player presses/releases a button: runs the action of the item with index id in the current menu.
 
-- `id` (*integer*) : Indice (base 1) de l'item dans currentMenuItems.
-- `buttonDown` (*boolean*) : true à l'appui, false au relâchement.
-- `actionIndex` (*integer|nil*) : 1 = principale, 2 = secondaire, 3 = tertiaire (défaut 1).
+- `id` (*integer*) : Index (1-based) of the item in currentMenuItems.
+- `buttonDown` (*boolean*) : true on press, false on release.
+- `actionIndex` (*integer|nil*) : 1 = primary, 2 = secondary, 3 = tertiary (default 1).
 
 #### `core_quickAccess.setDynamicSlotConfiguration(dynamicSlotKey, data)`
 
-Enregistre le choix du joueur pour un emplacement dynamique (modes uniqueAction, recentActions ou empty), émet les hooks onQuickAccessSetUniqueAction / SetRecentActions / SetEmpty puis onQuickAccessSetDynamicSlotConfiguration, sauvegarde et recharge le menu.
+Saves the player's choice for a dynamic slot (modes uniqueAction, recentActions or empty), emits the hooks onQuickAccessSetUniqueAction / SetRecentActions / SetEmpty then onQuickAccessSetDynamicSlotConfiguration, saves and reloads the menu.
 
-- `dynamicSlotKey` (*string*) : Id de l'emplacement.
-- `data` (*table*) : { mode, uniqueID, level } ou { mode, category }.
+- `dynamicSlotKey` (*string*) : Slot id.
+- `data` (*table*) : { mode, uniqueID, level } or { mode, category }.
 
 #### `core_quickAccess.setEnabled(enabled, level, force)`
 
-Ouvre ou ferme le menu. L'ouverture n'a lieu que si l'état UI est 'play' ou inconnu, ou si le menu est déjà visible, ou si force. Émet le hook onQuickAccessOpened(level). La fermeture est ignorée pendant un route handoff.
+Opens or closes the menu. Opening only happens if the UI state is 'play' or unknown, or if the menu is already visible, or if force. Emits the onQuickAccessOpened(level) hook. Closing is ignored during a route handoff.
 
-- `enabled` (*boolean*) : true pour ouvrir, false pour fermer.
-- `level` (*string|nil*) : Niveau à ouvrir (ex. '/root/sandbox/other/') ; nil = '/root/'.
-- `force` (*boolean|nil*) : Ouvre même si un autre écran est actif.
+- `enabled` (*boolean*) : true to open, false to close.
+- `level` (*string|nil*) : Level to open (e.g. '/root/sandbox/other/'); nil = '/root/'.
+- `force` (*boolean|nil*) : Opens even if another screen is active.
 
 #### `core_quickAccess.setSlowMoFactor(factor)`
 
-Définit le facteur de temps (simTimeAuthority) appliqué pendant que le menu radial est ouvert. 0.01 par défaut.
+Sets the time factor (simTimeAuthority) applied while the radial menu is open. 0.01 by default.
 
-- `factor` (*number*) : Facteur de vitesse de simulation (1 = temps réel).
+- `factor` (*number*) : Simulation speed factor (1 = real time).
 
 #### `core_quickAccess.setTutorialHighlightTargets(targets)`
 
-Définit la liste d'identifiants à mettre en évidence dans le menu (tutoriel). Les valeurs non chaînes, vides ou en double sont filtrées. Rafraîchit l'interface si visible.
+Sets the list of identifiers to highlight in the menu (tutorial). Non-string, empty or duplicate values are filtered out. Refreshes the UI if visible.
 
-- `targets` (*string[]*) : Identifiants de cibles.
+- `targets` (*string[]*) : Target identifiers.
 
 #### `core_quickAccess.toNiceName(str)`
 
-Transforme un identifiant en nom lisible : '_' devient espace, espace avant chaque majuscule collée à une minuscule, première lettre de chaque mot en majuscule, reste en minuscules.
+Turns an identifier into a readable name: '_' becomes a space, a space before each capital stuck to a lowercase letter, first letter of each word capitalized, the rest lowercase.
 
-- `str` (*string*) : Identifiant, ex. 'funStuff'.
-- **renvoie** : string Ex. 'Fun Stuff'.
+- `str` (*string*) : Identifier, e.g. 'funStuff'.
+- **returns**: string E.g. 'Fun Stuff'.
 
 #### `core_quickAccess.toggle(level)`
 
-Ouvre le menu s'il est fermé, le ferme sinon. Utilisée par l'action 'toggleRadialMenuMulti'.
+Opens the menu if it is closed, closes it otherwise. Used by the 'toggleRadialMenuMulti' action.
 
-- `level` (*string|nil*) : Niveau à ouvrir.
+- `level` (*string|nil*) : Level to open.
 
 #### `core_quickAccess.tryAction(action)`
 
-Exécute une action liée aux touches du menu parmi : toggleBigMap, toggleRadialMenuMulti, recoverVehicle, resetVehicle, activateStarterMotor. Ignorée si core_input_actionFilter la bloque ; une action inconnue est loggée en erreur.
+Runs an action tied to the menu keys among: toggleBigMap, toggleRadialMenuMulti, recoverVehicle, resetVehicle, activateStarterMotor. Ignored if core_input_actionFilter blocks it; an unknown action is logged as an error.
 
-- `action` (*string*) : Nom de l'action.
+- `action` (*string*) : Name of the action.
 
 #### `core_quickAccess.vehicleItemSelectCallback(objID, args)`
 
-Rappel du véhicule après exécution d'une action d'item : traite l'ordre renvoyé ({'hide'}, {'goto', ...}, etc.).
+Callback from the vehicle after an item action has run: processes the returned command ({'hide'}, {'goto', ...}, etc.).
 
-- `objID` (*integer*) : Id du véhicule (inutilisé).
-- `args` (*table*) : Ordre à exécuter, même format que le retour de onSelect.
+- `objID` (*integer*) : Vehicle id (unused).
+- `args` (*table*) : Command to run, same format as the return of onSelect.
 
 #### `core_quickAccess.vehicleItemsCallback(objID, level, vehicleMenuTree)`
 
-Rappel du véhicule joueur avec ses entrées de menu pour un niveau : les mémorise et affiche le menu.
+Callback from the player vehicle with its menu entries for a level: stores them and displays the menu.
 
-- `objID` (*integer*) : Id du véhicule.
-- `level` (*string*) : Niveau demandé.
-- `vehicleMenuTree` (*table*) : Table niveau -> liste d'entrées.
+- `objID` (*integer*) : Vehicle id.
+- `level` (*string*) : Requested level.
+- `vehicleMenuTree` (*table*) : Table level -> list of entries.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | { 'core_vehicleTriggers', 'core_funstuff' }, chargées avant cette extension. |
+| `dependencies` | string[] | { 'core_vehicleTriggers', 'core_funstuff' }, loaded before this extension. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onBeforeRadialOpened` — écouté par 3 module(s)
-- `onHideRadialMenu` — écouté par 1 module(s)
+- `onBeforeRadialOpened` — listened to by 3 module(s)
+- `onHideRadialMenu` — listened to by 1 module(s)
 - `onOpenDynamicSlotConfigurator`
 - `onQuickAccessClearRecentActions`
 - `onQuickAccessItemSelected`
-- `onQuickAccessLoaded` — écouté par 2 module(s)
+- `onQuickAccessLoaded` — listened to by 2 module(s)
 - `onQuickAccessOpened`
 - `onQuickAccessResetDynamicSlotSettings`
 - `onQuickAccessSetDynamicSlotConfiguration`
 - `onQuickAccessSetEmpty`
 - `onQuickAccessSetRecentActions`
 - `onQuickAccessSetUniqueAction`
-- `onRegisterQuickAccessMenus` — écouté par 1 module(s)
-- `onVehicleFlippedUpright` — écouté par 1 module(s)
+- `onRegisterQuickAccessMenus` — listened to by 1 module(s)
+- `onVehicleFlippedUpright` — listened to by 1 module(s)
 - `trackNewVeh`
 - `trackVehReset`
 
-**Évènements UI (guihooks.trigger) :** `OpenDynamicSlotConfigurator`, `RadialTemporaryHide`, `radialMenuUpdated`
+**UI events (guihooks.trigger):** `OpenDynamicSlotConfigurator`, `RadialTemporaryHide`, `radialMenuUpdated`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `enterNextVehicle`, `enterVehicle`, `getObject`, `getObjectCount`, `getPlayerVehicle`, `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/quickAccess.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/quickAccess.lua`.*

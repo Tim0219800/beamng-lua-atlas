@@ -1,0 +1,85 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenBegin.lua",
+  "module": "Nœud « EndScreen Begin » (catégorie par défaut, couleur ui). Commence la construction de l'écran de fin d'une mission : à la première frame avec flow actif, il appelle modules.ui:startUIBuilding('endScreen'), construit les boutons (Retry, Continuer au début, Continuer ici, boutons personnalisés, missions suivantes) puis active le pin build. Les nœuds « EndScreen ... » chaînés ensuite ajoutent les panneaux, et un nœud « Screen Finish » termine la construction. Pins : entrées flow, reset (impulsion), change (table, résultat d'une tentative), customBtnsFirst (caché), contStartActive / contHereActive (cachés, true) et un pin string + un pin bool « _active » par bouton personnalisé ; sorties flow, build (chainFlow), retry, contStart, contHere et un flow par bouton personnalisé. S'exécute tant que flow est actif.",
+  "notes": [
+    "Le pin flow de sortie est toujours remis à false en fin de work ; seul build (une frame) sert à chaîner les panneaux.",
+    "Le bouton « Continuer ici » n'existe en carrière que si le joueur utilise son propre véhicule ; en tutoriel de carrière seul ce bouton reste."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Initialise open=false, la liste des boutons personnalisés, data.includeRetryButton=true et le minuteur d'auto-skip.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Appelé juste après init, une fois les pins créés.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état du nœud.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Appelé à l'arrêt du projet ; ferme le dialogue.",
+          "internal": true
+        },
+        "onClientEndMission": {
+          "desc": "Hook appelé à la fin de la mission côté client ; ferme le dialogue.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine dans l'éditeur flowgraph la liste des boutons personnalisés (champ texte par bouton, boutons « add » et « rem »). Renvoie la raison de la modification (chaîne) ou nil.",
+          "internal": true
+        },
+        "updateButtons": {
+          "desc": "Recrée les pins du nœud pour chaque nom de bouton de self.options : pin d'entrée string (libellé), pin d'entrée bool « <nom>_active » (caché, true par défaut) et pin de sortie flow. Reconnecte les liens existants quand le nom n'a pas changé.",
+          "internal": false
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde la liste des boutons personnalisés (options).",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Recharge les boutons personnalisés puis recrée les pins.",
+          "internal": true
+        },
+        "buttonPushed": {
+          "desc": "Appelé quand un bouton est cliqué : met à true le pin de sortie du même nom que l'action, puis ferme le dialogue (navigation vers « play »).",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du pin de sortie (contStart, contHere, ou nom d'un bouton personnalisé)."
+            }
+          },
+          "internal": false
+        },
+        "onResetGameplay": {
+          "desc": "Hook appelé lors d'un reset du gameplay ; si l'écran est ouvert et que le bouton Retry est inclus, navigue vers « play » et active le pin retry.",
+          "internal": true
+        },
+        "openDialogue": {
+          "desc": "Émet le hook onEndScreenUIOpened et construit la liste de boutons : Retry (avec frais d'entrée en carrière, désactivé si le joueur ne peut pas payer), Continuer au début (ou retour aux scénarios si lancé comme scénario), Continuer ici (hors carrière, ou carrière avec véhicule du joueur), restriction en tutoriel, boutons personnalisés, puis boutons « Start Next Mission ». L'ordre est inversé et le premier bouton reçoit le focus.",
+          "internal": false
+        },
+        "closeDialogue": {
+          "desc": "Si l'écran a été construit, navigue vers l'écran « play » pour fermer l'écran de fin.",
+          "internal": false
+        },
+        "onNodeReset": {
+          "desc": "Remet les pins de sortie à false et réinitialise open/built.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Variante exécutée une seule fois par le moteur flowgraph (corps vide ici).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Si reset est actif, réinitialise le nœud. Quand flow est actif et que l'écran n'est pas encore construit, démarre la construction UI et ouvre le dialogue. Gère l'auto-skip : si startingOptions.autoSkipEndScreen est défini, arrête la mission après 2 s de temps réel.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

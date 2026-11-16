@@ -1,12 +1,12 @@
 # `ssaoModule`
 
-*Fichier : `lua/ge/client/postFx/ssao.lua` · VM : Game Engine (GE) · 91 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/client/postFx/ssao.lua` · VM: Game Engine (GE) · 91 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `ssaoModule`
+**Access:** global `ssaoModule`
 
-Occlusion ambiante en espace écran (SSAO, avec normales courbées / GTAO). À l'import, crée l'objet « SSAOPostFx » (PostEffectSSAO) s'il manque, puis règle sa propriété bentNormals d'après le réglage PostFXSpecularOcclusionEnabled, et crée « SSAOVizPostFx » pour visualiser #ssaoMask. Le module garde en mémoire le contraste et le rayon courants et les transmet à l'objet.
+Screen-space ambient occlusion (SSAO, with bent normals / GTAO). On import, creates the object "SSAOPostFx" (PostEffectSSAO) if missing, then sets its bentNormals property from the PostFXSpecularOcclusionEnabled setting, and creates "SSAOVizPostFx" to visualize #ssaoMask. The module keeps the current contrast and radius in memory and passes them to the object.
 
-## Exemple
+## Example
 
 ```lua
 local ssao = require('client/postFx/ssao')
@@ -15,57 +15,57 @@ ssao.setContrast(1.5)
 print(ssao.getRadius(), ssao.getContrast())
 ```
 
-## Remarques
+## Notes
 
-- Valeurs par défaut : contraste 2, rayon 1,5 (variables defaultContrast / defaultRadius).
-- setContrast et setRadius appliquent tonumber ; une valeur non numérique est ignorée sans erreur.
+- Default values: contrast 2, radius 1.5 (variables defaultContrast / defaultRadius).
+- setContrast and setRadius apply tonumber; a non-numeric value is ignored without error.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ssaoModule.applyDefaults()` | Fixe $SSAOPostFx::Enable à true et rétablit le contraste (2) et le rayon (1,5) par défaut. | 35 |
-| `ssaoModule.getContrast()` | Retourne le contraste mémorisé. | 44 |
-| `ssaoModule.getRadius()` | Retourne le rayon mémorisé. | 45 |
-| `ssaoModule.setBentNormalDebugEnabled(enabled)` | Active ou désactive un effet de débogage (GTAOBentNormalsVizPostFx, créé à la demande) qui affiche la carte des normales courbées #gtaoOutput. Sans coût tant qu'il est désactivé. | 49 |
-| `ssaoModule.setContrast(value)` | Mémorise le contraste du SSAO et l'applique à SSAOPostFx (méthode setContrast de l'objet). Ignoré si la valeur n'est pas convertible en nombre. | 15 |
-| `ssaoModule.setRadius(value)` | Mémorise le rayon du SSAO et l'applique à SSAOPostFx. Ignoré si la valeur n'est pas numérique. | 25 |
+| `ssaoModule.applyDefaults()` | Sets $SSAOPostFx::Enable to true and restores the default contrast (2) and radius (1.5). | 35 |
+| `ssaoModule.getContrast()` | Returns the stored contrast. | 44 |
+| `ssaoModule.getRadius()` | Returns the stored radius. | 45 |
+| `ssaoModule.setBentNormalDebugEnabled(enabled)` | Enables or disables a debug effect (GTAOBentNormalsVizPostFx, created on demand) that displays the bent normals map #gtaoOutput. No cost while it is disabled. | 49 |
+| `ssaoModule.setContrast(value)` | Stores the SSAO contrast and applies it to SSAOPostFx (the object's setContrast method). Ignored if the value cannot be converted to a number. | 15 |
+| `ssaoModule.setRadius(value)` | Stores the SSAO radius and applies it to SSAOPostFx. Ignored if the value is not numeric. | 25 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ssaoModule.getContrast()`
 
-Retourne le contraste mémorisé.
+Returns the stored contrast.
 
-- **renvoie** : number Contraste courant.
+- **returns**: number Current contrast.
 
 #### `ssaoModule.getRadius()`
 
-Retourne le rayon mémorisé.
+Returns the stored radius.
 
-- **renvoie** : number Rayon courant.
+- **returns**: number Current radius.
 
 #### `ssaoModule.setBentNormalDebugEnabled(enabled)`
 
-Active ou désactive un effet de débogage (GTAOBentNormalsVizPostFx, créé à la demande) qui affiche la carte des normales courbées #gtaoOutput. Sans coût tant qu'il est désactivé.
+Enables or disables a debug effect (GTAOBentNormalsVizPostFx, created on demand) that displays the bent normals map #gtaoOutput. No cost while it is disabled.
 
-- `enabled` (*boolean*) : true pour afficher, false pour masquer.
+- `enabled` (*boolean*) : true to show, false to hide.
 
 #### `ssaoModule.setContrast(value)`
 
-Mémorise le contraste du SSAO et l'applique à SSAOPostFx (méthode setContrast de l'objet). Ignoré si la valeur n'est pas convertible en nombre.
+Stores the SSAO contrast and applies it to SSAOPostFx (the object's setContrast method). Ignored if the value cannot be converted to a number.
 
-- `value` (*number|string*) : Nouveau contraste.
+- `value` (*number|string*) : New contrast.
 
 #### `ssaoModule.setRadius(value)`
 
-Mémorise le rayon du SSAO et l'applique à SSAOPostFx. Ignoré si la valeur n'est pas numérique.
+Stores the SSAO radius and applies it to SSAOPostFx. Ignored if the value is not numeric.
 
-- `value` (*number|string*) : Nouveau rayon (unité de la scène, déduit du code).
+- `value` (*number|string*) : New radius (scene unit, inferred from code).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/client/postFx/ssao.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/client/postFx/ssao.lua`.*

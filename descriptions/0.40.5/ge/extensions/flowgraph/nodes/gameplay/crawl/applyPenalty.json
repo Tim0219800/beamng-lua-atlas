@@ -1,14 +1,31 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crawl/applyPenalty.lua",
-  "module": "Nœud flowgraph « Apply Penalty » (catégorie impulse, crawl). Applique manuellement des points de pénalité au crawl actif, en choisissant un type dans la liste du bridge (gameplay/crawl/flowgraphBridge). Pins d'entrée : flow (impulsion) et penaltyType (string).",
-  "notes": ["work écrit self.pinOut.success et failed, mais pinSchema ne déclare aucun pin de sortie : ces accès plantent si penaltyType est vide.", "Si penaltyType est valide, le résultat de bridge.applyPenalty n'est pas exposé."],
+  "module": "Flowgraph node \"Apply Penalty\" (category impulse, crawl). Manually applies penalty points to the active crawl, choosing a type from the bridge list (gameplay/crawl/flowgraphBridge). Input pins: flow (pulse) and penaltyType (string).",
+  "notes": [
+    "work writes self.pinOut.success and failed, but pinSchema declares no output pin: these accesses crash if penaltyType is empty.",
+    "If penaltyType is valid, the result of bridge.applyPenalty is not exposed."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Charge le bridge du crawl.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "postInit": {"desc": "Remplit les modèles du pin penaltyType avec bridge.getPenaltyTypes().", "internal": true},
-        "work": {"desc": "Appelle bridge.applyPenalty(penaltyType) si le type est renseigné."}
+        "init": {
+          "desc": "Loads the crawl bridge.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Fills the templates of the penaltyType pin with bridge.getPenaltyTypes().",
+          "internal": true
+        },
+        "work": {
+          "desc": "Calls bridge.applyPenalty(penaltyType) if the type is set."
+        }
       }
     }
   }

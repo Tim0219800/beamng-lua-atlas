@@ -1,66 +1,66 @@
 # `ui_photomode_preview`
 
-*Fichier : `lua/ge/extensions/ui/photomode/preview.lua` · VM : Game Engine (GE) · 292 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/photomode/preview.lua` · VM: Game Engine (GE) · 292 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_photomode_preview` : `extensions.load("ui_photomode_preview")`, puis la globale `ui_photomode_preview`
+**Access:** extension `ui_photomode_preview`: `extensions.load("ui_photomode_preview")`, then the global `ui_photomode_preview`
 
-Partie « aperçu / relecture » du mode photo. Elle ajoute aux métadonnées d'une capture l'état complet du mode photo (caméra, scène, effets, rendu avancé, capture) et les presets, puis permet de rejouer une capture à partir de ces métadonnées : chargement du niveau si besoin, placement de la caméra libre, FOV et heure du jour. Elle sait aussi ouvrir l'URL de partage d'un aperçu dans le navigateur.
+"Preview / playback" part of photo mode. It adds the full photo mode state (camera, scene, effects, advanced render, capture) and the presets to a capture's metadata, then lets you replay a capture from this metadata: loading the level if needed, placing the free camera, FOV and time of day. It can also open a preview's share URL in the browser.
 
-## Remarques
+## Notes
 
-- Les fonctions de retour renvoient des tables {ok=false, reason="..."} en cas d'échec (raisons : share_url_missing, browser_unavailable, open_web_failed, session_inactive, preview_metadata_invalid, preview_level_missing, extensions_load_unavailable, loadMapCmd_load_failed, loadMapCmd_unavailable, loadMapCmd_set_failed, camera_api_unavailable, camera_set_failed).
-- Une lecture dans le même niveau n'est pas immédiate : la charge utile est stockée dans ui_photomode_shared.S.pendingPreviewPlayback et appliquée par handleUpdate dès que la session photo est fermée et que l'état du jeu n'est ni vide ni "menu". Pour un autre niveau, core_loadMapCmd.set(payload, false) est appelé tout de suite (le module est passé en déchargement manuel).
-- Bug mineur du jeu : logTag n'est pas déclaré localement dans ce fichier ; les appels log("E", logTag, ...) utilisent donc une globale probablement nil (le message est journalisé sans étiquette valide).
-- Le champ de métadonnées d'ouverture (openMap) attendu : level (obligatoire), camPos (3 nombres), camRot (4 nombres, quaternion), fov (> 0), timeOfDay.
+- The playback functions return tables {ok=false, reason="..."} on failure (reasons: share_url_missing, browser_unavailable, open_web_failed, session_inactive, preview_metadata_invalid, preview_level_missing, extensions_load_unavailable, loadMapCmd_load_failed, loadMapCmd_unavailable, loadMapCmd_set_failed, camera_api_unavailable, camera_set_failed).
+- Playback in the same level is not immediate: the payload is stored in ui_photomode_shared.S.pendingPreviewPlayback and applied by handleUpdate once the photo session is closed and the game state is neither empty nor "menu". For another level, core_loadMapCmd.set(payload, false) is called right away (the module is set to manual unload).
+- Minor game bug: logTag is not declared locally in this file; the log("E", logTag, ...) calls therefore use a probably nil global (the message is logged without a valid tag).
+- The expected opening metadata field (openMap): level (required), camPos (3 numbers), camRot (4 numbers, quaternion), fov (> 0), timeOfDay.
 
-**Dépendances (chargées avant) :** `ui_photomode_shared`, `ui_photomode_camera`, `ui_photomode_scene`, `ui_photomode_effects`, `ui_photomode_advancedRender`, `ui_photomode_capture`, `ui_photomode_presets`
+**Dependencies (loaded first):** `ui_photomode_shared`, `ui_photomode_camera`, `ui_photomode_scene`, `ui_photomode_effects`, `ui_photomode_advancedRender`, `ui_photomode_capture`, `ui_photomode_presets`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_photomode_preview.collectScreenshotMetadata(metadata)` | Complète la table de métadonnées d'une capture avec metadata.photomodeState (schemaVersion, camera, scene, effects, advancedRender, capture) et metadata.photomodePresets (bundle de presets). Ne fait rien si la session photo n'est pas active ou si metadata n'est pas une table. | 226 |
-| `ui_photomode_preview.handleUpdate(dtReal, dtSim, dtRaw)` | Appelée à chaque frame par la boucle du mode photo (hook de mise à jour) ; applique la lecture d'aperçu en attente (passage en caméra libre, setPosRot, setFOV, setTimeOfDay) quand les conditions sont réunies. Les arguments de temps ne sont pas utilisés. *(interne)* | 286 |
-| `ui_photomode_preview.openPreviewShareUrl(shareUrl)` | Ouvre l'URL de partage d'un aperçu dans le navigateur web, si l'action media « preview.openShareUrl » est activée. | 195 |
-| `ui_photomode_preview.playPreviewFromMetadata(openMap)` | Prépare la relecture d'une capture à partir de ses métadonnées. Exige une session photo active. Si le niveau est différent, déclenche immédiatement son chargement ; sinon met la charge utile en attente pour handleUpdate. | 241 |
+| `ui_photomode_preview.collectScreenshotMetadata(metadata)` | Completes a capture's metadata table with metadata.photomodeState (schemaVersion, camera, scene, effects, advancedRender, capture) and metadata.photomodePresets (preset bundle). Does nothing if the photo session is not active or if metadata is not a table. | 226 |
+| `ui_photomode_preview.handleUpdate(dtReal, dtSim, dtRaw)` | Called every frame by the photo mode loop (update hook); applies the pending preview playback (switch to free camera, setPosRot, setFOV, setTimeOfDay) when the conditions are met. The time arguments are not used. *(internal)* | 286 |
+| `ui_photomode_preview.openPreviewShareUrl(shareUrl)` | Opens a preview's share URL in the web browser, if the media action "preview.openShareUrl" is enabled. | 195 |
+| `ui_photomode_preview.playPreviewFromMetadata(openMap)` | Prepares the playback of a capture from its metadata. Requires an active photo session. If the level is different, triggers its loading immediately; otherwise puts the payload on hold for handleUpdate. | 241 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_photomode_preview.collectScreenshotMetadata(metadata)`
 
-Complète la table de métadonnées d'une capture avec metadata.photomodeState (schemaVersion, camera, scene, effects, advancedRender, capture) et metadata.photomodePresets (bundle de presets). Ne fait rien si la session photo n'est pas active ou si metadata n'est pas une table.
+Completes a capture's metadata table with metadata.photomodeState (schemaVersion, camera, scene, effects, advancedRender, capture) and metadata.photomodePresets (preset bundle). Does nothing if the photo session is not active or if metadata is not a table.
 
-- `metadata` (*table*) : Table modifiée en place.
+- `metadata` (*table*) : Table modified in place.
 
 #### `ui_photomode_preview.handleUpdate(dtReal, dtSim, dtRaw)`
 
-Appelée à chaque frame par la boucle du mode photo (hook de mise à jour) ; applique la lecture d'aperçu en attente (passage en caméra libre, setPosRot, setFOV, setTimeOfDay) quand les conditions sont réunies. Les arguments de temps ne sont pas utilisés.
+Called every frame by the photo mode loop (update hook); applies the pending preview playback (switch to free camera, setPosRot, setFOV, setTimeOfDay) when the conditions are met. The time arguments are not used.
 
-- `dtReal` (*number*) : Delta de temps réel (inutilisé).
-- `dtSim` (*number*) : Delta de temps simulé (inutilisé).
-- `dtRaw` (*number*) : Delta de temps brut (inutilisé).
+- `dtReal` (*number*) : Real time delta (unused).
+- `dtSim` (*number*) : Simulated time delta (unused).
+- `dtRaw` (*number*) : Raw time delta (unused).
 
 #### `ui_photomode_preview.openPreviewShareUrl(shareUrl)`
 
-Ouvre l'URL de partage d'un aperçu dans le navigateur web, si l'action media « preview.openShareUrl » est activée.
+Opens a preview's share URL in the web browser, if the media action "preview.openShareUrl" is enabled.
 
-- `shareUrl` (*string*) : URL à ouvrir ; vide ou nil donne reason="share_url_missing".
-- **renvoie** : table {ok=true} ou {ok=false, reason=...}.
+- `shareUrl` (*string*) : URL to open; empty or nil gives reason="share_url_missing".
+- **returns**: table {ok=true} or {ok=false, reason=...}.
 
 #### `ui_photomode_preview.playPreviewFromMetadata(openMap)`
 
-Prépare la relecture d'une capture à partir de ses métadonnées. Exige une session photo active. Si le niveau est différent, déclenche immédiatement son chargement ; sinon met la charge utile en attente pour handleUpdate.
+Prepares the playback of a capture from its metadata. Requires an active photo session. If the level is different, triggers its loading immediately; otherwise puts the payload on hold for handleUpdate.
 
-- `openMap` (*table*) : Métadonnées d'ouverture {level, camPos, camRot, fov, timeOfDay}.
-- **renvoie** : table {ok=true, level=string, requiresGameStatePlay=true} ou {ok=false, reason=...}.
+- `openMap` (*table*) : Opening metadata {level, camPos, camRot, fov, timeOfDay}.
+- **returns**: table {ok=true, level=string, requiresGameStatePlay=true} or {ok=false, reason=...}.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : ui_photomode_shared, _camera, _scene, _effects, _advancedRender, _capture, _presets. |
+| `dependencies` | table<integer, string> | Extensions loaded before: ui_photomode_shared, _camera, _scene, _effects, _advancedRender, _capture, _presets. |
 
-**Charge les extensions :** `core_loadMapCmd`
+**Loads extensions:** `core_loadMapCmd`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/photomode/preview.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/photomode/preview.lua`.*

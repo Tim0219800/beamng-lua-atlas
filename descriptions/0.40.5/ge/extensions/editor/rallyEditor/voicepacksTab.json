@@ -1,23 +1,83 @@
 {
   "path": "lua/ge/extensions/editor/rallyEditor/voicepacksTab.lua",
-  "module": "Onglet « Voicepacks » de l'éditeur de rallye. Il permet de choisir le voicepack et le notebook associé (menus déroulants), et liste les voicepacks globaux (jeu/mods) et ceux locaux à la mission (<mission>/rally/voicepacks/<nom>/) avec persona, langue, dialecte, style, style de compositeur, dossier, précédence des notebooks et notebooks qui existent dans cette mission. Le nom est en vert si les fichiers audio requis sont tous présents, en rouge sinon (résultat mis en cache). Le module renvoie un constructeur de classe C.",
+  "module": "\"Voicepacks\" tab of the rally editor. It lets you choose the voicepack and the associated notebook (dropdowns), and lists the global voicepacks (game/mods) and the mission-local ones (<mission>/rally/voicepacks/<name>/) with persona, language, dialect, style, composer style, folder, notebook precedence and the notebooks that exist in this mission. The name is green if all required audio files are present, red otherwise (result cached). The module returns a class C constructor.",
   "notes": [
-    "Aucune fonction exportée : on obtient une instance avec require(...)(rallyEditor).",
-    "Le bouton « Refresh voicepacks » invalide les caches de voicepack.lua et le cache de validation audio.",
-    "Utilise rallyEditor.getCurrentMissionDir, getCurrentVoicepackPick, setVoicepackPick, getCurrentPath et loadNotebook."
+    "No exported function: you get an instance with require(...)(rallyEditor).",
+    "The \"Refresh voicepacks\" button invalidates the voicepack.lua caches and the audio validation cache.",
+    "Uses rallyEditor.getCurrentMissionDir, getCurrentVoicepackPick, setVoicepackPick, getCurrentPath and loadNotebook."
   ],
   "classes": {
     "C": {
-      "desc": "Instance de l'onglet (windowDescription = 'Voicepacks').",
+      "desc": "Tab instance (windowDescription = 'Voicepacks').",
       "functions": {
-        "init": {"desc": "Constructeur : mémorise rallyEditor et crée le cache de validation audio.", "params": {"rallyEditor": {"type": "table", "desc": "Éditeur de rallye parent."}}, "internal": true},
-        "setPath": {"desc": "Définit le notebook courant.", "params": {"path": {"type": "table|nil", "desc": "Notebook."}}, "internal": true},
-        "selected": {"desc": "Appelé à la sélection de l'onglet : émet onEditorEditModeChanged(nil, nil).", "internal": true},
-        "unselect": {"desc": "Appelé quand l'onglet est quitté : émet onEditorEditModeChanged(nil, nil).", "internal": true},
-        "drawPickers": {"desc": "Dessine les menus « Voicepack » et « Notebook » ; changer de sélection appelle setVoicepackPick ou loadNotebook de l'éditeur.", "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}}, "internal": true},
-        "drawGlobalVoicepacks": {"desc": "Dessine la liste des voicepacks globaux (voicepack.scan()).", "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}}, "internal": true},
-        "drawMissionLocalVoicepacks": {"desc": "Dessine la liste des voicepacks de la mission (voicepack.scanMission).", "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}}, "internal": true},
-        "draw": {"desc": "Dessine l'onglet ; message si aucune mission n'est chargée.", "params": {"mouseInfo": {"type": "table", "desc": "Informations souris (non utilisé)."}}, "internal": true}
+        "init": {
+          "desc": "Constructor: stores rallyEditor and creates the audio validation cache.",
+          "params": {
+            "rallyEditor": {
+              "type": "table",
+              "desc": "Parent rally editor."
+            }
+          },
+          "internal": true
+        },
+        "setPath": {
+          "desc": "Sets the current notebook.",
+          "params": {
+            "path": {
+              "type": "table|nil",
+              "desc": "Notebook."
+            }
+          },
+          "internal": true
+        },
+        "selected": {
+          "desc": "Called when the tab is selected: emits onEditorEditModeChanged(nil, nil).",
+          "internal": true
+        },
+        "unselect": {
+          "desc": "Called when the tab is left: emits onEditorEditModeChanged(nil, nil).",
+          "internal": true
+        },
+        "drawPickers": {
+          "desc": "Draws the \"Voicepack\" and \"Notebook\" menus; changing the selection calls the editor's setVoicepackPick or loadNotebook.",
+          "params": {
+            "missionDir": {
+              "type": "string",
+              "desc": "Mission folder."
+            }
+          },
+          "internal": true
+        },
+        "drawGlobalVoicepacks": {
+          "desc": "Draws the list of global voicepacks (voicepack.scan()).",
+          "params": {
+            "missionDir": {
+              "type": "string",
+              "desc": "Mission folder."
+            }
+          },
+          "internal": true
+        },
+        "drawMissionLocalVoicepacks": {
+          "desc": "Draws the list of the mission's voicepacks (voicepack.scanMission).",
+          "params": {
+            "missionDir": {
+              "type": "string",
+              "desc": "Mission folder."
+            }
+          },
+          "internal": true
+        },
+        "draw": {
+          "desc": "Draws the tab; message if no mission is loaded.",
+          "params": {
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Mouse information (not used)."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

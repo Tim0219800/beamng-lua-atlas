@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/activateByDistance.lua",
+  "module": "Nœud flowgraph « Activate Vehicles By Distance » (repeat_instant). Chaque frame, active les véhicules du pool proches d'un point et désactive les autres (pool:activateByDistanceTo(pos, distance)). pos par défaut : position de la caméra (core_camera.getPositionXYZ). Nécessite le module core_vehicleActivePooling ; l'objet pool vient du nœud Create Vehicle Pool.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "work": {
+          "desc": "Détermine le point de focus et appelle activateByDistanceTo.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

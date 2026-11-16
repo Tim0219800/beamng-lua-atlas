@@ -1,0 +1,50 @@
+{
+  "path": "lua/ge/extensions/gameplay/missions/missionTypes/baseMission.lua",
+  "module": "Classe de base des types de mission (non-flowgraph). Le module renvoie une fabrique `function(derivedClass, ...)` : elle crée un objet à partir de la table d'options, lui donne la métatable C, appelle init(), copie dans l'objet toutes les clés de la classe dérivée (qui écrasent donc les méthodes de base), puis rappelle init(). Fournit des méthodes vides onStart / onUpdate / onStop que les types de mission surchargent, et la traduction des clés de progression.",
+  "usage": "-- dans un type de mission : local C = {}\n-- ... définir C:init(), C:onStart() ...\n-- return require('/lua/ge/extensions/gameplay/missions/missionTypes/baseMission')(C, ...)",
+  "notes": [
+    "init() est appelé DEUX fois par la fabrique : une fois avec la version de base (avant la copie des clés dérivées), une fois après (version dérivée si elle existe). Une init dérivée doit donc supporter d'être exécutée sur un objet déjà initialisé ; seule la valeur de retour du second appel est renvoyée (2e valeur de retour de la fabrique).",
+    "Les clés de la classe dérivée sont copiées dans l'objet lui-même (o[k] = v), pas dans une métatable : elles masquent les méthodes de C.",
+    "C.__index = C est réassigné à chaque création d'objet (inoffensif)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe de base d'une mission. L'objet porte les données de la mission (missionType, etc.) fournies via la table d'options.",
+      "functions": {
+        "init": {
+          "desc": "Appelé à la création d'une mission de ce type. Définit self.missionTypeLabel = \"bigMap.missionLabels.\"..self.missionType et self.progressKeyTranslations = {default, custom} (clés de traduction missions.progressKeyLabels.*).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "getProgressKeyTranslation": {
+          "desc": "Renvoie la clé de traduction d'une clé de progression (« default », « custom ») ; si elle est inconnue, renvoie la clé telle quelle.",
+          "params": {"progressKey": {"type": "string", "desc": "Clé de progression."}},
+          "returns": [{"type": "string", "desc": "Clé de traduction ou progressKey."}]
+        },
+        "onStart": {
+          "desc": "Appelé au démarrage de la mission. Vide dans la base, à surcharger.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "onUpdate": {
+          "desc": "Appelé à chaque frame pendant la mission. Vide dans la base, à surcharger.",
+          "params": {
+            "dtReal": {"type": "number", "desc": "Temps réel écoulé (s)."},
+            "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s)."},
+            "dtRaw": {"type": "number", "desc": "Temps brut écoulé (s)."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "onStop": {
+          "desc": "Appelé à l'arrêt de la mission. `data` (la tentative) peut être nil. Vide dans la base.",
+          "params": {"data": {"type": "table|nil", "desc": "Données de fin de mission / tentative."}},
+          "returns": [],
+          "internal": true
+        }
+      }
+    }
+  }
+}

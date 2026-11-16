@@ -1,121 +1,121 @@
 # `editor_toolUtilities_engineeredGeom`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/engineeredGeom.lua` · VM : Game Engine (GE) · 699 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/engineeredGeom.lua` · VM: Game Engine (GE) · 699 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_engineeredGeom` : `extensions.load("editor_toolUtilities_engineeredGeom")`, puis la globale `editor_toolUtilities_engineeredGeom`
+**Access:** extension `editor_toolUtilities_engineeredGeom`: `extensions.load("editor_toolUtilities_engineeredGeom")`, then the global `editor_toolUtilities_engineeredGeom`
 
-Géométrie de route « d'ingénieur » pour les outils d'édition de splines de l'éditeur : transforme la polyligne des noeuds d'une spline en axe ligne - clothoïde - arc - clothoïde - ligne (virages arrondis à rayon adaptatif, profil vertical lissé, élargissement dans les virages serrés). Les outils l'appellent via sampleInto selon group.geometryMode ('engineered' ou 'spline'). Il remplit divPoints, divWidths, normals, divCurv et discMap de la spline, puis calcule le repère de Frenet via geom.computeFrenetFrame.
+'Engineer' road geometry for the editor's spline editing tools: transforms the polyline of a spline's nodes into a line - clothoid - arc - clothoid - line axis (rounded turns with adaptive radius, smoothed vertical profile, widening in tight turns). The tools call it via sampleInto according to group.geometryMode ('engineered' or 'spline'). It fills the spline's divPoints, divWidths, normals, divCurv and discMap, then computes the Frenet frame via geom.computeFrenetFrame.
 
-## Exemple
+## Example
 
 ```lua
 local eng = require('editor/toolUtilities/engineeredGeom')
 eng.applyDefaults(group)
 if not eng.sampleInto(group, {zMode = 'free', lonRes = 1.5}) then
-  -- mode spline : l'outil échantillonne lui-même avec geom.catmullRom*
+  -- spline mode: the tool samples itself with geom.catmullRom*
 end
 ```
 
-## Remarques
+## Notes
 
-- Unités : mètres et radians. Constantes par défaut : rayon 40 m, transition (clothoïde) 15 m, rayon minimal 8 m, angle minimal 0.75 degré (en dessous, le noeud est traversé sans arrondi), élargissement max 2.5 m, longueur de lissage vertical 40 m.
-- Les boucles (spline.isLoop) et les splines de moins de 3 noeuds n'ont pas de virage intérieur : buildCenterline retombe sur geom.catmullRomRaycast / catmullRomConformToTerrain / catmullRomFree selon zMode, et met divCurv à nil.
-- Le rayon est ajusté sur des arcs durs (Ls = 0) puis les spirales sont ajoutées ensuite : la transition n'influence donc jamais le rayon retenu. Des surcharges par noeud existent dans spline.corners[i] ({ radiusM, taperM }).
-- sampleInto ne transmet pas minAngleDeg ni stepM à buildCenterline ; seuls minR, lonRes, deckZ, maxStep, zMode, levelStart et levelFinish sont repris.
-- Le module s'appuie sur editor/toolUtilities/geom, util et style.
+- Units: meters and radians. Default constants: radius 40 m, transition (clothoid) 15 m, minimum radius 8 m, minimum angle 0.75 degree (below it, the node is passed through without rounding), max widening 2.5 m, vertical smoothing length 40 m.
+- Loops (spline.isLoop) and splines with fewer than 3 nodes have no inner turn: buildCenterline falls back to geom.catmullRomRaycast / catmullRomConformToTerrain / catmullRomFree depending on zMode, and sets divCurv to nil.
+- The radius is fitted on hard arcs (Ls = 0) and the spirals are added afterwards: the transition therefore never influences the retained radius. Per-node overrides exist in spline.corners[i] ({ radiusM, taperM }).
+- sampleInto does not pass minAngleDeg or stepM to buildCenterline; only minR, lonRes, deckZ, maxStep, zMode, levelStart and levelFinish are carried over.
+- The module relies on editor/toolUtilities/geom, util and style.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_engineeredGeom.applyDefaults(group)` | Complète un groupe avec les champs du mode ingénieur uniquement s'ils sont nil (geometryMode = 'spline', engRadiusM, engTransM, engVertLenM, curveWidenMaxM, curveWidenRunoffM, corners = {}). À appeler à la création d'un groupe et à la désérialisation de sessions anciennes. | 574 |
-| `editor_toolUtilities_engineeredGeom.buildCenterline(spline, p)` | Construit l'axe en plan de la spline à partir de ses noeuds (virages à clothoïdes), puis le profil vertical selon zMode, et met à jour spline.divPoints, divWidths, normals, divCurv, discMap avant d'appeler geom.computeFrenetFrame. Ne renvoie rien (sauf pour le repli Catmull-Rom). | 290 |
-| `editor_toolUtilities_engineeredGeom.buildCenterlineConform(spline, p)` | Enveloppe de buildCenterline avec zMode = 'conform' (axe conforme au terrain). | 556 |
-| `editor_toolUtilities_engineeredGeom.buildCenterlineFree(spline, p)` | Enveloppe de buildCenterline avec zMode = 'free' (hauteurs des noeuds libres). | 548 |
-| `editor_toolUtilities_engineeredGeom.buildCenterlineRaycast(spline, p)` | Enveloppe de buildCenterline avec zMode = 'raycast' (axe posé sur le terrain par lancer de rayon). | 552 |
-| `editor_toolUtilities_engineeredGeom.drawControlPolygon(group)` | Dessine en debugDrawer, pour un groupe en mode ingénieur : le polygone des noeuds (guide fin), une sphère sur chaque noeud intérieur et l'axe résultant coloré par courbure (turquoise en ligne droite, ambre au virage le plus serré). Fondu selon la distance caméra (plein sous 90 m, invisible au-delà de 550 m). Sans effet hors mode 'engineered' ou avec moins de 2 noeuds. | 603 |
-| `editor_toolUtilities_engineeredGeom.sampleInto(group, opts)` | Point d'entrée unique d'échantillonnage selon group.geometryMode. En mode 'engineered', appelle buildCenterline avec les champs eng* du groupe et renvoie true. Sinon, met group.divCurv à nil et renvoie false pour que l'outil lance son propre échantillonneur geom.catmullRom*. | 591 |
-| `editor_toolUtilities_engineeredGeom.selfTest()` | Auto-test manuel : construit un virage de 90 degrés (R 30, Ls 20) et journalise le nombre de points, l'écart max entre points et le coude max par pas. | 657 |
-| `editor_toolUtilities_engineeredGeom.solveCorner(pPrev, pI, pNext, R, Ls, minAngle)` | Résout la géométrie d'un virage au noeud pI : déviation signée, rayon, longueur de spirale (réduite à R*\|delta\| si trop longue), angle de spirale, angle d'arc et distance tangente T absorbée sur chaque ligne droite voisine. Travaille en plan (x, y). Renvoie { through = true, T = 0 } si un segment est quasi nul ou si la déviation est inférieure à minAngle. | 62 |
+| `editor_toolUtilities_engineeredGeom.applyDefaults(group)` | Completes a group with the engineered mode fields only if they are nil (geometryMode = 'spline', engRadiusM, engTransM, engVertLenM, curveWidenMaxM, curveWidenRunoffM, corners = {}). To be called when a group is created and when deserializing old sessions. | 574 |
+| `editor_toolUtilities_engineeredGeom.buildCenterline(spline, p)` | Builds the spline's plan axis from its nodes (turns with clothoids), then the vertical profile according to zMode, and updates spline.divPoints, divWidths, normals, divCurv, discMap before calling geom.computeFrenetFrame. Returns nothing (except for the Catmull-Rom fallback). | 290 |
+| `editor_toolUtilities_engineeredGeom.buildCenterlineConform(spline, p)` | Wrapper of buildCenterline with zMode = 'conform' (axis conforming to the terrain). | 556 |
+| `editor_toolUtilities_engineeredGeom.buildCenterlineFree(spline, p)` | Wrapper of buildCenterline with zMode = 'free' (free node heights). | 548 |
+| `editor_toolUtilities_engineeredGeom.buildCenterlineRaycast(spline, p)` | Wrapper of buildCenterline with zMode = 'raycast' (axis placed on the terrain by raycast). | 552 |
+| `editor_toolUtilities_engineeredGeom.drawControlPolygon(group)` | Draws in debugDrawer, for a group in engineered mode: the node polygon (thin guide), a sphere on each inner node and the resulting axis colored by curvature (turquoise on a straight line, amber at the tightest turn). Fades with camera distance (full below 90 m, invisible beyond 550 m). No effect outside 'engineered' mode or with fewer than 2 nodes. | 603 |
+| `editor_toolUtilities_engineeredGeom.sampleInto(group, opts)` | Single sampling entry point according to group.geometryMode. In 'engineered' mode, calls buildCenterline with the group's eng* fields and returns true. Otherwise, sets group.divCurv to nil and returns false so that the tool runs its own geom.catmullRom* sampler. | 591 |
+| `editor_toolUtilities_engineeredGeom.selfTest()` | Manual self-test: builds a 90 degree turn (R 30, Ls 20) and logs the number of points, the max gap between points and the max bend per step. | 657 |
+| `editor_toolUtilities_engineeredGeom.solveCorner(pPrev, pI, pNext, R, Ls, minAngle)` | Resolves the geometry of a turn at node pI: signed deviation, radius, spiral length (reduced to R*\|delta\| if too long), spiral angle, arc angle and tangent distance T absorbed on each neighboring straight line. Works in plan (x, y). Returns { through = true, T = 0 } if a segment is nearly zero or if the deviation is below minAngle. | 62 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_engineeredGeom.applyDefaults(group)`
 
-Complète un groupe avec les champs du mode ingénieur uniquement s'ils sont nil (geometryMode = 'spline', engRadiusM, engTransM, engVertLenM, curveWidenMaxM, curveWidenRunoffM, corners = {}). À appeler à la création d'un groupe et à la désérialisation de sessions anciennes.
+Completes a group with the engineered mode fields only if they are nil (geometryMode = 'spline', engRadiusM, engTransM, engVertLenM, curveWidenMaxM, curveWidenRunoffM, corners = {}). To be called when a group is created and when deserializing old sessions.
 
-- `group` (*table*) : Groupe modifié sur place.
+- `group` (*table*) : Group modified in place.
 
 #### `editor_toolUtilities_engineeredGeom.buildCenterline(spline, p)`
 
-Construit l'axe en plan de la spline à partir de ses noeuds (virages à clothoïdes), puis le profil vertical selon zMode, et met à jour spline.divPoints, divWidths, normals, divCurv, discMap avant d'appeler geom.computeFrenetFrame. Ne renvoie rien (sauf pour le repli Catmull-Rom).
+Builds the spline's plan axis from its nodes (turns with clothoids), then the vertical profile according to zMode, and updates spline.divPoints, divWidths, normals, divCurv, discMap before calling geom.computeFrenetFrame. Returns nothing (except for the Catmull-Rom fallback).
 
-- `spline` (*table*) : Spline avec nodes, widths, nmls, divPoints, divWidths, normals, discMap (et optionnellement isLoop, corners).
+- `spline` (*table*) : Spline with nodes, widths, nmls, divPoints, divWidths, normals, discMap (and optionally isLoop, corners).
 - `p` (*table|nil*) : { R, Ls, minR, minAngleDeg, stepM, lonRes, vertLen, deckZ, maxStep, levelStart, levelFinish, zMode = 'free'|'raycast'|'conform' }.
 
 #### `editor_toolUtilities_engineeredGeom.buildCenterlineConform(spline, p)`
 
-Enveloppe de buildCenterline avec zMode = 'conform' (axe conforme au terrain).
+Wrapper of buildCenterline with zMode = 'conform' (axis conforming to the terrain).
 
 - `spline` (*table*) : Spline.
-- `p` (*table|nil*) : Paramètres (voir buildCenterline) ; p.zMode est écrasé.
+- `p` (*table|nil*) : Parameters (see buildCenterline); p.zMode is overwritten.
 
 #### `editor_toolUtilities_engineeredGeom.buildCenterlineFree(spline, p)`
 
-Enveloppe de buildCenterline avec zMode = 'free' (hauteurs des noeuds libres).
+Wrapper of buildCenterline with zMode = 'free' (free node heights).
 
 - `spline` (*table*) : Spline.
-- `p` (*table|nil*) : Paramètres (voir buildCenterline) ; p.zMode est écrasé.
+- `p` (*table|nil*) : Parameters (see buildCenterline); p.zMode is overwritten.
 
 #### `editor_toolUtilities_engineeredGeom.buildCenterlineRaycast(spline, p)`
 
-Enveloppe de buildCenterline avec zMode = 'raycast' (axe posé sur le terrain par lancer de rayon).
+Wrapper of buildCenterline with zMode = 'raycast' (axis placed on the terrain by raycast).
 
 - `spline` (*table*) : Spline.
-- `p` (*table|nil*) : Paramètres (voir buildCenterline) ; p.zMode est écrasé.
+- `p` (*table|nil*) : Parameters (see buildCenterline); p.zMode is overwritten.
 
 #### `editor_toolUtilities_engineeredGeom.drawControlPolygon(group)`
 
-Dessine en debugDrawer, pour un groupe en mode ingénieur : le polygone des noeuds (guide fin), une sphère sur chaque noeud intérieur et l'axe résultant coloré par courbure (turquoise en ligne droite, ambre au virage le plus serré). Fondu selon la distance caméra (plein sous 90 m, invisible au-delà de 550 m). Sans effet hors mode 'engineered' ou avec moins de 2 noeuds.
+Draws in debugDrawer, for a group in engineered mode: the node polygon (thin guide), a sphere on each inner node and the resulting axis colored by curvature (turquoise on a straight line, amber at the tightest turn). Fades with camera distance (full below 90 m, invisible beyond 550 m). No effect outside 'engineered' mode or with fewer than 2 nodes.
 
-- `group` (*table|nil*) : Groupe/spline à dessiner.
+- `group` (*table|nil*) : Group/spline to draw.
 
 #### `editor_toolUtilities_engineeredGeom.sampleInto(group, opts)`
 
-Point d'entrée unique d'échantillonnage selon group.geometryMode. En mode 'engineered', appelle buildCenterline avec les champs eng* du groupe et renvoie true. Sinon, met group.divCurv à nil et renvoie false pour que l'outil lance son propre échantillonneur geom.catmullRom*.
+Single sampling entry point according to group.geometryMode. In 'engineered' mode, calls buildCenterline with the group's eng* fields and returns true. Otherwise, sets group.divCurv to nil and returns false so that the tool runs its own geom.catmullRom* sampler.
 
-- `group` (*table*) : Groupe/spline avec geometryMode, engRadiusM, engTransM, engVertLenM.
-- `opts` (*table|nil*) : { zMode = 'free'|'raycast'|'conform' (défaut 'free'), lonRes, deckZ, maxStep, minR, levelStart, levelFinish }. levelStart/levelFinish : en mode free, cette extrémité rejoint une plateforme plate, le profil arrive à plat.
-- **renvoie** : boolean true si le mode ingénieur a échantillonné, false si l'appelant doit le faire.
+- `group` (*table*) : Group/spline with geometryMode, engRadiusM, engTransM, engVertLenM.
+- `opts` (*table|nil*) : { zMode = 'free'|'raycast'|'conform' (default 'free'), lonRes, deckZ, maxStep, minR, levelStart, levelFinish }. levelStart/levelFinish: in free mode, this end joins a flat platform, the profile arrives flat.
+- **returns**: boolean true if the engineered mode sampled, false if the caller must do it.
 
 #### `editor_toolUtilities_engineeredGeom.selfTest()`
 
-Auto-test manuel : construit un virage de 90 degrés (R 30, Ls 20) et journalise le nombre de points, l'écart max entre points et le coude max par pas.
+Manual self-test: builds a 90 degree turn (R 30, Ls 20) and logs the number of points, the max gap between points and the max bend per step.
 
-- **renvoie** : integer Nombre de points d'axe générés.
+- **returns**: integer Number of generated axis points.
 
 #### `editor_toolUtilities_engineeredGeom.solveCorner(pPrev, pI, pNext, R, Ls, minAngle)`
 
-Résout la géométrie d'un virage au noeud pI : déviation signée, rayon, longueur de spirale (réduite à R*|delta| si trop longue), angle de spirale, angle d'arc et distance tangente T absorbée sur chaque ligne droite voisine. Travaille en plan (x, y). Renvoie { through = true, T = 0 } si un segment est quasi nul ou si la déviation est inférieure à minAngle.
+Resolves the geometry of a turn at node pI: signed deviation, radius, spiral length (reduced to R*|delta| if too long), spiral angle, arc angle and tangent distance T absorbed on each neighboring straight line. Works in plan (x, y). Returns { through = true, T = 0 } if a segment is nearly zero or if the deviation is below minAngle.
 
-- `pPrev` (*vec3*) : Noeud précédent.
-- `pI` (*vec3*) : Noeud du virage (point d'intersection).
-- `pNext` (*vec3*) : Noeud suivant.
-- `R` (*number*) : Rayon d'arc voulu (m).
-- `Ls` (*number*) : Longueur de spirale voulue (m).
-- `minAngle` (*number*) : Déviation minimale (rad) sous laquelle aucun arrondi n'est fait.
-- **renvoie** : table { through, delta, absD, turn (+1 gauche, -1 droite), R, Ls, thetaS, arc, T }.
+- `pPrev` (*vec3*) : Previous node.
+- `pI` (*vec3*) : Turn node (intersection point).
+- `pNext` (*vec3*) : Next node.
+- `R` (*number*) : Desired arc radius (m).
+- `Ls` (*number*) : Desired spiral length (m).
+- `minAngle` (*number*) : Minimum deviation (rad) below which no rounding is done.
+- **returns**: table { through, delta, absD, turn (+1 left, -1 right), R, Ls, thetaS, arc, T }.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `CONTROLS` | table | Métadonnées pour l'inspecteur, afin que tous les outils affichent les mêmes curseurs : radius, transition, vertical, widthTaper, widenAmount (chacun avec key, default, min, max, fmt, label, tooltip) et les infobulles toggleTooltip, modeEngTip, modeSmoothTip. |
-| `DEFAULT_MIN_R` | number | Rayon plancher d'un virage (8.0 m). |
+| `CONTROLS` | table | Metadata for the inspector, so that all tools display the same sliders: radius, transition, vertical, widthTaper, widenAmount (each with key, default, min, max, fmt, label, tooltip) and the tooltips toggleTooltip, modeEngTip, modeSmoothTip. |
+| `DEFAULT_MIN_R` | number | Floor radius of a turn (8.0 m). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLineInstance`, `drawSphere`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/engineeredGeom.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/engineeredGeom.lua`.*

@@ -1,60 +1,94 @@
 {
   "path": "lua/ge/extensions/editor/roadUtils.lua",
-  "module": "Utilitaires des modèles de routes (road templates) de l'éditeur. Lit les fichiers levels/<niveau>/roadtemplates/*.road.json, mémorise matériaux et noms de matériaux des modèles, puis applique le modèle de chaque DecalRoad qui en référence un : crée des routes enfants, des décorations et des decals le long de la route. Tout est inactif tant que la préférence roadTemplates.general.loadTemplates est à false.",
+  "module": "Road template utilities of the editor. Reads the levels/<level>/roadtemplates/*.road.json files, stores the templates' materials and material names, then applies the template of each DecalRoad that references one: creates child roads, decorations and decals along the road. Everything is inactive as long as the roadTemplates.general.loadTemplates preference is false.",
   "notes": [
-    "Les champs dynamiques lus sur la route sont template, useTemplate, isChildRoad, childRoads, decorationIDs, decalIDs (chaînes d'ids séparés par des espaces).",
-    "Résolution des routes : un nœud tous les roadResolutionMetres = 2 m.",
-    "Piège : `local roadDecorations = extensions.editor_roadDecorations` est lu au chargement du fichier ; si cette extension n'est pas encore chargée à ce moment, roadDecorations vaut nil et updateChildRoads plante.",
-    "M.onEditorInitialized = nil est exporté explicitement : le champ n'existe pas, ce n'est pas un hook actif."
+    "The dynamic fields read on the road are template, useTemplate, isChildRoad, childRoads, decorationIDs, decalIDs (strings of space-separated ids).",
+    "Road resolution: one node every roadResolutionMetres = 2 m.",
+    "Trap: `local roadDecorations = extensions.editor_roadDecorations` is read when the file loads; if this extension is not yet loaded at that moment, roadDecorations is nil and updateChildRoads crashes.",
+    "M.onEditorInitialized = nil is exported explicitly: the field does not exist, it is not an active hook."
   ],
   "functions": {
     "reloadTemplates": {
-      "desc": "Relit les fichiers .road.json du niveau courant, reconstruit les listes de matériaux (texture colorMap, ou warnMat.dds si le matériau est introuvable) puis ré-applique à chaque DecalRoad utilisant un modèle : routes enfants, décorations et decals. Recharge enfin les collisions (be:reloadCollision). Sort tout de suite si la préférence est off ou s'il n'y a pas de niveau.",
+      "desc": "Rereads the .road.json files of the current level, rebuilds the material lists (colorMap texture, or warnMat.dds if the material is not found) then reapplies to each DecalRoad using a template: child roads, decorations and decals. Finally reloads the collisions (be:reloadCollision). Returns immediately if the preference is off or if there is no level.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "updateChildRoads": {
-      "desc": "Supprime les routes enfants d'une route puis recrée, d'après son modèle, une route enfant par entrée supplémentaire de template.roads (largeur relative ou absolue, décalage latéral horizPosRelative). La première entrée du modèle est collée sur la route elle-même.",
-      "params": {"road": {"type": "userdata", "desc": "Objet DecalRoad portant les champs dynamiques template/useTemplate."}},
+      "desc": "Deletes a road's child roads then recreates, according to its template, one child road per additional entry of template.roads (relative or absolute width, lateral offset horizPosRelative). The first entry of the template is pasted onto the road itself.",
+      "params": {
+        "road": {
+          "type": "userdata",
+          "desc": "DecalRoad object carrying the template/useTemplate dynamic fields."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "reloadDecals": {
-      "desc": "Supprime les decals précédents de la route (champ decalIDs) puis recrée ceux définis par le modèle et stocke leurs ids dans le champ dynamique decalIDs.",
+      "desc": "Deletes the road's previous decals (decalIDs field) then recreates those defined by the template and stores their ids in the decalIDs dynamic field.",
       "params": {
-        "road": {"type": "userdata", "desc": "Objet DecalRoad."},
-        "template": {"type": "table|nil", "desc": "Données du modèle déjà lues ; si nil, relues depuis le champ template de la route."}
+        "road": {
+          "type": "userdata",
+          "desc": "DecalRoad object."
+        },
+        "template": {
+          "type": "table|nil",
+          "desc": "Template data already read; if nil, reread from the road's template field."
+        }
       },
       "returns": [],
       "internal": false
     },
     "reloadDecorations": {
-      "desc": "Supprime les anciennes décorations de la route (champ decorationIDs) puis recrée celles du modèle. Ignore les routes enfants, les routes sans modèle ou avec useTemplate différent de \"true\".",
-      "params": {"road": {"type": "userdata", "desc": "Objet DecalRoad."}},
+      "desc": "Deletes the road's old decorations (decorationIDs field) then recreates those of the template. Ignores child roads, roads without a template or with useTemplate different from \"true\".",
+      "params": {
+        "road": {
+          "type": "userdata",
+          "desc": "DecalRoad object."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getMaterials": {
-      "desc": "Renvoie la liste des textures (objets editor.texObj) des matériaux des modèles chargés par reloadTemplates.",
+      "desc": "Returns the list of textures (editor.texObj objects) of the materials of the templates loaded by reloadTemplates.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Tableau indexé de textures ImGui."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Indexed array of ImGui textures."
+        }
+      ],
       "internal": false
     },
     "getMaterialNames": {
-      "desc": "Renvoie les noms de matériaux des modèles, dans le même ordre que getMaterials.",
+      "desc": "Returns the material names of the templates, in the same order as getMaterials.",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Noms de matériaux."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Material names."
+        }
+      ],
       "internal": false
     },
     "getRoadTemplateFiles": {
-      "desc": "Renvoie les chemins des fichiers *.road.json trouvés par le dernier reloadTemplates.",
+      "desc": "Returns the paths of the *.road.json files found by the last reloadTemplates.",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Chemins de fichiers."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "File paths."
+        }
+      ],
       "internal": false
     }
   },
   "fields": {
-    "onEditorInitialized": {"type": "nil", "desc": "Toujours nil : affectation explicite sans effet."}
+    "onEditorInitialized": {
+      "type": "nil",
+      "desc": "Always nil: explicit assignment with no effect."
+    }
   }
 }

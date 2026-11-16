@@ -1,153 +1,153 @@
 # `career_modules_milestones_milestones`
 
-*Fichier : `lua/ge/extensions/career/modules/milestones/milestones.lua` · VM : Game Engine (GE) · 231 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/milestones/milestones.lua` · VM: Game Engine (GE) · 231 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_milestones_milestones` : `extensions.load("career_modules_milestones_milestones")`, puis la globale `career_modules_milestones_milestones`
+**Access:** extension `career_modules_milestones_milestones`: `extensions.load("career_modules_milestones_milestones")`, then the global `career_modules_milestones_milestones`
 
-Module central des jalons (milestones) de la carrière : sauvegarde (milestones.json), liste agrégée pour l'UI via le hook onGetMilestones, réclamation de récompenses (une par une ou toutes), compteur de jalons non réclamés et notifications. Fournit aussi des fonctions de récompense et des couleurs communes aux sous-systèmes (generalMilestones/*).
+Central career milestones module: save data (milestones.json), aggregated list for the UI via the onGetMilestones hook, reward claiming (one by one or all), unclaimed milestone counter and notifications. Also provides common reward functions and colors for the subsystems (generalMilestones/*).
 
-## Exemple
+## Example
 
 ```lua
 local data = career_modules_milestones_milestones.getMilestones({"money"})
 for _, m in ipairs(data.list) do print(m.label, m.claimable) end
 ```
 
-## Remarques
+## Notes
 
-- saveData est chargé depuis <save>/career/milestones.json ; saveData.unclaimedMilestonesCount vaut 0 par défaut et saveData.general est rempli par milestones/general.lua.
-- Chaque appel à getMilestones recalcule la liste, réattribue des claimId (index de la liste) et recompte unclaimedMilestonesCount ; les claimId ne sont valides que pour la dernière liste générée.
-- claim(id) appelle claimFunction puis claimRefreshFunction, et envoie guihooks milestoneClaimed (sauf noGuiEvent).
-- onGetMilestones de ce fichier est vide (stub) ; le travail est fait par milestones/general.lua.
-- sortByTimeAndId est défini mais jamais utilisé.
+- saveData is loaded from <save>/career/milestones.json; saveData.unclaimedMilestonesCount is 0 by default and saveData.general is filled by milestones/general.lua.
+- Each call to getMilestones recomputes the list, reassigns claimIds (list index) and recounts unclaimedMilestonesCount; claimIds are valid only for the last generated list.
+- claim(id) calls claimFunction then claimRefreshFunction, and sends guihooks milestoneClaimed (unless noGuiEvent).
+- onGetMilestones in this file is empty (stub); the work is done by milestones/general.lua.
+- sortByTimeAndId is defined but never used.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_milestones_milestones.claim(id, noGuiEvent)` | Réclame le jalon repéré par son claimId (index dans la dernière liste). Exécute sa claimFunction, met à jour les fonctions de refresh et notifie l'UI (milestoneClaimed avec replacementEntry). | 47 |
-| `career_modules_milestones_milestones.claimAllUnclaimed()` | Réclame tous les jalons claimable de la liste complète, relance getMilestones et envoie guihooks allMilestonesClaimed. | 67 |
-| `career_modules_milestones_milestones.getMilestones(filter)` | Collecte les jalons via le hook onGetMilestones(list, filter), attribue les claimId, compte les jalons réclamables et renvoie la liste avec les filtres disponibles. | 89 |
-| `career_modules_milestones_milestones.loadSaveData()` | Charge saveData depuis career/milestones.json du profil courant. *(interne)* | 136 |
-| `career_modules_milestones_milestones.majorLinear(step)` | Fonction de récompense : 250 * (step + 1) en argent. | 186 |
-| `career_modules_milestones_milestones.milestoneReached(label)` | Affiche un toast « jalon atteint » (label chaîne ou {txt, context}) et incrémente unclaimedMilestonesCount. Prévu pour être éventuellement différé pendant une mission. | 122 |
-| `career_modules_milestones_milestones.minorLinear(step)` | Fonction de récompense : 100 * (step + 1) en argent. | 185 |
-| `career_modules_milestones_milestones.onCareerActive(active)` | Hook : affiche un toast si des jalons sont non réclamés. *(interne)* *(hook)* | 169 |
-| `career_modules_milestones_milestones.onExtensionLoaded()` | Hook : charge saveData si la carrière est déjà active (renvoie false sinon). *(interne)* *(hook)* | 145 |
-| `career_modules_milestones_milestones.onGetMilestones(list)` | Hook vide (stub) ; l'ajout des fiches est fait par milestones/general.lua. *(interne)* *(hook)* | 112 |
-| `career_modules_milestones_milestones.onMilestonesRouteEnter(context, toRoute, fromRoute, data)` | Cycle de vie du routeur UI : appelle onPauseEnter de ui_pause_routeLifecycleCallbacks s'il existe et ajoute data.milestones.filterOptions. *(interne)* *(hook)* | 218 |
-| `career_modules_milestones_milestones.onMilestonesRouteMount(context, toRoute, fromRoute, data)` | Cycle de vie du routeur UI : appelle onPauseMount puis ajoute data.milestones.filterOptions (options de filtre traduites). *(interne)* *(hook)* | 223 |
-| `career_modules_milestones_milestones.onSaveCurrentProfile(currentSavePath)` | Hook de sauvegarde : écrit saveData dans <save>/career/milestones.json. *(interne)* *(hook)* | 150 |
-| `career_modules_milestones_milestones.requestMilestones(filter)` | Envoie getMilestones(filter) à l'UI via guihooks milestonesData. | 116 |
-| `career_modules_milestones_milestones.unclaimedMilestonesCount()` | Nombre de jalons atteints et non réclamés. | 155 |
+| `career_modules_milestones_milestones.claim(id, noGuiEvent)` | Claims the milestone identified by its claimId (index in the last list). Runs its claimFunction, updates the refresh functions and notifies the UI (milestoneClaimed with replacementEntry). | 47 |
+| `career_modules_milestones_milestones.claimAllUnclaimed()` | Claims all claimable milestones of the full list, re-runs getMilestones and sends guihooks allMilestonesClaimed. | 67 |
+| `career_modules_milestones_milestones.getMilestones(filter)` | Collects milestones via the onGetMilestones(list, filter) hook, assigns claimIds, counts claimable milestones and returns the list with the available filters. | 89 |
+| `career_modules_milestones_milestones.loadSaveData()` | Loads saveData from career/milestones.json of the current profile. *(internal)* | 136 |
+| `career_modules_milestones_milestones.majorLinear(step)` | Reward function: 250 * (step + 1) in money. | 186 |
+| `career_modules_milestones_milestones.milestoneReached(label)` | Shows a "milestone reached" toast (string label or {txt, context}) and increments unclaimedMilestonesCount. Intended to possibly be deferred during a mission. | 122 |
+| `career_modules_milestones_milestones.minorLinear(step)` | Reward function: 100 * (step + 1) in money. | 185 |
+| `career_modules_milestones_milestones.onCareerActive(active)` | Hook: shows a toast if there are unclaimed milestones. *(internal)* *(hook)* | 169 |
+| `career_modules_milestones_milestones.onExtensionLoaded()` | Hook: loads saveData if the career is already active (returns false otherwise). *(internal)* *(hook)* | 145 |
+| `career_modules_milestones_milestones.onGetMilestones(list)` | Empty hook (stub); adding the cards is done by milestones/general.lua. *(internal)* *(hook)* | 112 |
+| `career_modules_milestones_milestones.onMilestonesRouteEnter(context, toRoute, fromRoute, data)` | UI router lifecycle: calls onPauseEnter of ui_pause_routeLifecycleCallbacks if it exists and adds data.milestones.filterOptions. *(internal)* *(hook)* | 218 |
+| `career_modules_milestones_milestones.onMilestonesRouteMount(context, toRoute, fromRoute, data)` | UI router lifecycle: calls onPauseMount then adds data.milestones.filterOptions (translated filter options). *(internal)* *(hook)* | 223 |
+| `career_modules_milestones_milestones.onSaveCurrentProfile(currentSavePath)` | Save hook: writes saveData to <save>/career/milestones.json. *(internal)* *(hook)* | 150 |
+| `career_modules_milestones_milestones.requestMilestones(filter)` | Sends getMilestones(filter) to the UI via guihooks milestonesData. | 116 |
+| `career_modules_milestones_milestones.unclaimedMilestonesCount()` | Number of milestones reached and unclaimed. | 155 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_milestones_milestones.claim(id, noGuiEvent)`
 
-Réclame le jalon repéré par son claimId (index dans la dernière liste). Exécute sa claimFunction, met à jour les fonctions de refresh et notifie l'UI (milestoneClaimed avec replacementEntry).
+Claims the milestone identified by its claimId (index in the last list). Runs its claimFunction, updates the refresh functions and notifies the UI (milestoneClaimed with replacementEntry).
 
-- `id` (*integer*) : claimId de la liste courante.
-- `noGuiEvent` (*boolean|nil*) : Si vrai, n'envoie pas l'événement UI.
-- **renvoie** : table|nil Nouvelle fiche du jalon (palier suivant) ou nil.
+- `id` (*integer*) : claimId from the current list.
+- `noGuiEvent` (*boolean|nil*) : If true, does not send the UI event.
+- **returns**: table|nil New milestone card (next tier) or nil.
 
 #### `career_modules_milestones_milestones.claimAllUnclaimed()`
 
-Réclame tous les jalons claimable de la liste complète, relance getMilestones et envoie guihooks allMilestonesClaimed.
+Claims all claimable milestones of the full list, re-runs getMilestones and sends guihooks allMilestonesClaimed.
 
-- **renvoie** : {claimed: integer, unclaimedMilestonesCount: integer} Nombre réclamé et compteur restant.
+- **returns**: {claimed: integer, unclaimedMilestonesCount: integer} Number claimed and remaining counter.
 
 #### `career_modules_milestones_milestones.getMilestones(filter)`
 
-Collecte les jalons via le hook onGetMilestones(list, filter), attribue les claimId, compte les jalons réclamables et renvoie la liste avec les filtres disponibles.
+Collects milestones via the onGetMilestones(list, filter) hook, assigns claimIds, counts claimable milestones and returns the list with the available filters.
 
-- `filter` (*string[]|nil*) : Filtres (general, mission, branch, delivery, money, speedTrap, insurance, all…).
-- **renvoie** : {list: table[], filters: string[]} Fiches et clés de filtres triées.
+- `filter` (*string[]|nil*) : Filters (general, mission, branch, delivery, money, speedTrap, insurance, all...).
+- **returns**: {list: table[], filters: string[]} Cards and sorted filter keys.
 
 #### `career_modules_milestones_milestones.majorLinear(step)`
 
-Fonction de récompense : 250 * (step + 1) en argent.
+Reward function: 250 * (step + 1) in money.
 
-- `step` (*integer*) : Indice de palier (à partir de 0).
-- **renvoie** : {attributeKey: string, rewardAmount: number}[] Une récompense money.
+- `step` (*integer*) : Tier index (starting from 0).
+- **returns**: {attributeKey: string, rewardAmount: number}[] A money reward.
 
 #### `career_modules_milestones_milestones.milestoneReached(label)`
 
-Affiche un toast « jalon atteint » (label chaîne ou {txt, context}) et incrémente unclaimedMilestonesCount. Prévu pour être éventuellement différé pendant une mission.
+Shows a "milestone reached" toast (string label or {txt, context}) and increments unclaimedMilestonesCount. Intended to possibly be deferred during a mission.
 
-- `label` (*string|table*) : Texte ou table de traduction {txt, context}.
+- `label` (*string|table*) : Text or translation table {txt, context}.
 
 #### `career_modules_milestones_milestones.minorLinear(step)`
 
-Fonction de récompense : 100 * (step + 1) en argent.
+Reward function: 100 * (step + 1) in money.
 
-- `step` (*integer*) : Indice de palier (à partir de 0).
-- **renvoie** : {attributeKey: string, rewardAmount: number}[] Une récompense money.
+- `step` (*integer*) : Tier index (starting from 0).
+- **returns**: {attributeKey: string, rewardAmount: number}[] A money reward.
 
 #### `career_modules_milestones_milestones.onCareerActive(active)`
 
-Hook : affiche un toast si des jalons sont non réclamés.
+Hook: shows a toast if there are unclaimed milestones.
 
-- `active` (*boolean*) : Rien si false.
+- `active` (*boolean*) : Nothing if false.
 
 #### `career_modules_milestones_milestones.onGetMilestones(list)`
 
-Hook vide (stub) ; l'ajout des fiches est fait par milestones/general.lua.
+Empty hook (stub); adding the cards is done by milestones/general.lua.
 
-- `list` (*table[]*) : Liste à compléter.
+- `list` (*table[]*) : List to fill.
 
 #### `career_modules_milestones_milestones.onMilestonesRouteEnter(context, toRoute, fromRoute, data)`
 
-Cycle de vie du routeur UI : appelle onPauseEnter de ui_pause_routeLifecycleCallbacks s'il existe et ajoute data.milestones.filterOptions.
+UI router lifecycle: calls onPauseEnter of ui_pause_routeLifecycleCallbacks if it exists and adds data.milestones.filterOptions.
 
-- `context` (*any*) : Contexte du routeur.
-- `toRoute` (*any*) : Route cible.
-- `fromRoute` (*any*) : Route précédente.
+- `context` (*any*) : Router context.
+- `toRoute` (*any*) : Target route.
+- `fromRoute` (*any*) : Previous route.
 - `data` (*table*) : routeData.
 
 #### `career_modules_milestones_milestones.onMilestonesRouteMount(context, toRoute, fromRoute, data)`
 
-Cycle de vie du routeur UI : appelle onPauseMount puis ajoute data.milestones.filterOptions (options de filtre traduites).
+UI router lifecycle: calls onPauseMount then adds data.milestones.filterOptions (translated filter options).
 
-- `context` (*any*) : Contexte du routeur.
-- `toRoute` (*any*) : Route cible.
-- `fromRoute` (*any*) : Route précédente.
+- `context` (*any*) : Router context.
+- `toRoute` (*any*) : Target route.
+- `fromRoute` (*any*) : Previous route.
 - `data` (*table*) : routeData.
 
 #### `career_modules_milestones_milestones.onSaveCurrentProfile(currentSavePath)`
 
-Hook de sauvegarde : écrit saveData dans <save>/career/milestones.json.
+Save hook: writes saveData to <save>/career/milestones.json.
 
-- `currentSavePath` (*string*) : Dossier de sauvegarde.
+- `currentSavePath` (*string*) : Save folder.
 
 #### `career_modules_milestones_milestones.requestMilestones(filter)`
 
-Envoie getMilestones(filter) à l'UI via guihooks milestonesData.
+Sends getMilestones(filter) to the UI via guihooks milestonesData.
 
-- `filter` (*string[]|nil*) : Filtres.
+- `filter` (*string[]|nil*) : Filters.
 
 #### `career_modules_milestones_milestones.unclaimedMilestonesCount()`
 
-Nombre de jalons atteints et non réclamés.
+Number of milestones reached and unclaimed.
 
-- **renvoie** : integer Compteur sauvegardé.
+- **returns**: integer Saved counter.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `colorGeneralGray` | string | Couleur CSS var(--bng-cool-gray-700-rgb). |
-| `colorMissionBlue` | string | Couleur CSS var(--bng-add-blue-500-rgb). |
-| `colorOrange` | string | Couleur CSS var(--bng-orange-500-rgb). |
-| `saveData` | table | Données sauvegardées : general (par id : claimedStep, notificationStep) et unclaimedMilestonesCount. |
+| `colorGeneralGray` | string | CSS color var(--bng-cool-gray-700-rgb). |
+| `colorMissionBlue` | string | CSS color var(--bng-add-blue-500-rgb). |
+| `colorOrange` | string | CSS color var(--bng-orange-500-rgb). |
+| `saveData` | table | Saved data: general (per id: claimedStep, notificationStep) and unclaimedMilestonesCount. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onGetMilestones` — écouté par 2 module(s)
+- `onGetMilestones` — listened to by 2 module(s)
 
-**Évènements UI (guihooks.trigger) :** `allMilestonesClaimed`, `milestoneClaimed`, `milestonesData`, `toastrMsg`
+**UI events (guihooks.trigger):** `allMilestonesClaimed`, `milestoneClaimed`, `milestonesData`, `toastrMsg`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/milestones/milestones.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/milestones/milestones.lua`.*

@@ -1,77 +1,77 @@
 # `ui_liveries_textures`
 
-*Fichier : `lua/ge/extensions/ui/liveries/textures.lua` · VM : Game Engine (GE) · 232 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/liveries/textures.lua` · VM: Game Engine (GE) · 232 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_liveries_textures` : `extensions.load("ui_liveries_textures")`, puis la globale `ui_liveries_textures`
+**Access:** extension `ui_liveries_textures`: `extensions.load("ui_liveries_textures")`, then the global `ui_liveries_textures`
 
-Fournit à l'interface des livrées le catalogue des textures de décalcomanies dynamiques, classées par tags (digit, gradient, letter, logo, noise, pattern, shape, textureFill, Team Offroad) plus une catégorie « others » pour les textures sans tag. Le scan des textures tourne dans un job (editor_api_dynamicDecals_textures.setupAsync) avec un flux de progression, et les résultats sont envoyés à l'UI par guihooks. Mémorise aussi l'élément choisi dans le sélecteur.
+Provides the livery UI with the catalog of dynamic decal textures, classified by tags (digit, gradient, letter, logo, noise, pattern, shape, textureFill, Team Offroad) plus an "others" category for untagged textures. The texture scan runs in a job (editor_api_dynamicDecals_textures.setupAsync) with a progress stream, and the results are sent to the UI via guihooks. Also stores the item chosen in the selector.
 
-## Remarques
+## Notes
 
-- Événements guihooks émis : liveries_textureSelectorDataLoaded (métadonnées, fin du scan), liveries_textureCategoryData ({requestId, category, groups}), flux liveries_textureLoadProgress ({count, total, percent, inProgress}).
-- percent vaut -1 tant que le nombre total de fichiers est inconnu (progression indéterminée).
-- Une texture portant plusieurs tags apparaît dans chacun de leurs groupes (voulu, d'après le commentaire du code).
-- Si l'API editor_api_dynamicDecals_textures est absente, loadTextures renvoie « unavailable ».
+- guihooks events emitted: liveries_textureSelectorDataLoaded (metadata, end of scan), liveries_textureCategoryData ({requestId, category, groups}), stream liveries_textureLoadProgress ({count, total, percent, inProgress}).
+- percent is -1 while the total number of files is unknown (indeterminate progress).
+- A texture with several tags appears in each of their groups (intended, according to the code comment).
+- If the editor_api_dynamicDecals_textures API is missing, loadTextures returns "unavailable".
 
-**Dépendances (chargées avant) :** `editor_api_dynamicDecals_textures`
+**Dependencies (loaded first):** `editor_api_dynamicDecals_textures`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_liveries_textures.clearSelectedItem()` | Oublie l'élément choisi. | 227 |
-| `ui_liveries_textures.getSelectedItem()` | Renvoie l'élément mémorisé par setSelectorItem. | 223 |
-| `ui_liveries_textures.getSelectorMetadata()` | Construit les métadonnées du sélecteur : catégorie par défaut « all », puis liste triée des catégories (tags connus, « others » s'il existe des textures sans tag), « all » en tête. | 165 |
-| `ui_liveries_textures.getTagLabel(tag)` | Renvoie la clé de traduction (ui.liveries.edit.decalCategories.*) associée à un tag de texture. | 98 |
-| `ui_liveries_textures.loadTextures()` | Lance dans un job (cadence 1/30) le scan asynchrone des textures si elles ne sont pas déjà chargées, publie la progression, puis déclenche liveries_textureSelectorDataLoaded avec getSelectorMetadata(). | 139 |
-| `ui_liveries_textures.requestSelectorCategory(category, requestId)` | Prépare les groupes de textures d'une catégorie (« all » : tous les tags plus « others » ; « others » : textures sans tag ; ou un tag précis) et les envoie à l'UI par l'événement liveries_textureCategoryData. Chaque élément a name, label, value (nom de fichier) et preview (chemin). | 190 |
-| `ui_liveries_textures.setSelectorItem(item)` | Mémorise l'élément de catalogue choisi, conservé pendant la navigation vers l'écran de transformation. | 219 |
+| `ui_liveries_textures.clearSelectedItem()` | Forgets the chosen item. | 227 |
+| `ui_liveries_textures.getSelectedItem()` | Returns the item stored by setSelectorItem. | 223 |
+| `ui_liveries_textures.getSelectorMetadata()` | Builds the selector metadata: default category "all", then sorted list of categories (known tags, "others" if untagged textures exist), "all" first. | 165 |
+| `ui_liveries_textures.getTagLabel(tag)` | Returns the translation key (ui.liveries.edit.decalCategories.*) associated with a texture tag. | 98 |
+| `ui_liveries_textures.loadTextures()` | Launches in a job (rate 1/30) the asynchronous texture scan if they are not already loaded, publishes the progress, then triggers liveries_textureSelectorDataLoaded with getSelectorMetadata(). | 139 |
+| `ui_liveries_textures.requestSelectorCategory(category, requestId)` | Prepares the texture groups of a category ("all": all tags plus "others"; "others": untagged textures; or a specific tag) and sends them to the UI via the liveries_textureCategoryData event. Each item has name, label, value (file name) and preview (path). | 190 |
+| `ui_liveries_textures.setSelectorItem(item)` | Stores the chosen catalog item, kept while navigating to the transform screen. | 219 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_liveries_textures.getSelectedItem()`
 
-Renvoie l'élément mémorisé par setSelectorItem.
+Returns the item stored by setSelectorItem.
 
-- **renvoie** : table|nil Élément choisi ou nil.
+- **returns**: table|nil Chosen item or nil.
 
 #### `ui_liveries_textures.getSelectorMetadata()`
 
-Construit les métadonnées du sélecteur : catégorie par défaut « all », puis liste triée des catégories (tags connus, « others » s'il existe des textures sans tag), « all » en tête.
+Builds the selector metadata: default category "all", then sorted list of categories (known tags, "others" if untagged textures exist), "all" first.
 
-- **renvoie** : table {defaultCategory = "all", categories = {{value, label}, ...}}.
+- **returns**: table {defaultCategory = "all", categories = {{value, label}, ...}}.
 
 #### `ui_liveries_textures.getTagLabel(tag)`
 
-Renvoie la clé de traduction (ui.liveries.edit.decalCategories.*) associée à un tag de texture.
+Returns the translation key (ui.liveries.edit.decalCategories.*) associated with a texture tag.
 
-- `tag` (*string*) : Identifiant de tag, par exemple « logo ».
-- **renvoie** : string|nil Clé de traduction, nil si le tag est inconnu.
+- `tag` (*string*) : Tag identifier, for example "logo".
+- **returns**: string|nil Translation key, nil if the tag is unknown.
 
 #### `ui_liveries_textures.loadTextures()`
 
-Lance dans un job (cadence 1/30) le scan asynchrone des textures si elles ne sont pas déjà chargées, publie la progression, puis déclenche liveries_textureSelectorDataLoaded avec getSelectorMetadata().
+Launches in a job (rate 1/30) the asynchronous texture scan if they are not already loaded, publishes the progress, then triggers liveries_textureSelectorDataLoaded with getSelectorMetadata().
 
-- **renvoie** : string « startLoading », « alreadyLoading » (job en cours, la progression est renvoyée) ou « unavailable » (API absente).
+- **returns**: string "startLoading", "alreadyLoading" (job running, progress is returned) or "unavailable" (API missing).
 
 #### `ui_liveries_textures.requestSelectorCategory(category, requestId)`
 
-Prépare les groupes de textures d'une catégorie (« all » : tous les tags plus « others » ; « others » : textures sans tag ; ou un tag précis) et les envoie à l'UI par l'événement liveries_textureCategoryData. Chaque élément a name, label, value (nom de fichier) et preview (chemin).
+Prepares the texture groups of a category ("all": all tags plus "others"; "others": untagged textures; or a specific tag) and sends them to the UI via the liveries_textureCategoryData event. Each item has name, label, value (file name) and preview (path).
 
-- `category` (*string*) : Catégorie demandée ; une valeur non string est remplacée par « all ».
-- `requestId` (*number*) : Identifiant renvoyé tel quel dans l'événement (0 par défaut).
+- `category` (*string*) : Requested category; a non-string value is replaced by "all".
+- `requestId` (*number*) : Identifier returned as is in the event (0 by default).
 
 #### `ui_liveries_textures.setSelectorItem(item)`
 
-Mémorise l'élément de catalogue choisi, conservé pendant la navigation vers l'écran de transformation.
+Stores the chosen catalog item, kept while navigating to the transform screen.
 
-- `item` (*table|nil*) : Élément choisi.
+- `item` (*table|nil*) : Chosen item.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : editor_api_dynamicDecals_textures. |
+| `dependencies` | table<integer, string> | Extensions loaded before: editor_api_dynamicDecals_textures. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/liveries/textures.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/liveries/textures.lua`.*

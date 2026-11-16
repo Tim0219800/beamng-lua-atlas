@@ -1,43 +1,54 @@
 {
   "path": "lua/ge/extensions/ui/apps/pointsBar.lua",
-  "module": "Alimente l'app d'interface pointsBar (barre de points avec paliers). Il garde le nombre de points et les paliers (100, 200, 300 par défaut) et publie dans le flux 'pointsBar' le pourcentage de remplissage, le libellé, les paliers atteints et la position des paliers en pourcentage.",
+  "module": "Feeds the pointsBar interface app (points bar with thresholds). It keeps the point count and the thresholds (100, 200, 300 by default) and publishes in the 'pointsBar' stream the fill percentage, the label, the thresholds reached and the position of the thresholds as a percentage.",
   "usage": "ui_apps_pointsBar.setThresholds({500, 1000, 2000})\nui_apps_pointsBar.setPoints(750, '750 pts')",
   "notes": [
-    "La barre est dimensionnée sur le dernier palier + 10 % : fillPercent = points / (dernierPalier * 1.1), sous forme de fraction (0 à ~0,91), alors que thresholdPercentages est exprimé en pourcentage (0 à 100).",
-    "setPoints ne vérifie pas que les paliers existent : une liste de paliers vide provoque une erreur (index nil).",
-    "Dans clearData, setPoints(0) n'a pas de libellé : pointsLabel interne devient nil (le flux utilise alors '0').",
-    "L'extension reste chargée en permanence (déchargement manuel)."
+    "The bar is sized on the last threshold + 10%: fillPercent = points / (lastThreshold * 1.1), as a fraction (0 to ~0.91), whereas thresholdPercentages is expressed as a percentage (0 to 100).",
+    "setPoints does not check that the thresholds exist: an empty threshold list causes an error (nil index).",
+    "In clearData, setPoints(0) has no label: the internal pointsLabel becomes nil (the stream then uses '0').",
+    "The extension stays loaded permanently (manual unload)."
   ],
   "functions": {
     "setPoints": {
-      "desc": "Met à jour les points courants et le libellé, recalcule remplissage et paliers atteints, puis publie dans le flux 'pointsBar'.",
+      "desc": "Updates the current points and the label, recomputes fill and thresholds reached, then publishes in the 'pointsBar' stream.",
       "params": {
-        "points": {"type": "number", "desc": "Points actuels."},
-        "pointsLabel": {"type": "string|nil", "desc": "Texte affiché ; par défaut tostring(points)."}
+        "points": {
+          "type": "number",
+          "desc": "Current points."
+        },
+        "pointsLabel": {
+          "type": "string|nil",
+          "desc": "Displayed text; defaults to tostring(points)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "setThresholds": {
-      "desc": "Définit la liste des paliers (si fournie), recalcule leur position en pourcentage et publie dans le flux.",
-      "params": {"thresholds": {"type": "table<integer, number>|nil", "desc": "Paliers croissants ; le dernier fixe l'échelle."}},
+      "desc": "Sets the threshold list (if provided), recomputes their position as a percentage and publishes in the stream.",
+      "params": {
+        "thresholds": {
+          "type": "table<integer, number>|nil",
+          "desc": "Increasing thresholds; the last one sets the scale."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "clearData": {
-      "desc": "Remet les paliers par défaut {100, 200, 300} et les points à 0.",
+      "desc": "Resets the default thresholds {100, 200, 300} and the points to 0.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "requestAllData": {
-      "desc": "Republie paliers et points courants (utile quand l'app se monte).",
+      "desc": "Republishes thresholds and current points (useful when the app mounts).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "onInit": {
-      "desc": "Hook d'initialisation : place l'extension en déchargement manuel.",
+      "desc": "Initialization hook: sets the extension to manual unload.",
       "params": {},
       "returns": [],
       "internal": true

@@ -1,42 +1,42 @@
 # `gameplayInterfaceModules_interactFire`
 
-*Fichier : `lua/vehicle/extensions/gameplayInterfaceModules/interactFire.lua` · VM : Véhicule · 34 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/gameplayInterfaceModules/interactFire.lua` · VM: Vehicle · 34 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplayInterfaceModules_interactFire` : `extensions.load (VM véhicule)("gameplayInterfaceModules_interactFire")`, puis la globale `gameplayInterfaceModules_interactFire`
+**Access:** extension `gameplayInterfaceModules_interactFire`: `extensions.load (vehicle VM)("gameplayInterfaceModules_interactFire")`, then the global `gameplayInterfaceModules_interactFire`
 
-Module de gameplayInterface donnant accès au système d'incendie : appel à distance d'une fonction sans argument du module fire par son nom.
+gameplayInterface module giving access to the fire system: remote call of an argument-less function of the fire module by name.
 
-## Exemple
+## Example
 
 ```lua
 gameplayInterface.executeAction(0, 13, 'interactFire', 'igniteVehicle')
 ```
 
-## Remarques
+## Notes
 
-- Action 'interactFire'(methodName:string) : appelle fire[methodName]() sans argument ; {failReason} si la fonction n'existe pas. Le nom exact des méthodes valides dépend du module fire (voir sa page).
+- Action 'interactFire'(methodName:string): calls fire[methodName]() with no argument; {failReason} if the function does not exist. The exact names of valid methods depend on the fire module (see its page).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplayInterfaceModules_interactFire.onExtensionLoaded()` | Appelé au chargement : remplit moduleActions. *(interne)* *(hook)* | 26 |
-| `gameplayInterfaceModules_interactFire.requestRegistration(gi)` | Enregistre les actions et lookups auprès de gameplayInterface. *(interne)* | 22 |
+| `gameplayInterfaceModules_interactFire.onExtensionLoaded()` | Called on load: fills moduleActions. *(internal)* *(hook)* | 26 |
+| `gameplayInterfaceModules_interactFire.requestRegistration(gi)` | Registers the actions and lookups with gameplayInterface. *(internal)* | 22 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplayInterfaceModules_interactFire.requestRegistration(gi)`
 
-Enregistre les actions et lookups auprès de gameplayInterface.
+Registers the actions and lookups with gameplayInterface.
 
-- `gi` (*table*) : Le module gameplayInterface.
+- `gi` (*table*) : The gameplayInterface module.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `moduleActions` | table<string, function> | Actions : interactFire. |
-| `moduleLookups` | table<string, function> | Lookups : aucun. |
+| `moduleActions` | table<string, function> | Actions: interactFire. |
+| `moduleLookups` | table<string, function> | Lookups: none. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/gameplayInterfaceModules/interactFire.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/gameplayInterfaceModules/interactFire.lua`.*

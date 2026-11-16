@@ -1,45 +1,81 @@
 {
   "path": "lua/ge/extensions/ui/uiStateManager.lua",
-  "module": "Suit l'état de disponibilité des frameworks d'interface ('vue' et 'angular') et choisit l'écran initial. Quand les deux ont annoncé uiReady, il émet le hook onAllUiReady puis navigue vers l'écran de démarrage (consentement en ligne, disposition des boutons, jeu, onboarding ou menu) via ui_router. Il gère aussi la resynchronisation de la route après un rechargement F5 de l'UI.",
+  "module": "Tracks the availability state of the interface frameworks ('vue' and 'angular') and chooses the initial screen. When both have announced uiReady, it emits the onAllUiReady hook then navigates to the startup screen (online consent, button layout, game, onboarding or menu) via ui_router. It also handles route resynchronization after an F5 reload of the UI.",
   "notes": [
-    "Le mode de déchargement est mis sur 'manual' au chargement : l'extension ne se décharge pas automatiquement.",
-    "uiType inconnu (autre que 'vue' ou 'angular') : un avertissement est loggé et l'appel est ignoré.",
-    "Après initialisation, un nouveau uiReady (rechargement F5) émet 'ui_router_routeRefresh' pour le framework annoncé et pour ceux déjà prêts."
+    "The unload mode is set to 'manual' on load: the extension does not unload automatically.",
+    "Unknown uiType (other than 'vue' or 'angular'): a warning is logged and the call is ignored.",
+    "After initialization, a new uiReady (F5 reload) emits 'ui_router_routeRefresh' for the announced framework and for those already ready."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "ui_router, ui_router_routeManager, ui_menuManager, ui_legal."},
-    "initialized": {"type": "boolean|nil", "desc": "Devient true quand tous les frameworks sont prêts (posé par _checkAllUiReady)."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "ui_router, ui_router_routeManager, ui_menuManager, ui_legal."
+    },
+    "initialized": {
+      "type": "boolean|nil",
+      "desc": "Becomes true when all frameworks are ready (set by _checkAllUiReady)."
+    }
   },
   "functions": {
     "initialize": {
-      "desc": "Point d'entrée. En mode headless, émet directement le hook onUiReady ; sinon charge l'extension ui_router.",
-      "params": {"headlessMode": {"type": "boolean", "desc": "true si le jeu tourne sans interface."}},
+      "desc": "Entry point. In headless mode, directly emits the onUiReady hook; otherwise loads the ui_router extension.",
+      "params": {
+        "headlessMode": {
+          "type": "boolean",
+          "desc": "true if the game runs without an interface."
+        }
+      },
       "internal": true
     },
     "uiReady": {
-      "desc": "Appelée par l'UI quand un framework est chargé. Émet onUiReady(uiType), marque le framework prêt, puis soit resynchronise la route (déjà initialisé), soit vérifie si tous sont prêts.",
-      "params": {"uiType": {"type": "string", "desc": "'vue' ou 'angular'."}}
+      "desc": "Called by the UI when a framework is loaded. Emits onUiReady(uiType), marks the framework ready, then either resynchronizes the route (already initialized) or checks whether all are ready.",
+      "params": {
+        "uiType": {
+          "type": "string",
+          "desc": "'vue' or 'angular'."
+        }
+      }
     },
     "isUiReady": {
-      "desc": "Indique si un framework donné, ou tous s'il n'y a pas d'argument, est prêt.",
-      "params": {"uiType": {"type": "string|nil", "desc": "Framework à tester, ou nil pour tous."}},
-      "returns": [{"type": "boolean", "desc": "true si prêt."}]
+      "desc": "Returns whether a given framework, or all if there is no argument, is ready.",
+      "params": {
+        "uiType": {
+          "type": "string|nil",
+          "desc": "Framework to test, or nil for all."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if ready."
+        }
+      ]
     },
     "checkAndSyncRoute": {
-      "desc": "Après un rechargement F5, renvoie à l'UI la route courante via guihooks 'ui_router_routeRefresh' ({request, resolved, refreshedBy}) pour chaque framework concerné.",
-      "params": {"uiType": {"type": "string", "desc": "Framework qui vient de se réannoncer."}},
-      "returns": [{"type": "boolean", "desc": "false si pas encore initialisé, sinon true."}]
+      "desc": "After an F5 reload, sends the current route back to the UI via guihooks 'ui_router_routeRefresh' ({request, resolved, refreshedBy}) for each concerned framework.",
+      "params": {
+        "uiType": {
+          "type": "string",
+          "desc": "Framework that just announced itself again."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if not yet initialized, otherwise true."
+        }
+      ]
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement : désactive le déchargement automatique de l'extension.",
+      "desc": "Hook called on load: disables automatic unloading of the extension.",
       "internal": true
     },
     "navigateToInitialScreen": {
-      "desc": "Choisit l'écran de départ. Sans licence valide : 'legal.onlineFeatures' si le consentement en ligne manque, puis 'buttonLayout' si la fenêtre de disposition (showedInputLayoutPopupV37) n'a pas été vue. Sinon 'play' si on entre en jeu (état freeroam ou chargement), 'onboarding' si non montré, sinon 'menu'.",
+      "desc": "Chooses the starting screen. Without a valid license: 'legal.onlineFeatures' if online consent is missing, then 'buttonLayout' if the layout window (showedInputLayoutPopupV37) has not been seen. Otherwise 'play' if entering the game (freeroam or loading state), 'onboarding' if not shown, otherwise 'menu'.",
       "internal": true
     },
     "_checkAllUiReady": {
-      "desc": "Si tous les frameworks sont prêts, passe initialized à true, émet onAllUiReady et lance navigateToInitialScreen.",
+      "desc": "If all frameworks are ready, sets initialized to true, emits onAllUiReady and starts navigateToInitialScreen.",
       "internal": true
     }
   }

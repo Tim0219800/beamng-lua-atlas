@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/util/photomodeAttach.lua",
+  "module": "Attache la caméra libre au véhicule du joueur pendant le mode photo : la caméra garde son décalage par rapport au véhicule et le suit à chaque frame (onPreRender). En option, elle suit aussi la rotation du véhicule, uniquement en lacet (yaw), sans tangage ni roulis. Ne fonctionne que si la caméra active est la caméra libre « free ».",
+  "usage": "extensions.util_photomodeAttach.enable(true, {followRotation = true})",
+  "fields": {
+    "enabled": {"type": "boolean", "desc": "true tant que l'attache est active"},
+    "followRotation": {"type": "boolean", "desc": "true si la caméra suit aussi le lacet du véhicule"},
+    "offsetWorld": {"type": "vec3|nil", "desc": "Décalage caméra - véhicule en repère monde (mode sans rotation)"},
+    "offsetLocal": {"type": "vec3|nil", "desc": "Décalage dans le repère du véhicule, lacet seul (mode avec rotation)"},
+    "rotOffset": {"type": "quat|nil", "desc": "Rotation de la caméra relative au lacet du véhicule"}
+  },
+  "notes": [
+    "enable désactive silencieusement l'attache (M.enabled = false) si la caméra active n'est pas « free », s'il n'y a pas de véhicule joueur ou si sa position/rotation est introuvable.",
+    "La position du véhicule est celle du nœud de référence (getRefNodeAbsPositionXYZ) quand elle existe."
+  ],
+  "functions": {
+    "enable": {
+      "desc": "Active ou désactive l'attache. À l'activation, mémorise le décalage actuel de la caméra libre par rapport au véhicule joueur (et son orientation relative si followRotation).",
+      "params": {
+        "en": {"type": "boolean", "desc": "true pour activer, tout autre valeur désactive"},
+        "opts": {"type": "table|nil", "desc": "Options : followRotation (boolean) pour suivre le lacet du véhicule"}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "syncCameraToVehicle": {
+      "desc": "Applique immédiatement la transformation mémorisée à la caméra (même traitement que celui fait à chaque frame). Sans effet si l'attache est inactive.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onPreRender": {
+      "desc": "Hook appelé chaque frame avant le rendu : replace la caméra par rapport au véhicule.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta de temps réel en secondes (non utilisé)"},
+        "dtSim": {"type": "number", "desc": "Delta de temps de simulation (non utilisé)"},
+        "dtRaw": {"type": "number", "desc": "Delta de temps brut (non utilisé)"}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

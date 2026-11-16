@@ -1,82 +1,82 @@
 # `gameplay_drift_sounds`
 
-*Fichier : `lua/ge/extensions/gameplay/drift/sounds.lua` · VM : Game Engine (GE) · 216 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drift/sounds.lua` · VM: Game Engine (GE) · 216 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drift_sounds` : `extensions.load("gameplay_drift_sounds")`, puis la globale `gameplay_drift_sounds`
+**Access:** extension `gameplay_drift_sounds`: `extensions.load("gameplay_drift_sounds")`, then the global `gameplay_drift_sounds`
 
-Gère les sons d'interface du drift (événements FMOD UI>Career>Drift_*) : un son continu pendant un drift dont la hauteur suit le facteur de performance, un son à chaque nouveau palier, à chaque changement de combo, à l'annulation du drift (crash/spinout) et à la validation des points. Contient aussi une fenêtre imgui « Drift audio » pour simuler un drift en debug. Chargé par gameplay_drift_general tant que l'extension d'affichage drift est chargée.
+Manages drift UI sounds (FMOD events UI>Career>Drift_*): a continuous sound during a drift whose pitch follows the performance factor, a sound on each new tier, on each combo change, when the drift is canceled (crash/spinout) and when points are validated. Also contains a "Drift audio" imgui window to simulate a drift in debug. Loaded by gameplay_drift_general as long as the drift display extension is loaded.
 
-## Remarques
+## Notes
 
-- Sons : continuousDrift = event:>UI>Career>Drift_Counting, newTier = Drift_Tier, newCombo1 = Drift_Combo_1x, newCombo5 = Drift_Combo_5x, driftCanceled = Drift_Canceled, pointsConfirmed = Drift_PointsReceived.
-- Le son continu est coupé quand le drift est en pause ou gelé (gameplay_drift_general.getPaused/getFrozen) ; sinon il joue tant que gameplay_drift_drift.getIsDrifting() est vrai.
-- Le volume du son de palier est tierData.order - 1 (donc 0 pour le palier d'ordre 1).
-- Le son de combo utilise comboChange <= 0.2 pour choisir Combo_1x, sinon Combo_5x.
-- La fonction locale reset() n'est pas exportée : general.reset ne peut donc pas l'appeler.
+- Sounds: continuousDrift = event:>UI>Career>Drift_Counting, newTier = Drift_Tier, newCombo1 = Drift_Combo_1x, newCombo5 = Drift_Combo_5x, driftCanceled = Drift_Canceled, pointsConfirmed = Drift_PointsReceived.
+- The continuous sound is cut when the drift is paused or frozen (gameplay_drift_general.getPaused/getFrozen); otherwise it plays as long as gameplay_drift_drift.getIsDrifting() is true.
+- The tier sound volume is tierData.order - 1 (so 0 for the tier of order 1).
+- The combo sound uses comboChange <= 0.2 to choose Combo_1x, otherwise Combo_5x.
+- The local function reset() is not exported: general.reset therefore cannot call it.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drift_sounds.getDriftDebugInfo()` | Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift. | 67 |
-| `gameplay_drift_sounds.onDriftCompletedScored(data)` | Hook : joue le son de points reçus. *(interne)* *(hook)* | 186 |
-| `gameplay_drift_sounds.onDriftCrash()` | Hook : joue le son d'annulation du drift. *(interne)* *(hook)* | 172 |
-| `gameplay_drift_sounds.onDriftDebugChanged(value)` | Hook : à la désactivation du debug, arrête la simulation de drift (gameplay_drift_drift.simulateADrift()). *(interne)* *(hook)* | 180 |
-| `gameplay_drift_sounds.onDriftNewCombo(data)` | Hook : joue le son de combo 1x ou 5x selon l'ampleur du changement. *(interne)* *(hook)* | 159 |
-| `gameplay_drift_sounds.onDriftSpinout()` | Hook : joue le son d'annulation du drift. *(interne)* *(hook)* | 176 |
-| `gameplay_drift_sounds.onExtensionUnloaded()` | Hook : supprime la source audio du son continu au déchargement. *(interne)* *(hook)* | 195 |
-| `gameplay_drift_sounds.onNewDriftTierReached(tierData)` | Hook : joue le son de nouveau palier. *(interne)* *(hook)* | 153 |
-| `gameplay_drift_sounds.onUpdate(dtReal, _dtSim, dtRaw)` | Appelé à chaque frame : au premier appel crée la source audio du son continu, affiche la fenêtre de debug, puis joue/arrête le son continu et met à jour son paramètre pitch et sa position (caméra). *(interne)* *(hook)* | 135 |
+| `gameplay_drift_sounds.getDriftDebugInfo()` | Returns {default=false, canBeChanged=true} for the drift debug window. | 67 |
+| `gameplay_drift_sounds.onDriftCompletedScored(data)` | Hook: plays the points received sound. *(internal)* *(hook)* | 186 |
+| `gameplay_drift_sounds.onDriftCrash()` | Hook: plays the drift cancel sound. *(internal)* *(hook)* | 172 |
+| `gameplay_drift_sounds.onDriftDebugChanged(value)` | Hook: when debug is disabled, stops the drift simulation (gameplay_drift_drift.simulateADrift()). *(internal)* *(hook)* | 180 |
+| `gameplay_drift_sounds.onDriftNewCombo(data)` | Hook: plays the 1x or 5x combo sound depending on the size of the change. *(internal)* *(hook)* | 159 |
+| `gameplay_drift_sounds.onDriftSpinout()` | Hook: plays the drift cancel sound. *(internal)* *(hook)* | 176 |
+| `gameplay_drift_sounds.onExtensionUnloaded()` | Hook: removes the audio source of the continuous sound on unload. *(internal)* *(hook)* | 195 |
+| `gameplay_drift_sounds.onNewDriftTierReached(tierData)` | Hook: plays the new tier sound. *(internal)* *(hook)* | 153 |
+| `gameplay_drift_sounds.onUpdate(dtReal, _dtSim, dtRaw)` | Called every frame: on the first call creates the audio source of the continuous sound, displays the debug window, then plays/stops the continuous sound and updates its pitch parameter and its position (camera). *(internal)* *(hook)* | 135 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drift_sounds.getDriftDebugInfo()`
 
-Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift.
+Returns {default=false, canBeChanged=true} for the drift debug window.
 
-- **renvoie** : table {default = false, canBeChanged = true}
+- **returns**: table {default = false, canBeChanged = true}
 
 #### `gameplay_drift_sounds.onDriftCompletedScored(data)`
 
-Hook : joue le son de points reçus.
+Hook: plays the points received sound.
 
-- `data` (*table*) : Données du drift scoré (inutilisées).
+- `data` (*table*) : Scored drift data (unused).
 
 #### `gameplay_drift_sounds.onDriftDebugChanged(value)`
 
-Hook : à la désactivation du debug, arrête la simulation de drift (gameplay_drift_drift.simulateADrift()).
+Hook: when debug is disabled, stops the drift simulation (gameplay_drift_drift.simulateADrift()).
 
-- `value` (*boolean*) : Nouvel état du debug.
+- `value` (*boolean*) : New debug state.
 
 #### `gameplay_drift_sounds.onDriftNewCombo(data)`
 
-Hook : joue le son de combo 1x ou 5x selon l'ampleur du changement.
+Hook: plays the 1x or 5x combo sound depending on the size of the change.
 
 - `data` (*table*) : {comboChange = number}.
 
 #### `gameplay_drift_sounds.onNewDriftTierReached(tierData)`
 
-Hook : joue le son de nouveau palier.
+Hook: plays the new tier sound.
 
-- `tierData` (*table*) : Données du palier ; order sert au volume.
+- `tierData` (*table*) : Tier data; order is used for the volume.
 
 #### `gameplay_drift_sounds.onUpdate(dtReal, _dtSim, dtRaw)`
 
-Appelé à chaque frame : au premier appel crée la source audio du son continu, affiche la fenêtre de debug, puis joue/arrête le son continu et met à jour son paramètre pitch et sa position (caméra).
+Called every frame: on the first call creates the audio source of the continuous sound, displays the debug window, then plays/stops the continuous sound and updates its pitch parameter and its position (camera).
 
-- `dtReal` (*number*) : Delta temps réel (inutilisé).
-- `_dtSim` (*number*) : Delta temps simulé, mémorisé pour les transitions de debug.
-- `dtRaw` (*number*) : Delta temps brut (inutilisé).
+- `dtReal` (*number*) : Real time delta (unused).
+- `_dtSim` (*number*) : Simulated delta time, stored for debug transitions.
+- `dtRaw` (*number*) : Raw time delta (unused).
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onNewDriftTierReached` — écouté par 2 module(s)
+- `onNewDriftTierReached` — listened to by 2 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drift/sounds.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drift/sounds.lua`.*

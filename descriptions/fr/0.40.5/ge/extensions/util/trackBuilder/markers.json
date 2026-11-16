@@ -1,0 +1,155 @@
+{
+  "path": "lua/ge/extensions/util/trackBuilder/markers.lua",
+  "module": "Gère les marqueurs d'édition du Track Builder (inclinaison, hauteur, largeur, checkpoint, murs gauche et droit, plafond) et l'interpolation des valeurs qu'ils portent le long de la piste. Les marqueurs sont des objets TSStatic créés et déplacés dans la scène (canSave = false). Chaque type de marqueur déclare dans une table interne 'types' son mode d'interpolation ('points', 'segments', 'both' ou 'single'), sa fonction d'interpolation de champ et sa fonction de placement des marqueurs. Le module calcule aussi les caps de début et fin entre segments voisins.",
+  "notes": [
+    "Les fonctions d'interpolation (step, linear, pow2, pow3, pow4, smoothSlope, smootherSlope) prennent t dans [0, 1] et renvoient deux valeurs : la valeur interpolée et sa dérivée. smoothSlope et smootherSlope ont une dérivée horizontale aux deux extrémités. Les noms d'interpolation stockés dans les marqueurs (b.interpolation) sont les noms de ces fonctions de M.",
+    "Les valeurs de marqueurs sont écrites dans les points du segment (point.bank, point.width, point.height…) et dans segment.markerInfo ; segment.refreshMesh est mis à true quand le mesh doit être régénéré.",
+    "Seuls les types listés dans names (bank, height, width, checkpoint, leftWall, rightWall, ceilingMesh) ont une liste de marqueurs ; les noms centerMesh, leftMesh et rightMesh sont commentés dans names, donc hideMarkers/clearMarkers/unloadAll ne les gèrent pas (hideMarkers('centerMesh') provoquerait une erreur sur une table nil).",
+    "Bug : dans linear/pow2/pow3/pow4, la dérivée renvoyée pour t >= 1 est t, 2t, 3t, 4t au lieu de la dérivée en 1 (1, 2, 3, 4 pour t=1) ; la valeur est correcte seulement si t vaut exactement 1.",
+    "Bug : dans compareSimpleCaps et compareWallCeilingCaps, les branches 'noPoints' testent second.startCap / first.endCap (champs du segment) au lieu de meshInfo[nameOfField].startCap / endCap.",
+    "Bug : dans interpolateOverSegments, la condition 'i ~= track' compare un nombre à une table (toujours vraie).",
+    "Un marqueur de largeur est composé de deux objets TSStatic (nom 'widthMarker<n>' et 'widthMarker<n>b')."
+  ],
+  "fields": {
+    "names": {"type": "string[]", "desc": "Liste des types de marqueurs gérés : bank, height, width, checkpoint, leftWall, rightWall, ceilingMesh."}
+  },
+  "functions": {
+    "step": {
+      "desc": "Interpolation en escalier : renvoie toujours 0 et 0 (la valeur de départ est conservée).",
+      "params": {"t": {"type": "number", "desc": "Position dans [0, 1]."}},
+      "returns": [{"type": "number", "desc": "Valeur."}, {"type": "number", "desc": "Dérivée."}],
+      "internal": false
+    },
+    "linear": {
+      "desc": "Interpolation linéaire : valeur t, dérivée 1 (0 hors de [0, 1] à gauche, 1 à droite).",
+      "params": {"t": {"type": "number", "desc": "Position."}},
+      "returns": [{"type": "number", "desc": "Valeur."}, {"type": "number", "desc": "Dérivée."}],
+      "internal": false
+    },
+    "pow2": {
+      "desc": "Interpolation en t².",
+      "params": {"t": {"type": "number", "desc": "Position."}},
+      "returns": [{"type": "number", "desc": "Valeur."}, {"type": "number", "desc": "Dérivée."}],
+      "internal": false
+    },
+    "pow3": {
+      "desc": "Interpolation en t³.",
+      "params": {"t": {"type": "number", "desc": "Position."}},
+      "returns": [{"type": "number", "desc": "Valeur."}, {"type": "number", "desc": "Dérivée."}],
+      "internal": false
+    },
+    "pow4": {
+      "desc": "Interpolation en t⁴.",
+      "params": {"t": {"type": "number", "desc": "Position."}},
+      "returns": [{"type": "number", "desc": "Valeur."}, {"type": "number", "desc": "Dérivée."}],
+      "internal": false
+    },
+    "smoothSlope": {
+      "desc": "Interpolation lissée (3t²-2t³) : va de 0 à 1 avec une pente horizontale en 0 et en 1.",
+      "params": {"t": {"type": "number", "desc": "Position."}},
+      "returns": [{"type": "number", "desc": "Valeur."}, {"type": "number", "desc": "Dérivée."}],
+      "internal": false
+    },
+    "smootherSlope": {
+      "desc": "Interpolation encore plus lisse (polynôme de Perlin 6t⁵-15t⁴+10t³), pente et courbure nulles aux extrémités.",
+      "params": {"t": {"type": "number", "desc": "Position."}},
+      "returns": [{"type": "number", "desc": "Valeur."}, {"type": "number", "desc": "Dérivée."}],
+      "internal": false
+    },
+    "interpolate": {
+      "desc": "Interpole le champ nameOfField sur toute la piste selon le mode du type ('points', 'segments', 'both' ou 'single'), puis vide la liste des changements de ce champ.",
+      "params": {
+        "nameOfField": {"type": "string", "desc": "Type de marqueur (bank, height, width, leftWall…)."},
+        "track": {"type": "table[]", "desc": "Liste ordonnée des segments."}
+      },
+      "internal": false
+    },
+    "interpolateOverPoints": {
+      "desc": "Interpole entre deux valeurs successives de marqueurs sur les points des segments concernés (seulement s'ils sont dans markerChanges ou frais), selon la longueur parcourue.",
+      "params": {
+        "nameOfField": {"type": "string", "desc": "Type de marqueur."},
+        "track": {"type": "table[]", "desc": "Segments de la piste."}
+      },
+      "internal": false
+    },
+    "interpolateOverSegments": {
+      "desc": "Applique la valeur de marqueur précédente à chaque segment (mode 'segments'), à partir du premier segment qui porte le champ.",
+      "params": {
+        "nameOfField": {"type": "string", "desc": "Type de marqueur."},
+        "track": {"type": "table[]", "desc": "Segments de la piste."}
+      },
+      "internal": false
+    },
+    "interpolateSingle": {
+      "desc": "Pour les types 'single' (checkpoint), appelle la fonction de segment seulement pour les indices enregistrés par addMarkerChange.",
+      "params": {
+        "nameOfField": {"type": "string", "desc": "Type de marqueur."},
+        "track": {"type": "table[]", "desc": "Segments de la piste."}
+      },
+      "internal": false
+    },
+    "interpolatePointsOfSegment": {
+      "desc": "Interpole entre startValue et endValue sur les points d'un segment (fraction t = (p.length - startLength)/(endLength - startLength)) et sur son markerInfo ; sans points, ne calcule que markerInfo. Met refreshMesh à true.",
+      "params": {
+        "segment": {"type": "table", "desc": "Segment à mettre à jour."},
+        "startValue": {"type": "table", "desc": "Valeur de départ (avec .value, .interpolation…)."},
+        "endValue": {"type": "table|nil", "desc": "Valeur d'arrivée ; nil pour garder startValue."},
+        "startLength": {"type": "number", "desc": "Longueur cumulée au départ."},
+        "endLength": {"type": "number|nil", "desc": "Longueur cumulée à l'arrivée."},
+        "nameOfField": {"type": "string", "desc": "Type de marqueur."}
+      },
+      "internal": false
+    },
+    "interpolateField": {
+      "desc": "Délègue à la fonction d'interpolation propre au type (par exemple interpolateBank, interpolateWidth) pour écrire la valeur interpolée dans point.",
+      "params": {
+        "name": {"type": "string", "desc": "Type de marqueur."},
+        "t": {"type": "number", "desc": "Fraction dans [0, 1]."},
+        "a": {"type": "table", "desc": "Valeur de départ."},
+        "b": {"type": "table", "desc": "Valeur d'arrivée."},
+        "point": {"type": "table", "desc": "Point ou markerInfo à écrire."},
+        "length": {"type": "number", "desc": "Longueur de l'intervalle."}
+      },
+      "internal": false
+    },
+    "caps": {
+      "desc": "Calcule les caps de début et de fin entre segments consécutifs pour centerMesh, leftMesh, rightMesh (si les valeurs diffèrent), et pour leftWall, rightWall, ceilingMesh (si l'état actif diffère). Le segment 1 est ignoré ; si closed est vrai, le dernier segment est comparé au deuxième.",
+      "params": {
+        "segments": {"type": "table[]", "desc": "Segments de la piste."},
+        "closed": {"type": "boolean|nil", "desc": "Piste en boucle fermée."}
+      },
+      "internal": false
+    },
+    "transformMarkers": {
+      "desc": "Crée, supprime et repositionne les objets marqueurs du type donné pour les nœuds de la piste ; sans effet si le type n'a pas de fonction transformMarkers.",
+      "params": {
+        "name": {"type": "string", "desc": "Type de marqueur."},
+        "allNodes": {"type": "table[]", "desc": "Tous les nœuds/segments de la piste."}
+      },
+      "internal": false
+    },
+    "hideMarkers": {
+      "desc": "Cache les marqueurs du type donné en mettant leur échelle à 0.",
+      "params": {"name": {"type": "string", "desc": "Type de marqueur présent dans names."}},
+      "internal": false
+    },
+    "clearMarkers": {
+      "desc": "Supprime de la scène les marqueurs du type donné.",
+      "params": {"name": {"type": "string", "desc": "Type de marqueur présent dans names."}},
+      "internal": false
+    },
+    "addMarkerChange": {
+      "desc": "Note que le segment d'indice index a un marqueur modifié pour le champ name ; interpolate ne recalcule alors que les zones concernées.",
+      "params": {
+        "name": {"type": "string", "desc": "Type de marqueur."},
+        "index": {"type": "integer", "desc": "Indice du segment dans la piste."}
+      },
+      "internal": false
+    },
+    "unloadAll": {
+      "desc": "Oublie toutes les listes de marqueurs (remises à {}) sans supprimer les objets de la scène ; à utiliser après un nettoyage de scène.",
+      "params": {},
+      "internal": false
+    }
+  }
+}

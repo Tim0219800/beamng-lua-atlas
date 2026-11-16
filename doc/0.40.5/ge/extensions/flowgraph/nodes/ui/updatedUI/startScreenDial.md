@@ -1,24 +1,24 @@
 # `flowgraph_nodes_ui_updatedUI_startScreenDial`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenDial.lua` · VM : Game Engine (GE) · 68 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenDial.lua` · VM: Game Engine (GE) · 68 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/updatedUI/startScreenDial")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/updatedUI/startScreenDial")` (file under extensions/ but not a regular extension)
 
-Nœud « StartScreen Drag Dial » (repeat_instant, couleur ui). Ajoute à l'écran de démarrage le panneau de réglage du dial d'une course de dragster (le gagnant est celui qui termine au plus près de son dial sans le dépasser). Entrée flow ; sorties flow (chainFlow) et dials (table de {label, key, value, disabled, racerId}).
+Node "StartScreen Drag Dial" (repeat_instant, color ui). Adds the dial setup panel of a drag race to the start screen (the winner is the one who finishes closest to their dial without going over). Input flow; outputs flow (chainFlow) and dials (table of {label, key, value, disabled, racerId}).
 
-## Remarques
+## Notes
 
-- Le log d'avertissement utilise logTag, non défini dans ce fichier (nil).
+- The warning log uses logTag, which is not defined in this file (nil).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Prépare le panneau {type='dragDial', header='Dial Setup', ...}. | 22 |
-| `C:onDialSetByDialPanel(dial)` | Appelé quand le joueur modifie un dial dans le panneau ; met à jour la valeur de l'entrée de même label et republie dials. | 58 |
-| `C:work()` | Lit gameplay_drag_dragBridge.getData() ; pour chaque coureur crée une entrée de dial (valeur timers.dial.value ou 12 par défaut, désactivée si le coureur n'est pas jouable), ajoute le panneau à l'UI et publie la liste sur le pin dials. Sans données, logue un avertissement et ne fait rien d'autre. | 34 |
+| `C:init()` | Prepares the panel {type='dragDial', header='Dial Setup', ...}. | 22 |
+| `C:onDialSetByDialPanel(dial)` | Called when the player changes a dial in the panel; updates the value of the entry with the same label and republishes dials. | 58 |
+| `C:work()` | Reads gameplay_drag_dragBridge.getData(); for each racer creates a dial entry (value timers.dial.value or 12 by default, disabled if the racer is not playable), adds the panel to the UI and publishes the list on the dials pin. Without data, logs a warning and does nothing else. | 34 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenDial.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenDial.lua`.*

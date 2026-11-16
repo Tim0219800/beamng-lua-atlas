@@ -1,43 +1,43 @@
 # `editor_vehicleBridgeTest`
 
-*Fichier : `lua/ge/extensions/editor/vehicleBridgeTest.lua` · VM : Game Engine (GE) · 56 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleBridgeTest.lua` · VM: Game Engine (GE) · 56 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleBridgeTest` : `extensions.load("editor_vehicleBridgeTest")`, puis la globale `editor_vehicleBridgeTest`
+**Access:** extension `editor_vehicleBridgeTest`: `extensions.load("editor_vehicleBridgeTest")`, then the global `editor_vehicleBridgeTest`
 
-Petite fenêtre de test de `core_vehicleBridge` dans l'éditeur (menu Window > Vehicles > 'Vehicle Bridge Test'). On choisit un véhicule (ID ou liste des BeamNGVehicle), on saisit une clé (par défaut 'ignition') et le bouton 'Get Value!' appelle core_vehicleBridge.requestValue ; la réponse asynchrone s'affiche avec dumps().
+Small test window for `core_vehicleBridge` in the editor (menu Window > Vehicles > 'Vehicle Bridge Test'). You choose a vehicle (ID or list of BeamNGVehicle), enter a key (default 'ignition') and the 'Get Value!' button calls core_vehicleBridge.requestValue; the asynchronous reply is displayed with dumps().
 
-## Exemple
+## Example
 
 ```lua
 extensions.load("editor_vehicleBridgeTest")
 ```
 
-## Remarques
+## Notes
 
-- La réponse n'est pas immédiate : le texte 'Waiting for Reply...' reste jusqu'à ce que le callback M.callback reçoive les arguments.
-- Le callback est appelé via editor_vehicleBridgeTest.callback(...) (globale), donc l'extension doit être chargée sous ce nom.
+- The reply is not immediate: the text 'Waiting for Reply...' stays until the callback M.callback receives the arguments.
+- The callback is called via editor_vehicleBridgeTest.callback(...) (global), so the extension must be loaded under this name.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleBridgeTest.callback(...)` | Reçoit la réponse de core_vehicleBridge.requestValue et stocke tous ses arguments dans une table affichée dans la fenêtre. | 53 |
-| `editor_vehicleBridgeTest.onEditorGui()` | Hook de rendu GUI de l'éditeur : dessine la fenêtre (saisie ID véhicule, combo de véhicules, clé, bouton Get Value!, résultat). *(interne)* *(hook)* | 13 |
-| `editor_vehicleBridgeTest.onEditorInitialized()` | Enregistre la fenêtre 'Vehicle Bridge Test' (400x600), ajoute son entrée de menu (groupe Vehicles) et charge l'extension core_vehicleBridge. *(interne)* *(hook)* | 44 |
+| `editor_vehicleBridgeTest.callback(...)` | Receives the reply of core_vehicleBridge.requestValue and stores all its arguments in a table displayed in the window. | 53 |
+| `editor_vehicleBridgeTest.onEditorGui()` | Editor GUI render hook: draws the window (vehicle ID input, vehicle combo, key, Get Value! button, result). *(internal)* *(hook)* | 13 |
+| `editor_vehicleBridgeTest.onEditorInitialized()` | Registers the 'Vehicle Bridge Test' window (400x600), adds its menu entry (Vehicles group) and loads the core_vehicleBridge extension. *(internal)* *(hook)* | 44 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleBridgeTest.callback(...)`
 
-Reçoit la réponse de core_vehicleBridge.requestValue et stocke tous ses arguments dans une table affichée dans la fenêtre.
+Receives the reply of core_vehicleBridge.requestValue and stores all its arguments in a table displayed in the window.
 
-- `...` (*any*) : Valeurs renvoyées par le bridge pour la clé demandée.
+- `...` (*any*) : Values returned by the bridge for the requested key.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
-**Charge les extensions :** `core_vehicleBridge`
+**Loads extensions:** `core_vehicleBridge`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleBridgeTest.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleBridgeTest.lua`.*

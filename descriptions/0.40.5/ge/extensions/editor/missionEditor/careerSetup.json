@@ -1,83 +1,132 @@
 {
   "path": "lua/ge/extensions/editor/missionEditor/careerSetup.lua",
-  "module": "Section de configuration carrière du Mission Editor (mission.careerSetup) : choix des modes où la mission apparaît (Freeroam, Career), compétence associée (Skill, parmi les branches de carrière), frais d'inscription (Entry Fee) et utilitaires pour les récompenses (clé d'attribut, montant, copier/coller). Charge career_branches pour lister les attributs possibles (money, vouchers et la clé de chaque branche). Le module renvoie un constructeur.",
+  "module": "Career setup section of the Mission Editor (mission.careerSetup): choice of the modes where the mission appears (Freeroam, Career), associated skill (Skill, among the career branches), registration fee (Entry Fee) and utilities for rewards (attribute key, amount, copy/paste). Loads career_branches to list the possible attributes (money, vouchers and each branch's key). The module returns a constructor.",
   "notes": [
-    "Les options d'attribut sont money, vouchers, puis branch.attributeKey pour chaque branche renvoyée par career_branches.getSortedBranches().",
-    "Les tampons de saisie sont dans une table locale (inputBuffers) vidée à chaque setMission.",
-    "getMissionIssues ne détecte aucun problème : renvoie toujours une liste vide.",
-    "setMission suppose que mission.careerSetup existe et que l'instance de mission est trouvée (missionInstance.sortedStarKeys) ; sinon erreur."
+    "The attribute options are money, vouchers, then branch.attributeKey for each branch returned by career_branches.getSortedBranches().",
+    "The input buffers are in a local table (inputBuffers) cleared at each setMission.",
+    "getMissionIssues detects no issue: always returns an empty list.",
+    "setMission assumes that mission.careerSetup exists and that the mission instance is found (missionInstance.sortedStarKeys); otherwise error."
   ],
   "classes": {
     "C": {
-      "desc": "Sous-fenêtre de configuration carrière.",
+      "desc": "Career setup sub-window.",
       "functions": {
         "init": {
-          "desc": "Constructeur : charge career_branches et construit les listes d'attributs (attributeOptions) et de compétences (skillOptions, triée, avec « (none) »).",
-          "params": {"missionEditor": {"type": "table", "desc": "Module editor_missionEditor."}},
+          "desc": "Constructor: loads career_branches and builds the attribute lists (attributeOptions) and skill lists (skillOptions, sorted, with \"(none)\").",
+          "params": {
+            "missionEditor": {
+              "type": "table",
+              "desc": "editor_missionEditor module."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "setMission": {
-          "desc": "Sélectionne la mission : lit careerSetup (showInCareer, showInFreeroam), récupère les clés d'étoiles, vide les tampons et relie l'assistant d'édition du type de mission au conteneur « mission ».",
-          "params": {"mission": {"type": "table", "desc": "Données de mission."}},
+          "desc": "Selects the mission: reads careerSetup (showInCareer, showInFreeroam), gets the star keys, clears the buffers and links the mission type's edit helper to the \"mission\" container.",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Mission data."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "getMissionIssues": {
-          "desc": "Appelle setMission puis renvoie la liste des problèmes (toujours vide).",
-          "params": {"m": {"type": "table", "desc": "Données de mission."}},
-          "returns": [{"type": "table[]", "desc": "Liste vide."}],
+          "desc": "Calls setMission then returns the list of issues (always empty).",
+          "params": {
+            "m": {
+              "type": "table",
+              "desc": "Mission data."
+            }
+          },
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "Empty list."
+            }
+          ],
           "internal": false
         },
         "attributeDropdown": {
-          "desc": "Dessine une petite liste déroulante « ... » des clés d'attribut possibles.",
+          "desc": "Draws a small \"...\" dropdown of the possible attribute keys.",
           "params": {},
-          "returns": [{"type": "string|nil", "desc": "Clé choisie pendant cette image, sinon nil."}],
+          "returns": [
+            {
+              "type": "string|nil",
+              "desc": "Key chosen during this frame, otherwise nil."
+            }
+          ],
           "internal": false
         },
         "drawAttributeInput": {
-          "desc": "Dessine le champ texte de la clé d'attribut d'une récompense avec la liste de choix ; met à jour re.attributeKey et marque la mission _dirty.",
+          "desc": "Draws the text field for a reward's attribute key with the choice list; updates re.attributeKey and marks the mission _dirty.",
           "params": {
-            "re": {"type": "table", "desc": "Entrée de récompense (attributeKey, rewardAmount)."},
-            "idx": {"type": "integer", "desc": "Indice de la récompense (sert à nommer le tampon)."},
-            "key": {"type": "string", "desc": "Clé de la liste de récompenses."}
+            "re": {
+              "type": "table",
+              "desc": "Reward entry (attributeKey, rewardAmount)."
+            },
+            "idx": {
+              "type": "integer",
+              "desc": "Index of the reward (used to name the buffer)."
+            },
+            "key": {
+              "type": "string",
+              "desc": "Key of the rewards list."
+            }
           },
           "returns": [],
           "internal": false
         },
         "drawRewardAmount": {
-          "desc": "Dessine le champ entier du montant de récompense ; écrit re.rewardAmount et re._originalRewardAmount et marque la mission _dirty.",
+          "desc": "Draws the integer field for the reward amount; writes re.rewardAmount and re._originalRewardAmount and marks the mission _dirty.",
           "params": {
-            "re": {"type": "table", "desc": "Entrée de récompense."},
-            "idx": {"type": "integer", "desc": "Indice de la récompense."},
-            "key": {"type": "string", "desc": "Clé de la liste de récompenses."}
+            "re": {
+              "type": "table",
+              "desc": "Reward entry."
+            },
+            "idx": {
+              "type": "integer",
+              "desc": "Index of the reward."
+            },
+            "key": {
+              "type": "string",
+              "desc": "Key of the rewards list."
+            }
           },
           "returns": [],
           "internal": false
         },
         "drawAddReward": {
-          "desc": "Dessine la zone d'ajout d'une récompense (champ clé, bouton +, liste de choix) et les boutons copier et coller de la liste de récompenses.",
+          "desc": "Draws the area for adding a reward (key field, + button, choice list) and the copy and paste buttons of the rewards list.",
           "params": {
-            "key": {"type": "string", "desc": "Clé de la liste de récompenses."},
-            "rewards": {"type": "table", "desc": "Liste de récompenses à compléter."}
+            "key": {
+              "type": "string",
+              "desc": "Key of the rewards list."
+            },
+            "rewards": {
+              "type": "table",
+              "desc": "Rewards list to complete."
+            }
           },
           "returns": [],
           "internal": false
         },
         "drawEntryFee": {
-          "desc": "Dessine l'édition des frais d'inscription de la mission (une ligne par frais avec un bouton « Rem » pour le retirer).",
+          "desc": "Draws the editing of the mission's registration fees (one line per fee with a \"Rem\" button to remove it).",
           "params": {},
           "returns": [],
           "internal": false
         },
         "drawCareerSetup": {
-          "desc": "Dessine le tableau principal : cases Freeroam et Career, liste Skill et Entry Fee ; chaque modification écrit dans mission.careerSetup et marque _dirty.",
+          "desc": "Draws the main table: Freeroam and Career checkboxes, Skill list and Entry Fee; each modification writes into mission.careerSetup and marks _dirty.",
           "params": {},
           "returns": [],
           "internal": false
         },
         "draw": {
-          "desc": "Point d'entrée de dessin : appelle drawCareerSetup.",
+          "desc": "Draw entry point: calls drawCareerSetup.",
           "params": {},
           "returns": [],
           "internal": false

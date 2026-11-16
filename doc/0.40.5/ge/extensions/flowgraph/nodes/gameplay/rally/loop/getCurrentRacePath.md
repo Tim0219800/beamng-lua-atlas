@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_rally_loop_getCurrentRacePath`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getCurrentRacePath.lua` · VM : Game Engine (GE) · 46 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getCurrentRacePath.lua` · VM: Game Engine (GE) · 46 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/loop/getCurrentRacePath")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/loop/getCurrentRacePath")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Get Current Race Path » (catégorie once_instant, tag rally). Lit rm:getCurrentRacePath() du gestionnaire de la boucle rally et le place dans la pin racePath (string) : chemin du fichier de course de la mission courante du planning, ou chaîne vide si indisponible.
+Flowgraph node "Rally Get Current Race Path" (category once_instant, tag rally). Reads rm:getCurrentRacePath() from the rally loop manager and places it in the racePath pin (string): path of the race file of the current mission in the schedule, or empty string if unavailable.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Écrit le chemin de course courant (ou '') dans racePath. | 28 |
+| `C:workOnce()` | Writes the current race path (or '') to racePath. | 28 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getCurrentRacePath.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getCurrentRacePath.lua`.*

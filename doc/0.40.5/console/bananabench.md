@@ -1,12 +1,12 @@
 # `bananabench`
 
-*Fichier : `lua/console/bananabench.lua` · VM : Console · 239 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/console/bananabench.lua` · VM: Console · 239 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("bananabench")`
+**Access:** `require("bananabench")`
 
-Banc d'essai « bananabench » de la physique des véhicules (version 0.5), exécuté dans la VM console (BeamNG sans interface). Il initialise un moteur de physique (initBeamEngine à 2000 Hz), charge un véhicule (jbeam/loader), le fait apparaître en 1 à N exemplaires et mesure, sur 200 itérations de 100 pas physiques, le débit en millions de poutres par seconde (MBeams/s) et le pourcentage de temps réel. Il imprime un tableau et renvoie les résultats. C'est la base utilisée par bananabench-json, bananabench-csv, bananabench-xml et bananabench-print.
+Vehicle physics test bench "bananabench" (version 0.5), run in the console VM (BeamNG without UI). It initializes a physics engine (initBeamEngine at 2000 Hz), loads a vehicle (jbeam/loader), spawns it in 1 to N copies and measures, over 200 iterations of 100 physics steps, the throughput in millions of beams per second (MBeams/s) and the percentage of real time. It prints a table and returns the results. It is the base used by bananabench-json, bananabench-csv, bananabench-xml and bananabench-print.
 
-## Exemple
+## Example
 
 ```lua
 local bench = require('lua/console/bananabench')
@@ -14,59 +14,59 @@ local res = bench.physics({'pickup'}, 1, 4)
 print(res.tests.pickup.maxMbeams)
 ```
 
-## Remarques
+## Notes
 
-- Constantes internes : physicsFPS = 2000, physicsSteps = 100 (ne pas dépasser), gfxSteps = 200, véhicule par défaut {'pickup'}, nombre de véhicules par défaut 40 (globale VehiclesToTest si définie).
-- Au chargement, le fichier appelle require('jit') et lua/console/console-lib.initConsole() (qui crée des globales factices) et initBeamEngine ; il crée donc un moteur à l'import.
-- Chaque véhicule est placé en (300*i, 300*i, 1) et on désactive son sommeil (setSleepingEnabled(false)). Un tour d'échauffement de 5 pas précède chaque mesure ; le GC est arrêté et le JIT coupé (sous pcall, car il peut être absent sur certaines plateformes) pendant la mesure.
-- Résultat de benchPhysics : {hw, physicsFPS, physicsSteps, gfxSteps, version, tests = {[véhicule] = {maxMbeams, maxMbeamsNum, maxRealtimeVehicles, version = 2, time, tests = {{vehicles, res = {Mbeamspersec, percentRealtime, time, spawntime}, msg}}}}, vehicleMax, vehicleMin, time}.
-- Globales créées : benchLog (collecteur de logs non utilisé ensuite), benchPhysics, myBenchStep. Utilise les API moteur BeamEngine:spawnObject2/deleteAllObjects/instabilityDetected/setDynamicCollisionEnabled, obj:getNodeCount/getBeamCount/queueLuaCommand, FS:findFiles, setPowerPlanMaxPerformance/restorePowerPlan.
-- `benchPhysics` renvoie nil (après un log d'erreur) si le moteur n'a pas pu être créé ; un véhicule dont le nombre de poutres ou de nœuds est nil est ignoré.
+- Internal constants: physicsFPS = 2000, physicsSteps = 100 (do not exceed), gfxSteps = 200, default vehicle {'pickup'}, default number of vehicles 40 (global VehiclesToTest if defined).
+- On load, the file calls require('jit') and lua/console/console-lib.initConsole() (which creates dummy globals) and initBeamEngine; it therefore creates an engine on import.
+- Each vehicle is placed at (300*i, 300*i, 1) and its sleeping is disabled (setSleepingEnabled(false)). A 5-step warm-up round precedes each measurement; the GC is stopped and the JIT turned off (under pcall, since it may be absent on some platforms) during the measurement.
+- Result of benchPhysics: {hw, physicsFPS, physicsSteps, gfxSteps, version, tests = {[vehicle] = {maxMbeams, maxMbeamsNum, maxRealtimeVehicles, version = 2, time, tests = {{vehicles, res = {Mbeamspersec, percentRealtime, time, spawntime}, msg}}}}, vehicleMax, vehicleMin, time}.
+- Globals created: benchLog (log collector not used afterwards), benchPhysics, myBenchStep. Uses the engine APIs BeamEngine:spawnObject2/deleteAllObjects/instabilityDetected/setDynamicCollisionEnabled, obj:getNodeCount/getBeamCount/queueLuaCommand, FS:findFiles, setPowerPlanMaxPerformance/restorePowerPlan.
+- `benchPhysics` returns nil (after an error log) if the engine could not be created; a vehicle whose beam or node count is nil is skipped.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `bananabench.beam()` | Renvoie l'objet moteur BeamEngine créé par ce module, pour le piloter directement (par ex. setThreadingLayout pour un balayage du nombre de threads). | 234 |
-| `bananabench.getAllVehicles()` | Liste les sous-dossiers de /vehicles (hors /vehicles/common) sous forme de noms. | 84 |
-| `bananabench.physics(vehicles, vehicleMin, vehicleMax)` | Lance le benchmark de physique (alias de benchPhysics). Pour chaque véhicule de la liste, mesure de vehicleMin à vehicleMax exemplaires et imprime un tableau MBeams/s et % temps réel. | 94 |
+| `bananabench.beam()` | Returns the BeamEngine engine object created by this module, to drive it directly (e.g. setThreadingLayout for a thread count sweep). | 234 |
+| `bananabench.getAllVehicles()` | Lists the subfolders of /vehicles (excluding /vehicles/common) as names. | 84 |
+| `bananabench.physics(vehicles, vehicleMin, vehicleMax)` | Runs the physics benchmark (alias of benchPhysics). For each vehicle in the list, measures from vehicleMin to vehicleMax copies and prints an MBeams/s and % realtime table. | 94 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `bananabench.beam()`
 
-Renvoie l'objet moteur BeamEngine créé par ce module, pour le piloter directement (par ex. setThreadingLayout pour un balayage du nombre de threads).
+Returns the BeamEngine engine object created by this module, to drive it directly (e.g. setThreadingLayout for a thread count sweep).
 
-- **renvoie** : userdata Système BeamNG natif.
+- **returns**: userdata Native BeamNG system.
 
 #### `bananabench.getAllVehicles()`
 
-Liste les sous-dossiers de /vehicles (hors /vehicles/common) sous forme de noms.
+Lists the subfolders of /vehicles (excluding /vehicles/common) as names.
 
-- **renvoie** : string[] Noms de véhicules.
+- **returns**: string[] Vehicle names.
 
 #### `bananabench.physics(vehicles, vehicleMin, vehicleMax)`
 
-Lance le benchmark de physique (alias de benchPhysics). Pour chaque véhicule de la liste, mesure de vehicleMin à vehicleMax exemplaires et imprime un tableau MBeams/s et % temps réel.
+Runs the physics benchmark (alias of benchPhysics). For each vehicle in the list, measures from vehicleMin to vehicleMax copies and prints an MBeams/s and % realtime table.
 
-- `vehicles` (*string[]|nil*) : Noms de dossiers sous /vehicles ; défaut {'pickup'}.
-- `vehicleMin` (*integer|nil*) : Nombre minimal de véhicules simultanés (défaut 1).
-- `vehicleMax` (*integer|nil*) : Nombre maximal (défaut VehiclesToTest ou 40).
-- **renvoie** : table|nil Résultats du benchmark (voir notes), nil si le moteur est indisponible.
+- `vehicles` (*string[]|nil*) : Folder names under /vehicles; default {'pickup'}.
+- `vehicleMin` (*integer|nil*) : Minimum number of simultaneous vehicles (default 1).
+- `vehicleMax` (*integer|nil*) : Maximum number (default VehiclesToTest or 40).
+- **returns**: table|nil Benchmark results (see notes), nil if the engine is unavailable.
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
 | `benchLog(level, origin, msg, newline)` |  | 71 |
 | `benchPhysics(vehicles, vehicleMin, vehicleMax)` |  | 94 |
 | `myBenchStep(testVehicle, vehLPackData, n, steps)` |  | 33 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `BeamEngine:` `deleteAllObjects`, `instabilityDetected`, `setDynamicCollisionEnabled`, `spawnObject2`
 - `FS:` `findFiles`
 - `obj:` `getBeamCount`, `getNodeCount`, `queueLuaCommand`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/console/bananabench.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/console/bananabench.lua`.*

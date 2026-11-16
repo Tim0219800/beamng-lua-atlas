@@ -1,44 +1,44 @@
 # `flowgraph_nodes_scene_raceLineParking`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/raceLineParking.lua` · VM : Game Engine (GE) · 337 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/raceLineParking.lua` · VM: Game Engine (GE) · 337 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/raceLineParking")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/raceLineParking")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Raceline Parking » (repeat_instant, auteur BeamNG). Vérifie qu'un véhicule est garé dans une place définie par position/rotation/scale (le scale donne demi-largeur x, longueur y et profondeur z). Calcule dotAngle, forward, sideDistance, forwardDistance (basés sur le centre des deux roues avant) et détecte l'arrêt (vitesse <= 0.05 m/s pendant stop_timer secondes). Dessine un volume de debug coloré dans le monde et, si le pin imgui est vrai, un aperçu 2D imgui.
+Flowgraph node "Raceline Parking" (repeat_instant, author BeamNG). Checks that a vehicle is parked in a spot defined by position/rotation/scale (the scale gives half-width x, length y and depth z). Computes dotAngle, forward, sideDistance, forwardDistance (based on the center of the two front wheels) and detects stopping (speed <= 0.05 m/s for stop_timer seconds). Draws a colored debug volume in the world and, if the imgui pin is true, a 2D imgui preview.
 
-## Remarques
+## Notes
 
-- Bug : checkParking lit self.pinIn.vehicleID alors que le pin s'appelle vehId : ce pin est ignoré et c'est toujours le véhicule du joueur (getPlayerVehicle(0)) qui est suivi. drawImgui utilise aussi toujours le véhicule du joueur.
-- getTwoSmallestValues renvoie deux fois la même roue si le nombre de roues est impair.
-- drawDebug référence la variable globale drawMode, probablement nil (alpha 0.25).
-- Valeurs de rotation par défaut quat(0,0,0,0) (non valide) si le pin n'est pas branché.
+- Bug: checkParking reads self.pinIn.vehicleID whereas the pin is named vehId: this pin is ignored and the player's vehicle (getPlayerVehicle(0)) is always the one tracked. drawImgui also always uses the player's vehicle.
+- getTwoSmallestValues returns the same wheel twice if the number of wheels is odd.
+- drawDebug references the global variable drawMode, probably nil (alpha 0.25).
+- Default rotation values quat(0,0,0,0) (invalid) if the pin is not connected.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet stopTimer à nil au démarrage du graphe. | 44 |
-| `C:_executionStopped()` | Remet stopTimer à nil à l'arrêt du graphe. | 48 |
-| `C:_onDeserialized(res)` | Ne restaure rien. | 268 |
-| `C:_onSerialize(res)` | Ne sauvegarde rien. | 264 |
-| `C:checkParking()` | Calcule les sorties (dotAngle, forward, sideDistance, forwardDistance, inside, stopping, stoppedPercent, stopped) pour le véhicule suivi. | 151 |
-| `C:drawDebug()` | Dessine avec debugDrawer des triangles semi-transparents (boîte de la place, côtés gauche/droit) colorés selon l'état. | 272 |
-| `C:drawImgui()` | Dessine l'aperçu imgui 280x300 : bords de la place (vert/jaune/rouge), contour du véhicule, essieu avant et cercle de progression de l'arrêt. | 110 |
-| `C:drawLine(line, color, thickness)` | Dessine une polyligne 2D dans la ImDrawList courante. | 90 |
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du noeud dans l'éditeur. | 260 |
-| `C:getVehicleFrontwheelsCenterPosition(vehicle, pos)` | Renvoie le centre des deux roues les plus à l'avant, puis les positions de chaque roue (vec3), ou rien si vehicle/pos est nil. | 236 |
-| `C:init(mgr, ...)` | Rien à initialiser. | 40 |
-| `C:onClientEndMission()` | Hook de fin de mission : appelle _executionStopped. | 52 |
-| `C:toInternal2d(pos)` | Convertit une position monde en coordonnées 2D de l'aperçu imgui, relatives à la place. | 77 |
-| `C:work(args)` | Sur clear, remet les sorties à nil ; sur flow, appelle checkParking, drawDebug et éventuellement drawImgui. | 58 |
-| `C:worldLineToMapLine(line)` | Convertit une liste de points monde en points 2D de l'aperçu (table réutilisée entre appels). | 101 |
+| `C:_executionStarted()` | Resets stopTimer to nil when the graph starts. | 44 |
+| `C:_executionStopped()` | Resets stopTimer to nil when the graph stops. | 48 |
+| `C:_onDeserialized(res)` | Restores nothing. | 268 |
+| `C:_onSerialize(res)` | Saves nothing. | 264 |
+| `C:checkParking()` | Computes the outputs (dotAngle, forward, sideDistance, forwardDistance, inside, stopping, stoppedPercent, stopped) for the tracked vehicle. | 151 |
+| `C:drawDebug()` | Draws with debugDrawer semi-transparent triangles (spot box, left/right sides) colored according to the state. | 272 |
+| `C:drawImgui()` | Draws the 280x300 imgui preview: spot edges (green/yellow/red), vehicle outline, front axle and stop progress circle. | 110 |
+| `C:drawLine(line, color, thickness)` | Draws a 2D polyline in the current ImDrawList. | 90 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the editor. | 260 |
+| `C:getVehicleFrontwheelsCenterPosition(vehicle, pos)` | Returns the center of the two frontmost wheels, then the position of each wheel (vec3), or nothing if vehicle/pos is nil. | 236 |
+| `C:init(mgr, ...)` | Nothing to initialize. | 40 |
+| `C:onClientEndMission()` | Mission end hook: calls _executionStopped. | 52 |
+| `C:toInternal2d(pos)` | Converts a world position into 2D coordinates of the imgui preview, relative to the spot. | 77 |
+| `C:work(args)` | On clear, resets the outputs to nil; on flow, calls checkParking, drawDebug and optionally drawImgui. | 58 |
+| `C:worldLineToMapLine(line)` | Converts a list of world points into 2D preview points (table reused between calls). | 101 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawTriSolid`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/raceLineParking.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/raceLineParking.lua`.*

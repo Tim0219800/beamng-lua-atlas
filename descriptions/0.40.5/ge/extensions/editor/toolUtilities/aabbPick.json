@@ -1,44 +1,112 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/aabbPick.lua",
-  "module": "Utilitaire de sélection par rayon contre des boîtes alignées sur les axes (AABB), sans allocation. Sert aux outils de l'éditeur qui doivent choisir un objet du monde par sa boîte englobante (ex. instances de bâtiments posées). Parcours linéaire des candidats.",
+  "module": "Ray picking utility against axis-aligned boxes (AABB), without allocation. Used by editor tools that need to pick a world object by its bounding box (e.g. placed building instances). Linear scan of the candidates.",
   "usage": "local id, t = editor_toolUtilities_aabbPick.pickNearest(ox,oy,oz, dx,dy,dz, function(visit)\n  for id, b in pairs(boxes) do visit(id, b.minx,b.miny,b.minz, b.maxx,b.maxy,b.maxz) end\nend)",
   "notes": [
-    "La direction du rayon n'a pas besoin d'être normalisée ; la distance t est alors exprimée en multiples de cette direction.",
-    "Un rayon démarrant à l'intérieur de la boîte renvoie 0."
+    "The ray direction does not need to be normalized; the distance t is then expressed in multiples of this direction.",
+    "A ray starting inside the box returns 0."
   ],
   "functions": {
     "rayAabb": {
-      "desc": "Test rayon/AABB par la méthode des slabs. Renvoie la distance d'entrée t le long du rayon (>= 0) si touché, sinon nil.",
+      "desc": "Ray/AABB test using the slab method. Returns the entry distance t along the ray (>= 0) if hit, otherwise nil.",
       "params": {
-        "ox": {"type": "number", "desc": "Origine du rayon, x"},
-        "oy": {"type": "number", "desc": "Origine du rayon, y"},
-        "oz": {"type": "number", "desc": "Origine du rayon, z"},
-        "dx": {"type": "number", "desc": "Direction, x"},
-        "dy": {"type": "number", "desc": "Direction, y"},
-        "dz": {"type": "number", "desc": "Direction, z"},
-        "minx": {"type": "number", "desc": "Coin min de la boîte, x"},
-        "miny": {"type": "number", "desc": "Coin min de la boîte, y"},
-        "minz": {"type": "number", "desc": "Coin min de la boîte, z"},
-        "maxx": {"type": "number", "desc": "Coin max de la boîte, x"},
-        "maxy": {"type": "number", "desc": "Coin max de la boîte, y"},
-        "maxz": {"type": "number", "desc": "Coin max de la boîte, z"}
-      },
-      "returns": [{"type": "number|nil", "desc": "Distance d'entrée, ou nil si le rayon rate la boîte ou si elle est derrière lui."}]
-    },
-    "pickNearest": {
-      "desc": "Renvoie l'id de la boîte la plus proche (par distance d'entrée) que le rayon traverse. Le fournisseur provider(visit) doit appeler visit(id, minx, miny, minz, maxx, maxy, maxz) une fois par boîte candidate.",
-      "params": {
-        "ox": {"type": "number", "desc": "Origine du rayon, x"},
-        "oy": {"type": "number", "desc": "Origine du rayon, y"},
-        "oz": {"type": "number", "desc": "Origine du rayon, z"},
-        "dx": {"type": "number", "desc": "Direction, x"},
-        "dy": {"type": "number", "desc": "Direction, y"},
-        "dz": {"type": "number", "desc": "Direction, z"},
-        "provider": {"type": "function", "desc": "function(visit) qui énumère les boîtes via visit(id, minx, miny, minz, maxx, maxy, maxz)."}
+        "ox": {
+          "type": "number",
+          "desc": "Ray origin, x"
+        },
+        "oy": {
+          "type": "number",
+          "desc": "Ray origin, y"
+        },
+        "oz": {
+          "type": "number",
+          "desc": "Ray origin, z"
+        },
+        "dx": {
+          "type": "number",
+          "desc": "Direction, x"
+        },
+        "dy": {
+          "type": "number",
+          "desc": "Direction, y"
+        },
+        "dz": {
+          "type": "number",
+          "desc": "Direction, z"
+        },
+        "minx": {
+          "type": "number",
+          "desc": "Min corner of the box, x"
+        },
+        "miny": {
+          "type": "number",
+          "desc": "Min corner of the box, y"
+        },
+        "minz": {
+          "type": "number",
+          "desc": "Min corner of the box, z"
+        },
+        "maxx": {
+          "type": "number",
+          "desc": "Max corner of the box, x"
+        },
+        "maxy": {
+          "type": "number",
+          "desc": "Max corner of the box, y"
+        },
+        "maxz": {
+          "type": "number",
+          "desc": "Max corner of the box, z"
+        }
       },
       "returns": [
-        {"type": "any|nil", "desc": "Id gagnant, ou nil si aucune boîte touchée."},
-        {"type": "number", "desc": "Distance d'entrée du gagnant (absente si nil)."}
+        {
+          "type": "number|nil",
+          "desc": "Entry distance, or nil if the ray misses the box or if it is behind it."
+        }
+      ]
+    },
+    "pickNearest": {
+      "desc": "Returns the id of the closest box (by entry distance) that the ray crosses. The provider provider(visit) must call visit(id, minx, miny, minz, maxx, maxy, maxz) once per candidate box.",
+      "params": {
+        "ox": {
+          "type": "number",
+          "desc": "Ray origin, x"
+        },
+        "oy": {
+          "type": "number",
+          "desc": "Ray origin, y"
+        },
+        "oz": {
+          "type": "number",
+          "desc": "Ray origin, z"
+        },
+        "dx": {
+          "type": "number",
+          "desc": "Direction, x"
+        },
+        "dy": {
+          "type": "number",
+          "desc": "Direction, y"
+        },
+        "dz": {
+          "type": "number",
+          "desc": "Direction, z"
+        },
+        "provider": {
+          "type": "function",
+          "desc": "function(visit) that enumerates the boxes via visit(id, minx, miny, minz, maxx, maxy, maxz)."
+        }
+      },
+      "returns": [
+        {
+          "type": "any|nil",
+          "desc": "Winning id, or nil if no box is hit."
+        },
+        {
+          "type": "number",
+          "desc": "Entry distance of the winner (absent if nil)."
+        }
       ]
     }
   }

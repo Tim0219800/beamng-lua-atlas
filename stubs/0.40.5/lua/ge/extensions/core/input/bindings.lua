@@ -2,232 +2,232 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/input/bindings.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_input_bindings` : charge, fusionne, sauvegarde et envoie au moteur les associations touches/axes -> actions (bindings) de tous les périphériques branchés, pour chaque joueur. Il lit les inputmaps par défaut (JSON du jeu et des véhicules) puis les différences utilisateur (*.diff dans settings/inputmaps), applique les courbes de réponse FFB, notifie l'UI, le moteur, les véhicules (config force feedback) et les autres extensions. Il gère aussi l'activation des ActionMap de menu selon les écrans ouverts. Un moddeur s'en sert surtout pour connaître la touche d'une action, réinitialiser les contrôles ou activer/désactiver des actions de menu.
---- Accès : extension `core_input_bindings` : `extensions.load("core_input_bindings")`, puis la globale `core_input_bindings`
+--- GE extension `core_input_bindings`: loads, merges, saves and sends to the engine the key/axis -> action associations (bindings) of all connected devices, for each player. It reads the default inputmaps (JSON of the game and the vehicles) then the user differences (*.diff in settings/inputmaps), applies the FFB response curves, notifies the UI, the engine, the vehicles (force feedback config) and the other extensions. It also handles the activation of menu ActionMaps according to the open screens. A modder mainly uses it to find the key of an action, reset the controls or enable/disable menu actions.
+--- Access: extension `core_input_bindings`: `extensions.load("core_input_bindings")`, then the global `core_input_bindings`
 ---@class core_input_bindings
----@field assignedPlayers table<string, integer> Nom de périphérique -> indice de joueur.
----@field autoAssignPlayersToDevices boolean true (défaut) : l'assignation joueur<->périphérique est calculée automatiquement par core_multiseat.
----@field bindings table[] Bindings courants par périphérique (voir notes).
----@field defaultBindings table[] Bindings par défaut officiels, même structure que bindings ; sert de référence pour calculer les diffs.
+---@field assignedPlayers table<string, integer> Device name -> player index.
+---@field autoAssignPlayersToDevices boolean true (default): the player<->device assignment is computed automatically by core_multiseat.
+---@field bindings table[] Current bindings per device (see notes).
+---@field defaultBindings table[] Official default bindings, same structure as bindings; used as a reference to compute the diffs.
 ---@field dependencies string[] {'core_input_actions', 'core_input_categories', 'core_multiseat', 'license', 'core_versionUpdate'}.
----@field devices table<string, table> Périphériques branchés : nom (ex. 'xinput0') -> {guid, productName, vidpid, playerNumber, platformUserNumber}.
----@field isMenuActive boolean true quand l'ActionMap de menu est active (écran de menu ou popup ouvert).
+---@field devices table<string, table> Connected devices: name (e.g. 'xinput0') -> {guid, productName, vidpid, playerNumber, platformUserNumber}.
+---@field isMenuActive boolean true when the menu ActionMap is active (menu screen or popup open).
 core_input_bindings = {}
 
---- Applique en une fois une table d'assignations (périphérique -> joueur ; absent = -1).
----Source : lua/ge/extensions/core/input/bindings.lua:959
----@param assignments table<string, integer> Assignations.
----@param reason string|nil Texte pour les notifications.
----@return boolean  false si assignments n'est pas une table.
+--- Applies an assignment table at once (device -> player; absent = -1).
+---Source: lua/ge/extensions/core/input/bindings.lua:959
+---@param assignments table<string, integer> Assignments.
+---@param reason string|nil Text for the notifications.
+---@return boolean  false if assignments is not a table.
 function core_input_bindings.applyPlayerAssignments(assignments, reason) end
 
---- Active ou désactive un modificateur personnalisé de l'ActionMap pour un joueur (ActionMap.enableCustomModifier).
----Source : lua/ge/extensions/core/input/bindings.lua:1368
----@param player integer Indice du joueur.
----@param enabled boolean Activer.
----@param modifier any Modificateur (valeur du moteur).
+--- Enables or disables a custom modifier of the ActionMap for a player (ActionMap.enableCustomModifier).
+---Source: lua/ge/extensions/core/input/bindings.lua:1368
+---@param player integer Player index.
+---@param enabled boolean Enable.
+---@param modifier any Modifier (engine value).
 function core_input_bindings.enableCustomModifier(player, enabled, modifier) end
 
---- Autres actions utilisées (non 'unused') sur les mêmes contrôles que actionName, sur le même périphérique.
----Source : lua/ge/extensions/core/input/bindings.lua:684
----@param actionName string Nom unique de l'action.
----@return string[]  Noms d'actions triés.
+--- Other actions used (not 'unused') on the same controls as actionName, on the same device.
+---Source: lua/ge/extensions/core/input/bindings.lua:684
+---@param actionName string Unique name of the action.
+---@return string[]  Sorted action names.
 function core_input_bindings.getActionsSharingControls(actionName) end
 
---- Renvoie M.assignedPlayers.
----Source : lua/ge/extensions/core/input/bindings.lua:1293
----@return table<string, integer>  Périphérique -> joueur.
+--- Returns M.assignedPlayers.
+---Source: lua/ge/extensions/core/input/bindings.lua:1293
+---@return table<string, integer>  Device -> player.
 function core_input_bindings.getAssignedPlayers() end
 
---- Renvoie le premier contrôle (touche/axe) trouvé pour une action, tous périphériques confondus. Le résultat est mis en cache jusqu'au prochain notifyGE.
----Source : lua/ge/extensions/core/input/bindings.lua:669
----@param actionName string Nom unique de l'action.
----@return string|nil  Nom du contrôle (ex. 'keyboard0' contrôle, 'axis1').
+--- Returns the first control (key/axis) found for an action, across all devices. The result is cached until the next notifyGE.
+---Source: lua/ge/extensions/core/input/bindings.lua:669
+---@param actionName string Unique name of the action.
+---@return string|nil  Control name (e.g. 'keyboard0' control, 'axis1').
 function core_input_bindings.getControlForAction(actionName) end
 
---- Lit la configuration force feedback d'une action (steering, accelerate, brake) pour le conducteur d'un véhicule : décode le JSON renvoyé par be:getFFBConfig puis ffbParamsJson dans ffbConfig.ffbParams.
----Source : lua/ge/extensions/core/input/bindings.lua:764
----@param veh userdata Objet véhicule.
----@param action string Nom de l'action.
----@return table|nil  Config FFB, nil s'il n'y a pas de conducteur ni de contrôleur FFB ou en cas d'erreur de décodage.
+--- Reads the force feedback configuration of an action (steering, accelerate, brake) for a vehicle's driver: decodes the JSON returned by be:getFFBConfig then ffbParamsJson into ffbConfig.ffbParams.
+---Source: lua/ge/extensions/core/input/bindings.lua:764
+---@param veh userdata Vehicle object.
+---@param action string Name of the action.
+---@return table|nil  FFB config, nil if there is no driver or FFB controller or on a decoding error.
 ---@return integer  FFBID.
 function core_input_bindings.getFFBConfigForAction(veh, action) end
 
---- Renvoie isMenuActive.
----Source : lua/ge/extensions/core/input/bindings.lua:1231
----@return boolean  État.
+--- Returns isMenuActive.
+---Source: lua/ge/extensions/core/input/bindings.lua:1231
+---@return boolean  State.
 function core_input_bindings.getMenuActionMapEnabled() end
 
---- Indique si la surveillance est active.
----Source : lua/ge/extensions/core/input/bindings.lua:1125
----@return boolean  État.
+--- Indicates whether watching is active.
+---Source: lua/ge/extensions/core/input/bindings.lua:1125
+---@return boolean  State.
 function core_input_bindings.getMenuActionMapWatchEnabled() end
 
---- État actuel (activé ou non) de chaque action de menu indépendante.
----Source : lua/ge/extensions/core/input/bindings.lua:1108
----@return table<string, boolean>  Action -> activée.
+--- Current state (enabled or not) of each independent menu action.
+---Source: lua/ge/extensions/core/input/bindings.lua:1108
+---@return table<string, boolean>  Action -> enabled.
 function core_input_bindings.getMenuActionStates() end
 
---- État de la MenuScrollActionMap.
----Source : lua/ge/extensions/core/input/bindings.lua:1141
----@return boolean  true si poussée.
+--- State of the MenuScrollActionMap.
+---Source: lua/ge/extensions/core/input/bindings.lua:1141
+---@return boolean  true if pushed.
 function core_input_bindings.getMenuScrollActionMapEnabled() end
 
---- Liste des périphériques triés par activité récente (mise en cache, getDevicesByRecentActivity).
----Source : lua/ge/extensions/core/input/bindings.lua:1459
----@return table  Périphériques récents.
+--- List of devices sorted by recent activity (cached, getDevicesByRecentActivity).
+---Source: lua/ge/extensions/core/input/bindings.lua:1459
+---@return table  Recent devices.
 function core_input_bindings.getRecentDevices() end
 
---- Recharge les bindings en enregistrant les chemins de fichiers lus (utile pour lister les inputmaps utilisés).
----Source : lua/ge/extensions/core/input/bindings.lua:1362
----@return string[]  Chemins lus.
+--- Reloads the bindings while recording the file paths read (useful to list the inputmaps used).
+---Source: lua/ge/extensions/core/input/bindings.lua:1362
+---@return string[]  Paths read.
 function core_input_bindings.getUsedBindingsFiles() end
 
---- Indique si un popup modal est ouvert (état d'UI '/popup/...' hors '/popup/activity/').
----Source : lua/ge/extensions/core/input/bindings.lua:1288
----@return boolean  État.
+--- Indicates whether a modal popup is open (UI state '/popup/...' other than '/popup/activity/').
+---Source: lua/ge/extensions/core/input/bindings.lua:1288
+---@return boolean  State.
 function core_input_bindings.isModalPopupOpen() end
 
---- Déprécié : loggue une erreur avec la pile d'appel et appelle setMenuActionMapEnabled(enabled).
----Source : lua/ge/extensions/core/input/bindings.lua:1347
----@param enabled boolean État voulu.
+--- Deprecated: logs an error with the call stack and calls setMenuActionMapEnabled(enabled).
+---Source: lua/ge/extensions/core/input/bindings.lua:1347
+---@param enabled boolean Desired state.
 function core_input_bindings.menuActive(enabled) end
 
---- Envoie à l'UI les contrôleurs, les joueurs assignés et un paquet InputBindingsChanged (catégories, actions du véhicule courant, template de binding, bindings, defaultBindings, reason).
----Source : lua/ge/extensions/core/input/bindings.lua:702
----@param reason string Texte indiquant la cause.
+--- Sends to the UI the controllers, the assigned players and an InputBindingsChanged packet (categories, current vehicle's actions, binding template, bindings, defaultBindings, reason).
+---Source: lua/ge/extensions/core/input/bindings.lua:702
+---@param reason string Text indicating the cause.
 function core_input_bindings.notifyUI(reason) end
 
---- Hook de changement de route UI : mémorise le nom de la route et met à jour l'état de l'ActionMap de menu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/bindings.lua:1262
----@param context table Contexte avec toRoute.name.
+--- UI route change hook: stores the route name and updates the menu ActionMap state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/bindings.lua:1262
+---@param context table Context with toRoute.name.
 function core_input_bindings.onAfterRouteChange(context) end
 
---- Hook quand un périphérique est branché/débranché : met à jour la liste (avec toasts UI), les assignations et notifie tout.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/bindings.lua:1325
+--- Hook when a device is plugged/unplugged: updates the list (with UI toasts), the assignments and notifies everyone.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/bindings.lua:1325
 function core_input_bindings.onDeviceChanged() end
 
---- Hook au chargement : exécute les migrations (popup de disposition v37 ; conversion des diffs manette PlayStation avant 0.38).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/bindings.lua:1455
+--- Hook on load: runs the migrations (v37 layout popup; conversion of PlayStation controller diffs before 0.38).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/bindings.lua:1455
 function core_input_bindings.onExtensionLoaded() end
 
---- Hook de changement de fichier : si un fichier d'actions ou d'inputmap (settings/inputmaps, vehicles/.../inputmaps, *.inputmap.json) change, programme un rechargement dans 0,1 s.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/bindings.lua:1316
----@param filename string Chemin modifié.
----@param t any Non utilisé (déduit du code).
+--- File change hook: if an actions or inputmap file (settings/inputmaps, vehicles/.../inputmaps, *.inputmap.json) changes, schedules a reload in 0.1 s.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/bindings.lua:1316
+---@param filename string Modified path.
+---@param t any Unused (inferred from code).
 function core_input_bindings.onFileChanged(filename, t) end
 
---- Hook au premier update : liste les périphériques, assigne les joueurs, calcule tous les bindings et notifie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/bindings.lua:1353
+--- Hook at first update: lists the devices, assigns the players, computes all bindings and notifies.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/bindings.lua:1353
 function core_input_bindings.onFirstUpdate() end
 
---- Hook quand un joueur entre ou quitte un véhicule : renvoie la config force feedback aux véhicules.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/bindings.lua:828
----@param player integer Indice du joueur.
+--- Hook when a player enters or leaves a vehicle: sends the force feedback config back to the vehicles.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/bindings.lua:828
+---@param player integer Player index.
 function core_input_bindings.onPlayerVehiclePresenceChanged(player) end
 
---- Hook appelé quand l'ordre d'activité des périphériques change : met en cache et envoie RecentDevicesChanged à l'UI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/bindings.lua:1464
----@param _recentDevices table Nouvelle liste.
+--- Hook called when the device activity order changes: caches and sends RecentDevicesChanged to the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/bindings.lua:1464
+---@param _recentDevices table New list.
 function core_input_bindings.onRecentDevicesChanged(_recentDevices) end
 
---- Hook de changement de réglages : si le réglage 'multiseat' a changé, recalcule assignations et bindings.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/bindings.lua:1335
+--- Settings change hook: if the 'multiseat' setting changed, recomputes assignments and bindings.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/bindings.lua:1335
 function core_input_bindings.onSettingsChanged() end
 
---- Hook à l'initialisation de l'UI : remet l'état de popup modal à faux.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/bindings.lua:1284
+--- Hook on UI initialization: resets the modal popup state to false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/bindings.lua:1284
 function core_input_bindings.onUIInitialised() end
 
---- Hook de changement d'état d'UI : détecte les popups ouverts ('/popup/...') et met à jour l'ActionMap de menu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/bindings.lua:1269
----@param stateName string État UI.
----@param opened boolean Ouvert ou fermé.
----@param stateStack string[] Pile des états ouverts.
+--- UI state change hook: detects open popups ('/popup/...') and updates the menu ActionMap.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/bindings.lua:1269
+---@param stateName string UI state.
+---@param opened boolean Open or closed.
+---@param stateStack string[] Stack of open states.
 function core_input_bindings.onUIStateTriggered(stateName, opened, stateStack) end
 
---- Hook à la création d'un véhicule : recalcule assignations et bindings sans notification.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/bindings.lua:1016
----@param vehId integer Id du véhicule.
----@param veh userdata Objet véhicule.
+--- Hook on vehicle creation: recomputes assignments and bindings without notification.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/bindings.lua:1016
+---@param vehId integer Vehicle id.
+---@param veh userdata Vehicle object.
 function core_input_bindings.onVehicleSpawned(vehId, veh) end
 
---- Hook au changement de véhicule d'un joueur : recalcule assignations et bindings (les actions spécifiques changent) et notifie tout.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/bindings.lua:996
----@param oldId integer Ancien véhicule.
----@param newId integer Nouveau véhicule.
----@param player integer Indice du joueur.
+--- Hook on a player's vehicle change: recomputes assignments and bindings (the specific actions change) and notifies everyone.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/bindings.lua:996
+---@param oldId integer Old vehicle.
+---@param newId integer New vehicle.
+---@param player integer Player index.
 function core_input_bindings.onVehicleSwitched(oldId, newId, player) end
 
---- Recalcule l'assignation automatique via core_multiseat (si autoAssign) et notifie seulement si elle a changé.
----Source : lua/ge/extensions/core/input/bindings.lua:973
----@param logEnabled boolean|nil Active les logs de core_multiseat.
----@param seatPlayers boolean|nil Transmis à core_multiseat.getAssignedPlayers.
----@return table<string, integer>  Assignations courantes.
+--- Recomputes the automatic assignment via core_multiseat (if autoAssign) and only notifies if it changed.
+---Source: lua/ge/extensions/core/input/bindings.lua:973
+---@param logEnabled boolean|nil Enables core_multiseat logs.
+---@param seatPlayers boolean|nil Passed to core_multiseat.getAssignedPlayers.
+---@return table<string, integer>  Current assignments.
 function core_input_bindings.refreshAssignedPlayers(logEnabled, seatPlayers) end
 
---- Supprime les bindings personnalisés (inputmaps/diff utilisateur) d'un périphérique ou de tous, génériques et du véhicule joueur, et recharge.
----Source : lua/ge/extensions/core/input/bindings.lua:926
----@param desiredDevName string|nil Nom de périphérique ; nil = tous les périphériques branchés.
+--- Deletes the custom bindings (user inputmaps/diff) of a device or of all, generic and of the player vehicle, and reloads.
+---Source: lua/ge/extensions/core/input/bindings.lua:926
+---@param desiredDevName string|nil Device name; nil = all connected devices.
 function core_input_bindings.resetBindings(desiredDevName) end
 
---- Sauvegarde les bindings envoyés par l'UI : les sépare par véhicule/génériques, compare à la version par défaut et écrit un fichier .diff par périphérique et véhicule, puis force un rechargement.
----Source : lua/ge/extensions/core/input/bindings.lua:894
----@param data table Inputmap complète d'un périphérique : {bindings, devicetype, guid, name, vidpid, …}.
+--- Saves the bindings sent by the UI: splits them by vehicle/generic, compares to the default version and writes a .diff file per device and vehicle, then forces a reload.
+---Source: lua/ge/extensions/core/input/bindings.lua:894
+---@param data table Complete inputmap of a device: {bindings, devicetype, guid, name, vidpid, …}.
 function core_input_bindings.saveBindingsToDisk(data) end
 
---- Active ou désactive une ActionMap de menu : soit par nom d'action ('menu_item_up' -> MenuIndependent_menu_item_upActionMap), soit directement par nom d'ActionMap. Refuse (log d'erreur) les ActionMap non liées aux menus ou inconnues.
----Source : lua/ge/extensions/core/input/bindings.lua:1147
----@param enabled boolean Nouvel état.
----@param actionName string|nil Nom d'action ; peut être nil si actionMapName est donné.
----@param actionMapName string|nil Nom complet de l'ActionMap.
----@return boolean|nil  Nouvel état effectif (am.enabled), nil en cas d'échec.
+--- Enables or disables a menu ActionMap: either by action name ('menu_item_up' -> MenuIndependent_menu_item_upActionMap), or directly by ActionMap name. Refuses (error log) ActionMaps not related to menus or unknown.
+---Source: lua/ge/extensions/core/input/bindings.lua:1147
+---@param enabled boolean New state.
+---@param actionName string|nil Action name; can be nil if actionMapName is given.
+---@param actionMapName string|nil Full name of the ActionMap.
+---@return boolean|nil  New effective state (am.enabled), nil on failure.
 function core_input_bindings.setMenuActionEnabled(enabled, actionName, actionMapName) end
 
---- Active ou désactive l'ActionMap de menu principale (et, à la désactivation, toutes les ActionMap de menu indépendantes), met à jour isMenuActive et notifie l'UI/extensions.
----Source : lua/ge/extensions/core/input/bindings.lua:1204
----@param enabled boolean true = menus actifs.
+--- Enables or disables the main menu ActionMap (and, on disabling, all independent menu ActionMaps), updates isMenuActive and notifies the UI/extensions.
+---Source: lua/ge/extensions/core/input/bindings.lua:1204
+---@param enabled boolean true = menus active.
 function core_input_bindings.setMenuActionMapEnabled(enabled) end
 
---- Active/désactive la notification UI MenuActionMapStateChanged à chaque modification d'une ActionMap de menu.
----Source : lua/ge/extensions/core/input/bindings.lua:1120
----@param enabled boolean true = surveiller.
----@return boolean  Nouvel état.
+--- Enables/disables the UI notification MenuActionMapStateChanged on every modification of a menu ActionMap.
+---Source: lua/ge/extensions/core/input/bindings.lua:1120
+---@param enabled boolean true = watch.
+---@return boolean  New state.
 function core_input_bindings.setMenuActionMapWatchEnabled(enabled) end
 
---- Applique en lot un état pour plusieurs actions de menu : {menu_item_up = true, menu_item_down = false}. Ignore les valeurs non booléennes.
----Source : lua/ge/extensions/core/input/bindings.lua:1183
----@param actionStates table<string, boolean> Action -> état voulu.
----@return table<string, boolean>|boolean  Action -> état effectif ; false si l'argument n'est pas une table.
+--- Applies in batch a state for several menu actions: {menu_item_up = true, menu_item_down = false}. Ignores non-boolean values.
+---Source: lua/ge/extensions/core/input/bindings.lua:1183
+---@param actionStates table<string, boolean> Action -> desired state.
+---@return table<string, boolean>|boolean  Action -> effective state; false if the argument is not a table.
 function core_input_bindings.setMenuActionsEnabled(actionStates) end
 
---- Pousse (push) ou retire (pop) la 'MenuScrollActionMap' sur la pile des ActionMap.
----Source : lua/ge/extensions/core/input/bindings.lua:1131
----@param enabled boolean true = pousser.
----@return boolean  État résultant ; false si l'ActionMap n'existe pas.
+--- Pushes or pops the 'MenuScrollActionMap' on the ActionMap stack.
+---Source: lua/ge/extensions/core/input/bindings.lua:1131
+---@param enabled boolean true = push.
+---@return boolean  Resulting state; false if the ActionMap does not exist.
 function core_input_bindings.setMenuScrollActionMapEnabled(enabled) end
 
---- Assigne un joueur à un périphérique (assignPlayerToDevice), recalcule les bindings et notifie tout le monde.
----Source : lua/ge/extensions/core/input/bindings.lua:952
----@param devname string Nom du périphérique.
----@param player integer Indice du joueur.
+--- Assigns a player to a device (assignPlayerToDevice), recomputes the bindings and notifies everyone.
+---Source: lua/ge/extensions/core/input/bindings.lua:952
+---@param devname string Device name.
+---@param player integer Player index.
 function core_input_bindings.setPlayerToDevice(devname, player) end
 
---- Hook par image : exécute le rechargement différé des bindings ; désactive la 'VehicleSpecificActionMap' quand le joueur marche (unicycle en caméra monde) hors split-screen.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/input/bindings.lua:1298
----@param dtRaw number Delta temps brut en secondes.
+--- Per-frame hook: runs the deferred bindings reload; disables the 'VehicleSpecificActionMap' when the player is walking (unicycle in world camera) outside split-screen.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/input/bindings.lua:1298
+---@param dtRaw number Raw time delta in seconds.
 function core_input_bindings.updateGFX(dtRaw) end
 

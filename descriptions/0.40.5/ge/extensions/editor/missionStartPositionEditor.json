@@ -1,19 +1,24 @@
 {
   "path": "lua/ge/extensions/editor/missionStartPositionEditor.lua",
-  "module": "Mode d'édition « Edit Mission Start Position » du World Editor (icône drapeau). Il dessine avec debugDrawer une sphère et le nom pour chaque mission dont startTrigger.level est le niveau courant, et permet de déplacer le point de départ de la mission sélectionnée : clic-glisser, ou Ctrl+clic pour poser directement à la position de la souris (raycast caméra). Chaque déplacement est enregistré dans l'historique d'annulation de l'éditeur (editor.history). Un bouton déplace aussi toutes les missions situées à moins de 10 m de la mission sélectionnée vers sa position.",
+  "module": "\"Edit Mission Start Position\" edit mode of the World Editor (flag icon). It draws with debugDrawer a sphere and the name for each mission whose startTrigger.level is the current level, and lets you move the start point of the selected mission: click-drag, or Ctrl+click to place directly at the mouse position (camera raycast). Each move is recorded in the editor's undo history (editor.history). A button also moves all the missions located within 10 m of the selected mission to its position.",
   "notes": [
-    "Code couleur : vert = mission sélectionnée, orange = missions proches (<= 10 m), bleu = autres. La taille des sphères augmente avec la distance à la caméra (1.5 à 10, entre 500 m et 1500 m) ; x1.3 pour la sélection, x1.2 pour les proches.",
-    "Modifie startTrigger.pos (table {x,y,z}) et met mission._dirty = true ; la sauvegarde se fait depuis l'éditeur de missions.",
-    "Le test im.IsItemHovered() dans onUpdate n'est pas lié à un élément imgui : l'infobulle de mission n'est probablement jamais affichée (déduit du code)."
+    "Color code: green = selected mission, orange = nearby missions (<= 10 m), blue = others. The sphere size increases with the distance to the camera (1.5 to 10, between 500 m and 1500 m); x1.3 for the selection, x1.2 for nearby ones.",
+    "Modifies startTrigger.pos ({x,y,z} table) and sets mission._dirty = true; saving is done from the mission editor.",
+    "The im.IsItemHovered() test in onUpdate is not tied to an imgui item: the mission tooltip is probably never displayed (inferred from code)."
   ],
   "functions": {
     "onEditorInitialized": {
-      "desc": "Hook appelé à l'initialisation de l'éditeur : déclare le mode d'édition missionStartPositionEditMode (action map « MissionStartPositionEditor », onActivate, onDeactivate, onUpdate, onToolbar).",
+      "desc": "Hook called at editor initialization: declares the missionStartPositionEditMode edit mode (action map \"MissionStartPositionEditor\", onActivate, onDeactivate, onUpdate, onToolbar).",
       "internal": true
     },
     "setSelectedMission": {
-      "desc": "Définit la mission sélectionnée dans ce mode d'édition (utile pour l'éditeur de missions).",
-      "params": {"mission": {"type": "table|nil", "desc": "Mission (avec startTrigger.pos) ou nil pour désélectionner."}}
+      "desc": "Sets the selected mission in this edit mode (useful for the mission editor).",
+      "params": {
+        "mission": {
+          "type": "table|nil",
+          "desc": "Mission (with startTrigger.pos) or nil to deselect."
+        }
+      }
     }
   }
 }

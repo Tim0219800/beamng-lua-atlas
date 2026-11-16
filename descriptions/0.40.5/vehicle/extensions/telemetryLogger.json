@@ -1,48 +1,58 @@
 {
   "path": "lua/vehicle/extensions/telemetryLogger.lua",
-  "module": "Enregistreur de télémétrie simple : à chaque frame graphique (quand l'enregistrement est actif) il mémorise timestamp, position, vitesse, gaz, frein, direction, frein à main et forces G (sensors.gx2/gy2), puis saveDataToDisk écrit le tout dans un fichier CSV `telemetryData_HH-MM-SS.csv`. Pratique pour un moddeur qui veut exporter une session de conduite.",
-  "usage": "extensions.load('telemetryLogger')\ntelemetryLogger.startRecording()\n-- ... conduire ...\ntelemetryLogger.saveDataToDisk()",
+  "module": "Simple telemetry recorder: every graphics frame (when recording is active) it stores timestamp, position, speed, throttle, brake, steering, parking brake and G forces (sensors.gx2/gy2), then saveDataToDisk writes it all to a CSV file `telemetryData_HH-MM-SS.csv`. Handy for a modder who wants to export a driving session.",
+  "usage": "extensions.load('telemetryLogger')\ntelemetryLogger.startRecording()\n-- ... drive ...\ntelemetryLogger.saveDataToDisk()",
   "notes": [
-    "Colonnes du CSV : frame, timestamp, position, velocity, throttle, brake, steering, parkingbrake, gForceX, gForceY. La position est une chaîne \"(x,y,z)\" (entre guillemets dans le CSV car elle contient des virgules). La ligne se termine par une virgule en trop ; fins de ligne \\r\\n.",
-    "timestamp = somme des dt reçus (secondes de simulation), velocity = norme de obj:getVelocity() (m/s).",
-    "Le fichier est créé avec un chemin relatif (répertoire de travail du jeu, pas un dossier utilisateur dédié). L'ordre des lignes vient de pairs() sur un tableau indexé, donc normalement croissant mais non garanti.",
-    "saveDataToDisk arrête l'enregistrement, écrit, puis appelle onInit() qui vide les données. Il renvoie false si le fichier ne peut pas être ouvert (et dans ce cas n'efface pas les données) ; sinon il ne renvoie rien.",
-    "escapeCSV plante si une valeur est nil (ex. sensors.gx2 absent)."
+    "CSV columns: frame, timestamp, position, velocity, throttle, brake, steering, parkingbrake, gForceX, gForceY. The position is a string \"(x,y,z)\" (quoted in the CSV because it contains commas). The line ends with an extra comma; line endings \\r\\n.",
+    "timestamp = sum of the dt received (simulation seconds), velocity = norm of obj:getVelocity() (m/s).",
+    "The file is created with a relative path (the game's working directory, not a dedicated user folder). The line order comes from pairs() on an indexed array, so normally ascending but not guaranteed.",
+    "saveDataToDisk stops recording, writes, then calls onInit() which clears the data. It returns false if the file cannot be opened (and in that case does not clear the data); otherwise it returns nothing.",
+    "escapeCSV crashes if a value is nil (e.g. sensors.gx2 missing)."
   ],
   "fields": {},
   "functions": {
     "startRecording": {
-      "desc": "Active l'enregistrement : updateGFX ajoute un point de données à chaque frame. Ne remet pas les données à zéro (utiliser onInit/onReset ou saveDataToDisk pour cela).",
+      "desc": "Enables recording: updateGFX adds a data point every frame. Does not reset the data (use onInit/onReset or saveDataToDisk for that).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "stopRecording": {
-      "desc": "Suspend l'enregistrement sans vider les données déjà collectées.",
+      "desc": "Pauses recording without clearing the data already collected.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "saveDataToDisk": {
-      "desc": "Arrête l'enregistrement et écrit les données collectées dans `telemetryData_<heure>.csv`, puis réinitialise l'état.",
+      "desc": "Stops recording and writes the collected data to `telemetryData_<time>.csv`, then resets the state.",
       "params": {},
-      "returns": [{"type": "boolean|nil", "desc": "false si le fichier n'a pas pu être ouvert, nil sinon."}],
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "false if the file could not be opened, nil otherwise."
+        }
+      ],
       "internal": false
     },
     "updateGFX": {
-      "desc": "Appelé à chaque frame graphique (extensions.hook('updateGFX')). Si l'enregistrement est actif, ajoute un point de données.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes, ajouté au timestamp."}},
+      "desc": "Called every graphics frame (extensions.hook('updateGFX')). If recording is active, adds a data point.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds, added to the timestamp."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onInit": {
-      "desc": "Hook appelé à l'initialisation du véhicule : vide les données, remet l'index et le timestamp à zéro et arrête l'enregistrement.",
+      "desc": "Hook called on vehicle initialization: clears the data, resets the index and the timestamp to zero and stops recording.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onReset": {
-      "desc": "Hook appelé au reset du véhicule ; même fonction que onInit (efface les données et arrête l'enregistrement).",
+      "desc": "Hook called on vehicle reset; same function as onInit (clears the data and stops recording).",
       "params": {},
       "returns": [],
       "internal": true

@@ -1,22 +1,22 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/showApps.lua",
-  "module": "Nœud flowgraph « Show Apps » (catégorie once_instant, auteur BeamNG) : affiche ou masque les apps de l'UI (hook 'ShowApps'). Entrée « value » (bool).",
+  "module": "Flowgraph node \"Show Apps\" (category once_instant, author BeamNG): shows or hides the UI apps ('ShowApps' hook). Input \"value\" (bool).",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_afterTrigger": {
-          "desc": "Envoie 'ShowApps' avec la valeur mémorisée.",
+          "desc": "Sends 'ShowApps' with the stored value.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Efface la demande en attente.",
+          "desc": "Clears the pending request.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Mémorise la valeur.",
+          "desc": "Stores the value.",
           "internal": true
         }
       }

@@ -1,43 +1,43 @@
 # `editor_roadTemplateEditor`
 
-*Fichier : `lua/ge/extensions/editor/roadTemplateEditor.lua` · VM : Game Engine (GE) · 426 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadTemplateEditor.lua` · VM: Game Engine (GE) · 426 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadTemplateEditor` : `extensions.load("editor_roadTemplateEditor")`, puis la globale `editor_roadTemplateEditor`
+**Access:** extension `editor_roadTemplateEditor`: `extensions.load("editor_roadTemplateEditor")`, then the global `editor_roadTemplateEditor`
 
-Éditeur de modèles de routes (menu Fenêtre > Roads > « Road Template Editor »). Permet de choisir, sauvegarder (« Save », « Save as... »), créer (« New ») et supprimer un modèle de route (fichier .road.json) composé de DecalRoads, de décorations et de decals ; les champs se modifient dans la fenêtre Inspector. Dépend de editor_roadEditor et s'appuie sur editor_roadUtils (rechargement des modèles). Quand la fenêtre est masquée, le modèle courant est désélectionné et ses objets temporaires supprimés.
+Road template editor (Window > Roads > "Road Template Editor" menu). Lets you choose, save ("Save", "Save as..."), create ("New") and delete a road template (.road.json file) made of DecalRoads, decorations and decals; the fields are edited in the Inspector window. Depends on editor_roadEditor and relies on editor_roadUtils (template reloading). When the window is hidden, the current template is deselected and its temporary objects are deleted.
 
-## Remarques
+## Notes
 
-- Préférence roadTemplates.general.loadTemplates (bool, défaut false) : « Load road templates on startup (longer initialization time) ». Tant qu'elle est à false, editor_roadUtils ne recharge ni ne applique aucun modèle.
-- « Delete » supprime le fichier avec os.remove("roadtemplates/<nom>.road.json") (chemin relatif au répertoire de travail du processus, alors que la sauvegarde et editor_roadUtils utilisent levels/<niveau>/roadtemplates/ : BUG probable, Delete ne supprime pas le bon fichier).
+- Preference roadTemplates.general.loadTemplates (bool, default false): "Load road templates on startup (longer initialization time)". As long as it is false, editor_roadUtils neither reloads nor applies any template.
+- "Delete" deletes the file with os.remove("roadtemplates/<name>.road.json") (path relative to the process working directory, whereas saving and editor_roadUtils use levels/<level>/roadtemplates/: probable BUG, Delete does not delete the right file).
 
-**Dépendances (chargées avant) :** `editor_roadEditor`
+**Dependencies (loaded first):** `editor_roadEditor`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadTemplateEditor.onEditorGui()` | Appelé à chaque image : si la fenêtre « roadTemplateEditor » est masquée, désélectionne le modèle ; sinon dessine la fenêtre « Road Templates » avec les boutons Choose Template, Save, Save as..., New, Delete et le choix des routes/décorations/decals du modèle. *(interne)* *(hook)* | 182 |
-| `editor_roadTemplateEditor.onEditorInitialized()` | Appelé à l'initialisation de l'éditeur : ajoute l'entrée de menu « Road Template Editor » (groupe Roads) et enregistre la fenêtre (200x400). *(interne)* *(hook)* | 407 |
-| `editor_roadTemplateEditor.onEditorRegisterPreferences(prefsRegistry)` | Enregistre la catégorie de préférences « roadTemplates » avec la sous-catégorie « general » et la case loadTemplates (bool, false par défaut). *(interne)* *(hook)* | 412 |
+| `editor_roadTemplateEditor.onEditorGui()` | Called every frame: if the "roadTemplateEditor" window is hidden, deselects the template; otherwise draws the "Road Templates" window with the buttons Choose Template, Save, Save as..., New, Delete and the choice of the template's roads/decorations/decals. *(internal)* *(hook)* | 182 |
+| `editor_roadTemplateEditor.onEditorInitialized()` | Called when the editor initializes: adds the "Road Template Editor" menu entry (Roads group) and registers the window (200x400). *(internal)* *(hook)* | 407 |
+| `editor_roadTemplateEditor.onEditorRegisterPreferences(prefsRegistry)` | Registers the "roadTemplates" preference category with the "general" subcategory and the loadTemplates checkbox (bool, false by default). *(internal)* *(hook)* | 412 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadTemplateEditor.onEditorRegisterPreferences(prefsRegistry)`
 
-Enregistre la catégorie de préférences « roadTemplates » avec la sous-catégorie « general » et la case loadTemplates (bool, false par défaut).
+Registers the "roadTemplates" preference category with the "general" subcategory and the loadTemplates checkbox (bool, false by default).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | {"editor_roadEditor"} : extensions chargées avant celle-ci. |
+| `dependencies` | string[] | {"editor_roadEditor"}: extensions loaded before this one. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadTemplateEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadTemplateEditor.lua`.*

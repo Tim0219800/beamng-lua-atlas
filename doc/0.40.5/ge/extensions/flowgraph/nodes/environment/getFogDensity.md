@@ -1,26 +1,26 @@
 # `flowgraph_nodes_environment_getFogDensity`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/environment/getFogDensity.lua` · VM : Game Engine (GE) · 36 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/environment/getFogDensity.lua` · VM: Game Engine (GE) · 36 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/environment/getFogDensity")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/environment/getFogDensity")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Fog » (catégorie provider, tags environment/tod). Lit les paramètres de brouillard actuels : sorties density (core_environment.getFogDensity) et atmosphereHeight (getFogAtmosphereHeight).
+Flowgraph node "Get Fog" (category provider, tags environment/tod). Reads the current fog parameters: outputs density (core_environment.getFogDensity) and atmosphereHeight (getFogAtmosphereHeight).
 
-## Remarques
+## Notes
 
-- legacyPins déclare un renommage fog -> density dans _in alors que density est une sortie ici (reste du nœud Set Fog) ; sans effet.
+- legacyPins declares a rename fog -> density in _in while density is an output here (leftover from the Set Fog node); no effect.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Chaque frame, écrit la densité et la hauteur atmosphérique du brouillard sur les sorties. | 28 |
+| `C:work()` | Every frame, writes the fog density and atmosphere height to the outputs. | 28 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `core_environment.` `getFogAtmosphereHeight`, `getFogDensity`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/environment/getFogDensity.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/environment/getFogDensity.lua`.*

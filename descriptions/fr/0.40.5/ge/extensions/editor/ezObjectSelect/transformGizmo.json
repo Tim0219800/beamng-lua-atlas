@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/transformGizmo.lua",
+  "module": "Guides visuels 3D de l'outil Easy Object Select pendant une translation, une mise à l'échelle ou une rotation. Dessinés avec debugDrawer : flèches (ligne + prisme) pour la translation, lignes + sphères pour l'échelle, anneau de 64 segments et arc d'angle pour la rotation. Les couleurs sont rouge/vert/bleu pour X/Y/Z ; la longueur du guide dépend de la distance à la caméra (0.16 × distance, bornée entre 1.5 et 30 m).",
+  "notes": [
+    "Le paramètre constraint est {axis = \"x\"|\"y\"|\"z\", exclude = boolean} : sans exclude seul l'axe est dessiné, avec exclude les deux autres (contrainte de plan). Sans contrainte les trois axes sont dessinés."
+  ],
+  "functions": {
+    "axisColors": {
+      "desc": "Renvoie la table des couleurs d'axes {x, y, z} (ColorF).",
+      "params": {},
+      "returns": [{"type": "table<string, ColorF>", "desc": "Couleurs des axes x, y, z."}],
+      "internal": false
+    },
+    "drawTranslate": {
+      "desc": "Dessine les flèches de translation depuis le pivot pour les axes concernés par la contrainte.",
+      "params": {
+        "pivot": {"type": "vec3", "desc": "Point d'origine des flèches."},
+        "axes": {"type": "table<string, vec3>", "desc": "Directions des axes x, y, z (monde ou locales)."},
+        "constraint": {"type": "table|nil", "desc": "Contrainte d'axe/plan ({axis, exclude}), ou nil pour les trois axes."}
+      },
+      "internal": false
+    },
+    "drawScale": {
+      "desc": "Dessine les guides de mise à l'échelle (ligne terminée par une sphère) pour les axes concernés.",
+      "params": {
+        "pivot": {"type": "vec3", "desc": "Centre de l'échelle."},
+        "axes": {"type": "table<string, vec3>", "desc": "Directions des axes x, y, z."},
+        "constraint": {"type": "table|nil", "desc": "Contrainte d'axe/plan, ou nil."}
+      },
+      "internal": false
+    },
+    "drawRotation": {
+      "desc": "Dessine l'anneau de rotation autour de l'axe donné et, si l'angle n'est pas nul, un arc épais de l'angle parcouru depuis le vecteur de départ.",
+      "params": {
+        "pivot": {"type": "vec3", "desc": "Centre de la rotation."},
+        "axis": {"type": "vec3", "desc": "Axe de rotation (normalisé en interne, défaut Z)."},
+        "startVector": {"type": "vec3|nil", "desc": "Vecteur de départ projeté sur le plan de l'anneau."},
+        "angle": {"type": "number|nil", "desc": "Angle en radians."}
+      },
+      "internal": false
+    }
+  }
+}

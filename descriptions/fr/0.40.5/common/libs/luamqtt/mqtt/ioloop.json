@@ -1,0 +1,23 @@
+{
+  "path": "lua/common/libs/luamqtt/mqtt/ioloop.lua",
+  "module": "Boucle d'entrées/sorties de luamqtt : fait vivre plusieurs clients MQTT (et des fonctions utilisateur) dans un même thread, en mode non bloquant avec un petit délai réseau, ce qui permet les PINGREQ de keep_alive et la reconnexion. Ne fonctionne qu'avec les connecteurs luasocket standard.",
+  "usage": "local ioloop = require('libs/luamqtt/mqtt/ioloop')\nlocal loop = ioloop.get()\nloop:add(client)\nclient:start_connecting()\n-- dans une boucle propre au jeu :\nloop:iteration()",
+  "notes": ["run_until_clients est bloquant ; dans le jeu, appeler plutôt iteration() périodiquement (par ex. depuis onUpdate) pour ne pas figer le thread."],
+  "functions": {
+    "create": {"desc": "Crée une instance d'ioloop.", "params": {"args": {"type": "table", "desc": "timeout (défaut 0.005 s), sleep (défaut 0), sleep_function."}}, "returns": [{"type": "table", "desc": "Instance ioloop_mt."}]},
+    "get": {"desc": "Renvoie l'ioloop par défaut (singleton), créé à la demande.", "params": {"autocreate": {"type": "boolean", "desc": "Créer automatiquement (défaut true)."}, "args": {"type": "table", "desc": "Arguments de création."}}, "returns": [{"type": "table|nil", "desc": "Instance ioloop."}]}
+  },
+  "classes": {
+    "ioloop_mt": {
+      "desc": "Instance d'ioloop renvoyée par create/get.",
+      "functions": {
+        "__init": {"desc": "Initialise l'instance avec timeout, sleep et sleep_function (défaut socket.sleep).", "params": {"args": {"type": "table", "desc": "timeout (0.005 s), sleep (0), sleep_function."}}, "internal": true},
+        "add": {"desc": "Ajoute un client MQTT ou une fonction de boucle. Pour un client, appelle client:set_ioloop(self) pour l'associer à la boucle.", "params": {"client": {"type": "table|function", "desc": "Client ou fonction."}}, "returns": [{"type": "boolean", "desc": "true, ou false et message d'erreur."}]},
+        "remove": {"desc": "Retire un client ou une fonction de l'ioloop.", "params": {"client": {"type": "table|function", "desc": "Client ou fonction."}}, "returns": [{"type": "boolean", "desc": "true, ou false et message d'erreur."}]},
+        "iteration": {"desc": "Effectue une itération : appelle _ioloop_iteration de chaque client et chaque fonction ajoutée, puis dort args.sleep secondes si sleep > 0.", "params": {}},
+        "can_sleep": {"desc": "Si aucun délai réseau (timeout) n'a encore eu lieu pendant l'itération, appelle sleep_function(args.timeout) une seule fois (par défaut socket.sleep) pour ne pas tourner à vide.", "internal": true},
+        "run_until_clients": {"desc": "Boucle bloquante : itère tant qu'il reste au moins un client dans l'ioloop.", "params": {}}
+      }
+    }
+  }
+}

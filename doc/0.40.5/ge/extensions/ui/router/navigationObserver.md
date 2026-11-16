@@ -1,64 +1,64 @@
 # `ui_router_navigationObserver`
 
-*Fichier : `lua/ge/extensions/ui/router/navigationObserver.lua` · VM : Game Engine (GE) · 234 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/navigationObserver.lua` · VM: Game Engine (GE) · 234 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_navigationObserver` : `extensions.load("ui_router_navigationObserver")`, puis la globale `ui_router_navigationObserver`
+**Access:** extension `ui_router_navigationObserver`: `extensions.load("ui_router_navigationObserver")`, then the global `ui_router_navigationObserver`
 
-Diagnostic non-shipping du routeur : attribue chaque appel à navigate() au module Lua appelant (en remontant la pile en ignorant les fichiers « ui/router/ ») et avertit quand une navigation en préempte une autre encore en cours (transition active remplacée, ou navigate() dont l'époque a été incrémentée par un navigate() réentrant pendant ses gardes/onEnter). Chaque préemption est classée duplicate_navigation (requêtes identiques : route, params, portée, options) ou conflicting_navigation. Il n'a aucun effet sur le comportement du routeur : il enregistre des tentatives et écrit des avertissements.
+Non-shipping diagnostic of the router: attributes each navigate() call to the calling Lua module (walking up the stack ignoring "ui/router/" files) and warns when a navigation preempts another still in progress (active transition replaced, or navigate() whose epoch was incremented by a reentrant navigate() during its guards/onEnter). Each preemption is classified duplicate_navigation (identical requests: route, params, scope, options) or conflicting_navigation. It has no effect on the router's behavior: it records attempts and writes warnings.
 
-## Remarques
+## Notes
 
-- Ne doit être chargé et appelé que si shipping_build ~= true (router.lua le garantit).
-- Le message d'avertissement est écrit avec l'étiquette de journal « LuaRouterObserver » au niveau W, sous la forme « <catégorie>: navigation from <source> [route=… scope=…] preempted by … (phase: …); check and fix duplicate navigation ».
-- La source est {module, file, func, line} du premier cadre hors routeur dans les 24 premiers niveaux de pile ; sinon module = "bridge/unknown" (appel venant du moteur/UI).
-- Une même tentative préemptée n'est jamais signalée deux fois, et une tentative ne se préempte pas elle-même.
-- Valeurs de phase utilisées par router.lua : active_transition, post_guard, post_enter.
+- Must be loaded and called only if shipping_build ~= true (router.lua guarantees it).
+- The warning message is written with the log tag "LuaRouterObserver" at level W, in the form "<category>: navigation from <source> [route=… scope=…] preempted by … (phase: …); check and fix duplicate navigation".
+- The source is {module, file, func, line} of the first non-router frame within the first 24 stack levels; otherwise module = "bridge/unknown" (call coming from the engine/UI).
+- A given preempted attempt is never reported twice, and an attempt does not preempt itself.
+- Phase values used by router.lua: active_transition, post_guard, post_enter.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_navigationObserver.attachResolvedTarget(attempt, target)` | Associe la cible résolue (route complète, paramètres effectifs, portée, options) à une tentative. *(interne)* | 179 |
-| `ui_router_navigationObserver.beginAttempt()` | Démarre une nouvelle tentative à l'entrée de navigate() en capturant l'appelant Lua externe. Doit être appelée avant tout wrapper du routeur. *(interne)* | 164 |
-| `ui_router_navigationObserver.getCurrentAttempt()` | Renvoie la dernière tentative commencée (un navigate() réentrant écrase la précédente). *(interne)* | 189 |
-| `ui_router_navigationObserver.reportPreemption(preemptedAttempt, replacementAttempt, phase)` | Signale une préemption avérée : classe la paire de tentatives, écrit un avertissement unique et renvoie l'enregistrement. Ne fait rien si une tentative manque, si ce sont les mêmes ou si la préemptée a déjà été signalée. *(interne)* | 203 |
-| `ui_router_navigationObserver.reset()` | Réinitialise l'observateur (tentative courante, compteur, tentatives déjà signalées). *(interne)* | 227 |
+| `ui_router_navigationObserver.attachResolvedTarget(attempt, target)` | Associates the resolved target (full route, effective parameters, scope, options) with an attempt. *(internal)* | 179 |
+| `ui_router_navigationObserver.beginAttempt()` | Starts a new attempt on entering navigate() by capturing the external Lua caller. Must be called before any router wrapper. *(internal)* | 164 |
+| `ui_router_navigationObserver.getCurrentAttempt()` | Returns the last attempt started (a reentrant navigate() overwrites the previous one). *(internal)* | 189 |
+| `ui_router_navigationObserver.reportPreemption(preemptedAttempt, replacementAttempt, phase)` | Reports a confirmed preemption: classifies the pair of attempts, writes a single warning and returns the record. Does nothing if an attempt is missing, if they are the same or if the preempted one has already been reported. *(internal)* | 203 |
+| `ui_router_navigationObserver.reset()` | Resets the observer (current attempt, counter, attempts already reported). *(internal)* | 227 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_navigationObserver.attachResolvedTarget(attempt, target)`
 
-Associe la cible résolue (route complète, paramètres effectifs, portée, options) à une tentative.
+Associates the resolved target (full route, effective parameters, scope, options) with an attempt.
 
-- `attempt` (*table|nil*) : Tentative créée par beginAttempt.
-- `target` (*table|nil*) : Cible issue de resolveNavigationTarget (fullRouteName, params, options).
+- `attempt` (*table|nil*) : Attempt created by beginAttempt.
+- `target` (*table|nil*) : Target from resolveNavigationTarget (fullRouteName, params, options).
 
 #### `ui_router_navigationObserver.beginAttempt()`
 
-Démarre une nouvelle tentative à l'entrée de navigate() en capturant l'appelant Lua externe. Doit être appelée avant tout wrapper du routeur.
+Starts a new attempt on entering navigate() by capturing the external Lua caller. Must be called before any router wrapper.
 
-- **renvoie** : table Tentative {id, source, route, params, scope, options} (les quatre derniers renseignés par attachResolvedTarget).
+- **returns**: table Attempt {id, source, route, params, scope, options} (the last four filled in by attachResolvedTarget).
 
 #### `ui_router_navigationObserver.getCurrentAttempt()`
 
-Renvoie la dernière tentative commencée (un navigate() réentrant écrase la précédente).
+Returns the last attempt started (a reentrant navigate() overwrites the previous one).
 
-- **renvoie** : table|nil Tentative courante.
+- **returns**: table|nil Current attempt.
 
 #### `ui_router_navigationObserver.reportPreemption(preemptedAttempt, replacementAttempt, phase)`
 
-Signale une préemption avérée : classe la paire de tentatives, écrit un avertissement unique et renvoie l'enregistrement. Ne fait rien si une tentative manque, si ce sont les mêmes ou si la préemptée a déjà été signalée.
+Reports a confirmed preemption: classifies the pair of attempts, writes a single warning and returns the record. Does nothing if an attempt is missing, if they are the same or if the preempted one has already been reported.
 
-- `preemptedAttempt` (*table|nil*) : Navigation interrompue.
-- `replacementAttempt` (*table|nil*) : Navigation qui l'a remplacée.
-- `phase` (*string*) : Étiquette indiquant où la préemption a été détectée.
-- **renvoie** : table|nil {category, phase, preempted, replacement} ou nil si rien n'a été signalé.
+- `preemptedAttempt` (*table|nil*) : Interrupted navigation.
+- `replacementAttempt` (*table|nil*) : Navigation that replaced it.
+- `phase` (*string*) : Label indicating where the preemption was detected.
+- **returns**: table|nil {category, phase, preempted, replacement} or nil if nothing was reported.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `ModuleName` | string | Nom du module : "navigationObserver". |
+| `ModuleName` | string | Module name: "navigationObserver". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/navigationObserver.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/navigationObserver.lua`.*

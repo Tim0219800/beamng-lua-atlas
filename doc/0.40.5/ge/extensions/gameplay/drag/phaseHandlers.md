@@ -1,228 +1,228 @@
 # `gameplay_drag_phaseHandlers`
 
-*Fichier : `lua/ge/extensions/gameplay/drag/phaseHandlers.lua` · VM : Game Engine (GE) · 1232 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drag/phaseHandlers.lua` · VM: Game Engine (GE) · 1232 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drag_phaseHandlers` : `extensions.load("gameplay_drag_phaseHandlers")`, puis la globale `gameplay_drag_phaseHandlers`
+**Access:** extension `gameplay_drag_phaseHandlers`: `extensions.load("gameplay_drag_phaseHandlers")`, then the global `gameplay_drag_phaseHandlers`
 
-Logique de phases d'une course de drag : stage (placement sur la ligne de stage), countdown (arbre de départ), race (course jusqu'au dernier timer de distance), stop (arrêt du véhicule) et emergencyStop. Il met à jour la position/vitesse/roues des racers (updateRacer), détecte pré-stage et stage par distance des roues avant, applique les règles de disqualification (faux départ, hors couloir, immobile trop longtemps, crash), pilote les véhicules IA par queueLuaCommand (ai.setSpeed, transbrake, nitro, throttleOverride), gère les transitions de phase et le re-staging après DQ en freeroam. Les fonctions de phase sont appelées par les extensions dragTypes_* (headsUpRace/bracketRace) à chaque frame pour chaque racer.
+Phase logic of a drag race: stage (placement on the stage line), countdown (starting tree), race (race up to the last distance timer), stop (vehicle stopping) and emergencyStop. It updates the racers' position/speed/wheels (updateRacer), detects pre-stage and stage by front wheel distance, applies the disqualification rules (false start, out of lane, stationary too long, crash), drives the AI vehicles through queueLuaCommand (ai.setSpeed, transbrake, nitro, throttleOverride), handles phase transitions and re-staging after DQ in freeroam. The phase functions are called by the dragTypes_* extensions (headsUpRace/bracketRace) every frame for each racer.
 
-## Remarques
+## Notes
 
-- Constantes : arrêt quand la vitesse <= 15 m/s ou après 300 m de phase stop ; pré-stage à -0.178 m, stage à 0 m (fenêtre de ±0.178 m) ; sortie des feux au-delà de 0.4 m ; stage validé après 1 s continue avec roues avant parallèles à la ligne (|dot| >= 0.70).
-- Disqualifications : faux départ (roue avant < -0.178 - 0.02 ou >= 0.178 m pendant le décompte, raison redLightReason), hors couloir (distance < -0.33 m ou inLane faux), immobile > 5 s (vitesse < 1 m/s), crash (z du vecteur haut < 0.2) ou immobilité (moins de 3 m en 3 s) pendant la course. Jamais de DQ en phase 1 (stage).
-- Les chaînes de raison de DQ sont des clés de traduction missions.dragRace.gameplay.disqualified.*.
-- Les IA freinent puis rampent (0.5 m/s) sur les 0.5 derniers mètres avant la ligne de stage ; leur accélérateur est réduit (min 0.5) si le nez se cabre au-delà de ~17 à 33 degrés.
-- La phase de course se termine quand le timer à la plus grande distance (raceEndTimerId) est défini, pas le timer important.
-- Hooks émis : onPhaseTransition (abortable via setPhaseTransitionAbort), onRacerPhaseTransition, preStageLightOn/Off, stageLightOn/Off, stageStarted, startDragCountdown, dragRaceStarted, dragRaceEndLineReached, stoppingVehicleDrag, dragRaceVehicleStopped, setDisqualifiedLights, onWinnerLightOn.
-- En MP, les racers distants (isLocalRacer == false ou vehId < 0) n'ont pas de données de position et sont exemptés du test de couloir ; leur staging est tenu 1 s via setRemoteStagingState.
-- Les commandes IA sont envoyées en texte à la VM du véhicule, avec le nom des waypoints (endLine, drag_stop ou autoStopName) du niveau.
+- Constants: stop when speed <= 15 m/s or after 300 m of stop phase; pre-stage at -0.178 m, stage at 0 m (window of ±0.178 m); leaving the lights beyond 0.4 m; stage validated after 1 s continuous with front wheels parallel to the line (|dot| >= 0.70).
+- Disqualifications: false start (front wheel < -0.178 - 0.02 or >= 0.178 m during the countdown, reason redLightReason), out of lane (distance < -0.33 m or inLane false), stationary > 5 s (speed < 1 m/s), crash (z of the up vector < 0.2) or stationary (less than 3 m in 3 s) during the race. Never a DQ in phase 1 (stage).
+- The DQ reason strings are translation keys missions.dragRace.gameplay.disqualified.*.
+- The AIs brake then crawl (0.5 m/s) over the last 0.5 meters before the stage line; their throttle is reduced (min 0.5) if the nose pitches up beyond ~17 to 33 degrees.
+- The race phase ends when the timer at the greatest distance (raceEndTimerId) is set, not the important timer.
+- Emitted hooks: onPhaseTransition (abortable via setPhaseTransitionAbort), onRacerPhaseTransition, preStageLightOn/Off, stageLightOn/Off, stageStarted, startDragCountdown, dragRaceStarted, dragRaceEndLineReached, stoppingVehicleDrag, dragRaceVehicleStopped, setDisqualifiedLights, onWinnerLightOn.
+- In MP, remote racers (isLocalRacer == false or vehId < 0) have no position data and are exempt from the lane test; their staging is held for 1 s via setRemoteStagingState.
+- The AI commands are sent as text to the vehicle VM, with the name of the level's waypoints (endLine, drag_stop or autoStopName).
 
-**Dépendances (chargées avant) :** `gameplay_drag_core`, `gameplay_drag_times`, `gameplay_drag_saveSystem`
+**Dependencies (loaded first):** `gameplay_drag_core`, `gameplay_drag_times`, `gameplay_drag_saveSystem`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drag_phaseHandlers.areAllRacersStaged(dragData)` | Indique si tous les racers sont en staging (phase 1 terminée, dans leur couloir, ou déjà finis) et si leur nombre atteint le minimum attendu (core.getExpectedStagingRacerCount). | 433 |
-| `gameplay_drag_phaseHandlers.calculateDistanceOfAllWheelsFromStagePos(racer)` | Calcule, pour chaque groupe de roues du racer, le vecteur centre de roues moins la position du point de stage de son couloir (racer._wheelDistances). | 58 |
-| `gameplay_drag_phaseHandlers.changeAllPhases()` | Fait passer à la phase suivante tous les racers dont la phase courante est complétée. | 381 |
-| `gameplay_drag_phaseHandlers.changeRacerPhase(racer, expectedCurrentPhase)` | Fait avancer un racer d'une phase (ou le marque fini après la dernière). Refuse si une transition est déjà en cours, si la phase attendue diffère, si le racer est hors couloir pour entrer en phase 2 ou 3, ou si un hook onPhaseTransition appelle setPhaseTransitionAbort. Émet onPhaseTransition (avant) et onRacerPhaseTransition (après, newPhase nil et nom 'finished' si fini). | 313 |
-| `gameplay_drag_phaseHandlers.checkFreeroamDqReStage(dtSim)` | En freeroam solo/multiseat (hors gamemode drag MP), gère le re-staging après DQ : 6 s après la DQ, si le joueur est à plus de 6 m derrière la ligne, relance la course (reset puis startDragRaceActivity) ; entre -6 et +6 m, affiche une fois le message ui.drag.flash.reverseToRestage. Renvoie 'leftArea' si le seul racer recule à plus de 15 m. | 637 |
-| `gameplay_drag_phaseHandlers.clearDqRestageState()` | Vide l'état de re-staging après DQ. | 629 |
-| `gameplay_drag_phaseHandlers.clearRacerTransitionLock(vehId)` | Supprime le verrou de transition (et le drapeau d'abandon) d'un racer, ou de tous si vehId est nil. | 299 |
-| `gameplay_drag_phaseHandlers.clearRemoteStagingHoldTimers()` | Vide les minuteries de maintien du staging distant (MP). | 625 |
-| `gameplay_drag_phaseHandlers.countdown(phase, racer, dtSim)` | Phase 2 (arbre) pour un racer. Démarre le décompte (émet startDragCountdown avec le dial), prépare l'IA (agressivité 2, two-step, transbrake ou freeze, throttleOverride = 1), et disqualifie pour faux départ ou sortie de couloir (met reactionTimeInvalid et appelle startRaceFromTree avant disqualifyRacer). *(interne)* | 715 |
-| `gameplay_drag_phaseHandlers.disqualifyRacer(racer, reason)` | Disqualifie un racer (jamais en phase 1, ni hors freeroam tant que la course n'est pas démarrée). Pour une IA, remet throttleOverride à nil. Émet setDisqualifiedLights. | 236 |
-| `gameplay_drag_phaseHandlers.emergencyStop(phase, racer, dtSim)` | Phase d'arrêt d'urgence : pour une IA, coupe nitro/jato et throttleOverride, impose ai.setSpeed(0) ; la phase est complétée quand la vitesse <= 0.01 m/s. *(interne)* | 1052 |
-| `gameplay_drag_phaseHandlers.generateWinData()` | Demande à l'extension de type de course (ext.generateWinData) la liste triée des résultats et émet onWinnerLightOn pour le couloir du premier. | 280 |
-| `gameplay_drag_phaseHandlers.getFrontWheelDistanceFromStagePos(racer)` | Distance signée (m) des roues avant à la ligne de stage, projetée sur l'axe stage-arrivée du couloir (négatif avant la ligne). | 50 |
-| `gameplay_drag_phaseHandlers.getImportantTimerValueForWin(racer, data)` | Valeur du timer important pour le classement (délègue à gameplay_drag_times). | 174 |
-| `gameplay_drag_phaseHandlers.isRacerInsideBoundary(racer)` | Vrai si toutes les roues du racer (centres par groupe, sinon la position du véhicule) sont dans la zone de son couloir et, s'il y a plusieurs racers, pas dans la zone d'un autre couloir occupé. | 93 |
-| `gameplay_drag_phaseHandlers.onDragClear()` | Hook de clear : vide les minuteries de staging distant et l'état de re-staging. *(interne)* *(hook)* | 1227 |
-| `gameplay_drag_phaseHandlers.onExtensionLoaded()` | Hook de chargement : logue une erreur si gameplay_drag_core est absent. *(interne)* *(hook)* | 43 |
-| `gameplay_drag_phaseHandlers.race(phase, racer, dtSim)` | Phase 3 (course). Lance l'IA (jato, transbrake relâché, throttleOverride = 1, vitesse et cible de l'endLine), détecte crash/immobilité/sortie de couloir, régule le cabrage des IA, et termine quand le timer de fin de course est défini : émet dragRaceEndLineReached, en MP envoie le temps brut à l'hôte, sinon génère les résultats et le ticket quand tous ont fini. *(interne)* | 838 |
-| `gameplay_drag_phaseHandlers.setDialsData(data)` | Calcule les délais de départ (dialsData) par véhicule : 1 racer = 0 ; 2 racers = l'écart de dial est ajouté au racer au dial le plus bas ; plus de 2 = le dial de chacun. | 1178 |
-| `gameplay_drag_phaseHandlers.setPhaseTransitionAbort(vehId)` | À appeler depuis un hook onPhaseTransition pour annuler la transition en cours d'un racer. | 309 |
-| `gameplay_drag_phaseHandlers.setRemoteStagingState(data, lane, staged)` | MP : applique l'état de staging d'un couloir reçu du réseau. À staged = true, démarre une minuterie (1 s de maintien avant de valider la phase 1) ; à false, annule et rouvre la phase 1 des racers du couloir. | 592 |
-| `gameplay_drag_phaseHandlers.stage(phase, racer, dtSim)` | Phase 1 (staging). Met à jour la géométrie des roues, envoie la distance à l'UI (updateStageApp) pour le joueur local, valide la phase après 1 s sur la ligne (joueur) ou conduit l'IA à la ligne (approche, freinage, rampement) puis l'arrête. *(interne)* | 471 |
-| `gameplay_drag_phaseHandlers.startRaceFromTree(vehId)` | Termine la phase de décompte d'un racer (phase 'countdown'), démarre ses timers si local et, pour une IA, tire un délai aléatoire de 0 à 0,5 s avant son départ. | 393 |
-| `gameplay_drag_phaseHandlers.stop(phase, racer, dtSim)` | Phase d'arrêt après l'arrivée : pour une IA, coupe nitro/jato et lui ordonne de s'arrêter vers la cible d'arrêt. Terminée quand la vitesse <= 15 m/s ou 300 m parcourus ; émet stoppingVehicleDrag et dragRaceVehicleStopped. *(interne)* | 992 |
-| `gameplay_drag_phaseHandlers.updateRacer(racer)` | Met à jour les données d'un racer depuis le véhicule : position, direction, vitesse, centres de roues, distances au stage, inLane, états pré-stage/stage (émet les hooks de feux) et currentDistanceFromOrigin. | 1099 |
-| `gameplay_drag_phaseHandlers.updateRemoteStagingHoldTimers()` | Valide la phase 1 des racers d'un couloir dont le staging distant est maintenu depuis au moins 1 s. Appelée par core.onUpdate. *(interne)* | 608 |
+| `gameplay_drag_phaseHandlers.areAllRacersStaged(dragData)` | Indicates whether all racers are in staging (phase 1 done, in their lane, or already finished) and whether their number reaches the expected minimum (core.getExpectedStagingRacerCount). | 433 |
+| `gameplay_drag_phaseHandlers.calculateDistanceOfAllWheelsFromStagePos(racer)` | Computes, for each wheel group of the racer, the vector wheel center minus the position of the stage point of its lane (racer._wheelDistances). | 58 |
+| `gameplay_drag_phaseHandlers.changeAllPhases()` | Moves to the next phase all racers whose current phase is completed. | 381 |
+| `gameplay_drag_phaseHandlers.changeRacerPhase(racer, expectedCurrentPhase)` | Advances a racer by one phase (or marks it finished after the last one). Refuses if a transition is already in progress, if the expected phase differs, if the racer is out of lane to enter phase 2 or 3, or if an onPhaseTransition hook calls setPhaseTransitionAbort. Emits onPhaseTransition (before) and onRacerPhaseTransition (after, newPhase nil and name 'finished' if finished). | 313 |
+| `gameplay_drag_phaseHandlers.checkFreeroamDqReStage(dtSim)` | In solo/multiseat freeroam (outside the MP drag gamemode), handles re-staging after DQ: 6 s after the DQ, if the player is more than 6 m behind the line, restarts the race (reset then startDragRaceActivity); between -6 and +6 m, shows the message ui.drag.flash.reverseToRestage once. Returns 'leftArea' if the only racer backs up more than 15 m. | 637 |
+| `gameplay_drag_phaseHandlers.clearDqRestageState()` | Empties the re-staging state after DQ. | 629 |
+| `gameplay_drag_phaseHandlers.clearRacerTransitionLock(vehId)` | Removes the transition lock (and the abort flag) of a racer, or of all if vehId is nil. | 299 |
+| `gameplay_drag_phaseHandlers.clearRemoteStagingHoldTimers()` | Empties the remote staging hold timers (MP). | 625 |
+| `gameplay_drag_phaseHandlers.countdown(phase, racer, dtSim)` | Phase 2 (tree) for a racer. Starts the countdown (emits startDragCountdown with the dial), prepares the AI (aggressiveness 2, two-step, transbrake or freeze, throttleOverride = 1), and disqualifies for a false start or leaving the lane (sets reactionTimeInvalid and calls startRaceFromTree before disqualifyRacer). *(internal)* | 715 |
+| `gameplay_drag_phaseHandlers.disqualifyRacer(racer, reason)` | Disqualifies a racer (never in phase 1, nor outside freeroam while the race is not started). For an AI, resets throttleOverride to nil. Emits setDisqualifiedLights. | 236 |
+| `gameplay_drag_phaseHandlers.emergencyStop(phase, racer, dtSim)` | Emergency stop phase: for an AI, cuts nitro/jato and throttleOverride, forces ai.setSpeed(0); the phase is completed when speed <= 0.01 m/s. *(internal)* | 1052 |
+| `gameplay_drag_phaseHandlers.generateWinData()` | Asks the race type extension (ext.generateWinData) for the sorted list of results and emits onWinnerLightOn for the first one's lane. | 280 |
+| `gameplay_drag_phaseHandlers.getFrontWheelDistanceFromStagePos(racer)` | Signed distance (m) of the front wheels to the stage line, projected onto the lane's stage-to-finish axis (negative before the line). | 50 |
+| `gameplay_drag_phaseHandlers.getImportantTimerValueForWin(racer, data)` | Value of the important timer for the ranking (delegates to gameplay_drag_times). | 174 |
+| `gameplay_drag_phaseHandlers.isRacerInsideBoundary(racer)` | True if all the racer's wheels (centers per group, otherwise the vehicle position) are in its lane's zone and, if there are several racers, not in the zone of another occupied lane. | 93 |
+| `gameplay_drag_phaseHandlers.onDragClear()` | Clear hook: empties the remote staging timers and the re-staging state. *(internal)* *(hook)* | 1227 |
+| `gameplay_drag_phaseHandlers.onExtensionLoaded()` | Load hook: logs an error if gameplay_drag_core is absent. *(internal)* *(hook)* | 43 |
+| `gameplay_drag_phaseHandlers.race(phase, racer, dtSim)` | Phase 3 (race). Launches the AI (jato, transbrake released, throttleOverride = 1, speed and target of the endLine), detects crash/stationary/out of lane, regulates the AIs' pitch-up, and ends when the race end timer is set: emits dragRaceEndLineReached, in MP sends the raw time to the host, otherwise generates the results and the slip when all have finished. *(internal)* | 838 |
+| `gameplay_drag_phaseHandlers.setDialsData(data)` | Computes the start delays (dialsData) per vehicle: 1 racer = 0; 2 racers = the dial gap is added to the racer with the lowest dial; more than 2 = each one's dial. | 1178 |
+| `gameplay_drag_phaseHandlers.setPhaseTransitionAbort(vehId)` | To be called from an onPhaseTransition hook to cancel a racer's transition in progress. | 309 |
+| `gameplay_drag_phaseHandlers.setRemoteStagingState(data, lane, staged)` | MP: applies the staging state of a lane received from the network. With staged = true, starts a timer (1 s hold before validating phase 1); with false, cancels and reopens phase 1 of the lane's racers. | 592 |
+| `gameplay_drag_phaseHandlers.stage(phase, racer, dtSim)` | Phase 1 (staging). Updates the wheel geometry, sends the distance to the UI (updateStageApp) for the local player, validates the phase after 1 s on the line (player) or drives the AI to the line (approach, braking, crawling) then stops it. *(internal)* | 471 |
+| `gameplay_drag_phaseHandlers.startRaceFromTree(vehId)` | Ends a racer's countdown phase ('countdown' phase), starts its timers if local and, for an AI, draws a random delay of 0 to 0.5 s before its start. | 393 |
+| `gameplay_drag_phaseHandlers.stop(phase, racer, dtSim)` | Stop phase after the finish: for an AI, cuts nitro/jato and orders it to stop toward the stop target. Completed when speed <= 15 m/s or 300 m traveled; emits stoppingVehicleDrag and dragRaceVehicleStopped. *(internal)* | 992 |
+| `gameplay_drag_phaseHandlers.updateRacer(racer)` | Updates a racer's data from the vehicle: position, direction, speed, wheel centers, distances to the stage, inLane, pre-stage/stage states (emits the light hooks) and currentDistanceFromOrigin. | 1099 |
+| `gameplay_drag_phaseHandlers.updateRemoteStagingHoldTimers()` | Validates phase 1 of the racers of a lane whose remote staging has been held for at least 1 s. Called by core.onUpdate. *(internal)* | 608 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drag_phaseHandlers.areAllRacersStaged(dragData)`
 
-Indique si tous les racers sont en staging (phase 1 terminée, dans leur couloir, ou déjà finis) et si leur nombre atteint le minimum attendu (core.getExpectedStagingRacerCount).
+Indicates whether all racers are in staging (phase 1 done, in their lane, or already finished) and whether their number reaches the expected minimum (core.getExpectedStagingRacerCount).
 
-- `dragData` (*table|nil*) : Données de course ; défaut core.getData().
-- **renvoie** : boolean true si tous en staging.
-- **renvoie** : integer Nombre de racers en staging.
-- **renvoie** : integer Nombre total de racers.
+- `dragData` (*table|nil*) : Race data; default core.getData().
+- **returns**: boolean true if all in staging.
+- **returns**: integer Number of racers in staging.
+- **returns**: integer Total number of racers.
 
 #### `gameplay_drag_phaseHandlers.calculateDistanceOfAllWheelsFromStagePos(racer)`
 
-Calcule, pour chaque groupe de roues du racer, le vecteur centre de roues moins la position du point de stage de son couloir (racer._wheelDistances).
+Computes, for each wheel group of the racer, the vector wheel center minus the position of the stage point of its lane (racer._wheelDistances).
 
 - `racer` (*table*) : Racer.
 
 #### `gameplay_drag_phaseHandlers.changeRacerPhase(racer, expectedCurrentPhase)`
 
-Fait avancer un racer d'une phase (ou le marque fini après la dernière). Refuse si une transition est déjà en cours, si la phase attendue diffère, si le racer est hors couloir pour entrer en phase 2 ou 3, ou si un hook onPhaseTransition appelle setPhaseTransitionAbort. Émet onPhaseTransition (avant) et onRacerPhaseTransition (après, newPhase nil et nom 'finished' si fini).
+Advances a racer by one phase (or marks it finished after the last one). Refuses if a transition is already in progress, if the expected phase differs, if the racer is out of lane to enter phase 2 or 3, or if an onPhaseTransition hook calls setPhaseTransitionAbort. Emits onPhaseTransition (before) and onRacerPhaseTransition (after, newPhase nil and name 'finished' if finished).
 
 - `racer` (*table*) : Racer.
-- `expectedCurrentPhase` (*integer|nil*) : Phase attendue (validation).
-- **renvoie** : boolean true si fait ou sans objet (racer retiré, fini), false si refusé.
+- `expectedCurrentPhase` (*integer|nil*) : Expected phase (validation).
+- **returns**: boolean true if done or not applicable (racer removed, finished), false if refused.
 
 #### `gameplay_drag_phaseHandlers.checkFreeroamDqReStage(dtSim)`
 
-En freeroam solo/multiseat (hors gamemode drag MP), gère le re-staging après DQ : 6 s après la DQ, si le joueur est à plus de 6 m derrière la ligne, relance la course (reset puis startDragRaceActivity) ; entre -6 et +6 m, affiche une fois le message ui.drag.flash.reverseToRestage. Renvoie 'leftArea' si le seul racer recule à plus de 15 m.
+In solo/multiseat freeroam (outside the MP drag gamemode), handles re-staging after DQ: 6 s after the DQ, if the player is more than 6 m behind the line, restarts the race (reset then startDragRaceActivity); between -6 and +6 m, shows the message ui.drag.flash.reverseToRestage once. Returns 'leftArea' if the only racer backs up more than 15 m.
 
-- `dtSim` (*number*) : Delta temps simulé (s).
-- **renvoie** : string|nil 'leftArea' ou nil.
+- `dtSim` (*number*) : Simulated time delta (s).
+- **returns**: string|nil 'leftArea' or nil.
 
 #### `gameplay_drag_phaseHandlers.clearRacerTransitionLock(vehId)`
 
-Supprime le verrou de transition (et le drapeau d'abandon) d'un racer, ou de tous si vehId est nil.
+Removes the transition lock (and the abort flag) of a racer, or of all if vehId is nil.
 
-- `vehId` (*integer|nil*) : ID du véhicule ; nil = tous.
+- `vehId` (*integer|nil*) : Vehicle ID; nil = all.
 
 #### `gameplay_drag_phaseHandlers.countdown(phase, racer, dtSim)`
 
-Phase 2 (arbre) pour un racer. Démarre le décompte (émet startDragCountdown avec le dial), prépare l'IA (agressivité 2, two-step, transbrake ou freeze, throttleOverride = 1), et disqualifie pour faux départ ou sortie de couloir (met reactionTimeInvalid et appelle startRaceFromTree avant disqualifyRacer).
+Phase 2 (tree) for a racer. Starts the countdown (emits startDragCountdown with the dial), prepares the AI (aggressiveness 2, two-step, transbrake or freeze, throttleOverride = 1), and disqualifies for a false start or leaving the lane (sets reactionTimeInvalid and calls startRaceFromTree before disqualifyRacer).
 
-- `phase` (*table*) : Phase courante du racer.
+- `phase` (*table*) : Racer's current phase.
 - `racer` (*table*) : Racer.
-- `dtSim` (*number*) : Delta temps simulé (s).
+- `dtSim` (*number*) : Simulated time delta (s).
 
 #### `gameplay_drag_phaseHandlers.disqualifyRacer(racer, reason)`
 
-Disqualifie un racer (jamais en phase 1, ni hors freeroam tant que la course n'est pas démarrée). Pour une IA, remet throttleOverride à nil. Émet setDisqualifiedLights.
+Disqualifies a racer (never in phase 1, nor outside freeroam while the race is not started). For an AI, resets throttleOverride to nil. Emits setDisqualifiedLights.
 
 - `racer` (*table*) : Racer.
-- `reason` (*string*) : Clé de traduction de la raison.
+- `reason` (*string*) : Translation key of the reason.
 
 #### `gameplay_drag_phaseHandlers.emergencyStop(phase, racer, dtSim)`
 
-Phase d'arrêt d'urgence : pour une IA, coupe nitro/jato et throttleOverride, impose ai.setSpeed(0) ; la phase est complétée quand la vitesse <= 0.01 m/s.
+Emergency stop phase: for an AI, cuts nitro/jato and throttleOverride, forces ai.setSpeed(0); the phase is completed when speed <= 0.01 m/s.
 
 - `phase` (*table*) : Phase.
 - `racer` (*table*) : Racer.
-- `dtSim` (*number*) : Delta temps simulé (s).
+- `dtSim` (*number*) : Simulated time delta (s).
 
 #### `gameplay_drag_phaseHandlers.generateWinData()`
 
-Demande à l'extension de type de course (ext.generateWinData) la liste triée des résultats et émet onWinnerLightOn pour le couloir du premier.
+Asks the race type extension (ext.generateWinData) for the sorted list of results and emits onWinnerLightOn for the first one's lane.
 
-- **renvoie** : table[] Liste des résultats (vide si pas de données).
+- **returns**: table[] List of results (empty if no data).
 
 #### `gameplay_drag_phaseHandlers.getFrontWheelDistanceFromStagePos(racer)`
 
-Distance signée (m) des roues avant à la ligne de stage, projetée sur l'axe stage-arrivée du couloir (négatif avant la ligne).
+Signed distance (m) of the front wheels to the stage line, projected onto the lane's stage-to-finish axis (negative before the line).
 
 - `racer` (*table*) : Racer.
-- **renvoie** : number|nil Distance ou nil si les données de roues manquent.
+- **returns**: number|nil Distance or nil if the wheel data is missing.
 
 #### `gameplay_drag_phaseHandlers.getImportantTimerValueForWin(racer, data)`
 
-Valeur du timer important pour le classement (délègue à gameplay_drag_times).
+Value of the important timer for the ranking (delegates to gameplay_drag_times).
 
 - `racer` (*table*) : Racer.
-- `data` (*table*) : Données de course.
-- **renvoie** : number Valeur, 0 si indisponible.
+- `data` (*table*) : Race data.
+- **returns**: number Value, 0 if unavailable.
 
 #### `gameplay_drag_phaseHandlers.isRacerInsideBoundary(racer)`
 
-Vrai si toutes les roues du racer (centres par groupe, sinon la position du véhicule) sont dans la zone de son couloir et, s'il y a plusieurs racers, pas dans la zone d'un autre couloir occupé.
+True if all the racer's wheels (centers per group, otherwise the vehicle position) are in its lane's zone and, if there are several racers, not in the zone of another occupied lane.
 
 - `racer` (*table*) : Racer.
-- **renvoie** : boolean true si dans le couloir.
+- **returns**: boolean true if in the lane.
 
 #### `gameplay_drag_phaseHandlers.race(phase, racer, dtSim)`
 
-Phase 3 (course). Lance l'IA (jato, transbrake relâché, throttleOverride = 1, vitesse et cible de l'endLine), détecte crash/immobilité/sortie de couloir, régule le cabrage des IA, et termine quand le timer de fin de course est défini : émet dragRaceEndLineReached, en MP envoie le temps brut à l'hôte, sinon génère les résultats et le ticket quand tous ont fini.
+Phase 3 (race). Launches the AI (jato, transbrake released, throttleOverride = 1, speed and target of the endLine), detects crash/stationary/out of lane, regulates the AIs' pitch-up, and ends when the race end timer is set: emits dragRaceEndLineReached, in MP sends the raw time to the host, otherwise generates the results and the slip when all have finished.
 
 - `phase` (*table*) : Phase.
 - `racer` (*table*) : Racer.
-- `dtSim` (*number*) : Delta temps simulé (s).
+- `dtSim` (*number*) : Simulated time delta (s).
 
 #### `gameplay_drag_phaseHandlers.setDialsData(data)`
 
-Calcule les délais de départ (dialsData) par véhicule : 1 racer = 0 ; 2 racers = l'écart de dial est ajouté au racer au dial le plus bas ; plus de 2 = le dial de chacun.
+Computes the start delays (dialsData) per vehicle: 1 racer = 0; 2 racers = the dial gap is added to the racer with the lowest dial; more than 2 = each one's dial.
 
-- `data` (*table[]*) : Liste d'entrées {vehId, dial}.
+- `data` (*table[]*) : List of entries {vehId, dial}.
 
 #### `gameplay_drag_phaseHandlers.setPhaseTransitionAbort(vehId)`
 
-À appeler depuis un hook onPhaseTransition pour annuler la transition en cours d'un racer.
+To be called from an onPhaseTransition hook to cancel a racer's transition in progress.
 
-- `vehId` (*integer*) : ID du véhicule.
+- `vehId` (*integer*) : Vehicle ID.
 
 #### `gameplay_drag_phaseHandlers.setRemoteStagingState(data, lane, staged)`
 
-MP : applique l'état de staging d'un couloir reçu du réseau. À staged = true, démarre une minuterie (1 s de maintien avant de valider la phase 1) ; à false, annule et rouvre la phase 1 des racers du couloir.
+MP: applies the staging state of a lane received from the network. With staged = true, starts a timer (1 s hold before validating phase 1); with false, cancels and reopens phase 1 of the lane's racers.
 
 - `data` (*table*) : dragData.
-- `lane` (*integer*) : Couloir.
-- `staged` (*boolean*) : Staging actif ou non.
+- `lane` (*integer*) : Lane.
+- `staged` (*boolean*) : Staging active or not.
 
 #### `gameplay_drag_phaseHandlers.stage(phase, racer, dtSim)`
 
-Phase 1 (staging). Met à jour la géométrie des roues, envoie la distance à l'UI (updateStageApp) pour le joueur local, valide la phase après 1 s sur la ligne (joueur) ou conduit l'IA à la ligne (approche, freinage, rampement) puis l'arrête.
+Phase 1 (staging). Updates the wheel geometry, sends the distance to the UI (updateStageApp) for the local player, validates the phase after 1 s on the line (player) or drives the AI to the line (approach, braking, crawling) then stops it.
 
 - `phase` (*table*) : Phase.
 - `racer` (*table*) : Racer.
-- `dtSim` (*number*) : Delta temps simulé (s).
+- `dtSim` (*number*) : Simulated time delta (s).
 
 #### `gameplay_drag_phaseHandlers.startRaceFromTree(vehId)`
 
-Termine la phase de décompte d'un racer (phase 'countdown'), démarre ses timers si local et, pour une IA, tire un délai aléatoire de 0 à 0,5 s avant son départ.
+Ends a racer's countdown phase ('countdown' phase), starts its timers if local and, for an AI, draws a random delay of 0 to 0.5 s before its start.
 
-- `vehId` (*integer*) : ID du véhicule.
+- `vehId` (*integer*) : Vehicle ID.
 
 #### `gameplay_drag_phaseHandlers.stop(phase, racer, dtSim)`
 
-Phase d'arrêt après l'arrivée : pour une IA, coupe nitro/jato et lui ordonne de s'arrêter vers la cible d'arrêt. Terminée quand la vitesse <= 15 m/s ou 300 m parcourus ; émet stoppingVehicleDrag et dragRaceVehicleStopped.
+Stop phase after the finish: for an AI, cuts nitro/jato and orders it to stop toward the stop target. Completed when speed <= 15 m/s or 300 m traveled; emits stoppingVehicleDrag and dragRaceVehicleStopped.
 
 - `phase` (*table*) : Phase.
 - `racer` (*table*) : Racer.
-- `dtSim` (*number*) : Delta temps simulé (s).
+- `dtSim` (*number*) : Simulated time delta (s).
 
 #### `gameplay_drag_phaseHandlers.updateRacer(racer)`
 
-Met à jour les données d'un racer depuis le véhicule : position, direction, vitesse, centres de roues, distances au stage, inLane, états pré-stage/stage (émet les hooks de feux) et currentDistanceFromOrigin.
+Updates a racer's data from the vehicle: position, direction, speed, wheel centers, distances to the stage, inLane, pre-stage/stage states (emits the light hooks) and currentDistanceFromOrigin.
 
 - `racer` (*table*) : Racer.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | gameplay_drag_core, gameplay_drag_times, gameplay_drag_saveSystem. |
-| `redLightReason` | string | Clé de raison de DQ pour le faux départ : 'missions.dragRace.gameplay.disqualified.jumping'. display.setDisqualifiedLights l'utilise pour allumer le feu rouge. |
+| `redLightReason` | string | DQ reason key for the false start: 'missions.dragRace.gameplay.disqualified.jumping'. display.setDisqualifiedLights uses it to turn on the red light. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `dragRaceEndLineReached`
 - `dragRaceStarted`
 - `dragRaceVehicleStopped`
 - `onPhaseTransition`
-- `onRacerPhaseTransition` — écouté par 2 module(s)
-- `onWinnerLightOn` — écouté par 1 module(s)
+- `onRacerPhaseTransition` — listened to by 2 module(s)
+- `onWinnerLightOn` — listened to by 1 module(s)
 - `setDisqualifiedLights`
 - `stageStarted`
 - `startDragCountdown`
 - `stoppingVehicleDrag`
 
-**Évènements UI (guihooks.trigger) :** `DragRaceTreeFlashMessage`, `ScenarioFlashMessage`, `updateStageApp`
+**UI events (guihooks.trigger):** `DragRaceTreeFlashMessage`, `ScenarioFlashMessage`, `updateStageApp`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drag/phaseHandlers.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drag/phaseHandlers.lua`.*

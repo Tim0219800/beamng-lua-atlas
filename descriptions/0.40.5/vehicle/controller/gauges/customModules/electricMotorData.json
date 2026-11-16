@@ -1,10 +1,10 @@
 {
   "path": "lua/vehicle/controller/gauges/customModules/electricMotorData.lua",
-  "module": "Module de données pour genericGauges : calcule la puissance affichée, la puissance et le couple, l'autonomie restante et un graphe de consommation pour les moteurs électriques.",
+  "module": "Data module for genericGauges: computes the displayed power, the power and torque, the remaining range and a consumption graph for electric motors.",
   "notes": [
-    "Les moteurs sont les dispositifs de type \"electricMotor\" ; les batteries sont leurs stockages d'énergie enregistrés. Autonomie = énergie stockée * 0.0278 / consommation moyenne par 100 km.",
-    "La consommation est lissée et ne change que si le véhicule roule (> 0.5 m/s). updateGaugeData lit electrics.values.wheelspeed sans défaut.",
-    "setupGaugeData ajoute les batteries sans vider la liste précédente (un second appel les duplique)."
+    "The motors are the devices of type \"electricMotor\"; the batteries are their registered energy storages. Range = stored energy * 0.0278 / average consumption per 100 km.",
+    "The consumption is smoothed and only changes if the vehicle is moving (> 0.5 m/s). updateGaugeData reads electrics.values.wheelspeed without a default.",
+    "setupGaugeData adds the batteries without clearing the previous list (a second call duplicates them)."
   ],
   "fields": {
     "type": {
@@ -14,54 +14,54 @@
   },
   "functions": {
     "init": {
-      "desc": "Ne fait rien.",
+      "desc": "Does nothing.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Réinitialise l'état interne du module.",
+      "desc": "Resets the module's internal state.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Ne fait rien (la mise à jour se fait par updateGaugeData).",
+      "desc": "Does nothing (the update is done by updateGaugeData).",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "setupGaugeData": {
-      "desc": "Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : powerDisplay (electricPowerDisplay : accélérateur moyen moins régénération), currentPower (currentPower et averagePower en ch, currentTorque en N·m), remainingRange, consumptionGraph (averageConsumption, envoyé toutes les 5 s, sinon nil).",
+      "desc": "Called by genericGauges with the properties requested in displayData.customModules: powerDisplay (electricPowerDisplay: average throttle minus regeneration), currentPower (currentPower and averagePower in hp, currentTorque in N·m), remainingRange, consumptionGraph (averageConsumption, sent every 5 s, otherwise nil).",
       "params": {
         "properties": {
           "type": "table<string, boolean>",
-          "desc": "Ensemble des propriétés demandées (clé = nom, valeur = true)."
+          "desc": "Set of requested properties (key = name, value = true)."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGaugeData": {
-      "desc": "Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées.",
+      "desc": "Called by genericGauges before each send: fills moduleData with the requested values.",
       "params": {
         "moduleData": {
           "type": "table",
-          "desc": "Table de données du module, envoyée ensuite à la page HTML."
+          "desc": "Module data table, then sent to the HTML page."
         },
         "dt": {
           "type": "number",
-          "desc": "Temps écoulé depuis le dernier envoi (s)."
+          "desc": "Time elapsed since the last send (s)."
         }
       },
       "returns": [],

@@ -1,41 +1,41 @@
 # `util_compileMeshes`
 
-*Fichier : `lua/ge/extensions/util/compileMeshes.lua` · VM : Game Engine (GE) · 249 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/compileMeshes.lua` · VM: Game Engine (GE) · 249 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_compileMeshes` : `extensions.load("util_compileMeshes")`, puis la globale `util_compileMeshes`
+**Access:** extension `util_compileMeshes`: `extensions.load("util_compileMeshes")`, then the global `util_compileMeshes`
 
-Outil de build hors-ligne : compile les maillages .dae (Collada) en .cdae (chargement plus rapide) pour les dossiers art/, assets/, vehicles/, levels/, content/ et /core/art/. Chaque sous-dossier est traité isolément (matériaux et objets temporaires dans ObjectsTempGroup). Un cache dans collada_cache/ (clé = SHA1 du .dae) évite de recompiler. À la fin, le jeu s'arrête avec un code de sortie (0 = tout compilé, 1 = fichiers manqués). Il se lance dès le chargement de l'extension.
+Offline build tool: compiles .dae (Collada) meshes into .cdae (faster loading) for the art/, assets/, vehicles/, levels/, content/ and /core/art/ folders. Each subfolder is processed in isolation (temporary materials and objects in ObjectsTempGroup). A cache in collada_cache/ (key = SHA1 of the .dae) avoids recompiling. At the end, the game exits with an exit code (0 = everything compiled, 1 = missed files). It starts as soon as the extension loads.
 
-## Remarques
+## Notes
 
-- Les .cdae existants sont réutilisés : les supprimer avant pour repartir de zéro.
-- Arguments de ligne de commande reconnus : -compileMeshesNoCache (désactive collada_cache), -compileMeshesCustomPaths "a/;b/" (remplace la liste de dossiers, séparés par ;), -compileMeshesScanPathBaseDirs (traite aussi les fichiers à la racine de chaque dossier de base), -compileMeshesNoCompileOnlyCheck (ne compile pas : vérifie seulement que les .cdae existent), -compileMeshesNoCheck (saute la vérification finale des fichiers manqués).
-- Chemins ignorés pour la vérification finale : débutant par /DevTools/ ou /projects/.
-- Écrit cdae_compilation_hardlink_todo.json : liste de paires {nomCache.cdae, destination} à lier en dur après compilation.
-- Un fichier .dae vide est considéré comme déjà couvert en mode -compileMeshesNoCompileOnlyCheck.
-- Bug mineur : le bilan final divise par (cacheHits + cacheMisses) ; sans cache (-compileMeshesNoCache) ce total est nul et le pourcentage affiché n'est pas défini (division par zéro en nombre flottant).
-- L'extension s'exécute dans un job (core_jobsystem.create(work, 1)) qui cède la main à chaque fichier.
+- Existing .cdae files are reused: delete them first to start from scratch.
+- Recognized command line arguments: -compileMeshesNoCache (disables collada_cache), -compileMeshesCustomPaths "a/;b/" (replaces the folder list, separated by ;), -compileMeshesScanPathBaseDirs (also processes files at the root of each base folder), -compileMeshesNoCompileOnlyCheck (does not compile: only checks that the .cdae exist), -compileMeshesNoCheck (skips the final check for missed files).
+- Paths ignored for the final check: starting with /DevTools/ or /projects/.
+- Writes cdae_compilation_hardlink_todo.json: list of {cacheName.cdae, destination} pairs to hard-link after compilation.
+- An empty .dae file is considered already covered in -compileMeshesNoCompileOnlyCheck mode.
+- Minor bug: the final summary divides by (cacheHits + cacheMisses); without cache (-compileMeshesNoCache) this total is zero and the displayed percentage is undefined (floating-point division by zero).
+- The extension runs in a job (core_jobsystem.create(work, 1)) that yields at each file.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_compileMeshes.onExtensionLoaded()` | Hook de chargement : crée le job work (core_jobsystem.create(work, 1)). *(interne)* *(hook)* | 238 |
-| `util_compileMeshes.work(job)` | Boucle principale de compilation, exécutée comme job : trouve tous les .dae, compile ou récupère depuis le cache, écrit la liste des liens en dur, vérifie les fichiers manqués, puis appelle shutdown(code). *(interne)* | 51 |
+| `util_compileMeshes.onExtensionLoaded()` | Load hook: creates the work job (core_jobsystem.create(work, 1)). *(internal)* *(hook)* | 238 |
+| `util_compileMeshes.work(job)` | Main compilation loop, run as a job: finds all .dae files, compiles or fetches from the cache, writes the hard-link list, checks for missed files, then calls shutdown(code). *(internal)* | 51 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_compileMeshes.work(job)`
 
-Boucle principale de compilation, exécutée comme job : trouve tous les .dae, compile ou récupère depuis le cache, écrit la liste des liens en dur, vérifie les fichiers manqués, puis appelle shutdown(code).
+Main compilation loop, run as a job: finds all .dae files, compiles or fetches from the cache, writes the hard-link list, checks for missed files, then calls shutdown(code).
 
-- `job` (*table*) : Job de core_jobsystem (job.yield est appelé à chaque fichier).
+- `job` (*table*) : core_jobsystem job (job.yield is called at each file).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `getStartingArgs`, `requestShutdown`
 - `FS:` `copyFile`, `directoryCreate`, `directoryExists`, `fileExists`, `fileSize`, `findFiles`, `hashFileSHA1`
 - `TorqueScriptLua.` `exec`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/compileMeshes.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/compileMeshes.lua`.*

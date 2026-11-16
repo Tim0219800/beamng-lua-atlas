@@ -1,23 +1,23 @@
 # `flowgraph_nodes_scene_trackPrefab`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/trackPrefab.lua` · VM : Game Engine (GE) · 33 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/trackPrefab.lua` · VM: Game Engine (GE) · 33 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/trackPrefab")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/trackPrefab")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Track Prefab » (once_instant). Permet au flowgraph de suivre un prefab créé hors flowgraph, via modules.prefab:addPrefab(id, options). Entrées : flow, id (0 = prefab du joueur d'après la description), dontDelete, skipNavgraphReload, skipCollisionReload (tous true par défaut, cachés).
+Flowgraph node "Track Prefab" (once_instant). Lets the flowgraph track a prefab created outside the flowgraph, via modules.prefab:addPrefab(id, options). Inputs: flow, id (0 = player's prefab according to the description), dontDelete, skipNavgraphReload, skipCollisionReload (all true by default, hidden).
 
-## Remarques
+## Notes
 
-- L'icône référence nodeIcons.svene (faute de frappe) : icône nil.
+- The icon references nodeIcons.svene (typo): nil icon.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Ne fait rien. | 29 |
-| `C:workOnce()` | Appelle addPrefab(id, {dontDelete, skipNavgraphReload, skipCollisionReload}). | 21 |
+| `C:_executionStopped()` | Does nothing. | 29 |
+| `C:workOnce()` | Calls addPrefab(id, {dontDelete, skipNavgraphReload, skipCollisionReload}). | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/trackPrefab.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/trackPrefab.lua`.*

@@ -1,28 +1,28 @@
 # `flowgraph_nodes_scene_getObjectField`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/getObjectField.lua` · VM : Game Engine (GE) · 37 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/getObjectField.lua` · VM: Game Engine (GE) · 37 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/getObjectField")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/getObjectField")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Get Object Field » (repeat_instant). Lit un champ d'un objet de la scene (scenetree.findObjectById). Entrees : objectId, fieldName, fieldArrayNum (optionnel, 0 par defaut, cache). Sortie : value (any). Utilise getField si le champ est declare, sinon getDynDataFieldbyName (champ dynamique).
+Flowgraph node "Get Object Field" (repeat_instant). Reads a field of a scene object (scenetree.findObjectById). Inputs: objectId, fieldName, fieldArrayNum (optional, 0 by default, hidden). Output: value (any). Uses getField if the field is declared, otherwise getDynDataFieldbyName (dynamic field).
 
-## Remarques
+## Notes
 
-- Rien n'est ecrit si l'objet est introuvable : la sortie garde l'ancienne valeur.
-- getField renvoie en general une chaine.
+- Nothing is written if the object is not found: the output keeps its old value.
+- getField generally returns a string.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Trouve l'objet, puis ecrit value avec obj:getField(nom, index) si le nom est dans obj:getFields(), sinon avec obj:getDynDataFieldbyName. | 24 |
+| `C:work()` | Finds the object, then writes value with obj:getField(name, index) if the name is in obj:getFields(), otherwise with obj:getDynDataFieldbyName. | 24 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getDynDataFieldbyName`, `getField`, `getFields`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/getObjectField.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/getObjectField.lua`.*

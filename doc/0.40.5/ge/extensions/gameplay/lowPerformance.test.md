@@ -1,64 +1,64 @@
 # `gameplay_lowPerformance.test`
 
-*Fichier : `lua/ge/extensions/gameplay/lowPerformance.test.lua` · VM : Game Engine (GE) · 161 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/lowPerformance.test.lua` · VM: Game Engine (GE) · 161 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_lowPerformance.test` : `extensions.load("gameplay_lowPerformance.test")`, puis la globale `gameplay_lowPerformance.test`
+**Access:** extension `gameplay_lowPerformance.test`: `extensions.load("gameplay_lowPerformance.test")`, then the global `gameplay_lowPerformance.test`
 
-Tests automatisés du détecteur gameplay/lowPerformance, à lancer avec require('testFramework/TestManager'):runTestFiles('gameplay/lowPerformance'). Chaque test charge lowPerformance.lua dans un environnement simulé (setfenv avec faux settings, Engine, ui_router, VariableRegistry, guihooks...) puis fait avancer des images à une fréquence donnée pour vérifier les transitions d'état. Ce n'est pas une API de jeu : aucune utilité directe pour un moddeur, sauf comme exemple de test avec environnement simulé.
+Automated tests of the gameplay/lowPerformance detector, to be run with require('testFramework/TestManager'):runTestFiles('gameplay/lowPerformance'). Each test loads lowPerformance.lua in a mocked environment (setfenv with fake settings, Engine, ui_router, VariableRegistry, guihooks...) then advances frames at a given rate to verify state transitions. This is not a game API: no direct use for a modder, except as an example of a test with a mocked environment.
 
-## Remarques
+## Notes
 
-- La fonction locale runtime(mode) fabrique l'environnement simulé ; runFrames(detector, state, fps, seconds) appelle onUpdate avec dt = 1/fps.
-- Chaque fonction testXxx reçoit un contexte ctx (méthodes assert et assertEqual) fourni par testFramework/TestManager.
+- The local function runtime(mode) builds the mocked environment; runFrames(detector, state, fps, seconds) calls onUpdate with dt = 1/fps.
+- Each testXxx function receives a ctx context (assert and assertEqual methods) provided by testFramework/TestManager.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_lowPerformance.test.testCuratedContentIsNeverChecked(ctx)` | En mode mission rien n'est détecté ni notifié ; passer de freeroam à mission annule l'effet (isLowPerformance faux, pas de pause notice). *(interne)* | 91 |
-| `gameplay_lowPerformance.test.testDipShorterThanDwellDoesNotTrigger(ctx)` | Une chute brève (moyenne sous 25 pendant environ 3 s, moins que les 5 s requis) ne déclenche rien ; une chute prolongée à 5 FPS déclenche. *(interne)* | 57 |
-| `gameplay_lowPerformance.test.testNotificationsCanBeMuted(ctx)` | Vérifie muteAndConfirmPendingSpawn (réglage notifyLowPerformance = false, détection maintenue sans notification) et le mode menu simple (notifications toujours actives, dialogue à 2 boutons au lieu de 3). *(interne)* | 131 |
-| `gameplay_lowPerformance.test.testSkippedFramesRestartGrace(ctx)` | Vérifie que la pause (route différente de play), l'apparition d'un véhicule et un fondu d'écran en cours redémarrent la période de grâce. *(interne)* | 70 |
-| `gameplay_lowPerformance.test.testSpawnWarningOncePerEpisode(ctx)` | confirmSpawn exécute directement hors faible performance ; en faible performance il retourne false et diffère jusqu'à confirmPendingSpawn ; l'avertissement n'apparaît qu'une fois par épisode (deux dialogues sur deux épisodes). *(interne)* | 107 |
-| `gameplay_lowPerformance.test.testSustainedLowFpsEntersAndRecovers(ctx)` | 20 FPS pendant 12 s doit activer la faible performance (un seul toast) ; 60 FPS pendant 15 s doit la désactiver. *(interne)* | 48 |
+| `gameplay_lowPerformance.test.testCuratedContentIsNeverChecked(ctx)` | In mission mode nothing is detected or notified; switching from freeroam to mission cancels the effect (isLowPerformance false, no pause notice). *(internal)* | 91 |
+| `gameplay_lowPerformance.test.testDipShorterThanDwellDoesNotTrigger(ctx)` | A brief drop (average below 25 for about 3 s, less than the required 5 s) triggers nothing; a prolonged drop to 5 FPS triggers. *(internal)* | 57 |
+| `gameplay_lowPerformance.test.testNotificationsCanBeMuted(ctx)` | Verifies muteAndConfirmPendingSpawn (notifyLowPerformance setting = false, detection kept without notification) and simple menu mode (notifications always active, 2-button dialog instead of 3). *(internal)* | 131 |
+| `gameplay_lowPerformance.test.testSkippedFramesRestartGrace(ctx)` | Verifies that pausing (route other than play), a vehicle spawn and an ongoing screen fade restart the grace period. *(internal)* | 70 |
+| `gameplay_lowPerformance.test.testSpawnWarningOncePerEpisode(ctx)` | confirmSpawn executes directly outside low performance; in low performance it returns false and defers until confirmPendingSpawn; the warning only appears once per episode (two dialogs over two episodes). *(internal)* | 107 |
+| `gameplay_lowPerformance.test.testSustainedLowFpsEntersAndRecovers(ctx)` | 20 FPS for 12 s must enable low performance (a single toast); 60 FPS for 15 s must disable it. *(internal)* | 48 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_lowPerformance.test.testCuratedContentIsNeverChecked(ctx)`
 
-En mode mission rien n'est détecté ni notifié ; passer de freeroam à mission annule l'effet (isLowPerformance faux, pas de pause notice).
+In mission mode nothing is detected or notified; switching from freeroam to mission cancels the effect (isLowPerformance false, no pause notice).
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `gameplay_lowPerformance.test.testDipShorterThanDwellDoesNotTrigger(ctx)`
 
-Une chute brève (moyenne sous 25 pendant environ 3 s, moins que les 5 s requis) ne déclenche rien ; une chute prolongée à 5 FPS déclenche.
+A brief drop (average below 25 for about 3 s, less than the required 5 s) triggers nothing; a prolonged drop to 5 FPS triggers.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `gameplay_lowPerformance.test.testNotificationsCanBeMuted(ctx)`
 
-Vérifie muteAndConfirmPendingSpawn (réglage notifyLowPerformance = false, détection maintenue sans notification) et le mode menu simple (notifications toujours actives, dialogue à 2 boutons au lieu de 3).
+Verifies muteAndConfirmPendingSpawn (notifyLowPerformance setting = false, detection kept without notification) and simple menu mode (notifications always active, 2-button dialog instead of 3).
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `gameplay_lowPerformance.test.testSkippedFramesRestartGrace(ctx)`
 
-Vérifie que la pause (route différente de play), l'apparition d'un véhicule et un fondu d'écran en cours redémarrent la période de grâce.
+Verifies that pausing (route other than play), a vehicle spawn and an ongoing screen fade restart the grace period.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `gameplay_lowPerformance.test.testSpawnWarningOncePerEpisode(ctx)`
 
-confirmSpawn exécute directement hors faible performance ; en faible performance il retourne false et diffère jusqu'à confirmPendingSpawn ; l'avertissement n'apparaît qu'une fois par épisode (deux dialogues sur deux épisodes).
+confirmSpawn executes directly outside low performance; in low performance it returns false and defers until confirmPendingSpawn; the warning only appears once per episode (two dialogs over two episodes).
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `gameplay_lowPerformance.test.testSustainedLowFpsEntersAndRecovers(ctx)`
 
-20 FPS pendant 12 s doit activer la faible performance (un seul toast) ; 60 FPS pendant 15 s doit la désactiver.
+20 FPS for 12 s must enable low performance (a single toast); 60 FPS for 15 s must disable it.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/lowPerformance.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/lowPerformance.test.lua`.*

@@ -2,41 +2,41 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+--- Flowgraph node class (created via `_flowgraph_createNode(C)`).
 ---@class flowgraph_nodes_gameplay_removeOtherVehicles_C
 local flowgraph_nodes_gameplay_removeOtherVehicles_C = {}
 
---- Restaure les réglages propres au nœud à partir des données sauvegardées.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua:133
----@param data table données sauvegardées du nœud
+--- Restores the node's own settings from the saved data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua:133
+---@param data table saved node data
 function flowgraph_nodes_gameplay_removeOtherVehicles_C:_onDeserialized(data) end
 
---- Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua:127
----@param res table table de sérialisation à remplir
+--- Adds the node's own settings to the `res` table when saving the graph.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua:127
+---@param res table serialization table to fill
 function flowgraph_nodes_gameplay_removeOtherVehicles_C:_onSerialize(res) end
 
---- Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua:27
+--- Draws the node's custom properties in the flowgraph editor panel (ImGui).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua:27
 function flowgraph_nodes_gameplay_removeOtherVehicles_C:drawCustomProperties() end
 
---- Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua:21
+--- Initializes the node's internal state at creation (called by the flowgraph engine).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua:21
 function flowgraph_nodes_gameplay_removeOtherVehicles_C:init() end
 
---- Ajoute ou retire des pins d'entrée idToIgnore_i pour passer de old à new ; supprime les liens des pins retirés.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua:62
----@param old integer ancien nombre de pins
----@param new integer nouveau nombre de pins
+--- Adds or removes idToIgnore_i input pins to go from old to new; deletes the links of removed pins.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua:62
+---@param old integer old number of pins
+---@param new integer new number of pins
 function flowgraph_nodes_gameplay_removeOtherVehicles_C:updatePins(old, new) end
 
---- Exécuté une seule fois (catégorie once_*) lorsque le nœud est déclenché : lit les pins d'entrée et applique l'effet.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua:81
+--- Executed only once (once_* category) when the node is triggered: reads the input pins and applies the effect.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua:81
 function flowgraph_nodes_gameplay_removeOtherVehicles_C:workOnce() end
 

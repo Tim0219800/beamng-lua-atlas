@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/layerTypes/group.lua",
+  "module": "Type de calque « Group » de l'outil Dynamic Decals : un calque conteneur qui regroupe d'autres calques ; le désactiver masque tous ses enfants. Ce module ajoute le bouton « Add group » dans la barre d'outils (api.addGroup), enregistre une GUI d'inspecteur vide pour ce type et la page de documentation « Layer Types / Group Layers ».",
+  "notes": [
+    "inspectLayerGui et sectionGui (exporté sous le nom onGui) sont des fonctions vides : un groupe n'a pas de propriété propre dans l'inspecteur au-delà du nom et de enabled.",
+    "L'enregistrement de la section « Group Properties » est commenté."
+  ],
+  "functions": {
+    "onGui": {
+      "desc": "Fonction vide (section non utilisée).",
+      "params": {"guiId": {"type": "string", "desc": "Suffixe d'identifiant ImGui (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "registerEditorPreferences": {
+      "desc": "Ne déclare aucune préférence (corps commenté).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : enregistre la GUI d'inspecteur du type group, l'élément de barre d'outils « group » (ordre 30) et la page de documentation.",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

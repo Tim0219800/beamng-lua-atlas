@@ -1,34 +1,201 @@
 {
   "path": "lua/common/kdtreebox3d.lua",
-  "module": "Arbre k-d pour boîtes 3D (xmin, ymin, zmin, xmax, ymax, zmax), soit 6 dimensions. Permet de retrouver rapidement tous les éléments dont la boîte intersecte une boîte de requête. Même API que kdtreebox2d en 3D : new -> preLoad -> build -> query/queryNotNested ; export/import pour réutiliser un arbre.",
+  "module": "K-d tree for 3D boxes (xmin, ymin, zmin, xmax, ymax, zmax), i.e. 6 dimensions. Allows quick retrieval of all the elements whose box intersects a query box. Same API as kdtreebox2d in 3D: new -> preLoad -> build -> query/queryNotNested; export/import to reuse a tree.",
   "usage": "local kdTreeB3d = require('kdtreebox3d')\nlocal kdT = kdTreeB3d.new(itemCount)\nkdT:preLoad(id, xmin, ymin, zmin, xmax, ymax, zmax)\nkdT:build()\nfor id in kdT:queryNotNested(xmin, ymin, zmin, xmax, ymax, zmax) do ... end",
   "notes": [
-    "Chaque élément occupe 7 valeurs dans self.items (xmin, ymin, zmin, xmax, ymax, zmax, id) ; avant build() itemCount compte des valeurs, après build() c'est le nombre d'éléments.",
-    "Mêmes règles que kdtreebox2d : queryNotNested réutilise l'état de l'arbre (pas d'imbrication), query alloue un état par requête (imbrication possible), bornes de requête ramenées à ±1.7e308.",
-    "Contrairement à kdtreebox2d, il n'y a pas de méthode clear() dans cette version.",
-    "Dans le code, l'exemple d'usage en tête de fichier décrit les mêmes appels que la version 2D ; c'est la version à 7 valeurs par élément qui est implémentée."
+    "Each element occupies 7 values in self.items (xmin, ymin, zmin, xmax, ymax, zmax, id); before build() itemCount counts values, after build() it is the number of elements.",
+    "Same rules as kdtreebox2d: queryNotNested reuses the tree's state (no nesting), query allocates a state per query (nesting possible), query bounds clamped to ±1.7e308.",
+    "Unlike kdtreebox2d, there is no clear() method in this version.",
+    "In the code, the usage example at the top of the file describes the same calls as the 2D version; the 7-values-per-element version is what is implemented."
   ],
   "fields": {},
   "functions": {
     "new": {
-      "desc": "Crée un arbre k-d de boîtes 3D vide.",
-      "params": {"itemCount": {"type": "integer|nil", "desc": "nombre d'éléments prévus (préallocation, facultatif)"}},
-      "returns": [{"type": "kdTree", "desc": "arbre vide"}],
+      "desc": "Creates an empty 3D box k-d tree.",
+      "params": {
+        "itemCount": {
+          "type": "integer|nil",
+          "desc": "expected number of elements (preallocation, optional)"
+        }
+      },
+      "returns": [
+        {
+          "type": "kdTree",
+          "desc": "empty tree"
+        }
+      ],
       "internal": false
     }
   },
   "classes": {
     "kdTree": {
-      "desc": "Objet renvoyé par new().",
+      "desc": "Object returned by new().",
       "functions": {
-        "preLoad": {"desc": "Ajoute un élément (avant build).", "params": {"id": {"type": "any", "desc": "identifiant renvoyé par les requêtes"}, "xmin": {"type": "number", "desc": "xmin"}, "ymin": {"type": "number", "desc": "ymin"}, "zmin": {"type": "number", "desc": "zmin"}, "xmax": {"type": "number", "desc": "xmax"}, "ymax": {"type": "number", "desc": "ymax"}, "zmax": {"type": "number", "desc": "zmax"}}, "returns": []},
-        "build": {"desc": "Construit l'arbre (médiane récursive en alternant les axes) à partir des éléments chargés.", "params": {}, "returns": []},
-        "_build": {"desc": "Interne : construction récursive d'un noeud.", "params": {"axis": {"type": "integer", "desc": "axe courant"}, "left": {"type": "integer", "desc": "indice de début dans items"}, "right": {"type": "integer", "desc": "indice de fin"}, "treeIdx": {"type": "integer", "desc": "indice du noeud"}}, "returns": [], "internal": true},
-        "query": {"desc": "Itérateur sur les ids des éléments dont la boîte intersecte la boîte de requête ; imbrication possible.", "params": {"query_xmin": {"type": "number", "desc": "xmin"}, "query_ymin": {"type": "number", "desc": "ymin"}, "query_zmin": {"type": "number", "desc": "zmin"}, "query_xmax": {"type": "number", "desc": "xmax"}, "query_ymax": {"type": "number", "desc": "ymax"}, "query_zmax": {"type": "number", "desc": "zmax"}}, "returns": [{"type": "function", "desc": "itérateur renvoyant les ids"}, {"type": "table", "desc": "état d'itération"}]},
-        "queryNotNested": {"desc": "Comme query sans allocation ; interdit d'imbriquer.", "params": {"query_xmin": {"type": "number", "desc": "xmin"}, "query_ymin": {"type": "number", "desc": "ymin"}, "query_zmin": {"type": "number", "desc": "zmin"}, "query_xmax": {"type": "number", "desc": "xmax"}, "query_ymax": {"type": "number", "desc": "ymax"}, "query_zmax": {"type": "number", "desc": "zmax"}}, "returns": [{"type": "function", "desc": "itérateur renvoyant les ids"}, {"type": "table", "desc": "état d'itération (l'arbre)"}]},
-        "export": {"desc": "Renvoie les données de l'arbre (références) pour sérialisation/réutilisation.", "params": {}, "returns": [{"type": "table", "desc": "données exportées"}]},
-        "import": {"desc": "Charge des données produites par export().", "params": {"kdTreeData": {"type": "table", "desc": "table d'export"}}, "returns": []},
-        "analytics": {"desc": "Affiche (print) des statistiques de l'arbre.", "params": {}, "returns": []}
+        "preLoad": {
+          "desc": "Adds an element (before build).",
+          "params": {
+            "id": {
+              "type": "any",
+              "desc": "id returned by the queries"
+            },
+            "xmin": {
+              "type": "number",
+              "desc": "xmin"
+            },
+            "ymin": {
+              "type": "number",
+              "desc": "ymin"
+            },
+            "zmin": {
+              "type": "number",
+              "desc": "zmin"
+            },
+            "xmax": {
+              "type": "number",
+              "desc": "xmax"
+            },
+            "ymax": {
+              "type": "number",
+              "desc": "ymax"
+            },
+            "zmax": {
+              "type": "number",
+              "desc": "zmax"
+            }
+          },
+          "returns": []
+        },
+        "build": {
+          "desc": "Builds the tree (recursive median alternating the axes) from the loaded elements.",
+          "params": {},
+          "returns": []
+        },
+        "_build": {
+          "desc": "Internal: recursive construction of a node.",
+          "params": {
+            "axis": {
+              "type": "integer",
+              "desc": "current axis"
+            },
+            "left": {
+              "type": "integer",
+              "desc": "start index in items"
+            },
+            "right": {
+              "type": "integer",
+              "desc": "end index"
+            },
+            "treeIdx": {
+              "type": "integer",
+              "desc": "node index"
+            }
+          },
+          "returns": [],
+          "internal": true
+        },
+        "query": {
+          "desc": "Iterator over the ids of the elements whose box intersects the query box; nesting possible.",
+          "params": {
+            "query_xmin": {
+              "type": "number",
+              "desc": "xmin"
+            },
+            "query_ymin": {
+              "type": "number",
+              "desc": "ymin"
+            },
+            "query_zmin": {
+              "type": "number",
+              "desc": "zmin"
+            },
+            "query_xmax": {
+              "type": "number",
+              "desc": "xmax"
+            },
+            "query_ymax": {
+              "type": "number",
+              "desc": "ymax"
+            },
+            "query_zmax": {
+              "type": "number",
+              "desc": "zmax"
+            }
+          },
+          "returns": [
+            {
+              "type": "function",
+              "desc": "iterator returning the ids"
+            },
+            {
+              "type": "table",
+              "desc": "iteration state"
+            }
+          ]
+        },
+        "queryNotNested": {
+          "desc": "Like query without allocation; nesting forbidden.",
+          "params": {
+            "query_xmin": {
+              "type": "number",
+              "desc": "xmin"
+            },
+            "query_ymin": {
+              "type": "number",
+              "desc": "ymin"
+            },
+            "query_zmin": {
+              "type": "number",
+              "desc": "zmin"
+            },
+            "query_xmax": {
+              "type": "number",
+              "desc": "xmax"
+            },
+            "query_ymax": {
+              "type": "number",
+              "desc": "ymax"
+            },
+            "query_zmax": {
+              "type": "number",
+              "desc": "zmax"
+            }
+          },
+          "returns": [
+            {
+              "type": "function",
+              "desc": "iterator returning the ids"
+            },
+            {
+              "type": "table",
+              "desc": "iteration state (the tree)"
+            }
+          ]
+        },
+        "export": {
+          "desc": "Returns the tree data (references) for serialization/reuse.",
+          "params": {},
+          "returns": [
+            {
+              "type": "table",
+              "desc": "exported data"
+            }
+          ]
+        },
+        "import": {
+          "desc": "Loads data produced by export().",
+          "params": {
+            "kdTreeData": {
+              "type": "table",
+              "desc": "export table"
+            }
+          },
+          "returns": []
+        },
+        "analytics": {
+          "desc": "Prints (print) tree statistics.",
+          "params": {},
+          "returns": []
+        }
       }
     }
   }

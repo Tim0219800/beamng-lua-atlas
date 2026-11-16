@@ -1,0 +1,20 @@
+{
+  "path": "lua/common/jbeam/sections/wheelTypes/wheels.lua",
+  "module": "Gestionnaire du type de roue 'wheels' (section jbeam wheels) : la roue simple. À partir de deux nœuds d'axe (node1, node2), il crée un anneau de 2 x numRays nœuds de pneu autour de l'axe puis les poutres associées (côtés, renforts en X, bande de roulement, périphérie). Appelé par jbeam/sections/wheels.lua pendant le chargement du véhicule ; sert à comprendre comment un jbeam de roue est converti en physique.",
+  "usage": "-- appelé par le répartiteur : process(vehicle, wheelKey, wheel)",
+  "notes": [
+    "Paramètres jbeam lus dans la roue : node1, node2 (nœuds d'axe, obligatoires, sinon avertissement 'invalid wheel' et sortie sans rien créer), radius (défaut 0.5 m), numRays (défaut 10), tireWidth, wheelOffset, et les familles wheelSideBeam*, wheelReinforcementBeam*, wheelTreadBeam*, wheelPeripheryBeam* (Spring, Damp, Deform, Strength ; Expansion pour renfort et bande). Les nœuds du pneu héritent des options de la roue (via addNodeWithOptions).",
+    "wheel.collision est forcé à true (les nœuds de pneu collisionnent). Les nœuds sont créés en alternant extérieur/intérieur ; à la fin wheel.nodes contient les nœuds du pneu (vehicle.nodes[n]).",
+    "Les nœuds node1/node2 sont échangés si node1.z > node2.z pour le calcul, mais les poutres créées utilisent encore wheel.node1 / wheel.node2 (noms d'origine) : l'échange n'affecte que la géométrie des anneaux. nodeArm est lu mais jamais utilisé.",
+    "Constantes C codées en dur : NORMALTYPE = 0, BEAM_ANISOTROPIC = 1 (ne pas changer)."
+  ],
+  "fields": {},
+  "functions": {
+    "process": {
+      "desc": "Crée nœuds et poutres d'une roue simple (alias de addWheel) : 2*numRays nœuds de pneu, puis par rayon 8 poutres (2 côtés, 2 renforts en X, 1 bande, 2 périphérie, 1 diagonale). Stocke vehicle.nodes de la roue dans wheel.nodes.",
+      "params": {"vehicle": {"type": "table", "desc": "véhicule en construction (nodes, maxIDs…)"}, "wheelKey": {"type": "integer", "desc": "indice de la roue dans sa section"}, "wheel": {"type": "table", "desc": "définition jbeam de la roue (modifiée : collision, radius, numRays, nodes)"}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

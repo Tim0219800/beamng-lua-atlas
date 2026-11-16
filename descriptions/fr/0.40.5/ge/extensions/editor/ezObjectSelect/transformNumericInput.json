@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/transformNumericInput.lua",
+  "module": "Petit tampon de saisie numérique au clavier pour les opérations de transformation d'Easy Object Select (comme dans Blender : taper « 2.5 » pendant un déplacement). Lit les touches chiffres (rangée du haut et pavé numérique), point/virgule décimale, moins (inverse le signe) et retour arrière via ImGui, et maintient une chaîne dans un état {text, active}.",
+  "usage": "local ni = require(\"editor/ezObjectSelect/transformNumericInput\")\nlocal st = ni.newState()\nni.update(st)          -- chaque frame\nlocal v = ni.value(st) -- nil tant que rien de valide n'est saisi",
+  "functions": {
+    "newState": {
+      "desc": "Crée un état de saisie vide.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{text = \"\", active = false}."}],
+      "internal": false
+    },
+    "clear": {
+      "desc": "Vide le texte et désactive la saisie.",
+      "params": {"state": {"type": "table", "desc": "État créé par newState."}},
+      "internal": false
+    },
+    "update": {
+      "desc": "Traite les touches pressées cette frame : chiffres, un seul point décimal (préfixé d'un 0 si le texte est vide ou « - »), moins qui bascule le signe, retour arrière.",
+      "params": {
+        "state": {"type": "table", "desc": "État de saisie, modifié en place."},
+        "ignoreTopRowFour": {"type": "boolean|nil", "desc": "Si true, ignore la touche 4 de la rangée du haut pour cette frame (utile quand elle sert à autre chose)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si le texte a changé."}],
+      "internal": false
+    },
+    "value": {
+      "desc": "Convertit le texte saisi en nombre.",
+      "params": {"state": {"type": "table", "desc": "État de saisie."}},
+      "returns": [{"type": "number|nil", "desc": "Valeur, ou nil si inactif, vide, « - » ou « . »."}],
+      "internal": false
+    }
+  }
+}

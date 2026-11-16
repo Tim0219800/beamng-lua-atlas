@@ -1,25 +1,25 @@
 # `flowgraph_nodes_environment_setBulletTime`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/environment/setBulletTime.lua` · VM : Game Engine (GE) · 50 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/environment/setBulletTime.lua` · VM: Game Engine (GE) · 50 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/environment/setBulletTime")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/environment/setBulletTime")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Bullet Time » (catégorie repeat_instant). Ralentit ou met en pause le temps de simulation via simTimeAuthority. Pins d'entrée : instant (bool, caché : applique la vitesse tout de suite au lieu d'y tendre progressivement) et value (number, 0 = pause du jeu, curseur 0 à 1). S'exécute à chaque frame tant que le flux d'entrée est actif ; à l'arrêt du graphe, remet la vitesse à 1.
+Flowgraph node "Bullet Time" (category repeat_instant). Slows down or pauses simulation time via simTimeAuthority. Input pins: instant (bool, hidden: applies the speed immediately instead of approaching it gradually) and value (number, 0 = game pause, slider 0 to 1). Runs every frame while the input flow is active; when the graph stops, resets the speed to 1.
 
-## Remarques
+## Notes
 
-- Si value vaut 0, simTimeAuthority.pause(true) est appelé ; sinon la vitesse est réglée puis la pause est levée.
-- Si value est nil, la vitesse 1 est utilisée (mais le test value == 0 est fait avant).
+- If value is 0, simTimeAuthority.pause(true) is called; otherwise the speed is set and then the pause is lifted.
+- If value is nil, speed 1 is used (but the value == 0 test is done first).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelé à l'arrêt du graphe : remet simTimeAuthority.set(1). | 21 |
-| `C:postInit()` | Configure le pin value comme curseur flottant de 0 à 1. | 25 |
-| `C:work()` | Si le flux est actif : pause si value == 0, sinon règle la vitesse (setInstant si instant, sinon set) et lève la pause. | 34 |
+| `C:_executionStopped()` | Called when the graph stops: resets simTimeAuthority.set(1). | 21 |
+| `C:postInit()` | Configures the value pin as a float slider from 0 to 1. | 25 |
+| `C:work()` | If the flow is active: pauses if value == 0, otherwise sets the speed (setInstant if instant, otherwise set) and lifts the pause. | 34 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/environment/setBulletTime.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/environment/setBulletTime.lua`.*

@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/editor/missionEditor/startTrigger.lua",
+  "module": "Panneau « StartTrigger » de l'éditeur de missions. Il édite mission.startTrigger : type « coordinates » (niveau + position, rotation et rayon éditables avec un gizmo, dessinés avec debugDrawer), « league » (démarrable depuis l'écran de progression de la carrière dans un niveau donné) ou « none ». Changer de type mémorise les valeurs précédentes de chaque type. Le module renvoie un constructeur : require(...)(missionEditor).",
+  "notes": [
+    "Valeurs par défaut d'un nouveau déclencheur : coordinates = {level = 'gridmap', pos = {0,0,0}, radius = 3, rot = {0,0,0,1}} ; league = {level = 'gridmap'}.",
+    "Le gizmo et le dessin (sphère rouge, prismes) ne sont actifs que si getCurrentLevelIdentifier() égale startTrigger.level.",
+    "L'échelle de l'assistant de transformation sert de rayon (radius) ; pos et rot sont stockés sous forme de tables.",
+    "Les types « automatic », « world » et « level » existent dans newStartTrigger mais pas dans startTriggerTypes (non proposés dans le combo)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance du panneau. Champs : missionEditor, name = 'StartTrigger', mission, fields, sortedLevels (niveaux triés).",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : liste et trie les niveaux (getAllLevelIdentifiers).",
+          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "internal": true
+        },
+        "setMission": {
+          "desc": "Définit la mission, réinitialise les champs, arrête le gizmo et le repositionne si le déclencheur est de type coordinates.",
+          "params": {"mission": {"type": "table", "desc": "Mission courante."}},
+          "internal": true
+        },
+        "draw": {
+          "desc": "Dessine le combo de type de déclencheur puis l'éditeur du type choisi (niveau, position, rayon).",
+          "internal": true
+        },
+        "getStartTriggerTransform": {
+          "desc": "Renvoie l'assistant de transformation si le niveau courant est celui du déclencheur.",
+          "returns": [{"type": "table|nil", "desc": "Assistant transformUtil (pos, rot, scl), ou nil dans un autre niveau."}]
+        }
+      }
+    }
+  }
+}

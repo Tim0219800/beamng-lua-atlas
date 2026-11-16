@@ -1,0 +1,151 @@
+{
+  "path": "lua/ge/extensions/editor/sitesEditor/sortedListDisplay.lua",
+  "module": "Affichage générique d'une liste triée d'éléments de sites (lieux, zones, places de parking), utilisé comme onglet par l'éditeur de sites. Le module renvoie un constructeur de classe C qui reçoit un 'elementEditor' (locations, zones ou parkingSpots) auquel il délègue test de clic, création, suppression, gizmo et dessin de l'élément. Il gère la recherche par nom, la sélection multiple, le renommage, la couleur, les champs personnalisés (copier/coller) et les modifications annulables.",
+  "notes": [
+    "Les éléments procéduraux (isProcedural) ne sont pas listés.",
+    "Dans drawList, Ctrl ou Shift donne le mode 'toggle' ; la branche suivante (Shift seul donnerait 'add') est inatteignable.",
+    "createByShift (défaut true) : Shift+clic crée un élément ; sinon un bouton 'Create...' est affiché. selectByClick (défaut true) : le clic sélectionne via elementEditor:hitTest ; sinon le clic est délégué à elementEditor:input.",
+    "Si plusieurs éléments sont sélectionnés, les champs nom et couleur sont désactivés."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet renvoyé par le constructeur. Champs : key, index (id sélectionné en dernier), selections (liste d'ids), objects, sorted, elementEditor, activeTags, createByShift, selectByClick, windowDescription.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : prépare la sélection (editor.selection[key]), les champs personnalisés et la zone de recherche.",
+          "params": {
+            "sitesEditor": {
+              "type": "table",
+              "desc": "Module editor_sitesEditor."
+            },
+            "key": {
+              "type": "string",
+              "desc": "'locations', 'zones' ou 'parkingSpots'."
+            },
+            "elementEditor": {
+              "type": "table",
+              "desc": "Sous-éditeur d'élément."
+            }
+          },
+          "returns": [],
+          "internal": true
+        },
+        "setSites": {
+          "desc": "Définit les sites édités, retient objects et sorted, les transmet à l'éditeur d'élément et recalcule les tags actifs.",
+          "params": {
+            "sites": {
+              "type": "table",
+              "desc": "Objet sites."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "updateActiveTags": {
+          "desc": "Recompte les tags utilisés par les éléments (table tag vers nombre).",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "selected": {
+          "desc": "Appelé quand l'onglet devient actif : vide la sélection et passe les objets en dessin 'normal'.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "unselect": {
+          "desc": "Appelé quand l'onglet est quitté : vide la sélection et passe les objets en dessin 'faded'.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "selectElement": {
+          "desc": "Sélectionne l'élément d'id donné (nil pour désélectionner), met à jour surbrillance, éditeur d'élément, tags et champs d'édition.",
+          "params": {
+            "id": {
+              "type": "integer|nil",
+              "desc": "Id de l'élément."
+            },
+            "mode": {
+              "type": "string|nil",
+              "desc": "nil remplace la sélection ; 'toggle' ou 'add' l'étend (toggle retire un id déjà sélectionné)."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "adoptElement": {
+          "desc": "Change la sélection de la liste sans appeler elementEditor:select, pour garder un glissement de gizmo en cours (utilisé après la duplication par Shift).",
+          "params": {
+            "id": {
+              "type": "integer",
+              "desc": "Id de l'élément."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "draw": {
+          "desc": "Dessine l'onglet ; traite les entrées souris si le gizmo est permis.",
+          "params": {
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Infos souris de sitesEditor."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "input": {
+          "desc": "Gère les clics dans le monde : création par Shift+clic, sélection par hitTest ou délégation à elementEditor:input.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "setField": {
+          "desc": "Modifie un champ (name, color...) de tous les éléments sélectionnés via une action annulable.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Nom du champ."
+            },
+            "value": {
+              "type": "any",
+              "desc": "Nouvelle valeur."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "drawList": {
+          "desc": "Dessine la liste filtrable à gauche et le panneau d'édition de l'élément à droite.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "drawCustomFields": {
+          "desc": "Dessine le widget de champs personnalisés et les boutons Copy Fields / Paste Fields.",
+          "params": {
+            "fields": {
+              "type": "table",
+              "desc": "customFields de l'élément."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "getCurrentSelected": {
+          "desc": "Renvoie l'élément actuellement sélectionné.",
+          "params": {},
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Élément ou nil."
+            }
+          ],
+          "internal": false
+        }
+      }
+    }
+  }
+}

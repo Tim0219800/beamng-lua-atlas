@@ -2,28 +2,28 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/perfProfiler.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre de l'éditeur « CameraProfiler » (menu Debug > Performance Recorder) pour enregistrer et comparer des performances. Elle lance un enregistrement le long d'un chemin de caméra (*.camPath.json du dossier levels/<niveau>/perfRecordingCampaths/) via test_util_fpsCamRecorder et util_stepHandler, charge des fichiers .perfRecording.json, trace des courbes (fps_average, fps_min, polyCount, drawCalls, mémoire…) dans des fenêtres « Profiler Chart N » (10 max) et compare les fichiers dans un tableau. Utile pour mesurer l'impact d'un mod ou d'un réglage graphique.
---- Accès : extension `editor_perfProfiler` : `extensions.load("editor_perfProfiler")`, puis la globale `editor_perfProfiler`
+--- Editor window "CameraProfiler" (Debug > Performance Recorder menu) to record and compare performance. It starts a recording along a camera path (*.camPath.json from the levels/<level>/perfRecordingCampaths/ folder) via test_util_fpsCamRecorder and util_stepHandler, loads .perfRecording.json files, plots curves (fps_average, fps_min, polyCount, drawCalls, memory...) in "Profiler Chart N" windows (10 max) and compares the files in a table. Useful to measure the impact of a mod or a graphics setting.
+--- Access: extension `editor_perfProfiler`: `extensions.load("editor_perfProfiler")`, then the global `editor_perfProfiler`
 ---@class editor_perfProfiler
 editor_perfProfiler = {}
 
---- Charge un fichier de performance JSON (jsonReadFile), complète meta.name (nom de fichier), cherche un fichier d'annotation du niveau, convertit chaque sample en pos=vec3 et rot=quat, marque le fichier actif et l'ajoute à la liste des fichiers comparés. Ne fait rien si filepath est vide.
----Source : lua/ge/extensions/editor/perfProfiler.lua:426
----@param data table Table de retour du dialogue de fichier ; seul data.filepath (chemin du .perfRecording.json) est lu.
+--- Loads a JSON performance file (jsonReadFile), completes meta.name (file name), looks for a level annotation file, converts each sample to pos=vec3 and rot=quat, marks the file active and adds it to the list of compared files. Does nothing if filepath is empty.
+---Source: lua/ge/extensions/editor/perfProfiler.lua:426
+---@param data table Return table of the file dialog; only data.filepath (path of the .perfRecording.json) is read.
 function editor_perfProfiler.loadFile(data) end
 
---- Appelé à chaque frame par l'éditeur. Dessine la fenêtre principale (menu Record / Load / New Chart Window, tableau des fichiers avec case, couleur, nom), recalcule couleurs et graphiques si nécessaire, puis les graphiques, le tableau comparateur, la fenêtre de métadonnées et le popup d'enregistrement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/perfProfiler.lua:461
----@param dt number Delta temps passé aux graphiques.
+--- Called every frame by the editor. Draws the main window (Record / Load / New Chart Window menu, file table with checkbox, color, name), recomputes colors and charts if needed, then the charts, the comparison table, the metadata window and the recording popup.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/perfProfiler.lua:461
+---@param dt number Delta time passed to the charts.
 function editor_perfProfiler.onEditorGui(dt) end
 
---- Enregistre la fenêtre CameraProfiler (500x500) et l'entrée de menu « Performance Recorder » (groupe Debug).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/perfProfiler.lua:549
+--- Registers the CameraProfiler window (500x500) and the "Performance Recorder" menu entry (Debug group).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/perfProfiler.lua:549
 function editor_perfProfiler.onEditorInitialized() end
 
---- Affiche la fenêtre CameraProfiler (editor.showWindow).
----Source : lua/ge/extensions/editor/perfProfiler.lua:545
+--- Shows the CameraProfiler window (editor.showWindow).
+---Source: lua/ge/extensions/editor/perfProfiler.lua:545
 function editor_perfProfiler.show() end
 

@@ -1,18 +1,45 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/environment/setCloud.lua",
-  "module": "Nœud flowgraph « Set Clouds » (catégorie dynamic_instant). Règle les paramètres des nuages. Pins d'entrée : objectId (id optionnel d'un objet nuage), coverage (0 à 1), exposure, windSpeed, height. Exécuté une fois (workOnce) ou à chaque frame en mode repeat.",
-  "notes": ["Sans objectId, seuls coverage (setCloudCover) et windSpeed (setWindSpeed) sont appliqués aux nuages par défaut ; exposure et height sont ignorés.", "data.restoreCloud = true est défini mais _executionStarted/_executionStopped sont vides : rien n'est restauré (valeur inutilisée)."],
+  "module": "Flowgraph node \"Set Clouds\" (category dynamic_instant). Sets the cloud parameters. Input pins: objectId (optional id of a cloud object), coverage (0 to 1), exposure, windSpeed, height. Executed once (workOnce) or every frame in repeat mode.",
+  "notes": [
+    "Without objectId, only coverage (setCloudCover) and windSpeed (setWindSpeed) are applied to the default clouds; exposure and height are ignored.",
+    "data.restoreCloud = true is defined but _executionStarted/_executionStopped are empty: nothing is restored (unused value)."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Définit data.restoreCloud = true.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "postInit": {"desc": "Configure le pin coverage comme curseur 0 à 1.", "internal": true},
-        "_executionStarted": {"desc": "Vide.", "internal": true},
-        "_executionStopped": {"desc": "Vide.", "internal": true},
-        "workOnce": {"desc": "Applique les paramètres une seule fois."},
-        "work": {"desc": "En mode repeat, applique les paramètres à chaque frame."},
-        "setCloudParameters": {"desc": "Appelle core_environment.setCloudCoverByID/ExposureByID/WindByID/HeightByID si objectId est fourni, sinon setCloudCover et setWindSpeed."}
+        "init": {
+          "desc": "Sets data.restoreCloud = true.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Configures the coverage pin as a 0 to 1 slider.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Empty.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Empty.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Applies the parameters once."
+        },
+        "work": {
+          "desc": "In repeat mode, applies the parameters every frame."
+        },
+        "setCloudParameters": {
+          "desc": "Calls core_environment.setCloudCoverByID/ExposureByID/WindByID/HeightByID if objectId is provided, otherwise setCloudCover and setWindSpeed."
+        }
       }
     }
   }

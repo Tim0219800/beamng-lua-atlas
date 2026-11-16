@@ -1,40 +1,68 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/terrainPainter.lua",
-  "module": "Peint le matériau de terrain sous une spline (route) et permet d'annuler. Calcule l'emprise de la route (bord réel du tablier pour les routes mesh, sinon ligne centrale et largeurs par station), pousse ce contour de group.paintMargin, remplit le polygone par lignes de balayage et mémorise les matériaux d'origine dans le groupe pour pouvoir les restaurer. Passe par editor_terrainEditor (bloc de terrain et terrain editor).",
+  "module": "Paints the terrain material under a spline (road) and allows undoing. Computes the road footprint (actual deck edge for mesh roads, otherwise centerline and widths per station), pushes this outline out by group.paintMargin, fills the polygon by scanlines and stores the original materials in the group so they can be restored. Goes through editor_terrainEditor (terrain block and terrain editor).",
   "notes": [
-    "Constantes : matériau par défaut = indice 1 ; marge de 2 m ajoutée à la boîte englobante de peinture.",
-    "paint ne fait rien si le groupe porte déjà des données peintes (paintedDataVals non vide), a moins de 2 nœuds ou moins de 2 divPoints : il faut revert avant de repeindre.",
-    "paintPolygon ne fait rien non plus si store.paintedDataVals est déjà rempli.",
-    "Le groupe doit avoir paintedDataX, paintedDataY et paintedDataVals (tables) : revert et paint les indexent sans test pour les tailler, seul paintedDataVals est testé avant.",
-    "revert restaure en ordre inverse, pour qu'une case peinte deux fois retrouve le matériau antérieur à la première peinture."
+    "Constants: default material = index 1; 2 m margin added to the paint bounding box.",
+    "paint does nothing if the group already holds painted data (paintedDataVals non-empty), has fewer than 2 nodes or fewer than 2 divPoints: you must revert before repainting.",
+    "paintPolygon also does nothing if store.paintedDataVals is already filled.",
+    "The group must have paintedDataX, paintedDataY and paintedDataVals (tables): revert and paint index them without testing to trim them, only paintedDataVals is tested beforehand.",
+    "revert restores in reverse order, so a cell painted twice gets back the material from before the first paint."
   ],
   "functions": {
     "paint": {
-      "desc": "Peint la spline donnée : calcule d'abord son emprise puis la peint, avec le matériau group.paintMaterialIdx. Stocke coordonnées, anciennes valeurs et boîte dans le groupe.",
+      "desc": "Paints the given spline: first computes its footprint then paints it, with the material group.paintMaterialIdx. Stores coordinates, old values and box in the group.",
       "params": {
-        "group": {"type": "table", "desc": "Groupe de spline (nodes, divPoints, binormals, divWidths, meshEdgeL/R, paintMargin, paintMaterialIdx, paintedData*)."},
-        "runs": {"type": "table|nil", "desc": "Paires d'indices de divPoints { i0, i1 } : seulement ces tronçons, dans un seul enregistrement. Par défaut toute la route."}
+        "group": {
+          "type": "table",
+          "desc": "Spline group (nodes, divPoints, binormals, divWidths, meshEdgeL/R, paintMargin, paintMaterialIdx, paintedData*)."
+        },
+        "runs": {
+          "type": "table|nil",
+          "desc": "Pairs of divPoints indices { i0, i1 }: only these sections, in a single record. Default is the whole road."
+        }
       },
       "returns": []
     },
     "paintPolygon": {
-      "desc": "Peint un polygone fermé en XY monde avec le matériau de terrain donné, en enregistrant dans `store` ce qui s'y trouvait pour pouvoir le remettre. Met à jour la grille du terrain (updateGridMaterials, updateGrid).",
+      "desc": "Paints a closed polygon in world XY with the given terrain material, recording in `store` what was there so it can be put back. Updates the terrain grid (updateGridMaterials, updateGrid).",
       "params": {
-        "store": {"type": "table", "desc": "Table qui reçoit paintedDataX, paintedDataY, paintedDataVals et les bornes paintedDataBox*."},
-        "poly": {"type": "table", "desc": "Liste de points (x, y) du polygone, 3 au moins."},
-        "materialIdx": {"type": "integer|nil", "desc": "Indice du matériau de terrain (1 par défaut)."},
-        "skip": {"type": "function|nil", "desc": "skip(x, y) interrogé pour chaque point ; si vrai le sol est laissé tel quel."}
+        "store": {
+          "type": "table",
+          "desc": "Table that receives paintedDataX, paintedDataY, paintedDataVals and the paintedDataBox* bounds."
+        },
+        "poly": {
+          "type": "table",
+          "desc": "List of polygon points (x, y), at least 3."
+        },
+        "materialIdx": {
+          "type": "integer|nil",
+          "desc": "Terrain material index (1 by default)."
+        },
+        "skip": {
+          "type": "function|nil",
+          "desc": "skip(x, y) is queried for each point; if true the ground is left as is."
+        }
       },
       "returns": []
     },
     "revert": {
-      "desc": "Remet sous la peinture l'état d'avant : restaure les indices de matériau, met à jour la grille, vide les données peintes du groupe.",
-      "params": {"group": {"type": "table", "desc": "Groupe peint."}},
+      "desc": "Puts back the state from before the paint: restores the material indices, updates the grid, clears the group's painted data.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Painted group."
+        }
+      },
       "returns": []
     },
     "revertAll": {
-      "desc": "Annule la peinture du terrain pour tous les groupes.",
-      "params": {"groups": {"type": "table", "desc": "Liste de groupes."}},
+      "desc": "Undoes the terrain painting for all groups.",
+      "params": {
+        "groups": {
+          "type": "table",
+          "desc": "List of groups."
+        }
+      },
       "returns": []
     }
   }

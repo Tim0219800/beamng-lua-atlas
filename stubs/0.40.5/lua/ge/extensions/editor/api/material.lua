@@ -2,69 +2,69 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/api/material.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- API de l'éditeur pour manipuler les matériaux (objets `Material`, fichiers materials.json) : création, copie, déplacement vers un autre fichier, modification d'une propriété, suppression. `initialize` installe les fonctions sur l'objet `editor`. Les écritures disque passent par le PersistenceManager `scenetree.matLuaEd_PersistMan` ; la suppression d'une entrée JSON se fait par manipulation de texte pour ne pas réordonner tout le fichier (jsonWriteFile trie les clés).
---- Accès : extension `editor_api_material` : `extensions.load("editor_api_material")`, puis la globale `editor_api_material`
+--- Editor API for manipulating materials (`Material` objects, materials.json files): creation, copy, move to another file, property modification, deletion. `initialize` installs the functions on the `editor` object. Disk writes go through the PersistenceManager `scenetree.matLuaEd_PersistMan`; deleting a JSON entry is done by text manipulation so as not to reorder the whole file (jsonWriteFile sorts the keys).
+--- Access: extension `editor_api_material`: `extensions.load("editor_api_material")`, then the global `editor_api_material`
 ---@class editor_api_material
 editor_api_material = {}
 
---- Enregistre un PersistenceManager 'materialPersistMan' s'il n'existe pas, mémorise l'éditeur et y installe createMaterial, setMaterialProperty, removeMaterialFromJson, moveMaterial, copyMaterial, copyMaterialAsNew, deleteMaterial.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/material.lua:369
----@param editorInstance table objet `editor`
+--- Registers a 'materialPersistMan' PersistenceManager if it does not exist, remembers the editor and installs createMaterial, setMaterialProperty, removeMaterialFromJson, moveMaterial, copyMaterial, copyMaterialAsNew, deleteMaterial on it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/material.lua:369
+---@param editorInstance table `editor` object
 function editor_api_material.initialize(editorInstance) end
 
---- Fonctions ajoutées à `editor` par initialize.
+--- Functions added to `editor` by initialize.
 ---@class editor_api_material_editor
 local editor_api_material_editor = {}
 
---- Copie tous les paramètres (toutes couches et champs dynamiques) d'un matériau source sur un matériau cible existant, en gardant nom, mapTo et fichier de la cible. La cible doit être dans un .json ; elle est rechargée et sauvegardée.
----Source : lua/ge/extensions/editor/api/material.lua:285
----@param source table|string Material source ou nom
----@param target table|string Material cible ou nom
----@return boolean  false si l'un n'est pas un Material, si source = cible ou si la cible n'est pas dans un json
+--- Copies all the parameters (all layers and dynamic fields) of a source material onto an existing target material, keeping the target's name, mapTo and file. The target must be in a .json; it is reloaded and saved.
+---Source: lua/ge/extensions/editor/api/material.lua:285
+---@param source table|string source Material or name
+---@param target table|string target Material or name
+---@return boolean  false if either is not a Material, if source = target or if the target is not in a json
 function editor_api_material_editor.copyMaterial(source, target) end
 
---- Copie un matériau dans un nouveau matériau (name et mapTo = newName) écrit dans le fichier donné.
----Source : lua/ge/extensions/editor/api/material.lua:315
----@param source table|string Material source ou nom
----@param newName string nom du nouveau matériau (non vide, non utilisé)
----@param newFilename string fichier materials.json de destination (dossier existant)
----@return boolean  true si créé
+--- Copies a material into a new material (name and mapTo = newName) written to the given file.
+---Source: lua/ge/extensions/editor/api/material.lua:315
+---@param source table|string source Material or name
+---@param newName string name of the new material (non-empty, unused)
+---@param newFilename string destination materials.json file (existing folder)
+---@return boolean  true if created
 function editor_api_material_editor.copyMaterialAsNew(source, newName, newFilename) end
 
---- Crée un nouveau Material (version 1.5) et l'écrit sur disque. Échoue si le nom est vide, déjà pris, ou si le dossier n'existe pas. Si mapTo est vide, le nom du matériau est utilisé.
----Source : lua/ge/extensions/editor/api/material.lua:12
----@param materialName string nom du matériau
----@param materialFilename string chemin du materials.json à écrire
----@param materialMapTo string valeur mapTo (nom de matériau du mesh)
----@return boolean  true si créé
+--- Creates a new Material (version 1.5) and writes it to disk. Fails if the name is empty, already taken, or if the folder does not exist. If mapTo is empty, the material name is used.
+---Source: lua/ge/extensions/editor/api/material.lua:12
+---@param materialName string material name
+---@param materialFilename string path of the materials.json to write
+---@param materialMapTo string mapTo value (mesh material name)
+---@return boolean  true if created
 function editor_api_material_editor.createMaterial(materialName, materialFilename, materialMapTo) end
 
---- Supprime l'objet Material de la scène et son entrée dans son fichier JSON (via removeMaterialFromJson).
----Source : lua/ge/extensions/editor/api/material.lua:351
----@param material table|string Material ou son nom
----@return boolean  true si c'était un Material
+--- Deletes the Material object from the scene and its entry in its JSON file (via removeMaterialFromJson).
+---Source: lua/ge/extensions/editor/api/material.lua:351
+---@param material table|string Material or its name
+---@return boolean  true if it was a Material
 function editor_api_material_editor.deleteMaterial(material) end
 
---- Déplace un matériau vers un autre fichier (le sauvegarde dans le nouveau) puis retire son entrée de l'ancien fichier s'il s'agissait d'un .json existant.
----Source : lua/ge/extensions/editor/api/material.lua:188
----@param material table|string Material ou son nom
----@param newFilename string fichier de destination (dossier existant requis)
----@return boolean  false si pas un Material, même fichier ou dossier inexistant
+--- Moves a material to another file (saves it in the new one) then removes its entry from the old file if it was an existing .json.
+---Source: lua/ge/extensions/editor/api/material.lua:188
+---@param material table|string Material or its name
+---@param newFilename string destination file (existing folder required)
+---@return boolean  false if not a Material, same file or nonexistent folder
 function editor_api_material_editor.moveMaterial(material, newFilename) end
 
---- Supprime l'entrée de premier niveau `materialName` d'un fichier materials.json par édition de texte (gère les virgules, indépendant de l'indentation) et réécrit le fichier. Logue une erreur/avertissement et ne renvoie rien si le fichier ou l'entrée est introuvable.
----Source : lua/ge/extensions/editor/api/material.lua:79
----@param materialName string clé du matériau à retirer
----@param materialFilename string chemin du fichier JSON
+--- Deletes the top-level `materialName` entry of a materials.json file by text editing (handles commas, independent of indentation) and rewrites the file. Logs an error/warning and returns nothing if the file or the entry is not found.
+---Source: lua/ge/extensions/editor/api/material.lua:79
+---@param materialName string key of the material to remove
+---@param materialFilename string path of the JSON file
 function editor_api_material_editor.removeMaterialFromJson(materialName, materialFilename) end
 
---- Fixe un champ du matériau sur une couche puis recharge le matériau (ne sauvegarde pas sur disque).
----Source : lua/ge/extensions/editor/api/material.lua:60
----@param material table|string Material ou son nom
----@param property string nom du champ
----@param layer integer index de couche (0 à 3)
----@param value string valeur au format texte du champ
----@return boolean  true si l'objet est un Material
+--- Sets a material field on a layer then reloads the material (does not save to disk).
+---Source: lua/ge/extensions/editor/api/material.lua:60
+---@param material table|string Material or its name
+---@param property string field name
+---@param layer integer layer index (0 to 3)
+---@param value string field value in text format
+---@return boolean  true if the object is a Material
 function editor_api_material_editor.setMaterialProperty(material, property, layer, value) end
 

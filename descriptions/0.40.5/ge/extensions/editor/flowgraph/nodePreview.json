@@ -1,21 +1,65 @@
 {
   "path": "lua/ge/extensions/editor/flowgraph/nodePreview.lua",
-  "module": "Aperçu en infobulle de l'éditeur Flowgraph : affiche, dans un petit éditeur de nœuds dédié (200x200), un nœud de la bibliothèque, une macro ou un graphe survolé. Il crée son propre contexte d'éditeur, instancie le nœud dans un graphe factice (« nodePreview ») ou redessine les nœuds et liens du graphe, cadre le contenu, puis affiche le nom (et le chemin) sous l'aperçu.",
+  "module": "Tooltip preview of the Flowgraph editor: displays, in a small dedicated node editor (200x200), a library node, a macro or a hovered graph. It creates its own editor context, instantiates the node in a dummy graph (\"nodePreview\") or redraws the nodes and links of the graph, frames the content, then displays the name (and path) under the preview.",
   "notes": [
-    "Le mode (node, macro, graph) est choisi par setNode / setMacro / setGraph ; draw ne dessine que pour les modes node et graph (le mode macro n'est pas dessiné).",
-    "En mode graph, la position de chaque nœud est lue dans l'éditeur principal (self.fgEditor.ectx) puis recopiée dans l'aperçu.",
-    "Une erreur dans le dessin d'un nœud est interceptée (xpcall) et marquée comme erreur du nœud."
+    "The mode (node, macro, graph) is chosen by setNode / setMacro / setGraph; draw only draws for the node and graph modes (the macro mode is not drawn).",
+    "In graph mode, the position of each node is read from the main editor (self.fgEditor.ectx) then copied into the preview.",
+    "An error while drawing a node is caught (xpcall) and flagged as a node error."
   ],
   "classes": {
     "C": {
-      "desc": "Classe de l'aperçu (windowKind = 'nodePreview').",
+      "desc": "Preview class (windowKind = 'nodePreview').",
       "functions": {
-        "attach": {"desc": "Associe le manager et crée le graphe factice 'nodePreview'.", "params": {"mgr": {"type": "table|nil", "desc": "Manager flowgraph."}}, "internal": false},
-        "init": {"desc": "Initialise l'état (survol, mode « node », taille d'aperçu 200x200).", "params": {}, "internal": true},
-        "setNode": {"desc": "Définit l'élément survolé comme nœud de bibliothèque (mode node).", "params": {"node": {"type": "table", "desc": "Entrée de bibliothèque (path, node, create)."}}, "internal": false},
-        "setMacro": {"desc": "Définit l'élément survolé comme macro (mode macro).", "params": {"macro": {"type": "table", "desc": "Macro."}}, "internal": false},
-        "setGraph": {"desc": "Définit l'élément survolé comme graphe (mode graph).", "params": {"graph": {"type": "table", "desc": "Graphe."}}, "internal": false},
-        "draw": {"desc": "Dessine l'infobulle d'aperçu si un élément est survolé, en sauvegardant/restaurant l'éditeur courant.", "params": {}, "internal": false}
+        "attach": {
+          "desc": "Associates the manager and creates the dummy 'nodePreview' graph.",
+          "params": {
+            "mgr": {
+              "type": "table|nil",
+              "desc": "Flowgraph manager."
+            }
+          },
+          "internal": false
+        },
+        "init": {
+          "desc": "Initializes the state (hover, \"node\" mode, preview size 200x200).",
+          "params": {},
+          "internal": true
+        },
+        "setNode": {
+          "desc": "Sets the hovered element as a library node (node mode).",
+          "params": {
+            "node": {
+              "type": "table",
+              "desc": "Library entry (path, node, create)."
+            }
+          },
+          "internal": false
+        },
+        "setMacro": {
+          "desc": "Sets the hovered element as a macro (macro mode).",
+          "params": {
+            "macro": {
+              "type": "table",
+              "desc": "Macro."
+            }
+          },
+          "internal": false
+        },
+        "setGraph": {
+          "desc": "Sets the hovered element as a graph (graph mode).",
+          "params": {
+            "graph": {
+              "type": "table",
+              "desc": "Graph."
+            }
+          },
+          "internal": false
+        },
+        "draw": {
+          "desc": "Draws the preview tooltip if an element is hovered, saving/restoring the current editor.",
+          "params": {},
+          "internal": false
+        }
       }
     }
   }

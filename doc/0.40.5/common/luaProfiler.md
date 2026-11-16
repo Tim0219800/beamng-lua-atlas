@@ -1,12 +1,12 @@
 # `luaProfiler`
 
-*Fichier : `lua/common/luaProfiler.lua` · VM : Commun (GE + véhicule) · 235 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/luaProfiler.lua` · VM: Common (GE + vehicle) · 235 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("luaProfiler")`
+**Access:** `require("luaProfiler")`
 
-Petit profileur de sections de code Lua. On crée un profileur avec LuaProfiler(titre), on appelle p:start() au début d'une fonction, p:add('nom') après chaque section à mesurer (temps et mémoire allouée), puis p:finish(...) à la fin pour écrire dans le log les durées, la mémoire et un petit graphique, avec détection optionnelle de pics par rapport à une moyenne lissée. Utile pour trouver les parties lentes ou génératrices de garbage d'un mod.
+Small Lua code-section profiler. You create a profiler with LuaProfiler(title), call p:start() at the beginning of a function, p:add('name') after each section to measure (time and allocated memory), then p:finish(...) at the end to write the durations, the memory and a small graph to the log, with optional peak detection against a smoothed average. Useful for finding the slow or garbage-generating parts of a mod.
 
-## Exemple
+## Example
 
 ```lua
 local p = LuaProfiler('mon profileur')
@@ -16,39 +16,39 @@ function updateGFX(dt)
   p:add('foo')
   bar()
   p:add('bar')
-  p:finish(true)            -- afficher à chaque frame
-  -- p:finish(dt > 0, dt)   -- avec détection de pics
-  -- p:finish(true, nil, 0.002) -- masquer les sections < 2 ms
+  p:finish(true)            -- display every frame
+  -- p:finish(dt > 0, dt)   -- with peak detection
+  -- p:finish(true, nil, 0.002) -- hide sections < 2 ms
 end
 ```
 
-## Remarques
+## Notes
 
-- SIGNATURE RÉELLE : finish(compute, dt, threshold) ; finishToTable(dt, threshold). La page extraite affichait finish(dt, threshold), ce qui est inexact.
-- compute == false désactive tout calcul et tout log (moyen rapide de couper le profilage sans retirer les add()). dt (nombre) active le calcul de moyenne et la détection de pics ; threshold = durée minimale pour afficher une ligne.
-- Plusieurs add() avec le même nom dans une même frame sont cumulés (champ runs, affiché '(xN)'). start() et add() réinitialisent le chronomètre : mesurer des fonctions indépendantes demande un start() chacune.
-- Les durées sont affichées en 'ms' dans les messages (valeur renvoyée par le chronomètre haute précision, HighPerfTimer ou hptimer) et la mémoire en octets (collectgarbage('count')*1024).
-- Dans le code, `peakDetected = true` est affecté inconditionnellement dans computeFrameResult juste après son calcul : la détection de pic globale est donc toujours vraie (seul le test par section sur deltaRel > 0.3 filtre).
-- Utilise des globales du jeu : log, newTemporalSmoothing (filters.lua), lpad, graphs, HighPerfTimer/hptimer.
-- Le commentaire d'exemple du code contient une faute (`p.add` et `done`), ignorer : la syntaxe correcte est p:add et end.
+- ACTUAL SIGNATURE: finish(compute, dt, threshold); finishToTable(dt, threshold). The extracted page showed finish(dt, threshold), which is inaccurate.
+- compute == false disables all computation and logging (quick way to turn profiling off without removing the add() calls). dt (number) enables the average computation and peak detection; threshold = minimum duration to display a line.
+- Several add() with the same name in the same frame are accumulated (field runs, displayed '(xN)'). start() and add() reset the timer: measuring independent functions requires one start() each.
+- Durations are displayed in 'ms' in the messages (value returned by the high-precision timer, HighPerfTimer or hptimer) and memory in bytes (collectgarbage('count')*1024).
+- In the code, `peakDetected = true` is assigned unconditionally in computeFrameResult right after its computation: the global peak detection is therefore always true (only the per-section test on deltaRel > 0.3 filters).
+- Uses game globals: log, newTemporalSmoothing (filters.lua), lpad, graphs, HighPerfTimer/hptimer.
+- The example comment in the code contains a mistake (`p.add` and `done`), ignore it: the correct syntax is p:add and end.
 
-## Classe `C`
+## Class `C`
 
-Classe du profileur (objet renvoyé par LuaProfiler).
+Profiler class (object returned by LuaProfiler).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:add(section)` | À appeler après chaque section de code à mesurer : enregistre le temps et la mémoire depuis le dernier start/add sous le nom `section`, puis relance le chronomètre. Journalise une erreur si start() n'a pas été appelé. | 49 |
-| `C:finish(compute, dt, threshold)` | Termine la frame : calcule les statistiques et écrit dans le log la ligne TOTAL puis une ligne par section (mémoire, durée, éventuel écart à la moyenne, graphique). Réinitialise ensuite le chronomètre et les sections. | 191 |
-| `C:finishToTable(dt, threshold)` | Comme finish mais renvoie un rapport sérialisable au lieu d'écrire dans le log : {title, detectPeaks, threshold, peakDetected, shouldOutput, total = {time, garbage, stats}, sections = [{section, runs, time, garbage, peakDetected, shouldOutput, graph, stats}]}. | 222 |
-| `C:init(title)` | Constructeur : mémorise le titre. | 44 |
-| `C:start()` | Démarre (ou réinitialise) le chronomètre et le compteur de mémoire. À appeler une fois par fonction indépendante à profiler (sans appelant commun avec une autre déjà profilée). | 183 |
+| `C:add(section)` | To be called after each code section to measure: records the time and memory since the last start/add under the name `section`, then restarts the timer. Logs an error if start() was not called. | 49 |
+| `C:finish(compute, dt, threshold)` | Ends the frame: computes the statistics and writes to the log the TOTAL line then one line per section (memory, duration, optional deviation from the average, graph). Then resets the timer and the sections. | 191 |
+| `C:finishToTable(dt, threshold)` | Like finish but returns a serializable report instead of writing to the log: {title, detectPeaks, threshold, peakDetected, shouldOutput, total = {time, garbage, stats}, sections = [{section, runs, time, garbage, peakDetected, shouldOutput, graph, stats}]}. | 222 |
+| `C:init(title)` | Constructor: stores the title. | 44 |
+| `C:start()` | Starts (or resets) the timer and the memory counter. To be called once per independent function to profile (with no common caller with another already profiled). | 183 |
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `LuaProfiler(...)` | Fonction GLOBALE : crée un profileur (objet de classe C) et appelle son init avec les arguments donnés. | 229 |
+| `LuaProfiler(...)` | GLOBAL function: creates a profiler (object of class C) and calls its init with the given arguments. | 229 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/luaProfiler.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/luaProfiler.lua`.*

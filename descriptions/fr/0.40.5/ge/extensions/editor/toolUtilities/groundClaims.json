@@ -1,0 +1,75 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/groundClaims.lua",
+  "module": "Registre partagé des « revendications de terrain » entre les outils de l'éditeur qui posent des surfaces sur le terrain. Chaque outil publie, sous un nom de propriétaire (owner), les anneaux (contours) qu'il occupe et la marge à respecter ; les autres outils lisent ces anneaux pour ne pas empiéter dessus. Un compteur de révision et des empreintes (fp) permettent de détecter qu'un autre outil a bougé son terrain.",
+  "usage": "local claims = require('editor/toolUtilities/groundClaims')\nclaims.publish('monOutil', {ring1, ring2}, 0.5)\nlocal obs, roads = claims.obstructions(monRing, 'monOutil', roadRings, 0.1)",
+  "notes": [
+    "Les anneaux sont des listes de points {x, y} (au moins 3). publish ne copie pas les anneaux : l'appelant doit republier s'il les modifie.",
+    "publish ignore un propriétaire nil et ne fait rien si l'empreinte (nombre de points et coordonnées, marge) n'a pas changé ; un publish sans anneau valide efface la revendication.",
+    "Un anneau étiqueté 'buried' est un terrain tenu au-dessus de quelque chose (couverture de tunnel) : on peut y planter.",
+    "L'état est local au module (table claims) : il n'est pas sauvegardé."
+  ],
+  "functions": {
+    "publish": {
+      "desc": "Remplace tout ce que ce propriétaire détient par les anneaux donnés, avec la marge que les autres doivent respecter. Incrémente la révision seulement si le contenu a changé.",
+      "params": {
+        "owner": {"type": "any", "desc": "Nom du propriétaire (clé de la table) ; nil = sans effet."},
+        "rings": {"type": "table[]|nil", "desc": "Anneaux de points {x, y} ; ceux de moins de 3 points sont ignorés."},
+        "margin": {"type": "number|nil", "desc": "Marge (m) que les autres outils laissent autour ; défaut 0 (jonction affleurante)."},
+        "tags": {"type": "table|nil", "desc": "Étiquette par anneau (même indice que rings), pour qu'un outil qui édite cette chose ignore ses propres copies (voir obstructions)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "clear": {
+      "desc": "Efface la revendication d'un propriétaire (publish sans anneau).",
+      "params": {"owner": {"type": "any", "desc": "Nom du propriétaire."}},
+      "returns": [],
+      "internal": false
+    },
+    "extents": {
+      "desc": "Pour chaque autre propriétaire, son empreinte fp et la boîte {x0, y0, x1, y1} que couvre son terrain, marge comprise. Sert à savoir OÙ le terrain d'un autre a bougé.",
+      "params": {"owner": {"type": "any", "desc": "Propriétaire exclu du résultat."}},
+      "returns": [{"type": "table<any, table>", "desc": "owner -> { fp, box }."}],
+      "internal": false
+    },
+    "others": {
+      "desc": "Ajoute à out tous les anneaux des autres propriétaires (sans la marge). L'exclusion évite à un outil de se soustraire son propre terrain.",
+      "params": {
+        "out": {"type": "table|nil", "desc": "Liste de sortie (créée si nil)."},
+        "owner": {"type": "any", "desc": "Propriétaire exclu."},
+        "flushOnly": {"type": "boolean|nil", "desc": "Ne garde que les revendications sans marge (terrain avec lequel on se joint à ras)."},
+        "tags": {"type": "table|nil", "desc": "Si fourni, reçoit l'étiquette de chaque anneau (false si aucune) à l'indice de l'anneau dans out."}
+      },
+      "returns": [{"type": "table", "desc": "La liste out."}],
+      "internal": false
+    },
+    "keepOut": {
+      "desc": "Comme others, mais chaque anneau est agrandi de la marge demandée par son propriétaire (geom.outsetClosedRing2D) : ce qu'il faut soustraire à son propre terrain. Une revendication sans marge est renvoyée telle quelle.",
+      "params": {
+        "out": {"type": "table|nil", "desc": "Liste de sortie."},
+        "owner": {"type": "any", "desc": "Propriétaire exclu."}
+      },
+      "returns": [{"type": "table", "desc": "La liste out."}],
+      "internal": false
+    },
+    "obstructions": {
+      "desc": "Tout ce qui est proche de ring et que son propriétaire ne doit pas recouvrir : les anneaux de route fournis agrandis de roadMargin, plus la revendication de chaque autre outil agrandie de sa marge. Seuls les éléments dont la boîte touche celle de ring sont retenus.",
+      "params": {
+        "ring": {"type": "table", "desc": "Contour testé (au moins 3 points) ; sinon renvoie deux tables vides."},
+        "owner": {"type": "any", "desc": "Propriétaire exclu."},
+        "roadRings": {"type": "table[]|nil", "desc": "Anneaux de route fournis par l'appelant."},
+        "roadMargin": {"type": "number|nil", "desc": "Marge appliquée aux routes (m)."},
+        "pad": {"type": "number|nil", "desc": "Élargit la boîte qui définit « proche »."},
+        "skip": {"type": "any|nil", "desc": "Ignore les anneaux portant cette étiquette (un site en édition ne se gêne pas lui-même)."}
+      },
+      "returns": [{"type": "table[]", "desc": "Anneaux obstacles."}, {"type": "table<table, boolean>", "desc": "Ensemble des anneaux de sortie qui sont des routes."}],
+      "internal": false
+    },
+    "sig": {
+      "desc": "Compteur de révision, incrémenté à chaque publication qui change quelque chose. Permet à un outil de remarquer que le terrain d'un autre a bougé sans le connaître directement.",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Révision courante."}],
+      "internal": false
+    }
+  }
+}

@@ -2,11 +2,11 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/environment/getScatterySky.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_environment_getScatterySky_C
 local flowgraph_nodes_environment_getScatterySky_C = {}
 
---- Chaque frame, lit les sept valeurs depuis core_environment et les écrit sur les sorties.
----Source : lua/ge/extensions/flowgraph/nodes/environment/getScatterySky.lua:26
+--- Every frame, reads the seven values from core_environment and writes them to the outputs.
+---Source: lua/ge/extensions/flowgraph/nodes/environment/getScatterySky.lua:26
 function flowgraph_nodes_environment_getScatterySky_C:work() end
 

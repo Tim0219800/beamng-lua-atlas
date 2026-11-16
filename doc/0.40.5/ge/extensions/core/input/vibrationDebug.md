@@ -1,23 +1,23 @@
 # `core_input_vibrationDebug`
 
-*Fichier : `lua/ge/extensions/core/input/vibrationDebug.lua` · VM : Game Engine (GE) · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/input/vibrationDebug.lua` · VM: Game Engine (GE) · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_input_vibrationDebug` : `extensions.load("core_input_vibrationDebug")`, puis la globale `core_input_vibrationDebug`
+**Access:** extension `core_input_vibrationDebug`: `extensions.load("core_input_vibrationDebug")`, then the global `core_input_vibrationDebug`
 
-Extension GE `core_input_vibrationDebug` : fenêtre ImGui de debug « Vibration Debug » pour régler en direct les paramètres des vibrations de manette (haptics) du véhicule du joueur. Chaque champ modifié envoie une commande à l'extension haptics côté véhicule. Utile pour tester le retour de force, pas pour une API durable.
+GE extension `core_input_vibrationDebug`: "Vibration Debug" ImGui debug window to tune in real time the controller vibration (haptics) parameters of the player's vehicle. Each modified field sends a command to the haptics extension on the vehicle side. Useful to test force feedback, not a lasting API.
 
-## Remarques
+## Notes
 
-- La fenêtre est dessinée à chaque onUpdate tant que l'extension est chargée ; les champs ne s'affichent que si un véhicule joueur existe.
-- Commandes envoyées au véhicule : haptics.setWheelSlipForceMultiplier(x), haptics.setJerkForceMultiplier(x), haptics.setWheelSlipMin(x), haptics.setJerkMin(x).
-- Incohérence : valeur initiale de wheelSlipMin = 2.0, mais onVehicleSwitched la remet à 4 (jerkMin 30 et multiplicateurs 1 identiques) ; les valeurs affichées ne sont pas renvoyées au nouveau véhicule, seul l'affichage est réinitialisé.
+- The window is drawn on every onUpdate as long as the extension is loaded; the fields are only displayed if a player vehicle exists.
+- Commands sent to the vehicle: haptics.setWheelSlipForceMultiplier(x), haptics.setJerkForceMultiplier(x), haptics.setWheelSlipMin(x), haptics.setJerkMin(x).
+- Inconsistency: initial value of wheelSlipMin = 2.0, but onVehicleSwitched resets it to 4 (jerkMin 30 and multipliers 1 are identical); the displayed values are not sent back to the new vehicle, only the display is reset.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_input_vibrationDebug.onUpdate()` | Hook par image : dessine la fenêtre ImGui et envoie au véhicule joueur 0 les nouvelles valeurs de multiplicateur de force (glissement des roues, à-coups) et de seuils minimaux. *(interne)* *(hook)* | 14 |
-| `core_input_vibrationDebug.onVehicleSwitched()` | Hook au changement de véhicule : remet les champs de la fenêtre à leurs valeurs par défaut (multiplicateurs 1, wheelSlipMin 4, jerkMin 30) sans les renvoyer au véhicule. *(interne)* *(hook)* | 34 |
+| `core_input_vibrationDebug.onUpdate()` | Per-frame hook: draws the ImGui window and sends to player vehicle 0 the new force multiplier values (wheel slip, jerks) and minimum thresholds. *(internal)* *(hook)* | 14 |
+| `core_input_vibrationDebug.onVehicleSwitched()` | Hook on vehicle change: resets the window fields to their default values (multipliers 1, wheelSlipMin 4, jerkMin 30) without sending them back to the vehicle. *(internal)* *(hook)* | 34 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/input/vibrationDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/input/vibrationDebug.lua`.*

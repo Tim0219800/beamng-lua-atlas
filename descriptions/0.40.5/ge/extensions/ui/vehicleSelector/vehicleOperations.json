@@ -1,90 +1,201 @@
 {
   "path": "lua/ge/extensions/ui/vehicleSelector/vehicleOperations.lua",
-  "module": "Actions du sélecteur de véhicules : crée les boutons « Faire apparaître » et « Remplacer le véhicule » d'une config, et les boutons de gestion (sauvegarder la config, cloner, choix aléatoire, tout réinitialiser, tout supprimer, supprimer le véhicule courant ou les autres, véhicule par défaut en mode dev). Il exécute le véhicule choisi après l'écran de fade en passant par core_vehicles (spawnNewVehicle, replaceVehicle, cloneCurrent), respecte les permissions multijoueur et les restrictions des tutoriels, et émet des hooks onVehicleSelector*.",
+  "module": "Vehicle selector actions: creates the \"Spawn\" and \"Replace vehicle\" buttons of a config, and the management buttons (save the config, clone, random choice, reset all, remove all, remove the current vehicle or the others, default vehicle in dev mode). It executes the chosen vehicle after the fade screen through core_vehicles (spawnNewVehicle, replaceVehicle, cloneCurrent), respects multiplayer permissions and tutorial restrictions, and emits onVehicleSelector* hooks.",
   "notes": [
-    "Les boutons sont gérés par ui/gridSelectorUtils/buttonModule (addButton, getFreeButtonId, clearButtonFunctions) ; chaque bouton a un buttonId, une fonction et des métadonnées (label, icon, primary, disabled, uiEvent, canClearFilters...).",
-    "Spawn et remplacement sont différés : la fonction callbackAfterFade est lancée au passage de onScreenFadeState(1) ou de onUiWaitingState, pendant que l'UI affiche 'app:waiting' (true puis false).",
-    "Hooks émis : onVehicleSelectorSpawnNewRequested, onVehicleSelectorSpawnNew(modelKey, configKey, paint1, paint2, paint3), onVehicleSelectorReplaceCurrentRequested, onVehicleSelectorReplaceCurrent(mêmes arguments), onVehicleSelectorCloneCurrent, onVehicleSelectorSetAsDefault, onVehicleSelectorLoadDefault, onVehicleSelectorSelectRandom, onVehicleSelectorResetAll, onVehicleSelectorRemoveAll, onVehicleSelectorRemoveCurrent, onVehicleSelectorRemoveOthers, trackNewVeh, trackVehReset.",
-    "Les peintures de additionalData (paint, paint2, paint3) sont des noms résolus dans model.model.paints.",
-    "En multijoueur (multiplayer_permissions), chaque action est désactivée selon la permission du joueur (resetVehicle, removeVehicle, spawnVehicle).",
-    "Bug probable : le bouton « Select Random » plante si aucune config ne passe les filtres (validConfigs vide, randomConfig nil). Il lit aussi randomConfig.subModel et randomConfig.brand (minuscules), champs sans doute absents des configs (qui utilisent SubModel et Brand), donc le chemin de navigation reçoit des chaînes vides.",
-    "Détail : setDetailsButtonForFreeroam et setCustomDetailsButtons ne font que stocker une valeur dans M.detailsButtonForFreeroam et M.customDetailsButtons, qui ne sont pas relues dans ce fichier (le tri est fait par detailsInteraction)."
+    "The buttons are managed by ui/gridSelectorUtils/buttonModule (addButton, getFreeButtonId, clearButtonFunctions); each button has a buttonId, a function and metadata (label, icon, primary, disabled, uiEvent, canClearFilters...).",
+    "Spawn and replace are deferred: the callbackAfterFade function is run when onScreenFadeState(1) or onUiWaitingState passes, while the UI displays 'app:waiting' (true then false).",
+    "Emitted hooks: onVehicleSelectorSpawnNewRequested, onVehicleSelectorSpawnNew(modelKey, configKey, paint1, paint2, paint3), onVehicleSelectorReplaceCurrentRequested, onVehicleSelectorReplaceCurrent(same arguments), onVehicleSelectorCloneCurrent, onVehicleSelectorSetAsDefault, onVehicleSelectorLoadDefault, onVehicleSelectorSelectRandom, onVehicleSelectorResetAll, onVehicleSelectorRemoveAll, onVehicleSelectorRemoveCurrent, onVehicleSelectorRemoveOthers, trackNewVeh, trackVehReset.",
+    "The paints in additionalData (paint, paint2, paint3) are names resolved in model.model.paints.",
+    "In multiplayer (multiplayer_permissions), each action is disabled according to the player's permission (resetVehicle, removeVehicle, spawnVehicle).",
+    "Probable bug: the \"Select Random\" button crashes if no config passes the filters (validConfigs empty, randomConfig nil). It also reads randomConfig.subModel and randomConfig.brand (lowercase), fields probably absent from the configs (which use SubModel and Brand), so the navigation path receives empty strings.",
+    "Detail: setDetailsButtonForFreeroam and setCustomDetailsButtons only store a value in M.detailsButtonForFreeroam and M.customDetailsButtons, which are not read back in this file (the sorting is done by detailsInteraction)."
   ],
   "fields": {
-    "managementButtonsEnabled": {"type": "boolean", "desc": "true par défaut ; si false, getManagementDetails ne crée aucun bouton."},
-    "detailsButtonForFreeroam": {"type": "boolean|nil", "desc": "Posé par setDetailsButtonForFreeroam (non lu ici)."},
-    "customDetailsButtons": {"type": "table|nil", "desc": "Posé par setCustomDetailsButtons (non lu ici)."}
+    "managementButtonsEnabled": {
+      "type": "boolean",
+      "desc": "true by default; if false, getManagementDetails creates no button."
+    },
+    "detailsButtonForFreeroam": {
+      "type": "boolean|nil",
+      "desc": "Set by setDetailsButtonForFreeroam (not read here)."
+    },
+    "customDetailsButtons": {
+      "type": "table|nil",
+      "desc": "Set by setCustomDetailsButtons (not read here)."
+    }
   },
   "functions": {
     "executeButton": {
-      "desc": "Exécute le bouton d'identifiant donné ; si ses métadonnées ont canClearFilters, efface les filtres quand l'option filterResetOnSpawn est active. Logue une erreur si l'id est inconnu.",
+      "desc": "Executes the button with the given identifier; if its metadata has canClearFilters, clears the filters when the filterResetOnSpawn option is active. Logs an error if the id is unknown.",
       "params": {
-        "buttonId": {"type": "integer", "desc": "Identifiant du bouton."},
-        "additionalData": {"type": "table|nil", "desc": "Données additionnelles transmises à la fonction du bouton (par exemple paint, paint2, paint3)."}
+        "buttonId": {
+          "type": "integer",
+          "desc": "Button identifier."
+        },
+        "additionalData": {
+          "type": "table|nil",
+          "desc": "Additional data passed to the button function (for example paint, paint2, paint3)."
+        }
       },
-      "returns": [{"type": "any", "desc": "Résultat de la fonction du bouton (par exemple {gotoPath = ...} pour le choix aléatoire)."}]
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of the button function (for example {gotoPath = ...} for the random choice)."
+        }
+      ]
     },
     "executeDoubleClick": {
-      "desc": "Pour un double-clic sur un élément : récupère ses détails et exécute le premier bouton marqué isDoubleClickAction (ou l'unique bouton).",
-      "params": {"itemDetails": {"type": "table", "desc": "Élément (model, config)."}}
+      "desc": "For a double-click on an item: fetches its details and executes the first button marked isDoubleClickAction (or the only button).",
+      "params": {
+        "itemDetails": {
+          "type": "table",
+          "desc": "Item (model, config)."
+        }
+      }
     },
     "makeSpawningButtons": {
-      "desc": "Crée les boutons de lancement d'une config : « Spawn new » (action_2) et, sauf spawnOnly, « Replace current » (ok, action principale et double-clic). Ils sont désactivés selon les restrictions de la première conduite, des leçons et des permissions.",
+      "desc": "Creates the launch buttons of a config: \"Spawn new\" (action_2) and, unless spawnOnly, \"Replace current\" (ok, main action and double-click). They are disabled according to the restrictions of the first drive, lessons and permissions.",
       "params": {
-        "configDetails": {"type": "table|nil", "desc": "Config (model_key, key) ; sans elle, aucun bouton."},
-        "spawnOnly": {"type": "boolean", "desc": "true pour ne proposer que le bouton d'apparition."}
+        "configDetails": {
+          "type": "table|nil",
+          "desc": "Config (model_key, key); without it, no button."
+        },
+        "spawnOnly": {
+          "type": "boolean",
+          "desc": "true to offer only the spawn button."
+        }
       },
-      "returns": [{"type": "table[]", "desc": "Informations de boutons à envoyer à l'UI."}]
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Button information to send to the UI."
+        }
+      ]
     },
     "getManagementDetails": {
-      "desc": "Crée les boutons de gestion (si activés) et les infos du véhicule joueur 0 (nom et miniature).",
-      "returns": [{"type": "table", "desc": "{buttonInfo = boutons, details = {currentVehicleName, currentVehicleThumb}}."}]
+      "desc": "Creates the management buttons (if enabled) and the player 0 vehicle info (name and thumbnail).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{buttonInfo = buttons, details = {currentVehicleName, currentVehicleThumb}}."
+        }
+      ]
     },
     "getVehicleName": {
-      "desc": "Construit le nom lisible « Marque Nom Configuration » d'un véhicule à partir de son modèle JBeam et de sa config.",
-      "params": {"veh": {"type": "userdata|nil", "desc": "Objet véhicule ; nil donne 'No vehicle'."}},
-      "returns": [{"type": "string", "desc": "Nom du véhicule."}]
+      "desc": "Builds the readable name \"Brand Name Configuration\" of a vehicle from its JBeam model and its config.",
+      "params": {
+        "veh": {
+          "type": "userdata|nil",
+          "desc": "Vehicle object; nil gives 'No vehicle'."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Vehicle name."
+        }
+      ]
     },
     "getCurrentVehicleThumb": {
-      "desc": "Renvoie l'aperçu de la config d'un véhicule.",
-      "params": {"veh": {"type": "userdata|nil", "desc": "Objet véhicule."}},
-      "returns": [{"type": "string|nil", "desc": "Chemin de l'image, ou nil."}]
+      "desc": "Returns the preview of a vehicle's config.",
+      "params": {
+        "veh": {
+          "type": "userdata|nil",
+          "desc": "Vehicle object."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Image path, or nil."
+        }
+      ]
     },
     "onScreenFadeState": {
-      "desc": "Hook appelé quand l'écran de fade change d'état ; à l'état 1, exécute l'action différée (spawn, remplacement, clonage).",
-      "params": {"state": {"type": "integer", "desc": "État du fade (1 déclenche l'action)."}},
+      "desc": "Hook called when the fade screen changes state; at state 1, executes the deferred action (spawn, replace, clone).",
+      "params": {
+        "state": {
+          "type": "integer",
+          "desc": "Fade state (1 triggers the action)."
+        }
+      },
       "internal": true
     },
     "onUiWaitingState": {
-      "desc": "Hook appelé quand l'état d'attente de l'UI change ; exécute l'action différée en attente, quel que soit l'état.",
-      "params": {"state": {"type": "any", "desc": "État d'attente (non utilisé)."}},
+      "desc": "Hook called when the UI waiting state changes; executes the pending deferred action, whatever the state.",
+      "params": {
+        "state": {
+          "type": "any",
+          "desc": "Waiting state (unused)."
+        }
+      },
       "internal": true
     },
     "setManagementButtonsEnabled": {
-      "desc": "Active ou désactive la création des boutons de gestion.",
-      "params": {"enabled": {"type": "boolean", "desc": "true pour les afficher."}}
+      "desc": "Enables or disables the creation of the management buttons.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to show them."
+        }
+      }
     },
     "setDetailsButtonForFreeroam": {
-      "desc": "Mémorise un indicateur freeroam pour le bouton de détails.",
-      "params": {"enabled": {"type": "boolean", "desc": "Valeur mémorisée dans M.detailsButtonForFreeroam."}}
+      "desc": "Stores a freeroam flag for the details button.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "Value stored in M.detailsButtonForFreeroam."
+        }
+      }
     },
     "setCustomDetailsButtons": {
-      "desc": "Mémorise une liste de boutons personnalisés (mode défi).",
-      "params": {"buttons": {"type": "table|nil", "desc": "Boutons personnalisés."}}
+      "desc": "Stores a list of custom buttons (challenge mode).",
+      "params": {
+        "buttons": {
+          "type": "table|nil",
+          "desc": "Custom buttons."
+        }
+      }
     },
     "addButton": {
-      "desc": "Ajoute un bouton à l'instance (délègue à buttonModule).",
-      "params": {"...": {"type": "any", "desc": "(fonction, métadonnées) comme dans buttonModule.addButton."}},
-      "returns": [{"type": "table", "desc": "Informations du bouton (dont buttonId)."}]
+      "desc": "Adds a button to the instance (delegates to buttonModule).",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "(function, metadata) as in buttonModule.addButton."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Button information (including buttonId)."
+        }
+      ]
     },
     "clearButtonFunctions": {
-      "desc": "Supprime tous les boutons enregistrés (délègue à buttonModule).",
-      "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}
+      "desc": "Removes all registered buttons (delegates to buttonModule).",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "Passed through as is."
+        }
+      }
     },
     "getFreeButtonId": {
-      "desc": "Renvoie un identifiant de bouton libre (délègue à buttonModule).",
-      "params": {"...": {"type": "any", "desc": "Transmis tels quels."}},
-      "returns": [{"type": "integer", "desc": "Identifiant libre (déduit du nom)."}]
+      "desc": "Returns a free button identifier (delegates to buttonModule).",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "Passed through as is."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Free identifier (inferred from the name)."
+        }
+      ]
     }
   }
 }

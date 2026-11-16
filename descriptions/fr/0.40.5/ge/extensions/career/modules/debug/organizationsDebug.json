@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/career/modules/debug/organizationsDebug.lua",
+  "module": "Onglet de debug carrière « Organizations ». Deux entrées de triche : donner une réputation aléatoire (-50 à 150) à environ 30 % des organisations (via career_modules_playerAttributes.addAttributes) et marquer environ 30 % des facilités de livraison comme 'interacted'.",
+  "notes": ["Outil de développement ; debugOrder = 3.", "La première entrée appelle aussi career_career.interactWithOrganization pour chaque organisation tirée."],
+  "fields": {
+    "debugOrder": {"type": "number", "desc": "Ordre de tri (3)."},
+    "debugName": {"type": "string", "desc": "'Organizations'."}
+  },
+  "functions": {
+    "drawDebugFunctions": {
+      "desc": "Dessine les entrées '> Give random reputation to 30% of organizations' et 'Interact with random facilities'.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

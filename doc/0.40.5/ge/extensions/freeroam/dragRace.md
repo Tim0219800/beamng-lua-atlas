@@ -1,131 +1,131 @@
 # `freeroam_dragRace`
 
-*Fichier : `lua/ge/extensions/freeroam/dragRace.lua` · VM : Game Engine (GE) · 906 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/freeroam/dragRace.lua` · VM: Game Engine (GE) · 906 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `freeroam_dragRace` : `extensions.load("freeroam_dragRace")`, puis la globale `freeroam_dragRace`
+**Access:** extension `freeroam_dragRace`: `extensions.load("freeroam_dragRace")`, then the global `freeroam_dragRace`
 
-Course de dragster au quart de mile contre une IA (« drag_opponent ») sur les dragstrips des niveaux gridmap_v2 et west_coast_usa. Gère l'arbre de départ (lumières de pré-stage, stage, ambres, vert, rouge), la mise en place de l'adversaire IA (positions, pré-stage/stage/départ, nitro/JATO), l'alignement du joueur sur la ligne, la détection de faux départ, le chronométrage jusqu'au déclencheur d'arrivée, les afficheurs 7 segments (temps et vitesse) et l'écran de résultats UI. S'appuie sur des objets de scène nommés (Prestagelight_l, Amberlight1_R, display_time_1_l, dragTrigger, startTrigger_L…) et sur les BeamNGTrigger du niveau. Global : freeroam_dragRace.
+Quarter-mile dragster race against an AI ("drag_opponent") on the dragstrips of the gridmap_v2 and west_coast_usa levels. Handles the starting tree (pre-stage, stage, amber, green, red lights), setting up the AI opponent (positions, pre-stage/stage/start, nitro/JATO), aligning the player on the line, false start detection, timing up to the finish trigger, the 7-segment displays (time and speed) and the UI results screen. Relies on named scene objects (Prestagelight_l, Amberlight1_R, display_time_1_l, dragTrigger, startTrigger_L...) and on the level's BeamNGTriggers. Global: freeroam_dragRace.
 
-## Exemple
+## Example
 
 ```lua
--- depuis un déclencheur du dragstrip, l'UI appelle :
+-- from a dragstrip trigger, the UI calls:
 freeroam_dragRace.selectOpponent(freeroam_dragRace.selectRandomOpponent(true))
-freeroam_dragRace.enableProTree(true) -- arbre « pro » (départ immédiat sur les 3 ambres)
+freeroam_dragRace.enableProTree(true) -- "pro" tree (immediate start on the 3 ambers)
 ```
 
-## Remarques
+## Notes
 
-- BUG : `M.onUpdate = onUpdate` et `M.startRace = startRace` exportent des variables qui ne sont jamais définies dans ce fichier : M.onUpdate et M.startRace valent donc nil. De même setupStage teste `if startRace` (variable globale nil).
-- BUG : dans setupPrestage, la ligne `opponentVehicle:queLuaComuemand(...)` est une faute de frappe de queueLuaCommand : appeler une méthode inexistante lève une erreur d'exécution à la fin de la mise en place du pré-stage (l'événement « AI_prestage » n'est jamais envoyé aux contrôleurs moddés et le reste de la fonction — be:enterVehicle, message — n'est pas exécuté).
-- Les conversions d'angle utilisent 3.1459 comme valeur de pi (faute de frappe pour 3.14159) dans setupVehicle et selectOpponent (légère erreur d'orientation).
-- Le niveau courant (`level`) est une variable locale fixée à 'gridmap_v2' par défaut ; setLevel(lvl) la change et recharge. Les positions de reset de l'adversaire/joueur sont codées en dur par niveau. Sur gridmap_v2 la caméra cinématique est désactivée (cinematicCam=false dans selectOpponent).
-- Les temps et la vitesse sont en secondes et en mph (facteur speedUnit = 2.2369362920544 appliqué à m/s). Les afficheurs ont 5 chiffres par côté ; time < 10 ajoute un chiffre « empty ».
-- Un faux départ (joueur franchissant la ligne de plus de 0.25 m pendant le compte à rebours) disqualifie : feux rouge/ambres côté joueur, l'IA est arrêtée. Rouler dans la voie de l'adversaire (laneTrigger_L) pendant la course disqualifie aussi.
-- Dans onBeamNGTrigger, `table.getn(vehicles)` et la modification de `vehicles` pendant le parcours (table.remove dans pairs) peuvent sauter des éléments.
-- Le module utilise des commandes envoyées à la VM de l'IA : controller.setFreeze, ai.setSpeed/setAggression/setAvoidCars/setSpeedMode, electrics.values.jatoInput, controller nitrousOxideInjection, et l'évènement controller.onGameplayEvent('freeroam_dragRace', 'AI_prestage'|'AI_stage'|'AI_setupStart'|'AI_start'|'AI_stop') pour les contrôleurs moddés.
+- BUG: `M.onUpdate = onUpdate` and `M.startRace = startRace` export variables that are never defined in this file: M.onUpdate and M.startRace are therefore nil. Likewise setupStage tests `if startRace` (nil global variable).
+- BUG: in setupPrestage, the line `opponentVehicle:queLuaComuemand(...)` is a typo for queueLuaCommand: calling a nonexistent method raises a runtime error at the end of the pre-stage setup (the "AI_prestage" event is never sent to modded controllers and the rest of the function — be:enterVehicle, message — is not executed).
+- The angle conversions use 3.1459 as the value of pi (typo for 3.14159) in setupVehicle and selectOpponent (slight orientation error).
+- The current level (`level`) is a local variable set to 'gridmap_v2' by default; setLevel(lvl) changes it and reloads. The opponent/player reset positions are hardcoded per level. On gridmap_v2 the cinematic camera is disabled (cinematicCam=false in selectOpponent).
+- Times and speed are in seconds and mph (speedUnit factor = 2.2369362920544 applied to m/s). The displays have 5 digits per side; time < 10 adds an "empty" digit.
+- A false start (player crossing the line by more than 0.25 m during the countdown) disqualifies: red/amber lights on the player's side, the AI is stopped. Driving in the opponent's lane (laneTrigger_L) during the race also disqualifies.
+- In onBeamNGTrigger, `table.getn(vehicles)` and modifying `vehicles` during the traversal (table.remove inside pairs) can skip elements.
+- The module uses commands sent to the AI's VM: controller.setFreeze, ai.setSpeed/setAggression/setAvoidCars/setSpeedMode, electrics.values.jatoInput, controller nitrousOxideInjection, and the event controller.onGameplayEvent('freeroam_dragRace', 'AI_prestage'|'AI_stage'|'AI_setupStart'|'AI_start'|'AI_stop') for modded controllers.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `freeroam_dragRace.accept()` | Appelé par le bouton « Accept/Configure » du dialogue du dragstrip : ouvre l'écran d'aperçu (displayOverview(true, false)) qui passe la simulation au ralenti (1/100) et navigue vers menu.dragRaceOverview. | 728 |
-| `freeroam_dragRace.closeOverview()` | Ferme l'aperçu : remet la simulation à 1x, le FOV à 65 et rétablit la caméra précédente. | 298 |
-| `freeroam_dragRace.enableCinematicCam(value)` | Lit ou règle l'utilisation de la caméra cinématique (externe) pendant la course. | 808 |
-| `freeroam_dragRace.enableProTree(val)` | Lit ou règle l'arbre « pro » (compte à rebours de 2 s puis les 3 ambres 0.4 s puis le vert) au lieu de l'arbre classique (ambres successifs 1.0/1.5/2.0 s, vert à 2.5 s). | 815 |
-| `freeroam_dragRace.exit()` | Quitte la course : masque le menu, ferme le dialogue et l'aperçu, supprime l'objet scène drag_opponent, oublie l'adversaire et ré-initialise le module (onExtensionLoaded). | 732 |
-| `freeroam_dragRace.onBeamNGTrigger(data)` | Hook des déclencheurs du niveau : dialogue d'entrée/sortie (dragTrigger), arrivée (endTrigger : mise à jour des afficheurs et des résultats, arrêt de l'IA), voie adverse (laneTrigger_L), enregistrement des véhicules (startTrigger_R/L) et préparation (dragTrigger_L). *(interne)* *(hook)* | 620 |
-| `freeroam_dragRace.onClientEndMission()` | Hook de fin de niveau : vide les références de lumières, afficheurs, véhicules, déclencheurs et résultats. *(interne)* *(hook)* | 867 |
-| `freeroam_dragRace.onExtensionLoaded()` | Hook de chargement : cherche les lumières, afficheurs (display_time_i_l/r, display_speed_i_l/r, i = 1..5) et déclencheurs de la scène, masque les afficheurs et fixe les positions de reset selon le niveau. *(interne)* *(hook)* | 742 |
-| `freeroam_dragRace.onExtensionUnloaded()` | Hook de déchargement : masque le menu, ferme dialogue et aperçu, supprime drag_opponent. *(interne)* *(hook)* | 859 |
-| `freeroam_dragRace.onPreRender(dtReal, dtSim, dtRaw)` | Hook avant rendu, cœur de la course : fait progresser le compte à rebours (starttimer en temps simulé), le chrono, les messages d'alignement du joueur (distance à la ligne en m), le faux départ et les phases pré-stage/stage/départ de l'IA. *(interne)* *(hook)* | 333 |
-| `freeroam_dragRace.onUpdate()` | Exporté mais valant nil (aucune fonction locale onUpdate définie). (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `freeroam_dragRace.onVehicleDestroyed(id)` | Hook de suppression de véhicule : oublie le joueur ou l'adversaire et masque les lumières. *(interne)* *(hook)* | 550 |
-| `freeroam_dragRace.onVehicleResetted(vid)` | Hook de reset de véhicule : ferme le dialogue si c'est le joueur dans le déclencheur ; repositionne l'adversaire (setupVehicle) s'il s'agit de drag_opponent. *(interne)* *(hook)* | 791 |
-| `freeroam_dragRace.onVehicleSpawned(vehicleID)` | Hook d'apparition : si c'est l'adversaire, masque le menu et le place (setupVehicle) ; retrouve aussi le véhicule joueur nommé « thePlayer ». *(interne)* *(hook)* | 541 |
-| `freeroam_dragRace.resetLights()` | Cache tous les objets lumineux de l'arbre de départ. | 107 |
-| `freeroam_dragRace.restartRace()` | Redémarre : reset de l'adversaire et du joueur, retour au menu, simulation à vitesse normale, caméra orbit. | 717 |
-| `freeroam_dragRace.selectOpponent(selection)` | Choisit et fait apparaître l'adversaire (core_vehicles.spawnNewVehicle avec vehicleName 'drag_opponent', plaque '2slow'), réinitialise la course et les afficheurs, et replace le joueur sur la ligne de départ si besoin. | 822 |
-| `freeroam_dragRace.selectRandomOpponent(sameClass)` | Tire au hasard une config de voiture ou camion ; avec sameClass=true, restreint aux configs dont le 0-100 km/h est à ±1 s de celui du véhicule du joueur. Ajoute Brand et Country du modèle pour l'UI. | 562 |
-| `freeroam_dragRace.setLevel(lvl)` | Choisit le niveau pour lequel les positions et caméras sont codées (gridmap_v2 ou west_coast_usa) et réinitialise le module. | 878 |
-| `freeroam_dragRace.setupPrestage()` | Allume le pré-stage de l'IA et fait avancer ou retenir l'adversaire selon que le joueur est prêt ; voir le bug (queLuaComuemand) dans les notes. *(interne)* | 158 |
-| `freeroam_dragRace.setupStage()` | Allume le feu de stage de l'IA et la fait s'approcher de la ligne (vitesse 5, agressivité 0). *(interne)* | 179 |
-| `freeroam_dragRace.startRace()` | Exporté mais valant nil : aucune implémentation dans ce fichier (voir notes). (assignée dynamiquement) | dyn |
+| `freeroam_dragRace.accept()` | Called by the "Accept/Configure" button of the dragstrip dialog: opens the overview screen (displayOverview(true, false)) which puts the simulation in slow motion (1/100) and navigates to menu.dragRaceOverview. | 728 |
+| `freeroam_dragRace.closeOverview()` | Closes the overview: puts the simulation back to 1x, the FOV to 65 and restores the previous camera. | 298 |
+| `freeroam_dragRace.enableCinematicCam(value)` | Reads or sets the use of the cinematic (external) camera during the race. | 808 |
+| `freeroam_dragRace.enableProTree(val)` | Reads or sets the "pro" tree (2 s countdown then the 3 ambers at 0.4 s then green) instead of the classic tree (successive ambers at 1.0/1.5/2.0 s, green at 2.5 s). | 815 |
+| `freeroam_dragRace.exit()` | Quits the race: hides the menu, closes the dialog and the overview, deletes the drag_opponent scene object, forgets the opponent and reinitializes the module (onExtensionLoaded). | 732 |
+| `freeroam_dragRace.onBeamNGTrigger(data)` | Level trigger hook: entry/exit dialog (dragTrigger), finish (endTrigger: update of the displays and results, AI stop), opponent's lane (laneTrigger_L), vehicle registration (startTrigger_R/L) and preparation (dragTrigger_L). *(internal)* *(hook)* | 620 |
+| `freeroam_dragRace.onClientEndMission()` | End-of-level hook: empties the references to lights, displays, vehicles, triggers and results. *(internal)* *(hook)* | 867 |
+| `freeroam_dragRace.onExtensionLoaded()` | Load hook: finds the scene's lights, displays (display_time_i_l/r, display_speed_i_l/r, i = 1..5) and triggers, hides the displays and sets the reset positions according to the level. *(internal)* *(hook)* | 742 |
+| `freeroam_dragRace.onExtensionUnloaded()` | Unload hook: hides the menu, closes dialog and overview, deletes drag_opponent. *(internal)* *(hook)* | 859 |
+| `freeroam_dragRace.onPreRender(dtReal, dtSim, dtRaw)` | Pre-render hook, heart of the race: advances the countdown (starttimer in simulated time), the timer, the player alignment messages (distance to the line in m), the false start and the AI's pre-stage/stage/start phases. *(internal)* *(hook)* | 333 |
+| `freeroam_dragRace.onUpdate()` | Exported but nil (no local onUpdate function defined). (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `freeroam_dragRace.onVehicleDestroyed(id)` | Vehicle deletion hook: forgets the player or the opponent and hides the lights. *(internal)* *(hook)* | 550 |
+| `freeroam_dragRace.onVehicleResetted(vid)` | Vehicle reset hook: closes the dialog if it is the player in the trigger; repositions the opponent (setupVehicle) if it is drag_opponent. *(internal)* *(hook)* | 791 |
+| `freeroam_dragRace.onVehicleSpawned(vehicleID)` | Spawn hook: if it is the opponent, hides the menu and places it (setupVehicle); also finds the player vehicle named "thePlayer". *(internal)* *(hook)* | 541 |
+| `freeroam_dragRace.resetLights()` | Hides all the light objects of the starting tree. | 107 |
+| `freeroam_dragRace.restartRace()` | Restarts: resets the opponent and the player, returns to the menu, simulation at normal speed, orbit camera. | 717 |
+| `freeroam_dragRace.selectOpponent(selection)` | Chooses and spawns the opponent (core_vehicles.spawnNewVehicle with vehicleName 'drag_opponent', plate '2slow'), resets the race and the displays, and puts the player back on the starting line if needed. | 822 |
+| `freeroam_dragRace.selectRandomOpponent(sameClass)` | Randomly picks a car or truck config; with sameClass=true, restricts to configs whose 0-100 km/h is within ±1 s of the player vehicle's. Adds the model's Brand and Country for the UI. | 562 |
+| `freeroam_dragRace.setLevel(lvl)` | Chooses the level for which the positions and cameras are hardcoded (gridmap_v2 or west_coast_usa) and reinitializes the module. | 878 |
+| `freeroam_dragRace.setupPrestage()` | Turns on the AI's pre-stage and makes the opponent advance or hold depending on whether the player is ready; see the bug (queLuaComuemand) in the notes. *(internal)* | 158 |
+| `freeroam_dragRace.setupStage()` | Turns on the AI's stage light and makes it approach the line (speed 5, aggression 0). *(internal)* | 179 |
+| `freeroam_dragRace.startRace()` | Exported but nil: no implementation in this file (see notes). (dynamically assigned) | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `freeroam_dragRace.enableCinematicCam(value)`
 
-Lit ou règle l'utilisation de la caméra cinématique (externe) pendant la course.
+Reads or sets the use of the cinematic (external) camera during the race.
 
-- `value` (*boolean|nil*) : Nouvelle valeur ; nil pour seulement lire.
-- **renvoie** : boolean Valeur actuelle.
+- `value` (*boolean|nil*) : New value; nil to only read.
+- **returns**: boolean Current value.
 
 #### `freeroam_dragRace.enableProTree(val)`
 
-Lit ou règle l'arbre « pro » (compte à rebours de 2 s puis les 3 ambres 0.4 s puis le vert) au lieu de l'arbre classique (ambres successifs 1.0/1.5/2.0 s, vert à 2.5 s).
+Reads or sets the "pro" tree (2 s countdown then the 3 ambers at 0.4 s then green) instead of the classic tree (successive ambers at 1.0/1.5/2.0 s, green at 2.5 s).
 
-- `val` (*boolean|nil*) : Nouvelle valeur ; nil pour seulement lire.
-- **renvoie** : boolean Valeur actuelle.
+- `val` (*boolean|nil*) : New value; nil to only read.
+- **returns**: boolean Current value.
 
 #### `freeroam_dragRace.onBeamNGTrigger(data)`
 
-Hook des déclencheurs du niveau : dialogue d'entrée/sortie (dragTrigger), arrivée (endTrigger : mise à jour des afficheurs et des résultats, arrêt de l'IA), voie adverse (laneTrigger_L), enregistrement des véhicules (startTrigger_R/L) et préparation (dragTrigger_L).
+Level trigger hook: entry/exit dialog (dragTrigger), finish (endTrigger: update of the displays and results, AI stop), opponent's lane (laneTrigger_L), vehicle registration (startTrigger_R/L) and preparation (dragTrigger_L).
 
 - `data` (*table*) : {triggerName, event ('enter'|'exit'), subjectID}
 
 #### `freeroam_dragRace.onPreRender(dtReal, dtSim, dtRaw)`
 
-Hook avant rendu, cœur de la course : fait progresser le compte à rebours (starttimer en temps simulé), le chrono, les messages d'alignement du joueur (distance à la ligne en m), le faux départ et les phases pré-stage/stage/départ de l'IA.
+Pre-render hook, heart of the race: advances the countdown (starttimer in simulated time), the timer, the player alignment messages (distance to the line in m), the false start and the AI's pre-stage/stage/start phases.
 
-- `dtReal` (*number*) : Durée réelle (s).
-- `dtSim` (*number*) : Durée simulée (s), utilisée pour les timers.
-- `dtRaw` (*number*) : Durée brute (s).
+- `dtReal` (*number*) : Real duration (s).
+- `dtSim` (*number*) : Simulated duration (s), used for the timers.
+- `dtRaw` (*number*) : Raw duration (s).
 
 #### `freeroam_dragRace.onVehicleDestroyed(id)`
 
-Hook de suppression de véhicule : oublie le joueur ou l'adversaire et masque les lumières.
+Vehicle deletion hook: forgets the player or the opponent and hides the lights.
 
-- `id` (*integer*) : Id du véhicule.
+- `id` (*integer*) : Vehicle id.
 
 #### `freeroam_dragRace.onVehicleResetted(vid)`
 
-Hook de reset de véhicule : ferme le dialogue si c'est le joueur dans le déclencheur ; repositionne l'adversaire (setupVehicle) s'il s'agit de drag_opponent.
+Vehicle reset hook: closes the dialog if it is the player in the trigger; repositions the opponent (setupVehicle) if it is drag_opponent.
 
-- `vid` (*integer*) : Id du véhicule.
+- `vid` (*integer*) : Vehicle id.
 
 #### `freeroam_dragRace.onVehicleSpawned(vehicleID)`
 
-Hook d'apparition : si c'est l'adversaire, masque le menu et le place (setupVehicle) ; retrouve aussi le véhicule joueur nommé « thePlayer ».
+Spawn hook: if it is the opponent, hides the menu and places it (setupVehicle); also finds the player vehicle named "thePlayer".
 
-- `vehicleID` (*integer*) : Id du véhicule.
+- `vehicleID` (*integer*) : Vehicle id.
 
 #### `freeroam_dragRace.selectOpponent(selection)`
 
-Choisit et fait apparaître l'adversaire (core_vehicles.spawnNewVehicle avec vehicleName 'drag_opponent', plaque '2slow'), réinitialise la course et les afficheurs, et replace le joueur sur la ligne de départ si besoin.
+Chooses and spawns the opponent (core_vehicles.spawnNewVehicle with vehicleName 'drag_opponent', plate '2slow'), resets the race and the displays, and puts the player back on the starting line if needed.
 
-- `selection` (*table*) : {model, config, color} (par ex. un élément de selectRandomOpponent).
+- `selection` (*table*) : {model, config, color} (e.g. an element of selectRandomOpponent).
 
 #### `freeroam_dragRace.selectRandomOpponent(sameClass)`
 
-Tire au hasard une config de voiture ou camion ; avec sameClass=true, restreint aux configs dont le 0-100 km/h est à ±1 s de celui du véhicule du joueur. Ajoute Brand et Country du modèle pour l'UI.
+Randomly picks a car or truck config; with sameClass=true, restricts to configs whose 0-100 km/h is within ±1 s of the player vehicle's. Adds the model's Brand and Country for the UI.
 
-- `sameClass` (*boolean|nil*) : true pour une classe de performance similaire.
-- **renvoie** : table Entrée de config véhicule (model_key, key, Brand, Country…).
+- `sameClass` (*boolean|nil*) : true for a similar performance class.
+- **returns**: table Vehicle config entry (model_key, key, Brand, Country...).
 
 #### `freeroam_dragRace.setLevel(lvl)`
 
-Choisit le niveau pour lequel les positions et caméras sont codées (gridmap_v2 ou west_coast_usa) et réinitialise le module.
+Chooses the level for which the positions and cameras are hardcoded (gridmap_v2 or west_coast_usa) and reinitializes the module.
 
-- `lvl` (*string*) : Nom du niveau.
+- `lvl` (*string*) : Level name.
 
-**Évènements UI (guihooks.trigger) :** `MenuHide`, `Message`
+**UI events (guihooks.trigger):** `MenuHide`, `Message`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `enterVehicle`, `getPlayerVehicleID`
 - `debugDrawer:` `drawLine`, `drawSphere`, `drawTextAdvanced`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/freeroam/dragRace.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/freeroam/dragRace.lua`.*

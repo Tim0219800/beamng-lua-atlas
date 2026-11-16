@@ -2,36 +2,36 @@
 -- tim19Atlas stub generated from lua/ge/extensions/scenario/raceUI.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Pont entre la course de scénario et l'interface : envoie à l'UI la progression des waypoints (WayPointChange), des tours (RaceLapChange) et les comparaisons de temps avec le tour précédent (RaceCheckpointComparison, RaceTimeComparison). Ne réagit qu'aux évènements du véhicule du joueur 0.
---- Accès : extension `scenario_raceUI` : `extensions.load("scenario_raceUI")`, puis la globale `scenario_raceUI`
+--- Bridge between the scenario race and the interface: sends the UI the waypoint progress (WayPointChange), lap progress (RaceLapChange) and time comparisons with the previous lap (RaceCheckpointComparison, RaceTimeComparison). Only reacts to events of player 0's vehicle.
+--- Access: extension `scenario_raceUI`: `extensions.load("scenario_raceUI")`, then the global `scenario_raceUI`
 ---@class scenario_raceUI
 scenario_raceUI = {}
 
---- Vide les temps de waypoints mémorisés et efface côté UI les affichages de waypoint et de tour.
----Source : lua/ge/extensions/scenario/raceUI.lua:10
----@param scenario table Scénario (non utilisé).
+--- Clears the stored waypoint times and clears the waypoint and lap displays on the UI side.
+---Source: lua/ge/extensions/scenario/raceUI.lua:10
+---@param scenario table Scenario (unused).
 function scenario_raceUI.initialise(scenario) end
 
---- Hook appelé à chaque tour terminé. Pour le véhicule du joueur, met à jour le numéro de tour (plafonné à lapCount), remet la progression de waypoint à fond et affiche le temps du tour.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/raceUI.lua:70
----@param data table Données du tour : vehicleId, lap, time (secondes).
+--- Hook called on each completed lap. For the player's vehicle, updates the lap number (capped at lapCount), resets the waypoint progress to full and displays the lap time.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/raceUI.lua:70
+---@param data table Lap data: vehicleId, lap, time (seconds).
 function scenario_raceUI.onRaceLap(data) end
 
---- Hook de début de course : envoie WayPointChange {current = 0, count = N} si la configuration de tour a plus d'un waypoint, et RaceLapChange {current = 1, count = lapCount} si lapCount > 1.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/raceUI.lua:17
+--- Race start hook: sends WayPointChange {current = 0, count = N} if the lap configuration has more than one waypoint, and RaceLapChange {current = 1, count = lapCount} if lapCount > 1.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/raceUI.lua:17
 function scenario_raceUI.onRaceStart() end
 
---- Hook appelé à chaque waypoint atteint. Pour le véhicule du joueur, mémorise le temps, émet les comparaisons de temps avec le tour précédent et met à jour la progression de waypoint.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/raceUI.lua:38
----@param data table Données du waypoint : vehicleId, time, cur, currentLapConfig.
+--- Hook called on each waypoint reached. For the player's vehicle, stores the time, emits the time comparisons with the previous lap and updates the waypoint progress.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/raceUI.lua:38
+---@param data table Waypoint data: vehicleId, time, cur, currentLapConfig.
 function scenario_raceUI.onRaceWaypointReached(data) end
 
---- Hook de changement d'état du scénario : efface l'affichage de waypoint quand le scénario est absent ou en 'pre-start'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/raceUI.lua:30
----@param scenario table|nil Scénario courant.
+--- Scenario state change hook: clears the waypoint display when the scenario is absent or in 'pre-start'.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/raceUI.lua:30
+---@param scenario table|nil Current scenario.
 function scenario_raceUI.onScenarioChange(scenario) end
 

@@ -1,27 +1,27 @@
 # `flowgraph_nodes_gameplay_crawl_applyPenalty`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/applyPenalty.lua` · VM : Game Engine (GE) · 50 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/applyPenalty.lua` · VM: Game Engine (GE) · 50 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/crawl/applyPenalty")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/crawl/applyPenalty")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Apply Penalty » (catégorie impulse, crawl). Applique manuellement des points de pénalité au crawl actif, en choisissant un type dans la liste du bridge (gameplay/crawl/flowgraphBridge). Pins d'entrée : flow (impulsion) et penaltyType (string).
+Flowgraph node "Apply Penalty" (category impulse, crawl). Manually applies penalty points to the active crawl, choosing a type from the bridge list (gameplay/crawl/flowgraphBridge). Input pins: flow (pulse) and penaltyType (string).
 
-## Remarques
+## Notes
 
-- work écrit self.pinOut.success et failed, mais pinSchema ne déclare aucun pin de sortie : ces accès plantent si penaltyType est vide.
-- Si penaltyType est valide, le résultat de bridge.applyPenalty n'est pas exposé.
+- work writes self.pinOut.success and failed, but pinSchema declares no output pin: these accesses crash if penaltyType is empty.
+- If penaltyType is valid, the result of bridge.applyPenalty is not exposed.
 
-**Dépendances (chargées avant) :** `gameplay_crawl_flowgraphBridge`
+**Dependencies (loaded first):** `gameplay_crawl_flowgraphBridge`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr)` | Charge le bridge du crawl. | 22 |
-| `C:postInit()` | Remplit les modèles du pin penaltyType avec bridge.getPenaltyTypes(). | 26 |
-| `C:work()` | Appelle bridge.applyPenalty(penaltyType) si le type est renseigné. | 35 |
+| `C:init(mgr)` | Loads the crawl bridge. | 22 |
+| `C:postInit()` | Fills the templates of the penaltyType pin with bridge.getPenaltyTypes(). | 26 |
+| `C:work()` | Calls bridge.applyPenalty(penaltyType) if the type is set. | 35 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/applyPenalty.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/applyPenalty.lua`.*

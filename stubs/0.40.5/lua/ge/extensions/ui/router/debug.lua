@@ -2,31 +2,31 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/router/debug.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre ImGui « Router Debugger » pour inspecter le routeur d'interface : route courante, route en attente, fil d'Ariane, champ de saisie pour naviguer vers une route ou revenir en arrière, et arbre des routes enregistrées regroupées par module (préfixe avant le premier point). Outil de développement ; chargé à la demande (la ligne de chargement dans ui_router est commentée).
---- Accès : extension `ui_router_debug` : `extensions.load("ui_router_debug")`, puis la globale `ui_router_debug`
+--- ImGui "Router Debugger" window to inspect the UI router: current route, pending route, breadcrumb, input field to navigate to a route or go back, and tree of registered routes grouped by module (prefix before the first dot). Development tool; loaded on demand (the load line in ui_router is commented out).
+--- Access: extension `ui_router_debug`: `extensions.load("ui_router_debug")`, then the global `ui_router_debug`
 ---@class ui_router_debug
----@field dependencies table<integer, string> Dépendance déclarée : ui_imgui (indiquée par la page auto-générée).
+---@field dependencies table<integer, string> Declared dependency: ui_imgui (indicated by the auto-generated page).
 ui_router_debug = {}
 
---- Ferme la fenêtre de debug.
----Source : lua/ge/extensions/ui/router/debug.lua:282
+--- Closes the debug window.
+---Source: lua/ge/extensions/ui/router/debug.lua:282
 function ui_router_debug.close() end
 
---- Hook appelé au chargement : demande l'ouverture automatique de la fenêtre sauf si disableHwWarnings est vrai.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/debug.lua:237
+--- Hook called on load: requests the automatic opening of the window unless disableHwWarnings is true.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/debug.lua:237
 function ui_router_debug.onExtensionLoaded() end
 
---- Hook appelé à chaque frame : ouvre la fenêtre si demandé, puis dessine « Router Debugger » (taille initiale 450x600) avec route courante, route en attente, fil d'Ariane, actions et modules de routes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/debug.lua:242
+--- Hook called every frame: opens the window if requested, then draws "Router Debugger" (initial size 450x600) with current route, pending route, breadcrumb, actions and route modules.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/debug.lua:242
 function ui_router_debug.onUpdate() end
 
---- Ouvre la fenêtre de debug.
----Source : lua/ge/extensions/ui/router/debug.lua:274
+--- Opens the debug window.
+---Source: lua/ge/extensions/ui/router/debug.lua:274
 function ui_router_debug.open() end
 
---- Inverse l'état d'ouverture de la fenêtre de debug.
----Source : lua/ge/extensions/ui/router/debug.lua:288
+--- Toggles the open state of the debug window.
+---Source: lua/ge/extensions/ui/router/debug.lua:288
 function ui_router_debug.toggle() end
 

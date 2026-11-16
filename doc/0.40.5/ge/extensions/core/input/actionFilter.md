@@ -1,164 +1,164 @@
 # `core_input_actionFilter`
 
-*Fichier : `lua/ge/extensions/core/input/actionFilter.lua` · VM : Game Engine (GE) · 241 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/input/actionFilter.lua` · VM: Game Engine (GE) · 241 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_input_actionFilter` : `extensions.load("core_input_actionFilter")`, puis la globale `core_input_actionFilter`
+**Access:** extension `core_input_actionFilter`: `extensions.load("core_input_actionFilter")`, then the global `core_input_actionFilter`
 
-Extension GE `core_input_actionFilter` : bloque ou autorise des actions d'entrée par « filtre » nommé (ex. scénario, mode compétitif). Gère des groupes d'actions, des modèles d'actions prédéfinis (téléportation, menus véhicule, caméras, triche…) et des masques de joueurs par ActionMap (pour le split-screen). Un moddeur l'utilise pour désactiver temporairement des touches (reset, menus, caméra libre) pendant une activité.
+GE extension `core_input_actionFilter`: blocks or allows input actions by named "filter" (e.g. scenario, competitive mode). Manages action groups, predefined action templates (teleportation, vehicle menus, cameras, cheats…) and player masks per ActionMap (for split-screen). A modder uses it to temporarily disable keys (reset, menus, free camera) during an activity.
 
-## Exemple
+## Example
 
 ```lua
 local f = core_input_actionFilter
 local tpl = f.getActionTemplates()
 f.setGroup('noCheats', tpl.competitive)
-f.addAction('myMod', 'noCheats', true)   -- bloque tout le groupe sous le filtre 'myMod'
--- plus tard
+f.addAction('myMod', 'noCheats', true)   -- blocks the whole group under the filter 'myMod'
+-- later
 f.clear('myMod')
 ```
 
-## Remarques
+## Notes
 
-- Le premier argument `filter` est un nom (chaîne) de filtre ; chaque filtre garde sa propre liste de blocages, donc plusieurs mods peuvent bloquer sans s'écraser. Une action est bloquée tant qu'au moins un filtre la bloque (isActionBlocked).
-- addAction(filter, name, filtered): `name` peut être un groupe défini par setGroup (alors toutes ses actions sont filtrées) ou un nom d'action seul.
-- Masques joueur : un masque est un entier bit-à-bit (bit n = joueur n autorisé, -1 = tous). Plusieurs propriétaires (`owner`) peuvent définir un masque pour la même ActionMap ; le masque effectif est le ET binaire de tous. Le nom d'ActionMap reçoit le suffixe 'ActionMap' s'il manque.
-- Piège dans createActionTemplate : le paramètre actionWhitelist agit comme une LISTE D'EXCLUSION (les actions du modèle qui sont dans la liste ne sont PAS ajoutées), et actionBlackList est AJOUTÉE telle quelle au résultat. Les noms sont inversés par rapport à leur sens.
-- Piège : actionTemplates.physicsControls reçoit par arrayConcat les actions de nodegrabber à la création du module, donc physicsControls inclut déjà nodegrabber.
-- Modèles prédéfinis (clés de getActionTemplates) : vehicleTeleporting, vehicleMenues, nodegrabber, physicsControls, aiControls, vehicleSwitching, editor, freeCam, gameCam, funStuff, walkingMode, photoMode, trackBuilder, bigMap, couplers, vehicleTriggers, radialMenu, pause, missionPopup, resetPhysics, vehicleRecovery, vehicleTeleportOnly, appedit, miniMap, radialMenuActivate, setShifterMode, uiReloading, competitive (= teleporting + menus véhicule + physique + IA + changement de véhicule + caméra libre + fun + éditeur).
-- Hook émis : `onActionFilterUpdated` après chaque mise à jour d'un filtre.
+- The first argument `filter` is a filter name (string); each filter keeps its own list of blocks, so several mods can block without overwriting each other. An action is blocked as long as at least one filter blocks it (isActionBlocked).
+- addAction(filter, name, filtered): `name` can be a group defined by setGroup (then all its actions are filtered) or a single action name.
+- Player masks: a mask is a bitwise integer (bit n = player n allowed, -1 = all). Several owners (`owner`) can define a mask for the same ActionMap; the effective mask is the bitwise AND of all of them. The ActionMap name gets the suffix 'ActionMap' if it is missing.
+- Trap in createActionTemplate: the actionWhitelist parameter acts as an EXCLUSION LIST (the template's actions that are in the list are NOT added), and actionBlackList is ADDED as is to the result. The names are inverted relative to their meaning.
+- Trap: actionTemplates.physicsControls receives the nodegrabber actions via arrayConcat when the module is created, so physicsControls already includes nodegrabber.
+- Predefined templates (keys of getActionTemplates): vehicleTeleporting, vehicleMenues, nodegrabber, physicsControls, aiControls, vehicleSwitching, editor, freeCam, gameCam, funStuff, walkingMode, photoMode, trackBuilder, bigMap, couplers, vehicleTriggers, radialMenu, pause, missionPopup, resetPhysics, vehicleRecovery, vehicleTeleportOnly, appedit, miniMap, radialMenuActivate, setShifterMode, uiReloading, competitive (= teleporting + vehicle menus + physics + AI + vehicle switching + free camera + fun + editor).
+- Emitted hook: `onActionFilterUpdated` after each filter update.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_input_actionFilter.addAction(filter, actionName, filtered)` | Ajoute (ou retire si filtered = false) une action ou un groupe au filtre, puis reconstruit entièrement ce filtre côté C++ et émet onActionFilterUpdated. | 96 |
-| `core_input_actionFilter.clear(filter)` | Supprime tous les blocages d'un filtre (ActionMap.clearFilters). N'émet pas onActionFilterUpdated. | 102 |
-| `core_input_actionFilter.clearActionMapPlayerMask(owner, mapName)` | Retire le masque d'un propriétaire pour une ActionMap et réapplique. | 146 |
-| `core_input_actionFilter.clearActionMapPlayerMasks(owner)` | Retire tous les masques d'un propriétaire sur toutes les ActionMap. | 155 |
-| `core_input_actionFilter.createActionTemplate(templateNames, actionWhitelist, actionBlackList)` | Fabrique une liste d'actions à partir de modèles existants. Voir notes : les noms des paramètres facultatifs sont inversés par rapport à leur effet. | 13 |
-| `core_input_actionFilter.getActionTemplates()` | Renvoie la table des modèles d'actions (clé = nom du modèle, valeur = liste d'actions). | 212 |
-| `core_input_actionFilter.getBlockedActions()` | Debug : table filtre -> {action = true} des actions réellement bloquées côté C++. | 216 |
-| `core_input_actionFilter.getGroup(name)` | Renvoie la liste d'un groupe. | 111 |
-| `core_input_actionFilter.isActionBlocked(actionName)` | Indique si une action est bloquée par au moins un filtre. | 115 |
-| `core_input_actionFilter.onDeserialized(v)` | Hook de restauration : recharge les données sauvegardées et réapplique les masques de joueurs. *(interne)* *(hook)* | 190 |
-| `core_input_actionFilter.onExtensionUnloaded()` | Hook de déchargement de l'extension : remet playerMask à -1 sur les ActionMap touchées. *(interne)* *(hook)* | 205 |
-| `core_input_actionFilter.onInputBindingsChanged()` | Hook appelé quand les bindings changent : réapplique les masques de joueurs (les ActionMap ont pu être recréées). *(interne)* *(hook)* | 199 |
-| `core_input_actionFilter.onSerialize()` | Hook de sauvegarde avant rechargement : renvoie groupes, blocages et masques. *(interne)* *(hook)* | 182 |
-| `core_input_actionFilter.setActionMapPlayerBlocked(owner, mapName, player, blocked)` | Bloque ou débloque un joueur (un bit) dans le masque d'un propriétaire pour une ActionMap. | 168 |
-| `core_input_actionFilter.setActionMapPlayerMask(owner, mapName, playerMask)` | Définit le masque de joueurs autorisés d'une ActionMap pour un propriétaire et applique le ET de tous les masques à actionMap.playerMask. | 137 |
-| `core_input_actionFilter.setGroup(name, arrayValues)` | Définit un groupe d'actions nommé, utilisable ensuite dans addAction. | 107 |
+| `core_input_actionFilter.addAction(filter, actionName, filtered)` | Adds (or removes if filtered = false) an action or a group to the filter, then fully rebuilds this filter on the C++ side and emits onActionFilterUpdated. | 96 |
+| `core_input_actionFilter.clear(filter)` | Removes all blocks of a filter (ActionMap.clearFilters). Does not emit onActionFilterUpdated. | 102 |
+| `core_input_actionFilter.clearActionMapPlayerMask(owner, mapName)` | Removes an owner's mask for an ActionMap and re-applies. | 146 |
+| `core_input_actionFilter.clearActionMapPlayerMasks(owner)` | Removes all masks of an owner on all ActionMaps. | 155 |
+| `core_input_actionFilter.createActionTemplate(templateNames, actionWhitelist, actionBlackList)` | Builds an action list from existing templates. See notes: the names of the optional parameters are inverted relative to their effect. | 13 |
+| `core_input_actionFilter.getActionTemplates()` | Returns the action templates table (key = template name, value = list of actions). | 212 |
+| `core_input_actionFilter.getBlockedActions()` | Debug: table filter -> {action = true} of the actions actually blocked on the C++ side. | 216 |
+| `core_input_actionFilter.getGroup(name)` | Returns the list of a group. | 111 |
+| `core_input_actionFilter.isActionBlocked(actionName)` | Indicates whether an action is blocked by at least one filter. | 115 |
+| `core_input_actionFilter.onDeserialized(v)` | Restore hook: reloads the saved data and re-applies the player masks. *(internal)* *(hook)* | 190 |
+| `core_input_actionFilter.onExtensionUnloaded()` | Extension unload hook: resets playerMask to -1 on the affected ActionMaps. *(internal)* *(hook)* | 205 |
+| `core_input_actionFilter.onInputBindingsChanged()` | Hook called when the bindings change: re-applies the player masks (the ActionMaps may have been recreated). *(internal)* *(hook)* | 199 |
+| `core_input_actionFilter.onSerialize()` | Save hook before reload: returns groups, blocks and masks. *(internal)* *(hook)* | 182 |
+| `core_input_actionFilter.setActionMapPlayerBlocked(owner, mapName, player, blocked)` | Blocks or unblocks a player (one bit) in an owner's mask for an ActionMap. | 168 |
+| `core_input_actionFilter.setActionMapPlayerMask(owner, mapName, playerMask)` | Sets the allowed player mask of an ActionMap for an owner and applies the AND of all masks to actionMap.playerMask. | 137 |
+| `core_input_actionFilter.setGroup(name, arrayValues)` | Defines a named action group, usable afterwards in addAction. | 107 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_input_actionFilter.addAction(filter, actionName, filtered)`
 
-Ajoute (ou retire si filtered = false) une action ou un groupe au filtre, puis reconstruit entièrement ce filtre côté C++ et émet onActionFilterUpdated.
+Adds (or removes if filtered = false) an action or a group to the filter, then fully rebuilds this filter on the C++ side and emits onActionFilterUpdated.
 
-- `filter` (*string*) : Nom du filtre.
-- `actionName` (*string*) : Nom d'action, ou nom d'un groupe défini par setGroup.
-- `filtered` (*boolean*) : true = bloquer, false/nil = ne plus bloquer.
+- `filter` (*string*) : Filter name.
+- `actionName` (*string*) : Action name, or name of a group defined by setGroup.
+- `filtered` (*boolean*) : true = block, false/nil = no longer block.
 
 #### `core_input_actionFilter.clear(filter)`
 
-Supprime tous les blocages d'un filtre (ActionMap.clearFilters). N'émet pas onActionFilterUpdated.
+Removes all blocks of a filter (ActionMap.clearFilters). Does not emit onActionFilterUpdated.
 
-- `filter` (*string*) : Nom du filtre.
+- `filter` (*string*) : Filter name.
 
 #### `core_input_actionFilter.clearActionMapPlayerMask(owner, mapName)`
 
-Retire le masque d'un propriétaire pour une ActionMap et réapplique.
+Removes an owner's mask for an ActionMap and re-applies.
 
-- `owner` (*string*) : Propriétaire.
-- `mapName` (*string*) : Nom de l'ActionMap.
+- `owner` (*string*) : Owner.
+- `mapName` (*string*) : ActionMap name.
 
 #### `core_input_actionFilter.clearActionMapPlayerMasks(owner)`
 
-Retire tous les masques d'un propriétaire sur toutes les ActionMap.
+Removes all masks of an owner on all ActionMaps.
 
-- `owner` (*string*) : Propriétaire.
+- `owner` (*string*) : Owner.
 
 #### `core_input_actionFilter.createActionTemplate(templateNames, actionWhitelist, actionBlackList)`
 
-Fabrique une liste d'actions à partir de modèles existants. Voir notes : les noms des paramètres facultatifs sont inversés par rapport à leur effet.
+Builds an action list from existing templates. See notes: the names of the optional parameters are inverted relative to their effect.
 
-- `templateNames` (*string[]*) : Noms de modèles à concaténer.
-- `actionWhitelist` (*string[]|nil*) : Si fourni : actions à EXCLURE des modèles (déduit du code).
-- `actionBlackList` (*string[]|nil*) : Actions ajoutées à la fin du résultat.
-- **renvoie** : string[] Liste d'actions.
+- `templateNames` (*string[]*) : Template names to concatenate.
+- `actionWhitelist` (*string[]|nil*) : If provided: actions to EXCLUDE from the templates (inferred from code).
+- `actionBlackList` (*string[]|nil*) : Actions added at the end of the result.
+- **returns**: string[] List of actions.
 
 #### `core_input_actionFilter.getActionTemplates()`
 
-Renvoie la table des modèles d'actions (clé = nom du modèle, valeur = liste d'actions).
+Returns the action templates table (key = template name, value = list of actions).
 
-- **renvoie** : table<string, string[]> Modèles.
+- **returns**: table<string, string[]> Templates.
 
 #### `core_input_actionFilter.getBlockedActions()`
 
-Debug : table filtre -> {action = true} des actions réellement bloquées côté C++.
+Debug: table filter -> {action = true} of the actions actually blocked on the C++ side.
 
-- **renvoie** : table<string, table<string, boolean>> Blocages.
+- **returns**: table<string, table<string, boolean>> Blocks.
 
 #### `core_input_actionFilter.getGroup(name)`
 
-Renvoie la liste d'un groupe.
+Returns the list of a group.
 
-- `name` (*string*) : Nom du groupe.
-- **renvoie** : string[]|nil Actions du groupe.
+- `name` (*string*) : Group name.
+- **returns**: string[]|nil Actions of the group.
 
 #### `core_input_actionFilter.isActionBlocked(actionName)`
 
-Indique si une action est bloquée par au moins un filtre.
+Indicates whether an action is blocked by at least one filter.
 
-- `actionName` (*string*) : Nom d'action (pas un groupe).
-- **renvoie** : boolean|nil true si bloquée, sinon nil.
+- `actionName` (*string*) : Action name (not a group).
+- **returns**: boolean|nil true if blocked, otherwise nil.
 
 #### `core_input_actionFilter.onDeserialized(v)`
 
-Hook de restauration : recharge les données sauvegardées et réapplique les masques de joueurs.
+Restore hook: reloads the saved data and re-applies the player masks.
 
-- `v` (*table*) : Table renvoyée par onSerialize.
+- `v` (*table*) : Table returned by onSerialize.
 
 #### `core_input_actionFilter.onSerialize()`
 
-Hook de sauvegarde avant rechargement : renvoie groupes, blocages et masques.
+Save hook before reload: returns groups, blocks and masks.
 
-- **renvoie** : table {actionGroups, blockedActionGroups, actionMapPlayerMasks}.
+- **returns**: table {actionGroups, blockedActionGroups, actionMapPlayerMasks}.
 
 #### `core_input_actionFilter.setActionMapPlayerBlocked(owner, mapName, player, blocked)`
 
-Bloque ou débloque un joueur (un bit) dans le masque d'un propriétaire pour une ActionMap.
+Blocks or unblocks a player (one bit) in an owner's mask for an ActionMap.
 
-- `owner` (*string*) : Propriétaire.
-- `mapName` (*string*) : Nom de l'ActionMap.
-- `player` (*integer*) : Indice du joueur (0, 1…).
-- `blocked` (*boolean*) : true = retire le bit du joueur, false = le remet.
-- **renvoie** : boolean false si arguments invalides.
+- `owner` (*string*) : Owner.
+- `mapName` (*string*) : ActionMap name.
+- `player` (*integer*) : Player index (0, 1…).
+- `blocked` (*boolean*) : true = removes the player's bit, false = puts it back.
+- **returns**: boolean false if invalid arguments.
 
 #### `core_input_actionFilter.setActionMapPlayerMask(owner, mapName, playerMask)`
 
-Définit le masque de joueurs autorisés d'une ActionMap pour un propriétaire et applique le ET de tous les masques à actionMap.playerMask.
+Sets the allowed player mask of an ActionMap for an owner and applies the AND of all masks to actionMap.playerMask.
 
-- `owner` (*string*) : Nom du propriétaire du masque.
-- `mapName` (*string*) : Nom de l'ActionMap (suffixe 'ActionMap' ajouté si absent).
-- `playerMask` (*integer*) : Masque binaire (bit n = joueur n), -1 = tous.
-- **renvoie** : boolean false si un argument est invalide.
+- `owner` (*string*) : Name of the mask owner.
+- `mapName` (*string*) : ActionMap name ('ActionMap' suffix added if missing).
+- `playerMask` (*integer*) : Bit mask (bit n = player n), -1 = all.
+- **returns**: boolean false if an argument is invalid.
 
 #### `core_input_actionFilter.setGroup(name, arrayValues)`
 
-Définit un groupe d'actions nommé, utilisable ensuite dans addAction.
+Defines a named action group, usable afterwards in addAction.
 
-- `name` (*string*) : Nom du groupe.
-- `arrayValues` (*string[]*) : Noms d'actions du groupe.
+- `name` (*string*) : Group name.
+- `arrayValues` (*string[]*) : Action names of the group.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onActionFilterUpdated` — écouté par 2 module(s)
+- `onActionFilterUpdated` — listened to by 2 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/input/actionFilter.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/input/actionFilter.lua`.*

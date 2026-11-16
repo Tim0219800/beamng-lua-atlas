@@ -1,14 +1,18 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/environment/getFogDensity.lua",
-  "module": "Nœud flowgraph « Get Fog » (catégorie provider, tags environment/tod). Lit les paramètres de brouillard actuels : sorties density (core_environment.getFogDensity) et atmosphereHeight (getFogAtmosphereHeight).",
-  "notes": ["legacyPins déclare un renommage fog -> density dans _in alors que density est une sortie ici (reste du nœud Set Fog) ; sans effet."],
+  "module": "Flowgraph node \"Get Fog\" (category provider, tags environment/tod). Reads the current fog parameters: outputs density (core_environment.getFogDensity) and atmosphereHeight (getFogAtmosphereHeight).",
+  "notes": [
+    "legacyPins declares a rename fog -> density in _in while density is an output here (leftover from the Set Fog node); no effect."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Chaque frame, écrit la densité et la hauteur atmosphérique du brouillard sur les sorties."}
+        "work": {
+          "desc": "Every frame, writes the fog density and atmosphere height to the outputs."
+        }
       }
     }
   }

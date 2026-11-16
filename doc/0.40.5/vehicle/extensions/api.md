@@ -1,33 +1,33 @@
 # `api`
 
-*Fichier : `lua/vehicle/extensions/api.lua` · VM : Véhicule · 140 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/api.lua` · VM: Vehicle · 140 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `api` : `extensions.load (VM véhicule)("api")`, puis la globale `api`
+**Access:** extension `api`: `extensions.load (vehicle VM)("api")`, then the global `api`
 
-Extension véhicule qui démarre un petit serveur HTTP/JSON local (utils/httpJsonServer) sur localhost:23512 au chargement de l'extension. Il répond à deux routes : v1/ping et v1/getData (nœuds, poutres et triangles du véhicule, pour un éditeur externe). L'extension est chargée par véhicule ; le serveur est démarré une seule fois dans ce VM.
+Vehicle extension that starts a small local HTTP/JSON server (utils/httpJsonServer) on localhost:23512 when the extension loads. It answers two routes: v1/ping and v1/getData (nodes, beams and triangles of the vehicle, for an external editor). The extension is loaded per vehicle; the server is started only once in this VM.
 
-## Exemple
+## Example
 
 ```lua
--- requête externe : POST/GET http://localhost:23512/v1/ping  ->  {"ok": true}
+-- external request: POST/GET http://localhost:23512/v1/ping  ->  {"ok": true}
 -- http://localhost:23512/v1/getData -> [nodes, beams, tris]
 ```
 
-## Remarques
+## Notes
 
-- Format de v1/getData : tableau {nodes, beams, tris}. nodes[k] = {cid, {x, y, z}, nodeWeight} (nœuds sans wheelTreadBeamDeform) ; beams[k] = {cid, {id1, id2}, beamSpring, beamDamp} (poutres sans wheelID) ; tris[k] = {{id1, id2, id3}} (triangles ayant un cid).
-- Le port (23512) et l'hôte (localhost) sont codés en dur ; une requête sans uri renvoie nil (erreur HTTP 500).
-- Le serveur est traité dans updateGFX (httpJsonServer.update) : il ne répond qu'une fois par frame, et seulement tant que l'extension est chargée.
-- onExtensionLoaded écrit un log de niveau erreur ('INIT WEBSERVER TO PORT ...') même en fonctionnement normal.
-- jsonRequest (client HTTP POST avec corps data=<json>) est défini mais n'est jamais appelé ni exporté.
+- v1/getData format: array {nodes, beams, tris}. nodes[k] = {cid, {x, y, z}, nodeWeight} (nodes without wheelTreadBeamDeform); beams[k] = {cid, {id1, id2}, beamSpring, beamDamp} (beams without wheelID); tris[k] = {{id1, id2, id3}} (triangles having a cid).
+- The port (23512) and host (localhost) are hardcoded; a request without uri returns nil (HTTP 500 error).
+- The server is processed in updateGFX (httpJsonServer.update): it only answers once per frame, and only as long as the extension is loaded.
+- onExtensionLoaded writes an error-level log ('INIT WEBSERVER TO PORT ...') even in normal operation.
+- jsonRequest (HTTP POST client with body data=<json>) is defined but never called or exported.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `api.onExtensionLoaded()` | Appelé au chargement de l'extension : démarre une fois le serveur HTTP JSON sur localhost:23512 avec le gestionnaire de requêtes interne. *(interne)* *(hook)* | 108 |
-| `api.onVehicleLoaded()` | Hook appelé quand le véhicule est chargé ; corps vide (code de débogage commenté). *(interne)* *(hook)* | 125 |
-| `api.updateGFX()` | Appelé chaque frame : traite les connexions en attente du serveur HTTP. *(interne)* | 129 |
+| `api.onExtensionLoaded()` | Called when the extension loads: starts the JSON HTTP server once on localhost:23512 with the internal request handler. *(internal)* *(hook)* | 108 |
+| `api.onVehicleLoaded()` | Hook called when the vehicle is loaded; empty body (debug code commented out). *(internal)* *(hook)* | 125 |
+| `api.updateGFX()` | Called every frame: processes the HTTP server's pending connections. *(internal)* | 129 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/api.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/api.lua`.*

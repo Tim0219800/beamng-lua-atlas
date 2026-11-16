@@ -1,68 +1,68 @@
 # `controller_pneumatics_lowAirPressureWarning`
 
-*Fichier : `lua/vehicle/controller/pneumatics/lowAirPressureWarning.lua` · VM : Véhicule · 77 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/pneumatics/lowAirPressureWarning.lua` · VM: Vehicle · 77 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `pneumatics/lowAirPressureWarning` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `pneumatics/lowAirPressureWarning` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire d'alerte de basse pression d'air (poids lourds). Surveille la pression d'un réservoir : sous airTooLowPressure et contact mis (ignitionLevel > 0), il met l'electric d'alerte à 1, joue une boucle sonore et affiche un message ; au-dessus de airOkPressure ou contact coupé il remet tout à zéro (hystérésis).
+Auxiliary low air pressure warning controller (heavy trucks). Monitors the pressure of a tank: below airTooLowPressure and with the ignition on (ignitionLevel > 0), it sets the warning electrics value to 1, plays a sound loop and displays a message; above airOkPressure or with the ignition off it resets everything to zero (hysteresis).
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : lowAirWarningElectric ("lowAirPressure"), airTooLowPressure (600000 Pa relatifs) et airOkPressure (650000 Pa), tous deux additionnés à powertrain.currentEnvPressure, relevantPressureTankName ("mainAirTank"), lowAirWarningSoundEvent (nom d'évènement audio, facultatif), lowAirWarningSoundNode (nom de nœud, 0 si absent), lowAirWarningSoundVolume (0.5).
-- Si le réservoir n'existe pas, la pression est considérée à 0 et l'alerte se déclenche dès que le contact est mis.
-- Le son est une source en boucle « AudioDefaultLoop3D » créée dans initSounds.
+- jbeam keys read: lowAirWarningElectric ("lowAirPressure"), airTooLowPressure (600000 Pa relative) and airOkPressure (650000 Pa), both added to powertrain.currentEnvPressure, relevantPressureTankName ("mainAirTank"), lowAirWarningSoundEvent (audio event name, optional), lowAirWarningSoundNode (node name, 0 if absent), lowAirWarningSoundVolume (0.5).
+- If the tank does not exist, the pressure is considered 0 and the warning triggers as soon as the ignition is on.
+- The sound is an "AudioDefaultLoop3D" loop source created in initSounds.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_pneumatics_lowAirPressureWarning.init(jbeamData)` | Lit les seuils de pression et le réservoir surveillé. *(interne)* | 60 |
-| `controller_pneumatics_lowAirPressureWarning.initSounds(jbeamData)` | Crée la source sonore d'alerte (si lowAirWarningSoundEvent est défini) et règle son volume. Appelé par le moteur à l'initialisation des sons. *(interne)* | 47 |
-| `controller_pneumatics_lowAirPressureWarning.reset(jbeamData)` | Remet l'electric d'alerte à 0. *(interne)* | 43 |
-| `controller_pneumatics_lowAirPressureWarning.resetSounds(jbeamData)` | Arrête le son d'alerte et réinitialise l'état de lecture. *(interne)* | 36 |
-| `controller_pneumatics_lowAirPressureWarning.updateGFX(dt)` | Chaque frame : compare la pression du réservoir aux seuils et met à jour l'electric d'alerte, le son et le message. *(interne)* | 18 |
+| `controller_pneumatics_lowAirPressureWarning.init(jbeamData)` | Reads the pressure thresholds and the monitored tank. *(internal)* | 60 |
+| `controller_pneumatics_lowAirPressureWarning.initSounds(jbeamData)` | Creates the warning sound source (if lowAirWarningSoundEvent is defined) and sets its volume. Called by the engine at sound initialization. *(internal)* | 47 |
+| `controller_pneumatics_lowAirPressureWarning.reset(jbeamData)` | Resets the warning electrics value to 0. *(internal)* | 43 |
+| `controller_pneumatics_lowAirPressureWarning.resetSounds(jbeamData)` | Stops the warning sound and resets the playback state. *(internal)* | 36 |
+| `controller_pneumatics_lowAirPressureWarning.updateGFX(dt)` | Every frame: compares the tank pressure to the thresholds and updates the warning electrics value, the sound and the message. *(internal)* | 18 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_pneumatics_lowAirPressureWarning.init(jbeamData)`
 
-Lit les seuils de pression et le réservoir surveillé.
+Reads the pressure thresholds and the monitored tank.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_pneumatics_lowAirPressureWarning.initSounds(jbeamData)`
 
-Crée la source sonore d'alerte (si lowAirWarningSoundEvent est défini) et règle son volume. Appelé par le moteur à l'initialisation des sons.
+Creates the warning sound source (if lowAirWarningSoundEvent is defined) and sets its volume. Called by the engine at sound initialization.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_pneumatics_lowAirPressureWarning.reset(jbeamData)`
 
-Remet l'electric d'alerte à 0.
+Resets the warning electrics value to 0.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_pneumatics_lowAirPressureWarning.resetSounds(jbeamData)`
 
-Arrête le son d'alerte et réinitialise l'état de lecture.
+Stops the warning sound and resets the playback state.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_pneumatics_lowAirPressureWarning.updateGFX(dt)`
 
-Chaque frame : compare la pression du réservoir aux seuils et met à jour l'electric d'alerte, le son et le message.
+Every frame: compares the tank pressure to the thresholds and updates the warning electrics value, the sound and the message.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `createSFXSource2`, `playSFX`, `setVolume`, `stopSFX`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/pneumatics/lowAirPressureWarning.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/pneumatics/lowAirPressureWarning.lua`.*

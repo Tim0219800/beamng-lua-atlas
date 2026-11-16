@@ -1,0 +1,85 @@
+{
+  "path": "lua/ge/extensions/gameplay/markers/missionMarker.lua",
+  "module": "Marqueur de mission en mode jeu : une icône (exclamation par défaut) flottant au-dessus d'un point, reliée au sol par un trait, plus deux décalques au sol (un point et un anneau). Quand le joueur s'approche, l'icône apparaît en fondu ; quand son véhicule touche la sphère du marqueur (rayon fixe 1.2 m), l'anneau s'allume et le marqueur devient interactif (liste des missions du cluster). Plusieurs missions proches (moins de 3 m) sont fusionnées en un cluster avec une icône numérotée. Le module renvoie {create, cluster}.",
+  "notes": [
+    "Deux rendus d'icône : l'icon renderer C++ (par défaut) ou render_skiaIcons si la variable locale useSkiaIcons est true ; elle vaut false dans ce fichier, donc le chemin Skia est inactif ; son changement n'agit qu'à la création des marqueurs.",
+    "Rayon fixe hardcodedRadius = 1.2 m pour la zone et le test de présence ; la fusion de clusters utilise un rayon de 1.5 m (deux POI fusionnent si distance au carré < (1.5 + 1.5)^2).",
+    "merge : trie les POI par date décroissante (data.date), icône = mission_no-NN_triangle (NN = min(count, 9)) si plusieurs ; si les iconFontIcon diffèrent, markerText = nombre de missions (\"9+\" au-delà de 9). visibleBySetting = \"showMissionMarkers\" ; visibilityRadius = rayon + 5.",
+    "Les POI doivent fournir markerInfo.missionMarker.{pos, rot, icon, iconFontIcon} et data.",
+    "Distances d'affichage : icône jusqu'à 50 m (100 m si le cluster est en focus), décalques jusqu'à 40 m ; tout s'efface en fondu quand la grande carte est active ou quand une mission est au premier plan (globalAlpha).",
+    "isInAreaChanged (\"in\"/\"out\") n'est mis à jour que lorsque le joueur marche (data.isWalking) ; le véhicule déclenche l'interaction via interactInPlayMode.",
+    "Le maillage d'icône (iconMesh / createObject) est présent mais son appel dans createObjects est commenté : iconMeshId reste nil.",
+    "setVisibilityInBigmap et instantFade sont des méthodes vides."
+  ],
+  "functions": {
+    "create": {
+      "desc": "Fabrique un marqueur de mission (instance de C).",
+      "params": {"...": {"type": "any", "desc": "Arguments transmis à C:init (non utilisés)."}},
+      "returns": [{"type": "table", "desc": "Instance de marqueur."}],
+      "internal": false
+    },
+    "cluster": {
+      "desc": "Regroupe les POI missionMarker qui se chevauchent (quadtree, rayon 1.5 m) et ajoute un cluster fusionné par groupe à allClusters.",
+      "params": {
+        "pois": {"type": "table[]", "desc": "POI avec markerInfo.missionMarker."},
+        "allClusters": {"type": "table[]", "desc": "Liste de clusters complétée en place."}
+      },
+      "internal": true
+    }
+  },
+  "classes": {
+    "C": {
+      "desc": "Marqueur de mission avec icône, trait et décalques.",
+      "functions": {
+        "init": {"desc": "Attribue un id, rayon par défaut 1.2 m et crée les lisseurs ; visible = true.", "internal": true},
+        "playerIsInArea": {
+          "desc": "Teste si la boîte englobante orientée du véhicule du joueur recouvre la sphère du marqueur (overlapsOBB_Sphere).",
+          "params": {"data": {"type": "table", "desc": "Données de frame : veh, bbCenter, bbHalfAxis0..2."}},
+          "returns": [{"type": "boolean", "desc": "true si recouvrement ; false si pas de véhicule."}],
+          "internal": false
+        },
+        "update": {
+          "desc": "Chaque frame : calcule les distances, masque l'icône derrière la géométrie (rayon), anime l'opacité et la hauteur de l'icône, dessine le trait vers le sol, pilote l'opacité du point et de l'anneau au sol et met à jour isInAreaChanged.",
+          "params": {"data": {"type": "table", "desc": "Données de frame : camPos, playerPosition, bigMapActive, globalAlpha, cruisingSpeedFactor, highestBBPointZ, isWalking, dt..."}},
+          "internal": true
+        },
+        "setup": {
+          "desc": "Mémorise pos et cluster, crée l'icône (cluster.icon ou poi_exclamationmark ; ou icône Skia), initialise les lisseurs et crée groundDecalData (point dot_128 et anneau outline_512).",
+          "params": {"cluster": {"type": "table", "desc": "Cluster issu de merge."}},
+          "internal": true
+        },
+        "createObject": {
+          "desc": "Crée et enregistre un objet TSStatic avec couleur d'instance ; utilitaire non utilisé par défaut.",
+          "params": {
+            "shapeName": {"type": "string", "desc": "Chemin du maillage."},
+            "objectName": {"type": "string", "desc": "Nom d'enregistrement de l'objet."}
+          },
+          "returns": [{"type": "userdata", "desc": "Objet TSStatic créé."}],
+          "internal": false
+        },
+        "createObjects": {"desc": "Nettoie les objets existants (la création du maillage est commentée).", "internal": true},
+        "hide": {"desc": "Passe invisible, réinitialise les lisseurs et rend l'icône transparente immédiatement.", "internal": false},
+        "show": {"desc": "Repasse visible.", "internal": false},
+        "instantFade": {"desc": "Ne fait rien.", "params": {"visible": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
+        "setVisibilityInBigmap": {"desc": "Ne fait rien.", "params": {"vis": {"type": "boolean", "desc": "Ignoré."}, "instant": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
+        "clearObjects": {"desc": "Libère l'icône (Skia ou icon renderer), supprime le maillage éventuel et vide les références.", "internal": false},
+        "interactInPlayMode": {
+          "desc": "Si canInteract et que le véhicule touche la sphère, ajoute les données (elemData) des missions du cluster aux éléments interactifs.",
+          "params": {
+            "interactData": {"type": "table", "desc": "Données de frame avec canInteract."},
+            "interactableElements": {"type": "table[]", "desc": "Liste complétée en place."}
+          },
+          "internal": false
+        },
+        "drawOnMinimap": {
+          "desc": "Dessine un marqueur triangle bleu sur la minimap (couche GAMEPLAY_MARKERS).",
+          "params": {
+            "td": {"type": "table", "desc": "Objet de dessin de la minimap (triangleMarker)."},
+            "dpi": {"type": "number", "desc": "Facteur DPI."}
+          },
+          "internal": false
+        }
+      }
+    }
+  }
+}

@@ -1,28 +1,28 @@
 # `flowgraph_nodes_logic_and`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/logic/and.lua` · VM : Game Engine (GE) · 90 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/logic/and.lua` · VM: Game Engine (GE) · 90 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/logic/and")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/logic/and")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'And' (categorie logic). Ne laisse passer le flux que si toutes les entrees flow_1..flow_N ont du flux. Par defaut 2 entrees, le nombre est reglable dans les proprietes du noeud (pins flow_i crees/supprimes dynamiquement). Sortie : pin flow. S'execute a chaque frame ou le graphe est actif.
+Flowgraph node 'And' (logic category). Only lets the flow through if all flow_1..flow_N inputs have flow. 2 inputs by default, the number is adjustable in the node properties (flow_i pins created/deleted dynamically). Output: flow pin. Runs every frame the graph is active.
 
-## Remarques
+## Notes
 
-- legacyPins : anciennes entrees a et b renommees flow_1 et flow_2.
-- Le champ C.todo du code prevoit un nombre d'entrees arbitraire, deja fait via la propriete Count.
+- legacyPins: former inputs a and b renamed flow_1 and flow_2.
+- The C.todo field in the code plans an arbitrary number of inputs, already done via the Count property.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(res)` | Relit count (2 par defaut) et recree les pins correspondants. | 84 |
-| `C:_onSerialize(res)` | Sauvegarde count dans les donnees serialisees. | 80 |
-| `C:drawCustomProperties()` | Panneau de proprietes de l'editeur : champ entier 'Count' qui change le nombre de pins d'entree (minimum 1). Renvoie la raison du changement. | 33 |
-| `C:init()` | Initialise le compteur d'entrees a 2. | 30 |
-| `C:updatePins(old, new)` | Ajoute ou supprime les pins d'entree flow_i pour passer de old a new ; supprime aussi les liens qui pointaient vers les pins retirees. | 50 |
-| `C:work()` | Met la sortie flow a true seulement si toutes les entrees flow_1..flow_count sont vraies, sinon false. | 71 |
+| `C:_onDeserialized(res)` | Reads count back (2 by default) and recreates the corresponding pins. | 84 |
+| `C:_onSerialize(res)` | Saves count in the serialized data. | 80 |
+| `C:drawCustomProperties()` | Editor properties panel: integer field 'Count' that changes the number of input pins (minimum 1). Returns the reason for the change. | 33 |
+| `C:init()` | Initializes the input counter to 2. | 30 |
+| `C:updatePins(old, new)` | Adds or deletes the flow_i input pins to go from old to new; also deletes the links that pointed to the removed pins. | 50 |
+| `C:work()` | Sets the flow output to true only if all flow_1..flow_count inputs are true, otherwise false. | 71 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/logic/and.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/logic/and.lua`.*

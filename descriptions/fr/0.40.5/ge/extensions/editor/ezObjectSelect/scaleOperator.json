@@ -1,0 +1,49 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/scaleOperator.lua",
+  "module": "Opérateur modal « Scale » (touche S) de l'outil Easy Select. Au démarrage il ouvre une session de transformation (modalOperatorCommon.begin, historique « EasySelectScale ») ; le facteur d'échelle est la distance souris-pivot à l'écran divisée par la distance initiale (ou une valeur saisie au clavier), bornée à [0.0001, 100000]. Contraintes d'axe X/Y/Z, Shift+axe pour exclure un axe, double appui pour l'espace local. Clic gauche/Entrée valide, clic droit/Échap annule.",
+  "notes": [
+    "Le suivi radial n'est actif qu'après que la souris s'est éloignée d'au moins 10 px (x uiscale) du pivot ; avant cela le facteur vaut 1.",
+    "Refuse de démarrer si un opérateur ou une transformSession est déjà actif."
+  ],
+  "functions": {
+    "wantsBegin": {
+      "desc": "Renvoie true si la touche S vient d'être pressée.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "touche S pressée cette frame"}]
+    },
+    "begin": {
+      "desc": "Démarre l'opérateur sur la sélection. Renvoie false si déjà actif, si la session n'a pas pu démarrer ou si le pivot n'est pas projetable à l'écran (la session est alors annulée).",
+      "params": {"options": {"type": "table|nil", "desc": "{defaultLocal = boolean} : espace local par défaut"}},
+      "returns": [{"type": "boolean", "desc": "true si démarré"}]
+    },
+    "update": {
+      "desc": "À appeler chaque frame : gère fin demandée, contraintes, saisie numérique, calcule le facteur, l'applique via transformSession.updateScale et dessine le gizmo.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "\"active\" tant que l'opérateur tourne ; sinon résultat de finish (valeur résolue et complétion) ; nil si inactif"}]
+    },
+    "cancel": {
+      "desc": "Annule l'opérateur en cours (restaure les objets).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si un opérateur était actif"}]
+    },
+    "setLocalSpace": {
+      "desc": "Bascule espace local/monde pour la contrainte courante.",
+      "params": {"localSpace": {"type": "boolean", "desc": "true pour l'espace local"}},
+      "returns": [{"type": "boolean", "desc": "résultat de modalOperatorCommon.setLocalSpace"}]
+    },
+    "isActive": {
+      "desc": "Indique si l'opérateur est en cours.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": ""}]
+    },
+    "getObjectIds": {
+      "desc": "Ids des objets manipulés par la session ({} si inactif).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "liste d'ids"}]
+    },
+    "drawScreen": {
+      "desc": "Dessine l'indicateur près du pivot et le HUD (contrainte UNIFORM/axe, WORLD/LOCAL, facteur « 1.000x », aide des touches).",
+      "params": {}
+    }
+  }
+}

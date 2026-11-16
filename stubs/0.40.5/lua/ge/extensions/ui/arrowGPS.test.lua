@@ -2,56 +2,56 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/arrowGPS.test.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Tests unitaires de l'extension ui_arrowGPS (flèche GPS flottante à l'écran). Le fichier charge arrowGPS.lua dans un environnement simulé (faux createObject TSStatic, faux core_camera, GFXDevice, scenetree) via loadfile + setfenv, puis vérifie la création paresseuse de la flèche, sa réutilisation, sa couleur, sa rotation vers la cible de plus haute priorité et sa recréation après suppression de l'objet. Utile à un moddeur pour comprendre le contrat de ui_arrowGPS (setTarget, removeTarget, setScale, setDepth, setAppScreenPos, onPreRender).
---- Accès : extension `ui_arrowGPS.test` : `extensions.load("ui_arrowGPS.test")`, puis la globale `ui_arrowGPS.test`
+--- Unit tests of the ui_arrowGPS extension (floating on-screen GPS arrow). The file loads arrowGPS.lua in a simulated environment (fake TSStatic createObject, fake core_camera, GFXDevice, scenetree) via loadfile + setfenv, then checks the lazy creation of the arrow, its reuse, its color, its rotation toward the highest-priority target and its recreation after the object is deleted. Useful to a modder to understand the ui_arrowGPS contract (setTarget, removeTarget, setScale, setDepth, setAppScreenPos, onPreRender).
+--- Access: extension `ui_arrowGPS.test`: `extensions.load("ui_arrowGPS.test")`, then the global `ui_arrowGPS.test`
 ---@class ui_arrowGPS.test
 ui_arrowGPS.test = {}
 
---- Vérifie qu'aucun objet n'est créé tant qu'aucune cible valide (avec pos) n'est posée : onPreRender, setTarget sans pos, removeTarget et onExtensionUnloaded ne créent rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/arrowGPS.test.lua:54
----@param ctx table Contexte de test du TestManager.
+--- Checks that no object is created as long as no valid target (with pos) is set: onPreRender, setTarget without pos, removeTarget and onExtensionUnloaded create nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/arrowGPS.test.lua:54
+---@param ctx table TestManager test context.
 function ui_arrowGPS.test.testIdleExtensionDoesNotCreateArrow(ctx) end
 
---- Vérifie que la cible de priorité la plus basse (1) dicte la couleur et la direction de la flèche, que removeTarget bascule sur la cible suivante, et que la flèche est masquée quand il n'y a plus de cible.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/arrowGPS.test.lua:97
----@param ctx table Contexte de test du TestManager.
+--- Checks that the lowest-priority target (1) dictates the arrow's color and direction, that removeTarget switches to the next target, and that the arrow is hidden when there is no target left.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/arrowGPS.test.lua:97
+---@param ctx table TestManager test context.
 function ui_arrowGPS.test.testPriorityColorAndTargetRemoval(ctx) end
 
---- Vérifie la couleur et le shape par défaut, que la flèche est masquée quand le joueur disparaît puis réaffichée, sans recréation (un seul objet créé).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/arrowGPS.test.lua:81
----@param ctx table Contexte de test du TestManager.
+--- Checks the default color and shape, that the arrow is hidden when the player disappears then shown again, without recreation (a single object created).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/arrowGPS.test.lua:81
+---@param ctx table TestManager test context.
 function ui_arrowGPS.test.testRenderedArrowIsReusedAndHidesWithoutPlayer(ctx) end
 
---- Vérifie que si l'objet de scène est supprimé, onPreRender recrée la flèche en conservant couleur et échelle (setScale), sans nouvel appel à setTarget.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/arrowGPS.test.lua:115
----@param ctx table Contexte de test du TestManager.
+--- Checks that if the scene object is deleted, onPreRender recreates the arrow keeping color and scale (setScale), without a new call to setTarget.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/arrowGPS.test.lua:115
+---@param ctx table TestManager test context.
 function ui_arrowGPS.test.testSceneDeletionRecreatesArrowWithoutTargetUpdate(ctx) end
 
---- Vérifie que setScale, setDepth et setAppScreenPos appelés avant la création de la flèche sont pris en compte dès le premier rendu (échelle 0.08, profondeur 0.3, position écran 0.75/0.25).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/arrowGPS.test.lua:145
----@param ctx table Contexte de test du TestManager.
+--- Checks that setScale, setDepth and setAppScreenPos called before the arrow is created are taken into account from the first render (scale 0.08, depth 0.3, screen position 0.75/0.25).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/arrowGPS.test.lua:145
+---@param ctx table TestManager test context.
 function ui_arrowGPS.test.testSettingsBeforeCreationAffectFirstRender(ctx) end
 
---- Vérifie qu'un setTarget/setScale après suppression de l'objet n'accède pas à l'ancien objet (le faux objet lève une erreur sinon) et que la recréation a lieu au onPreRender suivant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/arrowGPS.test.lua:131
----@param ctx table Contexte de test du TestManager.
+--- Checks that a setTarget/setScale after the object's deletion does not access the old object (the fake object raises an error otherwise) and that the recreation happens at the next onPreRender.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/arrowGPS.test.lua:131
+---@param ctx table TestManager test context.
 function ui_arrowGPS.test.testTargetUpdateAfterSceneDeletionDoesNotUseOldObject(ctx) end
 
---- Vérifie que la flèche attend un véhicule joueur et un onPreRender : sans joueur rien n'est créé, dès que le joueur existe la flèche est créée et visible.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/arrowGPS.test.lua:68
----@param ctx table Contexte de test du TestManager.
+--- Checks that the arrow waits for a player vehicle and an onPreRender: without a player nothing is created, as soon as the player exists the arrow is created and visible.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/arrowGPS.test.lua:68
+---@param ctx table TestManager test context.
 function ui_arrowGPS.test.testTargetWaitsForPlayerAndRender(ctx) end
 
---- Vérifie que onExtensionUnloaded supprime l'objet et vide l'état des cibles, et que l'extension reste utilisable ensuite avec de nouvelles cibles.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/arrowGPS.test.lua:162
----@param ctx table Contexte de test du TestManager.
+--- Checks that onExtensionUnloaded deletes the object and empties the targets state, and that the extension remains usable afterwards with new targets.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/arrowGPS.test.lua:162
+---@param ctx table TestManager test context.
 function ui_arrowGPS.test.testUnloadClearsObjectAndTargetState(ctx) end
 

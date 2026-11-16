@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceByName.lua",
+  "module": "Nœud flowgraph « Signal by Name » (once_instant). Cherche une instance de feu par nom dans signalsData.instances. Sorties : exists (caché), instanceData.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Appelle onNodeReset().",
+          "internal": true
+        },
+        "init": {
+          "desc": "Appelle onNodeReset().",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Vide la sortie instanceData.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Parcourt signalsData.instances et publie l'instance de même nom.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

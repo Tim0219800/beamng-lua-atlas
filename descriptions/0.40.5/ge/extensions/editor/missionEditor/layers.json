@@ -1,30 +1,40 @@
 {
   "path": "lua/ge/extensions/editor/missionEditor/layers.lua",
-  "module": "Panneau « Layers » de l'éditeur de missions. Une mission cherche ses fichiers dans une liste ordonnée de dossiers (mission.layers, chacun avec un champ dir) jusqu'à trouver un fichier correspondant. Ce panneau permet de réordonner les dossiers, de les éditer (texte ou sélecteur de fichier), d'ouvrir le dossier dans l'explorateur, d'en ajouter après une ligne ou d'en supprimer. Le module renvoie un constructeur : require(...)(missionEditor).",
+  "module": "\"Layers\" panel of the mission editor. A mission looks for its files in an ordered list of folders (mission.layers, each with a dir field) until it finds a matching file. This panel lets you reorder the folders, edit them (text or file picker), open the folder in the explorer, add some after a row or delete them. The module returns a constructor: require(...)(missionEditor).",
   "notes": [
-    "Un layer avec fixed = true est désactivé à l'édition (champ, sélecteur et suppression).",
-    "Le premier layer est étiqueté « Checked First », le dernier « Checked Last ».",
-    "L'ajout d'un dossier appelle dump(add) (reste de débogage dans le log)."
+    "A layer with fixed = true is disabled for editing (field, picker and deletion).",
+    "The first layer is labeled \"Checked First\", the last \"Checked Last\".",
+    "Adding a folder calls dump(add) (debugging leftover in the log)."
   ],
   "classes": {
     "C": {
-      "desc": "Instance du panneau Layers. Champs : missionEditor, mission, inputs (tampons de texte imgui par layer).",
+      "desc": "Instance of the Layers panel. Fields: missionEditor, mission, inputs (imgui text buffers per layer).",
       "functions": {
         "init": {
-          "desc": "Constructeur : mémorise missionEditor.",
-          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "desc": "Constructor: remembers missionEditor.",
+          "params": {
+            "missionEditor": {
+              "type": "table",
+              "desc": "Main editor_missionEditor module."
+            }
+          },
           "internal": true
         },
         "setMission": {
-          "desc": "Définit la mission courante et recrée les champs de saisie.",
-          "params": {"mission": {"type": "table", "desc": "Mission dont mission.layers est édité."}},
+          "desc": "Sets the current mission and recreates the input fields.",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Mission whose mission.layers is edited."
+            }
+          },
           "internal": true
         },
         "createInputFields": {
-          "desc": "Recrée les tampons de texte imgui (im.ArrayChar de 1024) à partir de layer.dir pour chaque layer."
+          "desc": "Recreates the imgui text buffers (im.ArrayChar of 1024) from layer.dir for each layer."
         },
         "draw": {
-          "desc": "Dessine la liste des layers avec boutons haut/bas, champ de chemin, dossier, sélecteur, suppression et ajout. Applique les déplacements à la fin de la frame et met mission._dirty à true.",
+          "desc": "Draws the list of layers with up/down buttons, path field, folder, picker, deletion and addition. Applies the moves at the end of the frame and sets mission._dirty to true.",
           "internal": true
         }
       }

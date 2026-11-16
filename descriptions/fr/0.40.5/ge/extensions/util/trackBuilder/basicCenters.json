@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/util/trackBuilder/basicCenters.lua",
+  "module": "Générateur de la surface centrale (la chaussée) d'un segment de piste du Track Builder. Trois profils de section sont définis : regular (surface et dessous bombés), halfRegular et low (version simplifiée utilisée en basse qualité). getMeshes calcule les normales et renvoie le mesh extrudé le long des points du segment.",
+  "notes": [
+    "Le profil est choisi par segment.centerMesh ; si ce nom n'existe pas, getMeshes renvoie une liste vide. Si segment.quality == 4, le profil 'low' est forcé.",
+    "Matériau : segment.materialInfo.centerMesh, sinon 'track_editor_A_center'. Tag du mesh : 'center'.",
+    "Effet de bord : incrémente segment.submeshCount et remplit segment.submeshIndexes.",
+    "Bug : clearShapes utilise ipairs sur la table shapes, qui est indexée par nom (regular, halfRegular, low) ; la boucle ne s'exécute donc jamais et la fonction ne vide rien."
+  ],
+  "functions": {
+    "getMeshes": {
+      "desc": "Renvoie {mesh} pour la surface centrale du segment, ou {} si le profil demandé n'existe pas.",
+      "params": {"segment": {"type": "table", "desc": "Segment du Track Builder (points, centerMesh, quality, materialInfo, meshInfo, submeshCount, submeshIndexes)."}},
+      "returns": [{"type": "table[]", "desc": "Liste d'au plus une table de mesh {verts, uvs, normals, faces, material, tag}."}],
+      "internal": false
+    },
+    "clearShapes": {
+      "desc": "Prévu pour vider le cache de sommets (vertexLUT) de chaque profil et réinitialiser LUTMax/LUTMin. Ne fait rien en pratique (voir notes).",
+      "params": {},
+      "internal": false
+    }
+  }
+}

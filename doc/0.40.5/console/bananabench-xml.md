@@ -1,33 +1,33 @@
 # `bananabench_xml`
 
-*Fichier : `lua/console/bananabench-xml.lua` · VM : Console · 197 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/console/bananabench-xml.lua` · VM: Console · 197 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("bananabench-xml")`
+**Access:** `require("bananabench-xml")`
 
-Script de la VM console : lance bananabench sur une liste fixe de 9 véhicules (barstow, burnside, etki, fullsize, moonhawk, pessima, pickup, pigeon, pressure_ball) et écrit un rapport XML « performance » (report > test > result avec success, performance, executiontime, compiletime et métriques realtime/maxmbeams) dans bananabench.xml. Il définit aussi une petite classe globale `XML` (create, addChild, encode, toString) pour générer du XML.
+Console VM script: runs bananabench on a fixed list of 9 vehicles (barstow, burnside, etki, fullsize, moonhawk, pessima, pickup, pigeon, pressure_ball) and writes an XML "performance" report (report > test > result with success, performance, executiontime, compiletime and realtime/maxmbeams metrics) to bananabench.xml. It also defines a small global `XML` class (create, addChild, encode, toString) to generate XML.
 
-## Remarques
+## Notes
 
-- Probablement cassé avec la version actuelle de bananabench : `writeXML` lit `v.tests[1].res[dynamicCol]` et les champs `beamspersec`, alors que bananabench.lua renvoie des `res` plats {Mbeamspersec, percentRealtime, time, spawntime} (sans indice 1/2 ni champ beamspersec) ; l'accès à res[dynamicCol] vaut nil et provoque une erreur.
-- Le script s'exécute au chargement ; la classe `XML` est une globale. Les variables `str` de XML:encode et XML:toString sont aussi globales (pas de `local`).
-- Les attributs `mesure` et `unit` du rapport reprennent le format d'un outil de reporting de performance externe ; le champ executed vaut toujours 'yes' et passed 'yes' (l'analyse des logs est commentée).
+- Probably broken with the current version of bananabench: `writeXML` reads `v.tests[1].res[dynamicCol]` and the `beamspersec` fields, whereas bananabench.lua returns flat `res` {Mbeamspersec, percentRealtime, time, spawntime} (without index 1/2 or a beamspersec field); accessing res[dynamicCol] gives nil and causes an error.
+- The script runs on load; the `XML` class is a global. The `str` variables of XML:encode and XML:toString are also global (no `local`).
+- The report's `measure` and `unit` attributes follow the format of an external performance reporting tool; the executed field is always 'yes' and passed 'yes' (log analysis is commented out).
 
-## Classe `XML`
+## Class `XML`
 
-Petit constructeur de document XML (classe globale).
+Small XML document builder (global class).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `XML:addChild(xml)` | Ajoute un nœud enfant. | dyn |
-| `XML:create()` | Crée un nœud XML vide (name, attribs, children). | dyn |
-| `XML:encode()` | Renvoie le document complet avec l'en-tête `<?xml version="1.0" encoding="UTF-8"?>`. | dyn |
-| `XML:toString(indent)` | Sérialise le nœud et ses enfants avec indentation de 2 espaces. | dyn |
+| `XML:addChild(xml)` | Adds a child node. | dyn |
+| `XML:create()` | Creates an empty XML node (name, attribs, children). | dyn |
+| `XML:encode()` | Returns the complete document with the header `<?xml version="1.0" encoding="UTF-8"?>`. | dyn |
+| `XML:toString(indent)` | Serializes the node and its children with 2-space indentation. | dyn |
 
-**Globales affectées :** `XML`
+**Globals assigned:** `XML`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `encode`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/console/bananabench-xml.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/console/bananabench-xml.lua`.*

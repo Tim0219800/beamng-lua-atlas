@@ -1,52 +1,52 @@
 # `ui_gameplaySelector_tiles`
 
-*Fichier : `lua/ge/extensions/ui/gameplaySelector/tiles.lua` · VM : Game Engine (GE) · 606 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/gameplaySelector/tiles.lua` · VM: Game Engine (GE) · 606 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_gameplaySelector_tiles` : `extensions.load("ui_gameplaySelector_tiles")`, puis la globale `ui_gameplaySelector_tiles`
+**Access:** extension `ui_gameplaySelector_tiles`: `extensions.load("ui_gameplaySelector_tiles")`, then the global `ui_gameplaySelector_tiles`
 
-Cœur du backend « gameplaySelector » : il choisit les tuiles à afficher selon le chemin de navigation (toutes les activités, détail d'un système ou d'un niveau, points d'apparition d'un niveau, page « découverte »). Au chargement il scanne le dossier tileGenerators/ et déclare chaque générateur (ui_gameplaySelector_tileGenerators_<nom>) comme dépendance. Il s'appuie sur les modules tileClustering et tileSorting et fournit les fonctions de regroupement et de tri du sélecteur.
+Core of the "gameplaySelector" backend: it chooses which tiles to display according to the navigation path (all activities, detail of a system or a level, level spawn points, "discover" page). At load time it scans the tileGenerators/ folder and declares each generator (ui_gameplaySelector_tileGenerators_<name>) as a dependency. It relies on the tileClustering and tileSorting modules and provides the selector's grouping and sorting functions.
 
-## Remarques
+## Notes
 
-- Les tuiles viennent de backend.getUiData(routeName).items, remplies par les hooks onGameplaySelectorGetTiles des générateurs ; getTiles ne les recalcule pas.
-- Pour le backend freeroamSelector, la liste validItems est construite en filtrant sur validBackends mais n'est jamais utilisée ensuite : les handlers reçoivent la liste complète items (incohérence probable).
-- Types de chemin reconnus (path.keys[1]) : allGameplay (défaut et chemin inconnu), detailGameplay, spawnPointsForLevel, discoverPage.
+- Tiles come from backend.getUiData(routeName).items, filled by the generators' onGameplaySelectorGetTiles hooks; getTiles does not recompute them.
+- For the freeroamSelector backend, the validItems list is built by filtering on validBackends but is never used afterwards: the handlers receive the full items list (probable inconsistency).
+- Recognized path types (path.keys[1]): allGameplay (default and unknown path), detailGameplay, spawnPointsForLevel, discoverPage.
 
-**Dépendances (chargées avant) :** `core_locales`
+**Dependencies (loaded first):** `core_locales`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_gameplaySelector_tiles.getTiles(path, _backend, routeName)` | Renvoie les tuiles ou groupes à afficher pour un chemin. Mémorise le backend, met à jour showFavouriteIconPercent de chaque tuile (1 si favori) et le cornerIcon « road » des points d'apparition freeroam sélectionnés, puis route vers le gestionnaire correspondant à path.keys[1]. | 548 |
-| `ui_gameplaySelector_tiles.getUiData()` | Renvoie les données d'interface du backend : backendName (« gameplaySelector »), les fonctions de regroupement (Type, Category, Difficulty, Source, System), les fonctions de tri (Name, Difficulty, Duration, Popularity) et le module tileSorting. | 594 |
+| `ui_gameplaySelector_tiles.getTiles(path, _backend, routeName)` | Returns the tiles or groups to display for a path. Stores the backend, updates showFavouriteIconPercent of each tile (1 if favorite) and the "road" cornerIcon of the selected freeroam spawn points, then routes to the handler matching path.keys[1]. | 548 |
+| `ui_gameplaySelector_tiles.getUiData()` | Returns the backend's UI data: backendName ("gameplaySelector"), the grouping functions (Type, Category, Difficulty, Source, System), the sorting functions (Name, Difficulty, Duration, Popularity) and the tileSorting module. | 594 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_gameplaySelector_tiles.getTiles(path, _backend, routeName)`
 
-Renvoie les tuiles ou groupes à afficher pour un chemin. Mémorise le backend, met à jour showFavouriteIconPercent de chaque tuile (1 si favori) et le cornerIcon « road » des points d'apparition freeroam sélectionnés, puis route vers le gestionnaire correspondant à path.keys[1].
+Returns the tiles or groups to display for a path. Stores the backend, updates showFavouriteIconPercent of each tile (1 if favorite) and the "road" cornerIcon of the selected freeroam spawn points, then routes to the handler matching path.keys[1].
 
-- `path` (*table*) : Chemin de navigation : table avec keys (liste de chaînes).
-- `_backend` (*table*) : Backend appelant (gameplaySelector ou freeroamSelector), avec getUiData, isFavourite, backendName.
-- `routeName` (*string|nil*) : Nom de la route passé à backend.getUiData.
-- **renvoie** : table Tuiles ou groupes selon le gestionnaire de chemin.
+- `path` (*table*) : Navigation path: table with keys (list of strings).
+- `_backend` (*table*) : Calling backend (gameplaySelector or freeroamSelector), with getUiData, isFavourite, backendName.
+- `routeName` (*string|nil*) : Route name passed to backend.getUiData.
+- **returns**: table Tiles or groups depending on the path handler.
 
 #### `ui_gameplaySelector_tiles.getUiData()`
 
-Renvoie les données d'interface du backend : backendName (« gameplaySelector »), les fonctions de regroupement (Type, Category, Difficulty, Source, System), les fonctions de tri (Name, Difficulty, Duration, Popularity) et le module tileSorting.
+Returns the backend's UI data: backendName ("gameplaySelector"), the grouping functions (Type, Category, Difficulty, Source, System), the sorting functions (Name, Difficulty, Duration, Popularity) and the tileSorting module.
 
-- **renvoie** : table Table backendName, groupModeFunctions, sortModeFunctions, tileSorting.
+- **returns**: table Table backendName, groupModeFunctions, sortModeFunctions, tileSorting.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | core_locales plus une extension par fichier trouvé dans lua/ge/extensions/ui/gameplaySelector/tileGenerators/ (liste construite au chargement du fichier). |
+| `dependencies` | string[] | core_locales plus one extension per file found in lua/ge/extensions/ui/gameplaySelector/tileGenerators/ (list built when the file loads). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/gameplaySelector/tiles.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/gameplaySelector/tiles.lua`.*

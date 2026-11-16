@@ -2,60 +2,60 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/lawnMower.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Tondeuse à gazon pilotée par les props JBeam (côté GE uniquement). Il cherche dans le JBeam analysé de chaque véhicule les props portant l'option mowerRadius et, tant que le plateau de coupe est bas et à plat au-dessus d'un terrain, coupe l'herbe dans le masque de surface partagé (util_surfaceMaskWheels) en traçant un disque puis des segments, et lance des particules de brins d'herbe sur les matériaux de terrain dont le nom contient « grass ». Aucun Lua côté véhicule n'est nécessaire. La partie JBeam déclare "gameEngineExtensions": {"util_lawnMower": true} pour charger l'extension automatiquement.
---- Accès : extension `util_lawnMower` : `extensions.load("util_lawnMower")`, puis la globale `util_lawnMower`
+--- Lawn mower driven by JBeam props (GE side only). It searches each vehicle's parsed JBeam for props with the mowerRadius option and, while the cutting deck is low and flat above terrain, cuts the grass in the shared surface mask (util_surfaceMaskWheels) by drawing a disc then segments, and spawns grass blade particles on terrain materials whose name contains "grass". No vehicle-side Lua is needed. The JBeam part declares "gameEngineExtensions": {"util_lawnMower": true} to load the extension automatically.
+--- Access: extension `util_lawnMower`: `extensions.load("util_lawnMower")`, then the global `util_lawnMower`
 ---@class util_lawnMower
----@field dependencies string[] Extensions requises : util_surfaceMaskWheels (service de masque) et core_vehicle_manager (données JBeam analysées)
----@field enabled boolean Active ou non la coupe ; true après onExtensionLoaded
+---@field dependencies string[] Required extensions: util_surfaceMaskWheels (mask service) and core_vehicle_manager (parsed JBeam data)
+---@field enabled boolean Enables or disables cutting; true after onExtensionLoaded
 util_lawnMower = {}
 
---- Hook appelé au démarrage d'un niveau : vide les caches de cellules coupées, de matériaux d'herbe et d'objet terrain.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/lawnMower.lua:233
+--- Hook called at level start: clears the caches of mown cells, grass materials and terrain object.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/lawnMower.lua:233
 function util_lawnMower.onClientStartMission() end
 
---- Hook de désérialisation après rechargement : restaure l'état enabled.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/lawnMower.lua:264
----@param data table|nil Données renvoyées par onSerialize
+--- Deserialization hook after reload: restores the enabled state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/lawnMower.lua:264
+---@param data table|nil Data returned by onSerialize
 function util_lawnMower.onDeserialized(data) end
 
---- Appelé au chargement : active la tondeuse et scanne les véhicules déjà présents.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/lawnMower.lua:244
+--- Called on load: enables the mower and scans the vehicles already present.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/lawnMower.lua:244
 function util_lawnMower.onExtensionLoaded() end
 
---- Hook appelé chaque frame avant le rendu : si activé et si des tondeuses existent, centre le clipmap du masque et fait couper chaque tondeuse (toutes les 0,05 s). Supprime l'état des véhicules disparus.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/lawnMower.lua:164
----@param dtReal number Delta de temps réel en secondes
----@param dtSim number Delta de temps de simulation en secondes (prioritaire pour le chronomètre)
+--- Hook called every frame before rendering: if enabled and mowers exist, centers the mask clipmap and makes each mower cut (every 0.05 s). Removes the state of vehicles that have disappeared.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/lawnMower.lua:164
+---@param dtReal number Real-time delta in seconds
+---@param dtSim number Simulation time delta in seconds (takes priority for the timer)
 function util_lawnMower.onPreRender(dtReal, dtSim) end
 
---- Hook de sérialisation avant un rechargement d'extensions : sauvegarde l'état enabled.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/lawnMower.lua:260
+--- Serialization hook before an extension reload: saves the enabled state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/lawnMower.lua:260
 ---@return table  {enabled = boolean}
 function util_lawnMower.onSerialize() end
 
---- Hook appelé quand un véhicule est détruit : oublie ses tondeuses.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/lawnMower.lua:239
----@param vehId integer Identifiant du véhicule
+--- Hook called when a vehicle is destroyed: forgets its mowers.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/lawnMower.lua:239
+---@param vehId integer Vehicle id
 function util_lawnMower.onVehicleDestroyed(vehId) end
 
---- Hook appelé quand un véhicule apparaît (ou est réapparu après un changement de pièce) : relit ses props JBeam à la recherche de mowerRadius.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/lawnMower.lua:229
----@param vehId integer Identifiant du véhicule
+--- Hook called when a vehicle spawns (or respawned after a part change): rereads its JBeam props looking for mowerRadius.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/lawnMower.lua:229
+---@param vehId integer Vehicle id
 function util_lawnMower.onVehicleSpawned(vehId) end
 
---- Active ou désactive la coupe et remet le chronomètre à zéro.
----Source : lua/ge/extensions/util/lawnMower.lua:251
----@param enabled boolean true pour activer
+--- Enables or disables cutting and resets the timer.
+---Source: lua/ge/extensions/util/lawnMower.lua:251
+---@param enabled boolean true to enable
 function util_lawnMower.setEnabled(enabled) end
 
---- Inverse l'état activé/désactivé.
----Source : lua/ge/extensions/util/lawnMower.lua:256
+--- Toggles the enabled/disabled state.
+---Source: lua/ge/extensions/util/lawnMower.lua:256
 function util_lawnMower.toggle() end
 

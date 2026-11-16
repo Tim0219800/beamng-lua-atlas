@@ -1,19 +1,59 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/debug/testDynamic.lua",
-  "module": "Nœud flowgraph « Category Test » (catégorie once_f_duration), nœud de test de cette catégorie : au flux, passe à l'état de durée « started », compte 5 secondes (mgr.dtReal) avec une barre de progression dans le nœud, puis passe à « finished ». Aucun pin personnalisé.",
-  "notes": ["Bug : dans work(), `not self.durationState == 'started'` est évalué comme `(not self.durationState) == 'started'`, toujours faux ; la garde ne protège donc rien et le minuteur avance même hors de l'état started."],
+  "module": "Flowgraph node \"Category Test\" (category once_f_duration), a test node for this category: on flow, switches to the duration state \"started\", counts 5 seconds (mgr.dtReal) with a progress bar in the node, then switches to \"finished\". No custom pins.",
+  "notes": [
+    "Bug: in work(), `not self.durationState == 'started'` is evaluated as `(not self.durationState) == 'started'`, always false; the guard therefore protects nothing and the timer advances even outside the started state."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Minuteur à 0 et état 'inactive'.", "params": {"mgr": {"type": "table", "desc": "non utilisé"}}, "internal": true},
-        "_executionStarted": {"desc": "Réinitialise à l'exécution.", "internal": true},
-        "onNodeReset": {"desc": "Réinitialise le minuteur et l'état.", "internal": true},
-        "drawMiddle": {"desc": "Éditeur : barre de progression timer/5.", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true},
-        "workOnce": {"desc": "Minuteur à 0, état 'started'."},
-        "work": {"desc": "Avance le minuteur et passe à 'finished' à 5 s.", "params": {"args": {"type": "any", "desc": "non utilisé"}}}
+        "init": {
+          "desc": "Timer at 0 and state 'inactive'.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Resets on execution.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Resets the timer and the state.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Editor: progress bar timer/5.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "node constructor"
+            },
+            "style": {
+              "type": "table",
+              "desc": "style"
+            }
+          },
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Timer at 0, state 'started'."
+        },
+        "work": {
+          "desc": "Advances the timer and switches to 'finished' at 5 s.",
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "unused"
+            }
+          }
+        }
       }
     }
   }

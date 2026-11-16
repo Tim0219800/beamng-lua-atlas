@@ -1,57 +1,57 @@
 # `libs_lua_websockets_websocket_handshake`
 
-*Fichier : `lua/common/libs/lua-websockets/websocket/handshake.lua` · VM : Commun (GE + véhicule) · 109 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lua-websockets/websocket/handshake.lua` · VM: Common (GE + vehicle) · 109 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/lua-websockets/websocket/handshake")`
+**Access:** `require("libs/lua-websockets/websocket/handshake")`
 
-Poignée de main HTTP/1.1 de WebSocket (upgrade) pour lua-websockets : construction de la requête client, analyse des en-têtes, validation côté serveur et calcul de Sec-WebSocket-Accept (SHA-1 de la clé + GUID RFC 6455, encodé en base64). Utilisé par websocket/sync et les backends serveur.
+WebSocket HTTP/1.1 handshake (upgrade) for lua-websockets: building the client request, parsing headers, server-side validation and computing Sec-WebSocket-Accept (SHA-1 of the key + RFC 6455 GUID, base64-encoded). Used by websocket/sync and the server backends.
 
-## Remarques
+## Notes
 
-- http_headers met les noms d'en-têtes en minuscules ; les valeurs aussi, sauf pour les en-têtes contenant 'sec-websocket' (clé et accept gardent leur casse).
-- Les assertions échouent (assert(false, ligne)) si une ligne d'en-tête est malformée.
+- http_headers lowercases the header names; the values too, except for headers containing 'sec-websocket' (key and accept keep their case).
+- Assertions fail (assert(false, line)) if a header line is malformed.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_lua_websockets_websocket_handshake.accept_upgrade(request, protocols)` | Côté serveur : vérifie qu'une requête est un upgrade WebSocket valide (Upgrade: websocket, Connection contenant upgrade, clé présente, version 13) et fabrique la réponse '101 Switching Protocols'. Choisit le premier sous-protocole demandé qui figure dans la liste supportée. | 67 |
-| `libs_lua_websockets_websocket_handshake.http_headers(request)` | Analyse une requête/réponse HTTP/1.1 en texte brut. Si la première ligne ne finit pas par HTTP/1.1, renvoie une table vide. | 14 |
-| `libs_lua_websockets_websocket_handshake.sec_websocket_accept(sec_websocket_key)` | Calcule la valeur Sec-WebSocket-Accept : SHA-1 de (clé .. GUID 258EAFA5-E914-47DA-95CA-C5AB0DC85B11) puis base64. | 7 |
-| `libs_lua_websockets_websocket_handshake.upgrade_request(req)` | Côté client : construit le texte de la requête GET d'upgrade WebSocket (version 13) avec Host, clé, sous-protocoles, en-têtes supplémentaires et Origin facultatifs. | 40 |
+| `libs_lua_websockets_websocket_handshake.accept_upgrade(request, protocols)` | Server side: checks that a request is a valid WebSocket upgrade (Upgrade: websocket, Connection containing upgrade, key present, version 13) and builds the '101 Switching Protocols' response. Picks the first requested subprotocol that is in the supported list. | 67 |
+| `libs_lua_websockets_websocket_handshake.http_headers(request)` | Parses a plain-text HTTP/1.1 request/response. If the first line does not end with HTTP/1.1, returns an empty table. | 14 |
+| `libs_lua_websockets_websocket_handshake.sec_websocket_accept(sec_websocket_key)` | Computes the Sec-WebSocket-Accept value: SHA-1 of (key .. GUID 258EAFA5-E914-47DA-95CA-C5AB0DC85B11) then base64. | 7 |
+| `libs_lua_websockets_websocket_handshake.upgrade_request(req)` | Client side: builds the text of the WebSocket upgrade GET request (version 13) with Host, key, and optional subprotocols, extra headers and Origin. | 40 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_lua_websockets_websocket_handshake.accept_upgrade(request, protocols)`
 
-Côté serveur : vérifie qu'une requête est un upgrade WebSocket valide (Upgrade: websocket, Connection contenant upgrade, clé présente, version 13) et fabrique la réponse '101 Switching Protocols'. Choisit le premier sous-protocole demandé qui figure dans la liste supportée.
+Server side: checks that a request is a valid WebSocket upgrade (Upgrade: websocket, Connection containing upgrade, key present, version 13) and builds the '101 Switching Protocols' response. Picks the first requested subprotocol that is in the supported list.
 
-- `request` (*string*) : Requête HTTP brute.
-- `protocols` (*string[]*) : Sous-protocoles supportés par le serveur.
-- **renvoie** : string|nil Réponse HTTP 101, ou nil si la requête est invalide.
-- **renvoie** : string|nil Sous-protocole retenu ; en cas de refus, 'HTTP/1.1 400 Bad Request' en seconde valeur.
+- `request` (*string*) : Raw HTTP request.
+- `protocols` (*string[]*) : Subprotocols supported by the server.
+- **returns**: string|nil HTTP 101 response, or nil if the request is invalid.
+- **returns**: string|nil Selected subprotocol; on refusal, 'HTTP/1.1 400 Bad Request' as the second value.
 
 #### `libs_lua_websockets_websocket_handshake.http_headers(request)`
 
-Analyse une requête/réponse HTTP/1.1 en texte brut. Si la première ligne ne finit pas par HTTP/1.1, renvoie une table vide.
+Parses a plain-text HTTP/1.1 request/response. If the first line does not end with HTTP/1.1, returns an empty table.
 
-- `request` (*string*) : Texte brut avec lignes terminées par CRLF.
-- **renvoie** : table<string, string> En-têtes en minuscules ; les doublons sont joints par une virgule.
-- **renvoie** : string|nil Corps après la ligne vide, s'il existe.
+- `request` (*string*) : Plain text with CRLF-terminated lines.
+- **returns**: table<string, string> Lowercase headers; duplicates are joined by a comma.
+- **returns**: string|nil Body after the blank line, if any.
 
 #### `libs_lua_websockets_websocket_handshake.sec_websocket_accept(sec_websocket_key)`
 
-Calcule la valeur Sec-WebSocket-Accept : SHA-1 de (clé .. GUID 258EAFA5-E914-47DA-95CA-C5AB0DC85B11) puis base64.
+Computes the Sec-WebSocket-Accept value: SHA-1 of (key .. GUID 258EAFA5-E914-47DA-95CA-C5AB0DC85B11) then base64.
 
-- `sec_websocket_key` (*string*) : Valeur de l'en-tête Sec-WebSocket-Key envoyée par le client.
-- **renvoie** : string Valeur à placer dans Sec-WebSocket-Accept.
+- `sec_websocket_key` (*string*) : Value of the Sec-WebSocket-Key header sent by the client.
+- **returns**: string Value to put in Sec-WebSocket-Accept.
 
 #### `libs_lua_websockets_websocket_handshake.upgrade_request(req)`
 
-Côté client : construit le texte de la requête GET d'upgrade WebSocket (version 13) avec Host, clé, sous-protocoles, en-têtes supplémentaires et Origin facultatifs.
+Client side: builds the text of the WebSocket upgrade GET request (version 13) with Host, key, and optional subprotocols, extra headers and Origin.
 
-- `req` (*table*) : Champs : uri, host, port (ajouté à Host s'il vaut autre chose que 80), key, protocols (liste de chaînes), extra_headers (table nom->valeur), origin.
-- **renvoie** : string Requête HTTP complète.
+- `req` (*table*) : Fields: uri, host, port (appended to Host if it is something other than 80), key, protocols (list of strings), extra_headers (name->value table), origin.
+- **returns**: string Complete HTTP request.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lua-websockets/websocket/handshake.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lua-websockets/websocket/handshake.lua`.*

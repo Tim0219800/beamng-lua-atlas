@@ -1,0 +1,121 @@
+{
+  "path": "lua/ge/extensions/gameplay/drift/general.lua",
+  "module": "Chef d'orchestre du gameplay de drift. Garde le contexte courant (inFreeroam, inChallenge, inFreeroamChallenge, inAnotherMissionType, inFreeroamCruising, inSplitscreen), le mode de défi (None, A to B, A to B with stunt zones, Gymkhana, Competition), les états pause/gel et le flag de debug. À chaque changement de contexte ou de mode, il charge ou décharge les autres extensions gameplay_drift_* selon la table variableExtensions. Un moddeur l'utilise pour lire le contexte drift ou en changer, et pour réinitialiser tout le système.",
+  "usage": "if gameplay_drift_general.getContext() == \"inFreeroam\" then\n  gameplay_drift_general.setContext(\"inFreeroamChallenge\")\nend",
+  "notes": [
+    "Extensions chargées par contexte : stuntZones (inChallenge), display (inChallenge, inFreeroamChallenge, inFreeroamCruising, inSplitscreen), quickMessages (inFreeroam, inChallenge, inFreeroamChallenge, inFreeroamCruising), bounds (inChallenge, inFreeroamChallenge), freeroam_driftSpots (inFreeroam, inFreeroamChallenge, inFreeroamCruising), scoreboard (inChallenge) ; par mode de défi : stallingSystem (Gymkhana), destination (A to B, A to B with stunt zones, avec le contexte inFreeroamChallenge).",
+    "Chargement manuel : freeroam_cruising (chargé seulement hors carrière, hors multiseat, si le réglage enableDriftFreeroamCruising est actif, hors tutoriel freeroam et hors première conduite), sounds (chargé tant que gameplay_drift_display existe) et multiplayer (chargé via onMPSessionChanged).",
+    "setContext émet toujours le hook onDriftContextChanged(context, oldContext), même si le contexte ne change pas ; les extensions ne sont rechargées que si le contexte a réellement changé. Passer à inFreeroam force le mode de défi à \"None\".",
+    "Le gel (frozen) vaut vrai si le joueur est hors limites, va à contresens ou est dans la phase de conclusion d'un spot de drift ; il est recalculé à chaque frame et remis à false par reset/clear.",
+    "pause (paused) sert à suspendre les systèmes de drift pendant l'écran de fin des défis de mission.",
+    "getMultiplayerEnabled renvoie un objet de session ou nil/false (pas un booléen strict) : vrai seulement si une session multijoueur existe.",
+    "Dans checkLoadedExtensions, la variable locale driftDebugInfo masque celle du module ; et l'appel ext:getDriftDebugInfo() passe ext comme argument self à une fonction qui n'en a pas besoin (sans conséquence)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "gameplay_drift_drift, gameplay_drift_scoring, gameplay_drift_statistics, gameplay_drift_saveLoad, gameplay_util_groundContact."}
+  },
+  "functions": {
+    "clear": {
+      "desc": "Appelle reset() de toutes les extensions drift chargées (sauf general), remet frozen à false puis vide les zones de cascade (gameplay_drift_stuntZones.clear)."
+    },
+    "reset": {
+      "desc": "Appelle reset() de toutes les extensions drift chargées (sauf general), remet frozen à false puis réinitialise les zones de cascade (gameplay_drift_stuntZones.reset)."
+    },
+    "setChallengeMode": {
+      "desc": "Change le mode de défi et recharge/décharge les extensions concernées. Sans effet si le mode est identique.",
+      "params": {"newChallengeMode": {"type": "string", "desc": "\"None\", \"A to B\", \"A to B with stunt zones\", \"Gymkhana\" ou \"Competition\"."}}
+    },
+    "getChallengeMode": {
+      "desc": "Renvoie le mode de défi courant.",
+      "returns": [{"type": "string|nil", "desc": "Mode de défi, nil tant qu'il n'a jamais été défini."}]
+    },
+    "setContext": {
+      "desc": "Change le contexte drift, émet onDriftContextChanged(newContext, oldContext) et met à jour les extensions chargées.",
+      "params": {"newContext": {"type": "string", "desc": "\"inFreeroam\", \"inChallenge\", \"inFreeroamChallenge\", \"inAnotherMissionType\", \"inFreeroamCruising\" ou \"inSplitscreen\"."}}
+    },
+    "getContext": {
+      "desc": "Renvoie le contexte drift courant.",
+      "returns": [{"type": "string|nil", "desc": "Contexte courant."}]
+    },
+    "setPaused": {
+      "desc": "Met le système de drift en pause (ou le relance).",
+      "params": {"newPaused": {"type": "boolean", "desc": "true pour mettre en pause."}}
+    },
+    "getPaused": {
+      "desc": "Indique si le système de drift est en pause.",
+      "returns": [{"type": "boolean", "desc": "État de pause."}]
+    },
+    "getFrozen": {
+      "desc": "Indique si scoring et détection de drift sont gelés (hors limites, contresens, phase de conclusion).",
+      "returns": [{"type": "boolean", "desc": "État de gel."}]
+    },
+    "setDebug": {
+      "desc": "Active/désactive le mode debug drift (fenêtre imgui « Drift general ») et émet onDriftDebugChanged(value).",
+      "params": {"value": {"type": "boolean", "desc": "true pour activer le debug."}}
+    },
+    "getGeneralDebug": {
+      "desc": "Indique si le debug général est actif.",
+      "returns": [{"type": "boolean", "desc": "Flag de debug."}]
+    },
+    "getExtensionDebug": {
+      "desc": "Indique si le debug est activé pour une extension drift donnée (debug général actif, extension connue, case cochée).",
+      "params": {"extName": {"type": "string", "desc": "Nom de l'extension, ex. \"gameplay_drift_scoreboard\"."}},
+      "returns": [{"type": "boolean", "desc": "true si le debug de cette extension est actif."}]
+    },
+    "getDriftDebugInfo": {
+      "desc": "Renvoie {default=true, canBeChanged=false} pour la fenêtre de debug drift.",
+      "returns": [{"type": "table", "desc": "{default = true, canBeChanged = false}"}]
+    },
+    "getMultiplayerEnabled": {
+      "desc": "Renvoie une valeur vraie seulement si une session multijoueur est en cours et que le drift multijoueur est autorisé.",
+      "returns": [{"type": "any", "desc": "Valeur vraie/fausse (peut être nil ou un booléen)."}]
+    },
+    "onAnyMissionChanged": {
+      "desc": "Hook : appelé au démarrage ou à l'arrêt d'une mission. Fait clear() ; au démarrage d'une mission non drift passe en \"inAnotherMissionType\" ; à l'arrêt remet pause/gel à false et le contexte à \"inFreeroam\".",
+      "params": {
+        "status": {"type": "string", "desc": "\"started\" ou \"stopped\"."},
+        "mission": {"type": "table", "desc": "Mission concernée (missionType est lu)."}
+      },
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook : fin de niveau, repasse le contexte à \"inFreeroam\".",
+      "internal": true
+    },
+    "onClientPostStartMission": {
+      "desc": "Hook : appelé quand le niveau est chargé ; si aucune mission n'est au premier plan, passe en \"inFreeroam\" et fait reset().",
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook : restaure debugFlag, context et challengeMode après un rechargement Lua.",
+      "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook : sauvegarde debugFlag, context et challengeMode avant un rechargement Lua.",
+      "returns": [{"type": "table", "desc": "{debugFlag, context, challengeMode}"}],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook : liste les fichiers lua de /lua/ge/extensions/gameplay/drift pour le suivi des extensions et du debug.",
+      "internal": true
+    },
+    "onMPSessionChanged": {
+      "desc": "Hook : charge gameplay_drift_multiplayer à l'entrée en session multijoueur et le décharge à la sortie.",
+      "params": {
+        "old": {"type": "any", "desc": "Ancienne session (nil si aucune)."},
+        "new": {"type": "any", "desc": "Nouvelle session (nil si aucune)."}
+      },
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque frame : fenêtre debug, chargement/déchargement des sons et du cruising, recalcul de l'état gelé.",
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook : si le véhicule remis en place est suivi par gameplay_drift_drift, émet onDriftPlVehReset(vid).",
+      "params": {"vid": {"type": "integer", "desc": "Id du véhicule."}},
+      "internal": true
+    }
+  }
+}

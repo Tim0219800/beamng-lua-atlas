@@ -1,12 +1,18 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/createRallyGroundMarker.lua",
-  "module": "Nœud flowgraph « Rally Mode Create Ground Marker Route » (catégorie once_instant, tag rally). Crée la route de marqueurs au sol (core_groundMarkers.setPath) vers une position nommée d'un pathData : les pathnodes triés (si includePathnodes, true par défaut) puis la position de départ nommée, reculée de routeEndOffsetMeters (10 m par défaut) le long de son axe -Y local et projetée sur le terrain. Les waypoints à moins de 1 m du précédent sont ignorés. Déclenche ensuite le hook onCreatedRallyGroundMarkerRoute. Entrées : pathData, name, includePathnodes, routeEndOffsetMeters.",
-  "notes": ["Si pathData est absent ou si la position nommée est introuvable, un avertissement est loggé et rien n'est créé.", "La projection au sol utilise core_terrain.getTerrainHeight, sinon un raycast statique de 150 m depuis 50 m au-dessus."],
+  "module": "Flowgraph node \"Rally Mode Create Ground Marker Route\" (category once_instant, tag rally). Creates the ground marker route (core_groundMarkers.setPath) to a named position of a pathData: the sorted pathnodes (if includePathnodes, true by default) then the named start position, moved back by routeEndOffsetMeters (10 m by default) along its local -Y axis and projected onto the terrain. Waypoints less than 1 m from the previous one are ignored. Then triggers the onCreatedRallyGroundMarkerRoute hook. Inputs: pathData, name, includePathnodes, routeEndOffsetMeters.",
+  "notes": [
+    "If pathData is absent or the named position cannot be found, a warning is logged and nothing is created.",
+    "The ground projection uses core_terrain.getTerrainHeight, otherwise a 150 m static raycast from 50 m above."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Construit la liste de waypoints, appelle core_groundMarkers.setPath puis extensions.hook('onCreatedRallyGroundMarkerRoute').", "internal": true}
+        "workOnce": {
+          "desc": "Builds the waypoint list, calls core_groundMarkers.setPath then extensions.hook('onCreatedRallyGroundMarkerRoute').",
+          "internal": true
+        }
       }
     }
   }

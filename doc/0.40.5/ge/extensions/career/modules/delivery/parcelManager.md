@@ -1,263 +1,263 @@
 # `career_modules_delivery_parcelManager`
 
-*Fichier : `lua/ge/extensions/career/modules/delivery/parcelManager.lua` · VM : Game Engine (GE) · 709 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/delivery/parcelManager.lua` · VM: Game Engine (GE) · 709 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_delivery_parcelManager` : `extensions.load("career_modules_delivery_parcelManager")`, puis la globale `career_modules_delivery_parcelManager`
+**Access:** extension `career_modules_delivery_parcelManager`: `extensions.load("career_modules_delivery_parcelManager")`, then the global `career_modules_delivery_parcelManager`
 
-Gestionnaire central des cargaisons (colis et matériaux) de la livraison en mode carrière. Il tient la liste allCargo (chaque cargo a un id, une location, une origin, une destination, des slots, un poids, des modifiers, des rewards…), déplace les cargaisons entre lieux (installation, véhicule, avatar du joueur), gère les « déplacements transitoires » (transientMoves) validés ensuite en bloc, fournit des requêtes de recherche, calcule les récompenses avec détail (retard, loaner, niveau de branche, précision de stationnement), envoie les messages de retard et nettoie les cargaisons périmées.
+Central manager of the cargos (parcels and materials) of delivery in career mode. It holds the allCargo list (each cargo has an id, a location, an origin, a destination, slots, a weight, modifiers, rewards…), moves cargos between locations (facility, vehicle, player avatar), handles "transient moves" (transientMoves) that are then validated in bulk, provides lookup queries, computes rewards with a breakdown (lateness, loaner, branch level, parking precision), sends lateness messages and cleans up outdated cargos.
 
-## Remarques
+## Notes
 
-- Un lieu (location) est une table : {type='facilityParkingspot', facId, psPath}, {type='vehicle', vehId}, {type='playerAvatar'}, {type='multi', destinations={...}} ou {type='delete'} (marque pour suppression).
-- sameLocation(a, b) ne compare que les clés présentes dans a : l'ordre des arguments compte (b peut avoir des clés en plus) et plante si b est nil.
-- M.addParcelRewards est exporté mais vaut toujours nil (la variable locale addParcelRewards n'existe pas dans le fichier).
-- clearTransientFlags et undoTransientCargo sont des restes : ils ne font que logguer une erreur.
-- Les fonctions getAllCargo* appellent triggerAllGenerators() du module generator avant de filtrer : elles peuvent donc générer de nouvelles offres comme effet de bord.
-- Le temps utilisé (offerExpiresAt, loadedAtTimeStamp) vient de career_modules_delivery_general.time(), pas de l'horloge réelle.
-- Multiplicateurs de retard (modifier timed) : à l'heure = x1 (+10 % d'argent, +50 % de réputation), en retard partiel = 0.2 à 0.8 linéaire, en retard = x0.2 (réputation -1.5x).
-- Dans getRewardsWithBreakdown, le bonus logistique de précision est calculé sur originalRewards['logistics'] alors que le bonus de compétence utilise la clé logistics-materials ou logistics-delivery.
-- Fusion de matériaux (cargo.merge) : le cargo déplacé est mis à location {type='delete'} et son slots est ajouté à l'autre ; la récompense d'argent est alors fixée à cargo.slots.
+- A location is a table: {type='facilityParkingspot', facId, psPath}, {type='vehicle', vehId}, {type='playerAvatar'}, {type='multi', destinations={...}} or {type='delete'} (marks for deletion).
+- sameLocation(a, b) only compares the keys present in a: argument order matters (b may have extra keys) and it crashes if b is nil.
+- M.addParcelRewards is exported but is always nil (the local variable addParcelRewards does not exist in the file).
+- clearTransientFlags and undoTransientCargo are leftovers: they only log an error.
+- The getAllCargo* functions call triggerAllGenerators() of the generator module before filtering: they can therefore generate new offers as a side effect.
+- The time used (offerExpiresAt, loadedAtTimeStamp) comes from career_modules_delivery_general.time(), not from the real clock.
+- Lateness multipliers (timed modifier): on time = x1 (+10% money, +50% reputation), partially late = 0.2 to 0.8 linear, late = x0.2 (reputation -1.5x).
+- In getRewardsWithBreakdown, the logistics precision bonus is computed on originalRewards['logistics'] whereas the skill bonus uses the key logistics-materials or logistics-delivery.
+- Material merge (cargo.merge): the moved cargo is set to location {type='delete'} and its slots is added to the other; the money reward is then set to cargo.slots.
 
-**Dépendances (chargées avant) :** `freeroam_facilities`
+**Dependencies (loaded first):** `freeroam_facilities`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_delivery_parcelManager.addCargo(cargo, silent)` | Ajoute une cargaison à la liste globale et émet le hook onCargoGenerated(cargo) sauf si silent. | 40 |
-| `career_modules_delivery_parcelManager.addParcelRewardsSummary(cargo)` | Calcule originalRewards/breakdown/adjustedRewards de chaque cargaison, regroupe par groupId et heure de chargement, formate chaque groupe via cargoScreen.formatCargoGroup et trie par plus petit id. | 578 |
-| `career_modules_delivery_parcelManager.addTransientMoveCargo(cargoId, targetLocation)` | Enregistre un déplacement en attente pour la cargaison (cargo._transientMove). Refusé avec une erreur loguée si elle en a déjà un. | 79 |
-| `career_modules_delivery_parcelManager.applyTransientMoves(currentLocation)` | Applique les déplacements transitoires dont la cargaison est au lieu currentLocation (ou tous si currentLocation est nil), met à jour les organisations prêteuses (loaner) des véhicules cibles, fusionne les cargaisons mergeables de même matériau au même lieu, et conserve les autres déplacements pour plus tard. | 134 |
-| `career_modules_delivery_parcelManager.changeCargoLocation(cargoId, newLocation)` | Déplace immédiatement la cargaison vers newLocation. Ajuste le stock de matériaux de l'installation (retire à l'ancien lieu, ajoute au nouveau), horodate loadedAtTimeStamp au premier chargement dans un véhicule, et marque cargo.data.delivered = true si le nouveau lieu est la destination. | 47 |
-| `career_modules_delivery_parcelManager.cleanUpCargo()` | Supprime les cargaisons de lieu « delete » et celles restées à leur origine, expirées depuis plus de 120 s et sans déplacement transitoire. Remet le minuteur de nettoyage à zéro. | 670 |
-| `career_modules_delivery_parcelManager.clearAllTransientMoves()` | Annule tous les déplacements transitoires et remet le drapeau « non validé » à false. | 125 |
-| `career_modules_delivery_parcelManager.clearTransientFlags()` | Obsolète : ne fait que loguer une erreur « no longer needed ». *(interne)* | 210 |
-| `career_modules_delivery_parcelManager.clearTransientMoveForCargo(cargoId)` | Annule le déplacement transitoire d'une cargaison (sans effet si aucun). | 108 |
-| `career_modules_delivery_parcelManager.getAllCargoAtFacilityUnexpired(facId)` | Cargaisons non expirées encore à leur origine, située dans l'installation facId. | 341 |
-| `career_modules_delivery_parcelManager.getAllCargoCustomFilter(filter, ...)` | Renvoie les cargaisons pour lesquelles filter(cargo, ...) est vrai, après avoir déclenché tous les générateurs. | 257 |
-| `career_modules_delivery_parcelManager.getAllCargoForDestinationFacilityStillAtOriginUnexpired(facId)` | Cargaisons non expirées encore à leur origine et dont la destination est l'installation facId. | 328 |
-| `career_modules_delivery_parcelManager.getAllCargoForFacilityUnexpiredUndelivered(facId, timeExpire, timeGenerated)` | Même filtre mais sur toutes les places d'une installation (facId). | 312 |
-| `career_modules_delivery_parcelManager.getAllCargoForLocation(loc)` | Toutes les cargaisons actuellement à ce lieu (déclenche les générateurs si le lieu est une place d'installation). | 268 |
-| `career_modules_delivery_parcelManager.getAllCargoForLocationUnexpired(loc)` | Comme getAllCargoForLocation mais seulement les cargaisons dont l'offre n'a pas expiré (offerExpiresAt > temps de livraison). | 282 |
-| `career_modules_delivery_parcelManager.getAllCargoForLocationUnexpiredUndelivered(loc, timeExpire, timeGenerated)` | Cargaisons à ce lieu, non expirées, qui ne sont pas déjà à leur destination et générées au plus tard à timeGenerated. | 296 |
-| `career_modules_delivery_parcelManager.getAllCargoInVehicles(includeTransient)` | Cargaisons actuellement dans un véhicule, et optionnellement celles ayant un déplacement transitoire en attente. | 354 |
-| `career_modules_delivery_parcelManager.getCargoById(cargoId)` | Cherche une cargaison par id. | 423 |
-| `career_modules_delivery_parcelManager.getLocationLabelLong(loc)` | Libellé long : pour une place d'installation, « Installation - nom de la place » si la place a un champ personnalisé name ; sinon comme le libellé court. | 396 |
-| `career_modules_delivery_parcelManager.getLocationLabelShort(loc)` | Libellé court d'un lieu : nom traduit de l'installation, « Current Vehicle (id) » / « Other Vehicle (id) », « Player Avatar », « N possible locations » (ou le libellé de l'unique destination), « Unknown ». Les textes véhicule/avatar ne sont pas traduits. | 374 |
-| `career_modules_delivery_parcelManager.getRewardsWithBreakdown(cargo)` | Calcule les récompenses d'une cargaison livrée avec le détail : effet du modificateur timed (à l'heure, retardée, en retard), part des organisations prêteuses de véhicule (loaner), multiplicateur du niveau de la branche logistics, bonus ou pénalité de précision de stationnement. Peut débloquer le succès ON_SCHEDULE. | 436 |
-| `career_modules_delivery_parcelManager.getTransientMoveCargo()` | Liste les cargaisons qui ont un déplacement transitoire en attente. | 97 |
-| `career_modules_delivery_parcelManager.getTransientMovesForTargetLocationWithCargo(targetLocation)` | Liste les cargaisons dont le déplacement transitoire cible le lieu donné. | 197 |
-| `career_modules_delivery_parcelManager.hasUncommittedTransientMoves()` | Indique si des déplacements transitoires ont été ajoutés mais pas encore appliqués. | 95 |
-| `career_modules_delivery_parcelManager.onCareerActivated()` | Hook appelé à l'activation de la carrière : mémorise les autres extensions de livraison. *(interne)* *(hook)* | 14 |
-| `career_modules_delivery_parcelManager.onTrailerAttached(objId1, objId2)` | Hook appelé quand une remorque est attelée : recalcule les organisations prêteuses des cargaisons situées dans des véhicules. *(interne)* *(hook)* | 214 |
-| `career_modules_delivery_parcelManager.onUpdate(dtReal, dtSim, dtRaw)` | Hook par image : envoie les messages UI « retardé » et « en retard » pour les cargaisons timed dans les véhicules, met à jour le tasklist chaque seconde, relance le tasklist et le nettoyage si des lieux ont changé, et nettoie toutes les 10 s. Inactif hors mode livraison. *(interne)* *(hook)* | 652 |
-| `career_modules_delivery_parcelManager.sameLocation(a, b)` | Teste l'égalité de deux lieux en comparant chaque clé de a avec la même clé de b (comparaison asymétrique). | 249 |
-| `career_modules_delivery_parcelManager.sameLocationCargo(cargo, otherLoc)` | Compare la position actuelle d'une cargaison avec un lieu via sameLocation. | 245 |
-| `career_modules_delivery_parcelManager.undoTransientCargo()` | Obsolète : ne fait que loguer une erreur (code d'annulation commenté, marqué TODO). | 223 |
+| `career_modules_delivery_parcelManager.addCargo(cargo, silent)` | Adds a cargo to the global list and emits the onCargoGenerated(cargo) hook unless silent. | 40 |
+| `career_modules_delivery_parcelManager.addParcelRewardsSummary(cargo)` | Computes originalRewards/breakdown/adjustedRewards of each cargo, groups by groupId and loading time, formats each group via cargoScreen.formatCargoGroup and sorts by smallest id. | 578 |
+| `career_modules_delivery_parcelManager.addTransientMoveCargo(cargoId, targetLocation)` | Records a pending move for the cargo (cargo._transientMove). Refused with a logged error if it already has one. | 79 |
+| `career_modules_delivery_parcelManager.applyTransientMoves(currentLocation)` | Applies the transient moves whose cargo is at the location currentLocation (or all if currentLocation is nil), updates the loaner organizations of the target vehicles, merges mergeable cargos of the same material at the same location, and keeps the other moves for later. | 134 |
+| `career_modules_delivery_parcelManager.changeCargoLocation(cargoId, newLocation)` | Immediately moves the cargo to newLocation. Adjusts the facility's material stock (removes from the old location, adds to the new one), timestamps loadedAtTimeStamp on the first load into a vehicle, and sets cargo.data.delivered = true if the new location is the destination. | 47 |
+| `career_modules_delivery_parcelManager.cleanUpCargo()` | Deletes the cargos with location 'delete' and those that stayed at their origin, expired for more than 120 s and without a transient move. Resets the cleanup timer to zero. | 670 |
+| `career_modules_delivery_parcelManager.clearAllTransientMoves()` | Cancels all transient moves and resets the "unvalidated" flag to false. | 125 |
+| `career_modules_delivery_parcelManager.clearTransientFlags()` | Obsolete: only logs a "no longer needed" error. *(internal)* | 210 |
+| `career_modules_delivery_parcelManager.clearTransientMoveForCargo(cargoId)` | Cancels a cargo's transient move (no effect if none). | 108 |
+| `career_modules_delivery_parcelManager.getAllCargoAtFacilityUnexpired(facId)` | Non-expired cargos still at their origin, located in the facility facId. | 341 |
+| `career_modules_delivery_parcelManager.getAllCargoCustomFilter(filter, ...)` | Returns the cargos for which filter(cargo, ...) is true, after triggering all generators. | 257 |
+| `career_modules_delivery_parcelManager.getAllCargoForDestinationFacilityStillAtOriginUnexpired(facId)` | Non-expired cargos still at their origin and whose destination is the facility facId. | 328 |
+| `career_modules_delivery_parcelManager.getAllCargoForFacilityUnexpiredUndelivered(facId, timeExpire, timeGenerated)` | Same filter but over all the spots of a facility (facId). | 312 |
+| `career_modules_delivery_parcelManager.getAllCargoForLocation(loc)` | All the cargos currently at this location (triggers the generators if the location is a facility spot). | 268 |
+| `career_modules_delivery_parcelManager.getAllCargoForLocationUnexpired(loc)` | Like getAllCargoForLocation but only the cargos whose offer has not expired (offerExpiresAt > delivery time). | 282 |
+| `career_modules_delivery_parcelManager.getAllCargoForLocationUnexpiredUndelivered(loc, timeExpire, timeGenerated)` | Cargos at this location, not expired, not already at their destination and generated no later than timeGenerated. | 296 |
+| `career_modules_delivery_parcelManager.getAllCargoInVehicles(includeTransient)` | Cargos currently in a vehicle, and optionally those with a pending transient move. | 354 |
+| `career_modules_delivery_parcelManager.getCargoById(cargoId)` | Looks up a cargo by id. | 423 |
+| `career_modules_delivery_parcelManager.getLocationLabelLong(loc)` | Long label: for a facility spot, "Facility - spot name" if the spot has a custom field name; otherwise same as the short label. | 396 |
+| `career_modules_delivery_parcelManager.getLocationLabelShort(loc)` | Short label of a location: translated facility name, "Current Vehicle (id)" / "Other Vehicle (id)", "Player Avatar", "N possible locations" (or the label of the single destination), "Unknown". The vehicle/avatar texts are not translated. | 374 |
+| `career_modules_delivery_parcelManager.getRewardsWithBreakdown(cargo)` | Computes the rewards of a delivered cargo with a breakdown: effect of the timed modifier (on time, delayed, late), share of the vehicle loaner organizations, multiplier of the logistics branch level, parking precision bonus or penalty. Can unlock the ON_SCHEDULE achievement. | 436 |
+| `career_modules_delivery_parcelManager.getTransientMoveCargo()` | Lists the cargos that have a pending transient move. | 97 |
+| `career_modules_delivery_parcelManager.getTransientMovesForTargetLocationWithCargo(targetLocation)` | Lists the cargos whose transient move targets the given location. | 197 |
+| `career_modules_delivery_parcelManager.hasUncommittedTransientMoves()` | Indicates whether transient moves have been added but not yet applied. | 95 |
+| `career_modules_delivery_parcelManager.onCareerActivated()` | Hook called on career activation: stores the other delivery extensions. *(internal)* *(hook)* | 14 |
+| `career_modules_delivery_parcelManager.onTrailerAttached(objId1, objId2)` | Hook called when a trailer is coupled: recomputes the loaner organizations of the cargos located in vehicles. *(internal)* *(hook)* | 214 |
+| `career_modules_delivery_parcelManager.onUpdate(dtReal, dtSim, dtRaw)` | Per-frame hook: sends the "delayed" and "late" UI messages for timed cargos in vehicles, updates the tasklist every second, restarts the tasklist and the cleanup if locations changed, and cleans up every 10 s. Inactive outside delivery mode. *(internal)* *(hook)* | 652 |
+| `career_modules_delivery_parcelManager.sameLocation(a, b)` | Tests the equality of two locations by comparing each key of a with the same key of b (asymmetric comparison). | 249 |
+| `career_modules_delivery_parcelManager.sameLocationCargo(cargo, otherLoc)` | Compares a cargo's current position with a location via sameLocation. | 245 |
+| `career_modules_delivery_parcelManager.undoTransientCargo()` | Obsolete: only logs an error (cancellation code commented out, marked TODO). | 223 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_delivery_parcelManager.addCargo(cargo, silent)`
 
-Ajoute une cargaison à la liste globale et émet le hook onCargoGenerated(cargo) sauf si silent.
+Adds a cargo to the global list and emits the onCargoGenerated(cargo) hook unless silent.
 
-- `cargo` (*table*) : Cargaison complète (id, location, origin, destination, slots…).
-- `silent` (*boolean|nil*) : true pour ne pas émettre onCargoGenerated.
+- `cargo` (*table*) : Complete cargo (id, location, origin, destination, slots…).
+- `silent` (*boolean|nil*) : true to not emit onCargoGenerated.
 
 #### `career_modules_delivery_parcelManager.addParcelRewardsSummary(cargo)`
 
-Calcule originalRewards/breakdown/adjustedRewards de chaque cargaison, regroupe par groupId et heure de chargement, formate chaque groupe via cargoScreen.formatCargoGroup et trie par plus petit id.
+Computes originalRewards/breakdown/adjustedRewards of each cargo, groups by groupId and loading time, formats each group via cargoScreen.formatCargoGroup and sorts by smallest id.
 
-- `cargo` (*table*) : Liste de cargaisons au même lieu actuel.
-- **renvoie** : table|nil Liste de groupes formatés pour l'UI (nil si la liste est vide).
+- `cargo` (*table*) : List of cargos at the same current location.
+- **returns**: table|nil List of groups formatted for the UI (nil if the list is empty).
 
 #### `career_modules_delivery_parcelManager.addTransientMoveCargo(cargoId, targetLocation)`
 
-Enregistre un déplacement en attente pour la cargaison (cargo._transientMove). Refusé avec une erreur loguée si elle en a déjà un.
+Records a pending move for the cargo (cargo._transientMove). Refused with a logged error if it already has one.
 
-- `cargoId` (*integer*) : Identifiant de la cargaison.
-- `targetLocation` (*table*) : Lieu cible.
+- `cargoId` (*integer*) : Cargo identifier.
+- `targetLocation` (*table*) : Target location.
 
 #### `career_modules_delivery_parcelManager.applyTransientMoves(currentLocation)`
 
-Applique les déplacements transitoires dont la cargaison est au lieu currentLocation (ou tous si currentLocation est nil), met à jour les organisations prêteuses (loaner) des véhicules cibles, fusionne les cargaisons mergeables de même matériau au même lieu, et conserve les autres déplacements pour plus tard.
+Applies the transient moves whose cargo is at the location currentLocation (or all if currentLocation is nil), updates the loaner organizations of the target vehicles, merges mergeable cargos of the same material at the same location, and keeps the other moves for later.
 
-- `currentLocation` (*table|nil*) : Lieu courant ; nil pour tout appliquer.
-- **renvoie** : table Cargaisons déplacées.
-- **renvoie** : table Cargaisons dont le déplacement reste en attente.
+- `currentLocation` (*table|nil*) : Current location; nil to apply everything.
+- **returns**: table Cargos moved.
+- **returns**: table Cargos whose move remains pending.
 
 #### `career_modules_delivery_parcelManager.changeCargoLocation(cargoId, newLocation)`
 
-Déplace immédiatement la cargaison vers newLocation. Ajuste le stock de matériaux de l'installation (retire à l'ancien lieu, ajoute au nouveau), horodate loadedAtTimeStamp au premier chargement dans un véhicule, et marque cargo.data.delivered = true si le nouveau lieu est la destination.
+Immediately moves the cargo to newLocation. Adjusts the facility's material stock (removes from the old location, adds to the new one), timestamps loadedAtTimeStamp on the first load into a vehicle, and sets cargo.data.delivered = true if the new location is the destination.
 
-- `cargoId` (*integer*) : Identifiant de la cargaison.
-- `newLocation` (*table*) : Nouveau lieu (une erreur est loguée si nil ou vide).
+- `cargoId` (*integer*) : Cargo identifier.
+- `newLocation` (*table*) : New location (an error is logged if nil or empty).
 
 #### `career_modules_delivery_parcelManager.clearTransientMoveForCargo(cargoId)`
 
-Annule le déplacement transitoire d'une cargaison (sans effet si aucun).
+Cancels a cargo's transient move (no effect if none).
 
-- `cargoId` (*integer*) : Identifiant de la cargaison.
+- `cargoId` (*integer*) : Cargo identifier.
 
 #### `career_modules_delivery_parcelManager.getAllCargoAtFacilityUnexpired(facId)`
 
-Cargaisons non expirées encore à leur origine, située dans l'installation facId.
+Non-expired cargos still at their origin, located in the facility facId.
 
-- `facId` (*string*) : Installation d'origine.
-- **renvoie** : table Liste de cargaisons.
+- `facId` (*string*) : Origin facility.
+- **returns**: table List of cargos.
 
 #### `career_modules_delivery_parcelManager.getAllCargoCustomFilter(filter, ...)`
 
-Renvoie les cargaisons pour lesquelles filter(cargo, ...) est vrai, après avoir déclenché tous les générateurs.
+Returns the cargos for which filter(cargo, ...) is true, after triggering all generators.
 
-- `filter` (*function*) : fonction(cargo, ...) -> boolean.
-- `...` (*any*) : Arguments supplémentaires passés à filter.
-- **renvoie** : table Liste de cargaisons.
+- `filter` (*function*) : function(cargo, ...) -> boolean.
+- `...` (*any*) : Extra arguments passed to filter.
+- **returns**: table List of cargos.
 
 #### `career_modules_delivery_parcelManager.getAllCargoForDestinationFacilityStillAtOriginUnexpired(facId)`
 
-Cargaisons non expirées encore à leur origine et dont la destination est l'installation facId.
+Non-expired cargos still at their origin and whose destination is the facility facId.
 
-- `facId` (*string*) : Installation de destination.
-- **renvoie** : table Liste de cargaisons.
+- `facId` (*string*) : Destination facility.
+- **returns**: table List of cargos.
 
 #### `career_modules_delivery_parcelManager.getAllCargoForFacilityUnexpiredUndelivered(facId, timeExpire, timeGenerated)`
 
-Même filtre mais sur toutes les places d'une installation (facId).
+Same filter but over all the spots of a facility (facId).
 
-- `facId` (*string*) : Identifiant de l'installation.
-- `timeExpire` (*number|nil*) : Seuil d'expiration.
-- `timeGenerated` (*number|nil*) : Horodatage maximal de génération.
-- **renvoie** : table Liste de cargaisons.
+- `facId` (*string*) : Facility identifier.
+- `timeExpire` (*number|nil*) : Expiration threshold.
+- `timeGenerated` (*number|nil*) : Maximum generation timestamp.
+- **returns**: table List of cargos.
 
 #### `career_modules_delivery_parcelManager.getAllCargoForLocation(loc)`
 
-Toutes les cargaisons actuellement à ce lieu (déclenche les générateurs si le lieu est une place d'installation).
+All the cargos currently at this location (triggers the generators if the location is a facility spot).
 
-- `loc` (*table*) : Lieu.
-- **renvoie** : table Liste de cargaisons.
+- `loc` (*table*) : Location.
+- **returns**: table List of cargos.
 
 #### `career_modules_delivery_parcelManager.getAllCargoForLocationUnexpired(loc)`
 
-Comme getAllCargoForLocation mais seulement les cargaisons dont l'offre n'a pas expiré (offerExpiresAt > temps de livraison).
+Like getAllCargoForLocation but only the cargos whose offer has not expired (offerExpiresAt > delivery time).
 
-- `loc` (*table*) : Lieu.
-- **renvoie** : table Liste de cargaisons.
+- `loc` (*table*) : Location.
+- **returns**: table List of cargos.
 
 #### `career_modules_delivery_parcelManager.getAllCargoForLocationUnexpiredUndelivered(loc, timeExpire, timeGenerated)`
 
-Cargaisons à ce lieu, non expirées, qui ne sont pas déjà à leur destination et générées au plus tard à timeGenerated.
+Cargos at this location, not expired, not already at their destination and generated no later than timeGenerated.
 
-- `loc` (*table*) : Lieu.
-- `timeExpire` (*number|nil*) : Seuil d'expiration ; défaut : temps courant.
-- `timeGenerated` (*number|nil*) : Horodatage maximal de génération ; défaut : infini.
-- **renvoie** : table Liste de cargaisons.
+- `loc` (*table*) : Location.
+- `timeExpire` (*number|nil*) : Expiration threshold; default: current time.
+- `timeGenerated` (*number|nil*) : Maximum generation timestamp; default: infinity.
+- **returns**: table List of cargos.
 
 #### `career_modules_delivery_parcelManager.getAllCargoInVehicles(includeTransient)`
 
-Cargaisons actuellement dans un véhicule, et optionnellement celles ayant un déplacement transitoire en attente.
+Cargos currently in a vehicle, and optionally those with a pending transient move.
 
-- `includeTransient` (*boolean|nil*) : Inclure les cargaisons avec _transientMove.
-- **renvoie** : table Liste de cargaisons.
+- `includeTransient` (*boolean|nil*) : Include the cargos with _transientMove.
+- **returns**: table List of cargos.
 
 #### `career_modules_delivery_parcelManager.getCargoById(cargoId)`
 
-Cherche une cargaison par id.
+Looks up a cargo by id.
 
-- `cargoId` (*integer*) : Identifiant.
-- **renvoie** : table|nil Cargaison ou nil.
+- `cargoId` (*integer*) : Identifier.
+- **returns**: table|nil Cargo or nil.
 
 #### `career_modules_delivery_parcelManager.getLocationLabelLong(loc)`
 
-Libellé long : pour une place d'installation, « Installation - nom de la place » si la place a un champ personnalisé name ; sinon comme le libellé court.
+Long label: for a facility spot, "Facility - spot name" if the spot has a custom field name; otherwise same as the short label.
 
-- `loc` (*table*) : Lieu.
-- **renvoie** : string Libellé.
+- `loc` (*table*) : Location.
+- **returns**: string Label.
 
 #### `career_modules_delivery_parcelManager.getLocationLabelShort(loc)`
 
-Libellé court d'un lieu : nom traduit de l'installation, « Current Vehicle (id) » / « Other Vehicle (id) », « Player Avatar », « N possible locations » (ou le libellé de l'unique destination), « Unknown ». Les textes véhicule/avatar ne sont pas traduits.
+Short label of a location: translated facility name, "Current Vehicle (id)" / "Other Vehicle (id)", "Player Avatar", "N possible locations" (or the label of the single destination), "Unknown". The vehicle/avatar texts are not translated.
 
-- `loc` (*table*) : Lieu.
-- **renvoie** : string Libellé.
+- `loc` (*table*) : Location.
+- **returns**: string Label.
 
 #### `career_modules_delivery_parcelManager.getRewardsWithBreakdown(cargo)`
 
-Calcule les récompenses d'une cargaison livrée avec le détail : effet du modificateur timed (à l'heure, retardée, en retard), part des organisations prêteuses de véhicule (loaner), multiplicateur du niveau de la branche logistics, bonus ou pénalité de précision de stationnement. Peut débloquer le succès ON_SCHEDULE.
+Computes the rewards of a delivered cargo with a breakdown: effect of the timed modifier (on time, delayed, late), share of the vehicle loaner organizations, multiplier of the logistics branch level, parking precision bonus or penalty. Can unlock the ON_SCHEDULE achievement.
 
-- `cargo` (*table*) : Cargaison (rewards, modifiers, loadedAtTimeStamp, organization, destination, location…).
-- **renvoie** : table originalRewards : copie des récompenses de base.
-- **renvoie** : table breakdown : liste d'éléments {label, rewards, simpleBreakdownType}.
-- **renvoie** : table adjustedRewards : récompenses finales (base + somme des éléments).
+- `cargo` (*table*) : Cargo (rewards, modifiers, loadedAtTimeStamp, organization, destination, location…).
+- **returns**: table originalRewards: copy of the base rewards.
+- **returns**: table breakdown: list of items {label, rewards, simpleBreakdownType}.
+- **returns**: table adjustedRewards: final rewards (base + sum of the items).
 
 #### `career_modules_delivery_parcelManager.getTransientMoveCargo()`
 
-Liste les cargaisons qui ont un déplacement transitoire en attente.
+Lists the cargos that have a pending transient move.
 
-- **renvoie** : table Liste de cargaisons.
+- **returns**: table List of cargos.
 
 #### `career_modules_delivery_parcelManager.getTransientMovesForTargetLocationWithCargo(targetLocation)`
 
-Liste les cargaisons dont le déplacement transitoire cible le lieu donné.
+Lists the cargos whose transient move targets the given location.
 
-- `targetLocation` (*table*) : Lieu cible.
-- **renvoie** : table Liste de cargaisons.
+- `targetLocation` (*table*) : Target location.
+- **returns**: table List of cargos.
 
 #### `career_modules_delivery_parcelManager.hasUncommittedTransientMoves()`
 
-Indique si des déplacements transitoires ont été ajoutés mais pas encore appliqués.
+Indicates whether transient moves have been added but not yet applied.
 
-- **renvoie** : boolean true si en attente.
+- **returns**: boolean true if pending.
 
 #### `career_modules_delivery_parcelManager.onTrailerAttached(objId1, objId2)`
 
-Hook appelé quand une remorque est attelée : recalcule les organisations prêteuses des cargaisons situées dans des véhicules.
+Hook called when a trailer is coupled: recomputes the loaner organizations of the cargos located in vehicles.
 
-- `objId1` (*integer*) : Premier véhicule.
-- `objId2` (*integer*) : Second véhicule.
+- `objId1` (*integer*) : First vehicle.
+- `objId2` (*integer*) : Second vehicle.
 
 #### `career_modules_delivery_parcelManager.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook par image : envoie les messages UI « retardé » et « en retard » pour les cargaisons timed dans les véhicules, met à jour le tasklist chaque seconde, relance le tasklist et le nettoyage si des lieux ont changé, et nettoie toutes les 10 s. Inactif hors mode livraison.
+Per-frame hook: sends the "delayed" and "late" UI messages for timed cargos in vehicles, updates the tasklist every second, restarts the tasklist and the cleanup if locations changed, and cleans up every 10 s. Inactive outside delivery mode.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulation (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
 #### `career_modules_delivery_parcelManager.sameLocation(a, b)`
 
-Teste l'égalité de deux lieux en comparant chaque clé de a avec la même clé de b (comparaison asymétrique).
+Tests the equality of two locations by comparing each key of a with the same key of b (asymmetric comparison).
 
-- `a` (*table*) : Lieu de référence.
-- `b` (*table*) : Lieu comparé (ne doit pas être nil).
-- **renvoie** : boolean true si toutes les clés de a valent celles de b.
+- `a` (*table*) : Reference location.
+- `b` (*table*) : Compared location (must not be nil).
+- **returns**: boolean true if all keys of a equal those of b.
 
 #### `career_modules_delivery_parcelManager.sameLocationCargo(cargo, otherLoc)`
 
-Compare la position actuelle d'une cargaison avec un lieu via sameLocation.
+Compares a cargo's current position with a location via sameLocation.
 
-- `cargo` (*table*) : Cargaison.
-- `otherLoc` (*table*) : Lieu à comparer.
-- **renvoie** : boolean true si identique.
+- `cargo` (*table*) : Cargo.
+- `otherLoc` (*table*) : Location to compare.
+- **returns**: boolean true if identical.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `addParcelRewards` | nil | Exporté mais toujours nil (référence non définie dans le fichier). ⚠ référence `addParcelRewards` non définie dans le fichier (vaut probablement nil) |
-| `dependencies` | table<integer, string> | Extensions chargées avant : freeroam_facilities. |
+| `addParcelRewards` | nil | Exported but always nil (reference not defined in the file). ⚠ reference `addParcelRewards` not defined in the file (probably nil) |
+| `dependencies` | table<integer, string> | Extensions loaded before: freeroam_facilities. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onCargoGenerated` — écouté par 1 module(s)
+- `onCargoGenerated` — listened to by 1 module(s)
 
-**Évènements UI (guihooks.trigger) :** `Message`
+**UI events (guihooks.trigger):** `Message`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/delivery/parcelManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/delivery/parcelManager.lua`.*

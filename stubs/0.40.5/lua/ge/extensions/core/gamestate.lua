@@ -2,100 +2,100 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/gamestate.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_gamestate` : deux rôles. (1) Stocker l'état de JEU (freeroam, campagne… avec disposition d'applis et éléments de menu) et le diffuser aux extensions et à l'UI. (2) Piloter l'écran de chargement : les modules demandent à l'afficher (requestEnterLoadingScreen) et à le fermer (requestExitLoadingScreen) ; l'écran ne se ferme que quand TOUS les demandeurs ont terminé. Un moddeur l'utilise pour afficher l'écran de chargement pendant un travail long.
---- Accès : extension `core_gamestate` : `extensions.load("core_gamestate")`, puis la globale `core_gamestate`
+--- GE extension `core_gamestate`: two roles. (1) Store the GAME state (freeroam, campaign… with app layout and menu items) and broadcast it to the extensions and the UI. (2) Drive the loading screen: modules request to show it (requestEnterLoadingScreen) and to close it (requestExitLoadingScreen); the screen only closes when ALL requesters have finished. A modder uses it to show the loading screen during a long task.
+--- Access: extension `core_gamestate`: `extensions.load("core_gamestate")`, then the global `core_gamestate`
 ---@class core_gamestate
----@field state table État de jeu courant {state, appLayout, menuItems, options} ; {} au départ et après un retour au menu principal.
+---@field state table Current game state {state, appLayout, menuItems, options}; {} at start and after a return to the main menu.
 core_gamestate = {}
 
---- Renvoie le nom de l'état de jeu s'il est non vide (affiche aussi l'état par dump(), debug).
----Source : lua/ge/extensions/core/gamestate.lua:43
----@return string|nil  Nom de l'état ou nil.
+--- Returns the game state name if it is non-empty (also displays the state via dump(), debug).
+---Source: lua/ge/extensions/core/gamestate.lua:43
+---@return string|nil  State name or nil.
 function core_gamestate.gameStateDecorator() end
 
---- Copie profonde de l'état de jeu.
----Source : lua/ge/extensions/core/gamestate.lua:39
----@return table  Copie de M.state.
+--- Deep copy of the game state.
+---Source: lua/ge/extensions/core/gamestate.lua:39
+---@return table  Copy of M.state.
 function core_gamestate.getGameState() end
 
---- État de la demande d'un module.
----Source : lua/ge/extensions/core/gamestate.lua:97
----@param tagName string Identifiant du demandeur.
----@return boolean|nil  true = demandé, false = terminé, nil = jamais demandé.
+--- State of a module's request.
+---Source: lua/ge/extensions/core/gamestate.lua:97
+---@param tagName string Requester identifier.
+---@return boolean|nil  true = requested, false = finished, nil = never requested.
 function core_gamestate.getLoadingStatus(tagName) end
 
---- Indique si au moins un module demande l'écran de chargement. À ne pas utiliser pendant le processus de chargement lui-même (le code le déconseille) ; préférer getLoadingStatus.
----Source : lua/ge/extensions/core/gamestate.lua:93
----@return boolean  true si un chargement est demandé.
+--- Indicates whether at least one module requests the loading screen. Not to be used during the loading process itself (the code advises against it); prefer getLoadingStatus.
+---Source: lua/ge/extensions/core/gamestate.lua:93
+---@return boolean  true if a loading is requested.
 function core_gamestate.loading() end
 
---- Appelé par l'UI quand l'écran de chargement est réellement affiché : marque loadingActive et exécute les callbacks en attente.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/gamestate.lua:169
+--- Called by the UI when the loading screen is actually displayed: sets loadingActive and executes the pending callbacks.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/gamestate.lua:169
 function core_gamestate.loadingScreenActive() end
 
---- Appelé par l'UI quand l'écran de chargement est fermé : remet les paramètres audio à 0, signale LoadingManager et émet le hook onLoadingScreenInactive.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/gamestate.lua:175
----@param state number|string État envoyé par l'UI (converti en nombre si possible).
+--- Called by the UI when the loading screen is closed: resets the audio parameters to 0, signals LoadingManager and emits the onLoadingScreenInactive hook.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/gamestate.lua:175
+---@param state number|string State sent by the UI (converted to a number if possible).
 function core_gamestate.loadingScreenInactive(state) end
 
---- Hook de changement de route UI : met à jour la musique du menu principal si les fonctions globales existent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/gamestate.lua:224
----@param context table Contexte avec toRoute.name.
+--- UI route change hook: updates the main menu music if the global functions exist.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/gamestate.lua:224
+---@param context table Context with toRoute.name.
 function core_gamestate.onAfterRouteChange(context) end
 
---- Hook de restauration : ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/gamestate.lua:184
----@param data any Non utilisé.
+--- Restore hook: does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/gamestate.lua:184
+---@param data any Not used.
 function core_gamestate.onDeserialized(data) end
 
---- Appelé au chargement de l'extension : demande à l'UI de signaler son initialisation (guihooks requestUIInitialised).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/gamestate.lua:202
+--- Called when the extension loads: asks the UI to report its initialization (guihooks requestUIInitialised).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/gamestate.lua:202
 function core_gamestate.onExtensionLoaded() end
 
---- Hook (alias de uiReady) appelé quand l'UI est prête : si un chargement attendait l'UI, ré-émet LoadingScreen {active = true}.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/gamestate.lua:187
+--- Hook (alias of uiReady) called when the UI is ready: if a loading was waiting for the UI, re-emits LoadingScreen {active = true}.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/gamestate.lua:187
 function core_gamestate.onUIInitialised() end
 
---- Hook par image : si des callbacks attendent l'écran de chargement depuis plus d'1 s (temps cumulé borné à 1/30 s par image), force loadingScreenActive.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/gamestate.lua:210
----@param dtReal number Delta temps réel en secondes.
----@param dtSim number Delta simulation.
----@param dtRaw number Delta brut.
+--- Per-frame hook: if callbacks have been waiting for the loading screen for more than 1 s (accumulated time capped at 1/30 s per frame), forces loadingScreenActive.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/gamestate.lua:210
+---@param dtReal number Real-time delta in seconds.
+---@param dtSim number Simulation delta.
+---@param dtRaw number Raw delta.
 function core_gamestate.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Demande l'affichage de l'écran de chargement au nom d'un module. À la première demande, envoie LoadingScreen {active = true} et règle les paramètres audio g_GameLoading=1 et g_FadeTimeMS=1000. func est appelé quand l'écran est prêt.
----Source : lua/ge/extensions/core/gamestate.lua:101
----@param tagName string Identifiant du demandeur (même nom à réutiliser pour la sortie). nil : ignoré.
----@param func function|nil Callback à exécuter quand l'écran est affiché.
+--- Requests the display of the loading screen on behalf of a module. On the first request, sends LoadingScreen {active = true} and sets the audio parameters g_GameLoading=1 and g_FadeTimeMS=1000. func is called when the screen is ready.
+---Source: lua/ge/extensions/core/gamestate.lua:101
+---@param tagName string Requester identifier (same name to reuse for the exit). nil: ignored.
+---@param func function|nil Callback to execute when the screen is displayed.
 function core_gamestate.requestEnterLoadingScreen(tagName, func) end
 
---- Indique que le demandeur a fini. Quand tous ont fini, l'écran de chargement est masqué (LoadingScreen {active = false, gotoMainMenu, gameState}) et la file de callbacks est vidée.
----Source : lua/ge/extensions/core/gamestate.lua:141
----@param tagName string Même identifiant que pour l'entrée. Un tag inconnu produit un avertissement.
----@param ignoreMenuswitch boolean|nil Non utilisé dans le code.
+--- Indicates that the requester has finished. When all have finished, the loading screen is hidden (LoadingScreen {active = false, gotoMainMenu, gameState}) and the callback queue is cleared.
+---Source: lua/ge/extensions/core/gamestate.lua:141
+---@param tagName string Same identifier as for the entry. An unknown tag produces a warning.
+---@param ignoreMenuswitch boolean|nil Not used in the code.
 function core_gamestate.requestExitLoadingScreen(tagName, ignoreMenuswitch) end
 
---- Diffuse l'état de jeu courant : hook onGameStateUpdate et évènement UI GameStateUpdate (alias de sendGameState).
----Source : lua/ge/extensions/core/gamestate.lua:23
+--- Broadcasts the current game state: onGameStateUpdate hook and UI event GameStateUpdate (alias of sendGameState).
+---Source: lua/ge/extensions/core/gamestate.lua:23
 function core_gamestate.requestGameState() end
 
---- Indique à l'UI s'il faut afficher le fond du menu principal (guihooks ShowEntertainingBackground) : vrai quand getMissionFilename() est vide. Ne change pas la route de l'UI.
----Source : lua/ge/extensions/core/gamestate.lua:59
----@return boolean  true si aucun niveau n'est chargé.
+--- Tells the UI whether to show the main menu background (guihooks ShowEntertainingBackground): true when getMissionFilename() is empty. Does not change the UI route.
+---Source: lua/ge/extensions/core/gamestate.lua:59
+---@return boolean  true if no level is loaded.
 function core_gamestate.requestMainMenuState() end
 
---- Met à jour l'état de jeu (freeroam, campagne…) puis le diffuse. Les paramètres nil gardent l'ancienne valeur.
----Source : lua/ge/extensions/core/gamestate.lua:29
----@param state string|nil Nom de l'état de jeu.
----@param appLayout any Disposition des applis UI (déduit du code).
----@param menuItems any Éléments de menu (déduit du code).
----@param options any Options supplémentaires.
+--- Updates the game state (freeroam, campaign…) then broadcasts it. nil parameters keep the old value.
+---Source: lua/ge/extensions/core/gamestate.lua:29
+---@param state string|nil Name of the game state.
+---@param appLayout any UI apps layout (inferred from code).
+---@param menuItems any Menu items (inferred from code).
+---@param options any Additional options.
 function core_gamestate.setGameState(state, appLayout, menuItems, options) end
 

@@ -1,0 +1,49 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/polygonPaint.lua",
+  "module": "Outil de polygone à main levée pour l'éditeur : l'utilisateur maintient le clic gauche et glisse sur le terrain pour poser des points, relâche pour terminer (la fermeture est implicite entre le dernier et le premier point). Le tracé est simplifié par RDP pour obtenir un polygone éditable propre. Dessine un aperçu (sphères et lignes bleues) et le curseur.",
+  "usage": "local pp = extensions.editor_toolUtilities_polygonPaint\npp.start({stepMeters = 2, rdpTolMeters = 6})\n-- chaque frame :\nif pp.update() then\n  local poly = pp.consumePolygon()\nend",
+  "notes": [
+    "Le dessin ne démarre que si la souris survole le terrain : évite qu'un clic sur l'interface (ex. bouton « New ») commence et termine un trait.",
+    "Les points sont posés à la hauteur du terrain + 0.05 m (anti z-fighting).",
+    "Un trait de moins de 3 points (ou moins de 3 après RDP) est jeté et l'outil reste armé.",
+    "À la fin d'un tracé valide, active passe à false et finished à true jusqu'à consumePolygon."
+  ],
+  "functions": {
+    "start": {
+      "desc": "Arme l'outil et réinitialise les tables. stepMeters (défaut 2.0) est la distance minimale entre deux points capturés, rdpTolMeters (défaut 6.0) la tolérance de simplification.",
+      "params": {"opts": {"type": "table|nil", "desc": "{ stepMeters = number, rdpTolMeters = number }"}},
+      "returns": [],
+      "internal": false
+    },
+    "cancel": {
+      "desc": "Désarme l'outil et efface les points.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "isActive": {
+      "desc": "Indique si l'outil est armé.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si armé."}],
+      "internal": false
+    },
+    "hasFinished": {
+      "desc": "Indique si un polygone terminé attend d'être récupéré par consumePolygon.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si un polygone est prêt."}],
+      "internal": false
+    },
+    "consumePolygon": {
+      "desc": "Récupère le polygone simplifié terminé et efface le drapeau finished. Renvoie nil s'il n'y a rien de terminé.",
+      "params": {"out": {"type": "table|nil", "desc": "Table de sortie réutilisable, vidée puis remplie ; créée si nil."}},
+      "returns": [{"type": "table|nil", "desc": "Liste de vec3 du polygone."}],
+      "internal": false
+    },
+    "update": {
+      "desc": "À appeler chaque frame pendant que la peinture doit être possible : dessine l'aperçu et le curseur, capture les points tant que le clic gauche est enfoncé sur le terrain, termine au relâchement.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si un polygone s'est terminé pendant cette frame."}],
+      "internal": false
+    }
+  }
+}

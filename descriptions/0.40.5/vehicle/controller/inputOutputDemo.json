@@ -1,11 +1,11 @@
 {
   "path": "lua/vehicle/controller/inputOutputDemo.lua",
-  "module": "Contrôleur de démonstration (type \"auxiliary\", defaultOrder 100000) montrant comment lire des données du véhicule, générer des entrées et communiquer par UDP. À chaque image il enregistre temps, accélérateur, frein, énergie de batterie et puissance moteur dans un tableau CSV en mémoire, envoie des entrées aléatoires (throttle, brake, steering en FILTER_DIRECT) et échange un message JSON avec 127.0.0.1:54812. N'est pas destiné à un véhicule jouable.",
+  "module": "Demo controller (type \"auxiliary\", defaultOrder 100000) showing how to read vehicle data, generate inputs and communicate over UDP. Every frame it records time, throttle, brake, battery energy and motor power in an in-memory CSV table, sends random inputs (throttle, brake, steering in FILTER_DIRECT) and exchanges a JSON message with 127.0.0.1:54812. Not intended for a playable vehicle.",
   "notes": [
-    "Attention : GenerateInputEvents envoie à chaque image des valeurs aléatoires de throttle (0..1), brake (0..1) et steering (-1..1) : le véhicule devient incontrôlable.",
-    "La communication UDP utilise socket.udp() avec un délai de réception de 5 ms, envoie {\"test\":123} et affiche (dump) la réponse ; le réseau bloque jusqu'à 5 ms par image.",
-    "saveLogToCSV écrit le fichier testLog.csv avec writeFile (chemin relatif au répertoire d'écriture du jeu, déduit du code).",
-    "Aucune clé jbeam n'est lue. Les noms de fonctions locales (SaveLogToDisk, LogInterestingData…) ne sont pas exportés."
+    "Warning: GenerateInputEvents sends random values of throttle (0..1), brake (0..1) and steering (-1..1) every frame: the vehicle becomes uncontrollable.",
+    "The UDP communication uses socket.udp() with a receive timeout of 5 ms, sends {\"test\":123} and prints (dump) the response; the network blocks for up to 5 ms per frame.",
+    "saveLogToCSV writes the file testLog.csv with writeFile (path relative to the game's write directory, inferred from code).",
+    "No jbeam key is read. The local function names (SaveLogToDisk, LogInterestingData...) are not exported."
   ],
   "fields": {
     "type": {
@@ -14,57 +14,57 @@
     },
     "defaultOrder": {
       "type": "number",
-      "desc": "100000 (exécuté en dernier)."
+      "desc": "100000 (executed last)."
     }
   },
   "functions": {
     "init": {
-      "desc": "Prépare l'en-tête CSV, remet le chrono à 0 et configure le socket UDP vers 127.0.0.1:54812.",
+      "desc": "Prepares the CSV header, resets the timer to 0 and configures the UDP socket toward 127.0.0.1:54812.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Vide le journal CSV (en-tête seul) et remet le chrono à 0.",
+      "desc": "Clears the CSV log (header only) and resets the timer to 0.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Journalise les données, génère des entrées aléatoires et communique par UDP.",
+      "desc": "Logs the data, generates random inputs and communicates over UDP.",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateFixedStep": {
-      "desc": "Ne fait rien.",
+      "desc": "Does nothing.",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "update": {
-      "desc": "Incrémente le chrono interne.",
+      "desc": "Increments the internal timer.",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "saveLogToCSV": {
-      "desc": "Écrit le journal accumulé dans testLog.csv.",
+      "desc": "Writes the accumulated log to testLog.csv.",
       "params": {},
       "returns": []
     }

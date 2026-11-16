@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/gameplay/drift/freeroam/cruising.lua",
+  "module": "Détecte en roaming libre le passage en mode « cruising » de drift : quand le joueur enchaîne assez de drifts (ou fait un très long drift), le contexte drift passe de \"inFreeroam\" à \"inFreeroamCruising\" (ce qui fait afficher l'interface de drift) puis revient à \"inFreeroam\" après quelques secondes sans drifter. Lit gameplay_drift_drift et pilote gameplay_drift_general.setContext.",
+  "notes": [
+    "Seuils codés en dur : drift >= 1.5 s avec au moins 3 drifts chaînés, ou drift >= 3.2 s ; le drift ne doit pas s'être terminé à moins de 25 m de son point de départ (sinon c'est un donut, pas du cruising) ; l'interface est désactivée après 3 s sans drift.",
+    "Le décompte de fin utilise dtSim (temps simulé), donc il est ralenti/figé avec le ralenti ou la pause.",
+    "Le hook onDriftFreeroamCruisingStarted est émis sans argument au passage en cruising.",
+    "La fonction locale getGC (garbage du profileur) n'est pas exportée : code mort."
+  ],
+  "functions": {
+    "onUpdate": {
+      "desc": "Appelé à chaque frame : teste le début du cruising (detectStart) puis sa fin (detectEnd). Si le debug général est actif, mesure le coût avec un LuaProfiler.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel en secondes (inutilisé)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulé en secondes, utilisé pour le décompte de fin."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut en secondes (inutilisé)."}
+      },
+      "internal": true
+    }
+  },
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "gameplay_drift_general et gameplay_drift_drift, chargés avant."}
+  }
+}

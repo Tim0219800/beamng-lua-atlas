@@ -1,0 +1,47 @@
+{
+  "path": "lua/ge/extensions/ui/router/utils.lua",
+  "module": "Petits utilitaires du routeur UI : détection et résolution de noms de routes relatifs (styles Angular « ^. » et Vue « ./ », « ../ »), fusion profonde de tables et résolution d'une référence de fonction « module.func » en fonction Lua appelable. Utilisé par le routeur et ses services.",
+  "notes": [
+    "Le code signale lui-même (TODO) que les fonctions de résolution relative devraient être nettoyées ou supprimées ; routeManager.resolveRouteName est la version plus récente.",
+    "resolveFunctionReference charge l'extension à la volée : `extensions[moduleName]` déclenche le chargement automatique."
+  ],
+  "functions": {
+    "isRelativeRoute": {
+      "desc": "Indique si le nom de route est relatif : commence par '^' (Angular) ou par '.' (Vue).",
+      "params": {"route": {"type": "string|any", "desc": "Nom de route."}},
+      "returns": [{"type": "boolean", "desc": "true si relatif ; false pour un non-string."}],
+      "internal": false
+    },
+    "resolveRelativeRoute": {
+      "desc": "Convertit une route relative en nom absolu pointé par rapport à l'état courant. « ^^.x » ou « ../../x » remontent de n niveaux ; « ./x » reste au même niveau (ajoute un enfant) ; les '/' deviennent des '.'. Une route absolue est renvoyée telle quelle.",
+      "params": {
+        "route": {"type": "string", "desc": "Route relative ou absolue."},
+        "currentState": {"type": "string", "desc": "Nom pointé de la route courante."}
+      },
+      "returns": [{"type": "string", "desc": "Nom pointé résolu."}],
+      "internal": false
+    },
+    "deepMerge": {
+      "desc": "Fusionne récursivement `source` dans `target` (modifié sur place) : les tables communes sont fusionnées, les autres valeurs écrasées par celles de source. Si source n'est pas une table, renvoie source (ou target si source est nil).",
+      "params": {
+        "target": {"type": "table", "desc": "Table modifiée."},
+        "source": {"type": "table", "desc": "Table à fusionner."}
+      },
+      "returns": [{"type": "table", "desc": "La table target fusionnée."}],
+      "internal": false
+    },
+    "resolveFunctionReference": {
+      "desc": "Résout une chaîne « module.func » (séparation au dernier point) en fonction de l'extension correspondante.",
+      "params": {
+        "reference": {"type": "string|nil", "desc": "Référence « module.func » ; nil donne trois nil."},
+        "contextLabel": {"type": "string|nil", "desc": "Libellé utilisé dans les messages d'erreur (défaut « Function reference »)."}
+      },
+      "returns": [
+        {"type": "function|nil", "desc": "La fonction trouvée."},
+        {"type": "string|nil", "desc": "Message d'erreur."},
+        {"type": "boolean|nil", "desc": "true en cas d'erreur."}
+      ],
+      "internal": false
+    }
+  }
+}

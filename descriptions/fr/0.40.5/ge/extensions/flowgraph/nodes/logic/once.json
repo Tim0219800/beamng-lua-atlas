@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/logic/once.lua",
+  "module": "Noeud flowgraph 'Once' (categorie logic, behaviour once). Laisse passer le flux une seule fois (impulsion en sortie) ; le pin impulsion 'reset' le rearme. L'etat est reinitialise a l'arret de l'execution.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "ready = true.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Rearme le noeud (ready = true).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Si reset : rearme et sortie false. Sinon, si pret et flux d'entree : sortie true une fois puis ready=false ; dans tous les autres cas sortie false.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "non utilise"
+            }
+          }
+        }
+      }
+    }
+  }
+}

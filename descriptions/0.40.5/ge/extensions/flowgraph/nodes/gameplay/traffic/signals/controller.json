@@ -1,63 +1,63 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/controller.lua",
-  "module": "Nœud flowgraph « Get Signal Controller » (repeat_instant). Lit un contrôleur de feux (signalControllerData) : signalType, stateCount, duration (totalDuration) et, pour chaque état i (nombre réglable), stateName_i et stateDuration_i ('none' et 0 si absent).",
+  "module": "Flowgraph node \"Get Signal Controller\" (repeat_instant). Reads a traffic light controller (signalControllerData): signalType, stateCount, duration (totalDuration) and, for each state i (adjustable count), stateName_i and stateDuration_i ('none' and 0 if absent).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_onDeserialized": {
-          "desc": "Restaure les réglages propres au nœud à partir des données sauvegardées.",
+          "desc": "Restores the node's own settings from the saved data.",
           "internal": true,
           "params": {
             "res": {
               "type": "table",
-              "desc": "table de sérialisation à remplir"
+              "desc": "serialization table to fill"
             }
           }
         },
         "_onSerialize": {
-          "desc": "Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.",
+          "desc": "Adds the node's own settings to the `res` table when saving the graph.",
           "internal": true,
           "params": {
             "res": {
               "type": "table",
-              "desc": "table de sérialisation à remplir"
+              "desc": "serialization table to fill"
             }
           }
         },
         "drawCustomProperties": {
-          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "desc": "Draws the node's custom properties in the flowgraph editor panel (ImGui).",
           "internal": true
         },
         "init": {
-          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "desc": "Initializes the node's internal state at creation (called by the flowgraph engine).",
           "internal": true
         },
         "postInit": {
-          "desc": "Appelé après la création des pins du nœud ; sert à ajuster les pins (modèles de valeurs, filtres de fichiers, clés dynamiques).",
+          "desc": "Called after the node's pins are created; used to adjust the pins (value templates, file filters, dynamic keys).",
           "internal": true
         },
         "updatePins": {
-          "desc": "Ajoute ou retire les pins stateName_i / stateDuration_i et supprime leurs liens.",
+          "desc": "Adds or removes the stateName_i / stateDuration_i pins and deletes their links.",
           "internal": true,
           "params": {
             "old": {
               "type": "integer",
-              "desc": "ancien nombre de pins"
+              "desc": "old number of pins"
             },
             "new": {
               "type": "integer",
-              "desc": "nouveau nombre de pins"
+              "desc": "new number of pins"
             }
           }
         },
         "work": {
-          "desc": "Recopie type, nombre d'états, durée totale et nom/durée de chaque état sur les sorties.",
+          "desc": "Copies type, state count, total duration and the name/duration of each state to the outputs.",
           "internal": true,
           "params": {
             "args": {
               "type": "table",
-              "desc": "arguments transmis par le moteur (non utilisés)"
+              "desc": "arguments passed by the engine (unused)"
             }
           }
         }

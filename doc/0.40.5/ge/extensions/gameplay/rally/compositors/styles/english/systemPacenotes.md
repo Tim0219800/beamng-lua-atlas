@@ -1,16 +1,16 @@
 # `gameplay_rally_compositors_styles_english_systemPacenotes`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/compositors/styles/english/systemPacenotes.lua` · VM : Game Engine (GE) · 38 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/compositors/styles/english/systemPacenotes.lua` · VM: Game Engine (GE) · 38 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/compositors/styles/english/systemPacenotes")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/compositors/styles/english/systemPacenotes")` (file under extensions/ but not a regular extension)
 
-Notes système en anglais (annonces du copilote qui ne viennent pas des virages) : compte à rebours de départ (five à go), avertissements de temps (60, 30, 15, 10 secondes), vérification de l'intercom et des ceintures, nouvelle minute de départ, faux départ. Le fichier renvoie le résultat de systemPacenotes.localized(...) (module notebook/systemPacenotes) à partir d'une table nom -> texte ou liste de variantes {text, weight}.
+System notes in English (co-driver announcements that do not come from corners): start countdown (five to go), time warnings (60, 30, 15, 10 seconds), intercom and belts check, new start minute, false start. The file returns the result of systemPacenotes.localized(...) (module notebook/systemPacenotes) from a table name -> text or list of variants {text, weight}.
 
-## Remarques
+## Notes
 
-- AVERTISSEMENT du fichier : toute modification d'une chaîne impose de régénérer les fichiers audio.
-- 'precountdown' a deux variantes pondérées : 'Good luck!' (poids 0,5) et 'Best of luck!' (poids 0,1).
-- Noms définis : precountdown, countdown5 à countdown1, countdowngo, warningSeconds60/30/15/10, commsCheck, beltsCheck, rescheduled, falseStart. Ils sont validés par styleValidator via systemPacenotes.validate.
+- File WARNING: any change to a string requires regenerating the audio files.
+- 'precountdown' has two weighted variants: 'Good luck!' (weight 0.5) and 'Best of luck!' (weight 0.1).
+- Defined names: precountdown, countdown5 to countdown1, countdowngo, warningSeconds60/30/15/10, commsCheck, beltsCheck, rescheduled, falseStart. They are validated by styleValidator via systemPacenotes.validate.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/compositors/styles/english/systemPacenotes.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/compositors/styles/english/systemPacenotes.lua`.*

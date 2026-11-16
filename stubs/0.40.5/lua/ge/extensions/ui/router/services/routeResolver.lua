@@ -2,23 +2,23 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/router/services/routeResolver.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Service OBSOLÈTE du routeur UI : le flux principal construit désormais les NavigationEntries directement avec ResolvedRoute.createEntry(). Ce module reste pour d'éventuels appelants externes : il résout un nom de route en table résolue et compare deux routes.
---- Accès : extension `ui_router_services_routeResolver` : `extensions.load("ui_router_services_routeResolver")`, puis la globale `ui_router_services_routeResolver`
+--- DEPRECATED UI router service: the main flow now builds NavigationEntries directly with ResolvedRoute.createEntry(). This module remains for possible external callers: it resolves a route name into a resolved table and compares two routes.
+--- Access: extension `ui_router_services_routeResolver`: `extensions.load("ui_router_services_routeResolver")`, then the global `ui_router_services_routeResolver`
 ---@class ui_router_services_routeResolver
 ui_router_services_routeResolver = {}
 
---- Compare deux routes : même `name` et mêmes `params` (comparaison valeur à valeur, non récursive).
----Source : lua/ge/extensions/ui/router/services/routeResolver.lua:42
----@param routeA table Première route.
----@param routeB table Seconde route.
----@return boolean  true si identiques ; false si l'une est nil.
+--- Compares two routes: same `name` and same `params` (value-by-value comparison, non-recursive).
+---Source: lua/ge/extensions/ui/router/services/routeResolver.lua:42
+---@param routeA table First route.
+---@param routeB table Second route.
+---@return boolean  true if identical; false if either is nil.
 function ui_router_services_routeResolver.isEqualRoutes(routeA, routeB) end
 
---- Résout un nom de route (relatif possible, résolu avec utils.resolveRelativeRoute si une route courante est fournie) en route résolue via routeManager.getRoute puis ResolvedRoute.createResolved. Renvoie nil avec un avertissement si la route est introuvable ou la création échoue. Obsolète.
----Source : lua/ge/extensions/ui/router/services/routeResolver.lua:15
----@param routeName string Nom de la route.
----@param params table|nil Paramètres de la requête.
----@param currentRoute table|nil Route courante (pour les noms relatifs).
----@return table|nil  Route résolue.
+--- Resolves a route name (possibly relative, resolved with utils.resolveRelativeRoute if a current route is provided) into a resolved route via routeManager.getRoute then ResolvedRoute.createResolved. Returns nil with a warning if the route is not found or creation fails. Deprecated.
+---Source: lua/ge/extensions/ui/router/services/routeResolver.lua:15
+---@param routeName string Name of the road.
+---@param params table|nil Query parameters.
+---@param currentRoute table|nil Current route (for relative names).
+---@return table|nil  Resolved route.
 function ui_router_services_routeResolver.resolve(routeName, params, currentRoute) end
 

@@ -1,48 +1,48 @@
 # `ui_options`
 
-*Fichier : `lua/ge/extensions/ui/options.lua` · VM : Game Engine (GE) · 59 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/options.lua` · VM: Game Engine (GE) · 59 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_options` : `extensions.load("ui_options")`, puis la globale `ui_options`
+**Access:** extension `ui_options`: `extensions.load("ui_options")`, then the global `ui_options`
 
-Petit utilitaire côté GE pour la disposition (layout) du menu d'options Vue. Il lit quels fichiers layout.json / layout.dev.json existent dans le dossier utilisateur et peut sauvegarder un layout dans /ui/ui-vue/src/modules/options/runtime/ (donc dans le dossier utilisateur). Utile à un moddeur qui veut surcharger la structure du menu d'options.
+Small GE-side utility for the layout of the Vue options menu. It reads which layout.json / layout.dev.json files exist in the user folder and can save a layout in /ui/ui-vue/src/modules/options/runtime/ (therefore in the user folder). Useful to a modder who wants to override the options menu structure.
 
-## Exemple
+## Example
 
 ```lua
-ui_options.saveLayout("mon-layout", jsonString) -- écrit layout.mon-layout.json
+ui_options.saveLayout("mon-layout", jsonString) -- writes layout.mon-layout.json
 ```
 
-## Remarques
+## Notes
 
-- La clé de saveLayout doit être vide/nil ou correspondre à ^[%w%-_]+$ ; sinon la fonction logue une erreur et renvoie false.
-- isValidKey n'est appelé que si key n'est ni nil ni vide, donc pas de risque d'erreur string.match sur nil.
+- The saveLayout key must be empty/nil or match ^[%w%-_]+$; otherwise the function logs an error and returns false.
+- isValidKey is only called if key is neither nil nor empty, so there is no risk of a string.match error on nil.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_options.getUserFolderLayouts()` | Liste ceux des fichiers layout.json et layout.dev.json dont le chemin réel se trouve sous le dossier utilisateur (FS:getUserPath). | 16 |
-| `ui_options.saveLayout(key, data)` | Écrit les données JSON dans layout[.key].json sous /ui/ui-vue/src/modules/options/runtime/ via writeFile. | 30 |
+| `ui_options.getUserFolderLayouts()` | Lists those of the layout.json and layout.dev.json files whose real path is under the user folder (FS:getUserPath). | 16 |
+| `ui_options.saveLayout(key, data)` | Writes the JSON data to layout[.key].json under /ui/ui-vue/src/modules/options/runtime/ via writeFile. | 30 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_options.getUserFolderLayouts()`
 
-Liste ceux des fichiers layout.json et layout.dev.json dont le chemin réel se trouve sous le dossier utilisateur (FS:getUserPath).
+Lists those of the layout.json and layout.dev.json files whose real path is under the user folder (FS:getUserPath).
 
-- **renvoie** : string[] Noms de fichiers trouvés ; vide si le dossier utilisateur est inconnu.
+- **returns**: string[] File names found; empty if the user folder is unknown.
 
 #### `ui_options.saveLayout(key, data)`
 
-Écrit les données JSON dans layout[.key].json sous /ui/ui-vue/src/modules/options/runtime/ via writeFile.
+Writes the JSON data to layout[.key].json under /ui/ui-vue/src/modules/options/runtime/ via writeFile.
 
-- `key` (*string|nil*) : Suffixe du fichier (slug sûr) ; nil ou vide pour layout.json.
-- `data` (*string*) : Contenu JSON déjà sérialisé.
-- **renvoie** : boolean true si l'écriture a réussi, false si data n'est pas une chaîne, si la clé est invalide ou si l'écriture échoue.
+- `key` (*string|nil*) : File suffix (safe slug); nil or empty for layout.json.
+- `data` (*string*) : Already serialized JSON content.
+- **returns**: boolean true if the write succeeded, false if data is not a string, the key is invalid or the write fails.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `getFileRealPath`, `getUserPath`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/options.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/options.lua`.*

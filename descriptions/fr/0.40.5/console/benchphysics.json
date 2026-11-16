@@ -1,0 +1,12 @@
+{
+  "path": "lua/console/benchphysics.lua",
+  "module": "Très ancien petit benchmark de mise à l'échelle de la physique : pour 0 à 8 véhicules, mesure le temps moyen par mise à jour sur 1000 images et écrit le résultat dans `phys-scale.csv` (colonnes « vehicle count;delay »). Définit les globales `testStep` et `benchPhysics`.",
+  "notes": [
+    "Code obsolète : il appelle `spawnObjects(i)` et `updateLoop(frames)`, qui ne sont définies nulle part dans ce fichier ni dans la VM console ; il ne fonctionne pas tel quel.",
+    "Utilise des globales sans `local` (frames, hp, file, d) et la classe moteur HighPerfTimer."
+  ],
+  "functions": {
+    "testStep": {"desc": "Fait apparaître i véhicules, joue 1000 images et renvoie le temps moyen par image en ms (t / frames).", "params": {"i": {"type": "integer", "desc": "Nombre de véhicules."}}, "returns": [{"type": "number", "desc": "Temps moyen par mise à jour, en ms."}]},
+    "benchPhysics": {"desc": "Boucle de 0 à 8 véhicules, appelle testStep et écrit phys-scale.csv ; affiche « Benchmark running: ... done! ».", "params": {}, "returns": []}
+  }
+}

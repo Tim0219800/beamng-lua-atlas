@@ -1,0 +1,32 @@
+{
+  "path": "lua/ge/extensions/core/cameraUpdate.lua",
+  "module": "Boucle de mise à jour de la caméra à chaque image, séparée de core/camera.lua. Elle traite la vue principale du joueur puis les contextes de rendu supplémentaires (écran partagé, flux vidéo) : remplit camData (position, vitesse, dt, véhicule suivi), appelle le mode de caméra sélectionné (caméra globale ou caméra du véhicule), puis les caméras « en cours d'exécution » (filtres), et copie le résultat dans finalCameraData. core_camera injecte son état via setup() et expose onPreRender / onClientPostStartMission comme ses propres callbacks ; un moddeur n'appelle normalement rien ici.",
+  "notes": [
+    "Hooks émis : onCameraChanged(player, camName, vehId) quand le nom de caméra ou le véhicule change pour un contexte (player vaut 0 si le contexte n'a pas de joueur) ; onCameraPreRender(camData) seulement sur la vue principale et seulement quand une caméra globale a réussi son update().",
+    "Si les calculs de caméra donnent NaN/inf, la dernière pose valide est réutilisée et le mode est réinitialisé via cam:init() (journal d'erreur).",
+    "Repli en cascade : caméra du véhicule manquante -> « orbit » -> caméra libre (commands.setFreeCamera() sur la vue principale ; sur un contexte supplémentaire, la caméra globale 'free' du contexte).",
+    "camData.dt est multiplié par cameraM.speedFactor (dtSim, dtReal, dtRaw aussi). Sur la vue principale, la distance des ombres de soleil vaut 0.5 en conduite (caméra attachée) et 1.0 avec une caméra globale.",
+    "Le rayon SSAO passe à 0.5 quand la caméra est à l'intérieur du véhicule (et 1.5 dehors), sauf en mode bigMap.",
+    "Le nearClip par défaut vient de theLevelInfo.nearClip, sinon 0.1 ; le fov par défaut vaut 60."
+  ],
+  "functions": {
+    "setup": {
+      "desc": "Reçoit de core/camera.lua ses tables d'état et ses fonctions utilitaires (extraContexts, mainContext, moveManager, getGlobalCameras, getVehicleData, getRunningCamsOrder, setGlobalCameraByName, set, vehicleChanged, isInsideBasedOnCameras, isUnicycle, cameraM). Appelé une fois par core_camera.",
+      "params": {"deps": {"type": "table", "desc": "Table des dépendances injectées par core_camera, clés citées ci-dessus."}},
+      "internal": true
+    },
+    "onClientPostStartMission": {
+      "desc": "Hook appelé après le démarrage d'un niveau : oublie le nearClip du niveau et l'état intérieur/extérieur de la caméra pour que le rayon SSAO soit réappliqué.",
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Appelé à chaque image avant le rendu (via core_camera) : met à jour la vue principale puis chaque contexte supplémentaire. Ne fait rien tant que levelLoaded est faux.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "dt de rendu lissé, en secondes"},
+        "dtSim": {"type": "number", "desc": "dt de simulation lissé (tient compte du ralenti/pause), en secondes"},
+        "dtRaw": {"type": "number", "desc": "dt de rendu brut, horloge réelle, en secondes"}
+      },
+      "internal": true
+    }
+  }
+}

@@ -1,47 +1,47 @@
 # `telemetry_trackers_controls`
 
-*Fichier : `lua/ge/extensions/telemetry/trackers/controls.lua` · VM : Game Engine (GE) · 67 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/trackers/controls.lua` · VM: Game Engine (GE) · 67 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_trackers_controls` : `extensions.load("telemetry_trackers_controls")`, puis la globale `telemetry_trackers_controls`
+**Access:** extension `telemetry_trackers_controls`: `extensions.load("telemetry_trackers_controls")`, then the global `telemetry_trackers_controls`
 
-Suiveur de télémétrie des commandes : signale la méthode de direction utilisée (évènement ponctuel « controlsUsed ») et, à la fermeture du jeu, le nombre d'utilisations de chaque action liée (« inputActionUse », via ActionMap.getActionUseCounts). Les périphériques connectés relèvent du relevé matériel (tracker hardware), pas de celui-ci.
+Controls telemetry tracker: reports the steering method used (one-off event "controlsUsed") and, when the game closes, the number of uses of each bound action ("inputActionUse", via ActionMap.getActionUseCounts). Connected devices belong to the hardware survey (hardware tracker), not this one.
 
-## Remarques
+## Notes
 
-- controlsUsed est un évènement ponctuel, pas une durée : la méthode ne change presque jamais dans une session. Elle est signalée par véhicule, donc un changement de véhicule la signale de nouveau.
-- L'extension se décharge avant que telemetry_core ne vide son tampon, donc l'évènement inputActionUse arrive encore dans le fichier.
-- Lors d'un rechargement Lua (onSerialize avec reason == « reload »), le rapport d'actions est sauté pour éviter les doublons ; il n'est rapporté qu'une fois par vie de l'extension.
+- controlsUsed is a one-off event, not a duration: the method almost never changes in a session. It is reported per vehicle, so a vehicle change reports it again.
+- The extension unloads before telemetry_core flushes its buffer, so the inputActionUse event still reaches the file.
+- On a Lua reload (onSerialize with reason == "reload"), the action report is skipped to avoid duplicates; it is only reported once per extension lifetime.
 
-**Dépendances (chargées avant) :** `telemetry_core`
+**Dependencies (loaded first):** `telemetry_core`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_trackers_controls.onExtensionLoaded()` | Hook appelé au chargement : déchargement manuel. *(interne)* *(hook)* | 45 |
-| `telemetry_trackers_controls.onExtensionUnloaded()` | Hook appelé au déchargement : envoie le décompte d'utilisation des actions (sauf rechargement Lua ou si déjà fait). *(interne)* *(hook)* | 50 |
-| `telemetry_trackers_controls.onSerialize(reason)` | Hook appelé avant déchargement/rechargement : retient si la raison est un rechargement Lua. *(interne)* *(hook)* | 56 |
-| `telemetry_trackers_controls.onSteeringFilterChanged(method)` | Hook appelé quand le filtre de direction du véhicule change : enregistre l'évènement controlsUsed avec la méthode. *(interne)* *(hook)* | 22 |
+| `telemetry_trackers_controls.onExtensionLoaded()` | Hook called on load: manual unload. *(internal)* *(hook)* | 45 |
+| `telemetry_trackers_controls.onExtensionUnloaded()` | Hook called on unload: sends the count of action uses (except on Lua reload or if already done). *(internal)* *(hook)* | 50 |
+| `telemetry_trackers_controls.onSerialize(reason)` | Hook called before unload/reload: remembers whether the reason is a Lua reload. *(internal)* *(hook)* | 56 |
+| `telemetry_trackers_controls.onSteeringFilterChanged(method)` | Hook called when the vehicle's steering filter changes: records the controlsUsed event with the method. *(internal)* *(hook)* | 22 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_trackers_controls.onSerialize(reason)`
 
-Hook appelé avant déchargement/rechargement : retient si la raison est un rechargement Lua.
+Hook called before unload/reload: remembers whether the reason is a Lua reload.
 
-- `reason` (*string*) : Raison de la sérialisation (« reload » en cas de rechargement).
+- `reason` (*string*) : Reason for the serialization ("reload" on reload).
 
 #### `telemetry_trackers_controls.onSteeringFilterChanged(method)`
 
-Hook appelé quand le filtre de direction du véhicule change : enregistre l'évènement controlsUsed avec la méthode.
+Hook called when the vehicle's steering filter changes: records the controlsUsed event with the method.
 
-- `method` (*string*) : Méthode de direction (déduit du code : nom du filtre/mode de direction).
+- `method` (*string*) : Steering method (inferred from code: name of the steering filter/mode).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | telemetry_core. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/trackers/controls.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/trackers/controls.lua`.*

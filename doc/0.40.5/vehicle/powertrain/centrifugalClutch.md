@@ -1,71 +1,71 @@
 # `powertrain_centrifugalClutch`
 
-*Fichier : `lua/vehicle/powertrain/centrifugalClutch.lua` · VM : Véhicule · 306 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/centrifugalClutch.lua` · VM: Vehicle · 306 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `centrifugalClutch` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `centrifugalClutch` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Type de device powertrain `centrifugalClutch` : embrayage centrifuge (catégories clutchlike et clutch) placé directement après un moteur thermique. Il s'engage automatiquement avec le régime d'entrée (entre engageRPMStart et engageRPMEnd) : le taux d'engagement clutchRatio passe de 0 à 1, et le couple transmis suit un ressort/amortisseur sur l'angle d'embrayage, limité par lockTorque. Il modélise aussi l'échauffement (température, efficacité thermique, fumée, dommage permanent) et l'usure. Utile pour scooters, karts, tondeuses… Le parent doit être un moteur (catégorie engine) et il a un seul enfant sur le port 1.
+Powertrain device type `centrifugalClutch`: centrifugal clutch (categories clutchlike and clutch) placed directly after a combustion engine. It engages automatically with the input RPM (between engageRPMStart and engageRPMEnd): the engagement ratio clutchRatio goes from 0 to 1, and the transmitted torque follows a spring/damper on the clutch angle, limited by lockTorque. It also models heating (temperature, thermal efficiency, smoke, permanent damage) and wear. Useful for scooters, karts, lawn mowers... The parent must be an engine (category engine) and it has a single child on port 1.
 
-## Exemple
+## Example
 
 ```lua
-// jbeam (section powertrain) : {"name":"clutch","type":"centrifugalClutch","inputName":"mainEngine","inputIndex":1, "engageRPMStart":1500, "engageRPMEnd":2500}
+// jbeam (powertrain section): {"name":"clutch","type":"centrifugalClutch","inputName":"mainEngine","inputIndex":1, "engageRPMStart":1500, "engageRPMEnd":2500}
 ```
 
-## Remarques
+## Notes
 
-- CLÉS JBEAM : engageRPMStart (défaut 800), engageRPMEnd (1100), lockTorque (défaut calculé dans validate : couple max moteur x 1.25 + maxRPM x inertie moteur x pi/30), lockSpring (sinon dérivé de powertrain.stabilityCoef), lockSpringCoef (1), lockDampRatio (0.15, 1 = amortissement critique), lockDampSmoothing (0), clutchAngleSmoothing (0), clutchStiffness (1), clutchFreePlay (0.125 rad), additionalEngineInertia (0, ajoutée à l'inertie du moteur), thermalsEnabled (défaut true), coolingCoef (0.8), maxClutchTemp (300, °C, dommage permanent au-delà), warningTemp (100 °C), maxSafeClutchTemp (150 °C), clutchOverheatRange (100 °C), clutchMass (1 kg), clutchSpecificHeat (490), electricsClutchRatioName (lu mais jamais utilisé dans ce fichier).
-- CHAMPS : inputAV (rad/s, = outputAV1 du parent), outputAV1 (rad/s vers l'enfant), outputTorque1 et torqueDiff (couple transmis, N·m ; le moteur lit torqueDiff comme charge), clutchRatio (0..1), clutchAngle, lockSpring, lockDamp, maxClutchAngle, lockTorque, clutchTemperature (°C), thermalEfficiency (0.5..1, 0.25 si endommagé), clutchPermanentlyDamaged, frictionLossPerUpdate (énergie dissipée), damage*/wear* Coef. Le rapport du device est fixe (gearRatio = 1).
-- Fonctionnement : le couple est clamp(min(1,|angle libre|) x |angle libre| x sign x lockSpring + amortissement x clutchRatio, ± lockTorque x thermalEfficiency x damage x wear) (ressort quadratique puis linéaire après 1 rad) ; la dissipation torqueDiff x ΔAV x dt chauffe l'embrayage, qui se refroidit vers la température extérieure.
-- Messages UI de température : « High clutch temperature... », « Clutch overheating... », « Clutch permanently damaged! » (toutes les 0.9 s). Flux UI 'clutchThermalData' envoyé si demandé. Fumée de l'embrayage via obj:addParticleByNodesRelative sur transmissionNodeID de l'enfant.
-- Incohérences repérées : le device n'a pas de méthode onBreak ; si une poutre de breakTriggerBeam est définie ou si setPartCondition reçoit isBroken, powertrain appellerait device:onBreak() (nil). validate loggue sous le tag 'frictionClutch.validate' (copié d'un autre fichier). updateGFX suppose device.children[1] existant (plante sans enfant).
-- Pas de méthode setMode : powertrain.setDeviceMode ne s'y applique pas (device.availableModes absent).
+- JBEAM KEYS: engageRPMStart (default 800), engageRPMEnd (1100), lockTorque (default computed in validate: max engine torque x 1.25 + maxRPM x engine inertia x pi/30), lockSpring (otherwise derived from powertrain.stabilityCoef), lockSpringCoef (1), lockDampRatio (0.15, 1 = critical damping), lockDampSmoothing (0), clutchAngleSmoothing (0), clutchStiffness (1), clutchFreePlay (0.125 rad), additionalEngineInertia (0, added to the engine inertia), thermalsEnabled (default true), coolingCoef (0.8), maxClutchTemp (300, °C, permanent damage beyond), warningTemp (100 °C), maxSafeClutchTemp (150 °C), clutchOverheatRange (100 °C), clutchMass (1 kg), clutchSpecificHeat (490), electricsClutchRatioName (read but never used in this file).
+- FIELDS: inputAV (rad/s, = outputAV1 of the parent), outputAV1 (rad/s to the child), outputTorque1 and torqueDiff (transmitted torque, N·m; the engine reads torqueDiff as load), clutchRatio (0..1), clutchAngle, lockSpring, lockDamp, maxClutchAngle, lockTorque, clutchTemperature (°C), thermalEfficiency (0.5..1, 0.25 if damaged), clutchPermanentlyDamaged, frictionLossPerUpdate (dissipated energy), damage*/wear* Coef. The device ratio is fixed (gearRatio = 1).
+- Operation: the torque is clamp(min(1,|free angle|) x |free angle| x sign x lockSpring + damping x clutchRatio, ± lockTorque x thermalEfficiency x damage x wear) (quadratic spring, then linear after 1 rad); the dissipation torqueDiff x ΔAV x dt heats the clutch, which cools toward the outside temperature.
+- Temperature UI messages: « High clutch temperature... », « Clutch overheating... », « Clutch permanently damaged! » (every 0.9 s). UI stream 'clutchThermalData' sent if requested. Clutch smoke via obj:addParticleByNodesRelative on the child's transmissionNodeID.
+- Inconsistencies found: the device has no onBreak method; if a breakTriggerBeam beam is defined or if setPartCondition receives isBroken, powertrain would call device:onBreak() (nil). validate logs under the tag 'frictionClutch.validate' (copied from another file). updateGFX assumes device.children[1] exists (crashes without a child).
+- No setMode method: powertrain.setDeviceMode does not apply to it (device.availableModes absent).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_centrifugalClutch.new(jbeamData)` | Fabrique du device appelée par powertrain.init pour une entrée jbeam de type 'centrifugalClutch'. Lit les clés jbeam (voir notes) et renvoie le device. *(interne)* | 232 |
+| `powertrain_centrifugalClutch.new(jbeamData)` | Device factory called by powertrain.init for a jbeam entry of type 'centrifugalClutch'. Reads the jbeam keys (see notes) and returns the device. *(internal)* | 232 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_centrifugalClutch.new(jbeamData)`
 
-Fabrique du device appelée par powertrain.init pour une entrée jbeam de type 'centrifugalClutch'. Lit les clés jbeam (voir notes) et renvoie le device.
+Device factory called by powertrain.init for a jbeam entry of type 'centrifugalClutch'. Reads the jbeam keys (see notes) and returns the device.
 
-- `jbeamData` (*table*) : Données jbeam du device.
-- **renvoie** : table Le device centrifugalClutch.
+- `jbeamData` (*table*) : jbeam data of the device.
+- **returns**: table The centrifugalClutch device.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `deviceCategories` | table<string, boolean> | {clutchlike = true, clutch = true}. clutchlike est requis par le moteur combustionEngine pour ses enfants. |
-| `outputPorts` | table<integer, boolean> | {[1] = true} : un seul port de sortie. |
-| `requiredExternalInertiaOutputs` | integer[] | {1} : powertrain ajoute un arbre factice (dummy shaft) sur ce port si aucun enfant n'y est branché. |
+| `deviceCategories` | table<string, boolean> | {clutchlike = true, clutch = true}. clutchlike is required by the combustionEngine engine for its children. |
+| `outputPorts` | table<integer, boolean> | {[1] = true}: a single output port. |
+| `requiredExternalInertiaOutputs` | integer[] | {1}: powertrain adds a dummy shaft on this port if no child is connected to it. |
 
-## Classe `device`
+## Class `device`
 
-Objet renvoyé par new(jbeamData). Méthodes appelées par powertrain.lua.
+Object returned by new(jbeamData). Methods called by powertrain.lua.
 
-Objet `device` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `device` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `device:applyDeformGroupDamage(damageAmount)` | Applique un dégât de déformation : augmente le jeu libre et réduit le couple de verrouillage (plancher 0.2), puis recalcule l'inertie. | 123 |
-| `device:calculateInertia()` | Reprend inertie et rapports de l'enfant (inertie plafonnée à la moitié de celle du moteur) et recalcule lockSpring, lockDamp et maxClutchAngle. | 178 |
-| `device:getPartCondition()` | Renvoie l'intégrité 0..1 (0 si dommage permanent) et la table d'état {damageClutchFreePlayCoef, damageLockTorqueCoef, clutchPermanentlyDamaged}. | 149 |
-| `device:reset(jbeamData)` | Remet tous les états à leurs valeurs initiales (vitesses, angle, température extérieure, usure et dommages) puis sélectionne les fonctions de mise à jour. | 202 |
-| `device:setLock(enabled)` | Verrouille/déverrouille le chauffage de l'embrayage : enabled = true met clutchThermalsCoef à 0 (plus d'énergie dissipée comptée comme chaleur), false à 1. | 119 |
-| `device:setPartCondition(subSystem, odometer, integrity, visual)` | Applique usure (odomètre) et intégrité (nombre ou table d'état) : coefficients de jeu libre et de couple de verrouillage, état de dommage permanent ; recalcule l'inertie. | 129 |
-| `device:torqueUpdate(dt)` | Pas de physique (couples) : calcule clutchRatio d'après le régime d'entrée, l'angle d'embrayage et le couple transmis (torqueDiff = outputTorque1), et accumule la perte par friction. | 84 |
-| `device:updateGFX(dt)` | Une fois par frame : calcule l'énergie dissipée dans l'embrayage et son refroidissement, met à jour clutchTemperature (bornée à [température extérieure, maxClutchTemp]) et thermalEfficiency, produit la fumée et les messages d'avertissement, signale un dommage permanent, remet frictionLossPerUpdate à 0 et publie 'clutchThermalData'. | 20 |
-| `device:validate()` | Vérifie que le parent est un moteur (catégorie engine), sinon log d'erreur et renvoie false (avorte l'init). Calcule lockTorque par défaut. | 166 |
-| `device:velocityUpdate(dt)` | Pas de physique (vitesses) : inputAV = vitesse de sortie du parent (outputAV1 du moteur). | 80 |
+| `device:applyDeformGroupDamage(damageAmount)` | Applies deformation damage: increases the free play and reduces the lock torque (floor 0.2), then recomputes the inertia. | 123 |
+| `device:calculateInertia()` | Takes over the child's inertia and ratios (inertia capped at half of the engine's) and recomputes lockSpring, lockDamp and maxClutchAngle. | 178 |
+| `device:getPartCondition()` | Returns the integrity 0..1 (0 if permanently damaged) and the state table {damageClutchFreePlayCoef, damageLockTorqueCoef, clutchPermanentlyDamaged}. | 149 |
+| `device:reset(jbeamData)` | Resets all states to their initial values (speeds, angle, outside temperature, wear and damage) then selects the update functions. | 202 |
+| `device:setLock(enabled)` | Locks/unlocks the clutch heating: enabled = true sets clutchThermalsCoef to 0 (dissipated energy is no longer counted as heat), false sets it to 1. | 119 |
+| `device:setPartCondition(subSystem, odometer, integrity, visual)` | Applies wear (odometer) and integrity (number or state table): free play and lock torque coefficients, permanent damage state; recomputes the inertia. | 129 |
+| `device:torqueUpdate(dt)` | Physics step (torques): computes clutchRatio from the input RPM, the clutch angle and the transmitted torque (torqueDiff = outputTorque1), and accumulates the friction loss. | 84 |
+| `device:updateGFX(dt)` | Once per frame: computes the energy dissipated in the clutch and its cooling, updates clutchTemperature (clamped to [outside temperature, maxClutchTemp]) and thermalEfficiency, produces smoke and warning messages, signals permanent damage, resets frictionLossPerUpdate to 0 and publishes 'clutchThermalData'. | 20 |
+| `device:validate()` | Checks that the parent is an engine (category engine), otherwise logs an error and returns false (aborts init). Computes the default lockTorque. | 166 |
+| `device:velocityUpdate(dt)` | Physics step (speeds): inputAV = output speed of the parent (outputAV1 of the engine). | 80 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `addParticleByNodesRelative`, `getEnvTemperature`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/centrifugalClutch.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/centrifugalClutch.lua`.*

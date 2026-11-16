@@ -1,11 +1,14 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/finish.lua",
-  "module": "Nœud flowgraph « Rally Mode Finish » (catégorie once_instant, tag rally, sans pin). Quand il reçoit du flux, déclenche une fois le hook extensions.hook('onRallyStageFlyingFinish') signalant que le véhicule a franchi l'arrivée lancée de la spéciale.",
+  "module": "Flowgraph node \"Rally Mode Finish\" (category once_instant, tag rally, no pin). When it receives flow, triggers once the hook extensions.hook('onRallyStageFlyingFinish') signaling that the vehicle has crossed the flying finish of the stage.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Appelle extensions.hook('onRallyStageFlyingFinish').", "internal": true}
+        "workOnce": {
+          "desc": "Calls extensions.hook('onRallyStageFlyingFinish').",
+          "internal": true
+        }
       }
     }
   }

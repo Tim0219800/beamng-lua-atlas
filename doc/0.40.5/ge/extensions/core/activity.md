@@ -1,35 +1,35 @@
 # `core_activity`
 
-*Fichier : `lua/ge/extensions/core/activity.lua` · VM : Game Engine (GE) · 28 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/activity.lua` · VM: Game Engine (GE) · 28 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_activity` : `extensions.load("core_activity")`, puis la globale `core_activity`
+**Access:** extension `core_activity`: `extensions.load("core_activity")`, then the global `core_activity`
 
-Extension GE (core_activity) minuscule : démarre une 'activité' nommée. Aujourd'hui la seule activité connue est 'ContinueFreeroam', qui lance extensions.freeroam_continueFreeroam.start() puis signale l'écran de chargement (core_gamestate.loadingScreenActive()). Un moddeur peut l'appeler depuis l'UI ou un script.
+Tiny GE extension (core_activity): starts a named 'activity'. Today the only known activity is 'ContinueFreeroam', which launches extensions.freeroam_continueFreeroam.start() then signals the loading screen (core_gamestate.loadingScreenActive()). A modder can call it from the UI or a script.
 
-## Exemple
+## Example
 
 ```lua
 core_activity.startActivity('ContinueFreeroam')
 ```
 
-## Remarques
+## Notes
 
-- Un nom d'activité inconnu est seulement loggué (niveau I) : aucune erreur n'est levée.
-- Le commentaire du code indique que l'appel à core_gamestate.loadingScreenActive() est à retirer quand l'UI sera ajoutée.
+- An unknown activity name is only logged (level I): no error is raised.
+- The code comment says the call to core_gamestate.loadingScreenActive() is to be removed once the UI is added.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_activity.startActivity(name)` | Lance l'activité portant ce nom si elle existe dans la table interne, sinon loggue 'Unknown activity'. | 16 |
+| `core_activity.startActivity(name)` | Launches the activity with this name if it exists in the internal table, otherwise logs 'Unknown activity'. | 16 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_activity.startActivity(name)`
 
-Lance l'activité portant ce nom si elle existe dans la table interne, sinon loggue 'Unknown activity'.
+Launches the activity with this name if it exists in the internal table, otherwise logs 'Unknown activity'.
 
-- `name` (*string*) : Nom d'activité, actuellement 'ContinueFreeroam'
+- `name` (*string*) : Activity name, currently 'ContinueFreeroam'
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/activity.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/activity.lua`.*

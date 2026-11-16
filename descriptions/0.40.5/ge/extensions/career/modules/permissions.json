@@ -1,20 +1,31 @@
 {
   "path": "lua/ge/extensions/career/modules/permissions.lua",
-  "module": "Système de permissions de la carrière. Une action (tag comme vehicleModification, vehicleSelling, interactRefuel, recoveryTowToRoad…) peut être allowed, warning, forbidden ou hidden. Le module ne décide rien lui-même : il émet le hook onCheckPermission(tags, permissions, additionalData) et garde la réponse la plus restrictive donnée par les extensions (par ex. une activité en cours).",
+  "module": "Career permissions system. An action (tag such as vehicleModification, vehicleSelling, interactRefuel, recoveryTowToRoad...) can be allowed, warning, forbidden or hidden. The module decides nothing itself: it emits the onCheckPermission(tags, permissions, additionalData) hook and keeps the most restrictive answer given by extensions (e.g. an activity in progress).",
   "usage": "local st = career_modules_permissions.getStatusForTag({\"vehicleSelling\"})\nif st.permission == \"forbidden\" then ... end",
   "notes": [
-    "Priorité : allowed < warning < forbidden < hidden.",
-    "Le champ allow du résultat vaut true seulement si la permission retenue est \"warning\" ; si aucune extension ne répond, le résultat est {permission = \"allowed\", allow = true}. Pour \"allowed\" renvoyé par une extension, allow vaut donc false (incohérence apparente du code).",
-    "Les extensions répondent en insérant {permission, label, penalty} dans la table permissions du hook."
+    "Priority: allowed < warning < forbidden < hidden.",
+    "The allow field of the result is true only if the retained permission is \"warning\"; if no extension answers, the result is {permission = \"allowed\", allow = true}. For \"allowed\" returned by an extension, allow is therefore false (apparent inconsistency in the code).",
+    "Extensions answer by inserting {permission, label, penalty} into the hook's permissions table."
   ],
   "functions": {
     "getStatusForTag": {
-      "desc": "Interroge les extensions via le hook onCheckPermission et renvoie la permission la plus restrictive pour les tags donnés.",
+      "desc": "Queries the extensions via the onCheckPermission hook and returns the most restrictive permission for the given tags.",
       "params": {
-        "tags": {"type": "string|string[]", "desc": "Un tag ou une liste de tags (une chaîne est encapsulée dans une table)."},
-        "additionalData": {"type": "any", "desc": "Données transmises telles quelles au hook."}
+        "tags": {
+          "type": "string|string[]",
+          "desc": "A tag or a list of tags (a string is wrapped in a table)."
+        },
+        "additionalData": {
+          "type": "any",
+          "desc": "Data passed as is to the hook."
+        }
       },
-      "returns": [{"type": "{allow: boolean, permission: string, label: any, type: string, penalty: any}", "desc": "Statut retenu ; type vaut \"text\"."}],
+      "returns": [
+        {
+          "type": "{allow: boolean, permission: string, label: any, type: string, penalty: any}",
+          "desc": "Retained status; type is \"text\"."
+        }
+      ],
       "internal": false
     }
   }

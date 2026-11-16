@@ -1,30 +1,30 @@
 # `flowgraph_nodes_events_controlsReset`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/events/controlsReset.lua` · VM : Game Engine (GE) · 78 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/events/controlsReset.lua` · VM: Game Engine (GE) · 78 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/events/controlsReset")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/events/controlsReset")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Controls Reset » (catégorie logic, événement). Laisse passer le flux quand le joueur appuie sur Reset. Quand il est utilisé, le reset par défaut du freeroam n'a plus lieu (data.blocksOnResetGameplay = true). Pins : flow (entrée), flow (sortie impulsion) et value (bool caché).
+Flowgraph node "Controls Reset" (category logic, event). Lets flow through when the player presses Reset. When it is used, the default freeroam reset no longer happens (data.blocksOnResetGameplay = true). Pins: flow (input), flow (pulse output) and value (hidden bool).
 
-## Remarques
+## Notes
 
-- Enregistre un événement dans le log du flowgraph (logEvent) à chaque appui.
-- Ajoute un bouton « Reset » à l'interface de contexte de jeu (onGatherGameContextUiButtons), actif seulement si le nœud est dans un état actif et a été utilisé à la frame courante.
+- Records an event in the flowgraph log (logEvent) on each press.
+- Adds a "Reset" button to the game context interface (onGatherGameContextUiButtons), active only if the node is in an active state and was used in the current frame.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_afterTrigger()` | Remet self.reset à false après le déclenchement. | 43 |
-| `C:_executionStarted()` | Remet self.reset à false. | 34 |
-| `C:_executionStopped()` | Remet self.reset à false. | 29 |
-| `C:drawMiddle(builder, style)` | Dessin du nœud dans l'éditeur. | 47 |
-| `C:init(mgr, ...)` | Initialise self.reset et data.blocksOnResetGameplay. | 24 |
-| `C:onGatherGameContextUiButtons(results)` | Hook : ajoute à results le bouton {id='controlsReset', label='Reset', order=0, active}. | 64 |
-| `C:onResetGameplay()` | Hook appelé par extensions.hook("onResetGameplay") : mémorise l'appui. | 39 |
-| `C:work(args)` | Met flow et value à vrai une frame après un reset, sinon à faux. | 51 |
+| `C:_afterTrigger()` | Resets self.reset to false after triggering. | 43 |
+| `C:_executionStarted()` | Resets self.reset to false. | 34 |
+| `C:_executionStopped()` | Resets self.reset to false. | 29 |
+| `C:drawMiddle(builder, style)` | Node drawing in the editor. | 47 |
+| `C:init(mgr, ...)` | Initializes self.reset and data.blocksOnResetGameplay. | 24 |
+| `C:onGatherGameContextUiButtons(results)` | Hook: adds to results the button {id='controlsReset', label='Reset', order=0, active}. | 64 |
+| `C:onResetGameplay()` | Hook called by extensions.hook("onResetGameplay"): stores the press. | 39 |
+| `C:work(args)` | Sets flow and value to true one frame after a reset, otherwise to false. | 51 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/events/controlsReset.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/events/controlsReset.lua`.*

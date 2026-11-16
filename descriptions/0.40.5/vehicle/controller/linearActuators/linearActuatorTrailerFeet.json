@@ -1,10 +1,10 @@
 {
   "path": "lua/vehicle/controller/linearActuators/linearActuatorTrailerFeet.lua",
-  "module": "Contrôleur auxiliaire pour les béquilles d'une remorque à actionneur linéaire électrique (type \"auxiliary\"). Même logique que hydraulics/hydraulicTrailerFeet : il mémorise les positions du vérin à l'état attelé et détaché et ramène les béquilles automatiquement à l'attelage ou au dételage, en écrivant la commande du moteur dans electrics. La différence : l'actionneur est un dispositif powertrain et on peut filtrer sur un nœud de coupleur précis.",
+  "module": "Auxiliary controller for the landing legs of a trailer with an electric linear actuator (type \"auxiliary\"). Same logic as hydraulics/hydraulicTrailerFeet: it stores the cylinder positions in the attached and detached states and automatically brings the legs back on coupling or uncoupling, by writing the motor command into electrics. The difference: the actuator is a powertrain device and one can filter on a specific coupler node.",
   "notes": [
-    "Clés jbeam (défaut) : linearActuatorName (nom du dispositif, obligatoire), motorThrottleElectricsName (nom de la valeur electrics de commande ; sinon déduit de motorName ou du dispositif de propulsion de l'actionneur via motor.electricsThrottleName), motorName, attachedDefaultPosition (0), detachedDefaultPosition (1), couplerNodeName (nom du nœud de coupleur à écouter ; sans lui, aucun hook de coupleur ne déclenche car nodeId == nil échoue), startValue (0).",
-    "Positions en ratio d'extension 0..1 (actuator.currentExtendPercent). La commande est -1/0/1.",
-    "Les hooks onCouplerAttached/onCouplerDetached ne réagissent que si l'autre objet est un autre véhicule ET si nodeId correspond au couplerNodeName."
+    "jbeam keys (default): linearActuatorName (device name, required), motorThrottleElectricsName (name of the command electrics value; otherwise inferred from motorName or from the actuator's propulsion device via motor.electricsThrottleName), motorName, attachedDefaultPosition (0), detachedDefaultPosition (1), couplerNodeName (name of the coupler node to listen to; without it, no coupler hook triggers because nodeId == nil fails), startValue (0).",
+    "Positions as an extension ratio 0..1 (actuator.currentExtendPercent). The command is -1/0/1.",
+    "The onCouplerAttached/onCouplerDetached hooks only react if the other object is another vehicle AND if nodeId matches couplerNodeName."
   ],
   "fields": {
     "type": {
@@ -14,95 +14,95 @@
   },
   "functions": {
     "init": {
-      "desc": "Retrouve l'actionneur et le nom electrics de commande, initialise positions et états.",
+      "desc": "Finds the actuator and the command electrics name, initializes positions and states.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Écrit la commande moteur (manuelle ou automatique vers la position mémorisée).",
+      "desc": "Writes the motor command (manual or automatic toward the stored position).",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "onCouplerAttached": {
-      "desc": "Hook appelé par le moteur à l'attelage ; lance le mouvement vers la position « attaché ».",
+      "desc": "Hook called by the engine on coupling; starts the movement toward the \"attached\" position.",
       "params": {
         "nodeId": {
           "type": "integer",
-          "desc": "Nœud de ce véhicule."
+          "desc": "This vehicle's node."
         },
         "obj2id": {
           "type": "integer",
-          "desc": "Id du véhicule partenaire."
+          "desc": "Partner vehicle id."
         },
         "obj2nodeId": {
           "type": "integer",
-          "desc": "Nœud du partenaire."
+          "desc": "Partner's node."
         }
       },
       "returns": [],
       "internal": true
     },
     "onCouplerDetached": {
-      "desc": "Hook appelé au dételage ; lance le mouvement vers la position « détaché ».",
+      "desc": "Hook called on uncoupling; starts the movement toward the \"detached\" position.",
       "params": {
         "nodeId": {
           "type": "integer",
-          "desc": "Nœud de ce véhicule."
+          "desc": "This vehicle's node."
         },
         "obj2id": {
           "type": "integer",
-          "desc": "Id du véhicule partenaire."
+          "desc": "Partner vehicle id."
         },
         "obj2nodeId": {
           "type": "integer",
-          "desc": "Nœud du partenaire."
+          "desc": "Partner's node."
         },
         "breakForce": {
           "type": "number",
-          "desc": "Force de rupture (non utilisée)."
+          "desc": "Breaking force (unused)."
         }
       },
       "returns": [],
       "internal": true
     },
     "moveFeet": {
-      "desc": "Commande manuelle des béquilles, -1 à 1 ; interrompt un mouvement automatique.",
+      "desc": "Manual command of the legs, -1 to 1; interrupts an automatic movement.",
       "params": {
         "input": {
           "type": "number",
-          "desc": "Entrée de direction -1..1."
+          "desc": "Direction input -1..1."
         }
       },
       "returns": []
     },
     "getState": {
-      "desc": "Renvoie l'état (positions, entrée manuelle, état d'attelage).",
+      "desc": "Returns the state (positions, manual input, coupling state).",
       "params": {},
       "returns": [
         {
           "type": "table",
-          "desc": "Table d'état (réutilisée)."
+          "desc": "State table (reused)."
         }
       ]
     },
     "setState": {
-      "desc": "Restaure l'état renvoyé par getState.",
+      "desc": "Restores the state returned by getState.",
       "params": {
         "data": {
           "type": "table|nil",
-          "desc": "Table d'état."
+          "desc": "State table."
         }
       },
       "returns": []

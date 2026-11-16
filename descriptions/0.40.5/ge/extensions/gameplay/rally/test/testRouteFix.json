@@ -1,28 +1,28 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/test/testRouteFix.lua",
-  "module": "Extension de test de développement pour le module gameplay/route/route : au chargement, elle crée une Route avec un petit chemin de 3 points codés en dur, puis à chaque frame dessine le chemin (sphères, prismes, numéros) via debugDrawer et fait suivre le véhicule joueur par route:trackVehicle. Se charge avec extensions.load('gameplay_rally_test_testRouteFix'). Sans intérêt en jeu normal.",
+  "module": "Development test extension for the gameplay/route/route module: on load, it creates a Route with a small hard-coded 3-point path, then every frame draws the path (spheres, prisms, numbers) via debugDrawer and makes the player vehicle follow it with route:trackVehicle. Loaded with extensions.load('gameplay_rally_test_testRouteFix'). Of no use in normal gameplay.",
   "notes": [
-    "Les coordonnées du chemin sont fixes (monde de test) ; les fonctions drawMousePos et drawPath existent mais leur appel est commenté dans onUpdate.",
-    "Le commentaire d'en-tête du fichier mentionne « extension name: gameplay_rally », ce qui ne correspond pas au nom réel de l'extension."
+    "The path coordinates are fixed (test world); the drawMousePos and drawPath functions exist but their call is commented out in onUpdate.",
+    "The file's header comment mentions \"extension name: gameplay_rally\", which does not match the extension's real name."
   ],
   "functions": {
     "onUpdate": {
-      "desc": "Hook appelé à chaque frame : dessine la route et appelle route:trackVehicle sur le véhicule joueur 0 s'il existe.",
+      "desc": "Hook called every frame: draws the route and calls route:trackVehicle on player vehicle 0 if it exists.",
       "params": {},
       "internal": true
     },
     "onVehicleResetted": {
-      "desc": "Hook appelé quand un véhicule est remis en place ; corps vide.",
+      "desc": "Hook called when a vehicle is put back in place; empty body.",
       "params": {},
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement de l'extension : crée la Route et appelle setupPathMulti sur le chemin de test.",
+      "desc": "Hook called when the extension loads: creates the Route and calls setupPathMulti on the test path.",
       "params": {},
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook appelé au déchargement de l'extension ; corps vide.",
+      "desc": "Hook called when the extension unloads; empty body.",
       "params": {},
       "internal": true
     }

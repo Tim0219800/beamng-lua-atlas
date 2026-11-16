@@ -1,10 +1,10 @@
 {
   "path": "lua/vehicle/controller/mechanics/linearToAngularTransform.lua",
-  "module": "Contrôleur de mécanique (type \"auxiliary\") qui convertit le déplacement d'une poutre capteur en rotation de poulie : la variation de longueur depuis le départ, divisée par un rayon effectif, donne un angle ; la fraction de tour (0..1, modulo 1) est multipliée par un facteur (360 par défaut) et écrite dans une valeur electrics pour animer une pièce rotative.",
+  "module": "Mechanics controller (type \"auxiliary\") that converts the displacement of a sensor beam into pulley rotation: the length change since the start, divided by an effective radius, gives an angle; the fraction of a turn (0..1, modulo 1) is multiplied by a factor (360 by default) and written into an electrics value to animate a rotating part.",
   "notes": [
-    "Clés jbeam (défaut) : sensorBeamTag (obligatoire), effectiveRadius (m, obligatoire > 0), angularOutputElectricsName (obligatoire), angularOutputElectricsMultiplier (360).",
-    "Les messages d'erreur du code mentionnent « beamSegments » et « pulleyRadius » (copier-coller) bien qu'ils concernent ce contrôleur.",
-    "Incohérence : isActiveCoef et beamBroken ne servent à rien (updateGFX ne le consulte pas) ; reset appelle obj:getBeamLength(sensorBeamId) sans vérifier que sensorBeamId existe."
+    "jbeam keys (default): sensorBeamTag (required), effectiveRadius (m, required > 0), angularOutputElectricsName (required), angularOutputElectricsMultiplier (360).",
+    "The code's error messages mention \"beamSegments\" and \"pulleyRadius\" (copy-paste) even though they concern this controller.",
+    "Inconsistency: isActiveCoef and beamBroken serve no purpose (updateGFX does not check it); reset calls obj:getBeamLength(sensorBeamId) without checking that sensorBeamId exists."
   ],
   "fields": {
     "type": {
@@ -13,53 +13,53 @@
     },
     "updateGFX": {
       "type": "function|nil",
-      "desc": "Défini à l'init si la configuration est valide."
+      "desc": "Defined at init if the configuration is valid."
     }
   },
   "functions": {
     "init": {
-      "desc": "Retrouve la poutre capteur et valide la configuration.",
+      "desc": "Finds the sensor beam and validates the configuration.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Mémorise la longueur de départ du capteur et remet la sortie à 0.",
+      "desc": "Stores the sensor's starting length and resets the output to 0.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Écrit la fraction de tour convertie dans la valeur electrics de sortie.",
+      "desc": "Writes the converted fraction of a turn into the output electrics value.",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "beamBroken": {
-      "desc": "Hook : appelé quand une poutre casse ; marque le contrôleur inactif si c'est le capteur (sans effet réel, voir notes).",
+      "desc": "Hook: called when a beam breaks; marks the controller inactive if it is the sensor (no real effect, see notes).",
       "params": {
         "id": {
           "type": "integer",
-          "desc": "Identifiant (cid) de la poutre cassée."
+          "desc": "Identifier (cid) of the broken beam."
         },
         "energy": {
           "type": "number",
-          "desc": "Énergie de rupture."
+          "desc": "Break energy."
         }
       },
       "returns": [],

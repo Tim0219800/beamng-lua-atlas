@@ -1,0 +1,42 @@
+{
+  "path": "lua/ge/extensions/scenario/nomoveGoal.lua",
+  "module": "Objectif de scénario « nomove » (goals.vehicles avec id = 'nomove') : le véhicule ne doit pas bouger de plus de 0.1 m par rapport à sa position de départ. Appelé par le système de goals de scenario_scenarios.",
+  "usage": "-- JSON du scénario :\n-- {\"id\":\"nomove\", \"value\":{\"msg\":\"Ne bougez pas\", \"triggerEndOnly\":false}}",
+  "notes": [
+    "Options de instance.value : msg (message d'échec), triggerEndOnly (boolean).",
+    "La position de départ est relevée à init puis rafraîchie sur l'état 'onCountdownEnded'.",
+    "Contrôle sur 'onRaceTick' et 'onRaceResult' : si le véhicule s'est éloigné de plus de 0.1 m, échec (scenario_scenarios.finish({failed = msg})). Avec triggerEndOnly, le mouvement termine simplement le scénario via scenario_scenarios.endScenario(0.25) et aucun résultat n'est enregistré.",
+    "Si le véhicule n'est pas présent (vId absent), une erreur est loguée une seule fois et l'instance est ignorée ; à l'init elle n'est pas ajoutée."
+  ],
+  "fields": {
+    "instances": {"type": "table", "desc": "Liste des goals 'nomove' valides, remplie par init()."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Réinitialise instances et ajoute chaque goal id='nomove' dont le véhicule existe, en mémorisant sa position de départ.",
+      "params": {"scenario": {"type": "table", "desc": "Scénario courant."}},
+      "returns": [],
+      "internal": true
+    },
+    "processState": {
+      "desc": "Appelé à chaque état du scénario. Met à jour la position de départ sur 'onCountdownEnded' puis vérifie l'immobilité sur 'onRaceTick' et 'onRaceResult'.",
+      "params": {
+        "scenario": {"type": "table", "desc": "Scénario courant."},
+        "state": {"type": "string", "desc": "Nom de l'état."},
+        "stateData": {"type": "table", "desc": "Données de l'état (non utilisées)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateFinalStatus": {
+      "desc": "Sauf si triggerEndOnly, envoie le résultat à statistics_statistics.setGoalProgress pour le véhicule du goal et pour le véhicule du joueur 0.",
+      "params": {
+        "scenario": {"type": "table", "desc": "Scénario courant."},
+        "instance": {"type": "table|nil", "desc": "Non utilisé."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

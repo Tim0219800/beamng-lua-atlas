@@ -1,93 +1,93 @@
 # `ui_console`
 
-*Fichier : `lua/ge/extensions/ui/console.lua` · VM : Game Engine (GE) · 1267 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/console.lua` · VM: Game Engine (GE) · 1267 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_console` : `extensions.load("ui_console")`, puis la globale `ui_console`
+**Access:** extension `ui_console`: `extensions.load("ui_console")`, then the global `ui_console`
 
-Console de développement « consoleNG » en ImGui (fenêtre « beamng.consoleNG »). Elle affiche le journal du jeu (lu à chaque image via Engine.getFrameLog) avec filtres par niveau (E, W, I, D, A), filtre par origine en motif Lua, pause (touche Arrêt défil), statistiques de journal et défilement automatique. Elle permet aussi d'exécuter des commandes dans quatre contextes : Lua du moteur de jeu (GE), TorqueScript, JavaScript de l'interface (CEF) ou Lua d'un véhicule précis. Un moddeur l'ouvre avec ui_console.toggle() pour déboguer.
+"consoleNG" development console in ImGui ("beamng.consoleNG" window). It displays the game log (read every frame via Engine.getFrameLog) with filters by level (E, W, I, D, A), filter by origin as a Lua pattern, pause (Pause key), log statistics and auto-scroll. It also lets you run commands in four contexts: game engine Lua (GE), TorqueScript, interface JavaScript (CEF) or the Lua of a specific vehicle. A modder opens it with ui_console.toggle() to debug.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('ui_console')
-ui_console.show()   -- ouvre la fenêtre
-ui_console.toggle() -- ouvre ou ferme
+ui_console.show()   -- opens the window
+ui_console.toggle() -- opens or closes
 ```
 
-## Remarques
+## Notes
 
-- Les réglages de fenêtre (taille de police, filtres de niveau, plein écran, transparence, bouclage de l'historique, mode bac à sable, focus à l'ouverture, contrôle du véhicule) sont sauvegardés dans /settings/consoleNG.json ; l'historique des commandes (20 entrées au maximum) est dans /consoleHistory.json et rechargé si ce fichier change (onFileChanged).
-- Contextes d'exécution (liste déroulante) : 0 = GE Lua, 1 = TorqueScript (un « ; » est ajouté s'il manque), 2 = JS de l'interface (be:queueJS), puis « Current Vehicle » et un élément par véhicule actif (v:queueLuaCommand).
-- En GE Lua, si l'option « Sandbox GE Commands » est active, la commande passe par executeLuaSandboxed(cmd, 'GEConsole') ; sinon elle est envoyée par Lua:queueLuaCommand après un hex dump journalisé. La variable vaut true dans le code, mais settingsLoad la met à false si le fichier de réglages n'en contient pas.
-- Quand la fenêtre est ouverte, les actions VehicleCommonActionMap et VehicleSpecificActionMap sont désactivées sauf si « enableVehicleControls » est vrai ; elles sont réactivées à la fermeture.
-- Le filtre de journal utilise des motifs Lua (string.match), pas des expressions régulières ; un motif invalide est détecté par pcall et son message d'erreur est affiché.
-- Le journal est un tampon circulaire borné par logsLimit = 1000 lignes.
-- ConsoleInputCallback est une fonction globale appelée par ImGui pour naviguer dans l'historique avec les flèches haut et bas.
-- Incohérences : M.inputCallback et M.onExtensionUnloaded sont assignés à des variables locales jamais définies et valent donc nil ; parseLogLine appelle M.onConsoleLog, qui n'existe plus (hook retiré, ligne en commentaire), ce qui provoquerait une erreur pour une ligne de journal non analysable ; settingsLoad utilise 0.64 comme taille de police par défaut alors que la valeur initiale est 0.95.
+- The window settings (font size, level filters, fullscreen, transparency, history wraparound, sandbox mode, focus on open, vehicle control) are saved in /settings/consoleNG.json; the command history (20 entries at most) is in /consoleHistory.json and reloaded if this file changes (onFileChanged).
+- Execution contexts (drop-down list): 0 = GE Lua, 1 = TorqueScript (a ";" is added if missing), 2 = interface JS (be:queueJS), then "Current Vehicle" and one item per active vehicle (v:queueLuaCommand).
+- In GE Lua, if the "Sandbox GE Commands" option is active, the command goes through executeLuaSandboxed(cmd, 'GEConsole'); otherwise it is sent by Lua:queueLuaCommand after a logged hex dump. The variable is true in the code, but settingsLoad sets it to false if the settings file does not contain it.
+- When the window is open, the VehicleCommonActionMap and VehicleSpecificActionMap actions are disabled unless "enableVehicleControls" is true; they are re-enabled on close.
+- The log filter uses Lua patterns (string.match), not regular expressions; an invalid pattern is detected by pcall and its error message is displayed.
+- The log is a circular buffer bounded by logsLimit = 1000 lines.
+- ConsoleInputCallback is a global function called by ImGui to navigate the history with the up and down arrows.
+- Inconsistencies: M.inputCallback and M.onExtensionUnloaded are assigned from local variables that are never defined and are therefore nil; parseLogLine calls M.onConsoleLog, which no longer exists (hook removed, line commented out), which would cause an error for an unparseable log line; settingsLoad uses 0.64 as the default font size while the initial value is 0.95.
 
-**Dépendances (chargées avant) :** `ui_imgui`
+**Dependencies (loaded first):** `ui_imgui`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_console.hide()` | Ferme la fenêtre de la console. | 172 |
-| `ui_console.onDeserialized(data)` | Hook appelé après un rechargement de Lua : restaure l'état sauvegardé par onSerialize. *(interne)* *(hook)* | 1215 |
-| `ui_console.onExtensionLoaded()` | Hook appelé au chargement de l'extension : charge les réglages et l'historique, initialise le thème ImGui de l'éditeur et construit la liste des contextes d'exécution. *(interne)* *(hook)* | 1230 |
-| `ui_console.onFileChanged(filename, type)` | Hook appelé quand un fichier surveillé change. Recharge l'historique si le fichier est /consoleHistory.json. *(interne)* *(hook)* | 1239 |
-| `ui_console.onSerialize()` | Hook appelé avant un rechargement de Lua : sauvegarde l'état de la fenêtre (ouverte, filtre d'origine, saisie en cours, filtre de niveaux, plein écran, position, défilement). *(interne)* *(hook)* | 1199 |
-| `ui_console.onUpdate(dtReal, dtSim, dtRaw)` | Hook appelé à chaque image. Si la fenêtre est ouverte, lit les nouvelles lignes du journal (sauf en pause), dessine la console ImGui et traite les commandes saisies ; à la fermeture, rend le contrôle du véhicule. *(interne)* *(hook)* | 556 |
-| `ui_console.onVehicleActiveChanged()` | Hook appelé quand un véhicule devient actif ou inactif : reconstruit la liste des contextes d'exécution (refreshCombo). *(interne)* *(hook)* | 1178 |
-| `ui_console.onVehicleDestroyed()` | Hook appelé quand un véhicule est détruit : reconstruit la liste des contextes d'exécution. *(interne)* *(hook)* | 1178 |
-| `ui_console.onVehicleSpawned()` | Hook appelé quand un véhicule apparaît : reconstruit la liste des contextes d'exécution. *(interne)* *(hook)* | 1178 |
-| `ui_console.onVehicleSwitched()` | Hook appelé quand le véhicule du joueur change : reconstruit la liste des contextes d'exécution. *(interne)* *(hook)* | 1178 |
-| `ui_console.show()` | Ouvre la fenêtre de la console. | 168 |
-| `ui_console.toggle()` | Ouvre la fenêtre si elle est fermée, la ferme si elle est ouverte. | 176 |
+| `ui_console.hide()` | Closes the console window. | 172 |
+| `ui_console.onDeserialized(data)` | Hook called after a Lua reload: restores the state saved by onSerialize. *(internal)* *(hook)* | 1215 |
+| `ui_console.onExtensionLoaded()` | Hook called when the extension loads: loads the settings and history, initializes the editor's ImGui theme and builds the list of execution contexts. *(internal)* *(hook)* | 1230 |
+| `ui_console.onFileChanged(filename, type)` | Hook called when a watched file changes. Reloads the history if the file is /consoleHistory.json. *(internal)* *(hook)* | 1239 |
+| `ui_console.onSerialize()` | Hook called before a Lua reload: saves the window state (open, origin filter, input in progress, level filter, fullscreen, position, scroll). *(internal)* *(hook)* | 1199 |
+| `ui_console.onUpdate(dtReal, dtSim, dtRaw)` | Hook called every frame. If the window is open, reads the new log lines (except when paused), draws the ImGui console and processes the commands entered; on close, gives vehicle control back. *(internal)* *(hook)* | 556 |
+| `ui_console.onVehicleActiveChanged()` | Hook called when a vehicle becomes active or inactive: rebuilds the list of execution contexts (refreshCombo). *(internal)* *(hook)* | 1178 |
+| `ui_console.onVehicleDestroyed()` | Hook called when a vehicle is destroyed: rebuilds the list of execution contexts. *(internal)* *(hook)* | 1178 |
+| `ui_console.onVehicleSpawned()` | Hook called when a vehicle is spawned: rebuilds the list of execution contexts. *(internal)* *(hook)* | 1178 |
+| `ui_console.onVehicleSwitched()` | Hook called when the player's vehicle changes: rebuilds the list of execution contexts. *(internal)* *(hook)* | 1178 |
+| `ui_console.show()` | Opens the console window. | 168 |
+| `ui_console.toggle()` | Opens the window if it is closed, closes it if it is open. | 176 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_console.onDeserialized(data)`
 
-Hook appelé après un rechargement de Lua : restaure l'état sauvegardé par onSerialize.
+Hook called after a Lua reload: restores the state saved by onSerialize.
 
-- `data` (*table*) : Table renvoyée par onSerialize.
+- `data` (*table*) : Table returned by onSerialize.
 
 #### `ui_console.onFileChanged(filename, type)`
 
-Hook appelé quand un fichier surveillé change. Recharge l'historique si le fichier est /consoleHistory.json.
+Hook called when a watched file changes. Reloads the history if the file is /consoleHistory.json.
 
-- `filename` (*string*) : Chemin du fichier modifié.
-- `type` (*string*) : Type de changement (non utilisé).
+- `filename` (*string*) : Path of the modified file.
+- `type` (*string*) : Change type (not used).
 
 #### `ui_console.onSerialize()`
 
-Hook appelé avant un rechargement de Lua : sauvegarde l'état de la fenêtre (ouverte, filtre d'origine, saisie en cours, filtre de niveaux, plein écran, position, défilement).
+Hook called before a Lua reload: saves the window state (open, origin filter, input in progress, level filter, fullscreen, position, scroll).
 
-- **renvoie** : table Données à restituer à onDeserialized.
+- **returns**: table Data to hand back to onDeserialized.
 
 #### `ui_console.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé à chaque image. Si la fenêtre est ouverte, lit les nouvelles lignes du journal (sauf en pause), dessine la console ImGui et traite les commandes saisies ; à la fermeture, rend le contrôle du véhicule.
+Hook called every frame. If the window is open, reads the new log lines (except when paused), draws the ImGui console and processes the commands entered; on close, gives vehicle control back.
 
-- `dtReal` (*number*) : Durée réelle de l'image en secondes (non utilisée).
-- `dtSim` (*number*) : Durée simulée de l'image en secondes (non utilisée).
-- `dtRaw` (*number*) : Durée brute de l'image en secondes (non utilisée).
+- `dtReal` (*number*) : Real frame duration in seconds (not used).
+- `dtSim` (*number*) : Simulated frame duration in seconds (not used).
+- `dtRaw` (*number*) : Raw frame duration in seconds (not used).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant celle-ci : ui_imgui. |
-| `inputCallback` | nil | Toujours nil : assigné depuis une variable locale inexistante (bug). ⚠ référence `inputCallback` non définie dans le fichier (vaut probablement nil) |
-| `onExtensionUnloaded` | nil | Toujours nil : assigné depuis une variable locale inexistante (bug), donc aucun hook de déchargement. ⚠ référence `onExtensionUnloaded` non définie dans le fichier (vaut probablement nil) |
+| `dependencies` | string[] | Extensions loaded before this one: ui_imgui. |
+| `inputCallback` | nil | Always nil: assigned from a nonexistent local variable (bug). ⚠ reference `inputCallback` not defined in the file (probably nil) |
+| `onExtensionUnloaded` | nil | Always nil: assigned from a nonexistent local variable (bug), so there is no unload hook. ⚠ reference `onExtensionUnloaded` not defined in the file (probably nil) |
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
 | `ConsoleInputCallback(data)` |  | 429 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `getFrameLog`
 - `Lua:` `getDevLogStats`, `queueLuaCommand`
@@ -96,4 +96,4 @@ Hook appelé à chaque image. Si la fenêtre est ouverte, lit les nouvelles lign
 - `ui_imgui.` `GetIO`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/console.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/console.lua`.*

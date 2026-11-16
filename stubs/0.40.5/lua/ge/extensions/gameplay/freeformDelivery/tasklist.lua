@@ -2,30 +2,30 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Alimente l'app « tasks » (liste de tâches en haut à gauche) pendant une livraison libre. Il affiche un en-tête (nom de la livraison), une tâche par objectif actif (placement, playerInVehicle, engineRunning, coupled, unhitched), une tâche groupée « ne pas abîmer la cargaison » pour les objectifs damage, les objectifs de distance quand leur seuil d'alerte est dépassé, et un message d'invite à choisir une route. La liste n'est reconstruite que lorsqu'un hash d'état des objectifs change.
---- Accès : extension `gameplay_freeformDelivery_tasklist` : `extensions.load("gameplay_freeformDelivery_tasklist")`, puis la globale `gameplay_freeformDelivery_tasklist`
+--- Feeds the "tasks" app (task list at the top left) during a freeform delivery. It displays a header (delivery name), one task per active goal (placement, playerInVehicle, engineRunning, coupled, unhitched), a grouped "do not damage the cargo" task for damage goals, distance goals when their warning threshold is exceeded, and a message prompting to choose a route. The list is only rebuilt when a goal state hash changes.
+--- Access: extension `gameplay_freeformDelivery_tasklist`: `extensions.load("gameplay_freeformDelivery_tasklist")`, then the global `gameplay_freeformDelivery_tasklist`
 ---@class gameplay_freeformDelivery_tasklist
----@field dependencies string[] gameplay_freeformDelivery_utils, gameplay_freeformDelivery_routes et core_groundMarkers.
+---@field dependencies string[] gameplay_freeformDelivery_utils, gameplay_freeformDelivery_routes and core_groundMarkers.
 gameplay_freeformDelivery_tasklist = {}
 
---- Efface l'en-tête, les tâches et les messages de route de l'UI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua:409
+--- Clears the header, tasks and route messages from the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua:409
 function gameplay_freeformDelivery_tasklist.cleanup() end
 
---- Affiche l'app « tasks », vide la liste, réinitialise les caches, envoie l'en-tête (nom de la livraison), construit la liste initiale et le message de route.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua:314
----@param delivery table Données de livraison (name...).
+--- Displays the "tasks" app, clears the list, resets the caches, sends the header (delivery name), builds the initial list and the route message.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua:314
+---@param delivery table Delivery data (name...).
 function gameplay_freeformDelivery_tasklist.setup(delivery) end
 
---- Appelée chaque frame : met à jour le message d'odomètre, calcule un hash de l'état des objectifs (y compris la progression des objectifs multi-véhicules) et reconstruit la liste si quelque chose a changé.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua:345
----@param profiler table|nil Profileur optionnel (méthode add).
+--- Called every frame: updates the odometer message, computes a hash of the goal state (including the progress of multi-vehicle goals) and rebuilds the list if something changed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua:345
+---@param profiler table|nil Optional profiler (add method).
 function gameplay_freeformDelivery_tasklist.update(profiler) end
 
---- Retire les anciens messages de route et, s'il existe des routes mais pas de guidage actif (core_groundMarkers.currentlyHasTarget) et que l'invite n'a pas encore été montrée, affiche le message invitant à choisir une route via la grande carte. Appelée par routes.lua.
----Source : lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua:122
+--- Removes the old route messages and, if there are routes but no active guidance (core_groundMarkers.currentlyHasTarget) and the prompt has not yet been shown, displays the message prompting to choose a route via the big map. Called by routes.lua.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua:122
 function gameplay_freeformDelivery_tasklist.updateRouteMessage() end
 

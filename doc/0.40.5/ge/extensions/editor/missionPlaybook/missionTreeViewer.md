@@ -1,43 +1,43 @@
 # `editor_missionPlaybook_missionTreeViewer`
 
-*Fichier : `lua/ge/extensions/editor/missionPlaybook/missionTreeViewer.lua` · VM : Game Engine (GE) · 261 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/missionPlaybook/missionTreeViewer.lua` · VM: Game Engine (GE) · 261 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_missionPlaybook_missionTreeViewer` : `extensions.load("editor_missionPlaybook_missionTreeViewer")`, puis la globale `editor_missionPlaybook_missionTreeViewer`
+**Access:** extension `editor_missionPlaybook_missionTreeViewer`: `extensions.load("editor_missionPlaybook_missionTreeViewer")`, then the global `editor_missionPlaybook_missionTreeViewer`
 
-Fenêtre « Playbook Mission Tree Viewer » associée à editor_missionPlaybook. Elle dessine, avec l'éditeur de nœuds du flowgraph (ui_flowgraph_editor), l'arbre de déblocage des missions de carrière : un nœud par mission (showInCareer), placé selon la profondeur forwardInfo.depth, relié aux missions qu'elle débloque (forwardIds). La couleur indique l'état (vert démarrable, jaune visible, rouge sinon) et des icônes d'étoiles montrent les étoiles débloquées à l'étape courante du playbook (étoile pleine, vide, ou « stars » pour débloquée à cette étape).
+"Playbook Mission Tree Viewer" window associated with editor_missionPlaybook. It draws, with the flowgraph node editor (ui_flowgraph_editor), the career mission unlock tree: one node per mission (showInCareer), placed according to the forwardInfo.depth depth, linked to the missions it unlocks (forwardIds). The color indicates the state (green startable, yellow visible, red otherwise) and star icons show the stars unlocked at the current playbook step (full star, empty, or "stars" for unlocked at this step).
 
-## Remarques
+## Notes
 
-- Il faut cliquer sur « Generate » pour créer les nœuds (generateNodes) ; sans cela M.nodes reste vide.
-- La fenêtre n'est dessinée que si « Mission Playbook » est visible et que book.results[book.page] existe.
-- Bug : M.onEditorRegisterPreferences est assigné à une variable globale non définie (nil).
-- Du code de débogage (dump) reste actif dans onEditorGui et onPlaybookLogAfterStep.
-- createRect.is_empty référence w et h globaux (non définis) ; fonction inutilisée.
+- You must click "Generate" to create the nodes (generateNodes); otherwise M.nodes stays empty.
+- The window is only drawn if "Mission Playbook" is visible and book.results[book.page] exists.
+- Bug: M.onEditorRegisterPreferences is assigned to an undefined global variable (nil).
+- Debug code (dump) remains active in onEditorGui and onPlaybookLogAfterStep.
+- createRect.is_empty references global (undefined) w and h; unused function.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_missionPlaybook_missionTreeViewer.onEditorGui()` | Hook d'éditeur appelé à chaque frame : crée (une fois) un contexte d'éditeur de nœuds dédié, dessine les nœuds et les liens puis restaure le contexte précédent. *(interne)* *(hook)* | 183 |
-| `editor_missionPlaybook_missionTreeViewer.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre (500x500) et l'entrée de menu « Missions ». *(interne)* *(hook)* | 229 |
-| `editor_missionPlaybook_missionTreeViewer.onPlaybookLogAfterStep(resultData)` | Hook émis après chaque instruction du playbook : ajoute à resultData les étoiles débloquées par mission (unlockedStars) et celles débloquées à cette étape (unlockedThisStep). *(interne)* *(hook)* | 234 |
-| `editor_missionPlaybook_missionTreeViewer.show()` | Affiche les fenêtres « Mission Playbook » et « Playbook Mission Tree Viewer ». | 224 |
+| `editor_missionPlaybook_missionTreeViewer.onEditorGui()` | Editor hook called every frame: creates (once) a dedicated node editor context, draws the nodes and links then restores the previous context. *(internal)* *(hook)* | 183 |
+| `editor_missionPlaybook_missionTreeViewer.onEditorInitialized()` | Hook called at editor initialization: registers the window (500x500) and the "Missions" menu entry. *(internal)* *(hook)* | 229 |
+| `editor_missionPlaybook_missionTreeViewer.onPlaybookLogAfterStep(resultData)` | Hook emitted after each playbook instruction: adds to resultData the stars unlocked per mission (unlockedStars) and those unlocked at this step (unlockedThisStep). *(internal)* *(hook)* | 234 |
+| `editor_missionPlaybook_missionTreeViewer.show()` | Shows the "Mission Playbook" and "Playbook Mission Tree Viewer" windows. | 224 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_missionPlaybook_missionTreeViewer.onPlaybookLogAfterStep(resultData)`
 
-Hook émis après chaque instruction du playbook : ajoute à resultData les étoiles débloquées par mission (unlockedStars) et celles débloquées à cette étape (unlockedThisStep).
+Hook emitted after each playbook instruction: adds to resultData the stars unlocked per mission (unlockedStars) and those unlocked at this step (unlockedThisStep).
 
-- `resultData` (*table*) : Résultat de l'étape, modifié sur place.
+- `resultData` (*table*) : Result of the step, modified in place.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `nodes` | table[] | Nœuds générés : {id, name, missionId, pos}. |
-| `nodesByMId` | table<string, table> | Nœuds indexés par id de mission. |
-| `onEditorRegisterPreferences` | any |  ⚠ référence `onEditorRegisterPreferences` non définie dans le fichier (vaut probablement nil) |
+| `nodes` | table[] | Generated nodes: {id, name, missionId, pos}. |
+| `nodesByMId` | table<string, table> | Nodes keyed by mission id. |
+| `onEditorRegisterPreferences` | any |  ⚠ reference `onEditorRegisterPreferences` not defined in the file (probably nil) |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionPlaybook/missionTreeViewer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/missionPlaybook/missionTreeViewer.lua`.*

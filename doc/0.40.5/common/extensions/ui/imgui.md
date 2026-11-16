@@ -1,40 +1,40 @@
 # `ui_imgui`
 
-*Fichier : `lua/common/extensions/ui/imgui.lua` · VM : Commun (GE + véhicule) · 47 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/extensions/ui/imgui.lua` · VM: Common (GE + vehicle) · 47 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_imgui` : `extensions.load("ui_imgui")`, puis la globale `ui_imgui`
+**Access:** extension `ui_imgui`: `extensions.load("ui_imgui")`, then the global `ui_imgui`
 
-Extension ui_imgui : point d'entrée d'ImGui pour les moddeurs Lua. Dans la VM du jeu (GE) elle devient simplement le module ui/imgui_api (aucun wrapper) ; les centaines de fonctions ImGui (Begin, Text, Button…) et leurs enums viennent donc de imgui_luaintf.lua et imgui_custom_luaintf.lua. Elle récupère le contexte ImGui principal au chargement et active le style BeamNG.
+Extension ui_imgui: ImGui entry point for Lua modders. In the game VM (GE) it simply becomes the module ui/imgui_api (no wrapper); the hundreds of ImGui functions (Begin, Text, Button...) and their enums therefore come from imgui_luaintf.lua and imgui_custom_luaintf.lua. It gets the main ImGui context on load and enables the BeamNG style.
 
-## Exemple
+## Example
 
 ```lua
 local im = ui_imgui
-if im.Begin('Ma fenêtre') then
-  im.Text('Bonjour')
+if im.Begin('My window') then
+  im.Text('Hello')
 end
 im.End()
 ```
 
-## Remarques
+## Notes
 
-- setEnabled n'est défini que dans la VM 'game' et se contente de loguer une erreur « imgui cannot be switched on or off in GE lua ». Dans une autre VM, M.setEnabled vaut nil (la variable locale n'est jamais assignée).
-- M.flags est simplement bit.bor : sert à combiner des flags ImGui.
-- Les champs et fonctions ImGui ne sont ajoutés que si vmType == 'game' (M = require imgui_api) ; sinon M est un module vide avec flags/hooks.
+- setEnabled is only defined in the 'game' VM and just logs an error "imgui cannot be switched on or off in GE lua". In another VM, M.setEnabled is nil (the local variable is never assigned).
+- M.flags is simply bit.bor: used to combine ImGui flags.
+- The ImGui fields and functions are only added if vmType == 'game' (M = require imgui_api); otherwise M is an empty module with flags/hooks.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_imgui.onExtensionLoaded()` | Hook appelé au chargement (y compris rechargement dynamique) : récupère de nouveau le contexte ImGui principal. *(interne)* *(hook)* | 29 |
-| `ui_imgui.onImGuiReady()` | Hook appelé quand ImGui est prêt la première fois : récupère le contexte principal (M.ctx = Engine.imgui.GetMainContext()) et appelle Engine.imgui.enableBeamNGStyle(). *(interne)* *(hook)* | 22 |
+| `ui_imgui.onExtensionLoaded()` | Hook called on load (including dynamic reload): gets the main ImGui context again. *(internal)* *(hook)* | 29 |
+| `ui_imgui.onImGuiReady()` | Hook called when ImGui is ready for the first time: gets the main context (M.ctx = Engine.imgui.GetMainContext()) and calls Engine.imgui.enableBeamNGStyle(). *(internal)* *(hook)* | 22 |
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `flags` | function | Alias de bit.bor, pour combiner des flags (im.flags(im.WindowFlags_NoMove, im.WindowFlags_NoResize)). |
-| `setEnabled` | function|nil | En GE : fonction qui loggue une erreur (impossible d'activer/désactiver imgui côté GE). nil hors VM game. |
+| `flags` | function | Alias of bit.bor, to combine flags (im.flags(im.WindowFlags_NoMove, im.WindowFlags_NoResize)). |
+| `setEnabled` | function|nil | In GE: function that logs an error (imgui cannot be enabled/disabled on the GE side). nil outside the game VM. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/extensions/ui/imgui.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/extensions/ui/imgui.lua`.*

@@ -1,0 +1,246 @@
+{
+  "path": "lua/ge/extensions/gameplay/traffic/vehicle.lua",
+  "module": "Classe d'un véhicule géré par le système de trafic (gameplay_traffic). Elle suit l'état du véhicule (reset, active, fadeIn, fadeOut, queued, locked), son rôle de conducteur (standard, police, suspect, empty), son suivi de route (roadTracking), ses collisions, ses infractions et son état de poursuite policière (pursuit). Elle gère aussi le respawn hors de vue, les phares, le klaxon et la sirène, et le mode IA.",
+  "usage": "local veh = require('/lua/ge/extensions/gameplay/traffic/vehicle')({id = vehId})\nif veh then veh:postInit(); veh:setAiMode('traffic') end",
+  "notes": [
+    "Le module renvoie un constructeur : le paramètre (table) devient l'objet et init(o.id) est appelé ; renvoie nil si le véhicule est invalide (introuvable ou drapeau ignoreTraffic). Le second paramètre 'role' de init n'est pas utilisé.",
+    "États (self.state) : 'reset', 'active', 'fadeIn', 'fadeOut', 'queued', 'locked'.",
+    "Cadence : onTrafficTick est appelé toutes les 0,25 s de temps simulé (TICK_TIME) ; SLOW_SPEED vaut 2,5 m/s.",
+    "pursuit.mode : 0 = aucune poursuite, 1 = passive, 2 = agressive, 3 = agressive avec barrages routiers, -1 = arrêté (arrestation).",
+    "Infractions testées par checkOffenses : speeding (>= max(16,7 m/s, 1,2 x limite)), racing (>= max(27,8 m/s, 2 x limite)), reckless, wrongWay, intersection, hitPolice, hitTraffic. Elles ne comptent que si strictness de la police > 0.",
+    "Valeurs de self.respawn : spawnValue (0 désactive le respawn), spawnDirBias (-1 à 1), spawnRandomization (0 à 1), activeRadius, finalRadius, innerRadius, staticVisibility.",
+    "Les getters self.getTraffic, getPolice, getTrafficVars et getPoliceVars sont des références vers gameplay_traffic / gameplay_police, modifiables de l'extérieur.",
+    "Hooks émis : onTrafficAction (changeRole), onPursuitOffense, onTrafficVehicleCrashed, onPursuitAction (arrest, release, roadblock, roadblockAlert, evade) pour les véhicules hors trafic principal.",
+    "Dans onVehicleResetted, role.flags.freeze est mis à false (et non nil) alors que les autres rôles testent la valeur de vérité du drapeau."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet véhicule de trafic. Champs courants : id, state, isAi, isPerson, isVehicle, isPlayerControlled, model, modelName, drivability, autoRole, role, tracking (roadTracking), collisions, pursuit, respawn, pos/dirVec/vel/driveVec/targetPos, speed, damage, alpha, focus, focusDist, enableRespawn, enableTracking, enableAutoPooling, camVisible, headlights, queuedFuncs.",
+      "functions": {
+        "init": {
+          "desc": "Initialise le véhicule de trafic : force la visibilité, crée tables de collisions et de fonctions différées, l'objet roadTracking et les getters, appelle resetAll, relève largeur/longueur et définit le rôle par défaut 'empty'. Ne fait rien (et le constructeur renvoie nil) si le véhicule n'existe pas ou a ignoreTraffic.",
+          "params": {
+            "id": {"type": "integer", "desc": "Id du véhicule."},
+            "role": {"type": "string|nil", "desc": "Non utilisé dans le corps de la fonction."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "postInit": {
+          "desc": "À appeler après l'initialisation : applique les données du modèle/config (applyModelConfigData) puis le rôle automatique choisi (autoRole).",
+          "params": {},
+          "returns": []
+        },
+        "applyModelConfigData": {
+          "desc": "Déduit des données du modèle et de la config : nom d'affichage, drivability (à partir du score tout-terrain et de la taille), peinture aléatoire, taxi, statut de véhicule (types car, truck, automation, traffic, proptraffic, player) et rôle automatique ('police' pour les configs de police, sinon 'standard' ; 'empty' si non véhicule).",
+          "params": {},
+          "returns": []
+        },
+        "resetPursuit": {
+          "desc": "Remet à zéro l'état de poursuite (mode 0, scores, compteurs, timers) ; si une poursuite était en cours, appelle d'abord gameplay_police.setPursuitMode(0, id).",
+          "params": {},
+          "returns": []
+        },
+        "resetTracking": {
+          "desc": "Rafraîchit roadTracking et remet à zéro compteurs de collisions et dégâts de crash ; mémorise les dégâts actuels comme référence.",
+          "params": {},
+          "returns": []
+        },
+        "resetValues": {
+          "desc": "Réinitialise les valeurs de respawn (depuis les variables de trafic), et vide collisions, fonctions différées et données actives.",
+          "params": {},
+          "returns": []
+        },
+        "resetElectrics": {
+          "desc": "Éteint la rampe lumineuse, les warnings et le klaxon du véhicule (commandes Lua véhicule).",
+          "params": {},
+          "returns": []
+        },
+        "resetAll": {
+          "desc": "Appelle resetPursuit, resetTracking et resetValues.",
+          "params": {},
+          "returns": []
+        },
+        "honkHorn": {
+          "desc": "Active le klaxon puis l'arrête après la durée donnée (fonction différée 'horn').",
+          "params": {"duration": {"type": "number|nil", "desc": "Durée en secondes (1 par défaut)."}},
+          "returns": []
+        },
+        "useSiren": {
+          "desc": "Allume la rampe lumineuse avec sirène (signal 2) puis la remet à 1 (ou 0 si disableAfterUse) après la durée donnée. Suppose que le véhicule a une rampe. Utilise la même entrée différée 'horn' que honkHorn : les deux s'écrasent mutuellement.",
+          "params": {
+            "duration": {"type": "number|nil", "desc": "Durée en secondes (1 par défaut)."},
+            "disableAfterUse": {"type": "boolean|nil", "desc": "Si true, éteint la rampe à la fin au lieu du mode lumières seules."}
+          },
+          "returns": []
+        },
+        "setAiMode": {
+          "desc": "Définit le mode IA du véhicule (ai.setMode) et ses paramètres automatiques : 'traffic' (agressivité de base, vitesse légale, conduite dans la voie), 'random', 'flee' et 'chase' (agressivité >= 0,8 pour flee/chase, pas de limite de vitesse). Met isAi à false si le mode est 'disabled'. Termine par ai.reset().",
+          "params": {
+            "mode": {"type": "string|nil", "desc": "Mode IA ; utilise trafficVars.aiMode si nil. Exemples : 'traffic', 'random', 'flee', 'chase', 'follow', 'stop', 'disabled'."},
+            "ignoreParams": {"type": "boolean|nil", "desc": "Si true, ne règle pas les paramètres automatiques ni ne réinitialise l'IA."}
+          },
+          "returns": []
+        },
+        "setAiParameters": {
+          "desc": "Applique à l'IA l'agressivité, la limite de vitesse (négative = vitesse légale) et le réglage aiAware (évitement de voitures) issus de params ou, par défaut, des variables de trafic.",
+          "params": {"params": {"type": "table|nil", "desc": "Champs aggression/baseAggression, speedLimit (m/s), aiAware."}},
+          "returns": []
+        },
+        "setRole": {
+          "desc": "Change le rôle du conducteur : termine l'ancien rôle (onRoleEnded), crée le nouveau via trafficUtils.getRoleConstructor, appelle onRoleStarted et émet le hook onTrafficAction(id, 'changeRole', …).",
+          "params": {"roleName": {"type": "string|nil", "desc": "Nom du rôle ('standard' par défaut)."}},
+          "returns": []
+        },
+        "getInteractiveDistance": {
+          "desc": "Renvoie la distance entre le point « regarde devant » du véhicule (targetPos, 10 à 50 m devant selon la vitesse) et une position.",
+          "params": {
+            "pos": {"type": "vec3|nil", "desc": "Position à mesurer."},
+            "squared": {"type": "boolean|nil", "desc": "Si true, renvoie la distance au carré."}
+          },
+          "returns": [{"type": "number", "desc": "Distance en mètres (math.huge si pos est nil)."}]
+        },
+        "modifyRespawnValues": {
+          "desc": "Augmente immédiatement les rayons de respawn pour garder le véhicule actif plus longtemps (utilisé après collision et pendant les poursuites).",
+          "params": {
+            "addActiveRadius": {"type": "number|nil", "desc": "Ajout au rayon actif (m)."},
+            "addInnerRadius": {"type": "number|nil", "desc": "Ajout au rayon intérieur (m)."}
+          },
+          "returns": []
+        },
+        "getBrakingDistance": {
+          "desc": "Estime la distance de freinage : v² / (2 · accel · g), avec g borné pour éviter une division par zéro.",
+          "params": {
+            "speed": {"type": "number|nil", "desc": "Vitesse en m/s (self.speed par défaut)."},
+            "accel": {"type": "number|nil", "desc": "Décélération en fraction de g (agressivité du conducteur par défaut)."}
+          },
+          "returns": [{"type": "number", "desc": "Distance en mètres."}]
+        },
+        "checkCollisions": {
+          "desc": "Détecte les contacts avec les autres objets de la carte (vérification OBB), crée et met à jour les tables de collision (compteur, vitesse, dégâts, produit scalaire), notifie le rôle (onCollision) et les autres véhicules de trafic (onOtherCollision) lorsque la vitesse >= 1 m/s, et gère le cas d'un piéton (unicycle) percuté (l'IA s'arrête puis repart).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "trackCollision": {
+          "desc": "Fait évoluer l'état d'une collision : 'active' puis 'resolved' (arrêt près du site pendant 5 s) ou 'abandoned' (le véhicule s'éloigne) ; efface la collision quand l'autre véhicule est à plus de 120 m.",
+          "params": {
+            "otherId": {"type": "integer|nil", "desc": "Id de l'autre véhicule."},
+            "dt": {"type": "number", "desc": "Delta temps en secondes."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "fade": {
+          "desc": "Fait varier l'opacité du véhicule ; à 0 en fondu sortant l'état passe à 'queued', à 1 en fondu entrant à 'active'.",
+          "params": {
+            "rate": {"type": "number|nil", "desc": "Pas d'opacité (0,1 par défaut)."},
+            "isFadeOut": {"type": "boolean|nil", "desc": "true pour disparaître, false/nil pour apparaître."}
+          },
+          "returns": []
+        },
+        "checkRayCast": {
+          "desc": "Teste la ligne de vue statique entre deux points (castRayStatic).",
+          "params": {
+            "startPos": {"type": "vec3|nil", "desc": "Départ (position du véhicule par défaut)."},
+            "endPos": {"type": "vec3|nil", "desc": "Arrivée (position du véhicule par défaut)."}
+          },
+          "returns": [{"type": "boolean", "desc": "true si le rayon atteint la position sans obstacle."}]
+        },
+        "updateActiveRadius": {
+          "desc": "Met à jour les rayons qui décident si le véhicule peut respawn : rayon actif décroissant selon spawnValue et visibilité, plus un rayon supplémentaire dépendant de la vitesse et de la direction du foyer.",
+          "params": {"tickTime": {"type": "number", "desc": "Durée du tick (s)."}},
+          "returns": [],
+          "internal": true
+        },
+        "tryRespawn": {
+          "desc": "Teste si le véhicule est assez loin du foyer pour respawn (jamais le véhicule du joueur) et qu'aucun véhicule non-trafic n'est trop près ; passe alors à l'état 'fadeOut' et coupe klaxon et phares.",
+          "params": {},
+          "returns": []
+        },
+        "triggerOffense": {
+          "desc": "Enregistre une infraction de poursuite (clé unique, score par défaut 100, divisé par 2 pour une IA), met à jour compteurs et score additionnel et émet le hook onPursuitOffense la première fois.",
+          "params": {"data": {"type": "table", "desc": "{key = string, score? = number, value?, threshold?} ; sans key, rien n'est fait."}},
+          "returns": []
+        },
+        "checkOffenses": {
+          "desc": "Évalue les infractions du véhicule pour la police (excès de vitesse, course, conduite imprudente, mauvais sens, feu/stop, collision avec la police ou le trafic) à partir des fautes de roadTracking et des collisions. Sans effet si strictness <= 0.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "checkPoliceVisibility": {
+          "desc": "Détermine la police la plus proche, fait croître ou décroître sightValue (visibilité 0 à 1 ; policeVisible si >= 0,5) et met à jour le score de poursuite.",
+          "params": {"dtSim": {"type": "number", "desc": "Delta temps de simulation (s)."}},
+          "returns": [],
+          "internal": true
+        },
+        "checkTimeOfDay": {
+          "desc": "Indique s'il fait jour d'après l'heure du jeu et la fenêtre de nuit solaire.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true en journée."}]
+        },
+        "onVehicleResetted": {
+          "desc": "Appelé quand le véhicule est réinitialisé (auto ou manuel) : dégèle le véhicule si besoin et réinitialise le suivi.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "onActiveDone": {
+          "desc": "Appelé après la disparition en fondu ou l'envoi dans le pool inactif ; relaie à role:onActiveDone().",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "onRespawn": {
+          "desc": "Appelé après un respawn dans le trafic : repeint au hasard si permis, incrémente respawnCount, passe l'état à 'reset'.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "onRefresh": {
+          "desc": "Appelé quand les données du véhicule doivent être rafraîchies (en général après respawn). Pour une IA : reset, réglage de playerUsable, mode debug IA, ajustement nocturne de spawnValue (x0,25), état active/fadeIn, réinitialisation de l'action et de la personnalité du rôle, paramètres IA. Appelle ensuite role:onRefresh().",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "onTrafficTick": {
+          "desc": "Tick de trafic (0,25 s) : met à jour le suivi de route, la visibilité, le rayon actif, les phares (nuit ou tunnel), détecte les dégâts de crash (hook onTrafficVehicleCrashed) et les quasi-accidents, puis appelle role:onTrafficTick.",
+          "params": {"tickTime": {"type": "number", "desc": "Durée du tick (0,25 s)."}},
+          "returns": [],
+          "internal": true
+        },
+        "onPursuitUpdate": {
+          "desc": "Fait avancer la poursuite : alerte, arrestation (arrestTime), relâchement, barrages routiers (mode 3), évasion (evadeTime), rayons d'arrestation et d'évasion, et valeurs normalisées arrestValue et evadeValue. Pour un véhicule hors trafic principal, émet directement les hooks onPursuitAction.",
+          "params": {
+            "dt": {"type": "number", "desc": "Delta temps réel (s)."},
+            "dtSim": {"type": "number", "desc": "Delta temps de simulation (s)."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "onUpdate": {
+          "desc": "Mise à jour par frame : lit position, direction et vitesse depuis map.objects, calcule driveVec et targetPos, gère les états (locked, fadeIn, fadeOut), cadence les ticks de trafic, suit collisions et police, exécute les fonctions différées et appelle role:onUpdate.",
+          "params": {
+            "dt": {"type": "number", "desc": "Delta temps réel (s)."},
+            "dtSim": {"type": "number", "desc": "Delta temps de simulation (s)."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "onSerialize": {
+          "desc": "Sérialise l'état du véhicule de trafic (y compris suivi de route et rôle) pour la sauvegarde.",
+          "params": {},
+          "returns": [{"type": "table", "desc": "Données sérialisables."}],
+          "internal": true
+        },
+        "onDeserialized": {
+          "desc": "Restaure l'état depuis la table de onSerialize, recrée le rôle et restaure le suivi ; met l'état à 'queued' si l'objet n'est pas actif.",
+          "params": {"data": {"type": "table", "desc": "Données issues de onSerialize."}},
+          "returns": [],
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,19 +1,69 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/raceMarkers.lua",
-  "module": "Nœud flowgraph « Race Markers » (catégorie repeat_instant, tag scenario). Affiche en 3D (module scenario/race_marker) les marqueurs de course d'un véhicule et dessine les mêmes points sur la minimap. Au premier flux avec raceData, crée un marqueur par pathnode (position, rayon, normale, position du suivant) ; à chaque évènement rollingStarted/pathnodeReached/raceStarted du véhicule, recalcule les modes (default, next, start, lap, recovery, final, branch, hidden) à partir de state.nextPathnodes et overNextPathnodes. Entrées : clear (impulsion qui supprime les marqueurs), raceData, vehId, ignoreRecovery, minAlpha (0,15), maxAlpha (1), minDistance (5), maxDistance (50), alwaysShowFinal.",
-  "notes": ["Les pins minAlpha, maxAlpha, minDistance, maxDistance sont déclarées mais jamais lues dans ce fichier.", "L'ancienne pin 'reset' est redirigée vers 'clear'.", "Il reste un « ]] » isolé dans le code (reste d'un bloc commenté)."],
+  "module": "Flowgraph node \"Race Markers\" (category repeat_instant, tag scenario). Displays in 3D (module scenario/race_marker) the race markers of a vehicle and draws the same points on the minimap. On first flow with raceData, creates one marker per pathnode (position, radius, normal, position of the next one); on each rollingStarted/pathnodeReached/raceStarted event of the vehicle, recomputes the modes (default, next, start, lap, recovery, final, branch, hidden) from state.nextPathnodes and overNextPathnodes. Inputs: clear (pulse that removes the markers), raceData, vehId, ignoreRecovery, minAlpha (0.15), maxAlpha (1), minDistance (5), maxDistance (50), alwaysShowFinal.",
+  "notes": [
+    "The pins minAlpha, maxAlpha, minDistance, maxDistance are declared but never read in this file.",
+    "The old pin 'reset' is redirected to 'clear'.",
+    "A stray \"]]\" remains in the code (leftover of a commented-out block)."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise markers, minimapMarkers et route.", "internal": true},
-        "work": {"desc": "Gère clear ; crée les marqueurs au besoin et met à jour leurs modes sur évènement de course.", "internal": true},
-        "onMinimapRouteOverride": {"desc": "Hook minimap : ajoute à routeOverrides une copie du chemin détaillé aiDetailedPath de la course (refermé s'il est fermé).", "params": {"routeOverrides": {"type": "table", "desc": "Liste de routes à compléter."}}, "internal": true},
-        "onDrawOnMinimap": {"desc": "Hook minimap : dessine ligne (pathnode avec normale) ou cercle de chaque marqueur non caché, avec pointeur de bord.", "params": {"td": {"type": "any", "desc": "Données de dessin de la minimap (non utilisées directement)."}}, "internal": true},
-        "onPreRender": {"desc": "Hook de rendu : appelle markers.render(dt, dtSim).", "params": {"dt": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."}}, "internal": true},
-        "_executionStopped": {"desc": "Détruit les marqueurs (markers.onClientEndMission) et vide la route.", "internal": true},
-        "onClientEndMission": {"desc": "Hook de fin de mission : appelle _executionStopped.", "internal": true},
-        "destroy": {"desc": "Destruction du nœud : appelle _executionStopped.", "internal": true}
+        "init": {
+          "desc": "Initializes markers, minimapMarkers and route.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Handles clear; creates the markers if needed and updates their modes on race events.",
+          "internal": true
+        },
+        "onMinimapRouteOverride": {
+          "desc": "Minimap hook: adds to routeOverrides a copy of the race's detailed path aiDetailedPath (closed again if it is closed).",
+          "params": {
+            "routeOverrides": {
+              "type": "table",
+              "desc": "List of routes to complete."
+            }
+          },
+          "internal": true
+        },
+        "onDrawOnMinimap": {
+          "desc": "Minimap hook: draws a line (pathnode with normal) or a circle for each non-hidden marker, with an edge pointer.",
+          "params": {
+            "td": {
+              "type": "any",
+              "desc": "Minimap drawing data (not used directly)."
+            }
+          },
+          "internal": true
+        },
+        "onPreRender": {
+          "desc": "Render hook: calls markers.render(dt, dtSim).",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Real time delta (s)."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Simulation time delta (s)."
+            }
+          },
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Destroys the markers (markers.onClientEndMission) and empties the route.",
+          "internal": true
+        },
+        "onClientEndMission": {
+          "desc": "Mission end hook: calls _executionStopped.",
+          "internal": true
+        },
+        "destroy": {
+          "desc": "Node destruction: calls _executionStopped.",
+          "internal": true
+        }
       }
     }
   }

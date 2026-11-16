@@ -2,46 +2,46 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/layoutManager.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gestion des dispositions (layouts) de fenêtres de l'éditeur. Chaque layout est un dossier settings/<outil>/layouts/<nom>/ contenant windowsState.json ; le layout courant est settings/<outil>/windowsState.json. Les positions ImGui sont lues/écrites dans settings/imgui.ini (ou settings/default_imgui.ini pour le layout Default). L'outil vaut « editor » par défaut.
---- Accès : extension `editor_layoutManager` : `extensions.load("editor_layoutManager")`, puis la globale `editor_layoutManager`
+--- Management of the editor's window layouts. Each layout is a folder settings/<tool>/layouts/<name>/ containing windowsState.json; the current layout is settings/<tool>/windowsState.json. The ImGui positions are read/written in settings/imgui.ini (or settings/default_imgui.ini for the Default layout). The tool is "editor" by default.
+--- Access: extension `editor_layoutManager`: `extensions.load("editor_layoutManager")`, then the global `editor_layoutManager`
 ---@class editor_layoutManager
 editor_layoutManager = {}
 
---- Supprime tous les fichiers d'un dossier de layout puis le dossier lui-même.
----Source : lua/ge/extensions/editor/layoutManager.lua:55
----@param layoutPath string Chemin du dossier de layout à supprimer.
+--- Deletes all files of a layout folder then the folder itself.
+---Source: lua/ge/extensions/editor/layoutManager.lua:55
+---@param layoutPath string Path of the layout folder to delete.
 function editor_layoutManager.deleteWindowLayout(layoutPath) end
 
---- Liste les dossiers de layouts de settings/<outil>/layouts/.
----Source : lua/ge/extensions/editor/layoutManager.lua:14
----@param toolName string|nil Nom de l'outil ; « editor » si nil.
----@return table<integer, string>  Chemins des dossiers de layouts (FS:directoryList).
+--- Lists the layout folders of settings/<tool>/layouts/.
+---Source: lua/ge/extensions/editor/layoutManager.lua:14
+---@param toolName string|nil Tool name; "editor" if nil.
+---@return table<integer, string>  Paths of the layout folders (FS:directoryList).
 function editor_layoutManager.getWindowLayouts(toolName) end
 
---- Charge l'état courant des fenêtres (settings/<outil>/windowsState.json). Si editor.needsDefaultImguiIniLoad est vrai, charge default_imgui.ini une fois, sinon imgui.ini.
----Source : lua/ge/extensions/editor/layoutManager.lua:37
----@param toolName string|nil Nom de l'outil ; « editor » si nil.
+--- Loads the current windows state (settings/<tool>/windowsState.json). If editor.needsDefaultImguiIniLoad is true, loads default_imgui.ini once, otherwise imgui.ini.
+---Source: lua/ge/extensions/editor/layoutManager.lua:37
+---@param toolName string|nil Tool name; "editor" if nil.
 function editor_layoutManager.loadCurrentWindowLayout(toolName) end
 
---- Charge windowsState.json d'un layout et recharge imgui.ini : default_imgui.ini si le layout est Default, sinon imgui.ini.
----Source : lua/ge/extensions/editor/layoutManager.lua:18
----@param layout string|nil Dossier du layout ; settings/editor/layouts/Default si nil.
----@param toolName string|nil Nom de l'outil passé à editor.loadWindowsState.
+--- Loads the windowsState.json of a layout and reloads imgui.ini: default_imgui.ini if the layout is Default, otherwise imgui.ini.
+---Source: lua/ge/extensions/editor/layoutManager.lua:18
+---@param layout string|nil Layout folder; settings/editor/layouts/Default if nil.
+---@param toolName string|nil Tool name passed to editor.loadWindowsState.
 function editor_layoutManager.loadWindowLayout(layout, toolName) end
 
---- Supprime tous les layouts personnalisés (tout sauf Default) de settings/<outil>/layouts puis charge le layout Default.
----Source : lua/ge/extensions/editor/layoutManager.lua:63
----@param toolName string|nil Nom de l'outil ; « editor » si nil.
+--- Deletes all custom layouts (everything except Default) from settings/<tool>/layouts then loads the Default layout.
+---Source: lua/ge/extensions/editor/layoutManager.lua:63
+---@param toolName string|nil Tool name; "editor" if nil.
 function editor_layoutManager.resetLayouts(toolName) end
 
---- Enregistre l'état courant des fenêtres dans settings/<outil>/windowsState.json et sauvegarde imgui.ini.
----Source : lua/ge/extensions/editor/layoutManager.lua:50
----@param toolName string|nil Sert à construire le chemin, mais n'est pas transmis à editor.saveWindowsState.
+--- Saves the current windows state to settings/<tool>/windowsState.json and saves imgui.ini.
+---Source: lua/ge/extensions/editor/layoutManager.lua:50
+---@param toolName string|nil Used to build the path, but is not passed to editor.saveWindowsState.
 function editor_layoutManager.saveCurrentWindowLayout(toolName) end
 
---- Enregistre l'état des fenêtres dans settings/<outil>/layouts/<layoutName>/windowsState.json et sauvegarde imgui.ini.
----Source : lua/ge/extensions/editor/layoutManager.lua:30
----@param layoutName string Nom du layout (nom du dossier).
----@param toolName string|nil Nom de l'outil ; « editor » si nil.
+--- Saves the windows state to settings/<tool>/layouts/<layoutName>/windowsState.json and saves imgui.ini.
+---Source: lua/ge/extensions/editor/layoutManager.lua:30
+---@param layoutName string Layout name (folder name).
+---@param toolName string|nil Tool name; "editor" if nil.
 function editor_layoutManager.saveWindowLayout(layoutName, toolName) end
 

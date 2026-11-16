@@ -2,57 +2,57 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/vehicle/thumbnail.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_vehicle_thumbnail` : génère les miniatures (.jpg) des configurations de véhicule sauvegardées, soit directement dans vehicles/<modèle>/<config>.jpg, soit sous forme de capture temporaire d'aperçu (dossier /screenshots/vehicleConfigTemp) que l'utilisateur peut valider ou annuler avant la sauvegarde. Délègue la prise de vue à util_screenshotCreator_currentConfigThumbnail. Utilisée par core_vehicle_partmgmt.
---- Accès : extension `core_vehicle_thumbnail` : `extensions.load("core_vehicle_thumbnail")`, puis la globale `core_vehicle_thumbnail`
+--- GE extension `core_vehicle_thumbnail`: generates the thumbnails (.jpg) of saved vehicle configurations, either directly in vehicles/<model>/<config>.jpg, or as a temporary preview capture (folder /screenshots/vehicleConfigTemp) that the user can accept or cancel before saving. Delegates the shot to util_screenshotCreator_currentConfigThumbnail. Used by core_vehicle_partmgmt.
+--- Access: extension `core_vehicle_thumbnail`: `extensions.load("core_vehicle_thumbnail")`, then the global `core_vehicle_thumbnail`
 ---@class core_vehicle_thumbnail
 ---@field dependencies string[] core_vehicle_manager, core_vehicle_configTarget, util_screenshotCreator_currentConfigThumbnail.
 core_vehicle_thumbnail = {}
 
---- Annule une capture (supprime le fichier ; si elle est encore en cours, elle sera supprimée à son terme).
----Source : lua/ge/extensions/core/vehicle/thumbnail.lua:186
----@param captureId integer identifiant de la capture
----@return table  {success, captureId} ou {success = false, reason = 'captureNotFound', captureId}
+--- Cancels a capture (deletes the file; if it is still in progress, it will be deleted when it finishes).
+---Source: lua/ge/extensions/core/vehicle/thumbnail.lua:186
+---@param captureId integer capture identifier
+---@return table  {success, captureId} or {success = false, reason = 'captureNotFound', captureId}
 function core_vehicle_thumbnail.cancelTemporaryThumbnail(captureId) end
 
---- Démarre une capture temporaire (aperçu) pour la config courante du véhicule configuré ; le fichier est /screenshots/vehicleConfigTemp/save-preview-<id>.jpg.
----Source : lua/ge/extensions/core/vehicle/thumbnail.lua:161
----@return table  {success = true, captureId, path} ou {success = false, reason = 'noCurrentConfig'|'busy'}
+--- Starts a temporary capture (preview) for the configured vehicle's current config; the file is /screenshots/vehicleConfigTemp/save-preview-<id>.jpg.
+---Source: lua/ge/extensions/core/vehicle/thumbnail.lua:161
+---@return table  {success = true, captureId, path} or {success = false, reason = 'noCurrentConfig'|'busy'}
 function core_vehicle_thumbnail.captureTemporaryThumbnail() end
 
---- Annule une capture précise, ou toutes si captureId est nil.
----Source : lua/ge/extensions/core/vehicle/thumbnail.lua:199
----@param captureId integer|nil identifiant ; nil = toutes
----@return table  {success = true} (ou résultat de cancelTemporaryThumbnail)
+--- Cancels a specific capture, or all of them if captureId is nil.
+---Source: lua/ge/extensions/core/vehicle/thumbnail.lua:199
+---@param captureId integer|nil identifier; nil = all
+---@return table  {success = true} (or the result of cancelTemporaryThumbnail)
 function core_vehicle_thumbnail.clearTemporaryThumbnail(captureId) end
 
---- Valide une capture prête : la copie vers targetPath puis supprime le fichier temporaire.
----Source : lua/ge/extensions/core/vehicle/thumbnail.lua:265
----@param captureId integer capture prête
----@param targetPath string chemin du .jpg définitif
----@return boolean  true si copiée
+--- Commits a ready capture: copies it to targetPath then deletes the temporary file.
+---Source: lua/ge/extensions/core/vehicle/thumbnail.lua:265
+---@param captureId integer ready capture
+---@param targetPath string path of the final .jpg
+---@return boolean  true if copied
 function core_vehicle_thumbnail.commitTemporaryThumbnail(captureId, targetPath) end
 
---- Copie un fichier miniature vers une destination en remplaçant l'ancien de manière sûre (création du dossier si nécessaire).
----Source : lua/ge/extensions/core/vehicle/thumbnail.lua:223
----@param sourcePath string fichier source existant
----@param targetPath string fichier destination
----@return boolean  true si la copie a réussi
+--- Copies a thumbnail file to a destination, safely replacing the old one (creates the folder if needed).
+---Source: lua/ge/extensions/core/vehicle/thumbnail.lua:223
+---@param sourcePath string existing source file
+---@param targetPath string destination file
+---@return boolean  true if the copy succeeded
 function core_vehicle_thumbnail.copyThumbnailFile(sourcePath, targetPath) end
 
---- Génère la miniature de la config nommée pour le véhicule configuré, dans vehicles/<modèle>/<nom>.jpg, via util_screenshotCreator_currentConfigThumbnail.
----Source : lua/ge/extensions/core/vehicle/thumbnail.lua:110
----@param configName string nom de config (le chemin et les extensions .pc/.jpg sont retirés)
----@return boolean  true si la prise de vue a démarré
+--- Generates the thumbnail of the named config for the configured vehicle, in vehicles/<model>/<name>.jpg, via util_screenshotCreator_currentConfigThumbnail.
+---Source: lua/ge/extensions/core/vehicle/thumbnail.lua:110
+---@param configName string config name (path and .pc/.jpg extensions are removed)
+---@return boolean  true if the shot started
 function core_vehicle_thumbnail.generateConfigThumbnail(configName) end
 
---- Renvoie la capture temporaire prête la plus récente.
----Source : lua/ge/extensions/core/vehicle/thumbnail.lua:114
----@return table  {captureId, path} ou {path = nil} s'il n'y en a pas
+--- Returns the most recent ready temporary capture.
+---Source: lua/ge/extensions/core/vehicle/thumbnail.lua:114
+---@return table  {captureId, path} or {path = nil} if there is none
 function core_vehicle_thumbnail.getTemporaryThumbnail() end
 
---- Indique si le chemin correspond à une capture temporaire prête, non annulée et existante.
----Source : lua/ge/extensions/core/vehicle/thumbnail.lua:213
----@param path string chemin du fichier
----@return boolean  true si valide
+--- Indicates whether the path matches a temporary capture that is ready, not canceled and existing.
+---Source: lua/ge/extensions/core/vehicle/thumbnail.lua:213
+---@param path string file path
+---@return boolean  true if valid
 function core_vehicle_thumbnail.isValidTemporaryThumbnail(path) end
 

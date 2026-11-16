@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crash/removeTrackedVehicleCrash.lua",
+  "module": "Nœud flowgraph « Remove Tracked Vehicle Crash » (catégorie repeat_instant). Retire un véhicule (pin vehId) du suivi des crashs via gameplay_util_crashDetection.removeTrackedVehicleById.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Appelle removeTrackedVehicleById(vehId) à chaque frame."}
+      }
+    }
+  }
+}

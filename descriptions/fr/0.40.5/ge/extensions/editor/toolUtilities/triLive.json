@@ -1,0 +1,45 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/triLive.lua",
+  "module": "Compteur de triangles réellement dessinés par un « kit » (pièces instanciées), vu depuis la caméra : chaque instance est comptée au LOD qu'elle dessine vraiment, moins celles hors écran. Sert au pied de page statsFooter. Garde une seule réponse à la fois (l'éditeur n'a qu'un mode d'édition). Les échelles de LOD mesurées, coûteuses, sont partagées et mises en cache sur disque dans /temp/massingEditor/shapeLods.json (avec la date de modification du fichier de forme).",
+  "usage": "local tl = require('editor/toolUtilities/triLive')\ntl.note(instances)     -- à chaque reconstruction\ntl.scanStep()          -- chaque frame\ntl.update(instances)\nlocal tris, dist, live, placed, toScan = tl.get()",
+  "notes": [
+    "Chaque instance doit avoir shape (chemin de forme), px, py, pz.",
+    "Mise à jour limitée à 4 Hz, et 10000 instances traitées par frame pour ne pas figer l'éditeur sur une grande ville.",
+    "Le calcul suppose une constante moteur ENGINE_SCALE = 4.48 mesurée à 1920x1009 et 65 degrés, avec le FOV et la taille de fenêtre réels. La visibilité est testée par un cône autour de la diagonale de l'écran.",
+    "Une forme impossible à mesurer est comptée comme ne dessinant rien pour la session, avec un avertissement loggé, et réessayée au prochain rechargement.",
+    "Une forme dont le fichier a été réécrit depuis la mesure est remesurée."
+  ],
+  "functions": {
+    "note": {
+      "desc": "Met en file les formes de `instances` jamais mesurées (ou dont le fichier a changé). Assez peu coûteux pour être appelé à chaque reconstruction.",
+      "params": {"instances": {"type": "table", "desc": "Liste d'entrées avec champ shape."}},
+      "returns": []
+    },
+    "scanStep": {
+      "desc": "Mesure UNE forme par appel (échelle de LOD), appelé depuis la frame de l'éditeur pour que le scan à froid apparaisse comme une progression et non comme un gel. Sauvegarde le cache quand la file est vide.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "Vrai si une forme a été traitée."}]
+    },
+    "update": {
+      "desc": "Calcule le total de triangles instanciés à l'écran et la distance caméra - centroïde des instances. Limité en fréquence et découpé en tranches de 10000 instances par frame.",
+      "params": {"instances": {"type": "table", "desc": "Liste d'entrées { shape, px, py, pz }."}},
+      "returns": []
+    },
+    "get": {
+      "desc": "Dernier résultat : triangles instanciés dessinés, distance au centroïde des instances (m), instances dessinées, instances placées, formes restant à scanner.",
+      "params": {},
+      "returns": [
+        {"type": "number", "desc": "Triangles dessinés."},
+        {"type": "number", "desc": "Distance au centroïde (m)."},
+        {"type": "integer", "desc": "Instances dessinées."},
+        {"type": "integer", "desc": "Instances placées."},
+        {"type": "integer", "desc": "Formes encore à scanner."}
+      ]
+    },
+    "rescan": {
+      "desc": "Vide le cache de mesures, les rayons, la file et les échecs : « tout réessayer ». Le cache sera réécrit.",
+      "params": {},
+      "returns": []
+    }
+  }
+}

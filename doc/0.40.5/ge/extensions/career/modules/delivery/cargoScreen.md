@@ -1,313 +1,313 @@
 # `career_modules_delivery_cargoScreen`
 
-*Fichier : `lua/ge/extensions/career/modules/delivery/cargoScreen.lua` · VM : Game Engine (GE) · 2017 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/delivery/cargoScreen.lua` · VM: Game Engine (GE) · 2017 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_delivery_cargoScreen` : `extensions.load("career_modules_delivery_cargoScreen")`, puis la globale `career_modules_delivery_cargoScreen`
+**Access:** extension `career_modules_delivery_cargoScreen`: `extensions.load("career_modules_delivery_cargoScreen")`, then the global `career_modules_delivery_cargoScreen`
 
-Back-end de l'écran « Cargo Overview » de la carrière (livraison de colis, matériaux, véhicules et remorques). Il formate pour l'UI les cartes de cargaison (colis groupés, stockages de fluides/vrac, offres de véhicules, véhicules prêtés), envoie le tout via guihooks 'cargoDataForUiReady', gère le chargement/déchargement par déplacements transitoires (moveCargoFromUi, moveMaterialFromUi puis commit/cancel), l'ouverture/fermeture de l'écran avec la grande carte, le calcul de la meilleure route (setBestRoute) et les aperçus de route et surbrillances des marqueurs.
+Back end of the career "Cargo Overview" screen (delivery of parcels, materials, vehicles and trailers). It formats for the UI the cargo cards (grouped parcels, fluid/bulk storages, vehicle offers, loaned vehicles), sends everything via guihooks 'cargoDataForUiReady', handles loading/unloading through transient moves (moveCargoFromUi, moveMaterialFromUi then commit/cancel), opening/closing the screen with the big map, computing the best route (setBestRoute), and route previews and marker highlights.
 
-## Exemple
+## Example
 
 ```lua
--- ouvrir l'écran de cargaison du joueur (hors facilité)
+-- open the player's cargo screen (outside a facility)
 career_modules_delivery_cargoScreen.enterMyCargo()
 ```
 
-## Remarques
+## Notes
 
-- Dépend de core_vehicleBridge ; les autres modules delivery sont référencés dans onCareerActivated.
-- Les cartes sont stockées dans une table locale cardsById avec des ids préfixés : 'F-' (facilité) ou 'P-' (joueur) puis 'pg-' (parcelGroup), 'st-' (storage), 'vo-' (vehicleOffer) ou 'lo-' (loaner).
-- requestCargoDataForUi est asynchrone (passe par getNearbyVehicleCargoContainers) et répond par guihooks.trigger('cargoDataForUiReady', uiData) ; les mises à jour du cargo déclenchent 'newCargoAvailable' (une seule fois par ouverture).
-- Un déplacement de cargo est d'abord 'transitoire' : il n'est appliqué qu'à commitDeliveryConfiguration ; cancelDeliveryConfiguration (ou la sortie de la route UI) l'annule.
-- commitDeliveryConfiguration démarre le mode livraison si besoin, met à jour les poids des conteneurs, puis fait apparaître les offres de véhicules marquées et les véhicules prêtés.
-- Bug probable : dans commitDeliveryConfiguration, step.startStepSequence(sequence, callback) utilise 'callback', variable non définie (nil) ; un print(data) de debug y est aussi laissé.
-- setBestRoute : plus proche voisin glouton sur les destinations (distances via gameplay/route/route et dGenerator.getDistanceBetweenFacilities) ; s'il y a des tâches de véhicule, délègue à vehicleTasks.navigateToNextTask. Le cas target.type == 'multi' n'est pas géré (bloc vide).
-- setCargoScreenTab(tab) filtre les marqueurs de grande carte selon les filterTags des cartes (ou 'myCargo').
-- Plusieurs fonctions ne sont que des passe-plats vers d'autres modules : spawnOffer, requestDropOffData, confirmDropOffData, unloadCargoPopupClosed, clearTransientMoveForCargo.
+- Depends on core_vehicleBridge; the other delivery modules are referenced in onCareerActivated.
+- Cards are stored in a local table cardsById with prefixed ids: 'F-' (facility) or 'P-' (player) then 'pg-' (parcelGroup), 'st-' (storage), 'vo-' (vehicleOffer) or 'lo-' (loaner).
+- requestCargoDataForUi is asynchronous (goes through getNearbyVehicleCargoContainers) and replies with guihooks.trigger('cargoDataForUiReady', uiData); cargo updates trigger 'newCargoAvailable' (only once per opening).
+- A cargo move is first 'transient': it is only applied at commitDeliveryConfiguration; cancelDeliveryConfiguration (or leaving the UI route) cancels it.
+- commitDeliveryConfiguration starts delivery mode if needed, updates the container weights, then spawns the marked vehicle offers and the loaned vehicles.
+- Probable bug: in commitDeliveryConfiguration, step.startStepSequence(sequence, callback) uses 'callback', an undefined variable (nil); a debug print(data) is also left in there.
+- setBestRoute: greedy nearest neighbor over the destinations (distances via gameplay/route/route and dGenerator.getDistanceBetweenFacilities); if there are vehicle tasks, delegates to vehicleTasks.navigateToNextTask. The target.type == 'multi' case is not handled (empty block).
+- setCargoScreenTab(tab) filters the big map markers according to the cards' filterTags (or 'myCargo').
+- Several functions are only pass-throughs to other modules: spawnOffer, requestDropOffData, confirmDropOffData, unloadCargoPopupClosed, clearTransientMoveForCargo.
 
-**Dépendances (chargées avant) :** `core_vehicleBridge`
+**Dependencies (loaded first):** `core_vehicleBridge`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_delivery_cargoScreen.abandonAcceptedOffer(vehId)` | Abandonne une offre acceptée : déclenche le hook onGameplayActivityAborted puis rend le véhicule de livraison (vehicleTasks.giveBackDeliveryVehicle). | 582 |
-| `career_modules_delivery_cargoScreen.applyTransientMoves()` | Déclenche onGameplayActivityAborted puis applique tous les déplacements transitoires (dParcelManager.applyTransientMoves). | 1484 |
-| `career_modules_delivery_cargoScreen.cancelDeliveryConfiguration()` | Annule la livraison en cours de configuration : efface les déplacements transitoires, les marquages d'apparition d'offres et de véhicules prêtés, rafraîchit les conteneurs proches et affiche un message. | 1673 |
-| `career_modules_delivery_cargoScreen.clearTransientMoveForCargo(...)` | Passe-plat vers career_modules_delivery_parcelManager.clearTransientMoveForCargo. | 2006 |
-| `career_modules_delivery_cargoScreen.clearTransientMovesForStorage(materialType)` | Supprime les cargos en déplacement transitoire issus du stockage de matériau donné de la facilité de l'écran ouvert (emplacement 'delete') et annule leur déplacement. | 740 |
-| `career_modules_delivery_cargoScreen.commitDeliveryConfiguration()` | Valide la configuration : applique les déplacements transitoires vers la facilité courante, démarre le mode livraison si du cargo est chargé ou restant, met à jour les poids des conteneurs (gel puis délai de chargement avec popup), puis fait apparaître les offres marquées et les véhicules prêtés. | 1595 |
-| `career_modules_delivery_cargoScreen.confirmDropOffData(...)` | Passe-plat vers career_modules_delivery_progress.confirmDropOffData. | 2005 |
-| `career_modules_delivery_cargoScreen.deliveryMarkerSelected(poiId)` | Callback de clic sur un marqueur : met en surbrillance les cartes et, si la route automatique est désactivée, y navigue (freeroam_bigMapMode.navigateToMission). *(interne)* | 1860 |
-| `career_modules_delivery_cargoScreen.deliveryScreenExternalButtonPressed(id)` | Boutons externes de l'écran : 'openDeliveryProgress' ouvre career.branchPage (logistics-delivery) et 'openVehicleDeliveryProgress' (logistics-vehicleDelivery). | 951 |
-| `career_modules_delivery_cargoScreen.dropOffPopupClosed(mode)` | Appelée par l'UI à la fermeture d'une popup de dépose : mode 'results' déclenche onDeliveryRewardsPopupClosed, mode 'cargoSelection' déclenche onDeliveryDropOffCargoSelectionPopupClosed. | 2008 |
-| `career_modules_delivery_cargoScreen.enterCargoOverviewScreen(facilityId, parkingSpotPath)` | Ouvre l'écran : mémorise facilité/parking spot, déclenche les générateurs du tutoriel si besoin, vide les POI, entre dans la grande carte avec POI personnalisés, navigue vers la route UI 'career.cargoOverview' et déclenche onEnterCargoOverviewScreen. | 1511 |
-| `career_modules_delivery_cargoScreen.enterMyCargo()` | Ouvre l'écran sans facilité (enterCargoOverviewScreen()). | 1567 |
-| `career_modules_delivery_cargoScreen.exitCargoOverviewScreen(facilityId, parkingSpotPath)` | Appelée à la fermeture de l'écran : le marque fermé, réactive le déplacement, vide les POI, quitte la grande carte, remet la simulation en marche, planifie la mise à jour des poids et vérifie la sortie du mode livraison. | 1583 |
-| `career_modules_delivery_cargoScreen.exitDeliveryMode()` | Quitte le mode livraison (avec hook onGameplayActivityAborted s'il était actif) via career_modules_delivery_general.exitDeliveryMode. | 1994 |
-| `career_modules_delivery_cargoScreen.formatAcceptedOfferForUI(offer)` | Formate une offre de véhicule/remorque acceptée pour l'UI : nom, marque, kilométrage, destination, tâche en cours (monter dans le véhicule, atteler la remorque, déposer…), vignette, récompense, route, modificateurs, informations d'abandon (pénalité = récompense × facteur d'abandon). | 521 |
-| `career_modules_delivery_cargoScreen.formatCargoGroup(group, playerCargoContainers, showFirstSeen)` | Formate un groupe de cargos « identiques » (même nom, destination…) en une entrée pour l'UI : ids, noms court/long d'origine/emplacement/destination, type, slots, distance, récompense, poids, temps d'offre restant, modificateurs, route navgraph, emplacements cibles possibles, etc. | 90 |
-| `career_modules_delivery_cargoScreen.getCargoScreenTab()` | Renvoie l'onglet courant ('' à l'ouverture). | 70 |
-| `career_modules_delivery_cargoScreen.highlightCargoInPoi(poiId)` | Envoie à l'UI (guihooks 'sendHighlightedCardIds') les ids de cartes liées au marqueur de grande carte donné ; table vide si inconnu. | 1841 |
-| `career_modules_delivery_cargoScreen.isCargoScreenOpen()` | Indique si l'écran de cargaison est ouvert. | 46 |
-| `career_modules_delivery_cargoScreen.moveCargoFromUi(cargoId, targetLocation)` | Déplace un cargo vers un autre emplacement en tant que déplacement transitoire (dParcelManager.addTransientMoveCargo) ; appliqué seulement au commit. | 1468 |
-| `career_modules_delivery_cargoScreen.moveMaterialFromUi(materialType, cargoType, amount, targetLocation)` | Charge un matériau (fluide ou vrac) du stockage de la facilité dans les conteneurs du joueur : avec targetLocation.type 'auto', choisit les conteneurs compatibles (déjà remplis du même matériau d'abord, puis vides) ; avec 'vehicle', le conteneur indiqué. Remplit jusqu'à épuisement du volume, logue un avertissement s'il en reste, puis notifie l'UI ('requestCargoDataSimple'). | 751 |
-| `career_modules_delivery_cargoScreen.onBigmapHoveredPoiIdChanged(poiId)` | Hook : au survol d'un marqueur, met en surbrillance les entrées de liste (si l'écran est ouvert). *(interne)* *(hook)* | 1871 |
-| `career_modules_delivery_cargoScreen.onCareerActivated()` | Hook : mémorise les modules delivery (parcelManager, cargoScreen, general, generator, progress, vehicleOfferManager, parcelMods, vehicleTasks, tutorial) et util_stepHandler. *(interne)* *(hook)* | 11 |
-| `career_modules_delivery_cargoScreen.onCargoGenerated(cargo)` | Hook : si l'écran est ouvert sur la facilité d'origine du cargo généré, notifie l'UI ('newCargoAvailable') une seule fois. *(interne)* *(hook)* | 1450 |
-| `career_modules_delivery_cargoScreen.onCargoOverviewRouteLeave(context, toRoute, fromRoute, data)` | Hook de route UI : en quittant la route cargoOverview (sauf vers un enfant), annule les déplacements non validés puis ferme l'écran. *(interne)* *(hook)* | 1687 |
-| `career_modules_delivery_cargoScreen.onCargoPickedUp()` | Hook : recalcule la meilleure route (destination la plus proche) si la route automatique est activée. *(interne)* *(hook)* | 1816 |
-| `career_modules_delivery_cargoScreen.onDeactivateBigMapCallback()` | Hook : à la sortie de la grande carte, en mode livraison avec route automatique, n'affiche que la route jusqu'à la première destination. *(interne)* *(hook)* | 1824 |
-| `career_modules_delivery_cargoScreen.onDeliveryRewardsPopupClosed()` | Hook : après la popup de récompenses, recalcule la route (si automaticRoute) et, après 0,5 s, affiche les popups d'introduction 'delivery/cargoDelivered' et l'astuce du taxi si le joueur est à pied. *(interne)* *(hook)* | 1795 |
-| `career_modules_delivery_cargoScreen.requestCargoDataForUi(facId, psPath, updateMaxTimeTimestamp)` | Construit toutes les données de l'écran (joueur, véhicules, conteneurs, offres acceptées, cartes, filtres, tris, regroupements, bouton de confirmation, panneaux de facilité) puis les envoie à l'UI par guihooks 'cargoDataForUiReady'. | 1095 |
-| `career_modules_delivery_cargoScreen.requestDropOffData(...)` | Passe-plat vers career_modules_delivery_progress.requestDropOffData. | 2004 |
-| `career_modules_delivery_cargoScreen.setBestRoute(onlyClosestTarget)` | Calcule et affiche la meilleure route : tâches de véhicule en priorité, sinon enchaînement de destinations (plus proche voisin) des cargos en véhicule ; efface le chemin s'il n'y a rien à cibler. | 1731 |
-| `career_modules_delivery_cargoScreen.setBigMapPanEnabled(enabled)` | Active/désactive le déplacement de la grande carte par les actions bigMapMoveForwardBackward/LeftRight (filtre d'actions) et remet la caméra à 0 quand c'est désactivé. | 1571 |
-| `career_modules_delivery_cargoScreen.setCargoRoute(cargoId, origin)` | Au clic sur un cargo, place le focus de navigation de la grande carte sur son origine ou sa destination. | 1959 |
-| `career_modules_delivery_cargoScreen.setCargoScreenTab(tab)` | Mémorise l'onglet courant et ne laisse visibles sur la grande carte que les marqueurs liés à des cartes ayant ce filterTag (ou 'myCargo') ; vide les POI et réinitialise les marqueurs. | 47 |
-| `career_modules_delivery_cargoScreen.setVisibleIdsForBigMap()` | Reconstruit la correspondance marqueur de grande carte -> cartes (via card.bigMapIds) ; seuls ces marqueurs sont pertinents. | 1974 |
-| `career_modules_delivery_cargoScreen.showCargoContainerHelpPopup()` | Affiche la popup d'aide 'cargoContainerHowTo'. | 2000 |
-| `career_modules_delivery_cargoScreen.showCargoRoutePreview(cargoId)` | Aperçu de route d'un cargo (origine/emplacement vers destination, ou plusieurs destinations). | 1902 |
-| `career_modules_delivery_cargoScreen.showLocationRoutePreview(locationId, asProvider)` | Aperçu de route depuis le parking spot de l'écran vers la facilité donnée (point de ramassage si asProvider, sinon de dépose). | 1944 |
-| `career_modules_delivery_cargoScreen.showRoutePreview(route)` | Affiche sur la grande carte un aperçu de route multipoints (type 'navgraph', via gameplay/route/route) ou l'efface si la route est nil/invalide. | 1878 |
-| `career_modules_delivery_cargoScreen.showVehicleOfferRoutePreview(offerId)` | Aperçu de route entre les deux emplacements d'une offre de véhicule. | 1929 |
-| `career_modules_delivery_cargoScreen.spawnOffer(...)` | Passe-plat vers career_modules_delivery_vehicleOfferManager.spawnOffer. | 1491 |
-| `career_modules_delivery_cargoScreen.toggleOfferForSpawning(offerId)` | Inverse le drapeau spawnWhenCommitingCargo d'une offre (apparition au commit de la configuration). | 1493 |
-| `career_modules_delivery_cargoScreen.tryLoadAll(ids)` | Corps vide dans cette version : ne fait rien. | 364 |
-| `career_modules_delivery_cargoScreen.unloadCargoPopupClosed()` | Passe-plat vers career_modules_delivery_progress.unloadCargoPopupClosed. | 2003 |
+| `career_modules_delivery_cargoScreen.abandonAcceptedOffer(vehId)` | Abandons an accepted offer: fires the onGameplayActivityAborted hook then gives back the delivery vehicle (vehicleTasks.giveBackDeliveryVehicle). | 582 |
+| `career_modules_delivery_cargoScreen.applyTransientMoves()` | Fires onGameplayActivityAborted then applies all transient moves (dParcelManager.applyTransientMoves). | 1484 |
+| `career_modules_delivery_cargoScreen.cancelDeliveryConfiguration()` | Cancels the delivery being configured: clears the transient moves, the spawn markings of offers and loaned vehicles, refreshes the nearby containers and shows a message. | 1673 |
+| `career_modules_delivery_cargoScreen.clearTransientMoveForCargo(...)` | Pass-through to career_modules_delivery_parcelManager.clearTransientMoveForCargo. | 2006 |
+| `career_modules_delivery_cargoScreen.clearTransientMovesForStorage(materialType)` | Deletes the cargos in transient move coming from the given material storage of the open screen's facility ('delete' location) and cancels their move. | 740 |
+| `career_modules_delivery_cargoScreen.commitDeliveryConfiguration()` | Validates the configuration: applies the transient moves to the current facility, starts delivery mode if cargo is loaded or remaining, updates the container weights (freeze then loading delay with popup), then spawns the marked offers and the loaned vehicles. | 1595 |
+| `career_modules_delivery_cargoScreen.confirmDropOffData(...)` | Pass-through to career_modules_delivery_progress.confirmDropOffData. | 2005 |
+| `career_modules_delivery_cargoScreen.deliveryMarkerSelected(poiId)` | Marker click callback: highlights the cards and, if automatic route is disabled, navigates to it (freeroam_bigMapMode.navigateToMission). *(internal)* | 1860 |
+| `career_modules_delivery_cargoScreen.deliveryScreenExternalButtonPressed(id)` | External buttons of the screen: 'openDeliveryProgress' opens career.branchPage (logistics-delivery) and 'openVehicleDeliveryProgress' (logistics-vehicleDelivery). | 951 |
+| `career_modules_delivery_cargoScreen.dropOffPopupClosed(mode)` | Called by the UI when a drop-off popup closes: mode 'results' fires onDeliveryRewardsPopupClosed, mode 'cargoSelection' fires onDeliveryDropOffCargoSelectionPopupClosed. | 2008 |
+| `career_modules_delivery_cargoScreen.enterCargoOverviewScreen(facilityId, parkingSpotPath)` | Opens the screen: stores facility/parking spot, triggers the tutorial generators if needed, clears the POIs, enters the big map with custom POIs, navigates to the UI route 'career.cargoOverview' and fires onEnterCargoOverviewScreen. | 1511 |
+| `career_modules_delivery_cargoScreen.enterMyCargo()` | Opens the screen without a facility (enterCargoOverviewScreen()). | 1567 |
+| `career_modules_delivery_cargoScreen.exitCargoOverviewScreen(facilityId, parkingSpotPath)` | Called when the screen closes: marks it closed, re-enables movement, clears the POIs, leaves the big map, resumes the simulation, schedules the weight update and checks for leaving delivery mode. | 1583 |
+| `career_modules_delivery_cargoScreen.exitDeliveryMode()` | Leaves delivery mode (with the onGameplayActivityAborted hook if it was active) via career_modules_delivery_general.exitDeliveryMode. | 1994 |
+| `career_modules_delivery_cargoScreen.formatAcceptedOfferForUI(offer)` | Formats an accepted vehicle/trailer offer for the UI: name, brand, mileage, destination, current task (get in the vehicle, hitch the trailer, drop off…), thumbnail, reward, route, modifiers, abandon information (penalty = reward × abandon factor). | 521 |
+| `career_modules_delivery_cargoScreen.formatCargoGroup(group, playerCargoContainers, showFirstSeen)` | Formats a group of "identical" cargos (same name, destination…) into a single UI entry: ids, short/long names of origin/location/destination, type, slots, distance, reward, weight, remaining offer time, modifiers, navgraph route, possible target locations, etc. | 90 |
+| `career_modules_delivery_cargoScreen.getCargoScreenTab()` | Returns the current tab ('' on opening). | 70 |
+| `career_modules_delivery_cargoScreen.highlightCargoInPoi(poiId)` | Sends to the UI (guihooks 'sendHighlightedCardIds') the ids of the cards linked to the given big map marker; empty table if unknown. | 1841 |
+| `career_modules_delivery_cargoScreen.isCargoScreenOpen()` | Indicates whether the cargo screen is open. | 46 |
+| `career_modules_delivery_cargoScreen.moveCargoFromUi(cargoId, targetLocation)` | Moves a cargo to another location as a transient move (dParcelManager.addTransientMoveCargo); applied only at commit. | 1468 |
+| `career_modules_delivery_cargoScreen.moveMaterialFromUi(materialType, cargoType, amount, targetLocation)` | Loads a material (fluid or bulk) from the facility's storage into the player's containers: with targetLocation.type 'auto', picks compatible containers (already filled with the same material first, then empty ones); with 'vehicle', the specified container. Fills until the volume is exhausted, logs a warning if any remains, then notifies the UI ('requestCargoDataSimple'). | 751 |
+| `career_modules_delivery_cargoScreen.onBigmapHoveredPoiIdChanged(poiId)` | Hook: when hovering a marker, highlights the list entries (if the screen is open). *(internal)* *(hook)* | 1871 |
+| `career_modules_delivery_cargoScreen.onCareerActivated()` | Hook: stores the delivery modules (parcelManager, cargoScreen, general, generator, progress, vehicleOfferManager, parcelMods, vehicleTasks, tutorial) and util_stepHandler. *(internal)* *(hook)* | 11 |
+| `career_modules_delivery_cargoScreen.onCargoGenerated(cargo)` | Hook: if the screen is open on the origin facility of the generated cargo, notifies the UI ('newCargoAvailable') only once. *(internal)* *(hook)* | 1450 |
+| `career_modules_delivery_cargoScreen.onCargoOverviewRouteLeave(context, toRoute, fromRoute, data)` | UI route hook: when leaving the cargoOverview route (except to a child), cancels the unvalidated moves then closes the screen. *(internal)* *(hook)* | 1687 |
+| `career_modules_delivery_cargoScreen.onCargoPickedUp()` | Hook: recomputes the best route (nearest destination) if automatic route is enabled. *(internal)* *(hook)* | 1816 |
+| `career_modules_delivery_cargoScreen.onDeactivateBigMapCallback()` | Hook: on leaving the big map, in delivery mode with automatic route, shows only the route to the first destination. *(internal)* *(hook)* | 1824 |
+| `career_modules_delivery_cargoScreen.onDeliveryRewardsPopupClosed()` | Hook: after the rewards popup, recomputes the route (if automaticRoute) and, after 0.5 s, shows the 'delivery/cargoDelivered' intro popups and the taxi tip if the player is on foot. *(internal)* *(hook)* | 1795 |
+| `career_modules_delivery_cargoScreen.requestCargoDataForUi(facId, psPath, updateMaxTimeTimestamp)` | Builds all the screen data (player, vehicles, containers, accepted offers, cards, filters, sorts, groupings, confirmation button, facility panels) then sends it to the UI via guihooks 'cargoDataForUiReady'. | 1095 |
+| `career_modules_delivery_cargoScreen.requestDropOffData(...)` | Pass-through to career_modules_delivery_progress.requestDropOffData. | 2004 |
+| `career_modules_delivery_cargoScreen.setBestRoute(onlyClosestTarget)` | Computes and displays the best route: vehicle tasks first, otherwise a chain of destinations (nearest neighbor) of the cargos in vehicles; clears the path if there is nothing to target. | 1731 |
+| `career_modules_delivery_cargoScreen.setBigMapPanEnabled(enabled)` | Enables/disables big map movement through the bigMapMoveForwardBackward/LeftRight actions (action filter) and resets the camera to 0 when disabled. | 1571 |
+| `career_modules_delivery_cargoScreen.setCargoRoute(cargoId, origin)` | On clicking a cargo, sets the big map navigation focus on its origin or destination. | 1959 |
+| `career_modules_delivery_cargoScreen.setCargoScreenTab(tab)` | Stores the current tab and leaves visible on the big map only the markers linked to cards with this filterTag (or 'myCargo'); clears the POIs and resets the markers. | 47 |
+| `career_modules_delivery_cargoScreen.setVisibleIdsForBigMap()` | Rebuilds the mapping big map marker -> cards (via card.bigMapIds); only these markers are relevant. | 1974 |
+| `career_modules_delivery_cargoScreen.showCargoContainerHelpPopup()` | Shows the 'cargoContainerHowTo' help popup. | 2000 |
+| `career_modules_delivery_cargoScreen.showCargoRoutePreview(cargoId)` | Route preview of a cargo (origin/location to destination, or several destinations). | 1902 |
+| `career_modules_delivery_cargoScreen.showLocationRoutePreview(locationId, asProvider)` | Route preview from the screen's parking spot to the given facility (pickup point if asProvider, otherwise drop-off). | 1944 |
+| `career_modules_delivery_cargoScreen.showRoutePreview(route)` | Shows on the big map a multi-point route preview (type 'navgraph', via gameplay/route/route) or clears it if the route is nil/invalid. | 1878 |
+| `career_modules_delivery_cargoScreen.showVehicleOfferRoutePreview(offerId)` | Route preview between the two locations of a vehicle offer. | 1929 |
+| `career_modules_delivery_cargoScreen.spawnOffer(...)` | Pass-through to career_modules_delivery_vehicleOfferManager.spawnOffer. | 1491 |
+| `career_modules_delivery_cargoScreen.toggleOfferForSpawning(offerId)` | Toggles an offer's spawnWhenCommitingCargo flag (spawn when the configuration is committed). | 1493 |
+| `career_modules_delivery_cargoScreen.tryLoadAll(ids)` | Empty body in this version: does nothing. | 364 |
+| `career_modules_delivery_cargoScreen.unloadCargoPopupClosed()` | Pass-through to career_modules_delivery_progress.unloadCargoPopupClosed. | 2003 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_delivery_cargoScreen.abandonAcceptedOffer(vehId)`
 
-Abandonne une offre acceptée : déclenche le hook onGameplayActivityAborted puis rend le véhicule de livraison (vehicleTasks.giveBackDeliveryVehicle).
+Abandons an accepted offer: fires the onGameplayActivityAborted hook then gives back the delivery vehicle (vehicleTasks.giveBackDeliveryVehicle).
 
-- `vehId` (*integer*) : Id d'objet du véhicule de livraison.
+- `vehId` (*integer*) : Object id of the delivery vehicle.
 
 #### `career_modules_delivery_cargoScreen.clearTransientMoveForCargo(...)`
 
-Passe-plat vers career_modules_delivery_parcelManager.clearTransientMoveForCargo.
+Pass-through to career_modules_delivery_parcelManager.clearTransientMoveForCargo.
 
-- `...` (*any*) : Arguments transmis (id de cargo).
+- `...` (*any*) : Arguments passed on (cargo id).
 
 #### `career_modules_delivery_cargoScreen.clearTransientMovesForStorage(materialType)`
 
-Supprime les cargos en déplacement transitoire issus du stockage de matériau donné de la facilité de l'écran ouvert (emplacement 'delete') et annule leur déplacement.
+Deletes the cargos in transient move coming from the given material storage of the open screen's facility ('delete' location) and cancels their move.
 
-- `materialType` (*string*) : Type de matériau du stockage.
+- `materialType` (*string*) : Material type of the storage.
 
 #### `career_modules_delivery_cargoScreen.confirmDropOffData(...)`
 
-Passe-plat vers career_modules_delivery_progress.confirmDropOffData.
+Pass-through to career_modules_delivery_progress.confirmDropOffData.
 
-- `...` (*any*) : Arguments transmis.
+- `...` (*any*) : Arguments passed on.
 
 #### `career_modules_delivery_cargoScreen.deliveryMarkerSelected(poiId)`
 
-Callback de clic sur un marqueur : met en surbrillance les cartes et, si la route automatique est désactivée, y navigue (freeroam_bigMapMode.navigateToMission).
+Marker click callback: highlights the cards and, if automatic route is disabled, navigates to it (freeroam_bigMapMode.navigateToMission).
 
-- `poiId` (*string*) : Id du marqueur.
+- `poiId` (*string*) : Marker id.
 
 #### `career_modules_delivery_cargoScreen.deliveryScreenExternalButtonPressed(id)`
 
-Boutons externes de l'écran : 'openDeliveryProgress' ouvre career.branchPage (logistics-delivery) et 'openVehicleDeliveryProgress' (logistics-vehicleDelivery).
+External buttons of the screen: 'openDeliveryProgress' opens career.branchPage (logistics-delivery) and 'openVehicleDeliveryProgress' (logistics-vehicleDelivery).
 
-- `id` (*string*) : Id du bouton.
+- `id` (*string*) : Button id.
 
 #### `career_modules_delivery_cargoScreen.dropOffPopupClosed(mode)`
 
-Appelée par l'UI à la fermeture d'une popup de dépose : mode 'results' déclenche onDeliveryRewardsPopupClosed, mode 'cargoSelection' déclenche onDeliveryDropOffCargoSelectionPopupClosed.
+Called by the UI when a drop-off popup closes: mode 'results' fires onDeliveryRewardsPopupClosed, mode 'cargoSelection' fires onDeliveryDropOffCargoSelectionPopupClosed.
 
-- `mode` (*string*) : 'results' ou 'cargoSelection'.
+- `mode` (*string*) : 'results' or 'cargoSelection'.
 
 #### `career_modules_delivery_cargoScreen.enterCargoOverviewScreen(facilityId, parkingSpotPath)`
 
-Ouvre l'écran : mémorise facilité/parking spot, déclenche les générateurs du tutoriel si besoin, vide les POI, entre dans la grande carte avec POI personnalisés, navigue vers la route UI 'career.cargoOverview' et déclenche onEnterCargoOverviewScreen.
+Opens the screen: stores facility/parking spot, triggers the tutorial generators if needed, clears the POIs, enters the big map with custom POIs, navigates to the UI route 'career.cargoOverview' and fires onEnterCargoOverviewScreen.
 
-- `facilityId` (*string|nil*) : Id de la facilité (nil pour « mon cargo »).
-- `parkingSpotPath` (*string|nil*) : Chemin du parking spot.
+- `facilityId` (*string|nil*) : Facility id (nil for "my cargo").
+- `parkingSpotPath` (*string|nil*) : Parking spot path.
 
 #### `career_modules_delivery_cargoScreen.exitCargoOverviewScreen(facilityId, parkingSpotPath)`
 
-Appelée à la fermeture de l'écran : le marque fermé, réactive le déplacement, vide les POI, quitte la grande carte, remet la simulation en marche, planifie la mise à jour des poids et vérifie la sortie du mode livraison.
+Called when the screen closes: marks it closed, re-enables movement, clears the POIs, leaves the big map, resumes the simulation, schedules the weight update and checks for leaving delivery mode.
 
-- `facilityId` (*string|nil*) : Non utilisé.
-- `parkingSpotPath` (*string|nil*) : Non utilisé.
+- `facilityId` (*string|nil*) : Not used.
+- `parkingSpotPath` (*string|nil*) : Not used.
 
 #### `career_modules_delivery_cargoScreen.formatAcceptedOfferForUI(offer)`
 
-Formate une offre de véhicule/remorque acceptée pour l'UI : nom, marque, kilométrage, destination, tâche en cours (monter dans le véhicule, atteler la remorque, déposer…), vignette, récompense, route, modificateurs, informations d'abandon (pénalité = récompense × facteur d'abandon).
+Formats an accepted vehicle/trailer offer for the UI: name, brand, mileage, destination, current task (get in the vehicle, hitch the trailer, drop off…), thumbnail, reward, route, modifiers, abandon information (penalty = reward × abandon factor).
 
-- `offer` (*table*) : Offre de véhicule (champs vehicle, task, data, rewards).
-- **renvoie** : table Carte de type offre pour l'UI.
+- `offer` (*table*) : Vehicle offer (fields vehicle, task, data, rewards).
+- **returns**: table Offer-type card for the UI.
 
 #### `career_modules_delivery_cargoScreen.formatCargoGroup(group, playerCargoContainers, showFirstSeen)`
 
-Formate un groupe de cargos « identiques » (même nom, destination…) en une entrée pour l'UI : ids, noms court/long d'origine/emplacement/destination, type, slots, distance, récompense, poids, temps d'offre restant, modificateurs, route navgraph, emplacements cibles possibles, etc.
+Formats a group of "identical" cargos (same name, destination…) into a single UI entry: ids, short/long names of origin/location/destination, type, slots, distance, reward, weight, remaining offer time, modifiers, navgraph route, possible target locations, etc.
 
-- `group` (*table[]*) : Cargos du groupe (triés par id dans la fonction).
-- `playerCargoContainers` (*table[]*) : Conteneurs du joueur (getNearbyVehicleCargoContainers).
-- `showFirstSeen` (*boolean|nil*) : Gère l'indicateur de première apparition des cargos (déduit du code).
-- **renvoie** : table Entrée formatée pour l'UI.
+- `group` (*table[]*) : Cargos of the group (sorted by id in the function).
+- `playerCargoContainers` (*table[]*) : Player containers (getNearbyVehicleCargoContainers).
+- `showFirstSeen` (*boolean|nil*) : Handles the indicator for the first appearance of cargos (inferred from code).
+- **returns**: table Entry formatted for the UI.
 
 #### `career_modules_delivery_cargoScreen.getCargoScreenTab()`
 
-Renvoie l'onglet courant ('' à l'ouverture).
+Returns the current tab ('' on opening).
 
-- **renvoie** : string Onglet courant.
+- **returns**: string Current tab.
 
 #### `career_modules_delivery_cargoScreen.highlightCargoInPoi(poiId)`
 
-Envoie à l'UI (guihooks 'sendHighlightedCardIds') les ids de cartes liées au marqueur de grande carte donné ; table vide si inconnu.
+Sends to the UI (guihooks 'sendHighlightedCardIds') the ids of the cards linked to the given big map marker; empty table if unknown.
 
-- `poiId` (*string|nil*) : Id du marqueur/POI.
+- `poiId` (*string|nil*) : Marker/POI id.
 
 #### `career_modules_delivery_cargoScreen.isCargoScreenOpen()`
 
-Indique si l'écran de cargaison est ouvert.
+Indicates whether the cargo screen is open.
 
-- **renvoie** : boolean true si ouvert.
+- **returns**: boolean true if open.
 
 #### `career_modules_delivery_cargoScreen.moveCargoFromUi(cargoId, targetLocation)`
 
-Déplace un cargo vers un autre emplacement en tant que déplacement transitoire (dParcelManager.addTransientMoveCargo) ; appliqué seulement au commit.
+Moves a cargo to another location as a transient move (dParcelManager.addTransientMoveCargo); applied only at commit.
 
-- `cargoId` (*any*) : Id du cargo.
-- `targetLocation` (*table*) : Emplacement cible (facilité, véhicule/conteneur…).
+- `cargoId` (*any*) : Cargo id.
+- `targetLocation` (*table*) : Target location (facility, vehicle/container…).
 
 #### `career_modules_delivery_cargoScreen.moveMaterialFromUi(materialType, cargoType, amount, targetLocation)`
 
-Charge un matériau (fluide ou vrac) du stockage de la facilité dans les conteneurs du joueur : avec targetLocation.type 'auto', choisit les conteneurs compatibles (déjà remplis du même matériau d'abord, puis vides) ; avec 'vehicle', le conteneur indiqué. Remplit jusqu'à épuisement du volume, logue un avertissement s'il en reste, puis notifie l'UI ('requestCargoDataSimple').
+Loads a material (fluid or bulk) from the facility's storage into the player's containers: with targetLocation.type 'auto', picks compatible containers (already filled with the same material first, then empty ones); with 'vehicle', the specified container. Fills until the volume is exhausted, logs a warning if any remains, then notifies the UI ('requestCargoDataSimple').
 
-- `materialType` (*string*) : Type de matériau.
-- `cargoType` (*string*) : Type de cargo ('fluid' ou 'dryBulk').
-- `amount` (*number*) : Volume à charger (litres/slots).
-- `targetLocation` (*table*) : {type='auto'} ou {type='vehicle', vehId, containerId}.
+- `materialType` (*string*) : Material type.
+- `cargoType` (*string*) : Cargo type ('fluid' or 'dryBulk').
+- `amount` (*number*) : Volume to load (liters/slots).
+- `targetLocation` (*table*) : {type='auto'} or {type='vehicle', vehId, containerId}.
 
 #### `career_modules_delivery_cargoScreen.onBigmapHoveredPoiIdChanged(poiId)`
 
-Hook : au survol d'un marqueur, met en surbrillance les entrées de liste (si l'écran est ouvert).
+Hook: when hovering a marker, highlights the list entries (if the screen is open).
 
-- `poiId` (*string|nil*) : Marqueur survolé.
+- `poiId` (*string|nil*) : Hovered marker.
 
 #### `career_modules_delivery_cargoScreen.onCargoGenerated(cargo)`
 
-Hook : si l'écran est ouvert sur la facilité d'origine du cargo généré, notifie l'UI ('newCargoAvailable') une seule fois.
+Hook: if the screen is open on the origin facility of the generated cargo, notifies the UI ('newCargoAvailable') only once.
 
-- `cargo` (*table*) : Cargo généré (champ origin).
+- `cargo` (*table*) : Generated cargo (field origin).
 
 #### `career_modules_delivery_cargoScreen.onCargoOverviewRouteLeave(context, toRoute, fromRoute, data)`
 
-Hook de route UI : en quittant la route cargoOverview (sauf vers un enfant), annule les déplacements non validés puis ferme l'écran.
+UI route hook: when leaving the cargoOverview route (except to a child), cancels the unvalidated moves then closes the screen.
 
-- `context` (*any*) : Contexte du routeur UI.
-- `toRoute` (*table|nil*) : Route de destination (champ name).
-- `fromRoute` (*table|nil*) : Route quittée.
-- `data` (*any*) : Données de navigation.
+- `context` (*any*) : UI router context.
+- `toRoute` (*table|nil*) : Destination route (field name).
+- `fromRoute` (*table|nil*) : Route being left.
+- `data` (*any*) : Navigation data.
 
 #### `career_modules_delivery_cargoScreen.requestCargoDataForUi(facId, psPath, updateMaxTimeTimestamp)`
 
-Construit toutes les données de l'écran (joueur, véhicules, conteneurs, offres acceptées, cartes, filtres, tris, regroupements, bouton de confirmation, panneaux de facilité) puis les envoie à l'UI par guihooks 'cargoDataForUiReady'.
+Builds all the screen data (player, vehicles, containers, accepted offers, cards, filters, sorts, groupings, confirmation button, facility panels) then sends it to the UI via guihooks 'cargoDataForUiReady'.
 
-- `facId` (*string|nil*) : Id de la facilité concernée.
-- `psPath` (*string|nil*) : Chemin du parking spot concerné.
-- `updateMaxTimeTimestamp` (*boolean|nil*) : Si différent de false, remet à jour l'horodatage maximal d'affichage des offres.
+- `facId` (*string|nil*) : Id of the facility concerned.
+- `psPath` (*string|nil*) : Path of the parking spot concerned.
+- `updateMaxTimeTimestamp` (*boolean|nil*) : If not false, resets the maximum offer display timestamp.
 
 #### `career_modules_delivery_cargoScreen.requestDropOffData(...)`
 
-Passe-plat vers career_modules_delivery_progress.requestDropOffData.
+Pass-through to career_modules_delivery_progress.requestDropOffData.
 
-- `...` (*any*) : Arguments transmis.
+- `...` (*any*) : Arguments passed on.
 
 #### `career_modules_delivery_cargoScreen.setBestRoute(onlyClosestTarget)`
 
-Calcule et affiche la meilleure route : tâches de véhicule en priorité, sinon enchaînement de destinations (plus proche voisin) des cargos en véhicule ; efface le chemin s'il n'y a rien à cibler.
+Computes and displays the best route: vehicle tasks first, otherwise a chain of destinations (nearest neighbor) of the cargos in vehicles; clears the path if there is nothing to target.
 
-- `onlyClosestTarget` (*boolean|nil*) : Si vrai, ne garde que la destination la plus proche.
+- `onlyClosestTarget` (*boolean|nil*) : If true, keeps only the nearest destination.
 
 #### `career_modules_delivery_cargoScreen.setBigMapPanEnabled(enabled)`
 
-Active/désactive le déplacement de la grande carte par les actions bigMapMoveForwardBackward/LeftRight (filtre d'actions) et remet la caméra à 0 quand c'est désactivé.
+Enables/disables big map movement through the bigMapMoveForwardBackward/LeftRight actions (action filter) and resets the camera to 0 when disabled.
 
-- `enabled` (*boolean*) : true pour autoriser le déplacement.
+- `enabled` (*boolean*) : true to allow movement.
 
 #### `career_modules_delivery_cargoScreen.setCargoRoute(cargoId, origin)`
 
-Au clic sur un cargo, place le focus de navigation de la grande carte sur son origine ou sa destination.
+On clicking a cargo, sets the big map navigation focus on its origin or destination.
 
-- `cargoId` (*any|nil*) : Id du cargo.
-- `origin` (*boolean|nil*) : Si vrai, cible l'origine plutôt que la destination.
+- `cargoId` (*any|nil*) : Cargo id.
+- `origin` (*boolean|nil*) : If true, targets the origin rather than the destination.
 
 #### `career_modules_delivery_cargoScreen.setCargoScreenTab(tab)`
 
-Mémorise l'onglet courant et ne laisse visibles sur la grande carte que les marqueurs liés à des cartes ayant ce filterTag (ou 'myCargo') ; vide les POI et réinitialise les marqueurs.
+Stores the current tab and leaves visible on the big map only the markers linked to cards with this filterTag (or 'myCargo'); clears the POIs and resets the markers.
 
-- `tab` (*string*) : Clé de filtre/onglet (ex. 'parcel', 'vehicle', 'all').
+- `tab` (*string*) : Filter/tab key (e.g. 'parcel', 'vehicle', 'all').
 
 #### `career_modules_delivery_cargoScreen.showCargoRoutePreview(cargoId)`
 
-Aperçu de route d'un cargo (origine/emplacement vers destination, ou plusieurs destinations).
+Route preview of a cargo (origin/location to destination, or several destinations).
 
-- `cargoId` (*any|nil*) : Id du cargo ; nil efface l'aperçu.
+- `cargoId` (*any|nil*) : Cargo id; nil clears the preview.
 
 #### `career_modules_delivery_cargoScreen.showLocationRoutePreview(locationId, asProvider)`
 
-Aperçu de route depuis le parking spot de l'écran vers la facilité donnée (point de ramassage si asProvider, sinon de dépose).
+Route preview from the screen's parking spot to the given facility (pickup point if asProvider, otherwise drop-off).
 
-- `locationId` (*string|nil*) : Id de facilité ; nil efface l'aperçu.
-- `asProvider` (*boolean|nil*) : Utiliser le premier pickUpSpot au lieu du premier dropOffSpot.
+- `locationId` (*string|nil*) : Facility id; nil clears the preview.
+- `asProvider` (*boolean|nil*) : Use the first pickUpSpot instead of the first dropOffSpot.
 
 #### `career_modules_delivery_cargoScreen.showRoutePreview(route)`
 
-Affiche sur la grande carte un aperçu de route multipoints (type 'navgraph', via gameplay/route/route) ou l'efface si la route est nil/invalide.
+Shows on the big map a multi-point route preview (type 'navgraph', via gameplay/route/route) or clears it if the route is nil/invalid.
 
 - `route` (*table|nil*) : {type='navgraph', locations={...}}.
 
 #### `career_modules_delivery_cargoScreen.showVehicleOfferRoutePreview(offerId)`
 
-Aperçu de route entre les deux emplacements d'une offre de véhicule.
+Route preview between the two locations of a vehicle offer.
 
-- `offerId` (*any|nil*) : Id de l'offre ; nil efface l'aperçu.
+- `offerId` (*any|nil*) : Offer id; nil clears the preview.
 
 #### `career_modules_delivery_cargoScreen.spawnOffer(...)`
 
-Passe-plat vers career_modules_delivery_vehicleOfferManager.spawnOffer.
+Pass-through to career_modules_delivery_vehicleOfferManager.spawnOffer.
 
-- `...` (*any*) : Arguments transmis tels quels.
-- **renvoie** : any Valeur renvoyée par spawnOffer.
+- `...` (*any*) : Arguments passed as is.
+- **returns**: any Value returned by spawnOffer.
 
 #### `career_modules_delivery_cargoScreen.toggleOfferForSpawning(offerId)`
 
-Inverse le drapeau spawnWhenCommitingCargo d'une offre (apparition au commit de la configuration).
+Toggles an offer's spawnWhenCommitingCargo flag (spawn when the configuration is committed).
 
-- `offerId` (*any*) : Id de l'offre.
+- `offerId` (*any*) : Offer id.
 
 #### `career_modules_delivery_cargoScreen.tryLoadAll(ids)`
 
-Corps vide dans cette version : ne fait rien.
+Empty body in this version: does nothing.
 
-- `ids` (*any*) : Non utilisé.
+- `ids` (*any*) : Not used.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {"core_vehicleBridge"}. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onDeliveryDropOffCargoSelectionPopupClosed`
-- `onDeliveryRewardsPopupClosed` — écouté par 1 module(s)
+- `onDeliveryRewardsPopupClosed` — listened to by 1 module(s)
 - `onEnterCargoOverviewScreen`
 - `onGameplayActivityAborted`
 
-**Évènements UI (guihooks.trigger) :** `OpenSimpleDelayPopup`, `cargoDataForUiReady`, `newCargoAvailable`, `requestCargoDataSimple`, `sendHighlightedCardIds`
+**UI events (guihooks.trigger):** `OpenSimpleDelayPopup`, `cargoDataForUiReady`, `newCargoAvailable`, `requestCargoDataSimple`, `sendHighlightedCardIds`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/delivery/cargoScreen.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/delivery/cargoScreen.lua`.*

@@ -1,140 +1,212 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/recceApp.lua",
-  "module": "Application « Recce » du rallye en freeroam : permet de charger une mission de rallye (rallyStage, rallyStageLoop ou rallyRoadSection du niveau courant), d'afficher les pacenotes à venir, de téléporter le véhicule le long des pacenotes, au départ ou au déclencheur de mission, et d'enregistrer une reconnaissance (driveline du véhicule et « cuts » vocaux). Fournit aussi une fenêtre imgui « Recce Toolbox » dessinée dans onUpdate. S'appuie sur gameplay_rally (loadMission, getRallyManager, canManageMission), RecceSettings, VehicleCapture et CutCapture. Ne fait rien dans onUpdate tant que setEnabled(true) n'a pas été appelé.",
-  "usage": "extensions.load('gameplay_rally_recceApp')\ngameplay_rally_recceApp.openWindow()\n-- puis, dans la fenêtre ou en Lua :\ngameplay_rally_recceApp.recordDrivelineStart(false)\ngameplay_rally_recceApp.recordDrivelineCut()\ngameplay_rally_recceApp.recordDrivelineStop()",
+  "module": "The rally \"Recce\" app in freeroam: lets you load a rally mission (rallyStage, rallyStageLoop or rallyRoadSection of the current level), display the upcoming pacenotes, teleport the vehicle along the pacenotes, to the start or to the mission trigger, and record a recce (vehicle driveline and voice \"cuts\"). Also provides a \"Recce Toolbox\" imgui window drawn in onUpdate. Relies on gameplay_rally (loadMission, getRallyManager, canManageMission), RecceSettings, VehicleCapture and CutCapture. Does nothing in onUpdate until setEnabled(true) has been called.",
+  "usage": "extensions.load('gameplay_rally_recceApp')\ngameplay_rally_recceApp.openWindow()\n-- then, in the window or in Lua:\ngameplay_rally_recceApp.recordDrivelineStart(false)\ngameplay_rally_recceApp.recordDrivelineCut()\ngameplay_rally_recceApp.recordDrivelineStop()",
   "notes": [
-    "Les enregistrements (VehicleCapture / CutCapture) ne sont créés que si l'état de jeu est « freeroam » et que le gestionnaire de rallye a un dossier de mission ; sinon vehicleCapture et cutCapture restent nil.",
-    "Bug potentiel : recordDrivelineClearAll appelle vehicleCapture:truncateCapturesFile() sans tester que initCaptures a bien créé les captures ; hors freeroam ou sans mission chargée, cela provoque une erreur sur nil.",
-    "recordDrivelineCut ne transcrit la voix que si recordVoice a été passé à true lors de recordDrivelineStart ; en cas d'échec de extensions.gameplay_rally_client.transcribe_recording_cut, le hook UI rallyInputActionDesktopCallNotOk reçoit le message client.",
-    "moveVehicleToPacenoteV2 (utilisée par moveVehicleForward/Backward) cherche la corner start la plus proche par kd-tree ; si le véhicule est à moins de 12 m (10 + 2) d'une pacenote, il va à la suivante ou la précédente, sinon à la plus proche. Il place le véhicule 10 m avant la pacenote sur la driveline.",
-    "Le code contient un bloc de code commenté (idée d'une application tout-imgui) sans effet.",
-    "Évènements UI émis : rally.recceApp.missionLoaded (succès, message d'erreur), rally.recceApp.refreshed (liste des missions, dernier état), rallyInputActionDesktopCallNotOk."
+    "The recordings (VehicleCapture / CutCapture) are only created if the game state is \"freeroam\" and the rally manager has a mission folder; otherwise vehicleCapture and cutCapture stay nil.",
+    "Potential bug: recordDrivelineClearAll calls vehicleCapture:truncateCapturesFile() without testing that initCaptures actually created the captures; outside freeroam or without a loaded mission, this raises an error on nil.",
+    "recordDrivelineCut only transcribes the voice if recordVoice was passed as true to recordDrivelineStart; if extensions.gameplay_rally_client.transcribe_recording_cut fails, the UI hook rallyInputActionDesktopCallNotOk receives the client message.",
+    "moveVehicleToPacenoteV2 (used by moveVehicleForward/Backward) looks for the closest corner start via a kd-tree; if the vehicle is less than 12 m (10 + 2) from a pacenote, it goes to the next or the previous one, otherwise to the closest. It places the vehicle 10 m before the pacenote on the driveline.",
+    "The code contains a commented-out block of code (idea of an all-imgui app) with no effect.",
+    "UI events emitted: rally.recceApp.missionLoaded (success, error message), rally.recceApp.refreshed (list of missions, last state), rallyInputActionDesktopCallNotOk."
   ],
   "functions": {
     "onUpdate": {
-      "desc": "Hook d'extension appelé à chaque frame : si l'application est activée, dessine les pacenotes (ou la route courte), la fenêtre imgui si ouverte, et capture la position du véhicule pendant l'enregistrement de driveline.",
+      "desc": "Extension hook called every frame: if the app is enabled, draws the pacenotes (or the short route), the imgui window if open, and captures the vehicle position during driveline recording.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Temps réel écoulé (s)"},
-        "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s)"},
-        "dtRaw": {"type": "number", "desc": "Temps brut écoulé (s)"}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time elapsed (s)"
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time elapsed (s)"
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time elapsed (s)"
+        }
       },
       "internal": true
     },
     "reload": {
-      "desc": "Recharge les réglages RecceSettings, reconstruit la liste des missions de rallye du niveau et envoie le hook UI rally.recceApp.refreshed avec {missions, last_mission_id, last_load_state, can_auto_load, corner_angles_style}.",
-      "params": {"rallyExt": {"type": "any", "desc": "Non utilisé dans le corps de la fonction"}},
+      "desc": "Reloads the RecceSettings, rebuilds the level's list of rally missions and sends the UI hook rally.recceApp.refreshed with {missions, last_mission_id, last_load_state, can_auto_load, corner_angles_style}.",
+      "params": {
+        "rallyExt": {
+          "type": "any",
+          "desc": "Not used in the function body"
+        }
+      },
       "internal": false
     },
     "loadMission": {
-      "desc": "Charge une mission via gameplay_rally.loadMission (propriétaire 'recce'), construit l'index kd-tree des départs de virage du notebook, mémorise la mission et l'état de chargement, puis envoie rally.recceApp.missionLoaded.",
+      "desc": "Loads a mission via gameplay_rally.loadMission (owner 'recce'), builds the kd-tree index of the notebook's corner starts, stores the mission and the load state, then sends rally.recceApp.missionLoaded.",
       "params": {
-        "missionId": {"type": "string", "desc": "Identifiant de la mission"},
-        "missionDir": {"type": "string", "desc": "Dossier de la mission"}
+        "missionId": {
+          "type": "string",
+          "desc": "Mission identifier"
+        },
+        "missionDir": {
+          "type": "string",
+          "desc": "Mission folder"
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "true si la mission est chargée"},
-        {"type": "string|nil", "desc": "Message d'erreur en cas d'échec"}
+        {
+          "type": "boolean",
+          "desc": "true if the mission is loaded"
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error message on failure"
+        }
       ],
       "internal": false
     },
     "unloadMission": {
-      "desc": "Décharge la mission du propriétaire 'recce' et mémorise l'état de chargement à false.",
+      "desc": "Unloads the mission of the 'recce' owner and stores the load state as false.",
       "returns": [
-        {"type": "boolean", "desc": "false si le déchargement est refusé"},
-        {"type": "string|nil", "desc": "Message d'erreur en cas de refus"}
+        {
+          "type": "boolean",
+          "desc": "false if the unload is refused"
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error message on refusal"
+        }
       ],
       "internal": false
     },
     "release": {
-      "desc": "Désactive l'application, ferme la fenêtre, oublie les captures et décharge la mission si elle appartient à 'recce'.",
+      "desc": "Disables the app, closes the window, forgets the captures and unloads the mission if it belongs to 'recce'.",
       "internal": false
     },
     "setLastMissionId": {
-      "desc": "Mémorise dans les réglages le dernier id de mission pour le niveau courant.",
-      "params": {"mid": {"type": "string", "desc": "Identifiant de mission"}},
+      "desc": "Stores in the settings the last mission id for the current level.",
+      "params": {
+        "mid": {
+          "type": "string",
+          "desc": "Mission identifier"
+        }
+      },
       "internal": false
     },
     "setLastLoadState": {
-      "desc": "Mémorise dans les réglages le dernier état de chargement (true/false) pour le niveau courant.",
-      "params": {"state": {"type": "boolean", "desc": "true si une mission était chargée"}},
+      "desc": "Stores in the settings the last load state (true/false) for the current level.",
+      "params": {
+        "state": {
+          "type": "boolean",
+          "desc": "true if a mission was loaded"
+        }
+      },
       "internal": false
     },
     "setShowNotes": {
-      "desc": "Active ou désactive l'affichage des prochaines pacenotes pendant la conduite (hors éditeur actif et hors boîte à outils rally visible).",
-      "params": {"val": {"type": "boolean", "desc": "true pour afficher"}},
+      "desc": "Enables or disables the display of the next pacenotes while driving (outside the active editor and when the rally toolbox is not visible).",
+      "params": {
+        "val": {
+          "type": "boolean",
+          "desc": "true to show"
+        }
+      },
       "internal": false
     },
     "moveVehicleBackward": {
-      "desc": "Téléporte le véhicule joueur vers la pacenote précédente (ou la plus proche si loin de toute pacenote), puis resynchronise le rally manager.",
+      "desc": "Teleports the player vehicle to the previous pacenote (or the closest if far from any pacenote), then resyncs the rally manager.",
       "internal": false
     },
     "moveVehicleForward": {
-      "desc": "Téléporte le véhicule joueur vers la pacenote suivante (ou la plus proche si loin de toute pacenote), puis resynchronise le rally manager.",
+      "desc": "Teleports the player vehicle to the next pacenote (or the closest if far from any pacenote), then resyncs the rally manager.",
       "internal": false
     },
     "moveVehicleToStart": {
-      "desc": "Téléporte le véhicule joueur à la position de départ par défaut du chemin de course (orientation retournée de 180°), puis resynchronise le rally manager.",
+      "desc": "Teleports the player vehicle to the race path's default start position (orientation flipped by 180°), then resyncs the rally manager.",
       "internal": false
     },
     "moveVehicleToMission": {
-      "desc": "Téléporte le véhicule joueur sur le déclencheur de départ de la mission (pos, rot), puis resynchronise le rally manager.",
+      "desc": "Teleports the player vehicle to the mission's start trigger (pos, rot), then resyncs the rally manager.",
       "internal": false
     },
     "recordDrivelineCut": {
-      "desc": "Enregistre un cut à la position actuelle du véhicule (CutCapture) et, si l'enregistrement vocal est activé, demande la transcription au client rally.",
+      "desc": "Records a cut at the vehicle's current position (CutCapture) and, if voice recording is enabled, requests the transcription from the rally client.",
       "internal": false
     },
     "recordDrivelineStart": {
-      "desc": "Démarre l'enregistrement de la driveline : initialise les captures (dossiers de recce créés si besoin) et active la capture à chaque frame.",
-      "params": {"recordVoice": {"type": "boolean", "desc": "true pour aussi transcrire la voix à chaque cut"}},
+      "desc": "Starts the driveline recording: initializes the captures (recce folders created if needed) and enables per-frame capture.",
+      "params": {
+        "recordVoice": {
+          "type": "boolean",
+          "desc": "true to also transcribe the voice at each cut"
+        }
+      },
       "internal": false
     },
     "recordDrivelineStop": {
-      "desc": "Arrête l'enregistrement : écrit les captures du véhicule sur disque puis oublie les captures.",
+      "desc": "Stops the recording: writes the vehicle captures to disk then forgets the captures.",
       "internal": false
     },
     "recordDrivelineClearAll": {
-      "desc": "Efface les fichiers d'enregistrement de la mission : driveline, cuts et transcripts (troncature des fichiers).",
+      "desc": "Clears the mission's recording files: driveline, cuts and transcripts (file truncation).",
       "internal": false
     },
     "isRecording": {
-      "desc": "Indique si un enregistrement de driveline est en cours.",
-      "returns": [{"type": "boolean", "desc": "true pendant l'enregistrement"}],
+      "desc": "Indicates whether a driveline recording is in progress.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true during recording"
+        }
+      ],
       "internal": false
     },
     "setEnabled": {
-      "desc": "Active ou désactive l'application ; onUpdate ne fait rien si elle est désactivée.",
-      "params": {"val": {"type": "boolean", "desc": "true pour activer"}},
+      "desc": "Enables or disables the app; onUpdate does nothing if it is disabled.",
+      "params": {
+        "val": {
+          "type": "boolean",
+          "desc": "true to enable"
+        }
+      },
       "internal": false
     },
     "isEnabled": {
-      "desc": "Indique si l'application est activée.",
-      "returns": [{"type": "boolean", "desc": "état activé"}],
+      "desc": "Indicates whether the app is enabled.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "enabled state"
+        }
+      ],
       "internal": false
     },
     "openWindow": {
-      "desc": "Active l'application, ouvre la fenêtre imgui « Recce Toolbox » et rafraîchit la liste des missions.",
+      "desc": "Enables the app, opens the \"Recce Toolbox\" imgui window and refreshes the mission list.",
       "internal": false
     },
     "closeWindow": {
-      "desc": "Ferme la fenêtre imgui (sans désactiver l'application).",
+      "desc": "Closes the imgui window (without disabling the app).",
       "internal": false
     },
     "toggleWindow": {
-      "desc": "Ouvre la fenêtre si elle est fermée, la ferme sinon.",
+      "desc": "Opens the window if it is closed, closes it otherwise.",
       "internal": false
     },
     "isWindowVisible": {
-      "desc": "Indique si la fenêtre imgui est ouverte.",
-      "returns": [{"type": "boolean", "desc": "true si ouverte"}],
+      "desc": "Indicates whether the imgui window is open.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if open"
+        }
+      ],
       "internal": false
     },
     "toggleDebug": {
-      "desc": "Bascule le mode debug de gameplay_rally (gameplay_rally.toggleDebug).",
+      "desc": "Toggles gameplay_rally's debug mode (gameplay_rally.toggleDebug).",
       "internal": false
     },
     "toggleMouseLikeVehicle": {
-      "desc": "Bascule la case de déplacement du véhicule à la souris de la boîte à outils rally, si elle existe.",
+      "desc": "Toggles the rally toolbox's move-vehicle-with-mouse checkbox, if it exists.",
       "internal": false
     }
   }

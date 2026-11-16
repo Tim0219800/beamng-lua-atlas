@@ -1,24 +1,35 @@
 {
   "path": "lua/vehicle/extensions/profiling/p.lua",
-  "module": "Bibliothèque tierce : profileur LuaJIT (jit.p) de Mike Pall, copyright 2005-2016, licence MIT. C'est une interface simple au profileur à faible surcharge intégré à LuaJIT (module jit.profile). Elle échantillonne la pile d'appels à intervalle régulier et affiche un résumé (fonctions, lignes de module, états de la VM, zones) dans un fichier ou sur la sortie standard. Un moddeur peut l'utiliser dans la VM véhicule pour trouver les fonctions Lua les plus coûteuses.",
-  "usage": "extensions.load('profiling_p')\nprofiling_p.start('vl', 'profil.txt') -- modes : voir notes\n-- ... laisser tourner ...\nprofiling_p.stop(true)",
+  "module": "Third-party library: Mike Pall's LuaJIT profiler (jit.p), copyright 2005-2016, MIT license. It is a simple interface to the low-overhead profiler built into LuaJIT (jit.profile module). It samples the call stack at regular intervals and prints a summary (functions, module lines, VM states, zones) to a file or to standard output. A modder can use it in the vehicle VM to find the most expensive Lua functions.",
+  "usage": "extensions.load('profiling_p')\nprofiling_p.start('vl', 'profil.txt') -- modes: see notes\n-- ... let it run ...\nprofiling_p.stop(true)",
   "notes": [
-    "Chaîne de mode de start (combinable) : f = pile avec noms de fonctions (défaut) ; F = idem avec module ; l = module:ligne ; <nombre> = profondeur de pile ; -<nombre> = profondeur inversée ; s = séparer après le premier niveau ; p = chemins complets ; v = états de la VM ; z = zones ; r = comptes bruts ; a / A = annoter des extraits / les fichiers sources complets ; G = sortie brute pour outils graphiques (flame graphs) ; m<nombre> = pourcentage minimal affiché (défaut 3) ; i<nombre> = intervalle d'échantillonnage en ms (défaut 10).",
-    "Si outfile est nil, la variable d'environnement LUAJIT_PROFILEFILE est utilisée ; sinon la sortie standard. La valeur '-' force la sortie standard.",
-    "stop(false) arrête l'échantillonnage sans écrire de résultat. Un garbage collect de l'objet interne (prof_ud) appelle aussi prof_finish.",
-    "Le mode z charge require('jit.zone') ; dans ce dossier la bibliothèque de zones est le fichier voisin zone.lua, pas forcément chargeable sous ce nom (déduit du code)."
+    "start mode string (combinable): f = stack with function names (default); F = same with module; l = module:line; <number> = stack depth; -<number> = inverted depth; s = split after the first level; p = full paths; v = VM states; z = zones; r = raw counts; a / A = annotate excerpts / full source files; G = raw output for graphical tools (flame graphs); m<number> = minimum percentage displayed (default 3); i<number> = sampling interval in ms (default 10).",
+    "If outfile is nil, the LUAJIT_PROFILEFILE environment variable is used; otherwise standard output. The value '-' forces standard output.",
+    "stop(false) stops sampling without writing a result. A garbage collection of the internal object (prof_ud) also calls prof_finish.",
+    "Mode z loads require('jit.zone'); in this folder the zone library is the neighboring file zone.lua, which is not necessarily loadable under that name (inferred from code)."
   ],
   "functions": {
     "start": {
-      "desc": "Démarre le profilage avec le mode donné et choisit la destination de sortie (fichier ouvert en écriture, ou sortie standard).",
+      "desc": "Starts profiling with the given mode and chooses the output destination (file opened for writing, or standard output).",
       "params": {
-        "mode": {"type": "string|nil", "desc": "chaîne de mode (voir notes), « f » par défaut"},
-        "outfile": {"type": "string|nil", "desc": "fichier de sortie, '-' pour la sortie standard ; nil = LUAJIT_PROFILEFILE ou sortie standard"}
+        "mode": {
+          "type": "string|nil",
+          "desc": "mode string (see notes), \"f\" by default"
+        },
+        "outfile": {
+          "type": "string|nil",
+          "desc": "output file, '-' for standard output; nil = LUAJIT_PROFILEFILE or standard output"
+        }
       }
     },
     "stop": {
-      "desc": "Arrête le profileur et, si doOutput est vrai, écrit le résultat (affichage des meilleures entrées ou annotation de source). Écrit « [No samples collected] » si aucun échantillon n'a été pris.",
-      "params": {"doOutput": {"type": "boolean|nil", "desc": "vrai pour écrire le résultat"}}
+      "desc": "Stops the profiler and, if doOutput is true, writes the result (display of the top entries or source annotation). Writes \"[No samples collected]\" if no sample was taken.",
+      "params": {
+        "doOutput": {
+          "type": "boolean|nil",
+          "desc": "true to write the result"
+        }
+      }
     }
   }
 }

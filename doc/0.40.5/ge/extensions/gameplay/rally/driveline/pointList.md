@@ -1,41 +1,41 @@
 # `gameplay_rally_driveline_pointList`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/driveline/pointList.lua` · VM : Game Engine (GE) · 180 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/driveline/pointList.lua` · VM: Game Engine (GE) · 180 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/driveline/pointList")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/driveline/pointList")` (file under extensions/ but not a regular extension)
 
-Liste de points le long d'un chemin (driveline de rallye). Chaque point est une table {pos (vec3), quat, ts, normal, prev, next, id, partition, pacenoteDistances, cachedPacenotes{cs, ce, at, auto_at, half}}. La classe sait chaîner les points (prev/next/id), calculer leurs normales (snaproad/normals), mesurer la longueur, trouver le point le plus proche et dessiner un aperçu de débogage. Le module renvoie un constructeur : require(...)(points).
+List of points along a path (rally driveline). Each point is a table {pos (vec3), quat, ts, normal, prev, next, id, partition, pacenoteDistances, cachedPacenotes{cs, ce, at, auto_at, half}}. The class can chain points (prev/next/id), compute their normals (snaproad/normals), measure the length, find the closest point and draw a debug preview. The module returns a constructor: require(...)(points).
 
-## Remarques
+## Notes
 
-- BUG : dans createPoint, le paramètre s'appelle 'quat' et masque la fonction globale quat() ; la valeur par défaut 'quat or quat(0,0,0,1)' appelle donc nil si l'argument est omis (erreur Lua). Passer toujours un quaternion.
-- setAll remplace les points puis recalcule relations (prev/next/id) et normales ; le constructeur, lui, ne le fait pas.
-- La longueur est la somme des distances 3D entre points consécutifs, en mètres.
+- BUG: in createPoint, the parameter is named 'quat' and shadows the global function quat(); the default value 'quat or quat(0,0,0,1)' therefore calls nil if the argument is omitted (Lua error). Always pass a quaternion.
+- setAll replaces the points then recomputes relations (prev/next/id) and normals; the constructor does not.
+- The length is the sum of the 3D distances between consecutive points, in meters.
 
-## Classe `C`
+## Class `C`
 
-Liste de points renvoyée par le constructeur ; attribut self.points.
+List of points returned by the constructor; attribute self.points.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_driveline_pointList")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_driveline_pointList")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:calculateLength()` | Longueur totale du chemin (0 s'il y a moins de 2 points). | 76 |
-| `C:count()` | Nombre de points. | 91 |
-| `C:createPoint(pos, quat, ts)` | Crée un point au format standard (normal (0,0,1), pacenoteDistances vide, cachedPacenotes vide). N'ajoute pas le point à la liste. | 17 |
-| `C:downsample()` | Stub de compatibilité avec DrivelineRoute : renvoie la liste elle-même (drivelineV3 simplifie déjà). | 134 |
-| `C:drawDebug(drawLabels)` | Dessine une sphère par point (couleur recce_driveline_clr, alpha 0,3) et, si demandé, l'horodatage ts en étiquette. À appeler à chaque frame. | 139 |
-| `C:findNearestPoint(srcPos)` | Point le plus proche d'une position (distance 3D, parcours linéaire). | 113 |
-| `C:get(index)` | Point à l'indice donné. | 96 |
-| `C:getAll()` | Table interne de tous les points (pas une copie). | 101 |
-| `C:init(points)` | Mémorise la liste de points fournie (vide par défaut) sans calculer relations ni normales. | 12 |
-| `C:setAll(points)` | Remplace tous les points puis recalcule relations et normales. | 106 |
-| `C:setupPointNormals()` | Calcule la normale de chaque point avec snaproadNormals.forwardNormalVec et crée pacenoteDistances/cachedPacenotes s'ils manquent. | 56 |
-| `C:setupPointRelationships()` | Renseigne id (indice), prev et next de chaque point. | 39 |
+| `C:calculateLength()` | Total length of the path (0 if fewer than 2 points). | 76 |
+| `C:count()` | Number of points. | 91 |
+| `C:createPoint(pos, quat, ts)` | Creates a point in standard format (normal (0,0,1), empty pacenoteDistances, empty cachedPacenotes). Does not add the point to the list. | 17 |
+| `C:downsample()` | Compatibility stub with DrivelineRoute: returns the list itself (drivelineV3 already simplifies). | 134 |
+| `C:drawDebug(drawLabels)` | Draws a sphere per point (color recce_driveline_clr, alpha 0.3) and, if requested, the ts timestamp as a label. Call every frame. | 139 |
+| `C:findNearestPoint(srcPos)` | Closest point to a position (3D distance, linear scan). | 113 |
+| `C:get(index)` | Point at the given index. | 96 |
+| `C:getAll()` | Internal table of all the points (not a copy). | 101 |
+| `C:init(points)` | Stores the provided list of points (empty by default) without computing relations or normals. | 12 |
+| `C:setAll(points)` | Replaces all the points then recomputes relations and normals. | 106 |
+| `C:setupPointNormals()` | Computes each point's normal with snaproadNormals.forwardNormalVec and creates pacenoteDistances/cachedPacenotes if missing. | 56 |
+| `C:setupPointRelationships()` | Fills in id (index), prev and next of each point. | 39 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/driveline/pointList.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/driveline/pointList.lua`.*

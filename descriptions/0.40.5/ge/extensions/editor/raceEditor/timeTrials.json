@@ -1,74 +1,117 @@
 {
   "path": "lua/ge/extensions/editor/raceEditor/timeTrials.lua",
-  "module": "Sous-fenêtre « Time Trials » de l'éditeur de course : métadonnées du circuit (nom, description, auteurs, difficulté Easy/Medium/Hard/Very Hard), indicateurs de classification (Reversible, Rolling Start, calculés par path:classify()), présence d'une image d'aperçu <nom>.jpg à côté du fichier de course, et trois listes de prefabs (prefabs, forwardPrefabs, reversePrefabs) à charger avec le circuit. Chaque changement passe par editor.history. Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/timeTrials')(raceEditor).",
+  "module": "\"Time Trials\" sub-window of the race editor: track metadata (name, description, authors, difficulty Easy/Medium/Hard/Very Hard), classification flags (Reversible, Rolling Start, computed by path:classify()), presence of a preview image <name>.jpg next to the race file, and three prefab lists (prefabs, forwardPrefabs, reversePrefabs) to load with the track. Each change goes through editor.history. The module returns a constructor: require('/lua/ge/extensions/editor/raceEditor/timeTrials')(raceEditor).",
   "notes": [
-    "Difficulté : stockée comme entier ; le choix de la liste écrit (i-1)*25+12 (12, 37, 62, 87) ; l'affichage inverse avec floor(d/25)+1 borné entre 1 et 4.",
-    "Prefab automatique : <nom du fichier>.prefab, <nom>_forward.prefab, <nom>_reverse.prefab (chargés s'ils existent). Les prefabs forward ne se chargent que dans le sens normal, les reverse que dans le sens inverse (infobulles du code).",
-    "Bug : dans C:existsIcon, « local levelPath » est redéclaré dans le bloc « if lvl », ce qui masque la variable externe ; le paramètre inPathFolder n'a donc aucun effet et le chemin testé reste le dossier du chemin de course.",
-    "Dans prefabData, le nom du troisième groupe affiche « ReversePrefabs » avec une espace initiale (coquille)."
+    "Difficulty: stored as an integer; the list choice writes (i-1)*25+12 (12, 37, 62, 87); the display reverses it with floor(d/25)+1 clamped between 1 and 4.",
+    "Automatic prefab: <file name>.prefab, <name>_forward.prefab, <name>_reverse.prefab (loaded if they exist). Forward prefabs only load in the normal direction, reverse ones only in the reverse direction (code tooltips).",
+    "Bug: in C:existsIcon, \"local levelPath\" is redeclared inside the \"if lvl\" block, which shadows the outer variable; the inPathFolder parameter therefore has no effect and the tested path stays the race path folder.",
+    "In prefabData, the name of the third group displays \"ReversePrefabs\" with a leading space (typo)."
   ],
   "classes": {
     "C": {
-      "desc": "Fenêtre Time Trials (windowDescription = 'Time Trials'). Instanciée avec init(raceEditor) ; le module est stocké dans self.pathEditor.",
+      "desc": "Time Trials window (windowDescription = 'Time Trials'). Instantiated with init(raceEditor); the module is stored in self.pathEditor.",
       "functions": {
         "init": {
-          "desc": "Mémorise le module raceEditor dans self.pathEditor.",
-          "params": {"raceEditor": {"type": "table", "desc": "Module editor_raceEditor."}},
+          "desc": "Stores the raceEditor module in self.pathEditor.",
+          "params": {
+            "raceEditor": {
+              "type": "table",
+              "desc": "Module editor_raceEditor."
+            }
+          },
           "internal": true
         },
         "setPath": {
-          "desc": "Définit le chemin de course édité et recharge les champs de la fenêtre (appelle selected()).",
-          "params": {"path": {"type": "table", "desc": "Objet gameplay/race/path."}}
+          "desc": "Sets the race path being edited and reloads the window fields (calls selected()).",
+          "params": {
+            "path": {
+              "type": "table",
+              "desc": "gameplay/race/path object."
+            }
+          }
         },
         "selected": {
-          "desc": "Recharge nom, description, auteurs et listes de prefabs depuis le chemin, puis cherche l'image d'aperçu.",
+          "desc": "Reloads name, description, authors and prefab lists from the path, then looks for the preview image.",
           "internal": true
         },
         "unselect": {
-          "desc": "Appelé quand l'onglet est quitté ; ne fait rien.",
+          "desc": "Called when the tab is left; does nothing.",
           "internal": true
         },
         "findPreview": {
-          "desc": "Cherche <dossier><nom du fichier>.jpg ; si présent, le charge comme texture d'aperçu, sinon efface l'aperçu.",
+          "desc": "Looks for <folder><file name>.jpg; if present, loads it as the preview texture, otherwise clears the preview.",
           "internal": false
         },
         "draw": {
-          "desc": "Appelé à chaque frame : dessine les informations générales.",
+          "desc": "Called every frame: draws the general information.",
           "internal": true
         },
         "changeField": {
-          "desc": "Si la nouvelle valeur diffère de path[field], valide une action d'historique qui modifie ce champ du chemin.",
+          "desc": "If the new value differs from path[field], commits a history action that modifies this path field.",
           "params": {
-            "field": {"type": "string", "desc": "Nom du champ du chemin (name, description, authors, difficulty, prefabs, forwardPrefabs, reversePrefabs)."},
-            "new": {"type": "any", "desc": "Nouvelle valeur."},
-            "add": {"type": "string|nil", "desc": "Précision ajoutée au nom de l'action d'historique."}
+            "field": {
+              "type": "string",
+              "desc": "Path field name (name, description, authors, difficulty, prefabs, forwardPrefabs, reversePrefabs)."
+            },
+            "new": {
+              "type": "any",
+              "desc": "New value."
+            },
+            "add": {
+              "type": "string|nil",
+              "desc": "Detail added to the history action name."
+            }
           }
         },
         "drawGeneralInfo": {
-          "desc": "Dessine tout le formulaire : champs texte, difficulté, classification, indicateur d'aperçu (survol = image, clic = actualiser) et listes de prefabs.",
+          "desc": "Draws the whole form: text fields, difficulty, classification, preview indicator (hover = image, click = refresh) and prefab lists.",
           "internal": true
         },
         "displayClassification": {
-          "desc": "Affiche une ligne « nom : » avec une icône coche ou croix selon classification[field].",
+          "desc": "Displays a \"name:\" line with a check or cross icon depending on classification[field].",
           "params": {
-            "classification": {"type": "table", "desc": "Résultat de path:classify() (clés reversible, allowRollingStart…)."},
-            "name": {"type": "string", "desc": "Libellé."},
-            "field": {"type": "string", "desc": "Clé testée dans classification."},
-            "tt": {"type": "string|nil", "desc": "Infobulle."}
+            "classification": {
+              "type": "table",
+              "desc": "Result of path:classify() (keys reversible, allowRollingStart...)."
+            },
+            "name": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "field": {
+              "type": "string",
+              "desc": "Key tested in classification."
+            },
+            "tt": {
+              "type": "string|nil",
+              "desc": "Tooltip."
+            }
           }
         },
         "existsIcon": {
-          "desc": "Affiche une icône coche (fichier trouvé) ou erreur (introuvable) pour un prefab, en testant plusieurs chemins (avec/sans .prefab, .prefab.json, .json, dossier du niveau ou du chemin). L'infobulle liste le fichier trouvé ou les chemins essayés.",
+          "desc": "Displays a check icon (file found) or error icon (not found) for a prefab, testing several paths (with/without .prefab, .prefab.json, .json, level or path folder). The tooltip lists the file found or the paths tried.",
           "params": {
-            "f": {"type": "string|table<integer, string>", "desc": "Nom de fichier, ou liste explicite de chemins à tester."},
-            "inPathFolder": {"type": "boolean|nil", "desc": "Censé chercher dans le dossier du chemin de course (sans effet, voir notes)."}
+            "f": {
+              "type": "string|table<integer, string>",
+              "desc": "File name, or explicit list of paths to test."
+            },
+            "inPathFolder": {
+              "type": "boolean|nil",
+              "desc": "Supposed to search in the race path folder (no effect, see notes)."
+            }
           }
         },
         "drawPrefabs": {
-          "desc": "Dessine la liste de prefabs d'un champ : entrée automatique en lecture seule, puis pour chaque prefab suppression, saisie, sélecteur de fichier et icône d'existence, et bouton Add.",
+          "desc": "Draws the prefab list of a field: read-only automatic entry, then for each prefab delete, input, file picker and existence icon, and an Add button.",
           "params": {
-            "fieldName": {"type": "string", "desc": "prefabs, forwardPrefabs ou reversePrefabs."},
-            "default": {"type": "string", "desc": "Nom du prefab chargé automatiquement."}
+            "fieldName": {
+              "type": "string",
+              "desc": "prefabs, forwardPrefabs or reversePrefabs."
+            },
+            "default": {
+              "type": "string",
+              "desc": "Name of the automatically loaded prefab."
+            }
           }
         }
       }

@@ -1,47 +1,47 @@
 # `gameplay_crashTest_crashTestCountdown`
 
-*Fichier : `lua/ge/extensions/gameplay/crashTest/crashTestCountdown.lua` · VM : Game Engine (GE) · 50 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/crashTest/crashTestCountdown.lua` · VM: Game Engine (GE) · 50 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_crashTest_crashTestCountdown` : `extensions.load("gameplay_crashTest_crashTestCountdown")`, puis la globale `gameplay_crashTest_crashTestCountdown`
+**Access:** extension `gameplay_crashTest_crashTestCountdown`: `extensions.load("gameplay_crashTest_crashTestCountdown")`, then the global `gameplay_crashTest_crashTestCountdown`
 
-Compte à rebours affiché pendant le scénario de crash test. Chaque seconde entière franchie, il envoie un message à l'UI (évènement ScenarioFlashMessage) avec le chiffre restant et un son de décompte, puis « Go! » avec un son de départ quand le temps est écoulé, et appelle alors le callback donné.
+Countdown displayed during the crash test scenario. Each whole second crossed, it sends a message to the UI (ScenarioFlashMessage event) with the remaining digit and a countdown sound, then "Go!" with a start sound when the time is up, and then calls the given callback.
 
-## Exemple
+## Example
 
 ```lua
 gameplay_crashTest_crashTestCountdown.startNewCountdown(3, function() print('go') end)
 ```
 
-## Remarques
+## Notes
 
-- Le temps décroît avec dtSim (temps de simulation), donc il s'arrête en pause.
-- Le message est de la forme {{texte, 0.95, appelLua, true}} ; le troisième élément est un appel Lua joué par l'UI (Engine.Audio.playOnce).
-- Le nom de la fonction interne updateCoundown contient une faute de frappe (sans effet).
+- The time decreases with dtSim (simulation time), so it stops when paused.
+- The message has the form {{text, 0.95, luaCall, true}}; the third element is a Lua call played by the UI (Engine.Audio.playOnce).
+- The name of the internal function updateCoundown contains a typo (no effect).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_crashTest_crashTestCountdown.onUpdate(dtReal, dtSim)` | Hook appelé à chaque image : fait avancer le compte à rebours s'il est en cours. *(interne)* *(hook)* | 40 |
-| `gameplay_crashTest_crashTestCountdown.startNewCountdown(duration, callback_)` | Démarre un compte à rebours de duration secondes. Le callback est appelé quand le décompte arrive à 0 (au moment du « Go! »). | 11 |
+| `gameplay_crashTest_crashTestCountdown.onUpdate(dtReal, dtSim)` | Hook called every frame: advances the countdown if one is in progress. *(internal)* *(hook)* | 40 |
+| `gameplay_crashTest_crashTestCountdown.startNewCountdown(duration, callback_)` | Starts a countdown of duration seconds. The callback is called when the count reaches 0 (at the time of "Go!"). | 11 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_crashTest_crashTestCountdown.onUpdate(dtReal, dtSim)`
 
-Hook appelé à chaque image : fait avancer le compte à rebours s'il est en cours.
+Hook called every frame: advances the countdown if one is in progress.
 
-- `dtReal` (*number*) : Delta temps réel (s), non utilisé.
-- `dtSim` (*number*) : Delta temps simulation (s).
+- `dtReal` (*number*) : Real delta time (s), unused.
+- `dtSim` (*number*) : Simulation time delta (s).
 
 #### `gameplay_crashTest_crashTestCountdown.startNewCountdown(duration, callback_)`
 
-Démarre un compte à rebours de duration secondes. Le callback est appelé quand le décompte arrive à 0 (au moment du « Go! »).
+Starts a countdown of duration seconds. The callback is called when the count reaches 0 (at the time of "Go!").
 
-- `duration` (*number*) : Durée en secondes.
-- `callback_` (*function|nil*) : Fonction appelée à la fin du compte à rebours.
+- `duration` (*number*) : Duration in seconds.
+- `callback_` (*function|nil*) : Function called at the end of the countdown.
 
-**Évènements UI (guihooks.trigger) :** `ScenarioFlashMessage`
+**UI events (guihooks.trigger):** `ScenarioFlashMessage`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/crashTest/crashTestCountdown.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/crashTest/crashTestCountdown.lua`.*

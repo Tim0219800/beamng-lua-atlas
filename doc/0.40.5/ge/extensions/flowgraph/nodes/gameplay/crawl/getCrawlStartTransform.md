@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gameplay_crawl_getCrawlStartTransform`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlStartTransform.lua` · VM : Game Engine (GE) · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlStartTransform.lua` · VM: Game Engine (GE) · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/crawl/getCrawlStartTransform")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/crawl/getCrawlStartTransform")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Crawl Start Transform » (catégorie repeat_instant, crawl). Donne la position (startPosition, vec3) et la rotation (startRotation, quat) de départ du crawl actif via bridge.getCrawlSpawnTransform. Sans crawl actif : erreur de nœud et valeurs {0,0,0} et {0,0,0,1}.
+Flowgraph node "Get Crawl Start Transform" (category repeat_instant, crawl). Gives the start position (startPosition, vec3) and rotation (startRotation, quat) of the active crawl via bridge.getCrawlSpawnTransform. Without an active crawl: node error and values {0,0,0} and {0,0,0,1}.
 
-**Dépendances (chargées avant) :** `gameplay_crawl_flowgraphBridge`
+**Dependencies (loaded first):** `gameplay_crawl_flowgraphBridge`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr)` | Charge le bridge du crawl. | 22 |
-| `C:work()` | Lit la transformation de spawn et la convertit en tables. | 26 |
+| `C:init(mgr)` | Loads the crawl bridge. | 22 |
+| `C:work()` | Reads the spawn transform and converts it to tables. | 26 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlStartTransform.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlStartTransform.lua`.*

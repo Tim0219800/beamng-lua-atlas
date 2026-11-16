@@ -1,316 +1,666 @@
 {
   "path": "lua/ge/extensions/gameplay/drag/dragBridge.lua",
-  "module": "Façade du système de drag pour les nœuds flowgraph (missions) et l'interface Vue. Elle ne contient presque pas de logique : elle renvoie vers gameplay_drag_core, saveSystem, rulesMenu, timeslip et phaseHandlers, fournit des données prêtes pour l'UI (infos de course, dial, état de l'arbre, temps en direct, règles de piste) et pousse des guihooks (dragRaceInfoChanged, dragDialDataChanged, onDragRaceLiveTimesData, onDragReset) quand l'état drag change. Un moddeur l'utilise pour démarrer/arrêter une course, définir des pilotes et des dials, ou générer des adversaires.",
+  "module": "Facade of the drag system for flowgraph nodes (missions) and the Vue interface. It contains almost no logic: it forwards to gameplay_drag_core, saveSystem, rulesMenu, timeslip and phaseHandlers, provides ready-to-use data for the UI (race info, dial, tree state, live times, track rules) and pushes guihooks (dragRaceInfoChanged, dragDialDataChanged, onDragRaceLiveTimesData, onDragReset) when the drag state changes. A modder uses it to start/stop a race, set drivers and dials, or generate opponents.",
   "usage": "gameplay_drag_dragBridge.loadDragDataForMission('/levels/west_coast_usa/dragstrips/strip.dragSettings.json')\ngameplay_drag_dragBridge.setVehicles({{id = playerId, lane = 1, isPlayable = true, dial = 11.5}})\ngameplay_drag_dragBridge.startDragRaceActivity(1)",
   "notes": [
-    "startDragRace renvoie toujours une valeur vraie : l'expression est « startDragRaceActivity(...) or true », donc même un échec de démarrage renvoie true (seul l'absence de véhicule renvoie false).",
-    "startDragRace ignore le paramètre vehicleId pour le démarrage (il ne sert qu'à vérifier que le véhicule existe) : core.startDragRaceActivity(lane or 1) est appelé sans véhicule.",
-    "Les temps de vitesse (type 'velocity') sont en m/s ; l'UI reçoit value_kmh et value_mph (chaînes à 3 décimales).",
-    "Les messages de phase de l'info HUD (Staging, On Tree, Racing, Stopping, Ready) sont en anglais en dur.",
-    "onUpdate envoie à l'UI uniquement les timers dont la valeur a changé de plus de 0,0005 s (cache par couloir, vidé à chaque setup/reset/clear).",
-    "getTimers/getRacerData renvoient {} quand rien n'est trouvé (alors que core.getRacerData renvoie nil)."
+    "startDragRace always returns a truthy value: the expression is \"startDragRaceActivity(...) or true\", so even a failed start returns true (only the absence of a vehicle returns false).",
+    "startDragRace ignores the vehicleId parameter for the start (it is only used to check that the vehicle exists): core.startDragRaceActivity(lane or 1) is called without a vehicle.",
+    "Speed times (type 'velocity') are in m/s; the UI receives value_kmh and value_mph (strings with 3 decimals).",
+    "The phase messages of the HUD info (Staging, On Tree, Racing, Stopping, Ready) are hardcoded in English.",
+    "onUpdate sends to the UI only the timers whose value changed by more than 0.0005 s (per-lane cache, emptied on every setup/reset/clear).",
+    "getTimers/getRacerData return {} when nothing is found (whereas core.getRacerData returns nil)."
   ],
   "fields": {},
   "functions": {
     "applyRulesRestore": {
-      "desc": "Renvoie les règles sauvegardées d'une piste (délègue à rulesMenu.applyRulesRestore).",
-      "params": {"levelId": {"type": "string", "desc": "Identifiant du niveau."}, "stripId": {"type": "string", "desc": "Identifiant de la piste."}},
-      "returns": [{"type": "table|nil", "desc": "Règles, nil si rulesMenu absent."}]
+      "desc": "Returns the saved rules of a track (delegates to rulesMenu.applyRulesRestore).",
+      "params": {
+        "levelId": {
+          "type": "string",
+          "desc": "Level identifier."
+        },
+        "stripId": {
+          "type": "string",
+          "desc": "Track identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Rules, nil if rulesMenu is absent."
+        }
+      ]
     },
     "applyRulesSave": {
-      "desc": "Sauvegarde les règles d'une piste (rulesMenu). En MP, les diffuse aux clients (broadcastRulesUpdate) ; applique aussi importantTimerId, dragType et treeType aux données de course en cours.",
-      "params": {"levelId": {"type": "string", "desc": "Identifiant du niveau."}, "stripId": {"type": "string", "desc": "Identifiant de la piste."}, "rules": {"type": "table", "desc": "Règles (importantTimerId, dragType, treeType...)."}},
+      "desc": "Saves the rules of a track (rulesMenu). In MP, broadcasts them to the clients (broadcastRulesUpdate); also applies importantTimerId, dragType and treeType to the current race data.",
+      "params": {
+        "levelId": {
+          "type": "string",
+          "desc": "Level identifier."
+        },
+        "stripId": {
+          "type": "string",
+          "desc": "Track identifier."
+        },
+        "rules": {
+          "type": "table",
+          "desc": "Rules (importantTimerId, dragType, treeType...)."
+        }
+      },
       "returns": []
     },
     "cleanup": {
-      "desc": "Arrête la course si elle est démarrée (stopDragRace).",
+      "desc": "Stops the race if it is started (stopDragRace).",
       "params": {},
       "returns": []
     },
     "clearRacers": {
-      "desc": "Supprime tous les racers des données courantes (core.reset avec clearRacers = true).",
+      "desc": "Removes all racers from the current data (core.reset with clearRacers = true).",
       "params": {},
       "returns": []
     },
     "clearTimeslip": {
-      "desc": "Efface le ticket côté UI (core.reset avec timeslip = true).",
+      "desc": "Clears the slip on the UI side (core.reset with timeslip = true).",
       "params": {},
       "returns": []
     },
     "closeMenu": {
-      "desc": "Ferme tous les menus de carrière (career_career.closeAllMenus). Sert aussi de callback de la laisse (tether).",
+      "desc": "Closes all career menus (career_career.closeAllMenus). Also serves as the tether callback.",
       "params": {},
       "returns": []
     },
     "configureDragStrip": {
-      "desc": "Compatibilité : renvoie true si dragStrip n'est pas nil. La config réelle est appliquée par core.setDragRaceData.",
-      "params": {"dragStrip": {"type": "table|nil", "desc": "Données de piste."}},
-      "returns": [{"type": "boolean", "desc": "dragStrip ~= nil."}]
+      "desc": "Compatibility: returns true if dragStrip is not nil. The actual config is applied by core.setDragRaceData.",
+      "params": {
+        "dragStrip": {
+          "type": "table|nil",
+          "desc": "Track data."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "dragStrip ~= nil."
+        }
+      ]
     },
     "createTimeslipData": {
-      "desc": "Délègue à core.createTimeslipData.",
+      "desc": "Delegates to core.createTimeslipData.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Données du ticket."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Slip data."
+        }
+      ]
     },
     "generateHashFromFile": {
-      "desc": "Hash d'identification d'un véhicule/config pour le carnet de dial (saveSystem.generateHashFromFile). Sans argument, utilise le véhicule du joueur 0.",
-      "params": {"vehicleId": {"type": "integer|nil", "desc": "ID du véhicule."}},
-      "returns": [{"type": "string", "desc": "Hash."}]
+      "desc": "Identification hash of a vehicle/config for the dial book (saveSystem.generateHashFromFile). Without argument, uses player 0's vehicle.",
+      "params": {
+        "vehicleId": {
+          "type": "integer|nil",
+          "desc": "Vehicle ID."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Hash."
+        }
+      ]
     },
     "generateOpponentsGroup": {
-      "desc": "Construit une liste d'adversaires (model, config, paint) dont le temps time_1_4 (Performance Data ou Drag Times) est dans [dial - offset ; dial + 0,4[ et qui respectent les règles de permission de véhicule. Si aucun n'est éligible, reprend le véhicule du joueur. Exclut les configs simple_traffic.",
+      "desc": "Builds a list of opponents (model, config, paint) whose time_1_4 time (Performance Data or Drag Times) is in [dial - offset; dial + 0.4[ and that respect the vehicle permission rules. If none is eligible, falls back to the player's vehicle. Excludes simple_traffic configs.",
       "params": {
-        "vehId": {"type": "any", "desc": "Identifiant utilisé pour core_vehicles.getVehicleDetails (nom de modèle/config du véhicule joueur, déduit du code)."},
-        "dial": {"type": "number|nil", "desc": "Temps cible (s) ; défaut time_1_4 du véhicule, sinon 10."},
-        "vehiclePermissionRules": {"type": "table[]", "desc": "Règles {path = {clés...}, allowedValues = {...}} ou {path, value} testées sur le modèle."},
-        "amount": {"type": "integer|nil", "desc": "Nombre d'adversaires (défaut 1)."},
-        "offset": {"type": "number|nil", "desc": "Marge basse du temps (défaut 0,1 s)."}
+        "vehId": {
+          "type": "any",
+          "desc": "Identifier used for core_vehicles.getVehicleDetails (model/config name of the player's vehicle, inferred from code)."
+        },
+        "dial": {
+          "type": "number|nil",
+          "desc": "Target time (s); default time_1_4 of the vehicle, otherwise 10."
+        },
+        "vehiclePermissionRules": {
+          "type": "table[]",
+          "desc": "Rules {path = {keys...}, allowedValues = {...}} or {path, value} tested on the model."
+        },
+        "amount": {
+          "type": "integer|nil",
+          "desc": "Number of opponents (default 1)."
+        },
+        "offset": {
+          "type": "number|nil",
+          "desc": "Lower time margin (default 0.1 s)."
+        }
       },
-      "returns": [{"type": "table[]|nil", "desc": "Liste {model, config, paint}, nil si entrée invalide ou pas de données de temps."}]
+      "returns": [
+        {
+          "type": "table[]|nil",
+          "desc": "List {model, config, paint}, nil if invalid input or no time data."
+        }
+      ]
     },
     "getActiveRacerId": {
-      "desc": "ID du véhicule du premier racer jouable.",
+      "desc": "Vehicle ID of the first playable racer.",
       "params": {},
-      "returns": [{"type": "integer|nil", "desc": "ID ou nil."}]
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "ID or nil."
+        }
+      ]
     },
     "getData": {
-      "desc": "Délègue à core.getData.",
+      "desc": "Delegates to core.getData.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "dragData."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "dragData."
+        }
+      ]
     },
     "getDialTimes": {
-      "desc": "Carnet des temps de dial sauvegardés (saveSystem.getDialTimes), indexé par hash de véhicule.",
+      "desc": "Book of the saved dial times (saveSystem.getDialTimes), keyed by vehicle hash.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Temps par véhicule."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Times per vehicle."
+        }
+      ]
     },
     "getDragDialData": {
-      "desc": "Données de dial du racer jouable local : vehicleId, dialValue (10 par défaut), isSet, importantTimerId, importantTimerLabel, isBracketRace.",
+      "desc": "Dial data of the local playable racer: vehicleId, dialValue (10 by default), isSet, importantTimerId, importantTimerLabel, isBracketRace.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Données, nil si indisponible."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Data, nil if unavailable."
+        }
+      ]
     },
     "getDragInfoData": {
-      "desc": "Toutes les données du widget HUD d'info drag : dragType, stripName, treeType et libellé, timer important, dial, isStarted/isCompleted, phase courante, liste des racers (nom, couloir, phase, dial, fini, DQ), et en MP manche courante, nombre de manches et liste d'attente.",
+      "desc": "All the data of the drag info HUD widget: dragType, stripName, treeType and label, important timer, dial, isStarted/isCompleted, current phase, list of racers (name, lane, phase, dial, finished, DQ), and in MP the current round, the number of rounds and the waiting list.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Données, nil si aucune piste chargée."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Data, nil if no track is loaded."
+        }
+      ]
     },
     "getDragIsStarted": {
-      "desc": "Vrai si la course est démarrée.",
+      "desc": "True if the race is started.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "isStarted."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "isStarted."
+        }
+      ]
     },
     "getDragRaceData": {
-      "desc": "Données du racer jouable : vehicleId, lane, timers, isFinished, isDisqualified, disqualificationReason, currentPhase, damage, phases.",
+      "desc": "Data of the playable racer: vehicleId, lane, timers, isFinished, isDisqualified, disqualificationReason, currentPhase, damage, phases.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Données ou nil."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Data or nil."
+        }
+      ]
     },
     "getDragRaceRuntimeData": {
-      "desc": "Données d'exécution du racer jouable : phase, isStarted, isCompleted, timers, phases, DQ, dégâts, vehiclePosition (vehPos), vehicleSpeed (vehSpeed).",
+      "desc": "Runtime data of the playable racer: phase, isStarted, isCompleted, timers, phases, DQ, damage, vehiclePosition (vehPos), vehicleSpeed (vehSpeed).",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Données ou nil."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Data or nil."
+        }
+      ]
     },
     "getDragStripInfo": {
-      "desc": "Infos d'une piste : stripName, dragType, context, lanes, phases, prefabs, canBeTeleported, canBeReseted. Charge la piste par id (saveSystem.loadCompleteDragRaceData) ou utilise les données courantes.",
-      "params": {"dragStripId": {"type": "string|nil", "desc": "Identifiant de piste ; nil = piste courante."}},
-      "returns": [{"type": "table|nil", "desc": "Infos ou nil."}]
+      "desc": "Info of a track: stripName, dragType, context, lanes, phases, prefabs, canBeTeleported, canBeReseted. Loads the track by id (saveSystem.loadCompleteDragRaceData) or uses the current data.",
+      "params": {
+        "dragStripId": {
+          "type": "string|nil",
+          "desc": "Track identifier; nil = current track."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Info or nil."
+        }
+      ]
     },
     "getHistory": {
-      "desc": "Historique des courses d'une installation (saveSystem.getHistory).",
-      "params": {"id": {"type": "string", "desc": "Identifiant de l'installation/piste."}},
-      "returns": [{"type": "table", "desc": "Historique."}]
+      "desc": "Race history of a facility (saveSystem.getHistory).",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Facility/track identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "History."
+        }
+      ]
     },
     "getPlayerRaceResult": {
-      "desc": "Résultat du joueur d'après generateWinData : playerWin, playerPos, winners, dialDiff (temps du joueur moins son dial) et threshold (temps du meilleur adversaire non disqualifié moins celui du joueur).",
+      "desc": "Player's result from generateWinData: playerWin, playerPos, winners, dialDiff (player's time minus their dial) and threshold (time of the best non-disqualified opponent minus the player's).",
       "params": {},
-      "returns": [{"type": "table", "desc": "{playerWin, playerPos, winners, dialDiff, threshold}."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{playerWin, playerPos, winners, dialDiff, threshold}."
+        }
+      ]
     },
     "getRacerData": {
-      "desc": "Table complète du racer d'un véhicule.",
-      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}},
-      "returns": [{"type": "table", "desc": "Racer, {} si inconnu."}]
+      "desc": "Full racer table of a vehicle.",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "Vehicle ID."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Racer, {} if unknown."
+        }
+      ]
     },
     "getRulesScreenData": {
-      "desc": "Données de l'écran de règles Vue (délègue à rulesMenu.getRulesScreenData).",
-      "params": {"facilityIdOrStripId": {"type": "string", "desc": "Identifiant d'installation ou de piste."}},
-      "returns": [{"type": "table|nil", "desc": "Données, nil si rulesMenu absent."}]
+      "desc": "Data of the Vue rules screen (delegates to rulesMenu.getRulesScreenData).",
+      "params": {
+        "facilityIdOrStripId": {
+          "type": "string",
+          "desc": "Facility or track identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Data, nil if rulesMenu is absent."
+        }
+      ]
     },
     "getStripLaneInfo": {
-      "desc": "Infos des couloirs de la première piste du niveau courant : liste lanes (index, longName, shortName, color), timers (ou DEFAULT_TIMERS) et importantTimerId.",
+      "desc": "Lane info of the first track of the current level: lanes list (index, longName, shortName, color), timers (or DEFAULT_TIMERS) and importantTimerId.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Infos ou nil."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Info or nil."
+        }
+      ]
     },
     "getTimers": {
-      "desc": "Timers d'un racer.",
-      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}},
-      "returns": [{"type": "table", "desc": "Timers, {} si inconnu."}]
+      "desc": "Timers of a racer.",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "Vehicle ID."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Timers, {} if unknown."
+        }
+      ]
     },
     "getTreeLightUIState": {
-      "desc": "État de l'arbre pour l'UI, côté couloir du racer jouable : isStaging, stageLights (prestageLight, stageLight), countDownLights (amberLight1..3, greenLight, redLight), globalLights.blueLight.",
+      "desc": "Tree state for the UI, on the lane side of the playable racer: isStaging, stageLights (prestageLight, stageLight), countDownLights (amberLight1..3, greenLight, redLight), globalLights.blueLight.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "État ou nil."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "State or nil."
+        }
+      ]
     },
     "getWinnersData": {
-      "desc": "Données de classement (phaseHandlers.generateWinData).",
+      "desc": "Ranking data (phaseHandlers.generateWinData).",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Liste des résultats triés."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Sorted list of results."
+        }
+      ]
     },
     "isDragRaceActive": {
-      "desc": "Vrai si une course est démarrée (compte à rebours ou en cours).",
+      "desc": "True if a race is started (countdown or in progress).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "isStarted."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "isStarted."
+        }
+      ]
     },
     "loadDragDataForMission": {
-      "desc": "Charge les données de piste depuis un fichier via core.loadDragDataForMission ; logue une erreur en cas d'échec.",
-      "params": {"filepath": {"type": "string", "desc": "Chemin du fichier."}},
-      "returns": [{"type": "table|nil", "desc": "Données chargées."}]
+      "desc": "Loads the track data from a file via core.loadDragDataForMission; logs an error on failure.",
+      "params": {
+        "filepath": {
+          "type": "string",
+          "desc": "File path."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Loaded data."
+        }
+      ]
     },
     "loadDragStrip": {
-      "desc": "Charge une piste par id : essaie saveSystem.loadCompleteDragRaceData puis loadDragStripData.",
-      "params": {"dragStripId": {"type": "string", "desc": "Identifiant/chemin de piste."}},
-      "returns": [{"type": "table|nil", "desc": "Données de piste ou nil."}]
+      "desc": "Loads a track by id: tries saveSystem.loadCompleteDragRaceData then loadDragStripData.",
+      "params": {
+        "dragStripId": {
+          "type": "string",
+          "desc": "Track identifier/path."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Track data or nil."
+        }
+      ]
     },
     "onDragClear": {
-      "desc": "Hook : à l'effacement du drag, envoie nil aux guihooks dragRaceInfoChanged/dragDialDataChanged et cache les apps topLeft dragInfo et dragDialControl.",
+      "desc": "Hook: when drag is cleared, sends nil to the guihooks dragRaceInfoChanged/dragDialDataChanged and hides the topLeft apps dragInfo and dragDialControl.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onDragDataSet": {
-      "desc": "Hook : piste armée ; pousse infos et dial à l'UI et affiche l'app topLeft dragInfo.",
-      "params": {"data": {"type": "table", "desc": "Données de piste."}},
+      "desc": "Hook: track armed; pushes info and dial to the UI and shows the topLeft app dragInfo.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Track data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onDragRaceListChanged": {
-      "desc": "Hook MP : la liste des courses change ; pousse dragRaceInfoChanged.",
+      "desc": "MP hook: the race list changes; pushes dragRaceInfoChanged.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onDragRacePlayersUpdated": {
-      "desc": "Hook MP : joueurs mis à jour ; pousse dragRaceInfoChanged.",
+      "desc": "MP hook: players updated; pushes dragRaceInfoChanged.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onDragRaceStarted": {
-      "desc": "Hook MP : manche démarrée ; vide le cache de temps en direct et pousse dragRaceInfoChanged.",
+      "desc": "MP hook: round started; empties the live times cache and pushes dragRaceInfoChanged.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onDragRaceStateChanged": {
-      "desc": "Hook MP : l'état de course change ; pousse dragRaceInfoChanged.",
+      "desc": "MP hook: the race state changes; pushes dragRaceInfoChanged.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onDragRacersSetup": {
-      "desc": "Hook émis par core.startDragRaceActivity : vide le cache de temps et pousse infos et dial à l'UI.",
-      "params": {"data": {"type": "table", "desc": "dragData."}},
+      "desc": "Hook emitted by core.startDragRaceActivity: empties the times cache and pushes info and dial to the UI.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "dragData."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onDragReset": {
-      "desc": "Hook de reset : vide le cache de temps, pousse infos et dial à l'UI et déclenche le guihook onDragReset.",
-      "params": {"opts": {"type": "table", "desc": "Options du reset."}},
+      "desc": "Reset hook: empties the times cache, pushes info and dial to the UI and triggers the guihook onDragReset.",
+      "params": {
+        "opts": {
+          "type": "table",
+          "desc": "Reset options."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onMenuClosed": {
-      "desc": "Hook : un menu est fermé ; supprime la laisse (tether) de proximité de l'installation.",
+      "desc": "Hook: a menu is closed; removes the facility's proximity tether.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onRacerPhaseTransition": {
-      "desc": "Hook émis par phaseHandlers lors d'un changement de phase d'un racer ; rafraîchit l'info HUD.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule."}, "oldPhase": {"type": "integer", "desc": "Ancienne phase."}, "newPhase": {"type": "integer", "desc": "Nouvelle phase."}, "newPhaseName": {"type": "string", "desc": "Nom de la nouvelle phase."}},
+      "desc": "Hook emitted by phaseHandlers on a racer's phase change; refreshes the HUD info.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle."
+        },
+        "oldPhase": {
+          "type": "integer",
+          "desc": "Old phase."
+        },
+        "newPhase": {
+          "type": "integer",
+          "desc": "New phase."
+        },
+        "newPhaseName": {
+          "type": "string",
+          "desc": "Name of the new phase."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook par frame : envoie à l'UI (onDragRaceLiveTimesData) les valeurs de timers nouvelles ou modifiées de chaque couloir, locales ou reçues du réseau.",
+      "desc": "Per-frame hook: sends to the UI (onDragRaceLiveTimesData) the new or modified timer values of each lane, local or received from the network.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "openHistoryScreen": {
-      "desc": "Ouvre l'écran d'historique drag (route mission.dragHistory) ; en carrière, pose une laisse sphérique de 4 m près de la porte de l'installation.",
-      "params": {"facility": {"type": "table", "desc": "Installation (id, name, level)."}},
+      "desc": "Opens the drag history screen (route mission.dragHistory); in career, places a 4 m spherical tether near the facility's door.",
+      "params": {
+        "facility": {
+          "type": "table",
+          "desc": "Facility (id, name, level)."
+        }
+      },
       "returns": []
     },
     "openRulesScreen": {
-      "desc": "Ouvre l'écran Vue des règles et réglages drag (route mission.dragRules) pour une installation ; laisse de 4 m en carrière.",
-      "params": {"facility": {"type": "table", "desc": "Installation (id, level)."}},
+      "desc": "Opens the Vue screen of drag rules and settings (route mission.dragRules) for a facility; 4 m tether in career.",
+      "params": {
+        "facility": {
+          "type": "table",
+          "desc": "Facility (id, level)."
+        }
+      },
       "returns": []
     },
     "openRulesScreenForStrip": {
-      "desc": "Ouvre l'écran de règles pour une piste donnée (par ex. depuis l'UI du gamemode MP).",
-      "params": {"levelId": {"type": "string", "desc": "Niveau."}, "stripId": {"type": "string", "desc": "Piste."}},
+      "desc": "Opens the rules screen for a given track (e.g. from the MP gamemode UI).",
+      "params": {
+        "levelId": {
+          "type": "string",
+          "desc": "Level."
+        },
+        "stripId": {
+          "type": "string",
+          "desc": "Track."
+        }
+      },
       "returns": []
     },
     "reset": {
-      "desc": "Remet la course à zéro. Sans argument : reset complet (raceState, racers, timeslip, transitionLock, treeLightStaging, hooks) ; sinon transmet opts à core.reset.",
-      "params": {"opts": {"type": "table|nil", "desc": "Options de core.reset."}},
-      "returns": [{"type": "boolean", "desc": "false si aucune donnée drag, sinon true."}]
+      "desc": "Resets the race. Without argument: full reset (raceState, racers, timeslip, transitionLock, treeLightStaging, hooks); otherwise passes opts to core.reset.",
+      "params": {
+        "opts": {
+          "type": "table|nil",
+          "desc": "Options of core.reset."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if no drag data, otherwise true."
+        }
+      ]
     },
     "screenshotTimeslip": {
-      "desc": "Prend une capture du ticket (gameplay_drag_timeslip.screenshotTimeslip).",
+      "desc": "Takes a screenshot of the slip (gameplay_drag_timeslip.screenshotTimeslip).",
       "params": {},
-      "returns": [{"type": "any", "desc": "Valeur renvoyée par timeslip."}]
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Value returned by timeslip."
+        }
+      ]
     },
     "sendTimeslipDataToUi": {
-      "desc": "Délègue à core.sendTimeslipDataToUi.",
+      "desc": "Delegates to core.sendTimeslipDataToUi.",
       "params": {},
       "returns": []
     },
     "setLocalPlayerDial": {
-      "desc": "Fixe le dial du racer jouable local puis rafraîchit l'info HUD.",
-      "params": {"value": {"type": "number", "desc": "Dial en secondes (>= 0)."}},
-      "returns": [{"type": "boolean", "desc": "true si appliqué."}]
+      "desc": "Sets the dial of the local playable racer then refreshes the HUD info.",
+      "params": {
+        "value": {
+          "type": "number",
+          "desc": "Dial in seconds (>= 0)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if applied."
+        }
+      ]
     },
     "setRacerDial": {
-      "desc": "Délègue à core.setRacerDial.",
-      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}, "dialValue": {"type": "number", "desc": "Dial (s)."}},
-      "returns": [{"type": "boolean", "desc": "true si appliqué."}]
+      "desc": "Delegates to core.setRacerDial.",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "Vehicle ID."
+        },
+        "dialValue": {
+          "type": "number",
+          "desc": "Dial (s)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if applied."
+        }
+      ]
     },
     "setRacersDial": {
-      "desc": "Délègue à core.setRacersDial.",
-      "params": {"dials": {"type": "table[]", "desc": "Liste {racerId, value}."}},
-      "returns": [{"type": "boolean", "desc": "true si au moins un appliqué."}]
+      "desc": "Delegates to core.setRacersDial.",
+      "params": {
+        "dials": {
+          "type": "table[]",
+          "desc": "List {racerId, value}."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if at least one applied."
+        }
+      ]
     },
     "setVehicles": {
-      "desc": "Crée plusieurs racers d'un coup et règle isPlayable et le dial (si > 0).",
-      "params": {"vehicleIds": {"type": "table[]", "desc": "Liste de {id, lane, isPlayable, dial}."}},
+      "desc": "Creates several racers at once and sets isPlayable and the dial (if > 0).",
+      "params": {
+        "vehicleIds": {
+          "type": "table[]",
+          "desc": "List of {id, lane, isPlayable, dial}."
+        }
+      },
       "returns": []
     },
     "setupRacer": {
-      "desc": "Délègue à core.setupRacer.",
-      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}, "lane": {"type": "integer", "desc": "Couloir."}},
+      "desc": "Delegates to core.setupRacer.",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "Vehicle ID."
+        },
+        "lane": {
+          "type": "integer",
+          "desc": "Lane."
+        }
+      },
       "returns": []
     },
     "showDialControl": {
-      "desc": "Affiche l'app de réglage du dial (dragDialControl) dans le conteneur topLeft.",
+      "desc": "Shows the dial setting app (dragDialControl) in the topLeft container.",
       "params": {},
       "returns": []
     },
     "startDragRace": {
-      "desc": "Démarre une course (core.startDragRaceActivity(lane or 1)) après avoir vérifié qu'un véhicule valide existe.",
-      "params": {"vehicleId": {"type": "integer|nil", "desc": "Véhicule à vérifier (défaut : véhicule joueur 0)."}, "lane": {"type": "integer|nil", "desc": "Couloir (défaut 1)."}},
-      "returns": [{"type": "boolean", "desc": "false si aucun véhicule, sinon toujours true (voir notes)."}]
+      "desc": "Starts a race (core.startDragRaceActivity(lane or 1)) after checking that a valid vehicle exists.",
+      "params": {
+        "vehicleId": {
+          "type": "integer|nil",
+          "desc": "Vehicle to check (default: player 0's vehicle)."
+        },
+        "lane": {
+          "type": "integer|nil",
+          "desc": "Lane (default 1)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if no vehicle, otherwise always true (see notes)."
+        }
+      ]
     },
     "startDragRaceActivity": {
-      "desc": "Délègue à core.startDragRaceActivity(lane).",
-      "params": {"lane": {"type": "integer|nil", "desc": "Couloir."}},
-      "returns": [{"type": "boolean", "desc": "true si démarré."}]
+      "desc": "Delegates to core.startDragRaceActivity(lane).",
+      "params": {
+        "lane": {
+          "type": "integer|nil",
+          "desc": "Lane."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if started."
+        }
+      ]
     },
     "stopDragRace": {
-      "desc": "Arrête la course : clear complet (hooks, transitionLock, localRace, extensions, data, context, ui, treeLightStaging).",
+      "desc": "Stops the race: full clear (hooks, transitionLock, localRace, extensions, data, context, ui, treeLightStaging).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "Toujours true."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Always true."
+        }
+      ]
     },
     "unloadRace": {
-      "desc": "Même clear complet que stopDragRace, sans valeur de retour.",
+      "desc": "Same full clear as stopDragRace, with no return value.",
       "params": {},
       "returns": []
     }

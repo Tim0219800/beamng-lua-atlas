@@ -1,50 +1,50 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/spawnPrefab.lua",
-  "module": "Noeud flowgraph « Spawn Prefab » (auteur BeamNG, behaviour once). Charge un prefab (.prefab.json ou ancien .prefab) à une position via spawnPrefab, l'ajoute au MissionGroup et l'enregistre dans le module prefab du flowgraph. Entrées : flow, reset, resetVeh, path, name, pos, useGlobalTranslation, silent. Sorties : flow, created (impulsion), id, origVehId (véhicule joueur avant spawn), success.",
+  "module": "Flowgraph node \"Spawn Prefab\" (author BeamNG, behaviour once). Loads a prefab (.prefab.json or old .prefab) at a position via spawnPrefab, adds it to the MissionGroup and registers it in the flowgraph prefab module. Inputs: flow, reset, resetVeh, path, name, pos, useGlobalTranslation, silent. Outputs: flow, created (impulse), id, origVehId (player vehicle before spawn), success.",
   "notes": [
-    "Les objets du prefab ne sont pas supprimés par ce noeud : le module prefab s'en charge à la fin (sauf Keep Prefab).",
-    "Charger un prefab avec véhicules change le véhicule du joueur ; origVehId permet de le retrouver."
+    "The prefab's objects are not deleted by this node: the prefab module takes care of it at the end (except Keep Prefab).",
+    "Loading a prefab with vehicles changes the player's vehicle; origVehId allows finding it again."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Initialise la liste d'objets et origPositions.",
+          "desc": "Initializes the object list and origPositions.",
           "params": {
             "mgr": {
               "type": "any",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           },
           "internal": true
         },
         "postInit": {
-          "desc": "Restreint le pin path aux fichiers .prefab.json et .prefab.",
+          "desc": "Restricts the path pin to .prefab.json and .prefab files.",
           "internal": true
         },
         "createObject": {
-          "desc": "Résout le chemin (avec extensions possibles), crée le prefab (canSave = false), le met dans MissionGroup et dans modules.prefab ; en cas d'échec, objects = {'failed'}.",
+          "desc": "Resolves the path (with possible extensions), creates the prefab (canSave = false), puts it in MissionGroup and in modules.prefab; on failure, objects = {'failed'}.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Oublie les objets à l'arrêt.",
+          "desc": "Forgets the objects on stop.",
           "internal": true
         },
         "clearObjects": {
-          "desc": "Vide la liste d'objets (sans supprimer le prefab de la scène).",
+          "desc": "Empties the object list (without deleting the prefab from the scene).",
           "internal": true
         },
         "work": {
-          "desc": "Gère reset (oublie le prefab), resetVeh (restaure les positions des véhicules) et crée le prefab une seule fois par flow ; écrit created, flow et success.",
+          "desc": "Handles reset (forgets the prefab), resetVeh (restores the vehicle positions) and creates the prefab only once per flow; writes created, flow and success.",
           "internal": false
         },
         "onClientEndMission": {
-          "desc": "Hook de fin de mission : oublie les objets.",
+          "desc": "End-of-mission hook: forgets the objects.",
           "internal": true
         },
         "destroy": {
-          "desc": "Appelé à la destruction du noeud : oublie les objets.",
+          "desc": "Called when the node is destroyed: forgets the objects.",
           "internal": true
         }
       }

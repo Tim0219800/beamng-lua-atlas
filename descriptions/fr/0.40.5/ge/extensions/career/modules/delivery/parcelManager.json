@@ -1,0 +1,194 @@
+{
+  "path": "lua/ge/extensions/career/modules/delivery/parcelManager.lua",
+  "module": "Gestionnaire central des cargaisons (colis et matériaux) de la livraison en mode carrière. Il tient la liste allCargo (chaque cargo a un id, une location, une origin, une destination, des slots, un poids, des modifiers, des rewards…), déplace les cargaisons entre lieux (installation, véhicule, avatar du joueur), gère les « déplacements transitoires » (transientMoves) validés ensuite en bloc, fournit des requêtes de recherche, calcule les récompenses avec détail (retard, loaner, niveau de branche, précision de stationnement), envoie les messages de retard et nettoie les cargaisons périmées.",
+  "notes": [
+    "Un lieu (location) est une table : {type='facilityParkingspot', facId, psPath}, {type='vehicle', vehId}, {type='playerAvatar'}, {type='multi', destinations={...}} ou {type='delete'} (marque pour suppression).",
+    "sameLocation(a, b) ne compare que les clés présentes dans a : l'ordre des arguments compte (b peut avoir des clés en plus) et plante si b est nil.",
+    "M.addParcelRewards est exporté mais vaut toujours nil (la variable locale addParcelRewards n'existe pas dans le fichier).",
+    "clearTransientFlags et undoTransientCargo sont des restes : ils ne font que logguer une erreur.",
+    "Les fonctions getAllCargo* appellent triggerAllGenerators() du module generator avant de filtrer : elles peuvent donc générer de nouvelles offres comme effet de bord.",
+    "Le temps utilisé (offerExpiresAt, loadedAtTimeStamp) vient de career_modules_delivery_general.time(), pas de l'horloge réelle.",
+    "Multiplicateurs de retard (modifier timed) : à l'heure = x1 (+10 % d'argent, +50 % de réputation), en retard partiel = 0.2 à 0.8 linéaire, en retard = x0.2 (réputation -1.5x).",
+    "Dans getRewardsWithBreakdown, le bonus logistique de précision est calculé sur originalRewards['logistics'] alors que le bonus de compétence utilise la clé logistics-materials ou logistics-delivery.",
+    "Fusion de matériaux (cargo.merge) : le cargo déplacé est mis à location {type='delete'} et son slots est ajouté à l'autre ; la récompense d'argent est alors fixée à cargo.slots."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : freeroam_facilities."},
+    "addParcelRewards": {"type": "nil", "desc": "Exporté mais toujours nil (référence non définie dans le fichier)."}
+  },
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook appelé à l'activation de la carrière : mémorise les autres extensions de livraison.",
+      "internal": true
+    },
+    "addCargo": {
+      "desc": "Ajoute une cargaison à la liste globale et émet le hook onCargoGenerated(cargo) sauf si silent.",
+      "params": {
+        "cargo": {"type": "table", "desc": "Cargaison complète (id, location, origin, destination, slots…)."},
+        "silent": {"type": "boolean|nil", "desc": "true pour ne pas émettre onCargoGenerated."}
+      }
+    },
+    "changeCargoLocation": {
+      "desc": "Déplace immédiatement la cargaison vers newLocation. Ajuste le stock de matériaux de l'installation (retire à l'ancien lieu, ajoute au nouveau), horodate loadedAtTimeStamp au premier chargement dans un véhicule, et marque cargo.data.delivered = true si le nouveau lieu est la destination.",
+      "params": {
+        "cargoId": {"type": "integer", "desc": "Identifiant de la cargaison."},
+        "newLocation": {"type": "table", "desc": "Nouveau lieu (une erreur est loguée si nil ou vide)."}
+      }
+    },
+    "addTransientMoveCargo": {
+      "desc": "Enregistre un déplacement en attente pour la cargaison (cargo._transientMove). Refusé avec une erreur loguée si elle en a déjà un.",
+      "params": {
+        "cargoId": {"type": "integer", "desc": "Identifiant de la cargaison."},
+        "targetLocation": {"type": "table", "desc": "Lieu cible."}
+      }
+    },
+    "hasUncommittedTransientMoves": {
+      "desc": "Indique si des déplacements transitoires ont été ajoutés mais pas encore appliqués.",
+      "returns": [{"type": "boolean", "desc": "true si en attente."}]
+    },
+    "getTransientMoveCargo": {
+      "desc": "Liste les cargaisons qui ont un déplacement transitoire en attente.",
+      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+    },
+    "clearTransientMoveForCargo": {
+      "desc": "Annule le déplacement transitoire d'une cargaison (sans effet si aucun).",
+      "params": {"cargoId": {"type": "integer", "desc": "Identifiant de la cargaison."}}
+    },
+    "clearAllTransientMoves": {
+      "desc": "Annule tous les déplacements transitoires et remet le drapeau « non validé » à false."
+    },
+    "applyTransientMoves": {
+      "desc": "Applique les déplacements transitoires dont la cargaison est au lieu currentLocation (ou tous si currentLocation est nil), met à jour les organisations prêteuses (loaner) des véhicules cibles, fusionne les cargaisons mergeables de même matériau au même lieu, et conserve les autres déplacements pour plus tard.",
+      "params": {"currentLocation": {"type": "table|nil", "desc": "Lieu courant ; nil pour tout appliquer."}},
+      "returns": [{"type": "table", "desc": "Cargaisons déplacées."}, {"type": "table", "desc": "Cargaisons dont le déplacement reste en attente."}]
+    },
+    "getTransientMovesForTargetLocationWithCargo": {
+      "desc": "Liste les cargaisons dont le déplacement transitoire cible le lieu donné.",
+      "params": {"targetLocation": {"type": "table", "desc": "Lieu cible."}},
+      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+    },
+    "clearTransientFlags": {
+      "desc": "Obsolète : ne fait que loguer une erreur « no longer needed ».",
+      "internal": true
+    },
+    "undoTransientCargo": {
+      "desc": "Obsolète : ne fait que loguer une erreur (code d'annulation commenté, marqué TODO)."
+    },
+    "sameLocationCargo": {
+      "desc": "Compare la position actuelle d'une cargaison avec un lieu via sameLocation.",
+      "params": {
+        "cargo": {"type": "table", "desc": "Cargaison."},
+        "otherLoc": {"type": "table", "desc": "Lieu à comparer."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si identique."}]
+    },
+    "sameLocation": {
+      "desc": "Teste l'égalité de deux lieux en comparant chaque clé de a avec la même clé de b (comparaison asymétrique).",
+      "params": {
+        "a": {"type": "table", "desc": "Lieu de référence."},
+        "b": {"type": "table", "desc": "Lieu comparé (ne doit pas être nil)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si toutes les clés de a valent celles de b."}]
+    },
+    "getAllCargoCustomFilter": {
+      "desc": "Renvoie les cargaisons pour lesquelles filter(cargo, ...) est vrai, après avoir déclenché tous les générateurs.",
+      "params": {
+        "filter": {"type": "function", "desc": "fonction(cargo, ...) -> boolean."},
+        "...": {"type": "any", "desc": "Arguments supplémentaires passés à filter."}
+      },
+      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+    },
+    "getAllCargoForLocation": {
+      "desc": "Toutes les cargaisons actuellement à ce lieu (déclenche les générateurs si le lieu est une place d'installation).",
+      "params": {"loc": {"type": "table", "desc": "Lieu."}},
+      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+    },
+    "getAllCargoForLocationUnexpired": {
+      "desc": "Comme getAllCargoForLocation mais seulement les cargaisons dont l'offre n'a pas expiré (offerExpiresAt > temps de livraison).",
+      "params": {"loc": {"type": "table", "desc": "Lieu."}},
+      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+    },
+    "getAllCargoForLocationUnexpiredUndelivered": {
+      "desc": "Cargaisons à ce lieu, non expirées, qui ne sont pas déjà à leur destination et générées au plus tard à timeGenerated.",
+      "params": {
+        "loc": {"type": "table", "desc": "Lieu."},
+        "timeExpire": {"type": "number|nil", "desc": "Seuil d'expiration ; défaut : temps courant."},
+        "timeGenerated": {"type": "number|nil", "desc": "Horodatage maximal de génération ; défaut : infini."}
+      },
+      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+    },
+    "getAllCargoForFacilityUnexpiredUndelivered": {
+      "desc": "Même filtre mais sur toutes les places d'une installation (facId).",
+      "params": {
+        "facId": {"type": "string", "desc": "Identifiant de l'installation."},
+        "timeExpire": {"type": "number|nil", "desc": "Seuil d'expiration."},
+        "timeGenerated": {"type": "number|nil", "desc": "Horodatage maximal de génération."}
+      },
+      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+    },
+    "getAllCargoForDestinationFacilityStillAtOriginUnexpired": {
+      "desc": "Cargaisons non expirées encore à leur origine et dont la destination est l'installation facId.",
+      "params": {"facId": {"type": "string", "desc": "Installation de destination."}},
+      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+    },
+    "getAllCargoAtFacilityUnexpired": {
+      "desc": "Cargaisons non expirées encore à leur origine, située dans l'installation facId.",
+      "params": {"facId": {"type": "string", "desc": "Installation d'origine."}},
+      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+    },
+    "getAllCargoInVehicles": {
+      "desc": "Cargaisons actuellement dans un véhicule, et optionnellement celles ayant un déplacement transitoire en attente.",
+      "params": {"includeTransient": {"type": "boolean|nil", "desc": "Inclure les cargaisons avec _transientMove."}},
+      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+    },
+    "getLocationLabelShort": {
+      "desc": "Libellé court d'un lieu : nom traduit de l'installation, « Current Vehicle (id) » / « Other Vehicle (id) », « Player Avatar », « N possible locations » (ou le libellé de l'unique destination), « Unknown ». Les textes véhicule/avatar ne sont pas traduits.",
+      "params": {"loc": {"type": "table", "desc": "Lieu."}},
+      "returns": [{"type": "string", "desc": "Libellé."}]
+    },
+    "getLocationLabelLong": {
+      "desc": "Libellé long : pour une place d'installation, « Installation - nom de la place » si la place a un champ personnalisé name ; sinon comme le libellé court.",
+      "params": {"loc": {"type": "table", "desc": "Lieu."}},
+      "returns": [{"type": "string", "desc": "Libellé."}]
+    },
+    "getCargoById": {
+      "desc": "Cherche une cargaison par id.",
+      "params": {"cargoId": {"type": "integer", "desc": "Identifiant."}},
+      "returns": [{"type": "table|nil", "desc": "Cargaison ou nil."}]
+    },
+    "getRewardsWithBreakdown": {
+      "desc": "Calcule les récompenses d'une cargaison livrée avec le détail : effet du modificateur timed (à l'heure, retardée, en retard), part des organisations prêteuses de véhicule (loaner), multiplicateur du niveau de la branche logistics, bonus ou pénalité de précision de stationnement. Peut débloquer le succès ON_SCHEDULE.",
+      "params": {"cargo": {"type": "table", "desc": "Cargaison (rewards, modifiers, loadedAtTimeStamp, organization, destination, location…)."}},
+      "returns": [
+        {"type": "table", "desc": "originalRewards : copie des récompenses de base."},
+        {"type": "table", "desc": "breakdown : liste d'éléments {label, rewards, simpleBreakdownType}."},
+        {"type": "table", "desc": "adjustedRewards : récompenses finales (base + somme des éléments)."}
+      ]
+    },
+    "addParcelRewardsSummary": {
+      "desc": "Calcule originalRewards/breakdown/adjustedRewards de chaque cargaison, regroupe par groupId et heure de chargement, formate chaque groupe via cargoScreen.formatCargoGroup et trie par plus petit id.",
+      "params": {"cargo": {"type": "table", "desc": "Liste de cargaisons au même lieu actuel."}},
+      "returns": [{"type": "table|nil", "desc": "Liste de groupes formatés pour l'UI (nil si la liste est vide)."}]
+    },
+    "cleanUpCargo": {
+      "desc": "Supprime les cargaisons de lieu « delete » et celles restées à leur origine, expirées depuis plus de 120 s et sans déplacement transitoire. Remet le minuteur de nettoyage à zéro."
+    },
+    "onUpdate": {
+      "desc": "Hook par image : envoie les messages UI « retardé » et « en retard » pour les cargaisons timed dans les véhicules, met à jour le tasklist chaque seconde, relance le tasklist et le nettoyage si des lieux ont changé, et nettoie toutes les 10 s. Inactif hors mode livraison.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onTrailerAttached": {
+      "desc": "Hook appelé quand une remorque est attelée : recalcule les organisations prêteuses des cargaisons situées dans des véhicules.",
+      "params": {
+        "objId1": {"type": "integer", "desc": "Premier véhicule."},
+        "objId2": {"type": "integer", "desc": "Second véhicule."}
+      },
+      "internal": true
+    }
+  }
+}

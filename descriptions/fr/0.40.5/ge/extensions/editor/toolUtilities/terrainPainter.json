@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/terrainPainter.lua",
+  "module": "Peint le matériau de terrain sous une spline (route) et permet d'annuler. Calcule l'emprise de la route (bord réel du tablier pour les routes mesh, sinon ligne centrale et largeurs par station), pousse ce contour de group.paintMargin, remplit le polygone par lignes de balayage et mémorise les matériaux d'origine dans le groupe pour pouvoir les restaurer. Passe par editor_terrainEditor (bloc de terrain et terrain editor).",
+  "notes": [
+    "Constantes : matériau par défaut = indice 1 ; marge de 2 m ajoutée à la boîte englobante de peinture.",
+    "paint ne fait rien si le groupe porte déjà des données peintes (paintedDataVals non vide), a moins de 2 nœuds ou moins de 2 divPoints : il faut revert avant de repeindre.",
+    "paintPolygon ne fait rien non plus si store.paintedDataVals est déjà rempli.",
+    "Le groupe doit avoir paintedDataX, paintedDataY et paintedDataVals (tables) : revert et paint les indexent sans test pour les tailler, seul paintedDataVals est testé avant.",
+    "revert restaure en ordre inverse, pour qu'une case peinte deux fois retrouve le matériau antérieur à la première peinture."
+  ],
+  "functions": {
+    "paint": {
+      "desc": "Peint la spline donnée : calcule d'abord son emprise puis la peint, avec le matériau group.paintMaterialIdx. Stocke coordonnées, anciennes valeurs et boîte dans le groupe.",
+      "params": {
+        "group": {"type": "table", "desc": "Groupe de spline (nodes, divPoints, binormals, divWidths, meshEdgeL/R, paintMargin, paintMaterialIdx, paintedData*)."},
+        "runs": {"type": "table|nil", "desc": "Paires d'indices de divPoints { i0, i1 } : seulement ces tronçons, dans un seul enregistrement. Par défaut toute la route."}
+      },
+      "returns": []
+    },
+    "paintPolygon": {
+      "desc": "Peint un polygone fermé en XY monde avec le matériau de terrain donné, en enregistrant dans `store` ce qui s'y trouvait pour pouvoir le remettre. Met à jour la grille du terrain (updateGridMaterials, updateGrid).",
+      "params": {
+        "store": {"type": "table", "desc": "Table qui reçoit paintedDataX, paintedDataY, paintedDataVals et les bornes paintedDataBox*."},
+        "poly": {"type": "table", "desc": "Liste de points (x, y) du polygone, 3 au moins."},
+        "materialIdx": {"type": "integer|nil", "desc": "Indice du matériau de terrain (1 par défaut)."},
+        "skip": {"type": "function|nil", "desc": "skip(x, y) interrogé pour chaque point ; si vrai le sol est laissé tel quel."}
+      },
+      "returns": []
+    },
+    "revert": {
+      "desc": "Remet sous la peinture l'état d'avant : restaure les indices de matériau, met à jour la grille, vide les données peintes du groupe.",
+      "params": {"group": {"type": "table", "desc": "Groupe peint."}},
+      "returns": []
+    },
+    "revertAll": {
+      "desc": "Annule la peinture du terrain pour tous les groupes.",
+      "params": {"groups": {"type": "table", "desc": "Liste de groupes."}},
+      "returns": []
+    }
+  }
+}

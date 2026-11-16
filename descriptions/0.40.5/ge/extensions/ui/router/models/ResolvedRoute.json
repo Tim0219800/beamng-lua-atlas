@@ -1,96 +1,218 @@
 {
   "path": "lua/ge/extensions/ui/router/models/ResolvedRoute.lua",
-  "module": "Construit l'entrée de navigation canonique (NavigationEntry) utilisée partout dans le routeur : {request, resolved, origin, toRoute, fromRoute, routeNode}. Une fois créée, l'entrée est à traiter comme immuable. Fournit aussi la conversion en forme stockable/sérialisable (sans fonctions) et sa validation.",
+  "module": "Builds the canonical navigation entry (NavigationEntry) used everywhere in the router: {request, resolved, origin, toRoute, fromRoute, routeNode}. Once created, the entry is to be treated as immutable. Also provides the conversion to a storable/serializable form (without functions) and its validation.",
   "notes": [
-    "request = {name, fullRoute, params, query, options} ; resolved = copie de la configuration de route sans children, onEnter, onMount, onLeave ni fonctions, plus name, params, query et les extras (breadcrumbs, scope…). resolved.ui reçoit par défaut uiTypes {\"angular\", \"vue\"} et uiTypesFilter any.",
-    "request.params contient seulement les vrais paramètres d'écran ; les clés de contrôle du routeur (preferredScope, decorator, showDecorator…) restent dans request.options pour que reload/back puissent les retrouver.",
-    "routeNode référence la configuration de route d'origine (avec ses hooks) ; il n'est ni sérialisé ni restauré (nil après fromStorable).",
-    "validate exige request.name (chaîne), resolved.name (chaîne), resolved.screenId (chaîne non vide) et resolved.ui.uiTypes (tableau).",
-    "Alias dépréciés conservés : createNew (ne fait rien), create, toMinimal."
+    "request = {name, fullRoute, params, query, options}; resolved = copy of the route configuration without children, onEnter, onMount, onLeave or functions, plus name, params, query and the extras (breadcrumbs, scope...). resolved.ui defaults to uiTypes {\"angular\", \"vue\"} and uiTypesFilter any.",
+    "request.params contains only the real screen parameters; the router's control keys (preferredScope, decorator, showDecorator...) stay in request.options so that reload/back can find them.",
+    "routeNode references the original route configuration (with its hooks); it is neither serialized nor restored (nil after fromStorable).",
+    "validate requires request.name (string), resolved.name (string), resolved.screenId (non-empty string) and resolved.ui.uiTypes (array).",
+    "Deprecated aliases kept: createNew (does nothing), create, toMinimal."
   ],
   "functions": {
     "createRequest": {
-      "desc": "Crée la requête de navigation.",
+      "desc": "Creates the navigation request.",
       "params": {
-        "name": {"type": "string", "desc": "Nom canonique de la route."},
-        "params": {"type": "table|nil", "desc": "Paramètres ({} par défaut)."},
-        "query": {"type": "table|nil", "desc": "Paramètres de requête ({} par défaut)."},
-        "options": {"type": "table|nil", "desc": "Options de navigation ({} par défaut)."},
-        "fullRoute": {"type": "string|nil", "desc": "Référence complète base[:scope] ; sinon le nom canonique."}
+        "name": {
+          "type": "string",
+          "desc": "Canonical route name."
+        },
+        "params": {
+          "type": "table|nil",
+          "desc": "Parameters ({} by default)."
+        },
+        "query": {
+          "type": "table|nil",
+          "desc": "Query parameters ({} by default)."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "Navigation options ({} by default)."
+        },
+        "fullRoute": {
+          "type": "string|nil",
+          "desc": "Full reference base[:scope]; otherwise the canonical name."
+        }
       },
-      "returns": [{"type": "table", "desc": "{name, fullRoute, params, query, options}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{name, fullRoute, params, query, options}."
+        }
+      ],
       "internal": false
     },
     "createResolved": {
-      "desc": "Construit la route résolue à partir de la configuration de route, de la requête et d'extras (copie sans hooks ni fonctions).",
+      "desc": "Builds the resolved route from the route configuration, the request and extras (copy without hooks or functions).",
       "params": {
-        "routeConfig": {"type": "table|nil", "desc": "Configuration de route."},
-        "request": {"type": "table", "desc": "Requête (name, params, query)."},
-        "extras": {"type": "table|nil", "desc": "Champs ajoutés dans resolved (breadcrumbs, scope…)."}
+        "routeConfig": {
+          "type": "table|nil",
+          "desc": "Route configuration."
+        },
+        "request": {
+          "type": "table",
+          "desc": "Request (name, params, query)."
+        },
+        "extras": {
+          "type": "table|nil",
+          "desc": "Fields added into resolved (breadcrumbs, scope...)."
+        }
       },
-      "returns": [{"type": "table", "desc": "Route résolue."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Resolved route."
+        }
+      ],
       "internal": false
     },
     "toCompatRoute": {
-      "desc": "Vue réduite de compatibilité d'une route résolue.",
-      "params": {"resolved": {"type": "table|nil", "desc": "Route résolue."}},
-      "returns": [{"type": "table|nil", "desc": "{name, screenId (ou name), params, meta} ou nil."}],
+      "desc": "Reduced compatibility view of a resolved route.",
+      "params": {
+        "resolved": {
+          "type": "table|nil",
+          "desc": "Resolved route."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{name, screenId (or name), params, meta} or nil."
+        }
+      ],
       "internal": false
     },
     "createEntry": {
-      "desc": "Crée l'entrée de navigation complète, avec origin = {route = nom de la requête précédente} si une entrée précédente existe.",
+      "desc": "Creates the full navigation entry, with origin = {route = name of the previous request} if a previous entry exists.",
       "params": {
-        "routeConfig": {"type": "table", "desc": "Configuration de route (devient routeNode)."},
-        "request": {"type": "table", "desc": "Requête."},
-        "extras": {"type": "table|nil", "desc": "Extras pour resolved."},
-        "previousEntry": {"type": "table|nil", "desc": "Entrée précédente."}
+        "routeConfig": {
+          "type": "table",
+          "desc": "Route configuration (becomes routeNode)."
+        },
+        "request": {
+          "type": "table",
+          "desc": "Request."
+        },
+        "extras": {
+          "type": "table|nil",
+          "desc": "Extras for resolved."
+        },
+        "previousEntry": {
+          "type": "table|nil",
+          "desc": "Previous entry."
+        }
       },
-      "returns": [{"type": "table", "desc": "{request, resolved, origin, toRoute, fromRoute, routeNode}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{request, resolved, origin, toRoute, fromRoute, routeNode}."
+        }
+      ],
       "internal": false
     },
     "toStorable": {
-      "desc": "Copie l'entrée en retirant les fonctions de resolved et le routeNode, pour sérialisation.",
-      "params": {"entry": {"type": "table|nil", "desc": "Entrée de navigation."}},
-      "returns": [{"type": "table|nil", "desc": "{request, resolved, origin, toRoute, fromRoute}."}],
+      "desc": "Copies the entry removing the functions from resolved and the routeNode, for serialization.",
+      "params": {
+        "entry": {
+          "type": "table|nil",
+          "desc": "Navigation entry."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{request, resolved, origin, toRoute, fromRoute}."
+        }
+      ],
       "internal": false
     },
     "fromStorable": {
-      "desc": "Reconstruit une entrée à partir de données stockées (routeNode = nil ; toRoute recalculé si absent).",
-      "params": {"data": {"type": "table|nil", "desc": "Données produites par toStorable."}},
-      "returns": [{"type": "table|nil", "desc": "Entrée de navigation."}],
+      "desc": "Rebuilds an entry from stored data (routeNode = nil; toRoute recomputed if absent).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Data produced by toStorable."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Navigation entry."
+        }
+      ],
       "internal": false
     },
     "validate": {
-      "desc": "Valide la structure d'une entrée de navigation.",
-      "params": {"entry": {"type": "table|nil", "desc": "Entrée à valider."}},
+      "desc": "Validates the structure of a navigation entry.",
+      "params": {
+        "entry": {
+          "type": "table|nil",
+          "desc": "Entry to validate."
+        }
+      },
       "returns": [
-        {"type": "boolean", "desc": "true si valide."},
-        {"type": "string[]", "desc": "Liste des erreurs."}
+        {
+          "type": "boolean",
+          "desc": "true if valid."
+        },
+        {
+          "type": "string[]",
+          "desc": "List of errors."
+        }
       ],
       "internal": false
     },
     "createNew": {
-      "desc": "Alias déprécié, ne fait rien.",
+      "desc": "Deprecated alias, does nothing.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "create": {
-      "desc": "Alias déprécié : crée une requête puis la route résolue (moduleName ajouté en extra).",
+      "desc": "Deprecated alias: creates a request then the resolved route (moduleName added as extra).",
       "params": {
-        "config": {"type": "table", "desc": "Configuration de route."},
-        "name": {"type": "string", "desc": "Nom de route."},
-        "params": {"type": "table|nil", "desc": "Paramètres."},
-        "query": {"type": "table|nil", "desc": "Requête."},
-        "moduleName": {"type": "string|nil", "desc": "Nom du module."}
+        "config": {
+          "type": "table",
+          "desc": "Route configuration."
+        },
+        "name": {
+          "type": "string",
+          "desc": "Road name."
+        },
+        "params": {
+          "type": "table|nil",
+          "desc": "Parameters."
+        },
+        "query": {
+          "type": "table|nil",
+          "desc": "Request."
+        },
+        "moduleName": {
+          "type": "string|nil",
+          "desc": "Module name."
+        }
       },
-      "returns": [{"type": "table", "desc": "Route résolue."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Resolved route."
+        }
+      ],
       "internal": false
     },
     "toMinimal": {
-      "desc": "Alias déprécié : vue minimale {name, params, query}.",
-      "params": {"route": {"type": "table", "desc": "Route."}},
-      "returns": [{"type": "table", "desc": "{name, params, query}."}],
+      "desc": "Deprecated alias: minimal view {name, params, query}.",
+      "params": {
+        "route": {
+          "type": "table",
+          "desc": "Road."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{name, params, query}."
+        }
+      ],
       "internal": false
     }
   }

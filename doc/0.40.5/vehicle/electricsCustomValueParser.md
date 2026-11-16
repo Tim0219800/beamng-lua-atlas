@@ -1,68 +1,68 @@
 # `electricsCustomValueParser`
 
-*Fichier : `lua/vehicle/electricsCustomValueParser.lua` · VM : Véhicule · 237 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/electricsCustomValueParser.lua` · VM: Vehicle · 237 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("electricsCustomValueParser")`
+**Access:** `require("electricsCustomValueParser")`
 
-Compile et exécute les valeurs électriques personnalisées déclarées dans le jbeam (electrics.customValues : champs electricsName, electricsFunction, electricsDefault). Chaque expression est évaluée chaque frame dans un environnement bac à sable (fonctions math, round, clamp, smoothstep, case, pwm…, et une copie de `electrics`) puis le résultat est recopié dans electrics.values. Utilisé uniquement par electrics.lua.
+Compiles and runs the custom electrical values declared in the jbeam (electrics.customValues: fields electricsName, electricsFunction, electricsDefault). Each expression is evaluated every frame in a sandboxed environment (math functions, round, clamp, smoothstep, case, pwm..., and a copy of `electrics`) then the result is copied back into electrics.values. Used only by electrics.lua.
 
-## Exemple
+## Example
 
 ```lua
--- jbeam (section electrics.customValues)
+-- jbeam (electrics.customValues section)
 -- ["electricsName", "electricsFunction", "electricsDefault"],
 -- ["myBlink", "pwm(1, 2, 0.5)", 0],
 -- ["throttleHalf", "clamp(electrics.throttle * 0.5, 0, 1)", 0]
 ```
 
-## Remarques
+## Notes
 
-- Une expression est de la forme `electrics.<nom> = <expression>` : les affectations (signe = isolé) sont refusées dans l'expression elle-même.
-- Variables disponibles dans l'expression : electrics (copie des valeurs courantes), dt, fonctions de math.*, dump, dumpz, round, square, clamp, smoothstep, smootherstep, smoothmin, sign, case, pwm, logValue.
-- case(selector, ...) : avec un booléen, agit comme un ternaire (true -> 1er argument, false -> 2e) ; avec un nombre n, renvoie le (n)ème argument (indexé depuis 1 après floor, avec n=0 renvoyant le dernier faute d'index 0), ou le dernier argument si hors plage.
-- pwm(input, frequency, dutyCycle, timeOffset) : renvoie input quand une sinusoïde (fréquence en Hz) normalisée dépasse 1 - dutyCycle, sinon 0. Le temps pwm repart à 0 toutes les 3600 s.
-- logValue(value, label) affiche la valeur et la renvoie (aide au débogage).
-- Bug/anomalie : `pwm` est déclarée comme fonction globale (function pwm sans local), elle fuit dans l'environnement global du VM véhicule.
-- Si la compilation du bloc complet échoue, updateCustomElectricsFunction reste nil et M.updateGFX lèvera une erreur à chaque frame (non protégé).
-- L'expression 'electricsFunction' (valeur littérale en-tête de table jbeam mal fusionné) est ignorée volontairement.
+- An expression has the form `electrics.<name> = <expression>`: assignments (isolated = sign) are refused inside the expression itself.
+- Variables available in the expression: electrics (copy of the current values), dt, math.* functions, dump, dumpz, round, square, clamp, smoothstep, smootherstep, smoothmin, sign, case, pwm, logValue.
+- case(selector, ...): with a boolean, acts as a ternary (true -> 1st argument, false -> 2nd); with a number n, returns the (n)th argument (1-based after floor, with n=0 returning the last one for lack of index 0), or the last argument if out of range.
+- pwm(input, frequency, dutyCycle, timeOffset): returns input when a normalized sine wave (frequency in Hz) exceeds 1 - dutyCycle, otherwise 0. The pwm time restarts at 0 every 3600 s.
+- logValue(value, label) prints the value and returns it (debugging aid).
+- Bug/anomaly: `pwm` is declared as a global function (function pwm without local), it leaks into the global environment of the vehicle VM.
+- If compilation of the whole block fails, updateCustomElectricsFunction stays nil and M.updateGFX will raise an error every frame (unprotected).
+- The 'electricsFunction' expression (literal value of a badly merged jbeam table header) is deliberately ignored.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `electricsCustomValueParser.compileCustomValueUpdates(customValueData)` | Construit l'environnement bac à sable, analyse chaque valeur custom, initialise electrics.values avec electricsDefault et compile une fonction unique exécutant toutes les affectations. *(interne)* | 165 |
-| `electricsCustomValueParser.resetCustomValues()` | Remet dans electrics.values les valeurs electricsDefault de toutes les valeurs custom (appelé au reset). *(interne)* | 117 |
-| `electricsCustomValueParser.updateGFX(dt)` | Copie electrics.values dans l'environnement, exécute la fonction compilée puis recopie dans electrics.values les clés personnalisées. Appelé par electrics.updateGFXSecondStep. *(interne)* | 106 |
+| `electricsCustomValueParser.compileCustomValueUpdates(customValueData)` | Builds the sandboxed environment, parses each custom value, initializes electrics.values with electricsDefault and compiles a single function running all the assignments. *(internal)* | 165 |
+| `electricsCustomValueParser.resetCustomValues()` | Puts back into electrics.values the electricsDefault values of all custom values (called at reset). *(internal)* | 117 |
+| `electricsCustomValueParser.updateGFX(dt)` | Copies electrics.values into the environment, runs the compiled function then copies the custom keys back into electrics.values. Called by electrics.updateGFXSecondStep. *(internal)* | 106 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `electricsCustomValueParser.compileCustomValueUpdates(customValueData)`
 
-Construit l'environnement bac à sable, analyse chaque valeur custom, initialise electrics.values avec electricsDefault et compile une fonction unique exécutant toutes les affectations.
+Builds the sandboxed environment, parses each custom value, initializes electrics.values with electricsDefault and compiles a single function running all the assignments.
 
-- `customValueData` (*table<integer, table>*) : Liste d'entrées {electricsName, electricsFunction?, electricsDefault?}.
-- **renvoie** : nil Rien (nil aussi si la compilation échoue, erreur journalisée).
+- `customValueData` (*table<integer, table>*) : List of entries {electricsName, electricsFunction?, electricsDefault?}.
+- **returns**: nil Nothing (nil also if compilation fails, error logged).
 
 #### `electricsCustomValueParser.updateGFX(dt)`
 
-Copie electrics.values dans l'environnement, exécute la fonction compilée puis recopie dans electrics.values les clés personnalisées. Appelé par electrics.updateGFXSecondStep.
+Copies electrics.values into the environment, runs the compiled function then copies the custom keys back into electrics.values. Called by electrics.updateGFXSecondStep.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Classe `customElectricsEnv`
+## Class `customElectricsEnv`
 
-Objet `customElectricsEnv` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `customElectricsEnv` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `customElectricsEnv.case(selector, ...)` | function used as a case selector, input can be both int and bool as the first argument, any number of arguments after that<br>in case it's a bool, it works like a ternary if, returning the second param if true, the third if false<br>if the selector is an int n, it simply returns the nth+1 param it was given, if n > #params it returns the last given param | 20 |
 | `customElectricsEnv.pwm(input, frequency, dutyCycle, timeOffset)` |  | 36 |
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
 | `pwm(input, frequency, dutyCycle, timeOffset)` |  | 36 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/electricsCustomValueParser.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/electricsCustomValueParser.lua`.*

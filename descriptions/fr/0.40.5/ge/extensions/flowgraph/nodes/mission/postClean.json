@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/mission/postClean.lua",
+  "module": "Noeud flowgraph 'Mission Post Clean' (categorie once_p_duration). Nettoie apres une mission : si keepVeh, garde le vehicule vehId (ou le vehicule joueur), supprime le vehicule joueur mis de cote (stashed) si ce n'est pas l'original, le degele et peut le recuperer sur place (recoverInPlace, avec reparation sauf en mode carriere avec vehicule d'inventaire). resetStartPos demande de replacer le vehicule d'origine a son point de depart (mission.restoreStartingInfoSetup). Si la mission utilisait le trafic precedent, garde l'etat du trafic.",
+  "notes": [
+    "Plante si keepVeh est vrai et qu'aucun vehicule n'est trouve (veh nil)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "workOnce": {
+          "desc": "Execute le nettoyage une seule fois (voir description du module).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

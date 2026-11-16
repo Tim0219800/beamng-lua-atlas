@@ -1,143 +1,143 @@
 # `render_skiaIcons`
 
-*Fichier : `lua/ge/extensions/render/skiaIcons.lua` · VM : Game Engine (GE) · 617 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/render/skiaIcons.lua` · VM: Game Engine (GE) · 617 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `render_skiaIcons` : `extensions.load("render_skiaIcons")`, puis la globale `render_skiaIcons`
+**Access:** extension `render_skiaIcons`: `extensions.load("render_skiaIcons")`, then the global `render_skiaIcons`
 
-Icônes 3D (billboards Skia tournés vers la caméra) pour marquer des positions du monde : missions, stations, marqueurs de course. Chaque icône est dessinée avec la police bngIcons en quatre couches (contour de la forme, remplissage, liseré du motif, motif). Les icônes de même apparence partagent un pool de billboards : en libérer une la range pour la prochaine du même style au lieu de refaire une texture. Un moddeur appelle getIcon, puis update à chaque image, et release à la fin.
+3D icons (Skia billboards facing the camera) to mark world positions: missions, stations, race markers. Each icon is drawn with the bngIcons font in four layers (shape outline, fill, pattern edge, pattern). Icons with the same appearance share a billboard pool: releasing one puts it away for the next one of the same style instead of rebuilding a texture. A modder calls getIcon, then update every frame, and release at the end.
 
-## Exemple
+## Example
 
 ```lua
-local icon = render_skiaIcons.getIcon('mission', pos)  -- preset d'un fichier *.skiaIcon.json
+local icon = render_skiaIcons.getIcon('mission', pos)  -- preset from a *.skiaIcon.json file
 local icon2 = render_skiaIcons.getIcon({shape = 'circle', motive = 'fuelPump', color = 'blue'})
 icon2:setVisible(true)
--- à chaque image (onPreRender) :
+-- every frame (onPreRender):
 icon2:update(pos, render_skiaIcons.screenBoundedScale(pos, 0.8, 0.03, 0.12), dt)
--- à la fin :
+-- at the end:
 icon2:release()
 ```
 
-## Remarques
+## Notes
 
-- Spec d'icône (tous champs facultatifs) : shape, motive, text (court libellé comme '3' ou '9+' qui remplace le motif), motiveScale, motiveOffset, outline (en unités de police par 24 ; défaut 1.5), color, borderColor, motiveColor, et preset (nom d'une entrée des fichiers /art/skiaIcons/*.skiaIcon.json, clé 'presets'). Les noms de couleur sont résolus par la table de iconMarkerConfig.json, sinon la valeur est prise telle quelle.
-- Le module lit au chargement ui/ui-vue/src/assets/fonts/bngIcons/iconMarkerConfig.json et bngIcons.js ; si la config est illisible, le chargement de l'extension échoue (error).
-- Le moteur n'offre pas d'alpha sur les billboards : le fondu est simulé en réduisant la taille jusqu'à zéro (sous 0.005 m l'icône est cachée). La taille est une hauteur en mètres.
-- Le pool garde au plus 192 billboards libérés ; au-delà ils sont détruits.
-- Un billboard n'est construit qu'au premier update visible, ce qui évite de coûter une texture aux marqueurs jamais vus.
-- Après release() l'icône est 'morte' : demander une nouvelle icône avec getIcon.
-- Le renderer est un objet du scenetree nommé 'skiaIconBillboards' ; il disparaît avec la scène (onClientEndMission invalide tous les identifiants).
-- Le code de Icon:update a pour signature réelle (pos, scale, dt) ; la page extraite affiche par erreur (scale, dt) car la méthode est déclarée avec ':'.
-- Charge l'extension core_skiaTemplate à la demande.
+- Icon spec (all fields optional): shape, motive, text (short label like '3' or '9+' that replaces the motive), motiveScale, motiveOffset, outline (in font units per 24; default 1.5), color, borderColor, motiveColor, and preset (name of an entry of the /art/skiaIcons/*.skiaIcon.json files, key 'presets'). Color names are resolved by the iconMarkerConfig.json table, otherwise the value is taken as is.
+- On load, the module reads ui/ui-vue/src/assets/fonts/bngIcons/iconMarkerConfig.json and bngIcons.js; if the config is unreadable, loading the extension fails (error).
+- The engine offers no alpha on billboards: the fade is simulated by shrinking the size down to zero (below 0.005 m the icon is hidden). The size is a height in meters.
+- The pool keeps at most 192 released billboards; beyond that they are destroyed.
+- A billboard is only built on the first visible update, which avoids costing a texture for markers that are never seen.
+- After release() the icon is "dead": request a new icon with getIcon.
+- The renderer is a scenetree object named 'skiaIconBillboards'; it disappears with the scene (onClientEndMission invalidates all identifiers).
+- The code of Icon:update has the real signature (pos, scale, dt); the extracted page wrongly shows (scale, dt) because the method is declared with ':'.
+- Loads the core_skiaTemplate extension on demand.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `render_skiaIcons.exploreFolder(which)` | Ouvre un de ces dossiers dans l'explorateur de fichiers du système (confort de développement). | 568 |
-| `render_skiaIcons.getColors()` | Renvoie la table des couleurs nommées de la config d'icônes. | 604 |
-| `render_skiaIcons.getFolders()` | Dossiers lus par le système : presets (/art/skiaIcons) et font. | 562 |
-| `render_skiaIcons.getIcon(spec, pos)` | Renvoie une icône pour un nom de preset, une table de spec, ou un preset avec surcharges (spec.preset plus champs). Si le style ne peut pas être construit, renvoie une icône déjà morte (isLive faux). | 476 |
-| `render_skiaIcons.getMotives()` | Liste triée de tous les noms de motifs (glyphes de bngIcons). | 553 |
-| `render_skiaIcons.getPresets()` | Renvoie la table des presets (nom -> spec) chargée depuis /art/skiaIcons/*.skiaIcon.json (champ 'presets'). | 174 |
-| `render_skiaIcons.getShapes()` | Liste triée des noms de formes disponibles. | 605 |
-| `render_skiaIcons.getStats()` | Statistiques du pool pour le débogage. | 575 |
-| `render_skiaIcons.onClientEndMission()` | Hook de fin de mission : la scène et son renderer sont perdus, tous les identifiants de billboards sont invalidés et les pools vidés. *(interne)* *(hook)* | 544 |
-| `render_skiaIcons.onExtensionLoaded()` | Hook appelé au chargement de l'extension : supprime un renderer 'skiaIconBillboards' laissé par une VM Lua précédente. *(interne)* *(hook)* | 589 |
-| `render_skiaIcons.onExtensionUnloaded()` | Hook appelé au déchargement : identique à reload(). *(interne)* *(hook)* | 525 |
-| `render_skiaIcons.reload()` | Relit la config partagée, la table de glyphes et les presets depuis le disque. Supprime le renderer (toutes les textures) ; les icônes vivantes se reconstruisent à leur prochain update. | 525 |
-| `render_skiaIcons.reloadPresets()` | Oublie les presets chargés pour que le prochain getIcon relise les fichiers *.skiaIcon.json. Plus léger que reload : les textures déjà construites sont conservées. | 539 |
-| `render_skiaIcons.screenBoundedScale(pos, worldSize, minScreen, maxScreen)` | Calcule la hauteur monde d'une icône qui se comporte comme un objet réel en distance moyenne mais reste bornée à l'écran : jamais sous minScreen (lisible de loin), jamais au-dessus de maxScreen (n'envahit pas la vue de près). Bornes exprimées en fraction de la hauteur de l'écran ; des bornes égales donnent une taille constante à l'écran. Utilise la caméra core_camera ; sans caméra, renvoie worldSize. | 508 |
+| `render_skiaIcons.exploreFolder(which)` | Opens one of these folders in the system file explorer (development convenience). | 568 |
+| `render_skiaIcons.getColors()` | Returns the table of named colors of the icon config. | 604 |
+| `render_skiaIcons.getFolders()` | Folders read by the system: presets (/art/skiaIcons) and font. | 562 |
+| `render_skiaIcons.getIcon(spec, pos)` | Returns an icon for a preset name, a spec table, or a preset with overrides (spec.preset plus fields). If the style cannot be built, returns an already dead icon (isLive false). | 476 |
+| `render_skiaIcons.getMotives()` | Sorted list of all motive names (bngIcons glyphs). | 553 |
+| `render_skiaIcons.getPresets()` | Returns the presets table (name -> spec) loaded from /art/skiaIcons/*.skiaIcon.json ('presets' field). | 174 |
+| `render_skiaIcons.getShapes()` | Sorted list of available shape names. | 605 |
+| `render_skiaIcons.getStats()` | Pool statistics for debugging. | 575 |
+| `render_skiaIcons.onClientEndMission()` | End-of-mission hook: the scene and its renderer are lost, all billboard identifiers are invalidated and the pools emptied. *(internal)* *(hook)* | 544 |
+| `render_skiaIcons.onExtensionLoaded()` | Hook called when the extension loads: deletes a 'skiaIconBillboards' renderer left by a previous Lua VM. *(internal)* *(hook)* | 589 |
+| `render_skiaIcons.onExtensionUnloaded()` | Hook called on unload: identical to reload(). *(internal)* *(hook)* | 525 |
+| `render_skiaIcons.reload()` | Re-reads the shared config, the glyph table and the presets from disk. Deletes the renderer (all textures); live icons rebuild on their next update. | 525 |
+| `render_skiaIcons.reloadPresets()` | Forgets the loaded presets so that the next getIcon re-reads the *.skiaIcon.json files. Lighter than reload: already built textures are kept. | 539 |
+| `render_skiaIcons.screenBoundedScale(pos, worldSize, minScreen, maxScreen)` | Computes the world height of an icon that behaves like a real object at medium distance but stays bounded on screen: never below minScreen (readable from afar), never above maxScreen (does not flood the view up close). Bounds are expressed as a fraction of the screen height; equal bounds give a constant on-screen size. Uses the core_camera camera; without a camera, returns worldSize. | 508 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `render_skiaIcons.exploreFolder(which)`
 
-Ouvre un de ces dossiers dans l'explorateur de fichiers du système (confort de développement).
+Opens one of these folders in the system file explorer (development convenience).
 
-- `which` (*string*) : 'presets', 'font', ou un chemin.
-- **renvoie** : string|nil Chemin ouvert, ou nil si la plateforme ne sait pas l'ouvrir.
+- `which` (*string*) : 'presets', 'font', or a path.
+- **returns**: string|nil Opened path, or nil if the platform cannot open it.
 
 #### `render_skiaIcons.getColors()`
 
-Renvoie la table des couleurs nommées de la config d'icônes.
+Returns the table of named colors of the icon config.
 
-- **renvoie** : table<string, string> Nom de couleur vers valeur (format de la config).
+- **returns**: table<string, string> Color name to value (config format).
 
 #### `render_skiaIcons.getFolders()`
 
-Dossiers lus par le système : presets (/art/skiaIcons) et font.
+Folders read by the system: presets (/art/skiaIcons) and font.
 
-- **renvoie** : table<string, string> {presets = ..., font = ...}.
+- **returns**: table<string, string> {presets = ..., font = ...}.
 
 #### `render_skiaIcons.getIcon(spec, pos)`
 
-Renvoie une icône pour un nom de preset, une table de spec, ou un preset avec surcharges (spec.preset plus champs). Si le style ne peut pas être construit, renvoie une icône déjà morte (isLive faux).
+Returns an icon for a preset name, a spec table, or a preset with overrides (spec.preset plus fields). If the style cannot be built, returns an already dead icon (isLive false).
 
-- `spec` (*string|table*) : Nom de preset ou table de spec (voir notes).
-- `pos` (*vec3|nil*) : Position monde. Si fournie, l'icône est construite et placée tout de suite ; sinon au premier update.
-- **renvoie** : Icon Objet icône avec update, setPos, setScale, setVisible, visibility, isLive, release.
+- `spec` (*string|table*) : Preset name or spec table (see notes).
+- `pos` (*vec3|nil*) : World position. If provided, the icon is built and placed right away; otherwise on the first update.
+- **returns**: Icon Icon object with update, setPos, setScale, setVisible, visibility, isLive, release.
 
 #### `render_skiaIcons.getMotives()`
 
-Liste triée de tous les noms de motifs (glyphes de bngIcons).
+Sorted list of all motive names (bngIcons glyphs).
 
-- **renvoie** : string[] Noms de motifs utilisables dans spec.motive.
+- **returns**: string[] Motive names usable in spec.motive.
 
 #### `render_skiaIcons.getPresets()`
 
-Renvoie la table des presets (nom -> spec) chargée depuis /art/skiaIcons/*.skiaIcon.json (champ 'presets').
+Returns the presets table (name -> spec) loaded from /art/skiaIcons/*.skiaIcon.json ('presets' field).
 
-- **renvoie** : table<string, table> Presets.
+- **returns**: table<string, table> Presets.
 
 #### `render_skiaIcons.getShapes()`
 
-Liste triée des noms de formes disponibles.
+Sorted list of available shape names.
 
-- **renvoie** : string[] Noms de formes utilisables dans spec.shape.
+- **returns**: string[] Shape names usable in spec.shape.
 
 #### `render_skiaIcons.getStats()`
 
-Statistiques du pool pour le débogage.
+Pool statistics for debugging.
 
-- **renvoie** : table {live, looks, pooled, created, reused, destroyed, hasRenderer}.
+- **returns**: table {live, looks, pooled, created, reused, destroyed, hasRenderer}.
 
 #### `render_skiaIcons.reload()`
 
-Relit la config partagée, la table de glyphes et les presets depuis le disque. Supprime le renderer (toutes les textures) ; les icônes vivantes se reconstruisent à leur prochain update.
+Re-reads the shared config, the glyph table and the presets from disk. Deletes the renderer (all textures); live icons rebuild on their next update.
 
-- **renvoie** : boolean true si la config a pu être relue.
+- **returns**: boolean true if the config could be re-read.
 
 #### `render_skiaIcons.screenBoundedScale(pos, worldSize, minScreen, maxScreen)`
 
-Calcule la hauteur monde d'une icône qui se comporte comme un objet réel en distance moyenne mais reste bornée à l'écran : jamais sous minScreen (lisible de loin), jamais au-dessus de maxScreen (n'envahit pas la vue de près). Bornes exprimées en fraction de la hauteur de l'écran ; des bornes égales donnent une taille constante à l'écran. Utilise la caméra core_camera ; sans caméra, renvoie worldSize.
+Computes the world height of an icon that behaves like a real object at medium distance but stays bounded on screen: never below minScreen (readable from afar), never above maxScreen (does not flood the view up close). Bounds are expressed as a fraction of the screen height; equal bounds give a constant on-screen size. Uses the core_camera camera; without a camera, returns worldSize.
 
-- `pos` (*vec3*) : Position de l'icône.
-- `worldSize` (*number*) : Hauteur en mètres dans la plage intermédiaire.
-- `minScreen` (*number|nil*) : Fraction minimale de la hauteur d'écran (défaut 0).
-- `maxScreen` (*number|nil*) : Fraction maximale de la hauteur d'écran (défaut 1).
-- **renvoie** : number Hauteur monde à passer à Icon:update.
+- `pos` (*vec3*) : Icon position.
+- `worldSize` (*number*) : Height in meters in the intermediate range.
+- `minScreen` (*number|nil*) : Minimum fraction of the screen height (default 0).
+- `maxScreen` (*number|nil*) : Maximum fraction of the screen height (default 1).
+- **returns**: number World height to pass to Icon:update.
 
-## Classe `Icon`
+## Class `Icon`
 
-Poignée d'icône renvoyée par getIcon. Chaque méthode d'état renvoie l'icône elle-même (sauf isLive, visibility, release).
+Icon handle returned by getIcon. Each state method returns the icon itself (except isLive, visibility, release).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `Icon:isLive()` | Faux si l'icône n'a pas de billboard : libérée, style impossible à construire, ou pas de renderer. | 450 |
-| `Icon:release()` | Range le billboard dans le pool pour une icône du même style. La poignée est inutilisable ensuite. | 454 |
-| `Icon:setPos(pos)` | Raccourci pour update(pos, nil, nil). | 431 |
-| `Icon:setScale(scale)` | Raccourci pour update(nil, scale, nil). | 432 |
-| `Icon:setVisible(visible, instant)` | Affiche ou masque l'icône avec fondu. Avec instant, saute le fondu et pousse le résultat tout de suite (utile pour un marqueur caché qu'on ne met plus à jour). | 436 |
-| `Icon:sync()` | S'assure que l'icône possède un billboard de son apparence actuelle : reconstruit après reload ou après la perte de la scène, récupère un billboard du pool ou en crée un. | 369 |
-| `Icon:update(pos, scale, dt)` | Appel par image. pos et scale gardent leur valeur actuelle quand ils sont nil ; dt fait avancer le fondu de visibilité (nil ou 0 le laisse en place). | 405 |
-| `Icon:visibility()` | Avancement actuel du fondu entre 0 et 1, pour caler d'autres éléments visuels dessus. | 446 |
+| `Icon:isLive()` | False if the icon has no billboard: released, style impossible to build, or no renderer. | 450 |
+| `Icon:release()` | Puts the billboard away in the pool for an icon of the same style. The handle is unusable afterward. | 454 |
+| `Icon:setPos(pos)` | Shortcut for update(pos, nil, nil). | 431 |
+| `Icon:setScale(scale)` | Shortcut for update(nil, scale, nil). | 432 |
+| `Icon:setVisible(visible, instant)` | Shows or hides the icon with a fade. With instant, skips the fade and pushes the result right away (useful for a hidden marker that is no longer updated). | 436 |
+| `Icon:sync()` | Makes sure the icon has a billboard of its current appearance: rebuilds after a reload or after the scene is lost, takes a billboard from the pool or creates one. | 369 |
+| `Icon:update(pos, scale, dt)` | Per-frame call. pos and scale keep their current value when nil; dt advances the visibility fade (nil or 0 leaves it in place). | 405 |
+| `Icon:visibility()` | Current fade progress between 0 and 1, to sync other visual elements to it. | 446 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
-**Charge les extensions :** `core_skiaTemplate`
+**Loads extensions:** `core_skiaTemplate`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/render/skiaIcons.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/render/skiaIcons.lua`.*

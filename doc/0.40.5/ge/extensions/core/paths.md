@@ -1,198 +1,198 @@
 # `core_paths`
 
-*Fichier : `lua/ge/extensions/core/paths.lua` · VM : Game Engine (GE) · 530 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/paths.lua` · VM: Game Engine (GE) · 530 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_paths` : `extensions.load("core_paths")`, puis la globale `core_paths`
+**Access:** extension `core_paths`: `extensions.load("core_paths")`, then the global `core_paths`
 
-Extension GE `core_paths` : gestion des chemins de caméra (fichiers *.camPath.json) utilisés par la caméra 'path' et par l'éditeur de trajectoires. Elle charge, crée, sauvegarde et supprime des chemins, les joue via core_camera, et fournit l'évaluation des pistes de transformation (position, orientation, FOV) avec courbes de Bézier temporelles. Au démarrage d'un niveau, elle charge tous les camPaths du dossier `camPaths` à côté du fichier de niveau.
+GE extension `core_paths`: management of camera paths (*.camPath.json files) used by the 'path' camera and by the path editor. It loads, creates, saves and deletes paths, plays them via core_camera, and provides the evaluation of transform tracks (position, orientation, FOV) with temporal Bezier curves. When a level starts, it loads all camPaths from the `camPaths` folder next to the level file.
 
-## Exemple
+## Example
 
 ```lua
 local p = core_paths.loadPath('/levels/gridmap_v2/camPaths/intro.camPath.json')
 if p then core_paths.playPath(p, 0) end
--- plus tard
+-- later
 core_paths.stopCurrentPath()
 ```
 
-## Remarques
+## Notes
 
-- Un chemin est une table { name, markers = {...}, looped, loopTime, filename, id, dirty, manualFov, transformTracks, advancedMode, replay }. Chaque marker a pos (vec3), rot (quat), time, fov, positionSmooth, bullettime, cut, movingStart, movingEnd, trackPosition, attachToVehicle, trackOffset, plus les familles Bézier <prefix>In/Out/InTime/OutTime.
-- À la sauvegarde, pos et rot sont convertis en tables {x,y,z[,w]}, la version écrite est "6", et les valeurs par défaut (positionSmooth 0.5, Bézier 1 et 1/3, bullettime 1) sont retirées pour garder des fichiers compacts. savePath ne gère pas marker.pos ou marker.rot nil.
-- loadPath réutilise un chemin déjà chargé avec le même `filename`. Il inverse le signe d'un quaternion si le produit scalaire avec le précédent est négatif (évite le chemin long). Il ne vérifie pas que `markers` existe dans le JSON.
-- Les pistes de transformation (transformTracks) sont des listes de clés { t, v, slopeIn, slopeOut, timeIn, timeOut } par canal (voir transformChannels). Les angles yaw et roll sont en degrés, interpolés par le plus court chemin lors du bouclage.
-- Une marque `cut` est un saut net : les clés avant et après la coupure ne sont pas interpolées entre elles.
-- getPath (ancien, nommé getPath_Deprecated dans le code) lit un objet SimPath de la scène, pas un fichier camPath ; sans argument il prend le premier SimPath. Il ne renvoie rien si aucun SimPath n'existe. Boucle `for i = 0, res.nodeCount` : parcourt un indice de plus que le nombre de nœuds (déduit du code).
-- onClientStartMission : remplace la liste des chemins ; les doublons de nom reçoivent un suffixe '(n)'. Elle plante si loadPath renvoie nil pour un fichier (path.name sur nil).
+- A path is a table { name, markers = {...}, looped, loopTime, filename, id, dirty, manualFov, transformTracks, advancedMode, replay }. Each marker has pos (vec3), rot (quat), time, fov, positionSmooth, bullettime, cut, movingStart, movingEnd, trackPosition, attachToVehicle, trackOffset, plus the Bezier families <prefix>In/Out/InTime/OutTime.
+- On save, pos and rot are converted to {x,y,z[,w]} tables, the written version is "6", and default values (positionSmooth 0.5, Bezier 1 and 1/3, bullettime 1) are removed to keep files compact. savePath does not handle a nil marker.pos or marker.rot.
+- loadPath reuses an already loaded path with the same `filename`. It flips the sign of a quaternion if the dot product with the previous one is negative (avoids the long way around). It does not check that `markers` exists in the JSON.
+- Transform tracks (transformTracks) are lists of keys { t, v, slopeIn, slopeOut, timeIn, timeOut } per channel (see transformChannels). The yaw and roll angles are in degrees, interpolated by the shortest path when looping.
+- A `cut` marker is a hard jump: the keys before and after the cut are not interpolated between each other.
+- getPath (old, named getPath_Deprecated in the code) reads a SimPath object from the scene, not a camPath file; with no argument it takes the first SimPath. It returns nothing if no SimPath exists. Loop `for i = 0, res.nodeCount`: iterates one index more than the number of nodes (inferred from code).
+- onClientStartMission: replaces the path list; duplicate names get a '(n)' suffix. It crashes if loadPath returns nil for a file (path.name on nil).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_paths.addPath(path)` | Ajoute un chemin à la liste et lui attribue le plus petit id libre (champ path.id modifié). | 241 |
-| `core_paths.cloneTransformTracks(tracks)` | Copie propre des pistes de transformation, en ne gardant que les canaux de transformChannels et les champs t, v, slopeIn, slopeOut, timeIn, timeOut. | 132 |
-| `core_paths.createPath(name)` | Crée un chemin vide { name, markers = {}, manualFov = true, dirty = true } et l'ajoute. | 246 |
-| `core_paths.deletePath(path)` | Retire de la liste le premier chemin portant le même name que celui donné. Ne supprime aucun fichier. | 251 |
-| `core_paths.evalTransform(path, t)` | Évalue tous les canaux (pos, yaw/pitch/roll, fov) du chemin au temps t. | 166 |
-| `core_paths.evalTransformTrack(keys, t, wrap, cuts)` | Évalue une piste de clés { t, v, ... } au temps t par interpolation Bézier entre clés, avec gestion des coupures (cuts) et du bouclage (wrap). | 98 |
-| `core_paths.getEndIdx(path)` | Indice du dernier segment jouable : nombre de marqueurs si le chemin boucle, sinon nombre moins 1. | 269 |
-| `core_paths.getMarkerIds(path, idx)` | Renvoie les 4 indices de marqueurs (précédent, courant, suivant, suivant+1) utilisés pour interpoler le segment idx. Gère le bouclage (modulo) et les coupures (`cut`), qui dupliquent l'indice voisin. | 223 |
-| `core_paths.getPath(pathName)` | Ancienne fonction (getPath_Deprecated) : lit un SimPath de la scène et renvoie ses marqueurs. Sans argument, prend le premier SimPath du niveau. | 439 |
-| `core_paths.getPaths()` | Renvoie la table interne des chemins chargés (pas une copie). | 265 |
-| `core_paths.getUniquePathName(name)` | Renvoie un nom non utilisé par les chemins chargés : le nom tel quel, sinon avec suffixe numérique (name1, name2...). | 208 |
-| `core_paths.invertCubicBezier(a, b, u)` | Inverse d'une Bézier cubique monotone x(t) = cubicBezier(a, b, t) sur [0, 1], par Newton (8 itérations). Exacte aux bornes : u<=0 donne 0, u>=1 donne 1. | 31 |
-| `core_paths.loadPath(pathFileName)` | Charge un chemin depuis un fichier camPath.json et l'ajoute à la liste ; renvoie le chemin existant si ce fichier est déjà chargé. | 329 |
-| `core_paths.loopDuration(path)` | Durée de la transition de bouclage d'un chemin : 0 si le chemin n'est pas `looped`, sinon loopTime (min 0), ou 2 s si loopTime est absent. | 65 |
-| `core_paths.onClientStartMission()` | Hook appelé au démarrage d'un niveau : vide la liste et charge tous les fichiers *.camPath.json du dossier 'camPaths' voisin du fichier de niveau. *(interne)* *(hook)* | 415 |
-| `core_paths.onDeserialized(data)` | Hook de restauration après rechargement Lua : remet les chemins sauvegardés. *(interne)* *(hook)* | 411 |
-| `core_paths.onExtensionLoaded()` | Hook appelé au chargement de l'extension ; ne fait rien. *(interne)* *(hook)* | 402 |
-| `core_paths.onSerialize()` | Hook de sauvegarde avant rechargement Lua : renvoie une copie profonde des chemins. *(interne)* *(hook)* | 405 |
-| `core_paths.playPath(path, offset, initData)` | Joue un chemin avec la caméra 'path' (core_camera.setByName(0, 'path', ...)). initData reçoit useJsonVersion, hasIntro, path, offset, et des reset/getNextPath par défaut. | 491 |
-| `core_paths.savePath(cameraPath, filename)` | Écrit le chemin dans un fichier JSON (version 6) et met à jour cameraPath.filename et dirty = false. | 277 |
-| `core_paths.stopCurrentPath()` | Si la caméra active est 'path', passe en caméra libre (commands.setFreeCamera). | 503 |
+| `core_paths.addPath(path)` | Adds a path to the list and assigns it the smallest free id (path.id field modified). | 241 |
+| `core_paths.cloneTransformTracks(tracks)` | Clean copy of the transform tracks, keeping only the channels of transformChannels and the fields t, v, slopeIn, slopeOut, timeIn, timeOut. | 132 |
+| `core_paths.createPath(name)` | Creates an empty path { name, markers = {}, manualFov = true, dirty = true } and adds it. | 246 |
+| `core_paths.deletePath(path)` | Removes from the list the first path with the same name as the given one. Does not delete any file. | 251 |
+| `core_paths.evalTransform(path, t)` | Evaluates all channels (pos, yaw/pitch/roll, fov) of the path at time t. | 166 |
+| `core_paths.evalTransformTrack(keys, t, wrap, cuts)` | Evaluates a track of keys { t, v, ... } at time t by Bezier interpolation between keys, handling cuts and wrapping (wrap). | 98 |
+| `core_paths.getEndIdx(path)` | Index of the last playable segment: number of markers if the path loops, otherwise number minus 1. | 269 |
+| `core_paths.getMarkerIds(path, idx)` | Returns the 4 marker indices (previous, current, next, next+1) used to interpolate segment idx. Handles looping (modulo) and cuts (`cut`), which duplicate the neighboring index. | 223 |
+| `core_paths.getPath(pathName)` | Old function (getPath_Deprecated): reads a SimPath from the scene and returns its markers. With no argument, takes the first SimPath of the level. | 439 |
+| `core_paths.getPaths()` | Returns the internal table of loaded paths (not a copy). | 265 |
+| `core_paths.getUniquePathName(name)` | Returns a name not used by the loaded paths: the name as is, otherwise with a numeric suffix (name1, name2...). | 208 |
+| `core_paths.invertCubicBezier(a, b, u)` | Inverse of a monotonic cubic Bezier x(t) = cubicBezier(a, b, t) on [0, 1], by Newton (8 iterations). Exact at the bounds: u<=0 gives 0, u>=1 gives 1. | 31 |
+| `core_paths.loadPath(pathFileName)` | Loads a path from a camPath.json file and adds it to the list; returns the existing path if that file is already loaded. | 329 |
+| `core_paths.loopDuration(path)` | Duration of a path's loop transition: 0 if the path is not `looped`, otherwise loopTime (min 0), or 2 s if loopTime is absent. | 65 |
+| `core_paths.onClientStartMission()` | Hook called when a level starts: clears the list and loads all *.camPath.json files from the 'camPaths' folder next to the level file. *(internal)* *(hook)* | 415 |
+| `core_paths.onDeserialized(data)` | Restore hook after Lua reload: puts the saved paths back. *(internal)* *(hook)* | 411 |
+| `core_paths.onExtensionLoaded()` | Hook called when the extension loads; does nothing. *(internal)* *(hook)* | 402 |
+| `core_paths.onSerialize()` | Save hook before Lua reload: returns a deep copy of the paths. *(internal)* *(hook)* | 405 |
+| `core_paths.playPath(path, offset, initData)` | Plays a path with the 'path' camera (core_camera.setByName(0, 'path', ...)). initData receives useJsonVersion, hasIntro, path, offset, and default reset/getNextPath. | 491 |
+| `core_paths.savePath(cameraPath, filename)` | Writes the path to a JSON file (version 6) and updates cameraPath.filename and dirty = false. | 277 |
+| `core_paths.stopCurrentPath()` | If the active camera is 'path', switches to the free camera (commands.setFreeCamera). | 503 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_paths.addPath(path)`
 
-Ajoute un chemin à la liste et lui attribue le plus petit id libre (champ path.id modifié).
+Adds a path to the list and assigns it the smallest free id (path.id field modified).
 
-- `path` (*table*) : Chemin à ajouter.
+- `path` (*table*) : Path to add.
 
 #### `core_paths.cloneTransformTracks(tracks)`
 
-Copie propre des pistes de transformation, en ne gardant que les canaux de transformChannels et les champs t, v, slopeIn, slopeOut, timeIn, timeOut.
+Clean copy of the transform tracks, keeping only the channels of transformChannels and the fields t, v, slopeIn, slopeOut, timeIn, timeOut.
 
-- `tracks` (*table|nil*) : Table canal -> liste de clés.
-- **renvoie** : table|nil Copie, ou nil si tracks n'est pas une table.
+- `tracks` (*table|nil*) : Table channel -> list of keys.
+- **returns**: table|nil Copy, or nil if tracks is not a table.
 
 #### `core_paths.createPath(name)`
 
-Crée un chemin vide { name, markers = {}, manualFov = true, dirty = true } et l'ajoute.
+Creates an empty path { name, markers = {}, manualFov = true, dirty = true } and adds it.
 
-- `name` (*string*) : Nom du chemin (non rendu unique automatiquement).
-- **renvoie** : table Le chemin créé.
+- `name` (*string*) : Path name (not automatically made unique).
+- **returns**: table The created path.
 
 #### `core_paths.deletePath(path)`
 
-Retire de la liste le premier chemin portant le même name que celui donné. Ne supprime aucun fichier.
+Removes from the list the first path with the same name as the given one. Does not delete any file.
 
-- `path` (*table*) : Chemin (comparé par name).
+- `path` (*table*) : Path (compared by name).
 
 #### `core_paths.evalTransform(path, t)`
 
-Évalue tous les canaux (pos, yaw/pitch/roll, fov) du chemin au temps t.
+Evaluates all channels (pos, yaw/pitch/roll, fov) of the path at time t.
 
-- `path` (*table|nil*) : Chemin avec transformTracks.
-- `t` (*number*) : Temps en secondes.
-- **renvoie** : table|nil Table canal -> valeur ; nil si le chemin n'a pas de pistes ou si aucun canal ne donne de valeur.
+- `path` (*table|nil*) : Path with transformTracks.
+- `t` (*number*) : Time in seconds.
+- **returns**: table|nil Table channel -> value; nil if the path has no tracks or if no channel gives a value.
 
 #### `core_paths.evalTransformTrack(keys, t, wrap, cuts)`
 
-Évalue une piste de clés { t, v, ... } au temps t par interpolation Bézier entre clés, avec gestion des coupures (cuts) et du bouclage (wrap).
+Evaluates a track of keys { t, v, ... } at time t by Bezier interpolation between keys, handling cuts and wrapping (wrap).
 
-- `keys` (*table[]*) : Clés triées par t.
-- `t` (*number*) : Temps en secondes.
-- `wrap` (*table|nil*) : { duration, fromT, unwrapDeg } pour la transition de fin vers la première clé.
-- `cuts` (*number[]|nil*) : Temps des coupures nettes.
-- **renvoie** : number|nil Valeur, ou nil si la piste est vide ou t est nil.
+- `keys` (*table[]*) : Keys sorted by t.
+- `t` (*number*) : Time in seconds.
+- `wrap` (*table|nil*) : { duration, fromT, unwrapDeg } for the end transition to the first key.
+- `cuts` (*number[]|nil*) : Times of the hard cuts.
+- **returns**: number|nil Value, or nil if the track is empty or t is nil.
 
 #### `core_paths.getEndIdx(path)`
 
-Indice du dernier segment jouable : nombre de marqueurs si le chemin boucle, sinon nombre moins 1.
+Index of the last playable segment: number of markers if the path loops, otherwise number minus 1.
 
-- `path` (*table*) : Chemin de caméra.
-- **renvoie** : integer Dernier indice de segment.
+- `path` (*table*) : Camera path.
+- **returns**: integer Last segment index.
 
 #### `core_paths.getMarkerIds(path, idx)`
 
-Renvoie les 4 indices de marqueurs (précédent, courant, suivant, suivant+1) utilisés pour interpoler le segment idx. Gère le bouclage (modulo) et les coupures (`cut`), qui dupliquent l'indice voisin.
+Returns the 4 marker indices (previous, current, next, next+1) used to interpolate segment idx. Handles looping (modulo) and cuts (`cut`), which duplicate the neighboring index.
 
-- `path` (*table*) : Chemin de caméra.
-- `idx` (*integer*) : Indice (base 1) du marqueur de début de segment.
-- **renvoie** : integer index1, index2, index3, index4 (quatre valeurs).
+- `path` (*table*) : Camera path.
+- `idx` (*integer*) : Index (1-based) of the segment's start marker.
+- **returns**: integer index1, index2, index3, index4 (four values).
 
 #### `core_paths.getPath(pathName)`
 
-Ancienne fonction (getPath_Deprecated) : lit un SimPath de la scène et renvoie ses marqueurs. Sans argument, prend le premier SimPath du niveau.
+Old function (getPath_Deprecated): reads a SimPath from the scene and returns its markers. With no argument, takes the first SimPath of the level.
 
-- `pathName` (*string|nil*) : Nom de l'objet SimPath.
-- **renvoie** : table|nil { markers, looped, nodeCount }, ou nil si introuvable.
+- `pathName` (*string|nil*) : Name of the SimPath object.
+- **returns**: table|nil { markers, looped, nodeCount }, or nil if not found.
 
 #### `core_paths.getPaths()`
 
-Renvoie la table interne des chemins chargés (pas une copie).
+Returns the internal table of loaded paths (not a copy).
 
-- **renvoie** : table[] Liste des chemins.
+- **returns**: table[] List of paths.
 
 #### `core_paths.getUniquePathName(name)`
 
-Renvoie un nom non utilisé par les chemins chargés : le nom tel quel, sinon avec suffixe numérique (name1, name2...).
+Returns a name not used by the loaded paths: the name as is, otherwise with a numeric suffix (name1, name2...).
 
-- `name` (*string*) : Nom souhaité.
-- **renvoie** : string Nom unique.
+- `name` (*string*) : Desired name.
+- **returns**: string Unique name.
 
 #### `core_paths.invertCubicBezier(a, b, u)`
 
-Inverse d'une Bézier cubique monotone x(t) = cubicBezier(a, b, t) sur [0, 1], par Newton (8 itérations). Exacte aux bornes : u<=0 donne 0, u>=1 donne 1.
+Inverse of a monotonic cubic Bezier x(t) = cubicBezier(a, b, t) on [0, 1], by Newton (8 iterations). Exact at the bounds: u<=0 gives 0, u>=1 gives 1.
 
-- `a` (*number*) : Premier point de contrôle (abscisse).
-- `b` (*number*) : Second point de contrôle (abscisse).
-- `u` (*number*) : Valeur cible, bornée à [0, 1].
-- **renvoie** : number Paramètre t dans [0, 1].
+- `a` (*number*) : First control point (x coordinate).
+- `b` (*number*) : Second control point (x coordinate).
+- `u` (*number*) : Target value, clamped to [0, 1].
+- **returns**: number Parameter t in [0, 1].
 
 #### `core_paths.loadPath(pathFileName)`
 
-Charge un chemin depuis un fichier camPath.json et l'ajoute à la liste ; renvoie le chemin existant si ce fichier est déjà chargé.
+Loads a path from a camPath.json file and adds it to the list; returns the existing path if that file is already loaded.
 
-- `pathFileName` (*string|nil*) : Fichier à lire ; nil renvoie nil.
-- **renvoie** : table|nil Le chemin, ou nil si le fichier est introuvable (erreur dans le log).
+- `pathFileName` (*string|nil*) : File to read; nil returns nil.
+- **returns**: table|nil The path, or nil if the file is not found (error in the log).
 
 #### `core_paths.loopDuration(path)`
 
-Durée de la transition de bouclage d'un chemin : 0 si le chemin n'est pas `looped`, sinon loopTime (min 0), ou 2 s si loopTime est absent.
+Duration of a path's loop transition: 0 if the path is not `looped`, otherwise loopTime (min 0), or 2 s if loopTime is absent.
 
-- `path` (*table|nil*) : Chemin de caméra.
-- **renvoie** : number Durée en secondes.
+- `path` (*table|nil*) : Camera path.
+- **returns**: number Duration in seconds.
 
 #### `core_paths.onDeserialized(data)`
 
-Hook de restauration après rechargement Lua : remet les chemins sauvegardés.
+Restore hook after Lua reload: puts the saved paths back.
 
-- `data` (*table*) : Table renvoyée par onSerialize.
+- `data` (*table*) : Table returned by onSerialize.
 
 #### `core_paths.onSerialize()`
 
-Hook de sauvegarde avant rechargement Lua : renvoie une copie profonde des chemins.
+Save hook before Lua reload: returns a deep copy of the paths.
 
-- **renvoie** : table { paths = ... }
+- **returns**: table { paths = ... }
 
 #### `core_paths.playPath(path, offset, initData)`
 
-Joue un chemin avec la caméra 'path' (core_camera.setByName(0, 'path', ...)). initData reçoit useJsonVersion, hasIntro, path, offset, et des reset/getNextPath par défaut.
+Plays a path with the 'path' camera (core_camera.setByName(0, 'path', ...)). initData receives useJsonVersion, hasIntro, path, offset, and default reset/getNextPath.
 
-- `path` (*table*) : Chemin à jouer.
-- `offset` (*number|nil*) : Décalage de départ (0 par défaut ; unité déduite : secondes).
-- `initData` (*table|nil*) : Options supplémentaires pour la caméra ; modifié en place.
+- `path` (*table*) : Path to play.
+- `offset` (*number|nil*) : Start offset (0 by default; unit inferred: seconds).
+- `initData` (*table|nil*) : Extra options for the camera; modified in place.
 
 #### `core_paths.savePath(cameraPath, filename)`
 
-Écrit le chemin dans un fichier JSON (version 6) et met à jour cameraPath.filename et dirty = false.
+Writes the path to a JSON file (version 6) and updates cameraPath.filename and dirty = false.
 
-- `cameraPath` (*table*) : Chemin à sauvegarder.
-- `filename` (*string*) : Fichier de destination (ex. .camPath.json).
+- `cameraPath` (*table*) : Path to save.
+- `filename` (*string*) : Destination file (e.g. .camPath.json).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `motionPrefixes` | string[] | Familles de Bézier temporelles : 'motion' (position), 'rotMotion' (orientation entière), puis 'yawMotion', 'pitchMotion', 'rollMotion' (un axe d'Euler chacun). |
-| `transformChannels` | string[] | Canaux des pistes de transformation : posX, posY, posZ, yaw, pitch, roll, fov. |
+| `motionPrefixes` | string[] | Temporal Bezier families: 'motion' (position), 'rotMotion' (whole orientation), then 'yawMotion', 'pitchMotion', 'rollMotion' (one Euler axis each). |
+| `transformChannels` | string[] | Transform track channels: posX, posY, posZ, yaw, pitch, roll, fov. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/paths.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/paths.lua`.*

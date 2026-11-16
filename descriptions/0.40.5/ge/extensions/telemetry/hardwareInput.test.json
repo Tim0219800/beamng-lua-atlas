@@ -1,68 +1,68 @@
 {
   "path": "lua/ge/extensions/telemetry/hardwareInput.test.lua",
-  "module": "Tests unitaires de telemetry/hardwareInput (runTestFiles(\"hardwareInput\")).",
+  "module": "Unit tests of telemetry/hardwareInput (runTestFiles(\"hardwareInput\")).",
   "functions": {
     "testMapsEveryAvailableWheelField": {
-      "desc": "Vérifie que tous les champs d'un volant (noms, vidpid, productId/vendorId, GUID, FFB, révisions, controls, controlCounts) sont repris.",
+      "desc": "Checks that all the fields of a wheel (names, vidpid, productId/vendorId, GUID, FFB, revisions, controls, controlCounts) are carried over.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testUnknownDefaultUpdateRateStaysAbsent": {
-      "desc": "Vérifie que sans période d'échantillonnage FFB valide, ni la période ni maxRawFfbUpdateRateHz ne sont renseignées.",
+      "desc": "Checks that without a valid FFB sampling period, neither the period nor maxRawFfbUpdateRateHz is set.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testEnglishNameComesOnlyFromOfficialInputMap": {
-      "desc": "Vérifie que le nom anglais est lu dans /settings/inputmaps/<vidpid>.json quand le fichier est officiel.",
+      "desc": "Checks that the English name is read from /settings/inputmaps/<vidpid>.json when the file is official.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testUnofficialInputMapCannotSupplyTelemetryName": {
-      "desc": "Vérifie qu'une table d'entrée non officielle ne peut pas fournir de nom.",
+      "desc": "Checks that an unofficial input table cannot provide a name.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testNonWheelsKeepOnlyCommonIdentity": {
-      "desc": "Vérifie qu'un périphérique qui n'est pas un volant ne garde que type, productName, vidpid et forceFeedback.",
+      "desc": "Checks that a device that is not a wheel only keeps type, productName, vidpid and forceFeedback.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testSymbolicDeviceIdentityKeepsItsCase": {
-      "desc": "Vérifie qu'un identifiant symbolique (ex. 'XIDevice') n'est pas mis en majuscules.",
+      "desc": "Checks that a symbolic identifier (e.g. 'XIDevice') is not uppercased.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],

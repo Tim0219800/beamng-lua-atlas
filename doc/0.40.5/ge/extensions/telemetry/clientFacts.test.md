@@ -1,59 +1,59 @@
 # `telemetry_clientFacts.test`
 
-*Fichier : `lua/ge/extensions/telemetry/clientFacts.test.lua` · VM : Game Engine (GE) · 160 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/clientFacts.test.lua` · VM: Game Engine (GE) · 160 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_clientFacts.test` : `extensions.load("telemetry_clientFacts.test")`, puis la globale `telemetry_clientFacts.test`
+**Access:** extension `telemetry_clientFacts.test`: `extensions.load("telemetry_clientFacts.test")`, then the global `telemetry_clientFacts.test`
 
-Tests unitaires de telemetry/clientFacts, exécutés avec extensions.testFramework_TestManager:runTestFiles("clientFacts"). Chaque fonction testXxx(ctx) reçoit un contexte de test (ctx:assert, ctx:assertEqual). Aucun intérêt direct pour un moddeur, sinon comme exemple d'usage de clientFacts.
+Unit tests of telemetry/clientFacts, run with extensions.testFramework_TestManager:runTestFiles("clientFacts"). Each testXxx(ctx) function receives a test context (ctx:assert, ctx:assertEqual). Of no direct interest to a modder, except as an example of clientFacts usage.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_clientFacts.test.testCiProviderDetection(ctx)` | Vérifie que chaque variable d'environnement CI connue (JENKINS_URL, GITLAB_CI, GITHUB_ACTIONS, TF_BUILD, TEAMCITY_VERSION, BUILDKITE, CIRCLECI, TRAVIS, APPVEYOR, CI) donne le bon fournisseur. *(interne)* | 17 |
-| `telemetry_clientFacts.test.testCiProviderPriority(ctx)` | Vérifie que jenkins l'emporte quand plusieurs variables CI sont définies. *(interne)* | 39 |
-| `telemetry_clientFacts.test.testCollectedContextContract(ctx)` | Simule Engine, os.getenv et les globales beamng_*, appelle clientFacts.collect('30') puis vérifie les champs obtenus (plateforme 'pc', fournisseur gitlab, osVersion, deviceType 'desktop', mémoire, GPU, booléens false conservés, VR). Restaure ensuite les globales. *(interne)* | 64 |
-| `telemetry_clientFacts.test.testDesktopPlatformNormalization(ctx)` | Vérifie normalizePlatform : '' donne 'pc', 'steamdeck' est conservé, nil reste nil. *(interne)* | 137 |
-| `telemetry_clientFacts.test.testFalseCiFlags(ctx)` | Vérifie que les valeurs '0', 'false', 'FALSE' et '' ne déclenchent pas la détection CI. *(interne)* | 51 |
-| `telemetry_clientFacts.test.testPreferredGpuSelection(ctx)` | Vérifie selectPreferredGPU : premier adaptateur dédié préféré, repli sur le premier, nil pour une liste vide. *(interne)* | 143 |
+| `telemetry_clientFacts.test.testCiProviderDetection(ctx)` | Checks that each known CI environment variable (JENKINS_URL, GITLAB_CI, GITHUB_ACTIONS, TF_BUILD, TEAMCITY_VERSION, BUILDKITE, CIRCLECI, TRAVIS, APPVEYOR, CI) gives the right provider. *(internal)* | 17 |
+| `telemetry_clientFacts.test.testCiProviderPriority(ctx)` | Checks that jenkins wins when several CI variables are defined. *(internal)* | 39 |
+| `telemetry_clientFacts.test.testCollectedContextContract(ctx)` | Mocks Engine, os.getenv and the beamng_* globals, calls clientFacts.collect('30') then checks the resulting fields (platform 'pc', provider gitlab, osVersion, deviceType 'desktop', memory, GPU, false booleans kept, VR). Then restores the globals. *(internal)* | 64 |
+| `telemetry_clientFacts.test.testDesktopPlatformNormalization(ctx)` | Checks normalizePlatform: '' gives 'pc', 'steamdeck' is kept, nil stays nil. *(internal)* | 137 |
+| `telemetry_clientFacts.test.testFalseCiFlags(ctx)` | Checks that the values '0', 'false', 'FALSE' and '' do not trigger CI detection. *(internal)* | 51 |
+| `telemetry_clientFacts.test.testPreferredGpuSelection(ctx)` | Checks selectPreferredGPU: first dedicated adapter preferred, fallback to the first, nil for an empty list. *(internal)* | 143 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_clientFacts.test.testCiProviderDetection(ctx)`
 
-Vérifie que chaque variable d'environnement CI connue (JENKINS_URL, GITLAB_CI, GITHUB_ACTIONS, TF_BUILD, TEAMCITY_VERSION, BUILDKITE, CIRCLECI, TRAVIS, APPVEYOR, CI) donne le bon fournisseur.
+Checks that each known CI environment variable (JENKINS_URL, GITLAB_CI, GITHUB_ACTIONS, TF_BUILD, TEAMCITY_VERSION, BUILDKITE, CIRCLECI, TRAVIS, APPVEYOR, CI) gives the right provider.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_clientFacts.test.testCiProviderPriority(ctx)`
 
-Vérifie que jenkins l'emporte quand plusieurs variables CI sont définies.
+Checks that jenkins wins when several CI variables are defined.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_clientFacts.test.testCollectedContextContract(ctx)`
 
-Simule Engine, os.getenv et les globales beamng_*, appelle clientFacts.collect('30') puis vérifie les champs obtenus (plateforme 'pc', fournisseur gitlab, osVersion, deviceType 'desktop', mémoire, GPU, booléens false conservés, VR). Restaure ensuite les globales.
+Mocks Engine, os.getenv and the beamng_* globals, calls clientFacts.collect('30') then checks the resulting fields (platform 'pc', provider gitlab, osVersion, deviceType 'desktop', memory, GPU, false booleans kept, VR). Then restores the globals.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_clientFacts.test.testDesktopPlatformNormalization(ctx)`
 
-Vérifie normalizePlatform : '' donne 'pc', 'steamdeck' est conservé, nil reste nil.
+Checks normalizePlatform: '' gives 'pc', 'steamdeck' is kept, nil stays nil.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_clientFacts.test.testFalseCiFlags(ctx)`
 
-Vérifie que les valeurs '0', 'false', 'FALSE' et '' ne déclenchent pas la détection CI.
+Checks that the values '0', 'false', 'FALSE' and '' do not trigger CI detection.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_clientFacts.test.testPreferredGpuSelection(ctx)`
 
-Vérifie selectPreferredGPU : premier adaptateur dédié préféré, repli sur le premier, nil pour une liste vide.
+Checks selectPreferredGPU: first dedicated adapter preferred, fallback to the first, nil for an empty list.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/clientFacts.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/clientFacts.test.lua`.*

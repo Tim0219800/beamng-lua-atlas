@@ -1,22 +1,22 @@
 # `flowgraph_nodes_activity_activityResetPrefabs`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/activity/activityResetPrefabs.lua` · VM : Game Engine (GE) · 20 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/activity/activityResetPrefabs.lua` · VM: Game Engine (GE) · 20 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/activity/activityResetPrefabs")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/activity/activityResetPrefabs")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Activity Reset Prefab » (catégorie once_p_duration, tag activity). Remet à leur position d'origine les véhicules contenus dans tous les prefabs chargés par l'activité associée, via gameplay_missions_missionManager.resetActivityPrefabVehicles. Aucun pin personnalisé.
+Flowgraph node "Activity Reset Prefab" (category once_p_duration, tag activity). Puts the vehicles contained in all prefabs loaded by the associated activity back at their original position, via gameplay_missions_missionManager.resetActivityPrefabVehicles. No custom pins.
 
-## Remarques
+## Notes
 
-- Passe self.mgr.activity sans vérification : sans activité associée, la valeur est nil.
+- Passes self.mgr.activity without checking: without an associated activity, the value is nil.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Appelle resetActivityPrefabVehicles pour l'activité du graphe. | 16 |
+| `C:workOnce()` | Calls resetActivityPrefabVehicles for the graph's activity. | 16 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/activity/activityResetPrefabs.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/activity/activityResetPrefabs.lua`.*

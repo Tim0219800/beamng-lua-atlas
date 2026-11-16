@@ -1,19 +1,32 @@
 {
   "path": "lua/common/jbeam/sections/wheelTypes/hubWheelsTSI.lua",
-  "module": "Gestionnaire du type de roue 'hubWheelsTSI' : variante de hubWheels sans enjoliveur. Anneau de nœuds de pneu + anneau de nœuds de moyeu, poutres de bande de roulement, de périphérie, de moyeu et d'axe, et six poutres pressurisées par rayon entre moyeu et pneu (la pression d'air est simulée). Appelé par jbeam/sections/wheels.lua pendant le chargement du véhicule.",
-  "usage": "-- appelé par le répartiteur : process(vehicle, wheelKey, wheel)",
+  "module": "Handler for the 'hubWheelsTSI' wheel type: a variant of hubWheels without hubcap. Ring of tire nodes + ring of hub nodes, tread, periphery, hub and axle beams, and six pressurized beams per ray between hub and tire (air pressure is simulated). Called by jbeam/sections/wheels.lua during vehicle loading.",
+  "usage": "-- called by the dispatcher: process(vehicle, wheelKey, wheel)",
   "notes": [
-    "Différences avec hubWheels : pas d'enjoliveur, pas de poutres en V ni de renforts de bande ; si tireWidth ou hubWidth ne sont pas fournis, ils sont fixés à la distance node1-node2 dans la table de la roue (wheel.tireWidth, wheel.hubWidth). Les options de moyeu hub* sont appliquées uniquement si elles sont définies (pas de 'or').",
-    "Poutres pressurisées de type BEAM_PRESSURED (3) basées sur les options de renfort (wheelReinforcementBeam*) avec pressurePSI (défaut 30), volumeCoef = 1/(numRays*6), surface calculée à partir de radius, hubRadius, tireWidth, hubWidth ; reinforcementPressure* (PSI, Spring, Damp) pour les renforts.",
-    "Les nœuds de pneu sont reliés par pairedNode (intérieur -> extérieur -> intérieur suivant). Poutres de soutien BEAM_SUPPORT (7) si enableTireSideSupportBeams.",
-    "Résultat : wheel.nodes = nœuds du moyeu, wheel.pressuredBeams = poutres pressurisées. Paramètres par défaut : radius 0.5, hubRadius 0.65*radius, numRays 10, treadCoef 1. wheel.collision forcé à true. Constantes C : NORMALTYPE 0, BEAM_ANISOTROPIC 1, BEAM_PRESSURED 3, BEAM_SUPPORT 7.",
-    "TSI/TSV : acronymes non expliqués dans le code (déduit : variantes 'pressure' et 'vertical' de la même construction ; à confirmer côté éditeur)."
+    "Differences from hubWheels: no hubcap, no V beams nor tread reinforcements; if tireWidth or hubWidth are not provided, they are set to the node1-node2 distance in the wheel table (wheel.tireWidth, wheel.hubWidth). The hub* hub options are applied only if they are defined (no 'or').",
+    "Pressurized beams of type BEAM_PRESSURED (3) based on the reinforcement options (wheelReinforcementBeam*) with pressurePSI (default 30), volumeCoef = 1/(numRays*6), surface computed from radius, hubRadius, tireWidth, hubWidth; reinforcementPressure* (PSI, Spring, Damp) for the reinforcements.",
+    "The tire nodes are linked by pairedNode (inner -> outer -> next inner). BEAM_SUPPORT (7) support beams if enableTireSideSupportBeams.",
+    "Result: wheel.nodes = hub nodes, wheel.pressuredBeams = pressurized beams. Default parameters: radius 0.5, hubRadius 0.65*radius, numRays 10, treadCoef 1. wheel.collision forced to true. C constants: NORMALTYPE 0, BEAM_ANISOTROPIC 1, BEAM_PRESSURED 3, BEAM_SUPPORT 7.",
+    "TSI/TSV: acronyms not explained in the code (inferred: 'pressure' and 'vertical' variants of the same construction; to be confirmed on the editor side)."
   ],
   "fields": {},
   "functions": {
     "process": {
-      "desc": "Crée nœuds et poutres d'une roue hubWheelsTSI (alias de addHubWheelTSI). Avertissement 'invalid hubWheel' et sortie sans rien créer si node1 ou node2 est introuvable.",
-      "params": {"vehicle": {"type": "table", "desc": "véhicule en construction"}, "wheelKey": {"type": "integer", "desc": "indice de la roue dans sa section"}, "wheel": {"type": "table", "desc": "définition jbeam de la roue (modifiée : collision, radius, hubRadius, numRays, tireWidth, hubWidth, nodes, pressuredBeams)"}},
+      "desc": "Creates nodes and beams of a hubWheelsTSI wheel (alias of addHubWheelTSI). Warning 'invalid hubWheel' and exits without creating anything if node1 or node2 cannot be found.",
+      "params": {
+        "vehicle": {
+          "type": "table",
+          "desc": "vehicle under construction"
+        },
+        "wheelKey": {
+          "type": "integer",
+          "desc": "index of the wheel in its section"
+        },
+        "wheel": {
+          "type": "table",
+          "desc": "jbeam definition of the wheel (modified: collision, radius, hubRadius, numRays, tireWidth, hubWidth, nodes, pressuredBeams)"
+        }
+      },
       "returns": [],
       "internal": true
     }

@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_traffic_signals_instanceSettings`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceSettings.lua` · VM : Game Engine (GE) · 41 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceSettings.lua` · VM: Game Engine (GE) · 41 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/instanceSettings")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/instanceSettings")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Signal Instance Settings » (once_instant). Règle une instance de feu : sequence (setSequence par id), controller (setController par id), active (setActive), stateIndex (setStrictState ; 0 pour réinitialiser). Seuls les pins non nil sont appliqués.
+Flowgraph node "Signal Instance Settings" (once_instant). Sets a traffic light instance: sequence (setSequence by id), controller (setController by id), active (setActive), stateIndex (setStrictState; 0 to reset). Only non-nil pins are applied.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Applique séquence, contrôleur, activation et état forcé à l'instance. | 23 |
+| `C:workOnce()` | Applies the sequence, controller, activation and forced state to the instance. | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceSettings.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceSettings.lua`.*

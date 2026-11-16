@@ -1,22 +1,70 @@
 {
   "path": "lua/ge/extensions/ui/apps/minimap/layers.lua",
-  "module": "Constantes numériques des couches de dessin de la mini-carte. Les couches sont rendues de la plus basse (0) à la plus haute : fond, grille, routes, itinéraire, marqueurs de gameplay, véhicules, masque rond/carré, boussole, pointeurs, debug. Ce n'est pas une extension chargeable : les modules de la minimap le lisent par require(\"ui/apps/minimap/layers\").",
+  "module": "Numeric constants for the minimap's drawing layers. Layers are rendered from the lowest (0) to the highest: background, grid, roads, route, gameplay markers, vehicles, round/square mask, compass, pointers, debug. This is not a loadable extension: the minimap modules read it with require(\"ui/apps/minimap/layers\").",
   "fields": {
-    "BACKGROUND": {"type": "integer", "desc": "0 : fond (tout en bas)."},
-    "BG_GRID": {"type": "integer", "desc": "10 : grille de fond."},
-    "ROADS_BG": {"type": "integer", "desc": "20 : contour des routes."},
-    "ROADS_FG": {"type": "integer", "desc": "30 : trait des routes."},
-    "ROUTE_BG": {"type": "integer", "desc": "40 : contour de l'itinéraire."},
-    "ROUTE_FG": {"type": "integer", "desc": "50 : trait de l'itinéraire."},
-    "GAMEPLAY_MARKERS": {"type": "integer", "desc": "60 : marqueurs de gameplay."},
-    "VEHICLES_OTHER": {"type": "integer", "desc": "70 : autres véhicules."},
-    "VEHICLES_POLICE": {"type": "integer", "desc": "80 : véhicules de police."},
-    "VEHICLES_USABLE": {"type": "integer", "desc": "90 : véhicules utilisables."},
-    "VEHICLE_PLAYER": {"type": "integer", "desc": "100 : véhicule du joueur."},
-    "ROUND_OR_SQUARE_MASK": {"type": "integer", "desc": "110 : masque d'occlusion (cadre rond ou carré)."},
-    "COMPASS": {"type": "integer", "desc": "120 : boussole."},
-    "ROUTE_POINTER": {"type": "integer", "desc": "130 : pointeur vers la destination."},
-    "GAMEPLAY_POINTER": {"type": "integer", "desc": "140 : pointeur de gameplay."},
-    "DEBUG": {"type": "integer", "desc": "150 : couche de debug (tout en haut)."}
+    "BACKGROUND": {
+      "type": "integer",
+      "desc": "0: background (very bottom)."
+    },
+    "BG_GRID": {
+      "type": "integer",
+      "desc": "10: background grid."
+    },
+    "ROADS_BG": {
+      "type": "integer",
+      "desc": "20: road outline."
+    },
+    "ROADS_FG": {
+      "type": "integer",
+      "desc": "30: road stroke."
+    },
+    "ROUTE_BG": {
+      "type": "integer",
+      "desc": "40: route outline."
+    },
+    "ROUTE_FG": {
+      "type": "integer",
+      "desc": "50: route stroke."
+    },
+    "GAMEPLAY_MARKERS": {
+      "type": "integer",
+      "desc": "60: gameplay markers."
+    },
+    "VEHICLES_OTHER": {
+      "type": "integer",
+      "desc": "70: other vehicles."
+    },
+    "VEHICLES_POLICE": {
+      "type": "integer",
+      "desc": "80: police vehicles."
+    },
+    "VEHICLES_USABLE": {
+      "type": "integer",
+      "desc": "90: usable vehicles."
+    },
+    "VEHICLE_PLAYER": {
+      "type": "integer",
+      "desc": "100: player vehicle."
+    },
+    "ROUND_OR_SQUARE_MASK": {
+      "type": "integer",
+      "desc": "110: occlusion mask (round or square frame)."
+    },
+    "COMPASS": {
+      "type": "integer",
+      "desc": "120: compass."
+    },
+    "ROUTE_POINTER": {
+      "type": "integer",
+      "desc": "130: pointer to the destination."
+    },
+    "GAMEPLAY_POINTER": {
+      "type": "integer",
+      "desc": "140: gameplay pointer."
+    },
+    "DEBUG": {
+      "type": "integer",
+      "desc": "150: debug layer (very top)."
+    }
   }
 }

@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/onMissionRunstateChanged.lua",
+  "module": "Nœud flowgraph « On Mission Start/Stop » (catégorie repeat_instant, couleur/icône ui). Détecte quand le joueur démarre (hook onMissionStartWithFade) ou arrête (onAnyMissionChanged avec l'état 'stopped') une mission. Sorties en impulsion : started et stopped.",
+  "notes": ["work() remet à faux seulement started ; stopped n'est jamais remis à faux explicitement après avoir été levé (probable oubli). Une sortie « abandoned » est commentée."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
+        "work": {"desc": "Chaque frame : started à faux, applique puis efface les drapeaux.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
+        "onMissionStartWithFade": {"desc": "Hook : lève started.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
+        "onAnyMissionChanged": {"desc": "Hook : lève stopped quand le nouvel état est 'stopped'.", "params": {"newState": {"type": "string", "desc": "nouvel état de la mission"}, "mission": {"type": "table", "desc": "mission concernée (non utilisée)"}}, "internal": true}
+      }
+    }
+  }
+}

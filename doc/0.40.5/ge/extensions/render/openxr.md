@@ -1,108 +1,108 @@
 # `render_openxr`
 
-*Fichier : `lua/ge/extensions/render/openxr.lua` · VM : Game Engine (GE) · 371 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/render/openxr.lua` · VM: Game Engine (GE) · 371 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `render_openxr` : `extensions.load("render_openxr")`, puis la globale `render_openxr`
+**Access:** extension `render_openxr`: `extensions.load("render_openxr")`, then the global `render_openxr`
 
-Interface Lua de la réalité virtuelle OpenXR (casque VR). Pilote le moteur C++ (objet global OpenXR) : activation/désactivation avec une boîte de dialogue de bienvenue, état de session reçu du moteur (stateChanged), recentrage, gestion des erreurs, et une fenêtre ImGui de debug (réglages d'affichage 2D, UI CEF dans le casque, ancrage, mode debug, résolutions, FOV, IPD). L'extension se décharge toute seule à la désactivation. Global : render_openxr.
+Lua interface for OpenXR virtual reality (VR headset). Drives the C++ engine (global object OpenXR): enabling/disabling with a welcome dialog, session state received from the engine (stateChanged), recentering, error handling, and a debug ImGui window (2D display settings, CEF UI in the headset, anchoring, debug mode, resolutions, FOV, IPD). The extension unloads itself on deactivation. Global: render_openxr.
 
-## Exemple
+## Example
 
 ```lua
 extensions.render_openxr.toggle()   -- disabled -> welcome -> enabled -> disabled
-extensions.render_openxr.center()   -- recentre la vue (ctrl+numpad5)
+extensions.render_openxr.center()   -- recenters the view (ctrl+numpad5)
 if extensions.render_openxr.isSessionRunning() then ... end
 ```
 
-## Remarques
+## Notes
 
-- stateString : 'disabled', 'welcome' (boîte de dialogue de confirmation affichée) ou 'enabled'. setStateUI('welcome') n'ouvre le dialogue avec le bouton OK que si l'adaptateur est Vulkan ou Direct3D12 ; sinon seul un bouton d'annulation est proposé (texte « no Vulkan »).
-- Les callbacks Lua des boutons de la boîte de dialogue sont des chaînes exécutées par l'UI : `extensions.render_openxr.closeWelcome(true|false)`.
-- M.state est la table reçue du moteur C++ via stateChanged(state) ; l'UI est notifiée par guihooks 'OpenXRStateChanged' quand l'un des champs suivis change (enabled, sessionRunning, headsetActive, systemName, targetRefreshRate, renderedWidth/Height, recommendedWidth/Height, sourceCount, activeSourceCount, poseValidSourceCount, inputSourcesKey). Les champs sourceCount… et les accesseurs getInputSourceStates/getSourcePoseStates sont commentés (TODO, API non finalisée).
-- onPreRender (et non onUpdate) est utilisé volontairement : core_camera s'exécute au preRender, donc OpenXR doit passer après elle pour éviter une frame de retard de pose (d'où la dépendance à core_camera).
-- Réglages persistés (via settings) : openXRuiEnabled, openXRuiMode, openXRwindowViewMode, openXRdebugEnabled, openXRquadCompositionEnabled (défaut false), plus openXRimguiEnabled (lu seul) ; changer le mode debug pendant une session redémarre OpenXR.
-- La fenêtre ImGui de debug n'est dessinée que si le réglage openXRimguiEnabled est vrai et la session en cours ; fermer la fenêtre désactive OpenXR.
-- Raccourcis annoncés dans l'UI de debug : ctrl+numpad0 (activer/désactiver), ctrl+numpad5 (centrer).
-- Si enable échoue côté C++, un simple log de debug est émis et l'état repasse à 'disabled'.
+- stateString: 'disabled', 'welcome' (confirmation dialog shown) or 'enabled'. setStateUI('welcome') only opens the dialog with the OK button if the adapter is Vulkan or Direct3D12; otherwise only a cancel button is offered ("no Vulkan" text).
+- The Lua callbacks of the dialog buttons are strings executed by the UI: `extensions.render_openxr.closeWelcome(true|false)`.
+- M.state is the table received from the C++ engine via stateChanged(state); the UI is notified by guihooks 'OpenXRStateChanged' when one of the tracked fields changes (enabled, sessionRunning, headsetActive, systemName, targetRefreshRate, renderedWidth/Height, recommendedWidth/Height, sourceCount, activeSourceCount, poseValidSourceCount, inputSourcesKey). The sourceCount… fields and the getInputSourceStates/getSourcePoseStates accessors are commented out (TODO, API not finalized).
+- onPreRender (and not onUpdate) is used deliberately: core_camera runs at preRender, so OpenXR must come after it to avoid a one-frame pose lag (hence the dependency on core_camera).
+- Persisted settings (via settings): openXRuiEnabled, openXRuiMode, openXRwindowViewMode, openXRdebugEnabled, openXRquadCompositionEnabled (default false), plus openXRimguiEnabled (read only); changing debug mode during a session restarts OpenXR.
+- The debug ImGui window is only drawn if the openXRimguiEnabled setting is true and the session is running; closing the window disables OpenXR.
+- Shortcuts announced in the debug UI: ctrl+numpad0 (enable/disable), ctrl+numpad5 (center).
+- If enable fails on the C++ side, a simple debug log is emitted and the state goes back to 'disabled'.
 
-**Dépendances (chargées avant) :** `core_camera`
+**Dependencies (loaded first):** `core_camera`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `render_openxr.center(value)` | Recentre la vue VR. Sans argument, recentre une fois (OpenXR.centerNow) ; avec une valeur, active/désactive le recentrage continu quand value > 0.2 (OpenXR.centerContinuous). | 328 |
-| `render_openxr.closeWelcome(enable)` | Fermeture de la boîte de dialogue de bienvenue (appelée par ses boutons) : enable=true active OpenXR, sinon le désactive. | 162 |
-| `render_openxr.errorDetected(err)` | Appelé par le moteur en cas d'erreur OpenXR : logue l'erreur et affiche un toast d'erreur avec la traduction `ui.openXR.errors.<err>`. *(interne)* | 340 |
-| `render_openxr.isSessionRunning()` | Indique si une session OpenXR est en cours. | 336 |
-| `render_openxr.onInit()` | Hook d'initialisation : passe l'extension en déchargement manuel et charge les réglages. *(interne)* *(hook)* | 157 |
-| `render_openxr.onPreRender(...)` | Hook avant rendu : appelle la fonction de mise à jour courante (onUpdate quand OpenXR est activé, sinon rien). *(interne)* *(hook)* | 36 |
-| `render_openxr.onSettingsChanged()` | Hook de changement de réglages : relit les réglages OpenXR, redémarre OpenXR si le mode debug change pendant une session, et régénère la courbure de l'UI (OpenXR.generateUiCurvature) si OpenXR est actif. *(interne)* *(hook)* | 143 |
-| `render_openxr.setStateUI(stateString)` | Change l'état de l'interface OpenXR : 'welcome' ouvre la boîte de dialogue, 'enabled' active OpenXR.setEnable(true) (retombe sur 'disabled' en cas d'échec), 'disabled' le coupe et décharge l'extension ; toute autre valeur est une erreur (désactive). Enregistre une action joueur « set VR state … ». | 289 |
-| `render_openxr.stateChanged(state)` | Appelé par le moteur C++ à chaque changement d'état OpenXR : met à jour M.state (le target refresh rate garde le maximum vu ; une fréquence infinie est ramenée à 0), synchronise stateString avec enabled et notifie l'UI. *(interne)* | 98 |
-| `render_openxr.toggle()` | Fait avancer l'état : disabled -> welcome ; welcome -> enabled ; enabled -> disabled. | 321 |
-| `render_openxr.updateUI(forced)` | Envoie 'OpenXRStateChanged' à l'UI si un champ suivi a changé, ou si forced (alors logue aussi l'état). | 82 |
+| `render_openxr.center(value)` | Recenters the VR view. Without argument, recenters once (OpenXR.centerNow); with a value, enables/disables continuous recentering when value > 0.2 (OpenXR.centerContinuous). | 328 |
+| `render_openxr.closeWelcome(enable)` | Closing of the welcome dialog (called by its buttons): enable=true enables OpenXR, otherwise disables it. | 162 |
+| `render_openxr.errorDetected(err)` | Called by the engine on an OpenXR error: logs the error and shows an error toast with the translation `ui.openXR.errors.<err>`. *(internal)* | 340 |
+| `render_openxr.isSessionRunning()` | Indicates whether an OpenXR session is running. | 336 |
+| `render_openxr.onInit()` | Initialization hook: sets the extension to manual unload and loads the settings. *(internal)* *(hook)* | 157 |
+| `render_openxr.onPreRender(...)` | Pre-render hook: calls the current update function (onUpdate when OpenXR is enabled, otherwise nothing). *(internal)* *(hook)* | 36 |
+| `render_openxr.onSettingsChanged()` | Settings change hook: re-reads the OpenXR settings, restarts OpenXR if debug mode changes during a session, and regenerates the UI curvature (OpenXR.generateUiCurvature) if OpenXR is active. *(internal)* *(hook)* | 143 |
+| `render_openxr.setStateUI(stateString)` | Changes the state of the OpenXR interface: 'welcome' opens the dialog, 'enabled' activates OpenXR.setEnable(true) (falls back to 'disabled' on failure), 'disabled' turns it off and unloads the extension; any other value is an error (disables). Records a player action "set VR state …". | 289 |
+| `render_openxr.stateChanged(state)` | Called by the C++ engine on every OpenXR state change: updates M.state (the target refresh rate keeps the maximum seen; an infinite rate is brought back to 0), synchronizes stateString with enabled and notifies the UI. *(internal)* | 98 |
+| `render_openxr.toggle()` | Advances the state: disabled -> welcome; welcome -> enabled; enabled -> disabled. | 321 |
+| `render_openxr.updateUI(forced)` | Sends 'OpenXRStateChanged' to the UI if a tracked field changed, or if forced (then also logs the state). | 82 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `render_openxr.center(value)`
 
-Recentre la vue VR. Sans argument, recentre une fois (OpenXR.centerNow) ; avec une valeur, active/désactive le recentrage continu quand value > 0.2 (OpenXR.centerContinuous).
+Recenters the VR view. Without argument, recenters once (OpenXR.centerNow); with a value, enables/disables continuous recentering when value > 0.2 (OpenXR.centerContinuous).
 
-- `value` (*number|nil*) : Valeur analogique d'une action d'entrée (déduit du code).
+- `value` (*number|nil*) : Analog value of an input action (inferred from code).
 
 #### `render_openxr.closeWelcome(enable)`
 
-Fermeture de la boîte de dialogue de bienvenue (appelée par ses boutons) : enable=true active OpenXR, sinon le désactive.
+Closing of the welcome dialog (called by its buttons): enable=true enables OpenXR, otherwise disables it.
 
-- `enable` (*boolean*) : Choix de l'utilisateur.
+- `enable` (*boolean*) : User's choice.
 
 #### `render_openxr.errorDetected(err)`
 
-Appelé par le moteur en cas d'erreur OpenXR : logue l'erreur et affiche un toast d'erreur avec la traduction `ui.openXR.errors.<err>`.
+Called by the engine on an OpenXR error: logs the error and shows an error toast with the translation `ui.openXR.errors.<err>`.
 
-- `err` (*string*) : Identifiant d'erreur (clé de traduction).
+- `err` (*string*) : Error identifier (translation key).
 
 #### `render_openxr.isSessionRunning()`
 
-Indique si une session OpenXR est en cours.
+Indicates whether an OpenXR session is running.
 
-- **renvoie** : boolean M.state.sessionRunning ou false.
+- **returns**: boolean M.state.sessionRunning or false.
 
 #### `render_openxr.onPreRender(...)`
 
-Hook avant rendu : appelle la fonction de mise à jour courante (onUpdate quand OpenXR est activé, sinon rien).
+Pre-render hook: calls the current update function (onUpdate when OpenXR is enabled, otherwise nothing).
 
-- `...` (*any*) : dtReal, dtSim, dtRaw (déduit du code).
+- `...` (*any*) : dtReal, dtSim, dtRaw (inferred from code).
 
 #### `render_openxr.setStateUI(stateString)`
 
-Change l'état de l'interface OpenXR : 'welcome' ouvre la boîte de dialogue, 'enabled' active OpenXR.setEnable(true) (retombe sur 'disabled' en cas d'échec), 'disabled' le coupe et décharge l'extension ; toute autre valeur est une erreur (désactive). Enregistre une action joueur « set VR state … ».
+Changes the state of the OpenXR interface: 'welcome' opens the dialog, 'enabled' activates OpenXR.setEnable(true) (falls back to 'disabled' on failure), 'disabled' turns it off and unloads the extension; any other value is an error (disables). Records a player action "set VR state …".
 
-- `stateString` (*string*) : 'welcome', 'enabled' ou 'disabled'.
+- `stateString` (*string*) : 'welcome', 'enabled' or 'disabled'.
 
 #### `render_openxr.stateChanged(state)`
 
-Appelé par le moteur C++ à chaque changement d'état OpenXR : met à jour M.state (le target refresh rate garde le maximum vu ; une fréquence infinie est ramenée à 0), synchronise stateString avec enabled et notifie l'UI.
+Called by the C++ engine on every OpenXR state change: updates M.state (the target refresh rate keeps the maximum seen; an infinite rate is brought back to 0), synchronizes stateString with enabled and notifies the UI.
 
-- `state` (*table*) : Nouvel état OpenXR.
+- `state` (*table*) : New OpenXR state.
 
 #### `render_openxr.updateUI(forced)`
 
-Envoie 'OpenXRStateChanged' à l'UI si un champ suivi a changé, ou si forced (alors logue aussi l'état).
+Sends 'OpenXRStateChanged' to the UI if a tracked field changed, or if forced (then also logs the state).
 
-- `forced` (*boolean|nil*) : Forcer l'envoi.
+- `forced` (*boolean|nil*) : Force the send.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `cefDialogOpen` | boolean|nil | true tant que la boîte de dialogue de bienvenue est ouverte. |
+| `cefDialogOpen` | boolean|nil | true while the welcome dialog is open. |
 | `dependencies` | string[] | {'core_camera'} |
-| `state` | table | État OpenXR reçu du moteur : systemName ('?' par défaut), enabled, sessionRunning, sessionState, renderedWidth/Height, recommendedWidth/Height, supportedWidth/Height, supportedLayers, fov0hz/fov0vt/fov1hz/fov1vt, ipd (m), currentRefreshRate/targetRefreshRate… |
-| `stateString` | string | 'disabled' (défaut), 'welcome' ou 'enabled'. |
+| `state` | table | OpenXR state received from the engine: systemName ('?' by default), enabled, sessionRunning, sessionState, renderedWidth/Height, recommendedWidth/Height, supportedWidth/Height, supportedLayers, fov0hz/fov0vt/fov1hz/fov1vt, ipd (m), currentRefreshRate/targetRefreshRate… |
+| `stateString` | string | 'disabled' (default), 'welcome' or 'enabled'. |
 
-**Évènements UI (guihooks.trigger) :** `ConfirmationDialogClose`, `ConfirmationDialogOpen`, `OpenXRStateChanged`, `toastrMsg`
+**UI events (guihooks.trigger):** `ConfirmationDialogClose`, `ConfirmationDialogOpen`, `OpenXRStateChanged`, `toastrMsg`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/render/openxr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/render/openxr.lua`.*

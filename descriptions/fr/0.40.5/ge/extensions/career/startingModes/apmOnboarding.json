@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/career/startingModes/apmOnboarding.lua",
+  "module": "Mode de départ de carrière « apmOnboarding » (tier major, ordre 100, image start_apm.jpg) : c'est le départ avec tutoriel. Ce fichier ne retourne pas un module d'extension mais une simple table de description, chargée par career/career.lua depuis le dossier startingModes. Il démarre l'argent à 0 et prépare les véhicules du tutoriel avec gameplay_tutorial_setup.setupVehicles().",
+  "notes": [
+    "Les champs id, order, tier et image décrivent le mode ; initPlayerAttributes et setupInventory sont appelées par le code de démarrage de la carrière.",
+    "Les titre et description ne sont pas définis dans ce fichier (présents dans sandbox et selfMade)."
+  ],
+  "fields": {
+    "id": {"type": "string", "desc": "\"apmOnboarding\"."},
+    "order": {"type": "number", "desc": "100 (ordre d'affichage)."},
+    "tier": {"type": "string", "desc": "\"major\"."},
+    "image": {"type": "string", "desc": "images/career/start_apm.jpg."}
+  },
+  "functions": {
+    "initPlayerAttributes": {
+      "desc": "Initialise les attributs du joueur : argent = 0 (libellé « Starting Capital »).",
+      "params": {"playerAttributes": {"type": "table", "desc": "Module career_modules_playerAttributes (utilise setAttributes)."}},
+      "internal": true
+    },
+    "setupInventory": {"desc": "Prépare les véhicules du tutoriel (gameplay_tutorial_setup.setupVehicles).", "internal": true}
+  }
+}

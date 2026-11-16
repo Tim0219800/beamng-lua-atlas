@@ -1,39 +1,62 @@
 {
   "path": "lua/ge/extensions/scenario/damageGoal.lua",
-  "module": "Objectif de scénario « damage » (goals.vehicles avec id = 'damage'). Il surveille le dégât du véhicule (map.objects[...].damage) à chaque tick de course et fait gagner ou perdre le scénario quand le dégât dépasse damageLimit. Il est appelé par le système de goals de scenario_scenarios (init au chargement, processState à chaque état, updateFinalStatus à la fin).",
-  "usage": "-- dans le JSON du scénario, goal d'un véhicule :\n-- {\"id\":\"damage\", \"value\":{\"damageLimit\":5000, \"damageThreshold\":500, \"purpose\":\"fail\", \"msg\":\"Trop de dégâts\"}}",
+  "module": "\"damage\" scenario goal (goals.vehicles with id = 'damage'). It monitors the vehicle's damage (map.objects[...].damage) at each race tick and makes the scenario win or lose when the damage exceeds damageLimit. It is called by the scenario_scenarios goal system (init on load, processState on each state, updateFinalStatus at the end).",
+  "usage": "-- in the scenario JSON, a vehicle's goal:\n-- {\"id\":\"damage\", \"value\":{\"damageLimit\":5000, \"damageThreshold\":500, \"purpose\":\"fail\", \"msg\":\"Trop de dégâts\"}}",
   "notes": [
-    "Options lues dans instance.value : damageLimit (number), damageThreshold (number), purpose ('fail' par défaut, ou 'win'), msg (texte final). Un type incorrect fait ignorer l'instance avec une erreur dans le log.",
-    "Tout se passe sur l'état 'onRaceTick'. Si le véhicule n'est pas encore dans map.objects, l'objectif appelle helper.trackVehicle pour activer le suivi et attend le tick suivant.",
-    "Quand le dégât progresse d'au moins damageThreshold (en pourcentage de damageLimit) depuis le dernier message, un flashUiMessage de 1 s est affiché (clés de traduction checkDamage.win.msg ou checkDamage.fail.msg avec le contexte damage en pourcentage).",
-    "Dans showMsg, l'expression {txt = instance.value.msg, ...} or {...} ne se rabat jamais sur le message par défaut (une table est toujours vraie) : si purpose='win' et msg absent, txt vaut nil.",
-    "Tant que le dégât est sous la limite, status.result est mis à 'passed' à chaque tick."
+    "Options read from instance.value: damageLimit (number), damageThreshold (number), purpose ('fail' by default, or 'win'), msg (final text). A wrong type makes the instance be ignored with an error in the log.",
+    "Everything happens on the 'onRaceTick' state. If the vehicle is not yet in map.objects, the goal calls helper.trackVehicle to enable tracking and waits for the next tick.",
+    "When the damage progresses by at least damageThreshold (as a percentage of damageLimit) since the last message, a 1 s flashUiMessage is shown (translation keys checkDamage.win.msg or checkDamage.fail.msg with the damage context as a percentage).",
+    "In showMsg, the expression {txt = instance.value.msg, ...} or {...} never falls back to the default message (a table is always truthy): if purpose='win' and msg is absent, txt is nil.",
+    "While the damage is under the limit, status.result is set to 'passed' on every tick."
   ],
   "fields": {
-    "instances": {"type": "table", "desc": "Liste des goals 'damage' valides, remplie par init()."}
+    "instances": {
+      "type": "table",
+      "desc": "List of valid 'damage' goals, filled by init()."
+    }
   },
   "functions": {
     "init": {
-      "desc": "Réinitialise instances et y ajoute chaque goal id='damage' de scenario.goals.vehicles après vérification des types (purpose vaut 'fail' si absent, lastProgress initialisé à 0).",
-      "params": {"scenario": {"type": "table", "desc": "Table du scénario courant."}},
+      "desc": "Resets instances and adds to them each goal id='damage' of scenario.goals.vehicles after checking the types (purpose is 'fail' if absent, lastProgress initialized to 0).",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Current scenario table."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "processState": {
-      "desc": "Appelé par le système de goals à chaque changement d'état du scénario. Sur 'onRaceTick', compare le dégât du véhicule à damageLimit, affiche la progression et termine le scénario (scenario_scenarios.finish) en victoire ou défaite selon purpose.",
+      "desc": "Called by the goal system on every scenario state change. On 'onRaceTick', compares the vehicle's damage to damageLimit, shows the progress and ends the scenario (scenario_scenarios.finish) in victory or defeat depending on purpose.",
       "params": {
-        "scenario": {"type": "table", "desc": "Scénario courant (scenario.timer sert à formater le temps)."},
-        "state": {"type": "string", "desc": "Nom de l'état ; seul 'onRaceTick' est traité."},
-        "stateData": {"type": "table", "desc": "Données de l'état (non utilisées)."}
+        "scenario": {
+          "type": "table",
+          "desc": "Current scenario (scenario.timer is used to format the time)."
+        },
+        "state": {
+          "type": "string",
+          "desc": "State name; only 'onRaceTick' is handled."
+        },
+        "stateData": {
+          "type": "table",
+          "desc": "State data (unused)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "updateFinalStatus": {
-      "desc": "Enregistre le résultat de chaque instance dans statistics_statistics.setGoalProgress en fin de scénario.",
+      "desc": "Records each instance's result in statistics_statistics.setGoalProgress at the end of the scenario.",
       "params": {
-        "scenario": {"type": "table", "desc": "Scénario courant."},
-        "instance": {"type": "table|nil", "desc": "Non utilisé : la boucle parcourt M.instances."}
+        "scenario": {
+          "type": "table",
+          "desc": "Current scenario."
+        },
+        "instance": {
+          "type": "table|nil",
+          "desc": "Unused: the loop iterates over M.instances."
+        }
       },
       "returns": [],
       "internal": true

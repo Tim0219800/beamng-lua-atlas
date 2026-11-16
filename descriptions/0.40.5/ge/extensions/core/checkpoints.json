@@ -1,62 +1,177 @@
 {
   "path": "lua/ge/extensions/core/checkpoints.lua",
-  "module": "Mémorise, pour chaque véhicule d'un scénario de course, le dernier point de passage atteint (position, direction, vecteur haut, indices de waypoint). Sert à replacer au dernier checkpoint les véhicules pilotés par l'IA qui sont bloqués : toutes les 4 s, un véhicule non jouable qui a quitté son point de départ (> 1 m) et n'a pas bougé de plus de 4 cm depuis le dernier relevé est remis au dernier checkpoint. Actif seulement si le scénario est en état 'running' et que enableCheckpoints est vrai avec plus d'un élément dans lapConfig.",
+  "module": "Stores, for each vehicle of a race scenario, the last waypoint reached (position, direction, up vector, waypoint indices). Used to put back at the last checkpoint the AI-driven vehicles that are stuck: every 4 s, a non-playable vehicle that has left its starting point (> 1 m) and has not moved more than 4 cm since the last sample is put back at the last checkpoint. Active only if the scenario is in the 'running' state and enableCheckpoints is true with more than one element in lapConfig.",
   "notes": [
-    "M.state.vehicleCheckpoints[vehId] contient : vehicleName, checkTimer, pos, dirVec, upVec, currentWpName, currentWpIndex, nextWpIndex, initialPos, prevVehPos, raceOver. M.state.aiVehiclePath[vehId] garde l'argument de scenariohelper.setAiPath de l'IA (la liste waypoints perd chaque waypoint atteint).",
-    "Seuls les véhicules playerUsable ou contrôlés par l'IA du scénario (scenario.aiControlledVehiclesById) sont initialisés (à la création du véhicule et au redémarrage du scénario).",
-    "La remise au checkpoint est faite par une fonction locale ResetToSavedCheckpoint : resetBrokenFlexMesh, setPositionRotation, puis rappel GE via queueGameEngineLua vers completeReset, et recovery.clear() côté véhicule.",
-    "Incohérence : completeReset indexe M.state.vehicleCheckpoints[vehicleId] sans vérifier qu'il existe (erreur Lua si le véhicule n'a pas de checkpoint).",
-    "Sérialisé en onSerialize/onDeserialized (clés converties id <-> nom de véhicule) ; la sauvegarde de campagne n'enregistre que vehicleCheckpoints."
+    "M.state.vehicleCheckpoints[vehId] contains: vehicleName, checkTimer, pos, dirVec, upVec, currentWpName, currentWpIndex, nextWpIndex, initialPos, prevVehPos, raceOver. M.state.aiVehiclePath[vehId] keeps the argument of the AI's scenariohelper.setAiPath (the waypoints list loses each waypoint reached).",
+    "Only vehicles that are playerUsable or controlled by the scenario's AI (scenario.aiControlledVehiclesById) are initialized (when the vehicle is created and when the scenario restarts).",
+    "The reset to checkpoint is done by a local function ResetToSavedCheckpoint: resetBrokenFlexMesh, setPositionRotation, then a GE callback via queueGameEngineLua to completeReset, and recovery.clear() on the vehicle side.",
+    "Inconsistency: completeReset indexes M.state.vehicleCheckpoints[vehicleId] without checking that it exists (Lua error if the vehicle has no checkpoint).",
+    "Serialized in onSerialize/onDeserialized (keys converted id <-> vehicle name); the campaign save only records vehicleCheckpoints."
   ],
   "fields": {
-    "state": {"type": "table", "desc": "État interne : vehicleCheckpoints (table<integer, table>) et aiVehiclePath (table<integer, table>), remis à zéro au début/fin de niveau."}
+    "state": {
+      "type": "table",
+      "desc": "Internal state: vehicleCheckpoints (table<integer, table>) and aiVehiclePath (table<integer, table>), reset at level start/end."
+    }
   },
   "functions": {
     "saveCheckpoint": {
-      "desc": "Enregistre un point de reprise pour un véhicule et remet son chrono à 0. Sans cpData, utilise la position et la direction actuelles du véhicule ; le vecteur haut est toujours celui du véhicule. Ne fait rien (journal) si le véhicule n'existe pas.",
+      "desc": "Records a restart point for a vehicle and resets its timer to 0. Without cpData, uses the vehicle's current position and direction; the up vector is always the vehicle's. Does nothing (log) if the vehicle does not exist.",
       "params": {
-        "vehicleId": {"type": "integer", "desc": "id du véhicule"},
-        "vehicleName": {"type": "string|nil", "desc": "nom du véhicule ; « unnamed_<id> » si nil"},
-        "cpData": {"type": "table|nil", "desc": "desiredPos, desiredDir (vec3), currentWpName, currentWpIndex, nextWpIndex"}
+        "vehicleId": {
+          "type": "integer",
+          "desc": "vehicle id"
+        },
+        "vehicleName": {
+          "type": "string|nil",
+          "desc": "vehicle name; \"unnamed_<id>\" if nil"
+        },
+        "cpData": {
+          "type": "table|nil",
+          "desc": "desiredPos, desiredDir (vec3), currentWpName, currentWpIndex, nextWpIndex"
+        }
       }
     },
     "saveAIPath": {
-      "desc": "Mémorise le chemin IA (argument de setAiPath) du véhicule désigné par son nom, pour le restaurer à la remise au checkpoint.",
+      "desc": "Stores the AI path (argument of setAiPath) of the vehicle designated by its name, to restore it when put back at the checkpoint.",
       "params": {
-        "vehicleName": {"type": "string", "desc": "nom de l'objet véhicule dans scenetree"},
-        "arg": {"type": "table", "desc": "table passée à scenario/scenariohelper.setAiPath (champ waypoints = noms)"}
+        "vehicleName": {
+          "type": "string",
+          "desc": "name of the vehicle object in scenetree"
+        },
+        "arg": {
+          "type": "table",
+          "desc": "table passed to scenario/scenariohelper.setAiPath (waypoints field = names)"
+        }
       }
     },
     "completeReset": {
-      "desc": "Appelé en retour (aller-retour véhicule -> GE) après le replacement : réapplique le chemin IA sauvegardé et informe scenario_waypoints des indices de waypoint du checkpoint.",
+      "desc": "Called back (round trip vehicle -> GE) after the replacement: reapplies the saved AI path and informs scenario_waypoints of the checkpoint's waypoint indices.",
       "params": {
-        "vehicleId": {"type": "integer", "desc": "id du véhicule"},
-        "vehicleName": {"type": "string", "desc": "nom du véhicule (journal)"}
+        "vehicleId": {
+          "type": "integer",
+          "desc": "vehicle id"
+        },
+        "vehicleName": {
+          "type": "string",
+          "desc": "vehicle name (log)"
+        }
       },
       "internal": true
     },
     "onRaceWaypointReached": {
-      "desc": "Hook : un véhicule atteint un waypoint de course. Enregistre le checkpoint (position du waypoint ; direction = curRot du waypoint, sinon vecteur vitesse du véhicule) et marque raceOver au dernier waypoint.",
-      "params": {"data": {"type": "table", "desc": "vehicleId, vehicleName, curPos, curRot (optionnel), waypointName, cur, next"}},
+      "desc": "Hook: a vehicle reaches a race waypoint. Records the checkpoint (waypoint position; direction = the waypoint's curRot, otherwise the vehicle's velocity vector) and marks raceOver at the last waypoint.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "vehicleId, vehicleName, curPos, curRot (optional), waypointName, cur, next"
+        }
+      },
       "internal": true
     },
     "onPreRender": {
-      "desc": "Hook par image : détecte les véhicules IA immobiles (voir description du module) et les remet au dernier checkpoint.",
-      "params": {"dt": {"type": "number", "desc": "secondes"}},
+      "desc": "Per-frame hook: detects stationary AI vehicles (see module description) and puts them back at the last checkpoint.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "seconds"
+        }
+      },
       "internal": true
     },
     "onScenarioRestarted": {
-      "desc": "Hook : remet à zéro les données puis initialise un checkpoint pour chaque véhicule du scénario.",
-      "params": {"scenario": {"type": "table", "desc": "scénario (utilise vehicleNameToId)"}},
+      "desc": "Hook: resets the data then initializes a checkpoint for each vehicle of the scenario.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "scenario (uses vehicleNameToId)"
+        }
+      },
       "internal": true
     },
-    "onVehicleSpawned": {"desc": "Hook : initialise le checkpoint d'un nouveau véhicule s'il n'en a pas.", "params": {"vehId": {"type": "integer", "desc": "id du véhicule"}}, "internal": true},
-    "onVehicleDestroyed": {"desc": "Hook : supprime le checkpoint du véhicule détruit.", "params": {"vid": {"type": "integer", "desc": "id du véhicule"}}, "internal": true},
-    "onClientPreStartMission": {"desc": "Hook : avant le chargement d'un niveau, remet les données à zéro.", "params": {"levelPath": {"type": "string", "desc": "chemin du niveau"}}, "internal": true},
-    "onClientEndMission": {"desc": "Hook : à la sortie du niveau, remet les données à zéro.", "params": {"levelPath": {"type": "string", "desc": "chemin du niveau"}}, "internal": true},
-    "onSerialize": {"desc": "Hook : renvoie vehicleCheckpoints et aiVehiclePath avec clés converties en noms de véhicules (rechargement des extensions).", "returns": [{"type": "table", "desc": "données à sérialiser"}], "internal": true},
-    "onDeserialized": {"desc": "Hook : restaure l'état sérialisé (noms de véhicules reconvertis en ids).", "params": {"data": {"type": "table", "desc": "table renvoyée par onSerialize"}}, "internal": true},
-    "onSaveCampaign": {"desc": "Hook : sauvegarde de campagne ; appelle saveCallback(M.__globalAlias__, {vehicleCheckpoints}).", "params": {"saveCallback": {"type": "function", "desc": "fonction de sauvegarde de la campagne"}}, "internal": true},
-    "onResumeCampaign": {"desc": "Hook : reprise de campagne, restaure vehicleCheckpoints.", "params": {"campaignInProgress": {"type": "any", "desc": "non utilisé"}, "data": {"type": "table", "desc": "données sauvegardées par onSaveCampaign"}}, "internal": true}
+    "onVehicleSpawned": {
+      "desc": "Hook: initializes the checkpoint of a new vehicle if it has none.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "vehicle id"
+        }
+      },
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook: removes the destroyed vehicle's checkpoint.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "vehicle id"
+        }
+      },
+      "internal": true
+    },
+    "onClientPreStartMission": {
+      "desc": "Hook: before a level loads, resets the data.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "level path"
+        }
+      },
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook: on leaving the level, resets the data.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "level path"
+        }
+      },
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook: returns vehicleCheckpoints and aiVehiclePath with keys converted to vehicle names (extension reload).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "data to serialize"
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook: restores the serialized state (vehicle names converted back to ids).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "table returned by onSerialize"
+        }
+      },
+      "internal": true
+    },
+    "onSaveCampaign": {
+      "desc": "Hook: campaign save; calls saveCallback(M.__globalAlias__, {vehicleCheckpoints}).",
+      "params": {
+        "saveCallback": {
+          "type": "function",
+          "desc": "campaign save function"
+        }
+      },
+      "internal": true
+    },
+    "onResumeCampaign": {
+      "desc": "Hook: campaign resume, restores vehicleCheckpoints.",
+      "params": {
+        "campaignInProgress": {
+          "type": "any",
+          "desc": "unused"
+        },
+        "data": {
+          "type": "table",
+          "desc": "data saved by onSaveCampaign"
+        }
+      },
+      "internal": true
+    }
   }
 }

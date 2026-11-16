@@ -1,0 +1,366 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/rallyManager.lua",
+  "module": "Gestionnaire d'une mission de rallye chargée (spéciale ou section de route). Un objet RallyManager regroupe le notebook (pacenotes), le chemin de course (race.json), la driveline enregistrée (DrivelineV3 / DrivelineRoute), le suivi du véhicule (VehicleTracker), le gestionnaire audio, la file d'attente des pacenotes, l'observateur d'étape (StageObserver) et le chronomètre (StageTimingState). Il déclenche les pacenotes audio et visuelles, gère les récupérations du véhicule, les temps intermédiaires et l'état de la spéciale pour l'UI. Il est créé et possédé par l'extension gameplay_rally (gameplay_rally.getRallyManager()). Le module renvoie un constructeur.",
+  "usage": "local rm = gameplay_rally.getRallyManager()\nif rm then\n  local data = rm:getActiveStageData()\n  print(data.currentSSTime, data.completion.distPct)\nend",
+  "notes": [
+    "Le constructeur est appelé avec (missionDir, missionId) ; les ressources (notebook, driveline, audio) ne sont construites que par rebuildAssets.",
+    "La file de pacenotes (dequeue) peut contenir la valeur spéciale 'HOLD' : tant qu'elle est en tête, aucun pacenote n'est joué. Elle est utilisée pour les virages lents (slowCorner) et libérée par clearQueueHold.",
+    "Les paramètres d'activation sont lus dans settings : rallyAudioPacenotes et rallyVisualPacenotes. Un notebook en mode audio personnalisé n'émet pas de pacenotes visuels.",
+    "Modes d'autorité du chrono : 'shadow' (par défaut, source = données de course 'race') ou 'tracker' (source = observateur de passage). Toute autre valeur est ramenée à 'shadow'.",
+    "Les récupérations de véhicule appellent extensions.hook('onVehicleTeleportedToLastRoad', vehId) ; recoverVehicleToRouteDeparture appelle aussi extensions.hook('onRallyRouteRecoveryComplete', {vehId, repairVehicle, recoveryData}).",
+    "getActiveStageData renvoie toujours la même table réutilisée (variable locale du module) : copier les valeurs si elles doivent être conservées entre deux appels.",
+    "Bug potentiel : plusieurs méthodes ne vérifient pas que drivelineRoute existe (getPointDistanceFromStartMeters/Km, getRaceCompletionData) et provoquent une erreur sur nil avant le chargement ; getTimeAllocationSecs divise par drivelineV3:getSpeedLimitKph() sans tester une valeur nil ou nulle ; codriver et closestPacenoteToVehicle supposent notebook / vehicleTracker non nil.",
+    "addRecoveryRaceTime utilise toujours les pénalités d'une spéciale (« Single stages are always a special stage », commentaire du code) et ignore la table des pénalités hors spéciale de recoveryClockAdvance."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet RallyManager renvoyé par le constructeur du module.",
+      "functions": {
+        "init": {
+          "desc": "Initialise tous les champs (file de pacenotes, notebook, racePath, driveline, audio nil, StageObserver, StageTimingState, mode d'autorité 'shadow') pour la mission donnée.",
+          "params": {
+            "missionDir": {"type": "string", "desc": "Dossier de la mission"},
+            "missionId": {"type": "string", "desc": "Identifiant de la mission"}
+          },
+          "internal": true
+        },
+        "getVoicepackPick": {
+          "desc": "Choix de voicepack de la session ; {type='preferences'} par défaut.",
+          "returns": [{"type": "table", "desc": "{type='preferences'} ou {type='voicepack', id, scope, dirname}"}]
+        },
+        "getVoicepackPickWritesSettings": {
+          "desc": "Indique si le choix de voicepack est écrit dans les réglages (vrai sauf si explicitement désactivé).",
+          "returns": [{"type": "boolean", "desc": ""}]
+        },
+        "_refreshNotebookForVoicepackPick": {
+          "desc": "Invalide les caches de voicepack et d'audio personnalisé du notebook et lui signale un changement de réglages.",
+          "internal": true
+        },
+        "setVoicepackPick": {
+          "desc": "Définit le voicepack de la session (type 'auto' converti en 'preferences'), l'ajoute à la liste MRU si nécessaire, puis rafraîchit le notebook sauf si deferNotebookRefresh.",
+          "params": {
+            "pick": {"type": "table|nil", "desc": "Choix de voicepack"},
+            "opts": {"type": "table|nil", "desc": "{writeSettings=boolean, deferNotebookRefresh=boolean}"}
+          }
+        },
+        "getErrorMsgForUser": {
+          "desc": "Dernier message d'erreur destiné à l'utilisateur (race.json manquant, notebook invalide, etc.).",
+          "returns": [{"type": "string|nil", "desc": "message"}]
+        },
+        "getPacenoteProcessingEnabled": {
+          "desc": "Indique si le traitement de la file de pacenotes est actif.",
+          "returns": [{"type": "boolean", "desc": ""}]
+        },
+        "setPacenoteProcessingEnabled": {
+          "desc": "Active ou suspend le traitement de la file de pacenotes.",
+          "params": {"enabled": {"type": "boolean", "desc": "true pour traiter la file"}}
+        },
+        "getMissionId": {"desc": "Identifiant de la mission.", "returns": [{"type": "string", "desc": ""}]},
+        "getMissionDir": {"desc": "Dossier de la mission.", "returns": [{"type": "string", "desc": ""}]},
+        "getNotebookPath": {"desc": "Notebook chargé (objet NotebookPath), nil avant rebuildAssets.", "returns": [{"type": "table|nil", "desc": ""}]},
+        "getAudioManager": {"desc": "Gestionnaire audio, nil avant rebuildAssets.", "returns": [{"type": "table|nil", "desc": ""}]},
+        "getRacePath": {"desc": "Chemin de course chargé depuis race.json.", "returns": [{"type": "table|nil", "desc": ""}]},
+        "getRaceData": {"desc": "Données de course courantes (états des véhicules, temps), fournies par setRaceData.", "returns": [{"type": "table|nil", "desc": ""}]},
+        "setRaceData": {
+          "desc": "Mémorise les données de course courantes.",
+          "params": {"raceData": {"type": "table|nil", "desc": "Données de course (states, time...)"}}
+        },
+        "getStartPositionByName": {
+          "desc": "Cherche une position de départ du chemin de course par son nom.",
+          "params": {"name": {"type": "string", "desc": "Nom de la position (ex. TC_in)"}},
+          "returns": [{"type": "table|nil", "desc": "Position de départ ou nil"}]
+        },
+        "getTCInPos": {"desc": "Position de départ nommée « TC_in » (entrée du contrôle horaire).", "returns": [{"type": "table|nil", "desc": ""}]},
+        "getTCOutPos": {"desc": "Position de départ nommée « TC_out » (sortie du contrôle horaire).", "returns": [{"type": "table|nil", "desc": ""}]},
+        "getSSStartLinePos": {"desc": "Position de départ nommée « SS_start_line » (ligne de départ de la spéciale).", "returns": [{"type": "table|nil", "desc": ""}]},
+        "getSSStopControlPos": {"desc": "Position de départ nommée « SS_stop_control » (contrôle d'arrêt).", "returns": [{"type": "table|nil", "desc": ""}]},
+        "getMissionName": {
+          "desc": "Nom traduit de la mission, calculé une fois puis mis en cache.",
+          "returns": [{"type": "string", "desc": ""}]
+        },
+        "getMissionStartTrigger": {
+          "desc": "Déclencheur de départ (startTrigger) de la mission dans gameplay_missions_missions ; nil et erreur loggée si la mission est introuvable.",
+          "returns": [{"type": "table|nil", "desc": "table avec pos, rot, level..."}]
+        },
+        "triggerPacenote": {
+          "desc": "Joue un pacenote si la lecture est autorisée : l'envoie à l'audio (réglage rallyAudioPacenotes) et déclenche l'affichage visuel (réglage rallyVisualPacenotes, sauf notebook audio personnalisé).",
+          "params": {"pacenote": {"type": "table", "desc": "Pacenote du notebook"}}
+        },
+        "_playbackAllowed": {
+          "desc": "Appelle pacenote:playbackAllowed() ; en cas d'erreur, l'erreur est loggée et la lecture est autorisée.",
+          "params": {"pacenote": {"type": "table", "desc": "Pacenote"}},
+          "returns": [{"type": "boolean", "desc": "true si la lecture est autorisée"}],
+          "internal": true
+        },
+        "setupDrivelineRouteHooks": {
+          "desc": "Branche les callbacks du DrivelineRoute (CsDynamic, CsImmediate, CsStatic, CeStatic, décalages -40 pour Cs et -5 pour Ce, pourcentage de virage 0.5) : ils mettent le pacenote en file, ajoutent un HOLD pour les virages lents, effacent le pacenote visuel et libèrent le HOLD selon la règle du pacenote.",
+          "internal": true
+        },
+        "codriver": {
+          "desc": "Copilote sélectionné du notebook.",
+          "returns": [{"type": "any", "desc": "résultat de notebook:selectedCodriver()"}]
+        },
+        "getPointDistanceFromStartMeters": {
+          "desc": "Distance du point depuis le départ le long de la route, en mètres.",
+          "params": {"point": {"type": "any", "desc": "Point ou position de la route (déduit du code)"}},
+          "returns": [{"type": "number", "desc": "mètres"}]
+        },
+        "getPointDistanceFromStartKm": {
+          "desc": "Distance du point depuis le départ le long de la route, en kilomètres.",
+          "params": {"point": {"type": "any", "desc": "Point ou position de la route (déduit du code)"}},
+          "returns": [{"type": "number", "desc": "kilomètres"}]
+        },
+        "getTimeAllocationSecs": {
+          "desc": "Temps alloué en secondes pour parcourir la route à la vitesse limite de la driveline (distance / vitesse).",
+          "returns": [{"type": "number|nil", "desc": "secondes ; nil si route/driveline absentes ou distance négative"}]
+        },
+        "getTimeAllocationString": {
+          "desc": "Temps alloué arrondi à la minute supérieure, au format « Xh Ym ».",
+          "returns": [{"type": "string", "desc": "texte, ou \"N/A\" si indisponible"}]
+        },
+        "getSplitDataList": {"desc": "Liste des données de splits du DrivelineRoute.", "returns": [{"type": "table|nil", "desc": ""}]},
+        "getSplitDataIndex": {"desc": "Index des splits par pathnodeId.", "returns": [{"type": "table|nil", "desc": ""}]},
+        "getPathnodeObservationList": {"desc": "Liste ordonnée par distance des pathnodes à observer (splits, arrivée).", "returns": [{"type": "table|nil", "desc": ""}]},
+        "resolveAndLoadNotebook": {
+          "desc": "Choisit le voicepack actif (choix exact ou préférences/MRU) puis charge le notebook correspondant de la mission. Si aucun n'existe, renvoie un notebook vide en mémoire (« Route Preview ») pour prévisualiser une route sans pacenotes.",
+          "returns": [{"type": "table|nil", "desc": "Notebook"}]
+        },
+        "rebuildAssets": {
+          "desc": "Construit tout le contexte d'exécution : VehicleTracker, race.json, notebook, AudioManager, driveline (DrivelineV3) et DrivelineRoute, snaproad du notebook, pacenotes compilés, puis runtimeResync. En cas d'échec, errorMsgForUser est renseigné.",
+          "params": {"options": {"type": "table|nil", "desc": "{assets=false pour seulement resynchroniser, deferRuntime=boolean (défaut true)}"}},
+          "returns": [{"type": "boolean", "desc": "true si tout s'est bien passé"}]
+        },
+        "reloadVoicepackAssets": {
+          "desc": "Change de voicepack puis reconstruit tous les états dérivés du compositeur (y compris les appels de distance).",
+          "params": {
+            "pick": {"type": "table|nil", "desc": "Choix de voicepack"},
+            "opts": {"type": "table|nil", "desc": "{writeSettings=boolean}"}
+          },
+          "returns": [{"type": "boolean", "desc": "résultat de rebuildAssets"}]
+        },
+        "resetStageRuntime": {
+          "desc": "Réinitialise l'état de suivi de la spéciale : chrono, observateur, drapeaux de fin, et réapplique le mode d'autorité à l'observateur."
+        },
+        "resetPacenoteRuntime": {
+          "desc": "Efface les pacenotes visuels, la file audio et la file de pacenotes."
+        },
+        "resyncAfterTeleport": {
+          "desc": "Resynchronise l'état après un déplacement du véhicule : vide les files, oublie l'emprise de l'observateur et demande au DrivelineRoute de recalculer (immédiatement si deferRuntime == false, sinon au prochain onUpdate).",
+          "params": {"options": {"type": "table|nil", "desc": "{deferRuntime=boolean, preserveRecoveryTracker=boolean}"}},
+          "returns": [{"type": "boolean", "desc": "toujours true"}]
+        },
+        "clearResolvedAudioObjs": {"desc": "Demande au notebook d'oublier les objets audio résolus."},
+        "runtimeResync": {
+          "desc": "Vide les audio résolus, réinitialise le chrono d'étape, puis appelle resyncAfterTeleport.",
+          "params": {"options": {"type": "table|nil", "desc": "Mêmes options que resyncAfterTeleport"}},
+          "returns": [{"type": "boolean", "desc": "résultat de resyncAfterTeleport"}]
+        },
+        "onSettingsChanged": {
+          "desc": "Appelé quand les réglages rally changent : prévient le notebook et vide la file audio.",
+          "internal": true
+        },
+        "setPreserveRecoveryTrackerOnNextVehicleReset": {
+          "desc": "Indique que le prochain reset du véhicule doit préserver le suivi statique de la récupération.",
+          "params": {"val": {"type": "boolean", "desc": "true pour préserver (seule la valeur true stricte compte)"}}
+        },
+        "onVehicleResetted": {
+          "desc": "Appelé quand le véhicule est remis en place : vide les audio résolus et resynchronise (en préservant le tracker de récupération une seule fois si demandé).",
+          "internal": true
+        },
+        "triggerShowVisualPacenote": {
+          "desc": "Envoie le pacenote compilé à l'UI via guihooks 'showVisualPacenote2'. Ignoré s'il n'a pas d'événement visuel ou aucune icône (visualPacenotes vide).",
+          "params": {"pacenote": {"type": "table|nil", "desc": "Pacenote"}}
+        },
+        "triggerClearVisualPacenote": {
+          "desc": "Efface un pacenote visuel (guihooks 'clearOneVisualPacenote' avec visualSerialNo).",
+          "params": {"pacenote": {"type": "table|nil", "desc": "Pacenote"}}
+        },
+        "triggerClearAllVisualPacenotes": {
+          "desc": "Efface tous les pacenotes visuels (guihooks 'clearAllVisualPacenotes')."
+        },
+        "drawPacenotesForDriving": {
+          "desc": "Dessine en debug le prochain pacenote : le waypoint de début de virage avec le texte compilé.",
+          "internal": false
+        },
+        "onUpdate": {
+          "desc": "Appelé à chaque frame par gameplay_rally : met à jour le tracker, le DrivelineRoute, le chrono (avance de dtSim), les observations de splits, l'audio, puis traite la file de pacenotes.",
+          "params": {
+            "dtReal": {"type": "number", "desc": "Temps réel écoulé (s)"},
+            "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s)"},
+            "dtRaw": {"type": "number", "desc": "Temps brut écoulé (s)"}
+          },
+          "internal": true
+        },
+        "clearQueueHold": {
+          "desc": "Retire le HOLD en tête de file de pacenotes, s'il y est."
+        },
+        "enqueuePacenote": {
+          "desc": "Ajoute un pacenote à la fin de la file.",
+          "params": {"pacenote": {"type": "table", "desc": "Pacenote"}}
+        },
+        "enqueueHold": {
+          "desc": "Ajoute une valeur HOLD à la fin de la file : les pacenotes suivants attendent sa libération."
+        },
+        "processPacenoteQueue": {
+          "desc": "Si le traitement est actif et que la tête n'est pas HOLD, dépile un pacenote et le joue via triggerPacenote.",
+          "internal": true
+        },
+        "closestPacenoteToVehicle": {
+          "desc": "Pacenote le plus proche de la position du véhicule suivi.",
+          "returns": [{"type": "table|nil", "desc": "Pacenote"}]
+        },
+        "getNextPacenotes": {
+          "desc": "Liste contenant le prochain pacenote de la driveline (un seul élément, éventuellement nil).",
+          "returns": [{"type": "table", "desc": "{pacenote}"}]
+        },
+        "enqueueRandomSystemPacenote": {
+          "desc": "Choisit un pacenote système aléatoire par nom, lit la durée audio dans ses métadonnées (+ audioLenOffset) et l'envoie à l'AudioManager. Logue une erreur si le nom, le fichier audio ou la durée sont invalides.",
+          "params": {
+            "name": {"type": "string", "desc": "Nom du pacenote système"},
+            "audioLenOffset": {"type": "number|nil", "desc": "Secondes ajoutées à la durée audio (0 par défaut)"}
+          }
+        },
+        "enqueuePauseSecs": {
+          "desc": "Ajoute une pause dans la file audio.",
+          "params": {"secs": {"type": "number", "desc": "Durée en secondes"}}
+        },
+        "sendPacenoteToAudioManager": {
+          "desc": "Envoie le pacenote à l'AudioManager pour lecture audio.",
+          "params": {"pacenote": {"type": "table", "desc": "Pacenote"}},
+          "returns": [{"type": "boolean", "desc": "false s'il n'y a pas d'AudioManager"}]
+        },
+        "playFirstPacenote": {
+          "desc": "Joue (audio) le premier pacenote trié du notebook et le mémorise comme dernier joué."
+        },
+        "getDrivelineRoute": {"desc": "Objet DrivelineRoute.", "returns": [{"type": "table|nil", "desc": ""}]},
+        "setLastPlayedPacenote": {
+          "desc": "Mémorise le dernier pacenote joué, son nom et son index dans la liste triée du notebook.",
+          "params": {"pacenote": {"type": "table|nil", "desc": "Pacenote"}}
+        },
+        "getLastPlayedPacenote": {
+          "desc": "Dernier pacenote joué (retrouvé par son index dans le notebook s'il existe).",
+          "returns": [{"type": "table|nil", "desc": "Pacenote"}]
+        },
+        "getLastPlayedPacenoteRecoveryPose": {
+          "desc": "Calcule une position et rotation de récupération placées avant le dernier pacenote joué.",
+          "params": {"distanceBefore": {"type": "number", "desc": "Distance avant le pacenote, en mètres (déduit du code)"}},
+          "returns": [
+            {"type": "vec3|nil", "desc": "Position"},
+            {"type": "quat|nil", "desc": "Rotation"},
+            {"type": "string|nil", "desc": "Raison de l'échec"},
+            {"type": "table|nil", "desc": "Pacenote utilisé"},
+            {"type": "vec3|nil", "desc": "Direction avant"}
+          ]
+        },
+        "recoverVehicleToLastPlayedPacenote": {
+          "desc": "Téléporte le véhicule 10 m (ou options.distanceBefore) avant le dernier pacenote joué, resynchronise puis déclenche le hook onVehicleTeleportedToLastRoad.",
+          "params": {
+            "veh": {"type": "userdata|nil", "desc": "Véhicule (joueur 0 par défaut)"},
+            "options": {"type": "table|nil", "desc": "{distanceBefore=number, resetVehicle=boolean, unlimitedSafeSpawnRange=boolean}"}
+          },
+          "returns": [
+            {"type": "boolean", "desc": "true si réussi"},
+            {"type": "string|nil", "desc": "Raison de l'échec"},
+            {"type": "table|nil", "desc": "Pacenote utilisé"}
+          ]
+        },
+        "getRouteDepartureRecoveryPose": {
+          "desc": "Calcule la pose de récupération après une sortie de route (DrivelineRoute:vehiclePlacementPosAndRotForRecovery).",
+          "params": {"options": {"type": "table|nil", "desc": "{backoffDistance=number, tangentLookAhead=number}"}},
+          "returns": [
+            {"type": "vec3|nil", "desc": "Position"},
+            {"type": "quat|nil", "desc": "Rotation"},
+            {"type": "string|nil", "desc": "Raison de l'échec"},
+            {"type": "table|nil", "desc": "{fwd, distToTarget, trackerState}"}
+          ]
+        },
+        "recoverVehicleToRouteDeparture": {
+          "desc": "Téléporte le véhicule au point de reprise de la route, avec réparation selon options.repairVehicle / resetVehicle / gameplay_rally.getRecoveryRepairVehicle (vrai par défaut), puis déclenche les hooks onVehicleTeleportedToLastRoad et onRallyRouteRecoveryComplete.",
+          "params": {
+            "veh": {"type": "userdata|nil", "desc": "Véhicule (joueur 0 par défaut)"},
+            "options": {"type": "table|nil", "desc": "{repairVehicle, resetVehicle, backoffDistance, tangentLookAhead, unlimitedSafeSpawnRange}"}
+          },
+          "returns": [
+            {"type": "boolean", "desc": "true si réussi"},
+            {"type": "string|nil", "desc": "Raison de l'échec"},
+            {"type": "table|nil", "desc": "recoveryData"}
+          ]
+        },
+        "getRecoveryDestinationPos": {
+          "desc": "Position de destination d'une récupération : la pose de reprise, sinon le point de route devant le véhicule.",
+          "returns": [{"type": "vec3|nil", "desc": "Position"}]
+        },
+        "resetAudioQueue": {"desc": "Vide la file audio de l'AudioManager."},
+        "getSpeedLimitKph": {"desc": "Limite de vitesse de la driveline en km/h.", "returns": [{"type": "number|nil", "desc": "km/h"}]},
+        "getLiaisonAllocatedTimeSecs": {"desc": "Temps alloué de la liaison en secondes.", "returns": [{"type": "number|nil", "desc": "secondes"}]},
+        "hasAnyPacenotes": {"desc": "Indique si le notebook contient des pacenotes.", "returns": [{"type": "boolean", "desc": ""}]},
+        "getStartAndFinishStartPositions": {
+          "desc": "Renvoie la position de départ (SS_start_line, à défaut TC_in) et le dernier pathnode (arrivée lancée, pas le contrôle d'arrêt).",
+          "returns": [
+            {"type": "table|nil", "desc": "Position de départ"},
+            {"type": "table|nil", "desc": "Dernier pathnode"}
+          ]
+        },
+        "getRaceDistanceMeters": {
+          "desc": "Distance de course entre départ et arrivée le long de la driveline.",
+          "returns": [{"type": "number|nil", "desc": "mètres"}]
+        },
+        "getRaceCompletionData": {
+          "desc": "Progression de la course : distM (distance en m) et distPct (0 à 1) ; le code lit aussi totalDistM.",
+          "returns": [{"type": "table", "desc": "{distM, distPct, totalDistM}"}]
+        },
+        "setStageRuntimeAuthorityMode": {
+          "desc": "Définit le mode d'autorité du chrono ('tracker' ou 'shadow') et le transmet à l'observateur.",
+          "params": {"mode": {"type": "string", "desc": "'tracker' ou 'shadow'"}}
+        },
+        "getStageRuntimeAuthorityMode": {"desc": "Mode d'autorité courant ('shadow' par défaut).", "returns": [{"type": "string", "desc": ""}]},
+        "getStageObserverState": {"desc": "État de l'observateur d'étape (StageObserver:getState).", "returns": [{"type": "table|nil", "desc": ""}]},
+        "setStageRuntimeActive": {
+          "desc": "Démarre ou arrête le chrono de l'étape ; ne démarre pas si l'étape est déjà terminée.",
+          "params": {"active": {"type": "boolean", "desc": "true pour démarrer"}}
+        },
+        "getStageRuntimeTime": {
+          "desc": "Temps de la spéciale en secondes : temps de fin du tracker s'il existe, sinon temps du chrono.",
+          "returns": [{"type": "number", "desc": "secondes"}]
+        },
+        "getStageTimingState": {"desc": "Instantané de l'état du chrono (StageTimingState:getState).", "returns": [{"type": "table|nil", "desc": ""}]},
+        "addRecoveryRaceTime": {
+          "desc": "Ajoute au chrono la pénalité d'une récupération (RecoveryClockAdvance.getSpecialStageSeconds).",
+          "params": {"recoveryType": {"type": "string", "desc": "\"recovery\" ou \"flip\""}},
+          "returns": [{"type": "boolean", "desc": "true si du temps a été ajouté (faux si 0 s ou chrono inactif)"}]
+        },
+        "sampleRaceStageTime": {
+          "desc": "Temps de la spéciale pour un véhicule : celui du chrono si actif ou terminé par le tracker, sinon celui des données de course (temps de fin si terminé).",
+          "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule"}},
+          "returns": [{"type": "number|nil", "desc": "secondes"}]
+        },
+        "getTrackerStageTime": {
+          "desc": "Temps de la spéciale vu par le tracker : observateur, sinon fin du tracker, chrono actif, ou temps de course.",
+          "returns": [{"type": "number|nil", "desc": "secondes"}]
+        },
+        "updateTrackerSplitObservations": {
+          "desc": "Appelle StageObserver:update avec le tracker statique, les nodes d'observation et les temps de frame, puis recopie la fin d'étape et termine le chrono si l'observateur a détecté l'arrivée.",
+          "internal": true
+        },
+        "getActiveStageData": {
+          "desc": "Construit l'état de la spéciale pour l'UI : currentSSTime (secondes au dixième), isActive, isComplete, splits, authorityMode, source ('race', 'tracker' ou 'trackerFallback'), completion {distPct, totalDistM}. Dépend du mode d'autorité et de l'état de l'observateur.",
+          "returns": [{"type": "table|nil", "desc": "Table partagée réutilisée ; nil sans vehicleTracker"}]
+        },
+        "recordSplit": {
+          "desc": "Enregistre le temps d'une course pour un split (via l'observateur, ou directement dans splitData).",
+          "params": {
+            "pathnodeId": {"type": "integer", "desc": "Id du pathnode du split"},
+            "time": {"type": "number", "desc": "Temps en secondes"}
+          }
+        },
+        "clearSplitTimes": {
+          "desc": "Efface tous les temps et marqueurs d'observation des splits puis réinitialise le chrono d'étape."
+        },
+        "getLoopPrefabPath": {
+          "desc": "Chemin du fichier loopPrefab.prefab.json dans le dossier de la mission.",
+          "returns": [{"type": "string", "desc": ""}]
+        }
+      }
+    }
+  }
+}

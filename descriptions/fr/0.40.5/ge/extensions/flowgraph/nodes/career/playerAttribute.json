@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/playerAttribute.lua",
+  "module": "Nœud flowgraph « Add Or Remove Player Attribute » (catégorie once_instant, couleur/icône career). Ajoute ou retire une quantité d'un attribut du joueur (par défaut « money ») dans l'emplacement de sauvegarde de carrière courant, via career_modules_playerAttributes.addAttributes. Entrées : add (bool, vrai = ajouter, défaut true), amount (number, défaut 0), playerAttribute (string, défaut 'money'), reason (string, texte du journal ; sinon clé « ui.career.attributeLog.unknownFlowgraphReason »). N'agit qu'en carrière et une seule fois jusqu'à réinitialisation.",
+  "notes": ["Le drapeau interne empêche une seconde application tant que le nœud n'est pas réinitialisé (pin reset ou onNodeReset).", "Les descriptions des pins parlent d'argent (« money ») même si l'attribut est configurable."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "onNodeReset": {"desc": "Remet le drapeau d'application à faux.", "internal": true},
+        "_executionStarted": {"desc": "Appelle onNodeReset au démarrage du graphe.", "internal": true},
+        "work": {"desc": "Si carrière active et pas encore appliqué, ajoute amount (signé selon add) à l'attribut et marque appliqué ; réinitialise si le pin reset est actif."}
+      }
+    }
+  }
+}

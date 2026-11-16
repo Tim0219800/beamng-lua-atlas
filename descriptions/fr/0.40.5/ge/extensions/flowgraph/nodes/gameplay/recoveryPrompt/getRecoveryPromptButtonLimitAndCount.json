@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/getRecoveryPromptButtonLimitAndCount.lua",
+  "module": "Nœud flowgraph « Get Recovery Prompt Button Limit and Count » (catégorie once_instant, couleur/icône recoveryPrompt, dépend de gameplay_walk). Lit core_recoveryPrompt.getButtonLimitsAndCounts() et renvoie pour le bouton choisi (pin id) sa limite (limit) et son compteur d'utilisations (count). Valeurs -1 si absentes des données du bouton, nil si l'id est inconnu. Dans l'éditeur, la pin id propose les valeurs flipMission, recoverMission, submitMission et restartMission.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "postInit": {"desc": "Définit les valeurs prédéfinies (hardTemplates) de la pin id.", "internal": true},
+        "workOnce": {"desc": "Lit les limites/compteurs et remplit limit et count pour l'id donné.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true},
+        "drawMiddle": {"desc": "Appelle builder:Middle() sans rien dessiner.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud."}, "style": {"type": "table", "desc": "Style."}}, "internal": true}
+      }
+    }
+  }
+}

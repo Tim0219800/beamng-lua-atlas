@@ -1,20 +1,20 @@
 # `gameplay_rally_driveline_drivelineMeasurement`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/driveline/drivelineMeasurement.lua` · VM : Game Engine (GE) · 16 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/driveline/drivelineMeasurement.lua` · VM: Game Engine (GE) · 16 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/driveline/drivelineMeasurement")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/driveline/drivelineMeasurement")` (file under extensions/ but not a regular extension)
 
-Classe vide (squelette) prévue pour les mesures sur une driveline de rallye. Le constructeur require(...)(driveline) appelle C:init, qui ne fait rien. Aucune donnée n'est stockée.
+Empty class (skeleton) intended for measurements on a rally driveline. The constructor require(...)(driveline) calls C:init, which does nothing. No data is stored.
 
-## Classe `C`
+## Class `C`
 
-Objet renvoyé par le constructeur du module ; sans attribut ni autre méthode.
+Object returned by the module constructor; no attributes or other methods.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_driveline_drivelineMeasurement")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_driveline_drivelineMeasurement")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(driveline)` | Ne fait rien (le paramètre driveline n'est pas mémorisé). | 7 |
+| `C:init(driveline)` | Does nothing (the driveline parameter is not stored). | 7 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/driveline/drivelineMeasurement.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/driveline/drivelineMeasurement.lua`.*

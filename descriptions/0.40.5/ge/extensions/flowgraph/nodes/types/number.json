@@ -1,48 +1,48 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/types/number.lua",
-  "module": "Noeud « Number » (provider). Fournit un nombre (data.value, 0 par défaut) sur le pin value.",
+  "module": "Node \"Number\" (provider). Provides a number (data.value, 0 by default) on the value pin.",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "data.value = 0 et clearOutPinsOnStart = false.",
+          "desc": "data.value = 0 and clearOutPinsOnStart = false.",
           "internal": true
         },
         "work": {
-          "desc": "Écrit data.value sur la sortie.",
+          "desc": "Writes data.value to the output.",
           "internal": false
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "desc": "Draws the central content of the node in the editor.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true
         },
         "onSerialize": {
-          "desc": "Vide (nom sans underscore, contrairement à _onSerialize utilisé par les autres noeuds).",
+          "desc": "Empty (name without underscore, unlike _onSerialize used by the other nodes).",
           "params": {
             "res": {
               "type": "any",
-              "desc": "table de sauvegarde"
+              "desc": "save table"
             }
           },
           "internal": true
         },
         "onDeserialized": {
-          "desc": "Vide (nom sans underscore, contrairement à _onSerialize utilisé par les autres noeuds).",
+          "desc": "Empty (name without underscore, unlike _onSerialize used by the other nodes).",
           "params": {
             "nodeData": {
               "type": "any",
-              "desc": "données sauvegardées"
+              "desc": "saved data"
             }
           },
           "internal": true

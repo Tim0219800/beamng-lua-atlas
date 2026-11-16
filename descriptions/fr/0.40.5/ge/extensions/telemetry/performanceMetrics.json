@@ -1,0 +1,60 @@
+{
+  "path": "lua/ge/extensions/telemetry/performanceMetrics.lua",
+  "module": "Petit module utilitaire (chargé par require) de la télémétrie de performance : lecture sûre de variables du VariableRegistry, état de focus du programme et cause d'un plafond de FPS choisi par le joueur.",
+  "functions": {
+    "readNumber": {
+      "desc": "Lit une variable du VariableRegistry en nombre ; renvoie -1 si elle est absente, non numérique, NaN ou infinie.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Nom de la variable (ex. '$fps::avg')."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Valeur, ou -1."
+        }
+      ],
+      "internal": false
+    },
+    "readAvailable": {
+      "desc": "Comme readNumber mais renvoie nil au lieu de -1 (valeur indisponible).",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Nom de la variable."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Valeur >= 0, ou nil."
+        }
+      ],
+      "internal": false
+    },
+    "isFocused": {
+      "desc": "Indique si la fenêtre du jeu a le focus (true si Engine.isProgramFocused n'existe pas).",
+      "params": {},
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true si le programme a le focus."
+        }
+      ],
+      "internal": false
+    },
+    "getLimitedBy": {
+      "desc": "Dit quel plafond de FPS choisi par le joueur s'applique : 'background' (limite en arrière-plan sans focus), 'vr' (session OpenXR), 'limiter' (fpsLimitEnabled), 'vsync', sinon nil. Sert à ne pas confondre un FPS bloqué à 60 avec une machine incapable de faire mieux.",
+      "params": {},
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "'background', 'vr', 'limiter', 'vsync' ou nil."
+        }
+      ],
+      "internal": false
+    }
+  }
+}

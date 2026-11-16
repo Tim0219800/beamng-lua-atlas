@@ -1,16 +1,26 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/fitPoly.lua",
-  "module": "Utilitaire qui ordonne un ensemble non ordonné d'objets en une polyligne. Pour chaque point de départ possible, il construit un chemin glouton (point le plus proche, bonus si la direction continue), puis garde le chemin au meilleur score (lissé de direction, longueur courte). Utile aux outils de l'éditeur qui reçoivent des objets sélectionnés sans ordre.",
+  "module": "Utility that orders an unordered set of objects into a polyline. For each possible starting point, it builds a greedy path (nearest point, bonus if the direction continues), then keeps the path with the best score (direction smoothing, short length). Useful for editor tools that receive selected objects without order.",
   "usage": "local fitPoly = require('editor/toolUtilities/fitPoly')\nlocal ordered = fitPoly.fitPoly(components) -- components[i].obj:getPosition()",
   "notes": [
-    "Distance maximale entre deux points voisins : 50 m (constante maxDist) ; au-delà, les points ne sont pas chaînés et les points restants sont ajoutés à la fin du chemin dans l'ordre d'origine.",
-    "Complexité O(n^3) environ (chaque départ, chaque pas parcourt tous les points) : prévu pour de petits ensembles."
+    "Maximum distance between two neighboring points: 50 m (constant maxDist); beyond that, the points are not chained and the remaining points are appended at the end of the path in their original order.",
+    "Complexity roughly O(n^3) (each start, each step goes through all the points): intended for small sets."
   ],
   "functions": {
     "fitPoly": {
-      "desc": "Réordonne les composants pour former la meilleure polyligne. Chaque composant doit avoir un champ obj avec getPosition(). Renvoie components tel quel s'il y en a moins de deux.",
-      "params": {"components": {"type": "table[]", "desc": "Liste de tables { obj = objet avec getPosition() }."}},
-      "returns": [{"type": "table[]", "desc": "Nouvelle liste des mêmes composants, dans l'ordre de la polyligne."}],
+      "desc": "Reorders the components to form the best polyline. Each component must have an obj field with getPosition(). Returns components as is if there are fewer than two.",
+      "params": {
+        "components": {
+          "type": "table[]",
+          "desc": "List of tables { obj = object with getPosition() }."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "New list of the same components, in polyline order."
+        }
+      ],
       "internal": false
     }
   }

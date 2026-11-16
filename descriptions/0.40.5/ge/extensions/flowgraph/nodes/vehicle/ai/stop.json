@@ -1,32 +1,32 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/stop.lua",
-  "module": "Nœud « AI Stop » (couleur ai, once_p_duration). Demande à l'IA d'arrêter le véhicule (ai.setState mode « stop ») et active la sortie stopped quand sa vitesse passe sous checkVelocity (0,01 m/s). Entrées : aiVehId (sans valeur = joueur), checkVelocity (caché). Sortie : stopped (flow).",
+  "module": "Node \"AI Stop\" (color ai, once_p_duration). Asks the AI to stop the vehicle (ai.setState mode \"stop\") and activates the stopped output when its speed drops below checkVelocity (0.01 m/s). Inputs: aiVehId (no value = player), checkVelocity (hidden). Output: stopped (flow).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Initialise complete=false.",
+          "desc": "Initializes complete=false.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Remet complete à false.",
+          "desc": "Resets complete to false.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Appelle onNodeReset.",
+          "desc": "Calls onNodeReset.",
           "internal": true
         },
         "getVeh": {
-          "desc": "Renvoie le véhicule dont l'id est donné en entrée, ou le véhicule du joueur (getPlayerVehicle(0)) sans entrée.",
+          "desc": "Returns the vehicle whose id is given as input, or the player's vehicle (getPlayerVehicle(0)) without input.",
           "internal": false
         },
         "workOnce": {
-          "desc": "Envoie au véhicule ai.setState({mode = \"stop\"}).",
+          "desc": "Sends ai.setState({mode = \"stop\"}) to the vehicle.",
           "internal": true
         },
         "work": {
-          "desc": "Si l'arrêt est constaté, active stopped ; sinon compare la vitesse (map.objects[vehId].vel) au seuil et mémorise complete.",
+          "desc": "If the stop is detected, activates stopped; otherwise compares the speed (map.objects[vehId].vel) to the threshold and stores complete.",
           "internal": true
         }
       }

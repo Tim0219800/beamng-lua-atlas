@@ -1,44 +1,44 @@
 # `render_viewDemo`
 
-*Fichier : `lua/ge/extensions/render/viewDemo.lua` · VM : Game Engine (GE) · 74 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/render/viewDemo.lua` · VM: Game Engine (GE) · 74 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `render_viewDemo` : `extensions.load("render_viewDemo")`, puis la globale `render_viewDemo`
+**Access:** extension `render_viewDemo`: `extensions.load("render_viewDemo")`, then the global `render_viewDemo`
 
-Petit exemple d'utilisation des vues de rendu (RenderViewManagerInstance) : crée une vue nommée 'Demo view 1' rendue dans une texture nommée, déplace sa caméra en cercle et l'affiche dans une fenêtre ImGui. À charger à la main avec extensions.load('render_viewDemo') ; sert de modèle pour un moddeur qui veut une caméra virtuelle vers une texture.
+Small example of using render views (RenderViewManagerInstance): creates a view named 'Demo view 1' rendered into a named texture, moves its camera in a circle and displays it in an ImGui window. To be loaded by hand with extensions.load('render_viewDemo'); serves as a template for a modder who wants a virtual camera to a texture.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('render_viewDemo')
 ```
 
-## Remarques
+## Notes
 
-- Le nom de la vue est son identifiant unique ; renderView.namedTexTargetColor reçoit ce nom, et imUtils.texObj('#<nom>') récupère la texture pour ImGui.
-- luaOwned = true fait supprimer la vue quand le ramasse-miettes la collecte.
-- Paramètres de la vue dans l'exemple : résolution 512x256, fov 75, near 0.1, far 2000, renderCubemap faux, renderEditorIcons vrai.
-- Le texte 'Hello world view :)' est dessiné via debugDrawer:drawTextAdvanced en (20, 20, 0).
-- La vue n'est jamais détruite par l'extension : pas de onExtensionUnloaded.
+- The view's name is its unique identifier; renderView.namedTexTargetColor receives this name, and imUtils.texObj('#<name>') retrieves the texture for ImGui.
+- luaOwned = true makes the view be deleted when the garbage collector collects it.
+- View parameters in the example: resolution 512x256, fov 75, near 0.1, far 2000, renderCubemap false, renderEditorIcons true.
+- The text 'Hello world view :)' is drawn via debugDrawer:drawTextAdvanced at (20, 20, 0).
+- The view is never destroyed by the extension: no onExtensionUnloaded.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `render_viewDemo.onUpdate(dtReal, dtSim, dtRaw)` | Hook appelé à chaque image : crée la vue au premier appel, déplace la caméra (position sin/cos du temps simulé, hauteur 1.5), dessine un texte de debug et affiche la texture de la vue dans la fenêtre ImGui 'Render view test'. *(interne)* *(hook)* | 25 |
+| `render_viewDemo.onUpdate(dtReal, dtSim, dtRaw)` | Hook called every frame: creates the view on the first call, moves the camera (position sin/cos of simulated time, height 1.5), draws a debug text and displays the view's texture in the ImGui window 'Render view test'. *(internal)* *(hook)* | 25 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `render_viewDemo.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé à chaque image : crée la vue au premier appel, déplace la caméra (position sin/cos du temps simulé, hauteur 1.5), dessine un texte de debug et affiche la texture de la vue dans la fenêtre ImGui 'Render view test'.
+Hook called every frame: creates the view on the first call, moves the camera (position sin/cos of simulated time, height 1.5), draws a debug text and displays the view's texture in the ImGui window 'Render view test'.
 
-- `dtReal` (*number*) : Durée réelle de l'image (s), non utilisée.
-- `dtSim` (*number*) : Durée simulée (s), ajoutée à un chronomètre local.
-- `dtRaw` (*number*) : Durée brute (s), non utilisée.
+- `dtReal` (*number*) : Real frame duration (s), unused.
+- `dtSim` (*number*) : Simulated duration (s), added to a local timer.
+- `dtRaw` (*number*) : Raw duration (s), unused.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/render/viewDemo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/render/viewDemo.lua`.*

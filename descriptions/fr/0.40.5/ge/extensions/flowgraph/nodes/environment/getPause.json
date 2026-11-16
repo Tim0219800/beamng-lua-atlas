@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/environment/getPause.lua",
+  "module": "Nœud flowgraph « Get Pause » (catégorie provider, auteur BeamNG, tags pause/freeze/halt/stop/interrupt). Sort un bool « value » indiquant si la simulation est en pause (simTimeAuthority.getPause()).",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Chaque frame, écrit l'état de pause sur la sortie value."}
+      }
+    }
+  }
+}

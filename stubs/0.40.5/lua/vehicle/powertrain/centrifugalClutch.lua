@@ -2,85 +2,85 @@
 -- tim19Atlas stub generated from lua/vehicle/powertrain/centrifugalClutch.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Type de device powertrain `centrifugalClutch` : embrayage centrifuge (catégories clutchlike et clutch) placé directement après un moteur thermique. Il s'engage automatiquement avec le régime d'entrée (entre engageRPMStart et engageRPMEnd) : le taux d'engagement clutchRatio passe de 0 à 1, et le couple transmis suit un ressort/amortisseur sur l'angle d'embrayage, limité par lockTorque. Il modélise aussi l'échauffement (température, efficacité thermique, fumée, dommage permanent) et l'usure. Utile pour scooters, karts, tondeuses… Le parent doit être un moteur (catégorie engine) et il a un seul enfant sur le port 1.
---- Accès : type de composant powertrain `centrifugalClutch` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+--- Powertrain device type `centrifugalClutch`: centrifugal clutch (categories clutchlike and clutch) placed directly after a combustion engine. It engages automatically with the input RPM (between engageRPMStart and engageRPMEnd): the engagement ratio clutchRatio goes from 0 to 1, and the transmitted torque follows a spring/damper on the clutch angle, limited by lockTorque. It also models heating (temperature, thermal efficiency, smoke, permanent damage) and wear. Useful for scooters, karts, lawn mowers... The parent must be an engine (category engine) and it has a single child on port 1.
+--- Access: powertrain device type `centrifugalClutch` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 ---@class powertrain_centrifugalClutch
----@field deviceCategories table<string, boolean> {clutchlike = true, clutch = true}. clutchlike est requis par le moteur combustionEngine pour ses enfants.
----@field outputPorts table<integer, boolean> {[1] = true} : un seul port de sortie.
----@field requiredExternalInertiaOutputs integer[] {1} : powertrain ajoute un arbre factice (dummy shaft) sur ce port si aucun enfant n'y est branché.
+---@field deviceCategories table<string, boolean> {clutchlike = true, clutch = true}. clutchlike is required by the combustionEngine engine for its children.
+---@field outputPorts table<integer, boolean> {[1] = true}: a single output port.
+---@field requiredExternalInertiaOutputs integer[] {1}: powertrain adds a dummy shaft on this port if no child is connected to it.
 local powertrain_centrifugalClutch = {}
 
---- Fabrique du device appelée par powertrain.init pour une entrée jbeam de type 'centrifugalClutch'. Lit les clés jbeam (voir notes) et renvoie le device.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/centrifugalClutch.lua:232
----@param jbeamData table Données jbeam du device.
----@return table  Le device centrifugalClutch.
+--- Device factory called by powertrain.init for a jbeam entry of type 'centrifugalClutch'. Reads the jbeam keys (see notes) and returns the device.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/centrifugalClutch.lua:232
+---@param jbeamData table jbeam data of the device.
+---@return table  The centrifugalClutch device.
 function powertrain_centrifugalClutch.new(jbeamData) end
 
---- Objet renvoyé par new(jbeamData). Méthodes appelées par powertrain.lua.
+--- Object returned by new(jbeamData). Methods called by powertrain.lua.
 ---@class powertrain_centrifugalClutch_device
 local powertrain_centrifugalClutch_device = {}
 
---- Applique un dégât de déformation : augmente le jeu libre et réduit le couple de verrouillage (plancher 0.2), puis recalcule l'inertie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/centrifugalClutch.lua:123
----@param damageAmount number Dégât ajouté.
+--- Applies deformation damage: increases the free play and reduces the lock torque (floor 0.2), then recomputes the inertia.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/centrifugalClutch.lua:123
+---@param damageAmount number Damage added.
 function powertrain_centrifugalClutch_device:applyDeformGroupDamage(damageAmount) end
 
---- Reprend inertie et rapports de l'enfant (inertie plafonnée à la moitié de celle du moteur) et recalcule lockSpring, lockDamp et maxClutchAngle.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/centrifugalClutch.lua:178
+--- Takes over the child's inertia and ratios (inertia capped at half of the engine's) and recomputes lockSpring, lockDamp and maxClutchAngle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/centrifugalClutch.lua:178
 function powertrain_centrifugalClutch_device:calculateInertia() end
 
---- Renvoie l'intégrité 0..1 (0 si dommage permanent) et la table d'état {damageClutchFreePlayCoef, damageLockTorqueCoef, clutchPermanentlyDamaged}.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/centrifugalClutch.lua:149
----@return number  Intégrité 0..1.
----@return table  État détaillé.
+--- Returns the integrity 0..1 (0 if permanently damaged) and the state table {damageClutchFreePlayCoef, damageLockTorqueCoef, clutchPermanentlyDamaged}.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/centrifugalClutch.lua:149
+---@return number  Integrity 0..1.
+---@return table  Detailed state.
 function powertrain_centrifugalClutch_device:getPartCondition() end
 
---- Remet tous les états à leurs valeurs initiales (vitesses, angle, température extérieure, usure et dommages) puis sélectionne les fonctions de mise à jour.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/centrifugalClutch.lua:202
----@param jbeamData table Données jbeam (non utilisées ici).
+--- Resets all states to their initial values (speeds, angle, outside temperature, wear and damage) then selects the update functions.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/centrifugalClutch.lua:202
+---@param jbeamData table jbeam data (unused here).
 function powertrain_centrifugalClutch_device:reset(jbeamData) end
 
---- Verrouille/déverrouille le chauffage de l'embrayage : enabled = true met clutchThermalsCoef à 0 (plus d'énergie dissipée comptée comme chaleur), false à 1.
----Source : lua/vehicle/powertrain/centrifugalClutch.lua:119
----@param enabled boolean true pour supprimer l'échauffement.
+--- Locks/unlocks the clutch heating: enabled = true sets clutchThermalsCoef to 0 (dissipated energy is no longer counted as heat), false sets it to 1.
+---Source: lua/vehicle/powertrain/centrifugalClutch.lua:119
+---@param enabled boolean true to disable heating.
 function powertrain_centrifugalClutch_device:setLock(enabled) end
 
---- Applique usure (odomètre) et intégrité (nombre ou table d'état) : coefficients de jeu libre et de couple de verrouillage, état de dommage permanent ; recalcule l'inertie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/centrifugalClutch.lua:129
----@param subSystem string|nil Non utilisé.
----@param odometer number Usure cumulée.
----@param integrity number|table Intégrité 0..1 ou table d'état de getPartCondition.
----@param visual any Non utilisé.
+--- Applies wear (odometer) and integrity (number or state table): free play and lock torque coefficients, permanent damage state; recomputes the inertia.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/centrifugalClutch.lua:129
+---@param subSystem string|nil Not used.
+---@param odometer number Cumulative wear.
+---@param integrity number|table Integrity 0..1 or state table from getPartCondition.
+---@param visual any Not used.
 function powertrain_centrifugalClutch_device:setPartCondition(subSystem, odometer, integrity, visual) end
 
---- Pas de physique (couples) : calcule clutchRatio d'après le régime d'entrée, l'angle d'embrayage et le couple transmis (torqueDiff = outputTorque1), et accumule la perte par friction.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/centrifugalClutch.lua:84
----@param dt number Pas de physique en secondes.
+--- Physics step (torques): computes clutchRatio from the input RPM, the clutch angle and the transmitted torque (torqueDiff = outputTorque1), and accumulates the friction loss.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/centrifugalClutch.lua:84
+---@param dt number Physics step in seconds.
 function powertrain_centrifugalClutch_device:torqueUpdate(dt) end
 
---- Une fois par frame : calcule l'énergie dissipée dans l'embrayage et son refroidissement, met à jour clutchTemperature (bornée à [température extérieure, maxClutchTemp]) et thermalEfficiency, produit la fumée et les messages d'avertissement, signale un dommage permanent, remet frictionLossPerUpdate à 0 et publie 'clutchThermalData'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/centrifugalClutch.lua:20
----@param dt number Pas de temps en secondes.
+--- Once per frame: computes the energy dissipated in the clutch and its cooling, updates clutchTemperature (clamped to [outside temperature, maxClutchTemp]) and thermalEfficiency, produces smoke and warning messages, signals permanent damage, resets frictionLossPerUpdate to 0 and publishes 'clutchThermalData'.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/centrifugalClutch.lua:20
+---@param dt number Time step in seconds.
 function powertrain_centrifugalClutch_device:updateGFX(dt) end
 
---- Vérifie que le parent est un moteur (catégorie engine), sinon log d'erreur et renvoie false (avorte l'init). Calcule lockTorque par défaut.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/centrifugalClutch.lua:166
----@return boolean  false si le parent n'est pas un moteur.
+--- Checks that the parent is an engine (category engine), otherwise logs an error and returns false (aborts init). Computes the default lockTorque.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/centrifugalClutch.lua:166
+---@return boolean  false if the parent is not an engine.
 function powertrain_centrifugalClutch_device:validate() end
 
---- Pas de physique (vitesses) : inputAV = vitesse de sortie du parent (outputAV1 du moteur).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/centrifugalClutch.lua:80
----@param dt number Pas de physique en secondes.
+--- Physics step (speeds): inputAV = output speed of the parent (outputAV1 of the engine).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/centrifugalClutch.lua:80
+---@param dt number Physics step in seconds.
 function powertrain_centrifugalClutch_device:velocityUpdate(dt) end
 
 return powertrain_centrifugalClutch

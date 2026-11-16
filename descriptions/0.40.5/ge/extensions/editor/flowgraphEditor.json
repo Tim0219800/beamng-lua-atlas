@@ -1,61 +1,326 @@
 {
   "path": "lua/ge/extensions/editor/flowgraphEditor.lua",
-  "module": "Extension de l'éditeur de jeu qui héberge l'éditeur Flowgraph (éditeur visuel de graphes de nœuds pour le gameplay, les scénarios et les missions). Elle crée la fenêtre principale (flowgraph/main) et toutes les fenêtres annexes (overview, stateView, events, examples, properties, variables, projectSettings, history, welcome, nodelibrary, execution, search, references, garbageDebug), gère le manager courant (core_flowgraphManager), l'ouverture/sauvegarde de fichiers .flow.json, l'autosave, les fichiers récents, les raccourcis d'édition et l'enregistrement des préférences flowgraph.general.* et flowgraph.debug.*.",
+  "module": "Game editor extension that hosts the Flowgraph editor (visual node graph editor for gameplay, scenarios and missions). It creates the main window (flowgraph/main) and all the auxiliary windows (overview, stateView, events, examples, properties, variables, projectSettings, history, welcome, nodelibrary, execution, search, references, garbageDebug), manages the current manager (core_flowgraphManager), opening/saving of .flow.json files, autosave, recent files, editing shortcuts and registration of the flowgraph.general.* and flowgraph.debug.* preferences.",
   "usage": "extensions.load('editor_flowgraphEditor')\neditor_flowgraphEditor.open()\nlocal mgr = editor_flowgraphEditor.getManager()",
   "notes": [
-    "Les fonctions de dessin et les hooks onEditor* ne fonctionnent que lorsque l'éditeur est actif et initialisé (onEditorInitialized crée les fenêtres et le contexte ui_flowgraph_editor).",
-    "Fichiers de projet : *.flow.json ; macros : *.macro.flow.json ; autosaves dans flowgraphEditor/autoSaves/ (nom <timestamp>_<nom du projet>.flow.json), intervalle par défaut 120 s (préférence flowgraph.general.autosaveInterval, 30-600).",
-    "setManager ne change le manager qu'au prochain onEditorGui (sauf instant = true).",
-    "Incohérences dans le code : save() teste la préférence flowgraph.general.editorDebug alors que celle enregistrée est flowgraph.debug.editorDebug (le test est donc toujours « faux »), saveFile() log une erreur pour un projet transitoire mais ne s'arrête pas ; onClientStartMission écrit M.requesteEditor (faute de frappe) donc requestedEditor n'est jamais remis à false ; showNodeReferences appelle winReferences:searchFor qui n'existe pas ; la boucle de restauration de onEditorGui utilise une variable globale `done` toujours nil ; onWindowMenuItem appelle open() avant sa déclaration locale (non exportée, non utilisée).",
-    "M.onUpdate est la petite fenêtre « FG Monitor » affichée quand l'éditeur est désactivé mais que showSmallFgWindow est vrai."
+    "The drawing functions and the onEditor* hooks only work when the editor is active and initialized (onEditorInitialized creates the windows and the ui_flowgraph_editor context).",
+    "Project files: *.flow.json; macros: *.macro.flow.json; autosaves in flowgraphEditor/autoSaves/ (name <timestamp>_<project name>.flow.json), default interval 120 s (preference flowgraph.general.autosaveInterval, 30-600).",
+    "setManager only changes the manager at the next onEditorGui (unless instant = true).",
+    "Inconsistencies in the code: save() tests the preference flowgraph.general.editorDebug while the registered one is flowgraph.debug.editorDebug (so the test is always \"false\"), saveFile() logs an error for a transient project but does not stop; onClientStartMission writes M.requesteEditor (typo) so requestedEditor is never reset to false; showNodeReferences calls winReferences:searchFor which does not exist; the restore loop in onEditorGui uses a global variable `done` that is always nil; onWindowMenuItem calls open() before its local declaration (not exported, not used).",
+    "M.onUpdate is the small \"FG Monitor\" window shown when the editor is disabled but showSmallFgWindow is true."
   ],
   "fields": {
-    "allowTooltip": {"type": "boolean", "desc": "Vrai quand la souris est immobile depuis plus de 0,5 s et qu'aucun bouton n'est enfoncé : autorise l'affichage des tooltips."},
-    "forceOpen": {"type": "table<string, boolean>", "desc": "Valeurs initiales {states = true, log = true} indiquant des vues à ouvrir de force."},
-    "lastOpenedFolder": {"type": "string", "desc": "Dernier dossier utilisé pour ouvrir/enregistrer (défaut 'flowgraphEditor/')."},
-    "pushedNodeLibActionMap": {"type": "boolean", "desc": "Vrai si l'action map 'NodeLibrary' a été poussée par une fenêtre de recherche."},
-    "requestedEditor": {"type": "boolean", "desc": "Si vrai, onClientStartMission active l'éditeur et ouvre Flowgraph."},
-    "settings": {"type": "table", "desc": "Réglages d'interface : viewModes = {'default', 'simple', 'flowLevel', 'debug'}."},
-    "showSmallFgWindow": {"type": "ImBoolPtr", "desc": "Affichage de la petite fenêtre « FG Monitor » (BoolPtr)."},
-    "switchToSmallWindow": {"type": "boolean", "desc": "Si vrai, le prochain drawEditor désactive l'éditeur et affiche la petite fenêtre."}
+    "allowTooltip": {
+      "type": "boolean",
+      "desc": "True when the mouse has been still for more than 0.5 s and no button is pressed: allows tooltips to be displayed."
+    },
+    "forceOpen": {
+      "type": "table<string, boolean>",
+      "desc": "Initial values {states = true, log = true} indicating views to force open."
+    },
+    "lastOpenedFolder": {
+      "type": "string",
+      "desc": "Last folder used for opening/saving (default 'flowgraphEditor/')."
+    },
+    "pushedNodeLibActionMap": {
+      "type": "boolean",
+      "desc": "True if the 'NodeLibrary' action map was pushed by a search window."
+    },
+    "requestedEditor": {
+      "type": "boolean",
+      "desc": "If true, onClientStartMission activates the editor and opens Flowgraph."
+    },
+    "settings": {
+      "type": "table",
+      "desc": "Interface settings: viewModes = {'default', 'simple', 'flowLevel', 'debug'}."
+    },
+    "showSmallFgWindow": {
+      "type": "ImBoolPtr",
+      "desc": "Display of the small \"FG Monitor\" window (BoolPtr)."
+    },
+    "switchToSmallWindow": {
+      "type": "boolean",
+      "desc": "If true, the next drawEditor disables the editor and shows the small window."
+    }
   },
   "functions": {
-    "addHistory": {"desc": "Programme un instantané d'historique (undo) du projet avec un titre ; le snapshot est pris plus tard (delayedHistorySnapshot). Affiche aussi le titre dans la console.", "params": {"title": {"type": "string", "desc": "Texte de l'entrée d'historique."}, "graph": {"type": "table|boolean|nil", "desc": "Graphe concerné ; nil = graphe courant ; un autre type (ex. false) = pas de graphe."}}},
-    "arrowControllableWindowCall": {"desc": "Appelle une méthode sur la fenêtre contrôlable au clavier courante (recherche, bibliothèque de nœuds), s'il y en a une.", "params": {"fun": {"type": "string", "desc": "Nom de la méthode (ex. 'navigateList', 'createNode')."}, "...": {"type": "any", "desc": "Arguments passés à la méthode."}}},
-    "autoSave": {"desc": "Sauvegarde automatique : si le minuteur est écoulé, que le projet est modifiable et non transitoire, écrit une copie dans flowgraphEditor/autoSaves/ et réarme le minuteur."},
-    "closeCurrent": {"desc": "Ferme le projet courant (removeManager) et bascule sur le premier manager restant ou nil."},
-    "drawContextMenus": {"desc": "Dessine le popup « CreateNodeContentMenu » (bibliothèque de nœuds à la position mgr.newNodePos).", "internal": true},
-    "drawEditor": {"desc": "Dessine l'éditeur complet pour la frame : manager, fenêtre principale, toutes les fenêtres annexes, gestion du double-clic de nœud, autosave. Appelée depuis onEditorGui.", "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}}, "internal": true},
-    "drawExecution": {"desc": "Dessine la vue d'exécution seule (executionView:drawAlone).", "internal": true},
-    "drawRestoreMenu": {"desc": "Dessine le sous-menu « Restore... » listant les fichiers d'autosave regroupés par projet d'origine (date UTC).", "internal": true},
-    "getManager": {"desc": "Renvoie le manager flowgraph affiché dans l'éditeur.", "returns": [{"type": "table|nil", "desc": "Manager courant."}]},
-    "getPropertiesWindow": {"desc": "Renvoie la fenêtre Properties.", "returns": [{"type": "table", "desc": "Instance de la fenêtre properties."}]},
-    "isActionMapEnabled": {"desc": "Indique si l'action map « <map>ActionMap » est active et activée.", "params": {"map": {"type": "string", "desc": "Nom sans le suffixe 'ActionMap'."}}, "returns": [{"type": "boolean", "desc": "true si activée."}]},
-    "onClientStartMission": {"desc": "Hook appelé au démarrage d'une mission/niveau côté client : si requestedEditor est vrai, active l'éditeur et ouvre la fenêtre Flowgraph.", "internal": true},
-    "onDeserialized": {"desc": "Hook de restauration après rechargement Lua : mémorise les fenêtres ouvertes (data.windows) et le nom du manager courant (data.currentMgrName).", "params": {"data": {"type": "table", "desc": "Données produites par onSerialize."}}, "internal": true},
-    "onEditorActivated": {"desc": "Hook appelé à l'activation de l'éditeur : masque la petite fenêtre FG Monitor.", "internal": true},
-    "onEditorDeactivated": {"desc": "Hook appelé à la désactivation de l'éditeur : dépile les action maps FlowgraphMain et Flowgraph.", "internal": true},
-    "onEditorGui": {"desc": "Hook appelé à chaque frame par l'éditeur : gère action maps, tooltips, changement de manager, puis dessine l'éditeur (drawEditor) si la fenêtre principale est visible.", "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}}, "internal": true},
-    "onEditorInitialized": {"desc": "Hook appelé quand l'éditeur est prêt : crée les fenêtres, l'entrée de menu « Flowgraph Editor » (groupe Gameplay), le contexte d'éditeur de nœuds, restaure les fenêtres ouvertes et déclare le mode d'édition flowgraphTransform.", "internal": true},
-    "onEditorRegisterPreferences": {"desc": "Hook d'enregistrement des préférences : catégorie 'flowgraph' avec sous-catégories 'general' (pins, fichiers récents, autosave…) et 'debug' (editorDebug, displayIds…).", "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}}, "internal": true},
-    "onSerialize": {"desc": "Hook de sauvegarde avant rechargement Lua : renvoie l'état des fenêtres et le nom du manager courant (table vide si les fenêtres n'existent pas).", "returns": [{"type": "table", "desc": "Données sérialisées."}], "internal": true},
-    "onUpdate": {"desc": "Hook appelé à chaque frame : dessine la petite fenêtre « FG Monitor » (bouton pour agrandir l'éditeur) quand showSmallFgWindow est vrai.", "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}}, "internal": true},
-    "open": {"desc": "Ouvre (affiche) la fenêtre principale de l'éditeur Flowgraph."},
-    "openFile": {"desc": "Ouvre un fichier .flow.json : soit comme nouveau manager (et le rend courant), soit en rechargeant les données dans le manager courant. Met à jour le dossier et les fichiers récents.", "params": {"fCbData": {"type": "table", "desc": "Données du dialogue de fichier, avec le champ filepath."}, "openAsNewManager": {"type": "boolean|nil", "desc": "true pour créer un nouveau manager."}, "keepSavedDirs": {"type": "boolean|nil", "desc": "Transmis à loadManager (conserver les dossiers enregistrés)."}}},
-    "save": {"desc": "Enregistre le projet courant : saveFile s'il a déjà un nom/dossier, sinon ouvre le dialogue « Enregistrer sous ». Réarme l'autosave.", "internal": false},
-    "saveAsFile": {"desc": "Définit le dossier et le nom de fichier du projet d'après le chemin choisi, puis sauvegarde.", "params": {"fCbData": {"type": "table", "desc": "Données du dialogue, champ filepath."}}},
-    "saveCurrent": {"desc": "Sauvegarde le graphe courant : la macro (saveMacro) s'il s'agit d'une macro avec chemin, sinon le projet (save)."},
-    "saveFile": {"desc": "Écrit le projet dans savedDir/savedFilename (JSON indenté). Refuse si le projet n'a pas de nom ou n'est pas à l'arrêt (runningState ~= 'stopped'), marque les graphes propres, renomme « New Project » d'après le fichier et met à jour les fichiers récents."},
-    "saveMacro": {"desc": "Sauvegarde une macro : ouvre le popup « Unsaved macros » si des macros enfants sont modifiées, sinon écrit au chemin existant (macroPath) ou ouvre le dialogue (.macro.flow.json).", "params": {"graph": {"type": "table", "desc": "Graphe de type macro."}}},
-    "setManager": {"desc": "Demande de changer le manager affiché (appliqué au prochain onEditorGui, ou immédiatement avec instant).", "params": {"newMgr": {"type": "table|nil", "desc": "Manager flowgraph."}, "instant": {"type": "boolean|nil", "desc": "Appliquer tout de suite à la variable locale mgr."}}},
-    "showNodeReferences": {"desc": "Ouvre la fenêtre References et lui demande de chercher un nœud. Bug : appelle winReferences:searchFor qui n'existe pas dans references.lua.", "params": {"node": {"type": "table", "desc": "Nœud à rechercher."}}},
-    "uiAutoConnectShortcut": {"desc": "Raccourci : relie automatiquement les pins de sortie du nœud de gauche aux pins d'entrée libres du nœud de droite, d'après la ressemblance des pins (nodelib:ratePinSimilarity) et si le lien est possible. Fonctionne avec un lien sélectionné, un nœud ayant un seul voisin, ou deux nœuds sélectionnés."},
-    "uiDisconnectShortcut": {"desc": "Raccourci : supprime les liens sélectionnés, ou les liens reliant les nœuds sélectionnés au reste du graphe (à défaut, ceux entre nœuds sélectionnés)."},
-    "uiFindShortcut": {"desc": "Raccourci : ouvre la fenêtre Search et place le focus dans le champ de recherche."},
-    "uiFocusNodesShortcut": {"desc": "Raccourci : recentre la vue du graphe sur la sélection, ou sur tout le contenu s'il n'y a pas de sélection."},
-    "uiHideShortcut": {"desc": "Raccourci : bascule la visibilité des liens sélectionnés ; sans lien sélectionné, masque ou affiche les liens des nœuds sélectionnés. Ajoute un instantané d'historique.", "params": {"hide": {"type": "boolean", "desc": "Valeur appliquée aux liens des nœuds sélectionnés quand aucun lien n'est sélectionné."}}},
-    "uiShowSourceShortcut": {"desc": "Raccourci : ouvre l'explorateur de fichiers sur le fichier source du nœud sélectionné (node.sourcePath), s'il y en a exactement un."},
-    "uiToggleCategoryShortcut": {"desc": "Raccourci : bascule le mode dynamique (toggleDynamicMode) du nœud sélectionné, s'il y en a exactement un."},
-    "windowsMenu": {"desc": "Dessine le contenu du menu « Windows » : une entrée par fenêtre (cochée si visible) et « Open All » / « Close All ».", "internal": true}
+    "addHistory": {
+      "desc": "Schedules a project history (undo) snapshot with a title; the snapshot is taken later (delayedHistorySnapshot). Also prints the title in the console.",
+      "params": {
+        "title": {
+          "type": "string",
+          "desc": "Text of the history entry."
+        },
+        "graph": {
+          "type": "table|boolean|nil",
+          "desc": "Graph concerned; nil = current graph; any other type (e.g. false) = no graph."
+        }
+      }
+    },
+    "arrowControllableWindowCall": {
+      "desc": "Calls a method on the current keyboard-controllable window (search, node library), if there is one.",
+      "params": {
+        "fun": {
+          "type": "string",
+          "desc": "Method name (e.g. 'navigateList', 'createNode')."
+        },
+        "...": {
+          "type": "any",
+          "desc": "Arguments passed to the method."
+        }
+      }
+    },
+    "autoSave": {
+      "desc": "Autosave: if the timer has elapsed and the project is editable and not transient, writes a copy to flowgraphEditor/autoSaves/ and re-arms the timer."
+    },
+    "closeCurrent": {
+      "desc": "Closes the current project (removeManager) and switches to the first remaining manager or nil."
+    },
+    "drawContextMenus": {
+      "desc": "Draws the \"CreateNodeContentMenu\" popup (node library at position mgr.newNodePos).",
+      "internal": true
+    },
+    "drawEditor": {
+      "desc": "Draws the full editor for the frame: manager, main window, all auxiliary windows, node double-click handling, autosave. Called from onEditorGui.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (s)."
+        }
+      },
+      "internal": true
+    },
+    "drawExecution": {
+      "desc": "Draws the execution view alone (executionView:drawAlone).",
+      "internal": true
+    },
+    "drawRestoreMenu": {
+      "desc": "Draws the \"Restore...\" submenu listing the autosave files grouped by original project (UTC date).",
+      "internal": true
+    },
+    "getManager": {
+      "desc": "Returns the flowgraph manager displayed in the editor.",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Current manager."
+        }
+      ]
+    },
+    "getPropertiesWindow": {
+      "desc": "Returns the Properties window.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Instance of the properties window."
+        }
+      ]
+    },
+    "isActionMapEnabled": {
+      "desc": "Indicates whether the \"<map>ActionMap\" action map is active and enabled.",
+      "params": {
+        "map": {
+          "type": "string",
+          "desc": "Name without the 'ActionMap' suffix."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if enabled."
+        }
+      ]
+    },
+    "onClientStartMission": {
+      "desc": "Hook called when a mission/level starts on the client side: if requestedEditor is true, activates the editor and opens the Flowgraph window.",
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Restore hook after Lua reload: stores the open windows (data.windows) and the current manager name (data.currentMgrName).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Data produced by onSerialize."
+        }
+      },
+      "internal": true
+    },
+    "onEditorActivated": {
+      "desc": "Hook called when the editor is activated: hides the small FG Monitor window.",
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Hook called when the editor is deactivated: pops the FlowgraphMain and Flowgraph action maps.",
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Hook called every frame by the editor: handles action maps, tooltips, manager change, then draws the editor (drawEditor) if the main window is visible.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (s)."
+        }
+      },
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook called when the editor is ready: creates the windows, the \"Flowgraph Editor\" menu entry (Gameplay group), the node editor context, restores the open windows and declares the flowgraphTransform edit mode.",
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Preferences registration hook: 'flowgraph' category with 'general' (pins, recent files, autosave...) and 'debug' (editorDebug, displayIds...) subcategories.",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Editor preferences registry."
+        }
+      },
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Save hook before Lua reload: returns the windows' state and the current manager name (empty table if the windows do not exist).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Serialized data."
+        }
+      ],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook called every frame: draws the small \"FG Monitor\" window (button to enlarge the editor) when showSmallFgWindow is true.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (s)."
+        }
+      },
+      "internal": true
+    },
+    "open": {
+      "desc": "Opens (shows) the main window of the Flowgraph editor."
+    },
+    "openFile": {
+      "desc": "Opens a .flow.json file: either as a new manager (and makes it current), or by reloading the data into the current manager. Updates the folder and recent files.",
+      "params": {
+        "fCbData": {
+          "type": "table",
+          "desc": "File dialog data, with the filepath field."
+        },
+        "openAsNewManager": {
+          "type": "boolean|nil",
+          "desc": "true to create a new manager."
+        },
+        "keepSavedDirs": {
+          "type": "boolean|nil",
+          "desc": "Passed to loadManager (keep the saved folders)."
+        }
+      }
+    },
+    "save": {
+      "desc": "Saves the current project: saveFile if it already has a name/folder, otherwise opens the \"Save as\" dialog. Re-arms the autosave.",
+      "internal": false
+    },
+    "saveAsFile": {
+      "desc": "Sets the project's folder and file name from the chosen path, then saves.",
+      "params": {
+        "fCbData": {
+          "type": "table",
+          "desc": "Dialog data, filepath field."
+        }
+      }
+    },
+    "saveCurrent": {
+      "desc": "Saves the current graph: the macro (saveMacro) if it is a macro with a path, otherwise the project (save)."
+    },
+    "saveFile": {
+      "desc": "Writes the project to savedDir/savedFilename (indented JSON). Refuses if the project has no name or is not stopped (runningState ~= 'stopped'), marks the graphs clean, renames \"New Project\" after the file and updates the recent files."
+    },
+    "saveMacro": {
+      "desc": "Saves a macro: opens the \"Unsaved macros\" popup if child macros are modified, otherwise writes to the existing path (macroPath) or opens the dialog (.macro.flow.json).",
+      "params": {
+        "graph": {
+          "type": "table",
+          "desc": "Macro-type graph."
+        }
+      }
+    },
+    "setManager": {
+      "desc": "Request to change the displayed manager (applied at the next onEditorGui, or immediately with instant).",
+      "params": {
+        "newMgr": {
+          "type": "table|nil",
+          "desc": "Flowgraph manager."
+        },
+        "instant": {
+          "type": "boolean|nil",
+          "desc": "Apply immediately to the local variable mgr."
+        }
+      }
+    },
+    "showNodeReferences": {
+      "desc": "Opens the References window and asks it to search for a node. BUG: calls winReferences:searchFor which does not exist in references.lua.",
+      "params": {
+        "node": {
+          "type": "table",
+          "desc": "Node to search for."
+        }
+      }
+    },
+    "uiAutoConnectShortcut": {
+      "desc": "Shortcut: automatically links the output pins of the left node to the free input pins of the right node, based on pin similarity (nodelib:ratePinSimilarity) and if the link is possible. Works with a selected link, a node with a single neighbor, or two selected nodes."
+    },
+    "uiDisconnectShortcut": {
+      "desc": "Shortcut: deletes the selected links, or the links connecting the selected nodes to the rest of the graph (failing that, those between selected nodes)."
+    },
+    "uiFindShortcut": {
+      "desc": "Shortcut: opens the Search window and puts the focus in the search field."
+    },
+    "uiFocusNodesShortcut": {
+      "desc": "Shortcut: recenters the graph view on the selection, or on all content if there is no selection."
+    },
+    "uiHideShortcut": {
+      "desc": "Shortcut: toggles the visibility of the selected links; with no link selected, hides or shows the links of the selected nodes. Adds a history snapshot.",
+      "params": {
+        "hide": {
+          "type": "boolean",
+          "desc": "Value applied to the links of the selected nodes when no link is selected."
+        }
+      }
+    },
+    "uiShowSourceShortcut": {
+      "desc": "Shortcut: opens the file explorer on the source file of the selected node (node.sourcePath), if there is exactly one."
+    },
+    "uiToggleCategoryShortcut": {
+      "desc": "Shortcut: toggles the dynamic mode (toggleDynamicMode) of the selected node, if there is exactly one."
+    },
+    "windowsMenu": {
+      "desc": "Draws the content of the \"Windows\" menu: one entry per window (checked if visible) and \"Open All\" / \"Close All\".",
+      "internal": true
+    }
   }
 }

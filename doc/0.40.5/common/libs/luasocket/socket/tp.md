@@ -1,42 +1,42 @@
 # `libs_luasocket_socket_tp`
 
-*Fichier : `lua/common/libs/luasocket/socket/tp.lua` · VM : Commun (GE + véhicule) · 126 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/luasocket/socket/tp.lua` · VM: Common (GE + vehicle) · 126 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/luasocket/socket/tp")`
+**Access:** `require("libs/luasocket/socket/tp")`
 
-Bibliothèque tierce LuaSocket (Diego Nehab) : sous-système commun aux protocoles texte SMTP/FTP (« Telnet-like Protocol »). `connect` ouvre une connexion TCP et renvoie un objet dont les méthodes lisent les réponses du serveur à code numérique à trois chiffres (réponses multilignes comprises) et envoient des commandes. Utilisé par socket.smtp.
+Third-party LuaSocket library (Diego Nehab): common subsystem of the SMTP/FTP text protocols ("Telnet-like Protocol"). `connect` opens a TCP connection and returns an object whose methods read the server's three-digit numeric-code responses (multiline responses included) and send commands. Used by socket.smtp.
 
-## Remarques
+## Notes
 
-- L'objet renvoyé par connect expose : check(ok), command(cmd, arg), send(data), receive(pat), source(source, step), sink(snk, pat), getfd, dirty, getcontrol et close.
-- `check(ok)` accepte un motif Lua (ex. "2.."), une liste de motifs, ou une fonction (code, réponse) ; renvoie le code numérique et le texte, ou nil et la réponse si le code ne correspond pas.
-- Bug du code : la méthode `sink` utilise une variable `c` non définie (elle devrait utiliser self.c) ; elle échoue si on l'appelle.
-- TIMEOUT par défaut : 60 s.
+- The object returned by connect exposes: check(ok), command(cmd, arg), send(data), receive(pat), source(source, step), sink(snk, pat), getfd, dirty, getcontrol and close.
+- `check(ok)` accepts a Lua pattern (e.g. "2.."), a list of patterns, or a function (code, response); returns the numeric code and the text, or nil and the response if the code does not match.
+- Code bug: the `sink` method uses an undefined variable `c` (it should use self.c); it fails if called.
+- Default TIMEOUT: 60 s.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_luasocket_socket_tp.connect(host, port, timeout, create)` | Crée un socket (create ou socket.tcp), fixe le délai, se connecte et renvoie l'objet de contrôle. En cas d'échec, ferme le socket et renvoie nil et l'erreur. | 114 |
+| `libs_luasocket_socket_tp.connect(host, port, timeout, create)` | Creates a socket (create or socket.tcp), sets the timeout, connects and returns the control object. On failure, closes the socket and returns nil and the error. | 114 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_luasocket_socket_tp.connect(host, port, timeout, create)`
 
-Crée un socket (create ou socket.tcp), fixe le délai, se connecte et renvoie l'objet de contrôle. En cas d'échec, ferme le socket et renvoie nil et l'erreur.
+Creates a socket (create or socket.tcp), sets the timeout, connects and returns the control object. On failure, closes the socket and returns nil and the error.
 
-- `host` (*string*) : Hôte du serveur.
-- `port` (*integer*) : Port du serveur.
-- `timeout` (*number|nil*) : Délai en secondes ; défaut TIMEOUT.
-- `create` (*function|nil*) : Fabrique de socket ; défaut socket.tcp.
-- **renvoie** : table|nil Objet de contrôle du protocole, ou nil.
-- **renvoie** : string|nil Message d'erreur.
+- `host` (*string*) : Server host.
+- `port` (*integer*) : Server port.
+- `timeout` (*number|nil*) : Timeout in seconds; default TIMEOUT.
+- `create` (*function|nil*) : Socket factory; default socket.tcp.
+- **returns**: table|nil Protocol control object, or nil.
+- **returns**: string|nil Error message.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `TIMEOUT` | number | Délai par défaut des opérations réseau en secondes (60). |
+| `TIMEOUT` | number | Default timeout of network operations in seconds (60). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luasocket/socket/tp.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/luasocket/socket/tp.lua`.*

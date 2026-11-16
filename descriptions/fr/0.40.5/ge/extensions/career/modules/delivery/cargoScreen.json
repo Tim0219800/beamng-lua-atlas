@@ -1,0 +1,282 @@
+{
+  "path": "lua/ge/extensions/career/modules/delivery/cargoScreen.lua",
+  "module": "Back-end de l'écran « Cargo Overview » de la carrière (livraison de colis, matériaux, véhicules et remorques). Il formate pour l'UI les cartes de cargaison (colis groupés, stockages de fluides/vrac, offres de véhicules, véhicules prêtés), envoie le tout via guihooks 'cargoDataForUiReady', gère le chargement/déchargement par déplacements transitoires (moveCargoFromUi, moveMaterialFromUi puis commit/cancel), l'ouverture/fermeture de l'écran avec la grande carte, le calcul de la meilleure route (setBestRoute) et les aperçus de route et surbrillances des marqueurs.",
+  "usage": "-- ouvrir l'écran de cargaison du joueur (hors facilité)\ncareer_modules_delivery_cargoScreen.enterMyCargo()",
+  "notes": [
+    "Dépend de core_vehicleBridge ; les autres modules delivery sont référencés dans onCareerActivated.",
+    "Les cartes sont stockées dans une table locale cardsById avec des ids préfixés : 'F-' (facilité) ou 'P-' (joueur) puis 'pg-' (parcelGroup), 'st-' (storage), 'vo-' (vehicleOffer) ou 'lo-' (loaner).",
+    "requestCargoDataForUi est asynchrone (passe par getNearbyVehicleCargoContainers) et répond par guihooks.trigger('cargoDataForUiReady', uiData) ; les mises à jour du cargo déclenchent 'newCargoAvailable' (une seule fois par ouverture).",
+    "Un déplacement de cargo est d'abord 'transitoire' : il n'est appliqué qu'à commitDeliveryConfiguration ; cancelDeliveryConfiguration (ou la sortie de la route UI) l'annule.",
+    "commitDeliveryConfiguration démarre le mode livraison si besoin, met à jour les poids des conteneurs, puis fait apparaître les offres de véhicules marquées et les véhicules prêtés.",
+    "Bug probable : dans commitDeliveryConfiguration, step.startStepSequence(sequence, callback) utilise 'callback', variable non définie (nil) ; un print(data) de debug y est aussi laissé.",
+    "setBestRoute : plus proche voisin glouton sur les destinations (distances via gameplay/route/route et dGenerator.getDistanceBetweenFacilities) ; s'il y a des tâches de véhicule, délègue à vehicleTasks.navigateToNextTask. Le cas target.type == 'multi' n'est pas géré (bloc vide).",
+    "setCargoScreenTab(tab) filtre les marqueurs de grande carte selon les filterTags des cartes (ou 'myCargo').",
+    "Plusieurs fonctions ne sont que des passe-plats vers d'autres modules : spawnOffer, requestDropOffData, confirmDropOffData, unloadCargoPopupClosed, clearTransientMoveForCargo."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{\"core_vehicleBridge\"}."}
+  },
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook : mémorise les modules delivery (parcelManager, cargoScreen, general, generator, progress, vehicleOfferManager, parcelMods, vehicleTasks, tutorial) et util_stepHandler.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "isCargoScreenOpen": {
+      "desc": "Indique si l'écran de cargaison est ouvert.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si ouvert."}]
+    },
+    "setCargoScreenTab": {
+      "desc": "Mémorise l'onglet courant et ne laisse visibles sur la grande carte que les marqueurs liés à des cartes ayant ce filterTag (ou 'myCargo') ; vide les POI et réinitialise les marqueurs.",
+      "params": {"tab": {"type": "string", "desc": "Clé de filtre/onglet (ex. 'parcel', 'vehicle', 'all')."}},
+      "returns": []
+    },
+    "getCargoScreenTab": {
+      "desc": "Renvoie l'onglet courant ('' à l'ouverture).",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Onglet courant."}]
+    },
+    "formatCargoGroup": {
+      "desc": "Formate un groupe de cargos « identiques » (même nom, destination…) en une entrée pour l'UI : ids, noms court/long d'origine/emplacement/destination, type, slots, distance, récompense, poids, temps d'offre restant, modificateurs, route navgraph, emplacements cibles possibles, etc.",
+      "params": {
+        "group": {"type": "table[]", "desc": "Cargos du groupe (triés par id dans la fonction)."},
+        "playerCargoContainers": {"type": "table[]", "desc": "Conteneurs du joueur (getNearbyVehicleCargoContainers)."},
+        "showFirstSeen": {"type": "boolean|nil", "desc": "Gère l'indicateur de première apparition des cargos (déduit du code)."}
+      },
+      "returns": [{"type": "table", "desc": "Entrée formatée pour l'UI."}]
+    },
+    "tryLoadAll": {
+      "desc": "Corps vide dans cette version : ne fait rien.",
+      "params": {"ids": {"type": "any", "desc": "Non utilisé."}},
+      "returns": []
+    },
+    "formatAcceptedOfferForUI": {
+      "desc": "Formate une offre de véhicule/remorque acceptée pour l'UI : nom, marque, kilométrage, destination, tâche en cours (monter dans le véhicule, atteler la remorque, déposer…), vignette, récompense, route, modificateurs, informations d'abandon (pénalité = récompense × facteur d'abandon).",
+      "params": {"offer": {"type": "table", "desc": "Offre de véhicule (champs vehicle, task, data, rewards)."}},
+      "returns": [{"type": "table", "desc": "Carte de type offre pour l'UI."}]
+    },
+    "abandonAcceptedOffer": {
+      "desc": "Abandonne une offre acceptée : déclenche le hook onGameplayActivityAborted puis rend le véhicule de livraison (vehicleTasks.giveBackDeliveryVehicle).",
+      "params": {"vehId": {"type": "integer", "desc": "Id d'objet du véhicule de livraison."}},
+      "returns": []
+    },
+    "clearTransientMovesForStorage": {
+      "desc": "Supprime les cargos en déplacement transitoire issus du stockage de matériau donné de la facilité de l'écran ouvert (emplacement 'delete') et annule leur déplacement.",
+      "params": {"materialType": {"type": "string", "desc": "Type de matériau du stockage."}},
+      "returns": []
+    },
+    "moveMaterialFromUi": {
+      "desc": "Charge un matériau (fluide ou vrac) du stockage de la facilité dans les conteneurs du joueur : avec targetLocation.type 'auto', choisit les conteneurs compatibles (déjà remplis du même matériau d'abord, puis vides) ; avec 'vehicle', le conteneur indiqué. Remplit jusqu'à épuisement du volume, logue un avertissement s'il en reste, puis notifie l'UI ('requestCargoDataSimple').",
+      "params": {
+        "materialType": {"type": "string", "desc": "Type de matériau."},
+        "cargoType": {"type": "string", "desc": "Type de cargo ('fluid' ou 'dryBulk')."},
+        "amount": {"type": "number", "desc": "Volume à charger (litres/slots)."},
+        "targetLocation": {"type": "table", "desc": "{type='auto'} ou {type='vehicle', vehId, containerId}."}
+      },
+      "returns": []
+    },
+    "deliveryScreenExternalButtonPressed": {
+      "desc": "Boutons externes de l'écran : 'openDeliveryProgress' ouvre career.branchPage (logistics-delivery) et 'openVehicleDeliveryProgress' (logistics-vehicleDelivery).",
+      "params": {"id": {"type": "string", "desc": "Id du bouton."}},
+      "returns": []
+    },
+    "requestCargoDataForUi": {
+      "desc": "Construit toutes les données de l'écran (joueur, véhicules, conteneurs, offres acceptées, cartes, filtres, tris, regroupements, bouton de confirmation, panneaux de facilité) puis les envoie à l'UI par guihooks 'cargoDataForUiReady'.",
+      "params": {
+        "facId": {"type": "string|nil", "desc": "Id de la facilité concernée."},
+        "psPath": {"type": "string|nil", "desc": "Chemin du parking spot concerné."},
+        "updateMaxTimeTimestamp": {"type": "boolean|nil", "desc": "Si différent de false, remet à jour l'horodatage maximal d'affichage des offres."}
+      },
+      "returns": []
+    },
+    "onCargoGenerated": {
+      "desc": "Hook : si l'écran est ouvert sur la facilité d'origine du cargo généré, notifie l'UI ('newCargoAvailable') une seule fois.",
+      "params": {"cargo": {"type": "table", "desc": "Cargo généré (champ origin)."}},
+      "returns": [],
+      "internal": true
+    },
+    "moveCargoFromUi": {
+      "desc": "Déplace un cargo vers un autre emplacement en tant que déplacement transitoire (dParcelManager.addTransientMoveCargo) ; appliqué seulement au commit.",
+      "params": {
+        "cargoId": {"type": "any", "desc": "Id du cargo."},
+        "targetLocation": {"type": "table", "desc": "Emplacement cible (facilité, véhicule/conteneur…)."}
+      },
+      "returns": []
+    },
+    "applyTransientMoves": {
+      "desc": "Déclenche onGameplayActivityAborted puis applique tous les déplacements transitoires (dParcelManager.applyTransientMoves).",
+      "params": {},
+      "returns": []
+    },
+    "spawnOffer": {
+      "desc": "Passe-plat vers career_modules_delivery_vehicleOfferManager.spawnOffer.",
+      "params": {"...": {"type": "any", "desc": "Arguments transmis tels quels."}},
+      "returns": [{"type": "any", "desc": "Valeur renvoyée par spawnOffer."}]
+    },
+    "toggleOfferForSpawning": {
+      "desc": "Inverse le drapeau spawnWhenCommitingCargo d'une offre (apparition au commit de la configuration).",
+      "params": {"offerId": {"type": "any", "desc": "Id de l'offre."}},
+      "returns": []
+    },
+    "enterCargoOverviewScreen": {
+      "desc": "Ouvre l'écran : mémorise facilité/parking spot, déclenche les générateurs du tutoriel si besoin, vide les POI, entre dans la grande carte avec POI personnalisés, navigue vers la route UI 'career.cargoOverview' et déclenche onEnterCargoOverviewScreen.",
+      "params": {
+        "facilityId": {"type": "string|nil", "desc": "Id de la facilité (nil pour « mon cargo »)."},
+        "parkingSpotPath": {"type": "string|nil", "desc": "Chemin du parking spot."}
+      },
+      "returns": []
+    },
+    "enterMyCargo": {
+      "desc": "Ouvre l'écran sans facilité (enterCargoOverviewScreen()).",
+      "params": {},
+      "returns": []
+    },
+    "setBigMapPanEnabled": {
+      "desc": "Active/désactive le déplacement de la grande carte par les actions bigMapMoveForwardBackward/LeftRight (filtre d'actions) et remet la caméra à 0 quand c'est désactivé.",
+      "params": {"enabled": {"type": "boolean", "desc": "true pour autoriser le déplacement."}},
+      "returns": []
+    },
+    "exitCargoOverviewScreen": {
+      "desc": "Appelée à la fermeture de l'écran : le marque fermé, réactive le déplacement, vide les POI, quitte la grande carte, remet la simulation en marche, planifie la mise à jour des poids et vérifie la sortie du mode livraison.",
+      "params": {
+        "facilityId": {"type": "string|nil", "desc": "Non utilisé."},
+        "parkingSpotPath": {"type": "string|nil", "desc": "Non utilisé."}
+      },
+      "returns": []
+    },
+    "commitDeliveryConfiguration": {
+      "desc": "Valide la configuration : applique les déplacements transitoires vers la facilité courante, démarre le mode livraison si du cargo est chargé ou restant, met à jour les poids des conteneurs (gel puis délai de chargement avec popup), puis fait apparaître les offres marquées et les véhicules prêtés.",
+      "params": {},
+      "returns": []
+    },
+    "cancelDeliveryConfiguration": {
+      "desc": "Annule la livraison en cours de configuration : efface les déplacements transitoires, les marquages d'apparition d'offres et de véhicules prêtés, rafraîchit les conteneurs proches et affiche un message.",
+      "params": {},
+      "returns": []
+    },
+    "onCargoOverviewRouteLeave": {
+      "desc": "Hook de route UI : en quittant la route cargoOverview (sauf vers un enfant), annule les déplacements non validés puis ferme l'écran.",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte du routeur UI."},
+        "toRoute": {"type": "table|nil", "desc": "Route de destination (champ name)."},
+        "fromRoute": {"type": "table|nil", "desc": "Route quittée."},
+        "data": {"type": "any", "desc": "Données de navigation."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setBestRoute": {
+      "desc": "Calcule et affiche la meilleure route : tâches de véhicule en priorité, sinon enchaînement de destinations (plus proche voisin) des cargos en véhicule ; efface le chemin s'il n'y a rien à cibler.",
+      "params": {"onlyClosestTarget": {"type": "boolean|nil", "desc": "Si vrai, ne garde que la destination la plus proche."}},
+      "returns": []
+    },
+    "onDeliveryRewardsPopupClosed": {
+      "desc": "Hook : après la popup de récompenses, recalcule la route (si automaticRoute) et, après 0,5 s, affiche les popups d'introduction 'delivery/cargoDelivered' et l'astuce du taxi si le joueur est à pied.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onCargoPickedUp": {
+      "desc": "Hook : recalcule la meilleure route (destination la plus proche) si la route automatique est activée.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onDeactivateBigMapCallback": {
+      "desc": "Hook : à la sortie de la grande carte, en mode livraison avec route automatique, n'affiche que la route jusqu'à la première destination.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "highlightCargoInPoi": {
+      "desc": "Envoie à l'UI (guihooks 'sendHighlightedCardIds') les ids de cartes liées au marqueur de grande carte donné ; table vide si inconnu.",
+      "params": {"poiId": {"type": "string|nil", "desc": "Id du marqueur/POI."}},
+      "returns": []
+    },
+    "deliveryMarkerSelected": {
+      "desc": "Callback de clic sur un marqueur : met en surbrillance les cartes et, si la route automatique est désactivée, y navigue (freeroam_bigMapMode.navigateToMission).",
+      "params": {"poiId": {"type": "string", "desc": "Id du marqueur."}},
+      "returns": [],
+      "internal": true
+    },
+    "onBigmapHoveredPoiIdChanged": {
+      "desc": "Hook : au survol d'un marqueur, met en surbrillance les entrées de liste (si l'écran est ouvert).",
+      "params": {"poiId": {"type": "string|nil", "desc": "Marqueur survolé."}},
+      "returns": [],
+      "internal": true
+    },
+    "showRoutePreview": {
+      "desc": "Affiche sur la grande carte un aperçu de route multipoints (type 'navgraph', via gameplay/route/route) ou l'efface si la route est nil/invalide.",
+      "params": {"route": {"type": "table|nil", "desc": "{type='navgraph', locations={...}}."}},
+      "returns": []
+    },
+    "showCargoRoutePreview": {
+      "desc": "Aperçu de route d'un cargo (origine/emplacement vers destination, ou plusieurs destinations).",
+      "params": {"cargoId": {"type": "any|nil", "desc": "Id du cargo ; nil efface l'aperçu."}},
+      "returns": []
+    },
+    "showVehicleOfferRoutePreview": {
+      "desc": "Aperçu de route entre les deux emplacements d'une offre de véhicule.",
+      "params": {"offerId": {"type": "any|nil", "desc": "Id de l'offre ; nil efface l'aperçu."}},
+      "returns": []
+    },
+    "showLocationRoutePreview": {
+      "desc": "Aperçu de route depuis le parking spot de l'écran vers la facilité donnée (point de ramassage si asProvider, sinon de dépose).",
+      "params": {
+        "locationId": {"type": "string|nil", "desc": "Id de facilité ; nil efface l'aperçu."},
+        "asProvider": {"type": "boolean|nil", "desc": "Utiliser le premier pickUpSpot au lieu du premier dropOffSpot."}
+      },
+      "returns": []
+    },
+    "setCargoRoute": {
+      "desc": "Au clic sur un cargo, place le focus de navigation de la grande carte sur son origine ou sa destination.",
+      "params": {
+        "cargoId": {"type": "any|nil", "desc": "Id du cargo."},
+        "origin": {"type": "boolean|nil", "desc": "Si vrai, cible l'origine plutôt que la destination."}
+      },
+      "returns": []
+    },
+    "setVisibleIdsForBigMap": {
+      "desc": "Reconstruit la correspondance marqueur de grande carte -> cartes (via card.bigMapIds) ; seuls ces marqueurs sont pertinents.",
+      "params": {},
+      "returns": []
+    },
+    "exitDeliveryMode": {
+      "desc": "Quitte le mode livraison (avec hook onGameplayActivityAborted s'il était actif) via career_modules_delivery_general.exitDeliveryMode.",
+      "params": {},
+      "returns": []
+    },
+    "showCargoContainerHelpPopup": {
+      "desc": "Affiche la popup d'aide 'cargoContainerHowTo'.",
+      "params": {},
+      "returns": []
+    },
+    "unloadCargoPopupClosed": {
+      "desc": "Passe-plat vers career_modules_delivery_progress.unloadCargoPopupClosed.",
+      "params": {},
+      "returns": []
+    },
+    "requestDropOffData": {
+      "desc": "Passe-plat vers career_modules_delivery_progress.requestDropOffData.",
+      "params": {"...": {"type": "any", "desc": "Arguments transmis."}},
+      "returns": []
+    },
+    "confirmDropOffData": {
+      "desc": "Passe-plat vers career_modules_delivery_progress.confirmDropOffData.",
+      "params": {"...": {"type": "any", "desc": "Arguments transmis."}},
+      "returns": []
+    },
+    "clearTransientMoveForCargo": {
+      "desc": "Passe-plat vers career_modules_delivery_parcelManager.clearTransientMoveForCargo.",
+      "params": {"...": {"type": "any", "desc": "Arguments transmis (id de cargo)."}},
+      "returns": []
+    },
+    "dropOffPopupClosed": {
+      "desc": "Appelée par l'UI à la fermeture d'une popup de dépose : mode 'results' déclenche onDeliveryRewardsPopupClosed, mode 'cargoSelection' déclenche onDeliveryDropOffCargoSelectionPopupClosed.",
+      "params": {"mode": {"type": "string", "desc": "'results' ou 'cargoSelection'."}},
+      "returns": []
+    }
+  }
+}

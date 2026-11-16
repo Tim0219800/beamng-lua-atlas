@@ -1,141 +1,245 @@
 {
   "path": "lua/ge/extensions/editor/roadArchitect/groups.lua",
-  "module": "Gestion des groupes de Road Architect (éditeur GE). Deux notions coexistent : les groupes prefab (modèles de routes réutilisables, comme carrefours ou ronds-points, chargés depuis des fichiers JSON ou créés par l'utilisateur) et les groupes placés (ensembles de nœuds de routes déjà présents dans la session). Le module sait auditionner un prefab (caméra en rotation à 1000 m d'altitude), le placer dans la session, créer un groupe à partir d'un polygone, sérialiser, sauvegarder, charger et déplacer la caméra sur un groupe.",
-  "usage": "local g = extensions.editor_roadArchitect_groups\ng.getDefaultGroups()\nlocal noms = g.addGroupToRoadsPlace(1, false) -- renvoie les noms (UUID) des routes ajoutées",
+  "module": "Road Architect group management (GE editor). Two notions coexist: prefab groups (reusable road templates, such as intersections or roundabouts, loaded from JSON files or created by the user) and placed groups (sets of road nodes already present in the session). The module can audition a prefab (rotating camera at 1000 m altitude), place it in the session, create a group from a polygon, serialize, save, load and move the camera to a group.",
+  "usage": "local g = extensions.editor_roadArchitect_groups\ng.getDefaultGroups()\nlocal noms = g.addGroupToRoadsPlace(1, false) -- returns the names (UUIDs) of the added roads",
   "notes": [
-    "Les données par défaut sont lues via jsonReadFile dans roadArchitect/groups/*.json (12 prefabs : Urban Block, Staggered Junction, Double Roundabout, RIRO Intersection, etc.) ; getDefaultGroups ne fait rien si groups contient déjà des éléments.",
-    "importGroup (création d'un prefab à partir de routes) est local et n'est pas exporté ; on y accède via load() ou getDefaultGroups().",
-    "Les noms de groupes placés sont des tampons imgui (im.ArrayChar(32, nom)), pas des strings Lua ; copyPlacedGroup les convertit avec ffi.string.",
-    "Les routes d'audition sont déplacées de -centre et élevées de 1000 m (auditionHeight) et restent cachées (isHidden = true).",
-    "Le fichier groupe sauvegardé a la forme { data = { group = {name, roads} } }.",
-    "save(idx) et load() manipulent un seul groupe à la fois malgré leur description (« collection ») : save écrit groups[idx], load ajoute un groupe.",
-    "createGroup modifie gPolygon en place (z mis à 0) et ignore les routes de jonction (isJctRoad) et les ponts (isBridge)."
+    "The default data is read via jsonReadFile from roadArchitect/groups/*.json (12 prefabs: Urban Block, Staggered Junction, Double Roundabout, RIRO Intersection, etc.); getDefaultGroups does nothing if groups already contains elements.",
+    "importGroup (creating a prefab from roads) is local and not exported; it is reached via load() or getDefaultGroups().",
+    "Placed group names are imgui buffers (im.ArrayChar(32, name)), not Lua strings; copyPlacedGroup converts them with ffi.string.",
+    "The audition roads are shifted by -center and raised by 1000 m (auditionHeight) and stay hidden (isHidden = true).",
+    "The saved group file has the form { data = { group = {name, roads} } }.",
+    "save(idx) and load() handle a single group at a time despite their description (\"collection\"): save writes groups[idx], load adds one group.",
+    "createGroup modifies gPolygon in place (z set to 0) and ignores junction roads (isJctRoad) and bridges (isBridge)."
   ],
   "fields": {
-    "groups": {"type": "table", "desc": "Tableau des modèles de groupes prefab disponibles, chaque élément ayant la forme { name = string, roads = table[] }. C'est la même table que celle remplie par getDefaultGroups, createPrefabGroup et load."}
+    "groups": {
+      "type": "table",
+      "desc": "Array of available prefab group templates, each element having the form { name = string, roads = table[] }. It is the same table as the one filled by getDefaultGroups, createPrefabGroup and load."
+    }
   },
   "functions": {
     "addGroupToRoadsAudition": {
-      "desc": "Copie les routes du groupe prefab gIdx dans roadMgr.roads pour l'audition : routes centrées sur l'origine, élevées à la pose d'audition (+1000 m) et cachées. Recalcule la carte des routes, et recadre la caméra si on est déjà en vue de groupe.",
-      "params": {"gIdx": {"type": "integer", "desc": "Indice du groupe dans groups."}},
+      "desc": "Copies the roads of prefab group gIdx into roadMgr.roads for auditioning: roads centered on the origin, raised to the audition pose (+1000 m) and hidden. Recomputes the road map, and reframes the camera if already in group view.",
+      "params": {
+        "gIdx": {
+          "type": "integer",
+          "desc": "Index of the group in groups."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "addGroupToRoadsPlace": {
-      "desc": "Place le groupe prefab gIdx dans la session : copie ses routes avec des noms UUID uniques (Engine.generateUUID), visibles, enregistre un groupe placé (nom 32 caractères, liste des nœuds) puis supprime les routes cachées.",
+      "desc": "Places prefab group gIdx in the session: copies its roads with unique UUID names (Engine.generateUUID), visible, registers a placed group (32-character name, node list) then deletes the hidden roads.",
       "params": {
-        "gIdx": {"type": "integer", "desc": "Indice du groupe dans groups."},
-        "isConformGroupToTerrain": {"type": "boolean", "desc": "Si vrai, les routes copiées sont plaquées au terrain."}
+        "gIdx": {
+          "type": "integer",
+          "desc": "Index of the group in groups."
+        },
+        "isConformGroupToTerrain": {
+          "type": "boolean",
+          "desc": "If true, the copied roads are conformed to the terrain."
+        }
       },
-      "returns": [{"type": "string[]", "desc": "Noms (UUID) des routes ajoutées."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Names (UUIDs) of the added roads."
+        }
+      ],
       "internal": false
     },
     "copyPlacedGroup": {
-      "desc": "Copie profonde d'un groupe placé, avec le nom converti du tampon imgui en string.",
-      "params": {"pg": {"type": "table", "desc": "Groupe placé { name = tampon imgui, list = {{r = nom de route, n = indice de nœud}} }."}},
-      "returns": [{"type": "table", "desc": "{ name = string, list = table }."}],
+      "desc": "Deep copy of a placed group, with the name converted from the imgui buffer to a string.",
+      "params": {
+        "pg": {
+          "type": "table",
+          "desc": "Placed group { name = imgui buffer, list = {{r = road name, n = node index}} }."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ name = string, list = table }."
+        }
+      ],
       "internal": false
     },
     "createGroup": {
-      "desc": "Crée un groupe placé à partir des nœuds de routes situés dans un polygone 2D (le polygone est aplati à z = 0 en place). Les routes de jonction et les ponts sont ignorés. Ne crée rien si aucun nœud n'est dans le polygone ; le groupe est nommé « New Group ».",
+      "desc": "Creates a placed group from the road nodes located inside a 2D polygon (the polygon is flattened to z = 0 in place). Junction roads and bridges are ignored. Creates nothing if no node is in the polygon; the group is named \"New Group\".",
       "params": {
-        "gPolygon": {"type": "vec3[]", "desc": "Sommets du polygone ; modifiés en place (z = 0)."},
-        "roads": {"type": "table[]", "desc": "Routes à tester."}
+        "gPolygon": {
+          "type": "vec3[]",
+          "desc": "Polygon vertices; modified in place (z = 0)."
+        },
+        "roads": {
+          "type": "table[]",
+          "desc": "Roads to test."
+        }
       },
       "returns": [],
       "internal": false
     },
     "createPrefabGroup": {
-      "desc": "Transforme un groupe placé en groupe prefab : copie chaque route concernée (une fois) avec un nouveau nom UUID et ajoute à groups un élément nommé « User N ».",
-      "params": {"g": {"type": "table", "desc": "Groupe placé (champ list de {r, n})."}},
+      "desc": "Turns a placed group into a prefab group: copies each concerned road (once) with a new UUID name and adds to groups an element named \"User N\".",
+      "params": {
+        "g": {
+          "type": "table",
+          "desc": "Placed group (list field of {r, n})."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "goToGroupView": {
-      "desc": "Place la caméra en vue d'audition du groupe si on n'y est pas déjà : mémorise la pose de caméra actuelle, remet le chrono à zéro et appelle la mise à jour de pose. Renvoie le temps ajusté.",
+      "desc": "Puts the camera in the group's audition view if not already there: stores the current camera pose, resets the timer and calls the pose update. Returns the adjusted time.",
       "params": {
-        "gIdx": {"type": "integer", "desc": "Indice du groupe à auditionner."},
-        "timer": {"type": "table", "desc": "Chronomètre ; appelle timer:stopAndReset() à l'entrée en vue de groupe."},
-        "time": {"type": "number", "desc": "Temps courant ; remplacé par 0 lors du premier appel."}
+        "gIdx": {
+          "type": "integer",
+          "desc": "Index of the group to audition."
+        },
+        "timer": {
+          "type": "table",
+          "desc": "Timer; calls timer:stopAndReset() on entering group view."
+        },
+        "time": {
+          "type": "number",
+          "desc": "Current time; replaced by 0 on the first call."
+        }
       },
-      "returns": [{"type": "number", "desc": "0.0 si la vue vient d'être activée, sinon time inchangé."}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "0.0 if the view has just been activated, otherwise time unchanged."
+        }
+      ],
       "internal": false
     },
     "goToOldView": {
-      "desc": "Rend la caméra à la pose mémorisée avant la vue de groupe et quitte l'état de vue de groupe.",
+      "desc": "Returns the camera to the pose stored before group view and leaves the group view state.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "manageRotateCam": {
-      "desc": "Fait tourner la caméra d'audition d'un pas de pi/500 autour du centre d'audition (appelé à chaque frame par l'interface).",
+      "desc": "Rotates the audition camera by a step of pi/500 around the audition center (called every frame by the UI).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "serialiseGroup": {
-      "desc": "Sérialise un groupe prefab en table { name, roads } via roadMgr.serialiseRoad.",
-      "params": {"g": {"type": "table", "desc": "Groupe prefab { name, roads }."}},
-      "returns": [{"type": "table", "desc": "Groupe sérialisé, utilisable par jsonWriteFile."}],
+      "desc": "Serializes a prefab group into a { name, roads } table via roadMgr.serialiseRoad.",
+      "params": {
+        "g": {
+          "type": "table",
+          "desc": "Prefab group { name, roads }."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Serialized group, usable by jsonWriteFile."
+        }
+      ],
       "internal": false
     },
     "deserialiseGroup": {
-      "desc": "Reconstruit un groupe prefab à partir d'un groupe sérialisé via roadMgr.deserialiseRoad.",
-      "params": {"gSer": {"type": "table", "desc": "Groupe sérialisé { name, roads }."}},
-      "returns": [{"type": "table", "desc": "Groupe { name, roads }."}],
+      "desc": "Rebuilds a prefab group from a serialized group via roadMgr.deserialiseRoad.",
+      "params": {
+        "gSer": {
+          "type": "table",
+          "desc": "Serialized group { name, roads }."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Group { name, roads }."
+        }
+      ],
       "internal": false
     },
     "save": {
-      "desc": "Ouvre une boîte de dialogue d'enregistrement JSON et écrit groups[idx] (sérialisé) dans le fichier choisi, sous la forme { data = { group = ... } }.",
-      "params": {"idx": {"type": "integer", "desc": "Indice du groupe à sauvegarder."}},
+      "desc": "Opens a JSON save dialog and writes groups[idx] (serialized) to the chosen file, in the form { data = { group = ... } }.",
+      "params": {
+        "idx": {
+          "type": "integer",
+          "desc": "Index of the group to save."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "load": {
-      "desc": "Ouvre une boîte de dialogue d'ouverture JSON, lit le groupe (data.group), le désérialise et l'ajoute à groups via importGroup.",
+      "desc": "Opens a JSON open dialog, reads the group (data.group), deserializes it and adds it to groups via importGroup.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getDefaultGroups": {
-      "desc": "Charge les 12 groupes prefab par défaut depuis les fichiers JSON roadArchitect/groups/. Ne fait rien si groups n'est pas vide.",
+      "desc": "Loads the 12 default prefab groups from the roadArchitect/groups/ JSON files. Does nothing if groups is not empty.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "updateGroupsAfterRoadRemove": {
-      "desc": "Parcourt les groupes placés et supprime ceux dont au moins une route n'existe plus dans roadMgr.",
+      "desc": "Iterates over the placed groups and removes those for which at least one road no longer exists in roadMgr.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getPlacedGroups": {
-      "desc": "Renvoie la collection des groupes placés de la session.",
+      "desc": "Returns the collection of placed groups of the session.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Groupes placés."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Placed groups."
+        }
+      ],
       "internal": false
     },
     "setPlacedGroups": {
-      "desc": "Remplace la collection des groupes placés.",
-      "params": {"pg": {"type": "table[]", "desc": "Nouvelle collection."}},
+      "desc": "Replaces the collection of placed groups.",
+      "params": {
+        "pg": {
+          "type": "table[]",
+          "desc": "New collection."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "removePlacedGroupSoft": {
-      "desc": "Retire un groupe placé de la collection sans toucher aux routes qu'il contient.",
-      "params": {"groupIdx": {"type": "integer", "desc": "Indice du groupe placé."}},
+      "desc": "Removes a placed group from the collection without touching the roads it contains.",
+      "params": {
+        "groupIdx": {
+          "type": "integer",
+          "desc": "Index of the placed group."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "removePlacedGroupHard": {
-      "desc": "Retire un groupe placé et supprime ses routes, sauf celles qui appartiennent encore à un autre groupe. Appelle ensuite updateGroupsAfterRoadRemove.",
-      "params": {"groupIdx": {"type": "integer", "desc": "Indice du groupe placé."}},
+      "desc": "Removes a placed group and deletes its roads, except those still belonging to another group. Then calls updateGroupsAfterRoadRemove.",
+      "params": {
+        "groupIdx": {
+          "type": "integer",
+          "desc": "Index of the placed group."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "goToPlacedGroup": {
-      "desc": "Met la caméra libre à la verticale du groupe placé, regardant vers le bas, à une hauteur calculée d'après le champ de vision pour tout cadrer. Ne fait rien si l'emprise est inférieure à 0,1 m en x et y.",
-      "params": {"idx": {"type": "integer", "desc": "Indice du groupe placé."}},
+      "desc": "Puts the free camera directly above the placed group, looking down, at a height computed from the field of view to frame everything. Does nothing if the extent is less than 0.1 m in x and y.",
+      "params": {
+        "idx": {
+          "type": "integer",
+          "desc": "Index of the placed group."
+        }
+      },
       "returns": [],
       "internal": false
     }

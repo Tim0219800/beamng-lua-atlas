@@ -1,0 +1,103 @@
+{
+  "path": "lua/ge/extensions/career/saveSystem.lua",
+  "module": "Système de sauvegarde de la carrière. Les profils sont des dossiers de settings/cloud/saves/<profil>/ ; chaque sauvegarde est un sous-dossier (autosave1 à autosave4 en rotation, ou un nom choisi) contenant info.json (version, date UTC, creationDate, displayName, corrupted). saveCurrent écrit d'abord info.json en « corrupted », déclenche les hooks onSaveCurrentProfileAsyncStart puis onSaveCurrentProfile(chemin, miniatures) pour que chaque extension écrive ses fichiers, attend les extensions asynchrones, puis finalise info.json et émet onSaveFinished.",
+  "usage": "-- dans une extension de carrière\nfunction M.onSaveCurrentProfile(currentSavePath)\n  career_saveSystem.jsonWriteFileSafe(currentSavePath .. \"/career/monModule.json\", data, true)\nend",
+  "notes": [
+    "Version du format : saveSystemVersion = 64 ; les sauvegardes dont la version est inférieure à backwardsCompVersion (36) sont refusées par setProfile (retourne false).",
+    "Quatre autosaves : getOldestAutosave choisit la première manquante, sinon la plus ancienne par date.",
+    "Pour une extension asynchrone : registerAsyncSaveExtension(nom) pendant onSaveCurrentProfile, puis asyncSaveExtensionFinished(nom) quand terminé ; la sauvegarde se finalise quand toutes sont terminées.",
+    "jsonWriteFileSafe écrit dans un fichier .tmp puis renomme ; en cas d'échec, il appelle saveFailed() (qui vide infoData, donc la sauvegarde sera signalée comme échouée) et retourne false.",
+    "Les noms de profil créés sans info.json existant sont assainis (minuscules alphanumériques, suffixe numérique si déjà pris) ; le nom d'affichage garde le nom d'origine.",
+    "removeProfile et renameProfile ne font rien (retour nil) pour le profil courant quand la carrière est active ; renameProfile retourne nil si le renommage de dossier échoue.",
+    "onSerialize / onDeserialized conservent le profil courant lors d'un rechargement Lua."
+  ],
+  "functions": {
+    "getAllSaveFolders": {
+      "desc": "Liste les sauvegardes d'un profil (contenu d'info.json + champ name = nom du dossier), triées par date croissante.",
+      "params": {"profile": {"type": "string", "desc": "Nom du profil."}},
+      "returns": [{"type": "table[]", "desc": "Liste de tables info.json."}],
+      "internal": false
+    },
+    "getNewestSave": {
+      "desc": "Trouve le dossier de sauvegarde le plus récent (non corrompu) d'un chemin de profil.",
+      "params": {"path": {"type": "string", "desc": "Dossier du profil."}},
+      "returns": [{"type": "string", "desc": "Chemin du dossier, ou chaîne vide si aucun."}],
+      "internal": false
+    },
+    "setProfile": {
+      "desc": "Sélectionne le profil courant (et sa sauvegarde la plus récente ou une précise). Émet onBeforeSetProfile puis onSetProfile(savePath, profile). Avec profile = nil, désélectionne.",
+      "params": {
+        "profile": {"type": "string|nil", "desc": "Nom du profil."},
+        "specificSaveFolder": {"type": "string|nil", "desc": "Nom d'un sous-dossier de sauvegarde précis."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si profil nil ou sauvegarde trop ancienne, true sinon."}],
+      "internal": false
+    },
+    "removeProfile": {
+      "desc": "Supprime le dossier d'un profil (refusé pour le profil courant si la carrière est active).",
+      "params": {"profile": {"type": "string", "desc": "Nom du profil."}},
+      "internal": false
+    },
+    "removeSaveFolder": {
+      "desc": "Supprime un dossier de sauvegarde d'un profil, sauf la sauvegarde courante ou un nom illégal.",
+      "params": {"profile": {"type": "string", "desc": "Nom du profil."}, "saveFolderName": {"type": "string", "desc": "Nom du dossier de sauvegarde."}},
+      "returns": [{"type": "boolean", "desc": "true si supprimé."}],
+      "internal": false
+    },
+    "renameProfile": {
+      "desc": "Renomme le dossier d'un profil (refusé si le nouveau nom existe, ou pour le profil courant en carrière active).",
+      "params": {"profile": {"type": "string", "desc": "Ancien nom."}, "newName": {"type": "string", "desc": "Nouveau nom."}},
+      "returns": [{"type": "boolean|nil", "desc": "true si renommé, false si refusé, nil dans les autres cas d'échec."}],
+      "internal": false
+    },
+    "getCurrentProfile": {
+      "desc": "Retourne le profil courant et le chemin de sa sauvegarde courante.",
+      "returns": [{"type": "string|nil", "desc": "Nom du profil."}, {"type": "string|nil", "desc": "Chemin du dossier de sauvegarde courant (à utiliser comme racine des fichiers de la carrière)."}],
+      "internal": false
+    },
+    "getCurrentDisplayName": {"desc": "Nom d'affichage du profil courant.", "returns": [{"type": "string|nil", "desc": "Nom affiché."}], "internal": false},
+    "saveCurrent": {
+      "desc": "Sauvegarde la carrière dans une sauvegarde automatique (la plus ancienne) ou dans saveName. Sans profil courant, ne fait rien.",
+      "params": {
+        "vehiclesThumbnailUpdate": {"type": "any", "desc": "Transmis aux extensions via onSaveCurrentProfile (ex. liste d'inventoryId dont la miniature doit être mise à jour)."},
+        "playSuccessSound": {"type": "boolean|nil", "desc": "Joue un son à la réussite."},
+        "saveName": {"type": "string|nil", "desc": "Nom d'une sauvegarde dédiée au lieu d'une autosave."}
+      },
+      "internal": false
+    },
+    "saveFailed": {"desc": "Marque la sauvegarde en cours comme échouée (vide infoData).", "internal": false},
+    "jsonWriteFileSafe": {
+      "desc": "Écrit un JSON via un fichier temporaire puis renomme (écriture atomique).",
+      "params": {
+        "filename": {"type": "string", "desc": "Fichier cible."},
+        "obj": {"type": "table", "desc": "Données."},
+        "pretty": {"type": "boolean|nil", "desc": "Mise en forme lisible."},
+        "numberPrecision": {"type": "integer|nil", "desc": "Précision des nombres."},
+        "tempFileName": {"type": "string|nil", "desc": "Fichier temporaire, défaut filename..\".tmp\"."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si écrit."}],
+      "internal": false
+    },
+    "registerAsyncSaveExtension": {
+      "desc": "Déclare qu'une extension finira sa sauvegarde plus tard (la finalisation est retardée).",
+      "params": {"extName": {"type": "string", "desc": "Nom de l'extension."}},
+      "internal": false
+    },
+    "asyncSaveExtensionFinished": {
+      "desc": "Signale qu'une extension asynchrone a fini ; finalise la sauvegarde quand toutes sont terminées.",
+      "params": {"extName": {"type": "string", "desc": "Nom de l'extension."}},
+      "internal": false
+    },
+    "getAllProfiles": {"desc": "Liste les noms de profils (dossiers de settings/cloud/saves/).", "returns": [{"type": "string[]", "desc": "Noms de profils."}], "internal": false},
+    "getSaveRootDirectory": {"desc": "Racine des sauvegardes : 'settings/cloud/saves/'.", "returns": [{"type": "string", "desc": "Chemin."}], "internal": false},
+    "getSaveSystemVersion": {"desc": "Version du format de sauvegarde (64).", "returns": [{"type": "integer", "desc": "Version."}], "internal": false},
+    "getBackwardsCompVersion": {"desc": "Version minimale de sauvegarde acceptée (36).", "returns": [{"type": "integer", "desc": "Version."}], "internal": false},
+    "onExtensionLoaded": {"desc": "Hook de chargement ; ne fait rien.", "internal": true},
+    "onSerialize": {"desc": "Hook de rechargement Lua : retourne le profil, le chemin, le nom d'affichage et la date de création courants.", "returns": [{"type": "table", "desc": "État à conserver."}], "internal": true},
+    "onDeserialized": {
+      "desc": "Hook de rechargement Lua : restaure l'état retourné par onSerialize.",
+      "params": {"v": {"type": "table", "desc": "État sauvegardé."}},
+      "internal": true
+    }
+  }
+}

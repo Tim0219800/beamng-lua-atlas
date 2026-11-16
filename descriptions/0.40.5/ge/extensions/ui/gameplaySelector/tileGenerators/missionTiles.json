@@ -1,28 +1,46 @@
 {
   "path": "lua/ge/extensions/ui/gameplaySelector/tileGenerators/missionTiles.lua",
-  "module": "Générateur de tuiles du sélecteur de gameplay pour les missions (système « challenges »). Il ajoute une tuile par mission de gameplay_missions_missions.getFilesData(true), calcule son libellé de type (course de dragster, contre-la-montre, gymkhana…) et construit le panneau de détails avec un bouton de démarrage.",
+  "module": "Gameplay selector tile generator for missions (\"challenges\" system). It adds one tile per mission from gameplay_missions_missions.getFilesData(true), computes its type label (dragster race, time trial, gymkhana...) and builds the details panel with a start button.",
   "notes": [
-    "Une mission réservée à la carrière (showInCareer sans showInFreeroam) est triée par profondeur de déblocage (gameplay_missions_unlocks.getForwardMissionInfo) et reçoit l'icône cup ; sinon l'ordre est -date.",
-    "Libellés de type : table missionTypeLabelByType pour dragStripRace, dragStripAPM, generatedTimeTrial, simpleLapconfigScenario et flowgraph ; les missions drift hors « A to B » et avalanche sans zone cible sont étiquetées gymkhana ; sinon bigMap.missionLabels.<missionType>.",
-    "La tuile « moreMissions » est ajoutée pour tous les backends (validBackends vide).",
-    "Les étiquettes de détails utilisent mission.missionTypeLabel, qui peut être nil (le libellé calculé n'est mémorisé que dans la tuile) : on retombe alors sur le missionType brut."
+    "A career-only mission (showInCareer without showInFreeroam) is sorted by unlock depth (gameplay_missions_unlocks.getForwardMissionInfo) and gets the cup icon; otherwise the order is -date.",
+    "Type labels: table missionTypeLabelByType for dragStripRace, dragStripAPM, generatedTimeTrial, simpleLapconfigScenario and flowgraph; drift missions other than \"A to B\" and avalanche without a target zone are labeled gymkhana; otherwise bigMap.missionLabels.<missionType>.",
+    "The \"moreMissions\" tile is added for all backends (empty validBackends).",
+    "The details labels use mission.missionTypeLabel, which may be nil (the computed label is only stored in the tile): it then falls back to the raw missionType."
   ],
   "functions": {
     "onGameplaySelectorGetTiles": {
-      "desc": "Hook appelé quand le sélecteur collecte ses tuiles. Pour le backend gameplaySelector, ajoute une tuile par mission (nom, aperçu, type, sous-groupe, niveau, icônes beamNG, bug, cup, clé mission_<id>). Ajoute dans tous les cas la tuile « moreMissions ».",
+      "desc": "Hook called when the selector collects its tiles. For the gameplaySelector backend, adds one tile per mission (name, preview, type, subgroup, level, beamNG icons, bug, cup, key mission_<id>). Always adds the \"moreMissions\" tile.",
       "params": {
-        "items": {"type": "table", "desc": "Liste de tuiles à compléter."},
-        "backend": {"type": "table", "desc": "Backend appelant ; backendName doit valoir « gameplaySelector »."}
+        "items": {
+          "type": "table",
+          "desc": "List of tiles to complete."
+        },
+        "backend": {
+          "type": "table",
+          "desc": "Calling backend; backendName must be \"gameplaySelector\"."
+        }
       },
       "internal": true
     },
     "onGameplaySelectorGetDetails": {
-      "desc": "Hook appelé à l'ouverture des détails. Si itemDetails.missionId désigne une mission connue, ajoute un bloc (titre, description, aperçu, favori, spécifications générales et carrière, étiquettes) avec un bouton de démarrage qui appelle gameplay_missions_missionManager.startWithLoadingLevel(mission, nil, nil, \"gameplaySelector\").",
+      "desc": "Hook called when the details are opened. If itemDetails.missionId refers to a known mission, adds a block (title, description, preview, favorite, general and career specifications, labels) with a start button that calls gameplay_missions_missionManager.startWithLoadingLevel(mission, nil, nil, \"gameplaySelector\").",
       "params": {
-        "itemDetails": {"type": "table", "desc": "Données showDetails (missionId, key)."},
-        "details": {"type": "table", "desc": "Liste de blocs de détails à compléter."},
-        "buttonInstance": {"type": "table", "desc": "Objet fournissant addButton."},
-        "backend": {"type": "table", "desc": "Backend offrant isFavourite et trackRecent."}
+        "itemDetails": {
+          "type": "table",
+          "desc": "showDetails data (missionId, key)."
+        },
+        "details": {
+          "type": "table",
+          "desc": "List of details blocks to complete."
+        },
+        "buttonInstance": {
+          "type": "table",
+          "desc": "Object providing addButton."
+        },
+        "backend": {
+          "type": "table",
+          "desc": "Backend offering isFavourite and trackRecent."
+        }
       },
       "internal": true
     }

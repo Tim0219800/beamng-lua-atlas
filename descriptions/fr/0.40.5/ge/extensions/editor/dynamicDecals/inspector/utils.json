@@ -1,0 +1,60 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/inspector/utils.lua",
+  "module": "Widgets ImGui réutilisables par les GUI de calques de l'inspecteur Dynamic Decals : sélecteur de texture (champ en lecture seule, bouton dossier, bouton de remise à zéro, aperçu, dépôt par glisser-déposer) et éditeur de dégradé à quatre coins pour un calque decal. Chaque modification appelle api.setLayer(layer, true). Dépend de editor_api_dynamicDecals.",
+  "notes": [
+    "Bug : decalTextureWidgetInspect utilise une variable `propert` (faute de frappe de `property`, globale nil) dans les identifiants ImGui ; les widgets de deux propriétés texture d'un même calque partagent donc le même identifiant.",
+    "Le glisser-déposer accepte la charge « DynDecalTextureDrapDrop » (faute de frappe dans le nom) ; la charge doit faire 256 octets (assert), et contient le chemin de la texture.",
+    "Le dégradé lit decalGradientColor{TopLeft,TopRight,BottomLeft,BottomRight} (ColorI 0..255) et les réécrit en ColorI.",
+    "L'aperçu de texture est limité par la préférence `dynamicDecalsTool.inspector.texturePreviewSize`."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant celle-ci : {\"editor_api_dynamicDecals\"}."}
+  },
+  "functions": {
+    "decalTextureWidgetInspect": {
+      "desc": "Dessine un sélecteur de texture pour layer[property] : chemin en lecture seule, ouverture d'une boîte de fichier (png/jpg/jpeg, dossier par défaut /art/decals/dynDecals/), suppression, aperçu et zone de dépôt. Affecte layer[property] puis appelle api.setLayer(layer, true).",
+      "params": {
+        "layer": {"type": "table", "desc": "Données du calque."},
+        "property": {"type": "string", "desc": "Nom du champ contenant le chemin de texture."},
+        "guiId": {"type": "string", "desc": "Suffixe d'identifiant ImGui."},
+        "removeTextureOverridePath": {"type": "string|nil", "desc": "Valeur mise dans la propriété par le bouton supprimer ; défaut « / »."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "decalColorGradientWidgetInspect": {
+      "desc": "Dessine un carré dégradé à quatre coins avec un sélecteur de couleur RGBA à chaque coin ; met à jour les propriétés decalGradientColor* du calque.",
+      "params": {
+        "k": {"type": "any", "desc": "Non utilisé dans le corps de la fonction."},
+        "layer": {"type": "table", "desc": "Calque decal contenant les quatre couleurs de dégradé."},
+        "guiId": {"type": "string", "desc": "Suffixe d'identifiant ImGui."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "onGui": {
+      "desc": "Fonction vide.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "registerEditorPreferences": {
+      "desc": "Ne déclare aucune préférence (corps commenté).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : mémorise l'outil et l'API.",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

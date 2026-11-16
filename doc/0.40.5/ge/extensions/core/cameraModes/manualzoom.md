@@ -1,27 +1,27 @@
 # `core_cameraModes_manualzoom`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/manualzoom.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/manualzoom.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/manualzoom")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/manualzoom")` (file under extensions/ but not a regular extension)
 
-Filtre de zoom manuel : modifie le champ de vision (FOV, en degrés) selon MoveManager.zoomIn / zoomOut, borné entre fovMin et fovMax, et affiche le FOV via ui_message quand il change. Utilisé par d'autres modes (onboard, bigMap...). Ne fait rien en session OpenXR. Renvoie un constructeur.
+Manual zoom filter: changes the field of view (FOV, in degrees) according to MoveManager.zoomIn / zoomOut, clamped between fovMin and fovMax, and displays the FOV via ui_message when it changes. Used by other modes (onboard, bigMap...). Does nothing in an OpenXR session. Returns a constructor.
 
-## Remarques
+## Notes
 
-- Vitesse de zoom : 4.5 * dt * (zoomIn - zoomOut) * fov (proportionnelle au FOV courant).
-- Valeurs par défaut : fovDefault 80, fovMin 10, fovMax 120, uiTxt « ui.camera.fov ». La page extraite indique init(fovMin, fovMax, uiTxt) mais le code a quatre paramètres, fovDefault en premier.
+- Zoom speed: 4.5 * dt * (zoomIn - zoomOut) * fov (proportional to the current FOV).
+- Default values: fovDefault 80, fovMin 10, fovMax 120, uiTxt "ui.camera.fov". The extracted page says init(fovMin, fovMax, uiTxt) but the code has four parameters, fovDefault first.
 
-## Classe `C`
+## Class `C`
 
-Filtre de zoom. Champs : fov (courant), fovDefault, fovMin, fovMax, uiTxt.
+Zoom filter. Fields: fov (current), fovDefault, fovMin, fovMax, uiTxt.
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_manualzoom")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_manualzoom")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(fovDefault, fovMin, fovMax, uiTxt)` | Initialise les bornes et remet le FOV à fovDefault. | 8 |
-| `C:reset()` | Remet fov à fovDefault. | 18 |
-| `C:update(data)` | Applique le zoom des entrées et écrit data.res.fov. | 22 |
+| `C:init(fovDefault, fovMin, fovMax, uiTxt)` | Initializes the limits and resets the FOV to fovDefault. | 8 |
+| `C:reset()` | Resets fov to fovDefault. | 18 |
+| `C:update(data)` | Applies the input zoom and writes data.res.fov. | 22 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/manualzoom.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/manualzoom.lua`.*

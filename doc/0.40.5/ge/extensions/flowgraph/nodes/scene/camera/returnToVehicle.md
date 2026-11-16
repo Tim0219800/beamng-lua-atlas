@@ -1,22 +1,22 @@
 # `flowgraph_nodes_scene_camera_returnToVehicle`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/camera/returnToVehicle.lua` · VM : Game Engine (GE) · 28 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/camera/returnToVehicle.lua` · VM: Game Engine (GE) · 28 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/camera/returnToVehicle")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/camera/returnToVehicle")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Return camera to vehicle' (categorie once_instant). Ramene la camera au vehicule actif depuis un autre mode (camera libre, etc.) avec commands.setGameCamera(). Aucun pin.
+Flowgraph node 'Return camera to vehicle' (once_instant category). Brings the camera back to the active vehicle from another mode (free camera, etc.) with commands.setGameCamera(). No pins.
 
-## Remarques
+## Notes
 
-- Dans la branche d'avertissement, 'logTag' n'est pas defini dans le fichier (variable globale nil), le tag de log est donc nil.
+- In the warning branch, 'logTag' is not defined in the file (nil global variable), so the log tag is nil.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Si un vehicule joueur existe, appelle commands.setGameCamera() ; sinon journalise un avertissement. | 19 |
+| `C:workOnce()` | If a player vehicle exists, calls commands.setGameCamera(); otherwise logs a warning. | 19 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/camera/returnToVehicle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/camera/returnToVehicle.lua`.*

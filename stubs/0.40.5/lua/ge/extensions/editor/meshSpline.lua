@@ -2,57 +2,57 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/meshSpline.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Outil Mesh Spline du world editor : on trace une spline (nœuds, largeurs, normales) le long de laquelle des meshes statiques (TSStatic) sont répétés, par exemple glissières, barrières ou lampadaires. Ce fichier gère la fenêtre de l'outil, les entrées souris/clavier, le rendu de la spline, l'import depuis des TSStatic existants (polygone ou menu contextuel du scenetree), le terraformage, la sauvegarde de session et le « bake » (verrouiller la spline pour que ses meshes soient sauvegardés avec le niveau). L'état des splines vit dans meshSpline/splineMgr.lua ; le placement des meshes dans meshSpline/populate.lua.
---- Accès : extension `editor_meshSpline` : `extensions.load("editor_meshSpline")`, puis la globale `editor_meshSpline`
+--- Mesh Spline tool of the world editor: you draw a spline (nodes, widths, normals) along which static meshes (TSStatic) are repeated, for example guardrails, barriers or lampposts. This file handles the tool window, mouse/keyboard input, spline rendering, import from existing TSStatic (polygon or scenetree context menu), terraforming, session saving and "baking" (locking the spline so its meshes are saved with the level). The splines' state lives in meshSpline/splineMgr.lua; the placement of the meshes in meshSpline/populate.lua.
+--- Access: extension `editor_meshSpline`: `extensions.load("editor_meshSpline")`, then the global `editor_meshSpline`
 ---@class editor_meshSpline
 editor_meshSpline = {}
 
---- Appelle fn(mesh, true) pour chaque mesh que l'outil détient pour la spline d'id donné (le « each » de splineLock). Ne fait rien si la spline n'existe plus.
----Source : lua/ge/extensions/editor/meshSpline.lua:108
----@param id string Identifiant de la mesh spline.
----@param fn function Callback appelé avec le mesh et true.
+--- Calls fn(mesh, true) for each mesh the tool holds for the spline with the given id (the "each" of splineLock). Does nothing if the spline no longer exists.
+---Source: lua/ge/extensions/editor/meshSpline.lua:108
+---@param id string Identifier of the mesh spline.
+---@param fn function Callback called with the mesh and true.
 function editor_meshSpline.eachObjectById(id, fn) end
 
---- Hook appelé en quittant la carte : supprime toutes les mesh splines, y compris désactivées.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/meshSpline.lua:1907
+--- Hook called when leaving the map: deletes all the mesh splines, including disabled ones.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/meshSpline.lua:1907
 function editor_meshSpline.onClientEndMission() end
 
---- Hook de désérialisation : recrée les splines, reprend les meshes des splines verrouillées (pop.adopt), borne l'indice sélectionné et recalcule la table id vers indice.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/meshSpline.lua:164
----@param data table|nil Données renvoyées par onSerialize.
+--- Deserialization hook: recreates the splines, takes back the meshes of locked splines (pop.adopt), clamps the selected index and recomputes the id-to-index table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/meshSpline.lua:164
+---@param data table|nil Data returned by onSerialize.
 function editor_meshSpline.onDeserialized(data) end
 
---- Hook appelé à chaque image par le world editor : applique l'import différé, reconstruit les splines « dirty » même si l'outil est inactif (pour les splines liées), puis, si l'outil est actif, dessine sa fenêtre, gère l'audition de meshes, le polygone d'import, les événements souris/clavier et le rendu. Outil inactif : dessine seulement les enveloppes des splines.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/meshSpline.lua:1782
+--- Hook called every frame by the world editor: applies the deferred import, rebuilds "dirty" splines even if the tool is inactive (for linked splines), then, if the tool is active, draws its window, handles mesh audition, the import polygon, mouse/keyboard events and rendering. Tool inactive: only draws the spline outlines.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/meshSpline.lua:1782
 function editor_meshSpline.onEditorGui() end
 
---- Hook d'initialisation du world editor : crée le mode meshSplineEditMode, enregistre la fenêtre « meshSpline » et celle d'audition, et ajoute l'entrée « Convert to Mesh Spline » au menu contextuel du scenetree (valide si au moins 2 TSStatic sont sélectionnés).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/meshSpline.lua:1886
+--- World editor initialization hook: creates the meshSplineEditMode mode, registers the "meshSpline" window and the audition window, and adds the "Convert to Mesh Spline" entry to the scenetree context menu (valid if at least 2 TSStatic are selected).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/meshSpline.lua:1886
 function editor_meshSpline.onEditorInitialized() end
 
---- Hook de sérialisation d'extension (avant rechargement Lua) : quitte la vue d'audition, libère les meshes des splines verrouillées, sérialise chaque spline, puis supprime toutes les splines. Renvoie une table vide s'il n'y en a aucune.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/meshSpline.lua:141
----@return table  Liste des splines sérialisées.
+--- Extension serialization hook (before Lua reload): leaves the audition view, releases the meshes of locked splines, serializes each spline, then deletes all the splines. Returns an empty table if there are none.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/meshSpline.lua:141
+---@return table  List of the serialized splines.
 function editor_meshSpline.onSerialize() end
 
---- Verrouille ou déverrouille la mesh spline d'identifiant donné et la reconstruit immédiatement. Avant un verrouillage, reconstruit d'abord une spline « dirty » pour verrouiller ce qui est affiché. Ne fait rien si l'id est inconnu. Utilisé aussi par le Master Spline pour ses enfants liés.
----Source : lua/ge/extensions/editor/meshSpline.lua:98
----@param id string Identifiant (UUID) de la mesh spline.
----@param isLocked boolean true pour verrouiller (isEnabled = false), false pour déverrouiller.
+--- Locks or unlocks the mesh spline with the given id and rebuilds it immediately. Before locking, first rebuilds a "dirty" spline so that what is displayed gets locked. Does nothing if the id is unknown. Also used by the Master Spline for its linked children.
+---Source: lua/ge/extensions/editor/meshSpline.lua:98
+---@param id string Identifier (UUID) of the mesh spline.
+---@param isLocked boolean true to lock (isEnabled = false), false to unlock.
 function editor_meshSpline.setLockedById(id, isLocked) end
 
---- Définit l'indice du nœud sélectionné (sélection partagée entre outils).
----Source : lua/ge/extensions/editor/meshSpline.lua:138
----@param idx integer Indice de nœud, base 1.
+--- Sets the index of the selected node (selection shared between tools).
+---Source: lua/ge/extensions/editor/meshSpline.lua:138
+---@param idx integer Node index, 1-based.
 function editor_meshSpline.setSelectedNodeIdx(idx) end
 
---- Définit l'indice de la spline sélectionnée (sélection partagée entre outils).
----Source : lua/ge/extensions/editor/meshSpline.lua:135
----@param idx integer Indice de spline, base 1.
+--- Sets the index of the selected spline (selection shared between tools).
+---Source: lua/ge/extensions/editor/meshSpline.lua:135
+---@param idx integer Spline index, 1-based.
 function editor_meshSpline.setSelectedSplineIdx(idx) end
 

@@ -1,28 +1,68 @@
 {
   "path": "lua/common/jbeam/tableSchema.lua",
-  "module": "Interprète le format tabulaire du jbeam : une section est une liste dont la première ligne est l'en-tête des colonnes et les lignes suivantes sont les données (ex. [\"id\",\"posX\",\"posY\",\"posZ\"], [\"n1\", 0, 0, 0]). Le module transforme chaque ligne en table {colonne = valeur}, en y fusionnant les options locales (dictionnaires insérés entre les lignes ou à la fin d'une ligne), les valeurs spéciales (FLT_MAX, |NORMAL|NM_ASPHALT…) et les lignes CSV incluses. process() applique cela à toutes les sections d'un véhicule.",
-  "usage": "local tableSchema = require('jbeam/tableSchema')\nlocal rowsCount = tableSchema.processTableWithSchemaDestructive(section, newList, vehicle.options)\n-- ou, pour un véhicule entier :\ntableSchema.process(vehicle, true, true)",
+  "module": "Interprets the jbeam tabular format: a section is a list whose first row is the column header and whose following rows are the data (e.g. [\"id\",\"posX\",\"posY\",\"posZ\"], [\"n1\", 0, 0, 0]). The module turns each row into a {column = value} table, merging into it the local options (dictionaries inserted between rows or at the end of a row), special values (FLT_MAX, |NORMAL|NM_ASPHALT...) and included CSV rows. process() applies this to all the sections of a vehicle.",
+  "usage": "local tableSchema = require('jbeam/tableSchema')\nlocal rowsCount = tableSchema.processTableWithSchemaDestructive(section, newList, vehicle.options)\n-- or, for a whole vehicle:\ntableSchema.process(vehicle, true, true)",
   "notes": [
-    "Règles de ligne : (1) un dictionnaire seul sur une ligne fixe des options locales pour les lignes suivantes ; (2) un dictionnaire placé en dernière cellule d'une ligne s'ajoute aux options de CETTE ligne ; (3) une ligne plus longue que l'en-tête + 1 est rejetée (avertissement, retour -1) ; (4) options `disable = true` (ou variables.disable = true) sautent la ligne ; (5) si la colonne id existe, elle devient la clé de la ligne dans la liste résultat et le champ name (le champ id est supprimé), sinon la clé est l'indice de ligne (à partir de 1, après retrait de l'en-tête).",
-    "Les options globales du véhicule (champs non-table à la racine) sont d'abord déplacées dans vehicle.options puis copiées dans les options locales de chaque section : elles deviennent les valeurs par défaut de chaque ligne.",
-    "Valeurs spéciales (chaînes) : 'FLT_MAX' -> +infini, 'MINUS_FLT_MAX' -> -infini ; chaîne commençant par '|' : combinaison binaire (bit.bor) de noms comme NORMAL, HYDRO, ANISOTROPIC/TIRESIDE, BOUNDED, PRESSURED, SUPPORT, LBEAM, FIXED, NONCOLLIDABLE, SIGNAL_LEFT(1), SIGNAL_RIGHT(2), HEADLIGHT(4), BRAKELIGHT(8), RUNNINGLIGHT(16), REVERSELIGHT(32) ; un élément 'NM_<nom>' est remplacé par l'identifiant du matériau de particules <nom> (particles.getMaterialIDByName) et ÉCRASE la valeur accumulée avant lui (pas un OU) : placer NM_ en premier.",
-    "Inclusion CSV : une ligne dictionnaire contenant include (chemin) et delimiter lit un fichier csvlib dont la première ligne doit être identique à l'en-tête de la section ; les lignes du fichier sont traitées comme des lignes normales. Les erreurs sont journalisées et la ligne est abandonnée.",
-    "BUG mineur : le message d'erreur d'en-tête CSV incohérent utilise une variable `headerCsv` non définie (affiche nil).",
-    "La fonction est DESTRUCTIVE : elle retire l'en-tête (table.remove) de jbeamTable et modifie les lignes (suppression de la cellule d'options). Les noms de sections doivent respecter ^[a-zA-Z_][a-zA-Z0-9_]*$ sinon process() journalise une erreur et renvoie false.",
-    "Les sections 'slots' et 'slots2' ne sont pas traitées par process quand processSlotsTable est faux (déjà préparées par le module io) ; la table vehicle.validTables mémorise les sections déjà traitées pour ne pas les retraiter deux fois."
+    "Row rules: (1) a dictionary alone on a row sets local options for the following rows; (2) a dictionary placed in the last cell of a row is added to the options of THIS row; (3) a row longer than the header + 1 is rejected (warning, returns -1); (4) options `disable = true` (or variables.disable = true) skip the row; (5) if the id column exists, it becomes the row's key in the result list and the name field (the id field is removed), otherwise the key is the row index (starting at 1, after the header is removed).",
+    "The vehicle's global options (non-table fields at the root) are first moved into vehicle.options then copied into the local options of each section: they become the default values of each row.",
+    "Special values (strings): 'FLT_MAX' -> +infinity, 'MINUS_FLT_MAX' -> -infinity; string starting with '|': binary combination (bit.bor) of names such as NORMAL, HYDRO, ANISOTROPIC/TIRESIDE, BOUNDED, PRESSURED, SUPPORT, LBEAM, FIXED, NONCOLLIDABLE, SIGNAL_LEFT(1), SIGNAL_RIGHT(2), HEADLIGHT(4), BRAKELIGHT(8), RUNNINGLIGHT(16), REVERSELIGHT(32); an 'NM_<name>' element is replaced by the id of the particle material <name> (particles.getMaterialIDByName) and OVERWRITES the value accumulated before it (not an OR): put NM_ first.",
+    "CSV include: a dictionary row containing include (path) and delimiter reads a csvlib file whose first row must be identical to the section header; the file's rows are processed as normal rows. Errors are logged and the row is dropped.",
+    "Minor BUG: the error message for an inconsistent CSV header uses an undefined variable `headerCsv` (displays nil).",
+    "The function is DESTRUCTIVE: it removes the header (table.remove) from jbeamTable and modifies the rows (removal of the options cell). Section names must match ^[a-zA-Z_][a-zA-Z0-9_]*$ otherwise process() logs an error and returns false.",
+    "The 'slots' and 'slots2' sections are not processed by process when processSlotsTable is false (already prepared by the io module); the vehicle.validTables table remembers the sections already processed so they are not processed twice."
   ],
   "fields": {},
   "functions": {
     "processTableWithSchemaDestructive": {
-      "desc": "Traite une section tabulaire jbeam : retire l'en-tête (première ligne), convertit chaque ligne en table clé/valeur et la range dans newList. Renvoie le nombre de lignes créées, ou -1 si l'en-tête est invalide (absent, ou dictionnaire au lieu d'une liste).",
-      "params": {"jbeamTable": {"type": "table", "desc": "section jbeam (liste) ; modifiée (en-tête retiré, cellules d'options retirées)"}, "newList": {"type": "table", "desc": "table de sortie remplie (clé = id de ligne ou indice, valeur = table de la ligne ; newList.__astNodeIdx = jbeamTable.__astNodeIdx)"}, "inputOptions": {"type": "table|nil", "desc": "options par défaut copiées dans chaque ligne (copie profonde, valeurs spéciales remplacées)"}, "omitWarnings": {"type": "boolean|nil", "desc": "supprime les avertissements d'en-tête/lignes invalides"}},
-      "returns": [{"type": "integer", "desc": "nombre de lignes créées, ou -1 si en-tête invalide"}],
+      "desc": "Processes a jbeam tabular section: removes the header (first row), converts each row into a key/value table and stores it in newList. Returns the number of rows created, or -1 if the header is invalid (missing, or a dictionary instead of a list).",
+      "params": {
+        "jbeamTable": {
+          "type": "table",
+          "desc": "jbeam section (list); modified (header removed, options cells removed)"
+        },
+        "newList": {
+          "type": "table",
+          "desc": "filled output table (key = row id or index, value = row table; newList.__astNodeIdx = jbeamTable.__astNodeIdx)"
+        },
+        "inputOptions": {
+          "type": "table|nil",
+          "desc": "default options copied into each row (deep copy, special values replaced)"
+        },
+        "omitWarnings": {
+          "type": "boolean|nil",
+          "desc": "suppresses invalid header/row warnings"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "number of rows created, or -1 if the header is invalid"
+        }
+      ],
       "internal": false
     },
     "process": {
-      "desc": "Traite un véhicule (ou fichier) jbeam entier : initialise vehicle.maxIDs, vehicle.validTables, vehicle.beams et vehicle.options, déplace les valeurs non-table de la racine dans options, puis remplace chaque section tabulaire (liste non vide) par sa version clé/valeur avec processTableWithSchemaDestructive.",
-      "params": {"vehicle": {"type": "table", "desc": "données jbeam (modifiées en place)"}, "processSlotsTable": {"type": "boolean|nil", "desc": "traiter aussi les sections slots/slots2 (faux = laissées au module io)"}, "omitWarnings": {"type": "boolean|nil", "desc": "supprimer les avertissements"}},
-      "returns": [{"type": "boolean", "desc": "false si un nom de section est invalide, sinon true"}],
+      "desc": "Processes an entire jbeam vehicle (or file): initializes vehicle.maxIDs, vehicle.validTables, vehicle.beams and vehicle.options, moves the non-table values at the root into options, then replaces each tabular section (non-empty list) with its key/value version using processTableWithSchemaDestructive.",
+      "params": {
+        "vehicle": {
+          "type": "table",
+          "desc": "jbeam data (modified in place)"
+        },
+        "processSlotsTable": {
+          "type": "boolean|nil",
+          "desc": "also process the slots/slots2 sections (false = left to the io module)"
+        },
+        "omitWarnings": {
+          "type": "boolean|nil",
+          "desc": "suppress warnings"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if a section name is invalid, otherwise true"
+        }
+      ],
       "internal": true
     }
   }

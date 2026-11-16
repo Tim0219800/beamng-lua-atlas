@@ -1,58 +1,92 @@
 {
   "path": "lua/ge/extensions/editor/dynamicDecals/loadSave.lua",
-  "module": "Section « Load/Save » de l'outil Dynamic Decals. Permet d'enregistrer la pile de calques dans un fichier projet `.dyndecals.json` (« Save as... » / « Save ») et d'en charger un (« Load from file ») en mode Overwrite (remplace) ou Append (ajoute). Le dossier par défaut est /art/dynamicDecals/projects/. Le dernier chemin utilisé est conservé lors du rechargement des extensions (onSerialize / onDeserialized).",
+  "module": "\"Load/Save\" section of the Dynamic Decals tool. Lets you save the layer stack to a `.dyndecals.json` project file (\"Save as...\" / \"Save\") and load one (\"Load from file\") in Overwrite (replace) or Append (add) mode. The default folder is /art/dynamicDecals/projects/. The last used path is kept across extension reloads (onSerialize / onDeserialized).",
   "notes": [
-    "Après un chargement, si res.status.code ~= 0, la réponse est affichée avec dump() et une notification de niveau warning « Baking Issues » est ajoutée.",
-    "Le bouton « Save » est désactivé tant que le chemin courant n'a pas d'extension (c'est-à-dire reste le dossier par défaut).",
-    "Faute de frappe dans le nom exporté : getCurrentPorjectFilePath (« Porject »).",
-    "Les modes de chargement viennent de api.loadingModes (champ `key`) ; loadingMode vaut 0 (Overwrite) ou 1 (Append)."
+    "After a load, if res.status.code ~= 0, the response is displayed with dump() and a \"Baking Issues\" warning-level notification is added.",
+    "The \"Save\" button is disabled as long as the current path has no extension (i.e. remains the default folder).",
+    "Typo in the exported name: getCurrentPorjectFilePath (\"Porject\").",
+    "The loading modes come from api.loadingModes (field `key`); loadingMode is 0 (Overwrite) or 1 (Append)."
   ],
   "functions": {
     "loadFileDialog": {
-      "desc": "Ouvre la boîte de dialogue de fichier (filtre .dyndecals.json) puis appelle api.loadLayerStackFromFile(chemin, mode) et mémorise le chemin.",
+      "desc": "Opens the file dialog (filter .dyndecals.json) then calls api.loadLayerStackFromFile(path, mode) and stores the path.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "saveAsFileDialog": {
-      "desc": "Ouvre la boîte « Enregistrer sous » (confirmation d'écrasement) puis appelle api.saveLayerStackToFile et mémorise le chemin.",
+      "desc": "Opens the \"Save as\" dialog (overwrite confirmation) then calls api.saveLayerStackToFile and stores the path.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getCurrentPorjectFilePath": {
-      "desc": "Renvoie le chemin du dernier fichier projet utilisé (ou le dossier par défaut).",
+      "desc": "Returns the path of the last project file used (or the default folder).",
       "params": {},
-      "returns": [{"type": "string", "desc": "Chemin du projet."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Project path."
+        }
+      ],
       "internal": false
     },
     "onSerialize": {
-      "desc": "Hook de rechargement des extensions : renvoie {lastProjectFilePath} à conserver.",
+      "desc": "Extension reload hook: returns {lastProjectFilePath} to keep.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Données à restaurer."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Data to restore."
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook appelé après rechargement avec les données de onSerialize ; restaure lastProjectFilePath (défaut : dossier des projets).",
-      "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "desc": "Hook called after reload with the data from onSerialize; restores lastProjectFilePath (default: projects folder).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Table returned by onSerialize."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "registerEditorPreferences": {
-      "desc": "Ne déclare aucune préférence (corps commenté).",
-      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "desc": "Declares no preference (body commented out).",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Editor preferences registry."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "editorPreferenceValueChanged": {
-      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
-      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "desc": "Hook called when a preference changes. Does nothing here.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "Preference path."
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setup": {
-      "desc": "Appelé par l'outil : récupère API, notification et docs, prépare la liste des modes de chargement, enregistre la section « Load/Save » (ordre 20) et la page de documentation « Save & Load ».",
-      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "desc": "Called by the tool: gets API, notification and docs, prepares the list of loading modes, registers the \"Load/Save\" section (order 20) and the \"Save & Load\" documentation page.",
+      "params": {
+        "tool_in": {
+          "type": "table",
+          "desc": "Reference to the editor_dynamicDecalsTool tool."
+        }
+      },
       "returns": [],
       "internal": true
     }

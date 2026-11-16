@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/activity/starsActive.lua",
+  "module": "Nœud flowgraph « Stars Active » (catégorie repeat_instant, tags activity/mission). Chaque pin de sortie flow personnalisé (le nom du pin = clé d'étoile) laisse passer le flux si l'étoile correspondante est active pour les réglages utilisateur actuels de la mission (gameplay_missions_missionScreen.getActiveStarsForUserSettings). La liste est calculée une seule fois (coûteuse) puis mise en cache jusqu'au prochain démarrage du graphe. Sans flux d'entrée, tous les pins sont à faux.",
+  "notes": ["Sans activité associée, ne fait rien. Une clé absente de starInfo donne false (self.activeStars[pin.name] testé avant)."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Active savePins et allowCustomOutPins.", "internal": true},
+        "_executionStarted": {"desc": "Efface le cache des étoiles actives.", "internal": true},
+        "work": {"desc": "Calcule (une fois) starInfo puis met chaque pin de sortie flow à enabled de l'étoile correspondante."}
+      }
+    }
+  }
+}

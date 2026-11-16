@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/ui/router/routeHandlers/mainMenuExitHandlers.lua",
+  "module": "Gestionnaire de sortie du menu principal.",
+  "notes": [
+    "Le gestionnaire appelle dump(...) à chaque exécution : trace de debug laissée dans le jeu (écrit le contexte de jeu dans le journal)."
+  ],
+  "functions": {
+    "mainmenuExitHandler": {
+      "desc": "Quitte le menu principal : navigue vers « garage » si le mode garage est actif (gameplay_garageMode.isActive), sinon vers « play » si l'état de jeu est « freeroam » ; ne fait rien dans les autres cas.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

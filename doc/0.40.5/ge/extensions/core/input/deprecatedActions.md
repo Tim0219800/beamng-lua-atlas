@@ -1,21 +1,21 @@
 # `core_input_deprecatedActions`
 
-*Fichier : `lua/ge/extensions/core/input/deprecatedActions.lua` · VM : Game Engine (GE) · 91 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/input/deprecatedActions.lua` · VM: Game Engine (GE) · 91 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_input_deprecatedActions` : `extensions.load("core_input_deprecatedActions")`, puis la globale `core_input_deprecatedActions`
+**Access:** extension `core_input_deprecatedActions`: `extensions.load("core_input_deprecatedActions")`, then the global `core_input_deprecatedActions`
 
-Table de données (le fichier retourne une table) qui associe d'anciens noms d'actions d'entrée à leur remplaçant (`replacement`) ou les déclare abandonnés (`obsolete = true`). Consultée par core_input_actions.upgradeAction pour migrer les anciens fichiers de bindings. Un moddeur ne l'appelle pas directement ; il peut y chercher le nom actuel d'une ancienne action.
+Data table (the file returns a table) that maps old input action names to their replacement (`replacement`) or declares them abandoned (`obsolete = true`). Consulted by core_input_actions.upgradeAction to migrate old bindings files. A modder does not call it directly; they can look in it for the current name of an old action.
 
-## Remarques
+## Notes
 
-- Chaque entrée est {replacement = 'nouvelleAction'} ou {obsolete = true}. upgradeAction suit les remplacements récursivement.
-- Exemples de remplacements : steer/steer_direct -> steering, accelerate_direct -> accelerate, brake_direct -> brake, clutch_direct -> clutch, handle_escape/toggleQuickAccess/toggle_dashboard -> toggleMenues, hide_ui -> toggleUi, camera_hotkey_N -> camera_N (camera_hotkey_0 -> camera_10), grabNode* -> nodegrabber*, slow_motion/realtime_motion -> toggle_slow_motion, toggle_physics -> pause, toggleConsole -> toggleConsoleNG, oldEditorToggle -> editorToggle.
-- Obsolètes (ignorées sans remplacement) : setZoomFOV, toggleZoom, reload_bindings, cui_advanced, toggleFreeLook, camera_hotkey_N_mod1, reload_system_lua, toggleRadialMenu, clear_console, annotatedScreenShot, switch_next_vehicle_multiseat, key_q/e/w/s/a/d/t/f/g/h/r/y.
-- Chaînes de remplacement : show_metrics -> cycle_metrics_back -> cycle_metrics, toggleFPS -> cycle_metrics_fwd -> cycle_metrics ; debugmode_toggle_coltris -> debugmode_coltris_fwd.
+- Each entry is {replacement = 'newAction'} or {obsolete = true}. upgradeAction follows replacements recursively.
+- Examples of replacements: steer/steer_direct -> steering, accelerate_direct -> accelerate, brake_direct -> brake, clutch_direct -> clutch, handle_escape/toggleQuickAccess/toggle_dashboard -> toggleMenues, hide_ui -> toggleUi, camera_hotkey_N -> camera_N (camera_hotkey_0 -> camera_10), grabNode* -> nodegrabber*, slow_motion/realtime_motion -> toggle_slow_motion, toggle_physics -> pause, toggleConsole -> toggleConsoleNG, oldEditorToggle -> editorToggle.
+- Obsolete (ignored without replacement): setZoomFOV, toggleZoom, reload_bindings, cui_advanced, toggleFreeLook, camera_hotkey_N_mod1, reload_system_lua, toggleRadialMenu, clear_console, annotatedScreenShot, switch_next_vehicle_multiseat, key_q/e/w/s/a/d/t/f/g/h/r/y.
+- Replacement chains: show_metrics -> cycle_metrics_back -> cycle_metrics, toggleFPS -> cycle_metrics_fwd -> cycle_metrics; debugmode_toggle_coltris -> debugmode_coltris_fwd.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `accelerate_direct` | table | {replacement = 'accelerate'}. |
 | `annotatedScreenShot` | table |  |
@@ -87,8 +87,8 @@ Table de données (le fichier retourne une table) qui associe d'anciens noms d'a
 | `select_all_road_nodes` | table |  |
 | `setZoomFOV` | table |  |
 | `show_metrics` | table |  |
-| `slow_motion` | table | {replacement = 'toggle_slow_motion'} (idem realtime_motion). |
-| `steer` | table | {replacement = 'steering'} (idem steer_direct). |
+| `slow_motion` | table | {replacement = 'toggle_slow_motion'} (same as realtime_motion). |
+| `steer` | table | {replacement = 'steering'} (same as steer_direct). |
 | `steer_direct` | table |  |
 | `switch_camera` | table | {replacement = 'switch_camera_next'}. |
 | `switch_next_vehicle_multiseat` | table |  |
@@ -103,4 +103,4 @@ Table de données (le fichier retourne une table) qui associe d'anciens noms d'a
 | `toggle_physics` | table | {replacement = 'pause'}. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/input/deprecatedActions.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/input/deprecatedActions.lua`.*

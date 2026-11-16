@@ -1,101 +1,186 @@
 {
   "path": "lua/ge/extensions/util/screenshotCreator/job.lua",
-  "module": "Orchestrateur du créateur de vignettes (thumbnails) de véhicules. Il lance, dans une coroutine pilotée par onPreRender, la boucle complète : remplacer/placer le véhicule, le laisser se stabiliser, geler la physique, calculer la caméra (cadrage via framingManager ou caméra enregistrée), ajuster l'éclairage, attendre 2 s, capturer l'image avec util_screenshotCreator_capture, vérifier le fichier produit puis restaurer l'environnement et la physique. Il gère aussi l'aperçu de la caméra (startPreview) et expose la progression et le compte rendu pour l'interface. Un moddeur l'utilise pour générer en lot les images vehicles/<modèle>/<config>.jpg.",
-  "usage": "util_screenshotCreator_job.startWork({selection = 'selectedModels', onlyMissingThumbnails = true})\n-- puis, à chaque frame de l'UI :\nlocal p = util_screenshotCreator_job.getProgress() -- {completed, total, current}\nif util_screenshotCreator_job.consumeRunDone() then dump(util_screenshotCreator_job.getReviewData()) end",
+  "module": "Orchestrator of the vehicle thumbnail creator. It runs, in a coroutine driven by onPreRender, the complete loop: replace/place the vehicle, let it settle, freeze the physics, compute the camera (framing via framingManager or saved camera), adjust the lighting, wait 2 s, capture the image with util_screenshotCreator_capture, check the produced file then restore the environment and the physics. It also handles the camera preview (startPreview) and exposes progress and the report for the UI. A modder uses it to batch-generate the vehicles/<model>/<config>.jpg images.",
+  "usage": "util_screenshotCreator_job.startWork({selection = 'selectedModels', onlyMissingThumbnails = true})\n-- then, every UI frame:\nlocal p = util_screenshotCreator_job.getProgress() -- {completed, total, current}\nif util_screenshotCreator_job.consumeRunDone() then dump(util_screenshotCreator_job.getReviewData()) end",
   "notes": [
-    "Le travail avance d'un pas de coroutine par appel de onPreRender ; un seul travail à la fois (startWork et startPreview renvoient false si une coroutine existe déjà).",
-    "Options de startWork : selection (« selectedModels » par défaut, « selectedModelDefaults », ou nom de config pour le véhicule courant), targets (liste {model, config}, max 2000), onlyMissingThumbnails, shippedConfigsOnly (vrai par défaut sauf si shippedOnly == false), lowBeamsEnabled, sample (écrit dans screenshots/thumbnailSamples/<date>/), comparison (copie la vignette existante en *_existing), cameraOverridePolicy (« useSaved » ou « ignore »), framingModeId, vehicleId, configName, outputPath, onDoneHook (nom d'évènement guihooks déclenché à la fin).",
-    "Dossier de sortie : vehicles/ par défaut (vehicles/<modèle>/<config><ext>), screenshots/showroom/ si le réglage de destination vaut 1 ; pour le véhicule courant, dans son vehicleDirectory. Si la config est celle par défaut (hors mode sample), la vignette est aussi copiée en vehicles/<modèle>/default<ext>.",
-    "La physique est gelée pendant le cadrage et la capture ; son état (running, speedFactor) est sauvegardé puis restauré à la fin ou lors du déchargement de l'extension.",
-    "Une capture échouée met forceQuit : le lot s'arrête (abortRun) sauf si c'était le dernier élément. Délai d'attente de la capture : 5 s, puis 2 s d'attente du fichier.",
-    "En ligne de commande, si les arguments contiennent deux fois -onLevelLoad_ext / 'util/createThumbnails', le jeu est fermé (shutdown(0)) à la fin du travail.",
-    "Les véhicules sont remplacés par core_vehicles.replaceVehicle (plaque « BeamNG »), frein de stationnement serré et moteur coupé."
+    "The work advances by one coroutine step per onPreRender call; only one job at a time (startWork and startPreview return false if a coroutine already exists).",
+    "startWork options: selection (\"selectedModels\" by default, \"selectedModelDefaults\", or a config name for the current vehicle), targets (list {model, config}, max 2000), onlyMissingThumbnails, shippedConfigsOnly (true by default unless shippedOnly == false), lowBeamsEnabled, sample (writes to screenshots/thumbnailSamples/<date>/), comparison (copies the existing thumbnail to *_existing), cameraOverridePolicy (\"useSaved\" or \"ignore\"), framingModeId, vehicleId, configName, outputPath, onDoneHook (guihooks event name triggered at the end).",
+    "Output folder: vehicles/ by default (vehicles/<model>/<config><ext>), screenshots/showroom/ if the destination setting is 1; for the current vehicle, in its vehicleDirectory. If the config is the default one (outside sample mode), the thumbnail is also copied to vehicles/<model>/default<ext>.",
+    "Physics is frozen during framing and capture; its state (running, speedFactor) is saved then restored at the end or when the extension is unloaded.",
+    "A failed capture sets forceQuit: the batch stops (abortRun) unless it was the last item. Capture wait timeout: 5 s, then 2 s waiting for the file.",
+    "On the command line, if the arguments contain -onLevelLoad_ext / 'util/createThumbnails' twice, the game is closed (shutdown(0)) at the end of the job.",
+    "Vehicles are replaced by core_vehicles.replaceVehicle (plate \"BeamNG\"), parking brake engaged and engine off."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : core_camera, core_vehicles, core_vehicle_manager, ui_vehicleSelector_general et plusieurs util_screenshotCreator_* (settings, thumbnailConfig, vehicleSetup, capture, lightingSetup, framing_configured, framingManager, modelSelection, shippedConfigs)."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extensions loaded before: core_camera, core_vehicles, core_vehicle_manager, ui_vehicleSelector_general and several util_screenshotCreator_* (settings, thumbnailConfig, vehicleSetup, capture, lightingSetup, framing_configured, framingManager, modelSelection, shippedConfigs)."
+    }
   },
   "functions": {
     "startWork": {
-      "desc": "Démarre la génération de vignettes. Normalise les options, construit la liste des éléments (modèles sélectionnés, cibles explicites ou véhicule courant), prend le contrôle de la physique, active les réglages d'environnement (settings.beginWork) et crée la coroutine de travail. Renvoie false si un travail est déjà en cours, si les cibles sont invalides ou si l'API de physique manque.",
+      "desc": "Starts thumbnail generation. Normalizes the options, builds the list of items (selected models, explicit targets or the current vehicle), takes control of the physics, enables the environment settings (settings.beginWork) and creates the work coroutine. Returns false if a job is already in progress, if the targets are invalid or if the physics API is missing.",
       "params": {
-        "workOptions": {"type": "table|nil", "desc": "Options du travail (voir notes). Si ce n'est pas une table : selection = « selectedModels », onlyMissingThumbnails = false."}
+        "workOptions": {
+          "type": "table|nil",
+          "desc": "Job options (see notes). If it is not a table: selection = \"selectedModels\", onlyMissingThumbnails = false."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si le travail a démarré."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the job started."
+        }
+      ]
     },
     "startPreview": {
-      "desc": "Place le véhicule comme pour une vignette, attend qu'il se stabilise puis positionne la caméra libre du joueur sur le cadrage calculé, sans capturer d'image. Renvoie false si un travail tourne ou si vehicle est nil.",
+      "desc": "Places the vehicle as for a thumbnail, waits for it to settle then positions the player's free camera on the computed framing, without capturing an image. Returns false if a job is running or if vehicle is nil.",
       "params": {
-        "vehicle": {"type": "table", "desc": "Objet véhicule."},
-        "configName": {"type": "string", "desc": "Nom de la configuration."},
-        "modeOrOptions": {"type": "string|table|nil", "desc": "Id du mode de cadrage, ou table d'options {framingModeId, fixedRotation, delayedPreview}."},
-        "fixedRotation": {"type": "quat|nil", "desc": "Rotation de caméra imposée (ignoré si modeOrOptions est une table)."}
+        "vehicle": {
+          "type": "table",
+          "desc": "Vehicle object."
+        },
+        "configName": {
+          "type": "string",
+          "desc": "Configuration name."
+        },
+        "modeOrOptions": {
+          "type": "string|table|nil",
+          "desc": "Framing mode id, or options table {framingModeId, fixedRotation, delayedPreview}."
+        },
+        "fixedRotation": {
+          "type": "quat|nil",
+          "desc": "Imposed camera rotation (ignored if modeOrOptions is a table)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si l'aperçu a démarré."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the preview started."
+        }
+      ]
     },
     "startPreviewWithDelay": {
-      "desc": "Comme startPreview, mais pour les véhicules dont thumbnailConfig.getPauseDelay est > 0 : la physique tourne pendant ce délai avant le gel. Renvoie false si le modèle est inconnu ou si le délai est nul.",
+      "desc": "Like startPreview, but for vehicles whose thumbnailConfig.getPauseDelay is > 0: the physics runs during this delay before freezing. Returns false if the model is unknown or if the delay is zero.",
       "params": {
-        "vehicle": {"type": "table", "desc": "Objet véhicule."},
-        "configName": {"type": "string", "desc": "Nom de la configuration."},
-        "modeOrOptions": {"type": "string|table|nil", "desc": "Id du mode de cadrage ou table d'options."},
-        "fixedRotation": {"type": "quat|nil", "desc": "Rotation de caméra imposée."}
+        "vehicle": {
+          "type": "table",
+          "desc": "Vehicle object."
+        },
+        "configName": {
+          "type": "string",
+          "desc": "Configuration name."
+        },
+        "modeOrOptions": {
+          "type": "string|table|nil",
+          "desc": "Framing mode id or options table."
+        },
+        "fixedRotation": {
+          "type": "quat|nil",
+          "desc": "Imposed camera rotation."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si l'aperçu a démarré."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the preview started."
+        }
+      ]
     },
     "stop": {
-      "desc": "Demande l'arrêt du travail en cours (forceQuit) ; la coroutine s'arrête à son prochain point de contrôle.",
-      "returns": [{"type": "boolean", "desc": "false s'il n'y a pas de travail en cours, sinon true."}]
+      "desc": "Requests the current job to stop (forceQuit); the coroutine stops at its next checkpoint.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if there is no job in progress, otherwise true."
+        }
+      ]
     },
     "isRunning": {
-      "desc": "Indique si une coroutine de travail existe.",
-      "returns": [{"type": "boolean", "desc": "true pendant un travail ou un aperçu."}]
+      "desc": "Indicates whether a work coroutine exists.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true during a job or a preview."
+        }
+      ]
     },
     "getProgress": {
-      "desc": "Renvoie la progression du travail.",
-      "returns": [{"type": "table", "desc": "{completed = integer, total = integer, current = string « modèle/config »}."}]
+      "desc": "Returns the job progress.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{completed = integer, total = integer, current = string \"model/config\"}."
+        }
+      ]
     },
     "getReviewData": {
-      "desc": "Renvoie le compte rendu du dernier travail.",
-      "returns": [{"type": "table|nil", "desc": "{onlyMissingThumbnails, shippedConfigsOnly, lowBeamsEnabled, selection, framingModeId, cameraOverridePolicy, sampleOutputFolder, configs = [{vehName, camName, status (done/failed/skipped), thumbnailPath}]} ; nil avant tout travail."}]
+      "desc": "Returns the report of the last job.",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{onlyMissingThumbnails, shippedConfigsOnly, lowBeamsEnabled, selection, framingModeId, cameraOverridePolicy, sampleOutputFolder, configs = [{vehName, camName, status (done/failed/skipped), thumbnailPath}]}; nil before any job."
+        }
+      ]
     },
     "consumeRunDone": {
-      "desc": "Lit puis remet à false l'indicateur « travail terminé ».",
-      "returns": [{"type": "boolean", "desc": "true une seule fois après la fin d'un travail (ou d'un échec au démarrage faute de véhicule)."}]
+      "desc": "Reads then resets the \"job done\" flag to false.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true only once after a job ends (or a startup failure for lack of a vehicle)."
+        }
+      ]
     },
     "clearRunDone": {
-      "desc": "Remet l'indicateur « travail terminé » à false sans le lire."
+      "desc": "Resets the \"job done\" flag to false without reading it."
     },
     "resetCamera": {
-      "desc": "Rend la caméra du joueur au mode « orbit » et restaure le FOV mémorisé avant l'aperçu (60 par défaut)."
+      "desc": "Returns the player's camera to \"orbit\" mode and restores the FOV saved before the preview (60 by default)."
     },
     "isCameraSet": {
-      "desc": "Indique si un aperçu a déplacé la caméra (cameraSet).",
-      "returns": [{"type": "boolean", "desc": "true tant que resetCamera n'a pas été appelé."}]
+      "desc": "Indicates whether a preview moved the camera (cameraSet).",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true as long as resetCamera has not been called."
+        }
+      ]
     },
     "onPreRender": {
-      "desc": "Hook appelé à chaque frame avant le rendu : fait avancer la coroutine de travail. En cas d'erreur Lua, la trace est journalisée et le travail est abandonné ; à la fin, l'éclairage et la physique sont restaurés.",
+      "desc": "Hook called every frame before rendering: advances the work coroutine. On a Lua error, the trace is logged and the job is abandoned; at the end, the lighting and the physics are restored.",
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook appelé avant un rechargement des extensions : renvoie progress, review, runDone, previousFov et cameraSet. La coroutine n'est pas sauvegardée.",
-      "returns": [{"type": "table", "desc": "État à restaurer."}],
+      "desc": "Hook called before an extension reload: returns progress, review, runDone, previousFov and cameraSet. The coroutine is not saved.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "State to restore."
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook appelé après rechargement avec l'état sérialisé.",
-      "params": {"data": {"type": "table", "desc": "État renvoyé par onSerialize."}},
+      "desc": "Hook called after reload with the serialized state.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "State returned by onSerialize."
+        }
+      },
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook appelé au déchargement de l'extension : arrête le travail, restaure l'éclairage, les réglages et l'état de la physique. Aussi utilisé comme onClientEndMission et onExit.",
+      "desc": "Hook called when the extension is unloaded: stops the job, restores the lighting, the settings and the physics state. Also used as onClientEndMission and onExit.",
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook appelé à la fin de la mission/niveau ; même fonction que onExtensionUnloaded.",
+      "desc": "Hook called at the end of the mission/level; same function as onExtensionUnloaded.",
       "internal": true
     },
     "onExit": {
-      "desc": "Hook appelé à la fermeture du jeu ; même fonction que onExtensionUnloaded.",
+      "desc": "Hook called when the game closes; same function as onExtensionUnloaded.",
       "internal": true
     }
   }

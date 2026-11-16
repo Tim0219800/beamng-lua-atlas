@@ -1,0 +1,33 @@
+{
+  "path": "lua/common/extensions/ui/imgui_luaintf.lua",
+  "module": "Fichier généré (≈ 2200 lignes, ~485 fonctions) qui expose presque toute l'API Dear ImGui en Lua sous forme de wrappers très fins vers Engine.imgui (binding C++ du jeu) : NewFrame/Render, fenêtres, widgets (Text, Button, Slider*, Drag*, Input*, Combo, Tree*, Table*, Plot*), ImDrawList_*, styles (PushStyleColor*, PushStyleVar*), IO, polices, et les enums sous forme de constantes M.Xxx_Yyy (ex. WindowFlags_NoTitleBar, Col_Text, Key_*). Ce n'est pas une extension : il renvoie une fonction qui reçoit la table M d'imgui_api. Les suffixes numériques (Button/SmallButton, TreeNode1/TreeNode2, Combo1, PushStyleColor2…) correspondent aux surcharges C++ d'une même fonction.",
+  "usage": "-- On l'utilise via ui_imgui :\nlocal im = ui_imgui\nif im.Begin('Test') then\n  if im.Button('OK') then print('clic') end\nend\nim.End()",
+  "notes": [
+    "Convention du fichier : chaque wrapper vérifie les paramètres de type 'const char *' ; si nil, il logue une erreur (« Parameter 'x' of function 'F' cannot be nil, as the c type is 'const char *' ») et retourne sans appeler ImGui.",
+    "Les paramètres « pointeur » (bool_p_open, float*, int*...) sont des tables {[0]=valeur} créées par BoolPtr/FloatPtr/IntPtr/ArrayChar (voir imgui_custom_luaintf).",
+    "Les valeurs par défaut sont posées dans les wrappers (ex. flags = 0 si nil).",
+    "Plusieurs fonctions de ce fichier sont réécrites par imgui_custom_luaintf.lua (Begin, InputText, GetKeyIndex...) : la version custom l'emporte puisqu'elle est chargée après.",
+    "Les fonctions de ce fichier ne sont pas listées une à une ici : elles suivent la documentation officielle de Dear ImGui (le suffixe de nom indique la surcharge)."
+  ],
+  "functions": {
+    "GetCurrentContext": {"desc": "Renvoie le contexte ImGui courant.", "params": {}, "returns": [{"type": "userdata", "desc": "Contexte."}]},
+    "NewFrame": {"desc": "Démarre une nouvelle frame ImGui (normalement géré par le moteur).", "params": {}, "returns": [], "internal": true},
+    "EndFrame": {"desc": "Termine la frame ImGui (géré par le moteur).", "params": {}, "returns": [], "internal": true},
+    "Render": {"desc": "Finalise le rendu ImGui (géré par le moteur).", "params": {}, "returns": [], "internal": true},
+    "ShowDemoWindow": {"desc": "Affiche la fenêtre de démonstration d'ImGui.", "params": {"bool_p_open": {"type": "table|nil", "desc": "BoolPtr optionnel."}}, "returns": []},
+    "ShowMetricsWindow": {"desc": "Affiche la fenêtre de métriques d'ImGui.", "params": {"bool_p_open": {"type": "table|nil", "desc": "BoolPtr optionnel."}}, "returns": []},
+    "ShowDebugLogWindow": {"desc": "Affiche la fenêtre de log de debug d'ImGui.", "params": {"bool_p_open": {"type": "table|nil", "desc": "BoolPtr optionnel."}}, "returns": []},
+    "ShowStackToolWindow": {"desc": "Affiche l'outil de pile d'ID d'ImGui.", "params": {"bool_p_open": {"type": "table|nil", "desc": "BoolPtr optionnel."}}, "returns": []},
+    "ShowAboutWindow": {"desc": "Affiche la fenêtre « À propos » d'ImGui.", "params": {"bool_p_open": {"type": "table|nil", "desc": "BoolPtr optionnel."}}, "returns": []},
+    "ShowStyleEditor": {"desc": "Affiche l'éditeur de style d'ImGui.", "params": {"ImGuiStyle_ref": {"type": "userdata|nil", "desc": "Style à éditer, optionnel."}}, "returns": []},
+    "ShowStyleSelector": {"desc": "Affiche un sélecteur de style.", "params": {"string_label": {"type": "string", "desc": "Libellé (ne peut pas être nil)."}}, "returns": [{"type": "boolean", "desc": "Vrai si le style a changé."}]},
+    "ShowFontSelector": {"desc": "Affiche un sélecteur de police.", "params": {"string_label": {"type": "string", "desc": "Libellé (ne peut pas être nil)."}}, "returns": []},
+    "ShowUserGuide": {"desc": "Affiche le guide utilisateur d'ImGui.", "params": {}, "returns": []},
+    "GetVersion": {"desc": "Renvoie la version de Dear ImGui.", "params": {}, "returns": [{"type": "string", "desc": "Version."}]},
+    "StyleColorsDark": {"desc": "Applique le thème sombre.", "params": {"ImGuiStyle_dst": {"type": "userdata|nil", "desc": "Style cible, optionnel."}}, "returns": []},
+    "StyleColorsLight": {"desc": "Applique le thème clair.", "params": {"ImGuiStyle_dst": {"type": "userdata|nil", "desc": "Style cible, optionnel."}}, "returns": []},
+    "StyleColorsClassic": {"desc": "Applique le thème classique.", "params": {"ImGuiStyle_dst": {"type": "userdata|nil", "desc": "Style cible, optionnel."}}, "returns": []},
+    "Begin": {"desc": "Ouvre une fenêtre (flags 0 par défaut dans cette version ; la version custom met NoFocusOnAppearing).", "params": {"string_name": {"type": "string", "desc": "Titre (ne peut pas être nil)."}, "bool_p_open": {"type": "table|nil", "desc": "BoolPtr optionnel."}, "ImGuiWindowFlags_flags": {"type": "integer|nil", "desc": "Flags de fenêtre."}}, "returns": [{"type": "boolean", "desc": "Vrai si la fenêtre est visible."}]},
+    "GetKeyIndex": {"desc": "Convertit une touche en index (imgui.GetKeyIndex) ; remplacée par une version no-op dans imgui_custom_luaintf.", "params": {"ImGuiKey_key": {"type": "integer", "desc": "Touche ImGui."}}, "returns": [{"type": "integer", "desc": "Index de touche."}]}
+  }
+}

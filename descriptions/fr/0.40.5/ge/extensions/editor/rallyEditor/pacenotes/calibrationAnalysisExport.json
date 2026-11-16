@@ -1,0 +1,75 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua",
+  "module": "Exporte les données de calibration des virages d'un carnet de rallye vers un fichier JSON destiné à être analysé (par exemple par un LLM) pour ajuster les seuils d'intensité et de longueur des virages. Pour chaque pacenote non TODO, il remesure le virage sur la snaproad et sérialise les mesures, les étiquettes manuelles (métadonnées de calibration), les ajustements, l'aperçu composé et le contexte des waypoints, avec la calibration courante, les surcharges actives et des instructions d'analyse. Deux formats : v1 (complet, calibrationAnalysis.json) et v2 (compact avec comparaisons cible/projeté par intensité et longueur, calibrationAnalysis.v2.json). Utilisé par l'onglet Export de la fenêtre de calibration.",
+  "notes": [
+    "Fichiers écrits : <missionDir>/rally/calibrationAnalysis.json et <missionDir>/rally/calibrationAnalysis.v2.json (dossier rally créé si besoin). Après écriture, le fichier est relu pour vérifier que le JSON se parse.",
+    "Les pacenotes avec todo == true sont ignorés (comptés dans skippedTodoPacenoteCount). Le champ exportFilters.note du fichier parle de « todo == false » : même sens.",
+    "Les nombres sont arrondis à 3 décimales ; les descripteurs (square, hairpin…) sont exclus de l'analyse numérique v2. Intensité = diamètre en mètres ; longueur = arcMeters.",
+    "La snaproad est prise sur pacenotesWindow.snaproad, sinon sur path:getSnaproad(). Dans l'onglet Pacenotes la snaproad est stockée dans pacenoteToolsState.snaproad, donc le champ pacenotesWindow.snaproad est en pratique nil et c'est le repli path:getSnaproad() qui sert.",
+    "La partition de la snaproad (pacenote sélectionné) est restaurée à la fin de build()."
+  ],
+  "functions": {
+    "exportFile": {
+      "desc": "Chemin du fichier d'export v1 pour une mission.",
+      "params": {"missionDir": {"type": "string|nil", "desc": "Dossier de la mission."}},
+      "returns": [{"type": "string|nil", "desc": "<missionDir>/rally/calibrationAnalysis.json, ou nil sans dossier."}],
+      "internal": false
+    },
+    "exportV2File": {
+      "desc": "Chemin du fichier d'export v2 pour une mission.",
+      "params": {"missionDir": {"type": "string|nil", "desc": "Dossier de la mission."}},
+      "returns": [{"type": "string|nil", "desc": "<missionDir>/rally/calibrationAnalysis.v2.json, ou nil sans dossier."}],
+      "internal": false
+    },
+    "build": {
+      "desc": "Construit la table d'export v1 en mémoire (version = 1) : identité du carnet, style de compositeur actif, calibration courante, surcharges, instructions, schéma, contexte, pacenotes et résumé.",
+      "params": {
+        "path": {"type": "table|nil", "desc": "Carnet."},
+        "pacenotesWindow": {"type": "table|nil", "desc": "Onglet Pacenotes (pour la snaproad)."}
+      },
+      "returns": [
+        {"type": "table|nil", "desc": "Données d'export, ou nil en cas d'erreur."},
+        {"type": "string|nil", "desc": "Message d'erreur (pas de carnet, pas de calibration corner active, snaproad non chargée)."}
+      ],
+      "internal": false
+    },
+    "export": {
+      "desc": "Construit l'export v1, l'écrit sur disque et vérifie la relecture.",
+      "params": {
+        "path": {"type": "table|nil", "desc": "Carnet."},
+        "pacenotesWindow": {"type": "table|nil", "desc": "Onglet Pacenotes."}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "Succès."},
+        {"type": "string|nil", "desc": "Chemin du fichier en cas de succès, sinon message d'erreur."},
+        {"type": "table|string|nil", "desc": "Données exportées en cas de succès ; en cas d'échec d'écriture, chemin du fichier."}
+      ],
+      "internal": false
+    },
+    "buildV2": {
+      "desc": "Construit l'export compact v2 (version = 2) à partir de build() : plages de calibration, surcharges actives, analyse (distributions cible/projeté) et instructions.",
+      "params": {
+        "path": {"type": "table|nil", "desc": "Carnet."},
+        "pacenotesWindow": {"type": "table|nil", "desc": "Onglet Pacenotes."}
+      },
+      "returns": [
+        {"type": "table|nil", "desc": "Données v2, ou nil."},
+        {"type": "string|nil", "desc": "Message d'erreur."}
+      ],
+      "internal": false
+    },
+    "exportV2": {
+      "desc": "Construit l'export v2, l'écrit sur disque et vérifie la relecture. Mêmes valeurs de retour que export().",
+      "params": {
+        "path": {"type": "table|nil", "desc": "Carnet."},
+        "pacenotesWindow": {"type": "table|nil", "desc": "Onglet Pacenotes."}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "Succès."},
+        {"type": "string|nil", "desc": "Chemin du fichier en cas de succès, sinon message d'erreur."},
+        {"type": "table|string|nil", "desc": "Données exportées, ou chemin en cas d'échec d'écriture."}
+      ],
+      "internal": false
+    }
+  }
+}

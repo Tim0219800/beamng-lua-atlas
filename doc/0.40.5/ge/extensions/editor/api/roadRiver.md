@@ -1,70 +1,70 @@
 # `editor_api_roadRiver`
 
-*Fichier : `lua/ge/extensions/editor/api/roadRiver.lua` · VM : Game Engine (GE) · 263 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/roadRiver.lua` · VM: Game Engine (GE) · 263 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_roadRiver` : `extensions.load("editor_api_roadRiver")`, puis la globale `editor_api_roadRiver`
+**Access:** extension `editor_api_roadRiver`: `extensions.load("editor_api_roadRiver")`, then the global `editor_api_roadRiver`
 
-API de l'éditeur pour créer, modifier et supprimer des routes (DecalRoad) et des maillages à nœuds comme les rivières (River, via createMesh). Elle tient aussi une liste locale des routes du niveau (allRoads) et, si la préférence roadTemplates.general.loadTemplates est active, leurs points médians (roadSplines). initialize(editor) ajoute toutes ces fonctions à l'objet editor. Chaque modification appelle editor.setDirty().
+Editor API for creating, modifying and deleting roads (DecalRoad) and node-based meshes such as rivers (River, via createMesh). It also keeps a local list of the level's roads (allRoads) and, if the roadTemplates.general.loadTemplates preference is enabled, their midpoints (roadSplines). initialize(editor) adds all these functions to the editor object. Each modification calls editor.setDirty().
 
-## Exemple
+## Example
 
 ```lua
 local id = editor.createRoad({{pos = vec3(0,0,0), width = 4}, {pos = vec3(20,0,0), width = 4}}, {overObjects = true})
 editor.addRoadNode(id, {pos = vec3(40,5,0), width = 4, index = 2})
 ```
 
-## Remarques
+## Notes
 
-- addRoadNode lit nodeInfo.pos alors que sa doc-commentaire dit « position » : la clé réelle est pos (width et index aussi).
-- createRoad lit roadInfo.overObjects avant de tester roadInfo : plante si roadInfo est nil et qu'un terrain existe.
-- Dans deleteRoad, la boucle sur decorationIDs ne teste pas que scenetree.findObjectById renvoie un objet (décoration déjà supprimée : erreur possible).
-- updateRoadVertices et removeRoadFromList (local) ne sont pas tous exposés : seul updateRoadVertices l'est.
+- addRoadNode reads nodeInfo.pos while its doc comment says "position": the actual key is pos (width and index too).
+- createRoad reads roadInfo.overObjects before testing roadInfo: crashes if roadInfo is nil and a terrain exists.
+- In deleteRoad, the loop over decorationIDs does not check that scenetree.findObjectById returns an object (decoration already deleted: possible error).
+- updateRoadVertices and removeRoadFromList (local) are not all exposed: only updateRoadVertices is.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_roadRiver.initialize(editorInstance)` | Enregistre toutes les fonctions du module sur l'objet editor. Appelé au chargement de l'API de l'éditeur. *(interne)* | 238 |
+| `editor_api_roadRiver.initialize(editorInstance)` | Registers all the module's functions on the editor object. Called when the editor API is loaded. *(internal)* | 238 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_roadRiver.initialize(editorInstance)`
 
-Enregistre toutes les fonctions du module sur l'objet editor. Appelé au chargement de l'API de l'éditeur.
+Registers all the module's functions on the editor object. Called when the editor API is loaded.
 
-- `editorInstance` (*table*) : Objet editor global.
+- `editorInstance` (*table*) : Global editor object.
 
-## Classe `editor`
+## Class `editor`
 
-Fonctions ajoutées à l'objet editor par initialize.
+Functions added to the editor object by initialize.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.addMeshNode(meshObjectId, nodeInfo)` | Insère un nœud dans un maillage (rivière, etc.). | 142 |
-| `editor.addRoadNode(roadObjectId, nodeInfo)` | Insère un nœud dans une route et met à jour ses sommets. | 38 |
-| `editor.createMesh(type, nodes, fields)` | Crée un maillage à nœuds du type donné. Pour 'River', pose des valeurs par défaut (ondulations, vitesses, couleur de base 45 108 171 255, textures d'eau). Applique fields via editor.pasteFields, l'enregistre sous un nom unique « New<type> », l'ajoute à MissionGroup, positionne l'objet sur le premier nœud et ajoute les nœuds. | 154 |
-| `editor.createRoad(nodes, roadInfo)` | Crée un DecalRoad (improvedSpline, matériau BlankWhite), l'enregistre, applique roadInfo via editor.pasteFields, l'ajoute à MissionGroup puis ajoute les nœuds. Sans terrain dans le niveau, overObjects est forcé à true. | 67 |
-| `editor.deleteMesh(meshObjectId)` | Supprime un maillage via editor.deleteObject. | 202 |
-| `editor.deleteMeshNode(mesh, nodeID)` | Supprime un nœud d'un maillage. | 149 |
-| `editor.deleteRoad(roadObjectId)` | Supprime une route, récursivement ses routes enfants (champ childRoads) et ses décorations (decorationIDs), la retire des listes et marque l'éditeur modifié. | 91 |
-| `editor.deleteRoadNode(roadObjectId, nodeID)` | Supprime un nœud de route et met à jour ses sommets. | 120 |
-| `editor.getAllRoads()` | Renvoie la table des routes connues (clé = id, valeur true). | 207 |
-| `editor.getAllSplines()` | Renvoie les points médians mémorisés par route (rempli seulement si roadTemplates.general.loadTemplates est actif). | 211 |
-| `editor.getNodes(object)` | Lit tous les nœuds d'un objet : pos, width, et depth/normal si l'objet fournit getNodeDepth/getNodeNormal. | 127 |
-| `editor.initializeLevelRoadsVertices()` | Réinitialise les listes puis parcourt tous les DecalRoad du niveau pour les enregistrer. Journalise une erreur pour un nom invalide (commençant par des chiffres). | 215 |
-| `editor.regenerateAllDecalRoads()` | Appelle regenerate() sur toutes les routes connues. | 229 |
-| `editor.resetRoadList()` | Vide les listes locales allRoads et roadSplines. | 21 |
-| `editor.setNodeDepth(object, nodeID, depth)` | Change la profondeur d'un nœud (maillages type rivière). | 51 |
-| `editor.setNodePosition(object, nodeID, position)` | Déplace un nœud. | 56 |
-| `editor.setNodeWidth(object, nodeID, width)` | Change la largeur d'un nœud de route ou de maillage. | 46 |
-| `editor.updateRoadVertices(road)` | Enregistre la route dans allRoads et, si les templates de route sont activés, mémorise les positions médianes de ses arêtes (roadSplines). Journalise une erreur si road est nil. | 9 |
+| `editor.addMeshNode(meshObjectId, nodeInfo)` | Inserts a node into a mesh (river, etc.). | 142 |
+| `editor.addRoadNode(roadObjectId, nodeInfo)` | Inserts a node into a road and updates its vertices. | 38 |
+| `editor.createMesh(type, nodes, fields)` | Creates a node-based mesh of the given type. For 'River', sets default values (waves, speeds, base color 45 108 171 255, water textures). Applies fields via editor.pasteFields, registers it under a unique name "New<type>", adds it to MissionGroup, positions the object on the first node and adds the nodes. | 154 |
+| `editor.createRoad(nodes, roadInfo)` | Creates a DecalRoad (improvedSpline, BlankWhite material), registers it, applies roadInfo via editor.pasteFields, adds it to MissionGroup then adds the nodes. Without a terrain in the level, overObjects is forced to true. | 67 |
+| `editor.deleteMesh(meshObjectId)` | Deletes a mesh via editor.deleteObject. | 202 |
+| `editor.deleteMeshNode(mesh, nodeID)` | Deletes a node from a mesh. | 149 |
+| `editor.deleteRoad(roadObjectId)` | Deletes a road, recursively its child roads (childRoads field) and its decorations (decorationIDs), removes it from the lists and marks the editor as modified. | 91 |
+| `editor.deleteRoadNode(roadObjectId, nodeID)` | Deletes a road node and updates its vertices. | 120 |
+| `editor.getAllRoads()` | Returns the table of known roads (key = id, value true). | 207 |
+| `editor.getAllSplines()` | Returns the midpoints remembered per road (only filled if roadTemplates.general.loadTemplates is enabled). | 211 |
+| `editor.getNodes(object)` | Reads all the nodes of an object: pos, width, and depth/normal if the object provides getNodeDepth/getNodeNormal. | 127 |
+| `editor.initializeLevelRoadsVertices()` | Resets the lists then walks all the level's DecalRoads to register them. Logs an error for an invalid name (starting with digits). | 215 |
+| `editor.regenerateAllDecalRoads()` | Calls regenerate() on all known roads. | 229 |
+| `editor.resetRoadList()` | Empties the local lists allRoads and roadSplines. | 21 |
+| `editor.setNodeDepth(object, nodeID, depth)` | Changes the depth of a node (river-type meshes). | 51 |
+| `editor.setNodePosition(object, nodeID, position)` | Moves a node. | 56 |
+| `editor.setNodeWidth(object, nodeID, width)` | Changes the width of a road or mesh node. | 46 |
+| `editor.updateRoadVertices(road)` | Registers the road in allRoads and, if road templates are enabled, remembers the midpoint positions of its edges (roadSplines). Logs an error if road is nil. | 9 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `getUniqueName`
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/roadRiver.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/roadRiver.lua`.*

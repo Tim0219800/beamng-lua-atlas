@@ -1,13 +1,21 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/missionDefaults.lua",
-  "module": "Nœud flowgraph « Mission Defaults » (catégorie provider). Fournit des valeurs par défaut communes aux missions : markerInactive (couleur RGBA orange clair {232,132,52}/255), markerActive (couleur RGBA vert clair {156,229,61}/255, pour les marqueurs 3D du nœud Parking Markers) et fadeTransitionTime (0.75 s). Les valeurs sont posées une seule fois au démarrage de l'exécution.",
-  "notes": ["Les descriptions des pins disent « Inactive » pour les deux couleurs (copier-coller dans le code), markerActive est bien la couleur verte."],
+  "module": "Flowgraph node \"Mission Defaults\" (category provider). Provides default values common to missions: markerInactive (light orange RGBA color {232,132,52}/255), markerActive (light green RGBA color {156,229,61}/255, for the 3D markers of the Parking Markers node) and fadeTransitionTime (0.75 s). The values are set only once when execution starts.",
+  "notes": [
+    "The pin descriptions say \"Inactive\" for both colors (copy-paste in the code); markerActive is indeed the green color."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Désactive clearOutPinsOnStart pour que les sorties gardent leurs valeurs.", "internal": true},
-        "_executionStarted": {"desc": "Écrit les valeurs des trois pins de sortie au démarrage du graphe.", "internal": true}
+        "init": {
+          "desc": "Disables clearOutPinsOnStart so that the outputs keep their values.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Writes the values of the three output pins when the graph starts.",
+          "internal": true
+        }
       }
     }
   }

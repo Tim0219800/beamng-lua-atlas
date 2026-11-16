@@ -1,0 +1,7 @@
+{
+  "path": "lua/common/cdefs.lua",
+  "module": "Point d'entrée regroupant toutes les déclarations FFI communes : il fait require de common/cdefDebugDraw, common/cdefImgui, common/cdefGpuMesh et common/cdefMath.",
+  "notes": ["Ne définit ni fonction ni champ."],
+  "fields": {},
+  "functions": {}
+}

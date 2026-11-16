@@ -1,0 +1,46 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/bobbing.lua",
+  "module": "Filtre de caméra (isFilter = true, hidden = true) : ajoute un balancement réaliste de la caméra (tête qui oscille en marchant, respiration à l'arrêt) en modifiant la position (légère montée) et l'orientation (tangage, roulis, lacet) du résultat de la caméra. Non sélectionnable : il est instancié par d'autres modes (cameraModes/external.lua, cameraModes/steadycam.lua) ou par du code comme gameplay/rallyStartClock.lua (require('core/cameraModes/bobbing')()). Désactivé quand une session OpenXR tourne. L'intensité vient des réglages cameraSteadycamWalkBob et cameraSteadycamStandingBob (0 à 2). Le module renvoie un constructeur : require('core/cameraModes/bobbing')(options).",
+  "usage": "local bobbing = require('core/cameraModes/bobbing')()\n-- chaque frame, après avoir calculé data.res :\nbobbing:update(data, walkAmount01, dt)",
+  "notes": [
+    "L'index automatique donne update(walkAmt, dt) : la vraie signature est update(data, walkAmt, dt).",
+    "walkAmt est une intensité de marche dans [0..1] (bornée) ; elle accélère la phase de pas (4 + 6*walkAmt rad/s) et amplifie le balancement. Le balancement est modéré par un facteur interne 0.6.",
+    "Angles de sway en radians (passés à quatFromEuler(swayPitch, swayRoll, swayYaw)), montée verticale en mètres (jusqu'à environ 0.035 m en marche).",
+    "update ajoute à data.res.pos un vec3(0,0,bobUp) et multiplie data.res.rot par un quaternion de sway ; il doit donc être appelé après que la caméra a rempli data.res.",
+    "update renvoie true même quand il ne fait rien (OpenXR actif, dt <= 0 ou amplitude nulle)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Objet filtre renvoyé par le constructeur. Champs : walkBobScale, standingBobScale, t, bobPhase, phase (vec3 de phases aléatoires).",
+      "functions": {
+        "init": {
+          "desc": "Initialise : isFilter et hidden à true, lit les réglages, remet à zéro. Appelé par le constructeur.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "onSettingsChanged": {
+          "desc": "Relit les réglages cameraSteadycamWalkBob et cameraSteadycamStandingBob (bornés à 0..2, défaut 1). Appelé par camera.lua quand les réglages changent, ou par le mode propriétaire.",
+          "params": {},
+          "returns": []
+        },
+        "reset": {
+          "desc": "Remet le temps et la phase à zéro et tire de nouvelles phases aléatoires pour le balancement.",
+          "params": {},
+          "returns": []
+        },
+        "update": {
+          "desc": "Applique le balancement à data.res.pos et data.res.rot.",
+          "params": {
+            "data": {"type": "table", "desc": "Données de frame : dt, res {pos, rot}, openxrSessionRunning"},
+            "walkAmt": {"type": "number|nil", "desc": "Intensité de marche [0..1], 0 par défaut"},
+            "dt": {"type": "number|nil", "desc": "Pas de temps en s, data.dt par défaut"}
+          },
+          "returns": [{"type": "boolean", "desc": "Toujours true"}]
+        }
+      }
+    }
+  }
+}

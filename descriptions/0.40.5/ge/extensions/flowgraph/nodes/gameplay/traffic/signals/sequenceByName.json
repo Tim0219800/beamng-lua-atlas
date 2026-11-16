@@ -1,29 +1,29 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceByName.lua",
-  "module": "Nœud flowgraph « Sequence by Name » (once_instant). Cherche une séquence de feux (groupe de signaux / logique de phases) par nom dans signalsData.sequences. Sorties : exists (caché), sequenceData.",
+  "module": "Flowgraph node \"Sequence by Name\" (once_instant). Looks up a traffic light sequence (signal group / phase logic) by name in signalsData.sequences. Outputs: exists (hidden), sequenceData.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStopped": {
-          "desc": "Appelle onNodeReset().",
+          "desc": "Calls onNodeReset().",
           "internal": true
         },
         "init": {
-          "desc": "Appelle onNodeReset().",
+          "desc": "Calls onNodeReset().",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Vide la sortie sequenceData.",
+          "desc": "Clears the sequenceData output.",
           "internal": true
         },
         "work": {
-          "desc": "Parcourt signalsData.sequences et publie la séquence de même nom.",
+          "desc": "Iterates over signalsData.sequences and publishes the sequence with the same name.",
           "internal": true,
           "params": {
             "args": {
               "type": "table",
-              "desc": "arguments transmis par le moteur (non utilisés)"
+              "desc": "arguments passed by the engine (unused)"
             }
           }
         }

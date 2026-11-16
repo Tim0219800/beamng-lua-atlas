@@ -2,33 +2,33 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/braking/postCrashBrake.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur auxiliaire de freinage automatique après un choc. Une machine à états (idle, braking, holding, disabled) détecte une forte accélération (accéléromètres `sensors.gx2`, `gy2`, `gz2`) : il passe en freinage total, coupe l'accélérateur, allume les feux de détresse, puis serre le frein de stationnement à l'arrêt (ou en marche arrière) et relâche quand le conducteur ré-accélère ou que le véhicule roule à plus de 5 m/s. Ordre d'appel : `defaultOrder = 700`.
---- Accès : contrôleur `braking/postCrashBrake` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Auxiliary controller for automatic braking after a crash. A state machine (idle, braking, holding, disabled) detects a strong acceleration (accelerometers `sensors.gx2`, `gy2`, `gz2`): it switches to full braking, cuts the throttle, turns on the hazard lights, then applies the parking brake at standstill (or in reverse) and releases when the driver accelerates again or the vehicle is moving faster than 5 m/s. Call order: `defaultOrder = 700`.
+--- Access: controller `braking/postCrashBrake` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_braking_postCrashBrake
----@field defaultOrder number 700 : rang d'appel par défaut.
+---@field defaultOrder number 700: default call rank.
 ---@field type string "auxiliary".
 local controller_braking_postCrashBrake = {}
 
---- Renvoie l'état courant et le compteur de chocs pour la synchronisation d'état.
----Source : lua/vehicle/controller/braking/postCrashBrake.lua:103
----@return table  Clés `<nom>_state` et `<nom>_crashCounter`.
+--- Returns the current state and the crash counter for state synchronization.
+---Source: lua/vehicle/controller/braking/postCrashBrake.lua:103
+---@return table  Keys `<name>_state` and `<name>_crashCounter`.
 function controller_braking_postCrashBrake.getState() end
 
---- Remet la machine à l'état idle (éteint les feux de détresse s'ils étaient commandés par ce contrôleur) et lit les seuils jbeam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/braking/postCrashBrake.lua:84
----@param jbeamData table Données jbeam du contrôleur.
+--- Puts the state machine back to idle (turns off the hazard lights if they were commanded by this controller) and reads the jbeam thresholds.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/braking/postCrashBrake.lua:84
+---@param jbeamData table Controller jbeam data.
 function controller_braking_postCrashBrake.init(jbeamData) end
 
---- Restaure le compteur de chocs et applique un état valide (idle, braking, holding, disabled) s'il diffère.
----Source : lua/vehicle/controller/braking/postCrashBrake.lua:109
----@param data table|nil Table d'état.
+--- Restores the crash counter and applies a valid state (idle, braking, holding, disabled) if it differs.
+---Source: lua/vehicle/controller/braking/postCrashBrake.lua:109
+---@param data table|nil State table.
 function controller_braking_postCrashBrake.setState(data) end
 
---- Chaque frame : détecte le choc en idle, impose le freinage en braking, maintient le frein en holding et gère la sortie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/braking/postCrashBrake.lua:30
----@param dt number Pas de temps en secondes (non utilisé).
+--- Every frame: detects the crash in idle, imposes braking in braking, holds the brake in holding and handles the exit.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/braking/postCrashBrake.lua:30
+---@param dt number Time step in seconds (unused).
 function controller_braking_postCrashBrake.updateGFX(dt) end
 
 return controller_braking_postCrashBrake

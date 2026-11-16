@@ -2,28 +2,28 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/controllerTemplate.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Modèle de départ pour écrire un contrôleur de véhicule. Un contrôleur est un module Lua placé dans lua/vehicle/controller/, déclaré dans le jbeam (section `controller` avec `fileName`, et éventuellement `name`) et chargé par `controller.lua`. Cycle de vie : `init(jbeamData)` à la création (jbeamData = déclaration fusionnée avec les données jbeam portant le nom du contrôleur), puis `initSecondStage`, `initSounds`, `initLastStage` (facultatifs) une fois les autres systèmes prêts ; au reset, `reset(jbeamData)` (ou, s'il est absent, `init` rappelé) ainsi que `resetLastStage` et `resetSounds`. En fonctionnement : `update(dt)` à chaque pas physique, `updateWheelsIntermediate(dt)`, `updateFixedStep(dt)` à pas fixe de 100 Hz, `updateGFX(dt)` à chaque frame graphique. Seules les fonctions réellement exportées dans M sont appelées. Autres hooks facultatifs : debugDraw, beamBroken, beamDeformed, nodeCollision, onCouplerFound/Attached/Detached, onGameplayEvent, settingsChanged, serialize/deserialize.
---- Accès : contrôleur `controllerTemplate` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Starter template for writing a vehicle controller. A controller is a Lua module placed in lua/vehicle/controller/, declared in the jbeam (`controller` section with `fileName`, and optionally `name`) and loaded by `controller.lua`. Lifecycle: `init(jbeamData)` on creation (jbeamData = the declaration merged with the jbeam data bearing the controller's name), then `initSecondStage`, `initSounds`, `initLastStage` (optional) once the other systems are ready; on reset, `reset(jbeamData)` (or, if absent, `init` is called again) as well as `resetLastStage` and `resetSounds`. In operation: `update(dt)` every physics step, `updateWheelsIntermediate(dt)`, `updateFixedStep(dt)` at a fixed 100 Hz step, `updateGFX(dt)` every graphics frame. Only the functions actually exported in M are called. Other optional hooks: debugDraw, beamBroken, beamDeformed, nodeCollision, onCouplerFound/Attached/Detached, onGameplayEvent, settingsChanged, serialize/deserialize.
+--- Access: controller `controllerTemplate` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_controllerTemplate
----@field type string "auxiliary" dans le modèle (contrôleur annexe). "main" pour le contrôleur principal du véhicule.
+---@field type string "auxiliary" in the template (secondary controller). "main" for the vehicle's main controller.
 local controller_controllerTemplate = {}
 
---- Appelée par controller.lua à la création du contrôleur (et au reset si `reset` n'existe pas). Corps vide dans le modèle ; c'est ici qu'on lit les clés jbeam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/controllerTemplate.lua:64
----@param jbeamData table Données jbeam du contrôleur (fileName, name, clés personnalisées…).
+--- Called by controller.lua when the controller is created (and on reset if `reset` does not exist). Empty body in the template; this is where the jbeam keys are read.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/controllerTemplate.lua:64
+---@param jbeamData table Controller jbeam data (fileName, name, custom keys...).
 function controller_controllerTemplate.init(jbeamData) end
 
---- Appelée au reset du véhicule (étape resetSecondStage de controller.lua). Corps vide dans le modèle.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/controllerTemplate.lua:55
----@param jbeamData table Mêmes données jbeam que pour init.
+--- Called on vehicle reset (resetSecondStage step of controller.lua). Empty body in the template.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/controllerTemplate.lua:55
+---@param jbeamData table Same jbeam data as for init.
 function controller_controllerTemplate.reset(jbeamData) end
 
---- Appelée à chaque frame graphique. Corps vide dans le modèle. Les variantes `update` (pas physique), `updateWheelsIntermediate` et `updateFixedStep` (100 Hz) sont fournies en commentaire.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/controllerTemplate.lua:22
----@param dt number Durée du pas en secondes.
+--- Called every graphics frame. Empty body in the template. The variants `update` (physics step), `updateWheelsIntermediate` and `updateFixedStep` (100 Hz) are provided as comments.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/controllerTemplate.lua:22
+---@param dt number Step duration in seconds.
 function controller_controllerTemplate.updateGFX(dt) end
 
 return controller_controllerTemplate

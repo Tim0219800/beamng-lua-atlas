@@ -1,50 +1,50 @@
 # `core_settings_dynCaptureQuality`
 
-*Fichier : `lua/ge/extensions/core/settings/dynCaptureQuality.lua` · VM : Game Engine (GE) · 49 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/settings/dynCaptureQuality.lua` · VM: Game Engine (GE) · 49 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_settings_dynCaptureQuality` : `extensions.load("core_settings_dynCaptureQuality")`, puis la globale `core_settings_dynCaptureQuality`
+**Access:** extension `core_settings_dynCaptureQuality`: `extensions.load("core_settings_dynCaptureQuality")`, then the global `core_settings_dynCaptureQuality`
 
-Préréglages de qualité des captures dynamiques des véhicules : reflets dynamiques (cubemap) et rétroviseurs dynamiques. Chaque fonction applique un niveau en écrivant les variables $pref::BeamNGVehicle::dynamicReflection::* ou dynamicMirrors::* dans VariableRegistry. Le commentaire du code dit qu'il restaure les réglages Normal/High/Ultra de la 0.39.
+Quality presets for dynamic vehicle captures: dynamic reflections (cubemap) and dynamic mirrors. Each function applies a level by writing the $pref::BeamNGVehicle::dynamicReflection::* or dynamicMirrors::* variables in VariableRegistry. The code comment says it restores the Normal/High/Ultra settings of 0.39.
 
-## Exemple
+## Example
 
 ```lua
 core_settings_dynCaptureQuality.applyReflection("High")
 core_settings_dynCaptureQuality.applyMirrors("Low")
 ```
 
-## Remarques
+## Notes
 
-- Un niveau inconnu est ignoré sans message.
-- Niveaux disponibles : Disabled, Lowest, Low, Normal, High, Ultra.
+- An unknown level is ignored without a message.
+- Available levels: Disabled, Lowest, Low, Normal, High, Ultra.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_settings_dynCaptureQuality.applyMirrors(level)` | Applique un niveau de rétroviseurs dynamiques : écrit enabled, textureSize, detail et distance dans $pref::BeamNGVehicle::dynamicMirrors::*. | 36 |
-| `core_settings_dynCaptureQuality.applyReflection(level)` | Applique un niveau de reflets dynamiques : écrit enabled, textureSize, facesPerUpdate, detail et distance dans $pref::BeamNGVehicle::dynamicReflection::*. | 26 |
+| `core_settings_dynCaptureQuality.applyMirrors(level)` | Applies a dynamic mirrors level: writes enabled, textureSize, detail and distance to $pref::BeamNGVehicle::dynamicMirrors::*. | 36 |
+| `core_settings_dynCaptureQuality.applyReflection(level)` | Applies a dynamic reflections level: writes enabled, textureSize, facesPerUpdate, detail and distance to $pref::BeamNGVehicle::dynamicReflection::*. | 26 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_settings_dynCaptureQuality.applyMirrors(level)`
 
-Applique un niveau de rétroviseurs dynamiques : écrit enabled, textureSize, detail et distance dans $pref::BeamNGVehicle::dynamicMirrors::*.
+Applies a dynamic mirrors level: writes enabled, textureSize, detail and distance to $pref::BeamNGVehicle::dynamicMirrors::*.
 
-- `level` (*string*) : Clé de mirrorLevels (Disabled, Lowest, Low, Normal, High, Ultra).
+- `level` (*string*) : Key of mirrorLevels (Disabled, Lowest, Low, Normal, High, Ultra).
 
 #### `core_settings_dynCaptureQuality.applyReflection(level)`
 
-Applique un niveau de reflets dynamiques : écrit enabled, textureSize, facesPerUpdate, detail et distance dans $pref::BeamNGVehicle::dynamicReflection::*.
+Applies a dynamic reflections level: writes enabled, textureSize, facesPerUpdate, detail and distance to $pref::BeamNGVehicle::dynamicReflection::*.
 
-- `level` (*string*) : Clé de reflectionLevels (Disabled, Lowest, Low, Normal, High, Ultra).
+- `level` (*string*) : Key of reflectionLevels (Disabled, Lowest, Low, Normal, High, Ultra).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `mirrorLevels` | table<string, table> | Par niveau : enabled (boolean), textureSize (128 à 1024), detail (0 à 0.75), distance (50 à 300). Pas de facesPerUpdate. |
-| `reflectionLevels` | table<string, table> | Par niveau : enabled (boolean), textureSize (128 à 1024), facesPerUpdate (1 ou 2), detail (0 à 0.75), distance (50 à 300). |
+| `mirrorLevels` | table<string, table> | Per level: enabled (boolean), textureSize (128 to 1024), detail (0 to 0.75), distance (50 to 300). No facesPerUpdate. |
+| `reflectionLevels` | table<string, table> | Per level: enabled (boolean), textureSize (128 to 1024), facesPerUpdate (1 or 2), detail (0 to 0.75), distance (50 to 300). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/settings/dynCaptureQuality.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/settings/dynCaptureQuality.lua`.*

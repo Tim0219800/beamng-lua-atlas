@@ -1,18 +1,18 @@
 # `flowgraph_nodes_util_tonumber`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/tonumber.lua` · VM : Game Engine (GE) · 26 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/tonumber.lua` · VM: Game Engine (GE) · 26 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/tonumber")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/tonumber")` (file under extensions/ but not a regular extension)
 
-Nœud « To Number » (catégorie simple). Convertit l'entrée en nombre avec tonumber. Entrée : value (any). Sortie : value (number). Le champ todo avertit que le résultat peut être nil.
+Node "To Number" (simple category). Converts the input to a number with tonumber. Input: value (any). Output: value (number). The todo field warns that the result can be nil.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Écrit tonumber(entrée) dans la sortie. | 21 |
+| `C:work()` | Writes tonumber(input) to the output. | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/tonumber.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/tonumber.lua`.*

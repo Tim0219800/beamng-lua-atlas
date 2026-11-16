@@ -1,95 +1,308 @@
 {
   "path": "lua/ge/extensions/editor/api/gizmo.lua",
-  "module": "API de l'éditeur pour le gizmo d'axes 3D (déplacer / tourner / mettre à l'échelle) et pour les icônes d'objets dans la vue monde. Il enveloppe `worldEditorCppApi` : choix du mode et de l'alignement, verrous par axe, magnétisme (snap) de translation/rotation/échelle, détection du survol/glisser à la souris, et calcul des transformations d'objets pendant un déplacement avec accrochage au terrain (raycast ou core_terrain). `initialize` installe tout sur l'objet `editor` et définit les constantes `editor.AxisGizmoMode_*` et `editor.AxisGizmoAlignment_*`.",
-  "usage": "editor.setAxisGizmoMode(editor.AxisGizmoMode_Translate)\neditor.setAxisGizmoTransform(myMatrix)\n-- chaque frame :\neditor.updateAxisGizmo(onStart, onEnd, onDragging)\neditor.drawAxisGizmo()",
+  "module": "Editor API for the 3D axis gizmo (move / rotate / scale) and for object icons in the world view. It wraps `worldEditorCppApi`: mode and alignment selection, per-axis locks, translation/rotation/scale snapping, mouse hover/drag detection, and computation of object transforms during a move with terrain snapping (raycast or core_terrain). `initialize` installs everything on the `editor` object and defines the `editor.AxisGizmoMode_*` and `editor.AxisGizmoAlignment_*` constants.",
+  "usage": "editor.setAxisGizmoMode(editor.AxisGizmoMode_Translate)\neditor.setAxisGizmoTransform(myMatrix)\n-- every frame:\neditor.updateAxisGizmo(onStart, onEnd, onDragging)\neditor.drawAxisGizmo()",
   "notes": [
-    "Constantes définies : editor.AxisX/Y/Z/W = 0/1/2/3 ; AxisGizmoMode_Translate/Rotate/Scale = 1/2/3 ; AxisGizmoAlignment_World = 0, _Local = 1 ; editor.objectIconHitId = 0 au départ.",
-    "`updateAxisGizmo` et `drawAxisGizmo` doivent être appelés ensemble à chaque frame. Pendant un glisser, la simulation est mise en pause (simTimeAuthority.pause) puis restaurée à la fin ou à l'annulation.",
-    "onEndGizmoDragFunc n'est appelée que si le gizmo a réellement été glissé (objectSelectionManipulated).",
-    "Les verrous setAxisGizmo*Lock(x, y, z) : true = l'axe est autorisé (le commentaire dit « allow »).",
-    "Accrochage au terrain (beginGizmoTranslate/getTransformsGizmoTranslate) piloté par les préférences snapping.terrain.* : enabled, useRayCast, indObjects, relRotation, keepHeight, snapToCenter, snapToBB.",
-    "Dans getTransformsGizmoTranslate, la hauteur de chaque objet utilise core_terrain.getTerrainHeight même en mode raycast (appelée avant de tester le raycast) : sans terrain, ces appels peuvent renvoyer nil (déduit du code, une valeur 0 de repli est utilisée avec `or`).",
-    "Le commentaire de code signale que getTransformsGizmoTranslate n'a pas d'équivalent pour la rotation (TODO)."
+    "Constants defined: editor.AxisX/Y/Z/W = 0/1/2/3; AxisGizmoMode_Translate/Rotate/Scale = 1/2/3; AxisGizmoAlignment_World = 0, _Local = 1; editor.objectIconHitId = 0 initially.",
+    "`updateAxisGizmo` and `drawAxisGizmo` must be called together every frame. During a drag, the simulation is paused (simTimeAuthority.pause) then restored at the end or on cancel.",
+    "onEndGizmoDragFunc is only called if the gizmo was actually dragged (objectSelectionManipulated).",
+    "The setAxisGizmo*Lock(x, y, z) locks: true = the axis is allowed (the comment says \"allow\").",
+    "Terrain snapping (beginGizmoTranslate/getTransformsGizmoTranslate) driven by the snapping.terrain.* preferences: enabled, useRayCast, indObjects, relRotation, keepHeight, snapToCenter, snapToBB.",
+    "In getTransformsGizmoTranslate, each object's height uses core_terrain.getTerrainHeight even in raycast mode (called before testing the raycast): without a terrain, these calls may return nil (inferred from code, a fallback value of 0 is used with `or`).",
+    "The code comment notes that getTransformsGizmoTranslate has no rotation equivalent (TODO)."
   ],
   "functions": {
     "initialize": {
-      "desc": "Mémorise l'éditeur, définit les constantes d'axe/mode/alignement et installe toutes les fonctions gizmo/icônes sur `editor`.",
-      "params": {"editorInstance": {"type": "table", "desc": "objet `editor`"}},
+      "desc": "Remembers the editor, defines the axis/mode/alignment constants and installs all the gizmo/icon functions on `editor`.",
+      "params": {
+        "editorInstance": {
+          "type": "table",
+          "desc": "`editor` object"
+        }
+      },
       "internal": true
     }
   },
   "classes": {
     "editor": {
-      "desc": "Fonctions ajoutées à `editor` par initialize.",
+      "desc": "Functions added to `editor` by initialize.",
       "functions": {
-        "updateObjectIcons": {"desc": "Met à jour editor.objectIconHitId (icône d'objet sous la souris, 0 si icônes masquées ou préférence gizmos.general.drawObjectIcons == false) et editor.objectIconHoverId (seulement si aucun bouton souris n'est enfoncé et que l'UI ne capture pas la souris). À appeler à chaque frame."},
-        "drawObjectIcons": {"desc": "Dessine les icônes des objets les plus proches si la caméra existe et que editor.hideObjectIcons n'est pas vrai."},
+        "updateObjectIcons": {
+          "desc": "Updates editor.objectIconHitId (object icon under the mouse, 0 if icons are hidden or the gizmos.general.drawObjectIcons preference == false) and editor.objectIconHoverId (only if no mouse button is pressed and the UI does not capture the mouse). To be called every frame."
+        },
+        "drawObjectIcons": {
+          "desc": "Draws the closest objects' icons if the camera exists and editor.hideObjectIcons is not true."
+        },
         "setAxisGizmoTransform": {
-          "desc": "Place le gizmo dans le monde (pour éditer des parties d'objet ou des poignées personnalisées).",
+          "desc": "Places the gizmo in the world (to edit object parts or custom handles).",
           "params": {
-            "matrix": {"type": "MatrixF", "desc": "transformation monde du gizmo"},
-            "scale": {"type": "vec3|nil", "desc": "échelle du gizmo (défaut vec3(1,1,1)), évite les problèmes de décomposition d'échelle non uniforme"}
+            "matrix": {
+              "type": "MatrixF",
+              "desc": "world transform of the gizmo"
+            },
+            "scale": {
+              "type": "vec3|nil",
+              "desc": "gizmo scale (default vec3(1,1,1)), avoids non-uniform scale decomposition problems"
+            }
           }
         },
-        "getAxisGizmoTransform": {"desc": "Renvoie la transformation actuelle du gizmo.", "returns": [{"type": "MatrixF", "desc": "transformation"}]},
-        "getAxisGizmoScale": {"desc": "Renvoie l'échelle actuelle du gizmo.", "returns": [{"type": "Point3F", "desc": "échelle"}]},
+        "getAxisGizmoTransform": {
+          "desc": "Returns the current gizmo transform.",
+          "returns": [
+            {
+              "type": "MatrixF",
+              "desc": "transform"
+            }
+          ]
+        },
+        "getAxisGizmoScale": {
+          "desc": "Returns the current gizmo scale.",
+          "returns": [
+            {
+              "type": "Point3F",
+              "desc": "scale"
+            }
+          ]
+        },
         "beginGizmoTranslate": {
-          "desc": "À appeler une fois au début du glissement : mémorise les transformations de départ et, si l'accrochage au terrain est activé, les décalages au sol, normales et boîtes englobantes (collision des objets désactivée temporairement pour le raycast).",
+          "desc": "To be called once at the start of the drag: remembers the starting transforms and, if terrain snapping is enabled, the ground offsets, normals and bounding boxes (object collision temporarily disabled for the raycast).",
           "params": {
-            "objectTransforms": {"type": "MatrixF[]", "desc": "transformations initiales des objets"},
-            "objectBBs": {"type": "Box3F[]", "desc": "boîtes englobantes des objets"},
-            "objectHeights": {"type": "number[]", "desc": "hauteur de départ du raycast par objet"},
-            "objects": {"type": "table[]", "desc": "objets (pour disableCollision/enableCollision)"}
+            "objectTransforms": {
+              "type": "MatrixF[]",
+              "desc": "initial object transforms"
+            },
+            "objectBBs": {
+              "type": "Box3F[]",
+              "desc": "object bounding boxes"
+            },
+            "objectHeights": {
+              "type": "number[]",
+              "desc": "starting raycast height per object"
+            },
+            "objects": {
+              "type": "table[]",
+              "desc": "objects (for disableCollision/enableCollision)"
+            }
           }
         },
         "getTransformsGizmoTranslate": {
-          "desc": "À appeler à chaque frame du glissement après beginGizmoTranslate : renvoie les nouvelles transformations des objets (translation du gizmo, avec accrochage terrain et rotation relative selon les préférences). Renvoie {} si beginGizmoTranslate n'a pas été appelé.",
+          "desc": "To be called every frame of the drag after beginGizmoTranslate: returns the new object transforms (gizmo translation, with terrain snapping and relative rotation according to the preferences). Returns {} if beginGizmoTranslate was not called.",
           "params": {
-            "objects": {"type": "table[]", "desc": "objets déplacés"},
-            "objectHeights": {"type": "number[]", "desc": "hauteur de départ du raycast par objet"}
+            "objects": {
+              "type": "table[]",
+              "desc": "moved objects"
+            },
+            "objectHeights": {
+              "type": "number[]",
+              "desc": "starting raycast height per object"
+            }
           },
-          "returns": [{"type": "MatrixF[]", "desc": "transformations mises à jour"}]
+          "returns": [
+            {
+              "type": "MatrixF[]",
+              "desc": "updated transforms"
+            }
+          ]
         },
         "updateAxisGizmo": {
-          "desc": "Traite les événements souris du gizmo (début, glissement, fin, survol), relaie les modificateurs clavier au C++ et émet onEditorAxisGizmoAligmentChanged si l'alignement a changé côté C++. À appeler avec drawAxisGizmo.",
+          "desc": "Handles the gizmo's mouse events (start, drag, end, hover), relays keyboard modifiers to C++ and emits onEditorAxisGizmoAligmentChanged if the alignment changed on the C++ side. To be called together with drawAxisGizmo.",
           "params": {
-            "onStartGizmoDragFunc": {"type": "function|nil", "desc": "appelée au début du glissement (sans argument)"},
-            "onEndGizmoDragFunc": {"type": "function|nil", "desc": "appelée à la fin si le gizmo a été glissé (sans argument)"},
-            "onGizmoDraggingFunc": {"type": "function|nil", "desc": "appelée à chaque frame de glissement (sans argument)"}
+            "onStartGizmoDragFunc": {
+              "type": "function|nil",
+              "desc": "called at the start of the drag (no arguments)"
+            },
+            "onEndGizmoDragFunc": {
+              "type": "function|nil",
+              "desc": "called at the end if the gizmo was dragged (no arguments)"
+            },
+            "onGizmoDraggingFunc": {
+              "type": "function|nil",
+              "desc": "called every drag frame (no arguments)"
+            }
           }
         },
-        "cancelAxisGizmoInteraction": {"desc": "Annule une interaction en cours : relâche virtuellement la souris, restaure la pause de la simulation et désélectionne l'élément du gizmo."},
-        "drawAxisGizmo": {"desc": "Dessine le gizmo avec sa transformation et son mode actuels (si la caméra de l'éditeur existe)."},
+        "cancelAxisGizmoInteraction": {
+          "desc": "Cancels an ongoing interaction: virtually releases the mouse, restores the simulation pause and deselects the gizmo element."
+        },
+        "drawAxisGizmo": {
+          "desc": "Draws the gizmo with its current transform and mode (if the editor camera exists)."
+        },
         "setAxisGizmoMode": {
-          "desc": "Choisit le mode du gizmo et émet onEditorAxisGizmoModeChanged(mode).",
-          "params": {"mode": {"type": "integer", "desc": "editor.AxisGizmoMode_Translate (1), _Rotate (2) ou _Scale (3)"}}
+          "desc": "Sets the gizmo mode and emits onEditorAxisGizmoModeChanged(mode).",
+          "params": {
+            "mode": {
+              "type": "integer",
+              "desc": "editor.AxisGizmoMode_Translate (1), _Rotate (2) or _Scale (3)"
+            }
+          }
         },
         "setAxisGizmoAlignment": {
-          "desc": "Choisit l'alignement du gizmo et émet onEditorAxisGizmoAligmentChanged.",
-          "params": {"alignment": {"type": "integer", "desc": "editor.AxisGizmoAlignment_World (0) ou _Local (1)"}}
+          "desc": "Sets the gizmo alignment and emits onEditorAxisGizmoAligmentChanged.",
+          "params": {
+            "alignment": {
+              "type": "integer",
+              "desc": "editor.AxisGizmoAlignment_World (0) or _Local (1)"
+            }
+          }
         },
-        "getAxisGizmoMode": {"desc": "Renvoie le mode actuel du gizmo.", "returns": [{"type": "integer", "desc": "mode"}]},
-        "getAxisGizmoAlignment": {"desc": "Renvoie l'alignement actuel du gizmo.", "returns": [{"type": "integer", "desc": "alignement"}]},
-        "toggleAxisGizmoAlignment": {"desc": "Bascule entre alignement monde et local."},
-        "toggleDrawObjectIcons": {"desc": "Inverse la préférence gizmos.general.drawObjectIcons et l'applique au C++."},
-        "toggleDrawGizmoPlane": {"desc": "Inverse la préférence gizmos.general.drawGizmoPlane et active/désactive plan, hachures et grille de déplacement du gizmo."},
-        "toggleDrawObjectText": {"desc": "Inverse la préférence gizmos.general.drawObjectText (affichage des noms d'objets) et l'applique au C++."},
-        "toggleSelectionHighlight": {"desc": "Inverse la préférence gizmos.general.highlightSelectedMeshes."},
-        "isAxisGizmoHovered": {"desc": "Indique si un élément (axe ou plan) du gizmo est survolé/sélectionné.", "returns": [{"type": "boolean", "desc": "true si l'élément sélectionné n'est pas -1"}]},
-        "getAxisGizmoSelectedElement": {"desc": "Renvoie l'élément du gizmo sélectionné (axe ou plan).", "returns": [{"type": "integer", "desc": "indice d'élément, -1 si aucun"}]},
-        "setAxisGizmoTranslateSnap": {"desc": "Règle le magnétisme de translation.", "params": {"enabled": {"type": "boolean", "desc": "activer"}, "gridSize": {"type": "number", "desc": "taille de cellule de la grille"}}},
-        "setAxisGizmoRotateSnap": {"desc": "Règle le magnétisme de rotation.", "params": {"enabled": {"type": "boolean", "desc": "activer"}, "rotationSnap": {"type": "number", "desc": "pas d'angle"}}},
-        "setAxisGizmoScaleSnap": {"desc": "Règle le magnétisme d'échelle.", "params": {"enabled": {"type": "boolean", "desc": "activer"}, "scaleSnap": {"type": "number", "desc": "pas d'échelle"}}},
+        "getAxisGizmoMode": {
+          "desc": "Returns the current gizmo mode.",
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "mode"
+            }
+          ]
+        },
+        "getAxisGizmoAlignment": {
+          "desc": "Returns the current gizmo alignment.",
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "alignment"
+            }
+          ]
+        },
+        "toggleAxisGizmoAlignment": {
+          "desc": "Toggles between world and local alignment."
+        },
+        "toggleDrawObjectIcons": {
+          "desc": "Toggles the gizmos.general.drawObjectIcons preference and applies it to C++."
+        },
+        "toggleDrawGizmoPlane": {
+          "desc": "Toggles the gizmos.general.drawGizmoPlane preference and enables/disables the gizmo's plane, hatching and move grid."
+        },
+        "toggleDrawObjectText": {
+          "desc": "Toggles the gizmos.general.drawObjectText preference (display of object names) and applies it to C++."
+        },
+        "toggleSelectionHighlight": {
+          "desc": "Toggles the gizmos.general.highlightSelectedMeshes preference."
+        },
+        "isAxisGizmoHovered": {
+          "desc": "Returns whether a gizmo element (axis or plane) is hovered/selected.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if the selected element is not -1"
+            }
+          ]
+        },
+        "getAxisGizmoSelectedElement": {
+          "desc": "Returns the selected gizmo element (axis or plane).",
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "element index, -1 if none"
+            }
+          ]
+        },
+        "setAxisGizmoTranslateSnap": {
+          "desc": "Sets translation snapping.",
+          "params": {
+            "enabled": {
+              "type": "boolean",
+              "desc": "enable"
+            },
+            "gridSize": {
+              "type": "number",
+              "desc": "grid cell size"
+            }
+          }
+        },
+        "setAxisGizmoRotateSnap": {
+          "desc": "Sets rotation snapping.",
+          "params": {
+            "enabled": {
+              "type": "boolean",
+              "desc": "enable"
+            },
+            "rotationSnap": {
+              "type": "number",
+              "desc": "angle step"
+            }
+          }
+        },
+        "setAxisGizmoScaleSnap": {
+          "desc": "Sets scale snapping.",
+          "params": {
+            "enabled": {
+              "type": "boolean",
+              "desc": "enable"
+            },
+            "scaleSnap": {
+              "type": "number",
+              "desc": "scale step"
+            }
+          }
+        },
         "toggleSnapping": {
-          "desc": "Active/désactive le magnétisme de rotation et de translation selon les préférences snapping.general.* (rotateSnapSize, gridSize), sauf si la préférence rotateSnapEnabled / snapToGrid correspondante est déjà vraie.",
-          "params": {"value": {"type": "integer", "desc": "0 = désactiver, 1 = activer (autres valeurs ignorées)"}}
+          "desc": "Enables/disables rotation and translation snapping according to the snapping.general.* preferences (rotateSnapSize, gridSize), unless the corresponding rotateSnapEnabled / snapToGrid preference is already true.",
+          "params": {
+            "value": {
+              "type": "integer",
+              "desc": "0 = disable, 1 = enable (other values ignored)"
+            }
+          }
         },
-        "setAxisGizmoTranslateLock": {"desc": "Autorise ou non la translation par axe.", "params": {"x": {"type": "boolean", "desc": "axe X"}, "y": {"type": "boolean", "desc": "axe Y"}, "z": {"type": "boolean", "desc": "axe Z"}}},
-        "setAxisGizmoRotateLock": {"desc": "Autorise ou non la rotation par axe.", "params": {"x": {"type": "boolean", "desc": "axe X"}, "y": {"type": "boolean", "desc": "axe Y"}, "z": {"type": "boolean", "desc": "axe Z"}}},
-        "setAxisGizmoScaleLock": {"desc": "Autorise ou non la mise à l'échelle par axe.", "params": {"x": {"type": "boolean", "desc": "axe X"}, "y": {"type": "boolean", "desc": "axe Y"}, "z": {"type": "boolean", "desc": "axe Z"}}},
+        "setAxisGizmoTranslateLock": {
+          "desc": "Allows or not translation per axis.",
+          "params": {
+            "x": {
+              "type": "boolean",
+              "desc": "X axis"
+            },
+            "y": {
+              "type": "boolean",
+              "desc": "Y axis"
+            },
+            "z": {
+              "type": "boolean",
+              "desc": "Z axis"
+            }
+          }
+        },
+        "setAxisGizmoRotateLock": {
+          "desc": "Allows or not rotation per axis.",
+          "params": {
+            "x": {
+              "type": "boolean",
+              "desc": "X axis"
+            },
+            "y": {
+              "type": "boolean",
+              "desc": "Y axis"
+            },
+            "z": {
+              "type": "boolean",
+              "desc": "Z axis"
+            }
+          }
+        },
+        "setAxisGizmoScaleLock": {
+          "desc": "Allows or not scaling per axis.",
+          "params": {
+            "x": {
+              "type": "boolean",
+              "desc": "X axis"
+            },
+            "y": {
+              "type": "boolean",
+              "desc": "Y axis"
+            },
+            "z": {
+              "type": "boolean",
+              "desc": "Z axis"
+            }
+          }
+        },
         "modifyFadeIconsDistance": {
-          "desc": "Ajuste la distance de fondu des icônes d'objets (préférence gizmos.objectIcons.fadeIconsDistance += delta x fadeIconsDistanceModifySpeed, bornée à 1..50000) et affiche une notification.",
-          "params": {"deltaValue": {"type": "number", "desc": "variation (0 = rien ; sans effet si editor.disableModifyFadeIconsDistance)"}}
+          "desc": "Adjusts the object icons fade distance (preference gizmos.objectIcons.fadeIconsDistance += delta x fadeIconsDistanceModifySpeed, clamped to 1..50000) and shows a notification.",
+          "params": {
+            "deltaValue": {
+              "type": "number",
+              "desc": "change (0 = nothing; no effect if editor.disableModifyFadeIconsDistance)"
+            }
+          }
         }
       }
     }

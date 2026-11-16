@@ -1,7 +1,10 @@
 {
   "path": "lua/ge/extensions/ui/router/guards/multiseat.lua",
-  "module": "Garde de sortie « confirmMultiseatSettingsExit » : lorsqu'on quitte l'écran des réglages multi-sièges, délègue la confirmation à ui_multiseat_multiseatSettings.confirmExit(route, params, context). Les déplacements entre pause.multiseatSettings et pause.multiseatSettings.vehicleSelector restent dans le flux et sont autorisés ; si ui_multiseat_multiseatSettings n'est pas chargé, la sortie est autorisée.",
+  "module": "Exit guard \"confirmMultiseatSettingsExit\": when leaving the multi-seat settings screen, delegates the confirmation to ui_multiseat_multiseatSettings.confirmExit(route, params, context). Moves between pause.multiseatSettings and pause.multiseatSettings.vehicleSelector stay in the flow and are allowed; if ui_multiseat_multiseatSettings is not loaded, the exit is allowed.",
   "fields": {
-    "guards": {"type": "table<string, function>", "desc": "Table des gardes exposées : {confirmMultiseatSettingsExit = function(route, params, context)}."}
+    "guards": {
+      "type": "table<string, function>",
+      "desc": "Table of exposed guards: {confirmMultiseatSettingsExit = function(route, params, context)}."
+    }
   }
 }

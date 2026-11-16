@@ -1,19 +1,99 @@
 {
   "path": "lua/ge/extensions/editor/trafficSignalsEditor.lua",
-  "module": "Éditeur de feux de signalisation (fenêtre « Traffic Signals Editor », menu Window > Gameplay, mode d'édition signalsEditMode). Permet de créer et placer des signaux (instances), des contrôleurs et des séquences de phases, d'éditer les définitions de contrôleur, de simuler les feux dans le niveau puis d'enregistrer le tout dans signals.json du niveau (editor.levelPath). Travaille sur les données de core_trafficSignals (newSignal, newController, newSequence, setupSignals, loadSignals). Maj + clic gauche crée un signal, clic gauche sélectionne.",
-  "usage": "local data = editor_trafficSignalsEditor.getCurrentSignals() -- {instances, controllers, sequences}\neditor_trafficSignalsEditor.saveFile() -- écrit <niveau>/signals.json",
-  "notes": ["loadFile et saveFile utilisent par défaut editor.levelPath..'signals.json' ; le menu File ne gère que ce fichier par défaut.", "loadFile : si les données contiennent la clé obsolète 'intersections', elles sont refusées (avertissement « Obsolete signals data! ») et l'éditeur est vidé via setCurrentSignals({}).", "La simulation (fonction locale simulate) force les séquences en mode test, appelle map.reset() pour mettre à jour les signaux de mapmgr (solution « temporaire » selon le code) et repasse trafficSignals.debugLevel à 0 à l'arrêt, avec rechargement des signaux d'origine du niveau."],
+  "module": "Traffic light editor (\"Traffic Signals Editor\" window, menu Window > Gameplay, signalsEditMode edit mode). Lets you create and place signals (instances), controllers and phase sequences, edit controller definitions, simulate the lights in the level then save everything to the level's signals.json (editor.levelPath). Works on core_trafficSignals data (newSignal, newController, newSequence, setupSignals, loadSignals). Shift + left click creates a signal, left click selects.",
+  "usage": "local data = editor_trafficSignalsEditor.getCurrentSignals() -- {instances, controllers, sequences}\neditor_trafficSignalsEditor.saveFile() -- writes <level>/signals.json",
+  "notes": [
+    "loadFile and saveFile default to editor.levelPath..'signals.json'; the File menu only handles this default file.",
+    "loadFile: if the data contains the obsolete key 'intersections', it is rejected (warning \"Obsolete signals data!\") and the editor is emptied via setCurrentSignals({}).",
+    "The simulation (local function simulate) forces the sequences into test mode, calls map.reset() to update the mapmgr signals (\"temporary\" solution according to the code) and sets trafficSignals.debugLevel back to 0 on stop, reloading the level's original signals."
+  ],
   "functions": {
-    "getCurrentElements": {"desc": "Renvoie la table des éléments de l'éditeur (signaux, contrôleurs, séquences) indexée par id.", "returns": [{"type": "table<integer|string, table>", "desc": "Éléments par id."}]},
-    "getCurrentSignals": {"desc": "Renvoie les données de signaux en cours d'édition (tables vivantes, non copiées).", "returns": [{"type": "table", "desc": "{instances, controllers, sequences}."}]},
-    "setCurrentSignals": {"desc": "Remplace les données de l'éditeur : réinitialise, recrée instances (pos/dir convertis en vec3), contrôleurs et séquences via core_trafficSignals, puis resélectionne les éléments courants. Sans argument, utilise les signaux du niveau (core_trafficSignals.getData()).", "params": {"data": {"type": "table|nil", "desc": "{instances, controllers, sequences} ; champs manquants traités comme vides."}}},
-    "loadFile": {"desc": "Charge un fichier de signaux JSON et l'applique avec setCurrentSignals (format obsolète rejeté).", "params": {"fileName": {"type": "string|nil", "desc": "Chemin du fichier, défaut <niveau>/signals.json."}}},
-    "saveFile": {"desc": "Écrit les signaux sérialisés dans un fichier JSON (jsonWriteFile) et affiche « Signals saved! » 3 s.", "params": {"fileName": {"type": "string|nil", "desc": "Chemin du fichier, défaut <niveau>/signals.json."}}},
-    "onEditorGui": {"desc": "Hook de frame de l'éditeur : dessine la fenêtre (menu File Load/Save/Clear, listes et propriétés des signaux, contrôleurs, séquences) et le rendu de debug des signaux. Initialise les tables au premier appel.", "params": {"dt": {"type": "number", "desc": "Delta de temps."}}, "internal": true},
-    "onEditorInitialized": {"desc": "Hook d'initialisation de l'éditeur : enregistre la fenêtre (540x600), le mode d'édition signalsEditMode avec ses raccourcis et l'entrée de menu dans le groupe Gameplay.", "internal": true},
-    "onWindowMenuItem": {"desc": "Hook du menu : initialise les tables si besoin, vide la sélection d'objets et affiche la fenêtre.", "internal": true},
-    "onClientEndMission": {"desc": "Hook de fin de mission : force une ré-initialisation des tables à la prochaine ouverture.", "internal": true},
-    "onSerialize": {"desc": "Avant rechargement Lua : renvoie {options, signals} (signaux sérialisés).", "returns": [{"type": "table", "desc": "{options, signals}."}], "internal": true},
-    "onDeserialized": {"desc": "Après rechargement Lua : restaure les options et réapplique les signaux avec setCurrentSignals.", "params": {"data": {"type": "table", "desc": "Valeur renvoyée par onSerialize."}}, "internal": true}
+    "getCurrentElements": {
+      "desc": "Returns the table of editor elements (signals, controllers, sequences) keyed by id.",
+      "returns": [
+        {
+          "type": "table<integer|string, table>",
+          "desc": "Elements by id."
+        }
+      ]
+    },
+    "getCurrentSignals": {
+      "desc": "Returns the signal data being edited (live tables, not copied).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{instances, controllers, sequences}."
+        }
+      ]
+    },
+    "setCurrentSignals": {
+      "desc": "Replaces the editor data: resets, recreates instances (pos/dir converted to vec3), controllers and sequences via core_trafficSignals, then reselects the current elements. Without an argument, uses the level's signals (core_trafficSignals.getData()).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "{instances, controllers, sequences}; missing fields treated as empty."
+        }
+      }
+    },
+    "loadFile": {
+      "desc": "Loads a JSON signals file and applies it with setCurrentSignals (obsolete format rejected).",
+      "params": {
+        "fileName": {
+          "type": "string|nil",
+          "desc": "File path, default <level>/signals.json."
+        }
+      }
+    },
+    "saveFile": {
+      "desc": "Writes the serialized signals to a JSON file (jsonWriteFile) and displays \"Signals saved!\" for 3 s.",
+      "params": {
+        "fileName": {
+          "type": "string|nil",
+          "desc": "File path, default <level>/signals.json."
+        }
+      }
+    },
+    "onEditorGui": {
+      "desc": "Editor frame hook: draws the window (File menu Load/Save/Clear, lists and properties of signals, controllers, sequences) and the signals' debug rendering. Initializes the tables on the first call.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time delta."
+        }
+      },
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Editor initialization hook: registers the window (540x600), the signalsEditMode edit mode with its shortcuts and the menu entry in the Gameplay group.",
+      "internal": true
+    },
+    "onWindowMenuItem": {
+      "desc": "Menu hook: initializes the tables if needed, clears the object selection and shows the window.",
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "End-of-mission hook: forces a re-initialization of the tables on the next opening.",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Before Lua reload: returns {options, signals} (serialized signals).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{options, signals}."
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "After Lua reload: restores the options and reapplies the signals with setCurrentSignals.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Value returned by onSerialize."
+        }
+      },
+      "internal": true
+    }
   }
 }

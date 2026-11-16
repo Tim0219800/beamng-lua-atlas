@@ -2,105 +2,105 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/esc.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur auxiliaire (type "auxiliary", defaultOrder 50) qui implémente le contrôle de stabilité (ESC) et l'antipatinage (TCS) de la voiture. L'ESC compare le taux de lacet mesuré à un taux de lacet désiré (calculé depuis l'angle des roues avant, la vitesse, une vitesse caractéristique et une accélération latérale max) et freine une roue pour corriger survirage ou sous-virage. Le TCS compare la vitesse de chaque roue motrice à celle de la roue diagonale et réduit la poussée du moteur (facteurs d'accélérateur écrits dans electrics.values) et/ou freine la roue qui patine. Un moddeur s'en sert en déclarant le contrôleur dans le jbeam avec un bloc de configurations, ou le pilote par ses fonctions de mode (toggleESCMode, setESCMode). Il écrit electrics.values.esc, tcs, escActive, tcsActive, hasESC, hasTCS et un ou plusieurs facteurs d'accélérateur (par défaut electrics.values.throttleFactor), qui doivent être lus par le moteur/l'accélérateur pour que le TCS agisse.
---- Accès : contrôleur `esc` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Auxiliary controller (type "auxiliary", defaultOrder 50) that implements the car's stability control (ESC) and traction control (TCS). The ESC compares the measured yaw rate to a desired yaw rate (computed from the front wheel angle, the speed, a characteristic speed and a max lateral acceleration) and brakes one wheel to correct oversteer or understeer. The TCS compares the speed of each driven wheel to that of the diagonal wheel and reduces engine thrust (throttle factors written into electrics.values) and/or brakes the slipping wheel. A modder uses it by declaring the controller in the jbeam with a block of configurations, or drives it with its mode functions (toggleESCMode, setESCMode). It writes electrics.values.esc, tcs, escActive, tcsActive, hasESC, hasTCS and one or more throttle factors (by default electrics.values.throttleFactor), which must be read by the engine/throttle for the TCS to act.
+--- Access: controller `esc` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_esc
----@field calibrationMeasurementReady boolean Vrai quand la mesure de rigidité de calibration est terminée.
----@field calibrationSettled boolean Vrai quand la phase de stabilisation de la calibration est terminée.
----@field debugData table Données pour l'appli de debug : debugData.esc (steeringAngle, yawRate, desiredYawRate, difference, desiredYawRateAcceleration, desiredYawRateSteering, speed) et debugData.tcs (wheelBrakeFactors, wheelSlips, slipThreshold, throttleFactors, allWheelSlips). Seuls yawRate, desiredYawRate, difference et les champs tcs sont mis à jour ; steeringAngle, desiredYawRateAcceleration/Steering et speed restent à 0.
----@field defaultOrder number Ordre d'exécution par défaut du contrôleur (50).
----@field doMeasure boolean À mettre à true pour lancer la phase de mesure de la calibration (3500 pas) ; repasse à false à la fin.
----@field doSettle boolean À mettre à true pour lancer la phase de stabilisation de la calibration (1500 pas) ; repasse à false à la fin.
----@field isExisting boolean Toujours true : sert de marqueur indiquant qu'un ESC existe.
----@field pauseESCAction boolean Si vrai, l'ESC ne freine plus et le TCS est traité comme désactivé. Remis à false à initSecondStage.
----@field stiffnessFront number Rigidité de dérive moyenne estimée de l'essieu avant par la calibration.
----@field stiffnessRear number Rigidité de dérive moyenne estimée de l'essieu arrière par la calibration.
----@field type string Toujours "auxiliary".
----@field wheelAngleFront number Angle de braquage réel des roues avant (rad), mis à jour à chaque pas.
----@field wheelAngleRear number Angle de braquage réel des roues arrière (rad), mis à jour à chaque pas.
+---@field calibrationMeasurementReady boolean True when the calibration stiffness measurement is finished.
+---@field calibrationSettled boolean True when the calibration settling phase is finished.
+---@field debugData table Data for the debug app: debugData.esc (steeringAngle, yawRate, desiredYawRate, difference, desiredYawRateAcceleration, desiredYawRateSteering, speed) and debugData.tcs (wheelBrakeFactors, wheelSlips, slipThreshold, throttleFactors, allWheelSlips). Only yawRate, desiredYawRate, difference and the tcs fields are updated; steeringAngle, desiredYawRateAcceleration/Steering and speed stay at 0.
+---@field defaultOrder number Default execution order of the controller (50).
+---@field doMeasure boolean Set to true to start the calibration measurement phase (3500 steps); returns to false at the end.
+---@field doSettle boolean Set to true to start the calibration settling phase (1500 steps); returns to false at the end.
+---@field isExisting boolean Always true: serves as a marker indicating that an ESC exists.
+---@field pauseESCAction boolean If true, the ESC no longer brakes and the TCS is treated as disabled. Reset to false at initSecondStage.
+---@field stiffnessFront number Average cornering stiffness of the front axle estimated by the calibration.
+---@field stiffnessRear number Average cornering stiffness of the rear axle estimated by the calibration.
+---@field type string Always "auxiliary".
+---@field wheelAngleFront number Actual steering angle of the front wheels (rad), updated every step.
+---@field wheelAngleRear number Actual steering angle of the rear wheels (rad), updated every step.
 local controller_esc = {}
 
---- Restaure la configuration à partir de serialize().
----Source : lua/vehicle/controller/esc.lua:1062
----@param data table|nil Table renvoyée par serialize.
+--- Restores the configuration from serialize().
+---Source: lua/vehicle/controller/esc.lua:1062
+---@param data table|nil Table returned by serialize.
 function controller_esc.deserialize(data) end
 
---- Renvoie la géométrie calculée du véhicule, ou nil si la masse est nulle.
----Source : lua/vehicle/controller/esc.lua:621
+--- Returns the computed vehicle geometry, or nil if the mass is zero.
+---Source: lua/vehicle/controller/esc.lua:621
 ---@return table|nil  {wheels, frontLeftWheelId, frontRightWheelId, rearLeftWheelId, rearRightWheelId, wheelBase (m), trackWidth (m), distanceCOGRearAxle (m), distanceCOGFrontAxle (m), mass (kg)}
 function controller_esc.getCarData() end
 
---- Renvoie la table de la configuration ESC courante (champs sanitisés, avec name).
----Source : lua/vehicle/controller/esc.lua:640
----@return table|nil  Configuration courante ; nil si pas d'ESC.
+--- Returns the table of the current ESC configuration (sanitized fields, with name).
+---Source: lua/vehicle/controller/esc.lua:640
+---@return table|nil  Current configuration; nil if no ESC.
 function controller_esc.getCurrentConfigData() end
 
---- Renvoie la table d'état (clé "<nomContrôleur>ConfigKey" = indice courant) pour la sauvegarde/synchronisation du véhicule.
----Source : lua/vehicle/controller/esc.lua:1068
----@return table  Table d'état partagée (réutilisée).
+--- Returns the state table (key "<controllerName>ConfigKey" = current index) for saving/synchronizing the vehicle.
+---Source: lua/vehicle/controller/esc.lua:1068
+---@return table  Shared state table (reused).
 function controller_esc.getState() end
 
---- Mémorise les données jbeam, crée la table d'état pour la sauvegarde et réinitialise la couleur de LED. Appelé par le chargement des contrôleurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/esc.lua:820
----@param jbeamData table Données du contrôleur dans le jbeam (voir notes).
+--- Stores the jbeam data, creates the state table for saving and resets the LED color. Called by the controller loading.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/esc.lua:820
+---@param jbeamData table Controller data in the jbeam (see notes).
 function controller_esc.init(jbeamData) end
 
---- Construit les caches de roues, identifie par géométrie les roues avant/arrière gauche/droite, charge et trie les configurations, calcule empattement, répartition de masse, vitesse caractéristique, enregistre l'entrée du menu radial et installe updateWheelsIntermediate et updateGFX. Appelé après l'init de tous les contrôleurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/esc.lua:828
+--- Builds the wheel caches, identifies the front/rear left/right wheels by geometry, loads and sorts the configurations, computes wheelbase, mass distribution, characteristic speed, registers the radial menu entry and installs updateWheelsIntermediate and updateGFX. Called after the init of all controllers.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/esc.lua:828
 function controller_esc.initSecondStage() end
 
---- Passe à la configuration suivante, sans boucler (reste sur la dernière).
----Source : lua/vehicle/controller/esc.lua:715
+--- Switches to the next configuration, without wrapping (stays on the last).
+---Source: lua/vehicle/controller/esc.lua:715
 function controller_esc.nextESCMode() end
 
---- Passe à la configuration précédente, sans boucler (reste sur la première).
----Source : lua/vehicle/controller/esc.lua:720
+--- Switches to the previous configuration, without wrapping (stays on the first).
+---Source: lua/vehicle/controller/esc.lua:720
 function controller_esc.previousESCMode() end
 
---- Renvoie l'état à sauvegarder : l'indice de configuration courant.
----Source : lua/vehicle/controller/esc.lua:1058
+--- Returns the state to save: the current configuration index.
+---Source: lua/vehicle/controller/esc.lua:1058
 ---@return table  {escConfigKey = integer}
 function controller_esc.serialize() end
 
---- Active la configuration d'indice key (retombe à 1 si key dépasse le nombre de configurations), recalcule les valeurs précalculées et affiche un message d'interface sauf si silent. Ne fait rien si le véhicule n'a pas d'ESC ou a perdu une roue.
----Source : lua/vehicle/controller/esc.lua:684
----@param key integer Indice 1..n dans la liste de configurations triée par order.
----@param silent boolean|nil Si vrai, pas de message guihooks.
+--- Activates the configuration at index key (falls back to 1 if key exceeds the number of configurations), recomputes the precomputed values and shows a UI message unless silent. Does nothing if the vehicle has no ESC or lost a wheel.
+---Source: lua/vehicle/controller/esc.lua:684
+---@param key integer Index 1..n in the configuration list sorted by order.
+---@param silent boolean|nil If true, no guihooks message.
 function controller_esc.setESCMode(key, silent) end
 
---- Applique un état renvoyé par getState si l'indice est un entier valide et différent de l'actuel (sans message).
----Source : lua/vehicle/controller/esc.lua:1075
----@param data table|nil Table d'état.
+--- Applies a state returned by getState if the index is a valid integer and differs from the current one (no message).
+---Source: lua/vehicle/controller/esc.lua:1075
+---@param data table|nil State table.
 function controller_esc.setState(data) end
 
---- Remet à zéro les compteurs et résultats de calibration puis active le calcul de rigidité de dérive à chaque pas (à utiliser avec doMeasure/doSettle).
----Source : lua/vehicle/controller/esc.lua:603
+--- Resets the calibration counters and results then enables the cornering stiffness computation at every step (to be used with doMeasure/doSettle).
+---Source: lua/vehicle/controller/esc.lua:603
 function controller_esc.startESCCalibration() end
 
---- Désactive le calcul de calibration.
----Source : lua/vehicle/controller/esc.lua:617
+--- Disables the calibration computation.
+---Source: lua/vehicle/controller/esc.lua:617
 function controller_esc.stopESCCalibration() end
 
---- Passe à la configuration ESC suivante ; après la dernière, revient à la première. Appelé par le bouton de l'interface.
----Source : lua/vehicle/controller/esc.lua:709
+--- Switches to the next ESC configuration; after the last, returns to the first. Called by the interface button.
+---Source: lua/vehicle/controller/esc.lua:709
 function controller_esc.toggleESCMode() end
 
---- Fait clignoter les voyants esc/tcs (période 0.15 s quand actifs), écrit electrics.values.esc/tcs/escActive/tcsActive et remplit debugData. Défini dynamiquement par initSecondStage. (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/esc.lua:dyn
----@param dt number Pas de temps graphique en secondes.
+--- Blinks the esc/tcs lights (0.15 s period when active), writes electrics.values.esc/tcs/escActive/tcsActive and fills debugData. Dynamically defined by initSecondStage. (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/esc.lua:dyn
+---@param dt number Graphics time step in seconds.
 function controller_esc.updateGFX(dt) end
 
---- Force la (re)création du bouton « ESC & TC » dans le panneau de contrôle simplifié du groupe motopropulseur (ui_simplePowertrainControl), avec la couleur de la configuration courante.
----Source : lua/vehicle/controller/esc.lua:147
+--- Forces the (re)creation of the "ESC & TC" button in the powertrain simplified control panel (ui_simplePowertrainControl), with the color of the current configuration.
+---Source: lua/vehicle/controller/esc.lua:147
 function controller_esc.updateSimpleControlButtons() end
 
---- Boucle ESC + TCS + décision à chaque pas physique (voir notes du module). Défini dynamiquement par initSecondStage. (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/esc.lua:dyn
----@param dt number Pas de temps en secondes.
+--- ESC + TCS + decision loop at every physics step (see the module notes). Dynamically defined by initSecondStage. (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/esc.lua:dyn
+---@param dt number Time step in seconds.
 function controller_esc.updateWheelsIntermediate(dt) end
 
 return controller_esc

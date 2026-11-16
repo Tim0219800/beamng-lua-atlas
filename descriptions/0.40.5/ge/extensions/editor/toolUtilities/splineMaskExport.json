@@ -1,19 +1,28 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/splineMaskExport.lua",
-  "module": "Exporte des surfaces de rubans (splines) sous forme de masque PNG 16 bits (GFXFormatR16) à la taille de la grille du terrain. Chaque texel vaut 65535 si son centre monde est dans un quadrilatère, 0 sinon. Sert aux outils de splines pour fabriquer un masque utilisable par l'éditeur de terrain (peinture). Nécessite un terrain chargé et l'extension editor_terrainEditor.",
+  "module": "Exports ribbon surfaces (splines) as a 16-bit PNG mask (GFXFormatR16) at the terrain grid size. Each texel is 65535 if its world center is inside a quadrilateral, 0 otherwise. Used by spline tools to make a mask usable by the terrain editor (painting). Requires a loaded terrain and the editor_terrainEditor extension.",
   "usage": "extensions.editor_toolUtilities_splineMaskExport.export('/levels/mon_niveau/masque.png', sources, 0.5)",
   "notes": [
-    "Sans bloc de terrain ou sans terrain editor, la fonction logue une erreur ('E') et sort sans rien renvoyer.",
-    "Parcourt chaque texel de la grille : coût élevé sur de grands terrains.",
-    "Le résultat n'est pas renvoyé : le succès ou l'échec de saveFile est seulement loggé."
+    "Without a terrain block or without the terrain editor, the function logs an error ('E') and exits without returning anything.",
+    "Iterates over every texel of the grid: high cost on large terrains.",
+    "The result is not returned: the success or failure of saveFile is only logged."
   ],
   "functions": {
     "export": {
-      "desc": "Construit un kd-tree des quadrilatères des sources (agrandis de `margin`), rasterise un bitmap de la taille du terrain et l'enregistre en PNG.",
+      "desc": "Builds a kd-tree of the sources' quadrilaterals (enlarged by `margin`), rasterizes a bitmap of the terrain size and saves it as PNG.",
       "params": {
-        "filepath": {"type": "string", "desc": "Chemin du fichier .png à écrire."},
-        "sources": {"type": "table", "desc": "Table de tables de quadrilatères représentant les surfaces de rubans."},
-        "margin": {"type": "number|nil", "desc": "Marge ajoutée autour des quadrilatères (0 par défaut), en mètres (déduit du code)."}
+        "filepath": {
+          "type": "string",
+          "desc": "Path of the .png file to write."
+        },
+        "sources": {
+          "type": "table",
+          "desc": "Table of tables of quadrilaterals representing the ribbon surfaces."
+        },
+        "margin": {
+          "type": "number|nil",
+          "desc": "Margin added around the quadrilaterals (0 by default), in meters (inferred from code)."
+        }
       },
       "returns": []
     }

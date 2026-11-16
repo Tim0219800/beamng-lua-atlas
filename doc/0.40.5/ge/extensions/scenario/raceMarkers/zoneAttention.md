@@ -1,39 +1,39 @@
 # `scenario_raceMarkers_zoneAttention`
 
-*Fichier : `lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua` · VM : Game Engine (GE) · 164 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua` · VM: Game Engine (GE) · 164 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/scenario/raceMarkers/zoneAttention")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/scenario/raceMarkers/zoneAttention")` (file under extensions/ but not a regular extension)
 
-Marqueur d'attention pour une zone (polygone) : au lieu d'un objet 3D, il demande à l'objet zone de se dessiner lui-même (zone:drawDebug('faded', couleur, hauteur de clôture)). La couleur passe du bleu (normal) au jaune puis à l'orange pendant un compte à rebours, et au orange foncé quand la zone « monte » (rising) ou que le compte est terminé. Le module renvoie un constructeur : require('scenario/raceMarkers/zoneAttention')(id) donne un objet de la classe C.
+Attention marker for a zone (polygon): instead of a 3D object, it asks the zone object to draw itself (zone:drawDebug('faded', color, fence height)). The color goes from blue (normal) to yellow then orange during a countdown, and to dark orange when the zone is "rising" or the countdown is finished. The module returns a constructor: require('scenario/raceMarkers/zoneAttention')(id) gives an object of class C.
 
-## Remarques
+## Notes
 
-- setToCheckpoint(wp) accepte soit un objet zone (champs drawDebug et vertices), soit wp.zone ; sinon seuls wp.pos et wp.radius sont mémorisés et rien n'est dessiné.
-- Le centre est zone.center ou la position du premier sommet ; si un terrain existe, la hauteur est replaquée à terrain + 2 m (core_terrain).
-- La clôture est dessinée avec alpha 0.25 et hauteur fenceHeight (0.33 par défaut, réglable par setFenceHeight).
-- C:setCountdown a pour signature réelle (remaining, total, done) ; la page extraite affiche (total, done) car elle omet le premier paramètre : le premier argument est le temps restant.
-- La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim).
+- setToCheckpoint(wp) accepts either a zone object (fields drawDebug and vertices), or wp.zone; otherwise only wp.pos and wp.radius are stored and nothing is drawn.
+- The center is zone.center or the position of the first vertex; if a terrain exists, the height is snapped back to terrain + 2 m (core_terrain).
+- The fence is drawn with alpha 0.25 and height fenceHeight (0.33 by default, adjustable with setFenceHeight).
+- C:setCountdown actually has the signature (remaining, total, done); the extracted page shows (total, done) because it omits the first parameter: the first argument is the remaining time.
+- The extracted page shows update(dtSim); the actual signature is update(dt, dtSim).
 
-## Classe `C`
+## Class `C`
 
-Marqueur de zone dessiné par debug.
+Zone marker drawn by debug.
 
-Le module renvoie un constructeur : `local obj = require("scenario_raceMarkers_zoneAttention")(options)`.
+The module returns a constructor: `local obj = require("scenario_raceMarkers_zoneAttention")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearMarkers()` | Efface la table d'identifiants. | 153 |
-| `C:createMarkers()` | Conservé pour la compatibilité d'API : ne crée aucun objet. | 149 |
-| `C:hide()` | Appelle setVisibility(false). | 145 |
-| `C:init(id)` | Constructeur : initialise l'état (invisible, mode 'hidden', couleur bleue). | 12 |
-| `C:setCountdown(remaining, total, done)` | Règle l'état du compte à rebours qui pilote la couleur. | 130 |
-| `C:setFenceHeight(h)` | Règle la hauteur de la clôture dessinée. | 126 |
-| `C:setMode(mode)` | 'hidden' masque, autre mode affiche. | 113 |
-| `C:setRising(v)` | Marque la zone comme « montante » : couleur orange foncé. | 136 |
-| `C:setToCheckpoint(wp)` | Associe la zone à dessiner, ou une simple position si wp n'est pas une zone. | 84 |
-| `C:setVisibility(v)` | Active ou désactive le dessin. | 141 |
-| `C:show()` | Appelle setVisibility(true). | 146 |
-| `C:update(dt, dtSim)` | Appel par image : calcule la couleur cible (bleue, dégradé jaune vers orange pendant le compte à rebours, orange foncé si rising ou terminé), la lisse puis dessine la zone. | 34 |
+| `C:clearMarkers()` | Clears the identifier table. | 153 |
+| `C:createMarkers()` | Kept for API compatibility: creates no object. | 149 |
+| `C:hide()` | Calls setVisibility(false). | 145 |
+| `C:init(id)` | Constructor: initializes the state (invisible, mode 'hidden', blue color). | 12 |
+| `C:setCountdown(remaining, total, done)` | Sets the countdown state that drives the color. | 130 |
+| `C:setFenceHeight(h)` | Sets the height of the drawn fence. | 126 |
+| `C:setMode(mode)` | 'hidden' hides, other mode shows. | 113 |
+| `C:setRising(v)` | Marks the zone as "rising": dark orange color. | 136 |
+| `C:setToCheckpoint(wp)` | Associates the zone to draw, or a simple position if wp is not a zone. | 84 |
+| `C:setVisibility(v)` | Enables or disables drawing. | 141 |
+| `C:show()` | Calls setVisibility(true). | 146 |
+| `C:update(dt, dtSim)` | Per-frame call: computes the target color (blue, yellow-to-orange gradient during the countdown, dark orange if rising or finished), smooths it then draws the zone. | 34 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua`.*

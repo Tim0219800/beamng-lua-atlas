@@ -1,28 +1,76 @@
 {
   "path": "lua/ge/extensions/core/input/categories.lua",
-  "module": "Table de données (le fichier retourne directement une table, pas de fonctions) listant les catégories d'actions d'entrée affichées dans l'écran des contrôles. Chaque catégorie a un ordre d'affichage, une icône et un titre (clé de traduction ou texte). Les actions de core_input_actions y font référence par leur champ `cat`.",
+  "module": "Data table (the file directly returns a table, no functions) listing the input action categories displayed in the controls screen. Each category has a display order, an icon and a title (translation key or text). The actions of core_input_actions reference them by their `cat` field.",
   "notes": [
-    "Champs de chaque catégorie : order (nombre, tri d'affichage), icon (nom d'icône Material), title (clé de traduction ou texte brut), simplemenu (false = masquée du menu simplifié ; présent pour editor, flowgraph, debug, vehicle_debug).",
-    "Une action dont `cat` n'est pas dans cette table déclenche un avertissement dans actionToCommands.",
-    "Particularité : le fichier fait `return { ... }` sans table M ; les entrées sont donc les champs de l'extension core_input_categories."
+    "Fields of each category: order (number, display sort), icon (Material icon name), title (translation key or raw text), simplemenu (false = hidden from the simplified menu; present for editor, flowgraph, debug, vehicle_debug).",
+    "An action whose `cat` is not in this table triggers a warning in actionToCommands.",
+    "Peculiarity: the file does `return { ... }` without an M table; the entries are therefore the fields of the core_input_categories extension."
   ],
   "fields": {
-    "modifier": {"type": "table", "desc": "order 0.5, icône settings : touches modificatrices."},
-    "vehicle_specific": {"type": "table", "desc": "order 1, icône local_taxi : actions propres au véhicule actuel."},
-    "vehicle_specific_unusable": {"type": "table", "desc": "order 1.5 : actions de véhicules non utilisables avec le véhicule courant."},
-    "vehicle": {"type": "table", "desc": "order 2, icône directions_car."},
-    "general": {"type": "table", "desc": "order 3, icône language."},
-    "gameplay": {"type": "table", "desc": "order 4, icône extension."},
-    "splitscreen": {"type": "table", "desc": "order 4.5, titre 'Split Screen'."},
-    "camera": {"type": "table", "desc": "order 5, icône videocam."},
-    "menu": {"type": "table", "desc": "order 6, navigation dans les menus (rend aussi l'actionmap 'Menu')."},
-    "menuExtra": {"type": "table", "desc": "order 6.5, navigation de menu supplémentaire."},
-    "slowmotion": {"type": "table", "desc": "order 7, icône timer."},
-    "replay": {"type": "table", "desc": "order 8, icône local_movies."},
-    "editor": {"type": "table", "desc": "order 9, simplemenu = false."},
-    "flowgraph": {"type": "table", "desc": "order 10, titre 'Flowgraph Editor', simplemenu = false."},
-    "debug": {"type": "table", "desc": "order 11, icône bug_report, simplemenu = false."},
-    "vehicle_debug": {"type": "table", "desc": "order 12, simplemenu = false."}
+    "modifier": {
+      "type": "table",
+      "desc": "order 0.5, icon settings: modifier keys."
+    },
+    "vehicle_specific": {
+      "type": "table",
+      "desc": "order 1, icon local_taxi: actions specific to the current vehicle."
+    },
+    "vehicle_specific_unusable": {
+      "type": "table",
+      "desc": "order 1.5: vehicle actions not usable with the current vehicle."
+    },
+    "vehicle": {
+      "type": "table",
+      "desc": "order 2, icon directions_car."
+    },
+    "general": {
+      "type": "table",
+      "desc": "order 3, icon language."
+    },
+    "gameplay": {
+      "type": "table",
+      "desc": "order 4, icon extension."
+    },
+    "splitscreen": {
+      "type": "table",
+      "desc": "order 4.5, title 'Split Screen'."
+    },
+    "camera": {
+      "type": "table",
+      "desc": "order 5, icon videocam."
+    },
+    "menu": {
+      "type": "table",
+      "desc": "order 6, navigation in menus (also renders the 'Menu' actionmap)."
+    },
+    "menuExtra": {
+      "type": "table",
+      "desc": "order 6.5, additional menu navigation."
+    },
+    "slowmotion": {
+      "type": "table",
+      "desc": "order 7, icon timer."
+    },
+    "replay": {
+      "type": "table",
+      "desc": "order 8, icon local_movies."
+    },
+    "editor": {
+      "type": "table",
+      "desc": "order 9, simplemenu = false."
+    },
+    "flowgraph": {
+      "type": "table",
+      "desc": "order 10, title 'Flowgraph Editor', simplemenu = false."
+    },
+    "debug": {
+      "type": "table",
+      "desc": "order 11, icon bug_report, simplemenu = false."
+    },
+    "vehicle_debug": {
+      "type": "table",
+      "desc": "order 12, simplemenu = false."
+    }
   },
   "functions": {}
 }

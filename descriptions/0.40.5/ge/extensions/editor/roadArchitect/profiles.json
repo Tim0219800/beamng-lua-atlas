@@ -1,495 +1,1230 @@
 {
   "path": "lua/ge/extensions/editor/roadArchitect/profiles.lua",
-  "module": "Gestion des profils latéraux (coupes en travers) des routes de Road Architect. Un profil est une table indexée par numéro de voie : les clés négatives (-1 à -20) sont les voies de gauche, les clés positives (1 à 20) celles de droite, il n'y a pas de clé 0. Chaque voie a un type ('road_lane', 'sidewalk', 'shoulder', 'island'), une largeur et des hauteurs (champs width, heightL, heightR, ce sont des pointeurs ImGui à lire avec [0]). Le profil porte aussi des paramètres de style (condition d'usure, matériaux des lignes de peinture, fondus de bord, gouttière…) et un tableau layers de couches (peinture, décalques, usure). Le module charge les modèles de profil prédéfinis (fichiers roadArchitect/profiles/*.json : Rural, Urban, Hwy, Tracks, Barrier_Only, Lamps_Only…), fabrique les profils des jonctions, ajoute automatiquement les couches de peinture, d'usure et de fondu de bord, et sérialise/désérialise les profils vers JSON.",
+  "module": "Management of the lateral profiles (cross sections) of Road Architect roads. A profile is a table keyed by lane number: negative keys (-1 to -20) are the left lanes, positive keys (1 to 20) the right ones, there is no key 0. Each lane has a type ('road_lane', 'sidewalk', 'shoulder', 'island'), a width and heights (fields width, heightL, heightR, which are ImGui pointers to read with [0]). The profile also carries style parameters (wear condition, paint line materials, edge fades, gutter...) and a layers array of layers (paint, decals, wear). The module loads the predefined profile templates (roadArchitect/profiles/*.json files: Rural, Urban, Hwy, Tracks, Barrier_Only, Lamps_Only...), builds the junction profiles, automatically adds the paint, wear and edge fade layers, and serializes/deserializes profiles to JSON.",
   "notes": [
-    "La table publique M.profiles (tableau des profils chargés) est remplie par populateProfileTemplates(). Chaque profil a un champ name (ArrayChar ImGui de 32 caractères) et isDeletable (false pour les modèles prédéfinis).",
-    "Pour les champs de profil ou de couche, la plupart des valeurs sont des pointeurs ImGui (im.FloatPtr, im.IntPtr, im.BoolPtr, im.ArrayChar) : lire avec [0] ou ffi.string pour les noms.",
-    "isProfileValidForMidJctPerfect renvoie nil (return sans valeur) si le profil n'est pas symétrique, false pour les autres refus et true si valide : tester avec 'not' fonctionne dans les deux cas.",
-    "getIdFromName compare name directement avec == aux champs name des profils, qui sont des ArrayChar ImGui ; le code ne les convertit pas en chaîne (comportement de la comparaison chaîne/ArrayChar non vérifié ici). roads.createRoadFromTemplate passe pourtant une chaîne à createProfileFromTemplate.",
-    "getNumRoadLanesLR compte les voies 'road_lane' et 'shoulder' (pas les trottoirs ni îlots) alors que getNumLanesLR compte toutes les voies.",
-    "Les fonctions createProfileForJctRoad* produisent les profils utilisés par les jonctions générées (carrefours, T, Y, ronds-points, jonctions d'autoroute). Elles remplissent les champs de style par défaut (condition 0.2, graine 41226, 10 rustines) et appellent autoPaintLines et/ou autoEdgeBlending.",
-    "load() et save() passent par editor_fileDialog (filtre .json) ; le fichier contient { profile = ... }. loadPrefabProfile (interne) retire l'extension du nom.",
-    "updateCondition suit les couches non persistantes : toute couche dont doNotDelete[0] est faux est supprimée avant régénération, puis les couches d'usure (tread, fissures, dégâts, rustines, nids-de-poule, selon prof.class 'urban'/'highway' ou autre) sont recréées avec math.randomseed(prof.conditionSeed[0]), donc de façon reproductible."
+    "The public table M.profiles (array of loaded profiles) is filled by populateProfileTemplates(). Each profile has a name field (32-character ImGui ArrayChar) and isDeletable (false for predefined templates).",
+    "For profile or layer fields, most values are ImGui pointers (im.FloatPtr, im.IntPtr, im.BoolPtr, im.ArrayChar): read with [0] or ffi.string for names.",
+    "isProfileValidForMidJctPerfect returns nil (return with no value) if the profile is not symmetric, false for the other refusals and true if valid: testing with 'not' works in both cases.",
+    "getIdFromName compares name directly with == against the name fields of the profiles, which are ImGui ArrayChars; the code does not convert them to a string (behavior of the string/ArrayChar comparison not verified here). roads.createRoadFromTemplate nevertheless passes a string to createProfileFromTemplate.",
+    "getNumRoadLanesLR counts 'road_lane' and 'shoulder' lanes (not sidewalks or islands) whereas getNumLanesLR counts all lanes.",
+    "The createProfileForJctRoad* functions produce the profiles used by the generated junctions (crossroads, T, Y, roundabouts, highway junctions). They fill the default style fields (condition 0.2, seed 41226, 10 patches) and call autoPaintLines and/or autoEdgeBlending.",
+    "load() and save() go through editor_fileDialog (.json filter); the file contains { profile = ... }. loadPrefabProfile (internal) strips the extension from the name.",
+    "updateCondition tracks the non-persistent layers: any layer whose doNotDelete[0] is false is deleted before regeneration, then the wear layers (tread, cracks, damage, patches, potholes, depending on prof.class 'urban'/'highway' or other) are recreated with math.randomseed(prof.conditionSeed[0]), so reproducibly."
   ],
   "fields": {
-    "profiles": {"type": "table[]", "desc": "Tableau des profils actuellement présents dans l'éditeur (modèles prédéfinis puis profils créés ou chargés par l'utilisateur)."}
+    "profiles": {
+      "type": "table[]",
+      "desc": "Array of the profiles currently present in the editor (predefined templates, then profiles created or loaded by the user)."
+    }
   },
   "functions": {
     "getMinMaxLaneKeys": {
-      "desc": "Renvoie la plus petite et la plus grande clé de voie existante d'un profil (parcours de -20 à 20).",
-      "params": {"profile": {"type": "table", "desc": "Profil de route."}},
-      "returns": [{"type": "integer", "desc": "Clé minimale (100 si le profil est vide)."}, {"type": "integer", "desc": "Clé maximale (-100 si le profil est vide)."}],
+      "desc": "Returns the smallest and largest existing lane key of a profile (scan from -20 to 20).",
+      "params": {
+        "profile": {
+          "type": "table",
+          "desc": "Road profile."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Minimum key (100 if the profile is empty)."
+        },
+        {
+          "type": "integer",
+          "desc": "Maximum key (-100 if the profile is empty)."
+        }
+      ],
       "internal": false
     },
     "computeSectionsByType": {
-      "desc": "Découpe le profil de gauche à droite en sections contiguës de voies d'un ou deux types donnés. Chaque section est { s, e, isOneWay, lanesL, lanesR } : clés de début et de fin, vrai si la section est entièrement d'un côté, nombre de voies à gauche et à droite.",
+      "desc": "Splits the profile from left to right into contiguous sections of lanes of one or two given types. Each section is { s, e, isOneWay, lanesL, lanesR }: start and end keys, true if the section is entirely on one side, number of lanes on the left and on the right.",
       "params": {
-        "profile": {"type": "table", "desc": "Profil de route."},
-        "laneType1": {"type": "string", "desc": "Premier type de voie accepté ('road_lane', 'sidewalk', 'shoulder', 'island')."},
-        "laneType2": {"type": "string|nil", "desc": "Second type de voie accepté, facultatif."}
+        "profile": {
+          "type": "table",
+          "desc": "Road profile."
+        },
+        "laneType1": {
+          "type": "string",
+          "desc": "First accepted lane type ('road_lane', 'sidewalk', 'shoulder', 'island')."
+        },
+        "laneType2": {
+          "type": "string|nil",
+          "desc": "Second accepted lane type, optional."
+        }
       },
-      "returns": [{"type": "table[]", "desc": "Tableau de sections { s, e, isOneWay, lanesL, lanesR }."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Array of sections { s, e, isOneWay, lanesL, lanesR }."
+        }
+      ],
       "internal": false
     },
     "removeLayer": {
-      "desc": "Supprime la couche d'indice i du profil (table.remove sur p.layers).",
-      "params": {"p": {"type": "table", "desc": "Profil."}, "i": {"type": "integer", "desc": "Indice de la couche."}},
+      "desc": "Removes the layer at index i from the profile (table.remove on p.layers).",
+      "params": {
+        "p": {
+          "type": "table",
+          "desc": "Profile."
+        },
+        "i": {
+          "type": "integer",
+          "desc": "Layer index."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "addCenterline": {
-      "desc": "Ajoute au profil une couche de ligne centrale (matériau p.centerlineMat, largeur 0.4) pour chaque section de voies de route à double sens (les sections à sens unique n'en reçoivent pas).",
-      "params": {"p": {"type": "table", "desc": "Profil."}, "isPaint": {"type": "boolean", "desc": "Si vrai, la couche n'est pas marquée comme peinture (isPaint = not isPaint) ; reçoit prof.continueLinesToEnd[0] depuis autoPaintLines."}},
+      "desc": "Adds to the profile a centerline layer (material p.centerlineMat, width 0.4) for each section of two-way road lanes (one-way sections do not get one).",
+      "params": {
+        "p": {
+          "type": "table",
+          "desc": "Profile."
+        },
+        "isPaint": {
+          "type": "boolean",
+          "desc": "If true, the layer is not marked as paint (isPaint = not isPaint); receives prof.continueLinesToEnd[0] from autoPaintLines."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "addEdgeLines": {
-      "desc": "Ajoute les lignes de bord de chaussée (largeur 0.25) à gauche et/ou à droite de chaque section de voies de route, avec les matériaux p.edgeMatL et p.edgeMatR.",
+      "desc": "Adds the road edge lines (width 0.25) on the left and/or right of each section of road lanes, with the materials p.edgeMatL and p.edgeMatR.",
       "params": {
-        "p": {"type": "table", "desc": "Profil."},
-        "latOffL": {"type": "number", "desc": "Décalage latéral de la ligne de bord gauche (m)."},
-        "latOffR": {"type": "number", "desc": "Décalage latéral de la ligne de bord droite (m)."},
-        "isLeft": {"type": "boolean", "desc": "Créer les lignes de bord gauches."},
-        "isRight": {"type": "boolean", "desc": "Créer les lignes de bord droites."},
-        "isPaint": {"type": "boolean", "desc": "Même sens que pour addCenterline."}
+        "p": {
+          "type": "table",
+          "desc": "Profile."
+        },
+        "latOffL": {
+          "type": "number",
+          "desc": "Lateral offset of the left edge line (m)."
+        },
+        "latOffR": {
+          "type": "number",
+          "desc": "Lateral offset of the right edge line (m)."
+        },
+        "isLeft": {
+          "type": "boolean",
+          "desc": "Create the left edge lines."
+        },
+        "isRight": {
+          "type": "boolean",
+          "desc": "Create the right edge lines."
+        },
+        "isPaint": {
+          "type": "boolean",
+          "desc": "Same meaning as for addCenterline."
+        }
       },
       "returns": [],
       "internal": false
     },
     "addEndLine": {
-      "desc": "Ajoute des lignes d'arrêt (largeur 0.4, matériaux p.endStopMatS et p.endStopMatE) en fin de section pour les voies de route. Seul le cas isEnd est géré dans le code lu ; les voies de gauche et de droite reçoivent des couches distinctes (Stop line A et B).",
-      "params": {"p": {"type": "table", "desc": "Profil."}, "isStart": {"type": "boolean", "desc": "Ligne d'arrêt au début de la route."}, "isEnd": {"type": "boolean", "desc": "Ligne d'arrêt à la fin de la route."}},
+      "desc": "Adds stop lines (width 0.4, materials p.endStopMatS and p.endStopMatE) at the end of the section for road lanes. Only the isEnd case is handled in the code read; the left and right lanes get separate layers (Stop line A and B).",
+      "params": {
+        "p": {
+          "type": "table",
+          "desc": "Profile."
+        },
+        "isStart": {
+          "type": "boolean",
+          "desc": "Stop line at the start of the road."
+        },
+        "isEnd": {
+          "type": "boolean",
+          "desc": "Stop line at the end of the road."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "addLaneDivisionLines": {
-      "desc": "Ajoute une ligne de séparation de voies (matériau p.laneMarkingsMat) entre chaque paire de voies de route adjacentes de même sens.",
-      "params": {"p": {"type": "table", "desc": "Profil."}, "isPaint": {"type": "boolean", "desc": "Même sens que pour addCenterline."}},
+      "desc": "Adds a lane separation line (material p.laneMarkingsMat) between each pair of adjacent road lanes of the same direction.",
+      "params": {
+        "p": {
+          "type": "table",
+          "desc": "Profile."
+        },
+        "isPaint": {
+          "type": "boolean",
+          "desc": "Same meaning as for addCenterline."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "addLightTreadToLanes": {
-      "desc": "Ajoute à chaque voie 'road_lane' ou 'shoulder' comprise entre lMin et lMax une couche de traces de pneus légères (matériau m_tread_marks_clean) sur toute la longueur.",
+      "desc": "Adds to each 'road_lane' or 'shoulder' lane between lMin and lMax a light tire tracks layer (material m_tread_marks_clean) over the whole length.",
       "params": {
-        "p": {"type": "table", "desc": "Profil."},
-        "fadeS": {"type": "number", "desc": "Longueur de fondu au début (m)."},
-        "fadeE": {"type": "number", "desc": "Longueur de fondu à la fin (m)."},
-        "lMin": {"type": "integer", "desc": "Première clé de voie."},
-        "lMax": {"type": "integer", "desc": "Dernière clé de voie."}
+        "p": {
+          "type": "table",
+          "desc": "Profile."
+        },
+        "fadeS": {
+          "type": "number",
+          "desc": "Fade length at the start (m)."
+        },
+        "fadeE": {
+          "type": "number",
+          "desc": "Fade length at the end (m)."
+        },
+        "lMin": {
+          "type": "integer",
+          "desc": "First lane key."
+        },
+        "lMax": {
+          "type": "integer",
+          "desc": "Last lane key."
+        }
       },
       "returns": [],
       "internal": false
     },
     "autoPaintLines": {
-      "desc": "Réinitialise prof.layers puis crée automatiquement ligne centrale, lignes de bord, ligne d'arrêt de fin et lignes de séparation de voies d'après les paramètres du profil (conditionEdgesL/R, conditionEndStopE, edgeLineGapL/R, continueLinesToEnd).",
-      "params": {"prof": {"type": "table", "desc": "Profil dont les couches sont recréées."}},
+      "desc": "Resets prof.layers then automatically creates centerline, edge lines, end stop line and lane separation lines from the profile parameters (conditionEdgesL/R, conditionEndStopE, edgeLineGapL/R, continueLinesToEnd).",
+      "params": {
+        "prof": {
+          "type": "table",
+          "desc": "Profile whose layers are recreated."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "autoEdgeBlending": {
-      "desc": "Ajoute des couches de fondu de bord (largeur 2.0, longueur de texture 18, décalage 0.5 m) pour chaque section de route ou d'accotement dont le côté n'est pas occupé par une autre voie autre qu'un îlot.",
+      "desc": "Adds edge fade layers (width 2.0, texture length 18, offset 0.5 m) for each road or shoulder section whose side is not occupied by another lane other than an island.",
       "params": {
-        "prof": {"type": "table", "desc": "Profil."},
-        "isLeft": {"type": "boolean", "desc": "Créer les fondus du côté gauche."},
-        "isRight": {"type": "boolean", "desc": "Créer les fondus du côté droit."},
-        "mat": {"type": "string|nil", "desc": "Matériau (défaut m_road_asphalt_edge)."}
+        "prof": {
+          "type": "table",
+          "desc": "Profile."
+        },
+        "isLeft": {
+          "type": "boolean",
+          "desc": "Create the left-side fades."
+        },
+        "isRight": {
+          "type": "boolean",
+          "desc": "Create the right-side fades."
+        },
+        "mat": {
+          "type": "string|nil",
+          "desc": "Material (default m_road_asphalt_edge)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "layerChangePriority": {
-      "desc": "Échange la couche i avec sa voisine : avec dir == 'raise' elle monte (indice i - 1), sinon elle descend (indice i + 1).",
-      "params": {"p": {"type": "table", "desc": "Profil."}, "i": {"type": "integer", "desc": "Indice de la couche."}, "dir": {"type": "string", "desc": "'raise' ou toute autre valeur pour descendre."}},
+      "desc": "Swaps layer i with its neighbor: with dir == 'raise' it moves up (index i - 1), otherwise it moves down (index i + 1).",
+      "params": {
+        "p": {
+          "type": "table",
+          "desc": "Profile."
+        },
+        "i": {
+          "type": "integer",
+          "desc": "Layer index."
+        },
+        "dir": {
+          "type": "string",
+          "desc": "'raise' or any other value to move down."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "addLayer": {
-      "desc": "Insère une nouvelle couche vide ('new layer') du profil, au-dessus ou au-dessous de l'indice i.",
-      "params": {"p": {"type": "table", "desc": "Profil."}, "i": {"type": "integer", "desc": "Indice de référence."}, "dir": {"type": "string", "desc": "'above' pour insérer avant l'indice i, sinon après (déduit du code)."}},
+      "desc": "Inserts a new empty layer ('new layer') into the profile, above or below index i.",
+      "params": {
+        "p": {
+          "type": "table",
+          "desc": "Profile."
+        },
+        "i": {
+          "type": "integer",
+          "desc": "Reference index."
+        },
+        "dir": {
+          "type": "string",
+          "desc": "'above' to insert before index i, otherwise after (inferred from code)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getIdFromName": {
-      "desc": "Renvoie l'indice du profil de M.profiles dont le champ name est égal à name (comparaison ==), ou nil.",
-      "params": {"name": {"type": "any", "desc": "Nom recherché, comparé tel quel au champ name des profils."}},
-      "returns": [{"type": "integer|nil", "desc": "Indice dans profiles."}],
+      "desc": "Returns the index of the profile in M.profiles whose name field equals name (== comparison), or nil.",
+      "params": {
+        "name": {
+          "type": "any",
+          "desc": "Name searched, compared as is against the profiles' name field."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Index in profiles."
+        }
+      ],
       "internal": false
     },
     "getProfileFromName": {
-      "desc": "Renvoie le profil dont le nom correspond à name (voir getIdFromName), ou nil.",
-      "params": {"name": {"type": "any", "desc": "Nom du profil."}},
-      "returns": [{"type": "table|nil", "desc": "Profil trouvé."}],
+      "desc": "Returns the profile whose name matches name (see getIdFromName), or nil.",
+      "params": {
+        "name": {
+          "type": "any",
+          "desc": "Profile name."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Profile found."
+        }
+      ],
       "internal": false
     },
     "updateLaneFlags": {
-      "desc": "Met à jour les drapeaux du module (isCustom : une voie de type 'mesh' existe, isSidewalk : une voie 'sidewalk' existe), utilisés par l'interface pour savoir quels meshes statiques sont présents.",
-      "params": {"p": {"type": "table", "desc": "Profil examiné."}},
+      "desc": "Updates the module flags (isCustom: a 'mesh' type lane exists, isSidewalk: a 'sidewalk' lane exists), used by the UI to know which static meshes are present.",
+      "params": {
+        "p": {
+          "type": "table",
+          "desc": "Profile examined."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "updateToNewTemplate": {
-      "desc": "Vide le profil de la route et le remplace par une copie du modèle templateName en conservant son nom d'origine.",
-      "params": {"road": {"type": "table", "desc": "Route dont le profil est remplacé."}, "templateName": {"type": "any", "desc": "Nom du modèle (voir getProfileFromName)."}},
+      "desc": "Empties the road's profile and replaces it with a copy of the templateName template, keeping its original name.",
+      "params": {
+        "road": {
+          "type": "table",
+          "desc": "Road whose profile is replaced."
+        },
+        "templateName": {
+          "type": "any",
+          "desc": "Template name (see getProfileFromName)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "cycleLaneType": {
-      "desc": "Passe au type de voie suivant : road_lane -> sidewalk -> shoulder -> island -> road_lane. Tout autre type est renvoyé inchangé.",
-      "params": {"t": {"type": "string", "desc": "Type de voie courant."}},
-      "returns": [{"type": "string", "desc": "Type suivant."}],
+      "desc": "Moves to the next lane type: road_lane -> sidewalk -> shoulder -> island -> road_lane. Any other type is returned unchanged.",
+      "params": {
+        "t": {
+          "type": "string",
+          "desc": "Current lane type."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Next type."
+        }
+      ],
       "internal": false
     },
     "cycleLaneTypeBack": {
-      "desc": "Passe au type de voie précédent (ordre inverse de cycleLaneType).",
-      "params": {"t": {"type": "string", "desc": "Type de voie courant."}},
-      "returns": [{"type": "string", "desc": "Type précédent."}],
+      "desc": "Moves to the previous lane type (reverse order of cycleLaneType).",
+      "params": {
+        "t": {
+          "type": "string",
+          "desc": "Current lane type."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Previous type."
+        }
+      ],
       "internal": false
     },
     "computeLaneKeys": {
-      "desc": "Renvoie les clés de voies existantes, de la plus petite à la plus grande, avec en plus les listes séparées des clés de gauche et de droite.",
-      "params": {"profile": {"type": "table", "desc": "Profil."}},
-      "returns": [{"type": "integer[]", "desc": "Toutes les clés triées."}, {"type": "integer[]", "desc": "Clés de gauche."}, {"type": "integer[]", "desc": "Clés de droite."}],
+      "desc": "Returns the existing lane keys, from smallest to largest, plus the separate lists of left and right keys.",
+      "params": {
+        "profile": {
+          "type": "table",
+          "desc": "Profile."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer[]",
+          "desc": "All keys, sorted."
+        },
+        {
+          "type": "integer[]",
+          "desc": "Left keys."
+        },
+        {
+          "type": "integer[]",
+          "desc": "Right keys."
+        }
+      ],
       "internal": false
     },
     "getOrderedLanes": {
-      "desc": "Renvoie les clés de voies triées du plus petit au plus grand et leur nombre total.",
-      "params": {"profile": {"type": "table", "desc": "Profil."}},
-      "returns": [{"type": "integer[]", "desc": "Clés triées."}, {"type": "integer", "desc": "Nombre de voies."}],
+      "desc": "Returns the lane keys sorted from smallest to largest and their total count.",
+      "params": {
+        "profile": {
+          "type": "table",
+          "desc": "Profile."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer[]",
+          "desc": "Sorted keys."
+        },
+        {
+          "type": "integer",
+          "desc": "Number of lanes."
+        }
+      ],
       "internal": false
     },
     "getNumLanesLR": {
-      "desc": "Compte les voies de gauche et de droite (tous types confondus).",
-      "params": {"profile": {"type": "table", "desc": "Profil."}},
-      "returns": [{"type": "integer", "desc": "Voies à gauche."}, {"type": "integer", "desc": "Voies à droite."}],
+      "desc": "Counts the left and right lanes (all types combined).",
+      "params": {
+        "profile": {
+          "type": "table",
+          "desc": "Profile."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Lanes on the left."
+        },
+        {
+          "type": "integer",
+          "desc": "Lanes on the right."
+        }
+      ],
       "internal": false
     },
     "getNumRoadLanesLR": {
-      "desc": "Compte les voies de gauche et de droite de type 'road_lane' ou 'shoulder' uniquement.",
-      "params": {"profile": {"type": "table", "desc": "Profil."}},
-      "returns": [{"type": "integer", "desc": "Voies de route à gauche."}, {"type": "integer", "desc": "Voies de route à droite."}],
+      "desc": "Counts only the left and right lanes of type 'road_lane' or 'shoulder'.",
+      "params": {
+        "profile": {
+          "type": "table",
+          "desc": "Profile."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Road lanes on the left."
+        },
+        {
+          "type": "integer",
+          "desc": "Road lanes on the right."
+        }
+      ],
       "internal": false
     },
     "isProfileValidForMidJctPerfect": {
-      "desc": "Indique si le profil convient à une jonction automatique parfaitement ajustée (route tirée au milieu d'une autre) : autant de voies à gauche qu'à droite, aucun îlot, 0 ou 2 trottoirs exactement placés aux bords et adjacents à une voie de route.",
-      "params": {"profile": {"type": "table", "desc": "Profil testé."}},
-      "returns": [{"type": "boolean|nil", "desc": "true si valide, false ou nil sinon (nil si asymétrique)."}],
+      "desc": "Indicates whether the profile is suitable for a perfectly fitted automatic junction (road drawn into the middle of another): as many lanes on the left as on the right, no island, 0 or exactly 2 sidewalks placed at the edges and adjacent to a road lane.",
+      "params": {
+        "profile": {
+          "type": "table",
+          "desc": "Profile tested."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true if valid, false or nil otherwise (nil if asymmetric)."
+        }
+      ],
       "internal": false
     },
     "areSidewalksPresent": {
-      "desc": "Indique si le profil contient au moins une voie de type 'sidewalk'.",
-      "params": {"p": {"type": "table", "desc": "Profil."}},
-      "returns": [{"type": "boolean", "desc": "true si un trottoir existe."}],
+      "desc": "Indicates whether the profile contains at least one 'sidewalk' type lane.",
+      "params": {
+        "p": {
+          "type": "table",
+          "desc": "Profile."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a sidewalk exists."
+        }
+      ],
       "internal": false
     },
     "getWAndHByKey": {
-      "desc": "Renvoie trois tables indexées par clé de voie : largeurs, hauteurs gauches et hauteurs droites, chacune sous forme de pointeurs ImGui (im.FloatPtr) prêts à être édités.",
-      "params": {"profile": {"type": "table", "desc": "Profil."}},
-      "returns": [{"type": "table<integer, cdata>", "desc": "Largeurs."}, {"type": "table<integer, cdata>", "desc": "Hauteurs gauches (heightL)."}, {"type": "table<integer, cdata>", "desc": "Hauteurs droites (heightR)."}],
+      "desc": "Returns three tables keyed by lane key: widths, left heights and right heights, each as ImGui pointers (im.FloatPtr) ready to be edited.",
+      "params": {
+        "profile": {
+          "type": "table",
+          "desc": "Profile."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, cdata>",
+          "desc": "Widths."
+        },
+        {
+          "type": "table<integer, cdata>",
+          "desc": "Left heights (heightL)."
+        },
+        {
+          "type": "table<integer, cdata>",
+          "desc": "Right heights (heightR)."
+        }
+      ],
       "internal": false
     },
     "getWidth": {
-      "desc": "Somme des largeurs de toutes les voies du profil.",
-      "params": {"profile": {"type": "table", "desc": "Profil."}},
-      "returns": [{"type": "number", "desc": "Largeur totale en mètres."}],
+      "desc": "Sum of the widths of all lanes of the profile.",
+      "params": {
+        "profile": {
+          "type": "table",
+          "desc": "Profile."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Total width in meters."
+        }
+      ],
       "internal": false
     },
     "getLaneFlags": {
-      "desc": "Renvoie l'état des drapeaux de voies du module : { isCustom, isSidewalk } (voir updateLaneFlags).",
+      "desc": "Returns the state of the module's lane flags: { isCustom, isSidewalk } (see updateLaneFlags).",
       "params": {},
-      "returns": [{"type": "table", "desc": "{ isCustom = boolean, isSidewalk = boolean }."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ isCustom = boolean, isSidewalk = boolean }."
+        }
+      ],
       "internal": false
     },
     "createCustomImportProfile": {
-      "desc": "Crée un profil pour l'import OpenDRIVE : chaque voie de lanes reçoit le type natif correspondant (driving, shoulder, parking, stop, median, entry/exit, rampes, slipLane… -> road_lane ; walking -> sidewalk ; restricted et none -> island ; autre -> road_lane) avec une largeur par défaut de 3.5 m (les vraies largeurs sont ajoutées ensuite nœud par nœud). Ajoute les lignes de peinture automatiques.",
-      "params": {"lanes": {"type": "table", "desc": "Table clé de voie -> { type = type OpenDRIVE (chaîne) }."}},
-      "returns": [{"type": "table", "desc": "Le profil créé."}, {"type": "table", "desc": "Table clé de voie -> type natif."}],
+      "desc": "Creates a profile for OpenDRIVE import: each lane of lanes gets the matching native type (driving, shoulder, parking, stop, median, entry/exit, ramps, slipLane... -> road_lane; walking -> sidewalk; restricted and none -> island; other -> road_lane) with a default width of 3.5 m (the real widths are added afterwards node by node). Adds the automatic paint lines.",
+      "params": {
+        "lanes": {
+          "type": "table",
+          "desc": "Table lane key -> { type = OpenDRIVE type (string) }."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The created profile."
+        },
+        {
+          "type": "table",
+          "desc": "Table lane key -> native type."
+        }
+      ],
       "internal": false
     },
     "createProfileFromTemplate": {
-      "desc": "Copie le modèle de profil templateName vers un nouveau profil (paramètres de style, voies et couches copiés en profondeur).",
+      "desc": "Copies the profile template templateName to a new profile (style parameters, lanes and layers deep-copied).",
       "params": {
-        "templateName": {"type": "any", "desc": "Nom du modèle à copier (voir getProfileFromName)."},
-        "newName": {"type": "any|nil", "desc": "Nom du nouveau profil (défaut un ArrayChar 'New Profile')."}
+        "templateName": {
+          "type": "any",
+          "desc": "Name of the template to copy (see getProfileFromName)."
+        },
+        "newName": {
+          "type": "any|nil",
+          "desc": "Name of the new profile (default an ArrayChar 'New Profile')."
+        }
       },
-      "returns": [{"type": "table", "desc": "Nouveau profil."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "New profile."
+        }
+      ],
       "internal": false
     },
     "createProfileFromDecalData": {
-      "desc": "Crée un profil urbain simple (voies de route de 3.5 m, hauteur 0.01) à partir des métadonnées d'une route à décalque (decal road) créée avec d'autres outils, avec peinture automatique.",
-      "params": {"numLeftLanes": {"type": "integer", "desc": "Nombre de voies à gauche."}, "numRightLanes": {"type": "integer", "desc": "Nombre de voies à droite."}},
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "desc": "Creates a simple urban profile (road lanes of 3.5 m, height 0.01) from the metadata of a decal road created with other tools, with automatic paint.",
+      "params": {
+        "numLeftLanes": {
+          "type": "integer",
+          "desc": "Number of lanes on the left."
+        },
+        "numRightLanes": {
+          "type": "integer",
+          "desc": "Number of lanes on the right."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createOverlayProfile": {
-      "desc": "Crée le profil des routes de superposition de jonction (voir overlays.lua), sans couche.",
-      "params": {"width": {"type": "number", "desc": "Largeur de la voie (m)."}},
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "desc": "Creates the profile of the junction overlay roads (see overlays.lua), with no layer.",
+      "params": {
+        "width": {
+          "type": "number",
+          "desc": "Lane width (m)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createBridgeProfile": {
-      "desc": "Crée le profil d'un pont simple : deux voies de route de largeur width et dont les hauteurs heightL et heightR valent depth.",
-      "params": {"width": {"type": "number", "desc": "Largeur de chaque voie (m)."}, "depth": {"type": "number", "desc": "Épaisseur/hauteur du tablier (m)."}},
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "desc": "Creates the profile of a simple bridge: two road lanes of width width whose heights heightL and heightR equal depth.",
+      "params": {
+        "width": {
+          "type": "number",
+          "desc": "Width of each lane (m)."
+        },
+        "depth": {
+          "type": "number",
+          "desc": "Deck thickness/height (m)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createProfileForJctRoad": {
-      "desc": "Crée le profil d'une route de jonction à double sens : numLeftLanes voies à gauche, numRightLanes à droite, plus éventuellement un trottoir de chaque côté. Ajoute peinture et fondus de bord (les fondus ne sont créés que s'il n'y a pas de trottoirs).",
+      "desc": "Creates the profile of a two-way junction road: numLeftLanes lanes on the left, numRightLanes on the right, plus optionally a sidewalk on each side. Adds paint and edge fades (the fades are only created if there are no sidewalks).",
       "params": {
-        "numLeftLanes": {"type": "integer", "desc": "Voies à gauche."},
-        "numRightLanes": {"type": "integer", "desc": "Voies à droite."},
-        "width": {"type": "number", "desc": "Largeur des voies (m)."},
-        "sidewalkWidth": {"type": "number", "desc": "Largeur des trottoirs (m)."},
-        "sidewalkHeight": {"type": "number", "desc": "Hauteur des trottoirs (m)."},
-        "isSidewalk": {"type": "boolean", "desc": "Ajouter les trottoirs."},
-        "mat": {"type": "string|nil", "desc": "Matériau des fondus de bord."}
+        "numLeftLanes": {
+          "type": "integer",
+          "desc": "Lanes on the left."
+        },
+        "numRightLanes": {
+          "type": "integer",
+          "desc": "Lanes on the right."
+        },
+        "width": {
+          "type": "number",
+          "desc": "Lane width (m)."
+        },
+        "sidewalkWidth": {
+          "type": "number",
+          "desc": "Sidewalk width (m)."
+        },
+        "sidewalkHeight": {
+          "type": "number",
+          "desc": "Sidewalk height (m)."
+        },
+        "isSidewalk": {
+          "type": "boolean",
+          "desc": "Add the sidewalks."
+        },
+        "mat": {
+          "type": "string|nil",
+          "desc": "Edge fade material."
+        }
       },
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createProfileForJctRoad1Way": {
-      "desc": "Crée le profil d'une route de jonction à sens unique de numLanes voies, avec trottoirs éventuels.",
+      "desc": "Creates the profile of a one-way junction road with numLanes lanes, with optional sidewalks.",
       "params": {
-        "numLanes": {"type": "integer", "desc": "Nombre de voies."},
-        "width": {"type": "number", "desc": "Largeur des voies (m)."},
-        "sidewalkWidth": {"type": "number", "desc": "Largeur des trottoirs (m)."},
-        "sidewalkHeight": {"type": "number", "desc": "Hauteur des trottoirs (m)."},
-        "isSidewalk": {"type": "boolean", "desc": "Ajouter les trottoirs."},
-        "mat": {"type": "string|nil", "desc": "Matériau des fondus de bord."}
+        "numLanes": {
+          "type": "integer",
+          "desc": "Number of lanes."
+        },
+        "width": {
+          "type": "number",
+          "desc": "Lane width (m)."
+        },
+        "sidewalkWidth": {
+          "type": "number",
+          "desc": "Sidewalk width (m)."
+        },
+        "sidewalkHeight": {
+          "type": "number",
+          "desc": "Sidewalk height (m)."
+        },
+        "isSidewalk": {
+          "type": "boolean",
+          "desc": "Add the sidewalks."
+        },
+        "mat": {
+          "type": "string|nil",
+          "desc": "Edge fade material."
+        }
       },
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createProfileForJctRoadYSpecial": {
-      "desc": "Crée le profil de la route de raccord serrée des jonctions en Y (voies de gauche et de droite plus un trottoir à droite, dont le côté de bordure peut être inversé).",
+      "desc": "Creates the profile of the tight connecting road of Y junctions (left and right lanes plus a sidewalk on the right, whose curb side can be reversed).",
       "params": {
-        "numLeftLanes": {"type": "integer", "desc": "Voies à gauche."},
-        "numRightLanes": {"type": "integer", "desc": "Voies à droite."},
-        "width": {"type": "number", "desc": "Largeur des voies (m)."},
-        "sidewalkWidth": {"type": "number", "desc": "Largeur du trottoir (m)."},
-        "sidewalkHeight": {"type": "number", "desc": "Hauteur du trottoir (m)."},
-        "isSidewalk": {"type": "boolean", "desc": "Ajouter le trottoir."},
-        "isFlipKerb": {"type": "boolean", "desc": "Inverser le côté de la bordure du trottoir (isLeftSide)."},
-        "mat": {"type": "string|nil", "desc": "Matériau des fondus de bord."}
+        "numLeftLanes": {
+          "type": "integer",
+          "desc": "Lanes on the left."
+        },
+        "numRightLanes": {
+          "type": "integer",
+          "desc": "Lanes on the right."
+        },
+        "width": {
+          "type": "number",
+          "desc": "Lane width (m)."
+        },
+        "sidewalkWidth": {
+          "type": "number",
+          "desc": "Sidewalk width (m)."
+        },
+        "sidewalkHeight": {
+          "type": "number",
+          "desc": "Sidewalk height (m)."
+        },
+        "isSidewalk": {
+          "type": "boolean",
+          "desc": "Add the sidewalk."
+        },
+        "isFlipKerb": {
+          "type": "boolean",
+          "desc": "Reverse the curb side of the sidewalk (isLeftSide)."
+        },
+        "mat": {
+          "type": "string|nil",
+          "desc": "Edge fade material."
+        }
       },
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createProfileForJctRoad_SW": {
-      "desc": "Crée le profil d'une route de jonction avec un seul trottoir, du côté gauche ou droit.",
+      "desc": "Creates the profile of a junction road with a single sidewalk, on the left or right side.",
       "params": {
-        "numLeftLanes": {"type": "integer", "desc": "Voies à gauche."},
-        "numRightLanes": {"type": "integer", "desc": "Voies à droite."},
-        "width": {"type": "number", "desc": "Largeur des voies (m)."},
-        "sidewalkWidth": {"type": "number", "desc": "Largeur du trottoir (m)."},
-        "sidewalkHeight": {"type": "number", "desc": "Hauteur du trottoir (m)."},
-        "isLeftSide": {"type": "boolean", "desc": "Trottoir sur le côté gauche si vrai, sinon à droite."},
-        "mat": {"type": "string|nil", "desc": "Matériau des fondus de bord."}
+        "numLeftLanes": {
+          "type": "integer",
+          "desc": "Lanes on the left."
+        },
+        "numRightLanes": {
+          "type": "integer",
+          "desc": "Lanes on the right."
+        },
+        "width": {
+          "type": "number",
+          "desc": "Lane width (m)."
+        },
+        "sidewalkWidth": {
+          "type": "number",
+          "desc": "Sidewalk width (m)."
+        },
+        "sidewalkHeight": {
+          "type": "number",
+          "desc": "Sidewalk height (m)."
+        },
+        "isLeftSide": {
+          "type": "boolean",
+          "desc": "Sidewalk on the left side if true, otherwise on the right."
+        },
+        "mat": {
+          "type": "string|nil",
+          "desc": "Edge fade material."
+        }
       },
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createSidewalkOnlyProfile": {
-      "desc": "Crée un profil formé d'une unique voie de trottoir en position 1.",
+      "desc": "Creates a profile made of a single sidewalk lane at position 1.",
       "params": {
-        "sidewalkWidth": {"type": "number", "desc": "Largeur (m)."},
-        "sidewalkHeight": {"type": "number", "desc": "Hauteur (m)."},
-        "isFlipKerb": {"type": "boolean|nil", "desc": "Inverse le côté de la bordure (faux par défaut)."}
+        "sidewalkWidth": {
+          "type": "number",
+          "desc": "Width (m)."
+        },
+        "sidewalkHeight": {
+          "type": "number",
+          "desc": "Height (m)."
+        },
+        "isFlipKerb": {
+          "type": "boolean|nil",
+          "desc": "Reverses the curb side (false by default)."
+        }
       },
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createRoundaboutProfile": {
-      "desc": "Crée le profil des routes circulaires d'un rond-point (numRBLanes voies de largeur laneWidthRB).",
+      "desc": "Creates the profile of the circular roads of a roundabout (numRBLanes lanes of width laneWidthRB).",
       "params": {
-        "numRBLanes": {"type": "integer", "desc": "Nombre de voies de l'anneau."},
-        "laneWidthRB": {"type": "number", "desc": "Largeur d'une voie (m)."},
-        "mat": {"type": "string|nil", "desc": "Matériau des fondus de bord."}
+        "numRBLanes": {
+          "type": "integer",
+          "desc": "Number of lanes of the ring."
+        },
+        "laneWidthRB": {
+          "type": "number",
+          "desc": "Width of one lane (m)."
+        },
+        "mat": {
+          "type": "string|nil",
+          "desc": "Edge fade material."
+        }
       },
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createProfileForJctRoadHwyCap": {
-      "desc": "Crée le profil des sections d'extrémité (début et fin) d'une jonction d'autoroute : voies de route de chaque côté, deux accotements et un terre-plein central (îlot de largeur cResWidth).",
+      "desc": "Creates the profile of the end sections (start and end) of a highway junction: road lanes on each side, two shoulders and a central reservation (island of width cResWidth).",
       "params": {
-        "numLanes": {"type": "integer", "desc": "Nombre de voies par sens."},
-        "laneWidth": {"type": "number", "desc": "Largeur d'une voie (m)."},
-        "cResWidth": {"type": "number", "desc": "Largeur du terre-plein central (m)."},
-        "hardWidth": {"type": "number", "desc": "Largeur de la bande d'arrêt d'urgence (m)."},
-        "mat": {"type": "string|nil", "desc": "Matériau des fondus de bord."}
+        "numLanes": {
+          "type": "integer",
+          "desc": "Number of lanes per direction."
+        },
+        "laneWidth": {
+          "type": "number",
+          "desc": "Width of one lane (m)."
+        },
+        "cResWidth": {
+          "type": "number",
+          "desc": "Width of the central reservation (m)."
+        },
+        "hardWidth": {
+          "type": "number",
+          "desc": "Width of the emergency lane (m)."
+        },
+        "mat": {
+          "type": "string|nil",
+          "desc": "Edge fade material."
+        }
       },
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createProfileForJctRoadHwyCap1W": {
-      "desc": "Crée le profil d'extrémité d'une jonction d'autoroute à sens unique (sans terre-plein central).",
+      "desc": "Creates the end profile of a one-way highway junction (without central reservation).",
       "params": {
-        "numLanes": {"type": "integer", "desc": "Nombre de voies."},
-        "laneWidth": {"type": "number", "desc": "Largeur d'une voie (m)."},
-        "hardWidth": {"type": "number", "desc": "Largeur de la bande d'arrêt d'urgence (m)."},
-        "mat": {"type": "string|nil", "desc": "Matériau des fondus de bord."}
+        "numLanes": {
+          "type": "integer",
+          "desc": "Number of lanes."
+        },
+        "laneWidth": {
+          "type": "number",
+          "desc": "Width of one lane (m)."
+        },
+        "hardWidth": {
+          "type": "number",
+          "desc": "Width of the emergency lane (m)."
+        },
+        "mat": {
+          "type": "string|nil",
+          "desc": "Edge fade material."
+        }
       },
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createProfileForJctRoadHwyCapUrban": {
-      "desc": "Crée le profil de la partie urbaine d'une jonction de transition autoroute-urbain (voies, trottoirs éventuels, sens unique ou double).",
+      "desc": "Creates the profile of the urban part of a highway-urban transition junction (lanes, optional sidewalks, one-way or two-way).",
       "params": {
-        "numLanes": {"type": "integer", "desc": "Nombre de voies."},
-        "laneWidth": {"type": "number", "desc": "Largeur d'une voie (m)."},
-        "isSidewalk": {"type": "boolean", "desc": "Ajouter des trottoirs."},
-        "sidewalkWidth": {"type": "number", "desc": "Largeur des trottoirs (m)."},
-        "sidewalkHeight": {"type": "number", "desc": "Hauteur des trottoirs (m)."},
-        "isOneWay": {"type": "boolean", "desc": "Route à sens unique."},
-        "mat": {"type": "string|nil", "desc": "Matériau des fondus de bord."}
+        "numLanes": {
+          "type": "integer",
+          "desc": "Number of lanes."
+        },
+        "laneWidth": {
+          "type": "number",
+          "desc": "Width of one lane (m)."
+        },
+        "isSidewalk": {
+          "type": "boolean",
+          "desc": "Add sidewalks."
+        },
+        "sidewalkWidth": {
+          "type": "number",
+          "desc": "Sidewalk width (m)."
+        },
+        "sidewalkHeight": {
+          "type": "number",
+          "desc": "Sidewalk height (m)."
+        },
+        "isOneWay": {
+          "type": "boolean",
+          "desc": "One-way road."
+        },
+        "mat": {
+          "type": "string|nil",
+          "desc": "Edge fade material."
+        }
       },
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createProfileForJctRoadHwyUrbanTrans": {
-      "desc": "Crée le profil des sections de transition (évasement) d'une jonction autoroute-urbain, à sens unique ou double.",
+      "desc": "Creates the profile of the transition (flaring) sections of a highway-urban junction, one-way or two-way.",
       "params": {
-        "numLanes": {"type": "integer", "desc": "Nombre de voies."},
-        "laneWidth": {"type": "number", "desc": "Largeur d'une voie (m)."},
-        "cResWidth": {"type": "number", "desc": "Largeur du terre-plein central (m)."},
-        "hardWidth": {"type": "number", "desc": "Largeur de la bande d'arrêt d'urgence (m)."},
-        "isOneWay": {"type": "boolean", "desc": "Route à sens unique."},
-        "mat": {"type": "string|nil", "desc": "Matériau des fondus de bord."}
+        "numLanes": {
+          "type": "integer",
+          "desc": "Number of lanes."
+        },
+        "laneWidth": {
+          "type": "number",
+          "desc": "Width of one lane (m)."
+        },
+        "cResWidth": {
+          "type": "number",
+          "desc": "Width of the central reservation (m)."
+        },
+        "hardWidth": {
+          "type": "number",
+          "desc": "Width of the emergency lane (m)."
+        },
+        "isOneWay": {
+          "type": "boolean",
+          "desc": "One-way road."
+        },
+        "mat": {
+          "type": "string|nil",
+          "desc": "Edge fade material."
+        }
       },
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createProfileForJctRoadHwyS2": {
-      "desc": "Crée le profil de la section 2 d'une jonction d'autoroute (accotements décalés d'une voie : clés extrêmes à -numLanes-3 et numLanes+3).",
+      "desc": "Creates the profile of section 2 of a highway junction (shoulders shifted by one lane: extreme keys at -numLanes-3 and numLanes+3).",
       "params": {
-        "numLanes": {"type": "integer", "desc": "Nombre de voies."},
-        "laneWidth": {"type": "number", "desc": "Largeur d'une voie (m)."},
-        "cResWidth": {"type": "number", "desc": "Largeur du terre-plein central (m)."},
-        "hardWidth": {"type": "number", "desc": "Largeur de la bande d'arrêt d'urgence (m)."},
-        "mat": {"type": "string|nil", "desc": "Matériau des fondus de bord."}
+        "numLanes": {
+          "type": "integer",
+          "desc": "Number of lanes."
+        },
+        "laneWidth": {
+          "type": "number",
+          "desc": "Width of one lane (m)."
+        },
+        "cResWidth": {
+          "type": "number",
+          "desc": "Width of the central reservation (m)."
+        },
+        "hardWidth": {
+          "type": "number",
+          "desc": "Width of the emergency lane (m)."
+        },
+        "mat": {
+          "type": "string|nil",
+          "desc": "Edge fade material."
+        }
       },
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createProfileForJctRoadHwyS3": {
-      "desc": "Crée le profil de la section 3 d'une jonction d'autoroute.",
+      "desc": "Creates the profile of section 3 of a highway junction.",
       "params": {
-        "numLanes": {"type": "integer", "desc": "Nombre de voies."},
-        "laneWidth": {"type": "number", "desc": "Largeur d'une voie (m)."},
-        "cResWidth": {"type": "number", "desc": "Largeur du terre-plein central (m)."},
-        "hardWidth": {"type": "number", "desc": "Largeur de la bande d'arrêt d'urgence (m)."},
-        "mat": {"type": "string|nil", "desc": "Matériau des fondus de bord."}
+        "numLanes": {
+          "type": "integer",
+          "desc": "Number of lanes."
+        },
+        "laneWidth": {
+          "type": "number",
+          "desc": "Width of one lane (m)."
+        },
+        "cResWidth": {
+          "type": "number",
+          "desc": "Width of the central reservation (m)."
+        },
+        "hardWidth": {
+          "type": "number",
+          "desc": "Width of the emergency lane (m)."
+        },
+        "mat": {
+          "type": "string|nil",
+          "desc": "Edge fade material."
+        }
       },
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "createProfileForJctRoadHwyExit": {
-      "desc": "Crée le profil des routes de sortie à sens unique d'une jonction d'autoroute (deux voies de route, en positions 1 et 2).",
+      "desc": "Creates the profile of the one-way exit roads of a highway junction (two road lanes, at positions 1 and 2).",
       "params": {
-        "laneWidth": {"type": "number", "desc": "Largeur d'une voie (m)."},
-        "hardWidth": {"type": "number", "desc": "Largeur de la bande d'arrêt d'urgence (m)."},
-        "mat": {"type": "string|nil", "desc": "Matériau des fondus de bord."}
+        "laneWidth": {
+          "type": "number",
+          "desc": "Width of one lane (m)."
+        },
+        "hardWidth": {
+          "type": "number",
+          "desc": "Width of the emergency lane (m)."
+        },
+        "mat": {
+          "type": "string|nil",
+          "desc": "Edge fade material."
+        }
       },
-      "returns": [{"type": "table", "desc": "Profil créé."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Profile created."
+        }
+      ],
       "internal": false
     },
     "copyProfile": {
-      "desc": "Copie un profil en profondeur (nouveaux pointeurs ImGui, voies et couches) ; le nom est repris tel quel (même objet).",
-      "params": {"template": {"type": "table", "desc": "Profil à copier."}},
-      "returns": [{"type": "table", "desc": "Copie du profil."}],
+      "desc": "Deep-copies a profile (new ImGui pointers, lanes and layers); the name is kept as is (same object).",
+      "params": {
+        "template": {
+          "type": "table",
+          "desc": "Profile to copy."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy of the profile."
+        }
+      ],
       "internal": false
     },
     "goToProfileView": {
-      "desc": "Mémorise la pose de la caméra, bascule en caméra libre et la place à la pose d'édition de profil. Ne fait rien si on est déjà en vue profil (le temps est alors renvoyé inchangé).",
+      "desc": "Stores the camera pose, switches to free camera and places it at the profile editing pose. Does nothing if already in profile view (the time is then returned unchanged).",
       "params": {
-        "timer": {"type": "table", "desc": "Chronomètre (objet avec stopAndReset) remis à zéro."},
-        "time": {"type": "number", "desc": "Temps courant de l'animation."}
+        "timer": {
+          "type": "table",
+          "desc": "Timer (object with stopAndReset) reset to zero."
+        },
+        "time": {
+          "type": "number",
+          "desc": "Current animation time."
+        }
       },
-      "returns": [{"type": "number", "desc": "0.0 si la vue vient d'être activée, sinon time."}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "0.0 if the view has just been activated, otherwise time."
+        }
+      ],
       "internal": false
     },
     "goToOldView": {
-      "desc": "Remet la caméra à la pose mémorisée avant la vue profil (si elle existe) et quitte la vue profil.",
+      "desc": "Returns the camera to the pose stored before the profile view (if it exists) and leaves the profile view.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "removeLane": {
-      "desc": "Supprime une voie du profil d'indice selectedProfileIdx dans M.profiles, décale les voies suivantes pour ne pas laisser de trou, puis retire les couches qui référencent des voies inexistantes.",
+      "desc": "Removes a lane from the profile at index selectedProfileIdx in M.profiles, shifts the following lanes so as not to leave a gap, then removes the layers that reference nonexistent lanes.",
       "params": {
-        "selectedProfileIdx": {"type": "integer", "desc": "Indice du profil dans profiles."},
-        "selectedLaneIdx": {"type": "integer", "desc": "Clé de la voie à supprimer."},
-        "side": {"type": "string", "desc": "'left' ou 'right'."}
+        "selectedProfileIdx": {
+          "type": "integer",
+          "desc": "Index of the profile in profiles."
+        },
+        "selectedLaneIdx": {
+          "type": "integer",
+          "desc": "Key of the lane to remove."
+        },
+        "side": {
+          "type": "string",
+          "desc": "'left' or 'right'."
+        }
       },
       "returns": [],
       "internal": false
     },
     "addLane": {
-      "desc": "Ajoute une voie 'road_lane' (3.5 m, hauteur 0.01) au profil, à la position choisie, en décalant les voies existantes. Limité à 20 voies par côté.",
+      "desc": "Adds a 'road_lane' lane (3.5 m, height 0.01) to the profile, at the chosen position, shifting the existing lanes. Limited to 20 lanes per side.",
       "params": {
-        "selectedProfileIdx": {"type": "integer", "desc": "Indice du profil dans profiles."},
-        "selectedLaneIdx": {"type": "integer", "desc": "Clé de voie de référence."},
-        "side": {"type": "string", "desc": "'left' ou 'right'."},
-        "rel": {"type": "string", "desc": "Position relative : 'above' (côté gauche : avant la voie) ou 'below' (côté droit : après la voie)."}
+        "selectedProfileIdx": {
+          "type": "integer",
+          "desc": "Index of the profile in profiles."
+        },
+        "selectedLaneIdx": {
+          "type": "integer",
+          "desc": "Reference lane key."
+        },
+        "side": {
+          "type": "string",
+          "desc": "'left' or 'right'."
+        },
+        "rel": {
+          "type": "string",
+          "desc": "Relative position: 'above' (left side: before the lane) or 'below' (right side: after the lane)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "applyMasterWidth": {
-      "desc": "Donne la largeur mWidth à toutes les voies de type 'road_lane' du profil (écrase les largeurs de la coupe).",
-      "params": {"profile": {"type": "table", "desc": "Profil."}, "mWidth": {"type": "number", "desc": "Largeur unique (m)."}},
+      "desc": "Gives the width mWidth to all 'road_lane' type lanes of the profile (overwrites the cross-section widths).",
+      "params": {
+        "profile": {
+          "type": "table",
+          "desc": "Profile."
+        },
+        "mWidth": {
+          "type": "number",
+          "desc": "Single width (m)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "updateCondition": {
-      "desc": "Régénère les couches d'usure/état de la route r d'après les paramètres du profil (condition, graine, nombre de rustines et de nids-de-poule, traces de pneus, fissures, dégâts d'asphalte ou sol de terre selon la classe). Sort sans rien faire si la route a moins de 2 nœuds ou pas de renderData, et sans régénérer si aucune voie 'road_lane' n'existe (après avoir supprimé les couches non persistantes).",
-      "params": {"r": {"type": "table", "desc": "Route Road Architect."}},
+      "desc": "Regenerates the wear/condition layers of road r from the profile parameters (condition, seed, number of patches and potholes, tire tracks, cracks, asphalt damage or dirt ground depending on the class). Returns without doing anything if the road has fewer than 2 nodes or no renderData, and without regenerating if no 'road_lane' lane exists (after deleting the non-persistent layers).",
+      "params": {
+        "r": {
+          "type": "table",
+          "desc": "Road Architect road."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "serialiseProfile": {
-      "desc": "Convertit un profil en table sérialisable en JSON (pointeurs ImGui remplacés par leurs valeurs, name en chaîne).",
-      "params": {"p": {"type": "table", "desc": "Profil."}},
-      "returns": [{"type": "table", "desc": "Données sérialisées."}],
+      "desc": "Converts a profile to a JSON-serializable table (ImGui pointers replaced by their values, name as a string).",
+      "params": {
+        "p": {
+          "type": "table",
+          "desc": "Profile."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Serialized data."
+        }
+      ],
       "internal": false
     },
     "deserialiseProfile": {
-      "desc": "Reconstruit un profil à partir de sa version sérialisée (valeurs par défaut pour les champs absents : nom 'New Profile', classe 'urban'). Renvoie nil si la donnée est nil.",
-      "params": {"pSer": {"type": "table|nil", "desc": "Profil sérialisé."}},
-      "returns": [{"type": "table|nil", "desc": "Profil reconstruit."}],
+      "desc": "Rebuilds a profile from its serialized version (default values for missing fields: name 'New Profile', class 'urban'). Returns nil if the data is nil.",
+      "params": {
+        "pSer": {
+          "type": "table|nil",
+          "desc": "Serialized profile."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Rebuilt profile."
+        }
+      ],
       "internal": false
     },
     "save": {
-      "desc": "Ouvre une boîte de dialogue d'enregistrement et écrit le profil sérialisé dans un fichier JSON { profile = ... } ; le nom du profil devient le nom du fichier.",
-      "params": {"p": {"type": "table", "desc": "Profil à enregistrer."}},
+      "desc": "Opens a save dialog and writes the serialized profile to a JSON file { profile = ... }; the profile name becomes the file name.",
+      "params": {
+        "p": {
+          "type": "table",
+          "desc": "Profile to save."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "load": {
-      "desc": "Ouvre un sélecteur de fichier JSON, lit le profil sérialisé et l'ajoute à M.profiles.",
+      "desc": "Opens a JSON file selector, reads the serialized profile and adds it to M.profiles.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "removeAllTempCurrentProfiles": {
-      "desc": "Supprime de M.profiles tous les profils temporaires nommés 'Current Profile'.",
+      "desc": "Removes from M.profiles all temporary profiles named 'Current Profile'.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "createTemplateOnRequest": {
-      "desc": "Ajoute à M.profiles une copie du profil p nommée 'New Template' (création d'un modèle demandée par l'utilisateur).",
-      "params": {"p": {"type": "table", "desc": "Profil à copier."}},
+      "desc": "Adds to M.profiles a copy of profile p named 'New Template' (template creation requested by the user).",
+      "params": {
+        "p": {
+          "type": "table",
+          "desc": "Profile to copy."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "populateProfileTemplates": {
-      "desc": "Charge les modèles de profil prédéfinis (fichiers roadArchitect/profiles/*.json) dans M.profiles, marqués non supprimables. Ne fait rien si M.profiles contient déjà des profils.",
+      "desc": "Loads the predefined profile templates (roadArchitect/profiles/*.json files) into M.profiles, marked non-deletable. Does nothing if M.profiles already contains profiles.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "resetTemplates": {
-      "desc": "Vide M.profiles puis recharge tous les modèles prédéfinis.",
+      "desc": "Empties M.profiles then reloads all the predefined templates.",
       "params": {},
       "returns": [],
       "internal": false

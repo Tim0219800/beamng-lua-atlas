@@ -1,12 +1,12 @@
 # `gameplay_drift_general`
 
-*Fichier : `lua/ge/extensions/gameplay/drift/general.lua` · VM : Game Engine (GE) · 458 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drift/general.lua` · VM: Game Engine (GE) · 458 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drift_general` : `extensions.load("gameplay_drift_general")`, puis la globale `gameplay_drift_general`
+**Access:** extension `gameplay_drift_general`: `extensions.load("gameplay_drift_general")`, then the global `gameplay_drift_general`
 
-Chef d'orchestre du gameplay de drift. Garde le contexte courant (inFreeroam, inChallenge, inFreeroamChallenge, inAnotherMissionType, inFreeroamCruising, inSplitscreen), le mode de défi (None, A to B, A to B with stunt zones, Gymkhana, Competition), les états pause/gel et le flag de debug. À chaque changement de contexte ou de mode, il charge ou décharge les autres extensions gameplay_drift_* selon la table variableExtensions. Un moddeur l'utilise pour lire le contexte drift ou en changer, et pour réinitialiser tout le système.
+Conductor of the drift gameplay. Keeps the current context (inFreeroam, inChallenge, inFreeroamChallenge, inAnotherMissionType, inFreeroamCruising, inSplitscreen), the challenge mode (None, A to B, A to B with stunt zones, Gymkhana, Competition), the pause/freeze states and the debug flag. On every context or mode change, it loads or unloads the other gameplay_drift_* extensions according to the variableExtensions table. A modder uses it to read the drift context or change it, and to reset the whole system.
 
-## Exemple
+## Example
 
 ```lua
 if gameplay_drift_general.getContext() == "inFreeroam" then
@@ -14,172 +14,172 @@ if gameplay_drift_general.getContext() == "inFreeroam" then
 end
 ```
 
-## Remarques
+## Notes
 
-- Extensions chargées par contexte : stuntZones (inChallenge), display (inChallenge, inFreeroamChallenge, inFreeroamCruising, inSplitscreen), quickMessages (inFreeroam, inChallenge, inFreeroamChallenge, inFreeroamCruising), bounds (inChallenge, inFreeroamChallenge), freeroam_driftSpots (inFreeroam, inFreeroamChallenge, inFreeroamCruising), scoreboard (inChallenge) ; par mode de défi : stallingSystem (Gymkhana), destination (A to B, A to B with stunt zones, avec le contexte inFreeroamChallenge).
-- Chargement manuel : freeroam_cruising (chargé seulement hors carrière, hors multiseat, si le réglage enableDriftFreeroamCruising est actif, hors tutoriel freeroam et hors première conduite), sounds (chargé tant que gameplay_drift_display existe) et multiplayer (chargé via onMPSessionChanged).
-- setContext émet toujours le hook onDriftContextChanged(context, oldContext), même si le contexte ne change pas ; les extensions ne sont rechargées que si le contexte a réellement changé. Passer à inFreeroam force le mode de défi à "None".
-- Le gel (frozen) vaut vrai si le joueur est hors limites, va à contresens ou est dans la phase de conclusion d'un spot de drift ; il est recalculé à chaque frame et remis à false par reset/clear.
-- pause (paused) sert à suspendre les systèmes de drift pendant l'écran de fin des défis de mission.
-- getMultiplayerEnabled renvoie un objet de session ou nil/false (pas un booléen strict) : vrai seulement si une session multijoueur existe.
-- Dans checkLoadedExtensions, la variable locale driftDebugInfo masque celle du module ; et l'appel ext:getDriftDebugInfo() passe ext comme argument self à une fonction qui n'en a pas besoin (sans conséquence).
+- Extensions loaded per context: stuntZones (inChallenge), display (inChallenge, inFreeroamChallenge, inFreeroamCruising, inSplitscreen), quickMessages (inFreeroam, inChallenge, inFreeroamChallenge, inFreeroamCruising), bounds (inChallenge, inFreeroamChallenge), freeroam_driftSpots (inFreeroam, inFreeroamChallenge, inFreeroamCruising), scoreboard (inChallenge); per challenge mode: stallingSystem (Gymkhana), destination (A to B, A to B with stunt zones, with the inFreeroamChallenge context).
+- Manual loading: freeroam_cruising (loaded only outside career, outside multiseat, if the enableDriftFreeroamCruising setting is active, outside the freeroam tutorial and outside first drive), sounds (loaded as long as gameplay_drift_display exists) and multiplayer (loaded via onMPSessionChanged).
+- setContext always emits the onDriftContextChanged(context, oldContext) hook, even if the context does not change; the extensions are only reloaded if the context actually changed. Switching to inFreeroam forces the challenge mode to "None".
+- The freeze (frozen) is true if the player is out of bounds, going the wrong way or in the concluding phase of a drift spot; it is recomputed every frame and set back to false by reset/clear.
+- pause (paused) is used to suspend the drift systems during the end screen of mission challenges.
+- getMultiplayerEnabled returns a session object or nil/false (not a strict boolean): true only if a multiplayer session exists.
+- In checkLoadedExtensions, the local variable driftDebugInfo shadows the module's; and the call ext:getDriftDebugInfo() passes ext as the self argument to a function that does not need it (harmless).
 
-**Dépendances (chargées avant) :** `gameplay_drift_drift`, `gameplay_drift_scoring`, `gameplay_drift_statistics`, `gameplay_drift_saveLoad`, `gameplay_util_groundContact`
+**Dependencies (loaded first):** `gameplay_drift_drift`, `gameplay_drift_scoring`, `gameplay_drift_statistics`, `gameplay_drift_saveLoad`, `gameplay_util_groundContact`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drift_general.clear()` | Appelle reset() de toutes les extensions drift chargées (sauf general), remet frozen à false puis vide les zones de cascade (gameplay_drift_stuntZones.clear). | 73 |
-| `gameplay_drift_general.getChallengeMode()` | Renvoie le mode de défi courant. | 196 |
-| `gameplay_drift_general.getContext()` | Renvoie le contexte drift courant. | 179 |
-| `gameplay_drift_general.getDriftDebugInfo()` | Renvoie {default=true, canBeChanged=false} pour la fenêtre de debug drift. | 183 |
-| `gameplay_drift_general.getExtensionDebug(extName)` | Indique si le debug est activé pour une extension drift donnée (debug général actif, extension connue, case cochée). | 187 |
-| `gameplay_drift_general.getFrozen()` | Indique si scoring et détection de drift sont gelés (hors limites, contresens, phase de conclusion). | 192 |
-| `gameplay_drift_general.getGeneralDebug()` | Indique si le debug général est actif. | 171 |
-| `gameplay_drift_general.getMultiplayerEnabled()` | Renvoie une valeur vraie seulement si une session multijoueur est en cours et que le drift multijoueur est autorisé. | 200 |
-| `gameplay_drift_general.getPaused()` | Indique si le système de drift est en pause. | 175 |
-| `gameplay_drift_general.onAnyMissionChanged(status, mission)` | Hook : appelé au démarrage ou à l'arrêt d'une mission. Fait clear() ; au démarrage d'une mission non drift passe en "inAnotherMissionType" ; à l'arrêt remet pause/gel à false et le contexte à "inFreeroam". *(interne)* *(hook)* | 204 |
-| `gameplay_drift_general.onClientEndMission()` | Hook : fin de niveau, repasse le contexte à "inFreeroam". *(interne)* *(hook)* | 427 |
-| `gameplay_drift_general.onClientPostStartMission()` | Hook : appelé quand le niveau est chargé ; si aucune mission n'est au premier plan, passe en "inFreeroam" et fait reset(). *(interne)* *(hook)* | 393 |
-| `gameplay_drift_general.onDeserialized(data)` | Hook : restaure debugFlag, context et challengeMode après un rechargement Lua. *(interne)* *(hook)* | 409 |
-| `gameplay_drift_general.onExtensionLoaded()` | Hook : liste les fichiers lua de /lua/ge/extensions/gameplay/drift pour le suivi des extensions et du debug. *(interne)* *(hook)* | 415 |
-| `gameplay_drift_general.onMPSessionChanged(old, new)` | Hook : charge gameplay_drift_multiplayer à l'entrée en session multijoueur et le décharge à la sortie. *(interne)* *(hook)* | 419 |
-| `gameplay_drift_general.onSerialize()` | Hook : sauvegarde debugFlag, context et challengeMode avant un rechargement Lua. *(interne)* *(hook)* | 401 |
-| `gameplay_drift_general.onUpdate()` | Appelé à chaque frame : fenêtre debug, chargement/déchargement des sons et du cruising, recalcul de l'état gelé. *(interne)* *(hook)* | 385 |
-| `gameplay_drift_general.onVehicleResetted(vid)` | Hook : si le véhicule remis en place est suivi par gameplay_drift_drift, émet onDriftPlVehReset(vid). *(interne)* *(hook)* | 217 |
-| `gameplay_drift_general.reset()` | Appelle reset() de toutes les extensions drift chargées (sauf general), remet frozen à false puis réinitialise les zones de cascade (gameplay_drift_stuntZones.reset). | 78 |
-| `gameplay_drift_general.setChallengeMode(newChallengeMode)` | Change le mode de défi et recharge/décharge les extensions concernées. Sans effet si le mode est identique. | 136 |
-| `gameplay_drift_general.setContext(newContext)` | Change le contexte drift, émet onDriftContextChanged(newContext, oldContext) et met à jour les extensions chargées. | 147 |
-| `gameplay_drift_general.setDebug(value)` | Active/désactive le mode debug drift (fenêtre imgui « Drift general ») et émet onDriftDebugChanged(value). | 163 |
-| `gameplay_drift_general.setPaused(newPaused)` | Met le système de drift en pause (ou le relance). | 143 |
+| `gameplay_drift_general.clear()` | Calls reset() of all the loaded drift extensions (except general), sets frozen back to false then empties the cascade zones (gameplay_drift_stuntZones.clear). | 73 |
+| `gameplay_drift_general.getChallengeMode()` | Returns the current challenge mode. | 196 |
+| `gameplay_drift_general.getContext()` | Returns the current drift context. | 179 |
+| `gameplay_drift_general.getDriftDebugInfo()` | Returns {default=true, canBeChanged=false} for the drift debug window. | 183 |
+| `gameplay_drift_general.getExtensionDebug(extName)` | Indicates whether debug is enabled for a given drift extension (general debug active, extension known, checkbox ticked). | 187 |
+| `gameplay_drift_general.getFrozen()` | Indicates whether drift scoring and detection are frozen (out of bounds, wrong way, concluding phase). | 192 |
+| `gameplay_drift_general.getGeneralDebug()` | Indicates whether general debug is active. | 171 |
+| `gameplay_drift_general.getMultiplayerEnabled()` | Returns a truthy value only if a multiplayer session is in progress and multiplayer drift is allowed. | 200 |
+| `gameplay_drift_general.getPaused()` | Indicates whether the drift system is paused. | 175 |
+| `gameplay_drift_general.onAnyMissionChanged(status, mission)` | Hook: called when a mission starts or stops. Does clear(); when a non-drift mission starts switches to "inAnotherMissionType"; when it stops sets pause/freeze back to false and the context to "inFreeroam". *(internal)* *(hook)* | 204 |
+| `gameplay_drift_general.onClientEndMission()` | Hook: level end, puts the context back to "inFreeroam". *(internal)* *(hook)* | 427 |
+| `gameplay_drift_general.onClientPostStartMission()` | Hook: called when the level is loaded; if no mission is in the foreground, switches to "inFreeroam" and does reset(). *(internal)* *(hook)* | 393 |
+| `gameplay_drift_general.onDeserialized(data)` | Hook: restores debugFlag, context and challengeMode after a Lua reload. *(internal)* *(hook)* | 409 |
+| `gameplay_drift_general.onExtensionLoaded()` | Hook: lists the lua files of /lua/ge/extensions/gameplay/drift for the tracking of extensions and debug. *(internal)* *(hook)* | 415 |
+| `gameplay_drift_general.onMPSessionChanged(old, new)` | Hook: loads gameplay_drift_multiplayer when entering a multiplayer session and unloads it when leaving. *(internal)* *(hook)* | 419 |
+| `gameplay_drift_general.onSerialize()` | Hook: saves debugFlag, context and challengeMode before a Lua reload. *(internal)* *(hook)* | 401 |
+| `gameplay_drift_general.onUpdate()` | Called every frame: debug window, loading/unloading of the sounds and cruising, recomputation of the frozen state. *(internal)* *(hook)* | 385 |
+| `gameplay_drift_general.onVehicleResetted(vid)` | Hook: if the vehicle put back in place is tracked by gameplay_drift_drift, emits onDriftPlVehReset(vid). *(internal)* *(hook)* | 217 |
+| `gameplay_drift_general.reset()` | Calls reset() of all the loaded drift extensions (except general), sets frozen back to false then resets the cascade zones (gameplay_drift_stuntZones.reset). | 78 |
+| `gameplay_drift_general.setChallengeMode(newChallengeMode)` | Changes the challenge mode and loads/unloads the extensions concerned. No effect if the mode is identical. | 136 |
+| `gameplay_drift_general.setContext(newContext)` | Changes the drift context, emits onDriftContextChanged(newContext, oldContext) and updates the loaded extensions. | 147 |
+| `gameplay_drift_general.setDebug(value)` | Enables/disables drift debug mode (imgui window "Drift general") and emits onDriftDebugChanged(value). | 163 |
+| `gameplay_drift_general.setPaused(newPaused)` | Pauses the drift system (or resumes it). | 143 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drift_general.getChallengeMode()`
 
-Renvoie le mode de défi courant.
+Returns the current challenge mode.
 
-- **renvoie** : string|nil Mode de défi, nil tant qu'il n'a jamais été défini.
+- **returns**: string|nil Challenge mode, nil as long as it has never been set.
 
 #### `gameplay_drift_general.getContext()`
 
-Renvoie le contexte drift courant.
+Returns the current drift context.
 
-- **renvoie** : string|nil Contexte courant.
+- **returns**: string|nil Current context.
 
 #### `gameplay_drift_general.getDriftDebugInfo()`
 
-Renvoie {default=true, canBeChanged=false} pour la fenêtre de debug drift.
+Returns {default=true, canBeChanged=false} for the drift debug window.
 
-- **renvoie** : table {default = true, canBeChanged = false}
+- **returns**: table {default = true, canBeChanged = false}
 
 #### `gameplay_drift_general.getExtensionDebug(extName)`
 
-Indique si le debug est activé pour une extension drift donnée (debug général actif, extension connue, case cochée).
+Indicates whether debug is enabled for a given drift extension (general debug active, extension known, checkbox ticked).
 
-- `extName` (*string*) : Nom de l'extension, ex. "gameplay_drift_scoreboard".
-- **renvoie** : boolean true si le debug de cette extension est actif.
+- `extName` (*string*) : Extension name, e.g. "gameplay_drift_scoreboard".
+- **returns**: boolean true if debug of this extension is active.
 
 #### `gameplay_drift_general.getFrozen()`
 
-Indique si scoring et détection de drift sont gelés (hors limites, contresens, phase de conclusion).
+Indicates whether drift scoring and detection are frozen (out of bounds, wrong way, concluding phase).
 
-- **renvoie** : boolean État de gel.
+- **returns**: boolean Freeze state.
 
 #### `gameplay_drift_general.getGeneralDebug()`
 
-Indique si le debug général est actif.
+Indicates whether general debug is active.
 
-- **renvoie** : boolean Flag de debug.
+- **returns**: boolean Debug flag.
 
 #### `gameplay_drift_general.getMultiplayerEnabled()`
 
-Renvoie une valeur vraie seulement si une session multijoueur est en cours et que le drift multijoueur est autorisé.
+Returns a truthy value only if a multiplayer session is in progress and multiplayer drift is allowed.
 
-- **renvoie** : any Valeur vraie/fausse (peut être nil ou un booléen).
+- **returns**: any True/false value (can be nil or a boolean).
 
 #### `gameplay_drift_general.getPaused()`
 
-Indique si le système de drift est en pause.
+Indicates whether the drift system is paused.
 
-- **renvoie** : boolean État de pause.
+- **returns**: boolean Pause state.
 
 #### `gameplay_drift_general.onAnyMissionChanged(status, mission)`
 
-Hook : appelé au démarrage ou à l'arrêt d'une mission. Fait clear() ; au démarrage d'une mission non drift passe en "inAnotherMissionType" ; à l'arrêt remet pause/gel à false et le contexte à "inFreeroam".
+Hook: called when a mission starts or stops. Does clear(); when a non-drift mission starts switches to "inAnotherMissionType"; when it stops sets pause/freeze back to false and the context to "inFreeroam".
 
-- `status` (*string*) : "started" ou "stopped".
-- `mission` (*table*) : Mission concernée (missionType est lu).
+- `status` (*string*) : "started" or "stopped".
+- `mission` (*table*) : Mission concerned (missionType is read).
 
 #### `gameplay_drift_general.onDeserialized(data)`
 
-Hook : restaure debugFlag, context et challengeMode après un rechargement Lua.
+Hook: restores debugFlag, context and challengeMode after a Lua reload.
 
-- `data` (*table*) : Table renvoyée par onSerialize.
+- `data` (*table*) : Table returned by onSerialize.
 
 #### `gameplay_drift_general.onMPSessionChanged(old, new)`
 
-Hook : charge gameplay_drift_multiplayer à l'entrée en session multijoueur et le décharge à la sortie.
+Hook: loads gameplay_drift_multiplayer when entering a multiplayer session and unloads it when leaving.
 
-- `old` (*any*) : Ancienne session (nil si aucune).
-- `new` (*any*) : Nouvelle session (nil si aucune).
+- `old` (*any*) : Old session (nil if none).
+- `new` (*any*) : New session (nil if none).
 
 #### `gameplay_drift_general.onSerialize()`
 
-Hook : sauvegarde debugFlag, context et challengeMode avant un rechargement Lua.
+Hook: saves debugFlag, context and challengeMode before a Lua reload.
 
-- **renvoie** : table {debugFlag, context, challengeMode}
+- **returns**: table {debugFlag, context, challengeMode}
 
 #### `gameplay_drift_general.onVehicleResetted(vid)`
 
-Hook : si le véhicule remis en place est suivi par gameplay_drift_drift, émet onDriftPlVehReset(vid).
+Hook: if the vehicle put back in place is tracked by gameplay_drift_drift, emits onDriftPlVehReset(vid).
 
-- `vid` (*integer*) : Id du véhicule.
+- `vid` (*integer*) : Vehicle id.
 
 #### `gameplay_drift_general.setChallengeMode(newChallengeMode)`
 
-Change le mode de défi et recharge/décharge les extensions concernées. Sans effet si le mode est identique.
+Changes the challenge mode and loads/unloads the extensions concerned. No effect if the mode is identical.
 
-- `newChallengeMode` (*string*) : "None", "A to B", "A to B with stunt zones", "Gymkhana" ou "Competition".
+- `newChallengeMode` (*string*) : "None", "A to B", "A to B with stunt zones", "Gymkhana" or "Competition".
 
 #### `gameplay_drift_general.setContext(newContext)`
 
-Change le contexte drift, émet onDriftContextChanged(newContext, oldContext) et met à jour les extensions chargées.
+Changes the drift context, emits onDriftContextChanged(newContext, oldContext) and updates the loaded extensions.
 
-- `newContext` (*string*) : "inFreeroam", "inChallenge", "inFreeroamChallenge", "inAnotherMissionType", "inFreeroamCruising" ou "inSplitscreen".
+- `newContext` (*string*) : "inFreeroam", "inChallenge", "inFreeroamChallenge", "inAnotherMissionType", "inFreeroamCruising" or "inSplitscreen".
 
 #### `gameplay_drift_general.setDebug(value)`
 
-Active/désactive le mode debug drift (fenêtre imgui « Drift general ») et émet onDriftDebugChanged(value).
+Enables/disables drift debug mode (imgui window "Drift general") and emits onDriftDebugChanged(value).
 
-- `value` (*boolean*) : true pour activer le debug.
+- `value` (*boolean*) : true to enable debug.
 
 #### `gameplay_drift_general.setPaused(newPaused)`
 
-Met le système de drift en pause (ou le relance).
+Pauses the drift system (or resumes it).
 
-- `newPaused` (*boolean*) : true pour mettre en pause.
+- `newPaused` (*boolean*) : true to pause.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | gameplay_drift_drift, gameplay_drift_scoring, gameplay_drift_statistics, gameplay_drift_saveLoad, gameplay_util_groundContact. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onDriftContextChanged` — écouté par 3 module(s)
-- `onDriftDebugChanged` — écouté par 3 module(s)
-- `onDriftPlVehReset` — écouté par 4 module(s)
+- `onDriftContextChanged` — listened to by 3 module(s)
+- `onDriftDebugChanged` — listened to by 3 module(s)
+- `onDriftPlVehReset` — listened to by 4 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
-**Charge les extensions :** `gameplay_drift_freeroam_cruising`, `gameplay_drift_multiplayer`, `gameplay_drift_sounds`
+**Loads extensions:** `gameplay_drift_freeroam_cruising`, `gameplay_drift_multiplayer`, `gameplay_drift_sounds`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drift/general.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drift/general.lua`.*

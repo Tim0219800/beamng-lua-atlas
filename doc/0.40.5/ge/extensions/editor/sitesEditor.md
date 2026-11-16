@@ -1,125 +1,125 @@
 # `editor_sitesEditor`
 
-*Fichier : `lua/ge/extensions/editor/sitesEditor.lua` · VM : Game Engine (GE) · 404 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/sitesEditor.lua` · VM: Game Engine (GE) · 404 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_sitesEditor` : `extensions.load("editor_sitesEditor")`, puis la globale `editor_sitesEditor`
+**Access:** extension `editor_sitesEditor`: `extensions.load("editor_sitesEditor")`, then the global `editor_sitesEditor`
 
-Éditeur des fichiers de 'sites' (*.sites.json) : lieux (locations), zones et places de parking (parkingSpots), avec leurs tags. Il ouvre la fenêtre 'Sites: Locations and Zones Editor' avec un menu File (New, Load, Save, Save as, Sites in Manager) et un menu Tools (tri par nom, numérotation des places, nommage par zone), et un onglet par sous-éditeur (editor/sitesEditor/*). Il crée le mode d'édition 'Edit Sites'. Un moddeur de cartes s'en sert pour placer des lieux et des places de parking.
+Editor for 'sites' files (*.sites.json): locations, zones and parking spots (parkingSpots), with their tags. It opens the 'Sites: Locations and Zones Editor' window with a File menu (New, Load, Save, Save as, Sites in Manager) and a Tools menu (sort by name, spot numbering, naming by zone), and one tab per sub-editor (editor/sitesEditor/*). It creates the 'Edit Sites' edit mode. A map modder uses it to place locations and parking spots.
 
-## Remarques
+## Notes
 
-- Fichiers par défaut : dossier de la mission courante ou /gameplay/sites/, nom newSite.sites.json.
-- Menu Tools : 'Enumerate Parking Spots' suffixe les noms en doublon par un compteur (1 à 4 chiffres selon le nombre) ; 'Parkingspot Names by Zone Containment' renomme chaque place avec le nom de la dernière zone qui la contient (peut être long).
-- BUG : M.onExtensionLoaded = onExtensionLoaded référence une variable locale jamais définie, donc M.onExtensionLoaded vaut nil.
-- Fenêtres internes : Locations, Zones, Parking Spots, Location Tags, Zone Tags, Parking Spot Tags.
+- Default files: current mission folder or /gameplay/sites/, name newSite.sites.json.
+- Tools menu: 'Enumerate Parking Spots' suffixes duplicate names with a counter (1 to 4 digits depending on the count); 'Parkingspot Names by Zone Containment' renames each spot with the name of the last zone that contains it (can be slow).
+- BUG: M.onExtensionLoaded = onExtensionLoaded references a local variable that is never defined, so M.onExtensionLoaded is nil.
+- Internal windows: Locations, Zones, Parking Spots, Location Tags, Zone Tags, Parking Spot Tags.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_sitesEditor.allowGizmo()` | Indique si le mode d'édition actif est 'Edit Sites' (donc si les gizmos et clics sont permis). | 387 |
-| `editor_sitesEditor.getCurrentLocation()` | Renvoie le lieu sélectionné dans l'onglet Locations. | 389 |
-| `editor_sitesEditor.getCurrentParkingSpot()` | Renvoie la place de parking sélectionnée dans l'onglet Parking Spots. | 391 |
-| `editor_sitesEditor.getCurrentSites()` | Renvoie l'objet sites en cours d'édition. | 388 |
-| `editor_sitesEditor.getCurrentZone()` | Renvoie la zone sélectionnée dans l'onglet Zones. | 390 |
-| `editor_sitesEditor.loadSites(loadPath)` | Charge un fichier de sites via gameplay_sites_sitesManager.loadSites, le rend courant, le transmet à tous les sous-éditeurs et réinitialise leur sélection. | 30 |
-| `editor_sitesEditor.managerSites()` | Dessine le sous-menu 'Sites in Manager...' : liste des sites par niveau et ceux de /gameplay, avec Refresh, et charge celui choisi. | 216 |
-| `editor_sitesEditor.onDeserialized(data)` | Hook de restauration après rechargement Lua : réinjecte data.path dans les sites courants. *(interne)* *(hook)* | 364 |
-| `editor_sitesEditor.onEditorGui()` | Hook appelé chaque frame de l'UI de l'éditeur : dessine la fenêtre, les menus, les onglets, met à jour les infos souris (rayon caméra) et dessine les sites en debug. *(interne)* *(hook)* | 79 |
-| `editor_sitesEditor.onEditorInitialized()` | Hook d'initialisation de l'éditeur : enregistre la fenêtre, le mode d'édition sitesEditMode, l'entrée de menu (groupe Gameplay) et crée les six sous-éditeurs. *(interne)* *(hook)* | 307 |
-| `editor_sitesEditor.onEditorToolWindowGotFocus(windowName)` | Hook : si la fenêtre de l'outil prend le focus, active le mode d'édition sitesEditMode. *(interne)* *(hook)* | 378 |
-| `editor_sitesEditor.onEditorToolWindowHide(windowName)` | Hook : si la fenêtre de l'outil est masquée, revient au mode objectSelect. *(interne)* *(hook)* | 372 |
-| `editor_sitesEditor.onSerialize()` | Hook de sérialisation (rechargement Lua) : renvoie {path = sérialisation des sites courants}. *(interne)* *(hook)* | 357 |
-| `editor_sitesEditor.saveSites(sites, savePath)` | Sérialise un objet sites et l'écrit en JSON au chemin donné ; met à jour sites.dir et sites.name et mémorise le dossier comme dernier chemin. | 21 |
-| `editor_sitesEditor.selectZone(elem, mode)` | Sélectionne une zone dans l'onglet Zones (utilisé par le clic dans le monde). | 392 |
-| `editor_sitesEditor.show()` | Efface la sélection d'objets, affiche la fenêtre de l'outil et active le mode d'édition sitesEditMode. | 284 |
+| `editor_sitesEditor.allowGizmo()` | Tells whether the active edit mode is 'Edit Sites' (hence whether gizmos and clicks are allowed). | 387 |
+| `editor_sitesEditor.getCurrentLocation()` | Returns the location selected in the Locations tab. | 389 |
+| `editor_sitesEditor.getCurrentParkingSpot()` | Returns the parking spot selected in the Parking Spots tab. | 391 |
+| `editor_sitesEditor.getCurrentSites()` | Returns the sites object being edited. | 388 |
+| `editor_sitesEditor.getCurrentZone()` | Returns the zone selected in the Zones tab. | 390 |
+| `editor_sitesEditor.loadSites(loadPath)` | Loads a sites file via gameplay_sites_sitesManager.loadSites, makes it current, passes it to all sub-editors and resets their selection. | 30 |
+| `editor_sitesEditor.managerSites()` | Draws the 'Sites in Manager...' submenu: list of the sites per level and those of /gameplay, with Refresh, and loads the chosen one. | 216 |
+| `editor_sitesEditor.onDeserialized(data)` | Restore hook after a Lua reload: reinjects data.path into the current sites. *(internal)* *(hook)* | 364 |
+| `editor_sitesEditor.onEditorGui()` | Hook called every frame of the editor UI: draws the window, the menus, the tabs, updates the mouse info (camera ray) and draws the sites in debug. *(internal)* *(hook)* | 79 |
+| `editor_sitesEditor.onEditorInitialized()` | Editor initialization hook: registers the window, the sitesEditMode edit mode, the menu entry (Gameplay group) and creates the six sub-editors. *(internal)* *(hook)* | 307 |
+| `editor_sitesEditor.onEditorToolWindowGotFocus(windowName)` | Hook: if the tool window gains focus, activates the sitesEditMode edit mode. *(internal)* *(hook)* | 378 |
+| `editor_sitesEditor.onEditorToolWindowHide(windowName)` | Hook: if the tool window is hidden, goes back to objectSelect mode. *(internal)* *(hook)* | 372 |
+| `editor_sitesEditor.onSerialize()` | Serialization hook (Lua reload): returns {path = serialization of the current sites}. *(internal)* *(hook)* | 357 |
+| `editor_sitesEditor.saveSites(sites, savePath)` | Serializes a sites object and writes it as JSON to the given path; updates sites.dir and sites.name and remembers the folder as the last path. | 21 |
+| `editor_sitesEditor.selectZone(elem, mode)` | Selects a zone in the Zones tab (used by the click in the world). | 392 |
+| `editor_sitesEditor.show()` | Clears the object selection, shows the tool window and activates the sitesEditMode edit mode. | 284 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_sitesEditor.allowGizmo()`
 
-Indique si le mode d'édition actif est 'Edit Sites' (donc si les gizmos et clics sont permis).
+Tells whether the active edit mode is 'Edit Sites' (hence whether gizmos and clicks are allowed).
 
-- **renvoie** : boolean true si le mode Edit Sites est actif.
+- **returns**: boolean true if Edit Sites mode is active.
 
 #### `editor_sitesEditor.getCurrentLocation()`
 
-Renvoie le lieu sélectionné dans l'onglet Locations.
+Returns the location selected in the Locations tab.
 
-- **renvoie** : table|nil Lieu sélectionné ou nil.
+- **returns**: table|nil Selected location or nil.
 
 #### `editor_sitesEditor.getCurrentParkingSpot()`
 
-Renvoie la place de parking sélectionnée dans l'onglet Parking Spots.
+Returns the parking spot selected in the Parking Spots tab.
 
-- **renvoie** : table|nil Place sélectionnée ou nil.
+- **returns**: table|nil Selected spot or nil.
 
 #### `editor_sitesEditor.getCurrentSites()`
 
-Renvoie l'objet sites en cours d'édition.
+Returns the sites object being edited.
 
-- **renvoie** : table Sites courants.
+- **returns**: table Current sites.
 
 #### `editor_sitesEditor.getCurrentZone()`
 
-Renvoie la zone sélectionnée dans l'onglet Zones.
+Returns the zone selected in the Zones tab.
 
-- **renvoie** : table|nil Zone sélectionnée ou nil.
+- **returns**: table|nil Selected zone or nil.
 
 #### `editor_sitesEditor.loadSites(loadPath)`
 
-Charge un fichier de sites via gameplay_sites_sitesManager.loadSites, le rend courant, le transmet à tous les sous-éditeurs et réinitialise leur sélection.
+Loads a sites file via gameplay_sites_sitesManager.loadSites, makes it current, passes it to all sub-editors and resets their selection.
 
-- `loadPath` (*string*) : Chemin du fichier .sites.json.
-- **renvoie** : table Les sites courants (l'ancien objet si le chargement a échoué).
+- `loadPath` (*string*) : Path of the .sites.json file.
+- **returns**: table The current sites (the old object if loading failed).
 
 #### `editor_sitesEditor.onDeserialized(data)`
 
-Hook de restauration après rechargement Lua : réinjecte data.path dans les sites courants.
+Restore hook after a Lua reload: reinjects data.path into the current sites.
 
-- `data` (*table*) : Données renvoyées par onSerialize.
+- `data` (*table*) : Data returned by onSerialize.
 
 #### `editor_sitesEditor.onEditorToolWindowGotFocus(windowName)`
 
-Hook : si la fenêtre de l'outil prend le focus, active le mode d'édition sitesEditMode.
+Hook: if the tool window gains focus, activates the sitesEditMode edit mode.
 
-- `windowName` (*string*) : Nom de la fenêtre.
+- `windowName` (*string*) : Window name.
 
 #### `editor_sitesEditor.onEditorToolWindowHide(windowName)`
 
-Hook : si la fenêtre de l'outil est masquée, revient au mode objectSelect.
+Hook: if the tool window is hidden, goes back to objectSelect mode.
 
-- `windowName` (*string*) : Nom de la fenêtre masquée.
+- `windowName` (*string*) : Name of the hidden window.
 
 #### `editor_sitesEditor.onSerialize()`
 
-Hook de sérialisation (rechargement Lua) : renvoie {path = sérialisation des sites courants}.
+Serialization hook (Lua reload): returns {path = serialization of the current sites}.
 
-- **renvoie** : table Données à restaurer.
+- **returns**: table Data to restore.
 
 #### `editor_sitesEditor.saveSites(sites, savePath)`
 
-Sérialise un objet sites et l'écrit en JSON au chemin donné ; met à jour sites.dir et sites.name et mémorise le dossier comme dernier chemin.
+Serializes a sites object and writes it as JSON to the given path; updates sites.dir and sites.name and remembers the folder as the last path.
 
-- `sites` (*table*) : Objet sites (gameplay/sites/sites).
-- `savePath` (*string*) : Chemin complet du fichier .sites.json.
+- `sites` (*table*) : Sites object (gameplay/sites/sites).
+- `savePath` (*string*) : Full path of the .sites.json file.
 
 #### `editor_sitesEditor.selectZone(elem, mode)`
 
-Sélectionne une zone dans l'onglet Zones (utilisé par le clic dans le monde).
+Selects a zone in the Zones tab (used by the click in the world).
 
-- `elem` (*integer*) : Id de la zone (déduit du code).
-- `mode` (*string|nil*) : 'toggle' pour basculer, nil pour remplacer la sélection.
+- `elem` (*integer*) : Zone id (inferred from code).
+- `mode` (*string|nil*) : 'toggle' to toggle, nil to replace the selection.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `onExtensionLoaded` | nil | Champ exporté mais toujours nil (variable locale non définie dans le fichier). ⚠ référence `onExtensionLoaded` non définie dans le fichier (vaut probablement nil) |
+| `onExtensionLoaded` | nil | Exported field but always nil (local variable not defined in the file). ⚠ reference `onExtensionLoaded` not defined in the file (probably nil) |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/sitesEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/sitesEditor.lua`.*

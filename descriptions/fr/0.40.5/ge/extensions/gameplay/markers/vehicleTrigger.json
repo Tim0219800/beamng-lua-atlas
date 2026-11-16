@@ -1,0 +1,65 @@
+{
+  "path": "lua/ge/extensions/gameplay/markers/vehicleTrigger.lua",
+  "module": "Marqueur de « portes » pour véhicule (par exemple l'entrée d'un garage ou d'un atelier) en mode jeu. Chaque porte est une paire d'objets de scène (zone, icône) : quand la boîte englobante du véhicule du joueur recouvre une zone, l'icône monte légèrement, un écran 3D facultatif s'affiche pendant 5 s avec un son d'ordinateur de carrière, et le marqueur devient interactif. Le module renvoie {create, cluster}.",
+  "notes": [
+    "cluster : un par POI (id 'vehicleTrigger#<poi.id>'). Lit poi.markerInfo.vehicleTrigger.{doors, icon, iconLift, iconOffsetHeight, pos, radius, screens} ; icône par défaut poi_exclamationmark_round, rayon par défaut 6 m.",
+    "doors = liste de {nomObjetZone, nomObjetIcône, distanceVisibleMax?} ; distance visible max par défaut 15 m. screens[idx] est le nom d'un objet de scène affiché en regard de la porte idx.",
+    "Le test de recouvrement ne s'applique qu'au véhicule du joueur (data.veh) ; si une porte recouvre le véhicule, toutes les portes sont marquées recouvertes (anyOverlap).",
+    "L'icône n'est visible que si la caméra est assez proche et sans obstacle statique (castRayStatic) ; hors grande carte.",
+    "isInAreaChanged vaut \"in\"/\"out\" pendant une frame.",
+    "Sans setup préalable (doors nil), plusieurs méthodes parcourent {} par sécurité ; hide() suppose en revanche que area.iconInfo existe quand l'icon renderer est disponible."
+  ],
+  "functions": {
+    "create": {
+      "desc": "Fabrique un marqueur de portes (instance de C).",
+      "params": {"...": {"type": "any", "desc": "Arguments transmis à C:init (non utilisés)."}},
+      "returns": [{"type": "table", "desc": "Instance de marqueur."}],
+      "internal": false
+    },
+    "cluster": {
+      "desc": "Transforme chaque POI vehicleTrigger en un cluster distinct et l'ajoute à allClusters.",
+      "params": {
+        "pois": {"type": "table[]", "desc": "POI avec markerInfo.vehicleTrigger."},
+        "allClusters": {"type": "table[]", "desc": "Liste de clusters complétée en place."}
+      },
+      "internal": true
+    }
+  },
+  "classes": {
+    "C": {
+      "desc": "Marqueur de portes pour véhicule.",
+      "functions": {
+        "init": {"desc": "Initialise visible = true.", "internal": true},
+        "setup": {
+          "desc": "Pour chaque porte, retrouve l'objet de zone et l'objet d'icône dans la scène, calcule la boîte de la zone, cache l'écran associé et crée l'icône (id <cluster.id>-vtIcon-<idx>).",
+          "params": {"cluster": {"type": "table", "desc": "Cluster issu de cluster()."}},
+          "internal": true
+        },
+        "update": {
+          "desc": "Chaque frame : teste le recouvrement OBB/OBB avec le véhicule, gère le minuteur et l'affichage des écrans, anime hauteur et opacité des icônes, dessine un trait, met à jour isInAreaChanged et anyOverlap.",
+          "params": {"data": {"type": "table", "desc": "Données de frame : veh, bbCenter, bbHalfAxis0..2, camPos, bigMapActive, dt."}},
+          "internal": true
+        },
+        "createObjects": {"desc": "Nettoie les objets existants (n'en crée pas).", "internal": true},
+        "hide": {"desc": "Passe invisible, rend les icônes transparentes et cache les écrans.", "internal": false},
+        "show": {"desc": "Repasse visible.", "internal": false},
+        "clearObjects": {"desc": "Retire les icônes, cache les écrans et efface la liste des portes.", "internal": false},
+        "interactInPlayMode": {
+          "desc": "Si canInteract et qu'une porte recouvre le véhicule, ajoute les données (elemData) du cluster aux éléments interactifs.",
+          "params": {
+            "interactData": {"type": "table", "desc": "Données de frame avec canInteract."},
+            "interactableElements": {"type": "table[]", "desc": "Liste complétée en place."}
+          },
+          "internal": false
+        },
+        "instantFade": {"desc": "Ne fait rien.", "params": {"visible": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
+        "setHidden": {"desc": "Ne fait rien.", "params": {"value": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
+        "drawOnMinimap": {
+          "desc": "Dessine un cercle sur la minimap à la position de chaque icône de porte.",
+          "params": {"td": {"type": "table", "desc": "Données de dessin (non utilisées)."}},
+          "internal": false
+        }
+      }
+    }
+  }
+}

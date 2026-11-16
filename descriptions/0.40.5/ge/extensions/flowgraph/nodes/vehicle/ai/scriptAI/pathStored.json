@@ -1,50 +1,50 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/pathStored.lua",
-  "module": "Nœud « Stored AI Path » (provider, couleur ai). Stocke dans le projet un chemin ScriptAI enregistré avec l'éditeur ScriptAIManager et le fournit. Sortie : path (type aiPath) = {path = aiPath}. L'inspecteur permet d'ouvrir ScriptAIManager, de choisir un enregistrement courant et de le charger dans le nœud ; le chemin est dessiné en debug (prismes magenta).",
+  "module": "Node \"Stored AI Path\" (provider, color ai). Stores in the project a ScriptAI path recorded with the ScriptAIManager editor and provides it. Output: path (type aiPath) = {path = aiPath}. The inspector allows opening ScriptAIManager, choosing a current recording and loading it into the node; the path is drawn in debug (magenta prisms).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Initialise un chemin vide et l'identifiant « Select... ».",
+          "desc": "Initializes an empty path and the identifier \"Select...\".",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Ne fait rien.",
+          "desc": "Does nothing.",
           "internal": true
         },
         "drawDebugPath": {
-          "desc": "Dessine le chemin stocké avec debugDrawer:drawSquarePrism pour les points proches de la caméra (100 à 200 m).",
+          "desc": "Draws the stored path with debugDrawer:drawSquarePrism for the points close to the camera (100 to 200 m).",
           "internal": false
         },
         "drawCustomProperties": {
-          "desc": "Affiche le nombre d'éléments, le chemin de debug, le bouton d'ouverture de ScriptAIManager, le sélecteur d'enregistrement et le bouton de chargement.",
+          "desc": "Displays the number of elements, the debug path, the button to open ScriptAIManager, the recording selector and the load button.",
           "internal": true
         },
         "work": {
-          "desc": "Publie {path = self.aiPath} sur la sortie path.",
+          "desc": "Publishes {path = self.aiPath} on the path output.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche le nombre d'éléments du chemin.",
+          "desc": "Displays the number of elements of the path.",
           "params": {
             "builder": {
               "type": "table",
-              "desc": "Constructeur de nœud."
+              "desc": "Node constructor."
             },
             "style": {
               "type": "table",
-              "desc": "Style du nœud."
+              "desc": "Node style."
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde aiPath dans le projet.",
+          "desc": "Saves aiPath in the project.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure aiPath (vide par défaut).",
+          "desc": "Restores aiPath (empty by default).",
           "internal": true
         }
       }

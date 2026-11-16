@@ -2,69 +2,69 @@
 -- tim19Atlas stub generated from lua/ge/extensions/render/openxr.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Interface Lua de la réalité virtuelle OpenXR (casque VR). Pilote le moteur C++ (objet global OpenXR) : activation/désactivation avec une boîte de dialogue de bienvenue, état de session reçu du moteur (stateChanged), recentrage, gestion des erreurs, et une fenêtre ImGui de debug (réglages d'affichage 2D, UI CEF dans le casque, ancrage, mode debug, résolutions, FOV, IPD). L'extension se décharge toute seule à la désactivation. Global : render_openxr.
---- Accès : extension `render_openxr` : `extensions.load("render_openxr")`, puis la globale `render_openxr`
+--- Lua interface for OpenXR virtual reality (VR headset). Drives the C++ engine (global object OpenXR): enabling/disabling with a welcome dialog, session state received from the engine (stateChanged), recentering, error handling, and a debug ImGui window (2D display settings, CEF UI in the headset, anchoring, debug mode, resolutions, FOV, IPD). The extension unloads itself on deactivation. Global: render_openxr.
+--- Access: extension `render_openxr`: `extensions.load("render_openxr")`, then the global `render_openxr`
 ---@class render_openxr
----@field cefDialogOpen boolean|nil true tant que la boîte de dialogue de bienvenue est ouverte.
+---@field cefDialogOpen boolean|nil true while the welcome dialog is open.
 ---@field dependencies string[] {'core_camera'}
----@field state table État OpenXR reçu du moteur : systemName ('?' par défaut), enabled, sessionRunning, sessionState, renderedWidth/Height, recommendedWidth/Height, supportedWidth/Height, supportedLayers, fov0hz/fov0vt/fov1hz/fov1vt, ipd (m), currentRefreshRate/targetRefreshRate…
----@field stateString string 'disabled' (défaut), 'welcome' ou 'enabled'.
+---@field state table OpenXR state received from the engine: systemName ('?' by default), enabled, sessionRunning, sessionState, renderedWidth/Height, recommendedWidth/Height, supportedWidth/Height, supportedLayers, fov0hz/fov0vt/fov1hz/fov1vt, ipd (m), currentRefreshRate/targetRefreshRate…
+---@field stateString string 'disabled' (default), 'welcome' or 'enabled'.
 render_openxr = {}
 
---- Recentre la vue VR. Sans argument, recentre une fois (OpenXR.centerNow) ; avec une valeur, active/désactive le recentrage continu quand value > 0.2 (OpenXR.centerContinuous).
----Source : lua/ge/extensions/render/openxr.lua:328
----@param value number|nil Valeur analogique d'une action d'entrée (déduit du code).
+--- Recenters the VR view. Without argument, recenters once (OpenXR.centerNow); with a value, enables/disables continuous recentering when value > 0.2 (OpenXR.centerContinuous).
+---Source: lua/ge/extensions/render/openxr.lua:328
+---@param value number|nil Analog value of an input action (inferred from code).
 function render_openxr.center(value) end
 
---- Fermeture de la boîte de dialogue de bienvenue (appelée par ses boutons) : enable=true active OpenXR, sinon le désactive.
----Source : lua/ge/extensions/render/openxr.lua:162
----@param enable boolean Choix de l'utilisateur.
+--- Closing of the welcome dialog (called by its buttons): enable=true enables OpenXR, otherwise disables it.
+---Source: lua/ge/extensions/render/openxr.lua:162
+---@param enable boolean User's choice.
 function render_openxr.closeWelcome(enable) end
 
---- Appelé par le moteur en cas d'erreur OpenXR : logue l'erreur et affiche un toast d'erreur avec la traduction `ui.openXR.errors.<err>`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/render/openxr.lua:340
----@param err string Identifiant d'erreur (clé de traduction).
+--- Called by the engine on an OpenXR error: logs the error and shows an error toast with the translation `ui.openXR.errors.<err>`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/render/openxr.lua:340
+---@param err string Error identifier (translation key).
 function render_openxr.errorDetected(err) end
 
---- Indique si une session OpenXR est en cours.
----Source : lua/ge/extensions/render/openxr.lua:336
----@return boolean  M.state.sessionRunning ou false.
+--- Indicates whether an OpenXR session is running.
+---Source: lua/ge/extensions/render/openxr.lua:336
+---@return boolean  M.state.sessionRunning or false.
 function render_openxr.isSessionRunning() end
 
---- Hook d'initialisation : passe l'extension en déchargement manuel et charge les réglages.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/render/openxr.lua:157
+--- Initialization hook: sets the extension to manual unload and loads the settings.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/render/openxr.lua:157
 function render_openxr.onInit() end
 
---- Hook avant rendu : appelle la fonction de mise à jour courante (onUpdate quand OpenXR est activé, sinon rien).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/render/openxr.lua:36
----@param ... any dtReal, dtSim, dtRaw (déduit du code).
+--- Pre-render hook: calls the current update function _anon(onUpdate when OpenXR is enabled, otherwise nothing).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/render/openxr.lua:36
+---@param ... any dtReal, dtSim, dtRaw (inferred from code).
 function render_openxr.onPreRender(...) end
 
---- Hook de changement de réglages : relit les réglages OpenXR, redémarre OpenXR si le mode debug change pendant une session, et régénère la courbure de l'UI (OpenXR.generateUiCurvature) si OpenXR est actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/render/openxr.lua:143
+--- Settings change hook: re-reads the OpenXR settings, restarts OpenXR if debug mode changes during a session, and regenerates the UI curvature (OpenXR.generateUiCurvature) if OpenXR is active.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/render/openxr.lua:143
 function render_openxr.onSettingsChanged() end
 
---- Change l'état de l'interface OpenXR : 'welcome' ouvre la boîte de dialogue, 'enabled' active OpenXR.setEnable(true) (retombe sur 'disabled' en cas d'échec), 'disabled' le coupe et décharge l'extension ; toute autre valeur est une erreur (désactive). Enregistre une action joueur « set VR state … ».
----Source : lua/ge/extensions/render/openxr.lua:289
----@param stateString string 'welcome', 'enabled' ou 'disabled'.
+--- Changes the state of the OpenXR interface: 'welcome' opens the dialog, 'enabled' activates OpenXR.setEnable(true) (falls back to 'disabled' on failure), 'disabled' turns it off and unloads the extension; any other value is an error (disables). Records a player action "set VR state …".
+---Source: lua/ge/extensions/render/openxr.lua:289
+---@param stateString string 'welcome', 'enabled' or 'disabled'.
 function render_openxr.setStateUI(stateString) end
 
---- Appelé par le moteur C++ à chaque changement d'état OpenXR : met à jour M.state (le target refresh rate garde le maximum vu ; une fréquence infinie est ramenée à 0), synchronise stateString avec enabled et notifie l'UI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/render/openxr.lua:98
----@param state table Nouvel état OpenXR.
+--- Called by the C++ engine on every OpenXR state change: updates M.state (the target refresh rate keeps the maximum seen; an infinite rate is brought back to 0), synchronizes stateString with enabled and notifies the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/render/openxr.lua:98
+---@param state table New OpenXR state.
 function render_openxr.stateChanged(state) end
 
---- Fait avancer l'état : disabled -> welcome ; welcome -> enabled ; enabled -> disabled.
----Source : lua/ge/extensions/render/openxr.lua:321
+--- Advances the state: disabled -> welcome; welcome -> enabled; enabled -> disabled.
+---Source: lua/ge/extensions/render/openxr.lua:321
 function render_openxr.toggle() end
 
---- Envoie 'OpenXRStateChanged' à l'UI si un champ suivi a changé, ou si forced (alors logue aussi l'état).
----Source : lua/ge/extensions/render/openxr.lua:82
----@param forced boolean|nil Forcer l'envoi.
+--- Sends 'OpenXRStateChanged' to the UI if a tracked field changed, or if forced (then also logs the state).
+---Source: lua/ge/extensions/render/openxr.lua:82
+---@param forced boolean|nil Force the send.
 function render_openxr.updateUI(forced) end
 

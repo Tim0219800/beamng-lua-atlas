@@ -2,33 +2,33 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+--- Flowgraph node class (created via `_flowgraph_createNode(C)`).
 ---@class flowgraph_nodes_gameplay_traffic_pursuitInformation_C
 local flowgraph_nodes_gameplay_traffic_pursuitInformation_C = {}
 
---- Appelle reset().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.lua:40
+--- Calls reset().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.lua:40
 function flowgraph_nodes_gameplay_traffic_pursuitInformation_C:_executionStopped() end
 
---- Appelle reset().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.lua:36
+--- Calls reset().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.lua:36
 function flowgraph_nodes_gameplay_traffic_pursuitInformation_C:init() end
 
---- Hook appelé par le système de police ; mémorise 'arrest' ou 'evade' si id correspond au véhicule suivi.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.lua:79
----@param id any id du véhicule concerné
----@param action any action de poursuite ('arrest' ou 'evade')
----@param data table données associées à l'action
+--- Hook called by the police system; remembers 'arrest' or 'evade' if id matches the tracked vehicle.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.lua:79
+---@param id any id of the vehicle concerned
+---@param action any pursuit action ('arrest' or 'evade')
+---@param data table data associated with the action
 function flowgraph_nodes_gameplay_traffic_pursuitInformation_C:onPursuitAction(id, action, data) end
 
---- Remet à zéro le véhicule, les sorties flow et les flags.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.lua:44
+--- Resets the vehicle, the flow outputs and the flags.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.lua:44
 function flowgraph_nodes_gameplay_traffic_pursuitInformation_C:reset() end
 
---- Lit les données de poursuite et met à jour les sorties ; émet arrest/evade une frame.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.lua:53
+--- Reads the pursuit data and updates the outputs; emits arrest/evade for one frame.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.lua:53
 function flowgraph_nodes_gameplay_traffic_pursuitInformation_C:work() end
 

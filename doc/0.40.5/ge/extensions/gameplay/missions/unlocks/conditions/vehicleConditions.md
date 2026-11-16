@@ -1,21 +1,21 @@
 # `gameplay_missions_unlocks_conditions_vehicleConditions`
 
-*Fichier : `lua/ge/extensions/gameplay/missions/unlocks/conditions/vehicleConditions.lua` · VM : Game Engine (GE) · 25 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/missions/unlocks/conditions/vehicleConditions.lua` · VM: Game Engine (GE) · 25 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_missions_unlocks_conditions_vehicleConditions` : `extensions.load("gameplay_missions_unlocks_conditions_vehicleConditions")`, puis la globale `gameplay_missions_unlocks_conditions_vehicleConditions`
+**Access:** extension `gameplay_missions_unlocks_conditions_vehicleConditions`: `extensions.load("gameplay_missions_unlocks_conditions_vehicleConditions")`, then the global `gameplay_missions_unlocks_conditions_vehicleConditions`
 
-Type de condition de déblocage de missions lié au véhicule : vehicleDriven. Chargé par gameplay_missions_unlocks.
+Vehicle-related mission unlock condition type: vehicleDriven. Loaded by gameplay_missions_unlocks.
 
-## Remarques
+## Notes
 
-- vehicleDriven annonce « le joueur doit être dans un véhicule » mais conditionMet renvoie toujours true sans rien vérifier.
-- busDriven est commenté dans le code (inactif).
+- vehicleDriven announces "the player must be in a vehicle" but conditionMet always returns true without checking anything.
+- busDriven is commented out in the code (inactive).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `vehicleDriven` | table | Condition {type='vehicleDriven'} : label 'Driving a vehicle', conditionMet renvoie toujours true, {}. |
+| `vehicleDriven` | table | Condition {type='vehicleDriven'}: label 'Driving a vehicle', conditionMet always returns true, {}. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/missions/unlocks/conditions/vehicleConditions.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/missions/unlocks/conditions/vehicleConditions.lua`.*

@@ -1,27 +1,48 @@
 {
   "path": "lua/ge/extensions/util/screenshotCreator/shippedConfigs.lua",
-  "module": "Détermine si un modèle de véhicule ou une configuration (.pc) est « livré » avec le jeu, c'est-à-dire non exclu par le fichier de filtres de déploiement /DevTools/deployfilters/shared_prepack.txt. Le fichier est lu une fois (règles en minuscules, lignes vides et commentaires # ignorés), les règles de type glob (*, **, ?) sont converties en motifs Lua et les résultats sont mis en cache. Utilisé par le créateur de vignettes (modelSelection, job) pour ne photographier que les véhicules livrés.",
+  "module": "Determines whether a vehicle model or configuration (.pc) is \"shipped\" with the game, i.e. not excluded by the deployment filter file /DevTools/deployfilters/shared_prepack.txt. The file is read once (lowercase rules, empty lines and # comments ignored), glob-style rules (*, **, ?) are converted to Lua patterns and results are cached. Used by the thumbnail creator (modelSelection, job) to photograph only shipped vehicles.",
   "notes": [
-    "Un chemin est considéré comme livré par défaut ; il cesse de l'être dès qu'une règle du fichier le reconnaît (préfixe exact ou motif glob).",
-    "Si le fichier /DevTools/deployfilters/shared_prepack.txt n'existe pas (cas d'une installation normale du jeu, ce dossier DevTools étant un outil interne), aucune règle n'est chargée et tout est considéré comme livré.",
-    "Les chemins testés sont /vehicles/<modèle>/ et /vehicles/<modèle>/<config>.pc (en minuscules)."
+    "A path is considered shipped by default; it stops being so as soon as a rule in the file matches it (exact prefix or glob pattern).",
+    "If the file /DevTools/deployfilters/shared_prepack.txt does not exist (the case for a normal game installation, this DevTools folder being an internal tool), no rule is loaded and everything is considered shipped.",
+    "The tested paths are /vehicles/<model>/ and /vehicles/<model>/<config>.pc (lowercase)."
   ],
   "functions": {
     "isModelShipped": {
-      "desc": "Indique si le dossier /vehicles/<modèle>/ n'est pas exclu par les filtres de déploiement.",
-      "params": {"modelName": {"type": "string", "desc": "Nom du modèle (dossier de véhicule)."}},
-      "returns": [{"type": "boolean", "desc": "true si le modèle est livré."}]
+      "desc": "Indicates whether the /vehicles/<model>/ folder is not excluded by the deployment filters.",
+      "params": {
+        "modelName": {
+          "type": "string",
+          "desc": "Model name (vehicle folder)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the model is shipped."
+        }
+      ]
     },
     "isConfigShipped": {
-      "desc": "Indique si le modèle ET le fichier /vehicles/<modèle>/<config>.pc sont livrés.",
+      "desc": "Indicates whether the model AND the file /vehicles/<model>/<config>.pc are shipped.",
       "params": {
-        "modelName": {"type": "string", "desc": "Nom du modèle."},
-        "configName": {"type": "string", "desc": "Nom de la configuration, sans extension .pc."}
+        "modelName": {
+          "type": "string",
+          "desc": "Model name."
+        },
+        "configName": {
+          "type": "string",
+          "desc": "Configuration name, without the .pc extension."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si la config est livrée."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the config is shipped."
+        }
+      ]
     },
     "clearCache": {
-      "desc": "Oublie les règles chargées et le cache de résultats ; le fichier de filtres sera relu au prochain appel."
+      "desc": "Forgets the loaded rules and the result cache; the filter file will be reread on the next call."
     }
   }
 }

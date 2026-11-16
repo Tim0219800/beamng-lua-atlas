@@ -1,55 +1,55 @@
 # `controller_propAnimation_hPattern`
 
-*Fichier : `lua/vehicle/controller/propAnimation/hPattern.lua` · VM : Véhicule · 229 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/propAnimation/hPattern.lua` · VM: Vehicle · 229 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `propAnimation/hPattern` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `propAnimation/hPattern` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire d'animation d'un levier de vitesses en H (boîte manuelle). Suit le rapport engagé du device « gearbox » et déplace un levier virtuel sur deux axes (electrics hPatternAxisX / hPatternAxisY) en passant par la grille : en engagement, il se déplace d'abord en X puis en Y ; en dégagement, d'abord en Y puis en X. Joue un son d'engagement et de dégagement avec l'agressivité de passage. Les changements de rapport rapides sont mis en file (dequeue) pour être animés l'un après l'autre.
+Auxiliary H-pattern gear lever animation controller (manual gearbox). Follows the engaged gear of the "gearbox" device and moves a virtual lever on two axes (electrics hPatternAxisX / hPatternAxisY) through the gate: on engagement, it moves first in X then in Y; on disengagement, first in Y then in X. Plays an engagement and disengagement sound with the shift aggression. Rapid gear changes are queued (dequeue) to be animated one after the other.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : gearCoordinates (table d'en-tête avec colonnes gearIndex, x, y), electricsNameXAxis ("hPatternAxisX"), electricsNameYAxis ("hPatternAxisY"), supportedGearboxTypes ({"manualGearbox"}), relevantGearboxName ("gearbox"), shiftSoundNode_nodes (premier élément = nœud du son, sinon 0 + log W), shiftSoundEventHPatternGearIn ("event:>Vehicle>Interior>Gearshift>manual_modern_01_in"), shiftSoundEventHPatternGearOut ("..._01_out"), shiftSoundVolumeHPatternGearIn / GearOut (0.5), demoMode (false).
-- Lit controller.mainController.shiftingAggression (vitesse d'animation entre 0.3 et 1 fois la vitesse de base) et electrics.values.isShifting.
-- Si le device est introuvable ou d'un type non supporté, log E et updateGFX devient nop ; demoMode réactive updateGFX et parcourt les rapports automatiquement (démonstration).
-- Au point mort, après la fin du passage, X est recentré sur la coordonnée du rapport 0.
+- jbeam keys read: gearCoordinates (header table with columns gearIndex, x, y), electricsNameXAxis ("hPatternAxisX"), electricsNameYAxis ("hPatternAxisY"), supportedGearboxTypes ({"manualGearbox"}), relevantGearboxName ("gearbox"), shiftSoundNode_nodes (first element = sound node, otherwise 0 + log W), shiftSoundEventHPatternGearIn ("event:>Vehicle>Interior>Gearshift>manual_modern_01_in"), shiftSoundEventHPatternGearOut ("..._01_out"), shiftSoundVolumeHPatternGearIn / GearOut (0.5), demoMode (false).
+- Reads controller.mainController.shiftingAggression (animation speed between 0.3 and 1 times the base speed) and electrics.values.isShifting.
+- If the device is not found or of an unsupported type, log E and updateGFX becomes nop; demoMode reactivates updateGFX and cycles through the gears automatically (demonstration).
+- In neutral, after the shift ends, X is recentered on the coordinate of gear 0.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_propAnimation_hPattern.init(jbeamData)` | Lit les coordonnées de la grille en H, vérifie le device de boîte et initialise sons et file de rapports. *(interne)* | 159 |
-| `controller_propAnimation_hPattern.reset(jbeamData)` | Remet le levier à (0, 0), vide la file de rapports et réinitialise lisseurs et démo. *(interne)* | 142 |
-| `controller_propAnimation_hPattern.updateGFX(dt)` | Chaque frame : met en file les changements de rapport, déplace le levier en X/Y, joue les sons et publie les electrics. *(interne)* | 72 |
+| `controller_propAnimation_hPattern.init(jbeamData)` | Reads the H-pattern gate coordinates, checks the gearbox device and initializes sounds and the gear queue. *(internal)* | 159 |
+| `controller_propAnimation_hPattern.reset(jbeamData)` | Resets the lever to (0, 0), clears the gear queue and resets smoothers and demo. *(internal)* | 142 |
+| `controller_propAnimation_hPattern.updateGFX(dt)` | Every frame: queues the gear changes, moves the lever in X/Y, plays the sounds and publishes the electrics. *(internal)* | 72 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_propAnimation_hPattern.init(jbeamData)`
 
-Lit les coordonnées de la grille en H, vérifie le device de boîte et initialise sons et file de rapports.
+Reads the H-pattern gate coordinates, checks the gearbox device and initializes sounds and the gear queue.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_propAnimation_hPattern.reset(jbeamData)`
 
-Remet le levier à (0, 0), vide la file de rapports et réinitialise lisseurs et démo.
+Resets the lever to (0, 0), clears the gear queue and resets smoothers and demo.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_propAnimation_hPattern.updateGFX(dt)`
 
-Chaque frame : met en file les changements de rapport, déplace le levier en X/Y, joue les sons et publie les electrics.
+Every frame: queues the gear changes, moves the lever in X/Y, plays the sounds and publishes the electrics.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `playSFXOnceCT`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/propAnimation/hPattern.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/propAnimation/hPattern.lua`.*

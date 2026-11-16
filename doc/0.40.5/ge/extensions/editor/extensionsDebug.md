@@ -1,23 +1,23 @@
 # `editor_extensionsDebug`
 
-*Fichier : `lua/ge/extensions/editor/extensionsDebug.lua` · VM : Game Engine (GE) · 69 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/extensionsDebug.lua` · VM: Game Engine (GE) · 69 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_extensionsDebug` : `extensions.load("editor_extensionsDebug")`, puis la globale `editor_extensionsDebug`
+**Access:** extension `editor_extensionsDebug`: `extensions.load("editor_extensionsDebug")`, then the global `editor_extensionsDebug`
 
-Fenêtre de debug de l'éditeur (menu Window > Debug > Extensions Debug) qui liste les extensions Lua chargées (extensions.getLoadedExtensionsNames()) sous forme d'arbre imgui. Chaque extension se déplie pour montrer récursivement le contenu de sa table (imguiUtils.addRecursiveTreeTable). Utile à un moddeur pour inspecter l'état d'une extension à chaud.
+Editor debug window (Window > Debug > Extensions Debug menu) that lists the loaded Lua extensions (extensions.getLoadedExtensionsNames()) as an imgui tree. Each extension expands to recursively show the content of its table (imguiUtils.addRecursiveTreeTable). Useful to a modder to inspect the state of an extension live.
 
-## Remarques
+## Notes
 
-- La case « Filters » est affichée mais le filtrage par type est commenté dans le code : cocher la case masque simplement l'arbre détaillé de chaque extension (rien n'est affiché à l'intérieur des nœuds).
-- Les cases funCheck/numCheck/strCheck/cdataCheck/boolCheck/tblCheck sont déclarées mais jamais utilisées.
+- The "Filters" checkbox is displayed but the filtering by type is commented out in the code: checking the box simply hides the detailed tree of each extension (nothing is displayed inside the nodes).
+- The checkboxes funCheck/numCheck/strCheck/cdataCheck/boolCheck/tblCheck are declared but never used.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_extensionsDebug.onEditorGui()` | Dessine la fenêtre « Extensions Debug Window » : case Filters puis un nœud d'arbre par extension chargée, avec le contenu récursif de extensions[nom] quand Filters est décochée. *(interne)* *(hook)* | 33 |
-| `editor_extensionsDebug.onEditorInitialized()` | Appelé quand l'éditeur est initialisé : enregistre la fenêtre « extensionsDebug » et l'entrée de menu « Extensions Debug » (groupe Debug). *(interne)* *(hook)* | 59 |
-| `editor_extensionsDebug.onExtensionLoaded()` | Hook appelé au chargement de l'extension ; ne fait rien ici. *(interne)* *(hook)* | 56 |
+| `editor_extensionsDebug.onEditorGui()` | Draws the "Extensions Debug Window": Filters checkbox then one tree node per loaded extension, with the recursive content of extensions[name] when Filters is unchecked. *(internal)* *(hook)* | 33 |
+| `editor_extensionsDebug.onEditorInitialized()` | Called when the editor is initialized: registers the "extensionsDebug" window and the "Extensions Debug" menu entry (Debug group). *(internal)* *(hook)* | 59 |
+| `editor_extensionsDebug.onExtensionLoaded()` | Hook called when the extension is loaded; does nothing here. *(internal)* *(hook)* | 56 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/extensionsDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/extensionsDebug.lua`.*

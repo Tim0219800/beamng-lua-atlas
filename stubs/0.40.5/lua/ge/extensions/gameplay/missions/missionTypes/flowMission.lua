@@ -2,130 +2,130 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe de base d'une mission flowgraph. L'objet porte les champs de la mission (id, missionFolder, setupModules, missionTypeData, careerSetup, additionalAttributes, fgPath, fgVariables, progress, userSettings...) et, une fois démarré, self.mgr (le gestionnaire de flowgraph).
+--- Base class of a flowgraph mission. The object carries the mission fields (id, missionFolder, setupModules, missionTypeData, careerSetup, additionalAttributes, fgPath, fgVariables, progress, userSettings...) and, once started, self.mgr (the flowgraph manager).
 ---@class gameplay_missions_missionTypes_flowMission
 local gameplay_missions_missionTypes_flowMission = {}
 
---- Modifie la valeur de base d'une variable existante du flowgraph. Types acceptés : boolean, string, number, table de 3 (vec3) ou 4 (quat) éléments. Si la variable n'existe pas dans le flowgraph, elle est ignorée.
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:569
----@param name string Nom de la variable.
----@param value boolean|string|number|table Nouvelle valeur.
----@return boolean|nil  true en cas d'erreur, nil sinon.
+--- Changes the base value of an existing flowgraph variable. Accepted types: boolean, string, number, table of 3 (vec3) or 4 (quat) elements. If the variable does not exist in the flowgraph, it is ignored.
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:569
+---@param name string Variable name.
+---@param value boolean|string|number|table New value.
+---@return boolean|nil  true on error, nil otherwise.
 function gameplay_missions_missionTypes_flowMission:addOrSetVariable(name, value) end
 
---- Si le flowgraph contient un nœud pour le hook onRequestAbandon, le diffuse et renvoie true (le flowgraph gère l'abandon) ; sinon renvoie nil.
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:560
----@return boolean|nil  true si le flowgraph prend en charge la demande d'abandon.
+--- If the flowgraph contains a node for the onRequestAbandon hook, broadcasts it and returns true (the flowgraph handles the abandon); otherwise returns nil.
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:560
+---@return boolean|nil  true if the flowgraph handles the abandon request.
 function gameplay_missions_missionTypes_flowMission:attemptAbandonMission() end
 
---- Construit la liste des réglages utilisateur communs à tous les types de mission : sélection du véhicule (setupModuleVehicles, avec option véhicule personnalisé), trafic (setupModuleTraffic) et heure du jour (setupModuleEnvironmentTime). Pendant la construction des réglages par défaut (_buildingDefaultUserSettings), ne renvoie que {key, value} par module activé.
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:111
----@return table[]  Liste de définitions de réglages ({key, value, ...} ou de type select pour les véhicules).
+--- Builds the list of user settings common to all mission types: vehicle selection (setupModuleVehicles, with custom vehicle option), traffic (setupModuleTraffic) and time of day (setupModuleEnvironmentTime). While the default settings are being built (_buildingDefaultUserSettings), returns only {key, value} per enabled module.
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:111
+---@return table[]  List of setting definitions ({key, value, ...} or select type for vehicles).
 function gameplay_missions_missionTypes_flowMission:getCommonSettingsData() end
 
---- Point d'extension pour une récompense d'étoile dépendant des réglages ; vide dans la base (renvoie nil).
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:420
----@param key string Clé de l'étoile.
----@param userSettings table|nil Réglages utilisateur.
+--- Extension point for a star reward that depends on settings; empty in the base (returns nil).
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:420
+---@param key string Star key.
+---@param userSettings table|nil User settings.
 function gameplay_missions_missionTypes_flowMission:getDynamicStarReward(key, userSettings) end
 
---- Renvoie les frais d'entrée de la mission (careerSetup.entryFee) sous forme de table attributeKey -> montant, ou nil s'il n'y en a pas. Accepte l'ancien format liste {attributeKey, rewardAmount}.
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:409
----@param userSettings table|nil Réglages utilisateur (non utilisés ici).
----@return table<string, number>|nil  Frais par attribut, ou nil.
+--- Returns the mission's entry fees (careerSetup.entryFee) as an attributeKey -> amount table, or nil if there are none. Accepts the old list format {attributeKey, rewardAmount}.
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:409
+---@param userSettings table|nil User settings (not used here).
+---@return table<string, number>|nil  Fees per attribute, or nil.
 function gameplay_missions_missionTypes_flowMission:getEntryFee(userSettings) end
 
---- Diffuse le hook flowgraph onGatherGameContextUiButtons, fusionne les boutons par id (un bouton actif l'emporte sur un inactif) et les trie par order puis label.
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:616
----@return table[]|nil  Liste de boutons {id, label, order, active, ...} ; nil si le flowgraph n'est pas créé.
+--- Broadcasts the flowgraph hook onGatherGameContextUiButtons, merges the buttons by id (an active button wins over an inactive one) and sorts them by order then label.
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:616
+---@return table[]|nil  List of buttons {id, label, order, active, ...}; nil if the flowgraph is not created.
 function gameplay_missions_missionTypes_flowMission:getGameContextUiButtons() end
 
---- Renvoie la clé de traduction d'une clé de progression, ou la clé elle-même si elle est inconnue.
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:63
----@param progressKey string Clé de progression.
----@return string  Clé de traduction ou progressKey.
+--- Returns the translation key of a progress key, or the key itself if unknown.
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:63
+---@param progressKey string Progress key.
+---@return string  Translation key or progressKey.
 function gameplay_missions_missionTypes_flowMission:getProgressKeyTranslation(progressKey) end
 
---- Appelé à la création de la mission. Définit missionTypeLabel, progressKeyTranslations, defaultPreviewFile (/gameplay/missionTypes/<type>/defaultPreview.jpg s'il existe, résultat mis en cache) et ignoreUserSettingsKeyForActiveStars. Charge aussi les données progressSetup du type mais ne les copie pas (la copie est commentée).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:37
+--- Called when the mission is created. Defines missionTypeLabel, progressKeyTranslations, defaultPreviewFile (/gameplay/missionTypes/<type>/defaultPreview.jpg if it exists, result cached) and ignoreUserSettingsKeyForActiveStars. Also loads the type's progressSetup data but does not copy it (the copy is commented out).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:37
 function gameplay_missions_missionTypes_flowMission:init() end
 
---- Relaie à self.script (s'il existe) le démarrage d'un état du flowgraph.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:491
----@param stateName string Nom de l'état.
----@param state table Objet état.
----@param transData any Données de transition.
+--- Relays the start of a flowgraph state to self.script (if it exists).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:491
+---@param stateName string State name.
+---@param state table State object.
+---@param transData any Transition data.
 function gameplay_missions_missionTypes_flowMission:onFlowgraphStateStarted(stateName, state, transData) end
 
---- Relaie à self.script l'arrêt d'un état du flowgraph.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:497
----@param stateName string Nom de l'état.
----@param state table Objet état.
+--- Relays the stop of a flowgraph state to self.script.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:497
+---@param stateName string State name.
+---@param state table State object.
 function gameplay_missions_missionTypes_flowMission:onFlowgraphStateStopped(stateName, state) end
 
---- Appelé quand l'écran de mission (début ou fin) est prêt. Relaie au script ; en mode « startScreen », remet l'heure du monde à l'heure de la mission si timeScale > 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:503
----@param mode string Mode de l'écran, par ex. « startScreen ».
+--- Called when the mission screen (start or end) is ready. Relays to the script; in "startScreen" mode, resets the world time to the mission time if timeScale > 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:503
+---@param mode string Screen mode, e.g. "startScreen".
 function gameplay_missions_missionTypes_flowMission:onMissionScreenReady(mode) end
 
---- Démarre la mission : journalise les problèmes (logMissionIssues), appelle onPreStart s'il existe, crée le flowgraph si besoin (preprocessMissionTypeData et getFgPath optionnels), injecte les variables de progression et les réglages utilisateur (puis les vide), lance le flowgraph s'il est arrêté, et appelle script:onStart.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:423
----@return boolean|nil  true si la mise en place du flowgraph a échoué.
+--- Starts the mission: logs the issues (logMissionIssues), calls onPreStart if it exists, creates the flowgraph if needed (optional preprocessMissionTypeData and getFgPath), injects the progress variables and user settings (then clears them), starts the flowgraph if it is stopped, and calls script:onStart.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:423
+---@return boolean|nil  true if the flowgraph setup failed.
 function gameplay_missions_missionTypes_flowMission:onStart() end
 
---- Arrête le flowgraph (instantanément si data.stopInstant), crée une tentative « abandoned » si data.abandoned, émet le hook onMissionProgressChanged, relaie à script:onStop puis appelle onPostStop s'il existe.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:537
----@param data table|nil Champs utilisés : stopInstant, abandoned, attempt.
+--- Stops the flowgraph (instantly if data.stopInstant), creates an "abandoned" attempt if data.abandoned, emits the onMissionProgressChanged hook, relays to script:onStop, then calls onPostStop if it exists.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:537
+---@param data table|nil Fields used: stopInstant, abandoned, attempt.
 function gameplay_missions_missionTypes_flowMission:onStop(data) end
 
---- Appelé à chaque frame : relaie au script et réapplique le vent de l'environnement à tous les véhicules prêts.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:520
----@param dtReal number Temps réel (s).
----@param dtSim number Temps de simulation (s).
----@param dtRaw number Temps brut (s).
+--- Called every frame: relays to the script and reapplies the environment wind to all ready vehicles.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:520
+---@param dtReal number Real time (s).
+---@param dtSim number Simulation time (s).
+---@param dtRaw number Raw time (s).
 function gameplay_missions_missionTypes_flowMission:onUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook relayé à self.script.onVehicleReset si le script le définit (généré dans une boucle sur la liste scriptHooks).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:dyn
----@param ... any Arguments du hook.
+--- Hook relayed to self.script.onVehicleReset if the script defines it (generated in a loop over the scriptHooks list).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:dyn
+---@param ... any Hook arguments.
 function gameplay_missions_missionTypes_flowMission:onVehicleReset(...) end
 
---- Applique les réglages communs choisis par le joueur à self.setupModules : véhicule choisi (index, véhicule personnalisé, usePlayerVehicle, useCustomConfig), trafic (useTraffic) et heure de l'environnement. Ne doit pas être appelée pendant qu'une mission est active (erreur loguée sinon).
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:295
----@param flatSettings table<string, any> Réglages à plat clé -> valeur.
+--- Applies the common settings chosen by the player to self.setupModules: chosen vehicle (index, custom vehicle, usePlayerVehicle, useCustomConfig), traffic (useTraffic) and environment time. Must not be called while a mission is active (otherwise an error is logged).
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:295
+---@param flatSettings table<string, any> Flat key -> value settings.
 function gameplay_missions_missionTypes_flowMission:processCommonSettings(flatSettings) end
 
---- Mémorise les réglages utilisateur dans self.userSettings ; ils sont injectés dans le flowgraph à onStart.
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:324
----@param settings table<string, any> Réglages à plat clé -> valeur.
+--- Stores the user settings in self.userSettings; they are injected into the flowgraph at onStart.
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:324
+---@param settings table<string, any> Flat key -> value settings.
 function gameplay_missions_missionTypes_flowMission:processUserSettings(settings) end
 
---- Relit dans le flowgraph la valeur de chaque variable de progression et la copie dans self.progress ; logue une erreur pour celles introuvables.
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:598
+--- Rereads from the flowgraph the value of each progress variable and copies it into self.progress; logs an error for those not found.
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:598
 function gameplay_missions_missionTypes_flowMission:retrieveProgressFromFlowgraph() end
 
---- Convertit les anciens formats de mission vers les setupModules actuels : variables flowgraph presetVehicleActive/playerModel/..., ancien mode de véhicule (own/choice/provided), timeOfDay numérique ou objet vers environment, valeurs par défaut de cloudCover/cloudWindSpeed. Génère aussi l'attribut additionalAttributes.vehicle (own/provided/choice) s'il manque.
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:329
----@param keyAliases table<string, string>|nil Alias des noms de variables de missionTypeData (presetVehicleActive, playerModel, playerConfig, playerConfigPath).
+--- Converts old mission formats to the current setupModules: flowgraph variables presetVehicleActive/playerModel/..., old vehicle mode (own/choice/provided), numeric or object timeOfDay to environment, default values for cloudCover/cloudWindSpeed. Also generates the additionalAttributes.vehicle attribute (own/provided/choice) if missing.
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:329
+---@param keyAliases table<string, string>|nil Aliases of the missionTypeData variable names (presetVehicleActive, playerModel, playerConfig, playerConfigPath).
 function gameplay_missions_missionTypes_flowMission:setBackwardsCompatibility(keyAliases) end
 
---- Pour chaque réglage de type select de sélection de véhicule, complète les options « custom » (liées à setupModuleVehiclesCustom) avec la vignette, le libellé « Custom: <marque modèle> » et la classe de véhicule (gameplay_vehiclePerformance.getClassFromConfig). Affiche « Custom: (None Selected) » si le modèle ou la config n'est pas choisi.
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:241
----@param userSettings table[]|nil Liste des réglages utilisateur (modifiée en place).
+--- For each vehicle-selection select setting, completes the "custom" options (tied to setupModuleVehiclesCustom) with the thumbnail, the "Custom: <make model>" label and the vehicle class (gameplay_vehiclePerformance.getClassFromConfig). Shows "Custom: (None Selected)" if the model or config is not chosen.
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:241
+---@param userSettings table[]|nil List of user settings (modified in place).
 function gameplay_missions_missionTypes_flowMission:setPreviewsForCustomVehicles(userSettings) end
 
---- Localise le fichier flowgraph (chemin relatif au dossier de la mission, sinon chemin absolu), le charge avec core_flowgraphManager.loadManager (transient=true, activity=self), puis définit les variables de progression (valeur sauvegardée prioritaire sur la valeur de la dernière tentative) et les variables de `variables`.
----Source : lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:69
----@param fgFile string Nom du fichier flowgraph, relatif au dossier de la mission ou absolu.
----@param variables table<string, any>|nil Variables à injecter (fgVariables).
----@return boolean|nil  true en cas d'erreur (fichier introuvable, nom réservé, variable invalide), nil sinon.
+--- Locates the flowgraph file (path relative to the mission folder, otherwise absolute path), loads it with core_flowgraphManager.loadManager (transient=true, activity=self), then sets the progress variables (saved value takes priority over the last attempt's value) and the variables from `variables`.
+---Source: lua/ge/extensions/gameplay/missions/missionTypes/flowMission.lua:69
+---@param fgFile string Flowgraph file name, relative to the mission folder or absolute.
+---@param variables table<string, any>|nil Variables to inject (fgVariables).
+---@return boolean|nil  true on error (file not found, reserved name, invalid variable), nil otherwise.
 function gameplay_missions_missionTypes_flowMission:setupFlowgraphManager(fgFile, variables) end
 

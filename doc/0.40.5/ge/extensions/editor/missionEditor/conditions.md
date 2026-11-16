@@ -1,35 +1,35 @@
 # `editor_missionEditor_conditions`
 
-*Fichier : `lua/ge/extensions/editor/missionEditor/conditions.lua` · VM : Game Engine (GE) · 395 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/missionEditor/conditions.lua` · VM: Game Engine (GE) · 395 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/missionEditor/conditions")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/missionEditor/conditions")` (file under extensions/ but not a regular extension)
 
-Éditeur de conditions du Mission Editor, utilisé deux fois par missionEditor.lua : « Start Condition » (champ startCondition) et « Visibility Conditions » (champ visibleCondition). Au démarrage, il charge tous les fichiers de /lua/ge/extensions/gameplay/missions/unlocks/conditions/ (via FS:findFiles et require) et fusionne leurs tables de conditions ; chaque type de condition dispose d'un affichage ImGui adapté (mission, valeur, comparaison numérique, niveau de carrière, catégorie WP, constructeur, disposition de transmission, propulsion, branche, ligue, conditions imbriquées). Le module renvoie un constructeur : require(...)(missionEditor, field, name).
+Condition editor of the Mission Editor, used twice by missionEditor.lua: "Start Condition" (field startCondition) and "Visibility Conditions" (field visibleCondition). At startup, it loads all the files of /lua/ge/extensions/gameplay/missions/unlocks/conditions/ (via FS:findFiles and require) and merges their condition tables; each condition type has a suitable ImGui display (mission, value, numeric comparison, career level, WP category, manufacturer, transmission layout, propulsion, branch, league, nested conditions). The module returns a constructor: require(...)(missionEditor, field, name).
 
-## Remarques
+## Notes
 
-- Les conditions sont stockées dans mission[field] sous forme {type = '...', ...} ; les conditions imbriquées sont dans condition.nested (bouton « Add » ajoute {type = 'always'}).
-- Le champ progressKey d'une condition de progression accepte 'any' (n'importe quelle clé) et 'default' (clé par défaut).
-- Bug : getMissionIssues teste d'abord si mission[field] est nil, mais n'arrête pas la fonction ; la ligne suivante lit alors .type sur nil et provoque une erreur.
-- L'état de dessin (index, depth) est global au module, partagé par toutes les instances ; il est remis à zéro dans draw.
-- Les conditions disponibles dépendent des fichiers présents dans le dossier unlocks/conditions ; les clés en double sont écrasées par le dernier fichier lu.
+- Conditions are stored in mission[field] as {type = '...', ...}; nested conditions are in condition.nested ("Add" button adds {type = 'always'}).
+- The progressKey field of a progress condition accepts 'any' (any key) and 'default' (default key).
+- Bug: getMissionIssues first tests whether mission[field] is nil, but does not stop the function; the next line then reads .type on nil and causes an error.
+- The draw state (index, depth) is global to the module, shared by all instances; it is reset in draw.
+- The available conditions depend on the files present in the unlocks/conditions folder; duplicate keys are overwritten by the last file read.
 
-## Classe `C`
+## Class `C`
 
-Sous-fenêtre d'édition d'une condition de mission.
+Sub-window for editing a mission condition.
 
-Le module renvoie un constructeur : `local obj = require("editor_missionEditor_conditions")(options)`.
+The module returns a constructor: `local obj = require("editor_missionEditor_conditions")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:draw()` | Dessine la condition de la mission (par défaut {type='always'}) avec son libellé, de façon récursive pour les conditions imbriquées. | 228 |
-| `C:getMissionIssues(m)` | Appelle setMission puis renvoie les problèmes : aucune condition définie (error), ou condition réglée sur « never » (error). | 46 |
-| `C:init(missionEditor, field, name)` | Constructeur : mémorise missionEditor, le champ édité et le libellé affiché, puis charge toutes les conditions disponibles depuis gameplay/missions/unlocks/conditions/. | 27 |
-| `C:setMission(mission)` | Sélectionne la mission à éditer et vide le cache des champs de saisie. | 41 |
+| `C:draw()` | Draws the mission's condition (default {type='always'}) with its label, recursively for nested conditions. | 228 |
+| `C:getMissionIssues(m)` | Calls setMission then returns the issues: no condition defined (error), or condition set to "never" (error). | 46 |
+| `C:init(missionEditor, field, name)` | Constructor: remembers missionEditor, the edited field and the displayed label, then loads all the available conditions from gameplay/missions/unlocks/conditions/. | 27 |
+| `C:setMission(mission)` | Selects the mission to edit and clears the input fields cache. | 41 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionEditor/conditions.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/missionEditor/conditions.lua`.*

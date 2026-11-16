@@ -1,43 +1,46 @@
 {
   "path": "lua/ge/extensions/editor/iconOverview.lua",
-  "module": "Fenêtre d'éditeur « Available Icons » (menu Window > Debug) qui liste toutes les icônes de editor.icons dans une grille filtrable, avec infobulle du nom. Un clic sur une icône copie son nom dans le presse-papiers. Le menu de la fenêtre permet de recréer l'atlas d'icônes (editor.createIconAtlas). drawContent est réutilisable par d'autres outils pour proposer un sélecteur d'icône.",
-  "usage": "extensions.load('editor_iconOverview')\neditor_iconOverview.drawContent(function(iconName) print(iconName) end) -- dans une fenêtre ImGui d'éditeur",
+  "module": "Editor window \"Available Icons\" (Window > Debug menu) that lists all the icons of editor.icons in a filterable grid, with a tooltip of the name. Clicking an icon copies its name to the clipboard. The window menu allows recreating the icon atlas (editor.createIconAtlas). drawContent is reusable by other tools to offer an icon picker.",
+  "usage": "extensions.load('editor_iconOverview')\neditor_iconOverview.drawContent(function(iconName) print(iconName) end) -- in an editor ImGui window",
   "notes": [
-    "La liste des icônes (tableKeys(editor.icons), triée) est calculée une seule fois dans onEditorInitialized, ou à nouveau après « Re-create icon atlas ».",
-    "drawContent utilise les variables locales icons et style initialisées par onEditorInitialized : l'appeler avant l'initialisation de l'éditeur provoquerait une erreur.",
-    "Les icônes sont dessinées en 32x32 multiplié par imgui.uiscale ; la grille utilise un ImGuiListClipper pour ne dessiner que les lignes visibles.",
-    "Le paramètre editEnded passé à uiInputSearchTextFilter est une globale non définie (donc nil) dans ce fichier."
+    "The icon list (tableKeys(editor.icons), sorted) is computed only once in onEditorInitialized, or again after \"Re-create icon atlas\".",
+    "drawContent uses the local variables icons and style initialized by onEditorInitialized: calling it before the editor is initialized would cause an error.",
+    "The icons are drawn at 32x32 multiplied by imgui.uiscale; the grid uses an ImGuiListClipper to only draw the visible rows.",
+    "The editEnded parameter passed to uiInputSearchTextFilter is an undefined global (so nil) in this file."
   ],
   "functions": {
     "drawContent": {
-      "desc": "Dessine le champ de recherche et la grille d'icônes filtrée dans la fenêtre ImGui courante. Appelle selectedFun(nomIcone) quand l'utilisateur clique sur une icône.",
+      "desc": "Draws the search field and the filtered icon grid in the current ImGui window. Calls selectedFun(iconName) when the user clicks an icon.",
       "params": {
-        "selectedFun": {"type": "function|nil", "desc": "Callback recevant le nom de l'icône cliquée (string). Par défaut nop."}
+        "selectedFun": {
+          "type": "function|nil",
+          "desc": "Callback receiving the name of the clicked icon (string). Default nop."
+        }
       },
       "internal": false
     },
     "onEditorGui": {
-      "desc": "Appelé à chaque frame par l'éditeur ; affiche la fenêtre « Available Icons » (menu + drawContent avec copie dans le presse-papiers).",
+      "desc": "Called every frame by the editor; displays the \"Available Icons\" window (menu + drawContent with copy to clipboard).",
       "params": {},
       "internal": true
     },
     "onEditorActivated": {
-      "desc": "Hook appelé à l'activation de l'éditeur ; vide dans ce fichier.",
+      "desc": "Hook called when the editor is activated; empty in this file.",
       "params": {},
       "internal": true
     },
     "open": {
-      "desc": "Affiche la fenêtre « iconOverview » (editor.showWindow). Même fonction que l'entrée de menu.",
+      "desc": "Shows the \"iconOverview\" window (editor.showWindow). Same function as the menu entry.",
       "params": {},
       "internal": false
     },
     "onEditorInitialized": {
-      "desc": "Appelé à l'initialisation de l'éditeur ; construit la liste triée des icônes, enregistre la fenêtre (600x600) et ajoute le menu « Available Icons » dans le groupe Debug.",
+      "desc": "Called at editor initialization; builds the sorted icon list, registers the window (600x600) and adds the \"Available Icons\" menu in the Debug group.",
       "params": {},
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement de l'extension ; vide dans ce fichier.",
+      "desc": "Hook called when the extension loads; empty in this file.",
       "params": {},
       "internal": true
     }

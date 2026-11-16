@@ -1,36 +1,36 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/buttons/simpleButton.lua",
-  "module": "Nœud flowgraph « Simple Button » (catégorie once_instant) : crée un bouton tout-en-un dont les valeurs ne peuvent plus être changées. Entrées : « hideWhenDone » (désactive le bouton après le premier clic), « label », « order » (caché), « style » (caché). Sorties : « clicked » (impulsion), « used » / « unused » (cachés), « buttonId » (caché).",
+  "module": "Flowgraph node \"Simple Button\" (category once_instant): creates an all-in-one button whose values can no longer be changed. Inputs: \"hideWhenDone\" (disables the button after the first click), \"label\", \"order\" (hidden), \"style\" (hidden). Outputs: \"clicked\" (pulse), \"used\" / \"unused\" (hidden), \"buttonId\" (hidden).",
   "notes": [
-    "Bug : workOnce lit self.pinIn.active alors que le pin 'active' n'existe pas dans pinSchema (nil -> erreur à l'index) ; et la clé passée à addButton est 'stlye' (faute de frappe), donc le style n'est pas transmis.",
-    "Bug : work() utilise button.used.value pour hideWhenDone alors que les autres lignes utilisent button.complete.",
-    "Il y a deux définitions de C:workOnce, la seconde remplace la première (vide).",
-    "Au reset, le bouton est désactivé puis réactivé au prochain work()."
+    "Bug: workOnce reads self.pinIn.active while the 'active' pin does not exist in pinSchema (nil -> index error); and the key passed to addButton is 'stlye' (typo), so the style is not passed.",
+    "Bug: work() uses button.used.value for hideWhenDone while the other lines use button.complete.",
+    "There are two definitions of C:workOnce; the second (empty) replaces the first.",
+    "On reset, the button is disabled, then re-enabled at the next work()."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStarted": {
-          "desc": "Remet hiddenAfterDone et hiddenAfterReset à false.",
+          "desc": "Resets hiddenAfterDone and hiddenAfterReset to false.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Désactive le bouton (active=false) une fois et remet hiddenAfterDone à false.",
+          "desc": "Disables the button (active=false) once and resets hiddenAfterDone to false.",
           "internal": true
         },
         "postInit": {
-          "desc": "Définit le modèle de valeur du pin style.",
+          "desc": "Defines the value template of the style pin.",
           "internal": true
         },
         "work": {
-          "desc": "Réactive le bouton après un reset, met à jour clicked/used/unused et le désactive si hideWhenDone et déjà cliqué.",
+          "desc": "Re-enables the button after a reset, updates clicked/used/unused and disables it if hideWhenDone is set and it was already clicked.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Crée le bouton et écrit son id (voir notes : bugs).",
+          "desc": "Creates the button and writes its id (see notes: bugs).",
           "internal": true
         }
       }

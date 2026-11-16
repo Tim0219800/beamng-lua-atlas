@@ -1,93 +1,211 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua",
-  "module": "Gère le calibrage par mission des seuils d'un style de compositeur de notes de rallye (diamètres d'intensité des virages, longueurs d'arc par intensité). Les réglages sont stockés dans <missionDir>/rally/compositorCalibration.json sous la forme {version=1, styles={<style>={intensity={diameter={...}}, lengthsByIntensity={<intensité>={arcMeters={...}}}}}} et réappliqués à la configuration d'un style au chargement. Une liste de 'boundaries' est un tableau croissant de bornes basses commençant par 0 ; la dernière plage est ouverte (pas de max).",
+  "module": "Manages the per-mission calibration of the thresholds of a rally note compositor style (corner intensity diameters, arc lengths per intensity). Settings are stored in <missionDir>/rally/compositorCalibration.json as {version=1, styles={<style>={intensity={diameter={...}}, lengthsByIntensity={<intensity>={arcMeters={...}}}}}} and reapplied to a style's configuration at load time. A list of 'boundaries' is an ascending array of lower bounds starting at 0; the last range is open-ended (no max).",
   "usage": "local ok = gameplay_rally_compositors_helpers_calibrationOverrides.setBoundaries(missionDir, 'english/casual', 'intensity', 'diameter', {0, 20, 45, 80})",
   "notes": [
-    "Une plage {min, max} correspond à [min, max[ ; la dernière plage n'a que min.",
-    "validateBoundaries exige : tableau numérique non vide, premier élément 0, valeurs strictement croissantes, et (si expectedCount est donné) la bonne longueur.",
-    "applyToConfig n'applique que les sections corner.numbering.intensity (clé 'diameter') et corner.numbering.lengthsByIntensity (clé 'arcMeters')."
+    "A range {min, max} corresponds to [min, max[; the last range has only min.",
+    "validateBoundaries requires: a non-empty numeric array, first element 0, strictly increasing values, and (if expectedCount is given) the right length.",
+    "applyToConfig only applies the sections corner.numbering.intensity (key 'diameter') and corner.numbering.lengthsByIntensity (key 'arcMeters')."
   ],
   "functions": {
     "calibrationFile": {
-      "desc": "Chemin du fichier de calibrage d'une mission : <missionDir>/rally/compositorCalibration.json.",
-      "params": {"missionDir": {"type": "string|nil", "desc": "Dossier de la mission."}},
-      "returns": [{"type": "string|nil", "desc": "Chemin, ou nil si missionDir est nil."}],
+      "desc": "Path of a mission's calibration file: <missionDir>/rally/compositorCalibration.json.",
+      "params": {
+        "missionDir": {
+          "type": "string|nil",
+          "desc": "Mission folder."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Path, or nil if missionDir is nil."
+        }
+      ],
       "internal": false
     },
     "boundariesFromList": {
-      "desc": "Extrait les bornes basses d'une liste d'entrées dont la clé 'key' est une plage {min, max}. Renvoie nil si la liste est vide, ne commence pas à 0, n'est pas contiguë (max précédent = min suivant) ou si un max manque hors dernière entrée.",
+      "desc": "Extracts the lower bounds from a list of entries whose 'key' key is a range {min, max}. Returns nil if the list is empty, does not start at 0, is not contiguous (previous max = next min) or if a max is missing outside the last entry.",
       "params": {
-        "list": {"type": "table[]|nil", "desc": "Liste ordonnée d'entrées."},
-        "key": {"type": "string", "desc": "Clé contenant la plage (ex. 'diameter', 'arcMeters')."}
+        "list": {
+          "type": "table[]|nil",
+          "desc": "Ordered list of entries."
+        },
+        "key": {
+          "type": "string",
+          "desc": "Key containing the range (e.g. 'diameter', 'arcMeters')."
+        }
       },
-      "returns": [{"type": "number[]|nil", "desc": "Bornes basses, ou nil si la liste n'est pas valide."}],
+      "returns": [
+        {
+          "type": "number[]|nil",
+          "desc": "Lower bounds, or nil if the list is not valid."
+        }
+      ],
       "internal": false
     },
     "validateBoundaries": {
-      "desc": "Vérifie qu'une liste de bornes est valable (numérique, commence à 0, strictement croissante, bonne longueur).",
+      "desc": "Checks that a list of bounds is valid (numeric, starts at 0, strictly increasing, right length).",
       "params": {
-        "boundaries": {"type": "table", "desc": "Tableau de nombres."},
-        "expectedCount": {"type": "integer|nil", "desc": "Longueur attendue."}
+        "boundaries": {
+          "type": "table",
+          "desc": "Array of numbers."
+        },
+        "expectedCount": {
+          "type": "integer|nil",
+          "desc": "Expected length."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si valide."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if valid."
+        }
+      ],
       "internal": false
     },
     "applyBoundariesToList": {
-      "desc": "Réécrit la clé 'key' de chaque entrée de la liste avec la plage {min, max} issue des bornes (la dernière : {min} seul). Ne modifie rien si les bornes sont invalides ou de mauvaise longueur.",
+      "desc": "Rewrites the 'key' key of each entry in the list with the range {min, max} derived from the bounds (the last one: {min} only). Changes nothing if the bounds are invalid or of the wrong length.",
       "params": {
-        "list": {"type": "table[]", "desc": "Liste d'entrées modifiée sur place."},
-        "key": {"type": "string", "desc": "Clé à écrire."},
-        "boundaries": {"type": "number[]", "desc": "Bornes basses."}
+        "list": {
+          "type": "table[]",
+          "desc": "List of entries, modified in place."
+        },
+        "key": {
+          "type": "string",
+          "desc": "Key to write."
+        },
+        "boundaries": {
+          "type": "number[]",
+          "desc": "Lower bounds."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si appliqué."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if applied."
+        }
+      ],
       "internal": false
     },
     "load": {
-      "desc": "Lit le fichier de calibrage de la mission. Renvoie une structure vierge {version=1, styles={}} si le fichier est absent ou illisible (erreur journalisée dans ce dernier cas).",
-      "params": {"missionDir": {"type": "string|nil", "desc": "Dossier de la mission."}},
-      "returns": [{"type": "table", "desc": "Données {version, styles}."}],
+      "desc": "Reads the mission's calibration file. Returns a blank structure {version=1, styles={}} if the file is missing or unreadable (error logged in the latter case).",
+      "params": {
+        "missionDir": {
+          "type": "string|nil",
+          "desc": "Mission folder."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Data {version, styles}."
+        }
+      ],
       "internal": false
     },
     "save": {
-      "desc": "Écrit les données de calibrage (indentées) dans le fichier de la mission, en créant le dossier au besoin.",
+      "desc": "Writes the calibration data (indented) to the mission's file, creating the folder if needed.",
       "params": {
-        "missionDir": {"type": "string|nil", "desc": "Dossier de la mission."},
-        "data": {"type": "table|nil", "desc": "Données ; vierges si nil."}
+        "missionDir": {
+          "type": "string|nil",
+          "desc": "Mission folder."
+        },
+        "data": {
+          "type": "table|nil",
+          "desc": "Data; blank if nil."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "Résultat de jsonWriteFile (false si missionDir est nil)."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Result of jsonWriteFile (false if missionDir is nil)."
+        }
+      ],
       "internal": false
     },
     "setBoundaries": {
-      "desc": "Enregistre une liste de bornes sous styles[compositorName][groupName][key] puis sauvegarde le fichier.",
+      "desc": "Stores a list of bounds under styles[compositorName][groupName][key] then saves the file.",
       "params": {
-        "missionDir": {"type": "string", "desc": "Dossier de la mission."},
-        "compositorName": {"type": "string", "desc": "Nom du style."},
-        "groupName": {"type": "string", "desc": "Groupe (ex. 'intensity')."},
-        "key": {"type": "string", "desc": "Clé (ex. 'diameter')."},
-        "boundaries": {"type": "number[]", "desc": "Bornes (copiées ; nil si une valeur n'est pas numérique)."}
+        "missionDir": {
+          "type": "string",
+          "desc": "Mission folder."
+        },
+        "compositorName": {
+          "type": "string",
+          "desc": "Style name."
+        },
+        "groupName": {
+          "type": "string",
+          "desc": "Group (e.g. 'intensity')."
+        },
+        "key": {
+          "type": "string",
+          "desc": "Key (e.g. 'diameter')."
+        },
+        "boundaries": {
+          "type": "number[]",
+          "desc": "Bounds (copied; nil if a value is not numeric)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "Succès de l'écriture."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Write success."
+        }
+      ],
       "internal": false
     },
     "setLengthBoundaries": {
-      "desc": "Enregistre les bornes de longueur d'arc d'une intensité sous styles[compositorName].lengthsByIntensity[intensityName].arcMeters puis sauvegarde.",
+      "desc": "Stores the arc length bounds of an intensity under styles[compositorName].lengthsByIntensity[intensityName].arcMeters then saves.",
       "params": {
-        "missionDir": {"type": "string", "desc": "Dossier de la mission."},
-        "compositorName": {"type": "string", "desc": "Nom du style."},
-        "intensityName": {"type": "string", "desc": "Identifiant de l'intensité."},
-        "boundaries": {"type": "number[]", "desc": "Bornes d'arc en mètres."}
+        "missionDir": {
+          "type": "string",
+          "desc": "Mission folder."
+        },
+        "compositorName": {
+          "type": "string",
+          "desc": "Style name."
+        },
+        "intensityName": {
+          "type": "string",
+          "desc": "Intensity identifier."
+        },
+        "boundaries": {
+          "type": "number[]",
+          "desc": "Arc bounds in meters."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "Succès de l'écriture."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Write success."
+        }
+      ],
       "internal": false
     },
     "applyToConfig": {
-      "desc": "Applique les calibrages sauvegardés à la configuration d'un style (corner.numbering.intensity et lengthsByIntensity). Appelé par textCompositor:load.",
+      "desc": "Applies the saved calibrations to a style's configuration (corner.numbering.intensity and lengthsByIntensity). Called by textCompositor:load.",
       "params": {
-        "config": {"type": "table", "desc": "Configuration du style (modifiée sur place)."},
-        "compositorName": {"type": "string", "desc": "Nom du style."},
-        "missionDir": {"type": "string", "desc": "Dossier de la mission."}
+        "config": {
+          "type": "table",
+          "desc": "Style configuration (modified in place)."
+        },
+        "compositorName": {
+          "type": "string",
+          "desc": "Style name."
+        },
+        "missionDir": {
+          "type": "string",
+          "desc": "Mission folder."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si au moins une liste a été modifiée."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if at least one list was modified."
+        }
+      ],
       "internal": false
     }
   }

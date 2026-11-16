@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/disable.lua",
-  "module": "Nœud « AI Disable » (couleur ai, repeat_p_duration). Désactive le mode IA d'un véhicule. Entrée : aiVehId (sans valeur = véhicule du joueur). Données : useScriptStop (false : utilise ai:scriptStop au lieu de ai.setState disabled), handBrakeWhenFinished, straightenWheelsWhenFinished.",
+  "module": "Node \"AI Disable\" (color ai, repeat_p_duration). Disables the AI mode of a vehicle. Input: aiVehId (no value = player vehicle). Data: useScriptStop (false: uses ai:scriptStop instead of ai.setState disabled), handBrakeWhenFinished, straightenWheelsWhenFinished.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Initialise les trois données du nœud à false.",
+          "desc": "Initializes the node's three data fields to false.",
           "internal": true
         },
         "work": {
-          "desc": "Envoie au véhicule ai:scriptStop(handBrake, straightenWheels) si useScriptStop, sinon ai.setState({mode = \"disabled\"}).",
+          "desc": "Sends ai:scriptStop(handBrake, straightenWheels) to the vehicle if useScriptStop, otherwise ai.setState({mode = \"disabled\"}).",
           "internal": true
         }
       }

@@ -1,57 +1,91 @@
 {
   "path": "lua/ge/extensions/gameplay/drift/sounds.lua",
-  "module": "Gère les sons d'interface du drift (événements FMOD UI>Career>Drift_*) : un son continu pendant un drift dont la hauteur suit le facteur de performance, un son à chaque nouveau palier, à chaque changement de combo, à l'annulation du drift (crash/spinout) et à la validation des points. Contient aussi une fenêtre imgui « Drift audio » pour simuler un drift en debug. Chargé par gameplay_drift_general tant que l'extension d'affichage drift est chargée.",
+  "module": "Manages drift UI sounds (FMOD events UI>Career>Drift_*): a continuous sound during a drift whose pitch follows the performance factor, a sound on each new tier, on each combo change, when the drift is canceled (crash/spinout) and when points are validated. Also contains a \"Drift audio\" imgui window to simulate a drift in debug. Loaded by gameplay_drift_general as long as the drift display extension is loaded.",
   "notes": [
-    "Sons : continuousDrift = event:>UI>Career>Drift_Counting, newTier = Drift_Tier, newCombo1 = Drift_Combo_1x, newCombo5 = Drift_Combo_5x, driftCanceled = Drift_Canceled, pointsConfirmed = Drift_PointsReceived.",
-    "Le son continu est coupé quand le drift est en pause ou gelé (gameplay_drift_general.getPaused/getFrozen) ; sinon il joue tant que gameplay_drift_drift.getIsDrifting() est vrai.",
-    "Le volume du son de palier est tierData.order - 1 (donc 0 pour le palier d'ordre 1).",
-    "Le son de combo utilise comboChange <= 0.2 pour choisir Combo_1x, sinon Combo_5x.",
-    "La fonction locale reset() n'est pas exportée : general.reset ne peut donc pas l'appeler."
+    "Sounds: continuousDrift = event:>UI>Career>Drift_Counting, newTier = Drift_Tier, newCombo1 = Drift_Combo_1x, newCombo5 = Drift_Combo_5x, driftCanceled = Drift_Canceled, pointsConfirmed = Drift_PointsReceived.",
+    "The continuous sound is cut when the drift is paused or frozen (gameplay_drift_general.getPaused/getFrozen); otherwise it plays as long as gameplay_drift_drift.getIsDrifting() is true.",
+    "The tier sound volume is tierData.order - 1 (so 0 for the tier of order 1).",
+    "The combo sound uses comboChange <= 0.2 to choose Combo_1x, otherwise Combo_5x.",
+    "The local function reset() is not exported: general.reset therefore cannot call it."
   ],
   "functions": {
     "getDriftDebugInfo": {
-      "desc": "Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift.",
-      "returns": [{"type": "table", "desc": "{default = false, canBeChanged = true}"}]
+      "desc": "Returns {default=false, canBeChanged=true} for the drift debug window.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{default = false, canBeChanged = true}"
+        }
+      ]
     },
     "onUpdate": {
-      "desc": "Appelé à chaque frame : au premier appel crée la source audio du son continu, affiche la fenêtre de debug, puis joue/arrête le son continu et met à jour son paramètre pitch et sa position (caméra).",
+      "desc": "Called every frame: on the first call creates the audio source of the continuous sound, displays the debug window, then plays/stops the continuous sound and updates its pitch parameter and its position (camera).",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (inutilisé)."},
-        "_dtSim": {"type": "number", "desc": "Delta temps simulé, mémorisé pour les transitions de debug."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut (inutilisé)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (unused)."
+        },
+        "_dtSim": {
+          "type": "number",
+          "desc": "Simulated delta time, stored for debug transitions."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (unused)."
+        }
       },
       "internal": true
     },
     "onNewDriftTierReached": {
-      "desc": "Hook : joue le son de nouveau palier.",
-      "params": {"tierData": {"type": "table", "desc": "Données du palier ; order sert au volume."}},
+      "desc": "Hook: plays the new tier sound.",
+      "params": {
+        "tierData": {
+          "type": "table",
+          "desc": "Tier data; order is used for the volume."
+        }
+      },
       "internal": true
     },
     "onDriftNewCombo": {
-      "desc": "Hook : joue le son de combo 1x ou 5x selon l'ampleur du changement.",
-      "params": {"data": {"type": "table", "desc": "{comboChange = number}."}},
+      "desc": "Hook: plays the 1x or 5x combo sound depending on the size of the change.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{comboChange = number}."
+        }
+      },
       "internal": true
     },
     "onDriftCrash": {
-      "desc": "Hook : joue le son d'annulation du drift.",
+      "desc": "Hook: plays the drift cancel sound.",
       "internal": true
     },
     "onDriftSpinout": {
-      "desc": "Hook : joue le son d'annulation du drift.",
+      "desc": "Hook: plays the drift cancel sound.",
       "internal": true
     },
     "onDriftDebugChanged": {
-      "desc": "Hook : à la désactivation du debug, arrête la simulation de drift (gameplay_drift_drift.simulateADrift()).",
-      "params": {"value": {"type": "boolean", "desc": "Nouvel état du debug."}},
+      "desc": "Hook: when debug is disabled, stops the drift simulation (gameplay_drift_drift.simulateADrift()).",
+      "params": {
+        "value": {
+          "type": "boolean",
+          "desc": "New debug state."
+        }
+      },
       "internal": true
     },
     "onDriftCompletedScored": {
-      "desc": "Hook : joue le son de points reçus.",
-      "params": {"data": {"type": "table", "desc": "Données du drift scoré (inutilisées)."}},
+      "desc": "Hook: plays the points received sound.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Scored drift data (unused)."
+        }
+      },
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook : supprime la source audio du son continu au déchargement.",
+      "desc": "Hook: removes the audio source of the continuous sound on unload.",
       "internal": true
     }
   },

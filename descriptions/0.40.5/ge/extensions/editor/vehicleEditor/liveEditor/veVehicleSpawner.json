@@ -1,20 +1,50 @@
 {
   "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veVehicleSpawner.lua",
-  "module": "Outil 'Other/Vehicle Spawner' du Vehicle Editor live. Au chargement de l'éditeur il mémorise jusqu'à 20 véhicules (Car ou Truck) de core_vehicles.getVehicleList. La fenêtre permet de faire apparaître un véhicule à la position/orientation de la caméra (fenêtre 'Select Vehicle'), de choisir un point sur le terrain (molette = rotation de 5°) puis d'y aligner tous les véhicules de la liste (espacés de 10 m), et de tout supprimer ('Despawn All').",
+  "module": "'Other/Vehicle Spawner' tool of the live Vehicle Editor. When the editor loads it remembers up to 20 vehicles (Car or Truck) from core_vehicles.getVehicleList. The window lets you spawn a vehicle at the camera position/orientation ('Select Vehicle' window), choose a point on the terrain (wheel = 5° rotation) then line up all the vehicles of the list there (spaced 10 m apart), and delete everything ('Despawn All').",
   "notes": [
-    "Les véhicules apparaissent avec le frein à main relâché (input.event('parkingbrake', 0, 1)).",
-    "Seuls les véhicules créés par 'Spawn Vehicles' sont suivis dans vehsData et supprimés par 'Despawn All' ; ceux créés depuis 'Select Vehicle' ne sont pas enregistrés.",
-    "Bug mineur : `hit = cameraMouseRayCast(...)` est affecté sans `local` (globale `hit`).",
-    "Un bouton par véhicule de vehsList : au maximum 20 modèles proposés."
+    "Vehicles spawn with the handbrake released (input.event('parkingbrake', 0, 1)).",
+    "Only the vehicles created by 'Spawn Vehicles' are tracked in vehsData and deleted by 'Despawn All'; those created from 'Select Vehicle' are not recorded.",
+    "Minor bug: `hit = cameraMouseRayCast(...)` is assigned without `local` (global `hit`).",
+    "One button per vehicle of vehsList: at most 20 models offered."
   ],
   "fields": {
-    "menuEntry": {"type": "string", "desc": "'Other/Vehicle Spawner'."}
+    "menuEntry": {
+      "type": "string",
+      "desc": "'Other/Vehicle Spawner'."
+    }
   },
   "functions": {
-    "onUpdate": {"desc": "Appelé chaque frame : dessine la fenêtre, les repères de départ et la fenêtre de sélection de véhicule.", "internal": true},
-    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
-    "onEditorInitialized": {"desc": "Appelé à l'initialisation de l'éditeur : remplit vehsList avec les 20 premiers véhicules Car/Truck.", "internal": true},
-    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
-    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+    "onUpdate": {
+      "desc": "Called every frame: draws the window, the start markers and the vehicle selection window.",
+      "internal": true
+    },
+    "open": {
+      "desc": "Opens the window.",
+      "internal": false
+    },
+    "onEditorInitialized": {
+      "desc": "Called at editor initialization: fills vehsList with the first 20 Car/Truck vehicles.",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Returns {windowOpen}.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{windowOpen = boolean}"
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Restores the open state.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "onSerialize table."
+        }
+      },
+      "internal": true
+    }
   }
 }

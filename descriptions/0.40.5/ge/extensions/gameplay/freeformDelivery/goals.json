@@ -1,96 +1,216 @@
 {
   "path": "lua/ge/extensions/gameplay/freeformDelivery/goals.lua",
-  "module": "Évalue les objectifs (goals) du mode de livraison libre. À partir de delivery.goals, crée un objectif par entrée (types placement, playerInVehicle, engineRunning, coupled, unhitched, damage, distance), gère leurs prérequis (requires, logique ET) et leur état (active, completed), les réévalue à chaque frame en deux passes (complétion puis activation) et fournit l'avancement global et par objectif. Gère aussi le compte à rebours de fin automatique de 5 s quand tous les objectifs requis actifs sont remplis.",
-  "usage": "local p = gameplay_freeformDelivery_goals.getProgress()\nif p.allRequiredComplete then print('livraison réussie') end",
+  "module": "Evaluates the goals of the freeform delivery mode. From delivery.goals, creates one goal per entry (types placement, playerInVehicle, engineRunning, coupled, unhitched, damage, distance), manages their prerequisites (requires, AND logic) and their state (active, completed), re-evaluates them every frame in two passes (completion then activation) and provides overall and per-goal progress. Also handles the 5 s automatic finish countdown when all active required goals are fulfilled.",
+  "usage": "local p = gameplay_freeformDelivery_goals.getProgress()\nif p.allRequiredComplete then print('delivery successful') end",
   "notes": [
-    "Champs communs d'un objectif de delivery.goals : id (obligatoire), type (placement par défaut), required (vrai sauf si false), requires, label, subtext, stayCompleted, stayCompletedAfterGoalId, removeOnComplete, showInTasklist (vrai sauf si false), showRequiredProgress.",
-    "placement : targetAreaId + vehicleId ou vehicleIds (+ requiredAmount, par défaut tous) ; réussi quand assez de véhicules sont dans la zone cible (zone, location ou parkingSpot). playerInVehicle et engineRunning : un seul véhicule ; playerInVehicle compare le véhicule du joueur, engineRunning lit l'électrique engineRunning > 0 via core_vehicleBridge. coupled/unhitched : vehicleId + trailerId (attelés si coupleur attaché ou core_trailerRespawn). damage : vehicleId(s), maxDamage (10000 par défaut), vrai tant qu'aucun véhicule ne dépasse. distance : vehicleListA et vehicleListB, failThreshold (1000 m par défaut), vrai tant que la distance maximale entre un véhicule de A et un de B reste <= failThreshold ; warningThreshold sert à l'avertissement.",
-    "Prérequis : chaque élément de requires est un id (chaîne) ou une table {id|goalId, state}. state : \"complete\" (défaut) ou \"completely_fulfilled\" (complété) ; \"not\" ou \"not_fulfilled\" (non complété) ; tout autre (partial, any...) = partiellement ou totalement avancé.",
-    "Un objectif n'est évalué que si ses prérequis sont remplis ; l'activation est recalculée après la passe de complétion pour éviter les artefacts d'ordre de parcours de pairs().",
-    "Le compte à rebours de fin (completionTimerDuration) dure 5 s en temps réel (dtReal) ; il se réinitialise si un objectif requis redevient incomplet. Il s'appuie sur areAllRequiredGoalsCompleted : au moins un objectif requis actif et tous complétés.",
-    "getProgress ne compte que les objectifs actifs ; allRequiredComplete exige required > 0.",
-    "Les objectifs mal définis (id manquant, type inconnu, véhicule manquant...) sont ignorés avec une erreur loggée.",
-    "Incohérence : checkDamageGoal lit veh.damage sur l'objet véhicule, alors que endScreen.collectStatistics lit map.objects[vehId].damage.",
-    "update() logge un avertissement à chaque frame s'il n'y a aucun objectif."
+    "Common fields of a delivery.goals goal: id (mandatory), type (placement by default), required (true unless false), requires, label, subtext, stayCompleted, stayCompletedAfterGoalId, removeOnComplete, showInTasklist (true unless false), showRequiredProgress.",
+    "placement: targetAreaId + vehicleId or vehicleIds (+ requiredAmount, all by default); succeeds when enough vehicles are in the target area (zone, location or parkingSpot). playerInVehicle and engineRunning: a single vehicle; playerInVehicle compares the player's vehicle, engineRunning reads the electric engineRunning > 0 via core_vehicleBridge. coupled/unhitched: vehicleId + trailerId (coupled if coupler attached or core_trailerRespawn). damage: vehicleId(s), maxDamage (10000 by default), true as long as no vehicle exceeds it. distance: vehicleListA and vehicleListB, failThreshold (1000 m by default), true as long as the maximum distance between a vehicle of A and one of B stays <= failThreshold; warningThreshold is used for the warning.",
+    "Prerequisites: each element of requires is an id (string) or a table {id|goalId, state}. state: \"complete\" (default) or \"completely_fulfilled\" (completed); \"not\" or \"not_fulfilled\" (not completed); any other (partial, any...) = partially or fully progressed.",
+    "A goal is only evaluated if its prerequisites are fulfilled; activation is recomputed after the completion pass to avoid pairs() iteration order artifacts.",
+    "The end countdown (completionTimerDuration) lasts 5 s in real time (dtReal); it resets if a required goal becomes incomplete again. It relies on areAllRequiredGoalsCompleted: at least one active required goal and all completed.",
+    "getProgress only counts active goals; allRequiredComplete requires required > 0.",
+    "Badly defined goals (missing id, unknown type, missing vehicle...) are ignored with a logged error.",
+    "Inconsistency: checkDamageGoal reads veh.damage on the vehicle object, whereas endScreen.collectStatistics reads map.objects[vehId].damage.",
+    "update() logs a warning every frame if there are no goals."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "gameplay_freeformDelivery_utils, core_trailerRespawn, core_vehicles, core_vehicleBridge."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "gameplay_freeformDelivery_utils, core_trailerRespawn, core_vehicles, core_vehicleBridge."
+    }
   },
   "functions": {
     "setup": {
-      "desc": "Réinitialise objectifs, états et caches, pré-remplit le cache des zones cibles et de leurs objets de site, crée les objectifs de delivery.goals et calcule l'activation initiale selon les prérequis.",
-      "params": {"delivery": {"type": "table", "desc": "Livraison chargée (goals, targetAreas, sites)."}}
+      "desc": "Resets goals, states and caches, pre-fills the cache of target areas and their site objects, creates the delivery.goals goals and computes the initial activation according to prerequisites.",
+      "params": {
+        "delivery": {
+          "type": "table",
+          "desc": "Loaded delivery (goals, targetAreas, sites)."
+        }
+      }
     },
     "update": {
-      "desc": "À appeler à chaque frame : met à jour le cache de position des véhicules concernés, évalue la complétion de chaque objectif actif (passe 1) puis recalcule l'activation (passe 2).",
+      "desc": "To be called every frame: updates the position cache of the relevant vehicles, evaluates the completion of each active goal (pass 1) then recomputes activation (pass 2).",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (inutilisé)."},
-        "dtSim": {"type": "number", "desc": "Delta temps simulé (inutilisé)."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut (inutilisé)."},
-        "profiler": {"type": "table|nil", "desc": "LuaProfiler facultatif."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (unused)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time delta (unused)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (unused)."
+        },
+        "profiler": {
+          "type": "table|nil",
+          "desc": "Optional LuaProfiler."
+        }
       }
     },
     "getProgress": {
-      "desc": "Compte les objectifs actifs et complétés, avec la part des objectifs requis.",
-      "returns": [{"type": "table", "desc": "{total, completed, required, requiredCompleted, allRequiredComplete}"}]
+      "desc": "Counts active and completed goals, with the share of required goals.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{total, completed, required, requiredCompleted, allRequiredComplete}"
+        }
+      ]
     },
     "getGoals": {
-      "desc": "Renvoie seulement les objectifs actifs (prérequis remplis), indexés par id.",
-      "returns": [{"type": "table<string, table>", "desc": "Objectifs actifs."}]
+      "desc": "Returns only the active goals (prerequisites fulfilled), keyed by id.",
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Active goals."
+        }
+      ]
     },
     "getAllGoals": {
-      "desc": "Renvoie tous les objectifs créés, actifs ou non, indexés par id.",
-      "returns": [{"type": "table<string, table>", "desc": "Tous les objectifs."}]
+      "desc": "Returns all created goals, active or not, keyed by id.",
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "All goals."
+        }
+      ]
     },
     "getGoalState": {
-      "desc": "Renvoie l'état d'un objectif.",
-      "params": {"goalId": {"type": "string", "desc": "Id de l'objectif."}},
-      "returns": [{"type": "table|nil", "desc": "{completed, lastCheck, active}"}]
+      "desc": "Returns the state of a goal.",
+      "params": {
+        "goalId": {
+          "type": "string",
+          "desc": "Goal id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{completed, lastCheck, active}"
+        }
+      ]
     },
     "getGoalProgress": {
-      "desc": "Renvoie l'avancement détaillé d'un objectif : pour un placement multi-véhicules {total, requiredAmount, inArea, partial, complete}, sinon {total = 1, inArea, partial = false, complete}.",
-      "params": {"goalId": {"type": "string", "desc": "Id de l'objectif."}},
-      "returns": [{"type": "table|nil", "desc": "Avancement, nil si l'objectif n'existe pas."}]
+      "desc": "Returns the detailed progress of a goal: for a multi-vehicle placement {total, requiredAmount, inArea, partial, complete}, otherwise {total = 1, inArea, partial = false, complete}.",
+      "params": {
+        "goalId": {
+          "type": "string",
+          "desc": "Goal id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Progress, nil if the goal does not exist."
+        }
+      ]
     },
     "isGoalActive": {
-      "desc": "Indique si les prérequis d'un objectif sont remplis.",
-      "params": {"goalId": {"type": "string", "desc": "Id de l'objectif."}},
-      "returns": [{"type": "boolean", "desc": "true si actif."}]
+      "desc": "Returns whether a goal's prerequisites are fulfilled.",
+      "params": {
+        "goalId": {
+          "type": "string",
+          "desc": "Goal id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if active."
+        }
+      ]
     },
     "getGoalsByTargetArea": {
-      "desc": "Liste les objectifs liés à une zone cible.",
-      "params": {"targetAreaId": {"type": "string", "desc": "Id de la zone cible."}},
-      "returns": [{"type": "table[]", "desc": "Tableau d'objectifs."}]
+      "desc": "Lists the goals linked to a target area.",
+      "params": {
+        "targetAreaId": {
+          "type": "string",
+          "desc": "Target area id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Array of goals."
+        }
+      ]
     },
     "getGoalsByType": {
-      "desc": "Liste les objectifs d'un type donné.",
-      "params": {"goalType": {"type": "string", "desc": "placement, playerInVehicle, engineRunning, coupled, unhitched, damage ou distance."}},
-      "returns": [{"type": "table[]", "desc": "Tableau d'objectifs."}]
+      "desc": "Lists the goals of a given type.",
+      "params": {
+        "goalType": {
+          "type": "string",
+          "desc": "placement, playerInVehicle, engineRunning, coupled, unhitched, damage or distance."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Array of goals."
+        }
+      ]
     },
     "areAllGoalsInAreaComplete": {
-      "desc": "Indique si tous les objectifs d'une zone cible sont complétés (false s'il n'y en a aucun).",
-      "params": {"areaId": {"type": "string", "desc": "Id de la zone cible."}},
-      "returns": [{"type": "boolean", "desc": "true si tous complétés."}]
+      "desc": "Returns whether all goals of a target area are completed (false if there are none).",
+      "params": {
+        "areaId": {
+          "type": "string",
+          "desc": "Target area id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if all completed."
+        }
+      ]
     },
     "isDistanceGoalWarningActive": {
-      "desc": "Indique si la distance maximale d'un objectif de type distance dépasse 90 % de son warningThreshold (pour afficher un avertissement).",
-      "params": {"goal": {"type": "table", "desc": "Objectif de type distance (vehicleListA, vehicleListB, warningThreshold)."}},
-      "returns": [{"type": "boolean", "desc": "true si l'avertissement doit être actif."}]
+      "desc": "Returns whether the maximum distance of a distance-type goal exceeds 90% of its warningThreshold (to display a warning).",
+      "params": {
+        "goal": {
+          "type": "table",
+          "desc": "Distance-type goal (vehicleListA, vehicleListB, warningThreshold)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the warning must be active."
+        }
+      ]
     },
     "updateCompletionTimer": {
-      "desc": "Gère le compte à rebours de fin automatique : le démarre quand tous les objectifs requis actifs sont complétés (message dans la tasklist), l'annule si l'un redevient incomplet, et renvoie true quand il atteint 0.",
-      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel en secondes."}},
-      "returns": [{"type": "boolean", "desc": "true quand la livraison doit se terminer."}]
+      "desc": "Manages the automatic finish countdown: starts it when all active required goals are completed (message in the tasklist), cancels it if one becomes incomplete again, and returns true when it reaches 0.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real-time delta in seconds."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true when the delivery must finish."
+        }
+      ]
     },
     "getCompletionTimer": {
-      "desc": "Renvoie le temps restant du compte à rebours de fin.",
-      "returns": [{"type": "number|nil", "desc": "Secondes restantes, nil s'il n'est pas lancé."}]
+      "desc": "Returns the remaining time of the finish countdown.",
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Remaining seconds, nil if not started."
+        }
+      ]
     },
     "hideFromTasklist": {
-      "desc": "Retire le message de fin de la tasklist et arrête le compte à rebours, mais garde objectifs et états pour l'évaluation des résultats."
+      "desc": "Removes the finish message from the tasklist and stops the countdown, but keeps goals and states for result evaluation."
     },
     "cleanup": {
-      "desc": "Nettoyage complet : vide objectifs, états, caches, requêtes en attente, le cache de véhicules d'utils et le message de fin."
+      "desc": "Full cleanup: clears goals, states, caches, pending requests, utils' vehicle cache and the finish message."
     }
   }
 }

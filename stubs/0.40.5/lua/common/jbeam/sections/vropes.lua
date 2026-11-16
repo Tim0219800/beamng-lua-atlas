@@ -2,17 +2,17 @@
 -- tim19Atlas stub generated from lua/common/jbeam/sections/vropes.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Traite la section jbeam « vropes » (cordes visuelles simulées, sans poutres physiques). Pour chaque entrée ayant anchorAProp et anchorBProp (noms de props du véhicule), crée une corde visuelle côté moteur (createRopeVisual/getRopeVisual), l'attache aux deux props (vehiclePropIdA/B) et applique ses propriétés avec des valeurs par défaut, puis appelle rope:rebuild(). La liste des identifiants créés est mise dans vehicleObj.ropeIds pour le rendu automatique.
---- Accès : `require("jbeam/sections/vropes")`
+--- Processes the jbeam "vropes" section (simulated visual ropes, without physical beams). For each entry that has anchorAProp and anchorBProp (vehicle prop names), creates an engine-side visual rope (createRopeVisual/getRopeVisual), attaches it to both props (vehiclePropIdA/B) and applies its properties with default values, then calls rope:rebuild(). The list of created ids is stored in vehicleObj.ropeIds for automatic rendering.
+--- Access: `require("jbeam/sections/vropes")`
 ---@class jbeam_sections_vropes
 local jbeam_sections_vropes = {}
 
---- Crée les cordes visuelles décrites par vehicle.vropes et enregistre leurs identifiants dans vehicleObj.ropeIds.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/jbeam/sections/vropes.lua:117
----@param objID integer Identifiant du véhicule (non utilisé).
----@param vehicleObj userdata Objet véhicule moteur.
----@param vehicle table Données jbeam (vropes, props).
+--- Creates the visual ropes described by vehicle.vropes and stores their ids in vehicleObj.ropeIds.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/jbeam/sections/vropes.lua:117
+---@param objID integer Vehicle identifier (unused).
+---@param vehicleObj userdata Engine vehicle object.
+---@param vehicle table jbeam data (vropes, props).
 function jbeam_sections_vropes.process(objID, vehicleObj, vehicle) end
 
 return jbeam_sections_vropes

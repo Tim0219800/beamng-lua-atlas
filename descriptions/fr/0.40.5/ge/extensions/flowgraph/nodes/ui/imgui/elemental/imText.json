@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imText.lua",
+  "module": "Nœud flowgraph « im Text » (catégorie repeat_instant, tag imgui) : affiche un texte avec retour à la ligne automatique dans la fenêtre imgui courante. Entrée « text » (any, converti avec tostring).",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Vide effectif (aucune sortie).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Affiche le texte (TextWrapped).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

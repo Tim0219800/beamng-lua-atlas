@@ -1,19 +1,63 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/career/onRefueling.lua",
-  "module": "Nœud flowgraph « On Refueling » (catégorie repeat_instant, couleur/icône ui). Détecte les évènements de ravitaillement en carrière. Sorties : openedMenu, tankFilled, paidPrice, closedMenu (impulsions d'une frame), currentlyFueling (flow tant que le plein est en cours, via career_modules_fuel.isCurrentlyFueling) et tankPercent (number, énergie actuelle / énergie max sommées sur tous les réservoirs).",
-  "notes": ["tankPercent n'est pas mis à jour si getFuelData() renvoie nil (garde sa dernière valeur) ; division par max sans protection si max vaut 0.", "Utilise career_modules_fuel : nécessite la carrière."],
+  "module": "Flowgraph node \"On Refueling\" (category repeat_instant, ui color/icon). Detects career refueling events. Outputs: openedMenu, tankFilled, paidPrice, closedMenu (one-frame impulses), currentlyFueling (flow while filling is in progress, via career_modules_fuel.isCurrentlyFueling) and tankPercent (number, current energy / max energy summed over all tanks).",
+  "notes": [
+    "tankPercent is not updated if getFuelData() returns nil (keeps its last value); division by max without protection if max is 0.",
+    "Uses career_modules_fuel: requires career."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
-        "work": {"desc": "Chaque frame : remet à faux les pins flow, applique les drapeaux, met à jour currentlyFueling et tankPercent, efface les drapeaux.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
-        "onRefuelingStartTransaction": {"desc": "Hook : lève openedMenu.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
-        "onRefuelingStopFueling": {"desc": "Hook : lève tankFilled.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
-        "onPaidRefuelling": {"desc": "Hook : lève paidPrice.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
-        "onRefuelingEndTransaction": {"desc": "Hook : lève closedMenu.", "internal": true}
+        "init": {
+          "desc": "Creates the flag table.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Every frame: sets the flow pins back to false, applies the flags, updates currentlyFueling and tankPercent, clears the flags.",
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "unused"
+            }
+          }
+        },
+        "onRefuelingStartTransaction": {
+          "desc": "Hook: raises openedMenu.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        },
+        "onRefuelingStopFueling": {
+          "desc": "Hook: raises tankFilled.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        },
+        "onPaidRefuelling": {
+          "desc": "Hook: raises paidPrice.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        },
+        "onRefuelingEndTransaction": {
+          "desc": "Hook: raises closedMenu.",
+          "internal": true
+        }
       }
     }
   }

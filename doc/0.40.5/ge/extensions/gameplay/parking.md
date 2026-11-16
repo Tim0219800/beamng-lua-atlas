@@ -1,341 +1,341 @@
 # `gameplay_parking`
 
-*Fichier : `lua/ge/extensions/gameplay/parking.lua` · VM : Game Engine (GE) · 1126 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/parking.lua` · VM: Game Engine (GE) · 1126 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_parking` : `extensions.load("gameplay_parking")`, puis la globale `gameplay_parking`
+**Access:** extension `gameplay_parking`: `extensions.load("gameplay_parking")`, then the global `gameplay_parking`
 
-Système de véhicules garés et de suivi du stationnement. D'une part il fait apparaître des voitures garées sur les places du fichier de sites du niveau (city.sites.json via gameplay_city) et les téléporte vers de nouvelles places devant le joueur quand il s'éloigne, en s'appuyant sur un pool d'activation (core_vehicleActivePooling). D'autre part il suit un véhicule en conduite (enableTracking) pour détecter qu'il entre, sort ou se gare correctement dans une place et émet onVehicleParkingStatus. Un moddeur s'en sert pour peupler une zone de voitures garées ou pour des missions de stationnement.
+Parked vehicles and parking tracking system. On one hand it spawns parked cars on the spots of the level's sites file (city.sites.json via gameplay_city) and teleports them to new spots in front of the player when they move away, relying on an activation pool (core_vehicleActivePooling). On the other hand it tracks a driven vehicle (enableTracking) to detect that it enters, exits or parks correctly in a spot and emits onVehicleParkingStatus. A modder uses it to populate an area with parked cars or for parking missions.
 
-## Exemple
+## Example
 
 ```lua
-gameplay_parking.setupVehicles(10)  -- fait apparaître 10 voitures garées
+gameplay_parking.setupVehicles(10)  -- spawns 10 parked cars
 gameplay_parking.setParkingVars({precision = 0.9, neatness = 0.5})
 gameplay_parking.enableTracking(be:getPlayerVehicleID(0), true)
--- hook : function M.onVehicleParkingStatus(vehId, data) if data.event == 'valid' then ... end end
+-- hook: function M.onVehicleParkingStatus(vehId, data) if data.event == 'valid' then ... end end
 ```
 
-## Remarques
+## Notes
 
-- Variables (vars) par défaut : precision 0.8 (précision requise pour valider le stationnement), neatness 0 (netteté des voitures garées générées), radiusCoef 1 (coefficient du rayon actif, borné à 0.25..1000 par setParkingVars), baseProbability 0.75, activeAmount math.huge, enableRespawn true.
-- Constantes internes : rayon cible 50 m, rayon de recherche 200 m, point de recherche à 200 m devant, rayon de maintien actif 50 m, rayon à garder libre 120 m.
-- Événements de suivi (data.event) : 'enter', 'exit', 'valid' (stationnement valide maintenu 0,5 s), 'invalid', 'none'.
-- Tags de places (customFields.tags) utilisés : street (active mapmgr.enableTracking), forwards, backwards, perfect, banned, dayTime, nightTime ; champ probability. Champ dynamique de véhicule trafficClearRadius : empêche les respawns de voitures garées à proximité.
-- Un véhicule ayant le drapeau ignoreParking est ignoré par insertVehicle.
-- Les véhicules insérés reçoivent playerUsable = false, ignoreTraffic et isParked, et sont ajoutés à la liste noire du mode marche.
-- processVehicles est un alias d'activate ; getParkingAmount est un alias de getParkedCarsAmount.
-- onClientStartMission est une fonction vide.
-- Hooks émis : onParkingVehiclesActivated(parkedVehIds), onParkingVehiclesDeactivated(), onVehicleParkingStatus(vehId, data).
-- Hors de onUpdate, la logique ne tourne pas si le système est inactif, sans sites, avec la physique coupée ou en mode grande carte.
+- Default variables (vars): precision 0.8 (precision required to validate parking), neatness 0 (neatness of the generated parked cars), radiusCoef 1 (active radius coefficient, clamped to 0.25..1000 by setParkingVars), baseProbability 0.75, activeAmount math.huge, enableRespawn true.
+- Internal constants: target radius 50 m, search radius 200 m, search point 200 m ahead, keep-active radius 50 m, radius to keep clear 120 m.
+- Tracking events (data.event): 'enter', 'exit', 'valid' (valid parking held for 0.5 s), 'invalid', 'none'.
+- Spot tags (customFields.tags) used: street (enables mapmgr.enableTracking), forwards, backwards, perfect, banned, dayTime, nightTime; probability field. Dynamic vehicle field trafficClearRadius: prevents parked car respawns nearby.
+- A vehicle with the ignoreParking flag is ignored by insertVehicle.
+- Inserted vehicles get playerUsable = false, ignoreTraffic and isParked, and are added to the walking mode blacklist.
+- processVehicles is an alias of activate; getParkingAmount is an alias of getParkedCarsAmount.
+- onClientStartMission is an empty function.
+- Emitted hooks: onParkingVehiclesActivated(parkedVehIds), onParkingVehiclesDeactivated(), onVehicleParkingStatus(vehId, data).
+- Outside onUpdate, the logic does not run if the system is inactive, has no sites, has physics off or is in big map mode.
 
-**Dépendances (chargées avant) :** `core_vehicleActivePooling`
+**Dependencies (loaded first):** `core_vehicleActivePooling`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_parking.activate(vehIds)` | Active un groupe de véhicules comme voitures garées (les insère), puis émet onParkingVehiclesActivated. Désactive le système s'il n'y a pas de sites, pas de véhicules ou aucun inséré. Alias : processVehicles. | 660 |
-| `gameplay_parking.checkParkingSpot(vehId, parkingSpot, minDist, maxDist)` | Indique si une place est utilisable pour un véhicule garé : existante, dans la fenêtre de distance du focus, libre (pas de véhicule, pas banned, aucun véhicule dessus), hors des rayons trafficClearRadius, taille adaptée (ni trop petite ni trop grande : rapport >= 0.5). | 155 |
-| `gameplay_parking.deactivate()` | Désactive le système : vide les listes, supprime le pool et émet onParkingVehiclesDeactivated. | 682 |
-| `gameplay_parking.deleteVehicles(amount)` | Supprime du monde les dernières voitures garées (toutes par défaut). | 647 |
-| `gameplay_parking.disableTracking(vehId)` | Arrête le suivi du stationnement d'un véhicule. | 394 |
-| `gameplay_parking.enableTracking(vehId, autoDisable)` | Active le suivi du stationnement pour un véhicule conduit (active aussi le système). Crée les données de suivi : inside, preParked, parked, event, maxDist 80 m, parkingTimer, isOversized… | 374 |
-| `gameplay_parking.filterParkingSpots(psList, filters)` | Filtre en place une liste issue de findParkingSpots : retire les places banned, puis selon filters : standardSize (largeur <= 3, longueur <= 8), checkVehicles (aucun véhicule dessus), useProbability (probabilité de la place × baseProbability × coefficient jour/nuit selon l'heure et les tags dayTime/nightTime). Défaut : {useProbability = true}. | 226 |
-| `gameplay_parking.findParkingSpots(pos, minRadius, maxRadius)` | Trouve les places dans une couronne autour d'une position, triées de la plus proche à la plus lointaine. | 197 |
-| `gameplay_parking.forceTeleport(vehId, pos, minDist, maxDist)` | Force une voiture garée à se téléporter sur une nouvelle place libre aléatoire proche. Sans place valide, l'envoie hors carte via gameplay_traffic.forceTeleport. Sans effet si enableRespawn est false ou si la voiture a ignoreForceTeleport. | 335 |
-| `gameplay_parking.getCurrentParkingSpot(vehId)` | Id de la place où un véhicule est correctement garé. Avec suivi actif, renvoie parkingSpotId si preParked ; sans suivi, cherche la place la plus proche (15 m) qui contient le véhicule avec la précision vars.precision. | 403 |
-| `gameplay_parking.getParkedCarsAmount(activeOnly)` | Nombre de voitures garées gérées ; avec activeOnly, borné par activeAmount. Alias : getParkingAmount. | 462 |
-| `gameplay_parking.getParkedCarsData()` | Données par voiture garée : parkingSpotId, activeRadius, randomPaint, searchFlag… | 470 |
-| `gameplay_parking.getParkedCarsList()` | Liste des ids de voitures garées gérées. | 466 |
-| `gameplay_parking.getParkingAmount(activeOnly)` | Alias de getParkedCarsAmount. | 462 |
-| `gameplay_parking.getParkingSpots()` | Renvoie la collection de places de parking (sites.parkingSpots : sorted, objects…), en chargeant les sites si nécessaire. | 74 |
-| `gameplay_parking.getParkingVars()` | Variables de stationnement actuelles. | 458 |
-| `gameplay_parking.getRandomParkingSpots(originPos, minDist, maxDist, targetCount, filters)` | Renvoie une liste de places valides triée avec un biais aléatoire en faveur des plus proches de la position d'origine. Élargit le rayon jusqu'à avoir assez de places ou atteindre maxDist. | 295 |
-| `gameplay_parking.getState()` | Indique si le système est actif. | 70 |
-| `gameplay_parking.getTrackingData()` | Données de suivi de tous les véhicules suivis, par id. | 399 |
-| `gameplay_parking.insertVehicle(vehId)` | Ajoute un véhicule aux voitures garées gérées : crée le pool 'autoParking' si besoin, le rend non utilisable par le joueur, l'associe à sa place actuelle éventuelle et active le suivi mapmgr. Ignoré si obj.ignoreParking. | 604 |
-| `gameplay_parking.moveToParkingSpot(vehId, parkingSpot, lowPrecision)` | Place un véhicule garé sur une place : choisit le sens (tags forwards/backwards, sinon avec la netteté), ajoute un décalage et une rotation aléatoires sauf tag perfect, éteint le contact, libère l'ancienne place, peut changer la peinture, et met à jour le suivi mapmgr. | 95 |
-| `gameplay_parking.onClientEndMission()` | Hook de fin de niveau : appelle resetAll. *(interne)* *(hook)* | 1004 |
-| `gameplay_parking.onClientStartMission()` | Hook de début de niveau ; ne fait rien. *(interne)* *(hook)* | 1001 |
-| `gameplay_parking.onDeserialized(data, options)` | Hook après rechargement Lua : refait apparaître les voitures stockées si options.respawnVehicles, réactive les voitures garées, rétablit les suivis, les variables et l'état. *(interne)* *(hook)* | 1049 |
-| `gameplay_parking.onSerialize(options)` | Hook avant rechargement Lua : renvoie l'état (actif, voiture garées, suivis, variables). Avec options.despawnVehicles, capture aussi les données d'apparition des voitures (sauf options.exceptVehicleId) puis les supprime. *(interne)* *(hook)* | 1008 |
-| `gameplay_parking.onUpdate(dt, dtSim)` | Appelé à chaque image. Met à jour le suivi du stationnement (événements enter/exit/valid/invalid), recherche périodiquement des places devant le joueur et recycle une voiture garée par image vers une nouvelle place hors de portée du joueur. *(interne)* *(hook)* | 822 |
-| `gameplay_parking.onVehicleActiveChanged(vehId, active)` | Hook de pool d'activation : marque une voiture garée désactivée pour téléportation ; à sa réactivation, la téléporte si un autre véhicule (100 m d'un joueur, 20 m sinon) est proche. *(interne)* *(hook)* | 800 |
-| `gameplay_parking.onVehicleDestroyed(vehId)` | Hook : retire le véhicule des listes de voitures garées et de suivi, et libère sa place. *(interne)* *(hook)* | 787 |
-| `gameplay_parking.onVehicleGroupSpawned(vehList, groupId, groupName)` | Hook de core_multiSpawn : active le groupe quand il porte le nom 'autoParking'. *(interne)* *(hook)* | 772 |
-| `gameplay_parking.onVehicleResetted(vehId)` | Hook : quand le véhicule joueur est réinitialisé/téléporté, force une recherche de places proche du joueur (mode de réapparition proche). *(interne)* *(hook)* | 778 |
-| `gameplay_parking.processVehicles(vehIds)` | Alias d'activate. | 660 |
-| `gameplay_parking.removeVehicle(vehId)` | Retire un véhicule des voitures garées gérées (ne le supprime pas du monde). | 640 |
-| `gameplay_parking.resetAll()` | Réinitialise tout : désactive, oublie les sites, vide listes et suivis, supprime le pool et remet les variables par défaut. | 758 |
-| `gameplay_parking.scatterParkedCars(vehIds, minDist, maxDist)` | Téléporte toutes les voitures garées (ou celles fournies) sur des places aléatoires ; repli sur forceTeleport quand aucune place ne convient. | 362 |
-| `gameplay_parking.setActiveAmount(amount)` | Définit le nombre maximal de voitures garées actives (visibles) ; nil = illimité. | 453 |
-| `gameplay_parking.setParkingVars(data, reset)` | Fusionne des variables de stationnement (réinitialise d'abord si reset). Un radiusCoef réinitialise les rayons actifs ; un activeAmount met à jour le pool de véhicules. | 434 |
-| `gameplay_parking.setSites(data)` | Définit les données de sites (places de parking) utilisées, en remplaçant celles du niveau. Accepte un chemin de fichier, ou une table de sites valide (avec parkingSpots) ; sinon remet à nil. | 45 |
-| `gameplay_parking.setState(val)` | Active ou désactive le système de stationnement. À l'activation, charge les sites par défaut si besoin et initialise le point de focus (gameplay_traffic.getFocus()). | 58 |
-| `gameplay_parking.setupVehicles(amount, options)` | Fait apparaître des véhicules garés sur des places aléatoires (groupe de véhicules de type propparked, ou options.vehGroup). Supprime d'abord les voitures garées actuelles sauf keepCurrent. Quand le groupe est apparu, onVehicleGroupSpawned appelle activate. | 693 |
+| `gameplay_parking.activate(vehIds)` | Activates a group of vehicles as parked cars (inserts them), then emits onParkingVehiclesActivated. Disables the system if there are no sites, no vehicles or none inserted. Alias: processVehicles. | 660 |
+| `gameplay_parking.checkParkingSpot(vehId, parkingSpot, minDist, maxDist)` | Indicates whether a spot is usable for a parked vehicle: existing, within the focus distance window, free (no vehicle, not banned, no vehicle on it), outside the trafficClearRadius radii, suitable size (neither too small nor too large: ratio >= 0.5). | 155 |
+| `gameplay_parking.deactivate()` | Disables the system: clears the lists, deletes the pool and emits onParkingVehiclesDeactivated. | 682 |
+| `gameplay_parking.deleteVehicles(amount)` | Deletes the last parked cars from the world (all by default). | 647 |
+| `gameplay_parking.disableTracking(vehId)` | Stops the parking tracking of a vehicle. | 394 |
+| `gameplay_parking.enableTracking(vehId, autoDisable)` | Enables parking tracking for a driven vehicle (also enables the system). Creates the tracking data: inside, preParked, parked, event, maxDist 80 m, parkingTimer, isOversized... | 374 |
+| `gameplay_parking.filterParkingSpots(psList, filters)` | Filters in place a list coming from findParkingSpots: removes banned spots, then depending on filters: standardSize (width <= 3, length <= 8), checkVehicles (no vehicle on it), useProbability (spot probability × baseProbability × day/night coefficient according to the time and the dayTime/nightTime tags). Default: {useProbability = true}. | 226 |
+| `gameplay_parking.findParkingSpots(pos, minRadius, maxRadius)` | Finds the spots in a ring around a position, sorted from nearest to farthest. | 197 |
+| `gameplay_parking.forceTeleport(vehId, pos, minDist, maxDist)` | Forces a parked car to teleport to a new random free spot nearby. Without a valid spot, sends it off the map via gameplay_traffic.forceTeleport. Has no effect if enableRespawn is false or if the car has ignoreForceTeleport. | 335 |
+| `gameplay_parking.getCurrentParkingSpot(vehId)` | Id of the spot where a vehicle is correctly parked. With active tracking, returns parkingSpotId if preParked; without tracking, searches for the nearest spot (15 m) that contains the vehicle with the precision vars.precision. | 403 |
+| `gameplay_parking.getParkedCarsAmount(activeOnly)` | Number of parked cars managed; with activeOnly, capped by activeAmount. Alias: getParkingAmount. | 462 |
+| `gameplay_parking.getParkedCarsData()` | Data per parked car: parkingSpotId, activeRadius, randomPaint, searchFlag... | 470 |
+| `gameplay_parking.getParkedCarsList()` | List of the ids of the managed parked cars. | 466 |
+| `gameplay_parking.getParkingAmount(activeOnly)` | Alias of getParkedCarsAmount. | 462 |
+| `gameplay_parking.getParkingSpots()` | Returns the collection of parking spots (sites.parkingSpots: sorted, objects...), loading the sites if necessary. | 74 |
+| `gameplay_parking.getParkingVars()` | Current parking variables. | 458 |
+| `gameplay_parking.getRandomParkingSpots(originPos, minDist, maxDist, targetCount, filters)` | Returns a sorted list of valid spots with a random bias in favor of those closest to the origin position. Widens the radius until there are enough spots or maxDist is reached. | 295 |
+| `gameplay_parking.getState()` | Indicates whether the system is active. | 70 |
+| `gameplay_parking.getTrackingData()` | Tracking data of all tracked vehicles, by id. | 399 |
+| `gameplay_parking.insertVehicle(vehId)` | Adds a vehicle to the managed parked cars: creates the 'autoParking' pool if needed, makes it unusable by the player, associates it with its current spot if any and enables mapmgr tracking. Ignored if obj.ignoreParking. | 604 |
+| `gameplay_parking.moveToParkingSpot(vehId, parkingSpot, lowPrecision)` | Places a parked vehicle on a spot: chooses the direction (forwards/backwards tags, otherwise using neatness), adds a random offset and rotation unless the perfect tag, turns the ignition off, frees the old spot, may change the paint, and updates the mapmgr tracking. | 95 |
+| `gameplay_parking.onClientEndMission()` | Level end hook: calls resetAll. *(internal)* *(hook)* | 1004 |
+| `gameplay_parking.onClientStartMission()` | Level start hook; does nothing. *(internal)* *(hook)* | 1001 |
+| `gameplay_parking.onDeserialized(data, options)` | Hook after Lua reload: respawns the stored cars if options.respawnVehicles, reactivates the parked cars, restores the tracking, the variables and the state. *(internal)* *(hook)* | 1049 |
+| `gameplay_parking.onSerialize(options)` | Hook before Lua reload: returns the state (active, parked cars, tracking, variables). With options.despawnVehicles, also captures the cars' spawn data (except options.exceptVehicleId) then deletes them. *(internal)* *(hook)* | 1008 |
+| `gameplay_parking.onUpdate(dt, dtSim)` | Called every frame. Updates the parking tracking (enter/exit/valid/invalid events), periodically searches for spots in front of the player and recycles one parked car per frame to a new spot out of the player's range. *(internal)* *(hook)* | 822 |
+| `gameplay_parking.onVehicleActiveChanged(vehId, active)` | Activation pool hook: marks a deactivated parked car for teleport; on its reactivation, teleports it if another vehicle (100 m from a player, 20 m otherwise) is nearby. *(internal)* *(hook)* | 800 |
+| `gameplay_parking.onVehicleDestroyed(vehId)` | Hook: removes the vehicle from the parked car and tracking lists, and frees its spot. *(internal)* *(hook)* | 787 |
+| `gameplay_parking.onVehicleGroupSpawned(vehList, groupId, groupName)` | core_multiSpawn hook: activates the group when it is named 'autoParking'. *(internal)* *(hook)* | 772 |
+| `gameplay_parking.onVehicleResetted(vehId)` | Hook: when the player vehicle is reset/teleported, forces a search for spots near the player (near respawn mode). *(internal)* *(hook)* | 778 |
+| `gameplay_parking.processVehicles(vehIds)` | Alias of activate. | 660 |
+| `gameplay_parking.removeVehicle(vehId)` | Removes a vehicle from the managed parked cars (does not delete it from the world). | 640 |
+| `gameplay_parking.resetAll()` | Resets everything: disables, forgets the sites, clears lists and tracking, deletes the pool and restores the default variables. | 758 |
+| `gameplay_parking.scatterParkedCars(vehIds, minDist, maxDist)` | Teleports all parked cars (or those provided) to random spots; falls back to forceTeleport when no spot is suitable. | 362 |
+| `gameplay_parking.setActiveAmount(amount)` | Sets the maximum number of active (visible) parked cars; nil = unlimited. | 453 |
+| `gameplay_parking.setParkingVars(data, reset)` | Merges parking variables (resets first if reset). A radiusCoef resets the active radii; an activeAmount updates the vehicle pool. | 434 |
+| `gameplay_parking.setSites(data)` | Sets the site data (parking spots) used, replacing those of the level. Accepts a file path, or a valid sites table (with parkingSpots); otherwise resets to nil. | 45 |
+| `gameplay_parking.setState(val)` | Enables or disables the parking system. On activation, loads the default sites if needed and initializes the focus point (gameplay_traffic.getFocus()). | 58 |
+| `gameplay_parking.setupVehicles(amount, options)` | Spawns parked vehicles on random spots (vehicle group of type propparked, or options.vehGroup). First deletes the current parked cars unless keepCurrent. When the group has spawned, onVehicleGroupSpawned calls activate. | 693 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_parking.activate(vehIds)`
 
-Active un groupe de véhicules comme voitures garées (les insère), puis émet onParkingVehiclesActivated. Désactive le système s'il n'y a pas de sites, pas de véhicules ou aucun inséré. Alias : processVehicles.
+Activates a group of vehicles as parked cars (inserts them), then emits onParkingVehiclesActivated. Disables the system if there are no sites, no vehicles or none inserted. Alias: processVehicles.
 
-- `vehIds` (*integer[]*) : Ids de véhicules.
+- `vehIds` (*integer[]*) : Vehicle ids.
 
 #### `gameplay_parking.checkParkingSpot(vehId, parkingSpot, minDist, maxDist)`
 
-Indique si une place est utilisable pour un véhicule garé : existante, dans la fenêtre de distance du focus, libre (pas de véhicule, pas banned, aucun véhicule dessus), hors des rayons trafficClearRadius, taille adaptée (ni trop petite ni trop grande : rapport >= 0.5).
+Indicates whether a spot is usable for a parked vehicle: existing, within the focus distance window, free (no vehicle, not banned, no vehicle on it), outside the trafficClearRadius radii, suitable size (neither too small nor too large: ratio >= 0.5).
 
-- `vehId` (*integer*) : Véhicule à garer.
-- `parkingSpot` (*table*) : Place à tester.
-- `minDist` (*number|nil*) : Distance minimale au focus (m, défaut 0).
-- `maxDist` (*number|nil*) : Distance maximale au focus (m, défaut 1e12).
-- **renvoie** : boolean true si la place convient.
+- `vehId` (*integer*) : Vehicle to park.
+- `parkingSpot` (*table*) : Spot to test.
+- `minDist` (*number|nil*) : Minimum distance to the focus (m, default 0).
+- `maxDist` (*number|nil*) : Maximum distance to the focus (m, default 1e12).
+- **returns**: boolean true if the spot is suitable.
 
 #### `gameplay_parking.deleteVehicles(amount)`
 
-Supprime du monde les dernières voitures garées (toutes par défaut).
+Deletes the last parked cars from the world (all by default).
 
-- `amount` (*integer|nil*) : Nombre à supprimer, en commençant par la fin de la liste.
+- `amount` (*integer|nil*) : Number to delete, starting from the end of the list.
 
 #### `gameplay_parking.disableTracking(vehId)`
 
-Arrête le suivi du stationnement d'un véhicule.
+Stops the parking tracking of a vehicle.
 
-- `vehId` (*integer|nil*) : Véhicule (défaut joueur 0).
+- `vehId` (*integer|nil*) : Vehicle (default player 0).
 
 #### `gameplay_parking.enableTracking(vehId, autoDisable)`
 
-Active le suivi du stationnement pour un véhicule conduit (active aussi le système). Crée les données de suivi : inside, preParked, parked, event, maxDist 80 m, parkingTimer, isOversized…
+Enables parking tracking for a driven vehicle (also enables the system). Creates the tracking data: inside, preParked, parked, event, maxDist 80 m, parkingTimer, isOversized...
 
-- `vehId` (*integer|nil*) : Véhicule (défaut joueur 0).
-- `autoDisable` (*boolean|nil*) : Si true, le suivi s'arrête à la première validation du stationnement.
+- `vehId` (*integer|nil*) : Vehicle (default player 0).
+- `autoDisable` (*boolean|nil*) : If true, tracking stops at the first parking validation.
 
 #### `gameplay_parking.filterParkingSpots(psList, filters)`
 
-Filtre en place une liste issue de findParkingSpots : retire les places banned, puis selon filters : standardSize (largeur <= 3, longueur <= 8), checkVehicles (aucun véhicule dessus), useProbability (probabilité de la place × baseProbability × coefficient jour/nuit selon l'heure et les tags dayTime/nightTime). Défaut : {useProbability = true}.
+Filters in place a list coming from findParkingSpots: removes banned spots, then depending on filters: standardSize (width <= 3, length <= 8), checkVehicles (no vehicle on it), useProbability (spot probability × baseProbability × day/night coefficient according to the time and the dayTime/nightTime tags). Default: {useProbability = true}.
 
-- `psList` (*table[]*) : Liste {ps, squaredDistance}.
+- `psList` (*table[]*) : List {ps, squaredDistance}.
 - `filters` (*table|nil*) : useProbability, standardSize, checkVehicles.
-- **renvoie** : table[] La même liste filtrée.
+- **returns**: table[] The same filtered list.
 
 #### `gameplay_parking.findParkingSpots(pos, minRadius, maxRadius)`
 
-Trouve les places dans une couronne autour d'une position, triées de la plus proche à la plus lointaine.
+Finds the spots in a ring around a position, sorted from nearest to farthest.
 
-- `pos` (*vec3|nil*) : Centre (défaut position caméra).
-- `minRadius` (*number|nil*) : Rayon minimal (défaut 0).
-- `maxRadius` (*number|nil*) : Rayon maximal (défaut 200 m).
-- **renvoie** : table[] Liste {ps = place, squaredDistance = number}.
+- `pos` (*vec3|nil*) : Center (default camera position).
+- `minRadius` (*number|nil*) : Minimum radius (default 0).
+- `maxRadius` (*number|nil*) : Maximum radius (default 200 m).
+- **returns**: table[] List {ps = spot, squaredDistance = number}.
 
 #### `gameplay_parking.forceTeleport(vehId, pos, minDist, maxDist)`
 
-Force une voiture garée à se téléporter sur une nouvelle place libre aléatoire proche. Sans place valide, l'envoie hors carte via gameplay_traffic.forceTeleport. Sans effet si enableRespawn est false ou si la voiture a ignoreForceTeleport.
+Forces a parked car to teleport to a new random free spot nearby. Without a valid spot, sends it off the map via gameplay_traffic.forceTeleport. Has no effect if enableRespawn is false or if the car has ignoreForceTeleport.
 
-- `vehId` (*integer*) : Voiture garée.
-- `pos` (*vec3|nil*) : Position de référence (défaut caméra).
-- `minDist` (*number|nil*) : Distance minimale.
-- `maxDist` (*number|nil*) : Distance maximale.
+- `vehId` (*integer*) : Parked car.
+- `pos` (*vec3|nil*) : Reference position (default camera).
+- `minDist` (*number|nil*) : Minimum distance.
+- `maxDist` (*number|nil*) : Maximum distance.
 
 #### `gameplay_parking.getCurrentParkingSpot(vehId)`
 
-Id de la place où un véhicule est correctement garé. Avec suivi actif, renvoie parkingSpotId si preParked ; sans suivi, cherche la place la plus proche (15 m) qui contient le véhicule avec la précision vars.precision.
+Id of the spot where a vehicle is correctly parked. With active tracking, returns parkingSpotId if preParked; without tracking, searches for the nearest spot (15 m) that contains the vehicle with the precision vars.precision.
 
-- `vehId` (*integer|nil*) : Véhicule (défaut joueur 0).
-- **renvoie** : integer|nil Id de place, ou nil.
+- `vehId` (*integer|nil*) : Vehicle (default player 0).
+- **returns**: integer|nil Spot id, or nil.
 
 #### `gameplay_parking.getParkedCarsAmount(activeOnly)`
 
-Nombre de voitures garées gérées ; avec activeOnly, borné par activeAmount. Alias : getParkingAmount.
+Number of parked cars managed; with activeOnly, capped by activeAmount. Alias: getParkingAmount.
 
-- `activeOnly` (*boolean|nil*) : true pour compter au plus activeAmount.
-- **renvoie** : integer Nombre.
+- `activeOnly` (*boolean|nil*) : true to count at most activeAmount.
+- **returns**: integer Number.
 
 #### `gameplay_parking.getParkedCarsData()`
 
-Données par voiture garée : parkingSpotId, activeRadius, randomPaint, searchFlag…
+Data per parked car: parkingSpotId, activeRadius, randomPaint, searchFlag...
 
-- **renvoie** : table<integer, table> Données (référence directe).
+- **returns**: table<integer, table> Data (direct reference).
 
 #### `gameplay_parking.getParkedCarsList()`
 
-Liste des ids de voitures garées gérées.
+List of the ids of the managed parked cars.
 
-- **renvoie** : integer[] Ids (référence directe).
+- **returns**: integer[] Ids (direct reference).
 
 #### `gameplay_parking.getParkingAmount(activeOnly)`
 
-Alias de getParkedCarsAmount.
+Alias of getParkedCarsAmount.
 
-- `activeOnly` (*boolean|nil*) : Voir getParkedCarsAmount.
-- **renvoie** : integer Nombre.
+- `activeOnly` (*boolean|nil*) : See getParkedCarsAmount.
+- **returns**: integer Number.
 
 #### `gameplay_parking.getParkingSpots()`
 
-Renvoie la collection de places de parking (sites.parkingSpots : sorted, objects…), en chargeant les sites si nécessaire.
+Returns the collection of parking spots (sites.parkingSpots: sorted, objects...), loading the sites if necessary.
 
-- **renvoie** : table|nil Collection de places, nil sans sites.
+- **returns**: table|nil Collection of spots, nil without sites.
 
 #### `gameplay_parking.getParkingVars()`
 
-Variables de stationnement actuelles.
+Current parking variables.
 
-- **renvoie** : table Variables (référence directe).
+- **returns**: table Variables (direct reference).
 
 #### `gameplay_parking.getRandomParkingSpots(originPos, minDist, maxDist, targetCount, filters)`
 
-Renvoie une liste de places valides triée avec un biais aléatoire en faveur des plus proches de la position d'origine. Élargit le rayon jusqu'à avoir assez de places ou atteindre maxDist.
+Returns a sorted list of valid spots with a random bias in favor of those closest to the origin position. Widens the radius until there are enough spots or maxDist is reached.
 
-- `originPos` (*vec3|nil*) : Origine (défaut caméra).
-- `minDist` (*number|nil*) : Distance minimale (défaut 0).
-- `maxDist` (*number|nil*) : Distance maximale (défaut 10000).
-- `targetCount` (*integer|nil*) : Nombre de places voulu ; nil ou <= 0 = rayon maxDist et minimum automatique.
-- `filters` (*table|nil*) : Filtres de filterParkingSpots.
-- **renvoie** : table[] Liste {ps, squaredDistance} (vide si rien trouvé).
+- `originPos` (*vec3|nil*) : Origin (default camera).
+- `minDist` (*number|nil*) : Minimum distance (default 0).
+- `maxDist` (*number|nil*) : Maximum distance (default 10000).
+- `targetCount` (*integer|nil*) : Number of spots wanted; nil or <= 0 = maxDist radius and automatic minimum.
+- `filters` (*table|nil*) : Filters of filterParkingSpots.
+- **returns**: table[] List {ps, squaredDistance} (empty if nothing found).
 
 #### `gameplay_parking.getState()`
 
-Indique si le système est actif.
+Indicates whether the system is active.
 
-- **renvoie** : boolean true si actif.
+- **returns**: boolean true if active.
 
 #### `gameplay_parking.getTrackingData()`
 
-Données de suivi de tous les véhicules suivis, par id.
+Tracking data of all tracked vehicles, by id.
 
-- **renvoie** : table<integer, table> Données (inside, parked, event, parkingSpotId, lastParkingSpotId…).
+- **returns**: table<integer, table> Data (inside, parked, event, parkingSpotId, lastParkingSpotId...).
 
 #### `gameplay_parking.insertVehicle(vehId)`
 
-Ajoute un véhicule aux voitures garées gérées : crée le pool 'autoParking' si besoin, le rend non utilisable par le joueur, l'associe à sa place actuelle éventuelle et active le suivi mapmgr. Ignoré si obj.ignoreParking.
+Adds a vehicle to the managed parked cars: creates the 'autoParking' pool if needed, makes it unusable by the player, associates it with its current spot if any and enables mapmgr tracking. Ignored if obj.ignoreParking.
 
-- `vehId` (*integer*) : Véhicule.
+- `vehId` (*integer*) : Vehicle.
 
 #### `gameplay_parking.moveToParkingSpot(vehId, parkingSpot, lowPrecision)`
 
-Place un véhicule garé sur une place : choisit le sens (tags forwards/backwards, sinon avec la netteté), ajoute un décalage et une rotation aléatoires sauf tag perfect, éteint le contact, libère l'ancienne place, peut changer la peinture, et met à jour le suivi mapmgr.
+Places a parked vehicle on a spot: chooses the direction (forwards/backwards tags, otherwise using neatness), adds a random offset and rotation unless the perfect tag, turns the ignition off, frees the old spot, may change the paint, and updates the mapmgr tracking.
 
-- `vehId` (*integer*) : Véhicule à déplacer.
-- `parkingSpot` (*table*) : Objet place de parking.
-- `lowPrecision` (*boolean|nil*) : Transmis à moveResetVehicleTo (utilisé quand le véhicule n'est pas prêt).
+- `vehId` (*integer*) : Vehicle to move.
+- `parkingSpot` (*table*) : Parking spot object.
+- `lowPrecision` (*boolean|nil*) : Passed to moveResetVehicleTo (used when the vehicle is not ready).
 
 #### `gameplay_parking.onDeserialized(data, options)`
 
-Hook après rechargement Lua : refait apparaître les voitures stockées si options.respawnVehicles, réactive les voitures garées, rétablit les suivis, les variables et l'état.
+Hook after Lua reload: respawns the stored cars if options.respawnVehicles, reactivates the parked cars, restores the tracking, the variables and the state.
 
-- `data` (*table*) : Résultat de onSerialize.
+- `data` (*table*) : Result of onSerialize.
 - `options` (*table|nil*) : respawnVehicles, debugVehicleStashing.
 
 #### `gameplay_parking.onSerialize(options)`
 
-Hook avant rechargement Lua : renvoie l'état (actif, voiture garées, suivis, variables). Avec options.despawnVehicles, capture aussi les données d'apparition des voitures (sauf options.exceptVehicleId) puis les supprime.
+Hook before Lua reload: returns the state (active, parked cars, tracking, variables). With options.despawnVehicles, also captures the cars' spawn data (except options.exceptVehicleId) then deletes them.
 
 - `options` (*table|nil*) : despawnVehicles, exceptVehicleId, debugVehicleStashing.
-- **renvoie** : table Données à restaurer.
+- **returns**: table Data to restore.
 
 #### `gameplay_parking.onUpdate(dt, dtSim)`
 
-Appelé à chaque image. Met à jour le suivi du stationnement (événements enter/exit/valid/invalid), recherche périodiquement des places devant le joueur et recycle une voiture garée par image vers une nouvelle place hors de portée du joueur.
+Called every frame. Updates the parking tracking (enter/exit/valid/invalid events), periodically searches for spots in front of the player and recycles one parked car per frame to a new spot out of the player's range.
 
-- `dt` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
+- `dt` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
 
 #### `gameplay_parking.onVehicleActiveChanged(vehId, active)`
 
-Hook de pool d'activation : marque une voiture garée désactivée pour téléportation ; à sa réactivation, la téléporte si un autre véhicule (100 m d'un joueur, 20 m sinon) est proche.
+Activation pool hook: marks a deactivated parked car for teleport; on its reactivation, teleports it if another vehicle (100 m from a player, 20 m otherwise) is nearby.
 
-- `vehId` (*integer*) : Véhicule.
-- `active` (*boolean*) : Nouvel état d'activité.
+- `vehId` (*integer*) : Vehicle.
+- `active` (*boolean*) : New activity state.
 
 #### `gameplay_parking.onVehicleDestroyed(vehId)`
 
-Hook : retire le véhicule des listes de voitures garées et de suivi, et libère sa place.
+Hook: removes the vehicle from the parked car and tracking lists, and frees its spot.
 
-- `vehId` (*integer*) : Véhicule détruit.
+- `vehId` (*integer*) : Destroyed vehicle.
 
 #### `gameplay_parking.onVehicleGroupSpawned(vehList, groupId, groupName)`
 
-Hook de core_multiSpawn : active le groupe quand il porte le nom 'autoParking'.
+core_multiSpawn hook: activates the group when it is named 'autoParking'.
 
-- `vehList` (*integer[]*) : Véhicules apparus.
-- `groupId` (*any*) : Id du groupe (inutilisé).
-- `groupName` (*string*) : Nom du groupe.
+- `vehList` (*integer[]*) : Vehicles spawned.
+- `groupId` (*any*) : Group id (unused).
+- `groupName` (*string*) : Group name.
 
 #### `gameplay_parking.onVehicleResetted(vehId)`
 
-Hook : quand le véhicule joueur est réinitialisé/téléporté, force une recherche de places proche du joueur (mode de réapparition proche).
+Hook: when the player vehicle is reset/teleported, forces a search for spots near the player (near respawn mode).
 
-- `vehId` (*integer*) : Véhicule réinitialisé.
+- `vehId` (*integer*) : Vehicle reset.
 
 #### `gameplay_parking.processVehicles(vehIds)`
 
-Alias d'activate.
+Alias of activate.
 
-- `vehIds` (*integer[]*) : Ids de véhicules.
+- `vehIds` (*integer[]*) : Vehicle ids.
 
 #### `gameplay_parking.removeVehicle(vehId)`
 
-Retire un véhicule des voitures garées gérées (ne le supprime pas du monde).
+Removes a vehicle from the managed parked cars (does not delete it from the world).
 
-- `vehId` (*integer*) : Véhicule.
+- `vehId` (*integer*) : Vehicle.
 
 #### `gameplay_parking.scatterParkedCars(vehIds, minDist, maxDist)`
 
-Téléporte toutes les voitures garées (ou celles fournies) sur des places aléatoires ; repli sur forceTeleport quand aucune place ne convient.
+Teleports all parked cars (or those provided) to random spots; falls back to forceTeleport when no spot is suitable.
 
-- `vehIds` (*integer[]|nil*) : Voitures (défaut toutes les voitures garées).
-- `minDist` (*number|nil*) : Distance minimale.
-- `maxDist` (*number|nil*) : Distance maximale.
+- `vehIds` (*integer[]|nil*) : Cars (default all parked cars).
+- `minDist` (*number|nil*) : Minimum distance.
+- `maxDist` (*number|nil*) : Maximum distance.
 
 #### `gameplay_parking.setActiveAmount(amount)`
 
-Définit le nombre maximal de voitures garées actives (visibles) ; nil = illimité.
+Sets the maximum number of active (visible) parked cars; nil = unlimited.
 
-- `amount` (*number|nil*) : Nombre maximal.
+- `amount` (*number|nil*) : Maximum number.
 
 #### `gameplay_parking.setParkingVars(data, reset)`
 
-Fusionne des variables de stationnement (réinitialise d'abord si reset). Un radiusCoef réinitialise les rayons actifs ; un activeAmount met à jour le pool de véhicules.
+Merges parking variables (resets first if reset). A radiusCoef resets the active radii; an activeAmount updates the vehicle pool.
 
 - `data` (*table*) : precision, neatness, radiusCoef, baseProbability, activeAmount, enableRespawn.
-- `reset` (*boolean|nil*) : true pour revenir aux valeurs par défaut avant fusion.
+- `reset` (*boolean|nil*) : true to return to the default values before merging.
 
 #### `gameplay_parking.setSites(data)`
 
-Définit les données de sites (places de parking) utilisées, en remplaçant celles du niveau. Accepte un chemin de fichier, ou une table de sites valide (avec parkingSpots) ; sinon remet à nil.
+Sets the site data (parking spots) used, replacing those of the level. Accepts a file path, or a valid sites table (with parkingSpots); otherwise resets to nil.
 
-- `data` (*string|table|nil*) : Chemin d'un fichier .sites.json ou table de sites.
+- `data` (*string|table|nil*) : Path of a .sites.json file or sites table.
 
 #### `gameplay_parking.setState(val)`
 
-Active ou désactive le système de stationnement. À l'activation, charge les sites par défaut si besoin et initialise le point de focus (gameplay_traffic.getFocus()).
+Enables or disables the parking system. On activation, loads the default sites if needed and initializes the focus point (gameplay_traffic.getFocus()).
 
-- `val` (*boolean*) : true pour activer.
+- `val` (*boolean*) : true to enable.
 
 #### `gameplay_parking.setupVehicles(amount, options)`
 
-Fait apparaître des véhicules garés sur des places aléatoires (groupe de véhicules de type propparked, ou options.vehGroup). Supprime d'abord les voitures garées actuelles sauf keepCurrent. Quand le groupe est apparu, onVehicleGroupSpawned appelle activate.
+Spawns parked vehicles on random spots (vehicle group of type propparked, or options.vehGroup). First deletes the current parked cars unless keepCurrent. When the group has spawned, onVehicleGroupSpawned calls activate.
 
-- `amount` (*integer|nil*) : Nombre ; -1 ou nil = réglage trafficParkingAmount (0 = auto entre 4 et 16).
+- `amount` (*integer|nil*) : Number; -1 or nil = trafficParkingAmount setting (0 = auto between 4 and 16).
 - `options` (*table|nil*) : keepCurrent, vehGroup, pos, bypassChecks.
-- **renvoie** : boolean false si le nombre est nul, si le groupe est vide ou s'il n'y a aucune place (sans bypassChecks).
+- **returns**: boolean false if the number is zero, if the group is empty or if there are no spots (without bypassChecks).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `debugLevel` | integer | Niveau de debug : > 0 logs de téléportation et de filtrage ; >= 1 dessine les places autour du véhicule suivi ; >= 2 dessine les coins ; >= 3 dessine le point de recherche et les cercles. |
-| `dependencies` | string[] | {'core_vehicleActivePooling'}, extension chargée avant. |
+| `debugLevel` | integer | Debug level: > 0 teleport and filtering logs; >= 1 draws the spots around the tracked vehicle; >= 2 draws the corners; >= 3 draws the search point and the circles. |
+| `dependencies` | string[] | {'core_vehicleActivePooling'}, extension loaded beforehand. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onParkingVehiclesActivated` — écouté par 1 module(s)
+- `onParkingVehiclesActivated` — listened to by 1 module(s)
 - `onParkingVehiclesDeactivated`
-- `onVehicleParkingStatus` — écouté par 1 module(s)
+- `onVehicleParkingStatus` — listened to by 1 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 - `be:` `getEnabled`, `getObjectActive`, `getObjectOOBBCenterXYZ`, `getObjectOOBBHalfExtentsXYZ`, `getObjectPositionXYZ`, `getPlayerVehicleID`, `getSurfaceHeightBelow`
@@ -344,4 +344,4 @@ Fait apparaître des véhicules garés sur des places aléatoires (groupe de vé
 - `obj:` `delete`, `getDirectionVector`, `getDirectionVectorUp`, `getDirectionVectorXYZ`, `getDynDataFieldbyName`, `getField`, `getMetallicPaintData`, `getPosition`, `setDynDataFieldbyName`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/parking.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/parking.lua`.*

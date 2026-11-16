@@ -1,19 +1,19 @@
 # `flowgraph_nodes_scene_camera_stopCamPath`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/camera/stopCamPath.lua` · VM : Game Engine (GE) · 32 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/camera/stopCamPath.lua` · VM: Game Engine (GE) · 32 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/camera/stopCamPath")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/camera/stopCamPath")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Stop Cam Path » (once_instant). Arrete un chemin camera : le chemin actif n'est pas considere comme termine mais devient inactif. Entree optionnelle (cachee) id : sans id, tente d'utiliser le chemin actif.
+Flowgraph node "Stop Cam Path" (once_instant). Stops a camera path: the active path is not considered completed but becomes inactive. Optional (hidden) input id: without id, tries to use the active path.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Zone centrale du noeud (rien d'affiche). | 26 |
-| `C:workOnce()` | Appelle self.mgr.modules.camera:endActivePath(id). | 22 |
+| `C:drawMiddle(builder, style)` | Central area of the node (nothing displayed). | 26 |
+| `C:workOnce()` | Calls self.mgr.modules.camera:endActivePath(id). | 22 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/camera/stopCamPath.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/camera/stopCamPath.lua`.*

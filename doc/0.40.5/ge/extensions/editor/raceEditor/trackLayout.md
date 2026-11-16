@@ -1,41 +1,41 @@
 # `editor_raceEditor_trackLayout`
 
-*Fichier : `lua/ge/extensions/editor/raceEditor/trackLayout.lua` · VM : Game Engine (GE) · 155 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/raceEditor/trackLayout.lua` · VM: Game Engine (GE) · 155 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/raceEditor/trackLayout")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/raceEditor/trackLayout")` (file under extensions/ but not a regular extension)
 
-Sous-fenêtre « Track Layout » de l'éditeur de course (raceEditor). Elle règle le nombre de tours par défaut (defaultLaps, minimum 1), les nœuds de départ et d'arrivée (startNode, endNode), les positions de départ normale, inverse, lancée et lancée inverse (defaultStartPosition, reverseStartPosition, rollingStartPosition, rollingReverseStartPosition) et l'option « Simplify AI Path » (simplifyAiPath). Elle affiche la classification calculée par path:classify() (Reversible, Rolling Start, Closed, Branching) et dessine dans le monde les libellés « Stop Control » et « Split N ». Changements via editor.history. Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/trackLayout')(raceEditor).
+"Track Layout" sub-window of the race editor (raceEditor). It sets the default lap count (defaultLaps, minimum 1), the start and end nodes (startNode, endNode), the normal, reverse, rolling and rolling reverse start positions (defaultStartPosition, reverseStartPosition, rollingStartPosition, rollingReverseStartPosition) and the "Simplify AI Path" option (simplifyAiPath). It displays the classification computed by path:classify() (Reversible, Rolling Start, Closed, Branching) and draws the "Stop Control" and "Split N" labels in the world. Changes via editor.history. The module returns a constructor: require('/lua/ge/extensions/editor/raceEditor/trackLayout')(raceEditor).
 
-## Remarques
+## Notes
 
-- Une position de départ nommée STOP_ZONE, SS_stop_control ou TC_out est reconnue comme zone d'arrêt et reçoit le texte « Stop Control » dans le monde.
-- Les nœuds marqués useAsSplit (sauf le dernier de la liste triée) sont numérotés « Split 1 », « Split 2 »… dans le monde.
-- Un circuit ouvert ne peut pas avoir plus d'un tour ; un circuit fermé n'a pas besoin de End Node (infobulles du code).
-- C:selector indexe objects.objects[self.path[fieldName]] : la valeur -1 (« None ») dépend du fait que la collection renvoie un objet « manquant » pour cet indice.
+- A start position named STOP_ZONE, SS_stop_control or TC_out is recognized as a stop zone and gets the text "Stop Control" in the world.
+- Nodes marked useAsSplit (except the last of the sorted list) are numbered "Split 1", "Split 2"... in the world.
+- An open track cannot have more than one lap; a closed track does not need an End Node (code tooltips).
+- C:selector indexes objects.objects[self.path[fieldName]]: the value -1 ("None") relies on the collection returning a "missing" object for that index.
 
-## Classe `C`
+## Class `C`
 
-Fenêtre Track Layout (windowDescription = 'Track Layout'). Instanciée avec init(raceEditor).
+Track Layout window (windowDescription = 'Track Layout'). Instantiated with init(raceEditor).
 
-Le module renvoie un constructeur : `local obj = require("editor_raceEditor_trackLayout")(options)`.
+The module returns a constructor: `local obj = require("editor_raceEditor_trackLayout")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:changeField(field, new)` | Si la nouvelle valeur diffère de path[field], valide une action d'historique qui modifie ce champ du chemin. | 27 |
-| `C:displayClassification(classification, name, field, tt)` | Affiche une ligne « nom » avec icône coche ou croix selon classification[field]. | 78 |
-| `C:draw()` | Appelé à chaque frame : dessine le formulaire, la zone d'arrêt et les splits. | 20 |
-| `C:drawGeneralInfo()` | Dessine le formulaire (tours, nœuds, positions de départ, classification, option de simplification IA) puis la zone d'arrêt et les splits. | 35 |
-| `C:drawSplits()` | Dessine « Split N » sur chaque pathnode useAsSplit (hors dernier nœud de la liste triée). | 107 |
-| `C:drawStopZone()` | Cherche une position de départ nommée STOP_ZONE, SS_stop_control ou TC_out et y dessine le texte « Stop Control ». | 89 |
-| `C:init(raceEditor)` | Mémorise raceEditor. | 10 |
-| `C:selected()` | Appelé quand l'onglet devient actif ; ne fait rien. | 17 |
-| `C:selector(name, objects, fieldName, clrI, tt)` | Liste déroulante de choix d'un nœud ou d'une position pour un champ du chemin (None = -1), avec libellé dessiné dans le monde et prévisualisation du nom survolé. | 120 |
-| `C:setPath(path)` | Définit le chemin de course édité. | 14 |
-| `C:unselect()` | Appelé quand l'onglet est quitté ; ne fait rien. | 18 |
+| `C:changeField(field, new)` | If the new value differs from path[field], commits a history action that modifies this path field. | 27 |
+| `C:displayClassification(classification, name, field, tt)` | Displays a "name" line with a check or cross icon depending on classification[field]. | 78 |
+| `C:draw()` | Called every frame: draws the form, the stop zone and the splits. | 20 |
+| `C:drawGeneralInfo()` | Draws the form (laps, nodes, start positions, classification, AI simplification option) then the stop zone and the splits. | 35 |
+| `C:drawSplits()` | Draws "Split N" on each useAsSplit pathnode (except the last node of the sorted list). | 107 |
+| `C:drawStopZone()` | Looks for a start position named STOP_ZONE, SS_stop_control or TC_out and draws the text "Stop Control" there. | 89 |
+| `C:init(raceEditor)` | Stores raceEditor. | 10 |
+| `C:selected()` | Called when the tab becomes active; does nothing. | 17 |
+| `C:selector(name, objects, fieldName, clrI, tt)` | Dropdown to choose a node or a position for a path field (None = -1), with a label drawn in the world and a preview of the hovered name. | 120 |
+| `C:setPath(path)` | Sets the race path being edited. | 14 |
+| `C:unselect()` | Called when the tab is left; does nothing. | 18 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/raceEditor/trackLayout.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/raceEditor/trackLayout.lua`.*

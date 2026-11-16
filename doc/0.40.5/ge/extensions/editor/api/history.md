@@ -1,12 +1,12 @@
 # `editor_api_history`
 
-*Fichier : `lua/ge/extensions/editor/api/history.lua` · VM : Game Engine (GE) · 226 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/history.lua` · VM: Game Engine (GE) · 226 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/api/history")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/api/history")` (file under extensions/ but not a regular extension)
 
-Pile annuler/rétablir (undo/redo) de l'éditeur. Chaque action a un nom, une table de données et deux fonctions undo/redo qui reçoivent cette table. Les actions sont regroupées en transactions (une action seule forme une transaction d'une action) ; undo/redo opèrent par transaction. Le module renvoie un constructeur sans argument (appelle `init`). Limite par défaut : 1000 niveaux.
+Editor undo/redo stack. Each action has a name, a data table and two undo/redo functions that receive this table. Actions are grouped into transactions (a single action forms a one-action transaction); undo/redo operate per transaction. The module returns a constructor with no arguments (calls `init`). Default limit: 1000 levels.
 
-## Exemple
+## Example
 
 ```lua
 local h = require("editor/api/history")()
@@ -16,33 +16,33 @@ h:commitAction("MyMove", {id = 5, old = a, new = b},
 h:undo()
 ```
 
-## Remarques
+## Notes
 
-- `commitAction` hors transaction exécute immédiatement redoFunc (sauf dontCallRedoNow) et renvoie le RÉSULTAT de redoFunc, non l'action comme le dit le commentaire ; dans une transaction il renvoie l'action. Il renvoie nil si l'action est identique à la dernière transaction de la pile (hors timestamp), et false si undo ou redo manque.
-- `table.remove(self.undoStack, 0)` est utilisé pour retirer la plus ancienne transaction quand la pile est pleine : l'indice 0 n'est pas un indice valide d'une séquence Lua, donc la limite de 1000 niveaux ne semble pas vraiment appliquée (déduit du code).
-- `endTransaction` plante si aucune transaction n'est commencée (currentTransaction nil). Une transaction vide n'est pas ajoutée à la pile.
-- Tout nouveau commit ou endTransaction non vide vide la pile de redo.
-- Hooks optionnels posés par l'appelant : `self.onUndo(action)`, `self.onRedo(action)`, `self.onCommitAction(action)`. Les actions stockent `userId` (editor.userId) et `timestamp` (os.time()).
+- `commitAction` outside a transaction immediately runs redoFunc (unless dontCallRedoNow) and returns the RESULT of redoFunc, not the action as the comment says; inside a transaction it returns the action. It returns nil if the action is identical to the last transaction on the stack (ignoring timestamp), and false if undo or redo is missing.
+- `table.remove(self.undoStack, 0)` is used to remove the oldest transaction when the stack is full: index 0 is not a valid index of a Lua sequence, so the 1000-level limit does not seem to be actually enforced (inferred from code).
+- `endTransaction` crashes if no transaction has been started (currentTransaction nil). An empty transaction is not added to the stack.
+- Any new commit or non-empty endTransaction clears the redo stack.
+- Optional hooks set by the caller: `self.onUndo(action)`, `self.onRedo(action)`, `self.onCommitAction(action)`. Actions store `userId` (editor.userId) and `timestamp` (os.time()).
 
-## Classe `C`
+## Class `C`
 
-Objet d'historique. Champs : maxUndoLevels, undoStack, redoStack, currentTransaction.
+History object. Fields: maxUndoLevels, undoStack, redoStack, currentTransaction.
 
-Le module renvoie un constructeur : `local obj = require("editor_api_history")(options)`.
+The module returns a constructor: `local obj = require("editor_api_history")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:beginTransaction(name)` | Démarre un groupe d'actions annulables d'un seul coup. Les redo ne sont exécutés qu'à endTransaction. | 76 |
-| `C:cancelTransaction()` | Abandonne la transaction en cours sans rien exécuter ni empiler (utile si une action a échoué). | 88 |
-| `C:clear()` | Vide les piles d'undo et de redo (nouveau document). | 173 |
-| `C:commitAction(name, data, undoFunc, redoFunc, dontCallRedoNow)` | Enregistre une action undo/redo et exécute son redo. Dans une transaction, l'action est seulement ajoutée au groupe. | 122 |
-| `C:deserialize(data)` | Restaure les piles depuis `data.history` s'il existe et annule la transaction en cours. | 212 |
-| `C:endTransaction(dontCallRedoNow)` | Termine la transaction : l'empile et exécute les redo de toutes ses actions (sauf dontCallRedoNow), puis vide la pile de redo. | 94 |
-| `C:init()` | Initialise les piles vides, maxUndoLevels = 1000, aucune transaction en cours. Appelé par le constructeur. | 31 |
-| `C:redo(steps)` | Rétablit `steps` transactions : appelle redo de chaque action dans l'ordre, puis les remet sur la pile d'undo. | 58 |
-| `C:serialize(data)` | Écrit `data.history = { undoStack, redoStack }` (références, pas de copie). | 205 |
-| `C:undo(steps)` | Annule `steps` transactions : appelle undo de chaque action en ordre inverse, puis déplace la transaction sur la pile de redo. S'arrête si la pile est vide. | 40 |
-| `C:updateRedoStackObjectId(oldObjectId, newObjectId)` | Dans les actions de la pile de redo, remplace `data.objectId` et les éléments de `data.objectIds` égaux à oldObjectId par newObjectId (utile quand un objet est recréé avec un autre id). | 181 |
+| `C:beginTransaction(name)` | Starts a group of actions that can be undone at once. The redos are only run at endTransaction. | 76 |
+| `C:cancelTransaction()` | Abandons the current transaction without running or pushing anything (useful if an action failed). | 88 |
+| `C:clear()` | Clears the undo and redo stacks (new document). | 173 |
+| `C:commitAction(name, data, undoFunc, redoFunc, dontCallRedoNow)` | Records an undo/redo action and runs its redo. Inside a transaction, the action is only added to the group. | 122 |
+| `C:deserialize(data)` | Restores the stacks from `data.history` if it exists and cancels the current transaction. | 212 |
+| `C:endTransaction(dontCallRedoNow)` | Ends the transaction: pushes it and runs the redos of all its actions (unless dontCallRedoNow), then clears the redo stack. | 94 |
+| `C:init()` | Initializes empty stacks, maxUndoLevels = 1000, no transaction in progress. Called by the constructor. | 31 |
+| `C:redo(steps)` | Redoes `steps` transactions: calls the redo of each action in order, then puts them back on the undo stack. | 58 |
+| `C:serialize(data)` | Writes `data.history = { undoStack, redoStack }` (references, not a copy). | 205 |
+| `C:undo(steps)` | Undoes `steps` transactions: calls the undo of each action in reverse order, then moves the transaction to the redo stack. Stops if the stack is empty. | 40 |
+| `C:updateRedoStackObjectId(oldObjectId, newObjectId)` | In the actions of the redo stack, replaces `data.objectId` and the elements of `data.objectIds` equal to oldObjectId with newObjectId (useful when an object is recreated with a different id). | 181 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/history.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/history.lua`.*

@@ -1,29 +1,29 @@
 # `editor_missionEditor_general`
 
-*Fichier : `lua/ge/extensions/editor/missionEditor/general.lua` · VM : Game Engine (GE) · 121 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/missionEditor/general.lua` · VM: Game Engine (GE) · 121 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/missionEditor/general")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/missionEditor/general")` (file under extensions/ but not a regular extension)
 
-Section « General » du Mission Editor : édite le nom et la description de la mission (champs texte ImGui) et affiche une icône de traduction (verte si _tr trouve une traduction, rouge sinon, avec la traduction en infobulle). Le module renvoie un constructeur : require('/lua/ge/extensions/editor/missionEditor/general')(missionEditor). Toute modification met mission._dirty = true.
+"General" section of the Mission Editor: edits the mission's name and description (ImGui text fields) and displays a translation icon (green if _tr finds a translation, red otherwise, with the translation in the tooltip). The module returns a constructor: require('/lua/ge/extensions/editor/missionEditor/general')(missionEditor). Any modification sets mission._dirty = true.
 
-## Remarques
+## Notes
 
-- La description peut être une chaîne ou une table ; une table n'est pas modifiable (elle est affichée avec dumps).
-- Tampons ImGui : nom 1024 caractères, description 2048.
-- Bug mineur : getMissionIssues compare la traduction avec le nom sans tester le type du nom ; seul le cas de description gère explicitement une table.
+- The description can be a string or a table; a table is not editable (it is displayed with dumps).
+- ImGui buffers: name 1024 characters, description 2048.
+- Minor bug: getMissionIssues compares the translation with the name without testing the name's type; only the description case explicitly handles a table.
 
-## Classe `C`
+## Class `C`
 
-Sous-fenêtre de la section General, créée par le constructeur renvoyé par le module.
+General section sub-window, created by the constructor returned by the module.
 
-Le module renvoie un constructeur : `local obj = require("editor_missionEditor_general")(options)`.
+The module returns a constructor: `local obj = require("editor_missionEditor_general")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:draw()` | Dessine les champs Name et Description et leurs icônes de traduction ; enregistre les modifications dans la mission à la fin de l'édition. | 52 |
-| `C:getMissionIssues(m)` | Appelle setMission puis renvoie les problèmes : nom manquant (error), description manquante (error), nom sans traduction (warning), description sans traduction (warning). | 22 |
-| `C:init(missionEditor)` | Constructeur : mémorise la référence au missionEditor et prépare les champs recommandés (attributs recommandés de gameplay_missions_missions). | 11 |
-| `C:setMission(mission)` | Sélectionne la mission à éditer : crée les tampons du nom et de la description et efface les traductions en cache. | 40 |
+| `C:draw()` | Draws the Name and Description fields and their translation icons; saves the modifications into the mission at the end of the edit. | 52 |
+| `C:getMissionIssues(m)` | Calls setMission then returns the issues: missing name (error), missing description (error), name without translation (warning), description without translation (warning). | 22 |
+| `C:init(missionEditor)` | Constructor: remembers the reference to the missionEditor and prepares the recommended fields (recommended attributes of gameplay_missions_missions). | 11 |
+| `C:setMission(mission)` | Selects the mission to edit: creates the name and description buffers and clears the cached translations. | 40 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionEditor/general.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/missionEditor/general.lua`.*

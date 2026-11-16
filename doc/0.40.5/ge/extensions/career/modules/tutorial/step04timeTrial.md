@@ -1,94 +1,94 @@
 # `career_modules_tutorial_step04timeTrial`
 
-*Fichier : `lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua` · VM : Game Engine (GE) · 315 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua` · VM: Game Engine (GE) · 315 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_tutorial_step04timeTrial` : `extensions.load("career_modules_tutorial_step04timeTrial")`, puis la globale `career_modules_tutorial_step04timeTrial`
+**Access:** extension `career_modules_tutorial_step04timeTrial`: `extensions.load("career_modules_tutorial_step04timeTrial")`, then the global `career_modules_tutorial_step04timeTrial`
 
-Étape 4 du tutoriel de carrière (« timeTrial ») : une popup d'intro lance la mission contre-la-montre west_coast_usa/timeTrial/tutorialSimple, avec guidage au sol (core_groundMarkers) construit à partir des prochains pathnodes de la course. À la fin, une popup propose un défi optionnel (tutorialAdvanced) ou le passage à la suite ; l'étape avance à la fin de la mission avancée ou si le joueur choisit autre chose. Phases : waitIntro, simpleMission, waitChoicePopup, waitPostSimplePopupClose, waitChoiceSelection, advancedMission. Active la zone de limites timeTrialBounds.
+Career tutorial step 4 ("timeTrial"): an intro popup launches the time trial mission west_coast_usa/timeTrial/tutorialSimple, with ground guidance (core_groundMarkers) built from the course's next pathnodes. At the end, a popup offers an optional challenge (tutorialAdvanced) or moving on; the step advances at the end of the advanced mission or if the player chooses something else. Phases: waitIntro, simpleMission, waitChoicePopup, waitPostSimplePopupClose, waitChoiceSelection, advancedMission. Activates the timeTrialBounds bounds zone.
 
-## Remarques
+## Notes
 
-- Si le joueur reste hors limites trop longtemps (onCareerTutorialOutOfBoundsTimedOut), la mission en cours est redémarrée (core_recoveryPrompt.buttonPressed("restartMission")) avec un message.
-- À la fin de l'étape, le véhicule du tutoriel est désactivé (setActive(0)) ; il est réactivé au début de l'étape.
-- À la fin de la mission avancée, le code écrit career_modules_tutorial.playedAdvancedTimeTrial = true ; ce champ n'est pas déclaré dans tutorial.lua (champ ajouté dynamiquement).
-- Si la mission avancée est introuvable, une erreur est loggée et l'étape avance quand même.
-- Tous les hooks de suivi ignorent les évènements si l'étape courante n'est pas 04timeTrial.
+- If the player stays out of bounds too long (onCareerTutorialOutOfBoundsTimedOut), the current mission is restarted (core_recoveryPrompt.buttonPressed("restartMission")) with a message.
+- At the end of the step, the tutorial vehicle is deactivated (setActive(0)); it is reactivated at the start of the step.
+- At the end of the advanced mission, the code writes career_modules_tutorial.playedAdvancedTimeTrial = true; this field is not declared in tutorial.lua (dynamically added field).
+- If the advanced mission is not found, an error is logged and the step advances anyway.
+- All tracking hooks ignore events if the current step is not 04timeTrial.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_tutorial_step04timeTrial.cleanup()` | Appelé à la fin de l'étape : retire le reset de zone, efface le guidage et arrête la mission du tutoriel si elle est au premier plan. *(interne)* | 280 |
-| `career_modules_tutorial_step04timeTrial.onAnyMissionChanged(state, mission)` | Hook émis par le gestionnaire de missions. Sur « started » de la mission simple, mémorise la course ; sur « stopped », passe à la popup de bilan (mission simple) ou avance d'étape (mission avancée). *(interne)* *(hook)* | 185 |
-| `career_modules_tutorial_step04timeTrial.onCareerTutorialAdvancedOrDragSelection(choice)` | Appelé depuis OptionalChallengeSelect.vue quand le joueur choisit : « advancedTimeTrial » lance la mission avancée, tout autre choix désactive le véhicule et passe à l'étape suivante. *(interne)* *(hook)* | 257 |
-| `career_modules_tutorial_step04timeTrial.onCareerTutorialLeftBounds()` | Hook de sortie de zone : lance le reset de sortie de zone de l'étape. *(interne)* *(hook)* | 276 |
-| `career_modules_tutorial_step04timeTrial.onCareerTutorialOutOfBoundsTimedOut()` | Hook émis quand le joueur est resté trop longtemps hors zone : affiche un avertissement et relance la mission en cours. *(interne)* *(hook)* | 211 |
-| `career_modules_tutorial_step04timeTrial.onDebugMenu(im)` | Bouton « Skip Step 4 » : arrête la mission, désactive le véhicule et avance. *(interne)* *(hook)* | 298 |
-| `career_modules_tutorial_step04timeTrial.onIntroPopupCareerClosed(id)` | Hook de fermeture de popup. v2/simpleTimeTrial : démarre la mission simple et, après 0,5 s, bascule les préfabriqués de piste (tutorialTrackOpen). v2/timeTrialAssessmentComplete : ouvre la popup de choix de défi optionnel. *(interne)* *(hook)* | 146 |
-| `career_modules_tutorial_step04timeTrial.onRacePathnodeReached(data)` | Hook émis à chaque pathnode atteint : met à jour le guidage pour la course simple du tutoriel. *(interne)* *(hook)* | 234 |
-| `career_modules_tutorial_step04timeTrial.onRaceStarted(data)` | Hook de départ de course : si c'est la course du tutoriel simple, la mémorise et trace le guidage. *(interne)* *(hook)* | 224 |
-| `career_modules_tutorial_step04timeTrial.onScreenFadeState(state)` | Hook de fondu d'écran : quand l'état vaut 3 pendant waitChoicePopup, remet l'état de jeu « career » et ouvre la popup de bilan ou de choix. *(interne)* *(hook)* | 242 |
-| `career_modules_tutorial_step04timeTrial.onUpdate(dtReal, dtSim, dtRaw)` | Appelé chaque frame : pendant la mission simple, met à jour le tracé de guidage vers les prochains pathnodes (ou vers l'arrivée). *(interne)* *(hook)* | 171 |
-| `career_modules_tutorial_step04timeTrial.setup(stepData)` | Appelé à l'activation : active la zone timeTrialBounds, réinitialise les états, retrouve la place simpleTimeTrialFinish, remet le joueur dans le véhicule du tutoriel et ouvre la popup v2/simpleTimeTrial. *(interne)* | 124 |
+| `career_modules_tutorial_step04timeTrial.cleanup()` | Called at the end of the step: removes the zone reset, clears the guidance and stops the tutorial mission if it is in the foreground. *(internal)* | 280 |
+| `career_modules_tutorial_step04timeTrial.onAnyMissionChanged(state, mission)` | Hook emitted by the mission manager. On "started" of the simple mission, remembers the race; on "stopped", moves to the assessment popup (simple mission) or advances the step (advanced mission). *(internal)* *(hook)* | 185 |
+| `career_modules_tutorial_step04timeTrial.onCareerTutorialAdvancedOrDragSelection(choice)` | Called from OptionalChallengeSelect.vue when the player chooses: "advancedTimeTrial" starts the advanced mission, any other choice deactivates the vehicle and moves to the next step. *(internal)* *(hook)* | 257 |
+| `career_modules_tutorial_step04timeTrial.onCareerTutorialLeftBounds()` | Out-of-bounds hook: starts the step's out-of-bounds reset. *(internal)* *(hook)* | 276 |
+| `career_modules_tutorial_step04timeTrial.onCareerTutorialOutOfBoundsTimedOut()` | Hook emitted when the player has stayed out of the zone too long: displays a warning and restarts the current mission. *(internal)* *(hook)* | 211 |
+| `career_modules_tutorial_step04timeTrial.onDebugMenu(im)` | "Skip Step 4" button: stops the mission, deactivates the vehicle and advances. *(internal)* *(hook)* | 298 |
+| `career_modules_tutorial_step04timeTrial.onIntroPopupCareerClosed(id)` | Popup close hook. v2/simpleTimeTrial: starts the simple mission and, after 0.5 s, switches the track prefabs (tutorialTrackOpen). v2/timeTrialAssessmentComplete: opens the optional challenge choice popup. *(internal)* *(hook)* | 146 |
+| `career_modules_tutorial_step04timeTrial.onRacePathnodeReached(data)` | Hook emitted at each pathnode reached: updates the guidance for the simple tutorial race. *(internal)* *(hook)* | 234 |
+| `career_modules_tutorial_step04timeTrial.onRaceStarted(data)` | Race start hook: if it is the simple tutorial race, remembers it and draws the guidance. *(internal)* *(hook)* | 224 |
+| `career_modules_tutorial_step04timeTrial.onScreenFadeState(state)` | Screen fade hook: when the state is 3 during waitChoicePopup, restores the "career" game state and opens the assessment or choice popup. *(internal)* *(hook)* | 242 |
+| `career_modules_tutorial_step04timeTrial.onUpdate(dtReal, dtSim, dtRaw)` | Called every frame: during the simple mission, updates the guidance path toward the next pathnodes (or toward the finish). *(internal)* *(hook)* | 171 |
+| `career_modules_tutorial_step04timeTrial.setup(stepData)` | Called on activation: activates the timeTrialBounds zone, resets the states, finds the simpleTimeTrialFinish spot, puts the player back in the tutorial vehicle and opens the v2/simpleTimeTrial popup. *(internal)* | 124 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_tutorial_step04timeTrial.onAnyMissionChanged(state, mission)`
 
-Hook émis par le gestionnaire de missions. Sur « started » de la mission simple, mémorise la course ; sur « stopped », passe à la popup de bilan (mission simple) ou avance d'étape (mission avancée).
+Hook emitted by the mission manager. On "started" of the simple mission, remembers the race; on "stopped", moves to the assessment popup (simple mission) or advances the step (advanced mission).
 
-- `state` (*string*) : État de la mission ("started", "stopped"…).
-- `mission` (*table*) : Mission concernée (id, race).
+- `state` (*string*) : Mission state ("started", "stopped"...).
+- `mission` (*table*) : Mission concerned (id, race).
 
 #### `career_modules_tutorial_step04timeTrial.onCareerTutorialAdvancedOrDragSelection(choice)`
 
-Appelé depuis OptionalChallengeSelect.vue quand le joueur choisit : « advancedTimeTrial » lance la mission avancée, tout autre choix désactive le véhicule et passe à l'étape suivante.
+Called from OptionalChallengeSelect.vue when the player chooses: "advancedTimeTrial" starts the advanced mission, any other choice deactivates the vehicle and moves to the next step.
 
-- `choice` (*string*) : Choix du joueur ("advancedTimeTrial" ou autre).
+- `choice` (*string*) : Player's choice ("advancedTimeTrial" or other).
 
 #### `career_modules_tutorial_step04timeTrial.onDebugMenu(im)`
 
-Bouton « Skip Step 4 » : arrête la mission, désactive le véhicule et avance.
+"Skip Step 4" button: stops the mission, deactivates the vehicle and advances.
 
-- `im` (*table*) : Table ui_imgui.
+- `im` (*table*) : ui_imgui table.
 
 #### `career_modules_tutorial_step04timeTrial.onIntroPopupCareerClosed(id)`
 
-Hook de fermeture de popup. v2/simpleTimeTrial : démarre la mission simple et, après 0,5 s, bascule les préfabriqués de piste (tutorialTrackOpen). v2/timeTrialAssessmentComplete : ouvre la popup de choix de défi optionnel.
+Popup close hook. v2/simpleTimeTrial: starts the simple mission and, after 0.5 s, switches the track prefabs (tutorialTrackOpen). v2/timeTrialAssessmentComplete: opens the optional challenge choice popup.
 
-- `id` (*string*) : Id de la popup.
+- `id` (*string*) : Popup id.
 
 #### `career_modules_tutorial_step04timeTrial.onRacePathnodeReached(data)`
 
-Hook émis à chaque pathnode atteint : met à jour le guidage pour la course simple du tutoriel.
+Hook emitted at each pathnode reached: updates the guidance for the simple tutorial race.
 
-- `data` (*table*) : Table avec le champ race.
+- `data` (*table*) : Table with the race field.
 
 #### `career_modules_tutorial_step04timeTrial.onRaceStarted(data)`
 
-Hook de départ de course : si c'est la course du tutoriel simple, la mémorise et trace le guidage.
+Race start hook: if it is the simple tutorial race, remembers it and draws the guidance.
 
-- `data` (*table*) : Table avec le champ race.
+- `data` (*table*) : Table with the race field.
 
 #### `career_modules_tutorial_step04timeTrial.onScreenFadeState(state)`
 
-Hook de fondu d'écran : quand l'état vaut 3 pendant waitChoicePopup, remet l'état de jeu « career » et ouvre la popup de bilan ou de choix.
+Screen fade hook: when the state is 3 during waitChoicePopup, restores the "career" game state and opens the assessment or choice popup.
 
-- `state` (*integer*) : État du fondu (3 = traité ici).
+- `state` (*integer*) : Fade state (3 = handled here).
 
 #### `career_modules_tutorial_step04timeTrial.onUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé chaque frame : pendant la mission simple, met à jour le tracé de guidage vers les prochains pathnodes (ou vers l'arrivée).
+Called every frame: during the simple mission, updates the guidance path toward the next pathnodes (or toward the finish).
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta simulation (s).
-- `dtRaw` (*number*) : Delta brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation delta (s).
+- `dtRaw` (*number*) : Raw delta (s).
 
 #### `career_modules_tutorial_step04timeTrial.setup(stepData)`
 
-Appelé à l'activation : active la zone timeTrialBounds, réinitialise les états, retrouve la place simpleTimeTrialFinish, remet le joueur dans le véhicule du tutoriel et ouvre la popup v2/simpleTimeTrial.
+Called on activation: activates the timeTrialBounds zone, resets the states, finds the simpleTimeTrialFinish spot, puts the player back in the tutorial vehicle and opens the v2/simpleTimeTrial popup.
 
-- `stepData` (*any*) : Données de l'étape (non utilisées).
+- `stepData` (*any*) : Step data (unused).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua`.*

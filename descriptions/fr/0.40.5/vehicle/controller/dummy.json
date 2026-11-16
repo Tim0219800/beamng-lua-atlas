@@ -1,0 +1,99 @@
+{
+  "path": "lua/vehicle/controller/dummy.lua",
+  "module": "Contrôleur principal (type \"main\") minimal pour les véhicules sans moteur (remorques, objets). Il fournit l'API obligatoire d'un contrôleur principal (changements de rapport, démarreur, etc., tous en nop) et écrit chaque image des valeurs electrics neutres : throttle, brake, clutch issus des entrées, gear \"N\", gearIndex 0, rpm/fuel/températures à 0, ignition false, gearboxMode \"none\".",
+  "notes": [
+    "Aucune clé jbeam n'est lue. M.engineInfo est un tableau de 21 valeurs (index 3 et 4 = 1000, index 14 = \"manual\", index 15 = id de l'objet) dont l'index 11 est mis à jour avec la vitesse sol (obj:getGroundSpeed()) uniquement si le flux engineInfo est écouté.",
+    "Champs throttle, brake, clutchRatio, fireEngineTemperature, drivingAggression, shiftingAggression : constantes à 0 pour l'API de contrôleur principal. nop = fonction globale du moteur qui ne fait rien."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"main\"."
+    },
+    "engineInfo": {
+      "type": "table",
+      "desc": "Tableau d'info moteur de 21 valeurs statiques (voir notes)."
+    },
+    "fireEngineTemperature": {
+      "type": "number",
+      "desc": "0."
+    },
+    "throttle": {
+      "type": "number",
+      "desc": "0."
+    },
+    "brake": {
+      "type": "number",
+      "desc": "0."
+    },
+    "clutchRatio": {
+      "type": "number",
+      "desc": "0."
+    },
+    "drivingAggression": {
+      "type": "number",
+      "desc": "0."
+    },
+    "shiftingAggression": {
+      "type": "number",
+      "desc": "0."
+    },
+    "init": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "shiftUp": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "shiftDown": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "shiftToGearIndex": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "cycleGearboxModes": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "setGearboxMode": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "setStarter": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "setEngineIgnition": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "setFreeze": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "sendTorqueData": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "vehicleActivated": {
+      "type": "function",
+      "desc": "nop."
+    }
+  },
+  "functions": {
+    "updateGFX": {
+      "desc": "Chaque image : copie les entrées throttle/brake/clutch (bornées 0..1) dans electrics.values et force les autres valeurs à leur état neutre.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

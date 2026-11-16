@@ -2,476 +2,476 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/rallyManager.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Objet RallyManager renvoyé par le constructeur du module.
+--- RallyManager object returned by the module's constructor.
 ---@class gameplay_rally_rallyManager
 local gameplay_rally_rallyManager = {}
 
---- Appelle pacenote:playbackAllowed() ; en cas d'erreur, l'erreur est loggée et la lecture est autorisée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:647
+--- Calls pacenote:playbackAllowed(); on error, the error is logged and playback is allowed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:647
 ---@param pacenote table Pacenote
----@return boolean  true si la lecture est autorisée
+---@return boolean  true if playback is allowed
 function gameplay_rally_rallyManager:_playbackAllowed(pacenote) end
 
---- Invalide les caches de voicepack et d'audio personnalisé du notebook et lui signale un changement de réglages.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:87
+--- Invalidates the notebook's voicepack and custom audio caches and notifies it of a settings change.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:87
 function gameplay_rally_rallyManager:_refreshNotebookForVoicepackPick() end
 
---- Ajoute au chrono la pénalité d'une récupération (RecoveryClockAdvance.getSpecialStageSeconds).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1096
----@param recoveryType string "recovery" ou "flip"
----@return boolean  true si du temps a été ajouté (faux si 0 s ou chrono inactif)
+--- Adds a recovery's penalty to the timer (RecoveryClockAdvance.getSpecialStageSeconds).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1096
+---@param recoveryType string "recovery" or "flip"
+---@return boolean  true if time was added (false if 0 s or timer inactive)
 function gameplay_rally_rallyManager:addRecoveryRaceTime(recoveryType) end
 
---- Retire le HOLD en tête de file de pacenotes, s'il y est.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:743
+--- Removes the HOLD at the head of the pacenote queue, if it is there.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:743
 function gameplay_rally_rallyManager:clearQueueHold() end
 
---- Demande au notebook d'oublier les objets audio résolus.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:609
+--- Asks the notebook to forget the resolved audio objects.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:609
 function gameplay_rally_rallyManager:clearResolvedAudioObjs() end
 
---- Efface tous les temps et marqueurs d'observation des splits puis réinitialise le chrono d'étape.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1259
+--- Clears all the splits' times and observation markers then resets the stage timer.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1259
 function gameplay_rally_rallyManager:clearSplitTimes() end
 
---- Pacenote le plus proche de la position du véhicule suivi.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:788
+--- Pacenote closest to the tracked vehicle's position.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:788
 ---@return table|nil  Pacenote
 function gameplay_rally_rallyManager:closestPacenoteToVehicle() end
 
---- Copilote sélectionné du notebook.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:328
----@return any  résultat de notebook:selectedCodriver()
+--- Selected co-driver of the notebook.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:328
+---@return any  result of notebook:selectedCodriver()
 function gameplay_rally_rallyManager:codriver() end
 
---- Dessine en debug le prochain pacenote : le waypoint de début de virage avec le texte compilé.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:702
+--- Debug-draws the next pacenote: the corner start waypoint with the compiled text.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:702
 function gameplay_rally_rallyManager:drawPacenotesForDriving() end
 
---- Ajoute une valeur HOLD à la fin de la file : les pacenotes suivants attendent sa libération.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:756
+--- Adds a HOLD value to the end of the queue: the following pacenotes wait for its release.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:756
 function gameplay_rally_rallyManager:enqueueHold() end
 
---- Ajoute un pacenote à la fin de la file.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:751
+--- Adds a pacenote to the end of the queue.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:751
 ---@param pacenote table Pacenote
 function gameplay_rally_rallyManager:enqueuePacenote(pacenote) end
 
---- Ajoute une pause dans la file audio.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:842
----@param secs number Durée en secondes
+--- Adds a pause to the audio queue.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:842
+---@param secs number Duration in seconds
 function gameplay_rally_rallyManager:enqueuePauseSecs(secs) end
 
---- Choisit un pacenote système aléatoire par nom, lit la durée audio dans ses métadonnées (+ audioLenOffset) et l'envoie à l'AudioManager. Logue une erreur si le nom, le fichier audio ou la durée sont invalides.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:802
----@param name string Nom du pacenote système
----@param audioLenOffset number|nil Secondes ajoutées à la durée audio (0 par défaut)
+--- Picks a random system pacenote by name, reads the audio duration from its metadata (+ audioLenOffset) and sends it to the AudioManager. Logs an error if the name, the audio file or the duration are invalid.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:802
+---@param name string System pacenote name
+---@param audioLenOffset number|nil Seconds added to the audio duration (0 by default)
 function gameplay_rally_rallyManager:enqueueRandomSystemPacenote(name, audioLenOffset) end
 
---- Construit l'état de la spéciale pour l'UI : currentSSTime (secondes au dixième), isActive, isComplete, splits, authorityMode, source ('race', 'tracker' ou 'trackerFallback'), completion {distPct, totalDistM}. Dépend du mode d'autorité et de l'état de l'observateur.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1167
----@return table|nil  Table partagée réutilisée ; nil sans vehicleTracker
+--- Builds the special stage state for the UI: currentSSTime (seconds to the tenth), isActive, isComplete, splits, authorityMode, source ('race', 'tracker' or 'trackerFallback'), completion {distPct, totalDistM}. Depends on the authority mode and the observer state.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1167
+---@return table|nil  Reused shared table; nil without vehicleTracker
 function gameplay_rally_rallyManager:getActiveStageData() end
 
---- Gestionnaire audio, nil avant rebuildAssets.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:140
+--- Audio manager, nil before rebuildAssets.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:140
 ---@return table|nil
 function gameplay_rally_rallyManager:getAudioManager() end
 
---- Objet DrivelineRoute.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:870
+--- DrivelineRoute object.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:870
 ---@return table|nil
 function gameplay_rally_rallyManager:getDrivelineRoute() end
 
---- Dernier message d'erreur destiné à l'utilisateur (race.json manquant, notebook invalide, etc.).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:108
+--- Last error message intended for the user (missing race.json, invalid notebook, etc.).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:108
 ---@return string|nil  message
 function gameplay_rally_rallyManager:getErrorMsgForUser() end
 
---- Dernier pacenote joué (retrouvé par son index dans le notebook s'il existe).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:892
+--- Last played pacenote (retrieved by its index in the notebook if it exists).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:892
 ---@return table|nil  Pacenote
 function gameplay_rally_rallyManager:getLastPlayedPacenote() end
 
---- Calcule une position et rotation de récupération placées avant le dernier pacenote joué.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:900
----@param distanceBefore number Distance avant le pacenote, en mètres (déduit du code)
+--- Computes a recovery position and rotation placed before the last played pacenote.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:900
+---@param distanceBefore number Distance before the pacenote, in meters (inferred from code)
 ---@return vec3|nil  Position
 ---@return quat|nil  Rotation
----@return string|nil  Raison de l'échec
----@return table|nil  Pacenote utilisé
----@return vec3|nil  Direction avant
+---@return string|nil  Reason for the failure
+---@return table|nil  Pacenote used
+---@return vec3|nil  Forward direction
 function gameplay_rally_rallyManager:getLastPlayedPacenoteRecoveryPose(distanceBefore) end
 
---- Temps alloué de la liaison en secondes.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1021
----@return number|nil  secondes
+--- Time allocated for the road section in seconds.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1021
+---@return number|nil  seconds
 function gameplay_rally_rallyManager:getLiaisonAllocatedTimeSecs() end
 
---- Chemin du fichier loopPrefab.prefab.json dans le dossier de la mission.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1279
+--- Path of the loopPrefab.prefab.json file in the mission folder.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1279
 ---@return string
 function gameplay_rally_rallyManager:getLoopPrefabPath() end
 
---- Dossier de la mission.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:132
+--- Mission folder.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:132
 ---@return string
 function gameplay_rally_rallyManager:getMissionDir() end
 
---- Identifiant de la mission.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:128
+--- Mission identifier.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:128
 ---@return string
 function gameplay_rally_rallyManager:getMissionId() end
 
---- Nom traduit de la mission, calculé une fois puis mis en cache.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:185
+--- Translated name of the mission, computed once then cached.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:185
 ---@return string
 function gameplay_rally_rallyManager:getMissionName() end
 
---- Déclencheur de départ (startTrigger) de la mission dans gameplay_missions_missions ; nil et erreur loggée si la mission est introuvable.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:194
----@return table|nil  table avec pos, rot, level...
+--- Start trigger (startTrigger) of the mission in gameplay_missions_missions; nil and a logged error if the mission is not found.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:194
+---@return table|nil  table with pos, rot, level...
 function gameplay_rally_rallyManager:getMissionStartTrigger() end
 
---- Liste contenant le prochain pacenote de la driveline (un seul élément, éventuellement nil).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:797
+--- List containing the driveline's next pacenote (a single element, possibly nil).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:797
 ---@return table  {pacenote}
 function gameplay_rally_rallyManager:getNextPacenotes() end
 
---- Notebook chargé (objet NotebookPath), nil avant rebuildAssets.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:136
+--- Loaded notebook (NotebookPath object), nil before rebuildAssets.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:136
 ---@return table|nil
 function gameplay_rally_rallyManager:getNotebookPath() end
 
---- Indique si le traitement de la file de pacenotes est actif.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:112
+--- Indicates whether pacenote queue processing is active.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:112
 ---@return boolean
 function gameplay_rally_rallyManager:getPacenoteProcessingEnabled() end
 
---- Liste ordonnée par distance des pathnodes à observer (splits, arrivée).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:422
+--- List ordered by distance of the pathnodes to observe (splits, finish).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:422
 ---@return table|nil
 function gameplay_rally_rallyManager:getPathnodeObservationList() end
 
---- Distance du point depuis le départ le long de la route, en kilomètres.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:363
----@param point any Point ou position de la route (déduit du code)
----@return number  kilomètres
+--- Distance of the point from the start along the road, in kilometers.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:363
+---@param point any Road point or position (inferred from code)
+---@return number  kilometers
 function gameplay_rally_rallyManager:getPointDistanceFromStartKm(point) end
 
---- Distance du point depuis le départ le long de la route, en mètres.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:359
----@param point any Point ou position de la route (déduit du code)
----@return number  mètres
+--- Distance of the point from the start along the road, in meters.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:359
+---@param point any Road point or position (inferred from code)
+---@return number  meters
 function gameplay_rally_rallyManager:getPointDistanceFromStartMeters(point) end
 
---- Progression de la course : distM (distance en m) et distPct (0 à 1) ; le code lit aussi totalDistM.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1061
+--- Race progress: distM (distance in m) and distPct (0 to 1); the code also reads totalDistM.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1061
 ---@return table  {distM, distPct, totalDistM}
 function gameplay_rally_rallyManager:getRaceCompletionData() end
 
---- Données de course courantes (états des véhicules, temps), fournies par setRaceData.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:148
+--- Current race data (vehicle states, times), provided by setRaceData.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:148
 ---@return table|nil
 function gameplay_rally_rallyManager:getRaceData() end
 
---- Distance de course entre départ et arrivée le long de la driveline.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1049
----@return number|nil  mètres
+--- Race distance between start and finish along the driveline.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1049
+---@return number|nil  meters
 function gameplay_rally_rallyManager:getRaceDistanceMeters() end
 
---- Chemin de course chargé depuis race.json.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:144
+--- Race path loaded from race.json.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:144
 ---@return table|nil
 function gameplay_rally_rallyManager:getRacePath() end
 
---- Position de destination d'une récupération : la pose de reprise, sinon le point de route devant le véhicule.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:998
+--- Destination position of a recovery: the resume pose, otherwise the road point ahead of the vehicle.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:998
 ---@return vec3|nil  Position
 function gameplay_rally_rallyManager:getRecoveryDestinationPos() end
 
---- Calcule la pose de récupération après une sortie de route (DrivelineRoute:vehiclePlacementPosAndRotForRecovery).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:939
+--- Computes the recovery pose after leaving the road (DrivelineRoute:vehiclePlacementPosAndRotForRecovery).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:939
 ---@param options table|nil {backoffDistance=number, tangentLookAhead=number}
 ---@return vec3|nil  Position
 ---@return quat|nil  Rotation
----@return string|nil  Raison de l'échec
+---@return string|nil  Reason for the failure
 ---@return table|nil  {fwd, distToTarget, trackerState}
 function gameplay_rally_rallyManager:getRouteDepartureRecoveryPose(options) end
 
---- Position de départ nommée « SS_start_line » (ligne de départ de la spéciale).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:177
+--- Start position named "SS_start_line" (special stage start line).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:177
 ---@return table|nil
 function gameplay_rally_rallyManager:getSSStartLinePos() end
 
---- Position de départ nommée « SS_stop_control » (contrôle d'arrêt).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:181
+--- Start position named "SS_stop_control" (stop control).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:181
 ---@return table|nil
 function gameplay_rally_rallyManager:getSSStopControlPos() end
 
---- Limite de vitesse de la driveline en km/h.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1014
+--- Driveline speed limit in km/h.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1014
 ---@return number|nil  km/h
 function gameplay_rally_rallyManager:getSpeedLimitKph() end
 
---- Index des splits par pathnodeId.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:415
+--- Index of the splits by pathnodeId.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:415
 ---@return table|nil
 function gameplay_rally_rallyManager:getSplitDataIndex() end
 
---- Liste des données de splits du DrivelineRoute.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:408
+--- List of the DrivelineRoute's splits data.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:408
 ---@return table|nil
 function gameplay_rally_rallyManager:getSplitDataList() end
 
---- État de l'observateur d'étape (StageObserver:getState).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1077
+--- State of the stage observer (StageObserver:getState).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1077
 ---@return table|nil
 function gameplay_rally_rallyManager:getStageObserverState() end
 
---- Mode d'autorité courant ('shadow' par défaut).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1073
+--- Current authority mode ('shadow' by default).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1073
 ---@return string
 function gameplay_rally_rallyManager:getStageRuntimeAuthorityMode() end
 
---- Temps de la spéciale en secondes : temps de fin du tracker s'il existe, sinon temps du chrono.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1087
----@return number  secondes
+--- Special stage time in seconds: the tracker's finish time if it exists, otherwise the timer's time.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1087
+---@return number  seconds
 function gameplay_rally_rallyManager:getStageRuntimeTime() end
 
---- Instantané de l'état du chrono (StageTimingState:getState).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1092
+--- Snapshot of the timer state (StageTimingState:getState).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1092
 ---@return table|nil
 function gameplay_rally_rallyManager:getStageTimingState() end
 
---- Renvoie la position de départ (SS_start_line, à défaut TC_in) et le dernier pathnode (arrivée lancée, pas le contrôle d'arrêt).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1033
----@return table|nil  Position de départ
----@return table|nil  Dernier pathnode
+--- Returns the start position (SS_start_line, otherwise TC_in) and the last pathnode (flying finish, not the stop control).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1033
+---@return table|nil  Start position
+---@return table|nil  Last pathnode
 function gameplay_rally_rallyManager:getStartAndFinishStartPositions() end
 
---- Cherche une position de départ du chemin de course par son nom.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:156
----@param name string Nom de la position (ex. TC_in)
----@return table|nil  Position de départ ou nil
+--- Looks for a start position of the race path by its name.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:156
+---@param name string Position name (e.g. TC_in)
+---@return table|nil  Starting position or nil
 function gameplay_rally_rallyManager:getStartPositionByName(name) end
 
---- Position de départ nommée « TC_in » (entrée du contrôle horaire).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:169
+--- Start position named "TC_in" (time control entry).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:169
 ---@return table|nil
 function gameplay_rally_rallyManager:getTCInPos() end
 
---- Position de départ nommée « TC_out » (sortie du contrôle horaire).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:173
+--- Start position named "TC_out" (time control exit).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:173
 ---@return table|nil
 function gameplay_rally_rallyManager:getTCOutPos() end
 
---- Temps alloué en secondes pour parcourir la route à la vitesse limite de la driveline (distance / vitesse).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:367
----@return number|nil  secondes ; nil si route/driveline absentes ou distance négative
+--- Time allocated in seconds to travel the road at the driveline's speed limit (distance / speed).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:367
+---@return number|nil  seconds; nil if road/driveline absent or negative distance
 function gameplay_rally_rallyManager:getTimeAllocationSecs() end
 
---- Temps alloué arrondi à la minute supérieure, au format « Xh Ym ».
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:387
----@return string  texte, ou "N/A" si indisponible
+--- Allocated time rounded up to the next minute, in the format "Xh Ym".
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:387
+---@return string  text, or "N/A" if unavailable
 function gameplay_rally_rallyManager:getTimeAllocationString() end
 
---- Temps de la spéciale vu par le tracker : observateur, sinon fin du tracker, chrono actif, ou temps de course.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1122
----@return number|nil  secondes
+--- Special stage time as seen by the tracker: observer, otherwise tracker finish, active timer, or race time.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1122
+---@return number|nil  seconds
 function gameplay_rally_rallyManager:getTrackerStageTime() end
 
---- Choix de voicepack de la session ; {type='preferences'} par défaut.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:79
----@return table  {type='preferences'} ou {type='voicepack', id, scope, dirname}
+--- Session voicepack choice; {type='preferences'} by default.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:79
+---@return table  {type='preferences'} or {type='voicepack', id, scope, dirname}
 function gameplay_rally_rallyManager:getVoicepackPick() end
 
---- Indique si le choix de voicepack est écrit dans les réglages (vrai sauf si explicitement désactivé).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:83
+--- Indicates whether the voicepack choice is written to the settings (true unless explicitly disabled).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:83
 ---@return boolean
 function gameplay_rally_rallyManager:getVoicepackPickWritesSettings() end
 
---- Indique si le notebook contient des pacenotes.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1028
+--- Indicates whether the notebook contains pacenotes.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1028
 ---@return boolean
 function gameplay_rally_rallyManager:hasAnyPacenotes() end
 
---- Initialise tous les champs (file de pacenotes, notebook, racePath, driveline, audio nil, StageObserver, StageTimingState, mode d'autorité 'shadow') pour la mission donnée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:36
----@param missionDir string Dossier de la mission
----@param missionId string Identifiant de la mission
+--- Initializes all fields (pacenote queue, notebook, racePath, driveline, audio nil, StageObserver, StageTimingState, authority mode 'shadow') for the given mission.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:36
+---@param missionDir string Mission folder
+---@param missionId string Mission identifier
 function gameplay_rally_rallyManager:init(missionDir, missionId) end
 
---- Appelé quand les réglages rally changent : prévient le notebook et vide la file audio.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:626
+--- Called when the rally settings change: notifies the notebook and empties the audio queue.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:626
 function gameplay_rally_rallyManager:onSettingsChanged() end
 
---- Appelé à chaque frame par gameplay_rally : met à jour le tracker, le DrivelineRoute, le chrono (avance de dtSim), les observations de splits, l'audio, puis traite la file de pacenotes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:717
----@param dtReal number Temps réel écoulé (s)
----@param dtSim number Temps de simulation écoulé (s)
----@param dtRaw number Temps brut écoulé (s)
+--- Called every frame by gameplay_rally: updates the tracker, the DrivelineRoute, the timer (advances by dtSim), the split observations, the audio, then processes the pacenote queue.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:717
+---@param dtReal number Real time elapsed (s)
+---@param dtSim number Simulation time elapsed (s)
+---@param dtRaw number Raw time elapsed (s)
 function gameplay_rally_rallyManager:onUpdate(dtReal, dtSim, dtRaw) end
 
---- Appelé quand le véhicule est remis en place : vide les audio résolus et resynchronise (en préservant le tracker de récupération une seule fois si demandé).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:637
+--- Called when the vehicle is put back in place: clears the resolved audio and resyncs (preserving the recovery tracker once only if requested).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:637
 function gameplay_rally_rallyManager:onVehicleResetted() end
 
---- Joue (audio) le premier pacenote trié du notebook et le mémorise comme dernier joué.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:853
+--- Plays (audio) the notebook's first sorted pacenote and stores it as the last played.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:853
 function gameplay_rally_rallyManager:playFirstPacenote() end
 
---- Si le traitement est actif et que la tête n'est pas HOLD, dépile un pacenote et le joue via triggerPacenote.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:763
+--- If processing is active and the head is not HOLD, dequeues a pacenote and plays it via triggerPacenote.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:763
 function gameplay_rally_rallyManager:processPacenoteQueue() end
 
---- Construit tout le contexte d'exécution : VehicleTracker, race.json, notebook, AudioManager, driveline (DrivelineV3) et DrivelineRoute, snaproad du notebook, pacenotes compilés, puis runtimeResync. En cas d'échec, errorMsgForUser est renseigné.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:447
----@param options table|nil {assets=false pour seulement resynchroniser, deferRuntime=boolean (défaut true)}
----@return boolean  true si tout s'est bien passé
+--- Builds the whole runtime context: VehicleTracker, race.json, notebook, AudioManager, driveline (DrivelineV3) and DrivelineRoute, notebook snaproad, compiled pacenotes, then runtimeResync. On failure, errorMsgForUser is set.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:447
+---@param options table|nil {assets=false to only resync, deferRuntime=boolean (default true)}
+---@return boolean  true if everything went well
 function gameplay_rally_rallyManager:rebuildAssets(options) end
 
---- Enregistre le temps d'une course pour un split (via l'observateur, ou directement dans splitData).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1246
----@param pathnodeId integer Id du pathnode du split
----@param time number Temps en secondes
+--- Records a race's time for a split (via the observer, or directly in splitData).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1246
+---@param pathnodeId integer Id of the split's pathnode
+---@param time number Time in seconds
 function gameplay_rally_rallyManager:recordSplit(pathnodeId, time) end
 
---- Téléporte le véhicule 10 m (ou options.distanceBefore) avant le dernier pacenote joué, resynchronise puis déclenche le hook onVehicleTeleportedToLastRoad.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:918
----@param veh userdata|nil Véhicule (joueur 0 par défaut)
+--- Teleports the vehicle 10 m (or options.distanceBefore) before the last played pacenote, resyncs then triggers the onVehicleTeleportedToLastRoad hook.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:918
+---@param veh userdata|nil Vehicle (player 0 by default)
 ---@param options table|nil {distanceBefore=number, resetVehicle=boolean, unlimitedSafeSpawnRange=boolean}
----@return boolean  true si réussi
----@return string|nil  Raison de l'échec
----@return table|nil  Pacenote utilisé
+---@return boolean  true if successful
+---@return string|nil  Reason for the failure
+---@return table|nil  Pacenote used
 function gameplay_rally_rallyManager:recoverVehicleToLastPlayedPacenote(veh, options) end
 
---- Téléporte le véhicule au point de reprise de la route, avec réparation selon options.repairVehicle / resetVehicle / gameplay_rally.getRecoveryRepairVehicle (vrai par défaut), puis déclenche les hooks onVehicleTeleportedToLastRoad et onRallyRouteRecoveryComplete.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:960
----@param veh userdata|nil Véhicule (joueur 0 par défaut)
+--- Teleports the vehicle to the road's resume point, with repair according to options.repairVehicle / resetVehicle / gameplay_rally.getRecoveryRepairVehicle (true by default), then triggers the onVehicleTeleportedToLastRoad and onRallyRouteRecoveryComplete hooks.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:960
+---@param veh userdata|nil Vehicle (player 0 by default)
 ---@param options table|nil {repairVehicle, resetVehicle, backoffDistance, tangentLookAhead, unlimitedSafeSpawnRange}
----@return boolean  true si réussi
----@return string|nil  Raison de l'échec
+---@return boolean  true if successful
+---@return string|nil  Reason for the failure
 ---@return table|nil  recoveryData
 function gameplay_rally_rallyManager:recoverVehicleToRouteDeparture(veh, options) end
 
---- Change de voicepack puis reconstruit tous les états dérivés du compositeur (y compris les appels de distance).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:552
----@param pick table|nil Choix de voicepack
+--- Changes the voicepack then rebuilds all the compositor-derived states (including the distance calls).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:552
+---@param pick table|nil Voicepack choice
 ---@param opts table|nil {writeSettings=boolean}
----@return boolean  résultat de rebuildAssets
+---@return boolean  result of rebuildAssets
 function gameplay_rally_rallyManager:reloadVoicepackAssets(pick, opts) end
 
---- Vide la file audio de l'AudioManager.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1009
+--- Empties the AudioManager's audio queue.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1009
 function gameplay_rally_rallyManager:resetAudioQueue() end
 
---- Efface les pacenotes visuels, la file audio et la file de pacenotes.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:575
+--- Clears the visual pacenotes, the audio queue and the pacenote queue.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:575
 function gameplay_rally_rallyManager:resetPacenoteRuntime() end
 
---- Réinitialise l'état de suivi de la spéciale : chrono, observateur, drapeaux de fin, et réapplique le mode d'autorité à l'observateur.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:561
+--- Resets the stage tracking state: timer, observer, end flags, and reapplies the authority mode to the observer.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:561
 function gameplay_rally_rallyManager:resetStageRuntime() end
 
---- Choisit le voicepack actif (choix exact ou préférences/MRU) puis charge le notebook correspondant de la mission. Si aucun n'existe, renvoie un notebook vide en mémoire (« Route Preview ») pour prévisualiser une route sans pacenotes.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:432
+--- Chooses the active voicepack (exact choice or preferences/MRU) then loads the mission's matching notebook. If none exists, returns an empty in-memory notebook ("Route Preview") to preview a route without pacenotes.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:432
 ---@return table|nil  Notebook
 function gameplay_rally_rallyManager:resolveAndLoadNotebook() end
 
---- Resynchronise l'état après un déplacement du véhicule : vide les files, oublie l'emprise de l'observateur et demande au DrivelineRoute de recalculer (immédiatement si deferRuntime == false, sinon au prochain onUpdate).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:581
+--- Resynchronizes the state after a vehicle move: empties the queues, forgets the observer's footprint and asks the DrivelineRoute to recompute (immediately if deferRuntime == false, otherwise at the next onUpdate).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:581
 ---@param options table|nil {deferRuntime=boolean, preserveRecoveryTracker=boolean}
----@return boolean  toujours true
+---@return boolean  always true
 function gameplay_rally_rallyManager:resyncAfterTeleport(options) end
 
---- Vide les audio résolus, réinitialise le chrono d'étape, puis appelle resyncAfterTeleport.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:615
----@param options table|nil Mêmes options que resyncAfterTeleport
----@return boolean  résultat de resyncAfterTeleport
+--- Clears the resolved audio, resets the stage timer, then calls resyncAfterTeleport.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:615
+---@param options table|nil Same options as resyncAfterTeleport
+---@return boolean  result of resyncAfterTeleport
 function gameplay_rally_rallyManager:runtimeResync(options) end
 
---- Temps de la spéciale pour un véhicule : celui du chrono si actif ou terminé par le tracker, sinon celui des données de course (temps de fin si terminé).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1110
----@param vehId integer|nil Id du véhicule
----@return number|nil  secondes
+--- Special stage time for a vehicle: the timer's if active or finished by the tracker, otherwise that of the race data (finish time if finished).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1110
+---@param vehId integer|nil Vehicle id
+---@return number|nil  seconds
 function gameplay_rally_rallyManager:sampleRaceStageTime(vehId) end
 
---- Envoie le pacenote à l'AudioManager pour lecture audio.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:847
+--- Sends the pacenote to the AudioManager for audio playback.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:847
 ---@param pacenote table Pacenote
----@return boolean  false s'il n'y a pas d'AudioManager
+---@return boolean  false if there is no AudioManager
 function gameplay_rally_rallyManager:sendPacenoteToAudioManager(pacenote) end
 
---- Mémorise le dernier pacenote joué, son nom et son index dans la liste triée du notebook.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:874
+--- Stores the last played pacenote, its name and its index in the notebook's sorted list.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:874
 ---@param pacenote table|nil Pacenote
 function gameplay_rally_rallyManager:setLastPlayedPacenote(pacenote) end
 
---- Active ou suspend le traitement de la file de pacenotes.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:116
----@param enabled boolean true pour traiter la file
+--- Enables or suspends pacenote queue processing.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:116
+---@param enabled boolean true to process the queue
 function gameplay_rally_rallyManager:setPacenoteProcessingEnabled(enabled) end
 
---- Indique que le prochain reset du véhicule doit préserver le suivi statique de la récupération.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:633
----@param val boolean true pour préserver (seule la valeur true stricte compte)
+--- Indicates that the next vehicle reset must preserve the recovery's static tracking.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:633
+---@param val boolean true to preserve (only the strict value true counts)
 function gameplay_rally_rallyManager:setPreserveRecoveryTrackerOnNextVehicleReset(val) end
 
---- Mémorise les données de course courantes.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:152
----@param raceData table|nil Données de course (states, time...)
+--- Stores the current race data.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:152
+---@param raceData table|nil Race data (states, time...)
 function gameplay_rally_rallyManager:setRaceData(raceData) end
 
---- Démarre ou arrête le chrono de l'étape ; ne démarre pas si l'étape est déjà terminée.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1081
----@param active boolean true pour démarrer
+--- Starts or stops the stage timer; does not start if the stage is already finished.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1081
+---@param active boolean true to start
 function gameplay_rally_rallyManager:setStageRuntimeActive(active) end
 
---- Définit le mode d'autorité du chrono ('tracker' ou 'shadow') et le transmet à l'observateur.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1066
----@param mode string 'tracker' ou 'shadow'
+--- Sets the timer authority mode ('tracker' or 'shadow') and passes it to the observer.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1066
+---@param mode string 'tracker' or 'shadow'
 function gameplay_rally_rallyManager:setStageRuntimeAuthorityMode(mode) end
 
---- Définit le voicepack de la session (type 'auto' converti en 'preferences'), l'ajoute à la liste MRU si nécessaire, puis rafraîchit le notebook sauf si deferNotebookRefresh.
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:96
----@param pick table|nil Choix de voicepack
+--- Sets the session voicepack (type 'auto' converted to 'preferences'), adds it to the MRU list if needed, then refreshes the notebook unless deferNotebookRefresh.
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:96
+---@param pick table|nil Voicepack choice
 ---@param opts table|nil {writeSettings=boolean, deferNotebookRefresh=boolean}
 function gameplay_rally_rallyManager:setVoicepackPick(pick, opts) end
 
---- Branche les callbacks du DrivelineRoute (CsDynamic, CsImmediate, CsStatic, CeStatic, décalages -40 pour Cs et -5 pour Ce, pourcentage de virage 0.5) : ils mettent le pacenote en file, ajoutent un HOLD pour les virages lents, effacent le pacenote visuel et libèrent le HOLD selon la règle du pacenote.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:230
+--- Wires up the DrivelineRoute callbacks (CsDynamic, CsImmediate, CsStatic, CeStatic, -40 offsets for Cs and -5 for Ce, corner percentage 0.5): they queue the pacenote, add a HOLD for slow corners, clear the visual pacenote and release the HOLD according to the pacenote's rule.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:230
 function gameplay_rally_rallyManager:setupDrivelineRouteHooks() end
 
---- Efface tous les pacenotes visuels (guihooks 'clearAllVisualPacenotes').
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:695
+--- Clears all visual pacenotes (guihooks 'clearAllVisualPacenotes').
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:695
 function gameplay_rally_rallyManager:triggerClearAllVisualPacenotes() end
 
---- Efface un pacenote visuel (guihooks 'clearOneVisualPacenote' avec visualSerialNo).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:687
+--- Clears one visual pacenote (guihooks 'clearOneVisualPacenote' with visualSerialNo).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:687
 ---@param pacenote table|nil Pacenote
 function gameplay_rally_rallyManager:triggerClearVisualPacenote(pacenote) end
 
---- Joue un pacenote si la lecture est autorisée : l'envoie à l'audio (réglage rallyAudioPacenotes) et déclenche l'affichage visuel (réglage rallyVisualPacenotes, sauf notebook audio personnalisé).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:203
----@param pacenote table Pacenote du notebook
+--- Plays a pacenote if playback is allowed: sends it to the audio (rallyAudioPacenotes setting) and triggers the visual display (rallyVisualPacenotes setting, except for a custom audio notebook).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:203
+---@param pacenote table Notebook pacenote
 function gameplay_rally_rallyManager:triggerPacenote(pacenote) end
 
---- Envoie le pacenote compilé à l'UI via guihooks 'showVisualPacenote2'. Ignoré s'il n'a pas d'événement visuel ou aucune icône (visualPacenotes vide).
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:661
+--- Sends the compiled pacenote to the UI via guihooks 'showVisualPacenote2'. Ignored if it has no visual event or no icon (empty visualPacenotes).
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:661
 ---@param pacenote table|nil Pacenote
 function gameplay_rally_rallyManager:triggerShowVisualPacenote(pacenote) end
 
---- Appelle StageObserver:update avec le tracker statique, les nodes d'observation et les temps de frame, puis recopie la fin d'étape et termine le chrono si l'observateur a détecté l'arrivée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/rallyManager.lua:1133
+--- Calls StageObserver:update with the static tracker, the observation nodes and the frame times, then copies the stage end and ends the timer if the observer detected the finish.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/rallyManager.lua:1133
 function gameplay_rally_rallyManager:updateTrackerSplitObservations() end
 

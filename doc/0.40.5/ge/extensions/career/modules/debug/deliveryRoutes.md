@@ -1,44 +1,44 @@
 # `career_modules_debug_deliveryRoutes`
 
-*Fichier : `lua/ge/extensions/career/modules/debug/deliveryRoutes.lua` · VM : Game Engine (GE) · 207 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/debug/deliveryRoutes.lua` · VM: Game Engine (GE) · 207 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_debug_deliveryRoutes` : `extensions.load("career_modules_debug_deliveryRoutes")`, puis la globale `career_modules_debug_deliveryRoutes`
+**Access:** extension `career_modules_debug_deliveryRoutes`: `extensions.load("career_modules_debug_deliveryRoutes")`, then the global `career_modules_debug_deliveryRoutes`
 
-Onglet de debug carrière « Delivery > Routes ». Fenêtre ImGui 'Delivery Access Points' listant les facilités de livraison et leurs points d'accès (accessPointsByName), avec sélection d'un point. Contient aussi un lancer de rayon souris (updateMouseInfo) et un helper de tracé d'arc, en grande partie inachevés.
+"Delivery > Routes" career debug tab. 'Delivery Access Points' ImGui window listing the delivery facilities and their access points (accessPointsByName), with selection of a point. Also contains a mouse raycast (updateMouseInfo) and an arc drawing helper, largely unfinished.
 
-## Remarques
+## Notes
 
-- Outil de développement, partiellement inachevé : drawRoute est vide, drawArc n'est appelée nulle part, le bloc 'mouse clicking' est vide.
-- updateMouseInfo désactive puis réactive la collision de la forêt autour du raycast souris.
+- Development tool, partly unfinished: drawRoute is empty, drawArc is not called anywhere, the 'mouse clicking' block is empty.
+- updateMouseInfo disables then re-enables forest collision around the mouse raycast.
 - debugOrder = 10.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_debug_deliveryRoutes.drawDebugFunctions()` | Sous-menu de fonctions de debug ; vide. *(interne)* | 29 |
-| `career_modules_debug_deliveryRoutes.drawDebugMenu(dt)` | Dessine la fenêtre 'Delivery Access Points' : arbre des facilités (career_modules_delivery_generator.getFacilities) avec leurs points d'accès sélectionnables. *(interne)* | 63 |
-| `career_modules_debug_deliveryRoutes.onCareerActivated()` | Hook de carrière : mémorise les modules delivery (parcelManager, cargoScreen, general, generator, progress, vehicleOfferManager). *(interne)* *(hook)* | 12 |
-| `career_modules_debug_deliveryRoutes.updateMouseInfo()` | Met à jour la table locale mouseInfo : position caméra, rayon souris, résultat de cameraMouseRayCast, états down/hold/up du bouton gauche (hors captation ImGui) et positions/normales de clic, maintien et relâchement. *(interne)* | 172 |
+| `career_modules_debug_deliveryRoutes.drawDebugFunctions()` | Debug functions submenu; empty. *(internal)* | 29 |
+| `career_modules_debug_deliveryRoutes.drawDebugMenu(dt)` | Draws the 'Delivery Access Points' window: tree of facilities (career_modules_delivery_generator.getFacilities) with their selectable access points. *(internal)* | 63 |
+| `career_modules_debug_deliveryRoutes.onCareerActivated()` | Career hook: stores the delivery modules (parcelManager, cargoScreen, general, generator, progress, vehicleOfferManager). *(internal)* *(hook)* | 12 |
+| `career_modules_debug_deliveryRoutes.updateMouseInfo()` | Updates the local mouseInfo table: camera position, mouse ray, result of cameraMouseRayCast, down/hold/up states of the left button (outside ImGui capture) and click, hold and release positions/normals. *(internal)* | 172 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_debug_deliveryRoutes.drawDebugMenu(dt)`
 
-Dessine la fenêtre 'Delivery Access Points' : arbre des facilités (career_modules_delivery_generator.getFacilities) avec leurs points d'accès sélectionnables.
+Draws the 'Delivery Access Points' window: tree of facilities (career_modules_delivery_generator.getFacilities) with their selectable access points.
 
-- `dt` (*number*) : Delta de temps (non utilisé).
+- `dt` (*number*) : Time delta (unused).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `debugName` | string | 'Delivery > Routes'. |
-| `debugOrder` | number | Ordre de tri dans la fenêtre de debug (10). |
+| `debugOrder` | number | Sort order in the debug window (10). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawLineInstance`, `drawSphere`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/debug/deliveryRoutes.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/debug/deliveryRoutes.lua`.*

@@ -2,53 +2,53 @@
 -- tim19Atlas stub generated from lua/vehicle/extensions/core/quickAccess.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Proxy côté véhicule du menu radial (quick access) du GE Lua : les modules du véhicule y déclarent des entrées de menu (addEntry), le GE demande la liste (requestItems) puis signale la sélection d'un élément (selectItem). Gère aussi les entrées du régulateur de vitesse (cruise control) et les catégories de base du menu véhicule.
---- Accès : extension `core_quickAccess` : `extensions.load (VM véhicule)("core_quickAccess")`, puis la globale `core_quickAccess`
+--- Vehicle-side proxy of the GE Lua radial menu (quick access): vehicle modules declare menu entries there (addEntry), the GE requests the list (requestItems) then reports the selection of an item (selectItem). Also handles the cruise control entries and the base categories of the vehicle menu.
+--- Access: extension `core_quickAccess`: `extensions.load (vehicle VM)("core_quickAccess")`, then the global `core_quickAccess`
 ---@class core_quickAccess
 core_quickAccess = {}
 
---- Ajoute (ou remplace via uniqueID) une entrée de menu pour ce véhicule.
----Source : lua/vehicle/extensions/core/quickAccess.lua:20
----@param _args table Description de l'entrée (voir notes).
----@return boolean  true si ajoutée, false si le niveau est invalide.
+--- Adds (or replaces via uniqueID) a menu entry for this vehicle.
+---Source: lua/vehicle/extensions/core/quickAccess.lua:20
+---@param _args table Description of the entry (see notes).
+---@return boolean  true if added, false if the level is invalid.
 function core_quickAccess.addEntry(_args) end
 
---- Augmente ou diminue la consigne du régulateur d'un cran (1 km/h ou 1 mph) si l'extension cruiseControl est chargée.
----Source : lua/vehicle/extensions/core/quickAccess.lua:181
----@param direction number Positif pour augmenter, négatif pour diminuer (0 et non-nombre sont ignorés).
+--- Increases or decreases the cruise control setpoint by one step (1 km/h or 1 mph) if the cruiseControl extension is loaded.
+---Source: lua/vehicle/extensions/core/quickAccess.lua:181
+---@param direction number Positive to increase, negative to decrease (0 and non-numbers are ignored).
 function core_quickAccess.adjustCruiseSpeed(direction) end
 
---- Appelé au chargement : ajoute les catégories de base du menu véhicule (aides à la conduite, éclairage, actions rapides, fonctionnalités du véhicule, régulateur de vitesse).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/core/quickAccess.lua:305
+--- Called at load: adds the base categories of the vehicle menu (driving aids, lighting, quick actions, vehicle features, cruise control).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/core/quickAccess.lua:305
 function core_quickAccess.onExtensionLoaded() end
 
---- Hook d'initialisation du véhicule : déclare les entrées du régulateur de vitesse s'il y a des roues motrices.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/core/quickAccess.lua:188
+--- Vehicle initialization hook: declares the cruise control entries if there are driven wheels.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/core/quickAccess.lua:188
 function core_quickAccess.onInit() end
 
---- Obsolète : écrit une erreur dans le log (utiliser addEntry).
----Source : lua/vehicle/extensions/core/quickAccess.lua:333
+--- Obsolete: writes an error in the log (use addEntry).
+---Source: lua/vehicle/extensions/core/quickAccess.lua:333
 function core_quickAccess.registerMenu() end
 
---- Interface pour le GE : génère l'arbre complet (exécute les generator) et le renvoie au GE via core_quickAccess.vehicleItemsCallback.
----Source : lua/vehicle/extensions/core/quickAccess.lua:102
----@param level string Niveau demandé (le GE reçoit l'arbre complet et le niveau).
----@return boolean  Toujours true.
+--- Interface for the GE: generates the full tree (runs the generators) and returns it to the GE via core_quickAccess.vehicleItemsCallback.
+---Source: lua/vehicle/extensions/core/quickAccess.lua:102
+---@param level string Requested level (the GE receives the full tree and the level).
+---@return boolean  Always true.
 function core_quickAccess.requestItems(level) end
 
---- Interface pour le GE : exécute l'action d'une entrée désignée par son id selon que le bouton est enfoncé ou relâché et selon l'index d'action (1 principal, 2 secondaire, 3 tertiaire). Le résultat est renvoyé au GE via vehicleItemSelectCallback.
----Source : lua/vehicle/extensions/core/quickAccess.lua:135
----@param id string Identifiant généré par requestItems.
----@param buttonDown boolean true à l'appui, false au relâchement.
----@param actionIndex integer 1, 2 ou 3.
----@return boolean|any  true, ou le résultat de itemSelectCallback en cas de goto/erreur.
+--- Interface for the GE: runs the action of an entry designated by its id depending on whether the button is pressed or released and on the action index (1 primary, 2 secondary, 3 tertiary). The result is returned to the GE via vehicleItemSelectCallback.
+---Source: lua/vehicle/extensions/core/quickAccess.lua:135
+---@param id string Identifier generated by requestItems.
+---@param buttonDown boolean true on press, false on release.
+---@param actionIndex integer 1, 2 or 3.
+---@return boolean|any  true, or the result of itemSelectCallback in case of goto/error.
 function core_quickAccess.selectItem(id, buttonDown, actionIndex) end
 
---- Boucle temporaire (valeur nil au repos) qui compte 2 frames avant de notifier le GE d'une demande 'reload'. (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/core/quickAccess.lua:dyn
----@param dt number Pas de temps en secondes.
+--- Temporary loop (nil value at rest) that counts 2 frames before notifying the GE of a 'reload' request. (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/core/quickAccess.lua:dyn
+---@param dt number Time step in seconds.
 function core_quickAccess.updateGFX(dt) end
 

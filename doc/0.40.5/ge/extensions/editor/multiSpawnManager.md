@@ -1,12 +1,12 @@
 # `editor_multiSpawnManager`
 
-*Fichier : `lua/ge/extensions/editor/multiSpawnManager.lua` · VM : Game Engine (GE) · 879 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/multiSpawnManager.lua` · VM: Game Engine (GE) · 879 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_multiSpawnManager` : `extensions.load("editor_multiSpawnManager")`, puis la globale `editor_multiSpawnManager`
+**Access:** extension `editor_multiSpawnManager`: `extensions.load("editor_multiSpawnManager")`, then the global `editor_multiSpawnManager`
 
-Outil d'éditeur « Vehicle Groups Manager » (menu Gameplay) pour créer, éditer, charger et sauvegarder des groupes de véhicules (fichiers .vehGroup.json) et les faire apparaître dans le monde via core_multiSpawn. Un groupe est de type « custom » (liste de véhicules choisie à la main : modèle, config, peintures) ou « generator » (paramètres : amount, allMods, allConfigs, minPop, modelPopPower, configPopPower, popDecreaseFactor, maxYear, avec lesquels core_multiSpawn.createGroup génère les véhicules). Les groupes trouvés dans vehicleGroups/ et settings/editor/vehicleGroups/ sont chargés automatiquement au premier affichage.
+Editor tool "Vehicle Groups Manager" (Gameplay menu) to create, edit, load and save vehicle groups (.vehGroup.json files) and make them spawn in the world via core_multiSpawn. A group is of type "custom" (hand-picked list of vehicles: model, config, paints) or "generator" (parameters: amount, allMods, allConfigs, minPop, modelPopPower, configPopPower, popDecreaseFactor, maxYear, with which core_multiSpawn.createGroup generates the vehicles). The groups found in vehicleGroups/ and settings/editor/vehicleGroups/ are loaded automatically on first display.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('editor_multiSpawnManager')
@@ -14,55 +14,55 @@ editor_multiSpawnManager.loadGroup('vehicleGroups/traffic.vehGroup.json')
 editor_multiSpawnManager.onWindowMenuItem()
 ```
 
-## Remarques
+## Notes
 
-- Modes d'apparition proposés : road, traffic, lineAhead/Behind/Left/Right/Above, raceGrid, raceGridAlt.
-- À la sauvegarde, le groupe est nettoyé : les groupes « custom » perdent generator, les véhicules sans modèle sont retirés, les tables de peinture ne sont conservées que si la peinture vaut « (Custom) » ; les groupes generator perdent data. L'ancien type « locked » est converti en « generator ».
-- saveGroup ignore son premier paramètre (file) ; seul filePath est utilisé. Elle suppose que options.groupListIdx désigne un groupe existant dans la liste.
-- Le bouton « Delete » appelle core_multiSpawn.deleteVehicles(amount) ; « Set Scene Vehicles to Group » remplace les données du groupe par core_multiSpawn.spawnedVehsToGroup().
-- L'état d'apparition (spawnState) repasse à 0 quand core_multiSpawn émet onVehicleGroupSpawned (hook appelé avec vehIds, groupId, nom).
+- Spawn modes offered: road, traffic, lineAhead/Behind/Left/Right/Above, raceGrid, raceGridAlt.
+- On save, the group is cleaned: "custom" groups lose generator, vehicles without a model are removed, paint tables are only kept if the paint is "(Custom)"; generator groups lose data. The old type "locked" is converted to "generator".
+- saveGroup ignores its first parameter (file); only filePath is used. It assumes that options.groupListIdx designates an existing group in the list.
+- The "Delete" button calls core_multiSpawn.deleteVehicles(amount); "Set Scene Vehicles to Group" replaces the group's data with core_multiSpawn.spawnedVehsToGroup().
+- The spawn state (spawnState) goes back to 0 when core_multiSpawn emits onVehicleGroupSpawned (hook called with vehIds, groupId, name).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_multiSpawnManager.loadGroup(filePath)` | Lit un fichier .vehGroup.json, en fait le groupe courant (après nettoyage), sélectionne son premier véhicule et l'ajoute à la liste des groupes s'il n'y est pas déjà. Écrit un avertissement dans le log si la lecture échoue. | 192 |
-| `editor_multiSpawnManager.onEditorGui(dt)` | Hook d'éditeur appelé à chaque frame : dessine la fenêtre « Vehicle Groups Manager » (menus File et Tools, liste des groupes, édition du groupe, options d'apparition). *(interne)* *(hook)* | 757 |
-| `editor_multiSpawnManager.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre principale et trois fenêtres modales (générateur, peinture personnalisée, remplacement du groupe) et l'entrée de menu « Gameplay ». *(interne)* *(hook)* | 863 |
-| `editor_multiSpawnManager.onVehicleGroupSpawned()` | Hook émis par core_multiSpawn une fois le groupe apparu ; remet spawnState à 0 (fait disparaître « Please wait... »). *(interne)* *(hook)* | 853 |
-| `editor_multiSpawnManager.onWindowMenuItem()` | Handler de l'entrée de menu : initialise les tables au besoin, vide la sélection d'objets de l'éditeur et affiche la fenêtre. *(interne)* *(hook)* | 857 |
-| `editor_multiSpawnManager.saveGroup(file, filePath)` | Écrit le groupe courant (traité par processGroup) dans un fichier JSON et mémorise le dossier et le chemin du fichier. | 223 |
+| `editor_multiSpawnManager.loadGroup(filePath)` | Reads a .vehGroup.json file, makes it the current group (after cleaning), selects its first vehicle and adds it to the groups list if it is not already there. Writes a warning to the log if the read fails. | 192 |
+| `editor_multiSpawnManager.onEditorGui(dt)` | Editor hook called every frame: draws the "Vehicle Groups Manager" window (File and Tools menus, groups list, group editing, spawn options). *(internal)* *(hook)* | 757 |
+| `editor_multiSpawnManager.onEditorInitialized()` | Hook called at editor initialization: registers the main window and three modal windows (generator, custom paint, group replacement) and the "Gameplay" menu entry. *(internal)* *(hook)* | 863 |
+| `editor_multiSpawnManager.onVehicleGroupSpawned()` | Hook emitted by core_multiSpawn once the group has spawned; sets spawnState back to 0 (makes "Please wait..." disappear). *(internal)* *(hook)* | 853 |
+| `editor_multiSpawnManager.onWindowMenuItem()` | Menu entry handler: initializes the tables if needed, clears the editor's object selection and shows the window. *(internal)* *(hook)* | 857 |
+| `editor_multiSpawnManager.saveGroup(file, filePath)` | Writes the current group (processed by processGroup) to a JSON file and remembers the folder and the file path. | 223 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_multiSpawnManager.loadGroup(filePath)`
 
-Lit un fichier .vehGroup.json, en fait le groupe courant (après nettoyage), sélectionne son premier véhicule et l'ajoute à la liste des groupes s'il n'y est pas déjà. Écrit un avertissement dans le log si la lecture échoue.
+Reads a .vehGroup.json file, makes it the current group (after cleaning), selects its first vehicle and adds it to the groups list if it is not already there. Writes a warning to the log if the read fails.
 
-- `filePath` (*string*) : Chemin du fichier .vehGroup.json.
+- `filePath` (*string*) : Path of the .vehGroup.json file.
 
 #### `editor_multiSpawnManager.onEditorGui(dt)`
 
-Hook d'éditeur appelé à chaque frame : dessine la fenêtre « Vehicle Groups Manager » (menus File et Tools, liste des groupes, édition du groupe, options d'apparition).
+Editor hook called every frame: draws the "Vehicle Groups Manager" window (File and Tools menus, groups list, group editing, spawn options).
 
-- `dt` (*number*) : Durée de la frame en secondes.
+- `dt` (*number*) : Frame duration in seconds.
 
 #### `editor_multiSpawnManager.saveGroup(file, filePath)`
 
-Écrit le groupe courant (traité par processGroup) dans un fichier JSON et mémorise le dossier et le chemin du fichier.
+Writes the current group (processed by processGroup) to a JSON file and remembers the folder and the file path.
 
-- `file` (*any*) : Non utilisé (déduit du code).
-- `filePath` (*string*) : Chemin de destination.
+- `file` (*any*) : Unused (inferred from code).
+- `filePath` (*string*) : Destination path.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `filePaths` | string[] | Dossiers explorés pour charger automatiquement les groupes : {"vehicleGroups/", "settings/editor/vehicleGroups/"}. Modifiable avant le premier affichage de l'outil. |
+| `filePaths` | string[] | Folders explored to automatically load the groups: {"vehicleGroups/", "settings/editor/vehicleGroups/"}. Modifiable before the tool's first display. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/multiSpawnManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/multiSpawnManager.lua`.*

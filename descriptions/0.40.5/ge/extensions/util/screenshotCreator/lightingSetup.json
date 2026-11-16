@@ -1,52 +1,105 @@
 {
   "path": "lua/ge/extensions/util/screenshotCreator/lightingSetup.lua",
-  "module": "Prépare l'éclairage de studio pour les vignettes de véhicules et le remet en état ensuite. Il retrouve dans la scène (scenetree) les objets marqués par le champ dynamique thumbnailRole : des SpotLight (rôles key, fill, rim, top, groundFill, horizonFill) et des TSStatic « lightplane » servant de cartes de réflexion (horizonCard, shoulderCard, topCard, cameraCard). adjust() les place autour du véhicule en fonction de la caméra et de la boîte englobante, règle leur intensité en lux, applique une correction d'exposition, ajuste le SSAO, affiche ou masque le marquage de parking (champ thumbnailLayer = parkingMarkup) et cache les occupants du véhicule. restore() annule tout (transformations, champs de lumière, visibilité).",
+  "module": "Sets up the studio lighting for vehicle thumbnails and restores it afterwards. It finds in the scene (scenetree) the objects marked by the dynamic field thumbnailRole: SpotLights (roles key, fill, rim, top, groundFill, horizonFill) and \"lightplane\" TSStatics serving as reflection cards (horizonCard, shoulderCard, topCard, cameraCard). adjust() places them around the vehicle based on the camera and the bounding box, sets their intensity in lux, applies an exposure correction, adjusts the SSAO, shows or hides the parking markup (field thumbnailLayer = parkingMarkup) and hides the vehicle's occupants. restore() undoes everything (transforms, light fields, visibility).",
   "notes": [
-    "adjust() commence par restore() ; il renvoie false (et restaure) à la moindre erreur. Appeler restore() après la capture est donc obligatoire (job.lua le fait).",
-    "Les réglages viennent de util_screenshotCreator_settings.getLightingRig() : enabled, roles, exposureCorrection, ssaoMode, parkingMarkup.",
-    "Si le rig est désactivé, seuls les projecteurs existants proches du véhicule sont ajustés (plans de spots), plus les cartes, le SSAO, le marquage et les occupants.",
-    "Une correction d'exposition vise 850 lx au total sur les faces visibles du véhicule, avec un gain borné entre 0,5 et 2 ; seuls key, fill, rim et top sont modifiés.",
-    "Chaque rôle ne peut être pris que par un seul objet : les doublons ou objets de mauvaise classe sont ignorés avec un avertissement dans le journal (tag screenshotCreatorLighting).",
-    "selfCheck() est exécuté une fois au premier adjust ; une assertion échouée lèverait une erreur Lua."
+    "adjust() starts with restore(); it returns false (and restores) on the slightest error. Calling restore() after the capture is therefore mandatory (job.lua does it).",
+    "The settings come from util_screenshotCreator_settings.getLightingRig(): enabled, roles, exposureCorrection, ssaoMode, parkingMarkup.",
+    "If the rig is disabled, only the existing spotlights near the vehicle are adjusted (spot planes), plus the cards, the SSAO, the markup and the occupants.",
+    "An exposure correction targets 850 lx in total on the visible faces of the vehicle, with a gain clamped between 0.5 and 2; only key, fill, rim and top are modified.",
+    "Each role can be taken by only one object: duplicates or objects of the wrong class are ignored with a warning in the log (tag screenshotCreatorLighting).",
+    "selfCheck() runs once at the first adjust; a failed assertion would raise a Lua error."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : util_screenshotCreator_settings et util_screenshotCreator_vehicleSetup."},
-    "onClientEndMission": {"type": "function", "desc": "Alias de M.restore : restaure l'éclairage à la fin du niveau."},
-    "onExit": {"type": "function", "desc": "Alias de M.restore : restaure l'éclairage à la fermeture du jeu."},
-    "onExtensionUnloaded": {"type": "function", "desc": "Alias de M.restore : restaure l'éclairage au déchargement de l'extension."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extensions loaded before: util_screenshotCreator_settings and util_screenshotCreator_vehicleSetup."
+    },
+    "onClientEndMission": {
+      "type": "function",
+      "desc": "Alias of M.restore: restores the lighting at the end of the level."
+    },
+    "onExit": {
+      "type": "function",
+      "desc": "Alias of M.restore: restores the lighting when the game closes."
+    },
+    "onExtensionUnloaded": {
+      "type": "function",
+      "desc": "Alias of M.restore: restores the lighting when the extension is unloaded."
+    }
   },
   "functions": {
     "adjust": {
-      "desc": "Met en place l'éclairage de capture pour ce véhicule et cette caméra : projecteurs du rig, cartes de réflexion, SSAO, marquage de parking, masquage des occupants, et activation du masque de rendu des cartes sur la vue principale.",
+      "desc": "Sets up the capture lighting for this vehicle and this camera: rig spotlights, reflection cards, SSAO, parking markup, occupant hiding, and enabling the cards' render mask on the main view.",
       "params": {
-        "vehicle": {"type": "table", "desc": "Objet véhicule à photographier."},
-        "camera": {"type": "table", "desc": "Caméra résolue : {pos = vec3, rot = quat, ...} (résultat du cadrage)."}
+        "vehicle": {
+          "type": "table",
+          "desc": "Vehicle object to photograph."
+        },
+        "camera": {
+          "type": "table",
+          "desc": "Resolved camera: {pos = vec3, rot = quat, ...} (framing result)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si tout a été appliqué, false en cas d'échec (l'état est alors restauré)."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if everything was applied, false on failure (the state is then restored)."
+        }
+      ]
     },
     "restore": {
-      "desc": "Annule tous les changements faits par adjust : masque de vue, SSAO, marquage, occupants, cartes de réflexion et lumières (transformation et champs intensity, innerAngle, outerAngle, range, castShadows). Les états non restaurés sont conservés pour une nouvelle tentative.",
-      "returns": [{"type": "boolean", "desc": "true si tout a été restauré exactement."}]
+      "desc": "Undoes all the changes made by adjust: view mask, SSAO, markup, occupants, reflection cards and lights (transform and fields intensity, innerAngle, outerAngle, range, castShadows). Unrestored states are kept for a new attempt.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if everything was restored exactly."
+        }
+      ]
     },
     "hideReflectionCardsForTechCapture": {
-      "desc": "Cache temporairement les cartes de réflexion actives (setHidden et setRenderEnabled(false)) pour une capture « Tech ». À rappeler avec restoreReflectionCardsAfterTechCapture.",
-      "returns": [{"type": "boolean", "desc": "false si un masquage est déjà en cours (appel imbriqué) ou en cas d'erreur (visibilité restaurée)."}]
+      "desc": "Temporarily hides the active reflection cards (setHidden and setRenderEnabled(false)) for a \"Tech\" capture. To be followed by restoreReflectionCardsAfterTechCapture.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if a hide is already in progress (nested call) or on error (visibility restored)."
+        }
+      ]
     },
     "restoreReflectionCardsAfterTechCapture": {
-      "desc": "Rétablit la visibilité d'origine des cartes cachées par hideReflectionCardsForTechCapture.",
-      "returns": [{"type": "boolean", "desc": "true si toutes les cartes ont retrouvé leur état."}]
+      "desc": "Restores the original visibility of the cards hidden by hideReflectionCardsForTechCapture.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if all cards have recovered their state."
+        }
+      ]
     },
     "getMarkupCount": {
-      "desc": "Compte les objets de la scène marqués thumbnailLayer = parkingMarkup.",
-      "returns": [{"type": "integer", "desc": "Nombre d'objets de marquage."}]
+      "desc": "Counts the scene objects marked thumbnailLayer = parkingMarkup.",
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of markup objects."
+        }
+      ]
     },
     "clearMarkupTags": {
-      "desc": "Efface le champ thumbnailLayer de tous les objets de marquage de parking.",
-      "returns": [{"type": "integer", "desc": "Nombre d'objets dont le tag a été effacé."}]
+      "desc": "Clears the thumbnailLayer field of all parking markup objects.",
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of objects whose tag was cleared."
+        }
+      ]
     },
     "selfCheck": {
-      "desc": "Test interne par assertions sur la géométrie des cartes (direction, transformation, côté arrière, rotation autour de l'axe vertical).",
-      "returns": [{"type": "boolean", "desc": "Toujours true (sinon une assertion échoue)."}],
+      "desc": "Internal assertion-based test on the card geometry (direction, transform, rear side, rotation around the vertical axis).",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Always true (otherwise an assertion fails)."
+        }
+      ],
       "internal": true
     }
   }

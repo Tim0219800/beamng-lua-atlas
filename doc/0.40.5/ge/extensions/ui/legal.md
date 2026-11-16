@@ -1,36 +1,36 @@
 # `ui_legal`
 
-*Fichier : `lua/ge/extensions/ui/legal.lua` · VM : Game Engine (GE) · 46 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/legal.lua` · VM: Game Engine (GE) · 46 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_legal` : `extensions.load("ui_legal")`, puis la globale `ui_legal`
+**Access:** extension `ui_legal`: `extensions.load("ui_legal")`, then the global `ui_legal`
 
-Vérifie si l'utilisateur a répondu à l'assistant de consentement en ligne (réglages `onlineFeatures` et `telemetry`, valeur "ask" = pas encore répondu). Sert au routeur d'UI pour interdire de quitter l'écran de consentement tant qu'il n'est pas validé.
+Checks whether the user has answered the online consent wizard (settings `onlineFeatures` and `telemetry`, value "ask" = not answered yet). Used by the UI router to prevent leaving the consent screen until it is validated.
 
-## Remarques
+## Notes
 
-- En menu simple (Engine.UI.isSimpleMenu()), si le consentement n'est pas donné, le module active automatiquement onlineFeatures et telemetry ("enable"), demande la sauvegarde des réglages et considère le consentement comme donné (les CGU sont supposées acceptées).
+- In simple menu (Engine.UI.isSimpleMenu()), if consent is not given, the module automatically enables onlineFeatures and telemetry ("enable"), requests saving the settings and considers consent as given (the terms are assumed accepted).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_legal.canLeaveOnlineConsent(route)` | Indique si la navigation hors de la route courante est permise : toujours true à l'intérieur de l'arbre de routes `legal.*` (pour finir l'assistant), sinon dépend de isOnlineConsentSet(). | 35 |
-| `ui_legal.isOnlineConsentSet()` | Renvoie true si telemetry et onlineFeatures sont tous deux différents de "ask". Effet de bord en menu simple : active les deux réglages et sauvegarde. | 18 |
+| `ui_legal.canLeaveOnlineConsent(route)` | Returns whether navigating away from the current route is allowed: always true inside the `legal.*` route tree (to finish the wizard), otherwise depends on isOnlineConsentSet(). | 35 |
+| `ui_legal.isOnlineConsentSet()` | Returns true if telemetry and onlineFeatures are both different from "ask". Side effect in simple menu: enables both settings and saves. | 18 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_legal.canLeaveOnlineConsent(route)`
 
-Indique si la navigation hors de la route courante est permise : toujours true à l'intérieur de l'arbre de routes `legal.*` (pour finir l'assistant), sinon dépend de isOnlineConsentSet().
+Returns whether navigating away from the current route is allowed: always true inside the `legal.*` route tree (to finish the wizard), otherwise depends on isOnlineConsentSet().
 
-- `route` (*table*) : Route de l'UI (champ name de type « legal.xxx »).
-- **renvoie** : boolean true si on peut quitter.
+- `route` (*table*) : UI route (name field of the form "legal.xxx").
+- **returns**: boolean true if leaving is allowed.
 
 #### `ui_legal.isOnlineConsentSet()`
 
-Renvoie true si telemetry et onlineFeatures sont tous deux différents de "ask". Effet de bord en menu simple : active les deux réglages et sauvegarde.
+Returns true if telemetry and onlineFeatures are both different from "ask". Side effect in simple menu: enables both settings and saves.
 
-- **renvoie** : boolean Consentement renseigné.
+- **returns**: boolean Consent provided.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/legal.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/legal.lua`.*

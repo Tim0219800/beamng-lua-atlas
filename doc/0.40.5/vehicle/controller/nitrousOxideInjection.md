@@ -1,97 +1,97 @@
 # `controller_nitrousOxideInjection`
 
-*Fichier : `lua/vehicle/controller/nitrousOxideInjection.lua` · VM : Véhicule · 165 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/nitrousOxideInjection.lua` · VM: Vehicle · 165 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `nitrousOxideInjection` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `nitrousOxideInjection` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de commande du protoxyde d'azote (N2O, type "auxiliary", relevantDevice "mainEngine"). Il arme/désarme le système via electrics.values (électrique d'armement), purge les conduites à l'armement et ajoute un bouton « N2O » au panneau de contrôle simplifié et une entrée au menu radial. L'injection elle-même est gérée par le moteur (engine.nitrousOxideInjection) ; ce contrôleur ne fait que l'interface et l'armement.
+Auxiliary controller for nitrous oxide (N2O) control (type "auxiliary", relevantDevice "mainEngine"). It arms/disarms the system via electrics.values (arming electrics value), purges the lines on arming and adds an "N2O" button to the simplified control panel and an entry to the radial menu. The injection itself is handled by the engine (engine.nitrousOxideInjection); this controller only handles the interface and the arming.
 
-## Exemple
+## Example
 
 ```lua
 local n2o = controller.getControllerSafe('nitrousOxideInjection')
-n2o.toggleActive()      -- arme/désarme
-n2o.setOverride(true)   -- force l'injection (électrique d'override)
+n2o.toggleActive()      -- arms/disarms
+n2o.setOverride(true)   -- forces the injection (override electrics value)
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam (défaut) : name (nom du contrôleur pour le menu radial), engineName ("mainEngine"), electricsArmName ("nitrousOxideArm"), electricsOverrideName ("nitrousOxideOverride"), purgeTime (1, s).
-- Le contrôleur n'est actif (updateGFX) que si le moteur possède un sous-système nitrousOxideInjection existant ; sinon M.updateGFX reste nop.
-- toggleActive : quand on arme (valeur electrics 0 -> 1) la purge des conduites est lancée pour purgeTime secondes ; un message d'interface Armed/Disarmed est affiché.
-- serialize/deserialize/getState/setState gèrent l'état d'armement (serialize) ou le temps de purge restant (getState).
+- jbeam keys (default): name (controller name for the radial menu), engineName ("mainEngine"), electricsArmName ("nitrousOxideArm"), electricsOverrideName ("nitrousOxideOverride"), purgeTime (1, s).
+- The controller is only active (updateGFX) if the engine has an existing nitrousOxideInjection subsystem; otherwise M.updateGFX stays nop.
+- toggleActive: when arming (electrics value 0 -> 1) the line purge is started for purgeTime seconds; an Armed/Disarmed interface message is displayed.
+- serialize/deserialize/getState/setState handle the arming state (serialize) or the remaining purge time (getState).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_nitrousOxideInjection.deserialize(data)` | Restaure l'état d'armement. | 71 |
-| `controller_nitrousOxideInjection.getState()` | Renvoie le temps de purge restant. | 77 |
-| `controller_nitrousOxideInjection.init(jbeamData)` | Lit la configuration, retrouve le moteur, enregistre le menu radial et affiche l'état. *(interne)* | 104 |
-| `controller_nitrousOxideInjection.reset(jbeamData)` | Efface les données d'état de l'interface. *(interne)* | 100 |
-| `controller_nitrousOxideInjection.serialize()` | Renvoie l'état d'armement. | 65 |
-| `controller_nitrousOxideInjection.setOverride(active)` | Active/désactive l'électrique d'override de l'injection. | 53 |
-| `controller_nitrousOxideInjection.setState(data)` | Restaure le temps de purge restant (borné 0..purgeTime). | 84 |
-| `controller_nitrousOxideInjection.toggleActive()` | Arme ou désarme le système (purge des conduites à l'armement) et affiche un message. | 57 |
-| `controller_nitrousOxideInjection.updateGFX(dt)` | Met à jour le bouton du panneau simplifié quand le réservoir, l'armement ou l'activité changent (nop si pas de N2O) (assignée dynamiquement) *(interne)* | dyn |
-| `controller_nitrousOxideInjection.updateSimpleControlButtons()` | (Re)crée le bouton « N2O » du panneau simplifié avec la couleur (inactif, armé, actif) et le niveau du réservoir. | 25 |
+| `controller_nitrousOxideInjection.deserialize(data)` | Restores the arming state. | 71 |
+| `controller_nitrousOxideInjection.getState()` | Returns the remaining purge time. | 77 |
+| `controller_nitrousOxideInjection.init(jbeamData)` | Reads the configuration, finds the engine, registers the radial menu and displays the state. *(internal)* | 104 |
+| `controller_nitrousOxideInjection.reset(jbeamData)` | Clears the interface state data. *(internal)* | 100 |
+| `controller_nitrousOxideInjection.serialize()` | Returns the arming state. | 65 |
+| `controller_nitrousOxideInjection.setOverride(active)` | Enables/disables the injection override electrics value. | 53 |
+| `controller_nitrousOxideInjection.setState(data)` | Restores the remaining purge time (bounded 0..purgeTime). | 84 |
+| `controller_nitrousOxideInjection.toggleActive()` | Arms or disarms the system (line purge on arming) and displays a message. | 57 |
+| `controller_nitrousOxideInjection.updateGFX(dt)` | Updates the simplified panel button when the tank, the arming or the activity change (nop if no N2O) (dynamically assigned) *(internal)* | dyn |
+| `controller_nitrousOxideInjection.updateSimpleControlButtons()` | (Re)creates the "N2O" button of the simplified panel with the color (inactive, armed, active) and the tank level. | 25 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_nitrousOxideInjection.deserialize(data)`
 
-Restaure l'état d'armement.
+Restores the arming state.
 
-- `data` (*table|nil*) : Table renvoyée par serialize.
+- `data` (*table|nil*) : Table returned by serialize.
 
 #### `controller_nitrousOxideInjection.getState()`
 
-Renvoie le temps de purge restant.
+Returns the remaining purge time.
 
-- **renvoie** : table Table d'état (réutilisée).
+- **returns**: table State table (reused).
 
 #### `controller_nitrousOxideInjection.init(jbeamData)`
 
-Lit la configuration, retrouve le moteur, enregistre le menu radial et affiche l'état.
+Reads the configuration, finds the engine, registers the radial menu and displays the state.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_nitrousOxideInjection.reset(jbeamData)`
 
-Efface les données d'état de l'interface.
+Clears the interface state data.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_nitrousOxideInjection.serialize()`
 
-Renvoie l'état d'armement.
+Returns the arming state.
 
-- **renvoie** : table {isArmed = valeur electrics}
+- **returns**: table {isArmed = electrics value}
 
 #### `controller_nitrousOxideInjection.setOverride(active)`
 
-Active/désactive l'électrique d'override de l'injection.
+Enables/disables the injection override electrics value.
 
-- `active` (*boolean*) : Vrai pour forcer l'injection.
+- `active` (*boolean*) : True to force the injection.
 
 #### `controller_nitrousOxideInjection.setState(data)`
 
-Restaure le temps de purge restant (borné 0..purgeTime).
+Restores the remaining purge time (bounded 0..purgeTime).
 
-- `data` (*table|nil*) : Table d'état.
+- `data` (*table|nil*) : State table.
 
 #### `controller_nitrousOxideInjection.updateGFX(dt)`
 
-Met à jour le bouton du panneau simplifié quand le réservoir, l'armement ou l'activité changent (nop si pas de N2O) (assignée dynamiquement)
+Updates the simplified panel button when the tank, the arming or the activity change (nop if no N2O) (dynamically assigned)
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `relevantDevice` | string | "mainEngine" : dispositif de powertrain concerné (valeur par défaut). |
+| `relevantDevice` | string | "mainEngine": concerned powertrain device (default value). |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/nitrousOxideInjection.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/nitrousOxideInjection.lua`.*

@@ -1,108 +1,182 @@
 {
   "path": "lua/vehicle/controller/couplings/containerLockLead.lua",
-  "module": "Côté « leader » du système de verrouillage de conteneurs (twist-locks) : placé sur le véhicule qui porte les verrous (grue, portique, châssis porte-conteneur). Pour chaque site, un coupleur « tâteur » (feeler) cherche un conteneur, puis le leader interroge le contrôleur `containerLockFollow` du conteneur pour obtenir la position du verrou cible, calcule une force d'alignement dans un cône (appliquée aux deux véhicules) et, quand l'alignement vertical est suffisant, active le coupleur de verrou (lock). Gère les états feeling, locking, locked, la stabilité du verrouillage et les electrics de visibilité des props.",
+  "module": "\"Leader\" side of the container locking system (twist-locks): placed on the vehicle carrying the locks (crane, gantry, container chassis). For each site, a \"feeler\" coupler looks for a container, then the leader queries the container's `containerLockFollow` controller for the target lock position, computes an alignment force within a cone (applied to both vehicles) and, when the vertical alignment is sufficient, activates the lock coupler. Handles the feeling, locking, locked states, lock stability and the props visibility electrics.",
   "notes": [
-    "États d'un site : feeling (cherche), locking (verrou armé), locked (verrouillé). Le global `lockState` est locked seulement si tous les sites le sont.",
-    "Clés jbeam communes : `feelerCouplerRadius` (0.35), `feelerCouplerLockRadius` (0.005), `feelerCouplerLatchSpeed` (1.0), `feelerCouplerStrength` (500), `aligningForceMaximum` (10000 N), `lockCouplerRadius` (0.05), `lockCouplerLockRadius` (0.02), `lockCouplerLatchSpeed` (0.05), `lockCouplerStrength` (10001000), `aligningForceConeVerticalOffset` (0.05), `aligningForceConeSlope` (0.2), `aligningForceConeTransitionWidth` (0.01), `aligningForceConeDeadzoneRadius` (lockCouplerRadius × 0.5), `aligningForceSmootherIn` (math.huge), `aligningForceSmootherOut` (aligningForceMaximum), `stableLockTime` (0.5 s).",
-    "Clés par site (table `lockSites`) : `name`, `feelerCouplerNodeName`, `lockCouplerNodeName`, `verticalReferenceNodeName`, `feelerCouplerTag`, `lockCouplerTag`, `lockStateElectricsName` (`<name>_lock_state` par défaut).",
-    "Electrics écrits : `<site>_lock_state` (0 au repos, 0.5 en feeling/locking, 1 verrouillé), `<nom>_<site>_lock_is_visible` et `<nom>_<site>_lock_is_locked`.",
-    "La force d'alignement croît quand la distance verticale diminue (0 à 0.5 m) ; la composante horizontale est limitée par un cône puis un tube mort ; la force réaction est envoyée au suiveur par `applyAligningForce`.",
-    "Verrouillage lorsque la distance verticale est inférieure à 0.8 × lockCouplerRadius ; retour en feeling si elle remonte au-dessus de 0.9 × lockCouplerRadius.",
-    "Après un déverrouillage normal (breakForce <= 0) d'un verrou stable, le site mémorise la dernière cible pour ne pas se reverrouiller sur le même conteneur tant que le verrou n'a pas bougé de plus de 0.2 m ; toggleLockState efface cette mémoire.",
-    "Un flux de debug `containerLockDebug` est envoyé via `gui.send` si le flux est écouté. La fonction debugDraw est écrite mais n'est pas exportée dans M (jamais appelée). `beamBroken`, `onCouplerFound`, `initSounds` sont exportés vides.",
-    "Si aucun site n'est défini, updateGFX est remplacé par `nop`.",
-    "Anomalie : toggleLockState, dans les deux branches, appelle setLockState(feeling) ; seule la branche non verrouillée efface en plus la mémoire de dernière cible."
+    "States of a site: feeling (searching), locking (lock armed), locked (locked). The global `lockState` is locked only if all sites are.",
+    "Common jbeam keys: `feelerCouplerRadius` (0.35), `feelerCouplerLockRadius` (0.005), `feelerCouplerLatchSpeed` (1.0), `feelerCouplerStrength` (500), `aligningForceMaximum` (10000 N), `lockCouplerRadius` (0.05), `lockCouplerLockRadius` (0.02), `lockCouplerLatchSpeed` (0.05), `lockCouplerStrength` (10001000), `aligningForceConeVerticalOffset` (0.05), `aligningForceConeSlope` (0.2), `aligningForceConeTransitionWidth` (0.01), `aligningForceConeDeadzoneRadius` (lockCouplerRadius × 0.5), `aligningForceSmootherIn` (math.huge), `aligningForceSmootherOut` (aligningForceMaximum), `stableLockTime` (0.5 s).",
+    "Per-site keys (`lockSites` table): `name`, `feelerCouplerNodeName`, `lockCouplerNodeName`, `verticalReferenceNodeName`, `feelerCouplerTag`, `lockCouplerTag`, `lockStateElectricsName` (`<name>_lock_state` by default).",
+    "Electrics written: `<site>_lock_state` (0 at rest, 0.5 in feeling/locking, 1 locked), `<name>_<site>_lock_is_visible` and `<name>_<site>_lock_is_locked`.",
+    "The alignment force grows as the vertical distance decreases (0 to 0.5 m); the horizontal component is limited by a cone then a dead tube; the reaction force is sent to the follower by `applyAligningForce`.",
+    "Locking when the vertical distance is below 0.8 × lockCouplerRadius; back to feeling if it rises above 0.9 × lockCouplerRadius.",
+    "After a normal unlock (breakForce <= 0) of a stable lock, the site remembers the last target so as not to lock again onto the same container until the lock has moved by more than 0.2 m; toggleLockState clears this memory.",
+    "A debug stream `containerLockDebug` is sent via `gui.send` if the stream is being listened to. The debugDraw function is written but not exported in M (never called). `beamBroken`, `onCouplerFound`, `initSounds` are exported empty.",
+    "If no site is defined, updateGFX is replaced by `nop`.",
+    "Anomaly: toggleLockState, in both branches, calls setLockState(feeling); only the unlocked branch also clears the last target memory."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
   },
   "functions": {
     "lastLockCouplerPositionCallback": {
-      "desc": "Rappel venant du suiveur : enregistre la dernière position connue du verrou précédemment relâché, pour détecter que le leader s'en est éloigné.",
+      "desc": "Callback from the follower: records the last known position of the previously released lock, to detect that the leader has moved away from it.",
       "params": {
-        "lockCouplerNodeId": {"type": "integer", "desc": "cid du noeud verrou du suiveur."},
-        "lastLockCouplerPosition": {"type": "vec3", "desc": "Position monde."}
+        "lockCouplerNodeId": {
+          "type": "integer",
+          "desc": "cid of the follower's lock node."
+        },
+        "lastLockCouplerPosition": {
+          "type": "vec3",
+          "desc": "World position."
+        }
       },
       "returns": [],
       "internal": true
     },
     "lockSitePositionCallback": {
-      "desc": "Rappel venant du suiveur : enregistre la position monde du verrou du suiveur et si un prop visuel est requis.",
+      "desc": "Callback from the follower: records the world position of the follower's lock and whether a visual prop is required.",
       "params": {
-        "lockSiteId": {"type": "integer", "desc": "Id du site (cid du noeud tâteur côté suiveur)."},
-        "lockCouplerPosition": {"type": "vec3", "desc": "Position monde du verrou du suiveur."},
-        "needsVisualLockProp": {"type": "boolean", "desc": "true si le prop visuel de verrou est nécessaire."}
+        "lockSiteId": {
+          "type": "integer",
+          "desc": "Site id (cid of the feeler node on the follower side)."
+        },
+        "lockCouplerPosition": {
+          "type": "vec3",
+          "desc": "World position of the follower's lock."
+        },
+        "needsVisualLockProp": {
+          "type": "boolean",
+          "desc": "true if the visual lock prop is needed."
+        }
       },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Chaque frame : fait tourner la recherche de tâteurs inactifs (10 Hz), interroge les suiveurs, calcule et applique la force d'alignement, fait passer les sites de feeling à locking, met à jour la stabilité du verrou et les electrics, et envoie les données de debug.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "desc": "Every frame: runs the search of inactive feelers (10 Hz), queries the followers, computes and applies the alignment force, moves sites from feeling to locking, updates the lock stability and the electrics, and sends the debug data.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "beamBroken": {
-      "desc": "Hook de rupture de poutre, vide.",
+      "desc": "Beam break hook, empty.",
       "params": {
-        "id": {"type": "integer", "desc": "cid de la poutre."},
-        "energy": {"type": "number", "desc": "Énergie de rupture."}
+        "id": {
+          "type": "integer",
+          "desc": "cid of the beam."
+        },
+        "energy": {
+          "type": "number",
+          "desc": "Break energy."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onCouplerFound": {
-      "desc": "Hook de coupleur trouvé, vide.",
+      "desc": "Coupler found hook, empty.",
       "params": {
-        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
-        "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
-        "obj2nodeId": {"type": "integer", "desc": "cid du noeud de l'autre véhicule."}
+        "nodeId": {
+          "type": "integer",
+          "desc": "cid of the local node."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Id of the other vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "cid of the other vehicle's node."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onCouplerAttached": {
-      "desc": "Hook : si le noeud est un tâteur, mémorise le véhicule suiveur et l'id du site, efface l'alignement ; si c'est un verrou, passe le site à locked et supprime la force d'alignement du suiveur.",
+      "desc": "Hook: if the node is a feeler, stores the follower vehicle and the site id, clears the alignment; if it is a lock, sets the site to locked and removes the follower's alignment force.",
       "params": {
-        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
-        "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
-        "obj2nodeId": {"type": "integer", "desc": "cid du noeud de l'autre véhicule."}
+        "nodeId": {
+          "type": "integer",
+          "desc": "cid of the local node."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Id of the other vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "cid of the other vehicle's node."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onCouplerDetached": {
-      "desc": "Hook : oublie le suiveur pour un tâteur ; pour un verrou, mémorise la cible précédente si le détachement est normal et le verrou stable (sinon l'efface) et remet le site en feeling.",
+      "desc": "Hook: forgets the follower for a feeler; for a lock, stores the previous target if the detachment is normal and the lock stable (otherwise clears it) and puts the site back to feeling.",
       "params": {
-        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
-        "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
-        "obj2nodeId": {"type": "integer", "desc": "cid du noeud de l'autre véhicule."},
-        "breakForce": {"type": "number", "desc": "Force de rupture (> 0 si le verrou a cassé)."}
+        "nodeId": {
+          "type": "integer",
+          "desc": "cid of the local node."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Id of the other vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "cid of the other vehicle's node."
+        },
+        "breakForce": {
+          "type": "number",
+          "desc": "Break force (> 0 if the lock broke)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "toggleLockState": {
-      "desc": "Ramène tous les sites en feeling (ce qui déverrouille s'ils sont verrouillés). Quand rien n'est verrouillé, efface aussi la mémoire de dernière cible pour permettre de reverrouiller la même.",
+      "desc": "Brings all sites back to feeling (which unlocks them if they are locked). When nothing is locked, also clears the last target memory to allow locking the same one again.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "reset": {
-      "desc": "Remet tous les sites en feeling avec des valeurs neutres et les electrics à 0.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "desc": "Puts all sites back to feeling with neutral values and the electrics to 0.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "initSounds": {
-      "desc": "Vide.",
-      "params": {"jbeamData": {"type": "table", "desc": "Non utilisé."}},
+      "desc": "Empty.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Not used."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "init": {
-      "desc": "Lit les paramètres communs et les sites depuis le jbeam, résout les noeuds par nom, crée les tables de recherche et initialise les electrics.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "desc": "Reads the common parameters and the sites from the jbeam, resolves the nodes by name, creates the lookup tables and initializes the electrics.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     }

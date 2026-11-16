@@ -1,161 +1,419 @@
 {
   "path": "lua/common/controlSystems.lua",
-  "module": "Fournit deux régulateurs PID : forme parallèle (newPIDParallel, gains kP/kI/kD) et forme standard (newPIDStandard, kP avec temps intégral tI et dérivé tD). Les deux dérivent sur la variable de process (et non sur l'erreur) pour éviter les pics quand la consigne change, et gèrent saturation de sortie, anti-windup de l'intégrale et zone morte d'erreur. Un moddeur s'en sert pour réguler un couple, un régime, une vitesse, etc.",
-  "usage": "local pid = newPIDParallel(1, 0.5, 0.1, 0, 1)\n-- à chaque pas de temps :\nlocal output, err = pid:get(currentValue, targetValue, dt)",
+  "module": "Provides two PID controllers: parallel form (newPIDParallel, gains kP/kI/kD) and standard form (newPIDStandard, kP with integral time tI and derivative time tD). Both differentiate on the process variable (not on the error) to avoid spikes when the setpoint changes, and handle output saturation, integral anti-windup and an error deadzone. A modder uses them to regulate a torque, an RPM, a speed, etc.",
+  "usage": "local pid = newPIDParallel(1, 0.5, 0.1, 0, 1)\n-- at each time step:\nlocal output, err = pid:get(currentValue, targetValue, dt)",
   "notes": [
-    "Les constructeurs sont des fonctions globales ; les objets renvoyés ont une méthode get (affectée dans la table de données) qui pointe vers getMethod, ou getWithDebugMethod si setDebug(true).",
-    "get renvoie deux valeurs : la sortie du PID et l'erreur courante (utile pour détecter un état quasi stable).",
-    "dt doit être > 0 (division par dt dans le terme dérivé).",
-    "Si |erreur| < errorDeadzone, l'erreur est mise à 0 ET l'intégrale remise à 0.",
-    "integralInCoef s'applique quand l'intégrale et l'erreur sont de signes opposés ou nuls (l'intégrale diminue), integralOutCoef quand elles ont le même signe (l'intégrale grandit).",
-    "Bug probable : PIDParallel:setConfig calcule maxIntegral avec le paramètre kI (et non self.kI) : appeler setConfig sans kI ni maxIntegral provoque une erreur arithmétique sur nil.",
-    "Incohérence : PIDStandard:reset ne remet à zéro ni error ni output (contrairement à PIDParallel:reset).",
-    "Les méthodes debug utilisent guihooks.graph pour tracer error, integral et output."
+    "The constructors are global functions; the returned objects have a get method (assigned in the data table) that points to getMethod, or getWithDebugMethod if setDebug(true).",
+    "get returns two values: the PID output and the current error (useful to detect a near-steady state).",
+    "dt must be > 0 (division by dt in the derivative term).",
+    "If |error| < errorDeadzone, the error is set to 0 AND the integral is reset to 0.",
+    "integralInCoef applies when the integral and the error have opposite signs or are zero (the integral decreases), integralOutCoef when they have the same sign (the integral grows).",
+    "Probable bug: PIDParallel:setConfig computes maxIntegral with the kI parameter (not self.kI): calling setConfig without kI or maxIntegral causes an arithmetic error on nil.",
+    "Inconsistency: PIDStandard:reset resets neither error nor output (unlike PIDParallel:reset).",
+    "The debug methods use guihooks.graph to plot error, integral and output."
   ],
   "fields": {},
   "functions": {
     "newPIDParallel": {
-      "desc": "Crée un PID en forme parallèle : sortie = kP*erreur + kI*intégrale + kD*(−dPV/dt).",
+      "desc": "Creates a parallel-form PID: output = kP*error + kI*integral + kD*(−dPV/dt).",
       "params": {
-        "kP": {"type": "number", "desc": "Gain proportionnel."},
-        "kI": {"type": "number", "desc": "Gain intégral."},
-        "kD": {"type": "number", "desc": "Gain dérivé (appliqué à la variation de la variable de process)."},
-        "minOutput": {"type": "number|nil", "desc": "Sortie minimale (défaut -math.huge)."},
-        "maxOutput": {"type": "number|nil", "desc": "Sortie maximale (défaut math.huge)."},
-        "integralInCoef": {"type": "number|nil", "desc": "Coefficient d'accumulation de l'intégrale quand elle s'éloigne de zéro (défaut 1)."},
-        "integralOutCoef": {"type": "number|nil", "desc": "Coefficient appliqué quand l'intégrale se résorbe (défaut 1)."},
-        "minIntegral": {"type": "number|nil", "desc": "Borne basse de l'intégrale (défaut -maxIntegral)."},
-        "maxIntegral": {"type": "number|nil", "desc": "Borne haute de l'intégrale (défaut maxOutput / kI)."},
-        "errorDeadzone": {"type": "number|nil", "desc": "Zone morte sur |erreur| (défaut 0)."}
+        "kP": {
+          "type": "number",
+          "desc": "Proportional gain."
+        },
+        "kI": {
+          "type": "number",
+          "desc": "Integral gain."
+        },
+        "kD": {
+          "type": "number",
+          "desc": "Derivative gain (applied to the change of the process variable)."
+        },
+        "minOutput": {
+          "type": "number|nil",
+          "desc": "Minimum output (default -math.huge)."
+        },
+        "maxOutput": {
+          "type": "number|nil",
+          "desc": "Maximum output (default math.huge)."
+        },
+        "integralInCoef": {
+          "type": "number|nil",
+          "desc": "Integral accumulation coefficient when it moves away from zero (default 1)."
+        },
+        "integralOutCoef": {
+          "type": "number|nil",
+          "desc": "Coefficient applied when the integral shrinks (default 1)."
+        },
+        "minIntegral": {
+          "type": "number|nil",
+          "desc": "Lower bound of the integral (default -maxIntegral)."
+        },
+        "maxIntegral": {
+          "type": "number|nil",
+          "desc": "Upper bound of the integral (default maxOutput / kI)."
+        },
+        "errorDeadzone": {
+          "type": "number|nil",
+          "desc": "Deadzone on |error| (default 0)."
+        }
       },
-      "returns": [{"type": "table", "desc": "Objet PIDParallel (méthodes get, setConfig, reset, setDebug, dump, drawDebug)."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "PIDParallel object (methods get, setConfig, reset, setDebug, dump, drawDebug)."
+        }
+      ],
       "internal": false
     },
     "newPIDStandard": {
-      "desc": "Crée un PID en forme standard : sortie = kP*(erreur + intégrale/tI + tD*(−dPV/dt)).",
+      "desc": "Creates a standard-form PID: output = kP*(error + integral/tI + tD*(−dPV/dt)).",
       "params": {
-        "kP": {"type": "number", "desc": "Gain proportionnel global."},
-        "tI": {"type": "number", "desc": "Temps intégral ; si <= 0, le terme intégral est désactivé (coefficient 0)."},
-        "tD": {"type": "number", "desc": "Temps dérivé."},
-        "minOutput": {"type": "number|nil", "desc": "Sortie minimale (défaut -math.huge)."},
-        "maxOutput": {"type": "number|nil", "desc": "Sortie maximale (défaut math.huge)."},
-        "integralInCoef": {"type": "number|nil", "desc": "Coefficient d'accumulation de l'intégrale (défaut 1)."},
-        "integralOutCoef": {"type": "number|nil", "desc": "Coefficient de résorption de l'intégrale (défaut 1)."},
-        "minIntegral": {"type": "number|nil", "desc": "Borne basse de l'intégrale (défaut -maxIntegral)."},
-        "maxIntegral": {"type": "number|nil", "desc": "Borne haute de l'intégrale (défaut maxOutput)."},
-        "errorDeadzone": {"type": "number|nil", "desc": "Zone morte sur |erreur| (défaut 0)."}
+        "kP": {
+          "type": "number",
+          "desc": "Overall proportional gain."
+        },
+        "tI": {
+          "type": "number",
+          "desc": "Integral time; if <= 0, the integral term is disabled (coefficient 0)."
+        },
+        "tD": {
+          "type": "number",
+          "desc": "Derivative time."
+        },
+        "minOutput": {
+          "type": "number|nil",
+          "desc": "Minimum output (default -math.huge)."
+        },
+        "maxOutput": {
+          "type": "number|nil",
+          "desc": "Maximum output (default math.huge)."
+        },
+        "integralInCoef": {
+          "type": "number|nil",
+          "desc": "Integral accumulation coefficient (default 1)."
+        },
+        "integralOutCoef": {
+          "type": "number|nil",
+          "desc": "Integral shrink coefficient (default 1)."
+        },
+        "minIntegral": {
+          "type": "number|nil",
+          "desc": "Lower bound of the integral (default -maxIntegral)."
+        },
+        "maxIntegral": {
+          "type": "number|nil",
+          "desc": "Upper bound of the integral (default maxOutput)."
+        },
+        "errorDeadzone": {
+          "type": "number|nil",
+          "desc": "Deadzone on |error| (default 0)."
+        }
       },
-      "returns": [{"type": "table", "desc": "Objet PIDStandard (mêmes méthodes que PIDParallel)."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "PIDStandard object (same methods as PIDParallel)."
+        }
+      ],
       "internal": false
     }
   },
   "classes": {
     "PIDParallel": {
-      "desc": "Objet renvoyé par newPIDParallel. Champs publics : kP, kI, kD, error, integral, output, minOutput, maxOutput, minIntegral, maxIntegral, errorDeadzone, integralInCoef, integralOutCoef, lastProcessVariable, debugEnabled, get.",
+      "desc": "Object returned by newPIDParallel. Public fields: kP, kI, kD, error, integral, output, minOutput, maxOutput, minIntegral, maxIntegral, errorDeadzone, integralInCoef, integralOutCoef, lastProcessVariable, debugEnabled, get.",
       "functions": {
         "get": {
-          "desc": "Alias de champ vers getMethod (ou getWithDebugMethod en mode debug). Utilisation : pid:get(processVariable, setPoint, dt).",
+          "desc": "Field alias to getMethod (or getWithDebugMethod in debug mode). Usage: pid:get(processVariable, setPoint, dt).",
           "params": {
-            "processVariable": {"type": "number", "desc": "Mesure actuelle."},
-            "setPoint": {"type": "number", "desc": "Consigne."},
-            "dt": {"type": "number", "desc": "Pas de temps en secondes."}
+            "processVariable": {
+              "type": "number",
+              "desc": "Current measurement."
+            },
+            "setPoint": {
+              "type": "number",
+              "desc": "Setpoint."
+            },
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds."
+            }
           },
-          "returns": [{"type": "number", "desc": "Sortie bornée du PID."}, {"type": "number", "desc": "Erreur (consigne - mesure) après zone morte."}]
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Bounded PID output."
+            },
+            {
+              "type": "number",
+              "desc": "Error (setpoint - measurement) after the deadzone."
+            }
+          ]
         },
         "getMethod": {
-          "desc": "Calcule la sortie du PID pour ce pas de temps et met à jour error, integral, output, lastProcessVariable.",
+          "desc": "Computes the PID output for this time step and updates error, integral, output, lastProcessVariable.",
           "params": {
-            "processVariable": {"type": "number", "desc": "Mesure actuelle."},
-            "setPoint": {"type": "number", "desc": "Consigne."},
-            "dt": {"type": "number", "desc": "Pas de temps en secondes (> 0)."}
+            "processVariable": {
+              "type": "number",
+              "desc": "Current measurement."
+            },
+            "setPoint": {
+              "type": "number",
+              "desc": "Setpoint."
+            },
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds (> 0)."
+            }
           },
-          "returns": [{"type": "number", "desc": "Sortie bornée."}, {"type": "number", "desc": "Erreur."}]
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Bounded output."
+            },
+            {
+              "type": "number",
+              "desc": "Error."
+            }
+          ]
         },
         "getWithDebugMethod": {
-          "desc": "Comme getMethod mais appelle aussi drawDebug. Ne renvoie que la sortie (pas l'erreur).",
+          "desc": "Like getMethod but also calls drawDebug. Returns only the output (not the error).",
           "params": {
-            "processVariable": {"type": "number", "desc": "Mesure actuelle."},
-            "setPoint": {"type": "number", "desc": "Consigne."},
-            "dt": {"type": "number", "desc": "Pas de temps en secondes."}
+            "processVariable": {
+              "type": "number",
+              "desc": "Current measurement."
+            },
+            "setPoint": {
+              "type": "number",
+              "desc": "Setpoint."
+            },
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds."
+            }
           },
-          "returns": [{"type": "number", "desc": "Sortie bornée."}]
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Bounded output."
+            }
+          ]
         },
         "setConfig": {
-          "desc": "Modifie les paramètres ; chaque argument nil conserve la valeur actuelle.",
+          "desc": "Changes the parameters; each nil argument keeps the current value.",
           "params": {
-            "kP": {"type": "number|nil", "desc": "Gain proportionnel."},
-            "kI": {"type": "number|nil", "desc": "Gain intégral."},
-            "kD": {"type": "number|nil", "desc": "Gain dérivé."},
-            "minOutput": {"type": "number|nil", "desc": "Sortie min."},
-            "maxOutput": {"type": "number|nil", "desc": "Sortie max."},
-            "integralInCoef": {"type": "number|nil", "desc": "Coefficient d'accumulation."},
-            "integralOutCoef": {"type": "number|nil", "desc": "Coefficient de résorption."},
-            "minIntegral": {"type": "number|nil", "desc": "Borne basse de l'intégrale."},
-            "maxIntegral": {"type": "number|nil", "desc": "Borne haute de l'intégrale."},
-            "errorDeadzone": {"type": "number|nil", "desc": "Zone morte."}
+            "kP": {
+              "type": "number|nil",
+              "desc": "Proportional gain."
+            },
+            "kI": {
+              "type": "number|nil",
+              "desc": "Integral gain."
+            },
+            "kD": {
+              "type": "number|nil",
+              "desc": "Derivative gain."
+            },
+            "minOutput": {
+              "type": "number|nil",
+              "desc": "Min output."
+            },
+            "maxOutput": {
+              "type": "number|nil",
+              "desc": "Max output."
+            },
+            "integralInCoef": {
+              "type": "number|nil",
+              "desc": "Accumulation coefficient."
+            },
+            "integralOutCoef": {
+              "type": "number|nil",
+              "desc": "Shrink coefficient."
+            },
+            "minIntegral": {
+              "type": "number|nil",
+              "desc": "Lower bound of the integral."
+            },
+            "maxIntegral": {
+              "type": "number|nil",
+              "desc": "Upper bound of the integral."
+            },
+            "errorDeadzone": {
+              "type": "number|nil",
+              "desc": "Deadzone."
+            }
           }
         },
-        "reset": {"desc": "Remet error, output, integral et lastProcessVariable à 0.", "params": {}},
-        "drawDebug": {"desc": "Envoie error, integral et output au graphe debug via guihooks.graph.", "params": {}},
-        "setDebug": {
-          "desc": "Active/désactive le tracé debug en changeant la méthode get.",
-          "params": {"debugEnabled": {"type": "boolean", "desc": "true pour utiliser getWithDebugMethod."}}
+        "reset": {
+          "desc": "Resets error, output, integral and lastProcessVariable to 0.",
+          "params": {}
         },
-        "dump": {"desc": "Affiche la configuration du PID avec print.", "params": {}}
+        "drawDebug": {
+          "desc": "Sends error, integral and output to the debug graph via guihooks.graph.",
+          "params": {}
+        },
+        "setDebug": {
+          "desc": "Enables/disables debug plotting by changing the get method.",
+          "params": {
+            "debugEnabled": {
+              "type": "boolean",
+              "desc": "true to use getWithDebugMethod."
+            }
+          }
+        },
+        "dump": {
+          "desc": "Prints the PID configuration with print.",
+          "params": {}
+        }
       }
     },
     "PIDStandard": {
-      "desc": "Objet renvoyé par newPIDStandard. Champs publics : kP, tICoef (1/tI), tD, error, integral, output, minOutput, maxOutput, minIntegral, maxIntegral, errorDeadzone, integralInCoef, integralOutCoef, lastProcessVariable, debugEnabled, get.",
+      "desc": "Object returned by newPIDStandard. Public fields: kP, tICoef (1/tI), tD, error, integral, output, minOutput, maxOutput, minIntegral, maxIntegral, errorDeadzone, integralInCoef, integralOutCoef, lastProcessVariable, debugEnabled, get.",
       "functions": {
         "get": {
-          "desc": "Alias de champ vers getMethod (ou getWithDebugMethod en mode debug). Utilisation : pid:get(processVariable, setPoint, dt).",
+          "desc": "Field alias to getMethod (or getWithDebugMethod in debug mode). Usage: pid:get(processVariable, setPoint, dt).",
           "params": {
-            "processVariable": {"type": "number", "desc": "Mesure actuelle."},
-            "setPoint": {"type": "number", "desc": "Consigne."},
-            "dt": {"type": "number", "desc": "Pas de temps en secondes."}
+            "processVariable": {
+              "type": "number",
+              "desc": "Current measurement."
+            },
+            "setPoint": {
+              "type": "number",
+              "desc": "Setpoint."
+            },
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds."
+            }
           },
-          "returns": [{"type": "number", "desc": "Sortie bornée du PID."}, {"type": "number", "desc": "Erreur."}]
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Bounded PID output."
+            },
+            {
+              "type": "number",
+              "desc": "Error."
+            }
+          ]
         },
         "getMethod": {
-          "desc": "Calcule la sortie du PID standard pour ce pas de temps.",
+          "desc": "Computes the standard PID output for this time step.",
           "params": {
-            "processVariable": {"type": "number", "desc": "Mesure actuelle."},
-            "setPoint": {"type": "number", "desc": "Consigne."},
-            "dt": {"type": "number", "desc": "Pas de temps en secondes (> 0)."}
+            "processVariable": {
+              "type": "number",
+              "desc": "Current measurement."
+            },
+            "setPoint": {
+              "type": "number",
+              "desc": "Setpoint."
+            },
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds (> 0)."
+            }
           },
-          "returns": [{"type": "number", "desc": "Sortie bornée."}, {"type": "number", "desc": "Erreur."}]
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Bounded output."
+            },
+            {
+              "type": "number",
+              "desc": "Error."
+            }
+          ]
         },
         "getWithDebugMethod": {
-          "desc": "Comme getMethod mais appelle drawDebug ; ne renvoie que la sortie.",
+          "desc": "Like getMethod but calls drawDebug; returns only the output.",
           "params": {
-            "processVariable": {"type": "number", "desc": "Mesure actuelle."},
-            "setPoint": {"type": "number", "desc": "Consigne."},
-            "dt": {"type": "number", "desc": "Pas de temps en secondes."}
+            "processVariable": {
+              "type": "number",
+              "desc": "Current measurement."
+            },
+            "setPoint": {
+              "type": "number",
+              "desc": "Setpoint."
+            },
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds."
+            }
           },
-          "returns": [{"type": "number", "desc": "Sortie bornée."}]
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Bounded output."
+            }
+          ]
         },
         "setConfig": {
-          "desc": "Modifie les paramètres ; nil conserve la valeur. tI n'est pris en compte que s'il est > 0.",
+          "desc": "Changes the parameters; nil keeps the value. tI is only taken into account if it is > 0.",
           "params": {
-            "kP": {"type": "number|nil", "desc": "Gain proportionnel."},
-            "tI": {"type": "number|nil", "desc": "Temps intégral."},
-            "tD": {"type": "number|nil", "desc": "Temps dérivé."},
-            "minOutput": {"type": "number|nil", "desc": "Sortie min."},
-            "maxOutput": {"type": "number|nil", "desc": "Sortie max."},
-            "integralInCoef": {"type": "number|nil", "desc": "Coefficient d'accumulation."},
-            "integralOutCoef": {"type": "number|nil", "desc": "Coefficient de résorption."},
-            "minIntegral": {"type": "number|nil", "desc": "Borne basse de l'intégrale."},
-            "maxIntegral": {"type": "number|nil", "desc": "Borne haute de l'intégrale."},
-            "errorDeadzone": {"type": "number|nil", "desc": "Zone morte."}
+            "kP": {
+              "type": "number|nil",
+              "desc": "Proportional gain."
+            },
+            "tI": {
+              "type": "number|nil",
+              "desc": "Integral time."
+            },
+            "tD": {
+              "type": "number|nil",
+              "desc": "Derivative time."
+            },
+            "minOutput": {
+              "type": "number|nil",
+              "desc": "Min output."
+            },
+            "maxOutput": {
+              "type": "number|nil",
+              "desc": "Max output."
+            },
+            "integralInCoef": {
+              "type": "number|nil",
+              "desc": "Accumulation coefficient."
+            },
+            "integralOutCoef": {
+              "type": "number|nil",
+              "desc": "Shrink coefficient."
+            },
+            "minIntegral": {
+              "type": "number|nil",
+              "desc": "Lower bound of the integral."
+            },
+            "maxIntegral": {
+              "type": "number|nil",
+              "desc": "Upper bound of the integral."
+            },
+            "errorDeadzone": {
+              "type": "number|nil",
+              "desc": "Deadzone."
+            }
           }
         },
-        "reset": {"desc": "Remet integral et lastProcessVariable à 0 (error et output non touchés).", "params": {}},
-        "drawDebug": {"desc": "Envoie error, integral et output au graphe debug via guihooks.graph.", "params": {}},
-        "setDebug": {
-          "desc": "Active/désactive le tracé debug en changeant la méthode get.",
-          "params": {"debugEnabled": {"type": "boolean", "desc": "true pour utiliser getWithDebugMethod."}}
+        "reset": {
+          "desc": "Resets integral and lastProcessVariable to 0 (error and output are untouched).",
+          "params": {}
         },
-        "dump": {"desc": "Affiche la configuration du PID avec print.", "params": {}}
+        "drawDebug": {
+          "desc": "Sends error, integral and output to the debug graph via guihooks.graph.",
+          "params": {}
+        },
+        "setDebug": {
+          "desc": "Enables/disables debug plotting by changing the get method.",
+          "params": {
+            "debugEnabled": {
+              "type": "boolean",
+              "desc": "true to use getWithDebugMethod."
+            }
+          }
+        },
+        "dump": {
+          "desc": "Prints the PID configuration with print.",
+          "params": {}
+        }
       }
     }
   }

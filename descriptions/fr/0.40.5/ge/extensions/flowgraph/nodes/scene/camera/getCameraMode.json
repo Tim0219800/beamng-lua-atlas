@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/getCameraMode.lua",
+  "module": "Noeud flowgraph 'Get Camera Mode' (categorie repeat_instant). Donne le nom du mode de camera actif (core_camera.getActiveCamName(0)) sur la sortie 'mode'. Depend de core_camera.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "work": {
+          "desc": "Ecrit le nom du mode de camera actif sur la sortie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

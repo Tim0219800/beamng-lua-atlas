@@ -1,45 +1,45 @@
 # `editor_crawlEditor_startingPositions`
 
-*Fichier : `lua/ge/extensions/editor/crawlEditor/startingPositions.lua` · VM : Game Engine (GE) · 581 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/crawlEditor/startingPositions.lua` · VM: Game Engine (GE) · 581 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/crawlEditor/startingPositions")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/crawlEditor/startingPositions")` (file under extensions/ but not a regular extension)
 
-Sous-outil de l'éditeur Crawl pour éditer les positions de départ (starting positions). Le module renvoie un constructeur de classe C. Une position de départ est une table {name, description, transform = {position, rotation, radius}, iconPosition, metadata}. L'outil affiche la liste et le détail dans ImGui, dessine la zone (sphère), la flèche d'orientation et l'icône avec debugDrawer, et permet de déplacer/pivoter via le gizmo d'axes avec annulation/rétablissement (editor.history).
+Crawl editor subtool to edit the starting positions. The module returns a class constructor C. A starting position is a table {name, description, transform = {position, rotation, radius}, iconPosition, metadata}. The tool shows the list and detail in ImGui, draws the zone (sphere), the orientation arrow and the icon with debugDrawer, and lets you move/rotate through the axis gizmo with undo/redo (editor.history).
 
-## Remarques
+## Notes
 
-- Placement : Maj+clic place l'icône (iconPosition) ; Ctrl+clic puis glisser place la zone et oriente la rotation selon la direction du glissement.
-- L'avant d'une position est l'axe Y (rotation * vec3(0,1,0)).
-- snapToTerrain vaut true par défaut : dropToTerrain utilise core_terrain.getTerrainHeight ; sans core_terrain la position n'est pas modifiée et le second retour est false.
-- Les modifications marquent la position avec _dirty = true pour la sauvegarde.
+- Placement: Shift+click places the icon (iconPosition); Ctrl+click then drag places the zone and orients the rotation according to the drag direction.
+- The front of a position is the Y axis (rotation * vec3(0,1,0)).
+- snapToTerrain is true by default: dropToTerrain uses core_terrain.getTerrainHeight; without core_terrain the position is not modified and the second return value is false.
+- Modifications mark the position with _dirty = true for saving.
 
-## Classe `C`
+## Class `C`
 
-Instance de l'outil. Champs principaux : startingPosition (élément édité), currentTransform ("area" ou "icon" ou nil), snapToTerrain, buffers ImGui name/fileName/description.
+Tool instance. Main fields: startingPosition (edited element), currentTransform ("area" or "icon" or nil), snapToTerrain, ImGui buffers name/fileName/description.
 
-Le module renvoie un constructeur : `local obj = require("editor_crawlEditor_startingPositions")(options)`.
+The module returns a constructor: `local obj = require("editor_crawlEditor_startingPositions")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:beginDrag()` | Début de manipulation du gizmo : mémorise les positions/rotation de départ. | 381 |
-| `C:clearSelection()` | Désélectionne la transformation (currentTransform = nil), ce qui masque le gizmo. | 253 |
-| `C:dragging()` | Pendant la manipulation : applique translation ou rotation du gizmo et recolle au terrain si snapToTerrain. | 394 |
-| `C:draw(mouseInfo)` | Appelé à chaque frame : traite l'entrée, affiche l'aperçu de placement avec rotation et le gizmo d'axes. | 460 |
-| `C:drawStartingPositionDetail(startingPosition)` | Dessine le panneau de détail (bouton Goto qui place la caméra 15 m au-dessus, nom, description, rayon, etc.) avec enregistrement des changements dans l'historique d'annulation. | 108 |
-| `C:drawStartingPositionIndicators(mouseInfo)` | Dessine dans la vue 3D la sphère de rayon réel (vert translucide), des points de sélection à taille liée à la distance caméra, la flèche d'orientation (3 m) et les étiquettes « Area: » et « Icon: ». | 520 |
-| `C:drawStartingPositionsList(allStartingPositions, selection)` | Dessine le bouton « Add Starting Position » et la liste sélectionnable ; le clic droit propose Delete. Met à jour selection.index et selection.clicked. | 72 |
-| `C:dropToTerrain(pos)` | Place la position à la hauteur du terrain. | 429 |
-| `C:endDragging()` | Fin de manipulation : recolle au terrain et enregistre l'action (zone ou icône) dans editor.history. | 438 |
-| `C:getNewStartingPosition()` | Crée une position par défaut : nom « New Starting Position », position (0,0,0), rotation identité, rayon 4.0, version de métadonnées "1.0". | 232 |
-| `C:init()` | Initialise l'état (aucune sélection, snapToTerrain = true, positions précédentes du gizmo à zéro). | 55 |
-| `C:input(mouseInfo)` | Gère la souris : Maj+clic place l'icône ; Ctrl+clic/glisser place la zone avec rotation. | 257 |
-| `C:setFields(startingPosition)` | Remplit les buffers ImGui (nom 256, nom de fichier 256, description 1024 caractères) depuis la position de départ. | 65 |
-| `C:setStartingPosition(startingPositionParam)` | Définit la position de départ en cours d'édition. | 249 |
-| `C:updateTransform()` | Place le gizmo d'axes sur la zone (avec sa rotation) ou sur l'icône selon currentTransform. | 365 |
+| `C:beginDrag()` | Start of gizmo manipulation: stores the starting positions/rotation. | 381 |
+| `C:clearSelection()` | Deselects the transform (currentTransform = nil), which hides the gizmo. | 253 |
+| `C:dragging()` | During manipulation: applies the gizmo translation or rotation and snaps back to the terrain if snapToTerrain. | 394 |
+| `C:draw(mouseInfo)` | Called every frame: processes input, displays the placement preview with rotation and the axis gizmo. | 460 |
+| `C:drawStartingPositionDetail(startingPosition)` | Draws the detail panel (Goto button that places the camera 15 m above, name, description, radius, etc.) with changes recorded in the undo history. | 108 |
+| `C:drawStartingPositionIndicators(mouseInfo)` | Draws in the 3D view the sphere of actual radius (translucent green), selection points sized according to camera distance, the orientation arrow (3 m) and the "Area:" and "Icon:" labels. | 520 |
+| `C:drawStartingPositionsList(allStartingPositions, selection)` | Draws the "Add Starting Position" button and the selectable list; right click offers Delete. Updates selection.index and selection.clicked. | 72 |
+| `C:dropToTerrain(pos)` | Places the position at the terrain height. | 429 |
+| `C:endDragging()` | End of manipulation: snaps back to the terrain and records the action (zone or icon) in editor.history. | 438 |
+| `C:getNewStartingPosition()` | Creates a default position: name "New Starting Position", position (0,0,0), identity rotation, radius 4.0, metadata version "1.0". | 232 |
+| `C:init()` | Initializes the state (no selection, snapToTerrain = true, previous gizmo positions at zero). | 55 |
+| `C:input(mouseInfo)` | Handles the mouse: Shift+click places the icon; Ctrl+click/drag places the zone with rotation. | 257 |
+| `C:setFields(startingPosition)` | Fills the ImGui buffers (name 256, file name 256, description 1024 characters) from the starting position. | 65 |
+| `C:setStartingPosition(startingPositionParam)` | Sets the starting position being edited. | 249 |
+| `C:updateTransform()` | Places the axis gizmo on the zone (with its rotation) or on the icon depending on currentTransform. | 365 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawSquarePrism`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/crawlEditor/startingPositions.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/crawlEditor/startingPositions.lua`.*

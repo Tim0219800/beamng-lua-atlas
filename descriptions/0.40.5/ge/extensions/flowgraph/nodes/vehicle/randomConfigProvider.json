@@ -1,62 +1,62 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/randomConfigProvider.lua",
-  "module": "Nœud fournisseur « Random Config Provider » (catégorie `once_instant`). Choisit au hasard un modèle et une configuration parmi les voitures (`Type == 'Car'`) dont une config a `Top Speed > 10`. Sorties : `model`, `config`, `name` (cachée), `color` (cachée, nom de peinture aléatoire du modèle ou nil).",
+  "module": "Provider node \"Random Config Provider\" (category `once_instant`). Randomly chooses a model and a configuration among the cars (`Type == 'Car'`) with a config having `Top Speed > 10`. Outputs: `model`, `config`, `name` (hidden), `color` (hidden, random paint name of the model or nil).",
   "notes": [
-    "Les options sont calculées une fois au premier démarrage (`self.options`) depuis `core_vehicles.getVehicleList()`.",
-    "La description du pin `color` est copiée de `name` (« model name »)."
+    "The options are computed once at first start (`self.options`) from `core_vehicles.getVehicleList()`.",
+    "The description of the `color` pin is copied from `name` (\"model name\")."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_executionStarted": {
-          "desc": "Construit la liste `options` des modèles/configs éligibles si elle n'existe pas.",
+          "desc": "Builds the `options` list of eligible models/configs if it does not exist.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Fonction vide.",
+          "desc": "Empty function.",
           "internal": true,
           "params": {
             "nodeData": {
               "type": "table",
-              "desc": "Données sauvegardées du nœud."
+              "desc": "Saved node data."
             }
           }
         },
         "_onSerialize": {
-          "desc": "Fonction vide.",
+          "desc": "Empty function.",
           "internal": true,
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde à remplir."
+              "desc": "Save table to fill."
             }
           }
         },
         "drawCustomProperties": {
-          "desc": "Ne dessine rien ; renvoie nil.",
+          "desc": "Draws nothing; returns nil.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affichage ImGui au centre du nœud dans l'éditeur de flowgraph ; purement visuel.",
+          "desc": "ImGui display in the center of the node in the flowgraph editor; purely visual.",
           "internal": true,
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+              "desc": "Editor node builder (builder:Middle())."
             },
             "style": {
               "type": "any",
-              "desc": "Style ImGui de l'éditeur."
+              "desc": "Editor ImGui style."
             }
           }
         },
         "init": {
-          "desc": "Constructeur ; initialise les champs modèle/config.",
+          "desc": "Constructor; initializes the model/config fields.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Tire un modèle, une config et une peinture au hasard et les écrit sur les sorties.",
+          "desc": "Draws a random model, config and paint and writes them to the outputs.",
           "internal": true
         }
       }

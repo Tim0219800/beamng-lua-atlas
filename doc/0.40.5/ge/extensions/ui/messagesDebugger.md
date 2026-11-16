@@ -1,51 +1,51 @@
 # `ui_messagesDebugger`
 
-*Fichier : `lua/ge/extensions/ui/messagesDebugger.lua` · VM : Game Engine (GE) · 112 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/messagesDebugger.lua` · VM: Game Engine (GE) · 112 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_messagesDebugger` : `extensions.load("ui_messagesDebugger")`, puis la globale `ui_messagesDebugger`
+**Access:** extension `ui_messagesDebugger`: `extensions.load("ui_messagesDebugger")`, then the global `ui_messagesDebugger`
 
-Fenêtre ImGui de débogage des messages à l'écran (événements UI « Message »). Elle permet de composer un message (texte, catégorie, icône, durée en secondes), de l'envoyer par guihooks.message, d'effacer une catégorie ou tous les messages, et d'activer un contournement du TTL côté interface. Utile pour tester l'affichage des messages et des liaisons [action=...].
+ImGui debug window for on-screen messages ("Message" UI events). It lets you compose a message (text, category, icon, duration in seconds), send it via guihooks.message, clear a category or all messages, and enable a TTL bypass on the UI side. Useful for testing the display of messages and [action=...] bindings.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('ui_messagesDebugger'); ui_messagesDebugger.show()
 ```
 
-## Remarques
+## Notes
 
-- Événements guihooks émis : Message (avec clear = true pour effacer une catégorie), ClearAllMessages, MessagesDebug ({bypassTtl}).
-- La case « Regex clear » n'a aucun effet : les deux branches de _clearCategory envoient le même événement (la catégorie est donc traitée telle quelle).
-- Le bouton « Test 3 Messages » envoie trois messages dans les catégories <catégorie>.1, .2 et .3 avec des durées de 3, 4 et 5 s.
+- guihooks events emitted: Message (with clear = true to clear a category), ClearAllMessages, MessagesDebug ({bypassTtl}).
+- The "Regex clear" checkbox has no effect: both branches of _clearCategory send the same event (the category is therefore used as is).
+- The "Test 3 Messages" button sends three messages in the categories <category>.1, .2 and .3 with durations of 3, 4 and 5 s.
 
-**Dépendances (chargées avant) :** `ui_imgui`
+**Dependencies (loaded first):** `ui_imgui`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_messagesDebugger.hide()` | Ferme la fenêtre. | 38 |
-| `ui_messagesDebugger.onUpdate(dtReal, dtSim, dtRaw)` | Hook appelé à chaque image ; dessine la fenêtre si elle est ouverte (rien sinon). *(interne)* *(hook)* | 42 |
-| `ui_messagesDebugger.show()` | Ouvre la fenêtre « Messages Debugger ». | 37 |
-| `ui_messagesDebugger.toggle()` | Inverse l'état d'ouverture de la fenêtre. | 39 |
+| `ui_messagesDebugger.hide()` | Closes the window. | 38 |
+| `ui_messagesDebugger.onUpdate(dtReal, dtSim, dtRaw)` | Hook called every frame; draws the window if it is open (nothing otherwise). *(internal)* *(hook)* | 42 |
+| `ui_messagesDebugger.show()` | Opens the "Messages Debugger" window. | 37 |
+| `ui_messagesDebugger.toggle()` | Toggles the window's open state. | 39 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_messagesDebugger.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé à chaque image ; dessine la fenêtre si elle est ouverte (rien sinon).
+Hook called every frame; draws the window if it is open (nothing otherwise).
 
-- `dtReal` (*number*) : Temps réel écoulé (s), non utilisé.
-- `dtSim` (*number*) : Temps de simulation écoulé (s), non utilisé.
-- `dtRaw` (*number*) : Temps brut écoulé (s), non utilisé.
+- `dtReal` (*number*) : Elapsed real time (s), unused.
+- `dtSim` (*number*) : Elapsed simulation time (s), unused.
+- `dtRaw` (*number*) : Raw elapsed time (s), unused.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : ui_imgui. |
+| `dependencies` | table<integer, string> | Extensions loaded before: ui_imgui. |
 
-**Évènements UI (guihooks.trigger) :** `ClearAllMessages`, `Message`, `MessagesDebug`
+**UI events (guihooks.trigger):** `ClearAllMessages`, `Message`, `MessagesDebug`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/messagesDebugger.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/messagesDebugger.lua`.*

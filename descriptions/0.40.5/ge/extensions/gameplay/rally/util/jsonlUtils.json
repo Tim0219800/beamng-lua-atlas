@@ -1,46 +1,102 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/util/jsonlUtils.lua",
-  "module": "Utilitaires de lecture de fichiers JSONL (un objet JSON par ligne), utilisés pour charger les enregistrements de reconnaissance du rallye (driveline, cuts, transcriptions). Les lignes vides et celles commençant par `//` sont ignorées par parseJsonlFile.",
+  "module": "Utilities for reading JSONL files (one JSON object per line), used to load the rally recce recordings (driveline, cuts, transcriptions). Empty lines and those starting with `//` are ignored by parseJsonlFile.",
   "usage": "local objs, err = gameplay_rally_util_jsonlUtils.parseJsonlFile(fname, function(o) return o end, rallyUtil)",
   "notes": [
-    "parseJsonlFile appelle rallyUtil.trimString : l'appelant doit passer le module gameplay/rally/util.",
-    "readJsonlLines ne saute ni les lignes vides ni les commentaires `//` ; jsonDecode sera appelé sur chaque ligne telle quelle."
+    "parseJsonlFile calls rallyUtil.trimString: the caller must pass the gameplay/rally/util module.",
+    "readJsonlLines skips neither empty lines nor `//` comments; jsonDecode will be called on each line as is."
   ],
   "functions": {
     "startsWithDoubleSlash": {
-      "desc": "Teste si la ligne commence par `//` (marqueur de commentaire).",
-      "params": {"line": {"type": "string", "desc": "Ligne à tester."}},
-      "returns": [{"type": "boolean", "desc": "true si la ligne commence par //."}]
-    },
-    "readFileToMemory": {
-      "desc": "Lit tout un fichier en mémoire avec io.open.",
-      "params": {"fname": {"type": "string", "desc": "Chemin du fichier."}},
-      "returns": [{"type": "string|nil", "desc": "Contenu, ou nil si l'ouverture échoue."}]
-    },
-    "splitIntoLines": {
-      "desc": "Découpe un texte en lignes sur \\r et \\n ; les lignes vides disparaissent.",
-      "params": {"content": {"type": "string", "desc": "Texte à découper."}},
-      "returns": [{"type": "string[]", "desc": "Liste des lignes non vides."}]
-    },
-    "parseJsonlFile": {
-      "desc": "Lit un fichier JSONL, décode chaque ligne non vide et non commentée, applique éventuellement processLine à l'objet et accumule les résultats non nil.",
+      "desc": "Tests whether the line starts with `//` (comment marker).",
       "params": {
-        "fname": {"type": "string", "desc": "Chemin du fichier."},
-        "processLine": {"type": "function|nil", "desc": "Reçoit l'objet décodé, renvoie l'objet à garder ou nil pour l'ignorer."},
-        "rallyUtil": {"type": "table", "desc": "Module rally util (fournit trimString)."}
+        "line": {
+          "type": "string",
+          "desc": "Line to test."
+        }
       },
       "returns": [
-        {"type": "table|nil", "desc": "Liste des objets, ou nil en cas d'erreur."},
-        {"type": "string|nil", "desc": "Message d'erreur : \"file not found\" ou \"failed to read file\"."}
+        {
+          "type": "boolean",
+          "desc": "true if the line starts with //."
+        }
+      ]
+    },
+    "readFileToMemory": {
+      "desc": "Reads a whole file into memory with io.open.",
+      "params": {
+        "fname": {
+          "type": "string",
+          "desc": "File path."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Content, or nil if opening fails."
+        }
+      ]
+    },
+    "splitIntoLines": {
+      "desc": "Splits a text into lines on \\r and \\n; empty lines disappear.",
+      "params": {
+        "content": {
+          "type": "string",
+          "desc": "Text to split."
+        }
+      },
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "List of non-empty lines."
+        }
+      ]
+    },
+    "parseJsonlFile": {
+      "desc": "Reads a JSONL file, decodes each non-empty, non-comment line, optionally applies processLine to the object and accumulates the non-nil results.",
+      "params": {
+        "fname": {
+          "type": "string",
+          "desc": "File path."
+        },
+        "processLine": {
+          "type": "function|nil",
+          "desc": "Receives the decoded object, returns the object to keep or nil to ignore it."
+        },
+        "rallyUtil": {
+          "type": "table",
+          "desc": "Rally util module (provides trimString)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "List of objects, or nil on error."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error message: \"file not found\" or \"failed to read file\"."
+        }
       ]
     },
     "readJsonlLines": {
-      "desc": "Lecteur simple basé sur io.lines (compatibilité). Appelle callback(obj) pour chaque ligne décodée.",
+      "desc": "Simple reader based on io.lines (compatibility). Calls callback(obj) for each decoded line.",
       "params": {
-        "fname": {"type": "string", "desc": "Chemin du fichier."},
-        "callback": {"type": "function|nil", "desc": "Appelée avec l'objet décodé de chaque ligne."}
+        "fname": {
+          "type": "string",
+          "desc": "File path."
+        },
+        "callback": {
+          "type": "function|nil",
+          "desc": "Called with the decoded object of each line."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si le fichier n'existe pas, sinon true."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the file does not exist, otherwise true."
+        }
+      ]
     }
   }
 }

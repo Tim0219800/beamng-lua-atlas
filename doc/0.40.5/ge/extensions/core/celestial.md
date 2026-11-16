@@ -1,227 +1,227 @@
 # `core_celestial`
 
-*Fichier : `lua/ge/extensions/core/celestial.lua` · VM : Game Engine (GE) · 1183 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/celestial.lua` · VM: Game Engine (GE) · 1183 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_celestial` : `extensions.load("core_celestial")`, puis la globale `core_celestial`
+**Access:** extension `core_celestial`: `extensions.load("core_celestial")`, then the global `core_celestial`
 
-Ciel astronomique réel piloté par le TimeOfDay du niveau. L'horloge (time, play, dayLength) et le lieu/date de l'observateur (latitude, longitude, year, month, day) viennent du TimeOfDay ; l'extension positionne le soleil, la lune (taille et phase) et l'orientation du champ d'étoiles sur ce même instant (objet ScatterSky). Elle gère aussi les étoiles filantes, les éclipses solaires, un profil céleste par niveau (atmosphère, corps) et une carte de détail au survol des étoiles/constellations. Un moddeur s'en sert pour changer le lieu, la date, la taille de la lune, afficher des grilles ou remplacer le calcul du ciel (setDriver).
+Real astronomical sky driven by the level's TimeOfDay. The clock (time, play, dayLength) and the observer's place/date (latitude, longitude, year, month, day) come from the TimeOfDay; the extension positions the sun, the moon (size and phase) and the orientation of the star field at that same instant (ScatterSky object). It also handles shooting stars, solar eclipses, a per-level sky profile (atmosphere, bodies) and a detail card on hovering stars/constellations. A modder uses it to change the place, the date, the moon size, display grids or replace the sky computation (setDriver).
 
-## Exemple
+## Example
 
 ```lua
-core_celestial.setLocation(47.0, 8.0)   -- latitude, longitude en degrés
-core_celestial.setDate(2026, 8, 12)    -- pic des Perséides
+core_celestial.setLocation(47.0, 8.0)   -- latitude, longitude in degrees
+core_celestial.setDate(2026, 8, 12)    -- Perseids peak
 core_celestial.setMoonScale(0.08)
 core_celestial.setDisplayOption('constellationLines', true)
-local ecl = core_celestial.findNextSolarEclipse() -- {year, month, day, time} ou nil
+local ecl = core_celestial.findNextSolarEclipse() -- {year, month, day, time} or nil
 ```
 
-## Remarques
+## Notes
 
-- Reste chargée entre les niveaux (setExtensionUnloadMode manual). À chaque niveau, les caches sont vidés et le profil céleste est relu (onClientPostStartMission) depuis tod.celestialProfile (nom nu -> /art/skies/profiles/<nom>.json, ou chemin commençant par /) sinon depuis celestial.json du dossier du niveau ; à la fin du niveau le profil est oublié.
-- Le positionnement se fait dans onPreRender (et non onUpdate) car le TimeOfDay C++ avance son temps entre les deux : pas de décalage d'une image.
-- Valeurs par défaut si le TimeOfDay n'a pas de lieu/date : latitude 47, longitude 8, 2026-06-20. Taille de lune par défaut 0.05 ; décalage du nord 0 ; azimuthSign 1 (mettre -1 si le ciel est en miroir est-ouest).
-- Les modèles astronomiques (Soleil et Lune de Schlyter, réfraction, parallaxe lunaire, fuseau civil + heure d'été) tiennent dans ce fichier ; setTimezone(nil) déduit le fuseau de la longitude.
-- Presets d'étoiles filantes : default (calendrier réel), low = 10, moderate = 30, high = 120 météores/min.
-- Clés de setDisplayOption -> champs ScatterSky : constellationLines -> constellationsEnabled, constellationLabels -> constellationNamesEnabled, horizonGrid -> gridEnabled, equatorialGrid -> equatorialGridEnabled, meridianGrid -> meridianEnabled, moonGrid -> moonPathEnabled.
-- Le survol envoie le guihook « CelestialHover » quand la cible change ; la sélection est limitée à environ 16 Hz et seulement si le ciel est visible.
-- Le champ extrait `hover` est décrit ici ; les autres fonctions locales du fichier (calculs, cartes d'étoiles, ~1000 lignes) ne sont pas exportées.
+- Stays loaded between levels (setExtensionUnloadMode manual). At each level, the caches are emptied and the sky profile is re-read (onClientPostStartMission) from tod.celestialProfile (bare name -> /art/skies/profiles/<name>.json, or path starting with /) otherwise from celestial.json in the level folder; at the end of the level the profile is forgotten.
+- Positioning is done in onPreRender (not onUpdate) because the C++ TimeOfDay advances its time between the two: no one-frame lag.
+- Default values if the TimeOfDay has no place/date: latitude 47, longitude 8, 2026-06-20. Default moon size 0.05; north offset 0; azimuthSign 1 (set to -1 if the sky is mirrored east-west).
+- The astronomical models (Schlyter's Sun and Moon, refraction, lunar parallax, civil time zone + daylight saving time) are contained in this file; setTimezone(nil) deduces the time zone from the longitude.
+- Shooting star presets: default (real calendar), low = 10, moderate = 30, high = 120 meteors/min.
+- setDisplayOption keys -> ScatterSky fields: constellationLines -> constellationsEnabled, constellationLabels -> constellationNamesEnabled, horizonGrid -> gridEnabled, equatorialGrid -> equatorialGridEnabled, meridianGrid -> meridianEnabled, moonGrid -> moonPathEnabled.
+- Hovering sends the guihook "CelestialHover" when the target changes; selection is limited to about 16 Hz and only if the sky is visible.
+- The extracted field `hover` is described here; the file's other local functions (computations, star maps, ~1000 lines) are not exported.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_celestial.findNextSolarEclipse()` | Cherche la prochaine éclipse solaire visible depuis le lieu de l'observateur du niveau, à partir de l'instant courant du TimeOfDay. | 708 |
-| `core_celestial.getActiveProfile()` | Profil céleste actif. | 813 |
-| `core_celestial.getDisplayState()` | État des couches d'affichage. | 782 |
-| `core_celestial.getDriver()` | Renvoie le pilote de ciel personnalisé courant. | 717 |
-| `core_celestial.getHover()` | Dernier résultat de survol (constellation + étoile). | 724 |
-| `core_celestial.getNorthOffset()` | Décalage du nord courant. | 726 |
-| `core_celestial.getState()` | Instantané de configuration pour outils de debug/scripts. | 817 |
-| `core_celestial.isEnabled()` | Indique si le ciel astronomique réel est activé. | 712 |
-| `core_celestial.loadProfile(profile)` | Charge ou remplace le profil céleste (atmosphère, corps). Le bloc atmosphère est repoussé vers ScatterSky à l'image suivante. | 806 |
-| `core_celestial.onClientEndMission()` | Hook : fin du niveau ; vide les caches et oublie le profil. *(interne)* *(hook)* | 1103 |
-| `core_celestial.onClientPostStartMission()` | Hook : un niveau vient d'être chargé ; vide les caches et recharge le profil céleste. *(interne)* *(hook)* | 1102 |
-| `core_celestial.onExtensionLoaded()` | Hook : met l'extension en déchargement manuel. *(interne)* *(hook)* | 1088 |
-| `core_celestial.onLanguageChanged()` | Hook : changement de langue ; reconstruit l'atlas de noms et les cartes de survol (gratuit si rien ne change). *(interne)* *(hook)* | 1107 |
-| `core_celestial.onPreRender(dtReal, dtSim)` | Hook par image : applique l'atmosphère du profil, puis calcule la position du soleil, de la lune et des étoiles depuis le TimeOfDay et met à jour le survol ; ou restaure le ciel d'origine si désactivé. *(interne)* *(hook)* | 1071 |
-| `core_celestial.onReloadLocales()` | Hook : rechargement à chaud des fichiers de langue ; même effet que onLanguageChanged. *(interne)* *(hook)* | 1107 |
-| `core_celestial.refreshHoverCards()` | Détruit les cartes de survol pour qu'elles soient reconstruites depuis M.hover au prochain survol (à appeler après avoir remplacé un *Template). | 970 |
-| `core_celestial.selftest()` | Auto-test de la partie mathématique (JD, soleil, lune, réfraction, parallaxe, fuseau, météores, éclipses). Lève une erreur d'assertion en cas d'écart. | 1112 |
-| `core_celestial.setAzimuthSign(s)` | Inverse le sens est-ouest du ciel si le soleil/les étoiles apparaissent en miroir. | 727 |
-| `core_celestial.setDate(y, mo, d)` | Écrit année/mois/jour dans le TimeOfDay du niveau ; les arguments nil sont ignorés. | 792 |
-| `core_celestial.setDisplayOption(key, value)` | Active/désactive une couche d'affichage du ciel (voir notes pour les clés valides). Sans effet si pas de ScatterSky ou clé inconnue. | 776 |
-| `core_celestial.setDriver(fn)` | Remplace le calcul du ciel à chaque image. fn(ctx) reçoit les valeurs du ciel réel préremplies (ctx.sunAz/sunEl, ctx.bodies, ctx.star*, ctx.meteor*, ctx.time/jd/lst/lat/lon) et un utilitaire ctx.altAz(raDeg, decDeg) ; il les modifie pour déplacer le ciel. nil rétablit le calcul intégré. | 716 |
-| `core_celestial.setEnabled(on)` | Active ou désactive le ciel astronomique réel (activé par défaut) ; la transition est appliquée à la prochaine image. | 704 |
-| `core_celestial.setHoverEnabled(on)` | Active la carte de détail au survol des étoiles (l'overlay UI l'active pendant son affichage). Désactiver efface le dernier résultat. | 720 |
-| `core_celestial.setLocation(latDeg, lonDeg)` | Écrit latitude/longitude dans le TimeOfDay du niveau (source de vérité). Ne fait rien sans TimeOfDay. | 786 |
-| `core_celestial.setMeteorRatePreset(preset)` | Choisit un préréglage de taux d'étoiles filantes. | 739 |
-| `core_celestial.setMeteorTest(on)` | Debug : force une forte pluie d'étoiles filantes même hors saison. | 736 |
-| `core_celestial.setMeteorTestRate(r)` | Debug : fixe le taux d'étoiles filantes et active le mode test. | 737 |
-| `core_celestial.setMoonScale(s)` | Change la taille de la lune (appliquée tout de suite si le ciel réel est actif). | 729 |
-| `core_celestial.setNorthOffset(deg)` | Décale le nord vrai par rapport à l'axe +Y du monde. | 725 |
-| `core_celestial.setTimezone(stdOffsetHours, rule)` | Fuseau civil de l'observateur. Un niveau peut aussi fixer tod.utcOffset / tod.dstRule directement. | 799 |
+| `core_celestial.findNextSolarEclipse()` | Looks for the next solar eclipse visible from the level observer's location, starting from the current TimeOfDay instant. | 708 |
+| `core_celestial.getActiveProfile()` | Active sky profile. | 813 |
+| `core_celestial.getDisplayState()` | State of the display layers. | 782 |
+| `core_celestial.getDriver()` | Returns the current custom sky driver. | 717 |
+| `core_celestial.getHover()` | Last hover result (constellation + star). | 724 |
+| `core_celestial.getNorthOffset()` | Current north offset. | 726 |
+| `core_celestial.getState()` | Configuration snapshot for debug tools/scripts. | 817 |
+| `core_celestial.isEnabled()` | Tells whether the real astronomical sky is enabled. | 712 |
+| `core_celestial.loadProfile(profile)` | Loads or replaces the sky profile (atmosphere, bodies). The atmosphere block is pushed to ScatterSky on the next frame. | 806 |
+| `core_celestial.onClientEndMission()` | Hook: end of the level; empties the caches and forgets the profile. *(internal)* *(hook)* | 1103 |
+| `core_celestial.onClientPostStartMission()` | Hook: a level has just been loaded; empties the caches and reloads the sky profile. *(internal)* *(hook)* | 1102 |
+| `core_celestial.onExtensionLoaded()` | Hook: sets the extension to manual unloading. *(internal)* *(hook)* | 1088 |
+| `core_celestial.onLanguageChanged()` | Hook: language change; rebuilds the name atlas and the hover cards (free if nothing changes). *(internal)* *(hook)* | 1107 |
+| `core_celestial.onPreRender(dtReal, dtSim)` | Per-frame hook: applies the profile's atmosphere, then computes the position of the sun, moon and stars from the TimeOfDay and updates hovering; or restores the original sky if disabled. *(internal)* *(hook)* | 1071 |
+| `core_celestial.onReloadLocales()` | Hook: hot reload of the language files; same effect as onLanguageChanged. *(internal)* *(hook)* | 1107 |
+| `core_celestial.refreshHoverCards()` | Destroys the hover cards so they are rebuilt from M.hover on the next hover (to call after replacing a *Template). | 970 |
+| `core_celestial.selftest()` | Self-test of the math part (JD, sun, moon, refraction, parallax, time zone, meteors, eclipses). Raises an assertion error on a mismatch. | 1112 |
+| `core_celestial.setAzimuthSign(s)` | Reverses the east-west direction of the sky if the sun/stars appear mirrored. | 727 |
+| `core_celestial.setDate(y, mo, d)` | Writes year/month/day to the level's TimeOfDay; nil arguments are ignored. | 792 |
+| `core_celestial.setDisplayOption(key, value)` | Enables/disables a sky display layer (see notes for valid keys). No effect if no ScatterSky or unknown key. | 776 |
+| `core_celestial.setDriver(fn)` | Replaces the sky computation every frame. fn(ctx) receives the prefilled real sky values (ctx.sunAz/sunEl, ctx.bodies, ctx.star*, ctx.meteor*, ctx.time/jd/lst/lat/lon) and a utility ctx.altAz(raDeg, decDeg); it modifies them to move the sky. nil restores the built-in computation. | 716 |
+| `core_celestial.setEnabled(on)` | Enables or disables the real astronomical sky (enabled by default); the transition is applied on the next frame. | 704 |
+| `core_celestial.setHoverEnabled(on)` | Enables the detail card on hovering stars (the UI overlay enables it while shown). Disabling clears the last result. | 720 |
+| `core_celestial.setLocation(latDeg, lonDeg)` | Writes latitude/longitude to the level's TimeOfDay (source of truth). Does nothing without a TimeOfDay. | 786 |
+| `core_celestial.setMeteorRatePreset(preset)` | Chooses a shooting star rate preset. | 739 |
+| `core_celestial.setMeteorTest(on)` | Debug: forces a heavy meteor shower even out of season. | 736 |
+| `core_celestial.setMeteorTestRate(r)` | Debug: sets the shooting star rate and enables test mode. | 737 |
+| `core_celestial.setMoonScale(s)` | Changes the moon size (applied immediately if the real sky is active). | 729 |
+| `core_celestial.setNorthOffset(deg)` | Offsets true north relative to the world's +Y axis. | 725 |
+| `core_celestial.setTimezone(stdOffsetHours, rule)` | Civil time zone of the observer. A level can also set tod.utcOffset / tod.dstRule directly. | 799 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_celestial.findNextSolarEclipse()`
 
-Cherche la prochaine éclipse solaire visible depuis le lieu de l'observateur du niveau, à partir de l'instant courant du TimeOfDay.
+Looks for the next solar eclipse visible from the level observer's location, starting from the current TimeOfDay instant.
 
-- **renvoie** : table|nil {year, month, day, time} au maximum de l'éclipse, nil si aucune dans la plage de recherche ou pas de TimeOfDay
+- **returns**: table|nil {year, month, day, time} at the eclipse maximum, nil if none in the search range or no TimeOfDay
 
 #### `core_celestial.getActiveProfile()`
 
-Profil céleste actif.
+Active sky profile.
 
-- **renvoie** : table|nil profil
+- **returns**: table|nil profile
 
 #### `core_celestial.getDisplayState()`
 
-État des couches d'affichage.
+State of the display layers.
 
-- **renvoie** : table {hasSky=boolean, constellationLines=..., ...} ; seul hasSky s'il n'y a pas de ciel
+- **returns**: table {hasSky=boolean, constellationLines=..., ...}; only hasSky if there is no sky
 
 #### `core_celestial.getDriver()`
 
-Renvoie le pilote de ciel personnalisé courant.
+Returns the current custom sky driver.
 
-- **renvoie** : function|nil pilote ou nil si le calcul intégré est utilisé
+- **returns**: function|nil driver or nil if the built-in computation is used
 
 #### `core_celestial.getHover()`
 
-Dernier résultat de survol (constellation + étoile).
+Last hover result (constellation + star).
 
-- **renvoie** : table|nil fiche du dernier survol ou nil
+- **returns**: table|nil card of the last hover or nil
 
 #### `core_celestial.getNorthOffset()`
 
-Décalage du nord courant.
+Current north offset.
 
-- **renvoie** : number degrés
+- **returns**: number degrees
 
 #### `core_celestial.getState()`
 
-Instantané de configuration pour outils de debug/scripts.
+Configuration snapshot for debug tools/scripts.
 
-- **renvoie** : table enabled, hoverEnabled, northOffsetDeg, azimuthSign, moonScale, latitude, longitude, year, month, day, time, meteor{name,test,ratePreset,rate,showerFraction}, display
+- **returns**: table enabled, hoverEnabled, northOffsetDeg, azimuthSign, moonScale, latitude, longitude, year, month, day, time, meteor{name,test,ratePreset,rate,showerFraction}, display
 
 #### `core_celestial.isEnabled()`
 
-Indique si le ciel astronomique réel est activé.
+Tells whether the real astronomical sky is enabled.
 
-- **renvoie** : boolean état
+- **returns**: boolean state
 
 #### `core_celestial.loadProfile(profile)`
 
-Charge ou remplace le profil céleste (atmosphère, corps). Le bloc atmosphère est repoussé vers ScatterSky à l'image suivante.
+Loads or replaces the sky profile (atmosphere, bodies). The atmosphere block is pushed to ScatterSky on the next frame.
 
-- `profile` (*string|table*) : chemin d'un JSON ou table déjà décodée
-- **renvoie** : boolean false si le profil n'est ni une table ni un JSON lisible
+- `profile` (*string|table*) : path of a JSON or already decoded table
+- **returns**: boolean false if the profile is neither a table nor a readable JSON
 
 #### `core_celestial.onPreRender(dtReal, dtSim)`
 
-Hook par image : applique l'atmosphère du profil, puis calcule la position du soleil, de la lune et des étoiles depuis le TimeOfDay et met à jour le survol ; ou restaure le ciel d'origine si désactivé.
+Per-frame hook: applies the profile's atmosphere, then computes the position of the sun, moon and stars from the TimeOfDay and updates hovering; or restores the original sky if disabled.
 
-- `dtReal` (*number*) : secondes réelles
-- `dtSim` (*number*) : secondes de simulation (non utilisé)
+- `dtReal` (*number*) : real seconds
+- `dtSim` (*number*) : simulation seconds (unused)
 
 #### `core_celestial.selftest()`
 
-Auto-test de la partie mathématique (JD, soleil, lune, réfraction, parallaxe, fuseau, météores, éclipses). Lève une erreur d'assertion en cas d'écart.
+Self-test of the math part (JD, sun, moon, refraction, parallax, time zone, meteors, eclipses). Raises an assertion error on a mismatch.
 
-- **renvoie** : boolean true si tout passe
+- **returns**: boolean true if everything passes
 
 #### `core_celestial.setAzimuthSign(s)`
 
-Inverse le sens est-ouest du ciel si le soleil/les étoiles apparaissent en miroir.
+Reverses the east-west direction of the sky if the sun/stars appear mirrored.
 
-- `s` (*number*) : négatif = -1, sinon 1
+- `s` (*number*) : negative = -1, otherwise 1
 
 #### `core_celestial.setDate(y, mo, d)`
 
-Écrit année/mois/jour dans le TimeOfDay du niveau ; les arguments nil sont ignorés.
+Writes year/month/day to the level's TimeOfDay; nil arguments are ignored.
 
-- `y` (*integer|nil*) : année
-- `mo` (*integer|nil*) : mois 1-12
-- `d` (*integer|nil*) : jour
+- `y` (*integer|nil*) : year
+- `mo` (*integer|nil*) : month 1-12
+- `d` (*integer|nil*) : day
 
 #### `core_celestial.setDisplayOption(key, value)`
 
-Active/désactive une couche d'affichage du ciel (voir notes pour les clés valides). Sans effet si pas de ScatterSky ou clé inconnue.
+Enables/disables a sky display layer (see notes for valid keys). No effect if no ScatterSky or unknown key.
 
 - `key` (*string*) : constellationLines, constellationLabels, horizonGrid, equatorialGrid, meridianGrid, moonGrid
-- `value` (*boolean*) : afficher ou non
+- `value` (*boolean*) : show or not
 
 #### `core_celestial.setDriver(fn)`
 
-Remplace le calcul du ciel à chaque image. fn(ctx) reçoit les valeurs du ciel réel préremplies (ctx.sunAz/sunEl, ctx.bodies, ctx.star*, ctx.meteor*, ctx.time/jd/lst/lat/lon) et un utilitaire ctx.altAz(raDeg, decDeg) ; il les modifie pour déplacer le ciel. nil rétablit le calcul intégré.
+Replaces the sky computation every frame. fn(ctx) receives the prefilled real sky values (ctx.sunAz/sunEl, ctx.bodies, ctx.star*, ctx.meteor*, ctx.time/jd/lst/lat/lon) and a utility ctx.altAz(raDeg, decDeg); it modifies them to move the sky. nil restores the built-in computation.
 
-- `fn` (*function|nil*) : fonction fn(ctx) ; toute valeur non fonction est traitée comme nil
+- `fn` (*function|nil*) : function fn(ctx); any non-function value is treated as nil
 
 #### `core_celestial.setEnabled(on)`
 
-Active ou désactive le ciel astronomique réel (activé par défaut) ; la transition est appliquée à la prochaine image.
+Enables or disables the real astronomical sky (enabled by default); the transition is applied on the next frame.
 
-- `on` (*boolean*) : true = ciel réel ; false = restaure l'ambiance nocturne d'origine du niveau
+- `on` (*boolean*) : true = real sky; false = restores the level's original night ambiance
 
 #### `core_celestial.setHoverEnabled(on)`
 
-Active la carte de détail au survol des étoiles (l'overlay UI l'active pendant son affichage). Désactiver efface le dernier résultat.
+Enables the detail card on hovering stars (the UI overlay enables it while shown). Disabling clears the last result.
 
-- `on` (*boolean*) : activer le survol
+- `on` (*boolean*) : enable hovering
 
 #### `core_celestial.setLocation(latDeg, lonDeg)`
 
-Écrit latitude/longitude dans le TimeOfDay du niveau (source de vérité). Ne fait rien sans TimeOfDay.
+Writes latitude/longitude to the level's TimeOfDay (source of truth). Does nothing without a TimeOfDay.
 
-- `latDeg` (*number*) : latitude en degrés (nord positif)
-- `lonDeg` (*number*) : longitude en degrés (est positif)
+- `latDeg` (*number*) : latitude in degrees (north positive)
+- `lonDeg` (*number*) : longitude in degrees (east positive)
 
 #### `core_celestial.setMeteorRatePreset(preset)`
 
-Choisit un préréglage de taux d'étoiles filantes.
+Chooses a shooting star rate preset.
 
-- `preset` (*string|nil*) : default (calendrier réel), low (10), moderate (30), high (120) ; nil = default ; valeur inconnue = sans effet
+- `preset` (*string|nil*) : default (real calendar), low (10), moderate (30), high (120); nil = default; unknown value = no effect
 
 #### `core_celestial.setMeteorTest(on)`
 
-Debug : force une forte pluie d'étoiles filantes même hors saison.
+Debug: forces a heavy meteor shower even out of season.
 
-- `on` (*boolean*) : activer
+- `on` (*boolean*) : enable
 
 #### `core_celestial.setMeteorTestRate(r)`
 
-Debug : fixe le taux d'étoiles filantes et active le mode test.
+Debug: sets the shooting star rate and enables test mode.
 
-- `r` (*number*) : météores par minute (30 par défaut)
+- `r` (*number*) : meteors per minute (30 by default)
 
 #### `core_celestial.setMoonScale(s)`
 
-Change la taille de la lune (appliquée tout de suite si le ciel réel est actif).
+Changes the moon size (applied immediately if the real sky is active).
 
-- `s` (*number*) : échelle ; 0.05 par défaut, le défaut des niveaux (~0.2) est énorme
+- `s` (*number*) : scale; 0.05 by default, the levels' default (~0.2) is huge
 
 #### `core_celestial.setNorthOffset(deg)`
 
-Décale le nord vrai par rapport à l'axe +Y du monde.
+Offsets true north relative to the world's +Y axis.
 
-- `deg` (*number*) : degrés (0 si non numérique)
+- `deg` (*number*) : degrees (0 if non-numeric)
 
 #### `core_celestial.setTimezone(stdOffsetHours, rule)`
 
-Fuseau civil de l'observateur. Un niveau peut aussi fixer tod.utcOffset / tod.dstRule directement.
+Civil time zone of the observer. A level can also set tod.utcOffset / tod.dstRule directly.
 
-- `stdOffsetHours` (*number|nil*) : décalage UTC standard en heures ; nil = déduit de la longitude
-- `rule` (*string|nil*) : règle d'heure d'été : auto, eu, us, au, none ; nil = inchangée
+- `stdOffsetHours` (*number|nil*) : standard UTC offset in hours; nil = deduced from the longitude
+- `rule` (*string|nil*) : daylight saving rule: auto, eu, us, au, none; nil = unchanged
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `hover` | table | Réglages publics de la carte de détail au survol, modifiables sans forker le fichier : dist (16 m devant la caméra), starHeight 4.6, constHeight 2.5, rightFrac 0.82, downFrac 0.10, tilt -0.22, res 2 (supersampling de texture), starPickDeg 1.5 (distance angulaire pour choisir une étoile), constPickDeg 6 (pour choisir une constellation), shimmerDist 40, shimmerRadiusFrac 0.025, shimmerColor {r,g,b}, leaderColor {r,g,b,a}, et les fonctions de remplacement starTemplate(), constTemplate(), starVars(meta), constVars(id). Après avoir remplacé un *Template, appeler refreshHoverCards(). |
+| `hover` | table | Public settings of the hover detail card, modifiable without forking the file: dist (16 m in front of the camera), starHeight 4.6, constHeight 2.5, rightFrac 0.82, downFrac 0.10, tilt -0.22, res 2 (texture supersampling), starPickDeg 1.5 (angular distance to pick a star), constPickDeg 6 (to pick a constellation), shimmerDist 40, shimmerRadiusFrac 0.025, shimmerColor {r,g,b}, leaderColor {r,g,b,a}, and the replacement functions starTemplate(), constTemplate(), starVars(meta), constVars(id). After replacing a *Template, call refreshHoverCards(). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 - `debugDrawer:` `drawLine`
@@ -229,4 +229,4 @@ Fuseau civil de l'observateur. Un niveau peut aussi fixer tod.utcOffset / tod.ds
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/celestial.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/celestial.lua`.*

@@ -1,30 +1,30 @@
 {
   "path": "lua/ge/extensions/telemetry/performanceSpatialSnapshot.lua",
-  "module": "Module utilitaire (chargé par require) qui construit l'instantané de performance envoyé par le tracker performanceSpatial : FPS (instantané, moyenne, min, p99), temps de frame, CPU/GPU, cause du plafond de FPS, position et réglages de la caméra, état du monde (échelle de temps, nombre de véhicules, écran partagé, trafic) et, sur option, répartition du temps par phase de frame et statistiques de rendu. Les valeurs sont arrondies.",
+  "module": "Utility module (loaded by require) that builds the performance snapshot sent by the performanceSpatial tracker: FPS (instantaneous, average, min, p99), frame time, CPU/GPU, FPS cap cause, camera position and settings, world state (time scale, vehicle count, split screen, traffic) and, optionally, the time breakdown by frame phase and render statistics. Values are rounded.",
   "notes": [
-    "framePhases n'est ajouté que si options.renderTimingTrackingEnabled ; renderStats que si options.sceneComplexityTrackingEnabled.",
-    "Les phases viennent de Engine.Debug.getLastPerformanceMetrics ; gpuWaitMs retombe sur la phase FramePresent s'il est absent.",
-    "Position de la caméra arrondie à 0,1 m, angles à 0,1 degré."
+    "framePhases is only added if options.renderTimingTrackingEnabled; renderStats only if options.sceneComplexityTrackingEnabled.",
+    "The phases come from Engine.Debug.getLastPerformanceMetrics; gpuWaitMs falls back to the FramePresent phase if absent.",
+    "Camera position rounded to 0.1 m, angles to 0.1 degree."
   ],
   "functions": {
     "capture": {
-      "desc": "Renvoie une table d'événement : level, fpsInstant, fpsAvg, fpsMin, fpsP99, frameMs, cpuMs, gpuMs, gpuWaitMs, limitedBy, activeGpu, position, camera, textureStreaming, worldReadyState, simTimeScale, vehicleCount, splitScreenPlayers, trafficCount, et facultativement framePhases et renderStats.",
+      "desc": "Returns an event table: level, fpsInstant, fpsAvg, fpsMin, fpsP99, frameMs, cpuMs, gpuMs, gpuWaitMs, limitedBy, activeGpu, position, camera, textureStreaming, worldReadyState, simTimeScale, vehicleCount, splitScreenPlayers, trafficCount, and optionally framePhases and renderStats.",
       "params": {
         "level": {
           "type": "string",
-          "desc": "Nom du niveau courant."
+          "desc": "Current level name."
         },
         "fpsInstant": {
           "type": "number",
-          "desc": "FPS instantanés."
+          "desc": "Instantaneous FPS."
         },
         "frameMs": {
           "type": "number",
-          "desc": "Durée de frame en ms."
+          "desc": "Frame duration in ms."
         },
         "activeGpu": {
           "type": "any",
-          "desc": "Description du GPU actif, recopiée telle quelle."
+          "desc": "Description of the active GPU, copied as is."
         },
         "options": {
           "type": "table|nil",
@@ -34,7 +34,7 @@
       "returns": [
         {
           "type": "table",
-          "desc": "Événement de performance."
+          "desc": "Performance event."
         }
       ],
       "internal": false

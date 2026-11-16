@@ -1,0 +1,103 @@
+{
+  "path": "lua/ge/extensions/telemetry/performanceSpatialDetector.lua",
+  "module": "Détecteur de chutes de performance (« dips ») pour le tracker performanceSpatial. Il suit une moyenne mobile exponentielle du temps de frame (baseline, alpha 0,05) et ouvre un épisode quand les FPS passent sous un seuil absolu ou quand le temps de frame dépasse baseline * ratio. L'épisode se termine au retour à la normale et ne produit un événement que s'il a duré assez longtemps. Un délai de repos et un plafond d'événements par session limitent le bruit.",
+  "notes": [
+    "Les temps sont en millisecondes. Un épisode est découpé automatiquement après maxEpisodeMs (1 800 000 ms par défaut).",
+    "Le champ 'trigger' de l'événement vaut 'absolute', 'relative' ou 'both'."
+  ],
+  "functions": {
+    "new": {
+      "desc": "Crée un détecteur.",
+      "params": {
+        "config": {
+          "type": "table",
+          "desc": "dipFpsThreshold, dipFrameTimeRatio, dipMinDurationMs, dipCooldownSeconds, maxDipEventsPerSession, maxEpisodeMs (facultatif)."
+        }
+      },
+      "returns": [
+        {
+          "type": "Detector",
+          "desc": "Instance du détecteur."
+        }
+      ],
+      "internal": false
+    }
+  },
+  "classes": {
+    "Detector": {
+      "desc": "Détecteur renvoyé par new(config).",
+      "functions": {
+        "reset": {
+          "desc": "Oublie la baseline et l'épisode en cours.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "canReport": {
+          "desc": "Vrai si le délai de repos est écoulé et si le plafond d'événements de la session n'est pas atteint.",
+          "params": {
+            "nowMs": {
+              "type": "number",
+              "desc": "Temps courant en ms."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true si un nouvel épisode peut être ouvert."
+            }
+          ],
+          "internal": false
+        },
+        "finish": {
+          "desc": "Force la fin de l'épisode ouvert et renvoie son événement s'il a duré au moins dipMinDurationMs.",
+          "params": {
+            "nowMs": {
+              "type": "number",
+              "desc": "Temps courant en ms."
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Événement {durationMs, worstAgoMs, baselineFrameMs, trigger, seuils…} ou nil."
+            }
+          ],
+          "internal": false
+        },
+        "update": {
+          "desc": "Traite un échantillon. Renvoie un booléen « capturer cette frame » (début d'épisode ou nouveau pire temps de frame) puis éventuellement l'événement d'un épisode terminé. Hors épisode, met à jour la baseline.",
+          "params": {
+            "nowMs": {
+              "type": "number",
+              "desc": "Temps courant en ms."
+            },
+            "fps": {
+              "type": "number",
+              "desc": "FPS instantanés."
+            },
+            "frameMs": {
+              "type": "number",
+              "desc": "Durée de la frame en ms."
+            },
+            "absoluteAllowed": {
+              "type": "boolean|nil",
+              "desc": "false si le plafond de FPS est volontaire (le déclencheur absolu est alors ignoré)."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true s'il faut capturer un instantané."
+            },
+            {
+              "type": "table|nil",
+              "desc": "Événement de fin d'épisode."
+            }
+          ],
+          "internal": false
+        }
+      }
+    }
+  }
+}

@@ -1,26 +1,26 @@
 # `editor_imguiCDemo`
 
-*Fichier : `lua/ge/extensions/editor/imguiCDemo.lua` · VM : Game Engine (GE) · 26 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/imguiCDemo.lua` · VM: Game Engine (GE) · 26 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_imguiCDemo` : `extensions.load("editor_imguiCDemo")`, puis la globale `editor_imguiCDemo`
+**Access:** extension `editor_imguiCDemo`: `extensions.load("editor_imguiCDemo")`, then the global `editor_imguiCDemo`
 
-Extension de l'éditeur qui ajoute l'entrée de menu « ImGui Demo » (groupe Debug du menu Window). Elle ouvre la fenêtre de démonstration intégrée de Dear ImGui (ui_imgui.ShowDemoWindow), utile à un moddeur pour voir tous les widgets ImGui disponibles. Elle n'écrit aucune donnée.
+Editor extension that adds the "ImGui Demo" menu entry (Debug group of the Window menu). It opens the built-in Dear ImGui demo window (ui_imgui.ShowDemoWindow), useful to a modder to see all the available ImGui widgets. It writes no data.
 
-## Remarques
+## Notes
 
-- L'état d'ouverture est un BoolPtr local (windowOpen) ; la fenêtre de démo met la valeur à false quand l'utilisateur la ferme.
-- onWindowMenuItem est local (non exporté) : il ne peut pas être appelé depuis un autre module.
+- The open state is a local BoolPtr (windowOpen); the demo window sets the value to false when the user closes it.
+- onWindowMenuItem is local (not exported): it cannot be called from another module.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_imguiCDemo.onEditorGui()` | Appelé à chaque frame par l'éditeur ; si la fenêtre est ouverte, affiche la fenêtre de démo ImGui. *(interne)* *(hook)* | 9 |
-| `editor_imguiCDemo.onEditorInitialized()` | Appelé à l'initialisation de l'éditeur ; enregistre le menu « ImGui Demo » dans le groupe Debug via editor.addWindowMenuItem. *(interne)* *(hook)* | 19 |
+| `editor_imguiCDemo.onEditorGui()` | Called every frame by the editor; if the window is open, displays the ImGui demo window. *(internal)* *(hook)* | 9 |
+| `editor_imguiCDemo.onEditorInitialized()` | Called at editor initialization; registers the "ImGui Demo" menu in the Debug group via editor.addWindowMenuItem. *(internal)* *(hook)* | 19 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `ui_imgui.` `BoolPtr`, `ShowDemoWindow`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/imguiCDemo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/imguiCDemo.lua`.*

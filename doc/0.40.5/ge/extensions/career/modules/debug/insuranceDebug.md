@@ -1,27 +1,27 @@
 # `career_modules_debug_insuranceDebug`
 
-*Fichier : `lua/ge/extensions/career/modules/debug/insuranceDebug.lua` · VM : Game Engine (GE) · 16 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/debug/insuranceDebug.lua` · VM: Game Engine (GE) · 16 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_debug_insuranceDebug` : `extensions.load("career_modules_debug_insuranceDebug")`, puis la globale `career_modules_debug_insuranceDebug`
+**Access:** extension `career_modules_debug_insuranceDebug`: `extensions.load("career_modules_debug_insuranceDebug")`, then the global `career_modules_debug_insuranceDebug`
 
-Onglet de debug carrière « Insurance ». Ajoute une seule entrée de menu '> Reset insurance data' qui appelle career_modules_insurance_insurance.resetPlPolicyData() (réinitialise les données de police d'assurance du joueur).
+"Insurance" career debug tab. Adds a single menu entry '> Reset insurance data' that calls career_modules_insurance_insurance.resetPlPolicyData() (resets the player's insurance policy data).
 
-## Remarques
+## Notes
 
-- Outil de développement ; debugOrder = 1.
+- Development tool; debugOrder = 1.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_debug_insuranceDebug.drawDebugFunctions()` | Dessine l'entrée '> Reset insurance data' ; au clic, réinitialise les données de police d'assurance. *(interne)* | 9 |
+| `career_modules_debug_insuranceDebug.drawDebugFunctions()` | Draws the '> Reset insurance data' entry; on click, resets the insurance policy data. *(internal)* | 9 |
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `debugName` | string | 'Insurance'. |
-| `debugOrder` | number | Ordre de tri (1). |
+| `debugOrder` | number | Sort order (1). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/debug/insuranceDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/debug/insuranceDebug.lua`.*

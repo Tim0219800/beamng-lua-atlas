@@ -1,22 +1,22 @@
 # `flowgraph_nodes_vehicle_generateLicensePlate`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/generateLicensePlate.lua` · VM : Game Engine (GE) · 31 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/generateLicensePlate.lua` · VM: Game Engine (GE) · 31 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/generateLicensePlate")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/generateLicensePlate")` (file under extensions/ but not a regular extension)
 
-Nœud « Generate License Plate » (catégorie `once_instant`, tags plate/license). Génère une plaque d'immatriculation aléatoire pour un véhicule : `core_vehicles.regenerateVehicleLicenseText(veh)` puis `core_vehicles.setPlateText(texte, vehId)`. Pin d'entrée : `vehId` (défaut : joueur).
+Node "Generate License Plate" (category `once_instant`, tags plate/license). Generates a random license plate for a vehicle: `core_vehicles.regenerateVehicleLicenseText(veh)` then `core_vehicles.setPlateText(text, vehId)`. Input pin: `vehId` (default: player).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Génère un texte de plaque aléatoire et l'applique au véhicule. | 21 |
+| `C:workOnce()` | Generates a random plate text and applies it to the vehicle. | 21 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/generateLicensePlate.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/generateLicensePlate.lua`.*

@@ -1,123 +1,123 @@
 # `trackbuilder_trackBuilder`
 
-*Fichier : `lua/ge/extensions/trackbuilder/trackBuilder.lua` · VM : Game Engine (GE) · 3654 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/trackbuilder/trackBuilder.lua` · VM: Game Engine (GE) · 3654 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `trackbuilder_trackBuilder` : `extensions.load("trackbuilder_trackBuilder")`, puis la globale `trackbuilder_trackBuilder`
+**Access:** extension `trackbuilder_trackBuilder`: `extensions.load("trackbuilder_trackBuilder")`, then the global `trackbuilder_trackBuilder`
 
-Interface ImGui de l'éditeur de circuits (Track Builder). Elle pilote le moteur de spline `util_trackBuilder_splineTrack` (chargé via `extensions['util_trackBuilder_splineTrack']`) : ajout et suppression de pièces, modificateurs (largeur, inclinaison, etc.), matériaux, bordures, sous-circuits, sauvegarde avec capture d'écran, mode conduite et modes de peinture (Select, Paint, ChangeMesh, Merge). Un moddeur s'en sert surtout pour ouvrir ou fermer l'éditeur (enter, exit, toggleTrackBuilder) et savoir s'il est actif (isActive). L'éditeur s'ouvre par la route UI `trackBuilder`, par défaut sur le niveau `glow_city`.
+ImGui interface of the track editor (Track Builder). It drives the spline engine `util_trackBuilder_splineTrack` (loaded via `extensions['util_trackBuilder_splineTrack']`): adding and removing pieces, modifiers (width, banking, etc.), materials, borders, sub-tracks, saving with screenshot, drive mode and paint modes (Select, Paint, ChangeMesh, Merge). A modder mostly uses it to open or close the editor (enter, exit, toggleTrackBuilder) and to know whether it is active (isActive). The editor opens through the UI route `trackBuilder`, on the `glow_city` level by default.
 
-## Exemple
+## Example
 
 ```lua
--- ouvrir le Track Builder sur glow_city (charge le niveau si besoin)
+-- open the Track Builder on glow_city (loads the level if needed)
 trackbuilder_trackBuilder.enter('glow_city')
 print(trackbuilder_trackBuilder.isActive())
 trackbuilder_trackBuilder.exit()
 ```
 
-## Remarques
+## Notes
 
-- Le fichier fait plus de 3600 lignes, surtout du code d'interface ImGui (fenêtres, barre d'outils, matériaux, sauvegarde) ; seules les fonctions de `M` ci-dessous sont l'API publique.
-- La table `tbFunctions` (navigate, refreshPieceInfo, pieceDeleted, pieceUpdated, modifierChange, modifierRemove, modifierShift, drive, unDrive, refreshTrackPositionRotation, switchSubTrack, mergeMultiTrack) est locale au fichier et n'est pas exportée dans M : ce sont des fonctions internes appelées par l'interface. La page automatique la présente comme classe, mais ce n'est pas un objet instanciable.
-- BUG : dans toggleTrackBuilder, la variable `active` est lue (`not freeCam and active`) avant sa déclaration `local active = open[0]` ; elle vaut donc nil (variable globale) et le passage en caméra de jeu de cette ligne n'a jamais lieu.
-- BUG mineur : une variable globale `i` est affectée quelque part dans le fichier (relevé par l'analyse automatique).
-- enter charge le niveau demandé via `freeroam_freeroam.startFreeroam` si nécessaire et ouvre l'éditeur au hook onClientStartMission ; pendant ce chargement `pendingEnter` empêche onClientEndMission de fermer l'éditeur. Son callback appelle `trackbuilder_trackBuilder.showTrackBuilder()` par la globale.
-- La fenêtre n'est dessinée dans onUpdate que si l'éditeur est initialisé ; pendant une capture d'écran de sauvegarde (hiddenForScreenshotTimer) rien n'est affiché.
-- En mode conduite (tbFunctions.drive), le code reset le véhicule 0, passe en caméra de jeu et envoie `ShowApps` à l'UI ; unDrive repasse en caméra libre.
+- The file is over 3600 lines long, mostly ImGui interface code (windows, toolbar, materials, saving); only the `M` functions below are the public API.
+- The `tbFunctions` table (navigate, refreshPieceInfo, pieceDeleted, pieceUpdated, modifierChange, modifierRemove, modifierShift, drive, unDrive, refreshTrackPositionRotation, switchSubTrack, mergeMultiTrack) is local to the file and is not exported in M: these are internal functions called by the interface. The automatic page presents it as a class, but it is not an instantiable object.
+- BUG: in toggleTrackBuilder, the variable `active` is read (`not freeCam and active`) before its declaration `local active = open[0]`; it is therefore nil (global variable) and the switch to the game camera on that line never happens.
+- Minor BUG: a global variable `i` is assigned somewhere in the file (found by the automatic analysis).
+- enter loads the requested level via `freeroam_freeroam.startFreeroam` if needed and opens the editor at the onClientStartMission hook; during this load `pendingEnter` prevents onClientEndMission from closing the editor. Its callback calls `trackbuilder_trackBuilder.showTrackBuilder()` through the global.
+- The window is only drawn in onUpdate if the editor is initialized; during a save screenshot capture (hiddenForScreenshotTimer) nothing is displayed.
+- In drive mode (tbFunctions.drive), the code resets vehicle 0, switches to the game camera and sends `ShowApps` to the UI; unDrive switches back to the free camera.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `trackbuilder_trackBuilder.enter(levelName, forceLoad)` | Ouvre le Track Builder. Si le niveau demandé n'est pas déjà chargé (ou si forceLoad est vrai), le charge en freeroam puis ouvre l'éditeur ; sinon l'ouvre directement. Un niveau introuvable est loggé en erreur et rien n'est fait. | 3577 |
-| `trackbuilder_trackBuilder.exit()` | Ferme le Track Builder s'il est actif, sans naviguer lui-même (le routeur garde la navigation), et libère la route de gameplay. | 3599 |
-| `trackbuilder_trackBuilder.exitToMainMenu()` | Annule une entrée en attente, ferme l'éditeur s'il est actif, puis appelle `returnToMainMenu()`. | 3609 |
-| `trackbuilder_trackBuilder.hideTrackBuilder()` | Ferme la fenêtre de l'éditeur, restaure le style ImGui BeamNG et réinitialise l'état. Si la fermeture n'est pas pilotée par le routeur, rend la route de gameplay en naviguant vers `play`. Sans effet si non initialisé. | 3530 |
-| `trackbuilder_trackBuilder.isActive()` | Indique si l'éditeur est initialisé et sa fenêtre ouverte. | 3573 |
-| `trackbuilder_trackBuilder.onClientEndMission()` | Hook appelé à la fin d'une mission/niveau. Ferme l'éditeur sauf si une entrée est en attente de chargement de niveau. *(interne)* *(hook)* | 3631 |
-| `trackbuilder_trackBuilder.onRouteEnter(context, toRoute, fromRoute, data)` | Hook appelé par le routeur UI à l'entrée de la route `trackBuilder`. Réserve la route de gameplay et appelle enter avec `params.level` ("glow_city" par défaut) et `params.forceLoad`. *(interne)* *(hook)* | 3617 |
-| `trackbuilder_trackBuilder.onRouteLeave(context, toRoute, fromRoute, data)` | Hook appelé par le routeur UI quand on quitte la route : ferme l'éditeur s'il est actif. *(interne)* *(hook)* | 3625 |
-| `trackbuilder_trackBuilder.onUpdate()` | Hook appelé à chaque frame. Affiche la fenêtre principale ou la barre du mode conduite, ou rien pendant la prise de capture d'écran de sauvegarde. *(interne)* *(hook)* | 2894 |
-| `trackbuilder_trackBuilder.onWindowResized(size)` | Hook appelé quand la fenêtre du jeu est redimensionnée. Mémorise la taille d'affichage utilisée par le style. *(interne)* *(hook)* | 3343 |
-| `trackbuilder_trackBuilder.showTrackBuilder()` | Affiche l'éditeur : passe en caméra de jeu si la caméra n'est pas libre, puis ouvre la fenêtre. | 3521 |
-| `trackbuilder_trackBuilder.showTrackBuilderWindow(show)` | Ouvre ou ferme la fenêtre ImGui. À l'ouverture : initialise, récupère le moteur de spline et applique le style ; à la fermeture : désélectionne, masque les marqueurs, et supprime le circuit s'il a 2 pièces ou moins (hors glow_city). Émet toujours le hook `onTrackBuilderWindowToggled(open)`. | 3477 |
-| `trackbuilder_trackBuilder.toggleTrackBuilder()` | Ouvre l'éditeur (en réglant la route de gameplay et en naviguant vers `trackBuilder`) ou le ferme s'il est ouvert. | 3552 |
+| `trackbuilder_trackBuilder.enter(levelName, forceLoad)` | Opens the Track Builder. If the requested level is not already loaded (or if forceLoad is true), loads it in freeroam then opens the editor; otherwise opens it directly. A level that cannot be found is logged as an error and nothing is done. | 3577 |
+| `trackbuilder_trackBuilder.exit()` | Closes the Track Builder if it is active, without navigating itself (the router keeps the navigation), and releases the gameplay route. | 3599 |
+| `trackbuilder_trackBuilder.exitToMainMenu()` | Cancels a pending entry, closes the editor if it is active, then calls `returnToMainMenu()`. | 3609 |
+| `trackbuilder_trackBuilder.hideTrackBuilder()` | Closes the editor window, restores the BeamNG ImGui style and resets the state. If the closing is not driven by the router, gives the gameplay route back by navigating to `play`. No effect if not initialized. | 3530 |
+| `trackbuilder_trackBuilder.isActive()` | Indicates whether the editor is initialized and its window open. | 3573 |
+| `trackbuilder_trackBuilder.onClientEndMission()` | Hook called at the end of a mission/level. Closes the editor unless an entry is waiting for a level to load. *(internal)* *(hook)* | 3631 |
+| `trackbuilder_trackBuilder.onRouteEnter(context, toRoute, fromRoute, data)` | Hook called by the UI router on entering the `trackBuilder` route. Reserves the gameplay route and calls enter with `params.level` ("glow_city" by default) and `params.forceLoad`. *(internal)* *(hook)* | 3617 |
+| `trackbuilder_trackBuilder.onRouteLeave(context, toRoute, fromRoute, data)` | Hook called by the UI router when leaving the route: closes the editor if it is active. *(internal)* *(hook)* | 3625 |
+| `trackbuilder_trackBuilder.onUpdate()` | Hook called every frame. Shows the main window or the drive mode bar, or nothing while the save screenshot is being taken. *(internal)* *(hook)* | 2894 |
+| `trackbuilder_trackBuilder.onWindowResized(size)` | Hook called when the game window is resized. Remembers the display size used by the style. *(internal)* *(hook)* | 3343 |
+| `trackbuilder_trackBuilder.showTrackBuilder()` | Shows the editor: switches to the game camera if the camera is not free, then opens the window. | 3521 |
+| `trackbuilder_trackBuilder.showTrackBuilderWindow(show)` | Opens or closes the ImGui window. On open: initializes, gets the spline engine and applies the style; on close: deselects, hides the markers, and deletes the track if it has 2 pieces or fewer (except glow_city). Always emits the hook `onTrackBuilderWindowToggled(open)`. | 3477 |
+| `trackbuilder_trackBuilder.toggleTrackBuilder()` | Opens the editor (by setting the gameplay route and navigating to `trackBuilder`) or closes it if it is open. | 3552 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `trackbuilder_trackBuilder.enter(levelName, forceLoad)`
 
-Ouvre le Track Builder. Si le niveau demandé n'est pas déjà chargé (ou si forceLoad est vrai), le charge en freeroam puis ouvre l'éditeur ; sinon l'ouvre directement. Un niveau introuvable est loggé en erreur et rien n'est fait.
+Opens the Track Builder. If the requested level is not already loaded (or if forceLoad is true), loads it in freeroam then opens the editor; otherwise opens it directly. A level that cannot be found is logged as an error and nothing is done.
 
-- `levelName` (*string|nil*) : Nom du niveau (par exemple "glow_city").
-- `forceLoad` (*boolean|nil*) : Force le rechargement du niveau même s'il est déjà chargé.
+- `levelName` (*string|nil*) : Level name (for example "glow_city").
+- `forceLoad` (*boolean|nil*) : Forces the level to reload even if it is already loaded.
 
 #### `trackbuilder_trackBuilder.isActive()`
 
-Indique si l'éditeur est initialisé et sa fenêtre ouverte.
+Indicates whether the editor is initialized and its window open.
 
-- **renvoie** : boolean true si actif.
+- **returns**: boolean true if active.
 
 #### `trackbuilder_trackBuilder.onRouteEnter(context, toRoute, fromRoute, data)`
 
-Hook appelé par le routeur UI à l'entrée de la route `trackBuilder`. Réserve la route de gameplay et appelle enter avec `params.level` ("glow_city" par défaut) et `params.forceLoad`.
+Hook called by the UI router on entering the `trackBuilder` route. Reserves the gameplay route and calls enter with `params.level` ("glow_city" by default) and `params.forceLoad`.
 
-- `context` (*any*) : Contexte de la route (non utilisé).
-- `toRoute` (*table*) : Route d'arrivée ; son champ `params` est lu.
-- `fromRoute` (*any*) : Route de départ (non utilisé).
-- `data` (*any*) : Données de route (non utilisées).
+- `context` (*any*) : Route context (not used).
+- `toRoute` (*table*) : Destination route; its `params` field is read.
+- `fromRoute` (*any*) : Source route (not used).
+- `data` (*any*) : Route data (not used).
 
 #### `trackbuilder_trackBuilder.onRouteLeave(context, toRoute, fromRoute, data)`
 
-Hook appelé par le routeur UI quand on quitte la route : ferme l'éditeur s'il est actif.
+Hook called by the UI router when leaving the route: closes the editor if it is active.
 
-- `context` (*any*) : Contexte de la route (non utilisé).
-- `toRoute` (*any*) : Route d'arrivée (non utilisé).
-- `fromRoute` (*any*) : Route de départ (non utilisé).
-- `data` (*any*) : Données de route (non utilisées).
+- `context` (*any*) : Route context (not used).
+- `toRoute` (*any*) : Destination route (not used).
+- `fromRoute` (*any*) : Source route (not used).
+- `data` (*any*) : Route data (not used).
 
 #### `trackbuilder_trackBuilder.onWindowResized(size)`
 
-Hook appelé quand la fenêtre du jeu est redimensionnée. Mémorise la taille d'affichage utilisée par le style.
+Hook called when the game window is resized. Remembers the display size used by the style.
 
-- `size` (*table*) : Taille de l'écran avec champs `x` et `y`.
+- `size` (*table*) : Screen size with fields `x` and `y`.
 
 #### `trackbuilder_trackBuilder.showTrackBuilderWindow(show)`
 
-Ouvre ou ferme la fenêtre ImGui. À l'ouverture : initialise, récupère le moteur de spline et applique le style ; à la fermeture : désélectionne, masque les marqueurs, et supprime le circuit s'il a 2 pièces ou moins (hors glow_city). Émet toujours le hook `onTrackBuilderWindowToggled(open)`.
+Opens or closes the ImGui window. On open: initializes, gets the spline engine and applies the style; on close: deselects, hides the markers, and deletes the track if it has 2 pieces or fewer (except glow_city). Always emits the hook `onTrackBuilderWindowToggled(open)`.
 
-- `show` (*boolean*) : true pour ouvrir, false pour fermer.
+- `show` (*boolean*) : true to open, false to close.
 
-## Classe `tbFunctions`
+## Class `tbFunctions`
 
-Table locale de fonctions internes de l'interface (non exportée). Elles modifient le circuit via le moteur de spline puis rafraîchissent les valeurs affichées ; `currentIndex` désigne la pièce sélectionnée.
+Local table of internal interface functions (not exported). They modify the track through the spline engine then refresh the displayed values; `currentIndex` is the selected piece.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `tbFunctions.drive(index)` | Démarre le mode conduite : circuit en haute qualité, marqueurs masqués, reset du véhicule 0 et placement sur la pièce donnée, caméra de jeu. | 3102 |
-| `tbFunctions.mergeMultiTrack(segments)` | Fusionne des segments de circuit via le moteur de spline. | 3148 |
-| `tbFunctions.modifierChange(field)` | Applique la valeur d'un modificateur à la pièce courante et reconstruit le circuit. | 3070 |
-| `tbFunctions.modifierRemove(field)` | Retire un modificateur de la pièce courante. | 3078 |
-| `tbFunctions.modifierShift(name, offset)` | Déplace un modificateur sur la pièce précédente ou suivante. | 3085 |
-| `tbFunctions.navigate(off)` | Déplace le curseur : 1 suivant, -1 précédent (avec bouclage), 'first' ou 'last'. Recentre le marqueur et relit les infos de la pièce. | 2966 |
-| `tbFunctions.pieceDeleted()` | Supprime la pièce courante (si l'indice est supérieur à 2), reconstruit le circuit et recule d'une pièce. | 3020 |
-| `tbFunctions.pieceUpdated(replace)` | Ajoute ou remplace une pièce avec les paramètres de l'interface. Ctrl remplace, Shift insère après la pièce courante, sans touche ajoute à la fin. Replace le curseur au début si le circuit vient de se fermer. | 3031 |
-| `tbFunctions.refreshPieceInfo()` | Relit les paramètres de la pièce courante et les valeurs des modificateurs dans l'interface. | 2983 |
-| `tbFunctions.refreshTrackPositionRotation()` | Relit la position et le cap du circuit (cap converti en degrés) dans l'interface. | 3127 |
-| `tbFunctions.switchSubTrack(index)` | Passe à un autre sous-circuit et sélectionne sa dernière pièce. | 3135 |
-| `tbFunctions.unDrive()` | Termine le mode conduite : caméra libre, marqueurs réaffichés, mode Select. | 3117 |
+| `tbFunctions.drive(index)` | Starts drive mode: high-quality track, markers hidden, reset of vehicle 0 and placement on the given piece, game camera. | 3102 |
+| `tbFunctions.mergeMultiTrack(segments)` | Merges track segments via the spline engine. | 3148 |
+| `tbFunctions.modifierChange(field)` | Applies a modifier's value to the current piece and rebuilds the track. | 3070 |
+| `tbFunctions.modifierRemove(field)` | Removes a modifier from the current piece. | 3078 |
+| `tbFunctions.modifierShift(name, offset)` | Moves a modifier to the previous or next piece. | 3085 |
+| `tbFunctions.navigate(off)` | Moves the cursor: 1 next, -1 previous (with wraparound), 'first' or 'last'. Recenters the marker and rereads the piece info. | 2966 |
+| `tbFunctions.pieceDeleted()` | Deletes the current piece (if the index is greater than 2), rebuilds the track and steps back one piece. | 3020 |
+| `tbFunctions.pieceUpdated(replace)` | Adds or replaces a piece with the interface parameters. Ctrl replaces, Shift inserts after the current piece, no key appends at the end. Puts the cursor back at the start if the track has just closed. | 3031 |
+| `tbFunctions.refreshPieceInfo()` | Rereads the current piece's parameters and the modifier values into the interface. | 2983 |
+| `tbFunctions.refreshTrackPositionRotation()` | Rereads the track's position and heading (heading converted to degrees) into the interface. | 3127 |
+| `tbFunctions.switchSubTrack(index)` | Switches to another sub-track and selects its last piece. | 3135 |
+| `tbFunctions.unDrive()` | Ends drive mode: free camera, markers shown again, Select mode. | 3117 |
 
-**Globales affectées :** `i`
+**Globals assigned:** `i`
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onTrackBuilderWindowToggled` — écouté par 1 module(s)
+- `onTrackBuilderWindowToggled` — listened to by 1 module(s)
 
-**Évènements UI (guihooks.trigger) :** `ShowApps`
+**UI events (guihooks.trigger):** `ShowApps`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `be:` `resetVehicle`
@@ -126,4 +126,4 @@ Table locale de fonctions internes de l'interface (non exportée). Elles modifie
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/trackbuilder/trackBuilder.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/trackbuilder/trackBuilder.lua`.*

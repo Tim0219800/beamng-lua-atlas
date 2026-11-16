@@ -1,12 +1,12 @@
 # `editor_toolUtilities_fenceStyles`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/fenceStyles.lua` · VM : Game Engine (GE) · 97 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/fenceStyles.lua` · VM: Game Engine (GE) · 97 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_fenceStyles` : `extensions.load("editor_toolUtilities_fenceStyles")`, puis la globale `editor_toolUtilities_fenceStyles`
+**Access:** extension `editor_toolUtilities_fenceStyles`: `extensions.load("editor_toolUtilities_fenceStyles")`, then the global `editor_toolUtilities_fenceStyles`
 
-Styles de clôture déclaratifs pour les outils de l'éditeur (clôtures, rambardes). Chaque style donne la hauteur de poteau (qui choisit la forme cuite fence_post_sq_*), la bande de hauteur des lisses, le nombre de lisses et l'espacement par défaut des poteaux. Fournit aussi le calcul des hauteurs de lisses selon un préréglage de disposition.
+Declarative fence styles for the editor tools (fences, railings). Each style gives the post height (which chooses the baked shape fence_post_sq_*), the height band of the rails, the number of rails and the default post spacing. Also provides the computation of rail heights according to a layout preset.
 
-## Exemple
+## Example
 
 ```lua
 local fs = require('editor/toolUtilities/fenceStyles')
@@ -14,57 +14,57 @@ local style = fs.get('deck')
 local h = fs.railHeights(style, 3, 'pinned', {})
 ```
 
-## Remarques
+## Notes
 
-- Deux styles existent : 'postrail' (Post & Rail, poteau 1.4 m, 1 à 7 lisses, lisses entre 0.35 et 1.25 m, espacement 2.4 m) et 'deck' (Deck Railing, poteau 1.0 m, 1 à 5 lisses, lisses entre 0.30 et 0.90 m, espacement 1.8 m).
-- Hauteurs en mètres (Z du centre de la lisse). Les dispositions reconnues : 'pinned' (défaut), 'even', 'topGroup', 'bottomGroup', 'split'.
-- Les fonctions réécrivent le tableau 'out' fourni (table.clear puis remplissage) et le renvoient.
+- Two styles exist: 'postrail' (Post & Rail, post 1.4 m, 1 to 7 rails, rails between 0.35 and 1.25 m, spacing 2.4 m) and 'deck' (Deck Railing, post 1.0 m, 1 to 5 rails, rails between 0.30 and 0.90 m, spacing 1.8 m).
+- Heights in meters (Z of the rail center). Recognized layouts: 'pinned' (default), 'even', 'topGroup', 'bottomGroup', 'split'.
+- The functions rewrite the supplied 'out' array (table.clear then fill) and return it.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_fenceStyles.get(id)` | Renvoie le style d'id donné, ou le style 'postrail' si l'id est inconnu. | 84 |
-| `editor_toolUtilities_fenceStyles.railFractions(count, layout, out, pitchFrac)` | Calcule les positions fractionnaires des lisses dans [0,1] (0 = bas, 1 = haut) pour un préréglage de disposition. Avec une seule lisse, elle est à 0.5. Les dispositions de groupe plafonnent pitchFrac à 0.9/max(1,count-2). | 41 |
-| `editor_toolUtilities_fenceStyles.railHeights(style, count, layout, out, railH, postH)` | Calcule les hauteurs Z (m) du centre des lisses pour un style, un nombre de lisses et une disposition. Pour les dispositions de groupe, le haut de la bande est relevé pour que la lisse du haut arrive juste sous le chapeau du poteau. | 71 |
+| `editor_toolUtilities_fenceStyles.get(id)` | Returns the style with the given id, or the 'postrail' style if the id is unknown. | 84 |
+| `editor_toolUtilities_fenceStyles.railFractions(count, layout, out, pitchFrac)` | Computes the fractional positions of the rails in [0,1] (0 = bottom, 1 = top) for a layout preset. With a single rail, it is at 0.5. Group layouts cap pitchFrac at 0.9/max(1,count-2). | 41 |
+| `editor_toolUtilities_fenceStyles.railHeights(style, count, layout, out, railH, postH)` | Computes the Z heights (m) of the rail centers for a style, a rail count and a layout. For group layouts, the top of the band is raised so that the top rail ends up just under the post cap. | 71 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_fenceStyles.get(id)`
 
-Renvoie le style d'id donné, ou le style 'postrail' si l'id est inconnu.
+Returns the style with the given id, or the 'postrail' style if the id is unknown.
 
-- `id` (*string*) : Id du style ('postrail' ou 'deck').
-- **renvoie** : table Table du style.
+- `id` (*string*) : Style id ('postrail' or 'deck').
+- **returns**: table Style table.
 
 #### `editor_toolUtilities_fenceStyles.railFractions(count, layout, out, pitchFrac)`
 
-Calcule les positions fractionnaires des lisses dans [0,1] (0 = bas, 1 = haut) pour un préréglage de disposition. Avec une seule lisse, elle est à 0.5. Les dispositions de groupe plafonnent pitchFrac à 0.9/max(1,count-2).
+Computes the fractional positions of the rails in [0,1] (0 = bottom, 1 = top) for a layout preset. With a single rail, it is at 0.5. Group layouts cap pitchFrac at 0.9/max(1,count-2).
 
-- `count` (*integer*) : Nombre de lisses (minimum 1).
-- `layout` (*string|nil*) : 'pinned' (défaut, réparties de 0 à 1), 'even', 'topGroup', 'bottomGroup' ou 'split'.
-- `out` (*table*) : Tableau de sortie, vidé puis rempli.
-- `pitchFrac` (*number|nil*) : Pas fractionnaire entre lisses groupées (défaut 0.18).
-- **renvoie** : table Le tableau out.
+- `count` (*integer*) : Number of rails (minimum 1).
+- `layout` (*string|nil*) : 'pinned' (default, spread from 0 to 1), 'even', 'topGroup', 'bottomGroup' or 'split'.
+- `out` (*table*) : Output array, cleared then filled.
+- `pitchFrac` (*number|nil*) : Fractional pitch between grouped rails (default 0.18).
+- **returns**: table The out array.
 
 #### `editor_toolUtilities_fenceStyles.railHeights(style, count, layout, out, railH, postH)`
 
-Calcule les hauteurs Z (m) du centre des lisses pour un style, un nombre de lisses et une disposition. Pour les dispositions de groupe, le haut de la bande est relevé pour que la lisse du haut arrive juste sous le chapeau du poteau.
+Computes the Z heights (m) of the rail centers for a style, a rail count and a layout. For group layouts, the top of the band is raised so that the top rail ends up just under the post cap.
 
-- `style` (*table*) : Style (voir get).
-- `count` (*integer|nil*) : Nombre de lisses ; défaut style.railCountDefault.
-- `layout` (*string|nil*) : Préréglage de disposition (voir railFractions).
-- `out` (*table*) : Tableau de sortie.
-- `railH` (*number|nil*) : Hauteur d'une lisse (m) ; sert à calculer le pas des groupes (railH * 1.25).
-- `postH` (*number|nil*) : Hauteur du poteau (m) ; sert à relever le haut de bande pour les dispositions de groupe.
-- **renvoie** : table Le tableau out, rempli de hauteurs Z.
+- `style` (*table*) : Style (see get).
+- `count` (*integer|nil*) : Number of rails; default style.railCountDefault.
+- `layout` (*string|nil*) : Layout preset (see railFractions).
+- `out` (*table*) : Output array.
+- `railH` (*number|nil*) : Height of a rail (m); used to compute the group pitch (railH * 1.25).
+- `postH` (*number|nil*) : Post height (m); used to raise the top of the band for group layouts.
+- **returns**: table The out array, filled with Z heights.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `styleOrder` | string[] | Ordre d'affichage des styles : { 'postrail', 'deck' }. |
-| `styles` | table<string, table> | Définitions des styles indexées par id ('postrail', 'deck'). Champs : id, name, postHeight, railCountDefault/Min/Max, railBottom, railTop, spacingDefault. |
+| `styleOrder` | string[] | Display order of the styles: { 'postrail', 'deck' }. |
+| `styles` | table<string, table> | Style definitions keyed by id ('postrail', 'deck'). Fields: id, name, postHeight, railCountDefault/Min/Max, railBottom, railTop, spacingDefault. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/fenceStyles.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/fenceStyles.lua`.*

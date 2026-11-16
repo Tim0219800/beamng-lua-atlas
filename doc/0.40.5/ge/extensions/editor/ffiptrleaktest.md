@@ -1,22 +1,22 @@
 # `editor_ffiptrleaktest`
 
-*Fichier : `lua/ge/extensions/editor/ffiptrleaktest.lua` · VM : Game Engine (GE) · 75 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ffiptrleaktest.lua` · VM: Game Engine (GE) · 75 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ffiptrleaktest` : `extensions.load("editor_ffiptrleaktest")`, puis la globale `editor_ffiptrleaktest`
+**Access:** extension `editor_ffiptrleaktest`: `extensions.load("editor_ffiptrleaktest")`, then the global `editor_ffiptrleaktest`
 
-Extension de test interne de l'éditeur (fuites de pointeurs FFI avec ImGui). Elle ouvre une fenêtre « ffi ptr leak test » avec des widgets de test (case à cocher, sliders, champ texte, image) et la fenêtre de démo ImGui. Elle est désactivée dans cette version : le fichier exécute `do return M end` juste après `local M = {}`, donc les hooks ne sont jamais exportés.
+Internal editor test extension (FFI pointer leaks with ImGui). It opens a "ffi ptr leak test" window with test widgets (checkbox, sliders, text field, image) and the ImGui demo window. It is disabled in this version: the file runs `do return M end` right after `local M = {}`, so the hooks are never exported.
 
-## Remarques
+## Notes
 
-- Désactivée : `do return M end` en tête de fichier. Le code qui suit (et l'export M.onEditorGui / M.onEditorInitialized) n'est jamais exécuté.
-- Si elle était activée, onEditorGui utiliserait `image.tex` alors que `image` n'est créé que dans onEditorInitialized (texture /art/dynamicDecals/textures/00_color_palette_test.png).
+- Disabled: `do return M end` at the top of the file. The code that follows (and the export of M.onEditorGui / M.onEditorInitialized) is never executed.
+- If it were enabled, onEditorGui would use `image.tex` while `image` is only created in onEditorInitialized (texture /art/dynamicDecals/textures/00_color_palette_test.png).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ffiptrleaktest.onEditorGui()` | Hook d'éditeur appelé chaque frame GUI : dessine la fenêtre de test ImGui. Non exporté tant que le fichier est désactivé. *(interne)* *(hook)* | 22 |
-| `editor_ffiptrleaktest.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre « ffi ptr leak test », son entrée de menu Window et charge la texture de test. Non exporté tant que le fichier est désactivé. *(interne)* *(hook)* | 48 |
+| `editor_ffiptrleaktest.onEditorGui()` | Editor hook called every GUI frame: draws the ImGui test window. Not exported while the file is disabled. *(internal)* *(hook)* | 22 |
+| `editor_ffiptrleaktest.onEditorInitialized()` | Hook called at editor initialization: registers the "ffi ptr leak test" window, its Window menu entry and loads the test texture. Not exported while the file is disabled. *(internal)* *(hook)* | 48 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ffiptrleaktest.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ffiptrleaktest.lua`.*

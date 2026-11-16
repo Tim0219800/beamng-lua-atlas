@@ -1,12 +1,12 @@
 # `editor_toolUtilities_session`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/session.lua` · VM : Game Engine (GE) · 387 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/session.lua` · VM: Game Engine (GE) · 387 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_session` : `extensions.load("editor_toolUtilities_session")`, puis la globale `editor_toolUtilities_session`
+**Access:** extension `editor_toolUtilities_session`: `extensions.load("editor_toolUtilities_session")`, then the global `editor_toolUtilities_session`
 
-Aide partagée de sauvegarde et chargement de session pour les outils personnalisés de splines et de zones de l'éditeur. Elle gère ce qui est identique pour tous les outils : l'enveloppe JSON portable (version, tool, mapName, items ou state, globals, records), la lecture/écriture de fichier, la boucle de chargement en remplacement ou en fusion, les boutons Save / Save As / Load en haut de fenêtre et la fenêtre modale Replace/Merge. Tout le spécifique à l'outil passe par une table spec. Référence de câblage : heroRoadEditor et roadSpline.
+Shared session save and load helper for the editor's custom spline and zone tools. It handles what is identical for all tools: the portable JSON envelope (version, tool, mapName, items or state, globals, records), file reading/writing, the load loop in replace or merge mode, the Save / Save As / Load buttons at the top of the window and the Replace/Merge modal window. Everything tool-specific goes through a spec table. Wiring reference: heroRoadEditor and roadSpline.
 
-## Exemple
+## Example
 
 ```lua
 local session = extensions.editor_toolUtilities_session
@@ -14,153 +14,153 @@ local spec = {toolId = 'myTool', displayName = 'My Tool', itemNoun = 'zones', ge
   serializeItem = function(it) return session.itemToTable(it, nil, {'runtimeHandle'}) end,
   deserializeItem = deserializeItem, clearAll = clearAll, deepCopyAll = deepCopyAll,
   transUndo = undoFn, transRedo = redoFn}
--- dans le rendu de la fenêtre :
+-- in the window rendering:
 session.renderButtons(spec)
--- depuis la passe de reconstruction :
+-- from the rebuild pass:
 session.markEdited('myTool')
 ```
 
-## Remarques
+## Notes
 
-- Champs de spec obligatoires : toolId, getItems, serializeItem + deserializeItem (ou getState + loadWhole pour un outil à état global), clearAll, deepCopyAll, transUndo, transRedo.
-- Champs de spec optionnels : displayName, itemNoun, refreshIdMap, onLoaded, logTag, version (défaut 1), noMerge (document unique : un Load remplace toujours), altItemsKey (ancienne clé de tableau acceptée), iconColor, iconSize (défaut 36x36), saveIcon/saveAsIcon/loadIcon, getGlobals/applyGlobals (réglages globaux de l'outil, appliqués seulement en Replace), getRecords/applyRecords (gros enregistrements, n'ouvrent jamais l'état modifié), loadJson, loadOptions, noLoadGuard.
-- L'état (chemin lié, drapeau modifié, garde de chargement, baseline des globals) est tenu par toolId ; les tables sont locales au module et propres à l'exécution.
-- Une fusion donne un nouvel identifiant (Engine.generateUUID) à un élément entrant dont l'id existe déjà.
-- Après un Load en Replace (hors keepUnbound), l'outil est lié au fichier : les Save suivants l'écrasent sans demander. Les modifications de terrain ne sont pas sauvegardées.
-- markEdited : la garde de chargement avale exactement un appel, celui de la reconstruction forcée provoquée par un Load.
-- Les erreurs de chargement sont journalisées avec log('E', ...) ; le fichier est écrit par jsonWriteFile et lu par jsonReadFile.
+- Required spec fields: toolId, getItems, serializeItem + deserializeItem (or getState + loadWhole for a global-state tool), clearAll, deepCopyAll, transUndo, transRedo.
+- Optional spec fields: displayName, itemNoun, refreshIdMap, onLoaded, logTag, version (default 1), noMerge (single document: a Load always replaces), altItemsKey (old array key accepted), iconColor, iconSize (default 36x36), saveIcon/saveAsIcon/loadIcon, getGlobals/applyGlobals (the tool's global settings, applied only in Replace), getRecords/applyRecords (large records, never set the modified state), loadJson, loadOptions, noLoadGuard.
+- The state (bound path, modified flag, load guard, globals baseline) is kept per toolId; the tables are local to the module and specific to the run.
+- A merge gives a new identifier (Engine.generateUUID) to an incoming item whose id already exists.
+- After a Load in Replace (except keepUnbound), the tool is bound to the file: subsequent Saves overwrite it without asking. Terrain changes are not saved.
+- markEdited: the load guard swallows exactly one call, that of the forced rebuild caused by a Load.
+- Load errors are logged with log('E', ...); the file is written by jsonWriteFile and read by jsonReadFile.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_session.attachment(toolId)` | Renvoie le fichier auquel le document est attaché et s'il a des modifications non enregistrées. | 109 |
-| `editor_toolUtilities_session.boundPath(toolId)` | Renvoie seulement le chemin lié, pour les appels par frame qui ne doivent pas allouer de table. | 114 |
-| `editor_toolUtilities_session.itemToTable(item, emptyKeys, nilKeys)` | Copie profonde d'un élément via le codec string.buffer (encode puis decode), avec en option des clés remplacées par {} ou supprimées. Sert à écrire serializeItem sans muter l'élément vivant. | 138 |
-| `editor_toolUtilities_session.loadFromFile(path, spec, replace)` | Lit le fichier JSON puis applique spec.loadJson s'il existe, sinon loadJson du module. | 209 |
-| `editor_toolUtilities_session.loadJson(j, spec, replace)` | Applique un JSON de session déjà décodé. replace vide d'abord les éléments courants (et applique globals/records) ; sinon les éléments chargés sont fusionnés, un id déjà utilisé recevant un nouvel UUID. Pour un outil à état global, passe state à spec.loadWhole. | 183 |
-| `editor_toolUtilities_session.markEdited(toolId)` | Marque le document d'un outil comme modifié (non enregistré). À appeler depuis la passe de reconstruction de l'outil, une fois par passe. La garde de chargement avale un appel après un Load. | 92 |
-| `editor_toolUtilities_session.reattach(toolId, at)` | Rétablit la liaison fichier et l'état modifié depuis une table renvoyée par attachment (par exemple après un rechargement d'extension). | 131 |
-| `editor_toolUtilities_session.rehydrateVec3Array(arr)` | Reconvertit en place un tableau de positions chargées depuis le JSON ({x,y,z} simples) en vec3. Idempotent (les vec3 existants, qui ont une méthode distance, sont laissés tels quels) ; sans danger sur nil ou une non-table. | 147 |
-| `editor_toolUtilities_session.renderButtons(spec)` | Variante en ligne : dessine Save (une fois un fichier connu), Save As (si l'outil est non vide) et Load côte à côte, puis la fenêtre modale Replace/Merge. | 345 |
-| `editor_toolUtilities_session.renderButtonsColumns(spec)` | Variante en colonnes : dessine Save, Save As et Load comme trois cellules de grille. | 357 |
-| `editor_toolUtilities_session.saveIfEdited(spec)` | Réécrit le document modifié sur le fichier auquel il est lié, pour un outil dont le travail ne doit jamais attendre un appui sur Save. Renvoie false s'il n'y a pas de fichier lié ou pas de modification. | 173 |
-| `editor_toolUtilities_session.saveToFile(path, spec)` | Écrit tous les éléments dans path en JSON de session portable : version, tool, mapName (niveau courant), items ou state, globals, records. | 156 |
-| `editor_toolUtilities_session.unbind(toolId)` | Détache un outil de son fichier : le prochain Save devra demander où écrire au lieu d'écraser silencieusement le dernier fichier chargé. | 104 |
-| `editor_toolUtilities_session.windowTitle(toolId, label, id, newName)` | Titre de fenêtre nommant le fichier lié (ou newName avant qu'il y en ait un, « New Session » par défaut). L'identifiant id suit « ### » pour qu'ImGui garde l'ancrage et la taille. Mis en cache par outil. | 121 |
+| `editor_toolUtilities_session.attachment(toolId)` | Returns the file the document is attached to and whether it has unsaved changes. | 109 |
+| `editor_toolUtilities_session.boundPath(toolId)` | Returns only the bound path, for per-frame calls that must not allocate a table. | 114 |
+| `editor_toolUtilities_session.itemToTable(item, emptyKeys, nilKeys)` | Deep copy of an item via the string.buffer codec (encode then decode), optionally with keys replaced by {} or removed. Used to write serializeItem without mutating the live item. | 138 |
+| `editor_toolUtilities_session.loadFromFile(path, spec, replace)` | Reads the JSON file then applies spec.loadJson if it exists, otherwise the module's loadJson. | 209 |
+| `editor_toolUtilities_session.loadJson(j, spec, replace)` | Applies an already decoded session JSON. replace first clears the current items (and applies globals/records); otherwise the loaded items are merged, an id already in use receiving a new UUID. For a global-state tool, passes state to spec.loadWhole. | 183 |
+| `editor_toolUtilities_session.markEdited(toolId)` | Marks a tool's document as modified (unsaved). To be called from the tool's rebuild pass, once per pass. The load guard swallows one call after a Load. | 92 |
+| `editor_toolUtilities_session.reattach(toolId, at)` | Restores the file binding and the modified state from a table returned by attachment (for example after an extension reload). | 131 |
+| `editor_toolUtilities_session.rehydrateVec3Array(arr)` | Converts in place an array of positions loaded from JSON (plain {x,y,z}) into vec3. Idempotent (existing vec3s, which have a distance method, are left as is); safe on nil or a non-table. | 147 |
+| `editor_toolUtilities_session.renderButtons(spec)` | Inline variant: draws Save (once a file is known), Save As (if the tool is not empty) and Load side by side, then the Replace/Merge modal window. | 345 |
+| `editor_toolUtilities_session.renderButtonsColumns(spec)` | Column variant: draws Save, Save As and Load as three grid cells. | 357 |
+| `editor_toolUtilities_session.saveIfEdited(spec)` | Rewrites the modified document to the file it is bound to, for a tool whose work must never wait for a Save press. Returns false if there is no bound file or no modification. | 173 |
+| `editor_toolUtilities_session.saveToFile(path, spec)` | Writes all items to path as portable session JSON: version, tool, mapName (current level), items or state, globals, records. | 156 |
+| `editor_toolUtilities_session.unbind(toolId)` | Detaches a tool from its file: the next Save will have to ask where to write instead of silently overwriting the last loaded file. | 104 |
+| `editor_toolUtilities_session.windowTitle(toolId, label, id, newName)` | Window title naming the bound file (or newName before there is one, "New Session" by default). The id follows "###" so that ImGui keeps the docking and size. Cached per tool. | 121 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_session.attachment(toolId)`
 
-Renvoie le fichier auquel le document est attaché et s'il a des modifications non enregistrées.
+Returns the file the document is attached to and whether it has unsaved changes.
 
-- `toolId` (*string*) : Identifiant de l'outil.
-- **renvoie** : table { path = string|nil, dirty = true|nil }
+- `toolId` (*string*) : Tool identifier.
+- **returns**: table { path = string|nil, dirty = true|nil }
 
 #### `editor_toolUtilities_session.boundPath(toolId)`
 
-Renvoie seulement le chemin lié, pour les appels par frame qui ne doivent pas allouer de table.
+Returns only the bound path, for per-frame calls that must not allocate a table.
 
-- `toolId` (*string*) : Identifiant de l'outil.
-- **renvoie** : string|nil Chemin du fichier lié.
+- `toolId` (*string*) : Tool identifier.
+- **returns**: string|nil Path of the bound file.
 
 #### `editor_toolUtilities_session.itemToTable(item, emptyKeys, nilKeys)`
 
-Copie profonde d'un élément via le codec string.buffer (encode puis decode), avec en option des clés remplacées par {} ou supprimées. Sert à écrire serializeItem sans muter l'élément vivant.
+Deep copy of an item via the string.buffer codec (encode then decode), optionally with keys replaced by {} or removed. Used to write serializeItem without mutating the live item.
 
-- `item` (*table*) : Élément à copier.
-- `emptyKeys` (*string[]|nil*) : Clés à remplacer par une table vide.
-- `nilKeys` (*string[]|nil*) : Clés à supprimer.
-- **renvoie** : table Copie propre.
+- `item` (*table*) : Item to copy.
+- `emptyKeys` (*string[]|nil*) : Keys to replace with an empty table.
+- `nilKeys` (*string[]|nil*) : Keys to remove.
+- **returns**: table Clean copy.
 
 #### `editor_toolUtilities_session.loadFromFile(path, spec, replace)`
 
-Lit le fichier JSON puis applique spec.loadJson s'il existe, sinon loadJson du module.
+Reads the JSON file then applies spec.loadJson if it exists, otherwise the module's loadJson.
 
-- `path` (*string*) : Chemin du fichier.
-- `spec` (*table*) : Spécification de l'outil.
-- `replace` (*boolean*) : true pour remplacer, false pour fusionner.
-- **renvoie** : boolean ok.
-- **renvoie** : integer|string Nombre d'éléments ou erreur.
-- **renvoie** : boolean|nil keepUnbound (fichier partiel) quand spec.loadJson le renvoie.
+- `path` (*string*) : File path.
+- `spec` (*table*) : Tool specification.
+- `replace` (*boolean*) : true to replace, false to merge.
+- **returns**: boolean ok.
+- **returns**: integer|string Number of items or error.
+- **returns**: boolean|nil keepUnbound (partial file) when spec.loadJson returns it.
 
 #### `editor_toolUtilities_session.loadJson(j, spec, replace)`
 
-Applique un JSON de session déjà décodé. replace vide d'abord les éléments courants (et applique globals/records) ; sinon les éléments chargés sont fusionnés, un id déjà utilisé recevant un nouvel UUID. Pour un outil à état global, passe state à spec.loadWhole.
+Applies an already decoded session JSON. replace first clears the current items (and applies globals/records); otherwise the loaded items are merged, an id already in use receiving a new UUID. For a global-state tool, passes state to spec.loadWhole.
 
-- `j` (*table*) : JSON décodé.
-- `spec` (*table*) : Spécification de l'outil.
-- `replace` (*boolean*) : true pour remplacer, false pour fusionner.
-- **renvoie** : boolean ok.
-- **renvoie** : integer|string Nombre d'éléments chargés, ou message d'erreur (« not a valid <toolId> session file »).
+- `j` (*table*) : Decoded JSON.
+- `spec` (*table*) : Tool specification.
+- `replace` (*boolean*) : true to replace, false to merge.
+- **returns**: boolean ok.
+- **returns**: integer|string Number of items loaded, or error message ("not a valid <toolId> session file").
 
 #### `editor_toolUtilities_session.markEdited(toolId)`
 
-Marque le document d'un outil comme modifié (non enregistré). À appeler depuis la passe de reconstruction de l'outil, une fois par passe. La garde de chargement avale un appel après un Load.
+Marks a tool's document as modified (unsaved). To be called from the tool's rebuild pass, once per pass. The load guard swallows one call after a Load.
 
-- `toolId` (*string*) : Identifiant de l'outil.
+- `toolId` (*string*) : Tool identifier.
 
 #### `editor_toolUtilities_session.reattach(toolId, at)`
 
-Rétablit la liaison fichier et l'état modifié depuis une table renvoyée par attachment (par exemple après un rechargement d'extension).
+Restores the file binding and the modified state from a table returned by attachment (for example after an extension reload).
 
-- `toolId` (*string*) : Identifiant de l'outil.
-- `at` (*table*) : { path, dirty } ; ignoré si ce n'est pas une table.
+- `toolId` (*string*) : Tool identifier.
+- `at` (*table*) : { path, dirty }; ignored if it is not a table.
 
 #### `editor_toolUtilities_session.rehydrateVec3Array(arr)`
 
-Reconvertit en place un tableau de positions chargées depuis le JSON ({x,y,z} simples) en vec3. Idempotent (les vec3 existants, qui ont une méthode distance, sont laissés tels quels) ; sans danger sur nil ou une non-table.
+Converts in place an array of positions loaded from JSON (plain {x,y,z}) into vec3. Idempotent (existing vec3s, which have a distance method, are left as is); safe on nil or a non-table.
 
-- `arr` (*table|nil*) : Tableau de positions.
+- `arr` (*table|nil*) : Array of positions.
 
 #### `editor_toolUtilities_session.renderButtons(spec)`
 
-Variante en ligne : dessine Save (une fois un fichier connu), Save As (si l'outil est non vide) et Load côte à côte, puis la fenêtre modale Replace/Merge.
+Inline variant: draws Save (once a file is known), Save As (if the tool is not empty) and Load side by side, then the Replace/Merge modal window.
 
-- `spec` (*table*) : Spécification de l'outil.
+- `spec` (*table*) : Tool specification.
 
 #### `editor_toolUtilities_session.renderButtonsColumns(spec)`
 
-Variante en colonnes : dessine Save, Save As et Load comme trois cellules de grille.
+Column variant: draws Save, Save As and Load as three grid cells.
 
-- `spec` (*table*) : Spécification de l'outil.
+- `spec` (*table*) : Tool specification.
 
 #### `editor_toolUtilities_session.saveIfEdited(spec)`
 
-Réécrit le document modifié sur le fichier auquel il est lié, pour un outil dont le travail ne doit jamais attendre un appui sur Save. Renvoie false s'il n'y a pas de fichier lié ou pas de modification.
+Rewrites the modified document to the file it is bound to, for a tool whose work must never wait for a Save press. Returns false if there is no bound file or no modification.
 
-- `spec` (*table*) : Spécification de l'outil.
-- **renvoie** : boolean true si enregistré.
+- `spec` (*table*) : Tool specification.
+- **returns**: boolean true if saved.
 
 #### `editor_toolUtilities_session.saveToFile(path, spec)`
 
-Écrit tous les éléments dans path en JSON de session portable : version, tool, mapName (niveau courant), items ou state, globals, records.
+Writes all items to path as portable session JSON: version, tool, mapName (current level), items or state, globals, records.
 
-- `path` (*string*) : Chemin du fichier.
-- `spec` (*table*) : Spécification de l'outil.
-- **renvoie** : boolean ok (toujours true).
-- **renvoie** : integer Nombre d'éléments de getItems().
+- `path` (*string*) : File path.
+- `spec` (*table*) : Tool specification.
+- **returns**: boolean ok (always true).
+- **returns**: integer Number of items from getItems().
 
 #### `editor_toolUtilities_session.unbind(toolId)`
 
-Détache un outil de son fichier : le prochain Save devra demander où écrire au lieu d'écraser silencieusement le dernier fichier chargé.
+Detaches a tool from its file: the next Save will have to ask where to write instead of silently overwriting the last loaded file.
 
-- `toolId` (*string*) : Identifiant de l'outil.
+- `toolId` (*string*) : Tool identifier.
 
 #### `editor_toolUtilities_session.windowTitle(toolId, label, id, newName)`
 
-Titre de fenêtre nommant le fichier lié (ou newName avant qu'il y en ait un, « New Session » par défaut). L'identifiant id suit « ### » pour qu'ImGui garde l'ancrage et la taille. Mis en cache par outil.
+Window title naming the bound file (or newName before there is one, "New Session" by default). The id follows "###" so that ImGui keeps the docking and size. Cached per tool.
 
-- `toolId` (*string*) : Identifiant de l'outil.
-- `label` (*string*) : Libellé affiché.
-- `id` (*string*) : Identifiant ImGui stable.
-- `newName` (*string|nil*) : Nom affiché tant qu'aucun fichier n'est lié.
-- **renvoie** : string Titre « label - [nom]###id ».
+- `toolId` (*string*) : Tool identifier.
+- `label` (*string*) : Displayed label.
+- `id` (*string*) : Stable ImGui identifier.
+- `newName` (*string|nil*) : Name displayed as long as no file is bound.
+- **returns**: string Title "label - [name]###id".
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/session.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/session.lua`.*

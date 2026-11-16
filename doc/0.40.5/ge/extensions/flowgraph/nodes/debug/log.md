@@ -1,28 +1,28 @@
 # `flowgraph_nodes_debug_log`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/debug/log.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/debug/log.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/debug/log")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/debug/log")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Log » (catégorie dynamic_instant, tags util/print). Écrit la valeur reçue dans la console du jeu (log) et dans le journal d'évènements du graphe (mgr:logEvent). Entrées : value (any ; les tables sont converties par dumps), logTag (string, défaut « Node #<id> »), logType (I Info, D Debug, W Warning, E Error ; défaut I). En mode dynamique 'repeat', le message est écrit à chaque frame.
+Flowgraph node "Log" (category dynamic_instant, tags util/print). Writes the received value to the game console (log) and to the graph event log (mgr:logEvent). Inputs: value (any; tables are converted by dumps), logTag (string, default "Node #<id>"), logType (I Info, D Debug, W Warning, E Error; default I). In 'repeat' dynamic mode, the message is written every frame.
 
-## Exemple
+## Example
 
 ```lua
--- le nœud équivaut à : log('I', 'Node #12', msg)
+-- the node is equivalent to: log('I', 'Node #12', msg)
 ```
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:createLogEntry()` | Convertit la valeur en texte (dumps pour une table), appelle log(type, tag, msg) et mgr:logEvent. | 49 |
-| `C:drawMiddle(builder, style)` | Éditeur : affiche ('type','tag',...). | 58 |
-| `C:postInit()` | Prépare les modèles du pin logType, masque logType et logTag, et fixe le tag par défaut « Node #id ». | 25 |
-| `C:work()` | Si dynamicMode vaut 'repeat', écrit une entrée de log. | 43 |
-| `C:workOnce()` | Écrit une entrée de log. | 39 |
+| `C:createLogEntry()` | Converts the value to text (dumps for a table), calls log(type, tag, msg) and mgr:logEvent. | 49 |
+| `C:drawMiddle(builder, style)` | Editor: displays ('type','tag',...). | 58 |
+| `C:postInit()` | Prepares the templates of the logType pin, hides logType and logTag, and sets the default tag "Node #id". | 25 |
+| `C:work()` | If dynamicMode is 'repeat', writes a log entry. | 43 |
+| `C:workOnce()` | Writes a log entry. | 39 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/debug/log.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/debug/log.lua`.*

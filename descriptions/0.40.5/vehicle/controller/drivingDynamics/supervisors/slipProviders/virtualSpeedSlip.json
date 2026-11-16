@@ -1,49 +1,191 @@
 {
   "path": "lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua",
-  "module": "Fournisseur de glissement (type \"auxiliary\", defaultOrder 70, providerOrder 10) qui compare la vitesse de chaque roue à la vitesse virtuelle du véhicule (virtualSensors.virtual.speed) pour estimer le glissement. Il s'enregistre auprès des superviseurs tractionControl et absControl (si présents) et leur répond via calculateSlipTractionControl et calculateSlipABSControl. Les résultats sont écrits dans les structures de roue du superviseur (wheelData.slip, wheelGroup.maxSlip/minSlip/slipRange).",
+  "module": "Slip provider (type \"auxiliary\", defaultOrder 70, providerOrder 10) that compares each wheel's speed to the vehicle's virtual speed (virtualSensors.virtual.speed) to estimate slip. It registers with the tractionControl and absControl supervisors (if present) and answers them via calculateSlipTractionControl and calculateSlipABSControl. The results are written into the supervisor's wheel structures (wheelData.slip, wheelGroup.maxSlip/minSlip/slipRange).",
   "notes": [
-    "Glissement de traction = clamp((vitesseRoue + offset) / (vitesseVirtuelle + offset) - 1, 0, 0.5) * coefficient, lissé par wheelData.slipSmoother. Le coefficient est le minimum de : coefficient de couple (throttle du moteur, 0..0.01 -> 0..1), steeringCoef du superviseur, et la confiance de virtualSpeed (0.5..0.8 -> 0..1). La vitesse de roue est corrigée par vehicleData.turningCircleSpeedRatios.",
-    "Glissement d'ABS = valeur absolue de (rapport - 1) bornée à 0.5, multipliée par la confiance de vitesse, aussi lissée.",
-    "Paramètres modifiables : tractionControl.isEnabled, absControl.isEnabled. Quand le traction control est désactivé, les glissements sont remis à 0 et calculateSlipTractionControl renvoie false (le fournisseur suivant est alors essayé).",
-    "Aucune clé jbeam n'est lue. Le fournisseur dépend de CMU.virtualSensors et CMU.vehicleData."
+    "Traction slip = clamp((wheelSpeed + offset) / (virtualSpeed + offset) - 1, 0, 0.5) * coefficient, smoothed by wheelData.slipSmoother. The coefficient is the minimum of: torque coefficient (motor throttle, 0..0.01 -> 0..1), the supervisor's steeringCoef, and the virtualSpeed confidence (0.5..0.8 -> 0..1). The wheel speed is corrected by vehicleData.turningCircleSpeedRatios.",
+    "ABS slip = absolute value of (ratio - 1) bounded to 0.5, multiplied by the speed confidence, also smoothed.",
+    "Modifiable parameters: tractionControl.isEnabled, absControl.isEnabled. When traction control is disabled, the slips are reset to 0 and calculateSlipTractionControl returns false (the next provider is then tried).",
+    "No jbeam key is read. The provider depends on CMU.virtualSensors and CMU.vehicleData."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution par défaut (70)."},
-    "providerOrder": {"type": "number", "desc": "Ordre de priorité parmi les fournisseurs (10, plus petit = essayé en premier)."},
-    "isActive": {"type": "boolean", "desc": "Vrai après init."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "Default execution order (70)."
+    },
+    "providerOrder": {
+      "type": "number",
+      "desc": "Priority order among the providers (10, lower = tried first)."
+    },
+    "isActive": {
+      "type": "boolean",
+      "desc": "True after init."
+    }
   },
   "functions": {
-    "init": {"desc": "Passe isActive à true.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "initSecondStage": {"desc": "S'enregistre comme fournisseur de glissement auprès de tractionControl et absControl.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "initLastStage": {"desc": "Sauvegarde les paramètres initiaux.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "reset": {"desc": "Ne fait rien.", "params": {}, "returns": [], "internal": true},
-    "updateGFX": {"desc": "Vide (version debug : envoie l'état d'activation).", "params": {"dt": {"type": "number", "desc": "Pas de temps graphique (s)."}}, "returns": [], "internal": true},
-    "calculateSlipTractionControl": {
-      "desc": "Calcule le glissement de chaque roue d'un groupe motorisé et les extrêmes du groupe. Appelé par tractionControl.",
+    "init": {
+      "desc": "Sets isActive to true.",
       "params": {
-        "wheelGroup": {"type": "table", "desc": "Groupe de roues {motor, wheels, wheelCount, maxSlip, minSlip, slipRange}."},
-        "steeringCoef": {"type": "number", "desc": "Facteur 0.5..1 lié au braquage."},
-        "velocityOffset": {"type": "number", "desc": "Décalage de vitesse (m/s) évitant la division par ~0 à basse vitesse."},
-        "dt": {"type": "number", "desc": "Pas de temps (s), non utilisé."}
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "Vrai si le glissement a été calculé, false si désactivé."}]
+      "returns": [],
+      "internal": true
+    },
+    "initSecondStage": {
+      "desc": "Registers as a slip provider with tractionControl and absControl.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initLastStage": {
+      "desc": "Saves the initial parameters.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Does nothing.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Empty (debug version: sends the enabled state).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Graphics time step (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "calculateSlipTractionControl": {
+      "desc": "Computes the slip of each wheel of a powered group and the group's extremes. Called by tractionControl.",
+      "params": {
+        "wheelGroup": {
+          "type": "table",
+          "desc": "Wheel group {motor, wheels, wheelCount, maxSlip, minSlip, slipRange}."
+        },
+        "steeringCoef": {
+          "type": "number",
+          "desc": "0.5..1 factor tied to steering."
+        },
+        "velocityOffset": {
+          "type": "number",
+          "desc": "Speed offset (m/s) avoiding division by ~0 at low speed."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s), unused."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if the slip was computed, false if disabled."
+        }
+      ]
     },
     "calculateSlipABSControl": {
-      "desc": "Calcule le glissement (en valeur absolue) d'une seule roue pour l'ABS. Appelé par le superviseur absControl.",
+      "desc": "Computes the slip (as an absolute value) of a single wheel for the ABS. Called by the absControl supervisor.",
       "params": {
-        "wheelData": {"type": "table", "desc": "Données de roue {wd, slip, slipSmoother}."},
-        "velocityOffset": {"type": "number", "desc": "Décalage de vitesse (m/s)."},
-        "dt": {"type": "number", "desc": "Pas de temps (s), non utilisé."}
+        "wheelData": {
+          "type": "table",
+          "desc": "Wheel data {wd, slip, slipSmoother}."
+        },
+        "velocityOffset": {
+          "type": "number",
+          "desc": "Speed offset (m/s)."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s), unused."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "Vrai si le glissement a été calculé, false si désactivé."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if the slip was computed, false if disabled."
+        }
+      ]
     },
-    "setDebugMode": {"desc": "Active/désactive les paquets de debug.", "params": {"debugEnabled": {"type": "boolean", "desc": "Vrai pour activer."}}, "returns": []},
-    "registerCMU": {"desc": "Mémorise la référence au CMU.", "params": {"cmu": {"type": "table", "desc": "Contrôleur CMU."}}, "returns": [], "internal": true},
-    "shutdown": {"desc": "Désactive le fournisseur.", "params": {}, "returns": []},
-    "setParameters": {"desc": "Applique tractionControl.isEnabled et absControl.isEnabled.", "params": {"parameters": {"type": "table<string, any>", "desc": "Paramètres à appliquer."}}, "returns": []},
-    "setConfig": {"desc": "Remplace la configuration.", "params": {"configTable": {"type": "table", "desc": "Table {tractionControl = {isEnabled}, absControl = {isEnabled}}."}}, "returns": []},
-    "getConfig": {"desc": "Renvoie une copie de la configuration.", "params": {}, "returns": [{"type": "table", "desc": "Copie."}]},
-    "sendConfigData": {"desc": "Envoie la configuration au CMU.", "params": {}, "returns": []}
+    "setDebugMode": {
+      "desc": "Enables/disables debug packets.",
+      "params": {
+        "debugEnabled": {
+          "type": "boolean",
+          "desc": "True to enable."
+        }
+      },
+      "returns": []
+    },
+    "registerCMU": {
+      "desc": "Stores the reference to the CMU.",
+      "params": {
+        "cmu": {
+          "type": "table",
+          "desc": "CMU controller."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "shutdown": {
+      "desc": "Disables the provider.",
+      "params": {},
+      "returns": []
+    },
+    "setParameters": {
+      "desc": "Applies tractionControl.isEnabled and absControl.isEnabled.",
+      "params": {
+        "parameters": {
+          "type": "table<string, any>",
+          "desc": "Parameters to apply."
+        }
+      },
+      "returns": []
+    },
+    "setConfig": {
+      "desc": "Replaces the configuration.",
+      "params": {
+        "configTable": {
+          "type": "table",
+          "desc": "Table {tractionControl = {isEnabled}, absControl = {isEnabled}}."
+        }
+      },
+      "returns": []
+    },
+    "getConfig": {
+      "desc": "Returns a copy of the configuration.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy."
+        }
+      ]
+    },
+    "sendConfigData": {
+      "desc": "Sends the configuration to the CMU.",
+      "params": {},
+      "returns": []
+    }
   }
 }

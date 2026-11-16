@@ -2,45 +2,45 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/compositors/styles/english/modifiers.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Catalogue des modificateurs atomiques anglais pour les notes de rallye (freinage, guidage de trajectoire, coupes, 'keep', chicanes, sauts, crêtes, creux, bosses, surfaces, eau, repères du bord de route, flux, appels de spéciale). Chaque entrée est {text, tags, visual, variant?} : text = phrase parlée, tags = catégories (pace, line, cut, keep, chicane, jump, crest, dip, bump, grade, surface, water, landmark, flow, stage), visual = icône/couleurs pour les notes visuelles ({} = pas de tuile). Utilisé par les styles english/casual et english/enthusiast.
---- Accès : extension `gameplay_rally_compositors_styles_english_modifiers` : `extensions.load("gameplay_rally_compositors_styles_english_modifiers")`, puis la globale `gameplay_rally_compositors_styles_english_modifiers`
+--- Catalog of the English atomic modifiers for rally notes (braking, line guidance, cuts, 'keep', chicanes, jumps, crests, dips, bumps, surfaces, water, roadside landmarks, flow, stage calls). Each entry is {text, tags, visual, variant?}: text = spoken phrase, tags = categories (pace, line, cut, keep, chicane, jump, crest, dip, bump, grade, surface, water, landmark, flow, stage), visual = icon/colors for the visual notes ({} = no tile). Used by the english/casual and english/enthusiast styles.
+--- Access: extension `gameplay_rally_compositors_styles_english_modifiers`: `extensions.load("gameplay_rally_compositors_styles_english_modifiers")`, then the global `gameplay_rally_compositors_styles_english_modifiers`
 ---@class gameplay_rally_compositors_styles_english_modifiers
 ---@field atJunction table 'at junction' (landmark).
 ---@field atRock table 'at rock' (landmark).
 ---@field atTree table 'at tree' (landmark).
----@field badDip table 'bad dip' (dip), icône pothole.
+---@field badDip table 'bad dip' (dip), pothole icon.
 ---@field badDipJump table 'bad dip jump' (jump).
 ---@field badDrop table 'bad drop' (bump).
 ---@field badJump table 'bad jump' (jump).
 ---@field badKick table 'bad kick' (bump).
 ---@field beBrave table 'be brave' (pace).
 ---@field bigCrest table 'big crest' (crest).
----@field bigCut table 'big cut' (cut), badge ciseaux.
+---@field bigCut table 'big cut' (cut), scissors badge.
 ---@field bigJump table 'big jump' (jump).
 ---@field brake table 'brake' (pace).
 ---@field brakeOverBumps table 'brake over bumps' (pace).
 ---@field brakeOverCrest table 'brake over crest' (pace).
 ---@field braking table 'braking' (pace).
----@field bump table 'over bump' (bump), icône bump.
----@field bumpy table 'bumpy' (bump), icône bumps.
+---@field bump table 'over bump' (bump), bump icon.
+---@field bumpy table 'bumpy' (bump), bumps icon.
 ---@field chicaneLeftEntry table 'chicane left entry' (chicane).
 ---@field chicaneRightEntry table 'chicane right entry' (chicane).
 ---@field crest table 'crest' (crest).
----@field cut table 'cut' (cut), badge ciseaux.
+---@field cut table 'cut' (cut), scissors badge.
 ---@field deceptive table 'deceptive' (flow).
 ---@field dip table 'dip' (dip).
----@field dont table 'don't' (cut), badge ciseaux barrés.
----@field dontCut table 'don't cut' (cut), badge ciseaux barrés.
----@field dontCutLate table 'don't cut late' (cut), badge ciseaux barrés.
+---@field dont table 'don't' (cut), crossed-out scissors badge.
+---@field dontCut table 'don't cut' (cut), crossed-out scissors badge.
+---@field dontCutLate table 'don't cut late' (cut), crossed-out scissors badge.
 ---@field dontGoWide table 'don't go wide' (line).
----@field down table 'down' (grade), sans visuel.
+---@field down table 'down' (grade), no visual.
 ---@field drop table 'drop' (bump).
 ---@field early table 'early' (line).
 ---@field earlyCut table 'early cut' (cut).
----@field finish table 'over finish' (stage), icône finish noir et blanc.
+---@field finish table 'over finish' (stage), black and white finish icon.
 ---@field getsFasterNow table 'gets faster now' (pace).
 ---@field goWide table 'go wide' (line).
----@field intoBridge table 'into bridge' (landmark), icône bridge.
+---@field intoBridge table 'into bridge' (landmark), bridge icon.
 ---@field intoCrest table 'into crest' (crest).
 ---@field intoTurn table 'into turn' (pace).
 ---@field intoWater table 'into water' (water).
@@ -58,17 +58,17 @@
 ---@field longCrest table 'long crest' (crest).
 ---@field middle table 'middle' (line).
 ---@field middleOverCrest table 'middle over crest' (line).
----@field narrowBridge table 'narrow bridge' (landmark), icône bridge.
----@field narrows table 'narrows' (line), icône narrows.
+---@field narrowBridge table 'narrow bridge' (landmark), bridge icon.
+---@field narrows table 'narrows' (line), narrows icon.
 ---@field nips table 'nips' (line).
 ---@field ontoGravel table 'onto gravel' (surface).
 ---@field ontoIce table 'onto ice' (surface).
 ---@field ontoMud table 'onto mud' (surface).
 ---@field ontoTarmac table 'onto tarmac' (surface).
----@field overBridge table 'over bridge' (landmark), icône bridge.
----@field overCrest table 'over crest' (crest), variant '1', icône crest.
+---@field overBridge table 'over bridge' (landmark), bridge icon.
+---@field overCrest table 'over crest' (crest), variant '1', crest icon.
 ---@field overDip table 'over dip' (dip).
----@field overJump table 'over jump' (jump), icône jumpOverBump.
+---@field overJump table 'over jump' (jump), jumpOverBump icon.
 ---@field pastFence table 'past fence' (landmark).
 ---@field pastHouse table 'past house' (landmark).
 ---@field pastJunction table 'past junction' (landmark).
@@ -81,17 +81,17 @@
 ---@field smallCut table 'small cut' (cut).
 ---@field stop table 'stop' (pace).
 ---@field sudden table 'sudden' (flow).
----@field throughBridge table 'through bridge' (landmark), icône bridge.
+---@field throughBridge table 'through bridge' (landmark), bridge icon.
 ---@field throughDip table 'through dip' (dip).
 ---@field throughGate table 'through gate' (landmark).
 ---@field throughTunnel table 'through tunnel' (landmark).
 ---@field toStop table 'to stop' (stage).
 ---@field turn table 'turn' (pace).
 ---@field twisty table 'twisty' (line).
----@field underBridge table 'under bridge' (landmark), icône bridge.
----@field up table 'up' (grade), sans visuel.
+---@field underBridge table 'under bridge' (landmark), bridge icon.
+---@field up table 'up' (grade), no visual.
 ---@field water table 'water' (water).
----@field watersplash table 'watersplash' (water), icône water.
+---@field watersplash table 'watersplash' (water), water icon.
 ---@field wide table 'wide' (line).
 gameplay_rally_compositors_styles_english_modifiers = {}
 

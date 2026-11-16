@@ -1,42 +1,42 @@
 # `util_vehicleRopeDebug`
 
-*Fichier : `lua/ge/extensions/util/vehicleRopeDebug.lua` · VM : Game Engine (GE) · 1200 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/vehicleRopeDebug.lua` · VM: Game Engine (GE) · 1200 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_vehicleRopeDebug` : `extensions.load("util_vehicleRopeDebug")`, puis la globale `util_vehicleRopeDebug`
+**Access:** extension `util_vehicleRopeDebug`: `extensions.load("util_vehicleRopeDebug")`, then the global `util_vehicleRopeDebug`
 
-Outil de débogage ImGui « Rope Visual Sandbox » pour les cordes visuelles (rope visuals) du véhicule joueur. Il liste les cordes de `be:getPlayerVehicle(0).ropeIds` (via `getRopeVisual`), dessine leurs nœuds et directions avec `debugDrawer`, permet de survoler et de faire glisser les nœuds à la souris, d'éditer les positions des ancrages A et B, et affiche des statistiques de performance (temps de simulation et de rendu par corde, pics). Se charge à la main depuis la console.
+ImGui debug tool "Rope Visual Sandbox" for the player vehicle's visual ropes (rope visuals). It lists the ropes of `be:getPlayerVehicle(0).ropeIds` (via `getRopeVisual`), draws their nodes and directions with `debugDrawer`, lets you hover and drag nodes with the mouse, edit the positions of anchors A and B, and displays performance statistics (simulation and render time per rope, spikes). Loaded manually from the console.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('util_vehicleRopeDebug')
 ```
 
-## Remarques
+## Notes
 
-- Aucune fonction n'est appelée par le jeu à part le hook onUpdate : tout le travail (statistiques, interaction souris, dessin, fenêtre ImGui) se fait dans M.onUpdate chaque image.
-- La fenêtre est ouverte par défaut (windowOpen = true) ; la corde est sélectionnée automatiquement : la première du véhicule joueur.
-- Le glissement d'un nœud se fait dans le plan horizontal à la hauteur Z du nœud saisi (rope:setDraggedNode, -1 pour relâcher).
-- Les statistiques de performance supposent une image de 16,67 ms (60 FPS) et gardent 60 images d'historique ; un pic = plus de 2 fois la moyenne.
+- No function is called by the game except the onUpdate hook: all the work (statistics, mouse interaction, drawing, ImGui window) is done in M.onUpdate each frame.
+- The window is open by default (windowOpen = true); the rope is selected automatically: the first one of the player vehicle.
+- Dragging a node is done in the horizontal plane at the Z height of the grabbed node (rope:setDraggedNode, -1 to release).
+- The performance statistics assume a 16.67 ms frame (60 FPS) and keep 60 frames of history; a spike = more than 2 times the average.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_vehicleRopeDebug.onUpdate(dt)` | Mise à jour par image : met à jour les statistiques de performance, gère le survol et le glissement des nœuds de corde à la souris (si debugNodes est actif), dessine les nœuds des cordes du véhicule joueur, puis construit la fenêtre ImGui « Rope Visual Sandbox ». *(interne)* *(hook)* | 572 |
+| `util_vehicleRopeDebug.onUpdate(dt)` | Per-frame update: updates the performance statistics, handles hovering and dragging of rope nodes with the mouse (if debugNodes is active), draws the nodes of the player vehicle's ropes, then builds the ImGui window "Rope Visual Sandbox". *(internal)* *(hook)* | 572 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_vehicleRopeDebug.onUpdate(dt)`
 
-Mise à jour par image : met à jour les statistiques de performance, gère le survol et le glissement des nœuds de corde à la souris (si debugNodes est actif), dessine les nœuds des cordes du véhicule joueur, puis construit la fenêtre ImGui « Rope Visual Sandbox ».
+Per-frame update: updates the performance statistics, handles hovering and dragging of rope nodes with the mouse (if debugNodes is active), draws the nodes of the player vehicle's ropes, then builds the ImGui window "Rope Visual Sandbox".
 
-- `dt` (*number*) : pas de temps de l'image, en secondes (hook onUpdate)
+- `dt` (*number*) : frame time step, in seconds (onUpdate hook)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicle`
 - `debugDrawer:` `drawArrow`, `drawLineInstance`, `drawSphere`, `drawText`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/vehicleRopeDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/vehicleRopeDebug.lua`.*

@@ -1,79 +1,124 @@
 {
   "path": "lua/ge/extensions/editor/raceEditor/segments.lua",
-  "module": "Sous-fenêtre « Segments » de l'éditeur de course (raceEditor). Un segment relie deux pathnodes (From/To) et a un mode : waypoint, capsules ou navpath (si getBeNavpath()). En mode capsules, on édite une liste de points-capsules (position, rayon) au gizmo ou au clavier. Alt + clic sur un nœud définit la source, Shift + clic la cible, Ctrl affiche des sphères au milieu des capsules pour en insérer une. Les modifications passent par editor.history. Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/segments')(raceEditor).",
+  "module": "\"Segments\" sub-window of the race editor (raceEditor). A segment links two pathnodes (From/To) and has a mode: waypoint, capsules or navpath (if getBeNavpath()). In capsules mode, you edit a list of capsule points (position, radius) with the gizmo or keyboard. Alt + click on a node sets the source, Shift + click the target, Ctrl shows spheres in the middle of capsules to insert one. Changes go through editor.history. The module returns a constructor: require('/lua/ge/extensions/editor/raceEditor/segments')(raceEditor).",
   "notes": [
-    "Bug : C:endDragging référence serializedUndo et serializedRedo, mais ces fonctions locales sont déclarées après lui dans le fichier ; elles sont donc nil (globales) au moment de la compilation et l'action d'historique du gizmo est passée sans undo/redo valides. Les autres actions (addHistory) fonctionnent car elles sont définies après les locales.",
-    "Le bouton « Remove » d'une capsule nomme son action d'historique « Added Capsule » (copier-coller).",
-    "Les pacenotes du segment sélectionné sont affichées, les autres masquées."
+    "Bug: C:endDragging references serializedUndo and serializedRedo, but these local functions are declared after it in the file; they are therefore nil (globals) at compile time and the gizmo history action is passed without valid undo/redo. The other actions (addHistory) work because they are defined after the locals.",
+    "A capsule's \"Remove\" button names its history action \"Added Capsule\" (copy-paste).",
+    "The selected segment's pacenotes are shown, the others hidden."
   ],
   "classes": {
     "C": {
-      "desc": "Fenêtre Segments (windowDescription = 'Segments'). Instanciée avec init(raceEditor).",
+      "desc": "Segments window (windowDescription = 'Segments'). Instantiated with init(raceEditor).",
       "functions": {
         "init": {
-          "desc": "Mémorise raceEditor ; index de segment et de capsule à nil.",
-          "params": {"raceEditor": {"type": "table", "desc": "Module editor_raceEditor."}},
+          "desc": "Stores raceEditor; segment and capsule indices set to nil.",
+          "params": {
+            "raceEditor": {
+              "type": "table",
+              "desc": "Module editor_raceEditor."
+            }
+          },
           "internal": true
         },
         "setPath": {
-          "desc": "Définit le chemin de course édité.",
-          "params": {"path": {"type": "table", "desc": "Objet gameplay/race/path."}}
+          "desc": "Sets the race path being edited.",
+          "params": {
+            "path": {
+              "type": "table",
+              "desc": "gameplay/race/path object."
+            }
+          }
         },
         "selected": {
-          "desc": "Appelé quand l'onglet devient actif : désélectionne et dessine les segments en « normal ».",
+          "desc": "Called when the tab becomes active: deselects and draws segments in \"normal\".",
           "internal": true
         },
         "unselect": {
-          "desc": "Appelé quand l'onglet est quitté : segments en « faded », retire les raccourcis Shift et Alt.",
+          "desc": "Called when the tab is left: segments in \"faded\", removes the Shift and Alt shortcuts.",
           "internal": true
         },
         "selectSegment": {
-          "desc": "Sélectionne le segment d'ID index (nil pour aucun) : met en surbrillance, charge le nom, définit les raccourcis Shift « Set Target » / Alt « Set Source » et n'affiche que les pacenotes de ce segment.",
-          "params": {"index": {"type": "integer|nil", "desc": "ID du segment."}}
+          "desc": "Selects the segment with ID index (nil for none): highlights, loads the name, sets the Shift \"Set Target\" / Alt \"Set Source\" shortcuts and shows only this segment's pacenotes.",
+          "params": {
+            "index": {
+              "type": "integer|nil",
+              "desc": "Segment ID."
+            }
+          }
         },
         "selectCapsule": {
-          "desc": "Sélectionne un point-capsule du segment courant et place le gizmo dessus.",
-          "params": {"index": {"type": "integer|nil", "desc": "Indice du point-capsule (à partir de 1)."}}
+          "desc": "Selects a capsule point of the current segment and places the gizmo on it.",
+          "params": {
+            "index": {
+              "type": "integer|nil",
+              "desc": "Capsule point index (1-based)."
+            }
+          }
         },
         "updateTransform": {
-          "desc": "Place le gizmo sur la capsule sélectionnée (sans effet si le gizmo est interdit ou si aucune capsule n'est choisie).",
+          "desc": "Places the gizmo on the selected capsule (no effect if the gizmo is forbidden or no capsule is chosen).",
           "internal": true
         },
         "beginDrag": {
-          "desc": "Début de manipulation au gizmo : mémorise le rayon de la capsule et l'état sérialisé du segment.",
+          "desc": "Start of gizmo manipulation: stores the capsule radius and the segment's serialized state.",
           "internal": true
         },
         "dragging": {
-          "desc": "Pendant la manipulation : applique translation (pos) ou échelle (radius, jamais négatif) à la capsule.",
+          "desc": "During manipulation: applies translation (pos) or scaling (radius, never negative) to the capsule.",
           "internal": true
         },
         "endDragging": {
-          "desc": "Fin de manipulation : tente de valider l'action d'historique « Manipulated Capsule Node via Gizmo » (voir notes : fonctions undo/redo nil).",
+          "desc": "End of manipulation: tries to commit the \"Manipulated Capsule Node via Gizmo\" history action (see notes: nil undo/redo functions).",
           "internal": true
         },
         "addHistory": {
-          "desc": "Valide une action d'historique pour le segment courant à partir de l'état sérialisé précédent et de l'état actuel ; undo/redo restaurent le segment et la capsule sélectionnés.",
-          "params": {"name": {"type": "string", "desc": "Nom de l'action."}, "old": {"type": "table", "desc": "Résultat de segment:onSerialize() avant la modification."}}
+          "desc": "Commits a history action for the current segment from the previous serialized state and the current state; undo/redo restore the segment and the selected capsule.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Name of the action."
+            },
+            "old": {
+              "type": "table",
+              "desc": "Result of segment:onSerialize() before the modification."
+            }
+          }
         },
         "draw": {
-          "desc": "Appelé à chaque frame : mémorise mouseInfo, gère gizmo et entrées si autorisé, puis dessine la liste des segments et le panneau.",
-          "params": {"mouseInfo": {"type": "table", "desc": "Infos souris (valid, down, camPos, rayDir, rayCast, closestNodeHovered…)."}},
+          "desc": "Called every frame: stores mouseInfo, handles gizmo and inputs if allowed, then draws the segment list and the panel.",
+          "params": {
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Mouse info (valid, down, camPos, rayDir, rayCast, closestNodeHovered...)."
+            }
+          },
           "internal": true
         },
         "input": {
-          "desc": "Gère la souris pour le segment sélectionné : Alt/Shift + clic sur un nœud pour changer source/cible ; en mode capsules, clic pour sélectionner une capsule et Ctrl + clic au milieu de deux capsules pour en ajouter une.",
+          "desc": "Handles the mouse for the selected segment: Alt/Shift + click on a node to change source/target; in capsules mode, click to select a capsule and Ctrl + click between two capsules to add one.",
           "internal": true
         },
         "mouseDistanceTo": {
-          "desc": "Distance caméra-point si le rayon souris traverse la sphère du point, sinon -1.",
+          "desc": "Camera-to-point distance if the mouse ray crosses the point's sphere, otherwise -1.",
           "params": {
-            "point": {"type": "table", "desc": "Table avec pos (vec3) et radius."},
-            "mouseInfo": {"type": "table", "desc": "Infos souris (camPos, rayDir)."}
+            "point": {
+              "type": "table",
+              "desc": "Table with pos (vec3) and radius."
+            },
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Mouse info (camPos, rayDir)."
+            }
           },
-          "returns": [{"type": "number", "desc": "Distance en mètres, ou -1 si non survolé."}]
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Distance in meters, or -1 if not hovered."
+            }
+          ]
         },
         "drawSegmentList": {
-          "desc": "Dessine la liste des segments (« (!) » si un nœud est manquant), le bouton Create et le panneau du segment : suppression, déplacement, nom, From/To, mode, et les capsules (liste, position, rayon, Add Before/After, Remove).",
+          "desc": "Draws the segment list (\"(!)\" if a node is missing), the Create button and the segment panel: delete, move, name, From/To, mode, and the capsules (list, position, radius, Add Before/After, Remove).",
           "internal": true
         }
       }

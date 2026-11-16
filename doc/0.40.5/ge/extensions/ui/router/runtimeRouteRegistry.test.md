@@ -1,189 +1,189 @@
 # `ui_router_runtimeRouteRegistry.test`
 
-*Fichier : `lua/ge/extensions/ui/router/runtimeRouteRegistry.test.lua` · VM : Game Engine (GE) · 367 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/runtimeRouteRegistry.test.lua` · VM: Game Engine (GE) · 367 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_runtimeRouteRegistry.test` : `extensions.load("ui_router_runtimeRouteRegistry.test")`, puis la globale `ui_router_runtimeRouteRegistry.test`
+**Access:** extension `ui_router_runtimeRouteRegistry.test`: `extensions.load("ui_router_runtimeRouteRegistry.test")`, then the global `ui_router_runtimeRouteRegistry.test`
 
-Tests unitaires du registre de routes d'exécution (analyse des routes Vue brutes, validation transactionnelle, précédence des sources, diffs ajouté/retiré/modifié, isolation des instances). Lancement : extensions.testFramework_TestManager:runTestFiles("runtimeRouteRegistry"). Utile comme exemples du format de routes accepté par registerModRoutes.
+Unit tests of the runtime route registry (parsing of raw Vue routes, transactional validation, source precedence, added/removed/changed diffs, instance isolation). Run with: extensions.testFramework_TestManager:runTestFiles("runtimeRouteRegistry"). Useful as examples of the route format accepted by registerModRoutes.
 
-## Remarques
+## Notes
 
-- Les fonctions testXxx(ctx) sont exécutées par testFramework_TestManager ; le jeu ne les appelle pas en usage normal.
+- The testXxx(ctx) functions are run by testFramework_TestManager; the game does not call them in normal use.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_runtimeRouteRegistry.test.testAppliesAllowlistedLuaRouteOverrides(ctx)` | meta.luaRoute applique uniquement les clés autorisées. *(interne)* | 123 |
-| `ui_router_runtimeRouteRegistry.test.testArrayRouteNamesShareDefinition(ctx)` | Un `name` en tableau crée plusieurs routes partageant la même définition. *(interne)* | 79 |
-| `ui_router_runtimeRouteRegistry.test.testEffectiveRoutesAreDeepCopied(ctx)` | getEffectiveRoutes renvoie des copies profondes : les modifier n'affecte pas le registre. *(interne)* | 335 |
-| `ui_router_runtimeRouteRegistry.test.testFailedReRegistrationKeepsPreviousSnapshot(ctx)` | Une ré-inscription invalide laisse l'instantané précédent intact (transactionnel). *(interne)* | 202 |
-| `ui_router_runtimeRouteRegistry.test.testInvalidSourceIdRejected(ctx)` | Un sourceId vide ou non-chaîne est rejeté. *(interne)* | 359 |
-| `ui_router_runtimeRouteRegistry.test.testMapsUiFieldsFromMeta(ctx)` | Les champs meta (uiTypes, infoBar, topBar, uiApps, triggerPause, uiNav…) sont reportés dans `ui`. *(interne)* | 94 |
-| `ui_router_runtimeRouteRegistry.test.testNewestSourceWinsWithoutComposition(ctx)` | La source la plus récente gagne pour un même nom, sans fusion. *(interne)* | 217 |
-| `ui_router_runtimeRouteRegistry.test.testParsesDeeplyNestedChildren(ctx)` | Les enfants imbriqués sur plusieurs niveaux sont tous analysés. *(interne)* | 56 |
-| `ui_router_runtimeRouteRegistry.test.testParsesSingleNamedRouteWithVueDefaults(ctx)` | Une route nommée reçoit les valeurs par défaut Vue (runtime, ui.uiTypes = vue, filtre only). *(interne)* | 20 |
-| `ui_router_runtimeRouteRegistry.test.testReRegistrationRemovesStaleNames(ctx)` | Ré-enregistrer une source retire les noms qui ne figurent plus dans la nouvelle liste. *(interne)* | 285 |
-| `ui_router_runtimeRouteRegistry.test.testReRegistrationRetainsOriginalPrecedence(ctx)` | Ré-enregistrer une source conserve son rang de priorité. *(interne)* | 230 |
-| `ui_router_runtimeRouteRegistry.test.testRegisterReportsAddedAndChangedDiffs(ctx)` | register renvoie les listes added et changed correctes. *(interne)* | 297 |
-| `ui_router_runtimeRouteRegistry.test.testRejectsBackTargetAndFallbackTargetTogether(ctx)` | backTarget et fallbackTarget simultanés sont rejetés. *(interne)* | 177 |
-| `ui_router_runtimeRouteRegistry.test.testRejectsDuplicateRouteNameWithinSource(ctx)` | Un nom de route en double dans une source est rejeté. *(interne)* | 185 |
-| `ui_router_runtimeRouteRegistry.test.testRejectsFunctionLifecycleHook(ctx)` | Un hook donné comme fonction (et non chaîne) est rejeté. *(interne)* | 169 |
-| `ui_router_runtimeRouteRegistry.test.testRejectsInvalidLifecycleHook(ctx)` | Un hook de cycle de vie qui n'est pas « module.func » est rejeté. *(interne)* | 160 |
-| `ui_router_runtimeRouteRegistry.test.testRejectsInvalidNameShape(ctx)` | Un `name` de type invalide (ni chaîne ni tableau de chaînes) est rejeté. *(interne)* | 194 |
-| `ui_router_runtimeRouteRegistry.test.testSeparateRegistriesDoNotShareState(ctx)` | Deux instances de registre sont indépendantes. *(interne)* | 349 |
-| `ui_router_runtimeRouteRegistry.test.testSourceOrderTracksFirstRegistration(ctx)` | getSourceOrder suit l'ordre de première inscription. *(interne)* | 270 |
-| `ui_router_runtimeRouteRegistry.test.testUnnamedGroupEmitsChildrenButNotItself(ctx)` | Un nœud sans nom ne produit pas de route mais ses enfants oui. *(interne)* | 38 |
-| `ui_router_runtimeRouteRegistry.test.testUnregisterMissingSourceIsNoop(ctx)` | Retirer une source inconnue réussit sans effet (existed = false). *(interne)* | 324 |
-| `ui_router_runtimeRouteRegistry.test.testUnregisterReportsRemovedDiff(ctx)` | unregister renvoie la liste removed correcte. *(interne)* | 313 |
-| `ui_router_runtimeRouteRegistry.test.testUnregisterRestoresPreviousWinner(ctx)` | Retirer la source gagnante restaure la définition de la source précédente. *(interne)* | 257 |
-| `ui_router_runtimeRouteRegistry.test.testUnregisterThenRegisterCreatesNewPrecedence(ctx)` | Retirer puis ré-enregistrer une source lui donne le rang le plus récent. *(interne)* | 243 |
+| `ui_router_runtimeRouteRegistry.test.testAppliesAllowlistedLuaRouteOverrides(ctx)` | meta.luaRoute applies only the allowed keys. *(internal)* | 123 |
+| `ui_router_runtimeRouteRegistry.test.testArrayRouteNamesShareDefinition(ctx)` | An array `name` creates several routes sharing the same definition. *(internal)* | 79 |
+| `ui_router_runtimeRouteRegistry.test.testEffectiveRoutesAreDeepCopied(ctx)` | getEffectiveRoutes returns deep copies: modifying them does not affect the registry. *(internal)* | 335 |
+| `ui_router_runtimeRouteRegistry.test.testFailedReRegistrationKeepsPreviousSnapshot(ctx)` | An invalid re-registration leaves the previous snapshot intact (transactional). *(internal)* | 202 |
+| `ui_router_runtimeRouteRegistry.test.testInvalidSourceIdRejected(ctx)` | An empty or non-string sourceId is rejected. *(internal)* | 359 |
+| `ui_router_runtimeRouteRegistry.test.testMapsUiFieldsFromMeta(ctx)` | The meta fields (uiTypes, infoBar, topBar, uiApps, triggerPause, uiNav...) are carried over into `ui`. *(internal)* | 94 |
+| `ui_router_runtimeRouteRegistry.test.testNewestSourceWinsWithoutComposition(ctx)` | The most recent source wins for the same name, with no merging. *(internal)* | 217 |
+| `ui_router_runtimeRouteRegistry.test.testParsesDeeplyNestedChildren(ctx)` | Children nested over several levels are all parsed. *(internal)* | 56 |
+| `ui_router_runtimeRouteRegistry.test.testParsesSingleNamedRouteWithVueDefaults(ctx)` | A named route gets the Vue defaults (runtime, ui.uiTypes = vue, filter only). *(internal)* | 20 |
+| `ui_router_runtimeRouteRegistry.test.testReRegistrationRemovesStaleNames(ctx)` | Re-registering a source removes the names that are no longer in the new list. *(internal)* | 285 |
+| `ui_router_runtimeRouteRegistry.test.testReRegistrationRetainsOriginalPrecedence(ctx)` | Re-registering a source keeps its priority rank. *(internal)* | 230 |
+| `ui_router_runtimeRouteRegistry.test.testRegisterReportsAddedAndChangedDiffs(ctx)` | register returns the correct added and changed lists. *(internal)* | 297 |
+| `ui_router_runtimeRouteRegistry.test.testRejectsBackTargetAndFallbackTargetTogether(ctx)` | Simultaneous backTarget and fallbackTarget are rejected. *(internal)* | 177 |
+| `ui_router_runtimeRouteRegistry.test.testRejectsDuplicateRouteNameWithinSource(ctx)` | A duplicate route name within a source is rejected. *(internal)* | 185 |
+| `ui_router_runtimeRouteRegistry.test.testRejectsFunctionLifecycleHook(ctx)` | A hook given as a function (not a string) is rejected. *(internal)* | 169 |
+| `ui_router_runtimeRouteRegistry.test.testRejectsInvalidLifecycleHook(ctx)` | A lifecycle hook that is not "module.func" is rejected. *(internal)* | 160 |
+| `ui_router_runtimeRouteRegistry.test.testRejectsInvalidNameShape(ctx)` | A `name` of invalid type (neither string nor array of strings) is rejected. *(internal)* | 194 |
+| `ui_router_runtimeRouteRegistry.test.testSeparateRegistriesDoNotShareState(ctx)` | Two registry instances are independent. *(internal)* | 349 |
+| `ui_router_runtimeRouteRegistry.test.testSourceOrderTracksFirstRegistration(ctx)` | getSourceOrder follows the order of first registration. *(internal)* | 270 |
+| `ui_router_runtimeRouteRegistry.test.testUnnamedGroupEmitsChildrenButNotItself(ctx)` | A node without a name produces no route but its children do. *(internal)* | 38 |
+| `ui_router_runtimeRouteRegistry.test.testUnregisterMissingSourceIsNoop(ctx)` | Unregistering an unknown source succeeds with no effect (existed = false). *(internal)* | 324 |
+| `ui_router_runtimeRouteRegistry.test.testUnregisterReportsRemovedDiff(ctx)` | unregister returns the correct removed list. *(internal)* | 313 |
+| `ui_router_runtimeRouteRegistry.test.testUnregisterRestoresPreviousWinner(ctx)` | Unregistering the winning source restores the definition of the previous source. *(internal)* | 257 |
+| `ui_router_runtimeRouteRegistry.test.testUnregisterThenRegisterCreatesNewPrecedence(ctx)` | Unregistering then re-registering a source gives it the most recent rank. *(internal)* | 243 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_runtimeRouteRegistry.test.testAppliesAllowlistedLuaRouteOverrides(ctx)`
 
-meta.luaRoute applique uniquement les clés autorisées.
+meta.luaRoute applies only the allowed keys.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testArrayRouteNamesShareDefinition(ctx)`
 
-Un `name` en tableau crée plusieurs routes partageant la même définition.
+An array `name` creates several routes sharing the same definition.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testEffectiveRoutesAreDeepCopied(ctx)`
 
-getEffectiveRoutes renvoie des copies profondes : les modifier n'affecte pas le registre.
+getEffectiveRoutes returns deep copies: modifying them does not affect the registry.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testFailedReRegistrationKeepsPreviousSnapshot(ctx)`
 
-Une ré-inscription invalide laisse l'instantané précédent intact (transactionnel).
+An invalid re-registration leaves the previous snapshot intact (transactional).
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testInvalidSourceIdRejected(ctx)`
 
-Un sourceId vide ou non-chaîne est rejeté.
+An empty or non-string sourceId is rejected.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testMapsUiFieldsFromMeta(ctx)`
 
-Les champs meta (uiTypes, infoBar, topBar, uiApps, triggerPause, uiNav…) sont reportés dans `ui`.
+The meta fields (uiTypes, infoBar, topBar, uiApps, triggerPause, uiNav...) are carried over into `ui`.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testNewestSourceWinsWithoutComposition(ctx)`
 
-La source la plus récente gagne pour un même nom, sans fusion.
+The most recent source wins for the same name, with no merging.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testParsesDeeplyNestedChildren(ctx)`
 
-Les enfants imbriqués sur plusieurs niveaux sont tous analysés.
+Children nested over several levels are all parsed.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testParsesSingleNamedRouteWithVueDefaults(ctx)`
 
-Une route nommée reçoit les valeurs par défaut Vue (runtime, ui.uiTypes = vue, filtre only).
+A named route gets the Vue defaults (runtime, ui.uiTypes = vue, filter only).
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testReRegistrationRemovesStaleNames(ctx)`
 
-Ré-enregistrer une source retire les noms qui ne figurent plus dans la nouvelle liste.
+Re-registering a source removes the names that are no longer in the new list.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testReRegistrationRetainsOriginalPrecedence(ctx)`
 
-Ré-enregistrer une source conserve son rang de priorité.
+Re-registering a source keeps its priority rank.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testRegisterReportsAddedAndChangedDiffs(ctx)`
 
-register renvoie les listes added et changed correctes.
+register returns the correct added and changed lists.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testRejectsBackTargetAndFallbackTargetTogether(ctx)`
 
-backTarget et fallbackTarget simultanés sont rejetés.
+Simultaneous backTarget and fallbackTarget are rejected.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testRejectsDuplicateRouteNameWithinSource(ctx)`
 
-Un nom de route en double dans une source est rejeté.
+A duplicate route name within a source is rejected.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testRejectsFunctionLifecycleHook(ctx)`
 
-Un hook donné comme fonction (et non chaîne) est rejeté.
+A hook given as a function (not a string) is rejected.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testRejectsInvalidLifecycleHook(ctx)`
 
-Un hook de cycle de vie qui n'est pas « module.func » est rejeté.
+A lifecycle hook that is not "module.func" is rejected.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testRejectsInvalidNameShape(ctx)`
 
-Un `name` de type invalide (ni chaîne ni tableau de chaînes) est rejeté.
+A `name` of invalid type (neither string nor array of strings) is rejected.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testSeparateRegistriesDoNotShareState(ctx)`
 
-Deux instances de registre sont indépendantes.
+Two registry instances are independent.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testSourceOrderTracksFirstRegistration(ctx)`
 
-getSourceOrder suit l'ordre de première inscription.
+getSourceOrder follows the order of first registration.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testUnnamedGroupEmitsChildrenButNotItself(ctx)`
 
-Un nœud sans nom ne produit pas de route mais ses enfants oui.
+A node without a name produces no route but its children do.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testUnregisterMissingSourceIsNoop(ctx)`
 
-Retirer une source inconnue réussit sans effet (existed = false).
+Unregistering an unknown source succeeds with no effect (existed = false).
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testUnregisterReportsRemovedDiff(ctx)`
 
-unregister renvoie la liste removed correcte.
+unregister returns the correct removed list.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testUnregisterRestoresPreviousWinner(ctx)`
 
-Retirer la source gagnante restaure la définition de la source précédente.
+Unregistering the winning source restores the definition of the previous source.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_runtimeRouteRegistry.test.testUnregisterThenRegisterCreatesNewPrecedence(ctx)`
 
-Retirer puis ré-enregistrer une source lui donne le rang le plus récent.
+Unregistering then re-registering a source gives it the most recent rank.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/runtimeRouteRegistry.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/runtimeRouteRegistry.test.lua`.*

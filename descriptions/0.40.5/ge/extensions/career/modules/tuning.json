@@ -1,65 +1,96 @@
 {
   "path": "lua/ge/extensions/career/modules/tuning.lua",
-  "module": "Menu de réglage (tuning) d'un véhicule d'inventaire en carrière, depuis l'ordinateur du garage. Il lit les variables de tuning du véhicule, applique les changements en réapparaissant le véhicule, construit un panier d'achat (catégories, sous-catégories, prix, taxes de 7 %) envoyé à l'UI, et débite l'argent à la validation. Une laisse (tether) capsule annule les achats si le joueur s'éloigne du garage.",
+  "module": "Tuning menu of a career inventory vehicle, from the garage computer. It reads the vehicle's tuning variables, applies changes by respawning the vehicle, builds a shopping cart (categories, subcategories, prices, 7% taxes) sent to the UI, and debits the money on confirmation. A capsule tether cancels the purchases if the player moves away from the garage.",
   "notes": [
-    "Les prix sont codés en dur dans la table locale `prices` (100 par défaut pour suspension/roues/alignement/châssis, 500 pour la transmission, 200 par défaut) ; la catégorie, la sous-catégorie et chaque variable peuvent s'additionner.",
-    "Variables exclues du panier (prix 0) : $$ffbstrength, $tirepressure_F et $tirepressure_R. Variables masquées en carrière : $fuel, $fuel_R, $fuel_L et la catégorie Cargo.",
-    "Total = somme des prix + 7 % de taxes. L'achat appelle invalidateCertification, setVehicleDirty, retire l'argent (tags tuning/buying) et débloque le succès VEHICLE_TUNED.",
-    "Le véhicule est gelé (setFreeze) pendant le menu et dégelé à la fermeture.",
-    "Dans onComputerAddFunctions, la variable `buttonDisabled` n'est pas définie dans le fichier (vaut nil)."
+    "Prices are hardcoded in the local `prices` table (100 by default for suspension/wheels/alignment/chassis, 500 for the transmission, 200 by default); the category, subcategory and each variable can add up.",
+    "Variables excluded from the cart (price 0): $$ffbstrength, $tirepressure_F and $tirepressure_R. Variables hidden in career: $fuel, $fuel_R, $fuel_L and the Cargo category.",
+    "Total = sum of prices + 7% taxes. The purchase calls invalidateCertification, setVehicleDirty, removes the money (tags tuning/buying) and unlocks the VEHICLE_TUNED achievement.",
+    "The vehicle is frozen (setFreeze) during the menu and unfrozen on close.",
+    "In onComputerAddFunctions, the variable `buttonDisabled` is not defined in the file (is nil)."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "{\"career_career\", \"gameplay_achievement\"}."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{\"career_career\", \"gameplay_achievement\"}."
+    }
   },
   "functions": {
     "start": {
-      "desc": "Ouvre le tuning pour un véhicule d'inventaire. Mémorise les variables d'origine, complète les valeurs par défaut manquantes, propose une réparation si peu de pièces sont cassées (sous le seuil de valueCalculator), puis navigue vers career.computer.tuning, crée le panier et la laisse. Ne fait rien si le véhicule n'est pas apparu dans la carte.",
+      "desc": "Opens tuning for an inventory vehicle. Remembers the original variables, fills in missing default values, offers a repair if few parts are broken (below the valueCalculator threshold), then navigates to career.computer.tuning, creates the cart and the tether. Does nothing if the vehicle has not appeared on the map.",
       "params": {
-        "_inventoryId": {"type": "integer|nil", "desc": "Id d'inventaire ; par défaut, le premier du garage le plus proche."},
-        "_originComputerId": {"type": "any", "desc": "Id de l'ordinateur du garage d'origine (sinon pas d'UI ni de laisse)."}
+        "_inventoryId": {
+          "type": "integer|nil",
+          "desc": "Inventory id; by default, the first one of the nearest garage."
+        },
+        "_originComputerId": {
+          "type": "any",
+          "desc": "Id of the originating garage computer (otherwise no UI or tether)."
+        }
       },
       "internal": false
     },
     "apply": {
-      "desc": "Fusionne de nouvelles valeurs de tuning dans la config du véhicule, le refait apparaître à la même position et rotation, le gèle, déclenche le hook onCareerTuningApplied, met à jour les variables modifiées et recalcule le panier.",
+      "desc": "Merges new tuning values into the vehicle config, respawns it at the same position and rotation, freezes it, triggers the onCareerTuningApplied hook, updates the modified variables and recomputes the cart.",
       "params": {
-        "tuningValues": {"type": "table<string, number>", "desc": "Variables de tuning (ex. \"$gear_1\") et leur valeur."},
-        "callback": {"type": "function|nil", "desc": "Passé à career_modules_inventory.spawnVehicle."}
+        "tuningValues": {
+          "type": "table<string, number>",
+          "desc": "Tuning variables (e.g. \"$gear_1\") and their value."
+        },
+        "callback": {
+          "type": "function|nil",
+          "desc": "Passed to career_modules_inventory.spawnVehicle."
+        }
       },
       "internal": false
     },
     "getTuningData": {
-      "desc": "Retourne les données de tuning du véhicule courant (variables traduites par core_vehicle_partmgmt), sans les variables masquées en carrière.",
-      "returns": [{"type": "table|nil", "desc": "Variables de tuning, ou nil si le véhicule n'est pas trouvé."}],
+      "desc": "Returns the current vehicle's tuning data (variables translated by core_vehicle_partmgmt), without the variables hidden in career.",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Tuning variables, or nil if the vehicle is not found."
+        }
+      ],
       "internal": false
     },
     "applyShopping": {
-      "desc": "Valide l'achat : invalide la certification, marque le véhicule modifié, débite le total, débloque le succès, joue le son, puis sauvegarde (si autosave) avant de fermer, sinon ferme directement.",
+      "desc": "Confirms the purchase: invalidates the certification, marks the vehicle modified, debits the total, unlocks the achievement, plays the sound, then saves (if autosave) before closing, otherwise closes directly.",
       "internal": false
     },
     "cancelShopping": {
-      "desc": "Annule : réapplique les variables d'origine puis ferme le menu. Appelé aussi par la laisse quand le joueur s'éloigne.",
+      "desc": "Cancels: reapplies the original variables then closes the menu. Also called by the tether when the player moves away.",
       "internal": false
     },
     "removeVarFromShoppingCart": {
-      "desc": "Remet une variable à sa valeur d'origine, la retire du panier et envoie l'UI (updateTuningVariable).",
-      "params": {"varName": {"type": "string", "desc": "Nom de la variable de tuning."}},
+      "desc": "Resets a variable to its original value, removes it from the cart and sends the UI (updateTuningVariable).",
+      "params": {
+        "varName": {
+          "type": "string",
+          "desc": "Tuning variable name."
+        }
+      },
       "internal": false
     },
     "close": {
-      "desc": "Ferme le menu : retourne au menu de l'ordinateur (ou ferme tous les menus de carrière), dégèle le véhicule et retire la laisse.",
+      "desc": "Closes the menu: returns to the computer menu (or closes all career menus), unfreezes the vehicle and removes the tether.",
       "internal": false
     },
     "onComputerAddFunctions": {
-      "desc": "Hook de l'ordinateur du garage : ajoute le bouton « tuning » pour chaque véhicule du garage. Désactivé si le véhicule doit être réparé, si le véhicule de départ n'est pas acheté ou si les permissions refusent les tags tuning/vehicleModification.",
+      "desc": "Garage computer hook: adds the \"tuning\" button for each garage vehicle. Disabled if the vehicle needs repair, if the starter vehicle is not bought or if permissions deny the tuning/vehicleModification tags.",
       "params": {
-        "menuData": {"type": "table", "desc": "Données du menu (computerFacility, vehiclesInGarage, hasBoughtStarterVehicle)."},
-        "computerFunctions": {"type": "table", "desc": "Table à remplir (vehicleSpecific[inventoryId][id])."}
+        "menuData": {
+          "type": "table",
+          "desc": "Menu data (computerFacility, vehiclesInGarage, hasBoughtStarterVehicle)."
+        },
+        "computerFunctions": {
+          "type": "table",
+          "desc": "Table to fill (vehicleSpecific[inventoryId][id])."
+        }
       },
       "internal": true
     },
     "onVehicleSaveFinished": {
-      "desc": "Hook appelé à la fin de la sauvegarde d'un véhicule ; ferme le menu si la fermeture attendait la sauvegarde.",
+      "desc": "Hook called at the end of a vehicle save; closes the menu if closing was waiting for the save.",
       "internal": true
     }
   }

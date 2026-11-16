@@ -1,47 +1,47 @@
 # `utils_httpJsonServer`
 
-*Fichier : `lua/common/utils/httpJsonServer.lua` · VM : Commun (GE + véhicule) · 163 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/utils/httpJsonServer.lua` · VM: Common (GE + vehicle) · 163 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("utils/httpJsonServer")`
+**Access:** `require("utils/httpJsonServer")`
 
-Mini serveur HTTP non bloquant qui répond en JSON, pour monter rapidement une API REST locale (outils externes, éditeurs). Se charge avec require('utils/httpJsonServer') ; init() ouvre le port, puis update() doit être appelé régulièrement (à chaque frame). Seules les requêtes GET sont traitées.
+Non-blocking mini HTTP server that replies in JSON, to quickly set up a local REST API (external tools, editors). Loaded with require('utils/httpJsonServer'); init() opens the port, then update() must be called regularly (every frame). Only GET requests are handled.
 
-## Exemple
+## Example
 
 ```lua
 local srv = require('utils/httpJsonServer')
 local function handle(request)
   if request.uri and request.uri.path == 'v1/ping' then return {ok = true} end
-  -- renvoyer nil donne une réponse {ok=false, error=500}
+  -- returning nil gives a {ok=false, error=500} response
 end
 srv.init('localhost', 23512, handle)
--- puis, à chaque frame : srv.update()
+-- then, every frame: srv.update()
 ```
 
-## Remarques
+## Notes
 
-- Le callback reçoit {uri = (table url.parse), headers = {nomEnMinuscules = valeur}}. uri.path ne commence pas par '/' (le motif capture ce qui suit 'GET /').
-- Le callback doit renvoyer une table sérialisable en JSON ; nil produit {ok=false, error=500} (le code HTTP réel reste celui de la réponse du serveur, le 500 est dans le corps JSON).
-- Si bind échoue, une erreur est loguée mais le code continue (settimeout/listen sont quand même appelés).
-- Les connexions fermées ne sont pas retirées des listes clients (TODO FIXME dans le code) : fuite possible.
-- Utilise socket.select non bloquant, un timeout de 0.1 s par client lisible, et ltn12 pour l'envoi par blocs de 4096 octets.
+- The callback receives {uri = (url.parse table), headers = {lowercaseName = value}}. uri.path does not start with '/' (the pattern captures what follows 'GET /').
+- The callback must return a JSON-serializable table; nil produces {ok=false, error=500} (the actual HTTP code remains that of the server's response, the 500 is in the JSON body).
+- If bind fails, an error is logged but the code continues (settimeout/listen are still called).
+- Closed connections are not removed from the client lists (TODO FIXME in the code): possible leak.
+- Uses non-blocking socket.select, a 0.1 s timeout per readable client, and ltn12 to send in blocks of 4096 bytes.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `utils_httpJsonServer.init(_bindhost, _bindport, _callback)` | Crée la socket TCP, la lie à l'hôte/port, la met en écoute non bloquante et mémorise le callback de traitement des requêtes. | 52 |
-| `utils_httpJsonServer.update()` | À appeler régulièrement : accepte les nouveaux clients, lit les requêtes GET prêtes, appelle le callback et envoie les réponses JSON (puis ferme la connexion). Ne fait rien avant init(). | 105 |
+| `utils_httpJsonServer.init(_bindhost, _bindport, _callback)` | Creates the TCP socket, binds it to the host/port, puts it in non-blocking listen mode and stores the request-handling callback. | 52 |
+| `utils_httpJsonServer.update()` | To be called regularly: accepts new clients, reads ready GET requests, calls the callback and sends the JSON responses (then closes the connection). Does nothing before init(). | 105 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `utils_httpJsonServer.init(_bindhost, _bindport, _callback)`
 
-Crée la socket TCP, la lie à l'hôte/port, la met en écoute non bloquante et mémorise le callback de traitement des requêtes.
+Creates the TCP socket, binds it to the host/port, puts it in non-blocking listen mode and stores the request-handling callback.
 
-- `_bindhost` (*string*) : Adresse d'écoute, ex. 'localhost'
-- `_bindport` (*integer*) : Port TCP, ex. 23512
-- `_callback` (*function*) : function(request) -> table|nil : construit la réponse JSON
+- `_bindhost` (*string*) : Listen address, e.g. 'localhost'
+- `_bindport` (*integer*) : TCP port, e.g. 23512
+- `_callback` (*function*) : function(request) -> table|nil: builds the JSON response
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/utils/httpJsonServer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/utils/httpJsonServer.lua`.*

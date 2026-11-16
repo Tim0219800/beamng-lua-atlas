@@ -2,94 +2,94 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/types/transform.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+--- Flowgraph node class (returned by _flowgraph_createNode(C)).
 ---@class flowgraph_nodes_types_transform_C
 local flowgraph_nodes_types_transform_C = {}
 
---- Force la réécriture des sorties au démarrage (changed = true).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:317
+--- Forces the outputs to be rewritten at start (changed = true).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:317
 function flowgraph_nodes_types_transform_C:_executionStarted() end
 
---- Force la réécriture des sorties au prochain démarrage (changed = true).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:341
+--- Forces the outputs to be rewritten at the next start (changed = true).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:341
 function flowgraph_nodes_types_transform_C:_executionStopped() end
 
---- Restaure l'état du nœud depuis les données sauvegardées.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:459
----@param nodeData table Données sauvegardées du nœud.
+--- Restores the node's state from the saved data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:459
+---@param nodeData table Saved node data.
 function flowgraph_nodes_types_transform_C:_onDeserialized(nodeData) end
 
---- Écrit l'état du nœud dans la table de sauvegarde.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:448
----@param res table Table de sauvegarde du nœud à remplir.
+--- Writes the node's state to the save table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:448
+---@param res table Node save table to fill.
 function flowgraph_nodes_types_transform_C:_onSerialize(res) end
 
---- Dessine une boîte pleine (triangles) et ses arêtes noires à partir d'un coin et de trois vecteurs d'arête.
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:392
----@param corner vec3 Coin de départ de la boîte.
----@param x vec3 Premier vecteur d'arête.
----@param y vec3 Deuxième vecteur d'arête.
----@param z vec3 Troisième vecteur d'arête.
----@param clr color Couleur des faces.
+--- Draws a solid box (triangles) and its black edges from a corner and three edge vectors.
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:392
+---@param corner vec3 Starting corner of the box.
+---@param x vec3 First edge vector.
+---@param y vec3 Second edge vector.
+---@param z vec3 Third edge vector.
+---@param clr color Color of the faces.
 function flowgraph_nodes_types_transform_C:drawAxisBox(corner, x, y, z, clr) end
 
---- Dessine les contrôles du mode gizmo : mode d'affichage, position, rotation (euler en degrés ou quaternion), échelle, couleur, boutons « Copier depuis la sélection », « Position devant la caméra / à la caméra », « Rotation à la caméra », « Descendre sur le terrain ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:166
+--- Draws the gizmo mode controls: display mode, position, rotation (euler in degrees or quaternion), scale, color, buttons "Copy from selection", "Position in front of camera / at camera", "Rotation at camera", "Drop to terrain".
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:166
 function flowgraph_nodes_types_transform_C:drawCustom() end
 
---- Combo du mode (gizmo/fromID) — ajoute ou retire le pin objID — puis drawCustom en mode gizmo.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:123
+--- Mode combo (gizmo/fromID) — adds or removes the objID pin — then drawCustom in gizmo mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:123
 function flowgraph_nodes_types_transform_C:drawCustomProperties() end
 
---- Dessine les axes X/Y/Z colorés (sphères et lignes) et le volume de prévisualisation selon displayMode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:346
----@param builder any Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale).
----@param style any Style d'affichage du nœud fourni par l'éditeur.
+--- Draws the colored X/Y/Z axes (spheres and lines) and the preview volume according to displayMode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:346
+---@param builder any Editor node builder (builder:Middle() opens the central area).
+---@param style any Node display style provided by the editor.
 function flowgraph_nodes_types_transform_C:drawMiddle(builder, style) end
 
---- Début d'un glisser du gizmo : mémorise rotation, échelle et position d'origine.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:42
+--- Start of a gizmo drag: stores the original rotation, scale and position.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:42
 function flowgraph_nodes_types_transform_C:gizmoBeginDrag() end
 
---- Pendant le glisser du gizmo : met à jour position (translation), rotation (rotation, en repère local ou relative au départ) ou échelle (composante par composante) selon le mode du gizmo, et dessine les axes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:48
+--- During the gizmo drag: updates position (translation), rotation (rotation, in local frame or relative to the start) or scale (component by component) depending on the gizmo mode, and draws the axes.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:48
 function flowgraph_nodes_types_transform_C:gizmoDragging() end
 
---- Fin d'un glisser du gizmo (appelée par editor.updateAxisGizmo) ; met à jour l'état du nœud.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:79
+--- End of a gizmo drag (called by editor.updateAxisGizmo); updates the node's state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:79
 function flowgraph_nodes_types_transform_C:gizmoEndDrag() end
 
---- Appelée quand le nœud est désélectionné : retire le gizmo et revient au mode d'édition objectSelect.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:113
+--- Called when the node is deselected: removes the gizmo and goes back to the objectSelect edit mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:113
 function flowgraph_nodes_types_transform_C:hideProperties() end
 
---- Place la position à 15 m devant la caméra, rotation identité, échelle (1,1,1), couleur de marqueur rouge semi-transparente, mode 'gizmo' et displayMode 'halfBox'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:24
+--- Sets the position 15 m in front of the camera, identity rotation, scale (1,1,1), semi-transparent red marker color, mode 'gizmo' and displayMode 'halfBox'.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:24
 function flowgraph_nodes_types_transform_C:init() end
 
---- Appelée quand le nœud est sélectionné dans l'éditeur : branche le mode d'édition 'flowgraphTransform' avec le gizmo d'axes du World Editor.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:85
+--- Called when the node is selected in the editor: plugs in the 'flowgraphTransform' edit mode with the World Editor axis gizmo.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:85
 function flowgraph_nodes_types_transform_C:showProperties() end
 
---- Synchronise la matrice du gizmo avec position et rotation du nœud (rotation ignorée si le gizmo est en alignement monde).
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:153
+--- Synchronizes the gizmo matrix with the node's position and rotation (rotation ignored if the gizmo is in world alignment).
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:153
 function flowgraph_nodes_types_transform_C:updateTransform() end
 
---- En mode fromID, copie position/rotation/échelle de l'objet objID ; si 'changed', écrit les trois pins de sortie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/transform.lua:321
+--- In fromID mode, copies position/rotation/scale from the object objID; if 'changed', writes the three output pins.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/transform.lua:321
 function flowgraph_nodes_types_transform_C:work() end
 

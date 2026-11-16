@@ -1,14 +1,38 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/pathEndTransform.lua",
-  "module": "Nœud flowgraph « Race End Transform » (catégorie repeat_instant, tag scenario). Donne la transformation du pathnode de fin d'un pathData, utile pour des triggers personnalisés. Le nœud de fin est path.endNode ; pour un chemin fermé sans endNode valide, c'est startNode. Sorties : endExists / endDoesNotExist (flow), existing (bool), pos (vec3), dirVec (normale du pathnode ou {0,0,1}) et radius. Calculé une seule fois (tant que self.path est nil).",
-  "notes": ["Si endNode vaut -1, un avertissement est loggé : la fin doit être marquée explicitement dans le Race Editor.", "endExists/endDoesNotExist sont remis à false à chaque frame ; seul endExists passe à true, et uniquement lors du calcul initial : endDoesNotExist ne devient jamais vrai dans ce code."],
+  "module": "Flowgraph node \"Race End Transform\" (category repeat_instant, tag scenario). Gives the transform of the end pathnode of a pathData, useful for custom triggers. The end node is path.endNode; for a closed path without a valid endNode, it is startNode. Outputs: endExists / endDoesNotExist (flow), existing (bool), pos (vec3), dirVec (pathnode normal or {0,0,1}) and radius. Computed only once (as long as self.path is nil).",
+  "notes": [
+    "If endNode is -1, a warning is logged: the end must be explicitly marked in the Race Editor.",
+    "endExists/endDoesNotExist are reset to false every frame; only endExists becomes true, and only during the initial computation: endDoesNotExist never becomes true in this code."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise self.path et désactive clearOutPinsOnStart.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
-        "_executionStopped": {"desc": "Oublie le chemin mémorisé.", "internal": true},
-        "work": {"desc": "Trouve le pathnode de fin et écrit existing, pos, dirVec, radius et les flows endExists/endDoesNotExist.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+        "init": {
+          "desc": "Initializes self.path and disables clearOutPinsOnStart.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager."
+            }
+          },
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Forgets the stored path.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Finds the end pathnode and writes existing, pos, dirVec, radius and the flows endExists/endDoesNotExist.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph engine arguments (unused)."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

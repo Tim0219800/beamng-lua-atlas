@@ -1,46 +1,46 @@
 # `gameplayInterfaceModules_interactElectrics`
 
-*Fichier : `lua/vehicle/extensions/gameplayInterfaceModules/interactElectrics.lua` · VM : Véhicule · 62 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/gameplayInterfaceModules/interactElectrics.lua` · VM: Vehicle · 62 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplayInterfaceModules_interactElectrics` : `extensions.load (VM véhicule)("gameplayInterfaceModules_interactElectrics")`, puis la globale `gameplayInterfaceModules_interactElectrics`
+**Access:** extension `gameplayInterfaceModules_interactElectrics`: `extensions.load (vehicle VM)("gameplayInterfaceModules_interactElectrics")`, then the global `gameplayInterfaceModules_interactElectrics`
 
-Module de gameplayInterface pour electrics : fixer le niveau d'allumage, le mode de la barre lumineuse et l'état des phares, et lire n'importe quelle valeur de electrics.values.
+gameplayInterface module for electrics: set the ignition level, the light bar mode and the headlight state, and read any value of electrics.values.
 
-## Exemple
+## Example
 
 ```lua
 gameplayInterface.executeAction(0, 9, 'setIgnitionLevel', 2)
 gameplayInterface.getSystemData(0, 10, 'electricsValue', 'rpm')
 ```
 
-## Remarques
+## Notes
 
-- Action 'setIgnitionLevel'(level:number) : electrics.setIgnitionLevel(level) (0 à 3).
-- Action 'setLightbarMode'(mode:number) : electrics.set_lightbar_signal(mode).
-- Action 'setLightMode'(mode:number) : electrics.setLightsState(mode) (0 éteint, 1 croisement, 2 route).
-- Lookup 'electricsValue'(key:string) : renvoie {result = electrics.values[key]} (nil si la clé n'existe pas).
+- Action 'setIgnitionLevel'(level:number): electrics.setIgnitionLevel(level) (0 to 3).
+- Action 'setLightbarMode'(mode:number): electrics.set_lightbar_signal(mode).
+- Action 'setLightMode'(mode:number): electrics.setLightsState(mode) (0 off, 1 low beam, 2 high beam).
+- Lookup 'electricsValue'(key:string): returns {result = electrics.values[key]} (nil if the key does not exist).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplayInterfaceModules_interactElectrics.onExtensionLoaded()` | Appelé au chargement : remplit moduleActions et moduleLookups. *(interne)* *(hook)* | 51 |
-| `gameplayInterfaceModules_interactElectrics.requestRegistration(gi)` | Enregistre les actions et lookups auprès de gameplayInterface. *(interne)* | 47 |
+| `gameplayInterfaceModules_interactElectrics.onExtensionLoaded()` | Called at load: fills moduleActions and moduleLookups. *(internal)* *(hook)* | 51 |
+| `gameplayInterfaceModules_interactElectrics.requestRegistration(gi)` | Registers the actions and lookups with gameplayInterface. *(internal)* | 47 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplayInterfaceModules_interactElectrics.requestRegistration(gi)`
 
-Enregistre les actions et lookups auprès de gameplayInterface.
+Registers the actions and lookups with gameplayInterface.
 
-- `gi` (*table*) : Le module gameplayInterface.
+- `gi` (*table*) : The gameplayInterface module.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `moduleActions` | table<string, function> | Actions : setIgnitionLevel, setLightbarMode, setLightMode. |
-| `moduleLookups` | table<string, function> | Lookups : electricsValue. |
+| `moduleActions` | table<string, function> | Actions: setIgnitionLevel, setLightbarMode, setLightMode. |
+| `moduleLookups` | table<string, function> | Lookups: electricsValue. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/gameplayInterfaceModules/interactElectrics.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/gameplayInterfaceModules/interactElectrics.lua`.*

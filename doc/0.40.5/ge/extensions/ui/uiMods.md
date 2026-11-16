@@ -1,90 +1,90 @@
 # `ui_uiMods`
 
-*Fichier : `lua/ge/extensions/ui/uiMods.lua` · VM : Game Engine (GE) · 381 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/uiMods.lua` · VM: Game Engine (GE) · 381 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_uiMods` : `extensions.load("ui_uiMods")`, puis la globale `ui_uiMods`
+**Access:** extension `ui_uiMods`: `extensions.load("ui_uiMods")`, then the global `ui_uiMods`
 
-Fournit à l'interface (Vue) la liste des mods d'UI, des apps UI et des listes d'images, et surveille les changements de fichiers pour prévenir l'UI en direct (rechargement à chaud). Il suit aussi des révisions de fichiers d'exécution (« runtime ») servis à l'UI pour le développement. onFilesChanged déclenche les évènements UiModsChanged, UiAppsChanged, UiImageListChanged et UiRuntimeFileChanged, et rappelle sendUIModules() quand /ui/modModules/ change.
+Provides the interface (Vue) with the list of UI mods, UI apps and image lists, and watches file changes to notify the UI live (hot reload). It also tracks revisions of runtime files served to the UI for development. onFilesChanged triggers the events UiModsChanged, UiAppsChanged, UiImageListChanged and UiRuntimeFileChanged, and calls sendUIModules() again when /ui/modModules/ changes.
 
-## Remarques
+## Notes
 
-- L'extension reste chargée (setExtensionUnloadMode « manual » dans onExtensionLoaded).
-- getImageList enregistre le dossier comme surveillé : les changements ultérieurs y déclenchent UiImageListChanged. Les images `nom_blur.ext` sont rattachées à `nom` dans le champ `blur`.
-- Extensions d'image reconnues : jpg, jpeg, jfif, png, gif, webp, avif.
-- Les fonctions « runtime » ne font rien tant que setUiRuntimeBundled n'a pas été appelé avec une config valide (`includes` non vide).
+- The extension stays loaded (setExtensionUnloadMode "manual" in onExtensionLoaded).
+- getImageList registers the folder as watched: later changes there trigger UiImageListChanged. `name_blur.ext` images are attached to `name` in the `blur` field.
+- Recognized image extensions: jpg, jpeg, jfif, png, gif, webp, avif.
+- The "runtime" functions do nothing until setUiRuntimeBundled has been called with a valid config (non-empty `includes`).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_uiMods.bumpUiRuntimeRevision(path)` | Incrémente la révision d'un chemin pour forcer un rechargement manuel. Renvoie 0 si le service d'exécution n'est pas configuré ou si path n'est pas une chaîne. | 341 |
-| `ui_uiMods.getImageList(path)` | Liste les images d'un dossier (récursif), triées par nom, en associant l'image normale et sa variante _blur. Le dossier est ajouté à la surveillance. | 108 |
-| `ui_uiMods.getUiApps()` | Renvoie, depuis extensions.ui_apps.getUIAppsData(), une copie filtrée des métadonnées des apps UI (appName, directive, folder, appJsonPath, jsSource, vueFile, types, category, version, essential, devonly, official, preview = première prévisualisation, etc.). Table vide si ui_apps est indisponible. | 53 |
-| `ui_uiMods.getUiRuntimeFileList(withMtime)` | Liste les fichiers d'exécution servis (sous les dossiers `includes`, de type suivi, et non intégrés au bundle sauf les styles). | 347 |
-| `ui_uiMods.getUiRuntimeRevisions()` | Renvoie la table chemin -> numéro de révision des fichiers d'exécution (référence directe, pas une copie). | 336 |
-| `ui_uiMods.getVueMods()` | Parcourt /ui/ui-vue/mods et regroupe les fichiers par mod (premier dossier sous mods/). | 31 |
-| `ui_uiMods.onExtensionLoaded()` | Hook appelé au chargement de l'extension : passe le mode de déchargement en « manual ». *(interne)* *(hook)* | 7 |
-| `ui_uiMods.onFilesChanged(files)` | Hook appelé par le moteur quand des fichiers changent. Pour chaque fichier : appelle sendUIModules() pour /ui/modModules/, déclenche UiModsChanged pour /ui/ui-vue/mods/, UiAppsChanged (avec files et apps concernées) pour /ui/modules/apps/, UiImageListChanged pour les dossiers d'images surveillés, et UiRuntimeFileChanged {path, rev, change} pour les fichiers d'exécution servis. *(interne)* *(hook)* | 274 |
-| `ui_uiMods.setUiRuntimeBundled(cfg)` | Configure le service de fichiers d'exécution de l'UI : dossiers inclus, exclus, extensions suivies (statExts) et extensions de style (styleExts). Ignoré si cfg n'est pas une table ou si cfg.includes est vide. | 208 |
+| `ui_uiMods.bumpUiRuntimeRevision(path)` | Increments the revision of a path to force a manual reload. Returns 0 if the runtime service is not configured or if path is not a string. | 341 |
+| `ui_uiMods.getImageList(path)` | Lists the images in a folder (recursive), sorted by name, associating the normal image and its _blur variant. The folder is added to the watch list. | 108 |
+| `ui_uiMods.getUiApps()` | Returns, from extensions.ui_apps.getUIAppsData(), a filtered copy of the UI apps metadata (appName, directive, folder, appJsonPath, jsSource, vueFile, types, category, version, essential, devonly, official, preview = first preview, etc.). Empty table if ui_apps is unavailable. | 53 |
+| `ui_uiMods.getUiRuntimeFileList(withMtime)` | Lists the served runtime files (under the `includes` folders, of a tracked type, and not built into the bundle except styles). | 347 |
+| `ui_uiMods.getUiRuntimeRevisions()` | Returns the path -> revision number table of runtime files (direct reference, not a copy). | 336 |
+| `ui_uiMods.getVueMods()` | Walks /ui/ui-vue/mods and groups files by mod (first folder under mods/). | 31 |
+| `ui_uiMods.onExtensionLoaded()` | Hook called when the extension loads: sets the unload mode to "manual". *(internal)* *(hook)* | 7 |
+| `ui_uiMods.onFilesChanged(files)` | Hook called by the engine when files change. For each file: calls sendUIModules() for /ui/modModules/, triggers UiModsChanged for /ui/ui-vue/mods/, UiAppsChanged (with the affected files and apps) for /ui/modules/apps/, UiImageListChanged for watched image folders, and UiRuntimeFileChanged {path, rev, change} for served runtime files. *(internal)* *(hook)* | 274 |
+| `ui_uiMods.setUiRuntimeBundled(cfg)` | Configures the UI runtime file service: included folders, excluded folders, tracked extensions (statExts) and style extensions (styleExts). Ignored if cfg is not a table or if cfg.includes is empty. | 208 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_uiMods.bumpUiRuntimeRevision(path)`
 
-Incrémente la révision d'un chemin pour forcer un rechargement manuel. Renvoie 0 si le service d'exécution n'est pas configuré ou si path n'est pas une chaîne.
+Increments the revision of a path to force a manual reload. Returns 0 if the runtime service is not configured or if path is not a string.
 
-- `path` (*string*) : Chemin du fichier.
-- **renvoie** : integer Nouvelle révision.
+- `path` (*string*) : File path.
+- **returns**: integer New revision.
 
 #### `ui_uiMods.getImageList(path)`
 
-Liste les images d'un dossier (récursif), triées par nom, en associant l'image normale et sa variante _blur. Le dossier est ajouté à la surveillance.
+Lists the images in a folder (recursive), sorted by name, associating the normal image and its _blur variant. The folder is added to the watch list.
 
-- `path` (*string*) : Dossier virtuel du jeu ; les '\' sont normalisés en '/'.
-- **renvoie** : {normal: string|nil, blur: string|nil}[] Entrées d'images ; {} si le chemin est vide.
+- `path` (*string*) : Virtual game folder; '\' are normalized to '/'.
+- **returns**: {normal: string|nil, blur: string|nil}[] Image entries; {} if the path is empty.
 
 #### `ui_uiMods.getUiApps()`
 
-Renvoie, depuis extensions.ui_apps.getUIAppsData(), une copie filtrée des métadonnées des apps UI (appName, directive, folder, appJsonPath, jsSource, vueFile, types, category, version, essential, devonly, official, preview = première prévisualisation, etc.). Table vide si ui_apps est indisponible.
+Returns, from extensions.ui_apps.getUIAppsData(), a filtered copy of the UI apps metadata (appName, directive, folder, appJsonPath, jsSource, vueFile, types, category, version, essential, devonly, official, preview = first preview, etc.). Empty table if ui_apps is unavailable.
 
-- **renvoie** : table<string, table> Apps par nom.
+- **returns**: table<string, table> Apps by name.
 
 #### `ui_uiMods.getUiRuntimeFileList(withMtime)`
 
-Liste les fichiers d'exécution servis (sous les dossiers `includes`, de type suivi, et non intégrés au bundle sauf les styles).
+Lists the served runtime files (under the `includes` folders, of a tracked type, and not built into the bundle except styles).
 
-- `withMtime` (*boolean|nil*) : Si true, ajoute `mtime` à chaque entrée (et mémorise les mtimes).
-- **renvoie** : {path: string, mtime: number|nil}[] Fichiers servis ; {} si non configuré.
+- `withMtime` (*boolean|nil*) : If true, adds `mtime` to each entry (and stores the mtimes).
+- **returns**: {path: string, mtime: number|nil}[] Served files; {} if not configured.
 
 #### `ui_uiMods.getUiRuntimeRevisions()`
 
-Renvoie la table chemin -> numéro de révision des fichiers d'exécution (référence directe, pas une copie).
+Returns the path -> revision number table of runtime files (direct reference, not a copy).
 
-- **renvoie** : table<string, integer> Révisions.
+- **returns**: table<string, integer> Revisions.
 
 #### `ui_uiMods.getVueMods()`
 
-Parcourt /ui/ui-vue/mods et regroupe les fichiers par mod (premier dossier sous mods/).
+Walks /ui/ui-vue/mods and groups files by mod (first folder under mods/).
 
-- **renvoie** : table<string, {path: string, files: string[]}> Par nom de mod : dossier et chemins relatifs des fichiers.
+- **returns**: table<string, {path: string, files: string[]}> By mod name: folder and relative file paths.
 
 #### `ui_uiMods.onFilesChanged(files)`
 
-Hook appelé par le moteur quand des fichiers changent. Pour chaque fichier : appelle sendUIModules() pour /ui/modModules/, déclenche UiModsChanged pour /ui/ui-vue/mods/, UiAppsChanged (avec files et apps concernées) pour /ui/modules/apps/, UiImageListChanged pour les dossiers d'images surveillés, et UiRuntimeFileChanged {path, rev, change} pour les fichiers d'exécution servis.
+Hook called by the engine when files change. For each file: calls sendUIModules() for /ui/modModules/, triggers UiModsChanged for /ui/ui-vue/mods/, UiAppsChanged (with the affected files and apps) for /ui/modules/apps/, UiImageListChanged for watched image folders, and UiRuntimeFileChanged {path, rev, change} for served runtime files.
 
-- `files` (*table[]*) : Liste d'objets {filename, type} (type « deleted » pour une suppression).
+- `files` (*table[]*) : List of {filename, type} objects (type "deleted" for a deletion).
 
 #### `ui_uiMods.setUiRuntimeBundled(cfg)`
 
-Configure le service de fichiers d'exécution de l'UI : dossiers inclus, exclus, extensions suivies (statExts) et extensions de style (styleExts). Ignoré si cfg n'est pas une table ou si cfg.includes est vide.
+Configures the UI runtime file service: included folders, excluded folders, tracked extensions (statExts) and style extensions (styleExts). Ignored if cfg is not a table or if cfg.includes is empty.
 
 - `cfg` (*table*) : { includes = string[], excludes = string[]|nil, statExts = string[]|nil, styleExts = string[]|nil }
 
-**Évènements UI (guihooks.trigger) :** `UiAppsChanged`, `UiImageListChanged`, `UiModsChanged`, `UiRuntimeFileChanged`
+**UI events (guihooks.trigger):** `UiAppsChanged`, `UiImageListChanged`, `UiModsChanged`, `UiRuntimeFileChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`, `stat`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/uiMods.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/uiMods.lua`.*

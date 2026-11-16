@@ -1,88 +1,88 @@
 # `gameplay_sites_sitesManager`
 
-*Fichier : `lua/ge/extensions/gameplay/sites/sitesManager.lua` · VM : Game Engine (GE) · 134 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/sites/sitesManager.lua` · VM: Game Engine (GE) · 134 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_sites_sitesManager` : `extensions.load("gameplay_sites_sitesManager")`, puis la globale `gameplay_sites_sitesManager`
+**Access:** extension `gameplay_sites_sitesManager`: `extensions.load("gameplay_sites_sitesManager")`, then the global `gameplay_sites_sitesManager`
 
-Extension qui recense les fichiers *.sites.json de chaque niveau, les charge en objets « sites » (lieux, zones, places de parking) et les met en cache. Les scénarios, missions et le trafic passent par elle pour obtenir les sites d'une carte. Garde un cache par chemin de fichier, vidé à la fin de la mission.
+Extension that lists the *.sites.json files of each level, loads them into "sites" objects (locations, zones, parking spots) and caches them. Scenarios, missions and traffic go through it to get a map's sites. Keeps a cache per file path, cleared at the end of the mission.
 
-## Exemple
+## Example
 
 ```lua
 local sites = gameplay_sites_sitesManager.loadSites(gameplay_sites_sitesManager.getCurrentLevelSitesFileByName('parking'))
 ```
 
-## Remarques
+## Notes
 
-- getCurrentLevelSitesFileByName compare le nom à celui du fichier privé de ses 11 derniers caractères (« .sites.json » + 1 : string.sub(siteName, 0, -12)) ; le nom passé doit donc être sans extension.
-- getCurrentLevelSitesFiles ignore son paramètre « name ».
-- getBestParkingSpotForVehicleFromList renvoie la dernière place de la liste en dernier recours (et plante si la liste est vide).
+- getCurrentLevelSitesFileByName compares the name to the private file's name minus its last 11 characters (".sites.json" + 1: string.sub(siteName, 0, -12)); the name passed must therefore have no extension.
+- getCurrentLevelSitesFiles ignores its "name" parameter.
+- getBestParkingSpotForVehicleFromList returns the last spot of the list as a last resort (and crashes if the list is empty).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_sites_sitesManager.getAllLevelSites()` | Parcourt les niveaux (core_levels.getList) et reconstruit la table des fichiers *.sites.json par niveau (clé = nom de niveau en minuscules). Journalise le nombre de fichiers trouvés. | 13 |
-| `gameplay_sites_sitesManager.getBestParkingSpotForVehicleFromList(vehId, parkingSpots)` | Renvoie la première place où le véhicule rentre (vehicleFits) et qui n'est occupée par aucun véhicule (hasAnyVehicles), sinon la dernière de la liste. | 121 |
-| `gameplay_sites_sitesManager.getCurrentLevelSitesFileByName(name)` | Trouve le fichier sites du niveau courant dont le nom (sans « .sites.json ») correspond. | 112 |
-| `gameplay_sites_sitesManager.getCurrentLevelSitesFiles(name)` | Liste des fichiers sites du niveau courant (getCurrentLevelIdentifier). | 108 |
-| `gameplay_sites_sitesManager.getSitesFilesByLevel()` | Renvoie la table niveau -> liste de fichiers sites (la construit si besoin). | 104 |
-| `gameplay_sites_sitesManager.loadSites(filepath, force, ignoreCache)` | Charge un fichier .sites.json et renvoie l'objet sites (désérialisé et finalisé). Utilise le cache si présent, sauf force. Ajoute site.dir et site.filename. | 30 |
-| `gameplay_sites_sitesManager.onClientEndMission()` | Hook appelé à la fin de la mission : vide le cache des sites. *(interne)* *(hook)* | 62 |
-| `gameplay_sites_sitesManager.onClientStartMission()` | Hook appelé au début d'une mission/niveau : mémorise le niveau courant. *(interne)* *(hook)* | 58 |
-| `gameplay_sites_sitesManager.onDeserialized(data)` | Restaure l'état après un rechargement Lua. *(interne)* *(hook)* | 89 |
-| `gameplay_sites_sitesManager.onModManagerReady()` | Hook appelé quand le gestionnaire de mods est prêt : construit la liste des fichiers sites. *(interne)* *(hook)* | 54 |
-| `gameplay_sites_sitesManager.onSerialize()` | Sérialise la liste des fichiers, le niveau courant et le cache pour le rechargement Lua. Renvoie nil si rien n'est en cache. *(interne)* *(hook)* | 73 |
+| `gameplay_sites_sitesManager.getAllLevelSites()` | Walks the levels (core_levels.getList) and rebuilds the table of *.sites.json files per level (key = lowercase level name). Logs the number of files found. | 13 |
+| `gameplay_sites_sitesManager.getBestParkingSpotForVehicleFromList(vehId, parkingSpots)` | Returns the first spot where the vehicle fits (vehicleFits) and that is not occupied by any vehicle (hasAnyVehicles), otherwise the last one in the list. | 121 |
+| `gameplay_sites_sitesManager.getCurrentLevelSitesFileByName(name)` | Finds the current level's sites file whose name (without ".sites.json") matches. | 112 |
+| `gameplay_sites_sitesManager.getCurrentLevelSitesFiles(name)` | List of the current level's sites files (getCurrentLevelIdentifier). | 108 |
+| `gameplay_sites_sitesManager.getSitesFilesByLevel()` | Returns the level -> list of sites files table (builds it if needed). | 104 |
+| `gameplay_sites_sitesManager.loadSites(filepath, force, ignoreCache)` | Loads a .sites.json file and returns the sites object (deserialized and finalized). Uses the cache if present, unless force. Adds site.dir and site.filename. | 30 |
+| `gameplay_sites_sitesManager.onClientEndMission()` | Hook called at the end of the mission: clears the sites cache. *(internal)* *(hook)* | 62 |
+| `gameplay_sites_sitesManager.onClientStartMission()` | Hook called at the start of a mission/level: stores the current level. *(internal)* *(hook)* | 58 |
+| `gameplay_sites_sitesManager.onDeserialized(data)` | Restores the state after a Lua reload. *(internal)* *(hook)* | 89 |
+| `gameplay_sites_sitesManager.onModManagerReady()` | Hook called when the mod manager is ready: builds the list of sites files. *(internal)* *(hook)* | 54 |
+| `gameplay_sites_sitesManager.onSerialize()` | Serializes the file list, the current level and the cache for the Lua reload. Returns nil if nothing is cached. *(internal)* *(hook)* | 73 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_sites_sitesManager.getBestParkingSpotForVehicleFromList(vehId, parkingSpots)`
 
-Renvoie la première place où le véhicule rentre (vehicleFits) et qui n'est occupée par aucun véhicule (hasAnyVehicles), sinon la dernière de la liste.
+Returns the first spot where the vehicle fits (vehicleFits) and that is not occupied by any vehicle (hasAnyVehicles), otherwise the last one in the list.
 
-- `vehId` (*integer|nil*) : Véhicule ; par défaut le véhicule du joueur 0.
-- `parkingSpots` (*table[]*) : Liste d'objets parkingSpot.
-- **renvoie** : table Place choisie.
+- `vehId` (*integer|nil*) : Vehicle; default the player 0 vehicle.
+- `parkingSpots` (*table[]*) : List of parkingSpot objects.
+- **returns**: table Chosen spot.
 
 #### `gameplay_sites_sitesManager.getCurrentLevelSitesFileByName(name)`
 
-Trouve le fichier sites du niveau courant dont le nom (sans « .sites.json ») correspond.
+Finds the current level's sites file whose name (without ".sites.json") matches.
 
-- `name` (*string*) : Nom du fichier sans extension.
-- **renvoie** : string|nil Chemin complet ou nil.
+- `name` (*string*) : File name without extension.
+- **returns**: string|nil Full path or nil.
 
 #### `gameplay_sites_sitesManager.getCurrentLevelSitesFiles(name)`
 
-Liste des fichiers sites du niveau courant (getCurrentLevelIdentifier).
+List of the current level's sites files (getCurrentLevelIdentifier).
 
-- `name` (*any*) : Inutilisé.
-- **renvoie** : string[] Chemins, table vide si aucun.
+- `name` (*any*) : Unused.
+- **returns**: string[] Paths, empty table if none.
 
 #### `gameplay_sites_sitesManager.getSitesFilesByLevel()`
 
-Renvoie la table niveau -> liste de fichiers sites (la construit si besoin).
+Returns the level -> list of sites files table (builds it if needed).
 
-- **renvoie** : table<string, string[]> Fichiers par niveau.
+- **returns**: table<string, string[]> Files per level.
 
 #### `gameplay_sites_sitesManager.loadSites(filepath, force, ignoreCache)`
 
-Charge un fichier .sites.json et renvoie l'objet sites (désérialisé et finalisé). Utilise le cache si présent, sauf force. Ajoute site.dir et site.filename.
+Loads a .sites.json file and returns the sites object (deserialized and finalized). Uses the cache if present, unless force. Adds site.dir and site.filename.
 
-- `filepath` (*string*) : Chemin du fichier .sites.json.
-- `force` (*boolean|nil*) : Recharge même si en cache.
-- `ignoreCache` (*boolean|nil*) : Ne pas stocker le résultat dans le cache.
-- **renvoie** : table|nil Objet sites, ou nil si le fichier est illisible (erreur journalisée).
+- `filepath` (*string*) : Path of the .sites.json file.
+- `force` (*boolean|nil*) : Reload even if cached.
+- `ignoreCache` (*boolean|nil*) : Do not store the result in the cache.
+- **returns**: table|nil Sites object, or nil if the file is unreadable (error logged).
 
 #### `gameplay_sites_sitesManager.onDeserialized(data)`
 
-Restaure l'état après un rechargement Lua.
+Restores the state after a Lua reload.
 
-- `data` (*table|nil*) : Données de onSerialize.
+- `data` (*table|nil*) : Data from onSerialize.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/sites/sitesManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/sites/sitesManager.lua`.*

@@ -2,71 +2,71 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/raceEditor/trackLayout.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre Track Layout (windowDescription = 'Track Layout'). Instanciée avec init(raceEditor).
+--- Track Layout window (windowDescription = 'Track Layout'). Instantiated with init(raceEditor).
 ---@class editor_raceEditor_trackLayout
 local editor_raceEditor_trackLayout = {}
 
---- Si la nouvelle valeur diffère de path[field], valide une action d'historique qui modifie ce champ du chemin.
----Source : lua/ge/extensions/editor/raceEditor/trackLayout.lua:27
----@param field string Champ du chemin (defaultLaps, startNode, endNode, defaultStartPosition, simplifyAiPath…).
----@param new any Nouvelle valeur (ID d'objet, -1 pour aucun, nombre ou booléen).
+--- If the new value differs from path[field], commits a history action that modifies this path field.
+---Source: lua/ge/extensions/editor/raceEditor/trackLayout.lua:27
+---@param field string Path field (defaultLaps, startNode, endNode, defaultStartPosition, simplifyAiPath...).
+---@param new any New value (object ID, -1 for none, number or boolean).
 function editor_raceEditor_trackLayout:changeField(field, new) end
 
---- Affiche une ligne « nom » avec icône coche ou croix selon classification[field].
----Source : lua/ge/extensions/editor/raceEditor/trackLayout.lua:78
----@param classification table Résultat de path:classify().
----@param name string Libellé.
----@param field string Clé testée (reversible, allowRollingStart, closed, branching).
----@param tt string|nil Infobulle.
+--- Displays a "name" line with a check or cross icon depending on classification[field].
+---Source: lua/ge/extensions/editor/raceEditor/trackLayout.lua:78
+---@param classification table Result of path:classify().
+---@param name string Label.
+---@param field string Key tested (reversible, allowRollingStart, closed, branching).
+---@param tt string|nil Tooltip.
 function editor_raceEditor_trackLayout:displayClassification(classification, name, field, tt) end
 
---- Appelé à chaque frame : dessine le formulaire, la zone d'arrêt et les splits.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/trackLayout.lua:20
+--- Called every frame: draws the form, the stop zone and the splits.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/trackLayout.lua:20
 function editor_raceEditor_trackLayout:draw() end
 
---- Dessine le formulaire (tours, nœuds, positions de départ, classification, option de simplification IA) puis la zone d'arrêt et les splits.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/trackLayout.lua:35
+--- Draws the form (laps, nodes, start positions, classification, AI simplification option) then the stop zone and the splits.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/trackLayout.lua:35
 function editor_raceEditor_trackLayout:drawGeneralInfo() end
 
---- Dessine « Split N » sur chaque pathnode useAsSplit (hors dernier nœud de la liste triée).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/trackLayout.lua:107
+--- Draws "Split N" on each useAsSplit pathnode (except the last node of the sorted list).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/trackLayout.lua:107
 function editor_raceEditor_trackLayout:drawSplits() end
 
---- Cherche une position de départ nommée STOP_ZONE, SS_stop_control ou TC_out et y dessine le texte « Stop Control ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/trackLayout.lua:89
+--- Looks for a start position named STOP_ZONE, SS_stop_control or TC_out and draws the text "Stop Control" there.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/trackLayout.lua:89
 function editor_raceEditor_trackLayout:drawStopZone() end
 
---- Mémorise raceEditor.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/trackLayout.lua:10
+--- Stores raceEditor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/trackLayout.lua:10
 ---@param raceEditor table Module editor_raceEditor.
 function editor_raceEditor_trackLayout:init(raceEditor) end
 
---- Appelé quand l'onglet devient actif ; ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/trackLayout.lua:17
+--- Called when the tab becomes active; does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/trackLayout.lua:17
 function editor_raceEditor_trackLayout:selected() end
 
---- Liste déroulante de choix d'un nœud ou d'une position pour un champ du chemin (None = -1), avec libellé dessiné dans le monde et prévisualisation du nom survolé.
----Source : lua/ge/extensions/editor/raceEditor/trackLayout.lua:120
----@param name string Libellé.
----@param objects table Collection (objects, sorted) : path.pathnodes ou path.startPositions.
----@param fieldName string Champ du chemin contenant l'ID choisi.
----@param clrI ColorI|nil Couleur de fond du texte dans le monde.
----@param tt string|nil Infobulle.
+--- Dropdown to choose a node or a position for a path field (None = -1), with a label drawn in the world and a preview of the hovered name.
+---Source: lua/ge/extensions/editor/raceEditor/trackLayout.lua:120
+---@param name string Label.
+---@param objects table Collection (objects, sorted): path.pathnodes or path.startPositions.
+---@param fieldName string Path field containing the chosen ID.
+---@param clrI ColorI|nil Background color of the in-world text.
+---@param tt string|nil Tooltip.
 function editor_raceEditor_trackLayout:selector(name, objects, fieldName, clrI, tt) end
 
---- Définit le chemin de course édité.
----Source : lua/ge/extensions/editor/raceEditor/trackLayout.lua:14
----@param path table Objet gameplay/race/path.
+--- Sets the race path being edited.
+---Source: lua/ge/extensions/editor/raceEditor/trackLayout.lua:14
+---@param path table gameplay/race/path object.
 function editor_raceEditor_trackLayout:setPath(path) end
 
---- Appelé quand l'onglet est quitté ; ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/trackLayout.lua:18
+--- Called when the tab is left; does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/trackLayout.lua:18
 function editor_raceEditor_trackLayout:unselect() end
 

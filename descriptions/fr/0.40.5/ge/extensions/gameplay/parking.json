@@ -1,0 +1,310 @@
+{
+  "path": "lua/ge/extensions/gameplay/parking.lua",
+  "module": "Système de véhicules garés et de suivi du stationnement. D'une part il fait apparaître des voitures garées sur les places du fichier de sites du niveau (city.sites.json via gameplay_city) et les téléporte vers de nouvelles places devant le joueur quand il s'éloigne, en s'appuyant sur un pool d'activation (core_vehicleActivePooling). D'autre part il suit un véhicule en conduite (enableTracking) pour détecter qu'il entre, sort ou se gare correctement dans une place et émet onVehicleParkingStatus. Un moddeur s'en sert pour peupler une zone de voitures garées ou pour des missions de stationnement.",
+  "usage": "gameplay_parking.setupVehicles(10)  -- fait apparaître 10 voitures garées\ngameplay_parking.setParkingVars({precision = 0.9, neatness = 0.5})\ngameplay_parking.enableTracking(be:getPlayerVehicleID(0), true)\n-- hook : function M.onVehicleParkingStatus(vehId, data) if data.event == 'valid' then ... end end",
+  "notes": [
+    "Variables (vars) par défaut : precision 0.8 (précision requise pour valider le stationnement), neatness 0 (netteté des voitures garées générées), radiusCoef 1 (coefficient du rayon actif, borné à 0.25..1000 par setParkingVars), baseProbability 0.75, activeAmount math.huge, enableRespawn true.",
+    "Constantes internes : rayon cible 50 m, rayon de recherche 200 m, point de recherche à 200 m devant, rayon de maintien actif 50 m, rayon à garder libre 120 m.",
+    "Événements de suivi (data.event) : 'enter', 'exit', 'valid' (stationnement valide maintenu 0,5 s), 'invalid', 'none'.",
+    "Tags de places (customFields.tags) utilisés : street (active mapmgr.enableTracking), forwards, backwards, perfect, banned, dayTime, nightTime ; champ probability. Champ dynamique de véhicule trafficClearRadius : empêche les respawns de voitures garées à proximité.",
+    "Un véhicule ayant le drapeau ignoreParking est ignoré par insertVehicle.",
+    "Les véhicules insérés reçoivent playerUsable = false, ignoreTraffic et isParked, et sont ajoutés à la liste noire du mode marche.",
+    "processVehicles est un alias d'activate ; getParkingAmount est un alias de getParkedCarsAmount.",
+    "onClientStartMission est une fonction vide.",
+    "Hooks émis : onParkingVehiclesActivated(parkedVehIds), onParkingVehiclesDeactivated(), onVehicleParkingStatus(vehId, data).",
+    "Hors de onUpdate, la logique ne tourne pas si le système est inactif, sans sites, avec la physique coupée ou en mode grande carte."
+  ],
+  "fields": {
+    "debugLevel": {"type": "integer", "desc": "Niveau de debug : > 0 logs de téléportation et de filtrage ; >= 1 dessine les places autour du véhicule suivi ; >= 2 dessine les coins ; >= 3 dessine le point de recherche et les cercles."},
+    "dependencies": {"type": "string[]", "desc": "{'core_vehicleActivePooling'}, extension chargée avant."}
+  },
+  "functions": {
+    "setSites": {
+      "desc": "Définit les données de sites (places de parking) utilisées, en remplaçant celles du niveau. Accepte un chemin de fichier, ou une table de sites valide (avec parkingSpots) ; sinon remet à nil.",
+      "params": {"data": {"type": "string|table|nil", "desc": "Chemin d'un fichier .sites.json ou table de sites."}},
+      "returns": [],
+      "internal": false
+    },
+    "setState": {
+      "desc": "Active ou désactive le système de stationnement. À l'activation, charge les sites par défaut si besoin et initialise le point de focus (gameplay_traffic.getFocus()).",
+      "params": {"val": {"type": "boolean", "desc": "true pour activer."}},
+      "returns": [],
+      "internal": false
+    },
+    "getState": {
+      "desc": "Indique si le système est actif.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si actif."}],
+      "internal": false
+    },
+    "getParkingSpots": {
+      "desc": "Renvoie la collection de places de parking (sites.parkingSpots : sorted, objects…), en chargeant les sites si nécessaire.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Collection de places, nil sans sites."}],
+      "internal": false
+    },
+    "moveToParkingSpot": {
+      "desc": "Place un véhicule garé sur une place : choisit le sens (tags forwards/backwards, sinon avec la netteté), ajoute un décalage et une rotation aléatoires sauf tag perfect, éteint le contact, libère l'ancienne place, peut changer la peinture, et met à jour le suivi mapmgr.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Véhicule à déplacer."},
+        "parkingSpot": {"type": "table", "desc": "Objet place de parking."},
+        "lowPrecision": {"type": "boolean|nil", "desc": "Transmis à moveResetVehicleTo (utilisé quand le véhicule n'est pas prêt)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "checkParkingSpot": {
+      "desc": "Indique si une place est utilisable pour un véhicule garé : existante, dans la fenêtre de distance du focus, libre (pas de véhicule, pas banned, aucun véhicule dessus), hors des rayons trafficClearRadius, taille adaptée (ni trop petite ni trop grande : rapport >= 0.5).",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Véhicule à garer."},
+        "parkingSpot": {"type": "table", "desc": "Place à tester."},
+        "minDist": {"type": "number|nil", "desc": "Distance minimale au focus (m, défaut 0)."},
+        "maxDist": {"type": "number|nil", "desc": "Distance maximale au focus (m, défaut 1e12)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si la place convient."}],
+      "internal": false
+    },
+    "findParkingSpots": {
+      "desc": "Trouve les places dans une couronne autour d'une position, triées de la plus proche à la plus lointaine.",
+      "params": {
+        "pos": {"type": "vec3|nil", "desc": "Centre (défaut position caméra)."},
+        "minRadius": {"type": "number|nil", "desc": "Rayon minimal (défaut 0)."},
+        "maxRadius": {"type": "number|nil", "desc": "Rayon maximal (défaut 200 m)."}
+      },
+      "returns": [{"type": "table[]", "desc": "Liste {ps = place, squaredDistance = number}."}],
+      "internal": false
+    },
+    "filterParkingSpots": {
+      "desc": "Filtre en place une liste issue de findParkingSpots : retire les places banned, puis selon filters : standardSize (largeur <= 3, longueur <= 8), checkVehicles (aucun véhicule dessus), useProbability (probabilité de la place × baseProbability × coefficient jour/nuit selon l'heure et les tags dayTime/nightTime). Défaut : {useProbability = true}.",
+      "params": {
+        "psList": {"type": "table[]", "desc": "Liste {ps, squaredDistance}."},
+        "filters": {"type": "table|nil", "desc": "useProbability, standardSize, checkVehicles."}
+      },
+      "returns": [{"type": "table[]", "desc": "La même liste filtrée."}],
+      "internal": false
+    },
+    "getRandomParkingSpots": {
+      "desc": "Renvoie une liste de places valides triée avec un biais aléatoire en faveur des plus proches de la position d'origine. Élargit le rayon jusqu'à avoir assez de places ou atteindre maxDist.",
+      "params": {
+        "originPos": {"type": "vec3|nil", "desc": "Origine (défaut caméra)."},
+        "minDist": {"type": "number|nil", "desc": "Distance minimale (défaut 0)."},
+        "maxDist": {"type": "number|nil", "desc": "Distance maximale (défaut 10000)."},
+        "targetCount": {"type": "integer|nil", "desc": "Nombre de places voulu ; nil ou <= 0 = rayon maxDist et minimum automatique."},
+        "filters": {"type": "table|nil", "desc": "Filtres de filterParkingSpots."}
+      },
+      "returns": [{"type": "table[]", "desc": "Liste {ps, squaredDistance} (vide si rien trouvé)."}],
+      "internal": false
+    },
+    "forceTeleport": {
+      "desc": "Force une voiture garée à se téléporter sur une nouvelle place libre aléatoire proche. Sans place valide, l'envoie hors carte via gameplay_traffic.forceTeleport. Sans effet si enableRespawn est false ou si la voiture a ignoreForceTeleport.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Voiture garée."},
+        "pos": {"type": "vec3|nil", "desc": "Position de référence (défaut caméra)."},
+        "minDist": {"type": "number|nil", "desc": "Distance minimale."},
+        "maxDist": {"type": "number|nil", "desc": "Distance maximale."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "scatterParkedCars": {
+      "desc": "Téléporte toutes les voitures garées (ou celles fournies) sur des places aléatoires ; repli sur forceTeleport quand aucune place ne convient.",
+      "params": {
+        "vehIds": {"type": "integer[]|nil", "desc": "Voitures (défaut toutes les voitures garées)."},
+        "minDist": {"type": "number|nil", "desc": "Distance minimale."},
+        "maxDist": {"type": "number|nil", "desc": "Distance maximale."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "enableTracking": {
+      "desc": "Active le suivi du stationnement pour un véhicule conduit (active aussi le système). Crée les données de suivi : inside, preParked, parked, event, maxDist 80 m, parkingTimer, isOversized…",
+      "params": {
+        "vehId": {"type": "integer|nil", "desc": "Véhicule (défaut joueur 0)."},
+        "autoDisable": {"type": "boolean|nil", "desc": "Si true, le suivi s'arrête à la première validation du stationnement."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "disableTracking": {
+      "desc": "Arrête le suivi du stationnement d'un véhicule.",
+      "params": {"vehId": {"type": "integer|nil", "desc": "Véhicule (défaut joueur 0)."}},
+      "returns": [],
+      "internal": false
+    },
+    "getTrackingData": {
+      "desc": "Données de suivi de tous les véhicules suivis, par id.",
+      "params": {},
+      "returns": [{"type": "table<integer, table>", "desc": "Données (inside, parked, event, parkingSpotId, lastParkingSpotId…)."}],
+      "internal": false
+    },
+    "getCurrentParkingSpot": {
+      "desc": "Id de la place où un véhicule est correctement garé. Avec suivi actif, renvoie parkingSpotId si preParked ; sans suivi, cherche la place la plus proche (15 m) qui contient le véhicule avec la précision vars.precision.",
+      "params": {"vehId": {"type": "integer|nil", "desc": "Véhicule (défaut joueur 0)."}},
+      "returns": [{"type": "integer|nil", "desc": "Id de place, ou nil."}],
+      "internal": false
+    },
+    "setParkingVars": {
+      "desc": "Fusionne des variables de stationnement (réinitialise d'abord si reset). Un radiusCoef réinitialise les rayons actifs ; un activeAmount met à jour le pool de véhicules.",
+      "params": {
+        "data": {"type": "table", "desc": "precision, neatness, radiusCoef, baseProbability, activeAmount, enableRespawn."},
+        "reset": {"type": "boolean|nil", "desc": "true pour revenir aux valeurs par défaut avant fusion."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setActiveAmount": {
+      "desc": "Définit le nombre maximal de voitures garées actives (visibles) ; nil = illimité.",
+      "params": {"amount": {"type": "number|nil", "desc": "Nombre maximal."}},
+      "returns": [],
+      "internal": false
+    },
+    "getParkingVars": {
+      "desc": "Variables de stationnement actuelles.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Variables (référence directe)."}],
+      "internal": false
+    },
+    "getParkedCarsAmount": {
+      "desc": "Nombre de voitures garées gérées ; avec activeOnly, borné par activeAmount. Alias : getParkingAmount.",
+      "params": {"activeOnly": {"type": "boolean|nil", "desc": "true pour compter au plus activeAmount."}},
+      "returns": [{"type": "integer", "desc": "Nombre."}],
+      "internal": false
+    },
+    "getParkingAmount": {
+      "desc": "Alias de getParkedCarsAmount.",
+      "params": {"activeOnly": {"type": "boolean|nil", "desc": "Voir getParkedCarsAmount."}},
+      "returns": [{"type": "integer", "desc": "Nombre."}],
+      "internal": false
+    },
+    "getParkedCarsList": {
+      "desc": "Liste des ids de voitures garées gérées.",
+      "params": {},
+      "returns": [{"type": "integer[]", "desc": "Ids (référence directe)."}],
+      "internal": false
+    },
+    "getParkedCarsData": {
+      "desc": "Données par voiture garée : parkingSpotId, activeRadius, randomPaint, searchFlag…",
+      "params": {},
+      "returns": [{"type": "table<integer, table>", "desc": "Données (référence directe)."}],
+      "internal": false
+    },
+    "insertVehicle": {
+      "desc": "Ajoute un véhicule aux voitures garées gérées : crée le pool 'autoParking' si besoin, le rend non utilisable par le joueur, l'associe à sa place actuelle éventuelle et active le suivi mapmgr. Ignoré si obj.ignoreParking.",
+      "params": {"vehId": {"type": "integer", "desc": "Véhicule."}},
+      "returns": [],
+      "internal": false
+    },
+    "removeVehicle": {
+      "desc": "Retire un véhicule des voitures garées gérées (ne le supprime pas du monde).",
+      "params": {"vehId": {"type": "integer", "desc": "Véhicule."}},
+      "returns": [],
+      "internal": false
+    },
+    "deleteVehicles": {
+      "desc": "Supprime du monde les dernières voitures garées (toutes par défaut).",
+      "params": {"amount": {"type": "integer|nil", "desc": "Nombre à supprimer, en commençant par la fin de la liste."}},
+      "returns": [],
+      "internal": false
+    },
+    "activate": {
+      "desc": "Active un groupe de véhicules comme voitures garées (les insère), puis émet onParkingVehiclesActivated. Désactive le système s'il n'y a pas de sites, pas de véhicules ou aucun inséré. Alias : processVehicles.",
+      "params": {"vehIds": {"type": "integer[]", "desc": "Ids de véhicules."}},
+      "returns": [],
+      "internal": false
+    },
+    "processVehicles": {
+      "desc": "Alias d'activate.",
+      "params": {"vehIds": {"type": "integer[]", "desc": "Ids de véhicules."}},
+      "returns": [],
+      "internal": false
+    },
+    "deactivate": {
+      "desc": "Désactive le système : vide les listes, supprime le pool et émet onParkingVehiclesDeactivated.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setupVehicles": {
+      "desc": "Fait apparaître des véhicules garés sur des places aléatoires (groupe de véhicules de type propparked, ou options.vehGroup). Supprime d'abord les voitures garées actuelles sauf keepCurrent. Quand le groupe est apparu, onVehicleGroupSpawned appelle activate.",
+      "params": {
+        "amount": {"type": "integer|nil", "desc": "Nombre ; -1 ou nil = réglage trafficParkingAmount (0 = auto entre 4 et 16)."},
+        "options": {"type": "table|nil", "desc": "keepCurrent, vehGroup, pos, bypassChecks."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si le nombre est nul, si le groupe est vide ou s'il n'y a aucune place (sans bypassChecks)."}],
+      "internal": false
+    },
+    "resetAll": {
+      "desc": "Réinitialise tout : désactive, oublie les sites, vide listes et suivis, supprime le pool et remet les variables par défaut.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onVehicleGroupSpawned": {
+      "desc": "Hook de core_multiSpawn : active le groupe quand il porte le nom 'autoParking'.",
+      "params": {
+        "vehList": {"type": "integer[]", "desc": "Véhicules apparus."},
+        "groupId": {"type": "any", "desc": "Id du groupe (inutilisé)."},
+        "groupName": {"type": "string", "desc": "Nom du groupe."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook : quand le véhicule joueur est réinitialisé/téléporté, force une recherche de places proche du joueur (mode de réapparition proche).",
+      "params": {"vehId": {"type": "integer", "desc": "Véhicule réinitialisé."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook : retire le véhicule des listes de voitures garées et de suivi, et libère sa place.",
+      "params": {"vehId": {"type": "integer", "desc": "Véhicule détruit."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleActiveChanged": {
+      "desc": "Hook de pool d'activation : marque une voiture garée désactivée pour téléportation ; à sa réactivation, la téléporte si un autre véhicule (100 m d'un joueur, 20 m sinon) est proche.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Véhicule."},
+        "active": {"type": "boolean", "desc": "Nouvel état d'activité."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque image. Met à jour le suivi du stationnement (événements enter/exit/valid/invalid), recherche périodiquement des places devant le joueur et recycle une voiture garée par image vers une nouvelle place hors de portée du joueur.",
+      "params": {
+        "dt": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onClientStartMission": {
+      "desc": "Hook de début de niveau ; ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook de fin de niveau : appelle resetAll.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook avant rechargement Lua : renvoie l'état (actif, voiture garées, suivis, variables). Avec options.despawnVehicles, capture aussi les données d'apparition des voitures (sauf options.exceptVehicleId) puis les supprime.",
+      "params": {"options": {"type": "table|nil", "desc": "despawnVehicles, exceptVehicleId, debugVehicleStashing."}},
+      "returns": [{"type": "table", "desc": "Données à restaurer."}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook après rechargement Lua : refait apparaître les voitures stockées si options.respawnVehicles, réactive les voitures garées, rétablit les suivis, les variables et l'état.",
+      "params": {
+        "data": {"type": "table", "desc": "Résultat de onSerialize."},
+        "options": {"type": "table|nil", "desc": "respawnVehicles, debugVehicleStashing."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

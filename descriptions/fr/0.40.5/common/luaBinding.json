@@ -1,0 +1,52 @@
+{
+  "path": "lua/common/luaBinding.lua",
+  "module": "Colle Lua des liaisons C++ <-> Lua : les fonctions __luaBind* sont les __index / __newindex que le moteur C++ place sur les metatables des classes exposées (getters, setters, héritage). Elles sont rappelées par le moteur (noms codés en dur côté C++), un moddeur n'a normalement pas à les appeler. __finalizeLuaBindings est appelée par le moteur après l'enregistrement des classes pour optimiser les metatables et configurer les SimObjects.",
+  "usage": "-- usage interne au moteur ; rien à appeler dans un mod",
+  "notes": [
+    "NE PAS RENOMMER : les noms __luaBindIndex, __luaBindIndexStatic, __luaBindNewindex, __luaBindNewindexStatic, __finalizeLuaBindings sont codés en dur côté C++ (commentaire du code).",
+    "Convention de metatable de classe C++ : [1] = table des getters, [2] = table des setters, [3] = metatable de la classe parente (super) ; pour les SimObjects : [4] getStaticDataFieldbyName, [5] getDynDataFieldbyName, [6] setStaticDataFieldbyName, [7] setDynDataFieldbyName. Les résultats trouvés dans une classe parente sont recopiés dans la metatable enfant (cache).",
+    "Pour les classes statiques, un getter qui n'est pas une fonction (constante via addConstant()) est renvoyé directement.",
+    "__finalizeLuaBindings ne fait le travail SimObject que si luaVMname ~= 'vlua' (hors VM véhicule) : détecte les classes dont le nom commence par 'd' (byte 100) et qui ont isSubClassOf, aplatit leur hiérarchie et installe les __index/__newindex SimObject (champs dynamiques/statiques accessibles comme des propriétés, obj.obj = lui-même).",
+    "Écrire dans une propriété non trouvée ou en lecture seule ne lève pas d'erreur : l'assignation est silencieusement ignorée (log commenté). Lire une propriété inconnue renvoie nil.",
+    "testBindings() est un test unitaire interne (TestNamespace.TestClassA/B) : n'existe que si ces classes de test sont enregistrées."
+  ],
+  "fields": {},
+  "functions": {
+    "__luaBindIndex": {
+      "desc": "__index d'une instance de classe C++ : cherche d'abord un champ de la metatable, puis un getter de la classe, puis remonte la chaîne des classes parentes (en mettant en cache). Renvoie nil si introuvable.",
+      "params": {"t": {"type": "userdata|table", "desc": "instance"}, "k": {"type": "any", "desc": "clé demandée"}},
+      "returns": [{"type": "any", "desc": "valeur, méthode ou résultat du getter"}],
+      "internal": true
+    },
+    "__luaBindIndexStatic": {
+      "desc": "__index des classes à membres statiques : comme __luaBindIndex mais les getters sont appelés sans instance, et une constante non fonction est renvoyée telle quelle.",
+      "params": {"t": {"type": "table", "desc": "table de la classe statique"}, "k": {"type": "any", "desc": "clé demandée"}},
+      "returns": [{"type": "any", "desc": "valeur"}],
+      "internal": true
+    },
+    "__luaBindNewindex": {
+      "desc": "__newindex d'une instance : appelle le setter de la classe (ou d'un parent) ; ignore silencieusement si aucun setter.",
+      "params": {"t": {"type": "userdata|table", "desc": "instance"}, "k": {"type": "any", "desc": "clé"}, "v": {"type": "any", "desc": "valeur à écrire"}},
+      "returns": [],
+      "internal": true
+    },
+    "__luaBindNewindexStatic": {
+      "desc": "__newindex pour classes statiques : appelle le setter sans instance (setFunc(v)).",
+      "params": {"t": {"type": "table", "desc": "table de la classe"}, "k": {"type": "any", "desc": "clé"}, "v": {"type": "any", "desc": "valeur"}},
+      "returns": [],
+      "internal": true
+    },
+    "__finalizeLuaBindings": {
+      "desc": "Appelée par le moteur une fois toutes les classes C++ enregistrées dans la VM : installe les accès SimObject (hors VM véhicule) puis optimise les metatables sans parent (supprime __newindex sans setters, aplatit les getters).",
+      "params": {"classes": {"type": "table<string, table>", "desc": "classes exposées (nom -> metatable)"}, "luaVMname": {"type": "string", "desc": "nom de la VM ('vlua' pour le véhicule)"}},
+      "returns": [],
+      "internal": true
+    },
+    "testBindings": {
+      "desc": "Test unitaire des liaisons (classes TestNamespace.TestClassA/B) : assignations, appels, destruction et ramasse-miettes ; affiche *** Unittest start *** / *** DONE ***.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

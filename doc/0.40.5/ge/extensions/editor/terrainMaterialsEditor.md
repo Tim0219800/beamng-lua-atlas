@@ -1,46 +1,46 @@
 # `editor_terrainMaterialsEditor`
 
-*Fichier : `lua/ge/extensions/editor/terrainMaterialsEditor.lua` · VM : Game Engine (GE) · 2296 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/terrainMaterialsEditor.lua` · VM: Game Engine (GE) · 2296 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_terrainMaterialsEditor` : `extensions.load("editor_terrainMaterialsEditor")`, puis la globale `editor_terrainMaterialsEditor`
+**Access:** extension `editor_terrainMaterialsEditor`: `extensions.load("editor_terrainMaterialsEditor")`, then the global `editor_terrainMaterialsEditor`
 
-Fenêtre « Terrain Material Library » du World Editor : liste, édite, duplique, supprime et importe depuis un autre niveau les matériaux de terrain (TerrainMaterial) du niveau, avec validation des textures (format PNG, tailles puissances de 2, plages de valeurs, ordre des distances), annulation par historique pour les propriétés, changement de textures en masse et mise à niveau de l'ancien format de fichier (art/terrains/materials.json vers art/terrain/main.materials.json). Dépend de editor_terrainEditor (qui fournit la bibliothèque et les proxies de matériaux). Publie editor.showTerrainMaterialsEditor(internalName) pour ouvrir la fenêtre sur un matériau donné.
+World Editor 'Terrain Material Library' window: lists, edits, duplicates, deletes and imports from another level the level's terrain materials (TerrainMaterial), with texture validation (PNG format, power-of-2 sizes, value ranges, distance order), undo through history for properties, bulk texture change and upgrade of the old file format (art/terrains/materials.json to art/terrain/main.materials.json). Depends on editor_terrainEditor (which provides the library and the material proxies). Publishes editor.showTerrainMaterialsEditor(internalName) to open the window on a given material.
 
-## Exemple
+## Example
 
 ```lua
 editor.showTerrainMaterialsEditor("grass_01")
 ```
 
-## Remarques
+## Notes
 
-- Un PersistenceManager 'terrainMatEditor_PersistMan' est créé au chargement du module s'il n'existe pas.
-- Le nom interne d'un matériau ne doit pas être vide, ne doit pas commencer par un chiffre et ne doit pas déjà exister (états de notification NotificationState_*).
-- Deux formats de matériau sont gérés : V0 (carte diffuse/normal/detail/macro) et V1 (baseColor, normal, roughness, ao, height avec tailles de texture par slot : baseTexSize, macroTexSize, detailTexSize).
-- Incohérence probable dans applyMtlChanges : le contrôle de nom déjà pris itère editor_terrainEditor.getMaterialsInJson() avec ipairs, alors que la table est ailleurs parcourue avec pairs (clés non entières) ; la détection de doublon à cet endroit pourrait ne jamais se déclencher.
-- La constante terrainMaterialTextureSetPath ('art/terrains/main.materials.json') est déclarée mais ne semble pas utilisée.
+- A PersistenceManager 'terrainMatEditor_PersistMan' is created when the module loads if it does not exist.
+- The internal name of a material must not be empty, must not start with a digit and must not already exist (NotificationState_* notification states).
+- Two material formats are handled: V0 (diffuse/normal/detail/macro map) and V1 (baseColor, normal, roughness, ao, height with texture sizes per slot: baseTexSize, macroTexSize, detailTexSize).
+- Probable inconsistency in applyMtlChanges: the already-taken name check iterates editor_terrainEditor.getMaterialsInJson() with ipairs, whereas the table is traversed elsewhere with pairs (non-integer keys); the duplicate detection here might never trigger.
+- The constant terrainMaterialTextureSetPath ('art/terrains/main.materials.json') is declared but does not seem to be used.
 
-**Dépendances (chargées avant) :** `editor_terrainEditor`
+**Dependencies (loaded first):** `editor_terrainEditor`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_terrainMaterialsEditor.onEditorActivated()` | Hook appelé quand l'éditeur est activé : si la fenêtre est visible, recharge la bibliothèque de matériaux (editor_terrainEditor.updateMaterialLibrary) et invalide le cache de validation. *(interne)* *(hook)* | 2282 |
-| `editor_terrainMaterialsEditor.onEditorGui()` | Hook de rendu de l'éditeur : dessine la fenêtre « Terrain Material Library » (liste des matériaux, propriétés V0/V1, validation, boutons d'import/duplication/suppression/mise à niveau) et les fenêtres modales associées. *(interne)* *(hook)* | 1666 |
-| `editor_terrainMaterialsEditor.onEditorInitialized()` | Hook d'initialisation de l'éditeur : enregistre la fenêtre (710x530), les modales (changement de textures en masse, mise à niveau, import) et publie editor.showTerrainMaterialsEditor. *(interne)* *(hook)* | 2272 |
+| `editor_terrainMaterialsEditor.onEditorActivated()` | Hook called when the editor is activated: if the window is visible, reloads the material library (editor_terrainEditor.updateMaterialLibrary) and invalidates the validation cache. *(internal)* *(hook)* | 2282 |
+| `editor_terrainMaterialsEditor.onEditorGui()` | Editor render hook: draws the 'Terrain Material Library' window (material list, V0/V1 properties, validation, import/duplicate/delete/upgrade buttons) and the associated modal windows. *(internal)* *(hook)* | 1666 |
+| `editor_terrainMaterialsEditor.onEditorInitialized()` | Editor initialization hook: registers the window (710x530), the modals (bulk texture change, upgrade, import) and publishes editor.showTerrainMaterialsEditor. *(internal)* *(hook)* | 2272 |
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | {"editor_terrainEditor"} : extensions à charger avant celle-ci. |
+| `dependencies` | string[] | {"editor_terrainEditor"}: extensions to load before this one. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`, `directoryExists`, `fileExists`, `findFiles`
 - `obj:` `getField`, `getId`, `setField`
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/terrainMaterialsEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/terrainMaterialsEditor.lua`.*

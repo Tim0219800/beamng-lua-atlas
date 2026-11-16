@@ -1,33 +1,70 @@
 {
   "path": "lua/common/libs/luamqtt/mqtt/init.lua",
-  "module": "Point d'entrée de la bibliothèque tierce luamqtt (xHasKx, version 3.4.3 d'après le champ _VERSION), client MQTT 3.1.1 et 5.0 en Lua pur. Le module renvoie la table 'mqtt' avec les constantes de version, la création de client, et des boucles d'exécution (ioloop partagé ou synchrone). Utile à un moddeur qui veut échanger avec un broker MQTT depuis le jeu.",
+  "module": "Entry point of the third-party luamqtt library (xHasKx, version 3.4.3 according to the _VERSION field), a pure-Lua MQTT 3.1.1 and 5.0 client. The module returns the 'mqtt' table with the version constants, client creation, and run loops (shared or synchronous ioloop). Useful to a modder who wants to exchange with an MQTT broker from the game.",
   "usage": "local mqtt = require('libs/luamqtt/mqtt/init')\nlocal cl = mqtt.client({uri = '127.0.0.1:1883', clean = true})\ncl:on({connect = function(pkt) cl:subscribe({topic = 'beamng/#', qos = 0}) end,\n       message = function(msg) log('I','mqtt',msg.topic..' '..tostring(msg.payload)) end})\nmqtt.run_ioloop(cl)",
   "notes": [
-    "Le module pose aussi une globale luamqtt_VERSION, lue par client_mt:__init (la page auto la liste comme nom du module).",
-    "Convention de la bibliothèque : un argument de mauvais type lève une exception ; les autres erreurs sont renvoyées sous la forme false, 'texte'.",
-    "run_ioloop et run_sync sont bloquants : dans le jeu, préférer piloter le client depuis une boucle propre (voir ioloop_mt:iteration / client_mt:_sync_iteration) pour ne pas figer le thread.",
-    "Le connecteur luasocket exige le module 'socket' (nom nu) ; le dossier libs/luasocket du jeu expose ce module."
+    "The module also sets a global luamqtt_VERSION, read by client_mt:__init (the auto page lists it as the module name).",
+    "Library convention: an argument of the wrong type raises an exception; other errors are returned as false, 'text'.",
+    "run_ioloop and run_sync are blocking: in the game, prefer driving the client from your own loop (see ioloop_mt:iteration / client_mt:_sync_iteration) so as not to freeze the thread.",
+    "The luasocket connector requires the 'socket' module (bare name); the game's libs/luasocket folder exposes this module."
   ],
   "fields": {
-    "get_ioloop": {"type": "function", "desc": "Alias de ioloop.get : renvoie l'instance d'ioloop par défaut (créée si besoin)."},
-    "v311": {"type": "integer", "desc": "Constante 4 : version de protocole MQTT 3.1.1."},
-    "v50": {"type": "integer", "desc": "Constante 5 : version de protocole MQTT 5.0."},
-    "_VERSION": {"type": "string", "desc": "Version de luamqtt : '3.4.3'."}
+    "get_ioloop": {
+      "type": "function",
+      "desc": "Alias of ioloop.get: returns the default ioloop instance (created if needed)."
+    },
+    "v311": {
+      "type": "integer",
+      "desc": "Constant 4: MQTT 3.1.1 protocol version."
+    },
+    "v50": {
+      "type": "integer",
+      "desc": "Constant 5: MQTT 5.0 protocol version."
+    },
+    "_VERSION": {
+      "type": "string",
+      "desc": "luamqtt version: '3.4.3'."
+    }
   },
   "functions": {
     "client": {
-      "desc": "Crée un client MQTT (équivalent de mqtt.client.create).",
-      "params": {"...": {"type": "table", "desc": "Table d'arguments de client_mt:__init (uri, clean, version, id, username, password, secure, will, keep_alive, reconnect, connector, ssl_module)."}},
-      "returns": [{"type": "table", "desc": "Instance de client MQTT."}]
+      "desc": "Creates an MQTT client (equivalent to mqtt.client.create).",
+      "params": {
+        "...": {
+          "type": "table",
+          "desc": "Argument table of client_mt:__init (uri, clean, version, id, username, password, secure, will, keep_alive, reconnect, connector, ssl_module)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "MQTT client instance."
+        }
+      ]
     },
     "run_ioloop": {
-      "desc": "Ajoute les clients (ou fonctions de boucle) à l'ioloop par défaut, lance start_connecting() sur chaque client, puis exécute l'ioloop tant qu'il reste au moins un client.",
-      "params": {"...": {"type": "table|function", "desc": "Clients MQTT ou fonctions appelées à chaque itération."}}
+      "desc": "Adds the clients (or loop functions) to the default ioloop, calls start_connecting() on each client, then runs the ioloop as long as at least one client remains.",
+      "params": {
+        "...": {
+          "type": "table|function",
+          "desc": "MQTT clients or functions called on each iteration."
+        }
+      }
     },
     "run_sync": {
-      "desc": "Boucle synchrone pour un seul client : ouvre la connexion puis itère tant que cl.connection existe. Pas de reconnexion ni de keep_alive.",
-      "params": {"cl": {"type": "table", "desc": "Client MQTT."}},
-      "returns": [{"type": "boolean|nil", "desc": "false et le message d'erreur en cas d'échec."}]
+      "desc": "Synchronous loop for a single client: opens the connection then iterates as long as cl.connection exists. No reconnection nor keep_alive.",
+      "params": {
+        "cl": {
+          "type": "table",
+          "desc": "MQTT client."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "false and the error message on failure."
+        }
+      ]
     }
   }
 }

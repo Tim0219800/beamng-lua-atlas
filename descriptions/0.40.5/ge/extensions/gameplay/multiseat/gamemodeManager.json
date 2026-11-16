@@ -1,216 +1,359 @@
 {
   "path": "lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua",
-  "module": "Gestionnaire des modes de jeu multi-sièges (écran partagé). Il charge les fournisseurs gameplay/discover/multiseat/*Rules.lua, collecte leurs infos via le hook onGetMultiseatGamemodeInfos, démarre/arrête/relance un mode, gère le fondu, le blocage des actions d'entrée, l'attente des véhicules, ainsi que les écrans de début et de fin (via ui_router et mission.control). Un moddeur qui ajoute un mode multi-sièges passe par lui : il appelle ext.start(settings), ext.onReady(vehicles), ext.stop(), buildStartScreen, buildEndScreen.",
-  "usage": "gameplay_multiseat_gamemodeManager.start('monMode', nil, {withFade = false})\n-- depuis le mode : gameplay_multiseat_gamemodeManager.showEndScreen({winnerPlayer = 0})",
+  "module": "Manager of multiseat game modes (split screen). It loads the gameplay/discover/multiseat/*Rules.lua providers, collects their info via the onGetMultiseatGamemodeInfos hook, starts/stops/restarts a mode, handles the fade, the blocking of input actions, the waiting for vehicles, and the start and end screens (via ui_router and mission.control). A modder adding a multiseat mode goes through it: it calls ext.start(settings), ext.onReady(vehicles), ext.stop(), buildStartScreen, buildEndScreen.",
+  "usage": "gameplay_multiseat_gamemodeManager.start('monMode', nil, {withFade = false})\n-- from the mode: gameplay_multiseat_gamemodeManager.showEndScreen({winnerPlayer = 0})",
   "notes": [
-    "Phases de gamemodePhase : nil, 'starting', 'waiting', 'running'.",
-    "start() échoue (false) si le mode est inconnu, sans extensionPath, ou si plus de joueurs que playerCount.max ont rejoint.",
-    "Changer de véhicule en phase 'running' (hors synchronisation) relance le mode ; les actions vehicleSwitching et walkingMode restent toujours bloquées, les autres seulement si le réglage restrictScenarios est actif.",
-    "startScreenPendingOnPauseExit n'est jamais mis à true dans ce fichier : playPendingRound renvoie donc toujours false et isStartScreenPending toujours false.",
-    "Après VEHICLE_READY_TIMEOUT (5 s), le mode continue même si les véhicules ne sont pas prêts.",
-    "Durée du fondu : 0,35 s (FADE_DURATION)."
+    "gamemodePhase phases: nil, 'starting', 'waiting', 'running'.",
+    "start() fails (false) if the mode is unknown, has no extensionPath, or if more players than playerCount.max have joined.",
+    "Switching vehicles in the 'running' phase (outside synchronization) restarts the mode; the vehicleSwitching and walkingMode actions always stay blocked, the others only if the restrictScenarios setting is active.",
+    "startScreenPendingOnPauseExit is never set to true in this file: playPendingRound therefore always returns false and isStartScreenPending always false.",
+    "After VEHICLE_READY_TIMEOUT (5 s), the mode continues even if the vehicles are not ready.",
+    "Fade duration: 0.35 s (FADE_DURATION)."
   ],
   "fields": {
-    "ModuleName": {"type": "string", "desc": "Nom du module : 'gamemodeManager'."}
+    "ModuleName": {
+      "type": "string",
+      "desc": "Module name: 'gamemodeManager'."
+    }
   },
   "functions": {
     "getPlayerName": {
-      "desc": "Nom affiché du joueur local d'index donné, d'après le persona du participant rejoint.",
-      "params": {"playerIndex": {"type": "integer", "desc": "Index du joueur (à partir de 0)."}},
-      "returns": [{"type": "string|nil", "desc": "displayName, ou nil si inconnu."}],
+      "desc": "Display name of the local player with the given index, based on the joined participant's persona.",
+      "params": {
+        "playerIndex": {
+          "type": "integer",
+          "desc": "Player index (0-based)."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "displayName, or nil if unknown."
+        }
+      ],
       "internal": false
     },
     "requestGamemodeData": {
-      "desc": "Envoie à l'UI (guihooks OnGamemodeData, context 'multiseat') la liste des modes disponibles, le mode en cours, ses réglages et la liste des joueurs. Les modes mapUnsupported ou dépassant le nombre de joueurs sont comptés mais non listés.",
+      "desc": "Sends the UI (guihooks OnGamemodeData, context 'multiseat') the list of available modes, the current mode, its settings and the list of players. Modes that are mapUnsupported or exceed the number of players are counted but not listed.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "showEndScreen": {
-      "desc": "Affiche l'écran de fin : émet onMultiseatGamemodeFinished, met le temps de simulation en pause, puis construit l'écran à partir de resultData et des surcharges de buildEndScreen du mode (header, headerColor, body, layout, pages, buttons). Par défaut : boutons Rejouer, Freeroam, Menu principal.",
-      "params": {"resultData": {"type": "table|nil", "desc": "Champs lus : title, tied, winnerPlayer (index), text."}},
+      "desc": "Shows the end screen: emits onMultiseatGamemodeFinished, pauses the simulation time, then builds the screen from resultData and the mode's buildEndScreen overrides (header, headerColor, body, layout, pages, buttons). By default: Replay, Freeroam, Main menu buttons.",
+      "params": {
+        "resultData": {
+          "type": "table|nil",
+          "desc": "Fields read: title, tied, winnerPlayer (index), text."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "goToMainMenu": {
-      "desc": "Retourne au menu principal (returnToMainMenu).",
+      "desc": "Returns to the main menu (returnToMainMenu).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "stop": {
-      "desc": "Arrête le mode en cours, appelle ext.stop() et réactive le freeroam multi-sièges (ui_multiseat_freeroam.activate).",
+      "desc": "Stops the current mode, calls ext.stop() and reactivates multiseat freeroam (ui_multiseat_freeroam.activate).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "setReadyCallback": {
-      "desc": "Définit une fonction appelée une fois, quand le mode passe à la phase 'running' (notifyReady).",
-      "params": {"callback": {"type": "function|nil", "desc": "Fonction sans argument."}},
+      "desc": "Sets a function called once, when the mode enters the 'running' phase (notifyReady).",
+      "params": {
+        "callback": {
+          "type": "function|nil",
+          "desc": "Function with no argument."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "deferReady": {
-      "desc": "Passe la phase de 'starting' à 'waiting' : le mode annonce qu'il notifiera lui-même qu'il est prêt avec notifyReady.",
+      "desc": "Moves the phase from 'starting' to 'waiting': the mode announces that it will itself notify when it is ready with notifyReady.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "notifyReady": {
-      "desc": "Passe en phase 'running', termine le fondu s'il est actif et exécute le callback défini par setReadyCallback. Sans effet hors phases 'starting'/'waiting'.",
+      "desc": "Moves to the 'running' phase, ends the fade if active and runs the callback set by setReadyCallback. Has no effect outside the 'starting'/'waiting' phases.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getVehiclePool": {
-      "desc": "Renvoie info.vehiclePool du mode en cours.",
+      "desc": "Returns info.vehiclePool of the current mode.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Pool de véhicules déclaré par le mode."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Vehicle pool declared by the mode."
+        }
+      ],
       "internal": false
     },
     "shouldAssignVehiclePool": {
-      "desc": "Indique si le démarrage a été demandé avec options.assignVehiclePool = true.",
+      "desc": "Indicates whether the start was requested with options.assignVehiclePool = true.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si le pool doit être assigné."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the pool must be assigned."
+        }
+      ],
       "internal": false
     },
     "start": {
-      "desc": "Démarre un mode : charge ui_multiseat_freeroam, arrête le mode précédent, charge l'extension du mode (info.extensionPath), lui assigne ext.info, retient les réglages (défauts de info.settings si nil), désactive le freeroam multi-sièges puis lance le mode (avec fondu sauf options.withFade == false).",
+      "desc": "Starts a mode: loads ui_multiseat_freeroam, stops the previous mode, loads the mode's extension (info.extensionPath), assigns it ext.info, stores the settings (info.settings defaults if nil), disables multiseat freeroam then launches the mode (with fade unless options.withFade == false).",
       "params": {
-        "name": {"type": "string", "desc": "Nom du mode dans le registre."},
-        "settings": {"type": "table|nil", "desc": "Réglages ; nil = valeurs par défaut."},
-        "options": {"type": "table|nil", "desc": "withFade (boolean, false = sans fondu), assignVehiclePool (boolean)."}
+        "name": {
+          "type": "string",
+          "desc": "Mode name in the registry."
+        },
+        "settings": {
+          "type": "table|nil",
+          "desc": "Settings; nil = default values."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "withFade (boolean, false = no fade), assignVehiclePool (boolean)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si le lancement est démarré, false en cas d'erreur."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the launch is started, false on error."
+        }
+      ],
       "internal": false
     },
     "restart": {
-      "desc": "Relance le mode (celui en cours si name est nil) avec fondu. Si le mode demandé n'est pas le mode actif, appelle start.",
+      "desc": "Restarts the mode (the current one if name is nil) with fade. If the requested mode is not the active mode, calls start.",
       "params": {
-        "name": {"type": "string|nil", "desc": "Mode à relancer."},
-        "settings": {"type": "table|nil", "desc": "Nouveaux réglages ; nil = garder les actuels."}
+        "name": {
+          "type": "string|nil",
+          "desc": "Mode to restart."
+        },
+        "settings": {
+          "type": "table|nil",
+          "desc": "New settings; nil = keep the current ones."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false s'il n'y a aucun mode à relancer."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if there is no mode to restart."
+        }
+      ],
       "internal": false
     },
     "isActive": {
-      "desc": "Indique si un mode est en cours.",
+      "desc": "Indicates whether a mode is running.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si un mode est actif."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a mode is active."
+        }
+      ],
       "internal": false
     },
     "getGamemodeId": {
-      "desc": "Nom du mode en cours.",
+      "desc": "Name of the current mode.",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "Nom, ou nil."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Name, or nil."
+        }
+      ],
       "internal": false
     },
     "getMaxPlayers": {
-      "desc": "Nombre maximal de joueurs du mode en cours (info.playerCount.max).",
+      "desc": "Maximum number of players of the current mode (info.playerCount.max).",
       "params": {},
-      "returns": [{"type": "integer|nil", "desc": "Maximum, ou nil."}],
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Maximum, or nil."
+        }
+      ],
       "internal": false
     },
     "getPhase": {
-      "desc": "Phase actuelle du mode.",
+      "desc": "Current phase of the mode.",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "nil, 'starting', 'waiting' ou 'running'."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "nil, 'starting', 'waiting' or 'running'."
+        }
+      ],
       "internal": false
     },
     "isStartScreenPending": {
-      "desc": "Indique si l'écran de début est en attente de la sortie de pause (la variable n'est jamais mise à true dans ce fichier).",
+      "desc": "Indicates whether the start screen is waiting for the pause to end (the variable is never set to true in this file).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "Toujours false en pratique."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Always false in practice."
+        }
+      ],
       "internal": false
     },
     "playPendingRound": {
-      "desc": "Affiche l'écran de début s'il était en attente.",
+      "desc": "Shows the start screen if it was pending.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si l'écran a été affiché."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the screen was shown."
+        }
+      ],
       "internal": false
     },
     "onScreenFadeState": {
-      "desc": "Hook de fondu d'écran : quand state vaut 1 (écran noir) et qu'un lancement est différé, lance le mode.",
-      "params": {"state": {"type": "integer", "desc": "État du fondu ; 1 = totalement fondu."}},
+      "desc": "Screen fade hook: when state is 1 (black screen) and a launch is deferred, launches the mode.",
+      "params": {
+        "state": {
+          "type": "integer",
+          "desc": "Fade state; 1 = fully faded."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onPreRender": {
-      "desc": "Appelé chaque image. En phase 'waiting' avec véhicules en attente : attend qu'ils soient prêts (ou le délai de 5 s), notifie prêt, appelle ext.onReady(vehicles), gèle les véhicules puis affiche l'écran de début.",
+      "desc": "Called every frame. In the 'waiting' phase with vehicles pending: waits for them to be ready (or the 5 s timeout), notifies ready, calls ext.onReady(vehicles), freezes the vehicles then shows the start screen.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
-        "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time delta (s)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onRequestMissionScreenData": {
-      "desc": "Hook : quand l'UI demande les données d'écran de mission (mode ne contenant pas 'test'), renvoie l'écran actif via onRequestMissionScreenDataReady et émet onMissionScreenReady.",
-      "params": {"mode": {"type": "string", "desc": "Mode d'écran demandé."}},
+      "desc": "Hook: when the UI requests the mission screen data (mode not containing 'test'), returns the active screen via onRequestMissionScreenDataReady and emits onMissionScreenReady.",
+      "params": {
+        "mode": {
+          "type": "string",
+          "desc": "Requested screen mode."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onMissionScreenButtonClicked": {
-      "desc": "Hook : exécute le callback du bouton cliqué (mgrId 'multiseatGamemode'). Pour l'écran de fin, immédiatement ; pour l'écran de début, après retour à la route multiseat, onUIStartButtonClicked et 0,1 s de délai.",
-      "params": {"button": {"type": "table", "desc": "Bouton avec mgrId et funId."}},
+      "desc": "Hook: runs the callback of the clicked button (mgrId 'multiseatGamemode'). For the end screen, immediately; for the start screen, after returning to the multiseat route, onUIStartButtonClicked and a 0.1 s delay.",
+      "params": {
+        "button": {
+          "type": "table",
+          "desc": "Button with mgrId and funId."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onGetIsMissionStartOrEndScreenActive": {
-      "desc": "Hook : ajoute le mode d'écran actif à la liste screensActive.",
-      "params": {"screensActive": {"type": "string[]", "desc": "Liste remplie en place."}},
+      "desc": "Hook: adds the active screen mode to the screensActive list.",
+      "params": {
+        "screensActive": {
+          "type": "string[]",
+          "desc": "List filled in place."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onLoadingScreenFadeout": {
-      "desc": "Hook vide : le flux « véhicules prêts » d'onPreRender gère déjà la transition.",
+      "desc": "Empty hook: the \"vehicles ready\" flow of onPreRender already handles the transition.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onAfterRouteChange": {
-      "desc": "Hook après changement de route UI : si un écran de début est en attente et que la route cible est 'play' ou 'multiseat', le joue.",
-      "params": {"context": {"type": "table", "desc": "Contient toRoute.name."}},
+      "desc": "Hook after a UI route change: if a start screen is pending and the target route is 'play' or 'multiseat', plays it.",
+      "params": {
+        "context": {
+          "type": "table",
+          "desc": "Contains toRoute.name."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook de déchargement : débloque les actions, appelle ext.stop() et réinitialise tout l'état, y compris le registre des modes.",
+      "desc": "Unload hook: unblocks the actions, calls ext.stop() and resets all state, including the mode registry.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onPauseHomeRailBuildMultiseatActions": {
-      "desc": "Hook de construction du menu pause multi-sièges : ajoute le bouton Modes de jeu s'il n'y a pas de mode actif, sinon Réglages, Quitter et Relancer le mode.",
+      "desc": "Multiseat pause menu build hook: adds the Game modes button if there is no active mode, otherwise Settings, Quit and Restart mode.",
       "params": {
-        "actions": {"type": "table[]", "desc": "Liste d'actions à compléter."},
-        "context": {"type": "table", "desc": "Contexte (inutilisé)."},
-        "registerButton": {"type": "function", "desc": "Fonction qui enregistre un bouton et son callback."}
+        "actions": {
+          "type": "table[]",
+          "desc": "List of actions to complete."
+        },
+        "context": {
+          "type": "table",
+          "desc": "Context (unused)."
+        },
+        "registerButton": {
+          "type": "function",
+          "desc": "Function that registers a button and its callback."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onVehicleSwitched": {
-      "desc": "Hook de changement de véhicule : relance le mode si en phase 'running' et hors synchronisation des véhicules.",
+      "desc": "Vehicle switch hook: restarts the mode if in the 'running' phase and outside vehicle synchronization.",
       "params": {
-        "oldId": {"type": "integer", "desc": "Ancien id de véhicule."},
-        "newId": {"type": "integer", "desc": "Nouvel id."},
-        "player": {"type": "integer", "desc": "Joueur concerné."}
+        "oldId": {
+          "type": "integer",
+          "desc": "Old vehicle id."
+        },
+        "newId": {
+          "type": "integer",
+          "desc": "New id."
+        },
+        "player": {
+          "type": "integer",
+          "desc": "Player concerned."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onMultiseatSettingsApplied": {
-      "desc": "Hook après application des réglages multi-sièges : relance le mode si changeSet.requiresRestart et si l'application a réussi sans exitAfterApply.",
+      "desc": "Hook after multiseat settings are applied: restarts the mode if changeSet.requiresRestart and if the application succeeded without exitAfterApply.",
       "params": {
-        "changeSet": {"type": "table", "desc": "Changements (requiresRestart)."},
-        "result": {"type": "table", "desc": "Résultat (success, exitAfterApply)."}
+        "changeSet": {
+          "type": "table",
+          "desc": "Changes (requiresRestart)."
+        },
+        "result": {
+          "type": "table",
+          "desc": "Result (success, exitAfterApply)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook de fin de niveau : arrête le mode sans réactiver le freeroam.",
+      "desc": "End-of-level hook: stops the mode without reactivating freeroam.",
       "params": {},
       "returns": [],
       "internal": true

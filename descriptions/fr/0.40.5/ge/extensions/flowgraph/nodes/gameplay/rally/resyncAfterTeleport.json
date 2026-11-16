@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/resyncAfterTeleport.lua",
+  "module": "Nœud flowgraph « Rally Mode Resync After Teleport » (catégorie repeat_instant, tag rally). Efface l'état d'exécution des pacenotes et resynchronise le mode rally après une téléportation ou un reset, via gameplay_rally.getRallyManager():resyncAfterTeleport(). Recopie flow en sortie.",
+  "notes": ["Le resync est appelé à chaque frame d'exécution du nœud, pas seulement sur impulsion ; à n'activer qu'au besoin.", "Le nœud ne vérifie pas que gameplay_rally est chargé avant d'appeler getRallyManager."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Appelle rm:resyncAfterTeleport() (erreur loggée si pas de rally manager) et recopie le flux.", "internal": true}
+      }
+    }
+  }
+}

@@ -2,37 +2,37 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/trafficExclusion.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Calcule des zones sphériques d'exclusion du trafic IA le long des spéciales de rallye, puis les applique au navgraph (`map.setTrafficExclusionZones` + `map.reset`) pour que le trafic ne circule pas sur le parcours. Les zones viennent de la driveline (drivelineV3) de chaque mission `rallyStage`, échantillonnée tous les 1,5 x rayon, et, pour une boucle, d'un fichier optionnel `trafficGatedRoads.grzones.json` du dossier de la mission. Rayon par défaut : 10 m.
---- Accès : extension `gameplay_rally_trafficExclusion` : `extensions.load("gameplay_rally_trafficExclusion")`, puis la globale `gameplay_rally_trafficExclusion`
+--- Computes spherical exclusion zones for AI traffic along the rally special stages, then applies them to the navgraph (`map.setTrafficExclusionZones` + `map.reset`) so that traffic does not drive on the course. The zones come from the driveline (drivelineV3) of each `rallyStage` mission, sampled every 1.5 x radius, and, for a loop, from an optional `trafficGatedRoads.grzones.json` file in the mission folder. Default radius: 10 m.
+--- Access: extension `gameplay_rally_trafficExclusion`: `extensions.load("gameplay_rally_trafficExclusion")`, then the global `gameplay_rally_trafficExclusion`
 ---@class gameplay_rally_trafficExclusion
 gameplay_rally_trafficExclusion = {}
 
---- Applique l'exclusion de trafic pour une boucle : retrouve les missions via extractMissionIdsFromRallyLoop, crée les zones, ajoute les sphères du fichier optionnel trafficGatedRoads.grzones.json (champ spheres avec pos {x,y,z} et radius), puis appelle map.setTrafficExclusionZones et map.reset().
----Source : lua/ge/extensions/gameplay/rally/trafficExclusion.lua:211
----@param loopMission table Mission boucle.
----@param radius number|nil Rayon des zones issues des spéciales ; défaut 10.
----@return table[]  Zones appliquées ({pos, radius}) ; table vide si loopMission est nil.
+--- Applies the traffic exclusion for a loop: finds the missions via extractMissionIdsFromRallyLoop, creates the zones, adds the spheres of the optional trafficGatedRoads.grzones.json file (spheres field with pos {x,y,z} and radius), then calls map.setTrafficExclusionZones and map.reset().
+---Source: lua/ge/extensions/gameplay/rally/trafficExclusion.lua:211
+---@param loopMission table Loop mission.
+---@param radius number|nil Radius of the zones coming from the special stages; default 10.
+---@return table[]  Applied zones ({pos, radius}); empty table if loopMission is nil.
 function gameplay_rally_trafficExclusion.applyForRallyLoop(loopMission, radius) end
 
---- Supprime toutes les zones d'exclusion (map.clearTrafficExclusionZones) et recharge le navgraph (map.reset).
----Source : lua/ge/extensions/gameplay/rally/trafficExclusion.lua:258
+--- Removes all the exclusion zones (map.clearTrafficExclusionZones) and reloads the navgraph (map.reset).
+---Source: lua/ge/extensions/gameplay/rally/trafficExclusion.lua:258
 function gameplay_rally_trafficExclusion.clearTrafficExclusion() end
 
---- Construit la liste de zones d'exclusion pour des missions de rallye. Pour chaque mission `rallyStage`, charge la driveline et échantillonne ses points tous les 1,5 x radius.
----Source : lua/ge/extensions/gameplay/rally/trafficExclusion.lua:101
----@param missions table[]|nil Missions (objets de gameplay_missions_missions). Si vide ou nil, utilise la mission de l'éditeur de rallye.
----@param radius number|nil Rayon des zones en mètres ; défaut 10.
----@return table[]  Liste de {pos = vec3, radius = number} ; vide si rien n'est disponible.
+--- Builds the list of exclusion zones for rally missions. For each `rallyStage` mission, loads the driveline and samples its points every 1.5 x radius.
+---Source: lua/ge/extensions/gameplay/rally/trafficExclusion.lua:101
+---@param missions table[]|nil Missions (gameplay_missions_missions objects). If empty or nil, uses the rally editor's mission.
+---@param radius number|nil Radius of the zones in meters; default 10.
+---@return table[]  List of {pos = vec3, radius = number}; empty if nothing is available.
 function gameplay_rally_trafficExclusion.createZones(missions, radius) end
 
---- Lit mission.fgVariables d'une mission de boucle et renvoie les ids des missions utilisées, dans l'ordre : pour chaque étape 1 à 4, la section de route (`stageN_rallyRoadSection`) puis la spéciale (`stageN_rallyStage`), enfin `return_rallyRoadSection`. Les valeurs ont le format « Nom (id) » ; `<none>` est ignoré.
----Source : lua/ge/extensions/gameplay/rally/trafficExclusion.lua:151
----@param mission table Mission de type boucle (avec fgVariables).
----@return string[]  Ids de missions ; vide si fgVariables est absent.
+--- Reads mission.fgVariables of a loop mission and returns the ids of the missions used, in order: for each stage 1 to 4, the road section (`stageN_rallyRoadSection`) then the special stage (`stageN_rallyStage`), finally `return_rallyRoadSection`. The values have the format "Name (id)"; `<none>` is ignored.
+---Source: lua/ge/extensions/gameplay/rally/trafficExclusion.lua:151
+---@param mission table Loop-type mission (with fgVariables).
+---@return string[]  Mission ids; empty if fgVariables is absent.
 function gameplay_rally_trafficExclusion.extractMissionIdsFromRallyLoop(mission) end
 
---- Renvoie le rayon par défaut des zones.
----Source : lua/ge/extensions/gameplay/rally/trafficExclusion.lua:268
----@return number  10 (mètres).
+--- Returns the default radius of the zones.
+---Source: lua/ge/extensions/gameplay/rally/trafficExclusion.lua:268
+---@return number  10 (meters).
 function gameplay_rally_trafficExclusion.getDefaultRadius() end
 

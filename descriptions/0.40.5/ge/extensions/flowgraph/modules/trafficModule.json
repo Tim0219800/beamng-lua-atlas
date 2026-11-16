@@ -1,20 +1,70 @@
 {
   "path": "lua/ge/extensions/flowgraph/modules/trafficModule.lua",
-  "module": "Module flowgraph (moduleOrder 0) qui enveloppe gameplay_traffic et gameplay_parking pour les nœuds de trafic. Il retient si le flowgraph a lui-même activé le trafic (trafficActive) ou les voitures garées (parkedCarsActive) afin de ne les désactiver à l'arrêt que si c'est lui qui les a activés, sauf si keepTrafficState est vrai.",
+  "module": "Flowgraph module (moduleOrder 0) that wraps gameplay_traffic and gameplay_parking for traffic nodes. It remembers whether the flowgraph itself enabled traffic (trafficActive) or parked cars (parkedCarsActive) so as to disable them on stop only if it enabled them, unless keepTrafficState is true.",
   "notes": [
-    "À l'arrêt (sans keepTrafficState), si le trafic était actif, il réinitialise les variables de trafic et de poursuite (setTrafficVars, setPursuitVars) et celles de stationnement, puis désactive trafic et voitures garées.",
-    "keepTrafficState est remis à false à chaque arrêt."
+    "On stop (without keepTrafficState), if traffic was active, it resets the traffic and pursuit variables (setTrafficVars, setPursuitVars) and the parking ones, then disables traffic and parked cars.",
+    "keepTrafficState is set back to false on every stop."
   ],
   "functions": {
-    "init": {"desc": "Appelé à la création du module : trafficActive, parkedCarsActive et keepTrafficState valent false.", "internal": true},
-    "updateTrafficState": {"desc": "Met à jour trafficActive d'après gameplay_traffic.getTrafficData(). À n'utiliser que si le flowgraph a modifié l'état du trafic.", "params": {}},
-    "updateParkedCarsState": {"desc": "Met à jour parkedCarsActive d'après gameplay_parking.getParkedCarsData().", "params": {}},
-    "insertTraffic": {"desc": "Ajoute un véhicule au trafic (gameplay_traffic.insertTraffic) et met à jour l'état.", "params": {"id": {"type": "integer", "desc": "id du véhicule"}}},
-    "removeTraffic": {"desc": "Retire un véhicule du trafic (gameplay_traffic.removeTraffic) et met à jour l'état.", "params": {"id": {"type": "integer", "desc": "id du véhicule"}}},
-    "activateTraffic": {"desc": "Active le trafic (gameplay_traffic.activate) avec une liste de véhicules.", "params": {"vehList": {"type": "integer[]|nil", "desc": "ids des véhicules (déduit du code)"}}},
-    "deactivateTraffic": {"desc": "Désactive le trafic (gameplay_traffic.deactivate), seulement s'il a été activé par le flowgraph.", "params": {}},
-    "activateParkedCars": {"desc": "Active les voitures garées (gameplay_parking.processVehicles(vehList)).", "params": {"vehList": {"type": "integer[]|nil", "desc": "ids des véhicules (déduit du code)"}}},
-    "deactivateParkedCars": {"desc": "Désactive les voitures garées (processVehicles sans argument), seulement si activées par le flowgraph.", "params": {}},
-    "executionStopped": {"desc": "Appelé à l'arrêt du projet : remet à zéro les variables de trafic, poursuite et stationnement puis désactive trafic et voitures garées, sauf si keepTrafficState est vrai.", "internal": true}
+    "init": {
+      "desc": "Called when the module is created: trafficActive, parkedCarsActive and keepTrafficState are false.",
+      "internal": true
+    },
+    "updateTrafficState": {
+      "desc": "Updates trafficActive from gameplay_traffic.getTrafficData(). Use only if the flowgraph changed the traffic state.",
+      "params": {}
+    },
+    "updateParkedCarsState": {
+      "desc": "Updates parkedCarsActive from gameplay_parking.getParkedCarsData().",
+      "params": {}
+    },
+    "insertTraffic": {
+      "desc": "Adds a vehicle to the traffic (gameplay_traffic.insertTraffic) and updates the state.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "vehicle id"
+        }
+      }
+    },
+    "removeTraffic": {
+      "desc": "Removes a vehicle from the traffic (gameplay_traffic.removeTraffic) and updates the state.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "vehicle id"
+        }
+      }
+    },
+    "activateTraffic": {
+      "desc": "Enables traffic (gameplay_traffic.activate) with a list of vehicles.",
+      "params": {
+        "vehList": {
+          "type": "integer[]|nil",
+          "desc": "vehicle ids (inferred from code)"
+        }
+      }
+    },
+    "deactivateTraffic": {
+      "desc": "Disables traffic (gameplay_traffic.deactivate), only if it was enabled by the flowgraph.",
+      "params": {}
+    },
+    "activateParkedCars": {
+      "desc": "Enables parked cars (gameplay_parking.processVehicles(vehList)).",
+      "params": {
+        "vehList": {
+          "type": "integer[]|nil",
+          "desc": "vehicle ids (inferred from code)"
+        }
+      }
+    },
+    "deactivateParkedCars": {
+      "desc": "Disables parked cars (processVehicles without arguments), only if enabled by the flowgraph.",
+      "params": {}
+    },
+    "executionStopped": {
+      "desc": "Called when the project stops: resets the traffic, pursuit and parking variables then disables traffic and parked cars, unless keepTrafficState is true.",
+      "internal": true
+    }
   }
 }

@@ -1,50 +1,86 @@
 {
   "path": "lua/ge/extensions/gameplay/sites/location.lua",
-  "module": "Classe « Location » d'un jeu de sites (fichier *.sites.json) : un point nommé de la carte avec une position, un rayon et une couleur. Sert à marquer des lieux (départ, arrivée, point d'intérêt) dans les scénarios, missions et le trafic. Le module renvoie un constructeur : require('/lua/ge/extensions/gameplay/sites/location')(sites, name, forceId).",
+  "module": "\"Location\" class of a sites set (*.sites.json file): a named map point with a position, a radius and a color. Used to mark places (start, finish, point of interest) in scenarios, missions and traffic. The module returns a constructor: require('/lua/ge/extensions/gameplay/sites/location')(sites, name, forceId).",
   "usage": "local loc = require('/lua/ge/extensions/gameplay/sites/location')(sitesObj, 'Garage')\nloc:set(vec3(0,0,0), 8)\nlocal info = loc:findClosestRoadInfo()",
   "notes": [
-    "Rayon par défaut 5 m ; drawMode par défaut 'faded' ; sortOrder par défaut 999999.",
-    "onDeserialized fixe le rayon via set(...) puis le réécrit avec « data.radius or 5 » ; si data.radius vaut nil, set() met d'abord radius à nil avant la correction.",
-    "findClosestRoadInfo nécessite le module global map (renvoie nil sinon)."
+    "Default radius 5 m; default drawMode 'faded'; default sortOrder 999999.",
+    "onDeserialized sets the radius via set(...) then rewrites it with \"data.radius or 5\"; if data.radius is nil, set() first sets radius to nil before the correction.",
+    "findClosestRoadInfo requires the global map module (returns nil otherwise)."
   ],
   "classes": {
     "C": {
-      "desc": "Objet location. Champs : sites, id, name, color (vec3), pos (vec3), radius, customFields (gameplay/util/customFields).",
+      "desc": "Location object. Fields: sites, id, name, color (vec3), pos (vec3), radius, customFields (gameplay/util/customFields).",
       "functions": {
         "init": {
-          "desc": "Constructeur appelé par le module. Prend un identifiant unique de l'objet sites si forceId est absent, nom par défaut « Location <id> ».",
+          "desc": "Constructor called by the module. Takes a unique identifier from the sites object if forceId is absent, default name \"Location <id>\".",
           "params": {
-            "sites": {"type": "table", "desc": "Objet sites parent (fournit getNextUniqueIdentifier)."},
-            "name": {"type": "string|nil", "desc": "Nom affiché."},
-            "forceId": {"type": "integer|nil", "desc": "Identifiant imposé (utilisé à la désérialisation)."}
+            "sites": {
+              "type": "table",
+              "desc": "Parent sites object (provides getNextUniqueIdentifier)."
+            },
+            "name": {
+              "type": "string|nil",
+              "desc": "Displayed name."
+            },
+            "forceId": {
+              "type": "integer|nil",
+              "desc": "Forced identifier (used on deserialization)."
+            }
           },
           "internal": true
         },
         "onSerialize": {
-          "desc": "Renvoie une table sérialisable (name, pos, radius, color, oldId, customFields).",
-          "returns": [{"type": "table", "desc": "Données JSON-compatibles."}]
+          "desc": "Returns a serializable table (name, pos, radius, color, oldId, customFields).",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "JSON-compatible data."
+            }
+          ]
         },
         "onDeserialized": {
-          "desc": "Restaure name, color, position, rayon et champs personnalisés depuis une table sérialisée.",
-          "params": {"data": {"type": "table", "desc": "Table produite par onSerialize."}}
+          "desc": "Restores name, color, position, radius and custom fields from a serialized table.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Table produced by onSerialize."
+            }
+          }
         },
         "set": {
-          "desc": "Définit la position et le rayon de la location.",
+          "desc": "Sets the position and radius of the location.",
           "params": {
-            "pos": {"type": "vec3", "desc": "Position monde (copiée)."},
-            "radius": {"type": "number", "desc": "Rayon en mètres."}
+            "pos": {
+              "type": "vec3",
+              "desc": "World position (copied)."
+            },
+            "radius": {
+              "type": "number",
+              "desc": "Radius in meters."
+            }
           }
         },
         "drawDebug": {
-          "desc": "Dessine une sphère de debug (et le nom si le mode n'est pas 'faded'). En mode 'highlight', dessine aussi la route la plus proche. Rien au-delà de la distance de visualisation (300 m, ou la préférence de l'éditeur).",
+          "desc": "Draws a debug sphere (and the name if the mode is not 'faded'). In 'highlight' mode, also draws the closest road. Nothing beyond the view distance (300 m, or the editor preference).",
           "params": {
-            "drawMode": {"type": "string|nil", "desc": "'none', 'faded', 'normal' ou 'highlight' ; par défaut self._drawMode."},
-            "clr": {"type": "table|nil", "desc": "Couleur {r,g,b} ; par défaut la couleur de la location."}
+            "drawMode": {
+              "type": "string|nil",
+              "desc": "'none', 'faded', 'normal' or 'highlight'; default self._drawMode."
+            },
+            "clr": {
+              "type": "table|nil",
+              "desc": "Color {r,g,b}; default the location's color."
+            }
           }
         },
         "findClosestRoadInfo": {
-          "desc": "Cherche le segment de route le plus proche via map.findClosestRoad et renvoie le point projeté sur ce segment, avec le rayon interpolé. Les nœuds a et b sont permutés pour que a soit le plus proche.",
-          "returns": [{"type": "table|nil", "desc": "{name_a, name_b, a, b, distance, pos, radius} ou nil si aucune route / map absent."}]
+          "desc": "Looks for the closest road segment via map.findClosestRoad and returns the point projected onto that segment, with the interpolated radius. Nodes a and b are swapped so that a is the closest.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "{name_a, name_b, a, b, distance, pos, radius} or nil if no road / map missing."
+            }
+          ]
         }
       }
     }

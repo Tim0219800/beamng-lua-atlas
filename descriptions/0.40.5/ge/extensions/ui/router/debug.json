@@ -1,42 +1,45 @@
 {
   "path": "lua/ge/extensions/ui/router/debug.lua",
-  "module": "Fenêtre ImGui « Router Debugger » pour inspecter le routeur d'interface : route courante, route en attente, fil d'Ariane, champ de saisie pour naviguer vers une route ou revenir en arrière, et arbre des routes enregistrées regroupées par module (préfixe avant le premier point). Outil de développement ; chargé à la demande (la ligne de chargement dans ui_router est commentée).",
+  "module": "ImGui \"Router Debugger\" window to inspect the UI router: current route, pending route, breadcrumb, input field to navigate to a route or go back, and tree of registered routes grouped by module (prefix before the first dot). Development tool; loaded on demand (the load line in ui_router is commented out).",
   "usage": "extensions.load(\"ui_router_debug\")\nui_router_debug.toggle()",
   "notes": [
-    "À son chargement, la fenêtre s'ouvre automatiquement sauf si la globale disableHwWarnings est vraie.",
-    "Les tables sont affichées récursivement sauf la clé « children ».",
-    "Le bouton Navigate appelle extensions.ui_router.navigate(nom) puis vide la saisie ; Back appelle extensions.ui_router.back(). Le dernier résultat est affiché."
+    "On load, the window opens automatically unless the global disableHwWarnings is true.",
+    "Tables are displayed recursively except the \"children\" key.",
+    "The Navigate button calls extensions.ui_router.navigate(name) then clears the input; Back calls extensions.ui_router.back(). The last result is displayed."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Dépendance déclarée : ui_imgui (indiquée par la page auto-générée)."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Declared dependency: ui_imgui (indicated by the auto-generated page)."
+    }
   },
   "functions": {
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement : demande l'ouverture automatique de la fenêtre sauf si disableHwWarnings est vrai.",
+      "desc": "Hook called on load: requests the automatic opening of the window unless disableHwWarnings is true.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook appelé à chaque frame : ouvre la fenêtre si demandé, puis dessine « Router Debugger » (taille initiale 450x600) avec route courante, route en attente, fil d'Ariane, actions et modules de routes.",
+      "desc": "Hook called every frame: opens the window if requested, then draws \"Router Debugger\" (initial size 450x600) with current route, pending route, breadcrumb, actions and route modules.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "open": {
-      "desc": "Ouvre la fenêtre de debug.",
+      "desc": "Opens the debug window.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "close": {
-      "desc": "Ferme la fenêtre de debug.",
+      "desc": "Closes the debug window.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "toggle": {
-      "desc": "Inverse l'état d'ouverture de la fenêtre de debug.",
+      "desc": "Toggles the open state of the debug window.",
       "params": {},
       "returns": [],
       "internal": false

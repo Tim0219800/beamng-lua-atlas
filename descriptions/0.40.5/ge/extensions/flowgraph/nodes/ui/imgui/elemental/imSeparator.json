@@ -1,26 +1,26 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imSeparator.lua",
-  "module": "Nœud flowgraph « im Separator » (catégorie repeat_instant, tag imgui) : séparateur horizontal dans une fenêtre imgui, avec espace au-dessus et au-dessous réglables (data.aboveSpacing et data.belowSpacing, 5 px par défaut). Aucun pin.",
+  "module": "Flowgraph node \"im Separator\" (category repeat_instant, tag imgui): horizontal separator in an imgui window, with adjustable space above and below (data.aboveSpacing and data.belowSpacing, 5 px by default). No pins.",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStarted": {
-          "desc": "Vide effectif (aucune sortie).",
+          "desc": "Effectively empty (no outputs).",
           "internal": true
         },
         "init": {
-          "desc": "Espacements à 5.",
+          "desc": "Spacings at 5.",
           "internal": true
         },
         "postInit": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         },
         "work": {
-          "desc": "Dessine espace, séparateur, espace.",
+          "desc": "Draws space, separator, space.",
           "internal": true
         }
       }

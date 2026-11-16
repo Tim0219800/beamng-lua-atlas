@@ -2,140 +2,140 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/sites/zone.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Objet zone. Champs : sites, id, name, color, vertices (liste de {pos, radius, index, next, prev}), center, labelPos, aabb {xMin..zMax, invalid}, top / bot ({pos, normal, active}), fenceDown, fenceHeight, usePlanes, customFields, locations et parkingSpots (remplis par finalizeSites).
+--- Zone object. Fields: sites, id, name, color, vertices (list of {pos, radius, index, next, prev}), center, labelPos, aabb {xMin..zMax, invalid}, top / bot ({pos, normal, active}), fenceDown, fenceHeight, usePlanes, customFields, locations and parkingSpots (filled by finalizeSites).
 ---@class gameplay_sites_zone
 local gameplay_sites_zone = {}
 
---- Test rapide x/y contre la boîte englobante (z ignoré).
----Source : lua/ge/extensions/gameplay/sites/zone.lua:197
----@param point vec3 Point à tester.
----@return boolean  false si hors boîte ou aabb invalide.
+--- Quick x/y test against the bounding box (z ignored).
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:197
+---@param point vec3 Point to test.
+---@return boolean  false if outside the box or aabb invalid.
 function gameplay_sites_zone:aabbCheck(point) end
 
---- Insère un sommet (à la fin ou à l'index donné) et recalcule les données dérivées.
----Source : lua/ge/extensions/gameplay/sites/zone.lua:72
----@param pos vec3 Position du sommet.
----@param index integer|nil Position d'insertion (défaut : à la fin).
+--- Inserts a vertex (at the end or at the given index) and recalculates the derived data.
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:72
+---@param pos vec3 Vertex position.
+---@param index integer|nil Insertion position (default: at the end).
 function gameplay_sites_zone:addVertex(pos, index) end
 
---- Crée automatiquement des plans horizontaux 5 m au-dessus du sommet le plus haut et 5 m en dessous du plus bas, centrés sur la zone.
----Source : lua/ge/extensions/gameplay/sites/zone.lua:143
----@param ignoreTop boolean|nil Ne pas créer le plan haut.
----@param ignoreBot boolean|nil Ne pas créer le plan bas.
+--- Automatically creates horizontal planes 5 m above the highest vertex and 5 m below the lowest, centered on the zone.
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:143
+---@param ignoreTop boolean|nil Do not create the top plane.
+---@param ignoreBot boolean|nil Do not create the bottom plane.
 function gameplay_sites_zone:autoPlanes(ignoreTop, ignoreBot) end
 
---- À appeler après modification des plans top/bot ; relance processVertices.
----Source : lua/ge/extensions/gameplay/sites/zone.lua:132
+--- To call after modifying the top/bot planes; reruns processVertices.
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:132
 function gameplay_sites_zone:changedPlanes() end
 
---- Teste si un point est dans le polygone (x/y) et entre les plans.
----Source : lua/ge/extensions/gameplay/sites/zone.lua:252
----@param point vec3 Point à tester.
----@return boolean  true si dans la zone.
+--- Tests whether a point is inside the polygon (x/y) and between the planes.
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:252
+---@param point vec3 Point to test.
+---@return boolean  true if inside the zone.
 function gameplay_sites_zone:containsPoint2D(point) end
 
---- Teste si un véhicule est dans la zone, d'après sa boîte englobante de spawn : centre seul en mode basic, sinon les quatre coins du bas/haut utilisés (points 0, 3, 4 et 7) doivent tous être dans la zone.
----Source : lua/ge/extensions/gameplay/sites/zone.lua:275
----@param veh userdata Objet véhicule (getSpawnWorldOOBB).
----@param basic boolean|nil Tester seulement le centre.
----@return boolean  true si contenu.
+--- Tests whether a vehicle is inside the zone, based on its spawn bounding box: center only in basic mode, otherwise the four bottom/top corners used (points 0, 3, 4 and 7) must all be inside the zone.
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:275
+---@param veh userdata Vehicle object (getSpawnWorldOOBB).
+---@param basic boolean|nil Test only the center.
+---@return boolean  true if contained.
 function gameplay_sites_zone:containsVehicle(veh, basic) end
 
---- Dessine la zone en debug (clôture translucide, nom, plans selon le mode). Ne dessine que si la caméra est assez proche.
----Source : lua/ge/extensions/gameplay/sites/zone.lua:291
----@param drawMode string|nil 'none', 'faded', 'normal' ou 'highlight'.
----@param clr table|nil Couleur {r,g,b}.
----@param customHeight number|nil Hauteur de clôture personnalisée.
----@param customDown number|nil Profondeur de clôture personnalisée.
----@param nearCam boolean|nil Ne dessiner que les segments proches de la caméra.
----@param drawDistance number|nil Distance de dessin.
+--- Draws the zone in debug (translucent fence, name, planes depending on the mode). Only draws if the camera is close enough.
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:291
+---@param drawMode string|nil 'none', 'faded', 'normal' or 'highlight'.
+---@param clr table|nil Color {r,g,b}.
+---@param customHeight number|nil Custom fence height.
+---@param customDown number|nil Custom fence depth.
+---@param nearCam boolean|nil Only draw the segments close to the camera.
+---@param drawDistance number|nil Draw distance.
 function gameplay_sites_zone:drawDebug(drawMode, clr, customHeight, customDown, nearCam, drawDistance) end
 
---- Dessine un panneau de clôture (deux triangles, double face) entre deux points.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/sites/zone.lua:393
----@param from vec3 Début du segment.
----@param to vec3 Fin du segment.
----@param clrI table ColorI (son champ a est écrasé).
----@param down number|nil Décalage vers le bas (défaut 0).
----@param up number|nil Hauteur (défaut 5).
----@param usePlanes boolean|nil Borner la clôture par les plans actifs.
----@param nearCam boolean|nil Limiter à la proximité de la caméra avec fondu.
----@param drawDistance number|nil Distance de dessin (défaut 30).
----@param shapeAlpha number|nil Opacité 0..1 (défaut 0,5).
+--- Draws a fence panel (two triangles, double-sided) between two points.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:393
+---@param from vec3 Segment start.
+---@param to vec3 Segment end.
+---@param clrI table ColorI (its a field is overwritten).
+---@param down number|nil Downward offset (default 0).
+---@param up number|nil Height (default 5).
+---@param usePlanes boolean|nil Bound the fence by the active planes.
+---@param nearCam boolean|nil Limit to camera proximity with fade.
+---@param drawDistance number|nil Draw distance (default 30).
+---@param shapeAlpha number|nil Opacity 0..1 (default 0.5).
 function gameplay_sites_zone:drawFence(from, to, clrI, down, up, usePlanes, nearCam, drawDistance, shapeAlpha) end
 
---- Dessine le contour de la zone sur la minimap de l'interface (lignes blanches).
----Source : lua/ge/extensions/gameplay/sites/zone.lua:380
----@param td any Objet de dessin de la minimap (méthode line), déduit du code.
+--- Draws the zone outline on the UI minimap (white lines).
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:380
+---@param td any Minimap drawing object (line method), inferred from code.
 function gameplay_sites_zone:drawMinimap(td) end
 
---- Dessine un plan (haut ou bas) par des lignes reliant son point d'ancrage aux sommets projetés, et sa normale.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/sites/zone.lua:369
----@param plane table Plan {pos, normal, active}.
----@param clrF any Couleur ColorF.
+--- Draws a plane (top or bottom) with lines linking its anchor point to the projected vertices, and its normal.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:369
+---@param plane table Plane {pos, normal, active}.
+---@param clrF any ColorF color.
 function gameplay_sites_zone:drawPlane(plane, clrF) end
 
---- Constructeur. sites peut être nil (identifiant -1). Valeurs par défaut : fenceDown 0, fenceHeight 5, plans inactifs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/sites/zone.lua:7
----@param sites table|nil Objet sites parent.
----@param name string|nil Nom ; défaut « Zone <id> ».
----@param forceId integer|nil Identifiant imposé.
+--- Constructor. sites may be nil (identifier -1). Default values: fenceDown 0, fenceHeight 5, planes inactive.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:7
+---@param sites table|nil Parent sites object.
+---@param name string|nil Name; default "Zone <id>".
+---@param forceId integer|nil Imposed identifier.
 function gameplay_sites_zone:init(sites, name, forceId) end
 
---- Remplace les sommets par une version échantillonnée tous les maxStep mètres (au minimum 1), recalée sur la hauteur du terrain.
----Source : lua/ge/extensions/gameplay/sites/zone.lua:446
----@param maxStep number|nil Pas maximal en mètres ; défaut 3, plancher 1.
+--- Replaces the vertices with a version sampled every maxStep meters (at least 1), snapped to the terrain height.
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:446
+---@param maxStep number|nil Maximum step in meters; default 3, floor 1.
 function gameplay_sites_zone:makeHighResolutionFence(maxStep) end
 
---- Restaure la zone depuis les données et appelle processVertices.
----Source : lua/ge/extensions/gameplay/sites/zone.lua:51
----@param data table Données de onSerialize.
+--- Restores the zone from the data and calls processVertices.
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:51
+---@param data table Data from onSerialize.
 function gameplay_sites_zone:onDeserialized(data) end
 
---- Sérialise nom, sommets, couleur, champs personnalisés et plans top/bot.
----Source : lua/ge/extensions/gameplay/sites/zone.lua:26
----@return table  Données JSON-compatibles.
+--- Serializes name, vertices, color, custom fields and top/bot planes.
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:26
+---@return table  JSON-compatible data.
 function gameplay_sites_zone:onSerialize() end
 
---- Indique si un point se trouve entre les plans actifs (un plan inactif est ignoré).
----Source : lua/ge/extensions/gameplay/sites/zone.lua:167
----@param point vec3 Point à tester.
----@return boolean  true si entre les plans.
+--- Indicates whether a point is between the active planes (an inactive plane is ignored).
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:167
+---@param point vec3 Point to test.
+---@return boolean  true if between the planes.
 function gameplay_sites_zone:pointBetweenPlanes(point) end
 
---- Précalculs : boîte englobante (aabb), centre, position du libellé, chaînage des sommets, extension de l'aabb par les plans. Si un plan n'est pas actif, la borne z correspondante est infinie.
----Source : lua/ge/extensions/gameplay/sites/zone.lua:83
+--- Precomputations: bounding box (aabb), center, label position, vertex chaining, aabb extension by the planes. If a plane is not active, the corresponding z bound is infinite.
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:83
 function gameplay_sites_zone:processVertices() end
 
---- Distance d'intersection d'un rayon avec la « clôture » (murs verticaux le long du contour, bornés par fenceDown/fenceHeight ou par les plans).
----Source : lua/ge/extensions/gameplay/sites/zone.lua:214
----@param rayPos vec3 Origine du rayon.
----@param rayDir vec3 Direction du rayon.
----@return number  Distance du plus proche impact, math.huge si aucun.
+--- Intersection distance of a ray with the "fence" (vertical walls along the outline, bounded by fenceDown/fenceHeight or by the planes).
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:214
+---@param rayPos vec3 Ray origin.
+---@param rayDir vec3 Ray direction.
+---@return number  Distance of the nearest hit, math.huge if none.
 function gameplay_sites_zone:rayIntersectsZone(rayPos, rayDir) end
 
---- Supprime le sommet d'index donné et recalcule.
----Source : lua/ge/extensions/gameplay/sites/zone.lua:77
----@param index integer Index du sommet.
+--- Removes the vertex at the given index and recalculates.
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:77
+---@param index integer Vertex index.
 function gameplay_sites_zone:removeVertex(index) end
 
---- Teste que les deux plans sont actifs et que leurs normales pointent respectivement vers le haut (top) et vers le bas (bot).
----Source : lua/ge/extensions/gameplay/sites/zone.lua:137
----@return boolean  true si valides.
+--- Tests that both planes are active and that their normals point up (top) and down (bot) respectively.
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:137
+---@return boolean  true if valid.
 function gameplay_sites_zone:validPlanes() end
 
---- Projette verticalement (axe z) un sommet sur un plan. Renvoie le sommet inchangé si le plan est inactif ou aligné avec l'axe z (erreur journalisée).
----Source : lua/ge/extensions/gameplay/sites/zone.lua:181
----@param vertex vec3 Point à projeter.
----@param plane table Plan {pos, normal, active}.
----@return vec3  Point d'intersection.
+--- Vertically projects (z axis) a vertex onto a plane. Returns the vertex unchanged if the plane is inactive or aligned with the z axis (error logged).
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:181
+---@param vertex vec3 Point to project.
+---@param plane table Plane {pos, normal, active}.
+---@return vec3  Intersection point.
 function gameplay_sites_zone:vertexPlaneIntersection(vertex, plane) end
 
---- Aire du polygone en m² (formule du lacet, x/y). 0 si moins de 3 sommets.
----Source : lua/ge/extensions/gameplay/sites/zone.lua:476
----@return number  Aire en m².
+--- Polygon area in m² (shoelace formula, x/y). 0 if fewer than 3 vertices.
+---Source: lua/ge/extensions/gameplay/sites/zone.lua:476
+---@return number  Area in m².
 function gameplay_sites_zone:zoneArea() end
 

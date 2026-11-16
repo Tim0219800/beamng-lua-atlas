@@ -1,0 +1,395 @@
+{
+  "path": "lua/ge/extensions/career/modules/insurance/insurance.lua",
+  "module": "Système d'assurance et de réparation de véhicules du mode carrière. Il charge les définitions de gameplay/insurance (fournisseurs, classes, options de couverture, perks, paliers de score de conducteur), enregistre pour chaque véhicule d'inventaire (invVehs) son assurance et ses options, suit la distance parcourue pour renouveler la police tous les 100 km, accorder des gestes commerciaux (réparation gratuite) et faire monter le score de conducteur, calcule les primes (valeur du véhicule x taux de classe x options x remise de groupe x multiplicateur du palier de score), traite les réclamations et les réparations (instantanées ou différées, franchise, assistance routière) et alimente l'UI (guihooks insurancesData, chooseInsuranceData).",
+  "usage": "local ins = career_modules_insurance_insurance\nlocal premium = ins.calculateInsurancePremium(insuranceId).totalPriceWithDriverScore\nlocal needs = ins.inventoryVehNeedsRepair(inventoryId)\nins.startRepair(inventoryId, {isInsuranceRepair = true, cost = {money = 300}, repairTime = 0})",
+  "notes": [
+    "Constantes : renouvellement tous les 100 000 m de conduite assurée ; score de conducteur de 0 à 100 (64 par défaut dans defaultDriverScore, 65 à la toute première initialisation) ; -1 par réclamation (sauf indulgence d'accident) ; +2 tous les 50 000 m sans réclamation ; au plus 5 indulgences d'accident ; délai de 600 s entre modifications de couverture ; pénalité de résiliation anticipée 25 % ; supplément de réparation rapide 1000 ; réclamation d'essai de véhicule 500.",
+    "Remise de groupe selon la valeur totale des véhicules assurés chez le même assureur (plus d'un véhicule) : 10 % (< 50 000), 15 %, 20 %, 25 %, 30 % (>= 500 000).",
+    "Les options de couverture sont soit à portée de l'assureur (isInsuranceWide, stockées dans plInsurancesData), soit par véhicule (stockées dans invVehs[id].insuranceData). Un insuranceId de -1 signifie non assuré.",
+    "Les perks de fournisseur modifient les options au chargement : reduceDeductible (franchise réduite), freeRepaintDuringRepair, freeTowing, repairTimeDiscount, instantRepair, accidentForgivenessAtRenewal, fuelDiscount (utilisé par le module fuel).",
+    "Bug : onEnterVehicleFinished lit startRepairVehInfo.vehId alors que startRepairDelayed stocke inventoryId : l'indice est nil et la réparation différée après avoir quitté le véhicule n'aboutit pas comme prévu.",
+    "Bug : changeInvVehInsuranceCoverageOptions lit plInsurancesData[...].coverageOptions[...] (champ inexistant, la structure réelle est coverageOptionsData.currentCoverageOptions) : la fonction ne semble pas utilisable telle quelle ; l'UI passe par saveNewInsuranceCoverageOptions et saveNewVehicleCoverageOptions.",
+    "makeTestDriveDamageClaim met toujours vehName = 'ibishu n' (valeur codée en dur) dans l'historique, et ignore son paramètre vehId.",
+    "renewActiveInsurance journalise concernedInsuranceName avec activeInsuranceId et non avec insuranceId passé en paramètre (identiques en pratique : appelée avec activeInsuranceId).",
+    "getTotalInsuranceVehsValue est défini deux fois dans le fichier (même code) ; sans conséquence.",
+    "onVehicleRemoved est exporté sous ce nom mais la fonction locale s'appelle onVehicleRemovedFromInventory.",
+    "loadInsurancesData lit saveInfo.version même si savePath est nil : prudence si la sauvegarde n'existe pas."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career, payment, playerAttributes, insurance_history, tether, etc."}
+  },
+  "functions": {
+    "onCareerActive": {
+      "desc": "Hook appelé quand la carrière devient active : charge les données d'assurance (fichiers du jeu et sauvegarde insurance.json).",
+      "params": {"active": {"type": "boolean", "desc": "true à l'activation."}},
+      "internal": true
+    },
+    "onSaveCurrentProfile": {
+      "desc": "Hook de sauvegarde : écrit career/insurance.json (score, distances, plInsurancesData, invVehs, historique).",
+      "params": {"currentSavePath": {"type": "string", "desc": "Dossier du profil de sauvegarde."}},
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook par image : hors mission au premier plan et hors marche à pied, cumule la distance, vérifie renouvellement, gestes et hausse du score de conducteur du véhicule assuré actif ; décompte aussi les minuteries d'édition de couverture.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook de changement de véhicule contrôlé : met à jour l'assurance active.",
+      "internal": true
+    },
+    "onEnterVehicleFinished": {
+      "desc": "Hook après entrée dans un véhicule : reprend une réparation différée mise en attente (voir bug dans notes).",
+      "params": {"invVehId": {"type": "integer", "desc": "Identifiant d'inventaire (non utilisé)."}},
+      "internal": true
+    },
+    "onVehicleAddedToInventory": {
+      "desc": "Hook : un véhicule entre dans l'inventaire. Crée son entrée invVehs (valeur initiale, classe d'assurance requise selon valeur, population, carrosserie, classe commerciale) et applique l'assurance choisie à l'achat (ou -1).",
+      "params": {"data": {"type": "table", "desc": "{inventoryId, vehicleInfo, purchaseData = {insuranceId}}."}},
+      "internal": true
+    },
+    "onVehicleRemoved": {
+      "desc": "Hook : un véhicule est retiré de l'inventaire ; supprime son entrée d'assurance.",
+      "params": {"invVehId": {"type": "integer", "desc": "Identifiant d'inventaire."}},
+      "internal": true
+    },
+    "onVehicleSaveFinished": {
+      "desc": "Hook de fin de sauvegarde de véhicule : referme le menu si sa fermeture attendait la sauvegarde.",
+      "internal": true
+    },
+    "onComputerAddFunctions": {
+      "desc": "Hook de l'ordinateur du garage : ajoute la fonction « Assurances » (désactivée avant l'achat du véhicule de départ).",
+      "params": {
+        "menuData": {"type": "table", "desc": "Données du menu (computerFacility, hasBoughtStarterVehicle)."},
+        "computerFunctions": {"type": "table", "desc": "Fonctions à compléter."}
+      },
+      "internal": true
+    },
+    "onMenuClosed": {
+      "desc": "Hook de fermeture de menu : retire la laisse (tether).",
+      "internal": true
+    },
+    "onExitInsurancesComputerScreen": {
+      "desc": "Hook : l'écran des assurances est quitté ; cesse l'envoi de mises à jour à l'UI.",
+      "internal": true
+    },
+    "openMenu": {
+      "desc": "Ouvre le menu des assurances depuis un ordinateur (laisse de 7 m) et émet onComputerInsurance. Ne fait rien sans identifiant d'ordinateur.",
+      "params": {"_originComputerId": {"type": "string", "desc": "Identifiant de l'ordinateur du garage."}}
+    },
+    "closeMenu": {
+      "desc": "Ferme le menu des assurances (retour à l'ordinateur ou fermeture de tous les menus). Avec sauvegarde auto, peut attendre la fin de la sauvegarde.",
+      "params": {"_closeMenuAfterSaving": {"type": "boolean|nil", "desc": "Attendre onVehicleSaveFinished avant de fermer."}}
+    },
+    "sendUIData": {
+      "desc": "Envoie à l'UI (guihook 'insurancesData') l'historique, le score, les véhicules non assurés, les tuiles de véhicules et toutes les classes avec leurs assureurs."
+    },
+    "sendChooseInsuranceDataToTheUI": {
+      "desc": "Envoie 'chooseInsuranceData' pour l'achat d'un véhicule en boutique : cartes des assureurs de la bonne classe (prime d'ajout, remise de groupe) plus la carte « sans assurance ».",
+      "params": {
+        "purchaseType": {"type": "string", "desc": "Type d'achat transmis à l'UI."},
+        "vehShopId": {"type": "string|integer", "desc": "Identifiant de l'annonce."},
+        "defaultInsuranceId": {"type": "integer|nil", "desc": "Assureur présélectionné."}
+      }
+    },
+    "sendChangeInsuranceDataToTheUI": {
+      "desc": "Envoie 'chooseInsuranceData' pour le changement d'assurance d'un véhicule déjà possédé (coût net de changement, remboursement).",
+      "params": {"invVehId": {"type": "integer", "desc": "Identifiant d'inventaire."}}
+    },
+    "openChooseInsuranceScreen": {
+      "desc": "Navigue vers l'écran de choix d'assurance : 'purchase' (achat en boutique) ou 'change' (changement depuis l'ordinateur).",
+      "params": {
+        "mode": {"type": "string", "desc": "'purchase' ou 'change'."},
+        "params": {"type": "table", "desc": "Paramètres de route (achat : purchaseType, shopId, insuranceId? ; changement : vehicleId)."}
+      },
+      "returns": [{"type": "table", "desc": "Résultat de navigation, ou {result=false, success=false, reason='unknown_mode'}."}]
+    },
+    "changeInvVehInsurance": {
+      "desc": "Changement d'assurance déclenché par le joueur : refusé si le véhicule a besoin de réparation ; calcule le coût net (remboursement moins pénalité moins prix d'ajout), applique le nouvel assureur, paie ou reçoit la différence, journalise et débloque le succès POLICY_REVIEW.",
+      "params": {
+        "invVehId": {"type": "integer", "desc": "Identifiant d'inventaire."},
+        "newInsuranceId": {"type": "integer", "desc": "Nouvel assureur ; -1 ou moins pour aucune assurance."}
+      }
+    },
+    "changeInvVehInsuranceCoverageOptions": {
+      "desc": "Ancienne voie de modification des options de couverture d'un véhicule : enregistre l'historique et fait payer les frais de dossier (voir bug dans notes).",
+      "params": {
+        "invVehId": {"type": "integer", "desc": "Identifiant d'inventaire."},
+        "changedCoverageOptions": {"type": "table", "desc": "Options modifiées (nom -> valeur)."}
+      }
+    },
+    "saveNewInsuranceCoverageOptions": {
+      "desc": "Enregistre les options de couverture propres à l'assureur (franchise, assistance routière…) contre les frais de dossier (paperworkFees) ; recharge l'assistance routière si elle change.",
+      "params": {
+        "insuranceId": {"type": "integer", "desc": "Assureur."},
+        "newCoverageOptions": {"type": "table<string, integer>", "desc": "Nom de l'option -> identifiant du choix."}
+      }
+    },
+    "saveNewVehicleCoverageOptions": {
+      "desc": "Enregistre les options de couverture propres à un véhicule contre les frais de dossier de son assureur.",
+      "params": {
+        "vehicleId": {"type": "integer", "desc": "Identifiant d'inventaire."},
+        "newCoverageOptions": {"type": "table<string, integer>", "desc": "Nom de l'option -> identifiant du choix."}
+      }
+    },
+    "calculateVehiclePremium": {
+      "desc": "Prime d'un véhicule : valeur x coverageRate de la classe x produit des influences des options x (1 - remise de groupe). Fournir invVehId (véhicule possédé) ou nonInvVehInfo ({vehValue, insuranceId}).",
+      "params": {
+        "invVehId": {"type": "integer|nil", "desc": "Véhicule d'inventaire."},
+        "nonInvVehInfo": {"type": "table|nil", "desc": "Véhicule hypothétique {vehValue, insuranceId}."},
+        "potentialCoverageOptions": {"type": "table|nil", "desc": "Options hypothétiques à la place des options actuelles."}
+      },
+      "returns": [{"type": "table", "desc": "{cost, costWithoutGroupDiscount}."}]
+    },
+    "calculateInsurancePremium": {
+      "desc": "Prime totale d'un assureur : somme des primes de ses véhicules plus options à portée de l'assureur, puis totalPriceWithDriverScore (x multiplicateur du palier de score).",
+      "params": {
+        "insuranceId": {"type": "integer", "desc": "Assureur."},
+        "potentialCoverageOptions": {"type": "table|nil", "desc": "Options hypothétiques (une table vide est ignorée)."},
+        "potentialVehiclesCoverageOptions": {"type": "table|nil", "desc": "Options hypothétiques par véhicule, indexées par id en chaîne."},
+        "potentialNewVehValue": {"type": "number|nil", "desc": "Valeur d'un véhicule supplémentaire à inclure."}
+      },
+      "returns": [{"type": "table", "desc": "{items, totalPrice, totalPriceWithDriverScore, groupDiscountSavings}."}]
+    },
+    "calculateAddVehiclePrice": {
+      "desc": "Prix à payer pour ajouter un véhicule à un assureur : prime totale si c'est le premier, sinon prime du véhicule au prorata de la distance restante avant renouvellement.",
+      "params": {
+        "insuranceId": {"type": "integer", "desc": "Assureur."},
+        "vehValue": {"type": "number", "desc": "Valeur du véhicule."}
+      },
+      "returns": [{"type": "number", "desc": "Montant."}]
+    },
+    "getRenewsIn": {
+      "desc": "Kilomètres restants avant le renouvellement de l'assureur (0 pour -1 ou assureur inconnu).",
+      "params": {"insuranceId": {"type": "integer", "desc": "Assureur."}},
+      "returns": [{"type": "integer", "desc": "Kilomètres (arrondi supérieur)."}]
+    },
+    "getInsuranceClassFromVehicleShoppingData": {
+      "desc": "Détermine la classe d'assurance requise pour une annonce selon la classe JSON, la valeur, la population, la carrosserie et la classe commerciale (la priorité la plus haute l'emporte).",
+      "params": {"data": {"type": "table", "desc": "Annonce de boutique (Value, Population, BodyStyle, aggregates, 'Commercial Class')."}},
+      "returns": [{"type": "table|nil", "desc": "Données de classe."}]
+    },
+    "getDefaultInsuranceForClassId": {
+      "desc": "Assureur par défaut d'une classe : celui de plus petit id.",
+      "params": {"insuranceClassId": {"type": "string", "desc": "Identifiant de classe."}},
+      "returns": [{"type": "table|nil", "desc": "Données d'assureur."}]
+    },
+    "getInsuranceDataById": {
+      "desc": "Définition d'un assureur chargée depuis les fichiers du jeu.",
+      "params": {"insuranceId": {"type": "integer", "desc": "Assureur."}},
+      "returns": [{"type": "table|nil", "desc": "Définition."}]
+    },
+    "doesInsuranceExist": {
+      "desc": "Indique si l'identifiant correspond à un assureur défini.",
+      "params": {"insuranceId": {"type": "integer", "desc": "Identifiant."}},
+      "returns": [{"type": "boolean", "desc": "true si défini."}]
+    },
+    "getInsuranceName": {
+      "desc": "Nom de l'assureur, ou le libellé « pas d'assurance » si inconnu.",
+      "params": {"insuranceId": {"type": "integer", "desc": "Identifiant."}},
+      "returns": [{"type": "string", "desc": "Nom."}]
+    },
+    "getInvVehs": {
+      "desc": "Table des entrées d'assurance des véhicules d'inventaire (insuranceId, name, id, initialValue, requiredInsuranceClass, insuranceData).",
+      "returns": [{"type": "table<integer, table>", "desc": "invVehs (référence)."}]
+    },
+    "getVehInsuranceInfo": {
+      "desc": "Infos d'assurance d'un véhicule : assuré ou non, définition de l'assureur et classe requise.",
+      "params": {"vehInvId": {"type": "integer", "desc": "Identifiant d'inventaire."}},
+      "returns": [{"type": "table|nil", "desc": "{isInsured, insuranceInfo, insuranceClass}."}]
+    },
+    "getPlayerInsurancesData": {
+      "desc": "Données sauvegardées par assureur (metersDriven, accidentForgiveness, roadsideAssistance, loyalty, coverageOptionsData…).",
+      "returns": [{"type": "table", "desc": "plInsurancesData (référence)."}]
+    },
+    "getPlayerAbstractData": {
+      "desc": "Résumé du joueur pour l'UI : score et palier, distances (totale, assurée, non assurée), nombre de réparations, coût de remise à zéro du score, bilan financier (primes, franchises, réparations privées, dégâts couverts).",
+      "returns": [{"type": "table", "desc": "Données de synthèse."}]
+    },
+    "getPlHistory": {
+      "desc": "Raccourci vers career_modules_insurance_history.getPlHistory.",
+      "returns": [{"type": "table", "desc": "Historique."}]
+    },
+    "addToPlHistory": {
+      "desc": "Raccourci vers career_modules_insurance_history.addToPlHistory.",
+      "params": {"data": {"type": "table", "desc": "Entrée d'historique."}}
+    },
+    "getDriverScore": {
+      "desc": "Score de conducteur actuel (0 à 100).",
+      "returns": [{"type": "number", "desc": "Score."}]
+    },
+    "setDriverScore": {
+      "desc": "Fixe le score de conducteur sans aucune vérification (outils/debug).",
+      "params": {"score": {"type": "number", "desc": "Nouveau score."}}
+    },
+    "getDriverScoreTierData": {
+      "desc": "Palier de score (min, max, multiplicateur de prime…) pour un score ; le dernier palier si aucun ne correspond.",
+      "params": {"score": {"type": "number|nil", "desc": "Score ; défaut : le score actuel."}},
+      "returns": [{"type": "table", "desc": "Données de palier."}]
+    },
+    "getDriverScoreResetCost": {
+      "desc": "Coût pour remettre le score à la valeur par défaut (64) : 0 si le score est déjà au moins égal, sinon 500 + proportion x 19500, arrondi.",
+      "returns": [{"type": "integer", "desc": "Montant."}]
+    },
+    "resetDriverScore": {
+      "desc": "Paie le coût de remise à zéro et rétablit le score par défaut, avec entrée d'historique et mise à jour de l'UI.",
+      "returns": [{"type": "boolean", "desc": "true si réussi ; false si coût nul ou fonds insuffisants."}]
+    },
+    "resetPlPolicyData": {
+      "desc": "Fonction de debug de carrière : recharge les données d'assurance en réinitialisant certaines données (loadInsurancesData(true)).",
+      "internal": true
+    },
+    "getPlCoverageOptionValue": {
+      "desc": "Valeur de l'option de couverture actuellement choisie pour un véhicule (ex. deductible, repairTime, paintRepair, roadsideAssistance). Ne renvoie rien si le véhicule n'est pas assuré.",
+      "params": {
+        "invVehId": {"type": "integer", "desc": "Identifiant d'inventaire."},
+        "coverageOptionName": {"type": "string", "desc": "Nom de l'option."}
+      },
+      "returns": [{"type": "number|boolean|nil", "desc": "Valeur du choix."}]
+    },
+    "sanitizeCoverageOption": {
+      "desc": "Prépare une option de couverture pour l'UI : clé, nom, choix, type de choix, texte de perk, ordre d'affichage et identifiant de la valeur actuelle.",
+      "params": {
+        "insuranceId": {"type": "integer", "desc": "Assureur."},
+        "coverageOptionId": {"type": "string", "desc": "Nom de l'option."},
+        "invVehId": {"type": "integer|nil", "desc": "Véhicule (requis pour les options par véhicule)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Données d'option."}]
+    },
+    "formatPerkIconData": {
+      "desc": "Construit la table d'icône de perk pour l'UI.",
+      "params": {
+        "smallText": {"type": "string", "desc": "Texte court."},
+        "tooltipText": {"type": "string", "desc": "Info-bulle."},
+        "discount": {"type": "number|nil", "desc": "Remise liée."},
+        "isSignaturePerk": {"type": "boolean", "desc": "Perk phare de l'assureur."}
+      },
+      "returns": [{"type": "table", "desc": "{smallText, tooltipText, discount, isSignaturePerk}."}]
+    },
+    "getPerkValueByInsuranceId": {
+      "desc": "Valeur d'un perk d'un assureur.",
+      "params": {
+        "insuranceId": {"type": "integer", "desc": "Assureur."},
+        "perkId": {"type": "string", "desc": "Perk (reduceDeductible, fuelDiscount, instantRepair…)."}
+      },
+      "returns": [{"type": "number|boolean|nil", "desc": "Valeur ou nil."}]
+    },
+    "getPerkValueByInvVehId": {
+      "desc": "Valeur d'un perk de l'assureur d'un véhicule.",
+      "params": {
+        "invVehId": {"type": "integer", "desc": "Identifiant d'inventaire."},
+        "perkId": {"type": "string", "desc": "Perk."}
+      },
+      "returns": [{"type": "number|boolean|nil", "desc": "Valeur ou nil."}]
+    },
+    "getInvVehFuelDiscountData": {
+      "desc": "Données de remise carburant d'un véhicule (hasFuelDiscount, fuelDiscount fraction, nom de l'assureur, icône de perk) ; utilisé par le module fuel.",
+      "params": {"invVehId": {"type": "integer", "desc": "Identifiant d'inventaire."}},
+      "returns": [{"type": "table", "desc": "{hasFuelDiscount, fuelDiscount, perkData, insuranceName?}."}]
+    },
+    "getAccidentForgivenessCount": {
+      "desc": "Nombre d'indulgences d'accident restantes chez un assureur.",
+      "params": {"insuranceId": {"type": "integer", "desc": "Assureur."}},
+      "returns": [{"type": "integer", "desc": "Nombre (0 si inconnu)."}]
+    },
+    "getActualRepairPrice": {
+      "desc": "Usage interne : franchise de réparation du véhicule (valeur de l'option deductible).",
+      "params": {"invVehId": {"type": "integer", "desc": "Identifiant d'inventaire."}},
+      "returns": [{"type": "number|nil", "desc": "Franchise."}],
+      "internal": true
+    },
+    "getInvVehRepairTime": {
+      "desc": "Délai de réparation inclus dans la police du véhicule (secondes ; 0 = instantané).",
+      "params": {"vehInvId": {"type": "integer", "desc": "Identifiant d'inventaire."}},
+      "returns": [{"type": "number|nil", "desc": "Secondes."}]
+    },
+    "getQuickRepairExtraPrice": {
+      "desc": "Supplément pour une réparation rapide (1000).",
+      "returns": [{"type": "number", "desc": "Montant."}]
+    },
+    "getTestDriveClaimPrice": {
+      "desc": "Montant facturé en cas de dégâts pendant un essai de véhicule (500).",
+      "returns": [{"type": "number", "desc": "Montant."}]
+    },
+    "makeTestDriveDamageClaim": {
+      "desc": "Facture les dégâts d'un essai (500), affiche un message et ajoute une entrée 'testDriveClaim' à l'historique (voir notes : nom de véhicule codé en dur).",
+      "params": {"vehId": {"type": "integer|nil", "desc": "Ignoré."}}
+    },
+    "makeRepairClaim": {
+      "desc": "Enregistre une réclamation de réparation : consomme une indulgence d'accident ou baisse le score de 1, ajoute l'historique (argent, bons, score, franchise, valeur des dégâts), émet onInsuranceRepairClaim et débloque le succès CLAIM_FILED. Sans effet si le véhicule n'est pas assuré.",
+      "params": {
+        "invVehId": {"type": "integer", "desc": "Identifiant d'inventaire."},
+        "costs": {"type": "table", "desc": "Coûts (nombres ou {money, vouchers}) et éventuellement deductible."},
+        "vehInfo": {"type": "table|nil", "desc": "Véhicule, pour estimer le prix des dégâts."}
+      }
+    },
+    "inventoryVehNeedsRepair": {
+      "desc": "Indique si un véhicule d'inventaire a des pièces à réparer (partConditions).",
+      "params": {"vehInvId": {"type": "integer", "desc": "Identifiant d'inventaire."}},
+      "returns": [{"type": "boolean|nil", "desc": "nil si le véhicule n'existe pas."}]
+    },
+    "genericVehNeedsRepair": {
+      "desc": "Demande au véhicule (objet) ses conditions de pièces et appelle callback(needsRepair) à la réponse ; sert aux véhicules hors inventaire (par exemple d'essai).",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Identifiant d'objet véhicule."},
+        "callback": {"type": "function", "desc": "fonction(needsRepair: boolean)."}
+      }
+    },
+    "repairPartConditions": {
+      "desc": "Remet les pièces cassées à neuf dans data.partConditions (intégrité 1, repeinture ou apprêt selon paintRepair, compteur de réparations des pièces d'inventaire, réservoirs d'énergie conservés).",
+      "params": {"data": {"type": "table", "desc": "{partConditions, paintRepair?, inventoryId?}."}}
+    },
+    "startRepair": {
+      "desc": "Répare un véhicule d'inventaire : paie le coût, enregistre une réclamation (isInsuranceRepair) ou une réparation privée, répare les pièces, puis lance une réparation différée (repairTime > 0) ou instantanée.",
+      "params": {
+        "vehInvId": {"type": "integer|nil", "desc": "Véhicule ; défaut : véhicule actuel."},
+        "repairOptionData": {"type": "table|nil", "desc": "{cost, isInsuranceRepair, repairTime}."},
+        "callback": {"type": "function|nil", "desc": "Appelé après une réparation instantanée avec vehInfo."}
+      }
+    },
+    "startRepairInstant": {
+      "desc": "Réparation instantanée : joue un son, respawn le véhicule s'il est présent, puis marque le véhicule modifié, recharge le carburant minimum et sauvegarde.",
+      "params": {
+        "vehInfo": {"type": "table", "desc": "Véhicule d'inventaire."},
+        "callback": {"type": "function|nil", "desc": "Appelé après le respawn."},
+        "skipSound": {"type": "boolean|nil", "desc": "Ne pas jouer le son."}
+      }
+    },
+    "startRepairInGarage": {
+      "desc": "Réparation depuis le garage : émet onRepairInGarage puis startRepair ; pour une réparation instantanée, téléporte le véhicule au garage le plus proche.",
+      "params": {
+        "invVehId": {"type": "integer", "desc": "Identifiant d'inventaire."},
+        "repairOptionData": {"type": "table", "desc": "{cost, isInsuranceRepair, repairTime}."}
+      },
+      "returns": [{"type": "any", "desc": "Valeur de startRepair (nil)."}]
+    },
+    "missionStartRepairCallback": {
+      "desc": "Callback de réparation avant mission : rouvre le menu de missions carrière et envoie l'état de dégâts du véhicule à l'UI.",
+      "params": {"vehInfo": {"type": "table", "desc": "Véhicule d'inventaire."}}
+    },
+    "expediteRepair": {
+      "desc": "Paie pour accéder immédiatement à un véhicule en réparation différée (supprime timeToAccess et delayReason).",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Identifiant d'inventaire."},
+        "price": {"type": "number", "desc": "Prix à payer."}
+      }
+    },
+    "isRoadSideAssistanceFree": {
+      "desc": "Indique s'il reste des remorquages gratuits d'assistance routière pour l'assureur du véhicule.",
+      "params": {"invVehId": {"type": "integer", "desc": "Identifiant d'inventaire."}},
+      "returns": [{"type": "boolean", "desc": "true s'il en reste."}]
+    },
+    "useRoadsideAssistance": {
+      "desc": "Consomme un remorquage gratuit de l'assureur du véhicule.",
+      "params": {"invVehId": {"type": "integer", "desc": "Identifiant d'inventaire."}}
+    },
+    "topUpRoadsideAssistance": {
+      "desc": "Recharge le nombre de remorquages gratuits selon l'option roadsideAssistance choisie (au renouvellement ou à la modification).",
+      "params": {"insuranceId": {"type": "integer", "desc": "Assureur."}}
+    }
+  }
+}

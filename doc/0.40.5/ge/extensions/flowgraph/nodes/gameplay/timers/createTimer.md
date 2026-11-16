@@ -1,20 +1,20 @@
 # `flowgraph_nodes_gameplay_timers_createTimer`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/timers/createTimer.lua` · VM : Game Engine (GE) · 31 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/timers/createTimer.lua` · VM: Game Engine (GE) · 31 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/timers/createTimer")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/timers/createTimer")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Create Timer » (catégorie once_instant). Crée un timer via le module timer du flowgraph. Entrées : duration (défaut 5 s), ref (caché ; dtSim temps de simulation, dtReal temps réel, dtRaw temps brut). Sortie : timerId, à passer à Get Timer / Set Timer Property.
+Flowgraph node "Create Timer" (category once_instant). Creates a timer via the flowgraph timer module. Inputs: duration (default 5 s), ref (hidden; dtSim simulation time, dtReal real time, dtRaw raw time). Output: timerId, to be passed to Get Timer / Set Timer Property.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud. | 18 |
-| `C:postInit()` | Définit les valeurs prédéfinies du pin ref (dtSim, dtReal, dtRaw). | 22 |
-| `C:workOnce()` | Appelle self.mgr.modules.timer:addTimer({duration, mode=ref}) et publie l'id sur timerId. | 26 |
+| `C:_executionStarted()` | Called when the flowgraph project execution starts; resets the node's internal state. | 18 |
+| `C:postInit()` | Defines the preset values of the ref pin (dtSim, dtReal, dtRaw). | 22 |
+| `C:workOnce()` | Calls self.mgr.modules.timer:addTimer({duration, mode=ref}) and publishes the id on timerId. | 26 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/timers/createTimer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/timers/createTimer.lua`.*

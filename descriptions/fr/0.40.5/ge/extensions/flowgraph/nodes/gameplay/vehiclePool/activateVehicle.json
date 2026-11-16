@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/activateVehicle.lua",
+  "module": "Nœud flowgraph « Activate Vehicle » (once_instant). Active ou désactive un véhicule du pool (pool:setVeh(vehId, activate), défaut true). Nécessite le module core_vehicleActivePooling ; l'objet pool vient du nœud Create Vehicle Pool.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "workOnce": {
+          "desc": "Appelle setVeh(vehId, activate) si pool et vehId sont définis.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

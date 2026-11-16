@@ -1,72 +1,72 @@
 # `flowgraph_modules_driftModule`
 
-*Fichier : `lua/ge/extensions/flowgraph/modules/driftModule.lua` · VM : Game Engine (GE) · 69 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/modules/driftModule.lua` · VM: Game Engine (GE) · 69 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/modules/driftModule")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/modules/driftModule")` (file under extensions/ but not a regular extension)
 
-Module flowgraph (moduleOrder 0, dépend de gameplay_drift_general) qui relaie les évènements du gameplay de drift vers les nœuds flowgraph. Il écoute les hooks onDriftSpinout, onDriftCrash, onDonutDriftScored, onTightDriftScored et onDriftCompletedScored, et conserve chaque évènement dans une table de callbacks avec une durée de vie (ttl) de 2 ticks que les nœuds peuvent lire.
+Flowgraph module (moduleOrder 0, depends on gameplay_drift_general) that relays drift gameplay events to flowgraph nodes. It listens to the hooks onDriftSpinout, onDriftCrash, onDonutDriftScored, onTightDriftScored and onDriftCompletedScored, and keeps each event in a callbacks table with a lifetime (ttl) of 2 ticks that nodes can read.
 
-## Remarques
+## Notes
 
-- Les callbacks connus à l'init sont tight, donut, spinout, crash, tap, scored ; chacun a ttl = 0 au départ.
-- Un évènement est considéré actif tant que ttl > 0 ; onUpdate décrémente le ttl d'un par appel.
-- addCallback fixe ttl = 2 : l'évènement reste visible environ 2 mises à jour.
-- onDonutZoneReactivated n'est pas déclaré dans C.hooks ; il est appelé directement et relaie vers gameplay_drift_drift.onDonutZoneReactivated().
+- The callbacks known at init are tight, donut, spinout, crash, tap, scored; each has ttl = 0 at the start.
+- An event is considered active as long as ttl > 0; onUpdate decrements the ttl by one per call.
+- addCallback sets ttl = 2: the event stays visible for about 2 updates.
+- onDonutZoneReactivated is not declared in C.hooks; it is called directly and relays to gameplay_drift_drift.onDonutZoneReactivated().
 
-**Dépendances (chargées avant) :** `gameplay_drift_general`
+**Dependencies (loaded first):** `gameplay_drift_general`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `flowgraph_modules_driftModule.addCallback(name, data)` | Enregistre (ou remplace) un évènement avec ttl = 2 et des données. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_driftModule.getCallBacks()` | Renvoie la table des callbacks (clé = nom, valeur = {ttl, data}). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_driftModule.init()` | Appelé à la création du module : appelle resetModule(). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_driftModule.onDonutDriftScored(score)` | Hook : donut marqué ; enregistre 'donut' avec {score}. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `flowgraph_modules_driftModule.onDonutZoneReactivated()` | Relaie vers gameplay_drift_drift.onDonutZoneReactivated(). (assignée dynamiquement) *(hook)* | dyn |
-| `flowgraph_modules_driftModule.onDriftCompletedScored(data)` | Hook : drift terminé et compté ; enregistre 'scored' avec addedScore, cachedScore et combo. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `flowgraph_modules_driftModule.onDriftCrash()` | Hook : crash en drift ; enregistre 'crash'. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `flowgraph_modules_driftModule.onDriftSpinout()` | Hook : le joueur a fait un tête-à-queue ; enregistre 'spinout'. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `flowgraph_modules_driftModule.onTightDriftScored(score)` | Hook : drift serré marqué ; enregistre 'tight' avec {score}. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `flowgraph_modules_driftModule.onUpdate()` | Appelé à chaque mise à jour du manager : décrémente le ttl de chaque callback positif. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `flowgraph_modules_driftModule.resetModule()` | Recrée la table callbacks avec tous les évènements à ttl = 0. (assignée dynamiquement) *(interne)* | dyn |
+| `flowgraph_modules_driftModule.addCallback(name, data)` | Registers (or replaces) an event with ttl = 2 and some data. (dynamically assigned) | dyn |
+| `flowgraph_modules_driftModule.getCallBacks()` | Returns the callbacks table (key = name, value = {ttl, data}). (dynamically assigned) | dyn |
+| `flowgraph_modules_driftModule.init()` | Called when the module is created: calls resetModule(). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_driftModule.onDonutDriftScored(score)` | Hook: donut scored; registers 'donut' with {score}. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `flowgraph_modules_driftModule.onDonutZoneReactivated()` | Relays to gameplay_drift_drift.onDonutZoneReactivated(). (dynamically assigned) *(hook)* | dyn |
+| `flowgraph_modules_driftModule.onDriftCompletedScored(data)` | Hook: drift completed and counted; registers 'scored' with addedScore, cachedScore and combo. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `flowgraph_modules_driftModule.onDriftCrash()` | Hook: drift crash; registers 'crash'. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `flowgraph_modules_driftModule.onDriftSpinout()` | Hook: the player spun out; registers 'spinout'. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `flowgraph_modules_driftModule.onTightDriftScored(score)` | Hook: tight drift scored; registers 'tight' with {score}. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `flowgraph_modules_driftModule.onUpdate()` | Called on every manager update: decrements the ttl of each positive callback. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `flowgraph_modules_driftModule.resetModule()` | Recreates the callbacks table with all events at ttl = 0. (dynamically assigned) *(internal)* | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `flowgraph_modules_driftModule.addCallback(name, data)`
 
-Enregistre (ou remplace) un évènement avec ttl = 2 et des données. (assignée dynamiquement)
+Registers (or replaces) an event with ttl = 2 and some data. (dynamically assigned)
 
-- `name` (*string*) : nom de l'évènement (tight, donut, spinout, crash, scored…)
-- `data` (*table|nil*) : données associées
+- `name` (*string*) : event name (tight, donut, spinout, crash, scored...)
+- `data` (*table|nil*) : associated data
 
 #### `flowgraph_modules_driftModule.getCallBacks()`
 
-Renvoie la table des callbacks (clé = nom, valeur = {ttl, data}). (assignée dynamiquement)
+Returns the callbacks table (key = name, value = {ttl, data}). (dynamically assigned)
 
-- **renvoie** : table<string, table> callbacks par nom
+- **returns**: table<string, table> callbacks by name
 
 #### `flowgraph_modules_driftModule.onDonutDriftScored(score)`
 
-Hook : donut marqué ; enregistre 'donut' avec {score}. (assignée dynamiquement)
+Hook: donut scored; registers 'donut' with {score}. (dynamically assigned)
 
-- `score` (*number*) : score obtenu
+- `score` (*number*) : score obtained
 
 #### `flowgraph_modules_driftModule.onDriftCompletedScored(data)`
 
-Hook : drift terminé et compté ; enregistre 'scored' avec addedScore, cachedScore et combo. (assignée dynamiquement)
+Hook: drift completed and counted; registers 'scored' with addedScore, cachedScore and combo. (dynamically assigned)
 
-- `data` (*table*) : champs addedScore, cachedScore, combo
+- `data` (*table*) : fields addedScore, cachedScore, combo
 
 #### `flowgraph_modules_driftModule.onTightDriftScored(score)`
 
-Hook : drift serré marqué ; enregistre 'tight' avec {score}. (assignée dynamiquement)
+Hook: tight drift scored; registers 'tight' with {score}. (dynamically assigned)
 
-- `score` (*number*) : score obtenu
+- `score` (*number*) : score obtained
 
-## Classe `C`
+## Class `C`
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:addCallback(name, data)` |  | 38 |
 | `C:getCallBacks()` |  | 34 |
@@ -81,4 +81,4 @@ Hook : drift serré marqué ; enregistre 'tight' avec {score}. (assignée dynami
 | `C:resetModule()` |  | 10 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/modules/driftModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/modules/driftModule.lua`.*

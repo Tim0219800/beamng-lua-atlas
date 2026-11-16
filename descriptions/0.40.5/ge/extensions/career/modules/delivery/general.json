@@ -1,229 +1,377 @@
 {
   "path": "lua/ge/extensions/career/modules/delivery/general.lua",
-  "module": "Noyau du système de livraison (logistique) de la carrière : horloge de jeu de livraison, sauvegarde/chargement de logisticsDatabase.json (colis, offres de véhicules, facilités, réglages, progression), mode livraison (démarrage/sortie, pénalité d'abandon de cargaison), réglages (route automatique, dépose détaillée), liste des conteneurs de cargaison des véhicules proches et mise à jour de leur poids dans la VM véhicule. Contribue aussi aux POI de la grande carte et aux permissions du mode livraison.",
-  "usage": "if career_modules_delivery_general.isDeliveryModeActive() then\n  local pen = career_modules_delivery_general.getDeliveryModePenalty()\n  print('Pénalité argent si abandon :', pen.money)\nend",
+  "module": "Core of the career delivery (logistics) system: delivery game clock, saving/loading of logisticsDatabase.json (parcels, vehicle offers, facilities, settings, progress), delivery mode (start/exit, cargo abandonment penalty), settings (automatic route, detailed drop-off), list of the cargo containers of nearby vehicles and update of their weight in the vehicle VM. Also contributes to the big map POIs and to the delivery mode permissions.",
+  "usage": "if career_modules_delivery_general.isDeliveryModeActive() then\n  local pen = career_modules_delivery_general.getDeliveryModePenalty()\n  print('Money penalty if abandoned:', pen.money)\nend",
   "notes": [
-    "Dépend de core_vehicleBridge. La version du format de sauvegarde (moduleVersion) est 42 : une sauvegarde plus ancienne est ignorée.",
-    "Au chargement, si la sauvegarde date de plus d'une heure (os.time), les colis et les minuteurs de générateurs des facilités sont effacés.",
-    "Le temps de livraison (time()) avance de dtSim à chaque onUpdate sauf si setDeliveryTimePaused(true).",
-    "Pénalité d'abandon : money -= rewards.money * (0.1 + somme des abandonMultiplier des modificateurs), plus la réputation de l'organisation et l'amende des tâches de véhicule ; ignorée pour un colis en déplacement transitoire.",
-    "Rayon de détection des véhicules proches : 25 m (comparaison avec le carré 625).",
-    "Les conteneurs 'passenger' seuls sont ignorés par getNearbyVehicleCargoContainers.",
-    "Bug probable : dans defaultDelayCallback, step.startStepSequence(sequence, callback) utilise 'callback', une variable non définie dans cette portée (nil).",
-    "Les modules delivery sont référencés dans onCareerActivated ; ne pas les utiliser avant."
+    "Depends on core_vehicleBridge. The save format version (moduleVersion) is 42: an older save is ignored.",
+    "On load, if the save is more than one hour old (os.time), the parcels and generator timers of the facilities are cleared.",
+    "Delivery time (time()) advances by dtSim on each onUpdate unless setDeliveryTimePaused(true).",
+    "Abandonment penalty: money -= rewards.money * (0.1 + sum of the modifiers' abandonMultiplier), plus the organization's reputation and the vehicle tasks' fine; ignored for a parcel in transient move.",
+    "Detection radius for nearby vehicles: 25 m (comparison with the square 625).",
+    "'passenger' containers alone are ignored by getNearbyVehicleCargoContainers.",
+    "Probable bug: in defaultDelayCallback, step.startStepSequence(sequence, callback) uses 'callback', a variable not defined in this scope (nil).",
+    "The delivery modules are referenced in onCareerActivated; do not use them before."
   ],
   "functions": {
     "getDeliveryAbandonPenaltyFactor": {
-      "desc": "Renvoie le facteur de base de la pénalité d'abandon de cargaison (0.1).",
+      "desc": "Returns the base factor of the cargo abandonment penalty (0.1).",
       "params": {},
-      "returns": [{"type": "number", "desc": "Facteur appliqué à la récompense en argent du cargo abandonné."}]
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Factor applied to the money reward of the abandoned cargo."
+        }
+      ]
     },
     "loadSaveData": {
-      "desc": "Charge logisticsDatabase.json du profil courant (ignoré si info.json est plus ancien que moduleVersion), initialise progress et parcelModProgress, réglages (automaticRoute vaut true par défaut) et temps de livraison ; efface les colis si la sauvegarde a plus d'une heure.",
+      "desc": "Loads logisticsDatabase.json from the current profile (ignored if info.json is older than moduleVersion), initializes progress and parcelModProgress, settings (automaticRoute is true by default) and delivery time; clears the parcels if the save is more than one hour old.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onSaveCurrentProfile": {
-      "desc": "Hook de sauvegarde : écrit logisticsDatabase.json (temps, pénalité, progression, colis non expirés en facilité, offres de véhicules non expirées, données de facilités, réglages).",
-      "params": {"currentSavePath": {"type": "string", "desc": "Dossier du profil en cours de sauvegarde."}},
+      "desc": "Save hook: writes logisticsDatabase.json (time, penalty, progress, non-expired parcels in facilities, non-expired vehicle offers, facility data, settings).",
+      "params": {
+        "currentSavePath": {
+          "type": "string",
+          "desc": "Folder of the profile being saved."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onCareerActive": {
-      "desc": "Hook : à l'activation de la carrière, charge les données, assure la carte (map.assureLoad) et lance dGenerator.setup.",
-      "params": {"active": {"type": "boolean", "desc": "true à l'activation."}},
+      "desc": "Hook: on career activation, loads the data, ensures the map (map.assureLoad) and launches dGenerator.setup.",
+      "params": {
+        "active": {
+          "type": "boolean",
+          "desc": "true on activation."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onCareerActivated": {
-      "desc": "Hook : mémorise les autres modules delivery (parcelManager, cargoScreen, generator, progress, vehicleTasks, tasklist, parcelMods, vehicleOfferManager, tutorial) et util_stepHandler.",
+      "desc": "Hook: stores the other delivery modules (parcelManager, cargoScreen, generator, progress, vehicleTasks, tasklist, parcelMods, vehicleOfferManager, tutorial) and util_stepHandler.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "time": {
-      "desc": "Temps de livraison courant (secondes de simulation cumulées, sauvegardé).",
+      "desc": "Current delivery time (cumulated simulation seconds, saved).",
       "params": {},
-      "returns": [{"type": "number", "desc": "Secondes."}]
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Seconds."
+        }
+      ]
     },
     "setDeliveryTimePaused": {
-      "desc": "Met en pause ou relance l'horloge de livraison.",
-      "params": {"paused": {"type": "boolean", "desc": "true pour geler le temps."}},
+      "desc": "Pauses or resumes the delivery clock.",
+      "params": {
+        "paused": {
+          "type": "boolean",
+          "desc": "true to freeze time."
+        }
+      },
       "returns": []
     },
     "getVehicleName": {
-      "desc": "Nom traduit d'un véhicule via l'inventaire carrière, ou un libellé de repli contenant l'id.",
-      "params": {"vehId": {"type": "integer", "desc": "Id d'objet véhicule."}},
-      "returns": [{"type": "string", "desc": "Nom affichable."}]
+      "desc": "Translated name of a vehicle via the career inventory, or a fallback label containing the id.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle object id."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Displayable name."
+        }
+      ]
     },
     "getNearbyVehicleCargoContainers": {
-      "desc": "Interroge (asynchrone, 'getCargoContainers') les véhicules à moins de 25 m du joueur (hors unicycle et véhicules non utilisables) et appelle callback avec la liste triée (vehId puis containerId) des conteneurs de livraison : emplacement, nom, types de cargo, emplacements total/utilisé/transitoire/libre, statut d'attache ('attached', 'nearby' ou 'lost'), colis présents. Appelle callback({}) s'il n'y a aucun véhicule.",
-      "params": {"callback": {"type": "function", "desc": "Reçoit la table des conteneurs."}},
-      "returns": [{"type": "table|nil", "desc": "{} si core_vehicleBridge est absent."}]
+      "desc": "Queries (asynchronous, 'getCargoContainers') the vehicles within 25 m of the player (excluding unicycle and unusable vehicles) and calls callback with the list, sorted (vehId then containerId), of the delivery containers: location, name, cargo types, total/used/transient/free slots, attachment status ('attached', 'nearby' or 'lost'), parcels present. Calls callback({}) if there is no vehicle.",
+      "params": {
+        "callback": {
+          "type": "function",
+          "desc": "Receives the containers table."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{} if core_vehicleBridge is missing."
+        }
+      ]
     },
     "getMostRecentCargoContainerData": {
-      "desc": "Dernière liste de conteneurs calculée par getNearbyVehicleCargoContainers (rafraîchie environ chaque seconde dans onUpdate).",
+      "desc": "Last container list computed by getNearbyVehicleCargoContainers (refreshed about every second in onUpdate).",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Conteneurs de cargaison."}]
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Cargo containers."
+        }
+      ]
     },
     "requestUpdateContainerWeights": {
-      "desc": "Planifie une mise à jour du poids des conteneurs ; exécutée dans onUpdate quand la simulation n'est pas en pause.",
+      "desc": "Schedules a container weight update; executed in onUpdate when the simulation is not paused.",
       "params": {},
       "returns": []
     },
     "updateContainerWeights": {
-      "desc": "Si une mise à jour est planifiée, calcule pour chaque véhicule/conteneur le volume (poids des colis, volume des fluides et vrac) et la densité, les envoie au véhicule (setCargoContainers), gèle le véhicule (setFreeze), lit le délai de mise en charge, puis appelle delayCallback avec le délai par véhicule.",
-      "params": {"delayCallback": {"type": "function|nil", "desc": "Reçoit {[vehId] = délai en secondes} ; par défaut affiche une popup de chargement et dégèle les véhicules."}},
+      "desc": "If an update is scheduled, computes for each vehicle/container the volume (weight of parcels, volume of fluids and bulk) and the density, sends them to the vehicle (setCargoContainers), freezes the vehicle (setFreeze), reads the loading delay, then calls delayCallback with the delay per vehicle.",
+      "params": {
+        "delayCallback": {
+          "type": "function|nil",
+          "desc": "Receives {[vehId] = delay in seconds}; by default shows a loading popup and unfreezes the vehicles."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook par frame : avance le temps de livraison, applique la pénalité issue d'une sauvegarde précédente (toast + addAttributes), rafraîchit chaque seconde les conteneurs proches et met à jour les poids.",
+      "desc": "Per-frame hook: advances the delivery time, applies the penalty coming from a previous save (toast + addAttributes), refreshes the nearby containers every second and updates the weights.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
-        "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (s)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onGetRawPoiListForLevel": {
-      "desc": "Hook de la liste de POI : ajoute les facilités de livraison visibles (ou ciblées) avec leurs points d'accès interactifs.",
+      "desc": "POI list hook: adds the visible (or targeted) delivery facilities with their interactive access points.",
       "params": {
-        "levelIdentifier": {"type": "string", "desc": "Id du niveau."},
-        "elements": {"type": "table[]", "desc": "Liste de POI à compléter."}
+        "levelIdentifier": {
+          "type": "string",
+          "desc": "Level id."
+        },
+        "elements": {
+          "type": "table[]",
+          "desc": "POI list to complete."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onActivityAcceptGatherData": {
-      "desc": "Hook : pour un élément 'logisticsOffice', ajoute les infos du prompt d'activité (titre de la facilité, propriétés, bouton 'inspecter le cargo').",
+      "desc": "Hook: for a 'logisticsOffice' element, adds the activity prompt info (facility title, properties, 'inspect cargo' button).",
       "params": {
-        "elemData": {"type": "table[]", "desc": "Éléments POI."},
-        "activityData": {"type": "table[]", "desc": "Données d'activité à compléter."}
+        "elemData": {
+          "type": "table[]",
+          "desc": "POI elements."
+        },
+        "activityData": {
+          "type": "table[]",
+          "desc": "Activity data to complete."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onCheckPermission": {
-      "desc": "Hook : en mode livraison, si un tag demandé est dans la table des activités restreintes (ex. interaction mission, remorquage vers le garage, achat de véhicule), ajoute une permission avec libellé expliquant la pénalité.",
+      "desc": "Hook: in delivery mode, if a requested tag is in the restricted activities table (e.g. mission interaction, towing to garage, vehicle purchase), adds a permission with a label explaining the penalty.",
       "params": {
-        "tags": {"type": "string[]", "desc": "Tags d'activité testés."},
-        "permissions": {"type": "table[]", "desc": "Liste de permissions à compléter."}
+        "tags": {
+          "type": "string[]",
+          "desc": "Activity tags tested."
+        },
+        "permissions": {
+          "type": "table[]",
+          "desc": "List of permissions to complete."
+        }
       },
       "returns": [],
       "internal": true
     },
     "startDeliveryMode": {
-      "desc": "Active le mode livraison (sans effet s'il est déjà actif), vide les POI et déclenche le hook onDeliveryModeStarted.",
+      "desc": "Enables delivery mode (no effect if already active), clears the POIs and fires the onDeliveryModeStarted hook.",
       "params": {},
       "returns": []
     },
     "exitDeliveryMode": {
-      "desc": "Quitte le mode livraison : annule les déplacements transitoires, supprime les cargos dans les véhicules (changeCargoLocation 'deleted'), applique la pénalité d'abandon (argent/réputation, toast, son), abandonne les tâches de véhicule, vide le focus de la grande carte, planifie la mise à jour des poids, efface la tasklist et déclenche onDeliveryModeStopped.",
+      "desc": "Leaves delivery mode: cancels the transient moves, deletes the cargos in vehicles (changeCargoLocation 'deleted'), applies the abandonment penalty (money/reputation, toast, sound), abandons the vehicle tasks, clears the big map focus, schedules the weight update, clears the tasklist and fires onDeliveryModeStopped.",
       "params": {},
       "returns": []
     },
     "checkExitDeliveryMode": {
-      "desc": "Quitte le mode livraison s'il ne reste ni cargo dans les véhicules ni tâche de véhicule.",
+      "desc": "Leaves delivery mode if there is neither cargo in vehicles nor a vehicle task left.",
       "params": {},
       "returns": []
     },
     "isDeliveryModeActive": {
-      "desc": "Indique si le mode livraison est actif.",
+      "desc": "Indicates whether delivery mode is active.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si actif."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if active."
+        }
+      ]
     },
     "getDeliveryModePenalty": {
-      "desc": "Calcule la pénalité si le joueur abandonne les cargos en véhicule : table d'attributs négatifs (money et <organisation>Reputation). Ajoute l'amende des tâches de véhicule sauf si onlyVehIdsAsKeys est fourni.",
-      "params": {"onlyVehIdsAsKeys": {"type": "table<integer, boolean>|nil", "desc": "Limite le calcul aux véhicules listés."}},
-      "returns": [{"type": "table<string, number>", "desc": "Pénalité par attribut (valeurs <= 0)."}]
+      "desc": "Computes the penalty if the player abandons the cargos in vehicles: table of negative attributes (money and <organization>Reputation). Adds the vehicle tasks' fine unless onlyVehIdsAsKeys is provided.",
+      "params": {
+        "onlyVehIdsAsKeys": {
+          "type": "table<integer, boolean>|nil",
+          "desc": "Limits the computation to the listed vehicles."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, number>",
+          "desc": "Penalty per attribute (values <= 0)."
+        }
+      ]
     },
     "isAutomaticRouteEnabled": {
-      "desc": "Renvoie le réglage 'automaticRoute' (route automatique vers la prochaine destination).",
+      "desc": "Returns the 'automaticRoute' setting (automatic route to the next destination).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si activé."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if enabled."
+        }
+      ]
     },
     "setAutomaticRoute": {
-      "desc": "Active/désactive la route automatique : activée, appelle cargoScreen.setBestRoute ; désactivée, efface le chemin des marqueurs de sol et de la grande carte. Notifie l'UI (guihooks 'automaticRouteSet').",
-      "params": {"enabled": {"type": "boolean", "desc": "Nouvel état."}},
+      "desc": "Enables/disables the automatic route: when enabled, calls cargoScreen.setBestRoute; when disabled, clears the path of the ground markers and the big map. Notifies the UI (guihooks 'automaticRouteSet').",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "New state."
+        }
+      },
       "returns": []
     },
     "setDetailedDropOff": {
-      "desc": "Définit le réglage detailedDropOff et notifie l'UI (guihooks 'detailedDropOffSet').",
-      "params": {"enabled": {"type": "boolean", "desc": "Nouvel état."}},
+      "desc": "Sets the detailedDropOff setting and notifies the UI (guihooks 'detailedDropOffSet').",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "New state."
+        }
+      },
       "returns": []
     },
     "onSetBigmapNavFocus": {
-      "desc": "Hook : un point de passage manuel posé sur la grande carte désactive la route automatique en mode livraison.",
+      "desc": "Hook: a manual waypoint placed on the big map disables the automatic route in delivery mode.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "setSetting": {
-      "desc": "Écrit un réglage de livraison (sauvegardé dans logisticsDatabase.json).",
+      "desc": "Writes a delivery setting (saved in logisticsDatabase.json).",
       "params": {
-        "key": {"type": "string", "desc": "Nom du réglage."},
-        "value": {"type": "any", "desc": "Valeur."}
+        "key": {
+          "type": "string",
+          "desc": "Setting name."
+        },
+        "value": {
+          "type": "any",
+          "desc": "Value."
+        }
       },
       "returns": []
     },
     "getSettings": {
-      "desc": "Renvoie la table des réglages de livraison.",
+      "desc": "Returns the delivery settings table.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Réglages (automaticRoute, detailedDropOff…)."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Settings (automaticRoute, detailedDropOff…)."
+        }
+      ]
     },
     "onPartShoppingStarted": {
-      "desc": "Hook : quitte le mode livraison si l'achat de pièces commence.",
+      "desc": "Hook: leaves delivery mode if parts shopping starts.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onCareerPaintingStarted": {
-      "desc": "Hook : quitte le mode livraison si la peinture commence.",
+      "desc": "Hook: leaves delivery mode if painting starts.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onCareerTuningStarted": {
-      "desc": "Hook : quitte le mode livraison si le tuning commence.",
+      "desc": "Hook: leaves delivery mode if tuning starts.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onTeleportedToGarage": {
-      "desc": "Hook : quitte le mode livraison si le joueur est remorqué au garage.",
+      "desc": "Hook: leaves delivery mode if the player is towed to the garage.",
       "params": {
-        "garageId": {"type": "string", "desc": "Id du garage."},
-        "veh": {"type": "any", "desc": "Véhicule téléporté (non utilisé)."}
+        "garageId": {
+          "type": "string",
+          "desc": "Garage id."
+        },
+        "veh": {
+          "type": "any",
+          "desc": "Teleported vehicle (unused)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onAnyMissionChanged": {
-      "desc": "Hook : quitte le mode livraison quand une mission démarre (change == 'started').",
-      "params": {"change": {"type": "string", "desc": "Type de changement de mission."}},
+      "desc": "Hook: leaves delivery mode when a mission starts (change == 'started').",
+      "params": {
+        "change": {
+          "type": "string",
+          "desc": "Mission change type."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onRepairInGarage": {
-      "desc": "Hook : un véhicule réparé au garage : supprime ses cargos (avec pénalité) et vérifie la sortie du mode livraison.",
-      "params": {"invVehId": {"type": "integer", "desc": "Id d'inventaire du véhicule."}},
+      "desc": "Hook: a vehicle repaired at the garage: deletes its cargos (with penalty) and checks for leaving delivery mode.",
+      "params": {
+        "invVehId": {
+          "type": "integer",
+          "desc": "Inventory id of the vehicle."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onInventoryPreRemoveVehicleObject": {
-      "desc": "Hook : avant le retrait de l'objet véhicule de l'inventaire, supprime ses cargos (avec pénalité) et vérifie la sortie du mode livraison.",
+      "desc": "Hook: before the vehicle object is removed from the inventory, deletes its cargos (with penalty) and checks for leaving delivery mode.",
       "params": {
-        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
-        "vehId": {"type": "integer", "desc": "Id d'objet véhicule."}
+        "inventoryId": {
+          "type": "integer",
+          "desc": "Inventory id."
+        },
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle object id."
+        }
       },
       "returns": [],
       "internal": true
     }
   },
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "{\"core_vehicleBridge\"}."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{\"core_vehicleBridge\"}."
+    }
   }
 }

@@ -1,181 +1,181 @@
 # `core_multiSpawn`
 
-*Fichier : `lua/ge/extensions/core/multiSpawn.lua` · VM : Game Engine (GE) · 887 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/multiSpawn.lua` · VM: Game Engine (GE) · 887 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_multiSpawn` : `extensions.load("core_multiSpawn")`, puis la globale `core_multiSpawn`
+**Access:** extension `core_multiSpawn`: `extensions.load("core_multiSpawn")`, then the global `core_multiSpawn`
 
-Extension GE `core_multiSpawn` : génération et placement de groupes de véhicules. Elle peut construire un groupe aléatoire à partir des véhicules installés (avec poids de population, filtres, pays, année), le faire apparaître en formation (route devant/derrière, grille de course, trafic, lignes), ou téléporter des véhicules existants dans une nouvelle formation. L'apparition se fait via un job, un véhicule par frame, et un seul groupe à la fois (les suivants sont mis en file). Utilisée notamment par l'app trafic de l'interface et par du code de gameplay (onVehicleGroupSpawned est écouté par 5 modules).
+GE extension `core_multiSpawn`: generation and placement of vehicle groups. It can build a random group from the installed vehicles (with population weights, filters, country, year), spawn it in a formation (road ahead/behind, race grid, traffic, lines), or teleport existing vehicles into a new formation. Spawning is done via a job, one vehicle per frame, and only one group at a time (subsequent ones are queued). Used notably by the UI traffic app and by gameplay code (onVehicleGroupSpawned is listened to by 5 modules).
 
-## Exemple
+## Example
 
 ```lua
--- 10 véhicules aléatoires (voitures et camions) devant le joueur
+-- 10 random vehicles (cars and trucks) in front of the player
 local group = core_multiSpawn.createGroup(10, {filters = {Type = {car = 1, truck = 0.4}}})
-core_multiSpawn.spawnGroup(group, 10, {name = 'monGroupe', mode = 'roadAhead', gap = 20})
--- plus tard : supprimer ce groupe
-core_multiSpawn.deleteVehicles(nil, 'monGroupe')
+core_multiSpawn.spawnGroup(group, 10, {name = 'myGroup', mode = 'roadAhead', gap = 20})
+-- later: delete this group
+core_multiSpawn.deleteVehicles(nil, 'myGroup')
 ```
 
-## Remarques
+## Notes
 
-- Un groupe est un tableau d'entrées { model, config, paint, paint2, paint3, paintName, paintName2, paintName3, ... }. L'ancien format tableau { modèle, config, paint, paint2, paint3 } est aussi accepté par setVehicleSpawnData. Une config nil ou 'base' devient la config par défaut du modèle. paintName '(Random)' demande des peintures aléatoires.
-- Modes de formation (options.mode) : roadAhead (défaut), roadBehind, roadAheadAlt, roadBehindAlt, traffic, raceGrid, raceGridAlt, lineLeft, lineRight, lineBehind, lineAhead, lineAbove ; 'road' est un alias de roadAhead. Un mode inconnu retombe sur lineAhead. Les modes route utilisent la carte de navigation (map) ; sans route trouvée la fonction de repli est lineAhead.
-- Options de position : pos (vec3) et dir (vec3) ou rot (quat) ; sinon le véhicule joueur (OOBB, case 0 réservée au joueur : la numérotation commence à 1), sinon la caméra. gap = espacement en mètres (15 par défaut). startIndex décale le premier emplacement. func(funcData) permet une fonction de placement personnalisée renvoyant pos, dir. customTransforms = tableau {pos, rot} imposé (doit avoir au moins autant d'éléments que de véhicules).
-- Le premier véhicule est toujours créé ; les suivants sont refusés (arrêt du groupe avec un avertissement) si canSpawnAnotherVehicle() est faux, sauf si options.canSpawnAnotherVehicleCheck == false.
-- Chaque véhicule créé reçoit le champ dynamique 'vehicleGroup' = options.name (lu par deleteVehicles) et éventuellement 'spawnMeta'. Hook onVehicleGroupSpawned(vehIds, groupId, name) à la fin ; onVehicleGroupRespawned(vehIds) à la fin d'un placeGroup.
-- Population : une config sans champ Population reçoit 10000 si le modèle ou la config est un mod, 0 si les deux sont officiels. Le poids d'un modèle/config est (popBase*popFactor)^popPower ; les modèles d'autres pays que `country` sont pénalisés (0.25/nombre de modèles du pays). Après chaque tirage, le poids est multiplié par popDecreaseFactor (0.05 par défaut) pour éviter les répétitions. modelPopPower/configPopPower <= 0 ou nil : tirage uniforme ; popPower plafonné à 2. Filtres : {Type = {car = 1, truck = 0.4, other = 0.1}} ; un champ absent du filtre donne facteur 0 sauf clé `other`. maxYear (<= 0 = année courante) exclut les configs plus récentes et pénalise les plus anciennes.
-- Bug probable dans buildGroup : `if not modelPopPower then ... else modelIdx = getIndexRandomPop(...)` teste nil alors que le tri préalable teste aussi `<= 0`. Avec modelPopPower = 0, shuffledList est rempli mais ignoré, et l'on tire via getIndexRandomPop sur des poids calculés avec popPower = 1 (déduit du code).
-- Bug probable dans spawnGroup : spawningBusy est mis à true avant l'appel de spawnProcessedGroup. Si celui-ci sort tôt (pas de MissionGroup, données vides), spawningBusy reste à true, et tous les groupes suivants restent indéfiniment dans la file.
-- onSpawnCCallback : tant qu'un groupe est en cours d'apparition (spawningBusy), les véhicules reçoivent spawnWithEngineRunning = M.startEngines. Ce drapeau s'applique donc aussi à tout véhicule créé pendant ce temps par un autre code.
-- setupVehicles est obsolète (log d'avertissement) : utiliser spawnGroup. teleportGroup est un alias de placeGroup.
+- A group is an array of entries { model, config, paint, paint2, paint3, paintName, paintName2, paintName3, ... }. The old array format { model, config, paint, paint2, paint3 } is also accepted by setVehicleSpawnData. A nil or 'base' config becomes the model's default config. paintName '(Random)' requests random paints.
+- Formation modes (options.mode): roadAhead (default), roadBehind, roadAheadAlt, roadBehindAlt, traffic, raceGrid, raceGridAlt, lineLeft, lineRight, lineBehind, lineAhead, lineAbove; 'road' is an alias of roadAhead. An unknown mode falls back to lineAhead. Road modes use the navigation map (map); if no road is found the fallback is lineAhead.
+- Position options: pos (vec3) and dir (vec3) or rot (quat); otherwise the player vehicle (OOBB, slot 0 reserved for the player: numbering starts at 1), otherwise the camera. gap = spacing in meters (15 by default). startIndex shifts the first slot. func(funcData) allows a custom placement function returning pos, dir. customTransforms = imposed array of {pos, rot} (must have at least as many elements as vehicles).
+- The first vehicle is always created; the following ones are refused (the group stops with a warning) if canSpawnAnotherVehicle() is false, unless options.canSpawnAnotherVehicleCheck == false.
+- Each created vehicle receives the dynamic field 'vehicleGroup' = options.name (read by deleteVehicles) and possibly 'spawnMeta'. Hook onVehicleGroupSpawned(vehIds, groupId, name) at the end; onVehicleGroupRespawned(vehIds) at the end of a placeGroup.
+- Population: a config without a Population field gets 10000 if the model or the config is a mod, 0 if both are official. The weight of a model/config is (popBase*popFactor)^popPower; models from countries other than `country` are penalized (0.25/number of models of the country). After each draw, the weight is multiplied by popDecreaseFactor (0.05 by default) to avoid repetitions. modelPopPower/configPopPower <= 0 or nil: uniform draw; popPower capped at 2. Filters: {Type = {car = 1, truck = 0.4, other = 0.1}}; a field absent from the filter gives factor 0 unless the key `other` exists. maxYear (<= 0 = current year) excludes newer configs and penalizes older ones.
+- Probable bug in buildGroup: `if not modelPopPower then ... else modelIdx = getIndexRandomPop(...)` tests nil whereas the earlier sort also tests `<= 0`. With modelPopPower = 0, shuffledList is filled but ignored, and the draw is done via getIndexRandomPop on weights computed with popPower = 1 (inferred from code).
+- Probable bug in spawnGroup: spawningBusy is set to true before spawnProcessedGroup is called. If the latter exits early (no MissionGroup, empty data), spawningBusy stays true, and all following groups stay in the queue indefinitely.
+- onSpawnCCallback: while a group is spawning (spawningBusy), vehicles receive spawnWithEngineRunning = M.startEngines. This flag therefore also applies to any vehicle created during that time by other code.
+- setupVehicles is deprecated (warning log): use spawnGroup. teleportGroup is an alias of placeGroup.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_multiSpawn.createGroup(amount, params)` | Crée un groupe aléatoire de `amount` véhicules (10 par défaut) à partir des véhicules installés, selon les filtres et populations. | 291 |
-| `core_multiSpawn.createSpawnPositions(amount, options)` | Calcule `amount` positions/rotations de formation selon options.mode (voir notes), en partant du joueur, de la caméra ou de options.pos. | 509 |
-| `core_multiSpawn.deleteVehicles(amount, groupName)` | Supprime des véhicules créés via ce module (ceux qui ont le champ vehicleGroup), en partant de la fin de la liste, avec limite et nom de groupe facultatifs. Utilisée par l'app de trafic. | 847 |
-| `core_multiSpawn.fitGroup(group, amount)` | Ajuste un groupe à `amount` éléments, en place : duplique les entrées en boucle s'il est trop petit, tronque s'il est trop grand. | 703 |
-| `core_multiSpawn.getInstalledVehicleData(params)` | Parcourt les modèles et configs installés (core_vehicles) et construit la table de base servant à tirer un groupe : par modèle { model, country, popBase, popFactor, configData = [{ config, popBase, popFactor }] }, plus countryCounts. Par défaut seuls les contenus officiels sont pris (allMods = false). | 140 |
-| `core_multiSpawn.onSpawnCCallback(id)` | Hook appelé à la création d'un véhicule côté C++ : pendant un spawn de groupe, demande au véhicule d'apparaître moteur tournant (selon startEngines). *(interne)* *(hook)* | 863 |
-| `core_multiSpawn.placeGroup(vehIds, options)` | Téléporte des véhicules existants dans une nouvelle formation (un par intervalle de 0.02 s via un job, ou immédiatement si options.instant). Les positions sont corrigées par le décalage du nœud de référence sauf ignoreAdjust ; safeTeleport est utilisé sauf ignoreSafe. | 685 |
-| `core_multiSpawn.setVehicleSpawnData(group, amount)` | Prépare les données d'apparition à partir d'un groupe : copie, ajuste à la taille demandée (fitGroup), complète la config par défaut, résout les peintures (y compris aléatoires). Un modèle introuvable est remplacé par le modèle 'pickup' par défaut (erreur loggée). | 727 |
-| `core_multiSpawn.setupVehicles(amount, shuffle, spawnMode, spawnGap)` | Obsolète : crée un groupe aléatoire puis le fait apparaître. Utiliser spawnGroup. | 842 |
-| `core_multiSpawn.spawnGroup(group, amount, options)` | Fait apparaître un groupe de véhicules en formation. Si un groupe est déjà en cours, la demande est mise en file. Groupe vide : en crée un par défaut ; amount <= 0 : ne fait rien. | 796 |
-| `core_multiSpawn.spawnProcessedGroup(spawnData, spawnOptions)` | Étape basse niveau de spawnGroup : affecte positions et rotations aux données d'apparition déjà préparées par setVehicleSpawnData, les assainit (sanitizeVehicleSpawnOptions) et lance le job de création (un véhicule par frame). | 617 |
-| `core_multiSpawn.spawnedVehsToGroup(ignorePlayer, ignoreTraffic)` | Convertit tous les véhicules actuellement dans la scène (getAllVehiclesByType) en groupe, avec exclusions facultatives. | 339 |
-| `core_multiSpawn.teleportGroup(vehIds, options)` | Alias de placeGroup. | 685 |
-| `core_multiSpawn.vehIdsToGroup(vehIds)` | Convertit des véhicules existants en entrées de groupe (modèle, config, peintures, les noms de peinture valent '(Custom)'). | 316 |
+| `core_multiSpawn.createGroup(amount, params)` | Creates a random group of `amount` vehicles (10 by default) from the installed vehicles, according to the filters and populations. | 291 |
+| `core_multiSpawn.createSpawnPositions(amount, options)` | Computes `amount` formation positions/rotations according to options.mode (see notes), starting from the player, the camera or options.pos. | 509 |
+| `core_multiSpawn.deleteVehicles(amount, groupName)` | Deletes vehicles created via this module (those with the vehicleGroup field), starting from the end of the list, with optional limit and group name. Used by the traffic app. | 847 |
+| `core_multiSpawn.fitGroup(group, amount)` | Adjusts a group to `amount` elements, in place: duplicates entries in a loop if it is too small, truncates if it is too large. | 703 |
+| `core_multiSpawn.getInstalledVehicleData(params)` | Walks through the installed models and configs (core_vehicles) and builds the base table used to draw a group: per model { model, country, popBase, popFactor, configData = [{ config, popBase, popFactor }] }, plus countryCounts. By default only official content is taken (allMods = false). | 140 |
+| `core_multiSpawn.onSpawnCCallback(id)` | Hook called when a vehicle is created on the C++ side: during a group spawn, asks the vehicle to spawn with the engine running (according to startEngines). *(internal)* *(hook)* | 863 |
+| `core_multiSpawn.placeGroup(vehIds, options)` | Teleports existing vehicles into a new formation (one per 0.02 s interval via a job, or immediately if options.instant). Positions are corrected by the reference node offset unless ignoreAdjust; safeTeleport is used unless ignoreSafe. | 685 |
+| `core_multiSpawn.setVehicleSpawnData(group, amount)` | Prepares the spawn data from a group: copies, adjusts to the requested size (fitGroup), fills in the default config, resolves paints (including random ones). A model that is not found is replaced by the default 'pickup' model (error logged). | 727 |
+| `core_multiSpawn.setupVehicles(amount, shuffle, spawnMode, spawnGap)` | Deprecated: creates a random group then spawns it. Use spawnGroup. | 842 |
+| `core_multiSpawn.spawnGroup(group, amount, options)` | Spawns a vehicle group in formation. If a group is already in progress, the request is queued. Empty group: creates a default one; amount <= 0: does nothing. | 796 |
+| `core_multiSpawn.spawnProcessedGroup(spawnData, spawnOptions)` | Low-level step of spawnGroup: assigns positions and rotations to the spawn data already prepared by setVehicleSpawnData, sanitizes them (sanitizeVehicleSpawnOptions) and starts the creation job (one vehicle per frame). | 617 |
+| `core_multiSpawn.spawnedVehsToGroup(ignorePlayer, ignoreTraffic)` | Converts all vehicles currently in the scene (getAllVehiclesByType) into a group, with optional exclusions. | 339 |
+| `core_multiSpawn.teleportGroup(vehIds, options)` | Alias of placeGroup. | 685 |
+| `core_multiSpawn.vehIdsToGroup(vehIds)` | Converts existing vehicles into group entries (model, config, paints; paint names are '(Custom)'). | 316 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_multiSpawn.createGroup(amount, params)`
 
-Crée un groupe aléatoire de `amount` véhicules (10 par défaut) à partir des véhicules installés, selon les filtres et populations.
+Creates a random group of `amount` vehicles (10 by default) from the installed vehicles, according to the filters and populations.
 
-- `amount` (*integer|nil*) : Taille du groupe (10 par défaut).
+- `amount` (*integer|nil*) : Group size (10 by default).
 - `params` (*table|nil*) : { allMods, allConfigs, filters, country, modelPopPower, configPopPower, popDecreaseFactor, minPop, maxYear }.
-- **renvoie** : table[] Entrées { model, config } ; {} si aucun véhicule ne correspond.
+- **returns**: table[] Entries { model, config }; {} if no vehicle matches.
 
 #### `core_multiSpawn.createSpawnPositions(amount, options)`
 
-Calcule `amount` positions/rotations de formation selon options.mode (voir notes), en partant du joueur, de la caméra ou de options.pos.
+Computes `amount` formation positions/rotations according to options.mode (see notes), starting from the player, the camera or options.pos.
 
-- `amount` (*integer|nil*) : Nombre de positions (20 par défaut).
+- `amount` (*integer|nil*) : Number of positions (20 by default).
 - `options` (*table|nil*) : { mode, gap, pos, dir, rot, startIndex, func }.
-- **renvoie** : table[] Éléments { pos = vec3, rot = quat }.
+- **returns**: table[] Elements { pos = vec3, rot = quat }.
 
 #### `core_multiSpawn.deleteVehicles(amount, groupName)`
 
-Supprime des véhicules créés via ce module (ceux qui ont le champ vehicleGroup), en partant de la fin de la liste, avec limite et nom de groupe facultatifs. Utilisée par l'app de trafic.
+Deletes vehicles created via this module (those with the vehicleGroup field), starting from the end of the list, with optional limit and group name. Used by the traffic app.
 
-- `amount` (*integer|nil*) : Nombre max à supprimer ; nil = tous.
-- `groupName` (*string|nil*) : Ne supprime que ce groupe ; nil = tout groupe.
+- `amount` (*integer|nil*) : Max number to delete; nil = all.
+- `groupName` (*string|nil*) : Only deletes this group; nil = any group.
 
 #### `core_multiSpawn.fitGroup(group, amount)`
 
-Ajuste un groupe à `amount` éléments, en place : duplique les entrées en boucle s'il est trop petit, tronque s'il est trop grand.
+Adjusts a group to `amount` elements, in place: duplicates entries in a loop if it is too small, truncates if it is too large.
 
-- `group` (*table[]*) : Groupe (modifié).
-- `amount` (*integer|nil*) : Taille cible.
-- **renvoie** : table[] Le même groupe.
+- `group` (*table[]*) : Group (modified).
+- `amount` (*integer|nil*) : Target size.
+- **returns**: table[] The same group.
 
 #### `core_multiSpawn.getInstalledVehicleData(params)`
 
-Parcourt les modèles et configs installés (core_vehicles) et construit la table de base servant à tirer un groupe : par modèle { model, country, popBase, popFactor, configData = [{ config, popBase, popFactor }] }, plus countryCounts. Par défaut seuls les contenus officiels sont pris (allMods = false).
+Walks through the installed models and configs (core_vehicles) and builds the base table used to draw a group: per model { model, country, popBase, popFactor, configData = [{ config, popBase, popFactor }] }, plus countryCounts. By default only official content is taken (allMods = false).
 
-- `params` (*table|nil*) : { allMods, allConfigs, filters, minPop, maxYear, country }. filters par défaut { Type = { car = 1, truck = 1 } }. Note : si params est fourni sans allConfigs, seule la config par défaut de chaque modèle est retenue.
-- **renvoie** : table Liste de modèles avec champ countryCounts.
+- `params` (*table|nil*) : { allMods, allConfigs, filters, minPop, maxYear, country }. filters defaults to { Type = { car = 1, truck = 1 } }. Note: if params is provided without allConfigs, only the default config of each model is kept.
+- **returns**: table List of models with a countryCounts field.
 
 #### `core_multiSpawn.onSpawnCCallback(id)`
 
-Hook appelé à la création d'un véhicule côté C++ : pendant un spawn de groupe, demande au véhicule d'apparaître moteur tournant (selon startEngines).
+Hook called when a vehicle is created on the C++ side: during a group spawn, asks the vehicle to spawn with the engine running (according to startEngines).
 
-- `id` (*integer*) : Id du véhicule créé.
+- `id` (*integer*) : Id of the created vehicle.
 
 #### `core_multiSpawn.placeGroup(vehIds, options)`
 
-Téléporte des véhicules existants dans une nouvelle formation (un par intervalle de 0.02 s via un job, ou immédiatement si options.instant). Les positions sont corrigées par le décalage du nœud de référence sauf ignoreAdjust ; safeTeleport est utilisé sauf ignoreSafe.
+Teleports existing vehicles into a new formation (one per 0.02 s interval via a job, or immediately if options.instant). Positions are corrected by the reference node offset unless ignoreAdjust; safeTeleport is used unless ignoreSafe.
 
-- `vehIds` (*integer[]*) : Ids des véhicules à placer.
+- `vehIds` (*integer[]*) : Ids of the vehicles to place.
 - `options` (*table|nil*) : { mode, gap, pos, dir, rot, startIndex, func, customTransforms, instant, ignoreAdjust, ignoreSafe }.
 
 #### `core_multiSpawn.setVehicleSpawnData(group, amount)`
 
-Prépare les données d'apparition à partir d'un groupe : copie, ajuste à la taille demandée (fitGroup), complète la config par défaut, résout les peintures (y compris aléatoires). Un modèle introuvable est remplacé par le modèle 'pickup' par défaut (erreur loggée).
+Prepares the spawn data from a group: copies, adjusts to the requested size (fitGroup), fills in the default config, resolves paints (including random ones). A model that is not found is replaced by the default 'pickup' model (error logged).
 
-- `group` (*table[]*) : Groupe de véhicules.
-- `amount` (*integer|nil*) : Taille voulue ; nil garde la taille du groupe.
-- **renvoie** : table[]|nil Données d'apparition, nil si le groupe est vide.
+- `group` (*table[]*) : Vehicle group.
+- `amount` (*integer|nil*) : Requested size; nil keeps the group's size.
+- **returns**: table[]|nil Spawn data, nil if the group is empty.
 
 #### `core_multiSpawn.setupVehicles(amount, shuffle, spawnMode, spawnGap)`
 
-Obsolète : crée un groupe aléatoire puis le fait apparaître. Utiliser spawnGroup.
+Deprecated: creates a random group then spawns it. Use spawnGroup.
 
-- `amount` (*integer*) : Nombre de véhicules.
-- `shuffle` (*boolean|nil*) : Mélange l'ordre.
-- `spawnMode` (*string|nil*) : Mode de formation.
-- `spawnGap` (*number|nil*) : Espacement en mètres.
-- **renvoie** : integer|nil Id du groupe.
+- `amount` (*integer*) : Number of vehicles.
+- `shuffle` (*boolean|nil*) : Shuffles the order.
+- `spawnMode` (*string|nil*) : Formation mode.
+- `spawnGap` (*number|nil*) : Spacing in meters.
+- **returns**: integer|nil Group id.
 
 #### `core_multiSpawn.spawnGroup(group, amount, options)`
 
-Fait apparaître un groupe de véhicules en formation. Si un groupe est déjà en cours, la demande est mise en file. Groupe vide : en crée un par défaut ; amount <= 0 : ne fait rien.
+Spawns a vehicle group in formation. If a group is already in progress, the request is queued. Empty group: creates a default one; amount <= 0: does nothing.
 
-- `group` (*table[]|nil*) : Groupe de véhicules.
-- `amount` (*integer*) : Nombre de véhicules.
+- `group` (*table[]|nil*) : Vehicle group.
+- `amount` (*integer*) : Number of vehicles.
 - `options` (*table|nil*) : { name ('custom'), mode ('roadAhead'), gap (15), shuffle, randomPaints, cling, ignoreAdjust, canSpawnAnotherVehicleCheck, pos, dir, rot, startIndex, func, customTransforms }.
-- **renvoie** : integer|nil Identifiant unique du groupe (nil si en file, refusé, ou scène sans MissionGroup).
+- **returns**: integer|nil Unique group identifier (nil if queued, refused, or scene without MissionGroup).
 
 #### `core_multiSpawn.spawnProcessedGroup(spawnData, spawnOptions)`
 
-Étape basse niveau de spawnGroup : affecte positions et rotations aux données d'apparition déjà préparées par setVehicleSpawnData, les assainit (sanitizeVehicleSpawnOptions) et lance le job de création (un véhicule par frame).
+Low-level step of spawnGroup: assigns positions and rotations to the spawn data already prepared by setVehicleSpawnData, sanitizes them (sanitizeVehicleSpawnOptions) and starts the creation job (one vehicle per frame).
 
-- `spawnData` (*table[]*) : Sortie de setVehicleSpawnData.
-- `spawnOptions` (*table*) : Mêmes options que spawnGroup (name, mode, gap, cling, ...).
-- **renvoie** : integer|nil Nouvel identifiant de groupe, nil si pas de MissionGroup ou données vides.
+- `spawnData` (*table[]*) : Output of setVehicleSpawnData.
+- `spawnOptions` (*table*) : Same options as spawnGroup (name, mode, gap, cling, ...).
+- **returns**: integer|nil New group identifier, nil if no MissionGroup or empty data.
 
 #### `core_multiSpawn.spawnedVehsToGroup(ignorePlayer, ignoreTraffic)`
 
-Convertit tous les véhicules actuellement dans la scène (getAllVehiclesByType) en groupe, avec exclusions facultatives.
+Converts all vehicles currently in the scene (getAllVehiclesByType) into a group, with optional exclusions.
 
-- `ignorePlayer` (*boolean|nil*) : Exclut le véhicule joueur 0.
-- `ignoreTraffic` (*boolean|nil*) : Exclut les véhicules de trafic ou garés.
-- **renvoie** : table[] Entrées de groupe.
+- `ignorePlayer` (*boolean|nil*) : Excludes the player vehicle 0.
+- `ignoreTraffic` (*boolean|nil*) : Excludes traffic or parked vehicles.
+- **returns**: table[] Group entries.
 
 #### `core_multiSpawn.teleportGroup(vehIds, options)`
 
-Alias de placeGroup.
+Alias of placeGroup.
 
-- `vehIds` (*integer[]*) : Ids des véhicules.
-- `options` (*table|nil*) : Voir placeGroup.
+- `vehIds` (*integer[]*) : Vehicle ids.
+- `options` (*table|nil*) : See placeGroup.
 
 #### `core_multiSpawn.vehIdsToGroup(vehIds)`
 
-Convertit des véhicules existants en entrées de groupe (modèle, config, peintures, les noms de peinture valent '(Custom)').
+Converts existing vehicles into group entries (model, config, paints; paint names are '(Custom)').
 
-- `vehIds` (*integer[]|nil*) : Ids de véhicules.
-- **renvoie** : table[] Entrées de groupe.
+- `vehIds` (*integer[]|nil*) : Vehicle ids.
+- **returns**: table[] Group entries.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `startEngines` | boolean | true par défaut : les véhicules d'un groupe apparaissent moteur démarré (via onSpawnCCallback). |
-| `useFullData` | boolean | false par défaut. Si vrai, createGroup ajoute modelPop et configPop dans chaque entrée du groupe. |
+| `startEngines` | boolean | true by default: vehicles of a group spawn with the engine started (via onSpawnCCallback). |
+| `useFullData` | boolean | false by default. If true, createGroup adds modelPop and configPop to each entry of the group. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onVehicleGroupRespawned`
-- `onVehicleGroupSpawned` — écouté par 5 module(s)
+- `onVehicleGroupSpawned` — listened to by 5 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectOOBBCenterXYZ`, `getPlayerVehicleID`, `getSurfaceHeightBelow`
 - `obj:` `getInitialNodePosition`, `getRefNodeId`, `setPosRot`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/multiSpawn.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/multiSpawn.lua`.*

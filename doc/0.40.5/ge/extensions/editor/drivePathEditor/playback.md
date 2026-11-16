@@ -1,43 +1,43 @@
 # `editor_drivePathEditor_playback`
 
-*Fichier : `lua/ge/extensions/editor/drivePathEditor/playback.lua` · VM : Game Engine (GE) · 205 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/drivePathEditor/playback.lua` · VM: Game Engine (GE) · 205 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_drivePathEditor_playback` : `extensions.load("editor_drivePathEditor_playback")`, puis la globale `editor_drivePathEditor_playback`
+**Access:** extension `editor_drivePathEditor_playback`: `extensions.load("editor_drivePathEditor_playback")`, then the global `editor_drivePathEditor_playback`
 
-Lecture des chemins (splines) du Drive Path Editor : associe chaque véhicule à sa spline liée, le replace au départ, puis, une fois le délai de la spline écoulé, envoie au véhicule une commande vLua ai.driveUsingPath générée depuis la spline. Deux modes : libre (script de nœuds x,y,z,r[,v|vl] après lissage Catmull-Rom et simplification RDP, tolérance 1.0) ou graphe de navigation (wpTargetList et wpSpeeds).
+Playback of Drive Path Editor paths (splines): associates each vehicle with its linked spline, moves it back to the start, then, once the spline's delay has elapsed, sends the vehicle a vLua command ai.driveUsingPath generated from the spline. Two modes: free (script of nodes x,y,z,r[,v|vl] after Catmull-Rom smoothing and RDP simplification, tolerance 1.0) or navigation graph (wpTargetList and wpSpeeds).
 
-## Remarques
+## Notes
 
-- Un véhicule n'est pris en compte que si sa spline est liée (isVehicleLink), a l'id du lien (vehicle.linkSplineId), le bon linkVehId == vehicle.vid, et isEnabled.
-- Le démarrage réel se fait dans handlePlayback, appelé chaque frame : startPlayback ne lance pas encore l'IA.
-- Mode libre : les largeurs sont divisées par 2 (demi-largeurs) ; en boucle (isLoop) le premier nœud de départ est ajouté à la fin ; noOfLaps n'est transmis que pour les boucles.
-- speedProfileMode : 0 aucun profil, 1 vitesses v par nœud, 2 limites de vitesse vl par nœud (mode libre) ; en mode graphe seul le mode 1 produit wpSpeeds.
-- driveInLane n'est transmis qu'en mode graphe (mode libre : chaîne vide, avec commentaire du code).
-- Les arguments passés à ai.driveUsingPath incluent aggression, routeSpeed/routeSpeedMode (si différent de off) et avoidCars.
+- A vehicle is only considered if its spline is linked (isVehicleLink), has the link id (vehicle.linkSplineId), the right linkVehId == vehicle.vid, and isEnabled.
+- The actual start happens in handlePlayback, called every frame: startPlayback does not start the AI yet.
+- Free mode: widths are divided by 2 (half-widths); in loop mode (isLoop) the first start node is appended at the end; noOfLaps is only passed for loops.
+- speedProfileMode: 0 no profile, 1 per-node speeds v, 2 per-node speed limits vl (free mode); in graph mode only mode 1 produces wpSpeeds.
+- driveInLane is only passed in graph mode (free mode: empty string, with a code comment).
+- The arguments passed to ai.driveUsingPath include aggression, routeSpeed/routeSpeedMode (if different from off) and avoidCars.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_drivePathEditor_playback.getPlaybackTime()` | Temps écoulé depuis le début de la lecture. | 25 |
-| `editor_drivePathEditor_playback.handlePlayback()` | À appeler chaque frame : démarre l'IA des véhicules dont le delayTime est atteint (une seule fois par véhicule) puis fait avancer le temps de lecture. *(interne)* | 77 |
-| `editor_drivePathEditor_playback.startPlayback(splines, vehicles)` | Prépare la lecture : vide la table des lectures en cours, y met chaque véhicule ayant une spline liée et activée, replace ces véhicules à leur pose de départ (splineMgr.resetVehiclePose), puis remet les compteurs de temps à zéro. | 30 |
-| `editor_drivePathEditor_playback.stopPlayback()` | Envoie ai.setState({mode = "stop"}) à chaque véhicule en cours de lecture, les replace à leur pose de départ, puis vide la table et remet les compteurs à zéro. | 58 |
+| `editor_drivePathEditor_playback.getPlaybackTime()` | Time elapsed since the start of playback. | 25 |
+| `editor_drivePathEditor_playback.handlePlayback()` | To be called every frame: starts the AI of vehicles whose delayTime is reached (only once per vehicle) then advances the playback time. *(internal)* | 77 |
+| `editor_drivePathEditor_playback.startPlayback(splines, vehicles)` | Prepares playback: clears the table of ongoing playbacks, adds each vehicle with a linked and enabled spline, moves these vehicles back to their start pose (splineMgr.resetVehiclePose), then resets the time counters to zero. | 30 |
+| `editor_drivePathEditor_playback.stopPlayback()` | Sends ai.setState({mode = "stop"}) to each vehicle being played back, moves them back to their start pose, then clears the table and resets the counters to zero. | 58 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_drivePathEditor_playback.getPlaybackTime()`
 
-Temps écoulé depuis le début de la lecture.
+Time elapsed since the start of playback.
 
-- **renvoie** : number secondes
+- **returns**: number seconds
 
 #### `editor_drivePathEditor_playback.startPlayback(splines, vehicles)`
 
-Prépare la lecture : vide la table des lectures en cours, y met chaque véhicule ayant une spline liée et activée, replace ces véhicules à leur pose de départ (splineMgr.resetVehiclePose), puis remet les compteurs de temps à zéro.
+Prepares playback: clears the table of ongoing playbacks, adds each vehicle with a linked and enabled spline, moves these vehicles back to their start pose (splineMgr.resetVehiclePose), then resets the time counters to zero.
 
-- `splines` (*table*) : splines de chemin (champs id, isVehicleLink, linkVehId, isEnabled, delayTime…)
-- `vehicles` (*table*) : véhicules de la scène (champs vid, veh, linkSplineId)
+- `splines` (*table*) : path splines (fields id, isVehicleLink, linkVehId, isEnabled, delayTime...)
+- `vehicles` (*table*) : scene vehicles (fields vid, veh, linkSplineId)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/drivePathEditor/playback.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/drivePathEditor/playback.lua`.*

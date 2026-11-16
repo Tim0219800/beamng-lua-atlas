@@ -1,47 +1,89 @@
 {
   "path": "lua/ge/extensions/editor/layoutManager.lua",
-  "module": "Gestion des dispositions (layouts) de fenêtres de l'éditeur. Chaque layout est un dossier settings/<outil>/layouts/<nom>/ contenant windowsState.json ; le layout courant est settings/<outil>/windowsState.json. Les positions ImGui sont lues/écrites dans settings/imgui.ini (ou settings/default_imgui.ini pour le layout Default). L'outil vaut « editor » par défaut.",
-  "usage": "editor_layoutManager.saveWindowLayout(\"MonLayout\")\nlocal liste = editor_layoutManager.getWindowLayouts()",
+  "module": "Management of the editor's window layouts. Each layout is a folder settings/<tool>/layouts/<name>/ containing windowsState.json; the current layout is settings/<tool>/windowsState.json. The ImGui positions are read/written in settings/imgui.ini (or settings/default_imgui.ini for the Default layout). The tool is \"editor\" by default.",
+  "usage": "editor_layoutManager.saveWindowLayout(\"MyLayout\")\nlocal list = editor_layoutManager.getWindowLayouts()",
   "notes": [
-    "Dépend de editor.loadWindowsState / editor.saveWindowsState (définis ailleurs) et de ui_imgui.",
-    "saveCurrentWindowLayout ne transmet pas toolName à editor.saveWindowsState, contrairement à saveWindowLayout et loadCurrentWindowLayout.",
-    "resetLayouts supprime tous les layouts dont le chemin ne contient pas « /Default », puis recharge Default."
+    "Depends on editor.loadWindowsState / editor.saveWindowsState (defined elsewhere) and on ui_imgui.",
+    "saveCurrentWindowLayout does not pass toolName to editor.saveWindowsState, unlike saveWindowLayout and loadCurrentWindowLayout.",
+    "resetLayouts deletes all layouts whose path does not contain \"/Default\", then reloads Default."
   ],
   "functions": {
     "getWindowLayouts": {
-      "desc": "Liste les dossiers de layouts de settings/<outil>/layouts/.",
-      "params": {"toolName": {"type": "string|nil", "desc": "Nom de l'outil ; « editor » si nil."}},
-      "returns": [{"type": "table<integer, string>", "desc": "Chemins des dossiers de layouts (FS:directoryList)."}]
+      "desc": "Lists the layout folders of settings/<tool>/layouts/.",
+      "params": {
+        "toolName": {
+          "type": "string|nil",
+          "desc": "Tool name; \"editor\" if nil."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, string>",
+          "desc": "Paths of the layout folders (FS:directoryList)."
+        }
+      ]
     },
     "loadWindowLayout": {
-      "desc": "Charge windowsState.json d'un layout et recharge imgui.ini : default_imgui.ini si le layout est Default, sinon imgui.ini.",
+      "desc": "Loads the windowsState.json of a layout and reloads imgui.ini: default_imgui.ini if the layout is Default, otherwise imgui.ini.",
       "params": {
-        "layout": {"type": "string|nil", "desc": "Dossier du layout ; settings/editor/layouts/Default si nil."},
-        "toolName": {"type": "string|nil", "desc": "Nom de l'outil passé à editor.loadWindowsState."}
+        "layout": {
+          "type": "string|nil",
+          "desc": "Layout folder; settings/editor/layouts/Default if nil."
+        },
+        "toolName": {
+          "type": "string|nil",
+          "desc": "Tool name passed to editor.loadWindowsState."
+        }
       }
     },
     "saveWindowLayout": {
-      "desc": "Enregistre l'état des fenêtres dans settings/<outil>/layouts/<layoutName>/windowsState.json et sauvegarde imgui.ini.",
+      "desc": "Saves the windows state to settings/<tool>/layouts/<layoutName>/windowsState.json and saves imgui.ini.",
       "params": {
-        "layoutName": {"type": "string", "desc": "Nom du layout (nom du dossier)."},
-        "toolName": {"type": "string|nil", "desc": "Nom de l'outil ; « editor » si nil."}
+        "layoutName": {
+          "type": "string",
+          "desc": "Layout name (folder name)."
+        },
+        "toolName": {
+          "type": "string|nil",
+          "desc": "Tool name; \"editor\" if nil."
+        }
       }
     },
     "loadCurrentWindowLayout": {
-      "desc": "Charge l'état courant des fenêtres (settings/<outil>/windowsState.json). Si editor.needsDefaultImguiIniLoad est vrai, charge default_imgui.ini une fois, sinon imgui.ini.",
-      "params": {"toolName": {"type": "string|nil", "desc": "Nom de l'outil ; « editor » si nil."}}
+      "desc": "Loads the current windows state (settings/<tool>/windowsState.json). If editor.needsDefaultImguiIniLoad is true, loads default_imgui.ini once, otherwise imgui.ini.",
+      "params": {
+        "toolName": {
+          "type": "string|nil",
+          "desc": "Tool name; \"editor\" if nil."
+        }
+      }
     },
     "saveCurrentWindowLayout": {
-      "desc": "Enregistre l'état courant des fenêtres dans settings/<outil>/windowsState.json et sauvegarde imgui.ini.",
-      "params": {"toolName": {"type": "string|nil", "desc": "Sert à construire le chemin, mais n'est pas transmis à editor.saveWindowsState."}}
+      "desc": "Saves the current windows state to settings/<tool>/windowsState.json and saves imgui.ini.",
+      "params": {
+        "toolName": {
+          "type": "string|nil",
+          "desc": "Used to build the path, but is not passed to editor.saveWindowsState."
+        }
+      }
     },
     "deleteWindowLayout": {
-      "desc": "Supprime tous les fichiers d'un dossier de layout puis le dossier lui-même.",
-      "params": {"layoutPath": {"type": "string", "desc": "Chemin du dossier de layout à supprimer."}}
+      "desc": "Deletes all files of a layout folder then the folder itself.",
+      "params": {
+        "layoutPath": {
+          "type": "string",
+          "desc": "Path of the layout folder to delete."
+        }
+      }
     },
     "resetLayouts": {
-      "desc": "Supprime tous les layouts personnalisés (tout sauf Default) de settings/<outil>/layouts puis charge le layout Default.",
-      "params": {"toolName": {"type": "string|nil", "desc": "Nom de l'outil ; « editor » si nil."}}
+      "desc": "Deletes all custom layouts (everything except Default) from settings/<tool>/layouts then loads the Default layout.",
+      "params": {
+        "toolName": {
+          "type": "string|nil",
+          "desc": "Tool name; \"editor\" if nil."
+        }
+      }
     }
   }
 }

@@ -1,0 +1,44 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/loop/rallyLoopStars.lua",
+  "module": "Gère les étoiles (bronze, silver, gold) d'une boucle de rallye. Les seuils de la boucle sont la somme des seuils des spéciales liées (jusqu'à 4 : stage1_rallyStage…stage4_rallyStage). Le module note aussi une tentative (étoiles débloquées si le temps total est inférieur ou égal au seuil) et choisit le texte de fin de mission correspondant.",
+  "notes": [
+    "Les clés d'étoiles sont bronzeTime, silverTime, goldTime (temps en secondes, plus petit = meilleur).",
+    "deriveThresholds renvoie nil (avec un log W) si une spéciale est introuvable, si une étoile n'est pas active (careerSetup.starsActive) ou n'a pas de valeur > 0, ou si l'ordre gold <= silver <= bronze n'est pas respecté.",
+    "Les totaux sont arrondis au dixième de seconde.",
+    "applyThresholds vide bronzeTime/silverTime/goldTime de la table si le calcul échoue.",
+    "Dans deriveThresholds la comparaison d'ordre utilise stageData.goldTime directement (valeur brute, pas tonumber) : une valeur en chaîne provoquerait une erreur de comparaison (déduit du code)."
+  ],
+  "functions": {
+    "extractMissionId": {
+      "desc": "Extrait l'id de mission d'une valeur de champ : renvoie ce qui est entre parenthèses finales (\"Nom (id)\" donne \"id\"), sinon la chaîne telle quelle ; nil si la valeur n'est pas une chaîne, est vide ou vaut '<none>'.",
+      "params": {"value": {"type": "any", "desc": "Valeur du champ stageN_rallyStage."}},
+      "returns": [{"type": "string|nil", "desc": "Id de mission."}]
+    },
+    "deriveThresholds": {
+      "desc": "Additionne les seuils bronze/silver/gold des spéciales liées à la boucle. Toutes les spéciales configurées doivent fournir les trois valeurs.",
+      "params": {"loopMissionTypeData": {"type": "table", "desc": "missionTypeData de la boucle (champs stage1_rallyStage…stage4_rallyStage)."}},
+      "returns": [{"type": "table|nil", "desc": "{bronzeTime, silverTime, goldTime, stageCount} ou nil."}]
+    },
+    "applyThresholds": {
+      "desc": "Calcule les seuils et les écrit dans loopMissionTypeData ; les met à nil si le calcul échoue.",
+      "params": {"loopMissionTypeData": {"type": "table", "desc": "missionTypeData de la boucle, modifié sur place."}},
+      "returns": [{"type": "table|nil", "desc": "Les totaux, ou nil."}]
+    },
+    "gradeAttempt": {
+      "desc": "Remplit attempt.unlockedStars[clé] = (temps total <= seuil) pour chaque étoile active. Ne fait rien pour un DNF, une mission sans missionTypeData ou un temps non valide (<= 0).",
+      "params": {
+        "mission": {"type": "table|nil", "desc": "Mission de la boucle (missionTypeData, careerSetup.starsActive)."},
+        "attempt": {"type": "table", "desc": "Tentative ; lit attempt.data.totalTime et attempt.dnf."}
+      },
+      "returns": [{"type": "table", "desc": "La même tentative."}]
+    },
+    "getOutroText": {
+      "desc": "Renvoie le texte de fin : celui de 'noStarUnlocked' puis celui de la meilleure étoile débloquée (bronze, puis silver, puis gold), pris dans careerSetup.starOutroTexts ou à défaut defaultStarOutroTexts. nil si la mission n'a pas de goldTime ou aucune étoile active.",
+      "params": {
+        "mission": {"type": "table|nil", "desc": "Mission de la boucle."},
+        "attempt": {"type": "table|nil", "desc": "Tentative notée (unlockedStars)."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Texte de fin."}]
+    }
+  }
+}

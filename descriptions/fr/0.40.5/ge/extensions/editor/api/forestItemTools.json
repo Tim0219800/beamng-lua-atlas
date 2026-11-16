@@ -1,0 +1,158 @@
+{
+  "path": "lua/ge/extensions/editor/api/forestItemTools.lua",
+  "module": "Outils partagés de l'éditeur pour placer, sélectionner, déplacer et annuler des items de forêt (Forest / ForestData), extraits de forestEditor.lua pour qu'un second outil (l'éditeur d'intérieurs parallax) réutilise la même mécanique. Tout est paramétré par le handle `forest`/`forestData` (pas d'état de scène dans le module) ; la sélection est le store global `editor.selection.forestItem`, et les modifications passent par `editor.history` (annulables). Contient aussi l'empaquetage des données par-instance des fenêtres « parallax » (customData entier 32 bits) et des filtres sur le préfixe `parallax_` des datablocks ForestItemData.",
+  "usage": "-- dans le onUpdate d'un outil :\nlocal tools = require(\"editor/api/forestItemTools\")\ntools.updateSelectMode(forest, tools.isParallaxItem)\ntools.handleGizmo(forest)",
+  "notes": [
+    "Le module est un `require` classique qui renvoie M ; il dépend d'un `editor` global déjà initialisé (editor.createForestItem, editor.updateForestItem, editor.history, gizmo d'axes).",
+    "customData parallax : bits 0-23 = id du jeu de textures (0xFFFFFF = aucun/désactivé), bits 24-31 = drapeaux (bit 0 = emissive). Valeur < 0 = désactivé et non sauvegardé côté C++. Doit rester synchronisé avec shaders/common/examples/parallaxInterior.h.hlsl.",
+    "Shift au début d'un glissement de gizmo arme un duplicata : le clone n'est créé qu'à la première frame de glissement, et le tout est enregistré comme une seule action « AddForestItems » (undo = suppression des clones).",
+    "En mode échelle, le gizmo ajoute au plus 0.1 par frame à l'échelle uniforme de chaque item.",
+    "`removeItems` ne fait rien (renvoie nil) si la liste est vide ; `addItems`/`removeItems` renvoient le résultat de commitAction.",
+    "Hook émis : onEditorObjectSelectionChanged (depuis select)."
+  ],
+  "fields": {
+    "PARALLAX_ITEM_PREFIX": {"type": "string", "desc": "Préfixe \"parallax_\" du nom (ou internalName) d'un datablock ForestItemData identifiant une fenêtre parallax ; l'éditeur parallax ne touche que ces items, l'éditeur de forêt les autres."}
+  },
+  "functions": {
+    "getSelection": {
+      "desc": "Renvoie la sélection courante d'items de forêt (editor.selection.forestItem) ou une table vide.",
+      "returns": [{"type": "table", "desc": "liste d'items"}]
+    },
+    "clearSelection": {
+      "desc": "Désélectionne tous les items de forêt sélectionnés, reconstruit les données d'instances et vide la sélection.",
+      "params": {"forestData": {"type": "userdata", "desc": "ForestData"}}
+    },
+    "select": {
+      "desc": "Sélectionne les items donnés (nil ou vide = effacer). Place le gizmo d'axes (sur l'item en mode local avec un seul item, sinon sur le centroïde), reconstruit les instances et émet onEditorObjectSelectionChanged. Ne déclenche pas l'aperçu du mesh de l'éditeur de forêt.",
+      "params": {
+        "forestData": {"type": "userdata", "desc": "ForestData"},
+        "forestItems": {"type": "table|nil", "desc": "items à sélectionner"},
+        "addToSelection": {"type": "boolean|nil", "desc": "true = garder la sélection actuelle"}
+      }
+    },
+    "addItems": {
+      "desc": "Ajoute des items de façon annulable (action \"AddForestItems\") ; le redo sélectionne les items ajoutés.",
+      "params": {
+        "forestData": {"type": "userdata", "desc": "ForestData"},
+        "items": {"type": "table", "desc": "items à ajouter"},
+        "dontCallRedo": {"type": "boolean|nil", "desc": "true si les items existent déjà (n'exécute pas le redo) ; défaut false"}
+      },
+      "returns": [{"type": "any", "desc": "résultat de editor.history:commitAction"}]
+    },
+    "removeItems": {
+      "desc": "Supprime des items de façon annulable (action \"RemoveForestItems\"). Ne fait rien si la liste est vide.",
+      "params": {
+        "forestData": {"type": "userdata", "desc": "ForestData"},
+        "items": {"type": "table", "desc": "items à supprimer"},
+        "dontCallRedo": {"type": "boolean|nil", "desc": "true = ne pas exécuter maintenant ; défaut false"}
+      },
+      "returns": [{"type": "any", "desc": "résultat de commitAction"}]
+    },
+    "place": {
+      "desc": "Instancie un item à partir d'un datablock à la transformation donnée et renvoie le handle final. N'enregistre PAS d'historique : l'appelant commite (typiquement via addItems). afterCreate peut modifier l'item neuf (ex. customData parallax) et renvoyer le handle final à garder.",
+      "params": {
+        "forest": {"type": "userdata", "desc": "objet Forest"},
+        "itemData": {"type": "userdata", "desc": "datablock ForestItemData"},
+        "transform": {"type": "MatrixF", "desc": "transformation monde"},
+        "scale": {"type": "number", "desc": "échelle"},
+        "afterCreate": {"type": "function|nil", "desc": "function(item, forestData) -> item|nil"}
+      },
+      "returns": [{"type": "userdata", "desc": "handle de l'item créé"}]
+    },
+    "pick": {
+      "desc": "Renvoie l'item de forêt rendu sous la souris (rayon caméra-souris), ou nil ; filterFn peut rejeter les items qui ne sont pas à l'outil.",
+      "params": {
+        "forest": {"type": "userdata", "desc": "objet Forest"},
+        "rayRange": {"type": "number", "desc": "portée du rayon en mètres"},
+        "filterFn": {"type": "function|nil", "desc": "function(item) -> boolean"}
+      },
+      "returns": [{"type": "userdata|nil", "desc": "item touché"}]
+    },
+    "handleGizmo": {
+      "desc": "Pilote et dessine le gizmo d'axes pour la sélection courante (translation avec accrochage terrain, rotation autour du centroïde, échelle uniforme, duplication par Shift). Enregistre l'action annulable \"SetForestItemTransform\" (ou \"AddForestItems\" pour un duplicata) à la fin du glissement. À appeler une fois par frame depuis le onUpdate de l'outil. Ne fait rien sans sélection.",
+      "params": {"forest": {"type": "userdata", "desc": "objet Forest"}}
+    },
+    "updateSelectMode": {
+      "desc": "Une frame de l'interaction « sélectionner des items de forêt » (outil Select de l'éditeur de forêt) : survol en blanc, clic = sélection (Ctrl ajoute, clic dans le vide efface), rectangle de sélection (Ctrl ajoute), dessin des boîtes de la sélection (orange) et gizmo de transformation. Restreint aux items passant filterFn.",
+      "params": {
+        "forest": {"type": "userdata|nil", "desc": "objet Forest (rien n'est fait si nil)"},
+        "filterFn": {"type": "function|nil", "desc": "function(item) -> boolean ; nil = tous"},
+        "rayRange": {"type": "number|nil", "desc": "portée du rayon (défaut : préférence de distance de travail)"}
+      }
+    },
+    "updateInstantiateMode": {
+      "desc": "Une frame de l'interaction « instancier un item » : raycast sous le curseur, aperçu (sphère, boîte englobante réelle du mesh, ligne de face ; cellule pivot en orange) et, au clic gauche, création d'un tableau cols x rows d'items du datablock itemDataId (échelle opts.scale, 1 par défaut), commité en UNE action annulable. Renvoie la liste des items créés au clic, sinon nil.",
+      "params": {
+        "forest": {"type": "userdata", "desc": "objet Forest"},
+        "itemDataId": {"type": "integer", "desc": "id du datablock ForestItemData"},
+        "opts": {"type": "table|nil", "desc": "rayRange (préférence par défaut), cols/rows (1x1), colGap/rowGap (m, bord à bord sur les bornes du mesh, 0), yaw (degrés), alignToNormal, flipNormal, normalOffset (m, décalage le long de la face), scale (1), afterCreate(item, forestData, index) (index 1-based)"}
+      },
+      "returns": [{"type": "table|nil", "desc": "items placés (au clic) ou nil"}]
+    },
+    "placementBasis": {
+      "desc": "Calcule la base de placement du tableau et l'orientation de chaque item : (right, up, forward) unitaires. Colonnes de la transformation : X = right, Y = forward (face de la fenêtre), Z = up ; le tableau avance selon right (colonnes) et up (lignes). Mode monde : axes monde tournés de yawRad autour de Z. alignToNormal : la face suit la normale de la surface, le tableau est dans le plan de la surface et yawRad est une rotation dans ce plan. flip inverse la face.",
+      "params": {
+        "hitNormal": {"type": "vec3", "desc": "normale de la surface touchée"},
+        "yawRad": {"type": "number", "desc": "rotation en radians"},
+        "alignToNormal": {"type": "boolean", "desc": "aligner sur la normale"},
+        "flip": {"type": "boolean", "desc": "inverser la face"}
+      },
+      "returns": [
+        {"type": "vec3", "desc": "right"},
+        {"type": "vec3", "desc": "up"},
+        {"type": "vec3", "desc": "forward"}
+      ]
+    },
+    "listItemDatas": {
+      "desc": "Liste les datablocks ForestItemData filtrés par préfixe de nom (ou internalName). matchPrefix = true : seulement ceux qui commencent par prefix (éditeur parallax) ; false : tous les autres (éditeur de forêt). Triée par nom sans casse.",
+      "params": {
+        "prefix": {"type": "string", "desc": "préfixe (utilisé dans un motif Lua \"^\"..prefix)"},
+        "matchPrefix": {"type": "boolean", "desc": "true = garder ceux qui correspondent, false = les autres"}
+      },
+      "returns": [{"type": "table[]", "desc": "liste de {id, name}"}]
+    },
+    "itemDataSelectable": {
+      "desc": "Ligne de liste de meshes partagée : icône de datablock + sélectionnable pleine largeur, surligné si sélectionné. Renvoie true au clic ; l'appelant gère l'état de sélection.",
+      "params": {
+        "uniqueId": {"type": "any", "desc": "id du datablock (distingue l'id ImGui)"},
+        "label": {"type": "string", "desc": "texte affiché"},
+        "isSelected": {"type": "boolean", "desc": "surligner"},
+        "icon": {"type": "any|nil", "desc": "icône de remplacement (défaut editor.icons.forest_brushelement)"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si cliqué"}]
+    },
+    "itemMatchesPrefix": {
+      "desc": "Vrai si le nom (ou l'internalName) du datablock de l'item commence par prefix.",
+      "params": {"item": {"type": "userdata", "desc": "item de forêt"}, "prefix": {"type": "string", "desc": "préfixe"}},
+      "returns": [{"type": "boolean", "desc": "résultat"}]
+    },
+    "isParallaxItem": {
+      "desc": "Prédicat pratique pour les filtres de sélection : l'item est-il une fenêtre parallax (préfixe parallax_) ?",
+      "params": {"item": {"type": "userdata", "desc": "item de forêt"}},
+      "returns": [{"type": "boolean", "desc": "résultat"}]
+    },
+    "isParallaxDataObject": {
+      "desc": "Même test sur un objet datablock ForestItemData (issu de scenetree.findObject), pour filtrer la palette de meshes.",
+      "params": {"cobj": {"type": "userdata|nil", "desc": "datablock"}},
+      "returns": [{"type": "boolean", "desc": "true si name/internalName commence par parallax_"}]
+    },
+    "filterItems": {
+      "desc": "Renvoie une nouvelle liste contenant les items pour lesquels keep(item) est vrai (liste nil = liste vide).",
+      "params": {"items": {"type": "table|nil", "desc": "liste d'items"}, "keep": {"type": "function", "desc": "function(item) -> boolean"}},
+      "returns": [{"type": "table", "desc": "liste filtrée"}]
+    },
+    "unpackParallaxData": {
+      "desc": "Décode le customData en (setId, emissive). setId vaut -1 si aucun jeu parallax n'est assigné.",
+      "params": {"customData": {"type": "integer|nil", "desc": "entier 32 bits de l'item"}},
+      "returns": [
+        {"type": "integer", "desc": "id du jeu de textures, -1 si désactivé"},
+        {"type": "boolean", "desc": "drapeau emissive"}
+      ]
+    },
+    "packParallaxData": {
+      "desc": "Encode (setId, emissive) en customData. setId < 0 ou nil donne -1 (désactivé ; le C++ ne sauvegarde pas customData < 0).",
+      "params": {"setId": {"type": "integer|nil", "desc": "id du jeu de textures (24 bits)"}, "emissive": {"type": "boolean|nil", "desc": "drapeau emissive"}},
+      "returns": [{"type": "integer", "desc": "customData"}]
+    }
+  }
+}

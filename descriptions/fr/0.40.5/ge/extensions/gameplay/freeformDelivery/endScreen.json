@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/gameplay/freeformDelivery/endScreen.lua",
+  "module": "Petit module du mode de livraison libre (freeformDelivery) qui rassemble les statistiques affichées à la fin d'une livraison : temps écoulé, avancement des objectifs (via gameplay_freeformDelivery_goals.getProgress) et dégâts de chaque véhicule de la livraison (lus dans map.objects). Ne contient pas d'interface : il ne fait que construire la table de résultats.",
+  "notes": [
+    "Le temps est calculé avec os.clock() - startTime : startTime doit donc venir de os.clock().",
+    "Renvoie nil (avec une erreur loggée) si delivery est nil, si startTime est nil ou 0, ou si getProgress ne renvoie rien."
+  ],
+  "functions": {
+    "collectStatistics": {
+      "desc": "Construit la table de statistiques de fin de livraison : durée (brute et formatée par gameplay_freeformDelivery_utils.formatTime), nombre d'objectifs total/complétés/requis/requis complétés, dégâts par véhicule (vehData.damage) et indicateur allRequiredComplete.",
+      "params": {
+        "delivery": {"type": "table", "desc": "Données de la livraison chargée (liste vehicles avec id et name)."},
+        "startTime": {"type": "number", "desc": "Instant de début en secondes, mesuré avec os.clock()."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{time, timeStr, goalsTotal, goalsCompleted, goalsRequired, goalsRequiredCompleted, vehicleDamages = {[deliveryId] = {name, damage}}, allRequiredComplete}, ou nil en cas d'erreur."}]
+    }
+  }
+}

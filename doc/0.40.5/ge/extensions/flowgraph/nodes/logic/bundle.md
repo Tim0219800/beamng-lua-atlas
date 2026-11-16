@@ -1,22 +1,22 @@
 # `flowgraph_nodes_logic_bundle`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/logic/bundle.lua` · VM : Game Engine (GE) · 26 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/logic/bundle.lua` · VM: Game Engine (GE) · 26 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/logic/bundle")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/logic/bundle")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Bundle' (categorie logic). Recopie simplement le flux d'entree vers la sortie ; sert seulement a regrouper visuellement des liens pour la lisibilite du graphe.
+Flowgraph node 'Bundle' (logic category). Simply copies the input flow to the output; only used to visually group links for graph readability.
 
-## Remarques
+## Notes
 
-- Utilise C.type = 'simple' (les autres noeuds utilisent C.category).
+- Uses C.type = 'simple' (the other nodes use C.category).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:work()` | pinOut.flow = pinIn.flow. | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/logic/bundle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/logic/bundle.lua`.*

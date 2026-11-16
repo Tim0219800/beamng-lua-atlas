@@ -1,29 +1,29 @@
 # `flowgraph_nodes_ui_imgui_elemental_imBegin`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imBegin.lua` · VM : Game Engine (GE) · 83 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imBegin.lua` · VM: Game Engine (GE) · 83 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/imgui/elemental/imBegin")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/imgui/elemental/imBegin")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « im Begin » (catégorie repeat_instant, tag imgui) : ouvre une fenêtre imgui (à terminer avec « im End »). Entrées : « title » (sans titre = barre de titre masquée), « width » (200), « height » (150), « posX », « posY » (100), « anchor » (TL, TR, BL, BR : coin de référence de la fenêtre par rapport à la fenêtre du jeu). Sortie « wasClosed » (impulsion quand l'utilisateur ferme la fenêtre).
+Flowgraph node "im Begin" (category repeat_instant, tag imgui): opens an imgui window (to be ended with "im End"). Inputs: "title" (no title = title bar hidden), "width" (200), "height" (150), "posX", "posY" (100), "anchor" (TL, TR, BL, BR: reference corner of the window relative to the game window). Output "wasClosed" (pulse when the user closes the window).
 
-## Remarques
+## Notes
 
-- Taille et position ne sont appliquées qu'une fois (flag done) ; ensuite la fenêtre est librement déplaçable.
-- Si anchor est nil, il vaut 100 dans le code (faute : valeur numérique) et aucune position n'est appliquée.
+- Size and position are applied only once (done flag); afterwards the window can be freely moved.
+- If anchor is nil, it equals 100 in the code (mistake: numeric value) and no position is applied.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | done = false et sorties à false. | 33 |
+| `C:_executionStarted()` | done = false and outputs to false. | 33 |
 | `C:init()` | done = false. | 27 |
-| `C:work()` | Fixe taille/position (une seule fois, via l'ancre) puis appelle im.Begin et écrit wasClosed. | 41 |
+| `C:work()` | Sets size/position (only once, via the anchor) then calls im.Begin and writes wasClosed. | 41 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imBegin.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imBegin.lua`.*

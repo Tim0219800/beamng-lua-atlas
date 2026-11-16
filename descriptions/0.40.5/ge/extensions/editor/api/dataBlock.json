@@ -1,69 +1,137 @@
 {
   "path": "lua/ge/extensions/editor/api/dataBlock.lua",
-  "module": "API de l'éditeur pour gérer les datablocks du moteur (objets de données partagés : sons, particules, matériaux physiques…). initialize(editor) ajoute les fonctions de création, recherche, sauvegarde et suppression sur l'objet editor ; la persistance passe par un PersistenceManager nommé dataBlockPersistMan. Fichier par défaut : art/datablocks/managedDatablocks.json.",
+  "module": "Editor API for managing engine datablocks (shared data objects: sounds, particles, physical materials, etc.). initialize(editor) adds the creation, lookup, save and delete functions to the editor object; persistence goes through a PersistenceManager named dataBlockPersistMan. Default file: art/datablocks/managedDatablocks.json.",
   "notes": [
-    "Bug : initialize assigne editor.addDataBlockToFile = addDataBlockToFile, mais la fonction locale s'appelle addDatablockToFile (casse différente). editor.addDataBlockToFile vaut donc nil.",
-    "createDataBlock renvoie l'ID de l'objet (getID()), pas l'objet."
+    "Bug: initialize assigns editor.addDataBlockToFile = addDataBlockToFile, but the local function is named addDatablockToFile (different casing). editor.addDataBlockToFile is therefore nil.",
+    "createDataBlock returns the object ID (getID()), not the object."
   ],
   "functions": {
     "initialize": {
-      "desc": "Crée le PersistenceManager dataBlockPersistMan s'il n'existe pas et installe les fonctions sur l'objet editor.",
-      "params": {"editorInstance": {"type": "table", "desc": "Objet editor"}},
+      "desc": "Creates the dataBlockPersistMan PersistenceManager if it does not exist and installs the functions on the editor object.",
+      "params": {
+        "editorInstance": {
+          "type": "table",
+          "desc": "editor object"
+        }
+      },
       "returns": [],
       "internal": true
     }
   },
   "classes": {
     "editor": {
-      "desc": "Fonctions ajoutées à l'objet editor par initialize.",
+      "desc": "Functions added to the editor object by initialize.",
       "functions": {
         "createDataBlock": {
-          "desc": "Crée un datablock du type donné, copie éventuellement les champs d'un existant, l'enregistre, le nomme, l'ajoute au groupe dataBlockGroup et au set de datablocks, puis le marque modifié pour le fichier.",
+          "desc": "Creates a datablock of the given type, optionally copies the fields of an existing one, registers it, names it, adds it to the dataBlockGroup group and to the datablock set, then marks it as modified for the file.",
           "params": {
-            "name": {"type": "string|nil", "desc": "Nom unique"},
-            "type": {"type": "string", "desc": "Type (classe) du datablock"},
-            "copyFrom": {"type": "string|nil", "desc": "Nom d'un datablock dont copier les champs (ignoré si nil ou vide)"},
-            "filename": {"type": "string|nil", "desc": "Fichier cible, défaut art/datablocks/managedDatablocks.json"}
+            "name": {
+              "type": "string|nil",
+              "desc": "Unique name"
+            },
+            "type": {
+              "type": "string",
+              "desc": "Datablock type (class)"
+            },
+            "copyFrom": {
+              "type": "string|nil",
+              "desc": "Name of a datablock to copy fields from (ignored if nil or empty)"
+            },
+            "filename": {
+              "type": "string|nil",
+              "desc": "Target file, default art/datablocks/managedDatablocks.json"
+            }
           },
-          "returns": [{"type": "integer", "desc": "ID de l'objet créé"}]
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "ID of the created object"
+            }
+          ]
         },
         "saveDirtyDataBlock": {
-          "desc": "Sauvegarde le datablock s'il est modifié.",
-          "params": {"dataBlock": {"type": "userdata", "desc": "Objet datablock"}},
+          "desc": "Saves the datablock if it is modified.",
+          "params": {
+            "dataBlock": {
+              "type": "userdata",
+              "desc": "Datablock object"
+            }
+          },
           "returns": []
         },
         "removeDataBlockFromFile": {
-          "desc": "Retire le datablock du set et, s'il a un nom de fichier, le supprime de son fichier.",
-          "params": {"dataBlock": {"type": "userdata", "desc": "Objet datablock"}},
+          "desc": "Removes the datablock from the set and, if it has a file name, deletes it from its file.",
+          "params": {
+            "dataBlock": {
+              "type": "userdata",
+              "desc": "Datablock object"
+            }
+          },
           "returns": []
         },
         "saveDataBlockToFile": {
-          "desc": "Associe le datablock à un fichier (par défaut son fichier actuel) puis le sauvegarde immédiatement.",
+          "desc": "Associates the datablock with a file (by default its current file) then saves it immediately.",
           "params": {
-            "dataBlock": {"type": "userdata", "desc": "Objet datablock"},
-            "filename": {"type": "string|nil", "desc": "Fichier cible"}
+            "dataBlock": {
+              "type": "userdata",
+              "desc": "Datablock object"
+            },
+            "filename": {
+              "type": "string|nil",
+              "desc": "Target file"
+            }
           },
           "returns": []
         },
         "isDataBlockDirty": {
-          "desc": "Indique si le datablock a été modifié.",
-          "params": {"dataBlock": {"type": "userdata", "desc": "Objet datablock"}},
-          "returns": [{"type": "boolean", "desc": "true si modifié"}]
+          "desc": "Returns whether the datablock has been modified.",
+          "params": {
+            "dataBlock": {
+              "type": "userdata",
+              "desc": "Datablock object"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if modified"
+            }
+          ]
         },
         "setDataBlockDirty": {
-          "desc": "Marque le datablock comme modifié (fichier = son fichier, sinon le fichier par défaut).",
-          "params": {"dataBlock": {"type": "userdata", "desc": "Objet datablock"}},
+          "desc": "Marks the datablock as modified (file = its file, otherwise the default file).",
+          "params": {
+            "dataBlock": {
+              "type": "userdata",
+              "desc": "Datablock object"
+            }
+          },
           "returns": []
         },
         "getDataBlocks": {
-          "desc": "Renvoie le set de tous les datablocks (Sim.getDataBlockSet()).",
+          "desc": "Returns the set of all datablocks (Sim.getDataBlockSet()).",
           "params": {},
-          "returns": [{"type": "userdata", "desc": "SimSet de datablocks"}]
+          "returns": [
+            {
+              "type": "userdata",
+              "desc": "Datablock SimSet"
+            }
+          ]
         },
         "findDataBlock": {
-          "desc": "Cherche un datablock par son nom en parcourant le set.",
-          "params": {"name": {"type": "string", "desc": "Nom recherché"}},
-          "returns": [{"type": "userdata|nil", "desc": "Datablock trouvé ou nil"}]
+          "desc": "Looks up a datablock by name by iterating over the set.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Name to find"
+            }
+          },
+          "returns": [
+            {
+              "type": "userdata|nil",
+              "desc": "Datablock found or nil"
+            }
+          ]
         }
       }
     }

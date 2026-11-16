@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/logic/chainFlowBranch.lua",
+  "module": "Noeud flowgraph 'Chainflow Branch' (categorie logic). Variante de Branch pour le 'chain flow' (pins declares avec chainFlow=true) : envoie le flux sur True ou False selon le pin bool 'condition'. Pas de pin de sortie 'flow' general.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "work": {
+          "desc": "Si flow est vrai : True = condition et False = not condition ; sinon True et False passent a false.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "path": "lua/ge/extensions/career/modules/tutorial/step06dragStripBasics.lua",
+  "module": "Étape 6 du tutoriel de carrière (« dragStripBasics ») : apprendre une course de drag. Le joueur se place (staging), attend le compte à rebours, part, atteint la ligne d'arrivée, puis une popup de bulletin de temps (timeslip) conclut l'étape. Gère aussi les disqualifications (faux départ ou sortie de voie), des popups de coaching qui mettent le jeu en pause (simTimeAuthority) et un ralenti à la fin du compte à rebours. Les hooks dragRaceStarted, dragRaceEndLineReached, onDragRacersSetup et onRacerPhaseTransition sont émis par gameplay_drag_*.",
+  "notes": [
+    "Phases internes : waitIntroPopup, active, waitDqPopup, waitFalseStartRestage, waitTimeslipPopup.",
+    "Après 3 échecs depuis la dernière réinitialisation, les popups de coaching (approche, compte à rebours) sont de nouveau autorisées.",
+    "Une disqualification pour faux départ amène à un objectif « retourner au staging » ; une sortie de voie provoque un reset avec fondu sur la place dragStripResetSpot puis un redémarrage de la tentative (attente de 2,5 s).",
+    "Les hooks de course ne comptent que si l'étape courante est 06dragStripBasics, si le véhicule est celui du tutoriel et si le joueur est dans les limites.",
+    "Ralenti de fin de compte à rebours : le temps de simulation passe de 0,1 à 0,75 sur 2 s (courbe quadratique), puis revient à 1."
+  ],
+  "functions": {
+    "setup": {
+      "desc": "Appelé à l'activation : réinitialise l'état, active les zones drivingToDragBounds et dragStripBounds, retrouve les places beforeDragStrip et dragStartLine, affiche la popup d'accueil v2/dragStripWelcome, bascule les préfabriqués et crée les marqueurs de direction (dragGuide1 à 3).",
+      "params": {"stepData": {"type": "any", "desc": "Données de l'étape (non utilisées)."}},
+      "internal": true
+    },
+    "onCareerTutorialLeftBounds": {"desc": "Hook de sortie de zone : lance le reset de sortie de zone de l'étape.", "internal": true},
+    "onIntroPopupCareerClosed": {
+      "desc": "Hook de fermeture de popup : fait avancer la machine d'état (accueil terminé -> affiche les objectifs ; popup de disqualification -> reset ou retour au staging ; timeslip -> avance à l'étape suivante ; coaching -> reprise de la pause et éventuel ralenti).",
+      "params": {"id": {"type": "string", "desc": "Id de la popup fermée."}},
+      "internal": true
+    },
+    "onRacerPhaseTransition": {
+      "desc": "Hook de gameplay_drag : à la phase compte à rebours, valide l'objectif « se placer » et ouvre la popup de coaching du compte à rebours (une fois).",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Id du véhicule."},
+        "oldPhase": {"type": "integer", "desc": "Ancienne phase."},
+        "newPhase": {"type": "integer", "desc": "Nouvelle phase (2 = compte à rebours)."},
+        "newPhaseName": {"type": "string", "desc": "Nom de la nouvelle phase (« countdown »)."}
+      },
+      "internal": true
+    },
+    "dragRaceStarted": {
+      "desc": "Hook émis au départ réel de la course : valide les objectifs « se placer » et « partir ».",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "internal": true
+    },
+    "dragRaceEndLineReached": {
+      "desc": "Hook émis à l'arrivée du véhicule : démarre le flux de disqualification si le pilote est disqualifié, sinon valide l'objectif d'arrivée et ouvre la popup de timeslip après 2 s.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Appelé chaque frame : gère le ralenti de départ, déclenche la popup d'approche à moins de 15 m de la ligne de départ, masque le marqueur de ligne à moins de 5 m, et détecte les disqualifications.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "internal": true
+    },
+    "onDragRacersSetup": {
+      "desc": "Hook émis quand les coureurs sont remis en place pour une nouvelle tentative : valide l'objectif « retourner au staging » après un faux départ et relance la tentative après 1 s.",
+      "params": {"data": {"type": "table", "desc": "Données de mise en place (non utilisées)."}},
+      "internal": true
+    },
+    "cleanup": {"desc": "Retire le reset de zone, lève la pause, remet le temps de simulation à 1 et supprime marqueurs, guidage et tâches.", "internal": true},
+    "onDebugMenu": {
+      "desc": "Affiche la phase et l'état des objectifs ; bouton « Skip Step 6 » (marque tout comme fait et avance).",
+      "params": {"im": {"type": "table", "desc": "Table ui_imgui."}},
+      "internal": true
+    }
+  }
+}

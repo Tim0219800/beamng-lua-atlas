@@ -2,52 +2,52 @@
 -- tim19Atlas stub generated from lua/vehicle/powertrain/viscousClutch.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Coupleur visqueux placé derrière un moteur : transmet un couple proportionnel à l'écart de vitesse angulaire entre entrée et sortie (viscousCoef, en N·m par rad/s), plafonné à viscousTorque. Peut être « engagé » progressivement au-dessus d'un régime cutInRPM (cutInRPM, stallRPM). Sert d'embrayage simple automatique (ex. petits véhicules, boîtes sans embrayage piloté). Catégories clutchlike et viscouscoupling ; un port de sortie.
---- Accès : type de composant powertrain `viscousClutch` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+--- Viscous coupler placed behind an engine: transmits a torque proportional to the angular speed difference between input and output (viscousCoef, in N·m per rad/s), capped at viscousTorque. Can be progressively "engaged" above an RPM cutInRPM (cutInRPM, stallRPM). Serves as a simple automatic clutch (e.g. small vehicles, gearboxes without a driven clutch). Categories clutchlike and viscouscoupling; one output port.
+--- Access: powertrain device type `viscousClutch` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 ---@class powertrain_viscousClutch
 ---@field deviceCategories table<string, boolean> {clutchlike=true, viscouscoupling=true}.
 ---@field outputPorts table<integer, boolean> {[1]=true}.
 ---@field requiredExternalInertiaOutputs table<integer, integer> {1}.
 local powertrain_viscousClutch = {}
 
---- Construit le coupleur visqueux à partir du jbeam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/viscousClutch.lua:89
----@param jbeamData table Données jbeam du composant.
----@return table  Objet device.
+--- Builds the viscous coupler from the jbeam.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/viscousClutch.lua:89
+---@param jbeamData table jbeam data of the component.
+---@return table  Device object.
 function powertrain_viscousClutch.new(jbeamData) end
 
---- Objet renvoyé par new(jbeamData). Champs : inputAV, outputAV1 (rad/s), outputTorque1 et torqueDiff (N·m), clutchRatio (0..1), viscousCoef, viscousTorque, cutInAV, stallAV (rad/s), isBroken, mode.
+--- Object returned by new(jbeamData). Fields: inputAV, outputAV1 (rad/s), outputTorque1 and torqueDiff (N·m), clutchRatio (0..1), viscousCoef, viscousTorque, cutInAV, stallAV (rad/s), isBroken, mode.
 ---@class powertrain_viscousClutch_device
 local powertrain_viscousClutch_device = {}
 
---- Reprend inertie et rapports cumulés du premier enfant (le coupleur n'ajoute pas d'inertie).
----Source : lua/vehicle/powertrain/viscousClutch.lua:55
+--- Takes the cumulative inertia and ratios of the first child (the coupler adds no inertia).
+---Source: lua/vehicle/powertrain/viscousClutch.lua:55
 function powertrain_viscousClutch_device:calculateInertia() end
 
---- Remet à zéro vitesses, couple, clutchRatio=1, relit viscousCoef et réinitialise le lisseur.
----Source : lua/vehicle/powertrain/viscousClutch.lua:71
----@param jbeamData table Données jbeam.
+--- Resets speeds, torque, clutchRatio=1, rereads viscousCoef and reinitializes the smoother.
+---Source: lua/vehicle/powertrain/viscousClutch.lua:71
+---@param jbeamData table Jbeam data.
 function powertrain_viscousClutch_device:reset(jbeamData) end
 
---- Mémorise le mode et réinstalle velocityUpdate/torqueUpdate (le mode n'a pas d'autre effet ici).
----Source : lua/vehicle/powertrain/viscousClutch.lua:50
----@param mode any Mode (non interprété).
+--- Stores the mode and reinstalls velocityUpdate/torqueUpdate (the mode has no other effect here).
+---Source: lua/vehicle/powertrain/viscousClutch.lua:50
+---@param mode any Mode (not interpreted).
 function powertrain_viscousClutch_device:setMode(mode) end
 
---- Pas de physique : calcule le couple visqueux (écart de vitesse), applique clutchRatio et l'engagement à cutInRPM, lisse et place le résultat dans torqueDiff et outputTorque1.
----Source : lua/vehicle/powertrain/viscousClutch.lua:20
----@param dt number Pas de physique (s). Non utilisé.
+--- Physics step: computes the viscous torque (speed difference), applies clutchRatio and the engagement at cutInRPM, smooths and places the result in torqueDiff and outputTorque1.
+---Source: lua/vehicle/powertrain/viscousClutch.lua:20
+---@param dt number Physics step (s). Unused.
 function powertrain_viscousClutch_device:torqueUpdate(dt) end
 
---- Vérifie que le parent est un moteur et fixe viscousTorque par défaut.
----Source : lua/vehicle/powertrain/viscousClutch.lua:38
----@return boolean  false si le parent n'est pas un moteur.
+--- Checks that the parent is an engine and sets the default viscousTorque.
+---Source: lua/vehicle/powertrain/viscousClutch.lua:38
+---@return boolean  false if the parent is not an engine.
 function powertrain_viscousClutch_device:validate() end
 
---- Pas de physique : inputAV = vitesse de sortie du parent (moteur).
----Source : lua/vehicle/powertrain/viscousClutch.lua:16
----@param dt number Pas de physique (s).
+--- Physics step: inputAV = output speed of the parent (engine).
+---Source: lua/vehicle/powertrain/viscousClutch.lua:16
+---@param dt number Physics step (s).
 function powertrain_viscousClutch_device:velocityUpdate(dt) end
 
 return powertrain_viscousClutch

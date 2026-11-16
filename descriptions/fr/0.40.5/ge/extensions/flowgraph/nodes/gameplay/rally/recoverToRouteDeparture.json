@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/recoverToRouteDeparture.lua",
+  "module": "Nœud flowgraph « Rally Mode Recover To Route Departure » (catégorie repeat_p_duration, tags rally, recover, teleport). Replace le véhicule au dernier point de recovery de sortie de route suivi, via gameplay_rally.getRallyManager():recoverVehicleToRouteDeparture(veh, {repairVehicle, backoffDistance}). Entrées : flow, vehId (sinon véhicule joueur 0) et backoffDistance (distance en amont du point suivi, le long du driveline statique). Si la réparation est active, un instantané de carburant est pris avant et réappliqué après.",
+  "notes": ["Erreur loggée si le rally manager est introuvable ; avertissement avec la raison si recoverVehicleToRouteDeparture échoue.", "Contrairement à recoverInPlace, ce nœud n'émet pas lui-même les hooks de fin de recovery."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Appelle onNodeReset.", "internal": true},
+        "_executionStarted": {"desc": "Appelle onNodeReset.", "internal": true},
+        "_executionStopped": {"desc": "Appelle onNodeReset.", "internal": true},
+        "onNodeReset": {"desc": "Efface la recovery en attente et l'instantané de carburant.", "internal": true},
+        "runRecovery": {"desc": "Appelle rm:recoverVehicleToRouteDeparture puis réapplique le carburant si réparé.", "internal": true},
+        "startRecovery": {"desc": "Prépare la recovery en attente (véhicule, réparation, backoffDistance) et la lance, après l'instantané de carburant si nécessaire.", "internal": true},
+        "work": {"desc": "Si flow est actif, appelle startRecovery.", "internal": true}
+      }
+    }
+  }
+}

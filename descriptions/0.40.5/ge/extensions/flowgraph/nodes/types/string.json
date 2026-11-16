@@ -1,59 +1,59 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/types/string.lua",
-  "module": "Noeud « String » (provider). Fournit une chaîne (« Hello World » par défaut) sur le pin value. Édition simple ou multi-lignes dans l'éditeur ; les retours à la ligne sont échappés (\\n) à la sauvegarde.",
+  "module": "Node \"String\" (provider). Provides a string (\"Hello World\" by default) on the value pin. Single-line or multi-line editing in the editor; line breaks are escaped (\\n) on save.",
   "notes": [
-    "Le tampon imgui est limité à 2048 caractères."
+    "The imgui buffer is limited to 2048 characters."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
           "desc": "string = 'Hello World', multiLine = false.",
           "internal": true
         },
         "work": {
-          "desc": "Écrit la chaîne sur la sortie.",
+          "desc": "Writes the string to the output.",
           "internal": false
         },
         "drawCustomProperties": {
-          "desc": "Case « Multi Line » et champ de saisie (tampon de 2048 caractères).",
+          "desc": "\"Multi Line\" checkbox and input field (2048-character buffer).",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "desc": "Draws the central content of the node in the editor.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true
         },
         "drawProperties": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde l'état du noeud dans la table donnée.",
+          "desc": "Saves the node's state in the given table.",
           "params": {
             "res": {
               "type": "any",
-              "desc": "table de sauvegarde"
+              "desc": "save table"
             }
           },
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure la chaîne (supporte l'ancien format data.value) et multiLine.",
+          "desc": "Restores the string (supports the old data.value format) and multiLine.",
           "params": {
             "nodeData": {
               "type": "any",
-              "desc": "données sauvegardées"
+              "desc": "saved data"
             }
           },
           "internal": true

@@ -1,107 +1,107 @@
 # `controller_drivingDynamics_supervisors_yawProviders_STMEstimate`
 
-*Fichier : `lua/vehicle/controller/drivingDynamics/supervisors/yawProviders/STMEstimate.lua` · VM : Véhicule · 131 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/drivingDynamics/supervisors/yawProviders/STMEstimate.lua` · VM: Vehicle · 131 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `drivingDynamics/supervisors/yawProviders/STMEstimate` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `drivingDynamics/supervisors/yawProviders/STMEstimate` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Fournisseur de lacet attendu (type "auxiliary", defaultOrder 80, providerOrder 20) pour le superviseur yawControl. Il estime le taux de lacet que le conducteur demande avec le modèle de bicyclette à rigidité de dérive (angle de roue avant, empattement, vitesse caractéristique), limité par une accélération latérale maximale. S'enregistre via yawControl.registerYawProvider ; si yawControl est absent, il se désactive.
+Expected yaw provider (type "auxiliary", defaultOrder 80, providerOrder 20) for the yawControl supervisor. It estimates the yaw rate the driver is requesting using the bicycle model with cornering stiffness (front wheel angle, wheelbase, characteristic speed), limited by a maximum lateral acceleration. Registers via yawControl.registerYawProvider; if yawControl is absent, it disables itself.
 
-## Remarques
+## Notes
 
-- Clé jbeam : maxLateralAcceleration (défaut 12 m/s²).
-- Formule : min( |angleRoueAvant| / empattement * v / (1 + v² / vc²), maxLateralAcceleration / v ) avec v = vitesse virtuelle si virtualSpeed est entièrement fiable (>= 1) sinon vitesse de roue. Le résultat est toujours positif (le signe est géré par yawControl).
-- Incohérence : yawControl appelle yawProvider.calculateExpectedYaw(speed, dt), mais la fonction est déclarée calculateExpectedYaw(dt) : le paramètre dt reçoit en fait la vitesse. Sans conséquence car il n'est pas utilisé.
-- Paramètres modifiables : isEnabled, maxLateralAcceleration. isEnabled n'est pas consulté dans calculateExpectedYaw (le fournisseur répond toujours).
+- jbeam key: maxLateralAcceleration (default 12 m/s²).
+- Formula: min( |frontWheelAngle| / wheelbase * v / (1 + v² / vc²), maxLateralAcceleration / v ) with v = virtual speed if virtualSpeed is fully trusted (>= 1) otherwise wheel speed. The result is always positive (the sign is handled by yawControl).
+- Inconsistency: yawControl calls yawProvider.calculateExpectedYaw(speed, dt), but the function is declared calculateExpectedYaw(dt): the dt parameter actually receives the speed. Harmless since it is not used.
+- Modifiable parameters: isEnabled, maxLateralAcceleration. isEnabled is not checked in calculateExpectedYaw (the provider always answers).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.calculateExpectedYaw(dt)` | Renvoie le taux de lacet attendu (rad/s, positif) d'après l'angle de roue avant et la vitesse ; appelé par yawControl à chaque pas fixe. *(interne)* | 25 |
-| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.getConfig()` | Renvoie une copie de la configuration. | 103 |
-| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.init(jbeamData)` | Passe isActive à true. *(interne)* | 66 |
-| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.initLastStage(jbeamData)` | Ne fait rien. *(interne)* | 85 |
-| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.initSecondStage(jbeamData)` | S'enregistre auprès de yawControl et lit maxLateralAcceleration. *(interne)* | 70 |
-| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.registerCMU(cmu)` | Mémorise la référence au CMU. *(interne)* | 59 |
-| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.reset()` | Ne fait rien. *(interne)* | 63 |
-| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.sendConfigData()` | Envoie la configuration au CMU. | 107 |
-| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.setConfig(configTable)` | Remplace la configuration. | 99 |
-| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.setDebugMode(debugEnabled)` | Active/désactive les paquets de debug. | 53 |
-| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.setParameters(parameters)` | Applique isEnabled et maxLateralAcceleration. | 94 |
-| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.shutdown()` | Désactive le fournisseur. | 88 |
-| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.updateGFX(dt)` | Vide (version debug : envoie isEnabled). *(interne)* | 42 |
+| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.calculateExpectedYaw(dt)` | Returns the expected yaw rate (rad/s, positive) from the front wheel angle and the speed; called by yawControl at every fixed step. *(internal)* | 25 |
+| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.getConfig()` | Returns a copy of the configuration. | 103 |
+| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.init(jbeamData)` | Sets isActive to true. *(internal)* | 66 |
+| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.initLastStage(jbeamData)` | Does nothing. *(internal)* | 85 |
+| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.initSecondStage(jbeamData)` | Registers with yawControl and reads maxLateralAcceleration. *(internal)* | 70 |
+| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.registerCMU(cmu)` | Stores the reference to the CMU. *(internal)* | 59 |
+| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.reset()` | Does nothing. *(internal)* | 63 |
+| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.sendConfigData()` | Sends the configuration to the CMU. | 107 |
+| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.setConfig(configTable)` | Replaces the configuration. | 99 |
+| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.setDebugMode(debugEnabled)` | Enables/disables debug packets. | 53 |
+| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.setParameters(parameters)` | Applies isEnabled and maxLateralAcceleration. | 94 |
+| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.shutdown()` | Disables the provider. | 88 |
+| `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.updateGFX(dt)` | Empty (debug version: sends isEnabled). *(internal)* | 42 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.calculateExpectedYaw(dt)`
 
-Renvoie le taux de lacet attendu (rad/s, positif) d'après l'angle de roue avant et la vitesse ; appelé par yawControl à chaque pas fixe.
+Returns the expected yaw rate (rad/s, positive) from the front wheel angle and the speed; called by yawControl at every fixed step.
 
-- `dt` (*number*) : Déclaré dt mais reçoit la vitesse (voir notes) ; non utilisé.
-- **renvoie** : number Lacet attendu en rad/s.
+- `dt` (*number*) : Declared as dt but receives the speed (see notes); unused.
+- **returns**: number Expected yaw in rad/s.
 
 #### `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.getConfig()`
 
-Renvoie une copie de la configuration.
+Returns a copy of the configuration.
 
-- **renvoie** : table Copie.
+- **returns**: table Copy.
 
 #### `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.init(jbeamData)`
 
-Passe isActive à true.
+Sets isActive to true.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.initLastStage(jbeamData)`
 
-Ne fait rien.
+Does nothing.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.initSecondStage(jbeamData)`
 
-S'enregistre auprès de yawControl et lit maxLateralAcceleration.
+Registers with yawControl and reads maxLateralAcceleration.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.registerCMU(cmu)`
 
-Mémorise la référence au CMU.
+Stores the reference to the CMU.
 
-- `cmu` (*table*) : Contrôleur CMU.
+- `cmu` (*table*) : CMU controller.
 
 #### `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.setConfig(configTable)`
 
-Remplace la configuration.
+Replaces the configuration.
 
 - `configTable` (*table*) : Table {isEnabled, maxLateralAcceleration}.
 
 #### `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.setDebugMode(debugEnabled)`
 
-Active/désactive les paquets de debug.
+Enables/disables debug packets.
 
-- `debugEnabled` (*boolean*) : Vrai pour activer.
+- `debugEnabled` (*boolean*) : True to enable.
 
 #### `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.setParameters(parameters)`
 
-Applique isEnabled et maxLateralAcceleration.
+Applies isEnabled and maxLateralAcceleration.
 
-- `parameters` (*table<string, any>*) : Paramètres à appliquer.
+- `parameters` (*table<string, any>*) : Parameters to apply.
 
 #### `controller_drivingDynamics_supervisors_yawProviders_STMEstimate.updateGFX(dt)`
 
-Vide (version debug : envoie isEnabled).
+Empty (debug version: sends isEnabled).
 
-- `dt` (*number*) : Pas de temps graphique (s).
+- `dt` (*number*) : Graphics time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `defaultOrder` | number | Ordre d'exécution par défaut (80). |
-| `isActive` | boolean | Vrai après init, faux si yawControl est absent. |
-| `providerOrder` | number | Priorité parmi les fournisseurs de lacet (20). |
+| `defaultOrder` | number | Default execution order (80). |
+| `isActive` | boolean | True after init, false if yawControl is absent. |
+| `providerOrder` | number | Priority among the yaw providers (20). |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/drivingDynamics/supervisors/yawProviders/STMEstimate.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/drivingDynamics/supervisors/yawProviders/STMEstimate.lua`.*

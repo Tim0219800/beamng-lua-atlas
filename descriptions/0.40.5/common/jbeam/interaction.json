@@ -1,18 +1,23 @@
 {
   "path": "lua/common/jbeam/interaction.lua",
-  "module": "Étape de post-traitement jbeam qui charge les fichiers *.interaction.json (dossier /vehicles/common/ puis dossier du véhicule) et en fusionne les groupes d'interaction, catégories d'actions et actions. Produit vehicle.interactionGroups, vehicle.actionCategories et vehicle.inputActions, utilisés ensuite par le système d'actions d'entrée (lua/ge/extensions/core/input/actions.lua d'après le commentaire du code).",
+  "module": "Jbeam post-processing step that loads the *.interaction.json files (folder /vehicles/common/ then the vehicle folder) and merges their interaction groups, action categories and actions. Produces vehicle.interactionGroups, vehicle.actionCategories and vehicle.inputActions, used afterwards by the input actions system (lua/ge/extensions/core/input/actions.lua according to the code comment).",
   "notes": [
-    "Seuls les fichiers dont fileversion vaut 2 sont acceptés ; les autres sont ignorés avec une erreur dans le journal.",
-    "Chaque action reçoit un champ source = nom du fichier qui la définit.",
-    "La fusion se fait par tableMerge : le fichier du véhicule, lu en dernier, surcharge les définitions communes.",
-    "vehicle.components.actionIconOverrides (table nomAction -> icône) remplace l'icône des actions existantes.",
-    "Le module n'est exécuté que là où FS (système de fichiers) est disponible."
+    "Only files whose fileversion is 2 are accepted; the others are ignored with an error in the log.",
+    "Each action receives a field source = name of the file that defines it.",
+    "The merge is done with tableMerge: the vehicle file, read last, overrides the common definitions.",
+    "vehicle.components.actionIconOverrides (table actionName -> icon) replaces the icon of existing actions.",
+    "The module only runs where FS (file system) is available."
   ],
   "fields": {},
   "functions": {
     "process": {
-      "desc": "Lit les fichiers d'interaction, applique les surcharges d'icônes et stocke les résultats dans vehicle.interactionGroups, vehicle.actionCategories et vehicle.inputActions.",
-      "params": {"vehicle": {"type": "table", "desc": "Données du véhicule (vehicleDirectory requis ; modifiées en place)."}},
+      "desc": "Reads the interaction files, applies the icon overrides and stores the results in vehicle.interactionGroups, vehicle.actionCategories and vehicle.inputActions.",
+      "params": {
+        "vehicle": {
+          "type": "table",
+          "desc": "Vehicle data (vehicleDirectory required; modified in place)."
+        }
+      },
       "internal": true
     }
   }

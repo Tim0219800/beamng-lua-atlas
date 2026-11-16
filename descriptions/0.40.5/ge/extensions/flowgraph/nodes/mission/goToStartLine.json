@@ -1,17 +1,17 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/mission/goToStartLine.lua",
-  "module": "Noeud flowgraph 'Check Players Position' (categorie repeat_instant, fichier goToStartLine). Classe la position du vehicule par rapport a la ligne de depart selon le pin 'distance' : > 0,35 = outLineForward (trop avance), < 0 = outLineBackward (trop en arriere), sinon inLine (bien positionne). Le pin impulsion 'reset' remet les sorties a false.",
+  "module": "Flowgraph node 'Check Players Position' (repeat_instant category, file goToStartLine). Classifies the vehicle's position relative to the start line according to the 'distance' pin: > 0.35 = outLineForward (too far ahead), < 0 = outLineBackward (too far behind), otherwise inLine (well positioned). The impulse pin 'reset' resets the outputs to false.",
   "notes": [
-    "Le pin de sortie 'flow' n'est jamais ecrit dans work.",
-    "Les pins 'velocity' et le vehicule recupere ne sont pas utilises.",
-    "Les deux sorties outLineForward et outLineBackward ont la meme description ('Outflow when the vehicle is not in position')."
+    "The output pin 'flow' is never written in work.",
+    "The 'velocity' pins and the retrieved vehicle are not used.",
+    "The two outputs outLineForward and outLineBackward have the same description ('Outflow when the vehicle is not in position')."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "_executionStarted": {
-          "desc": "Recupere le vehicule via self.mgr.modules.vehicle:getVehicle(vehId).",
+          "desc": "Gets the vehicle via self.mgr.modules.vehicle:getVehicle(vehId).",
           "internal": true
         },
         "init": {
@@ -19,7 +19,7 @@
           "internal": true
         },
         "work": {
-          "desc": "Sur reset : tout a false. Sinon met inLine/outLineForward/outLineBackward selon distance.",
+          "desc": "On reset: everything false. Otherwise sets inLine/outLineForward/outLineBackward according to distance.",
           "internal": true
         }
       }

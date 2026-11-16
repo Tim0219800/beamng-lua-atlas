@@ -1,61 +1,61 @@
 # `ui_ambientSound`
 
-*Fichier : `lua/ge/extensions/ui/ambientSound.lua` · VM : Game Engine (GE) · 104 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/ambientSound.lua` · VM: Game Engine (GE) · 104 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_ambientSound` : `extensions.load("ui_ambientSound")`, puis la globale `ui_ambientSound`
+**Access:** extension `ui_ambientSound`: `extensions.load("ui_ambientSound")`, then the global `ui_ambientSound`
 
-Petit gestionnaire de « flux » de sons d'ambiance joués dans le canal audio 'AudioGui'. Chaque flux est décrit par un fichier JSON (clé data) contenant une liste de sons et un délai aléatoire entre deux lectures. update(dt) doit être appelé par l'appelant à chaque frame : il joue un son tiré au hasard, attend la fin du son plus le délai, puis en tire un autre.
+Small manager of ambient sound "streams" played in the 'AudioGui' audio channel. Each stream is described by a JSON file (key data) containing a list of sounds and a random delay between two plays. update(dt) must be called by the caller every frame: it plays a randomly drawn sound, waits for the sound to end plus the delay, then draws another.
 
-## Remarques
+## Notes
 
-- Bug : dans getRandomSound, les branches « delay à 1 valeur » et « pas de delay » écrivent dans la variable inexistante temptable (nil) au lieu de stream.currentSoundData : cela déclenche une erreur Lua. Seul le cas delay = {min, max} fonctionne.
-- Bug : si un flux n'a qu'un seul son, le deuxième appel de getRandomSound boucle indéfiniment (repeat … until previousSound ~= temp ne peut jamais être vrai).
-- Le volume est codé en dur à 0.29 dans update ; stream.volume n'est jamais utilisé pour la lecture. Le paramètre fadeInTime de setStreamState est ignoré (stream.fadeInTime n'est jamais renseigné par ce module).
-- update ne vérifie pas qu'il existe des currentSoundData : un flux sans sons fera échouer getRandomSound dès init.
-- Le module ne s'appelle pas tout seul : aucun hook onUpdate n'est exporté, c'est à l'appelant d'invoquer ui_ambientSound.update(dt).
+- Bug: in getRandomSound, the "delay with 1 value" and "no delay" branches write to the nonexistent variable temptable (nil) instead of stream.currentSoundData: this triggers a Lua error. Only the delay = {min, max} case works.
+- Bug: if a stream has only one sound, the second call of getRandomSound loops forever (repeat … until previousSound ~= temp can never be true).
+- The volume is hardcoded to 0.29 in update; stream.volume is never used for playback. The fadeInTime parameter of setStreamState is ignored (stream.fadeInTime is never set by this module).
+- update does not check that currentSoundData exists: a stream without sounds will make getRandomSound fail right from init.
+- The module does not call itself: no onUpdate hook is exported, so the caller must invoke ui_ambientSound.update(dt).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_ambientSound.deleteSoundSFX(ID)` | Retire de la liste le flux dont le streamID correspond. | 90 |
-| `ui_ambientSound.init(json)` | Charge un fichier JSON de flux sonore (clé data), l'ajoute à la liste des flux, tire un premier son au hasard et renvoie l'identifiant du flux. Si le fichier n'existe pas, journalise une erreur et ne renvoie rien. | 69 |
-| `ui_ambientSound.setStreamState(streamID, volume, pitch, fadeInTime)` | Fixe le volume et la hauteur (pitch) d'un flux. fadeInTime est accepté mais pas utilisé. | 33 |
-| `ui_ambientSound.update(dt)` | Fait avancer tous les flux : joue le son courant s'il existe (FS:fileExists) via Engine.Audio.playOnce('AudioGui'), puis cumule le temps et passe à un nouveau son quand durée + délai sont écoulés. | 44 |
+| `ui_ambientSound.deleteSoundSFX(ID)` | Removes from the list the stream whose streamID matches. | 90 |
+| `ui_ambientSound.init(json)` | Loads a sound stream JSON file (key data), adds it to the list of streams, draws a first sound at random and returns the stream ID. If the file does not exist, logs an error and returns nothing. | 69 |
+| `ui_ambientSound.setStreamState(streamID, volume, pitch, fadeInTime)` | Sets the volume and pitch of a stream. fadeInTime is accepted but not used. | 33 |
+| `ui_ambientSound.update(dt)` | Advances all streams: plays the current sound if it exists (FS:fileExists) via Engine.Audio.playOnce('AudioGui'), then accumulates time and moves to a new sound when duration + delay have elapsed. | 44 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_ambientSound.deleteSoundSFX(ID)`
 
-Retire de la liste le flux dont le streamID correspond.
+Removes from the list the stream whose streamID matches.
 
-- `ID` (*integer*) : Identifiant de flux renvoyé par init.
+- `ID` (*integer*) : Stream ID returned by init.
 
 #### `ui_ambientSound.init(json)`
 
-Charge un fichier JSON de flux sonore (clé data), l'ajoute à la liste des flux, tire un premier son au hasard et renvoie l'identifiant du flux. Si le fichier n'existe pas, journalise une erreur et ne renvoie rien.
+Loads a sound stream JSON file (key data), adds it to the list of streams, draws a first sound at random and returns the stream ID. If the file does not exist, logs an error and returns nothing.
 
-- `json` (*string*) : Chemin du fichier JSON décrivant le flux (champ data avec sounds, delay…).
-- **renvoie** : integer|nil streamID du nouveau flux, ou nil si le fichier est introuvable.
+- `json` (*string*) : Path of the JSON file describing the stream (field data with sounds, delay…).
+- **returns**: integer|nil streamID of the new stream, or nil if the file is not found.
 
 #### `ui_ambientSound.setStreamState(streamID, volume, pitch, fadeInTime)`
 
-Fixe le volume et la hauteur (pitch) d'un flux. fadeInTime est accepté mais pas utilisé.
+Sets the volume and pitch of a stream. fadeInTime is accepted but not used.
 
-- `streamID` (*integer*) : Identifiant du flux.
-- `volume` (*number*) : Volume mémorisé dans le flux (non utilisé à la lecture, voir notes).
-- `pitch` (*number*) : Hauteur transmise à playOnce.
-- `fadeInTime` (*number|nil*) : Ignoré.
+- `streamID` (*integer*) : Stream ID.
+- `volume` (*number*) : Volume stored in the stream (not used at playback, see notes).
+- `pitch` (*number*) : Pitch passed to playOnce.
+- `fadeInTime` (*number|nil*) : Ignored.
 
 #### `ui_ambientSound.update(dt)`
 
-Fait avancer tous les flux : joue le son courant s'il existe (FS:fileExists) via Engine.Audio.playOnce('AudioGui'), puis cumule le temps et passe à un nouveau son quand durée + délai sont écoulés.
+Advances all streams: plays the current sound if it exists (FS:fileExists) via Engine.Audio.playOnce('AudioGui'), then accumulates time and moves to a new sound when duration + delay have elapsed.
 
-- `dt` (*number*) : Temps écoulé depuis la frame précédente, en secondes.
+- `dt` (*number*) : Time elapsed since the previous frame, in seconds.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/ambientSound.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/ambientSound.lua`.*

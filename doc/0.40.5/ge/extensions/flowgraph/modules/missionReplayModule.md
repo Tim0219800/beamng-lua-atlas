@@ -1,87 +1,87 @@
 # `flowgraph_modules_missionReplayModule`
 
-*Fichier : `lua/ge/extensions/flowgraph/modules/missionReplayModule.lua` · VM : Game Engine (GE) · 196 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/modules/missionReplayModule.lua` · VM: Game Engine (GE) · 196 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/modules/missionReplayModule")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/modules/missionReplayModule")` (file under extensions/ but not a regular extension)
 
-Module flowgraph (moduleOrder 0) qui enregistre automatiquement des replays de missions (fichiers .rpl). Il applique les limites de stockage choisies dans les réglages (par nombre ou par taille maximale), crée un fichier .rplMeta.json avec l'id de la mission, l'heure, le contexte carrière et la tentative, et gère la caméra pendant la lecture d'un replay de mission.
+Flowgraph module (moduleOrder 0) that automatically records mission replays (.rpl files). It applies the storage limits chosen in the settings (by count or by maximum size), creates a .rplMeta.json file with the mission id, time, career context and attempt, and manages the camera while a mission replay plays.
 
-## Remarques
+## Notes
 
-- Réglages lus : enableMissionReplayCapModes ('maxSize' ou 'count'), countReplayCapMode, maxSizeReplayCapMode (en Mo).
-- Hooks écoutés : onReplayStateChanged, onReplayRecordingValueRequested, onMissionAutoReplayRecordingSettingChanged, onMissionAttemptAggregated.
-- deleteByCount boucle jusqu'à diff + 1 : elle supprime donc un fichier de plus que l'excédent (pour laisser la place au nouvel enregistrement) ; l'indice peut dépasser #files si diff + 1 > #files, ce qui appellerait FS:removeFile(nil).
-- Les tables de fichiers sont triées par date de création (FS:stat(file).createtime), du plus ancien au plus récent.
-- originalCamMode, originalPathId, originalPathLoop et lastFrameState sont des variables locales au fichier.
+- Settings read: enableMissionReplayCapModes ('maxSize' or 'count'), countReplayCapMode, maxSizeReplayCapMode (in MB).
+- Hooks listened to: onReplayStateChanged, onReplayRecordingValueRequested, onMissionAutoReplayRecordingSettingChanged, onMissionAttemptAggregated.
+- deleteByCount loops up to diff + 1: it therefore deletes one more file than the excess (to make room for the new recording); the index can exceed #files if diff + 1 > #files, which would call FS:removeFile(nil).
+- The file tables are sorted by creation date (FS:stat(file).createtime), from oldest to newest.
+- originalCamMode, originalPathId, originalPathLoop and lastFrameState are file-local variables.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `flowgraph_modules_missionReplayModule.buildMetaInfo(attempt, mission, progressKey)` | Écrit le fichier <replay>.rplMeta.json (missionId, missionName, time, humanTime, context carrière, et attempt si fournie). Ne fait rien sans currentReplayFile. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_missionReplayModule.deleteByCount()` | Supprime les replays les plus anciens quand leur nombre dépasse le réglage countReplayCapMode. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_missionReplayModule.deleteByMaxSize()` | Supprime les plus anciens replays tant que la taille totale (en Mo) atteint maxSizeReplayCapMode. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_missionReplayModule.deleteOlderReplays()` | Applique la règle de nettoyage choisie dans le réglage enableMissionReplayCapModes ('maxSize' ou 'count'). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_missionReplayModule.deleteReplayFile(file)` | Supprime un fichier de replay. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_missionReplayModule.executionStarted()` | Appelé au démarrage du projet : lit le dossier des replays de mission (core_replay.getMissionReplaysPath). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_missionReplayModule.executionStopped()` | Appelé à l'arrêt du projet : arrête l'enregistrement en cours et le replay IA (module aiRecording). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_missionReplayModule.getMissionReplayFiles()` | Liste les fichiers *.rpl du dossier des replays de mission, du plus ancien au plus récent. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_missionReplayModule.init()` | Appelé à la création du module : replayRecording = false, currentReplayFile = nil. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_missionReplayModule.missionPlaybackEnded()` | À la fin de la lecture : restaure le chemin de caméra d'origine ou la caméra d'origine. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_missionReplayModule.missionPlaybackStarted()` | Au début de la lecture d'un replay de mission : mémorise la caméra (et le chemin si caméra 'path'), passe en caméra orbite, puis relance la simulation après 0,1 s. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_missionReplayModule.onMissionAttemptAggregated(attempt, mission, progressKey)` | Hook appelé quand une tentative de mission est agrégée : écrit les métadonnées avec la tentative puis oublie le fichier courant. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `flowgraph_modules_missionReplayModule.onMissionAutoReplayRecordingSettingChanged(newValue)` | Hook appelé quand le réglage d'enregistrement automatique change. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `flowgraph_modules_missionReplayModule.onReplayRecordingValueRequested()` | Hook appelé quand l'UI demande l'état de l'enregistrement automatique : répond par guihooks.trigger('onReplayRecordingValueRequested', replayRecording). (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `flowgraph_modules_missionReplayModule.onReplayStateChanged(state)` | Hook appelé à chaque changement d'état du replay. Détecte le début et la fin d'une lecture d'un replay appartenant à la mission courante et appelle missionPlaybackStarted / missionPlaybackEnded. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `flowgraph_modules_missionReplayModule.saveMetaInfoWithoutAttempt()` | Écrit les métadonnées sans tentative puis oublie le fichier courant. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_missionReplayModule.startNewRec()` | Arrête tout enregistrement, nettoie les anciens replays, puis démarre un nouvel enregistrement si le réglage replayRecording est actif et le replay inactif. Mémorise le fichier dans currentReplayFile. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_missionReplayModule.stopIfRec()` | Arrête l'enregistrement de replay s'il est en cours (core_replay.toggleMissionRecording). (assignée dynamiquement) | dyn |
+| `flowgraph_modules_missionReplayModule.buildMetaInfo(attempt, mission, progressKey)` | Writes the <replay>.rplMeta.json file (missionId, missionName, time, humanTime, career context, and attempt if provided). Does nothing without currentReplayFile. (dynamically assigned) | dyn |
+| `flowgraph_modules_missionReplayModule.deleteByCount()` | Deletes the oldest replays when their number exceeds the countReplayCapMode setting. (dynamically assigned) | dyn |
+| `flowgraph_modules_missionReplayModule.deleteByMaxSize()` | Deletes the oldest replays while the total size (in MB) reaches maxSizeReplayCapMode. (dynamically assigned) | dyn |
+| `flowgraph_modules_missionReplayModule.deleteOlderReplays()` | Applies the cleanup rule chosen in the enableMissionReplayCapModes setting ('maxSize' or 'count'). (dynamically assigned) | dyn |
+| `flowgraph_modules_missionReplayModule.deleteReplayFile(file)` | Deletes a replay file. (dynamically assigned) | dyn |
+| `flowgraph_modules_missionReplayModule.executionStarted()` | Called when the project starts: reads the mission replays folder (core_replay.getMissionReplaysPath). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_missionReplayModule.executionStopped()` | Called when the project stops: stops the current recording and the AI replay (aiRecording module). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_missionReplayModule.getMissionReplayFiles()` | Lists the *.rpl files in the mission replays folder, from oldest to newest. (dynamically assigned) | dyn |
+| `flowgraph_modules_missionReplayModule.init()` | Called when the module is created: replayRecording = false, currentReplayFile = nil. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_missionReplayModule.missionPlaybackEnded()` | At the end of playback: restores the original camera path or the original camera. (dynamically assigned) | dyn |
+| `flowgraph_modules_missionReplayModule.missionPlaybackStarted()` | At the start of a mission replay playback: stores the camera (and the path if camera is 'path'), switches to orbit camera, then restarts the simulation after 0.1 s. (dynamically assigned) | dyn |
+| `flowgraph_modules_missionReplayModule.onMissionAttemptAggregated(attempt, mission, progressKey)` | Hook called when a mission attempt is aggregated: writes the metadata with the attempt then forgets the current file. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `flowgraph_modules_missionReplayModule.onMissionAutoReplayRecordingSettingChanged(newValue)` | Hook called when the automatic recording setting changes. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `flowgraph_modules_missionReplayModule.onReplayRecordingValueRequested()` | Hook called when the UI requests the automatic recording state: replies with guihooks.trigger('onReplayRecordingValueRequested', replayRecording). (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `flowgraph_modules_missionReplayModule.onReplayStateChanged(state)` | Hook called on every replay state change. Detects the start and end of playback of a replay belonging to the current mission and calls missionPlaybackStarted / missionPlaybackEnded. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `flowgraph_modules_missionReplayModule.saveMetaInfoWithoutAttempt()` | Writes the metadata without an attempt then forgets the current file. (dynamically assigned) | dyn |
+| `flowgraph_modules_missionReplayModule.startNewRec()` | Stops any recording, cleans up old replays, then starts a new recording if the replayRecording setting is active and the replay is inactive. Stores the file in currentReplayFile. (dynamically assigned) | dyn |
+| `flowgraph_modules_missionReplayModule.stopIfRec()` | Stops the replay recording if it is in progress (core_replay.toggleMissionRecording). (dynamically assigned) | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `flowgraph_modules_missionReplayModule.buildMetaInfo(attempt, mission, progressKey)`
 
-Écrit le fichier <replay>.rplMeta.json (missionId, missionName, time, humanTime, context carrière, et attempt si fournie). Ne fait rien sans currentReplayFile. (assignée dynamiquement)
+Writes the <replay>.rplMeta.json file (missionId, missionName, time, humanTime, career context, and attempt if provided). Does nothing without currentReplayFile. (dynamically assigned)
 
-- `attempt` (*table|nil*) : tentative (champ attemptNumber)
-- `mission` (*table|nil*) : mission (inutilisé dans le code)
-- `progressKey` (*string|nil*) : clé de progression
+- `attempt` (*table|nil*) : attempt (field attemptNumber)
+- `mission` (*table|nil*) : mission (unused in the code)
+- `progressKey` (*string|nil*) : progress key
 
 #### `flowgraph_modules_missionReplayModule.deleteReplayFile(file)`
 
-Supprime un fichier de replay. (assignée dynamiquement)
+Deletes a replay file. (dynamically assigned)
 
-- `file` (*string*) : chemin du fichier
+- `file` (*string*) : file path
 
 #### `flowgraph_modules_missionReplayModule.getMissionReplayFiles()`
 
-Liste les fichiers *.rpl du dossier des replays de mission, du plus ancien au plus récent. (assignée dynamiquement)
+Lists the *.rpl files in the mission replays folder, from oldest to newest. (dynamically assigned)
 
-- **renvoie** : string[] chemins de fichiers
+- **returns**: string[] file paths
 
 #### `flowgraph_modules_missionReplayModule.onMissionAttemptAggregated(attempt, mission, progressKey)`
 
-Hook appelé quand une tentative de mission est agrégée : écrit les métadonnées avec la tentative puis oublie le fichier courant. (assignée dynamiquement)
+Hook called when a mission attempt is aggregated: writes the metadata with the attempt then forgets the current file. (dynamically assigned)
 
-- `attempt` (*table*) : tentative
+- `attempt` (*table*) : attempt
 - `mission` (*table*) : mission
-- `progressKey` (*string*) : clé de progression
+- `progressKey` (*string*) : progress key
 
 #### `flowgraph_modules_missionReplayModule.onMissionAutoReplayRecordingSettingChanged(newValue)`
 
-Hook appelé quand le réglage d'enregistrement automatique change. (assignée dynamiquement)
+Hook called when the automatic recording setting changes. (dynamically assigned)
 
-- `newValue` (*boolean*) : nouvelle valeur
+- `newValue` (*boolean*) : new value
 
 #### `flowgraph_modules_missionReplayModule.onReplayStateChanged(state)`
 
-Hook appelé à chaque changement d'état du replay. Détecte le début et la fin d'une lecture d'un replay appartenant à la mission courante et appelle missionPlaybackStarted / missionPlaybackEnded. (assignée dynamiquement)
+Hook called on every replay state change. Detects the start and end of playback of a replay belonging to the current mission and calls missionPlaybackStarted / missionPlaybackEnded. (dynamically assigned)
 
-- `state` (*table*) : champs state ('playback', 'inactive'…) et loadedFile
+- `state` (*table*) : fields state ('playback', 'inactive'...) and loadedFile
 
-## Classe `C`
+## Class `C`
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:buildMetaInfo(attempt, mission, progressKey)` |  | 102 |
 | `C:deleteByCount()` |  | 52 |
@@ -102,11 +102,11 @@ Hook appelé à chaque changement d'état du replay. Détecte le début et la fi
 | `C:startNewRec()` |  | 91 |
 | `C:stopIfRec()` |  | 84 |
 
-**Évènements UI (guihooks.trigger) :** `onReplayRecordingValueRequested`
+**UI events (guihooks.trigger):** `onReplayRecordingValueRequested`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`, `removeFile`, `stat`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/modules/missionReplayModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/modules/missionReplayModule.lua`.*

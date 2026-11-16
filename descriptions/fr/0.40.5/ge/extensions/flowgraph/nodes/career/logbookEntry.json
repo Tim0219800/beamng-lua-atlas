@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/logbookEntry.lua",
+  "module": "Nœud flowgraph « Logbook Entry » (catégorie once_instant, couleur/icône career). Ajoute une entrée au journal de bord de la carrière (career_modules_logbook.genericInfoUnlocked) avec un titre et un texte. Entrées : title, text (string). Ne fait rien hors carrière. Recopie le flux d'entrée sur la sortie.",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "workOnce": {"desc": "Si carrière active et module logbook présent, ajoute l'entrée ; copie flow vers la sortie."}
+      }
+    }
+  }
+}

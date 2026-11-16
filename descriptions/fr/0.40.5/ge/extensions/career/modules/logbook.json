@@ -1,0 +1,111 @@
+{
+  "path": "lua/ge/extensions/career/modules/logbook.lua",
+  "module": "Journal de bord de la carrière (logbook.json dans le dossier career de la sauvegarde). Stocke les entrées affichées dans l'UI : déblocage de missions, d'installations de livraison, de points d'apparition, et pages d'aide/tutoriel. Au premier lancement (logbook vide), il crée les entrées d'introduction (welcome, logbook, driving, delivery…) à partir de ui/modules/careerLogbook/pages/<id>/.",
+  "usage": "career_modules_logbook.genericInfoUnlocked(\"Titre\", \"Texte\", \"/ui/cover.jpg\")",
+  "notes": [
+    "Chaque entrée reçoit time = os.time(), entryId (compteur croissant) et isNew = true.",
+    "getLogbook déclenche le hook onLogbookGetEntries(ret) pour que d'autres extensions ajoutent des entrées, puis trie par temps décroissant (à égalité, par entryId décroissant).",
+    "setLogbookEntryRead ne modifie que isNew (not read) ; getPopups et getLogbookMostRecentUnread lisent le champ read : ces deux champs ne sont jamais synchronisés dans ce fichier (incohérence probable).",
+    "missionUnlocked lit mission.name avant de tester id : plante si id est nil ou inconnu (mission nil).",
+    "logbookEntry lit le fichier content.html avec readFile sans vérifier qu'il existe."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career."}
+  },
+  "functions": {
+    "getLogbook": {
+      "desc": "Renvoie une copie de la liste des entrées, enrichie par le hook onLogbookGetEntries et triée de la plus récente à la plus ancienne.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Entrées du journal."}],
+      "internal": false
+    },
+    "getPopups": {
+      "desc": "Renvoie les entrées non lues (read faux) marquées isPopup.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Entrées à afficher en popup."}],
+      "internal": false
+    },
+    "getLogbookMostRecentUnread": {
+      "desc": "Renvoie jusqu'à `limit` entrées récentes (hideInRecent exclu) en plaçant d'abord les non lues, puis les lues.",
+      "params": {"limit": {"type": "integer|nil", "desc": "Nombre maximal d'entrées, 3 par défaut."}},
+      "returns": [{"type": "table[]", "desc": "Entrées sélectionnées."}],
+      "internal": false
+    },
+    "setLogbookEntryRead": {
+      "desc": "Met isNew = not read sur l'entrée d'identifiant entryId. Ignore entryId == -1.",
+      "params": {
+        "entryId": {"type": "integer", "desc": "Identifiant de l'entrée."},
+        "read": {"type": "boolean", "desc": "true pour la marquer lue."}
+      },
+      "internal": false
+    },
+    "addNewLogbookEntry": {
+      "desc": "Crée l'entrée réelle : fixe time, entryId, isNew, l'insère en tête de liste (sauf skipSave) et, si entry.showMessage et hors tutoriel, affiche un message UI (guihooks Message, 15 s).",
+      "params": {
+        "entry": {"type": "table|nil", "desc": "Données de l'entrée (type, title, text, cover…)."},
+        "skipSave": {"type": "boolean|nil", "desc": "Si vrai, l'entrée est renvoyée mais pas stockée."}
+      },
+      "returns": [{"type": "table", "desc": "L'entrée complétée."}],
+      "internal": false
+    },
+    "missionUnlocked": {
+      "desc": "Appelé quand une mission est débloquée : crée une entrée de type progress avec nom et image de la mission.",
+      "params": {"id": {"type": "string", "desc": "Identifiant de la mission."}},
+      "internal": false
+    },
+    "deliveryFacilityUnlocked": {
+      "desc": "Appelé quand une installation de livraison est débloquée : crée une entrée progress (nom et aperçu de l'installation). Ne fait rien si l'installation est introuvable.",
+      "params": {"id": {"type": "string", "desc": "Identifiant de l'installation."}},
+      "internal": false
+    },
+    "spawnPointUnlocked": {
+      "desc": "Appelé quand un point d'apparition est découvert : crée une entrée progress avec showMessage = true.",
+      "params": {"spawnPoint": {"type": "table", "desc": "Point d'apparition (translationId, previews, logbookEntry)."}},
+      "internal": false
+    },
+    "genericInfoUnlocked": {
+      "desc": "Entrée « normale » d'information/tutoriel ; joue le son UI_Checkpoint (une seule fois par frame, jamais pendant le tutoriel).",
+      "params": {
+        "title": {"type": "string|table", "desc": "Titre ou clé de traduction."},
+        "text": {"type": "string|table", "desc": "Contenu."},
+        "cover": {"type": "string|nil", "desc": "Image de couverture."},
+        "ratio": {"type": "string|nil", "desc": "Ratio d'image, \"16x9\" par défaut."},
+        "flavour": {"type": "any", "desc": "Non utilisé dans le code."},
+        "type": {"type": "string|nil", "desc": "Type d'entrée, \"info\" par défaut."}
+      },
+      "returns": [{"type": "table", "desc": "L'entrée créée."}],
+      "internal": false
+    },
+    "genericLogbookEntry": {
+      "desc": "Entrée générique de type info, sans son ni particularité.",
+      "params": {
+        "title": {"type": "string|table", "desc": "Titre."},
+        "text": {"type": "string|table", "desc": "Contenu."},
+        "cover": {"type": "string|nil", "desc": "Image de couverture."},
+        "coverText": {"type": "string|nil", "desc": "Texte sur la couverture."}
+      },
+      "returns": [{"type": "table", "desc": "L'entrée créée."}],
+      "internal": false
+    },
+    "logbookEntry": {
+      "desc": "Crée une entrée d'aide depuis l'id d'une page : titre ui.introPopup.<id>.title, contenu de ui/modules/careerLogbook/pages/<id>/content.html (sauts de ligne retirés) et image header.jpg.",
+      "params": {"id": {"type": "string", "desc": "Nom de la page (ex. welcome, driving)."}},
+      "internal": false
+    },
+    "onCareerActive": {
+      "desc": "Hook : charge logbook.json ; si vide, crée les entrées d'introduction dans l'ordre inverse de la liste interne.",
+      "params": {"active": {"type": "boolean", "desc": "Rien si false."}},
+      "internal": true
+    },
+    "onSaveCurrentProfile": {
+      "desc": "Hook de sauvegarde : écrit {logbook = ...} dans <save>/career/logbook.json.",
+      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde."}},
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook appelé chaque frame : réinitialise le garde-fou du son (un son max par frame).",
+      "params": {},
+      "internal": true
+    }
+  }
+}

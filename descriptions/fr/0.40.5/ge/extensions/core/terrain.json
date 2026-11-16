@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/core/terrain.lua",
+  "module": "Accès simplifié au premier TerrainBlock de la scène : hauteur et normale du terrain en un point. Un moddeur s'en sert pour poser des objets au sol ou orienter un élément selon la pente. Le bloc trouvé est mis en cache par son id.",
+  "usage": "local z = core_terrain.getTerrainHeight(vec3(x, y, 0))\nlocal n = core_terrain.getTerrainNormal(vec3(x, y, 0))",
+  "notes": ["Toutes les fonctions renvoient nil s'il n'y a aucun TerrainBlock dans la scène.", "Seul le premier TerrainBlock trouvé est utilisé."],
+  "fields": {},
+  "functions": {
+    "getTerrain": {
+      "desc": "Renvoie l'objet TerrainBlock (cache par id, sinon premier résultat de scenetree.findClassObjects(\"TerrainBlock\")).",
+      "params": {},
+      "returns": [{"type": "userdata|nil", "desc": "Objet TerrainBlock ou nil."}],
+      "internal": false
+    },
+    "getTerrainHeight": {
+      "desc": "Hauteur du terrain au point donné (terrain:getHeight).",
+      "params": {"point": {"type": "vec3", "desc": "Position monde ; seuls x et y comptent (déduit du code)."}},
+      "returns": [{"type": "number|nil", "desc": "Altitude, nil sans terrain."}],
+      "internal": false
+    },
+    "getTerrainNormal": {
+      "desc": "Normale du terrain au point (terrain:getNormal(point, true, true)).",
+      "params": {"point": {"type": "vec3", "desc": "Position monde."}},
+      "returns": [{"type": "vec3|nil", "desc": "Normale, nil sans terrain."}],
+      "internal": false
+    },
+    "getTerrainSmoothNormal": {
+      "desc": "Normale lissée du terrain au point (terrain:getSmoothNormal(point, true, true)).",
+      "params": {"point": {"type": "vec3", "desc": "Position monde."}},
+      "returns": [{"type": "vec3|nil", "desc": "Normale lissée, nil sans terrain."}],
+      "internal": false
+    }
+  }
+}

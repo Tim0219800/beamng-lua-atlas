@@ -1,58 +1,113 @@
 {
   "path": "lua/ge/extensions/ui/uiMods.lua",
-  "module": "Fournit à l'interface (Vue) la liste des mods d'UI, des apps UI et des listes d'images, et surveille les changements de fichiers pour prévenir l'UI en direct (rechargement à chaud). Il suit aussi des révisions de fichiers d'exécution (« runtime ») servis à l'UI pour le développement. onFilesChanged déclenche les évènements UiModsChanged, UiAppsChanged, UiImageListChanged et UiRuntimeFileChanged, et rappelle sendUIModules() quand /ui/modModules/ change.",
+  "module": "Provides the interface (Vue) with the list of UI mods, UI apps and image lists, and watches file changes to notify the UI live (hot reload). It also tracks revisions of runtime files served to the UI for development. onFilesChanged triggers the events UiModsChanged, UiAppsChanged, UiImageListChanged and UiRuntimeFileChanged, and calls sendUIModules() again when /ui/modModules/ changes.",
   "notes": [
-    "L'extension reste chargée (setExtensionUnloadMode « manual » dans onExtensionLoaded).",
-    "getImageList enregistre le dossier comme surveillé : les changements ultérieurs y déclenchent UiImageListChanged. Les images `nom_blur.ext` sont rattachées à `nom` dans le champ `blur`.",
-    "Extensions d'image reconnues : jpg, jpeg, jfif, png, gif, webp, avif.",
-    "Les fonctions « runtime » ne font rien tant que setUiRuntimeBundled n'a pas été appelé avec une config valide (`includes` non vide)."
+    "The extension stays loaded (setExtensionUnloadMode \"manual\" in onExtensionLoaded).",
+    "getImageList registers the folder as watched: later changes there trigger UiImageListChanged. `name_blur.ext` images are attached to `name` in the `blur` field.",
+    "Recognized image extensions: jpg, jpeg, jfif, png, gif, webp, avif.",
+    "The \"runtime\" functions do nothing until setUiRuntimeBundled has been called with a valid config (non-empty `includes`)."
   ],
   "functions": {
     "getVueMods": {
-      "desc": "Parcourt /ui/ui-vue/mods et regroupe les fichiers par mod (premier dossier sous mods/).",
-      "returns": [{"type": "table<string, {path: string, files: string[]}>", "desc": "Par nom de mod : dossier et chemins relatifs des fichiers."}],
+      "desc": "Walks /ui/ui-vue/mods and groups files by mod (first folder under mods/).",
+      "returns": [
+        {
+          "type": "table<string, {path: string, files: string[]}>",
+          "desc": "By mod name: folder and relative file paths."
+        }
+      ],
       "internal": false
     },
     "getUiApps": {
-      "desc": "Renvoie, depuis extensions.ui_apps.getUIAppsData(), une copie filtrée des métadonnées des apps UI (appName, directive, folder, appJsonPath, jsSource, vueFile, types, category, version, essential, devonly, official, preview = première prévisualisation, etc.). Table vide si ui_apps est indisponible.",
-      "returns": [{"type": "table<string, table>", "desc": "Apps par nom."}],
+      "desc": "Returns, from extensions.ui_apps.getUIAppsData(), a filtered copy of the UI apps metadata (appName, directive, folder, appJsonPath, jsSource, vueFile, types, category, version, essential, devonly, official, preview = first preview, etc.). Empty table if ui_apps is unavailable.",
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Apps by name."
+        }
+      ],
       "internal": false
     },
     "getImageList": {
-      "desc": "Liste les images d'un dossier (récursif), triées par nom, en associant l'image normale et sa variante _blur. Le dossier est ajouté à la surveillance.",
-      "params": {"path": {"type": "string", "desc": "Dossier virtuel du jeu ; les '\\' sont normalisés en '/'."}},
-      "returns": [{"type": "{normal: string|nil, blur: string|nil}[]", "desc": "Entrées d'images ; {} si le chemin est vide."}],
+      "desc": "Lists the images in a folder (recursive), sorted by name, associating the normal image and its _blur variant. The folder is added to the watch list.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "Virtual game folder; '\\' are normalized to '/'."
+        }
+      },
+      "returns": [
+        {
+          "type": "{normal: string|nil, blur: string|nil}[]",
+          "desc": "Image entries; {} if the path is empty."
+        }
+      ],
       "internal": false
     },
     "setUiRuntimeBundled": {
-      "desc": "Configure le service de fichiers d'exécution de l'UI : dossiers inclus, exclus, extensions suivies (statExts) et extensions de style (styleExts). Ignoré si cfg n'est pas une table ou si cfg.includes est vide.",
-      "params": {"cfg": {"type": "table", "desc": "{ includes = string[], excludes = string[]|nil, statExts = string[]|nil, styleExts = string[]|nil }"}},
+      "desc": "Configures the UI runtime file service: included folders, excluded folders, tracked extensions (statExts) and style extensions (styleExts). Ignored if cfg is not a table or if cfg.includes is empty.",
+      "params": {
+        "cfg": {
+          "type": "table",
+          "desc": "{ includes = string[], excludes = string[]|nil, statExts = string[]|nil, styleExts = string[]|nil }"
+        }
+      },
       "internal": false
     },
     "onFilesChanged": {
-      "desc": "Hook appelé par le moteur quand des fichiers changent. Pour chaque fichier : appelle sendUIModules() pour /ui/modModules/, déclenche UiModsChanged pour /ui/ui-vue/mods/, UiAppsChanged (avec files et apps concernées) pour /ui/modules/apps/, UiImageListChanged pour les dossiers d'images surveillés, et UiRuntimeFileChanged {path, rev, change} pour les fichiers d'exécution servis.",
-      "params": {"files": {"type": "table[]", "desc": "Liste d'objets {filename, type} (type « deleted » pour une suppression)."}},
+      "desc": "Hook called by the engine when files change. For each file: calls sendUIModules() for /ui/modModules/, triggers UiModsChanged for /ui/ui-vue/mods/, UiAppsChanged (with the affected files and apps) for /ui/modules/apps/, UiImageListChanged for watched image folders, and UiRuntimeFileChanged {path, rev, change} for served runtime files.",
+      "params": {
+        "files": {
+          "type": "table[]",
+          "desc": "List of {filename, type} objects (type \"deleted\" for a deletion)."
+        }
+      },
       "internal": true
     },
     "getUiRuntimeRevisions": {
-      "desc": "Renvoie la table chemin -> numéro de révision des fichiers d'exécution (référence directe, pas une copie).",
-      "returns": [{"type": "table<string, integer>", "desc": "Révisions."}],
+      "desc": "Returns the path -> revision number table of runtime files (direct reference, not a copy).",
+      "returns": [
+        {
+          "type": "table<string, integer>",
+          "desc": "Revisions."
+        }
+      ],
       "internal": false
     },
     "bumpUiRuntimeRevision": {
-      "desc": "Incrémente la révision d'un chemin pour forcer un rechargement manuel. Renvoie 0 si le service d'exécution n'est pas configuré ou si path n'est pas une chaîne.",
-      "params": {"path": {"type": "string", "desc": "Chemin du fichier."}},
-      "returns": [{"type": "integer", "desc": "Nouvelle révision."}],
+      "desc": "Increments the revision of a path to force a manual reload. Returns 0 if the runtime service is not configured or if path is not a string.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "File path."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "New revision."
+        }
+      ],
       "internal": false
     },
     "getUiRuntimeFileList": {
-      "desc": "Liste les fichiers d'exécution servis (sous les dossiers `includes`, de type suivi, et non intégrés au bundle sauf les styles).",
-      "params": {"withMtime": {"type": "boolean|nil", "desc": "Si true, ajoute `mtime` à chaque entrée (et mémorise les mtimes)."}},
-      "returns": [{"type": "{path: string, mtime: number|nil}[]", "desc": "Fichiers servis ; {} si non configuré."}],
+      "desc": "Lists the served runtime files (under the `includes` folders, of a tracked type, and not built into the bundle except styles).",
+      "params": {
+        "withMtime": {
+          "type": "boolean|nil",
+          "desc": "If true, adds `mtime` to each entry (and stores the mtimes)."
+        }
+      },
+      "returns": [
+        {
+          "type": "{path: string, mtime: number|nil}[]",
+          "desc": "Served files; {} if not configured."
+        }
+      ],
       "internal": false
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement de l'extension : passe le mode de déchargement en « manual ».",
+      "desc": "Hook called when the extension loads: sets the unload mode to \"manual\".",
       "internal": true
     }
   }

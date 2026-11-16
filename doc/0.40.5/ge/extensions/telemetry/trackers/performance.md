@@ -1,41 +1,41 @@
 # `telemetry_trackers_performance`
 
-*Fichier : `lua/ge/extensions/telemetry/trackers/performance.lua` · VM : Game Engine (GE) · 76 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/trackers/performance.lua` · VM: Game Engine (GE) · 76 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_trackers_performance` : `extensions.load("telemetry_trackers_performance")`, puis la globale `telemetry_trackers_performance`
+**Access:** extension `telemetry_trackers_performance`: `extensions.load("telemetry_trackers_performance")`, then the global `telemetry_trackers_performance`
 
-Suiveur de télémétrie des performances : rapporte le framerate des joueurs à partir de ce que le moteur mesure déjà pour la surcouche cyclée par Ctrl+F ($fps::avg, min, p99, cpuTime, gpuTime). Un évènement « performance » par lecture, sans moyenne ni jugement : c'est le serveur qui décide quel framerate est trop bas. L'intervalle (sampleIntervalSeconds, 300 s par défaut, borné entre 5 et 3600) vient de la config serveur.
+Performance telemetry tracker: reports players' framerate from what the engine already measures for the overlay cycled by Ctrl+F ($fps::avg, min, p99, cpuTime, gpuTime). One "performance" event per reading, with no averaging or judgment: the server decides which framerate is too low. The interval (sampleIntervalSeconds, 300 s by default, clamped between 5 and 3600) comes from the server config.
 
-## Remarques
+## Notes
 
-- Les lectures sont faites partout, menus compris ; chacune indique d'où elle vient : level est nil dans les menus et paused est défini quand la simulation est arrêtée.
-- La lecture est ignorée si $fps::avg est absent ou <= 0.
-- L'évènement contient fpsAvg, fpsMin, fpsP99, cpuMs, gpuMs et limitedBy (facteur limitant selon performanceMetrics).
+- Readings are taken everywhere, menus included; each one says where it comes from: level is nil in menus and paused is set when the simulation is stopped.
+- The reading is ignored if $fps::avg is missing or <= 0.
+- The event contains fpsAvg, fpsMin, fpsP99, cpuMs, gpuMs and limitedBy (limiting factor according to performanceMetrics).
 
-**Dépendances (chargées avant) :** `telemetry_core`
+**Dependencies (loaded first):** `telemetry_core`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_trackers_performance.onExtensionLoaded()` | Hook appelé au chargement : lit sampleIntervalSeconds dans la config du module « performance » et passe en déchargement manuel. *(interne)* *(hook)* | 64 |
-| `telemetry_trackers_performance.onUpdate(dtReal, dtSim, dtRaw)` | Hook appelé à chaque image : un seul appel d'horloge et une comparaison ; prend une lecture quand l'intervalle est écoulé. *(interne)* *(hook)* | 56 |
+| `telemetry_trackers_performance.onExtensionLoaded()` | Hook called on load: reads sampleIntervalSeconds from the "performance" module config and switches to manual unload. *(internal)* *(hook)* | 64 |
+| `telemetry_trackers_performance.onUpdate(dtReal, dtSim, dtRaw)` | Hook called every frame: a single clock call and one comparison; takes a reading when the interval has elapsed. *(internal)* *(hook)* | 56 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_trackers_performance.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé à chaque image : un seul appel d'horloge et une comparaison ; prend une lecture quand l'intervalle est écoulé.
+Hook called every frame: a single clock call and one comparison; takes a reading when the interval has elapsed.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s) ; <= 0 marque la lecture comme paused.
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated delta time (s); <= 0 marks the reading as paused.
+- `dtRaw` (*number*) : Raw time delta (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | telemetry_core. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/trackers/performance.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/trackers/performance.lua`.*

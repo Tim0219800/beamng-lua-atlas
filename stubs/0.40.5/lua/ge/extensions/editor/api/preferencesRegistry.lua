@@ -2,156 +2,156 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/api/preferencesRegistry.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Objet registre. Champs : categories, nonPersistentItemPaths, preferences (valeurs courantes par catégorie), changedItems, dirty.
+--- Registry object. Fields: categories, nonPersistentItemPaths, preferences (current values per category), changedItems, dirty.
 ---@class editor_api_preferencesRegistry
 local editor_api_preferencesRegistry = {}
 
---- Marque un chemin comme non persistant : il n'est pas écrit dans les fichiers de préférences.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:128
----@param subCategoryPath string chemin complet de l'item (malgré le nom du paramètre)
+--- Marks a path as non-persistent: it is not written to the preferences files.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:128
+---@param subCategoryPath string full path of the item (despite the parameter name)
 function editor_api_preferencesRegistry:addNonPersistentItemPath(subCategoryPath) end
 
---- Émet onEditorPreferenceValueChanged pour chaque changement en file puis vide la file.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:288
----@return boolean  true s'il y avait des changements
+--- Emits onEditorPreferenceValueChanged for each queued change then clears the queue.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:288
+---@return boolean  true if there were changes
 function editor_api_preferencesRegistry:broadcastPreferenceValueChanged() end
 
---- Émet onEditorPreferenceValueChanged pour TOUS les items enregistrés avec leur valeur actuelle (utile après un chargement).
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:412
+--- Emits onEditorPreferenceValueChanged for ALL registered items with their current value (useful after a load).
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:412
 function editor_api_preferencesRegistry:callHookForSetValue() end
 
---- Vide catégories, chemins non persistants, préférences, éléments modifiés et remet dirty à false.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:69
+--- Clears categories, non-persistent paths, preferences and changed items, and resets dirty to false.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:69
 function editor_api_preferencesRegistry:clear() end
 
---- Cherche une catégorie par nom.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:189
----@param name string nom
----@return table|nil  catégorie
+--- Looks up a category by name.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:189
+---@param name string name
+---@return table|nil  category
 function editor_api_preferencesRegistry:findCategory(name) end
 
---- Cherche un item par chemin "cat.souscat.item" ; nil si moins de 3 segments ou introuvable.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:201
----@param itemPath string chemin
----@return table|nil  item du registre
+--- Looks up an item by path "cat.subcat.item"; nil if fewer than 3 segments or not found.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:201
+---@param itemPath string path
+---@return table|nil  registry item
 function editor_api_preferencesRegistry:findItem(itemPath) end
 
---- Cherche un item par nom dans une sous-catégorie.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:217
----@param subCateg table|nil sous-catégorie
----@param itemName string nom
+--- Looks up an item by name in a subcategory.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:217
+---@param subCateg table|nil subcategory
+---@param itemName string name
 ---@return table|nil  item
 function editor_api_preferencesRegistry:findItemInSubCategory(subCateg, itemName) end
 
---- Cherche une sous-catégorie par nom dans une catégorie.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:195
----@param category table catégorie
----@param name string nom
----@return table|nil  sous-catégorie
+--- Looks up a subcategory by name in a category.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:195
+---@param category table category
+---@param name string name
+---@return table|nil  subcategory
 function editor_api_preferencesRegistry:findSubCategory(category, name) end
 
---- Renvoie la valeur d'une préférence par chemin (équivalent de editor.getPreference).
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:301
----@param itemPath string "cat.souscat.item"
----@return any  valeur, ou nil si inconnue
+--- Returns the value of a preference by path (equivalent of editor.getPreference).
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:301
+---@param itemPath string "cat.subcat.item"
+---@return any  value, or nil if unknown
 function editor_api_preferencesRegistry:get(itemPath) end
 
---- Renvoie la valeur d'une préférence sérialisée en texte selon son type.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:314
----@param itemPath string chemin
----@return any  valeur sérialisée
+--- Returns the value of a preference serialized as text according to its type.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:314
+---@param itemPath string path
+---@return any  serialized value
 function editor_api_preferencesRegistry:getAsString(itemPath) end
 
---- Appelle clear(). Appelé par le constructeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:77
+--- Calls clear(). Called by the constructor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:77
 function editor_api_preferencesRegistry:init() end
 
---- Convertit une valeur texte (lue du fichier) en valeur Lua selon item.type (nombre, bool, table JSON, vec3, Point2F, ColorF…).
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:11
----@param item table item du registre (champ type)
----@param itemVal string valeur texte
----@return any  valeur convertie (inchangée pour les types non listés)
+--- Converts a text value (read from the file) into a Lua value according to item.type (number, bool, JSON table, vec3, Point2F, ColorF...).
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:11
+---@param item table registry item (type field)
+---@param itemVal string text value
+---@return any  converted value (unchanged for unlisted types)
 function editor_api_preferencesRegistry:itemValueFromString(item, itemVal) end
 
---- Convertit une valeur en texte pour le fichier : tostring pour les nombres/bool, JSON pour table (inchangé si déjà une string), tostring sans virgules pour les vecteurs/couleurs.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:41
----@param item table item du registre
----@param itemVal any valeur
----@return any  valeur sérialisée
+--- Converts a value to text for the file: tostring for numbers/bool, JSON for table (unchanged if already a string), tostring without commas for vectors/colors.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:41
+---@param item table registry item
+---@param itemVal any value
+---@return any  serialized value
 function editor_api_preferencesRegistry:itemValueToString(item, itemVal) end
 
---- Charge une seule catégorie depuis un fichier au format de saveCategory et applique ses valeurs ; marque dirty.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:424
----@param categoryName string catégorie
----@param filename string fichier json
+--- Loads a single category from a file in saveCategory's format and applies its values; marks dirty.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:424
+---@param categoryName string category
+---@param filename string json file
 function editor_api_preferencesRegistry:loadCategory(categoryName, filename) end
 
---- Lit le fichier de préférences (défaut settings/editor/preferences.json), rejette un format de version différente, puis remplit chaque item enregistré avec la valeur du fichier ou la valeur par défaut. Gère les anciennes valeurs (non-table) et appelle onEditorPreferenceVersionChanged si la version d'un item a changé. Pas de hook de changement pendant le chargement.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:319
----@param filename string|nil fichier json
+--- Reads the preferences file (default settings/editor/preferences.json), rejects a different format version, then fills each registered item with the file value or the default value. Handles old (non-table) values and calls onEditorPreferenceVersionChanged if an item's version changed. No change hook during loading.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:319
+---@param filename string|nil json file
 function editor_api_preferencesRegistry:loadPreferences(filename) end
 
---- Parcourt les préférences chargées et, pour chaque item absent du registre, émet onEditorDeprecatedPreferencesItem ; supprime l'item si deleteDeprecatedItems est vrai ou si le hook renvoie true. Corrige aussi les catégories/sous-catégories qui ne sont pas des tables.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:224
----@param deleteDeprecatedItems boolean|nil true = supprimer tous les items obsolètes
+--- Walks the loaded preferences and, for each item absent from the registry, emits onEditorDeprecatedPreferencesItem; deletes the item if deleteDeprecatedItems is true or if the hook returns true. Also fixes categories/subcategories that are not tables.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:224
+---@param deleteDeprecatedItems boolean|nil true = delete all obsolete items
 function editor_api_preferencesRegistry:migratePreferences(deleteDeprecatedItems) end
 
---- Crée (ou retrouve) une catégorie de premier niveau. Si elle existe avec un autre libellé, avertit et remplace le libellé.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:81
----@param categName string nom interne
----@param categLabel string|nil libellé affiché (défaut sentenceCase du nom)
----@return table  la catégorie {name, label, subcategories}
+--- Creates (or finds) a top-level category. If it exists with a different label, warns and replaces the label.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:81
+---@param categName string internal name
+---@param categLabel string|nil displayed label (default sentenceCase of the name)
+---@return table  the category {name, label, subcategories}
 function editor_api_preferencesRegistry:registerCategory(categName, categLabel) end
 
---- Ajoute des items à une sous-catégorie existante. Un nom déjà présent est refusé avec une erreur loguée.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:136
----@param categName string catégorie
----@param subCategName string sous-catégorie
----@param prefs table liste de tables à une paire {nom = {type, défaut, description, label, min, max, hidden, advanced, customUiFunc, enumLabels, version}}
+--- Adds items to an existing subcategory. A name already present is refused with a logged error.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:136
+---@param categName string category
+---@param subCategName string subcategory
+---@param prefs table list of one-pair tables {name = {type, default, description, label, min, max, hidden, advanced, customUiFunc, enumLabels, version}}
 function editor_api_preferencesRegistry:registerPreferences(categName, subCategName, prefs) end
 
---- Crée (ou retrouve) une sous-catégorie dans une catégorie déjà enregistrée et y enregistre éventuellement des préférences. Logue une erreur et renvoie nil si la catégorie n'existe pas.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:99
----@param categName string catégorie parente
----@param subCategName string nom interne
----@param subCategLabel string|nil libellé affiché
----@param prefs table|nil liste de {nom = {type, défaut, …}} (voir notes)
----@return table|nil  la sous-catégorie {name, label, items}
+--- Creates (or finds) a subcategory in an already registered category and optionally registers preferences in it. Logs an error and returns nil if the category does not exist.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:99
+---@param categName string parent category
+---@param subCategName string internal name
+---@param subCategLabel string|nil displayed label
+---@param prefs table|nil list of {name = {type, default, ...}} (see notes)
+---@return table|nil  the subcategory {name, label, items}
 function editor_api_preferencesRegistry:registerSubCategory(categName, subCategName, subCategLabel, prefs) end
 
---- Retire un chemin de la liste des non persistants.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:132
----@param subCategoryPath string chemin de l'item
+--- Removes a path from the non-persistent list.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:132
+---@param subCategoryPath string item path
 function editor_api_preferencesRegistry:removeNonPersistentItemPath(subCategoryPath) end
 
---- Remet un item à sa valeur par défaut.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:542
----@param itemPath string chemin de l'item
+--- Resets an item to its default value.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:542
+---@param itemPath string item path
 ---@return boolean  true
 function editor_api_preferencesRegistry:resetItemToDefault(itemPath) end
 
---- Remet à leur valeur par défaut tous les items d'une catégorie, ou de toutes les catégories si categoryName est nil.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:523
----@param categoryName string|nil catégorie ou nil pour tout
----@return boolean  false si la catégorie n'existe pas
+--- Resets all the items of a category, or of all categories if categoryName is nil, to their default value.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:523
+---@param categoryName string|nil category or nil for all
+---@return boolean  false if the category does not exist
 function editor_api_preferencesRegistry:resetToDefaults(categoryName) end
 
---- Sauvegarde toutes les préférences d'une catégorie (même celles à la valeur par défaut, hors chemins non persistants) dans un fichier json.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:452
----@param categoryName string catégorie et ses sous-catégories
----@param filename string fichier json cible
+--- Saves all the preferences of a category (even those at the default value, excluding non-persistent paths) to a json file.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:452
+---@param categoryName string category and its subcategories
+---@param filename string target json file
 function editor_api_preferencesRegistry:saveCategory(categoryName, filename) end
 
---- Écrit les préférences dans le fichier (défaut settings/editor/preferences.json) en omettant les valeurs égales au défaut et les chemins non persistants ; remet dirty à false. Conserve les valeurs d'extensions non chargées.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:475
----@param filename string|nil fichier json
----@return boolean|nil  false si aucune préférence chargée
+--- Writes the preferences to the file (default settings/editor/preferences.json) omitting values equal to the default and non-persistent paths; resets dirty to false. Keeps values of unloaded extensions.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:475
+---@param filename string|nil json file
+---@return boolean|nil  false if no preferences are loaded
 function editor_api_preferencesRegistry:savePreferences(filename) end
 
---- Fixe la valeur d'une préférence par chemin (bornée pour un nombre), marque dirty et met le changement en file pour le hook.
----Source : lua/ge/extensions/editor/api/preferencesRegistry.lua:255
----@param itemPath string "cat.souscat.item"
----@param value any nouvelle valeur
+--- Sets the value of a preference by path (clamped for a number), marks dirty and queues the change for the hook.
+---Source: lua/ge/extensions/editor/api/preferencesRegistry.lua:255
+---@param itemPath string "cat.subcat.item"
+---@param value any new value
 function editor_api_preferencesRegistry:set(itemPath, value) end
 

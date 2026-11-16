@@ -1,24 +1,24 @@
 # `telemetry_configManager.test`
 
-*Fichier : `lua/ge/extensions/telemetry/configManager.test.lua` · VM : Game Engine (GE) · 17 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/configManager.test.lua` · VM: Game Engine (GE) · 17 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_configManager.test` : `extensions.load("telemetry_configManager.test")`, puis la globale `telemetry_configManager.test`
+**Access:** extension `telemetry_configManager.test`: `extensions.load("telemetry_configManager.test")`, then the global `telemetry_configManager.test`
 
-Test unitaire de telemetry/configManager (extensions.testFramework_TestManager:runTestFiles("configManager")).
+Unit test of telemetry/configManager (extensions.testFramework_TestManager:runTestFiles("configManager")).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_configManager.test.testMissingTrackerConfigIsDisabledAndAllocationFree(ctx)` | Vérifie qu'un tracker inconnu est désactivé par défaut et que getModuleConfig renvoie la même table à chaque appel (pas d'allocation). *(interne)* | 7 |
+| `telemetry_configManager.test.testMissingTrackerConfigIsDisabledAndAllocationFree(ctx)` | Checks that an unknown tracker is disabled by default and that getModuleConfig returns the same table on each call (no allocation). *(internal)* | 7 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_configManager.test.testMissingTrackerConfigIsDisabledAndAllocationFree(ctx)`
 
-Vérifie qu'un tracker inconnu est désactivé par défaut et que getModuleConfig renvoie la même table à chaque appel (pas d'allocation).
+Checks that an unknown tracker is disabled by default and that getModuleConfig returns the same table on each call (no allocation).
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/configManager.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/configManager.test.lua`.*

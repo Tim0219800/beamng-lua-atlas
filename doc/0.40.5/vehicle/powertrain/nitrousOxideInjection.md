@@ -1,99 +1,99 @@
 # `powertrain_nitrousOxideInjection`
 
-*Fichier : `lua/vehicle/powertrain/nitrousOxideInjection.lua` · VM : Véhicule · 284 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/nitrousOxideInjection.lua` · VM: Vehicle · 284 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `nitrousOxideInjection` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `nitrousOxideInjection` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Sous-module d'injection de protoxyde d'azote (NOS) pour un moteur à combustion. Ce n'est PAS un composant powertrain indépendant : il n'exporte pas `new` ; c'est un module à état global dans le fichier (une seule instance par VM véhicule), initialisé par le moteur avec `init(device, data)`. Il lit trois valeurs electrics (armement, forçage, activation), ajoute du couple au moteur (`engine.nitrousOxideTorque`) selon une table par régime, consomme l'énergie des réservoirs `n2o` enregistrés et gère la purge des conduites (particules et son).
+Nitrous oxide (NOS) injection submodule for a combustion engine. It is NOT an independent powertrain component: it does not export `new`; it is a module with global state in the file (a single instance per vehicle VM), initialized by the engine with `init(device, data)`. It reads three electrics values (arming, override, activation), adds torque to the engine (`engine.nitrousOxideTorque`) according to a per-RPM table, consumes energy from the registered `n2o` tanks and handles the purging of the lines (particles and sound).
 
-## Exemple
+## Example
 
 ```lua
-electrics.values.nitrousOxideArm = 1       -- armer (>= 1)
-electrics.values.nitrousOxideOverride = 1  -- forcer l'injection sans conditions
+electrics.values.nitrousOxideArm = 1       -- arm (>= 1)
+electrics.values.nitrousOxideOverride = 1  -- force the injection without conditions
 print(electrics.values.nitrousOxideActive)
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues dans data (init) : addedPower (kW), cutInRPM (régime d'enclenchement, défaut = idleRPM du moteur, borné à 0.9 * maxRPM), cutInRange (tr/min de montée progressive, 50), electricsArmName ('nitrousOxideArm'), electricsOverrideName ('nitrousOxideOverride'), electricsActiveName ('nitrousOxideActive'), minimumGear (0), volumeCoef (1.5, multiplie le volume sonore du moteur quand le NOS agit), purgeValves_nodes (liste de paires de cid de nœuds). initSounds lit data.purgeSoundEvent ('event:>Vehicle>Nitrous_Purging') et purgeSoundVolume (1). Si data est nil, le module est désactivé (updateGFX = nop).
-- Conditions d'activation (par image) : (armé ET papillon du moteur >= 1 ET régime >= cutInRPM ET |electrics.gearIndex| >= minimumGear ET embrayage non utilisé (electrics.clutch == 0)) OU forçage manuel, ET du liquide disponible, ET pas de purge en cours. L'armement et le forçage se lisent depuis electrics.values avec un seuil >= 1.
-- Effets sur le moteur : engine.nitrousOxideTorque += couple additionnel (N·m, = puissance ajoutée / vitesse angulaire), engine.engineVolumeCoef *= volumeCoef si couple > 0, engine.invBurnEfficiencyCoef *= 2 quand actif. Le moteur doit remettre ces champs à leur valeur avant chaque appel à updateGFX. La consommation passe par engine.spentEnergyNitrousOxide partagée entre les réservoirs enregistrés.
-- Champs publics : isExisting (true), isArmed (booléen mis à jour chaque image), isActive (booléen), updateGFX et updateSounds (réaffectés par init ; nop par défaut).
-- Bugs / pièges : les tables de couple nitrousOxideTorqueLookup sont remplies à l'indice i + 1 (valeur pour i tr/min) mais sont lues à l'indice du régime entier (updateGFX) ou rpm (getAddedTorque) : décalage d'un tr/min sans conséquence pratique. registerStorage plante si le nom de stockage est inconnu (storage nil, puis storage.storedEnergy). updateGFX lit abs(electrics.values.gearIndex) : erreur si gearIndex n'existe pas. cutInRange = 0 donne une division par zéro. Un seul moteur à la fois (état global dans le module).
+- Jbeam keys read in data (init): addedPower (kW), cutInRPM (cut-in speed, default = engine idleRPM, clamped to 0.9 * maxRPM), cutInRange (RPM of progressive ramp-up, 50), electricsArmName ('nitrousOxideArm'), electricsOverrideName ('nitrousOxideOverride'), electricsActiveName ('nitrousOxideActive'), minimumGear (0), volumeCoef (1.5, multiplies the engine sound volume when the NOS is active), purgeValves_nodes (list of node cid pairs). initSounds reads data.purgeSoundEvent ('event:>Vehicle>Nitrous_Purging') and purgeSoundVolume (1). If data is nil, the module is disabled (updateGFX = nop).
+- Activation conditions (per frame): (armed AND engine throttle >= 1 AND RPM >= cutInRPM AND |electrics.gearIndex| >= minimumGear AND clutch not used (electrics.clutch == 0)) OR manual override, AND liquid available, AND no purge in progress. Arming and override are read from electrics.values with a threshold >= 1.
+- Effects on the engine: engine.nitrousOxideTorque += additional torque (N·m, = added power / angular speed), engine.engineVolumeCoef *= volumeCoef if torque > 0, engine.invBurnEfficiencyCoef *= 2 when active. The engine must reset these fields to their value before each call to updateGFX. The consumption goes through engine.spentEnergyNitrousOxide shared between the registered tanks.
+- Public fields: isExisting (true), isArmed (boolean updated every frame), isActive (boolean), updateGFX and updateSounds (reassigned by init; nop by default).
+- Bugs / pitfalls: the nitrousOxideTorqueLookup torque tables are filled at index i + 1 (value for i RPM) but are read at the integer RPM index (updateGFX) or rpm (getAddedTorque): a one-RPM offset with no practical consequence. registerStorage crashes if the storage name is unknown (storage nil, then storage.storedEnergy). updateGFX reads abs(electrics.values.gearIndex): error if gearIndex does not exist. cutInRange = 0 gives a division by zero. Only one engine at a time (global state in the module).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_nitrousOxideInjection.getAddedTorque()` | Renvoie la table du couple additionnel (N·m) par tr/min de la courbe de couple du moteur (indexée comme torqueCurve, k+1), sans condition d'activation. Sert à tracer la courbe de couple avec NOS. | 259 |
-| `powertrain_nitrousOxideInjection.getPurgeTimeRemaining()` | Renvoie le temps de purge restant en secondes (0 si aucune purge). | 53 |
-| `powertrain_nitrousOxideInjection.getTankRatio()` | Renvoie la moyenne du niveau relatif (remainingRatio, 0..1) des réservoirs enregistrés, ou 0 s'il n'y en a pas. Utile pour une jauge. | 57 |
-| `powertrain_nitrousOxideInjection.init(device, data)` | Initialise le module pour un moteur : construit les tables de couple additionnel par tr/min (montée progressive de cutInStart à cutInRPM), lit les noms electrics, le rapport minimal, les valves de purge. Appelée par le moteur à combustion à l'initialisation ; avec data nil, désactive le module. *(interne)* | 193 |
-| `powertrain_nitrousOxideInjection.initSounds(data)` | Lit l'événement et le volume du son de purge depuis le jbeam. Appelée à l'initialisation des sons du moteur. *(interne)* | 248 |
-| `powertrain_nitrousOxideInjection.purgeLines(purgeTime)` | Lance la purge des conduites de NOS pendant purgeTime secondes (particules et son aux valves) s'il y a des valves de purge et du liquide ; sinon remet le temps de purge à 0. Bloque l'injection pendant la purge. | 49 |
-| `powertrain_nitrousOxideInjection.registerStorage(storageName)` | Enregistre un réservoir d'énergie (liquide de protoxyde) du moteur pour la consommation du NOS. Appelée par le moteur pour chaque stockage d'énergie du type attendu. *(interne)* | 166 |
-| `powertrain_nitrousOxideInjection.reset()` | Remet à zéro les états (armement, forçage, purge, réservoirs enregistrés, énergie). Appelée au reset du véhicule. *(interne)* | 177 |
-| `powertrain_nitrousOxideInjection.resetSounds()` | Arrête les sons de purge de toutes les valves. Appelée au reset des sons. *(interne)* | 253 |
+| `powertrain_nitrousOxideInjection.getAddedTorque()` | Returns the table of additional torque (N·m) per RPM of the engine torque curve (indexed like torqueCurve, k+1), without any activation condition. Used to draw the torque curve with NOS. | 259 |
+| `powertrain_nitrousOxideInjection.getPurgeTimeRemaining()` | Returns the remaining purge time in seconds (0 if no purge). | 53 |
+| `powertrain_nitrousOxideInjection.getTankRatio()` | Returns the average of the relative level (remainingRatio, 0..1) of the registered tanks, or 0 if there are none. Useful for a gauge. | 57 |
+| `powertrain_nitrousOxideInjection.init(device, data)` | Initializes the module for an engine: builds the additional torque tables per RPM (progressive ramp-up from cutInStart to cutInRPM), reads the electrics names, the minimum gear, the purge valves. Called by the combustion engine at initialization; with data nil, disables the module. *(internal)* | 193 |
+| `powertrain_nitrousOxideInjection.initSounds(data)` | Reads the purge sound event and volume from the jbeam. Called at engine sound initialization. *(internal)* | 248 |
+| `powertrain_nitrousOxideInjection.purgeLines(purgeTime)` | Starts the purging of the NOS lines for purgeTime seconds (particles and sound at the valves) if there are purge valves and liquid; otherwise resets the purge time to 0. Blocks the injection during the purge. | 49 |
+| `powertrain_nitrousOxideInjection.registerStorage(storageName)` | Registers an energy tank (nitrous liquid) of the engine for NOS consumption. Called by the engine for each energy storage of the expected type. *(internal)* | 166 |
+| `powertrain_nitrousOxideInjection.reset()` | Resets the states (arming, override, purge, registered tanks, energy). Called at vehicle reset. *(internal)* | 177 |
+| `powertrain_nitrousOxideInjection.resetSounds()` | Stops the purge sounds of all valves. Called at sound reset. *(internal)* | 253 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_nitrousOxideInjection.getAddedTorque()`
 
-Renvoie la table du couple additionnel (N·m) par tr/min de la courbe de couple du moteur (indexée comme torqueCurve, k+1), sans condition d'activation. Sert à tracer la courbe de couple avec NOS.
+Returns the table of additional torque (N·m) per RPM of the engine torque curve (indexed like torqueCurve, k+1), without any activation condition. Used to draw the torque curve with NOS.
 
-- **renvoie** : table<integer, number> Couple additionnel par régime (N·m).
+- **returns**: table<integer, number> Additional torque per speed (N·m).
 
 #### `powertrain_nitrousOxideInjection.getPurgeTimeRemaining()`
 
-Renvoie le temps de purge restant en secondes (0 si aucune purge).
+Returns the remaining purge time in seconds (0 if no purge).
 
-- **renvoie** : number Secondes restantes.
+- **returns**: number Remaining seconds.
 
 #### `powertrain_nitrousOxideInjection.getTankRatio()`
 
-Renvoie la moyenne du niveau relatif (remainingRatio, 0..1) des réservoirs enregistrés, ou 0 s'il n'y en a pas. Utile pour une jauge.
+Returns the average of the relative level (remainingRatio, 0..1) of the registered tanks, or 0 if there are none. Useful for a gauge.
 
-- **renvoie** : number Niveau moyen 0..1.
+- **returns**: number Average level 0..1.
 
 #### `powertrain_nitrousOxideInjection.init(device, data)`
 
-Initialise le module pour un moteur : construit les tables de couple additionnel par tr/min (montée progressive de cutInStart à cutInRPM), lit les noms electrics, le rapport minimal, les valves de purge. Appelée par le moteur à combustion à l'initialisation ; avec data nil, désactive le module.
+Initializes the module for an engine: builds the additional torque tables per RPM (progressive ramp-up from cutInStart to cutInRPM), reads the electrics names, the minimum gear, the purge valves. Called by the combustion engine at initialization; with data nil, disables the module.
 
-- `device` (*table*) : Moteur à combustion (idleRPM, maxRPM, outputAV1, throttle, nitrousOxideTorque, engineVolumeCoef, invBurnEfficiencyCoef…).
-- `data` (*table|nil*) : Données jbeam de NOS (addedPower en kW, cutInRPM, electricsArmName…) ; nil pour désactiver.
+- `device` (*table*) : Combustion engine (idleRPM, maxRPM, outputAV1, throttle, nitrousOxideTorque, engineVolumeCoef, invBurnEfficiencyCoef…).
+- `data` (*table|nil*) : NOS jbeam data (addedPower in kW, cutInRPM, electricsArmName…); nil to disable.
 
 #### `powertrain_nitrousOxideInjection.initSounds(data)`
 
-Lit l'événement et le volume du son de purge depuis le jbeam. Appelée à l'initialisation des sons du moteur.
+Reads the purge sound event and volume from the jbeam. Called at engine sound initialization.
 
-- `data` (*table*) : Données jbeam NOS (purgeSoundEvent, purgeSoundVolume).
+- `data` (*table*) : NOS jbeam data (purgeSoundEvent, purgeSoundVolume).
 
 #### `powertrain_nitrousOxideInjection.purgeLines(purgeTime)`
 
-Lance la purge des conduites de NOS pendant purgeTime secondes (particules et son aux valves) s'il y a des valves de purge et du liquide ; sinon remet le temps de purge à 0. Bloque l'injection pendant la purge.
+Starts the purging of the NOS lines for purgeTime seconds (particles and sound at the valves) if there are purge valves and liquid; otherwise resets the purge time to 0. Blocks the injection during the purge.
 
-- `purgeTime` (*number*) : Durée de la purge en secondes.
+- `purgeTime` (*number*) : Purge duration in seconds.
 
 #### `powertrain_nitrousOxideInjection.registerStorage(storageName)`
 
-Enregistre un réservoir d'énergie (liquide de protoxyde) du moteur pour la consommation du NOS. Appelée par le moteur pour chaque stockage d'énergie du type attendu.
+Registers an energy tank (nitrous liquid) of the engine for NOS consumption. Called by the engine for each energy storage of the expected type.
 
-- `storageName` (*string*) : Nom du stockage (energyStorage.getStorage).
+- `storageName` (*string*) : Name of the storage (energyStorage.getStorage).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `isActive` | boolean | true si l'injection est en cours (conditions remplies, liquide présent, pas de purge). |
-| `isArmed` | boolean | true si le NOS est armé (electrics nitrousOxideArm >= 1). |
-| `isExisting` | boolean | Toujours true : permet de tester si le module de NOS est présent sur le véhicule. |
-| `updateGFX` | function | Fonction de mise à jour par image : nop jusqu'à init, puis la vraie fonction. Appelée par le moteur après avoir préparé nitrousOxideTorque. |
-| `updateSounds` | function | Fonction son : nop (la vraie fonction est vide). |
+| `isActive` | boolean | true if the injection is in progress (conditions met, liquid present, no purge). |
+| `isArmed` | boolean | true if the NOS is armed (electrics nitrousOxideArm >= 1). |
+| `isExisting` | boolean | Always true: allows testing whether the NOS module is present on the vehicle. |
+| `updateGFX` | function | Per-frame update function: nop until init, then the real function. Called by the engine after preparing nitrousOxideTorque. |
+| `updateSounds` | function | Sound function: nop (the real function is empty). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `addParticleByNodesRelative`, `createSFXSource2`, `cutSFX`, `playSFX`, `setVolume`, `stopSFX`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/nitrousOxideInjection.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/nitrousOxideInjection.lua`.*

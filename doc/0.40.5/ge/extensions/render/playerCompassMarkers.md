@@ -1,55 +1,55 @@
 # `render_playerCompassMarkers`
 
-*Fichier : `lua/ge/extensions/render/playerCompassMarkers.lua` · VM : Game Engine (GE) · 271 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/render/playerCompassMarkers.lua` · VM: Game Engine (GE) · 271 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `render_playerCompassMarkers` : `extensions.load("render_playerCompassMarkers")`, puis la globale `render_playerCompassMarkers`
+**Access:** extension `render_playerCompassMarkers`: `extensions.load("render_playerCompassMarkers")`, then the global `render_playerCompassMarkers`
 
-Indicateurs de direction des autres joueurs pour l'écran partagé (multi-sièges en freeroam). Pour chaque vue, dessine en haut de la vue une pastille colorée par autre joueur, positionnée horizontalement selon la direction où il se trouve (comme une boussole), dans une texture ImGui transparente. Piloté par render_splitScreen (appel de update chaque frame). Dépend de ui_imgui, core_gamestate, core_camera. Global : render_playerCompassMarkers.
+Direction indicators of the other players for split screen (multiseat in freeroam). For each view, draws at the top of the view one colored dot per other player, positioned horizontally according to the direction they are in (like a compass), in a transparent ImGui texture. Driven by render_splitScreen (update called every frame). Depends on ui_imgui, core_gamestate, core_camera. Global: render_playerCompassMarkers.
 
-## Remarques
+## Notes
 
-- Actif seulement si : ui_multiseat_freeroam.isActive(), enabled vrai, TextureDrawPrimitiveRegistry disponible, au moins 2 joueurs, et pas pendant un écran de chargement (suppression tant que le chargement n'est pas terminé, levée par onLoadingScreenInactive(2)). Sinon destroy() libère textures et états.
-- Un marqueur apparaît pour un joueur seulement s'il est à plus de 40 m (hideDistance) ; toujours affiché au-delà de 100 m (alwaysShowDistance) ; entre les deux il n'est affiché que s'il est masqué à la vue (rayon castRayStatic de la caméra vers lui, uniquement s'il est dans le frustum). Un changement d'état doit rester stable 3 s (visibilityDelay) avant de prendre effet, avec un fondu de 0,5 s.
-- La marge de sécurité reproduit la variable CSS --safezone de l'UI (réglage uiLayoutSafeArea, borné à 0.8..1 par défaut 0.98, zone limitée au 16:9).
-- Chaque vue fournit un markerRect {x, y, largeur, hauteur} en pixels ; la couleur de chaque joueur est une chaîne hexadécimale '#RRGGBB' (playerInfo.color).
-- Taille du marqueur : markerScale 0.4, fond d'alpha 77, marqueur d'alpha 255 (valeurs locales).
+- Active only if: ui_multiseat_freeroam.isActive(), enabled true, TextureDrawPrimitiveRegistry available, at least 2 players, and not during a loading screen (suppressed until loading is finished, lifted by onLoadingScreenInactive(2)). Otherwise destroy() frees textures and states.
+- A marker appears for a player only if they are more than 40 m away (hideDistance); always shown beyond 100 m (alwaysShowDistance); in between it is shown only if they are hidden from view (castRayStatic ray from the camera toward them, only if they are in the frustum). A state change must remain stable for 3 s (visibilityDelay) before taking effect, with a 0.5 s fade.
+- The safety margin reproduces the UI's CSS variable --safezone (uiLayoutSafeArea setting, clamped to 0.8..1 default 0.98, area limited to 16:9).
+- Each view provides a markerRect {x, y, width, height} in pixels; each player's color is a hexadecimal string '#RRGGBB' (playerInfo.color).
+- Marker size: markerScale 0.4, background alpha 77, marker alpha 255 (local values).
 
-**Dépendances (chargées avant) :** `ui_imgui`, `core_gamestate`, `core_camera`
+**Dependencies (loaded first):** `ui_imgui`, `core_gamestate`, `core_camera`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `render_playerCompassMarkers.destroy()` | Libère les textures de direction enregistrées et réinitialise les états ; sans effet si déjà inactif. | 54 |
-| `render_playerCompassMarkers.onLoadingScreenInactive(state)` | Hook de l'écran de chargement : quand state vaut 2, lève la suppression des marqueurs. *(interne)* *(hook)* | 260 |
-| `render_playerCompassMarkers.update(enabled, views, players, vehicleForPlayer)` | Met à jour et dessine les marqueurs de direction pour toutes les vues d'écran partagé (collecte, texture, fenêtre ImGui sans fond ni entrées par vue). *(interne)* | 179 |
+| `render_playerCompassMarkers.destroy()` | Frees the registered direction textures and resets the states; no effect if already inactive. | 54 |
+| `render_playerCompassMarkers.onLoadingScreenInactive(state)` | Loading screen hook: when state is 2, lifts the suppression of the markers. *(internal)* *(hook)* | 260 |
+| `render_playerCompassMarkers.update(enabled, views, players, vehicleForPlayer)` | Updates and draws the direction markers for all split screen views (collection, texture, background-less, input-less ImGui window per view). *(internal)* | 179 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `render_playerCompassMarkers.onLoadingScreenInactive(state)`
 
-Hook de l'écran de chargement : quand state vaut 2, lève la suppression des marqueurs.
+Loading screen hook: when state is 2, lifts the suppression of the markers.
 
-- `state` (*integer*) : État de l'écran de chargement (2 = terminé, déduit du code).
+- `state` (*integer*) : Loading screen state (2 = finished, inferred from code).
 
 #### `render_playerCompassMarkers.update(enabled, views, players, vehicleForPlayer)`
 
-Met à jour et dessine les marqueurs de direction pour toutes les vues d'écran partagé (collecte, texture, fenêtre ImGui sans fond ni entrées par vue).
+Updates and draws the direction markers for all split screen views (collection, texture, background-less, input-less ImGui window per view).
 
-- `enabled` (*boolean*) : Activer la fonction.
-- `views` (*table[]*) : Vues : {name, player, markerRect = {x, y, w, h}}.
-- `players` (*table[]*) : Joueurs : {player, color = '#RRGGBB'}.
-- `vehicleForPlayer` (*function*) : function(player) -> objet véhicule ou nil.
+- `enabled` (*boolean*) : Enable the feature.
+- `views` (*table[]*) : Views: {name, player, markerRect = {x, y, w, h}}.
+- `players` (*table[]*) : Players: {player, color = '#RRGGBB'}.
+- `vehicleForPlayer` (*function*) : function(player) -> vehicle object or nil.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | table |  |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/render/playerCompassMarkers.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/render/playerCompassMarkers.lua`.*

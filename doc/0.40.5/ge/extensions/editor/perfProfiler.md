@@ -1,47 +1,47 @@
 # `editor_perfProfiler`
 
-*Fichier : `lua/ge/extensions/editor/perfProfiler.lua` · VM : Game Engine (GE) · 558 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/perfProfiler.lua` · VM: Game Engine (GE) · 558 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_perfProfiler` : `extensions.load("editor_perfProfiler")`, puis la globale `editor_perfProfiler`
+**Access:** extension `editor_perfProfiler`: `extensions.load("editor_perfProfiler")`, then the global `editor_perfProfiler`
 
-Fenêtre de l'éditeur « CameraProfiler » (menu Debug > Performance Recorder) pour enregistrer et comparer des performances. Elle lance un enregistrement le long d'un chemin de caméra (*.camPath.json du dossier levels/<niveau>/perfRecordingCampaths/) via test_util_fpsCamRecorder et util_stepHandler, charge des fichiers .perfRecording.json, trace des courbes (fps_average, fps_min, polyCount, drawCalls, mémoire…) dans des fenêtres « Profiler Chart N » (10 max) et compare les fichiers dans un tableau. Utile pour mesurer l'impact d'un mod ou d'un réglage graphique.
+Editor window "CameraProfiler" (Debug > Performance Recorder menu) to record and compare performance. It starts a recording along a camera path (*.camPath.json from the levels/<level>/perfRecordingCampaths/ folder) via test_util_fpsCamRecorder and util_stepHandler, loads .perfRecording.json files, plots curves (fps_average, fps_min, polyCount, drawCalls, memory...) in "Profiler Chart N" windows (10 max) and compares the files in a table. Useful to measure the impact of a mod or a graphics setting.
 
-## Remarques
+## Notes
 
-- Clés de données traçables : fps_instant, fps_average, fps_min, fps_max, fps_waitForGPU, gfx_polyCount, gfx_drawCalls, mem_osPhys*/mem_osVirt*, mem_processPhysUsed/VirtUsed.
-- Fichiers de chargement : filtre « .perfRecording.json », dossier /perfRecordings/. Un fichier d'annotation optionnel est cherché dans /levels/<lvl>/perfRecordingCampaths/<nom>.perfAnnotation.json.
-- Bug probable : dans loadFile, la ligne « metadataFile = file » utilise une variable « file » jamais définie dans la fonction (nil) ; la fenêtre de métadonnées ne s'ouvre donc pas après un chargement. De plus, globalNames reçoit file.name, champ que loadFile ne renseigne pas (seulement file.meta.name).
-- Le bouton « Delete All Vehicles » du popup d'enregistrement supprime réellement tous les véhicules.
+- Plottable data keys: fps_instant, fps_average, fps_min, fps_max, fps_waitForGPU, gfx_polyCount, gfx_drawCalls, mem_osPhys*/mem_osVirt*, mem_processPhysUsed/VirtUsed.
+- Load files: filter ".perfRecording.json", folder /perfRecordings/. An optional annotation file is searched in /levels/<lvl>/perfRecordingCampaths/<name>.perfAnnotation.json.
+- Probable bug: in loadFile, the line "metadataFile = file" uses a variable "file" never defined in the function (nil); the metadata window therefore does not open after a load. Also, globalNames receives file.name, a field that loadFile does not set (only file.meta.name).
+- The "Delete All Vehicles" button of the recording popup really deletes all the vehicles.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_perfProfiler.loadFile(data)` | Charge un fichier de performance JSON (jsonReadFile), complète meta.name (nom de fichier), cherche un fichier d'annotation du niveau, convertit chaque sample en pos=vec3 et rot=quat, marque le fichier actif et l'ajoute à la liste des fichiers comparés. Ne fait rien si filepath est vide. | 426 |
-| `editor_perfProfiler.onEditorGui(dt)` | Appelé à chaque frame par l'éditeur. Dessine la fenêtre principale (menu Record / Load / New Chart Window, tableau des fichiers avec case, couleur, nom), recalcule couleurs et graphiques si nécessaire, puis les graphiques, le tableau comparateur, la fenêtre de métadonnées et le popup d'enregistrement. *(interne)* *(hook)* | 461 |
-| `editor_perfProfiler.onEditorInitialized()` | Enregistre la fenêtre CameraProfiler (500x500) et l'entrée de menu « Performance Recorder » (groupe Debug). *(interne)* *(hook)* | 549 |
-| `editor_perfProfiler.show()` | Affiche la fenêtre CameraProfiler (editor.showWindow). | 545 |
+| `editor_perfProfiler.loadFile(data)` | Loads a JSON performance file (jsonReadFile), completes meta.name (file name), looks for a level annotation file, converts each sample to pos=vec3 and rot=quat, marks the file active and adds it to the list of compared files. Does nothing if filepath is empty. | 426 |
+| `editor_perfProfiler.onEditorGui(dt)` | Called every frame by the editor. Draws the main window (Record / Load / New Chart Window menu, file table with checkbox, color, name), recomputes colors and charts if needed, then the charts, the comparison table, the metadata window and the recording popup. *(internal)* *(hook)* | 461 |
+| `editor_perfProfiler.onEditorInitialized()` | Registers the CameraProfiler window (500x500) and the "Performance Recorder" menu entry (Debug group). *(internal)* *(hook)* | 549 |
+| `editor_perfProfiler.show()` | Shows the CameraProfiler window (editor.showWindow). | 545 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_perfProfiler.loadFile(data)`
 
-Charge un fichier de performance JSON (jsonReadFile), complète meta.name (nom de fichier), cherche un fichier d'annotation du niveau, convertit chaque sample en pos=vec3 et rot=quat, marque le fichier actif et l'ajoute à la liste des fichiers comparés. Ne fait rien si filepath est vide.
+Loads a JSON performance file (jsonReadFile), completes meta.name (file name), looks for a level annotation file, converts each sample to pos=vec3 and rot=quat, marks the file active and adds it to the list of compared files. Does nothing if filepath is empty.
 
-- `data` (*table*) : Table de retour du dialogue de fichier ; seul data.filepath (chemin du .perfRecording.json) est lu.
+- `data` (*table*) : Return table of the file dialog; only data.filepath (path of the .perfRecording.json) is read.
 
 #### `editor_perfProfiler.onEditorGui(dt)`
 
-Appelé à chaque frame par l'éditeur. Dessine la fenêtre principale (menu Record / Load / New Chart Window, tableau des fichiers avec case, couleur, nom), recalcule couleurs et graphiques si nécessaire, puis les graphiques, le tableau comparateur, la fenêtre de métadonnées et le popup d'enregistrement.
+Called every frame by the editor. Draws the main window (Record / Load / New Chart Window menu, file table with checkbox, color, name), recomputes colors and charts if needed, then the charts, the comparison table, the metadata window and the recording popup.
 
-- `dt` (*number*) : Delta temps passé aux graphiques.
+- `dt` (*number*) : Delta time passed to the charts.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`
 - `obj:` `delete`
 
-**Charge les extensions :** `test_util_camPosDataToBucket`, `test_util_fpsCamRecorder`, `util_stepHandler`
+**Loads extensions:** `test_util_camPosDataToBucket`, `test_util_fpsCamRecorder`, `util_stepHandler`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/perfProfiler.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/perfProfiler.lua`.*

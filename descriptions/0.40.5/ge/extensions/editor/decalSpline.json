@@ -1,21 +1,76 @@
 {
   "path": "lua/ge/extensions/editor/decalSpline.lua",
-  "module": "Outil « Decal Spline » du World Editor : on trace une spline (nœuds, largeur par défaut 10 m) le long de laquelle des decals sont posés automatiquement à partir de jusqu'à 4 composants (matériau, lignes/colonnes de texture, frame, espacement, jitter). Le fichier est le point d'entrée de l'outil (fenêtre « decalSpline », mode d'édition « Decal Spline ») ; la logique est répartie dans editor/decalSpline/splineMgr, editor/decalSpline/populate et les utilitaires editor/toolUtilities (splineInput, render/spline, session, bake, panCamera, materialSelectionMgr…). Il gère aussi la sauvegarde des splines dans le niveau (onSerialize/onDeserialized, qui survit au rechargement Lua) et l'import/export de sessions.",
+  "module": "World Editor \"Decal Spline\" tool: you draw a spline (nodes, default width 10 m) along which decals are placed automatically from up to 4 components (material, texture rows/columns, frame, spacing, jitter). The file is the entry point of the tool (\"decalSpline\" window, \"Decal Spline\" edit mode); the logic is split between editor/decalSpline/splineMgr, editor/decalSpline/populate and the editor/toolUtilities utilities (splineInput, render/spline, session, bake, panCamera, materialSelectionMgr...). It also handles saving the splines in the level (onSerialize/onDeserialized, which survives Lua reload) and session import/export.",
   "notes": [
-    "Même hors du mode d'édition, onEditorGui reconstruit les splines modifiées (pour mettre à jour les splines liées) et dessine leurs contours (shells).",
-    "Une spline verrouillée (isEnabled = false) garde ses decals dans la scène ; onSerialize les libère via populate.release et onDeserialized les reprend via populate.adopt.",
-    "onSerialize supprime toutes les splines après les avoir sérialisées (splineMgr.removeAllDecalSplines(true)) : les splines sont recréées par onDeserialized.",
-    "Constantes internes : tolérance RDP de simplification 9.0, espacement entre 0 et 100, échelle des lignes d'élévation 100.",
-    "setSelectedSplineIdx et setSelectedNodeIdx n'ont pas de contrôle de borne (la borne est appliquée seulement dans onDeserialized)."
+    "Even outside the edit mode, onEditorGui rebuilds the modified splines (to update linked splines) and draws their outlines (shells).",
+    "A locked spline (isEnabled = false) keeps its decals in the scene; onSerialize releases them via populate.release and onDeserialized takes them back via populate.adopt.",
+    "onSerialize deletes all splines after serializing them (splineMgr.removeAllDecalSplines(true)): the splines are recreated by onDeserialized.",
+    "Internal constants: RDP simplification tolerance 9.0, spacing between 0 and 100, elevation line scale 100.",
+    "setSelectedSplineIdx and setSelectedNodeIdx have no bounds check (the bound is only applied in onDeserialized)."
   ],
   "functions": {
-    "onClientEndMission": {"desc": "Hook appelé quand on quitte la carte ; supprime toutes les splines de decals.", "internal": true},
-    "onDeserialized": {"desc": "Hook de restauration après rechargement Lua : recrée les splines depuis les données sérialisées, reprend les decals conservés des splines verrouillées (populate.adopt), borne l'index sélectionné et recalcule la table id vers index.", "params": {"data": {"type": "table|nil", "desc": "liste de splines sérialisées (ignorée si vide)"}}, "internal": true},
-    "onEditorGui": {"desc": "Hook appelé à chaque frame de l'éditeur. Met à jour les splines modifiées ; si l'outil n'est pas actif, ne fait que dessiner les contours. Sinon gère la fenêtre principale, la caméra panoramique, la sélection de matériau, les événements souris/clavier (splineInput) et le rendu des splines.", "internal": true},
-    "onEditorInitialized": {"desc": "Hook appelé à l'initialisation de l'éditeur : déclare editor.editModes.decalSplineEditMode (icône decalRoad) et enregistre la fenêtre 300x700.", "internal": true},
-    "onSerialize": {"desc": "Hook de sauvegarde avant rechargement Lua : renvoie la liste des splines sérialisées ({} s'il n'y en a pas) et supprime les splines en mémoire.", "returns": [{"type": "table", "desc": "splines sérialisées"}], "internal": true},
-    "setLockedById": {"desc": "Verrouille ou déverrouille la spline d'id donné et la reconstruit immédiatement (utilisé aussi par la Master Spline pour ses enfants liés). Les decals sont enregistrés par le gestionnaire de persistance dans les deux cas : le verrou rend seulement la spline non éditable. Ne fait rien si l'id est inconnu.", "params": {"id": {"type": "integer", "desc": "id de la spline"}, "isLocked": {"type": "boolean", "desc": "true pour verrouiller"}}},
-    "setSelectedNodeIdx": {"desc": "Définit l'index du nœud sélectionné (sélection partagée entre outils).", "params": {"idx": {"type": "integer", "desc": "index du nœud, à partir de 1"}}},
-    "setSelectedSplineIdx": {"desc": "Définit l'index de la spline sélectionnée (sélection partagée entre outils).", "params": {"idx": {"type": "integer", "desc": "index de la spline, à partir de 1"}}}
+    "onClientEndMission": {
+      "desc": "Hook called when leaving the map; deletes all decal splines.",
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Restore hook after Lua reload: recreates the splines from the serialized data, takes back the decals kept from locked splines (populate.adopt), clamps the selected index and recomputes the id to index table.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "list of serialized splines (ignored if empty)"
+        }
+      },
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Hook called every editor frame. Updates the modified splines; if the tool is not active, only draws the outlines. Otherwise handles the main window, the pan camera, material selection, mouse/keyboard events (splineInput) and the rendering of the splines.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook called at editor initialization: declares editor.editModes.decalSplineEditMode (decalRoad icon) and registers the 300x700 window.",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Save hook before Lua reload: returns the list of serialized splines ({} if there are none) and deletes the in-memory splines.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "serialized splines"
+        }
+      ],
+      "internal": true
+    },
+    "setLockedById": {
+      "desc": "Locks or unlocks the spline with the given id and rebuilds it immediately (also used by the Master Spline for its linked children). The decals are saved by the persistence manager in both cases: the lock only makes the spline non-editable. Does nothing if the id is unknown.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "spline id"
+        },
+        "isLocked": {
+          "type": "boolean",
+          "desc": "true to lock"
+        }
+      }
+    },
+    "setSelectedNodeIdx": {
+      "desc": "Sets the index of the selected node (selection shared between tools).",
+      "params": {
+        "idx": {
+          "type": "integer",
+          "desc": "node index, 1-based"
+        }
+      }
+    },
+    "setSelectedSplineIdx": {
+      "desc": "Sets the index of the selected spline (selection shared between tools).",
+      "params": {
+        "idx": {
+          "type": "integer",
+          "desc": "spline index, 1-based"
+        }
+      }
+    }
   }
 }

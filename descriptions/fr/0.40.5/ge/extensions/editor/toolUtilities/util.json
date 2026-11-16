@@ -1,0 +1,266 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/util.lua",
+  "module": "Boîte à outils commune aux outils de splines et de « sites » de l'éditeur : souris et raycasts (position sur la carte, sur le terrain, sur un plan), conversions et couleurs, nettoyage de niveau, noms uniques, annulation (commitStep), noms de matériaux de terrain, calculs sur polylignes et splines (longueur, largeur, espacement, inversion, cadrage caméra), construction de rubans (mesh, GLTF), sources de splines pour le terraformage, bitmaps (retournement, export PNG de debug) et sous-onglets ImGui. Constantes par défaut : largeur min et max 10 m, tolérance de largeur fixe 0.01, distance max du rayon caméra 5000 m.",
+  "usage": "local util = require('editor/toolUtilities/util')\nlocal p = util.mouseOnTerrainPos()\nlocal len = util.getPolyLength(points)",
+  "notes": [
+    "Unités : msToKph et msToMph prennent des m/s ; les distances sont en mètres.",
+    "flipBitmapY est décrit « en place » dans le code mais renvoie un NOUVEAU GBitmap (format GFXFormatR16) sans modifier l'original.",
+    "generateUniqueName exige prefixIn (il est concaténé sans test) : un appel sans second argument lève une erreur.",
+    "buildRibbonGLTF convertit les coordonnées BeamNG (x, y, z) en GLTF (x, z, -y) et emballe positions en float et indices en uint16, donc limité à 65536 sommets.",
+    "Dans les structures de ruban, un 'source' est une liste de { pos, width, binormal } ; width est la largeur totale, la demi-largeur est utilisée de part et d'autre du binormal.",
+    "La grille d'empreinte des sites (footSnap) a un pas de 1 m, alignée sur le monde."
+  ],
+  "functions": {
+    "isMouseHoveringOverTerrain": {
+      "desc": "Vrai si la souris est sur le viewport (ni sur un élément ou une fenêtre ImGui, ni sur le gizmo d'axes).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "La souris pointe le monde."}]
+    },
+    "mouseOnMapPos": {
+      "desc": "Position carte sur laquelle pointe la souris (castRayStatic, portée 5000 m). Sans impact, renvoie la dernière position valide, ou à défaut le point du rayon à la portée maximale.",
+      "params": {},
+      "returns": [{"type": "vec3", "desc": "Position monde."}]
+    },
+    "mouseOnPlaneZ": {
+      "desc": "Point où le rayon de la souris coupe le plan horizontal z = planeZ.",
+      "params": {"planeZ": {"type": "number", "desc": "Altitude du plan."}},
+      "returns": [{"type": "vec3|nil", "desc": "Point d'intersection ; nil si le rayon est presque horizontal ou si le plan est derrière la caméra."}]
+    },
+    "mouseOnTerrainPos": {
+      "desc": "Le SOL sous la souris, posé sur la grille de hauteur du terrain plutôt que sur une géométrie statique qui se trouverait sur le rayon. Itère 4 fois en recoupant avec la hauteur du terrain.",
+      "params": {"seedZ": {"type": "number|nil", "desc": "Altitude de départ du plan (0 par défaut)."}},
+      "returns": [{"type": "vec3|nil", "desc": "Point sur le terrain."}]
+    },
+    "vertRaycast": {
+      "desc": "Raycast vertical vers le bas qui modifie le Z du point sur place : monte de rayRaise, tire vers le bas, puis redescend sur la surface + postFloat pour ne pas s'enfoncer.",
+      "params": {
+        "pos": {"type": "vec3", "desc": "Point modifié en place."},
+        "rayRaise": {"type": "number|nil", "desc": "Montée avant le tir (10 par défaut)."},
+        "postFloat": {"type": "number|nil", "desc": "Petite hauteur ajoutée après (0.05 par défaut)."}
+      },
+      "returns": []
+    },
+    "fastArrayCopy": {
+      "desc": "Copie rapide d'un tableau simple (copie superficielle).",
+      "params": {"arr": {"type": "table", "desc": "Tableau source."}},
+      "returns": [{"type": "table", "desc": "Nouvelle copie."}]
+    },
+    "msToMph": {"desc": "Convertit des m/s en mph (x 2.236936).", "params": {"ms": {"type": "number", "desc": "Vitesse en m/s."}}, "returns": [{"type": "number", "desc": "Vitesse en mph."}]},
+    "msToKph": {"desc": "Convertit des m/s en km/h (x 3.6).", "params": {"ms": {"type": "number", "desc": "Vitesse en m/s."}}, "returns": [{"type": "number", "desc": "Vitesse en km/h."}]},
+    "sumOverNonArrayTable": {
+      "desc": "Somme de toutes les valeurs d'une table non tableau.",
+      "params": {"t": {"type": "table<any, number>", "desc": "Table clé -> nombre."}},
+      "returns": [{"type": "number", "desc": "Somme."}]
+    },
+    "clearLevelContent": {
+      "desc": "Ramène un niveau au terrain nu pour construire une scène de zéro. Supprime tous les objets des classes DecalRoad, TSStatic, MeshRoad, ProceduralMesh, PointLight et SpotLight, ainsi que toutes les INSTANCES de forêt ; les datablocks ForestItemData restent (la plantation retrouve ses espèces par nom). Marque editor.forestDirty.",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Nombre d'objets de scène supprimés (hors éléments de forêt)."}]
+    },
+    "getMeshBox": {
+      "desc": "Boîte englobante d'une forme TSStatic : crée un TSStatic temporaire ('temp_getMeshBox'), lit sa boîte d'objet, le supprime.",
+      "params": {"meshPath": {"type": "string", "desc": "Chemin de la forme (shapeName)."}},
+      "returns": [{"type": "table", "desc": "{ minExtents, maxExtents, center, extents } (vec3)."}]
+    },
+    "getBlueToRedColour": {
+      "desc": "Couleur interpolée du bleu (minValue) au rouge (maxValue), valeur bornée.",
+      "params": {"value": {"type": "number", "desc": "Valeur."}, "minValue": {"type": "number", "desc": "Valeur pour le bleu."}, "maxValue": {"type": "number", "desc": "Valeur pour le rouge."}},
+      "returns": [{"type": "ColorI", "desc": "color(r, 0, b, 255)."}]
+    },
+    "getHueBasedColour255": {
+      "desc": "Couleur de teinte pour t borné entre 0 et 1 : de 240 degrés (bleu) à 0 (rouge), saturation et valeur à 1.",
+      "params": {"t": {"type": "number", "desc": "Valeur 0..1."}},
+      "returns": [
+        {"type": "integer", "desc": "R (0-255)."}, {"type": "integer", "desc": "G (0-255)."}, {"type": "integer", "desc": "B (0-255)."}
+      ]
+    },
+    "hsvToRgb255": {
+      "desc": "Convertit HSV en RGB sur 0-255 (h en degrés 0-360, s et v en 0-1).",
+      "params": {"h": {"type": "number", "desc": "Teinte en degrés."}, "s": {"type": "number", "desc": "Saturation 0-1."}, "v": {"type": "number", "desc": "Valeur 0-1."}},
+      "returns": [{"type": "integer", "desc": "R."}, {"type": "integer", "desc": "G."}, {"type": "integer", "desc": "B."}]
+    },
+    "hsvToRgb": {
+      "desc": "Convertit HSV en RGB, tout dans [0,1] (h est un tour entier = 1).",
+      "params": {"h": {"type": "number", "desc": "Teinte 0-1."}, "s": {"type": "number", "desc": "Saturation 0-1."}, "v": {"type": "number", "desc": "Valeur 0-1."}},
+      "returns": [{"type": "number", "desc": "R."}, {"type": "number", "desc": "G."}, {"type": "number", "desc": "B."}]
+    },
+    "generateUniqueName": {
+      "desc": "Génère un nom qui n'entre pas en conflit avec l'arbre de scène : teste « prefix - nom », puis « prefix - nom - 1 », « - 2 », etc. Renvoie la partie nom sans préfixe.",
+      "params": {"baseName": {"type": "string", "desc": "Nom de base."}, "prefixIn": {"type": "string", "desc": "Préfixe (obligatoire)."}},
+      "returns": [{"type": "string", "desc": "Nom unique, sans le préfixe."}]
+    },
+    "computeIdToIdxMap": {
+      "desc": "Remplit `map` (vidée d'abord) avec spline.id -> indice dans la liste.",
+      "params": {"splines": {"type": "table", "desc": "Liste de splines."}, "map": {"type": "table", "desc": "Table de sortie."}},
+      "returns": []
+    },
+    "deepEqual": {
+      "desc": "Égalité profonde de deux valeurs. Teste le type avant == car comparer un vec3 à autre chose lève une erreur.",
+      "params": {"a": {"type": "any", "desc": "Valeur."}, "b": {"type": "any", "desc": "Valeur."}},
+      "returns": [{"type": "boolean", "desc": "Égales."}]
+    },
+    "unchangedIds": {
+      "desc": "Ids dont les copies dans deux instantanés des mêmes éléments sont identiques : ce qu'un pas d'annulation intermédiaire n'a pas touché.",
+      "params": {"a": {"type": "table", "desc": "Instantané A (éléments avec .id)."}, "b": {"type": "table", "desc": "Instantané B."}},
+      "returns": [{"type": "table<any, boolean>", "desc": "Ensemble id -> true."}]
+    },
+    "commitStep": {
+      "desc": "Enregistre un pas d'annulation comme transaction à part entière. Un commitAction seul copie en profondeur le pas du dessus de la pile et le nouveau pour chercher un doublon, ce qui est prohibitif pour un pas de terraformage de millions de hauteurs ; une transaction est enregistrée sans cette vérification.",
+      "params": {
+        "label": {"type": "string", "desc": "Libellé."},
+        "data": {"type": "any", "desc": "Données du pas."},
+        "undoFn": {"type": "function", "desc": "Callback d'annulation."},
+        "redoFn": {"type": "function", "desc": "Callback de rétablissement."}
+      },
+      "returns": []
+    },
+    "getMaterialNames": {
+      "desc": "Noms des couches de matériau du terrain (indice à partir de 0 -> nom), même source que roadNetwork. 'Material i' si un nom manque.",
+      "params": {},
+      "returns": [{"type": "table<integer, string>", "desc": "Table vide si pas de terrain."}]
+    },
+    "findMaterialIdx": {
+      "desc": "Indice de la première couche de terrain qui porte l'un des noms candidats, sans tenir compte de la casse.",
+      "params": {"candidates": {"type": "string[]", "desc": "Noms candidats, par ordre de priorité."}},
+      "returns": [{"type": "integer|nil", "desc": "Indice (à partir de 0) ou nil."}]
+    },
+    "getPolyLength": {
+      "desc": "Longueur d'une polyligne (somme des distances 3D).",
+      "params": {"pts": {"type": "vec3[]", "desc": "Points."}},
+      "returns": [{"type": "number", "desc": "Longueur en mètres."}]
+    },
+    "getMinMaxWidth": {
+      "desc": "Largeurs minimale et maximale d'une spline (spline.widths) ; 10 et 10 s'il n'y en a pas.",
+      "params": {"spline": {"type": "table", "desc": "Spline avec widths."}},
+      "returns": [{"type": "number", "desc": "Minimum."}, {"type": "number", "desc": "Maximum."}]
+    },
+    "isWidthFixed": {
+      "desc": "Vrai si la largeur des nœuds est fixe (écart inférieur à 0.01).",
+      "params": {"nodes": {"type": "table", "desc": "Nœuds avec .width."}},
+      "returns": [{"type": "boolean", "desc": "Largeur fixe."}, {"type": "number", "desc": "Largeur minimale."}]
+    },
+    "filterClosePointsXY": {
+      "desc": "Retire les points consécutifs plus proches que minDist dans le plan XY (garde le premier).",
+      "params": {"points": {"type": "vec3[]", "desc": "Points."}, "minDist": {"type": "number", "desc": "Distance minimale (m)."}},
+      "returns": [{"type": "table", "desc": "Nouvelle liste (la même table si moins de 2 points)."}]
+    },
+    "calculateAverageSpacingXY": {
+      "desc": "Estime l'espacement moyen en XY entre nœuds en simulant une interpolation Catmull-Rom centripète (10 échantillons par segment), sans compter l'emprise des meshes.",
+      "params": {"positions": {"type": "vec3[]", "desc": "Positions des nœuds."}, "minSpacing": {"type": "number|nil", "desc": "Plancher de l'espacement ; sert aussi de valeur de repli (1.0 par défaut) s'il y a moins de 2 nœuds."}},
+      "returns": [{"type": "number", "desc": "Espacement moyen (m)."}]
+    },
+    "doesPathContainNode": {
+      "desc": "Cherche une clé de nœud dans un chemin.",
+      "params": {"path": {"type": "table", "desc": "Liste de clés."}, "nodeKey": {"type": "any", "desc": "Clé cherchée."}},
+      "returns": [{"type": "boolean", "desc": "Trouvée."}, {"type": "integer|nil", "desc": "Indice ou nil."}]
+    },
+    "flipSplineDirection": {
+      "desc": "Inverse le sens d'une spline (nodes, widths, nmls) et la marque isDirty.",
+      "params": {"spline": {"type": "table", "desc": "Spline modifiée en place."}},
+      "returns": []
+    },
+    "splineFocus": {
+      "desc": "Calcule un cadrage vu de dessus pour une spline : milieu de la boîte 2D et altitude telle que tout tient dans le champ (distance / tan(fov/2) + zMax + 5).",
+      "params": {"points": {"type": "vec3[]", "desc": "Points de la spline."}},
+      "returns": [{"type": "number|nil", "desc": "X du milieu, nil si la spline est trop petite (moins de 0.1 m)."}, {"type": "number", "desc": "Y du milieu."}, {"type": "number", "desc": "Altitude de la caméra."}]
+    },
+    "goToSpline": {
+      "desc": "Passe en caméra libre et place la caméra au-dessus de la spline, regard vers le bas, d'après splineFocus.",
+      "params": {"points": {"type": "vec3[]", "desc": "Points de la spline."}},
+      "returns": []
+    },
+    "lookAtGround": {
+      "desc": "Le sol sous le milieu de l'écran, en x, y (raycast depuis la caméra). Sert à poser un nouvel objet devant l'utilisateur. Renvoie 0, 0 si le regard est dans le ciel ou hors de la carte.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "X."}, {"type": "number", "desc": "Y."}]
+    },
+    "footSnap": {
+      "desc": "Spécification de la grille de calage des empreintes de sites : { ox = 0, oy = 0, step = 1 }, alignée sur le monde et partagée par les trois outils de site.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{ ox, oy, step }."}]
+    },
+    "footSnapped": {
+      "desc": "Ramène un x, y monde à cette grille (pas de 1 m). Pour les points qu'un outil pose lui-même : une forme de départ hors grille devient de travers dès qu'un coin est glissé dessus.",
+      "params": {"x": {"type": "number", "desc": "X monde."}, "y": {"type": "number", "desc": "Y monde."}},
+      "returns": [{"type": "number", "desc": "X calé."}, {"type": "number", "desc": "Y calé."}]
+    },
+    "starterRing": {
+      "desc": "Un rectangle posé sur le sol sous le milieu de l'écran, orienté anti-horaire, coins sur la grille d'empreinte.",
+      "params": {
+        "w": {"type": "number", "desc": "Largeur (m)."},
+        "d": {"type": "number", "desc": "Profondeur (m)."},
+        "zAt": {"type": "function|nil", "desc": "zAt(x, y) donne l'altitude de chaque coin (0 par défaut)."}
+      },
+      "returns": [{"type": "vec3[]", "desc": "4 coins."}]
+    },
+    "buildRibbonMeshFromPolyline": {
+      "desc": "Convertit une polyligne de ruban en maillage de triangles : deux sommets par point (gauche et droite, à demi-largeur le long du binormal), deux triangles par segment.",
+      "params": {
+        "points": {"type": "vec3[]", "desc": "Points de la ligne centrale."},
+        "widths": {"type": "number[]", "desc": "Largeur totale à chaque point."},
+        "binormals": {"type": "vec3[]", "desc": "Binormal à chaque point."}
+      },
+      "returns": [{"type": "table", "desc": "{ vertices = vec3[], indices = integer[] } (indices à partir de 1)."}]
+    },
+    "buildRibbonGLTF": {
+      "desc": "Convertit une polyligne de ruban en JSON GLTF avec tampon binaire intégré (positions float, indices uint16), coordonnées converties (x, z, -y).",
+      "params": {
+        "points": {"type": "vec3[]", "desc": "Points."},
+        "widths": {"type": "number[]", "desc": "Largeurs."},
+        "binormals": {"type": "vec3[]", "desc": "Binormaux."}
+      },
+      "returns": [{"type": "table", "desc": "Table GLTF."}]
+    },
+    "getSourcesSingle": {
+      "desc": "Sources d'une spline pour le terraformage : une seule liste de { pos, width, binormal } sur divPoints, avec spline.terraWidth si défini à la place de divWidths.",
+      "params": {"spline": {"type": "table", "desc": "Spline (divPoints, divWidths, binormals, terraWidth)."}},
+      "returns": [{"type": "table", "desc": "{ sData }."}]
+    },
+    "getAllSources": {
+      "desc": "Sources de toutes les splines activées (isEnabled), une liste par spline.",
+      "params": {"splines": {"type": "table", "desc": "Liste de splines."}},
+      "returns": [{"type": "table", "desc": "Liste de listes de { pos, width, binormal }."}]
+    },
+    "flipBitmapY": {
+      "desc": "Retourne verticalement un bitmap : crée un nouveau GBitmap GFXFormatR16 dont chaque texel copie la valeur de la ligne symétrique.",
+      "params": {"bmpIn": {"type": "GBitmap", "desc": "Bitmap source (non modifié)."}},
+      "returns": [{"type": "GBitmap", "desc": "Nouveau bitmap retourné."}]
+    },
+    "writeMaskToPng": {
+      "desc": "Utilitaire de debug : écrit un masque binaire (lignes de 0 ou 1) en PNG 16 bits (blanc si 1).",
+      "params": {"mask": {"type": "table", "desc": "Masque 2D."}, "path": {"type": "string", "desc": "Fichier de sortie."}},
+      "returns": []
+    },
+    "writePathsToPng": {
+      "desc": "Écrit des chemins vectorisés en PNG 16 bits à niveaux de gris, avec une intensité distincte par chemin.",
+      "params": {
+        "paths": {"type": "table", "desc": "Chemins."},
+        "width": {"type": "integer", "desc": "Largeur de l'image."},
+        "height": {"type": "integer", "desc": "Hauteur de l'image."},
+        "path": {"type": "string", "desc": "Fichier de sortie."}
+      },
+      "returns": []
+    },
+    "writeWidthsToPng": {
+      "desc": "Écrit les chemins en traits épais continus : un disque plein à chaque point, de rayon max(1, floor(largeur/2)), en blanc sur fond noir.",
+      "params": {
+        "paths": {"type": "table", "desc": "Chemins."},
+        "widths": {"type": "table", "desc": "Largeurs par chemin."},
+        "width": {"type": "integer", "desc": "Largeur de l'image."},
+        "height": {"type": "integer", "desc": "Hauteur de l'image."},
+        "outPath": {"type": "string", "desc": "Fichier de sortie."}
+      },
+      "returns": []
+    },
+    "beginSubTab": {
+      "desc": "Ouvre un sous-onglet ImGui (BeginTabItem) dont le corps est un enfant, pour que la rangée d'onglets reste en place. Renvoie false si l'onglet n'est pas ouvert.",
+      "params": {"label": {"type": "string", "desc": "Titre."}, "flags": {"type": "integer|nil", "desc": "Drapeaux TabItemFlags."}},
+      "returns": [{"type": "boolean", "desc": "Onglet ouvert."}]
+    },
+    "endSubTab": {
+      "desc": "Ferme le sous-onglet (EndChild puis EndTabItem). Pas de garde : EndChild doit être appelé même si l'enfant est rogné.",
+      "params": {},
+      "returns": []
+    }
+  }
+}

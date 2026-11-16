@@ -1,18 +1,27 @@
 {
   "path": "lua/common/jbeam/sections/paints.lua",
-  "module": "Applique les peintures du véhicule : vehicleConfig.paints (ou, à défaut, vehicleConfig.colors converti par convertVehicleColorsToPaints) donne jusqu'à trois peintures. Pour chacune, validateVehiclePaint la vérifie puis baseColor devient la couleur de l'objet (paints[1] -> color, paints[2] -> colorPalette0, paints[3] -> colorPalette1). Toute la liste est ensuite envoyée au moteur via setMetallicPaintData pour les paramètres métalliques/clearcoat.",
+  "module": "Applies the vehicle paints: vehicleConfig.paints (or, failing that, vehicleConfig.colors converted by convertVehicleColorsToPaints) provides up to three paints. For each one, validateVehiclePaint checks it, then baseColor becomes the object's color (paints[1] -> color, paints[2] -> colorPalette0, paints[3] -> colorPalette1). The whole list is then sent to the engine via setMetallicPaintData for the metallic/clearcoat parameters.",
   "notes": [
-    "baseColor est un tableau {r, v, b, a}.",
-    "convertVehicleColorsToPaints et validateVehiclePaint sont des fonctions globales définies ailleurs."
+    "baseColor is an array {r, g, b, a}.",
+    "convertVehicleColorsToPaints and validateVehiclePaint are global functions defined elsewhere."
   ],
   "fields": {},
   "functions": {
     "process": {
-      "desc": "Applique les peintures du config à l'objet véhicule et transmet les données de peinture métallique.",
+      "desc": "Applies the config's paints to the vehicle object and passes on the metallic paint data.",
       "params": {
-        "vehicleObj": {"type": "userdata", "desc": "Objet véhicule moteur."},
-        "vehicleConfig": {"type": "table", "desc": "Configuration (paints ou colors)."},
-        "vehicle": {"type": "table", "desc": "Données jbeam (non utilisé)."}
+        "vehicleObj": {
+          "type": "userdata",
+          "desc": "Engine vehicle object."
+        },
+        "vehicleConfig": {
+          "type": "table",
+          "desc": "Configuration (paints or colors)."
+        },
+        "vehicle": {
+          "type": "table",
+          "desc": "Jbeam data (unused)."
+        }
       },
       "internal": true
     }

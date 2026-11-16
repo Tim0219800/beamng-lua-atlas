@@ -1,53 +1,227 @@
 {
   "path": "lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua",
-  "module": "Composant de contrôle de lacet pour les transmissions intégrales à verrouillage électronique (type \"auxiliary\", defaultOrder 70). Il s'enregistre auprès de tractionControl (ordre 10, mais n'y fait rien) et de yawControl (ordre 20). Sous accélération, s'il détecte du survirage via l'angle de dérive de caisse, il règle overrideMin/overrideMax de l'actionneur de verrouillage (par défaut \"electronicSplitShaftLock\") pour répartir le couple entre essieux avant/arrière selon le mode (rearMain, frontMain, centerDiff).",
+  "module": "Yaw control component for electronically locking all-wheel-drive transmissions (type \"auxiliary\", defaultOrder 70). It registers with tractionControl (order 10, but does nothing there) and yawControl (order 20). Under acceleration, if it detects oversteer via the body slip angle, it sets overrideMin/overrideMax of the locking actuator (by default \"electronicSplitShaftLock\") to distribute torque between the front/rear axles according to the mode (rearMain, frontMain, centerDiff).",
   "notes": [
-    "Clés jbeam : awdActuatorName (défaut \"electronicSplitShaftLock\", nom d'un actionneur CMU), controlMode (\"rearMain\" par défaut, \"frontMain\" ou \"centerDiff\" ; centerDiff réutilise rearMain), slipAngleThreshold (défaut 0.2 rad).",
-    "Si l'actionneur est introuvable, actAsTractionControl et actAsYawControl sont remplacées par nop et le composant ne s'enregistre nulle part.",
-    "actAsYawControl renvoie toujours false volontairement, pour ne pas faire s'allumer le voyant ESC (trop intrusif pour le contrôle AWD) ; l'état réel est dans isActingAsYC.",
-    "Mode rearMain : overrideMin monte de 0 à 1 quand l'angle de dérive corrigé passe de 0 à slipAngleThreshold ; mode frontMain : overrideMax descend de 1 à 0. La détection du sous-virage n'est pas implémentée (commentaire « todo » dans le code).",
-    "Paramètres modifiables via setParameters : tractionControl, tractionControl.isEnabled, yawControl, yawControl.isEnabled, yawControl.slipAngleThreshold, controlMode.",
-    "Le contrôle n'agit que si electrics.values.throttle > 0."
+    "jbeam keys: awdActuatorName (default \"electronicSplitShaftLock\", name of a CMU actuator), controlMode (\"rearMain\" by default, \"frontMain\" or \"centerDiff\"; centerDiff reuses rearMain), slipAngleThreshold (default 0.2 rad).",
+    "If the actuator is not found, actAsTractionControl and actAsYawControl are replaced by nop and the component registers nowhere.",
+    "actAsYawControl always returns false on purpose, so that the ESC light does not turn on (too intrusive for AWD control); the real state is in isActingAsYC.",
+    "rearMain mode: overrideMin rises from 0 to 1 as the corrected slip angle goes from 0 to slipAngleThreshold; frontMain mode: overrideMax falls from 1 to 0. Understeer detection is not implemented (\"todo\" comment in the code).",
+    "Parameters modifiable via setParameters: tractionControl, tractionControl.isEnabled, yawControl, yawControl.isEnabled, yawControl.slipAngleThreshold, controlMode.",
+    "The control only acts if electrics.values.throttle > 0."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution par défaut (70)."},
-    "componentOrderTractionControl": {"type": "number", "desc": "10."},
-    "componentOrderYawControl": {"type": "number", "desc": "20."},
-    "componentOrderABSControl": {"type": "number", "desc": "1000 : inutilisé."},
-    "isActive": {"type": "boolean", "desc": "Vrai après initSecondStage."},
-    "isActingAsTC": {"type": "boolean", "desc": "Toujours false."},
-    "isActingAsYC": {"type": "boolean", "desc": "Vrai quand un override de verrouillage est appliqué."},
-    "isActingAsABS": {"type": "boolean", "desc": "Toujours false."},
-    "actAsABSControl": {"type": "function", "desc": "nop."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "Default execution order (70)."
+    },
+    "componentOrderTractionControl": {
+      "type": "number",
+      "desc": "10."
+    },
+    "componentOrderYawControl": {
+      "type": "number",
+      "desc": "20."
+    },
+    "componentOrderABSControl": {
+      "type": "number",
+      "desc": "1000: unused."
+    },
+    "isActive": {
+      "type": "boolean",
+      "desc": "True after initSecondStage."
+    },
+    "isActingAsTC": {
+      "type": "boolean",
+      "desc": "Always false."
+    },
+    "isActingAsYC": {
+      "type": "boolean",
+      "desc": "True when a locking override is applied."
+    },
+    "isActingAsABS": {
+      "type": "boolean",
+      "desc": "Always false."
+    },
+    "actAsABSControl": {
+      "type": "function",
+      "desc": "nop."
+    }
   },
   "functions": {
-    "init": {"desc": "Remet à false les indicateurs.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "initSecondStage": {"desc": "Cherche l'actionneur AWD, s'enregistre auprès des superviseurs et lit controlMode et slipAngleThreshold.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (voir notes)."}}, "returns": [], "internal": true},
-    "initLastStage": {"desc": "Ne fait rien.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "reset": {"desc": "Remet à false les indicateurs.", "params": {}, "returns": [], "internal": true},
-    "updateGFX": {"desc": "Vide (version debug : envoie un paquet d'état).", "params": {"dt": {"type": "number", "desc": "Pas de temps graphique (s)."}}, "returns": [], "internal": true},
-    "actAsTractionControl": {"desc": "Appelé par tractionControl ; ne fait rien et renvoie false.", "params": {"wheelGroup": {"type": "table", "desc": "Groupe de roues."}, "dt": {"type": "number", "desc": "Pas de temps (s)."}}, "returns": [{"type": "boolean", "desc": "false."}], "internal": true},
-    "actAsYawControl": {
-      "desc": "Appelé par yawControl : réinitialise puis calcule les bornes overrideMin/overrideMax de l'actionneur de verrouillage à partir de l'angle de dérive de caisse (survirage sous accélération seulement).",
+    "init": {
+      "desc": "Resets the flags to false.",
       "params": {
-        "measuredYaw": {"type": "number", "desc": "Lacet mesuré (rad/s)."},
-        "expectedYaw": {"type": "number", "desc": "Lacet attendu, non utilisé."},
-        "yawDifference": {"type": "number", "desc": "Écart de lacet, non utilisé."},
-        "bodySlipAngle": {"type": "number", "desc": "Angle de dérive de caisse ajusté (rad)."},
-        "frontSlipAngle": {"type": "number", "desc": "Non utilisé."},
-        "rearSlipAngle": {"type": "number", "desc": "Non utilisé."},
-        "dt": {"type": "number", "desc": "Pas de temps (s)."}
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "Toujours false (voir notes)."}],
+      "returns": [],
       "internal": true
     },
-    "setDebugMode": {"desc": "Active/désactive les paquets de debug.", "params": {"debugEnabled": {"type": "boolean", "desc": "Vrai pour activer."}}, "returns": []},
-    "registerCMU": {"desc": "Mémorise la référence au CMU.", "params": {"cmu": {"type": "table", "desc": "Contrôleur CMU."}}, "returns": [], "internal": true},
-    "shutdown": {"desc": "Désactive le composant.", "params": {}, "returns": []},
-    "setParameters": {"desc": "Applique des paramètres (voir notes) et recalcule la méthode de contrôle selon controlMode.", "params": {"parameters": {"type": "table<string, any>", "desc": "Paramètres à appliquer."}}, "returns": []},
-    "setConfig": {"desc": "Remplace la configuration complète.", "params": {"configTable": {"type": "table", "desc": "Table {tractionControl, yawControl, controlMode}."}}, "returns": []},
-    "getConfig": {"desc": "Renvoie une copie de la configuration.", "params": {}, "returns": [{"type": "table", "desc": "Copie de la configuration."}]},
-    "sendConfigData": {"desc": "Envoie la configuration au CMU (paquet de debug).", "params": {}, "returns": []}
+    "initSecondStage": {
+      "desc": "Looks for the AWD actuator, registers with the supervisors and reads controlMode and slipAngleThreshold.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "jbeam data (see notes)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initLastStage": {
+      "desc": "Does nothing.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Resets the flags to false.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Empty (debug version: sends a state packet).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Graphics time step (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "actAsTractionControl": {
+      "desc": "Called by tractionControl; does nothing and returns false.",
+      "params": {
+        "wheelGroup": {
+          "type": "table",
+          "desc": "Wheel group."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false."
+        }
+      ],
+      "internal": true
+    },
+    "actAsYawControl": {
+      "desc": "Called by yawControl: resets then computes the overrideMin/overrideMax bounds of the locking actuator from the body slip angle (oversteer under acceleration only).",
+      "params": {
+        "measuredYaw": {
+          "type": "number",
+          "desc": "Measured yaw (rad/s)."
+        },
+        "expectedYaw": {
+          "type": "number",
+          "desc": "Expected yaw, unused."
+        },
+        "yawDifference": {
+          "type": "number",
+          "desc": "Yaw error, unused."
+        },
+        "bodySlipAngle": {
+          "type": "number",
+          "desc": "Adjusted body slip angle (rad)."
+        },
+        "frontSlipAngle": {
+          "type": "number",
+          "desc": "Not used."
+        },
+        "rearSlipAngle": {
+          "type": "number",
+          "desc": "Not used."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Always false (see notes)."
+        }
+      ],
+      "internal": true
+    },
+    "setDebugMode": {
+      "desc": "Enables/disables debug packets.",
+      "params": {
+        "debugEnabled": {
+          "type": "boolean",
+          "desc": "True to enable."
+        }
+      },
+      "returns": []
+    },
+    "registerCMU": {
+      "desc": "Stores the reference to the CMU.",
+      "params": {
+        "cmu": {
+          "type": "table",
+          "desc": "CMU controller."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "shutdown": {
+      "desc": "Disables the component.",
+      "params": {},
+      "returns": []
+    },
+    "setParameters": {
+      "desc": "Applies parameters (see notes) and recomputes the control method according to controlMode.",
+      "params": {
+        "parameters": {
+          "type": "table<string, any>",
+          "desc": "Parameters to apply."
+        }
+      },
+      "returns": []
+    },
+    "setConfig": {
+      "desc": "Replaces the entire configuration.",
+      "params": {
+        "configTable": {
+          "type": "table",
+          "desc": "Table {tractionControl, yawControl, controlMode}."
+        }
+      },
+      "returns": []
+    },
+    "getConfig": {
+      "desc": "Returns a copy of the configuration.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy of the configuration."
+        }
+      ]
+    },
+    "sendConfigData": {
+      "desc": "Sends the configuration to the CMU (debug packet).",
+      "params": {},
+      "returns": []
+    }
   }
 }

@@ -1,73 +1,158 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/cameraRig.lua",
-  "module": "Rig de caméra réutilisable pour les outils de l'éditeur : état de panoramique (pan, vue quasi aérienne nord en haut) et d'orbite avec inertie, qui produit une pose (pos, yaw, pitch, roll) pour une caméra pilotée par script (scriptedFree). Module d'état et de maths pur, sans couplage moteur : l'outil hôte lit les entrées, appelle update() chaque frame et pousse la pose renvoyée. Les transitions chronométrées entre focus restent à la charge de l'hôte.",
+  "module": "Reusable camera rig for editor tools: pan state (pan, near-aerial view with north up) and orbit state with inertia, which produces a pose (pos, yaw, pitch, roll) for a script-driven camera (scriptedFree). Pure state and math module, with no engine coupling: the host tool reads the inputs, calls update() every frame and pushes the returned pose. Timed transitions between focuses remain the host's responsibility.",
   "notes": [
-    "Les angles sont en degrés ; yaw 0 regarde vers +Y, un pitch positif regarde vers le bas.",
-    "La position renvoyée est un vec3 partagé réutilisé à chaque appel : la copier pour la conserver.",
-    "Le pan utilise pitch 89.9 (pas 90) et roll 0 pour éviter la dégénérescence de la base du quaternion.",
-    "Constantes : pan hauteur 15 à 3000 m (défaut 220), zoom x0.86 par cran ; orbite distance 6 à 2500 m (défaut 130), pitch -30 à 88, marge au sol 2 m ; les deltas de souris > 250 px sont rejetés (recentrage du curseur caché).",
-    "update() borne dt à 0.05 s."
+    "Angles are in degrees; yaw 0 looks toward +Y, a positive pitch looks downward.",
+    "The returned position is a shared vec3 reused on every call: copy it to keep it.",
+    "The pan uses pitch 89.9 (not 90) and roll 0 to avoid degeneracy of the quaternion basis.",
+    "Constants: pan height 15 to 3000 m (default 220), zoom x0.86 per notch; orbit distance 6 to 2500 m (default 130), pitch -30 to 88, ground margin 2 m; mouse deltas > 250 px are rejected (hidden cursor recentering).",
+    "update() clamps dt to 0.05 s."
   ],
   "functions": {
     "update": {
-      "desc": "Avance la caméra interactive d'une frame et renvoie la pose à pousser. En pan, un glissé attrape le sol (avec inertie) ; en orbite il fait tourner autour du pivot (avec inertie) ; la molette zoome/dolly.",
+      "desc": "Advances the interactive camera by one frame and returns the pose to push. In pan, a drag grabs the ground (with inertia); in orbit it rotates around the pivot (with inertia); the wheel zooms/dollies.",
       "params": {
-        "dt": {"type": "number|nil", "desc": "Durée de frame en secondes (plafonnée à 0.05)."},
-        "input": {"type": "table|nil", "desc": "{ dragActive:boolean, dragDX:number, dragDY:number (pixels écran), wheel:number (crans), groundZAt:function(x,y[,heightAbove])->number|nil (altitude du sol ; moyenne sur la vue si heightAbove), limitXY:function(x,y)->x,y (borne le centre du pan) }"}
+        "dt": {
+          "type": "number|nil",
+          "desc": "Frame duration in seconds (capped at 0.05)."
+        },
+        "input": {
+          "type": "table|nil",
+          "desc": "{ dragActive:boolean, dragDX:number, dragDY:number (screen pixels), wheel:number (notches), groundZAt:function(x,y[,heightAbove])->number|nil (ground altitude; average over the view if heightAbove), limitXY:function(x,y)->x,y (bounds the pan center) }"
+        }
       },
       "returns": [
-        {"type": "vec3", "desc": "Position de la caméra (vec3 partagé)."},
-        {"type": "number", "desc": "yaw en degrés"},
-        {"type": "number", "desc": "pitch en degrés"},
-        {"type": "number", "desc": "roll en degrés"}
+        {
+          "type": "vec3",
+          "desc": "Camera position (shared vec3)."
+        },
+        {
+          "type": "number",
+          "desc": "yaw in degrees"
+        },
+        {
+          "type": "number",
+          "desc": "pitch in degrees"
+        },
+        {
+          "type": "number",
+          "desc": "roll in degrees"
+        }
       ]
     },
     "focusFootprint": {
-      "desc": "Passe en mode PAN centré sur l'origine d'une emprise et renvoie sa pose cible vue de dessus.",
+      "desc": "Switches to PAN mode centered on the origin of a footprint and returns its target top-down pose.",
       "params": {
-        "originXY": {"type": "table|nil", "desc": "{x=,y=} centre (0,0 si nil)."},
-        "terrainH": {"type": "number|nil", "desc": "Altitude du sol ; si nil on garde la dernière connue."},
-        "height": {"type": "number|nil", "desc": "Hauteur de la caméra au-dessus du sol (bornée à 15-3000 m)."}
+        "originXY": {
+          "type": "table|nil",
+          "desc": "{x=,y=} center (0,0 if nil)."
+        },
+        "terrainH": {
+          "type": "number|nil",
+          "desc": "Ground altitude; if nil the last known one is kept."
+        },
+        "height": {
+          "type": "number|nil",
+          "desc": "Camera height above the ground (clamped to 15-3000 m)."
+        }
       },
       "returns": [
-        {"type": "vec3", "desc": "Position"},
-        {"type": "number", "desc": "yaw"},
-        {"type": "number", "desc": "pitch"},
-        {"type": "number", "desc": "roll"}
+        {
+          "type": "vec3",
+          "desc": "Position"
+        },
+        {
+          "type": "number",
+          "desc": "yaw"
+        },
+        {
+          "type": "number",
+          "desc": "pitch"
+        },
+        {
+          "type": "number",
+          "desc": "roll"
+        }
       ]
     },
     "focusMassing": {
-      "desc": "Passe en mode ORBITE centré sur le centroïde d'un bâtiment et renvoie sa pose cible en 3/4. La distance vaut radius*2.4 (bornée), sinon 130 m.",
+      "desc": "Switches to ORBIT mode centered on the centroid of a building and returns its 3/4 target pose. The distance is radius*2.4 (clamped), otherwise 130 m.",
       "params": {
-        "centroid": {"type": "vec3|nil", "desc": "Pivot (origine si nil)."},
-        "radius": {"type": "number|nil", "desc": "Rayon englobant ; utilisé seulement s'il est > 1."},
-        "yawDeg": {"type": "number|nil", "desc": "Yaw initial (défaut 30)."},
-        "pitchDeg": {"type": "number|nil", "desc": "Pitch initial (défaut 32, borné -30..88)."}
+        "centroid": {
+          "type": "vec3|nil",
+          "desc": "Pivot (origin if nil)."
+        },
+        "radius": {
+          "type": "number|nil",
+          "desc": "Bounding radius; used only if > 1."
+        },
+        "yawDeg": {
+          "type": "number|nil",
+          "desc": "Initial yaw (default 30)."
+        },
+        "pitchDeg": {
+          "type": "number|nil",
+          "desc": "Initial pitch (default 32, clamped -30..88)."
+        }
       },
       "returns": [
-        {"type": "vec3", "desc": "Position"},
-        {"type": "number", "desc": "yaw"},
-        {"type": "number", "desc": "pitch"},
-        {"type": "number", "desc": "roll (0)"}
+        {
+          "type": "vec3",
+          "desc": "Position"
+        },
+        {
+          "type": "number",
+          "desc": "yaw"
+        },
+        {
+          "type": "number",
+          "desc": "pitch"
+        },
+        {
+          "type": "number",
+          "desc": "roll (0)"
+        }
       ]
     },
     "recenter": {
-      "desc": "Déplace le PIVOT de l'orbite vers `centroid` en gardant yaw/pitch/distance, et renvoie la pose qui conserve le cadrage. Passe en mode orbite et annule l'inertie.",
-      "params": {"centroid": {"type": "vec3|nil", "desc": "Nouveau pivot (chaque composante manquante garde l'ancienne)."}},
+      "desc": "Moves the orbit PIVOT to `centroid` while keeping yaw/pitch/distance, and returns the pose that preserves the framing. Switches to orbit mode and cancels inertia.",
+      "params": {
+        "centroid": {
+          "type": "vec3|nil",
+          "desc": "New pivot (each missing component keeps the old one)."
+        }
+      },
       "returns": [
-        {"type": "vec3", "desc": "Position"},
-        {"type": "number", "desc": "yaw"},
-        {"type": "number", "desc": "pitch"},
-        {"type": "number", "desc": "roll (0)"}
+        {
+          "type": "vec3",
+          "desc": "Position"
+        },
+        {
+          "type": "number",
+          "desc": "yaw"
+        },
+        {
+          "type": "number",
+          "desc": "pitch"
+        },
+        {
+          "type": "number",
+          "desc": "roll (0)"
+        }
       ]
     },
     "settle": {
-      "desc": "Annule toute inertie résiduelle (pan et orbite) et l'état de glissé ; à appeler quand une transition chronométrée se termine avant de rendre la main à l'interaction.",
+      "desc": "Cancels any residual inertia (pan and orbit) and the drag state; to be called when a timed transition ends before handing control back to interaction.",
       "params": {}
     },
     "getMode": {
-      "desc": "Mode courant du rig.",
-      "returns": [{"type": "string", "desc": "'pan' (emprise) ou 'orbit' (volume)."}]
+      "desc": "Current mode of the rig.",
+      "returns": [
+        {
+          "type": "string",
+          "desc": "'pan' (footprint) or 'orbit' (volume)."
+        }
+      ]
     }
   }
 }

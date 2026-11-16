@@ -1,63 +1,63 @@
 # `editor_vehicleEditor_liveEditor_vePowerTrain`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/liveEditor/vePowerTrain.lua` · VM : Game Engine (GE) · 107 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/liveEditor/vePowerTrain.lua` · VM: Game Engine (GE) · 107 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_liveEditor_vePowerTrain` : `extensions.load("editor_vehicleEditor_liveEditor_vePowerTrain")`, puis la globale `editor_vehicleEditor_liveEditor_vePowerTrain`
+**Access:** extension `editor_vehicleEditor_liveEditor_vePowerTrain`: `extensions.load("editor_vehicleEditor_liveEditor_vePowerTrain")`, then the global `editor_vehicleEditor_liveEditor_vePowerTrain`
 
-Fenêtre 'Powertrain' (Powertrain Inspector) du Vehicle Editor live. Chaque frame elle demande au véhicule powertrain.serializeDevicesInfo() (stocké dans vEditor.powertrainDevices), propose un combo des devices triés par nom, puis affiche leurs données jbeam et leurs données live grâce à powerTrainUtils. Dépend de editor_veMain.
+'Powertrain' window (Powertrain Inspector) of the live Vehicle Editor. Every frame it asks the vehicle for powertrain.serializeDevicesInfo() (stored in vEditor.powertrainDevices), offers a combo of the devices sorted by name, then displays their jbeam data and live data using powerTrainUtils. Depends on editor_veMain.
 
-## Remarques
+## Notes
 
-- Incohérence : exporte `onDeserialize` (sans 'd') alors que le hook d'extension est `onDeserialized` ; devicePtr/windowOpen ne sont donc probablement pas restaurés.
-- La liste de devices est recalculée quand vEditor.resetDeviceString est vrai (changement de véhicule ou activation de l'éditeur).
+- Inconsistency: exports `onDeserialize` (without 'd') whereas the extension hook is `onDeserialized`; devicePtr/windowOpen are therefore probably not restored.
+- The device list is recomputed when vEditor.resetDeviceString is true (vehicle change or editor activation).
 
-**Dépendances (chargées avant) :** `editor_veMain`
+**Dependencies (loaded first):** `editor_veMain`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_liveEditor_vePowerTrain.onDeserialize(data)` | Restaure windowOpen et devicePtr (nom non standard). *(interne)* *(hook)* | 74 |
-| `editor_vehicleEditor_liveEditor_vePowerTrain.onEditorActivated()` | Appelé à l'activation de l'éditeur : force le recalcul de la liste de devices. *(interne)* *(hook)* | 96 |
-| `editor_vehicleEditor_liveEditor_vePowerTrain.onSerialize()` | Renvoie {windowOpen, devicePtr}. *(interne)* *(hook)* | 67 |
-| `editor_vehicleEditor_liveEditor_vePowerTrain.onUpdate(dt)` | Appelé chaque frame : demande les infos de devices au véhicule et dessine le combo, les données jbeam et les données live. *(interne)* *(hook)* | 20 |
-| `editor_vehicleEditor_liveEditor_vePowerTrain.onVehicleSwitched(oldVehicle, newVehicle, player)` | Au changement de véhicule, si l'éditeur est actif, vide la liste de devices et force le recalcul de la liste de noms. *(interne)* *(hook)* | 90 |
-| `editor_vehicleEditor_liveEditor_vePowerTrain.open()` | Ouvre la fenêtre. | 79 |
+| `editor_vehicleEditor_liveEditor_vePowerTrain.onDeserialize(data)` | Restores windowOpen and devicePtr (non-standard name). *(internal)* *(hook)* | 74 |
+| `editor_vehicleEditor_liveEditor_vePowerTrain.onEditorActivated()` | Called on editor activation: forces the recomputation of the device list. *(internal)* *(hook)* | 96 |
+| `editor_vehicleEditor_liveEditor_vePowerTrain.onSerialize()` | Returns {windowOpen, devicePtr}. *(internal)* *(hook)* | 67 |
+| `editor_vehicleEditor_liveEditor_vePowerTrain.onUpdate(dt)` | Called every frame: requests the device info from the vehicle and draws the combo, the jbeam data and the live data. *(internal)* *(hook)* | 20 |
+| `editor_vehicleEditor_liveEditor_vePowerTrain.onVehicleSwitched(oldVehicle, newVehicle, player)` | On vehicle change, if the editor is active, empties the device list and forces the recomputation of the name list. *(internal)* *(hook)* | 90 |
+| `editor_vehicleEditor_liveEditor_vePowerTrain.open()` | Opens the window. | 79 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_liveEditor_vePowerTrain.onDeserialize(data)`
 
-Restaure windowOpen et devicePtr (nom non standard).
+Restores windowOpen and devicePtr (non-standard name).
 
-- `data` (*table*) : Table de onSerialize.
+- `data` (*table*) : onSerialize table.
 
 #### `editor_vehicleEditor_liveEditor_vePowerTrain.onSerialize()`
 
-Renvoie {windowOpen, devicePtr}.
+Returns {windowOpen, devicePtr}.
 
-- **renvoie** : table {windowOpen = boolean, devicePtr = integer}
+- **returns**: table {windowOpen = boolean, devicePtr = integer}
 
 #### `editor_vehicleEditor_liveEditor_vePowerTrain.onUpdate(dt)`
 
-Appelé chaque frame : demande les infos de devices au véhicule et dessine le combo, les données jbeam et les données live.
+Called every frame: requests the device info from the vehicle and draws the combo, the jbeam data and the live data.
 
-- `dt` (*number*) : Delta temps.
+- `dt` (*number*) : Time delta.
 
 #### `editor_vehicleEditor_liveEditor_vePowerTrain.onVehicleSwitched(oldVehicle, newVehicle, player)`
 
-Au changement de véhicule, si l'éditeur est actif, vide la liste de devices et force le recalcul de la liste de noms.
+On vehicle change, if the editor is active, empties the device list and forces the recomputation of the name list.
 
-- `oldVehicle` (*integer*) : ID de l'ancien véhicule.
-- `newVehicle` (*integer*) : ID du nouveau véhicule.
-- `player` (*integer*) : Index du joueur.
+- `oldVehicle` (*integer*) : ID of the old vehicle.
+- `newVehicle` (*integer*) : ID of the new vehicle.
+- `player` (*integer*) : Player index.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | table<integer, string> | {'editor_veMain'}. |
 | `menuEntry` | string | 'Powertrain Inspector'. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/liveEditor/vePowerTrain.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/liveEditor/vePowerTrain.lua`.*

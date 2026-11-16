@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSpawned.lua",
+  "module": "Nœud événement « On Vehicle Spawned » (catégorie `logic`). Émet une impulsion sur `flow` et l'id `vehId` quand un véhicule est créé (hook `onVehicleSpawned`).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_afterTrigger": {
+          "desc": "Appelé par le gestionnaire après le déclenchement du nœud ; remet le drapeau d'événement à false.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Constructeur vide.",
+          "internal": true
+        },
+        "onVehicleSpawned": {
+          "desc": "Hook appelé à la création d'un véhicule ; mémorise `id` et lève le drapeau.",
+          "internal": true,
+          "params": {
+            "id": {
+              "type": "integer",
+              "desc": "Id du véhicule créé."
+            }
+          }
+        },
+        "work": {
+          "desc": "Si le drapeau est levé, remplit `vehId` et met `flow` à true une frame, sinon false.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

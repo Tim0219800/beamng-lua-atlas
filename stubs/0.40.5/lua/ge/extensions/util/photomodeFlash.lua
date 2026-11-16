@@ -2,56 +2,56 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/photomodeFlash.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Flash de mode photo : crée un projecteur (SpotLight, avec ombres, non sauvegardé dans le niveau) collé à la caméra pendant le mode photo, orienté vers le point visé (raycast depuis la caméra, sinon distance de mise au point DOF). Deux modes : « always » (allumé en continu) et « pulse » (allumé uniquement pendant la prise de capture). En mode pulse, runCapture attend 2 frames de préchauffage, déclenche la capture via le module screenshot, puis éteint le flash à la réception de onScreenshotAllDone (ou après 60 frames de secours). L'interface du mode photo appelle applyFromUi.
---- Accès : extension `util_photomodeFlash` : `extensions.load("util_photomodeFlash")`, puis la globale `util_photomodeFlash`
+--- Photo mode flash: creates a spotlight (SpotLight, with shadows, not saved in the level) attached to the camera during photo mode, aimed at the target point (raycast from the camera, otherwise the DOF focus distance). Two modes: "always" (continuously on) and "pulse" (on only during the capture). In pulse mode, runCapture waits 2 warm-up frames, triggers the capture via the screenshot module, then turns the flash off on receiving onScreenshotAllDone (or after 60 fallback frames). The photo mode UI calls applyFromUi.
+--- Access: extension `util_photomodeFlash`: `extensions.load("util_photomodeFlash")`, then the global `util_photomodeFlash`
 ---@class util_photomodeFlash
----@field capturePulseActive boolean true pendant une impulsion de flash liée à une capture
----@field enabled boolean true si le flash est actif (le projecteur existe)
----@field hue integer Teinte de la couleur en degrés, 0 à 360 (défaut 0)
----@field intensity number Intensité du projecteur (défaut 25000, de 0 à 1 000 000)
----@field mode string "always" (continu) ou "pulse" (seulement pendant une capture)
----@field outerAngle integer Angle extérieur du cône en degrés (défaut 55, de 1 à 179)
----@field saturation integer Saturation en pourcentage, 0 à 100 (défaut 0 : lumière blanche)
+---@field capturePulseActive boolean true during a flash pulse tied to a capture
+---@field enabled boolean true if the flash is active (the spotlight exists)
+---@field hue integer Color hue in degrees, 0 to 360 (default 0)
+---@field intensity number Spotlight intensity (default 25000, from 0 to 1,000,000)
+---@field mode string "always" (continuous) or "pulse" (only during a capture)
+---@field outerAngle integer Outer cone angle in degrees (default 55, from 1 to 179)
+---@field saturation integer Saturation in percent, 0 to 100 (default 0: white light)
 util_photomodeFlash = {}
 
---- Applique les réglages issus de l'interface du mode photo : bornage des valeurs puis activation du flash (ou désactivation si enabled n'est pas true).
----Source : lua/ge/extensions/util/photomodeFlash.lua:330
----@param enabled boolean Active le flash (désactive sinon)
----@param fireOnCapture boolean true pour le mode pulse, sinon always
----@param intensity number Intensité (0 à 1 000 000)
----@param outerAngle number Angle extérieur en degrés (1 à 179)
----@param hue number Teinte en degrés (0 à 360)
----@param saturation number Saturation en pourcentage (0 à 100)
+--- Applies the settings coming from the photo mode UI: clamps the values then enables the flash (or disables it if enabled is not true).
+---Source: lua/ge/extensions/util/photomodeFlash.lua:330
+---@param enabled boolean Enables the flash (disables otherwise)
+---@param fireOnCapture boolean true for pulse mode, otherwise always
+---@param intensity number Intensity (0 to 1,000,000)
+---@param outerAngle number Outer angle in degrees (1 to 179)
+---@param hue number Hue in degrees (0 to 360)
+---@param saturation number Saturation in percent (0 to 100)
 function util_photomodeFlash.applyFromUi(enabled, fireOnCapture, intensity, outerAngle, hue, saturation) end
 
---- Active ou désactive le flash : à l'activation crée le SpotLight dans MissionGroup et l'oriente ; à la désactivation le supprime. Annule toute impulsion en attente.
----Source : lua/ge/extensions/util/photomodeFlash.lua:268
----@param en boolean true pour activer (toute autre valeur désactive)
+--- Enables or disables the flash: on activation creates the SpotLight in MissionGroup and aims it; on deactivation removes it. Cancels any pending pulse.
+---Source: lua/ge/extensions/util/photomodeFlash.lua:268
+---@param en boolean true to enable (any other value disables)
 function util_photomodeFlash.enable(en) end
 
---- Hook appelé au déchargement : désactive le flash et supprime le projecteur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/photomodeFlash.lua:402
+--- Hook called on unload: disables the flash and removes the spotlight.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/photomodeFlash.lua:402
 function util_photomodeFlash.onExtensionUnloaded() end
 
---- Hook appelé chaque frame avant le rendu : replace le projecteur sur la caméra et fait avancer la machine à états de l'impulsion (préchauffage, capture, nettoyage, délai de secours).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/photomodeFlash.lua:346
----@param dtReal number Delta de temps réel (non utilisé)
----@param dtSim number Delta de temps de simulation (non utilisé)
----@param dtRaw number Delta de temps brut (non utilisé)
+--- Hook called every frame before rendering: repositions the spotlight on the camera and advances the pulse state machine (warm-up, capture, cleanup, fallback delay).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/photomodeFlash.lua:346
+---@param dtReal number Real-time delta (unused)
+---@param dtSim number Simulation time delta (unused)
+---@param dtRaw number Raw time delta (unused)
 function util_photomodeFlash.onPreRender(dtReal, dtSim, dtRaw) end
 
---- Hook appelé quand toutes les captures d'écran en cours sont terminées : démarre le nettoyage (extinction du flash) d'une impulsion en attente. Ignoré si le mode photo n'est pas ouvert.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/photomodeFlash.lua:394
+--- Hook called when all in-progress screenshots are done: starts the cleanup (turning the flash off) of a pending pulse. Ignored if photo mode is not open.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/photomodeFlash.lua:394
 function util_photomodeFlash.onScreenshotAllDone() end
 
---- Déclenche une capture d'écran en tenant compte du flash : direct si le flash est inactif ou en mode always, avec impulsion de lumière en mode pulse.
----Source : lua/ge/extensions/util/photomodeFlash.lua:291
----@param kind string Type de capture (voir notes)
----@param ... any Arguments transmis à la fonction du module screenshot correspondante (jusqu'à 6 selon le type)
----@return boolean  true si la capture est lancée ou planifiée
----@return string|nil  Code d'erreur : "capture_busy" ou "screenshot_request_failed"
+--- Triggers a screenshot taking the flash into account: direct if the flash is inactive or in always mode, with a light pulse in pulse mode.
+---Source: lua/ge/extensions/util/photomodeFlash.lua:291
+---@param kind string Capture type (see notes)
+---@param ... any Arguments passed to the corresponding screenshot module function _anon(up to 6 depending on the type)
+---@return boolean  true if the capture is started or scheduled
+---@return string|nil  Error code: "capture_busy" or "screenshot_request_failed"
 function util_photomodeFlash.runCapture(kind, ...) end
 

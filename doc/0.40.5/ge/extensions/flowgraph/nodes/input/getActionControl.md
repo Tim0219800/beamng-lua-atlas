@@ -1,18 +1,18 @@
 # `flowgraph_nodes_input_getActionControl`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/input/getActionControl.lua` · VM : Game Engine (GE) · 26 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/input/getActionControl.lua` · VM: Game Engine (GE) · 26 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/input/getActionControl")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/input/getActionControl")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Action Control » (repeat_instant). Donne le contrôle (touche/bouton) associé à une action d'entrée via core_input_bindings.getControlForAction(actionName). Sortie : controlName.
+Flowgraph node "Get Action Control" (repeat_instant). Gives the control (key/button) bound to an input action via core_input_bindings.getControlForAction(actionName). Output: controlName.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work(args)` | Écrit sur controlName le contrôle lié à actionName. | 21 |
+| `C:work(args)` | Writes the control bound to actionName to controlName. | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/input/getActionControl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/input/getActionControl.lua`.*

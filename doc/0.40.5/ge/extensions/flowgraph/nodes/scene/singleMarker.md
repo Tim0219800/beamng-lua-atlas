@@ -1,34 +1,34 @@
 # `flowgraph_nodes_scene_singleMarker`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/singleMarker.lua` · VM : Game Engine (GE) · 153 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/singleMarker.lua` · VM: Game Engine (GE) · 153 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/singleMarker")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/singleMarker")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Single Marker » (auteur BeamNG). Affiche un marqueur de course (scenario/race_marker) à une position avec un rayon. Doit être réinitialisé manuellement (pin reset) ; la transparence selon la caméra n'est mise à jour qu'avec un flux continu. Types de marqueur : overhead, ringMarker, sideColumnMarker, sideMarker, cylinderMarker, attention, sideHologramMarker, singleHologramMarker. Entrées : flow, reset, position, radius, markerType, color, fadeNearDist, fadeFarDist ; sortie : flow.
+Flowgraph node "Single Marker" (author BeamNG). Displays a race marker (scenario/race_marker) at a position with a radius. Must be reset manually (reset pin); camera-dependent transparency is only updated with a continuous flow. Marker types: overhead, ringMarker, sideColumnMarker, sideMarker, cylinderMarker, attention, sideHologramMarker, singleHologramMarker. Inputs: flow, reset, position, radius, markerType, color, fadeNearDist, fadeFarDist; output: flow.
 
-## Remarques
+## Notes
 
-- Bug : _afterTrigger teste self.shown qui n'est jamais mis à true : le marqueur n'est pas caché quand le flow retombe, seul reset le supprime.
-- Ancien nom de pin : clear -> reset (legacyPins).
+- Bug: _afterTrigger tests self.shown which is never set to true: the marker is not hidden when the flow drops, only reset deletes it.
+- Old pin name: clear -> reset (legacyPins).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_afterTrigger()` | Après déclenchement : si flow est faux et le marqueur affiché, tente de le cacher. | 61 |
-| `C:_executionStarted()` | Réinitialise le cache de position/rayon. | 73 |
-| `C:_executionStopped()` | Cache le marqueur à l'arrêt. | 67 |
-| `C:blend()` | Vide (non utilisé). | 100 |
-| `C:destroy()` | Appelé à la destruction du noeud : nettoie les objets créés. | 148 |
-| `C:fillFields()` | Lit position (+ data.zOffset sur z), rayon (2 par défaut, 1er composant si table) et couleur ; renvoie true si position ou rayon ont changé. | 76 |
-| `C:hideMarker()` | Efface le marqueur (clearMarkers) et l'oublie. | 54 |
-| `C:init(mgr, ...)` | Initialise l'état ; data.zOffset = 0. | 36 |
-| `C:onClientEndMission()` | Hook de fin de mission : nettoie les objets créés par le noeud. | 144 |
-| `C:onDrawOnMinimap(td)` | Dessine un cercle avec pointeur de bord sur la minimap tant que le marqueur existe. | 138 |
-| `C:postInit()` | Propose les types de marqueur comme modèles du pin markerType. | 45 |
-| `C:work()` | Sur reset, cache le marqueur ; sur flow, crée le marqueur si besoin, le met à jour (setToCheckpoint, couleur, update) et active flow en sortie. | 106 |
+| `C:_afterTrigger()` | After the trigger: if flow is false and the marker is shown, tries to hide it. | 61 |
+| `C:_executionStarted()` | Resets the position/radius cache. | 73 |
+| `C:_executionStopped()` | Hides the marker on stop. | 67 |
+| `C:blend()` | Empty (unused). | 100 |
+| `C:destroy()` | Called when the node is destroyed: cleans up the created objects. | 148 |
+| `C:fillFields()` | Reads position (+ data.zOffset on z), radius (2 by default, 1st component if table) and color; returns true if position or radius changed. | 76 |
+| `C:hideMarker()` | Clears the marker (clearMarkers) and forgets it. | 54 |
+| `C:init(mgr, ...)` | Initializes the state; data.zOffset = 0. | 36 |
+| `C:onClientEndMission()` | End-of-mission hook: cleans up the objects created by the node. | 144 |
+| `C:onDrawOnMinimap(td)` | Draws a circle with an edge pointer on the minimap as long as the marker exists. | 138 |
+| `C:postInit()` | Offers the marker types as templates for the markerType pin. | 45 |
+| `C:work()` | On reset, hides the marker; on flow, creates the marker if needed, updates it (setToCheckpoint, color, update) and sets flow to active on output. | 106 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/singleMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/singleMarker.lua`.*

@@ -1,93 +1,93 @@
 # `editor_cameraV2_controller`
 
-*Fichier : `lua/ge/extensions/editor/cameraV2/controller.lua` · VM : Game Engine (GE) · 530 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/cameraV2/controller.lua` · VM: Game Engine (GE) · 530 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_cameraV2_controller` : `extensions.load("editor_cameraV2_controller")`, puis la globale `editor_cameraV2_controller`
+**Access:** extension `editor_cameraV2_controller`: `extensions.load("editor_cameraV2_controller")`, then the global `editor_cameraV2_controller`
 
-Contrôleur de Camera V2 : traite l'entrée souris routée vers Camera V2 et l'applique à la caméra libre existante (core_camera, caméra globale « free »). Il gère le panoramique à la souris (clic droit ou milieu selon la préférence swapPanOrbitButtons), délègue l'orbite à editor/cameraV2/orbit et le zoom à editor/cameraV2/zoom, anime la focalisation par double clic gauche (centrage sur le point visé avec un easing à dépassement), et règle la translation planaire WASD de la caméra libre. Il s'appuie sur core/cameraControllerRegistry (acquire/release/isOwner avec l'id « editor.cameraV2 ») pour qu'un geste ne soit traité que par un seul chemin d'entrée.
+Camera V2 controller: processes the mouse input routed to Camera V2 and applies it to the existing free camera (core_camera, global "free" camera). It handles mouse panning (right or middle click depending on the swapPanOrbitButtons preference), delegates orbit to editor/cameraV2/orbit and zoom to editor/cameraV2/zoom, animates focus on left double click (centering on the targeted point with an overshoot easing), and sets the planar WASD translation of the free camera. It relies on core/cameraControllerRegistry (acquire/release/isOwner with the id "editor.cameraV2") so that a gesture is handled by only one input path.
 
-## Remarques
+## Notes
 
-- Le contrôleur n'est disponible que si : il est activé (activate()), l'éditeur est actif, la caméra d'éditeur est de type Free et la caméra globale active est « free », la vue est survolée et imgui ne capte pas la souris (cameraAvailable).
-- Boutons : par défaut (swapPanOrbitButtons = true) pan = bouton droit (1), orbite = bouton milieu (2) ; sinon pan = milieu, orbite = droit. Le curseur est caché pendant une orbite au bouton milieu.
-- Le panoramique à la souris est borné à 4000 unités/s de vitesse, ignore les deltas de souris > 250 px (saut de curseur), et met à l'échelle les pixels selon la distance au point touché (distance bornée à [1 ; 5000]) et le FOV.
-- La focalisation (double clic gauche sans Ctrl/Shift/Alt, sans item imgui actif) dure entre 0,35 et 1 s selon la distance latérale à parcourir ; la caméra reste à sa profondeur, elle se translate latéralement, puis le pivot d'orbite est fixé sur le point visé (source « focus »).
-- Pour la translation planaire WASD, le contrôleur écrit sur la caméra libre : planarTranslation, planarTranslationScale, planarTranslationDrag, planarTranslationResponse, planarTranslationSpeedMultiplier, planarTranslationFastSpeedMultiplier. Traînée = -ln(0,05) / inertiaDuration.
-- Dans le code, onEditorMouseWheel est un hook de l'éditeur (valeur de molette) ; update() lit aussi im.GetIO().MouseWheel et le cumul pendingWheel, et ignore la molette si l'action « editorCameraZoom » est bloquée ou si editor.disableCameraZoom est vrai (ou Ctrl+Alt).
+- The controller is only available if: it is activated (activate()), the editor is active, the editor camera is of type Free and the active global camera is "free", the view is hovered and imgui is not capturing the mouse (cameraAvailable).
+- Buttons: by default (swapPanOrbitButtons = true) pan = right button (1), orbit = middle button (2); otherwise pan = middle, orbit = right. The cursor is hidden during a middle-button orbit.
+- Mouse panning is limited to a speed of 4000 units/s, ignores mouse deltas > 250 px (cursor jump), and scales pixels according to the distance to the hit point (distance clamped to [1; 5000]) and the FOV.
+- Focus (left double click without Ctrl/Shift/Alt, with no active imgui item) lasts between 0.35 and 1 s depending on the lateral distance to travel; the camera stays at its depth, translates laterally, then the orbit pivot is set on the targeted point (source "focus").
+- For planar WASD translation, the controller writes to the free camera: planarTranslation, planarTranslationScale, planarTranslationDrag, planarTranslationResponse, planarTranslationSpeedMultiplier, planarTranslationFastSpeedMultiplier. Drag = -ln(0.05) / inertiaDuration.
+- In the code, onEditorMouseWheel is an editor hook (wheel value); update() also reads im.GetIO().MouseWheel and the accumulated pendingWheel, and ignores the wheel if the "editorCameraZoom" action is blocked or if editor.disableCameraZoom is true (or Ctrl+Alt).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_cameraV2_controller.activate()` | Active le contrôleur et annule tout mouvement en cours. Appelé par cameraV2 à l'enregistrement. *(interne)* | 458 |
-| `editor_cameraV2_controller.cancel()` | Annule pan, zoom, orbite et focalisation en cours, remet à zéro la molette en attente, ré-affiche le curseur si besoin et libère la propriété du registre de contrôleurs. | 463 |
-| `editor_cameraV2_controller.consumeFocusDoubleClick()` | Détecte (une seule fois par frame, résultat mis en cache) un double clic gauche valide et, si le raycast touche un point raisonnable devant la caméra, démarre la transition de focalisation. Appelé aussi depuis cameraV2.consumeFocusDoubleClick pour que l'éditeur ne traite pas ce clic comme une sélection. | 291 |
-| `editor_cameraV2_controller.deactivate()` | Désactive le contrôleur, annule tout et réinitialise l'orbite. *(interne)* | 477 |
-| `editor_cameraV2_controller.lastZoomUsedTerrainOnly()` | Relaie zoom.lastZoomUsedTerrainOnly() (debug). | 483 |
-| `editor_cameraV2_controller.onEditorMouseWheel(value)` | Hook de molette de l'éditeur : si Camera V2 est actif, que la caméra libre est active et que la vue est survolée, annule pan/orbite/focalisation, prend la main sur le registre et accumule la valeur dans pendingWheel pour update(). *(hook)* | 346 |
-| `editor_cameraV2_controller.onRelativeInput(axis, value, player)` | Hook d'entrée relative (mouvement souris) : si le bouton de pan est enfoncé, acquiert le registre ; si le bouton d'orbite est enfoncé, passe les axes à orbit.onMouseInput ; sinon bloque ou laisse passer l'entrée selon l'état. Ne traite que le joueur 0. *(hook)* | 358 |
-| `editor_cameraV2_controller.orbitDebugState()` | Relaie orbit.getDebugState() (pivot d'orbite, distance, source, mouvement en cours) pour la fenêtre de debug. | 487 |
-| `editor_cameraV2_controller.panDebugState()` | État de debug du pan : point touché et distance au point, soit du geste en cours, soit du dernier calcul d'échelle planaire. | 491 |
-| `editor_cameraV2_controller.setPlanarTranslation(planar)` | Active ou désactive la translation WASD dans le plan XY sur la caméra libre (mode WASD « pan »). Efface les mouvements et entrées planaires résiduels et remet à zéro les paramètres planarTranslation* de la caméra libre. | 504 |
-| `editor_cameraV2_controller.update(deltaTime)` | Boucle principale appelée à chaque frame par cameraV2.onUpdate : met à jour l'échelle de translation planaire, traite le double clic de focalisation, la molette (zoom), l'acquisition du contrôleur, le zoom lissé, le pan, l'orbite et la focalisation, puis libère le registre quand plus rien ne bouge. *(interne)* | 397 |
+| `editor_cameraV2_controller.activate()` | Activates the controller and cancels any movement in progress. Called by cameraV2 on registration. *(internal)* | 458 |
+| `editor_cameraV2_controller.cancel()` | Cancels the current pan, zoom, orbit and focus, resets the pending wheel to zero, shows the cursor again if needed and releases ownership in the controller registry. | 463 |
+| `editor_cameraV2_controller.consumeFocusDoubleClick()` | Detects (once per frame, result cached) a valid left double click and, if the raycast hits a reasonable point in front of the camera, starts the focus transition. Also called from cameraV2.consumeFocusDoubleClick so that the editor does not treat this click as a selection. | 291 |
+| `editor_cameraV2_controller.deactivate()` | Deactivates the controller, cancels everything and resets the orbit. *(internal)* | 477 |
+| `editor_cameraV2_controller.lastZoomUsedTerrainOnly()` | Relays zoom.lastZoomUsedTerrainOnly() (debug). | 483 |
+| `editor_cameraV2_controller.onEditorMouseWheel(value)` | Editor wheel hook: if Camera V2 is active, the free camera is active and the view is hovered, cancels pan/orbit/focus, takes over the registry and accumulates the value in pendingWheel for update(). *(hook)* | 346 |
+| `editor_cameraV2_controller.onRelativeInput(axis, value, player)` | Relative input hook (mouse movement): if the pan button is held, acquires the registry; if the orbit button is held, passes the axes to orbit.onMouseInput; otherwise blocks or lets the input through depending on the state. Only handles player 0. *(hook)* | 358 |
+| `editor_cameraV2_controller.orbitDebugState()` | Relays orbit.getDebugState() (orbit pivot, distance, source, movement in progress) for the debug window. | 487 |
+| `editor_cameraV2_controller.panDebugState()` | Pan debug state: hit point and distance to the point, either from the current gesture or from the last planar scale computation. | 491 |
+| `editor_cameraV2_controller.setPlanarTranslation(planar)` | Enables or disables WASD translation in the XY plane on the free camera ("pan" WASD mode). Clears residual planar movements and inputs and resets the planarTranslation* parameters of the free camera to zero. | 504 |
+| `editor_cameraV2_controller.update(deltaTime)` | Main loop called every frame by cameraV2.onUpdate: updates the planar translation scale, handles the focus double click, the wheel (zoom), controller acquisition, smoothed zoom, pan, orbit and focus, then releases the registry when nothing moves anymore. *(internal)* | 397 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_cameraV2_controller.consumeFocusDoubleClick()`
 
-Détecte (une seule fois par frame, résultat mis en cache) un double clic gauche valide et, si le raycast touche un point raisonnable devant la caméra, démarre la transition de focalisation. Appelé aussi depuis cameraV2.consumeFocusDoubleClick pour que l'éditeur ne traite pas ce clic comme une sélection.
+Detects (once per frame, result cached) a valid left double click and, if the raycast hits a reasonable point in front of the camera, starts the focus transition. Also called from cameraV2.consumeFocusDoubleClick so that the editor does not treat this click as a selection.
 
-- **renvoie** : boolean true si le double clic a été consommé et la focalisation lancée
+- **returns**: boolean true if the double click was consumed and focus started
 
 #### `editor_cameraV2_controller.lastZoomUsedTerrainOnly()`
 
-Relaie zoom.lastZoomUsedTerrainOnly() (debug).
+Relays zoom.lastZoomUsedTerrainOnly() (debug).
 
-- **renvoie** : boolean voir zoom
+- **returns**: boolean see zoom
 
 #### `editor_cameraV2_controller.onEditorMouseWheel(value)`
 
-Hook de molette de l'éditeur : si Camera V2 est actif, que la caméra libre est active et que la vue est survolée, annule pan/orbite/focalisation, prend la main sur le registre et accumule la valeur dans pendingWheel pour update().
+Editor wheel hook: if Camera V2 is active, the free camera is active and the view is hovered, cancels pan/orbit/focus, takes over the registry and accumulates the value in pendingWheel for update().
 
-- `value` (*number*) : Crans de molette
-- **renvoie** : boolean true si l'événement est consommé ; false si le contrôleur est inactif ou non acquis
+- `value` (*number*) : Wheel notches
+- **returns**: boolean true if the event is consumed; false if the controller is inactive or not acquired
 
 #### `editor_cameraV2_controller.onRelativeInput(axis, value, player)`
 
-Hook d'entrée relative (mouvement souris) : si le bouton de pan est enfoncé, acquiert le registre ; si le bouton d'orbite est enfoncé, passe les axes à orbit.onMouseInput ; sinon bloque ou laisse passer l'entrée selon l'état. Ne traite que le joueur 0.
+Relative input hook (mouse movement): if the pan button is held, acquires the registry; if the orbit button is held, passes the axes to orbit.onMouseInput; otherwise blocks or lets the input through depending on the state. Only handles player 0.
 
-- `axis` (*string|integer*) : Axe d'entrée relatif (transmis tel quel à orbit.onMouseInput)
-- `value` (*number*) : Valeur du mouvement
-- `player` (*integer|nil*) : Indice du joueur (nil = 0)
-- **renvoie** : boolean true si Camera V2 consomme l'entrée
+- `axis` (*string|integer*) : Relative input axis (passed as is to orbit.onMouseInput)
+- `value` (*number*) : Movement value
+- `player` (*integer|nil*) : Player index (nil = 0)
+- **returns**: boolean true if Camera V2 consumes the input
 
 #### `editor_cameraV2_controller.orbitDebugState()`
 
-Relaie orbit.getDebugState() (pivot d'orbite, distance, source, mouvement en cours) pour la fenêtre de debug.
+Relays orbit.getDebugState() (orbit pivot, distance, source, movement in progress) for the debug window.
 
-- **renvoie** : table|nil État de debug d'orbite
+- **returns**: table|nil Orbit debug state
 
 #### `editor_cameraV2_controller.panDebugState()`
 
-État de debug du pan : point touché et distance au point, soit du geste en cours, soit du dernier calcul d'échelle planaire.
+Pan debug state: hit point and distance to the point, either from the current gesture or from the last planar scale computation.
 
-- **renvoie** : table|nil {point = vec3, distance = number|nil}, ou nil
+- **returns**: table|nil {point = vec3, distance = number|nil}, or nil
 
 #### `editor_cameraV2_controller.setPlanarTranslation(planar)`
 
-Active ou désactive la translation WASD dans le plan XY sur la caméra libre (mode WASD « pan »). Efface les mouvements et entrées planaires résiduels et remet à zéro les paramètres planarTranslation* de la caméra libre.
+Enables or disables WASD translation in the XY plane on the free camera ("pan" WASD mode). Clears residual planar movements and inputs and resets the planarTranslation* parameters of the free camera to zero.
 
-- `planar` (*boolean*) : true pour le mode planaire (tout le reste vaut false)
+- `planar` (*boolean*) : true for planar mode (anything else is false)
 
 #### `editor_cameraV2_controller.update(deltaTime)`
 
-Boucle principale appelée à chaque frame par cameraV2.onUpdate : met à jour l'échelle de translation planaire, traite le double clic de focalisation, la molette (zoom), l'acquisition du contrôleur, le zoom lissé, le pan, l'orbite et la focalisation, puis libère le registre quand plus rien ne bouge.
+Main loop called every frame by cameraV2.onUpdate: updates the planar translation scale, handles the focus double click, the wheel (zoom), controller acquisition, smoothed zoom, pan, orbit and focus, then releases the registry when nothing moves anymore.
 
-- `deltaTime` (*number|nil*) : Secondes ; limité à [0 ; 0,05]
+- `deltaTime` (*number|nil*) : Seconds; clamped to [0; 0.05]
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `castRay`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/cameraV2/controller.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/cameraV2/controller.lua`.*

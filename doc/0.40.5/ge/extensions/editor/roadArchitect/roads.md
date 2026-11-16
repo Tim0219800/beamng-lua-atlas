@@ -1,373 +1,373 @@
 # `editor_roadArchitect_roads`
 
-*Fichier : `lua/ge/extensions/editor/roadArchitect/roads.lua` · VM : Game Engine (GE) · 1645 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadArchitect/roads.lua` · VM: Game Engine (GE) · 1645 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadArchitect_roads` : `extensions.load("editor_roadArchitect_roads")`, puis la globale `editor_roadArchitect_roads`
+**Access:** extension `editor_roadArchitect_roads`: `extensions.load("editor_roadArchitect_roads")`, then the global `editor_roadArchitect_roads`
 
-Conteneur central du Road Architect : il stocke la liste des routes de la session (chaque route = nœuds, profil latéral, options d'affichage, pont, tunnels) et fournit toutes les opérations d'édition (ajout/suppression de nœuds, déplacement, hauteur, rotation latérale, découpe, retournement, copie, sérialisation). Il gère aussi le passage entre l'état « edit » et l'état « finalised » (création des maillages procéduraux, statiques, tunnels et décalcomanies). Un moddeur s'en sert pour créer ou manipuler des routes par script depuis l'éditeur ; les modules du Road Architect (geometry, profiles, decals, roadMesh…) lisent ses tables.
+Central container of Road Architect: it stores the list of the session's roads (each road = nodes, lateral profile, display options, bridge, tunnels) and provides all the editing operations (adding/removing nodes, moving, height, lateral rotation, cutting, flipping, copying, serialization). It also handles the transition between the "edit" and "finalised" states (creation of procedural meshes, static meshes, tunnels and decals). A modder uses it to create or manipulate roads by script from the editor; the Road Architect modules (geometry, profiles, decals, roadMesh...) read its tables.
 
-## Exemple
+## Example
 
 ```lua
 local roads = extensions.editor_roadArchitect_roads
 local idx = #roads.roads + 1
-roads.roads[idx] = roads.createRoadFromTemplate('Two Lane')  -- nom de modèle de profil (exemple)
+roads.roads[idx] = roads.createRoadFromTemplate('Two Lane')  -- profile template name (example)
 roads.map[roads.roads[idx].name] = idx
 roads.addNodeToRoad(idx, vec3(0, 0, 0))
 roads.addNodeToRoad(idx, vec3(50, 0, 0))
 roads.updateRoads()
 ```
 
-## Remarques
+## Notes
 
-- Une route est une table (champs : name, displayName (im.ArrayChar), nodes, profile, isVis/isDirty…, renderData, tunnels, groupIdx). Beaucoup de paramètres sont des pointeurs ImGui (im.BoolPtr, im.FloatPtr, im.IntPtr) : lire/écrire avec [0].
-- Un nœud = {p (vec3), isLocked, rot (FloatPtr, degrés), widths/heightsL/heightsR (tables FloatPtr indexées par clé de voie, -20..20), incircleRad, isAutoBanked, offset}.
-- Limites internes : hauteur des nœuds bornée à ±1000 m, rotation latérale bornée à ±50 degrés, largeur locale (setLocalWidth) bornée à [0.5, 10] m par voie.
-- createRoadFromProfile/createRoadFromTemplate renvoient seulement la table route : elles ne l'ajoutent PAS à roads.roads ni à roads.map (voir convertDecalRoads2RoadArchitect pour l'ajout manuel).
-- Les routes modifiées sont marquées isDirty via setDirty ; updateRoads() recalcule ensuite leur renderData (les routes à moins de 2 nœuds sont ignorées).
-- Une route nommée 'temp' (isHidden = true) sert à prévisualiser les profils (manageTempRoadSection).
-- BUG/incohérence : M.isAuditionProfileDirty est une copie booléenne figée au chargement (le flag réel est une variable locale) ; lire ce champ ne donne pas l'état courant.
-- BUG probable : reparameteriseDecalRoad (interne) utilise `while isError or iter > maxIter` (la borne est inversée) et construit ses points de largeur avec pp1.x/pp1.y pour tous les points.
-- BUG probable : updateBridgeParameters fait im.FloatPtr(road.bridgeWidth) alors que bridgeWidth est déjà un FloatPtr (il faudrait [0]).
-- convertDecalRoads2RoadArchitect : le commentaire dit que les DecalRoad d'origine sont supprimés, mais l'appel sel:delete() est commenté dans le code ; la fonction ne les supprime donc pas. De plus elle ne l'ajoute pas à roadMap via recomputeMap.
+- A road is a table (fields: name, displayName (im.ArrayChar), nodes, profile, isVis/isDirty..., renderData, tunnels, groupIdx). Many parameters are ImGui pointers (im.BoolPtr, im.FloatPtr, im.IntPtr): read/write with [0].
+- A node = {p (vec3), isLocked, rot (FloatPtr, degrees), widths/heightsL/heightsR (FloatPtr tables keyed by lane key, -20..20), incircleRad, isAutoBanked, offset}.
+- Internal limits: node height bounded to ±1000 m, lateral rotation bounded to ±50 degrees, local width (setLocalWidth) bounded to [0.5, 10] m per lane.
+- createRoadFromProfile/createRoadFromTemplate only return the road table: they do NOT add it to roads.roads or roads.map (see convertDecalRoads2RoadArchitect for manual addition).
+- Modified roads are marked isDirty via setDirty; updateRoads() then recomputes their renderData (roads with fewer than 2 nodes are ignored).
+- A road named 'temp' (isHidden = true) is used to preview profiles (manageTempRoadSection).
+- BUG/inconsistency: M.isAuditionProfileDirty is a boolean copy frozen at load time (the real flag is a local variable); reading this field does not give the current state.
+- BUG probable: reparameteriseDecalRoad (internal) uses `while isError or iter > maxIter` (the bound is inverted) and builds its width points with pp1.x/pp1.y for all points.
+- BUG probable: updateBridgeParameters does im.FloatPtr(road.bridgeWidth) whereas bridgeWidth is already a FloatPtr ([0] would be needed).
+- convertDecalRoads2RoadArchitect: the comment says the original DecalRoads are deleted, but the sel:delete() call is commented out in the code; the function therefore does not delete them. Moreover it does not add it to roadMap via recomputeMap.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadArchitect_roads.addIntermediateNode(rIdx, nIdx, lie)` | Ajoute un nœud entre le nœud sélectionné et son voisin (point milieu, valeurs moyennées). Aux extrémités de la route, copie le nœud et le place 3 m plus loin dans l'axe de la route. | 404 |
-| `editor_roadArchitect_roads.addNodeToRoad(rIdx, pos)` | Ajoute un nœud à la fin de la route, avec les largeurs/hauteurs par voie issues du profil. Marque la route dirty. | 191 |
-| `editor_roadArchitect_roads.addNodeToRoadAtIdx(rIdx, pos, idx)` | Insère un nœud à l'indice donné de la route. Marque la route dirty. | 210 |
-| `editor_roadArchitect_roads.adjustHeight(hNew, hOld, nIdx, rIdx)` | Modifie la hauteur d'un nœud (bornée à ±1000 m) et propage la variation aux autres nœuds (rigide ou champ de force). Marque dirty. | 555 |
-| `editor_roadArchitect_roads.adjustLateralRotation(rotNew, rotOld, nIdx, rIdx)` | Modifie la rotation latérale (devers) d'un nœud et propage aux autres (bornée à ±50 degrés). Sans effet si le profil est en auto-banking. | 602 |
-| `editor_roadArchitect_roads.clearAllRoads()` | Supprime toutes les routes qui ne sont pas des routes de jonction (isJctRoad). | 452 |
-| `editor_roadArchitect_roads.clearBridges()` | Vide la table des ponts du module roadMesh (sans supprimer les objets de scène). | 910 |
-| `editor_roadArchitect_roads.computeAABB2D(rIdx)` | Boîte englobante 2D des nœuds d'une route. Renvoie nil pour un pont ou un overlay. (Le commentaire annonce que la largeur du profil est incluse, mais le code ne prend en compte que les nœuds.) | 314 |
-| `editor_roadArchitect_roads.computeAllRoadRenderData()` | Recalcule le renderData de toutes les routes à 2 nœuds ou plus (via geometry). | 1115 |
-| `editor_roadArchitect_roads.computeRoadAABB_2D(r)` | Calcule la boîte englobante 2D alignée sur les axes des nœuds d'une route (utilisée uniquement par l'arbre d'accélération). | 137 |
-| `editor_roadArchitect_roads.computeRoadRenderDataSingle(i)` | Recalcule le renderData d'une seule route. | 1126 |
-| `editor_roadArchitect_roads.convertDecalRoads2RoadArchitect()` | Pour chaque DecalRoad sélectionné dans l'éditeur, crée une route Road Architect (nœuds re-paramétrés, profil selon lanesLeft/lanesRight) et l'ajoute à roads. Voir notes : les DecalRoad ne sont pas supprimés. | 1213 |
-| `editor_roadArchitect_roads.copyNode(n)` | Copie profonde d'un nœud (nouveaux pointeurs ImGui et nouveau vec3). | 285 |
-| `editor_roadArchitect_roads.copyRoad(r)` | Copie profonde d'une route (nœuds, profil, options, paramètres de pont/tunnel). Le nom est conservé identique, renderData est vidé, tunnels est vide et isDirty = true. | 663 |
-| `editor_roadArchitect_roads.createMultiSelect(gPolygon)` | Remplit roads.multi avec tous les nœuds de toutes les routes situés dans le polygone (en 2D). | 1075 |
-| `editor_roadArchitect_roads.createRoadFromProfile(profile)` | Construit une nouvelle table route à partir d'un profil latéral (met à jour les drapeaux de voies du profil, calcule les clés de voies). La route n'a aucun nœud et n'est pas ajoutée à la liste. | 61 |
-| `editor_roadArchitect_roads.createRoadFromTemplate(profileTemplateName)` | Comme createRoadFromProfile, mais le profil est créé à partir du nom d'un modèle de profil (avec un identifiant généré par Engine.generateUUID()). | 129 |
-| `editor_roadArchitect_roads.deserialiseRoad(rSer)` | Reconstruit une route (avec pointeurs ImGui, isDirty = true) à partir d'une table sérialisée par serialiseRoad. | 1505 |
-| `editor_roadArchitect_roads.finalise()` | Passe à l'état « finalised » : recalcule tous les renderData, crée un dossier de scène par route (« Road Architect - Road <i> »), génère les maillages de ponts puis de routes, les maillages statiques et les tunnels, recharge la collision (be:reloadCollision), pose les décalcomanies puis recharge le navgraph (map.reset()). | 1270 |
-| `editor_roadArchitect_roads.flipRoad(rIdx)` | Inverse le sens de la route (ordre des nœuds) et recalcule immédiatement son renderData. Utile pour corriger des imports. | 873 |
-| `editor_roadArchitect_roads.getCurrentMap()` | Renvoie le nom/identifiant de la carte (niveau) actuellement mémorisée par le module. | 55 |
-| `editor_roadArchitect_roads.getMultiSelectionCentroid()` | Centre de la boîte englobante 3D des nœuds de la multi-sélection. | 1100 |
-| `editor_roadArchitect_roads.getRoadsFromGroup(group)` | Renvoie les routes (sans doublon) appartenant à un groupe placé ; si group est nil, renvoie toutes les routes de la session. | 330 |
-| `editor_roadArchitect_roads.getTree()` | Renvoie le quadtree 2D utilisé pour le culling de l'affichage en édition (nil s'il n'existe pas encore). | 182 |
-| `editor_roadArchitect_roads.goToRoad(rIdx)` | Place la caméra libre à la verticale du centre de la route, à une hauteur qui cadre toute la route (selon le champ de vision). Ne fait rien si la route est trop petite (moins de 0.1 m d'étendue). | 478 |
-| `editor_roadArchitect_roads.isMouseAtIntermediatePos(rIdx, mousePos)` | Teste si la position de la souris est proche (tolérance 3.5 m en 2D) d'un segment de la route, entre deux nœuds, pour proposer l'insertion d'un nœud. | 230 |
-| `editor_roadArchitect_roads.manageTempRoadSection(pIdx)` | Crée ou met à jour la route temporaire 'temp' (segment droit de 20 m à 1000 m d'altitude) qui montre le profil en cours d'édition, place la caméra libre dessus et la fait tourner autour. Appelée à chaque frame pendant l'audition. | 959 |
-| `editor_roadArchitect_roads.moveRoad(road, nodeIdx, mouseNow, mouseLast)` | Translate une route : soit rigide (tous les nœuds non verrouillés), soit en champ de force (le nœud central suit la souris, les autres bougent proportionnellement à la distance, jusqu'au premier nœud verrouillé). Marque la route dirty. | 515 |
-| `editor_roadArchitect_roads.offsetByValue(offset)` | Ajoute un décalage vertical à tous les nœuds de toutes les routes et les marque dirty. | 1257 |
-| `editor_roadArchitect_roads.offsetRoads2Terrain()` | Active isConformRoadToTerrain sur toutes les routes (elles se posent sur le terrain) et les marque dirty. | 1249 |
-| `editor_roadArchitect_roads.recomputeMap()` | Reconstruit la table nom -> indice (roads.map). À appeler après toute insertion/suppression manuelle dans roads. | 353 |
-| `editor_roadArchitect_roads.removeAll()` | Supprime toutes les décalcomanies, maillages de routes, statiques, ponts et tunnels, puis vide roads et la map. | 913 |
-| `editor_roadArchitect_roads.removeGroupFromRoad(r, groupIdx)` | Retire un indice de groupe placé de la liste groupIdx de la route. | 1129 |
-| `editor_roadArchitect_roads.removeHiddenRoads()` | Supprime de roads toutes les routes masquées (isHidden) et leurs maillages, puis recalcule la map. | 462 |
-| `editor_roadArchitect_roads.removeNode(rIdx, nIdx)` | Supprime un nœud d'une route (table.remove). Ne marque pas la route dirty. | 385 |
-| `editor_roadArchitect_roads.removeRoad(roadName)` | Supprime une route par son nom : retire décalcomanies, maillages de route et statiques, entrée du quadtree, dossier de pont éventuel, puis l'entrée de roads et reconstruit la map. | 362 |
-| `editor_roadArchitect_roads.removeTree()` | Oublie le quadtree (il sera recréé au prochain setDirty). | 185 |
-| `editor_roadArchitect_roads.serialiseRoad(r)` | Convertit une route en table simple (valeurs plain, sans pointeurs ImGui) pour la sauvegarde JSON. | 1446 |
-| `editor_roadArchitect_roads.setAllDirty()` | Appelle setDirty sur toutes les routes. | 175 |
-| `editor_roadArchitect_roads.setAuditionProfileDirty()` | Demande la reconstruction de la route temporaire d'audition de profil au prochain appel de manageTempRoadSection. | 188 |
-| `editor_roadArchitect_roads.setBridgesVisibilityMaster(isShow)` | Affiche ou masque tous les ponts. | 1426 |
-| `editor_roadArchitect_roads.setCurrentMap(cMap)` | Mémorise la carte (niveau) actuellement chargée. | 58 |
-| `editor_roadArchitect_roads.setDirty(r)` | Marque la route comme à recalculer (isDirty), met à jour la condition du profil et réinsère la route dans le quadtree d'édition (créé à la demande avec l'étendue du terrain, ou 5000 m par défaut). | 149 |
-| `editor_roadArchitect_roads.setLocalWidth(rIdx, nIdx, offset)` | Modifie la largeur de toutes les voies de type 'road_lane' d'un nœud : nouvelle largeur = largeur de départ + offset, bornée à [0.5, 10]. | 260 |
-| `editor_roadArchitect_roads.setOverlaysVisibilityMaster(isShow)` | Affiche ou masque tous les overlays. | 1436 |
-| `editor_roadArchitect_roads.setRoadsVisibilityMaster(isShow)` | Affiche ou masque toutes les routes ordinaires (ni ponts ni overlays) en remplaçant leur isVis. | 1416 |
-| `editor_roadArchitect_roads.splitRoad(rIdx, nIdx)` | Coupe une route au nœud donné en deux nouvelles routes ([A] et [B], chacune avec une copie du nœud de coupure repoussé de 1 m), supprime l'ancienne route et les ajoute à roads. Utile pour créer des jonctions. | 737 |
-| `editor_roadArchitect_roads.unfinalise()` | Quitte l'état « finalised » : supprime décalcomanies, maillages, statiques et tunnels générés par finalise et revient à l'édition. | 1334 |
-| `editor_roadArchitect_roads.updateBridgeParameters(road)` | Applique la largeur et la profondeur de pont de la route aux deux premiers nœuds (voies -1 et 1). Voir notes : bug probable de pointeur. | 1054 |
-| `editor_roadArchitect_roads.updateMultiAfterRemove()` | Retire de roads.multi les entrées dont la route ou le nœud n'existe plus. | 1202 |
-| `editor_roadArchitect_roads.updateRoads()` | Recalcule le renderData de chaque route dirty ayant au moins 2 nœuds ; pour les ponts, met à jour aussi le maillage de pont dans le dossier de scène « Road Architect - Bridge <nom> ». À appeler à chaque frame d'édition. | 889 |
-| `editor_roadArchitect_roads.updateRoadsAfterRemovingGroup(placedGroups)` | Reconstruit les groupIdx de toutes les routes à partir de la liste des groupes placés restants (renumérotation après suppression d'un groupe). | 1188 |
-| `editor_roadArchitect_roads.updateWAndHToNewProfile(road)` | Réinitialise les largeurs et hauteurs par voie de tous les nœuds de la route selon son profil actuel (après changement de profil). | 304 |
+| `editor_roadArchitect_roads.addIntermediateNode(rIdx, nIdx, lie)` | Adds a node between the selected node and its neighbor (midpoint, averaged values). At the ends of the road, copies the node and places it 3 m further along the road axis. | 404 |
+| `editor_roadArchitect_roads.addNodeToRoad(rIdx, pos)` | Adds a node at the end of the road, with the per-lane widths/heights from the profile. Marks the road dirty. | 191 |
+| `editor_roadArchitect_roads.addNodeToRoadAtIdx(rIdx, pos, idx)` | Inserts a node at the given index of the road. Marks the road dirty. | 210 |
+| `editor_roadArchitect_roads.adjustHeight(hNew, hOld, nIdx, rIdx)` | Changes the height of a node (bounded to ±1000 m) and propagates the change to the other nodes (rigid or force field). Marks dirty. | 555 |
+| `editor_roadArchitect_roads.adjustLateralRotation(rotNew, rotOld, nIdx, rIdx)` | Changes the lateral rotation (banking) of a node and propagates it to the others (bounded to ±50 degrees). No effect if the profile is in auto-banking. | 602 |
+| `editor_roadArchitect_roads.clearAllRoads()` | Deletes all roads that are not junction roads (isJctRoad). | 452 |
+| `editor_roadArchitect_roads.clearBridges()` | Empties the bridges table of the roadMesh module (without deleting the scene objects). | 910 |
+| `editor_roadArchitect_roads.computeAABB2D(rIdx)` | 2D bounding box of a road's nodes. Returns nil for a bridge or an overlay. (The comment says the profile width is included, but the code only takes the nodes into account.) | 314 |
+| `editor_roadArchitect_roads.computeAllRoadRenderData()` | Recomputes the renderData of all roads with 2 or more nodes (via geometry). | 1115 |
+| `editor_roadArchitect_roads.computeRoadAABB_2D(r)` | Computes the axis-aligned 2D bounding box of a road's nodes (used only by the acceleration tree). | 137 |
+| `editor_roadArchitect_roads.computeRoadRenderDataSingle(i)` | Recomputes the renderData of a single road. | 1126 |
+| `editor_roadArchitect_roads.convertDecalRoads2RoadArchitect()` | For each DecalRoad selected in the editor, creates a Road Architect road (re-parameterized nodes, profile according to lanesLeft/lanesRight) and adds it to roads. See notes: the DecalRoads are not deleted. | 1213 |
+| `editor_roadArchitect_roads.copyNode(n)` | Deep copy of a node (new ImGui pointers and new vec3). | 285 |
+| `editor_roadArchitect_roads.copyRoad(r)` | Deep copy of a road (nodes, profile, options, bridge/tunnel parameters). The name is kept identical, renderData is emptied, tunnels is empty and isDirty = true. | 663 |
+| `editor_roadArchitect_roads.createMultiSelect(gPolygon)` | Fills roads.multi with all the nodes of all roads located inside the polygon (in 2D). | 1075 |
+| `editor_roadArchitect_roads.createRoadFromProfile(profile)` | Builds a new road table from a lateral profile (updates the profile's lane flags, computes the lane keys). The road has no nodes and is not added to the list. | 61 |
+| `editor_roadArchitect_roads.createRoadFromTemplate(profileTemplateName)` | Like createRoadFromProfile, but the profile is created from the name of a profile template (with an identifier generated by Engine.generateUUID()). | 129 |
+| `editor_roadArchitect_roads.deserialiseRoad(rSer)` | Rebuilds a road (with ImGui pointers, isDirty = true) from a table serialized by serialiseRoad. | 1505 |
+| `editor_roadArchitect_roads.finalise()` | Switches to the "finalised" state: recomputes all renderData, creates a scene folder per road ("Road Architect - Road <i>"), generates the bridge meshes then road meshes, the static meshes and the tunnels, reloads the collision (be:reloadCollision), places the decals then reloads the navgraph (map.reset()). | 1270 |
+| `editor_roadArchitect_roads.flipRoad(rIdx)` | Reverses the direction of the road (node order) and immediately recomputes its renderData. Useful for fixing imports. | 873 |
+| `editor_roadArchitect_roads.getCurrentMap()` | Returns the name/identifier of the map (level) currently stored by the module. | 55 |
+| `editor_roadArchitect_roads.getMultiSelectionCentroid()` | Center of the 3D bounding box of the multi-selection nodes. | 1100 |
+| `editor_roadArchitect_roads.getRoadsFromGroup(group)` | Returns the roads (without duplicates) belonging to a placed group; if group is nil, returns all the session's roads. | 330 |
+| `editor_roadArchitect_roads.getTree()` | Returns the 2D quadtree used for display culling while editing (nil if it does not exist yet). | 182 |
+| `editor_roadArchitect_roads.goToRoad(rIdx)` | Places the free camera directly above the center of the road, at a height that frames the whole road (according to the field of view). Does nothing if the road is too small (less than 0.1 m extent). | 478 |
+| `editor_roadArchitect_roads.isMouseAtIntermediatePos(rIdx, mousePos)` | Tests whether the mouse position is close (2D tolerance 3.5 m) to a segment of the road, between two nodes, to offer node insertion. | 230 |
+| `editor_roadArchitect_roads.manageTempRoadSection(pIdx)` | Creates or updates the temporary road 'temp' (20 m straight segment at 1000 m altitude) that shows the profile being edited, places the free camera on it and makes it rotate around. Called every frame during the audition. | 959 |
+| `editor_roadArchitect_roads.moveRoad(road, nodeIdx, mouseNow, mouseLast)` | Translates a road: either rigidly (all unlocked nodes), or as a force field (the central node follows the mouse, the others move proportionally to the distance, up to the first locked node). Marks the road dirty. | 515 |
+| `editor_roadArchitect_roads.offsetByValue(offset)` | Adds a vertical offset to all nodes of all roads and marks them dirty. | 1257 |
+| `editor_roadArchitect_roads.offsetRoads2Terrain()` | Enables isConformRoadToTerrain on all roads (they sit on the terrain) and marks them dirty. | 1249 |
+| `editor_roadArchitect_roads.recomputeMap()` | Rebuilds the name -> index table (roads.map). To be called after any manual insertion/removal in roads. | 353 |
+| `editor_roadArchitect_roads.removeAll()` | Deletes all decals, road meshes, statics, bridges and tunnels, then empties roads and the map. | 913 |
+| `editor_roadArchitect_roads.removeGroupFromRoad(r, groupIdx)` | Removes a placed group index from the road's groupIdx list. | 1129 |
+| `editor_roadArchitect_roads.removeHiddenRoads()` | Removes from roads all hidden roads (isHidden) and their meshes, then recomputes the map. | 462 |
+| `editor_roadArchitect_roads.removeNode(rIdx, nIdx)` | Removes a node from a road (table.remove). Does not mark the road dirty. | 385 |
+| `editor_roadArchitect_roads.removeRoad(roadName)` | Deletes a road by its name: removes decals, road and static meshes, quadtree entry, possible bridge folder, then the entry in roads and rebuilds the map. | 362 |
+| `editor_roadArchitect_roads.removeTree()` | Forgets the quadtree (it will be recreated on the next setDirty). | 185 |
+| `editor_roadArchitect_roads.serialiseRoad(r)` | Converts a road to a plain table (plain values, without ImGui pointers) for JSON saving. | 1446 |
+| `editor_roadArchitect_roads.setAllDirty()` | Calls setDirty on all roads. | 175 |
+| `editor_roadArchitect_roads.setAuditionProfileDirty()` | Requests the rebuild of the temporary profile audition road on the next call of manageTempRoadSection. | 188 |
+| `editor_roadArchitect_roads.setBridgesVisibilityMaster(isShow)` | Shows or hides all bridges. | 1426 |
+| `editor_roadArchitect_roads.setCurrentMap(cMap)` | Stores the map (level) currently loaded. | 58 |
+| `editor_roadArchitect_roads.setDirty(r)` | Marks the road as needing recomputation (isDirty), updates the profile condition and reinserts the road into the editing quadtree (created on demand with the terrain extent, or 5000 m by default). | 149 |
+| `editor_roadArchitect_roads.setLocalWidth(rIdx, nIdx, offset)` | Changes the width of all 'road_lane' type lanes of a node: new width = starting width + offset, bounded to [0.5, 10]. | 260 |
+| `editor_roadArchitect_roads.setOverlaysVisibilityMaster(isShow)` | Shows or hides all overlays. | 1436 |
+| `editor_roadArchitect_roads.setRoadsVisibilityMaster(isShow)` | Shows or hides all ordinary roads (neither bridges nor overlays) by overwriting their isVis. | 1416 |
+| `editor_roadArchitect_roads.splitRoad(rIdx, nIdx)` | Cuts a road at the given node into two new roads ([A] and [B], each with a copy of the cut node pushed back by 1 m), deletes the old road and adds them to roads. Useful for creating junctions. | 737 |
+| `editor_roadArchitect_roads.unfinalise()` | Leaves the "finalised" state: removes the decals, meshes, statics and tunnels generated by finalise and goes back to editing. | 1334 |
+| `editor_roadArchitect_roads.updateBridgeParameters(road)` | Applies the road's bridge width and depth to the first two nodes (lanes -1 and 1). See notes: probable pointer bug. | 1054 |
+| `editor_roadArchitect_roads.updateMultiAfterRemove()` | Removes from roads.multi the entries whose road or node no longer exists. | 1202 |
+| `editor_roadArchitect_roads.updateRoads()` | Recomputes the renderData of each dirty road having at least 2 nodes; for bridges, also updates the bridge mesh in the scene folder "Road Architect - Bridge <name>". To be called every editing frame. | 889 |
+| `editor_roadArchitect_roads.updateRoadsAfterRemovingGroup(placedGroups)` | Rebuilds the groupIdx of all roads from the list of remaining placed groups (renumbering after a group is deleted). | 1188 |
+| `editor_roadArchitect_roads.updateWAndHToNewProfile(road)` | Resets the per-lane widths and heights of all the road's nodes according to its current profile (after a profile change). | 304 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadArchitect_roads.addIntermediateNode(rIdx, nIdx, lie)`
 
-Ajoute un nœud entre le nœud sélectionné et son voisin (point milieu, valeurs moyennées). Aux extrémités de la route, copie le nœud et le place 3 m plus loin dans l'axe de la route.
+Adds a node between the selected node and its neighbor (midpoint, averaged values). At the ends of the road, copies the node and places it 3 m further along the road axis.
 
-- `rIdx` (*integer*) : Indice de la route.
-- `nIdx` (*integer*) : Indice du nœud sélectionné.
-- `lie` (*string*) : 'above' (avec le nœud précédent) ou 'below' (avec le nœud suivant).
+- `rIdx` (*integer*) : Index of the road.
+- `nIdx` (*integer*) : Index of the selected node.
+- `lie` (*string*) : 'above' (with the previous node) or 'below' (with the next node).
 
 #### `editor_roadArchitect_roads.addNodeToRoad(rIdx, pos)`
 
-Ajoute un nœud à la fin de la route, avec les largeurs/hauteurs par voie issues du profil. Marque la route dirty.
+Adds a node at the end of the road, with the per-lane widths/heights from the profile. Marks the road dirty.
 
-- `rIdx` (*integer*) : Indice de la route dans roads.
-- `pos` (*vec3*) : Position monde du nœud.
+- `rIdx` (*integer*) : Index of the road in roads.
+- `pos` (*vec3*) : World position of the node.
 
 #### `editor_roadArchitect_roads.addNodeToRoadAtIdx(rIdx, pos, idx)`
 
-Insère un nœud à l'indice donné de la route. Marque la route dirty.
+Inserts a node at the given index of the road. Marks the road dirty.
 
-- `rIdx` (*integer*) : Indice de la route.
-- `pos` (*vec3*) : Position monde.
-- `idx` (*integer*) : Indice d'insertion dans route.nodes (table.insert).
+- `rIdx` (*integer*) : Index of the road.
+- `pos` (*vec3*) : World position.
+- `idx` (*integer*) : Insertion index in route.nodes (table.insert).
 
 #### `editor_roadArchitect_roads.adjustHeight(hNew, hOld, nIdx, rIdx)`
 
-Modifie la hauteur d'un nœud (bornée à ±1000 m) et propage la variation aux autres nœuds (rigide ou champ de force). Marque dirty.
+Changes the height of a node (bounded to ±1000 m) and propagates the change to the other nodes (rigid or force field). Marks dirty.
 
-- `hNew` (*number*) : Nouvelle hauteur du nœud central, en mètres.
-- `hOld` (*number*) : Ancienne hauteur (sert à calculer la variation dz).
-- `nIdx` (*integer*) : Indice du nœud central.
-- `rIdx` (*integer*) : Indice de la route.
+- `hNew` (*number*) : New height of the central node, in meters.
+- `hOld` (*number*) : Old height (used to compute the change dz).
+- `nIdx` (*integer*) : Index of the central node.
+- `rIdx` (*integer*) : Index of the road.
 
 #### `editor_roadArchitect_roads.adjustLateralRotation(rotNew, rotOld, nIdx, rIdx)`
 
-Modifie la rotation latérale (devers) d'un nœud et propage aux autres (bornée à ±50 degrés). Sans effet si le profil est en auto-banking.
+Changes the lateral rotation (banking) of a node and propagates it to the others (bounded to ±50 degrees). No effect if the profile is in auto-banking.
 
-- `rotNew` (*number*) : Nouvelle rotation du nœud central, en degrés.
-- `rotOld` (*number*) : Ancienne rotation.
-- `nIdx` (*integer*) : Indice du nœud central.
-- `rIdx` (*integer*) : Indice de la route.
+- `rotNew` (*number*) : New rotation of the central node, in degrees.
+- `rotOld` (*number*) : Old rotation.
+- `nIdx` (*integer*) : Index of the central node.
+- `rIdx` (*integer*) : Index of the road.
 
 #### `editor_roadArchitect_roads.computeAABB2D(rIdx)`
 
-Boîte englobante 2D des nœuds d'une route. Renvoie nil pour un pont ou un overlay. (Le commentaire annonce que la largeur du profil est incluse, mais le code ne prend en compte que les nœuds.)
+2D bounding box of a road's nodes. Returns nil for a bridge or an overlay. (The comment says the profile width is included, but the code only takes the nodes into account.)
 
-- `rIdx` (*integer*) : Indice de la route.
-- **renvoie** : table|nil {xMin, xMax, yMin, yMax} ou nil.
+- `rIdx` (*integer*) : Index of the road.
+- **returns**: table|nil {xMin, xMax, yMin, yMax} or nil.
 
 #### `editor_roadArchitect_roads.computeRoadAABB_2D(r)`
 
-Calcule la boîte englobante 2D alignée sur les axes des nœuds d'une route (utilisée uniquement par l'arbre d'accélération).
+Computes the axis-aligned 2D bounding box of a road's nodes (used only by the acceleration tree).
 
-- `r` (*table*) : Route.
-- **renvoie** : number xMin
-- **renvoie** : number xMax
-- **renvoie** : number yMin
-- **renvoie** : number yMax
+- `r` (*table*) : Road.
+- **returns**: number xMin
+- **returns**: number xMax
+- **returns**: number yMin
+- **returns**: number yMax
 
 #### `editor_roadArchitect_roads.computeRoadRenderDataSingle(i)`
 
-Recalcule le renderData d'une seule route.
+Recomputes the renderData of a single road.
 
-- `i` (*integer*) : Indice de la route.
+- `i` (*integer*) : Index of the road.
 
 #### `editor_roadArchitect_roads.copyNode(n)`
 
-Copie profonde d'un nœud (nouveaux pointeurs ImGui et nouveau vec3).
+Deep copy of a node (new ImGui pointers and new vec3).
 
-- `n` (*table*) : Nœud.
-- **renvoie** : table Copie du nœud.
+- `n` (*table*) : Node.
+- **returns**: table Copy of the node.
 
 #### `editor_roadArchitect_roads.copyRoad(r)`
 
-Copie profonde d'une route (nœuds, profil, options, paramètres de pont/tunnel). Le nom est conservé identique, renderData est vidé, tunnels est vide et isDirty = true.
+Deep copy of a road (nodes, profile, options, bridge/tunnel parameters). The name is kept identical, renderData is emptied, tunnels is empty and isDirty = true.
 
-- `r` (*table*) : Route.
-- **renvoie** : table Copie de la route.
+- `r` (*table*) : Road.
+- **returns**: table Copy of the road.
 
 #### `editor_roadArchitect_roads.createMultiSelect(gPolygon)`
 
-Remplit roads.multi avec tous les nœuds de toutes les routes situés dans le polygone (en 2D).
+Fills roads.multi with all the nodes of all roads located inside the polygon (in 2D).
 
-- `gPolygon` (*table<integer, vec3>*) : Sommets du polygone de sélection.
+- `gPolygon` (*table<integer, vec3>*) : Vertices of the selection polygon.
 
 #### `editor_roadArchitect_roads.createRoadFromProfile(profile)`
 
-Construit une nouvelle table route à partir d'un profil latéral (met à jour les drapeaux de voies du profil, calcule les clés de voies). La route n'a aucun nœud et n'est pas ajoutée à la liste.
+Builds a new road table from a lateral profile (updates the profile's lane flags, computes the lane keys). The road has no nodes and is not added to the list.
 
-- `profile` (*table*) : Profil latéral (voir editor/roadArchitect/profiles).
-- **renvoie** : table La route créée (valeurs par défaut : visible, 15 divisions radiales de tunnel, pont de demi-largeur 5.5, profondeur 4, arche -6, etc.).
+- `profile` (*table*) : Lateral profile (see editor/roadArchitect/profiles).
+- **returns**: table The created road (default values: visible, 15 radial tunnel divisions, bridge half-width 5.5, depth 4, arch -6, etc.).
 
 #### `editor_roadArchitect_roads.createRoadFromTemplate(profileTemplateName)`
 
-Comme createRoadFromProfile, mais le profil est créé à partir du nom d'un modèle de profil (avec un identifiant généré par Engine.generateUUID()).
+Like createRoadFromProfile, but the profile is created from the name of a profile template (with an identifier generated by Engine.generateUUID()).
 
-- `profileTemplateName` (*string*) : Nom du modèle de profil.
-- **renvoie** : table La route créée.
+- `profileTemplateName` (*string*) : Profile template name.
+- **returns**: table The created road.
 
 #### `editor_roadArchitect_roads.deserialiseRoad(rSer)`
 
-Reconstruit une route (avec pointeurs ImGui, isDirty = true) à partir d'une table sérialisée par serialiseRoad.
+Rebuilds a road (with ImGui pointers, isDirty = true) from a table serialized by serialiseRoad.
 
-- `rSer` (*table*) : Route sérialisée.
-- **renvoie** : table Route utilisable dans roads.
+- `rSer` (*table*) : Serialized road.
+- **returns**: table Road usable in roads.
 
 #### `editor_roadArchitect_roads.flipRoad(rIdx)`
 
-Inverse le sens de la route (ordre des nœuds) et recalcule immédiatement son renderData. Utile pour corriger des imports.
+Reverses the direction of the road (node order) and immediately recomputes its renderData. Useful for fixing imports.
 
-- `rIdx` (*integer*) : Indice de la route.
+- `rIdx` (*integer*) : Index of the road.
 
 #### `editor_roadArchitect_roads.getCurrentMap()`
 
-Renvoie le nom/identifiant de la carte (niveau) actuellement mémorisée par le module.
+Returns the name/identifier of the map (level) currently stored by the module.
 
-- **renvoie** : any Valeur stockée par setCurrentMap (nil au départ).
+- **returns**: any Value stored by setCurrentMap (nil at start).
 
 #### `editor_roadArchitect_roads.getMultiSelectionCentroid()`
 
-Centre de la boîte englobante 3D des nœuds de la multi-sélection.
+Center of the 3D bounding box of the multi-selection nodes.
 
-- **renvoie** : vec3 Centre (valeurs absurdes si la sélection est vide).
+- **returns**: vec3 Center (nonsensical values if the selection is empty).
 
 #### `editor_roadArchitect_roads.getRoadsFromGroup(group)`
 
-Renvoie les routes (sans doublon) appartenant à un groupe placé ; si group est nil, renvoie toutes les routes de la session.
+Returns the roads (without duplicates) belonging to a placed group; if group is nil, returns all the session's roads.
 
-- `group` (*table|nil*) : Groupe avec group.list = liste d'entrées {r = nom de route, n = indice de nœud}.
-- **renvoie** : table Liste de routes.
+- `group` (*table|nil*) : Group with group.list = list of entries {r = road name, n = node index}.
+- **returns**: table List of roads.
 
 #### `editor_roadArchitect_roads.getTree()`
 
-Renvoie le quadtree 2D utilisé pour le culling de l'affichage en édition (nil s'il n'existe pas encore).
+Returns the 2D quadtree used for display culling while editing (nil if it does not exist yet).
 
-- **renvoie** : table|nil Le quadtree.
+- **returns**: table|nil The quadtree.
 
 #### `editor_roadArchitect_roads.goToRoad(rIdx)`
 
-Place la caméra libre à la verticale du centre de la route, à une hauteur qui cadre toute la route (selon le champ de vision). Ne fait rien si la route est trop petite (moins de 0.1 m d'étendue).
+Places the free camera directly above the center of the road, at a height that frames the whole road (according to the field of view). Does nothing if the road is too small (less than 0.1 m extent).
 
-- `rIdx` (*integer*) : Indice de la route.
+- `rIdx` (*integer*) : Index of the road.
 
 #### `editor_roadArchitect_roads.isMouseAtIntermediatePos(rIdx, mousePos)`
 
-Teste si la position de la souris est proche (tolérance 3.5 m en 2D) d'un segment de la route, entre deux nœuds, pour proposer l'insertion d'un nœud.
+Tests whether the mouse position is close (2D tolerance 3.5 m) to a segment of the road, between two nodes, to offer node insertion.
 
-- `rIdx` (*integer*) : Indice de la route.
-- `mousePos` (*vec3*) : Position de la souris sur la carte.
-- **renvoie** : boolean true si la souris est sur un segment.
-- **renvoie** : vec3|nil Position interpolée sur le segment.
-- **renvoie** : integer|nil Indice du nœud qui suit le point trouvé.
+- `rIdx` (*integer*) : Index of the road.
+- `mousePos` (*vec3*) : Mouse position on the map.
+- **returns**: boolean true if the mouse is over a segment.
+- **returns**: vec3|nil Interpolated position on the segment.
+- **returns**: integer|nil Index of the node following the point found.
 
 #### `editor_roadArchitect_roads.manageTempRoadSection(pIdx)`
 
-Crée ou met à jour la route temporaire 'temp' (segment droit de 20 m à 1000 m d'altitude) qui montre le profil en cours d'édition, place la caméra libre dessus et la fait tourner autour. Appelée à chaque frame pendant l'audition.
+Creates or updates the temporary road 'temp' (20 m straight segment at 1000 m altitude) that shows the profile being edited, places the free camera on it and makes it rotate around. Called every frame during the audition.
 
-- `pIdx` (*integer*) : Indice du profil dans profileMgr.profiles.
+- `pIdx` (*integer*) : Index of the profile in profileMgr.profiles.
 
 #### `editor_roadArchitect_roads.moveRoad(road, nodeIdx, mouseNow, mouseLast)`
 
-Translate une route : soit rigide (tous les nœuds non verrouillés), soit en champ de force (le nœud central suit la souris, les autres bougent proportionnellement à la distance, jusqu'au premier nœud verrouillé). Marque la route dirty.
+Translates a road: either rigidly (all unlocked nodes), or as a force field (the central node follows the mouse, the others move proportionally to the distance, up to the first locked node). Marks the road dirty.
 
-- `road` (*table*) : Route (table, pas un indice).
-- `nodeIdx` (*integer*) : Nœud saisi.
-- `mouseNow` (*vec3*) : Position actuelle de la souris.
-- `mouseLast` (*vec3*) : Position précédente.
+- `road` (*table*) : Road (table, not an index).
+- `nodeIdx` (*integer*) : Grabbed node.
+- `mouseNow` (*vec3*) : Current mouse position.
+- `mouseLast` (*vec3*) : Previous position.
 
 #### `editor_roadArchitect_roads.offsetByValue(offset)`
 
-Ajoute un décalage vertical à tous les nœuds de toutes les routes et les marque dirty.
+Adds a vertical offset to all nodes of all roads and marks them dirty.
 
-- `offset` (*number*) : Décalage en mètres (positif = vers le haut).
+- `offset` (*number*) : Offset in meters (positive = upward).
 
 #### `editor_roadArchitect_roads.removeGroupFromRoad(r, groupIdx)`
 
-Retire un indice de groupe placé de la liste groupIdx de la route.
+Removes a placed group index from the road's groupIdx list.
 
-- `r` (*table*) : Route.
-- `groupIdx` (*integer*) : Indice de groupe à retirer.
+- `r` (*table*) : Road.
+- `groupIdx` (*integer*) : Group index to remove.
 
 #### `editor_roadArchitect_roads.removeNode(rIdx, nIdx)`
 
-Supprime un nœud d'une route (table.remove). Ne marque pas la route dirty.
+Removes a node from a road (table.remove). Does not mark the road dirty.
 
-- `rIdx` (*integer*) : Indice de la route.
-- `nIdx` (*integer*) : Indice du nœud.
+- `rIdx` (*integer*) : Index of the road.
+- `nIdx` (*integer*) : Index of the node.
 
 #### `editor_roadArchitect_roads.removeRoad(roadName)`
 
-Supprime une route par son nom : retire décalcomanies, maillages de route et statiques, entrée du quadtree, dossier de pont éventuel, puis l'entrée de roads et reconstruit la map.
+Deletes a road by its name: removes decals, road and static meshes, quadtree entry, possible bridge folder, then the entry in roads and rebuilds the map.
 
-- `roadName` (*string*) : Nom (identifiant) de la route, pas son displayName.
+- `roadName` (*string*) : Name (identifier) of the road, not its displayName.
 
 #### `editor_roadArchitect_roads.serialiseRoad(r)`
 
-Convertit une route en table simple (valeurs plain, sans pointeurs ImGui) pour la sauvegarde JSON.
+Converts a road to a plain table (plain values, without ImGui pointers) for JSON saving.
 
-- `r` (*table*) : Route.
-- **renvoie** : table Route sérialisée.
+- `r` (*table*) : Road.
+- **returns**: table Serialized road.
 
 #### `editor_roadArchitect_roads.setBridgesVisibilityMaster(isShow)`
 
-Affiche ou masque tous les ponts.
+Shows or hides all bridges.
 
-- `isShow` (*boolean*) : true pour afficher.
+- `isShow` (*boolean*) : true to show.
 
 #### `editor_roadArchitect_roads.setCurrentMap(cMap)`
 
-Mémorise la carte (niveau) actuellement chargée.
+Stores the map (level) currently loaded.
 
-- `cMap` (*any*) : Valeur à mémoriser (déduit du code).
+- `cMap` (*any*) : Value to store (inferred from code).
 
 #### `editor_roadArchitect_roads.setDirty(r)`
 
-Marque la route comme à recalculer (isDirty), met à jour la condition du profil et réinsère la route dans le quadtree d'édition (créé à la demande avec l'étendue du terrain, ou 5000 m par défaut).
+Marks the road as needing recomputation (isDirty), updates the profile condition and reinserts the road into the editing quadtree (created on demand with the terrain extent, or 5000 m by default).
 
-- `r` (*table|nil*) : Route ; ne fait rien si nil.
+- `r` (*table|nil*) : Road; does nothing if nil.
 
 #### `editor_roadArchitect_roads.setLocalWidth(rIdx, nIdx, offset)`
 
-Modifie la largeur de toutes les voies de type 'road_lane' d'un nœud : nouvelle largeur = largeur de départ + offset, bornée à [0.5, 10].
+Changes the width of all 'road_lane' type lanes of a node: new width = starting width + offset, bounded to [0.5, 10].
 
-- `rIdx` (*integer*) : Indice de la route.
-- `nIdx` (*integer*) : Indice du nœud.
-- `offset` (*number*) : Variation de largeur de voie, en mètres.
+- `rIdx` (*integer*) : Index of the road.
+- `nIdx` (*integer*) : Index of the node.
+- `offset` (*number*) : Lane width change, in meters.
 
 #### `editor_roadArchitect_roads.setOverlaysVisibilityMaster(isShow)`
 
-Affiche ou masque tous les overlays.
+Shows or hides all overlays.
 
-- `isShow` (*boolean*) : true pour afficher.
+- `isShow` (*boolean*) : true to show.
 
 #### `editor_roadArchitect_roads.setRoadsVisibilityMaster(isShow)`
 
-Affiche ou masque toutes les routes ordinaires (ni ponts ni overlays) en remplaçant leur isVis.
+Shows or hides all ordinary roads (neither bridges nor overlays) by overwriting their isVis.
 
-- `isShow` (*boolean*) : true pour afficher.
+- `isShow` (*boolean*) : true to show.
 
 #### `editor_roadArchitect_roads.splitRoad(rIdx, nIdx)`
 
-Coupe une route au nœud donné en deux nouvelles routes ([A] et [B], chacune avec une copie du nœud de coupure repoussé de 1 m), supprime l'ancienne route et les ajoute à roads. Utile pour créer des jonctions.
+Cuts a road at the given node into two new roads ([A] and [B], each with a copy of the cut node pushed back by 1 m), deletes the old road and adds them to roads. Useful for creating junctions.
 
-- `rIdx` (*integer*) : Indice de la route.
-- `nIdx` (*integer*) : Indice du nœud de coupure ; doit avoir un voisin de chaque côté (le code lit nodes[nIdx-1] et nodes[nIdx+1]).
+- `rIdx` (*integer*) : Index of the road.
+- `nIdx` (*integer*) : Index of the cut node; must have a neighbor on each side (the code reads nodes[nIdx-1] and nodes[nIdx+1]).
 
 #### `editor_roadArchitect_roads.updateBridgeParameters(road)`
 
-Applique la largeur et la profondeur de pont de la route aux deux premiers nœuds (voies -1 et 1). Voir notes : bug probable de pointeur.
+Applies the road's bridge width and depth to the first two nodes (lanes -1 and 1). See notes: probable pointer bug.
 
-- `road` (*table*) : Route de type pont.
+- `road` (*table*) : Bridge type road.
 
 #### `editor_roadArchitect_roads.updateRoadsAfterRemovingGroup(placedGroups)`
 
-Reconstruit les groupIdx de toutes les routes à partir de la liste des groupes placés restants (renumérotation après suppression d'un groupe).
+Rebuilds the groupIdx of all roads from the list of remaining placed groups (renumbering after a group is deleted).
 
-- `placedGroups` (*table*) : Liste des groupes placés, chacun avec list = {{r = nom, n = indice}, ...}.
+- `placedGroups` (*table*) : List of placed groups, each with list = {{r = name, n = index}, ...}.
 
 #### `editor_roadArchitect_roads.updateWAndHToNewProfile(road)`
 
-Réinitialise les largeurs et hauteurs par voie de tous les nœuds de la route selon son profil actuel (après changement de profil).
+Resets the per-lane widths and heights of all the road's nodes according to its current profile (after a profile change).
 
-- `road` (*table*) : Route.
+- `road` (*table*) : Road.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `isAuditionProfileDirty` | boolean | Copie initiale (false) du flag d'audition de profil ; voir notes, la valeur réelle n'est pas exposée. |
-| `map` | table<string, integer> | Table de hachage nom de route -> indice dans roads. Reconstruite par recomputeMap(). |
-| `multi` | table<integer, {r: integer, n: integer}> | Multi-sélection de nœuds : chaque entrée donne l'indice de route (r) et de nœud (n). |
-| `roads` | table<integer, table> | Liste des routes de la session (même table que celle utilisée en interne : la modifier agit directement). |
+| `isAuditionProfileDirty` | boolean | Initial copy (false) of the profile audition flag; see notes, the real value is not exposed. |
+| `map` | table<string, integer> | Hash table road name -> index in roads. Rebuilt by recomputeMap(). |
+| `multi` | table<integer, {r: integer, n: integer}> | Multi-selection of nodes: each entry gives the road index (r) and node index (n). |
+| `roads` | table<integer, table> | List of the session's roads (same table as the one used internally: modifying it acts directly). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 - `be:` `reloadCollision`
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadArchitect/roads.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadArchitect/roads.lua`.*

@@ -1,310 +1,310 @@
 # `ui_gridSelector`
 
-*Fichier : `lua/ge/extensions/ui/gridSelector.lua` · VM : Game Engine (GE) · 503 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/gridSelector.lua` · VM: Game Engine (GE) · 503 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_gridSelector` : `extensions.load("ui_gridSelector")`, puis la globale `ui_gridSelector`
+**Access:** extension `ui_gridSelector`: `extensions.load("ui_gridSelector")`, then the global `ui_gridSelector`
 
-Façade unique entre l'interface (UI Vue) et les sélecteurs en grille (véhicules, gameplay, apps, freeroam, course rapide, light runner, lignes de bus). Chaque appel reçoit le nom du backend en premier argument et est redirigé (dispatch) vers l'extension `ui_<nom>_general` correspondante. Le module normalise les chemins, les groupes de tuiles, les filtres, les données d'affichage, l'en-tête et les détails de gestion avant de les renvoyer à l'UI, et fournit des valeurs de repli pour les méthodes optionnelles absentes d'un backend.
+Single facade between the UI (Vue) and the grid selectors (vehicles, gameplay, apps, freeroam, quick race, light runner, bus routes). Each call receives the backend name as its first argument and is dispatched to the matching `ui_<name>_general` extension. The module normalizes paths, tile groups, filters, display data, header and management details before returning them to the UI, and provides fallback values for optional methods missing from a backend.
 
-## Exemple
+## Example
 
 ```lua
 local snap = ui_gridSelector.getSelectorSnapshot('vehicleSelector', {keys = {}})
 for _, group in ipairs(snap.groups) do log('I', 'x', #group.tiles) end
 ```
 
-## Remarques
+## Notes
 
-- Noms de backend valides : vehicleSelector, gameplaySelector, appSelector, freeroamSelector, quickraceSelector, lightRunnerSelector, busRouteSelector. Un autre nom donne une erreur de log et nil.
-- Un chemin (path) est normalisé en { keys = {...} } : accepte { keys = {...} } ou un tableau de segments (string, number, boolean convertis en string). Tout autre chose donne { keys = {} } avec un avertissement.
-- Contrat backend : méthodes requises getTiles, getFilters, getSearchText, setSearchText, getDisplayDataOptions, setDisplayDataOption, resetDisplayDataToDefaults, getScreenHeaderTitleAndPath, getDetails. Méthodes optionnelles avec repli : getManagementDetails, executeButton, executeDoubleClick, toggleFavourite, requestClusterTiles, requestDetails, clearAllFilters, closedFromUI, profilerFinish.
-- getActiveFilters, toggleFilter, updateRangeFilter, resetRangeFilter, resetSetFilter et exitCallback sont transmises au backend mais n'ont PAS de repli : si le backend ne les définit pas, une erreur est loguée et nil est renvoyé.
-- Le commentaire placé avant M.toggleFavourite dans le code (exploreFolder/goToMod commentés) est du code désactivé ; exploreFolder et goToMod sont en réalité définies plus bas dans le fichier.
-- Une tuile sans `key` reçoit une clé générée `__missingTileKey_<backend>_<n>`.
+- Valid backend names: vehicleSelector, gameplaySelector, appSelector, freeroamSelector, quickraceSelector, lightRunnerSelector, busRouteSelector. Any other name gives a log error and nil.
+- A path is normalized to { keys = {...} }: accepts { keys = {...} } or an array of segments (string, number, boolean converted to string). Anything else gives { keys = {} } with a warning.
+- Backend contract: required methods getTiles, getFilters, getSearchText, setSearchText, getDisplayDataOptions, setDisplayDataOption, resetDisplayDataToDefaults, getScreenHeaderTitleAndPath, getDetails. Optional methods with fallback: getManagementDetails, executeButton, executeDoubleClick, toggleFavourite, requestClusterTiles, requestDetails, clearAllFilters, closedFromUI, profilerFinish.
+- getActiveFilters, toggleFilter, updateRangeFilter, resetRangeFilter, resetSetFilter and exitCallback are forwarded to the backend but have NO fallback: if the backend does not define them, an error is logged and nil is returned.
+- The comment placed before M.toggleFavourite in the code (exploreFolder/goToMod commented out) is disabled code; exploreFolder and goToMod are actually defined further down in the file.
+- A tile without `key` gets a generated key `__missingTileKey_<backend>_<n>`.
 
-**Dépendances (chargées avant) :** `ui_vehicleSelector_general`, `ui_gameplaySelector_general`, `ui_appSelector_general`, `ui_freeroamSelector_general`, `ui_quickraceSelector_general`, `ui_lightRunnerSelector_general`, `ui_busRouteSelector_general`
+**Dependencies (loaded first):** `ui_vehicleSelector_general`, `ui_gameplaySelector_general`, `ui_appSelector_general`, `ui_freeroamSelector_general`, `ui_quickraceSelector_general`, `ui_lightRunnerSelector_general`, `ui_busRouteSelector_general`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_gridSelector.clearAllFilters(backendName, ...)` | Efface tous les filtres (optionnel, repli : false). | 415 |
-| `ui_gridSelector.closedFromUI(backendName, ...)` | Notifie le backend que l'écran a été fermé depuis l'UI (optionnel, repli : nil). | 428 |
-| `ui_gridSelector.executeButton(backendName, ...)` | Exécute un bouton d'action du panneau de détails (optionnel, repli : nil). | 432 |
-| `ui_gridSelector.executeDoubleClick(backendName, ...)` | Exécute l'action de double-clic sur une tuile (optionnel, repli : nil). | 435 |
-| `ui_gridSelector.exitCallback(backendName, ...)` | Appelle exitCallback du backend (sans repli). | 434 |
-| `ui_gridSelector.exploreFolder(_backendName, path)` | Ouvre un dossier dans l'explorateur de fichiers du système (Engine.Platform.exploreFolder). | 495 |
-| `ui_gridSelector.getActiveFilters(backendName, ...)` | Renvoie les filtres actifs du backend (sans repli). | 410 |
-| `ui_gridSelector.getBackendByName(backendName)` | Renvoie la table de l'extension backend associée au nom donné, ou nil si le nom est inconnu. | 64 |
-| `ui_gridSelector.getDetails(backendName, ...)` | Renvoie les détails de l'élément sélectionné (requis). | 430 |
-| `ui_gridSelector.getDisplayDataOptions(backendName, ...)` | Renvoie les options d'affichage (tri, regroupement, etc.) du backend (requis). | 419 |
-| `ui_gridSelector.getFilters(backendName, ...)` | Renvoie les filtres du backend (requis). | 409 |
-| `ui_gridSelector.getInitialData(backendName, path)` | Alias de getSelectorSnapshot. | 481 |
-| `ui_gridSelector.getManagementDetails(backendName, ...)` | Renvoie les boutons/détails de gestion (optionnel, repli : { buttons = {} }). | 433 |
-| `ui_gridSelector.getScreenHeaderTitleAndPath(backendName, path, ...)` | Renvoie le titre et les segments de chemin de l'en-tête d'écran pour le chemin donné (requis). | 423 |
-| `ui_gridSelector.getSearchText(backendName, ...)` | Renvoie le texte de recherche courant du backend (requis). | 416 |
-| `ui_gridSelector.getSelectorRefresh(backendName, path, options)` | Alias de getSelectorSnapshotSlices. | 440 |
-| `ui_gridSelector.getSelectorSnapshot(backendName, path)` | Renvoie un instantané complet (toutes les tranches) du sélecteur pour un chemin. | 481 |
-| `ui_gridSelector.getSelectorSnapshotSlices(backendName, path, options)` | Construit une charge utile contenant seulement les tranches demandées : tiles (groups + defaultFocusKey), filters, displayData, searchText, managementDetails, header. Si aucune tranche n'est activée, toutes le sont. | 440 |
-| `ui_gridSelector.getTiles(backendName, path, ...)` | Demande les tuiles au backend pour un chemin et renvoie un tableau de groupes normalisé (groupes et tuiles non-tables ignorés, copie superficielle, clé générée si manquante). | 399 |
-| `ui_gridSelector.goToMod(_backendName, modId)` | Navigue l'UI vers la page de détails d'un mod (route menu.mods.details). | 499 |
-| `ui_gridSelector.profilerFinish(backendName, ...)` | Notifie le backend de la fin d'un profilage (optionnel, repli : nil). | 427 |
-| `ui_gridSelector.requestClusterTiles(backendName, path, ...)` | Demande au backend les tuiles d'un cluster (méthode optionnelle, repli : nil). | 404 |
-| `ui_gridSelector.requestDetails(backendName, ...)` | Demande au backend de préparer les détails d'un élément (optionnel, repli : nil). | 431 |
-| `ui_gridSelector.resetDisplayDataToDefaults(backendName, ...)` | Remet les options d'affichage aux valeurs par défaut (requis). | 421 |
-| `ui_gridSelector.resetRangeFilter(backendName, ...)` | Réinitialise un filtre de plage côté backend (sans repli). | 413 |
-| `ui_gridSelector.resetSetFilter(backendName, ...)` | Réinitialise un filtre à ensemble de valeurs côté backend (sans repli). | 414 |
-| `ui_gridSelector.setDisplayDataOption(backendName, ...)` | Modifie une option d'affichage du backend (requis). | 420 |
-| `ui_gridSelector.setSearchText(backendName, ...)` | Définit le texte de recherche du backend (requis). | 417 |
-| `ui_gridSelector.toggleFavourite(backendName, ...)` | Bascule l'état favori d'un élément (optionnel, repli : false). | 438 |
-| `ui_gridSelector.toggleFilter(backendName, ...)` | Active ou désactive un filtre côté backend (sans repli). | 411 |
-| `ui_gridSelector.updateRangeFilter(backendName, ...)` | Met à jour un filtre de plage côté backend (sans repli). | 412 |
+| `ui_gridSelector.clearAllFilters(backendName, ...)` | Clears all filters (optional, fallback: false). | 415 |
+| `ui_gridSelector.closedFromUI(backendName, ...)` | Notifies the backend that the screen was closed from the UI (optional, fallback: nil). | 428 |
+| `ui_gridSelector.executeButton(backendName, ...)` | Executes an action button of the details panel (optional, fallback: nil). | 432 |
+| `ui_gridSelector.executeDoubleClick(backendName, ...)` | Executes the double-click action on a tile (optional, fallback: nil). | 435 |
+| `ui_gridSelector.exitCallback(backendName, ...)` | Calls the backend's exitCallback (no fallback). | 434 |
+| `ui_gridSelector.exploreFolder(_backendName, path)` | Opens a folder in the system file explorer (Engine.Platform.exploreFolder). | 495 |
+| `ui_gridSelector.getActiveFilters(backendName, ...)` | Returns the backend's active filters (no fallback). | 410 |
+| `ui_gridSelector.getBackendByName(backendName)` | Returns the backend extension table associated with the given name, or nil if the name is unknown. | 64 |
+| `ui_gridSelector.getDetails(backendName, ...)` | Returns the details of the selected item (required). | 430 |
+| `ui_gridSelector.getDisplayDataOptions(backendName, ...)` | Returns the backend's display options (sorting, grouping, etc.) (required). | 419 |
+| `ui_gridSelector.getFilters(backendName, ...)` | Returns the backend's filters (required). | 409 |
+| `ui_gridSelector.getInitialData(backendName, path)` | Alias of getSelectorSnapshot. | 481 |
+| `ui_gridSelector.getManagementDetails(backendName, ...)` | Returns the management buttons/details (optional, fallback: { buttons = {} }). | 433 |
+| `ui_gridSelector.getScreenHeaderTitleAndPath(backendName, path, ...)` | Returns the screen header title and path segments for the given path (required). | 423 |
+| `ui_gridSelector.getSearchText(backendName, ...)` | Returns the backend's current search text (required). | 416 |
+| `ui_gridSelector.getSelectorRefresh(backendName, path, options)` | Alias of getSelectorSnapshotSlices. | 440 |
+| `ui_gridSelector.getSelectorSnapshot(backendName, path)` | Returns a full snapshot (all slices) of the selector for a path. | 481 |
+| `ui_gridSelector.getSelectorSnapshotSlices(backendName, path, options)` | Builds a payload containing only the requested slices: tiles (groups + defaultFocusKey), filters, displayData, searchText, managementDetails, header. If no slice is enabled, all of them are. | 440 |
+| `ui_gridSelector.getTiles(backendName, path, ...)` | Requests the tiles from the backend for a path and returns a normalized array of groups (non-table groups and tiles ignored, shallow copy, key generated if missing). | 399 |
+| `ui_gridSelector.goToMod(_backendName, modId)` | Navigates the UI to a mod's details page (route menu.mods.details). | 499 |
+| `ui_gridSelector.profilerFinish(backendName, ...)` | Notifies the backend that profiling has finished (optional, fallback: nil). | 427 |
+| `ui_gridSelector.requestClusterTiles(backendName, path, ...)` | Requests the tiles of a cluster from the backend (optional method, fallback: nil). | 404 |
+| `ui_gridSelector.requestDetails(backendName, ...)` | Asks the backend to prepare an item's details (optional, fallback: nil). | 431 |
+| `ui_gridSelector.resetDisplayDataToDefaults(backendName, ...)` | Resets the display options to their default values (required). | 421 |
+| `ui_gridSelector.resetRangeFilter(backendName, ...)` | Resets a range filter on the backend side (no fallback). | 413 |
+| `ui_gridSelector.resetSetFilter(backendName, ...)` | Resets a set-of-values filter on the backend side (no fallback). | 414 |
+| `ui_gridSelector.setDisplayDataOption(backendName, ...)` | Changes a backend display option (required). | 420 |
+| `ui_gridSelector.setSearchText(backendName, ...)` | Sets the backend's search text (required). | 417 |
+| `ui_gridSelector.toggleFavourite(backendName, ...)` | Toggles an item's favorite state (optional, fallback: false). | 438 |
+| `ui_gridSelector.toggleFilter(backendName, ...)` | Enables or disables a filter on the backend side (no fallback). | 411 |
+| `ui_gridSelector.updateRangeFilter(backendName, ...)` | Updates a range filter on the backend side (no fallback). | 412 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_gridSelector.clearAllFilters(backendName, ...)`
 
-Efface tous les filtres (optionnel, repli : false).
+Clears all filters (optional, fallback: false).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
-- **renvoie** : boolean|any false si non implémenté.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
+- **returns**: boolean|any false if not implemented.
 
 #### `ui_gridSelector.closedFromUI(backendName, ...)`
 
-Notifie le backend que l'écran a été fermé depuis l'UI (optionnel, repli : nil).
+Notifies the backend that the screen was closed from the UI (optional, fallback: nil).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
 
 #### `ui_gridSelector.executeButton(backendName, ...)`
 
-Exécute un bouton d'action du panneau de détails (optionnel, repli : nil).
+Executes an action button of the details panel (optional, fallback: nil).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
 
 #### `ui_gridSelector.executeDoubleClick(backendName, ...)`
 
-Exécute l'action de double-clic sur une tuile (optionnel, repli : nil).
+Executes the double-click action on a tile (optional, fallback: nil).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
 
 #### `ui_gridSelector.exitCallback(backendName, ...)`
 
-Appelle exitCallback du backend (sans repli).
+Calls the backend's exitCallback (no fallback).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
 
 #### `ui_gridSelector.exploreFolder(_backendName, path)`
 
-Ouvre un dossier dans l'explorateur de fichiers du système (Engine.Platform.exploreFolder).
+Opens a folder in the system file explorer (Engine.Platform.exploreFolder).
 
-- `_backendName` (*string*) : Ignoré.
-- `path` (*string*) : Chemin du dossier.
+- `_backendName` (*string*) : Ignored.
+- `path` (*string*) : Folder path.
 
 #### `ui_gridSelector.getActiveFilters(backendName, ...)`
 
-Renvoie les filtres actifs du backend (sans repli).
+Returns the backend's active filters (no fallback).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
-- **renvoie** : any Filtres actifs.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
+- **returns**: any Active filters.
 
 #### `ui_gridSelector.getBackendByName(backendName)`
 
-Renvoie la table de l'extension backend associée au nom donné, ou nil si le nom est inconnu.
+Returns the backend extension table associated with the given name, or nil if the name is unknown.
 
-- `backendName` (*string*) : vehicleSelector, gameplaySelector, appSelector, freeroamSelector, quickraceSelector, lightRunnerSelector ou busRouteSelector
-- **renvoie** : table|nil Le module backend (ex. ui_vehicleSelector_general).
+- `backendName` (*string*) : vehicleSelector, gameplaySelector, appSelector, freeroamSelector, quickraceSelector, lightRunnerSelector or busRouteSelector
+- **returns**: table|nil The backend module (e.g. ui_vehicleSelector_general).
 
 #### `ui_gridSelector.getDetails(backendName, ...)`
 
-Renvoie les détails de l'élément sélectionné (requis).
+Returns the details of the selected item (required).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
-- **renvoie** : any Détails fournis par le backend.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
+- **returns**: any Details provided by the backend.
 
 #### `ui_gridSelector.getDisplayDataOptions(backendName, ...)`
 
-Renvoie les options d'affichage (tri, regroupement, etc.) du backend (requis).
+Returns the backend's display options (sorting, grouping, etc.) (required).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
-- **renvoie** : table Options d'affichage.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
+- **returns**: table Display options.
 
 #### `ui_gridSelector.getFilters(backendName, ...)`
 
-Renvoie les filtres du backend (requis).
+Returns the backend's filters (required).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
-- **renvoie** : table Données de filtres du backend.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
+- **returns**: table Backend filter data.
 
 #### `ui_gridSelector.getInitialData(backendName, path)`
 
-Alias de getSelectorSnapshot.
+Alias of getSelectorSnapshot.
 
-- `backendName` (*string*) : Nom du backend.
-- `path` (*table|nil*) : Chemin.
-- **renvoie** : table Instantané complet.
+- `backendName` (*string*) : Backend name.
+- `path` (*table|nil*) : Path.
+- **returns**: table Full snapshot.
 
 #### `ui_gridSelector.getManagementDetails(backendName, ...)`
 
-Renvoie les boutons/détails de gestion (optionnel, repli : { buttons = {} }).
+Returns the management buttons/details (optional, fallback: { buttons = {} }).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
-- **renvoie** : table { buttons = {...}, ... }.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
+- **returns**: table { buttons = {...}, ... }.
 
 #### `ui_gridSelector.getScreenHeaderTitleAndPath(backendName, path, ...)`
 
-Renvoie le titre et les segments de chemin de l'en-tête d'écran pour le chemin donné (requis).
+Returns the screen header title and path segments for the given path (required).
 
-- `backendName` (*string*) : Nom du backend.
-- `path` (*table|nil*) : Chemin à normaliser.
-- `...` (*any*) : Arguments transmis.
-- **renvoie** : table { title, pathSegments }.
+- `backendName` (*string*) : Backend name.
+- `path` (*table|nil*) : Path to normalize.
+- `...` (*any*) : Arguments passed on.
+- **returns**: table { title, pathSegments }.
 
 #### `ui_gridSelector.getSearchText(backendName, ...)`
 
-Renvoie le texte de recherche courant du backend (requis).
+Returns the backend's current search text (required).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
-- **renvoie** : string Texte de recherche.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
+- **returns**: string Search text.
 
 #### `ui_gridSelector.getSelectorRefresh(backendName, path, options)`
 
-Alias de getSelectorSnapshotSlices.
+Alias of getSelectorSnapshotSlices.
 
-- `backendName` (*string*) : Nom du backend.
-- `path` (*table|nil*) : Chemin.
-- `options` (*table|nil*) : Tranches.
-- **renvoie** : table Voir getSelectorSnapshotSlices.
+- `backendName` (*string*) : Backend name.
+- `path` (*table|nil*) : Path.
+- `options` (*table|nil*) : Slices.
+- **returns**: table See getSelectorSnapshotSlices.
 
 #### `ui_gridSelector.getSelectorSnapshot(backendName, path)`
 
-Renvoie un instantané complet (toutes les tranches) du sélecteur pour un chemin.
+Returns a full snapshot (all slices) of the selector for a path.
 
-- `backendName` (*string*) : Nom du backend.
-- `path` (*table|nil*) : Chemin.
-- **renvoie** : table Voir getSelectorSnapshotSlices. La tuile par défaut (forceAutoFocus ou isDefaultSelected) donne defaultFocusKey.
+- `backendName` (*string*) : Backend name.
+- `path` (*table|nil*) : Path.
+- **returns**: table See getSelectorSnapshotSlices. The default tile (forceAutoFocus or isDefaultSelected) gives defaultFocusKey.
 
 #### `ui_gridSelector.getSelectorSnapshotSlices(backendName, path, options)`
 
-Construit une charge utile contenant seulement les tranches demandées : tiles (groups + defaultFocusKey), filters, displayData, searchText, managementDetails, header. Si aucune tranche n'est activée, toutes le sont.
+Builds a payload containing only the requested slices: tiles (groups + defaultFocusKey), filters, displayData, searchText, managementDetails, header. If no slice is enabled, all of them are.
 
-- `backendName` (*string*) : Nom du backend.
-- `path` (*table|nil*) : Chemin à normaliser.
-- `options` (*table<string, boolean>|nil*) : Tranches à inclure (clé = true).
-- **renvoie** : table { backendName, path, groups?, defaultFocusKey?, filters?, displayData?, searchText?, managementDetails?, header? }.
+- `backendName` (*string*) : Backend name.
+- `path` (*table|nil*) : Path to normalize.
+- `options` (*table<string, boolean>|nil*) : Slices to include (key = true).
+- **returns**: table { backendName, path, groups?, defaultFocusKey?, filters?, displayData?, searchText?, managementDetails?, header? }.
 
 #### `ui_gridSelector.getTiles(backendName, path, ...)`
 
-Demande les tuiles au backend pour un chemin et renvoie un tableau de groupes normalisé (groupes et tuiles non-tables ignorés, copie superficielle, clé générée si manquante).
+Requests the tiles from the backend for a path and returns a normalized array of groups (non-table groups and tiles ignored, shallow copy, key generated if missing).
 
-- `backendName` (*string*) : Nom du backend.
-- `path` (*table|nil*) : Chemin { keys = {...} } ou tableau de segments.
-- `...` (*any*) : Arguments supplémentaires transmis au backend.
-- **renvoie** : table[] Liste de groupes { tiles = {...}, ... }.
+- `backendName` (*string*) : Backend name.
+- `path` (*table|nil*) : Path { keys = {...} } or array of segments.
+- `...` (*any*) : Extra arguments passed to the backend.
+- **returns**: table[] List of groups { tiles = {...}, ... }.
 
 #### `ui_gridSelector.goToMod(_backendName, modId)`
 
-Navigue l'UI vers la page de détails d'un mod (route menu.mods.details).
+Navigates the UI to a mod's details page (route menu.mods.details).
 
-- `_backendName` (*string*) : Ignoré.
-- `modId` (*string*) : Identifiant du mod.
+- `_backendName` (*string*) : Ignored.
+- `modId` (*string*) : Mod identifier.
 
 #### `ui_gridSelector.profilerFinish(backendName, ...)`
 
-Notifie le backend de la fin d'un profilage (optionnel, repli : nil).
+Notifies the backend that profiling has finished (optional, fallback: nil).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
 
 #### `ui_gridSelector.requestClusterTiles(backendName, path, ...)`
 
-Demande au backend les tuiles d'un cluster (méthode optionnelle, repli : nil).
+Requests the tiles of a cluster from the backend (optional method, fallback: nil).
 
-- `backendName` (*string*) : Nom du backend.
-- `path` (*table|nil*) : Chemin à normaliser.
-- `...` (*any*) : Arguments transmis.
-- **renvoie** : any Résultat du backend.
+- `backendName` (*string*) : Backend name.
+- `path` (*table|nil*) : Path to normalize.
+- `...` (*any*) : Arguments passed on.
+- **returns**: any Backend result.
 
 #### `ui_gridSelector.requestDetails(backendName, ...)`
 
-Demande au backend de préparer les détails d'un élément (optionnel, repli : nil).
+Asks the backend to prepare an item's details (optional, fallback: nil).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
 
 #### `ui_gridSelector.resetDisplayDataToDefaults(backendName, ...)`
 
-Remet les options d'affichage aux valeurs par défaut (requis).
+Resets the display options to their default values (required).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
 
 #### `ui_gridSelector.resetRangeFilter(backendName, ...)`
 
-Réinitialise un filtre de plage côté backend (sans repli).
+Resets a range filter on the backend side (no fallback).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
 
 #### `ui_gridSelector.resetSetFilter(backendName, ...)`
 
-Réinitialise un filtre à ensemble de valeurs côté backend (sans repli).
+Resets a set-of-values filter on the backend side (no fallback).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
 
 #### `ui_gridSelector.setDisplayDataOption(backendName, ...)`
 
-Modifie une option d'affichage du backend (requis).
+Changes a backend display option (required).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
 
 #### `ui_gridSelector.setSearchText(backendName, ...)`
 
-Définit le texte de recherche du backend (requis).
+Sets the backend's search text (required).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis (texte).
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Forwarded arguments (text).
 
 #### `ui_gridSelector.toggleFavourite(backendName, ...)`
 
-Bascule l'état favori d'un élément (optionnel, repli : false).
+Toggles an item's favorite state (optional, fallback: false).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
-- **renvoie** : boolean|any false si non implémenté.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
+- **returns**: boolean|any false if not implemented.
 
 #### `ui_gridSelector.toggleFilter(backendName, ...)`
 
-Active ou désactive un filtre côté backend (sans repli).
+Enables or disables a filter on the backend side (no fallback).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
 
 #### `ui_gridSelector.updateRangeFilter(backendName, ...)`
 
-Met à jour un filtre de plage côté backend (sans repli).
+Updates a range filter on the backend side (no fallback).
 
-- `backendName` (*string*) : Nom du backend.
-- `...` (*any*) : Arguments transmis.
+- `backendName` (*string*) : Backend name.
+- `...` (*any*) : Arguments passed on.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `BackendContract` | table | Décrit le contrat attendu des backends : `requiredMethods` (liste de noms) et `optionalMethods` (liste de noms). |
-| `dependencies` | table<integer, string> | Extensions backend chargées avant ce module (les sept `ui_*Selector_general`). |
+| `BackendContract` | table | Describes the expected backend contract: `requiredMethods` (list of names) and `optionalMethods` (list of names). |
+| `dependencies` | table<integer, string> | Backend extensions loaded before this module (the seven `ui_*Selector_general`). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/gridSelector.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/gridSelector.lua`.*

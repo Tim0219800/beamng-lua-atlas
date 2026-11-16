@@ -1,69 +1,69 @@
 # `gameplay_markers_invisibleTrigger`
 
-*Fichier : `lua/ge/extensions/gameplay/markers/invisibleTrigger.lua` · VM : Game Engine (GE) · 104 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/markers/invisibleTrigger.lua` · VM: Game Engine (GE) · 104 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_markers_invisibleTrigger` : `extensions.load("gameplay_markers_invisibleTrigger")`, puis la globale `gameplay_markers_invisibleTrigger`
+**Access:** extension `gameplay_markers_invisibleTrigger`: `extensions.load("gameplay_markers_invisibleTrigger")`, then the global `gameplay_markers_invisibleTrigger`
 
-Déclencheur sphérique invisible : à partir d'un POI invisibleTrigger (pos, radius, onEnter, onInside, onExit), appelle les callbacks Lua quand le véhicule d'un joueur entre dans la sphère, y reste, ou en sort. L'état dedans/dehors est suivi par joueur (multiseat) et conservé par id de cluster. Le module renvoie {create, cluster}. Utile pour des déclencheurs de gameplay sans aucun visuel.
+Invisible spherical trigger: from an invisibleTrigger POI (pos, radius, onEnter, onInside, onExit), calls the Lua callbacks when a player's vehicle enters the sphere, stays in it, or leaves it. The inside/outside state is tracked per player (multiseat) and kept by cluster id. The module returns {create, cluster}. Useful for gameplay triggers without any visual.
 
-## Exemple
+## Example
 
 ```lua
--- POI fournissant markerInfo.invisibleTrigger
+-- POI providing markerInfo.invisibleTrigger
 markerInfo = { invisibleTrigger = {
   pos = vec3(0,0,0), radius = 10,
-  onEnter = function(interactData) log('I','', 'entre') end,
-  onExit  = function(interactData) log('I','', 'sort') end
+  onEnter = function(interactData) log('I','', 'enters') end,
+  onExit  = function(interactData) log('I','', 'exits') end
 }}
 ```
 
-## Remarques
+## Notes
 
-- Les callbacks reçoivent interactData : vehPos, isWalking, playerIndex (0 si absent), etc.
-- Rien n'est déclenché quand le joueur marche (isWalking) ; l'état dedans/dehors n'est alors pas mis à jour.
-- L'état insideByCluster est conservé entre recréations du marqueur (régénération des POI) pour ne pas redéclencher onEnter pour un joueur déjà dedans ; hide() efface cet état du cluster.
-- Cluster : un par POI, id 'invisibleTrigger#<poi.id>', visibilityRadius = 0, showOnMinimap = false.
+- The callbacks receive interactData: vehPos, isWalking, playerIndex (0 if absent), etc.
+- Nothing is triggered when the player is walking (isWalking); the inside/outside state is then not updated.
+- The insideByCluster state is kept across marker recreations (POI regeneration) so as not to retrigger onEnter for a player already inside; hide() clears this state for the cluster.
+- Cluster: one per POI, id 'invisibleTrigger#<poi.id>', visibilityRadius = 0, showOnMinimap = false.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_markers_invisibleTrigger.cluster(pois, allClusters)` | Transforme chaque POI invisibleTrigger en un cluster distinct (pas de fusion) et l'ajoute à allClusters. *(interne)* | 81 |
-| `gameplay_markers_invisibleTrigger.create(...)` | Fabrique un marqueur déclencheur invisible (instance de C). | 72 |
+| `gameplay_markers_invisibleTrigger.cluster(pois, allClusters)` | Turns each invisibleTrigger POI into a distinct cluster (no merging) and adds it to allClusters. *(internal)* | 81 |
+| `gameplay_markers_invisibleTrigger.create(...)` | Builds an invisible trigger marker (instance of C). | 72 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_markers_invisibleTrigger.cluster(pois, allClusters)`
 
-Transforme chaque POI invisibleTrigger en un cluster distinct (pas de fusion) et l'ajoute à allClusters.
+Turns each invisibleTrigger POI into a distinct cluster (no merging) and adds it to allClusters.
 
-- `pois` (*table[]*) : POI avec markerInfo.invisibleTrigger {pos, radius, onEnter, onInside, onExit}.
-- `allClusters` (*table[]*) : Liste de clusters complétée en place.
+- `pois` (*table[]*) : POIs with markerInfo.invisibleTrigger {pos, radius, onEnter, onInside, onExit}.
+- `allClusters` (*table[]*) : List of clusters completed in place.
 
 #### `gameplay_markers_invisibleTrigger.create(...)`
 
-Fabrique un marqueur déclencheur invisible (instance de C).
+Builds an invisible trigger marker (instance of C).
 
-- `...` (*any*) : Arguments transmis à C:init (non utilisés).
-- **renvoie** : table Instance de marqueur.
+- `...` (*any*) : Arguments passed to C:init (unused).
+- **returns**: table Marker instance.
 
-## Classe `C`
+## Class `C`
 
-Déclencheur sphérique sans visuel.
+Spherical trigger without visual.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearObjects()` | Ne fait rien. | 68 |
-| `C:createObjects()` | Ne fait rien. | 60 |
-| `C:hide()` | Efface l'état dedans/dehors de tous les joueurs pour ce cluster. | 63 |
-| `C:init()` | Ne fait rien. | 11 |
-| `C:instantFade(visible)` | Ne fait rien. | 70 |
-| `C:interactInPlayMode(interactData, interactableElements)` | Ne fait rien. | 23 |
-| `C:interactWhileMoving(interactData)` | Appelée chaque frame : si le véhicule du joueur est dans la sphère, appelle onEnter (à la première frame dedans) puis onInside ; en sortant, appelle onExit. | 24 |
-| `C:setHidden(value)` | Ne fait rien. | 61 |
-| `C:setup(cluster)` | Mémorise cluster, pos, radius et les trois callbacks ; relie l'état dedans/dehors par joueur à celui de l'id du cluster. | 48 |
-| `C:show()` | Ne fait rien. | 62 |
-| `C:update(data)` | Ne fait rien (le dessin de debug est commenté). | 14 |
+| `C:clearObjects()` | Does nothing. | 68 |
+| `C:createObjects()` | Does nothing. | 60 |
+| `C:hide()` | Clears the inside/outside state of all players for this cluster. | 63 |
+| `C:init()` | Does nothing. | 11 |
+| `C:instantFade(visible)` | Does nothing. | 70 |
+| `C:interactInPlayMode(interactData, interactableElements)` | Does nothing. | 23 |
+| `C:interactWhileMoving(interactData)` | Called every frame: if the player's vehicle is in the sphere, calls onEnter (on the first frame inside) then onInside; when leaving, calls onExit. | 24 |
+| `C:setHidden(value)` | Does nothing. | 61 |
+| `C:setup(cluster)` | Stores cluster, pos, radius and the three callbacks; links the per-player inside/outside state to that of the cluster id. | 48 |
+| `C:show()` | Does nothing. | 62 |
+| `C:update(data)` | Does nothing (the debug drawing is commented out). | 14 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/markers/invisibleTrigger.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/markers/invisibleTrigger.lua`.*

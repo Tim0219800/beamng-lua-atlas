@@ -1,41 +1,201 @@
 {
   "path": "lua/common/libs/lua-websockets/websocket/frame.lua",
-  "module": "Encodage et décodage des trames WebSocket (RFC 6455) pour lua-websockets : en-têtes 7/16/64 bits de longueur, masquage XOR côté client, trames de fermeture (code + raison). Utilisé par sync, ev_common et les backends client/serveur. Exporte aussi les constantes d'opcodes.",
+  "module": "Encoding and decoding of WebSocket frames (RFC 6455) for lua-websockets: 7/16/64-bit length headers, client-side XOR masking, close frames (code + reason). Used by sync, ev_common and the client/server backends. Also exports the opcode constants.",
   "notes": [
-    "Le décodage d'une longueur 64 bits échoue par assert si la longueur est inférieure à 0xffff ou supérieure à 2^53.",
-    "xor_mask est marqué 'TODO: improve performance' dans le code : le masquage se fait octet par octet en Lua."
+    "Decoding a 64-bit length fails via assert if the length is less than 0xffff or greater than 2^53.",
+    "xor_mask is marked 'TODO: improve performance' in the code: masking is done byte by byte in Lua."
   ],
   "fields": {
-    "CONTINUATION": {"type": "integer", "desc": "0."},
-    "TEXT": {"type": "integer", "desc": "1."},
-    "BINARY": {"type": "integer", "desc": "2."},
-    "CLOSE": {"type": "integer", "desc": "8."},
-    "PING": {"type": "integer", "desc": "9."},
-    "PONG": {"type": "integer", "desc": "10."}
+    "CONTINUATION": {
+      "type": "integer",
+      "desc": "0."
+    },
+    "TEXT": {
+      "type": "integer",
+      "desc": "1."
+    },
+    "BINARY": {
+      "type": "integer",
+      "desc": "2."
+    },
+    "CLOSE": {
+      "type": "integer",
+      "desc": "8."
+    },
+    "PING": {
+      "type": "integer",
+      "desc": "9."
+    },
+    "PONG": {
+      "type": "integer",
+      "desc": "10."
+    }
   },
   "functions": {
     "encode": {
-      "desc": "Construit une trame WebSocket complète : en-tête, longueur, éventuel masque aléatoire (math.random) et données masquées.",
-      "params": {"data": {"type": "string", "desc": "Charge utile."}, "opcode": {"type": "integer", "desc": "Opcode (1 = TEXT par défaut)."}, "masked": {"type": "boolean", "desc": "true pour masquer (obligatoire côté client)."}, "fin": {"type": "boolean|nil", "desc": "Bit FIN ; nil ou true = trame finale."}},
-      "returns": [{"type": "string", "desc": "Octets de la trame."}]
+      "desc": "Builds a complete WebSocket frame: header, length, optional random mask (math.random) and masked data.",
+      "params": {
+        "data": {
+          "type": "string",
+          "desc": "Payload."
+        },
+        "opcode": {
+          "type": "integer",
+          "desc": "Opcode (1 = TEXT by default)."
+        },
+        "masked": {
+          "type": "boolean",
+          "desc": "true to mask (required on the client side)."
+        },
+        "fin": {
+          "type": "boolean|nil",
+          "desc": "FIN bit; nil or true = final frame."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Frame bytes."
+        }
+      ]
     },
     "decode": {
-      "desc": "Décode une trame depuis un tampon. Si les données sont incomplètes, renvoie nil et le nombre d'octets manquants.",
-      "params": {"encoded": {"type": "string", "desc": "Octets reçus (peut contenir plusieurs trames)."}},
-      "returns": [{"type": "string|nil", "desc": "Charge utile démasquée, ou nil si incomplet."}, {"type": "boolean|integer", "desc": "fin (bit FIN), ou octets manquants si incomplet."}, {"type": "integer", "desc": "opcode."}, {"type": "string", "desc": "Octets restants après la trame."}, {"type": "boolean", "desc": "true si la trame était masquée."}]
+      "desc": "Decodes a frame from a buffer. If the data is incomplete, returns nil and the number of missing bytes.",
+      "params": {
+        "encoded": {
+          "type": "string",
+          "desc": "Bytes received (may contain several frames)."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Unmasked payload, or nil if incomplete."
+        },
+        {
+          "type": "boolean|integer",
+          "desc": "fin (FIN bit), or missing bytes if incomplete."
+        },
+        {
+          "type": "integer",
+          "desc": "opcode."
+        },
+        {
+          "type": "string",
+          "desc": "Bytes remaining after the frame."
+        },
+        {
+          "type": "boolean",
+          "desc": "true if the frame was masked."
+        }
+      ]
     },
     "encode_close": {
-      "desc": "Construit la charge utile d'une trame CLOSE : code sur 2 octets suivi de la raison. Renvoie une chaîne vide si code est nil.",
-      "params": {"code": {"type": "integer|nil", "desc": "Code de fermeture (ex. 1000)."}, "reason": {"type": "string|nil", "desc": "Raison."}},
-      "returns": [{"type": "string", "desc": "Charge utile."}]
+      "desc": "Builds the payload of a CLOSE frame: 2-byte code followed by the reason. Returns an empty string if code is nil.",
+      "params": {
+        "code": {
+          "type": "integer|nil",
+          "desc": "Close code (e.g. 1000)."
+        },
+        "reason": {
+          "type": "string|nil",
+          "desc": "Reason."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Payload."
+        }
+      ]
     },
     "decode_close": {
-      "desc": "Extrait code et raison de la charge utile d'une trame CLOSE.",
-      "params": {"data": {"type": "string|nil", "desc": "Charge utile."}},
-      "returns": [{"type": "integer|nil", "desc": "Code."}, {"type": "string|nil", "desc": "Raison."}]
+      "desc": "Extracts code and reason from the payload of a CLOSE frame.",
+      "params": {
+        "data": {
+          "type": "string|nil",
+          "desc": "Payload."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Code."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Reason."
+        }
+      ]
     },
-    "encode_header_small": {"desc": "Deux octets d'en-tête (longueur < 126).", "params": {"header": {"type": "integer", "desc": "Premier octet (FIN + opcode)."}, "payload": {"type": "integer", "desc": "Second octet (bit masque + longueur)."}}, "returns": [{"type": "string", "desc": "En-tête."}]},
-    "encode_header_medium": {"desc": "En-tête avec longueur sur 16 bits (126..65535).", "params": {"header": {"type": "integer", "desc": "Premier octet."}, "payload": {"type": "integer", "desc": "Second octet."}, "len": {"type": "integer", "desc": "Longueur."}}, "returns": [{"type": "string", "desc": "En-tête."}]},
-    "encode_header_big": {"desc": "En-tête avec longueur sur 64 bits (deux entiers 32 bits).", "params": {"header": {"type": "integer", "desc": "Premier octet."}, "payload": {"type": "integer", "desc": "Second octet."}, "high": {"type": "integer", "desc": "32 bits de poids fort."}, "low": {"type": "integer", "desc": "32 bits de poids faible."}}, "returns": [{"type": "string", "desc": "En-tête."}]}
+    "encode_header_small": {
+      "desc": "Two header bytes (length < 126).",
+      "params": {
+        "header": {
+          "type": "integer",
+          "desc": "First byte (FIN + opcode)."
+        },
+        "payload": {
+          "type": "integer",
+          "desc": "Second byte (mask bit + length)."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Header."
+        }
+      ]
+    },
+    "encode_header_medium": {
+      "desc": "Header with a 16-bit length (126..65535).",
+      "params": {
+        "header": {
+          "type": "integer",
+          "desc": "First byte."
+        },
+        "payload": {
+          "type": "integer",
+          "desc": "Second byte."
+        },
+        "len": {
+          "type": "integer",
+          "desc": "Length."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Header."
+        }
+      ]
+    },
+    "encode_header_big": {
+      "desc": "Header with a 64-bit length (two 32-bit integers).",
+      "params": {
+        "header": {
+          "type": "integer",
+          "desc": "First byte."
+        },
+        "payload": {
+          "type": "integer",
+          "desc": "Second byte."
+        },
+        "high": {
+          "type": "integer",
+          "desc": "High 32 bits."
+        },
+        "low": {
+          "type": "integer",
+          "desc": "Low 32 bits."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Header."
+        }
+      ]
+    }
   }
 }

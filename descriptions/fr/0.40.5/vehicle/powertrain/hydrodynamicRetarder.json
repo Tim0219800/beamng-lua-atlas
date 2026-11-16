@@ -1,0 +1,121 @@
+{
+  "path": "lua/vehicle/powertrain/hydrodynamicRetarder.lua",
+  "module": "Composant powertrain `hydrodynamicRetarder` : ralentisseur hydrodynamique (frein moteur de camion/bus) monté en dérivation sur l'arbre. Il possède un rotor virtuel (inertie `virtualInertia`) dont il intègre lui-même la vitesse `outputAV1` ; il renvoie à son parent `inputAV = outputAV1 * gearRatio`. Quand le coefficient demandé est > 0, il applique un couple de freinage lu dans la courbe `brakeTorque` (couple selon le régime du rotor), lissé par `strengthSmoothing`. La puissance dissipée peut être renvoyée au liquide de refroidissement du moteur (`thermals.additionalCoolantEnergyPerStep`). Catégories `retarder` et `torqueConsumer`, sans port de sortie.",
+  "usage": "local ret = powertrain.getDevice(\"retarder\")\nret:setRetarderCoef(0.6) -- freinage à 60 % (0..1)",
+  "notes": [
+    "Clés jbeam lues : name, type, inputName, inputIndex, friction (N·m), dynamicFriction, strengthSmoothing (10), gearRatio (1, rapport entre arbre d'entrée et rotor), virtualInertia (kg·m², 0.1), torqueDropOffRange (tr/min, défaut 500, min 10, arrondi vers le bas), brakeTorque (table en-tête {rpm, torque}, OBLIGATOIRE, au moins deux lignes, rpm distincts, torque en N·m), coolantEnergyCoef (0..1, défaut 1, part de la puissance dissipée envoyée au liquide de refroidissement), breakTriggerBeam, retarderWhineEvent, retarderWhinePitchCoefSmoothing (100).",
+    "Champs principaux : inputAV (rad/s côté parent), outputAV1 (rad/s, vitesse du rotor), outputTorque1 (toujours 0), gearRatio, desiredRetarderCoef (0..1 demandé par setRetarderCoef), brakeTorqueCurve (table indexée par tr/min entier du rotor, N·m), torqueDropOffRange, virtualInertia, invVirtualInertia, coolantEnergyCoef, cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, isBroken.",
+    "Le couple de freinage = -signe(rotorAV) * brakeTorqueCurve[|rotorRPM|] * coefficient lissé. Au-delà de la dernière ligne de la courbe, le couple descend linéairement jusqu'à 0 sur torqueDropOffRange tr/min. Le couple de freinage de la courbe est tabulé en tr/min du ROTOR (outputAV1), pas de l'arbre d'entrée.",
+    "validate renvoie false si la courbe brakeTorque est absente ou invalide : le device est alors rejeté. Un rotor cassé ou sans courbe passe à updateTorqueBroken (le rotor accélère librement sans frein).",
+    "Le thermique n'est alimenté que si le moteur propulseur (powertrain.getPropulsionDeviceForDevice) possède thermals.additionalCoolantEnergyPerStep.",
+    "Bugs mineurs : les messages de log citent 'hydrodynamicRetarder2.new' (ancien nom) ; calculateInertia divise par gearRatio² sans protéger gearRatio == 0 ; M.requiredExternalInertiaOutputs n'est pas défini dans ce module ; initSounds utilise obj:createSFXSource (et non createSFXSource2)."
+  ],
+  "fields": {
+    "outputPorts": {"type": "table", "desc": "Table vide : aucun port de sortie."},
+    "deviceCategories": {"type": "table<string, boolean>", "desc": "{retarder=true, torqueConsumer=true}."}
+  },
+  "functions": {
+    "new": {
+      "desc": "Construit le ralentisseur : lit et valide la courbe brakeTorque, construit la courbe par tr/min avec la zone de décroissance, règle l'inertie virtuelle et les lisseurs.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (brakeTorque obligatoire)."}},
+      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "internal": true
+    }
+  },
+  "classes": {
+    "device": {
+      "desc": "Objet renvoyé par new(jbeamData). velocityUpdate et torqueUpdate sont posées par selectUpdates.",
+      "functions": {
+        "setRetarderCoef": {
+          "desc": "Règle la force de freinage demandée (0 = aucun, 1 = maximum de la courbe). Le couple réel suit via un lisseur. À appeler depuis un contrôleur (levier de ralentisseur).",
+          "params": {"coef": {"type": "number|nil", "desc": "Coefficient 0..1 (borné ; nil = 0)."}},
+          "returns": [],
+          "internal": false
+        },
+        "updateSounds": {
+          "desc": "Règle volume, hauteur et couleur du son de sifflement du ralentisseur d'après la vitesse lissée et le coefficient demandé.",
+          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+          "returns": [],
+          "internal": true
+        },
+        "velocityUpdate": {
+          "desc": "Appelée à chaque pas physique : inputAV = outputAV1 * gearRatio, écrit dans le champ de vitesse du parent.",
+          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (inutilisé)."}},
+          "returns": [],
+          "internal": true
+        },
+        "torqueUpdate": {
+          "desc": "Appelée à chaque pas physique : intègre la vitesse du rotor avec le couple du parent (moins frottement) plus le couple de freinage, et ajoute la puissance dissipée à l'énergie du circuit de refroidissement. Version « cassé ou sans courbe » : sans freinage.",
+          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+          "returns": [],
+          "internal": true
+        },
+        "updateGFX": {
+          "desc": "Mise à jour par image : ne fait rien.",
+          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes (inutilisé)."}},
+          "returns": [],
+          "internal": true
+        },
+        "applyDeformGroupDamage": {
+          "desc": "Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1).",
+          "params": {"damageAmount": {"type": "number", "desc": "Quantité de dégâts du groupe de déformation."}},
+          "returns": [],
+          "internal": true
+        },
+        "setPartCondition": {
+          "desc": "Applique l'usure (odomètre, coefficient de 1 à 2) et les dégâts (intégrité nombre 0..1 ou table {damageFrictionCoef, isBroken}) ; appelle onBreak si isBroken.",
+          "params": {
+            "subSystem": {"type": "any", "desc": "Non utilisé."},
+            "odometer": {"type": "number", "desc": "Distance parcourue en mètres."},
+            "integrity": {"type": "number|table", "desc": "Nombre 0..1 ou table d'état."},
+            "visual": {"type": "any", "desc": "Non utilisé."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "getPartCondition": {
+          "desc": "Renvoie l'intégrité 0..1 (0 si cassé) et {damageFrictionCoef, isBroken}.",
+          "params": {},
+          "returns": [{"type": "number", "desc": "Intégrité 0..1."}, {"type": "table", "desc": "État sauvegardable."}],
+          "internal": true
+        },
+        "validate": {
+          "desc": "Appelée après construction du powertrain ; renvoie false si la courbe brakeTorque est absente ou invalide.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true si une courbe de freinage valide existe."}],
+          "internal": true
+        },
+        "onBreak": {
+          "desc": "Marque le ralentisseur comme cassé et passe à la version de couple sans freinage.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "calculateInertia": {
+          "desc": "cumulativeInertia = virtualInertia / gearRatio² ; rapports cumulés = gearRatio ; calcule invVirtualInertia.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "resetSounds": {
+          "desc": "Remet à zéro le lisseur de vitesse du son.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "initSounds": {
+          "desc": "Crée la boucle sonore du ralentisseur (désactivée au départ) et le lisseur de vitesse.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (retarderWhineEvent, retarderWhinePitchCoefSmoothing)."}},
+          "returns": [],
+          "internal": true
+        },
+        "reset": {
+          "desc": "Remet à zéro vitesses, couple, coefficient demandé, lisseur, coefficients d'usure/dégâts ; relit friction et dynamicFriction.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "returns": [],
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,52 +1,78 @@
 {
   "path": "lua/vehicle/guistreams.lua",
-  "module": "Flux de données envoyés à l'UI (apps du HUD) à haute fréquence. Chaque flux a un nom (wheelInfo, engineInfo, stats, electrics, sensors, environment, genericGraphAdvanced…) ; l'UI indique ceux dont elle a besoin via setRequiredStreams, et seuls ceux-là sont calculés puis mis en file avec guihooks.queueStream. Accessible en globale `streams` (main.lua : streams = require('guistreams')). guihooks.lua appelle streams.update() lors de l'envoi.",
+  "module": "Data streams sent to the UI (HUD apps) at high frequency. Each stream has a name (wheelInfo, engineInfo, stats, electrics, sensors, environment, genericGraphAdvanced…); the UI indicates which ones it needs via setRequiredStreams, and only those are computed then queued with guihooks.queueStream. Accessible as the global `streams` (main.lua: streams = require('guistreams')). guihooks.lua calls streams.update() when sending.",
   "usage": "if streams.willSend('myStream') then\n  guihooks.queueStream('myStream', {value = 42})\nend\nstreams.drawGraph('speed', electrics.values.wheelspeed)",
   "notes": [
-    "willSend(name) est vrai seulement si guihooks.updateStreams (calculé dans main.lua:onGraphicsStep = flux actifs ET indicateur d'actualisation UI de obj) est vrai et si le flux est demandé : utile pour éviter de construire des données inutilement.",
-    "hasActiveStreams() renvoie true tant que setRequiredStreams n'a jamais été appelée (par prudence au démarrage), puis seulement s'il reste au moins un flux demandé.",
-    "wheelInfo : par roue, tableau à index numériques : [1] nom, [2] rayon, [3] wheelDir, [4] vitesse angulaire, [5] propulsionTorque, [6] lastSlip, [7] 0 (obsolète), [8] downForce, [9] brakingTorque, [10] brakeTorque, [11..13] centre statique de la roue x,y,z, [14] décalage le long de l'axe, [15] rotatorType ('wheel' par défaut), [16] parkingTorque. Les tables par roue sont réutilisées (cache).",
-    "sensors : gx, gy, gz, gx2, gy2, gz2, forceAtWheelNorm, forceAtDriverNorm, curForceLimitNorm, torqueCurrent (hydros), position {x,y,z}, roll, pitch, yaw, gravity. environment : temperature (K), pressure (obj:getEnvPressure). stats : obj:calcBeamStats() + tri_count + collidable_tri_count. engineInfo : controller.mainController.engineInfo. electrics : electrics.values.",
-    "La table streamsHandlers (une fonction par flux) est locale et n'est pas exportée dans M ; seuls reset, update, setRequiredStreams, willSend, hasActiveStreams et drawGraph le sont.",
-    "drawGraph envoie le flux 'genericGraphAdvanced' avec un compteur de frame _fidx qui s'incrémente à chaque appel et la valeur de chaque clé k."
+    "willSend(name) is true only if guihooks.updateStreams (computed in main.lua:onGraphicsStep = active streams AND obj's UI refresh flag) is true and the stream is requested: useful to avoid building data needlessly.",
+    "hasActiveStreams() returns true as long as setRequiredStreams has never been called (as a precaution at startup), then only if at least one stream remains requested.",
+    "wheelInfo: per wheel, numerically indexed array: [1] name, [2] radius, [3] wheelDir, [4] angular velocity, [5] propulsionTorque, [6] lastSlip, [7] 0 (obsolete), [8] downForce, [9] brakingTorque, [10] brakeTorque, [11..13] static wheel center x,y,z, [14] offset along the axis, [15] rotatorType ('wheel' by default), [16] parkingTorque. The per-wheel tables are reused (cache).",
+    "sensors: gx, gy, gz, gx2, gy2, gz2, forceAtWheelNorm, forceAtDriverNorm, curForceLimitNorm, torqueCurrent (hydros), position {x,y,z}, roll, pitch, yaw, gravity. environment: temperature (K), pressure (obj:getEnvPressure). stats: obj:calcBeamStats() + tri_count + collidable_tri_count. engineInfo: controller.mainController.engineInfo. electrics: electrics.values.",
+    "The streamsHandlers table (one function per stream) is local and is not exported in M; only reset, update, setRequiredStreams, willSend, hasActiveStreams and drawGraph are.",
+    "drawGraph sends the 'genericGraphAdvanced' stream with a frame counter _fidx that increments on each call and the value of each key k."
   ],
   "fields": {},
   "functions": {
     "willSend": {
-      "desc": "Indique si un flux doit être envoyé cette frame (flux demandé par l'UI et envoi actif).",
-      "params": {"name": {"type": "string", "desc": "Nom du flux."}},
-      "returns": [{"type": "boolean|nil", "desc": "Vrai si le flux doit être produit (peut renvoyer nil/false sinon)."}],
+      "desc": "Indicates whether a stream must be sent this frame (stream requested by the UI and sending active).",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Stream name."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "True if the stream must be produced (may return nil/false otherwise)."
+        }
+      ],
       "internal": false
     },
     "reset": {
-      "desc": "Vide les flux demandés et le cache des positions statiques de roues.",
+      "desc": "Clears the requested streams and the cache of static wheel positions.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "update": {
-      "desc": "Appelée par guihooks lors de l'envoi des flux : exécute le gestionnaire de chaque flux demandé (ceux de streamsHandlers) qui met ses données en file.",
+      "desc": "Called by guihooks when sending the streams: runs the handler of each requested stream (those of streamsHandlers), which queues its data.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "setRequiredStreams": {
-      "desc": "Définit la liste des flux demandés par l'UI (remplace la précédente). Appelée par le moteur/l'UI.",
-      "params": {"state": {"type": "string[]", "desc": "Liste de noms de flux."}},
+      "desc": "Sets the list of streams requested by the UI (replaces the previous one). Called by the engine/the UI.",
+      "params": {
+        "state": {
+          "type": "string[]",
+          "desc": "List of stream names."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "hasActiveStreams": {
-      "desc": "Indique si au moins un flux est demandé (ou si la liste n'a jamais été définie). Utilisé par main.lua:onGraphicsStep.",
+      "desc": "Indicates whether at least one stream is requested (or whether the list has never been set). Used by main.lua:onGraphicsStep.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si des flux sont actifs."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if streams are active."
+        }
+      ],
       "internal": true
     },
     "drawGraph": {
-      "desc": "Ajoute une valeur au graphe générique avancé de l'UI (flux 'genericGraphAdvanced'), si ce flux est demandé.",
+      "desc": "Adds a value to the UI's advanced generic graph ('genericGraphAdvanced' stream), if this stream is requested.",
       "params": {
-        "k": {"type": "string", "desc": "Nom de la série."},
-        "val": {"type": "number", "desc": "Valeur courante."}
+        "k": {
+          "type": "string",
+          "desc": "Series name."
+        },
+        "val": {
+          "type": "number",
+          "desc": "Current value."
+        }
       },
       "returns": [],
       "internal": false
@@ -54,14 +80,38 @@
   },
   "classes": {
     "streamsHandlers": {
-      "desc": "Table locale (non exportée) des gestionnaires de flux, une fonction sans argument par nom de flux ; update() les appelle.",
+      "desc": "Local (non-exported) table of stream handlers, one argument-less function per stream name; update() calls them.",
       "functions": {
-        "wheelInfo": {"desc": "Construit et met en file le flux 'wheelInfo' (voir notes pour le format par roue).", "params": {}, "internal": true},
-        "engineInfo": {"desc": "Met en file controller.mainController.engineInfo.", "params": {}, "internal": true},
-        "stats": {"desc": "Met en file obj:calcBeamStats() complété par tri_count et collidable_tri_count.", "params": {}, "internal": true},
-        "electrics": {"desc": "Met en file electrics.values.", "params": {}, "internal": true},
-        "sensors": {"desc": "Met en file accélérations, forces de volant, position, roulis/tangage/lacet et gravité.", "params": {}, "internal": true},
-        "environment": {"desc": "Met en file température et pression ambiantes.", "params": {}, "internal": true}
+        "wheelInfo": {
+          "desc": "Builds and queues the 'wheelInfo' stream (see notes for the per-wheel format).",
+          "params": {},
+          "internal": true
+        },
+        "engineInfo": {
+          "desc": "Queues controller.mainController.engineInfo.",
+          "params": {},
+          "internal": true
+        },
+        "stats": {
+          "desc": "Queues obj:calcBeamStats() completed with tri_count and collidable_tri_count.",
+          "params": {},
+          "internal": true
+        },
+        "electrics": {
+          "desc": "Queues electrics.values.",
+          "params": {},
+          "internal": true
+        },
+        "sensors": {
+          "desc": "Queues accelerations, steering wheel forces, position, roll/pitch/yaw and gravity.",
+          "params": {},
+          "internal": true
+        },
+        "environment": {
+          "desc": "Queues ambient temperature and pressure.",
+          "params": {},
+          "internal": true
+        }
       }
     }
   }

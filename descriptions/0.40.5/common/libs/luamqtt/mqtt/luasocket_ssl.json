@@ -1,12 +1,85 @@
 {
   "path": "lua/common/libs/luamqtt/mqtt/luasocket_ssl.lua",
-  "module": "Connecteur réseau luamqtt pour connexions TLS : ouvre un socket TCP via le connecteur luasocket puis l'enveloppe avec ssl.wrap (module luasec ou compatible, nom conn.ssl_module, 'ssl' par défaut) et réalise la poignée de main. send, receive et settimeout sont ceux de luasocket.",
-  "notes": ["Nécessite le module 'ssl' (luasec), probablement absent du jeu : require('ssl') échouerait.", "connect exige conn.secure_params (table), rempli par le client à partir de l'argument secure."],
+  "module": "luamqtt network connector for TLS connections: opens a TCP socket through the luasocket connector, then wraps it with ssl.wrap (luasec module or compatible, named conn.ssl_module, 'ssl' by default) and performs the handshake. send, receive and settimeout are those of luasocket.",
+  "notes": [
+    "Requires the 'ssl' module (luasec), probably absent from the game: require('ssl') would fail.",
+    "connect requires conn.secure_params (table), filled in by the client from the secure argument."
+  ],
   "functions": {
-    "connect": {"desc": "Connexion TCP + TLS. Remplace conn.sock par le socket sécurisé.", "params": {"conn": {"type": "table", "desc": "host, port, secure_params, ssl_module."}}, "returns": [{"type": "boolean", "desc": "Succès."}, {"type": "string|nil", "desc": "Erreur."}]},
-    "shutdown": {"desc": "Ferme la connexion avec conn.sock:close().", "params": {"conn": {"type": "table", "desc": "Connexion."}}},
-    "send": {"desc": "Identique à luasocket.send.", "params": {"conn": {"type": "table", "desc": "Connexion."}, "data": {"type": "string", "desc": "Données."}, "i": {"type": "integer|nil", "desc": "Début."}, "j": {"type": "integer|nil", "desc": "Fin."}}},
-    "receive": {"desc": "Identique à luasocket.receive.", "params": {"conn": {"type": "table", "desc": "Connexion."}, "size": {"type": "integer", "desc": "Octets."}}},
-    "settimeout": {"desc": "Identique à luasocket.settimeout.", "params": {"conn": {"type": "table", "desc": "Connexion."}, "timeout": {"type": "number|nil", "desc": "Secondes."}}}
+    "connect": {
+      "desc": "TCP + TLS connection. Replaces conn.sock with the secure socket.",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "host, port, secure_params, ssl_module."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Success."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error."
+        }
+      ]
+    },
+    "shutdown": {
+      "desc": "Closes the connection with conn.sock:close().",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "Connection."
+        }
+      }
+    },
+    "send": {
+      "desc": "Same as luasocket.send.",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "Connection."
+        },
+        "data": {
+          "type": "string",
+          "desc": "Data."
+        },
+        "i": {
+          "type": "integer|nil",
+          "desc": "Start."
+        },
+        "j": {
+          "type": "integer|nil",
+          "desc": "End."
+        }
+      }
+    },
+    "receive": {
+      "desc": "Same as luasocket.receive.",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "Connection."
+        },
+        "size": {
+          "type": "integer",
+          "desc": "Bytes."
+        }
+      }
+    },
+    "settimeout": {
+      "desc": "Same as luasocket.settimeout.",
+      "params": {
+        "conn": {
+          "type": "table",
+          "desc": "Connection."
+        },
+        "timeout": {
+          "type": "number|nil",
+          "desc": "Seconds."
+        }
+      }
+    }
   }
 }

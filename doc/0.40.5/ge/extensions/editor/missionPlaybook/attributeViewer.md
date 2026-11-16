@@ -1,46 +1,46 @@
 # `editor_missionPlaybook_attributeViewer`
 
-*Fichier : `lua/ge/extensions/editor/missionPlaybook/attributeViewer.lua` · VM : Game Engine (GE) · 127 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/missionPlaybook/attributeViewer.lua` · VM: Game Engine (GE) · 127 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_missionPlaybook_attributeViewer` : `extensions.load("editor_missionPlaybook_attributeViewer")`, puis la globale `editor_missionPlaybook_attributeViewer`
+**Access:** extension `editor_missionPlaybook_attributeViewer`: `extensions.load("editor_missionPlaybook_attributeViewer")`, then the global `editor_missionPlaybook_attributeViewer`
 
-Fenêtre « Playbook Attribute Viewer » associée à editor_missionPlaybook. À chaque étape du playbook, elle enregistre les attributs du joueur (career_modules_playerAttributes.getAllAttributes : valeur, niveau de branche, progression vers le niveau suivant) dans resultData.attributes. La fenêtre affiche pour la page courante un tableau Key / Value / Tier / Change (vert pour une hausse, rouge pour une baisse) et une courbe de l'évolution des attributs (hors « money ») via plotHelperUtil.
+"Playbook Attribute Viewer" window associated with editor_missionPlaybook. At each playbook step, it records the player's attributes (career_modules_playerAttributes.getAllAttributes: value, branch level, progress toward the next level) in resultData.attributes. The window displays for the current page a Key / Value / Tier / Change table (green for an increase, red for a decrease) and a curve of the attributes' evolution (except "money") via plotHelperUtil.
 
-## Remarques
+## Notes
 
-- La fenêtre n'est dessinée que si la fenêtre « Mission Playbook » est visible.
-- Bug : M.onEditorRegisterPreferences est assigné à une variable globale non définie dans ce fichier (nil) ; sans effet.
-- Le graphique est conditionné par plotInvalid, mis à true à chaque onPlaybookLogAfterStep ; il n'apparaît donc qu'après une première étape exécutée.
-- Le calcul de « Change » lit prevData[key].value sans vérifier que la clé existe dans l'étape précédente.
+- The window is only drawn if the "Mission Playbook" window is visible.
+- Bug: M.onEditorRegisterPreferences is assigned to a global variable not defined in this file (nil); no effect.
+- The graph is conditioned by plotInvalid, set to true at each onPlaybookLogAfterStep; it therefore only appears after a first step has run.
+- The computation of "Change" reads prevData[key].value without checking that the key exists in the previous step.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_missionPlaybook_attributeViewer.onEditorGui(dt)` | Hook d'éditeur appelé à chaque frame : dessine le tableau et le graphique des attributs pour book.results[book.page]. *(interne)* *(hook)* | 17 |
-| `editor_missionPlaybook_attributeViewer.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre (500x500), l'entrée de menu « Missions » et crée l'utilitaire de tracé. *(interne)* *(hook)* | 97 |
-| `editor_missionPlaybook_attributeViewer.onPlaybookLogAfterStep(resultData)` | Hook émis par editor_missionPlaybook après chaque instruction : ajoute resultData.attributes = {clé = {value, level, curLvlProgress, neededForNext}}. *(interne)* *(hook)* | 103 |
-| `editor_missionPlaybook_attributeViewer.show()` | Affiche les fenêtres « Mission Playbook » et « Playbook Attribute Viewer ». | 87 |
+| `editor_missionPlaybook_attributeViewer.onEditorGui(dt)` | Editor hook called every frame: draws the attributes table and graph for book.results[book.page]. *(internal)* *(hook)* | 17 |
+| `editor_missionPlaybook_attributeViewer.onEditorInitialized()` | Hook called at editor initialization: registers the window (500x500), the "Missions" menu entry and creates the plot utility. *(internal)* *(hook)* | 97 |
+| `editor_missionPlaybook_attributeViewer.onPlaybookLogAfterStep(resultData)` | Hook emitted by editor_missionPlaybook after each instruction: adds resultData.attributes = {key = {value, level, curLvlProgress, neededForNext}}. *(internal)* *(hook)* | 103 |
+| `editor_missionPlaybook_attributeViewer.show()` | Shows the "Mission Playbook" and "Playbook Attribute Viewer" windows. | 87 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_missionPlaybook_attributeViewer.onEditorGui(dt)`
 
-Hook d'éditeur appelé à chaque frame : dessine le tableau et le graphique des attributs pour book.results[book.page].
+Editor hook called every frame: draws the attributes table and graph for book.results[book.page].
 
-- `dt` (*number*) : Durée de la frame en secondes (passée au tracé).
+- `dt` (*number*) : Frame duration in seconds (passed to the plot).
 
 #### `editor_missionPlaybook_attributeViewer.onPlaybookLogAfterStep(resultData)`
 
-Hook émis par editor_missionPlaybook après chaque instruction : ajoute resultData.attributes = {clé = {value, level, curLvlProgress, neededForNext}}.
+Hook emitted by editor_missionPlaybook after each instruction: adds resultData.attributes = {key = {value, level, curLvlProgress, neededForNext}}.
 
-- `resultData` (*table*) : Résultat de l'étape, modifié sur place.
+- `resultData` (*table*) : Result of the step, modified in place.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `onEditorRegisterPreferences` | any |  ⚠ référence `onEditorRegisterPreferences` non définie dans le fichier (vaut probablement nil) |
+| `onEditorRegisterPreferences` | any |  ⚠ reference `onEditorRegisterPreferences` not defined in the file (probably nil) |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionPlaybook/attributeViewer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/missionPlaybook/attributeViewer.lua`.*

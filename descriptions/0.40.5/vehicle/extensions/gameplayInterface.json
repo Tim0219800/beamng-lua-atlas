@@ -1,30 +1,191 @@
 {
   "path": "lua/vehicle/extensions/gameplayInterface.lua",
-  "module": "Passerelle générique entre le code gameplay (VM GE Lua, via core_vehicleBridge) ou d'autres extensions véhicule et le VM véhicule. Elle charge à l'init tous les modules du dossier gameplayInterfaceModules, leur fait déclarer leurs 'actions' (commandes sans retour direct) et leurs 'lookups' (lectures de données), puis exécute les requêtes numérotées et renvoie le résultat par un callback enregistré. Gère aussi les notifications de changement de valeur d'une clé d'electrics. Un moddeur l'utilise pour piloter un véhicule à distance ou pour ajouter son propre module (fichier gameplayInterfaceModules/<nom>.lua).",
-  "usage": "-- Dans un module gameplayInterfaceModules/monModule.lua\nM.moduleActions.monAction = function(params) ... end\nM.moduleLookups.maLecture = function(params) return {result = 42} end\nfunction M.requestRegistration(gi) gi.registerModule('monModule', M.moduleActions, M.moduleLookups) end\n-- Appel côté véhicule\ngameplayInterface.getSystemData(0, 1, 'electricsValue', 'rpm')",
+  "module": "Generic gateway between gameplay code (GE Lua VM, via core_vehicleBridge) or other vehicle extensions and the vehicle VM. At init it loads all modules from the gameplayInterfaceModules folder, has them declare their 'actions' (commands with no direct return) and their 'lookups' (data reads), then runs numbered requests and returns the result through a registered callback. Also handles change notifications of an electrics key value. A modder uses it to drive a vehicle remotely or to add their own module (file gameplayInterfaceModules/<name>.lua).",
+  "usage": "-- In a gameplayInterfaceModules/myModule.lua module\nM.moduleActions.myAction = function(params) ... end\nM.moduleLookups.myLookup = function(params) return {result = 42} end\nfunction M.requestRegistration(gi) gi.registerModule('myModule', M.moduleActions, M.moduleLookups) end\n-- Call on the vehicle side\ngameplayInterface.getSystemData(0, 1, 'electricsValue', 'rpm')",
   "notes": [
-    "Protocole : chaque requête a un identifiant de callback (callbackId), un id de requête (id) et le nom du système (lookup) ou de l'action. Le résultat est envoyé via triggerCallback(callbackId, id, result). Si une action ne renvoie rien (nil), aucun callback n'est émis.",
-    "Les paramètres sont passés au module sous forme d'une table `params` (arguments variadiques). Les modules vérifient les types avec checkTableDataTypes et renvoient {failReason = ...} en cas d'erreur.",
-    "Callbacks : l'id 0 est réservé à GE Lua (extensions.core_vehicleBridge.callbackFromVlua), l'id 1 à debugCallback (print + dump). registerCallback ajoute un callback ({vm = 'gelua'|'vlua', callback = nom ou fonction}) et renvoie son id au demandeur par la requête -1 ({callbackId = ...}). Les notifications de changement de valeur utilisent l'id de requête -2. Pour vm = 'gelua', callback est le nom d'une fonction GE Lua appelée avec (objectId, requestId, données encodées lpack).",
-    "Les modules sont chargés (si besoin) à la volée à la première requête les concernant (ensureExtensionModuleLoaded) ; au démarrage, ils sont chargés puis déchargés juste après requestRegistration pour enregistrer leurs noms d'actions/lookups.",
-    "Les noms d'actions et de lookups doivent être uniques entre modules ; un doublon écrit un message 'duplicate action/lookup' et le dernier module enregistré gagne.",
-    "Notifications de changement de valeur : registerValueChangeNotification surveille electrics.values[cléElectrics] et déclenche le callback dès que la valeur change (valeur nil ignorée). Remise à zéro de la dernière valeur à onReset.",
-    "Anomalie : getSystemData/executeAction construisent leurs messages d'erreur avec string.format('%d', id) ; si id est nil l'appel lève une erreur Lua au lieu de renvoyer failReason.",
-    "Anomalie : onExtensionLoaded réinitialise la table callbacks avec les index 0 et 1 ; les callbacks enregistrés avant ce moment seraient perdus."
+    "Protocol: each request has a callback identifier (callbackId), a request id (id) and the name of the system (lookup) or of the action. The result is sent via triggerCallback(callbackId, id, result). If an action returns nothing (nil), no callback is emitted.",
+    "Parameters are passed to the module as a `params` table (variadic arguments). Modules check types with checkTableDataTypes and return {failReason = ...} on error.",
+    "Callbacks: id 0 is reserved for GE Lua (extensions.core_vehicleBridge.callbackFromVlua), id 1 for debugCallback (print + dump). registerCallback adds a callback ({vm = 'gelua'|'vlua', callback = name or function}) and returns its id to the requester via request -1 ({callbackId = ...}). Value change notifications use request id -2. For vm = 'gelua', callback is the name of a GE Lua function called with (objectId, requestId, lpack-encoded data).",
+    "Modules are loaded (if needed) on the fly at the first request concerning them (ensureExtensionModuleLoaded); at startup, they are loaded then unloaded right after requestRegistration to register their action/lookup names.",
+    "Action and lookup names must be unique across modules; a duplicate writes a 'duplicate action/lookup' message and the last registered module wins.",
+    "Value change notifications: registerValueChangeNotification watches electrics.values[electricsKey] and triggers the callback as soon as the value changes (nil value ignored). The last value is reset at onReset.",
+    "Anomaly: getSystemData/executeAction build their error messages with string.format('%d', id); if id is nil the call raises a Lua error instead of returning failReason.",
+    "Anomaly: onExtensionLoaded reinitializes the callbacks table with indices 0 and 1; callbacks registered before that moment would be lost."
   ],
   "fields": {},
   "functions": {
-    "onExtensionLoaded": {"desc": "Appelé au chargement de l'extension : parcourt lua/vehicle/extensions/gameplayInterfaceModules, charge chaque module, appelle requestRegistration(M) puis le décharge s'il n'était pas déjà chargé ; réinitialise la table des callbacks (id 0 = GE Lua, id 1 = debug).", "params": {}, "returns": [], "internal": true},
-    "onInit": {"desc": "Hook d'initialisation du véhicule ; vide.", "params": {}, "returns": [], "internal": true},
-    "onReset": {"desc": "Appelé au reset du véhicule : oublie la dernière valeur connue des notifications de changement.", "params": {}, "returns": [], "internal": true},
-    "updateGFX": {"desc": "Appelé chaque frame : exécute la vérification des notifications de changement de valeur si au moins une est enregistrée.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true},
-    "registerModule": {"desc": "Enregistre un module : associe chaque nom d'action et de lookup au nom du module, avec détection des doublons. Appelé par module.requestRegistration(gi).", "params": {"name": {"type": "string", "desc": "Nom du module (nom du fichier sans extension)."}, "actions": {"type": "table<string, function>", "desc": "Table moduleActions du module."}, "lookups": {"type": "table<string, function>", "desc": "Table moduleLookups du module."}}, "returns": [], "internal": false},
-    "registerCallback": {"desc": "Enregistre un callback de réponse et renvoie immédiatement son identifiant au demandeur (requête -1 avec {callbackId}).", "params": {"vm": {"type": "string", "desc": "'gelua' (callback = nom de fonction GE Lua sous forme de texte) ou 'vlua' (callback = fonction locale)."}, "callback": {"type": "string|function", "desc": "Nom de fonction GE ou fonction(requestId, data) selon vm."}}, "returns": [], "internal": false},
-    "getSystemData": {"desc": "Exécute un lookup (lecture) enregistré par un module et envoie le résultat au callback. Si le système est inconnu ou les paramètres invalides, envoie {failReason}.", "params": {"callbackId": {"type": "integer", "desc": "Callback qui recevra le résultat."}, "id": {"type": "integer", "desc": "Identifiant de requête (renvoyé tel quel)."}, "system": {"type": "string", "desc": "Nom du lookup (ex. 'electricsValue')."}, "...": {"type": "any", "desc": "Paramètres passés au lookup sous forme de table."}}, "returns": [], "internal": false},
-    "executeAction": {"desc": "Exécute une action enregistrée par un module ; renvoie un résultat au callback seulement si l'action retourne une valeur (ex. {failReason}).", "params": {"callbackId": {"type": "integer", "desc": "Callback qui recevra le résultat."}, "id": {"type": "integer", "desc": "Identifiant de requête."}, "action": {"type": "string", "desc": "Nom de l'action (ex. 'setIgnitionLevel')."}, "...": {"type": "any", "desc": "Paramètres passés à l'action sous forme de table."}}, "returns": [], "internal": false},
-    "registerValueChangeNotification": {"desc": "Demande d'être notifié (via callbackId, id de requête -2, données {[clé] = valeur}) à chaque changement de electrics.values[electricsKey]. Confirme par {registerResult = true}.", "params": {"callbackId": {"type": "integer", "desc": "Callback à appeler."}, "id": {"type": "integer", "desc": "Identifiant de la requête d'inscription."}, "electricsKey": {"type": "string", "desc": "Clé de electrics.values à surveiller."}}, "returns": [], "internal": false},
-    "unregisterValueChangeNotification": {"desc": "Retire la première notification correspondant à (callbackId, electricsKey) ; arrête la surveillance quand il n'en reste plus.", "params": {"callbackId": {"type": "integer", "desc": "Callback inscrit."}, "electricsKey": {"type": "string", "desc": "Clé surveillée."}}, "returns": [], "internal": false},
-    "triggerValueChangeNotification": {"desc": "Déclenche manuellement une notification de changement enregistrée (par son index) avec des données quelconques : le callback reçoit {data, valueChangeNotificationId}.", "params": {"valueChangeNotificationId": {"type": "integer", "desc": "Index dans la liste des notifications enregistrées."}, "data": {"type": "any", "desc": "Données à transmettre."}}, "returns": [], "internal": false},
-    "debugCallback": {"desc": "Callback de débogage (id 1) : affiche les données reçues via print/dump.", "params": {"requestId": {"type": "integer", "desc": "Identifiant de requête."}, "data": {"type": "any", "desc": "Données reçues."}}, "returns": [], "internal": false}
+    "onExtensionLoaded": {
+      "desc": "Called when the extension loads: walks through lua/vehicle/extensions/gameplayInterfaceModules, loads each module, calls requestRegistration(M) then unloads it if it was not already loaded; reinitializes the callbacks table (id 0 = GE Lua, id 1 = debug).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onInit": {
+      "desc": "Vehicle initialization hook; empty.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onReset": {
+      "desc": "Called at vehicle reset: forgets the last known value of the change notifications.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Called every frame: runs the value change notification check if at least one is registered.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "registerModule": {
+      "desc": "Registers a module: associates each action and lookup name with the module name, with duplicate detection. Called by module.requestRegistration(gi).",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Module name (file name without extension)."
+        },
+        "actions": {
+          "type": "table<string, function>",
+          "desc": "moduleActions table of the module."
+        },
+        "lookups": {
+          "type": "table<string, function>",
+          "desc": "moduleLookups table of the module."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "registerCallback": {
+      "desc": "Registers a response callback and immediately returns its identifier to the requester (request -1 with {callbackId}).",
+      "params": {
+        "vm": {
+          "type": "string",
+          "desc": "'gelua' (callback = GE Lua function name as text) or 'vlua' (callback = local function)."
+        },
+        "callback": {
+          "type": "string|function",
+          "desc": "GE function name or function(requestId, data) depending on vm."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getSystemData": {
+      "desc": "Runs a lookup (read) registered by a module and sends the result to the callback. If the system is unknown or the parameters invalid, sends {failReason}.",
+      "params": {
+        "callbackId": {
+          "type": "integer",
+          "desc": "Callback that will receive the result."
+        },
+        "id": {
+          "type": "integer",
+          "desc": "Request identifier (returned as is)."
+        },
+        "system": {
+          "type": "string",
+          "desc": "Lookup name (e.g. 'electricsValue')."
+        },
+        "...": {
+          "type": "any",
+          "desc": "Parameters passed to the lookup as a table."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "executeAction": {
+      "desc": "Runs an action registered by a module; returns a result to the callback only if the action returns a value (e.g. {failReason}).",
+      "params": {
+        "callbackId": {
+          "type": "integer",
+          "desc": "Callback that will receive the result."
+        },
+        "id": {
+          "type": "integer",
+          "desc": "Request identifier."
+        },
+        "action": {
+          "type": "string",
+          "desc": "Action name (e.g. 'setIgnitionLevel')."
+        },
+        "...": {
+          "type": "any",
+          "desc": "Parameters passed to the action as a table."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "registerValueChangeNotification": {
+      "desc": "Asks to be notified (via callbackId, request id -2, data {[key] = value}) at each change of electrics.values[electricsKey]. Confirms with {registerResult = true}.",
+      "params": {
+        "callbackId": {
+          "type": "integer",
+          "desc": "Callback to call."
+        },
+        "id": {
+          "type": "integer",
+          "desc": "Identifier of the registration request."
+        },
+        "electricsKey": {
+          "type": "string",
+          "desc": "Key of electrics.values to watch."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "unregisterValueChangeNotification": {
+      "desc": "Removes the first notification matching (callbackId, electricsKey); stops watching when none remain.",
+      "params": {
+        "callbackId": {
+          "type": "integer",
+          "desc": "Registered callback."
+        },
+        "electricsKey": {
+          "type": "string",
+          "desc": "Watched key."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "triggerValueChangeNotification": {
+      "desc": "Manually triggers a registered change notification (by its index) with arbitrary data: the callback receives {data, valueChangeNotificationId}.",
+      "params": {
+        "valueChangeNotificationId": {
+          "type": "integer",
+          "desc": "Index in the list of registered notifications."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Data to pass on."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "debugCallback": {
+      "desc": "Debug callback (id 1): displays the received data via print/dump.",
+      "params": {
+        "requestId": {
+          "type": "integer",
+          "desc": "Request identifier."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Received data."
+        }
+      },
+      "returns": [],
+      "internal": false
+    }
   }
 }

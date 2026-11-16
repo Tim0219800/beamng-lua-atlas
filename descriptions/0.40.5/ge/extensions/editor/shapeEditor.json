@@ -1,30 +1,100 @@
 {
   "path": "lua/ge/extensions/editor/shapeEditor.lua",
-  "module": "Éditeur de formes (Shape Editor) de l'éditeur de monde : fenêtre qui prévisualise un modèle 3D (.dae et autres) via l'objet C++ ShapePreview, avec une caméra orbitale et plusieurs onglets (Details, Render, Nodes, Sequence, Material, Imposter, et LOD WIP si createMeshLOD existe). Il permet d'exporter en Collada ou Wavefront obj, de lire les nodes, séquences d'animation et matériaux, de gérer l'imposteur et de générer des LOD. Les réglages de constructeur de mesh sont stockés dans un fichier .cs à côté du modèle (préfixe '//JSON:'). Un moddeur l'utilise pour inspecter un TSStatic ou un asset.",
+  "module": "World editor Shape Editor: a window that previews a 3D model (.dae and others) through the C++ ShapePreview object, with an orbital camera and several tabs (Details, Render, Nodes, Sequence, Material, Imposter, and LOD WIP if createMeshLOD exists). It can export to Collada or Wavefront obj, read the nodes, animation sequences and materials, manage the imposter and generate LODs. The mesh constructor settings are stored in a .cs file next to the model ('//JSON:' prefix). A modder uses it to inspect a TSStatic or an asset.",
   "usage": "extensions.editor_shapeEditor.showShapeEditorLoadFile('/levels/GridMap/art/shapes/buildings/busstop_grid.dae')",
   "notes": [
-    "Le menu de la fenêtre est dans le groupe 'Assets' ; la fenêtre affiche 'too small' si sa zone de rendu fait moins de 150 px.",
-    "Le bouton 'Open in Shape Editor' est ajouté à l'en-tête de l'inspecteur pour un TSStatic sélectionné.",
-    "Préférence shapeEditor.general.autoOpenSelectedObject (bool, vrai par défaut) : charge automatiquement le modèle du TSStatic sélectionné si la fenêtre est visible.",
-    "showShapeEditorLoadFile ne s'arrête pas quand le fichier n'existe pas : elle journalise 'File doesn't exist' puis continue de charger.",
-    "Certains boutons (dumpShapeInfo, getTSShapeInfo) n'apparaissent que si beamng_buildtype vaut INTERNAL.",
-    "onPreRender est commenté dans l'interface publique : le rendu se fait dans onEditorGui lorsque la zone est marquée sale."
+    "The window menu is in the 'Assets' group; the window shows 'too small' if its render area is smaller than 150 px.",
+    "The 'Open in Shape Editor' button is added to the inspector header for a selected TSStatic.",
+    "Preference shapeEditor.general.autoOpenSelectedObject (bool, true by default): automatically loads the model of the selected TSStatic if the window is visible.",
+    "showShapeEditorLoadFile does not stop when the file does not exist: it logs 'File doesn't exist' then keeps loading.",
+    "Some buttons (dumpShapeInfo, getTSShapeInfo) only appear if beamng_buildtype equals INTERNAL.",
+    "onPreRender is commented out in the public interface: rendering is done in onEditorGui when the area is marked dirty."
   ],
   "functions": {
     "showShapeEditorLoadFile": {
-      "desc": "Charge un modèle dans l'aperçu : le définit dans ShapePreview, réinitialise l'orbite, affiche la fenêtre, lit les infos du shape (détails/LOD, séquences), le fichier .cs du mesh constructor et les réglages d'imposteur.",
-      "params": {"filename": {"type": "string", "desc": "Chemin du modèle 3D, ex. /levels/.../x.dae."}},
+      "desc": "Loads a model into the preview: sets it in ShapePreview, resets the orbit, shows the window, reads the shape info (details/LODs, sequences), the mesh constructor .cs file and the imposter settings.",
+      "params": {
+        "filename": {
+          "type": "string",
+          "desc": "Path of the 3D model, e.g. /levels/.../x.dae."
+        }
+      },
       "returns": [],
       "internal": false
     },
-    "onEditorInitialized": {"desc": "Hook d'initialisation de l'éditeur : crée ShapePreview, ajoute l'entrée de menu 'Shape Editor' (groupe Assets) et enregistre la fenêtre (800x600).", "params": {}, "returns": [], "internal": true},
-    "onEditorGui": {"desc": "Hook de dessin appelé chaque frame : dessine la fenêtre, le rendu 3D et les onglets.", "params": {}, "returns": [], "internal": true},
-    "onEditorInspectorHeaderGui": {"desc": "Hook appelé pour dessiner l'en-tête de l'inspecteur : ajoute le bouton 'Open in Shape Editor' pour le premier objet sélectionné s'il est de classe TSStatic.", "params": {"inspectorInfo": {"type": "table", "desc": "Infos de l'inspecteur ; sa clé selection.object contient les ids sélectionnés."}}, "returns": [], "internal": true},
-    "onEditorObjectSelectionChanged": {"desc": "Hook appelé quand la sélection change : si la fenêtre est visible et la préférence autoOpenSelectedObject est active, charge le modèle du TSStatic sélectionné.", "params": {}, "returns": [], "internal": true},
-    "onEditorRegisterPreferences": {"desc": "Hook : enregistre la catégorie shapeEditor et la préférence general.autoOpenSelectedObject.", "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}}, "returns": [], "internal": true},
-    "onEditorExitLevel": {"desc": "Hook appelé à la sortie du niveau : vide la forme de l'aperçu.", "params": {}, "returns": [], "internal": true},
-    "onEditorDeactivated": {"desc": "Hook appelé à la désactivation de l'éditeur : restaure le matériau de l'aperçu et supprime le matériau de surbrillance.", "params": {}, "returns": [], "internal": true},
-    "onSerialize": {"desc": "Hook de sérialisation (rechargement Lua) : renvoie meshFile et highlightMaterialName.", "params": {}, "returns": [{"type": "table", "desc": "{meshFile, highlightMaterialName}."}], "internal": true},
-    "onDeserialized": {"desc": "Hook de restauration après rechargement Lua : recrée ShapePreview, recharge le modèle et le matériau de surbrillance.", "params": {"data": {"type": "table", "desc": "Données renvoyées par onSerialize."}}, "returns": [], "internal": true}
+    "onEditorInitialized": {
+      "desc": "Editor initialization hook: creates ShapePreview, adds the 'Shape Editor' menu entry (Assets group) and registers the window (800x600).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Draw hook called every frame: draws the window, the 3D render and the tabs.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorInspectorHeaderGui": {
+      "desc": "Hook called to draw the inspector header: adds the 'Open in Shape Editor' button for the first selected object if it is of class TSStatic.",
+      "params": {
+        "inspectorInfo": {
+          "type": "table",
+          "desc": "Inspector info; its selection.object key contains the selected ids."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onEditorObjectSelectionChanged": {
+      "desc": "Hook called when the selection changes: if the window is visible and the autoOpenSelectedObject preference is enabled, loads the model of the selected TSStatic.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Hook: registers the shapeEditor category and the general.autoOpenSelectedObject preference.",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Editor preferences registry."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onEditorExitLevel": {
+      "desc": "Hook called when leaving the level: clears the preview shape.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Hook called when the editor is deactivated: restores the preview material and removes the highlight material.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Serialization hook (Lua reload): returns meshFile and highlightMaterialName.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{meshFile, highlightMaterialName}."
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Restore hook after a Lua reload: recreates ShapePreview, reloads the model and the highlight material.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Data returned by onSerialize."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

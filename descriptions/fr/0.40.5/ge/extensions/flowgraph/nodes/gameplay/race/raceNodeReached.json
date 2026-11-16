@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/raceNodeReached.lua",
+  "module": "Nœud flowgraph « Race Pathnode Reached » (catégorie logic, tag scenario). Laisse passer le flux quand un véhicule atteint un pathnode de la course (events.pathnodeReached). Sorties fixes : flow et nodeName (nom du pathnode atteint). Le moddeur peut ajouter des pins de sortie string ou number : leur valeur est lue dans les customFields du pathnode (même nom et même type).",
+  "notes": ["Quand aucun pathnode n'est atteint, flow vaut false et nodeName et les pins personnalisées valent nil.", "work() indexe race.states[vehId] sans test : un véhicule absent de la course provoque une erreur."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Active allowCustomOutPins et savePins, data.detailed = false.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
+        "drawMiddle": {"desc": "Vide.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud."}, "style": {"type": "table", "desc": "Style."}}, "internal": true},
+        "work": {"desc": "Lit les events du véhicule et remplit flow, nodeName et les pins personnalisées.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

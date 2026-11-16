@@ -1,42 +1,42 @@
 # `ui_apps_minimap_additionalInfo`
 
-*Fichier : `lua/ge/extensions/ui/apps/minimap/additionalInfo.lua` · VM : Game Engine (GE) · 117 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/apps/minimap/additionalInfo.lua` · VM: Game Engine (GE) · 117 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_apps_minimap_additionalInfo` : `extensions.load("ui_apps_minimap_additionalInfo")`, puis la globale `ui_apps_minimap_additionalInfo`
+**Access:** extension `ui_apps_minimap_additionalInfo`: `extensions.load("ui_apps_minimap_additionalInfo")`, then the global `ui_apps_minimap_additionalInfo`
 
-Calcule les informations complémentaires affichées par la mini-carte : distance restante jusqu'à la destination (routePlanner de core_groundMarkers), nom du lieu (zone de gameplay_city la plus prioritaire sous la caméra, sinon titre du niveau) et état de la poursuite de police (disabled, visibleToPolice, hiddenFromPolice). Les changements sont envoyés au flux 'minimap' via guihooks.queueStream.
+Computes the extra information shown by the minimap: remaining distance to the destination (routePlanner of core_groundMarkers), place name (highest-priority gameplay_city zone under the camera, otherwise the level title) and police pursuit state (disabled, visibleToPolice, hiddenFromPolice). Changes are sent to the 'minimap' stream via guihooks.queueStream.
 
-## Remarques
+## Notes
 
-- Un seul envoi par frame, seulement si une valeur a changé (drapeau hasNewAdditionalInfo).
-- La distance est formatée « %.1f unité » après translateDistance(…, 'auto') selon les réglages d'unités.
-- checkPolice appelle gameplay_police.getPursuitData() sans test : l'extension gameplay_police doit être disponible.
-- checkLocationName ne fait rien si gameplay_city n'est pas chargé.
+- A single send per frame, only if a value has changed (hasNewAdditionalInfo flag).
+- The distance is formatted "%.1f unit" after translateDistance(…, 'auto') according to the unit settings.
+- checkPolice calls gameplay_police.getPursuitData() without a test: the gameplay_police extension must be available.
+- checkLocationName does nothing if gameplay_city is not loaded.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_apps_minimap_additionalInfo.onClientEndMission()` | Hook de fin de niveau : vide les infos (visible remis à true) et force un renvoi. *(interne)* *(hook)* | 100 |
-| `ui_apps_minimap_additionalInfo.onReachedTargetPos()` | Hook appelé quand la destination est atteinte : efface la distance à la cible. *(interne)* *(hook)* | 42 |
-| `ui_apps_minimap_additionalInfo.onSetBigmapNavFocus(pos)` | Hook appelé quand le focus de navigation de la grande carte change ; si pos est nil, efface la distance à la cible. *(interne)* *(hook)* | 106 |
-| `ui_apps_minimap_additionalInfo.onUpdate()` | Hook de frame : vérifie la route, le nom de lieu et la police, puis envoie les infos si l'une a changé. *(interne)* *(hook)* | 89 |
-| `ui_apps_minimap_additionalInfo.requestAdditionalInfo()` | Force le renvoi des informations au flux 'minimap' à la prochaine mise à jour (appelé quand l'interface se monte). | 7 |
-| `ui_apps_minimap_additionalInfo.setVisible(visible)` | Affiche ou masque le bloc d'informations dans l'interface ; ne renvoie rien si la valeur ne change pas. Tout ce qui n'est pas false est traité comme true. | 11 |
+| `ui_apps_minimap_additionalInfo.onClientEndMission()` | End-of-level hook: empties the info (visible reset to true) and forces a resend. *(internal)* *(hook)* | 100 |
+| `ui_apps_minimap_additionalInfo.onReachedTargetPos()` | Hook called when the destination is reached: clears the distance to the target. *(internal)* *(hook)* | 42 |
+| `ui_apps_minimap_additionalInfo.onSetBigmapNavFocus(pos)` | Hook called when the big map's navigation focus changes; if pos is nil, clears the distance to the target. *(internal)* *(hook)* | 106 |
+| `ui_apps_minimap_additionalInfo.onUpdate()` | Frame hook: checks the route, the place name and the police, then sends the info if one has changed. *(internal)* *(hook)* | 89 |
+| `ui_apps_minimap_additionalInfo.requestAdditionalInfo()` | Forces the information to be resent to the 'minimap' stream at the next update (called when the interface mounts). | 7 |
+| `ui_apps_minimap_additionalInfo.setVisible(visible)` | Shows or hides the information block in the interface; returns nothing if the value does not change. Anything that is not false is treated as true. | 11 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_apps_minimap_additionalInfo.onSetBigmapNavFocus(pos)`
 
-Hook appelé quand le focus de navigation de la grande carte change ; si pos est nil, efface la distance à la cible.
+Hook called when the big map's navigation focus changes; if pos is nil, clears the distance to the target.
 
-- `pos` (*vec3|nil*) : Position visée, ou nil si la navigation est retirée.
+- `pos` (*vec3|nil*) : Target position, or nil if the navigation is removed.
 
 #### `ui_apps_minimap_additionalInfo.setVisible(visible)`
 
-Affiche ou masque le bloc d'informations dans l'interface ; ne renvoie rien si la valeur ne change pas. Tout ce qui n'est pas false est traité comme true.
+Shows or hides the information block in the interface; returns nothing if the value does not change. Anything that is not false is treated as true.
 
-- `visible` (*boolean|nil*) : false pour masquer.
+- `visible` (*boolean|nil*) : false to hide.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/apps/minimap/additionalInfo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/apps/minimap/additionalInfo.lua`.*

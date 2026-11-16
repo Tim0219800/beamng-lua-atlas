@@ -2,78 +2,78 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/vehiclePaints.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_vehiclePaints` : gestion des peintures de véhicules. Lit les fichiers de bibliothèque de peintures (paints, multiPaintSetups, paintCollections) via core_vehicles, résout les peintures déclarées par chaque modèle et chaque config (`setupPaints`, appelé par core_vehicles.getModel), compare les peintures d'un .pc avec celles du modèle/de la bibliothèque, et tire des peintures aléatoires selon les distributions randomPaintDistribution / randomMultiPaintDistribution. Une peinture est une table {baseColor = {r,g,b,a}, metallic, roughness, clearcoat, clearcoatRoughness, name, class…}.
---- Accès : extension `core_vehiclePaints` : `extensions.load("core_vehiclePaints")`, puis la globale `core_vehiclePaints`
+--- GE extension `core_vehiclePaints`: vehicle paint management. Reads the paint library files (paints, multiPaintSetups, paintCollections) through core_vehicles, resolves the paints declared by each model and each config (`setupPaints`, called by core_vehicles.getModel), compares the paints of a .pc with those of the model/library, and draws random paints according to the randomPaintDistribution / randomMultiPaintDistribution distributions. A paint is a table {baseColor = {r,g,b,a}, metallic, roughness, clearcoat, clearcoatRoughness, name, class...}.
+--- Access: extension `core_vehiclePaints`: `extensions.load("core_vehiclePaints")`, then the global `core_vehiclePaints`
 ---@class core_vehiclePaints
 core_vehiclePaints = {}
 
---- Comme writePcPaintsAsInfoPaints, mais réutilise une référence existante (peinture du modèle, de la bibliothèque, ou multiPaintSetup équivalent trouvé par signature) quand elle existe, au lieu de dupliquer la peinture.
----Source : lua/ge/extensions/core/vehiclePaints.lua:1069
----@param pcData table contenu du .pc
----@param infoData table contenu info à compléter (defaultMultiPaintSetup)
----@param configName string nom de la config
----@param modelName string modèle, pour chercher ses peintures
+--- Like writePcPaintsAsInfoPaints, but reuses an existing reference (model paint, library paint, or equivalent multiPaintSetup found by signature) when one exists, instead of duplicating the paint.
+---Source: lua/ge/extensions/core/vehiclePaints.lua:1069
+---@param pcData table content of the .pc
+---@param infoData table info content to complete (defaultMultiPaintSetup)
+---@param configName string config name
+---@param modelName string model, to look up its paints
 function core_vehiclePaints.convertPcPaintsToInfoPaints(pcData, infoData, configName, modelName) end
 
---- Génère un multiPaintSetup aléatoire en tirant trois peintures simples (les multiPaintSetups de la distribution sont ignorés).
----Source : lua/ge/extensions/core/vehiclePaints.lua:1215
----@param model_key string modèle
+--- Generates a random multiPaintSetup by drawing three single paints (the distribution's multiPaintSetups are ignored).
+---Source: lua/ge/extensions/core/vehiclePaints.lua:1215
+---@param model_key string model
 ---@param config_key string config
----@param avoidDuplicates boolean|nil si true, une peinture déjà tirée ne peut pas être retirée
----@return table  {paintName1, paintName2, paintName3} ('White' en secours)
+---@param avoidDuplicates boolean|nil if true, a paint already drawn cannot be drawn again
+---@return table  {paintName1, paintName2, paintName3} ('White' as a fallback)
 function core_vehiclePaints.createRandomMultiPaintSetup(model_key, config_key, avoidDuplicates) end
 
---- Tire au hasard une entrée de peinture selon les probabilités de la config (ou à défaut du modèle). Le helper est construit à la première demande.
----Source : lua/ge/extensions/core/vehiclePaints.lua:1169
----@param model_key string nom du modèle
----@param config_key string clé de la config (peut être sans config propre : alors le modèle est utilisé)
----@return table|nil  {type ('paint' ou multiPaintSetup), paintName1, paintName2, paintName3, probability}
+--- Randomly draws a paint entry according to the config's probabilities (or the model's by default). The helper is built on first request.
+---Source: lua/ge/extensions/core/vehiclePaints.lua:1169
+---@param model_key string model name
+---@param config_key string config key (may have no config of its own: then the model is used)
+---@return table|nil  {type ('paint' or multiPaintSetup), paintName1, paintName2, paintName3, probability}
 function core_vehiclePaints.getRandomPaints(model_key, config_key) end
 
---- Tire des peintures pour un véhicule existant, d'après son modèle et sa config (extraits de partConfig).
----Source : lua/ge/extensions/core/vehiclePaints.lua:1195
----@param vehId integer|nil identifiant du véhicule
----@return string[]  {nom1, nom2, nom3} utilisable par core_vehicle_manager.setVehicleColorsNames ; {'White','White','White'} si le véhicule ou la config est introuvable
+--- Draws paints for an existing vehicle, based on its model and config (extracted from partConfig).
+---Source: lua/ge/extensions/core/vehiclePaints.lua:1195
+---@param vehId integer|nil vehicle identifier
+---@return string[]  {name1, name2, name3} usable by core_vehicle_manager.setVehicleColorsNames; {'White','White','White'} if the vehicle or config is not found
 function core_vehiclePaints.getRandomPaintsByVehicle(vehId) end
 
---- Signature d'un ensemble de 3 peintures : {"paint1":..,"paint2":..,"paint3":..} où chaque élément est une paintSignature.
----Source : lua/ge/extensions/core/vehiclePaints.lua:19
----@param multiPaintSetup table table avec paint1, paint2, paint3 (peintures complètes)
+--- Signature of a set of 3 paints: {"paint1":..,"paint2":..,"paint3":..} where each element is a paintSignature.
+---Source: lua/ge/extensions/core/vehiclePaints.lua:19
+---@param multiPaintSetup table table with paint1, paint2, paint3 (full paints)
 ---@return string  signature
 function core_vehiclePaints.multiPaintSetupSignature(multiPaintSetup) end
 
---- Chaîne JSON canonique d'une peinture ({baseColor, clearcoat, clearcoatRoughness, metallic, roughness}, 5 décimales) servant à comparer deux peintures.
----Source : lua/ge/extensions/core/vehiclePaints.lua:17
----@param paint table peinture complète
+--- Canonical JSON string of a paint ({baseColor, clearcoat, clearcoatRoughness, metallic, roughness}, 5 decimals) used to compare two paints.
+---Source: lua/ge/extensions/core/vehiclePaints.lua:17
+---@param paint table full paint
 ---@return string  signature
 function core_vehiclePaints.paintSignature(paint) end
 
---- Prépare les peintures d'un modèle et de ses configs : collecte les peintures directes, les libraryPaints, les paintCollections, résout les multiPaintSetups et les peintures par défaut (modèle d'abord, puis configs) et finalise les classes. Modifie `model` et `configs` en place. Appelée par core_vehicles.getModel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/vehiclePaints.lua:351
----@param model table table du modèle (model.key, model.paints…)
----@param configs table<string, table> configs du modèle
+--- Prepares the paints of a model and its configs: collects direct paints, libraryPaints, paintCollections, resolves multiPaintSetups and default paints (model first, then configs) and finalizes the classes. Modifies `model` and `configs` in place. Called by core_vehicles.getModel.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/vehiclePaints.lua:351
+---@param model table model table (model.key, model.paints...)
+---@param configs table<string, table> configs of the model
 function core_vehiclePaints.setupPaints(model, configs) end
 
---- Outil de test : tire `amount` peintures et logue (niveau I) la répartition obtenue.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/vehiclePaints.lua:1266
----@param model_key string modèle
+--- Test tool: draws `amount` paints and logs (level I) the resulting distribution.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/vehiclePaints.lua:1266
+---@param model_key string model
 ---@param config_key string config
----@param amount integer nombre de tirages
+---@param amount integer number of draws
 function core_vehiclePaints.testRandomPaint(model_key, config_key, amount) end
 
---- Analyse les peintures d'un .pc : pour chacune des 3, indique si elle correspond à une peinture du modèle, de la bibliothèque ou est personnalisée, et si l'ensemble correspond à un multiPaintSetup connu.
----Source : lua/ge/extensions/core/vehiclePaints.lua:1143
----@param pcData table contenu du .pc
----@param modelName string nom du modèle
+--- Analyzes the paints of a .pc: for each of the 3, indicates whether it matches a model paint, a library paint or is custom, and whether the set matches a known multiPaintSetup.
+---Source: lua/ge/extensions/core/vehiclePaints.lua:1143
+---@param pcData table content of the .pc
+---@param modelName string model name
 ---@return table  {paints = {{index, source ('model'|'library'|'custom'), modelPaintName, libraryPaintId, libraryPaintName, resolvedReference}}, multiPaintSetup = {found, source, name, id}, defaultStorageMode ('individualPaints'|'multiPaintSetup'), canOverridePaints, modelDefaultColors, modelDefaultMultiPaintSetup}
 function core_vehiclePaints.validatePcPaints(pcData, modelName) end
 
---- Écrit les peintures d'un .pc comme `defaultMultiPaintSetup` d'un fichier info, avec des peintures explicites (class 'hidden', nommées '<config> Paint N'). Modifie infoData.
----Source : lua/ge/extensions/core/vehiclePaints.lua:1055
----@param pcData table contenu du .pc (champ paints)
----@param infoData table contenu info à compléter
----@param configName string nom de la config
+--- Writes the paints of a .pc as `defaultMultiPaintSetup` of an info file, with explicit paints (class 'hidden', named '<config> Paint N'). Modifies infoData.
+---Source: lua/ge/extensions/core/vehiclePaints.lua:1055
+---@param pcData table content of the .pc (paints field)
+---@param infoData table info content to complete
+---@param configName string config name
 function core_vehiclePaints.writePcPaintsAsInfoPaints(pcData, infoData, configName) end
 

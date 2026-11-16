@@ -1,80 +1,80 @@
 # `scenario_race_marker`
 
-*Fichier : `lua/ge/extensions/scenario/race_marker.lua` · VM : Game Engine (GE) · 135 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/race_marker.lua` · VM: Game Engine (GE) · 135 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_race_marker` : `extensions.load("scenario_race_marker")`, puis la globale `scenario_race_marker`
+**Access:** extension `scenario_race_marker`: `extensions.load("scenario_race_marker")`, then the global `scenario_race_marker`
 
-Gestionnaire des marqueurs 3D de checkpoints d'une course de scénario. Il crée un marqueur par waypoint avec le type choisi (module scenario/raceMarkers/<type>, par défaut sideColumnMarker), les masque ou affiche, règle leur mode (courant, suivant, caché...) et les met à jour à chaque image. Les marqueurs sont masqués en mode photo.
+Manager of the 3D checkpoint markers of a scenario race. It creates one marker per waypoint with the chosen type (module scenario/raceMarkers/<type>, sideColumnMarker by default), hides or shows them, sets their mode (current, next, hidden...) and updates them every frame. The markers are hidden in photo mode.
 
-## Remarques
+## Notes
 
-- M.idToMarker est copié à l'export : clearMarkerList réassigne la variable locale idToMarker, donc M.idToMarker ne suit plus la table réellement utilisée après un premier nettoyage.
-- Dans setupMarkers, marker:createMarkers() est appelé deux fois par marqueur (une fois dans createRaceMarker, une fois ensuite).
-- Les modes passés à setModes sont des noms de mode propres à chaque type de marqueur (voir scenario/raceMarkers/*) ; un waypoint absent de la table reçoit 'hidden'.
-- La variable globale photoModeOpen est lue pour masquer les marqueurs.
+- M.idToMarker is copied at export: clearMarkerList reassigns the local variable idToMarker, so M.idToMarker no longer follows the table actually used after a first cleanup.
+- In setupMarkers, marker:createMarkers() is called twice per marker (once in createRaceMarker, once afterwards).
+- The modes passed to setModes are mode names specific to each marker type (see scenario/raceMarkers/*); a waypoint absent from the table receives 'hidden'.
+- The global variable photoModeOpen is read to hide the markers.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_race_marker.createRaceMarker(detached, type)` | Crée un marqueur du type donné (ou du type courant par défaut), appelle createMarkers() et, sauf si detached, l'enregistre pour les mises à jour et le masquage. | 29 |
-| `scenario_race_marker.drawOnMinimap(td)` | Demande à chaque marqueur qui en est capable (drawOnMinimap) de se dessiner sur la minicarte. | 106 |
-| `scenario_race_marker.hide()` | Masque tous les marqueurs gérés. | 17 |
-| `scenario_race_marker.init()` | Efface les marqueurs précédents et masque ceux qui restent. *(interne)* | 50 |
-| `scenario_race_marker.onClientEndMission()` | Hook de fin de mission : supprime les marqueurs et remet le type de marqueur par défaut. *(interne)* *(hook)* | 115 |
-| `scenario_race_marker.render(dt, dtSim)` | À appeler chaque image : masque les marqueurs en mode photo (et les restaure à la sortie), sinon appelle marker:update(dt, dtSim) sur chacun. *(interne)* | 76 |
-| `scenario_race_marker.setModes(wpModes)` | Règle le mode de chaque marqueur d'après une table nom de waypoint -> mode ; les noms absents passent en 'hidden'. | 93 |
-| `scenario_race_marker.setToCheckpoints(data)` | Replace chaque marqueur sur les données de checkpoint correspondant à son nom. | 98 |
-| `scenario_race_marker.setupMarkers(wps, marker)` | Choisit le type de marqueur puis crée un marqueur par waypoint et le place sur son checkpoint (setToCheckpoint). Les anciens marqueurs sont d'abord supprimés. Les marqueurs sont indexés par wp.name. | 57 |
-| `scenario_race_marker.show()` | Affiche tous les marqueurs gérés. | 23 |
+| `scenario_race_marker.createRaceMarker(detached, type)` | Creates a marker of the given type (or the current type by default), calls createMarkers() and, unless detached, registers it for updates and hiding. | 29 |
+| `scenario_race_marker.drawOnMinimap(td)` | Asks each marker that supports it (drawOnMinimap) to draw itself on the minimap. | 106 |
+| `scenario_race_marker.hide()` | Hides all managed markers. | 17 |
+| `scenario_race_marker.init()` | Clears the previous markers and hides those that remain. *(internal)* | 50 |
+| `scenario_race_marker.onClientEndMission()` | Mission end hook: removes the markers and resets the marker type to default. *(internal)* *(hook)* | 115 |
+| `scenario_race_marker.render(dt, dtSim)` | To be called every frame: hides the markers in photo mode (and restores them on exit), otherwise calls marker:update(dt, dtSim) on each. *(internal)* | 76 |
+| `scenario_race_marker.setModes(wpModes)` | Sets the mode of each marker from a table waypoint name -> mode; absent names go to 'hidden'. | 93 |
+| `scenario_race_marker.setToCheckpoints(data)` | Places each marker back on the checkpoint data matching its name. | 98 |
+| `scenario_race_marker.setupMarkers(wps, marker)` | Chooses the marker type then creates one marker per waypoint and places it on its checkpoint (setToCheckpoint). The old markers are removed first. The markers are indexed by wp.name. | 57 |
+| `scenario_race_marker.show()` | Shows all managed markers. | 23 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_race_marker.createRaceMarker(detached, type)`
 
-Crée un marqueur du type donné (ou du type courant par défaut), appelle createMarkers() et, sauf si detached, l'enregistre pour les mises à jour et le masquage.
+Creates a marker of the given type (or the current type by default), calls createMarkers() and, unless detached, registers it for updates and hiding.
 
-- `detached` (*boolean|nil*) : Si true, le marqueur n'est pas géré par ce module (pas de mise à jour automatique).
-- `type` (*string|nil*) : Nom du module dans scenario/raceMarkers/, par exemple 'ringMarker'.
-- **renvoie** : table Le marqueur créé.
+- `detached` (*boolean|nil*) : If true, the marker is not managed by this module (no automatic update).
+- `type` (*string|nil*) : Module name in scenario/raceMarkers/, for example 'ringMarker'.
+- **returns**: table The created marker.
 
 #### `scenario_race_marker.drawOnMinimap(td)`
 
-Demande à chaque marqueur qui en est capable (drawOnMinimap) de se dessiner sur la minicarte.
+Asks each marker that supports it (drawOnMinimap) to draw itself on the minimap.
 
-- `td` (*any*) : Contexte de dessin transmis tel quel aux marqueurs (déduit du code).
+- `td` (*any*) : Drawing context passed as is to the markers (inferred from code).
 
 #### `scenario_race_marker.render(dt, dtSim)`
 
-À appeler chaque image : masque les marqueurs en mode photo (et les restaure à la sortie), sinon appelle marker:update(dt, dtSim) sur chacun.
+To be called every frame: hides the markers in photo mode (and restores them on exit), otherwise calls marker:update(dt, dtSim) on each.
 
-- `dt` (*number*) : Durée de l'image réelle (s).
-- `dtSim` (*number*) : Durée de simulation (s).
+- `dt` (*number*) : Real frame duration (s).
+- `dtSim` (*number*) : Simulation duration (s).
 
 #### `scenario_race_marker.setModes(wpModes)`
 
-Règle le mode de chaque marqueur d'après une table nom de waypoint -> mode ; les noms absents passent en 'hidden'.
+Sets the mode of each marker from a table waypoint name -> mode; absent names go to 'hidden'.
 
-- `wpModes` (*table<string, string>*) : Mode par nom de waypoint.
+- `wpModes` (*table<string, string>*) : Mode per waypoint name.
 
 #### `scenario_race_marker.setToCheckpoints(data)`
 
-Replace chaque marqueur sur les données de checkpoint correspondant à son nom.
+Places each marker back on the checkpoint data matching its name.
 
-- `data` (*table<string, table>*) : Données de checkpoint par nom de waypoint.
+- `data` (*table<string, table>*) : Checkpoint data per waypoint name.
 
 #### `scenario_race_marker.setupMarkers(wps, marker)`
 
-Choisit le type de marqueur puis crée un marqueur par waypoint et le place sur son checkpoint (setToCheckpoint). Les anciens marqueurs sont d'abord supprimés. Les marqueurs sont indexés par wp.name.
+Chooses the marker type then creates one marker per waypoint and places it on its checkpoint (setToCheckpoint). The old markers are removed first. The markers are indexed by wp.name.
 
-- `wps` (*table[]*) : Liste de waypoints, chacun avec un champ name.
-- `marker` (*string|nil*) : Nom du module dans scenario/raceMarkers/ ; nil pour le type par défaut sideColumnMarker.
+- `wps` (*table[]*) : List of waypoints, each with a name field.
+- `marker` (*string|nil*) : Module name in scenario/raceMarkers/; nil for the default type sideColumnMarker.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `idToMarker` | table | Table id -> marqueur, copie initiale de la table interne (voir notes). |
+| `idToMarker` | table | Table id -> marker, initial copy of the internal table (see notes). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/race_marker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/race_marker.lua`.*

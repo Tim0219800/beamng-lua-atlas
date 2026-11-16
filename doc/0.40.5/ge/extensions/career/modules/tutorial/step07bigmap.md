@@ -1,73 +1,73 @@
 # `career_modules_tutorial_step07bigmap`
 
-*Fichier : `lua/ge/extensions/career/modules/tutorial/step07bigmap.lua` · VM : Game Engine (GE) · 249 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/tutorial/step07bigmap.lua` · VM: Game Engine (GE) · 249 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_tutorial_step07bigmap` : `extensions.load("career_modules_tutorial_step07bigmap")`, puis la globale `career_modules_tutorial_step07bigmap`
+**Access:** extension `career_modules_tutorial_step07bigmap`: `extensions.load("career_modules_tutorial_step07bigmap")`, then the global `career_modules_tutorial_step07bigmap`
 
-Étape 7 du tutoriel de carrière (« bigmap ») : apprendre la grande carte. Le joueur l'ouvre, lit une popup (v2/bigmapTutorial), sélectionne le point d'intérêt du garage (tutorial_apm_parking), définit un itinéraire vers lui (à 10 m de la place garageExteriorPark), puis ferme la carte ; l'étape suivante s'active 1 s après. Un message d'aide sur le bulletin de temps (timeslip) s'affiche dans la zone timeslipHint quand la carte est fermée.
+Career tutorial step 7 ("bigmap"): learning the big map. The player opens it, reads a popup (v2/bigmapTutorial), selects the garage point of interest (tutorial_apm_parking), sets a route to it (within 10 m of the garageExteriorPark spot), then closes the map; the next step activates 1 s later. A help message about the timeslip is displayed in the timeslipHint zone when the map is closed.
 
-## Remarques
+## Notes
 
-- L'action toggleBigMap est débloquée pour l'étape (blockedActionsTemplates.bigMap = false).
-- En sortie de zone, le véhicule est téléporté sur la place beforeDragStrip.
-- Les hooks onActivateBigMapCallback / onDeactivateBigMapCallback / onPoiSelectedFromBigmap / onSetBigmapNavFocus sont émis par la grande carte ; ils sont ignorés si l'étape courante n'est pas 07bigmap.
+- The toggleBigMap action is unlocked for the step (blockedActionsTemplates.bigMap = false).
+- When leaving the zone, the vehicle is teleported to the beforeDragStrip spot.
+- The hooks onActivateBigMapCallback / onDeactivateBigMapCallback / onPoiSelectedFromBigmap / onSetBigmapNavFocus are emitted by the big map; they are ignored if the current step is not 07bigmap.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_tutorial_step07bigmap.cleanup()` | Retire le reset de zone, le message timeslip et la liste de tâches. *(interne)* | 226 |
-| `career_modules_tutorial_step07bigmap.onActivateBigMapCallback()` | Hook émis à l'ouverture de la grande carte : masque l'aide timeslip et, à la première ouverture, ouvre la popup v2/bigmapTutorial après 0,5 s. *(interne)* *(hook)* | 151 |
-| `career_modules_tutorial_step07bigmap.onCareerTutorialLeftBounds()` | Hook de sortie de zone : lance le reset de sortie de zone de l'étape. *(interne)* *(hook)* | 146 |
-| `career_modules_tutorial_step07bigmap.onDeactivateBigMapCallback()` | Hook émis à la fermeture de la grande carte : si l'itinéraire est posé, valide l'objectif de fermeture et avance d'étape après 1 s. *(interne)* *(hook)* | 200 |
-| `career_modules_tutorial_step07bigmap.onDebugMenu(im)` | Affiche l'état de l'étape et un bouton « Skip Step 7 ». *(interne)* *(hook)* | 234 |
-| `career_modules_tutorial_step07bigmap.onIntroPopupCareerClosed(id)` | Hook de fermeture de popup : à la fermeture de v2/bigmapTutorial, affiche l'objectif de sélection d'un POI. *(interne)* *(hook)* | 167 |
-| `career_modules_tutorial_step07bigmap.onPoiSelectedFromBigmap(poiId)` | Hook émis quand un POI est sélectionné : valide l'objectif si c'est le POI du garage. *(interne)* *(hook)* | 175 |
-| `career_modules_tutorial_step07bigmap.onSetBigmapNavFocus(pos)` | Hook émis quand un itinéraire est défini sur la carte : valide l'objectif si la destination est à moins de 10 m du garage. *(interne)* *(hook)* | 187 |
-| `career_modules_tutorial_step07bigmap.onUpdate(dtReal, dtSim, dtRaw)` | Appelé chaque frame : affiche ou masque le message d'aide timeslip selon que le joueur est dans la zone timeslipHint, dans les limites et que la carte est fermée. *(interne)* *(hook)* | 213 |
-| `career_modules_tutorial_step07bigmap.setup(stepData)` | Appelé à l'activation : remet les objectifs à zéro, débloque la grande carte, active les zones drivingToDragBounds et dragStripBounds, affiche le message « ouvrir la grande carte » et vide les POI bruts. *(interne)* | 118 |
+| `career_modules_tutorial_step07bigmap.cleanup()` | Removes the zone reset, the timeslip message and the task list. *(internal)* | 226 |
+| `career_modules_tutorial_step07bigmap.onActivateBigMapCallback()` | Hook emitted when the big map opens: hides the timeslip help and, on the first opening, opens the v2/bigmapTutorial popup after 0.5 s. *(internal)* *(hook)* | 151 |
+| `career_modules_tutorial_step07bigmap.onCareerTutorialLeftBounds()` | Out-of-bounds hook: starts the step's out-of-bounds reset. *(internal)* *(hook)* | 146 |
+| `career_modules_tutorial_step07bigmap.onDeactivateBigMapCallback()` | Hook emitted when the big map closes: if the route is set, validates the close objective and advances the step after 1 s. *(internal)* *(hook)* | 200 |
+| `career_modules_tutorial_step07bigmap.onDebugMenu(im)` | Displays the step state and a "Skip Step 7" button. *(internal)* *(hook)* | 234 |
+| `career_modules_tutorial_step07bigmap.onIntroPopupCareerClosed(id)` | Popup close hook: when v2/bigmapTutorial closes, displays the POI selection objective. *(internal)* *(hook)* | 167 |
+| `career_modules_tutorial_step07bigmap.onPoiSelectedFromBigmap(poiId)` | Hook emitted when a POI is selected: validates the objective if it is the garage POI. *(internal)* *(hook)* | 175 |
+| `career_modules_tutorial_step07bigmap.onSetBigmapNavFocus(pos)` | Hook emitted when a route is set on the map: validates the objective if the destination is within 10 m of the garage. *(internal)* *(hook)* | 187 |
+| `career_modules_tutorial_step07bigmap.onUpdate(dtReal, dtSim, dtRaw)` | Called every frame: shows or hides the timeslip help message depending on whether the player is in the timeslipHint zone, within bounds and the map is closed. *(internal)* *(hook)* | 213 |
+| `career_modules_tutorial_step07bigmap.setup(stepData)` | Called on activation: resets the objectives, unlocks the big map, activates the drivingToDragBounds and dragStripBounds zones, displays the "open the big map" message and clears the raw POIs. *(internal)* | 118 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_tutorial_step07bigmap.onDebugMenu(im)`
 
-Affiche l'état de l'étape et un bouton « Skip Step 7 ».
+Displays the step state and a "Skip Step 7" button.
 
-- `im` (*table*) : Table ui_imgui.
+- `im` (*table*) : ui_imgui table.
 
 #### `career_modules_tutorial_step07bigmap.onIntroPopupCareerClosed(id)`
 
-Hook de fermeture de popup : à la fermeture de v2/bigmapTutorial, affiche l'objectif de sélection d'un POI.
+Popup close hook: when v2/bigmapTutorial closes, displays the POI selection objective.
 
-- `id` (*string*) : Id de la popup.
+- `id` (*string*) : Popup id.
 
 #### `career_modules_tutorial_step07bigmap.onPoiSelectedFromBigmap(poiId)`
 
-Hook émis quand un POI est sélectionné : valide l'objectif si c'est le POI du garage.
+Hook emitted when a POI is selected: validates the objective if it is the garage POI.
 
-- `poiId` (*string*) : Id du POI sélectionné.
+- `poiId` (*string*) : Id of the selected POI.
 
 #### `career_modules_tutorial_step07bigmap.onSetBigmapNavFocus(pos)`
 
-Hook émis quand un itinéraire est défini sur la carte : valide l'objectif si la destination est à moins de 10 m du garage.
+Hook emitted when a route is set on the map: validates the objective if the destination is within 10 m of the garage.
 
-- `pos` (*table*) : Position de destination (champs x, y, z).
+- `pos` (*table*) : Destination position (fields x, y, z).
 
 #### `career_modules_tutorial_step07bigmap.onUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé chaque frame : affiche ou masque le message d'aide timeslip selon que le joueur est dans la zone timeslipHint, dans les limites et que la carte est fermée.
+Called every frame: shows or hides the timeslip help message depending on whether the player is in the timeslipHint zone, within bounds and the map is closed.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta simulation (s).
-- `dtRaw` (*number*) : Delta brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation delta (s).
+- `dtRaw` (*number*) : Raw delta (s).
 
 #### `career_modules_tutorial_step07bigmap.setup(stepData)`
 
-Appelé à l'activation : remet les objectifs à zéro, débloque la grande carte, active les zones drivingToDragBounds et dragStripBounds, affiche le message « ouvrir la grande carte » et vide les POI bruts.
+Called on activation: resets the objectives, unlocks the big map, activates the drivingToDragBounds and dragStripBounds zones, displays the "open the big map" message and clears the raw POIs.
 
-- `stepData` (*any*) : Données de l'étape (non utilisées).
+- `stepData` (*any*) : Step data (unused).
 
-**Évènements UI (guihooks.trigger) :** `ClearTasklist`, `DiscardTasklistItem`
+**UI events (guihooks.trigger):** `ClearTasklist`, `DiscardTasklistItem`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/tutorial/step07bigmap.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/tutorial/step07bigmap.lua`.*

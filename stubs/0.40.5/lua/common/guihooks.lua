@@ -2,82 +2,82 @@
 -- tim19Atlas stub generated from lua/common/guihooks.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Passerelle Lua vers l'interface HTML/JS (CEF). Permet de déclencher des hooks JS côté UI (guihooks.trigger) et d'envoyer des flux de données (streams) à haute fréquence pour les applications d'UI. Présent dans la VM GE (via `be`) et dans la VM véhicule (via `obj`) ; les deux envoient par queueHookJS/queueStreamDataJS. Un moddeur s'en sert pour afficher un message, mettre à jour une app UI ou tracer des valeurs dans l'app 'Generic Graph'.
---- Accès : globale `guihooks`
+--- Lua gateway to the HTML/JS interface (CEF). Allows triggering JS hooks on the UI side (guihooks.trigger) and sending high-frequency data streams to UI apps. Present in the GE VM (via `be`) and in the vehicle VM (via `obj`); both send through queueHookJS/queueStreamDataJS. A modder uses it to show a message, update a UI app or plot values in the 'Generic Graph' app.
+--- Access: global `guihooks`
 ---@class guihooks
----@field queueStream function queueStream(key, value) : met en cache la donnée de flux `key` pour envoi ultérieur par sendStreams (VM véhicule : seulement si updateStreams est vrai). nop si ni `obj` ni `be`.
----@field send function Alias de queueStream.
+---@field queueStream function queueStream(key, value): caches the stream data `key` for later sending by sendStreams (vehicle VM: only if updateStreams is true). nop if neither `obj` nor `be` exists.
+---@field send function Alias of queueStream.
 guihooks = {}
 
---- Alimente l'app UI 'Generic Graph' (stream 'genericGraphSimple'). Chaque argument est une table {clé, valeur, échelle, unité, renderNegatives, couleur}; valeurs par défaut : clé '#i', valeur 0, échelle 1, unité '', renderNegatives false, couleur RGBA dégradé jet. Renvoie la liste normalisée. Exemple : graph({'foo',foo}, {'bar',bar,100}, {'baz',baz,nil,'m/s',false,nil}).
----Source : lua/common/guihooks.lua:151
----@param a table|nil premier graphe {clé, valeur, échelle, unité, renderNegatives, couleur} (ignoré si nil/false)
----@param ... table autres graphes, même format
----@return table[]  liste des graphes avec valeurs par défaut remplies
+--- Feeds the 'Generic Graph' UI app (stream 'genericGraphSimple'). Each argument is a table {key, value, scale, unit, renderNegatives, color}; defaults: key '#i', value 0, scale 1, unit '', renderNegatives false, color RGBA jet gradient. Returns the normalized list. Example: graph({'foo',foo}, {'bar',bar,100}, {'baz',baz,nil,'m/s',false,nil}).
+---Source: lua/common/guihooks.lua:151
+---@param a table|nil first graph {key, value, scale, unit, renderNegatives, color} (ignored if nil/false)
+---@param ... table other graphs, same format
+---@return table[]  list of graphs with default values filled in
 function guihooks.graph(a, ...) end
 
---- Comme graph, et enregistre aussi chaque appel comme une ligne d'un CSV en mémoire (csvlib). Le premier appel crée le fichier et fixe les colonnes (clé + unité). Écrire sur disque avec graphWithCSVWrite().
----Source : lua/common/guihooks.lua:167
----@param filename string|nil nom du fichier CSV (pris au premier appel ; défaut graphcsv.<date>.csv)
----@param ... table graphes, mêmes arguments que graph
+--- Like graph, and also records each call as a row of an in-memory CSV (csvlib). The first call creates the file and sets the columns (key + unit). Write to disk with graphWithCSVWrite().
+---Source: lua/common/guihooks.lua:167
+---@param filename string|nil CSV file name (taken at the first call; default graphcsv.<date>.csv)
+---@param ... table graphs, same arguments as graph
 function guihooks.graphWithCSV(filename, ...) end
 
---- Écrit le CSV accumulé par graphWithCSV dans le fichier ; journalise une erreur si aucun CSV n'existe.
----Source : lua/common/guihooks.lua:185
+--- Writes the CSV accumulated by graphWithCSV to the file; logs an error if no CSV exists.
+---Source: lua/common/guihooks.lua:185
 function guihooks.graphWithCSVWrite() end
 
---- Affiche un message dans l'UI via le hook 'Message' (données {msg, ttl, category, icon, availableOptionsCount, currentOptionIndex}). Ne fait rien si playerInfo.firstPlayerSeated est faux.
----Source : lua/common/guihooks.lua:126
----@param msg string texte (clé de traduction possible, déduit du code UI)
----@param ttl number|nil durée d'affichage en secondes, défaut 5
----@param category string|nil catégorie du message, défaut ''
----@param icon string|nil icône
----@param availableOptionsCount integer|nil nombre d'options (menus de choix)
----@param currentOptionIndex integer|nil option courante
+--- Displays a message in the UI via the 'Message' hook (data {msg, ttl, category, icon, availableOptionsCount, currentOptionIndex}). Does nothing if playerInfo.firstPlayerSeated is false.
+---Source: lua/common/guihooks.lua:126
+---@param msg string text (possibly a translation key, inferred from the UI code)
+---@param ttl number|nil display duration in seconds, default 5
+---@param category string|nil message category, default ''
+---@param icon string|nil icon
+---@param availableOptionsCount integer|nil number of options (choice menus)
+---@param currentOptionIndex integer|nil current option
 function guihooks.message(msg, ttl, category, icon, availableOptionsCount, currentOptionIndex) end
 
---- Envoie le hook 'Message' une fois pour chaque joueur assis (playerInfo.seatedPlayers), avec le champ data.player. Accepte soit les mêmes arguments que message, soit une seule table {msg=..., ...} passée en premier argument (ttl nil).
----Source : lua/common/guihooks.lua:132
----@param msg string|table texte ou table de données avec champ msg
----@param ttl number|nil durée, défaut 5
----@param category string|nil catégorie, défaut ''
----@param icon string|nil icône
----@param availableOptionsCount integer|nil nombre d'options
----@param currentOptionIndex integer|nil option courante
+--- Sends the 'Message' hook once for each seated player (playerInfo.seatedPlayers), with the field data.player. Accepts either the same arguments as message, or a single table {msg=..., ...} passed as the first argument (ttl nil).
+---Source: lua/common/guihooks.lua:132
+---@param msg string|table text or data table with a msg field
+---@param ttl number|nil duration, default 5
+---@param category string|nil category, default ''
+---@param icon string|nil icon
+---@param availableOptionsCount integer|nil number of options
+---@param currentOptionIndex integer|nil current option
 function guihooks.messageForSeatedPlayers(msg, ttl, category, icon, availableOptionsCount, currentOptionIndex) end
 
---- Remet updateStreams à false, vide le cache de streams et envoie le hook 'VehicleReset' si le premier joueur est assis. Appelé lors d'un reset du véhicule/de la VM.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/guihooks.lua:97
+--- Sets updateStreams back to false, empties the stream cache and sends the 'VehicleReset' hook if the first player is seated. Called on a vehicle/VM reset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/guihooks.lua:97
 function guihooks.reset() end
 
---- Envoie à l'UI tous les streams mis en cache par queueStream puis vide le cache. Appelé par le moteur (VM véhicule : depuis onGraphicsStep ; ne doit pas être appelé depuis GE d'après le commentaire du code).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/guihooks.lua:88
+--- Sends to the UI all streams cached by queueStream then empties the cache. Called by the engine (vehicle VM: from onGraphicsStep; must not be called from GE according to the code comment).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/guihooks.lua:88
 function guihooks.sendStreams() end
 
---- Déclenche le hook JS `hookName` côté UI avec les arguments donnés (encodés en JSON dans un tableau). Les valeurs nil sont ignorées. Sensible au ramasse-miettes (réutilise une table temporaire) : ne pas la modifier à la légère.
----Source : lua/common/guihooks.lua:26
----@param hookName string nom du hook JS
----@param ... any arguments sérialisables en JSON (nil ignorés)
+--- Triggers the JS hook `hookName` on the UI side with the given arguments (JSON-encoded in an array). nil values are ignored. Garbage-collector sensitive (reuses a temporary table): do not modify it lightly.
+---Source: lua/common/guihooks.lua:26
+---@param hookName string JS hook name
+---@param ... any JSON-serializable arguments (nil ignored)
 function guihooks.trigger(hookName, ...) end
 
---- Comme trigger mais pour un client UI précis identifié par targetDsmId.
----Source : lua/common/guihooks.lua:41
----@param targetDsmId integer identifiant du client/UI cible
----@param hookName string nom du hook JS
----@param ... any arguments (nil ignorés)
+--- Like trigger but for a specific UI client identified by targetDsmId.
+---Source: lua/common/guihooks.lua:41
+---@param targetDsmId integer target client/UI identifier
+---@param hookName string JS hook name
+---@param ... any arguments (nil ignored)
 function guihooks.triggerClient(targetDsmId, hookName, ...) end
 
---- Déclenche un hook JS en passant du JS brut (inséré tel quel entre crochets, pas d'échappement ni d'encodage JSON). À n'utiliser qu'avec du texte de confiance.
----Source : lua/common/guihooks.lua:54
----@param hookName string nom du hook JS
----@param rawJs any code JS brut converti avec tostring
+--- Triggers a JS hook by passing raw JS (inserted as is between brackets, no escaping or JSON encoding). To be used only with trusted text.
+---Source: lua/common/guihooks.lua:54
+---@param hookName string JS hook name
+---@param rawJs any raw JS code converted with tostring
 function guihooks.triggerRawJS(hookName, rawJs) end
 
---- Envoie immédiatement une donnée de flux (stream) à l'UI sous le nom streamName (encodée en JSON).
----Source : lua/common/guihooks.lua:58
----@param streamName string nom du stream
----@param streamData any donnée sérialisable en JSON
+--- Immediately sends stream data to the UI under the name streamName (JSON-encoded).
+---Source: lua/common/guihooks.lua:58
+---@param streamName string stream name
+---@param streamData any JSON-serializable data
 function guihooks.triggerStream(streamName, streamData) end
 

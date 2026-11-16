@@ -1,22 +1,27 @@
 {
   "path": "lua/ge/extensions/editor/newsMessage.lua",
-  "module": "Extension d'éditeur qui affiche une fenêtre modale « World Editor News » avec les notes de version importantes, une seule fois par version de message (EditorNewsMessageVersion = 5), avec des liens vers le support et le forum BeamNG. Elle mémorise l'affichage dans deux préférences cachées (newsMessage.general.newsMessageShown et newsMessageVersion).",
+  "module": "Editor extension that displays a \"World Editor News\" modal window with the important release notes, only once per message version (EditorNewsMessageVersion = 5), with links to the BeamNG support and forum. It remembers the display in two hidden preferences (newsMessage.general.newsMessageShown and newsMessageVersion).",
   "notes": [
-    "Dans 0.40.5, newsText est vide : onEditorGui retourne tout de suite et la fenêtre ne s'affiche jamais.",
-    "Pour que le message s'affiche de nouveau, il faut augmenter EditorNewsMessageVersion et remplir newsText."
+    "In 0.40.5, newsText is empty: onEditorGui returns immediately and the window is never displayed.",
+    "For the message to be displayed again, EditorNewsMessageVersion must be increased and newsText filled in."
   ],
   "functions": {
     "onEditorGui": {
-      "desc": "Hook d'éditeur appelé à chaque frame : ouvre la fenêtre modale si le message n'a pas encore été vu pour cette version, puis la dessine (texte, liens, bouton Close).",
+      "desc": "Editor hook called every frame: opens the modal window if the message has not yet been seen for this version, then draws it (text, links, Close button).",
       "internal": true
     },
     "onEditorRegisterPreferences": {
-      "desc": "Hook d'enregistrement des préférences : crée la catégorie newsMessage avec les préférences cachées newsMessageShown (bool) et newsMessageVersion (int).",
-      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "desc": "Preferences registration hook: creates the newsMessage category with the hidden preferences newsMessageShown (bool) and newsMessageVersion (int).",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Editor preferences registry."
+        }
+      },
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre modale « newsModalDlg ».",
+      "desc": "Hook called at editor initialization: registers the \"newsModalDlg\" modal window.",
       "internal": true
     }
   }

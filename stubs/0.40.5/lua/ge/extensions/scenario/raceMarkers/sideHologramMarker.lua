@@ -2,63 +2,63 @@
 -- tim19Atlas stub generated from lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Marqueur portique avec piliers, cônes, colonnes et flèche.
+--- Gantry marker with pillars, cones, columns and arrow.
 ---@class scenario_raceMarkers_sideHologramMarker
 local scenario_raceMarkers_sideHologramMarker = {}
 
---- Supprime un objet à partir de son identifiant.
----Source : lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:509
----@param id integer|nil Identifiant d'objet.
+--- Removes an object from its identifier.
+---Source: lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:509
+---@param id integer|nil Object identifier.
 function scenario_raceMarkers_sideHologramMarker:clearMarker(id) end
 
---- Supprime tous les objets créés.
----Source : lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:517
+--- Deletes all created objects.
+---Source: lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:517
 function scenario_raceMarkers_sideHologramMarker:clearMarkers() end
 
---- Supprime les anciens objets puis crée les 9 objets.
----Source : lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:495
+--- Removes the old objects then creates the 9 objects.
+---Source: lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:495
 function scenario_raceMarkers_sideHologramMarker:createMarkers() end
 
---- Crée un TSStatic caché enregistré sous objectName et ajouté à ScenarioObjectsGroup.
----Source : lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:473
----@param shapeName string Chemin du modèle.
----@param objectName string Nom d'enregistrement.
----@return table  L'objet créé.
+--- Creates a hidden TSStatic registered under objectName and added to ScenarioObjectsGroup.
+---Source: lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:473
+---@param shapeName string Model path.
+---@param objectName string Registration name.
+---@return table  The created object.
 function scenario_raceMarkers_sideHologramMarker:createObject(shapeName, objectName) end
 
---- Appelle setVisibility(false).
----Source : lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:469
+--- Calls setVisibility(false).
+---Source: lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:469
 function scenario_raceMarkers_sideHologramMarker:hide() end
 
---- Constructeur : initialise l'état et les couleurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:105
----@param id integer Identifiant unique.
+--- Constructor: initializes the state and the colors.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:105
+---@param id integer Unique identifier.
 function scenario_raceMarkers_sideHologramMarker:init(id) end
 
---- Change de mode : affiche (sauf 'hidden') et lance le fondu.
----Source : lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:413
----@param mode string default, next, start, lap, recovery, final, branch ou hidden.
+--- Changes mode: shows (except 'hidden') and starts the fade.
+---Source: lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:413
+---@param mode string default, next, start, lap, recovery, final, branch or hidden.
 function scenario_raceMarkers_sideHologramMarker:setMode(mode) end
 
---- Calcule les positions au sol des deux piliers par lancers de rayon et place tous les objets.
----Source : lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:300
+--- Computes the ground positions of the two pillars by raycasts and places all the objects.
+---Source: lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:300
 ---@param wp table {pos, radius, normal?, nextPos?, fadeNear?, fadeFar?, minAlpha?}.
 function scenario_raceMarkers_sideHologramMarker:setToCheckpoint(wp) end
 
---- Affiche ou cache les 9 objets.
----Source : lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:425
----@param v boolean Visibilité.
+--- Shows or hides the 9 objects.
+---Source: lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:425
+---@param v boolean Visibility.
 function scenario_raceMarkers_sideHologramMarker:setVisibility(v) end
 
---- Appelle setVisibility(true).
----Source : lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:470
+--- Calls setVisibility(true).
+---Source: lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:470
 function scenario_raceMarkers_sideHologramMarker:show() end
 
---- Appel par image : balancement vertical, fondu de couleur, taille des colonnes selon la distance, orientation de la flèche vers nextPos.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:145
----@param dt number Durée réelle (s).
----@param dtSim number Durée simulée (s).
+--- Per-frame call: vertical sway, color fade, column size according to distance, arrow orientation toward nextPos.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua:145
+---@param dt number Real duration (s).
+---@param dtSim number Simulated duration (s).
 function scenario_raceMarkers_sideHologramMarker:update(dt, dtSim) end
 

@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/log.lua",
+  "module": "Nœud flowgraph « Log » (catégorie dynamic_instant, tags util/print). Écrit la valeur reçue dans la console du jeu (log) et dans le journal d'évènements du graphe (mgr:logEvent). Entrées : value (any ; les tables sont converties par dumps), logTag (string, défaut « Node #<id> »), logType (I Info, D Debug, W Warning, E Error ; défaut I). En mode dynamique 'repeat', le message est écrit à chaque frame.",
+  "usage": "-- le nœud équivaut à : log('I', 'Node #12', msg)",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "postInit": {"desc": "Prépare les modèles du pin logType, masque logType et logTag, et fixe le tag par défaut « Node #id ».", "internal": true},
+        "workOnce": {"desc": "Écrit une entrée de log."},
+        "work": {"desc": "Si dynamicMode vaut 'repeat', écrit une entrée de log."},
+        "createLogEntry": {"desc": "Convertit la valeur en texte (dumps pour une table), appelle log(type, tag, msg) et mgr:logEvent.", "internal": true},
+        "drawMiddle": {"desc": "Éditeur : affiche ('type','tag',...).", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true}
+      }
+    }
+  }
+}

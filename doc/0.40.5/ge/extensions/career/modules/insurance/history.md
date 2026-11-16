@@ -1,96 +1,96 @@
 # `career_modules_insurance_history`
 
-*Fichier : `lua/ge/extensions/career/modules/insurance/history.lua` · VM : Game Engine (GE) · 116 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/insurance/history.lua` · VM: Game Engine (GE) · 116 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_insurance_history` : `extensions.load("career_modules_insurance_history")`, puis la globale `career_modules_insurance_history`
+**Access:** extension `career_modules_insurance_history`: `extensions.load("career_modules_insurance_history")`, then the global `career_modules_insurance_history`
 
-Historique des événements d'assurance du joueur en carrière (réclamations, réparations privées, renouvellements, changements de contrat…). Chaque entrée porte un type, un titre, des effets (par exemple {type='money', changedBy=-montant}), le nom de l'assurance concernée, un texte optionnel, des données libres (other) et l'heure os.time(). Le module fournit aussi des totaux utilisés pour les statistiques d'assurance. Les données sont sauvegardées par le module insurance via getPlHistory/setPlHistory.
+History of the player's insurance events in career (claims, private repairs, renewals, contract changes…). Each entry has a type, a title, effects (for example {type='money', changedBy=-amount}), the name of the insurance concerned, an optional text, free data (other) and the os.time() time. The module also provides totals used for the insurance statistics. The data is saved by the insurance module via getPlHistory/setPlHistory.
 
-## Remarques
+## Notes
 
-- Types d'entrée utilisés par les totaux : 'insuranceRepairClaim', 'privateRepair', 'insuranceRenewed', 'insuranceChanged'.
-- getHistoryTotalDetails (interne) incrémente totalCount une fois par effet de type 'money' (et non une fois par entrée) : une entrée avec plusieurs effets d'argent compte plusieurs fois, une entrée sans effet d'argent ne compte pas.
-- Le total d'argent utilise la valeur absolue de changedBy.
-- getTotalInsuranceRepairDeductiblesPaid lit entry.other.deductible et getDamageCostCoveredByInsurance lit entry.other.vehDamagePrice ; ces champs doivent être fournis dans other lors de l'ajout.
-- buildPlHistory renvoie une copie triée de la plus récente à la plus ancienne et ajoute un champ date formaté os.date('%c').
+- Entry types used by the totals: 'insuranceRepairClaim', 'privateRepair', 'insuranceRenewed', 'insuranceChanged'.
+- getHistoryTotalDetails (internal) increments totalCount once per 'money' effect (and not once per entry): an entry with several money effects counts several times, an entry without a money effect does not count.
+- The money total uses the absolute value of changedBy.
+- getTotalInsuranceRepairDeductiblesPaid reads entry.other.deductible and getDamageCostCoveredByInsurance reads entry.other.vehDamagePrice; these fields must be provided in other when adding.
+- buildPlHistory returns a copy sorted from most recent to oldest and adds a date field formatted os.date('%c').
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_insurance_history.addToPlHistory(data)` | Ajoute une entrée à l'historique avec l'heure courante (os.time()). | 10 |
-| `career_modules_insurance_history.buildPlHistory()` | Construit la liste d'historique pour l'UI : copie profonde triée du plus récent au plus ancien, avec date lisible. | 23 |
-| `career_modules_insurance_history.getDamageCostCoveredByInsurance()` | Somme des coûts de dégâts (vehDamagePrice) des réclamations de réparation, c'est-à-dire la valeur des dommages couverts. | 75 |
-| `career_modules_insurance_history.getInsuranceClaimsCount()` | Nombre de réparations prises en charge par une assurance (effets d'argent des entrées 'insuranceRepairClaim'). | 85 |
-| `career_modules_insurance_history.getNonInsuranceRepairsCount()` | Nombre de réparations payées sans assurance (entrées 'privateRepair'). | 89 |
-| `career_modules_insurance_history.getPlHistory()` | Renvoie la table d'historique brute (pour la sauvegarde). | 53 |
-| `career_modules_insurance_history.getTotalInsuranceRepairDeductiblesPaid()` | Somme des franchises payées lors des réclamations de réparation. | 65 |
-| `career_modules_insurance_history.getTotalPremiumPaid()` | Total des primes payées : renouvellements ('insuranceRenewed') plus changements de contrat ('insuranceChanged'). | 93 |
-| `career_modules_insurance_history.getTotalPrivateRepairsPaid()` | Total dépensé en réparations sans assurance. | 99 |
-| `career_modules_insurance_history.initPlHistory()` | Vide l'historique (nouvelle partie). *(interne)* | 61 |
-| `career_modules_insurance_history.setPlHistory(history)` | Remplace l'historique (chargement de sauvegarde) ; une valeur nil le vide. | 57 |
+| `career_modules_insurance_history.addToPlHistory(data)` | Adds an entry to the history with the current time (os.time()). | 10 |
+| `career_modules_insurance_history.buildPlHistory()` | Builds the history list for the UI: deep copy sorted from most recent to oldest, with a readable date. | 23 |
+| `career_modules_insurance_history.getDamageCostCoveredByInsurance()` | Sum of the damage costs (vehDamagePrice) of the repair claims, i.e. the value of the damage covered. | 75 |
+| `career_modules_insurance_history.getInsuranceClaimsCount()` | Number of repairs covered by an insurance (money effects of the 'insuranceRepairClaim' entries). | 85 |
+| `career_modules_insurance_history.getNonInsuranceRepairsCount()` | Number of repairs paid without insurance ('privateRepair' entries). | 89 |
+| `career_modules_insurance_history.getPlHistory()` | Returns the raw history table (for saving). | 53 |
+| `career_modules_insurance_history.getTotalInsuranceRepairDeductiblesPaid()` | Sum of the deductibles paid on repair claims. | 65 |
+| `career_modules_insurance_history.getTotalPremiumPaid()` | Total premiums paid: renewals ('insuranceRenewed') plus contract changes ('insuranceChanged'). | 93 |
+| `career_modules_insurance_history.getTotalPrivateRepairsPaid()` | Total spent on repairs without insurance. | 99 |
+| `career_modules_insurance_history.initPlHistory()` | Clears the history (new game). *(internal)* | 61 |
+| `career_modules_insurance_history.setPlHistory(history)` | Replaces the history (save loading); a nil value clears it. | 57 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_insurance_history.addToPlHistory(data)`
 
-Ajoute une entrée à l'historique avec l'heure courante (os.time()).
+Adds an entry to the history with the current time (os.time()).
 
-- `data` (*table*) : Table avec type, title, effects, concernedInsuranceName, overrideText, other.
+- `data` (*table*) : Table with type, title, effects, concernedInsuranceName, overrideText, other.
 
 #### `career_modules_insurance_history.buildPlHistory()`
 
-Construit la liste d'historique pour l'UI : copie profonde triée du plus récent au plus ancien, avec date lisible.
+Builds the history list for the UI: deep copy sorted from most recent to oldest, with a readable date.
 
-- **renvoie** : table Liste d'entrées avec champ date supplémentaire.
+- **returns**: table List of entries with an extra date field.
 
 #### `career_modules_insurance_history.getDamageCostCoveredByInsurance()`
 
-Somme des coûts de dégâts (vehDamagePrice) des réclamations de réparation, c'est-à-dire la valeur des dommages couverts.
+Sum of the damage costs (vehDamagePrice) of the repair claims, i.e. the value of the damage covered.
 
-- **renvoie** : number Montant.
+- **returns**: number Amount.
 
 #### `career_modules_insurance_history.getInsuranceClaimsCount()`
 
-Nombre de réparations prises en charge par une assurance (effets d'argent des entrées 'insuranceRepairClaim').
+Number of repairs covered by an insurance (money effects of the 'insuranceRepairClaim' entries).
 
-- **renvoie** : integer Nombre de réclamations.
+- **returns**: integer Number of claims.
 
 #### `career_modules_insurance_history.getNonInsuranceRepairsCount()`
 
-Nombre de réparations payées sans assurance (entrées 'privateRepair').
+Number of repairs paid without insurance ('privateRepair' entries).
 
-- **renvoie** : integer Nombre de réparations privées.
+- **returns**: integer Number of private repairs.
 
 #### `career_modules_insurance_history.getPlHistory()`
 
-Renvoie la table d'historique brute (pour la sauvegarde).
+Returns the raw history table (for saving).
 
-- **renvoie** : table Liste d'entrées.
+- **returns**: table List of entries.
 
 #### `career_modules_insurance_history.getTotalInsuranceRepairDeductiblesPaid()`
 
-Somme des franchises payées lors des réclamations de réparation.
+Sum of the deductibles paid on repair claims.
 
-- **renvoie** : number Montant.
+- **returns**: number Amount.
 
 #### `career_modules_insurance_history.getTotalPremiumPaid()`
 
-Total des primes payées : renouvellements ('insuranceRenewed') plus changements de contrat ('insuranceChanged').
+Total premiums paid: renewals ('insuranceRenewed') plus contract changes ('insuranceChanged').
 
-- **renvoie** : number Montant en argent du jeu.
+- **returns**: number Amount in game money.
 
 #### `career_modules_insurance_history.getTotalPrivateRepairsPaid()`
 
-Total dépensé en réparations sans assurance.
+Total spent on repairs without insurance.
 
-- **renvoie** : number Montant.
+- **returns**: number Amount.
 
 #### `career_modules_insurance_history.setPlHistory(history)`
 
-Remplace l'historique (chargement de sauvegarde) ; une valeur nil le vide.
+Replaces the history (save loading); a nil value clears it.
 
-- `history` (*table|nil*) : Historique sauvegardé.
+- `history` (*table|nil*) : Saved history.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/insurance/history.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/insurance/history.lua`.*

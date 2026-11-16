@@ -1,139 +1,139 @@
 # `gameplay_rally_loop_stagedCountdownUtils`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/loop/stagedCountdownUtils.lua` · VM : Game Engine (GE) · 240 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/loop/stagedCountdownUtils.lua` · VM: Game Engine (GE) · 240 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_loop_stagedCountdownUtils` : `extensions.load("gameplay_rally_loop_stagedCountdownUtils")`, puis la globale `gameplay_rally_loop_stagedCountdownUtils`
+**Access:** extension `gameplay_rally_loop_stagedCountdownUtils`: `extensions.load("gameplay_rally_loop_stagedCountdownUtils")`, then the global `gameplay_rally_loop_stagedCountdownUtils`
 
-Fonctions communes au compte à rebours de départ de spéciale (nœud flowgraph et simulation de test) : lecture de l'horloge murale de l'environnement, réglages du compte à rebours selon les options rallyVisualPacenotes/rallyAudioPacenotes, calcul d'un compte à rebours calé sur la minute suivante, geler/dégeler le véhicule, dessin de debug du plan de départ et affichage ImGui d'état dans le nœud.
+Functions common to the stage start countdown (flowgraph node and test simulation): reading the environment's wall clock, countdown settings according to the rallyVisualPacenotes/rallyAudioPacenotes options, computing a countdown aligned on the next minute, freezing/unfreezing the vehicle, debug drawing of the start plane and ImGui status display in the node.
 
-## Remarques
+## Notes
 
-- Horloge murale : ((tod.time + 0.5) % 1) * 86400 secondes ; tod.time = 0 correspond à midi.
-- getStageCountdownSettings : le paramètre defaultMaxAnnounced est ignoré ; maxAnnounced reçoit defaultDuration.
-- Dans le plan de debug, l'axe Y est la normale : +Y est « back » (derrière la ligne) et -Y « front ».
+- Wall clock: ((tod.time + 0.5) % 1) * 86400 seconds; tod.time = 0 corresponds to noon.
+- getStageCountdownSettings: the defaultMaxAnnounced parameter is ignored; maxAnnounced receives defaultDuration.
+- In the debug plane, the Y axis is the normal: +Y is "back" (behind the line) and -Y "front".
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_loop_stagedCountdownUtils.buildRallyClockData(wallClockSecs)` | Données d'horloge pour l'UI : wallClockSecs, wallClockTime (texte 24 h via rallyUtil.formatTime24Hour) et trois drapeaux de saut à false. | 54 |
-| `gameplay_rally_loop_stagedCountdownUtils.calculateImmediateMinuteCountdown(duration)` | Prépare un compte à rebours qui se termine à la prochaine minute pleine de l'horloge murale (fenêtre de lancement = duration + 1 s). | 30 |
-| `gameplay_rally_loop_stagedCountdownUtils.drawDebugPlane(pos, rot, normals)` | Dessine un plan violet (deux triangles de 10 m de large) avec une sphère au point d'origine ; avec normals, ajoute les axes « back » (vert) et « front » (rouge). | 64 |
-| `gameplay_rally_loop_stagedCountdownUtils.drawDebugVehiclePoint(vehPos, inside)` | Dessine une petite sphère au véhicule : verte si inside, rouge sinon. | 145 |
-| `gameplay_rally_loop_stagedCountdownUtils.drawMiddleInfo(im, nodeData, formatTimeFromSeconds)` | Affiche dans le nœud (drawMiddle, ImGui) : indicateur TEST MODE, horloge, époque, heure de l'évènement, temps restant, contrôle de mise en place, état, replanifications, et zone/staged. Ne fait rien si nodeData.useImgui est faux. | 174 |
-| `gameplay_rally_loop_stagedCountdownUtils.drawMiddleProgress(im, state, duration, timer, STATE_COUNTDOWN_RUNNING, STATE_FINISHED)` | Barre de progression du nœud : « Running » avec (duration - timer)/duration, « Done » (pleine) si terminé, « Waiting » (vide) sinon. | 227 |
-| `gameplay_rally_loop_stagedCountdownUtils.drawVehicleToPlaneDebug(vehPos, planePos, rot, tmpPlaneNormal, tmpToVehicle, tmpClosestPoint, tmpMidPoint)` | Dessine la projection du véhicule sur le plan, une ligne et la distance signée (« past » orange si le véhicule a dépassé la ligne, « before » vert sinon). Les vec3 passés en paramètres servent de tampons pour éviter les allocations. | 95 |
-| `gameplay_rally_loop_stagedCountdownUtils.freezeVehicle(vehId, logTag)` | Gèle le véhicule (action 'setFreeze' true via core_vehicleBridge) pendant la phase de mise en place. | 150 |
-| `gameplay_rally_loop_stagedCountdownUtils.getEnvironmentWallClockSecs()` | Heure murale actuelle de l'environnement, en secondes depuis minuit. | 9 |
-| `gameplay_rally_loop_stagedCountdownUtils.getStageCountdownSettings(defaultDuration, defaultMaxAnnounced)` | Construit la table de réglages du compte à rebours : duration, maxAnnounced, showVisualCountdown (réglage rallyVisualPacenotes ou nil), playSoundEffects (vrai si rallyAudioPacenotes est désactivé), playVoiceCountdown (réglage rallyAudioPacenotes). | 17 |
-| `gameplay_rally_loop_stagedCountdownUtils.getWallClockTime(environmentStartTimeSecs, epochTime)` | Heure murale = (environmentStartTimeSecs + epochTime) modulo 86400. | 50 |
-| `gameplay_rally_loop_stagedCountdownUtils.unfreezeVehicle(vehId, logTag)` | Dégèle le véhicule (action 'setFreeze' false). | 162 |
+| `gameplay_rally_loop_stagedCountdownUtils.buildRallyClockData(wallClockSecs)` | Clock data for the UI: wallClockSecs, wallClockTime (24 h text via rallyUtil.formatTime24Hour) and three skip flags set to false. | 54 |
+| `gameplay_rally_loop_stagedCountdownUtils.calculateImmediateMinuteCountdown(duration)` | Prepares a countdown that ends at the next full minute of the wall clock (launch window = duration + 1 s). | 30 |
+| `gameplay_rally_loop_stagedCountdownUtils.drawDebugPlane(pos, rot, normals)` | Draws a purple plane (two triangles 10 m wide) with a sphere at the origin point; with normals, adds the "back" (green) and "front" (red) axes. | 64 |
+| `gameplay_rally_loop_stagedCountdownUtils.drawDebugVehiclePoint(vehPos, inside)` | Draws a small sphere at the vehicle: green if inside, red otherwise. | 145 |
+| `gameplay_rally_loop_stagedCountdownUtils.drawMiddleInfo(im, nodeData, formatTimeFromSeconds)` | Displays in the node (drawMiddle, ImGui): TEST MODE indicator, clock, epoch, event time, remaining time, staging check, state, reschedulings, and zone/staged. Does nothing if nodeData.useImgui is false. | 174 |
+| `gameplay_rally_loop_stagedCountdownUtils.drawMiddleProgress(im, state, duration, timer, STATE_COUNTDOWN_RUNNING, STATE_FINISHED)` | Node progress bar: "Running" with (duration - timer)/duration, "Done" (full) if finished, "Waiting" (empty) otherwise. | 227 |
+| `gameplay_rally_loop_stagedCountdownUtils.drawVehicleToPlaneDebug(vehPos, planePos, rot, tmpPlaneNormal, tmpToVehicle, tmpClosestPoint, tmpMidPoint)` | Draws the vehicle's projection onto the plane, a line and the signed distance ("past" orange if the vehicle has crossed the line, "before" green otherwise). The vec3 passed as parameters serve as buffers to avoid allocations. | 95 |
+| `gameplay_rally_loop_stagedCountdownUtils.freezeVehicle(vehId, logTag)` | Freezes the vehicle ('setFreeze' action true via core_vehicleBridge) during the staging phase. | 150 |
+| `gameplay_rally_loop_stagedCountdownUtils.getEnvironmentWallClockSecs()` | Current wall-clock time of the environment, in seconds since midnight. | 9 |
+| `gameplay_rally_loop_stagedCountdownUtils.getStageCountdownSettings(defaultDuration, defaultMaxAnnounced)` | Builds the countdown settings table: duration, maxAnnounced, showVisualCountdown (rallyVisualPacenotes setting or nil), playSoundEffects (true if rallyAudioPacenotes is disabled), playVoiceCountdown (rallyAudioPacenotes setting). | 17 |
+| `gameplay_rally_loop_stagedCountdownUtils.getWallClockTime(environmentStartTimeSecs, epochTime)` | Wall-clock time = (environmentStartTimeSecs + epochTime) modulo 86400. | 50 |
+| `gameplay_rally_loop_stagedCountdownUtils.unfreezeVehicle(vehId, logTag)` | Unfreezes the vehicle ('setFreeze' action false). | 162 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_loop_stagedCountdownUtils.buildRallyClockData(wallClockSecs)`
 
-Données d'horloge pour l'UI : wallClockSecs, wallClockTime (texte 24 h via rallyUtil.formatTime24Hour) et trois drapeaux de saut à false.
+Clock data for the UI: wallClockSecs, wallClockTime (24 h text via rallyUtil.formatTime24Hour) and three skip flags set to false.
 
-- `wallClockSecs` (*number*) : Heure murale en secondes.
-- **renvoie** : table {wallClockSecs, wallClockTime, canSkipTimeControls, isTimeControlSkipAvailable, canSkipCountdown}.
+- `wallClockSecs` (*number*) : Wall-clock time in seconds.
+- **returns**: table {wallClockSecs, wallClockTime, canSkipTimeControls, isTimeControlSkipAvailable, canSkipCountdown}.
 
 #### `gameplay_rally_loop_stagedCountdownUtils.calculateImmediateMinuteCountdown(duration)`
 
-Prépare un compte à rebours qui se termine à la prochaine minute pleine de l'horloge murale (fenêtre de lancement = duration + 1 s).
+Prepares a countdown that ends at the next full minute of the wall clock (launch window = duration + 1 s).
 
-- `duration` (*number*) : Durée du compte à rebours en secondes.
-- **renvoie** : table {environmentStartTimeSecs, epochTime = 0, scheduledEventTime, targetStartTime = 1, timer}.
+- `duration` (*number*) : Countdown duration in seconds.
+- **returns**: table {environmentStartTimeSecs, epochTime = 0, scheduledEventTime, targetStartTime = 1, timer}.
 
 #### `gameplay_rally_loop_stagedCountdownUtils.drawDebugPlane(pos, rot, normals)`
 
-Dessine un plan violet (deux triangles de 10 m de large) avec une sphère au point d'origine ; avec normals, ajoute les axes « back » (vert) et « front » (rouge).
+Draws a purple plane (two triangles 10 m wide) with a sphere at the origin point; with normals, adds the "back" (green) and "front" (red) axes.
 
-- `pos` (*vec3*) : Position du plan.
-- `rot` (*quat*) : Orientation du plan.
-- `normals` (*boolean|nil*) : true pour dessiner les normales.
+- `pos` (*vec3*) : Plane position.
+- `rot` (*quat*) : Plane orientation.
+- `normals` (*boolean|nil*) : true to draw the normals.
 
 #### `gameplay_rally_loop_stagedCountdownUtils.drawDebugVehiclePoint(vehPos, inside)`
 
-Dessine une petite sphère au véhicule : verte si inside, rouge sinon.
+Draws a small sphere at the vehicle: green if inside, red otherwise.
 
 - `vehPos` (*vec3*) : Position.
-- `inside` (*boolean*) : Véhicule dans la zone.
+- `inside` (*boolean*) : Vehicle in the zone.
 
 #### `gameplay_rally_loop_stagedCountdownUtils.drawMiddleInfo(im, nodeData, formatTimeFromSeconds)`
 
-Affiche dans le nœud (drawMiddle, ImGui) : indicateur TEST MODE, horloge, époque, heure de l'évènement, temps restant, contrôle de mise en place, état, replanifications, et zone/staged. Ne fait rien si nodeData.useImgui est faux.
+Displays in the node (drawMiddle, ImGui): TEST MODE indicator, clock, epoch, event time, remaining time, staging check, state, reschedulings, and zone/staged. Does nothing if nodeData.useImgui is false.
 
 - `im` (*table*) : ui_imgui.
-- `nodeData` (*table*) : Données du nœud (useImgui, test, wallClockSecs, currentEpochTime, scheduledEventTime, stagingCheckTime, state, rescheduleCount, maxReschedules, inZone, staged…).
-- `formatTimeFromSeconds` (*function*) : Fonction secondes -> texte.
+- `nodeData` (*table*) : Node data (useImgui, test, wallClockSecs, currentEpochTime, scheduledEventTime, stagingCheckTime, state, rescheduleCount, maxReschedules, inZone, staged...).
+- `formatTimeFromSeconds` (*function*) : Function seconds -> text.
 
 #### `gameplay_rally_loop_stagedCountdownUtils.drawMiddleProgress(im, state, duration, timer, STATE_COUNTDOWN_RUNNING, STATE_FINISHED)`
 
-Barre de progression du nœud : « Running » avec (duration - timer)/duration, « Done » (pleine) si terminé, « Waiting » (vide) sinon.
+Node progress bar: "Running" with (duration - timer)/duration, "Done" (full) if finished, "Waiting" (empty) otherwise.
 
 - `im` (*table*) : ui_imgui.
-- `state` (*any*) : État courant du nœud.
-- `duration` (*number*) : Durée totale en secondes.
-- `timer` (*number*) : Temps restant en secondes.
-- `STATE_COUNTDOWN_RUNNING` (*any*) : Valeur d'état « en cours ».
-- `STATE_FINISHED` (*any*) : Valeur d'état « terminé ».
+- `state` (*any*) : Current state of the node.
+- `duration` (*number*) : Total duration in seconds.
+- `timer` (*number*) : Remaining time in seconds.
+- `STATE_COUNTDOWN_RUNNING` (*any*) : "Running" state value.
+- `STATE_FINISHED` (*any*) : "Finished" state value.
 
 #### `gameplay_rally_loop_stagedCountdownUtils.drawVehicleToPlaneDebug(vehPos, planePos, rot, tmpPlaneNormal, tmpToVehicle, tmpClosestPoint, tmpMidPoint)`
 
-Dessine la projection du véhicule sur le plan, une ligne et la distance signée (« past » orange si le véhicule a dépassé la ligne, « before » vert sinon). Les vec3 passés en paramètres servent de tampons pour éviter les allocations.
+Draws the vehicle's projection onto the plane, a line and the signed distance ("past" orange if the vehicle has crossed the line, "before" green otherwise). The vec3 passed as parameters serve as buffers to avoid allocations.
 
-- `vehPos` (*vec3*) : Position du véhicule.
-- `planePos` (*vec3*) : Position du plan.
-- `rot` (*quat*) : Orientation du plan.
-- `tmpPlaneNormal` (*vec3*) : Tampon réutilisable.
-- `tmpToVehicle` (*vec3*) : Tampon réutilisable.
-- `tmpClosestPoint` (*vec3*) : Tampon réutilisable.
-- `tmpMidPoint` (*vec3*) : Tampon réutilisable.
+- `vehPos` (*vec3*) : Vehicle position.
+- `planePos` (*vec3*) : Plane position.
+- `rot` (*quat*) : Plane orientation.
+- `tmpPlaneNormal` (*vec3*) : Reusable buffer.
+- `tmpToVehicle` (*vec3*) : Reusable buffer.
+- `tmpClosestPoint` (*vec3*) : Reusable buffer.
+- `tmpMidPoint` (*vec3*) : Reusable buffer.
 
 #### `gameplay_rally_loop_stagedCountdownUtils.freezeVehicle(vehId, logTag)`
 
-Gèle le véhicule (action 'setFreeze' true via core_vehicleBridge) pendant la phase de mise en place.
+Freezes the vehicle ('setFreeze' action true via core_vehicleBridge) during the staging phase.
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- `logTag` (*string*) : Étiquette de log.
-- **renvoie** : boolean true si le véhicule a été trouvé.
+- `vehId` (*integer|nil*) : Vehicle id.
+- `logTag` (*string*) : Log label.
+- **returns**: boolean true if the vehicle was found.
 
 #### `gameplay_rally_loop_stagedCountdownUtils.getEnvironmentWallClockSecs()`
 
-Heure murale actuelle de l'environnement, en secondes depuis minuit.
+Current wall-clock time of the environment, in seconds since midnight.
 
-- **renvoie** : number Secondes (0 si core_environment ou l'heure est indisponible).
+- **returns**: number Seconds (0 if core_environment or the time is unavailable).
 
 #### `gameplay_rally_loop_stagedCountdownUtils.getStageCountdownSettings(defaultDuration, defaultMaxAnnounced)`
 
-Construit la table de réglages du compte à rebours : duration, maxAnnounced, showVisualCountdown (réglage rallyVisualPacenotes ou nil), playSoundEffects (vrai si rallyAudioPacenotes est désactivé), playVoiceCountdown (réglage rallyAudioPacenotes).
+Builds the countdown settings table: duration, maxAnnounced, showVisualCountdown (rallyVisualPacenotes setting or nil), playSoundEffects (true if rallyAudioPacenotes is disabled), playVoiceCountdown (rallyAudioPacenotes setting).
 
-- `defaultDuration` (*number*) : Durée du compte à rebours en secondes.
-- `defaultMaxAnnounced` (*number*) : Non utilisé (déduit du code).
-- **renvoie** : table {duration, maxAnnounced, showVisualCountdown, playSoundEffects, playVoiceCountdown}.
+- `defaultDuration` (*number*) : Countdown duration in seconds.
+- `defaultMaxAnnounced` (*number*) : Unused (inferred from code).
+- **returns**: table {duration, maxAnnounced, showVisualCountdown, playSoundEffects, playVoiceCountdown}.
 
 #### `gameplay_rally_loop_stagedCountdownUtils.getWallClockTime(environmentStartTimeSecs, epochTime)`
 
-Heure murale = (environmentStartTimeSecs + epochTime) modulo 86400.
+Wall-clock time = (environmentStartTimeSecs + epochTime) modulo 86400.
 
-- `environmentStartTimeSecs` (*number|nil*) : Heure de départ, 0 si nil.
-- `epochTime` (*number|nil*) : Secondes écoulées, 0 si nil.
-- **renvoie** : number Secondes depuis minuit.
+- `environmentStartTimeSecs` (*number|nil*) : Start time, 0 if nil.
+- `epochTime` (*number|nil*) : Elapsed seconds, 0 if nil.
+- **returns**: number Seconds since midnight.
 
 #### `gameplay_rally_loop_stagedCountdownUtils.unfreezeVehicle(vehId, logTag)`
 
-Dégèle le véhicule (action 'setFreeze' false).
+Unfreezes the vehicle ('setFreeze' action false).
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- `logTag` (*string*) : Étiquette de log.
-- **renvoie** : boolean true si le véhicule a été trouvé.
+- `vehId` (*integer|nil*) : Vehicle id.
+- `logTag` (*string*) : Log label.
+- **returns**: boolean true if the vehicle was found.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `core_environment.` `getTimeOfDay`
 - `debugDrawer:` `drawLineInstance`, `drawSphere`, `drawTextAdvanced`, `drawTriSolid`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/loop/stagedCountdownUtils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/loop/stagedCountdownUtils.lua`.*

@@ -2,61 +2,61 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/heroRoadEditor/mesh.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Génération du maillage de conduite procédural d'un groupe du Hero Road Editor. Balaye les coupes de profile.lua le long de la ligne centrale 3D (divPoints) : chaussée, accotements, chanfreins périphériques, nids-de-poule creusés, et groupes de surface (groundmodels) répartis par matériau. Produit des ProceduralMesh avec collision pour l'édition (nommés 'HeroRoad_<id>_<n>', découpés en chunks) et, pour le bake, les chunks avec niveaux de détail et maillage de collision. Il remplit aussi les champs dérivés que d'autres modules lisent (meshEdgeL/R, meshEdgeDirL/R, meshEdgeUp, meshGrid, meshVArc, meshStationCount, triCount).
---- Accès : extension `editor_heroRoadEditor_mesh` : `extensions.load("editor_heroRoadEditor_mesh")`, puis la globale `editor_heroRoadEditor_mesh`
+--- Generation of a group's procedural driving mesh in the Hero Road Editor. Sweeps the profile.lua cross-sections along the 3D centerline (divPoints): roadway, shoulders, peripheral chamfers, carved potholes, and surface groups (groundmodels) distributed by material. Produces ProceduralMeshes with collision for editing (named 'HeroRoad_<id>_<n>', split into chunks) and, for the bake, the chunks with levels of detail and collision mesh. It also fills the derived fields that other modules read (meshEdgeL/R, meshEdgeDirL/R, meshEdgeUp, meshGrid, meshVArc, meshStationCount, triCount).
+--- Access: extension `editor_heroRoadEditor_mesh`: `extensions.load("editor_heroRoadEditor_mesh")`, then the global `editor_heroRoadEditor_mesh`
 ---@class editor_heroRoadEditor_mesh
 editor_heroRoadEditor_mesh = {}
 
---- Construit toute la charge utile du bake : pour chaque chunk d'environ chunkLenM, son jeu de LOD visibles et un maillage de collision de chaussée seule. Les coupures sont calculées une fois à partir de la longueur d'arc pleine résolution et partagées par tous les niveaux. Les LOD de nombre de triangles quasi égal sont abandonnés.
----Source : lua/ge/extensions/editor/heroRoadEditor/mesh.lua:883
----@param group table Groupe Hero Road.
----@param chunkLenM number|nil Longueur de chunk en mètres (min 20, défaut 120).
----@return table|nil  Liste de chunks { lods = { {size, parts}, ... }, col = { part, ... } }, ou nil s'il n'y a rien à construire.
----@return number|nil  nullSize : taille en px du niveau 'nulldetail' lointain, ou nil si le dernier niveau est un LOD visible.
+--- Builds the entire bake payload: for each chunk of about chunkLenM, its set of visible LODs and a roadway-only collision mesh. The cuts are computed once from the full-resolution arc length and shared by all levels. LODs with a nearly equal triangle count are dropped.
+---Source: lua/ge/extensions/editor/heroRoadEditor/mesh.lua:883
+---@param group table Hero Road group.
+---@param chunkLenM number|nil Chunk length in meters (min 20, default 120).
+---@return table|nil  List of chunks { lods = { {size, parts}, ... }, col = { part, ... } }, or nil if there is nothing to build.
+---@return number|nil  nullSize: size in px of the far 'nulldetail' level, or nil if the last level is a visible LOD.
 function editor_heroRoadEditor_mesh.buildChunkLODs(group, chunkLenM) end
 
---- Assemble la géométrie de conduite en une liste de parts de matériau (meshPart) ; c'est la fonction interne assemble exportée sous ce nom. Écrase les champs dérivés du groupe (bords, grille, vArc, triCount...). Avec jLo/jHi, ne construit que les stations de ce chunk.
----Source : lua/ge/extensions/editor/heroRoadEditor/mesh.lua:371
----@param group table Groupe Hero Road (divPoints, tangents, matériaux, paramètres de profil).
----@param opts table|nil Options : tol (tolérance de décimation en m, nil = pleine résolution), maxSeg (longueur max de segment en m), emitChamfer (false pour omettre les chanfreins), potholes (true pour creuser les nids-de-poule).
----@param jLo integer|nil Première station du chunk.
----@param jHi integer|nil Dernière station du chunk.
----@param isFirst boolean|nil Chunk de début de route (déduit du code).
----@param isLast boolean|nil Chunk de fin de route (déduit du code).
----@param cutArcs number[]|nil Positions d'arc (m) des coupures de chunk.
----@return table|nil  Liste de parts (matériau, sommets, faces), ou nil si la géométrie est insuffisante.
+--- Assembles the driving geometry into a list of material parts (meshPart); this is the internal assemble function exported under this name. Overwrites the group's derived fields (edges, grid, vArc, triCount...). With jLo/jHi, only builds the stations of that chunk.
+---Source: lua/ge/extensions/editor/heroRoadEditor/mesh.lua:371
+---@param group table Hero Road group (divPoints, tangents, materials, profile parameters).
+---@param opts table|nil Options: tol (decimation tolerance in m, nil = full resolution), maxSeg (max segment length in m), emitChamfer (false to omit the chamfers), potholes (true to carve the potholes).
+---@param jLo integer|nil First station of the chunk.
+---@param jHi integer|nil Last station of the chunk.
+---@param isFirst boolean|nil Start-of-road chunk (inferred from code).
+---@param isLast boolean|nil End-of-road chunk (inferred from code).
+---@param cutArcs number[]|nil Arc positions (m) of the chunk cuts.
+---@return table|nil  List of parts (material, vertices, faces), or nil if the geometry is insufficient.
 function editor_heroRoadEditor_mesh.buildExportParts(group, opts, jLo, jHi, isFirst, isLast, cutArcs) end
 
---- Reconstruction LÉGÈRE des seuls bords supérieurs extérieurs (group.meshEdgeL/R) pendant un glissement, quand grille, collision et décalques sont démontés. Réutilise profile.build et worldStation sur les deux points extrêmes de la coupe, avec la même extension de fin : le ruban suit exactement le bord que le maillage complet aura. Met aussi à jour group.divBankR (axe droit incliné, pour la carte de chaleur). Efface les bords si la géométrie est insuffisante.
----Source : lua/ge/extensions/editor/heroRoadEditor/mesh.lua:1033
----@param group table Groupe Hero Road.
+--- LIGHT rebuild of only the outer top edges (group.meshEdgeL/R) during a drag, when grid, collision and decals are torn down. Reuses profile.build and worldStation on the two extreme points of the cross-section, with the same end extension: the ribbon follows exactly the edge the full mesh will have. Also updates group.divBankR (banked right axis, for the heat map). Clears the edges if the geometry is insufficient.
+---Source: lua/ge/extensions/editor/heroRoadEditor/mesh.lua:1033
+---@param group table Hero Road group.
 function editor_heroRoadEditor_mesh.buildRibbonEdges(group) end
 
---- Construit des repères de bord PLATS (relevés à l'horizontale) pour une route en mode terrain : group.meshEdgeL/R décalés de leftExtM/rightExtM (défaut 4.0 m) le long du binormal, meshEdgeDirL/R, meshEdgeUp = (0,0,1), et met meshGrid à nil (pas de grille de chaussée en mode terrain).
----Source : lua/ge/extensions/editor/heroRoadEditor/mesh.lua:1068
----@param group table Groupe Hero Road (divPoints, binormals).
+--- Builds FLAT edge references (leveled horizontally) for a road in terrain mode: group.meshEdgeL/R offset by leftExtM/rightExtM (default 4.0 m) along the binormal, meshEdgeDirL/R, meshEdgeUp = (0,0,1), and sets meshGrid to nil (no roadway grid in terrain mode).
+---Source: lua/ge/extensions/editor/heroRoadEditor/mesh.lua:1068
+---@param group table Hero Road group (divPoints, binormals).
 function editor_heroRoadEditor_mesh.buildTerrainEdges(group) end
 
---- Nombre de chunks DAE qu'un bake produira pour une longueur d'arc totale et une longueur de chunk données (reflète le baker). L'interface doit passer la même longueur d'arc que le bake (group.meshVArc[fin]).
----Source : lua/ge/extensions/editor/heroRoadEditor/mesh.lua:810
----@param total number Longueur d'arc totale en mètres.
----@param chunkLenM number|nil Longueur de chunk en mètres (min 20, défaut 120).
----@return integer  Nombre de chunks (au moins 1).
+--- Number of DAE chunks a bake will produce for a given total arc length and chunk length (mirrors the baker). The interface must pass the same arc length as the bake (group.meshVArc[end]).
+---Source: lua/ge/extensions/editor/heroRoadEditor/mesh.lua:810
+---@param total number Total arc length in meters.
+---@param chunkLenM number|nil Chunk length in meters (min 20, default 120).
+---@return integer  Number of chunks (at least 1).
 function editor_heroRoadEditor_mesh.chunkCount(total, chunkLenM) end
 
---- Calcule, pour le panneau Export, le nombre de triangles de la route entière pour chaque LOD visible. Le résultat est mis en cache par groupe (signature des paramètres de LOD, de résolution, de géométrie et des nids-de-poule) et les champs dérivés du groupe écrasés par l'assemblage sont restaurés ensuite. Écrit aussi group.lodMaxEdgeM.
----Source : lua/ge/extensions/editor/heroRoadEditor/mesh.lua:924
----@param group table Groupe Hero Road.
----@return table  { lods = { {size, tris, kept}, ... }, nullSize = number|nil } ; kept indique si le niveau est conservé au bake.
+--- Computes, for the Export panel, the triangle count of the whole road for each visible LOD. The result is cached per group (signature of the LOD, resolution, geometry and pothole parameters) and the group's derived fields overwritten by the assembly are restored afterwards. Also writes group.lodMaxEdgeM.
+---Source: lua/ge/extensions/editor/heroRoadEditor/mesh.lua:924
+---@param group table Hero Road group.
+---@return table  { lods = { {size, tris, kept}, ... }, nullSize = number|nil }; kept indicates whether the level is kept at bake.
 function editor_heroRoadEditor_mesh.lodPreview(group) end
 
---- Supprime les ProceduralMesh du groupe : celui hérité sans suffixe ('HeroRoad_<id>') et chaque chunk 'HeroRoad_<id>_<n>' jusqu'au premier trou.
----Source : lua/ge/extensions/editor/heroRoadEditor/mesh.lua:68
----@param group table Groupe Hero Road.
+--- Deletes the group's ProceduralMeshes: the legacy one without suffix ('HeroRoad_<id>') and each chunk 'HeroRoad_<id>_<n>' up to the first gap.
+---Source: lua/ge/extensions/editor/heroRoadEditor/mesh.lua:68
+---@param group table Hero Road group.
 function editor_heroRoadEditor_mesh.removeMesh(group) end
 
---- Reconstruit le maillage LOD0 (niveau proche) vivant du groupe : supprime l'ancien, assemble la géométrie, la découpe en chunks, crée un ProceduralMesh avec collision par chunk dans le dossier de scène du groupe et remplit group.meshIds / group.meshId. Appelé par le pipeline de reconstruction à chaque modification ; ne fait rien sans dossier de scène (sceneTreeFolderId).
----Source : lua/ge/extensions/editor/heroRoadEditor/mesh.lua:1098
----@param group table Groupe Hero Road.
+--- Rebuilds the group's live LOD0 (near level) mesh: deletes the old one, assembles the geometry, splits it into chunks, creates a ProceduralMesh with collision per chunk in the group's scene folder and fills group.meshIds / group.meshId. Called by the rebuild pipeline on every modification; does nothing without a scene folder (sceneTreeFolderId).
+---Source: lua/ge/extensions/editor/heroRoadEditor/mesh.lua:1098
+---@param group table Hero Road group.
 function editor_heroRoadEditor_mesh.updateMesh(group) end
 

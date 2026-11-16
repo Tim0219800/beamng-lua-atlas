@@ -2,23 +2,23 @@
 -- tim19Atlas stub generated from lua/common/jit/v.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Module jit.v de LuaJIT (Mike Pall, licence MIT, 2005-2026) : mode verbeux du compilateur JIT. Il affiche une ligne par trace générée ([TRACE n fichier:ligne ...]) et par trace abandonnée, ce qui aide à voir quel code est compilé ou où le compilateur retombe sur l'interpréteur (NYI). Sortie par défaut sur stderr ; fichier via argument ou variable d'environnement LUAJIT_VERBOSEFILE.
---- Accès : `require("jit/v")`
+--- LuaJIT's jit.v module (Mike Pall, MIT license, 2005-2026): verbose mode of the JIT compiler. It prints one line per generated trace ([TRACE n file:line ...]) and per aborted trace, which helps to see which code is compiled or where the compiler falls back to the interpreter (NYI). Output defaults to stderr; file via argument or the LUAJIT_VERBOSEFILE environment variable.
+--- Access: `require("jit/v")`
 ---@class jit_v
 local jit_v = {}
 
---- Détache le handler de traces et ferme le fichier (sauf stdout/stderr).
----Source : lua/common/jit/v.lua:146
+--- Detaches the trace handler and closes the file (except stdout/stderr).
+---Source: lua/common/jit/v.lua:146
 function jit_v.off() end
 
---- Ouvre le fichier de sortie et attache le handler de traces (jit.attach 'trace').
----Source : lua/common/jit/v.lua:156
----@param outfile string|nil Fichier de sortie ; défaut LUAJIT_VERBOSEFILE sinon stderr ; '-' = stdout.
+--- Opens the output file and attaches the trace handler (jit.attach 'trace').
+---Source: lua/common/jit/v.lua:156
+---@param outfile string|nil Output file; default LUAJIT_VERBOSEFILE otherwise stderr; '-' = stdout.
 function jit_v.on(outfile) end
 
---- Alias de on, prévu pour l'option -jv de la ligne de commande.
----Source : lua/common/jit/v.lua:156
----@param outfile string|nil Fichier de sortie.
+--- Alias of on, intended for the -jv command-line option.
+---Source: lua/common/jit/v.lua:156
+---@param outfile string|nil Output file.
 function jit_v.start(outfile) end
 
 return jit_v

@@ -1,0 +1,84 @@
+{
+  "path": "lua/ge/extensions/core/audio.lua",
+  "module": "Extension GE (core_audio) qui charge les banques FMOD du jeu. Au premier update, elle scanne /art/sound/fmod/<plateforme> (et le sous-dossier mods, plus le dossier _headphones si le mode casque est activé), regroupe les fichiers .bank en jeux de banques (assets/strings/streams/meta), les trie (strings d'abord, puis 'preload', puis par taille) et crée un SFXFMODProject par jeu. Elle gère aussi le rechargement à chaud des banques et le paramètre FMOD g_GamePause. Un moddeur l'utilise pour enregistrer une banque ou forcer un rechargement.",
+  "usage": "core_audio.registerBaseBank('/art/sound/fmod/monmod/macollection.bank')\ncore_audio.triggerBankHotloading()",
+  "notes": [
+    "Bug : dans registerBaseBank, la variable est déclarée `inLevelOrLoadingOrLoading` mais testée sous le nom `inLevelOrLoading` (globale nil) : le garde 'pas pendant un niveau ou un chargement' n'a jamais d'effet.",
+    "Dans registerBaseBank, les chemins sont mis en minuscules et préfixés par '/' ; avant le premier chargement ils sont mémorisés dans registeredBanks, mais la boucle qui les utilisait (loadBankSets) est commentée : ces banques ne sont alors jamais chargées par cette liste. Après init, la banque est chargée immédiatement via SFXFMODProject.loadBaseBank (une seule fois grâce à loadedBankCache).",
+    "Rechargement à chaud : onFilesChanged marque comme non chargée toute banque .bank modifiée et ne déclenche triggerBankHotloading que quand toutes les banques connues sont marquées non chargées (attend la fin de la reconstruction).",
+    "Les champs M.keepLoadedBanks et M.prevReplayState/M.prevReplayPaused sont créés dynamiquement (pas déclarés dans le module au chargement).",
+    "Pause : onPhysicsPaused / onPhysicsUnpaused mettent le paramètre global FMOD g_GamePause à 1 / 0 ; onReplayStateChanged le met à jour d'après simTimeAuthority.getPause()."
+  ],
+  "fields": {
+    "keepLoadedBanks": {"type": "boolean|nil", "desc": "Rempli par onDeserialized après un rechargement Lua : si vrai, onFirstUpdate ne recharge pas les banques."},
+    "prevReplayState": {"type": "any", "desc": "Dernier état de replay vu par onReplayStateChanged (créé à la volée)."},
+    "prevReplayPaused": {"type": "boolean|nil", "desc": "Dernière valeur 'paused' vue par onReplayStateChanged (créé à la volée)."}
+  },
+  "functions": {
+    "registerBaseBank": {
+      "desc": "Enregistre une banque FMOD de base (voir notes pour le comportement avant/après l'initialisation).",
+      "params": {"path": {"type": "string", "desc": "Chemin du fichier .bank, avec ou sans '/' initial (mis en minuscules)"}},
+      "returns": []
+    },
+    "triggerBankHotloading": {
+      "desc": "Supprime les projets FMOD créés, vide les caches, prévient SFXFMODProject (hotloadingTriggered), re-scanne et recharge toutes les banques puis signale la fin (hotloadingCompleted).",
+      "params": {},
+      "returns": []
+    },
+    "onFirstUpdate": {
+      "desc": "Hook appelé au premier update du GE : scanne et charge les banques (populateBankSets puis loadBankSets), sauf si keepLoadedBanks est vrai (rechargement Lua : on ne fait rien).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientPreStartMission": {
+      "desc": "Hook appelé avant le démarrage d'un niveau. N'ajoute que des événements profileur (le chargement de banques de niveau est commenté).",
+      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau"}},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook appelé à la fin d'un niveau. Ne fait rien (corps vide, avec un commentaire).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onPhysicsPaused": {
+      "desc": "Hook appelé quand la physique est mise en pause : SFXSystem.setGlobalParameter('g_GamePause', 1).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onPhysicsUnpaused": {
+      "desc": "Hook appelé à la reprise de la physique : g_GamePause = 0.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onReplayStateChanged": {
+      "desc": "Hook appelé quand l'état du replay change : met g_GamePause selon simTimeAuthority.getPause(), seulement si state ou paused a changé depuis la dernière fois.",
+      "params": {"newState": {"type": "table", "desc": "Table avec les champs state et paused"}},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation avant rechargement Lua : renvoie keepLoadedBanks=true, levelProjectsCache et loadedBankCache.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{keepLoadedBanks, levelProjectsCache, loadedBankCache}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook de restauration après rechargement Lua.",
+      "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize"}},
+      "returns": [],
+      "internal": true
+    },
+    "onFilesChanged": {
+      "desc": "Hook appelé quand des fichiers surveillés changent : gère le rechargement à chaud des .bank (voir notes).",
+      "params": {"files": {"type": "table<integer, table>", "desc": "Liste d'entrées avec le champ filename (sans '/' initial)"}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

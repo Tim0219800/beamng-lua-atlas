@@ -1,20 +1,20 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/thread/sendMessage.lua",
-  "module": "Noeud « Send Message » (thread). Envoie un message (table des pins d'entrée non fixes) au projet flowgraph d'id donné (-1 = parent) via modules.thread:sendMessage, ou sendNetworkedMessage si le pin networked est vrai. Envoie une seule fois jusqu'au reset. Pins fixes : flow, reset, networked, id, name ; sortie flow.",
+  "module": "Node \"Send Message\" (thread). Sends a message (table of the non-fixed input pins) to the flowgraph project with the given id (-1 = parent) via modules.thread:sendMessage, or sendNetworkedMessage if the networked pin is true. Sends only once until reset. Fixed pins: flow, reset, networked, id, name; output flow.",
   "notes": [
-    "Le pin name (nom du message) est fixe donc n'est pas ajouté au contenu du message.",
-    "Le résultat de sendMessage n'est pas utilisé."
+    "The name pin (message name) is fixed so it is not added to the message content.",
+    "The result of sendMessage is not used."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
           "desc": "savePins = true, allowCustomInPins = true.",
           "internal": true
         },
         "work": {
-          "desc": "Sur reset, done = false ; sinon, au flow avec un id, assemble les pins non fixes en table et envoie le message, puis recopie flow.",
+          "desc": "On reset, done = false; otherwise, on flow with an id, assembles the non-fixed pins into a table and sends the message, then copies flow.",
           "internal": false
         },
         "_executionStarted": {
@@ -22,15 +22,15 @@
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "desc": "Draws the central content of the node in the editor.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true

@@ -1,13 +1,38 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/getRecoveryPromptButtonLimitAndCount.lua",
-  "module": "Nœud flowgraph « Get Recovery Prompt Button Limit and Count » (catégorie once_instant, couleur/icône recoveryPrompt, dépend de gameplay_walk). Lit core_recoveryPrompt.getButtonLimitsAndCounts() et renvoie pour le bouton choisi (pin id) sa limite (limit) et son compteur d'utilisations (count). Valeurs -1 si absentes des données du bouton, nil si l'id est inconnu. Dans l'éditeur, la pin id propose les valeurs flipMission, recoverMission, submitMission et restartMission.",
+  "module": "Flowgraph node \"Get Recovery Prompt Button Limit and Count\" (category once_instant, recoveryPrompt color/icon, depends on gameplay_walk). Reads core_recoveryPrompt.getButtonLimitsAndCounts() and returns for the chosen button (id pin) its limit (limit) and its usage counter (count). Values -1 if absent from the button data, nil if the id is unknown. In the editor, the id pin offers the values flipMission, recoverMission, submitMission and restartMission.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "postInit": {"desc": "Définit les valeurs prédéfinies (hardTemplates) de la pin id.", "internal": true},
-        "workOnce": {"desc": "Lit les limites/compteurs et remplit limit et count pour l'id donné.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true},
-        "drawMiddle": {"desc": "Appelle builder:Middle() sans rien dessiner.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud."}, "style": {"type": "table", "desc": "Style."}}, "internal": true}
+        "postInit": {
+          "desc": "Sets the predefined values (hardTemplates) of the id pin.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Reads the limits/counters and fills limit and count for the given id.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph engine arguments (unused)."
+            }
+          },
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Calls builder:Middle() without drawing anything.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Node constructor."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

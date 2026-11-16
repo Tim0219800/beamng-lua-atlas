@@ -1,10 +1,10 @@
 {
   "path": "lua/vehicle/controller/hydraulics/closedLoopLinearControl.lua",
-  "module": "Régulateur en boucle fermée de vérin hydraulique linéaire (type \"auxiliary\"). Un PID compare l'extension moyenne des vérins (hydraulic consumers du powertrain) à une cible et écrit la commande de vanne dans electrics.values. Un moddeur fixe la cible avec setCylinderTargetExtendPercent.",
+  "module": "Closed-loop regulator of a linear hydraulic cylinder (type \"auxiliary\"). A PID compares the average extension of the cylinders (powertrain hydraulic consumers) to a target and writes the valve command into electrics.values. A modder sets the target with setCylinderTargetExtendPercent.",
   "usage": "local c = controller.getControllerSafe('hydraulics/closedLoopLinearControl')\nc.setCylinderTargetExtendPercent(0.5)",
   "notes": [
-    "Clés jbeam (défaut) : cylinders (liste de noms de consommateurs hydrauliques), cylinderValveElectricsName (\"cylinderValve\"), cylinderPositionMin (0), cylinderPositionMax (1), targetExtendPercentInitial (0), cylinderPIDKp (0.5), cylinderPIDKi (0.3), cylinderPIDKd (0.01).",
-    "Sortie du PID bornée à -1..1 et remise à 0 sous 0.001. Si aucun vérin n'est trouvé, updateFixedStep est mis à nil."
+    "jbeam keys (default): cylinders (list of hydraulic consumer names), cylinderValveElectricsName (\"cylinderValve\"), cylinderPositionMin (0), cylinderPositionMax (1), targetExtendPercentInitial (0), cylinderPIDKp (0.5), cylinderPIDKi (0.3), cylinderPIDKd (0.01).",
+    "PID output bounded to -1..1 and reset to 0 below 0.001. If no cylinder is found, updateFixedStep is set to nil."
   ],
   "fields": {
     "type": {
@@ -14,44 +14,44 @@
   },
   "functions": {
     "init": {
-      "desc": "Crée le PID, retrouve les vérins et lit les paramètres.",
+      "desc": "Creates the PID, finds the cylinders and reads the parameters.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Remet la vanne à 0, la cible à la valeur initiale et le PID à zéro.",
+      "desc": "Resets the valve to 0, the target to the initial value and the PID to zero.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam."
+          "desc": "Jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateFixedStep": {
-      "desc": "Calcule la commande de vanne à partir de l'extension moyenne des vérins et l'écrit dans electrics.values.",
+      "desc": "Computes the valve command from the average extension of the cylinders and writes it into electrics.values.",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "setCylinderTargetExtendPercent": {
-      "desc": "Fixe l'extension cible des vérins.",
+      "desc": "Sets the target extension of the cylinders.",
       "params": {
         "extendPercent": {
           "type": "number",
-          "desc": "Extension 0..1, bornée par cylinderPositionMin/Max."
+          "desc": "Extension 0..1, bounded by cylinderPositionMin/Max."
         }
       },
       "returns": []

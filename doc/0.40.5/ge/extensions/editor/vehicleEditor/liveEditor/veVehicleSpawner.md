@@ -1,51 +1,51 @@
 # `editor_vehicleEditor_liveEditor_veVehicleSpawner`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veVehicleSpawner.lua` · VM : Game Engine (GE) · 184 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veVehicleSpawner.lua` · VM: Game Engine (GE) · 184 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_liveEditor_veVehicleSpawner` : `extensions.load("editor_vehicleEditor_liveEditor_veVehicleSpawner")`, puis la globale `editor_vehicleEditor_liveEditor_veVehicleSpawner`
+**Access:** extension `editor_vehicleEditor_liveEditor_veVehicleSpawner`: `extensions.load("editor_vehicleEditor_liveEditor_veVehicleSpawner")`, then the global `editor_vehicleEditor_liveEditor_veVehicleSpawner`
 
-Outil 'Other/Vehicle Spawner' du Vehicle Editor live. Au chargement de l'éditeur il mémorise jusqu'à 20 véhicules (Car ou Truck) de core_vehicles.getVehicleList. La fenêtre permet de faire apparaître un véhicule à la position/orientation de la caméra (fenêtre 'Select Vehicle'), de choisir un point sur le terrain (molette = rotation de 5°) puis d'y aligner tous les véhicules de la liste (espacés de 10 m), et de tout supprimer ('Despawn All').
+'Other/Vehicle Spawner' tool of the live Vehicle Editor. When the editor loads it remembers up to 20 vehicles (Car or Truck) from core_vehicles.getVehicleList. The window lets you spawn a vehicle at the camera position/orientation ('Select Vehicle' window), choose a point on the terrain (wheel = 5° rotation) then line up all the vehicles of the list there (spaced 10 m apart), and delete everything ('Despawn All').
 
-## Remarques
+## Notes
 
-- Les véhicules apparaissent avec le frein à main relâché (input.event('parkingbrake', 0, 1)).
-- Seuls les véhicules créés par 'Spawn Vehicles' sont suivis dans vehsData et supprimés par 'Despawn All' ; ceux créés depuis 'Select Vehicle' ne sont pas enregistrés.
-- Bug mineur : `hit = cameraMouseRayCast(...)` est affecté sans `local` (globale `hit`).
-- Un bouton par véhicule de vehsList : au maximum 20 modèles proposés.
+- Vehicles spawn with the handbrake released (input.event('parkingbrake', 0, 1)).
+- Only the vehicles created by 'Spawn Vehicles' are tracked in vehsData and deleted by 'Despawn All'; those created from 'Select Vehicle' are not recorded.
+- Minor bug: `hit = cameraMouseRayCast(...)` is assigned without `local` (global `hit`).
+- One button per vehicle of vehsList: at most 20 models offered.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_liveEditor_veVehicleSpawner.onDeserialized(data)` | Restaure l'état d'ouverture. *(interne)* *(hook)* | 172 |
-| `editor_vehicleEditor_liveEditor_veVehicleSpawner.onEditorInitialized()` | Appelé à l'initialisation de l'éditeur : remplit vehsList avec les 20 premiers véhicules Car/Truck. *(interne)* *(hook)* | 152 |
-| `editor_vehicleEditor_liveEditor_veVehicleSpawner.onSerialize()` | Renvoie {windowOpen}. *(interne)* *(hook)* | 166 |
-| `editor_vehicleEditor_liveEditor_veVehicleSpawner.onUpdate()` | Appelé chaque frame : dessine la fenêtre, les repères de départ et la fenêtre de sélection de véhicule. *(interne)* *(hook)* | 113 |
-| `editor_vehicleEditor_liveEditor_veVehicleSpawner.open()` | Ouvre la fenêtre. | 148 |
+| `editor_vehicleEditor_liveEditor_veVehicleSpawner.onDeserialized(data)` | Restores the open state. *(internal)* *(hook)* | 172 |
+| `editor_vehicleEditor_liveEditor_veVehicleSpawner.onEditorInitialized()` | Called at editor initialization: fills vehsList with the first 20 Car/Truck vehicles. *(internal)* *(hook)* | 152 |
+| `editor_vehicleEditor_liveEditor_veVehicleSpawner.onSerialize()` | Returns {windowOpen}. *(internal)* *(hook)* | 166 |
+| `editor_vehicleEditor_liveEditor_veVehicleSpawner.onUpdate()` | Called every frame: draws the window, the start markers and the vehicle selection window. *(internal)* *(hook)* | 113 |
+| `editor_vehicleEditor_liveEditor_veVehicleSpawner.open()` | Opens the window. | 148 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_liveEditor_veVehicleSpawner.onDeserialized(data)`
 
-Restaure l'état d'ouverture.
+Restores the open state.
 
-- `data` (*table*) : Table de onSerialize.
+- `data` (*table*) : onSerialize table.
 
 #### `editor_vehicleEditor_liveEditor_veVehicleSpawner.onSerialize()`
 
-Renvoie {windowOpen}.
+Returns {windowOpen}.
 
-- **renvoie** : table {windowOpen = boolean}
+- **returns**: table {windowOpen = boolean}
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `menuEntry` | string | 'Other/Vehicle Spawner'. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawTriSolid`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veVehicleSpawner.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veVehicleSpawner.lua`.*

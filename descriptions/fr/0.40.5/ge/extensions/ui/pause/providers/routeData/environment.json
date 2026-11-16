@@ -1,0 +1,45 @@
+{
+  "path": "lua/ge/extensions/ui/pause/providers/routeData/environment.lua",
+  "module": "Fournisseur de données du menu pause pour la page Environnement : résumé (météo, circulation, autres), page météo/heure, page simulation (gravité, vitesse) et page circulation. Il décide si l'édition est permise (freeroam, multiplayer, freeroamTutorial, ou si le réglage restrictScenarios est désactivé) et tient compte des capacités de la session First Drive. Les mods peuvent ajouter des boutons à la page via le hook onEnvironmentGetOtherButtons.",
+  "usage": "function M.onEnvironmentGetOtherButtons(buttons, actionState)\n  table.insert(buttons, {id = \"monBouton\", label = \"Mon outil\", icon = \"wrench\", callback = function() return true end})\nend",
+  "notes": [
+    "Le hook onEnvironmentGetOtherButtons(candidates, actionState) n'est émis que si showOther est vrai (donc pas pendant une session First Drive). Chaque bouton candidat doit avoir id, label et callback, sinon une erreur est loguée et il est ignoré ; icon et routeTarget sont facultatifs.",
+    "Les « autres » boutons sont triés par label (comparaison de chaînes) ; le bouton Simulation en fait partie.",
+    "getEnvironmentWeatherData et getEnvironmentTrafficData appellent core_environment sans test de nil (getTimeOfDayOptions, getInitState)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{\"ui_pause_providers_trafficControls\"}"}
+  },
+  "functions": {
+    "getEnvironmentData": {
+      "desc": "Renvoie la page résumé Environnement : composant PauseEnvironmentDigest avec boutons météo, circulation et autres (simulation incluse), états d'action, options d'heure du jour, valeurs initiales du niveau et nom du niveau courant.",
+      "params": {"context": {"type": "table", "desc": "Contexte pause (champ lu : mode)."}},
+      "returns": [{"type": "table", "desc": "{editable, mainPanelContent, actions, timeOfDayOptions, levelDefaults, currentLevelName}"}],
+      "internal": false
+    },
+    "getEnvironmentWeatherData": {
+      "desc": "Renvoie la page météo/heure (composant PauseEnvironmentWeather) avec gravityPresets, simSpeedPresets, timeOfDayOptions et levelDefaults de core_environment.",
+      "params": {"context": {"type": "table", "desc": "Contexte pause."}},
+      "returns": [{"type": "table", "desc": "{editable, disabledReason, mainCardClass, mainPanelContent, gravityPresets, simSpeedPresets, timeOfDayOptions, levelDefaults}"}],
+      "internal": false
+    },
+    "getEnvironmentSimulationData": {
+      "desc": "Renvoie la page simulation (composant PauseEnvironmentSimulation). Pendant une session First Drive, renvoie une page vide non éditable.",
+      "params": {"context": {"type": "table", "desc": "Contexte pause."}},
+      "returns": [{"type": "table", "desc": "{editable, disabledReason, mainPanelContent}"}],
+      "internal": false
+    },
+    "getEnvironmentTrafficData": {
+      "desc": "Renvoie la page circulation (composant PauseEnvironmentTraffic) avec les données de ui_pause_providers_trafficControls.getData({editable = ...}).",
+      "params": {"context": {"type": "table", "desc": "Contexte pause."}},
+      "returns": [{"type": "table", "desc": "{editable, disabledReason, traffic, mainPanelContent}"}],
+      "internal": false
+    },
+    "requestEnvironmentTrafficPayload": {
+      "desc": "Redirige vers ui_pause_providers_trafficControls.getData(payload), pour rafraîchir uniquement les données de circulation.",
+      "params": {"payload": {"type": "table", "desc": "Charge utile transmise (champ lu : editable)."}},
+      "returns": [{"type": "table", "desc": "Données de circulation."}],
+      "internal": false
+    }
+  }
+}

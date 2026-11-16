@@ -1,22 +1,22 @@
 # `flowgraph_nodes_gameplay_traffic_getVehicleData`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/getVehicleData.lua` · VM : Game Engine (GE) · 38 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/getVehicleData.lua` · VM: Game Engine (GE) · 38 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/getVehicleData")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/getVehicleData")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Traffic Vehicle Data » (repeat_instant). Lit les paramètres d'un véhicule actif dans le trafic (gameplay_traffic.getTrafficData) : role (nom du rôle), state, camVisible, crashDamage, respawnCount.
+Flowgraph node "Get Traffic Vehicle Data" (repeat_instant). Reads the parameters of an active traffic vehicle (gameplay_traffic.getTrafficData): role (role name), state, camVisible, crashDamage, respawnCount.
 
-## Remarques
+## Notes
 
-- Si le véhicule n'est pas dans le trafic, les sorties gardent leurs anciennes valeurs.
+- If the vehicle is not in traffic, the outputs keep their old values.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Recopie les données du véhicule de trafic vehId sur les sorties. | 27 |
+| `C:work()` | Copies the data of traffic vehicle vehId to the outputs. | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/getVehicleData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/getVehicleData.lua`.*

@@ -1,54 +1,54 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/buttons/simpleMultipleButtons.lua",
-  "module": "Nœud flowgraph « Simple Multiple Buttons » (catégorie once_instant) : version multi-boutons de Simple Button. Pour chaque i : entrées « hideWhenDone_i », « label_i », « order_i », « style_i » ; sorties « clicked_i » (impulsion), « complete_i », « incomplete_i » (cachées), « buttonId_i ». Le nombre de boutons se règle dans les propriétés.",
+  "module": "Flowgraph node \"Simple Multiple Buttons\" (category once_instant): multi-button version of Simple Button. For each i: inputs \"hideWhenDone_i\", \"label_i\", \"order_i\", \"style_i\"; outputs \"clicked_i\" (pulse), \"complete_i\", \"incomplete_i\" (hidden), \"buttonId_i\". The number of buttons is set in the properties.",
   "notes": [
-    "Bug : workOnce lit self.pinIn.active (pin inexistant, erreur) pour chaque bouton.",
-    "Contrairement à Simple Button, les sorties s'appellent complete_i / incomplete_i (pas used/unused)."
+    "Bug: workOnce reads self.pinIn.active (nonexistent pin, error) for each button.",
+    "Unlike Simple Button, the outputs are named complete_i / incomplete_i (not used/unused)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStarted": {
-          "desc": "Initialise hiddenAfterDone/hiddenAfterReset à false pour chaque bouton.",
+          "desc": "Initializes hiddenAfterDone/hiddenAfterReset to false for each button.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure l'état du nœud depuis les données sauvegardées.",
+          "desc": "Restores the node's state from the saved data.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Écrit l'état du nœud dans la table de sauvegarde.",
+          "desc": "Writes the node's state to the save table.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Dessine le panneau de propriétés personnalisé de l'éditeur ; renvoie une chaîne décrivant la modification (pour l'historique d'annulation) ou nil.",
+          "desc": "Draws the editor's custom properties panel; returns a string describing the change (for the undo history) or nil.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Zone centrale vide.",
+          "desc": "Empty central area.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale)."
+              "desc": "Editor node builder (builder:Middle() opens the central area)."
             },
             "style": {
               "type": "any",
-              "desc": "Style d'affichage du nœud fourni par l'éditeur."
+              "desc": "Node display style provided by the editor."
             }
           },
           "internal": true
@@ -58,29 +58,29 @@
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Désactive chaque bouton une fois et remet hiddenAfterDone à false.",
+          "desc": "Disables each button once and resets hiddenAfterDone to false.",
           "internal": true
         },
         "updatePins": {
-          "desc": "Ajuste le nombre de groupes de pins (4 entrées, 4 sorties par bouton).",
+          "desc": "Adjusts the number of pin groups (4 inputs, 4 outputs per button).",
           "params": {
             "old": {
               "type": "integer",
-              "desc": "Ancien nombre d'éléments."
+              "desc": "Old number of elements."
             },
             "new": {
               "type": "integer",
-              "desc": "Nouveau nombre d'éléments."
+              "desc": "New number of elements."
             }
           },
           "internal": true
         },
         "work": {
-          "desc": "Pour chaque bouton, met à jour clicked/complete/incomplete et le désactive si hideWhenDone et complété.",
+          "desc": "For each button, updates clicked/complete/incomplete and disables it if hideWhenDone is set and it is completed.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Crée tous les boutons et écrit leurs id (voir notes : bug).",
+          "desc": "Creates all the buttons and writes their ids (see notes: bug).",
           "internal": true
         }
       }

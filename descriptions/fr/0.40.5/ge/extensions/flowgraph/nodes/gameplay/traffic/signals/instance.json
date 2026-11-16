@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instance.lua",
+  "module": "Nœud flowgraph « Get Signal Instance » (repeat_instant). Lit une instance de feu (signalInstanceData) : pos (position d'arrêt), dirVec, targetPos (pos si absent), stateName, stateAction, active, sequenceData et controllerData (tables vides si absents).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "work": {
+          "desc": "Recopie les propriétés de l'instance et son état courant (instance:getState()) sur les sorties.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/core/settings/dynCaptureQuality.lua",
+  "module": "Préréglages de qualité des captures dynamiques des véhicules : reflets dynamiques (cubemap) et rétroviseurs dynamiques. Chaque fonction applique un niveau en écrivant les variables $pref::BeamNGVehicle::dynamicReflection::* ou dynamicMirrors::* dans VariableRegistry. Le commentaire du code dit qu'il restaure les réglages Normal/High/Ultra de la 0.39.",
+  "usage": "core_settings_dynCaptureQuality.applyReflection(\"High\")\ncore_settings_dynCaptureQuality.applyMirrors(\"Low\")",
+  "notes": [
+    "Un niveau inconnu est ignoré sans message.",
+    "Niveaux disponibles : Disabled, Lowest, Low, Normal, High, Ultra."
+  ],
+  "fields": {
+    "reflectionLevels": {
+      "type": "table<string, table>",
+      "desc": "Par niveau : enabled (boolean), textureSize (128 à 1024), facesPerUpdate (1 ou 2), detail (0 à 0.75), distance (50 à 300)."
+    },
+    "mirrorLevels": {
+      "type": "table<string, table>",
+      "desc": "Par niveau : enabled (boolean), textureSize (128 à 1024), detail (0 à 0.75), distance (50 à 300). Pas de facesPerUpdate."
+    }
+  },
+  "functions": {
+    "applyReflection": {
+      "desc": "Applique un niveau de reflets dynamiques : écrit enabled, textureSize, facesPerUpdate, detail et distance dans $pref::BeamNGVehicle::dynamicReflection::*.",
+      "params": {"level": {"type": "string", "desc": "Clé de reflectionLevels (Disabled, Lowest, Low, Normal, High, Ultra)."}},
+      "returns": [],
+      "internal": false
+    },
+    "applyMirrors": {
+      "desc": "Applique un niveau de rétroviseurs dynamiques : écrit enabled, textureSize, detail et distance dans $pref::BeamNGVehicle::dynamicMirrors::*.",
+      "params": {"level": {"type": "string", "desc": "Clé de mirrorLevels (Disabled, Lowest, Low, Normal, High, Ultra)."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

@@ -1,69 +1,69 @@
 # `editor_assemblySpline_populate`
 
-*Fichier : `lua/ge/extensions/editor/assemblySpline/populate.lua` · VM : Game Engine (GE) · 538 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/assemblySpline/populate.lua` · VM: Game Engine (GE) · 538 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_assemblySpline_populate` : `extensions.load("editor_assemblySpline_populate")`, puis la globale `editor_assemblySpline_populate`
+**Access:** extension `editor_assemblySpline_populate`: `extensions.load("editor_assemblySpline_populate")`, then the global `editor_assemblySpline_populate`
 
-Place dans le niveau les meshes TSStatic d'une assembly spline : à partir de la géométrie de la spline (divPoints, tangentes, normales), de la molécule et de la carte de distribution (distribution.computeMeshMap), il positionne les rigides le long de la courbe (espacement, décalage vertical, affaissement, rotation préalable, jitter, graine aléatoire) et étire/oriente les ponts entre deux rigides. Les meshes sont rangés dans des pools par spline et par chemin de mesh pour être réutilisés, et sont enfants du SimGroup de la spline. Gère aussi l'état verrouillé (splineLock) : une spline verrouillée dont les meshes existent n'est pas replacée.
+Places the TSStatic meshes of an assembly spline in the level: from the spline geometry (divPoints, tangents, normals), the molecule and the distribution map (distribution.computeMeshMap), it positions the rigids along the curve (spacing, vertical offset, sag, pre-rotation, jitter, random seed) and stretches/orients the bridges between two rigids. The meshes are stored in pools per spline and per mesh path for reuse, and are children of the spline's SimGroup. Also handles the locked state (splineLock): a locked spline whose meshes exist is not re-placed.
 
-## Remarques
+## Notes
 
-- Constante : minSpacingBetweenMolecules = 3.0 m.
-- release/adopt servent au rechargement Lua : une spline verrouillée garde ses meshes dans la scène ; release renvoie leurs ids par chemin de mesh et adopt les reprend.
-- Les ponts sont mis à l'échelle en X pour couvrir la distance entre rigides et en Z pour l'affaissement (sag) voulu par l'utilisateur.
+- Constant: minSpacingBetweenMolecules = 3.0 m.
+- release/adopt are used for Lua reload: a locked spline keeps its meshes in the scene; release returns their ids by mesh path and adopt takes them back.
+- Bridges are scaled in X to cover the distance between rigids and in Z for the sag desired by the user.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_assemblySpline_populate.adopt(spline, ids)` | Reprend les meshes lâchés par release (ceux encore présents dans la scène) tels quels et mémorise l'état de verrouillage. | 516 |
-| `editor_assemblySpline_populate.eachObject(spline, fn)` | Appelle fn(mesh, true) pour chaque mesh que l'outil détient pour la spline (le « each » de splineLock). | 54 |
-| `editor_assemblySpline_populate.populateAssemblySpline(spline, splineIdx, molecule)` | Met la spline à jour dans la scène. Si la spline est verrouillée (isEnabled faux) et que ses meshes existent, applique seulement l'état de verrouillage sans les déplacer ; sinon (re)place tous les meshes. | 490 |
-| `editor_assemblySpline_populate.release(spline)` | Rechargement Lua : l'outil lâche les meshes d'une spline verrouillée sans les supprimer (ils font partie du niveau) et renvoie leurs ids par chemin de mesh. | 500 |
-| `editor_assemblySpline_populate.tryRemove(spline)` | Supprime tous les meshes de la spline (objets de la scène et pools) et oublie son état de verrouillage appliqué. | 460 |
+| `editor_assemblySpline_populate.adopt(spline, ids)` | Takes back as-is the meshes released by release (those still present in the scene) and remembers the lock state. | 516 |
+| `editor_assemblySpline_populate.eachObject(spline, fn)` | Calls fn(mesh, true) for each mesh the tool holds for the spline (the "each" of splineLock). | 54 |
+| `editor_assemblySpline_populate.populateAssemblySpline(spline, splineIdx, molecule)` | Updates the spline in the scene. If the spline is locked (isEnabled false) and its meshes exist, only applies the lock state without moving them; otherwise (re)places all meshes. | 490 |
+| `editor_assemblySpline_populate.release(spline)` | Lua reload: the tool lets go of the meshes of a locked spline without deleting them (they are part of the level) and returns their ids by mesh path. | 500 |
+| `editor_assemblySpline_populate.tryRemove(spline)` | Deletes all meshes of the spline (scene objects and pools) and forgets its applied lock state. | 460 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_assemblySpline_populate.adopt(spline, ids)`
 
-Reprend les meshes lâchés par release (ceux encore présents dans la scène) tels quels et mémorise l'état de verrouillage.
+Takes back as-is the meshes released by release (those still present in the scene) and remembers the lock state.
 
 - `spline` (*table*) : Assembly spline.
-- `ids` (*table<string, integer[]>*) : Résultat de release.
+- `ids` (*table<string, integer[]>*) : Result of release.
 
 #### `editor_assemblySpline_populate.eachObject(spline, fn)`
 
-Appelle fn(mesh, true) pour chaque mesh que l'outil détient pour la spline (le « each » de splineLock).
+Calls fn(mesh, true) for each mesh the tool holds for the spline (the "each" of splineLock).
 
 - `spline` (*table*) : Assembly spline.
 - `fn` (*function*) : Callback fn(mesh, true).
 
 #### `editor_assemblySpline_populate.populateAssemblySpline(spline, splineIdx, molecule)`
 
-Met la spline à jour dans la scène. Si la spline est verrouillée (isEnabled faux) et que ses meshes existent, applique seulement l'état de verrouillage sans les déplacer ; sinon (re)place tous les meshes.
+Updates the spline in the scene. If the spline is locked (isEnabled false) and its meshes exist, only applies the lock state without moving them; otherwise (re)places all meshes.
 
 - `spline` (*table*) : Assembly spline.
-- `splineIdx` (*integer*) : Index de la spline.
-- `molecule` (*table*) : Molécule (spline.moleculeDescription).
+- `splineIdx` (*integer*) : Spline index.
+- `molecule` (*table*) : Molecule (spline.moleculeDescription).
 
 #### `editor_assemblySpline_populate.release(spline)`
 
-Rechargement Lua : l'outil lâche les meshes d'une spline verrouillée sans les supprimer (ils font partie du niveau) et renvoie leurs ids par chemin de mesh.
+Lua reload: the tool lets go of the meshes of a locked spline without deleting them (they are part of the level) and returns their ids by mesh path.
 
 - `spline` (*table*) : Assembly spline.
-- **renvoie** : table<string, integer[]> Ids des meshes par meshPath.
+- **returns**: table<string, integer[]> Mesh ids by meshPath.
 
 #### `editor_assemblySpline_populate.tryRemove(spline)`
 
-Supprime tous les meshes de la spline (objets de la scène et pools) et oublie son état de verrouillage appliqué.
+Deletes all meshes of the spline (scene objects and pools) and forgets its applied lock state.
 
 - `spline` (*table*) : Assembly spline.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 - `obj:` `delete`, `getField`, `registerObject`, `setField`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/assemblySpline/populate.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/assemblySpline/populate.lua`.*

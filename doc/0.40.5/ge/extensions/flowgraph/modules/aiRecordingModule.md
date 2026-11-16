@@ -1,72 +1,72 @@
 # `flowgraph_modules_aiRecordingModule`
 
-*Fichier : `lua/ge/extensions/flowgraph/modules/aiRecordingModule.lua` · VM : Game Engine (GE) · 122 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/modules/aiRecordingModule.lua` · VM: Game Engine (GE) · 122 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/modules/aiRecordingModule")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/modules/aiRecordingModule")` (file under extensions/ but not a regular extension)
 
-Module flowgraph (moduleOrder 1, après missionReplayModule) qui enregistre ou rejoue le parcours IA (script AI) du véhicule joueur pour les missions. Il n'est actif que si l'argument de ligne de commande enableAiRecordingForMissions vaut true, ou si la mission a startingOptions.aiPath. À l'arrêt de l'enregistrement, le véhicule renvoie son tracé via le hook onVehicleSubmitRecordingForMission et le module écrit un fichier recording_<date>.missionTestData.json dans <dossier de mission>/tests/.
+Flowgraph module (moduleOrder 1, after missionReplayModule) that records or replays the player vehicle's AI route (AI script) for missions. It is active only if the command-line argument enableAiRecordingForMissions is true, or if the mission has startingOptions.aiPath. When recording stops, the vehicle sends its trace back via the onVehicleSubmitRecordingForMission hook and the module writes a recording_<date>.missionTestData.json file in <mission folder>/tests/.
 
-## Remarques
+## Notes
 
-- Le flag 'enabled' et les tables d'état sont des variables locales au fichier (partagées entre toutes les instances du module).
-- Le fichier de test contient aiPath, userSettings, vehicle (model, config, isConfigFile, licensePlate), attemptData, attemptStars et aiDuration.
-- Incohérence : la clé attemptStars est définie deux fois dans la table testData (la seconde, lastAttempt.unlockedStars, écrase la première, lastTotalChange.unlockedStarsAttempt).
-- onVehicleSubmitRecordingForMission suppose que lastAttempt et lastTotalChange ne sont pas nil (erreur si stopAiRecording a été appelé sans arguments, ce que fait executionStopped).
-- startAiReplay met aussi vehicleStates[...] = 'recording' : le replay est lui aussi ré-enregistré.
+- The 'enabled' flag and the state tables are file-local variables (shared among all instances of the module).
+- The test file contains aiPath, userSettings, vehicle (model, config, isConfigFile, licensePlate), attemptData, attemptStars and aiDuration.
+- Inconsistency: the key attemptStars is defined twice in the testData table (the second, lastAttempt.unlockedStars, overwrites the first, lastTotalChange.unlockedStarsAttempt).
+- onVehicleSubmitRecordingForMission assumes that lastAttempt and lastTotalChange are not nil (error if stopAiRecording was called without arguments, which executionStopped does).
+- startAiReplay also sets vehicleStates[...] = 'recording': the replay is itself re-recorded.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `flowgraph_modules_aiRecordingModule.executionStarted()` | Appelé au démarrage du projet : active le module si parseArgs.args.enableAiRecordingForMissions est true ou si la mission a startingOptions.aiPath. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_aiRecordingModule.executionStopped()` | Appelé à l'arrêt du projet : appelle stopAiRecording() sans arguments. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_aiRecordingModule.getVehicleStates()` | Renvoie la table des états par id de véhicule (valeur 'recording' ou nil). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_aiRecordingModule.init()` | Appelé à la création du module (vide). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_aiRecordingModule.isRecordingScriptAi()` | Indique si le module est actif. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_aiRecordingModule.onVehicleSubmitRecordingForMission(vehId, aiPath)` | Hook appelé via extensions.hook depuis le véhicule quand l'enregistrement IA est terminé. Écrit le fichier missionTestData.json dans le dossier tests de la mission. (assignée dynamiquement) *(hook)* | dyn |
-| `flowgraph_modules_aiRecordingModule.setenabled(newEnabled)` | Force l'activation ou la désactivation du module. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_aiRecordingModule.startAiRecording()` | Si actif, marque le véhicule joueur comme 'recording' et lui envoie ai.startRecording(). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_aiRecordingModule.startAiReplay()` | Si actif et que la mission a startingOptions.aiPath, lance ai.startFollowing avec ce tracé (mode 'noReset') sur le véhicule joueur. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_aiRecordingModule.stopAiRecording(attempt, totalChange)` | Mémorise attempt et totalChange puis, si le module est actif et que le véhicule joueur est en état 'recording', demande au véhicule d'arrêter l'enregistrement (ai.stopRecording()) et de renvoyer le résultat via le hook onVehicleSubmitRecordingForMission. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_aiRecordingModule.stopAiReplay()` | Si actif et que la mission a un aiPath, envoie 'ai:scriptStop(false, false)' au véhicule joueur. (assignée dynamiquement) | dyn |
+| `flowgraph_modules_aiRecordingModule.executionStarted()` | Called when the project starts: enables the module if parseArgs.args.enableAiRecordingForMissions is true or if the mission has startingOptions.aiPath. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_aiRecordingModule.executionStopped()` | Called when the project stops: calls stopAiRecording() without arguments. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_aiRecordingModule.getVehicleStates()` | Returns the table of states by vehicle id (value 'recording' or nil). (dynamically assigned) | dyn |
+| `flowgraph_modules_aiRecordingModule.init()` | Called when the module is created (empty). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_aiRecordingModule.isRecordingScriptAi()` | Returns whether the module is active. (dynamically assigned) | dyn |
+| `flowgraph_modules_aiRecordingModule.onVehicleSubmitRecordingForMission(vehId, aiPath)` | Hook called via extensions.hook from the vehicle when the AI recording is finished. Writes the missionTestData.json file in the mission's tests folder. (dynamically assigned) *(hook)* | dyn |
+| `flowgraph_modules_aiRecordingModule.setenabled(newEnabled)` | Forces the module on or off. (dynamically assigned) | dyn |
+| `flowgraph_modules_aiRecordingModule.startAiRecording()` | If active, marks the player vehicle as 'recording' and sends it ai.startRecording(). (dynamically assigned) | dyn |
+| `flowgraph_modules_aiRecordingModule.startAiReplay()` | If active and the mission has startingOptions.aiPath, starts ai.startFollowing with this trace ('noReset' mode) on the player vehicle. (dynamically assigned) | dyn |
+| `flowgraph_modules_aiRecordingModule.stopAiRecording(attempt, totalChange)` | Stores attempt and totalChange then, if the module is active and the player vehicle is in the 'recording' state, asks the vehicle to stop recording (ai.stopRecording()) and to send the result back via the onVehicleSubmitRecordingForMission hook. (dynamically assigned) | dyn |
+| `flowgraph_modules_aiRecordingModule.stopAiReplay()` | If active and the mission has an aiPath, sends 'ai:scriptStop(false, false)' to the player vehicle. (dynamically assigned) | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `flowgraph_modules_aiRecordingModule.getVehicleStates()`
 
-Renvoie la table des états par id de véhicule (valeur 'recording' ou nil). (assignée dynamiquement)
+Returns the table of states by vehicle id (value 'recording' or nil). (dynamically assigned)
 
-- **renvoie** : table<integer, string> états des véhicules
+- **returns**: table<integer, string> vehicle states
 
 #### `flowgraph_modules_aiRecordingModule.isRecordingScriptAi()`
 
-Indique si le module est actif. (assignée dynamiquement)
+Returns whether the module is active. (dynamically assigned)
 
-- **renvoie** : boolean valeur du flag enabled
+- **returns**: boolean value of the enabled flag
 
 #### `flowgraph_modules_aiRecordingModule.onVehicleSubmitRecordingForMission(vehId, aiPath)`
 
-Hook appelé via extensions.hook depuis le véhicule quand l'enregistrement IA est terminé. Écrit le fichier missionTestData.json dans le dossier tests de la mission. (assignée dynamiquement)
+Hook called via extensions.hook from the vehicle when the AI recording is finished. Writes the missionTestData.json file in the mission's tests folder. (dynamically assigned)
 
-- `vehId` (*integer*) : id du véhicule
-- `aiPath` (*table*) : tracé IA (champ path = liste de points avec t)
+- `vehId` (*integer*) : vehicle id
+- `aiPath` (*table*) : AI trace (field path = list of points with t)
 
 #### `flowgraph_modules_aiRecordingModule.setenabled(newEnabled)`
 
-Force l'activation ou la désactivation du module. (assignée dynamiquement)
+Forces the module on or off. (dynamically assigned)
 
-- `newEnabled` (*boolean*) : nouvel état
+- `newEnabled` (*boolean*) : new state
 
 #### `flowgraph_modules_aiRecordingModule.stopAiRecording(attempt, totalChange)`
 
-Mémorise attempt et totalChange puis, si le module est actif et que le véhicule joueur est en état 'recording', demande au véhicule d'arrêter l'enregistrement (ai.stopRecording()) et de renvoyer le résultat via le hook onVehicleSubmitRecordingForMission. (assignée dynamiquement)
+Stores attempt and totalChange then, if the module is active and the player vehicle is in the 'recording' state, asks the vehicle to stop recording (ai.stopRecording()) and to send the result back via the onVehicleSubmitRecordingForMission hook. (dynamically assigned)
 
-- `attempt` (*table|nil*) : tentative de mission (champs data, unlockedStars) (déduit du code)
-- `totalChange` (*table|nil*) : changements totaux de progression (champ unlockedStarsAttempt) (déduit du code)
+- `attempt` (*table|nil*) : mission attempt (fields data, unlockedStars) (inferred from code)
+- `totalChange` (*table|nil*) : total progression changes (field unlockedStarsAttempt) (inferred from code)
 
-## Classe `C`
+## Class `C`
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:executionStarted()` |  | 18 |
 | `C:executionStopped()` |  | 14 |
@@ -81,4 +81,4 @@ Mémorise attempt et totalChange puis, si le module est actif et que le véhicul
 | `C:stopAiReplay()` |  | 45 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/modules/aiRecordingModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/modules/aiRecordingModule.lua`.*

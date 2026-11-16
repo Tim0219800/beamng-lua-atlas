@@ -1,67 +1,67 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/imDialogue.lua",
-  "module": "Nœud flowgraph « im Dialogue » (catégorie repeat_instant, singleActive, tag imgui) : fenêtre imgui avec titre, description et boutons. Entrées : « title », « description » ; pour chaque option (liste modifiable, défaut accept / decline) un pin d'entrée string (libellé) et un pin de sortie flux mis à true au clic. Largeur de retour à la ligne : data.wrapSize (500).",
+  "module": "Flowgraph node \"im Dialogue\" (category repeat_instant, singleActive, tag imgui): imgui window with title, description and buttons. Inputs: \"title\", \"description\"; for each option (editable list, default accept / decline) a string input pin (label) and a flow output pin set to true on click. Word wrap width: data.wrapSize (500).",
   "notes": [
-    "Bug : work() appelle self:closeDialogue() et self:closed(), qui ne sont pas définies dans ce fichier (erreur au premier clic si la classe de base ne les fournit pas).",
-    "Showing two of these at the same time will break everything (todo du code).",
-    "updateButtons : tous les liens de sortie sont mis dans flowLinks, et strLinks reste vide (les liens d'entrée ne sont pas recréés correctement)."
+    "Bug: work() calls self:closeDialogue() and self:closed(), which are not defined in this file (error on first click if the base class does not provide them).",
+    "Showing two of these at the same time will break everything (todo from the code).",
+    "updateButtons: all output links are put in flowLinks, and strLinks stays empty (input links are not recreated correctly)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStopped": {
-          "desc": "Appelle onNodeReset.",
+          "desc": "Calls onNodeReset.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure options.",
+          "desc": "Restores options.",
           "params": {
             "nodeData": {
               "type": "table",
-              "desc": "Données sauvegardées du nœud."
+              "desc": "Saved node data."
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde options.",
+          "desc": "Saves options.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Édition de la liste des boutons.",
+          "desc": "Button list editing.",
           "internal": true
         },
         "init": {
-          "desc": "Options par défaut {accept, decline}, wrapSize = 500.",
+          "desc": "Default options {accept, decline}, wrapSize = 500.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Ferme la fenêtre (open = false).",
+          "desc": "Closes the window (open = false).",
           "internal": true
         },
         "postInit": {
-          "desc": "Crée les pins des options.",
+          "desc": "Creates the option pins.",
           "internal": true
         },
         "updateButtons": {
-          "desc": "Recrée les pins des options.",
+          "desc": "Recreates the option pins.",
           "internal": false
         },
         "work": {
-          "desc": "Si ouvert, dessine la fenêtre, le texte et les boutons.",
+          "desc": "If open, draws the window, the text and the buttons.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Ouvre la fenêtre (open = true).",
+          "desc": "Opens the window (open = true).",
           "internal": true
         }
       }

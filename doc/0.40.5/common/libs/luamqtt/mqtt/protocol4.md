@@ -1,33 +1,33 @@
 # `libs_luamqtt_mqtt_protocol4`
 
-*Fichier : `lua/common/libs/luamqtt/mqtt/protocol4.lua` · VM : Commun (GE + véhicule) · 428 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/luamqtt/mqtt/protocol4.lua` · VM: Common (GE + vehicle) · 428 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/luamqtt/mqtt/protocol4")`
+**Access:** `require("libs/luamqtt/mqtt/protocol4")`
 
-Implémentation du protocole MQTT 3.1.1 de luamqtt : construction (make_packet) et analyse (parse_packet) des paquets. Chargé par client.lua quand la version 4 est utilisée (défaut).
+luamqtt implementation of the MQTT 3.1.1 protocol: packet construction (make_packet) and parsing (parse_packet). Loaded by client.lua when version 4 is used (default).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_luamqtt_mqtt_protocol4.make_packet(args)` | Construit un paquet à partir d'une table d'arguments dont le champ type est un packet_type (CONNECT, PUBLISH, SUBSCRIBE…). | 280 |
-| `libs_luamqtt_mqtt_protocol4.parse_packet(read_func)` | Analyse un paquet reçu à l'aide de read_func. | 313 |
+| `libs_luamqtt_mqtt_protocol4.make_packet(args)` | Builds a packet from an arguments table whose type field is a packet_type (CONNECT, PUBLISH, SUBSCRIBE...). | 280 |
+| `libs_luamqtt_mqtt_protocol4.parse_packet(read_func)` | Parses a received packet using read_func. | 313 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_luamqtt_mqtt_protocol4.make_packet(args)`
 
-Construit un paquet à partir d'une table d'arguments dont le champ type est un packet_type (CONNECT, PUBLISH, SUBSCRIBE…).
+Builds a packet from an arguments table whose type field is a packet_type (CONNECT, PUBLISH, SUBSCRIBE...).
 
-- `args` (*table*) : type et champs propres au paquet.
-- **renvoie** : table|boolean Paquet combiné prêt à envoyer, ou false et un message d'erreur.
+- `args` (*table*) : type and packet-specific fields.
+- **returns**: table|boolean Combined packet ready to send, or false and an error message.
 
 #### `libs_luamqtt_mqtt_protocol4.parse_packet(read_func)`
 
-Analyse un paquet reçu à l'aide de read_func.
+Parses a received packet using read_func.
 
-- `read_func` (*function*) : Fonction de lecture de n octets.
-- **renvoie** : table|boolean Paquet analysé (métatable packet_mt), ou false et un message d'erreur.
+- `read_func` (*function*) : Function that reads n bytes.
+- **returns**: table|boolean Parsed packet (metatable packet_mt), or false and an error message.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luamqtt/mqtt/protocol4.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/luamqtt/mqtt/protocol4.lua`.*

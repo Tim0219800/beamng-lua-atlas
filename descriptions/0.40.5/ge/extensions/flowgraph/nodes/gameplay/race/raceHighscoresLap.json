@@ -1,13 +1,23 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/raceHighscoresLap.lua",
-  "module": "Nœud flowgraph « Race Highscores » (catégorie repeat_instant, tag scenario), variante « tour ». Identique à raceHighscoresComplete mais enregistre sous l'identifiant missionTypeData.trackName (sans préfixe « mission- »). Écrit le temps du dernier passage du véhicule dans core_highscores.setScenarioHighscoresCustom puis stocke {place, scores} dans state.raceComepleteHighscores. Entrées : flow, raceData, vehId ; sortie : flow.",
-  "notes": ["S'exécute à chaque frame tant que flow est actif (print « Writing Highscores... » et écriture répétée) : ne lui donner du flux qu'une fois.", "Nécessite self.mgr.activity.missionTypeData.trackName.", "L'ancienne pin 'clear' est redirigée vers 'reset' (legacyPins), mais aucune pin reset n'est déclarée dans le pinSchema de ce fichier."],
+  "module": "Flowgraph node \"Race Highscores\" (category repeat_instant, tag scenario), \"lap\" variant. Identical to raceHighscoresComplete but records under the identifier missionTypeData.trackName (without the \"mission-\" prefix). Writes the time of the vehicle's last pass in core_highscores.setScenarioHighscoresCustom then stores {place, scores} in state.raceComepleteHighscores. Inputs: flow, raceData, vehId; output: flow.",
+  "notes": [
+    "Runs every frame as long as flow is active (print \"Writing Highscores...\" and repeated writing): give it flow only once.",
+    "Requires self.mgr.activity.missionTypeData.trackName.",
+    "The old pin 'clear' is redirected to 'reset' (legacyPins), but no reset pin is declared in the pinSchema of this file."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise self.markers à nil (non utilisé ensuite).", "internal": true},
-        "work": {"desc": "Recopie flow et enregistre le highscore du véhicule, puis stocke le résultat dans son état.", "internal": true}
+        "init": {
+          "desc": "Initializes self.markers to nil (not used afterwards).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Copies flow and records the vehicle's highscore, then stores the result in its state.",
+          "internal": true
+        }
       }
     }
   }

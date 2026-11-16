@@ -1,0 +1,69 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/toolCamera.lua",
+  "module": "Caméra d'outil réutilisable : prend la main sur la caméra de l'éditeur avec la caméra pilotée par script 'scriptedFree' de BeamNG, la pilote chaque frame avec le glisser du bouton droit et la molette dans le viewport (via cameraRig), et lance des transitions lissées (smoothstep) vers un cadrage « pan » (vue de dessus) ou « orbite ». Pendant qu'elle conduit, elle bloque dans le groupe de filtre 'toolCameraZoom' les actions editorCameraZoom et changeCameraSpeed.",
+  "usage": "local cam = require('editor/toolUtilities/toolCamera')\ncam.takeOver()\ncam.flyOrbit(x, y, z, 20)\n-- chaque frame : cam.drive(false)\n-- en sortant : cam.handBack(true)",
+  "notes": [
+    "flyPan, flyOrbit et recenterOrbit ne font rien tant que takeOver n'a pas été appelé (active == false).",
+    "Durée d'un vol : de 1 s à 2 s selon la distance (2 s à partir de 400 m) quand `time` est nil.",
+    "recenterOrbit glisse en 0.5 s par défaut.",
+    "Le bouton droit pilote la caméra ; le bouton gauche reste libre pour l'outil.",
+    "En mode pan la caméra reste dans l'emprise du terrain (marge d'une case) et flotte à hauteur constante au-dessus du terrain moyen en vue.",
+    "drive ne fait rien pendant qu'une animation de caméra est en cours."
+  ],
+  "functions": {
+    "takeOver": {
+      "desc": "Prend la main sur la caméra de l'éditeur : mémorise la caméra globale et sa pose, passe à 'scriptedFree' (locked, driveRot) à la même pose et bloque la molette de zoom standard. Sans effet si déjà actif ou sans core_camera.",
+      "params": {},
+      "returns": []
+    },
+    "handBack": {
+      "desc": "Rend la caméra de l'éditeur : débloque la molette et revient à la caméra globale mémorisée. Sans effet si on ne conduit pas.",
+      "params": {"animate": {"type": "boolean", "desc": "Vrai : revient d'abord à la pose mémorisée par un vol lissé avant de rendre la main."}},
+      "returns": []
+    },
+    "isActive": {
+      "desc": "Vrai si le module conduit scriptedFree.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "État actif."}]
+    },
+    "flyPan": {
+      "desc": "Vol vers un cadrage PAN vu de dessus. Le point est tenu dans l'emprise du terrain. Si groundZ est absent, la hauteur du sol est échantillonnée sur le terrain.",
+      "params": {
+        "x": {"type": "number", "desc": "X monde."},
+        "y": {"type": "number", "desc": "Y monde."},
+        "groundZ": {"type": "number|nil", "desc": "Altitude du sol sous le point."},
+        "height": {"type": "number|nil", "desc": "Altitude absolue visée pour la caméra."},
+        "time": {"type": "number|nil", "desc": "Durée en secondes (0 = saut immédiat, nil = selon la distance)."}
+      },
+      "returns": []
+    },
+    "flyOrbit": {
+      "desc": "Vol vers un cadrage ORBITE sur (x, y, z). `radius` dimensionne le recul pour bien cadrer le sujet ; yaw et pitch remplacent l'angle 3/4 par défaut (pour aborder un détail depuis une direction extérieure connue).",
+      "params": {
+        "x": {"type": "number", "desc": "X monde."},
+        "y": {"type": "number", "desc": "Y monde."},
+        "z": {"type": "number", "desc": "Z monde."},
+        "radius": {"type": "number|nil", "desc": "Rayon du sujet."},
+        "yaw": {"type": "number|nil", "desc": "Lacet imposé."},
+        "pitch": {"type": "number|nil", "desc": "Tangage imposé."},
+        "time": {"type": "number|nil", "desc": "Durée en secondes (nil = selon la distance)."}
+      },
+      "returns": []
+    },
+    "recenterOrbit": {
+      "desc": "Glisse le PIVOT d'orbite sur (x, y, z) en GARDANT lacet, tangage et distance : le geste doux « recentrer sur ce que je viens de sélectionner », contrairement à flyOrbit qui recadre en 3/4.",
+      "params": {
+        "x": {"type": "number", "desc": "X monde."},
+        "y": {"type": "number", "desc": "Y monde."},
+        "z": {"type": "number", "desc": "Z monde."},
+        "time": {"type": "number|nil", "desc": "Durée en secondes (0.5 par défaut)."}
+      },
+      "returns": []
+    },
+    "drive": {
+      "desc": "Pilotage interactif par frame : collecte le glisser bouton droit et la molette dans le viewport (ignorés si l'UI ou un état occupé déclaré par l'hôte capte la souris) et applique la pose de cameraRig à scriptedFree. Force l'affichage du curseur pendant le glisser pour que MouseDelta continue à être renseigné.",
+      "params": {"blocked": {"type": "boolean|nil", "desc": "Vrai : ne pas déplacer la caméra (interaction modale de l'outil)."}},
+      "returns": []
+    }
+  }
+}

@@ -1,18 +1,23 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/activity/activityStop.lua",
-  "module": "Nœud flowgraph « Finish Mission » (tag activity). Arrête la mission en cours : quand le flux arrive, il arrête l'exécution du graphe (mgr:setRunning(false)) après le déclenchement des nœuds de la frame. Pins d'entrée : flow, « attempt » (table attemptData). Sans activité associée, la tentative est jetée avec un log W et l'écran de fondu est arrêté (ui_fadeScreen.stop(0)).",
+  "module": "Flowgraph node \"Finish Mission\" (tag activity). Stops the current mission: when the flow arrives, it stops the graph execution (mgr:setRunning(false)) after the frame's nodes have triggered. Input pins: flow, \"attempt\" (attemptData table). Without an associated activity, the attempt is discarded with a W log and the fade screen is stopped (ui_fadeScreen.stop(0)).",
   "notes": [
-    "La tentative lue (pin attempt, sinon newAttempt('attempted', {})) n'est plus enregistrée : l'appel à missionManager.stop est commenté, seul setRunning(false) arrête le graphe.",
-    "La catégorie n'est pas définie dans ce fichier."
+    "The attempt read (attempt pin, otherwise newAttempt('attempted', {})) is no longer recorded: the call to missionManager.stop is commented out, only setRunning(false) stops the graph.",
+    "The category is not defined in this file."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Marque self.stopping = true quand le nœud est exécuté."},
-        "_afterTrigger": {"desc": "Appelée après le déclenchement des nœuds : si stopping, arrête le graphe (setRunning(false)) ; sans activité, loggue l'abandon de la tentative et arrête le fondu d'écran.", "internal": true}
+        "work": {
+          "desc": "Sets self.stopping = true when the node is executed."
+        },
+        "_afterTrigger": {
+          "desc": "Called after the nodes have triggered: if stopping, stops the graph (setRunning(false)); without an activity, logs the abandoned attempt and stops the screen fade.",
+          "internal": true
+        }
       }
     }
   }

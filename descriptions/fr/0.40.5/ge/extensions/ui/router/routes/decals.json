@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/ui/router/routes/decals.lua",
+  "module": "Sous-arbre de routes de l'éditeur de décalcomanies de livrées (inclus par liveries.edit.decals). Flux d'ajout : decals -> camera (choix de la vue) -> selector (grille de décalcomanies) -> transform -> settings ; branches séparées pour material, mirror et transform d'une décalcomanie déjà sélectionnée. Les hooks pointent vers ui_liveries_routeLifecycleCallbacks.",
+  "notes": [
+    "Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = \"<nom>\" }`.",
+    "Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.",
+    "`ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change.",
+    "Le screenId commence par « liveries.edit.decals » pour que la préparation et le nettoyage de ui_liveries_decal restent valides sur toute la branche (commentaire du code)."
+  ],
+  "fields": {
+    "Root": {
+      "type": "table",
+      "desc": "{screenId = \"liveries.edit.decals\", title = \"ui.liveries.edit.decals\", backTarget = \"liveries.edit\", targetScope = \"layers-manager\", scopeTree (liveries-decals-hidden, layers-manager), onEnter onDecalsEnter, onMount onDecalsMount, onLeave onDecalsLeave}"
+    },
+    "Children": {
+      "type": "table<string, table>",
+      "desc": "camera (> selector > transform > settings), material, mirror, transform (> settings), chacun avec backTarget vers le niveau précédent."
+    },
+    "ModuleName": {
+      "type": "string",
+      "desc": "Nom du module de routes (premier segment du nom pointé)."
+    }
+  }
+}

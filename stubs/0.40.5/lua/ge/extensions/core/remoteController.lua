@@ -2,36 +2,36 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/remoteController.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Serveur UDP qui permet de piloter le jeu avec l'application mobile BeamNG « remote controller ». getQRCode ouvre le port UDP 4444 et renvoie un code à 5 chiffres que l'appli doit envoyer ; ensuite chaque appareil reconnu devient un périphérique virtuel (core_input_virtualInput, type bngremotectrlv1, 1 axe, 2 boutons) alimenté par les paquets d'orientation reçus. Les données d'interface du véhicule sont renvoyées à l'appli (port 4445) via l'extension outgauge du véhicule.
---- Accès : extension `core_remoteController` : `extensions.load("core_remoteController")`, puis la globale `core_remoteController`
+--- UDP server that lets you control the game with the BeamNG "remote controller" mobile app. getQRCode opens UDP port 4444 and returns a 5-digit code that the app must send; then each recognized device becomes a virtual device (core_input_virtualInput, type bngremotectrlv1, 1 axis, 2 buttons) fed by the orientation packets received. The vehicle's UI data is sent back to the app (port 4445) via the vehicle's outgauge extension.
+--- Access: extension `core_remoteController`: `extensions.load("core_remoteController")`, then the global `core_remoteController`
 ---@class core_remoteController
----@field onFirstUpdate nil Vaut nil : référence à une variable non définie dans le fichier.
+---@field onFirstUpdate nil Is nil: reference to a variable not defined in the file.
 core_remoteController = {}
 
---- Indique si au moins un appareil distant est connecté.
----Source : lua/ge/extensions/core/remoteController.lua:182
----@return boolean  true s'il y a au moins un périphérique virtuel.
+--- Indicates whether at least one remote device is connected.
+---Source: lua/ge/extensions/core/remoteController.lua:182
+---@return boolean  true if there is at least one virtual device.
 function core_remoteController.devicesConnected() end
 
---- Ouvre le socket UDP d'écoute (port 4444) s'il ne l'est pas, et renvoie le code d'appairage à afficher (sous forme de QR code par l'UI).
----Source : lua/ge/extensions/core/remoteController.lua:54
----@return integer|boolean  Code à 5 chiffres, ou false si le socket n'a pas pu être ouvert.
+--- Opens the listening UDP socket (port 4444) if it is not open, and returns the pairing code to display (as a QR code by the UI).
+---Source: lua/ge/extensions/core/remoteController.lua:54
+---@return integer|boolean  5-digit code, or false if the socket could not be opened.
 function core_remoteController.getQRCode() end
 
---- Hook de chargement : vérifie la présence de FFI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/remoteController.lua:164
----@return boolean  false si FFI est indisponible (chargement refusé).
+--- Load hook: checks for FFI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/remoteController.lua:164
+---@return boolean  false if FFI is unavailable (load refused).
 function core_remoteController.onExtensionLoaded() end
 
---- Hook appelé quand les liaisons d'entrée changent : mémorise à quel joueur est assigné chaque appareil virtuel (clé 'vinput<instance>'), ou l'oublie si le joueur est négatif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/remoteController.lua:172
----@param players table<string, integer> Nom de périphérique -> index du joueur.
+--- Hook called when input bindings change: remembers which player each virtual device is assigned to (key 'vinput<instance>'), or forgets it if the player is negative.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/remoteController.lua:172
+---@param players table<string, integer> Device name -> player index.
 function core_remoteController.onInputBindingsChanged(players) end
 
---- Hook de mise à jour : supprime les appareils inactifs depuis plus de 10 s, lit les paquets UDP, crée les périphériques virtuels et émet leurs évènements (boutons, axe) vers core_input_virtualInput. Ne fait rien tant que le socket n'est pas ouvert.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/remoteController.lua:70
+--- Update hook: removes devices inactive for more than 10 s, reads UDP packets, creates the virtual devices and emits their events (buttons, axis) to core_input_virtualInput. Does nothing as long as the socket is not open.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/remoteController.lua:70
 function core_remoteController.onUpdate() end
 

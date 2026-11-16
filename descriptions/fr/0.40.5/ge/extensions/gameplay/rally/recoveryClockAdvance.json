@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/recoveryClockAdvance.lua",
+  "module": "Table des pénalités de chronomètre appliquées à chaque récupération du véhicule (reset) en rallye. Une récupération coûte un nombre fixe de secondes, indépendant de la longueur de l'étape. Sur une spéciale : 5 s pour un recovery, 0 s pour un flip (retournement). Hors spéciale (liaison) : 60 s et 10 s. Utilisé par rallyManager:addRecoveryRaceTime.",
+  "fields": {
+    "specialStageSeconds": {"type": "table<string, number>", "desc": "Pénalités sur une spéciale : recovery = 5, flip = 0 (le chemin de code est gardé mais n'ajoute rien)."},
+    "nonSpecialStageSeconds": {"type": "table<string, number>", "desc": "Pénalités hors spéciale : recovery = 60, flip = 10."}
+  },
+  "functions": {
+    "getSpecialStageSeconds": {
+      "desc": "Renvoie la pénalité en secondes pour un type de récupération sur une spéciale ; 0 si le type est inconnu.",
+      "params": {"recoveryType": {"type": "string", "desc": "\"recovery\" ou \"flip\""}},
+      "returns": [{"type": "number", "desc": "Secondes ajoutées au chrono"}],
+      "internal": false
+    },
+    "getSeconds": {
+      "desc": "Renvoie la pénalité en secondes selon que l'étape est une spéciale ou non ; 0 si le type est inconnu.",
+      "params": {
+        "recoveryType": {"type": "string", "desc": "\"recovery\" ou \"flip\""},
+        "isSpecialStage": {"type": "boolean", "desc": "true pour une spéciale, false pour une liaison / autre étape"}
+      },
+      "returns": [{"type": "number", "desc": "Secondes ajoutées au chrono"}],
+      "internal": false
+    }
+  }
+}

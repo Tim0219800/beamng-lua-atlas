@@ -1,22 +1,28 @@
 {
   "path": "lua/ge/extensions/util/followTheWhiteRabbit.lua",
-  "module": "Petit easter egg (référence à Matrix) : une fois chargée, l'extension crée un contexte de console « neo », l'active et affiche un mini jeu d'aventure textuel. Dans ce contexte, la commande « throttle » répond « You crash. Game over. » ; les autres commandes sont ignorées.",
+  "module": "Small easter egg (Matrix reference): once loaded, the extension creates a \"neo\" console context, activates it and displays a mini text adventure. In this context, the \"throttle\" command answers \"You crash. Game over.\"; other commands are ignored.",
   "usage": "extensions.load('util_followTheWhiteRabbit')",
   "notes": [
-    "Le contexte de console reste sur 'neo' après le chargement ; il n'y a pas de code de sortie dans ce fichier."
+    "The console context stays on 'neo' after loading; there is no exit code in this file."
   ],
   "functions": {
     "onExtensionLoaded": {
-      "desc": "Appelé au chargement de l'extension : désactive l'horodatage des logs de la console, ajoute et active le contexte 'neo' puis affiche le texte d'introduction.",
+      "desc": "Called when the extension loads: disables console log timestamps, adds and activates the 'neo' context then displays the intro text.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onConsoleExecuteCommand": {
-      "desc": "Hook appelé quand une commande est exécutée dans la console. Ignore tout contexte autre que 'neo' ; pour la commande 'throttle', affiche « You crash. Game over. ».",
+      "desc": "Hook called when a command is run in the console. Ignores any context other than 'neo'; for the 'throttle' command, prints \"You crash. Game over.\".",
       "params": {
-        "context": {"type": "string", "desc": "Contexte de console actif"},
-        "cmd": {"type": "string", "desc": "Commande saisie"}
+        "context": {
+          "type": "string",
+          "desc": "Active console context"
+        },
+        "cmd": {
+          "type": "string",
+          "desc": "Command entered"
+        }
       },
       "returns": [],
       "internal": true

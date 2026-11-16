@@ -1,71 +1,71 @@
 # `ui_liveries`
 
-*Fichier : `lua/ge/extensions/ui/liveries.lua` · VM : Game Engine (GE) · 120 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/liveries.lua` · VM: Game Engine (GE) · 120 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_liveries` : `extensions.load("ui_liveries")`, puis la globale `ui_liveries`
+**Access:** extension `ui_liveries`: `extensions.load("ui_liveries")`, then the global `ui_liveries`
 
-Orchestrateur de l'éditeur de livrées (peinture/décalcomanies) de l'UI. Il s'appuie sur l'API d'éditeur `editor_api_dynamicDecals` : à l'ouverture il mémorise le skin actuel du véhicule joueur, active le skin `dynamicTextures`, prépare la pile de calques (livrée vierge à la couleur du véhicule ou sauvegarde existante) et démarre la caméra. À la fermeture il restaure le skin d'origine.
+UI livery editor (paint/decals) orchestrator. It relies on the editor API `editor_api_dynamicDecals`: on opening it stores the player vehicle's current skin, enables the `dynamicTextures` skin, prepares the layer stack (blank livery in the vehicle's color or existing save) and starts the camera. On closing it restores the original skin.
 
-## Exemple
+## Example
 
 ```lua
-ui_liveries.setup()          -- livrée vierge
-ui_liveries.setup('maSauvegarde') -- charge une sauvegarde
+ui_liveries.setup()          -- blank livery
+ui_liveries.setup('maSauvegarde') -- loads a save
 -- ...
 ui_liveries.teardown()
 ```
 
-## Remarques
+## Notes
 
-- setup renvoie true sans rien refaire si l'éditeur tourne déjà ; renvoie false si l'API de décalcomanies est absente.
-- La valeur renvoyée par setup est le succès du chargement de la pile de calques (false si la sauvegarde n'a pas pu être chargée : une livrée vierge est alors créée quand même).
-- Le curseur de décalcomanie live n'est affiché que lorsque l'écran de transformation le demande (setProjectDynamicDecalsState(false) au démarrage).
+- setup returns true without doing anything if the editor is already running; returns false if the decals API is missing.
+- The value returned by setup is the success of loading the layer stack (false if the save could not be loaded: a blank livery is then created anyway).
+- The live decal cursor is only displayed when the transform screen requests it (setProjectDynamicDecalsState(false) at startup).
 
-**Dépendances (chargées avant) :** `editor_api_dynamicDecals`, `ui_liveries_camera`, `ui_liveries_fill`, `ui_liveries_saves`
+**Dependencies (loaded first):** `editor_api_dynamicDecals`, `ui_liveries_camera`, `ui_liveries_fill`, `ui_liveries_saves`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_liveries.isRunning()` | Indique si l'éditeur de livrées est actif. | 115 |
-| `ui_liveries.onUpdate(dtReal, dtSim, dtRaw)` | Hook appelé à chaque image par le système d'extensions ; appelle api.onUpdate_() tant que l'éditeur tourne. *(interne)* *(hook)* | 107 |
-| `ui_liveries.setup(saveName)` | Démarre l'éditeur de livrées sur le véhicule joueur (skin dynamicTextures, calques, historique vidé, caméra). | 60 |
-| `ui_liveries.teardown()` | Arrête l'éditeur : caméra, désactivation de l'API, restauration du skin précédent et nettoyage du fill. Sans effet si non démarré. | 90 |
+| `ui_liveries.isRunning()` | Returns whether the livery editor is active. | 115 |
+| `ui_liveries.onUpdate(dtReal, dtSim, dtRaw)` | Hook called every frame by the extension system; calls api.onUpdate_() while the editor is running. *(internal)* *(hook)* | 107 |
+| `ui_liveries.setup(saveName)` | Starts the livery editor on the player vehicle (dynamicTextures skin, layers, history cleared, camera). | 60 |
+| `ui_liveries.teardown()` | Stops the editor: camera, API deactivation, restoring the previous skin and cleaning up the fill. No effect if not started. | 90 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_liveries.isRunning()`
 
-Indique si l'éditeur de livrées est actif.
+Returns whether the livery editor is active.
 
-- **renvoie** : boolean true entre setup et teardown.
+- **returns**: boolean true between setup and teardown.
 
 #### `ui_liveries.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé à chaque image par le système d'extensions ; appelle api.onUpdate_() tant que l'éditeur tourne.
+Hook called every frame by the extension system; calls api.onUpdate_() while the editor is running.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
 #### `ui_liveries.setup(saveName)`
 
-Démarre l'éditeur de livrées sur le véhicule joueur (skin dynamicTextures, calques, historique vidé, caméra).
+Starts the livery editor on the player vehicle (dynamicTextures skin, layers, history cleared, camera).
 
-- `saveName` (*string|nil*) : Nom d'une sauvegarde à charger ; nil = livrée vierge à la couleur du véhicule.
-- **renvoie** : boolean true si la pile de calques a été initialisée correctement.
+- `saveName` (*string|nil*) : Name of a save to load; nil = blank livery in the vehicle's color.
+- **returns**: boolean true if the layer stack was initialized correctly.
 
 #### `ui_liveries.teardown()`
 
-Arrête l'éditeur : caméra, désactivation de l'API, restauration du skin précédent et nettoyage du fill. Sans effet si non démarré.
+Stops the editor: camera, API deactivation, restoring the previous skin and cleaning up the fill. No effect if not started.
 
-- **renvoie** : nil 
+- **returns**: nil 
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | table<integer, string> | editor_api_dynamicDecals, ui_liveries_camera, ui_liveries_fill, ui_liveries_saves. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/liveries.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/liveries.lua`.*

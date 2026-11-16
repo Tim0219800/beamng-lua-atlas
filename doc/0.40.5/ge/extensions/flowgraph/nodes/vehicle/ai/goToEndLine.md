@@ -1,28 +1,28 @@
 # `flowgraph_nodes_vehicle_ai_goToEndLine`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/goToEndLine.lua` · VM : Game Engine (GE) · 101 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/goToEndLine.lua` · VM: Game Engine (GE) · 101 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/ai/goToEndLine")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/ai/goToEndLine")` (file under extensions/ but not a regular extension)
 
-Nœud « AI Go To The End Line » (couleur ai, comportement duration, pas de catégorie). Envoie un véhicule en mode IA « manual » vers une ligne d'arrivée donnée par une position, et active la sortie flow quand il est à moins de checkDistance (1 m par défaut) et plus lent que checkVelocity. Entrées : flow, reset, aiVehId, endLinePosition (vec3, caché), checkDistance (caché), checkVelocity (0,1, caché). Sorties : flow, distance (cachée). Donnée : autoDisableOnArrive (true).
+Node "AI Go To The End Line" (color ai, duration behavior, no category). Sends a vehicle in "manual" AI mode to a finish line given by a position, and activates the flow output when it is within checkDistance (1 m by default) and slower than checkVelocity. Inputs: flow, reset, aiVehId, endLinePosition (vec3, hidden), checkDistance (hidden), checkVelocity (0.1, hidden). Outputs: flow, distance (hidden). Data: autoDisableOnArrive (true).
 
-## Remarques
+## Notes
 
-- Bug : le code écrit self.pinOut.inRadius.value alors que le pin inRadius n'existe pas dans pinSchema : l'accès lèverait une erreur dès que le véhicule est dans le rayon.
-- Contrairement à AI Arrive, aucune commande ai.setTarget n'est envoyée : le mode manual est activé sans cible, le véhicule n'est donc pas vraiment dirigé vers endLinePosition par ce nœud.
-- La description du pin flow de sortie contient une faute (« slowe »).
+- Bug: the code writes self.pinOut.inRadius.value while the inRadius pin does not exist in pinSchema: the access would raise an error as soon as the vehicle is within the radius.
+- Unlike AI Arrive, no ai.setTarget command is sent: manual mode is enabled without a target, so this node does not really steer the vehicle toward endLinePosition.
+- The description of the output flow pin contains a typo ("slowe").
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelle onNodeReset. | 39 |
-| `C:getVeh()` | Renvoie le véhicule dont l'id est donné en entrée, ou le véhicule du joueur (getPlayerVehicle(0)) sans entrée. | 43 |
-| `C:init()` | Active autoDisableOnArrive et appelle onNodeReset. | 29 |
-| `C:onNodeReset()` | Remet complete et sentCommand à false. | 34 |
-| `C:work()` | Gère reset ; si déjà arrivé, active flow. Sinon calcule la distance entre le milieu de l'avant du véhicule et endLinePosition, détermine l'arrivée (distance et vitesse) et désactive l'IA si autoDisableOnArrive ; envoie une fois ai.setState manual. Erreur de nœud si aucune position n'est donnée. | 53 |
+| `C:_executionStopped()` | Calls onNodeReset. | 39 |
+| `C:getVeh()` | Returns the vehicle whose id is given as input, or the player's vehicle (getPlayerVehicle(0)) without input. | 43 |
+| `C:init()` | Enables autoDisableOnArrive and calls onNodeReset. | 29 |
+| `C:onNodeReset()` | Resets complete and sentCommand to false. | 34 |
+| `C:work()` | Handles reset; if already arrived, activates flow. Otherwise computes the distance between the middle of the vehicle's front and endLinePosition, determines arrival (distance and speed) and disables the AI if autoDisableOnArrive; sends ai.setState manual once. Node error if no position is given. | 53 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/goToEndLine.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/goToEndLine.lua`.*

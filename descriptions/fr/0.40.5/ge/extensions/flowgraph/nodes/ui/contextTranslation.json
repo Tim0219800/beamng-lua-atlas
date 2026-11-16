@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/contextTranslation.lua",
+  "module": "Nœud flowgraph « Context Translation » (catégorie repeat_instant) : crée un objet de traduction avec contexte. Entrée « translationString » (clé de traduction, pin fixe) plus des pins d'entrée personnalisés (tous types sauf flow) : chacun devient une variable de contexte. Sortie « value » (table de type translationObject) : {txt = clé, context = {nom = valeur}}. Le bouton « Load Variables » des propriétés crée un pin string par variable {{nom}} trouvée dans la traduction.",
+  "notes": [
+    "La clé de traduction est résolue avec _tr() pour trouver les variables {{%a+}} (lettres uniquement).",
+    "drawCustomProperties appelle dump('string: ...') à chaque chargement (trace de debug).",
+    "Les pins personnalisés sont sauvegardés (savePins = true)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "drawCustomProperties": {
+          "desc": "Affiche l'état de chargement des variables (icône rouge/verte/blanche) et le bouton « Load Variables » qui recrée les pins de contexte.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Active savePins et allowCustomInPins ; crée la table de sortie réutilisée {context = {}}.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Remplit txt et context (valeur de chaque pin personnalisé) dans la table de sortie réutilisée et l'écrit sur « value ».",
+          "internal": true
+        }
+      }
+    }
+  }
+}

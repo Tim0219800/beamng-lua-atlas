@@ -1,29 +1,60 @@
 {
   "path": "lua/common/timeEvents.lua",
-  "module": "Petit planificateur : permet de programmer l'exécution d'une fonction dans X secondes, à la manière de `schedule()`. On crée une liste d'événements avec require('timeEvents').create(), on y ajoute des événements, et on appelle process(dt) à chaque mise à jour.",
-  "usage": "local events = require('timeEvents').create()\nevents:addEvent(5, function() print('hello world!') end) -- dans 5 s\n-- dans la boucle de mise à jour :\nevents:process(dtSim)",
+  "module": "Small scheduler: lets you schedule the execution of a function in X seconds, like `schedule()`. You create an event list with require('timeEvents').create(), add events to it, and call process(dt) on every update.",
+  "usage": "local events = require('timeEvents').create()\nevents:addEvent(5, function() print('hello world!') end) -- in 5 s\n-- in the update loop:\nevents:process(dtSim)",
   "notes": [
-    "La page extraite montre addEvent(fn) et process() sans argument, mais le code est addEvent(time, fn) et process(dt).",
-    "process(dt) retranche dt au temps de chaque événement, parcourus du dernier ajouté au premier, et exécute puis supprime celui dont le temps devient STRICTEMENT inférieur à 0 (pas d'ordre garanti entre événements échus simultanément : ordre inverse d'ajout).",
-    "Une erreur dans une fonction planifiée interrompt process (pas de pcall) et l'événement reste dans la liste.",
-    "L'objet renvoyé par create() est lui-même le tableau des événements ({fn=, time=}) avec la metatable mt."
+    "The extracted page shows addEvent(fn) and process() without arguments, but the code is addEvent(time, fn) and process(dt).",
+    "process(dt) subtracts dt from the time of each event, traversed from the last added to the first, and runs then removes the one whose time becomes STRICTLY below 0 (no guaranteed order between simultaneously expired events: reverse order of addition).",
+    "An error in a scheduled function interrupts process (no pcall) and the event stays in the list.",
+    "The object returned by create() is itself the events array ({fn=, time=}) with the metatable mt."
   ],
   "fields": {},
   "functions": {
     "create": {
-      "desc": "Crée et renvoie une nouvelle liste d'événements temporels vide.",
+      "desc": "Creates and returns a new empty list of timed events.",
       "params": {},
-      "returns": [{"type": "table", "desc": "objet avec méthodes addEvent, clear, process"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "object with methods addEvent, clear, process"
+        }
+      ],
       "internal": false
     }
   },
   "classes": {
     "mt": {
-      "desc": "Objet renvoyé par create(). Les événements sont stockés comme éléments du tableau.",
+      "desc": "Object returned by create(). Events are stored as elements of the array.",
       "functions": {
-        "addEvent": {"desc": "Programme fn dans `time` secondes.", "params": {"time": {"type": "number", "desc": "délai en secondes"}, "fn": {"type": "function", "desc": "fonction sans argument à exécuter"}}, "returns": []},
-        "clear": {"desc": "Supprime tous les événements en attente.", "params": {}, "returns": []},
-        "process": {"desc": "À appeler à chaque mise à jour : fait avancer les délais de dt et exécute les événements arrivés à échéance.", "params": {"dt": {"type": "number", "desc": "temps écoulé en secondes"}}, "returns": []}
+        "addEvent": {
+          "desc": "Schedules fn in `time` seconds.",
+          "params": {
+            "time": {
+              "type": "number",
+              "desc": "delay in seconds"
+            },
+            "fn": {
+              "type": "function",
+              "desc": "function with no argument to run"
+            }
+          },
+          "returns": []
+        },
+        "clear": {
+          "desc": "Removes all pending events.",
+          "params": {},
+          "returns": []
+        },
+        "process": {
+          "desc": "To be called on every update: advances the delays by dt and runs the events that have expired.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "elapsed time in seconds"
+            }
+          },
+          "returns": []
+        }
       }
     }
   }

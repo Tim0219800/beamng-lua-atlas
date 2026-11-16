@@ -2,772 +2,772 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Instance du gestionnaire de boucle. Champs principaux : missionId, missionDir, mission, missionName, fgVariables, missionSequence (liste d'ids), currentMissionIndex (0 = pas démarré), schedule (une entrée par mission de la séquence), events (liste linéaire des évènements), nextEventIndex, clock, clockPaused, environmentStartTimeSecs, rallyStartTimeSecs, scheduleParams, skipParams, eventLog (RallyEventLog), streamData/rallyClockData/scheduleData/timecardData/uiColors (tables réutilisées sur place), roadSectionPenaltyKeeper, speedingDetector, totalSSCount, totalSSDistanceKm, totalRoadSectionDistanceKm, totalDistanceKm.
+--- Loop manager instance. Main fields: missionId, missionDir, mission, missionName, fgVariables, missionSequence (list of ids), currentMissionIndex (0 = not started), schedule (one entry per mission of the sequence), events (linear list of events), nextEventIndex, clock, clockPaused, environmentStartTimeSecs, rallyStartTimeSecs, scheduleParams, skipParams, eventLog (RallyEventLog), streamData/rallyClockData/scheduleData/timecardData/uiColors (tables reused in place), roadSectionPenaltyKeeper, speedingDetector, totalSSCount, totalSSDistanceKm, totalRoadSectionDistanceKm, totalDistanceKm.
 ---@class gameplay_rally_loop_rallyLoopManager
 local gameplay_rally_loop_rallyLoopManager = {}
 
---- Ajoute l'entrée serviceIn (position du stall serviceStallPos, sans heure ni TC).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1414
+--- Adds the serviceIn entry (position of the serviceStallPos stall, with no time or TC).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1414
 function gameplay_rally_loop_rallyLoopManager:_addServiceInToSchedule() end
 
---- Ajoute l'entrée serviceOut au schedule (TC0, ou TC{n-1}B si on continue un rallye) et renvoie son étiquette.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1385
----@param currentScheduleTimeSecs number Heure courante.
----@param startingSSNumber integer Numéro de la première spéciale.
----@return string  Étiquette TC.
+--- Adds the serviceOut entry to the schedule (TC0, or TC{n-1}B if continuing a rally) and returns its label.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1385
+---@param currentScheduleTimeSecs number Current time.
+---@param startingSSNumber integer Number of the first stage.
+---@return string  TC label.
 function gameplay_rally_loop_rallyLoopManager:_addServiceOutToSchedule(currentScheduleTimeSecs, startingSSNumber) end
 
---- Ajoute un problème de validation (blocking = true par défaut) et marque l'horaire invalide (scheduleValid = false).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:377
+--- Adds a validation problem (blocking = true by default) and marks the schedule invalid (scheduleValid = false).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:377
 ---@param issue table {type, missionId, missionType, label, message, hint, blocking}.
 function gameplay_rally_loop_rallyLoopManager:_addValidationIssue(issue) end
 
---- Construit la liste events : un TC pour serviceOut, un 'service_in', et pour chaque spéciale 'ss_start' + 'ss_stop', pour chaque liaison un 'tc' (TC_out). Place nextEventIndex sur le premier évènement avec heure.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1721
+--- Builds the events list: a TC for serviceOut, a 'service_in', and for each stage 'ss_start' + 'ss_stop', for each road section a 'tc' (TC_out). Sets nextEventIndex to the first event with a time.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1721
 function gameplay_rally_loop_rallyLoopManager:_buildEventsFromSchedule() end
 
---- Détermine les étiquettes TC_in et TC_out d'une liaison : TC_in reprend le dernier TC pour la première liaison ou la liaison de retour ; TC_out = 'TC'..nextSSNumber, ou 'TC'..(nextSSNumber-1)..'A' pour la liaison de retour.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1350
----@param roadSectionCount integer Rang de la liaison.
----@param nextSSNumber integer Prochain numéro de spéciale.
----@param isServiceInRoadSection boolean true pour la liaison de retour.
----@param lastTCLabel string|nil Dernier TC attribué.
----@param tcInPos vec3|nil Position TC_in.
----@param tcOutPos vec3|nil Position TC_out.
+--- Determines the TC_in and TC_out labels of a road section: TC_in reuses the last TC for the first road section or the return road section; TC_out = 'TC'..nextSSNumber, or 'TC'..(nextSSNumber-1)..'A' for the return road section.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1350
+---@param roadSectionCount integer Rank of the road section.
+---@param nextSSNumber integer Next stage number.
+---@param isServiceInRoadSection boolean true for the return road section.
+---@param lastTCLabel string|nil Last TC assigned.
+---@param tcInPos vec3|nil TC_in position.
+---@param tcOutPos vec3|nil TC_out position.
 ---@return string|nil  tcInLabel.
 ---@return string|nil  tcOutLabel.
----@return string|nil  Dernier TC mis à jour.
+---@return string|nil  Last TC updated.
 function gameplay_rally_loop_rallyLoopManager:_calculateRoadSectionLabels(roadSectionCount, nextSSNumber, isServiceInRoadSection, lastTCLabel, tcInPos, tcOutPos) end
 
---- Calcule les heures d'une liaison : TC_in = heure courante, TC_out = minute supérieure de (heure courante + temps alloué).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1295
----@param tcInPos vec3|nil Position TC_in.
----@param tcOutPos vec3|nil Position TC_out.
----@param currentScheduleTimeSecs number Heure courante de l'horaire.
----@param timeAllocationSecs number|nil Temps alloué en secondes.
+--- Computes the times of a road section: TC_in = current time, TC_out = next minute of (current time + allocated time).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1295
+---@param tcInPos vec3|nil TC_in position.
+---@param tcOutPos vec3|nil TC_out position.
+---@param currentScheduleTimeSecs number Current schedule time.
+---@param timeAllocationSecs number|nil Allocated time in seconds.
 ---@return number|nil  tcInTime.
 ---@return number|nil  tcOutTime.
----@return number|nil  Durée de la section.
----@return number  Heure courante mise à jour.
+---@return number|nil  Section duration.
+---@return number  Updated current time.
 function gameplay_rally_loop_rallyLoopManager:_calculateRoadSectionTimes(tcInPos, tcOutPos, currentScheduleTimeSecs, timeAllocationSecs) end
 
---- Calcule les heures d'une spéciale : ligne de départ = minute supérieure de (heure courante + 60 s), arrêt = minute supérieure de (départ + temps alloué).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1321
----@param ssStartLinePos vec3|nil Position de la ligne de départ.
----@param ssStopControlPos vec3|nil Position du contrôle d'arrêt.
----@param currentScheduleTimeSecs number Heure courante.
----@param timeAllocationSecs number|nil Temps alloué.
----@return number|nil  Heure de la ligne de départ.
----@return number|nil  Heure du contrôle d'arrêt.
----@return number|nil  Durée de transition.
----@return number|nil  Durée de la section.
----@return number  Heure courante mise à jour.
+--- Computes the times of a stage: start line = next minute of (current time + 60 s), stop = next minute of (start + allocated time).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1321
+---@param ssStartLinePos vec3|nil Start line position.
+---@param ssStopControlPos vec3|nil Stop control position.
+---@param currentScheduleTimeSecs number Current time.
+---@param timeAllocationSecs number|nil Allocated time.
+---@return number|nil  Start line time.
+---@return number|nil  Stop control time.
+---@return number|nil  Transition duration.
+---@return number|nil  Section duration.
+---@return number  Updated current time.
 function gameplay_rally_loop_rallyLoopManager:_calculateStageTimes(ssStartLinePos, ssStopControlPos, currentScheduleTimeSecs, timeAllocationSecs) end
 
---- Cherche vers l'avant, à partir de nextEventIndex, le prochain évènement 'ss_start'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1038
----@return table|nil  Évènement.
+--- Searches forward, from nextEventIndex, for the next 'ss_start' event.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1038
+---@return table|nil  Event.
 ---@return integer|nil  Index.
 function gameplay_rally_loop_rallyLoopManager:_findNextSSStartEvent() end
 
---- Cherche vers l'avant le prochain évènement 'tc'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1071
----@return table|nil  Évènement.
+--- Searches forward for the next 'tc' event.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1071
+---@return table|nil  Event.
 ---@return integer|nil  Index.
 function gameplay_rally_loop_rallyLoopManager:_findNextTCEvent() end
 
---- Cherche vers l'arrière le 'ss_start' de la spéciale en cours.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1054
----@return table|nil  Évènement.
+--- Searches backward for the 'ss_start' of the current stage.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1054
+---@return table|nil  Event.
 ---@return integer|nil  Index.
 function gameplay_rally_loop_rallyLoopManager:_findPreviousSSStartEvent() end
 
---- Cherche vers l'arrière le dernier évènement 'tc'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1087
----@return table|nil  Évènement.
+--- Searches backward for the last 'tc' event.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1087
+---@return table|nil  Event.
 ---@return integer|nil  Index.
 function gameplay_rally_loop_rallyLoopManager:_findPreviousTCEvent() end
 
---- Étiquette attendue pour un message de validation : 'ROAD'..(roadSectionCount+1) pour une liaison, 'SS'..nextSSNumber pour une spéciale, nil sinon.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:353
----@param missionType string|nil 'rallyRoadSection' ou 'rallyStage'.
----@param nextSSNumber integer|nil Prochain numéro de spéciale.
----@param roadSectionCount integer|nil Nombre de liaisons déjà traitées.
----@return string|nil  Étiquette.
+--- Expected label for a validation message: 'ROAD'..(roadSectionCount+1) for a road section, 'SS'..nextSSNumber for a stage, nil otherwise.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:353
+---@param missionType string|nil 'rallyRoadSection' or 'rallyStage'.
+---@param nextSSNumber integer|nil Next stage number.
+---@param roadSectionCount integer|nil Number of road sections already processed.
+---@return string|nil  Label.
 function gameplay_rally_loop_rallyLoopManager:_getExpectedScheduleLabel(missionType, nextSSNumber, roadSectionCount) end
 
---- Conseil de correction selon le message d'erreur (mot 'driveline' ou 'race') et le type de mission.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:362
----@param missionType string|nil Type de mission.
----@param errorMessage string|nil Message d'erreur du rallyManager.
----@return string|nil  Conseil ou nil.
+--- Fix hint depending on the error message (word 'driveline' or 'race') and the mission type.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:362
+---@param missionType string|nil Mission type.
+---@param errorMessage string|nil Error message from the rallyManager.
+---@return string|nil  Hint or nil.
 function gameplay_rally_loop_rallyLoopManager:_getValidationHint(missionType, errorMessage) end
 
---- Réinitialise schedule, events, validation, totaux, calcule l'heure de départ du rallye, initialise l'horloge (négative) et crée le roadSectionPenaltyKeeper et le speedingDetector.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1632
----@return table  État initial du calcul (returnRoadSectionId, startingSSNumber, nextSSNumber, roadSectionCount, lastTCLabel, rallyStartTimeSecs, currentScheduleTimeSecs).
+--- Resets schedule, events, validation, totals, computes the rally start time, initializes the (negative) clock and creates the roadSectionPenaltyKeeper and the speedingDetector.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1632
+---@return table  Initial state of the computation (returnRoadSectionId, startingSSNumber, nextSSNumber, roadSectionCount, lastTCLabel, rallyStartTimeSecs, currentScheduleTimeSecs).
 function gameplay_rally_loop_rallyLoopManager:_initScheduleCalculation() end
 
---- Définit la position de déclenchement du serviceOut (TC_in de la première liaison), construit les évènements et les données de carte de temps.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1693
+--- Sets the trigger position of serviceOut (TC_in of the first road section), builds the events and the timecard data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1693
 function gameplay_rally_loop_rallyLoopManager:_postProcessSchedule() end
 
---- Charge une mission de spéciale ou de liaison via un RallyManager temporaire (distance, temps alloué, limite de vitesse, positions TC/SS), détermine son type, calcule ses étiquettes et heures, ajoute l'entrée au schedule. En cas d'échec, ajoute un problème de validation (scheduleLoadFailed ou scheduleMissingStageStartPositions).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1434
----@param missionId string Id de la mission.
----@param currentScheduleTimeSecs number Heure courante.
----@param nextSSNumber integer Prochain numéro de spéciale.
----@param roadSectionCount integer Nombre de liaisons déjà traitées.
----@param lastTCLabel string|nil Dernier TC.
----@param serviceInRoadSectionId string|nil Id de la liaison de retour.
----@param includeDebugData boolean Garder les points de driveline.
+--- Loads a stage or road section mission via a temporary RallyManager (distance, allocated time, speed limit, TC/SS positions), determines its type, computes its labels and times, adds the entry to the schedule. On failure, adds a validation problem (scheduleLoadFailed or scheduleMissingStageStartPositions).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1434
+---@param missionId string Mission id.
+---@param currentScheduleTimeSecs number Current time.
+---@param nextSSNumber integer Next stage number.
+---@param roadSectionCount integer Number of road sections already processed.
+---@param lastTCLabel string|nil Last TC.
+---@param serviceInRoadSectionId string|nil Id of the return road section.
+---@param includeDebugData boolean Keep the driveline points.
 ---@return table  {currentScheduleTimeSecs, nextSSNumber, roadSectionCount, lastTCLabel, success, isStage}.
 function gameplay_rally_loop_rallyLoopManager:_processRegularMission(missionId, currentScheduleTimeSecs, nextSSNumber, roadSectionCount, lastTCLabel, serviceInRoadSectionId, includeDebugData) end
 
---- Modifie l'heure du prochain 'ss_start' (marque scheduledTimeWasAdjusted, incrémente rescheduleCount).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1103
----@param newTime number Nouvelle heure en epoch.
----@param onlyIfLater boolean Si true, ne change que si newTime est strictement postérieure.
----@param reason string Raison (log).
----@return table  {success, newTime, oldTime, rescheduleCount} ou {success=false, reason}.
+--- Changes the time of the next 'ss_start' (marks scheduledTimeWasAdjusted, increments rescheduleCount).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1103
+---@param newTime number New time in epoch.
+---@param onlyIfLater boolean If true, only changes if newTime is strictly later.
+---@param reason string Reason (log).
+---@return table  {success, newTime, oldTime, rescheduleCount} or {success=false, reason}.
 function gameplay_rally_loop_rallyLoopManager:_updateSSStartTime(newTime, onlyIfLater, reason) end
 
---- Active (pushActionMap) ou désactive (popActionMap) la carte d'actions 'RallyModeInteract'.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2120
----@param enabled boolean|nil true pour activer.
+--- Enables (pushActionMap) or disables (popActionMap) the 'RallyModeInteract' action map.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2120
+---@param enabled boolean|nil true to enable.
 function gameplay_rally_loop_rallyLoopManager:activateRallyModeInteractActionMap(enabled) end
 
---- Ajoute des secondes à l'horloge (avance ou recul).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:564
----@param seconds number Secondes à ajouter.
+--- Adds seconds to the clock (forward or backward).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:564
+---@param seconds number Seconds to add.
 function gameplay_rally_loop_rallyLoopManager:adjustClock(seconds) end
 
---- Passe à l'évènement suivant (nextEventIndex = #events + 1 à la fin).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:855
+--- Moves to the next event (nextEventIndex = #events + 1 at the end).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:855
 function gameplay_rally_loop_rallyLoopManager:advanceToNextEvent() end
 
---- Applique les réglages choisis sur l'écran de départ (rallyEnableFalseStarts, rallyRepairVehicleOnRecovery, rallyEnableEarlyTimeControlPenalties), met à jour isNgrcMode, les données d'horloge et les couleurs.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:296
----@param values table|nil Table clé -> booléen (ignorée si ce n'est pas une table).
+--- Applies the settings chosen on the start screen (rallyEnableFalseStarts, rallyRepairVehicleOnRecovery, rallyEnableEarlyTimeControlPenalties), updates isNgrcMode, the clock data and the colors.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:296
+---@param values table|nil Table key -> boolean (ignored if not a table).
 function gameplay_rally_loop_rallyLoopManager:applyStartScreenSettings(values) end
 
---- Applique l'exclusion de trafic de la boucle (TrafficExclusion.applyForRallyLoop).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2940
+--- Applies the loop's traffic exclusion (TrafficExclusion.applyForRallyLoop).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2940
 function gameplay_rally_loop_rallyLoopManager:applyTrafficExclusion() end
 
---- Construit missionSequence : 'serviceOut', puis liaison et spéciale de chaque stage 1 à 4 présents, la liaison de retour, puis 'serviceIn'. Remet currentMissionIndex à 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:384
+--- Builds missionSequence: 'serviceOut', then road section and stage of each stage 1 to 4 present, the return road section, then 'serviceIn'. Resets currentMissionIndex to 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:384
 function gameplay_rally_loop_rallyLoopManager:buildMissionSequence() end
 
---- Calcule rallyStartTimeSecs : heure de l'environnement arrondie à la minute supérieure plus currentTimeToRallyStartSecs (120 s).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:468
----@return number  Secondes du jour.
+--- Computes rallyStartTimeSecs: environment time rounded up to the next minute plus currentTimeToRallyStartSecs (120 s).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:468
+---@return number  Seconds of the day.
 function gameplay_rally_loop_rallyLoopManager:calculateRallyStartTime() end
 
---- Calcule tout l'horaire : initialise l'état, parcourt la séquence (serviceOut, missions réelles chargées via un RallyManager temporaire, serviceIn), puis construit les évènements et les cartes de temps. Arrête et vide events au premier échec de mission.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:601
----@param includeDebugData boolean|nil true pour garder la liste de points de driveline (dessin de debug).
----@return boolean  false si une mission n'a pas pu être traitée.
+--- Computes the whole schedule: initializes the state, walks the sequence (serviceOut, real missions loaded via a temporary RallyManager, serviceIn), then builds the events and the timecards. Stops and empties events at the first mission failure.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:601
+---@param includeDebugData boolean|nil true to keep the driveline point list (debug drawing).
+---@return boolean  false if a mission could not be processed.
 function gameplay_rally_loop_rallyLoopManager:calculateSchedule(includeDebugData) end
 
---- Replanifie la ligne de départ de spéciale d'après l'heure d'arrivée au TC : minute suivante s'il reste au moins 35 s dans la minute, sinon minute pleine après arrivée + 60 s. Ne met à jour que si la nouvelle heure est plus tardive.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1141
----@param tcArrivalTime number Heure d'arrivée en epoch.
----@return number|nil  Heure de départ résultante.
+--- Reschedules the stage start line based on the arrival time at the TC: next minute if at least 35 s remain in the minute, otherwise the full minute after arrival + 60 s. Only updates if the new time is later.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1141
+---@param tcArrivalTime number Arrival time in epoch.
+---@return number|nil  Resulting start time.
 function gameplay_rally_loop_rallyLoopManager:calculateStartLineTime(tcArrivalTime) end
 
---- Vrai si un saut de contrôle horaire ou de compte à rebours est possible.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2214
----@return boolean  État.
+--- True if a time control or countdown skip is possible.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2214
+---@return boolean  State.
 function gameplay_rally_loop_rallyLoopManager:canSkip() end
 
---- Vrai si le compte à rebours peut être sauté.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2629
----@return boolean  État.
+--- True if the countdown can be skipped.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2629
+---@return boolean  State.
 function gameplay_rally_loop_rallyLoopManager:canSkipCountdown() end
 
---- Drapeau de saut manuel possible.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2210
----@return boolean  État.
+--- Manual skip possible flag.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2210
+---@return boolean  State.
 function gameplay_rally_loop_rallyLoopManager:canSkipTimeControls() end
 
---- Supprime l'exclusion de trafic (TrafficExclusion.clearTrafficExclusion).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2949
+--- Removes the traffic exclusion (TrafficExclusion.clearTrafficExclusion).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2949
 function gameplay_rally_loop_rallyLoopManager:clearTrafficExclusion() end
 
---- Dessine en debug les épingles, positions TC/SS et éventuellement le tracé et les étiquettes de chaque mission du schedule (rouge pour les liaisons, bleu pour les spéciales, gris pour les services).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2336
----@param zOnTop boolean|nil Dessiner au premier plan.
----@param drawRoute boolean|nil Dessiner les formes (true par défaut).
----@param drawLabels boolean|nil Dessiner les textes (false par défaut).
+--- Debug-draws the pins, TC/SS positions and optionally the trace and labels of each mission of the schedule (red for road sections, blue for stages, gray for services).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2336
+---@param zOnTop boolean|nil Draw in the foreground.
+---@param drawRoute boolean|nil Draw the shapes (true by default).
+---@param drawLabels boolean|nil Draw the texts (false by default).
 function gameplay_rally_loop_rallyLoopManager:drawDebug(zOnTop, drawRoute, drawLabels) end
 
---- Convertit un temps d'epoch en secondes du jour absolues (epoch + rallyStartTimeSecs, sans modulo).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1285
+--- Converts an epoch time to absolute seconds of the day (epoch + rallyStartTimeSecs, no modulo).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1285
 ---@param epochTime number|nil Epoch.
----@return number|nil  Secondes.
+---@return number|nil  Seconds.
 function gameplay_rally_loop_rallyLoopManager:epochToWallClock(epochTime) end
 
---- Évalue si le saut d'horloge est possible : prochain évènement 'tc', vitesse < 30 km/h (hystérésis de 0.5 m/s) et distance du joueur au TC entre 5 m et 50 m. Avec les pénalités d'avance, autorise le saut manuel ; sans, saute automatiquement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2162
+--- Evaluates whether the clock skip is possible: next 'tc' event, speed < 30 km/h (0.5 m/s hysteresis) and player distance to the TC between 5 m and 50 m. With early penalties, allows the manual skip; without, skips automatically.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2162
 function gameplay_rally_loop_rallyLoopManager:evaluateSkip() end
 
---- Extrait l'id de mission d'une valeur « Nom (id) » de fgVariable. Renvoie nil pour nil ou '<none>'.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:344
----@param value string|nil Valeur du champ.
----@return string|nil  Id de mission.
+--- Extracts the mission id from a fgVariable "Name (id)" value. Returns nil for nil or '<none>'.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:344
+---@param value string|nil Field value.
+---@return string|nil  Mission id.
 function gameplay_rally_loop_rallyLoopManager:extractMissionId(value) end
 
---- Si les pénalités d'avance sont désactivées, retire les pénalités 'time_control_early' du résultat de timing et recalcule le total.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:870
----@param timingResult table|nil Résultat de Penalties.getTimingStatus.
+--- If early penalties are disabled, removes the 'time_control_early' penalties from the timing result and recomputes the total.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:870
+---@param timingResult table|nil Result of Penalties.getTimingStatus.
 ---@return table|nil  {status, totalPenalty, hasPenalty, penalties}.
 function gameplay_rally_loop_rallyLoopManager:filterTimingResultForSettings(timingResult) end
 
---- Formate une durée en M:SS (valeur absolue).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1231
----@param seconds number|nil Secondes.
----@return string|nil  Texte.
+--- Formats a duration as M:SS (absolute value).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1231
+---@param seconds number|nil Seconds.
+---@return string|nil  Text.
 function gameplay_rally_loop_rallyLoopManager:formatDuration(seconds) end
 
---- Formate un temps de spéciale arrondi au dixième : S.T, M:SS.T ou H:MM:SS.T selon la durée.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1242
----@param seconds number|nil Secondes.
----@return string|nil  Texte.
+--- Formats a stage time rounded to the tenth: S.T, M:SS.T or H:MM:SS.T depending on the duration.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1242
+---@param seconds number|nil Seconds.
+---@return string|nil  Text.
 function gameplay_rally_loop_rallyLoopManager:formatStageTime(seconds) end
 
---- Formate des secondes du jour selon le format 24 h (USE_24H_FORMAT = true) ou 12 h.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1211
----@param timeSecs number Secondes du jour.
----@param includeSeconds boolean|nil Inclure les secondes.
----@param includeTenths boolean|nil Inclure les dixièmes.
+--- Formats seconds of the day according to the 24 h format (USE_24H_FORMAT = true) or 12 h.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1211
+---@param timeSecs number Seconds of the day.
+---@param includeSeconds boolean|nil Include seconds.
+---@param includeTenths boolean|nil Include tenths.
 ---@return table  {time = 'HH:MM', ampm = 'AM'|'PM'|nil}.
 function gameplay_rally_loop_rallyLoopManager:formatTimeFromSeconds(timeSecs, includeSeconds, includeTenths) end
 
---- Comme formatTimeFromSeconds mais renvoie une chaîne (avec AM/PM si 12 h).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1221
----@param timeSecs number Secondes du jour.
----@param includeSeconds boolean|nil Inclure les secondes.
----@param includeTenths boolean|nil Inclure les dixièmes.
----@return string  Texte.
+--- Like formatTimeFromSeconds but returns a string (with AM/PM if 12 h).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1221
+---@param timeSecs number Seconds of the day.
+---@param includeSeconds boolean|nil Include seconds.
+---@param includeTenths boolean|nil Include tenths.
+---@return string  Text.
 function gameplay_rally_loop_rallyLoopManager:formatTimeFromSecondsString(timeSecs, includeSeconds, includeTenths) end
 
---- Indique si l'horloge est en pause.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:560
----@return boolean  État.
+--- Indicates whether the clock is paused.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:560
+---@return boolean  State.
 function gameplay_rally_loop_rallyLoopManager:getClockPaused() end
 
---- Id de la mission courante de la séquence.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:648
----@return string|nil  Id, nil si hors séquence.
+--- Id of the current mission of the sequence.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:648
+---@return string|nil  Id, nil if outside the sequence.
 function gameplay_rally_loop_rallyLoopManager:getCurrentMissionId() end
 
---- Chemin du race.race.json de la mission courante (nil pour serviceOut/serviceIn).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:828
----@return string|nil  Chemin.
+--- Path of the current mission's race.race.json (nil for serviceOut/serviceIn).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:828
+---@return string|nil  Path.
 function gameplay_rally_loop_rallyLoopManager:getCurrentRacePath() end
 
---- Lit un drapeau de dessin (par exemple showDebugInfo).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2525
----@param flagName string Nom du drapeau.
----@return boolean  Valeur (false par défaut).
+--- Reads a drawing flag (for example showDebugInfo).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2525
+---@param flagName string Flag name.
+---@return boolean  Value (false by default).
 function gameplay_rally_loop_rallyLoopManager:getDrawFlag(flagName) end
 
---- Pénalités de faux départ activées.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2964
----@return boolean  État.
+--- False start penalties enabled.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2964
+---@return boolean  State.
 function gameplay_rally_loop_rallyLoopManager:getEnableFalseStarts() end
 
---- Heure de l'environnement au démarrage, formatée.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2536
----@return string  Texte, ou 'N/A'.
+--- Environment time at start, formatted.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2536
+---@return string  Text, or 'N/A'.
 function gameplay_rally_loop_rallyLoopManager:getEnvironmentStartTimeFormatted() end
 
---- Temps de l'epoch du rallye (négatif avant le départ).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:543
----@return number  Secondes.
+--- Rally epoch time (negative before the start).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:543
+---@return number  Seconds.
 function gameplay_rally_loop_rallyLoopManager:getEpochTime() end
 
---- Epoch formaté avec signe, par exemple '+0:01:30'.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:549
----@return string  Texte.
+--- Epoch formatted with sign, for example '+0:01:30'.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:549
+---@return string  Text.
 function gameplay_rally_loop_rallyLoopManager:getEpochTimeFormatted() end
 
---- Journal d'évènements (RallyEventLog).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1170
----@return table  Journal.
+--- Event log (RallyEventLog).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1170
+---@return table  Log.
 function gameplay_rally_loop_rallyLoopManager:getEventLog() end
 
---- Liste linéaire des évènements.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:820
----@return table[]|nil  Évènements.
+--- Linear list of events.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:820
+---@return table[]|nil  Events.
 function gameplay_rally_loop_rallyLoopManager:getEvents() end
 
---- Drapeau indiquant que l'exécution est transférée à une autre mission.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2517
----@return boolean  État.
+--- Flag indicating that execution is being transferred to another mission.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2517
+---@return boolean  State.
 function gameplay_rally_loop_rallyLoopManager:getMissionExecutionTransferFlag() end
 
---- Index (1-based) du prochain évènement à valider.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:824
+--- 1-based index of the next event to validate.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:824
 ---@return integer  Index.
 function gameplay_rally_loop_rallyLoopManager:getNextEventIndex() end
 
---- Passe à la mission suivante de la séquence et renvoie son id. Incrémente toujours l'index, même au-delà de la fin.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:710
----@return string|nil  Id, nil si séquence vide ou terminée.
+--- Moves to the next mission of the sequence and returns its id. Always increments the index, even past the end.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:710
+---@return string|nil  Id, nil if the sequence is empty or finished.
 function gameplay_rally_loop_rallyLoopManager:getNextMissionId() end
 
---- Objet mission de la boucle.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:701
+--- Mission object of the loop.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:701
 ---@return table|nil  Mission.
 function gameplay_rally_loop_rallyLoopManager:getRallyLoopMission() end
 
---- Id de la mission rallyLoop.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:693
+--- Id of the rallyLoop mission.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:693
 ---@return string  Id.
 function gameplay_rally_loop_rallyLoopManager:getRallyLoopMissionId() end
 
---- Nom (non traduit) de la mission rallyLoop.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:697
----@return string|nil  Nom.
+--- Name (untranslated) of the rallyLoop mission.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:697
+---@return string|nil  Name.
 function gameplay_rally_loop_rallyLoopManager:getRallyLoopName() end
 
---- RallyManager de gameplay_rally (mis en cache) ; nil si l'extension gameplay_rally n'est pas chargée.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2081
+--- gameplay_rally RallyManager (cached); nil if the gameplay_rally extension is not loaded.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2081
 ---@return table|nil  RallyManager.
 function gameplay_rally_loop_rallyLoopManager:getRallyManager() end
 
---- Durée prévue avant le départ (scheduleParams.currentTimeToRallyStartSecs).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:506
----@return number  Secondes.
+--- Planned duration before the start (scheduleParams.currentTimeToRallyStartSecs).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:506
+---@return number  Seconds.
 function gameplay_rally_loop_rallyLoopManager:getRallyPreStartAllocatedDurationSecs() end
 
---- Durée entre l'heure de l'environnement et le départ du rallye.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:498
----@return number|nil  Secondes.
+--- Duration between the environment time and the rally start.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:498
+---@return number|nil  Seconds.
 function gameplay_rally_loop_rallyLoopManager:getRallyStartDurationSecs() end
 
---- Heure de départ formatée (HH:MM).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:494
----@return string  Texte.
+--- Formatted start time (HH:MM).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:494
+---@return string  Text.
 function gameplay_rally_loop_rallyLoopManager:getRallyStartTimeFormatted() end
 
---- Heure de départ du rallye en secondes du jour.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:490
----@return number|nil  Secondes.
+--- Rally start time in seconds of the day.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:490
+---@return number|nil  Seconds.
 function gameplay_rally_loop_rallyLoopManager:getRallyStartTimeSecs() end
 
---- Indique si le véhicule est réparé lors d'une récupération : toujours si rallyRepairVehicleOnRecovery, sinon seulement hors spéciale (mode hardcore/NGRC : pas de réparation en spéciale).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:315
----@return boolean  true si réparation.
+--- Indicates whether the vehicle is repaired on recovery: always if rallyRepairVehicleOnRecovery, otherwise only outside a stage (hardcore/NGRC mode: no repair during a stage).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:315
+---@return boolean  true if repair.
 function gameplay_rally_loop_rallyLoopManager:getRecoveryRepairVehicle() end
 
---- Nombre de replanifications du prochain 'ss_start'.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2654
----@return integer  Compteur.
+--- Number of reschedulings of the next 'ss_start'.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2654
+---@return integer  Counter.
 function gameplay_rally_loop_rallyLoopManager:getSSRescheduleCount() end
 
---- Table schedule (une entrée par mission de la séquence : tcIn/tcOut/ssStartLine/ssStopControl avec pos, rot, nom, étiquette, heure, speedLimitKph, distanceKm…).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:780
+--- Schedule table (one entry per mission of the sequence: tcIn/tcOut/ssStartLine/ssStopControl with pos, rot, name, label, time, speedLimitKph, distanceKm...).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:780
 ---@return table|nil  Schedule.
 function gameplay_rally_loop_rallyLoopManager:getSchedule() end
 
---- Cherche dans events l'heure planifiée de l'évènement dont spName vaut eventName pour la mission courante.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:568
----@param eventName string Nom de la start position (spName).
----@return number|nil  Heure en epoch, nil si introuvable.
+--- Looks in events for the scheduled time of the event whose spName equals eventName for the current mission.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:568
+---@param eventName string Name of the start position (spName).
+---@return number|nil  Time in epoch, nil if not found.
 function gameplay_rally_loop_rallyLoopManager:getScheduledEventTime(eventName) end
 
---- Position {x,y,z} du déclencheur serviceOut (TC_in de la première liaison).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2819
+--- Position {x,y,z} of the serviceOut trigger (TC_in of the first road section).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2819
 ---@return number[]|nil  Position.
 function gameplay_rally_loop_rallyLoopManager:getServiceOutTCPos() end
 
---- Rotation {x,y,z,w} du déclencheur serviceOut.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2833
+--- Rotation {x,y,z,w} of the serviceOut trigger.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2833
 ---@return number[]|nil  Quaternion.
 function gameplay_rally_loop_rallyLoopManager:getServiceOutTCRot() end
 
---- Même limite formatée pour l'affichage, en km/h ou mph arrondi à 5 selon le réglage uiUnitLength.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:72
----@return string  Par exemple '30 km/h'.
+--- Same limit formatted for display, in km/h or mph rounded to 5 depending on the uiUnitLength setting.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:72
+---@return string  For example '30 km/h'.
 function gameplay_rally_loop_rallyLoopManager:getServiceParkSpeedLimitDisplay() end
 
---- Limite de vitesse dans le parc d'assistance (30 km/h).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:68
+--- Speed limit in the service park (30 km/h).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:68
 ---@return number  km/h.
 function gameplay_rally_loop_rallyLoopManager:getServiceParkSpeedLimitKph() end
 
---- Réglage rallyShowStageApps (true par défaut).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:333
----@return boolean  true si les apps de spéciale sont affichées.
+--- rallyShowStageApps setting (true by default).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:333
+---@return boolean  true if the stage apps are shown.
 function gameplay_rally_loop_rallyLoopManager:getShowStageApps() end
 
---- Taille du créneau de replanification du départ de spéciale (1 minute).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:510
+--- Size of the stage start rescheduling slot (1 minute).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:510
 ---@return number  Minutes.
 function gameplay_rally_loop_rallyLoopManager:getSlotSizeMinutes() end
 
---- Liste des étiquettes de spéciales ('SS1', 'SS2'…).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:798
----@return string[]  Étiquettes.
+--- List of stage labels ('SS1', 'SS2'...).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:798
+---@return string[]  Labels.
 function gameplay_rally_loop_rallyLoopManager:getStageLabels() end
 
---- Met à jour sur place et renvoie la table de flux envoyée à l'UI : activeState (testActiveState en mode test), rallyClock, stageData (seulement en spéciale, avec label et unité km), vehicleProximity, countdownData, scheduleData, timecardData, penaltyData (résumé des pénalités), showStageApps, missionName traduit, uiColors.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2577
----@return table  Données de flux.
+--- Updates in place and returns the stream table sent to the UI: activeState (testActiveState in test mode), rallyClock, stageData (only during a stage, with label and km unit), vehicleProximity, countdownData, scheduleData, timecardData, penaltyData (penalty summary), showStageApps, translated missionName, uiColors.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2577
+---@return table  Stream data.
 function gameplay_rally_loop_rallyLoopManager:getStreamData() end
 
---- Mode test actif.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2960
----@return boolean  État.
+--- Test mode active.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2960
+---@return boolean  State.
 function gameplay_rally_loop_rallyLoopManager:getTestMode() end
 
---- Heure du jour de l'environnement ; en repli {time = 0.92} (heure de départ par défaut pour l'Italie) si core_environment ne renvoie rien.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1194
----@return table|nil  Table tod.
+--- Environment time of day; falls back to {time = 0.92} (default start time for Italy) if core_environment returns nothing.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1194
+---@return table|nil  tod table.
 function gameplay_rally_loop_rallyLoopManager:getTimeOfDay() end
 
---- Heure du jour de l'environnement formatée (avec secondes).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1268
----@return string  Texte, ou 'N/A'.
+--- Environment time of day, formatted (with seconds).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1268
+---@return string  Text, or 'N/A'.
 function gameplay_rally_loop_rallyLoopManager:getTimeOfDayFormatted() end
 
---- Distance totale en km.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1182
+--- Total distance in km.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1182
 ---@return number  km.
 function gameplay_rally_loop_rallyLoopManager:getTotalDistanceKm() end
 
---- Pénalités totales du journal.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1190
----@return number  Secondes.
+--- Total penalties of the log.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1190
+---@return number  Seconds.
 function gameplay_rally_loop_rallyLoopManager:getTotalPenalty() end
 
---- Distance totale des liaisons en km.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1178
+--- Total road section distance in km.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1178
 ---@return number  km.
 function gameplay_rally_loop_rallyLoopManager:getTotalRoadSectionDistanceKm() end
 
---- Distance totale des spéciales en km.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1174
+--- Total stage distance in km.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1174
 ---@return number  km.
 function gameplay_rally_loop_rallyLoopManager:getTotalSSDistanceKm() end
 
---- Temps total (spéciales + pénalités) du journal.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1186
----@return number  Secondes.
+--- Total time (stages + penalties) of the log.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1186
+---@return number  Seconds.
 function gameplay_rally_loop_rallyLoopManager:getTotalTime() end
 
---- Trafic activé pour la boucle (faux pour une mission de dev qui le désactive).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:325
----@return boolean  true si activé.
+--- Traffic enabled for the loop (false for a dev mission that disables it).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:325
+---@return boolean  true if enabled.
 function gameplay_rally_loop_rallyLoopManager:getTrafficEnabled() end
 
---- Format 24 h (constante USE_24H_FORMAT = true).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2088
+--- 24 h format (constant USE_24H_FORMAT = true).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2088
 ---@return boolean  true.
 function gameplay_rally_loop_rallyLoopManager:getUse24hFormat() end
 
---- Liste des problèmes de validation.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:812
----@return table[]  Problèmes.
+--- List of validation problems.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:812
+---@return table[]  Problems.
 function gameplay_rally_loop_rallyLoopManager:getValidationIssues() end
 
---- Résout le voicepack à utiliser via voicepack.resolveLoopVoicepackPick selon le réglage rallyVoicepackPick.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:705
----@param missionId string Id de la mission.
----@param missionDir string Dossier de la mission.
----@return any  Choix de voicepack (déduit du code : valeur renvoyée par voicepack.resolveLoopVoicepackPick).
+--- Resolves the voicepack to use via voicepack.resolveLoopVoicepackPick according to the rallyVoicepackPick setting.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:705
+---@param missionId string Mission id.
+---@param missionDir string Mission folder.
+---@return any  Voicepack choice (inferred from code: value returned by voicepack.resolveLoopVoicepackPick).
 function gameplay_rally_loop_rallyLoopManager:getVoicepackPickForMission(missionId, missionDir) end
 
---- Numéro de jour (1, 2…) de l'horloge murale.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:523
----@return integer|nil  Jour.
+--- Day number (1, 2...) of the wall clock.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:523
+---@return integer|nil  Day.
 function gameplay_rally_loop_rallyLoopManager:getWallClockDay() end
 
---- Heure murale avec secondes et dixièmes, suivie de « , Day N ».
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:532
----@return string  Texte, ou 'N/A'.
+--- Wall-clock time with seconds and tenths, followed by ", Day N".
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:532
+---@return string  Text, or 'N/A'.
 function gameplay_rally_loop_rallyLoopManager:getWallClockTimeFormatted() end
 
---- Heure murale courante = (rallyStartTimeSecs + clock) % 86400.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:514
----@return number|nil  Secondes du jour, nil si l'horaire n'est pas calculé.
+--- Current wall-clock time = (rallyStartTimeSecs + clock) % 86400.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:514
+---@return number|nil  Seconds of the day, nil if the schedule is not computed.
 function gameplay_rally_loop_rallyLoopManager:getWallClockTimeSecs() end
 
---- Heure murale avec secondes sous forme de table {time, ampm}.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2092
+--- Wall-clock time with seconds as a {time, ampm} table.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2092
 ---@return table|nil  Table.
 function gameplay_rally_loop_rallyLoopManager:getWallClockTimeTable() end
 
---- Identique à restartRallyLoop : redémarre instantanément la mission rallyLoop.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:769
+--- Same as restartRallyLoop: instantly restarts the rallyLoop mission.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:769
 function gameplay_rally_loop_rallyLoopManager:gotoRallyLoopInstant() end
 
---- Vrai s'il y a au moins un problème de validation.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:816
----@return boolean  État.
+--- True if there is at least one validation problem.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:816
+---@return boolean  State.
 function gameplay_rally_loop_rallyLoopManager:hasValidationIssues() end
 
---- Initialise l'état de la boucle : tables d'UI, heure de départ de l'environnement, horloge en pause, paramètres d'horaire (départ rallye 120 s après la minute pleine, 60 s de TC à la ligne de départ, créneau de 1 min) et de saut. Si la mission fournit des fgVariables, construit la séquence et calcule l'horaire (calculateSchedule(true)), puis lit les réglages.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:77
----@param missionId string Id de la mission rallyLoop.
----@param missionDir string Dossier de la mission.
+--- Initializes the loop state: UI tables, environment start time, paused clock, schedule parameters (rally start 120 s after the full minute, 60 s of TC at the start line, 1 min slot) and skip parameters. If the mission provides fgVariables, builds the sequence and computes the schedule (calculateSchedule(true)), then reads the settings.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:77
+---@param missionId string Id of the rallyLoop mission.
+---@param missionDir string Mission folder.
 function gameplay_rally_loop_rallyLoopManager:init(missionId, missionDir) end
 
---- Fige les réglages de la boucle : enableFalseStarts, repairVehicleOnRecovery, earlyTimeControlPenaltiesEnabled, trafficEnabled, showStageApps et isNgrcMode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:286
+--- Freezes the loop settings: enableFalseStarts, repairVehicleOnRecovery, earlyTimeControlPenaltiesEnabled, trafficEnabled, showStageApps and isNgrcMode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:286
 function gameplay_rally_loop_rallyLoopManager:initSettings() end
 
---- Construit une fois la structure timecardData (une entrée par TC, plus une entrée de temps par spéciale), avec groupes 'group-N'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1842
+--- Builds the timecardData structure once (one entry per TC, plus one time entry per stage), with 'group-N' groups.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1842
 function gameplay_rally_loop_rallyLoopManager:initTimecardData() end
 
---- Vrai pour une mission de dev dont missionTypeData.devDisableTraffic est vrai.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:279
----@return boolean  true si le trafic est désactivé par la mission de dev.
+--- True for a dev mission whose missionTypeData.devDisableTraffic is true.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:279
+---@return boolean  true if traffic is disabled by the dev mission.
 function gameplay_rally_loop_rallyLoopManager:isDevTrafficDisabled() end
 
---- Vrai si l'entrée courante du schedule est une liaison (roadSectionLabel défini).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:655
----@return boolean  État.
+--- True if the current schedule entry is a road section (roadSectionLabel defined).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:655
+---@return boolean  State.
 function gameplay_rally_loop_rallyLoopManager:isInRoadSection() end
 
---- Vrai si l'entrée courante est une spéciale chronométrée (ssLabel défini).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:671
----@return boolean  État.
+--- True if the current entry is a timed stage (ssLabel defined).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:671
+---@return boolean  State.
 function gameplay_rally_loop_rallyLoopManager:isInSpecialStage() end
 
---- Vrai tant qu'aucun problème bloquant n'a été trouvé.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:808
----@return boolean  État.
+--- True as long as no blocking problem has been found.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:808
+---@return boolean  State.
 function gameplay_rally_loop_rallyLoopManager:isScheduleValid() end
 
---- Drapeau de saut disponible.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2206
----@return boolean  État.
+--- Skip available flag.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2206
+---@return boolean  State.
 function gameplay_rally_loop_rallyLoopManager:isTimeControlSkipAvailable() end
 
---- Hook appelé à la création de la route de marqueurs au sol : remet à zéro le roadSectionPenaltyKeeper.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2872
+--- Hook called when the ground markers route is created: resets the roadSectionPenaltyKeeper.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2872
 function gameplay_rally_loop_rallyLoopManager:onCreatedRallyGroundMarkerRoute() end
 
---- Appelé par la boucle GUI ; ne fait rien (instrumentation du profileur seulement).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2155
----@param dtReal number Temps réel.
----@param dtSim number Temps de simulation.
----@param dtRaw number Temps brut.
+--- Called by the GUI loop; does nothing (profiler instrumentation only).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2155
+---@param dtReal number Real time.
+---@param dtSim number Simulation time.
+---@param dtRaw number Raw time.
 function gameplay_rally_loop_rallyLoopManager:onGuiUpdate(dtReal, dtSim, dtRaw) end
 
---- Reçoit les données du rallyManager ou des nœuds (activeState, vehicleProximity avec distances arrondies au centimètre, countdownData) et les mémorise pour le flux UI.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2543
----@param data table|nil Paquet de données.
+--- Receives data from the rallyManager or the nodes (activeState, vehicleProximity with distances rounded to the centimeter, countdownData) and stores it for the UI stream.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2543
+---@param data table|nil Data packet.
 function gameplay_rally_loop_rallyLoopManager:onRallyDataUpdated(data) end
 
---- Hook de l'action d'interaction : saute au prochain évènement si possible, sinon déclenche l'évènement UI RallyGameplayInteract.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2328
+--- Hook of the interact action: skips to the next event if possible, otherwise triggers the UI event RallyGameplayInteract.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2328
 function gameplay_rally_loop_rallyLoopManager:onRallyModeInteract() end
 
---- Hook de fin de récupération de route : mémorise data dans lastRouteRecoveryData et log.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2925
+--- Hook at the end of a route recovery: stores data in lastRouteRecoveryData and logs.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2925
 ---@param data table|nil {vehId, repairVehicle}.
 function gameplay_rally_loop_rallyLoopManager:onRallyRouteRecoveryComplete(data) end
 
---- Hook de recalcul d'itinéraire ; actuellement sans effet (code commenté).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2861
----@param source any Source du recalcul.
+--- Route recalculation hook; currently has no effect (code commented out).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2861
+---@param source any Source of the recalculation.
 function gameplay_rally_loop_rallyLoopManager:onRecalculatedRoute(source) end
 
---- Hook appelé quand les réglages changent : relit rallyShowStageApps.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:340
+--- Hook called when settings change: rereads rallyShowStageApps.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:340
 function gameplay_rally_loop_rallyLoopManager:onSettingsChanged() end
 
---- Appelé quand le joueur clique sur Démarrer : applique les réglages de l'écran de départ, relance l'horloge, active le bouton restartMission de core_recoveryPrompt et dégèle le véhicule.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2847
+--- Called when the player clicks Start: applies the start screen settings, resumes the clock, enables the restartMission button of core_recoveryPrompt and unfreezes the vehicle.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2847
 function gameplay_rally_loop_rallyLoopManager:onUIStartButtonClicked() end
 
---- Appelé à chaque frame : avance l'horloge de dtSim si elle n'est pas en pause, évalue le saut, active la carte d'actions si le saut est possible, met à jour le roadSectionPenaltyKeeper et le speedingDetector (hors spéciale, avec limite ; mode strict pour serviceIn et serviceOut).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2129
----@param dtReal number Temps réel.
----@param dtSim number Temps de simulation.
----@param dtRaw number Temps brut.
+--- Called every frame: advances the clock by dtSim if it is not paused, evaluates the skip, enables the action map if skipping is possible, updates the roadSectionPenaltyKeeper and the speedingDetector (outside a stage, with a limit; strict mode for serviceIn and serviceOut).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2129
+---@param dtReal number Real time.
+---@param dtSim number Simulation time.
+---@param dtRaw number Raw time.
 function gameplay_rally_loop_rallyLoopManager:onUpdate(dtReal, dtSim, dtRaw) end
 
---- Enregistre une pénalité de faux départ pour la prochaine spéciale : compte les faux départs déjà journalisés pour l'évènement et utilise Penalties.calculateFalseStartPenalty(n).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2664
----@return boolean  false s'il n'y a pas de ss_start à venir.
+--- Records a false start penalty for the next stage: counts the false starts already logged for the event and uses Penalties.calculateFalseStartPenalty(n).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2664
+---@return boolean  false if there is no upcoming ss_start.
 function gameplay_rally_loop_rallyLoopManager:recordFalseStartPenalty() end
 
---- Enregistre une pénalité de recalcul d'itinéraire (penaltyType 'route_recalc') sur le prochain TC et affiche un message « Route penalty recorded ».
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2707
----@param penaltyData table {amount, data = {violationNumber, recalcCount}} (produit par roadSectionPenaltyKeeper).
----@return boolean  false s'il n'y a pas de TC à venir.
+--- Records a route recalculation penalty (penaltyType 'route_recalc') on the next TC and shows a "Route penalty recorded" message.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2707
+---@param penaltyData table {amount, data = {violationNumber, recalcCount}} (produced by roadSectionPenaltyKeeper).
+---@return boolean  false if there is no upcoming TC.
 function gameplay_rally_loop_rallyLoopManager:recordRouteRecalcPenalty(penaltyData) end
 
---- Enregistre une pénalité d'excès de vitesse fixe de 10 s sur le prochain évènement 'tc' ou 'service_in'.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2733
----@param speedingData table {speedOver, speedLimit, strictMode, …} produit par speedingDetector.
----@return boolean  false s'il n'y a pas d'évènement éligible.
+--- Records a fixed 10 s speeding penalty on the next 'tc' or 'service_in' event.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2733
+---@param speedingData table {speedOver, speedLimit, strictMode, ...} produced by speedingDetector.
+---@return boolean  false if there is no eligible event.
 function gameplay_rally_loop_rallyLoopManager:recordSpeedingPenalty(speedingData) end
 
---- Outil de test : enregistre une pénalité 'test_penalty' (10 s par défaut) sur l'évènement courant et affiche un message.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2783
----@param amount number|nil Secondes (entier > 0).
----@return boolean  false si montant <= 0 ou aucun évènement.
+--- Test tool: records a 'test_penalty' penalty (10 s by default) on the current event and shows a message.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2783
+---@param amount number|nil Seconds (integer > 0).
+---@return boolean  false if amount <= 0 or no event.
 function gameplay_rally_loop_rallyLoopManager:recordTestPenalty(amount) end
 
---- Enregistre le passage à l'évènement courant. Vérifie que l'évènement appartient à la mission courante et que entryName == spName. Calcule l'écart horaire, journalise les pénalités horaires puis un item 'timecard' (actualTime, timeDiff, timingResult, stageTimeSecs, splits pour ss_stop), force l'affichage de la carte de temps, replanifie la ligne de départ si on arrive à un TC trop près, met à jour la carte puis avance.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:893
----@param entryName string Nom de la start position franchie.
----@param stageTimeSecs number|nil Temps de la spéciale (pour ss_stop).
----@return boolean  false si l'enregistrement est refusé.
+--- Records the passage at the current event. Checks that the event belongs to the current mission and that entryName == spName. Computes the time difference, logs the time penalties then a 'timecard' item (actualTime, timeDiff, timingResult, stageTimeSecs, splits for ss_stop), forces the timecard to be shown, reschedules the start line if arriving at a TC too close, updates the timecard then advances.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:893
+---@param entryName string Name of the start position crossed.
+---@param stageTimeSecs number|nil Stage time (for ss_stop).
+---@return boolean  false if the recording is refused.
 function gameplay_rally_loop_rallyLoopManager:recordTimeCardEntry(entryName, stageTimeSecs) end
 
---- Repousse le prochain 'ss_start' au créneau suivant (slotSizeMinutes, arrondi à la minute) quand le véhicule n'est pas en position à -10 s. Replanifie toujours.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2633
----@return table  Résultat de _updateSSStartTime.
+--- Pushes the next 'ss_start' to the next slot (slotSizeMinutes, rounded to the minute) when the vehicle is not in position at -10 s. Always reschedules.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2633
+---@return table  Result of _updateSSStartTime.
 function gameplay_rally_loop_rallyLoopManager:rescheduleNextSSStart() end
 
---- Lit un réglage booléen global (settings.getValue) ou la valeur par défaut.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:268
----@param key string Nom du réglage.
----@param defaultValue boolean Valeur de repli.
----@return boolean  Valeur résolue.
+--- Reads a global boolean setting (settings.getValue) or the default value.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:268
+---@param key string Setting name.
+---@param defaultValue boolean Fallback value.
+---@return boolean  Resolved value.
 function gameplay_rally_loop_rallyLoopManager:resolveGlobalBoolSetting(key, defaultValue) end
 
---- Lit un réglage booléen en priorité dans mission.lastUserSettings, sinon dans settings.getValue, sinon la valeur par défaut.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:252
----@param key string Nom du réglage.
----@param defaultValue boolean Valeur de repli.
----@return boolean  Valeur résolue.
+--- Reads a boolean setting first from mission.lastUserSettings, otherwise from settings.getValue, otherwise the default value.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:252
+---@param key string Setting name.
+---@param defaultValue boolean Fallback value.
+---@return boolean  Resolved value.
 function gameplay_rally_loop_rallyLoopManager:resolveMissionBoolSetting(key, defaultValue) end
 
---- Relance la mission rallyLoop depuis elle-même (instantané) et lève missionExecutionTransferFlag.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:758
+--- Restarts the rallyLoop mission from itself (instant) and raises missionExecutionTransferFlag.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:758
 function gameplay_rally_loop_rallyLoopManager:restartRallyLoop() end
 
---- Arrondit à la minute supérieure (délègue à scheduleUtils).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1033
----@param timeSecs number Secondes.
----@return number  Secondes.
+--- Rounds up to the next minute (delegates to scheduleUtils).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1033
+---@param timeSecs number Seconds.
+---@return number  Seconds.
 function gameplay_rally_loop_rallyLoopManager:roundToNextMinute(timeSecs) end
 
---- Fixe les deux drapeaux de saut de contrôle horaire.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2201
----@param canSkip boolean Saut manuel possible maintenant.
----@param isTimeControlSkipAvailable boolean Saut disponible (affichage).
+--- Sets the two time control skip flags.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2201
+---@param canSkip boolean Manual skip possible now.
+---@param isTimeControlSkipAvailable boolean Skip available (display).
 function gameplay_rally_loop_rallyLoopManager:setCanSkipTimeControls(canSkip, isTimeControlSkipAvailable) end
 
---- Met l'horloge en pause ou la relance.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:556
----@param paused boolean true pour figer.
+--- Pauses or resumes the clock.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:556
+---@param paused boolean true to freeze.
 function gameplay_rally_loop_rallyLoopManager:setClockPaused(paused) end
 
---- Mémorise que le compte à rebours peut être sauté (mis à jour par le nœud de compte à rebours).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2624
----@param canSkip boolean|nil État.
+--- Stores that the countdown can be skipped (updated by the countdown node).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2624
+---@param canSkip boolean|nil State.
 function gameplay_rally_loop_rallyLoopManager:setCountdownCanSkip(canSkip) end
 
---- Fixe un drapeau de dessin.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2529
----@param flagName string Nom du drapeau.
----@param value boolean Valeur.
+--- Sets a drawing flag.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2529
+---@param flagName string Flag name.
+---@param value boolean Value.
 function gameplay_rally_loop_rallyLoopManager:setDrawFlag(flagName, value) end
 
---- Fixe le drapeau de transfert d'exécution.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2521
----@param val boolean Valeur.
+--- Sets the execution transfer flag.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2521
+---@param val boolean Value.
 function gameplay_rally_loop_rallyLoopManager:setMissionExecutionTransferFlag(val) end
 
---- Fixe l'état actif forcé en mode test (et currentActiveState si le mode test est actif).
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2968
----@param state any Valeur RallyUtil.activeState_*.
+--- Sets the forced active state in test mode (and currentActiveState if test mode is active).
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2968
+---@param state any RallyUtil.activeState_* value.
 function gameplay_rally_loop_rallyLoopManager:setTestActiveState(state) end
 
---- Active ou désactive le mode test ; en le désactivant, remet currentActiveState à inactif.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2953
----@param enabled boolean|nil État.
+--- Enables or disables test mode; when disabling, resets currentActiveState to inactive.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2953
+---@param enabled boolean|nil State.
 function gameplay_rally_loop_rallyLoopManager:setTestMode(enabled) end
 
---- Oublie le rallyManager mis en cache.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2513
+--- Forgets the cached rallyManager.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2513
 function gameplay_rally_loop_rallyLoopManager:setupForNewMission() end
 
---- Les excès de vitesse sont pénalisés partout sauf en spéciale.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:687
----@return boolean  État.
+--- Speeding is penalized everywhere except during a stage.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:687
+---@return boolean  State.
 function gameplay_rally_loop_rallyLoopManager:shouldPenalizeSpeeding() end
 
---- Outil de test : téléporte le véhicule à distanceBefore m (50 par défaut) avant le TC_out de la liaison en cours, resynchronise le rallyManager et règle l'horloge 1 s avant l'heure du TC_out.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2252
+--- Test tool: teleports the vehicle to distanceBefore m (50 by default) before the TC_out of the current road section, resynchronizes the rallyManager and sets the clock 1 s before the TC_out time.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2252
 ---@param options table|nil {distanceBefore = 50, resetVehicle = true}.
----@return boolean  true si réussi.
----@return string|nil  Raison de l'échec.
+---@return boolean  true if successful.
+---@return string|nil  Failure reason.
 function gameplay_rally_loop_rallyLoopManager:skipLiaisonForTesting(options) end
 
---- Avance l'horloge jusqu'à 1 s avant le prochain TC et notifie l'UI (RallyClockSkipped). Refuse si le prochain évènement n'est pas un TC ou si la cible n'est pas dans le futur.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2218
----@return boolean  true si l'horloge a été avancée.
+--- Advances the clock to 1 s before the next TC and notifies the UI (RallyClockSkipped). Refuses if the next event is not a TC or if the target is not in the future.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2218
+---@return boolean  true if the clock was advanced.
 function gameplay_rally_loop_rallyLoopManager:skipToNextEvent() end
 
---- Lance la mission suivante de la séquence depuis la mission en cours (startFromWithinMission instantané) et lève missionExecutionTransferFlag. Échoue s'il n'y a pas de mission au premier plan.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:727
----@return boolean  true si lancée.
+--- Starts the next mission of the sequence from the current mission (instant startFromWithinMission) and raises missionExecutionTransferFlag. Fails if there is no foreground mission.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:727
+---@return boolean  true if started.
 function gameplay_rally_loop_rallyLoopManager:startNextMission() end
 
---- Enregistre une récupération ('recovery') ou un retournement ('flip') : avance l'horloge de RecoveryClockAdvance.getSeconds(type, enSpéciale), avance aussi l'heure du jour (RallyLoopTime.advancePlayingTime), notifie l'UI et journalise l'item avec la position du joueur.
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2878
----@param recoveryType string 'recovery' ou 'flip'.
+--- Records a recovery ('recovery') or a flip ('flip'): advances the clock by RecoveryClockAdvance.getSeconds(type, inStage), also advances the time of day (RallyLoopTime.advancePlayingTime), notifies the UI and logs the item with the player's position.
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2878
+---@param recoveryType string 'recovery' or 'flip'.
 function gameplay_rally_loop_rallyLoopManager:trackRecovery(recoveryType) end
 
---- Met à jour sur place rallyClockData : heure, jour, temps total, drapeaux de saut, pénalités d'avance activées.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2107
+--- Updates rallyClockData in place: time, day, total time, skip flags, early penalties enabled.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:2107
 function gameplay_rally_loop_rallyLoopManager:updateRallyClockData() end
 
---- Met à jour sur place scheduleData pour le prochain évènement : étiquette, type, heures de la minute prévue, écart (timeDiff négatif = en avance), statut et pénalité courants, limite de vitesse, parc d'assistance, isSpeeding.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1956
+--- Updates scheduleData in place for the next event: label, type, times of the scheduled minute, difference (negative timeDiff = early), current status and penalty, speed limit, service park, isSpeeding.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1956
 function gameplay_rally_loop_rallyLoopManager:updateScheduleData() end
 
---- Met à jour l'entrée de carte de temps d'un évènement (heure enregistrée, statut early/late/on-time, temps de spéciale) d'après le journal.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1910
----@param eventIndex integer Index dans events.
+--- Updates an event's timecard entry (recorded time, early/late/on-time status, stage time) from the log.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:1910
+---@param eventIndex integer Index in events.
 function gameplay_rally_loop_rallyLoopManager:updateTimecardEntry(eventIndex) end
 
---- Vérifie que la première mission est serviceOutMission. Non appelée dans cette version (appel commenté).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:435
----@return boolean  true si valide.
+--- Checks that the first mission is serviceOutMission. Not called in this version (call commented out).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua:435
+---@return boolean  true if valid.
 function gameplay_rally_loop_rallyLoopManager:validateMissionSequence() end
 

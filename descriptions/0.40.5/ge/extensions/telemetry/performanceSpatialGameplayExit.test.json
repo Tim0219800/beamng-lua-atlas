@@ -1,20 +1,120 @@
 {
   "path": "lua/ge/extensions/telemetry/performanceSpatialGameplayExit.test.lua",
-  "module": "Tests unitaires de telemetry/performanceSpatialGameplayExit. Chaque test reçoit un contexte `ctx` (assert, assertEqual) du lanceur de tests du jeu et injecte de faux modules de gameplay via le paramètre `source` (niveau « italy », véhicule en (1.24, -2.26, 3.01), caméra en (10.04, 20.06, 30.01)). Ce n'est pas une extension à charger.",
+  "module": "Unit tests of telemetry/performanceSpatialGameplayExit. Each test receives a `ctx` context (assert, assertEqual) from the game's test runner and injects fake gameplay modules via the `source` parameter (level \"italy\", vehicle at (1.24, -2.26, 3.01), camera at (10.04, 20.06, 30.01)). It is not an extension to load.",
   "notes": [
-    "Les tests documentent le comportement attendu : la mission prime sur le reste, une tentative active (drag, drift, crawl) prime sur la livraison de carrière, et les activités terminées (scénario en état post, drag isCompleted, drift en conclusion, crawl isCompleted) ne comptent plus comme actives.",
-    "Ils vérifient aussi l'arrondi à 0,1 m, le repli véhicule puis caméra, le rejet d'un exitKind inconnu (« failure »), d'un activityType inconnu et d'un niveau non suivi."
+    "The tests document the expected behavior: the mission takes precedence over the rest, an active attempt (drag, drift, crawl) takes precedence over career delivery, and finished activities (scenario in post state, drag isCompleted, drift in conclusion, crawl isCompleted) no longer count as active.",
+    "They also check the rounding to 0.1 m, the fallback vehicle then camera, the rejection of an unknown exitKind (\"failure\"), an unknown activityType and an untracked level."
   ],
   "functions": {
-    "testMissionTakesPrecedence": {"desc": "Une mission au premier plan est prioritaire sur un drag en cours.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
-    "testAttemptBasedActivityFamilies": {"desc": "Vérifie que chaque famille (scénario, livraison libre, livraison de carrière, essai, certification, drag, drift, crawl) est reconnue avec le bon activityType et activityId.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
-    "testCaptureUsesVehicleThenCamera": {"desc": "capture prend la position du véhicule (arrondie à 0,1), sinon celle de la caméra.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
-    "testCaptureValidatesContextAndLevel": {"desc": "capture convertit un id numérique en chaîne, omet un id invalide sans perdre l'évènement, et renvoie nil pour un exitKind/activityType inconnu ou un niveau non suivi.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
-    "testCompletedScenarioIsNotActive": {"desc": "Un scénario à l'état post n'est pas une activité active.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
-    "testConcludingDriftIsNotActive": {"desc": "Un défi de drift en phase de conclusion n'est plus actif.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
-    "testCompletedDragIsNotActive": {"desc": "Un drag terminé (isCompleted) n'est plus actif.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
-    "testDragUsesTopLevelDataAndCurrentLevel": {"desc": "La clé de drag est calculée avec les données de drag de plus haut niveau, et le préfixe « : » est complété par le niveau courant.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
-    "testActiveAttemptTakesPrecedenceOverCareerDelivery": {"desc": "Un drag, drift ou crawl actif prime sur une livraison de carrière active.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
-    "testCompletedCrawlIsNotActive": {"desc": "Un crawl terminé n'est plus actif.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true}
+    "testMissionTakesPrecedence": {
+      "desc": "A foreground mission takes precedence over a drag in progress.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testAttemptBasedActivityFamilies": {
+      "desc": "Checks that each family (scenario, free delivery, career delivery, test drive, certification, drag, drift, crawl) is recognized with the right activityType and activityId.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testCaptureUsesVehicleThenCamera": {
+      "desc": "capture takes the vehicle's position (rounded to 0.1), otherwise the camera's.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testCaptureValidatesContextAndLevel": {
+      "desc": "capture converts a numeric id to a string, omits an invalid id without losing the event, and returns nil for an unknown exitKind/activityType or an untracked level.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testCompletedScenarioIsNotActive": {
+      "desc": "A scenario in the post state is not an active activity.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testConcludingDriftIsNotActive": {
+      "desc": "A drift challenge in the conclusion phase is no longer active.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testCompletedDragIsNotActive": {
+      "desc": "A finished drag (isCompleted) is no longer active.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testDragUsesTopLevelDataAndCurrentLevel": {
+      "desc": "The drag key is computed with the highest-level drag data, and the prefix \":\" is completed with the current level.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testActiveAttemptTakesPrecedenceOverCareerDelivery": {
+      "desc": "An active drag, drift or crawl takes precedence over an active career delivery.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testCompletedCrawlIsNotActive": {
+      "desc": "A finished crawl is no longer active.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

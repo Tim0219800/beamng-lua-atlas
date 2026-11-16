@@ -1,45 +1,70 @@
 {
   "path": "lua/common/interpolatedMap.lua",
-  "module": "Table d'interpolation 1D (linéaire) ou 2D (bilinéaire) sur grille régulière ou irrégulière. new() crée l'objet, loadData(inputData, opts) charge les données (ce qui choisit la méthode get 1D ou 2D), puis get(x[, y]) renvoie la valeur interpolée. Sert pour des cartes moteur, courbes de couple, tables de coefficients. Garde en cache le dernier résultat et le dernier intervalle utilisé (recherche rapide si x varie peu).",
-  "usage": "local map = require('interpolatedMap').new()\n-- 2D : coin vide puis axe X ; ensuite chaque ligne = valeur Y, valeurs Z\nmap:loadData({{nil, 0, 1000, 2000}, {0, 10, 20, 30}, {1, 15, 25, 40}})\nlocal z = map:get(rpm, load)\n-- 1D : paires {x, z}\nmap:loadData({{0, 0}, {1000, 100}, {2000, 150}})\nlocal v = map:get(1500)",
+  "module": "1D (linear) or 2D (bilinear) interpolation table on a regular or irregular grid. new() creates the object, loadData(inputData, opts) loads the data (which selects the 1D or 2D get method), then get(x[, y]) returns the interpolated value. Used for engine maps, torque curves, coefficient tables. Caches the last result and the last interval used (fast lookup when x varies little).",
+  "usage": "local map = require('interpolatedMap').new()\n-- 2D: empty corner then X axis; then each row = Y value, Z values\nmap:loadData({{nil, 0, 1000, 2000}, {0, 10, 20, 30}, {1, 15, 25, 40}})\nlocal z = map:get(rpm, load)\n-- 1D: {x, z} pairs\nmap:loadData({{0, 0}, {1000, 100}, {2000, 150}})\nlocal v = map:get(1500)",
   "notes": [
-    "Avant loadData, get et reset sont des fonctions vides (renvoient nil).",
-    "Formats acceptés par loadData : (a) paires {x, z} (avec ou sans ligne d'en-tête dont la 1re cellule est une chaîne) ; (b) deux lignes {xValues}, {zValues} ; (c) tableau 2D dont la première ligne donne les valeurs X (avec ou sans coin vide) et dont chaque ligne suivante commence par la valeur Y suivie des valeurs Z. Un tableau de 2 lignes de nombres est toujours interprété comme {xValues, zValues}.",
-    "opts : xScale, yScale, zScale (multiplicateurs appliqués aux axes et valeurs, défaut 1).",
-    "Les axes X et Y doivent être croissants, avec au moins 2 points ; sinon division par zéro dans le calcul des intervalles.",
-    "Hors de la plage de données, get renvoie nil sauf si le champ clampToDataRange est mis à true (la valeur est alors bornée à la plage).",
-    "Champs publics utiles : is1D, is2D, xMin, xMax, yMin, yMax, clampToDataRange (défaut false), xIndices, yIndices, data.",
-    "Cas 1D : self.lastInputY reste nil ; le cache du dernier résultat compare x et l'absence de y."
+    "Before loadData, get and reset are empty functions (return nil).",
+    "Formats accepted by loadData: (a) {x, z} pairs (with or without a header row whose 1st cell is a string); (b) two rows {xValues}, {zValues}; (c) 2D array whose first row gives the X values (with or without an empty corner) and each following row starts with the Y value followed by the Z values. An array of 2 rows of numbers is always interpreted as {xValues, zValues}.",
+    "opts: xScale, yScale, zScale (multipliers applied to the axes and values, default 1).",
+    "The X and Y axes must be increasing, with at least 2 points; otherwise division by zero in the interval computation.",
+    "Outside the data range, get returns nil unless the field clampToDataRange is set to true (the value is then bounded to the range).",
+    "Useful public fields: is1D, is2D, xMin, xMax, yMin, yMax, clampToDataRange (default false), xIndices, yIndices, data.",
+    "1D case: self.lastInputY stays nil; the last-result cache compares x and the absence of y."
   ],
   "fields": {},
   "functions": {
     "new": {
-      "desc": "Crée une table d'interpolation vide.",
+      "desc": "Creates an empty interpolation table.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Objet interpolatedMap avec méthodes loadData, get, reset."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "interpolatedMap object with methods loadData, get, reset."
+        }
+      ],
       "internal": false
     }
   },
   "classes": {
     "interpolatedMap": {
-      "desc": "Objet renvoyé par new().",
+      "desc": "Object returned by new().",
       "functions": {
         "loadData": {
-          "desc": "Charge les données (voir formats dans notes), calcule les bornes et choisit la méthode get 1D ou 2D.",
+          "desc": "Loads the data (see formats in notes), computes the bounds and selects the 1D or 2D get method.",
           "params": {
-            "inputData": {"type": "table", "desc": "Données au format paires, deux lignes, ou tableau 2D."},
-            "opts": {"type": "table|nil", "desc": "Options {xScale, yScale, zScale}."}
+            "inputData": {
+              "type": "table",
+              "desc": "Data in pairs format, two rows, or 2D array."
+            },
+            "opts": {
+              "type": "table|nil",
+              "desc": "Options {xScale, yScale, zScale}."
+            }
           }
         },
         "get": {
-          "desc": "Valeur interpolée : get(x) en 1D, get(x, y) en 2D. Remplacée par loadData selon la dimension.",
+          "desc": "Interpolated value: get(x) in 1D, get(x, y) in 2D. Replaced by loadData depending on the dimension.",
           "params": {
-            "x": {"type": "number", "desc": "Abscisse."},
-            "y": {"type": "number|nil", "desc": "Ordonnée (2D uniquement)."}
+            "x": {
+              "type": "number",
+              "desc": "X coordinate."
+            },
+            "y": {
+              "type": "number|nil",
+              "desc": "Y coordinate (2D only)."
+            }
           },
-          "returns": [{"type": "number|nil", "desc": "Valeur interpolée ; nil hors plage si clampToDataRange est faux."}]
+          "returns": [
+            {
+              "type": "number|nil",
+              "desc": "Interpolated value; nil outside the range if clampToDataRange is false."
+            }
+          ]
         },
-        "reset": {"desc": "Ne fait rien (fonction vide).", "params": {}}
+        "reset": {
+          "desc": "Does nothing (empty function).",
+          "params": {}
+        }
       }
     }
   }

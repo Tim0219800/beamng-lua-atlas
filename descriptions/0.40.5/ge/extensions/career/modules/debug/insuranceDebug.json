@@ -1,14 +1,22 @@
 {
   "path": "lua/ge/extensions/career/modules/debug/insuranceDebug.lua",
-  "module": "Onglet de debug carrière « Insurance ». Ajoute une seule entrée de menu '> Reset insurance data' qui appelle career_modules_insurance_insurance.resetPlPolicyData() (réinitialise les données de police d'assurance du joueur).",
-  "notes": ["Outil de développement ; debugOrder = 1."],
+  "module": "\"Insurance\" career debug tab. Adds a single menu entry '> Reset insurance data' that calls career_modules_insurance_insurance.resetPlPolicyData() (resets the player's insurance policy data).",
+  "notes": [
+    "Development tool; debugOrder = 1."
+  ],
   "fields": {
-    "debugOrder": {"type": "number", "desc": "Ordre de tri (1)."},
-    "debugName": {"type": "string", "desc": "'Insurance'."}
+    "debugOrder": {
+      "type": "number",
+      "desc": "Sort order (1)."
+    },
+    "debugName": {
+      "type": "string",
+      "desc": "'Insurance'."
+    }
   },
   "functions": {
     "drawDebugFunctions": {
-      "desc": "Dessine l'entrée '> Reset insurance data' ; au clic, réinitialise les données de police d'assurance.",
+      "desc": "Draws the '> Reset insurance data' entry; on click, resets the insurance policy data.",
       "params": {},
       "returns": [],
       "internal": true

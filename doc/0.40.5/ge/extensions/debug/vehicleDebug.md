@@ -1,86 +1,86 @@
 # `debug_vehicleDebug`
 
-*Fichier : `lua/ge/extensions/debug/vehicleDebug.lua` · VM : Game Engine (GE) · 82 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/debug/vehicleDebug.lua` · VM: Game Engine (GE) · 82 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `debug_vehicleDebug` : `extensions.load("debug_vehicleDebug")`, puis la globale `debug_vehicleDebug`
+**Access:** extension `debug_vehicleDebug`: `extensions.load("debug_vehicleDebug")`, then the global `debug_vehicleDebug`
 
-Affichage de debug au-dessus de chaque véhicule actif : quand il est activé, onUpdate dessine avec debugDrawer l'id du véhicule, sa position et la rotation (quaternion) de son nœud de référence, au-dessus de sa boîte englobante. Le changement d'état est signalé à l'UI par le guihook vehicleDebugInfoEnabledChanged. L'état est conservé lors d'un rechargement Lua.
+Debug display above each active vehicle: when enabled, onUpdate draws with debugDrawer the vehicle's id, its position and the rotation (quaternion) of its reference node, above its bounding box. The state change is signaled to the UI through the guihook vehicleDebugInfoEnabledChanged. The state is kept across a Lua reload.
 
-## Exemple
+## Example
 
 ```lua
 debug_vehicleDebug.setDebugEnabled(true)
 ```
 
-## Remarques
+## Notes
 
-- Les trois lignes de texte sont dessinées à la même position (textPos) avec drawTextAdvanced : elles peuvent se superposer selon l'implémentation du moteur (déduit du code, aucun décalage vertical n'est appliqué).
-- bdebugRequestViewportSize envoie la taille de la fenêtre principale ImGui au module bdebug côté véhicule.
+- The three lines of text are drawn at the same position (textPos) with drawTextAdvanced: they may overlap depending on the engine implementation (inferred from code, no vertical offset is applied).
+- bdebugRequestViewportSize sends the size of the main ImGui window to the bdebug module on the vehicle side.
 
-**Dépendances (chargées avant) :** `ui_imgui`
+**Dependencies (loaded first):** `ui_imgui`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `debug_vehicleDebug.bdebugRequestViewportSize(vehId)` | Envoie au véhicule la taille de la fenêtre principale (bdebug.receiveViewportSize(largeur, hauteur)). Sans effet si le véhicule n'existe pas. | 30 |
-| `debug_vehicleDebug.getDebugEnabled()` | Retourne l'état d'affichage. | 21 |
-| `debug_vehicleDebug.onDeserialized(serializedData)` | Hook de rechargement Lua : restaure debugEnabled. *(interne)* *(hook)* | 61 |
-| `debug_vehicleDebug.onSerialize()` | Hook de rechargement Lua : retourne {debugEnabled}. *(interne)* *(hook)* | 67 |
-| `debug_vehicleDebug.onUpdate(dt)` | Hook de mise à jour : dessine les informations de debug de chaque véhicule actif si l'affichage est activé. *(interne)* *(hook)* | 38 |
-| `debug_vehicleDebug.setDebugEnabled(value)` | Active ou désactive l'affichage et notifie l'UI. | 25 |
-| `debug_vehicleDebug.toggleDebugEnabled()` | Inverse l'état d'affichage et notifie l'UI (vehicleDebugInfoEnabledChanged). | 16 |
+| `debug_vehicleDebug.bdebugRequestViewportSize(vehId)` | Sends the vehicle the size of the main window (bdebug.receiveViewportSize(width, height)). No effect if the vehicle does not exist. | 30 |
+| `debug_vehicleDebug.getDebugEnabled()` | Returns the display state. | 21 |
+| `debug_vehicleDebug.onDeserialized(serializedData)` | Lua reload hook: restores debugEnabled. *(internal)* *(hook)* | 61 |
+| `debug_vehicleDebug.onSerialize()` | Lua reload hook: returns {debugEnabled}. *(internal)* *(hook)* | 67 |
+| `debug_vehicleDebug.onUpdate(dt)` | Update hook: draws each active vehicle's debug information if the display is enabled. *(internal)* *(hook)* | 38 |
+| `debug_vehicleDebug.setDebugEnabled(value)` | Enables or disables the display and notifies the UI. | 25 |
+| `debug_vehicleDebug.toggleDebugEnabled()` | Toggles the display state and notifies the UI (vehicleDebugInfoEnabledChanged). | 16 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `debug_vehicleDebug.bdebugRequestViewportSize(vehId)`
 
-Envoie au véhicule la taille de la fenêtre principale (bdebug.receiveViewportSize(largeur, hauteur)). Sans effet si le véhicule n'existe pas.
+Sends the vehicle the size of the main window (bdebug.receiveViewportSize(width, height)). No effect if the vehicle does not exist.
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `debug_vehicleDebug.getDebugEnabled()`
 
-Retourne l'état d'affichage.
+Returns the display state.
 
-- **renvoie** : boolean true si activé.
+- **returns**: boolean true if enabled.
 
 #### `debug_vehicleDebug.onDeserialized(serializedData)`
 
-Hook de rechargement Lua : restaure debugEnabled.
+Lua reload hook: restores debugEnabled.
 
-- `serializedData` (*table|nil*) : État retourné par onSerialize.
+- `serializedData` (*table|nil*) : State returned by onSerialize.
 
 #### `debug_vehicleDebug.onSerialize()`
 
-Hook de rechargement Lua : retourne {debugEnabled}.
+Lua reload hook: returns {debugEnabled}.
 
-- **renvoie** : table État à conserver.
+- **returns**: table State to keep.
 
 #### `debug_vehicleDebug.onUpdate(dt)`
 
-Hook de mise à jour : dessine les informations de debug de chaque véhicule actif si l'affichage est activé.
+Update hook: draws each active vehicle's debug information if the display is enabled.
 
-- `dt` (*number*) : Delta temps (s).
+- `dt` (*number*) : Time delta (s).
 
 #### `debug_vehicleDebug.setDebugEnabled(value)`
 
-Active ou désactive l'affichage et notifie l'UI.
+Enables or disables the display and notifies the UI.
 
-- `value` (*boolean*) : Nouvel état.
+- `value` (*boolean*) : New state.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {'ui_imgui'}. |
 
-**Évènements UI (guihooks.trigger) :** `vehicleDebugInfoEnabledChanged`
+**UI events (guihooks.trigger):** `vehicleDebugInfoEnabledChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawTextAdvanced`
 - `ui_imgui.` `GetMainViewport`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/debug/vehicleDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/debug/vehicleDebug.lua`.*

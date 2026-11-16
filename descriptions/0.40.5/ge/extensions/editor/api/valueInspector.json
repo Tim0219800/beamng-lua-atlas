@@ -1,59 +1,183 @@
 {
   "path": "lua/ge/extensions/editor/api/valueInspector.lua",
-  "module": "Widget ImGui de l'inspecteur de champs de l'éditeur : affiche un champ (nom + valeur) sur deux colonnes et fournit l'éditeur adapté à son type (texte, float, int, bool, fichier, Point2F/3F/4F, rotation Euler, couleurs ColorF/ColorI, EaseF, RectF, matériau, datablock, annotation, SFX, etc.). Le module renvoie une fonction constructeur ; chaque appel crée un inspecteur indépendant. À l'import il ajoute aussi à editor des fonctions pour enregistrer des éditeurs, filtres et changeurs de libellé personnalisés par classe et nom de champ. Utile à un moddeur d'outil d'éditeur pour afficher des champs d'objet avec le même rendu que l'inspecteur du jeu.",
-  "usage": "local newInspector = require('editor/api/valueInspector')\nlocal insp = newInspector()\ninsp.setValueCallback = function(name, value, idx, custom, editEnded) --[[ appliquer ]] end\ninsp:valueEditorGui('mass', 1200, nil, 'Mass', 'Masse en kg', 'float', 'TypeF32', nil, nil, nil, 0)",
+  "module": "ImGui widget of the editor's field inspector: displays a field (name + value) in two columns and provides the editor suited to its type (text, float, int, bool, file, Point2F/3F/4F, Euler rotation, ColorF/ColorI colors, EaseF, RectF, material, datablock, annotation, SFX, etc.). The module returns a constructor function; each call creates an independent inspector. On import it also adds to editor functions to register custom editors, filters and label changers per class and field name. Useful to an editor tool modder to display object fields with the same rendering as the game's inspector.",
+  "usage": "local newInspector = require('editor/api/valueInspector')\nlocal insp = newInspector()\ninsp.setValueCallback = function(name, value, idx, custom, editEnded) --[[ apply ]] end\ninsp:valueEditorGui('mass', 1200, nil, 'Mass', 'Mass in kg', 'float', 'TypeF32', nil, nil, nil, 0)",
   "notes": [
-    "Le module retourne function() sans paramètre : il n'y a pas d'options à passer au constructeur (init() fixe les valeurs par défaut).",
-    "Champs d'instance utiles posés par init : inspectorName ('default'), setValueCallback(fieldName, fieldValue, arrayIndex, customData, editEndedBool) à fournir, selectionClassName (classe de la sélection, sert à trouver les éditeurs personnalisés), selectedIds, differentValuesFieldFlags (champs dont la valeur diffère entre objets sélectionnés, affichés en orange et gras), addTypeToTooltip.",
-    "Les éditeurs/filtres/changeurs personnalisés sont indexés par la concaténation fieldName .. className.",
-    "Fonctions ajoutées à editor à l'import : registerCustomFieldInspectorEditor, unregisterCustomFieldInspectorEditor, findCustomFieldEditor, registerCustomFieldInspectorFilter, unregisterCustomFieldInspectorFilter, findCustomFieldFilter, registerCustomFieldLabelChanger, unregisterCustomFieldLabelChanger, findCustomFieldLabelChanger, valueInspectorCopyPasteMenu, valueInspectorFilenameContextMenu, getAnnotations, getAnnotationsTbl.",
-    "Le format de flottant dépend de la préférence ui.general.floatDigitCount, lue à chaque appel de valueEditorGui.",
-    "Collage par Ctrl+C / Ctrl+V sur le nom du champ (préférence ui.general.inspectorFieldNameHoverCopyPaste) : le presse-papiers contient du JSON {copiedValue, copiedFieldType} ; le collage n'est refusé que si les types diffèrent et que la destination n'est pas une chaîne.",
-    "Les tables de datablocks/annotations sont globales au module (partagées par tous les inspecteurs) et initialisées une fois."
+    "The module returns function() with no parameters: there are no options to pass to the constructor (init() sets the default values).",
+    "Useful instance fields set by init: inspectorName ('default'), setValueCallback(fieldName, fieldValue, arrayIndex, customData, editEndedBool) to be provided, selectionClassName (class of the selection, used to find custom editors), selectedIds, differentValuesFieldFlags (fields whose value differs between selected objects, displayed in orange and bold), addTypeToTooltip.",
+    "Custom editors/filters/label changers are keyed by the concatenation fieldName .. className.",
+    "Functions added to editor at import: registerCustomFieldInspectorEditor, unregisterCustomFieldInspectorEditor, findCustomFieldEditor, registerCustomFieldInspectorFilter, unregisterCustomFieldInspectorFilter, findCustomFieldFilter, registerCustomFieldLabelChanger, unregisterCustomFieldLabelChanger, findCustomFieldLabelChanger, valueInspectorCopyPasteMenu, valueInspectorFilenameContextMenu, getAnnotations, getAnnotationsTbl.",
+    "The float format depends on the ui.general.floatDigitCount preference, read on every valueEditorGui call.",
+    "Copy/paste with Ctrl+C / Ctrl+V on the field name (preference ui.general.inspectorFieldNameHoverCopyPaste): the clipboard contains JSON {copiedValue, copiedFieldType}; pasting is refused only if the types differ and the destination is not a string.",
+    "The datablock/annotation tables are global to the module (shared by all inspectors) and initialized once."
   ],
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Objet inspecteur renvoyé par le constructeur du module (require(...)()). Méthodes d'instance.",
+      "desc": "Inspector object returned by the module constructor (require(...)()). Instance methods.",
       "functions": {
-        "init": {"desc": "Initialise les tampons ImGui (texte, entiers, flottants, booléen, combo) et les champs par défaut. Appelé automatiquement par le constructeur.", "params": {}, "returns": [], "internal": true},
-        "initializeTables": {"desc": "Construit (une seule fois, sauf force) les tables globales d'annotations et de datablocks utilisées par les sélecteurs.", "params": {"force": {"type": "boolean|nil", "desc": "true pour reconstruire même si déjà initialisé."}}, "returns": []},
-        "reinitializeTables": {"desc": "Marque les tables globales comme à reconstruire au prochain initializeTables.", "params": {}, "returns": []},
-        "setSimSetWindowFieldId": {"desc": "Définit l'id du champ dont la fenêtre popup de sélection SimSet est ouverte (nil pour la fermer).", "params": {"id": {"type": "string|nil", "desc": "Id du champ (« ##nomChamp »)."}}, "returns": []},
-        "deleteTexObjs": {"desc": "Vide le cache des textures d'aperçu utilisées dans le sélecteur de matériaux.", "params": {}, "returns": []},
-        "displaySimSetPopupList": {"desc": "Affiche un bouton « ... » et la valeur actuelle, et au clic une popup filtrable listant les objets des SimSet donnés pour en choisir un.", "params": {
-          "objectSetArray": {"type": "table", "desc": "Liste de SimSet/groupes à parcourir."},
-          "fieldName": {"type": "string", "desc": "Nom du champ."},
-          "fieldNameId": {"type": "string", "desc": "Id ImGui du champ."},
-          "fieldValue": {"type": "string", "desc": "Valeur actuelle."},
-          "selectedIds": {"type": "table", "desc": "Ids des objets sélectionnés."},
-          "val": {"type": "any", "desc": "customData transmis au callback (déduit du code)."},
-          "arrayIndex": {"type": "integer|nil", "desc": "Index dans un champ tableau."},
-          "className": {"type": "string|nil", "desc": "Classe d'objets à lister (déduit du code)."}
-        }, "returns": []},
-        "displayMaterialPopupList": {"desc": "Comme displaySimSetPopupList mais pour les matériaux : popup avec aperçu des textures (cache texObjs) et filtre par nom ou tag.", "params": {
-          "objectSet": {"type": "table", "desc": "Liste d'objets matériau."},
-          "fieldName": {"type": "string", "desc": "Nom du champ."},
-          "fieldNameId": {"type": "string", "desc": "Id ImGui du champ."},
-          "fieldValue": {"type": "string", "desc": "Valeur actuelle."},
-          "selectedIds": {"type": "table", "desc": "Ids des objets sélectionnés."},
-          "val": {"type": "any", "desc": "customData transmis au callback (déduit du code)."},
-          "arrayIndex": {"type": "integer|nil", "desc": "Index dans un champ tableau."},
-          "className": {"type": "string|nil", "desc": "Classe (déduit du code)."}
-        }, "returns": []},
-        "valueEditorGui": {"desc": "Dessine un champ complet : libellé (avec tooltip fieldDesc, menu copier/coller) et widget d'édition choisi selon fieldTypeName puis fieldType. Appelle un éditeur personnalisé s'il est enregistré pour (classe de sélection, fieldName). Toute modification est envoyée à self.setValueCallback.", "params": {
-          "fieldName": {"type": "string", "desc": "Nom technique du champ."},
-          "fieldValue": {"type": "any", "desc": "Valeur actuelle (chaîne, nombre, table selon le type)."},
-          "arrayIndex": {"type": "integer|nil", "desc": "Index si champ tableau."},
-          "fieldLabel": {"type": "string", "desc": "Libellé affiché."},
-          "fieldDesc": {"type": "string|nil", "desc": "Description affichée en tooltip."},
-          "fieldType": {"type": "string", "desc": "Type du champ : 'float', 'int', 'bool', 'filename', 'Point3F', 'ColorF', 'string', etc."},
-          "fieldTypeName": {"type": "string", "desc": "Nom de type moteur : 'TypeMaterialName', 'TypeShapeFilename', 'TypeCommand', etc."},
-          "customData": {"type": "any", "desc": "Données opaques renvoyées au callback."},
-          "pasteCallback": {"type": "function|nil", "desc": "pasteCallback(fieldName, value, arrayIndex, customData) appelé lors d'un collage."},
-          "contextMenuUI": {"type": "function|nil", "desc": "Contenu additionnel du menu contextuel (déduit du code)."},
-          "indeterminateFlags": {"type": "integer|nil", "desc": "Drapeaux de valeur indéterminée (0 par défaut)."}
-        }, "returns": []}
+        "init": {
+          "desc": "Initializes the ImGui buffers (text, integers, floats, boolean, combo) and the default fields. Called automatically by the constructor.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "initializeTables": {
+          "desc": "Builds (only once, unless forced) the global annotation and datablock tables used by the selectors.",
+          "params": {
+            "force": {
+              "type": "boolean|nil",
+              "desc": "true to rebuild even if already initialized."
+            }
+          },
+          "returns": []
+        },
+        "reinitializeTables": {
+          "desc": "Marks the global tables as to be rebuilt at the next initializeTables.",
+          "params": {},
+          "returns": []
+        },
+        "setSimSetWindowFieldId": {
+          "desc": "Sets the id of the field whose SimSet selection popup window is open (nil to close it).",
+          "params": {
+            "id": {
+              "type": "string|nil",
+              "desc": "Field id (\"##fieldName\")."
+            }
+          },
+          "returns": []
+        },
+        "deleteTexObjs": {
+          "desc": "Clears the cache of preview textures used in the material selector.",
+          "params": {},
+          "returns": []
+        },
+        "displaySimSetPopupList": {
+          "desc": "Displays a \"...\" button and the current value, and on click a filterable popup listing the objects of the given SimSets so one can be picked.",
+          "params": {
+            "objectSetArray": {
+              "type": "table",
+              "desc": "List of SimSets/groups to browse."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Field name."
+            },
+            "fieldNameId": {
+              "type": "string",
+              "desc": "ImGui id of the field."
+            },
+            "fieldValue": {
+              "type": "string",
+              "desc": "Current value."
+            },
+            "selectedIds": {
+              "type": "table",
+              "desc": "Ids of the selected objects."
+            },
+            "val": {
+              "type": "any",
+              "desc": "customData passed to the callback (inferred from code)."
+            },
+            "arrayIndex": {
+              "type": "integer|nil",
+              "desc": "Index in an array field."
+            },
+            "className": {
+              "type": "string|nil",
+              "desc": "Class of objects to list (inferred from code)."
+            }
+          },
+          "returns": []
+        },
+        "displayMaterialPopupList": {
+          "desc": "Like displaySimSetPopupList but for materials: popup with texture previews (texObjs cache) and filtering by name or tag.",
+          "params": {
+            "objectSet": {
+              "type": "table",
+              "desc": "List of material objects."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Field name."
+            },
+            "fieldNameId": {
+              "type": "string",
+              "desc": "ImGui id of the field."
+            },
+            "fieldValue": {
+              "type": "string",
+              "desc": "Current value."
+            },
+            "selectedIds": {
+              "type": "table",
+              "desc": "Ids of the selected objects."
+            },
+            "val": {
+              "type": "any",
+              "desc": "customData passed to the callback (inferred from code)."
+            },
+            "arrayIndex": {
+              "type": "integer|nil",
+              "desc": "Index in an array field."
+            },
+            "className": {
+              "type": "string|nil",
+              "desc": "Class (inferred from code)."
+            }
+          },
+          "returns": []
+        },
+        "valueEditorGui": {
+          "desc": "Draws a complete field: label (with fieldDesc tooltip, copy/paste menu) and an editing widget chosen by fieldTypeName then fieldType. Calls a custom editor if one is registered for (selection class, fieldName). Any change is sent to self.setValueCallback.",
+          "params": {
+            "fieldName": {
+              "type": "string",
+              "desc": "Technical field name."
+            },
+            "fieldValue": {
+              "type": "any",
+              "desc": "Current value (string, number, table depending on the type)."
+            },
+            "arrayIndex": {
+              "type": "integer|nil",
+              "desc": "Index if array field."
+            },
+            "fieldLabel": {
+              "type": "string",
+              "desc": "Displayed label."
+            },
+            "fieldDesc": {
+              "type": "string|nil",
+              "desc": "Description displayed as a tooltip."
+            },
+            "fieldType": {
+              "type": "string",
+              "desc": "Field type: 'float', 'int', 'bool', 'filename', 'Point3F', 'ColorF', 'string', etc."
+            },
+            "fieldTypeName": {
+              "type": "string",
+              "desc": "Engine type name: 'TypeMaterialName', 'TypeShapeFilename', 'TypeCommand', etc."
+            },
+            "customData": {
+              "type": "any",
+              "desc": "Opaque data passed back to the callback."
+            },
+            "pasteCallback": {
+              "type": "function|nil",
+              "desc": "pasteCallback(fieldName, value, arrayIndex, customData) called on paste."
+            },
+            "contextMenuUI": {
+              "type": "function|nil",
+              "desc": "Additional context menu content (inferred from code)."
+            },
+            "indeterminateFlags": {
+              "type": "integer|nil",
+              "desc": "Indeterminate-value flags (0 by default)."
+            }
+          },
+          "returns": []
+        }
       }
     }
   }

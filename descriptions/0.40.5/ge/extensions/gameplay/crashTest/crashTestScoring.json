@@ -1,60 +1,109 @@
 {
   "path": "lua/ge/extensions/gameplay/crashTest/crashTestScoring.lua",
-  "module": "Calcul des scores du scénario de crash test. Pour chaque étape réussie, calcule des sous-scores (temps avant impact, vitesse d'impact, dégâts, zone d'impact, redirection de la cible dans la zone) et les range par étape. Les barèmes sont dans scoreParameters (1000 points max par critère, temps mini 500, tolérance de vitesse 3 km/h). Utilise gameplay_util_damageAssessment pour la gravité des dégâts.",
+  "module": "Score computation for the crash test scenario. For each successful step, computes sub-scores (time before impact, impact speed, damage, impact zone, target redirection into the zone) and stores them per step. The scales are in scoreParameters (1000 points max per criterion, minimum time 500, speed tolerance 3 km/h). Uses gameplay_util_damageAssessment for damage severity.",
   "notes": [
-    "Score de temps : max si temps <= objectif ; décroît linéairement jusqu'à 500 à +30 % de l'objectif ; 500 au-delà.",
-    "Score de vitesse : les vitesses (km/h) sont converties en m/s puis par translateVelocity (unité du joueur), l'écart est mis à l'échelle de 1000 à 0 sur 3 km/h.",
-    "Gravité des dégâts : Minor = 1, Moderate = 2, A lot = 3. Conditions : 'At least' ou 'No more than' ; écart de 0 -> 1000, 1 palier -> 500, 2 paliers -> 200, sinon 0.",
-    "Bug probable : calculateIndividualDamageScore retourne nil si damageCondition n'est ni 'At least' ni 'No more than' (l'addition dans calculateDamageScore planterait).",
-    "calculateDamageScore divise par #vehIds : division par zéro (nan) si damageTargets ne correspond à aucune valeur connue.",
-    "getTotalScoreData ajoute la clé 'totalScore' directement dans le tableau scoringDataPerStep, qui mélange alors indices et clé ; un second appel ignore la clé (ipairs) mais la table renvoyée est partagée.",
-    "calculateStepScore insère les données dans la liste mais ne retourne rien, malgré son commentaire (« appelé seulement si l'étape est réussie »).",
-    "Les fonctions calculateTimeScore, calculateSpeedScore et calculateDamageScore sont locales (non exportées)."
+    "Time score: max if time <= target; decreases linearly down to 500 at +30% of the target; 500 beyond.",
+    "Speed score: speeds (km/h) are converted to m/s then by translateVelocity (player's unit), the difference is scaled from 1000 to 0 over 3 km/h.",
+    "Damage severity: Minor = 1, Moderate = 2, A lot = 3. Conditions: 'At least' or 'No more than'; difference of 0 -> 1000, 1 level -> 500, 2 levels -> 200, otherwise 0.",
+    "Probable bug: calculateIndividualDamageScore returns nil if damageCondition is neither 'At least' nor 'No more than' (the addition in calculateDamageScore would crash).",
+    "calculateDamageScore divides by #vehIds: division by zero (nan) if damageTargets does not match any known value.",
+    "getTotalScoreData adds the 'totalScore' key directly into the scoringDataPerStep array, which then mixes indices and a key; a second call ignores the key (ipairs) but the returned table is shared.",
+    "calculateStepScore inserts the data into the list but returns nothing, despite its comment (\"only called if the step is successful\").",
+    "The functions calculateTimeScore, calculateSpeedScore and calculateDamageScore are local (not exported)."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : {\"gameplay_util_damageAssessment\"}."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: {\"gameplay_util_damageAssessment\"}."
+    }
   },
   "functions": {
     "calculateDamageLocationScore": {
-      "desc": "Score de précision de la zone d'impact : part des dégâts totaux située dans la zone visée, ramenée à 1000. Retourne aussi la zone réellement la plus touchée et la précision en pourcentage.",
+      "desc": "Impact zone accuracy score: share of the total damage located in the targeted zone, scaled to 1000. Also returns the zone actually most hit and the accuracy as a percentage.",
       "params": {
-        "damageLocationGoal": {"type": "string", "desc": "Zone d'impact requise (clé de damagedLocations)."},
-        "damageLocationData": {"type": "table", "desc": "Données d'impact : totalDamage, damageStateDiff (damagedLocations, mostDamagedLocation), mostDamagedLocation."}
+        "damageLocationGoal": {
+          "type": "string",
+          "desc": "Required impact zone (key of damagedLocations)."
+        },
+        "damageLocationData": {
+          "type": "table",
+          "desc": "Impact data: totalDamage, damageStateDiff (damagedLocations, mostDamagedLocation), mostDamagedLocation."
+        }
       },
-      "returns": [{"type": "table", "desc": "{score, scoreName, maxScore, requiredImpactLocation, actualImpactLocation}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{score, scoreName, maxScore, requiredImpactLocation, actualImpactLocation}."
+        }
+      ],
       "internal": false
     },
     "calculateIndividualDamageScore": {
-      "desc": "Compare la gravité de dégâts d'un véhicule (getDamageAssessment(vehId).damageSeverity) à l'objectif et renvoie 1000, 500, 200 ou 0 selon l'écart de paliers.",
+      "desc": "Compares a vehicle's damage severity (getDamageAssessment(vehId).damageSeverity) to the target and returns 1000, 500, 200 or 0 depending on the level difference.",
       "params": {
-        "damageGoal": {"type": "string", "desc": "'Minor', 'Moderate' ou 'A lot'."},
-        "damageCondition": {"type": "string", "desc": "'At least' ou 'No more than'."},
-        "vehId": {"type": "integer", "desc": "Identifiant du véhicule évalué."}
+        "damageGoal": {
+          "type": "string",
+          "desc": "'Minor', 'Moderate' or 'A lot'."
+        },
+        "damageCondition": {
+          "type": "string",
+          "desc": "'At least' or 'No more than'."
+        },
+        "vehId": {
+          "type": "integer",
+          "desc": "Identifier of the evaluated vehicle."
+        }
       },
-      "returns": [{"type": "integer|nil", "desc": "Score ; nil si la condition est inconnue."}],
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Score; nil if the condition is unknown."
+        }
+      ],
       "internal": false
     },
     "calculateStepScore": {
-      "desc": "Calcule tous les sous-scores d'une étape réussie et ajoute le résultat à la liste des scores par étape. Sauf pour l'objectif 'Crash target vehicle into target area', calcule scores de temps (si timeToImpact existe) et de vitesse ; ajoute selon les cas les scores de dégâts, de zone d'impact ou de zone cible (1000).",
+      "desc": "Computes all the sub-scores of a successful step and adds the result to the per-step score list. Except for the objective 'Crash target vehicle into target area', computes time scores (if timeToImpact exists) and speed scores; depending on the case adds the damage, impact zone or target zone scores (1000).",
       "params": {
-        "stepData": {"type": "table", "desc": "Définition de l'étape (objective, timeToImpact, impactSpeed, plVehId, jbeamTargets, damageAmount, impactLocation…)."},
-        "stepCrashData": {"type": "table<integer, table>", "desc": "Données de crash par id de véhicule (stepElapsedTime, crashStartData, crashEndData)."}
+        "stepData": {
+          "type": "table",
+          "desc": "Step definition (objective, timeToImpact, impactSpeed, plVehId, jbeamTargets, damageAmount, impactLocation...)."
+        },
+        "stepCrashData": {
+          "type": "table<integer, table>",
+          "desc": "Crash data by vehicle id (stepElapsedTime, crashStartData, crashEndData)."
+        }
       },
       "internal": false
     },
     "getTotalScoreData": {
-      "desc": "Additionne tous les scores de toutes les étapes et stocke le total dans la clé 'totalScore' de la table retournée.",
-      "returns": [{"type": "table", "desc": "Liste des scores par étape, avec la clé totalScore."}],
+      "desc": "Adds up all the scores of all the steps and stores the total in the 'totalScore' key of the returned table.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of per-step scores, with the totalScore key."
+        }
+      ],
       "internal": false
     },
     "getStepScoreData": {
-      "desc": "Retourne les données de score d'une étape.",
-      "params": {"stepIndex": {"type": "integer", "desc": "Indice de l'étape (à partir de 1)."}},
-      "returns": [{"type": "table|nil", "desc": "Sous-scores de l'étape."}],
+      "desc": "Returns a step's score data.",
+      "params": {
+        "stepIndex": {
+          "type": "integer",
+          "desc": "Step index (starting at 1)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Step sub-scores."
+        }
+      ],
       "internal": false
     },
     "reset": {
-      "desc": "Efface tous les scores enregistrés.",
+      "desc": "Clears all recorded scores.",
       "internal": false
     }
   }

@@ -1,18 +1,58 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/career/onGarageEvent.lua",
-  "module": "Nœud flowgraph « On Garage Event » (catégorie repeat_instant, couleur/icône ui). Impulsions d'une frame sur les évènements de garage de la carrière : beforeGarageInventoryOpened (menu de sélection avant garage ouvert), beforeGarageVehicleSelected (véhicule choisi), endMode (mode garage terminé).",
-  "notes": ["work() remet à faux seulement les deux premières sorties ; endMode n'est jamais remis à faux explicitement (il reste à la dernière valeur écrite, true après un évènement), probable oubli."],
+  "module": "Flowgraph node \"On Garage Event\" (category repeat_instant, ui color/icon). One-frame impulses on career garage events: beforeGarageInventoryOpened (selection menu before garage opened), beforeGarageVehicleSelected (vehicle chosen), endMode (garage mode ended).",
+  "notes": [
+    "work() sets back to false only the first two outputs; endMode is never explicitly set back to false (it stays at the last written value, true after an event), probably an oversight."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
-        "work": {"desc": "Chaque frame : remet à faux deux sorties, applique puis efface les drapeaux.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
-        "onBeforeGarageVehicleSelectionMenuOpened": {"desc": "Hook : lève beforeGarageInventoryOpened.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
-        "onBeforeGarageVehicleSelected": {"desc": "Hook : lève beforeGarageVehicleSelected.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
-        "onEndGarageMode": {"desc": "Hook : lève endMode.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true}
+        "init": {
+          "desc": "Creates the flag table.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Every frame: sets two outputs back to false, applies then clears the flags.",
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "unused"
+            }
+          }
+        },
+        "onBeforeGarageVehicleSelectionMenuOpened": {
+          "desc": "Hook: raises beforeGarageInventoryOpened.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        },
+        "onBeforeGarageVehicleSelected": {
+          "desc": "Hook: raises beforeGarageVehicleSelected.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        },
+        "onEndGarageMode": {
+          "desc": "Hook: raises endMode.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

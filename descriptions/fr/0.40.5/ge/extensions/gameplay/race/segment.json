@@ -1,0 +1,165 @@
+{
+  "path": "lua/ge/extensions/gameplay/race/segment.lua",
+  "module": "Classe d'un segment de chemin de course : tronçon entre deux pathnodes (from et to). Trois représentations sont prévues : « waypoint » (ligne droite entre les deux nœuds), un chemin navgraph rempli automatiquement en capsules, ou des capsules manuelles (points avec rayon). Le segment dit si un véhicule est dedans (contains) et s'il a atteint le nœud d'arrivée (finished). Le module renvoie une fabrique : require('/lua/ge/extensions/gameplay/race/segment')(path, name, forceId).",
+  "notes": [
+    "Incohérence des noms de mode : la liste locale modes vaut {'waypoint', 'navgraphCapsule', 'manualCapsules'}, mais le code teste 'waypoint', 'navpath' et 'capsules'. Les valeurs 'navgraphCapsule' et 'manualCapsules' ne sont traitées nulle part : contains renvoie alors false.",
+    "Une capsule est un point {pos, radius, name} ; les capsules d'un segment relient from, les capsulePoints, puis to. Le rayon est interpolé linéairement le long de chaque tronçon.",
+    "Les capsules générées par fillNavpath portent _generated = true et sont recalculées à chaque appel de fillNavpath.",
+    "isValid lit .missing sur les pathnodes from et to : erreur Lua si l'un des ids n'existe pas dans path.pathnodes.objects.",
+    "contains en mode waypoint exige state.currentSegments, state.previousCorners et state.currentCorners."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Segment de course. Champs : path, id, name (« Segment <id> » par défaut), mode ('waypoint' par défaut), from et to (ids de pathnodes, -1 si aucun), capsulePoints, sortOrder, _drawMode.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : id, nom, mode 'waypoint', from/to à -1, liste de capsules vide.",
+          "params": {
+            "path": {"type": "table", "desc": "Chemin de course propriétaire."},
+            "name": {"type": "string|nil", "desc": "Nom."},
+            "forceId": {"type": "integer|nil", "desc": "Id imposé."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "getBeNavpath": {
+          "desc": "Indique si les deux pathnodes d'extrémité sont en mode navgraph (donc si un chemin navgraph est possible).",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true si possible."}],
+          "internal": false
+        },
+        "getFrom": {
+          "desc": "Pathnode de départ.",
+          "params": {},
+          "returns": [{"type": "table|nil", "desc": "Pathnode."}],
+          "internal": false
+        },
+        "getTo": {
+          "desc": "Pathnode d'arrivée.",
+          "params": {},
+          "returns": [{"type": "table|nil", "desc": "Pathnode."}],
+          "internal": false
+        },
+        "setFrom": {
+          "desc": "Définit le pathnode de départ (par id) et revalide le mode.",
+          "params": {"from": {"type": "integer", "desc": "Id du pathnode."}},
+          "returns": [],
+          "internal": false
+        },
+        "setTo": {
+          "desc": "Définit le pathnode d'arrivée (par id) et revalide le mode.",
+          "params": {"to": {"type": "integer", "desc": "Id du pathnode."}},
+          "returns": [],
+          "internal": false
+        },
+        "checkMode": {
+          "desc": "Revalide le mode après un changement d'extrémité : en mode 'navpath', recalcule le chemin si possible, sinon repasse en 'waypoint'.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "setMode": {
+          "desc": "Change le mode : 'waypoint' vide les capsules ; 'navpath' les remplit depuis le navgraph.",
+          "params": {"mode": {"type": "string", "desc": "Nouveau mode."}},
+          "returns": [],
+          "internal": false
+        },
+        "fillNavpath": {
+          "desc": "Remplit les capsules avec les nœuds intermédiaires du plus court chemin map.getPath entre les nœuds navgraph from et to (extrémités exclues).",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "addCapsule": {
+          "desc": "Insère une capsule à l'index donné (à la fin par défaut).",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position."},
+            "radius": {"type": "number", "desc": "Rayon (m)."},
+            "name": {"type": "string|nil", "desc": "Nom."},
+            "index": {"type": "integer|nil", "desc": "Position d'insertion dans capsulePoints."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "removeCapsule": {
+          "desc": "Retire la capsule d'index donné.",
+          "params": {"index": {"type": "integer", "desc": "Index dans capsulePoints."}},
+          "returns": [],
+          "internal": false
+        },
+        "getCapsuleCount": {
+          "desc": "Nombre de points de capsule, extrémités comprises (#capsulePoints + 2).",
+          "params": {},
+          "returns": [{"type": "integer", "desc": "Nombre de points."}],
+          "internal": false
+        },
+        "getCapsuleNode": {
+          "desc": "Point i de la chaîne de capsules : 1 = pathnode from, dernier = pathnode to, sinon un capsulePoint.",
+          "params": {"i": {"type": "integer", "desc": "Index à partir de 1."}},
+          "returns": [{"type": "table|nil", "desc": "Pathnode ou capsule {pos, radius, name}."}],
+          "internal": false
+        },
+        "capsuleContains": {
+          "desc": "Indique si un point est dans le tronçon de capsule entre les points id et id+1 (distance au segment inférieure au rayon interpolé).",
+          "params": {
+            "point": {"type": "vec3", "desc": "Point à tester."},
+            "id": {"type": "integer", "desc": "Index du premier point du tronçon."}
+          },
+          "returns": [{"type": "boolean|nil", "desc": "true si dedans, nil sinon."}],
+          "internal": false
+        },
+        "contains": {
+          "desc": "Indique si le véhicule est dans le segment. En mode waypoint : vrai s'il est déjà dans ce segment (state.currentSegments) ou s'il vient de traverser le pathnode de départ. En mode 'capsules' ou 'navpath' : vrai s'il est dans une des capsules.",
+          "params": {
+            "point": {"type": "vec3", "desc": "Position du véhicule."},
+            "state": {"type": "table", "desc": "currentSegments, previousCorners, currentCorners."}
+          },
+          "returns": [
+            {"type": "boolean", "desc": "true si dedans."},
+            {"type": "number|nil", "desc": "0 en mode capsules/navpath (valeur fixe)."}
+          ],
+          "internal": false
+        },
+        "finished": {
+          "desc": "Indique si le véhicule vient de traverser le pathnode d'arrivée (intersectCorners).",
+          "params": {
+            "point": {"type": "vec3", "desc": "Position (non utilisée)."},
+            "state": {"type": "table", "desc": "previousCorners, currentCorners."}
+          },
+          "returns": [
+            {"type": "boolean", "desc": "true si traversé."},
+            {"type": "number", "desc": "Paramètre t de la traversée."}
+          ],
+          "internal": false
+        },
+        "onSerialize": {
+          "desc": "Sérialise le segment (name, mode, from, to, oldId, capsules).",
+          "params": {},
+          "returns": [{"type": "table", "desc": "Données JSON."}],
+          "internal": false
+        },
+        "onDeserialized": {
+          "desc": "Restaure le segment ; convertit from/to avec oldIdMap, applique le mode puis ajoute les capsules sauvegardées.",
+          "params": {
+            "data": {"type": "table", "desc": "Données de onSerialize."},
+            "oldIdMap": {"type": "table<integer, integer>|nil", "desc": "Correspondance ancien id -> nouvel id."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "drawDebug": {
+          "desc": "Dessine le segment (prisme entre les deux nœuds en mode waypoint, capsules et bords sinon) et son nom. Ne dessine rien si le segment est invalide.",
+          "params": {"drawMode": {"type": "string|nil", "desc": "'none', 'faded', 'normal', 'highlight' (défaut self._drawMode)."}},
+          "returns": [],
+          "internal": false
+        },
+        "isValid": {
+          "desc": "Indique si les pathnodes from et to existent, ne sont pas marqués missing et sont différents.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true si valide."}],
+          "internal": false
+        }
+      }
+    }
+  }
+}

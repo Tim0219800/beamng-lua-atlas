@@ -1,51 +1,51 @@
 # `gameplay_freeformDelivery_tasklist`
 
-*Fichier : `lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua` · VM : Game Engine (GE) · 429 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua` · VM: Game Engine (GE) · 429 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_freeformDelivery_tasklist` : `extensions.load("gameplay_freeformDelivery_tasklist")`, puis la globale `gameplay_freeformDelivery_tasklist`
+**Access:** extension `gameplay_freeformDelivery_tasklist`: `extensions.load("gameplay_freeformDelivery_tasklist")`, then the global `gameplay_freeformDelivery_tasklist`
 
-Alimente l'app « tasks » (liste de tâches en haut à gauche) pendant une livraison libre. Il affiche un en-tête (nom de la livraison), une tâche par objectif actif (placement, playerInVehicle, engineRunning, coupled, unhitched), une tâche groupée « ne pas abîmer la cargaison » pour les objectifs damage, les objectifs de distance quand leur seuil d'alerte est dépassé, et un message d'invite à choisir une route. La liste n'est reconstruite que lorsqu'un hash d'état des objectifs change.
+Feeds the "tasks" app (task list at the top left) during a freeform delivery. It displays a header (delivery name), one task per active goal (placement, playerInVehicle, engineRunning, coupled, unhitched), a grouped "do not damage the cargo" task for damage goals, distance goals when their warning threshold is exceeded, and a message prompting to choose a route. The list is only rebuilt when a goal state hash changes.
 
-## Remarques
+## Notes
 
-- Les tâches sont envoyées à l'UI par guihooks.trigger : ClearTasklist, SetTasklistHeader, SetTasklistTask {id, type, label, subtext, done, fail} et DiscardTasklistItem (id, délai facultatif).
-- Ids de tâches : delivery_goal_<goalId>, delivery_damage, delivery_distance_<goalId>, delivery_route_prompt. Un objectif avec showInTasklist == false n'est jamais affiché.
-- Un objectif terminé avec removeOnComplete est retiré après un délai et ne revient plus dans la liste (sauf s'il redevient non terminé).
-- L'invite de route n'apparaît qu'une fois par livraison : dès qu'une route est active, elle est considérée comme déjà montrée.
-- Dépend des globales gameplay_freeformDelivery_goals et _odometer et de ui_appContainers, sans les déclarer dans dependencies.
+- Tasks are sent to the UI by guihooks.trigger: ClearTasklist, SetTasklistHeader, SetTasklistTask {id, type, label, subtext, done, fail} and DiscardTasklistItem (id, optional delay).
+- Task ids: delivery_goal_<goalId>, delivery_damage, delivery_distance_<goalId>, delivery_route_prompt. A goal with showInTasklist == false is never displayed.
+- A completed goal with removeOnComplete is removed after a delay and does not return to the list (unless it becomes incomplete again).
+- The route prompt only appears once per delivery: as soon as a route is active, it is considered already shown.
+- Depends on the globals gameplay_freeformDelivery_goals and _odometer and on ui_appContainers, without declaring them in dependencies.
 
-**Dépendances (chargées avant) :** `gameplay_freeformDelivery_utils`, `gameplay_freeformDelivery_routes`, `core_groundMarkers`
+**Dependencies (loaded first):** `gameplay_freeformDelivery_utils`, `gameplay_freeformDelivery_routes`, `core_groundMarkers`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_freeformDelivery_tasklist.cleanup()` | Efface l'en-tête, les tâches et les messages de route de l'UI. *(interne)* | 409 |
-| `gameplay_freeformDelivery_tasklist.setup(delivery)` | Affiche l'app « tasks », vide la liste, réinitialise les caches, envoie l'en-tête (nom de la livraison), construit la liste initiale et le message de route. *(interne)* | 314 |
-| `gameplay_freeformDelivery_tasklist.update(profiler)` | Appelée chaque frame : met à jour le message d'odomètre, calcule un hash de l'état des objectifs (y compris la progression des objectifs multi-véhicules) et reconstruit la liste si quelque chose a changé. *(interne)* | 345 |
-| `gameplay_freeformDelivery_tasklist.updateRouteMessage()` | Retire les anciens messages de route et, s'il existe des routes mais pas de guidage actif (core_groundMarkers.currentlyHasTarget) et que l'invite n'a pas encore été montrée, affiche le message invitant à choisir une route via la grande carte. Appelée par routes.lua. | 122 |
+| `gameplay_freeformDelivery_tasklist.cleanup()` | Clears the header, tasks and route messages from the UI. *(internal)* | 409 |
+| `gameplay_freeformDelivery_tasklist.setup(delivery)` | Displays the "tasks" app, clears the list, resets the caches, sends the header (delivery name), builds the initial list and the route message. *(internal)* | 314 |
+| `gameplay_freeformDelivery_tasklist.update(profiler)` | Called every frame: updates the odometer message, computes a hash of the goal state (including the progress of multi-vehicle goals) and rebuilds the list if something changed. *(internal)* | 345 |
+| `gameplay_freeformDelivery_tasklist.updateRouteMessage()` | Removes the old route messages and, if there are routes but no active guidance (core_groundMarkers.currentlyHasTarget) and the prompt has not yet been shown, displays the message prompting to choose a route via the big map. Called by routes.lua. | 122 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_freeformDelivery_tasklist.setup(delivery)`
 
-Affiche l'app « tasks », vide la liste, réinitialise les caches, envoie l'en-tête (nom de la livraison), construit la liste initiale et le message de route.
+Displays the "tasks" app, clears the list, resets the caches, sends the header (delivery name), builds the initial list and the route message.
 
-- `delivery` (*table*) : Données de livraison (name...).
+- `delivery` (*table*) : Delivery data (name...).
 
 #### `gameplay_freeformDelivery_tasklist.update(profiler)`
 
-Appelée chaque frame : met à jour le message d'odomètre, calcule un hash de l'état des objectifs (y compris la progression des objectifs multi-véhicules) et reconstruit la liste si quelque chose a changé.
+Called every frame: updates the odometer message, computes a hash of the goal state (including the progress of multi-vehicle goals) and rebuilds the list if something changed.
 
-- `profiler` (*table|nil*) : Profileur optionnel (méthode add).
+- `profiler` (*table|nil*) : Optional profiler (add method).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | gameplay_freeformDelivery_utils, gameplay_freeformDelivery_routes et core_groundMarkers. |
+| `dependencies` | string[] | gameplay_freeformDelivery_utils, gameplay_freeformDelivery_routes and core_groundMarkers. |
 
-**Évènements UI (guihooks.trigger) :** `ClearTasklist`, `DiscardTasklistItem`, `SetTasklistHeader`, `SetTasklistTask`
+**UI events (guihooks.trigger):** `ClearTasklist`, `DiscardTasklistItem`, `SetTasklistHeader`, `SetTasklistTask`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua`.*

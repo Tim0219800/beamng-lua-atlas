@@ -1,12 +1,23 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlStartTransform.lua",
-  "module": "Nœud flowgraph « Get Crawl Start Transform » (catégorie repeat_instant, crawl). Donne la position (startPosition, vec3) et la rotation (startRotation, quat) de départ du crawl actif via bridge.getCrawlSpawnTransform. Sans crawl actif : erreur de nœud et valeurs {0,0,0} et {0,0,0,1}.",
+  "module": "Flowgraph node \"Get Crawl Start Transform\" (category repeat_instant, crawl). Gives the start position (startPosition, vec3) and rotation (startRotation, quat) of the active crawl via bridge.getCrawlSpawnTransform. Without an active crawl: node error and values {0,0,0} and {0,0,0,1}.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Charge le bridge du crawl.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "work": {"desc": "Lit la transformation de spawn et la convertit en tables."}
+        "init": {
+          "desc": "Loads the crawl bridge.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Reads the spawn transform and converts it to tables."
+        }
       }
     }
   }

@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/setNoteSearch.lua",
+  "module": "Nœud flowgraph « Rally Mode Set NoteSearch » (tag rally, pas de catégorie). Prévu pour chercher les pacenotes les plus proches plutôt que la suivante. Entrées : noteSearch (impulsion) et recoveredTo (table, point de recovery).",
+  "notes": ["Nœud inachevé : sur impulsion il logge seulement « setNoteSearch » et fait dump(recoveredTo) si fourni ; il ne modifie aucun état."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Sur impulsion noteSearch : dump de recoveredTo et log de debug, sans autre effet.", "internal": true}
+      }
+    }
+  }
+}

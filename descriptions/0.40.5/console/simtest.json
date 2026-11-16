@@ -1,12 +1,19 @@
 {
   "path": "lua/console/simtest.lua",
-  "module": "Script de benchmark de la console : il crée un véhicule pickup avec newVehicle():spawn en (0, 0, 0.1), active BeamEngine.enabled puis mesure, avec HighPerfTimer, le temps de 101 pas de simulation. S'exécute au chargement (test(100)).",
-  "notes": ["Définit les globales v (le véhicule) et hp (le chronomètre, global car sans local)."],
+  "module": "Console benchmark script: it creates a pickup vehicle with newVehicle():spawn at (0, 0, 0.1), enables BeamEngine.enabled then measures, with HighPerfTimer, the time of 101 simulation steps. Runs on load (test(100)).",
+  "notes": [
+    "Defines the globals v (the vehicle) and hp (the timer, global because there is no local)."
+  ],
   "fields": {},
   "functions": {
     "test": {
-      "desc": "Exécute n+1 fois BeamEngine:update(1/2000, 1/2000) (pas de 0,5 ms) et affiche la durée de chaque pas en ms.",
-      "params": {"n": {"type": "integer", "desc": "Nombre de pas, la boucle va de 0 à n inclus (donc n+1 pas)."}},
+      "desc": "Runs BeamEngine:update(1/2000, 1/2000) n+1 times (0.5 ms step) and prints the duration of each step in ms.",
+      "params": {
+        "n": {
+          "type": "integer",
+          "desc": "Number of steps, the loop goes from 0 to n inclusive (so n+1 steps)."
+        }
+      },
       "returns": [],
       "internal": false
     }

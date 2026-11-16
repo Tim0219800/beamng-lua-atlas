@@ -1,17 +1,38 @@
 {
   "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactSpecialLights.lua",
-  "module": "Module de gameplayInterface pour les feux spéciaux : lecture et fixation de l'état du feu de taxi via les contrôleurs 'lights/taxiLights'.",
+  "module": "gameplayInterface module for special lights: reads and sets the taxi light state via the 'lights/taxiLights' controllers.",
   "usage": "gameplayInterface.executeAction(0, 20, 'setTaxiLightState', 'on')",
   "notes": [
-    "Action 'setTaxiLightState'(state:string) : appelle setTaxiState(state) sur tous les contrôleurs de type lights/taxiLights.",
-    "Lookup 'taxiLightState'() : renvoie {result = getTaxiState()} du premier contrôleur lights/taxiLights, ou nil s'il n'y en a pas."
+    "Action 'setTaxiLightState'(state:string): calls setTaxiState(state) on all controllers of type lights/taxiLights.",
+    "Lookup 'taxiLightState'(): returns {result = getTaxiState()} of the first lights/taxiLights controller, or nil if there is none."
   ],
   "fields": {
-    "moduleActions": {"type": "table<string, function>", "desc": "Actions : setTaxiLightState."},
-    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups : taxiLightState."}
+    "moduleActions": {
+      "type": "table<string, function>",
+      "desc": "Actions: setTaxiLightState."
+    },
+    "moduleLookups": {
+      "type": "table<string, function>",
+      "desc": "Lookups: taxiLightState."
+    }
   },
   "functions": {
-    "onExtensionLoaded": {"desc": "Appelé au chargement : remplit moduleActions et moduleLookups.", "params": {}, "returns": [], "internal": true},
-    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+    "onExtensionLoaded": {
+      "desc": "Called at load: fills moduleActions and moduleLookups.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "requestRegistration": {
+      "desc": "Registers the actions and lookups with gameplayInterface.",
+      "params": {
+        "gi": {
+          "type": "table",
+          "desc": "The gameplayInterface module."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

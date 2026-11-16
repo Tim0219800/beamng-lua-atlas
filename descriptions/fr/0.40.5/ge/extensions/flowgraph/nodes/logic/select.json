@@ -1,0 +1,56 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/logic/select.lua",
+  "module": "Noeud flowgraph 'Select' (categorie logic). Choisit une valeur parmi N entrees value_i selon les pins flow select_i actifs, et combine les valeurs selectionnees avec une fonction de fusion (fg_utils.mergeFuns.any : mode 'first' par defaut). Si le pin flow d'entree n'est pas connecte, la valeur n'est pas conservee. Le nombre de choix se regle dans les proprietes.",
+  "notes": [
+    "updatePins teste lnk.sourcePin alors que select_i/value_i sont des pins d'entree (targetPin) : les liens vers les pins retires ne sont donc pas supprimes."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "count=1, mode='first'.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche le mode de fusion.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Panneau : nombre de choix (Count) et liste deroulante des fonctions de fusion (hors 'readOnly') avec infobulle.",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Cree ou supprime les paires de pins select_i / value_i et les liens associes.",
+          "internal": true,
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "ancien nombre"
+            },
+            "new": {
+              "type": "integer",
+              "desc": "nouveau nombre"
+            }
+          }
+        },
+        "work": {
+          "desc": "Initialise la fusion, merge les value_i dont select_i est actif (si flow), finalise. Si au moins un choix : flow=true et value=resultat ; sinon flow suit l'entree et value=nil.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde mode et count.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Relit mode ('first' par defaut) et count, recree les pins.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

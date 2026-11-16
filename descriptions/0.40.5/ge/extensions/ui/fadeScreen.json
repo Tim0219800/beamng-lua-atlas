@@ -1,80 +1,153 @@
 {
   "path": "lua/ge/extensions/ui/fadeScreen.lua",
-  "module": "Fondu au noir de l'écran piloté depuis Lua. Envoie l'évènement UI « LoadingScreen » (active + paramètres fadeIn/pause/fadeOut/data), règle les paramètres audio globaux FMOD g_FadeTimeMS et g_GameLoading, et prévient les autres extensions via le hook onScreenFadeState quand l'UI signale que l'écran est noir (1), que la pause est finie (2) ou que le fondu retour est terminé (3). Sert aux chargements de niveau, téléportations et transitions.",
-  "usage": "ui_fadeScreen.cycle(0.5, 0.2, 0.5)  -- noir, pause, retour\n-- ou : ui_fadeScreen.start(1, {title='Chargement'}) ... ui_fadeScreen.stop(1)",
+  "module": "Screen fade to black driven from Lua. Sends the UI event \"LoadingScreen\" (active + fadeIn/pause/fadeOut/data parameters), sets the global FMOD audio parameters g_FadeTimeMS and g_GameLoading, and notifies the other extensions via the hook onScreenFadeState when the UI signals that the screen is black (1), that the pause is over (2) or that the fade back is finished (3). Used for level loads, teleports and transitions.",
+  "usage": "ui_fadeScreen.cycle(0.5, 0.2, 0.5)  -- black, pause, back\n-- or: ui_fadeScreen.start(1, {title='Loading'}) ... ui_fadeScreen.stop(1)",
   "notes": [
-    "Durées en secondes.",
-    "start/stop/cycle sont des alias de fadeToBlack/fadeFromBlack/fadeSequence.",
-    "onScreenFadeState : 1 = écran entièrement noir, 2 = fin de la pause, 3 = fondu retour terminé. L'état 1 n'est diffusé qu'après delayFrames (3) frames d'onGuiUpdate pour être sûr que l'écran est noir ; isBlack() ne devient vrai qu'à ce moment, si le noir a été demandé.",
-    "En mode headless (headless_mode), aucun UI : fadeToBlack met isBlack à true et diffuse l'état 1 immédiatement, fadeFromBlack diffuse l'état 3.",
-    "fadeSequence impose une pause minimale de 0,05 s (un TODO indique qu'une pause nulle casse des choses).",
-    "Le fondu d'une séquence repasse automatiquement à fadeFromBlack à l'état 2 ; un fadeToBlack seul reste sur noir (pause -1) jusqu'à fadeFromBlack."
+    "Durations in seconds.",
+    "start/stop/cycle are aliases of fadeToBlack/fadeFromBlack/fadeSequence.",
+    "onScreenFadeState: 1 = screen fully black, 2 = end of pause, 3 = fade back finished. State 1 is only broadcast after delayFrames (3) onGuiUpdate frames to be sure the screen is black; isBlack() only becomes true at that point, if black was requested.",
+    "In headless mode (headless_mode), there is no UI: fadeToBlack sets isBlack to true and broadcasts state 1 immediately, fadeFromBlack broadcasts state 3.",
+    "fadeSequence enforces a minimum pause of 0.05 s (a TODO says that a zero pause breaks things).",
+    "A sequence's fade automatically switches to fadeFromBlack at state 2; a lone fadeToBlack stays on black (pause -1) until fadeFromBlack."
   ],
   "fields": {
-    "delayFrames": {"type": "number", "desc": "Nombre de frames d'attente avant de diffuser onScreenFadeState (3 par défaut)."}
+    "delayFrames": {
+      "type": "number",
+      "desc": "Number of frames to wait before broadcasting onScreenFadeState (3 by default)."
+    }
   },
   "functions": {
     "fadeToBlack": {
-      "desc": "Lance un fondu vers le noir et y reste. screenData est affiché pendant la pause. Règle aussi les paramètres audio globaux (sauf useGlobalAudioFade == false). Alias : start.",
+      "desc": "Starts a fade to black and stays there. screenData is displayed during the pause. Also sets the global audio parameters (unless useGlobalAudioFade == false). Alias: start.",
       "params": {
-        "fade": {"type": "number|nil", "desc": "Durée du fondu en secondes (défaut 1)."},
-        "screenData": {"type": "table|nil", "desc": "Contenu affiché pendant la pause : {image, title, text}."},
-        "args": {"type": "table|nil", "desc": "Options ; useGlobalAudioFade=false pour ne pas toucher à l'audio global."}
+        "fade": {
+          "type": "number|nil",
+          "desc": "Fade duration in seconds (default 1)."
+        },
+        "screenData": {
+          "type": "table|nil",
+          "desc": "Content displayed during the pause: {image, title, text}."
+        },
+        "args": {
+          "type": "table|nil",
+          "desc": "Options; useGlobalAudioFade=false to leave the global audio alone."
+        }
       }
     },
     "fadeFromBlack": {
-      "desc": "Revient du noir (LoadingScreen active=false avec fadeOut), remet g_GameLoading à 0. Alias : stop.",
+      "desc": "Comes back from black (LoadingScreen active=false with fadeOut), resets g_GameLoading to 0. Alias: stop.",
       "params": {
-        "fade": {"type": "number|nil", "desc": "Durée du fondu retour en secondes (défaut 1)."},
-        "args": {"type": "table|nil", "desc": "Options ; useGlobalAudioFade=false pour ne pas toucher à l'audio global."}
+        "fade": {
+          "type": "number|nil",
+          "desc": "Fade-back duration in seconds (default 1)."
+        },
+        "args": {
+          "type": "table|nil",
+          "desc": "Options; useGlobalAudioFade=false to leave the global audio alone."
+        }
       }
     },
     "fadeSequence": {
-      "desc": "Fondu complet : au noir, pause, puis retour. Alias : cycle.",
+      "desc": "Full fade: to black, pause, then back. Alias: cycle.",
       "params": {
-        "fadeIn": {"type": "number|nil", "desc": "Durée du fondu vers le noir (défaut 1)."},
-        "pause": {"type": "number|nil", "desc": "Durée de la pause sur noir (minimum 0,05 s)."},
-        "fadeOut": {"type": "number|nil", "desc": "Durée du fondu retour (défaut fadeIn)."},
-        "screenData": {"type": "table|nil", "desc": "Contenu affiché pendant la pause : {image, title, text}."},
-        "args": {"type": "table|nil", "desc": "Options transmises aux fondus (useGlobalAudioFade)."}
+        "fadeIn": {
+          "type": "number|nil",
+          "desc": "Duration of the fade to black (default 1)."
+        },
+        "pause": {
+          "type": "number|nil",
+          "desc": "Duration of the pause on black (minimum 0.05 s)."
+        },
+        "fadeOut": {
+          "type": "number|nil",
+          "desc": "Duration of the fade back (default fadeIn)."
+        },
+        "screenData": {
+          "type": "table|nil",
+          "desc": "Content displayed during the pause: {image, title, text}."
+        },
+        "args": {
+          "type": "table|nil",
+          "desc": "Options passed to the fades (useGlobalAudioFade)."
+        }
       }
     },
     "start": {
-      "desc": "Alias de fadeToBlack.",
+      "desc": "Alias of fadeToBlack.",
       "params": {
-        "fade": {"type": "number|nil", "desc": "Durée du fondu en secondes."},
-        "screenData": {"type": "table|nil", "desc": "Contenu {image, title, text} affiché pendant la pause."},
-        "args": {"type": "table|nil", "desc": "Options."}
+        "fade": {
+          "type": "number|nil",
+          "desc": "Fade duration in seconds."
+        },
+        "screenData": {
+          "type": "table|nil",
+          "desc": "Content {image, title, text} displayed during the pause."
+        },
+        "args": {
+          "type": "table|nil",
+          "desc": "Options."
+        }
       }
     },
     "stop": {
-      "desc": "Alias de fadeFromBlack.",
+      "desc": "Alias of fadeFromBlack.",
       "params": {
-        "fade": {"type": "number|nil", "desc": "Durée du fondu retour en secondes."},
-        "args": {"type": "table|nil", "desc": "Options."}
+        "fade": {
+          "type": "number|nil",
+          "desc": "Fade-back duration in seconds."
+        },
+        "args": {
+          "type": "table|nil",
+          "desc": "Options."
+        }
       }
     },
     "cycle": {
-      "desc": "Alias de fadeSequence.",
+      "desc": "Alias of fadeSequence.",
       "params": {
-        "fadeIn": {"type": "number|nil", "desc": "Durée du fondu vers le noir."},
-        "pause": {"type": "number|nil", "desc": "Durée de la pause."},
-        "fadeOut": {"type": "number|nil", "desc": "Durée du fondu retour."},
-        "screenData": {"type": "table|nil", "desc": "Contenu affiché pendant la pause."},
-        "args": {"type": "table|nil", "desc": "Options."}
+        "fadeIn": {
+          "type": "number|nil",
+          "desc": "Duration of the fade to black."
+        },
+        "pause": {
+          "type": "number|nil",
+          "desc": "Duration of the pause."
+        },
+        "fadeOut": {
+          "type": "number|nil",
+          "desc": "Duration of the fade back."
+        },
+        "screenData": {
+          "type": "table|nil",
+          "desc": "Content displayed during the pause."
+        },
+        "args": {
+          "type": "table|nil",
+          "desc": "Options."
+        }
       }
     },
     "isBlack": {
-      "desc": "Indique si l'écran est confirmé noir (après le délai de delayFrames frames).",
-      "returns": [{"type": "boolean", "desc": "true si l'écran est noir."}]
+      "desc": "Indicates whether the screen is confirmed black (after the delay of delayFrames frames).",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the screen is black."
+        }
+      ]
     },
     "onScreenFadeStateDelayed": {
-      "desc": "Appelé par l'UI/le moteur quand l'état du fondu change (1, 2 ou 3) : met l'état en file et relance le compteur de frames ; onGuiUpdate le diffuse ensuite par onScreenFadeState.",
-      "params": {"state": {"type": "integer", "desc": "1 = noir atteint, 2 = fin de pause, 3 = fondu retour terminé."}},
+      "desc": "Called by the UI/engine when the fade state changes (1, 2 or 3): queues the state and restarts the frame counter; onGuiUpdate then broadcasts it via onScreenFadeState.",
+      "params": {
+        "state": {
+          "type": "integer",
+          "desc": "1 = black reached, 2 = end of pause, 3 = fade back finished."
+        }
+      },
       "internal": true
     },
     "onGuiUpdate": {
-      "desc": "Hook par frame GUI : une fois le délai écoulé, diffuse les états en attente par extensions.hook('onScreenFadeState', state) et enchaîne le fadeFromBlack d'une séquence à l'état 2.",
+      "desc": "GUI per-frame hook: once the delay has elapsed, broadcasts the pending states via extensions.hook('onScreenFadeState', state) and chains the fadeFromBlack of a sequence at state 2.",
       "internal": true
     }
   }

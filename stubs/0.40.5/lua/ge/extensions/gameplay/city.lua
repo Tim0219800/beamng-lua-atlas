@@ -2,65 +2,65 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/city.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension qui charge le fichier city.sites.json du niveau courant (via gameplay_sites_sitesManager) et offre des requêtes sur ses zones et places de parking : zone de plus haute priorité à une position, valeurs fusionnées de champs personnalisés de zones, et tirage de deux places de parking distantes. La priorité d'une zone est le champ personnalisé 'priority' (0 par défaut). Les sites sont chargés au démarrage du niveau et libérés à la fin.
---- Accès : extension `gameplay_city` : `extensions.load("gameplay_city")`, puis la globale `gameplay_city`
+--- Extension that loads the current level's city.sites.json file (via gameplay_sites_sitesManager) and offers queries on its zones and parking spots: highest-priority zone at a position, merged values of zones' custom fields, and drawing of two distant parking spots. A zone's priority is the custom field 'priority' (0 by default). The sites are loaded at level start and freed at the end.
+--- Access: extension `gameplay_city`: `extensions.load("gameplay_city")`, then the global `gameplay_city`
 ---@class gameplay_city
----@field dependencies table<integer, string> Extensions chargées avant : {"gameplay_sites_sitesManager"}.
+---@field dependencies table<integer, string> Extensions loaded before: {"gameplay_sites_sitesManager"}.
 gameplay_city = {}
 
---- Retourne la première zone de plus haute priorité qui contient la position.
----Source : lua/ge/extensions/gameplay/city.lua:30
----@param pos vec3 Position monde.
----@return table|nil  Zone, ou nil si aucun site chargé ou aucune zone.
+--- Returns the first highest-priority zone that contains the position.
+---Source: lua/ge/extensions/gameplay/city.lua:30
+---@param pos vec3 World position.
+---@return table|nil  Zone, or nil if no sites loaded or no zone.
 function gameplay_city.getHighestPrioZone(pos) end
 
---- Doit renvoyer les valeurs uniques, triées, des champs personnalisés fieldName (avec suffixes '' à '4') de la zone de plus haute priorité à la position. Voir notes : l'implémentation itère sur le résultat de getHighestPrioZone.
----Source : lua/ge/extensions/gameplay/city.lua:47
----@param pos vec3 Position monde.
----@param fieldName string Nom de base du champ personnalisé (ex. 'vehicleGroup').
----@return table  Tableau trié de valeurs ; vide si pos ou fieldName manque.
+--- Should return the unique, sorted values of the custom fields fieldName (with suffixes '' to '4') of the highest-priority zone at the position. See notes: the implementation iterates over the result of getHighestPrioZone.
+---Source: lua/ge/extensions/gameplay/city.lua:47
+---@param pos vec3 World position.
+---@param fieldName string Base name of the custom field (e.g. 'vehicleGroup').
+---@return table  Sorted array of values; empty if pos or fieldName is missing.
 function gameplay_city.getMergedFieldsFromZones(pos, fieldName) end
 
---- Tire deux places de parking au hasard dont la distance est au moins minDist, et donne la zone de plus haute priorité de chacune.
----Source : lua/ge/extensions/gameplay/city.lua:61
----@param minDist number|nil Distance minimale en mètres (300 par défaut).
----@param startName string|nil Nom imposé pour la place de départ, s'il existe.
----@return string|nil  Nom de la place de départ.
----@return string  Nom de la place d'arrivée.
----@return string  Nom de la zone de départ.
----@return string  Nom de la zone d'arrivée.
+--- Draws two parking spots at random whose distance is at least minDist, and gives the highest-priority zone of each.
+---Source: lua/ge/extensions/gameplay/city.lua:61
+---@param minDist number|nil Minimum distance in meters (300 by default).
+---@param startName string|nil Name imposed for the start spot, if it exists.
+---@return string|nil  Start spot name.
+---@return string  End spot name.
+---@return string  Start zone name.
+---@return string  End zone name.
 function gameplay_city.getRandomParkingSpots(minDist, startName) end
 
---- Retourne l'objet sites actuellement chargé.
----Source : lua/ge/extensions/gameplay/city.lua:112
----@return table|nil  Objet sites, ou nil.
+--- Returns the currently loaded sites object.
+---Source: lua/ge/extensions/gameplay/city.lua:112
+---@return table|nil  Sites object, or nil.
 function gameplay_city.getSites() end
 
---- Regroupe les zones contenant la position par priorité.
----Source : lua/ge/extensions/gameplay/city.lua:13
----@param pos vec3 Position monde.
----@return table<number, table[]>  Dictionnaire priorité -> liste de zones (la clé -math.huge existe toujours, avec une liste vide).
----@return number  Plus haute priorité trouvée (-math.huge si aucune).
+--- Groups the zones containing the position by priority.
+---Source: lua/ge/extensions/gameplay/city.lua:13
+---@param pos vec3 World position.
+---@return table<number, table[]>  Dictionary priority -> list of zones (the key -math.huge always exists, with an empty list).
+---@return number  Highest priority found (-math.huge if none).
 function gameplay_city.getZonesByPrioForPosition(pos) end
 
---- Charge un fichier de sites via sitesManager.loadSites. Sans argument, charge city.sites.json du niveau courant (sauf si déjà chargé).
----Source : lua/ge/extensions/gameplay/city.lua:97
----@param file string|nil Chemin du fichier .sites.json.
+--- Loads a sites file via sitesManager.loadSites. With no argument, loads the current level's city.sites.json (unless already loaded).
+---Source: lua/ge/extensions/gameplay/city.lua:97
+---@param file string|nil Path of the .sites.json file.
 function gameplay_city.loadSites(file) end
 
---- Hook appelé à la fin d'un niveau : appelle reset().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/city.lua:124
----@param levelPath string Chemin du niveau.
+--- Hook called at the end of a level: calls reset().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/city.lua:124
+---@param levelPath string Level path.
 function gameplay_city.onClientEndMission(levelPath) end
 
---- Hook appelé au démarrage d'un niveau : charge les sites par défaut.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/city.lua:120
----@param levelPath string Chemin du niveau.
+--- Hook called when a level starts: loads the default sites.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/city.lua:120
+---@param levelPath string Level path.
 function gameplay_city.onClientStartMission(levelPath) end
 
---- Oublie les sites chargés (sites = nil).
----Source : lua/ge/extensions/gameplay/city.lua:116
+--- Forgets the loaded sites (sites = nil).
+---Source: lua/ge/extensions/gameplay/city.lua:116
 function gameplay_city.reset() end
 

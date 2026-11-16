@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftTightDrift.lua",
+  "module": "Nœud flowgraph « Drift Through Detected » (catégorie repeat_instant, drift). Détecte les zones de drift serré : émet tightDrift (impulsion) et tightDriftScore quand le callback tight du module drift du flowgraph est actif (ttl > 0).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Lit mgr.modules.drift:getCallBacks().tight et renseigne tightDrift et tightDriftScore."}
+      }
+    }
+  }
+}

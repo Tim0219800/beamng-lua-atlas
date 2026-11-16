@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/cameraAngle.lua",
+  "module": "Noeud flowgraph 'Camera Transform' (categorie repeat_instant, fichier cameraAngle). Donne la position (vec3), la rotation (quat) et le champ de vision (degres) de la camera courante via core_camera. pos et rot ne sont calcules que si leur pin de sortie est utilise.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "work": {
+          "desc": "fov = core_camera.getFovDeg() ; pos = getPosition():toTable() et rot = getQuat():toTable() si les pins sont utilises.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

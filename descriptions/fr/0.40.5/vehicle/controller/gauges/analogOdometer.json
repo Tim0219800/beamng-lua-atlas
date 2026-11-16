@@ -1,0 +1,59 @@
+{
+  "path": "lua/vehicle/controller/gauges/analogOdometer.lua",
+  "module": "Contrôleur auxiliaire pour un compteur kilométrique analogique affiché par une texture HTML (htmlTexture). Il envoie le total (electrics.values.odometer) et le trip (extensions.odometer.getRelativeRecording()) à la page seulement quand l'un d'eux a changé de plus d'un pas de mise à jour (1000 m, ou 1609.34 m en impérial, divisé par 10 avec séparateur décimal).",
+  "notes": [
+    "Clés jbeam : configuration (table, fusionnée avec les clés \"configuration_xxx\") avec materialName, htmlPath, displayWidth, displayHeight (obligatoires pour afficher), unit (\"imperial\" = pas de 1609.34, sinon 1000), odometerHasDecimalSeparator, tripHasDecimalSeparator (pas divisé par 10). La table de configuration est envoyée entière à la page par callJS(\"setup\").",
+    "La texture est créée en mode \"manual\" à 1 FPS. L'envoi n'a lieu que si un joueur est assis et si l'UI doit être rafraîchie.",
+    "M.init = nop (fonction globale du moteur). setParameters ne fait rien."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "init": {
+      "type": "function",
+      "desc": "nop."
+    }
+  },
+  "functions": {
+    "initSecondStage": {
+      "desc": "Lit la configuration, calcule le pas de mise à jour, crée la texture HTML et envoie la configuration à la page.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Force un nouvel envoi de données au prochain updateGFX.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Envoie trip et odomètre à la page quand ils ont changé d'au moins un pas.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setParameters": {
+      "desc": "Ne fait rien.",
+      "params": {
+        "parameters": {
+          "type": "table",
+          "desc": "Ignoré."
+        }
+      },
+      "returns": []
+    }
+  }
+}

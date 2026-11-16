@@ -1,40 +1,40 @@
 # `editor_rallyEditor_aiCompetitorsTab`
 
-*Fichier : `lua/ge/extensions/editor/rallyEditor/aiCompetitorsTab.lua` · VM : Game Engine (GE) · 344 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/rallyEditor/aiCompetitorsTab.lua` · VM: Game Engine (GE) · 344 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/rallyEditor/aiCompetitorsTab")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/rallyEditor/aiCompetitorsTab")` (file under extensions/ but not a regular extension)
 
-Onglet « AI Competitors Configuration » de l'éditeur de rallye. Il permet de régler les paramètres globaux du modèle de résultats des concurrents IA (26 curseurs regroupés), le temps de référence de la spéciale et les traits d'un concurrent à la fois (Pace = skill, Consistency, Risk), avec un aperçu en direct : parts de chaque résultat en % et courbe de distribution des temps d'arrivée. Boutons Reload / Save : relit ou écrit gameplay/rally/aiCompetitorsConfig.json via aiCompetitorsEditorModel. Le module renvoie une fonction sans argument qui crée l'onglet : require('/lua/ge/extensions/editor/rallyEditor/aiCompetitorsTab')().
+"AI Competitors Configuration" tab of the rally editor. It lets you set the global parameters of the AI competitors' outcome model (26 grouped sliders), the stage reference time and the traits of one competitor at a time (Pace = skill, Consistency, Risk), with a live preview: share of each outcome in % and finish time distribution curve. Reload / Save buttons: reads or writes gameplay/rally/aiCompetitorsConfig.json via aiCompetitorsEditorModel. The module returns a function with no arguments that creates the tab: require('/lua/ge/extensions/editor/rallyEditor/aiCompetitorsTab')().
 
-## Remarques
+## Notes
 
-- Les modifications ne sont écrites sur disque qu'avec le bouton Save ; le temps de référence saisi est enregistré dans ui.default_player_time_sec (minimum 1 s, défaut 100 s).
-- Les valeurs chargées sont bornées à la plage de leur curseur (clampParamToSliderRange).
-- Bug : drawTraitSliders lit aiCompetitorsTexts.driverPreviewSection.emptycompetitors (minuscules) alors que la clé définie est emptyCompetitors ; si la liste de concurrents était vide, im.Text recevrait nil. Peu probable en pratique car configWithDefaults fournit toujours au moins un concurrent.
-- Un seul concurrent est prévisualisé à la fois ; Prev / Next recopient d'abord les curseurs dans le concurrent courant.
+- Changes are only written to disk with the Save button; the entered reference time is stored in ui.default_player_time_sec (minimum 1 s, default 100 s).
+- Loaded values are clamped to their slider's range (clampParamToSliderRange).
+- Bug: drawTraitSliders reads aiCompetitorsTexts.driverPreviewSection.emptycompetitors (lowercase) while the defined key is emptyCompetitors; if the competitors list were empty, im.Text would receive nil. Unlikely in practice because configWithDefaults always provides at least one competitor.
+- Only one competitor is previewed at a time; Prev / Next first copy the sliders into the current competitor.
 
-## Classe `Panel`
+## Class `Panel`
 
-Onglet de configuration des concurrents IA (windowDescription = « AI Competitors Configuration »). Champs principaux : competitors (liste copiée pour l'édition), ui, selectedCompetitorIndex, generalFloatPtrs (un FloatPtr par paramètre général), referenceTimePtr et traitSkillPtr / traitConsistencyPtr / traitRiskPtr. Appelé par la fenêtre de l'éditeur de rallye (draw).
+AI competitors configuration tab (windowDescription = "AI Competitors Configuration"). Main fields: competitors (list copied for editing), ui, selectedCompetitorIndex, generalFloatPtrs (one FloatPtr per general parameter), referenceTimePtr and traitSkillPtr / traitConsistencyPtr / traitRiskPtr. Called by the rally editor window (draw).
 
-Le module renvoie un constructeur : `local obj = require("editor_rallyEditor_aiCompetitorsTab")(options)`.
+The module returns a constructor: `local obj = require("editor_rallyEditor_aiCompetitorsTab")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `Panel:applyGeneralTable(general)` | Applique une table de paramètres généraux aux curseurs, chaque valeur étant bornée à sa plage. | 73 |
-| `Panel:applySelectedCompetitorToTraitSliders()` | Met les curseurs de traits aux valeurs du concurrent sélectionné (index borné à la liste ; valeur par défaut ui.default_slider_value ou 0.5 si le trait est absent). | 97 |
-| `Panel:buildVisualization()` | Synchronise les traits puis calcule les données d'aperçu (aiCompetitorsEditorPreview.computeVisualization) avec les traits ramenés à [0,1] selon slider_min/slider_max. | 146 |
-| `Panel:competitorDisplayName(competitor)` | Renvoie le nom affichable d'un concurrent, ou « ? » s'il est absent ou vide. | 111 |
-| `Panel:draw(_mouseInfo, _dtReal, _dtSim, _dtRaw)` | Appelé à chaque frame par la fenêtre de l'éditeur de rallye : barre d'outils (Reload / Save), parts de résultats, graphique, puis deux colonnes (paramètres généraux, référence et concurrents). Les arguments sont ignorés. | 288 |
-| `Panel:drawGeneralParameterGroups()` | Dessine les groupes de curseurs des paramètres généraux avec titres, descriptions, infobulles et valeur formatée. | 161 |
-| `Panel:drawReferenceAndDriversColumn()` | Dessine la colonne de droite : champ du temps de référence puis les curseurs de traits. | 254 |
-| `Panel:drawTraitSliders()` | Dessine la navigation Prev / Next entre concurrents et les curseurs Pace, Consistency et Risk. | 197 |
-| `Panel:gatherGeneralTable()` | Relit les valeurs des curseurs dans une table des paramètres généraux. | 62 |
-| `Panel:init()` | Crée les pointeurs ImGui (paramètres généraux par défaut, temps de référence, traits à 0.5) puis charge le fichier de configuration. | 46 |
-| `Panel:loadFromDisk()` | Relit la configuration (loadRawConfig puis configWithDefaults), met à jour curseurs, concurrents, ui et temps de référence, et resélectionne le premier concurrent. | 122 |
-| `Panel:parseReferenceTimeSeconds()` | Valide le temps de référence saisi : remplace une valeur invalide (NaN) par la valeur par défaut et impose un minimum de 1 s. | 133 |
-| `Panel:syncTraitsIntoSelectedCompetitor()` | Copie les trois curseurs de traits dans le concurrent sélectionné (sans effet si aucun concurrent ou index invalide). | 82 |
-| `Panel:trySaveToDisk()` | Synchronise les traits, met à jour ui.default_player_time_sec et écrit le fichier via saveConfig ; journalise « Wrote ... » (I) ou « Failed to save ... » (E). | 271 |
+| `Panel:applyGeneralTable(general)` | Applies a general parameters table to the sliders, each value being clamped to its range. | 73 |
+| `Panel:applySelectedCompetitorToTraitSliders()` | Sets the trait sliders to the selected competitor's values (index clamped to the list; default value ui.default_slider_value or 0.5 if the trait is missing). | 97 |
+| `Panel:buildVisualization()` | Syncs the traits then computes the preview data (aiCompetitorsEditorPreview.computeVisualization) with the traits brought back to [0,1] according to slider_min/slider_max. | 146 |
+| `Panel:competitorDisplayName(competitor)` | Returns a competitor's displayable name, or "?" if it is missing or empty. | 111 |
+| `Panel:draw(_mouseInfo, _dtReal, _dtSim, _dtRaw)` | Called every frame by the rally editor window: toolbar (Reload / Save), outcome shares, chart, then two columns (general parameters, reference and competitors). Arguments are ignored. | 288 |
+| `Panel:drawGeneralParameterGroups()` | Draws the general parameter slider groups with titles, descriptions, tooltips and formatted value. | 161 |
+| `Panel:drawReferenceAndDriversColumn()` | Draws the right column: reference time field then the trait sliders. | 254 |
+| `Panel:drawTraitSliders()` | Draws the Prev / Next navigation between competitors and the Pace, Consistency and Risk sliders. | 197 |
+| `Panel:gatherGeneralTable()` | Reads the slider values back into a general parameters table. | 62 |
+| `Panel:init()` | Creates the ImGui pointers (default general parameters, reference time, traits at 0.5) then loads the configuration file. | 46 |
+| `Panel:loadFromDisk()` | Re-reads the configuration (loadRawConfig then configWithDefaults), updates sliders, competitors, ui and reference time, and reselects the first competitor. | 122 |
+| `Panel:parseReferenceTimeSeconds()` | Validates the entered reference time: replaces an invalid value (NaN) with the default and enforces a minimum of 1 s. | 133 |
+| `Panel:syncTraitsIntoSelectedCompetitor()` | Copies the three trait sliders into the selected competitor (no effect if no competitor or invalid index). | 82 |
+| `Panel:trySaveToDisk()` | Syncs the traits, updates ui.default_player_time_sec and writes the file via saveConfig; logs "Wrote ..." (I) or "Failed to save ..." (E). | 271 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/rallyEditor/aiCompetitorsTab.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/rallyEditor/aiCompetitorsTab.lua`.*

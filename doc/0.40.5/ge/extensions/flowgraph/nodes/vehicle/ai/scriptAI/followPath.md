@@ -1,38 +1,38 @@
 # `flowgraph_nodes_vehicle_ai_scriptAI_followPath`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/followPath.lua` · VM : Game Engine (GE) · 150 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/followPath.lua` · VM: Game Engine (GE) · 150 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/ai/scriptAI/followPath")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/ai/scriptAI/followPath")` (file under extensions/ but not a regular extension)
 
-Nœud « AI Follow Path from Data » (couleur ai). Fait suivre à un véhicule un chemin ScriptAI fourni par les nœuds « AI Path from File » ou « Stored AI Path » (ai.startFollowing). Entrées : flow, reset, path (type aiPath), vehId, loopCount. Sortie : flow, actif quand le chemin est terminé. Options de l'inspecteur : Timescale (min 0,25), mode de reset (neverReset, alwaysReset, startReset), bouton « Reset AI ». Données : handBrakeWhenFinished, straightenWheelsWhenFinished.
+Node "AI Follow Path from Data" (color ai). Makes a vehicle follow a ScriptAI path provided by the "AI Path from File" or "Stored AI Path" nodes (ai.startFollowing). Inputs: flow, reset, path (type aiPath), vehId, loopCount. Output: flow, active when the path is finished. Inspector options: Timescale (min 0.25), reset mode (neverReset, alwaysReset, startReset), "Reset AI" button. Data: handBrakeWhenFinished, straightenWheelsWhenFinished.
 
-## Remarques
+## Notes
 
-- loopMode n'est pas sauvegardé : il revient à « neverReset » au rechargement du projet.
-- Si loopCount n'est pas donné, la valeur 0 est envoyée à ai.startFollowing.
+- loopMode is not saved: it goes back to "neverReset" when the project is reloaded.
+- If loopCount is not given, the value 0 is sent to ai.startFollowing.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Arrête l'IA si le chemin était en cours puis remet started/complete à false. | 87 |
-| `C:_onDeserialized(nodeData)` | Restaure timeScale (1 par défaut). | 138 |
-| `C:_onSerialize(res)` | Sauvegarde timeScale. | 134 |
-| `C:drawCustomProperties()` | Dessine le champ Timescale (minimum 0,25), le choix du mode de reset et le bouton « Reset AI ». | 38 |
-| `C:drawMiddle(builder, style)` | Affiche les états Complete et Started. | 143 |
-| `C:endAI()` | Envoie au véhicule ai:scriptStop(handBrake, straightenWheels). | 70 |
-| `C:getVeh()` | Renvoie le véhicule dont l'id est donné en entrée, ou le véhicule du joueur (getPlayerVehicle(0)) sans entrée. | 60 |
-| `C:init()` | Initialise started, complete, loopMode=« neverReset », timeScale=1 et les données. | 29 |
-| `C:loadPath()` | Charge le chemin depuis le pin path dans self.path. | 95 |
-| `C:onVehicleSubmitInfo(id, info, nodeID)` | Hook appelé par la commande envoyée à chaque frame (ai.scriptState du véhicule) ; quand l'info est nil pour ce véhicule et ce nœud, marque le chemin comme terminé et arrête l'IA. | 77 |
-| `C:setupAI()` | Prépare le chemin (temps divisés par timeScale, dir/up conservés) et envoie ai.startFollowing(chemin, nil, loopCount, mode de boucle). | 99 |
-| `C:work()` | Gère reset ; au premier passage lance setupAI ; chaque frame demande via be:queueAllObjectLua l'état ai.scriptState() de chaque véhicule qui rappelle le hook onVehicleSubmitInfo ; active flow une fois complete. | 118 |
+| `C:_executionStopped()` | Stops the AI if the path was running then resets started/complete to false. | 87 |
+| `C:_onDeserialized(nodeData)` | Restores timeScale (1 by default). | 138 |
+| `C:_onSerialize(res)` | Saves timeScale. | 134 |
+| `C:drawCustomProperties()` | Draws the Timescale field (minimum 0.25), the reset mode choice and the "Reset AI" button. | 38 |
+| `C:drawMiddle(builder, style)` | Displays the Complete and Started states. | 143 |
+| `C:endAI()` | Sends ai:scriptStop(handBrake, straightenWheels) to the vehicle. | 70 |
+| `C:getVeh()` | Returns the vehicle whose id is given as input, or the player's vehicle (getPlayerVehicle(0)) without input. | 60 |
+| `C:init()` | Initializes started, complete, loopMode="neverReset", timeScale=1 and the data. | 29 |
+| `C:loadPath()` | Loads the path from the path pin into self.path. | 95 |
+| `C:onVehicleSubmitInfo(id, info, nodeID)` | Hook called by the command sent every frame (the vehicle's ai.scriptState); when the info is nil for this vehicle and this node, marks the path as finished and stops the AI. | 77 |
+| `C:setupAI()` | Prepares the path (times divided by timeScale, dir/up kept) and sends ai.startFollowing(path, nil, loopCount, loop mode). | 99 |
+| `C:work()` | Handles reset; on the first pass runs setupAI; every frame requests via be:queueAllObjectLua the ai.scriptState() state of each vehicle, which calls the onVehicleSubmitInfo hook back; activates flow once complete. | 118 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `queueAllObjectLua`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/followPath.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/followPath.lua`.*

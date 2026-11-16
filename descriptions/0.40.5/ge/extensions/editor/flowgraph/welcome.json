@@ -1,22 +1,64 @@
 {
   "path": "lua/ge/extensions/editor/flowgraph/welcome.lua",
-  "module": "Fenêtre d'accueil « Welcome » (fg_welcome) de l'éditeur Flowgraph. Affiche une image d'en-tête (welcomeHeader.png), une image latérale (welcomeSide.png), une colonne gauche (nouveau projet, ouvrir un projet, 10 derniers fichiers récents) et une colonne droite d'introduction. Un projet de démonstration « Simple Race » est chargé depuis flowgraph/examples/scenarios/simpleRace/race.flow.json.",
+  "module": "\"Welcome\" window (fg_welcome) of the Flowgraph editor. Displays a header image (welcomeHeader.png), a side image (welcomeSide.png), a left column (new project, open a project, last 10 recent files) and a right introduction column. A \"Simple Race\" demo project is loaded from flowgraph/examples/scenarios/simpleRace/race.flow.json.",
   "notes": [
-    "Les fichiers récents viennent de la préférence flowgraph.general.recentFiles ; seuls ceux qui existent encore (FS:fileExists) sont listés.",
-    "La fenêtre prend le focus une seule fois à l'ouverture (self.focus)."
+    "Recent files come from the flowgraph.general.recentFiles preference; only those that still exist (FS:fileExists) are listed.",
+    "The window takes focus only once at opening (self.focus)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe de la fenêtre (windowName 'fg_welcome', windowDescription 'Welcome').",
+      "desc": "Window class (windowName 'fg_welcome', windowDescription 'Welcome').",
       "functions": {
-        "attach": {"desc": "Mémorise le manager courant.", "params": {"mgr": {"type": "table", "desc": "Manager flowgraph."}}, "internal": true},
-        "init": {"desc": "Enregistre la fenêtre (150x300, visible par défaut), charge les textures d'en-tête et latérale, prépare la liste des projets de démo.", "internal": true},
-        "drawLeftColumn": {"desc": "Dessine « Projects » (New Project via core_flowgraphManager.addManager, Open Project... via le dialogue de fichier) et « Recent Files ».", "internal": true},
-        "drawRightColumn": {"desc": "Dessine le texte d'introduction de l'éditeur.", "internal": true},
-        "drawContent": {"desc": "Assemble les images et les deux colonnes de la fenêtre.", "internal": true},
-        "draw": {"desc": "Dessine la fenêtre « Welcome » si elle est visible. Appelée à chaque frame.", "internal": true},
-        "_onSerialize": {"desc": "Hook de sérialisation : vide.", "params": {"data": {"type": "table", "desc": "Table de sauvegarde."}}, "internal": true},
-        "_onDeserialized": {"desc": "Hook de désérialisation : vide.", "params": {"data": {"type": "table", "desc": "Données restaurées."}}, "internal": true}
+        "attach": {
+          "desc": "Stores the current manager.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager."
+            }
+          },
+          "internal": true
+        },
+        "init": {
+          "desc": "Registers the window (150x300, visible by default), loads the header and side textures, prepares the list of demo projects.",
+          "internal": true
+        },
+        "drawLeftColumn": {
+          "desc": "Draws \"Projects\" (New Project via core_flowgraphManager.addManager, Open Project... via the file dialog) and \"Recent Files\".",
+          "internal": true
+        },
+        "drawRightColumn": {
+          "desc": "Draws the editor's introduction text.",
+          "internal": true
+        },
+        "drawContent": {
+          "desc": "Assembles the images and the two columns of the window.",
+          "internal": true
+        },
+        "draw": {
+          "desc": "Draws the \"Welcome\" window if it is visible. Called every frame.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Serialization hook: empty.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Save table."
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Deserialization hook: empty.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Restored data."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

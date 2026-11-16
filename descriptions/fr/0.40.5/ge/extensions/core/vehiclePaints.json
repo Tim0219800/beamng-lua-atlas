@@ -1,0 +1,192 @@
+{
+  "path": "lua/ge/extensions/core/vehiclePaints.lua",
+  "module": "Extension GE `core_vehiclePaints` : gestion des peintures de véhicules. Lit les fichiers de bibliothèque de peintures (paints, multiPaintSetups, paintCollections) via core_vehicles, résout les peintures déclarées par chaque modèle et chaque config (`setupPaints`, appelé par core_vehicles.getModel), compare les peintures d'un .pc avec celles du modèle/de la bibliothèque, et tire des peintures aléatoires selon les distributions randomPaintDistribution / randomMultiPaintDistribution. Une peinture est une table {baseColor = {r,g,b,a}, metallic, roughness, clearcoat, clearcoatRoughness, name, class…}.",
+  "usage": "-- Peintures aléatoires pour une config\nlocal r = core_vehiclePaints.getRandomPaints('etk800', '854_190d_A')\nprint(r.type, r.paintName1, r.paintName2, r.paintName3)\n-- Trois noms de peinture pour un véhicule existant\nlocal names = core_vehiclePaints.getRandomPaintsByVehicle(be:getPlayerVehicleID(0))\ncore_vehicle_manager.setVehicleColorsNames(be:getPlayerVehicleID(0), names)",
+  "notes": [
+    "Les peintures de la bibliothèque sont indexées par id ; la peinture spéciale '_missing_paint_' (gris 0.5) sert de valeur de secours. Les entrées marquées `_official` viennent de fichiers du contenu officiel (Author = 'BeamNG' ou chemin officiel).",
+    "getRandomPaintsByVehicle lit `obj.jbeam` (minuscules) alors que le reste du code utilise `veh.JBeam` ; selon la casse acceptée par le moteur pour ce champ, le modèle peut valoir nil, auquel cas la fonction renvoie {'White','White','White'} avec un avertissement."
+  ],
+  "fields": {},
+  "functions": {
+    "paintSignature": {
+      "desc": "Chaîne JSON canonique d'une peinture ({baseColor, clearcoat, clearcoatRoughness, metallic, roughness}, 5 décimales) servant à comparer deux peintures.",
+      "params": {
+        "paint": {
+          "type": "table",
+          "desc": "peinture complète"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "signature"
+        }
+      ]
+    },
+    "multiPaintSetupSignature": {
+      "desc": "Signature d'un ensemble de 3 peintures : {\"paint1\":..,\"paint2\":..,\"paint3\":..} où chaque élément est une paintSignature.",
+      "params": {
+        "multiPaintSetup": {
+          "type": "table",
+          "desc": "table avec paint1, paint2, paint3 (peintures complètes)"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "signature"
+        }
+      ]
+    },
+    "setupPaints": {
+      "desc": "Prépare les peintures d'un modèle et de ses configs : collecte les peintures directes, les libraryPaints, les paintCollections, résout les multiPaintSetups et les peintures par défaut (modèle d'abord, puis configs) et finalise les classes. Modifie `model` et `configs` en place. Appelée par core_vehicles.getModel.",
+      "params": {
+        "model": {
+          "type": "table",
+          "desc": "table du modèle (model.key, model.paints…)"
+        },
+        "configs": {
+          "type": "table<string, table>",
+          "desc": "configs du modèle"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "writePcPaintsAsInfoPaints": {
+      "desc": "Écrit les peintures d'un .pc comme `defaultMultiPaintSetup` d'un fichier info, avec des peintures explicites (class 'hidden', nommées '<config> Paint N'). Modifie infoData.",
+      "params": {
+        "pcData": {
+          "type": "table",
+          "desc": "contenu du .pc (champ paints)"
+        },
+        "infoData": {
+          "type": "table",
+          "desc": "contenu info à compléter"
+        },
+        "configName": {
+          "type": "string",
+          "desc": "nom de la config"
+        }
+      },
+      "returns": []
+    },
+    "convertPcPaintsToInfoPaints": {
+      "desc": "Comme writePcPaintsAsInfoPaints, mais réutilise une référence existante (peinture du modèle, de la bibliothèque, ou multiPaintSetup équivalent trouvé par signature) quand elle existe, au lieu de dupliquer la peinture.",
+      "params": {
+        "pcData": {
+          "type": "table",
+          "desc": "contenu du .pc"
+        },
+        "infoData": {
+          "type": "table",
+          "desc": "contenu info à compléter (defaultMultiPaintSetup)"
+        },
+        "configName": {
+          "type": "string",
+          "desc": "nom de la config"
+        },
+        "modelName": {
+          "type": "string",
+          "desc": "modèle, pour chercher ses peintures"
+        }
+      },
+      "returns": []
+    },
+    "validatePcPaints": {
+      "desc": "Analyse les peintures d'un .pc : pour chacune des 3, indique si elle correspond à une peinture du modèle, de la bibliothèque ou est personnalisée, et si l'ensemble correspond à un multiPaintSetup connu.",
+      "params": {
+        "pcData": {
+          "type": "table",
+          "desc": "contenu du .pc"
+        },
+        "modelName": {
+          "type": "string",
+          "desc": "nom du modèle"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{paints = {{index, source ('model'|'library'|'custom'), modelPaintName, libraryPaintId, libraryPaintName, resolvedReference}}, multiPaintSetup = {found, source, name, id}, defaultStorageMode ('individualPaints'|'multiPaintSetup'), canOverridePaints, modelDefaultColors, modelDefaultMultiPaintSetup}"
+        }
+      ]
+    },
+    "getRandomPaints": {
+      "desc": "Tire au hasard une entrée de peinture selon les probabilités de la config (ou à défaut du modèle). Le helper est construit à la première demande.",
+      "params": {
+        "model_key": {
+          "type": "string",
+          "desc": "nom du modèle"
+        },
+        "config_key": {
+          "type": "string",
+          "desc": "clé de la config (peut être sans config propre : alors le modèle est utilisé)"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{type ('paint' ou multiPaintSetup), paintName1, paintName2, paintName3, probability}"
+        }
+      ]
+    },
+    "getRandomPaintsByVehicle": {
+      "desc": "Tire des peintures pour un véhicule existant, d'après son modèle et sa config (extraits de partConfig).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "identifiant du véhicule"
+        }
+      },
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "{nom1, nom2, nom3} utilisable par core_vehicle_manager.setVehicleColorsNames ; {'White','White','White'} si le véhicule ou la config est introuvable"
+        }
+      ]
+    },
+    "createRandomMultiPaintSetup": {
+      "desc": "Génère un multiPaintSetup aléatoire en tirant trois peintures simples (les multiPaintSetups de la distribution sont ignorés).",
+      "params": {
+        "model_key": {
+          "type": "string",
+          "desc": "modèle"
+        },
+        "config_key": {
+          "type": "string",
+          "desc": "config"
+        },
+        "avoidDuplicates": {
+          "type": "boolean|nil",
+          "desc": "si true, une peinture déjà tirée ne peut pas être retirée"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{paintName1, paintName2, paintName3} ('White' en secours)"
+        }
+      ]
+    },
+    "testRandomPaint": {
+      "desc": "Outil de test : tire `amount` peintures et logue (niveau I) la répartition obtenue.",
+      "params": {
+        "model_key": {
+          "type": "string",
+          "desc": "modèle"
+        },
+        "config_key": {
+          "type": "string",
+          "desc": "config"
+        },
+        "amount": {
+          "type": "integer",
+          "desc": "nombre de tirages"
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

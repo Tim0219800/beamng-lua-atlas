@@ -1,0 +1,69 @@
+{
+  "path": "lua/ge/extensions/util/screenshotCreator/thumbnailTargets.lua",
+  "module": "Aide à la construction de la liste des cibles de vignettes (couples modèle/config) pour le compositeur de vignettes. Il valide les cibles reçues de l'interface (au plus 2000, noms de 128 caractères maximum, doublons supprimés), les transforme en éléments de travail à partir des données de core_vehicles, produit le catalogue des modèles et configs pour l'interface (avec l'indicateur « livré » de shippedConfigs) et gère le cas par défaut où seule la config du véhicule du joueur est photographiée.",
+  "notes": [
+    "Un élément de travail est {modelName, modelKey, configName, isDefaultConfig} ; modelKey vaut configData.model_key s'il existe, sinon le nom du modèle.",
+    "resolveStartMessage sans targets exige un véhicule joueur dont partConfig est un fichier .pc nommé ; sinon elle renvoie nil et un message d'erreur.",
+    "Les cibles sont des tables {model = string, config = string}."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : core_vehicles et util_screenshotCreator_shippedConfigs."}
+  },
+  "functions": {
+    "normalizeConfigName": {
+      "desc": "Extrait le nom de config d'un chemin .pc (dernier segment, sans extension). Renvoie nil si ce n'est pas une chaîne finissant par .pc.",
+      "params": {"partConfig": {"type": "string|nil", "desc": "Valeur de vehicle.partConfig, ex. vehicles/pickup/d15_4wd.pc."}},
+      "returns": [{"type": "string|nil", "desc": "Nom de la configuration, ex. d15_4wd."}]
+    },
+    "getConfigData": {
+      "desc": "Cherche dans core_vehicles.getModel(modelKey).configs la configuration dont key vaut configName.",
+      "params": {
+        "modelKey": {"type": "string", "desc": "Clé du modèle."},
+        "configName": {"type": "string", "desc": "Clé de la configuration."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Données de la config, ou nil."}]
+    },
+    "isDefaultConfig": {
+      "desc": "Indique si la config est celle par défaut du modèle (is_default_config ou default_pc du modèle).",
+      "params": {
+        "modelKey": {"type": "string", "desc": "Clé du modèle."},
+        "configName": {"type": "string", "desc": "Clé de la configuration."},
+        "configData": {"type": "table|nil", "desc": "Données de la config, si déjà connues."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si config par défaut."}]
+    },
+    "sanitizeTargets": {
+      "desc": "Valide et dédoublonne une liste de cibles.",
+      "params": {"targets": {"type": "table|nil", "desc": "Liste de {model, config}."}},
+      "returns": [
+        {"type": "table|nil", "desc": "Liste assainie ; nil si targets est nil."},
+        {"type": "string|nil", "desc": "Message d'erreur (liste invalide, cible invalide à l'indice N)."}
+      ]
+    },
+    "buildExplicitWorkItems": {
+      "desc": "Transforme des cibles assainies en éléments de travail. Échoue si une config est inconnue.",
+      "params": {"targets": {"type": "table[]", "desc": "Liste de {model, config}."}},
+      "returns": [
+        {"type": "table[]|nil", "desc": "Éléments de travail."},
+        {"type": "string|nil", "desc": "« Unknown vehicle config: modèle/config »."}
+      ]
+    },
+    "buildModelCatalog": {
+      "desc": "Construit le catalogue trié des modèles pour l'interface : {key, label « Marque Nom », category = Type, configs = [{key, label, isDefault, shipped}]}. Les modèles sans config sont omis.",
+      "returns": [{"type": "table[]", "desc": "Catalogue des modèles."}]
+    },
+    "buildShippedTargets": {
+      "desc": "Liste toutes les cibles {model, config} livrées (selon shippedConfigs) pour les modèles donnés.",
+      "params": {"modelKeys": {"type": "string[]", "desc": "Clés de modèles."}},
+      "returns": [{"type": "table[]", "desc": "Cibles {model, config}."}]
+    },
+    "resolveStartMessage": {
+      "desc": "Convertit un message de démarrage de l'interface en éléments de travail : message.targets si présent, sinon la config actuelle du véhicule du joueur.",
+      "params": {"message": {"type": "table|nil", "desc": "Message de l'interface ({targets = ...})."}},
+      "returns": [
+        {"type": "table[]|nil", "desc": "Éléments de travail."},
+        {"type": "string|nil", "desc": "Message d'erreur."}
+      ]
+    }
+  }
+}

@@ -1,29 +1,29 @@
 # `editor_toolUtilities_regionStyles`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/regionStyles.lua` · VM : Game Engine (GE) · 33 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/regionStyles.lua` · VM: Game Engine (GE) · 33 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_regionStyles` : `extensions.load("editor_toolUtilities_regionStyles")`, puis la globale `editor_toolUtilities_regionStyles`
+**Access:** extension `editor_toolUtilities_regionStyles`: `extensions.load("editor_toolUtilities_regionStyles")`, then the global `editor_toolUtilities_regionStyles`
 
-Style de peinture de marquage routier pour une région. Pour l'instant une seule région est définie : USA (circulation à droite). Donne les matériaux et largeurs des lignes centrales, de voie, de rive, d'arrêt et de cédez-le-passage, ainsi que de la zone de séparation hachurée.
+Road marking paint style for a region. For now only one region is defined: USA (right-hand traffic). Provides the materials and widths of center, lane, edge, stop and give-way lines, as well as of the hatched separation zone.
 
-## Remarques
+## Notes
 
-- Le cédez-le-passage (dents de requin) n'existe pas comme matériau DecalRoad : c'est une barre blanche pleine.
-- getRegion ignore tout argument et renvoie toujours la table USA.
+- The give-way line (shark teeth) does not exist as a DecalRoad material: it is a solid white bar.
+- getRegion ignores any argument and always returns the USA table.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_regionStyles.getRegion()` | Renvoie la table de style de marquage de la région courante (toujours USA) : centerLineMaterial, centerLineWidthM, centerLineTexLen, laneLineMaterial, edgeLineMaterial, leftEdgeLineMaterial, stopLineMaterial, giveWayMaterial, stopLineWidthM, giveWayWidthM, goreSepMaterial, goreSepTexLen. | 25 |
+| `editor_toolUtilities_regionStyles.getRegion()` | Returns the marking style table of the current region (always USA): centerLineMaterial, centerLineWidthM, centerLineTexLen, laneLineMaterial, edgeLineMaterial, leftEdgeLineMaterial, stopLineMaterial, giveWayMaterial, stopLineWidthM, giveWayWidthM, goreSepMaterial, goreSepTexLen. | 25 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_regionStyles.getRegion()`
 
-Renvoie la table de style de marquage de la région courante (toujours USA) : centerLineMaterial, centerLineWidthM, centerLineTexLen, laneLineMaterial, edgeLineMaterial, leftEdgeLineMaterial, stopLineMaterial, giveWayMaterial, stopLineWidthM, giveWayWidthM, goreSepMaterial, goreSepTexLen.
+Returns the marking style table of the current region (always USA): centerLineMaterial, centerLineWidthM, centerLineTexLen, laneLineMaterial, edgeLineMaterial, leftEdgeLineMaterial, stopLineMaterial, giveWayMaterial, stopLineWidthM, giveWayWidthM, goreSepMaterial, goreSepTexLen.
 
-- **renvoie** : table Table de style (matériaux en string, largeurs et longueurs de texture en mètres).
+- **returns**: table Style table (materials as strings, widths and texture lengths in meters).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/regionStyles.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/regionStyles.lua`.*

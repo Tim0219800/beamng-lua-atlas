@@ -1,92 +1,168 @@
 {
   "path": "lua/ge/extensions/campaign/campaignsLoader.lua",
-  "module": "Chargeur de campagnes : trouve les fichiers /campaigns/*.json dont header.type vaut « campaign », les charge (avec infos de mod et image d'aperçu), valide et prépare une campagne, la démarre (ou reprend une sauvegarde) et gère les sauvegardes dans /saves/campaigns/ (fichiers slotN.json de header.type « campaignSave »). Les modules de la campagne sont campaign_campaigns, campaign_comics, campaign_rewards, campaign_dealer et campaign_photoSafari (M.campaignModules).",
+  "module": "Campaign loader: finds the /campaigns/*.json files whose header.type is \"campaign\", loads them (with mod info and preview image), validates and prepares a campaign, starts it (or resumes a save) and manages saves in /saves/campaigns/ (slotN.json files with header.type \"campaignSave\"). The campaign modules are campaign_campaigns, campaign_comics, campaign_rewards, campaign_dealer and campaign_photoSafari (M.campaignModules).",
   "notes": [
-    "Sauvegarde : saveCampaign lance le hook onSaveCampaign(callback) ; chaque module appelle le callback avec (alias global, données) ; le résultat est écrit en JSON avec un header {version = 1, type = 'campaignSave', title}. Rien n'est sauvegardé si meta.enableSaves est faux.",
-    "La sauvegarde correspond à une campagne par son titre (meta.title).",
-    "resumeSavedCampaign appelle onResumeCampaign sur chaque module sauvegardé via _G (sauf campaign_campaigns, repris en dernier avec campaign_campaigns.resumeCampaign).",
-    "Bug : M.onInit = onInit exporte une variable non définie dans ce fichier (nil).",
-    "Bug : startByFolder appelle campaign_campaigns.start, qui n'est pas exportée par campaigns.lua (celui-ci exporte startCampaign) ; l'appel échoue. Utiliser plutôt campaign_campaignsLoader.start.",
-    "Bug : processCampaignStartInternal teste « if campaign then stop() » avec des globales non définies dans ce fichier ; seul un échec de validation (inatteignable car validate retourne toujours true) ferait retourner nil.",
-    "splitFieldByToken construit le motif \"([^\"..token..\".]+)\" : le point est toujours exclu en plus du jeton donné.",
-    "start attend la fin du niveau courant (scenetree.MissionGroup) avant de lancer la campagne, via endActiveGameMode et triggerDelayedStartGenerator."
+    "Saving: saveCampaign launches the hook onSaveCampaign(callback); each module calls the callback with (global alias, data); the result is written as JSON with a header {version = 1, type = 'campaignSave', title}. Nothing is saved if meta.enableSaves is false.",
+    "A save matches a campaign by its title (meta.title).",
+    "resumeSavedCampaign calls onResumeCampaign on each saved module via _G (except campaign_campaigns, resumed last with campaign_campaigns.resumeCampaign).",
+    "Bug: M.onInit = onInit exports a variable not defined in this file (nil).",
+    "Bug: startByFolder calls campaign_campaigns.start, which is not exported by campaigns.lua (it exports startCampaign); the call fails. Use campaign_campaignsLoader.start instead.",
+    "Bug: processCampaignStartInternal tests \"if campaign then stop() \" with globals not defined in this file; only a validation failure (unreachable since validate always returns true) would make it return nil.",
+    "splitFieldByToken builds the pattern \"([^\"..token..\".]+)\": the dot is always excluded in addition to the given token.",
+    "start waits for the current level to end (scenetree.MissionGroup) before launching the campaign, via endActiveGameMode and triggerDelayedStartGenerator."
   ],
   "fields": {
-    "campaignModules": {"type": "string[]", "desc": "Modules d'extension chargés pour une campagne."},
-    "onInit": {"type": "nil", "desc": "Toujours nil : référence à une variable non définie dans le fichier."}
+    "campaignModules": {
+      "type": "string[]",
+      "desc": "Extension modules loaded for a campaign."
+    },
+    "onInit": {
+      "type": "nil",
+      "desc": "Always nil: reference to a variable not defined in the file."
+    }
   },
   "functions": {
     "loadCampaign": {
-      "desc": "Lit le JSON d'une campagne et ajoute sourceFile, sourcePath, official, modID/modName/modTitle (valeurs « BeamNG » / « BeamNG.drive » si ce n'est pas un mod) et previews (image .jpg du dossier de la campagne).",
-      "params": {"campaignfile": {"type": "string", "desc": "Chemin du fichier JSON de la campagne."}},
-      "returns": [{"type": "table", "desc": "Données de la campagne enrichies."}],
+      "desc": "Reads a campaign's JSON and adds sourceFile, sourcePath, official, modID/modName/modTitle (\"BeamNG\" / \"BeamNG.drive\" values if it is not a mod) and previews (.jpg image from the campaign folder).",
+      "params": {
+        "campaignfile": {
+          "type": "string",
+          "desc": "Path of the campaign's JSON file."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Enriched campaign data."
+        }
+      ],
       "internal": false
     },
     "getCampaignFilenames": {
-      "desc": "Liste les fichiers JSON de /campaigns/ (1 niveau) dont header.type == 'campaign'. Retourne {} si le dossier n'existe pas.",
+      "desc": "Lists the JSON files in /campaigns/ (1 level) whose header.type == 'campaign'. Returns {} if the folder does not exist.",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Chemins des fichiers de campagne."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Paths of the campaign files."
+        }
+      ],
       "internal": false
     },
     "getList": {
-      "desc": "Charge toutes les campagnes trouvées avec loadCampaign et les retourne ; coopère avec util_asyncBulkLoader si un chargement groupé est en cours.",
+      "desc": "Loads all the campaigns found with loadCampaign and returns them; cooperates with util_asyncBulkLoader if a bulk load is in progress.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Liste des campagnes."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "List of campaigns."
+        }
+      ],
       "internal": false
     },
     "getCampaignScenarios": {
-      "desc": "Retourne la liste mise en cache scenariosInAllCampaigns (vide dans ce fichier : jamais remplie ici ; generateCampaignScenariosList existe mais n'est pas appelée).",
+      "desc": "Returns the cached list scenariosInAllCampaigns (empty in this file: never filled here; generateCampaignScenariosList exists but is not called).",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Chemins de scénarios."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Scenario paths."
+        }
+      ],
       "internal": false
     },
     "splitFieldByToken": {
-      "desc": "Découpe une chaîne par un caractère jeton (en excluant aussi le point) et retourne les morceaux.",
+      "desc": "Splits a string by a token character (also excluding the dot) and returns the pieces.",
       "params": {
-        "field": {"type": "string", "desc": "Chaîne à découper."},
-        "token": {"type": "string", "desc": "Jeton de séparation."}
+        "field": {
+          "type": "string",
+          "desc": "String to split."
+        },
+        "token": {
+          "type": "string",
+          "desc": "Separator token."
+        }
       },
-      "returns": [{"type": "string[]", "desc": "Morceaux."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Pieces."
+        }
+      ],
       "internal": false
     },
     "start": {
-      "desc": "Démarre une campagne choisie dans l'interface. Si un niveau est chargé, attend sa fermeture ; sinon décharge les extensions automatiques, charge celles du scénario, du quick race et de la campagne, prépare la campagne, puis reprend une sauvegarde existante ou appelle campaign_campaigns.startCampaign.",
+      "desc": "Starts a campaign chosen in the interface. If a level is loaded, waits for it to close; otherwise unloads the automatic extensions, loads those of the scenario, the quick race and the campaign, prepares the campaign, then resumes an existing save or calls campaign_campaigns.startCampaign.",
       "params": {
-        "newCampaign": {"type": "table", "desc": "Campagne (issue de loadCampaign)."},
-        "endCallback": {"type": "function|nil", "desc": "Mémorisée comme endCampaignCallback."}
+        "newCampaign": {
+          "type": "table",
+          "desc": "Campaign (from loadCampaign)."
+        },
+        "endCallback": {
+          "type": "function|nil",
+          "desc": "Stored as endCampaignCallback."
+        }
       },
       "returns": [],
       "internal": false
     },
     "startByFolder": {
-      "desc": "Cherche la campagne dont sourcePath est path et la démarre.",
+      "desc": "Finds the campaign whose sourcePath is path and starts it.",
       "params": {
-        "path": {"type": "string", "desc": "Dossier source de la campagne."},
-        "endCallback": {"type": "function|nil", "desc": "Callback de fin."}
+        "path": {
+          "type": "string",
+          "desc": "Source folder of the campaign."
+        },
+        "endCallback": {
+          "type": "function|nil",
+          "desc": "End callback."
+        }
       },
       "returns": [],
       "internal": false
     },
     "checkSaveExists": {
-      "desc": "Retourne le nom du fichier de sauvegarde correspondant à un titre de campagne, ou nil.",
+      "desc": "Returns the save file name matching a campaign title, or nil.",
       "params": {
-        "title": {"type": "string", "desc": "Titre de la campagne."},
-        "savesEnabled": {"type": "boolean", "desc": "Si faux, retourne nil sans rien chercher."}
+        "title": {
+          "type": "string",
+          "desc": "Campaign title."
+        },
+        "savesEnabled": {
+          "type": "boolean",
+          "desc": "If false, returns nil without searching anything."
+        }
       },
-      "returns": [{"type": "string|nil", "desc": "Chemin de la sauvegarde."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Path of the save."
+        }
+      ],
       "internal": false
     },
     "saveCampaign": {
-      "desc": "Sauvegarde l'état de la campagne (voir notes) dans /saves/campaigns/ ; réutilise le fichier existant du même titre, sinon prend le prochain « slotN.json ».",
-      "params": {"campaign": {"type": "table", "desc": "Campagne traitée ({meta, state}) ; meta.enableSaves et meta.title sont lus."}},
+      "desc": "Saves the campaign state (see notes) in /saves/campaigns/; reuses the existing file with the same title, otherwise takes the next \"slotN.json\".",
+      "params": {
+        "campaign": {
+          "type": "table",
+          "desc": "Processed campaign ({meta, state}); meta.enableSaves and meta.title are read."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "resumeSavedCampaign": {
-      "desc": "Relit un fichier de sauvegarde, rappelle onResumeCampaign de chaque module concerné, puis campaign_campaigns.resumeCampaign.",
+      "desc": "Rereads a save file, calls onResumeCampaign of each module concerned again, then campaign_campaigns.resumeCampaign.",
       "params": {
-        "campaign": {"type": "table", "desc": "Campagne traitée à reprendre."},
-        "saveFilename": {"type": "string", "desc": "Chemin du fichier de sauvegarde."}
+        "campaign": {
+          "type": "table",
+          "desc": "Processed campaign to resume."
+        },
+        "saveFilename": {
+          "type": "string",
+          "desc": "Path of the save file."
+        }
       },
       "returns": [],
       "internal": false

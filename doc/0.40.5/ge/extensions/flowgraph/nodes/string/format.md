@@ -1,30 +1,30 @@
 # `flowgraph_nodes_string_format`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/string/format.lua` · VM : Game Engine (GE) · 159 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/string/format.lua` · VM: Game Engine (GE) · 159 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/string/format")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/string/format")` (file under extensions/ but not a regular extension)
 
-Noeud « Format String » (repeat_instant). Applique string.format(data.pattern, valeurs...) avec jusqu'à 16 valeurs (pins d'entrée dynamiques value_1..value_N, N réglé par « Count » dans l'éditeur). Sortie : value (string). Pattern par défaut « %d ».
+Node "Format String" (repeat_instant). Applies string.format(data.pattern, values...) with up to 16 values (dynamic input pins value_1..value_N, N set by "Count" in the editor). Output: value (string). Default pattern "%d".
 
-## Remarques
+## Notes
 
-- Maximum 16 valeurs : au-delà de 16, work ne produit rien.
-- Une valeur nil ou d'un type incompatible avec le format (ex. %d avec une chaîne) fait échouer string.format.
+- Maximum 16 values: beyond 16, work produces nothing.
+- A nil value or one of a type incompatible with the format (e.g. %d with a string) makes string.format fail.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(res)` | Restaure count et recrée les pins. | 71 |
-| `C:_onSerialize(res)` | Sauvegarde l'état du noeud dans la table donnée. | 67 |
-| `C:drawCustomProperties()` | Champ « Count » (min 1) qui ajoute/retire des pins. | 31 |
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du noeud dans l'éditeur. | 145 |
-| `C:init()` | data.pattern = '%d' et count = 1. | 22 |
-| `C:postInit()` | Crée les pins value_i initiaux. | 27 |
-| `C:updatePins(old, new)` | Crée ou supprime les pins value_i (et les liens associés) pour passer de old à new valeurs. | 49 |
-| `C:work()` | Formate le pattern avec les valeurs value_1..value_count. | 77 |
+| `C:_onDeserialized(res)` | Restores count and recreates the pins. | 71 |
+| `C:_onSerialize(res)` | Saves the node's state in the given table. | 67 |
+| `C:drawCustomProperties()` | "Count" field (min 1) that adds/removes pins. | 31 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the editor. | 145 |
+| `C:init()` | data.pattern = '%d' and count = 1. | 22 |
+| `C:postInit()` | Creates the initial value_i pins. | 27 |
+| `C:updatePins(old, new)` | Creates or deletes the value_i pins (and the associated links) to go from old to new values. | 49 |
+| `C:work()` | Formats the pattern with the values value_1..value_count. | 77 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/string/format.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/string/format.lua`.*

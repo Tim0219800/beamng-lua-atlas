@@ -2,186 +2,186 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Relie les routes de l'interface de l'éditeur de livrées (liveries, liveries.edit, liveries.edit.decals…) au code Lua. Le routeur UI appelle ces hooks Enter, Mount et Leave quand l'utilisateur change d'écran ; ils démarrent et arrêtent les sessions (ui_liveries, ui_liveries_decal), gèlent la simulation, pilotent la caméra et le curseur de décalque, et remplissent data.liveries avec les données de l'écran d'arrivée.
---- Accès : extension `ui_liveries_routeLifecycleCallbacks` : `extensions.load("ui_liveries_routeLifecycleCallbacks")`, puis la globale `ui_liveries_routeLifecycleCallbacks`
+--- Links the livery editor's UI routes (liveries, liveries.edit, liveries.edit.decals...) to Lua code. The UI router calls these Enter, Mount and Leave hooks when the user changes screen; they start and stop the sessions (ui_liveries, ui_liveries_decal), freeze the simulation, drive the camera and the decal cursor, and fill data.liveries with the destination screen's data.
+--- Access: extension `ui_liveries_routeLifecycleCallbacks`: `extensions.load("ui_liveries_routeLifecycleCallbacks")`, then the global `ui_liveries_routeLifecycleCallbacks`
 ---@class ui_liveries_routeLifecycleCallbacks
----@field dependencies string[] Extensions chargées avant celle-ci : ui_liveries_saves, ui_liveries, ui_liveries_fill, ui_liveries_decal, ui_liveries_textures, ui_liveries_camera.
+---@field dependencies string[] Extensions loaded before this one: ui_liveries_saves, ui_liveries, ui_liveries_fill, ui_liveries_decal, ui_liveries_textures, ui_liveries_camera.
 ui_liveries_routeLifecycleCallbacks = {}
 
---- Appelé à l'entrée dans l'écran de choix de vue. Exécute onDecalsEnter et place dans data.liveries.cameraViews la liste ui_liveries_camera.getViews().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:137
+--- Called when entering the view selection screen. Runs onDecalsEnter and puts the ui_liveries_camera.getViews() list in data.liveries.cameraViews.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:137
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onDecalCameraEnter(context, toRoute, fromRoute, data) end
 
---- Appelé à l'entrée dans l'écran de matériau d'un décalque. Exécute onDecalsEnter, déplace la caméra libre sur le décalque (params.layerUid) et place sa peinture dans data.liveries.layerPaint.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:144
+--- Called when entering a decal's material screen. Runs onDecalsEnter, moves the free camera to the decal (params.layerUid) and puts its paint in data.liveries.layerPaint.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:144
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onDecalMaterialEnter(context, toRoute, fromRoute, data) end
 
---- Appelé à l'entrée dans l'écran de miroir d'un décalque. Exécute onDecalsEnter, avertit si params.layerUid manque, cadre la caméra orbite sur le décalque et place ses réglages de miroir dans data.liveries.decalMirror.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:155
+--- Called when entering a decal's mirror screen. Runs onDecalsEnter, warns if params.layerUid is missing, frames the orbit camera on the decal and puts its mirror settings in data.liveries.decalMirror.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:155
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onDecalMirrorEnter(context, toRoute, fromRoute, data) end
 
---- Appelé au montage du sélecteur de décalques. Charge les textures avec ui_liveries_textures.loadTextures.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:170
+--- Called when the decal selector is mounted. Loads the textures with ui_liveries_textures.loadTextures.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:170
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onDecalSelectorMount(context, toRoute, fromRoute, data) end
 
---- Appelé en quittant l'écran de transformation d'un nouveau décalque. Cache le curseur sauf si on va vers les réglages, puis exécute onDecalsLeave.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:196
+--- Called when leaving the new decal transform screen. Hides the cursor unless going to the settings, then runs onDecalsLeave.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:196
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onDecalTransformLeave(context, toRoute, fromRoute, data) end
 
---- Appelé au montage de l'écran de transformation d'un nouveau décalque. Notifie l'interface, reprend la table d'actions si on revient des réglages, sinon affiche le curseur du décalque sélectionné, puis place dans data.liveries decalTransform et decalMouseMode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:174
+--- Called when the new decal transform screen is mounted. Notifies the UI, resumes the action map if returning from the settings, otherwise shows the selected decal's cursor, then puts decalTransform and decalMouseMode in data.liveries.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:174
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onDecalTransformMount(context, toRoute, fromRoute, data) end
 
---- Appelé à l'entrée dans les réglages de transformation d'un nouveau décalque. Exécute onDecalsEnter, suspend la table d'actions de transformation et place decalMirror et layerPaint dans data.liveries.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:203
+--- Called when entering the new decal transform settings. Runs onDecalsEnter, suspends the transform action map and puts decalMirror and layerPaint in data.liveries.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:203
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onDecalTransformSettingsEnter(context, toRoute, fromRoute, data) end
 
---- Appelé en quittant les réglages de transformation. Si on retourne à une route de transformation, reprend la table d'actions ; sinon exécute onDecalsLeave.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:212
+--- Called when leaving the transform settings. If returning to a transform route, resumes the action map; otherwise runs onDecalsLeave.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:212
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onDecalTransformSettingsLeave(context, toRoute, fromRoute, data) end
 
---- Appelé à l'entrée dans la branche liveries.edit.decals. Démarre ui_liveries_decal.setup seulement si on vient de l'extérieur de cette branche.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:124
+--- Called when entering the liveries.edit.decals branch. Starts ui_liveries_decal.setup only if coming from outside this branch.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:124
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onDecalsEnter(context, toRoute, fromRoute, data) end
 
---- Appelé en quittant la branche decals. Si la destination reste dans cette branche, ne fait rien ; sinon appelle ui_liveries_decal.teardown puis onLiveriesLeave.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:187
+--- Called when leaving the decals branch. If the destination stays within this branch, does nothing; otherwise calls ui_liveries_decal.teardown then onLiveriesLeave.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:187
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onDecalsLeave(context, toRoute, fromRoute, data) end
 
---- Appelé au montage de l'écran des décalques. Demande à ui_liveries_decal.notifyUi d'envoyer l'état à l'interface.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:133
+--- Called when the decals screen is mounted. Asks ui_liveries_decal.notifyUi to send the state to the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:133
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onDecalsMount(context, toRoute, fromRoute, data) end
 
---- Appelé à l'entrée dans l'écran de transformation d'un décalque existant. Exécute onDecalsEnter puis ui_liveries_decal.beginExistingTransform(params.layerUid) ; avertit si layerUid manque.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:220
+--- Called when entering the existing decal transform screen. Runs onDecalsEnter then ui_liveries_decal.beginExistingTransform(params.layerUid); warns if layerUid is missing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:220
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onExistingDecalTransformEnter(context, toRoute, fromRoute, data) end
 
---- Appelé en quittant la transformation d'un décalque existant. Termine la transformation (endExistingTransform) sauf si on va vers les réglages, puis exécute onDecalsLeave.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:245
+--- Called when leaving the existing decal transform. Ends the transform (endExistingTransform) unless going to the settings, then runs onDecalsLeave.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:245
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onExistingDecalTransformLeave(context, toRoute, fromRoute, data) end
 
---- Appelé au montage de l'écran de transformation d'un décalque existant. Reprend la table d'actions si on revient des réglages, sinon affiche le curseur du décalque existant, puis place decalTransform et decalMouseMode dans data.liveries.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:233
+--- Called when the existing decal transform screen is mounted. Resumes the action map if returning from the settings, otherwise shows the existing decal's cursor, then puts decalTransform and decalMouseMode in data.liveries.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:233
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onExistingDecalTransformMount(context, toRoute, fromRoute, data) end
 
---- Appelé à l'entrée dans liveries.edit. Si on vient de l'extérieur de la branche edit, démarre la session avec ui_liveries.setup(params.saveName) (pas de saveName : nouvelle livrée) et journalise un avertissement en cas d'échec. Place data.liveries.currentSaveName pour que le formulaire de sauvegarde propose d'écraser.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:81
+--- Called when entering liveries.edit. If coming from outside the edit branch, starts the session with ui_liveries.setup(params.saveName) (no saveName: new livery) and logs a warning on failure. Sets data.liveries.currentSaveName so that the save form offers to overwrite.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:81
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onLiveriesEditEnter(context, toRoute, fromRoute, data) end
 
---- Appelé à l'entrée dans la route liveries. Met en pause la simulation et place dans data.liveries.saveFiles la liste des livrées sauvegardées (ui_liveries_saves.getAll).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:70
+--- Called when entering the liveries route. Pauses the simulation and puts the list of saved liveries (ui_liveries_saves.getAll) in data.liveries.saveFiles.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:70
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onLiveriesEnter(context, toRoute, fromRoute, data) end
 
---- Appelé en quittant une route de livrées. Si la destination reste dans la branche edit, ne fait rien de plus ; sinon appelle ui_liveries.teardown puis applique la peau en attente (ui_liveries_saves.consumeStagedApplySkin) avec core_vehicle_partmgmt.setSkin.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:110
+--- Called when leaving a liveries route. If the destination stays within the edit branch, does nothing more; otherwise calls ui_liveries.teardown then applies the pending skin (ui_liveries_saves.consumeStagedApplySkin) with core_vehicle_partmgmt.setSkin.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:110
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onLiveriesLeave(context, toRoute, fromRoute, data) end
 
---- Appelé au montage de la route liveries. Ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:78
+--- Called when the liveries route is mounted. Does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:78
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onLiveriesMount(context, toRoute, fromRoute, data) end
 
---- Appelé à l'entrée dans l'écran de peinture. Place dans data.liveries.layerPaint la peinture de la couche de base (ui_liveries_fill.getPaint).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:100
+--- Called when entering the paint screen. Puts the base layer's paint (ui_liveries_fill.getPaint) in data.liveries.layerPaint.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:100
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any
 ---@param data any
 function ui_liveries_routeLifecycleCallbacks.onLiveriesPaintEnter(context, toRoute, fromRoute, data) end
 
---- Appelé en quittant l'écran d'accueil des livrées. Retire la demande de pause de la simulation (aucun autre hook Leave n'existe pour cet écran).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:106
+--- Called when leaving the liveries home screen. Removes the simulation pause request (no other Leave hook exists for this screen).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua:106
 ---@param context any
 ---@param toRoute any
 ---@param fromRoute any

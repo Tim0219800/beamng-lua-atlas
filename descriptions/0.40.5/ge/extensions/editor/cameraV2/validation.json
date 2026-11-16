@@ -1,75 +1,197 @@
 {
   "path": "lua/ge/extensions/editor/cameraV2/validation.lua",
-  "module": "Contrôles partagés de Camera V2 pour rejeter les NaN, infinis et coordonnées extrêmes issus de raycasts ou de calculs de caméra défaillants, avant d'appliquer une position ou rotation. Utile à un moddeur qui veut valider des points, quaternions ou hauteurs de terrain avant de les passer à la caméra.",
+  "module": "Shared Camera V2 checks to reject NaNs, infinities and extreme coordinates coming from faulty raycasts or camera computations, before applying a position or rotation. Useful to a modder who wants to validate points, quaternions or terrain heights before passing them to the camera.",
   "notes": [
-    "Limite 'raisonnable' des coordonnées : 10 000 000 (worldCoordinateLimit). Limite de hauteur de terrain : 1 000 000.",
-    "Un quaternion est jugé valide si le carré de sa norme est compris entre 0,25 et 2,25 (il n'est pas exigé unitaire).",
-    "isValidXY/isValidPoint/isReasonableXY/isReasonablePoint renvoient nil (et non false) quand point vaut nil."
+    "'Reasonable' coordinate limit: 10,000,000 (worldCoordinateLimit). Terrain height limit: 1,000,000.",
+    "A quaternion is considered valid if the square of its norm is between 0.25 and 2.25 (it is not required to be unit length).",
+    "isValidXY/isValidPoint/isReasonableXY/isReasonablePoint return nil (not false) when point is nil."
   ],
   "functions": {
     "isFinite": {
-      "desc": "Vrai si value est un nombre ni NaN ni infini.",
-      "params": {"value": {"type": "any", "desc": "Valeur à tester"}},
-      "returns": [{"type": "boolean", "desc": "true si nombre fini"}]
+      "desc": "True if value is a number that is neither NaN nor infinite.",
+      "params": {
+        "value": {
+          "type": "any",
+          "desc": "Value to test"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if finite number"
+        }
+      ]
     },
     "isValidCoordinate": {
-      "desc": "Alias de isFinite pour une coordonnée.",
-      "params": {"value": {"type": "any", "desc": "Coordonnée"}},
-      "returns": [{"type": "boolean", "desc": "true si finie"}]
+      "desc": "Alias of isFinite for a coordinate.",
+      "params": {
+        "value": {
+          "type": "any",
+          "desc": "Coordinate"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if finite"
+        }
+      ]
     },
     "isValidXY": {
-      "desc": "Vrai si point.x et point.y sont des nombres finis.",
-      "params": {"point": {"type": "table|nil", "desc": "Table avec champs x et y (vec3 possible)"}},
-      "returns": [{"type": "boolean|nil", "desc": "true/false, ou nil si point est nil"}]
+      "desc": "True if point.x and point.y are finite numbers.",
+      "params": {
+        "point": {
+          "type": "table|nil",
+          "desc": "Table with x and y fields (vec3 possible)"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true/false, or nil if point is nil"
+        }
+      ]
     },
     "isValidPoint": {
-      "desc": "Vrai si x, y et z sont des nombres finis.",
-      "params": {"point": {"type": "table|nil", "desc": "Point avec x, y, z"}},
-      "returns": [{"type": "boolean|nil", "desc": "true/false, ou nil si point est nil"}]
+      "desc": "True if x, y and z are finite numbers.",
+      "params": {
+        "point": {
+          "type": "table|nil",
+          "desc": "Point with x, y, z"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true/false, or nil if point is nil"
+        }
+      ]
     },
     "isReasonableCoordinate": {
-      "desc": "Vrai si la valeur est finie et sa valeur absolue ne dépasse pas 10 000 000.",
-      "params": {"value": {"type": "any", "desc": "Coordonnée"}},
-      "returns": [{"type": "boolean", "desc": "true si raisonnable"}]
+      "desc": "True if the value is finite and its absolute value does not exceed 10,000,000.",
+      "params": {
+        "value": {
+          "type": "any",
+          "desc": "Coordinate"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if reasonable"
+        }
+      ]
     },
     "isReasonableXY": {
-      "desc": "Vrai si x et y sont des coordonnées raisonnables.",
-      "params": {"point": {"type": "table|nil", "desc": "Point avec x, y"}},
-      "returns": [{"type": "boolean|nil", "desc": "true/false, ou nil si point est nil"}]
+      "desc": "True if x and y are reasonable coordinates.",
+      "params": {
+        "point": {
+          "type": "table|nil",
+          "desc": "Point with x, y"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true/false, or nil if point is nil"
+        }
+      ]
     },
     "isReasonablePoint": {
-      "desc": "Vrai si x, y et z sont des coordonnées raisonnables.",
-      "params": {"point": {"type": "table|nil", "desc": "Point avec x, y, z"}},
-      "returns": [{"type": "boolean|nil", "desc": "true/false, ou nil si point est nil"}]
+      "desc": "True if x, y and z are reasonable coordinates.",
+      "params": {
+        "point": {
+          "type": "table|nil",
+          "desc": "Point with x, y, z"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true/false, or nil if point is nil"
+        }
+      ]
     },
     "isValidQuaternion": {
-      "desc": "Vrai si x, y, z, w sont finis et si x²+y²+z²+w² est dans [0,25 ; 2,25].",
-      "params": {"rotation": {"type": "table|nil", "desc": "Quaternion avec x, y, z, w"}},
-      "returns": [{"type": "boolean", "desc": "true si valide"}]
+      "desc": "True if x, y, z, w are finite and if x²+y²+z²+w² is in [0.25; 2.25].",
+      "params": {
+        "rotation": {
+          "type": "table|nil",
+          "desc": "Quaternion with x, y, z, w"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if valid"
+        }
+      ]
     },
     "isValidTerrainHeight": {
-      "desc": "Vrai si la hauteur est finie et |hauteur| <= 1 000 000.",
-      "params": {"value": {"type": "any", "desc": "Hauteur"}},
-      "returns": [{"type": "boolean", "desc": "true si valide"}]
+      "desc": "True if the height is finite and |height| <= 1,000,000.",
+      "params": {
+        "value": {
+          "type": "any",
+          "desc": "Height"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if valid"
+        }
+      ]
     },
     "terrainHeightAt": {
-      "desc": "Interroge core_terrain.getTerrainHeight(vec3(x, y, 0)) pour un point raisonnable et renvoie la hauteur si elle est valide.",
-      "params": {"point": {"type": "table", "desc": "Point avec x, y"}},
-      "returns": [{"type": "number|nil", "desc": "Hauteur du terrain, ou nil si le point ou la hauteur est invalide"}]
+      "desc": "Queries core_terrain.getTerrainHeight(vec3(x, y, 0)) for a reasonable point and returns the height if it is valid.",
+      "params": {
+        "point": {
+          "type": "table",
+          "desc": "Point with x, y"
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Terrain height, or nil if the point or the height is invalid"
+        }
+      ]
     },
     "isPointOnRaySegment": {
-      "desc": "Vrai si point se trouve près du segment de rayon origin -> origin + direction*maximumDistance : projection sur le rayon normalisé comprise entre -0,01 et maximumDistance+0,01, et distance perpendiculaire <= 1.",
+      "desc": "True if point is near the ray segment origin -> origin + direction*maximumDistance: projection on the normalized ray between -0.01 and maximumDistance+0.01, and perpendicular distance <= 1.",
       "params": {
-        "point": {"type": "vec3", "desc": "Point à tester"},
-        "origin": {"type": "vec3", "desc": "Origine du rayon"},
-        "direction": {"type": "vec3", "desc": "Direction (normalisée en interne ; longueur <= 0,0001 refusée)"},
-        "maximumDistance": {"type": "number", "desc": "Longueur maximale du segment (>= 0)"}
+        "point": {
+          "type": "vec3",
+          "desc": "Point to test"
+        },
+        "origin": {
+          "type": "vec3",
+          "desc": "Ray origin"
+        },
+        "direction": {
+          "type": "vec3",
+          "desc": "Direction (normalized internally; length <= 0.0001 rejected)"
+        },
+        "maximumDistance": {
+          "type": "number",
+          "desc": "Maximum segment length (>= 0)"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si sur le segment"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if on the segment"
+        }
+      ]
     },
     "worldCoordinateLimit": {
-      "desc": "Renvoie la limite de coordonnée utilisée par les tests 'raisonnable'.",
-      "returns": [{"type": "number", "desc": "10000000"}]
+      "desc": "Returns the coordinate limit used by the 'reasonable' tests.",
+      "returns": [
+        {
+          "type": "number",
+          "desc": "10000000"
+        }
+      ]
     }
   }
 }

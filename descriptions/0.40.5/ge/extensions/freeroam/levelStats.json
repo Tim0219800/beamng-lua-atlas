@@ -1,34 +1,63 @@
 {
   "path": "lua/ge/extensions/freeroam/levelStats.lua",
-  "module": "Statistiques d'usage des niveaux et des points de départ pour l'interface : compte combien de fois chaque niveau/point de départ a été lancé et quand. Les données sont persistées dans `/settings/cloud/uiStats.json` (table `levels` avec count, lastUsed, spawnPoints, et table `vehicles`). Global : freeroam_levelStats.",
+  "module": "Usage statistics of levels and spawn points for the UI: counts how many times each level/spawn point was launched and when. The data is persisted in `/settings/cloud/uiStats.json` (`levels` table with count, lastUsed, spawnPoints, and `vehicles` table). Global: freeroam_levelStats.",
   "notes": [
-    "Le point de départ par défaut n'a pas de nom : il est stocké sous le nom interne `__default__` et restitué avec spawnPointName=nil.",
-    "Les dates sont en ISO 8601 UTC (os.date '!%Y-%m-%dT%H:%M:%SZ').",
-    "Chaque recordLevelSpawn réécrit tout le fichier JSON.",
-    "Les listes triées placent en tête l'élément utilisé le plus récemment, puis les autres par nombre de lancements décroissant (à égalité, plus récent d'abord)."
+    "The default spawn point has no name: it is stored under the internal name `__default__` and returned with spawnPointName=nil.",
+    "Dates are in ISO 8601 UTC (os.date '!%Y-%m-%dT%H:%M:%SZ').",
+    "Every recordLevelSpawn rewrites the whole JSON file.",
+    "The sorted lists put the most recently used item first, then the others by decreasing launch count (ties: most recent first)."
   ],
   "functions": {
     "recordLevelSpawn": {
-      "desc": "Incrémente le compteur et la date du niveau et du point de départ, puis sauvegarde le fichier de stats.",
-      "params": {"levelName": {"type": "string", "desc": "Nom du niveau."}, "spawnPointName": {"type": "string|nil", "desc": "Nom du point de départ ; nil = point par défaut."}},
+      "desc": "Increments the counter and the date of the level and of the spawn point, then saves the stats file.",
+      "params": {
+        "levelName": {
+          "type": "string",
+          "desc": "Level name."
+        },
+        "spawnPointName": {
+          "type": "string|nil",
+          "desc": "Spawn point name; nil = default point."
+        }
+      },
       "internal": false
     },
     "getTopLevels": {
-      "desc": "Niveaux triés par usage (dernier utilisé en premier, puis par nombre).",
+      "desc": "Levels sorted by usage (last used first, then by count).",
       "params": {},
-      "returns": [{"type": "table", "desc": "Liste de {levelName, count, lastUsed}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of {levelName, count, lastUsed}."
+        }
+      ],
       "internal": false
     },
     "getTopSpawnPoints": {
-      "desc": "Points de départ d'un niveau triés de la même façon.",
-      "params": {"levelName": {"type": "string", "desc": "Nom du niveau."}},
-      "returns": [{"type": "table", "desc": "Liste de {spawnPointName|nil, count, lastUsed}."}],
+      "desc": "A level's spawn points sorted the same way.",
+      "params": {
+        "levelName": {
+          "type": "string",
+          "desc": "Level name."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of {spawnPointName|nil, count, lastUsed}."
+        }
+      ],
       "internal": false
     },
     "getUiStats": {
-      "desc": "Regroupe topLevels et topSpawnPoints (les points de départ de tous les niveaux, concaténés, sans nom de niveau).",
+      "desc": "Groups topLevels and topSpawnPoints (the spawn points of all levels, concatenated, with no level name).",
       "params": {},
-      "returns": [{"type": "table", "desc": "{topLevels, topSpawnPoints}"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{topLevels, topSpawnPoints}"
+        }
+      ],
       "internal": false
     }
   }

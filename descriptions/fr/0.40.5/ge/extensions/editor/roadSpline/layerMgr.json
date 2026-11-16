@@ -1,0 +1,101 @@
+{
+  "path": "lua/ge/extensions/editor/roadSpline/layerMgr.lua",
+  "module": "Gestionnaire des couches d'un groupe Road Spline. Une couche (layer) est une bande décalée le long de la route, matérialisée par un ou plusieurs DecalRoads (découpés en tronçons au-delà de 100 points) avec matériau, largeur, position latérale, longueur de texture, fondus et priorité de rendu. Le module crée/duplique/supprime les couches, génère les couches « cachées » automatiques (marques de pneus, fissures, réparations, rustines, asphalte abîmé, ligne centrale, lignes de rive et de voie, fondus de bord 1 à 3 avec leurs matériaux par défaut), met à jour les DecalRoads et (dé)sérialise les couches.",
+  "notes": [
+    "Champs d'une couche : name, id (UUID), isDirty, isHidden (couche automatique), isEnabled, material, isFlip, isTrackWidth, isOverObjects, width (m), position (latérale, relative à la demi-largeur de la route), texLen (m), fadeIn, fadeOut, renderPriority, decalRoadId, decalRoadIds (tronçons), et tampons runtime pClipped/wClipped/pFlip/wFlip.",
+    "Valeurs par défaut (getSliderDefaults) : width 10, position 0, renderPriority 10, texLength 10, fadeIn 1, fadeOut 1, paintMargin 0, paintMaterialIdx 0. Matériau par défaut d'une nouvelle couche : road_invisible.",
+    "Les nœuds des décals sont ré-échantillonnés à pas régulier (2 m, 1 m pour les lignes de rive) pour éviter les dépassements de la spline du moteur ; segments < 5 cm soudés.",
+    "Les couches automatiques sont retrouvées par leur nom (string.find, motif Lua) : renommer ou nommer une couche comme « Repair 1 » les fait supprimer avec les removeXxxLayers.",
+    "Les couches « pleine longueur » (marques de pneus, fissures, réparations, rustines, asphalte abîmé) créent une couche par voie de 5 m à gauche et à droite (au moins une de chaque côté).",
+    "Une couche désactivée (isEnabled = false) voit son DecalRoad supprimé lors de la mise à jour."
+  ],
+  "functions": {
+    "getSliderDefaults": {"desc": "Renvoie les valeurs par défaut des curseurs (largeur, position, priorité, longueur de texture, fondus, marge et matériau de peinture) pour l'interface de l'outil.", "params": {}, "returns": [{"type": "table<string, number>", "desc": "Table sliderDefaults (vivante)."}], "internal": false},
+    "deepCopyLayer": {
+      "desc": "Copie profonde d'une couche via string.buffer. Les tampons géométriques runtime sont détachés de la source avant encodage puis restaurés (la source n'est pas altérée) ; la copie démarre avec des tampons vides, reconstruits à la prochaine mise à jour.",
+      "params": {"layer": {"type": "table", "desc": "Couche source."}},
+      "returns": [{"type": "table", "desc": "Copie indépendante."}],
+      "internal": false
+    },
+    "deepCopyAllLayers": {"desc": "Copie profonde d'une liste de couches.", "params": {"layers": {"type": "table[]", "desc": "Couches."}}, "returns": [{"type": "table[]", "desc": "Copies."}], "internal": false},
+    "removeDecalRoadInLayer": {"desc": "Supprime de la scène le DecalRoad de la couche (et ses tronçons éventuels) et oublie les ids.", "params": {"layer": {"type": "table", "desc": "Couche."}}, "returns": [], "internal": false},
+    "eachLayerRoad": {
+      "desc": "Appelle fn(decalRoad) pour chaque DecalRoad de la couche (route unique et tronçons). Les objets introuvables sont passés à fn comme nil.",
+      "params": {
+        "layer": {"type": "table", "desc": "Couche."},
+        "fn": {"type": "function", "desc": "Rappel recevant un DecalRoad (ou nil)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "updateAllLayers": {
+      "desc": "Met à jour les DecalRoads de toutes les couches du groupe ; une couche désactivée voit son DecalRoad supprimé.",
+      "params": {
+        "group": {"type": "table", "desc": "Groupe."},
+        "groupIdx": {"type": "integer", "desc": "Indice du groupe dans la liste."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "updateOnlyDirtyLayers": {
+      "desc": "Ne met à jour que les couches marquées sales (isDirty), puis efface leur drapeau.",
+      "params": {
+        "group": {"type": "table", "desc": "Groupe."},
+        "groupIdx": {"type": "integer", "desc": "Indice du groupe."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "removeLayer": {"desc": "Supprime la couche à l'indice donné (son DecalRoad aussi).", "params": {"idx": {"type": "integer", "desc": "Indice de la couche."}, "group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeAllLayers": {"desc": "Supprime toutes les couches du groupe.", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeAllHiddenLayers": {"desc": "Supprime les couches cachées (automatiques) du groupe.", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addNewLayer": {"desc": "Ajoute une couche vide « New Layer N » (matériau road_invisible, valeurs par défaut des curseurs, suit la largeur de la route).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "duplicateLayer": {
+      "desc": "Duplique une couche juste après l'original (« nom (Copy) », nouvel UUID, ids de DecalRoad oubliés pour que la copie construise ses propres routes).",
+      "params": {"idx": {"type": "integer", "desc": "Indice de la couche à copier."}, "group": {"type": "table", "desc": "Groupe."}},
+      "returns": [],
+      "internal": false
+    },
+    "switchOffAllAutoLayers": {"desc": "Met à false toutes les options de couches automatiques du groupe (14 drapeaux) et le marque sale.", "params": {"selGroup": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addLightTreadMarksLayers": {"desc": "Ajoute les couches « Light Tread Marks » (matériau m_tread_marks_clean, texLen 5), une par voie gauche/droite.", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeLightTreadMarksLayers": {"desc": "Supprime les couches dont le nom contient « Light Tread Marks ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addHeavyTreadMarksLayers": {"desc": "Ajoute les couches « Heavy Tread Marks » (road_rubber_double, texLen 5).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeHeavyTreadMarksLayers": {"desc": "Supprime les couches « Heavy Tread Marks ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addRoadCrackLayers": {"desc": "Ajoute les couches « Road Crack » (m_asphalt_cracks_02, texLen 15).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeRoadCrackLayers": {"desc": "Supprime les couches « Road Crack ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addRepair1Layers": {"desc": "Ajoute les couches « Repair 1 » (matériau repair1, texLen 25).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeRepair1Layers": {"desc": "Supprime les couches « Repair 1 ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addRepair2Layers": {"desc": "Ajoute les couches « Repair 2 » (matériau repair2, texLen 25).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeRepair2Layers": {"desc": "Supprime les couches « Repair 2 ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addPatchesLayers": {"desc": "Ajoute les couches « Patches » (road_patches1, texLen 45).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removePatchesLayers": {"desc": "Supprime les couches « Patches ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addRoadDamageAsphalt1Layers": {"desc": "Ajoute les couches « Damage Asphalt 1 » (m_asphalt_damaged_01, texLen 10).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeRoadDamageAsphalt1Layers": {"desc": "Supprime les couches « Damage Asphalt 1 ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addRoadDamageAsphalt2Layers": {"desc": "Ajoute les couches « Damage Asphalt 2 » (m_asphalt_damaged_02, texLen 25).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeRoadDamageAsphalt2Layers": {"desc": "Supprime les couches « Damage Asphalt 2 ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addRoadCenterLineLayers": {"desc": "Ajoute la couche « Center Line » (double ligne jaune m_line_yellow_double, largeur 0,2 m, position 0, texLen 5).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeRoadCenterLineLayers": {"desc": "Supprime la couche « Center Line ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addRoadEdgeLinesLayers": {"desc": "Ajoute les lignes de rive « Edge Line - Left/Right » (m_line_white) ; largeur et décalage viennent de group.edgeLineWidth (défaut 0,25 m) et group.edgeLineOffset (défaut 1,0).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeRoadEdgeLinesLayers": {"desc": "Supprime les couches « Edge Line ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addRoadLaneLinesLayers": {"desc": "Ajoute les lignes de voie « Lane Line » en pointillés (m_line_white_discontinue, largeur 0,2 m par défaut).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeRoadLaneLinesLayers": {"desc": "Supprime les couches « Lane Line ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addEdgeBlend1Layers": {"desc": "Ajoute les couches « Edge Blend 1 » (m_road_asphalt_edge) ; largeur et décalage de group.edgeBlend1Width (1,0) et edgeBlend1Offset (1,1).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeEdgeBlend1Layers": {"desc": "Supprime les couches « Edge Blend 1 ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addEdgeBlend2Layers": {"desc": "Ajoute les couches « Edge Blend 2 » (m_road_edge_dirt) ; défauts largeur 2,0 et décalage 1,25 (group.edgeBlend2Width/Offset).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeEdgeBlend2Layers": {"desc": "Supprime les couches « Edge Blend 2 ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "addEdgeBlend3Layers": {"desc": "Ajoute les couches « Edge Blend 3 » (m_road_asphalt_edge_grass) ; défauts largeur 3,0 et décalage 1,35 (group.edgeBlend3Width/Offset).", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "removeEdgeBlend3Layers": {"desc": "Supprime les couches « Edge Blend 3 ».", "params": {"group": {"type": "table", "desc": "Groupe."}}, "returns": [], "internal": false},
+    "serializeLayer": {
+      "desc": "Réduit une couche à ses champs auteur (name, id, isHidden, isEnabled, material, isFlip, isTrackWidth, isOverObjects, width, position, texLen, fadeIn, fadeOut, renderPriority), sans ids de scène ni tampons runtime.",
+      "params": {"layer": {"type": "table", "desc": "Couche."}},
+      "returns": [{"type": "table", "desc": "Table JSON-compatible."}],
+      "internal": false
+    },
+    "deserializeLayer": {
+      "desc": "Reconstruit une couche propre depuis une table : valeurs par défaut pour les champs absents, isDirty = true, tampons et ids de DecalRoad vides. Le nom manquant devient « ? » et l'id manquant est généré.",
+      "params": {"data": {"type": "table", "desc": "Table issue de serializeLayer ou d'un JSON."}},
+      "returns": [{"type": "table", "desc": "Couche prête à insérer dans group.layers."}],
+      "internal": false
+    }
+  }
+}

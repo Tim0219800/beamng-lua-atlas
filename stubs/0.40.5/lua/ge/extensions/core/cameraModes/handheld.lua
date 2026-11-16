@@ -2,21 +2,21 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/cameraModes/handheld.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Filtre à ressort sur la direction de visée.
+--- Spring filter on the aiming direction.
 ---@class core_cameraModes_handheld
 local core_cameraModes_handheld = {}
 
---- Initialise les paramètres du ressort et force une réinitialisation de la direction au prochain update.
----Source : lua/ge/extensions/core/cameraModes/handheld.lua:8
----@param spring number|nil raideur (20 par défaut)
----@param damping number|nil amortissement (5 par défaut)
----@param rotspring number|nil raideur de l'inclinaison de l'horizon (3 par défaut)
+--- Initializes the spring parameters and forces a direction reset on the next update.
+---Source: lua/ge/extensions/core/cameraModes/handheld.lua:8
+---@param spring number|nil stiffness (20 by default)
+---@param damping number|nil damping (5 by default)
+---@param rotspring number|nil horizon tilt stiffness (3 by default)
 function core_cameraModes_handheld:init(spring, damping, rotspring) end
 
---- Calcule data.res.rot depuis la direction lissée de data.res.pos vers data.res.targetPos.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/handheld.lua:18
+--- Computes data.res.rot from the smoothed direction from data.res.pos to data.res.targetPos.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/handheld.lua:18
 ---@param data table camData
----@return boolean  toujours true
+---@return boolean  always true
 function core_cameraModes_handheld:update(data) end
 

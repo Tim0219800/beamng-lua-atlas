@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_rally_loop_getRallyLoopInfo`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopInfo.lua` · VM : Game Engine (GE) · 43 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopInfo.lua` · VM: Game Engine (GE) · 43 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopInfo")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopInfo")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Loop Get Info » (catégorie once_instant, tag rally). Lit dans le gestionnaire de la boucle rally le nom du rally (rm:getRallyLoopName()) et les textes d'écran de départ et de fin de la mission (missionTypeData.startScreenText / endScreenText, « » par défaut). Sorties : name, startScreenText, endScreenText (string ou table translationObject).
+Flowgraph node "Rally Loop Get Info" (category once_instant, tag rally). Reads from the rally loop manager the name of the rally (rm:getRallyLoopName()) and the start and end screen texts of the mission (missionTypeData.startScreenText / endScreenText, "" by default). Outputs: name, startScreenText, endScreenText (string or translationObject table).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Écrit name, startScreenText et endScreenText ; log d'erreur si aucun gestionnaire. | 30 |
+| `C:workOnce()` | Writes name, startScreenText and endScreenText; error log if there is no manager. | 30 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopInfo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopInfo.lua`.*

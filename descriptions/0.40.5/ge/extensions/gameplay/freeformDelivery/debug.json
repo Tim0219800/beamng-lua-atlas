@@ -1,37 +1,59 @@
 {
   "path": "lua/ge/extensions/gameplay/freeformDelivery/debug.lua",
-  "module": "Fenêtre imgui de debug « Freeform Delivery Debug » du mode de livraison libre. Quand elle est activée (setEnableDebugWindow(true)), elle collecte chaque frame l'état de la livraison courante et affiche des sections : état de la livraison, état du setup, attelages, véhicules, objectifs, zones cibles, itinéraires, places de parking et mise en veille des véhicules. Utile à un moddeur pour déboguer un fichier delivery.json.",
+  "module": "\"Freeform Delivery Debug\" imgui debug window of the freeform delivery mode. When enabled (setEnableDebugWindow(true)), it collects the current delivery's state every frame and displays sections: delivery state, setup state, couplings, vehicles, goals, target areas, routes, parking spots and vehicle sleep. Useful to a modder for debugging a delivery.json file.",
   "usage": "gameplay_freeformDelivery_debug.setEnableDebugWindow(true)",
   "notes": [
-    "La fenêtre est contrôlée uniquement par enableDebugWindow (setEnableDebugWindow / getEnableDebugWindow). toggleDebugWindow ne modifie que debugWindowOpen, une variable jamais lue : l'appeler (comme le fait gameplay_freeformDelivery_freeformDelivery.load) n'ouvre donc rien.",
-    "Quand le debug est désactivé, les données collectées sont vidées. Sans livraison chargée, la fenêtre affiche « No delivery loaded ».",
-    "La collecte et le dessin se font dans onPreRender, pas dans onUpdate."
+    "The window is controlled only by enableDebugWindow (setEnableDebugWindow / getEnableDebugWindow). toggleDebugWindow only modifies debugWindowOpen, a variable that is never read: calling it (as gameplay_freeformDelivery_freeformDelivery.load does) therefore opens nothing.",
+    "When debug is disabled, the collected data is cleared. Without a loaded delivery, the window displays \"No delivery loaded\".",
+    "Collection and drawing happen in onPreRender, not in onUpdate."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "ui_imgui et gameplay_freeformDelivery_utils."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "ui_imgui and gameplay_freeformDelivery_utils."
+    }
   },
   "functions": {
     "setEnableDebugWindow": {
-      "desc": "Active ou désactive l'affichage de la fenêtre de debug. La désactivation vide les données collectées.",
-      "params": {"enabled": {"type": "boolean", "desc": "true pour afficher la fenêtre."}}
+      "desc": "Enables or disables the display of the debug window. Disabling clears the collected data.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to display the window."
+        }
+      }
     },
     "getEnableDebugWindow": {
-      "desc": "Indique si la fenêtre de debug est activée.",
-      "returns": [{"type": "boolean", "desc": "true si activée."}]
+      "desc": "Tells whether the debug window is enabled.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if enabled."
+        }
+      ]
     },
     "toggleDebugWindow": {
-      "desc": "Inverse debugWindowOpen et logge le nouvel état ; sans effet visible (voir notes).",
+      "desc": "Inverts debugWindowOpen and logs the new state; no visible effect (see notes).",
       "internal": false
     },
     "clearDebugData": {
-      "desc": "Vide les données de debug collectées."
+      "desc": "Clears the collected debug data."
     },
     "onPreRender": {
-      "desc": "Hook appelé avant le rendu de chaque frame : si la fenêtre est activée, met à jour les données de debug depuis gameplay_freeformDelivery_freeformDelivery puis dessine la fenêtre.",
+      "desc": "Hook called before rendering each frame: if the window is enabled, updates the debug data from gameplay_freeformDelivery_freeformDelivery then draws the window.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (inutilisé)."},
-        "dtSim": {"type": "number", "desc": "Delta temps simulé (inutilisé)."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut (inutilisé)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (unused)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time delta (unused)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (unused)."
+        }
       },
       "internal": true
     }

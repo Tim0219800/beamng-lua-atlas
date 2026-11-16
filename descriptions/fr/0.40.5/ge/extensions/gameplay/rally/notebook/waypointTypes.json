@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/notebook/waypointTypes.lua",
+  "module": "Constantes des types de waypoints d'une pacenote de rallye : début de virage (\"cornerStart\") et fin de virage (\"cornerEnd\"). Fournit aussi une fonction qui abrège ces types en \"Cs\" / \"Ce\" pour l'affichage dans l'éditeur.",
+  "usage": "local wpt = require('gameplay_rally_notebook_waypointTypes')\nprint(wpt.shortenWaypointType(wpt.wpTypeCornerStart)) -- \"Cs\"",
+  "notes": ["shortenWaypointType renvoie nil pour tout type autre que cornerStart/cornerEnd."],
+  "fields": {
+    "wpTypeCornerStart": {"type": "string", "desc": "Valeur \"cornerStart\" : waypoint de début de virage."},
+    "wpTypeCornerEnd": {"type": "string", "desc": "Valeur \"cornerEnd\" : waypoint de fin de virage."}
+  },
+  "functions": {
+    "shortenWaypointType": {
+      "desc": "Renvoie l'abréviation d'un type de waypoint : \"Cs\" pour cornerStart, \"Ce\" pour cornerEnd, nil sinon.",
+      "params": {"wpType": {"type": "string", "desc": "Type de waypoint (wpTypeCornerStart ou wpTypeCornerEnd)."}},
+      "returns": [{"type": "string|nil", "desc": "Abréviation, ou nil si le type est inconnu."}],
+      "internal": false
+    }
+  }
+}

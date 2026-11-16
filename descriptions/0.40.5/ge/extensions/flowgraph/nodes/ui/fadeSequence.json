@@ -1,47 +1,47 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/fadeSequence.lua",
-  "module": "Nœud flowgraph « Fade Sequence » (catégorie once_f_duration, obsolète) : enchaîne fondu au noir, pause et fondu depuis le noir via ui_fadeScreen.fadeSequence. Entrées : « startDuration » (0.75), « pauseDuration » (0), « endDuration » (0.75). Sortie « faded » (impulsion quand l'écran est noir). Le code recommande plutôt Fade To Black + Fade From Black.",
+  "module": "Flowgraph node \"Fade Sequence\" (category once_f_duration, obsolete): chains fade to black, pause and fade from black via ui_fadeScreen.fadeSequence. Inputs: \"startDuration\" (0.75), \"pauseDuration\" (0), \"endDuration\" (0.75). Output \"faded\" (pulse when the screen is black). The code recommends Fade To Black + Fade From Black instead.",
   "notes": [
-    "C.todo : « Obsolete; use Fade To Black and Fade From Black nodes instead. »"
+    "C.todo: \"Obsolete; use Fade To Black and Fade From Black nodes instead.\""
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStopped": {
-          "desc": "Réinitialise l'état et le pin faded.",
+          "desc": "Resets the state and the faded pin.",
           "internal": true
         },
         "init": {
-          "desc": "État de durée 'inactive', fadedTriggered = false.",
+          "desc": "Duration state 'inactive', fadedTriggered = false.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Réinitialise l'état et le pin faded.",
+          "desc": "Resets the state and the faded pin.",
           "internal": true
         },
         "onScreenFadeState": {
-          "desc": "Hook : état 1 -> faded = true ; état 3 -> terminé.",
+          "desc": "Hook: state 1 -> faded = true; state 3 -> finished.",
           "params": {
             "state": {
               "type": "integer",
-              "desc": "État du fondu d'écran (1 = noir atteint, 3 = fondu terminé)."
+              "desc": "Screen fade state (1 = black reached, 3 = fade finished)."
             }
           },
           "internal": true
         },
         "postInit": {
-          "desc": "Modèles de durée à 0.75 pour startDuration et endDuration.",
+          "desc": "Duration templates at 0.75 for startDuration and endDuration.",
           "internal": true
         },
         "work": {
-          "desc": "Transforme 'faded' en impulsion (remis à false à la frame suivante).",
+          "desc": "Turns 'faded' into a pulse (reset to false on the next frame).",
           "internal": true
         },
         "workOnce": {
-          "desc": "Démarre la séquence avec les trois durées (défauts 1, 0, 1 si nil).",
+          "desc": "Starts the sequence with the three durations (defaults 1, 0, 1 if nil).",
           "internal": true
         }
       }

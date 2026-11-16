@@ -1,0 +1,45 @@
+{
+  "path": "lua/ge/extensions/ui/router/debug.lua",
+  "module": "Fenêtre ImGui « Router Debugger » pour inspecter le routeur d'interface : route courante, route en attente, fil d'Ariane, champ de saisie pour naviguer vers une route ou revenir en arrière, et arbre des routes enregistrées regroupées par module (préfixe avant le premier point). Outil de développement ; chargé à la demande (la ligne de chargement dans ui_router est commentée).",
+  "usage": "extensions.load(\"ui_router_debug\")\nui_router_debug.toggle()",
+  "notes": [
+    "À son chargement, la fenêtre s'ouvre automatiquement sauf si la globale disableHwWarnings est vraie.",
+    "Les tables sont affichées récursivement sauf la clé « children ».",
+    "Le bouton Navigate appelle extensions.ui_router.navigate(nom) puis vide la saisie ; Back appelle extensions.ui_router.back(). Le dernier résultat est affiché."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Dépendance déclarée : ui_imgui (indiquée par la page auto-générée)."}
+  },
+  "functions": {
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement : demande l'ouverture automatique de la fenêtre sauf si disableHwWarnings est vrai.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque frame : ouvre la fenêtre si demandé, puis dessine « Router Debugger » (taille initiale 450x600) avec route courante, route en attente, fil d'Ariane, actions et modules de routes.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "open": {
+      "desc": "Ouvre la fenêtre de debug.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "close": {
+      "desc": "Ferme la fenêtre de debug.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "toggle": {
+      "desc": "Inverse l'état d'ouverture de la fenêtre de debug.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

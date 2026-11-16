@@ -1,18 +1,18 @@
 # `flowgraph_nodes_debug_stopManager`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/debug/stopManager.lua` · VM : Game Engine (GE) · 24 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/debug/stopManager.lua` · VM: Game Engine (GE) · 24 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/debug/stopManager")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/debug/stopManager")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Stop Project » (catégorie logic). Arrête l'exécution du projet flowgraph (graph.mgr:setRunning(false)) quand l'entrée flow a du flux.
+Flowgraph node "Stop Project" (category logic). Stops the execution of the flowgraph project (graph.mgr:setRunning(false)) when the flow input has flow.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Appelle graph.mgr:setRunning(false). | 19 |
+| `C:work()` | Calls graph.mgr:setRunning(false). | 19 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/debug/stopManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/debug/stopManager.lua`.*

@@ -2,47 +2,47 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/walkRibbon.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Génère un trottoir bordé (bordure et dalles) balayé le long de deux rails, sous forme d'un seul mesh unique, pour les outils de routes de l'éditeur. Les parties de mesh sont regroupées par matériau (deux trottoirs de même pierre partagent un même mesh, donc un seul draw). Gère aussi les bordures abaissées au droit des passages piétons : le trottoir s'affleure sur la zone du passage et remonte en rampe de chaque côté. Utilise meshPart (face4, face4n) et kerbSpec (matériaux et cotes de bordure).
---- Accès : extension `editor_toolUtilities_walkRibbon` : `extensions.load("editor_toolUtilities_walkRibbon")`, puis la globale `editor_toolUtilities_walkRibbon`
+--- Generates a bordered sidewalk (curb and slabs) swept along two rails, as a single unique mesh, for the editor's road tools. The mesh parts are grouped by material (two sidewalks of the same stone share one mesh, so a single draw). Also handles curbs lowered at crosswalks: the sidewalk becomes flush over the crossing area and ramps back up on each side. Uses meshPart (face4, face4n) and kerbSpec (curb materials and dimensions).
+--- Access: extension `editor_toolUtilities_walkRibbon`: `extensions.load("editor_toolUtilities_walkRibbon")`, then the global `editor_toolUtilities_walkRibbon`
 ---@class editor_toolUtilities_walkRibbon
----@field crossingDepthM number Longueur par défaut de la partie à plat quand le passage n'indique rien (3.5 m).
----@field crossingRampM number Longueur de la rampe de chaque côté d'un passage abaissé (1.5 m).
+---@field crossingDepthM number Default length of the flat part when the crossing gives no indication (3.5 m).
+---@field crossingRampM number Length of the ramp on each side of a lowered crossing (1.5 m).
 editor_toolUtilities_walkRibbon = {}
 
---- Balaie le trottoir entre deux rails correspondants : la ligne de bordure sur la route et le fond du pavage. Ajoute des faces dans opts.parts (un mesh par matériau). Les options : parts (obligatoire, liste de parties), paving (matériau des dalles, défaut celui de kerbSpec), variant (variante de bordure), caps (fermer les extrémités, vrai par défaut), scale (hauteur de bordure par station, 0 = bordure supprimée), uvs (nombre de dalles au mètre), worldUv (poser le pavage depuis x,y monde), uRail (rail sur lequel mesurer les UV en long), bury (profondeur enterrée), back (faux pour ne pas fermer le fond).
----Source : lua/ge/extensions/editor/toolUtilities/walkRibbon.lua:73
----@param inner table Rail intérieur, liste de { x, y, z } (ligne de bordure).
----@param outer table Rail extérieur, liste de { x, y, z } (fond du pavage).
----@param opts table Options décrites ci-dessus ; opts.parts requis.
----@return integer  Nombre de triangles écrits (0 si rien).
+--- Sweeps the sidewalk between two matching rails: the curb line on the road and the bottom of the paving. Adds faces to opts.parts (one mesh per material). The options: parts (required, list of parts), paving (slab material, default that of kerbSpec), variant (curb variant), caps (close the ends, true by default), scale (curb height per station, 0 = curb removed), uvs (number of slabs per meter), worldUv (lay the paving from world x,y), uRail (rail on which to measure the lengthwise UVs), bury (buried depth), back (false to not close the bottom).
+---Source: lua/ge/extensions/editor/toolUtilities/walkRibbon.lua:73
+---@param inner table Inner rail, list of { x, y, z } (curb line).
+---@param outer table Outer rail, list of { x, y, z } (bottom of the paving).
+---@param opts table Options described above; opts.parts required.
+---@return integer  Number of triangles written (0 if nothing).
 function editor_toolUtilities_walkRibbon.build(inner, outer, opts) end
 
---- Densifie inner/outer dans la bande de chaque passage (environ tous les 0.4 m) et renvoie les rails densifiés avec le multiplicateur d'abaissement par station. Les centres des passages sont projetés sur le rail à partir de la position t le long de la ligne centrale. Renvoie les rails d'ORIGINE et nil si la route n'a pas de passage ou de ligne centrale.
----Source : lua/ge/extensions/editor/toolUtilities/walkRibbon.lua:261
----@param crossings table|nil Passages de la route, liste de { t (0..1, 0.5 par défaut), depthM }.
----@param div table Ligne centrale de la route (liste de points).
----@param inner table Rail intérieur.
----@param outer table Rail extérieur.
----@return table  Rail intérieur (densifié ou d'origine).
----@return table  Rail extérieur.
----@return number[]|nil  Multiplicateur par station, nil s'il n'y a pas de passage.
+--- Densifies inner/outer in the band of each crosswalk (about every 0.4 m) and returns the densified rails with the per-station lowering multiplier. Crosswalk centers are projected onto the rail from the position t along the centerline. Returns the ORIGINAL rails and nil if the road has no crosswalk or centerline.
+---Source: lua/ge/extensions/editor/toolUtilities/walkRibbon.lua:261
+---@param crossings table|nil Crosswalks of the road, list of { t (0..1, 0.5 by default), depthM }.
+---@param div table Centerline of the road (list of points).
+---@param inner table Inner rail.
+---@param outer table Outer rail.
+---@return table  Inner rail (densified or original).
+---@return table  Outer rail.
+---@return number[]|nil  Multiplier per station, nil if there is no crosswalk.
 function editor_toolUtilities_walkRibbon.crossingDips(crossings, div, inner, outer) end
 
---- Multiplicateur de hauteur de bordure par station pour un trottoir traversé par des passages piétons : 0 (à ras) sur chaque passage, rampe de part et d'autre, 1 ailleurs. `cum`, `centres` et `depths` sont des abscisses curvilignes sur le rail. nil si aucun passage n'atteint le trottoir.
----Source : lua/ge/extensions/editor/toolUtilities/walkRibbon.lua:190
----@param cum number[] Abscisse curviligne cumulée de chaque station.
----@param centres number[] Abscisse du centre de chaque passage.
----@param depths number[]|nil Profondeur (m) de chaque passage ; 3.5 par défaut.
----@return number[]|nil  Un multiplicateur par station entre 0 et 1.
+--- Curb height multiplier per station for a sidewalk crossed by crosswalks: 0 (flush) on each crosswalk, ramp on either side, 1 elsewhere. `cum`, `centres` and `depths` are arc-length abscissas along the rail. nil if no crosswalk reaches the sidewalk.
+---Source: lua/ge/extensions/editor/toolUtilities/walkRibbon.lua:190
+---@param cum number[] Cumulative arc-length abscissa of each station.
+---@param centres number[] Abscissa of the center of each crosswalk.
+---@param depths number[]|nil Depth (m) of each crosswalk; 3.5 by default.
+---@return number[]|nil  One multiplier per station between 0 and 1.
 function editor_toolUtilities_walkRibbon.dropScale(cum, centres, depths) end
 
---- Hauteur de la surface de marche au-dessus de la route sur laquelle repose le rail intérieur (kerbH de kerbSpec).
----Source : lua/ge/extensions/editor/toolUtilities/walkRibbon.lua:320
----@return number  Hauteur en mètres.
+--- Height of the walking surface above the road on which the inner rail rests (kerbH from kerbSpec).
+---Source: lua/ge/extensions/editor/toolUtilities/walkRibbon.lua:320
+---@return number  Height in meters.
 function editor_toolUtilities_walkRibbon.rise() end
 
---- Distance dont le rail extérieur doit s'écarter de l'intérieur : la bordure plus une dalle (kerbW + slabW de kerbSpec).
----Source : lua/ge/extensions/editor/toolUtilities/walkRibbon.lua:315
----@return number  Largeur en mètres.
+--- Distance by which the outer rail must be offset from the inner one: the curb plus one slab (kerbW + slabW from kerbSpec).
+---Source: lua/ge/extensions/editor/toolUtilities/walkRibbon.lua:315
+---@return number  Width in meters.
 function editor_toolUtilities_walkRibbon.width() end
 

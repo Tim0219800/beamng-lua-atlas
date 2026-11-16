@@ -1,22 +1,67 @@
 {
   "path": "lua/ge/extensions/scenario/speedGoal.lua",
-  "module": "But de scénario « speed » : surveille la vitesse d'un véhicule et gagne ou échoue quand elle reste hors de la plage [minSpeed, maxSpeed] plus de maxTimeout secondes. Chargé par scenario_raceGoals qui appelle init, processState et updateFinalStatus ; un scénario le déclare dans goals.vehicles avec id 'speed'.",
-  "usage": "-- dans le JSON d'un scénario, goals.vehicles :\n-- {\"id\":\"speed\", \"vehicle\":\"scenario_player0\", \"value\":{\"minSpeed\":10, \"maxTimeout\":3, \"purpose\":\"fail\", \"msg\":\"Trop lent\"}}",
+  "module": "\"speed\" scenario goal: monitors a vehicle's speed and wins or fails when it stays outside the range [minSpeed, maxSpeed] for more than maxTimeout seconds. Loaded by scenario_raceGoals which calls init, processState and updateFinalStatus; a scenario declares it in goals.vehicles with id 'speed'.",
+  "usage": "-- in a scenario's JSON, goals.vehicles:\n-- {\"id\":\"speed\", \"vehicle\":\"scenario_player0\", \"value\":{\"minSpeed\":10, \"maxTimeout\":3, \"purpose\":\"fail\", \"msg\":\"Trop lent\"}}",
   "notes": [
-    "Champs de instance.value lus : minSpeed et maxSpeed (m/s, nombres), maxTimeout (s, 0 par défaut), delay (s : ignore le contrôle tant que scenario.timer <= delay), wayPointNum (tableau d'indices de waypoint : le contrôle ne s'applique que quand vehWpData.cur en fait partie), purpose ('fail' par défaut ou 'win'), msg (message).",
-    "Le contrôle se fait à chaque 'onRaceTick' (toutes les 0,25 s de temps simulé) : tant que la vitesse est hors plage, instance.Timeout augmente de 0,25 ; il est remis à 0 sinon. Un message de compte à rebours est affiché chaque seconde entière. Quand Timeout > maxTimeout, showMsg termine le scénario via scenario_scenarios.finish : en échec si purpose='fail' (result.failed = msg ou clé par défaut), en victoire si purpose='win' (result.msg avec le temps).",
-    "Le suivi de la vitesse utilise map.objects (suivi de véhicule) ; si absent, la fonction demande côté véhicule mapmgr.enableTracking(nom) et attend la frame suivante.",
-    "Bug/incohérence : dans showMsg, « {txt = instance.value.msg, ...} or {...} » ne retombe jamais sur le message par défaut (une table est toujours vraie) ; si value.msg est nil, le message de victoire n'a pas de texte.",
-    "Bug/incohérence : processState ignore l'instance si maxSpeed == 0 mais pas si maxSpeed est nil ; si le véhicule est introuvable (vehicle nil) et fobjData nil, playerSpeed peut recevoir fobjData nil et lever une erreur.",
-    "Bug/incohérence : le test « instance.Timeout % 1 == 0 » compare des flottants (0,25 cumulés) ; ça fonctionne car 0,25 est exactement représentable.",
-    "Bug/incohérence : updateFinalStatus ignore son argument instance et redéclare la variable de boucle du même nom."
+    "instance.value fields read: minSpeed and maxSpeed (m/s, numbers), maxTimeout (s, 0 by default), delay (s: skips the check while scenario.timer <= delay), wayPointNum (array of waypoint indices: the check only applies when vehWpData.cur is one of them), purpose ('fail' by default or 'win'), msg (message).",
+    "The check runs on every 'onRaceTick' (every 0.25 s of simulated time): while the speed is outside the range, instance.Timeout increases by 0.25; it is reset to 0 otherwise. A countdown message is displayed every whole second. When Timeout > maxTimeout, showMsg ends the scenario via scenario_scenarios.finish: as a failure if purpose='fail' (result.failed = msg or default key), as a win if purpose='win' (result.msg with the time).",
+    "Speed tracking uses map.objects (vehicle tracking); if absent, the function asks the vehicle side for mapmgr.enableTracking(name) and waits for the next frame.",
+    "BUG/inconsistency: in showMsg, \"{txt = instance.value.msg, ...} or {...}\" never falls back to the default message (a table is always truthy); if value.msg is nil, the win message has no text.",
+    "BUG/inconsistency: processState skips the instance if maxSpeed == 0 but not if maxSpeed is nil; if the vehicle is not found (vehicle nil) and fobjData is nil, playerSpeed may receive a nil fobjData and raise an error.",
+    "BUG/inconsistency: the test \"instance.Timeout % 1 == 0\" compares floats (accumulated 0.25); it works because 0.25 is exactly representable.",
+    "BUG/inconsistency: updateFinalStatus ignores its instance argument and redeclares the loop variable of the same name."
   ],
   "fields": {
-    "instances": {"type": "table<integer, table>", "desc": "Instances du but 'speed' actives pour le scénario courant, remplies par init."}
+    "instances": {
+      "type": "table<integer, table>",
+      "desc": "'speed' goal instances active for the current scenario, filled by init."
+    }
   },
   "functions": {
-    "init": {"desc": "Appelée par scenario_raceGoals au démarrage : reconstruit M.instances à partir de scenario.goals.vehicles (entrées id == 'speed'), valide les types (minSpeed, maxSpeed, delay nombres ; wayPointNum tableau ; purpose chaîne), met maxTimeout à 0 et purpose à 'fail' par défaut, et Timeout à 0.", "params": {"scenario": {"type": "table", "desc": "scénario courant"}}, "returns": [], "internal": true},
-    "processState": {"desc": "Appelée par scenario_raceGoals à chaque évènement de course ; n'agit que pour state == 'onRaceTick' : vérifie la vitesse des véhicules concernés (voir notes).", "params": {"scenario": {"type": "table", "desc": "scénario courant"}, "state": {"type": "string", "desc": "nom du hook : 'onRaceStart','onRaceInit','onRaceWaypointReached','onRaceTick','onRaceResult','onCountdownEnded'"}, "stateData": {"type": "table|nil", "desc": "données du hook (non utilisées ici)"}}, "returns": [], "internal": true},
-    "updateFinalStatus": {"desc": "Appelée en fin de scénario : publie dans statistics_statistics le statut (passed/failed) de chaque instance.", "params": {"scenario": {"type": "table", "desc": "scénario courant"}, "instance": {"type": "table", "desc": "non utilisé (déduit du code)"}}, "returns": [], "internal": true}
+    "init": {
+      "desc": "Called by scenario_raceGoals at startup: rebuilds M.instances from scenario.goals.vehicles (entries id == 'speed'), validates the types (minSpeed, maxSpeed, delay numbers; wayPointNum array; purpose string), sets maxTimeout to 0 and purpose to 'fail' by default, and Timeout to 0.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "current scenario"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "processState": {
+      "desc": "Called by scenario_raceGoals on every race event; only acts for state == 'onRaceTick': checks the speed of the relevant vehicles (see notes).",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "current scenario"
+        },
+        "state": {
+          "type": "string",
+          "desc": "hook name: 'onRaceStart','onRaceInit','onRaceWaypointReached','onRaceTick','onRaceResult','onCountdownEnded'"
+        },
+        "stateData": {
+          "type": "table|nil",
+          "desc": "hook data (unused here)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateFinalStatus": {
+      "desc": "Called at the end of the scenario: publishes to statistics_statistics the status (passed/failed) of each instance.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "current scenario"
+        },
+        "instance": {
+          "type": "table",
+          "desc": "unused (inferred from code)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

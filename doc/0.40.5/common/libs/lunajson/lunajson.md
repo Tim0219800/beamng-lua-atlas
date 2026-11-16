@@ -1,12 +1,12 @@
 # `libs_lunajson_lunajson`
 
-*Fichier : `lua/common/libs/lunajson/lunajson.lua` · VM : Commun (GE + véhicule) · 12 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lunajson/lunajson.lua` · VM: Common (GE + vehicle) · 12 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/lunajson/lunajson")`
+**Access:** `require("libs/lunajson/lunajson")`
 
-Bibliothèque tierce lunajson (décodeur/encodeur JSON pur Lua, rapide). Ce fichier est le point d'entrée : il crée un décodeur et un encodeur par défaut et expose aussi l'analyseur SAX (événementiel). Pour avoir plusieurs contextes indépendants, on peut requérir directement lunajson/decoder ou lunajson/encoder. Le jeu fournit par ailleurs ses propres fonctions jsonEncode/jsonDecode ; ceci est la bibliothèque brute.
+Third-party library lunajson (fast pure-Lua JSON decoder/encoder). This file is the entry point: it creates a default decoder and encoder and also exposes the SAX (event-driven) parser. To have several independent contexts, you can require lunajson/decoder or lunajson/encoder directly. The game also provides its own jsonEncode/jsonDecode functions; this is the raw library.
 
-## Exemple
+## Example
 
 ```lua
 local lunajson = require('libs/lunajson/lunajson')
@@ -14,20 +14,20 @@ local t = lunajson.decode('{"a":[1,2,3]}')
 local s = lunajson.encode(t)
 ```
 
-## Remarques
+## Notes
 
-- Le fichier fait `require 'libs/lunajson/lunajson.decoder'` (séparateur point) ; les sous-modules sont des fichiers `lunajson/decoder.lua`, `encoder.lua` et `sax.lua`.
-- `decode(json, pos?, nullv?, arraylen?)` : si `pos` est donné, renvoie aussi la position où le décodage s'est arrêté (et n'exige pas la fin de la chaîne) ; `nullv` remplace le null JSON (nil par défaut) ; si `arraylen` est vrai, la longueur de chaque tableau décodé est stockée à l'indice 0 (`ary[0]`).
-- `encode(valeur, nullv?)` : les clés non-chaînes dans un objet et les références circulaires provoquent une erreur.
+- The file does `require 'libs/lunajson/lunajson.decoder'` (dot separator); the submodules are the files `lunajson/decoder.lua`, `encoder.lua` and `sax.lua`.
+- `decode(json, pos?, nullv?, arraylen?)`: if `pos` is given, also returns the position where decoding stopped (and does not require the end of the string); `nullv` replaces the JSON null (nil by default); if `arraylen` is true, the length of each decoded array is stored at index 0 (`ary[0]`).
+- `encode(value, nullv?)`: non-string keys in an object and circular references cause an error.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `decode` | function | Décode une chaîne JSON en valeur Lua (voir lunajson/decoder). |
-| `encode` | function | Encode une valeur Lua en chaîne JSON (voir lunajson/encoder). |
-| `newfileparser` | function | Crée un analyseur SAX lisant un fichier par blocs de 8192 octets (voir lunajson/sax). |
-| `newparser` | function | Crée un analyseur SAX sur une chaîne ou une fonction source (voir lunajson/sax). |
+| `decode` | function | Decodes a JSON string into a Lua value (see lunajson/decoder). |
+| `encode` | function | Encodes a Lua value into a JSON string (see lunajson/encoder). |
+| `newfileparser` | function | Creates a SAX parser reading a file in 8192-byte blocks (see lunajson/sax). |
+| `newparser` | function | Creates a SAX parser on a string or a source function (see lunajson/sax). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lunajson/lunajson.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lunajson/lunajson.lua`.*

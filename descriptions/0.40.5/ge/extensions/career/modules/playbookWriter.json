@@ -1,35 +1,54 @@
 {
   "path": "lua/ge/extensions/career/modules/playbookWriter.lua",
-  "module": "Enregistre l'historique des missions jouées (missionId et étoiles) dans playbook.json du dossier career de la sauvegarde. Chargé seulement quand la carrière est active.",
+  "module": "Records the history of played missions (missionId and stars) in playbook.json in the save's career folder. Loaded only when the career is active.",
   "notes": [
-    "Le fichier est ignoré (liste vide) si info.json de la sauvegarde a une version < moduleVersion (42).",
-    "La liste n'est jamais lue par ce module : il ne fait qu'ajouter et sauvegarder."
+    "The file is ignored (empty list) if the save's info.json has a version < moduleVersion (42).",
+    "The list is never read by this module: it only appends and saves."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: career_career."
+    }
   },
   "functions": {
     "addMissionPlayedEntry": {
-      "desc": "Ajoute {missionId, stars} à la fin du playbook en mémoire.",
+      "desc": "Appends {missionId, stars} to the end of the in-memory playbook.",
       "params": {
-        "missionId": {"type": "string", "desc": "Identifiant de la mission."},
-        "stars": {"type": "any", "desc": "Résultat en étoiles (déduit du code)."}
+        "missionId": {
+          "type": "string",
+          "desc": "Mission identifier."
+        },
+        "stars": {
+          "type": "any",
+          "desc": "Result in stars (inferred from code)."
+        }
       },
       "internal": false
     },
     "onExtensionLoaded": {
-      "desc": "Hook au chargement de l'extension : charge le playbook si la carrière est active (renvoie false sinon).",
+      "desc": "Hook on extension load: loads the playbook if the career is active (returns false otherwise).",
       "params": {},
       "internal": true
     },
     "onCareerActive": {
-      "desc": "Hook : recharge le playbook quand la carrière devient active.",
-      "params": {"active": {"type": "boolean", "desc": "Rien si false."}},
+      "desc": "Hook: reloads the playbook when the career becomes active.",
+      "params": {
+        "active": {
+          "type": "boolean",
+          "desc": "Nothing if false."
+        }
+      },
       "internal": true
     },
     "onSaveCurrentProfile": {
-      "desc": "Hook de sauvegarde : écrit le playbook dans <save>/career/playbook.json.",
-      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde."}},
+      "desc": "Save hook: writes the playbook to <save>/career/playbook.json.",
+      "params": {
+        "currentSavePath": {
+          "type": "string",
+          "desc": "Save folder."
+        }
+      },
       "internal": true
     }
   }

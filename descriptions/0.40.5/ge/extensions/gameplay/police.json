@@ -1,292 +1,536 @@
 {
   "path": "lua/ge/extensions/gameplay/police.lua",
-  "module": "Logique de police du trafic : suit les véhicules ayant le rôle 'police', gère les poursuites (niveaux -1 à 3 selon le score d'infractions), l'arrestation, l'évasion, la libération, les barrages routiers (véhicules et accessoires), et la file d'attente des suspects aléatoires. Elle s'appuie sur gameplay_traffic (données de trafic, rôles). Un moddeur s'en sert pour lancer ou terminer une poursuite, régler les variables de poursuite ou installer un barrage.",
+  "module": "Traffic police logic: tracks vehicles with the 'police' role, handles pursuits (levels -1 to 3 depending on the offense score), arrest, evasion, release, roadblocks (vehicles and props), and the queue of random suspects. It relies on gameplay_traffic (traffic data, roles). A modder uses it to start or end a pursuit, set the pursuit variables or set up a roadblock.",
   "usage": "gameplay_police.setPursuitVars({arrestTime = 3, evadeTime = 30})\ngameplay_police.setupPursuitGameplay(suspectId, {policeId1, policeId2})\ngameplay_police.setPursuitMode(2, suspectId)\nlocal ok, isPolice = gameplay_police.isVehicleInPursuit(suspectId)",
   "notes": [
-    "Niveaux de poursuite : -1 arrêté (busted), 0 aucun, 1 à 3 niveaux ; le mode est borné par clamp(-1, 3). Le niveau est déclenché par pursuit.score face à vars.scoreLevels (défaut {100, 500, 2000}).",
-    "Variables de poursuite par défaut (vars) : scoreLevels, strictness 0.5, arrestTime 5, arrestRadius 20, evadeTime 45, evadeRadius 80, suspectFrequency 0.5, roadblockFrequency 0.5, useVisibility true, autoRelease true.",
-    "setPoliceVars/getPoliceVars et getPolice sont des alias de setPursuitVars/getPursuitVars et getPoliceVehicles.",
-    "setPursuitVars(nil) ou (false) réinitialise les variables ; une table est fusionnée dans les variables actuelles.",
-    "Les variables sont réinitialisées à la fin du niveau (onClientEndMission) ; elles sont conservées par onSerialize/onDeserialized.",
-    "L'extension ne fait rien si M.enabled est false, si la physique est désactivée (be:getEnabled) ou si le trafic n'est pas à l'état 'on'.",
-    "Le minuteur de suspect aléatoire n'avance que si gameplay_traffic.getTrafficVars().enableRandomEvents est vrai et vars.suspectFrequency > 0.",
-    "Hooks émis : onPursuitAction(id, 'start'|'arrest'|'evade'|'release', pursuit) et onPursuitModeUpdate(id, {mode})."
+    "Pursuit levels: -1 arrested (busted), 0 none, 1 to 3 levels; the mode is bounded by clamp(-1, 3). The level is triggered by pursuit.score against vars.scoreLevels (default {100, 500, 2000}).",
+    "Default pursuit variables (vars): scoreLevels, strictness 0.5, arrestTime 5, arrestRadius 20, evadeTime 45, evadeRadius 80, suspectFrequency 0.5, roadblockFrequency 0.5, useVisibility true, autoRelease true.",
+    "setPoliceVars/getPoliceVars and getPolice are aliases of setPursuitVars/getPursuitVars and getPoliceVehicles.",
+    "setPursuitVars(nil) or (false) resets the variables; a table is merged into the current variables.",
+    "The variables are reset at the end of the level (onClientEndMission); they are kept by onSerialize/onDeserialized.",
+    "The extension does nothing if M.enabled is false, if physics is disabled (be:getEnabled) or if traffic is not in the 'on' state.",
+    "The random suspect timer only advances if gameplay_traffic.getTrafficVars().enableRandomEvents is true and vars.suspectFrequency > 0.",
+    "Emitted hooks: onPursuitAction(id, 'start'|'arrest'|'evade'|'release', pursuit) and onPursuitModeUpdate(id, {mode})."
   ],
   "fields": {
-    "enabled": {"type": "boolean", "desc": "Si false, la logique de police à l'exécution (onUpdate) est suspendue. Vaut true par défaut."}
+    "enabled": {
+      "type": "boolean",
+      "desc": "If false, the police logic at runtime (onUpdate) is suspended. Is true by default."
+    }
   },
   "functions": {
     "onTrafficSpecialVehiclesProviders": {
-      "desc": "Hook de gameplay_traffic : enregistre le fournisseur de véhicules spéciaux 'police' (priorité 10, au moins 3 véhicules de trafic au total, 25 % du total arrondi au supérieur si options.police). Le groupe vient d'un fichier de groupe (si options.autoLoadFromFile ou le réglage trafficSmartSelections), sinon de trafficUtils.createPoliceGroup, sinon des fullsize/police.",
+      "desc": "gameplay_traffic hook: registers the 'police' special vehicle provider (priority 10, at least 3 traffic vehicles in total, 25% of the total rounded up if options.police). The group comes from a group file (if options.autoLoadFromFile or the trafficSmartSelections setting), otherwise from trafficUtils.createPoliceGroup, otherwise from the fullsize/police.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "checkRoadblock": {
-      "desc": "Indique combien des véhicules fournis tiennent dans la largeur d'un barrage (du plus court au plus long, longueur = plus grande étendue de la boîte, ou l'axe choisi par useLength).",
+      "desc": "Indicates how many of the provided vehicles fit in the width of a roadblock (from shortest to longest, length = largest extent of the box, or the axis chosen by useLength).",
       "params": {
-        "vehIds": {"type": "integer[]", "desc": "Ids de véhicules ou d'accessoires."},
-        "rbWidth": {"type": "number|nil", "desc": "Largeur maximale du barrage en mètres (défaut 10)."},
-        "useLength": {"type": "boolean|nil", "desc": "nil = meilleur axe ; true = étendue Y ; false = étendue X."}
+        "vehIds": {
+          "type": "integer[]",
+          "desc": "Vehicle or prop ids."
+        },
+        "rbWidth": {
+          "type": "number|nil",
+          "desc": "Maximum roadblock width in meters (default 10)."
+        },
+        "useLength": {
+          "type": "boolean|nil",
+          "desc": "nil = best axis; true = Y extent; false = X extent."
+        }
       },
       "returns": [
-        {"type": "integer[]", "desc": "Ids qui tiennent dans le barrage (nil si vehIds n'est pas une table)."},
-        {"type": "number", "desc": "Longueur totale occupée en mètres."}
+        {
+          "type": "integer[]",
+          "desc": "Ids that fit in the roadblock (nil if vehIds is not a table)."
+        },
+        {
+          "type": "number",
+          "desc": "Total length occupied in meters."
+        }
       ],
       "internal": false
     },
     "placeRoadblock": {
-      "desc": "Place des véhicules en rang en travers d'une route (centrés sur pos, répartis sur placeData.width), puis les téléporte avec core_multiSpawn.placeGroup.",
+      "desc": "Places vehicles in a row across a road (centered on pos, spread over placeData.width), then teleports them with core_multiSpawn.placeGroup.",
       "params": {
-        "vehIds": {"type": "integer[]", "desc": "Ids à placer."},
-        "pos": {"type": "vec3", "desc": "Centre du barrage."},
-        "rot": {"type": "quat", "desc": "Orientation (la direction avant doit suivre la route)."},
-        "placeData": {"type": "table|nil", "desc": "width (défaut 10 m), angle (degrés, défaut 0), centerAngle (angle du véhicule central)."}
+        "vehIds": {
+          "type": "integer[]",
+          "desc": "Ids to place."
+        },
+        "pos": {
+          "type": "vec3",
+          "desc": "Center of the roadblock."
+        },
+        "rot": {
+          "type": "quat",
+          "desc": "Orientation (the forward direction must follow the road)."
+        },
+        "placeData": {
+          "type": "table|nil",
+          "desc": "width (default 10 m), angle (degrees, default 0), centerAngle (angle of the center vehicle)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "setupRoadblock": {
-      "desc": "Prépare et place un barrage devant la cible. Choisit les véhicules de police actifs, éloignés de plus de activeDist et derrière l'origine, qui peuvent cibler targetId. Cherche un point de route à spawnDist devant, calcule la largeur de route, ajuste l'angle aléatoirement, met les policiers en action 'roadblock' et place aussi des accessoires (propIds).",
+      "desc": "Prepares and places a roadblock in front of the target. Chooses the active police vehicles, farther than activeDist and behind the origin, that can target targetId. Looks for a road point at spawnDist ahead, computes the road width, adjusts the angle randomly, puts the police in 'roadblock' action and also places props (propIds).",
       "params": {
-        "targetId": {"type": "integer|nil", "desc": "Cible (défaut véhicule du joueur 0)."},
-        "roadblockVehIds": {"type": "integer[]|nil", "desc": "Véhicules candidats (défaut tous les véhicules de police)."},
-        "roadblockPropIds": {"type": "integer[]|nil", "desc": "Accessoires (défaut ceux de insertProp)."},
-        "originPos": {"type": "vec3|nil", "desc": "Origine (défaut position caméra)."},
-        "originDirVec": {"type": "vec3|nil", "desc": "Direction de l'origine (défaut avant de la caméra)."},
-        "activeDist": {"type": "number|nil", "desc": "Distance rayonnante (défaut 100 m) ; 0 ignore les tests de distance et de direction."},
-        "spawnDist": {"type": "number|nil", "desc": "Distance minimale de placement (défaut 120 m) ; 0 force le placement à l'origine."}
+        "targetId": {
+          "type": "integer|nil",
+          "desc": "Target (default player 0 vehicle)."
+        },
+        "roadblockVehIds": {
+          "type": "integer[]|nil",
+          "desc": "Candidate vehicles (default all police vehicles)."
+        },
+        "roadblockPropIds": {
+          "type": "integer[]|nil",
+          "desc": "Props (default those of insertProp)."
+        },
+        "originPos": {
+          "type": "vec3|nil",
+          "desc": "Origin (default camera position)."
+        },
+        "originDirVec": {
+          "type": "vec3|nil",
+          "desc": "Origin direction (default camera forward)."
+        },
+        "activeDist": {
+          "type": "number|nil",
+          "desc": "Radiating distance (default 100 m); 0 skips the distance and direction tests."
+        },
+        "spawnDist": {
+          "type": "number|nil",
+          "desc": "Minimum placement distance (default 120 m); 0 forces placement at the origin."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "{vehIds, propIds} des éléments placés ; nil en cas d'échec."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{vehIds, propIds} of the placed elements; nil on failure."
+        }
+      ],
       "internal": false
     },
     "setPropsActive": {
-      "desc": "Active ou désactive tous les accessoires de barrage enregistrés ; avec reset, appelle recovery.loadHome() sur chacun.",
+      "desc": "Enables or disables all registered roadblock props; with reset, calls recovery.loadHome() on each.",
       "params": {
-        "active": {"type": "boolean", "desc": "true pour activer."},
-        "reset": {"type": "boolean|nil", "desc": "true pour remettre à leur position d'origine."}
+        "active": {
+          "type": "boolean",
+          "desc": "true to enable."
+        },
+        "reset": {
+          "type": "boolean|nil",
+          "desc": "true to return them to their original position."
+        }
       },
       "returns": [],
       "internal": false
     },
     "insertProp": {
-      "desc": "Ajoute un objet comme accessoire de barrage, s'il existe, n'est pas déjà un véhicule de trafic et n'est pas déjà enregistré.",
-      "params": {"propId": {"type": "integer", "desc": "Id de l'objet."}},
+      "desc": "Adds an object as a roadblock prop, if it exists, is not already a traffic vehicle and is not already registered.",
+      "params": {
+        "propId": {
+          "type": "integer",
+          "desc": "Object id."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "removeProp": {
-      "desc": "Retire un accessoire de la liste de barrage.",
-      "params": {"propId": {"type": "integer", "desc": "Id de l'objet."}},
+      "desc": "Removes a prop from the roadblock list.",
+      "params": {
+        "propId": {
+          "type": "integer",
+          "desc": "Object id."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setPursuitVars": {
-      "desc": "Fusionne data dans les variables de poursuite ; sans table valide (nil/false), les remet par défaut. Alias : setPoliceVars.",
-      "params": {"data": {"type": "table|nil|false", "desc": "Variables à modifier (scoreLevels, strictness, arrestTime, arrestRadius, evadeTime, evadeRadius, suspectFrequency, roadblockFrequency, useVisibility, autoRelease)."}},
+      "desc": "Merges data into the pursuit variables; without a valid table (nil/false), resets them to default. Alias: setPoliceVars.",
+      "params": {
+        "data": {
+          "type": "table|nil|false",
+          "desc": "Variables to change (scoreLevels, strictness, arrestTime, arrestRadius, evadeTime, evadeRadius, suspectFrequency, roadblockFrequency, useVisibility, autoRelease)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setPoliceVars": {
-      "desc": "Alias de setPursuitVars.",
-      "params": {"data": {"type": "table|nil|false", "desc": "Voir setPursuitVars."}},
+      "desc": "Alias of setPursuitVars.",
+      "params": {
+        "data": {
+          "type": "table|nil|false",
+          "desc": "See setPursuitVars."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getPoliceVehicles": {
-      "desc": "Table des véhicules de police du trafic, par id de véhicule (données de gameplay_traffic). Alias : getPolice.",
+      "desc": "Table of the traffic police vehicles, by vehicle id (gameplay_traffic data). Alias: getPolice.",
       "params": {},
-      "returns": [{"type": "table<integer, table>", "desc": "Véhicules de police."}],
+      "returns": [
+        {
+          "type": "table<integer, table>",
+          "desc": "Police vehicles."
+        }
+      ],
       "internal": false
     },
     "getPolice": {
-      "desc": "Alias de getPoliceVehicles.",
+      "desc": "Alias of getPoliceVehicles.",
       "params": {},
-      "returns": [{"type": "table<integer, table>", "desc": "Véhicules de police."}],
+      "returns": [
+        {
+          "type": "table<integer, table>",
+          "desc": "Police vehicles."
+        }
+      ],
       "internal": false
     },
     "getNearestPoliceVehicle": {
-      "desc": "Police active la plus proche de la cible, d'après les distances mises en cache dans role.validTargets.",
+      "desc": "Active police closest to the target, based on the distances cached in role.validTargets.",
       "params": {
-        "targetId": {"type": "integer|nil", "desc": "Id de la cible."},
-        "isVisible": {"type": "boolean|nil", "desc": "Ne garder que les policiers voyant la cible (ignoré si vars.useVisibility est false)."},
-        "isUsable": {"type": "boolean|nil", "desc": "Exclure les policiers à l'état 'disabled'."}
+        "targetId": {
+          "type": "integer|nil",
+          "desc": "Target id."
+        },
+        "isVisible": {
+          "type": "boolean|nil",
+          "desc": "Keep only the police that see the target (ignored if vars.useVisibility is false)."
+        },
+        "isUsable": {
+          "type": "boolean|nil",
+          "desc": "Exclude police in the 'disabled' state."
+        }
       },
       "returns": [
-        {"type": "integer|nil", "desc": "Id du policier."},
-        {"type": "number", "desc": "Distance (math.huge si aucun)."},
-        {"type": "number", "desc": "Distance interactive (le policier regarde devant)."}
+        {
+          "type": "integer|nil",
+          "desc": "Police vehicle id."
+        },
+        {
+          "type": "number",
+          "desc": "Distance (math.huge if none)."
+        },
+        {
+          "type": "number",
+          "desc": "Interactive distance (the police is facing forward)."
+        }
       ],
       "internal": false
     },
     "isVehicleInPursuit": {
-      "desc": "Statut de poursuite d'un véhicule du trafic : pour un policier, vrai s'il poursuit (éventuellement targetId) ; pour un suspect, vrai si pursuit.mode > 0.",
+      "desc": "Pursuit status of a traffic vehicle: for a police vehicle, true if it is pursuing (optionally targetId); for a suspect, true if pursuit.mode > 0.",
       "params": {
-        "id": {"type": "integer|nil", "desc": "Véhicule (défaut joueur 0)."},
-        "targetId": {"type": "integer|nil", "desc": "Filtre sur la cible poursuivie (policiers seulement)."}
+        "id": {
+          "type": "integer|nil",
+          "desc": "Vehicle (default player 0)."
+        },
+        "targetId": {
+          "type": "integer|nil",
+          "desc": "Filter on the pursued target (police only)."
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "En poursuite."},
-        {"type": "boolean", "desc": "Le véhicule est un policier."}
+        {
+          "type": "boolean",
+          "desc": "In pursuit."
+        },
+        {
+          "type": "boolean",
+          "desc": "The vehicle is a police vehicle."
+        }
       ],
       "internal": false
     },
     "setPursuitMode": {
-      "desc": "Fixe le mode de poursuite d'une cible : -1 arrêté, 0 fin, 1 à 3 niveau. Met la cible au rôle suspect (action fleePolice), met à jour les policiers (pursuitStart, pursuitEnd, resetAction) et le score, puis émet onPursuitModeUpdate. Au passage de 0 à >0, émet onPursuitAction 'start'. Sans effet si la cible n'est pas du trafic ou a ignorePursuit.",
+      "desc": "Sets a target's pursuit mode: -1 arrested, 0 end, 1 to 3 level. Gives the target the suspect role (fleePolice action), updates the police (pursuitStart, pursuitEnd, resetAction) and the score, then emits onPursuitModeUpdate. When going from 0 to >0, emits onPursuitAction 'start'. Has no effect if the target is not traffic or has ignorePursuit.",
       "params": {
-        "mode": {"type": "integer", "desc": "-1 à 3 (borné)."},
-        "targetId": {"type": "integer|nil", "desc": "Cible (défaut joueur 0)."},
-        "policeIds": {"type": "integer[]|integer|nil", "desc": "Policiers concernés (défaut tous ; un nombre seul est accepté)."}
+        "mode": {
+          "type": "integer",
+          "desc": "-1 to 3 (clamped)."
+        },
+        "targetId": {
+          "type": "integer|nil",
+          "desc": "Target (default player 0)."
+        },
+        "policeIds": {
+          "type": "integer[]|integer|nil",
+          "desc": "Police concerned (default all; a single number is accepted)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "setSuspect": {
-      "desc": "Passe un véhicule de trafic au rôle 'suspect' avec l'action 'watchPolice' (conservée au rafraîchissement du rôle).",
-      "params": {"id": {"type": "integer", "desc": "Id du véhicule."}},
+      "desc": "Sets a traffic vehicle to the 'suspect' role with the 'watchPolice' action (kept on role refresh).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setSuspectTimer": {
-      "desc": "Règle le délai avant le prochain suspect aléatoire. Sans argument : 120 * coef * (1 - suspectFrequency)^2 + 15 à 45 s ; coef vaut 2, 1 après une arrestation du joueur policier, 5 après une évasion.",
-      "params": {"time": {"type": "number|nil", "desc": "Délai en secondes ; nil = calcul automatique."}},
+      "desc": "Sets the delay before the next random suspect. With no argument: 120 * coef * (1 - suspectFrequency)^2 + 15 to 45 s; coef is 2, 1 after an arrest by the police player, 5 after an evasion.",
+      "params": {
+        "time": {
+          "type": "number|nil",
+          "desc": "Delay in seconds; nil = automatic calculation."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "arrestVehicle": {
-      "desc": "Déclare immédiatement un véhicule arrêté : messages optionnels (contravention ou arrestation, liste des infractions), émet onPursuitAction 'arrest' puis setPursuitMode(-1) pour les policiers qui le ciblent. Fonctionne comme prévu si la cible a le rôle suspect.",
+      "desc": "Immediately declares a vehicle arrested: optional messages (ticket or arrest, list of offenses), emits onPursuitAction 'arrest' then setPursuitMode(-1) for the police targeting it. Works as intended if the target has the suspect role.",
       "params": {
-        "id": {"type": "integer", "desc": "Véhicule arrêté."},
-        "showMessages": {"type": "boolean|nil", "desc": "Afficher les messages d'interface."}
+        "id": {
+          "type": "integer",
+          "desc": "Arrested vehicle."
+        },
+        "showMessages": {
+          "type": "boolean|nil",
+          "desc": "Show the UI messages."
+        }
       },
       "returns": [],
       "internal": false
     },
     "evadeVehicle": {
-      "desc": "Déclare immédiatement qu'un véhicule a échappé à la police : émet onPursuitAction 'evade' puis setPursuitMode(0).",
+      "desc": "Immediately declares that a vehicle escaped the police: emits onPursuitAction 'evade' then setPursuitMode(0).",
       "params": {
-        "id": {"type": "integer", "desc": "Véhicule."},
-        "showMessages": {"type": "boolean|nil", "desc": "Afficher les messages d'interface."}
+        "id": {
+          "type": "integer",
+          "desc": "Vehicle."
+        },
+        "showMessages": {
+          "type": "boolean|nil",
+          "desc": "Show the UI messages."
+        }
       },
       "returns": [],
       "internal": false
     },
     "releaseVehicle": {
-      "desc": "Libère un véhicule après arrestation : émet onPursuitAction 'release' et remet le mode de poursuite à 0. Si le véhicule n'est pas du trafic, envoie controller.setFreeze(0) à son VM.",
+      "desc": "Releases a vehicle after arrest: emits onPursuitAction 'release' and sets the pursuit mode back to 0. If the vehicle is not traffic, sends controller.setFreeze(0) to its VM.",
       "params": {
-        "id": {"type": "integer", "desc": "Véhicule."},
-        "showMessages": {"type": "boolean|nil", "desc": "Afficher le message « drive away » si c'est le joueur."}
+        "id": {
+          "type": "integer",
+          "desc": "Vehicle."
+        },
+        "showMessages": {
+          "type": "boolean|nil",
+          "desc": "Show the \"drive away\" message if it is the player."
+        }
       },
       "returns": [],
       "internal": false
     },
     "setupPursuitGameplay": {
-      "desc": "Prépare un scénario de poursuite : insère le suspect dans le trafic (sans désactivation par le pool de véhicules), désactive son respawn, lui donne le rôle suspect (pursuitMode), force le rôle 'police' aux policeIds fournis, et lance l'action 'watchPolice' sauf si preventAutoStart.",
+      "desc": "Prepares a pursuit scenario: inserts the suspect into traffic (without deactivation by the vehicle pool), disables its respawn, gives it the suspect role (pursuitMode), forces the 'police' role on the provided policeIds, and starts the 'watchPolice' action unless preventAutoStart.",
       "params": {
-        "suspectId": {"type": "integer|nil", "desc": "Suspect (défaut véhicule du joueur 0)."},
-        "policeIds": {"type": "integer[]|nil", "desc": "Policiers (défaut : policiers existants)."},
-        "options": {"type": "table|nil", "desc": "playerId, pursuitMode (défaut 2), preventAutoStart (défaut false)."}
+        "suspectId": {
+          "type": "integer|nil",
+          "desc": "Suspect (default player 0 vehicle)."
+        },
+        "policeIds": {
+          "type": "integer[]|nil",
+          "desc": "Police (default: existing police)."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "playerId, pursuitMode (default 2), preventAutoStart (default false)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si le suspect est introuvable ou s'il n'existe aucun policier."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the suspect is not found or if there is no police."
+        }
+      ],
       "internal": false
     },
     "getPursuitData": {
-      "desc": "Données de poursuite (veh.pursuit) d'un véhicule du trafic. Conservée pour compatibilité.",
-      "params": {"id": {"type": "integer|nil", "desc": "Véhicule (défaut joueur 0)."}},
-      "returns": [{"type": "table|nil", "desc": "Table pursuit (mode, score, timers, offensesList…)."}],
+      "desc": "Pursuit data (veh.pursuit) of a traffic vehicle. Kept for compatibility.",
+      "params": {
+        "id": {
+          "type": "integer|nil",
+          "desc": "Vehicle (default player 0)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "pursuit table (mode, score, timers, offensesList...)."
+        }
+      ],
       "internal": false
     },
     "getPursuitVars": {
-      "desc": "Variables de poursuite actuelles. Alias : getPoliceVars.",
+      "desc": "Current pursuit variables. Alias: getPoliceVars.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Variables (référence directe)."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Variables (direct reference)."
+        }
+      ],
       "internal": false
     },
     "getPoliceVars": {
-      "desc": "Alias de getPursuitVars.",
+      "desc": "Alias of getPursuitVars.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Variables (référence directe)."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Variables (direct reference)."
+        }
+      ],
       "internal": false
     },
     "onTrafficAction": {
-      "desc": "Hook de trafic : suit les changements de rôle (action 'changeRole') pour ajouter ou retirer un véhicule de la liste de police.",
+      "desc": "Traffic hook: tracks role changes ('changeRole' action) to add or remove a vehicle from the police list.",
       "params": {
-        "id": {"type": "integer", "desc": "Véhicule."},
-        "action": {"type": "string", "desc": "Nom de l'action."},
-        "data": {"type": "table", "desc": "Pour 'changeRole' : name, prevName."}
+        "id": {
+          "type": "integer",
+          "desc": "Vehicle."
+        },
+        "action": {
+          "type": "string",
+          "desc": "Name of the action."
+        },
+        "data": {
+          "type": "table",
+          "desc": "For 'changeRole': name, prevName."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onTrafficVehicleAdded": {
-      "desc": "Hook : ajoute le véhicule à la liste de police si son rôle est 'police'.",
-      "params": {"id": {"type": "integer", "desc": "Véhicule ajouté."}},
+      "desc": "Hook: adds the vehicle to the police list if its role is 'police'.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Vehicle added."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onTrafficVehicleRemoved": {
-      "desc": "Hook : retire le véhicule de la liste de police.",
-      "params": {"id": {"type": "integer", "desc": "Véhicule retiré."}},
+      "desc": "Hook: removes the vehicle from the police list.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Vehicle removed."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onTrafficStarted": {
-      "desc": "Hook au démarrage du trafic : logue le nombre de véhicules de police et d'accessoires.",
+      "desc": "Hook at traffic start: logs the number of police vehicles and props.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onTrafficStopped": {
-      "desc": "Hook à l'arrêt du trafic : vide la liste de police.",
+      "desc": "Hook at traffic stop: clears the police list.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onVehicleSwitched": {
-      "desc": "Hook de changement de véhicule contrôlé : insère le nouveau véhicule dans le trafic si besoin ; lors d'un passage à pied/en véhicule (jbeam 'unicycle') pendant une poursuite, transfère les données de poursuite au nouveau véhicule, relance le mode, et force l'arrestation en cas de retour dans un véhicule sous les yeux de la police. Marque ignorePolice pour éviter l'auto-arrestation d'un policier descendant.",
+      "desc": "Controlled vehicle change hook: inserts the new vehicle into traffic if needed; on a switch on foot/in vehicle (jbeam 'unicycle') during a pursuit, transfers the pursuit data to the new vehicle, restarts the mode, and forces the arrest on a return to a vehicle in front of the police. Sets ignorePolice to avoid the self-arrest of a police officer getting out.",
       "params": {
-        "oldId": {"type": "integer", "desc": "Ancien véhicule."},
-        "newId": {"type": "integer", "desc": "Nouveau véhicule."}
+        "oldId": {
+          "type": "integer",
+          "desc": "Old vehicle."
+        },
+        "newId": {
+          "type": "integer",
+          "desc": "New vehicle."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onVehicleResetted": {
-      "desc": "Hook de réinitialisation d'un véhicule IA : choisit éventuellement un suspect aléatoire parmi les véhicules 'standard' quand le minuteur est écoulé, ou ramène un suspect non 'wanted' au rôle standard.",
-      "params": {"id": {"type": "integer", "desc": "Véhicule réinitialisé."}},
+      "desc": "AI vehicle reset hook: optionally picks a random suspect among the 'standard' vehicles when the timer has elapsed, or returns a non-'wanted' suspect to the standard role.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Vehicle reset."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook : retire l'objet détruit de la liste d'accessoires.",
-      "params": {"id": {"type": "integer", "desc": "Objet détruit."}},
+      "desc": "Hook: removes the destroyed object from the props list.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Destroyed object."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook de fin de niveau : vide la liste de police et réinitialise les variables de poursuite.",
+      "desc": "Level end hook: clears the police list and resets the pursuit variables.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onUpdate": {
-      "desc": "Appelé à chaque image. Pour chaque véhicule du trafic, déclenche setPursuitMode quand le score atteint un nouveau palier de scoreLevels (avec un court délai au début). Gère aussi le minuteur de suspect aléatoire.",
+      "desc": "Called every frame. For each traffic vehicle, triggers setPursuitMode when the score reaches a new scoreLevels step (with a short delay at the start). Also handles the random suspect timer.",
       "params": {
-        "dt": {"type": "number", "desc": "Delta temps réel (s)."},
-        "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}
+        "dt": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time delta (s)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook avant rechargement Lua : renvoie {vars, propIds} et vide la liste de police (reconstruite ensuite).",
+      "desc": "Hook before Lua reload: returns {vars, propIds} and clears the police list (rebuilt afterwards).",
       "params": {},
-      "returns": [{"type": "table", "desc": "{vars, propIds}"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{vars, propIds}"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook après rechargement Lua : restaure vars et policePropIds.",
-      "params": {"data": {"type": "table", "desc": "Résultat de onSerialize."}},
+      "desc": "Hook after Lua reload: restores vars and policePropIds.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Result of onSerialize."
+        }
+      },
       "returns": [],
       "internal": true
     }

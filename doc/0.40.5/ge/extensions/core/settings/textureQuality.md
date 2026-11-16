@@ -1,27 +1,27 @@
 # `core_settings_textureQuality`
 
-*Fichier : `lua/ge/extensions/core/settings/textureQuality.lua` · VM : Game Engine (GE) · 28 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/settings/textureQuality.lua` · VM: Game Engine (GE) · 28 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_settings_textureQuality` : `extensions.load("core_settings_textureQuality")`, puis la globale `core_settings_textureQuality`
+**Access:** extension `core_settings_textureQuality`: `extensions.load("core_settings_textureQuality")`, then the global `core_settings_textureQuality`
 
-Préréglages de qualité des textures, consommés par graphicsQualityGroup. Chaque niveau fixe $pref::Video::textureReductionLevel et $pref::Reflect::refractTexScale. Le hook onApply recharge les textures.
+Texture quality presets, consumed by graphicsQualityGroup. Each level sets $pref::Video::textureReductionLevel and $pref::Reflect::refractTexScale. The onApply hook reloads the textures.
 
-## Remarques
+## Notes
 
-- Niveaux : Lowest, Low, Normal seulement.
-- Le code précise que reloadTextures() peut être une opération lente.
+- Levels: Lowest, Low, Normal only.
+- The code notes that reloadTextures() can be a slow operation.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_settings_textureQuality.onApply()` | Appelé par graphicsQualityGroup quand une valeur a changé. Appelle reloadTextures(). *(interne)* *(hook)* | 24 |
+| `core_settings_textureQuality.onApply()` | Called by graphicsQualityGroup when a value has changed. Calls reloadTextures(). *(internal)* *(hook)* | 24 |
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `qualityLevels` | table<string, table<string, number>> | textureReductionLevel / refractTexScale : Lowest 2 / 0.5, Low 1 / 0.75, Normal 0 / 1. |
+| `qualityLevels` | table<string, table<string, number>> | textureReductionLevel / refractTexScale: Lowest 2 / 0.5, Low 1 / 0.75, Normal 0 / 1. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/settings/textureQuality.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/settings/textureQuality.lua`.*

@@ -1,23 +1,23 @@
 # `flowgraph_nodes_ui_tasklistTask`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/tasklistTask.lua` · VM : Game Engine (GE) · 49 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/tasklistTask.lua` · VM: Game Engine (GE) · 49 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/tasklistTask")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/tasklistTask")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Tasklist Task » (catégorie once_instant, durée) : affiche une tâche dans l'app Tasklist (hook 'SetTasklistTask', type 'goal'). Entrées : « label », « sub », « identifier », « done », « fail », « clear » (vrai par défaut), « active », « attention » (clignote). Sortie : flow propagé.
+Flowgraph node "Tasklist Task" (category once_instant, duration): displays a task in the Tasklist app ('SetTasklistTask' hook, type 'goal'). Inputs: "label", "sub", "identifier", "done", "fail", "clear" (true by default), "active", "attention" (blinks). Output: propagated flow.
 
-## Remarques
+## Notes
 
-- L'app n'accepte pas un libellé qui commence par un chiffre (todo du code).
-- Par défaut 'clear' vaut true.
+- The app does not accept a label that starts with a digit (todo from the code).
+- By default 'clear' is true.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Envoie la tâche à l'UI et propage le flux. | 30 |
+| `C:workOnce()` | Sends the task to the UI and propagates the flow. | 30 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/tasklistTask.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/tasklistTask.lua`.*

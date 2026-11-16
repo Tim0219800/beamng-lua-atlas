@@ -1,34 +1,34 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/thread/loadProject.lua",
-  "module": "Noeud « Load Project » (once_p_duration). Charge un flowgraph (.flow.json) par chemin et le démarre comme projet enfant via self.mgr.modules.thread:startProjectFromFilepath. Entrée : path (string) ; sortie : id (number) du projet démarré, utilisable avec Send/Receive Message.",
+  "module": "Node \"Load Project\" (once_p_duration). Loads a flowgraph (.flow.json) by path and starts it as a child project via self.mgr.modules.thread:startProjectFromFilepath. Input: path (string); output: id (number) of the started project, usable with Send/Receive Message.",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Initialise targetId.",
+          "desc": "Initializes targetId.",
           "params": {
             "mgr": {
               "type": "any",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           },
           "internal": true
         },
         "postInit": {
-          "desc": "Restreint path aux fichiers « Flowgraph Files » (.flow.json).",
+          "desc": "Restricts path to \"Flowgraph Files\" (.flow.json).",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Remet targetId à nil.",
+          "desc": "Resets targetId to nil.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Remet targetId à nil.",
+          "desc": "Resets targetId to nil.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Résout le chemin (avec ou sans extension .flow.json), démarre le projet et écrit son id.",
+          "desc": "Resolves the path (with or without the .flow.json extension), starts the project and writes its id.",
           "internal": false
         }
       }

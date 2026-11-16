@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/controllerByName.lua",
+  "module": "Nœud flowgraph « Controller by Name » (once_instant). Cherche un contrôleur de feux (type de signal) par nom dans signalsData.controllers. Sorties : exists (caché), controllerData.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Appelle onNodeReset().",
+          "internal": true
+        },
+        "init": {
+          "desc": "Appelle onNodeReset().",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Vide la sortie controllerData.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Parcourt signalsData.controllers et publie le contrôleur de même nom.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

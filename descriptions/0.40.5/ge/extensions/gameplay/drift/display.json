@@ -1,152 +1,280 @@
 {
   "path": "lua/ge/extensions/gameplay/drift/display.lua",
-  "module": "Couche d'affichage (UI) du drift. Chaque frame, publie sur le stream UI \"drift\" l'état de chaque véhicule suivi (score permanent, score potentiel, score en cache, combo, temps de combo restant, creep, angle, vitesse, facteur de performance, phase de présentation du score confirmé). Réagit aux hooks de score, crash, spinout, zones de cascade, spots et paliers par des messages flash (TopCenterAppsFlashMessage) et des évènements guihooks, et affiche/masque les apps UI de drift (scoreboard, tasks, driftScores, flashMessage) selon le contexte de gameplay_drift_general. Chargé par general dans les contextes inChallenge, inFreeroamChallenge, inFreeroamCruising et inSplitscreen.",
+  "module": "Display (UI) layer of drift. Every frame, publishes on the \"drift\" UI stream the state of each tracked vehicle (permanent score, potential score, cached score, combo, remaining combo time, creep, angle, speed, performance factor, confirmed score presentation phase). Reacts to the score, crash, spinout, cascade zone, spot and tier hooks with flash messages (TopCenterAppsFlashMessage) and guihooks events, and shows/hides the drift UI apps (scoreboard, tasks, driftScores, flashMessage) depending on the gameplay_drift_general context. Loaded by general in the contexts inChallenge, inFreeroamChallenge, inFreeroamCruising and inSplitscreen.",
   "notes": [
-    "Stream \"drift\" : { context, players = { [\"<playerId>\"] = {permanentScore, potentialScore, realtimePerformanceFactor, realtimeCachedScoreFloored, realtimeCombo, realtimeRemainingComboTime, realtimeCreep, realtimeAngle, realtimeAirSpeed, scorePhase, scorePhaseProgress, confirmedScore, confirmedScoreId} } }. Les clés de players sont des chaînes pour que le stream soit toujours sérialisé comme un objet.",
-    "Présentation du score confirmé : machine à phases hold (0.9 s) -> dwindle (0.6 s) -> linger (0.5 s) -> idle ; durée totale 2.0 s (getScorePresentationDuration). Les durées sont comptées en temps réel (dtReal).",
-    "Les messages flash sont ignorés en contexte inFreeroam et si le message est vide ; durée par défaut 1.5 s (2 s pour un échec de spot).",
-    "realtimeAngle n'est renseigné que si |angle| < maxAngle, véhicule en survirage, au-dessus de la vitesse min de drift, pas en l'air et pas en mode marche.",
-    "Évènements guihooks émis : ScenarioRealtimeDisplay, ClearTasklist, TopCenterAppsFlashMessage, displayDriftScoreModifier, setDriftPersistentDriftScored, setDriftRealtimeFail (table unique {reason, playerId}), stuntZoneScored ({type, score}).",
-    "Contextes -> apps : inChallenge = enableDriftMissionUI (état de jeu driftMission, app tasks) ; inFreeroamChallenge = scoreboard si multijoueur sinon driftScores, plus tasks ; inFreeroamCruising = driftScores ; inFreeroam = tout masquer.",
-    "Après onExtensionUnloaded, isUnloaded vaut true et onUpdate ne publie plus rien : la variable n'est jamais remise à false (le module est rechargé comme nouvelle instance)."
+    "\"drift\" stream: { context, players = { [\"<playerId>\"] = {permanentScore, potentialScore, realtimePerformanceFactor, realtimeCachedScoreFloored, realtimeCombo, realtimeRemainingComboTime, realtimeCreep, realtimeAngle, realtimeAirSpeed, scorePhase, scorePhaseProgress, confirmedScore, confirmedScoreId} } }. The players keys are strings so that the stream is always serialized as an object.",
+    "Confirmed score presentation: phase machine hold (0.9 s) -> dwindle (0.6 s) -> linger (0.5 s) -> idle; total duration 2.0 s (getScorePresentationDuration). Durations are counted in real time (dtReal).",
+    "Flash messages are ignored in the inFreeroam context and if the message is empty; default duration 1.5 s (2 s for a spot failure).",
+    "realtimeAngle is only filled if |angle| < maxAngle, vehicle oversteering, above the min drift speed, not airborne and not in walking mode.",
+    "Emitted guihooks events: ScenarioRealtimeDisplay, ClearTasklist, TopCenterAppsFlashMessage, displayDriftScoreModifier, setDriftPersistentDriftScored, setDriftRealtimeFail (single table {reason, playerId}), stuntZoneScored ({type, score}).",
+    "Contexts -> apps: inChallenge = enableDriftMissionUI (driftMission game state, tasks app); inFreeroamChallenge = scoreboard if multiplayer otherwise driftScores, plus tasks; inFreeroamCruising = driftScores; inFreeroam = hide everything.",
+    "After onExtensionUnloaded, isUnloaded is true and onUpdate no longer publishes anything: the variable is never set back to false (the module is reloaded as a new instance)."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "gameplay_drift_general, gameplay_drift_drift, gameplay_drift_scoring, ui_apps_genericMissionData, ui_appContainers."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "gameplay_drift_general, gameplay_drift_drift, gameplay_drift_scoring, ui_apps_genericMissionData, ui_appContainers."
+    }
   },
   "functions": {
     "getDriftDebugInfo": {
-      "desc": "Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift.",
-      "returns": [{"type": "table", "desc": "{default = false, canBeChanged = true}"}]
+      "desc": "Returns {default=false, canBeChanged=true} for the drift debug window.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{default = false, canBeChanged = true}"
+        }
+      ]
     },
     "getIsScorePresentationActive": {
-      "desc": "Indique si l'animation du score confirmé est en cours pour ce véhicule.",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
-      "returns": [{"type": "boolean", "desc": "true si la phase n'est pas idle."}]
+      "desc": "Indicates whether the confirmed score animation is in progress for this vehicle.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the phase is not idle."
+        }
+      ]
     },
     "getScorePresentationDuration": {
-      "desc": "Renvoie la durée totale de la présentation du score confirmé (hold + dwindle + linger). Utilisée par driftSpots pour attendre la fin de l'animation.",
-      "returns": [{"type": "number", "desc": "Durée en secondes (2.0)."}]
+      "desc": "Returns the total duration of the confirmed score presentation (hold + dwindle + linger). Used by driftSpots to wait for the end of the animation.",
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Duration in seconds (2.0)."
+        }
+      ]
     },
     "reset": {
-      "desc": "Vide les lisseurs de creep, les présentations de score, le pool de données joueur et les données de gameplay_ui genericMissionData."
+      "desc": "Empties the creep smoothers, the score presentations, the player data pool and the gameplay_ui genericMissionData data."
     },
     "onUpdate": {
-      "desc": "Appelé à chaque frame (sauf après déchargement) : fenêtre de debug, publication du stream drift, messages de contresens, de sortie de limites et de distance restante.",
+      "desc": "Called every frame (except after unloading): debug window, drift stream publishing, wrong-way, out-of-bounds and remaining distance messages.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel en secondes, utilisé pour les animations."},
-        "dtSim": {"type": "number", "desc": "Delta temps simulé (inutilisé)."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut (inutilisé)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta in seconds, used for the animations."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time delta (unused)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (unused)."
+        }
       },
       "internal": true
     },
     "onDriftCompletedScored": {
-      "desc": "Hook : lance la présentation du score confirmé, affiche « +points » et notifie l'UI (setDriftPersistentDriftScored).",
-      "params": {"data": {"type": "table", "desc": "{vehId, addedScore, combo}."}},
+      "desc": "Hook: starts the confirmed score presentation, displays \"+points\" and notifies the UI (setDriftPersistentDriftScored).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{vehId, addedScore, combo}."
+        }
+      },
       "internal": true
     },
     "onDriftCrash": {
-      "desc": "Hook : affiche l'échec « crashed » dans l'UI et remet le lisseur à zéro.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule concerné."}},
+      "desc": "Hook: shows the \"crashed\" failure in the UI and sets the smoother back to zero.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle concerned."
+        }
+      },
       "internal": true
     },
     "onDriftSpinout": {
-      "desc": "Hook : affiche l'échec « spinout » dans l'UI.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule concerné."}},
+      "desc": "Hook: shows the \"spinout\" failure in the UI.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle concerned."
+        }
+      },
       "internal": true
     },
     "onDonutDriftScored": {
-      "desc": "Hook : message flash et évènement stuntZoneScored (type donut).",
-      "params": {"score": {"type": "number", "desc": "Points gagnés."}},
+      "desc": "Hook: flash message and stuntZoneScored event (donut type).",
+      "params": {
+        "score": {
+          "type": "number",
+          "desc": "Points earned."
+        }
+      },
       "internal": true
     },
     "onNearPoleScored": {
-      "desc": "Hook : message flash et évènement stuntZoneScored (type nearPole).",
-      "params": {"score": {"type": "number", "desc": "Points gagnés."}},
+      "desc": "Hook: flash message and stuntZoneScored event (nearPole type).",
+      "params": {
+        "score": {
+          "type": "number",
+          "desc": "Points earned."
+        }
+      },
       "internal": true
     },
     "onTightDriftScored": {
-      "desc": "Hook : message flash et évènement stuntZoneScored (type tightDrift).",
-      "params": {"score": {"type": "number", "desc": "Points gagnés."}},
+      "desc": "Hook: flash message and stuntZoneScored event (tightDrift type).",
+      "params": {
+        "score": {
+          "type": "number",
+          "desc": "Points earned."
+        }
+      },
       "internal": true
     },
     "onHitPoleScored": {
-      "desc": "Hook : message flash et évènement stuntZoneScored (type hitPole).",
-      "params": {"score": {"type": "number", "desc": "Points gagnés."}},
+      "desc": "Hook: flash message and stuntZoneScored event (hitPole type).",
+      "params": {
+        "score": {
+          "type": "number",
+          "desc": "Points earned."
+        }
+      },
       "internal": true
     },
     "onDriftSpotCompleted": {
-      "desc": "Hook : message flash de fin de spot (nouveau record ou zone terminée) avec le score.",
-      "params": {"data": {"type": "table", "desc": "{newRecord, score, duration}."}},
+      "desc": "Hook: end-of-spot flash message (new record or zone completed) with the score.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{newRecord, score, duration}."
+        }
+      },
       "internal": true
     },
     "onDriftSpotFailed": {
-      "desc": "Hook : message flash de 2 s avec le texte de la raison d'échec.",
-      "params": {"data": {"type": "table", "desc": "{reason = {msg = clé de traduction}, ...}."}},
+      "desc": "Hook: 2 s flash message with the failure reason text.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{reason = {msg = translation key}, ...}."
+        }
+      },
       "internal": true
     },
     "onDriftQuickMessageDisplay": {
-      "desc": "Hook : envoie un quick message à l'UI (displayDriftScoreModifier).",
-      "params": {"data": {"type": "table", "desc": "{msg, displayTime, vehId?}."}},
+      "desc": "Hook: sends a quick message to the UI (displayDriftScoreModifier).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{msg, displayTime, vehId?}."
+        }
+      },
       "internal": true
     },
     "onDriftPlVehReset": {
-      "desc": "Hook : véhicule du joueur remis en place ; remet à zéro lisseur, présentation du score et message temps réel.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule concerné."}},
+      "desc": "Hook: player's vehicle put back in place; resets the smoother, the score presentation and the real-time message.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle concerned."
+        }
+      },
       "internal": true
     },
     "onDriftCachedScoreReset": {
-      "desc": "Hook : le score en cache a été réinitialisé ; efface le message temps réel.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule concerné."}},
+      "desc": "Hook: the cached score was reset; clears the real-time message.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle concerned."
+        }
+      },
       "internal": true
     },
     "onDriftScoreWrappedUp": {
-      "desc": "Hook : le score en cours est validé de force (fin de spot) ; lance la présentation et affiche les points bonus.",
+      "desc": "Hook: the current score is force-validated (end of spot); starts the presentation and shows the bonus points.",
       "params": {
-        "score": {"type": "number", "desc": "Score validé."},
-        "vehId": {"type": "integer", "desc": "Véhicule concerné."}
+        "score": {
+          "type": "number",
+          "desc": "Validated score."
+        },
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle concerned."
+        }
       },
       "internal": true
     },
     "onFreeroamDriftZoneNewHighscore": {
-      "desc": "Hook : message flash « nouveau meilleur score ».",
+      "desc": "Hook: \"new best score\" flash message.",
       "internal": true
     },
     "onNewDriftTierReached": {
-      "desc": "Hook : affiche le nom du nouveau palier en message flash.",
-      "params": {"tierData": {"type": "table", "desc": "Données du palier (name utilisé)."}},
+      "desc": "Hook: shows the name of the new tier as a flash message.",
+      "params": {
+        "tierData": {
+          "type": "table",
+          "desc": "Tier data (name used)."
+        }
+      },
       "internal": true
     },
     "onDriftContextChanged": {
-      "desc": "Hook : montre ou masque les apps UI de drift selon le nouveau contexte.",
-      "params": {"context": {"type": "string", "desc": "Nouveau contexte de gameplay_drift_general."}},
+      "desc": "Hook: shows or hides the drift UI apps according to the new context.",
+      "params": {
+        "context": {
+          "type": "string",
+          "desc": "New context of gameplay_drift_general."
+        }
+      },
       "internal": true
     },
     "onDriftDebugChanged": {
-      "desc": "Hook : à la désactivation du debug, masque l'interface de drift.",
-      "params": {"value": {"type": "boolean", "desc": "Nouvel état du debug."}},
+      "desc": "Hook: when debug is disabled, hides the drift interface.",
+      "params": {
+        "value": {
+          "type": "boolean",
+          "desc": "New debug state."
+        }
+      },
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook : supprime lisseur et présentation du véhicule détruit.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule détruit."}},
+      "desc": "Hook: removes the smoother and presentation of the destroyed vehicle.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Destroyed vehicle."
+        }
+      },
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook : applique tout de suite l'UI correspondant au contexte drift déjà actif.",
+      "desc": "Hook: immediately applies the UI matching the already active drift context.",
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook : masque l'UI, vide les données et publie un stream vide.",
+      "desc": "Hook: hides the UI, empties the data and publishes an empty stream.",
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook : sauvegarde driftDebugUILayout avant rechargement Lua.",
-      "returns": [{"type": "table", "desc": "{driftDebugUILayout}"}],
+      "desc": "Hook: saves driftDebugUILayout before Lua reload.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{driftDebugUILayout}"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook : restaure driftDebugUILayout.",
-      "params": {"data": {"type": "table", "desc": "Table de onSerialize."}},
+      "desc": "Hook: restores driftDebugUILayout.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "onSerialize table."
+        }
+      },
       "internal": true
     }
   }

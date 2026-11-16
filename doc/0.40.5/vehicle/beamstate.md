@@ -1,404 +1,404 @@
 # `beamstate`
 
-*Fichier : `lua/vehicle/beamstate.lua` · VM : Véhicule · 1700 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/beamstate.lua` · VM: Vehicle · 1700 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `beamstate`
+**Access:** global `beamstate`
 
-Etat physique du vehicule cote Lua (VM vehicule, globale `beamstate`). Suit les poutres cassees ou deformees, les groupes de casse (breakGroup) et de deformation (deformGroup), le score de degats par piece et par zone de carrosserie, les pneus crevés, les planetes (attracteurs de gravite locaux) et tous les coupleurs (attelages, remorques). Un moddeur s'en sert pour casser des groupes, crever des pneus, ajouter des degats, lire les degats, attacher ou detacher les coupleurs, sauvegarder ou charger l'etat des noeuds et poutres. Les hooks beamBroken, onBeamDeformed, onCouplerAttached et onCouplerDetached sont appeles par le moteur C++ ; updateGFX et init/reset par la boucle principale du vehicule.
+Physical state of the vehicle on the Lua side (vehicle VM, global `beamstate`). Tracks broken or deformed beams, break groups (breakGroup) and deform groups (deformGroup), the damage score per part and per body zone, flat tires, planets (local gravity attractors) and all couplers (hitches, trailers). A modder uses it to break groups, puncture tires, add damage, read damage, attach or detach couplers, save or load the state of nodes and beams. The hooks beamBroken, onBeamDeformed, onCouplerAttached and onCouplerDetached are called by the C++ engine; updateGFX and init/reset by the vehicle's main loop.
 
-## Exemple
+## Example
 
 ```lua
--- casser un groupe, crever un pneu, lire les degats
+-- break a group, puncture a tire, read the damage
 beamstate.breakBreakGroup("doorFL_break")
 beamstate.deflateTire(0)
 local zones = beamstate.getBodyZoneDamage() -- {FL=0..1, FR=..., ML, MR, RL, RR}
 print(beamstate.damage)
--- toggle des attelages
+-- toggle couplers
 beamstate.toggleCouplers()
 ```
 
-## Remarques
+## Notes
 
-- `beamstate.damage` = energie dissipee du moteur (`obj:getDissipatedEnergy()`) + `damageExt`, recalcule a chaque updateGFX. `damageExt` est incremente par addDamage et de 1000 a chaque pneu qui se degonfle.
-- Les ids de poutres, noeuds, roues et triangles sont des `cid` (index 0 base du moteur).
-- Zones de carrosserie : lettre 1 = avant/milieu/arriere (F, M, R selon y en tiers), lettre 2 = L/R selon x (moitie). Les poutres de roue (wheelID) ne comptent pas. Valeurs de degats de 0 a 1 environ.
-- breakGroupType d'une poutre : 0 ou nil = casser cette poutre casse tout le groupe ; 1 = la poutre est cassee par le groupe mais ne le declenche pas.
-- Une poutre ayant `beamPrecompressionTime` (ou une barre de torsion avec `precompressionTime`) active `M.update` pendant le temps de precompression progressive ; ensuite `M.update` revient a `nop`.
-- M.update, M.updateRemoteElectrics et M.debugDraw valent `nop` (fonction vide du jeu) et non nil ; les champs listes comme references `nop` sont donc des fonctions vides. `update` n'est actif que pendant la precompression ; `updateRemoteElectrics` est installe a la premiere exportation de donnees de coupleur ; `debugDraw` est actif tant que la visibilite des coupleurs est demandee.
-- Bug potentiel : dans init, `for _, tag in b.tag do` (et la variante linkTag) itere sans `pairs`, donc une poutre dont `tag` ou `linkTag` est une table provoque une erreur Lua. La branche linkTag teste aussi `type(b.tag)` au lieu de `type(b.linkTag)`.
-- Bug potentiel : onCouplerAttached lit `n.breakGroup` sans verifier que `n` (noeud) est non nil, alors que le test precedent le verifie.
-- `beamstate.getVehicleState` contient un faux delai volontaire d'1 seconde (boucle d'attente active) et un log d'avertissement : a ne pas appeler dans une boucle de jeu.
-- `brokenBreakGroups` est remplace par une nouvelle table a chaque init/reset : ne pas conserver une reference ancienne. En revanche `deformedBeams`, `couplerCache`, `attachedCouplers`, `nodeNameMap`, `tagBeamMap` sont vides puis remplis en place.
-- Champs exportes mais jamais ecrits dans ce fichier : `lowpressure` est mis a true des qu'un pneu est degonfle et remis a false seulement par reset().
+- `beamstate.damage` = dissipated energy of the engine (`obj:getDissipatedEnergy()`) + `damageExt`, recomputed on every updateGFX. `damageExt` is incremented by addDamage and by 1000 each time a tire deflates.
+- Beam, node, wheel and triangle ids are `cid` (0-based engine index).
+- Body zones: letter 1 = front/middle/rear (F, M, R according to y in thirds), letter 2 = L/R according to x (half). Wheel beams (wheelID) do not count. Damage values from 0 to about 1.
+- breakGroupType of a beam: 0 or nil = breaking this beam breaks the whole group; 1 = the beam is broken by the group but does not trigger it.
+- A beam with `beamPrecompressionTime` (or a torsion bar with `precompressionTime`) activates `M.update` during the progressive precompression time; afterwards `M.update` goes back to `nop`.
+- M.update, M.updateRemoteElectrics and M.debugDraw are `nop` (the game's empty function) and not nil; the fields listed as `nop` references are therefore empty functions. `update` is active only during precompression; `updateRemoteElectrics` is installed at the first coupler data export; `debugDraw` is active as long as coupler visibility is requested.
+- Potential bug: in init, `for _, tag in b.tag do` (and the linkTag variant) iterates without `pairs`, so a beam whose `tag` or `linkTag` is a table causes a Lua error. The linkTag branch also tests `type(b.tag)` instead of `type(b.linkTag)`.
+- Potential bug: onCouplerAttached reads `n.breakGroup` without checking that `n` (node) is non-nil, whereas the previous test checks it.
+- `beamstate.getVehicleState` contains a deliberate fake 1-second delay (busy-wait loop) and a warning log: do not call it in a game loop.
+- `brokenBreakGroups` is replaced by a new table on every init/reset: do not keep an old reference. On the other hand `deformedBeams`, `couplerCache`, `attachedCouplers`, `nodeNameMap`, `tagBeamMap` are emptied then filled in place.
+- Fields exported but never written in this file: `lowpressure` is set to true as soon as a tire is deflated and reset to false only by reset().
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `beamstate.activateAutoCoupling(_nodetag)` | Active l'attelage automatique : pendant 60 s max, toutes les 0,5 s les coupleurs (tous, ou ceux des tags donnes) sont rearmes via attachCouplers. Diffuse la visibilite des tags aux autres vehicules. Sans argument, prevoit aussi l'extension `couplings`. Ne fait rien si le vehicule n'a aucun coupleur a tag. | 252 |
-| `beamstate.addDamage(damage)` | Ajoute des degats artificiels a `damageExt` (donc a `damage`). | 1426 |
-| `beamstate.addPlanet(center, radius, mass, dt)` | Ajoute une planete (attracteur) via obj:setPlanets. Avec dt, la planete est temporaire : si elle existe deja avec dt > 0 on prolonge sa duree, avec dt = 0 on la supprime. | 631 |
-| `beamstate.attachCouplers(_nodetag)` | Arme (obj:attachCoupler) les coupleurs non welded portant un couplerTag, avec leurs parametres jbeam (couplerStrength defaut 1000000, couplerRadius 0.2, couplerLockRadius 0.025, couplerLatchSpeed 0.3, couplerTargets 0). | 304 |
-| `beamstate.beamBroken(id, energy)` | Hook C++ appele quand une poutre casse. Met a jour le suivi de degats (zone de carrosserie, piece), degonfle le pneu ou le groupe de pression concerne, casse les triangles de collision et les meshes, les rails, propage au breakGroup (breakGroupType 0/nil), change le materiau (deformSwitches) et lance des particules (plastique, verre, bois). *(interne)* | 806 |
-| `beamstate.breakAllBreakgroups()` | Casse toutes les poutres qui ont un breakGroup (obj:breakBeam) et casse aussi les groupes qui ne contiennent que des coupleurs. | 1356 |
-| `beamstate.breakBreakGroup(g)` | Casse un groupe : le marque dans brokenBreakGroups, cache les props du groupe, casse toutes ses poutres, detache ses coupleurs et casse les triangles de collision du meme groupe. Previent aussi la camera si c'est un groupe d'occupant (ocpAttach...). | 169 |
-| `beamstate.breakHinges()` | Casse les poutres dont un breakGroup contient "hinge" ou "latch" (charnieres, loquets), ainsi que les groupes de coupleurs de ce type. | 1368 |
-| `beamstate.couplerExists(_nodetag)` | Indique si un tag de coupleur (couplerTag ou tag) existe sur ce vehicule. | 313 |
-| `beamstate.couplerFound(nodeId, obj2id, obj2nodeId)` | Hook C++ appele quand un coupleur proche est trouve. Corps vide dans cette version (seulement un print commente). *(interne)* | 381 |
-| `beamstate.deflateRandomTire()` | Degonfle un pneu pris au hasard parmi ceux qui ne sont pas deja degonfles. | 1397 |
-| `beamstate.deflateTire(wheelid)` | Degonfle un pneu. Au premier appel pour la roue : marque isTireDeflated, affiche le message, joue le son d'eclatement, enregistre le degat, appelle le hook `onTireDeflated(wheelid)` via extensions.hook, ajoute 1000 a damageExt et ramollit les poutres de la bande de roulement, des flancs et de la pression. Les appels suivants font monter le compteur ; au-dela de 4 le groupe de pression est vide. | 524 |
-| `beamstate.deflateTires()` | Appelle deflateTire pour toutes les roues. | 1391 |
-| `beamstate.delPlanet(center, radius, mass)` | Supprime une planete (attracteur de gravite) identifiee par centre, rayon et masse exacts, puis met a jour le moteur. | 621 |
-| `beamstate.detachCouplers(_nodetag, forceLocked, forceWelded)` | Detache (obj:detachCoupler) les coupleurs d'un tag ou tous. Les coupleurs locked ou welded sont ignores sauf si on force. Notifie le jeu (onCouplerDetach) et l'extension couplings. | 317 |
-| `beamstate.disableAutoCoupling()` | Arrete l'attelage automatique, efface les tags visibles et previent l'extension couplings. | 291 |
-| `beamstate.exportCouplerData(nodeid, dataList)` | Appelee depuis le vehicule qui veut importer des electrics. Chez le fournisseur, ajoute les electrics/inputs demandes a la liste transmise chaque frame (dans updateGFX) vers l'autre vehicule. *(interne)* | 479 |
-| `beamstate.exportPartDamageData()` | Ecrit les degats par piece dans le fichier `partDamage.json` (dumpToFile). Outil de debug. | 1627 |
-| `beamstate.getBodyZoneDamage()` | Degat des six zones de carrosserie. | 1618 |
-| `beamstate.getBodyZoneDamageValue(zone)` | Degat d'une zone de carrosserie (somme des poutres cassees + ratios de deformation, divisee par le nombre de poutres de la zone). | 1606 |
-| `beamstate.getCouplerOffset(couplerTag)` | Renvoie la position de chaque coupleur relative au noeud de reference du vehicule (refNodes[0].ref). | 463 |
-| `beamstate.getPartCondition(partId, partTypeData)` | Estime l'etat d'une piece a partir de ses breakGroups casses et des poutres deformees (`beamDamage`). La piece (qui doit avoir un flexbody) est dite a remplacer si trop de groupes sont casses (>1, ou tous), plus de 1 % de poutres deformees (>= 0.01) ou plus de 2 poutres cassees (>= 0.9). | 106 |
-| `beamstate.getPartDamageBySignalName(name)` | Score de degat d'une piece a partir de son nom de signal. | 1581 |
-| `beamstate.getPartDamageData()` | Renvoie les pieces ayant un degat strictement positif. | 1560 |
-| `beamstate.getPartDamageScores()` | Table plate nom-de-signal -> score de degat pour toutes les pieces, y compris celles a 0. | 1572 |
-| `beamstate.getPartDamageSignalList()` | Liste triee des noms de signaux de pieces disponibles. | 1593 |
-| `beamstate.getVehicleState(...)` | Renvoie une photo du vehicule (id, conditions de pieces, itemId de config, position, vecteurs avant et haut). Contient un faux delai de 1 s volontaire (voir notes). | 1539 |
-| `beamstate.hasCouplers(couplerTag)` | Indique si le vehicule a au moins un coupleur non welded portant un couplerTag. | 1447 |
-| `beamstate.importCouplerData(nodeId, data)` | Appelee par l'hote fournisseur. Stocke les electrics recus (fusionnes ensuite dans electrics.values par updateRemoteElectrics) et rejoue les inputs via input.event(nom, valeur, 2). Ignore les donnees si le coupleur n'est plus attache. *(interne)* | 496 |
-| `beamstate.init()` | Reconstruit tout l'etat a partir de `v.data` : remet les degats a zero, vide les caches, reindexe triangles, breakGroups, deformGroups, coupleurs, tags de poutres, zones de carrosserie, donnees de pieces ; prepare la precompression retardee, la liste des signaux de pieces, et enregistre le menu radial des coupleurs. Appelee au chargement du vehicule. *(interne)* | 1049 |
-| `beamstate.isPhysicsStepUsed()` | Indique si beamstate a besoin de la boucle physique (true seulement tant que la precompression retardee est en cours). *(interne)* | 1632 |
-| `beamstate.isTriangleBroken(triId)` | Indique si un triangle de collision est casse (absent du suivi interne). | 961 |
-| `beamstate.load(filename)` | Recharge un fichier ecrit par save. Verifie que le nombre de noeuds/poutres, le dossier du vehicule et le format correspondent, sinon log d'erreur et abandon. Restaure noeuds, masses, longueurs, poutres cassees/deformees puis appelle obj:commitLoad(). | 1496 |
-| `beamstate.onBeamDeformed(id, ratio)` | Hook C++ appele seulement pour les poutres qui ont un seuil de deformation. Met a jour `deformedBeams`, les degats de zone et de piece, change de materiau (deformSwitches) et compte les evenements du ou des deformGroup. *(interne)* *(hook)* | 1308 |
-| `beamstate.onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy)` | Hook C++ appele quand un coupleur s'attache. Enregistre l'attelage dans attachedCouplers, copie les flags lock/weld entre coupleurs du meme vehicule, coupe l'attelage auto si c'etait ce tag, demande l'import d'electrics/inputs si le noeud a importElectrics/importInputs, restaure ses breakGroups de coupleur, puis previent le jeu (onCouplerAttached cote GE, une seule fois : par le vehicule d'id le plus petit). *(interne)* *(hook)* | 402 |
-| `beamstate.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook C++ appele quand un coupleur se detache. Retire l'attelage, casse les breakGroups du noeud si breakGroupType vaut 0 ou nil, puis previent le jeu (onCouplerDetached cote GE, une seule fois par paire). *(interne)* *(hook)* | 441 |
-| `beamstate.registerExternalCouplerBreakGroup(breakGroup, cid)` | Enregistre un cid de noeud-coupleur dans un breakGroup, pour qu'un breakBreakGroup ulterieur le detache. Utilisee par des extensions de couplage. | 776 |
-| `beamstate.requestSkeleton()` | Pour l'UI : envoie la geometrie des poutres (paires de positions de noeuds) via guihooks "VehicleSkeleton", puis l'etat du squelette. Ne fait rien d'affichable si aucun joueur n'est assis. | 1430 |
-| `beamstate.requestSkeletonState()` | Envoie a l'UI l'etat des poutres (`beamDamageTracker`) via guihooks "VehicleSkeletonState" si un joueur est assis dans ce vehicule. Appelee aussi toutes les 0,25 s quand des degats ont change. | 517 |
-| `beamstate.reset()` | Reinitialise l'etat (appelle init) et remet `lowpressure` a false. Appelee au reset du vehicule. *(interne)* | 1351 |
-| `beamstate.save(filename)` | Ecrit un JSON (format "v2") de l'etat : positions et masses des noeuds, longueur au repos, cassure et deformation des poutres, etat des hydros et paquets Lua serialises. | 1457 |
-| `beamstate.sendExportCouplerData(obj2Id, obj2nodeId, data)` | Demande a l'autre vehicule (queueObjectLuaCommand -> exportCouplerData) d'exporter vers nous certaines valeurs electrics/inputs, et active updateRemoteElectrics. | 397 |
-| `beamstate.setCouplerVisiblityExternal(sourceObjectID, visibleTags)` | Appelee par un autre vehicule (via BeamEngine:queueAllObjectLua) pour activer/desactiver la surbrillance des coupleurs dont le tag est dans la liste. (Le nom contient la faute "Visiblity".) *(interne)* | 242 |
-| `beamstate.setPartCondition(partId, partTypeData, odometer, integrity, visual)` | Appliquerait un etat d'integrite/visuel a une piece. Dans cette version le corps est quasi vide (le code utile est commente) : ne fait rien d'utile. *(interne)* | 71 |
-| `beamstate.setPlanets(p)` | Remplace toutes les planetes. Le tableau est lu par triplets (centre, rayon, masse). | 659 |
-| `beamstate.toggleCouplers(_nodetag, forceLocked, forceWelded, forceAutoCoupling)` | Bascule les attelages ; appelee a l'appui sur la touche L. Sans tag : coupe l'attelage auto s'il est actif, detache tout si un coupleur est attache, sinon lance l'attelage auto. Avec un tag : detache s'il est attache, sinon l'attache (sauf forceAutoCoupling). | 351 |
-| `beamstate.torsionBarBroken(id, energy)` | Hook C++ appele quand une barre de torsion casse. Si elle a un breakGroup, cache les props et casse le groupe (breakGroupType 0 ou nil), comme beamBroken le fait pour les poutres. *(interne)* | 781 |
-| `beamstate.triggerDeformGroup(group)` | Declenche le changement de materiau du premier deformSwitches correspondant au groupe de deformation donne. | 1409 |
-| `beamstate.updateGFX(dt)` | Appelee chaque frame graphique. Gere les minuteurs des planetes temporaires, recalcule `damage`, le score de degats par piece, envoie l'etat du squelette a l'UI (au plus toutes les 0,25 s), pilote l'attelage automatique (timeout 60 s) et transmet aux vehicules attelés les electrics/inputs demandes. *(interne)* | 672 |
+| `beamstate.activateAutoCoupling(_nodetag)` | Enables automatic coupling: for 60 s max, every 0.5 s the couplers (all, or those of the given tags) are rearmed via attachCouplers. Broadcasts tag visibility to other vehicles. Without argument, also arms the `couplings` extension. Does nothing if the vehicle has no tagged coupler. | 252 |
+| `beamstate.addDamage(damage)` | Adds artificial damage to `damageExt` (and therefore to `damage`). | 1426 |
+| `beamstate.addPlanet(center, radius, mass, dt)` | Adds a planet (attractor) via obj:setPlanets. With dt, the planet is temporary: if it already exists with dt > 0 its duration is extended, with dt = 0 it is removed. | 631 |
+| `beamstate.attachCouplers(_nodetag)` | Arms (obj:attachCoupler) the non-welded couplers carrying a couplerTag, with their jbeam parameters (couplerStrength default 1000000, couplerRadius 0.2, couplerLockRadius 0.025, couplerLatchSpeed 0.3, couplerTargets 0). | 304 |
+| `beamstate.beamBroken(id, energy)` | C++ hook called when a beam breaks. Updates the damage tracking (body zone, part), deflates the relevant tire or pressure group, breaks collision triangles and meshes, rails, propagates to the breakGroup (breakGroupType 0/nil), changes the material (deformSwitches) and spawns particles (plastic, glass, wood). *(internal)* | 806 |
+| `beamstate.breakAllBreakgroups()` | Breaks all beams that have a breakGroup (obj:breakBeam) and also breaks the groups that contain only couplers. | 1356 |
+| `beamstate.breakBreakGroup(g)` | Breaks a group: marks it in brokenBreakGroups, hides the group's props, breaks all its beams, detaches its couplers and breaks the collision triangles of the same group. Also notifies the camera if it is an occupant group (ocpAttach...). | 169 |
+| `beamstate.breakHinges()` | Breaks the beams with a breakGroup containing "hinge" or "latch" (hinges, latches), as well as coupler groups of this type. | 1368 |
+| `beamstate.couplerExists(_nodetag)` | Indicates whether a coupler tag (couplerTag or tag) exists on this vehicle. | 313 |
+| `beamstate.couplerFound(nodeId, obj2id, obj2nodeId)` | C++ hook called when a nearby coupler is found. Empty body in this version (only a commented-out print). *(internal)* | 381 |
+| `beamstate.deflateRandomTire()` | Deflates a randomly chosen tire among those not already deflated. | 1397 |
+| `beamstate.deflateTire(wheelid)` | Deflates a tire. On the first call for the wheel: marks isTireDeflated, displays the message, plays the burst sound, records the damage, calls the hook `onTireDeflated(wheelid)` via extensions.hook, adds 1000 to damageExt and softens the beams of the tread, sidewalls and pressure. Subsequent calls increment the counter; beyond 4 the pressure group is emptied. | 524 |
+| `beamstate.deflateTires()` | Calls deflateTire for all wheels. | 1391 |
+| `beamstate.delPlanet(center, radius, mass)` | Removes a planet (gravity attractor) identified by exact center, radius and mass, then updates the engine. | 621 |
+| `beamstate.detachCouplers(_nodetag, forceLocked, forceWelded)` | Detaches (obj:detachCoupler) the couplers of a tag or all of them. Locked or welded couplers are ignored unless forced. Notifies the game (onCouplerDetach) and the couplings extension. | 317 |
+| `beamstate.disableAutoCoupling()` | Stops automatic coupling, clears the visible tags and notifies the couplings extension. | 291 |
+| `beamstate.exportCouplerData(nodeid, dataList)` | Called from the vehicle that wants to import electrics. On the provider, adds the requested electrics/inputs to the list sent every frame (in updateGFX) to the other vehicle. *(internal)* | 479 |
+| `beamstate.exportPartDamageData()` | Writes the damage per part to the file `partDamage.json` (dumpToFile). Debug tool. | 1627 |
+| `beamstate.getBodyZoneDamage()` | Damage of the six body zones. | 1618 |
+| `beamstate.getBodyZoneDamageValue(zone)` | Damage of a body zone (sum of broken beams + deformation ratios, divided by the number of beams in the zone). | 1606 |
+| `beamstate.getCouplerOffset(couplerTag)` | Returns the position of each coupler relative to the vehicle's reference node (refNodes[0].ref). | 463 |
+| `beamstate.getPartCondition(partId, partTypeData)` | Estimates the state of a part from its broken breakGroups and deformed beams (`beamDamage`). The part (which must have a flexbody) is said to need replacement if too many groups are broken (>1, or all), more than 1% of beams are deformed (>= 0.01) or more than 2 beams are broken (>= 0.9). | 106 |
+| `beamstate.getPartDamageBySignalName(name)` | Damage score of a part from its signal name. | 1581 |
+| `beamstate.getPartDamageData()` | Returns the parts with strictly positive damage. | 1560 |
+| `beamstate.getPartDamageScores()` | Flat table signal-name -> damage score for all parts, including those at 0. | 1572 |
+| `beamstate.getPartDamageSignalList()` | Sorted list of available part signal names. | 1593 |
+| `beamstate.getVehicleState(...)` | Returns a snapshot of the vehicle (id, parts conditions, config itemId, position, front and up vectors). Contains a deliberate fake 1 s delay (see notes). | 1539 |
+| `beamstate.hasCouplers(couplerTag)` | Indicates whether the vehicle has at least one non-welded coupler carrying a couplerTag. | 1447 |
+| `beamstate.importCouplerData(nodeId, data)` | Called by the provider host. Stores the received electrics (then merged into electrics.values by updateRemoteElectrics) and replays the inputs via input.event(name, value, 2). Ignores the data if the coupler is no longer attached. *(internal)* | 496 |
+| `beamstate.init()` | Rebuilds the whole state from `v.data`: resets damage to zero, empties caches, reindexes triangles, breakGroups, deformGroups, couplers, beam tags, body zones, part data; prepares the delayed precompression, the part signal list, and registers the couplers radial menu. Called when the vehicle loads. *(internal)* | 1049 |
+| `beamstate.isPhysicsStepUsed()` | Indicates whether beamstate needs the physics loop (true only while the delayed precompression is in progress). *(internal)* | 1632 |
+| `beamstate.isTriangleBroken(triId)` | Indicates whether a collision triangle is broken (absent from the internal tracking). | 961 |
+| `beamstate.load(filename)` | Reloads a file written by save. Checks that the number of nodes/beams, the vehicle folder and the format match, otherwise logs an error and aborts. Restores nodes, masses, lengths, broken/deformed beams then calls obj:commitLoad(). | 1496 |
+| `beamstate.onBeamDeformed(id, ratio)` | C++ hook called only for beams that have a deformation threshold. Updates `deformedBeams`, zone and part damage, changes material (deformSwitches) and counts the events of the deformGroup(s). *(internal)* *(hook)* | 1308 |
+| `beamstate.onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy)` | C++ hook called when a coupler attaches. Records the coupling in attachedCouplers, copies the lock/weld flags between couplers of the same vehicle, stops auto coupling if it was for this tag, requests the import of electrics/inputs if the node has importElectrics/importInputs, restores its coupler breakGroups, then notifies the game (onCouplerAttached on the GE side, only once: by the vehicle with the lowest id). *(internal)* *(hook)* | 402 |
+| `beamstate.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | C++ hook called when a coupler detaches. Removes the coupling, breaks the node's breakGroups if breakGroupType is 0 or nil, then notifies the game (onCouplerDetached on the GE side, only once per pair). *(internal)* *(hook)* | 441 |
+| `beamstate.registerExternalCouplerBreakGroup(breakGroup, cid)` | Registers a coupler node cid in a breakGroup, so that a later breakBreakGroup detaches it. Used by coupling extensions. | 776 |
+| `beamstate.requestSkeleton()` | For the UI: sends the beam geometry (pairs of node positions) via guihooks "VehicleSkeleton", then the skeleton state. Does nothing displayable if no player is seated. | 1430 |
+| `beamstate.requestSkeletonState()` | Sends the beam state (`beamDamageTracker`) to the UI via guihooks "VehicleSkeletonState" if a player is seated in this vehicle. Also called every 0.25 s when damage has changed. | 517 |
+| `beamstate.reset()` | Reinitializes the state (calls init) and resets `lowpressure` to false. Called on vehicle reset. *(internal)* | 1351 |
+| `beamstate.save(filename)` | Writes a JSON ("v2" format) of the state: node positions and masses, rest length, beam breakage and deformation, hydro state and serialized Lua packets. | 1457 |
+| `beamstate.sendExportCouplerData(obj2Id, obj2nodeId, data)` | Asks the other vehicle (queueObjectLuaCommand -> exportCouplerData) to export certain electrics/inputs values to us, and activates updateRemoteElectrics. | 397 |
+| `beamstate.setCouplerVisiblityExternal(sourceObjectID, visibleTags)` | Called by another vehicle (via BeamEngine:queueAllObjectLua) to enable/disable the highlighting of couplers whose tag is in the list. (The name contains the typo "Visiblity".) *(internal)* | 242 |
+| `beamstate.setPartCondition(partId, partTypeData, odometer, integrity, visual)` | Would apply an integrity/visual state to a part. In this version the body is almost empty (the useful code is commented out): does nothing useful. *(internal)* | 71 |
+| `beamstate.setPlanets(p)` | Replaces all planets. The array is read in triplets (center, radius, mass). | 659 |
+| `beamstate.toggleCouplers(_nodetag, forceLocked, forceWelded, forceAutoCoupling)` | Toggles couplers; called when the L key is pressed. Without tag: stops auto coupling if active, detaches everything if a coupler is attached, otherwise starts auto coupling. With a tag: detaches if attached, otherwise attaches it (unless forceAutoCoupling). | 351 |
+| `beamstate.torsionBarBroken(id, energy)` | C++ hook called when a torsion bar breaks. If it has a breakGroup, hides the props and breaks the group (breakGroupType 0 or nil), as beamBroken does for beams. *(internal)* | 781 |
+| `beamstate.triggerDeformGroup(group)` | Triggers the material change of the first deformSwitches matching the given deform group. | 1409 |
+| `beamstate.updateGFX(dt)` | Called every graphics frame. Handles the timers of temporary planets, recomputes `damage`, the damage score per part, sends the skeleton state to the UI (at most every 0.25 s), drives automatic coupling (60 s timeout) and passes the requested electrics/inputs to coupled vehicles. *(internal)* | 672 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `beamstate.activateAutoCoupling(_nodetag)`
 
-Active l'attelage automatique : pendant 60 s max, toutes les 0,5 s les coupleurs (tous, ou ceux des tags donnes) sont rearmes via attachCouplers. Diffuse la visibilite des tags aux autres vehicules. Sans argument, prevoit aussi l'extension `couplings`. Ne fait rien si le vehicule n'a aucun coupleur a tag.
+Enables automatic coupling: for 60 s max, every 0.5 s the couplers (all, or those of the given tags) are rearmed via attachCouplers. Broadcasts tag visibility to other vehicles. Without argument, also arms the `couplings` extension. Does nothing if the vehicle has no tagged coupler.
 
-- `_nodetag` (*string|string[]|nil*) : Tag(s) de coupleur a viser ; nil = tous les coupleurs libres (ni welded ni locked).
+- `_nodetag` (*string|string[]|nil*) : Coupler tag(s) to target; nil = all free couplers (neither welded nor locked).
 
 #### `beamstate.addDamage(damage)`
 
-Ajoute des degats artificiels a `damageExt` (donc a `damage`).
+Adds artificial damage to `damageExt` (and therefore to `damage`).
 
-- `damage` (*number*) : Montant a ajouter.
+- `damage` (*number*) : Amount to add.
 
 #### `beamstate.addPlanet(center, radius, mass, dt)`
 
-Ajoute une planete (attracteur) via obj:setPlanets. Avec dt, la planete est temporaire : si elle existe deja avec dt > 0 on prolonge sa duree, avec dt = 0 on la supprime.
+Adds a planet (attractor) via obj:setPlanets. With dt, the planet is temporary: if it already exists with dt > 0 its duration is extended, with dt = 0 it is removed.
 
-- `center` (*vec3*) : Centre.
-- `radius` (*number*) : Rayon.
-- `mass` (*number*) : Masse.
-- `dt` (*number|nil*) : Duree de vie en secondes ; nil = permanente.
+- `center` (*vec3*) : Center.
+- `radius` (*number*) : Radius.
+- `mass` (*number*) : Mass.
+- `dt` (*number|nil*) : Lifetime in seconds; nil = permanent.
 
 #### `beamstate.attachCouplers(_nodetag)`
 
-Arme (obj:attachCoupler) les coupleurs non welded portant un couplerTag, avec leurs parametres jbeam (couplerStrength defaut 1000000, couplerRadius 0.2, couplerLockRadius 0.025, couplerLatchSpeed 0.3, couplerTargets 0).
+Arms (obj:attachCoupler) the non-welded couplers carrying a couplerTag, with their jbeam parameters (couplerStrength default 1000000, couplerRadius 0.2, couplerLockRadius 0.025, couplerLatchSpeed 0.3, couplerTargets 0).
 
-- `_nodetag` (*string|nil*) : Ne traite que ce couplerTag ; nil = tous.
+- `_nodetag` (*string|nil*) : Processes only this couplerTag; nil = all.
 
 #### `beamstate.beamBroken(id, energy)`
 
-Hook C++ appele quand une poutre casse. Met a jour le suivi de degats (zone de carrosserie, piece), degonfle le pneu ou le groupe de pression concerne, casse les triangles de collision et les meshes, les rails, propage au breakGroup (breakGroupType 0/nil), change le materiau (deformSwitches) et lance des particules (plastique, verre, bois).
+C++ hook called when a beam breaks. Updates the damage tracking (body zone, part), deflates the relevant tire or pressure group, breaks collision triangles and meshes, rails, propagates to the breakGroup (breakGroupType 0/nil), changes the material (deformSwitches) and spawns particles (plastic, glass, wood).
 
-- `id` (*integer*) : cid de la poutre.
-- `energy` (*number*) : Energie de rupture (non utilisee).
+- `id` (*integer*) : cid of the beam.
+- `energy` (*number*) : Break energy (unused).
 
 #### `beamstate.breakBreakGroup(g)`
 
-Casse un groupe : le marque dans brokenBreakGroups, cache les props du groupe, casse toutes ses poutres, detache ses coupleurs et casse les triangles de collision du meme groupe. Previent aussi la camera si c'est un groupe d'occupant (ocpAttach...).
+Breaks a group: marks it in brokenBreakGroups, hides the group's props, breaks all its beams, detaches its couplers and breaks the collision triangles of the same group. Also notifies the camera if it is an occupant group (ocpAttach...).
 
-- `g` (*string|nil*) : Nom du breakGroup. nil : ne fait rien.
+- `g` (*string|nil*) : Name of the breakGroup. nil: does nothing.
 
 #### `beamstate.couplerExists(_nodetag)`
 
-Indique si un tag de coupleur (couplerTag ou tag) existe sur ce vehicule.
+Indicates whether a coupler tag (couplerTag or tag) exists on this vehicle.
 
-- `_nodetag` (*string*) : Tag recherche.
-- **renvoie** : boolean|nil true si existe, sinon nil.
+- `_nodetag` (*string*) : Tag searched.
+- **returns**: boolean|nil true if it exists, otherwise nil.
 
 #### `beamstate.couplerFound(nodeId, obj2id, obj2nodeId)`
 
-Hook C++ appele quand un coupleur proche est trouve. Corps vide dans cette version (seulement un print commente).
+C++ hook called when a nearby coupler is found. Empty body in this version (only a commented-out print).
 
-- `nodeId` (*integer*) : cid du noeud local.
-- `obj2id` (*integer*) : Id de l'autre vehicule.
-- `obj2nodeId` (*integer*) : cid du noeud de l'autre vehicule.
+- `nodeId` (*integer*) : cid of the local node.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : cid of the other vehicle's node.
 
 #### `beamstate.deflateTire(wheelid)`
 
-Degonfle un pneu. Au premier appel pour la roue : marque isTireDeflated, affiche le message, joue le son d'eclatement, enregistre le degat, appelle le hook `onTireDeflated(wheelid)` via extensions.hook, ajoute 1000 a damageExt et ramollit les poutres de la bande de roulement, des flancs et de la pression. Les appels suivants font monter le compteur ; au-dela de 4 le groupe de pression est vide.
+Deflates a tire. On the first call for the wheel: marks isTireDeflated, displays the message, plays the burst sound, records the damage, calls the hook `onTireDeflated(wheelid)` via extensions.hook, adds 1000 to damageExt and softens the beams of the tread, sidewalls and pressure. Subsequent calls increment the counter; beyond 4 the pressure group is emptied.
 
-- `wheelid` (*integer*) : Index de roue (v.data.wheels / wheels.wheels).
+- `wheelid` (*integer*) : Wheel index (v.data.wheels / wheels.wheels).
 
 #### `beamstate.delPlanet(center, radius, mass)`
 
-Supprime une planete (attracteur de gravite) identifiee par centre, rayon et masse exacts, puis met a jour le moteur.
+Removes a planet (gravity attractor) identified by exact center, radius and mass, then updates the engine.
 
-- `center` (*vec3*) : Centre.
-- `radius` (*number*) : Rayon.
-- `mass` (*number*) : Masse.
+- `center` (*vec3*) : Center.
+- `radius` (*number*) : Radius.
+- `mass` (*number*) : Mass.
 
 #### `beamstate.detachCouplers(_nodetag, forceLocked, forceWelded)`
 
-Detache (obj:detachCoupler) les coupleurs d'un tag ou tous. Les coupleurs locked ou welded sont ignores sauf si on force. Notifie le jeu (onCouplerDetach) et l'extension couplings.
+Detaches (obj:detachCoupler) the couplers of a tag or all of them. Locked or welded couplers are ignored unless forced. Notifies the game (onCouplerDetach) and the couplings extension.
 
-- `_nodetag` (*string|nil*) : Tag a detacher ; nil = tous.
-- `forceLocked` (*boolean|nil*) : Detache aussi les coupleurs couplerLock.
-- `forceWelded` (*boolean|nil*) : Detache aussi les coupleurs couplerWeld.
+- `_nodetag` (*string|nil*) : Tag to detach; nil = all.
+- `forceLocked` (*boolean|nil*) : Also detaches couplerLock couplers.
+- `forceWelded` (*boolean|nil*) : Also detaches couplerWeld couplers.
 
 #### `beamstate.exportCouplerData(nodeid, dataList)`
 
-Appelee depuis le vehicule qui veut importer des electrics. Chez le fournisseur, ajoute les electrics/inputs demandes a la liste transmise chaque frame (dans updateGFX) vers l'autre vehicule.
+Called from the vehicle that wants to import electrics. On the provider, adds the requested electrics/inputs to the list sent every frame (in updateGFX) to the other vehicle.
 
-- `nodeid` (*integer*) : cid du noeud local de coupleur.
+- `nodeid` (*integer*) : cid of the local coupler node.
 - `dataList` (*table*) : {electrics = string[], inputs = string[]}.
 
 #### `beamstate.getBodyZoneDamage()`
 
-Degat des six zones de carrosserie.
+Damage of the six body zones.
 
-- **renvoie** : table<string, number> {FL=, FR=, ML=, MR=, RL=, RR=}.
+- **returns**: table<string, number> {FL=, FR=, ML=, MR=, RL=, RR=}.
 
 #### `beamstate.getBodyZoneDamageValue(zone)`
 
-Degat d'une zone de carrosserie (somme des poutres cassees + ratios de deformation, divisee par le nombre de poutres de la zone).
+Damage of a body zone (sum of broken beams + deformation ratios, divided by the number of beams in the zone).
 
-- `zone` (*string*) : "FL", "FR", "ML", "MR", "RL" ou "RR".
-- **renvoie** : number Valeur de degat, 0 si zone inconnue ou vide.
+- `zone` (*string*) : "FL", "FR", "ML", "MR", "RL" or "RR".
+- **returns**: number Damage value, 0 if the zone is unknown or empty.
 
 #### `beamstate.getCouplerOffset(couplerTag)`
 
-Renvoie la position de chaque coupleur relative au noeud de reference du vehicule (refNodes[0].ref).
+Returns the position of each coupler relative to the vehicle's reference node (refNodes[0].ref).
 
-- `couplerTag` (*string|nil*) : Filtre sur couplerTag ou tag ; nil ou "" = tous.
-- **renvoie** : table<integer, table> Par cid : {x, y, z, couplerTag, tag}. Table vide si pas de noeuds.
+- `couplerTag` (*string|nil*) : Filter on couplerTag or tag; nil or "" = all.
+- **returns**: table<integer, table> Per cid: {x, y, z, couplerTag, tag}. Empty table if there are no nodes.
 
 #### `beamstate.getPartCondition(partId, partTypeData)`
 
-Estime l'etat d'une piece a partir de ses breakGroups casses et des poutres deformees (`beamDamage`). La piece (qui doit avoir un flexbody) est dite a remplacer si trop de groupes sont casses (>1, ou tous), plus de 1 % de poutres deformees (>= 0.01) ou plus de 2 poutres cassees (>= 0.9).
+Estimates the state of a part from its broken breakGroups and deformed beams (`beamDamage`). The part (which must have a flexbody) is said to need replacement if too many groups are broken (>1, or all), more than 1% of beams are deformed (>= 0.01) or more than 2 beams are broken (>= 0.9).
 
-- `partId` (*string*) : Identifiant de la piece (pour debug).
-- `partTypeData` (*string[]|nil*) : Tags de la piece de forme "jbeam:breakGroup:nom", "jbeam:flexbody", "jbeam:beamDamage:<cid>".
-- **renvoie** : table {integrityValue, integrityState, visualValue, visualState} ; visualState.needsReplacement = true et integrityValue = 0 si la piece est trop abimee.
-- **renvoie** : boolean true si un etat a pu etre fourni.
+- `partId` (*string*) : Part identifier (for debug).
+- `partTypeData` (*string[]|nil*) : Part tags of the form "jbeam:breakGroup:name", "jbeam:flexbody", "jbeam:beamDamage:<cid>".
+- **returns**: table {integrityValue, integrityState, visualValue, visualState}; visualState.needsReplacement = true and integrityValue = 0 if the part is too damaged.
+- **returns**: boolean true if a state could be provided.
 
 #### `beamstate.getPartDamageBySignalName(name)`
 
-Score de degat d'une piece a partir de son nom de signal.
+Damage score of a part from its signal name.
 
-- `name` (*string*) : Nom de signal (cf. getPartDamageSignalList).
-- **renvoie** : number|nil Score 0 a 1, nil si le nom est inconnu.
+- `name` (*string*) : Signal name (see getPartDamageSignalList).
+- **returns**: number|nil Score 0 to 1, nil if the name is unknown.
 
 #### `beamstate.getPartDamageData()`
 
-Renvoie les pieces ayant un degat strictement positif.
+Returns the parts with strictly positive damage.
 
-- **renvoie** : table<string, table> partPath -> {name, damage} ; damage = max(poutres cassees / seuil, poutres deformees / seuil), entre 0 et 1.
+- **returns**: table<string, table> partPath -> {name, damage}; damage = max(broken beams / threshold, deformed beams / threshold), between 0 and 1.
 
 #### `beamstate.getPartDamageScores()`
 
-Table plate nom-de-signal -> score de degat pour toutes les pieces, y compris celles a 0.
+Flat table signal-name -> damage score for all parts, including those at 0.
 
-- **renvoie** : table<string, number> Nom court de piece (ou chemin avec "_" en cas de doublon) -> score 0 a 1.
+- **returns**: table<string, number> Short part name (or path with "_" in case of duplicates) -> score 0 to 1.
 
 #### `beamstate.getPartDamageSignalList()`
 
-Liste triee des noms de signaux de pieces disponibles.
+Sorted list of available part signal names.
 
-- **renvoie** : table[] {{name = string, type = "number"}, ...}.
+- **returns**: table[] {{name = string, type = "number"}, ...}.
 
 #### `beamstate.getVehicleState(...)`
 
-Renvoie une photo du vehicule (id, conditions de pieces, itemId de config, position, vecteurs avant et haut). Contient un faux delai de 1 s volontaire (voir notes).
+Returns a snapshot of the vehicle (id, parts conditions, config itemId, position, front and up vectors). Contains a deliberate fake 1 s delay (see notes).
 
-- `...` (*any*) : Valeurs renvoyees telles quelles apres l'etat.
-- **renvoie** : table {objId, partsCondition, itemId, pos, front, up}.
-- **renvoie** : any Les arguments supplementaires passes en entree.
+- `...` (*any*) : Values returned as is after the state.
+- **returns**: table {objId, partsCondition, itemId, pos, front, up}.
+- **returns**: any The extra arguments passed as input.
 
 #### `beamstate.hasCouplers(couplerTag)`
 
-Indique si le vehicule a au moins un coupleur non welded portant un couplerTag.
+Indicates whether the vehicle has at least one non-welded coupler carrying a couplerTag.
 
-- `couplerTag` (*string|nil*) : Filtre sur couplerTag ou tag ; nil = tous.
-- **renvoie** : boolean true si un coupleur correspond.
+- `couplerTag` (*string|nil*) : Filter on couplerTag or tag; nil = all.
+- **returns**: boolean true if a coupler matches.
 
 #### `beamstate.importCouplerData(nodeId, data)`
 
-Appelee par l'hote fournisseur. Stocke les electrics recus (fusionnes ensuite dans electrics.values par updateRemoteElectrics) et rejoue les inputs via input.event(nom, valeur, 2). Ignore les donnees si le coupleur n'est plus attache.
+Called by the provider host. Stores the received electrics (then merged into electrics.values by updateRemoteElectrics) and replays the inputs via input.event(name, value, 2). Ignores the data if the coupler is no longer attached.
 
-- `nodeId` (*integer*) : cid du noeud local.
+- `nodeId` (*integer*) : cid of the local node.
 - `data` (*table*) : {electrics = table<string, any>, inputs = table<string, number>}.
 
 #### `beamstate.isPhysicsStepUsed()`
 
-Indique si beamstate a besoin de la boucle physique (true seulement tant que la precompression retardee est en cours).
+Indicates whether beamstate needs the physics loop (true only while the delayed precompression is in progress).
 
-- **renvoie** : boolean true si M.update est actif.
+- **returns**: boolean true if M.update is active.
 
 #### `beamstate.isTriangleBroken(triId)`
 
-Indique si un triangle de collision est casse (absent du suivi interne).
+Indicates whether a collision triangle is broken (absent from the internal tracking).
 
-- `triId` (*integer*) : cid du triangle.
-- **renvoie** : boolean true si casse ou inconnu.
+- `triId` (*integer*) : cid of the triangle.
+- **returns**: boolean true if broken or unknown.
 
 #### `beamstate.load(filename)`
 
-Recharge un fichier ecrit par save. Verifie que le nombre de noeuds/poutres, le dossier du vehicule et le format correspondent, sinon log d'erreur et abandon. Restaure noeuds, masses, longueurs, poutres cassees/deformees puis appelle obj:commitLoad().
+Reloads a file written by save. Checks that the number of nodes/beams, the vehicle folder and the format match, otherwise logs an error and aborts. Restores nodes, masses, lengths, broken/deformed beams then calls obj:commitLoad().
 
-- `filename` (*string|nil*) : Chemin ; par defaut `<vehicleDirectory>/vehicle.save.json`.
+- `filename` (*string|nil*) : Path; by default `<vehicleDirectory>/vehicle.save.json`.
 
 #### `beamstate.onBeamDeformed(id, ratio)`
 
-Hook C++ appele seulement pour les poutres qui ont un seuil de deformation. Met a jour `deformedBeams`, les degats de zone et de piece, change de materiau (deformSwitches) et compte les evenements du ou des deformGroup.
+C++ hook called only for beams that have a deformation threshold. Updates `deformedBeams`, zone and part damage, changes material (deformSwitches) and counts the events of the deformGroup(s).
 
-- `id` (*integer*) : cid de la poutre.
-- `ratio` (*number*) : Ratio de deformation de la poutre.
+- `id` (*integer*) : cid of the beam.
+- `ratio` (*number*) : Deformation ratio of the beam.
 
 #### `beamstate.onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy)`
 
-Hook C++ appele quand un coupleur s'attache. Enregistre l'attelage dans attachedCouplers, copie les flags lock/weld entre coupleurs du meme vehicule, coupe l'attelage auto si c'etait ce tag, demande l'import d'electrics/inputs si le noeud a importElectrics/importInputs, restaure ses breakGroups de coupleur, puis previent le jeu (onCouplerAttached cote GE, une seule fois : par le vehicule d'id le plus petit).
+C++ hook called when a coupler attaches. Records the coupling in attachedCouplers, copies the lock/weld flags between couplers of the same vehicle, stops auto coupling if it was for this tag, requests the import of electrics/inputs if the node has importElectrics/importInputs, restores its coupler breakGroups, then notifies the game (onCouplerAttached on the GE side, only once: by the vehicle with the lowest id).
 
-- `nodeId` (*integer*) : cid du noeud local.
-- `obj2id` (*integer*) : Id de l'autre vehicule.
-- `obj2nodeId` (*integer*) : cid du noeud de l'autre vehicule.
-- `attachSpeed` (*number*) : Vitesse d'attache (non utilisee ici).
-- `attachEnergy` (*number*) : Energie d'attache (non utilisee ici).
+- `nodeId` (*integer*) : cid of the local node.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : cid of the other vehicle's node.
+- `attachSpeed` (*number*) : Attach speed (not used here).
+- `attachEnergy` (*number*) : Attach energy (not used here).
 
 #### `beamstate.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)`
 
-Hook C++ appele quand un coupleur se detache. Retire l'attelage, casse les breakGroups du noeud si breakGroupType vaut 0 ou nil, puis previent le jeu (onCouplerDetached cote GE, une seule fois par paire).
+C++ hook called when a coupler detaches. Removes the coupling, breaks the node's breakGroups if breakGroupType is 0 or nil, then notifies the game (onCouplerDetached on the GE side, only once per pair).
 
-- `nodeId` (*integer*) : cid du noeud local.
-- `obj2id` (*integer*) : Id de l'autre vehicule.
-- `obj2nodeId` (*integer*) : cid du noeud de l'autre vehicule.
-- `breakForce` (*number*) : Force de rupture transmise au jeu.
+- `nodeId` (*integer*) : cid of the local node.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : cid of the other vehicle's node.
+- `breakForce` (*number*) : Break force passed to the game.
 
 #### `beamstate.registerExternalCouplerBreakGroup(breakGroup, cid)`
 
-Enregistre un cid de noeud-coupleur dans un breakGroup, pour qu'un breakBreakGroup ulterieur le detache. Utilisee par des extensions de couplage.
+Registers a coupler node cid in a breakGroup, so that a later breakBreakGroup detaches it. Used by coupling extensions.
 
-- `breakGroup` (*string*) : Nom du groupe.
-- `cid` (*integer*) : cid du noeud de coupleur.
+- `breakGroup` (*string*) : Group name.
+- `cid` (*integer*) : cid of the coupler node.
 
 #### `beamstate.save(filename)`
 
-Ecrit un JSON (format "v2") de l'etat : positions et masses des noeuds, longueur au repos, cassure et deformation des poutres, etat des hydros et paquets Lua serialises.
+Writes a JSON ("v2" format) of the state: node positions and masses, rest length, beam breakage and deformation, hydro state and serialized Lua packets.
 
-- `filename` (*string|nil*) : Chemin ; par defaut `<vehicleDirectory>/vehicle.save.json`.
+- `filename` (*string|nil*) : Path; by default `<vehicleDirectory>/vehicle.save.json`.
 
 #### `beamstate.sendExportCouplerData(obj2Id, obj2nodeId, data)`
 
-Demande a l'autre vehicule (queueObjectLuaCommand -> exportCouplerData) d'exporter vers nous certaines valeurs electrics/inputs, et active updateRemoteElectrics.
+Asks the other vehicle (queueObjectLuaCommand -> exportCouplerData) to export certain electrics/inputs values to us, and activates updateRemoteElectrics.
 
-- `obj2Id` (*integer*) : Id de l'autre vehicule.
-- `obj2nodeId` (*integer*) : cid du noeud de coupleur de l'autre vehicule.
+- `obj2Id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : cid of the other vehicle's coupler node.
 - `data` (*table*) : {electrics = string[], inputs = string[]}.
 
 #### `beamstate.setCouplerVisiblityExternal(sourceObjectID, visibleTags)`
 
-Appelee par un autre vehicule (via BeamEngine:queueAllObjectLua) pour activer/desactiver la surbrillance des coupleurs dont le tag est dans la liste. (Le nom contient la faute "Visiblity".)
+Called by another vehicle (via BeamEngine:queueAllObjectLua) to enable/disable the highlighting of couplers whose tag is in the list. (The name contains the typo "Visiblity".)
 
-- `sourceObjectID` (*integer*) : Id du vehicule qui diffuse (non utilise).
-- `visibleTags` (*table<string, boolean>|false|nil*) : Tags visibles ; faux/nil desactive l'affichage.
+- `sourceObjectID` (*integer*) : Id of the broadcasting vehicle (unused).
+- `visibleTags` (*table<string, boolean>|false|nil*) : Visible tags; false/nil disables the display.
 
 #### `beamstate.setPartCondition(partId, partTypeData, odometer, integrity, visual)`
 
-Appliquerait un etat d'integrite/visuel a une piece. Dans cette version le corps est quasi vide (le code utile est commente) : ne fait rien d'utile.
+Would apply an integrity/visual state to a part. In this version the body is almost empty (the useful code is commented out): does nothing useful.
 
-- `partId` (*string*) : Identifiant de la piece.
-- `partTypeData` (*string[]*) : Liste de types de piece (ex. "jbeam:breakGroup:nom").
-- `odometer` (*any*) : Non utilise.
-- `integrity` (*number|table*) : Valeur ou table d'integrite.
-- `visual` (*number|table*) : Valeur ou table d'etat visuel.
+- `partId` (*string*) : Part identifier.
+- `partTypeData` (*string[]*) : List of part types (e.g. "jbeam:breakGroup:name").
+- `odometer` (*any*) : Unused.
+- `integrity` (*number|table*) : Integrity value or table.
+- `visual` (*number|table*) : Visual state value or table.
 
 #### `beamstate.setPlanets(p)`
 
-Remplace toutes les planetes. Le tableau est lu par triplets (centre, rayon, masse).
+Replaces all planets. The array is read in triplets (center, radius, mass).
 
-- `p` (*table*) : {vec3, rayon, masse, vec3, rayon, masse, ...}.
+- `p` (*table*) : {vec3, radius, mass, vec3, radius, mass, ...}.
 
 #### `beamstate.toggleCouplers(_nodetag, forceLocked, forceWelded, forceAutoCoupling)`
 
-Bascule les attelages ; appelee a l'appui sur la touche L. Sans tag : coupe l'attelage auto s'il est actif, detache tout si un coupleur est attache, sinon lance l'attelage auto. Avec un tag : detache s'il est attache, sinon l'attache (sauf forceAutoCoupling).
+Toggles couplers; called when the L key is pressed. Without tag: stops auto coupling if active, detaches everything if a coupler is attached, otherwise starts auto coupling. With a tag: detaches if attached, otherwise attaches it (unless forceAutoCoupling).
 
-- `_nodetag` (*string|nil*) : Tag cible.
-- `forceLocked` (*boolean|nil*) : Transmis a detachCouplers.
-- `forceWelded` (*boolean|nil*) : Transmis a detachCouplers.
-- `forceAutoCoupling` (*boolean|nil*) : Avec un tag, force la logique de l'attelage automatique.
+- `_nodetag` (*string|nil*) : Target tag.
+- `forceLocked` (*boolean|nil*) : Passed to detachCouplers.
+- `forceWelded` (*boolean|nil*) : Passed to detachCouplers.
+- `forceAutoCoupling` (*boolean|nil*) : With a tag, forces the automatic coupling logic.
 
 #### `beamstate.torsionBarBroken(id, energy)`
 
-Hook C++ appele quand une barre de torsion casse. Si elle a un breakGroup, cache les props et casse le groupe (breakGroupType 0 ou nil), comme beamBroken le fait pour les poutres.
+C++ hook called when a torsion bar breaks. If it has a breakGroup, hides the props and breaks the group (breakGroupType 0 or nil), as beamBroken does for beams.
 
-- `id` (*integer*) : Index de la barre de torsion dans v.data.torsionbars.
-- `energy` (*number*) : Energie de rupture (non utilisee).
+- `id` (*integer*) : Index of the torsion bar in v.data.torsionbars.
+- `energy` (*number*) : Break energy (unused).
 
 #### `beamstate.triggerDeformGroup(group)`
 
-Declenche le changement de materiau du premier deformSwitches correspondant au groupe de deformation donne.
+Triggers the material change of the first deformSwitches matching the given deform group.
 
-- `group` (*string|nil*) : Nom du deformGroup ; nil ne fait rien.
+- `group` (*string|nil*) : Name of the deformGroup; nil does nothing.
 
 #### `beamstate.updateGFX(dt)`
 
-Appelee chaque frame graphique. Gere les minuteurs des planetes temporaires, recalcule `damage`, le score de degats par piece, envoie l'etat du squelette a l'UI (au plus toutes les 0,25 s), pilote l'attelage automatique (timeout 60 s) et transmet aux vehicules attelés les electrics/inputs demandes.
+Called every graphics frame. Handles the timers of temporary planets, recomputes `damage`, the damage score per part, sends the skeleton state to the UI (at most every 0.25 s), drives automatic coupling (60 s timeout) and passes the requested electrics/inputs to coupled vehicles.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `activeParts` | string[] | Noms des parties actives du vehicule, collectees depuis `v.data.slotMap`. |
-| `attachedCouplers` | table<integer, table> | Coupleurs actuellement attaches, par cid de noeud local : {obj2id, obj2nodeId, exportElectrics?, exportInputs?}. |
-| `brokenBreakGroups` | table<string, boolean> | Noms des breakGroups deja casses (valeur true). Table recreee a chaque init. |
-| `couplerCache` | table<integer, table> | Copie des noeuds jbeam qui ont un couplerTag ou un tag, indexee par cid de noeud (champs couplerTag, couplerWeld, couplerLock, couplerStrength, couplerRadius, couplerLockRadius, couplerLatchSpeed, couplerTargets, couplerStartRadius, breakGroup, importElectrics, importInputs). |
-| `damage` | number | Degats cumules du vehicule (energie dissipee + damageExt), mis a jour dans updateGFX. |
-| `damageExt` | number | Degats ajoutes artificiellement (addDamage, pneus crevés +1000). Remis a 0 par init. |
-| `debugDraw` | function | nop par defaut ; dessine des spheres sur les noeuds de coupleurs libres dont le tag est visible (setCouplerVisiblityExternal). |
-| `deformGroupDamage` | table<string, table> | Par deformGroup : {eventCount, damage, maxEvents, invMaxEvents}. `damage` = eventCount / maxEvents, de 0 a 1 environ. |
-| `deformGroupsTriggerBeam` | table<string, integer> | Par deformGroup, cid de la premiere poutre qui l'a declenche (deformation ou casse). |
-| `deformedBeams` | table<integer, number> | Alias de beamDamageTracker : par cid de poutre, ratio de deformation (onBeamDeformed) ou 1 si cassee. |
-| `linkTagBeamMap` | table<string, integer[]> | linkTag de poutre -> liste d'ids de poutres. |
-| `lowpressure` | boolean | true des qu'au moins un pneu a ete degonfle. Remis a false par reset(). |
-| `monetaryDamage` | number | Remis a 0 par init, non modifie ailleurs dans ce fichier. |
-| `nodeNameMap` | table<string, integer> | Nom jbeam d'un noeud -> cid. |
-| `tagBeamMap` | table<string, integer[]> | Tag de poutre -> liste d'ids de poutres portant ce tag. |
-| `update` | function | nop sauf pendant la precompression progressive des poutres/barres de torsion ; appele par la boucle physique. |
-| `updateRemoteElectrics` | function | nop par defaut ; devient la vraie fonction apres sendExportCouplerData. Appelee deux fois par electrics.lua : fusionne dans electrics.values les valeurs recues d'un vehicule attele. Parametre retainReceivedElectrics : si faux/nil, vide la liste recue. |
+| `activeParts` | string[] | Names of the active parts of the vehicle, collected from `v.data.slotMap`. |
+| `attachedCouplers` | table<integer, table> | Couplers currently attached, by local node cid: {obj2id, obj2nodeId, exportElectrics?, exportInputs?}. |
+| `brokenBreakGroups` | table<string, boolean> | Names of the breakGroups already broken (value true). Table recreated on every init. |
+| `couplerCache` | table<integer, table> | Copy of the jbeam nodes that have a couplerTag or a tag, keyed by node cid (fields couplerTag, couplerWeld, couplerLock, couplerStrength, couplerRadius, couplerLockRadius, couplerLatchSpeed, couplerTargets, couplerStartRadius, breakGroup, importElectrics, importInputs). |
+| `damage` | number | Cumulative vehicle damage (dissipated energy + damageExt), updated in updateGFX. |
+| `damageExt` | number | Artificially added damage (addDamage, punctured tires +1000). Reset to 0 by init. |
+| `debugDraw` | function | nop by default; draws spheres on the free coupler nodes whose tag is visible (setCouplerVisiblityExternal). |
+| `deformGroupDamage` | table<string, table> | Per deformGroup: {eventCount, damage, maxEvents, invMaxEvents}. `damage` = eventCount / maxEvents, from 0 to about 1. |
+| `deformGroupsTriggerBeam` | table<string, integer> | Per deformGroup, cid of the first beam that triggered it (deformation or break). |
+| `deformedBeams` | table<integer, number> | Alias of beamDamageTracker: per beam cid, deformation ratio (onBeamDeformed) or 1 if broken. |
+| `linkTagBeamMap` | table<string, integer[]> | Beam linkTag -> list of beam ids. |
+| `lowpressure` | boolean | true as soon as at least one tire has been deflated. Reset to false by reset(). |
+| `monetaryDamage` | number | Reset to 0 by init, not modified elsewhere in this file. |
+| `nodeNameMap` | table<string, integer> | Jbeam name of a node -> cid. |
+| `tagBeamMap` | table<string, integer[]> | Beam tag -> list of ids of beams carrying this tag. |
+| `update` | function | nop except during the progressive precompression of beams/torsion bars; called by the physics loop. |
+| `updateRemoteElectrics` | function | nop by default; becomes the real function after sendExportCouplerData. Called twice by electrics.lua: merges into electrics.values the values received from a coupled vehicle. Parameter retainReceivedElectrics: if false/nil, empties the received list. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onTireDeflated`
 
-**Évènements UI (guihooks.trigger) :** `VehicleSkeleton`, `VehicleSkeletonState`
+**UI events (guihooks.trigger):** `VehicleSkeleton`, `VehicleSkeletonState`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `BeamEngine:` `queueAllObjectLua`
 - `obj:` `addParticleByNodesRelative`, `attachCoupler`, `beamIsBroken`, `breakBeam`, `breakCollisionTriangle`, `breakMeshes`, `breakRails`, `changePressureGroupDrag`, `commitLoad`, `deflatePressureGroup`, `detachCoupler`, `getBeamDeformation`, `getBeamRestLength`, `getDirectionVector`, `getDirectionVectorUp`, `getDissipatedEnergy`, `getGroupPressure`, `getId`, `getNodeMass`, `getNodePosition`, `getOriginalNodeMass`, `getPosition`, `playSFXOnceCT`, `queueGameEngineLua`, `queueObjectLuaCommand`, `setBeamLength`, `setBeamPressureRel`, `setBeamSpringDamp`, `setGroupPressure`, `setNodeFrictionSlidingCoefs`, `setNodeMass`, `setNodePosition`, `setPlanets`, `setPrecompressionRatio`, `setTorsionbarPrecompressionAngle`, `stopLatching`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/beamstate.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/beamstate.lua`.*

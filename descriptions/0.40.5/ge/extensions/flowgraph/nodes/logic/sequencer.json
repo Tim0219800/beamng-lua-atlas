@@ -1,15 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/logic/sequencer.lua",
-  "module": "Noeud flowgraph 'Sequencer' (categorie logic). Active tour a tour les sorties flow value_1..value_N. Mode d'increment 'auto' (+1 par frame), 'manual' (pins next/reset/count) ou 'select' (pin index). Mode de sequence : loop, random, once (pingpong est defini mais non propose). Sorties cachees currentIndex, maxIndex, totalIndex.",
+  "module": "Flowgraph node 'Sequencer' (logic category). Activates the flow outputs value_1..value_N in turn. Increment mode 'auto' (+1 per frame), 'manual' (pins next/reset/count) or 'select' (pin index). Sequence mode: loop, random, once (pingpong is defined but not offered). Hidden outputs currentIndex, maxIndex, totalIndex.",
   "notes": [
-    "Le champ C.todo du code signale que l'index demarre a 2 en mode auto.",
-    "Dans work, 'self.mode == manual' est teste alors que 'manual' est un mode d'increment : self.pinIn.count n'est donc jamais utilise et c = self.count.",
-    "En mode pingpong avec count=1, modulo 0 (non propose dans l'UI).",
-    "updatePins ne supprime pas les liens des pins retirees."
+    "The C.todo field in the code notes that the index starts at 2 in auto mode.",
+    "In work, 'self.mode == manual' is tested whereas 'manual' is an increment mode: self.pinIn.count is therefore never used and c = self.count.",
+    "In pingpong mode with count=1, modulo 0 (not offered in the UI).",
+    "updatePins does not delete the links of the removed pins."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
           "desc": "count=1, mode='loop', incMode='auto', index=1.",
@@ -20,47 +20,47 @@
           "internal": true
         },
         "updateMode": {
-          "desc": "Ajoute/supprime les pins d'entree selon le mode d'increment (index pour select ; next, reset, count pour manual).",
+          "desc": "Adds/deletes the input pins according to the increment mode (index for select; next, reset, count for manual).",
           "internal": true,
           "params": {
             "m": {
               "type": "string",
-              "desc": "'auto', 'manual' ou 'select'"
+              "desc": "'auto', 'manual' or 'select'"
             }
           }
         },
         "drawCustomProperties": {
-          "desc": "Panneau : mode d'increment, mode de sequence (sauf select), nombre de sorties.",
+          "desc": "Panel: increment mode, sequence mode (except select), number of outputs.",
           "internal": true
         },
         "updatePins": {
-          "desc": "Cree ou supprime les sorties flow value_i.",
+          "desc": "Creates or deletes the flow outputs value_i.",
           "internal": true,
           "params": {
             "old": {
               "type": "integer",
-              "desc": "ancien nombre"
+              "desc": "old count"
             },
             "new": {
               "type": "integer",
-              "desc": "nouveau nombre"
+              "desc": "new count"
             }
           }
         },
         "_onSerialize": {
-          "desc": "Sauvegarde mode, count, incMode.",
+          "desc": "Saves mode, count, incMode.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Relit les reglages, recree les pins et le mode.",
+          "desc": "Reads back the settings, recreates the pins and the mode.",
           "internal": true
         },
         "work": {
-          "desc": "Met a jour l'index selon le mode d'increment, calcule la sortie active, met value_i a (i == actif), ecrit currentIndex, maxIndex, totalIndex ; flow vaut le flux d'entree.",
+          "desc": "Updates the index according to the increment mode, computes the active output, sets value_i to (i == active), writes currentIndex, maxIndex, totalIndex; flow equals the input flow.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche le mode et l'index courant.",
+          "desc": "Displays the mode and the current index.",
           "internal": true
         }
       }

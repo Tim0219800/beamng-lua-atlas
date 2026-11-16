@@ -1,29 +1,29 @@
 # `ui_vehicleSelector_vehicleMetadataEditor`
 
-*Fichier : `lua/ge/extensions/ui/vehicleSelector/vehicleMetadataEditor.lua` · VM : Game Engine (GE) · 14 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/vehicleSelector/vehicleMetadataEditor.lua` · VM: Game Engine (GE) · 14 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_vehicleSelector_vehicleMetadataEditor` : `extensions.load("ui_vehicleSelector_vehicleMetadataEditor")`, puis la globale `ui_vehicleSelector_vehicleMetadataEditor`
+**Access:** extension `ui_vehicleSelector_vehicleMetadataEditor`: `extensions.load("ui_vehicleSelector_vehicleMetadataEditor")`, then the global `ui_vehicleSelector_vehicleMetadataEditor`
 
-Ébauche d'éditeur de métadonnées de véhicule pour le sélecteur. Le module est quasi vide : sa seule fonction renvoie des valeurs fixes. Sa référence dans les dépendances de ui_vehicleSelector_general est commentée.
+Sketch of a vehicle metadata editor for the selector. The module is almost empty: its only function returns fixed values. Its reference in the dependencies of ui_vehicleSelector_general is commented out.
 
-## Remarques
+## Notes
 
-- getVehicleMetadataDetails ignore son paramètre data et renvoie toujours {name = 'Default Vehicle Name', description = 'Default vehicle description', type = 'Car'} : c'est un espace réservé.
+- getVehicleMetadataDetails ignores its data parameter and always returns {name = 'Default Vehicle Name', description = 'Default vehicle description', type = 'Car'}: it is a placeholder.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_vehicleSelector_vehicleMetadataEditor.getVehicleMetadataDetails(data)` | Renvoie des métadonnées factices de véhicule (nom, description, type), quel que soit l'argument. | 4 |
+| `ui_vehicleSelector_vehicleMetadataEditor.getVehicleMetadataDetails(data)` | Returns dummy vehicle metadata (name, description, type), whatever the argument. | 4 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_vehicleSelector_vehicleMetadataEditor.getVehicleMetadataDetails(data)`
 
-Renvoie des métadonnées factices de véhicule (nom, description, type), quel que soit l'argument.
+Returns dummy vehicle metadata (name, description, type), whatever the argument.
 
-- `data` (*any*) : Ignoré.
-- **renvoie** : table {name, description, type} avec des valeurs par défaut fixes.
+- `data` (*any*) : Ignored.
+- **returns**: table {name, description, type} with fixed default values.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/vehicleSelector/vehicleMetadataEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/vehicleSelector/vehicleMetadataEditor.lua`.*

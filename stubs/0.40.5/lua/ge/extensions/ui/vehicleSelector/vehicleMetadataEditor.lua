@@ -2,14 +2,14 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/vehicleSelector/vehicleMetadataEditor.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Ébauche d'éditeur de métadonnées de véhicule pour le sélecteur. Le module est quasi vide : sa seule fonction renvoie des valeurs fixes. Sa référence dans les dépendances de ui_vehicleSelector_general est commentée.
---- Accès : extension `ui_vehicleSelector_vehicleMetadataEditor` : `extensions.load("ui_vehicleSelector_vehicleMetadataEditor")`, puis la globale `ui_vehicleSelector_vehicleMetadataEditor`
+--- Sketch of a vehicle metadata editor for the selector. The module is almost empty: its only function returns fixed values. Its reference in the dependencies of ui_vehicleSelector_general is commented out.
+--- Access: extension `ui_vehicleSelector_vehicleMetadataEditor`: `extensions.load("ui_vehicleSelector_vehicleMetadataEditor")`, then the global `ui_vehicleSelector_vehicleMetadataEditor`
 ---@class ui_vehicleSelector_vehicleMetadataEditor
 ui_vehicleSelector_vehicleMetadataEditor = {}
 
---- Renvoie des métadonnées factices de véhicule (nom, description, type), quel que soit l'argument.
----Source : lua/ge/extensions/ui/vehicleSelector/vehicleMetadataEditor.lua:4
----@param data any Ignoré.
----@return table  {name, description, type} avec des valeurs par défaut fixes.
+--- Returns dummy vehicle metadata (name, description, type), whatever the argument.
+---Source: lua/ge/extensions/ui/vehicleSelector/vehicleMetadataEditor.lua:4
+---@param data any Ignored.
+---@return table  {name, description, type} with fixed default values.
 function ui_vehicleSelector_vehicleMetadataEditor.getVehicleMetadataDetails(data) end
 

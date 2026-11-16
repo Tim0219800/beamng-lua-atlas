@@ -1,70 +1,263 @@
 {
   "path": "lua/vehicle/controller/drivingDynamics/supervisors/components/brakeControl.lua",
-  "module": "Composant de freinage du système drivingDynamics (type \"auxiliary\", defaultOrder 70). Il agit comme antipatinage (ordre 30), contrôle de lacet (ordre 50) et ABS (ordre 50) en freinant des roues individuelles. Le freinage antipatinage et de lacet est ajouté chaque pas à wheel.desiredBrakingTorque dans updateWheelsIntermediate ; l'ABS remplace les fonctions de calcul du couple de frein de chaque roue (wheels.setWheelBrakeUpdate). Chaque rôle est géré par des régulateurs PID parallèles configurables dans le jbeam ou via setParameters.",
+  "module": "Braking component of the drivingDynamics system (type \"auxiliary\", defaultOrder 70). It acts as traction control (order 30), yaw control (order 50) and ABS (order 50) by braking individual wheels. The traction and yaw braking is added every step to wheel.desiredBrakingTorque in updateWheelsIntermediate; the ABS replaces each wheel's brake torque computation functions (wheels.setWheelBrakeUpdate). Each role is handled by parallel PID regulators configurable in the jbeam or via setParameters.",
   "notes": [
-    "Clés jbeam de premier niveau : useForTractionControl, useForYawControl, useForABSControl (booléens, vrai par défaut) ; tractionControl (table, obligatoire pour activer le rôle TC) avec wheelGroupSettings (table d'en-tête : motorName, slipThreshold (0.2), slipRangeThreshold (0), maxVelocity (1, m/s), kP/kI/kD (0), integralInCoef (20), integralOutCoef (2)) ; yawControl (table, obligatoire pour activer le rôle YC) avec PIDSettings (table d'en-tête : type = yawAV|slipAngle|frontAxleSlipAngle, kP, kI, kD, integralInCoef, integralOutCoef), yawAVThreshold (0.4), slipAngleThreshold (0.1), frontAxleSlipAngleThreshold (0.2) ; absControl.wheelSettings (table d'en-tête : wheelName, absFrequency (100 Hz), slipThreshold (0.2), kP (5), kI (0.5), kD (0.1), integralInCoef (20), integralOutCoef (20), minSteeringCoef (0.3), steeringCoefYawRate (0.2)).",
-    "Bug potentiel : initSecondStage lit jbeamData.absControl.wheelSettings dès que le superviseur absControl existe et que useForABSControl est vrai, sans vérifier que jbeamData.absControl est défini (erreur Lua si absent).",
-    "Contrôle de lacet : trois PID (écart de lacet, angle de dérive de caisse, angle de dérive combiné avant/arrière) ; le plus fort choisit la roue à freiner : survirage -> roue avant extérieure, sous-virage -> roue arrière intérieure ; le facteur est réduit à basse vitesse de roue (antiblocage, 2..5 rad/s).",
-    "Antipatinage : un PID par roue sur le glissement, pondéré par la vitesse (annulé au-dessus de maxVelocity+1 m/s) et par la plage de glissement du groupe ; le facteur de frein final par roue vaut min(TC + YC, 1) * wheel.brakeTorque, appliqué avec max().",
-    "ABS : à chaque période absTime (1/absFrequency) un PID calcule un coefficient de freinage absCoef selon le glissement, réduit en cas de lacet élevé (steeringCoef) ; sans vitesse > 2 m/s l'ABS est inactif (absCoef = 1). Les limites de couple gauche/droite/centre (absBrakeTorqueLimits) empêchent une roue de freiner bien plus fort que la roue opposée.",
-    "electrics.values.isYCBrakeActive, isTCBrakeActive, isABSBrakeActive (0/1) sont écrites chaque image ; isABSBrakeActive vaut toujours 0 (commentaire « TODO fix whatever this is » dans le code).",
-    "setParameters accepte de nombreuses clés : tractionControl.isEnabled, tractionControl.wheelGroupSettings.<moteur>.(slipThreshold|slipRangeThreshold|maxVelocity), tractionControl.wheelBrakingPID.<roue>.(kP|kI|kD|integralInCoef|integralOutCoef), yawControl.(isEnabled|slipAngleThreshold|yawAvThreshold|frontAxleSlipAngleThreshold), absControl.wheelSettings.<roue>.(kP|kI|kD|integralInCoef|integralOutCoef|slipThreshold|absFrequency|minSteeringCoef|steeringCoefYawRate). Les paramètres des PID de lacet (PIDSettings) sont lus mais pas modifiables via setParameters (ils sont appliqués seulement par setConfig)."
+    "Top-level jbeam keys: useForTractionControl, useForYawControl, useForABSControl (booleans, true by default); tractionControl (table, required to enable the TC role) with wheelGroupSettings (header table: motorName, slipThreshold (0.2), slipRangeThreshold (0), maxVelocity (1, m/s), kP/kI/kD (0), integralInCoef (20), integralOutCoef (2)); yawControl (table, required to enable the YC role) with PIDSettings (header table: type = yawAV|slipAngle|frontAxleSlipAngle, kP, kI, kD, integralInCoef, integralOutCoef), yawAVThreshold (0.4), slipAngleThreshold (0.1), frontAxleSlipAngleThreshold (0.2); absControl.wheelSettings (header table: wheelName, absFrequency (100 Hz), slipThreshold (0.2), kP (5), kI (0.5), kD (0.1), integralInCoef (20), integralOutCoef (20), minSteeringCoef (0.3), steeringCoefYawRate (0.2)).",
+    "Potential bug: initSecondStage reads jbeamData.absControl.wheelSettings as soon as the absControl supervisor exists and useForABSControl is true, without checking that jbeamData.absControl is defined (Lua error if absent).",
+    "Yaw control: three PIDs (yaw error, body slip angle, combined front/rear slip angle); the strongest picks the wheel to brake: oversteer -> outer front wheel, understeer -> inner rear wheel; the factor is reduced at low wheel speed (anti-lock, 2..5 rad/s).",
+    "Traction control: one PID per wheel on the slip, weighted by the speed (zeroed above maxVelocity+1 m/s) and by the group's slip range; the final brake factor per wheel is min(TC + YC, 1) * wheel.brakeTorque, applied with max().",
+    "ABS: every absTime period (1/absFrequency) a PID computes a braking coefficient absCoef based on the slip, reduced at high yaw (steeringCoef); without speed > 2 m/s the ABS is inactive (absCoef = 1). The left/right/center torque limits (absBrakeTorqueLimits) prevent a wheel from braking much harder than the opposite wheel.",
+    "electrics.values.isYCBrakeActive, isTCBrakeActive, isABSBrakeActive (0/1) are written every frame; isABSBrakeActive is always 0 (\"TODO fix whatever this is\" comment in the code).",
+    "setParameters accepts many keys: tractionControl.isEnabled, tractionControl.wheelGroupSettings.<motor>.(slipThreshold|slipRangeThreshold|maxVelocity), tractionControl.wheelBrakingPID.<wheel>.(kP|kI|kD|integralInCoef|integralOutCoef), yawControl.(isEnabled|slipAngleThreshold|yawAvThreshold|frontAxleSlipAngleThreshold), absControl.wheelSettings.<wheel>.(kP|kI|kD|integralInCoef|integralOutCoef|slipThreshold|absFrequency|minSteeringCoef|steeringCoefYawRate). The yaw PID parameters (PIDSettings) are read but not modifiable via setParameters (they are only applied by setConfig)."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution par défaut (70)."},
-    "componentOrderTractionControl": {"type": "number", "desc": "30."},
-    "componentOrderYawControl": {"type": "number", "desc": "50."},
-    "componentOrderABSControl": {"type": "number", "desc": "50."},
-    "isActive": {"type": "boolean", "desc": "Vrai après initSecondStage."},
-    "isActingAsTC": {"type": "boolean", "desc": "Vrai quand un frein d'antipatinage est actif."},
-    "isActingAsYC": {"type": "boolean", "desc": "Vrai quand un frein de contrôle de lacet est actif."},
-    "isActingAsABS": {"type": "boolean", "desc": "Vrai quand l'ABS limite le freinage."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "Default execution order (70)."
+    },
+    "componentOrderTractionControl": {
+      "type": "number",
+      "desc": "30."
+    },
+    "componentOrderYawControl": {
+      "type": "number",
+      "desc": "50."
+    },
+    "componentOrderABSControl": {
+      "type": "number",
+      "desc": "50."
+    },
+    "isActive": {
+      "type": "boolean",
+      "desc": "True after initSecondStage."
+    },
+    "isActingAsTC": {
+      "type": "boolean",
+      "desc": "True when a traction control brake is active."
+    },
+    "isActingAsYC": {
+      "type": "boolean",
+      "desc": "True when a yaw control brake is active."
+    },
+    "isActingAsABS": {
+      "type": "boolean",
+      "desc": "True when the ABS limits the braking."
+    }
   },
   "functions": {
-    "init": {"desc": "Remet à false les indicateurs d'action.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "initSecondStage": {"desc": "Lit la configuration, crée les PID et s'enregistre auprès de tractionControl, yawControl et absControl selon leur présence ; installe les fonctions de frein ABS sur les roues.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (voir notes)."}}, "returns": [], "internal": true},
-    "initLastStage": {"desc": "Mémorise le nombre de roues.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "reset": {"desc": "Remet à zéro indicateurs et PID et réinstalle les fonctions de frein ABS.", "params": {}, "returns": [], "internal": true},
-    "updateWheelsIntermediate": {"desc": "Chaque pas : ajoute à wheel.desiredBrakingTorque le frein TC/YC de chaque roue contrôlée et fait tourner les limites de couple ABS.", "params": {"dt": {"type": "number", "desc": "Pas de temps (s)."}}, "returns": [], "internal": true},
-    "updateGFX": {"desc": "Écrit electrics.values.isYCBrakeActive/isTCBrakeActive/isABSBrakeActive puis les remet à zéro (version debug : envoie aussi un paquet détaillé).", "params": {"dt": {"type": "number", "desc": "Pas de temps graphique (s)."}}, "returns": [], "internal": true},
+    "init": {
+      "desc": "Resets the action flags to false.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initSecondStage": {
+      "desc": "Reads the configuration, creates the PIDs and registers with tractionControl, yawControl and absControl depending on their presence; installs the ABS brake functions on the wheels.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "jbeam data (see notes)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initLastStage": {
+      "desc": "Stores the number of wheels.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Resets flags and PIDs and reinstalls the ABS brake functions.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateWheelsIntermediate": {
+      "desc": "Every step: adds the TC/YC brake of each controlled wheel to wheel.desiredBrakingTorque and rotates the ABS torque limits.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Writes electrics.values.isYCBrakeActive/isTCBrakeActive/isABSBrakeActive then resets them to zero (debug version: also sends a detailed packet).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Graphics time step (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
     "actAsTractionControl": {
-      "desc": "Appelé par tractionControl pour chaque groupe de roues : calcule le facteur de freinage de chaque roue d'après son glissement.",
-      "params": {"wheelGroup": {"type": "table", "desc": "Groupe de roues {name, wheels, wheelCount, slipRange…}."}, "dt": {"type": "number", "desc": "Pas de temps (s)."}},
-      "returns": [{"type": "boolean", "desc": "Vrai si un frein antipatinage est demandé."}],
+      "desc": "Called by tractionControl for each wheel group: computes each wheel's braking factor from its slip.",
+      "params": {
+        "wheelGroup": {
+          "type": "table",
+          "desc": "Wheel group {name, wheels, wheelCount, slipRange...}."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if a traction control brake is requested."
+        }
+      ],
       "internal": true
     },
     "actAsYawControl": {
-      "desc": "Appelé par yawControl : choisit la roue à freiner selon le PID dominant (écart de lacet, angle de dérive de caisse, dérive avant) et fixe son facteur de frein.",
+      "desc": "Called by yawControl: picks the wheel to brake according to the dominant PID (yaw error, body slip angle, front slip) and sets its brake factor.",
       "params": {
-        "measuredYaw": {"type": "number", "desc": "Lacet mesuré (rad/s)."},
-        "expectedYaw": {"type": "number", "desc": "Lacet attendu, non utilisé."},
-        "yawDifference": {"type": "number", "desc": "Écart de lacet (positif = survirage)."},
-        "bodySlipAngle": {"type": "number", "desc": "Angle de dérive de caisse ajusté (rad)."},
-        "frontSlipAngle": {"type": "number", "desc": "Angle de dérive de l'essieu avant (rad)."},
-        "rearSlipAngle": {"type": "number", "desc": "Angle de dérive de l'essieu arrière (rad)."},
-        "dt": {"type": "number", "desc": "Pas de temps (s)."}
+        "measuredYaw": {
+          "type": "number",
+          "desc": "Measured yaw (rad/s)."
+        },
+        "expectedYaw": {
+          "type": "number",
+          "desc": "Expected yaw, unused."
+        },
+        "yawDifference": {
+          "type": "number",
+          "desc": "Yaw error (positive = oversteer)."
+        },
+        "bodySlipAngle": {
+          "type": "number",
+          "desc": "Adjusted body slip angle (rad)."
+        },
+        "frontSlipAngle": {
+          "type": "number",
+          "desc": "Front axle slip angle (rad)."
+        },
+        "rearSlipAngle": {
+          "type": "number",
+          "desc": "Rear axle slip angle (rad)."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "Vrai si une roue est freinée par le contrôle de lacet."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if a wheel is braked by the yaw control."
+        }
+      ],
       "internal": true
     },
     "actAsABSControl": {
-      "desc": "Appelé par le superviseur absControl pour chaque roue : met à jour périodiquement le coefficient ABS (absCoef) via un PID sur le glissement.",
+      "desc": "Called by the absControl supervisor for each wheel: periodically updates the ABS coefficient (absCoef) via a PID on the slip.",
       "params": {
-        "wheelData": {"type": "table", "desc": "Données de roue {wheelName, slip}."},
-        "brake": {"type": "number", "desc": "Entrée de frein 0..1."},
-        "vehicleVelocity": {"type": "number", "desc": "Vitesse du véhicule (m/s)."},
-        "dt": {"type": "number", "desc": "Pas de temps (s)."}
+        "wheelData": {
+          "type": "table",
+          "desc": "Wheel data {wheelName, slip}."
+        },
+        "brake": {
+          "type": "number",
+          "desc": "Brake input 0..1."
+        },
+        "vehicleVelocity": {
+          "type": "number",
+          "desc": "Vehicle speed (m/s)."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "Vrai si l'ABS réduit le freinage (absCoef < 0.9)."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if the ABS reduces braking (absCoef < 0.9)."
+        }
+      ],
       "internal": true
     },
-    "setDebugMode": {"desc": "Active/désactive les paquets de debug.", "params": {"debugEnabled": {"type": "boolean", "desc": "Vrai pour activer."}}, "returns": []},
-    "registerCMU": {"desc": "Mémorise la référence au CMU.", "params": {"cmu": {"type": "table", "desc": "Contrôleur CMU."}}, "returns": [], "internal": true},
-    "shutdown": {"desc": "Désactive le composant.", "params": {}, "returns": []},
-    "setParameters": {"desc": "Applique des paramètres (voir notes) puis reconfigure les PID.", "params": {"parameters": {"type": "table<string, any>", "desc": "Paramètres à appliquer."}}, "returns": []},
-    "setConfig": {"desc": "Remplace la configuration complète et reconfigure les PID.", "params": {"configTable": {"type": "table", "desc": "Table {tractionControl, yawControl, absControl}."}}, "returns": []},
-    "getConfig": {"desc": "Renvoie une copie de la configuration.", "params": {}, "returns": [{"type": "table", "desc": "Copie de la configuration."}]},
-    "sendConfigData": {"desc": "Envoie la configuration au CMU.", "params": {}, "returns": []}
+    "setDebugMode": {
+      "desc": "Enables/disables debug packets.",
+      "params": {
+        "debugEnabled": {
+          "type": "boolean",
+          "desc": "True to enable."
+        }
+      },
+      "returns": []
+    },
+    "registerCMU": {
+      "desc": "Stores the reference to the CMU.",
+      "params": {
+        "cmu": {
+          "type": "table",
+          "desc": "CMU controller."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "shutdown": {
+      "desc": "Disables the component.",
+      "params": {},
+      "returns": []
+    },
+    "setParameters": {
+      "desc": "Applies parameters (see notes) then reconfigures the PIDs.",
+      "params": {
+        "parameters": {
+          "type": "table<string, any>",
+          "desc": "Parameters to apply."
+        }
+      },
+      "returns": []
+    },
+    "setConfig": {
+      "desc": "Replaces the entire configuration and reconfigures the PIDs.",
+      "params": {
+        "configTable": {
+          "type": "table",
+          "desc": "Table {tractionControl, yawControl, absControl}."
+        }
+      },
+      "returns": []
+    },
+    "getConfig": {
+      "desc": "Returns a copy of the configuration.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy of the configuration."
+        }
+      ]
+    },
+    "sendConfigData": {
+      "desc": "Sends the configuration to the CMU.",
+      "params": {},
+      "returns": []
+    }
   }
 }

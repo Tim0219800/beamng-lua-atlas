@@ -1,64 +1,64 @@
 # `gameplay_vehiclePresencePolicy`
 
-*Fichier : `lua/ge/extensions/gameplay/vehiclePresencePolicy.lua` · VM : Game Engine (GE) · 38 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/vehiclePresencePolicy.lua` · VM: Game Engine (GE) · 38 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_vehiclePresencePolicy` : `extensions.load("gameplay_vehiclePresencePolicy")`, puis la globale `gameplay_vehiclePresencePolicy`
+**Access:** extension `gameplay_vehiclePresencePolicy`: `extensions.load("gameplay_vehiclePresencePolicy")`, then the global `gameplay_vehiclePresencePolicy`
 
-Règles pures (sans état) décrivant la « présence » d'un joueur par rapport à un véhicule : driver (conducteur), passenger (passager) ou unrestricted (sans restriction). Dit si une carte d'actions d'entrée est autorisée pour un mode donné et quel mode non assis utiliser par défaut. Pas de hook ni d'état : on l'utilise comme bibliothèque.
+Pure (stateless) rules describing a player's "presence" relative to a vehicle: driver, passenger or unrestricted. Tells whether an input action map is allowed for a given mode and which unseated mode to use by default. No hook or state: it is used as a library.
 
-## Exemple
+## Example
 
 ```lua
 local policy = require("gameplay/vehiclePresencePolicy")
 if policy.allowsActionMap(mode, "driving") then ... end
 ```
 
-## Remarques
+## Notes
 
-- Modes valides : driver, passenger, unrestricted.
-- allowsActionMap : unrestricted autorise tout ; driver n'autorise que la carte « driving » ; passenger n'autorise rien.
-- Le fichier se charge par require("gameplay/vehiclePresencePolicy") ; le nom d'extension gameplay_vehiclePresencePolicy n'est pas nécessairement chargé par extensions.load.
+- Valid modes: driver, passenger, unrestricted.
+- allowsActionMap: unrestricted allows everything; driver only allows the "driving" map; passenger allows nothing.
+- The file is loaded with require("gameplay/vehiclePresencePolicy"); the extension name gameplay_vehiclePresencePolicy is not necessarily loaded by extensions.load.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_vehiclePresencePolicy.allowsActionMap(mode, mapKind)` | Indique si une carte d'actions est autorisée pour le mode. | 28 |
-| `gameplay_vehiclePresencePolicy.defaultUnseatedMode(context)` | Mode par défaut d'un joueur non assis : « unrestricted » en freeroam (ou sans mode) quand le multi-siège n'est pas actif, « passenger » sinon. | 21 |
-| `gameplay_vehiclePresencePolicy.isValidMode(mode)` | Teste si une valeur est un mode connu. | 13 |
-| `gameplay_vehiclePresencePolicy.normalizeMode(mode, fallback)` | Renvoie le mode s'il est valide, sinon le mode de repli s'il est valide, sinon « passenger ». | 17 |
+| `gameplay_vehiclePresencePolicy.allowsActionMap(mode, mapKind)` | Indicates whether an action map is allowed for the mode. | 28 |
+| `gameplay_vehiclePresencePolicy.defaultUnseatedMode(context)` | Default mode of an unseated player: "unrestricted" in freeroam (or without a mode) when multiseat is not active, "passenger" otherwise. | 21 |
+| `gameplay_vehiclePresencePolicy.isValidMode(mode)` | Tests whether a value is a known mode. | 13 |
+| `gameplay_vehiclePresencePolicy.normalizeMode(mode, fallback)` | Returns the mode if valid, otherwise the fallback mode if valid, otherwise "passenger". | 17 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_vehiclePresencePolicy.allowsActionMap(mode, mapKind)`
 
-Indique si une carte d'actions est autorisée pour le mode.
+Indicates whether an action map is allowed for the mode.
 
-- `mode` (*string*) : Mode de présence.
-- `mapKind` (*string*) : Type de carte d'actions (par ex. « driving », « slot »).
-- **renvoie** : boolean 
+- `mode` (*string*) : Presence mode.
+- `mapKind` (*string*) : Action map type (e.g. "driving", "slot").
+- **returns**: boolean 
 
 #### `gameplay_vehiclePresencePolicy.defaultUnseatedMode(context)`
 
-Mode par défaut d'un joueur non assis : « unrestricted » en freeroam (ou sans mode) quand le multi-siège n'est pas actif, « passenger » sinon.
+Default mode of an unseated player: "unrestricted" in freeroam (or without a mode) when multiseat is not active, "passenger" otherwise.
 
 - `context` (*table|nil*) : {mode = "freeroam"|"multiplayer"|"career"|..., isMultiseatActive = boolean}
-- **renvoie** : string "unrestricted" ou "passenger"
+- **returns**: string "unrestricted" or "passenger"
 
 #### `gameplay_vehiclePresencePolicy.isValidMode(mode)`
 
-Teste si une valeur est un mode connu.
+Tests whether a value is a known mode.
 
-- `mode` (*any*) : Valeur à tester.
-- **renvoie** : boolean true pour driver, passenger ou unrestricted.
+- `mode` (*any*) : Value to test.
+- **returns**: boolean true for driver, passenger or unrestricted.
 
 #### `gameplay_vehiclePresencePolicy.normalizeMode(mode, fallback)`
 
-Renvoie le mode s'il est valide, sinon le mode de repli s'il est valide, sinon « passenger ».
+Returns the mode if valid, otherwise the fallback mode if valid, otherwise "passenger".
 
-- `mode` (*any*) : Mode demandé.
-- `fallback` (*any*) : Mode de repli facultatif.
-- **renvoie** : string Un mode valide.
+- `mode` (*any*) : Requested mode.
+- `fallback` (*any*) : Optional fallback mode.
+- **returns**: string A valid mode.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/vehiclePresencePolicy.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/vehiclePresencePolicy.lua`.*

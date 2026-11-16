@@ -1,12 +1,12 @@
 # `gameplay_pursuit_pursuit`
 
-*Fichier : `lua/ge/extensions/gameplay/pursuit/pursuit.lua` · VM : Game Engine (GE) · 784 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/pursuit/pursuit.lua` · VM: Game Engine (GE) · 784 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_pursuit_pursuit` : `extensions.load("gameplay_pursuit_pursuit")`, puis la globale `gameplay_pursuit_pursuit`
+**Access:** extension `gameplay_pursuit_pursuit`: `extensions.load("gameplay_pursuit_pursuit")`, then the global `gameplay_pursuit_pursuit`
 
-Gestionnaire de mode poursuite : événement de gameplay où plusieurs véhicules « chase » (police) poursuivent plusieurs véhicules « flee » (fuyards), joueurs ou IA. Une seule instance à la fois. Il insère les véhicules (rôles police/suspect), gère les objectifs (mode free, timed, score, destination), le démarrage (manuel ou à une vitesse donnée), les arrestations, la récupération des fuyards libérés et la détection de blocage. Les états du gestionnaire sont 'off', 'ready', 'active', 'inactive' et 'complete'.
+Pursuit mode manager: a gameplay event where several "chase" vehicles (police) pursue several "flee" vehicles (fugitives), players or AI. Only one instance at a time. It inserts the vehicles (police/suspect roles), handles the goals (free, timed, score, destination modes), the start (manual or at a given speed), arrests, recovery of released fugitives and stuck detection. The manager states are 'off', 'ready', 'active', 'inactive' and 'complete'.
 
-## Exemple
+## Example
 
 ```lua
 local p = gameplay_pursuit_pursuit
@@ -14,183 +14,183 @@ p.setupPursuit(policeId, suspectId, {gameMode = 'timed', timeLimit = 120, recove
 p.start()
 ```
 
-## Remarques
+## Notes
 
-- Options lues : gameMode, timeLimit, scoreGoal, arrestGoal, locationGoal, startSpeed (démarrage auto quand un fuyard atteint cette vitesse, m/s), recoveryMode ('none', 'basic', 'teleportRoad', 'teleportStart', 'teleportRandom', sinon fondu seul), autoRecovery, shuffleVehGroups, shuffleSpots, zoneName.
-- Contraintes d'objectifs (setupGoals) : mode timed -> temps >= 30 s et arrestGoal = nombre de fuyards si <= 0 ; mode score -> score >= 100 ; mode destination -> locations >= 1.
-- Gagnants passés à stop(winner) et au hook onPursuitGameplayFinished : 'flee' ou 'chase' ; temps écoulé en mode timed = victoire des fuyards, sinon des poursuivants ; 'none' si tous les véhicules sont bloqués.
-- Une période de grâce de 10 s (defaults.graceTime) empêche les arrestations et la détection de blocage au début ; tous les véhicules à moins de 2,5 m/s pendant 10 s consécutives sont considérés bloqués.
-- Hooks émis : onPursuitGameplayStarted, onPursuitGameplayFinished({winningTeam}), onPursuitGameplayEvent('recoverAll'|'stuckAll'), onPursuitAction (pour les fuyards).
-- Bug probable dans onPursuitAction (arrest) : la boucle sur chaseVehs réutilise le nom vehId pour sa variable, donc `vehData.role.targetId == vehId` compare à l'id du poursuivant lui-même, pas à celui de l'arrêté.
-- Bug probable dans onPursuitAction (evade) : la cible suivante teste `targetVeh.pursuitUsable` (déjà mis à false) au lieu de vehData.pursuitUsable : nextTargetId reste nil et les poursuivants sont simplement réinitialisés.
-- Bug probable dans setupVehiclesFromFiles : parkingSpots est redéclarée en `local` dans le bloc if, la variable extérieure reste nil : les points de départ des fichiers de sites ne sont jamais utilisés (placement automatique 'roadAhead').
-- Quand un véhicule est déjà dans le trafic, ses données sont partagées (isShared) ; il a ignorePursuit = true pour que le système de police principal l'ignore.
-- reset() est appelé au chargement du module et réinitialise aussi les variables de poursuite de gameplay_police.
+- Options read: gameMode, timeLimit, scoreGoal, arrestGoal, locationGoal, startSpeed (auto start when a fugitive reaches this speed, m/s), recoveryMode ('none', 'basic', 'teleportRoad', 'teleportStart', 'teleportRandom', otherwise fade only), autoRecovery, shuffleVehGroups, shuffleSpots, zoneName.
+- Goal constraints (setupGoals): timed mode -> time >= 30 s and arrestGoal = number of fugitives if <= 0; score mode -> score >= 100; destination mode -> locations >= 1.
+- Winners passed to stop(winner) and to the onPursuitGameplayFinished hook: 'flee' or 'chase'; time elapsed in timed mode = fugitives win, otherwise the pursuers; 'none' if all vehicles are stuck.
+- A 10 s grace period (defaults.graceTime) prevents arrests and stuck detection at the start; all vehicles under 2.5 m/s for 10 consecutive seconds are considered stuck.
+- Emitted hooks: onPursuitGameplayStarted, onPursuitGameplayFinished({winningTeam}), onPursuitGameplayEvent('recoverAll'|'stuckAll'), onPursuitAction (for fugitives).
+- Probable bug in onPursuitAction (arrest): the loop over chaseVehs reuses the name vehId for its variable, so `vehData.role.targetId == vehId` compares to the pursuer's own id, not the arrested one's.
+- Probable bug in onPursuitAction (evade): the next-target test uses `targetVeh.pursuitUsable` (already set to false) instead of vehData.pursuitUsable: nextTargetId stays nil and the pursuers are simply reset.
+- Probable bug in setupVehiclesFromFiles: parkingSpots is redeclared as `local` inside the if block, the outer variable stays nil: the start points from the sites files are never used (automatic 'roadAhead' placement).
+- When a vehicle is already in traffic, its data is shared (isShared); it has ignorePursuit = true so the main police system ignores it.
+- reset() is called on module load and also resets the gameplay_police pursuit variables.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_pursuit_pursuit.filterParkingSpots(parkingSpots, chaseAmount, fleeAmount)` | Copie la liste de points de parking et, si les deux quantités sont données, la réarrange en n points tagués 'chase' puis n points tagués 'flee' (sans tag inverse). Garde la liste d'origine si les deux listes ne sont pas assez remplies. | 280 |
-| `gameplay_pursuit_pursuit.getManager()` | Renvoie l'objet gestionnaire (vehData, vehIds, chaseVehs, fleeVehs, options, goals, state, running, data{duration, arrests, totalScore, tempScore, locations, roadblocks}). | 507 |
-| `gameplay_pursuit_pursuit.insertVeh(vehId, isChase, isAiControlled, options)` | Valide et insère un véhicule dans le gestionnaire. Réutilise les données de trafic s'il y en a (isShared), sinon crée un objet véhicule de trafic. Lui donne le rôle police ou suspect, désactive respawn et pooling, et met l'IA en mode 'stop' (ou 'disabled' pour un joueur). | 106 |
-| `gameplay_pursuit_pursuit.onDeserialized(data)` | Hook après rechargement Lua : réinitialise puis restaure le gestionnaire et réinsère les véhicules. *(interne)* *(hook)* | 746 |
-| `gameplay_pursuit_pursuit.onPursuitAction(vehId, action, pursuit)` | Hook émis par gameplay_police pour une action de poursuite. Actif seulement si l'état est 'active' et pour un fuyard : 'arrest' compte l'arrestation, 'evade' retire le fuyard du ciblage, 'release' applique le recoveryMode. *(interne)* *(hook)* | 511 |
-| `gameplay_pursuit_pursuit.onSerialize()` | Hook avant rechargement Lua : renvoie l'état du gestionnaire (options, objectifs, données, état) et les données sérialisées des véhicules. *(interne)* *(hook)* | 719 |
-| `gameplay_pursuit_pursuit.onTrafficAmountChanged()` | Hook de changement du nombre de véhicules de trafic ; ne fait rien. *(interne)* *(hook)* | 716 |
-| `gameplay_pursuit_pursuit.onTrafficStarted()` | Hook au démarrage du trafic : remplace les entrées de trafic par les données du gestionnaire pour les véhicules qui en font partie. *(interne)* *(hook)* | 704 |
-| `gameplay_pursuit_pursuit.onTrafficStopped()` | Hook à l'arrêt du trafic ; ne fait rien. *(interne)* *(hook)* | 713 |
-| `gameplay_pursuit_pursuit.onUpdate(dt, dtSim)` | Appelé à chaque image. Met à jour les véhicules non partagés, déclenche le démarrage automatique (options.startSpeed), et en jeu actif : durée, ciblage chaque seconde, détection de blocage, récupération, fondus, score total et conditions de victoire. *(interne)* *(hook)* | 560 |
-| `gameplay_pursuit_pursuit.onVehicleGroupSpawned(vehList, groupId, groupName)` | Hook de core_multiSpawn : quand les groupes 'autoPursuitChase' puis 'autoPursuitFlee' sont apparus, appelle setupPursuitMulti avec les données mémorisées ; échoue (reset) si l'un des groupes est vide. *(interne)* *(hook)* | 682 |
-| `gameplay_pursuit_pursuit.removeVeh(vehId)` | Retire un véhicule du gestionnaire et lui rend son rôle automatique de trafic s'il en fait partie. | 159 |
-| `gameplay_pursuit_pursuit.reset()` | Réinitialise complètement le gestionnaire (arrête le gameplay s'il tourne, vide les véhicules, remet l'état à 'off', réinitialise les véhicules et les variables de gameplay_police). | 221 |
-| `gameplay_pursuit_pursuit.restart()` | Remet le gameplay à l'état 'ready' sans vider le gestionnaire : réinitialise les données, les poursuites et renvoie les véhicules à leur position d'origine (interactRecovery loadHome). Ne démarre pas. | 241 |
-| `gameplay_pursuit_pursuit.setupGoals(options)` | Calcule les objectifs (mode, temps, score, arrestations, lieux) à partir des options ; applique des minimums selon le mode. | 70 |
-| `gameplay_pursuit_pursuit.setupPursuit(chaseVehId, fleeVehId, options, pursuitVars)` | Crée une poursuite avec un poursuivant et un fuyard existants (réinitialise d'abord le gestionnaire s'il n'est pas 'off'). Passe en état 'ready'. | 310 |
-| `gameplay_pursuit_pursuit.setupPursuitMulti(chaseVehIds, fleeVehIds, options, pursuitVars)` | Crée une poursuite avec plusieurs poursuivants et fuyards. Échoue (reset) s'il n'y a aucun poursuivant ou aucun fuyard inséré ; avertit si certains ont échoué. | 342 |
-| `gameplay_pursuit_pursuit.setupVehicles(chaseAmount, fleeAmount, chaseVehGroup, fleeVehGroup, parkingSpots, options, pursuitVars)` | Fait apparaître les groupes de véhicules (core_multiSpawn.spawnGroup, noms 'autoPursuitChase' et 'autoPursuitFlee') puis, via onVehicleGroupSpawned, appelle setupPursuitMulti. Utilise les points de parking fournis, sinon place les véhicules sur la route devant (écart 15 m). | 420 |
-| `gameplay_pursuit_pursuit.setupVehiclesFromFiles(chaseAmount, fleeAmount, chaseVehGroupFile, fleeVehGroupFile, sitesFile, options, pursuitVars)` | Comme setupVehicles mais lit les groupes de véhicules (champ data) dans des fichiers JSON, et éventuellement les points de parking d'un fichier de sites (zone optionnelle options.zoneName, mélange options.shuffleSpots, filtre par tags chase/flee). | 448 |
-| `gameplay_pursuit_pursuit.start()` | Démarre le gameplay (états 'ready' ou 'inactive' seulement) : active les véhicules (poursuivants en action pursuitStart niveau 3, fuyards en fleePolice) et émet onPursuitGameplayStarted. | 250 |
-| `gameplay_pursuit_pursuit.stop(winner)` | Arrête le gameplay actif. Avec un gagnant, l'état devient 'complete', les poursuites des fuyards sont réinitialisées et onPursuitGameplayFinished est émis ; sans gagnant, l'état devient 'inactive'. | 258 |
+| `gameplay_pursuit_pursuit.filterParkingSpots(parkingSpots, chaseAmount, fleeAmount)` | Copies the parking point list and, if both quantities are given, rearranges it into n points tagged 'chase' then n points tagged 'flee' (without the opposite tag). Keeps the original list if the two lists are not filled enough. | 280 |
+| `gameplay_pursuit_pursuit.getManager()` | Returns the manager object (vehData, vehIds, chaseVehs, fleeVehs, options, goals, state, running, data{duration, arrests, totalScore, tempScore, locations, roadblocks}). | 507 |
+| `gameplay_pursuit_pursuit.insertVeh(vehId, isChase, isAiControlled, options)` | Validates and inserts a vehicle into the manager. Reuses the traffic data if there is any (isShared), otherwise creates a traffic vehicle object. Gives it the police or suspect role, disables respawn and pooling, and sets the AI to 'stop' mode (or 'disabled' for a player). | 106 |
+| `gameplay_pursuit_pursuit.onDeserialized(data)` | Hook after Lua reload: resets then restores the manager and reinserts the vehicles. *(internal)* *(hook)* | 746 |
+| `gameplay_pursuit_pursuit.onPursuitAction(vehId, action, pursuit)` | Hook emitted by gameplay_police for a pursuit action. Active only if the state is 'active' and for a fugitive: 'arrest' counts the arrest, 'evade' removes the fugitive from targeting, 'release' applies the recoveryMode. *(internal)* *(hook)* | 511 |
+| `gameplay_pursuit_pursuit.onSerialize()` | Hook before Lua reload: returns the manager state (options, goals, data, state) and the serialized vehicle data. *(internal)* *(hook)* | 719 |
+| `gameplay_pursuit_pursuit.onTrafficAmountChanged()` | Hook on change of the number of traffic vehicles; does nothing. *(internal)* *(hook)* | 716 |
+| `gameplay_pursuit_pursuit.onTrafficStarted()` | Hook at traffic start: replaces the traffic entries with the manager's data for the vehicles that are part of it. *(internal)* *(hook)* | 704 |
+| `gameplay_pursuit_pursuit.onTrafficStopped()` | Hook at traffic stop; does nothing. *(internal)* *(hook)* | 713 |
+| `gameplay_pursuit_pursuit.onUpdate(dt, dtSim)` | Called every frame. Updates the non-shared vehicles, triggers the automatic start (options.startSpeed), and in active play: duration, targeting every second, stuck detection, recovery, fades, total score and victory conditions. *(internal)* *(hook)* | 560 |
+| `gameplay_pursuit_pursuit.onVehicleGroupSpawned(vehList, groupId, groupName)` | core_multiSpawn hook: when the 'autoPursuitChase' then 'autoPursuitFlee' groups have spawned, calls setupPursuitMulti with the stored data; fails (reset) if one of the groups is empty. *(internal)* *(hook)* | 682 |
+| `gameplay_pursuit_pursuit.removeVeh(vehId)` | Removes a vehicle from the manager and gives it back its automatic traffic role if it is part of it. | 159 |
+| `gameplay_pursuit_pursuit.reset()` | Completely resets the manager (stops the gameplay if running, clears the vehicles, sets the state to 'off', resets the vehicles and the gameplay_police variables). | 221 |
+| `gameplay_pursuit_pursuit.restart()` | Sets the gameplay back to the 'ready' state without clearing the manager: resets the data, the pursuits and returns the vehicles to their original position (interactRecovery loadHome). Does not start. | 241 |
+| `gameplay_pursuit_pursuit.setupGoals(options)` | Computes the goals (mode, time, score, arrests, locations) from the options; applies minimums depending on the mode. | 70 |
+| `gameplay_pursuit_pursuit.setupPursuit(chaseVehId, fleeVehId, options, pursuitVars)` | Creates a pursuit with one existing pursuer and one existing fugitive (first resets the manager if it is not 'off'). Moves to the 'ready' state. | 310 |
+| `gameplay_pursuit_pursuit.setupPursuitMulti(chaseVehIds, fleeVehIds, options, pursuitVars)` | Creates a pursuit with several pursuers and fugitives. Fails (reset) if there is no pursuer or no fugitive inserted; warns if some failed. | 342 |
+| `gameplay_pursuit_pursuit.setupVehicles(chaseAmount, fleeAmount, chaseVehGroup, fleeVehGroup, parkingSpots, options, pursuitVars)` | Spawns the vehicle groups (core_multiSpawn.spawnGroup, names 'autoPursuitChase' and 'autoPursuitFlee') then, via onVehicleGroupSpawned, calls setupPursuitMulti. Uses the provided parking points, otherwise places the vehicles on the road ahead (15 m gap). | 420 |
+| `gameplay_pursuit_pursuit.setupVehiclesFromFiles(chaseAmount, fleeAmount, chaseVehGroupFile, fleeVehGroupFile, sitesFile, options, pursuitVars)` | Like setupVehicles but reads the vehicle groups (data field) from JSON files, and optionally the parking points from a sites file (optional zone options.zoneName, shuffle options.shuffleSpots, filter by chase/flee tags). | 448 |
+| `gameplay_pursuit_pursuit.start()` | Starts the gameplay ('ready' or 'inactive' states only): activates the vehicles (pursuers in pursuitStart action level 3, fugitives in fleePolice) and emits onPursuitGameplayStarted. | 250 |
+| `gameplay_pursuit_pursuit.stop(winner)` | Stops the active gameplay. With a winner, the state becomes 'complete', the fugitives' pursuits are reset and onPursuitGameplayFinished is emitted; without a winner, the state becomes 'inactive'. | 258 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_pursuit_pursuit.filterParkingSpots(parkingSpots, chaseAmount, fleeAmount)`
 
-Copie la liste de points de parking et, si les deux quantités sont données, la réarrange en n points tagués 'chase' puis n points tagués 'flee' (sans tag inverse). Garde la liste d'origine si les deux listes ne sont pas assez remplies.
+Copies the parking point list and, if both quantities are given, rearranges it into n points tagged 'chase' then n points tagged 'flee' (without the opposite tag). Keeps the original list if the two lists are not filled enough.
 
-- `parkingSpots` (*table[]*) : Points de parking avec customFields.tags.
-- `chaseAmount` (*integer|nil*) : Nombre de points chase voulus.
-- `fleeAmount` (*integer|nil*) : Nombre de points flee voulus.
-- **renvoie** : table[] Liste filtrée (copie superficielle).
+- `parkingSpots` (*table[]*) : Parking points with customFields.tags.
+- `chaseAmount` (*integer|nil*) : Number of chase points wanted.
+- `fleeAmount` (*integer|nil*) : Number of flee points wanted.
+- **returns**: table[] Filtered list (shallow copy).
 
 #### `gameplay_pursuit_pursuit.getManager()`
 
-Renvoie l'objet gestionnaire (vehData, vehIds, chaseVehs, fleeVehs, options, goals, state, running, data{duration, arrests, totalScore, tempScore, locations, roadblocks}).
+Returns the manager object (vehData, vehIds, chaseVehs, fleeVehs, options, goals, state, running, data{duration, arrests, totalScore, tempScore, locations, roadblocks}).
 
-- **renvoie** : table Gestionnaire (référence directe).
+- **returns**: table Manager (direct reference).
 
 #### `gameplay_pursuit_pursuit.insertVeh(vehId, isChase, isAiControlled, options)`
 
-Valide et insère un véhicule dans le gestionnaire. Réutilise les données de trafic s'il y en a (isShared), sinon crée un objet véhicule de trafic. Lui donne le rôle police ou suspect, désactive respawn et pooling, et met l'IA en mode 'stop' (ou 'disabled' pour un joueur).
+Validates and inserts a vehicle into the manager. Reuses the traffic data if there is any (isShared), otherwise creates a traffic vehicle object. Gives it the police or suspect role, disables respawn and pooling, and sets the AI to 'stop' mode (or 'disabled' for a player).
 
-- `vehId` (*integer*) : Id du véhicule.
-- `isChase` (*boolean*) : true = poursuivant, false = fuyard.
-- `isAiControlled` (*boolean*) : true si piloté par l'IA (non utilisable par le joueur).
-- `options` (*table|nil*) : Options (non utilisées dans la fonction).
-- **renvoie** : boolean|nil true si inséré, false si les données n'ont pu être créées, nil si id absent ou déjà inséré.
+- `vehId` (*integer*) : Vehicle id.
+- `isChase` (*boolean*) : true = pursuer, false = fugitive.
+- `isAiControlled` (*boolean*) : true if driven by the AI (not usable by the player).
+- `options` (*table|nil*) : Options (not used in the function).
+- **returns**: boolean|nil true if inserted, false if the data could not be created, nil if id is missing or already inserted.
 
 #### `gameplay_pursuit_pursuit.onDeserialized(data)`
 
-Hook après rechargement Lua : réinitialise puis restaure le gestionnaire et réinsère les véhicules.
+Hook after Lua reload: resets then restores the manager and reinserts the vehicles.
 
-- `data` (*table*) : Résultat de onSerialize.
+- `data` (*table*) : Result of onSerialize.
 
 #### `gameplay_pursuit_pursuit.onPursuitAction(vehId, action, pursuit)`
 
-Hook émis par gameplay_police pour une action de poursuite. Actif seulement si l'état est 'active' et pour un fuyard : 'arrest' compte l'arrestation, 'evade' retire le fuyard du ciblage, 'release' applique le recoveryMode.
+Hook emitted by gameplay_police for a pursuit action. Active only if the state is 'active' and for a fugitive: 'arrest' counts the arrest, 'evade' removes the fugitive from targeting, 'release' applies the recoveryMode.
 
-- `vehId` (*integer*) : Fuyard concerné.
+- `vehId` (*integer*) : Fugitive concerned.
 - `action` (*string*) : 'start', 'arrest', 'evade', 'release', 'roadblockAlert', 'roadblock'.
-- `pursuit` (*table*) : Données de poursuite du véhicule.
+- `pursuit` (*table*) : Pursuit data of the vehicle.
 
 #### `gameplay_pursuit_pursuit.onSerialize()`
 
-Hook avant rechargement Lua : renvoie l'état du gestionnaire (options, objectifs, données, état) et les données sérialisées des véhicules.
+Hook before Lua reload: returns the manager state (options, goals, data, state) and the serialized vehicle data.
 
-- **renvoie** : table {manager, vehicles}
+- **returns**: table {manager, vehicles}
 
 #### `gameplay_pursuit_pursuit.onUpdate(dt, dtSim)`
 
-Appelé à chaque image. Met à jour les véhicules non partagés, déclenche le démarrage automatique (options.startSpeed), et en jeu actif : durée, ciblage chaque seconde, détection de blocage, récupération, fondus, score total et conditions de victoire.
+Called every frame. Updates the non-shared vehicles, triggers the automatic start (options.startSpeed), and in active play: duration, targeting every second, stuck detection, recovery, fades, total score and victory conditions.
 
-- `dt` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
+- `dt` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
 
 #### `gameplay_pursuit_pursuit.onVehicleGroupSpawned(vehList, groupId, groupName)`
 
-Hook de core_multiSpawn : quand les groupes 'autoPursuitChase' puis 'autoPursuitFlee' sont apparus, appelle setupPursuitMulti avec les données mémorisées ; échoue (reset) si l'un des groupes est vide.
+core_multiSpawn hook: when the 'autoPursuitChase' then 'autoPursuitFlee' groups have spawned, calls setupPursuitMulti with the stored data; fails (reset) if one of the groups is empty.
 
-- `vehList` (*integer[]*) : Ids des véhicules apparus.
-- `groupId` (*any*) : Id du groupe (inutilisé).
-- `groupName` (*string*) : Nom du groupe.
+- `vehList` (*integer[]*) : Ids of the spawned vehicles.
+- `groupId` (*any*) : Group id (unused).
+- `groupName` (*string*) : Group name.
 
 #### `gameplay_pursuit_pursuit.removeVeh(vehId)`
 
-Retire un véhicule du gestionnaire et lui rend son rôle automatique de trafic s'il en fait partie.
+Removes a vehicle from the manager and gives it back its automatic traffic role if it is part of it.
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `gameplay_pursuit_pursuit.setupGoals(options)`
 
-Calcule les objectifs (mode, temps, score, arrestations, lieux) à partir des options ; applique des minimums selon le mode.
+Computes the goals (mode, time, score, arrests, locations) from the options; applies minimums depending on the mode.
 
-- `options` (*table|nil*) : gameMode, timeLimit, scoreGoal, arrestGoal, locationGoal ; défaut manager.options.
+- `options` (*table|nil*) : gameMode, timeLimit, scoreGoal, arrestGoal, locationGoal; default manager.options.
 
 #### `gameplay_pursuit_pursuit.setupPursuit(chaseVehId, fleeVehId, options, pursuitVars)`
 
-Crée une poursuite avec un poursuivant et un fuyard existants (réinitialise d'abord le gestionnaire s'il n'est pas 'off'). Passe en état 'ready'.
+Creates a pursuit with one existing pursuer and one existing fugitive (first resets the manager if it is not 'off'). Moves to the 'ready' state.
 
-- `chaseVehId` (*integer*) : Id du poursuivant.
-- `fleeVehId` (*integer*) : Id du fuyard.
-- `options` (*table|nil*) : Options de gameplay.
-- `pursuitVars` (*table|nil*) : Variables passées à gameplay_police.setPursuitVars.
-- **renvoie** : boolean false si l'un des véhicules est introuvable.
+- `chaseVehId` (*integer*) : Pursuer id.
+- `fleeVehId` (*integer*) : Fugitive id.
+- `options` (*table|nil*) : Gameplay options.
+- `pursuitVars` (*table|nil*) : Variables passed to gameplay_police.setPursuitVars.
+- **returns**: boolean false if one of the vehicles is not found.
 
 #### `gameplay_pursuit_pursuit.setupPursuitMulti(chaseVehIds, fleeVehIds, options, pursuitVars)`
 
-Crée une poursuite avec plusieurs poursuivants et fuyards. Échoue (reset) s'il n'y a aucun poursuivant ou aucun fuyard inséré ; avertit si certains ont échoué.
+Creates a pursuit with several pursuers and fugitives. Fails (reset) if there is no pursuer or no fugitive inserted; warns if some failed.
 
-- `chaseVehIds` (*integer[]*) : Ids des poursuivants.
-- `fleeVehIds` (*integer[]*) : Ids des fuyards.
-- `options` (*table|nil*) : Options de gameplay.
-- `pursuitVars` (*table|nil*) : Variables de poursuite.
-- **renvoie** : boolean true si la configuration est prête.
+- `chaseVehIds` (*integer[]*) : Pursuer ids.
+- `fleeVehIds` (*integer[]*) : Fugitive ids.
+- `options` (*table|nil*) : Gameplay options.
+- `pursuitVars` (*table|nil*) : Pursuit variables.
+- **returns**: boolean true if the setup is ready.
 
 #### `gameplay_pursuit_pursuit.setupVehicles(chaseAmount, fleeAmount, chaseVehGroup, fleeVehGroup, parkingSpots, options, pursuitVars)`
 
-Fait apparaître les groupes de véhicules (core_multiSpawn.spawnGroup, noms 'autoPursuitChase' et 'autoPursuitFlee') puis, via onVehicleGroupSpawned, appelle setupPursuitMulti. Utilise les points de parking fournis, sinon place les véhicules sur la route devant (écart 15 m).
+Spawns the vehicle groups (core_multiSpawn.spawnGroup, names 'autoPursuitChase' and 'autoPursuitFlee') then, via onVehicleGroupSpawned, calls setupPursuitMulti. Uses the provided parking points, otherwise places the vehicles on the road ahead (15 m gap).
 
-- `chaseAmount` (*integer|nil*) : Nombre de poursuivants (défaut 1).
-- `fleeAmount` (*integer|nil*) : Nombre de fuyards (défaut 1).
-- `chaseVehGroup` (*table|nil*) : Groupe de véhicules {model, config…} des poursuivants.
-- `fleeVehGroup` (*table|nil*) : Groupe des fuyards.
-- `parkingSpots` (*table[]|nil*) : Points {pos, rot}, les premiers pour les poursuivants.
-- `options` (*table|nil*) : Options (shuffleVehGroups…).
-- `pursuitVars` (*table|nil*) : Variables de poursuite.
-- **renvoie** : boolean false si une quantité est inférieure à 1.
+- `chaseAmount` (*integer|nil*) : Number of pursuers (default 1).
+- `fleeAmount` (*integer|nil*) : Number of fugitives (default 1).
+- `chaseVehGroup` (*table|nil*) : Vehicle group {model, config...} of the pursuers.
+- `fleeVehGroup` (*table|nil*) : Fugitives' group.
+- `parkingSpots` (*table[]|nil*) : Points {pos, rot}, the first ones for the pursuers.
+- `options` (*table|nil*) : Options (shuffleVehGroups...).
+- `pursuitVars` (*table|nil*) : Pursuit variables.
+- **returns**: boolean false if a quantity is less than 1.
 
 #### `gameplay_pursuit_pursuit.setupVehiclesFromFiles(chaseAmount, fleeAmount, chaseVehGroupFile, fleeVehGroupFile, sitesFile, options, pursuitVars)`
 
-Comme setupVehicles mais lit les groupes de véhicules (champ data) dans des fichiers JSON, et éventuellement les points de parking d'un fichier de sites (zone optionnelle options.zoneName, mélange options.shuffleSpots, filtre par tags chase/flee).
+Like setupVehicles but reads the vehicle groups (data field) from JSON files, and optionally the parking points from a sites file (optional zone options.zoneName, shuffle options.shuffleSpots, filter by chase/flee tags).
 
-- `chaseAmount` (*integer*) : Nombre de poursuivants (>= 1).
-- `fleeAmount` (*integer*) : Nombre de fuyards (>= 1).
-- `chaseVehGroupFile` (*string*) : Chemin du JSON du groupe de poursuivants.
-- `fleeVehGroupFile` (*string*) : Chemin du JSON du groupe de fuyards.
-- `sitesFile` (*string|nil*) : Chemin du fichier de sites.
-- `options` (*table|nil*) : Options (zoneName, shuffleSpots, shuffleVehGroups…).
-- `pursuitVars` (*table|nil*) : Variables de poursuite.
-- **renvoie** : boolean false si les quantités sont invalides ou un fichier de groupe est illisible.
+- `chaseAmount` (*integer*) : Number of pursuers (>= 1).
+- `fleeAmount` (*integer*) : Number of fugitives (>= 1).
+- `chaseVehGroupFile` (*string*) : Path of the pursuer group JSON.
+- `fleeVehGroupFile` (*string*) : Path of the fugitive group JSON.
+- `sitesFile` (*string|nil*) : Path of the sites file.
+- `options` (*table|nil*) : Options (zoneName, shuffleSpots, shuffleVehGroups...).
+- `pursuitVars` (*table|nil*) : Pursuit variables.
+- **returns**: boolean false if the quantities are invalid or a group file is unreadable.
 
 #### `gameplay_pursuit_pursuit.stop(winner)`
 
-Arrête le gameplay actif. Avec un gagnant, l'état devient 'complete', les poursuites des fuyards sont réinitialisées et onPursuitGameplayFinished est émis ; sans gagnant, l'état devient 'inactive'.
+Stops the active gameplay. With a winner, the state becomes 'complete', the fugitives' pursuits are reset and onPursuitGameplayFinished is emitted; without a winner, the state becomes 'inactive'.
 
-- `winner` (*string|nil*) : 'flee', 'chase' ou autre valeur non nil pour terminer ; nil pour simplement mettre en pause.
+- `winner` (*string|nil*) : 'flee', 'chase' or another non-nil value to finish; nil to simply pause.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onPursuitAction` — écouté par 3 module(s)
+- `onPursuitAction` — listened to by 3 module(s)
 - `onPursuitGameplayEvent`
 - `onPursuitGameplayFinished`
 - `onPursuitGameplayStarted`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/pursuit/pursuit.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/pursuit/pursuit.lua`.*

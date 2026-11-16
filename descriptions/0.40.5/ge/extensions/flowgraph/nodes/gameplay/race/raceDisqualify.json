@@ -1,13 +1,21 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/raceDisqualify.lua",
-  "module": "Nœud flowgraph « Race Disqualify » (catégorie repeat_instant, tag scenario). Disqualifie un véhicule d'une course en appelant raceData:abortRace(vehId). Entrées : raceData et vehId.",
-  "notes": ["work() n'a aucune garde : une pin raceData vide provoque une erreur Lua."],
+  "module": "Flowgraph node \"Race Disqualify\" (category repeat_instant, tag scenario). Disqualifies a vehicle from a race by calling raceData:abortRace(vehId). Inputs: raceData and vehId.",
+  "notes": [
+    "work() has no guard: an empty raceData pin causes a Lua error."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Vide.", "internal": true},
-        "work": {"desc": "Appelle abortRace(vehId) sur la course reçue.", "internal": true}
+        "init": {
+          "desc": "Empty.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Calls abortRace(vehId) on the received race.",
+          "internal": true
+        }
       }
     }
   }

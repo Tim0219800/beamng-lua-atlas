@@ -2,167 +2,167 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/main.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Cœur du World Editor : définit la globale `editor` (editor = M). Il charge toutes les extensions de lua/ge/extensions/editor/ (celles qui contiennent « M.onEditor » ou « M.onExtension », sauf editor_main), initialise les modules editor/api/*, gère les préférences (settings/editor/preferences.json), l'état (settings/editor/currentState.json) et l'activation/désactivation de l'éditeur (caméra libre, action maps, CEF masqué, layout, audio). Les autres extensions d'éditeur ajoutent leurs fonctions à la table `editor`.
---- Accès : extension `editor_main` : `extensions.load("editor_main")`, puis la globale `editor_main`
+--- Core of the World Editor: defines the global `editor` (editor = M). It loads all the extensions in lua/ge/extensions/editor/ (those containing "M.onEditor" or "M.onExtension", except editor_main), initializes the editor/api/* modules, manages the preferences (settings/editor/preferences.json), the state (settings/editor/currentState.json) and the activation/deactivation of the editor (free camera, action maps, hidden CEF, layout, audio). The other editor extensions add their functions to the `editor` table.
+--- Access: extension `editor_main`: `extensions.load("editor_main")`, then the global `editor_main`
 ---@class editor_main
----@field active boolean Vrai quand l'éditeur est actif (ouvert).
----@field additionalActionMaps table Action maps supplémentaires empilées à l'activation et dépilées à la désactivation de l'éditeur.
----@field allExtensionNames table<integer, string> Noms courts de toutes les extensions d'éditeur trouvées sur disque.
+---@field active boolean True when the editor is active (open).
+---@field additionalActionMaps table Additional action maps pushed when the editor is activated and popped when it is deactivated.
+---@field allExtensionNames table<integer, string> Short names of all the editor extensions found on disk.
 ---@field dependencies table<integer, string> {"core_camera"}.
----@field extensionNames table<integer, string> Noms (editor_xxx) des extensions d'éditeur actuellement chargées.
----@field initialized boolean Vrai quand les extensions d'éditeur sont chargées et initialisées.
----@field preferencesRegistry any Registre des préférences (editor/api/preferencesRegistry).
----@field safeMode boolean|nil Vrai si l'éditeur a été lancé en mode sans échec.
+---@field extensionNames table<integer, string> Names (editor_xxx) of the editor extensions currently loaded.
+---@field initialized boolean True when the editor extensions are loaded and initialized.
+---@field preferencesRegistry any Preferences registry (editor/api/preferencesRegistry).
+---@field safeMode boolean|nil True if the editor was launched in safe mode.
 editor_main = {}
 
---- Charge et initialise les modules editor/api/* (gui, core, assets, camera, dataBlock, decal, gizmo, material, navigation, object, roadRiver, sketch, terrain, forest, proceduralContentGenerator), puis émet onEditorModulesInitialized. Sans effet si déjà fait.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/main.lua:294
+--- Loads and initializes the editor/api/* modules (gui, core, assets, camera, dataBlock, decal, gizmo, material, navigation, object, roadRiver, sketch, terrain, forest, proceduralContentGenerator), then emits onEditorModulesInitialized. No effect if already done.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/main.lua:294
 function editor_main.initializeModules() end
 
---- Indique si l'éditeur est actif.
----Source : lua/ge/extensions/editor/main.lua:594
+--- Returns whether the editor is active.
+---Source: lua/ge/extensions/editor/main.lua:594
 ---@return boolean  editor.active.
 function editor_main.isEditorActive() end
 
---- Charge une extension d'éditeur à chaud : enregistre ses préférences, puis appelle ses onEditorRegisterApi, onEditorInitialized et onEditorActivated.
----Source : lua/ge/extensions/editor/main.lua:140
----@param name string Nom de l'extension, par ex. « editor_monOutil ».
----@return table|nil  La table de l'extension, ou nil si le chargement a échoué.
+--- Hot-loads an editor extension: registers its preferences, then calls its onEditorRegisterApi, onEditorInitialized and onEditorActivated.
+---Source: lua/ge/extensions/editor/main.lua:140
+---@param name string Extension name, e.g. "editor_myTool".
+---@return table|nil  The extension table, or nil if loading failed.
 function editor_main.loadEditorExtension(name) end
 
---- Charge plusieurs extensions d'éditeur d'un coup (préférences enregistrées avant, puis hooks RegisterApi/Initialized/Activated pour chacune).
----Source : lua/ge/extensions/editor/main.lua:171
----@param names table<integer, string> Noms des extensions.
+--- Loads several editor extensions at once (preferences registered first, then RegisterApi/Initialized/Activated hooks for each).
+---Source: lua/ge/extensions/editor/main.lua:171
+---@param names table<integer, string> Extension names.
 function editor_main.loadEditorExtensions(names) end
 
---- Lit settings/editor/extensions.json dans editor.extensionsSettings (table vide si absent).
----Source : lua/ge/extensions/editor/main.lua:85
+--- Reads settings/editor/extensions.json into editor.extensionsSettings (empty table if absent).
+---Source: lua/ge/extensions/editor/main.lua:85
 function editor_main.loadExtensionsSettings() end
 
---- Recharge les préférences depuis settings/editor/preferences.json, définit editor.setPreference/getPreference et migre les anciennes préférences.
----Source : lua/ge/extensions/editor/main.lua:74
+--- Reloads the preferences from settings/editor/preferences.json, defines editor.setPreference/getPreference and migrates the old preferences.
+---Source: lua/ge/extensions/editor/main.lua:74
 function editor_main.loadPreferences() end
 
---- Lit le fichier d'état de l'éditeur (avertit si la version du format diffère).
----Source : lua/ge/extensions/editor/main.lua:368
----@param filePath string|nil Fichier source ; settings/editor/currentState.json par défaut.
----@return table  L'état lu, ou une table vide.
+--- Reads the editor state file (warns if the format version differs).
+---Source: lua/ge/extensions/editor/main.lua:368
+---@param filePath string|nil Source file; settings/editor/currentState.json by default.
+---@return table  The state read, or an empty table.
 function editor_main.loadState(filePath) end
 
---- Écrit un message de niveau Info dans le log, tag « editor ».
----Source : lua/ge/extensions/editor/main.lua:50
+--- Writes an Info-level message to the log, tag "editor".
+---Source: lua/ge/extensions/editor/main.lua:50
 ---@param msg string Message.
 function editor_main.log(msg) end
 
---- Message de niveau Debug, tag « editor ».
----Source : lua/ge/extensions/editor/main.lua:54
+--- Debug-level message, tag "editor".
+---Source: lua/ge/extensions/editor/main.lua:54
 ---@param msg string Message.
 function editor_main.logDebug(msg) end
 
---- Message de niveau Error, tag « editor ».
----Source : lua/ge/extensions/editor/main.lua:58
+--- Error-level message, tag "editor".
+---Source: lua/ge/extensions/editor/main.lua:58
 ---@param msg string Message.
 function editor_main.logError(msg) end
 
---- Alias de log (niveau Info, tag « editor »).
----Source : lua/ge/extensions/editor/main.lua:50
+--- Log alias (Info level, tag "editor").
+---Source: lua/ge/extensions/editor/main.lua:50
 ---@param msg string Message.
 function editor_main.logInfo(msg) end
 
---- Message de niveau Warning, tag « editor ».
----Source : lua/ge/extensions/editor/main.lua:62
+--- Warning-level message, tag "editor".
+---Source: lua/ge/extensions/editor/main.lua:62
 ---@param msg string Message.
 function editor_main.logWarn(msg) end
 
---- Appelé à la fin d'un niveau : sauvegarde l'état, réaffiche les apps (ShowApps), propose de sauvegarder si modifié, puis shutdown().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/main.lua:623
+--- Called at the end of a level: saves the state, shows the apps again (ShowApps), offers to save if modified, then shutdown().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/main.lua:623
 function editor_main.onClientEndMission() end
 
---- Appelé au démarrage d'un niveau : remet initialized et modulesInitialized à false et réapplique l'état actif courant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/main.lua:608
+--- Called when a level starts: sets initialized and modulesInitialized back to false and reapplies the current active state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/main.lua:608
 function editor_main.onClientStartMission() end
 
---- Appelé après un rechargement Lua : restaure active/dirty/headless/mode d'édition et expose les données dans editor_main.serializedData.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/main.lua:733
----@param data table Table renvoyée par onSerialize.
+--- Called after a Lua reload: restores active/dirty/headless/edit mode and exposes the data in editor_main.serializedData.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/main.lua:733
+---@param data table Table returned by onSerialize.
 function editor_main.onDeserialized(data) end
 
---- Appelé à la sortie du jeu : met editor.active à false et sauvegarde l'état.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/main.lua:678
+--- Called when the game exits: sets editor.active to false and saves the state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/main.lua:678
 function editor_main.onExit() end
 
---- Hook de chargement. Corps vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/main.lua:683
+--- Load hook. Empty body.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/main.lua:683
 function editor_main.onExtensionLoaded() end
 
---- Appelé au déchargement : editor.shutdown().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/main.lua:686
+--- Called on unload: editor.shutdown().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/main.lua:686
 function editor_main.onExtensionUnloaded() end
 
---- Appelé à la première mise à jour : réactive l'éditeur s'il l'était avant le rechargement, et l'ouvre automatiquement si le jeu a été lancé avec -worldEditor.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/main.lua:747
+--- Called on the first update: reactivates the editor if it was active before the reload, and opens it automatically if the game was launched with -worldEditor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/main.lua:747
 function editor_main.onFirstUpdate() end
 
---- Appelé avant la sortie du jeu. Corps vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/main.lua:620
+--- Called before the game exits. Empty body.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/main.lua:620
 function editor_main.onPreExit() end
 
---- Appelé avant la fermeture de la fenêtre du jeu : editor.checkDirtyAndSave() si disponible.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/main.lua:614
+--- Called before the game window closes: editor.checkDirtyAndSave() if available.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/main.lua:614
 function editor_main.onPreWindowClose() end
 
---- Appelé avant un rechargement Lua : sauvegarde caméra, état actif, dirty, headless, mode d'édition, positions des fenêtres et préférence cleanExit ; désactive l'éditeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/main.lua:690
----@return table  Données restituées à onDeserialized.
+--- Called before a Lua reload: saves the camera, active state, dirty, headless, edit mode, window positions and the cleanExit preference; deactivates the editor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/main.lua:690
+---@return table  Data handed back to onDeserialized.
 function editor_main.onSerialize() end
 
---- Appelé chaque frame : traite la requête d'activation/désactivation (affiche l'image de chargement editorSplash.png pendant 3 frames, puis applique).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/main.lua:634
+--- Called every frame: processes the activation/deactivation request (shows the editorSplash.png loading image for 3 frames, then applies).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/main.lua:634
 function editor_main.onUpdate() end
 
---- Écrit editor.extensionsSettings dans settings/editor/extensions.json.
----Source : lua/ge/extensions/editor/main.lua:89
+--- Writes editor.extensionsSettings to settings/editor/extensions.json.
+---Source: lua/ge/extensions/editor/main.lua:89
 function editor_main.saveExtensionsSettings() end
 
---- Écrit les préférences dans settings/editor/preferences.json.
----Source : lua/ge/extensions/editor/main.lua:81
+--- Writes the preferences to settings/editor/preferences.json.
+---Source: lua/ge/extensions/editor/main.lua:81
 function editor_main.savePreferences() end
 
---- Sauvegarde l'état de l'éditeur : émet onEditorSaveState(state) puis écrit le JSON. Sans effet si l'éditeur n'a pas été initialisé dans cette session.
----Source : lua/ge/extensions/editor/main.lua:356
----@param filePath string|nil Fichier cible ; settings/editor/currentState.json par défaut.
+--- Saves the editor state: emits onEditorSaveState(state) then writes the JSON. No effect if the editor was not initialized in this session.
+---Source: lua/ge/extensions/editor/main.lua:356
+---@param filePath string|nil Target file; settings/editor/currentState.json by default.
 function editor_main.saveState(filePath) end
 
---- Demande l'activation ou la désactivation de l'éditeur ; appliquée dans onUpdate après quelques frames de splash.
----Source : lua/ge/extensions/editor/main.lua:587
----@param activate boolean true pour ouvrir, false pour fermer.
----@param safeMode boolean|nil true pour démarrer en mode sans échec.
+--- Requests the activation or deactivation of the editor; applied in onUpdate after a few splash frames.
+---Source: lua/ge/extensions/editor/main.lua:587
+---@param activate boolean true to open, false to close.
+---@param safeMode boolean|nil true to start in safe mode.
 function editor_main.setEditorActive(activate, safeMode) end
 
---- Ferme l'éditeur, émet onEditorShutdown, décharge toutes les extensions d'éditeur et remet initialized/active à false.
----Source : lua/ge/extensions/editor/main.lua:598
+--- Closes the editor, emits onEditorShutdown, unloads all the editor extensions and sets initialized/active back to false.
+---Source: lua/ge/extensions/editor/main.lua:598
 function editor_main.shutdown() end
 
---- Inverse l'état actif de l'éditeur (via setEditorActive).
----Source : lua/ge/extensions/editor/main.lua:674
----@param safeMode boolean|nil Mode sans échec à l'ouverture.
+--- Toggles the editor's active state (via setEditorActive).
+---Source: lua/ge/extensions/editor/main.lua:674
+---@param safeMode boolean|nil Safe mode on opening.
 function editor_main.toggleActive(safeMode) end
 
---- Décharge une extension d'éditeur chargée : appelle son onEditorDeactivated puis onEditorShutdown, puis extensions.unload.
----Source : lua/ge/extensions/editor/main.lua:213
----@param extName string Nom de l'extension chargée.
+--- Unloads a loaded editor extension: calls its onEditorDeactivated then onEditorShutdown, then extensions.unload.
+---Source: lua/ge/extensions/editor/main.lua:213
+---@param extName string Name of the loaded extension.
 function editor_main.unloadEditorExtension(extName) end
 
 ---@type any

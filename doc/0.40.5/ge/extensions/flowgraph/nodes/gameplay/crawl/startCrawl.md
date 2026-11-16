@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gameplay_crawl_startCrawl`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/startCrawl.lua` · VM : Game Engine (GE) · 43 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/startCrawl.lua` · VM: Game Engine (GE) · 43 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/crawl/startCrawl")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/crawl/startCrawl")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Start Crawl » (catégorie once_instant, crawl). Démarre la course et le timer du crawl ; nécessite que Setup Crawl ait été exécuté (utilise son trail et son véhicule). Sorties : success, failed.
+Flowgraph node "Start Crawl" (category once_instant, crawl). Starts the run and the crawl timer; requires Setup Crawl to have been executed (uses its trail and vehicle). Outputs: success, failed.
 
-**Dépendances (chargées avant) :** `gameplay_crawl_flowgraphBridge`
+**Dependencies (loaded first):** `gameplay_crawl_flowgraphBridge`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr)` | Charge le bridge du crawl. | 22 |
-| `C:work()` | Appelle bridge.startCrawl(nil, nil) et renseigne success/failed. | 26 |
+| `C:init(mgr)` | Loads the crawl bridge. | 22 |
+| `C:work()` | Calls bridge.startCrawl(nil, nil) and fills success/failed. | 26 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/startCrawl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/startCrawl.lua`.*

@@ -1,18 +1,71 @@
 {
   "path": "lua/ge/extensions/core/cameraModes/pacenoteOrbit.lua",
-  "module": "Caméra orbitale globale autour d'un point fixe (fixedTargetPos), utilisée par les outils d'annotations de rallye (pacenotes). Rotation à la souris, aux touches (gauche/droite, avant/arrière) ou aux entrées de lacet/tangage ; zoom entre 10 et 1500 m (300 par défaut), FOV 65. La caméra est maintenue à au moins 1 m au-dessus du terrain (core_terrain). Renvoie un constructeur.",
-  "notes": ["update remet MoveManager.zoomIn/zoomOut à zéro après les avoir lus (le zoom continu est donc limité à l'image).", "reset teste self.cameraResetted == 0 alors que ce champ n'est jamais défini dans ce fichier (nil) : la fonction ne fait rien (code mort) ; camLastTargetPos2 non plus.", "onSettingsChanged appelle core_camera.clearInputs() (commentaire du code : « is this really necessary? »)."],
+  "module": "Global orbital camera around a fixed point (fixedTargetPos), used by the rally pacenotes annotation tools. Rotation by mouse, by keys (left/right, forward/backward) or by yaw/pitch inputs; zoom between 10 and 1500 m (300 by default), FOV 65. The camera is kept at least 1 m above the terrain (core_terrain). Returns a constructor.",
+  "notes": [
+    "update resets MoveManager.zoomIn/zoomOut to zero after reading them (so continuous zoom is limited to the frame).",
+    "reset tests self.cameraResetted == 0 whereas this field is never defined in this file (nil): the function does nothing (dead code); camLastTargetPos2 neither.",
+    "onSettingsChanged calls core_camera.clearInputs() (code comment: \"is this really necessary?\")."
+  ],
   "classes": {
     "C": {
-      "desc": "Orbite autour d'un point. Champs : fixedTargetPos, fov, camRot (vec3 degrés : x lacet, y tangage), camDist, defaultDistance, camMinDist, camMaxDist.",
+      "desc": "Orbit around a point. Fields: fixedTargetPos, fov, camRot (vec3 degrees: x yaw, y pitch), camDist, defaultDistance, camMinDist, camMaxDist.",
       "functions": {
-        "init": {"desc": "isGlobal = true, FOV 65, puis setupStuff, onSettingsChanged, reset.", "internal": true},
-        "setupStuff": {"desc": "Définit rotation par défaut (0, -17, 0), bornes de distance 10-1500 m et distance par défaut 300 m."},
-        "onSettingsChanged": {"desc": "Hook : relit les réglages cameraOrbit* (fovModifier, relaxation, maxDynamicFov, maxDynamicPitch, maxDynamicOffset, smoothing).", "internal": true},
-        "reset": {"desc": "Code mort (voir notes)."},
-        "setRef": {"desc": "Définit le point autour duquel orbiter ; seul center est utilisé.", "params": {"center": {"type": "vec3", "desc": "point cible monde"}, "left": {"type": "any", "desc": "ignoré"}, "back": {"type": "any", "desc": "ignoré"}}},
-        "setDefaultDistance": {"desc": "Change defaultDistance (sans modifier la distance courante camDist).", "params": {"d": {"type": "number", "desc": "mètres"}}},
-        "update": {"desc": "Calcule la position orbitale, la clippe au terrain et écrit data.res (collisionCompatible = true).", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "true"}], "internal": true}
+        "init": {
+          "desc": "isGlobal = true, FOV 65, then setupStuff, onSettingsChanged, reset.",
+          "internal": true
+        },
+        "setupStuff": {
+          "desc": "Sets default rotation (0, -17, 0), distance limits 10-1500 m and default distance 300 m."
+        },
+        "onSettingsChanged": {
+          "desc": "Hook: re-reads the cameraOrbit* settings (fovModifier, relaxation, maxDynamicFov, maxDynamicPitch, maxDynamicOffset, smoothing).",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Dead code (see notes)."
+        },
+        "setRef": {
+          "desc": "Sets the point to orbit around; only center is used.",
+          "params": {
+            "center": {
+              "type": "vec3",
+              "desc": "world target point"
+            },
+            "left": {
+              "type": "any",
+              "desc": "ignored"
+            },
+            "back": {
+              "type": "any",
+              "desc": "ignored"
+            }
+          }
+        },
+        "setDefaultDistance": {
+          "desc": "Changes defaultDistance (without modifying the current distance camDist).",
+          "params": {
+            "d": {
+              "type": "number",
+              "desc": "meters"
+            }
+          }
+        },
+        "update": {
+          "desc": "Computes the orbital position, clips it to the terrain and writes data.res (collisionCompatible = true).",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "camData"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true"
+            }
+          ],
+          "internal": true
+        }
       }
     }
   }

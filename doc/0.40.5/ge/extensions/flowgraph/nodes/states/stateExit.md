@@ -1,26 +1,26 @@
 # `flowgraph_nodes_states_stateExit`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/states/stateExit.lua` · VM : Game Engine (GE) · 76 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/states/stateExit.lua` · VM: Game Engine (GE) · 76 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/states/stateExit")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/states/stateExit")` (file under extensions/ but not a regular extension)
 
-Noeud d'état « State Exit » (créé par _flowgraph_createStateNode). Point de sortie du graphe d'états : un pin d'entrée 'flow' de type state (pins manuels de type state autorisés), caché dans les menus. Le champ transitionName désigne la transition (pin de sortie du noeud état parent) à emprunter ; choisie dans l'éditeur parmi celles du noeud cible.
+State node "State Exit" (created by _flowgraph_createStateNode). Exit point of the state graph: an input pin 'flow' of type state (manual pins of type state allowed), hidden in the menus. The transitionName field designates the transition (output pin of the parent state node) to take; chosen in the editor among those of the target node.
 
-## Remarques
+## Notes
 
-- Le choix « (None) » met transitionName à nil alors que la valeur initiale est '' ; drawMiddle affiche « No Transition! » pour nil.
+- The "(None)" choice sets transitionName to nil whereas the initial value is ''; drawMiddle displays "No Transition!" for nil.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(data)` | Restaure transitionName ('' par défaut). | 69 |
-| `C:_onSerialize(res)` | Sauvegarde transitionName. | 65 |
-| `C:drawCustomProperties()` | Liste déroulante « Transition Name » construite à partir des noms de transition du noeud état parent qui cible ce graphe. | 30 |
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du noeud dans l'éditeur. | 59 |
+| `C:_onDeserialized(data)` | Restores transitionName ('' by default). | 69 |
+| `C:_onSerialize(res)` | Saves transitionName. | 65 |
+| `C:drawCustomProperties()` | "Transition Name" dropdown built from the transition names of the parent state node that targets this graph. | 30 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the editor. | 59 |
 | `C:init(mgr)` | autoStart = false, savePins = true, transitionName = ''. | 24 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/states/stateExit.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/states/stateExit.lua`.*

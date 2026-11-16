@@ -1,0 +1,136 @@
+{
+  "path": "lua/ge/extensions/ui/pause/providers/vehicleTabInteractions.lua",
+  "module": "Fournisseur de données et d'actions pour l'onglet « Véhicule » (et la gestion des véhicules) du menu pause. Il liste les véhicules apparus (hors personnage à pied « unicycle », véhicules inactifs ou non utilisables par le joueur), leur contrôleur (joueur, IA, multijoueur), leur mode IA (interrogé toutes les 8 s via core_vehicleBridge), et construit pour chaque véhicule les boutons d'action (changer de véhicule, quitter, modes IA, réparer, réinitialiser, cloner, supprimer, tout supprimer sauf celui-ci, ouvrir les détails) en tenant compte des permissions multijoueur et de l'état de la première conduite. Il surligne aussi en orange le véhicule survolé ou sélectionné avec le debugDrawer. Les charges utiles sont envoyées à l'UI soit par appel direct, soit par flux (guihooks.triggerStream) pour l'hydratation asynchrone.",
+  "usage": "local data = ui_pause_providers_vehicleTabInteractions.getSpawnedVehiclesData({mode = \"freeroam\"})\nfor _, v in ipairs(data.vehicles) do print(v.vehicleId, v.label, v.aiMode) end\n-- exécuter une action à partir de son buttonId\nui_pause_providers_vehicleTabInteractions.executeVehicleTabInteractionAction(data.vehicles[1].cardActions.switchToVehicle.buttonId)",
+  "notes": [
+    "Flux guihooks émis : ui_pause_vehicleTabInteractions_vehicle_state (état des véhicules : controllerType, controllingPlayerNums, multiSeatLocal, onlineControlled, aiMode, aiControlled, controllerUiElements), ui_pause_vehicleTabInteractions_spawned_payload et ui_pause_vehicleTabInteractions_spawned_selected_payload (charges utiles hydratées). Évènement UI : VehicleTabSpawnFinished quand un véhicule est apparu.",
+    "Les actions sont des boutons (gridSelectorUtils/buttonModule) mis en cache par véhicule : switchToVehicle, switchToVehicle_p<N> (multi-sièges), deleteVehicle, repairVehicleHere, resetVehicle, cloneVehicle, aiModeFlee/Chase/Follow/Random/Traffic/Disable, removeAllOtherVehicles, exitVehicle, openVehicleDetails(Home|Manage), setOtherVehiclesAiMode_<mode>. Elles sont exécutées par buttonId via executeVehicleTabInteractionAction.",
+    "Les modes IA flee, chase et follow envoient ai.setMode puis ai.setTargetObjectID avec le véhicule du joueur comme cible ; random envoie ai.setState({mode = \"random\"}) ; traffic envoie ai.setMode(\"traffic\") ; désactiver envoie ai.setMode(\"disabled\"). Le mode « disabled » est normalisé en « none » côté affichage.",
+    "Réparer, réinitialiser et la réparation en première conduite avec une mission au premier plan sont bloqués ; réparer utilise spawn.safeTeleport sur la position actuelle, réinitialiser utilise requestReset(RESET_PHYSICS) et resetBrokenFlexMesh. Cloner passe temporairement le joueur sur le véhicule source (be:enterVehicle) pour appeler core_vehicles.cloneCurrent puis revient au véhicule d'origine ; le clonage passe par gameplay_lowPerformance.confirmSpawn s'il existe.",
+    "Les permissions multijoueur sont vérifiées par multiplayer_permissions.checkPlayerPermission (removeVehicle, recoverVehicle, resetVehicle, spawnVehicle) ; sans multijoueur tout est permis.",
+    "Les hooks émis par les actions : trackNewVeh, onVehicleSwitchPerformendByUser (la faute « Performend » est dans le nom du hook du jeu), onVehicleTabInteractionRemoveVehicle(vehicleId), onVehicleTabInteractionRemoveAll(selectedId).",
+    "Le module n'agit (mise à jour périodique, surlignage) que quand la route courante du routeur est pause ou pause.vehicle* / pause.manageVehicles* (flag posé par onPauseRouteLifecycle) ; hors de ces routes, onUpdate remet à zéro le survol et les requêtes différées.",
+    "Le délai de débogage d'hydratation asynchrone (setAsyncHydrationDebugDelay) retarde artificiellement les réponses des requêtes ; il est destiné à la revue de l'interface, pas à l'usage normal.",
+    "Dans getSpawnedVehiclesPayload (appelée par getSpawnedVehiclesData, getSpawnedSelectedVehicleData, etc.), chaque appel remet à zéro l'état, émet le flux d'état et relance la requête de mode IA : ces fonctions ont donc des effets de bord, pas seulement de lecture."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'core_vehicleBridge', 'core_locales'}"}
+  },
+  "functions": {
+    "executeVehicleTabInteractionAction": {
+      "desc": "Exécute le bouton d'action identifié par buttonId (champ buttonId des entrées d'action renvoyées dans les charges utiles), avec une charge utile facultative.",
+      "params": {
+        "buttonId": {"type": "any", "desc": "Identifiant de bouton fourni par buttonModule (déduit du code)"},
+        "payload": {"type": "any", "desc": "Données transmises au callback du bouton (déduit du code)"}
+      },
+      "returns": [{"type": "boolean", "desc": "false si buttonId est absent, sinon résultat de l'exécution du bouton"}],
+      "internal": false
+    },
+    "getSpawnedVehiclesData": {
+      "desc": "Charge utile complète des véhicules apparus : mode, summary {currentVehicleName, totalCount, aiControlledCount}, selectedVehicleId, aiOtherVehiclesMode, aiModeOptions, vehicles (id, vehicleId, index, displayNumber, label, rawName, isCurrent, controllerType, aiMode, aiControlled, cardActions...), actions (actions globales) et lowPerformance. Effets de bord : réinitialise l'état et relance l'interrogation des modes IA.",
+      "params": {"context": {"type": "table|nil", "desc": "Contexte de pause ; seul context.mode est lu (défaut « freeroam »)"}},
+      "returns": [{"type": "table", "desc": "Charge utile des véhicules"}],
+      "internal": false
+    },
+    "getSpawnedVehiclesShellData": {
+      "desc": "Version « squelette » de la charge utile, sans interroger les véhicules : asyncHydration et loading valent true, liste vide, actions désactivées. Sert à afficher l'écran immédiatement avant l'hydratation.",
+      "params": {"context": {"type": "table|nil", "desc": "Contexte de pause (mode)"}},
+      "returns": [{"type": "table", "desc": "Charge utile de chargement"}],
+      "internal": false
+    },
+    "requestSpawnedVehiclesPayload": {
+      "desc": "Demande l'hydratation asynchrone : calcule la charge utile et l'envoie dans le flux ui_pause_vehicleTabInteractions_spawned_payload (avec asyncHydration, loading = false, requestId). Si un délai de débogage est actif, la réponse est mise en file et un accusé de chargement est renvoyé.",
+      "params": {"payload": {"type": "table|nil", "desc": "{requestId, context}"}},
+      "returns": [{"type": "table", "desc": "Charge utile émise, ou accusé de chargement en mode délai de débogage"}],
+      "internal": false
+    },
+    "getSpawnedSelectedVehicleShellData": {
+      "desc": "Squelette des détails du véhicule sélectionné (étiquette, groupes d'actions désactivés, loading = true), sans calcul complet.",
+      "params": {"context": {"type": "table|nil", "desc": "Contexte de pause"}},
+      "returns": [{"type": "table", "desc": "Charge utile de chargement"}],
+      "internal": false
+    },
+    "requestSpawnedSelectedVehiclePayload": {
+      "desc": "Version asynchrone des détails du véhicule sélectionné : émet le résultat dans le flux ui_pause_vehicleTabInteractions_spawned_selected_payload.",
+      "params": {"payload": {"type": "table|nil", "desc": "{requestId, context}"}},
+      "returns": [{"type": "table", "desc": "Charge utile émise, ou accusé de chargement en mode délai de débogage"}],
+      "internal": false
+    },
+    "getSpawnedSelectedVehicleData": {
+      "desc": "Détails du véhicule sélectionné : vehicleId, label, rawName, vehicle (entrée de liste) et groups (groupes d'actions). La sélection vient du paramètre vehicleId de la route, sinon du dernier véhicule choisi, sinon du véhicule du joueur, sinon du premier de la liste.",
+      "params": {"context": {"type": "table|nil", "desc": "Contexte de pause"}},
+      "returns": [{"type": "table", "desc": "{vehicleId, label, rawName, vehicle, groups}"}],
+      "internal": false
+    },
+    "getSpawnedVehiclesSummaryData": {
+      "desc": "Renvoie seulement summary et vehicles de la charge utile des véhicules apparus.",
+      "params": {"context": {"type": "table|nil", "desc": "Contexte de pause"}},
+      "returns": [{"type": "table", "desc": "{summary, vehicles}"}],
+      "internal": false
+    },
+    "setAsyncHydrationDebugDelay": {
+      "desc": "Règle un délai artificiel (secondes, minimum 0) avant la réponse aux requêtes asynchrones ; 0 le désactive et vide la file.",
+      "params": {"delaySec": {"type": "number", "desc": "Délai en secondes"}},
+      "returns": [{"type": "number", "desc": "Délai effectivement appliqué"}],
+      "internal": false
+    },
+    "getAsyncHydrationDebugDelay": {
+      "desc": "Renvoie le délai de débogage d'hydratation asynchrone actuel, en secondes.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Délai en secondes (0 = désactivé)"}],
+      "internal": false
+    },
+    "onPauseRouteLifecycle": {
+      "desc": "Hook appelé par routeLifecycleCallbacks à l'entrée et à la sortie d'une route de pause, avec le nom de la route cible. Active ou désactive le suivi (survol, interrogation IA) et réinitialise la numérotation des véhicules si on sort de la famille pause.",
+      "params": {"routeName": {"type": "string|nil", "desc": "Nom de la route cible"}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé quand le véhicule du joueur change : réémet l'état des véhicules vers l'UI et remet à zéro le minuteur d'interrogation IA.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSwitchPerformendByUser": {
+      "desc": "Hook émis après un changement de véhicule demandé par l'utilisateur depuis le menu : même traitement que onVehicleSwitched.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Hook appelé à l'apparition d'un véhicule : recalcule l'état si la route le demande et déclenche l'évènement UI VehicleTabSpawnFinished.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook appelé quand un véhicule est détruit : recalcule l'état des véhicules pour l'UI si le suivi est actif.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleHoverStart": {
+      "desc": "Appelé par l'UI quand le curseur survole la carte d'un véhicule : ce véhicule sera surligné dans le monde.",
+      "params": {"vehicleId": {"type": "number", "desc": "Identifiant du véhicule survolé"}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleHoverEnd": {
+      "desc": "Appelé par l'UI quand le curseur quitte la carte : supprime le surlignage si c'est ce véhicule (ou si vehicleId est nil).",
+      "params": {"vehicleId": {"type": "number|nil", "desc": "Identifiant du véhicule"}},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image. Quand le suivi est actif sur une route de véhicule : traite les requêtes différées, relance l'interrogation des modes IA toutes les 8 s de temps de simulation et dessine un cadre pulsant blanc-orange (12 arêtes de la boîte englobante, épaisseur 3) autour du véhicule survolé ou affiché en détails, via debugDrawer.drawLineInstance. À défaut de boîte, trace une ligne verticale de 2 m.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel (s)"},
+        "dtSim": {"type": "number", "desc": "Temps de simulation (s)"},
+        "dtRaw": {"type": "number", "desc": "Temps brut (s)"}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

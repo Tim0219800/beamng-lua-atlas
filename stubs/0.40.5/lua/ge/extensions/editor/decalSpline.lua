@@ -2,51 +2,51 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/decalSpline.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Outil « Decal Spline » du World Editor : on trace une spline (nœuds, largeur par défaut 10 m) le long de laquelle des decals sont posés automatiquement à partir de jusqu'à 4 composants (matériau, lignes/colonnes de texture, frame, espacement, jitter). Le fichier est le point d'entrée de l'outil (fenêtre « decalSpline », mode d'édition « Decal Spline ») ; la logique est répartie dans editor/decalSpline/splineMgr, editor/decalSpline/populate et les utilitaires editor/toolUtilities (splineInput, render/spline, session, bake, panCamera, materialSelectionMgr…). Il gère aussi la sauvegarde des splines dans le niveau (onSerialize/onDeserialized, qui survit au rechargement Lua) et l'import/export de sessions.
---- Accès : extension `editor_decalSpline` : `extensions.load("editor_decalSpline")`, puis la globale `editor_decalSpline`
+--- World Editor "Decal Spline" tool: you draw a spline (nodes, default width 10 m) along which decals are placed automatically from up to 4 components (material, texture rows/columns, frame, spacing, jitter). The file is the entry point of the tool ("decalSpline" window, "Decal Spline" edit mode); the logic is split between editor/decalSpline/splineMgr, editor/decalSpline/populate and the editor/toolUtilities utilities (splineInput, render/spline, session, bake, panCamera, materialSelectionMgr...). It also handles saving the splines in the level (onSerialize/onDeserialized, which survives Lua reload) and session import/export.
+--- Access: extension `editor_decalSpline`: `extensions.load("editor_decalSpline")`, then the global `editor_decalSpline`
 ---@class editor_decalSpline
 editor_decalSpline = {}
 
---- Hook appelé quand on quitte la carte ; supprime toutes les splines de decals.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/decalSpline.lua:1745
+--- Hook called when leaving the map; deletes all decal splines.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/decalSpline.lua:1745
 function editor_decalSpline.onClientEndMission() end
 
---- Hook de restauration après rechargement Lua : recrée les splines depuis les données sérialisées, reprend les decals conservés des splines verrouillées (populate.adopt), borne l'index sélectionné et recalcule la table id vers index.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/decalSpline.lua:127
----@param data table|nil liste de splines sérialisées (ignorée si vide)
+--- Restore hook after Lua reload: recreates the splines from the serialized data, takes back the decals kept from locked splines (populate.adopt), clamps the selected index and recomputes the id to index table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/decalSpline.lua:127
+---@param data table|nil list of serialized splines (ignored if empty)
 function editor_decalSpline.onDeserialized(data) end
 
---- Hook appelé à chaque frame de l'éditeur. Met à jour les splines modifiées ; si l'outil n'est pas actif, ne fait que dessiner les contours. Sinon gère la fenêtre principale, la caméra panoramique, la sélection de matériau, les événements souris/clavier (splineInput) et le rendu des splines.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/decalSpline.lua:1664
+--- Hook called every editor frame. Updates the modified splines; if the tool is not active, only draws the outlines. Otherwise handles the main window, the pan camera, material selection, mouse/keyboard events (splineInput) and the rendering of the splines.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/decalSpline.lua:1664
 function editor_decalSpline.onEditorGui() end
 
---- Hook appelé à l'initialisation de l'éditeur : déclare editor.editModes.decalSplineEditMode (icône decalRoad) et enregistre la fenêtre 300x700.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/decalSpline.lua:1731
+--- Hook called at editor initialization: declares editor.editModes.decalSplineEditMode (decalRoad icon) and registers the 300x700 window.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/decalSpline.lua:1731
 function editor_decalSpline.onEditorInitialized() end
 
---- Hook de sauvegarde avant rechargement Lua : renvoie la liste des splines sérialisées ({} s'il n'y en a pas) et supprime les splines en mémoire.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/decalSpline.lua:108
----@return table  splines sérialisées
+--- Save hook before Lua reload: returns the list of serialized splines ({} if there are none) and deletes the in-memory splines.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/decalSpline.lua:108
+---@return table  serialized splines
 function editor_decalSpline.onSerialize() end
 
---- Verrouille ou déverrouille la spline d'id donné et la reconstruit immédiatement (utilisé aussi par la Master Spline pour ses enfants liés). Les decals sont enregistrés par le gestionnaire de persistance dans les deux cas : le verrou rend seulement la spline non éditable. Ne fait rien si l'id est inconnu.
----Source : lua/ge/extensions/editor/decalSpline.lua:96
----@param id integer id de la spline
----@param isLocked boolean true pour verrouiller
+--- Locks or unlocks the spline with the given id and rebuilds it immediately (also used by the Master Spline for its linked children). The decals are saved by the persistence manager in both cases: the lock only makes the spline non-editable. Does nothing if the id is unknown.
+---Source: lua/ge/extensions/editor/decalSpline.lua:96
+---@param id integer spline id
+---@param isLocked boolean true to lock
 function editor_decalSpline.setLockedById(id, isLocked) end
 
---- Définit l'index du nœud sélectionné (sélection partagée entre outils).
----Source : lua/ge/extensions/editor/decalSpline.lua:92
----@param idx integer index du nœud, à partir de 1
+--- Sets the index of the selected node (selection shared between tools).
+---Source: lua/ge/extensions/editor/decalSpline.lua:92
+---@param idx integer node index, 1-based
 function editor_decalSpline.setSelectedNodeIdx(idx) end
 
---- Définit l'index de la spline sélectionnée (sélection partagée entre outils).
----Source : lua/ge/extensions/editor/decalSpline.lua:89
----@param idx integer index de la spline, à partir de 1
+--- Sets the index of the selected spline (selection shared between tools).
+---Source: lua/ge/extensions/editor/decalSpline.lua:89
+---@param idx integer spline index, 1-based
 function editor_decalSpline.setSelectedSplineIdx(idx) end
 

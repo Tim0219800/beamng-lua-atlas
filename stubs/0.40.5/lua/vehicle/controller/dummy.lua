@@ -2,14 +2,14 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/dummy.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur principal (type "main") minimal pour les véhicules sans moteur (remorques, objets). Il fournit l'API obligatoire d'un contrôleur principal (changements de rapport, démarreur, etc., tous en nop) et écrit chaque image des valeurs electrics neutres : throttle, brake, clutch issus des entrées, gear "N", gearIndex 0, rpm/fuel/températures à 0, ignition false, gearboxMode "none".
---- Accès : contrôleur `dummy` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Minimal main controller (type "main") for vehicles without an engine (trailers, objects). It provides the mandatory main controller API (gear changes, starter, etc., all nop) and writes neutral electrics values every frame: throttle, brake, clutch from the inputs, gear "N", gearIndex 0, rpm/fuel/temperatures at 0, ignition false, gearboxMode "none".
+--- Access: controller `dummy` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_dummy
 ---@field brake number 0.
 ---@field clutchRatio number 0.
 ---@field cycleGearboxModes function nop.
 ---@field drivingAggression number 0.
----@field engineInfo table Tableau d'info moteur de 21 valeurs statiques (voir notes).
+---@field engineInfo table Engine info array of 21 static values (see notes).
 ---@field fireEngineTemperature number 0.
 ---@field init function nop.
 ---@field sendTorqueData function nop.
@@ -26,10 +26,10 @@
 ---@field vehicleActivated function nop.
 local controller_dummy = {}
 
---- Chaque image : copie les entrées throttle/brake/clutch (bornées 0..1) dans electrics.values et force les autres valeurs à leur état neutre.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/dummy.lua:42
----@param dt number Pas de temps (s).
+--- Every frame: copies the throttle/brake/clutch inputs (bounded 0..1) into electrics.values and forces the other values to their neutral state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/dummy.lua:42
+---@param dt number Time step (s).
 function controller_dummy.updateGFX(dt) end
 
 return controller_dummy

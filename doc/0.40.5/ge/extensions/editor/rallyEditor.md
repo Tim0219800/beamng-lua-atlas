@@ -1,485 +1,485 @@
 # `editor_rallyEditor`
 
-*Fichier : `lua/ge/extensions/editor/rallyEditor.lua` · VM : Game Engine (GE) · 1523 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/rallyEditor.lua` · VM: Game Engine (GE) · 1523 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_rallyEditor` : `extensions.load("editor_rallyEditor")`, puis la globale `editor_rallyEditor`
+**Access:** extension `editor_rallyEditor`: `extensions.load("editor_rallyEditor")`, then the global `editor_rallyEditor`
 
-Fenêtre principale « Rally Editor » de l'éditeur de monde (menu Gameplay > Rally Editor, mode d'édition « Rally Editor » / notebookEditMode, action map « rallyEditor »). Elle édite un carnet de notes de rallye (notebook : *.notebook.json dans le dossier d'une mission, sous rallyUtil.notebooksPath) à travers des onglets : notebookInfo, missionTab, voicepacksTab, pacenotes, drivelineTab, systemPacenotesTab, measurementsTab, aiCompetitorsTab, et testTab uniquement si un fichier dev.txt existe à la racine. Elle gère la mission courante (currentMissionDir/Name/Id), le choix de voicepack (pick), un « ghost notebook » de comparaison, des fenêtres annexes (DevTools, RallyToolbox, calibration, chargeur de spéciale) et les préférences rallyEditor.* (editing, view, waypoints, ui). Les autres modules (onglets) appellent ses getters (getPref*, getCurrentPath…).
+Main "Rally Editor" window of the world editor (menu Gameplay > Rally Editor, edit mode "Rally Editor" / notebookEditMode, action map "rallyEditor"). It edits a rally notebook (notebook: *.notebook.json in a mission folder, under rallyUtil.notebooksPath) through tabs: notebookInfo, missionTab, voicepacksTab, pacenotes, drivelineTab, systemPacenotesTab, measurementsTab, aiCompetitorsTab, and testTab only if a dev.txt file exists at the root. It manages the current mission (currentMissionDir/Name/Id), voicepack selection (pick), a comparison "ghost notebook", auxiliary windows (DevTools, RallyToolbox, calibration, stage loader) and the rallyEditor.* preferences (editing, view, waypoints, ui). The other modules (tabs) call its getters (getPref*, getCurrentPath...).
 
-## Exemple
+## Example
 
 ```lua
-local nb = editor_rallyEditor.getCurrentPath()  -- carnet en cours ou nil
+local nb = editor_rallyEditor.getCurrentPath()  -- current notebook or nil
 editor_rallyEditor.loadOrCreateForMissionEditor('/gameplay/missions/italy/rallyStage/001-...')
 editor_rallyEditor.saveNotebook()
 ```
 
-## Remarques
+## Notes
 
-- Préférences enregistrées : rallyEditor.editing (lockWaypoints [cachée], showPreviousPacenote, showNextPacenote, waypointSnapMethod), rallyEditor.view (pacenoteLabelMode « all »|« distance », pacenoteLabelDistance 100-1500 [650 par défaut], pacenoteLabelNearCameraCount 0-10 [3], showAdjacentPacenoteText, showSelectedPacenoteUtility, drivelineSplinePrismWidth 0.5-5 [1.945], showAllPacenoteLabels [héritée, cachée]), rallyEditor.waypoints.defaultRadius (8, de 1 à 50), rallyEditor.ui.pacenoteNoteFieldWidth (300).
-- Bug : M.getVolatilePreferences renvoie la variable « volatilePreferences » qui n'est jamais définie dans ce fichier ; elle renvoie donc toujours nil.
-- La préférence héritée showAllPacenoteLabels = true force le mode d'étiquettes « all ».
-- moveSelectedWaypointForward/Backward, zoomIn et zoomOut sont appelés directement par des actions d'entrée avec une valeur (0 = relâché, 1 = appuyé) ; la répétition est limitée par un anti-rebond (0.25 s pour les waypoints, 0.05 s pour le zoom). zoomIn/zoomOut/mouseWheelZoom n'agissent que si la caméra active est « pacenoteOrbit ».
-- Les raccourcis de navigation (selectPrevPacenote, selectNextPacenote, insertMode, deselect, selectNextWaypoint, cameraPathPlay, toggleCornerCalls) ne font rien si l'onglet actif n'est pas Pacenotes.
-- Dépendance déclarée : gameplay_missions_missions. L'extension gameplay_rallyLoop est chargée/déchargée par la case « RallyLoop Extension » du menu Tools.
-- À l'activation puis désactivation du mode d'édition, resetEphemeralViewOptions remet à zéro l'option de masquage de la forêt (theForest) et l'affichage du snaproad au premier plan.
+- Registered preferences: rallyEditor.editing (lockWaypoints [hidden], showPreviousPacenote, showNextPacenote, waypointSnapMethod), rallyEditor.view (pacenoteLabelMode "all"|"distance", pacenoteLabelDistance 100-1500 [650 default], pacenoteLabelNearCameraCount 0-10 [3], showAdjacentPacenoteText, showSelectedPacenoteUtility, drivelineSplinePrismWidth 0.5-5 [1.945], showAllPacenoteLabels [legacy, hidden]), rallyEditor.waypoints.defaultRadius (8, from 1 to 50), rallyEditor.ui.pacenoteNoteFieldWidth (300).
+- Bug: M.getVolatilePreferences returns the variable "volatilePreferences" which is never defined in this file; it therefore always returns nil.
+- The legacy preference showAllPacenoteLabels = true forces the "all" label mode.
+- moveSelectedWaypointForward/Backward, zoomIn and zoomOut are called directly by input actions with a value (0 = released, 1 = pressed); repetition is limited by a debounce (0.25 s for waypoints, 0.05 s for zoom). zoomIn/zoomOut/mouseWheelZoom only act if the active camera is "pacenoteOrbit".
+- The navigation shortcuts (selectPrevPacenote, selectNextPacenote, insertMode, deselect, selectNextWaypoint, cameraPathPlay, toggleCornerCalls) do nothing if the active tab is not Pacenotes.
+- Declared dependency: gameplay_missions_missions. The gameplay_rallyLoop extension is loaded/unloaded by the "RallyLoop Extension" checkbox in the Tools menu.
+- When the edit mode is activated then deactivated, resetEphemeralViewOptions resets the forest hiding option (theForest) and the foreground snaproad display.
 
-**Dépendances (chargées avant) :** `gameplay_missions_missions`
+**Dependencies (loaded first):** `gameplay_missions_missions`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_rallyEditor.allowGizmo()` | Indique si le gizmo est autorisé : vrai quand le mode d'édition courant est « Rally Editor ». | 1439 |
-| `editor_rallyEditor.buildVoicepackPickerEntries(missionDir)` | Construit la liste des voicepacks proposés pour une mission (voicepack.buildPickerEntries avec suffixe « (mission) » pour les voicepacks de mission). | 1450 |
-| `editor_rallyEditor.cameraPathPlay()` | Lance/arrête la lecture du chemin de caméra de l'onglet Pacenotes ; sans effet si un autre onglet est actif. | 302 |
-| `editor_rallyEditor.changeDebugDrawOpacity(val)` | Change l'opacité du dessin de debug par pas de 0.2, bornée entre 0.1 et 1.0 : val = 0 diminue, val = 1.0 augmente. | 1377 |
-| `editor_rallyEditor.clearGhostNotebook()` | Efface le carnet « fantôme » de comparaison s'il existe. | 1295 |
-| `editor_rallyEditor.deselect()` | Désélectionne dans l'onglet Pacenotes (ignoré hors de cet onglet). | 247 |
-| `editor_rallyEditor.detectNotebookToLoad(missionDir)` | Choisit le carnet à charger pour une mission : résolution par voicepack, sinon premier carnet existant, sinon « structured.notebook.json » à créer. | 1323 |
-| `editor_rallyEditor.drawStageLoaderModal()` | Dessine la fenêtre modale de chargement de spéciale (StageLoaderModal). *(interne)* | 612 |
-| `editor_rallyEditor.drawToolbarMissionContext(pathObj)` | Dessine dans la barre d'outils le texte « mission \| carnet \| voicepack » (en cyan) avec une infobulle ; ne fait rien si aucune mission courante. *(interne)* | 616 |
-| `editor_rallyEditor.getCurrentFilename()` | Renvoie le chemin du fichier du carnet courant. | 1369 |
-| `editor_rallyEditor.getCurrentMissionDir()` | Renvoie le dossier de la mission courante. | 1443 |
-| `editor_rallyEditor.getCurrentMissionId()` | Renvoie l'identifiant de la mission courante (ex. « italy/rallyStage/001-ss-fastello-norte », extrait après « /missions/ »). | 1445 |
-| `editor_rallyEditor.getCurrentMissionName()` | Renvoie le nom lisible de la mission (info.json name traduit, sinon dernier segment du chemin). | 1444 |
-| `editor_rallyEditor.getCurrentPath()` | Renvoie le carnet (notebook) en cours d'édition. | 1442 |
-| `editor_rallyEditor.getCurrentVoicepackPick()` | Renvoie le choix de voicepack courant : {type='voicepack', scope='global'\|'mission', dirname=...}. | 1446 |
-| `editor_rallyEditor.getGhostNotebookError()` | Renvoie l'erreur du dernier chargement du carnet fantôme. | 1313 |
-| `editor_rallyEditor.getGhostNotebookLabelForPacenote(pacenote)` | Renvoie l'étiquette du carnet fantôme correspondant à une pacenote. | 1317 |
-| `editor_rallyEditor.getGhostNotebookPath()` | Renvoie le carnet fantôme chargé. | 1301 |
-| `editor_rallyEditor.getGhostNotebookSelectedFname()` | Renvoie le nom de fichier du carnet fantôme sélectionné. | 1305 |
-| `editor_rallyEditor.getGhostNotebookSelectedLabel()` | Renvoie l'étiquette du carnet fantôme sélectionné. | 1309 |
-| `editor_rallyEditor.getMissionDir()` | Renvoie le dossier de mission du carnet courant (currentPath:getMissionDir()). | 1517 |
-| `editor_rallyEditor.getMissionId()` | Renvoie l'identifiant de mission du carnet courant (currentPath:getMissionId()). | 1518 |
-| `editor_rallyEditor.getPacenotesWindow()` | Renvoie l'onglet Pacenotes. | 1516 |
-| `editor_rallyEditor.getPrefDefaultRadius()` | Préférence rallyEditor.waypoints.defaultRadius : rayon d'affichage des waypoints. | 1246 |
-| `editor_rallyEditor.getPrefDrivelineSplinePrismWidth()` | Largeur du prisme (largeur de véhicule) servant à dessiner la spline de driveline. | 1242 |
-| `editor_rallyEditor.getPrefLockWaypoints()` | Préférence rallyEditor.editing.lockWaypoints : verrouille la position des waypoints. | 1254 |
-| `editor_rallyEditor.getPrefPacenoteLabelDistance()` | Distance caméra à partir de laquelle l'aperçu sans sélection passe en vue d'ensemble arc-en-ciel. | 1226 |
-| `editor_rallyEditor.getPrefPacenoteLabelMode()` | Mode d'affichage des étiquettes d'aperçu de pacenotes. | 1222 |
-| `editor_rallyEditor.getPrefPacenoteLabelNearCameraCount()` | Nombre de pacenotes avant et après le pivot de la caméra qui affichent leur étiquette. | 1230 |
-| `editor_rallyEditor.getPrefShowAdjacentPacenoteText()` | Indique si les textes d'aperçu des pacenotes précédente et suivante sont affichés. | 1234 |
-| `editor_rallyEditor.getPrefShowAllPacenoteLabels()` | Vrai si le mode d'étiquettes est « all ». | 1218 |
-| `editor_rallyEditor.getPrefShowNextPacenote()` | Affiche aussi la pacenote suivante quand une pacenote est sélectionnée. | 1214 |
-| `editor_rallyEditor.getPrefShowPreviousPacenote()` | Affiche aussi la pacenote précédente quand une pacenote est sélectionnée. | 1210 |
-| `editor_rallyEditor.getPrefShowSelectedPacenoteUtility()` | Indique si la fenêtre flottante d'utilitaire de la pacenote sélectionnée est affichée. | 1238 |
-| `editor_rallyEditor.getPrefUiPacenoteNoteFieldWidth()` | Largeur du champ notes.note.freeform d'une pacenote. | 1250 |
-| `editor_rallyEditor.getPrefWaypointSnapMethod()` | Méthode de recalage en Z lors du glisser d'un waypoint, avant de chercher le point de snaproad le plus proche. | 1258 |
-| `editor_rallyEditor.getViewSnaproadPathOnTop()` | Indique si le chemin du snaproad est dessiné au premier plan (option de vue éphémère, remise à false à la désactivation du mode). | 1459 |
-| `editor_rallyEditor.getVolatilePreferences()` | Censée renvoyer les préférences volatiles ; renvoie la variable non définie volatilePreferences, donc nil (voir notes). | 1514 |
-| `editor_rallyEditor.insertMode()` | Active le mode d'insertion de l'onglet Pacenotes (ignoré hors de cet onglet). | 233 |
-| `editor_rallyEditor.isCalibrationWindowOpen()` | Indique si la fenêtre de calibration est ouverte. | 1510 |
-| `editor_rallyEditor.isPacenotesToolsSectionExpanded()` | Vrai si DevTools est ouvert et que sa section d'outils de pacenotes est dépliée. | 1520 |
-| `editor_rallyEditor.isToolboxOpen()` | Vrai si la fenêtre RallyToolbox ou DevTools est ouverte. | 1425 |
-| `editor_rallyEditor.isVisible()` | Indique si la fenêtre « rallyEditor » est affichée. | 1452 |
-| `editor_rallyEditor.listGhostNotebookChoices()` | Liste les carnets proposés comme carnet fantôme. | 1285 |
-| `editor_rallyEditor.listNotebooks(folder)` | Liste, triés, les fichiers *.notebook.json (recherche récursive) sous le dossier des carnets d'une mission. | 1267 |
-| `editor_rallyEditor.loadForMissionEditor(missionDir)` | Définit la mission courante, construit la liste des voicepacks et applique le premier (ce qui charge son premier carnet) ; sinon efface le carnet. | 1345 |
-| `editor_rallyEditor.loadNotebook(fullFilename)` | Charge un carnet existant (rallyUtil.loadNotebook), le définit comme courant, met à jour tous les onglets et recalcule les notes structurées. Journalise une erreur si le chargement échoue. | 416 |
-| `editor_rallyEditor.loadOrCreateForMissionEditor(missionDir)` | Définit la mission courante, retire le pick de voicepack, détecte le carnet (detectNotebookToLoad) et le charge ou le crée. | 1357 |
-| `editor_rallyEditor.loadOrCreateNotebook(fullFilename)` | Charge le carnet ou, s'il est introuvable, en crée un nouveau (rallyUtil.createNotebook), puis met à jour les onglets et recalcule les notes structurées. | 400 |
-| `editor_rallyEditor.mouseWheelZoom(val)` | Zoom de la caméra « pacenoteOrbit » à la molette : val = 0 zoome de 0.4, val = 1.0 dézoome de 0.4. Sans effet avec une autre caméra. | 1389 |
-| `editor_rallyEditor.moveSelectedWaypointBackward(v)` | Appelé directement par l'action d'entrée : demande le déplacement du waypoint sélectionné vers l'arrière (répété avec anti-rebond de 0.25 s). Seulement dans l'onglet Pacenotes. *(interne)* | 292 |
-| `editor_rallyEditor.moveSelectedWaypointForward(v)` | Appelé directement par l'action d'entrée : demande le déplacement du waypoint sélectionné vers l'avant (anti-rebond de 0.25 s). Seulement dans l'onglet Pacenotes. *(interne)* | 282 |
-| `editor_rallyEditor.onDeserialized(data)` | Appelé après un rechargement Lua avec l'état sauvegardé : restaure la mission, le pick de voicepack (les picks « custom » hérités sont ignorés), le carnet (ou le premier carnet du pick si le fichier n'existe plus) et l'état des fenêtres Toolbox/DevTools. *(interne)* *(hook)* | 1133 |
-| `editor_rallyEditor.onEditorGui(dtReal, dtSim, dtRaw)` | Appelé à chaque frame par l'éditeur : dessine la fenêtre (menus File, View, Tools, onglets, entrées clavier et souris, fenêtres annexes). *(interne)* *(hook)* | 979 |
-| `editor_rallyEditor.onEditorInitialized()` | Appelé à l'initialisation de l'éditeur, y compris après un rechargement Lua (Ctrl+L) : réinitialise les références, crée le ghost notebook, déclare le mode d'édition notebookEditMode, enregistre la fenêtre et le menu Gameplay > Rally Editor, instancie les onglets et sélectionne Pacenotes (ou le premier onglet utile s'il n'y a pas de carnet). *(interne)* *(hook)* | 1037 |
-| `editor_rallyEditor.onEditorRegisterPreferences(prefsRegistry)` | Déclare la catégorie de préférences rallyEditor (editing, view, waypoints, ui). *(interne)* *(hook)* | 1167 |
-| `editor_rallyEditor.onEditorToolWindowHide(windowName)` | Si la fenêtre masquée est rallyEditor, repasse en mode objectSelect. *(interne)* *(hook)* | 1110 |
-| `editor_rallyEditor.onSerialize()` | Appelé avant un rechargement Lua ; sauvegarde mission, pick de voicepack, fichier du carnet courant et état d'ouverture de RallyToolbox et DevTools. *(interne)* *(hook)* | 1122 |
-| `editor_rallyEditor.onVehicleResetted()` | Hook appelé à la réinitialisation d'un véhicule : transmis à DevTools s'il est ouvert. *(interne)* *(hook)* | 1429 |
-| `editor_rallyEditor.onWindowGotFocus(windowName)` | Si la fenêtre qui prend le focus est rallyEditor, active le mode d'édition notebookEditMode. *(interne)* *(hook)* | 1116 |
-| `editor_rallyEditor.openStageLoaderModal()` | Ouvre la fenêtre modale « Open Rally Stage... ». | 608 |
-| `editor_rallyEditor.saveNotebook()` | Enregistre le carnet courant (currentPath:save()). Journalise un avertissement s'il n'y a aucun carnet chargé. | 212 |
-| `editor_rallyEditor.selectGhostNotebook(fname)` | Sélectionne un carnet fantôme de comparaison par nom de fichier. | 1290 |
-| `editor_rallyEditor.selectNextPacenote()` | Sélectionne la pacenote suivante dans l'onglet Pacenotes (ignoré ailleurs). | 228 |
-| `editor_rallyEditor.selectNextWaypoint()` | Sélectionne le waypoint suivant dans l'onglet Pacenotes (ignoré ailleurs). | 252 |
-| `editor_rallyEditor.selectPrevPacenote()` | Sélectionne la pacenote précédente dans l'onglet Pacenotes (ignoré ailleurs). | 223 |
-| `editor_rallyEditor.setFreeCam()` | Passe à la caméra libre de l'éditeur en conservant la position et la rotation de la caméra actuelle. | 238 |
-| `editor_rallyEditor.setPrefLockWaypoints(val)` | Écrit la préférence rallyEditor.editing.lockWaypoints. | 1263 |
-| `editor_rallyEditor.setVoicepackPick(pick)` | Définit le pick de voicepack actif et charge automatiquement le premier carnet candidat ; si le pick n'a aucun carnet résolvable, efface le carnet chargé. | 445 |
-| `editor_rallyEditor.show()` | Vide la sélection, affiche la fenêtre Rally Editor et active le mode d'édition notebookEditMode. | 1000 |
-| `editor_rallyEditor.showPacenotesTab()` | Sélectionne l'onglet Pacenotes (sélection programmatique). | 983 |
-| `editor_rallyEditor.showRallyTool()` | Affiche la fenêtre (ou lui donne le focus), ouvre l'onglet Pacenotes et active le mode d'édition notebookEditMode. | 988 |
-| `editor_rallyEditor.toggleCalibrationWindow()` | Ouvre ou ferme la fenêtre de calibration. | 1511 |
-| `editor_rallyEditor.toggleCornerCalls()` | Active/désactive les annonces de virages dans l'onglet Pacenotes (ignoré ailleurs). | 307 |
-| `editor_rallyEditor.zoomIn(val)` | Appelé directement par l'action d'entrée : zoom avant continu (anti-rebond 0.05 s) de la caméra « pacenoteOrbit ». Sans effet avec une autre caméra. *(interne)* | 1400 |
-| `editor_rallyEditor.zoomOut(val)` | Appelé directement par l'action d'entrée : zoom arrière continu (anti-rebond 0.05 s) de la caméra « pacenoteOrbit ». Sans effet avec une autre caméra. *(interne)* | 1413 |
+| `editor_rallyEditor.allowGizmo()` | Returns whether the gizmo is allowed: true when the current edit mode is "Rally Editor". | 1439 |
+| `editor_rallyEditor.buildVoicepackPickerEntries(missionDir)` | Builds the list of voicepacks offered for a mission (voicepack.buildPickerEntries with suffix "(mission)" for mission voicepacks). | 1450 |
+| `editor_rallyEditor.cameraPathPlay()` | Starts/stops playback of the Pacenotes tab's camera path; no effect if another tab is active. | 302 |
+| `editor_rallyEditor.changeDebugDrawOpacity(val)` | Changes the debug draw opacity in steps of 0.2, clamped between 0.1 and 1.0: val = 0 decreases, val = 1.0 increases. | 1377 |
+| `editor_rallyEditor.clearGhostNotebook()` | Clears the comparison "ghost" notebook if it exists. | 1295 |
+| `editor_rallyEditor.deselect()` | Deselects in the Pacenotes tab (ignored outside this tab). | 247 |
+| `editor_rallyEditor.detectNotebookToLoad(missionDir)` | Chooses the notebook to load for a mission: resolution by voicepack, otherwise first existing notebook, otherwise "structured.notebook.json" to create. | 1323 |
+| `editor_rallyEditor.drawStageLoaderModal()` | Draws the stage loading modal window (StageLoaderModal). *(internal)* | 612 |
+| `editor_rallyEditor.drawToolbarMissionContext(pathObj)` | Draws the text "mission \| notebook \| voicepack" (in cyan) in the toolbar with a tooltip; does nothing if there is no current mission. *(internal)* | 616 |
+| `editor_rallyEditor.getCurrentFilename()` | Returns the file path of the current notebook. | 1369 |
+| `editor_rallyEditor.getCurrentMissionDir()` | Returns the current mission's folder. | 1443 |
+| `editor_rallyEditor.getCurrentMissionId()` | Returns the current mission's identifier (e.g. "italy/rallyStage/001-ss-fastello-norte", extracted after "/missions/"). | 1445 |
+| `editor_rallyEditor.getCurrentMissionName()` | Returns the mission's readable name (translated info.json name, otherwise last path segment). | 1444 |
+| `editor_rallyEditor.getCurrentPath()` | Returns the notebook being edited. | 1442 |
+| `editor_rallyEditor.getCurrentVoicepackPick()` | Returns the current voicepack choice: {type='voicepack', scope='global'\|'mission', dirname=...}. | 1446 |
+| `editor_rallyEditor.getGhostNotebookError()` | Returns the error from the last ghost notebook load. | 1313 |
+| `editor_rallyEditor.getGhostNotebookLabelForPacenote(pacenote)` | Returns the label of the ghost notebook corresponding to a pacenote. | 1317 |
+| `editor_rallyEditor.getGhostNotebookPath()` | Returns the loaded ghost notebook. | 1301 |
+| `editor_rallyEditor.getGhostNotebookSelectedFname()` | Returns the file name of the selected ghost notebook. | 1305 |
+| `editor_rallyEditor.getGhostNotebookSelectedLabel()` | Returns the label of the selected ghost notebook. | 1309 |
+| `editor_rallyEditor.getMissionDir()` | Returns the current notebook's mission folder (currentPath:getMissionDir()). | 1517 |
+| `editor_rallyEditor.getMissionId()` | Returns the current notebook's mission identifier (currentPath:getMissionId()). | 1518 |
+| `editor_rallyEditor.getPacenotesWindow()` | Returns the Pacenotes tab. | 1516 |
+| `editor_rallyEditor.getPrefDefaultRadius()` | Preference rallyEditor.waypoints.defaultRadius: display radius of waypoints. | 1246 |
+| `editor_rallyEditor.getPrefDrivelineSplinePrismWidth()` | Prism width (vehicle width) used to draw the driveline spline. | 1242 |
+| `editor_rallyEditor.getPrefLockWaypoints()` | Preference rallyEditor.editing.lockWaypoints: locks the waypoint position. | 1254 |
+| `editor_rallyEditor.getPrefPacenoteLabelDistance()` | Camera distance beyond which the preview with no selection switches to the rainbow overview. | 1226 |
+| `editor_rallyEditor.getPrefPacenoteLabelMode()` | Display mode for pacenote preview labels. | 1222 |
+| `editor_rallyEditor.getPrefPacenoteLabelNearCameraCount()` | Number of pacenotes before and after the camera pivot that display their label. | 1230 |
+| `editor_rallyEditor.getPrefShowAdjacentPacenoteText()` | Returns whether the preview texts of the previous and next pacenotes are displayed. | 1234 |
+| `editor_rallyEditor.getPrefShowAllPacenoteLabels()` | True if the label mode is "all". | 1218 |
+| `editor_rallyEditor.getPrefShowNextPacenote()` | Also displays the next pacenote when a pacenote is selected. | 1214 |
+| `editor_rallyEditor.getPrefShowPreviousPacenote()` | Also displays the previous pacenote when a pacenote is selected. | 1210 |
+| `editor_rallyEditor.getPrefShowSelectedPacenoteUtility()` | Returns whether the floating utility window of the selected pacenote is displayed. | 1238 |
+| `editor_rallyEditor.getPrefUiPacenoteNoteFieldWidth()` | Width of a pacenote's notes.note.freeform field. | 1250 |
+| `editor_rallyEditor.getPrefWaypointSnapMethod()` | Z snapping method when dragging a waypoint, before looking for the nearest snaproad point. | 1258 |
+| `editor_rallyEditor.getViewSnaproadPathOnTop()` | Returns whether the snaproad path is drawn in the foreground (ephemeral view option, reset to false when the mode is deactivated). | 1459 |
+| `editor_rallyEditor.getVolatilePreferences()` | Supposed to return the volatile preferences; returns the undefined variable volatilePreferences, so nil (see notes). | 1514 |
+| `editor_rallyEditor.insertMode()` | Activates the Pacenotes tab's insert mode (ignored outside this tab). | 233 |
+| `editor_rallyEditor.isCalibrationWindowOpen()` | Returns whether the calibration window is open. | 1510 |
+| `editor_rallyEditor.isPacenotesToolsSectionExpanded()` | True if DevTools is open and its pacenote tools section is expanded. | 1520 |
+| `editor_rallyEditor.isToolboxOpen()` | True if the RallyToolbox or DevTools window is open. | 1425 |
+| `editor_rallyEditor.isVisible()` | Returns whether the "rallyEditor" window is displayed. | 1452 |
+| `editor_rallyEditor.listGhostNotebookChoices()` | Lists the notebooks offered as ghost notebook. | 1285 |
+| `editor_rallyEditor.listNotebooks(folder)` | Lists, sorted, the *.notebook.json files (recursive search) under a mission's notebooks folder. | 1267 |
+| `editor_rallyEditor.loadForMissionEditor(missionDir)` | Sets the current mission, builds the voicepack list and applies the first one (which loads its first notebook); otherwise clears the notebook. | 1345 |
+| `editor_rallyEditor.loadNotebook(fullFilename)` | Loads an existing notebook (rallyUtil.loadNotebook), sets it as current, updates all tabs and recomputes the structured notes. Logs an error if loading fails. | 416 |
+| `editor_rallyEditor.loadOrCreateForMissionEditor(missionDir)` | Sets the current mission, removes the voicepack pick, detects the notebook (detectNotebookToLoad) and loads or creates it. | 1357 |
+| `editor_rallyEditor.loadOrCreateNotebook(fullFilename)` | Loads the notebook or, if not found, creates a new one (rallyUtil.createNotebook), then updates the tabs and recomputes the structured notes. | 400 |
+| `editor_rallyEditor.mouseWheelZoom(val)` | Zoom of the "pacenoteOrbit" camera with the mouse wheel: val = 0 zooms in by 0.4, val = 1.0 zooms out by 0.4. No effect with another camera. | 1389 |
+| `editor_rallyEditor.moveSelectedWaypointBackward(v)` | Called directly by the input action: requests moving the selected waypoint backward (repeated with a 0.25 s debounce). Pacenotes tab only. *(internal)* | 292 |
+| `editor_rallyEditor.moveSelectedWaypointForward(v)` | Called directly by the input action: requests moving the selected waypoint forward (0.25 s debounce). Pacenotes tab only. *(internal)* | 282 |
+| `editor_rallyEditor.onDeserialized(data)` | Called after a Lua reload with the saved state: restores the mission, the voicepack pick (legacy "custom" picks are ignored), the notebook (or the pick's first notebook if the file no longer exists) and the state of the Toolbox/DevTools windows. *(internal)* *(hook)* | 1133 |
+| `editor_rallyEditor.onEditorGui(dtReal, dtSim, dtRaw)` | Called every frame by the editor: draws the window (File, View, Tools menus, tabs, keyboard and mouse inputs, auxiliary windows). *(internal)* *(hook)* | 979 |
+| `editor_rallyEditor.onEditorInitialized()` | Called at editor initialization, including after a Lua reload (Ctrl+L): resets references, creates the ghost notebook, declares the notebookEditMode edit mode, registers the window and the Gameplay > Rally Editor menu, instantiates the tabs and selects Pacenotes (or the first useful tab if there is no notebook). *(internal)* *(hook)* | 1037 |
+| `editor_rallyEditor.onEditorRegisterPreferences(prefsRegistry)` | Declares the rallyEditor preferences category (editing, view, waypoints, ui). *(internal)* *(hook)* | 1167 |
+| `editor_rallyEditor.onEditorToolWindowHide(windowName)` | If the hidden window is rallyEditor, switches back to objectSelect mode. *(internal)* *(hook)* | 1110 |
+| `editor_rallyEditor.onSerialize()` | Called before a Lua reload; saves the mission, voicepack pick, current notebook file and the open state of RallyToolbox and DevTools. *(internal)* *(hook)* | 1122 |
+| `editor_rallyEditor.onVehicleResetted()` | Hook called on vehicle reset: forwarded to DevTools if it is open. *(internal)* *(hook)* | 1429 |
+| `editor_rallyEditor.onWindowGotFocus(windowName)` | If the window gaining focus is rallyEditor, activates the notebookEditMode edit mode. *(internal)* *(hook)* | 1116 |
+| `editor_rallyEditor.openStageLoaderModal()` | Opens the "Open Rally Stage..." modal window. | 608 |
+| `editor_rallyEditor.saveNotebook()` | Saves the current notebook (currentPath:save()). Logs a warning if no notebook is loaded. | 212 |
+| `editor_rallyEditor.selectGhostNotebook(fname)` | Selects a comparison ghost notebook by file name. | 1290 |
+| `editor_rallyEditor.selectNextPacenote()` | Selects the next pacenote in the Pacenotes tab (ignored elsewhere). | 228 |
+| `editor_rallyEditor.selectNextWaypoint()` | Selects the next waypoint in the Pacenotes tab (ignored elsewhere). | 252 |
+| `editor_rallyEditor.selectPrevPacenote()` | Selects the previous pacenote in the Pacenotes tab (ignored elsewhere). | 223 |
+| `editor_rallyEditor.setFreeCam()` | Switches to the editor's free camera, keeping the current camera's position and rotation. | 238 |
+| `editor_rallyEditor.setPrefLockWaypoints(val)` | Writes the rallyEditor.editing.lockWaypoints preference. | 1263 |
+| `editor_rallyEditor.setVoicepackPick(pick)` | Sets the active voicepack pick and automatically loads the first candidate notebook; if the pick has no resolvable notebook, clears the loaded notebook. | 445 |
+| `editor_rallyEditor.show()` | Clears the selection, shows the Rally Editor window and activates the notebookEditMode edit mode. | 1000 |
+| `editor_rallyEditor.showPacenotesTab()` | Selects the Pacenotes tab (programmatic selection). | 983 |
+| `editor_rallyEditor.showRallyTool()` | Shows the window (or gives it focus), opens the Pacenotes tab and activates the notebookEditMode edit mode. | 988 |
+| `editor_rallyEditor.toggleCalibrationWindow()` | Opens or closes the calibration window. | 1511 |
+| `editor_rallyEditor.toggleCornerCalls()` | Enables/disables corner calls in the Pacenotes tab (ignored elsewhere). | 307 |
+| `editor_rallyEditor.zoomIn(val)` | Called directly by the input action: continuous zoom in (0.05 s debounce) of the "pacenoteOrbit" camera. No effect with another camera. *(internal)* | 1400 |
+| `editor_rallyEditor.zoomOut(val)` | Called directly by the input action: continuous zoom out (0.05 s debounce) of the "pacenoteOrbit" camera. No effect with another camera. *(internal)* | 1413 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_rallyEditor.allowGizmo()`
 
-Indique si le gizmo est autorisé : vrai quand le mode d'édition courant est « Rally Editor ».
+Returns whether the gizmo is allowed: true when the current edit mode is "Rally Editor".
 
-- **renvoie** : boolean true en mode Rally Editor.
+- **returns**: boolean true in Rally Editor mode.
 
 #### `editor_rallyEditor.buildVoicepackPickerEntries(missionDir)`
 
-Construit la liste des voicepacks proposés pour une mission (voicepack.buildPickerEntries avec suffixe « (mission) » pour les voicepacks de mission).
+Builds the list of voicepacks offered for a mission (voicepack.buildPickerEntries with suffix "(mission)" for mission voicepacks).
 
-- `missionDir` (*string*) : Dossier de la mission.
-- **renvoie** : table<integer, table> Entrées contenant notamment un champ pick.
+- `missionDir` (*string*) : Mission folder.
+- **returns**: table<integer, table> Entries containing in particular a pick field.
 
 #### `editor_rallyEditor.changeDebugDrawOpacity(val)`
 
-Change l'opacité du dessin de debug par pas de 0.2, bornée entre 0.1 et 1.0 : val = 0 diminue, val = 1.0 augmente.
+Changes the debug draw opacity in steps of 0.2, clamped between 0.1 and 1.0: val = 0 decreases, val = 1.0 increases.
 
-- `val` (*number*) : 0 pour diminuer, 1.0 pour augmenter.
+- `val` (*number*) : 0 to decrease, 1.0 to increase.
 
 #### `editor_rallyEditor.detectNotebookToLoad(missionDir)`
 
-Choisit le carnet à charger pour une mission : résolution par voicepack, sinon premier carnet existant, sinon « structured.notebook.json » à créer.
+Chooses the notebook to load for a mission: resolution by voicepack, otherwise first existing notebook, otherwise "structured.notebook.json" to create.
 
-- `missionDir` (*string*) : Dossier de la mission.
-- **renvoie** : string Chemin complet du fichier de carnet.
+- `missionDir` (*string*) : Mission folder.
+- **returns**: string Full path of the notebook file.
 
 #### `editor_rallyEditor.drawToolbarMissionContext(pathObj)`
 
-Dessine dans la barre d'outils le texte « mission | carnet | voicepack » (en cyan) avec une infobulle ; ne fait rien si aucune mission courante.
+Draws the text "mission | notebook | voicepack" (in cyan) in the toolbar with a tooltip; does nothing if there is no current mission.
 
-- `pathObj` (*table|nil*) : Carnet courant (basenameNoExt() pour le nom).
+- `pathObj` (*table|nil*) : Current notebook (basenameNoExt() for the name).
 
 #### `editor_rallyEditor.getCurrentFilename()`
 
-Renvoie le chemin du fichier du carnet courant.
+Returns the file path of the current notebook.
 
-- **renvoie** : string|nil currentPath.fname ou nil si aucun carnet.
+- **returns**: string|nil currentPath.fname or nil if no notebook.
 
 #### `editor_rallyEditor.getCurrentMissionDir()`
 
-Renvoie le dossier de la mission courante.
+Returns the current mission's folder.
 
-- **renvoie** : string|nil Chemin absolu.
+- **returns**: string|nil Absolute path.
 
 #### `editor_rallyEditor.getCurrentMissionId()`
 
-Renvoie l'identifiant de la mission courante (ex. « italy/rallyStage/001-ss-fastello-norte », extrait après « /missions/ »).
+Returns the current mission's identifier (e.g. "italy/rallyStage/001-ss-fastello-norte", extracted after "/missions/").
 
-- **renvoie** : string|nil Identifiant ou nil.
+- **returns**: string|nil Identifier or nil.
 
 #### `editor_rallyEditor.getCurrentMissionName()`
 
-Renvoie le nom lisible de la mission (info.json name traduit, sinon dernier segment du chemin).
+Returns the mission's readable name (translated info.json name, otherwise last path segment).
 
-- **renvoie** : string|nil Nom.
+- **returns**: string|nil Name.
 
 #### `editor_rallyEditor.getCurrentPath()`
 
-Renvoie le carnet (notebook) en cours d'édition.
+Returns the notebook being edited.
 
-- **renvoie** : table|nil Objet carnet ou nil.
+- **returns**: table|nil Notebook object or nil.
 
 #### `editor_rallyEditor.getCurrentVoicepackPick()`
 
-Renvoie le choix de voicepack courant : {type='voicepack', scope='global'|'mission', dirname=...}.
+Returns the current voicepack choice: {type='voicepack', scope='global'|'mission', dirname=...}.
 
-- **renvoie** : table|nil Pick courant.
+- **returns**: table|nil Current pick.
 
 #### `editor_rallyEditor.getGhostNotebookError()`
 
-Renvoie l'erreur du dernier chargement du carnet fantôme.
+Returns the error from the last ghost notebook load.
 
-- **renvoie** : string|nil Message d'erreur.
+- **returns**: string|nil Error message.
 
 #### `editor_rallyEditor.getGhostNotebookLabelForPacenote(pacenote)`
 
-Renvoie l'étiquette du carnet fantôme correspondant à une pacenote.
+Returns the label of the ghost notebook corresponding to a pacenote.
 
-- `pacenote` (*table*) : Pacenote du carnet courant.
-- **renvoie** : string|nil Étiquette.
+- `pacenote` (*table*) : Pacenote of the current notebook.
+- **returns**: string|nil Label.
 
 #### `editor_rallyEditor.getGhostNotebookPath()`
 
-Renvoie le carnet fantôme chargé.
+Returns the loaded ghost notebook.
 
-- **renvoie** : table|nil Carnet fantôme.
+- **returns**: table|nil Ghost notebook.
 
 #### `editor_rallyEditor.getGhostNotebookSelectedFname()`
 
-Renvoie le nom de fichier du carnet fantôme sélectionné.
+Returns the file name of the selected ghost notebook.
 
-- **renvoie** : string|nil Chemin du fichier.
+- **returns**: string|nil File path.
 
 #### `editor_rallyEditor.getGhostNotebookSelectedLabel()`
 
-Renvoie l'étiquette du carnet fantôme sélectionné.
+Returns the label of the selected ghost notebook.
 
-- **renvoie** : string Étiquette, ou « (none) ».
+- **returns**: string Label, or "(none)".
 
 #### `editor_rallyEditor.getMissionDir()`
 
-Renvoie le dossier de mission du carnet courant (currentPath:getMissionDir()).
+Returns the current notebook's mission folder (currentPath:getMissionDir()).
 
-- **renvoie** : string|nil Dossier ou nil.
+- **returns**: string|nil Folder or nil.
 
 #### `editor_rallyEditor.getMissionId()`
 
-Renvoie l'identifiant de mission du carnet courant (currentPath:getMissionId()).
+Returns the current notebook's mission identifier (currentPath:getMissionId()).
 
-- **renvoie** : string|nil Identifiant ou nil.
+- **returns**: string|nil Identifier or nil.
 
 #### `editor_rallyEditor.getPacenotesWindow()`
 
-Renvoie l'onglet Pacenotes.
+Returns the Pacenotes tab.
 
-- **renvoie** : table|nil Instance de l'onglet.
+- **returns**: table|nil Tab instance.
 
 #### `editor_rallyEditor.getPrefDefaultRadius()`
 
-Préférence rallyEditor.waypoints.defaultRadius : rayon d'affichage des waypoints.
+Preference rallyEditor.waypoints.defaultRadius: display radius of waypoints.
 
-- **renvoie** : integer Rayon (8 par défaut).
+- **returns**: integer Radius (8 by default).
 
 #### `editor_rallyEditor.getPrefDrivelineSplinePrismWidth()`
 
-Largeur du prisme (largeur de véhicule) servant à dessiner la spline de driveline.
+Prism width (vehicle width) used to draw the driveline spline.
 
-- **renvoie** : number Largeur en mètres, bornée à 0.5-5 (1.945 par défaut).
+- **returns**: number Width in meters, clamped to 0.5-5 (1.945 by default).
 
 #### `editor_rallyEditor.getPrefLockWaypoints()`
 
-Préférence rallyEditor.editing.lockWaypoints : verrouille la position des waypoints.
+Preference rallyEditor.editing.lockWaypoints: locks the waypoint position.
 
-- **renvoie** : boolean false par défaut.
+- **returns**: boolean false by default.
 
 #### `editor_rallyEditor.getPrefPacenoteLabelDistance()`
 
-Distance caméra à partir de laquelle l'aperçu sans sélection passe en vue d'ensemble arc-en-ciel.
+Camera distance beyond which the preview with no selection switches to the rainbow overview.
 
-- **renvoie** : number Distance en mètres, bornée à 100-1500 (650 par défaut).
+- **returns**: number Distance in meters, clamped to 100-1500 (650 by default).
 
 #### `editor_rallyEditor.getPrefPacenoteLabelMode()`
 
-Mode d'affichage des étiquettes d'aperçu de pacenotes.
+Display mode for pacenote preview labels.
 
-- **renvoie** : string « all » ou « distance » (par défaut).
+- **returns**: string "all" or "distance" (default).
 
 #### `editor_rallyEditor.getPrefPacenoteLabelNearCameraCount()`
 
-Nombre de pacenotes avant et après le pivot de la caméra qui affichent leur étiquette.
+Number of pacenotes before and after the camera pivot that display their label.
 
-- **renvoie** : integer 0 à 10 (3 par défaut).
+- **returns**: integer 0 to 10 (3 by default).
 
 #### `editor_rallyEditor.getPrefShowAdjacentPacenoteText()`
 
-Indique si les textes d'aperçu des pacenotes précédente et suivante sont affichés.
+Returns whether the preview texts of the previous and next pacenotes are displayed.
 
-- **renvoie** : boolean true par défaut.
+- **returns**: boolean true by default.
 
 #### `editor_rallyEditor.getPrefShowAllPacenoteLabels()`
 
-Vrai si le mode d'étiquettes est « all ».
+True if the label mode is "all".
 
-- **renvoie** : boolean true si toutes les étiquettes sont affichées.
+- **returns**: boolean true if all labels are displayed.
 
 #### `editor_rallyEditor.getPrefShowNextPacenote()`
 
-Affiche aussi la pacenote suivante quand une pacenote est sélectionnée.
+Also displays the next pacenote when a pacenote is selected.
 
-- **renvoie** : boolean true par défaut.
+- **returns**: boolean true by default.
 
 #### `editor_rallyEditor.getPrefShowPreviousPacenote()`
 
-Affiche aussi la pacenote précédente quand une pacenote est sélectionnée.
+Also displays the previous pacenote when a pacenote is selected.
 
-- **renvoie** : boolean true par défaut.
+- **returns**: boolean true by default.
 
 #### `editor_rallyEditor.getPrefShowSelectedPacenoteUtility()`
 
-Indique si la fenêtre flottante d'utilitaire de la pacenote sélectionnée est affichée.
+Returns whether the floating utility window of the selected pacenote is displayed.
 
-- **renvoie** : boolean false par défaut.
+- **returns**: boolean false by default.
 
 #### `editor_rallyEditor.getPrefUiPacenoteNoteFieldWidth()`
 
-Largeur du champ notes.note.freeform d'une pacenote.
+Width of a pacenote's notes.note.freeform field.
 
-- **renvoie** : integer Largeur (300 par défaut, de 1 à 1000).
+- **returns**: integer Width (300 by default, from 1 to 1000).
 
 #### `editor_rallyEditor.getPrefWaypointSnapMethod()`
 
-Méthode de recalage en Z lors du glisser d'un waypoint, avant de chercher le point de snaproad le plus proche.
+Z snapping method when dragging a waypoint, before looking for the nearest snaproad point.
 
-- **renvoie** : string Valeur valide de zSnap (zSnap.defaultMethod sinon).
+- **returns**: string Valid zSnap value (zSnap.defaultMethod otherwise).
 
 #### `editor_rallyEditor.getViewSnaproadPathOnTop()`
 
-Indique si le chemin du snaproad est dessiné au premier plan (option de vue éphémère, remise à false à la désactivation du mode).
+Returns whether the snaproad path is drawn in the foreground (ephemeral view option, reset to false when the mode is deactivated).
 
-- **renvoie** : boolean Valeur courante.
+- **returns**: boolean Current value.
 
 #### `editor_rallyEditor.getVolatilePreferences()`
 
-Censée renvoyer les préférences volatiles ; renvoie la variable non définie volatilePreferences, donc nil (voir notes).
+Supposed to return the volatile preferences; returns the undefined variable volatilePreferences, so nil (see notes).
 
-- **renvoie** : nil Toujours nil.
+- **returns**: nil Always nil.
 
 #### `editor_rallyEditor.isCalibrationWindowOpen()`
 
-Indique si la fenêtre de calibration est ouverte.
+Returns whether the calibration window is open.
 
-- **renvoie** : boolean État de la fenêtre.
+- **returns**: boolean Window state.
 
 #### `editor_rallyEditor.isPacenotesToolsSectionExpanded()`
 
-Vrai si DevTools est ouvert et que sa section d'outils de pacenotes est dépliée.
+True if DevTools is open and its pacenote tools section is expanded.
 
-- **renvoie** : boolean État de la section.
+- **returns**: boolean Section state.
 
 #### `editor_rallyEditor.isToolboxOpen()`
 
-Vrai si la fenêtre RallyToolbox ou DevTools est ouverte.
+True if the RallyToolbox or DevTools window is open.
 
-- **renvoie** : boolean true si l'une des deux est ouverte.
+- **returns**: boolean true if either is open.
 
 #### `editor_rallyEditor.isVisible()`
 
-Indique si la fenêtre « rallyEditor » est affichée.
+Returns whether the "rallyEditor" window is displayed.
 
-- **renvoie** : boolean Visibilité.
+- **returns**: boolean Visibility.
 
 #### `editor_rallyEditor.listGhostNotebookChoices()`
 
-Liste les carnets proposés comme carnet fantôme.
+Lists the notebooks offered as ghost notebook.
 
-- **renvoie** : table Choix (liste vide si le module fantôme n'est pas prêt).
+- **returns**: table Choices (empty list if the ghost module is not ready).
 
 #### `editor_rallyEditor.listNotebooks(folder)`
 
-Liste, triés, les fichiers *.notebook.json (recherche récursive) sous le dossier des carnets d'une mission.
+Lists, sorted, the *.notebook.json files (recursive search) under a mission's notebooks folder.
 
-- `folder` (*string|nil*) : Dossier de la mission ; par défaut celui du carnet courant (erreur si aucun carnet chargé).
-- **renvoie** : table<integer, string> Chemins complets triés.
+- `folder` (*string|nil*) : Mission folder; by default the current notebook's (error if no notebook loaded).
+- **returns**: table<integer, string> Sorted full paths.
 
 #### `editor_rallyEditor.loadForMissionEditor(missionDir)`
 
-Définit la mission courante, construit la liste des voicepacks et applique le premier (ce qui charge son premier carnet) ; sinon efface le carnet.
+Sets the current mission, builds the voicepack list and applies the first one (which loads its first notebook); otherwise clears the notebook.
 
-- `missionDir` (*string*) : Dossier de la mission.
+- `missionDir` (*string*) : Mission folder.
 
 #### `editor_rallyEditor.loadNotebook(fullFilename)`
 
-Charge un carnet existant (rallyUtil.loadNotebook), le définit comme courant, met à jour tous les onglets et recalcule les notes structurées. Journalise une erreur si le chargement échoue.
+Loads an existing notebook (rallyUtil.loadNotebook), sets it as current, updates all tabs and recomputes the structured notes. Logs an error if loading fails.
 
-- `fullFilename` (*string*) : Chemin complet du fichier .notebook.json.
+- `fullFilename` (*string*) : Full path of the .notebook.json file.
 
 #### `editor_rallyEditor.loadOrCreateForMissionEditor(missionDir)`
 
-Définit la mission courante, retire le pick de voicepack, détecte le carnet (detectNotebookToLoad) et le charge ou le crée.
+Sets the current mission, removes the voicepack pick, detects the notebook (detectNotebookToLoad) and loads or creates it.
 
-- `missionDir` (*string*) : Dossier de la mission.
+- `missionDir` (*string*) : Mission folder.
 
 #### `editor_rallyEditor.loadOrCreateNotebook(fullFilename)`
 
-Charge le carnet ou, s'il est introuvable, en crée un nouveau (rallyUtil.createNotebook), puis met à jour les onglets et recalcule les notes structurées.
+Loads the notebook or, if not found, creates a new one (rallyUtil.createNotebook), then updates the tabs and recomputes the structured notes.
 
-- `fullFilename` (*string*) : Chemin complet du fichier .notebook.json.
+- `fullFilename` (*string*) : Full path of the .notebook.json file.
 
 #### `editor_rallyEditor.mouseWheelZoom(val)`
 
-Zoom de la caméra « pacenoteOrbit » à la molette : val = 0 zoome de 0.4, val = 1.0 dézoome de 0.4. Sans effet avec une autre caméra.
+Zoom of the "pacenoteOrbit" camera with the mouse wheel: val = 0 zooms in by 0.4, val = 1.0 zooms out by 0.4. No effect with another camera.
 
-- `val` (*number*) : 0 ou 1.0.
+- `val` (*number*) : 0 or 1.0.
 
 #### `editor_rallyEditor.moveSelectedWaypointBackward(v)`
 
-Appelé directement par l'action d'entrée : demande le déplacement du waypoint sélectionné vers l'arrière (répété avec anti-rebond de 0.25 s). Seulement dans l'onglet Pacenotes.
+Called directly by the input action: requests moving the selected waypoint backward (repeated with a 0.25 s debounce). Pacenotes tab only.
 
-- `v` (*number*) : 0 relâché, 1 appuyé.
+- `v` (*number*) : 0 released, 1 pressed.
 
 #### `editor_rallyEditor.moveSelectedWaypointForward(v)`
 
-Appelé directement par l'action d'entrée : demande le déplacement du waypoint sélectionné vers l'avant (anti-rebond de 0.25 s). Seulement dans l'onglet Pacenotes.
+Called directly by the input action: requests moving the selected waypoint forward (0.25 s debounce). Pacenotes tab only.
 
-- `v` (*number*) : 0 relâché, 1 appuyé.
+- `v` (*number*) : 0 released, 1 pressed.
 
 #### `editor_rallyEditor.onDeserialized(data)`
 
-Appelé après un rechargement Lua avec l'état sauvegardé : restaure la mission, le pick de voicepack (les picks « custom » hérités sont ignorés), le carnet (ou le premier carnet du pick si le fichier n'existe plus) et l'état des fenêtres Toolbox/DevTools.
+Called after a Lua reload with the saved state: restores the mission, the voicepack pick (legacy "custom" picks are ignored), the notebook (or the pick's first notebook if the file no longer exists) and the state of the Toolbox/DevTools windows.
 
-- `data` (*table|nil*) : Table de onSerialize.
+- `data` (*table|nil*) : onSerialize table.
 
 #### `editor_rallyEditor.onEditorGui(dtReal, dtSim, dtRaw)`
 
-Appelé à chaque frame par l'éditeur : dessine la fenêtre (menus File, View, Tools, onglets, entrées clavier et souris, fenêtres annexes).
+Called every frame by the editor: draws the window (File, View, Tools menus, tabs, keyboard and mouse inputs, auxiliary windows).
 
-- `dtReal` (*number*) : Delta temps réel.
-- `dtSim` (*number*) : Delta temps de simulation.
-- `dtRaw` (*number*) : Delta temps brut.
+- `dtReal` (*number*) : Real-time delta.
+- `dtSim` (*number*) : Simulation time delta.
+- `dtRaw` (*number*) : Raw time delta.
 
 #### `editor_rallyEditor.onEditorRegisterPreferences(prefsRegistry)`
 
-Déclare la catégorie de préférences rallyEditor (editing, view, waypoints, ui).
+Declares the rallyEditor preferences category (editing, view, waypoints, ui).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_rallyEditor.onEditorToolWindowHide(windowName)`
 
-Si la fenêtre masquée est rallyEditor, repasse en mode objectSelect.
+If the hidden window is rallyEditor, switches back to objectSelect mode.
 
-- `windowName` (*string*) : Nom de la fenêtre.
+- `windowName` (*string*) : Window name.
 
 #### `editor_rallyEditor.onSerialize()`
 
-Appelé avant un rechargement Lua ; sauvegarde mission, pick de voicepack, fichier du carnet courant et état d'ouverture de RallyToolbox et DevTools.
+Called before a Lua reload; saves the mission, voicepack pick, current notebook file and the open state of RallyToolbox and DevTools.
 
-- **renvoie** : table {currentMissionDir, currentVoicepackPick, currentNotebookFname, rallyToolboxWindowOpen, devToolsWindowOpen}.
+- **returns**: table {currentMissionDir, currentVoicepackPick, currentNotebookFname, rallyToolboxWindowOpen, devToolsWindowOpen}.
 
 #### `editor_rallyEditor.onWindowGotFocus(windowName)`
 
-Si la fenêtre qui prend le focus est rallyEditor, active le mode d'édition notebookEditMode.
+If the window gaining focus is rallyEditor, activates the notebookEditMode edit mode.
 
-- `windowName` (*string*) : Nom de la fenêtre.
+- `windowName` (*string*) : Window name.
 
 #### `editor_rallyEditor.selectGhostNotebook(fname)`
 
-Sélectionne un carnet fantôme de comparaison par nom de fichier.
+Selects a comparison ghost notebook by file name.
 
-- `fname` (*string*) : Chemin du carnet.
-- **renvoie** : boolean Résultat de la sélection ; false si le module fantôme n'est pas prêt.
+- `fname` (*string*) : Notebook path.
+- **returns**: boolean Selection result; false if the ghost module is not ready.
 
 #### `editor_rallyEditor.setPrefLockWaypoints(val)`
 
-Écrit la préférence rallyEditor.editing.lockWaypoints.
+Writes the rallyEditor.editing.lockWaypoints preference.
 
-- `val` (*boolean*) : true pour verrouiller.
+- `val` (*boolean*) : true to lock.
 
 #### `editor_rallyEditor.setVoicepackPick(pick)`
 
-Définit le pick de voicepack actif et charge automatiquement le premier carnet candidat ; si le pick n'a aucun carnet résolvable, efface le carnet chargé.
+Sets the active voicepack pick and automatically loads the first candidate notebook; if the pick has no resolvable notebook, clears the loaded notebook.
 
-- `pick` (*table*) : {type='voicepack', scope='global'|'mission', dirname=<dossier du voicepack>}.
+- `pick` (*table*) : {type='voicepack', scope='global'|'mission', dirname=<voicepack folder>}.
 
 #### `editor_rallyEditor.zoomIn(val)`
 
-Appelé directement par l'action d'entrée : zoom avant continu (anti-rebond 0.05 s) de la caméra « pacenoteOrbit ». Sans effet avec une autre caméra.
+Called directly by the input action: continuous zoom in (0.05 s debounce) of the "pacenoteOrbit" camera. No effect with another camera.
 
-- `val` (*number*) : 0 relâché, 1 appuyé.
+- `val` (*number*) : 0 released, 1 pressed.
 
 #### `editor_rallyEditor.zoomOut(val)`
 
-Appelé directement par l'action d'entrée : zoom arrière continu (anti-rebond 0.05 s) de la caméra « pacenoteOrbit ». Sans effet avec une autre caméra.
+Called directly by the input action: continuous zoom out (0.05 s debounce) of the "pacenoteOrbit" camera. No effect with another camera.
 
-- `val` (*number*) : 0 relâché, 1 appuyé.
+- `val` (*number*) : 0 released, 1 pressed.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions requises : {'gameplay_missions_missions'}. |
-| `devToolsWindowOpen` | ImBoolPtr | Indicateur d'ouverture de la fenêtre DevTools (remplacé à la désérialisation). |
-| `notebookBasenamesForPick` | function | Alias de voicepack.notebookBasenamesForPick (liste des noms de carnets candidats pour un pick de voicepack). |
-| `picksMatch` | function | Alias de voicepack.picksMatch (compatibilité avec les appelants externes). |
-| `rallyToolboxWindowOpen` | ImBoolPtr | Indicateur d'ouverture de la fenêtre RallyToolbox (remplacé à la désérialisation). |
+| `dependencies` | table<integer, string> | Required extensions: {'gameplay_missions_missions'}. |
+| `devToolsWindowOpen` | ImBoolPtr | Flag for whether the DevTools window is open (replaced on deserialization). |
+| `notebookBasenamesForPick` | function | Alias of voicepack.notebookBasenamesForPick (list of candidate notebook names for a voicepack pick). |
+| `picksMatch` | function | Alias of voicepack.picksMatch (compatibility with external callers). |
+| `rallyToolboxWindowOpen` | ImBoolPtr | Flag for whether the RallyToolbox window is open (replaced on deserialization). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`
 - `scenetree.` `findObject`
 
-**Charge les extensions :** `gameplay_rallyLoop`
+**Loads extensions:** `gameplay_rallyLoop`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/rallyEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/rallyEditor.lua`.*

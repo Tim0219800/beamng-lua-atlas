@@ -1,65 +1,65 @@
 # `scenario_shiftBooster`
 
-*Fichier : `lua/vehicle/extensions/scenario/shiftBooster.lua` · VM : Véhicule · 80 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/scenario/shiftBooster.lua` · VM: Vehicle · 80 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_shiftBooster` : `extensions.load (VM véhicule)("scenario_shiftBooster")`, puis la globale `scenario_shiftBooster`
+**Access:** extension `scenario_shiftBooster`: `extensions.load (vehicle VM)("scenario_shiftBooster")`, then the global `scenario_shiftBooster`
 
-Extension de scénario de démonstration : donne un coup de pouce (« boost ») au véhicule en lui appliquant un vent constant dirigé selon son axe avant via obj:setWind. Peut se déclencher à chaque changement de rapport montant (listenToShift) ou manuellement (manualBoost). Le boost dure `boostTime` secondes, décompté dans updateGFX.
+Demo scenario extension: gives the vehicle a boost by applying a constant wind directed along its forward axis via obj:setWind. Can be triggered on each upshift (listenToShift) or manually (manualBoost). The boost lasts `boostTime` seconds, counted down in updateGFX.
 
-## Exemple
+## Example
 
 ```lua
 scenario_shiftBooster.manualBoost(1.0, 500) -- boost 1 s, force 500
-scenario_shiftBooster.listenToShift()  -- boost 0.4 s à chaque shiftUp
+scenario_shiftBooster.listenToShift()  -- boost 0.4 s on each shiftUp
 ```
 
-## Remarques
+## Notes
 
-- listenToShift remplace drivetrain.shiftUp ; or drivetrain.lua (chargé comme globale `drivetrain` par main.lua) ne contient aucune fonction shiftUp en 0.40.5. up_for_real vaut donc nil et le remplacement plantera au premier appel : code obsolète (incohérence repérée).
-- La force par défaut est 300 (unité du vent de obj:setWind, déduite du code) ; le vecteur direction est multiplié par la force.
-- Quand boostTime tombe sous 0.01, updateGFX remet le vent à (0,0,0) à chaque frame, ce qui écrase tout autre vent posé par le véhicule.
-- applyBoost fait un print à chaque appel (bruyant dans les logs).
+- listenToShift replaces drivetrain.shiftUp; but drivetrain.lua (loaded as the global `drivetrain` by main.lua) contains no shiftUp function in 0.40.5. up_for_real is therefore nil and the replacement will crash on the first call: obsolete code (inconsistency spotted).
+- The default force is 300 (obj:setWind wind unit, inferred from code); the direction vector is multiplied by the force.
+- When boostTime drops below 0.01, updateGFX resets the wind to (0,0,0) every frame, which overwrites any other wind set by the vehicle.
+- applyBoost prints on every call (noisy in the logs).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_shiftBooster.listenToShift()` | Enveloppe drivetrain.shiftUp : après le vrai changement de rapport, règle boostTime à 0.4 s, affiche un message UI « Boooooost! » (5 s) et applique un boost de force par défaut. | 27 |
-| `scenario_shiftBooster.manualBoost(duration, strength)` | Démarre un boost manuel : fixe boostTime à la durée donnée et applique immédiatement le boost. | 68 |
-| `scenario_shiftBooster.onDebugDraw(focusPos)` | Hook de dessin debug : si un boost est actif, dessine une sphère de rayon boostTime 2 m au-dessus du véhicule, de couleur variable. *(interne)* *(hook)* | 58 |
-| `scenario_shiftBooster.onVehicleScenarioData(data)` | Hook de configuration scénario ; corps vide, aucune donnée n'est lue. *(interne)* *(hook)* | 65 |
-| `scenario_shiftBooster.updateGFX(dt)` | Appelé à chaque frame graphique par la boucle principale (extensions.hook('updateGFX')). Tant que boostTime > 0.01 : le décrémente de dt et réapplique le boost ; sinon remet le vent à zéro. *(interne)* | 46 |
+| `scenario_shiftBooster.listenToShift()` | Wraps drivetrain.shiftUp: after the actual gear change, sets boostTime to 0.4 s, shows a UI message "Boooooost!" (5 s) and applies a boost with the default force. | 27 |
+| `scenario_shiftBooster.manualBoost(duration, strength)` | Starts a manual boost: sets boostTime to the given duration and applies the boost immediately. | 68 |
+| `scenario_shiftBooster.onDebugDraw(focusPos)` | Debug draw hook: if a boost is active, draws a sphere of radius boostTime 2 m above the vehicle, with a varying color. *(internal)* *(hook)* | 58 |
+| `scenario_shiftBooster.onVehicleScenarioData(data)` | Scenario configuration hook; empty body, no data is read. *(internal)* *(hook)* | 65 |
+| `scenario_shiftBooster.updateGFX(dt)` | Called every graphics frame by the main loop (extensions.hook('updateGFX')). While boostTime > 0.01: decrements it by dt and reapplies the boost; otherwise resets the wind to zero. *(internal)* | 46 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_shiftBooster.manualBoost(duration, strength)`
 
-Démarre un boost manuel : fixe boostTime à la durée donnée et applique immédiatement le boost.
+Starts a manual boost: sets boostTime to the given duration and applies the boost immediately.
 
-- `duration` (*number*) : Durée du boost en secondes.
-- `strength` (*number|nil*) : Intensité multipliée au vecteur direction ; 300 si nil.
+- `duration` (*number*) : Boost duration in seconds.
+- `strength` (*number|nil*) : Intensity multiplied by the direction vector; 300 if nil.
 
 #### `scenario_shiftBooster.onDebugDraw(focusPos)`
 
-Hook de dessin debug : si un boost est actif, dessine une sphère de rayon boostTime 2 m au-dessus du véhicule, de couleur variable.
+Debug draw hook: if a boost is active, draws a sphere of radius boostTime 2 m above the vehicle, with a varying color.
 
-- `focusPos` (*vec3*) : Position du focus caméra (non utilisée).
+- `focusPos` (*vec3*) : Camera focus position (unused).
 
 #### `scenario_shiftBooster.onVehicleScenarioData(data)`
 
-Hook de configuration scénario ; corps vide, aucune donnée n'est lue.
+Scenario configuration hook; empty body, no data is read.
 
-- `data` (*table*) : Données du scénario (ignorées).
+- `data` (*table*) : Scenario data (ignored).
 
 #### `scenario_shiftBooster.updateGFX(dt)`
 
-Appelé à chaque frame graphique par la boucle principale (extensions.hook('updateGFX')). Tant que boostTime > 0.01 : le décrémente de dt et réapplique le boost ; sinon remet le vent à zéro.
+Called every graphics frame by the main loop (extensions.hook('updateGFX')). While boostTime > 0.01: decrements it by dt and reapplies the boost; otherwise resets the wind to zero.
 
-- `dt` (*number*) : Pas de temps de simulation en secondes.
+- `dt` (*number*) : Simulation time step in seconds.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getDirectionVector`, `getPosition`, `setWind`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/scenario/shiftBooster.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/scenario/shiftBooster.lua`.*

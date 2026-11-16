@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/gameplay/missions/unlocks/conditions/genericConditions.lua",
+  "module": "Types de condition génériques pour les déblocages de missions : never, missing, always et les combinateurs multiAnd / multiOr. Chargés par gameplay_missions_unlocks ; chaque type a conditionMet(c) (renvoie met et éventuellement la liste des résultats imbriqués) et getLabel(c).",
+  "notes": [
+    "missing est utilisé quand le type de condition est inconnu, et renvoie true (la condition est donc considérée remplie).",
+    "multiOr renvoie true si la liste nested est vide ; multiAnd aussi (aucun élément).",
+    "always est marquée hidden = true (non affichée dans l'interface)."
+  ],
+  "fields": {
+    "never": {"type": "table", "desc": "Toujours false. Label littéral 'Never'."},
+    "missing": {"type": "table", "desc": "Condition de repli pour un type invalide ou introuvable ; toujours true."},
+    "always": {"type": "table", "desc": "Toujours true ; hidden = true."},
+    "multiAnd": {"type": "table", "desc": "ET logique sur c.nested (chaque sous-condition évaluée via gameplay_missions_unlocks.conditionMet). Renvoie met, nested. editorFunction 'displayNestedCondition'."},
+    "multiOr": {"type": "table", "desc": "OU logique sur c.nested ; true si la liste est vide. Renvoie met, nested. editorFunction 'displayNestedCondition'."}
+  }
+}

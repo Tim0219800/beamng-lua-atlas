@@ -1,12 +1,12 @@
 # `editor_terrainEditor`
 
-*Fichier : `lua/ge/extensions/editor/terrainEditor.lua` · VM : Game Engine (GE) · 3379 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/terrainEditor.lua` · VM: Game Engine (GE) · 3379 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_terrainEditor` : `extensions.load("editor_terrainEditor")`, puis la globale `editor_terrainEditor`
+**Access:** extension `editor_terrainEditor`: `extensions.load("editor_terrainEditor")`, then the global `editor_terrainEditor`
 
-Éditeur de terrain du World Editor (mode d'édition « Terrain Tools », terrainToolsEditMode). Il gère les pinceaux de sculpture, de peinture de matériaux et de terraformage (via extensions/editor/terraformTool), le choix du TerrainBlock actif, la bibliothèque de matériaux de terrain du niveau (art/terrain/main.materials.json) sous forme de « proxies », la fenêtre d'import/export de terrain (heightmap, hole map, cartes de texture, meshes, presets) et la sauvegarde du terrain et des matériaux avant l'enregistrement du niveau. Un moddeur s'en sert surtout pour récupérer le TerrainBlock/l'objet TerrainEditor (getTerrainBlock, getTerrainEditor), marquer le terrain modifié (setTerrainDirty) ou manipuler les matériaux peints.
+World Editor terrain editor ('Terrain Tools' edit mode, terrainToolsEditMode). It handles the sculpting, material painting and terraforming brushes (via extensions/editor/terraformTool), the choice of the active TerrainBlock, the level's terrain material library (art/terrain/main.materials.json) as 'proxies', the terrain import/export window (heightmap, hole map, texture maps, meshes, presets) and saving the terrain and materials before the level is saved. A modder mostly uses it to get the TerrainBlock/TerrainEditor object (getTerrainBlock, getTerrainEditor), mark the terrain as modified (setTerrainDirty) or manipulate painted materials.
 
-## Exemple
+## Example
 
 ```lua
 local te = extensions.editor_terrainEditor
@@ -18,272 +18,272 @@ if tb then
 end
 ```
 
-## Remarques
+## Notes
 
-- Les chemins de matériaux sont /art/terrain/main.materials.json (ou /art/terrains/... pour l'ancien format, détecté par checkForTerrainMaterialFileFormat) ; ils sont lus relatifs à var.levelPath.
-- Pinceau : taille 1 à 256 (changeBrushSize), pression/douceur/hauteur en pourcentage dans les préférences terrainEditor.general.* ; terraformage : préférences terrainEditor.terraform.* (DOI, marge, falloff, rugosité, échelle).
-- Les indices de matériaux de peinture côté Lua sont à base 1 (k) alors que le TerrainBlock/terrainEditor C++ attend k-1.
-- Hooks émis (extensions.hook) autour de la sauvegarde du terrain : onEditorBeforeSaveTerrain puis onEditorAfterSaveTerrain, pour les outils avec un overlay de peinture en direct.
-- Migration automatique : si un matériau n'a pas de groundmodelName, il est rempli depuis l'internalName en majuscules (ou 'ASPHALT' pour un matériau neuf), avec avertissement et marquage sale.
-- getTerrainBlock() renvoie nil s'il n'y a pas de TerrainBlock actif (ex. niveau smallgrid).
+- Material paths are /art/terrain/main.materials.json (or /art/terrains/... for the old format, detected by checkForTerrainMaterialFileFormat); they are read relative to var.levelPath.
+- Brush: size 1 to 256 (changeBrushSize), pressure/softness/height as a percentage in the terrainEditor.general.* preferences; terraforming: terrainEditor.terraform.* preferences (DOI, margin, falloff, roughness, scale).
+- Paint material indices on the Lua side are 1-based (k) whereas the C++ TerrainBlock/terrainEditor expects k-1.
+- Emitted hooks (extensions.hook) around the terrain save: onEditorBeforeSaveTerrain then onEditorAfterSaveTerrain, for tools with a live paint overlay.
+- Automatic migration: if a material has no groundmodelName, it is filled from the uppercase internalName (or 'ASPHALT' for a new material), with a warning and a dirty mark.
+- getTerrainBlock() returns nil if there is no active TerrainBlock (e.g. smallgrid level).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_terrainEditor.beginChangeBrushSizeWithKeys(direction)` | Active l'auto-répétition du changement de taille de pinceau avec les touches [ et ]. | 3376 |
-| `editor_terrainEditor.changeBrushSize(value, step)` | Augmente (value == 1) ou diminue (value == 0) la taille du pinceau de `step`, bornée à 1-256, et l'applique au TerrainEditor. Toute autre valeur de value ne change rien. | 2482 |
-| `editor_terrainEditor.checkForTerrainMaterialFileFormat()` | Détecte l'emplacement du fichier de matériaux (art/terrain ou ancien art/terrains) et signale le format obsolète (errors.deprecated_material_file). | 2798 |
-| `editor_terrainEditor.copyMaterialProxyWithInputs(mtlProxy)` | Copie profonde d'un proxy de matériau en recréant les widgets imgui d'entrée (nom, taille, forces…). Remplit le groundmodelName depuis l'internalName en majuscules s'il est vide. | 621 |
-| `editor_terrainEditor.createMaterialProxy(index, pid, mtlObject, name, dirty, isNew)` | Construit un proxy Lua d'un matériau de terrain (cartes diffuse/normal/detail/macro, tailles, forces, distances, side projection, parallaxScale, groundmodelName, uniqueID = nom-persistentId). Appelle fixGroundmodelName ; si dirty est vrai, marque aussi le terrain modifié. | 671 |
-| `editor_terrainEditor.deleteMaterialInJson(name)` | Retire de la bibliothèque en mémoire le matériau dont l'internalName est donné (ne modifie pas le fichier). | 3346 |
-| `editor_terrainEditor.dragDropTarget(mtlProxy, map, cbData)` | Cible de glisser-déposer imgui pour un asset (payload ASSETDRAGDROP de 2048 octets) : appelle updateMap avec le chemin déposé. À appeler juste après un widget imgui. | 409 |
-| `editor_terrainEditor.endChangeBrushSizeWithKeys()` | Arrête l'auto-répétition du changement de taille de pinceau. | 3377 |
-| `editor_terrainEditor.fixGroundmodelName(name, mtlObject, isNew)` | Migration : auparavant le groundmodel était stocké dans l'internalName ; maintenant un champ groundmodel dédié existe. Si ce champ est vide, il est rempli depuis l'internalName en majuscules (ou « ASPHALT » pour un matériau neuf), le matériau est marqué sale et un avertissement est logué. | 649 |
-| `editor_terrainEditor.fixedFileFormat()` | Efface l'erreur « deprecated_material_file » (à appeler une fois le fichier de matériaux mis à niveau). | 3375 |
-| `editor_terrainEditor.getErrors()` | Table des erreurs/avertissements de format détectés (clé -> true). | 3373 |
-| `editor_terrainEditor.getLevelPath()` | Chemin du niveau courant (var.levelPath). | 3374 |
-| `editor_terrainEditor.getMatFilePath()` | Chemin (relatif au niveau) du fichier des matériaux de terrain, normalement '/art/terrain/main.materials.json'. | 3371 |
-| `editor_terrainEditor.getMaterialsInJson()` | Bibliothèque de matériaux du niveau lue dans le JSON. | 3367 |
-| `editor_terrainEditor.getMtlIdByName(matName)` | Cherche un matériau d'import par nom (exact, puis insensible à la casse). Renvoie son indice à base 0, son nom et si trouvé ; sinon 0 et le premier matériau avec found=false ; (0, 'unknown', false) s'il n'y en a aucun. | 223 |
-| `editor_terrainEditor.getPaintMaterialProxies()` | Liste des proxies des matériaux de peinture du TerrainBlock actif. | 3369 |
-| `editor_terrainEditor.getSelectedPaintMaterialProxy()` | Proxy du matériau de peinture sélectionné (ou nil). | 3368 |
-| `editor_terrainEditor.getTerrainBlock()` | Renvoie l'objet TerrainBlock actif (recherché par son id) ou nil s'il n'y en a pas. | 3366 |
-| `editor_terrainEditor.getTerrainBlockMaterialIndex(name)` | Indice (base 1) du matériau de peinture portant cet internalName, ou -1 s'il n'est pas dans le bloc. | 3355 |
-| `editor_terrainEditor.getTerrainBlockProxies()` | Table des proxies de TerrainBlock indexée par nom d'objet. | 3370 |
-| `editor_terrainEditor.getTerrainEditor()` | Renvoie l'objet TerrainEditor (C++) utilisé pour les conversions monde/grille, les pinceaux et les actions. | 3365 |
-| `editor_terrainEditor.getTerrainFolder()` | Dossier des matériaux de terrain du niveau : '/art/terrain/' ou l'ancien '/art/terrains/'. | 3372 |
-| `editor_terrainEditor.getUniqueMtlName(initialName, counter)` | Renvoie un nom de matériau absent de la bibliothèque : initialName, puis initialName0, initialName1… | 721 |
-| `editor_terrainEditor.getVars()` | Renvoie la table interne var (état de l'interface, levelPath, brosse courante…). | 3364 |
-| `editor_terrainEditor.onClientEndMission()` | Hook appelé à la fin de la mission : vide la bibliothèque de matériaux en mémoire. *(interne)* *(hook)* | 3285 |
-| `editor_terrainEditor.onEditorBeforeSaveLevel()` | Hook appelé avant l'enregistrement du niveau : sauvegarde les matériaux de terrain modifiés puis le fichier terrain (en émettant onEditorBeforeSaveTerrain / onEditorAfterSaveTerrain) si des modifications sont en attente. *(interne)* *(hook)* | 3120 |
-| `editor_terrainEditor.onEditorDeactivated()` | Hook appelé quand l'éditeur est désactivé ; ne fait rien dans cette version. *(interne)* *(hook)* | 3282 |
-| `editor_terrainEditor.onEditorDeleteSelection()` | Hook appelé avant la suppression de la sélection : détache les TerrainBlock sélectionnés du TerrainEditor et vide l'état si c'était le bloc actif, pour éviter des plantages. *(interne)* *(hook)* | 3297 |
-| `editor_terrainEditor.onEditorGui()` | Hook de rendu : dessine le dialogue d'import, celui d'export, la fenêtre de peinture, la courbe de douceur et la barre d'outils du terrain. *(interne)* *(hook)* | 2399 |
-| `editor_terrainEditor.onEditorInitialized()` | Hook d'initialisation de l'éditeur : enregistre les fenêtres (terrainPainter, import, export, courbe de douceur, modale autoPaint) et le mode d'édition « Terrain Tools », puis appelle initialize(). *(interne)* *(hook)* | 3258 |
-| `editor_terrainEditor.onEditorObjectAdded(id)` | Hook appelé à l'ajout d'un objet dans l'éditeur : si c'est un TerrainBlock, rescanne les blocs (updateEditorTerrainBlocks). *(interne)* *(hook)* | 3289 |
-| `editor_terrainEditor.onEditorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change : répercute terrainEditor.general.* (taille, pression, douceur, hauteur, pentes, filtre de sélection douce) et terrainEditor.terraform.* (DOI, marge, falloff, rugosité, échelle) sur le pinceau/terraformeur. *(interne)* *(hook)* | 3145 |
-| `editor_terrainEditor.onEditorRegisterPreferences(prefsRegistry)` | Hook d'enregistrement des préférences : crée la catégorie terrainEditor (general, import, terrainMaterialLibrary, terraform) avec leurs valeurs par défaut et bornes. *(interne)* *(hook)* | 3215 |
-| `editor_terrainEditor.removeMap(mtlProxy, mapType)` | Vide une carte d'un proxy (updateMap avec un chemin vide). Un TODO du code s'interroge sur l'origine de mtlProxy. | 1026 |
-| `editor_terrainEditor.saveMaterials()` | Enregistre les matériaux de terrain modifiés (terrEd_PersistMan:saveDirty). | 1031 |
-| `editor_terrainEditor.saveTerrainAndMaterials()` | Enregistre les matériaux puis le fichier terrain (.ter) du TerrainBlock actif, efface les notifications et affiche « Saved TerrainBlock ». | 1036 |
-| `editor_terrainEditor.selectPaintMaterial(matProxy)` | Sélectionne un matériau de peinture et règle l'indice de peinture du TerrainEditor (index - 1). | 884 |
-| `editor_terrainEditor.setActiveTerrainBlock(id)` | Définit le TerrainBlock sur lequel travaillent les outils (jusqu'à ce que l'utilisateur en choisisse un autre) : l'attache au TerrainEditor, réinitialise le matériau de peinture sélectionné et sélectionne le premier. Sans effet si l'id est introuvable. | 1059 |
-| `editor_terrainEditor.setMaterialsDirty()` | Marque les matériaux de terrain comme modifiés (editor.setDirty + notification) ; ils seront sauvegardés avec le niveau. | 530 |
-| `editor_terrainEditor.setTerrainDirty()` | Marque le terrain comme modifié (editor.setDirty) et affiche la notification « unsaved terrain changes ». Le terrain sera enregistré à la sauvegarde du niveau. À appeler après toute modification directe de la heightmap. | 525 |
-| `editor_terrainEditor.setupVars()` | Voir plus haut : recalcule les variables d'interface. | 2389 |
-| `editor_terrainEditor.updateEditorTerrainBlocks(preferredId)` | Rescanne les TerrainBlock du niveau, détache les anciens et attache tous les nouveaux au TerrainEditor, puis réactive le bloc préféré (ou l'actif, ou le premier) ; vide l'état s'il n'y en a plus. | 1108 |
-| `editor_terrainEditor.updateMap(mtlProxy, map, path)` | Affecte un chemin de texture à une carte d'un proxy ('diffuse', 'macro', 'detail', 'normal') ou aux champs de l'importeur/exporteur ('heightMap', 'holeMap', 'textureMap', 'mesh', ou table {meshIndex=…}). | 377 |
-| `editor_terrainEditor.updateMaterialLibrary()` | Relit le fichier de matériaux JSON du niveau et reconstruit la bibliothèque (materialsInJson). (Un TODO du code indique que cela devrait migrer vers terrainMaterialsEditor.lua.) | 733 |
-| `editor_terrainEditor.updatePaintMaterialProxies()` | Reconstruit les proxies des matériaux de peinture du TerrainBlock actif (noms, indices, inTerrainBlock), avertit si le nombre ne correspond pas et resélectionne le matériau précédent. | 900 |
-| `editor_terrainEditor.updateTerrainBlockProxies()` | Reconstruit la liste des TerrainBlock du niveau (proxies {selected, id} par nom) et la liste triée des noms pour le combo. | 1046 |
+| `editor_terrainEditor.beginChangeBrushSizeWithKeys(direction)` | Enables auto-repeat of the brush size change with the [ and ] keys. | 3376 |
+| `editor_terrainEditor.changeBrushSize(value, step)` | Increases (value == 1) or decreases (value == 0) the brush size by `step`, clamped to 1-256, and applies it to the TerrainEditor. Any other value of value changes nothing. | 2482 |
+| `editor_terrainEditor.checkForTerrainMaterialFileFormat()` | Detects the location of the materials file (art/terrain or old art/terrains) and flags the obsolete format (errors.deprecated_material_file). | 2798 |
+| `editor_terrainEditor.copyMaterialProxyWithInputs(mtlProxy)` | Deep copy of a material proxy, recreating the imgui input widgets (name, size, strengths...). Fills groundmodelName from the uppercase internalName if it is empty. | 621 |
+| `editor_terrainEditor.createMaterialProxy(index, pid, mtlObject, name, dirty, isNew)` | Builds a Lua proxy of a terrain material (diffuse/normal/detail/macro maps, sizes, strengths, distances, side projection, parallaxScale, groundmodelName, uniqueID = name-persistentId). Calls fixGroundmodelName; if dirty is true, also marks the terrain as modified. | 671 |
+| `editor_terrainEditor.deleteMaterialInJson(name)` | Removes from the in-memory library the material with the given internalName (does not modify the file). | 3346 |
+| `editor_terrainEditor.dragDropTarget(mtlProxy, map, cbData)` | imgui drag-and-drop target for an asset (ASSETDRAGDROP payload of 2048 bytes): calls updateMap with the dropped path. To be called right after an imgui widget. | 409 |
+| `editor_terrainEditor.endChangeBrushSizeWithKeys()` | Stops the auto-repeat of the brush size change. | 3377 |
+| `editor_terrainEditor.fixGroundmodelName(name, mtlObject, isNew)` | Migration: the groundmodel used to be stored in the internalName; now a dedicated groundmodel field exists. If this field is empty, it is filled from the uppercase internalName (or 'ASPHALT' for a new material), the material is marked dirty and a warning is logged. | 649 |
+| `editor_terrainEditor.fixedFileFormat()` | Clears the 'deprecated_material_file' error (to be called once the materials file has been upgraded). | 3375 |
+| `editor_terrainEditor.getErrors()` | Table of detected format errors/warnings (key -> true). | 3373 |
+| `editor_terrainEditor.getLevelPath()` | Path of the current level (var.levelPath). | 3374 |
+| `editor_terrainEditor.getMatFilePath()` | Path (relative to the level) of the terrain materials file, normally '/art/terrain/main.materials.json'. | 3371 |
+| `editor_terrainEditor.getMaterialsInJson()` | Level material library read from the JSON. | 3367 |
+| `editor_terrainEditor.getMtlIdByName(matName)` | Looks up an import material by name (exact, then case-insensitive). Returns its 0-based index, its name and whether it was found; otherwise 0 and the first material with found=false; (0, 'unknown', false) if there are none. | 223 |
+| `editor_terrainEditor.getPaintMaterialProxies()` | List of the paint material proxies of the active TerrainBlock. | 3369 |
+| `editor_terrainEditor.getSelectedPaintMaterialProxy()` | Proxy of the selected paint material (or nil). | 3368 |
+| `editor_terrainEditor.getTerrainBlock()` | Returns the active TerrainBlock object (looked up by its id) or nil if there is none. | 3366 |
+| `editor_terrainEditor.getTerrainBlockMaterialIndex(name)` | Index (1-based) of the paint material with this internalName, or -1 if it is not in the block. | 3355 |
+| `editor_terrainEditor.getTerrainBlockProxies()` | Table of TerrainBlock proxies keyed by object name. | 3370 |
+| `editor_terrainEditor.getTerrainEditor()` | Returns the TerrainEditor (C++) object used for world/grid conversions, brushes and actions. | 3365 |
+| `editor_terrainEditor.getTerrainFolder()` | Folder of the level's terrain materials: '/art/terrain/' or the old '/art/terrains/'. | 3372 |
+| `editor_terrainEditor.getUniqueMtlName(initialName, counter)` | Returns a material name absent from the library: initialName, then initialName0, initialName1... | 721 |
+| `editor_terrainEditor.getVars()` | Returns the internal var table (UI state, levelPath, current brush...). | 3364 |
+| `editor_terrainEditor.onClientEndMission()` | Hook called at the end of the mission: clears the in-memory material library. *(internal)* *(hook)* | 3285 |
+| `editor_terrainEditor.onEditorBeforeSaveLevel()` | Hook called before the level is saved: saves the modified terrain materials then the terrain file (emitting onEditorBeforeSaveTerrain / onEditorAfterSaveTerrain) if changes are pending. *(internal)* *(hook)* | 3120 |
+| `editor_terrainEditor.onEditorDeactivated()` | Hook called when the editor is deactivated; does nothing in this version. *(internal)* *(hook)* | 3282 |
+| `editor_terrainEditor.onEditorDeleteSelection()` | Hook called before the selection is deleted: detaches the selected TerrainBlocks from the TerrainEditor and clears the state if it was the active block, to avoid crashes. *(internal)* *(hook)* | 3297 |
+| `editor_terrainEditor.onEditorGui()` | Render hook: draws the import dialog, the export dialog, the paint window, the softness curve and the terrain toolbar. *(internal)* *(hook)* | 2399 |
+| `editor_terrainEditor.onEditorInitialized()` | Editor initialization hook: registers the windows (terrainPainter, import, export, softness curve, autoPaint modal) and the 'Terrain Tools' edit mode, then calls initialize(). *(internal)* *(hook)* | 3258 |
+| `editor_terrainEditor.onEditorObjectAdded(id)` | Hook called when an object is added in the editor: if it is a TerrainBlock, rescans the blocks (updateEditorTerrainBlocks). *(internal)* *(hook)* | 3289 |
+| `editor_terrainEditor.onEditorPreferenceValueChanged(path, value)` | Hook called when a preference changes: applies terrainEditor.general.* (size, pressure, softness, height, slopes, soft selection filter) and terrainEditor.terraform.* (DOI, margin, falloff, roughness, scale) to the brush/terraformer. *(internal)* *(hook)* | 3145 |
+| `editor_terrainEditor.onEditorRegisterPreferences(prefsRegistry)` | Preference registration hook: creates the terrainEditor category (general, import, terrainMaterialLibrary, terraform) with their default values and bounds. *(internal)* *(hook)* | 3215 |
+| `editor_terrainEditor.removeMap(mtlProxy, mapType)` | Clears a map of a proxy (updateMap with an empty path). A TODO in the code questions the origin of mtlProxy. | 1026 |
+| `editor_terrainEditor.saveMaterials()` | Saves the modified terrain materials (terrEd_PersistMan:saveDirty). | 1031 |
+| `editor_terrainEditor.saveTerrainAndMaterials()` | Saves the materials then the terrain file (.ter) of the active TerrainBlock, clears the notifications and displays 'Saved TerrainBlock'. | 1036 |
+| `editor_terrainEditor.selectPaintMaterial(matProxy)` | Selects a paint material and sets the TerrainEditor paint index (index - 1). | 884 |
+| `editor_terrainEditor.setActiveTerrainBlock(id)` | Sets the TerrainBlock the tools work on (until the user chooses another): attaches it to the TerrainEditor, resets the selected paint material and selects the first one. No effect if the id is not found. | 1059 |
+| `editor_terrainEditor.setMaterialsDirty()` | Marks the terrain materials as modified (editor.setDirty + notification); they will be saved with the level. | 530 |
+| `editor_terrainEditor.setTerrainDirty()` | Marks the terrain as modified (editor.setDirty) and shows the 'unsaved terrain changes' notification. The terrain will be saved when the level is saved. To be called after any direct modification of the heightmap. | 525 |
+| `editor_terrainEditor.setupVars()` | See above: recomputes the UI variables. | 2389 |
+| `editor_terrainEditor.updateEditorTerrainBlocks(preferredId)` | Rescans the level's TerrainBlocks, detaches the old ones and attaches all the new ones to the TerrainEditor, then reactivates the preferred block (or the active one, or the first); clears the state if there are none left. | 1108 |
+| `editor_terrainEditor.updateMap(mtlProxy, map, path)` | Assigns a texture path to a map of a proxy ('diffuse', 'macro', 'detail', 'normal') or to the importer/exporter fields ('heightMap', 'holeMap', 'textureMap', 'mesh', or table {meshIndex=...}). | 377 |
+| `editor_terrainEditor.updateMaterialLibrary()` | Rereads the level's JSON materials file and rebuilds the library (materialsInJson). (A TODO in the code says this should migrate to terrainMaterialsEditor.lua.) | 733 |
+| `editor_terrainEditor.updatePaintMaterialProxies()` | Rebuilds the paint material proxies of the active TerrainBlock (names, indices, inTerrainBlock), warns if the count does not match and reselects the previous material. | 900 |
+| `editor_terrainEditor.updateTerrainBlockProxies()` | Rebuilds the list of the level's TerrainBlocks (proxies {selected, id} by name) and the sorted list of names for the combo. | 1046 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_terrainEditor.beginChangeBrushSizeWithKeys(direction)`
 
-Active l'auto-répétition du changement de taille de pinceau avec les touches [ et ].
+Enables auto-repeat of the brush size change with the [ and ] keys.
 
-- `direction` (*integer*) : Sens du changement (convention de changeBrushSize : 1 agrandir, 0 réduire, déduite du code)
+- `direction` (*integer*) : Direction of the change (changeBrushSize convention: 1 enlarge, 0 reduce, inferred from code)
 
 #### `editor_terrainEditor.changeBrushSize(value, step)`
 
-Augmente (value == 1) ou diminue (value == 0) la taille du pinceau de `step`, bornée à 1-256, et l'applique au TerrainEditor. Toute autre valeur de value ne change rien.
+Increases (value == 1) or decreases (value == 0) the brush size by `step`, clamped to 1-256, and applies it to the TerrainEditor. Any other value of value changes nothing.
 
-- `value` (*integer*) : 1 pour agrandir, 0 pour réduire
-- `step` (*number*) : Incrément de taille
+- `value` (*integer*) : 1 to enlarge, 0 to reduce
+- `step` (*number*) : Size increment
 
 #### `editor_terrainEditor.copyMaterialProxyWithInputs(mtlProxy)`
 
-Copie profonde d'un proxy de matériau en recréant les widgets imgui d'entrée (nom, taille, forces…). Remplit le groundmodelName depuis l'internalName en majuscules s'il est vide.
+Deep copy of a material proxy, recreating the imgui input widgets (name, size, strengths...). Fills groundmodelName from the uppercase internalName if it is empty.
 
-- `mtlProxy` (*table*) : Proxy source
-- **renvoie** : table Copie avec champs *Input.
+- `mtlProxy` (*table*) : Source proxy
+- **returns**: table Copy with *Input fields.
 
 #### `editor_terrainEditor.createMaterialProxy(index, pid, mtlObject, name, dirty, isNew)`
 
-Construit un proxy Lua d'un matériau de terrain (cartes diffuse/normal/detail/macro, tailles, forces, distances, side projection, parallaxScale, groundmodelName, uniqueID = nom-persistentId). Appelle fixGroundmodelName ; si dirty est vrai, marque aussi le terrain modifié.
+Builds a Lua proxy of a terrain material (diffuse/normal/detail/macro maps, sizes, strengths, distances, side projection, parallaxScale, groundmodelName, uniqueID = name-persistentId). Calls fixGroundmodelName; if dirty is true, also marks the terrain as modified.
 
-- `index` (*integer*) : Indice (base 1)
-- `pid` (*string|nil*) : persistentId (créé si vide)
-- `mtlObject` (*userdata*) : Objet matériau de terrain
+- `index` (*integer*) : Index (1-based)
+- `pid` (*string|nil*) : persistentId (created if empty)
+- `mtlObject` (*userdata*) : Terrain material object
 - `name` (*string*) : internalName
-- `dirty` (*boolean|nil*) : true pour marquer sale
-- `isNew` (*boolean|nil*) : true si matériau nouvellement créé
-- **renvoie** : table Proxy du matériau.
+- `dirty` (*boolean|nil*) : true to mark dirty
+- `isNew` (*boolean|nil*) : true if the material was newly created
+- **returns**: table Material proxy.
 
 #### `editor_terrainEditor.deleteMaterialInJson(name)`
 
-Retire de la bibliothèque en mémoire le matériau dont l'internalName est donné (ne modifie pas le fichier).
+Removes from the in-memory library the material with the given internalName (does not modify the file).
 
-- `name` (*string*) : internalName du matériau
+- `name` (*string*) : internalName of the material
 
 #### `editor_terrainEditor.dragDropTarget(mtlProxy, map, cbData)`
 
-Cible de glisser-déposer imgui pour un asset (payload ASSETDRAGDROP de 2048 octets) : appelle updateMap avec le chemin déposé. À appeler juste après un widget imgui.
+imgui drag-and-drop target for an asset (ASSETDRAGDROP payload of 2048 bytes): calls updateMap with the dropped path. To be called right after an imgui widget.
 
-- `mtlProxy` (*table*) : Proxy de matériau
-- `map` (*string|table*) : Carte visée
-- `cbData` (*any*) : Non utilisé (déduit du code)
+- `mtlProxy` (*table*) : Material proxy
+- `map` (*string|table*) : Target map
+- `cbData` (*any*) : Unused (inferred from code)
 
 #### `editor_terrainEditor.fixGroundmodelName(name, mtlObject, isNew)`
 
-Migration : auparavant le groundmodel était stocké dans l'internalName ; maintenant un champ groundmodel dédié existe. Si ce champ est vide, il est rempli depuis l'internalName en majuscules (ou « ASPHALT » pour un matériau neuf), le matériau est marqué sale et un avertissement est logué.
+Migration: the groundmodel used to be stored in the internalName; now a dedicated groundmodel field exists. If this field is empty, it is filled from the uppercase internalName (or 'ASPHALT' for a new material), the material is marked dirty and a warning is logged.
 
 - `name` (*string*) : internalName
-- `mtlObject` (*userdata*) : Matériau
-- `isNew` (*boolean|nil*) : true si nouveau
+- `mtlObject` (*userdata*) : Material
+- `isNew` (*boolean|nil*) : true if new
 
 #### `editor_terrainEditor.getErrors()`
 
-Table des erreurs/avertissements de format détectés (clé -> true).
+Table of detected format errors/warnings (key -> true).
 
-- **renvoie** : table<string, boolean> 
+- **returns**: table<string, boolean> 
 
 #### `editor_terrainEditor.getLevelPath()`
 
-Chemin du niveau courant (var.levelPath).
+Path of the current level (var.levelPath).
 
-- **renvoie** : string|nil 
+- **returns**: string|nil 
 
 #### `editor_terrainEditor.getMatFilePath()`
 
-Chemin (relatif au niveau) du fichier des matériaux de terrain, normalement '/art/terrain/main.materials.json'.
+Path (relative to the level) of the terrain materials file, normally '/art/terrain/main.materials.json'.
 
-- **renvoie** : string 
+- **returns**: string 
 
 #### `editor_terrainEditor.getMaterialsInJson()`
 
-Bibliothèque de matériaux du niveau lue dans le JSON.
+Level material library read from the JSON.
 
-- **renvoie** : table Matériaux indexés par id/persistentId, avec internalName, etc.
+- **returns**: table Materials keyed by id/persistentId, with internalName, etc.
 
 #### `editor_terrainEditor.getMtlIdByName(matName)`
 
-Cherche un matériau d'import par nom (exact, puis insensible à la casse). Renvoie son indice à base 0, son nom et si trouvé ; sinon 0 et le premier matériau avec found=false ; (0, 'unknown', false) s'il n'y en a aucun.
+Looks up an import material by name (exact, then case-insensitive). Returns its 0-based index, its name and whether it was found; otherwise 0 and the first material with found=false; (0, 'unknown', false) if there are none.
 
-- `matName` (*string*) : Nom du matériau
-- **renvoie** : integer Indice (base 0)
-- **renvoie** : string Nom retenu
-- **renvoie** : boolean true si trouvé
+- `matName` (*string*) : Material name
+- **returns**: integer Index (0-based)
+- **returns**: string Name retained
+- **returns**: boolean true if found
 
 #### `editor_terrainEditor.getPaintMaterialProxies()`
 
-Liste des proxies des matériaux de peinture du TerrainBlock actif.
+List of the paint material proxies of the active TerrainBlock.
 
-- **renvoie** : table[] 
+- **returns**: table[] 
 
 #### `editor_terrainEditor.getSelectedPaintMaterialProxy()`
 
-Proxy du matériau de peinture sélectionné (ou nil).
+Proxy of the selected paint material (or nil).
 
-- **renvoie** : table|nil 
+- **returns**: table|nil 
 
 #### `editor_terrainEditor.getTerrainBlock()`
 
-Renvoie l'objet TerrainBlock actif (recherché par son id) ou nil s'il n'y en a pas.
+Returns the active TerrainBlock object (looked up by its id) or nil if there is none.
 
-- **renvoie** : userdata|nil TerrainBlock
+- **returns**: userdata|nil TerrainBlock
 
 #### `editor_terrainEditor.getTerrainBlockMaterialIndex(name)`
 
-Indice (base 1) du matériau de peinture portant cet internalName, ou -1 s'il n'est pas dans le bloc.
+Index (1-based) of the paint material with this internalName, or -1 if it is not in the block.
 
 - `name` (*string*) : internalName
-- **renvoie** : integer Indice ou -1
+- **returns**: integer Index or -1
 
 #### `editor_terrainEditor.getTerrainBlockProxies()`
 
-Table des proxies de TerrainBlock indexée par nom d'objet.
+Table of TerrainBlock proxies keyed by object name.
 
-- **renvoie** : table<string, table> { [nom] = { selected = boolean, id = integer } }
+- **returns**: table<string, table> { [name] = { selected = boolean, id = integer } }
 
 #### `editor_terrainEditor.getTerrainEditor()`
 
-Renvoie l'objet TerrainEditor (C++) utilisé pour les conversions monde/grille, les pinceaux et les actions.
+Returns the TerrainEditor (C++) object used for world/grid conversions, brushes and actions.
 
-- **renvoie** : userdata TerrainEditor
+- **returns**: userdata TerrainEditor
 
 #### `editor_terrainEditor.getTerrainFolder()`
 
-Dossier des matériaux de terrain du niveau : '/art/terrain/' ou l'ancien '/art/terrains/'.
+Folder of the level's terrain materials: '/art/terrain/' or the old '/art/terrains/'.
 
-- **renvoie** : string 
+- **returns**: string 
 
 #### `editor_terrainEditor.getUniqueMtlName(initialName, counter)`
 
-Renvoie un nom de matériau absent de la bibliothèque : initialName, puis initialName0, initialName1…
+Returns a material name absent from the library: initialName, then initialName0, initialName1...
 
-- `initialName` (*string|nil*) : Nom de base (« NewMaterial » par défaut).
-- `counter` (*integer|nil*) : Suffixe de départ (récursif, interne).
-- **renvoie** : string Nom unique.
+- `initialName` (*string|nil*) : Base name ('NewMaterial' by default).
+- `counter` (*integer|nil*) : Starting suffix (recursive, internal).
+- **returns**: string Unique name.
 
 #### `editor_terrainEditor.getVars()`
 
-Renvoie la table interne var (état de l'interface, levelPath, brosse courante…).
+Returns the internal var table (UI state, levelPath, current brush...).
 
-- **renvoie** : table Table var
+- **returns**: table var table
 
 #### `editor_terrainEditor.onEditorObjectAdded(id)`
 
-Hook appelé à l'ajout d'un objet dans l'éditeur : si c'est un TerrainBlock, rescanne les blocs (updateEditorTerrainBlocks).
+Hook called when an object is added in the editor: if it is a TerrainBlock, rescans the blocks (updateEditorTerrainBlocks).
 
-- `id` (*integer*) : Id de l'objet ajouté
+- `id` (*integer*) : Id of the added object
 
 #### `editor_terrainEditor.onEditorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change : répercute terrainEditor.general.* (taille, pression, douceur, hauteur, pentes, filtre de sélection douce) et terrainEditor.terraform.* (DOI, marge, falloff, rugosité, échelle) sur le pinceau/terraformeur.
+Hook called when a preference changes: applies terrainEditor.general.* (size, pressure, softness, height, slopes, soft selection filter) and terrainEditor.terraform.* (DOI, margin, falloff, roughness, scale) to the brush/terraformer.
 
-- `path` (*string*) : Chemin de la préférence
-- `value` (*any*) : Nouvelle valeur
+- `path` (*string*) : Preference path
+- `value` (*any*) : New value
 
 #### `editor_terrainEditor.onEditorRegisterPreferences(prefsRegistry)`
 
-Hook d'enregistrement des préférences : crée la catégorie terrainEditor (general, import, terrainMaterialLibrary, terraform) avec leurs valeurs par défaut et bornes.
+Preference registration hook: creates the terrainEditor category (general, import, terrainMaterialLibrary, terraform) with their default values and bounds.
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur
+- `prefsRegistry` (*table*) : Editor preferences registry
 
 #### `editor_terrainEditor.removeMap(mtlProxy, mapType)`
 
-Vide une carte d'un proxy (updateMap avec un chemin vide). Un TODO du code s'interroge sur l'origine de mtlProxy.
+Clears a map of a proxy (updateMap with an empty path). A TODO in the code questions the origin of mtlProxy.
 
-- `mtlProxy` (*table*) : Proxy de matériau
-- `mapType` (*string*) : Type de carte
+- `mtlProxy` (*table*) : Material proxy
+- `mapType` (*string*) : Map type
 
 #### `editor_terrainEditor.selectPaintMaterial(matProxy)`
 
-Sélectionne un matériau de peinture et règle l'indice de peinture du TerrainEditor (index - 1).
+Selects a paint material and sets the TerrainEditor paint index (index - 1).
 
-- `matProxy` (*table*) : Proxy de matériau (avec .index à base 1)
+- `matProxy` (*table*) : Material proxy (with 1-based .index)
 
 #### `editor_terrainEditor.setActiveTerrainBlock(id)`
 
-Définit le TerrainBlock sur lequel travaillent les outils (jusqu'à ce que l'utilisateur en choisisse un autre) : l'attache au TerrainEditor, réinitialise le matériau de peinture sélectionné et sélectionne le premier. Sans effet si l'id est introuvable.
+Sets the TerrainBlock the tools work on (until the user chooses another): attaches it to the TerrainEditor, resets the selected paint material and selects the first one. No effect if the id is not found.
 
-- `id` (*integer*) : Id de l'objet TerrainBlock
+- `id` (*integer*) : Id of the TerrainBlock object
 
 #### `editor_terrainEditor.updateEditorTerrainBlocks(preferredId)`
 
-Rescanne les TerrainBlock du niveau, détache les anciens et attache tous les nouveaux au TerrainEditor, puis réactive le bloc préféré (ou l'actif, ou le premier) ; vide l'état s'il n'y en a plus.
+Rescans the level's TerrainBlocks, detaches the old ones and attaches all the new ones to the TerrainEditor, then reactivates the preferred block (or the active one, or the first); clears the state if there are none left.
 
-- `preferredId` (*integer|nil*) : Id du bloc à activer en priorité.
+- `preferredId` (*integer|nil*) : Id of the block to activate first.
 
 #### `editor_terrainEditor.updateMap(mtlProxy, map, path)`
 
-Affecte un chemin de texture à une carte d'un proxy ('diffuse', 'macro', 'detail', 'normal') ou aux champs de l'importeur/exporteur ('heightMap', 'holeMap', 'textureMap', 'mesh', ou table {meshIndex=…}).
+Assigns a texture path to a map of a proxy ('diffuse', 'macro', 'detail', 'normal') or to the importer/exporter fields ('heightMap', 'holeMap', 'textureMap', 'mesh', or table {meshIndex=...}).
 
-- `mtlProxy` (*table*) : Proxy de matériau (ignoré pour les cartes d'import)
-- `map` (*string|table*) : Type de carte
-- `path` (*string*) : Chemin du fichier
+- `mtlProxy` (*table*) : Material proxy (ignored for import maps)
+- `map` (*string|table*) : Map type
+- `path` (*string*) : File path
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onEditorAfterSaveTerrain`
 - `onEditorBeforeSaveTerrain`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`, `directoryExists`, `fileExists`, `findFiles`, `stat`
 - `debugDrawer:` `drawSphere`
@@ -291,4 +291,4 @@ Affecte un chemin de texture à une carte d'un proxy ('diffuse', 'macro', 'detai
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/terrainEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/terrainEditor.lua`.*

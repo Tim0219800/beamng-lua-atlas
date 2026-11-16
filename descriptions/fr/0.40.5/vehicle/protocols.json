@@ -1,0 +1,56 @@
+{
+  "path": "lua/vehicle/protocols.lua",
+  "module": "Gestionnaire des protocoles de télémétrie UDP du véhicule (OutGauge pour tableaux de bord externes, MotionSim pour plateformes de mouvement). Au init, il charge chaque module de lua/vehicle/protocols/*.lua activé dans les réglages, ouvre un socket UDP par protocole, remplit un paquet C (ffi) à la fréquence demandée (temps réel, pas temps de simulation) et l'envoie. Il calcule aussi les grandeurs lissées partagées (vitesse, accélération, angles et vitesses angulaires) que les modules lisent dans protocols.xxx. N'agit que pour le premier joueur assis, et jamais en multi-siège.",
+  "usage": "-- Un module de protocole perso : lua/vehicle/protocols/monProto.lua doit exposer\n-- init, reset (facultatifs), getAddress, getPort, getMaxUpdateRate, isPhysicsStepUsed, getStructDefinition, fillStruct(o, dtSim)\n-- Il est activé par le réglage protocols_others_enabled.",
+  "notes": [
+    "Réglages lus : protocols_outgauge_enabled, protocols_motionSim_enabled, protocols_others_enabled (tous les autres fichiers du dossier), multiseat (désactive tout), et protocols_smoothing_<velX|velY|velZ|accX|accY|accZ|rollPos|pitchPos|yawPos|rollVel|pitchVel|yawVel|rollAcc|pitchAcc|yawAcc> pour les constantes de lissage exponentiel.",
+    "Champs lus par les modules de protocole dans la table protocols (M) : posX, posY, posZ (m, monde), velXSmoothed/velYSmoothed/velZSmoothed (m/s), accXSmoothed/accYSmoothed/accZSmoothed (m/s², signe inversé des capteurs, gravité non incluse selon le commentaire de motionSim), upX/upY/upZ (vecteur haut du véhicule), rollPosSmoothed/pitchPosSmoothed/yawPosSmoothed (angles ; roll et yaw négatifs « par convention des simulateurs »), rollVelSmoothed/pitchVelSmoothed/yawVelSmoothed (rad/s), rollAccSmoothed/pitchAccSmoothed/yawAccSmoothed (rad/s², dérivée des vitesses lissées). Ces champs sont créés dynamiquement à la première mise à jour des lisseurs.",
+    "L'envoi a lieu à l'horloge murale : updatePeriod = 1 / getMaxUpdateRate() ; un protocole qui utilise le pas physique (isPhysicsStepUsed vrai) est mis à jour dans update(), les autres dans updateGFX().",
+    "Le paquet est remis à zéro (ffi.fill) avant chaque fillStruct ; il est envoyé en UDP à (getAddress(), getPort()) même si fillStruct a quitté tôt (voir outgauge.fillStruct : paquet entièrement nul envoyé quand le véhicule n'est pas initialisé).",
+    "La structure C est déclarée une seule fois par nom de protocole (typedef 'protocol_<nom>_t'). Une modification de getStructDefinition d'un module déjà chargé demande un redémarrage (ctrl-R ne suffit pas car la définition ffi persiste).",
+    "Les fichiers du dossier protocols sont listés une seule fois (filesCache) : un nouveau fichier n'est vu qu'après rechargement du Lua (ctrl-R).",
+    "M.update et M.updateGFX sont des nop au chargement et remplacés dans init() ; ⚠ nop est un global du jeu."
+  ],
+  "fields": {
+    "update": {"type": "function", "desc": "nop, ou updatePhysics(dtSim) si au moins un protocole utilise le pas physique. Appelée à chaque pas de physique."},
+    "updateGFX": {"type": "function", "desc": "nop, ou la mise à jour graphique si au moins un protocole n'utilise pas le pas physique."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Détruit les protocoles existants, puis (si activés dans les réglages et si on n'est pas en multi-siège) charge, initialise et active chaque module de protocole trouvé, installe update/updateGFX et initialise les lisseurs.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "destroy": {
+      "desc": "Ferme les sockets UDP de tous les protocoles actifs et vide la liste.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet à zéro les lisseurs et appelle reset() de chaque module de protocole qui en définit une.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "settingsChanged": {
+      "desc": "Hook appelé quand les réglages utilisateur changent : relance init() pour appliquer les nouveaux réglages de protocoles.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onPlayersChanged": {
+      "desc": "Hook appelé quand les joueurs assis changent : si un premier joueur est assis, remet les lisseurs à zéro.",
+      "params": {"anyPlayerSeated": {"type": "boolean", "desc": "Vrai si au moins un joueur est assis (non utilisé directement)."}},
+      "returns": [],
+      "internal": true
+    },
+    "isPhysicsStepUsed": {
+      "desc": "Indique si au moins un protocole actif demande le pas de physique ; sert à enregistrer update() dans la boucle de physique.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si un protocole utilise le pas physique."}],
+      "internal": true
+    }
+  }
+}

@@ -1,12 +1,12 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/removeVehicle.lua",
-  "module": "Nœud flowgraph « Remove Vehicle (Pool) » (once_instant). Retire un véhicule du pool (pool:removeVeh(vehId)). Nécessite le module core_vehicleActivePooling ; l'objet pool vient du nœud Create Vehicle Pool.",
+  "module": "Flowgraph node \"Remove Vehicle (Pool)\" (once_instant). Removes a vehicle from the pool (pool:removeVeh(vehId)). Requires the core_vehicleActivePooling module; the pool object comes from the Create Vehicle Pool node.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "workOnce": {
-          "desc": "Appelle removeVeh(vehId) si pool et vehId sont définis.",
+          "desc": "Calls removeVeh(vehId) if pool and vehId are defined.",
           "internal": true
         }
       }

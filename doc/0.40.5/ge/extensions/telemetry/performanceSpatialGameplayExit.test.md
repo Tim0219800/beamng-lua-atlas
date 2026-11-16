@@ -1,92 +1,92 @@
 # `telemetry_performanceSpatialGameplayExit.test`
 
-*Fichier : `lua/ge/extensions/telemetry/performanceSpatialGameplayExit.test.lua` · VM : Game Engine (GE) · 311 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/performanceSpatialGameplayExit.test.lua` · VM: Game Engine (GE) · 311 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_performanceSpatialGameplayExit.test` : `extensions.load("telemetry_performanceSpatialGameplayExit.test")`, puis la globale `telemetry_performanceSpatialGameplayExit.test`
+**Access:** extension `telemetry_performanceSpatialGameplayExit.test`: `extensions.load("telemetry_performanceSpatialGameplayExit.test")`, then the global `telemetry_performanceSpatialGameplayExit.test`
 
-Tests unitaires de telemetry/performanceSpatialGameplayExit. Chaque test reçoit un contexte `ctx` (assert, assertEqual) du lanceur de tests du jeu et injecte de faux modules de gameplay via le paramètre `source` (niveau « italy », véhicule en (1.24, -2.26, 3.01), caméra en (10.04, 20.06, 30.01)). Ce n'est pas une extension à charger.
+Unit tests of telemetry/performanceSpatialGameplayExit. Each test receives a `ctx` context (assert, assertEqual) from the game's test runner and injects fake gameplay modules via the `source` parameter (level "italy", vehicle at (1.24, -2.26, 3.01), camera at (10.04, 20.06, 30.01)). It is not an extension to load.
 
-## Remarques
+## Notes
 
-- Les tests documentent le comportement attendu : la mission prime sur le reste, une tentative active (drag, drift, crawl) prime sur la livraison de carrière, et les activités terminées (scénario en état post, drag isCompleted, drift en conclusion, crawl isCompleted) ne comptent plus comme actives.
-- Ils vérifient aussi l'arrondi à 0,1 m, le repli véhicule puis caméra, le rejet d'un exitKind inconnu (« failure »), d'un activityType inconnu et d'un niveau non suivi.
+- The tests document the expected behavior: the mission takes precedence over the rest, an active attempt (drag, drift, crawl) takes precedence over career delivery, and finished activities (scenario in post state, drag isCompleted, drift in conclusion, crawl isCompleted) no longer count as active.
+- They also check the rounding to 0.1 m, the fallback vehicle then camera, the rejection of an unknown exitKind ("failure"), an unknown activityType and an untracked level.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_performanceSpatialGameplayExit.test.testActiveAttemptTakesPrecedenceOverCareerDelivery(ctx)` | Un drag, drift ou crawl actif prime sur une livraison de carrière active. *(interne)* | 244 |
-| `telemetry_performanceSpatialGameplayExit.test.testAttemptBasedActivityFamilies(ctx)` | Vérifie que chaque famille (scénario, livraison libre, livraison de carrière, essai, certification, drag, drift, crawl) est reconnue avec le bon activityType et activityId. *(interne)* | 58 |
-| `telemetry_performanceSpatialGameplayExit.test.testCaptureUsesVehicleThenCamera(ctx)` | capture prend la position du véhicule (arrondie à 0,1), sinon celle de la caméra. *(interne)* | 146 |
-| `telemetry_performanceSpatialGameplayExit.test.testCaptureValidatesContextAndLevel(ctx)` | capture convertit un id numérique en chaîne, omet un id invalide sans perdre l'évènement, et renvoie nil pour un exitKind/activityType inconnu ou un niveau non suivi. *(interne)* | 165 |
-| `telemetry_performanceSpatialGameplayExit.test.testCompletedCrawlIsNotActive(ctx)` | Un crawl terminé n'est plus actif. *(interne)* | 293 |
-| `telemetry_performanceSpatialGameplayExit.test.testCompletedDragIsNotActive(ctx)` | Un drag terminé (isCompleted) n'est plus actif. *(interne)* | 211 |
-| `telemetry_performanceSpatialGameplayExit.test.testCompletedScenarioIsNotActive(ctx)` | Un scénario à l'état post n'est pas une activité active. *(interne)* | 188 |
-| `telemetry_performanceSpatialGameplayExit.test.testConcludingDriftIsNotActive(ctx)` | Un défi de drift en phase de conclusion n'est plus actif. *(interne)* | 200 |
-| `telemetry_performanceSpatialGameplayExit.test.testDragUsesTopLevelDataAndCurrentLevel(ctx)` | La clé de drag est calculée avec les données de drag de plus haut niveau, et le préfixe « : » est complété par le niveau courant. *(interne)* | 224 |
-| `telemetry_performanceSpatialGameplayExit.test.testMissionTakesPrecedence(ctx)` | Une mission au premier plan est prioritaire sur un drag en cours. *(interne)* | 39 |
+| `telemetry_performanceSpatialGameplayExit.test.testActiveAttemptTakesPrecedenceOverCareerDelivery(ctx)` | An active drag, drift or crawl takes precedence over an active career delivery. *(internal)* | 244 |
+| `telemetry_performanceSpatialGameplayExit.test.testAttemptBasedActivityFamilies(ctx)` | Checks that each family (scenario, free delivery, career delivery, test drive, certification, drag, drift, crawl) is recognized with the right activityType and activityId. *(internal)* | 58 |
+| `telemetry_performanceSpatialGameplayExit.test.testCaptureUsesVehicleThenCamera(ctx)` | capture takes the vehicle's position (rounded to 0.1), otherwise the camera's. *(internal)* | 146 |
+| `telemetry_performanceSpatialGameplayExit.test.testCaptureValidatesContextAndLevel(ctx)` | capture converts a numeric id to a string, omits an invalid id without losing the event, and returns nil for an unknown exitKind/activityType or an untracked level. *(internal)* | 165 |
+| `telemetry_performanceSpatialGameplayExit.test.testCompletedCrawlIsNotActive(ctx)` | A finished crawl is no longer active. *(internal)* | 293 |
+| `telemetry_performanceSpatialGameplayExit.test.testCompletedDragIsNotActive(ctx)` | A finished drag (isCompleted) is no longer active. *(internal)* | 211 |
+| `telemetry_performanceSpatialGameplayExit.test.testCompletedScenarioIsNotActive(ctx)` | A scenario in the post state is not an active activity. *(internal)* | 188 |
+| `telemetry_performanceSpatialGameplayExit.test.testConcludingDriftIsNotActive(ctx)` | A drift challenge in the conclusion phase is no longer active. *(internal)* | 200 |
+| `telemetry_performanceSpatialGameplayExit.test.testDragUsesTopLevelDataAndCurrentLevel(ctx)` | The drag key is computed with the highest-level drag data, and the prefix ":" is completed with the current level. *(internal)* | 224 |
+| `telemetry_performanceSpatialGameplayExit.test.testMissionTakesPrecedence(ctx)` | A foreground mission takes precedence over a drag in progress. *(internal)* | 39 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_performanceSpatialGameplayExit.test.testActiveAttemptTakesPrecedenceOverCareerDelivery(ctx)`
 
-Un drag, drift ou crawl actif prime sur une livraison de carrière active.
+An active drag, drift or crawl takes precedence over an active career delivery.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `telemetry_performanceSpatialGameplayExit.test.testAttemptBasedActivityFamilies(ctx)`
 
-Vérifie que chaque famille (scénario, livraison libre, livraison de carrière, essai, certification, drag, drift, crawl) est reconnue avec le bon activityType et activityId.
+Checks that each family (scenario, free delivery, career delivery, test drive, certification, drag, drift, crawl) is recognized with the right activityType and activityId.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `telemetry_performanceSpatialGameplayExit.test.testCaptureUsesVehicleThenCamera(ctx)`
 
-capture prend la position du véhicule (arrondie à 0,1), sinon celle de la caméra.
+capture takes the vehicle's position (rounded to 0.1), otherwise the camera's.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `telemetry_performanceSpatialGameplayExit.test.testCaptureValidatesContextAndLevel(ctx)`
 
-capture convertit un id numérique en chaîne, omet un id invalide sans perdre l'évènement, et renvoie nil pour un exitKind/activityType inconnu ou un niveau non suivi.
+capture converts a numeric id to a string, omits an invalid id without losing the event, and returns nil for an unknown exitKind/activityType or an untracked level.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `telemetry_performanceSpatialGameplayExit.test.testCompletedCrawlIsNotActive(ctx)`
 
-Un crawl terminé n'est plus actif.
+A finished crawl is no longer active.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `telemetry_performanceSpatialGameplayExit.test.testCompletedDragIsNotActive(ctx)`
 
-Un drag terminé (isCompleted) n'est plus actif.
+A finished drag (isCompleted) is no longer active.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `telemetry_performanceSpatialGameplayExit.test.testCompletedScenarioIsNotActive(ctx)`
 
-Un scénario à l'état post n'est pas une activité active.
+A scenario in the post state is not an active activity.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `telemetry_performanceSpatialGameplayExit.test.testConcludingDriftIsNotActive(ctx)`
 
-Un défi de drift en phase de conclusion n'est plus actif.
+A drift challenge in the conclusion phase is no longer active.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `telemetry_performanceSpatialGameplayExit.test.testDragUsesTopLevelDataAndCurrentLevel(ctx)`
 
-La clé de drag est calculée avec les données de drag de plus haut niveau, et le préfixe « : » est complété par le niveau courant.
+The drag key is computed with the highest-level drag data, and the prefix ":" is completed with the current level.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `telemetry_performanceSpatialGameplayExit.test.testMissionTakesPrecedence(ctx)`
 
-Une mission au premier plan est prioritaire sur un drag en cours.
+A foreground mission takes precedence over a drag in progress.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/performanceSpatialGameplayExit.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/performanceSpatialGameplayExit.test.lua`.*

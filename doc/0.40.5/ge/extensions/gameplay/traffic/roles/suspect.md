@@ -1,36 +1,36 @@
 # `gameplay_traffic_roles_suspect`
 
-*Fichier : `lua/ge/extensions/gameplay/traffic/roles/suspect.lua` · VM : Game Engine (GE) · 84 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/traffic/roles/suspect.lua` · VM: Game Engine (GE) · 84 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/traffic/roles/suspect")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/traffic/roles/suspect")` (file under extensions/ but not a regular extension)
 
-Rôle de trafic « suspect » : un véhicule recherché par la police. Il définit les actions watchPolice (devenir recherché), fleePolice (fuir), arrest (immobiliser) et clear (remettre à zéro). Tant que son état est 'wanted' et que la police l'a assez vu, il déclenche une poursuite via gameplay_police.
+"Suspect" traffic role: a vehicle wanted by the police. It defines the actions watchPolice (become wanted), fleePolice (flee), arrest (immobilize) and clear (reset). As long as its state is 'wanted' and the police have seen it enough, it triggers a pursuit via gameplay_police.
 
-## Remarques
+## Notes
 
-- États utilisés dans self.state : 'wanted', 'flee', 'stop', 'none'.
-- Drapeaux manipulés dans self.flags : flee, busy, freeze, driveCheck (lu), pursuit/reset (lus sur les véhicules de police).
-- pursuitMode vaut 2 par défaut.
-- fleePolice rend le véhicule quasi impossible à respawn en appelant veh:modifyRespawnValues(800, 40).
-- onUpdate est une fonction vide.
+- States used in self.state: 'wanted', 'flee', 'stop', 'none'.
+- Flags manipulated in self.flags: flee, busy, freeze, driveCheck (read), pursuit/reset (read on police vehicles).
+- pursuitMode is 2 by default.
+- fleePolice makes the vehicle almost impossible to respawn by calling veh:modifyRespawnValues(800, 40).
+- onUpdate is an empty function.
 
-## Classe `C`
+## Class `C`
 
-Classe du rôle suspect, complétée par baseRole (self.veh = véhicule de trafic, self.flags, self.state, self.actions).
+Suspect role class, completed by baseRole (self.veh = traffic vehicle, self.flags, self.state, self.actions).
 
-Le module renvoie un constructeur : `local obj = require("gameplay_traffic_roles_suspect")(options)`.
+The module returns a constructor: `local obj = require("gameplay_traffic_roles_suspect")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Initialise le rôle : ajoute +0,2 d'offset à l'agressivité (personalityModifiers), définit les actions watchPolice / fleePolice / arrest / clear et fixe pursuitMode = 2. | 7 |
-| `C:onActiveDone()` | Appelé quand le véhicule n'est plus actif dans le trafic. Même traitement que onRoleEnded : si le drapeau flee est posé, le suspect est déclaré ayant échappé à la police. | 55 |
-| `C:onRoleEnded()` | Appelé quand le rôle prend fin. Si le suspect fuyait, appelle gameplay_police.evadeVehicle(vehId, gameplay_traffic.showMessages) et retire le drapeau flee. | 48 |
-| `C:onTrafficTick(tickTime)` | Appelé à chaque tick du gestionnaire de trafic. Si l'état est 'wanted', que la valeur de visibilité (pursuit.sightValue) atteint le seuil (0,25 pour une IA, 1 pour un joueur) et que la vitesse atteint le seuil (1 m/s si driveCheck, sinon 0), il cherche les policiers disponibles (ni en poursuite ni en reset), lance gameplay_police.setPursuitMode(pursuitMode, vehId, policeIds) et cible le policier le plus proche. | 62 |
-| `C:onUpdate(dt, dtSim)` | Appelé à chaque frame ; corps vide. | 81 |
+| `C:init()` | Initializes the role: adds a +0.2 offset to aggression (personalityModifiers), defines the actions watchPolice / fleePolice / arrest / clear and sets pursuitMode = 2. | 7 |
+| `C:onActiveDone()` | Called when the vehicle is no longer active in traffic. Same handling as onRoleEnded: if the flee flag is set, the suspect is declared to have escaped the police. | 55 |
+| `C:onRoleEnded()` | Called when the role ends. If the suspect was fleeing, calls gameplay_police.evadeVehicle(vehId, gameplay_traffic.showMessages) and removes the flee flag. | 48 |
+| `C:onTrafficTick(tickTime)` | Called on each traffic manager tick. If the state is 'wanted', the visibility value (pursuit.sightValue) reaches the threshold (0.25 for an AI, 1 for a player) and the speed reaches the threshold (1 m/s if driveCheck, otherwise 0), it looks for available police officers (neither in pursuit nor in reset), starts gameplay_police.setPursuitMode(pursuitMode, vehId, policeIds) and targets the closest police officer. | 62 |
+| `C:onUpdate(dt, dtSim)` | Called every frame; empty body. | 81 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `queueLuaCommand`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/traffic/roles/suspect.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/traffic/roles/suspect.lua`.*

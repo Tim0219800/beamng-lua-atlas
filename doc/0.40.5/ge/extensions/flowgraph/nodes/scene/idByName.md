@@ -1,31 +1,31 @@
 # `flowgraph_nodes_scene_idByName`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/idByName.lua` · VM : Game Engine (GE) · 68 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/idByName.lua` · VM: Game Engine (GE) · 68 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/idByName")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/idByName")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « ID by Name » (categorie simple). Retrouve l'id du premier objet de la scene portant un nom (scenetree.findObject). Entree : name (string, cache ; sinon le nom est dans self.data.name). Sorties : objID (number) et exist (bool, cache). L'id trouve est memorise jusqu'au debut/fin de mission ou au demarrage du graphe.
+Flowgraph node "ID by Name" (simple category). Finds the id of the first scene object with a given name (scenetree.findObject). Input: name (string, hidden; otherwise the name is in self.data.name). Outputs: objID (number) and exist (bool, hidden). The found id is remembered until the start/end of a mission or the start of the graph.
 
-## Remarques
+## Notes
 
-- Une fois l'id trouve, il est conserve meme si le nom du pin change ensuite et que l'objet n'est plus trouve.
+- Once the id is found, it is kept even if the pin's name later changes and the object is no longer found.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Oublie l'id memorise au demarrage du graphe. | 56 |
-| `C:drawMiddle(builder, style)` | Affiche le nom et l'id courants au milieu du noeud. | 60 |
-| `C:init()` | Nom vide et objID nil. | 24 |
-| `C:onClientEndMission()` | Hook de fin de mission : oublie l'id memorise. | 48 |
-| `C:onClientStartMission()` | Hook de debut de mission : oublie l'id memorise. | 52 |
-| `C:work()` | Utilise le pin name s'il est branche, cherche l'objet et ecrit objID et exist. | 29 |
+| `C:_executionStarted()` | Forgets the remembered id when the graph starts. | 56 |
+| `C:drawMiddle(builder, style)` | Displays the current name and id in the middle of the node. | 60 |
+| `C:init()` | Empty name and objID nil. | 24 |
+| `C:onClientEndMission()` | End-of-mission hook: forgets the remembered id. | 48 |
+| `C:onClientStartMission()` | Start-of-mission hook: forgets the remembered id. | 52 |
+| `C:work()` | Uses the name pin if it is connected, looks up the object and writes objID and exist. | 29 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/idByName.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/idByName.lua`.*

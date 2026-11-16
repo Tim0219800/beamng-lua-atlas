@@ -1,26 +1,26 @@
 # `core_cameraModes_handheld`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/handheld.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/handheld.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/handheld")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/handheld")` (file under extensions/ but not a regular extension)
 
-Filtre de caméra « à l'épaule » : la direction de visée suit la cible via un ressort amorti et l'horizon se penche légèrement selon la force (effet caméra portée à la main). Module masqué (isFilter, hidden). Renvoie un constructeur.
+"Shoulder-mounted" camera filter: the aiming direction follows the target through a damped spring and the horizon tilts slightly according to the force (hand-held camera effect). Hidden module (isFilter, hidden). Returns a constructor.
 
-## Remarques
+## Notes
 
-- La page extraite indique init(damping, rotspring) mais le code définit init(spring, damping, rotspring).
-- Valeurs par défaut : k = 20, damping = 5, rotk = 3. Avec une session OpenXR, l'axe haut reste (0,0,1).
+- The extracted page says init(damping, rotspring) but the code defines init(spring, damping, rotspring).
+- Default values: k = 20, damping = 5, rotk = 3. With an OpenXR session, the up axis stays (0,0,1).
 
-## Classe `C`
+## Class `C`
 
-Filtre à ressort sur la direction de visée.
+Spring filter on the aiming direction.
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_handheld")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_handheld")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(spring, damping, rotspring)` | Initialise les paramètres du ressort et force une réinitialisation de la direction au prochain update. | 8 |
-| `C:update(data)` | Calcule data.res.rot depuis la direction lissée de data.res.pos vers data.res.targetPos. | 18 |
+| `C:init(spring, damping, rotspring)` | Initializes the spring parameters and forces a direction reset on the next update. | 8 |
+| `C:update(data)` | Computes data.res.rot from the smoothed direction from data.res.pos to data.res.targetPos. | 18 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/handheld.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/handheld.lua`.*

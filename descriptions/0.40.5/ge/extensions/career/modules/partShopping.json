@@ -1,135 +1,229 @@
 {
   "path": "lua/ge/extensions/career/modules/partShopping.lua",
-  "module": "Boutique de pièces de la carrière (écran « personnalisation de pièces » de l'ordinateur du garage). Pour un véhicule de l'inventaire, il génère la liste des pièces compatibles par slot (pièces neuves du JBeam avec leur valeur, plus pièces en stockage de l'inventaire à coût nul), tient un panier (partsIn / partsOut), prévisualise le résultat en refaisant apparaître le véhicule avec les pièces choisies, ajoute automatiquement les pièces nécessaires dans les sous-slots, retire les pièces devenues incompatibles et applique l'achat (paiement, mise à jour de l'inventaire de pièces, sauvegarde).",
+  "module": "Career parts shop (\"part customization\" screen of the garage computer). For an inventory vehicle, it generates the list of compatible parts per slot (new JBeam parts with their value, plus inventory parts in storage at zero cost), maintains a cart (partsIn / partsOut), previews the result by respawning the vehicle with the chosen parts, automatically adds the necessary parts in sub-slots, removes parts that became incompatible and applies the purchase (payment, parts inventory update, save).",
   "usage": "career_modules_partShopping.startShopping(inventoryId, computerId)\ncareer_modules_partShopping.installPartByPartShopId(partShopId)\nlocal cart = career_modules_partShopping.getShoppingCart()\nprint(cart.total)",
   "notes": [
-    "Taxe de vente : 7 % (salesTax) ajoutée au total du panier ; shoppingCart.total = somme des finalValue + taxes.",
-    "Une pièce neuve a une valeur finale = valeur calculée (career_modules_valueCalculator.getPartValue) arrondie à 5 près moins 0,01 (minimum 0) ; une pièce de l'inventaire proposée a finalValue = 0 ; l'entrée « empty » (emptyPlaceholder) permet de retirer une pièce non essentielle.",
-    "Les pièces de cargo (dryBulk ou fluid) sont désactivées (disabled) tant que la branche logistics-materials n'est pas débloquée (hors pièce de test « Magic Cargo Testing Part »).",
-    "La prévisualisation remplace le véhicule (core_vehicles.replaceVehicle) avec previewVehicle.config et gèle le véhicule ; la peinture des nouvelles pièces utilise la couleur d'apprêt de career_modules_painting.getPrimerColor.",
-    "Un véhicule avec des pièces cassées (entre 1 et le seuil) est d'abord réparé via l'assurance avant d'entrer en boutique.",
-    "Une laisse (tether) capsule entre l'ordinateur et le véhicule annule la session (cancelShopping) si le joueur s'éloigne.",
-    "Hooks émis : onPartShoppingStarted, onPartShoppingPartInstalled({part}), onPartShoppingCancelled, onPartShoppingTransactionComplete, plus guihooks partShoppingData et partShoppingRequestExit.",
-    "L'achat appelle career_modules_vehiclePerformance.invalidateCertification et débloque le succès VEHICLE_MODIFIED.",
-    "Route UI : career.computer.partShopping, .category (catégories « cargo » ou toutes les pièces) et .category.slot ; le panneau actif (categories, slots, parts) dépend de la route."
+    "Sales tax: 7% (salesTax) added to the cart total; shoppingCart.total = sum of finalValue + taxes.",
+    "A new part has a final value = computed value (career_modules_valueCalculator.getPartValue) rounded to the nearest 5 minus 0.01 (minimum 0); an offered inventory part has finalValue = 0; the \"empty\" entry (emptyPlaceholder) allows removing a non-essential part.",
+    "Cargo parts (dryBulk or fluid) are disabled until the logistics-materials branch is unlocked (except the \"Magic Cargo Testing Part\" test part).",
+    "The preview replaces the vehicle (core_vehicles.replaceVehicle) with previewVehicle.config and freezes the vehicle; the paint of the new parts uses the primer color from career_modules_painting.getPrimerColor.",
+    "A vehicle with broken parts (between 1 and the threshold) is first repaired via insurance before entering the shop.",
+    "A capsule tether between the computer and the vehicle cancels the session (cancelShopping) if the player moves away.",
+    "Emitted hooks: onPartShoppingStarted, onPartShoppingPartInstalled({part}), onPartShoppingCancelled, onPartShoppingTransactionComplete, plus guihooks partShoppingData and partShoppingRequestExit.",
+    "The purchase calls career_modules_vehiclePerformance.invalidateCertification and unlocks the VEHICLE_MODIFIED achievement.",
+    "UI route: career.computer.partShopping, .category (\"cargo\" category or all parts) and .category.slot; the active panel (categories, slots, parts) depends on the route."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career, gameplay_achievement."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: career_career, gameplay_achievement."
+    }
   },
   "functions": {
     "startShopping": {
-      "desc": "Démarre une session pour un véhicule (celui donné, le courant, sinon celui du garage le plus proche). Répare d'abord par l'assurance si le véhicule est abîmé, puis prépare le panier, génère la boutique, pose la laisse, ouvre l'écran et fige le véhicule.",
+      "desc": "Starts a session for a vehicle (the given one, the current one, otherwise the nearest garage one). First repairs via insurance if the vehicle is damaged, then prepares the cart, generates the shop, sets the tether, opens the screen and freezes the vehicle.",
       "params": {
-        "inventoryId": {"type": "integer|nil", "desc": "Id d'inventaire du véhicule."},
-        "_originComputerId": {"type": "string|nil", "desc": "Id de l'ordinateur d'origine (sert au retour et à la laisse)."}
+        "inventoryId": {
+          "type": "integer|nil",
+          "desc": "Inventory id of the vehicle."
+        },
+        "_originComputerId": {
+          "type": "string|nil",
+          "desc": "Id of the originating computer (used for returning and for the tether)."
+        }
       },
       "internal": false
     },
     "setupTether": {
-      "desc": "Crée la laisse capsule entre l'ordinateur et le véhicule ; quand elle est franchie, cancelShopping est appelé.",
+      "desc": "Creates the capsule tether between the computer and the vehicle; when it is crossed, cancelShopping is called.",
       "params": {},
       "internal": false
     },
     "installPart": {
-      "desc": "Ajoute une pièce au panier (sans effet hors session), complète automatiquement les sous-slots vides avec des pièces de l'inventaire ou par défaut, met à jour la prévisualisation et émet onPartShoppingPartInstalled.",
-      "params": {"part": {"type": "table", "desc": "Pièce de la boutique (containingSlot, name, partPath, finalValue...)."}},
+      "desc": "Adds a part to the cart (no effect outside a session), automatically fills empty sub-slots with inventory or default parts, updates the preview and emits onPartShoppingPartInstalled.",
+      "params": {
+        "part": {
+          "type": "table",
+          "desc": "Shop part (containingSlot, name, partPath, finalValue...)."
+        }
+      },
       "internal": false
     },
     "installPartByPartShopId": {
-      "desc": "Installe la pièce de la boutique identifiée par son partShopId.",
-      "params": {"partShopId": {"type": "integer", "desc": "Identifiant de la pièce dans partsInShop."}},
+      "desc": "Installs the shop part identified by its partShopId.",
+      "params": {
+        "partShopId": {
+          "type": "integer",
+          "desc": "Part identifier in partsInShop."
+        }
+      },
       "internal": false
     },
     "removePartBySlot": {
-      "desc": "Retire du panier la pièce du slot donné (restaure la pièce d'origine si elle convient encore au slot).",
-      "params": {"slot": {"type": "string", "desc": "Chemin du slot (containingSlot)."}},
+      "desc": "Removes from the cart the part of the given slot (restores the original part if it still fits the slot).",
+      "params": {
+        "slot": {
+          "type": "string",
+          "desc": "Slot path (containingSlot)."
+        }
+      },
       "internal": false
     },
     "updatePreviewVehicle": {
-      "desc": "Rappel appelé par le véhicule avec ses conditions de pièces après le respawn de prévisualisation : recopie l'arbre de pièces, met à jour le panier, renvoie les données à l'UI et refige le véhicule.",
-      "params": {"currentPartConditions": {"type": "table|nil", "desc": "Conditions de pièces lues sur le véhicule."}},
+      "desc": "Callback called by the vehicle with its part conditions after the preview respawn: copies the parts tree, updates the cart, sends the data back to the UI and refreezes the vehicle.",
+      "params": {
+        "currentPartConditions": {
+          "type": "table|nil",
+          "desc": "Part conditions read from the vehicle."
+        }
+      },
       "internal": true
     },
     "applyShopping": {
-      "desc": "Valide l'achat : ne fait rien si le joueur ne peut pas payer le total TTC. Sinon remplace le véhicule de l'inventaire par la prévisualisation, déplace les pièces retirées en stockage, ajoute/met à jour les pièces installées, paie (tags partsBought, buying), sauvegarde le véhicule, joue le son et émet onPartShoppingTransactionComplete.",
+      "desc": "Confirms the purchase: does nothing if the player cannot pay the total including tax. Otherwise replaces the inventory vehicle with the preview, moves removed parts to storage, adds/updates installed parts, pays (tags partsBought, buying), saves the vehicle, plays the sound and emits onPartShoppingTransactionComplete.",
       "params": {},
       "internal": false
     },
     "cancelShopping": {
-      "desc": "Annule la session : émet onPartShoppingCancelled, refait apparaître le véhicule d'origine (spawnVehicle option 2) et ferme le menu.",
+      "desc": "Cancels the session: emits onPartShoppingCancelled, respawns the original vehicle (spawnVehicle option 2) and closes the menu.",
       "params": {},
       "internal": false
     },
     "requestExit": {
-      "desc": "Demande à l'UI de quitter l'écran (guihooks partShoppingRequestExit).",
+      "desc": "Asks the UI to leave the screen (guihooks partShoppingRequestExit).",
       "params": {},
       "internal": false
     },
     "isShoppingSessionActive": {
-      "desc": "Indique si une session d'achat est active.",
+      "desc": "Indicates whether a shopping session is active.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si active."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if active."
+        }
+      ],
       "internal": false
     },
     "getPartsInShop": {
-      "desc": "Renvoie la liste des pièces proposées (partsInShop).",
+      "desc": "Returns the list of offered parts (partsInShop).",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Pièces de la boutique."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Shop parts."
+        }
+      ],
       "internal": false
     },
     "getShoppingCart": {
-      "desc": "Renvoie le panier {partsIn, partsOut, partsInList, partsOutList, slotList, taxes, total}.",
+      "desc": "Returns the cart {partsIn, partsOut, partsInList, partsOutList, slotList, taxes, total}.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Panier."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Cart."
+        }
+      ],
       "internal": false
     },
     "sendShoppingDataToUI": {
-      "desc": "Régénère la boutique et envoie à l'UI (guihooks partShoppingData) : pièces, arbre de slots, panier, noms, liste de recherche, pièces filtrées selon la route, carte slot -> pièce installée et argent du joueur.",
+      "desc": "Regenerates the shop and sends to the UI (guihooks partShoppingData): parts, slot tree, cart, names, search list, parts filtered by route, slot -> installed part map and the player's money.",
       "params": {},
       "internal": false
     },
     "getCategoryBreadcrumbTitle": {
-      "desc": "Titre de fil d'Ariane pour la route de catégorie : « pièces de cargo » pour category == \"cargo\", sinon « toutes les pièces ».",
-      "params": {"category": {"type": "string", "desc": "Paramètre de route category."}},
-      "returns": [{"type": "string", "desc": "Titre traduit."}],
+      "desc": "Breadcrumb title for the category route: \"cargo parts\" for category == \"cargo\", otherwise \"all parts\".",
+      "params": {
+        "category": {
+          "type": "string",
+          "desc": "Route parameter category."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Translated title."
+        }
+      ],
       "internal": false
     },
     "getSlotBreadcrumbTitle": {
-      "desc": "Titre de fil d'Ariane pour la route de slot : nom lisible du dernier segment du chemin.",
-      "params": {"slotPath": {"type": "string", "desc": "Paramètre de route slotPath."}},
-      "returns": [{"type": "string|nil", "desc": "Nom du slot, nil si inconnu."}],
+      "desc": "Breadcrumb title for the slot route: readable name of the last segment of the path.",
+      "params": {
+        "slotPath": {
+          "type": "string",
+          "desc": "Route parameter slotPath."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Slot name, nil if unknown."
+        }
+      ],
       "internal": false
     },
     "onRouteEnter": {
-      "desc": "Cycle de vie du routeur UI : mémorise la sélection (catégorie, slot, panneau) déduite de la route.",
+      "desc": "UI router lifecycle: remembers the selection (category, slot, panel) inferred from the route.",
       "params": {
-        "context": {"type": "any", "desc": "Contexte du routeur."},
-        "toRoute": {"type": "table", "desc": "Route cible (name, params)."},
-        "fromRoute": {"type": "any", "desc": "Route précédente."},
-        "data": {"type": "table", "desc": "routeData."}
+        "context": {
+          "type": "any",
+          "desc": "Router context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route (name, params)."
+        },
+        "fromRoute": {
+          "type": "any",
+          "desc": "Previous route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "routeData."
+        }
       },
       "internal": true
     },
     "onRouteMount": {
-      "desc": "Cycle de vie du routeur UI : renormalise la sélection puis envoie les données de la boutique.",
+      "desc": "UI router lifecycle: renormalizes the selection then sends the shop data.",
       "params": {
-        "context": {"type": "any", "desc": "Contexte du routeur."},
-        "toRoute": {"type": "table", "desc": "Route cible."},
-        "fromRoute": {"type": "any", "desc": "Route précédente."},
-        "data": {"type": "table", "desc": "routeData."}
+        "context": {
+          "type": "any",
+          "desc": "Router context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route."
+        },
+        "fromRoute": {
+          "type": "any",
+          "desc": "Previous route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "routeData."
+        }
       },
       "internal": true
     },
     "onVehicleSaveFinished": {
-      "desc": "Hook : une fois la sauvegarde du véhicule terminée après un achat, ferme le menu si la fermeture était différée.",
+      "desc": "Hook: once the vehicle save is finished after a purchase, closes the menu if closing was deferred.",
       "params": {},
       "internal": true
     },
     "onComputerAddFunctions": {
-      "desc": "Hook de l'ordinateur : ajoute la fonction « personnalisation de pièces » (ordre 1) pour chaque véhicule du garage, désactivée si le véhicule est à réparer, si le véhicule de départ n'est pas acheté ou si career_modules_permissions refuse partBuying/vehicleModification.",
+      "desc": "Computer hook: adds the \"part customization\" function (order 1) for each garage vehicle, disabled if the vehicle needs repair, if the starter vehicle is not bought or if career_modules_permissions denies partBuying/vehicleModification.",
       "params": {
-        "menuData": {"type": "table", "desc": "Données du menu (computerFacility, vehiclesInGarage...)."},
-        "computerFunctions": {"type": "table", "desc": "Fonctions à compléter (vehicleSpecific[inventoryId])."}
+        "menuData": {
+          "type": "table",
+          "desc": "Menu data (computerFacility, vehiclesInGarage...)."
+        },
+        "computerFunctions": {
+          "type": "table",
+          "desc": "Functions to fill (vehicleSpecific[inventoryId])."
+        }
       },
       "internal": true
     }

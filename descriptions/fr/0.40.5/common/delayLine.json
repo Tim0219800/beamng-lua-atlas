@@ -1,0 +1,46 @@
+{
+  "path": "lua/common/delayLine.lua",
+  "module": "Ligne à retard générique : chaque paquet de données poussé dans la ligne ressort après le même délai. Créée à l'origine pour simuler le temps que met le carburant imbrûlé à parcourir l'échappement avant de brûler. Il faut interroger la ligne régulièrement (pop/popSum) avec le pas de temps pour récupérer ce qui est arrivé au bout.",
+  "usage": "local dl = require('delayLine').new(0.2)  -- délai 0,2 s\ndl:push(5)\n-- à chaque frame :\nlocal sum = dl:popSum(dt)",
+  "notes": [
+    "Le temps interne (currentTime) n'avance que dans pop et popSum, pas dans peek.",
+    "pop renvoie nil si la ligne est vide, sinon un tableau (éventuellement vide). popSum renvoie 0 si vide ; elle suppose des données numériques.",
+    "Les paquets sortent dans l'ordre d'entrée (délai identique pour tous)."
+  ],
+  "fields": {},
+  "functions": {
+    "new": {
+      "desc": "Crée une ligne à retard.",
+      "params": {"delay": {"type": "number", "desc": "Délai en secondes appliqué à chaque paquet."}},
+      "returns": [{"type": "table", "desc": "Objet avec les méthodes push, peek, pop, popSum, reset."}],
+      "internal": false
+    }
+  },
+  "classes": {
+    "delayLine": {
+      "desc": "Objet renvoyé par new(delay). Champs : delay, length, currentTime, data, times.",
+      "functions": {
+        "push": {
+          "desc": "Insère un paquet de données ; il sortira à currentTime + delay.",
+          "params": {"payload": {"type": "any", "desc": "Donnée à retarder."}}
+        },
+        "pop": {
+          "desc": "Fait avancer le temps de dt, retire et renvoie tous les paquets arrivés à échéance.",
+          "params": {"dt": {"type": "number", "desc": "Temps écoulé en secondes."}},
+          "returns": [{"type": "table|nil", "desc": "Liste des paquets arrivés ; nil si la ligne est vide."}]
+        },
+        "popSum": {
+          "desc": "Comme pop mais renvoie la somme (numérique) des paquets arrivés.",
+          "params": {"dt": {"type": "number", "desc": "Temps écoulé en secondes."}},
+          "returns": [{"type": "number", "desc": "Somme des paquets arrivés (0 si aucun)."}]
+        },
+        "peek": {
+          "desc": "Renvoie, sans les retirer ni avancer le temps, les paquets qui seraient arrivés dans dt secondes.",
+          "params": {"dt": {"type": "number", "desc": "Horizon en secondes."}},
+          "returns": [{"type": "table|nil", "desc": "Liste des paquets ; nil si la ligne est vide."}]
+        },
+        "reset": {"desc": "Vide la ligne et remet le temps interne à 0.", "params": {}}
+      }
+    }
+  }
+}

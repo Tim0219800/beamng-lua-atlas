@@ -1,49 +1,49 @@
 # `controller_beamNavigator`
 
-*Fichier : `lua/vehicle/controller/beamNavigator.lua` · VM : Véhicule · 59 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/beamNavigator.lua` · VM: Vehicle · 59 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `beamNavigator` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `beamNavigator` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire qui affiche une carte de navigation en direct sur un écran du véhicule. Il crée une texture HTML (module `htmlTexture`) sur un matériau d'écran, demande au jeu la carte du tableau de bord (`ui_uinavi.requestVehicleDashboardMap`) et lui envoie 15 fois par seconde la position, l'orientation, la vitesse et l'allumage du véhicule, tant qu'un joueur est assis.
+Auxiliary controller that displays a live navigation map on a vehicle screen. It creates an HTML texture (`htmlTexture` module) on a screen material, asks the game for the dashboard map (`ui_uinavi.requestVehicleDashboardMap`) and sends it 15 times per second the vehicle's position, orientation, speed and ignition, as long as a player is seated.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues par init : `screenMaterialName` ("@screen_gps"), `htmlFilePath` ("local://local/vehicles/common/navi_screen.html"), `textureWidth` (256), `textureHeight` (128), `textureFPS` (30), `bootscreenImage` (URL facultative de l'écran de démarrage).
-- Données envoyées à `map.updateData` : x, y, rotation (degrés = direction + 180), speed (km/h = airspeed × 3.6), zoom (min(150 + vitesse × 1.5, 250), inutilisé sur le tableau de bord), ignitionLevel.
-- `M.reset = nop` (fonction vide) : sans cela controller.reset rappellerait init et recréerait la texture. Le champ `reset` n'est donc pas nil.
-- L'appel utilise `obj:getID()` pour l'identifiant du véhicule.
+- Jbeam keys read by init: `screenMaterialName` ("@screen_gps"), `htmlFilePath` ("local://local/vehicles/common/navi_screen.html"), `textureWidth` (256), `textureHeight` (128), `textureFPS` (30), `bootscreenImage` (optional URL of the boot screen).
+- Data sent to `map.updateData`: x, y, rotation (degrees = direction + 180), speed (km/h = airspeed × 3.6), zoom (min(150 + speed × 1.5, 250), unused on the dashboard), ignitionLevel.
+- `M.reset = nop` (empty function): without it controller.reset would call init again and recreate the texture. The `reset` field is therefore not nil.
+- The call uses `obj:getID()` for the vehicle identifier.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_beamNavigator.init(jbeamData)` | Crée la texture HTML de l'écran, demande la carte au jeu et affiche l'image de démarrage si `bootscreenImage` est fournie. *(interne)* | 40 |
-| `controller_beamNavigator.updateGFX(dt)` | Envoie les données GPS à la texture HTML à 15 Hz quand un joueur est assis. *(interne)* | 21 |
+| `controller_beamNavigator.init(jbeamData)` | Creates the screen's HTML texture, asks the game for the map and displays the boot image if `bootscreenImage` is provided. *(internal)* | 40 |
+| `controller_beamNavigator.updateGFX(dt)` | Sends the GPS data to the HTML texture at 15 Hz when a player is seated. *(internal)* | 21 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_beamNavigator.init(jbeamData)`
 
-Crée la texture HTML de l'écran, demande la carte au jeu et affiche l'image de démarrage si `bootscreenImage` est fournie.
+Creates the screen's HTML texture, asks the game for the map and displays the boot image if `bootscreenImage` is provided.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_beamNavigator.updateGFX(dt)`
 
-Envoie les données GPS à la texture HTML à 15 Hz quand un joueur est assis.
+Sends the GPS data to the HTML texture at 15 Hz when a player is seated.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `reset` | function | nop : évite de rappeler init au reset du véhicule. |
+| `reset` | function | nop: avoids calling init again on vehicle reset. |
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getDirection`, `getID`, `getPosition`, `queueGameEngineLua`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/beamNavigator.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/beamNavigator.lua`.*

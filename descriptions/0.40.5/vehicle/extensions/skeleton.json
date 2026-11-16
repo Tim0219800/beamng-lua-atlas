@@ -1,24 +1,34 @@
 {
   "path": "lua/vehicle/extensions/skeleton.lua",
-  "module": "Modèle minimal d'extension véhicule, et extension réellement utilisée : main.lua la charge toujours (extensions.load(\"skeleton\")) à la fin de l'initialisation du véhicule. Cycle de vie : le gestionnaire d'extensions la charge, appelle onExtensionLoaded(), et si celle-ci renvoie false l'extension est déchargée immédiatement (ses hooks ne seront jamais appelés) ; sinon elle reste active et reçoit les hooks globaux (ici onDebugDraw, appelé à chaque frame de debug par main.lua). Convention : une extension expose ses hooks dans la table M (onExtensionLoaded, onInit, onReset, updateGFX, onDebugDraw, onExtensionUnloaded…) et renvoie M.\nCelle-ci dessine les poutres et nœuds du véhicule pour aider à démarrer en jbeam quand il n'y a aucun flexbody.",
-  "usage": "-- squelette d'une extension véhicule\nlocal M = {}\nlocal function onExtensionLoaded()\n  if not v.data.nodes then return false end -- false = se décharger\nend\nlocal function updateGFX(dt) end\nM.onExtensionLoaded = onExtensionLoaded\nM.updateGFX = updateGFX\nreturn M",
+  "module": "Minimal vehicle extension template, and an extension actually used: main.lua always loads it (extensions.load(\"skeleton\")) at the end of vehicle initialization. Lifecycle: the extension manager loads it, calls onExtensionLoaded(), and if that returns false the extension is unloaded immediately (its hooks will never be called); otherwise it stays active and receives the global hooks (here onDebugDraw, called every debug frame by main.lua). Convention: an extension exposes its hooks in the table M (onExtensionLoaded, onInit, onReset, updateGFX, onDebugDraw, onExtensionUnloaded…) and returns M.\nThis one draws the vehicle's beams and nodes to help get started in jbeam when there is no flexbody.",
+  "usage": "-- skeleton of a vehicle extension\nlocal M = {}\nlocal function onExtensionLoaded()\n  if not v.data.nodes then return false end -- false = unload itself\nend\nlocal function updateGFX(dt) end\nM.onExtensionLoaded = onExtensionLoaded\nM.updateGFX = updateGFX\nreturn M",
   "notes": [
-    "Se décharge (retourne false) si v.data.beams ou v.data.nodes est nil, si v.data.information.showSkeleton est défini et faux, ou si le véhicule possède des flexbodies non vides. Elle ne reste donc que pour les véhicules sans mesh visible et dont information.showSkeleton n'est pas désactivé.",
-    "Le retour d'onExtensionLoaded : `false` = décharger ; `true` ou nil = garder (extensions.lua ne teste que res == false).",
-    "Le dessin est désactivé quand bdebug.isEnabled() est vrai pour éviter un conflit avec le mode debug.",
-    "Couleurs : poutres (44,71,112,230) épaisseur 0.01 ; nœuds (170,57,57,230) rayon 0.03 ; triangles de collision via drawColTris."
+    "Unloads itself (returns false) if v.data.beams or v.data.nodes is nil, if v.data.information.showSkeleton is defined and false, or if the vehicle has non-empty flexbodies. It therefore only stays for vehicles without a visible mesh and whose information.showSkeleton is not disabled.",
+    "Return value of onExtensionLoaded: `false` = unload; `true` or nil = keep (extensions.lua only tests res == false).",
+    "Drawing is disabled when bdebug.isEnabled() is true to avoid a conflict with debug mode.",
+    "Colors: beams (44,71,112,230) thickness 0.01; nodes (170,57,57,230) radius 0.03; collision triangles via drawColTris."
   ],
   "fields": {},
   "functions": {
     "onExtensionLoaded": {
-      "desc": "Hook appelé juste après le chargement de l'extension. Renvoie false pour se décharger (pas de beams/nodes, showSkeleton faux, ou flexbodies présents), true sinon.",
+      "desc": "Hook called right after the extension loads. Returns false to unload itself (no beams/nodes, showSkeleton false, or flexbodies present), true otherwise.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "false = décharger l'extension, true = la garder."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false = unload the extension, true = keep it."
+        }
+      ],
       "internal": true
     },
     "onDebugDraw": {
-      "desc": "Hook appelé à chaque frame par main.lua (extensions.hook('onDebugDraw', focusPos)). Dessine toutes les poutres (drawBeam3d), tous les nœuds (drawNodeSphere) et les triangles de collision, sauf si le debug beam (bdebug) est actif.",
-      "params": {"focusPos": {"type": "vec3", "desc": "Position du focus caméra (non utilisée)."}},
+      "desc": "Hook called every frame by main.lua (extensions.hook('onDebugDraw', focusPos)). Draws all beams (drawBeam3d), all nodes (drawNodeSphere) and the collision triangles, unless beam debug (bdebug) is active.",
+      "params": {
+        "focusPos": {
+          "type": "vec3",
+          "desc": "Camera focus position (unused)."
+        }
+      },
       "returns": [],
       "internal": true
     }

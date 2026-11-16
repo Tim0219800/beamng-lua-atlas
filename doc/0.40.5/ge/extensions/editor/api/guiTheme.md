@@ -1,16 +1,16 @@
 # `editor_api_guiTheme`
 
-*Fichier : `lua/ge/extensions/editor/api/guiTheme.lua` · VM : Game Engine (GE) · 28 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/guiTheme.lua` · VM: Game Engine (GE) · 28 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/api/guiTheme")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/api/guiTheme")` (file under extensions/ but not a regular extension)
 
-Fichier de l'éditeur : définit la palette de couleurs ImGui partagée par les outils de l'éditeur. Il n'exporte pas de table : il ajoute seulement `editor.setupEditorGuiTheme` à la globale `editor`. Appeler cette fonction remplit `editor.color` (beamng, black, buttonInactive, darkgrey, error, gold, green, grey, lightblue, lightgrey, transparent, warning, white) avec des ImColor.
+Editor file: defines the ImGui color palette shared by the editor tools. It does not export a table: it only adds `editor.setupEditorGuiTheme` to the `editor` global. Calling this function fills `editor.color` (beamng, black, buttonInactive, darkgrey, error, gold, green, grey, lightblue, lightgrey, transparent, warning, white) with ImColors.
 
-## Remarques
+## Notes
 
-- Le fichier ne renvoie rien (pas de `return M`) : il agit par effet de bord sur `editor` au moment du chargement.
-- `buttonInactive` reprend la couleur Col_Button du style ImGui courant avec l'alpha divisé par 2.
-- `transparent` est défini avec RGB (255,0,0) et alpha 0 : totalement transparent malgré la composante rouge.
+- The file returns nothing (no `return M`): it acts by side effect on `editor` at load time.
+- `buttonInactive` takes the Col_Button color of the current ImGui style with the alpha divided by 2.
+- `transparent` is defined with RGB (255,0,0) and alpha 0: fully transparent despite the red component.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/guiTheme.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/guiTheme.lua`.*

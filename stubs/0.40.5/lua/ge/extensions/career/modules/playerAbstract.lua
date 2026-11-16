@@ -2,51 +2,51 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/playerAbstract.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Écran « résumé du conducteur » (driver abstract) accessible depuis l'ordinateur du garage en carrière. Il ajoute une entrée au menu de l'ordinateur et fournit à l'UI les données calculées par le module d'assurance (career_modules_insurance_insurance.getPlayerAbstractData).
---- Accès : extension `career_modules_playerAbstract` : `extensions.load("career_modules_playerAbstract")`, puis la globale `career_modules_playerAbstract`
+--- "Driver abstract" screen accessible from the garage computer in career. It adds an entry to the computer menu and provides the UI with the data computed by the insurance module (career_modules_insurance_insurance.getPlayerAbstractData).
+--- Access: extension `career_modules_playerAbstract`: `extensions.load("career_modules_playerAbstract")`, then the global `career_modules_playerAbstract`
 ---@class career_modules_playerAbstract
 career_modules_playerAbstract = {}
 
---- Revient au menu de l'ordinateur d'origine, ou ferme tous les menus carrière s'il n'y en a pas.
----Source : lua/ge/extensions/career/modules/playerAbstract.lua:31
+--- Returns to the originating computer's menu, or closes all career menus if there is none.
+---Source: lua/ge/extensions/career/modules/playerAbstract.lua:31
 function career_modules_playerAbstract.closePlayerAbstractMenu() end
 
---- Renvoie les données du résumé du conducteur fournies par le module d'assurance.
----Source : lua/ge/extensions/career/modules/playerAbstract.lua:40
----@return table  Données du résumé.
+--- Returns the driver abstract data provided by the insurance module.
+---Source: lua/ge/extensions/career/modules/playerAbstract.lua:40
+---@return table  Abstract data.
 function career_modules_playerAbstract.getPlayerAbstractData() end
 
---- Hook de l'ordinateur : ajoute la fonction playerAbstract (ordre 15, catégorie general) si l'installation l'autorise.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/playerAbstract.lua:14
----@param menuData table Données du menu (computerFacility, hasBoughtStarterVehicle).
----@param computerFunctions table Tables de fonctions à compléter.
+--- Computer hook: adds the playerAbstract function _anon(order 15, category general) if the facility allows it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/playerAbstract.lua:14
+---@param menuData table Menu data (computerFacility, hasBoughtStarterVehicle).
+---@param computerFunctions table Function tables to fill.
 function career_modules_playerAbstract.onComputerAddFunctions(menuData, computerFunctions) end
 
---- Cycle de vie du routeur UI : oublie l'ordinateur d'origine en quittant l'écran.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/playerAbstract.lua:51
----@param context any Contexte du routeur.
----@param toRoute any Route cible.
----@param fromRoute any Route quittée.
+--- UI router lifecycle: forgets the originating computer when leaving the screen.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/playerAbstract.lua:51
+---@param context any Router context.
+---@param toRoute any Target route.
+---@param fromRoute any Route being left.
 ---@param data table routeData.
 function career_modules_playerAbstract.onRouteLeave(context, toRoute, fromRoute, data) end
 
---- Cycle de vie du routeur UI : place les données du résumé dans data.playerAbstract.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/playerAbstract.lua:46
----@param context any Contexte du routeur.
----@param toRoute any Route cible.
----@param fromRoute any Route précédente.
----@param data table routeData à remplir.
+--- UI router lifecycle: places the abstract data in data.playerAbstract.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/playerAbstract.lua:46
+---@param context any Router context.
+---@param toRoute any Target route.
+---@param fromRoute any Previous route.
+---@param data table routeData to fill.
 function career_modules_playerAbstract.onRouteMount(context, toRoute, fromRoute, data) end
 
---- Mémorise l'ordinateur d'origine et, s'il existe, navigue vers career.computer.playerAbstract puis déclenche le hook onComputerPlayerAbstract.
----Source : lua/ge/extensions/career/modules/playerAbstract.lua:6
----@param _originComputerId string|nil Id de l'ordinateur du garage.
+--- Remembers the originating computer and, if it exists, navigates to career.computer.playerAbstract then triggers the onComputerPlayerAbstract hook.
+---Source: lua/ge/extensions/career/modules/playerAbstract.lua:6
+---@param _originComputerId string|nil Garage computer id.
 function career_modules_playerAbstract.openPlayerAbstractMenu(_originComputerId) end
 
---- Pousse des données fraîches vers un écran déjà ouvert (guihooks playerAbstractData), par ex. après une remise à zéro du score.
----Source : lua/ge/extensions/career/modules/playerAbstract.lua:56
+--- Pushes fresh data to an already open screen (guihooks playerAbstractData), e.g. after a score reset.
+---Source: lua/ge/extensions/career/modules/playerAbstract.lua:56
 function career_modules_playerAbstract.sendPlayerAbstractDataToUI() end
 

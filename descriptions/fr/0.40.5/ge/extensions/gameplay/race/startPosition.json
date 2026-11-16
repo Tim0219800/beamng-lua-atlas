@@ -1,0 +1,122 @@
+{
+  "path": "lua/ge/extensions/gameplay/race/startPosition.lua",
+  "module": "Classe d'une position de départ d'une course : position et rotation d'une ligne de départ, avec un groupe ('start', 'rollingStart', 'recovery' ou 'other'). Elle sait placer un véhicule dessus en conservant son décalage relatif, se calquer sur un véhicule et fournir les coins avant pour les tests de franchissement. Le module renvoie une fabrique : require('/lua/ge/extensions/gameplay/race/startPosition')(race, name). Contrairement aux autres classes de course, son premier argument s'appelle race.",
+  "notes": [
+    "Le rôle des groupes est celui indiqué par le commentaire du code : start, rollingStart, recovery, other. Sans groupe dans les données, le nom contenant 'Recovery' donne 'recovery', sinon 'start'.",
+    "moveResetVehicleTo utilise une variable logTag non définie dans le fichier (nil, sans conséquence sur le log).",
+    "Sans réparation (repair = false), le véhicule est téléporté avec spawn.safeTeleport et une rotation corrigée.",
+    "calculateVehiclePosRot utilise la boîte englobante OOBB d'apparition : en lowPrecision (véhicule chargé à la première image), le véhicule est placé 2 m derrière et 0,5 m au-dessus de la position.",
+    "Le véhicule est orienté face à la ligne (rotation de la ligne composée d'un demi-tour sur Z).",
+    "setToVehicle ajuste la hauteur et la pente au terrain s'il existe un TerrainBlock."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Position de départ. Champs : race, id (race:getNextUniqueIdentifier()), name (« Start Position <id> » par défaut), group, pos (vec3), rot (quat), sortOrder, routePoint, originalDistToTarget, staticRoutePoint, staticOriginalDistToTarget.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : id, nom, groupe 'start', position et rotation nulles.",
+          "params": {
+            "race": {"type": "table", "desc": "Course ou chemin propriétaire."},
+            "name": {"type": "string|nil", "desc": "Nom."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "onSerialize": {
+          "desc": "Sérialise name, group, pos, rot (x,y,z,w) et oldId.",
+          "params": {},
+          "returns": [{"type": "table", "desc": "Données JSON."}],
+          "internal": false
+        },
+        "onDeserialized": {
+          "desc": "Restaure la position à partir de données sérialisées (groupe déduit du nom si absent).",
+          "params": {"data": {"type": "table", "desc": "Données de onSerialize."}},
+          "returns": [],
+          "internal": false
+        },
+        "set": {
+          "desc": "Définit la position et la rotation.",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position."},
+            "rot": {"type": "quat", "desc": "Rotation."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "getFrontCorners": {
+          "desc": "Coins de la zone devant la position : deux listes, l'une de quatre points (largeur et longueur, vers l'arrière de la ligne selon -Y), l'autre de deux points à 0,4 m.",
+          "params": {
+            "width": {"type": "number|nil", "desc": "Demi-largeur (défaut 1)."},
+            "length": {"type": "number|nil", "desc": "Longueur (défaut 1)."}
+          },
+          "returns": [{"type": "table", "desc": "{ {4 vec3}, {2 vec3} }"}],
+          "internal": false
+        },
+        "drawDebug": {
+          "desc": "Dessine la ligne de départ (triangles pleins), un prisme rouge en mode highlight et le nom.",
+          "params": {
+            "drawMode": {"type": "string|nil", "desc": "'none', 'faded', 'normal', 'highlight'."},
+            "clr": {"type": "number[]|nil", "desc": "Couleur {r,g,b,a} entre 0 et 1."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "calculateVehiclePosRot": {
+          "desc": "Calcule la position et la rotation à donner à un véhicule pour qu'il garde son décalage relatif par rapport à sa boîte d'apparition, centrée sur la ligne.",
+          "params": {
+            "vehId": {"type": "integer", "desc": "Id du véhicule."},
+            "lowPrecision": {"type": "boolean|nil", "desc": "true pour un véhicule chargé à la première image."}
+          },
+          "returns": [
+            {"type": "vec3|nil", "desc": "Nouvelle position."},
+            {"type": "quat|nil", "desc": "Nouvelle rotation."}
+          ],
+          "internal": false
+        },
+        "moveResetVehicleTo": {
+          "desc": "Déplace un véhicule sur la position de départ. Par défaut avec réparation (setPositionRotation) ; avec repair = false, téléportation sûre.",
+          "params": {
+            "vehId": {"type": "integer", "desc": "Id du véhicule."},
+            "lowPrecision": {"type": "boolean|nil", "desc": "Voir calculateVehiclePosRot."},
+            "repair": {"type": "boolean|nil", "desc": "Défaut true ; false = téléportation sûre sans réparation."}
+          },
+          "returns": [
+            {"type": "vec3|nil", "desc": "Position appliquée."},
+            {"type": "quat|nil", "desc": "Rotation calculée."}
+          ],
+          "internal": false
+        },
+        "setToVehicle": {
+          "desc": "Aligne la position de départ sur un véhicule : centre de son avant, orientation du véhicule (ou du terrain sous lui).",
+          "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+          "returns": [],
+          "internal": false
+        },
+        "setRoutePoint": {
+          "desc": "Mémorise le point de route associé et sa distance d'origine à la cible (distToTarget).",
+          "params": {"rp": {"type": "table", "desc": "Point de route."}},
+          "returns": [],
+          "internal": false
+        },
+        "getRoutePoint": {
+          "desc": "Point de route associé.",
+          "params": {},
+          "returns": [{"type": "table|nil", "desc": "Point de route."}],
+          "internal": false
+        },
+        "setStaticRoutePoint": {
+          "desc": "Mémorise le point de route statique et sa distance d'origine.",
+          "params": {"rp": {"type": "table", "desc": "Point de route."}},
+          "returns": [],
+          "internal": false
+        },
+        "getStaticRoutePoint": {
+          "desc": "Point de route statique.",
+          "params": {},
+          "returns": [{"type": "table|nil", "desc": "Point de route."}],
+          "internal": false
+        }
+      }
+    }
+  }
+}

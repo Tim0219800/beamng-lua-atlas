@@ -1,30 +1,86 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/career/careerVehicleSelect.lua",
-  "module": "Nœud flowgraph « Career Vehicle Select » (behaviour once + singleActive, dépend de core_input_bindings). Ouvre le menu carrière 'menu.careerVehicleSelect' où le joueur choisit entre 3 véhicules, pour les tester ou les choisir. Entrées : flow, reset (impulsion), description (string ou table de traduction), et pour chaque véhicule i=1..3 : vehNimage, vehNname, vehNbrand, vehNdesc, vehNtestDisabled. Sorties flow (une seule à vrai selon le bouton) : test1, pick1, test2, pick2, test3, pick3. Les boutons de l'UI rappellent le nœud par une commande Lua générée (getCmd).",
+  "module": "Flowgraph node \"Career Vehicle Select\" (behaviour once + singleActive, depends on core_input_bindings). Opens the career menu 'menu.careerVehicleSelect' where the player chooses among 3 vehicles, to test or pick them. Inputs: flow, reset (impulse), description (string or translation table), and for each vehicle i=1..3: vehNimage, vehNname, vehNbrand, vehNdesc, vehNtestDisabled. Flow outputs (only one is true depending on the button): test1, pick1, test2, pick2, test3, pick3. The UI buttons call the node back via a generated Lua command (getCmd).",
   "notes": [
-    "_executionStarted est défini deux fois ; la seconde définition écrase la première et ne réinitialise pas open/done.",
-    "Les fonctions closed() et started() existent mais ne sont pas appelées dans ce fichier (elles peuvent l'être depuis l'UI).",
-    "Le pin de sortie « flow » est utilisé par started() alors que le schéma ne déclare aucun pin de sortie nommé flow (hors flow implicite)."
+    "_executionStarted is defined twice; the second definition overwrites the first and does not reset open/done.",
+    "The functions closed() and started() exist but are not called in this file (they may be called from the UI).",
+    "The output pin \"flow\" is used by started() whereas the schema declares no output pin named flow (apart from the implicit flow)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Met open et done à faux.", "internal": true},
-        "_executionStarted": {"desc": "Au démarrage du graphe : met toutes les sorties à faux et _active à faux.", "internal": true},
-        "postInit": {"desc": "Vide.", "internal": true},
-        "_executionStopped": {"desc": "Ferme la fenêtre si elle est ouverte puis reset().", "internal": true},
-        "reset": {"desc": "Remet done, open et _active à faux.", "internal": true},
-        "buttonPushed": {"desc": "Appelée par l'UI : met à vrai uniquement le pin de sortie portant le nom de l'action (test1, pick2…).", "params": {"action": {"type": "string", "desc": "nom du pin (testN ou pickN)"}}, "internal": true},
-        "getCmd": {"desc": "Construit la commande Lua que le bouton de l'UI exécutera pour rappeler buttonPushed sur ce nœud.", "params": {"action": {"type": "string", "desc": "nom du pin à activer"}}, "returns": [{"type": "string", "desc": "code Lua à exécuter côté GE"}], "internal": true},
-        "closeDialogue": {"desc": "Marque la fenêtre comme fermée et inactive.", "internal": true},
-        "openDialogue": {"desc": "Construit les données des 3 véhicules (image, marque, nom, description, codes des boutons, testDisabled) et navigue vers 'menu.careerVehicleSelect'.", "internal": true},
-        "closed": {"desc": "Marque le choix comme terminé (done) et inactif.", "internal": true},
-        "started": {"desc": "Ferme la fenêtre, met le pin flow de sortie à vrai et done à vrai.", "internal": true},
-        "onClientEndMission": {"desc": "Hook : remet open et _active à faux à la fin de mission côté client.", "internal": true},
-        "work": {"desc": "Si reset est actif : ferme, réinitialise et met les sorties à faux. Sinon, ouvre la fenêtre une fois quand flow est actif et que ce n'est pas déjà fait."}
+        "init": {
+          "desc": "Sets open and done to false.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "When the graph starts: sets all outputs to false and _active to false.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Empty.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Closes the window if it is open then reset().",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Sets done, open and _active back to false.",
+          "internal": true
+        },
+        "buttonPushed": {
+          "desc": "Called by the UI: sets to true only the output pin bearing the action's name (test1, pick2...).",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "pin name (testN or pickN)"
+            }
+          },
+          "internal": true
+        },
+        "getCmd": {
+          "desc": "Builds the Lua command that the UI button will run to call buttonPushed back on this node.",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "name of the pin to activate"
+            }
+          },
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Lua code to run on the GE side"
+            }
+          ],
+          "internal": true
+        },
+        "closeDialogue": {
+          "desc": "Marks the window as closed and inactive.",
+          "internal": true
+        },
+        "openDialogue": {
+          "desc": "Builds the data of the 3 vehicles (image, brand, name, description, button codes, testDisabled) and navigates to 'menu.careerVehicleSelect'.",
+          "internal": true
+        },
+        "closed": {
+          "desc": "Marks the choice as finished (done) and inactive.",
+          "internal": true
+        },
+        "started": {
+          "desc": "Closes the window, sets the output flow pin to true and done to true.",
+          "internal": true
+        },
+        "onClientEndMission": {
+          "desc": "Hook: sets open and _active back to false at the client-side end of mission.",
+          "internal": true
+        },
+        "work": {
+          "desc": "If reset is active: closes, resets and sets the outputs to false. Otherwise, opens the window once when flow is active and it is not already done."
+        }
       }
     }
   }

@@ -1,40 +1,75 @@
 {
   "path": "lua/ge/extensions/career/modules/reputation.lua",
-  "module": "Calcul de la réputation du joueur auprès des organisations de la carrière. Valeur comprise entre -50 et 700, convertie en niveau (-1 à 3 par défaut : questionable, neutral, reliable, preferred, partner) avec, par niveau, la part retenue sur les véhicules prêtés (loanerCut) et le bonus de livraison (deliveryBonus). La valeur brute est l'attribut <orgId>Reputation de playerAttributes.",
+  "module": "Computation of the player's reputation with career organizations. Value between -50 and 700, converted to a level (-1 to 3 by default: questionable, neutral, reliable, preferred, partner) with, per level, the share withheld on loaned vehicles (loanerCut) and the delivery bonus (deliveryBonus). The raw value is the <orgId>Reputation attribute of playerAttributes.",
   "notes": [
-    "Seuils par défaut (requiredValue) : -50, -25, 40, 175, 400. Les organisations peuvent surcharger via organization.reputationLevels.",
-    "Événements : returnLoanerDamaged = -20, discardDeliveryVehicle = -10.",
-    "addReputationToOrg modifie l'objet organisation : fusionne les valeurs par défaut dans reputationLevels, traduit label/levelLabel et écrit organization.reputation.",
-    "Le niveau renvoyé est (index trouvé - 2) ; addReputationToOrg suppose donc que reputationLevels commence au niveau -1."
+    "Default thresholds (requiredValue): -50, -25, 40, 175, 400. Organizations can override via organization.reputationLevels.",
+    "Events: returnLoanerDamaged = -20, discardDeliveryVehicle = -10.",
+    "addReputationToOrg modifies the organization object: merges the defaults into reputationLevels, translates label/levelLabel and writes organization.reputation.",
+    "The returned level is (found index - 2); addReputationToOrg therefore assumes reputationLevels starts at level -1."
   ],
   "functions": {
     "addReputationToOrg": {
-      "desc": "Calcule la réputation de l'organisation et l'attache dans organization.reputation = {value, level, curLvlProgress, neededForNext, prevThreshold, nextThreshold} ; complète aussi les niveaux avec les valeurs par défaut.",
-      "params": {"organization": {"type": "table|nil", "desc": "Organisation (id, reputationLevels). Ne fait rien si nil."}},
+      "desc": "Computes the organization's reputation and attaches it as organization.reputation = {value, level, curLvlProgress, neededForNext, prevThreshold, nextThreshold}; also fills in the levels with the default values.",
+      "params": {
+        "organization": {
+          "type": "table|nil",
+          "desc": "Organization (id, reputationLevels). Does nothing if nil."
+        }
+      },
       "internal": false
     },
     "getLabel": {
-      "desc": "Libellé traduit du niveau de réputation par défaut.",
-      "params": {"lvl": {"type": "integer", "desc": "Niveau de -1 à 3."}},
-      "returns": [{"type": "string", "desc": "Libellé, ou chaîne vide si inconnu."}],
+      "desc": "Translated label of the default reputation level.",
+      "params": {
+        "lvl": {
+          "type": "integer",
+          "desc": "Level from -1 to 3."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Label, or empty string if unknown."
+        }
+      ],
       "internal": false
     },
     "getMinimumValue": {
-      "desc": "Valeur minimale de réputation.",
+      "desc": "Minimum reputation value.",
       "params": {},
-      "returns": [{"type": "number", "desc": "-50."}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "-50."
+        }
+      ],
       "internal": false
     },
     "getMaximumValue": {
-      "desc": "Valeur maximale de réputation.",
+      "desc": "Maximum reputation value.",
       "params": {},
-      "returns": [{"type": "number", "desc": "700."}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "700."
+        }
+      ],
       "internal": false
     },
     "getValueForEvent": {
-      "desc": "Variation de réputation associée à un événement.",
-      "params": {"eventId": {"type": "string", "desc": "returnLoanerDamaged ou discardDeliveryVehicle."}},
-      "returns": [{"type": "number|nil", "desc": "Variation (négative), nil si inconnu."}],
+      "desc": "Reputation change associated with an event.",
+      "params": {
+        "eventId": {
+          "type": "string",
+          "desc": "returnLoanerDamaged or discardDeliveryVehicle."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Change (negative), nil if unknown."
+        }
+      ],
       "internal": false
     }
   }

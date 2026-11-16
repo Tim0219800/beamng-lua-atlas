@@ -1,225 +1,225 @@
 # `editor_toolUtilities_occupancy`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/occupancy.lua` · VM : Game Engine (GE) · 922 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/occupancy.lua` · VM: Game Engine (GE) · 922 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_occupancy` : `extensions.load("editor_toolUtilities_occupancy")`, puis la globale `editor_toolUtilities_occupancy`
+**Access:** extension `editor_toolUtilities_occupancy`: `extensions.load("editor_toolUtilities_occupancy")`, then the global `editor_toolUtilities_occupancy`
 
-Grille d'occupation 2D grossière (cellules de 1 m) partagée par l'écartement des piles de pont et celui de la végétation. Les routes (groupes à divPoints/binormales) et les jonctions sont fournies à rebuild ; le Rail Network poste ses voies et jonctions via setRail ; tout est estampillé ensemble, avec les obstacles statiques (rivières, bâtiments, clôtures, lacs), les terrains revendiqués par d'autres outils (groundClaims) et une couche propre aux plantes (setPlantKeepOut). Chaque cellule garde un propriétaire (chaîne), ou false si plusieurs se la partagent. Les requêtes (occupiedAt, transportAt, blocked, overhangAt…) répondent « y a-t-il quelque chose ici ».
+Coarse 2D occupancy grid (1 m cells) shared by bridge pier clearance and vegetation clearance. Roads (groups with divPoints/binormals) and junctions are supplied to rebuild; the Rail Network posts its tracks and junctions via setRail; everything is stamped together, along with static obstacles (rivers, buildings, fences, lakes), terrain claimed by other tools (groundClaims) and a layer specific to plants (setPlantKeepOut). Each cell keeps an owner (string), or false if several share it. The queries (occupiedAt, transportAt, blocked, overhangAt...) answer "is there something here".
 
-## Remarques
+## Notes
 
-- Propriétaires (premier caractère) : 'g' route/rail, 'p' chemin, 'j' jonction, 'b' bâtiment ; suffixe 'b' = tronçon de pont d'une liaison (une pile peut se tenir sous son propre tablier), suffixe 't' = souterrain (tunnel, jonction en tunnel, terrain réclamé pour la couverture) ; les rails sont 'gr', 'jr'. Les plantes se tiennent sur ce qui est enterré, tout le reste l'évite.
-- Marges : rubans de route 0.5 m, rivières +1 m au-delà du demi-largeur, bâtiments +1 m, clôtures 0.5 m, lacs +1 m, terrains revendiqués 0.5 m ; accotement stabilisé compté en largeur constante.
-- Les requêtes rafraîchissent la grille à la demande (freshen) : elle est restampillée si la révision du rail ou des revendications a changé. revision() change à chaque restampillage.
-- Les rayons radius valent 0 si nil. Hors de la grille, toutes les requêtes répondent false.
-- setRivers/setBuildings/setFences/setLakes remplacent chacun leur liste ; les listes survivent à rebuild() pour que le remaillage des piles continue de les éviter.
-- Structures attendues : rivières { pts = {{x,y},...}, halfW = n } ; bâtiments et lacs = listes d'anneaux {x,y} remplis ; clôtures = polylignes {x,y}.
+- Owners (first character): 'g' road/rail, 'p' path, 'j' junction, 'b' building; suffix 'b' = bridge section of a link (a pier may stand under its own deck), suffix 't' = underground (tunnel, tunnel junction, terrain claimed for cover); rails are 'gr', 'jr'. Plants stand on what is buried, everything else avoids it.
+- Margins: road ribbons 0.5 m, rivers +1 m beyond the half-width, buildings +1 m, fences 0.5 m, lakes +1 m, claimed terrain 0.5 m; stabilized shoulder counted at constant width.
+- The queries refresh the grid on demand (freshen): it is restamped if the rail or claims revision has changed. revision() changes on each restamp.
+- The radius values are 0 if nil. Outside the grid, all queries answer false.
+- setRivers/setBuildings/setFences/setLakes each replace their list; the lists survive rebuild() so that pier remeshing keeps avoiding them.
+- Expected structures: rivers { pts = {{x,y},...}, halfW = n }; buildings and lakes = lists of filled {x,y} rings; fences = {x,y} polylines.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_occupancy.blocked(cluster, x, y, halfX, halfY, pass)` | Vrai si une cellule de l'empreinte alignée sur les axes appartient à un propriétaire hors du cluster. pass(owner), si fourni, laisse passer d'autres propriétaires. | 629 |
-| `editor_toolUtilities_occupancy.buildingAt(x, y, radius)` | Vrai si une cellule de BÂTIMENT (propriétaire 'b', empreinte estampillée + 1 m) se trouve dans le rayon. | 852 |
-| `editor_toolUtilities_occupancy.clearClusterCache(cluster)` | Efface l'ensemble de propriétaires autorisés mis en cache dans un cluster (_pierAllow), à appeler quand le cluster change. | 870 |
-| `editor_toolUtilities_occupancy.clearStatics()` | Efface tous les obstacles statiques (rivières, bâtiments, clôtures, lacs). | 894 |
-| `editor_toolUtilities_occupancy.heightAt(owner, x, y)` | Hauteur de la route (à son point le plus proche de x, y) ou de la jonction estampillée sous ce propriétaire ; nil pour tout autre propriétaire. | 651 |
-| `editor_toolUtilities_occupancy.occupiedAt(x, y, radius)` | Vrai si quelque chose est estampillé dans le rayon (tous propriétaires, couche des plantes comprise) hors souterrain : un arbre se tient sur la colline au-dessus d'un tunnel. Sert à l'écartement de la végétation. | 701 |
-| `editor_toolUtilities_occupancy.occupiedAtExcluding(x, y, radius, ownerId)` | Comme occupiedAt mais IGNORE les cellules appartenant uniquement à ownerId (le ruban de l'appelant, tronçons de tablier et de tunnel compris). Ne tient pas compte de la couche des plantes. | 725 |
-| `editor_toolUtilities_occupancy.overhangAt(x, y, radius)` | Vrai si le centre d'une cellule de route, de rail ou de jonction, ou une cellule CONSTRUITE de la couche des plantes, se trouve dans le rayon : ce qu'une couronne de cette largeur surplomberait ou traverserait en poussant. Un disque (et non la boîte de roadRailAt), exact sur les cellules partagées. Les blocs sans route ni construction sont sautés d'un coup, donc un point éloigné coûte quelques lectures quel que soit le rayon. Le milieu rempli d'une jonction ne marque aucun bloc, mais rien d'extérieur ne l'atteint sans traverser la peau du bord, qui en marque. | 814 |
-| `editor_toolUtilities_occupancy.ownerFor(g)` | Chaîne propriétaire d'un groupe (« g » suivi de son id), à passer à occupiedAtExcluding. | 745 |
-| `editor_toolUtilities_occupancy.pointInPoly(px, py, poly)` | Test point dans polygone en 2D (lancer de rayon, règle pair-impair). | 248 |
-| `editor_toolUtilities_occupancy.railCluster(trackIds, jctIds)` | Construit le cluster de ce sous lequel les piles d'un pont ferroviaire peuvent se tenir, pour blocked : les tronçons de pont de ces voies et ces jonctions. | 881 |
-| `editor_toolUtilities_occupancy.railRev()` | Révision du rail (0 si non enregistré). Les routes restampillent la grille elles-mêmes une fois stabilisées ; les changements du rail sont repérés à partir de cette révision. | 90 |
-| `editor_toolUtilities_occupancy.rebuild(groups, jcts, clearSegs)` | Restampille la grille depuis les routes et jonctions. Mémorise les entrées pour pouvoir estampiller plus tard un terrain revendiqué sans remaillage du réseau. | 472 |
-| `editor_toolUtilities_occupancy.revision()` | Compteur qui change chaque fois que la grille change : un outil qui garde des choses hors de la grille compare cette valeur au lieu de redemander pour chaque point. | 719 |
-| `editor_toolUtilities_occupancy.roadBetween(x, y, radius, zLo, zHi, skip)` | Vrai si une route ou jonction autre que celle de skip (son ownerFor, tronçons de tablier compris) est estampillée dans le rayon autour de (x, y) à une hauteur strictement comprise entre zLo et zHi. | 663 |
-| `editor_toolUtilities_occupancy.roadRailAt(x, y, radius)` | Comme transportAt mais les CHEMINS sont ignorés : vrai seulement pour un ruban de route ou de rail 'g' ou une jonction 'j' (ou une cellule multi-propriétaire, gardée par prudence car ses propriétaires sont perdus). | 774 |
-| `editor_toolUtilities_occupancy.setBuildings(list)` | Enregistre les bâtiments (polygones remplis) comme obstacles statiques. | 891 |
-| `editor_toolUtilities_occupancy.setFences(list)` | Enregistre les clôtures, murs et haies (polylignes fines) comme obstacles statiques. | 892 |
-| `editor_toolUtilities_occupancy.setLakes(list)` | Enregistre les lacs (polygones de rivage remplis) comme obstacles statiques. | 893 |
-| `editor_toolUtilities_occupancy.setPlantKeepOut(get, rev)` | Source du terrain que les plantes évitent en plus du reste : get() renvoie `paved, built` où paved = { { ring = r, holes = { r, ... } }, ... } (un tronc ne peut pas s'y tenir) et built = { r, ... } (une couronne ne peut pas non plus l'atteindre). rev() change quand l'un ou l'autre change. Source unique ; voir occupiedAt et overhangAt. | 847 |
-| `editor_toolUtilities_occupancy.setRail(get, rev)` | Côté Rail Network : get() renvoie ses voies (lues comme des groupes de route), ses plates-formes de jonction ({ id, pos, lines = { { pts, halfW } } }) et les clearSegs de ses voies ; rev() est incrémentée à chaque changement. | 876 |
-| `editor_toolUtilities_occupancy.setRivers(list)` | Enregistre les rivières comme obstacles statiques (importeur). Remplace la liste précédente ; la liste survit à rebuild(). | 890 |
-| `editor_toolUtilities_occupancy.transportAt(x, y, radius)` | Vrai si une cellule de TRANSPORT (route 'g', chemin 'p', jonction 'j', ou cellule multi-propriétaire) se trouve dans le rayon. | 750 |
+| `editor_toolUtilities_occupancy.blocked(cluster, x, y, halfX, halfY, pass)` | True if a cell of the axis-aligned footprint belongs to an owner outside the cluster. pass(owner), if provided, lets other owners through. | 629 |
+| `editor_toolUtilities_occupancy.buildingAt(x, y, radius)` | True if a BUILDING cell (owner 'b', stamped footprint + 1 m) lies within the radius. | 852 |
+| `editor_toolUtilities_occupancy.clearClusterCache(cluster)` | Clears the set of allowed owners cached in a cluster (_pierAllow), to be called when the cluster changes. | 870 |
+| `editor_toolUtilities_occupancy.clearStatics()` | Clears all static obstacles (rivers, buildings, fences, lakes). | 894 |
+| `editor_toolUtilities_occupancy.heightAt(owner, x, y)` | Height of the road (at its point closest to x, y) or of the junction stamped under this owner; nil for any other owner. | 651 |
+| `editor_toolUtilities_occupancy.occupiedAt(x, y, radius)` | True if something is stamped within the radius (all owners, plant layer included) other than underground: a tree stands on the hill above a tunnel. Used for vegetation clearance. | 701 |
+| `editor_toolUtilities_occupancy.occupiedAtExcluding(x, y, radius, ownerId)` | Like occupiedAt but IGNORES the cells belonging only to ownerId (the caller's ribbon, deck and tunnel sections included). Does not take the plant layer into account. | 725 |
+| `editor_toolUtilities_occupancy.overhangAt(x, y, radius)` | True if the center of a road, rail or junction cell, or a BUILT cell of the plant layer, lies within the radius: what a crown of this width would overhang or cross as it grows. A disc (not the box of roadRailAt), exact on shared cells. Blocks with no road or construction are skipped in one go, so a distant point costs a few reads whatever the radius. The filled middle of a junction marks no block, but nothing from outside reaches it without crossing the edge skin, which does mark. | 814 |
+| `editor_toolUtilities_occupancy.ownerFor(g)` | Owner string of a group ("g" followed by its id), to pass to occupiedAtExcluding. | 745 |
+| `editor_toolUtilities_occupancy.pointInPoly(px, py, poly)` | 2D point-in-polygon test (ray casting, even-odd rule). | 248 |
+| `editor_toolUtilities_occupancy.railCluster(trackIds, jctIds)` | Builds the cluster of these under which the piers of a rail bridge may stand, for blocked: the bridge sections of these tracks and these junctions. | 881 |
+| `editor_toolUtilities_occupancy.railRev()` | Rail revision (0 if not registered). Roads restamp the grid themselves once stabilized; rail changes are detected from this revision. | 90 |
+| `editor_toolUtilities_occupancy.rebuild(groups, jcts, clearSegs)` | Restamps the grid from the roads and junctions. Remembers the inputs so that claimed terrain can be stamped later without remeshing the network. | 472 |
+| `editor_toolUtilities_occupancy.revision()` | Counter that changes whenever the grid changes: a tool that keeps things off the grid compares this value instead of querying again for each point. | 719 |
+| `editor_toolUtilities_occupancy.roadBetween(x, y, radius, zLo, zHi, skip)` | True if a road or junction other than skip's (its ownerFor, deck sections included) is stamped within the radius around (x, y) at a height strictly between zLo and zHi. | 663 |
+| `editor_toolUtilities_occupancy.roadRailAt(x, y, radius)` | Like transportAt but PATHS are ignored: true only for a road or rail ribbon 'g' or a junction 'j' (or a multi-owner cell, kept as a precaution because its owners are lost). | 774 |
+| `editor_toolUtilities_occupancy.setBuildings(list)` | Registers buildings (filled polygons) as static obstacles. | 891 |
+| `editor_toolUtilities_occupancy.setFences(list)` | Registers fences, walls and hedges (thin polylines) as static obstacles. | 892 |
+| `editor_toolUtilities_occupancy.setLakes(list)` | Registers lakes (filled shoreline polygons) as static obstacles. | 893 |
+| `editor_toolUtilities_occupancy.setPlantKeepOut(get, rev)` | Source of the terrain that plants avoid in addition to the rest: get() returns `paved, built` where paved = { { ring = r, holes = { r, ... } }, ... } (a trunk cannot stand there) and built = { r, ... } (a crown cannot reach it either). rev() changes when either changes. Single source; see occupiedAt and overhangAt. | 847 |
+| `editor_toolUtilities_occupancy.setRail(get, rev)` | Rail Network side: get() returns its tracks (read as road groups), its junction platforms ({ id, pos, lines = { { pts, halfW } } }) and the clearSegs of its tracks; rev() is incremented on each change. | 876 |
+| `editor_toolUtilities_occupancy.setRivers(list)` | Registers rivers as static obstacles (importer). Replaces the previous list; the list survives rebuild(). | 890 |
+| `editor_toolUtilities_occupancy.transportAt(x, y, radius)` | True if a TRANSPORT cell (road 'g', path 'p', junction 'j', or multi-owner cell) lies within the radius. | 750 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_occupancy.blocked(cluster, x, y, halfX, halfY, pass)`
 
-Vrai si une cellule de l'empreinte alignée sur les axes appartient à un propriétaire hors du cluster. pass(owner), si fourni, laisse passer d'autres propriétaires.
+True if a cell of the axis-aligned footprint belongs to an owner outside the cluster. pass(owner), if provided, lets other owners through.
 
-- `cluster` (*table*) : Cluster (avec _pierAllow mis en cache) ; voir railCluster.
-- `x` (*number*) : x du centre.
-- `y` (*number*) : y du centre.
-- `halfX` (*number*) : Demi-étendue en x.
-- `halfY` (*number*) : Demi-étendue en y.
-- `pass` (*function|nil*) : pass(owner) renvoie true pour tolérer ce propriétaire.
-- **renvoie** : boolean true si l'empreinte est bloquée.
+- `cluster` (*table*) : Cluster (with _pierAllow cached); see railCluster.
+- `x` (*number*) : x of the center.
+- `y` (*number*) : y of the center.
+- `halfX` (*number*) : Half-extent in x.
+- `halfY` (*number*) : Half-extent in y.
+- `pass` (*function|nil*) : pass(owner) returns true to tolerate this owner.
+- **returns**: boolean true if the footprint is blocked.
 
 #### `editor_toolUtilities_occupancy.buildingAt(x, y, radius)`
 
-Vrai si une cellule de BÂTIMENT (propriétaire 'b', empreinte estampillée + 1 m) se trouve dans le rayon.
+True if a BUILDING cell (owner 'b', stamped footprint + 1 m) lies within the radius.
 
 - `x` (*number*) : x.
 - `y` (*number*) : y.
-- `radius` (*number|nil*) : Rayon (0 si nil).
-- **renvoie** : boolean true si un bâtiment est présent.
+- `radius` (*number|nil*) : Radius (0 if nil).
+- **returns**: boolean true if a building is present.
 
 #### `editor_toolUtilities_occupancy.clearClusterCache(cluster)`
 
-Efface l'ensemble de propriétaires autorisés mis en cache dans un cluster (_pierAllow), à appeler quand le cluster change.
+Clears the set of allowed owners cached in a cluster (_pierAllow), to be called when the cluster changes.
 
-- `cluster` (*table|nil*) : Cluster concerné.
+- `cluster` (*table|nil*) : Cluster concerned.
 
 #### `editor_toolUtilities_occupancy.heightAt(owner, x, y)`
 
-Hauteur de la route (à son point le plus proche de x, y) ou de la jonction estampillée sous ce propriétaire ; nil pour tout autre propriétaire.
+Height of the road (at its point closest to x, y) or of the junction stamped under this owner; nil for any other owner.
 
-- `owner` (*string*) : Chaîne propriétaire.
+- `owner` (*string*) : Owner string.
 - `x` (*number*) : x.
 - `y` (*number*) : y.
-- **renvoie** : number|nil Hauteur z.
+- **returns**: number|nil Height z.
 
 #### `editor_toolUtilities_occupancy.occupiedAt(x, y, radius)`
 
-Vrai si quelque chose est estampillé dans le rayon (tous propriétaires, couche des plantes comprise) hors souterrain : un arbre se tient sur la colline au-dessus d'un tunnel. Sert à l'écartement de la végétation.
+True if something is stamped within the radius (all owners, plant layer included) other than underground: a tree stands on the hill above a tunnel. Used for vegetation clearance.
 
 - `x` (*number*) : x.
 - `y` (*number*) : y.
-- `radius` (*number|nil*) : Rayon (0 si nil).
-- **renvoie** : boolean true si occupé.
+- `radius` (*number|nil*) : Radius (0 if nil).
+- **returns**: boolean true if occupied.
 
 #### `editor_toolUtilities_occupancy.occupiedAtExcluding(x, y, radius, ownerId)`
 
-Comme occupiedAt mais IGNORE les cellules appartenant uniquement à ownerId (le ruban de l'appelant, tronçons de tablier et de tunnel compris). Ne tient pas compte de la couche des plantes.
+Like occupiedAt but IGNORES the cells belonging only to ownerId (the caller's ribbon, deck and tunnel sections included). Does not take the plant layer into account.
 
 - `x` (*number*) : x.
 - `y` (*number*) : y.
-- `radius` (*number|nil*) : Rayon (0 si nil).
-- `ownerId` (*string|nil*) : Propriétaire à ignorer, voir ownerFor.
-- **renvoie** : boolean true si autre chose occupe la zone.
+- `radius` (*number|nil*) : Radius (0 if nil).
+- `ownerId` (*string|nil*) : Owner to ignore, see ownerFor.
+- **returns**: boolean true if something else occupies the area.
 
 #### `editor_toolUtilities_occupancy.overhangAt(x, y, radius)`
 
-Vrai si le centre d'une cellule de route, de rail ou de jonction, ou une cellule CONSTRUITE de la couche des plantes, se trouve dans le rayon : ce qu'une couronne de cette largeur surplomberait ou traverserait en poussant. Un disque (et non la boîte de roadRailAt), exact sur les cellules partagées. Les blocs sans route ni construction sont sautés d'un coup, donc un point éloigné coûte quelques lectures quel que soit le rayon. Le milieu rempli d'une jonction ne marque aucun bloc, mais rien d'extérieur ne l'atteint sans traverser la peau du bord, qui en marque.
+True if the center of a road, rail or junction cell, or a BUILT cell of the plant layer, lies within the radius: what a crown of this width would overhang or cross as it grows. A disc (not the box of roadRailAt), exact on shared cells. Blocks with no road or construction are skipped in one go, so a distant point costs a few reads whatever the radius. The filled middle of a junction marks no block, but nothing from outside reaches it without crossing the edge skin, which does mark.
 
 - `x` (*number*) : x.
 - `y` (*number*) : y.
-- `radius` (*number*) : Rayon de la couronne en mètres.
-- **renvoie** : boolean true si une couronne de ce rayon surplomberait quelque chose.
+- `radius` (*number*) : Crown radius in meters.
+- **returns**: boolean true if a crown of this radius would overhang something.
 
 #### `editor_toolUtilities_occupancy.ownerFor(g)`
 
-Chaîne propriétaire d'un groupe (« g » suivi de son id), à passer à occupiedAtExcluding.
+Owner string of a group ("g" followed by its id), to pass to occupiedAtExcluding.
 
-- `g` (*table*) : Groupe (route) avec un champ id.
-- **renvoie** : string Propriétaire.
+- `g` (*table*) : Group (road) with an id field.
+- **returns**: string Owner.
 
 #### `editor_toolUtilities_occupancy.pointInPoly(px, py, poly)`
 
-Test point dans polygone en 2D (lancer de rayon, règle pair-impair).
+2D point-in-polygon test (ray casting, even-odd rule).
 
-- `px` (*number*) : x du point.
-- `py` (*number*) : y du point.
-- `poly` (*table*) : Liste de sommets {x,y}.
-- **renvoie** : boolean true si le point est à l'intérieur.
+- `px` (*number*) : x of the point.
+- `py` (*number*) : y of the point.
+- `poly` (*table*) : List of {x,y} vertices.
+- **returns**: boolean true if the point is inside.
 
 #### `editor_toolUtilities_occupancy.railCluster(trackIds, jctIds)`
 
-Construit le cluster de ce sous lequel les piles d'un pont ferroviaire peuvent se tenir, pour blocked : les tronçons de pont de ces voies et ces jonctions.
+Builds the cluster of these under which the piers of a rail bridge may stand, for blocked: the bridge sections of these tracks and these junctions.
 
-- `trackIds` (*table*) : Identifiants de voies.
-- `jctIds` (*table*) : Identifiants de jonctions.
-- **renvoie** : table Cluster { _pierAllow = ensemble de propriétaires }.
+- `trackIds` (*table*) : Track ids.
+- `jctIds` (*table*) : Junction ids.
+- **returns**: table Cluster { _pierAllow = set of owners }.
 
 #### `editor_toolUtilities_occupancy.railRev()`
 
-Révision du rail (0 si non enregistré). Les routes restampillent la grille elles-mêmes une fois stabilisées ; les changements du rail sont repérés à partir de cette révision.
+Rail revision (0 if not registered). Roads restamp the grid themselves once stabilized; rail changes are detected from this revision.
 
-- **renvoie** : integer Révision du rail.
+- **returns**: integer Rail revision.
 
 #### `editor_toolUtilities_occupancy.rebuild(groups, jcts, clearSegs)`
 
-Restampille la grille depuis les routes et jonctions. Mémorise les entrées pour pouvoir estampiller plus tard un terrain revendiqué sans remaillage du réseau.
+Restamps the grid from the roads and junctions. Remembers the inputs so that claimed terrain can be stamped later without remeshing the network.
 
-- `groups` (*table*) : Liste de groupes (routes) avec id, divPoints, binormales, divWidths, leftExtM, rightExtM, isEnabled.
-- `jcts` (*table*) : Liste de jonctions.
-- `clearSegs` (*function|nil*) : clearSegs(g, kind) renvoie le masque par segment d'une liaison (false sur ses portées de ce type, 'bridge' ou 'tunnel'), ou nil si elle n'en a pas. Fournie par le réseau qui possède les portées.
+- `groups` (*table*) : List of groups (roads) with id, divPoints, binormals, divWidths, leftExtM, rightExtM, isEnabled.
+- `jcts` (*table*) : List of junctions.
+- `clearSegs` (*function|nil*) : clearSegs(g, kind) returns the per-segment mask of a link (false over its spans of this kind, 'bridge' or 'tunnel'), or nil if it has none. Supplied by the network that owns the spans.
 
 #### `editor_toolUtilities_occupancy.revision()`
 
-Compteur qui change chaque fois que la grille change : un outil qui garde des choses hors de la grille compare cette valeur au lieu de redemander pour chaque point.
+Counter that changes whenever the grid changes: a tool that keeps things off the grid compares this value instead of querying again for each point.
 
-- **renvoie** : integer Révision de la grille.
+- **returns**: integer Grid revision.
 
 #### `editor_toolUtilities_occupancy.roadBetween(x, y, radius, zLo, zHi, skip)`
 
-Vrai si une route ou jonction autre que celle de skip (son ownerFor, tronçons de tablier compris) est estampillée dans le rayon autour de (x, y) à une hauteur strictement comprise entre zLo et zHi.
+True if a road or junction other than skip's (its ownerFor, deck sections included) is stamped within the radius around (x, y) at a height strictly between zLo and zHi.
 
 - `x` (*number*) : x.
 - `y` (*number*) : y.
-- `radius` (*number*) : Rayon de recherche en mètres.
-- `zLo` (*number*) : Hauteur minimale.
-- `zHi` (*number*) : Hauteur maximale.
-- `skip` (*string|nil*) : Propriétaire à ignorer (ainsi que ses suffixes b et t).
-- **renvoie** : boolean true si une route se trouve entre ces hauteurs.
+- `radius` (*number*) : Search radius in meters.
+- `zLo` (*number*) : Minimum height.
+- `zHi` (*number*) : Maximum height.
+- `skip` (*string|nil*) : Owner to ignore (as well as its b and t suffixes).
+- **returns**: boolean true if a road lies between these heights.
 
 #### `editor_toolUtilities_occupancy.roadRailAt(x, y, radius)`
 
-Comme transportAt mais les CHEMINS sont ignorés : vrai seulement pour un ruban de route ou de rail 'g' ou une jonction 'j' (ou une cellule multi-propriétaire, gardée par prudence car ses propriétaires sont perdus).
+Like transportAt but PATHS are ignored: true only for a road or rail ribbon 'g' or a junction 'j' (or a multi-owner cell, kept as a precaution because its owners are lost).
 
 - `x` (*number*) : x.
 - `y` (*number*) : y.
-- `radius` (*number|nil*) : Rayon (0 si nil).
-- **renvoie** : boolean true si une route, un rail ou une jonction est présent.
+- `radius` (*number|nil*) : Radius (0 if nil).
+- **returns**: boolean true if a road, rail or junction is present.
 
 #### `editor_toolUtilities_occupancy.setBuildings(list)`
 
-Enregistre les bâtiments (polygones remplis) comme obstacles statiques.
+Registers buildings (filled polygons) as static obstacles.
 
-- `list` (*table|nil*) : Liste d'anneaux {x,y}.
+- `list` (*table|nil*) : List of {x,y} rings.
 
 #### `editor_toolUtilities_occupancy.setFences(list)`
 
-Enregistre les clôtures, murs et haies (polylignes fines) comme obstacles statiques.
+Registers fences, walls and hedges (thin polylines) as static obstacles.
 
-- `list` (*table|nil*) : Liste de polylignes {x,y}.
+- `list` (*table|nil*) : List of {x,y} polylines.
 
 #### `editor_toolUtilities_occupancy.setLakes(list)`
 
-Enregistre les lacs (polygones de rivage remplis) comme obstacles statiques.
+Registers lakes (filled shoreline polygons) as static obstacles.
 
-- `list` (*table|nil*) : Liste d'anneaux {x,y}.
+- `list` (*table|nil*) : List of {x,y} rings.
 
 #### `editor_toolUtilities_occupancy.setPlantKeepOut(get, rev)`
 
-Source du terrain que les plantes évitent en plus du reste : get() renvoie `paved, built` où paved = { { ring = r, holes = { r, ... } }, ... } (un tronc ne peut pas s'y tenir) et built = { r, ... } (une couronne ne peut pas non plus l'atteindre). rev() change quand l'un ou l'autre change. Source unique ; voir occupiedAt et overhangAt.
+Source of the terrain that plants avoid in addition to the rest: get() returns `paved, built` where paved = { { ring = r, holes = { r, ... } }, ... } (a trunk cannot stand there) and built = { r, ... } (a crown cannot reach it either). rev() changes when either changes. Single source; see occupiedAt and overhangAt.
 
-- `get` (*function*) : Renvoie paved, built.
-- `rev` (*function*) : Renvoie la révision de la source.
+- `get` (*function*) : Returns paved, built.
+- `rev` (*function*) : Returns the source's revision.
 
 #### `editor_toolUtilities_occupancy.setRail(get, rev)`
 
-Côté Rail Network : get() renvoie ses voies (lues comme des groupes de route), ses plates-formes de jonction ({ id, pos, lines = { { pts, halfW } } }) et les clearSegs de ses voies ; rev() est incrémentée à chaque changement.
+Rail Network side: get() returns its tracks (read as road groups), its junction platforms ({ id, pos, lines = { { pts, halfW } } }) and the clearSegs of its tracks; rev() is incremented on each change.
 
-- `get` (*function*) : Fournit voies, jonctions et clearSegs.
-- `rev` (*function*) : Renvoie la révision du rail.
+- `get` (*function*) : Provides tracks, junctions and clearSegs.
+- `rev` (*function*) : Returns the rail revision.
 
 #### `editor_toolUtilities_occupancy.setRivers(list)`
 
-Enregistre les rivières comme obstacles statiques (importeur). Remplace la liste précédente ; la liste survit à rebuild().
+Registers rivers as static obstacles (importer). Replaces the previous list; the list survives rebuild().
 
-- `list` (*table|nil*) : Liste de { pts = {{x,y},...}, halfW = n }.
+- `list` (*table|nil*) : List of { pts = {{x,y},...}, halfW = n }.
 
 #### `editor_toolUtilities_occupancy.transportAt(x, y, radius)`
 
-Vrai si une cellule de TRANSPORT (route 'g', chemin 'p', jonction 'j', ou cellule multi-propriétaire) se trouve dans le rayon.
+True if a TRANSPORT cell (road 'g', path 'p', junction 'j', or multi-owner cell) lies within the radius.
 
 - `x` (*number*) : x.
 - `y` (*number*) : y.
-- `radius` (*number|nil*) : Rayon (0 si nil).
-- **renvoie** : boolean true si du transport est présent.
+- `radius` (*number|nil*) : Radius (0 if nil).
+- **returns**: boolean true if transport is present.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/occupancy.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/occupancy.lua`.*

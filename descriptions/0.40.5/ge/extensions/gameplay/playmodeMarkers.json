@@ -1,85 +1,136 @@
 {
   "path": "lua/ge/extensions/gameplay/playmodeMarkers.lua",
-  "module": "Gère les marqueurs de jeu en freeroam/carrière (missions, parkings, zones, stations-service, etc.). Il regroupe les POI bruts de gameplay_rawPois en clusters par type de marqueur (fabriques dans gameplay/markers/<type>.lua), crée à la demande l'objet marqueur d'un cluster, et fournit les deux rendus d'icônes (BeamNGWorldIconsRenderer) du monde et de la grande carte. Un kd-tree 2D sert à retrouver les clusters visibles autour d'une position.",
+  "module": "Manages game markers in freeroam/career (missions, parkings, zones, gas stations, etc.). It groups the raw POIs of gameplay_rawPois into clusters by marker type (factories in gameplay/markers/<type>.lua), creates a cluster's marker object on demand, and provides the two icon renderers (BeamNGWorldIconsRenderer) for the world and the big map. A 2D kd-tree is used to find the visible clusters around a position.",
   "notes": [
-    "Les clusters sont invalidés dès que gameplay_rawPois.getRawPoiGeneration() augmente.",
-    "Types de marqueurs gérés : missionMarker, parkingMarker, zoneMarker, walkingMarker, gasStationMarker, driftLineMarker, invisibleTrigger, inspectVehicleMarker, crawlMarker, vehicleTrigger (liste codée en dur).",
-    "Les deux rendus d'icônes sont supprimés à la fin du niveau et à la sérialisation (rechargement Lua).",
-    "Les rendus d'icônes sont créés paresseusement par les getters ; le rendu du monde charge l'atlas core/art/gui/images/iconAtlas."
+    "Clusters are invalidated as soon as gameplay_rawPois.getRawPoiGeneration() increases.",
+    "Marker types handled: missionMarker, parkingMarker, zoneMarker, walkingMarker, gasStationMarker, driftLineMarker, invisibleTrigger, inspectVehicleMarker, crawlMarker, vehicleTrigger (hardcoded list).",
+    "Both icon renderers are deleted at the end of the level and at serialization (Lua reload).",
+    "The icon renderers are created lazily by the getters; the world renderer loads the core/art/gui/images/iconAtlas atlas."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "{'gameplay_rawPois'}, extension chargée avant."},
-    "validPlaymodeMarkersStates": {"type": "table<string, boolean>", "desc": "États de jeu où les marqueurs sont actifs : freeroam et career. Modifiable pour en ajouter."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{'gameplay_rawPois'}, extension loaded beforehand."
+    },
+    "validPlaymodeMarkersStates": {
+      "type": "table<string, boolean>",
+      "desc": "Game states where markers are active: freeroam and career. Modifiable to add more."
+    }
   },
   "functions": {
     "clear": {
-      "desc": "Vide les clusters, le kd-tree et supprime les objets des marqueurs créés.",
+      "desc": "Clears the clusters, the kd-tree and deletes the created marker objects.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getIconRendererId": {
-      "desc": "Id de l'objet BeamNGWorldIconsRenderer 'markerIconRenderer' (créé si besoin).",
+      "desc": "Id of the BeamNGWorldIconsRenderer object 'markerIconRenderer' (created if needed).",
       "params": {},
-      "returns": [{"type": "integer", "desc": "Id d'objet."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Object id."
+        }
+      ],
       "internal": false
     },
     "getIconRendererObj": {
-      "desc": "Objet du rendu d'icônes du monde (créé si besoin).",
+      "desc": "World icon renderer object (created if needed).",
       "params": {},
-      "returns": [{"type": "userdata|nil", "desc": "Objet de la scène."}],
+      "returns": [
+        {
+          "type": "userdata|nil",
+          "desc": "Scene object."
+        }
+      ],
       "internal": false
     },
     "getBigmapRendererId": {
-      "desc": "Id du rendu d'icônes de la grande carte 'bigmapIconRenderer' (créé si besoin).",
+      "desc": "Id of the big map icon renderer 'bigmapIconRenderer' (created if needed).",
       "params": {},
-      "returns": [{"type": "integer", "desc": "Id d'objet."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Object id."
+        }
+      ],
       "internal": false
     },
     "getBigmapRendererObj": {
-      "desc": "Objet du rendu d'icônes de la grande carte (créé si besoin).",
+      "desc": "Big map icon renderer object (created if needed).",
       "params": {},
-      "returns": [{"type": "userdata|nil", "desc": "Objet de la scène."}],
+      "returns": [
+        {
+          "type": "userdata|nil",
+          "desc": "Scene object."
+        }
+      ],
       "internal": false
     },
     "getPlaymodeClusters": {
-      "desc": "Liste triée par id des clusters de marqueurs du niveau courant (calculée puis mise en cache). Chaque cluster doit avoir id, visibilityPos et visibilityRadius, sinon une erreur est loguée.",
+      "desc": "List, sorted by id, of the marker clusters of the current level (computed then cached). Each cluster must have id, visibilityPos and visibilityRadius, otherwise an error is logged.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Clusters."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Clusters."
+        }
+      ],
       "internal": false
     },
     "getPlaymodeClustersAsQuadtree": {
-      "desc": "kd-tree 2D (kdtreebox2d) des clusters, indexé par boîte englobant visibilityPos ± visibilityRadius.",
+      "desc": "2D kd-tree (kdtreebox2d) of the clusters, indexed by a box enclosing visibilityPos ± visibilityRadius.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Objet kd-tree construit."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Built kd-tree object."
+        }
+      ],
       "internal": false
     },
     "getMarkerForCluster": {
-      "desc": "Renvoie l'objet marqueur du cluster ; le crée au premier appel (cluster.create(), createObjects, setup).",
-      "params": {"cluster": {"type": "table", "desc": "Cluster issu de getPlaymodeClusters."}},
-      "returns": [{"type": "table", "desc": "Objet marqueur."}],
+      "desc": "Returns the cluster's marker object; creates it on the first call (cluster.create(), createObjects, setup).",
+      "params": {
+        "cluster": {
+          "type": "table",
+          "desc": "Cluster from getPlaymodeClusters."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Marker object."
+        }
+      ],
       "internal": false
     },
     "isStateWithPlaymodeMarkers": {
-      "desc": "Indique si l'état de jeu courant est dans validPlaymodeMarkersStates.",
+      "desc": "Indicates whether the current game state is in validPlaymodeMarkersStates.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si les marqueurs sont autorisés."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if markers are allowed."
+        }
+      ],
       "internal": false
     },
     "onClientStartMission": {
-      "desc": "Hook de début de niveau : crée les deux rendus d'icônes.",
+      "desc": "Level start hook: creates the two icon renderers.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook de fin de niveau : vide clusters et marqueurs, supprime les rendus d'icônes.",
+      "desc": "Level end hook: clears clusters and markers, deletes the icon renderers.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook avant rechargement Lua : mêmes nettoyages que onClientEndMission.",
+      "desc": "Hook before Lua reload: same cleanups as onClientEndMission.",
       "params": {},
       "returns": [],
       "internal": true

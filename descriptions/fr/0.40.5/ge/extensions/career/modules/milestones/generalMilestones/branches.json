@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/career/modules/milestones/generalMilestones/branches.lua",
+  "module": "Jalons de niveaux de branches et de compétences de la carrière. Pour chaque branche non « isInDevelopment » de career_branches.getSortedBranches(), crée un jalon branch_<id> dont les paliers sont les niveaux (requiredValue). Les branches donnent une récompense majorLinear et apparaissent aussi dans le filtre general ; les compétences (isSkill) une récompense minorLinear. Notifie le joueur quand le seuil du niveau suivant est atteint.",
+  "notes": [
+    "Dans onPlayerAttributesChanged, `return` est utilisé quand l'attribut modifié n'a pas de jalon : les attributs suivants de la table change ne sont alors pas traités (probablement `goto continue` voulu).",
+    "Déclenche le hook onBranchTierReached(branchKey, step+1) à l'atteinte d'un palier.",
+    "Icônes par branche parente : motorsport raceFlag, labourer deliveryTruckArrows, specialized carChase01, adventurer jump.",
+    "Si la branche n'a pas de color, elle prend celle de sa branche parente."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_branches."}
+  },
+  "functions": {
+    "onGeneralMilestonesCollect": {
+      "desc": "Hook : ajoute à milestonesList un jalon par branche/compétence et crée sa sauvegarde si absente.",
+      "params": {"milestonesList": {"type": "table[]", "desc": "Liste à compléter."}},
+      "internal": true
+    },
+    "onGeneralMilestonesSetupCallbacks": {
+      "desc": "Hook : fixe la prochaine cible de notification de chaque jalon de branche.",
+      "params": {},
+      "internal": true
+    },
+    "setNotificationTarget": {
+      "desc": "Calcule la cible du palier suivant à notifier (notificationStep + 1) et la stocke dans milestoneConfig._target ; ne fait rien si tous les paliers sont notifiés.",
+      "params": {"attKey": {"type": "string", "desc": "Clé d'attribut de la branche."}},
+      "internal": false
+    },
+    "onPlayerAttributesChanged": {
+      "desc": "Hook : quand un attribut de branche augmente et dépasse la cible, déclenche onBranchTierReached, affiche le toast de jalon, avance notificationStep et recalcule la cible.",
+      "params": {"change": {"type": "table<string, number>", "desc": "Variation par attribut."}},
+      "internal": true
+    }
+  }
+}

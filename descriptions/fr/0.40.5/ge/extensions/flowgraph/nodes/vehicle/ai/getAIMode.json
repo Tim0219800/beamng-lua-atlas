@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.lua",
+  "module": "Nœud « Get AI Mode » (couleur ai, repeat_p_duration). Lit le mode IA courant d'un véhicule. Entrée : vehId (sans valeur = joueur). Sortie : aiMode (string). La valeur arrive de façon asynchrone : le véhicule exécute une commande qui rappelle le nœud côté moteur de jeu.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Ne fait rien.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Envoie au véhicule la commande de getCmd et publie le dernier mode reçu sur aiMode (la valeur a donc au moins une frame de retard).",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Oublie le dernier mode reçu.",
+          "internal": true
+        },
+        "getCmd": {
+          "desc": "Construit la commande Lua exécutée côté véhicule : lit ai.getState().mode et rappelle n:getAIMode(mode) sur ce nœud via core_flowgraphManager.getManagerGraphNode.",
+          "internal": false
+        },
+        "getAIMode": {
+          "desc": "Rappel appelé depuis le véhicule avec le mode IA ; le mémorise dans returnedMode.",
+          "params": {
+            "mode": {
+              "type": "string",
+              "desc": "Mode IA du véhicule (ex. manual, disabled, random...)."
+            }
+          },
+          "internal": false
+        }
+      }
+    }
+  }
+}

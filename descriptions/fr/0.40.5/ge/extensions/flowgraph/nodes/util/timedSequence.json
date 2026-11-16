@@ -1,0 +1,80 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/timedSequence.lua",
+  "module": "Nœud « Timed Sequence » (once_f_duration, icône timer). Enchaîne N parties chronométrées (réglable dans l'inspecteur, 1 minimum). Pour chaque partie i : pin d'entrée duration_i (s, 5 par défaut) et pins de sortie start_i (impulsion au début), active_i (pendant la partie), complete_i (impulsion à la fin). Le temps avance avec le temps simulé (mgr.dtSim). Pin hérité : allComplete devenu complete.",
+  "notes": [
+    "Bug : _executionStarted est défini deux fois ; la seconde définition remplace la première (identiques).",
+    "Dans updatePins, la suppression des liens teste lnk.sourcePin contre des pins d'entrée (pinInLocal) ; ces liens ne sont donc probablement jamais supprimés.",
+    "Le champ mode est sauvegardé mais jamais utilisé."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Initialise count, index, endTime, time et current.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Crée les pins de la première partie (updatePins(0, 1)).",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet index, endTime, time et current à zéro (la fonction est définie deux fois dans le fichier, à l'identique).",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine le champ « Count » ; le modifier appelle updatePins. Renvoie la raison du changement.",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Ajoute ou retire les pins duration_/start_/active_/complete_ pour passer de old à new parties et met à jour count.",
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "Nombre actuel de parties."
+            },
+            "new": {
+              "type": "integer",
+              "desc": "Nouveau nombre de parties."
+            }
+          },
+          "internal": false
+        },
+        "workOnce": {
+          "desc": "Passe l'état de durée à « started ».",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Remet le temps à zéro et l'état à « inactive ».",
+          "internal": true
+        },
+        "work": {
+          "desc": "Tant que l'état est started, avance le temps, active start/active/complete selon la partie courante ; quand le temps total est écoulé, passe à « finished » et active complete de la dernière partie.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche le temps écoulé et la section courante.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Constructeur de nœud."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style du nœud."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde mode et count.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure mode (« loop » par défaut) et count puis recrée les pins.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

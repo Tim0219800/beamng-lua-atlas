@@ -1,334 +1,334 @@
 # `gameplay_rally_compositors_helpers_compositorUtil`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/compositors/helpers/compositorUtil.lua` · VM : Game Engine (GE) · 863 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/compositors/helpers/compositorUtil.lua` · VM: Game Engine (GE) · 863 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_compositors_helpers_compositorUtil` : `extensions.load("gameplay_rally_compositors_helpers_compositorUtil")`, puis la globale `gameplay_rally_compositors_helpers_compositorUtil`
+**Access:** extension `gameplay_rally_compositors_helpers_compositorUtil`: `extensions.load("gameplay_rally_compositors_helpers_compositorUtil")`, then the global `gameplay_rally_compositors_helpers_compositorUtil`
 
-Boîte à outils du compositeur de notes de rallye. Parcourt les éléments d'une note structurée dans l'ordre fixe des emplacements, appelle pour chaque type (corner, caution, modificateurs) les règles du registre componentTypes du style actif, et produit les phrases (avec catégorie et variante), en ajoutant les marqueurs de distance avant/après. Contient aussi les recherches dans les plages (intensité par diamètre, longueur par longueur d'arc), le hash de phrase servant de nom de fichier audio et les énumérations de phrases pour la génération audio et le lecteur de script. Les types inconnus ou valeurs non rendables sont ignorés silencieusement.
+Toolbox of the rally note compositor. Walks the elements of a structured note in the fixed order of the slots, calls the active style's componentTypes registry rules for each type (corner, caution, modifiers), and produces the phrases (with category and variant), adding the before/after distance markers. It also contains range lookups (intensity by diameter, length by arc length), the phrase hash used as the audio file name, and the phrase enumerations for audio generation and the script player. Unknown types or non-renderable values are silently ignored.
 
-## Remarques
+## Notes
 
-- Une plage est {min, max} avec max facultatif (dernière plage ouverte) ; rangeContains teste min <= v < max.
-- Les listes d'intensité vont du risque le plus élevé au plus faible : un riskIntensity positif remonte vers le début de la liste (index - step, borné).
-- Le descripteur (descriptor) d'un virage l'emporte sur l'intensité ; dans ce cas la longueur n'est pas énoncée.
-- Direction d'un virage : -1 gauche, 1 droite, 0/nil = pas d'appel de virage. lengthMode peut être 'skip', 'shorter' ou 'longer'.
-- Catégories de phrases : distance, linkword, corner, caution, modifier, other. Un texte de distance égal à un lien du style est classé 'linkword'.
-- pacenoteHash : minuscules, apostrophes supprimées, tout caractère hors a-z0-9 remplacé par '_', '_' répétés fusionnés, '_' de début/fin retirés ; sert à nommer les fichiers audio.
-- getRandomWeightedItem utilise math.random : résultat non déterministe ; le poids par défaut est 1.
-- enumerateScriptEntries et enumerateConcise reçoivent un paramètre textCompositor qui n'est pas utilisé.
+- A range is {min, max} with optional max (last range open-ended); rangeContains tests min <= v < max.
+- Intensity lists go from highest to lowest risk: a positive riskIntensity moves toward the start of the list (index - step, clamped).
+- A corner's descriptor takes precedence over intensity; in that case the length is not spoken.
+- Corner direction: -1 left, 1 right, 0/nil = no corner call. lengthMode can be 'skip', 'shorter' or 'longer'.
+- Phrase categories: distance, linkword, corner, caution, modifier, other. A distance text equal to a style link is classified as 'linkword'.
+- pacenoteHash: lowercase, apostrophes removed, every character outside a-z0-9 replaced by '_', repeated '_' merged, leading/trailing '_' removed; used to name audio files.
+- getRandomWeightedItem uses math.random: non-deterministic result; the default weight is 1.
+- enumerateScriptEntries and enumerateConcise receive a textCompositor parameter that is unused.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_compositors_helpers_compositorUtil.compositeFromPhrases(config, structured, rawDistanceBefore, rawDistanceAfter, escapeVars)` | Version simplifiée de compositePhraseEntries qui ne renvoie que les textes. | 556 |
-| `gameplay_rally_compositors_helpers_compositorUtil.compositePhraseEntries(config, structured, rawDistanceBefore, rawDistanceAfter, opts)` | Parcourt les éléments structurés dans l'ordre fixe des emplacements, appelle l'émetteur du type et ajoute les marqueurs de distance avant/après. Les éléments sont dits les uns après les autres sans connecteur automatique ; les liens inter-notes ('into', 'and') viennent de la liste de liens de distance si les appels de distance sont activés. | 455 |
-| `gameplay_rally_compositors_helpers_compositorUtil.cornerIntensityList(cornerCfg)` | Liste ordonnée des intensités de virage du style. | 113 |
-| `gameplay_rally_compositors_helpers_compositorUtil.cornerLengthEntryById(cornerCfg, intensityId, lengthId)` | Cherche une entrée de longueur par son id pour une intensité. | 125 |
-| `gameplay_rally_compositors_helpers_compositorUtil.cornerLengthEntryLabel(entry)` | Libellé d'une entrée de longueur : label, sinon text, sinon id. | 152 |
-| `gameplay_rally_compositors_helpers_compositorUtil.cornerLengthEntryText(entry)` | Texte parlé d'une entrée de longueur. | 147 |
-| `gameplay_rally_compositors_helpers_compositorUtil.cornerLengthList(cornerCfg, intensityId)` | Liste des longueurs de virage pour une intensité (lengthsByIntensity[intensityId]). | 118 |
-| `gameplay_rally_compositors_helpers_compositorUtil.cornerNumbering(cornerCfg)` | Renvoie la sous-table de numérotation d'un composant corner (cornerCfg.numbering, ou cornerCfg lui-même s'il n'existe pas, ou {} si nil). | 107 |
-| `gameplay_rally_compositors_helpers_compositorUtil.distanceCallsEnabled(config)` | Vrai sauf si config.distance.callsEnabled vaut explicitement false. | 417 |
-| `gameplay_rally_compositors_helpers_compositorUtil.enumerateConcise(textCompositor, config)` | Énumère toutes les phrases prononçables du style actif (dédoublonnées) : liens de distance, appels de virage, descripteurs, longueurs, formes, cautions, modificateurs. Sert au pipeline audio et au lecteur de script pour savoir quels fichiers chercher ou générer. | 784 |
-| `gameplay_rally_compositors_helpers_compositorUtil.enumerateScriptEntries(textCompositor, config)` | Énumère les entrées du lecteur de script avec catégorie, sous-catégorie, variante et clés de tri : liens de distance, appels de virage (par intensité et direction), descripteurs, longueurs, formes, niveaux de caution, modificateurs. Plus riche qu'enumerateConcise. | 660 |
-| `gameplay_rally_compositors_helpers_compositorUtil.getCaution(cautionCfg, item)` | Texte d'un niveau de caution (cautionCfg.levels[item.level]). | 302 |
-| `gameplay_rally_compositors_helpers_compositorUtil.getClosestEntry(valuesList, targetValue, key, filterFn)` | Renvoie l'entrée dont la plage est la plus proche de targetValue (distance 0 si contenue), avec filtre facultatif. | 71 |
-| `gameplay_rally_compositors_helpers_compositorUtil.getCornerCall(cornerCfg, item)` | Phrase d'appel d'un virage : descripteur + direction, sinon intensité (ajustée au risque) + direction + afterDirection. Renvoie nil si pas de direction, direction non définie dans le style ou intensité introuvable. | 246 |
-| `gameplay_rally_compositors_helpers_compositorUtil.getCornerLengthForIntensity(cornerCfg, item, intensityEntry)` | Texte de longueur d'un virage pour une intensité donnée d'après item.arcMeters ; lengthMode 'shorter'/'longer' décale d'une entrée, 'skip' supprime. | 266 |
-| `gameplay_rally_compositors_helpers_compositorUtil.getCornerLengthForItem(cornerCfg, item)` | Texte de longueur d'un virage en cherchant d'abord l'intensité de l'élément (sans ajustement de risque). | 290 |
-| `gameplay_rally_compositors_helpers_compositorUtil.getCornerShape(cornerCfg, shape)` | Texte parlé de la forme d'un virage. | 296 |
-| `gameplay_rally_compositors_helpers_compositorUtil.getNearestValue(valuesList, targetValue, key)` | Renvoie l'entrée dont la valeur numérique (clé 'value' par défaut) est la plus proche de targetValue. | 24 |
-| `gameplay_rally_compositors_helpers_compositorUtil.getRandomWeightedItem(items)` | Tire un élément au hasard selon son champ 'weight' (1 par défaut). | 396 |
-| `gameplay_rally_compositors_helpers_compositorUtil.getRangeValue(valuesList, targetValue, key)` | Renvoie la première entrée dont la plage (clé 'value' par défaut) contient targetValue. | 58 |
-| `gameplay_rally_compositors_helpers_compositorUtil.intensityEntryId(entry)` | Identifiant d'une entrée d'intensité. | 158 |
-| `gameplay_rally_compositors_helpers_compositorUtil.intensityEntryLabel(entry)` | Libellé d'une entrée d'intensité : label, sinon text, sinon id. | 168 |
-| `gameplay_rally_compositors_helpers_compositorUtil.intensityEntryText(entry)` | Texte parlé d'une entrée d'intensité. | 163 |
-| `gameplay_rally_compositors_helpers_compositorUtil.lookupComponentType(componentTypes, itemType)` | Renvoie la config du composant pour un type d'élément : corner et caution directement, sinon un modificateur (en résolvant modifierAliases). | 138 |
-| `gameplay_rally_compositors_helpers_compositorUtil.lookupDescriptorEntry(cornerCfg, descriptor)` | Entrée de descripteur d'un virage (cornerCfg.descriptors, en résolvant descriptorAliases). | 232 |
-| `gameplay_rally_compositors_helpers_compositorUtil.lookupIntensityEntry(cornerCfg, intensity)` | Entrée d'intensité du style correspondant à un diamètre physique mesuré (plage 'diameter'). | 213 |
-| `gameplay_rally_compositors_helpers_compositorUtil.lookupRiskAdjustedIntensityEntry(cornerCfg, item)` | Comme lookupIntensityEntry sur item.intensity, puis décale l'entrée selon le signe de item.riskIntensity (positif = vers le début de la liste, plus risqué), borné aux extrémités. | 218 |
-| `gameplay_rally_compositors_helpers_compositorUtil.lookupShapeEntry(cornerCfg, shape)` | Entrée de forme d'un virage (cornerCfg.shapes[shape]). | 238 |
-| `gameplay_rally_compositors_helpers_compositorUtil.modifierComponents(componentTypes)` | Table des modificateurs atomiques du style (componentTypes.modifiers, ou {}). | 133 |
-| `gameplay_rally_compositors_helpers_compositorUtil.pacenoteHash(text)` | Transforme une phrase en identifiant utilisable comme nom de fichier (voir notes). | 385 |
-| `gameplay_rally_compositors_helpers_compositorUtil.postProcessPhrase(phrase)` | Nettoie une phrase (suppression des espaces de début et de fin via rallyUtil.trimString). | 379 |
-| `gameplay_rally_compositors_helpers_compositorUtil.rangeBounds(value)` | Lit une plage {min, max} : renvoie min et max numériques (max nil si absent) ; nil, nil si value n'est pas une table. | 43 |
-| `gameplay_rally_compositors_helpers_compositorUtil.rangeContains(value, targetValue)` | Vrai si targetValue est dans [min, max[ (ou >= min sans max). | 51 |
-| `gameplay_rally_compositors_helpers_compositorUtil.signedStep(value)` | Signe d'une valeur : 1, -1 ou 0 (0 si non numérique). | 174 |
+| `gameplay_rally_compositors_helpers_compositorUtil.compositeFromPhrases(config, structured, rawDistanceBefore, rawDistanceAfter, escapeVars)` | Simplified version of compositePhraseEntries that returns only the texts. | 556 |
+| `gameplay_rally_compositors_helpers_compositorUtil.compositePhraseEntries(config, structured, rawDistanceBefore, rawDistanceAfter, opts)` | Walks the structured elements in the fixed order of the slots, calls the type's emitter and adds the before/after distance markers. Elements are spoken one after another with no automatic connector; links between notes ('into', 'and') come from the distance link list if distance calls are enabled. | 455 |
+| `gameplay_rally_compositors_helpers_compositorUtil.cornerIntensityList(cornerCfg)` | Ordered list of the style's corner intensities. | 113 |
+| `gameplay_rally_compositors_helpers_compositorUtil.cornerLengthEntryById(cornerCfg, intensityId, lengthId)` | Finds a length entry by its id for an intensity. | 125 |
+| `gameplay_rally_compositors_helpers_compositorUtil.cornerLengthEntryLabel(entry)` | Label of a length entry: label, otherwise text, otherwise id. | 152 |
+| `gameplay_rally_compositors_helpers_compositorUtil.cornerLengthEntryText(entry)` | Spoken text of a length entry. | 147 |
+| `gameplay_rally_compositors_helpers_compositorUtil.cornerLengthList(cornerCfg, intensityId)` | List of corner lengths for an intensity (lengthsByIntensity[intensityId]). | 118 |
+| `gameplay_rally_compositors_helpers_compositorUtil.cornerNumbering(cornerCfg)` | Returns the numbering sub-table of a corner component (cornerCfg.numbering, or cornerCfg itself if it does not exist, or {} if nil). | 107 |
+| `gameplay_rally_compositors_helpers_compositorUtil.distanceCallsEnabled(config)` | True unless config.distance.callsEnabled is explicitly false. | 417 |
+| `gameplay_rally_compositors_helpers_compositorUtil.enumerateConcise(textCompositor, config)` | Enumerates all speakable phrases of the active style (deduplicated): distance links, corner calls, descriptors, lengths, shapes, cautions, modifiers. Used by the audio pipeline and the script player to know which files to look for or generate. | 784 |
+| `gameplay_rally_compositors_helpers_compositorUtil.enumerateScriptEntries(textCompositor, config)` | Enumerates the script player entries with category, subcategory, variant and sort keys: distance links, corner calls (by intensity and direction), descriptors, lengths, shapes, caution levels, modifiers. Richer than enumerateConcise. | 660 |
+| `gameplay_rally_compositors_helpers_compositorUtil.getCaution(cautionCfg, item)` | Text of a caution level (cautionCfg.levels[item.level]). | 302 |
+| `gameplay_rally_compositors_helpers_compositorUtil.getClosestEntry(valuesList, targetValue, key, filterFn)` | Returns the entry whose range is closest to targetValue (distance 0 if contained), with optional filter. | 71 |
+| `gameplay_rally_compositors_helpers_compositorUtil.getCornerCall(cornerCfg, item)` | Corner call phrase: descriptor + direction, otherwise intensity (risk-adjusted) + direction + afterDirection. Returns nil if there is no direction, the direction is not defined in the style, or the intensity is not found. | 246 |
+| `gameplay_rally_compositors_helpers_compositorUtil.getCornerLengthForIntensity(cornerCfg, item, intensityEntry)` | Corner length text for a given intensity based on item.arcMeters; lengthMode 'shorter'/'longer' shifts by one entry, 'skip' removes it. | 266 |
+| `gameplay_rally_compositors_helpers_compositorUtil.getCornerLengthForItem(cornerCfg, item)` | Corner length text, first looking up the element's intensity (without risk adjustment). | 290 |
+| `gameplay_rally_compositors_helpers_compositorUtil.getCornerShape(cornerCfg, shape)` | Spoken text of a corner's shape. | 296 |
+| `gameplay_rally_compositors_helpers_compositorUtil.getNearestValue(valuesList, targetValue, key)` | Returns the entry whose numeric value ('value' key by default) is closest to targetValue. | 24 |
+| `gameplay_rally_compositors_helpers_compositorUtil.getRandomWeightedItem(items)` | Randomly picks an item according to its 'weight' field (1 by default). | 396 |
+| `gameplay_rally_compositors_helpers_compositorUtil.getRangeValue(valuesList, targetValue, key)` | Returns the first entry whose range ('value' key by default) contains targetValue. | 58 |
+| `gameplay_rally_compositors_helpers_compositorUtil.intensityEntryId(entry)` | Identifier of an intensity entry. | 158 |
+| `gameplay_rally_compositors_helpers_compositorUtil.intensityEntryLabel(entry)` | Label of an intensity entry: label, otherwise text, otherwise id. | 168 |
+| `gameplay_rally_compositors_helpers_compositorUtil.intensityEntryText(entry)` | Spoken text of an intensity entry. | 163 |
+| `gameplay_rally_compositors_helpers_compositorUtil.lookupComponentType(componentTypes, itemType)` | Returns the component config for an element type: corner and caution directly, otherwise a modifier (resolving modifierAliases). | 138 |
+| `gameplay_rally_compositors_helpers_compositorUtil.lookupDescriptorEntry(cornerCfg, descriptor)` | Descriptor entry of a corner (cornerCfg.descriptors, resolving descriptorAliases). | 232 |
+| `gameplay_rally_compositors_helpers_compositorUtil.lookupIntensityEntry(cornerCfg, intensity)` | Intensity entry of the style matching a measured physical diameter ('diameter' range). | 213 |
+| `gameplay_rally_compositors_helpers_compositorUtil.lookupRiskAdjustedIntensityEntry(cornerCfg, item)` | Like lookupIntensityEntry on item.intensity, then shifts the entry according to the sign of item.riskIntensity (positive = toward the start of the list, riskier), clamped at the ends. | 218 |
+| `gameplay_rally_compositors_helpers_compositorUtil.lookupShapeEntry(cornerCfg, shape)` | Shape entry of a corner (cornerCfg.shapes[shape]). | 238 |
+| `gameplay_rally_compositors_helpers_compositorUtil.modifierComponents(componentTypes)` | Table of the style's atomic modifiers (componentTypes.modifiers, or {}). | 133 |
+| `gameplay_rally_compositors_helpers_compositorUtil.pacenoteHash(text)` | Turns a phrase into an identifier usable as a file name (see notes). | 385 |
+| `gameplay_rally_compositors_helpers_compositorUtil.postProcessPhrase(phrase)` | Cleans up a phrase (removes leading and trailing spaces via rallyUtil.trimString). | 379 |
+| `gameplay_rally_compositors_helpers_compositorUtil.rangeBounds(value)` | Reads a range {min, max}: returns numeric min and max (max nil if absent); nil, nil if value is not a table. | 43 |
+| `gameplay_rally_compositors_helpers_compositorUtil.rangeContains(value, targetValue)` | True if targetValue is in [min, max[ (or >= min without max). | 51 |
+| `gameplay_rally_compositors_helpers_compositorUtil.signedStep(value)` | Sign of a value: 1, -1 or 0 (0 if non-numeric). | 174 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.compositeFromPhrases(config, structured, rawDistanceBefore, rawDistanceAfter, escapeVars)`
 
-Version simplifiée de compositePhraseEntries qui ne renvoie que les textes.
+Simplified version of compositePhraseEntries that returns only the texts.
 
-- `config` (*table|nil*) : Config du style.
-- `structured` (*table*) : Note structurée.
-- `rawDistanceBefore` (*number|nil*) : Distance avant (m).
-- `rawDistanceAfter` (*number|nil*) : Distance après (m).
-- `escapeVars` (*boolean|nil*) : true pour des variables de distance.
-- **renvoie** : string[] Phrases dans l'ordre.
+- `config` (*table|nil*) : Style config.
+- `structured` (*table*) : Structured note.
+- `rawDistanceBefore` (*number|nil*) : Distance before (m).
+- `rawDistanceAfter` (*number|nil*) : Distance after (m).
+- `escapeVars` (*boolean|nil*) : true for distance variables.
+- **returns**: string[] Phrases in order.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.compositePhraseEntries(config, structured, rawDistanceBefore, rawDistanceAfter, opts)`
 
-Parcourt les éléments structurés dans l'ordre fixe des emplacements, appelle l'émetteur du type et ajoute les marqueurs de distance avant/après. Les éléments sont dits les uns après les autres sans connecteur automatique ; les liens inter-notes ('into', 'and') viennent de la liste de liens de distance si les appels de distance sont activés.
+Walks the structured elements in the fixed order of the slots, calls the type's emitter and adds the before/after distance markers. Elements are spoken one after another with no automatic connector; links between notes ('into', 'and') come from the distance link list if distance calls are enabled.
 
-- `config` (*table|nil*) : Config du style.
-- `structured` (*table*) : Note structurée.
-- `rawDistanceBefore` (*number|nil*) : Distance avant (m).
-- `rawDistanceAfter` (*number|nil*) : Distance après (m).
-- `opts` (*table|nil*) : escapeVars (boolean : variables au lieu de valeurs), variantResolver (function(entry) -> entry|nil), distanceAfterBeforePostModifier (boolean : place la distance après avant le premier modificateur postérieur au virage).
-- **renvoie** : table[] Entrées {text, category, variant?, audioFname?}.
+- `config` (*table|nil*) : Style config.
+- `structured` (*table*) : Structured note.
+- `rawDistanceBefore` (*number|nil*) : Distance before (m).
+- `rawDistanceAfter` (*number|nil*) : Distance after (m).
+- `opts` (*table|nil*) : escapeVars (boolean: variables instead of values), variantResolver (function(entry) -> entry|nil), distanceAfterBeforePostModifier (boolean: places the after-distance before the first modifier that follows the corner).
+- **returns**: table[] Entries {text, category, variant?, audioFname?}.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.cornerIntensityList(cornerCfg)`
 
-Liste ordonnée des intensités de virage du style.
+Ordered list of the style's corner intensities.
 
-- `cornerCfg` (*table|nil*) : Config corner.
-- **renvoie** : table[]|nil Entrées {id, text, diameter, visual, afterDirection...}.
+- `cornerCfg` (*table|nil*) : Corner config.
+- **returns**: table[]|nil Entries {id, text, diameter, visual, afterDirection...}.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.cornerLengthEntryById(cornerCfg, intensityId, lengthId)`
 
-Cherche une entrée de longueur par son id pour une intensité.
+Finds a length entry by its id for an intensity.
 
-- `cornerCfg` (*table|nil*) : Config corner.
-- `intensityId` (*string*) : Intensité.
-- `lengthId` (*string*) : Id de la longueur.
-- **renvoie** : table|nil Entrée.
-- **renvoie** : integer|nil Indice dans la liste.
+- `cornerCfg` (*table|nil*) : Corner config.
+- `intensityId` (*string*) : Intensity.
+- `lengthId` (*string*) : Length id.
+- **returns**: table|nil Entry.
+- **returns**: integer|nil Index in the list.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.cornerLengthEntryLabel(entry)`
 
-Libellé d'une entrée de longueur : label, sinon text, sinon id.
+Label of a length entry: label, otherwise text, otherwise id.
 
-- `entry` (*table|nil*) : Entrée.
-- **renvoie** : string|nil Libellé.
+- `entry` (*table|nil*) : Entry.
+- **returns**: string|nil Label.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.cornerLengthEntryText(entry)`
 
-Texte parlé d'une entrée de longueur.
+Spoken text of a length entry.
 
-- `entry` (*table|nil*) : Entrée.
-- **renvoie** : string|nil Texte.
+- `entry` (*table|nil*) : Entry.
+- **returns**: string|nil Text.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.cornerLengthList(cornerCfg, intensityId)`
 
-Liste des longueurs de virage pour une intensité (lengthsByIntensity[intensityId]).
+List of corner lengths for an intensity (lengthsByIntensity[intensityId]).
 
-- `cornerCfg` (*table|nil*) : Config corner.
-- `intensityId` (*string|nil*) : Identifiant d'intensité.
-- **renvoie** : table[]|nil Entrées {id, text, arcMeters...}.
+- `cornerCfg` (*table|nil*) : Corner config.
+- `intensityId` (*string|nil*) : Intensity identifier.
+- **returns**: table[]|nil Entries {id, text, arcMeters...}.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.cornerNumbering(cornerCfg)`
 
-Renvoie la sous-table de numérotation d'un composant corner (cornerCfg.numbering, ou cornerCfg lui-même s'il n'existe pas, ou {} si nil).
+Returns the numbering sub-table of a corner component (cornerCfg.numbering, or cornerCfg itself if it does not exist, or {} if nil).
 
-- `cornerCfg` (*table|nil*) : Config du composant corner.
-- **renvoie** : table Numérotation.
+- `cornerCfg` (*table|nil*) : Config of the corner component.
+- **returns**: table Numbering.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.distanceCallsEnabled(config)`
 
-Vrai sauf si config.distance.callsEnabled vaut explicitement false.
+True unless config.distance.callsEnabled is explicitly false.
 
-- `config` (*table|nil*) : Config du style.
-- **renvoie** : boolean État.
+- `config` (*table|nil*) : Style config.
+- **returns**: boolean State.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.enumerateConcise(textCompositor, config)`
 
-Énumère toutes les phrases prononçables du style actif (dédoublonnées) : liens de distance, appels de virage, descripteurs, longueurs, formes, cautions, modificateurs. Sert au pipeline audio et au lecteur de script pour savoir quels fichiers chercher ou générer.
+Enumerates all speakable phrases of the active style (deduplicated): distance links, corner calls, descriptors, lengths, shapes, cautions, modifiers. Used by the audio pipeline and the script player to know which files to look for or generate.
 
-- `textCompositor` (*table*) : Non utilisé.
-- `config` (*table*) : Config du style.
-- **renvoie** : string[] Phrases uniques.
+- `textCompositor` (*table*) : Not used.
+- `config` (*table*) : Style config.
+- **returns**: string[] Unique phrases.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.enumerateScriptEntries(textCompositor, config)`
 
-Énumère les entrées du lecteur de script avec catégorie, sous-catégorie, variante et clés de tri : liens de distance, appels de virage (par intensité et direction), descripteurs, longueurs, formes, niveaux de caution, modificateurs. Plus riche qu'enumerateConcise.
+Enumerates the script player entries with category, subcategory, variant and sort keys: distance links, corner calls (by intensity and direction), descriptors, lengths, shapes, caution levels, modifiers. Richer than enumerateConcise.
 
-- `textCompositor` (*table*) : Non utilisé.
-- `config` (*table*) : Config du style.
-- **renvoie** : table[] Entrées {phrase, hash, audioFname, recordingSlug, category, subcategory, sourceContext, variant, sortGroup, sortSubgroup, sortPhrase}.
+- `textCompositor` (*table*) : Not used.
+- `config` (*table*) : Style config.
+- **returns**: table[] Entries {phrase, hash, audioFname, recordingSlug, category, subcategory, sourceContext, variant, sortGroup, sortSubgroup, sortPhrase}.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.getCaution(cautionCfg, item)`
 
-Texte d'un niveau de caution (cautionCfg.levels[item.level]).
+Text of a caution level (cautionCfg.levels[item.level]).
 
-- `cautionCfg` (*table|nil*) : Config caution.
-- `item` (*table|nil*) : Élément caution (level).
-- **renvoie** : string|nil Texte.
+- `cautionCfg` (*table|nil*) : Caution config.
+- `item` (*table|nil*) : Caution element (level).
+- **returns**: string|nil Text.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.getClosestEntry(valuesList, targetValue, key, filterFn)`
 
-Renvoie l'entrée dont la plage est la plus proche de targetValue (distance 0 si contenue), avec filtre facultatif.
+Returns the entry whose range is closest to targetValue (distance 0 if contained), with optional filter.
 
-- `valuesList` (*table[]|nil*) : Liste d'entrées.
-- `targetValue` (*number|string*) : Valeur cible.
-- `key` (*string|nil*) : Clé de la plage.
-- `filterFn` (*function|nil*) : function(entry) -> boolean pour exclure des entrées.
-- **renvoie** : table|nil Entrée la plus proche.
+- `valuesList` (*table[]|nil*) : List of entries.
+- `targetValue` (*number|string*) : Target value.
+- `key` (*string|nil*) : Range key.
+- `filterFn` (*function|nil*) : function(entry) -> boolean to exclude entries.
+- **returns**: table|nil Closest entry.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.getCornerCall(cornerCfg, item)`
 
-Phrase d'appel d'un virage : descripteur + direction, sinon intensité (ajustée au risque) + direction + afterDirection. Renvoie nil si pas de direction, direction non définie dans le style ou intensité introuvable.
+Corner call phrase: descriptor + direction, otherwise intensity (risk-adjusted) + direction + afterDirection. Returns nil if there is no direction, the direction is not defined in the style, or the intensity is not found.
 
-- `cornerCfg` (*table|nil*) : Config corner.
-- `item` (*table*) : Élément corner (direction, descriptor, intensity...).
-- **renvoie** : string|nil Phrase.
+- `cornerCfg` (*table|nil*) : Corner config.
+- `item` (*table*) : Corner element (direction, descriptor, intensity...).
+- **returns**: string|nil Phrase.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.getCornerLengthForIntensity(cornerCfg, item, intensityEntry)`
 
-Texte de longueur d'un virage pour une intensité donnée d'après item.arcMeters ; lengthMode 'shorter'/'longer' décale d'une entrée, 'skip' supprime.
+Corner length text for a given intensity based on item.arcMeters; lengthMode 'shorter'/'longer' shifts by one entry, 'skip' removes it.
 
-- `cornerCfg` (*table*) : Config corner.
-- `item` (*table*) : Élément corner (arcMeters, lengthMode).
-- `intensityEntry` (*table|nil*) : Entrée d'intensité.
-- **renvoie** : string|nil Texte de longueur.
+- `cornerCfg` (*table*) : Corner config.
+- `item` (*table*) : Corner element (arcMeters, lengthMode).
+- `intensityEntry` (*table|nil*) : Intensity entry.
+- **returns**: string|nil Length text.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.getCornerLengthForItem(cornerCfg, item)`
 
-Texte de longueur d'un virage en cherchant d'abord l'intensité de l'élément (sans ajustement de risque).
+Corner length text, first looking up the element's intensity (without risk adjustment).
 
-- `cornerCfg` (*table*) : Config corner.
-- `item` (*table*) : Élément corner.
-- **renvoie** : string|nil Texte de longueur.
+- `cornerCfg` (*table*) : Corner config.
+- `item` (*table*) : Corner element.
+- **returns**: string|nil Length text.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.getCornerShape(cornerCfg, shape)`
 
-Texte parlé de la forme d'un virage.
+Spoken text of a corner's shape.
 
-- `cornerCfg` (*table*) : Config corner.
-- `shape` (*string|nil*) : Clé de forme.
-- **renvoie** : string|nil Texte.
+- `cornerCfg` (*table*) : Corner config.
+- `shape` (*string|nil*) : Shape key.
+- **returns**: string|nil Text.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.getNearestValue(valuesList, targetValue, key)`
 
-Renvoie l'entrée dont la valeur numérique (clé 'value' par défaut) est la plus proche de targetValue.
+Returns the entry whose numeric value ('value' key by default) is closest to targetValue.
 
-- `valuesList` (*table[]*) : Liste d'entrées.
-- `targetValue` (*number*) : Valeur cible.
-- `key` (*string|nil*) : Clé numérique ('value' par défaut).
-- **renvoie** : table|nil Entrée la plus proche.
+- `valuesList` (*table[]*) : List of entries.
+- `targetValue` (*number*) : Target value.
+- `key` (*string|nil*) : Numeric key ('value' by default).
+- **returns**: table|nil Closest entry.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.getRandomWeightedItem(items)`
 
-Tire un élément au hasard selon son champ 'weight' (1 par défaut).
+Randomly picks an item according to its 'weight' field (1 by default).
 
-- `items` (*table[]*) : Éléments avec weight facultatif.
-- **renvoie** : table Élément choisi.
+- `items` (*table[]*) : Items with optional weight.
+- **returns**: table Chosen item.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.getRangeValue(valuesList, targetValue, key)`
 
-Renvoie la première entrée dont la plage (clé 'value' par défaut) contient targetValue.
+Returns the first entry whose range ('value' key by default) contains targetValue.
 
-- `valuesList` (*table[]|nil*) : Liste d'entrées.
-- `targetValue` (*number|string*) : Valeur cherchée.
-- `key` (*string|nil*) : Clé de la plage.
-- **renvoie** : table|nil Entrée trouvée.
+- `valuesList` (*table[]|nil*) : List of entries.
+- `targetValue` (*number|string*) : Value searched.
+- `key` (*string|nil*) : Range key.
+- **returns**: table|nil Entry found.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.intensityEntryId(entry)`
 
-Identifiant d'une entrée d'intensité.
+Identifier of an intensity entry.
 
-- `entry` (*table|nil*) : Entrée.
-- **renvoie** : string|nil Id.
+- `entry` (*table|nil*) : Entry.
+- **returns**: string|nil Id.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.intensityEntryLabel(entry)`
 
-Libellé d'une entrée d'intensité : label, sinon text, sinon id.
+Label of an intensity entry: label, otherwise text, otherwise id.
 
-- `entry` (*table|nil*) : Entrée.
-- **renvoie** : string|nil Libellé.
+- `entry` (*table|nil*) : Entry.
+- **returns**: string|nil Label.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.intensityEntryText(entry)`
 
-Texte parlé d'une entrée d'intensité.
+Spoken text of an intensity entry.
 
-- `entry` (*table|nil*) : Entrée.
-- **renvoie** : string|nil Texte.
+- `entry` (*table|nil*) : Entry.
+- **returns**: string|nil Text.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.lookupComponentType(componentTypes, itemType)`
 
-Renvoie la config du composant pour un type d'élément : corner et caution directement, sinon un modificateur (en résolvant modifierAliases).
+Returns the component config for an element type: corner and caution directly, otherwise a modifier (resolving modifierAliases).
 
-- `componentTypes` (*table|nil*) : Registre componentTypes.
-- `itemType` (*string*) : Type de l'élément.
-- **renvoie** : table|nil Config du composant.
+- `componentTypes` (*table|nil*) : componentTypes registry.
+- `itemType` (*string*) : Kind of the item.
+- **returns**: table|nil Component config.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.lookupDescriptorEntry(cornerCfg, descriptor)`
 
-Entrée de descripteur d'un virage (cornerCfg.descriptors, en résolvant descriptorAliases).
+Descriptor entry of a corner (cornerCfg.descriptors, resolving descriptorAliases).
 
-- `cornerCfg` (*table*) : Config corner.
-- `descriptor` (*string|nil*) : Clé du descripteur.
-- **renvoie** : table|nil Entrée.
+- `cornerCfg` (*table*) : Corner config.
+- `descriptor` (*string|nil*) : Descriptor key.
+- **returns**: table|nil Entry.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.lookupIntensityEntry(cornerCfg, intensity)`
 
-Entrée d'intensité du style correspondant à un diamètre physique mesuré (plage 'diameter').
+Intensity entry of the style matching a measured physical diameter ('diameter' range).
 
-- `cornerCfg` (*table*) : Config corner.
-- `intensity` (*number*) : Diamètre mesuré (>= 0).
-- **renvoie** : table|nil Entrée d'intensité.
+- `cornerCfg` (*table*) : Corner config.
+- `intensity` (*number*) : Measured diameter (>= 0).
+- **returns**: table|nil Intensity entry.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.lookupRiskAdjustedIntensityEntry(cornerCfg, item)`
 
-Comme lookupIntensityEntry sur item.intensity, puis décale l'entrée selon le signe de item.riskIntensity (positif = vers le début de la liste, plus risqué), borné aux extrémités.
+Like lookupIntensityEntry on item.intensity, then shifts the entry according to the sign of item.riskIntensity (positive = toward the start of the list, riskier), clamped at the ends.
 
-- `cornerCfg` (*table*) : Config corner.
-- `item` (*table*) : Élément corner (intensity, riskIntensity).
-- **renvoie** : table|nil Entrée d'intensité ajustée.
+- `cornerCfg` (*table*) : Corner config.
+- `item` (*table*) : Corner element (intensity, riskIntensity).
+- **returns**: table|nil Adjusted intensity entry.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.lookupShapeEntry(cornerCfg, shape)`
 
-Entrée de forme d'un virage (cornerCfg.shapes[shape]).
+Shape entry of a corner (cornerCfg.shapes[shape]).
 
-- `cornerCfg` (*table*) : Config corner.
-- `shape` (*string|nil*) : Clé de forme.
-- **renvoie** : table|nil Entrée.
+- `cornerCfg` (*table*) : Corner config.
+- `shape` (*string|nil*) : Shape key.
+- **returns**: table|nil Entry.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.modifierComponents(componentTypes)`
 
-Table des modificateurs atomiques du style (componentTypes.modifiers, ou {}).
+Table of the style's atomic modifiers (componentTypes.modifiers, or {}).
 
-- `componentTypes` (*table|nil*) : Registre componentTypes.
-- **renvoie** : table Modificateurs par clé.
+- `componentTypes` (*table|nil*) : componentTypes registry.
+- **returns**: table Modifiers by key.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.pacenoteHash(text)`
 
-Transforme une phrase en identifiant utilisable comme nom de fichier (voir notes).
+Turns a phrase into an identifier usable as a file name (see notes).
 
 - `text` (*string|nil*) : Phrase.
-- **renvoie** : string|nil Hash, nil si text est nil.
+- **returns**: string|nil Hash, nil if text is nil.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.postProcessPhrase(phrase)`
 
-Nettoie une phrase (suppression des espaces de début et de fin via rallyUtil.trimString).
+Cleans up a phrase (removes leading and trailing spaces via rallyUtil.trimString).
 
-- `phrase` (*string*) : Phrase brute.
-- **renvoie** : string Phrase nettoyée.
+- `phrase` (*string*) : Raw phrase.
+- **returns**: string Cleaned phrase.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.rangeBounds(value)`
 
-Lit une plage {min, max} : renvoie min et max numériques (max nil si absent) ; nil, nil si value n'est pas une table.
+Reads a range {min, max}: returns numeric min and max (max nil if absent); nil, nil if value is not a table.
 
-- `value` (*table|nil*) : Plage.
-- **renvoie** : number|nil min.
-- **renvoie** : number|nil max.
+- `value` (*table|nil*) : Range.
+- **returns**: number|nil min.
+- **returns**: number|nil max.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.rangeContains(value, targetValue)`
 
-Vrai si targetValue est dans [min, max[ (ou >= min sans max).
+True if targetValue is in [min, max[ (or >= min without max).
 
-- `value` (*table*) : Plage {min, max}.
-- `targetValue` (*number*) : Valeur testée.
-- **renvoie** : boolean Résultat.
+- `value` (*table*) : Range {min, max}.
+- `targetValue` (*number*) : Value tested.
+- **returns**: boolean Result.
 
 #### `gameplay_rally_compositors_helpers_compositorUtil.signedStep(value)`
 
-Signe d'une valeur : 1, -1 ou 0 (0 si non numérique).
+Sign of a value: 1, -1 or 0 (0 if non-numeric).
 
-- `value` (*number|nil*) : Valeur.
-- **renvoie** : integer -1, 0 ou 1.
+- `value` (*number|nil*) : Value.
+- **returns**: integer -1, 0 or 1.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/compositors/helpers/compositorUtil.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/compositors/helpers/compositorUtil.lua`.*

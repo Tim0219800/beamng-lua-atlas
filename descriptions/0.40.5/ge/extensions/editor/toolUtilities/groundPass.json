@@ -1,103 +1,185 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/groundPass.lua",
-  "module": "Le terraformage unique du terrain sur lequel les outils de l'éditeur posent leurs objets. Les réseaux routier et ferré sont creusés ensemble en une seule passe, avec un seul fondu (le rail est prioritaire, PRIO.RAIL). La pente de site de City Builder est posée par-dessus comme seconde passe : levée avant la passe réseau et reposée après. Chaque bouton Build appelle run(), chaque Restore appelle restore().",
-  "usage": "local gp = require('editor/toolUtilities/groundPass')\ngp.run({doi = 30})   -- terraformer les réseaux avec un fondu de 30 m\ngp.restore()         -- remettre le terrain d'origine",
+  "module": "The single terraforming of the terrain on which the editor tools place their objects. The road and rail networks are carved together in a single pass, with a single blend (rail has priority, PRIO.RAIL). City Builder's site grade is laid on top as a second pass: lifted before the network pass and laid back after. Each Build button calls run(), each Restore calls restore().",
+  "usage": "local gp = require('editor/toolUtilities/groundPass')\ngp.run({doi = 30})   -- terraform the networks with a 30 m blend\ngp.restore()         -- put the original terrain back",
   "notes": [
-    "Un réseau s'enregistre avec register(id, source) ; source.features(out, p) ajoute ses éléments de terraformage. Hooks facultatifs : lift(), finish(), after(), records(), hasCarve().",
-    "L'enregistrement de creusement (owner.terraBaseline) est lié au bloc de terrain et au niveau ; checkOwner l'abandonne si le bloc a changé.",
-    "pass() refuse de travailler (journal W 'held: the road network is still rebuilding') tant que les sites sont occupés ; run() renvoie alors 0.",
-    "Chaque passe est une transaction d'historique ('Build Ground', 'Restore Ground', 'Grade Sites') et appelle be:reloadCollision() si un terrain existe.",
-    "Valeurs par défaut : doi 40 m, margin 10 m, falloff 2, smooth 5, roughness 0, scale 0.5, abutLen et abutShoulder pris dans roadNetwork/bridges (embankLenM, abutShoulderM)."
+    "A network registers with register(id, source); source.features(out, p) adds its terraforming elements. Optional hooks: lift(), finish(), after(), records(), hasCarve().",
+    "The carving record (owner.terraBaseline) is tied to the terrain block and the level; checkOwner drops it if the block changed.",
+    "pass() refuses to work (log W 'held: the road network is still rebuilding') while the sites are busy; run() then returns 0.",
+    "Each pass is a history transaction ('Build Ground', 'Restore Ground', 'Grade Sites') and calls be:reloadCollision() if a terrain exists.",
+    "Defaults: doi 40 m, margin 10 m, falloff 2, smooth 5, roughness 0, scale 0.5, abutLen and abutShoulder taken from roadNetwork/bridges (embankLenM, abutShoulderM)."
   ],
   "fields": {
-    "params": {"type": "table", "desc": "Réglages courants : on, roads, rail (booléens) et doi, margin, falloff, smooth, roughness, scale, abutLen, abutShoulder."},
-    "defaults": {"type": "table", "desc": "Valeurs par défaut des réglages numériques."}
+    "params": {
+      "type": "table",
+      "desc": "Current settings: on, roads, rail (booleans) and doi, margin, falloff, smooth, roughness, scale, abutLen, abutShoulder."
+    },
+    "defaults": {
+      "type": "table",
+      "desc": "Default values of the numeric settings."
+    }
   },
   "functions": {
     "register": {
-      "desc": "Enregistre (ou remplace, si l'id existe déjà) la source de terraformage d'un réseau.",
+      "desc": "Registers (or replaces, if the id already exists) the terraforming source of a network.",
       "params": {
-        "id": {"type": "string", "desc": "Id du réseau, aussi clé de params (par exemple 'roads', 'rail')."},
-        "s": {"type": "table", "desc": "Source avec features(out, p) et éventuellement lift, finish, after, records, hasCarve."}
+        "id": {
+          "type": "string",
+          "desc": "Network id, also the key of params (e.g. 'roads', 'rail')."
+        },
+        "s": {
+          "type": "table",
+          "desc": "Source with features(out, p) and optionally lift, finish, after, records, hasCarve."
+        }
       },
       "returns": [],
       "internal": false
     },
     "setSites": {
-      "desc": "Branche la pente de site de City Builder (lift, lay, busy, record).",
-      "params": {"s": {"type": "table|nil", "desc": "Objet de sites."}},
+      "desc": "Plugs in City Builder's site grade (lift, lay, busy, record).",
+      "params": {
+        "s": {
+          "type": "table|nil",
+          "desc": "Sites object."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "features": {
-      "desc": "Ajoute à out les éléments de terraformage de chaque réseau enregistré, selon les réglages p (ceux partagés par défaut). Un réseau décoché (p[id] == false) est ignoré.",
+      "desc": "Adds to out the terraforming elements of each registered network, according to the settings p (the shared ones by default). An unchecked network (p[id] == false) is ignored.",
       "params": {
-        "out": {"type": "table", "desc": "Liste de sortie."},
-        "p": {"type": "table|nil", "desc": "Réglages ; défaut params."}
+        "out": {
+          "type": "table",
+          "desc": "Output list."
+        },
+        "p": {
+          "type": "table|nil",
+          "desc": "Settings; default params."
+        }
       },
-      "returns": [{"type": "table", "desc": "La liste out."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The out list."
+        }
+      ],
       "internal": false
     },
     "run": {
-      "desc": "Terraforme les réseaux (si Terraform est actif) puis repose la pente des sites, en une transaction 'Build Ground'.",
+      "desc": "Terraforms the networks (if Terraform is active) then lays the site grade back, in one 'Build Ground' transaction.",
       "params": {
-        "p": {"type": "table|nil", "desc": "Réglages qui remplacent les réglages partagés pour cette exécution."},
-        "laySites": {"type": "boolean|nil", "desc": "Pente les sites même s'ils ne l'étaient pas."},
-        "holdSites": {"type": "boolean|nil", "desc": "Laisse la pente levée ; il faudra appeler laySites()."}
+        "p": {
+          "type": "table|nil",
+          "desc": "Settings that replace the shared settings for this run."
+        },
+        "laySites": {
+          "type": "boolean|nil",
+          "desc": "Grades the sites even if they were not."
+        },
+        "holdSites": {
+          "type": "boolean|nil",
+          "desc": "Leaves the grade lifted; laySites() must be called later."
+        }
       },
-      "returns": [{"type": "integer", "desc": "Nombre d'éléments de terraformage appliqués (0 si bloqué)."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of terraforming elements applied (0 if blocked)."
+        }
+      ],
       "internal": false
     },
     "laySites": {
-      "desc": "Repose la pente de site gardée levée par les passes holdSites, sur le terrain de la dernière passe, en une transaction 'Grade Sites'. Sans effet (0) si rien n'est en attente.",
+      "desc": "Lays back the site grade kept lifted by the holdSites passes, on the terrain of the last pass, in one 'Grade Sites' transaction. No effect (0) if nothing is pending.",
       "params": {},
-      "returns": [{"type": "integer", "desc": "Résultat de sites.lay(), 0 si rien ou si le réseau est encore en reconstruction."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Result of sites.lay(), 0 if nothing or if the network is still rebuilding."
+        }
+      ],
       "internal": false
     },
     "restore": {
-      "desc": "Remet le terrain d'origine sous les réseaux et la pente de site par-dessus (transaction 'Restore Ground').",
+      "desc": "Puts the original terrain back under the networks and the site grade on top (transaction 'Restore Ground').",
       "params": {},
-      "returns": [{"type": "integer", "desc": "Nombre d'éléments (0 en pratique)."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of elements (0 in practice)."
+        }
+      ],
       "internal": false
     },
     "hasCarve": {
-      "desc": "Vrai si un creusement est mémorisé (enregistrement partagé ou chose que les sources auraient à remettre).",
+      "desc": "True if a carving is stored (shared record or something the sources would have to put back).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "Un creusement existe."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "A carving exists."
+        }
+      ],
       "internal": false
     },
     "naturalGround": {
-      "desc": "Renvoie la fonction height(x, y) du terrain avant tous les creusements (terraform.groundBefore). Reconstruite seulement si les enregistrements ont changé ; sans enregistrement elle lit le terrain vivant.",
+      "desc": "Returns the function height(x, y) of the terrain before all the carvings (terraform.groundBefore). Rebuilt only if the records changed; without a record it reads the live terrain.",
       "params": {},
-      "returns": [{"type": "function", "desc": "height(x, y)."}],
+      "returns": [
+        {
+          "type": "function",
+          "desc": "height(x, y)."
+        }
+      ],
       "internal": false
     },
     "getParams": {
-      "desc": "Copie des réglages, à garder dans le fichier de session de chaque outil.",
+      "desc": "Copy of the settings, to keep in each tool's session file.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Copie de params."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy of params."
+        }
+      ],
       "internal": false
     },
     "applyParams": {
-      "desc": "Applique des réglages sauvegardés : seules les clés existantes dont le type correspond sont reprises. Ignore un argument non table.",
-      "params": {"t": {"type": "table", "desc": "Réglages sauvegardés."}},
+      "desc": "Applies saved settings: only existing keys whose type matches are taken. Ignores a non-table argument.",
+      "params": {
+        "t": {
+          "type": "table",
+          "desc": "Saved settings."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getRecord": {
-      "desc": "Renvoie l'enregistrement de creusement (garde-le entre rechargements Lua et dans les sessions).",
+      "desc": "Returns the carving record (keep it across Lua reloads and in sessions).",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "owner.terraBaseline."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "owner.terraBaseline."
+        }
+      ],
       "internal": false
     },
     "setRecord": {
-      "desc": "Restaure un enregistrement de creusement (doit être une table avec gx table et n > 0, sinon il est effacé). L'id du bloc est remis à nil : checkOwner rattache l'enregistrement par le niveau.",
-      "params": {"bl": {"type": "table|nil", "desc": "Enregistrement."}},
+      "desc": "Restores a carving record (must be a table with gx a table and n > 0, otherwise it is cleared). The block id is set back to nil: checkOwner attaches the record via the level.",
+      "params": {
+        "bl": {
+          "type": "table|nil",
+          "desc": "Record."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "reset": {
-      "desc": "Nouveau niveau : oublie l'enregistrement de creusement, puisque le terrain n'est plus celui où il a été fait.",
+      "desc": "New level: forgets the carving record, since the terrain is no longer the one where it was made.",
       "params": {},
       "returns": [],
       "internal": false

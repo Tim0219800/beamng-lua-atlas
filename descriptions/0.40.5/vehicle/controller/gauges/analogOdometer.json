@@ -1,10 +1,10 @@
 {
   "path": "lua/vehicle/controller/gauges/analogOdometer.lua",
-  "module": "Contrôleur auxiliaire pour un compteur kilométrique analogique affiché par une texture HTML (htmlTexture). Il envoie le total (electrics.values.odometer) et le trip (extensions.odometer.getRelativeRecording()) à la page seulement quand l'un d'eux a changé de plus d'un pas de mise à jour (1000 m, ou 1609.34 m en impérial, divisé par 10 avec séparateur décimal).",
+  "module": "Auxiliary controller for an analog odometer displayed by an HTML texture (htmlTexture). It sends the total (electrics.values.odometer) and the trip (extensions.odometer.getRelativeRecording()) to the page only when one of them has changed by more than one update step (1000 m, or 1609.34 m in imperial, divided by 10 with a decimal separator).",
   "notes": [
-    "Clés jbeam : configuration (table, fusionnée avec les clés \"configuration_xxx\") avec materialName, htmlPath, displayWidth, displayHeight (obligatoires pour afficher), unit (\"imperial\" = pas de 1609.34, sinon 1000), odometerHasDecimalSeparator, tripHasDecimalSeparator (pas divisé par 10). La table de configuration est envoyée entière à la page par callJS(\"setup\").",
-    "La texture est créée en mode \"manual\" à 1 FPS. L'envoi n'a lieu que si un joueur est assis et si l'UI doit être rafraîchie.",
-    "M.init = nop (fonction globale du moteur). setParameters ne fait rien."
+    "jbeam keys: configuration (table, merged with the \"configuration_xxx\" keys) with materialName, htmlPath, displayWidth, displayHeight (required to display), unit (\"imperial\" = step of 1609.34, otherwise 1000), odometerHasDecimalSeparator, tripHasDecimalSeparator (step divided by 10). The whole configuration table is sent to the page by callJS(\"setup\").",
+    "The texture is created in \"manual\" mode at 1 FPS. Sending only happens if a player is seated and the UI needs refreshing.",
+    "M.init = nop (global engine function). setParameters does nothing."
   ],
   "fields": {
     "type": {
@@ -18,39 +18,39 @@
   },
   "functions": {
     "initSecondStage": {
-      "desc": "Lit la configuration, calcule le pas de mise à jour, crée la texture HTML et envoie la configuration à la page.",
+      "desc": "Reads the configuration, computes the update step, creates the HTML texture and sends the configuration to the page.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Force un nouvel envoi de données au prochain updateGFX.",
+      "desc": "Forces a new data send at the next updateGFX.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Envoie trip et odomètre à la page quand ils ont changé d'au moins un pas.",
+      "desc": "Sends trip and odometer to the page when they have changed by at least one step.",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "setParameters": {
-      "desc": "Ne fait rien.",
+      "desc": "Does nothing.",
       "params": {
         "parameters": {
           "type": "table",
-          "desc": "Ignoré."
+          "desc": "Ignored."
         }
       },
       "returns": []

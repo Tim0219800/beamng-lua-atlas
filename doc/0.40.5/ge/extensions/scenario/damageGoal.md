@@ -1,62 +1,62 @@
 # `scenario_damageGoal`
 
-*Fichier : `lua/ge/extensions/scenario/damageGoal.lua` · VM : Game Engine (GE) · 105 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/damageGoal.lua` · VM: Game Engine (GE) · 105 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_damageGoal` : `extensions.load("scenario_damageGoal")`, puis la globale `scenario_damageGoal`
+**Access:** extension `scenario_damageGoal`: `extensions.load("scenario_damageGoal")`, then the global `scenario_damageGoal`
 
-Objectif de scénario « damage » (goals.vehicles avec id = 'damage'). Il surveille le dégât du véhicule (map.objects[...].damage) à chaque tick de course et fait gagner ou perdre le scénario quand le dégât dépasse damageLimit. Il est appelé par le système de goals de scenario_scenarios (init au chargement, processState à chaque état, updateFinalStatus à la fin).
+"damage" scenario goal (goals.vehicles with id = 'damage'). It monitors the vehicle's damage (map.objects[...].damage) at each race tick and makes the scenario win or lose when the damage exceeds damageLimit. It is called by the scenario_scenarios goal system (init on load, processState on each state, updateFinalStatus at the end).
 
-## Exemple
+## Example
 
 ```lua
--- dans le JSON du scénario, goal d'un véhicule :
+-- in the scenario JSON, a vehicle's goal:
 -- {"id":"damage", "value":{"damageLimit":5000, "damageThreshold":500, "purpose":"fail", "msg":"Trop de dégâts"}}
 ```
 
-## Remarques
+## Notes
 
-- Options lues dans instance.value : damageLimit (number), damageThreshold (number), purpose ('fail' par défaut, ou 'win'), msg (texte final). Un type incorrect fait ignorer l'instance avec une erreur dans le log.
-- Tout se passe sur l'état 'onRaceTick'. Si le véhicule n'est pas encore dans map.objects, l'objectif appelle helper.trackVehicle pour activer le suivi et attend le tick suivant.
-- Quand le dégât progresse d'au moins damageThreshold (en pourcentage de damageLimit) depuis le dernier message, un flashUiMessage de 1 s est affiché (clés de traduction checkDamage.win.msg ou checkDamage.fail.msg avec le contexte damage en pourcentage).
-- Dans showMsg, l'expression {txt = instance.value.msg, ...} or {...} ne se rabat jamais sur le message par défaut (une table est toujours vraie) : si purpose='win' et msg absent, txt vaut nil.
-- Tant que le dégât est sous la limite, status.result est mis à 'passed' à chaque tick.
+- Options read from instance.value: damageLimit (number), damageThreshold (number), purpose ('fail' by default, or 'win'), msg (final text). A wrong type makes the instance be ignored with an error in the log.
+- Everything happens on the 'onRaceTick' state. If the vehicle is not yet in map.objects, the goal calls helper.trackVehicle to enable tracking and waits for the next tick.
+- When the damage progresses by at least damageThreshold (as a percentage of damageLimit) since the last message, a 1 s flashUiMessage is shown (translation keys checkDamage.win.msg or checkDamage.fail.msg with the damage context as a percentage).
+- In showMsg, the expression {txt = instance.value.msg, ...} or {...} never falls back to the default message (a table is always truthy): if purpose='win' and msg is absent, txt is nil.
+- While the damage is under the limit, status.result is set to 'passed' on every tick.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_damageGoal.init(scenario)` | Réinitialise instances et y ajoute chaque goal id='damage' de scenario.goals.vehicles après vérification des types (purpose vaut 'fail' si absent, lastProgress initialisé à 0). *(interne)* | 68 |
-| `scenario_damageGoal.processState(scenario, state, stateData)` | Appelé par le système de goals à chaque changement d'état du scénario. Sur 'onRaceTick', compare le dégât du véhicule à damageLimit, affiche la progression et termine le scénario (scenario_scenarios.finish) en victoire ou défaite selon purpose. *(interne)* | 36 |
-| `scenario_damageGoal.updateFinalStatus(scenario, instance)` | Enregistre le résultat de chaque instance dans statistics_statistics.setGoalProgress en fin de scénario. *(interne)* | 95 |
+| `scenario_damageGoal.init(scenario)` | Resets instances and adds to them each goal id='damage' of scenario.goals.vehicles after checking the types (purpose is 'fail' if absent, lastProgress initialized to 0). *(internal)* | 68 |
+| `scenario_damageGoal.processState(scenario, state, stateData)` | Called by the goal system on every scenario state change. On 'onRaceTick', compares the vehicle's damage to damageLimit, shows the progress and ends the scenario (scenario_scenarios.finish) in victory or defeat depending on purpose. *(internal)* | 36 |
+| `scenario_damageGoal.updateFinalStatus(scenario, instance)` | Records each instance's result in statistics_statistics.setGoalProgress at the end of the scenario. *(internal)* | 95 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_damageGoal.init(scenario)`
 
-Réinitialise instances et y ajoute chaque goal id='damage' de scenario.goals.vehicles après vérification des types (purpose vaut 'fail' si absent, lastProgress initialisé à 0).
+Resets instances and adds to them each goal id='damage' of scenario.goals.vehicles after checking the types (purpose is 'fail' if absent, lastProgress initialized to 0).
 
-- `scenario` (*table*) : Table du scénario courant.
+- `scenario` (*table*) : Current scenario table.
 
 #### `scenario_damageGoal.processState(scenario, state, stateData)`
 
-Appelé par le système de goals à chaque changement d'état du scénario. Sur 'onRaceTick', compare le dégât du véhicule à damageLimit, affiche la progression et termine le scénario (scenario_scenarios.finish) en victoire ou défaite selon purpose.
+Called by the goal system on every scenario state change. On 'onRaceTick', compares the vehicle's damage to damageLimit, shows the progress and ends the scenario (scenario_scenarios.finish) in victory or defeat depending on purpose.
 
-- `scenario` (*table*) : Scénario courant (scenario.timer sert à formater le temps).
-- `state` (*string*) : Nom de l'état ; seul 'onRaceTick' est traité.
-- `stateData` (*table*) : Données de l'état (non utilisées).
+- `scenario` (*table*) : Current scenario (scenario.timer is used to format the time).
+- `state` (*string*) : State name; only 'onRaceTick' is handled.
+- `stateData` (*table*) : State data (unused).
 
 #### `scenario_damageGoal.updateFinalStatus(scenario, instance)`
 
-Enregistre le résultat de chaque instance dans statistics_statistics.setGoalProgress en fin de scénario.
+Records each instance's result in statistics_statistics.setGoalProgress at the end of the scenario.
 
-- `scenario` (*table*) : Scénario courant.
-- `instance` (*table|nil*) : Non utilisé : la boucle parcourt M.instances.
+- `scenario` (*table*) : Current scenario.
+- `instance` (*table|nil*) : Unused: the loop iterates over M.instances.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `instances` | table | Liste des goals 'damage' valides, remplie par init(). |
+| `instances` | table | List of valid 'damage' goals, filled by init(). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/damageGoal.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/damageGoal.lua`.*

@@ -2,30 +2,30 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/shortcutLegend.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre de l'éditeur de monde (sans barre de titre) qui affiche une légende des raccourcis du mode d'édition actif. Elle lit soit editor.editMode.getLegendCurrentActionNames(), soit les actions de l'actionMap du mode (bindings clavier et souris de core_input_bindings), plus editor.editMode.auxShortcuts, puis les trie et les affiche en ligne. Un moddeur d'outil d'éditeur remplit auxShortcuts ou getLegendCurrentActionNames pour que ses raccourcis apparaissent.
---- Accès : extension `editor_shortcutLegend` : `extensions.load("editor_shortcutLegend")`, puis la globale `editor_shortcutLegend`
+--- World editor window (no title bar) that displays a legend of the shortcuts of the active edit mode. It reads either editor.editMode.getLegendCurrentActionNames(), or the actions of the mode's actionMap (keyboard and mouse bindings from core_input_bindings), plus editor.editMode.auxShortcuts, then sorts them and displays them inline. An editor tool modder fills auxShortcuts or getLegendCurrentActionNames so that their shortcuts appear.
+--- Access: extension `editor_shortcutLegend`: `extensions.load("editor_shortcutLegend")`, then the global `editor_shortcutLegend`
 ---@class editor_shortcutLegend
 editor_shortcutLegend = {}
 
---- Hook appelé quand le mode d'édition change : demande la reconstruction de la liste des raccourcis.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/shortcutLegend.lua:165
----@param oldEditMode table Ancien mode d'édition.
----@param newEditMode table Nouveau mode d'édition.
+--- Hook called when the edit mode changes: requests a rebuild of the shortcut list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/shortcutLegend.lua:165
+---@param oldEditMode table Old edit mode.
+---@param newEditMode table New edit mode.
 function editor_shortcutLegend.onEditorEditModeChanged(oldEditMode, newEditMode) end
 
---- Hook appelé à chaque frame de l'UI de l'éditeur : reconstruit la liste des raccourcis si nécessaire et dessine la légende centrée avec des pastilles pour les touches.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/shortcutLegend.lua:22
+--- Hook called every frame of the editor UI: rebuilds the shortcut list if needed and draws the centered legend with key badges.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/shortcutLegend.lua:22
 function editor_shortcutLegend.onEditorGui() end
 
---- Hook appelé à l'initialisation de l'éditeur : remplit la table des noms de modificateurs (Ctrl, Shift, Alt, LMB, MMB, RMB, MouseWheel, Copy, Paste, etc.), enregistre et affiche la fenêtre shortcutLegend.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/shortcutLegend.lua:140
+--- Hook called at editor initialization: fills the modifier name table (Ctrl, Shift, Alt, LMB, MMB, RMB, MouseWheel, Copy, Paste, etc.), registers and shows the shortcutLegend window.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/shortcutLegend.lua:140
 function editor_shortcutLegend.onEditorInitialized() end
 
---- Hook de chargement de l'extension ; vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/shortcutLegend.lua:137
+--- Extension load hook; empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/shortcutLegend.lua:137
 function editor_shortcutLegend.onExtensionLoaded() end
 

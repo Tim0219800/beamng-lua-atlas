@@ -1,0 +1,29 @@
+{
+  "path": "lua/common/libs/xlsxlib/xlsxlib.lua",
+  "module": "Bibliothèque BeamNG (Thomas Fischer, 2024) de lecture de classeurs Excel .xlsx. Elle ouvre l'archive ZIP avec l'objet moteur `ZipArchive`, lit les relations, la liste des feuilles et les chaînes partagées, puis extrait les cellules d'une feuille (valeurs, pas les formules) dans des tables Lua. Sert à importer des données de tableur (par ex. paramètres de contenu) ; s'appuie sur libs/slaxml/slaxdom.",
+  "usage": "local xlsx = require('libs/xlsxlib/xlsxlib')\nlocal book = xlsx.loadFileXLSX('lua/common/libs/xlsxlib/tests/test_input_1.xlsx')\nlocal tout = xlsx.getSheetData(book, 'Sheet1')\nlocal bloc = xlsx.getSheetData(book, 'Sheet1', 'A1:C3')\nlocal cell = xlsx.getSheetData(book, 'Sheet1', 'B2')",
+  "notes": [
+    "Syntaxe des plages (parseRange) : \"B2\" (une cellule, renvoie la valeur seule), \"A1:C3\", colonne seule \"B\" (liste), plage de colonnes \"C:E\", ligne seule \"2\" (liste), plage de lignes \"2:5\". Les références absolues $A$1 sont acceptées pour les cellules. Colonnes en majuscules uniquement.",
+    "Les plages générales (cellules ou colonnes/lignes combinées) sont rognées : les lignes/colonnes vides en bordure sont supprimées avant extraction, donc la position retournée n'est pas forcément celle demandée.",
+    "Types de cellules : chaîne partagée (t='s'), booléen (t='b'), chaîne/inlineStr, sinon nombre si convertible. Les formules ne sont pas évaluées (cellule ignorée) et les cellules vides sont omises.",
+    "Erreurs levées via error() : fichier impossible à ouvrir, archive vide, relation du classeur introuvable, feuille introuvable (« Sheet not found: ... »), plage invalide, référence de cellule invalide.",
+    "Le nom de feuille est recherché sans tenir compte de la casse ; si `sheetName` est nil, la première feuille renvoyée par next() (ordre non garanti) est utilisée.",
+    "getSheetData rouvre l'archive à chaque appel (le chemin est conservé dans xlsx.filepath)."
+  ],
+  "functions": {
+    "loadFileXLSX": {
+      "desc": "Charge un fichier .xlsx : ouvre l'archive, lit _rels/.rels et les relations du classeur, la liste des feuilles (nom -> chemin interne) et les chaînes partagées. Referme l'archive avant de renvoyer.",
+      "params": {"filepath": {"type": "string", "desc": "Chemin du fichier .xlsx (ouvert par ZipArchive:openArchiveName en lecture)."}},
+      "returns": [{"type": "table", "desc": "{filepath = string, sharedStrings = string[], sheets = table<string, string>}."}]
+    },
+    "getSheetData": {
+      "desc": "Lit les données d'une feuille d'un classeur chargé. Sans `range`, renvoie toute la feuille sous forme de tableau de lignes (rognée des bords vides). Avec `range`, renvoie la portion demandée (valeur seule pour une cellule, liste pour une colonne ou une ligne, tableau de lignes pour un bloc).",
+      "params": {
+        "xlsx": {"type": "table", "desc": "Résultat de loadFileXLSX."},
+        "sheetName": {"type": "string|nil", "desc": "Nom de la feuille (insensible à la casse) ; nil = première feuille trouvée."},
+        "range": {"type": "string|nil", "desc": "Plage au format Excel (voir notes)."}
+      },
+      "returns": [{"type": "table|string|number|boolean|nil", "desc": "Données extraites ; les valeurs sont des nombres, chaînes ou booléens, et les cellules vides valent nil."}]
+    }
+  }
+}

@@ -1,12 +1,12 @@
 # `editor_api_gui`
 
-*Fichier : `lua/ge/extensions/editor/api/gui.lua` · VM : Game Engine (GE) · 2251 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/gui.lua` · VM: Game Engine (GE) · 2251 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_gui` : `extensions.load("editor_api_gui")`, puis la globale `editor_api_gui`
+**Access:** extension `editor_api_gui`: `extensions.load("editor_api_gui")`, then the global `editor_api_gui`
 
-Coeur de l'interface ImGui de l'éditeur de niveau : gestion des fenêtres d'outils (enregistrement, affichage/masquage, groupes, modales, sauvegarde/chargement de l'état du layout), boucle de présentation (`presentGui` : dockspace principal puis hooks onEditorGui*), atlas d'icônes (`editor.icons`) et un grand nombre d'enveloppes `editor.ui*` autour des widgets ImGui (drag, input, slider, couleur) qui renseignent en plus un BoolPtr `editEnded` quand l'édition se termine. Un moddeur d'outil d'éditeur s'en sert pour déclarer ses fenêtres (`editor.registerWindow`, `editor.beginWindow`/`endWindow`) et dessiner ses widgets. `initialize` installe tout sur l'objet `editor`.
+Core of the level editor's ImGui interface: management of tool windows (registration, show/hide, groups, modals, saving/loading the layout state), the presentation loop (`presentGui`: main dockspace then onEditorGui* hooks), the icon atlas (`editor.icons`) and a large number of `editor.ui*` wrappers around ImGui widgets (drag, input, slider, color) that additionally fill an `editEnded` BoolPtr when editing ends. An editor tool modder uses it to declare their windows (`editor.registerWindow`, `editor.beginWindow`/`endWindow`) and draw their widgets. `initialize` installs everything on the `editor` object.
 
-## Exemple
+## Example
 
 ```lua
 -- onEditorInitialized
@@ -18,189 +18,189 @@ end
 editor.endWindow()
 ```
 
-## Remarques
+## Notes
 
-- Tout l'API est exposé comme editor.xxx (installé par initialize) ; les paramètres editEnded sont des imgui.BoolPtr optionnels.
-- endWindow/endModalWindow doivent toujours être appelés, même si beginWindow a renvoyé false.
-- Les fenêtres modales sont sauvegardées invisibles ; elles ne réapparaissent qu'avec openModalWindow.
-- Le commentaire de showWindow dit « sets the visible boolean to false » alors que la fonction met la visibilité à true (ou à `show`).
-- uiIconImageButton sans libellé génère un id automatique par frame ; passer un `id` explicite si le nombre/ordre des boutons change.
-- Les helpers getTemp* partagent un tampon par type : ne pas conserver le pointeur au-delà de l'appel de widget.
-- Hooks émis : onEditorGui(dtReal, dtSim, dtRaw), onEditorGuiMainMenu, onEditorGuiToolBar, onEditorGuiStatusBar, onEditorToolWindowShow/Hide/GotFocus/LostFocus(windowName), onEditorSaveWindowsState, onEditorLoadWindowsState, onEditorSaveGuiInstancerState, onEditorLoadGuiInstancerState, onWindowResized(ImVec2).
+- The whole API is exposed as editor.xxx (installed by initialize); the editEnded parameters are optional imgui.BoolPtr.
+- endWindow/endModalWindow must always be called, even if beginWindow returned false.
+- Modal windows are saved as invisible; they only reappear with openModalWindow.
+- The comment of showWindow says "sets the visible boolean to false" while the function sets visibility to true (or to `show`).
+- uiIconImageButton without a label generates an automatic per-frame id; pass an explicit `id` if the number/order of buttons changes.
+- The getTemp* helpers share one buffer per type: do not keep the pointer beyond the widget call.
+- Emitted hooks: onEditorGui(dtReal, dtSim, dtRaw), onEditorGuiMainMenu, onEditorGuiToolBar, onEditorGuiStatusBar, onEditorToolWindowShow/Hide/GotFocus/LostFocus(windowName), onEditorSaveWindowsState, onEditorLoadWindowsState, onEditorSaveGuiInstancerState, onEditorLoadGuiInstancerState, onWindowResized(ImVec2).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_gui.initialize(editorInstance)` | Mémorise l'éditeur, initialise l'état et installe toutes les fonctions ci-dessous sur `editor`. *(interne)* | 2206 |
-| `editor_api_gui.presentGui(dtReal, dtSim, dtRaw)` | Présente toute l'interface de l'éditeur : resynchronise editor.keyModifiers depuis ImGui, crée le dockspace principal, puis émet onEditorGuiMainMenu, onEditorGuiToolBar, onEditorGui(dtReal, dtSim, dtRaw), onEditorGuiStatusBar et vérifie le redimensionnement. Appelé chaque frame par l'éditeur. *(interne)* | 466 |
+| `editor_api_gui.initialize(editorInstance)` | Remembers the editor, initializes the state and installs all the functions below on `editor`. *(internal)* | 2206 |
+| `editor_api_gui.presentGui(dtReal, dtSim, dtRaw)` | Presents the whole editor interface: resyncs editor.keyModifiers from ImGui, creates the main dockspace, then emits onEditorGuiMainMenu, onEditorGuiToolBar, onEditorGui(dtReal, dtSim, dtRaw), onEditorGuiStatusBar and checks for resizing. Called every frame by the editor. *(internal)* | 466 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_gui.initialize(editorInstance)`
 
-Mémorise l'éditeur, initialise l'état et installe toutes les fonctions ci-dessous sur `editor`.
+Remembers the editor, initializes the state and installs all the functions below on `editor`.
 
-- `editorInstance` (*table*) : objet `editor`
+- `editorInstance` (*table*) : `editor` object
 
 #### `editor_api_gui.presentGui(dtReal, dtSim, dtRaw)`
 
-Présente toute l'interface de l'éditeur : resynchronise editor.keyModifiers depuis ImGui, crée le dockspace principal, puis émet onEditorGuiMainMenu, onEditorGuiToolBar, onEditorGui(dtReal, dtSim, dtRaw), onEditorGuiStatusBar et vérifie le redimensionnement. Appelé chaque frame par l'éditeur.
+Presents the whole editor interface: resyncs editor.keyModifiers from ImGui, creates the main dockspace, then emits onEditorGuiMainMenu, onEditorGuiToolBar, onEditorGui(dtReal, dtSim, dtRaw), onEditorGuiStatusBar and checks for resizing. Called every frame by the editor.
 
-- `dtReal` (*number*) : delta temps réel (s)
-- `dtSim` (*number*) : delta temps simulation (s)
-- `dtRaw` (*number*) : delta temps brut (s)
+- `dtReal` (*number*) : real time delta (s)
+- `dtSim` (*number*) : simulation time delta (s)
+- `dtRaw` (*number*) : raw time delta (s)
 
-## Classe `editor`
+## Class `editor`
 
-Fonctions ajoutées à `editor` par initialize.
+Functions added to `editor` by initialize.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.IsItemClicked(int_mouse_button)` | Vrai si le dernier item est survolé et que le bouton vient d'être cliqué. | 985 |
-| `editor.IsItemDoubleClicked(int_mouse_button)` | Vrai si le dernier item est survolé et double-cliqué. | 980 |
-| `editor.beginModalWindow(windowName, title, flags, noClose)` | Comme beginWindow pour une fenêtre modale : ouvre le popup si la fenêtre est marquée visible. | 1243 |
-| `editor.beginWindow(windowName, title, flags, noClose)` | Équivalent de imgui.Begin pour une fenêtre enregistrée (titre##nom). Renvoie false si non enregistrée (avertissement) ou invisible. Toujours à associer à editor.endWindow(). | 1195 |
-| `editor.callShowWindowHookForVisibleWindows()` | Émet onEditorToolWindowShow pour chaque fenêtre visible. | 1376 |
-| `editor.checkWindowFocus(windowName)` | Détecte le gain/la perte de focus de la fenêtre ImGui courante et émet onEditorToolWindowGotFocus / onEditorToolWindowLostFocus. | 1178 |
-| `editor.checkWindowResize()` | Détecte un changement de taille de la fenêtre principale et émet le hook onWindowResized(ImVec2 DisplaySize). | 426 |
-| `editor.closeModalDialog()` | Ferme le dialogue modal générique et désenregistre sa fenêtre. | 1408 |
-| `editor.closeModalWindow(windowName)` | Cache la fenêtre modale et ferme le popup ImGui courant. | 1274 |
-| `editor.createIconAtlas()` | Charge l'atlas d'icônes de l'éditeur (JSON + image) et remplit editor.icons, editor.atlasWidth, editor.atlasHeight. Logue les icônes en double. | 70 |
-| `editor.defocusFocusedWindow()` | Retire le focus aux fenêtres marquées focalisées (émet onEditorToolWindowLostFocus). | 1384 |
-| `editor.drawBrush(brushType, pos, radius, numberOfSegments, color, terrainBlock, brushRatio, brushRotation, onlyTerrain)` | Dessine un pinceau (type 'ellipse' ou boîte) au sol autour de pos, collé au terrain (terrainBlock) ou à la géométrie statique par raycast. | 299 |
-| `editor.endModalWindow()` | Ferme une fenêtre modale (imgui.EndPopup si elle était affichée). | 1262 |
-| `editor.endWindow()` | Ferme la fenêtre ouverte par beginWindow (appelle imgui.End si Begin a été appelé). À appeler même si beginWindow a renvoyé false. | 1252 |
-| `editor.getDefaultIconButtonSize()` | Renvoie la taille par défaut des boutons d'icône. | 61 |
-| `editor.getFontList()` | Liste les polices ImGui disponibles. | 991 |
-| `editor.getSceneViewportRightEdge(screenY)` | Renvoie la coordonnée X du bord droit de la vue 3D à la hauteur écran donnée, en tenant compte des fenêtres ancrées à droite. | 446 |
-| `editor.getTempBool_BoolBool(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : bool -> pointeur bool ; nil -> bool lu. | 1795 |
-| `editor.getTempBool_StringString(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string/bool -> pointeur bool ("1" = true) ; nil -> "1" ou "0". | 1811 |
-| `editor.getTempCharPtr(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur char ; nil -> string. | 2071 |
-| `editor.getTempFloatArray2_StringString(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur/tableau de float[2] ; nil -> string. | 1912 |
-| `editor.getTempFloatArray2_TableTable(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> pointeur/tableau de float[2] ; nil -> table. | 1933 |
-| `editor.getTempFloatArray3_TableTable(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> pointeur/tableau de float[3] ; nil -> table. | 1951 |
-| `editor.getTempFloatArray3_Vec3Vec3(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : vec3 -> pointeur/tableau de float[3] ; nil -> vec3. | 1969 |
-| `editor.getTempFloatArray4_StringString(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur/tableau de float[4] ; nil -> string. | 2007 |
-| `editor.getTempFloatArray4_TableTable(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> pointeur/tableau de float[4] ; nil -> table. | 1985 |
-| `editor.getTempFloat_NumberNumber(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : number -> pointeur float ; nil -> number. | 1884 |
-| `editor.getTempFloat_StringString(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur float ; nil -> number. | 1895 |
-| `editor.getTempImVec4_TableImVec4(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> ImVec4 ; nil -> ImVec4. | 2093 |
-| `editor.getTempImVec4_TableTable(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> pointeur/tableau de float (ImVec4) ; nil -> table. | 2049 |
-| `editor.getTempIntArray2_StringString(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur/tableau d'int[2] ; nil -> string. | 1863 |
-| `editor.getTempInt_NumberNumber(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : number -> pointeur int ; nil -> number. | 1835 |
-| `editor.getTempInt_StringString(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur int ; nil -> number. | 1846 |
-| `editor.getTempTextureObj(value)` | Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : chemin string -> objet texture ; nil -> objet texture courant. | 2082 |
-| `editor.getWindowVisibleBoolPtr(windowName)` | Renvoie le imgui.BoolPtr de visibilité de la fenêtre (utilisé par imgui.Begin), ou nil. | 1084 |
-| `editor.hideAllWindows()` | Cache toutes les fenêtres enregistrées visibles (émet les hooks). | 1107 |
-| `editor.hideWindow(windowName)` | Cache la fenêtre et émet onEditorToolWindowLostFocus puis onEditorToolWindowHide. | 1095 |
-| `editor.isViewportFocused()` | Vrai si aucun item ImGui n'est actif. | 442 |
-| `editor.isViewportHovered()` | Vrai si la souris est sur la vue 3D du jeu uniquement (aucun item ni fenêtre ImGui survolé). | 438 |
-| `editor.isWindowRegistered(windowName)` | Vrai si la fenêtre est enregistrée. | 1029 |
-| `editor.isWindowVisible(windowName)` | Vrai si la fenêtre est enregistrée et visible ; déclenche aussi les hooks Show/Hide si la visibilité a changé (ex. fermeture par la croix). | 1072 |
-| `editor.loadWindowsState(customFilename, toolName)` | Recharge l'état des fenêtres (retombe sur settings/<outil>/layouts/Default/windowsState.json si le fichier manque ou a une version différente), masque d'abord toutes les fenêtres, puis émet onEditorLoadWindowsState et onEditorLoadGuiInstancerState. | 1312 |
-| `editor.modalDialogWindowUi()` | Dessine le dialogue modal générique ; appelé par l'éditeur. | 1415 |
-| `editor.openModalDialog(title, windowSize, uiFunction)` | Ouvre un dialogue modal générique (fenêtre editorModalDialog) dont le contenu est dessiné par uiFunction. | 1401 |
-| `editor.openModalWindow(windowName)` | Ouvre la fenêtre modale (showWindow). | 1270 |
-| `editor.registerModalWindow(windowName, defaultSize, defaultPos, centered, toolName)` | Enregistre une fenêtre modale (raccourci de registerWindow avec modal = true). | 1041 |
-| `editor.registerWindow(windowName, defaultSize, defaultPos, defaultVisibleBoolean, modal, centered, groupName, toolName)` | Enregistre une fenêtre d'outil (à appeler dans onEditorInitialized). Conserve la visibilité précédente si elle existe déjà. | 1013 |
-| `editor.saveWindowsState(customFilename, toolName)` | Sauvegarde l'état des fenêtres (visibilité, taille, position, instances GUI) en JSON ; les modales sont sauvegardées invisibles. Émet onEditorSaveGuiInstancerState et onEditorSaveWindowsState. | 1279 |
-| `editor.screenToClient(pt2i)` | Convertit un point écran en point client via le Canvas (identité si les viewports ImGui sont désactivés). | 511 |
-| `editor.setDefaultIconButtonSize(size)` | Définit la taille (carrée) par défaut des boutons d'icône. | 65 |
-| `editor.setKeyModifier(mod, pressed)` | Enregistre l'état d'une touche modificatrice dans editor.keyModifiers (appelé par l'action map de l'éditeur). Note : presentGui resynchronise ctrl/shift/alt chaque frame depuis ImGui. | 2133 |
-| `editor.setWindowGroup(windowName, groupName)` | Change le groupe d'une fenêtre enregistrée. | 1393 |
-| `editor.setWindowGroupVisibility(groupName, visible)` | Affiche ou masque toutes les fenêtres d'un groupe. | 1142 |
-| `editor.setWindowVisibility(windowName, visible)` | Alias de showWindow(windowName, visible). | 1138 |
-| `editor.setupWindow(windowName)` | Applique taille et position par défaut (Cond_FirstUseEver, ou centrage) ; à appeler avant imgui.Begin. Peut forcer le dépliage selon la préférence ui.general.forceExpandWindowOnFirstShow. | 1152 |
-| `editor.showVizHelperWindow()` | Ouvre la fenêtre d'aide à la visibilité (editor_vizHelper) si l'extension est chargée. | 257 |
-| `editor.showWindow(windowName, show)` | Affiche (ou masque si show == false) la fenêtre et émet onEditorToolWindowShow / onEditorToolWindowHide. | 1119 |
-| `editor.texObj(path)` | Charge une texture et renvoie ses informations ; nil si le chargement échoue. | 40 |
-| `editor.uiButtonRightAlign(string_label, ImVec2_size, bool_sameLine, id, offset)` | Bouton aligné à droite de la zone disponible. | 116 |
-| `editor.uiColorButton(desc_id, col, flags, size, editEnded)` | Enveloppe de imgui.ColorButton (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 957 |
-| `editor.uiColorEdit3(label, col, flags, editEnded)` | Enveloppe de imgui.ColorEdit3 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 902 |
-| `editor.uiColorEdit4(label, col, flags, editEnded)` | Enveloppe de imgui.ColorEdit4 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 909 |
-| `editor.uiColorEdit8(label, col, flags, editEnded)` | Enveloppe de imgui.ColorEdit8 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 917 |
-| `editor.uiColorPicker3(label, col, flags, editEnded)` | Enveloppe de imgui.ColorPicker3 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 943 |
-| `editor.uiColorPicker4(label, col, flags, ref_col, editEnded)` | Enveloppe de imgui.ColorPicker4 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 950 |
-| `editor.uiDragFloat(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Enveloppe de imgui.DragFloat (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 521 |
-| `editor.uiDragFloat2(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Enveloppe de imgui.DragFloat2 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 528 |
-| `editor.uiDragFloat3(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Enveloppe de imgui.DragFloat3 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 535 |
-| `editor.uiDragFloat4(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Enveloppe de imgui.DragFloat4 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 542 |
-| `editor.uiDragFloatRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags, editEnded)` | Enveloppe de imgui.DragFloatRange2 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 549 |
-| `editor.uiDragInt(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Enveloppe de imgui.DragInt (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 556 |
-| `editor.uiDragInt2(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Enveloppe de imgui.DragInt2 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 563 |
-| `editor.uiDragInt3(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Enveloppe de imgui.DragInt3 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 570 |
-| `editor.uiDragInt4(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Enveloppe de imgui.DragInt4 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 577 |
-| `editor.uiDragIntRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags, editEnded)` | Enveloppe de imgui.DragIntRange2 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 584 |
-| `editor.uiDragScalar(label, data_type, v, v_speed, v_min, v_max, format, flags, editEnded)` | Enveloppe de imgui.DragScalar (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 591 |
-| `editor.uiDragScalarN(label, data_type, v, components, v_speed, v_min, v_max, format, flags, editEnded)` | Enveloppe de imgui.DragScalarN (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 598 |
-| `editor.uiHelpButton(topicName, relativeUrl, size)` | Bouton d'aide : ouvre https://documentation.beamng.com/<relativeUrl> dans le navigateur (index par défaut). | 249 |
-| `editor.uiHighlightedText(text, highlightText, textColor)` | Affiche un texte en surlignant en jaune plusieurs occurrences (insensible à la casse, une dizaine au plus) de highlightText. | 158 |
-| `editor.uiIconImage(icon, size, col, borderCol, label)` | Dessine une icône de l'atlas de l'éditeur (taille 32x32 par défaut, multipliée par imgui.uiscale). | 130 |
-| `editor.uiIconImageButton(icon, size, col, label, backgroundCol, id, textColor, textBG, onRelease, highlightText)` | Bouton à icône (avec ou sans libellé). Sans id fourni, un id automatique par frame est généré. onRelease = clic détecté au relâchement. | 191 |
-| `editor.uiInputDouble(label, v, step, step_fast, format, extra_flags, editEnded)` | Enveloppe de imgui.InputDouble (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 694 |
-| `editor.uiInputFile(label, buf, width, dir, extFilter, flags, editEnded)` | Champ de chemin de fichier avec bouton '...' ouvrant editor_fileDialog.openFile ; écrit le chemin choisi dans buf. | 757 |
-| `editor.uiInputFloat(label, v, step, step_fast, format, extra_flags, editEnded)` | Enveloppe de imgui.InputFloat (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 628 |
-| `editor.uiInputFloat2(label, v, format, extra_flags, editEnded)` | Enveloppe de imgui.InputFloat2 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 640 |
-| `editor.uiInputFloat2Ex(label, v, step, step_fast, format, flags, editEnded)` | Variante de uiInputFloat2 avec step/step_fast gérés par l'éditeur ; renseigne editEnded. | 1639 |
-| `editor.uiInputFloat3(label, v, format, extra_flags, editEnded)` | Enveloppe de imgui.InputFloat3 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 647 |
-| `editor.uiInputFloat3Ex(label, v, step, step_fast, format, flags, editEnded)` | Variante de uiInputFloat3 avec step/step_fast gérés par l'éditeur ; renseigne editEnded. | 1676 |
-| `editor.uiInputFloat4(label, v, format, extra_flags, editEnded)` | Enveloppe de imgui.InputFloat4 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 654 |
-| `editor.uiInputFloat4Ex(label, v, step, step_fast, format, flags, editEnded)` | Variante de uiInputFloat4 avec step/step_fast gérés par l'éditeur ; renseigne editEnded. | 1718 |
-| `editor.uiInputFloatEx(label, v, step, step_fast, format, flags, editEnded)` | Variante de uiInputFloat avec step/step_fast gérés par l'éditeur ; renseigne editEnded. | 1610 |
-| `editor.uiInputInt(label, v, step, step_fast, extra_flags, editEnded)` | Enveloppe de imgui.InputInt (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 661 |
-| `editor.uiInputInt2(label, v, extra_flags, editEnded)` | Enveloppe de imgui.InputInt2 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 673 |
-| `editor.uiInputInt3(label, v, extra_flags, editEnded)` | Enveloppe de imgui.InputInt3 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 680 |
-| `editor.uiInputInt4(label, v, extra_flags, editEnded)` | Enveloppe de imgui.InputInt4 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 687 |
-| `editor.uiInputScalar(label, data_type, v, step, step_fast, format, extra_flags, editEnded)` | Enveloppe de imgui.InputScalar (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 701 |
-| `editor.uiInputScalarN(label, data_type, v, components, step, step_fast, format, extra_flags, editEnded)` | Enveloppe de imgui.InputScalarN (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 708 |
-| `editor.uiInputSearch(label, text, width, extra_flags, editEnded)` | Champ de recherche (icône loupe + texte + bouton d'effacement) de largeur fixe. Renvoie true si le texte a changé ou a été effacé. | 715 |
-| `editor.uiInputSearchTextFilter(label, txtfilter, width, extra_flags, editEnded)` | Comme uiInputSearch mais édite un ImGuiTextFilter et le reconstruit (ImGuiTextFilter_Build) à chaque changement. | 747 |
-| `editor.uiInputText(label, buf, buf_size, flags, callback, user_data, editEnded)` | Enveloppe de imgui.InputText (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 607 |
-| `editor.uiInputTextMultiline(label, buf, buf_size, size, flags, callback, user_data, editEnded)` | Enveloppe de imgui.InputTextMultiline (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 614 |
-| `editor.uiInputTextMultilineReadOnly(label, buf, size, flags, callback, user_data, editEnded)` | Enveloppe de imgui.InputTextMultilineReadOnly (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé. | 621 |
-| `editor.uiPlotLines1(string_label, float_values, int_values_count, int_values_offset, string_overlay_text, float_scale_min, float_scale_max, ImVec2_graph_size, int_stride, auto_resize)` | Enveloppe de imgui.PlotLines1 : courbe de floats ; valeurs par défaut offset 0, échelle FLT_MAX, stride sizeof(float) ; auto_resize adapte la taille à la fenêtre. | 965 |
-| `editor.uiRenderAlternateRows(lineHeight, mOddColor, mEvenColor)` | Dessine des lignes de fond de couleurs alternées dans la fenêtre/l'enfant courant (technique de ocornut/imgui#2668). Doit être entouré de Begin/BeginChild ... End/EndChild. | 2148 |
-| `editor.uiSliderAngle(label, v_rad, v_degrees_min, v_degrees_max, editEnded)` | Enveloppe de imgui.SliderAngle (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 830 |
-| `editor.uiSliderFloat(label, v, v_min, v_max, format, power, editEnded)` | Enveloppe de imgui.SliderFloat (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 802 |
-| `editor.uiSliderFloat2(label, v, v_min, v_max, format, power, editEnded)` | Enveloppe de imgui.SliderFloat2 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 809 |
-| `editor.uiSliderFloat3(label, v, v_min, v_max, format, power, editEnded)` | Enveloppe de imgui.SliderFloat3 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 816 |
-| `editor.uiSliderFloat4(label, v, v_min, v_max, format, power, editEnded)` | Enveloppe de imgui.SliderFloat4 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 823 |
-| `editor.uiSliderInt(label, v, v_min, v_max, format, editEnded)` | Enveloppe de imgui.SliderInt (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 837 |
-| `editor.uiSliderInt2(label, v, v_min, v_max, format, editEnded)` | Enveloppe de imgui.SliderInt2 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 844 |
-| `editor.uiSliderInt3(label, v, v_min, v_max, format, editEnded)` | Enveloppe de imgui.SliderInt3 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 851 |
-| `editor.uiSliderInt4(label, v, v_min, v_max, format, editEnded)` | Enveloppe de imgui.SliderInt4 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 858 |
-| `editor.uiSliderScalar(label, data_type, v, v_min, v_max, format, power, editEnded)` | Enveloppe de imgui.SliderScalar (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 865 |
-| `editor.uiSliderScalarN(label, data_type, v, components, v_min, v_max, format, power, editEnded)` | Enveloppe de imgui.SliderScalarN (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 872 |
-| `editor.uiTextColoredWithFont(color, text, fontName)` | Affiche un texte (coloré si color non nil) avec une police ImGui nommée. | 106 |
-| `editor.uiTextUnformattedRightAlign(string_label, bool_sameLine, offset)` | Affiche un texte aligné à droite de la zone disponible. | 97 |
-| `editor.uiVSliderFloat(label, size, v, v_min, v_max, format, power, editEnded)` | Enveloppe de imgui.VSliderFloat (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 879 |
-| `editor.uiVSliderInt(label, size, v, v_min, v_max, format, editEnded)` | Enveloppe de imgui.VSliderInt (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 886 |
-| `editor.uiVSliderScalar(label, size, data_type, v, v_min, v_max, format, power, editEnded)` | Enveloppe de imgui.VSliderScalar (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui. | 893 |
-| `editor.uiVertSeparator(float_height, vec2_offset, width)` | Dessine un séparateur vertical sur la ligne courante. | 263 |
-| `editor.unregisterWindow(windowName)` | Désenregistre une fenêtre pour qu'elle ne soit plus dans l'état sauvegardé. À appeler juste après imgui.Begin si la fenêtre n'est plus visible ; pour simplement la cacher, utiliser hideWindow. | 1068 |
+| `editor.IsItemClicked(int_mouse_button)` | True if the last item is hovered and the button was just clicked. | 985 |
+| `editor.IsItemDoubleClicked(int_mouse_button)` | True if the last item is hovered and double-clicked. | 980 |
+| `editor.beginModalWindow(windowName, title, flags, noClose)` | Like beginWindow for a modal window: opens the popup if the window is marked visible. | 1243 |
+| `editor.beginWindow(windowName, title, flags, noClose)` | Equivalent of imgui.Begin for a registered window (title##name). Returns false if not registered (warning) or invisible. Always to be paired with editor.endWindow(). | 1195 |
+| `editor.callShowWindowHookForVisibleWindows()` | Emits onEditorToolWindowShow for each visible window. | 1376 |
+| `editor.checkWindowFocus(windowName)` | Detects the gain/loss of focus of the current ImGui window and emits onEditorToolWindowGotFocus / onEditorToolWindowLostFocus. | 1178 |
+| `editor.checkWindowResize()` | Detects a change in the main window size and emits the onWindowResized(ImVec2 DisplaySize) hook. | 426 |
+| `editor.closeModalDialog()` | Closes the generic modal dialog and unregisters its window. | 1408 |
+| `editor.closeModalWindow(windowName)` | Hides the modal window and closes the current ImGui popup. | 1274 |
+| `editor.createIconAtlas()` | Loads the editor icon atlas (JSON + image) and fills editor.icons, editor.atlasWidth, editor.atlasHeight. Logs duplicate icons. | 70 |
+| `editor.defocusFocusedWindow()` | Removes focus from the windows marked as focused (emits onEditorToolWindowLostFocus). | 1384 |
+| `editor.drawBrush(brushType, pos, radius, numberOfSegments, color, terrainBlock, brushRatio, brushRotation, onlyTerrain)` | Draws a brush ('ellipse' type or box) on the ground around pos, stuck to the terrain (terrainBlock) or to static geometry by raycast. | 299 |
+| `editor.endModalWindow()` | Closes a modal window (imgui.EndPopup if it was displayed). | 1262 |
+| `editor.endWindow()` | Closes the window opened by beginWindow (calls imgui.End if Begin was called). To be called even if beginWindow returned false. | 1252 |
+| `editor.getDefaultIconButtonSize()` | Returns the default size of icon buttons. | 61 |
+| `editor.getFontList()` | Lists the available ImGui fonts. | 991 |
+| `editor.getSceneViewportRightEdge(screenY)` | Returns the X coordinate of the right edge of the 3D view at the given screen height, taking right-docked windows into account. | 446 |
+| `editor.getTempBool_BoolBool(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: bool -> bool pointer; nil -> bool read. | 1795 |
+| `editor.getTempBool_StringString(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string/bool -> bool pointer ("1" = true); nil -> "1" or "0". | 1811 |
+| `editor.getTempCharPtr(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> char pointer; nil -> string. | 2071 |
+| `editor.getTempFloatArray2_StringString(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> float[2] pointer/array; nil -> string. | 1912 |
+| `editor.getTempFloatArray2_TableTable(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> float[2] pointer/array; nil -> table. | 1933 |
+| `editor.getTempFloatArray3_TableTable(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> float[3] pointer/array; nil -> table. | 1951 |
+| `editor.getTempFloatArray3_Vec3Vec3(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: vec3 -> float[3] pointer/array; nil -> vec3. | 1969 |
+| `editor.getTempFloatArray4_StringString(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> float[4] pointer/array; nil -> string. | 2007 |
+| `editor.getTempFloatArray4_TableTable(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> float[4] pointer/array; nil -> table. | 1985 |
+| `editor.getTempFloat_NumberNumber(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: number -> float pointer; nil -> number. | 1884 |
+| `editor.getTempFloat_StringString(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> float pointer; nil -> number. | 1895 |
+| `editor.getTempImVec4_TableImVec4(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> ImVec4; nil -> ImVec4. | 2093 |
+| `editor.getTempImVec4_TableTable(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> float pointer/array (ImVec4); nil -> table. | 2049 |
+| `editor.getTempIntArray2_StringString(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> int[2] pointer/array; nil -> string. | 1863 |
+| `editor.getTempInt_NumberNumber(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: number -> int pointer; nil -> number. | 1835 |
+| `editor.getTempInt_StringString(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> int pointer; nil -> number. | 1846 |
+| `editor.getTempTextureObj(value)` | Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string path -> texture object; nil -> current texture object. | 2082 |
+| `editor.getWindowVisibleBoolPtr(windowName)` | Returns the window's visibility imgui.BoolPtr (used by imgui.Begin), or nil. | 1084 |
+| `editor.hideAllWindows()` | Hides all visible registered windows (emits the hooks). | 1107 |
+| `editor.hideWindow(windowName)` | Hides the window and emits onEditorToolWindowLostFocus then onEditorToolWindowHide. | 1095 |
+| `editor.isViewportFocused()` | True if no ImGui item is active. | 442 |
+| `editor.isViewportHovered()` | True if the mouse is over the game's 3D view only (no ImGui item or window hovered). | 438 |
+| `editor.isWindowRegistered(windowName)` | True if the window is registered. | 1029 |
+| `editor.isWindowVisible(windowName)` | True if the window is registered and visible; also triggers the Show/Hide hooks if the visibility changed (e.g. closed with the cross). | 1072 |
+| `editor.loadWindowsState(customFilename, toolName)` | Reloads the windows state (falls back to settings/<tool>/layouts/Default/windowsState.json if the file is missing or has a different version), first hides all windows, then emits onEditorLoadWindowsState and onEditorLoadGuiInstancerState. | 1312 |
+| `editor.modalDialogWindowUi()` | Draws the generic modal dialog; called by the editor. | 1415 |
+| `editor.openModalDialog(title, windowSize, uiFunction)` | Opens a generic modal dialog (editorModalDialog window) whose content is drawn by uiFunction. | 1401 |
+| `editor.openModalWindow(windowName)` | Opens the modal window (showWindow). | 1270 |
+| `editor.registerModalWindow(windowName, defaultSize, defaultPos, centered, toolName)` | Registers a modal window (shortcut for registerWindow with modal = true). | 1041 |
+| `editor.registerWindow(windowName, defaultSize, defaultPos, defaultVisibleBoolean, modal, centered, groupName, toolName)` | Registers a tool window (to be called in onEditorInitialized). Keeps the previous visibility if it already exists. | 1013 |
+| `editor.saveWindowsState(customFilename, toolName)` | Saves the windows state (visibility, size, position, GUI instances) as JSON; modals are saved as invisible. Emits onEditorSaveGuiInstancerState and onEditorSaveWindowsState. | 1279 |
+| `editor.screenToClient(pt2i)` | Converts a screen point to a client point via the Canvas (identity if ImGui viewports are disabled). | 511 |
+| `editor.setDefaultIconButtonSize(size)` | Sets the default (square) size of icon buttons. | 65 |
+| `editor.setKeyModifier(mod, pressed)` | Records the state of a modifier key in editor.keyModifiers (called by the editor's action map). Note: presentGui resyncs ctrl/shift/alt every frame from ImGui. | 2133 |
+| `editor.setWindowGroup(windowName, groupName)` | Changes the group of a registered window. | 1393 |
+| `editor.setWindowGroupVisibility(groupName, visible)` | Shows or hides all the windows of a group. | 1142 |
+| `editor.setWindowVisibility(windowName, visible)` | Alias of showWindow(windowName, visible). | 1138 |
+| `editor.setupWindow(windowName)` | Applies default size and position (Cond_FirstUseEver, or centering); to be called before imgui.Begin. Can force expansion according to the ui.general.forceExpandWindowOnFirstShow preference. | 1152 |
+| `editor.showVizHelperWindow()` | Opens the visibility help window (editor_vizHelper) if the extension is loaded. | 257 |
+| `editor.showWindow(windowName, show)` | Shows (or hides if show == false) the window and emits onEditorToolWindowShow / onEditorToolWindowHide. | 1119 |
+| `editor.texObj(path)` | Loads a texture and returns its information; nil if loading fails. | 40 |
+| `editor.uiButtonRightAlign(string_label, ImVec2_size, bool_sameLine, id, offset)` | Right-aligned button in the available area. | 116 |
+| `editor.uiColorButton(desc_id, col, flags, size, editEnded)` | Wrapper of imgui.ColorButton (color) that additionally fills editEnded. Same parameters as ImGui. | 957 |
+| `editor.uiColorEdit3(label, col, flags, editEnded)` | Wrapper of imgui.ColorEdit3 (color) that additionally fills editEnded. Same parameters as ImGui. | 902 |
+| `editor.uiColorEdit4(label, col, flags, editEnded)` | Wrapper of imgui.ColorEdit4 (color) that additionally fills editEnded. Same parameters as ImGui. | 909 |
+| `editor.uiColorEdit8(label, col, flags, editEnded)` | Wrapper of imgui.ColorEdit8 (color) that additionally fills editEnded. Same parameters as ImGui. | 917 |
+| `editor.uiColorPicker3(label, col, flags, editEnded)` | Wrapper of imgui.ColorPicker3 (color) that additionally fills editEnded. Same parameters as ImGui. | 943 |
+| `editor.uiColorPicker4(label, col, flags, ref_col, editEnded)` | Wrapper of imgui.ColorPicker4 (color) that additionally fills editEnded. Same parameters as ImGui. | 950 |
+| `editor.uiDragFloat(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Wrapper of imgui.DragFloat (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 521 |
+| `editor.uiDragFloat2(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Wrapper of imgui.DragFloat2 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 528 |
+| `editor.uiDragFloat3(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Wrapper of imgui.DragFloat3 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 535 |
+| `editor.uiDragFloat4(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Wrapper of imgui.DragFloat4 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 542 |
+| `editor.uiDragFloatRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags, editEnded)` | Wrapper of imgui.DragFloatRange2 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 549 |
+| `editor.uiDragInt(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Wrapper of imgui.DragInt (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 556 |
+| `editor.uiDragInt2(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Wrapper of imgui.DragInt2 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 563 |
+| `editor.uiDragInt3(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Wrapper of imgui.DragInt3 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 570 |
+| `editor.uiDragInt4(label, v, v_speed, v_min, v_max, format, flags, editEnded)` | Wrapper of imgui.DragInt4 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 577 |
+| `editor.uiDragIntRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags, editEnded)` | Wrapper of imgui.DragIntRange2 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 584 |
+| `editor.uiDragScalar(label, data_type, v, v_speed, v_min, v_max, format, flags, editEnded)` | Wrapper of imgui.DragScalar (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 591 |
+| `editor.uiDragScalarN(label, data_type, v, components, v_speed, v_min, v_max, format, flags, editEnded)` | Wrapper of imgui.DragScalarN (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 598 |
+| `editor.uiHelpButton(topicName, relativeUrl, size)` | Help button: opens https://documentation.beamng.com/<relativeUrl> in the browser (index by default). | 249 |
+| `editor.uiHighlightedText(text, highlightText, textColor)` | Displays text, highlighting in yellow several occurrences (case-insensitive, about ten at most) of highlightText. | 158 |
+| `editor.uiIconImage(icon, size, col, borderCol, label)` | Draws an icon from the editor atlas (32x32 size by default, multiplied by imgui.uiscale). | 130 |
+| `editor.uiIconImageButton(icon, size, col, label, backgroundCol, id, textColor, textBG, onRelease, highlightText)` | Icon button (with or without a label). Without a provided id, an automatic per-frame id is generated. onRelease = click detected on release. | 191 |
+| `editor.uiInputDouble(label, v, step, step_fast, format, extra_flags, editEnded)` | Wrapper of imgui.InputDouble (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 694 |
+| `editor.uiInputFile(label, buf, width, dir, extFilter, flags, editEnded)` | File path field with a '...' button opening editor_fileDialog.openFile; writes the chosen path into buf. | 757 |
+| `editor.uiInputFloat(label, v, step, step_fast, format, extra_flags, editEnded)` | Wrapper of imgui.InputFloat (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 628 |
+| `editor.uiInputFloat2(label, v, format, extra_flags, editEnded)` | Wrapper of imgui.InputFloat2 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 640 |
+| `editor.uiInputFloat2Ex(label, v, step, step_fast, format, flags, editEnded)` | Variant of uiInputFloat2 with step/step_fast handled by the editor; fills editEnded. | 1639 |
+| `editor.uiInputFloat3(label, v, format, extra_flags, editEnded)` | Wrapper of imgui.InputFloat3 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 647 |
+| `editor.uiInputFloat3Ex(label, v, step, step_fast, format, flags, editEnded)` | Variant of uiInputFloat3 with step/step_fast handled by the editor; fills editEnded. | 1676 |
+| `editor.uiInputFloat4(label, v, format, extra_flags, editEnded)` | Wrapper of imgui.InputFloat4 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 654 |
+| `editor.uiInputFloat4Ex(label, v, step, step_fast, format, flags, editEnded)` | Variant of uiInputFloat4 with step/step_fast handled by the editor; fills editEnded. | 1718 |
+| `editor.uiInputFloatEx(label, v, step, step_fast, format, flags, editEnded)` | Variant of uiInputFloat with step/step_fast handled by the editor; fills editEnded. | 1610 |
+| `editor.uiInputInt(label, v, step, step_fast, extra_flags, editEnded)` | Wrapper of imgui.InputInt (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 661 |
+| `editor.uiInputInt2(label, v, extra_flags, editEnded)` | Wrapper of imgui.InputInt2 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 673 |
+| `editor.uiInputInt3(label, v, extra_flags, editEnded)` | Wrapper of imgui.InputInt3 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 680 |
+| `editor.uiInputInt4(label, v, extra_flags, editEnded)` | Wrapper of imgui.InputInt4 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 687 |
+| `editor.uiInputScalar(label, data_type, v, step, step_fast, format, extra_flags, editEnded)` | Wrapper of imgui.InputScalar (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 701 |
+| `editor.uiInputScalarN(label, data_type, v, components, step, step_fast, format, extra_flags, editEnded)` | Wrapper of imgui.InputScalarN (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 708 |
+| `editor.uiInputSearch(label, text, width, extra_flags, editEnded)` | Search field (magnifier icon + text + clear button) of fixed width. Returns true if the text changed or was cleared. | 715 |
+| `editor.uiInputSearchTextFilter(label, txtfilter, width, extra_flags, editEnded)` | Like uiInputSearch but edits an ImGuiTextFilter and rebuilds it (ImGuiTextFilter_Build) on each change. | 747 |
+| `editor.uiInputText(label, buf, buf_size, flags, callback, user_data, editEnded)` | Wrapper of imgui.InputText (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 607 |
+| `editor.uiInputTextMultiline(label, buf, buf_size, size, flags, callback, user_data, editEnded)` | Wrapper of imgui.InputTextMultiline (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 614 |
+| `editor.uiInputTextMultilineReadOnly(label, buf, size, flags, callback, user_data, editEnded)` | Wrapper of imgui.InputTextMultilineReadOnly (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed. | 621 |
+| `editor.uiPlotLines1(string_label, float_values, int_values_count, int_values_offset, string_overlay_text, float_scale_min, float_scale_max, ImVec2_graph_size, int_stride, auto_resize)` | Wrapper of imgui.PlotLines1: float curve; default values offset 0, scale FLT_MAX, stride sizeof(float); auto_resize fits the size to the window. | 965 |
+| `editor.uiRenderAlternateRows(lineHeight, mOddColor, mEvenColor)` | Draws alternating-color background rows in the current window/child (technique from ocornut/imgui#2668). Must be wrapped in Begin/BeginChild ... End/EndChild. | 2148 |
+| `editor.uiSliderAngle(label, v_rad, v_degrees_min, v_degrees_max, editEnded)` | Wrapper of imgui.SliderAngle (slider) that additionally fills editEnded. Same parameters as ImGui. | 830 |
+| `editor.uiSliderFloat(label, v, v_min, v_max, format, power, editEnded)` | Wrapper of imgui.SliderFloat (slider) that additionally fills editEnded. Same parameters as ImGui. | 802 |
+| `editor.uiSliderFloat2(label, v, v_min, v_max, format, power, editEnded)` | Wrapper of imgui.SliderFloat2 (slider) that additionally fills editEnded. Same parameters as ImGui. | 809 |
+| `editor.uiSliderFloat3(label, v, v_min, v_max, format, power, editEnded)` | Wrapper of imgui.SliderFloat3 (slider) that additionally fills editEnded. Same parameters as ImGui. | 816 |
+| `editor.uiSliderFloat4(label, v, v_min, v_max, format, power, editEnded)` | Wrapper of imgui.SliderFloat4 (slider) that additionally fills editEnded. Same parameters as ImGui. | 823 |
+| `editor.uiSliderInt(label, v, v_min, v_max, format, editEnded)` | Wrapper of imgui.SliderInt (slider) that additionally fills editEnded. Same parameters as ImGui. | 837 |
+| `editor.uiSliderInt2(label, v, v_min, v_max, format, editEnded)` | Wrapper of imgui.SliderInt2 (slider) that additionally fills editEnded. Same parameters as ImGui. | 844 |
+| `editor.uiSliderInt3(label, v, v_min, v_max, format, editEnded)` | Wrapper of imgui.SliderInt3 (slider) that additionally fills editEnded. Same parameters as ImGui. | 851 |
+| `editor.uiSliderInt4(label, v, v_min, v_max, format, editEnded)` | Wrapper of imgui.SliderInt4 (slider) that additionally fills editEnded. Same parameters as ImGui. | 858 |
+| `editor.uiSliderScalar(label, data_type, v, v_min, v_max, format, power, editEnded)` | Wrapper of imgui.SliderScalar (slider) that additionally fills editEnded. Same parameters as ImGui. | 865 |
+| `editor.uiSliderScalarN(label, data_type, v, components, v_min, v_max, format, power, editEnded)` | Wrapper of imgui.SliderScalarN (slider) that additionally fills editEnded. Same parameters as ImGui. | 872 |
+| `editor.uiTextColoredWithFont(color, text, fontName)` | Displays text (colored if color is not nil) with a named ImGui font. | 106 |
+| `editor.uiTextUnformattedRightAlign(string_label, bool_sameLine, offset)` | Displays text right-aligned in the available area. | 97 |
+| `editor.uiVSliderFloat(label, size, v, v_min, v_max, format, power, editEnded)` | Wrapper of imgui.VSliderFloat (slider) that additionally fills editEnded. Same parameters as ImGui. | 879 |
+| `editor.uiVSliderInt(label, size, v, v_min, v_max, format, editEnded)` | Wrapper of imgui.VSliderInt (slider) that additionally fills editEnded. Same parameters as ImGui. | 886 |
+| `editor.uiVSliderScalar(label, size, data_type, v, v_min, v_max, format, power, editEnded)` | Wrapper of imgui.VSliderScalar (slider) that additionally fills editEnded. Same parameters as ImGui. | 893 |
+| `editor.uiVertSeparator(float_height, vec2_offset, width)` | Draws a vertical separator on the current line. | 263 |
+| `editor.unregisterWindow(windowName)` | Unregisters a window so that it is no longer in the saved state. To be called right after imgui.Begin if the window is no longer visible; to simply hide it, use hideWindow. | 1068 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onEditorGui` — écouté par 103 module(s)
-- `onEditorGuiMainMenu` — écouté par 1 module(s)
+- `onEditorGui` — listened to by 103 module(s)
+- `onEditorGuiMainMenu` — listened to by 1 module(s)
 - `onEditorGuiStatusBar`
-- `onEditorGuiToolBar` — écouté par 2 module(s)
-- `onEditorLoadGuiInstancerState` — écouté par 2 module(s)
+- `onEditorGuiToolBar` — listened to by 2 module(s)
+- `onEditorLoadGuiInstancerState` — listened to by 2 module(s)
 - `onEditorLoadWindowsState`
-- `onEditorSaveGuiInstancerState` — écouté par 2 module(s)
+- `onEditorSaveGuiInstancerState` — listened to by 2 module(s)
 - `onEditorSaveWindowsState`
-- `onEditorToolWindowGotFocus` — écouté par 4 module(s)
-- `onEditorToolWindowHide` — écouté par 10 module(s)
-- `onEditorToolWindowLostFocus` — écouté par 2 module(s)
-- `onEditorToolWindowShow` — écouté par 3 module(s)
-- `onWindowResized` — écouté par 2 module(s)
+- `onEditorToolWindowGotFocus` — listened to by 4 module(s)
+- `onEditorToolWindowHide` — listened to by 10 module(s)
+- `onEditorToolWindowLostFocus` — listened to by 2 module(s)
+- `onEditorToolWindowShow` — listened to by 3 module(s)
+- `onWindowResized` — listened to by 2 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 - `debugDrawer:` `drawQuadSolid`
@@ -208,4 +208,4 @@ Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes 
 - `ui_imgui.` `GetIO`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/gui.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/gui.lua`.*

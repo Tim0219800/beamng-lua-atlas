@@ -1,27 +1,286 @@
 {
   "path": "lua/ge/extensions/editor/assemblySpline/molecule.lua",
-  "module": "Modèle de « molécule » de l'outil Assembly Spline. Un kit d'assemblage est un dossier de fichiers .dae (noms contenant 'root', 'bridge', 'sag', 'var') dont les ancres 'nail.*' (point, head, aux) définissent des jonctions de type nail (1 degré de liberté), fixed (0) ou ball (3). Le module charge le kit (getAssemblyKit), construit la molécule (rigids = éléments rigides, bridges = éléments reliant deux rigides, avec leurs variations) et gère par spline les états activé/aléatoire/poids de chaque mesh.",
+  "module": "\"Molecule\" model of the Assembly Spline tool. An assembly kit is a folder of .dae files (names containing 'root', 'bridge', 'sag', 'var') whose 'nail.*' anchors (point, head, aux) define junctions of type nail (1 degree of freedom), fixed (0) or ball (3). The module loads the kit (getAssemblyKit), builds the molecule (rigids = rigid elements, bridges = elements linking two rigids, with their variations) and manages, per spline, the enabled/random/weight states of each mesh.",
   "notes": [
-    "Constantes de nommage : 'root' (mesh racine), 'bridge' (ponts), 'sag' (ponts qui s'affaissent), 'var' (variations, nom de forme <base>_var...; le mesh de base est <base>.dae), préfixe d'ancre 'nail', ancres 'point', 'head', 'aux'.",
-    "Piège sur les états d'activation : si spline.rigidEnabledStates (ou bridgeEnabledStates) n'existe pas, tous les meshes sont activés ; dès que la table existe, un mesh absent de la table est considéré désactivé (seul == true compte). Le commentaire du code dit pourtant « only true if explicitly set to true ».",
-    "Les états aléatoires valent false (round robin) et les poids 1.0 par défaut.",
-    "Les getters/setters stockent les états dans la spline : rigidEnabledStates, bridgeEnabledStates, rigidRandomStates, rigidRandomWeights, bridgeRandomStates, bridgeRandomWeights (clés = id du mesh)."
+    "Naming constants: 'root' (root mesh), 'bridge' (bridges), 'sag' (sagging bridges), 'var' (variations, name of the form <base>_var...; the base mesh is <base>.dae), anchor prefix 'nail', anchors 'point', 'head', 'aux'.",
+    "Pitfall on enabled states: if spline.rigidEnabledStates (or bridgeEnabledStates) does not exist, all meshes are enabled; as soon as the table exists, a mesh absent from the table is considered disabled (only == true counts). The code comment nevertheless says \"only true if explicitly set to true\".",
+    "Random states default to false (round robin) and weights to 1.0.",
+    "The getters/setters store the states in the spline: rigidEnabledStates, bridgeEnabledStates, rigidRandomStates, rigidRandomWeights, bridgeRandomStates, bridgeRandomWeights (keys = mesh id)."
   ],
   "functions": {
-    "getRigidEnabled": {"desc": "Indique si le mesh rigide d'id donné est activé pour la spline (voir notes pour le piège).", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "meshId": {"type": "string", "desc": "Id du mesh."}}, "returns": [{"type": "boolean", "desc": "Activé ou non."}]},
-    "setRigidEnabled": {"desc": "Définit l'état activé d'un mesh rigide pour la spline (crée la table au besoin).", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "meshId": {"type": "string", "desc": "Id du mesh."}, "enabled": {"type": "boolean", "desc": "Activé."}}, "returns": []},
-    "getBridgeEnabled": {"desc": "Indique si le mesh pont d'id donné est activé pour la spline (même règle que getRigidEnabled).", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "meshId": {"type": "string", "desc": "Id du mesh."}}, "returns": [{"type": "boolean", "desc": "Activé ou non."}]},
-    "setBridgeEnabled": {"desc": "Définit l'état activé d'un mesh pont.", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "meshId": {"type": "string", "desc": "Id du mesh."}, "enabled": {"type": "boolean", "desc": "Activé."}}, "returns": []},
-    "getRigidRandom": {"desc": "Indique si la distribution du groupe rigide est aléatoire (sinon tourniquet). Défaut false.", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "meshId": {"type": "string", "desc": "Id du mesh."}}, "returns": [{"type": "boolean", "desc": "true si aléatoire."}]},
-    "setRigidRandom": {"desc": "Définit le mode de distribution aléatoire d'un rigide.", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "meshId": {"type": "string", "desc": "Id du mesh."}, "isRandom": {"type": "boolean", "desc": "Aléatoire."}}, "returns": []},
-    "getRigidRandomWeight": {"desc": "Poids de tirage d'un mesh rigide (défaut 1.0).", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "meshId": {"type": "string", "desc": "Id du mesh."}}, "returns": [{"type": "number", "desc": "Poids."}]},
-    "setRigidRandomWeight": {"desc": "Définit le poids de tirage d'un mesh rigide.", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "meshId": {"type": "string", "desc": "Id du mesh."}, "weight": {"type": "number", "desc": "Poids."}}, "returns": []},
-    "getBridgeRandom": {"desc": "Indique si la distribution du groupe pont est aléatoire. Défaut false.", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "meshId": {"type": "string", "desc": "Id du mesh."}}, "returns": [{"type": "boolean", "desc": "true si aléatoire."}]},
-    "setBridgeRandom": {"desc": "Définit le mode de distribution aléatoire d'un pont.", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "meshId": {"type": "string", "desc": "Id du mesh."}, "isRandom": {"type": "boolean", "desc": "Aléatoire."}}, "returns": []},
-    "getBridgeRandomWeight": {"desc": "Poids de tirage d'un mesh pont (défaut 1.0).", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "meshId": {"type": "string", "desc": "Id du mesh."}}, "returns": [{"type": "number", "desc": "Poids."}]},
-    "setBridgeRandomWeight": {"desc": "Définit le poids de tirage d'un mesh pont.", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "meshId": {"type": "string", "desc": "Id du mesh."}, "weight": {"type": "number", "desc": "Poids."}}, "returns": []},
-    "getAssemblyKit": {"desc": "Charge un kit : liste tous les .dae du dossier et sous-dossiers (FS:findFiles) et extrait pour chacun ses données (boîte englobante, ancres). Chemin vide ou nil : renvoie une table vide et une chaîne vide.", "params": {"kitFolderPath": {"type": "string", "desc": "Dossier du kit (ex. 'assets/meshes/props/assembly_kit/ak_wood_fence_001/')."}}, "returns": [{"type": "table", "desc": "Liste des meshes du kit (id, fileName, meshPath, ancres…)."}, {"type": "string", "desc": "Chaîne vide si chemin invalide (deuxième valeur seulement dans ce cas, déduit du code)."}]},
-    "buildMolecule": {"desc": "Construit la molécule depuis le kit : regroupe les variations (_var) avec leur mesh de base, identifie racine, rigides et ponts, calcule les jonctions d'après les ancres nail.* puis corrige les points d'attache des ponts pour les placer aux bords des meshes.", "params": {"assemblyKit": {"type": "table", "desc": "Résultat de getAssemblyKit."}, "spline": {"type": "table", "desc": "Spline utilisée pour les états activé/aléatoire (déduit du code)."}}, "returns": [{"type": "table", "desc": "Molécule avec les listes rigids et bridges (chaque entrée : mesh, variations, isRandom, randomWeight)."}]},
-    "applyEnabledStatesToMolecule": {"desc": "Après désérialisation, réapplique à la molécule les états activé des rigides, ponts et leurs variations enregistrés dans la spline. Ne fait rien si spline ou molécule est nil.", "params": {"spline": {"type": "table|nil", "desc": "Spline."}, "molecule": {"type": "table|nil", "desc": "Molécule."}}, "returns": []}
+    "getRigidEnabled": {
+      "desc": "Indicates whether the rigid mesh with the given id is enabled for the spline (see notes for the pitfall).",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "meshId": {
+          "type": "string",
+          "desc": "Mesh id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Enabled or not."
+        }
+      ]
+    },
+    "setRigidEnabled": {
+      "desc": "Sets the enabled state of a rigid mesh for the spline (creates the table if needed).",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "meshId": {
+          "type": "string",
+          "desc": "Mesh id."
+        },
+        "enabled": {
+          "type": "boolean",
+          "desc": "Enabled."
+        }
+      },
+      "returns": []
+    },
+    "getBridgeEnabled": {
+      "desc": "Indicates whether the bridge mesh with the given id is enabled for the spline (same rule as getRigidEnabled).",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "meshId": {
+          "type": "string",
+          "desc": "Mesh id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Enabled or not."
+        }
+      ]
+    },
+    "setBridgeEnabled": {
+      "desc": "Sets the enabled state of a bridge mesh.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "meshId": {
+          "type": "string",
+          "desc": "Mesh id."
+        },
+        "enabled": {
+          "type": "boolean",
+          "desc": "Enabled."
+        }
+      },
+      "returns": []
+    },
+    "getRigidRandom": {
+      "desc": "Indicates whether the distribution of the rigid group is random (otherwise round robin). Default false.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "meshId": {
+          "type": "string",
+          "desc": "Mesh id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if random."
+        }
+      ]
+    },
+    "setRigidRandom": {
+      "desc": "Sets the random distribution mode of a rigid.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "meshId": {
+          "type": "string",
+          "desc": "Mesh id."
+        },
+        "isRandom": {
+          "type": "boolean",
+          "desc": "Random."
+        }
+      },
+      "returns": []
+    },
+    "getRigidRandomWeight": {
+      "desc": "Draw weight of a rigid mesh (default 1.0).",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "meshId": {
+          "type": "string",
+          "desc": "Mesh id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Weight."
+        }
+      ]
+    },
+    "setRigidRandomWeight": {
+      "desc": "Sets the draw weight of a rigid mesh.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "meshId": {
+          "type": "string",
+          "desc": "Mesh id."
+        },
+        "weight": {
+          "type": "number",
+          "desc": "Weight."
+        }
+      },
+      "returns": []
+    },
+    "getBridgeRandom": {
+      "desc": "Indicates whether the distribution of the bridge group is random. Default false.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "meshId": {
+          "type": "string",
+          "desc": "Mesh id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if random."
+        }
+      ]
+    },
+    "setBridgeRandom": {
+      "desc": "Sets the random distribution mode of a bridge.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "meshId": {
+          "type": "string",
+          "desc": "Mesh id."
+        },
+        "isRandom": {
+          "type": "boolean",
+          "desc": "Random."
+        }
+      },
+      "returns": []
+    },
+    "getBridgeRandomWeight": {
+      "desc": "Draw weight of a bridge mesh (default 1.0).",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "meshId": {
+          "type": "string",
+          "desc": "Mesh id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Weight."
+        }
+      ]
+    },
+    "setBridgeRandomWeight": {
+      "desc": "Sets the draw weight of a bridge mesh.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "meshId": {
+          "type": "string",
+          "desc": "Mesh id."
+        },
+        "weight": {
+          "type": "number",
+          "desc": "Weight."
+        }
+      },
+      "returns": []
+    },
+    "getAssemblyKit": {
+      "desc": "Loads a kit: lists all .dae files in the folder and subfolders (FS:findFiles) and extracts for each its data (bounding box, anchors). Empty or nil path: returns an empty table and an empty string.",
+      "params": {
+        "kitFolderPath": {
+          "type": "string",
+          "desc": "Kit folder (e.g. 'assets/meshes/props/assembly_kit/ak_wood_fence_001/')."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of kit meshes (id, fileName, meshPath, anchors...)."
+        },
+        {
+          "type": "string",
+          "desc": "Empty string if the path is invalid (second value only in that case, inferred from code)."
+        }
+      ]
+    },
+    "buildMolecule": {
+      "desc": "Builds the molecule from the kit: groups the variations (_var) with their base mesh, identifies root, rigids and bridges, computes the junctions from the nail.* anchors, then corrects the bridges' attachment points to place them at the mesh edges.",
+      "params": {
+        "assemblyKit": {
+          "type": "table",
+          "desc": "Result of getAssemblyKit."
+        },
+        "spline": {
+          "type": "table",
+          "desc": "Spline used for the enabled/random states (inferred from code)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Molecule with the rigids and bridges lists (each entry: mesh, variations, isRandom, randomWeight)."
+        }
+      ]
+    },
+    "applyEnabledStatesToMolecule": {
+      "desc": "After deserialization, reapplies to the molecule the enabled states of the rigids, bridges and their variations stored in the spline. Does nothing if spline or molecule is nil.",
+      "params": {
+        "spline": {
+          "type": "table|nil",
+          "desc": "Spline."
+        },
+        "molecule": {
+          "type": "table|nil",
+          "desc": "Molecule."
+        }
+      },
+      "returns": []
+    }
   }
 }

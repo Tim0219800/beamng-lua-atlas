@@ -1,129 +1,226 @@
 {
   "path": "lua/ge/extensions/render/splitScreen.lua",
-  "module": "Écran partagé (multiseat) : crée une vue de rendu par joueur (RenderViewManagerInstance, vues nommées 'splitscreen0', 'splitscreen1'...), calcule la disposition à l'écran avec render_splitScreenLayouts selon le nombre de joueurs et le réglage multiseatLayout<N>, gère les contextes caméra par joueur, les étiquettes de joueurs et le HUD Vue 'multiseat'. L'extension s'active dès son chargement (onExtensionLoaded appelle enable) et se désactive au déchargement. Un moddeur ou une mission peut imposer la liste des joueurs avec setCustomPlayers.",
-  "usage": "extensions.load('render_splitScreen')\nrender_splitScreen.setCustomPlayers({0, 1})  -- deux vues, joueurs 0 et 1\n-- ...\nrender_splitScreen.clearCustomPlayers()\nextensions.unload('render_splitScreen')",
+  "module": "Split screen (multiseat): creates a render view per player (RenderViewManagerInstance, views named 'splitscreen0', 'splitscreen1'...), computes the on-screen layout with render_splitScreenLayouts according to the number of players and the multiseatLayout<N> setting, manages per-player camera contexts, player labels and the 'multiseat' Vue HUD. The extension activates as soon as it is loaded (onExtensionLoaded calls enable) and deactivates on unload. A modder or a mission can force the player list with setCustomPlayers.",
+  "usage": "extensions.load('render_splitScreen')\nrender_splitScreen.setCustomPlayers({0, 1})  -- two views, players 0 and 1\n-- ...\nrender_splitScreen.clearCustomPlayers()\nextensions.unload('render_splitScreen')",
   "notes": [
-    "Dépend de core_playerPersonas, render_playerTags et render_playerCompassMarkers (chargés avant).",
-    "Maximum 64 vues (une par joueur). Liste de joueurs vide : renvoie {0}.",
-    "Pour économiser le rendu, chaque vue reçoit un facteur de qualité (meshDetailAdjust et groundCoverScale multipliés) : 1.0 pour 1 vue, 0.75 pour 2, 0.6 pour 3, 0.5 pour 4 et au-delà. Les miroirs et réflexions dynamiques des véhicules sont coupés sauf pour la vue en solo. Les réglages graphiques de l'utilisateur ne sont pas modifiés.",
-    "En activant l'extension : les actions 'vehicleMenues' et 'nodegrabber' sont bloquées, le réglage 'multiseat' est mis à true et la route de jeu 'multiseat' est installée.",
-    "Mode 'shared' (disposition partagée) : une seule vue principale est rendue ; mode 'split' : une vue par joueur.",
-    "La fonction 'performance preset' (setPerformancePreset) existe mais son appel est commenté : inutilisée.",
-    "Hooks émis : onSplitScreenChanged(enabled, playerCount, layoutId, mode) à l'activation et quand les joueurs ou la disposition changent (false seul à la désactivation), et onSplitScreenLayoutChanged() à chaque nouveau calcul de disposition. Évènement UI : MultiseatHudData(count, layout, players, mode) ou MultiseatHudData(0)."
+    "Depends on core_playerPersonas, render_playerTags and render_playerCompassMarkers (loaded first).",
+    "Maximum 64 views (one per player). Empty player list: returns {0}.",
+    "To save rendering cost, each view receives a quality factor (meshDetailAdjust and groundCoverScale multiplied): 1.0 for 1 view, 0.75 for 2, 0.6 for 3, 0.5 for 4 and beyond. Vehicle mirrors and dynamic reflections are turned off except for the solo view. The user's graphics settings are not modified.",
+    "When enabling the extension: the actions 'vehicleMenues' and 'nodegrabber' are blocked, the 'multiseat' setting is set to true and the 'multiseat' game route is installed.",
+    "'shared' mode (shared layout): a single main view is rendered; 'split' mode: one view per player.",
+    "The 'performance preset' function (setPerformancePreset) exists but its call is commented out: unused.",
+    "Emitted hooks: onSplitScreenChanged(enabled, playerCount, layoutId, mode) on activation and when players or layout change (false alone on deactivation), and onSplitScreenLayoutChanged() on every new layout computation. UI event: MultiseatHudData(count, layout, players, mode) or MultiseatHudData(0)."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : core_playerPersonas, render_playerTags, render_playerCompassMarkers."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extensions loaded first: core_playerPersonas, render_playerTags, render_playerCompassMarkers."
+    }
   },
   "functions": {
     "getPlayers": {
-      "desc": "Renvoie la liste ordonnée des indices de joueurs qui ont une vue : la liste personnalisée de setCustomPlayers si elle existe, sinon core_multiseat.getPlayers. Limitée à 64 ; contient {0} si vide.",
-      "params": {"result": {"type": "integer[]|nil", "desc": "Table à remplir et renvoyer (réutilisable pour éviter une allocation) ; créée si nil."}},
-      "returns": [{"type": "integer[]", "desc": "Indices de joueurs."}],
+      "desc": "Returns the ordered list of player indices that have a view: the custom list from setCustomPlayers if it exists, otherwise core_multiseat.getPlayers. Limited to 64; contains {0} if empty.",
+      "params": {
+        "result": {
+          "type": "integer[]|nil",
+          "desc": "Table to fill and return (reusable to avoid an allocation); created if nil."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer[]",
+          "desc": "Player indices."
+        }
+      ],
       "internal": false
     },
     "getCurrentConfiguration": {
-      "desc": "Renvoie la configuration d'affichage courante.",
+      "desc": "Returns the current display configuration.",
       "params": {},
       "returns": [
-        {"type": "boolean", "desc": "false si l'écran partagé est inactif."},
-        {"type": "integer|nil", "desc": "Nombre de joueurs."},
-        {"type": "string|nil", "desc": "Identifiant de disposition."},
-        {"type": "string|nil", "desc": "Mode : 'shared' ou 'split'."}
+        {
+          "type": "boolean",
+          "desc": "false if split screen is inactive."
+        },
+        {
+          "type": "integer|nil",
+          "desc": "Number of players."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Layout identifier."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Mode: 'shared' or 'split'."
+        }
       ],
       "internal": false
     },
     "isSharedView": {
-      "desc": "Vrai si l'écran partagé est actif, rendu en vue partagée et sans vue solo.",
+      "desc": "True if split screen is active, rendered in shared view and without a solo view.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "État."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "State."
+        }
+      ],
       "internal": false
     },
     "setCustomPlayers": {
-      "desc": "Impose la liste des joueurs qui doivent avoir une vue (par exemple pour une mission), ou la supprime avec nil. Une liste vide équivaut à nil. Si l'écran partagé est actif, recalcule tout de suite.",
-      "params": {"players": {"type": "integer[]|nil", "desc": "Indices de joueurs ordonnés, ou nil pour effacer la surcharge."}},
+      "desc": "Forces the list of players that must have a view (e.g. for a mission), or removes it with nil. An empty list is equivalent to nil. If split screen is active, recomputes right away.",
+      "params": {
+        "players": {
+          "type": "integer[]|nil",
+          "desc": "Ordered player indices, or nil to clear the override."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "clearCustomPlayers": {
-      "desc": "Raccourci pour setCustomPlayers(nil).",
+      "desc": "Shortcut for setCustomPlayers(nil).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "toggleFreeCam": {
-      "desc": "Passe la vue propre à ce joueur au groupe de caméras suivant (core_camera.cycleCameraGroup).",
-      "params": {"player": {"type": "integer", "desc": "Indice du joueur."}},
-      "returns": [{"type": "boolean", "desc": "false si le joueur n'a pas de vue d'écran partagé (l'appelant peut alors utiliser le basculement de caméra principale)."}],
+      "desc": "Switches this player's own view to the next camera group (core_camera.cycleCameraGroup).",
+      "params": {
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the player has no split screen view (the caller can then use the main camera toggle)."
+        }
+      ],
       "internal": false
     },
     "refreshLayout": {
-      "desc": "Force le recalcul de la disposition au prochain passage (réinitialise la taille mémorisée) et le fait tout de suite si actif.",
+      "desc": "Forces the layout to be recomputed on the next pass (resets the remembered size) and does it right away if active.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "beginSoloView": {
-      "desc": "Affiche temporairement un seul joueur en plein écran sans changer la liste des participants ni l'état du HUD. Avec options.mainView = true, utilise la vue principale ; sinon agrandit la vue du joueur avec une caméra 'orbit'. Les étiquettes de joueurs sont supprimées pendant la vue solo.",
+      "desc": "Temporarily shows a single player in full screen without changing the participant list or the HUD state. With options.mainView = true, uses the main view; otherwise enlarges the player's view with an 'orbit' camera. Player labels are removed during the solo view.",
       "params": {
-        "player": {"type": "integer", "desc": "Indice du joueur (converti par tonumber)."},
-        "options": {"type": "table|nil", "desc": "{mainView = boolean}."}
+        "player": {
+          "type": "integer",
+          "desc": "Player index (converted by tonumber)."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "{mainView = boolean}."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si player n'est pas numérique ou n'est pas dans la liste des joueurs configurés (ou sans vue) ; true sinon."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if player is not numeric or is not in the configured player list (or has no view); true otherwise."
+        }
+      ],
       "internal": false
     },
     "endSoloView": {
-      "desc": "Termine la vue solo et restaure la caméra du contexte et la disposition.",
+      "desc": "Ends the solo view and restores the context camera and the layout.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si une vue solo était active."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a solo view was active."
+        }
+      ],
       "internal": false
     },
     "onAfterRouteChange": {
-      "desc": "Hook de changement de route de l'UI : renvoie l'état du HUD à chaque entrée dans la route 'multiseat', car la vue Vue est remontée avec sa route.",
-      "params": {"context": {"type": "table", "desc": "Contexte de navigation (context.toRoute.name)."}},
+      "desc": "UI route change hook: sends the HUD state back on each entry into the 'multiseat' route, since the Vue view is remounted with its route.",
+      "params": {
+        "context": {
+          "type": "table",
+          "desc": "Navigation context (context.toRoute.name)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook de fin de mission : termine la vue solo (endSoloView).",
+      "desc": "End-of-mission hook: ends the solo view (endSoloView).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook appelé après un rechargement Lua GE : restaure la liste de joueurs sauvegardée et réactive l'écran partagé.",
-      "params": {"data": {"type": "table", "desc": "Données de onSerialize (customPlayers)."}},
+      "desc": "Hook called after a GE Lua reload: restores the saved player list and re-enables split screen.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "onSerialize data (customPlayers)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook de chargement de l'extension : restaure customPlayers si des données sont fournies et active l'écran partagé.",
-      "params": {"data": {"type": "table|nil", "desc": "Données sérialisées éventuelles."}},
+      "desc": "Extension load hook: restores customPlayers if data is provided and enables split screen.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Possible serialized data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook de déchargement : alias de disable(preserveRoute). Détruit les vues, rend le monde sur la vue principale, remet l'exposition à zéro et rétablit la route de jeu 'play' sauf si preserveRoute.",
-      "params": {"preserveRoute": {"type": "boolean|nil", "desc": "Si vrai, ne change pas la route de jeu."}},
+      "desc": "Unload hook: alias of disable(preserveRoute). Destroys the views, renders the world on the main view, resets exposure to zero and restores the 'play' game route unless preserveRoute.",
+      "params": {
+        "preserveRoute": {
+          "type": "boolean|nil",
+          "desc": "If true, does not change the game route."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook appelé avant un rechargement Lua GE : renvoie {customPlayers} et désactive l'écran partagé en conservant la route, pour détruire les vues C++.",
-      "params": {"reason": {"type": "string", "desc": "Raison de la sérialisation (utilisée dans le log)."}},
-      "returns": [{"type": "table", "desc": "{customPlayers = ...}."}],
+      "desc": "Hook called before a GE Lua reload: returns {customPlayers} and disables split screen while keeping the route, to destroy the C++ views.",
+      "params": {
+        "reason": {
+          "type": "string",
+          "desc": "Reason for serialization (used in the log)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{customPlayers = ...}."
+        }
+      ],
       "internal": true
     },
     "onSettingsChanged": {
-      "desc": "Hook appelé quand les réglages changent : reconstruit les surcharges de qualité des vues, qui sont un instantané des réglages globaux.",
+      "desc": "Hook called when settings change: rebuilds the view quality overrides, which are a snapshot of the global settings.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook appelé à chaque image : recalcule la configuration (joueurs, taille de fenêtre, disposition) et met à jour les marqueurs de boussole des joueurs.",
+      "desc": "Hook called every frame: recomputes the configuration (players, window size, layout) and updates the players' compass markers.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Durée réelle de l'image (s)."},
-        "dtSim": {"type": "number", "desc": "Durée simulée (s), non utilisée."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real frame duration (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated duration (s), unused."
+        }
       },
       "returns": [],
       "internal": true

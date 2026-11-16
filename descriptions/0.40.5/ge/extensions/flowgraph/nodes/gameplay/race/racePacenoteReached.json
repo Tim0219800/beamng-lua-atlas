@@ -1,13 +1,44 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/racePacenoteReached.lua",
-  "module": "Nœud flowgraph « Race Pacenote Reached » (catégorie logic, tag scenario). Laisse passer une impulsion quand un véhicule atteint une pacenote de la course (events.pacenoteReached). Sorties : flow (impulsion) et note (texte de la pacenote, race.path.pacenotes.objects[id].note).",
+  "module": "Flowgraph node \"Race Pacenote Reached\" (category logic, tag scenario). Lets a pulse through when a vehicle reaches a pacenote of the race (events.pacenoteReached). Outputs: flow (pulse) and note (pacenote text, race.path.pacenotes.objects[id].note).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise data.detailed = false (non utilisé).", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
-        "drawMiddle": {"desc": "Vide.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud."}, "style": {"type": "table", "desc": "Style."}}, "internal": true},
-        "work": {"desc": "Met flow et note selon les events du véhicule.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+        "init": {
+          "desc": "Initializes data.detailed = false (unused).",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager."
+            }
+          },
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Empty.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Node constructor."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style."
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Sets flow and note according to the vehicle's events.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph engine arguments (unused)."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

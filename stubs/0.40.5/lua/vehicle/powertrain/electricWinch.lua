@@ -2,66 +2,66 @@
 -- tim19Atlas stub generated from lua/vehicle/powertrain/electricWinch.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Composant powertrain `electricWinch` : treuil électrique très sommaire, de catégorie `winch` et `torqueConsumer`, sans port de sortie. Son code est un prototype : à chaque pas physique il tire sur la poutre étiquetée `ropeTest` avec une force fixe de 500000 N multipliée par le niveau d'allumage, sans paramètre jbeam de réglage. Un moddeur ne s'en sert pas en pratique ; voir hydraulicWinch (vide) et linearActuator pour des actionneurs réels.
---- Accès : type de composant powertrain `electricWinch` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+--- Powertrain component `electricWinch`: very basic electric winch, of category `winch` and `torqueConsumer`, without an output port. Its code is a prototype: at each physics step it pulls on the beam tagged `ropeTest` with a fixed force of 500000 N multiplied by the ignition level, with no jbeam tuning parameter. A modder does not use it in practice; see hydraulicWinch (empty) and linearActuator for real actuators.
+--- Access: powertrain device type `electricWinch` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 ---@class powertrain_electricWinch
 ---@field deviceCategories table<string, boolean> {winch=true, torqueConsumer=true}.
----@field outputPorts table Table vide : aucun port de sortie.
+---@field outputPorts table Empty table: no output port.
 local powertrain_electricWinch = {}
 
---- Construit le device treuil avec les champs standard (gearRatio, friction, coefficients d'usure/dégâts, inertie) et les fonctions de mise à jour. Il n'appelle pas selectUpdates : velocityUpdate et torqueUpdate sont posées directement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricWinch.lua:77
----@param jbeamData table Données jbeam du composant.
----@return table  Le device (classe `device`).
+--- Builds the winch device with the standard fields (gearRatio, friction, wear/damage coefficients, inertia) and the update functions. It does not call selectUpdates: velocityUpdate and torqueUpdate are set directly.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricWinch.lua:77
+---@param jbeamData table jbeam data of the component.
+---@return table  The device (class `device`).
 function powertrain_electricWinch.new(jbeamData) end
 
---- Objet renvoyé par new(jbeamData).
+--- Object returned by new(jbeamData).
 ---@class powertrain_electricWinch_device
 local powertrain_electricWinch_device = {}
 
---- Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricWinch.lua:24
----@param damageAmount number Quantité de dégâts du groupe de déformation.
+--- Increases the damage friction coefficient (0.01 of damage = +0.1).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricWinch.lua:24
+---@param damageAmount number Amount of damage of the deformation group.
 function powertrain_electricWinch_device:applyDeformGroupDamage(damageAmount) end
 
---- Pose cumulativeInertia = 0 (inertie de sortie nulle) et les rapports cumulés (maxCumulativeGearRatio reste nil, voir notes).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricWinch.lua:52
+--- Sets cumulativeInertia = 0 (zero output inertia) and the cumulative ratios (maxCumulativeGearRatio stays nil, see notes).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricWinch.lua:52
 function powertrain_electricWinch_device:calculateInertia() end
 
---- Renvoie l'intégrité 0..1 (0 si cassé) et la table {damageFrictionCoef, isBroken}.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricWinch.lua:43
----@return number  Intégrité 0..1.
----@return table  État sauvegardable.
+--- Returns the integrity 0..1 (0 if broken) and the table {damageFrictionCoef, isBroken}.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricWinch.lua:43
+---@return number  Integrity 0..1.
+---@return table  Saveable state.
 function powertrain_electricWinch_device:getPartCondition() end
 
---- Remet à zéro vitesses, couple, inertie cumulée, coefficients d'usure/dégâts et isBroken ; relit friction.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricWinch.lua:61
----@param jbeamData table Données jbeam du composant.
+--- Resets speeds, torque, cumulative inertia, wear/damage coefficients and isBroken; rereads friction.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricWinch.lua:61
+---@param jbeamData table jbeam data of the component.
 function powertrain_electricWinch_device:reset(jbeamData) end
 
---- Applique usure et dégâts selon l'odomètre et l'intégrité ; appelle onBreak si l'état indique isBroken, mais ce device ne définit pas onBreak.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricWinch.lua:28
----@param subSystem any Non utilisé.
----@param odometer number Distance parcourue en mètres.
----@param integrity number|table Nombre 0..1 ou table {damageFrictionCoef, isBroken}.
----@param visual any Non utilisé.
+--- Applies wear and damage according to the odometer and the integrity; calls onBreak if the state indicates isBroken, but this device does not define onBreak.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricWinch.lua:28
+---@param subSystem any Not used.
+---@param odometer number Distance traveled in meters.
+---@param integrity number|table Number 0..1 or table {damageFrictionCoef, isBroken}.
+---@param visual any Not used.
 function powertrain_electricWinch_device:setPartCondition(subSystem, odometer, integrity, visual) end
 
---- Appelée à chaque pas physique : met outputTorque1 à 0 et actionne la première poutre étiquetée 'ropeTest' avec une force de -ignitionLevel * 500000 N, vitesse limite 10 et course 0 à 100.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricWinch.lua:15
+--- Called at each physics step: sets outputTorque1 to 0 and actuates the first beam tagged 'ropeTest' with a force of -ignitionLevel * 500000 N, speed limit 10 and stroke 0 to 100.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricWinch.lua:15
 function powertrain_electricWinch_device:torqueUpdate() end
 
---- Appelée à chaque pas physique : inputAV = outputAV1 * gearRatio, écrit dans le parent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricWinch.lua:10
----@param dt number Pas de temps en secondes (inutilisé).
+--- Called at each physics step: inputAV = outputAV1 * gearRatio, written to the parent.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricWinch.lua:10
+---@param dt number Time step in seconds (unused).
 function powertrain_electricWinch_device:velocityUpdate(dt) end
 
 return powertrain_electricWinch

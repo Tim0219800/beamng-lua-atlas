@@ -1,42 +1,42 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/geom.lua",
-  "module": "Bibliothèque géométrique des outils d'édition de splines de l'éditeur (routes, rails, clôtures, bâtiments) : interpolation de splines Catmull-Rom (libre, par lancer de rayon, conforme au terrain, avec dévers), repère de Frenet, échantillonnage à longueur d'arc, géométrie 2D de polygones (point dans anneau, découpe à une boîte, décalage/retrait biseauté, triangulation par ear clipping avec trous), intersections, distances, survol à la souris, découpe/jonction de splines et utilitaires de terrain. Une « spline » est une table avec nodes, widths, nmls (entrée) et divPoints, divWidths, normals, tangents, binormals, discMap (sorties calculées).",
+  "module": "Geometry library of the editor's spline editing tools (roads, rails, fences, buildings): Catmull-Rom spline interpolation (free, raycast, terrain-conforming, with banking), Frenet frame, arc-length sampling, 2D polygon geometry (point in ring, clipping to a box, beveled offset/inset, ear clipping triangulation with holes), intersections, distances, mouse hover, spline cutting/joining and terrain utilities. A \"spline\" is a table with nodes, widths, nmls (input) and divPoints, divWidths, normals, tangents, binormals, discMap (computed outputs).",
   "notes": [
-    "Constantes internes : division minimale 10 par segment, espacement maximal 20 m entre points de division (plafond dur 2000), marge de bout de polygone 10 m, tolérance souris-noeud 2 m, dévers maximal 15 degrés, réglage de dévers 500, écartement de découpe 2 m.",
-    "Les fonctions « 2D » prennent des points {x, y} (les tables avec x et y suffisent, pas forcément vec3) ; les fonctions scalaires (cross2, dot2, distSqPointSeg2D...) évitent toute allocation pour les boucles chaudes.",
-    "Unités : mètres, radians sauf signedAngleAroundAxis (degrés).",
-    "Ordre des arguments piégeux : perpDistPointSeg2D prend d'abord le segment (ax, ay, bx, by) puis le point (px, py), l'inverse de distSqPointSeg2D.",
-    "Le module utilise kdtreebox2d et editor/toolUtilities/util ; certaines fonctions appellent des API éditeur (getCameraMouseRay, core_terrain)."
+    "Internal constants: minimum division 10 per segment, maximum spacing 20 m between division points (hard cap 2000), polygon end margin 10 m, mouse-node tolerance 2 m, maximum banking 15 degrees, banking setting 500, cut gap 2 m.",
+    "The \"2D\" functions take {x, y} points (tables with x and y are enough, not necessarily vec3); the scalar functions (cross2, dot2, distSqPointSeg2D...) avoid any allocation for hot loops.",
+    "Units: meters, radians except signedAngleAroundAxis (degrees).",
+    "Tricky argument order: perpDistPointSeg2D takes the segment (ax, ay, bx, by) first then the point (px, py), the reverse of distSqPointSeg2D.",
+    "The module uses kdtreebox2d and editor/toolUtilities/util; some functions call editor APIs (getCameraMouseRay, core_terrain)."
   ],
   "functions": {
     "getPreRotQuats": {
-      "desc": "Renvoie la table des quaternions de pré-rotation indexée de 0 à 3 (0, 90, 180, 270 degrés autour de Z).",
+      "desc": "Returns the table of pre-rotation quaternions indexed from 0 to 3 (0, 90, 180, 270 degrees around Z).",
       "params": {},
       "returns": [
         {
           "type": "table<integer, quat>",
-          "desc": "Quaternions de pré-rotation."
+          "desc": "Pre-rotation quaternions."
         }
       ],
       "internal": false
     },
     "getBarScale": {
-      "desc": "Renvoie le facteur d'échelle des barres de vitesse (hauteur = barScale * vitesse, 0.5).",
+      "desc": "Returns the scale factor of the speed bars (height = barScale * speed, 0.5).",
       "params": {},
       "returns": [
         {
           "type": "number",
-          "desc": "Facteur."
+          "desc": "Factor."
         }
       ],
       "internal": false
     },
     "closestPointOnPolyline": {
-      "desc": "Point le plus proche de p sur une polyligne 3D. Écrit le résultat dans outPos et renvoie la distance au carré.",
+      "desc": "Closest point to p on a 3D polyline. Writes the result into outPos and returns the squared distance.",
       "params": {
         "pts": {
           "type": "vec3[]",
-          "desc": "Polyligne."
+          "desc": "Polyline."
         },
         "p": {
           "type": "vec3",
@@ -44,19 +44,19 @@
         },
         "outPos": {
           "type": "vec3",
-          "desc": "Reçoit le point le plus proche."
+          "desc": "Receives the closest point."
         }
       },
       "returns": [
         {
           "type": "number",
-          "desc": "Distance au carré (m^2)."
+          "desc": "Squared distance (m^2)."
         }
       ],
       "internal": false
     },
     "squaredDistance2D": {
-      "desc": "Distance au carré en XY entre deux points (Z ignoré).",
+      "desc": "Squared distance in XY between two points (Z ignored).",
       "params": {
         "a": {
           "type": "vec3",
@@ -70,33 +70,33 @@
       "returns": [
         {
           "type": "number",
-          "desc": "Distance au carré (m^2)."
+          "desc": "Squared distance (m^2)."
         }
       ],
       "internal": false
     },
     "smoothNodesHeightSteffen": {
-      "desc": "Lissage de hauteur d'un bout à l'autre : fixe z[1] et z[n] et réécrit les Z intérieurs par interpolation de Steffen selon la longueur XY. Sans effet (renvoie false) sous 3 noeuds.",
+      "desc": "End-to-end height smoothing: fixes z[1] and z[n] and rewrites the interior Zs by Steffen interpolation along the XY length. No effect (returns false) below 3 nodes.",
       "params": {
         "nodes": {
           "type": "vec3[]",
-          "desc": "Noeuds modifiés sur place."
+          "desc": "Nodes modified in place."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "true si le lissage a été fait."
+          "desc": "true if the smoothing was done."
         }
       ],
       "internal": false
     },
     "closestPointOnPolyline2D": {
-      "desc": "Point le plus proche de p sur une polyligne, mesuré en XY (Z interpolé). Écrit dans outPos et renvoie la distance au carré.",
+      "desc": "Closest point to p on a polyline, measured in XY (Z interpolated). Writes into outPos and returns the squared distance.",
       "params": {
         "pts": {
           "type": "vec3[]",
-          "desc": "Polyligne."
+          "desc": "Polyline."
         },
         "p": {
           "type": "vec3",
@@ -104,211 +104,211 @@
         },
         "outPos": {
           "type": "vec3",
-          "desc": "Reçoit le point."
+          "desc": "Receives the point."
         },
         "tMin": {
           "type": "number|nil",
-          "desc": "Borne basse de recherche (déduit du code)."
+          "desc": "Lower search bound (inferred from code)."
         },
         "tMax": {
           "type": "number|nil",
-          "desc": "Borne haute de recherche (déduit du code)."
+          "desc": "Upper search bound (inferred from code)."
         },
         "closed": {
           "type": "boolean|nil",
-          "desc": "Polyligne fermée."
+          "desc": "Closed polyline."
         }
       },
       "returns": [
         {
           "type": "number",
-          "desc": "Distance au carré."
+          "desc": "Squared distance."
         }
       ],
       "internal": false
     },
     "ribbonOverlapEnd2D": {
-      "desc": "Où deux rubans (routes) partant d'une même jonction cessent de se chevaucher, en longueur d'arc le long de A depuis le centre (hx, hy). Renvoie maxM si aucun ruban utilisable.",
+      "desc": "Where two ribbons (roads) leaving the same junction stop overlapping, in arc length along A from the center (hx, hy). Returns maxM if no usable ribbon.",
       "params": {
         "hx": {
           "type": "number",
-          "desc": "X du centre de jonction."
+          "desc": "X of the junction center."
         },
         "hy": {
           "type": "number",
-          "desc": "Y du centre."
+          "desc": "Y of the center."
         },
         "a": {
           "type": "table",
-          "desc": "Points du ruban A."
+          "desc": "Points of ribbon A."
         },
         "aFromStart": {
           "type": "boolean",
-          "desc": "A part de son premier point."
+          "desc": "A starts from its first point."
         },
         "b": {
           "type": "table",
-          "desc": "Points du ruban B."
+          "desc": "Points of ribbon B."
         },
         "bFromStart": {
           "type": "boolean",
-          "desc": "B part de son premier point."
+          "desc": "B starts from its first point."
         },
         "clearM": {
           "type": "number",
-          "desc": "Distance de dégagement (m)."
+          "desc": "Clearance distance (m)."
         },
         "stepM": {
           "type": "number",
-          "desc": "Pas de recherche (m, doit être > 0)."
+          "desc": "Search step (m, must be > 0)."
         },
         "maxM": {
           "type": "number",
-          "desc": "Longueur maximale (m)."
+          "desc": "Maximum length (m)."
         }
       },
       "returns": [
         {
           "type": "number",
-          "desc": "Longueur d'arc (m)."
+          "desc": "Arc length (m)."
         }
       ],
       "internal": false
     },
     "squaredSegSegDist": {
-      "desc": "Distance au carré entre deux segments 3D ; écrit les points les plus proches dans outP1 et outP2.",
+      "desc": "Squared distance between two 3D segments; writes the closest points into outP1 and outP2.",
       "params": {
         "a0": {
           "type": "vec3",
-          "desc": "Début du segment A."
+          "desc": "Start of segment A."
         },
         "a1": {
           "type": "vec3",
-          "desc": "Fin du segment A."
+          "desc": "End of segment A."
         },
         "b0": {
           "type": "vec3",
-          "desc": "Début de B."
+          "desc": "Start of B."
         },
         "b1": {
           "type": "vec3",
-          "desc": "Fin de B."
+          "desc": "End of B."
         },
         "outP1": {
           "type": "vec3",
-          "desc": "Point le plus proche sur A."
+          "desc": "Closest point on A."
         },
         "outP2": {
           "type": "vec3",
-          "desc": "Point le plus proche sur B."
+          "desc": "Closest point on B."
         }
       },
       "returns": [
         {
           "type": "number",
-          "desc": "Distance au carré."
+          "desc": "Squared distance."
         }
       ],
       "internal": false
     },
     "isMouseOverNode": {
-      "desc": "Teste si la souris survole un noeud d'une des splines (tolérance 2 m). Chaque spline doit avoir un tableau nodes.",
+      "desc": "Tests whether the mouse hovers a node of one of the splines (tolerance 2 m). Each spline must have a nodes array.",
       "params": {
         "splines": {
           "type": "table[]",
-          "desc": "Splines à tester."
+          "desc": "Splines to test."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "Survol."
+          "desc": "Hover."
         },
         {
           "type": "integer|nil",
-          "desc": "Indice de spline."
+          "desc": "Spline index."
         },
         {
           "type": "integer|nil",
-          "desc": "Indice de noeud."
+          "desc": "Node index."
         }
       ],
       "internal": false
     },
     "isMouseOverPolyline": {
-      "desc": "Teste si la souris survole une polyligne ; closed teste aussi l'arête du dernier noeud au premier.",
+      "desc": "Tests whether the mouse hovers a polyline; closed also tests the edge from the last node to the first.",
       "params": {
         "points": {
           "type": "vec3[]",
-          "desc": "Polyligne."
+          "desc": "Polyline."
         },
         "mousePos": {
           "type": "vec3",
-          "desc": "Position de la souris."
+          "desc": "Mouse position."
         },
         "closed": {
           "type": "boolean|nil",
-          "desc": "Polygone fermé."
+          "desc": "Closed polygon."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "Survol."
+          "desc": "Hover."
         },
         {
           "type": "integer|nil",
-          "desc": "Indice du segment."
+          "desc": "Segment index."
         }
       ],
       "internal": false
     },
     "isMouseOverBar": {
-      "desc": "Teste si la souris survole une barre (splines avec un tableau barPoints ordonné).",
+      "desc": "Tests whether the mouse hovers a bar (splines with an ordered barPoints array).",
       "params": {
         "splines": {
           "type": "table[]",
-          "desc": "Splines à tester."
+          "desc": "Splines to test."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "Survol."
+          "desc": "Hover."
         },
         {
           "type": "integer|nil",
-          "desc": "Indice de spline."
+          "desc": "Spline index."
         },
         {
           "type": "integer|nil",
-          "desc": "Indice de barre."
+          "desc": "Bar index."
         }
       ],
       "internal": false
     },
     "isMouseOverGraphNode": {
-      "desc": "Teste si la souris survole un noeud du graphe de navigation.",
+      "desc": "Tests whether the mouse hovers a node of the navigation graph.",
       "params": {
         "nodes": {
           "type": "table",
-          "desc": "Noeuds du graphe (indexés par clé)."
+          "desc": "Graph nodes (indexed by key)."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "Survol."
+          "desc": "Hover."
         },
         {
           "type": "any|nil",
-          "desc": "Clé du noeud."
+          "desc": "Node key."
         }
       ],
       "internal": false
     },
     "getAABB": {
-      "desc": "Boîte englobante alignée aux axes (XY) d'un tableau de points.",
+      "desc": "Axis-aligned bounding box (XY) of an array of points.",
       "params": {
         "points": {
           "type": "vec3[]",
@@ -324,58 +324,58 @@
       "internal": false
     },
     "polygonOBB": {
-      "desc": "Boîte englobante orientée d'un polygone 2D par ACP. Les points sont des paires [1]=x, [2]=y.",
+      "desc": "Oriented bounding box of a 2D polygon by PCA. The points are pairs [1]=x, [2]=y.",
       "params": {
         "poly": {
           "type": "number[][]",
-          "desc": "Polygone."
+          "desc": "Polygon."
         }
       },
       "returns": [
         {
           "type": "number",
-          "desc": "Centre x."
+          "desc": "Center x."
         },
         {
           "type": "number",
-          "desc": "Centre y."
+          "desc": "Center y."
         },
         {
           "type": "number",
-          "desc": "Demi-largeur le long de l'axe principal."
+          "desc": "Half-width along the principal axis."
         },
         {
           "type": "number",
-          "desc": "Demi-largeur transversale."
+          "desc": "Transverse half-width."
         },
         {
           "type": "number",
-          "desc": "Angle theta de l'axe principal (rad)."
+          "desc": "Angle theta of the principal axis (rad)."
         }
       ],
       "internal": false
     },
     "computeSplinePolygon": {
-      "desc": "Calcule un contour polygonal autour d'une spline (bords gauche et droit à la demi-largeur + marge, prolongés de 10 m aux deux bouts). Rapide à traiter par spans de scanline. Remplit le tableau polygon.",
+      "desc": "Computes a polygonal outline around a spline (left and right edges at the half-width + margin, extended by 10 m at both ends). Fast to process by scanline spans. Fills the polygon array.",
       "params": {
         "spline": {
           "type": "table",
-          "desc": "Spline avec divPoints, tangents, binormals, divWidths."
+          "desc": "Spline with divPoints, tangents, binormals, divWidths."
         },
         "margin": {
           "type": "number",
-          "desc": "Marge latérale (m)."
+          "desc": "Lateral margin (m)."
         },
         "polygon": {
           "type": "table",
-          "desc": "Tableau de sortie, vidé puis rempli de vec3."
+          "desc": "Output array, cleared then filled with vec3."
         }
       },
       "returns": [],
       "internal": false
     },
     "isPointInTriangle": {
-      "desc": "Teste si p est dans le triangle (a, b, c) (coordonnées barycentriques).",
+      "desc": "Tests whether p is in the triangle (a, b, c) (barycentric coordinates).",
       "params": {
         "p": {
           "type": "vec3",
@@ -383,66 +383,66 @@
         },
         "a": {
           "type": "vec3",
-          "desc": "Sommet."
+          "desc": "Vertex."
         },
         "b": {
           "type": "vec3",
-          "desc": "Sommet."
+          "desc": "Vertex."
         },
         "c": {
           "type": "vec3",
-          "desc": "Sommet."
+          "desc": "Vertex."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "Dedans."
+          "desc": "Inside."
         }
       ],
       "internal": false
     },
     "getTerrainNormal": {
-      "desc": "Normale du terrain au point monde donné.",
+      "desc": "Terrain normal at the given world point.",
       "params": {
         "p": {
           "type": "vec3",
-          "desc": "Point monde."
+          "desc": "World point."
         }
       },
       "returns": [
         {
           "type": "vec3",
-          "desc": "Normale."
+          "desc": "Normal."
         }
       ],
       "internal": false
     },
     "getTerrainNormalInPlace": {
-      "desc": "Normale du terrain au point monde donné, écrite dans out.",
+      "desc": "Terrain normal at the given world point, written into out.",
       "params": {
         "p": {
           "type": "vec3",
-          "desc": "Point monde."
+          "desc": "World point."
         },
         "out": {
           "type": "vec3",
-          "desc": "Reçoit la normale."
+          "desc": "Receives the normal."
         }
       },
       "returns": [],
       "internal": false
     },
     "rotateVecAroundZ": {
-      "desc": "Tourne le vecteur v autour de l'axe Z de l'angle donné, sur place (la fonction reçoit vec comme destination).",
+      "desc": "Rotates vector v around the Z axis by the given angle, in place (the function receives vec as destination).",
       "params": {
         "vec": {
           "type": "vec3",
-          "desc": "Vecteur modifié."
+          "desc": "Modified vector."
         },
         "v": {
           "type": "vec3",
-          "desc": "Vecteur source (déduit du code)."
+          "desc": "Source vector (inferred from code)."
         },
         "angle": {
           "type": "number",
@@ -453,15 +453,15 @@
       "internal": false
     },
     "rotateVecAroundAxis": {
-      "desc": "Tourne le vecteur v autour de l'axe unitaire k de l'angle theta (formule de Rodrigues).",
+      "desc": "Rotates vector v around the unit axis k by the angle theta (Rodrigues formula).",
       "params": {
         "v": {
           "type": "vec3",
-          "desc": "Vecteur."
+          "desc": "Vector."
         },
         "k": {
           "type": "vec3",
-          "desc": "Axe unitaire."
+          "desc": "Unit axis."
         },
         "theta": {
           "type": "number",
@@ -471,21 +471,21 @@
       "returns": [
         {
           "type": "vec3",
-          "desc": "Copie du résultat."
+          "desc": "Copy of the result."
         }
       ],
       "internal": false
     },
     "rotateVecAroundAxisInlined": {
-      "desc": "Comme rotateVecAroundAxis sans allocation : out = v*cos + (k x v)*sin + k*(k.v)*(1-cos).",
+      "desc": "Like rotateVecAroundAxis without allocation: out = v*cos + (k x v)*sin + k*(k.v)*(1-cos).",
       "params": {
         "v": {
           "type": "vec3",
-          "desc": "Vecteur."
+          "desc": "Vector."
         },
         "k": {
           "type": "vec3",
-          "desc": "Axe unitaire."
+          "desc": "Unit axis."
         },
         "theta": {
           "type": "number",
@@ -493,7 +493,7 @@
         },
         "out": {
           "type": "vec3",
-          "desc": "Reçoit le résultat."
+          "desc": "Receives the result."
         }
       },
       "returns": [
@@ -505,7 +505,7 @@
       "internal": false
     },
     "computeTurningRadius": {
-      "desc": "Rayon de courbure approché par 3 points consécutifs (moyenne des longueurs des deux côtés divisée par tan(angle/2)).",
+      "desc": "Radius of curvature approximated by 3 consecutive points (average of the lengths of the two sides divided by tan(angle/2)).",
       "params": {
         "p1": {
           "type": "vec3",
@@ -513,7 +513,7 @@
         },
         "p2": {
           "type": "vec3",
-          "desc": "Point central."
+          "desc": "Center point."
         },
         "p3": {
           "type": "vec3",
@@ -523,29 +523,29 @@
       "returns": [
         {
           "type": "number",
-          "desc": "Rayon (m)."
+          "desc": "Radius (m)."
         }
       ],
       "internal": false
     },
     "isLineSegIntersect": {
-      "desc": "Teste si le segment (a, b) coupe le segment (c, d).",
+      "desc": "Tests whether segment (a, b) crosses segment (c, d).",
       "params": {
         "a": {
           "type": "vec3",
-          "desc": "Début de ab."
+          "desc": "Start of ab."
         },
         "b": {
           "type": "vec3",
-          "desc": "Fin de ab."
+          "desc": "End of ab."
         },
         "c": {
           "type": "vec3",
-          "desc": "Début de cd."
+          "desc": "Start of cd."
         },
         "d": {
           "type": "vec3",
-          "desc": "Fin de cd."
+          "desc": "End of cd."
         }
       },
       "returns": [
@@ -557,39 +557,39 @@
       "internal": false
     },
     "intersection2LineSegs": {
-      "desc": "Point d'intersection de deux segments (en ligne). Renvoie nil sans intersection.",
+      "desc": "Intersection point of two segments (inline). Returns nil without an intersection.",
       "params": {
         "p1": {
           "type": "vec3",
-          "desc": "Début du segment 1."
+          "desc": "Start of segment 1."
         },
         "p2": {
           "type": "vec3",
-          "desc": "Fin du segment 1."
+          "desc": "End of segment 1."
         },
         "q1": {
           "type": "vec3",
-          "desc": "Début du segment 2."
+          "desc": "Start of segment 2."
         },
         "q2": {
           "type": "vec3",
-          "desc": "Fin du segment 2."
+          "desc": "End of segment 2."
         },
         "out": {
           "type": "vec3",
-          "desc": "Reçoit le point."
+          "desc": "Receives the point."
         }
       },
       "returns": [
         {
           "type": "vec3|nil",
-          "desc": "out ou nil."
+          "desc": "out or nil."
         }
       ],
       "internal": false
     },
     "pointsSame2D": {
-      "desc": "Deux points sont-ils confondus en XY à eps près (par composante).",
+      "desc": "Are two points coincident in XY within eps (per component).",
       "params": {
         "a": {
           "type": "table",
@@ -601,19 +601,19 @@
         },
         "eps": {
           "type": "number",
-          "desc": "Tolérance."
+          "desc": "Tolerance."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "Identiques."
+          "desc": "Identical."
         }
       ],
       "internal": false
     },
     "pointsCompare2D": {
-      "desc": "Comparaison de deux points en XY, pour un tri (-1 ou 1, d'abord par x puis par y).",
+      "desc": "Comparison of two points in XY, for sorting (-1 or 1, first by x then by y).",
       "params": {
         "a": {
           "type": "table",
@@ -625,19 +625,19 @@
         },
         "eps": {
           "type": "number",
-          "desc": "Tolérance sur x."
+          "desc": "Tolerance on x."
         }
       },
       "returns": [
         {
           "type": "integer",
-          "desc": "-1 si a avant b, sinon 1."
+          "desc": "-1 if a is before b, otherwise 1."
         }
       ],
       "internal": false
     },
     "pointAboveOrOnLine2D": {
-      "desc": "Le point est-il au-dessus ou sur la droite left->right (produit vectoriel >= -eps).",
+      "desc": "Is the point above or on the line left->right (cross product >= -eps).",
       "params": {
         "pt": {
           "type": "table",
@@ -645,27 +645,27 @@
         },
         "left": {
           "type": "table",
-          "desc": "Début."
+          "desc": "Start."
         },
         "right": {
           "type": "table",
-          "desc": "Fin."
+          "desc": "End."
         },
         "eps": {
           "type": "number",
-          "desc": "Tolérance."
+          "desc": "Tolerance."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "Résultat."
+          "desc": "Result."
         }
       ],
       "internal": false
     },
     "pointsCollinear2D": {
-      "desc": "Trois points sont-ils alignés en XY (|produit vectoriel| < eps).",
+      "desc": "Are three points aligned in XY (|cross product| < eps).",
       "params": {
         "a": {
           "type": "table",
@@ -681,19 +681,19 @@
         },
         "eps": {
           "type": "number",
-          "desc": "Tolérance."
+          "desc": "Tolerance."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "Alignés."
+          "desc": "Aligned."
         }
       ],
       "internal": false
     },
     "pointBetween2D": {
-      "desc": "Pour un p supposé aligné avec left->right : faux s'il est une extrémité ou en dehors. Testé sur le produit scalaire (unité m^2) et non sur la position normalisée, pour ne pas fendre un segment à sa propre extrémité (ce qui donnerait une pièce de longueur nulle).",
+      "desc": "For a p assumed aligned with left->right: false if it is an endpoint or outside. Tested on the dot product (unit m^2) and not on the normalized position, so as not to split a segment at its own endpoint (which would give a zero-length piece).",
       "params": {
         "p": {
           "type": "table",
@@ -701,27 +701,27 @@
         },
         "left": {
           "type": "table",
-          "desc": "Début."
+          "desc": "Start."
         },
         "right": {
           "type": "table",
-          "desc": "Fin."
+          "desc": "End."
         },
         "eps": {
           "type": "number",
-          "desc": "Tolérance."
+          "desc": "Tolerance."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "Strictement entre."
+          "desc": "Strictly between."
         }
       ],
       "internal": false
     },
     "linesIntersect2D": {
-      "desc": "Intersection de deux droites a0-a1 et b0-b1. Renvoie nil si parallèles.",
+      "desc": "Intersection of two lines a0-a1 and b0-b1. Returns nil if parallel.",
       "params": {
         "a0": {
           "type": "table",
@@ -741,19 +741,19 @@
         },
         "eps": {
           "type": "number",
-          "desc": "Tolérance."
+          "desc": "Tolerance."
         }
       },
       "returns": [
         {
           "type": "table|nil",
-          "desc": "{ pt = {x, y}, alongA, alongB } (codes along de Martinez)."
+          "desc": "{ pt = {x, y}, alongA, alongB } (Martinez along codes)."
         }
       ],
       "internal": false
     },
     "lineDirsHitT2D": {
-      "desc": "Paramètre t le long de p0 + t*d0 au point d'intersection avec p1 + u*d1 ; nil si parallèles. Avec d0 unitaire, t est en mètres.",
+      "desc": "Parameter t along p0 + t*d0 at the intersection point with p1 + u*d1; nil if parallel. With d0 unit, t is in meters.",
       "params": {
         "p0x": {
           "type": "number",
@@ -789,39 +789,39 @@
         },
         "eps": {
           "type": "number",
-          "desc": "Tolérance de parallélisme."
+          "desc": "Parallelism tolerance."
         }
       },
       "returns": [
         {
           "type": "number|nil",
-          "desc": "t, ou nil."
+          "desc": "t, or nil."
         }
       ],
       "internal": false
     },
     "sampleCubicBezier2D": {
-      "desc": "Échantillonne une Bézier cubique en XY (extrémités incluses).",
+      "desc": "Samples a cubic Bezier in XY (endpoints included).",
       "params": {
         "p0": {
           "type": "table",
-          "desc": "Point de contrôle."
+          "desc": "Control point."
         },
         "p1": {
           "type": "table",
-          "desc": "Point de contrôle."
+          "desc": "Control point."
         },
         "p2": {
           "type": "table",
-          "desc": "Point de contrôle."
+          "desc": "Control point."
         },
         "p3": {
           "type": "table",
-          "desc": "Point de contrôle."
+          "desc": "Control point."
         },
         "segs": {
           "type": "integer|nil",
-          "desc": "Nombre de segments (défaut 14)."
+          "desc": "Number of segments (default 14)."
         }
       },
       "returns": [
@@ -833,118 +833,118 @@
       "internal": false
     },
     "reshapeLeadInBezier2D": {
-      "desc": "Remodèle sur place UNE extrémité d'une polyligne de noeuds (x/y, z inchangé) selon une Bézier d'amorce vers un point but, sur une longueur L.",
+      "desc": "Reshapes in place ONE end of a node polyline (x/y, z unchanged) according to a lead-in Bezier toward a goal point, over a length L.",
       "params": {
         "nodes": {
           "type": "vec3[]",
-          "desc": "Noeuds modifiés."
+          "desc": "Modified nodes."
         },
         "fromStart": {
           "type": "boolean",
-          "desc": "true : le début est l'extrémité mobile."
+          "desc": "true: the start is the moving end."
         },
         "p0x": {
           "type": "number",
-          "desc": "Pointe x (déduit du code)."
+          "desc": "Tip x (inferred from code)."
         },
         "p0y": {
           "type": "number",
-          "desc": "Pointe y."
+          "desc": "Tip y."
         },
         "gx": {
           "type": "number",
-          "desc": "But x (déduit du code)."
+          "desc": "Goal x (inferred from code)."
         },
         "gy": {
           "type": "number",
-          "desc": "But y."
+          "desc": "Goal y."
         },
         "L": {
           "type": "number",
-          "desc": "Longueur remodelée (m)."
+          "desc": "Reshaped length (m)."
         }
       },
       "returns": [],
       "internal": false
     },
     "insetPathAlongNormal2D": {
-      "desc": "Décale un chemin 2D vers le centre (cx, cy) de insetM le long de la normale locale (déduit du code).",
+      "desc": "Offsets a 2D path toward the center (cx, cy) by insetM along the local normal (inferred from code).",
       "params": {
         "path": {
           "type": "table[]",
-          "desc": "Chemin."
+          "desc": "Path."
         },
         "cx": {
           "type": "number",
-          "desc": "Centre x."
+          "desc": "Center x."
         },
         "cy": {
           "type": "number",
-          "desc": "Centre y."
+          "desc": "Center y."
         },
         "insetM": {
           "type": "number",
-          "desc": "Retrait (m)."
+          "desc": "Inset (m)."
         }
       },
       "returns": [
         {
           "type": "table[]",
-          "desc": "Nouveau chemin."
+          "desc": "New path."
         }
       ],
       "internal": false
     },
     "offsetPathMiter2D": {
-      "desc": "Décalage parallèle à angles biseautés (miter) d'une polyligne 2D OUVERTE : un point de sortie par sommet (les rails appairés restent alignés), z conservé. Les coins gardent la vraie largeur perpendiculaire. Le côté est choisi UNE fois pour tout le chemin : à l'opposé de (cx, cy), ou vers lui si inward.",
+      "desc": "Parallel offset with mitered corners of an OPEN 2D polyline: one output point per vertex (paired rails stay aligned), z kept. Corners keep the true perpendicular width. The side is chosen ONCE for the whole path: away from (cx, cy), or toward it if inward.",
       "params": {
         "pts": {
           "type": "table[]",
-          "desc": "Polyligne ouverte."
+          "desc": "Open polyline."
         },
         "dist": {
           "type": "number",
-          "desc": "Distance de décalage (m)."
+          "desc": "Offset distance (m)."
         },
         "cx": {
           "type": "number",
-          "desc": "Centre x."
+          "desc": "Center x."
         },
         "cy": {
           "type": "number",
-          "desc": "Centre y."
+          "desc": "Center y."
         },
         "z": {
           "type": "number|nil",
-          "desc": "Z imposé (déduit du code)."
+          "desc": "Imposed Z (inferred from code)."
         },
         "inward": {
           "type": "boolean|nil",
-          "desc": "Décaler vers le centre."
+          "desc": "Offset toward the center."
         }
       },
       "returns": [
         {
           "type": "table[]",
-          "desc": "Points décalés."
+          "desc": "Offset points."
         }
       ],
       "internal": false
     },
     "offsetPathFromCenter2D": {
-      "desc": "Décale une polyligne 2D à l'opposé de (cx, cy) le long de sa normale locale par sommet.",
+      "desc": "Offsets a 2D polyline away from (cx, cy) along its local normal per vertex.",
       "params": {
         "path": {
           "type": "table[]",
-          "desc": "Polyligne."
+          "desc": "Polyline."
         },
         "cx": {
           "type": "number",
-          "desc": "Centre x."
+          "desc": "Center x."
         },
         "cy": {
           "type": "number",
-          "desc": "Centre y."
+          "desc": "Center y."
         },
         "distM": {
           "type": "number",
@@ -952,23 +952,23 @@
         },
         "distArr": {
           "type": "number[]|nil",
-          "desc": "Distances par sommet (déduit du code)."
+          "desc": "Per-vertex distances (inferred from code)."
         }
       },
       "returns": [
         {
           "type": "table[]",
-          "desc": "Points décalés."
+          "desc": "Offset points."
         }
       ],
       "internal": false
     },
     "multiPolygonCentroidXY": {
-      "desc": "Centroïde pondéré par l'aire d'un ou plusieurs anneaux fermés 2D ({x, y}). Renvoie cx, cy ou nil.",
+      "desc": "Area-weighted centroid of one or more closed 2D rings ({x, y}). Returns cx, cy or nil.",
       "params": {
         "regions": {
           "type": "table[]",
-          "desc": "Anneaux."
+          "desc": "Rings."
         }
       },
       "returns": [
@@ -984,11 +984,11 @@
       "internal": false
     },
     "polylineCumLength3D": {
-      "desc": "Longueurs cumulées 3D le long d'une polyligne.",
+      "desc": "Cumulative 3D lengths along a polyline.",
       "params": {
         "pts": {
           "type": "vec3[]",
-          "desc": "Polyligne."
+          "desc": "Polyline."
         }
       },
       "returns": [
@@ -998,21 +998,21 @@
         },
         {
           "type": "number",
-          "desc": "Longueur totale."
+          "desc": "Total length."
         }
       ],
       "internal": false
     },
     "polylineCumLength2D": {
-      "desc": "Cousine 2D (XY seul) de polylineCumLength3D pour des points {x, y} simples : out[i] = distance de pts[1] à pts[i]. Un tableau out réutilisable évite les allocations.",
+      "desc": "2D (XY only) cousin of polylineCumLength3D for plain {x, y} points: out[i] = distance from pts[1] to pts[i]. A reusable out array avoids allocations.",
       "params": {
         "pts": {
           "type": "table[]",
-          "desc": "Polyligne."
+          "desc": "Polyline."
         },
         "out": {
           "type": "number[]|nil",
-          "desc": "Tableau réutilisé (vidé puis rempli)."
+          "desc": "Reused array (cleared then filled)."
         }
       },
       "returns": [
@@ -1022,57 +1022,57 @@
         },
         {
           "type": "number",
-          "desc": "Longueur totale."
+          "desc": "Total length."
         }
       ],
       "internal": false
     },
     "sigMoved": {
-      "desc": "Une signature de forme (liste plate de nombres et de chaînes) a-t-elle bougé depuis old : nombres de plus de tolM, chaînes dès qu'elles diffèrent.",
+      "desc": "Has a shape signature (flat list of numbers and strings) moved since old: numbers by more than tolM, strings as soon as they differ.",
       "params": {
         "old": {
           "type": "table|nil",
-          "desc": "Ancienne signature."
+          "desc": "Old signature."
         },
         "new": {
           "type": "table",
-          "desc": "Nouvelle signature."
+          "desc": "New signature."
         },
         "tolM": {
           "type": "number",
-          "desc": "Tolérance numérique."
+          "desc": "Numeric tolerance."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "true si elle a bougé."
+          "desc": "true if it moved."
         }
       ],
       "internal": false
     },
     "simplifyRDP": {
-      "desc": "Simplification de Ramer-Douglas-Peucker d'une polyligne (distance perpendiculaire mesurée en 3D).",
+      "desc": "Ramer-Douglas-Peucker simplification of a polyline (perpendicular distance measured in 3D).",
       "params": {
         "points": {
           "type": "vec3[]",
-          "desc": "Polyligne."
+          "desc": "Polyline."
         },
         "tolM": {
           "type": "number",
-          "desc": "Tolérance (m)."
+          "desc": "Tolerance (m)."
         }
       },
       "returns": [
         {
           "type": "vec3[]",
-          "desc": "Polyligne simplifiée."
+          "desc": "Simplified polyline."
         }
       ],
       "internal": false
     },
     "chordify": {
-      "desc": "Réduit une courbe tessellée à des cordes d'environ chord mètres ; les points drapeautés (flags) sont toujours gardés, ainsi que les extrémités.",
+      "desc": "Reduces a tessellated curve to chords of about chord meters; flagged points (flags) are always kept, as are the ends.",
       "params": {
         "pts": {
           "type": "table[]",
@@ -1080,119 +1080,119 @@
         },
         "n": {
           "type": "integer",
-          "desc": "Nombre de points."
+          "desc": "Number of points."
         },
         "chord": {
           "type": "number",
-          "desc": "Longueur de corde (m)."
+          "desc": "Chord length (m)."
         },
         "flags": {
           "type": "table|nil",
-          "desc": "Drapeaux par point."
+          "desc": "Flags per point."
         }
       },
       "returns": [
         {
           "type": "table[]",
-          "desc": "Points gardés."
+          "desc": "Kept points."
         },
         {
           "type": "table|nil",
-          "desc": "Drapeaux correspondants."
+          "desc": "Corresponding flags."
         }
       ],
       "internal": false
     },
     "weldShortSegments": {
-      "desc": "Soude sur place les noeuds consécutifs presque confondus (segments plus courts que minLen).",
+      "desc": "Welds in place consecutive nodes that are almost coincident (segments shorter than minLen).",
       "params": {
         "nodes": {
           "type": "vec3[]",
-          "desc": "Noeuds modifiés."
+          "desc": "Modified nodes."
         },
         "widths": {
           "type": "number[]",
-          "desc": "Largeurs, mises à jour en parallèle."
+          "desc": "Widths, updated in parallel."
         },
         "minLen": {
           "type": "number",
-          "desc": "Longueur minimale (m)."
+          "desc": "Minimum length (m)."
         }
       },
       "returns": [
         {
           "type": "integer",
-          "desc": "Nombre de noeuds conservés (déduit du code)."
+          "desc": "Number of kept nodes (inferred from code)."
         }
       ],
       "internal": false
     },
     "densifyByMaxSpacing": {
-      "desc": "Densifie une polyligne pour qu'aucun segment ne dépasse maxSpacing.",
+      "desc": "Densifies a polyline so that no segment exceeds maxSpacing.",
       "params": {
         "points": {
           "type": "table[]",
-          "desc": "Polyligne."
+          "desc": "Polyline."
         },
         "maxSpacing": {
           "type": "number",
-          "desc": "Espacement maximal (m)."
+          "desc": "Maximum spacing (m)."
         }
       },
       "returns": [
         {
           "type": "table[]",
-          "desc": "Polyligne densifiée."
+          "desc": "Densified polyline."
         }
       ],
       "internal": false
     },
     "resampleUniformNodesWidths": {
-      "desc": "Rééchantillonne une polyligne (noeuds et largeurs) à pas régulier.",
+      "desc": "Resamples a polyline (nodes and widths) at a regular step.",
       "params": {
         "nodes": {
           "type": "vec3[]",
-          "desc": "Noeuds."
+          "desc": "Nodes."
         },
         "widths": {
           "type": "number[]",
-          "desc": "Largeurs."
+          "desc": "Widths."
         },
         "spacing": {
           "type": "number",
-          "desc": "Pas (m)."
+          "desc": "Step (m)."
         }
       },
       "returns": [
         {
           "type": "vec3[]",
-          "desc": "Nouveaux noeuds (les largeurs correspondantes sont aussi produites, déduit du code)."
+          "desc": "New nodes (the corresponding widths are also produced, inferred from code)."
         }
       ],
       "internal": false
     },
     "smoothClosedPolygonChaikin": {
-      "desc": "Coupe de coins de Chaikin d'un polygone fermé de points {x, y}.",
+      "desc": "Chaikin corner cutting of a closed polygon of {x, y} points.",
       "params": {
         "poly": {
           "type": "table[]",
-          "desc": "Polygone."
+          "desc": "Polygon."
         },
         "iterations": {
           "type": "integer",
-          "desc": "Nombre d'itérations."
+          "desc": "Number of iterations."
         }
       },
       "returns": [
         {
           "type": "table[]",
-          "desc": "Polygone lissé."
+          "desc": "Smoothed polygon."
         }
       ],
       "internal": false
     },
     "distSqPointSeg2D": {
-      "desc": "Distance au carré du point (px, py) au segment FINI AB (t borné au segment). Pour les tests de proximité fréquents.",
+      "desc": "Squared distance from the point (px, py) to the FINITE segment AB (t clamped to the segment). For frequent proximity tests.",
       "params": {
         "px": {
           "type": "number",
@@ -1222,13 +1222,13 @@
       "returns": [
         {
           "type": "number",
-          "desc": "Distance au carré."
+          "desc": "Squared distance."
         }
       ],
       "internal": false
     },
     "segCrossParam2D": {
-      "desc": "Croisement strict de deux segments ouverts AB et CD : renvoie le paramètre t sur AB dans (0,1), sinon nil (parallèles ou croisement sur une extrémité). Les extrémités sont exclues pour que deux bandes qui se touchent ne soient pas lues comme un pli.",
+      "desc": "Strict crossing of two open segments AB and CD: returns the parameter t on AB in (0,1), otherwise nil (parallel or crossing at an endpoint). Endpoints are excluded so that two strips that touch are not read as a fold.",
       "params": {
         "ax": {
           "type": "number",
@@ -1266,13 +1266,13 @@
       "returns": [
         {
           "type": "number|nil",
-          "desc": "t sur AB, ou nil."
+          "desc": "t on AB, or nil."
         }
       ],
       "internal": false
     },
     "pointInRing2D": {
-      "desc": "Point dans un polygone 2D (tir de rayon, pair-impair), indifférent au sens de l'anneau. Les sommets sont des {x, y}.",
+      "desc": "Point in a 2D polygon (ray casting, even-odd), independent of the ring's direction. The vertices are {x, y}.",
       "params": {
         "px": {
           "type": "number",
@@ -1284,23 +1284,23 @@
         },
         "ring": {
           "type": "table[]",
-          "desc": "Anneau."
+          "desc": "Ring."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "Dedans."
+          "desc": "Inside."
         }
       ],
       "internal": false
     },
     "clipRingRect2D": {
-      "desc": "Découpe un anneau à la boîte x0..x1, y0..y1. Un anneau concave revient en un seul anneau qui longe le bord de la boîte entre ses morceaux, ce qui couvre la même surface dans la boîte.",
+      "desc": "Clips a ring to the box x0..x1, y0..y1. A concave ring comes back as a single ring that runs along the edge of the box between its pieces, which covers the same area in the box.",
       "params": {
         "pts": {
           "type": "table[]",
-          "desc": "Anneau."
+          "desc": "Ring."
         },
         "x0": {
           "type": "number",
@@ -1322,13 +1322,13 @@
       "returns": [
         {
           "type": "table[]",
-          "desc": "Anneau découpé (peut avoir moins de 3 points)."
+          "desc": "Clipped ring (may have fewer than 3 points)."
         }
       ],
       "internal": false
     },
     "pointInTri2D": {
-      "desc": "Point dans un triangle 2D (barycentrique), en scalaires pour les boucles serrées comme l'ear clipping.",
+      "desc": "Point in a 2D triangle (barycentric), in scalars for tight loops like ear clipping.",
       "params": {
         "px": {
           "type": "number",
@@ -1366,97 +1366,97 @@
       "returns": [
         {
           "type": "boolean",
-          "desc": "Dedans."
+          "desc": "Inside."
         }
       ],
       "internal": false
     },
     "triangulatePolygon2D": {
-      "desc": "Triangulation par ear clipping d'un polygone 2D simple (anneau de {x, y}, l'un ou l'autre sens). La répétition de fermeture est retirée avant : arête de longueur nulle, elle bloquerait la découpe et ferait jeter le capot entier.",
+      "desc": "Ear clipping triangulation of a simple 2D polygon (ring of {x, y}, either direction). The closing repeat is removed beforehand: a zero-length edge would block the clipping and cause the whole cap to be discarded.",
       "params": {
         "poly": {
           "type": "table[]",
-          "desc": "Anneau."
+          "desc": "Ring."
         }
       },
       "returns": [
         {
           "type": "integer[][]",
-          "desc": "Triplets d'indices dans l'anneau ouvert (liste vide si échec)."
+          "desc": "Triplets of indices into the open ring (empty list on failure)."
         }
       ],
       "internal": false
     },
     "ringSignedArea2": {
-      "desc": "Deux fois l'aire signée d'un anneau 2D de {x, y} ; positif = anti-horaire (x à droite, y en haut).",
+      "desc": "Twice the signed area of a 2D ring of {x, y}; positive = counter-clockwise (x to the right, y up).",
       "params": {
         "ring": {
           "type": "table[]",
-          "desc": "Anneau."
+          "desc": "Ring."
         }
       },
       "returns": [
         {
           "type": "number",
-          "desc": "2 x aire signée."
+          "desc": "2 x signed area."
         }
       ],
       "internal": false
     },
     "bridgeHoles2D": {
-      "desc": "Fusionne des anneaux de trous dans l'anneau extérieur par des arêtes de pont. count plafonne le nombre de trous pris.",
+      "desc": "Merges hole rings into the outer ring by bridge edges. count caps the number of holes taken.",
       "params": {
         "outer": {
           "type": "table[]",
-          "desc": "Anneau extérieur (remis anti-horaire)."
+          "desc": "Outer ring (set back to counter-clockwise)."
         },
         "holes": {
           "type": "table[][]",
-          "desc": "Trous (remis horaires, ponts par min-x croissant)."
+          "desc": "Holes (set back to clockwise, bridges by increasing min-x)."
         },
         "count": {
           "type": "integer|nil",
-          "desc": "Nombre maximal de trous pris."
+          "desc": "Maximum number of holes taken."
         }
       },
       "returns": [
         {
           "type": "table[]",
-          "desc": "Anneau fusionné."
+          "desc": "Merged ring."
         }
       ],
       "internal": false
     },
     "triangulateWithHoles2D": {
-      "desc": "Triangule un polygone 2D éventuellement troué. Si l'ear clipping échoue avec un anneau pontant, abandonne les trous un par un plutôt que de perdre tout le capot.",
+      "desc": "Triangulates a possibly holed 2D polygon. If ear clipping fails with a bridging ring, drops the holes one by one rather than losing the whole cap.",
       "params": {
         "outer": {
           "type": "table[]",
-          "desc": "Anneau extérieur."
+          "desc": "Outer ring."
         },
         "holes": {
           "type": "table[][]|nil",
-          "desc": "Trous."
+          "desc": "Holes."
         }
       },
       "returns": [
         {
           "type": "table[]",
-          "desc": "Anneau auquel les triangles se réfèrent."
+          "desc": "Ring to which the triangles refer."
         },
         {
           "type": "integer[][]",
-          "desc": "Triplets d'indices."
+          "desc": "Triplets of indices."
         }
       ],
       "internal": false
     },
     "outsetClosedRing2D": {
-      "desc": "Pousse un anneau fermé VERS L'EXTÉRIEUR d'une petite distance, coins biseautés (mitrés).",
+      "desc": "Pushes a closed ring OUTWARD by a small distance, mitered corners.",
       "params": {
         "ring": {
           "type": "table[]",
-          "desc": "Anneau."
+          "desc": "Ring."
         },
         "dist": {
           "type": "number",
@@ -1466,17 +1466,17 @@
       "returns": [
         {
           "type": "table[]|nil",
-          "desc": "Anneau agrandi."
+          "desc": "Enlarged ring."
         }
       ],
       "internal": false
     },
     "outsetRingSides2D": {
-      "desc": "Comme outsetClosedRing2D mais seulement pour les côtés désignés par move[i] ; les autres restent exactement sur leur droite. Un sommet entre un côté mobile et un côté fixe glisse le long du côté fixe : pas d'encoche, nombre de sommets inchangé.",
+      "desc": "Like outsetClosedRing2D but only for the sides designated by move[i]; the others stay exactly on their line. A vertex between a moving side and a fixed side slides along the fixed side: no notch, vertex count unchanged.",
       "params": {
         "ring": {
           "type": "table[]",
-          "desc": "Anneau."
+          "desc": "Ring."
         },
         "dist": {
           "type": "number",
@@ -1484,23 +1484,23 @@
         },
         "move": {
           "type": "table<integer, boolean>",
-          "desc": "Côtés à déplacer."
+          "desc": "Sides to move."
         }
       },
       "returns": [
         {
           "type": "table[]",
-          "desc": "Anneau."
+          "desc": "Ring."
         }
       ],
       "internal": false
     },
     "insetClosedRing2D": {
-      "desc": "Rétrécit un polygone fermé de {x, y} vers l'intérieur d'au plus dist, le long de la normale moyenne des arêtes de chaque sommet (vraie direction intérieure locale, correcte pour les anneaux concaves).",
+      "desc": "Shrinks a closed polygon of {x, y} inward by at most dist, along the average normal of the edges of each vertex (true local inward direction, correct for concave rings).",
       "params": {
         "ring": {
           "type": "table[]",
-          "desc": "Anneau."
+          "desc": "Ring."
         },
         "dist": {
           "type": "number",
@@ -1510,17 +1510,17 @@
       "returns": [
         {
           "type": "table[]",
-          "desc": "Anneau rétréci."
+          "desc": "Shrunk ring."
         }
       ],
       "internal": false
     },
     "splitPolylineByBlocked": {
-      "desc": "Coupe une polyligne 2D en tronçons qui restent hors d'une région bloquée.",
+      "desc": "Cuts a 2D polyline into stretches that stay outside a blocked region.",
       "params": {
         "pts": {
           "type": "table[]",
-          "desc": "Polyligne {x, y}."
+          "desc": "Polyline {x, y}."
         },
         "isBlocked": {
           "type": "function",
@@ -1528,39 +1528,39 @@
         },
         "stepM": {
           "type": "number|nil",
-          "desc": "Pas de test (m, défaut 1.0 si <= 0.05)."
+          "desc": "Test step (m, default 1.0 if <= 0.05)."
         },
         "minKeepM": {
           "type": "number|nil",
-          "desc": "Longueur minimale d'un tronçon gardé (déduit du code)."
+          "desc": "Minimum length of a kept stretch (inferred from code)."
         }
       },
       "returns": [
         {
           "type": "table[][]",
-          "desc": "Tronçons."
+          "desc": "Stretches."
         }
       ],
       "internal": false
     },
     "polylineZAtArcFromTip": {
-      "desc": "Z du premier échantillon à la distance d'arc dist depuis le bout début ou fin.",
+      "desc": "Z of the first sample at arc distance dist from the start or end tip.",
       "params": {
         "pts": {
           "type": "vec3[]",
-          "desc": "Polyligne."
+          "desc": "Polyline."
         },
         "cum": {
           "type": "number[]",
-          "desc": "Longueurs cumulées."
+          "desc": "Cumulative lengths."
         },
         "total": {
           "type": "number",
-          "desc": "Longueur totale."
+          "desc": "Total length."
         },
         "fromStart": {
           "type": "boolean",
-          "desc": "Mesurer depuis le début."
+          "desc": "Measure from the start."
         },
         "dist": {
           "type": "number",
@@ -1576,19 +1576,19 @@
       "internal": false
     },
     "tipOutwardXY": {
-      "desc": "Direction XY unitaire vers l'extérieur au-delà d'un bout (à l'opposé de la polyligne). Parcourt minWalkM le long de la chaîne pour qu'un premier segment court replié n'inverse pas la visée.",
+      "desc": "Outward unit XY direction beyond an end (away from the polyline). Walks minWalkM along the chain so that a short folded-back first segment does not reverse the aim.",
       "params": {
         "pts": {
           "type": "table[]",
-          "desc": "Polyligne."
+          "desc": "Polyline."
         },
         "fromStart": {
           "type": "boolean",
-          "desc": "Bout début ou fin."
+          "desc": "Start or end tip."
         },
         "minWalkM": {
           "type": "number",
-          "desc": "Distance minimale parcourue (m)."
+          "desc": "Minimum walked distance (m)."
         }
       },
       "returns": [
@@ -1604,15 +1604,15 @@
       "internal": false
     },
     "angleBetweenVecsNorm": {
-      "desc": "Petit angle entre deux vecteurs unitaires (rad).",
+      "desc": "Small angle between two unit vectors (rad).",
       "params": {
         "a": {
           "type": "vec3",
-          "desc": "Vecteur unitaire."
+          "desc": "Unit vector."
         },
         "b": {
           "type": "vec3",
-          "desc": "Vecteur unitaire."
+          "desc": "Unit vector."
         }
       },
       "returns": [
@@ -1624,15 +1624,15 @@
       "internal": false
     },
     "angleBetweenVecs": {
-      "desc": "Petit angle entre deux vecteurs de longueur quelconque (rad).",
+      "desc": "Small angle between two vectors of arbitrary length (rad).",
       "params": {
         "a": {
           "type": "vec3",
-          "desc": "Vecteur."
+          "desc": "Vector."
         },
         "b": {
           "type": "vec3",
-          "desc": "Vecteur."
+          "desc": "Vector."
         }
       },
       "returns": [
@@ -1644,55 +1644,55 @@
       "internal": false
     },
     "signedAngleBetweenVecs": {
-      "desc": "Angle signé entre deux vecteurs autour d'un axe, en supposant les vecteurs dans le plan de rotation.",
+      "desc": "Signed angle between two vectors around an axis, assuming the vectors are in the plane of rotation.",
       "params": {
         "a": {
           "type": "vec3",
-          "desc": "Vecteur."
+          "desc": "Vector."
         },
         "b": {
           "type": "vec3",
-          "desc": "Vecteur."
+          "desc": "Vector."
         },
         "axis": {
           "type": "vec3",
-          "desc": "Axe."
+          "desc": "Axis."
         }
       },
       "returns": [
         {
           "type": "number",
-          "desc": "Angle signé (rad)."
+          "desc": "Signed angle (rad)."
         }
       ],
       "internal": false
     },
     "signedAngleAroundAxis": {
-      "desc": "Angle signé entre deux vecteurs autour d'un axe, après projection sur le plan de rotation. Renvoyé en DEGRÉS (contrairement à signedAngleBetweenVecs).",
+      "desc": "Signed angle between two vectors around an axis, after projection onto the plane of rotation. Returned in DEGREES (unlike signedAngleBetweenVecs).",
       "params": {
         "fromVec": {
           "type": "vec3",
-          "desc": "Vecteur de départ."
+          "desc": "Start vector."
         },
         "toVec": {
           "type": "vec3",
-          "desc": "Vecteur d'arrivée."
+          "desc": "End vector."
         },
         "axis": {
           "type": "vec3",
-          "desc": "Axe."
+          "desc": "Axis."
         }
       },
       "returns": [
         {
           "type": "number",
-          "desc": "Angle signé (degrés)."
+          "desc": "Signed angle (degrees)."
         }
       ],
       "internal": false
     },
     "quadUV": {
-      "desc": "Bilinéaire inverse dans le plan XY : le (u, v) tel que p = lerp(lerp(q1, q2, u), lerp(q3, q4, u), v), ou nil si p est hors du quad. u court de q1 vers q2, v de q1 vers q3.",
+      "desc": "Inverse bilinear in the XY plane: the (u, v) such that p = lerp(lerp(q1, q2, u), lerp(q3, q4, u), v), or nil if p is outside the quad. u runs from q1 toward q2, v from q1 toward q3.",
       "params": {
         "px": {
           "type": "number",
@@ -1704,19 +1704,19 @@
         },
         "q1": {
           "type": "table",
-          "desc": "Coin 1."
+          "desc": "Corner 1."
         },
         "q2": {
           "type": "table",
-          "desc": "Coin 2."
+          "desc": "Corner 2."
         },
         "q3": {
           "type": "table",
-          "desc": "Coin 3."
+          "desc": "Corner 3."
         },
         "q4": {
           "type": "table",
-          "desc": "Coin 4."
+          "desc": "Corner 4."
         }
       },
       "returns": [
@@ -1732,7 +1732,7 @@
       "internal": false
     },
     "intersectsUpQuadBarycentric": {
-      "desc": "Intersecte un point (x, y) avec un quad et renvoie la hauteur interpolée à cet endroit, ou false si hors du quad.",
+      "desc": "Intersects a point (x, y) with a quad and returns the interpolated height there, or false if outside the quad.",
       "params": {
         "p": {
           "type": "vec3",
@@ -1740,19 +1740,19 @@
         },
         "q": {
           "type": "table",
-          "desc": "Quad : 4 sommets vec3."
+          "desc": "Quad: 4 vec3 vertices."
         }
       },
       "returns": [
         {
           "type": "number|boolean",
-          "desc": "Hauteur ou false."
+          "desc": "Height or false."
         }
       ],
       "internal": false
     },
     "pointInQuadBarycentric": {
-      "desc": "Détermine si un point est dans un quad (en XY).",
+      "desc": "Determines whether a point is in a quad (in XY).",
       "params": {
         "p": {
           "type": "vec3",
@@ -1760,23 +1760,23 @@
         },
         "q": {
           "type": "table",
-          "desc": "Quad : 4 sommets."
+          "desc": "Quad: 4 vertices."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "Dedans."
+          "desc": "Inside."
         }
       ],
       "internal": false
     },
     "computeSourcesAABB": {
-      "desc": "Boîte englobante (XY) des sources données.",
+      "desc": "Bounding box (XY) of the given sources.",
       "params": {
         "sources": {
           "type": "table[]",
-          "desc": "Sources (points ou splines, déduit du code)."
+          "desc": "Sources (points or splines, inferred from code)."
         }
       },
       "returns": [
@@ -1788,15 +1788,15 @@
       "internal": false
     },
     "getAllQuadrilaterals": {
-      "desc": "Construit les quadrilatères des sources, avec gonflement latéral (sans étirement longitudinal).",
+      "desc": "Builds the quadrilaterals of the sources, with lateral inflation (without longitudinal stretching).",
       "params": {
         "sources": {
           "type": "table[]",
-          "desc": "Sources de type spline."
+          "desc": "Spline-type sources."
         },
         "margin": {
           "type": "number",
-          "desc": "Marge latérale (m)."
+          "desc": "Lateral margin (m)."
         }
       },
       "returns": [
@@ -1808,7 +1808,7 @@
       "internal": false
     },
     "populateTreeQuads": {
-      "desc": "Crée et remplit un kd-tree contenant les quads donnés.",
+      "desc": "Creates and fills a kd-tree containing the given quads.",
       "params": {
         "quads": {
           "type": "table[]",
@@ -1818,39 +1818,39 @@
       "returns": [
         {
           "type": "table",
-          "desc": "Arbre kdtreebox2d."
+          "desc": "kdtreebox2d tree."
         }
       ],
       "internal": false
     },
     "splitSplineGeometry": {
-      "desc": "Coupe une géométrie de spline à l'indice de noeud donné (les deux moitiés sont écartées de 2 m au point de coupe). corners (facultatif) est un tableau de surcharges par noeud, conservé pour que les outils d'ingénierie gardent leurs rayons par virage.",
+      "desc": "Cuts a spline geometry at the given node index (the two halves are moved 2 m apart at the cut point). corners (optional) is an array of per-node overrides, kept so that the engineering tools keep their per-turn radii.",
       "params": {
         "nodes": {
           "type": "vec3[]",
-          "desc": "Noeuds."
+          "desc": "Nodes."
         },
         "widths": {
           "type": "number[]",
-          "desc": "Largeurs."
+          "desc": "Widths."
         },
         "nmls": {
           "type": "vec3[]",
-          "desc": "Normales."
+          "desc": "Normals."
         },
         "splitNodeIdx": {
           "type": "integer",
-          "desc": "Indice de coupe."
+          "desc": "Cut index."
         },
         "corners": {
           "type": "table|nil",
-          "desc": "Surcharges de virages alignées sur les noeuds."
+          "desc": "Turn overrides aligned with the nodes."
         }
       },
       "returns": [
         {
           "type": "table|nil",
-          "desc": "nodes1 (nil si indice invalide)."
+          "desc": "nodes1 (nil if invalid index)."
         },
         {
           "type": "table|nil",
@@ -1884,27 +1884,27 @@
       "internal": false
     },
     "splitLoopSplineGeometry": {
-      "desc": "Coupe une spline en boucle à l'indice donné et renvoie la géométrie réordonnée. corners est renvoyé en 4e valeur.",
+      "desc": "Cuts a looped spline at the given index and returns the reordered geometry. corners is returned as the 4th value.",
       "params": {
         "nodes": {
           "type": "vec3[]",
-          "desc": "Noeuds."
+          "desc": "Nodes."
         },
         "widths": {
           "type": "number[]",
-          "desc": "Largeurs."
+          "desc": "Widths."
         },
         "nmls": {
           "type": "vec3[]",
-          "desc": "Normales."
+          "desc": "Normals."
         },
         "splitNodeIdx": {
           "type": "integer",
-          "desc": "Indice de coupe."
+          "desc": "Cut index."
         },
         "corners": {
           "type": "table|nil",
-          "desc": "Surcharges de virages."
+          "desc": "Turn overrides."
         }
       },
       "returns": [
@@ -1928,47 +1928,47 @@
       "internal": false
     },
     "joinSplineGeometry": {
-      "desc": "Joint deux géométries de spline aux indices de noeud donnés. Renvoie nil si les indices sont invalides.",
+      "desc": "Joins two spline geometries at the given node indices. Returns nil if the indices are invalid.",
       "params": {
         "n1": {
           "type": "vec3[]",
-          "desc": "Noeuds 1."
+          "desc": "Nodes 1."
         },
         "w1": {
           "type": "number[]",
-          "desc": "Largeurs 1."
+          "desc": "Widths 1."
         },
         "nm1": {
           "type": "vec3[]",
-          "desc": "Normales 1."
+          "desc": "Normals 1."
         },
         "nodeIdx1": {
           "type": "integer",
-          "desc": "Indice de jonction 1."
+          "desc": "Junction index 1."
         },
         "n2": {
           "type": "vec3[]",
-          "desc": "Noeuds 2."
+          "desc": "Nodes 2."
         },
         "w2": {
           "type": "number[]",
-          "desc": "Largeurs 2."
+          "desc": "Widths 2."
         },
         "nm2": {
           "type": "vec3[]",
-          "desc": "Normales 2."
+          "desc": "Normals 2."
         },
         "nodeIdx2": {
           "type": "integer",
-          "desc": "Indice de jonction 2."
+          "desc": "Junction index 2."
         },
         "c1": {
           "type": "table|nil",
-          "desc": "Surcharges de virages 1."
+          "desc": "Turn overrides 1."
         },
         "c2": {
           "type": "table|nil",
-          "desc": "Surcharges 2."
+          "desc": "Overrides 2."
         }
       },
       "returns": [
@@ -1992,7 +1992,7 @@
       "internal": false
     },
     "flipSplineDirection": {
-      "desc": "Inverse le sens d'une spline sur place (noeuds, normales, corners) et marque spline.isDirty.",
+      "desc": "Reverses the direction of a spline in place (nodes, normals, corners) and marks spline.isDirty.",
       "params": {
         "spline": {
           "type": "table",
@@ -2003,15 +2003,15 @@
       "internal": false
     },
     "closestRibbonSegPointToPoint": {
-      "desc": "Point le plus proche, sur un segment de ruban donné, d'un point donné.",
+      "desc": "Closest point, on a given ribbon segment, to a given point.",
       "params": {
         "segIdx": {
           "type": "integer",
-          "desc": "Indice du segment."
+          "desc": "Segment index."
         },
         "ribbon": {
           "type": "table",
-          "desc": "Ruban."
+          "desc": "Ribbon."
         },
         "p": {
           "type": "vec3",
@@ -2021,37 +2021,37 @@
       "returns": [
         {
           "type": "any|nil",
-          "desc": "Point le plus proche (nil, nil si indisponible)."
+          "desc": "Closest point (nil, nil if unavailable)."
         },
         {
           "type": "number|nil",
-          "desc": "Distance au carré."
+          "desc": "Squared distance."
         }
       ],
       "internal": false
     },
     "getNodeSpansInsidePolygon": {
-      "desc": "Étant donné une polyligne et un polygone, renvoie les suites d'indices consécutifs qui sont dans le polygone.",
+      "desc": "Given a polyline and a polygon, returns the runs of consecutive indices that are in the polygon.",
       "params": {
         "nodes": {
           "type": "vec3[]",
-          "desc": "Polyligne."
+          "desc": "Polyline."
         },
         "polygon": {
           "type": "table[]",
-          "desc": "Polygone."
+          "desc": "Polygon."
         }
       },
       "returns": [
         {
           "type": "table[]",
-          "desc": "Suites d'indices."
+          "desc": "Runs of indices."
         }
       ],
       "internal": false
     },
     "projectPointToSpline": {
-      "desc": "Projette un point sur une spline. Renvoie nil si hors des bornes des segments.",
+      "desc": "Projects a point onto a spline. Returns nil if outside the segment bounds.",
       "params": {
         "pos": {
           "type": "vec3",
@@ -2065,49 +2065,49 @@
       "returns": [
         {
           "type": "vec3|nil",
-          "desc": "Point projeté le plus proche."
+          "desc": "Closest projected point."
         },
         {
           "type": "number|nil",
-          "desc": "s dans [0,1]."
+          "desc": "s in [0,1]."
         },
         {
           "type": "number|nil",
-          "desc": "t latéral dans [-inf, inf]."
+          "desc": "Lateral t in [-inf, inf]."
         }
       ],
       "internal": false
     },
     "sampleSpline": {
-      "desc": "Échantillonne à longueur d'arc réelle une polyligne pour calculer positions et repère de Frenet à intervalles réguliers. Sans effet si spacing n'est pas > 0.",
+      "desc": "Samples a polyline at true arc length to compute positions and Frenet frame at regular intervals. No effect if spacing is not > 0.",
       "params": {
         "divPoints": {
           "type": "vec3[]",
-          "desc": "Points de division."
+          "desc": "Division points."
         },
         "tangents": {
           "type": "vec3[]",
-          "desc": "Tangentes."
+          "desc": "Tangents."
         },
         "normals": {
           "type": "vec3[]",
-          "desc": "Normales."
+          "desc": "Normals."
         },
         "spacing": {
           "type": "number",
-          "desc": "Pas (m)."
+          "desc": "Step (m)."
         },
         "outPosns": {
           "type": "vec3[]",
-          "desc": "Sortie positions (vidée)."
+          "desc": "Positions output (cleared)."
         },
         "outTans": {
           "type": "vec3[]",
-          "desc": "Sortie tangentes."
+          "desc": "Tangents output."
         },
         "outNormals": {
           "type": "vec3[]",
-          "desc": "Sortie normales."
+          "desc": "Normals output."
         }
       },
       "returns": [
@@ -2127,148 +2127,148 @@
       "internal": false
     },
     "sampleSplineEvenFit": {
-      "desc": "Échantillonneur à répartition ajustée pour des objets discrets (lampadaires, bornes) : le pas est ajusté pour que la longueur totale soit un nombre entier d'intervalles.",
+      "desc": "Sampler with adjusted distribution for discrete objects (lamp posts, bollards): the step is adjusted so that the total length is a whole number of intervals.",
       "params": {
         "divPoints": {
           "type": "vec3[]",
-          "desc": "Points de division."
+          "desc": "Division points."
         },
         "tangents": {
           "type": "vec3[]",
-          "desc": "Tangentes."
+          "desc": "Tangents."
         },
         "normals": {
           "type": "vec3[]",
-          "desc": "Normales."
+          "desc": "Normals."
         },
         "targetSpacing": {
           "type": "number",
-          "desc": "Pas visé (m, > 0)."
+          "desc": "Target step (m, > 0)."
         },
         "isLoop": {
           "type": "boolean",
-          "desc": "Spline en boucle."
+          "desc": "Looped spline."
         },
         "outPosns": {
           "type": "vec3[]",
-          "desc": "Sortie positions."
+          "desc": "Positions output."
         },
         "outTans": {
           "type": "vec3[]",
-          "desc": "Sortie tangentes."
+          "desc": "Tangents output."
         },
         "outNormals": {
           "type": "vec3[]",
-          "desc": "Sortie normales."
+          "desc": "Normals output."
         }
       },
       "returns": [],
       "internal": false
     },
     "ribbonUpFromAlong": {
-      "desc": "Vecteur haut du ruban de route pour une direction along unitaire : up perpendiculaire à along, roulis pris sur upRef. prevAcross garde le signe latéral continu le long d'une série de placements.",
+      "desc": "Up vector of the road ribbon for a unit along direction: up perpendicular to along, roll taken from upRef. prevAcross keeps the lateral sign continuous along a series of placements.",
       "params": {
         "along": {
           "type": "vec3",
-          "desc": "Direction unitaire."
+          "desc": "Unit direction."
         },
         "upRef": {
           "type": "vec3",
-          "desc": "Haut de référence."
+          "desc": "Reference up."
         },
         "outUp": {
           "type": "vec3",
-          "desc": "Reçoit le haut."
+          "desc": "Receives the up."
         },
         "prevAcross": {
           "type": "vec3|nil",
-          "desc": "Vecteur latéral précédent."
+          "desc": "Previous lateral vector."
         }
       },
       "returns": [],
       "internal": false
     },
     "ribbonIntervalFrame": {
-      "desc": "Repère à mi-intervalle pour des panneaux rigides de kit sur un bord incliné ou en dévers (clôtures, glissières).",
+      "desc": "Mid-interval frame for rigid kit panels on a sloped or banked edge (fences, guardrails).",
       "params": {
         "p1": {
           "type": "vec3",
-          "desc": "Début."
+          "desc": "Start."
         },
         "p2": {
           "type": "vec3",
-          "desc": "Fin."
+          "desc": "End."
         },
         "t1": {
           "type": "vec3",
-          "desc": "Tangente début."
+          "desc": "Start tangent."
         },
         "t2": {
           "type": "vec3",
-          "desc": "Tangente fin."
+          "desc": "End tangent."
         },
         "n1": {
           "type": "vec3",
-          "desc": "Normale début."
+          "desc": "Start normal."
         },
         "n2": {
           "type": "vec3",
-          "desc": "Normale fin."
+          "desc": "End normal."
         },
         "outPos": {
           "type": "vec3",
-          "desc": "Reçoit la position."
+          "desc": "Receives the position."
         },
         "outTan": {
           "type": "vec3",
-          "desc": "Reçoit la tangente."
+          "desc": "Receives the tangent."
         },
         "outUp": {
           "type": "vec3",
-          "desc": "Reçoit le haut."
+          "desc": "Receives the up."
         },
         "prevAcross": {
           "type": "vec3|nil",
-          "desc": "Latéral précédent."
+          "desc": "Previous lateral."
         }
       },
       "returns": [],
       "internal": false
     },
     "sampleSplineAdaptive": {
-      "desc": "Échantillonnage adaptatif le long d'une spline : calcule positions, repère de Frenet et échelles par pas de meshLength ; l'échelle (minimum 0.01) dépend de la courbure (sensibilité kappaSensitivity = 150). Sans effet si meshLength n'est pas > 0.",
+      "desc": "Adaptive sampling along a spline: computes positions, Frenet frame and scales per meshLength step; the scale (minimum 0.01) depends on the curvature (sensitivity kappaSensitivity = 150). No effect if meshLength is not > 0.",
       "params": {
         "divPoints": {
           "type": "vec3[]",
-          "desc": "Points de division."
+          "desc": "Division points."
         },
         "tangents": {
           "type": "vec3[]",
-          "desc": "Tangentes."
+          "desc": "Tangents."
         },
         "normals": {
           "type": "vec3[]",
-          "desc": "Normales."
+          "desc": "Normals."
         },
         "meshLength": {
           "type": "number",
-          "desc": "Longueur de maille nominale (m)."
+          "desc": "Nominal mesh length (m)."
         },
         "outPosns": {
           "type": "vec3[]",
-          "desc": "Sortie positions."
+          "desc": "Positions output."
         },
         "outTans": {
           "type": "vec3[]",
-          "desc": "Sortie tangentes."
+          "desc": "Tangents output."
         },
         "outNormals": {
           "type": "vec3[]",
-          "desc": "Sortie normales."
+          "desc": "Normals output."
         },
         "outScales": {
           "type": "number[]",
-          "desc": "Sortie échelles (minimum 0.01)."
+          "desc": "Scales output (minimum 0.01)."
         }
       },
       "returns": [
@@ -2292,7 +2292,7 @@
       "internal": false
     },
     "translateSpline": {
-      "desc": "Translate une polyligne de t mètres le long de la binormale (direction latérale).",
+      "desc": "Translates a polyline by t meters along the binormal (lateral direction).",
       "params": {
         "pts": {
           "type": "vec3[]",
@@ -2300,50 +2300,50 @@
         },
         "binormals": {
           "type": "vec3[]",
-          "desc": "Binormales."
+          "desc": "Binormals."
         },
         "t": {
           "type": "number",
-          "desc": "Décalage (m)."
+          "desc": "Offset (m)."
         },
         "out": {
           "type": "table",
-          "desc": "Sortie (vidée) de vec3."
+          "desc": "Output (cleared) of vec3."
         }
       },
       "returns": [],
       "internal": false
     },
     "curvatureToBankAngle": {
-      "desc": "Convertit une courbure en angle de dévers (rad). maxDeg (plafond sur les virages les plus serrés, défaut 15) et tuning (courbure à laquelle le plafond est atteint, défaut 500) sont des surcharges facultatives.",
+      "desc": "Converts a curvature into a banking angle (rad). maxDeg (cap on the tightest turns, default 15) and tuning (curvature at which the cap is reached, default 500) are optional overrides.",
       "params": {
         "curv": {
           "type": "number",
-          "desc": "Courbure."
+          "desc": "Curvature."
         },
         "bankStrength": {
           "type": "number",
-          "desc": "Intensité du dévers."
+          "desc": "Banking intensity."
         },
         "maxDeg": {
           "type": "number|nil",
-          "desc": "Plafond (degrés)."
+          "desc": "Cap (degrees)."
         },
         "tuning": {
           "type": "number|nil",
-          "desc": "Réglage de saturation."
+          "desc": "Saturation setting."
         }
       },
       "returns": [
         {
           "type": "number",
-          "desc": "Angle de dévers (rad)."
+          "desc": "Banking angle (rad)."
         }
       ],
       "internal": false
     },
     "applyBankFraction": {
-      "desc": "Fait rouler le repère par station d'une spline selon une fraction de dévers TOUTE FAITE (bankT[i] dans [-1, 1], + = courbe à gauche), peakRad étant l'angle atteint par une station de pleine amplitude. L'appelant gère la correspondance courbure -> fraction et le raccord en longueur d'arc (sinon le dévers devient un créneau).",
+      "desc": "Rolls the frame per station of a spline according to a READY-MADE banking fraction (bankT[i] in [-1, 1], + = left curve), peakRad being the angle reached by a full-amplitude station. The caller handles the curvature -> fraction mapping and the arc-length blending (otherwise the banking becomes a square wave).",
       "params": {
         "spline": {
           "type": "table",
@@ -2351,18 +2351,18 @@
         },
         "bankT": {
           "type": "number[]",
-          "desc": "Fraction de dévers par station."
+          "desc": "Banking fraction per station."
         },
         "peakRad": {
           "type": "number",
-          "desc": "Angle de pleine amplitude (rad)."
+          "desc": "Full-amplitude angle (rad)."
         }
       },
       "returns": [],
       "internal": false
     },
     "computeRandomJitterQuat_ZOnly": {
-      "desc": "Quaternion de variation aléatoire autour de Z seulement.",
+      "desc": "Random variation quaternion around Z only.",
       "params": {
         "jitter": {
           "type": "number",
@@ -2370,11 +2370,11 @@
         },
         "nmlVec": {
           "type": "vec3",
-          "desc": "Normale."
+          "desc": "Normal."
         },
         "outQuat": {
           "type": "quat",
-          "desc": "Reçoit le résultat."
+          "desc": "Receives the result."
         }
       },
       "returns": [
@@ -2386,7 +2386,7 @@
       "internal": false
     },
     "computeRandomJitterQuat": {
-      "desc": "Quaternion de variation aléatoire, par composante.",
+      "desc": "Random variation quaternion, per component.",
       "params": {
         "spline": {
           "type": "table",
@@ -2394,19 +2394,19 @@
         },
         "tgt": {
           "type": "vec3",
-          "desc": "Tangente."
+          "desc": "Tangent."
         },
         "rightVec": {
           "type": "vec3",
-          "desc": "Vecteur droit."
+          "desc": "Right vector."
         },
         "nmlVec": {
           "type": "vec3",
-          "desc": "Normale."
+          "desc": "Normal."
         },
         "outQuat": {
           "type": "quat",
-          "desc": "Reçoit le résultat."
+          "desc": "Receives the result."
         }
       },
       "returns": [
@@ -2418,7 +2418,7 @@
       "internal": false
     },
     "computeRandomJitterQuatFromFreedomAxes": {
-      "desc": "Quaternion de variation aléatoire d'après les axes de liberté de jointure.",
+      "desc": "Random variation quaternion based on the joint's freedom axes.",
       "params": {
         "spline": {
           "type": "table",
@@ -2426,11 +2426,11 @@
         },
         "freedomAxes": {
           "type": "table",
-          "desc": "Axes de liberté."
+          "desc": "Freedom axes."
         },
         "outQuat": {
           "type": "quat",
-          "desc": "Reçoit le résultat."
+          "desc": "Receives the result."
         }
       },
       "returns": [
@@ -2442,7 +2442,7 @@
       "internal": false
     },
     "updateRibPointsFree": {
-      "desc": "Recalcule les points de côtes (ribs) d'une spline en 3D libre. Sans effet sous 2 noeuds.",
+      "desc": "Recomputes the rib points of a spline in free 3D. No effect below 2 nodes.",
       "params": {
         "spline": {
           "type": "table",
@@ -2453,7 +2453,7 @@
       "internal": false
     },
     "updateRibPointsRaycast": {
-      "desc": "Recalcule les points de côtes d'une spline par lancer de rayon vertical vers la surface la plus proche en dessous. Sans effet sous 2 noeuds.",
+      "desc": "Recomputes the rib points of a spline by vertical raycast to the nearest surface below. No effect below 2 nodes.",
       "params": {
         "spline": {
           "type": "table",
@@ -2464,7 +2464,7 @@
       "internal": false
     },
     "updateBarPoints": {
-      "desc": "Met à jour les points de barres de vitesse d'une spline ; remplit spline.vels et spline.velLimits.",
+      "desc": "Updates the speed bar points of a spline; fills spline.vels and spline.velLimits.",
       "params": {
         "spline": {
           "type": "table",
@@ -2472,14 +2472,14 @@
         },
         "isBarsLimits": {
           "type": "boolean",
-          "desc": "Barres pour les limites de vitesse (true) ou les vitesses (false)."
+          "desc": "Bars for speed limits (true) or speeds (false)."
         }
       },
       "returns": [],
       "internal": false
     },
     "updateBarPointsGraph": {
-      "desc": "Met à jour les points de barres pour un chemin de graphe de navigation ; remplit spline.vels et spline.velLimits.",
+      "desc": "Updates the bar points for a navigation graph path; fills spline.vels and spline.velLimits.",
       "params": {
         "spline": {
           "type": "table",
@@ -2487,113 +2487,113 @@
         },
         "graphData": {
           "type": "table",
-          "desc": "Données du graphe de navigation."
+          "desc": "Navigation graph data."
         },
         "isBarsLimit": {
           "type": "boolean",
-          "desc": "Utiliser velLimits (true) ou vels (false) pour la hauteur des barres."
+          "desc": "Use velLimits (true) or vels (false) for the bar height."
         }
       },
       "returns": [],
       "internal": false
     },
     "getScanlineSpans": {
-      "desc": "Calcule les spans de scanline d'un polygone sur l'axe Y, en espace de grille de terrain. Stocke les résultats dans spansXMin, spansXMax et spansY.",
+      "desc": "Computes the scanline spans of a polygon on the Y axis, in terrain grid space. Stores the results in spansXMin, spansXMax and spansY.",
       "params": {
         "gMinY": {
           "type": "integer",
-          "desc": "Rangée de grille minimale."
+          "desc": "Minimum grid row."
         },
         "gMaxY": {
           "type": "integer",
-          "desc": "Rangée de grille maximale."
+          "desc": "Maximum grid row."
         },
         "te": {
           "type": "userdata",
-          "desc": "Éditeur de terrain (gridToWorldByPoint2I)."
+          "desc": "Terrain editor (gridToWorldByPoint2I)."
         },
         "tb": {
           "type": "userdata",
-          "desc": "Bloc de terrain."
+          "desc": "Terrain block."
         },
         "polygon": {
           "type": "table[]",
-          "desc": "Polygone en monde."
+          "desc": "Polygon in world."
         },
         "spansXMin": {
           "type": "table",
-          "desc": "Sortie, vidée."
+          "desc": "Output, cleared."
         },
         "spansXMax": {
           "type": "table",
-          "desc": "Sortie."
+          "desc": "Output."
         },
         "spansY": {
           "type": "table",
-          "desc": "Sortie."
+          "desc": "Output."
         }
       },
       "returns": [],
       "internal": false
     },
     "computeSDF": {
-      "desc": "Calcule le champ de distance signé (SDF) d'un masque (tableau 2D, 0 = dedans).",
+      "desc": "Computes the signed distance field (SDF) of a mask (2D array, 0 = inside).",
       "params": {
         "mask": {
           "type": "number[][]",
-          "desc": "Masque mask[y][x]."
+          "desc": "Mask mask[y][x]."
         }
       },
       "returns": [
         {
           "type": "number[][]",
-          "desc": "Champ de distance."
+          "desc": "Distance field."
         }
       ],
       "internal": false
     },
     "catmullRomCentripetalFast": {
-      "desc": "Version rapide et sans allocation de catmullRomCentripetal. Si outVec est fourni, l'écrit et le renvoie ; sinon crée un vec3.",
+      "desc": "Fast, allocation-free version of catmullRomCentripetal. If outVec is provided, writes into it and returns it; otherwise creates a vec3.",
       "params": {
         "p0": {
           "type": "vec3",
-          "desc": "Point de contrôle."
+          "desc": "Control point."
         },
         "p1": {
           "type": "vec3",
-          "desc": "Point de contrôle."
+          "desc": "Control point."
         },
         "p2": {
           "type": "vec3",
-          "desc": "Point de contrôle."
+          "desc": "Control point."
         },
         "p3": {
           "type": "vec3",
-          "desc": "Point de contrôle."
+          "desc": "Control point."
         },
         "t": {
           "type": "number",
-          "desc": "Paramètre."
+          "desc": "Parameter."
         },
         "s": {
           "type": "number",
-          "desc": "Paramètre de tension/knots (déduit du code)."
+          "desc": "Tension/knots parameter (inferred from code)."
         },
         "outVec": {
           "type": "vec3|nil",
-          "desc": "Sortie facultative."
+          "desc": "Optional output."
         }
       },
       "returns": [
         {
           "type": "vec3",
-          "desc": "Point interpolé."
+          "desc": "Interpolated point."
         }
       ],
       "internal": false
     },
     "isMouseOverSpline": {
-      "desc": "Teste si la souris survole la spline (pour insérer un noeud ou survol). Utilise l'approche la plus proche rayon-caméra / axe, donc les routes surélevées marchent. maxDistSq : tolérance au carré (math.huge pour obtenir le point le plus proche sans condition).",
+      "desc": "Tests whether the mouse hovers the spline (to insert a node or hover). Uses the closest camera-ray / axis approach, so elevated roads work. maxDistSq: squared tolerance (math.huge to get the closest point unconditionally).",
       "params": {
         "spline": {
           "type": "table",
@@ -2601,27 +2601,27 @@
         },
         "maxDistSq": {
           "type": "number|nil",
-          "desc": "Tolérance rayon-axe au carré (défaut 1)."
+          "desc": "Squared ray-axis tolerance (default 1)."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "Survol."
+          "desc": "Hover."
         },
         {
           "type": "integer|nil",
-          "desc": "Indice de segment."
+          "desc": "Segment index."
         },
         {
           "type": "vec3|nil",
-          "desc": "Point sur la spline."
+          "desc": "Point on the spline."
         }
       ],
       "internal": false
     },
     "catmullRomNodesOnly": {
-      "desc": "Interpole les points donnés par des Catmull-Rom.",
+      "desc": "Interpolates the given points with Catmull-Rom.",
       "params": {
         "nodes": {
           "type": "vec3[]",
@@ -2629,19 +2629,19 @@
         },
         "gran": {
           "type": "integer",
-          "desc": "Granularité (subdivisions par segment)."
+          "desc": "Granularity (subdivisions per segment)."
         }
       },
       "returns": [
         {
           "type": "vec3[]",
-          "desc": "Points interpolés."
+          "desc": "Interpolated points."
         }
       ],
       "internal": false
     },
     "catmullRomNodesWidthsOnly": {
-      "desc": "Interpole points et largeurs par Catmull-Rom (un seul tableau de noeuds).",
+      "desc": "Interpolates points and widths with Catmull-Rom (a single array of nodes).",
       "params": {
         "nodes": {
           "type": "vec3[]",
@@ -2649,15 +2649,15 @@
         },
         "widths": {
           "type": "number[]",
-          "desc": "Largeurs."
+          "desc": "Widths."
         },
         "gran": {
           "type": "integer",
-          "desc": "Granularité."
+          "desc": "Granularity."
         },
         "isLoop": {
           "type": "boolean|nil",
-          "desc": "Boucle."
+          "desc": "Loop."
         }
       },
       "returns": [
@@ -2667,21 +2667,21 @@
         },
         {
           "type": "number[]",
-          "desc": "Largeurs."
+          "desc": "Widths."
         }
       ],
       "internal": false
     },
     "catmullRomNodesWidthsVelVelLimits": {
-      "desc": "Interpole points, largeurs, vitesses et limites de vitesse d'une spline par Catmull-Rom (un seul tableau de noeuds).",
+      "desc": "Interpolates points, widths, speeds and speed limits of a spline with Catmull-Rom (a single array of nodes).",
       "params": {
         "spline": {
           "type": "table",
-          "desc": "Spline avec nodes, widths, vels, velLimits."
+          "desc": "Spline with nodes, widths, vels, velLimits."
         },
         "gran": {
           "type": "integer",
-          "desc": "Granularité."
+          "desc": "Granularity."
         }
       },
       "returns": [
@@ -2691,21 +2691,21 @@
         },
         {
           "type": "number[]",
-          "desc": "Largeurs."
+          "desc": "Widths."
         },
         {
           "type": "number[]",
-          "desc": "Vitesses."
+          "desc": "Speeds."
         },
         {
           "type": "number[]",
-          "desc": "Limites de vitesse."
+          "desc": "Speed limits."
         }
       ],
       "internal": false
     },
     "computeFrenetFrame": {
-      "desc": "Calcule le repère de Frenet local à chaque point de division (tangents, binormals, normals). Les segments de longueur nulle ne doivent pas être normalisés (sinon binormales NaN et noeuds DecalRoad infinis).",
+      "desc": "Computes the local Frenet frame at each division point (tangents, binormals, normals). Zero-length segments must not be normalized (otherwise NaN binormals and infinite DecalRoad nodes).",
       "params": {
         "spline": {
           "type": "table",
@@ -2716,7 +2716,7 @@
       "internal": false
     },
     "catmullRomRaycast": {
-      "desc": "Interpole noeuds et largeurs d'une spline par Catmull-Rom standard pour produire sa géométrie secondaire ; les points sont posés par lancer de rayon sur la surface en dessous. Les données sont stockées dans la spline (divPoints, divWidths, normals, discMap).",
+      "desc": "Interpolates the nodes and widths of a spline with standard Catmull-Rom to produce its secondary geometry; points are placed by raycast onto the surface below. The data is stored in the spline (divPoints, divWidths, normals, discMap).",
       "params": {
         "spline": {
           "type": "table",
@@ -2724,22 +2724,22 @@
         },
         "minNumDivIn": {
           "type": "integer|nil",
-          "desc": "Nombre minimal de divisions par segment (défaut 10)."
+          "desc": "Minimum number of divisions per segment (default 10)."
         },
         "minSpacing": {
           "type": "number|nil",
-          "desc": "Espacement minimal entre points (m)."
+          "desc": "Minimum spacing between points (m)."
         },
         "rayRaise": {
           "type": "number|nil",
-          "desc": "Élévation de départ du rayon (m) ; défaut spline.rayRaise."
+          "desc": "Ray starting elevation (m); default spline.rayRaise."
         }
       },
       "returns": [],
       "internal": false
     },
     "catmullRomConformToTerrain": {
-      "desc": "Comme catmullRomRaycast mais les points sont conformés au terrain. Retombe sur catmullRomRaycast s'il n'y a pas de bloc de terrain.",
+      "desc": "Like catmullRomRaycast but the points are conformed to the terrain. Falls back to catmullRomRaycast if there is no terrain block.",
       "params": {
         "spline": {
           "type": "table",
@@ -2747,22 +2747,22 @@
         },
         "minNumDivIn": {
           "type": "integer|nil",
-          "desc": "Divisions minimales par segment."
+          "desc": "Minimum divisions per segment."
         },
         "minSpacing": {
           "type": "number|nil",
-          "desc": "Espacement minimal (m)."
+          "desc": "Minimum spacing (m)."
         },
         "rayRaise": {
           "type": "number|nil",
-          "desc": "Élévation de départ du rayon (m)."
+          "desc": "Ray starting elevation (m)."
         }
       },
       "returns": [],
       "internal": false
     },
     "catmullRomFree": {
-      "desc": "Interpole noeuds et largeurs avec des Catmull-Rom standard (XY centripète ; Z par Steffen pour une route au sol, Catmull-Rom lisse pour un tablier surélevé si deckZ). Les données sont stockées dans la spline.",
+      "desc": "Interpolates nodes and widths with standard Catmull-Rom (centripetal XY; Z by Steffen for a ground road, smooth Catmull-Rom for an elevated deck if deckZ). The data is stored in the spline.",
       "params": {
         "spline": {
           "type": "table",
@@ -2770,22 +2770,22 @@
         },
         "minNumDivIn": {
           "type": "integer|nil",
-          "desc": "Divisions minimales par segment (défaut 10)."
+          "desc": "Minimum divisions per segment (default 10)."
         },
         "deckZ": {
           "type": "boolean|nil",
-          "desc": "Tablier surélevé : Z lissé par Catmull-Rom."
+          "desc": "Elevated deck: Z smoothed by Catmull-Rom."
         },
         "maxSpacingIn": {
           "type": "number|nil",
-          "desc": "Espacement maximal entre divisions (défaut 20 m)."
+          "desc": "Maximum spacing between divisions (default 20 m)."
         }
       },
       "returns": [],
       "internal": false
     },
     "catmullRomFreeWithBanking": {
-      "desc": "Comme catmullRomFree avec dévers automatique et raccord.",
+      "desc": "Like catmullRomFree with automatic banking and blending.",
       "params": {
         "spline": {
           "type": "table",
@@ -2793,34 +2793,34 @@
         },
         "minNumDivIn": {
           "type": "integer|nil",
-          "desc": "Divisions minimales."
+          "desc": "Minimum divisions."
         },
         "bankStrength": {
           "type": "number",
-          "desc": "Intensité du dévers."
+          "desc": "Banking intensity."
         },
         "maxDegIn": {
           "type": "number|nil",
-          "desc": "Dévers maximal (degrés, défaut 15)."
+          "desc": "Maximum banking (degrees, default 15)."
         },
         "tuningIn": {
           "type": "number|nil",
-          "desc": "Réglage de saturation (défaut 500)."
+          "desc": "Saturation setting (default 500)."
         },
         "deckZ": {
           "type": "boolean|nil",
-          "desc": "Tablier surélevé."
+          "desc": "Elevated deck."
         },
         "maxSpacingIn": {
           "type": "number|nil",
-          "desc": "Espacement maximal."
+          "desc": "Maximum spacing."
         }
       },
       "returns": [],
       "internal": false
     },
     "computeGraphPathFromNodes": {
-      "desc": "Calcule le chemin de graphe à partir des noeuds et remplit la géométrie de la spline (divPoints, divWidths, normals). Sans effet s'il n'y a pas assez de noeuds.",
+      "desc": "Computes the graph path from the nodes and fills the spline geometry (divPoints, divWidths, normals). No effect if there are not enough nodes.",
       "params": {
         "spline": {
           "type": "table",
@@ -2831,7 +2831,7 @@
       "internal": false
     },
     "perpDistPointSeg2D": {
-      "desc": "Distance perpendiculaire du point (px, py) au segment (ax, ay)->(bx, by) en XY. Segment dégénéré : distance à A. Attention à l'ordre des arguments : les points du segment d'abord.",
+      "desc": "Perpendicular distance from the point (px, py) to the segment (ax, ay)->(bx, by) in XY. Degenerate segment: distance to A. Mind the argument order: the segment points first.",
       "params": {
         "ax": {
           "type": "number",
@@ -2867,7 +2867,7 @@
       "internal": false
     },
     "cross2": {
-      "desc": "Produit vectoriel scalaire 2D de (ax, ay) et (bx, by), sur composantes simples (sans allocation de vec3 ou de table).",
+      "desc": "2D scalar cross product of (ax, ay) and (bx, by), on plain components (without allocating a vec3 or a table).",
       "params": {
         "ax": {
           "type": "number",
@@ -2895,7 +2895,7 @@
       "internal": false
     },
     "dot2": {
-      "desc": "Produit scalaire 2D sur composantes simples.",
+      "desc": "2D dot product on plain components.",
       "params": {
         "ax": {
           "type": "number",
@@ -2923,7 +2923,7 @@
       "internal": false
     },
     "normalize2": {
-      "desc": "Normalise un vecteur 2D (x, y).",
+      "desc": "Normalizes a 2D vector (x, y).",
       "params": {
         "x": {
           "type": "number",
@@ -2937,53 +2937,53 @@
       "returns": [
         {
           "type": "number",
-          "desc": "x normalisé."
+          "desc": "Normalized x."
         },
         {
           "type": "number",
-          "desc": "y normalisé."
+          "desc": "Normalized y."
         }
       ],
       "internal": false
     },
     "cornerAxis": {
-      "desc": "Direction que prend un poteau, un pilier ou un potelet PLACÉ SUR UN COIN, d'après la direction d'entrée et de sortie : l'axe est tourné de la moitié du virage réduit modulo period (défaut pi/2). Les égalités vont au plus petit virage pour que des coins à gauche et à droite se miroitent.",
+      "desc": "Direction taken by a post, pillar or bollard PLACED ON A CORNER, from the entry and exit direction: the axis is rotated by half the turn reduced modulo period (default pi/2). Ties go to the smaller turn so that left and right corners mirror each other.",
       "params": {
         "ix": {
           "type": "number",
-          "desc": "Direction d'entrée x."
+          "desc": "Entry direction x."
         },
         "iy": {
           "type": "number",
-          "desc": "Direction d'entrée y."
+          "desc": "Entry direction y."
         },
         "ox": {
           "type": "number",
-          "desc": "Direction de sortie x."
+          "desc": "Exit direction x."
         },
         "oy": {
           "type": "number",
-          "desc": "Direction de sortie y."
+          "desc": "Exit direction y."
         },
         "period": {
           "type": "number|nil",
-          "desc": "Période de symétrie du poteau (rad, défaut pi/2)."
+          "desc": "Symmetry period of the post (rad, default pi/2)."
         }
       },
       "returns": [
         {
           "type": "number",
-          "desc": "cos de l'axe."
+          "desc": "cos of the axis."
         },
         {
           "type": "number",
-          "desc": "sin de l'axe."
+          "desc": "sin of the axis."
         }
       ],
       "internal": false
     },
     "lineIntersect2D": {
-      "desc": "Intersection de deux droites INFINIES P+s*D et Q+s*E ; renvoie ix, iy ou nil si parallèles.",
+      "desc": "Intersection of two INFINITE lines P+s*D and Q+s*E; returns ix, iy or nil if parallel.",
       "params": {
         "px": {
           "type": "number",
@@ -3019,7 +3019,7 @@
         },
         "eps": {
           "type": "number|nil",
-          "desc": "Tolérance de parallélisme."
+          "desc": "Parallelism tolerance."
         }
       },
       "returns": [
@@ -3035,7 +3035,7 @@
       "internal": false
     },
     "rayIntersect2D": {
-      "desc": "Intersection de deux RAYONS (vers l'avant seulement) P+s*D et Q+u*E ; renvoie ix, iy ou nil (parallèles ou point derrière l'un des rayons).",
+      "desc": "Intersection of two RAYS (forward only) P+s*D and Q+u*E; returns ix, iy or nil (parallel or point behind one of the rays).",
       "params": {
         "px": {
           "type": "number",
@@ -3071,7 +3071,7 @@
         },
         "eps": {
           "type": "number|nil",
-          "desc": "Tolérance."
+          "desc": "Tolerance."
         }
       },
       "returns": [

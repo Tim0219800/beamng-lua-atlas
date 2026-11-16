@@ -1,24 +1,24 @@
 # `flowgraph_nodes_activity_activityStop`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/activity/activityStop.lua` · VM : Game Engine (GE) · 46 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/activity/activityStop.lua` · VM: Game Engine (GE) · 46 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/activity/activityStop")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/activity/activityStop")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Finish Mission » (tag activity). Arrête la mission en cours : quand le flux arrive, il arrête l'exécution du graphe (mgr:setRunning(false)) après le déclenchement des nœuds de la frame. Pins d'entrée : flow, « attempt » (table attemptData). Sans activité associée, la tentative est jetée avec un log W et l'écran de fondu est arrêté (ui_fadeScreen.stop(0)).
+Flowgraph node "Finish Mission" (tag activity). Stops the current mission: when the flow arrives, it stops the graph execution (mgr:setRunning(false)) after the frame's nodes have triggered. Input pins: flow, "attempt" (attemptData table). Without an associated activity, the attempt is discarded with a W log and the fade screen is stopped (ui_fadeScreen.stop(0)).
 
-## Remarques
+## Notes
 
-- La tentative lue (pin attempt, sinon newAttempt('attempted', {})) n'est plus enregistrée : l'appel à missionManager.stop est commenté, seul setRunning(false) arrête le graphe.
-- La catégorie n'est pas définie dans ce fichier.
+- The attempt read (attempt pin, otherwise newAttempt('attempted', {})) is no longer recorded: the call to missionManager.stop is commented out, only setRunning(false) stops the graph.
+- The category is not defined in this file.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_afterTrigger()` | Appelée après le déclenchement des nœuds : si stopping, arrête le graphe (setRunning(false)) ; sans activité, loggue l'abandon de la tentative et arrête le fondu d'écran. | 27 |
-| `C:work()` | Marque self.stopping = true quand le nœud est exécuté. | 23 |
+| `C:_afterTrigger()` | Called after the nodes have triggered: if stopping, stops the graph (setRunning(false)); without an activity, logs the abandoned attempt and stops the screen fade. | 27 |
+| `C:work()` | Sets self.stopping = true when the node is executed. | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/activity/activityStop.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/activity/activityStop.lua`.*

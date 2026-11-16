@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/editor/missionStartPositionEditor.lua",
+  "module": "Mode d'édition « Edit Mission Start Position » du World Editor (icône drapeau). Il dessine avec debugDrawer une sphère et le nom pour chaque mission dont startTrigger.level est le niveau courant, et permet de déplacer le point de départ de la mission sélectionnée : clic-glisser, ou Ctrl+clic pour poser directement à la position de la souris (raycast caméra). Chaque déplacement est enregistré dans l'historique d'annulation de l'éditeur (editor.history). Un bouton déplace aussi toutes les missions situées à moins de 10 m de la mission sélectionnée vers sa position.",
+  "notes": [
+    "Code couleur : vert = mission sélectionnée, orange = missions proches (<= 10 m), bleu = autres. La taille des sphères augmente avec la distance à la caméra (1.5 à 10, entre 500 m et 1500 m) ; x1.3 pour la sélection, x1.2 pour les proches.",
+    "Modifie startTrigger.pos (table {x,y,z}) et met mission._dirty = true ; la sauvegarde se fait depuis l'éditeur de missions.",
+    "Le test im.IsItemHovered() dans onUpdate n'est pas lié à un élément imgui : l'infobulle de mission n'est probablement jamais affichée (déduit du code)."
+  ],
+  "functions": {
+    "onEditorInitialized": {
+      "desc": "Hook appelé à l'initialisation de l'éditeur : déclare le mode d'édition missionStartPositionEditMode (action map « MissionStartPositionEditor », onActivate, onDeactivate, onUpdate, onToolbar).",
+      "internal": true
+    },
+    "setSelectedMission": {
+      "desc": "Définit la mission sélectionnée dans ce mode d'édition (utile pour l'éditeur de missions).",
+      "params": {"mission": {"type": "table|nil", "desc": "Mission (avec startTrigger.pos) ou nil pour désélectionner."}}
+    }
+  }
+}

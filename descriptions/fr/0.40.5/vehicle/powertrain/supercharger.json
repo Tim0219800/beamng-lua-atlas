@@ -1,0 +1,106 @@
+{
+  "path": "lua/vehicle/powertrain/supercharger.lua",
+  "module": "Sous-système de compresseur mécanique (supercharger) rattaché à un moteur : le compresseur est entraîné par le vilebrequin (rapport gearRatio, avec un embrayage progressif entre clutchEngageRPM et clutchDisengageRPM). Trois types : 'roots', 'screws', 'centrifugal', chacun avec sa courbe d'efficacité et son niveau de pulsation. Calcule la pression de suralimentation (psi/1000 tr/min, courbe boostController selon l'ouverture des gaz, soupape de décharge), l'applique à engine.forcedInductionCoef et prélève une perte de couple proportionnelle au régime (crankLossPer1kRPM). Génère aussi le sifflement du compresseur.",
+  "usage": "-- jbeam du moteur : \"supercharger\":{\"type\":\"roots\", \"gearRatio\":2, \"pressurePSIPer1kRPM\":1.2, \"lobes\":3, \"boostController\":[[0,0],[100,1]]}\nlocal eng = powertrain.getDevice('mainEngine')\neng.supercharger.setBypassPressure(8) -- soupape de décharge à 8 psi",
+  "notes": [
+    "Unités jbeam : pressions en psi, régimes en tr/min (conversion rpmToAV 0.10471971768, avToRPM 9.5493). Valeur electrics écrite : superchargerBoost (psi), superchargerBoostMax (= pression maximale de la courbe, en psi).",
+    "Clés jbeam : type ('roots', 'screws' ou 'centrifugal', obligatoire ; type inconnu -> log d'erreur et init interrompu), gearRatio (1), maxRPM (régime max du compresseur ; défaut ceil(maxRPM moteur*gearRatio)), pressurePSIPer1kRPM (obligatoire, pente de pression), boostController (liste de [gaz en %, coefficient], obligatoire : index 0..100 de la courbe = ouverture des gaz *100), lobes (2..4, défaut 3 ; screws impose au moins 3 ; centrifugal impose 0), twistedLobes (roots), pulseCoefModifier, crankLossPer1kRPM (5 -> 0.005 de perte par 1000 tr/min), clutchEngageRPM (1000), clutchEngageRange, clutchDisengageRPM (2*maxRPM moteur), clutchDisengageRange, pressureRatePSI (50 psi/s), sons : whineLoopEvent, whinePitchPer10kRPM (0.65), whineVolumePerPSI (0.01), whineVolumePer10kRPM.",
+    "Pulsations : pulseCoefModifier par défaut 0.98 pour screws, 0.95 (roots torsadé) ou 0.9 (roots droit), 1 pour centrifugal ; fréquence = nombre de lobes * vitesse du compresseur.",
+    "La pression de la courbe est calculée par pressionCoef(rpm relatif) * pente * rpm avec un polynôme d'ordre 2 propre au type ; la soupape de décharge coupe la pression au-delà de bypassConditions.maxPressure (très élevée par défaut, réglable avec setBypassPressure) et à 0 si les gaz sont inférieurs à 1 %.",
+    "Gain de couple : forcedInductionCoef *= max(1 + 0.0000087*pression_Pa - perte, 0), appelé dans updateFixedStep à chaque pas de physique.",
+    "Bug/incohérence : setPartCondition construit integrityState avec damageFrictionCoef et damageExhaustPowerCoef (copié du turbo) puis lit integrityState.damagePressureCoef : quand integrity est un nombre, damagePressureCoef revient toujours à 1 (l'intégrité est ignorée).",
+    "Bug/incohérence : getPartCondition appelle min(pressureIntegrityValue) avec un seul argument (équivalent à la valeur elle-même).",
+    "Bug/incohérence : maxPressure est une variable locale du module jamais remise à 0 dans init (cumule le maximum sur les rechargements du module). applyDeformGroupDamage signale 'inductionSystemDamaged' mais reset ne l'efface pas (seul 'superchargerDamaged' l'est).",
+    "Bug/incohérence : le flux 'forcedInductionInfo' lit electrics.values.boost et electrics.values.boostMax, que ce fichier n'écrit pas (il écrit superchargerBoost / superchargerBoostMax) ; sans moteur qui définit boost/boostMax, une arithmétique sur nil est possible.",
+    "Après un retour anticipé de init (type inconnu, boostController absent), updateGFX et updateFixedStep restent à nop et les variables internes (pressureCurve…) sont partiellement initialisées."
+  ],
+  "fields": {
+    "isExisting": {"type": "boolean", "desc": "Toujours true : indique au moteur qu'un compresseur existe."},
+    "updateFixedStep": {"type": "function", "desc": "nop par défaut ; devient la mise à jour de physique après init réussi. ⚠ nop est un global du jeu."},
+    "updateGFX": {"type": "function", "desc": "nop par défaut ; devient la mise à jour graphique après init réussi."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Initialise le compresseur pour un moteur : lit le jbeam, génère la courbe de pression et celle du boostController, calcule la vitesse maximale du compresseur et installe updateGFX/updateFixedStep. Si jbeamData est nil, désactive updateGFX.",
+      "params": {
+        "device": {"type": "table", "desc": "Device moteur."},
+        "jbeamData": {"type": "table|nil", "desc": "Table jbeam 'supercharger'."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet à zéro le lisseur de pression et les coefficients de dégâts et d'usure, et efface 'superchargerDamaged'.",
+      "params": {"jbeamData": {"type": "table", "desc": "Non utilisé."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Frame graphique : état de l'embrayage progressif, vitesse et régime du compresseur, pulsations, pression avec soupape de décharge et lissage, perte de couple, electrics.superchargerBoost et flux 'forcedInductionInfo'.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps de la frame (s)."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateFixedStep": {
+      "desc": "Pas de physique : multiplie assignedEngine.forcedInductionCoef par le gain de couple du compresseur (pression) moins la perte au vilebrequin.",
+      "params": {"dt": {"type": "number", "desc": "Pas de physique (s). Non utilisé."}},
+      "returns": [],
+      "internal": true
+    },
+    "initSounds": {
+      "desc": "Crée le son de sifflement du compresseur (soundObj) sur le noeud du moteur et calcule les coefficients de volume et de pitch.",
+      "params": {"jbeamData": {"type": "table", "desc": "Table jbeam 'supercharger'."}},
+      "returns": [],
+      "internal": true
+    },
+    "resetSounds": {
+      "desc": "Ne fait rien (fonction vide).",
+      "params": {"jbeamData": {"type": "table", "desc": "Non utilisé."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateSounds": {
+      "desc": "Règle volume et pitch du sifflement selon la pression et le régime du compresseur.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps (s). Non utilisé."}},
+      "returns": [],
+      "internal": true
+    },
+    "setBypassPressure": {
+      "desc": "Règle la pression à partir de laquelle la soupape de décharge limite la pression du compresseur.",
+      "params": {"pressurePSI": {"type": "number", "desc": "Pression de décharge en psi."}},
+      "returns": [],
+      "internal": false
+    },
+    "getTorqueCoefs": {
+      "desc": "Estime le coefficient de gain de couple du compresseur pour chaque régime de la courbe de couple du moteur (embrayage et rapport pris en compte).",
+      "params": {},
+      "returns": [{"type": "table<integer, number>", "desc": "Table indexée par rpm+1 : coefficient (1 = aucun gain)."}],
+      "internal": false
+    },
+    "applyDeformGroupDamage": {
+      "desc": "Réduit la pression délivrée (damagePressureCoef, jusqu'à -0.1) quand un groupe de déformation est endommagé, et signale 'inductionSystemDamaged'.",
+      "params": {"damageAmount": {"type": "number", "desc": "Quantité de dégât."}},
+      "returns": [],
+      "internal": true
+    },
+    "setPartCondition": {
+      "desc": "Applique l'usure (odomètre : pression jusqu'à 50 % à 1e9) et l'intégrité d'une pièce chargée depuis une sauvegarde. Voir le bug noté sur damagePressureCoef.",
+      "params": {
+        "odometer": {"type": "number", "desc": "Odomètre de la pièce."},
+        "integrity": {"type": "number|table", "desc": "Intégrité 0..1 ou table d'état."},
+        "visual": {"type": "any", "desc": "Non utilisé."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "getPartCondition": {
+      "desc": "Renvoie l'intégrité du compresseur.",
+      "params": {},
+      "returns": [
+        {"type": "number", "desc": "Intégrité 0..1."},
+        {"type": "table", "desc": "{damagePressureCoef}."}
+      ],
+      "internal": true
+    }
+  }
+}

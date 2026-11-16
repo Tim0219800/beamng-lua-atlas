@@ -1,24 +1,24 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/roadSegment.lua",
-  "module": "Nœud « Road Properties » (repeat_instant). Donne les propriétés d'un segment de route du navgraph défini par deux nœuds. Entrées : n1, n2 (noms de nœuds), xnorm (caché, 0,5 par défaut). Sorties : roadDir (direction normalisée, tient compte du sens unique), length, width, drivability (0 à 1), speedLimit (m/s), lanesIncoming, lanesOutgoing, lanesTotal, isOneWay, isPrivate.",
+  "module": "Node \"Road Properties\" (repeat_instant). Gives the properties of a navgraph road segment defined by two nodes. Inputs: n1, n2 (node names), xnorm (hidden, 0.5 by default). Outputs: roadDir (normalized direction, takes one-way into account), length, width, drivability (0 to 1), speedLimit (m/s), lanesIncoming, lanesOutgoing, lanesTotal, isOneWay, isPrivate.",
   "notes": [
-    "Bug : si aucun lien n'existe entre n1 et n2 (link == nil), le code lit quand même link.inNode et lève une erreur.",
-    "Le nombre de voies est compté sur la chaîne link.lanes (caractères « - » entrants, « + » sortants)."
+    "Bug: if no link exists between n1 and n2 (link == nil), the code still reads link.inNode and raises an error.",
+    "The number of lanes is counted on the string link.lanes (\"-\" characters incoming, \"+\" outgoing)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Réinitialise le cache des deux noms.",
+          "desc": "Resets the cache of the two names.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Réinitialise le cache des deux noms.",
+          "desc": "Resets the cache of the two names.",
           "internal": true
         },
         "work": {
-          "desc": "Si les deux nœuds existent dans map.getMap().nodes, recalcule (quand la paire change) longueur, drivabilité, limite de vitesse, sens unique, route privée, nombre de voies (comptage des « - » et « + » de link.lanes, « -+ » par défaut) et direction ; recalcule toujours la largeur (2 × rayon interpolé selon xnorm).",
+          "desc": "If both nodes exist in map.getMap().nodes, recomputes (when the pair changes) length, drivability, speed limit, one-way, private road, number of lanes (counting \"-\" and \"+\" in link.lanes, \"-+\" by default) and direction; always recomputes the width (2 × radius interpolated according to xnorm).",
           "internal": true
         }
       }

@@ -1,39 +1,227 @@
 {
   "path": "lua/ge/extensions/scenario/waypoints.lua",
-  "module": "Système de waypoints d'un scénario de course : à partir de scenario.lapConfig (liste ordonnée de waypoints/triggers) et des branches (lapConfigBranches), construit un graphe de successeurs, affiche les marqueurs (raceMarker) et détecte chaque frame le passage des roues des véhicules du joueur ou pilotés par IA à travers le prochain waypoint. Émet les hooks de course (onRaceWaypointReached, onRaceWaypoint, onRaceLap, onRaceBranchChosen) et termine la course quand le dernier waypoint du dernier tour est franchi. Chargé par scenario_scenariosLoader avec scenario_scenarios.",
-  "usage": "-- dans une extension de scénario :\nlocal function onRaceWaypointReached(data)\n  -- data = {cur, curPos, curRot, curRadius, next, vehicleId, vehicleName, waypointName, time, lapDiff, currentLapConfig}\nend\nlocal d = scenario_waypoints.getVehicleWaypointData(be:getPlayerVehicleID(0))\nif d then print(d.cur, d.next, d.lap) end",
+  "module": "Waypoint system of a race scenario: from scenario.lapConfig (ordered list of waypoints/triggers) and the branches (lapConfigBranches), builds a successor graph, displays the markers (raceMarker) and detects every frame the passage of the wheels of the player's or AI-driven vehicles through the next waypoint. Emits the race hooks (onRaceWaypointReached, onRaceWaypoint, onRaceLap, onRaceBranchChosen) and ends the race when the last waypoint of the last lap is crossed. Loaded by scenario_scenariosLoader with scenario_scenarios.",
+  "usage": "-- in a scenario extension:\nlocal function onRaceWaypointReached(data)\n  -- data = {cur, curPos, curRot, curRadius, next, vehicleId, vehicleName, waypointName, time, lapDiff, currentLapConfig}\nend\nlocal d = scenario_waypoints.getVehicleWaypointData(be:getPlayerVehicleID(0))\nif d then print(d.cur, d.next, d.lap) end",
   "notes": [
-    "Dépend de scenario_scenarios (M.dependencies). Initialisé par scenario_scenarios au passage en 'pre-running' (initialise) et à chaque redémarrage (onScenarioRestarted).",
-    "M.state : vehicleWaypointsData[vehicleId] = {cur, next, lap, waypointConfig, nextWps, historicalLapConfig, wheelOffsets, currentCorners, previousCorners} ; nextWpForVehicle ; waypointBranches ; branchGraph ; pathnodes ; lapConfigName ; originalBranches. Réinitialisé par onScenarioChange(nil) et onClientEndMission.",
-    "Indices : cur = -1 (avant départ) puis 0 (première cible atteinte) ; en départ lancé (rollingStart avec startTimerCheckpoint) cur démarre à -2. Après le franchissement, cur est l'index (base 1) dans waypointConfig du waypoint qui vient d'être atteint, next celui du suivant ou nil à la fin. getNextWaypoint renvoie 1 pour un nouveau tour tant que lap + 1 < lapCount (lapCount == 0 : tours infinis).",
-    "Détection : onPreRender calcule la position courante des coins (un par roue, décalage de l'axe de roue) et teste le segment précédent->courant contre chaque pathnode successeur (pn:intersectCorners). dtOff = dtSim * (1 - tNorm) corrige le temps du passage : time = scenario.timer - dtOff.",
-    "Marqueurs : modes 'default' (rouge), 'lap' (fin de tour), 'final' (dernier waypoint de la dernière course), 'branch' (embranchement), 'next' (suivant des suivants), 'start' ; n'affichés que pour les véhicules playerUsable.",
-    "Bug/incohérence : onScenarioVehicleTrigger, dans la branche de départ lancé (rollingStart et cur == 0), émet onRaceWaypoint avec la variable 'data' qui n'est déclarée que plus bas (valeur nil à ce moment) : le hook reçoit nil.",
-    "Bug/incohérence : M.onUpdate et M.addWaypointBranch sont assignés depuis des variables non définies (nil) : ces champs n'existent pas réellement.",
-    "Bug/incohérence : deactivateWaypointBranch commence par « do return end » : la fonction ne fait rien. isFinalWaypoint renvoie toujours false (commentaire du code : « this always returns false or what? »).",
-    "Bug/incohérence : initialise lit scenario.lapConfig avant le test « if scenario » (erreur si aucun scénario) ; updateResetVehicleData mélange and/or sans parenthèses : « vehicleWaypointsData and not data[id] or not curWpIndex ».",
-    "Bug/incohérence : onScenarioRestarted utilise l'argument scenario avant de le redéclarer (shadowing) ; lapConfigBranches non défini lève une erreur dans insertWaypoints."
+    "Depends on scenario_scenarios (M.dependencies). Initialized by scenario_scenarios on entering 'pre-running' (initialise) and on each restart (onScenarioRestarted).",
+    "M.state: vehicleWaypointsData[vehicleId] = {cur, next, lap, waypointConfig, nextWps, historicalLapConfig, wheelOffsets, currentCorners, previousCorners}; nextWpForVehicle; waypointBranches; branchGraph; pathnodes; lapConfigName; originalBranches. Reset by onScenarioChange(nil) and onClientEndMission.",
+    "Indices: cur = -1 (before the start) then 0 (first target reached); in a rolling start (rollingStart with startTimerCheckpoint) cur starts at -2. After crossing, cur is the (1-based) index in waypointConfig of the waypoint just reached, next that of the following one or nil at the end. getNextWaypoint returns 1 for a new lap as long as lap + 1 < lapCount (lapCount == 0: infinite laps).",
+    "Detection: onPreRender computes the current position of the corners (one per wheel, wheel axle offset) and tests the previous->current segment against each successor pathnode (pn:intersectCorners). dtOff = dtSim * (1 - tNorm) corrects the crossing time: time = scenario.timer - dtOff.",
+    "Markers: modes 'default' (red), 'lap' (end of lap), 'final' (last waypoint of the last race), 'branch' (fork), 'next' (next of the nexts), 'start'; only shown for playerUsable vehicles.",
+    "BUG/inconsistency: onScenarioVehicleTrigger, in the rolling start branch (rollingStart and cur == 0), emits onRaceWaypoint with the variable 'data' which is only declared further down (nil value at that point): the hook receives nil.",
+    "BUG/inconsistency: M.onUpdate and M.addWaypointBranch are assigned from undefined variables (nil): these fields do not actually exist.",
+    "BUG/inconsistency: deactivateWaypointBranch starts with \"do return end\": the function does nothing. isFinalWaypoint always returns false (code comment: \"this always returns false or what?\").",
+    "BUG/inconsistency: initialise reads scenario.lapConfig before the \"if scenario\" test (error if there is no scenario); updateResetVehicleData mixes and/or without parentheses: \"vehicleWaypointsData and not data[id] or not curWpIndex\".",
+    "BUG/inconsistency: onScenarioRestarted uses the scenario argument before redeclaring it (shadowing); undefined lapConfigBranches raises an error in insertWaypoints."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "{'scenario_scenarios'}"},
-    "state": {"type": "table", "desc": "État du système (voir notes) : vehicleWaypointsData, nextWpForVehicle, waypointBranches, currentWaypointChoice, currentBranch, waypointsConfigData, branchGraph, pathnodes."},
-    "addWaypointBranch": {"type": "nil", "desc": "Exporté mais vaut nil (variable locale non définie dans le fichier)."},
-    "onUpdate": {"type": "nil", "desc": "Exporté mais vaut nil (variable locale non définie dans le fichier)."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "{'scenario_scenarios'}"
+    },
+    "state": {
+      "type": "table",
+      "desc": "System state (see notes): vehicleWaypointsData, nextWpForVehicle, waypointBranches, currentWaypointChoice, currentBranch, waypointsConfigData, branchGraph, pathnodes."
+    },
+    "addWaypointBranch": {
+      "type": "nil",
+      "desc": "Exported but is nil (local variable not defined in the file)."
+    },
+    "onUpdate": {
+      "type": "nil",
+      "desc": "Exported but is nil (local variable not defined in the file)."
+    }
   },
   "functions": {
-    "initialise": {"desc": "Appelée par scenario_scenarios en 'pre-running' : réinitialise l'état, construit les branches et le graphe des successeurs, crée un pathnode par waypoint, configure les marqueurs (raceMarker.setupMarkers) et initialise les données de chaque véhicule du scénario. Ne fait rien si lapConfig est vide.", "params": {}, "returns": [], "internal": true},
-    "getVehicleWaypointData": {"desc": "Renvoie une copie profonde des données de waypoint d'un véhicule (cur, next, lap, waypointConfig, nextWps, historicalLapConfig, coins de roues…).", "params": {"vehicleId": {"type": "integer", "desc": "id du véhicule"}}, "returns": [{"type": "table|nil", "desc": "données ou nil"}], "internal": false},
-    "updateResetVehicleData": {"desc": "Réinitialise les données de waypoint d'un véhicule remis en place : sans curWpIndex (ou données absentes) les recrée, sinon positionne cur = curWpIndex - 1 et next = nextWpIndex - 1 et retraite le waypoint. Utilisée par checkpoints.lua selon le code.", "params": {"vehicleId": {"type": "integer", "desc": "id du véhicule"}, "curWpIndex": {"type": "integer|nil", "desc": "index (base 1) du waypoint courant"}, "nextWpIndex": {"type": "integer|nil", "desc": "index (base 1) du prochain waypoint"}}, "returns": [], "internal": false},
-    "isFinalWaypoint": {"desc": "Censée dire si un waypoint est le dernier ; renvoie toujours false (corps commenté dans le code).", "params": {"vehicleId": {"type": "integer", "desc": "id du véhicule"}, "waypointName": {"type": "string", "desc": "nom du waypoint"}}, "returns": [{"type": "boolean", "desc": "toujours false"}], "internal": false},
-    "activateWaypointBranch": {"desc": "Insère dans la liste de waypoints du véhicule les waypoints de la branche choisie, après le waypoint courant, puis émet onRaceBranchChosen({branchName, time, vehicleId, vehicleName}).", "params": {"branchName": {"type": "string", "desc": "nom de la branche (clé de lapConfigBranches)"}, "vehicleId": {"type": "integer", "desc": "id du véhicule"}, "dtOff": {"type": "number", "desc": "correction de temps (s)"}}, "returns": [], "internal": false},
-    "deactivateWaypointBranch": {"desc": "Ne fait rien (retourne immédiatement).", "params": {"branchName": {"type": "string", "desc": "nom de la branche"}}, "returns": [], "internal": false},
-    "onScenarioVehicleTrigger": {"desc": "Appelée en interne quand un véhicule traverse son waypoint cible : traite le waypoint (marqueurs, suivant), émet onRaceWaypointReached(data) (et onRaceWaypoint pour les véhicules playerUsable, avec un son), gère la fin de course (scenario_scenarios.endRace) et les tours (onRaceLap). Marquée « private » dans le code.", "params": {"vid": {"type": "integer", "desc": "id du véhicule"}, "wpData": {"type": "table", "desc": "noeud du scénario {pos, radius, rot}"}, "dtOff": {"type": "number", "desc": "correction de temps (s)"}}, "returns": [], "internal": true},
-    "onScenarioChange": {"desc": "Hook émis par scenario_scenarios à chaque changement d'état ; efface l'état du système quand le scénario est nil (arrêt).", "params": {"scenario": {"type": "table|nil", "desc": "scénario ou nil"}}, "returns": [], "internal": true},
-    "onScenarioRestarted": {"desc": "Hook émis au redémarrage d'un scénario : restaure lapConfig, vide l'état, reconstruit branches et graphe de successeurs.", "params": {"scenario": {"type": "table", "desc": "scénario"}}, "returns": [], "internal": true},
-    "onPreRender": {"desc": "Hook chaque frame (luaPreRender) : met à jour les coins des roues de chaque véhicule suivi et détecte le franchissement du prochain waypoint.", "params": {"dtReal": {"type": "number", "desc": "temps réel (s)"}, "dtSim": {"type": "number", "desc": "temps simulé (s)"}, "dtRaw": {"type": "number", "desc": "temps brut (s)"}}, "returns": [], "internal": true},
-    "onVehicleAIStateChanged": {"desc": "Hook émis par scenario_scenarios : initialise le suivi des waypoints d'un véhicule dont l'IA vient d'être activée.", "params": {"data": {"type": "table", "desc": "{vehicleId, vehicleName, aiControlled}"}}, "returns": [], "internal": true},
-    "onSerialize": {"desc": "Hook de sérialisation avant rechargement Lua : renvoie les données par nom de véhicule.", "params": {}, "returns": [{"type": "table", "desc": "données sérialisées"}], "internal": true},
-    "onDeserialized": {"desc": "Hook de désérialisation : restaure l'état en reconvertissant les noms de véhicules en ids.", "params": {"data": {"type": "table", "desc": "données de onSerialize"}}, "returns": [], "internal": true},
-    "onClientEndMission": {"desc": "Hook de fin de niveau : efface l'état.", "params": {}, "returns": [], "internal": true}
+    "initialise": {
+      "desc": "Called by scenario_scenarios in 'pre-running': resets the state, builds the branches and the successor graph, creates a pathnode per waypoint, configures the markers (raceMarker.setupMarkers) and initializes the data of each vehicle in the scenario. Does nothing if lapConfig is empty.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "getVehicleWaypointData": {
+      "desc": "Returns a deep copy of a vehicle's waypoint data (cur, next, lap, waypointConfig, nextWps, historicalLapConfig, wheel corners...).",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "vehicle id"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "data or nil"
+        }
+      ],
+      "internal": false
+    },
+    "updateResetVehicleData": {
+      "desc": "Resets the waypoint data of a vehicle that was put back in place: without curWpIndex (or with missing data) recreates them, otherwise sets cur = curWpIndex - 1 and next = nextWpIndex - 1 and reprocesses the waypoint. Used by checkpoints.lua according to the code.",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "vehicle id"
+        },
+        "curWpIndex": {
+          "type": "integer|nil",
+          "desc": "(1-based) index of the current waypoint"
+        },
+        "nextWpIndex": {
+          "type": "integer|nil",
+          "desc": "(1-based) index of the next waypoint"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "isFinalWaypoint": {
+      "desc": "Supposed to tell whether a waypoint is the last one; always returns false (body commented out in the code).",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "vehicle id"
+        },
+        "waypointName": {
+          "type": "string",
+          "desc": "waypoint name"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "always false"
+        }
+      ],
+      "internal": false
+    },
+    "activateWaypointBranch": {
+      "desc": "Inserts into the vehicle's waypoint list the waypoints of the chosen branch, after the current waypoint, then emits onRaceBranchChosen({branchName, time, vehicleId, vehicleName}).",
+      "params": {
+        "branchName": {
+          "type": "string",
+          "desc": "branch name (key of lapConfigBranches)"
+        },
+        "vehicleId": {
+          "type": "integer",
+          "desc": "vehicle id"
+        },
+        "dtOff": {
+          "type": "number",
+          "desc": "time correction (s)"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "deactivateWaypointBranch": {
+      "desc": "Does nothing (returns immediately).",
+      "params": {
+        "branchName": {
+          "type": "string",
+          "desc": "branch name"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "onScenarioVehicleTrigger": {
+      "desc": "Called internally when a vehicle crosses its target waypoint: processes the waypoint (markers, next), emits onRaceWaypointReached(data) (and onRaceWaypoint for playerUsable vehicles, with a sound), handles the end of the race (scenario_scenarios.endRace) and the laps (onRaceLap). Marked \"private\" in the code.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "vehicle id"
+        },
+        "wpData": {
+          "type": "table",
+          "desc": "scenario node {pos, radius, rot}"
+        },
+        "dtOff": {
+          "type": "number",
+          "desc": "time correction (s)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onScenarioChange": {
+      "desc": "Hook emitted by scenario_scenarios on each state change; clears the system state when the scenario is nil (stop).",
+      "params": {
+        "scenario": {
+          "type": "table|nil",
+          "desc": "scenario or nil"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onScenarioRestarted": {
+      "desc": "Hook emitted when a scenario restarts: restores lapConfig, clears the state, rebuilds branches and the successor graph.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "scenario"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Per-frame hook (luaPreRender): updates the wheel corners of each tracked vehicle and detects the crossing of the next waypoint.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "real time (s)"
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "simulated time (s)"
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "raw time (s)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleAIStateChanged": {
+      "desc": "Hook emitted by scenario_scenarios: initializes waypoint tracking for a vehicle whose AI has just been enabled.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{vehicleId, vehicleName, aiControlled}"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Serialization hook before Lua reload: returns the data per vehicle name.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "serialized data"
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Deserialization hook: restores the state by converting vehicle names back to ids.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "data from onSerialize"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Level end hook: clears the state.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
   }
 }

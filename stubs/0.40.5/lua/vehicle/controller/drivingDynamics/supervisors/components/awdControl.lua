@@ -2,103 +2,103 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Composant de contrôle de lacet pour les transmissions intégrales à verrouillage électronique (type "auxiliary", defaultOrder 70). Il s'enregistre auprès de tractionControl (ordre 10, mais n'y fait rien) et de yawControl (ordre 20). Sous accélération, s'il détecte du survirage via l'angle de dérive de caisse, il règle overrideMin/overrideMax de l'actionneur de verrouillage (par défaut "electronicSplitShaftLock") pour répartir le couple entre essieux avant/arrière selon le mode (rearMain, frontMain, centerDiff).
---- Accès : contrôleur `drivingDynamics/supervisors/components/awdControl` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Yaw control component for electronically locking all-wheel-drive transmissions (type "auxiliary", defaultOrder 70). It registers with tractionControl (order 10, but does nothing there) and yawControl (order 20). Under acceleration, if it detects oversteer via the body slip angle, it sets overrideMin/overrideMax of the locking actuator (by default "electronicSplitShaftLock") to distribute torque between the front/rear axles according to the mode (rearMain, frontMain, centerDiff).
+--- Access: controller `drivingDynamics/supervisors/components/awdControl` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_drivingDynamics_supervisors_components_awdControl
 ---@field actAsABSControl function nop.
----@field componentOrderABSControl number 1000 : inutilisé.
+---@field componentOrderABSControl number 1000: unused.
 ---@field componentOrderTractionControl number 10.
 ---@field componentOrderYawControl number 20.
----@field defaultOrder number Ordre d'exécution par défaut (70).
----@field isActingAsABS boolean Toujours false.
----@field isActingAsTC boolean Toujours false.
----@field isActingAsYC boolean Vrai quand un override de verrouillage est appliqué.
----@field isActive boolean Vrai après initSecondStage.
+---@field defaultOrder number Default execution order (70).
+---@field isActingAsABS boolean Always false.
+---@field isActingAsTC boolean Always false.
+---@field isActingAsYC boolean True when a locking override is applied.
+---@field isActive boolean True after initSecondStage.
 ---@field type string "auxiliary".
 local controller_drivingDynamics_supervisors_components_awdControl = {}
 
---- Appelé par tractionControl ; ne fait rien et renvoie false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:35
----@param wheelGroup table Groupe de roues.
----@param dt number Pas de temps (s).
+--- Called by tractionControl; does nothing and returns false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:35
+---@param wheelGroup table Wheel group.
+---@param dt number Time step (s).
 ---@return boolean  false.
 function controller_drivingDynamics_supervisors_components_awdControl.actAsTractionControl(wheelGroup, dt) end
 
---- Appelé par yawControl : réinitialise puis calcule les bornes overrideMin/overrideMax de l'actionneur de verrouillage à partir de l'angle de dérive de caisse (survirage sous accélération seulement).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:54
----@param measuredYaw number Lacet mesuré (rad/s).
----@param expectedYaw number Lacet attendu, non utilisé.
----@param yawDifference number Écart de lacet, non utilisé.
----@param bodySlipAngle number Angle de dérive de caisse ajusté (rad).
----@param frontSlipAngle number Non utilisé.
----@param rearSlipAngle number Non utilisé.
----@param dt number Pas de temps (s).
----@return boolean  Toujours false (voir notes).
+--- Called by yawControl: resets then computes the overrideMin/overrideMax bounds of the locking actuator from the body slip angle (oversteer under acceleration only).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:54
+---@param measuredYaw number Measured yaw (rad/s).
+---@param expectedYaw number Expected yaw, unused.
+---@param yawDifference number Yaw error, unused.
+---@param bodySlipAngle number Adjusted body slip angle (rad).
+---@param frontSlipAngle number Not used.
+---@param rearSlipAngle number Not used.
+---@param dt number Time step (s).
+---@return boolean  Always false (see notes).
 function controller_drivingDynamics_supervisors_components_awdControl.actAsYawControl(measuredYaw, expectedYaw, yawDifference, bodySlipAngle, frontSlipAngle, rearSlipAngle, dt) end
 
---- Renvoie une copie de la configuration.
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:176
----@return table  Copie de la configuration.
+--- Returns a copy of the configuration.
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:176
+---@return table  Copy of the configuration.
 function controller_drivingDynamics_supervisors_components_awdControl.getConfig() end
 
---- Remet à false les indicateurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:114
----@param jbeamData table Données jbeam.
+--- Resets the flags to false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:114
+---@param jbeamData table Jbeam data.
 function controller_drivingDynamics_supervisors_components_awdControl.init(jbeamData) end
 
---- Ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:147
----@param jbeamData table Données jbeam.
+--- Does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:147
+---@param jbeamData table Jbeam data.
 function controller_drivingDynamics_supervisors_components_awdControl.initLastStage(jbeamData) end
 
---- Cherche l'actionneur AWD, s'enregistre auprès des superviseurs et lit controlMode et slipAngleThreshold.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:120
----@param jbeamData table Données jbeam (voir notes).
+--- Looks for the AWD actuator, registers with the supervisors and reads controlMode and slipAngleThreshold.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:120
+---@param jbeamData table jbeam data (see notes).
 function controller_drivingDynamics_supervisors_components_awdControl.initSecondStage(jbeamData) end
 
---- Mémorise la référence au CMU.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:94
----@param cmu table Contrôleur CMU.
+--- Stores the reference to the CMU.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:94
+---@param cmu table CMU controller.
 function controller_drivingDynamics_supervisors_components_awdControl.registerCMU(cmu) end
 
---- Remet à false les indicateurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:108
+--- Resets the flags to false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:108
 function controller_drivingDynamics_supervisors_components_awdControl.reset() end
 
---- Envoie la configuration au CMU (paquet de debug).
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:180
+--- Sends the configuration to the CMU (debug packet).
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:180
 function controller_drivingDynamics_supervisors_components_awdControl.sendConfigData() end
 
---- Remplace la configuration complète.
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:171
+--- Replaces the entire configuration.
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:171
 ---@param configTable table Table {tractionControl, yawControl, controlMode}.
 function controller_drivingDynamics_supervisors_components_awdControl.setConfig(configTable) end
 
---- Active/désactive les paquets de debug.
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:88
----@param debugEnabled boolean Vrai pour activer.
+--- Enables/disables debug packets.
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:88
+---@param debugEnabled boolean True to enable.
 function controller_drivingDynamics_supervisors_components_awdControl.setDebugMode(debugEnabled) end
 
---- Applique des paramètres (voir notes) et recalcule la méthode de contrôle selon controlMode.
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:159
----@param parameters table<string, any> Paramètres à appliquer.
+--- Applies parameters (see notes) and recomputes the control method according to controlMode.
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:159
+---@param parameters table<string, any> Parameters to apply.
 function controller_drivingDynamics_supervisors_components_awdControl.setParameters(parameters) end
 
---- Désactive le composant.
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:150
+--- Disables the component.
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:150
 function controller_drivingDynamics_supervisors_components_awdControl.shutdown() end
 
---- Vide (version debug : envoie un paquet d'état).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:75
----@param dt number Pas de temps graphique (s).
+--- Empty (debug version: sends a state packet).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/components/awdControl.lua:75
+---@param dt number Graphics time step (s).
 function controller_drivingDynamics_supervisors_components_awdControl.updateGFX(dt) end
 
 return controller_drivingDynamics_supervisors_components_awdControl

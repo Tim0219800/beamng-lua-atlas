@@ -1,13 +1,22 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/viewportOrientationGizmo.lua",
-  "module": "Petit gizmo d'orientation 2D dessiné dans un coin de la vue de l'éditeur (ImGui, foreground draw list) pour Easy Object Select : trois axes X (rouge), Y (vert), Z (bleu) projetés selon l'orientation de la caméra (core_camera.getQuat), avec bouts positifs pleins étiquetés et bouts négatifs plus sombres. Affiche « W » (monde) ou « L » (local) selon qu'un objet local est donné.",
+  "module": "Small 2D orientation gizmo drawn in a corner of the editor view (ImGui, foreground draw list) for Easy Object Select: three axes X (red), Y (green), Z (blue) projected according to the camera orientation (core_camera.getQuat), with solid labeled positive tips and darker negative tips. Displays \"W\" (world) or \"L\" (local) depending on whether a local object is given.",
   "functions": {
     "draw": {
-      "desc": "Dessine le gizmo. Si localObjectId désigne un objet existant, les axes suivent sa matrice de transformation (mode L), sinon les axes monde (mode W). Les extrémités sont triées par profondeur.",
+      "desc": "Draws the gizmo. If localObjectId designates an existing object, the axes follow its transform matrix (L mode), otherwise the world axes (W mode). The tips are sorted by depth.",
       "params": {
-        "rightOffset": {"type": "number|nil", "desc": "Décalage depuis le bord droit de la vue de scène, en pixels avant uiscale (défaut 64)."},
-        "topOffset": {"type": "number|nil", "desc": "Décalage depuis le haut, en pixels avant uiscale (défaut 64)."},
-        "localObjectId": {"type": "integer|nil", "desc": "ID d'un objet dont les axes locaux sont affichés."}
+        "rightOffset": {
+          "type": "number|nil",
+          "desc": "Offset from the right edge of the scene view, in pixels before uiscale (default 64)."
+        },
+        "topOffset": {
+          "type": "number|nil",
+          "desc": "Offset from the top, in pixels before uiscale (default 64)."
+        },
+        "localObjectId": {
+          "type": "integer|nil",
+          "desc": "ID of an object whose local axes are displayed."
+        }
       },
       "internal": false
     }

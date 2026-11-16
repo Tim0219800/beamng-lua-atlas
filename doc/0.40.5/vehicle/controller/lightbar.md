@@ -1,81 +1,81 @@
 # `controller_lightbar`
 
-*Fichier : `lua/vehicle/controller/lightbar.lua` · VM : Véhicule · 257 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/lightbar.lua` · VM: Vehicle · 257 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `lightbar` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `lightbar` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de rampe lumineuse (gyrophares) à modes configurables (type "auxiliary"). Chaque mode définit, par nom de valeur electrics, une séquence d'états (durée, valeur) répétée en boucle tant que l'électrique principale (par défaut "lightbar") est > 0 ; une séquence à un seul état devient une valeur statique. Les valeurs electrics produites sont multipliées par l'intensité de la valeur principale (0..1). Un menu radial « Lightbar Modes » permet de changer de mode.
+Auxiliary lightbar (beacon lights) controller with configurable modes (type "auxiliary"). Each mode defines, per electrics value name, a sequence of states (duration, value) repeated in a loop as long as the main electrics value (by default "lightbar") is > 0; a single-state sequence becomes a static value. The electrics values produced are multiplied by the intensity of the main value (0..1). A "Lightbar Modes" radial menu allows changing the mode.
 
-## Exemple
+## Example
 
 ```lua
--- jbeam (extrait)
+-- jbeam (excerpt)
 -- "modes": [["name", "config"],
 --   ["Police", [["electric","duration","value"], ["lightbar_left",0.1,1], ["lightbar_left",0.1,0]]]]
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam (défaut) : lightbarElectricsName ("lightbar"), modes (table d'en-tête avec name et config ; config est une table d'en-tête electric/duration/value), defaultModeIndex (1), resetTriggerElectricNames (liste de noms d'electrics dont un changement remet les séquences à zéro ; lightbarElectricsName y est ajouté).
-- Les durées sont en secondes. Le changement de mode affiche un message d'interface.
-- Incohérence : init ajoute lightbarElectricsName dans la table jbeamData.resetTriggerElectricNames elle-même (modification de la table jbeam, qui accumule à chaque init si la table est réutilisée).
-- reset(jbeamData) réapplique defaultModeIndex ; setState/applyRemoteModeIndex change de mode sans message ni coupure des valeurs de sortie.
+- jbeam keys (default): lightbarElectricsName ("lightbar"), modes (header table with name and config; config is a header table electric/duration/value), defaultModeIndex (1), resetTriggerElectricNames (list of electrics names whose change resets the sequences to zero; lightbarElectricsName is added to it).
+- Durations are in seconds. The mode change displays an interface message.
+- Inconsistency: init adds lightbarElectricsName into the jbeamData.resetTriggerElectricNames table itself (modifying the jbeam table, which accumulates at each init if the table is reused).
+- reset(jbeamData) reapplies defaultModeIndex; setState/applyRemoteModeIndex changes mode without a message or cutting the output values.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_lightbar.getState()` | Renvoie l'indice de mode courant. | 231 |
-| `controller_lightbar.init(jbeamData)` | Construit les modes (séquences animées et valeurs statiques), enregistre l'entrée du menu radial si plusieurs modes existent. *(interne)* | 143 |
-| `controller_lightbar.reset(jbeamData)` | Rétablit le mode par défaut. *(interne)* | 138 |
-| `controller_lightbar.setModeIndex(index)` | Active le mode d'indice donné : remet les séquences à zéro, applique les valeurs statiques et affiche un message. Ne fait rien si l'indice n'existe pas. | 96 |
-| `controller_lightbar.setState(data)` | Applique l'indice de mode d'une table d'état si valide. | 236 |
-| `controller_lightbar.toggleMode()` | Passe au mode suivant (revient au premier après le dernier). | 129 |
-| `controller_lightbar.updateGFX(dt)` | Avance les séquences de chaque électrique selon dt et écrit electrics.values. *(interne)* | 43 |
+| `controller_lightbar.getState()` | Returns the current mode index. | 231 |
+| `controller_lightbar.init(jbeamData)` | Builds the modes (animated sequences and static values), registers the radial menu entry if several modes exist. *(internal)* | 143 |
+| `controller_lightbar.reset(jbeamData)` | Restores the default mode. *(internal)* | 138 |
+| `controller_lightbar.setModeIndex(index)` | Activates the mode at the given index: resets the sequences to zero, applies the static values and displays a message. Does nothing if the index does not exist. | 96 |
+| `controller_lightbar.setState(data)` | Applies the mode index from a state table if valid. | 236 |
+| `controller_lightbar.toggleMode()` | Switches to the next mode (returns to the first after the last). | 129 |
+| `controller_lightbar.updateGFX(dt)` | Advances the sequences of each electrics value according to dt and writes electrics.values. *(internal)* | 43 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_lightbar.getState()`
 
-Renvoie l'indice de mode courant.
+Returns the current mode index.
 
-- **renvoie** : table Table d'état (réutilisée).
+- **returns**: table State table (reused).
 
 #### `controller_lightbar.init(jbeamData)`
 
-Construit les modes (séquences animées et valeurs statiques), enregistre l'entrée du menu radial si plusieurs modes existent.
+Builds the modes (animated sequences and static values), registers the radial menu entry if several modes exist.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_lightbar.reset(jbeamData)`
 
-Rétablit le mode par défaut.
+Restores the default mode.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_lightbar.setModeIndex(index)`
 
-Active le mode d'indice donné : remet les séquences à zéro, applique les valeurs statiques et affiche un message. Ne fait rien si l'indice n'existe pas.
+Activates the mode at the given index: resets the sequences to zero, applies the static values and displays a message. Does nothing if the index does not exist.
 
-- `index` (*integer*) : Indice 1..n dans modes.
+- `index` (*integer*) : Index 1..n in modes.
 
 #### `controller_lightbar.setState(data)`
 
-Applique l'indice de mode d'une table d'état si valide.
+Applies the mode index from a state table if valid.
 
-- `data` (*table|nil*) : Table d'état.
+- `data` (*table|nil*) : State table.
 
 #### `controller_lightbar.updateGFX(dt)`
 
-Avance les séquences de chaque électrique selon dt et écrit electrics.values.
+Advances the sequences of each electrics value according to dt and writes electrics.values.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/lightbar.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/lightbar.lua`.*

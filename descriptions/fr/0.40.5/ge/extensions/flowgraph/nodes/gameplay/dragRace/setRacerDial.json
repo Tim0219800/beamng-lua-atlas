@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/setRacerDial.lua",
+  "module": "Nœud flowgraph « Set Drag Racer Dial » (catégorie once_instant). Règle le dial (temps annoncé) d'un ou plusieurs pilotes. Pin d'entrée : dials, table d'entrées {racerId = number, value = number}. Sorties : flow (impulsion), success (tout réussi), count (nombre de dials valides). Appelle dragBridge.setRacersDial.",
+  "notes": ["count est calculé avant l'appel : c'est le nombre d'entrées valides dont le racerId existe dans dragData.racers.", "Table vide : success faux, count 0, mais flux donné."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "workOnce": {"desc": "Valide les entrées, appelle setRacersDial et renseigne success/count ; signale un échec partiel par erreur de nœud."}
+      }
+    }
+  }
+}

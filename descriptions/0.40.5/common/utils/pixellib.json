@@ -1,154 +1,300 @@
 {
   "path": "lua/common/utils/pixellib.lua",
-  "module": "Petite bibliothèque de dessin de pixels en mémoire (tampon RGBA 8 bits via FFI) : points, lignes, cercles, rectangles, icônes et texte en police bitmap 'mini_font' (majuscules, chiffres et quelques signes). Le tampon s'enregistre en image (GBitmap:saveFile). Se charge avec require('utils/pixellib') ; M.create() renvoie un objet LuaPixelBuffer. Utile pour générer des images de debug (cartes, graphiques) sans UI. Voir M.test() pour un exemple complet.",
+  "module": "Small in-memory pixel drawing library (8-bit RGBA buffer via FFI): points, lines, circles, rectangles, icons and text in the 'mini_font' bitmap font (capitals, digits and a few signs). The buffer is saved as an image (GBitmap:saveFile). Loaded with require('utils/pixellib'); M.create() returns a LuaPixelBuffer object. Useful to generate debug images (maps, graphs) without UI. See M.test() for a complete example.",
   "usage": "local pb = require('utils/pixellib').create()\npb:init(250, 250)\npb:fill(ColorI(255,255,255,255))\npb:drawLine(vec3(0,0,0), vec3(100,50,0), ColorI(255,0,0,255), 2)\npb:drawText(vec3(10,200,0), 'Hello', ColorI(0,0,0,255))\npb:saveFile('test.png')",
   "notes": [
-    "Les positions de dessin (pos, p1, pos1…) sont des vec3 dont seuls x et y servent (z ignoré). Les couleurs sont des tables/objets avec champs r, g, b, a entiers 0..255 (ex. ColorI(255,0,0,255)).",
-    "Les coordonnées sont en pixels ; l'origine (0,0) est en haut à gauche ; les pixels hors du tampon sont ignorés (drawPixel) ; la mémoire du tampon est indexée y*width + x.",
-    "drawText met le texte en majuscules et ne gère que les caractères de mini_font (A-Z, 0-9, ! ? ' \" . , : - _ et espace) ; la position pos.y est le BAS de la ligne de texte (le texte monte au-dessus).",
-    "Incohérence : getPixel ne fait pas math.floor sur x et y (contrairement à drawPixel) ; avec des coordonnées non entières l'index FFI peut être faux.",
-    "Incohérence : LuaPixelBuffer:init alloue width*height sans arrondir (math.floor n'est appliqué qu'aux champs width/height), ce qui peut sous-dimensionner le tampon avec des dimensions décimales.",
-    "drawText : pour une espace, x avance de 4 puis ne trouvant pas la lettre dans mini_font il n'y a pas d'avance supplémentaire ; le décompte consumedWidth ne compte que les caractères dessinés.",
-    "Les fonctions M.test() écrivent 'helloworld.png' dans le répertoire courant."
+    "Drawing positions (pos, p1, pos1…) are vec3 of which only x and y are used (z ignored). Colors are tables/objects with integer fields r, g, b, a 0..255 (e.g. ColorI(255,0,0,255)).",
+    "Coordinates are in pixels; the origin (0,0) is at the top left; pixels outside the buffer are ignored (drawPixel); the buffer memory is indexed y*width + x.",
+    "drawText uppercases the text and only handles the mini_font characters (A-Z, 0-9, ! ? ' \" . , : - _ and space); the position pos.y is the BOTTOM of the text line (the text goes up above it).",
+    "Inconsistency: getPixel does not apply math.floor to x and y (unlike drawPixel); with non-integer coordinates the FFI index can be wrong.",
+    "Inconsistency: LuaPixelBuffer:init allocates width*height without rounding (math.floor is only applied to the width/height fields), which can undersize the buffer with decimal dimensions.",
+    "drawText: for a space, x advances by 4 then, since the letter is not found in mini_font, there is no extra advance; the consumedWidth count only counts the drawn characters.",
+    "The M.test() functions write 'helloworld.png' in the current directory."
   ],
   "fields": {},
   "functions": {
     "create": {
-      "desc": "Crée un objet LuaPixelBuffer vide ; appeler ensuite :init(width, height) pour allouer le tampon.",
+      "desc": "Creates an empty LuaPixelBuffer object; then call :init(width, height) to allocate the buffer.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Instance LuaPixelBuffer"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "LuaPixelBuffer instance"
+        }
+      ]
     },
     "test": {
-      "desc": "Démonstration : dessine plusieurs primitives et du texte dans un tampon 250x250 puis l'enregistre en 'helloworld.png'.",
+      "desc": "Demonstration: draws several primitives and text in a 250x250 buffer then saves it as 'helloworld.png'.",
       "params": {},
       "returns": []
     }
   },
   "classes": {
     "LuaPixelBuffer": {
-      "desc": "Tampon de pixels RGBA renvoyé par create(). Champs : width, height, bufSize, buf (cdata rgba_pixel_t[?]).",
+      "desc": "RGBA pixel buffer returned by create(). Fields: width, height, bufSize, buf (cdata rgba_pixel_t[?]).",
       "functions": {
         "init": {
-          "desc": "Alloue le tampon et fixe width/height (arrondis à l'entier inférieur). Pixels initialement à zéro (transparents noirs).",
+          "desc": "Allocates the buffer and sets width/height (rounded down to the integer). Pixels initially zero (transparent black).",
           "params": {
-            "width": {"type": "number", "desc": "Largeur en pixels"},
-            "height": {"type": "number", "desc": "Hauteur en pixels"}
+            "width": {
+              "type": "number",
+              "desc": "Width in pixels"
+            },
+            "height": {
+              "type": "number",
+              "desc": "Height in pixels"
+            }
           },
           "returns": []
         },
         "saveFile": {
-          "desc": "Enregistre le tampon comme image via un GBitmap du moteur (format selon l'extension, ex. .png). Loggue une erreur si le chargement dans le bitmap échoue.",
-          "params": {"filename": {"type": "string", "desc": "Fichier de sortie"}},
+          "desc": "Saves the buffer as an image via an engine GBitmap (format depends on the extension, e.g. .png). Logs an error if loading into the bitmap fails.",
+          "params": {
+            "filename": {
+              "type": "string",
+              "desc": "Output file"
+            }
+          },
           "returns": []
         },
         "_allocate_buffer": {
-          "desc": "Alloue le tableau FFI de n pixels. Appelé par init.",
-          "params": {"n": {"type": "integer", "desc": "Nombre de pixels"}},
+          "desc": "Allocates the FFI array of n pixels. Called by init.",
+          "params": {
+            "n": {
+              "type": "integer",
+              "desc": "Number of pixels"
+            }
+          },
           "returns": [],
           "internal": true
         },
         "__tostring": {
-          "desc": "Texte descriptif 'LuaPixelBuffer - ... [resolution: W x H (RGBA)]'.",
+          "desc": "Descriptive text 'LuaPixelBuffer - ... [resolution: W x H (RGBA)]'.",
           "params": {},
-          "returns": [{"type": "string", "desc": "Description"}]
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Description"
+            }
+          ]
         },
         "drawPixel": {
-          "desc": "Écrit la couleur sur un pixel (copie r, g, b, a, sans mélange alpha). Ignore les coordonnées hors tampon.",
+          "desc": "Writes the color to a pixel (copies r, g, b, a, no alpha blending). Ignores coordinates outside the buffer.",
           "params": {
-            "x": {"type": "number", "desc": "Colonne"},
-            "y": {"type": "number", "desc": "Ligne"},
-            "color": {"type": "table", "desc": "Couleur {r,g,b,a} 0..255"}
+            "x": {
+              "type": "number",
+              "desc": "Column"
+            },
+            "y": {
+              "type": "number",
+              "desc": "Row"
+            },
+            "color": {
+              "type": "table",
+              "desc": "Color {r,g,b,a} 0..255"
+            }
           },
           "returns": []
         },
         "getPixel": {
-          "desc": "Lit un pixel du tampon.",
+          "desc": "Reads a pixel from the buffer.",
           "params": {
-            "x": {"type": "integer", "desc": "Colonne"},
-            "y": {"type": "integer", "desc": "Ligne"}
+            "x": {
+              "type": "integer",
+              "desc": "Column"
+            },
+            "y": {
+              "type": "integer",
+              "desc": "Row"
+            }
           },
-          "returns": [{"type": "cdata|nil", "desc": "rgba_pixel_t (champs r,g,b,a), nil si hors tampon"}]
+          "returns": [
+            {
+              "type": "cdata|nil",
+              "desc": "rgba_pixel_t (fields r,g,b,a), nil if outside the buffer"
+            }
+          ]
         },
         "drawPoint": {
-          "desc": "Dessine un point : un pixel si size vaut 1/nil/0, sinon un disque plein de diamètre approximatif size.",
+          "desc": "Draws a point: one pixel if size is 1/nil/0, otherwise a filled disc of approximate diameter size.",
           "params": {
-            "x": {"type": "number", "desc": "Colonne"},
-            "y": {"type": "number", "desc": "Ligne"},
-            "color": {"type": "table", "desc": "Couleur"},
-            "size": {"type": "number|nil", "desc": "Taille en pixels, 1 par défaut"}
+            "x": {
+              "type": "number",
+              "desc": "Column"
+            },
+            "y": {
+              "type": "number",
+              "desc": "Row"
+            },
+            "color": {
+              "type": "table",
+              "desc": "Color"
+            },
+            "size": {
+              "type": "number|nil",
+              "desc": "Size in pixels, 1 by default"
+            }
           },
           "returns": []
         },
         "fill": {
-          "desc": "Remplit tout le tampon avec une couleur.",
-          "params": {"color": {"type": "table", "desc": "Couleur"}},
+          "desc": "Fills the whole buffer with a color.",
+          "params": {
+            "color": {
+              "type": "table",
+              "desc": "Color"
+            }
+          },
           "returns": []
         },
         "drawCircle": {
-          "desc": "Dessine le contour d'un cercle (algorithme du point milieu).",
+          "desc": "Draws the outline of a circle (midpoint algorithm).",
           "params": {
-            "pos": {"type": "vec3", "desc": "Centre (x,y)"},
-            "radius": {"type": "number", "desc": "Rayon en pixels"},
-            "color": {"type": "table", "desc": "Couleur"},
-            "lineWidth": {"type": "number|nil", "desc": "Épaisseur du trait, 1 par défaut"}
+            "pos": {
+              "type": "vec3",
+              "desc": "Center (x,y)"
+            },
+            "radius": {
+              "type": "number",
+              "desc": "Radius in pixels"
+            },
+            "color": {
+              "type": "table",
+              "desc": "Color"
+            },
+            "lineWidth": {
+              "type": "number|nil",
+              "desc": "Line thickness, 1 by default"
+            }
           },
           "returns": []
         },
         "drawFilledCircle": {
-          "desc": "Dessine un disque plein.",
+          "desc": "Draws a filled disc.",
           "params": {
-            "pos": {"type": "vec3", "desc": "Centre (x,y)"},
-            "radius": {"type": "number", "desc": "Rayon en pixels"},
-            "color": {"type": "table", "desc": "Couleur"}
+            "pos": {
+              "type": "vec3",
+              "desc": "Center (x,y)"
+            },
+            "radius": {
+              "type": "number",
+              "desc": "Radius in pixels"
+            },
+            "color": {
+              "type": "table",
+              "desc": "Color"
+            }
           },
           "returns": []
         },
         "drawRect": {
-          "desc": "Dessine le contour d'un rectangle avec 4 lignes.",
+          "desc": "Draws the outline of a rectangle with 4 lines.",
           "params": {
-            "p1": {"type": "vec3", "desc": "Coin supérieur gauche (x,y)"},
-            "width": {"type": "number", "desc": "Largeur"},
-            "height": {"type": "number", "desc": "Hauteur"},
-            "color": {"type": "table", "desc": "Couleur"},
-            "lineWidth": {"type": "number|nil", "desc": "Épaisseur, 1 par défaut"}
+            "p1": {
+              "type": "vec3",
+              "desc": "Top-left corner (x,y)"
+            },
+            "width": {
+              "type": "number",
+              "desc": "Width"
+            },
+            "height": {
+              "type": "number",
+              "desc": "Height"
+            },
+            "color": {
+              "type": "table",
+              "desc": "Color"
+            },
+            "lineWidth": {
+              "type": "number|nil",
+              "desc": "Thickness, 1 by default"
+            }
           },
           "returns": []
         },
         "drawFilledRect": {
-          "desc": "Remplit un rectangle (bornes incluses : width+1 par height+1 pixels).",
+          "desc": "Fills a rectangle (bounds included: width+1 by height+1 pixels).",
           "params": {
-            "p1": {"type": "vec3", "desc": "Coin supérieur gauche (x,y)"},
-            "width": {"type": "number", "desc": "Largeur"},
-            "height": {"type": "number", "desc": "Hauteur"},
-            "color": {"type": "table", "desc": "Couleur"}
+            "p1": {
+              "type": "vec3",
+              "desc": "Top-left corner (x,y)"
+            },
+            "width": {
+              "type": "number",
+              "desc": "Width"
+            },
+            "height": {
+              "type": "number",
+              "desc": "Height"
+            },
+            "color": {
+              "type": "table",
+              "desc": "Color"
+            }
           },
           "returns": []
         },
         "drawText": {
-          "desc": "Écrit du texte avec la police bitmap interne (5 pixels de haut). pos.y est le bas de la ligne.",
+          "desc": "Writes text with the internal bitmap font (5 pixels tall). pos.y is the bottom of the line.",
           "params": {
-            "pos": {"type": "vec3", "desc": "Position (x,y)"},
-            "text": {"type": "string", "desc": "Texte (mis en majuscules)"},
-            "color": {"type": "table", "desc": "Couleur"}
+            "pos": {
+              "type": "vec3",
+              "desc": "Position (x,y)"
+            },
+            "text": {
+              "type": "string",
+              "desc": "Text (uppercased)"
+            },
+            "color": {
+              "type": "table",
+              "desc": "Color"
+            }
           },
-          "returns": [{"type": "integer", "desc": "Nombre de caractères effectivement dessinés"}]
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "Number of characters actually drawn"
+            }
+          ]
         },
         "drawIcon": {
-          "desc": "Dessine une petite icône : 'x' (croix de 5x5) ou 'o' (cercle de rayon 2). Autre type : rien.",
+          "desc": "Draws a small icon: 'x' (5x5 cross) or 'o' (circle of radius 2). Any other type: nothing.",
           "params": {
-            "pos": {"type": "vec3", "desc": "Centre (x,y)"},
-            "type": {"type": "string", "desc": "'x' ou 'o'"},
-            "color": {"type": "table", "desc": "Couleur"}
+            "pos": {
+              "type": "vec3",
+              "desc": "Center (x,y)"
+            },
+            "type": {
+              "type": "string",
+              "desc": "'x' or 'o'"
+            },
+            "color": {
+              "type": "table",
+              "desc": "Color"
+            }
           },
           "returns": []
         },
         "drawLine": {
-          "desc": "Dessine un segment (parcours pixel par pixel selon l'axe dominant).",
+          "desc": "Draws a segment (pixel by pixel along the dominant axis).",
           "params": {
-            "pos1": {"type": "vec3", "desc": "Début (x,y)"},
-            "pos2": {"type": "vec3", "desc": "Fin (x,y)"},
-            "color": {"type": "table", "desc": "Couleur"},
-            "lineWidth": {"type": "number|nil", "desc": "Épaisseur, 1 par défaut"}
+            "pos1": {
+              "type": "vec3",
+              "desc": "Start (x,y)"
+            },
+            "pos2": {
+              "type": "vec3",
+              "desc": "End (x,y)"
+            },
+            "color": {
+              "type": "table",
+              "desc": "Color"
+            },
+            "lineWidth": {
+              "type": "number|nil",
+              "desc": "Thickness, 1 by default"
+            }
           },
           "returns": []
         }

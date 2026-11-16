@@ -1,127 +1,127 @@
 # `controller_couplings_fifthwheel`
 
-*Fichier : `lua/vehicle/controller/couplings/fifthwheel.lua` · VM : Véhicule · 299 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/couplings/fifthwheel.lua` · VM: Vehicle · 299 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `couplings/fifthwheel` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `couplings/fifthwheel` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de sellette d'attelage (fifth wheel) du tracteur : il cherche, parmi les véhicules en collision, les pivots (kingpin) compatibles en demandant leurs données au contrôleur `couplings/kingpin` de la remorque, calcule les distances, et attache un coupleur externe (`obj:attachExternalCoupler`) quand un pivot passe à moins de 80 % du rayon du coupleur. Il suit l'état attached, attaching, detaching, detached, joue des sons et publie un electrics d'attache.
+Auxiliary fifth wheel controller of the tractor: among the colliding vehicles, it looks for compatible kingpins by requesting their data from the trailer's `couplings/kingpin` controller, computes the distances, and attaches an external coupler (`obj:attachExternalCoupler`) when a kingpin comes within 80% of the coupler radius. It tracks the state attached, attaching, detaching, detached, plays sounds and publishes an attach electrics.
 
-## Exemple
+## Example
 
 ```lua
 controller.getControllerSafe("fifthwheel").detachFifthwheel()
 print(controller.getControllerSafe("fifthwheel").isAttached())
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues par init : `fifthwheelNode` (nom du noeud), `fifthwheelKey` ("fifthwheel_v2" : doit correspondre à `kingpinKey` du pivot), `attachmentStateElectricsName` (`<nom>_attachmentState`). Lues par initSounds : `attachSoundEvent` ("event:>Vehicle>Latches>Special>tailgate_01_close"), `detachSoundEvent` ("...tailgate_01_open"), `attachSoundEventVolume` (0.5), `detachSoundEventVolume` (0.5). Les paramètres du coupleur (`couplerStrength` 10000000, `couplerRadius` 0.5, `couplerLockRadius` 0.025, `couplerLatchSpeed` 0.3) sont lus sur le noeud jbeam lui-même.
-- Les demandes de données aux pivots se font à 5 Hz tant que le coupleur n'est pas attaché ; une réponse est attendue en 1 s (sinon le cache du véhicule est effacé).
-- Après détachement (`detaching`), le contrôleur attend que le pivot précédent s'éloigne à plus de 0.6 m avant de redevenir `detached`.
-- Appelle `extensions.couplings.couplingAttached/couplingDetached` pour informer l'extension de couplage.
-- Anomalie : onCouplerAttached appelle `setFifthwheelIndicatorVisibility(false)` pour tout noeud attaché, pas seulement la sellette.
-- `M.debugDraw` est nil au départ ; setFifthwheelIndicatorVisibility l'active ou le retire puis appelle `controller.cacheAllControllerFunctions()` et diffuse la visibilité aux contrôleurs kingpin de tous les véhicules.
-- La variable interne s'écrit `fithwheel...` (faute de frappe sans effet).
+- Jbeam keys read by init: `fifthwheelNode` (node name), `fifthwheelKey` ("fifthwheel_v2": must match the kingpin's `kingpinKey`), `attachmentStateElectricsName` (`<name>_attachmentState`). Read by initSounds: `attachSoundEvent` ("event:>Vehicle>Latches>Special>tailgate_01_close"), `detachSoundEvent` ("...tailgate_01_open"), `attachSoundEventVolume` (0.5), `detachSoundEventVolume` (0.5). The coupler parameters (`couplerStrength` 10000000, `couplerRadius` 0.5, `couplerLockRadius` 0.025, `couplerLatchSpeed` 0.3) are read from the jbeam node itself.
+- Data requests to the kingpins are made at 5 Hz as long as the coupler is not attached; a response is expected within 1 s (otherwise the vehicle's cache is cleared).
+- After detachment (`detaching`), the controller waits for the previous kingpin to move away by more than 0.6 m before going back to `detached`.
+- Calls `extensions.couplings.couplingAttached/couplingDetached` to inform the coupling extension.
+- Anomaly: onCouplerAttached calls `setFifthwheelIndicatorVisibility(false)` for any attached node, not only the fifth wheel.
+- `M.debugDraw` is nil at the start; setFifthwheelIndicatorVisibility sets or removes it then calls `controller.cacheAllControllerFunctions()` and broadcasts the visibility to the kingpin controllers of all vehicles.
+- The internal variable is spelled `fithwheel...` (harmless typo).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_couplings_fifthwheel.detachFifthwheel()` | Détache le coupleur de la sellette (obj:detachCoupler). Appelée par l'entrée du menu radial. | 64 |
-| `controller_couplings_fifthwheel.init(jbeamData)` | Retrouve le noeud de sellette, lit les paramètres du coupleur sur ce noeud, initialise l'état et ajoute l'entrée du menu radial de détachement (une seule fois). *(interne)* | 233 |
-| `controller_couplings_fifthwheel.initSounds(jbeamData)` | Lit les événements et volumes de sons d'attache et de détache. *(interne)* | 226 |
-| `controller_couplings_fifthwheel.isAttached()` | Indique si la sellette est attachée à un pivot. | 202 |
-| `controller_couplings_fifthwheel.kingpinDataCallback(obj2Id, data)` | Rappel venant du contrôleur kingpin d'une remorque : calcule la distance entre la sellette et le pivot et la met en cache. *(interne)* | 75 |
-| `controller_couplings_fifthwheel.onCouplerAttached(nodeId, obj2id, obj2nodeId, attachForce)` | Hook : pour le noeud de sellette, passe à attached, mémorise le pivot, joue le son d'attache et prévient l'extension couplings. Masque l'indicateur. *(interne)* *(hook)* | 171 |
-| `controller_couplings_fifthwheel.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook : pour le noeud de sellette, passe à detaching, mémorise le pivot quitté, joue le son de détache et prévient l'extension couplings. *(interne)* *(hook)* | 187 |
-| `controller_couplings_fifthwheel.onCouplerFound(nodeId, obj2id, obj2nodeId)` | Hook de coupleur trouvé, vide. *(interne)* *(hook)* | 167 |
-| `controller_couplings_fifthwheel.reset(jbeamData)` | Remet l'état à detached et vide les caches de pivots. *(interne)* | 212 |
-| `controller_couplings_fifthwheel.setFifthwheelIndicatorVisibility(visible)` | Affiche ou masque l'indicateur de debug de la sellette ici et sur les pivots de tous les véhicules (par clé). | 53 |
-| `controller_couplings_fifthwheel.toggleFifthwheelIndicatorVisibility()` | Inverse la visibilité de l'indicateur. | 60 |
-| `controller_couplings_fifthwheel.updateGFX(dt)` | Chaque frame : met à jour les collisions et les délais de requêtes, interroge les pivots proches, gère la sortie de l'état detaching, déclenche l'attache externe vers le pivot le plus proche et publie l'electrics. *(interne)* | 95 |
+| `controller_couplings_fifthwheel.detachFifthwheel()` | Detaches the fifth wheel coupler (obj:detachCoupler). Called by the radial menu entry. | 64 |
+| `controller_couplings_fifthwheel.init(jbeamData)` | Finds the fifth wheel node, reads the coupler parameters from this node, initializes the state and adds the detach radial menu entry (only once). *(internal)* | 233 |
+| `controller_couplings_fifthwheel.initSounds(jbeamData)` | Reads the attach and detach sound events and volumes. *(internal)* | 226 |
+| `controller_couplings_fifthwheel.isAttached()` | Indicates whether the fifth wheel is attached to a kingpin. | 202 |
+| `controller_couplings_fifthwheel.kingpinDataCallback(obj2Id, data)` | Callback from a trailer's kingpin controller: computes the distance between the fifth wheel and the kingpin and caches it. *(internal)* | 75 |
+| `controller_couplings_fifthwheel.onCouplerAttached(nodeId, obj2id, obj2nodeId, attachForce)` | Hook: for the fifth wheel node, switches to attached, stores the kingpin, plays the attach sound and notifies the couplings extension. Hides the indicator. *(internal)* *(hook)* | 171 |
+| `controller_couplings_fifthwheel.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook: for the fifth wheel node, switches to detaching, stores the kingpin left, plays the detach sound and notifies the couplings extension. *(internal)* *(hook)* | 187 |
+| `controller_couplings_fifthwheel.onCouplerFound(nodeId, obj2id, obj2nodeId)` | Coupler found hook, empty. *(internal)* *(hook)* | 167 |
+| `controller_couplings_fifthwheel.reset(jbeamData)` | Puts the state back to detached and empties the kingpin caches. *(internal)* | 212 |
+| `controller_couplings_fifthwheel.setFifthwheelIndicatorVisibility(visible)` | Shows or hides the fifth wheel debug indicator here and on the kingpins of all vehicles (by key). | 53 |
+| `controller_couplings_fifthwheel.toggleFifthwheelIndicatorVisibility()` | Toggles the indicator visibility. | 60 |
+| `controller_couplings_fifthwheel.updateGFX(dt)` | Every frame: updates the collisions and the request delays, queries nearby kingpins, handles leaving the detaching state, triggers the external attach to the nearest kingpin and publishes the electrics. *(internal)* | 95 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_couplings_fifthwheel.init(jbeamData)`
 
-Retrouve le noeud de sellette, lit les paramètres du coupleur sur ce noeud, initialise l'état et ajoute l'entrée du menu radial de détachement (une seule fois).
+Finds the fifth wheel node, reads the coupler parameters from this node, initializes the state and adds the detach radial menu entry (only once).
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_couplings_fifthwheel.initSounds(jbeamData)`
 
-Lit les événements et volumes de sons d'attache et de détache.
+Reads the attach and detach sound events and volumes.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_couplings_fifthwheel.isAttached()`
 
-Indique si la sellette est attachée à un pivot.
+Indicates whether the fifth wheel is attached to a kingpin.
 
-- **renvoie** : boolean true si l'état est attached.
+- **returns**: boolean true if the state is attached.
 
 #### `controller_couplings_fifthwheel.kingpinDataCallback(obj2Id, data)`
 
-Rappel venant du contrôleur kingpin d'une remorque : calcule la distance entre la sellette et le pivot et la met en cache.
+Callback from a trailer's kingpin controller: computes the distance between the fifth wheel and the kingpin and caches it.
 
-- `obj2Id` (*integer*) : Id du véhicule remorque.
-- `data` (*table*) : {nodeId = cid du pivot, nodePosition = position monde}.
+- `obj2Id` (*integer*) : Trailer vehicle id.
+- `data` (*table*) : {nodeId = kingpin cid, nodePosition = world position}.
 
 #### `controller_couplings_fifthwheel.onCouplerAttached(nodeId, obj2id, obj2nodeId, attachForce)`
 
-Hook : pour le noeud de sellette, passe à attached, mémorise le pivot, joue le son d'attache et prévient l'extension couplings. Masque l'indicateur.
+Hook: for the fifth wheel node, switches to attached, stores the kingpin, plays the attach sound and notifies the couplings extension. Hides the indicator.
 
-- `nodeId` (*integer*) : cid du noeud local.
-- `obj2id` (*integer*) : Id du véhicule remorque.
-- `obj2nodeId` (*integer*) : cid du pivot.
-- `attachForce` (*number*) : Reçoit en pratique `attachSpeed` de controller.lua (déduit du code) ; sert à l'agressivité du son.
+- `nodeId` (*integer*) : cid of the local node.
+- `obj2id` (*integer*) : Trailer vehicle id.
+- `obj2nodeId` (*integer*) : cid of the kingpin.
+- `attachForce` (*number*) : In practice receives `attachSpeed` from controller.lua (inferred from code); used for the sound's aggressiveness.
 
 #### `controller_couplings_fifthwheel.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)`
 
-Hook : pour le noeud de sellette, passe à detaching, mémorise le pivot quitté, joue le son de détache et prévient l'extension couplings.
+Hook: for the fifth wheel node, switches to detaching, stores the kingpin left, plays the detach sound and notifies the couplings extension.
 
-- `nodeId` (*integer*) : cid du noeud local.
-- `obj2id` (*integer*) : Id du véhicule remorque.
-- `obj2nodeId` (*integer*) : cid du pivot.
-- `breakForce` (*number*) : Force de rupture (non utilisée).
+- `nodeId` (*integer*) : cid of the local node.
+- `obj2id` (*integer*) : Trailer vehicle id.
+- `obj2nodeId` (*integer*) : cid of the kingpin.
+- `breakForce` (*number*) : Breaking force (unused).
 
 #### `controller_couplings_fifthwheel.onCouplerFound(nodeId, obj2id, obj2nodeId)`
 
-Hook de coupleur trouvé, vide.
+Coupler found hook, empty.
 
-- `nodeId` (*integer*) : cid du noeud local.
-- `obj2id` (*integer*) : Id de l'autre véhicule.
-- `obj2nodeId` (*integer*) : cid du noeud de l'autre véhicule.
+- `nodeId` (*integer*) : cid of the local node.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : cid of the other vehicle's node.
 
 #### `controller_couplings_fifthwheel.reset(jbeamData)`
 
-Remet l'état à detached et vide les caches de pivots.
+Puts the state back to detached and empties the kingpin caches.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_couplings_fifthwheel.setFifthwheelIndicatorVisibility(visible)`
 
-Affiche ou masque l'indicateur de debug de la sellette ici et sur les pivots de tous les véhicules (par clé).
+Shows or hides the fifth wheel debug indicator here and on the kingpins of all vehicles (by key).
 
-- `visible` (*boolean*) : true pour afficher.
+- `visible` (*boolean*) : true to show.
 
 #### `controller_couplings_fifthwheel.updateGFX(dt)`
 
-Chaque frame : met à jour les collisions et les délais de requêtes, interroge les pivots proches, gère la sortie de l'état detaching, déclenche l'attache externe vers le pivot le plus proche et publie l'electrics.
+Every frame: updates the collisions and the request delays, queries nearby kingpins, handles leaving the detaching state, triggers the external attach to the nearest kingpin and publishes the electrics.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `debugDraw` | function|nil | nil par défaut ; devient la fonction de dessin du noeud de sellette quand l'indicateur est visible. |
+| `debugDraw` | function|nil | nil by default; becomes the fifth wheel node drawing function when the indicator is visible. |
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `BeamEngine:` `queueAllObjectLua`
 - `obj:` `attachExternalCoupler`, `detachCoupler`, `getNodePosition`, `getPosition`, `playSFXOnceCT`, `queueObjectLuaCommand`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/couplings/fifthwheel.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/couplings/fifthwheel.lua`.*

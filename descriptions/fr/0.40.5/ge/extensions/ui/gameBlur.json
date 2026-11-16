@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/ui/gameBlur.lua",
+  "module": "Gère des rectangles de flou plein écran dessinés derrière l'interface (effet scenetree.ScreenBlurFX). Les rectangles sont rangés par groupes dans M.blurRects ; à chaque onPreRender ils sont envoyés à addFrameBlurRect. Coordonnées normalisées : (0,0) en haut à gauche, (1,1) en bas à droite.",
+  "usage": "ui_gameBlur.replaceGroup('monPanneau', { {0, 0.15, 1, 0.8, 1} })  -- x, y, w, h, opacité\nui_gameBlur.removeGroup('monPanneau')",
+  "notes": [
+    "Chaque rectangle est une table {x, y, largeur, hauteur, alpha} (indices 1 à 5), la couleur est ColorF(1,1,1,alpha).",
+    "Rien n'est dessiné si l'UI CEF est masquée (ui_visibility.getCef()), sauf si l'extension test_singleLevelLong est chargée, ni si une session OpenXR tourne.",
+    "Bug : M.onExtensionLoaded, M.onExtensionUnloaded et M.setColor sont affectés à des variables locales jamais définies, donc valent nil.",
+    "addToGroup et removeFromGroup existent mais ne sont pas exportés ; seuls replaceGroup, removeGroup et removeAllGroups sont publics."
+  ],
+  "fields": {
+    "blurRects": {"type": "table<string, table>", "desc": "Groupe -> liste de rectangles {x, y, w, h, alpha}."},
+    "onExtensionLoaded": {"type": "nil", "desc": "Toujours nil (référence à une variable non définie)."},
+    "onExtensionUnloaded": {"type": "nil", "desc": "Toujours nil (référence à une variable non définie)."},
+    "setColor": {"type": "nil", "desc": "Toujours nil (référence à une variable non définie)."}
+  },
+  "functions": {
+    "replaceGroup": {
+      "desc": "Remplace tous les rectangles d'un groupe par la liste donnée.",
+      "params": {
+        "group": {"type": "string", "desc": "Nom du groupe."},
+        "data": {"type": "table", "desc": "Liste de rectangles {x, y, w, h, alpha}."}
+      }
+    },
+    "removeGroup": {
+      "desc": "Supprime un groupe de rectangles.",
+      "params": {"group": {"type": "string", "desc": "Nom du groupe."}}
+    },
+    "removeAllGroups": {
+      "desc": "Supprime tous les groupes de rectangles de flou."
+    },
+    "onPreRender": {
+      "desc": "Hook de pré-rendu : envoie chaque rectangle au ScreenBlurFX (addFrameBlurRect) si l'UI est visible.",
+      "internal": true
+    }
+  }
+}

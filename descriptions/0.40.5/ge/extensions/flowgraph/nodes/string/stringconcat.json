@@ -1,55 +1,55 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/string/stringconcat.lua",
-  "module": "Noeud « Concat » (simple, OBSOLÈTE : « Use the Format String node instead »). Concatène toutes ses entrées (converties par tostring) en une chaîne. Un nouveau pin value<N+1> est ajouté automatiquement quand le dernier est lié et les pins vides en fin de liste sont retirés. Les valeurs nil ou false sont ignorées.",
+  "module": "Node \"Concat\" (simple, OBSOLETE: \"Use the Format String node instead\"). Concatenates all its inputs (converted by tostring) into a string. A new pin value<N+1> is added automatically when the last one is linked and the empty pins at the end of the list are removed. nil or false values are ignored.",
   "notes": [
-    "Les valeurs false sont ignorées : les booléens doivent être convertis manuellement (todo du fichier)."
+    "false values are ignored: booleans must be converted manually (todo in the file)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Sortie à '', cache d'entrées vide, savePins = true.",
+          "desc": "Output at '', empty input cache, savePins = true.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Vide le cache d'entrées.",
+          "desc": "Empties the input cache.",
           "internal": true
         },
         "updateCache": {
-          "desc": "Reconstruit le cache de chaînes depuis les pins d'entrée et indique s'il a changé.",
+          "desc": "Rebuilds the string cache from the input pins and indicates whether it changed.",
           "internal": true
         },
         "work": {
-          "desc": "Recalcule la sortie par table.concat(cache) si le cache a changé.",
+          "desc": "Recomputes the output with table.concat(cache) if the cache changed.",
           "internal": false
         },
         "onLink": {
-          "desc": "Hook : à la création d'un lien, nettoie les pins.",
+          "desc": "Hook: when a link is created, cleans up the pins.",
           "params": {
             "link": {
               "type": "any",
-              "desc": "lien créé"
+              "desc": "created link"
             }
           },
           "internal": true
         },
         "onUnlink": {
-          "desc": "Hook : à la suppression d'un lien, nettoie les pins.",
+          "desc": "Hook: when a link is deleted, cleans up the pins.",
           "params": {
             "link": {
               "type": "any",
-              "desc": "lien supprimé"
+              "desc": "deleted link"
             }
           },
           "internal": true
         },
         "cleanupPins": {
-          "desc": "Garde exactement un pin vide en fin de liste (en crée un ou supprime les surplus).",
+          "desc": "Keeps exactly one empty pin at the end of the list (creates one or removes the excess).",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         }
       }

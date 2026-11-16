@@ -2,63 +2,63 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/edgeHandles.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Utilitaire d'outils d'éditeur pour des poignées « portes » (gates) déplaçables le long du contour d'un polygone (ring : liste de points {x,y}). Une porte est { edge, t, id } : indice d'arête et position t (0..1) sur cette arête. Fournit l'accrochage au contour, les portes par défaut (extrémités du grand axe), la géométrie d'une poignée flottante hors du bord et son dessin via debugDraw.
---- Accès : extension `editor_toolUtilities_edgeHandles` : `extensions.load("editor_toolUtilities_edgeHandles")`, puis la globale `editor_toolUtilities_edgeHandles`
+--- Editor tool utility for "gate" handles that can be moved along the outline of a polygon (ring: list of {x,y} points). A gate is { edge, t, id }: edge index and position t (0..1) on that edge. Provides snapping to the outline, default gates (ends of the long axis), the geometry of a floating handle outside the edge and its drawing via debugDraw.
+--- Access: extension `editor_toolUtilities_edgeHandles`: `extensions.load("editor_toolUtilities_edgeHandles")`, then the global `editor_toolUtilities_edgeHandles`
 ---@class editor_toolUtilities_edgeHandles
 editor_toolUtilities_edgeHandles = {}
 
---- Deux portes par défaut aux extrémités opposées du grand axe du ring (entrée, sortie).
----Source : lua/ge/extensions/editor/toolUtilities/edgeHandles.lua:99
----@param ring table Liste de points {x,y}
----@return table  Porte d'entrée { edge, t }
----@return table  Porte de sortie { edge, t }
+--- Two default gates at opposite ends of the ring's long axis (entry, exit).
+---Source: lua/ge/extensions/editor/toolUtilities/edgeHandles.lua:99
+---@param ring table List of points {x,y}
+---@return table  Entry gate { edge, t }
+---@return table  Exit gate { edge, t }
 function editor_toolUtilities_edgeHandles.defaultGates(ring) end
 
---- Dessine la poignée (points de handleGeom) : tige du bord à la barre, barre avec points d'extrémité, bouton central qui pulse au survol.
----Source : lua/ge/extensions/editor/toolUtilities/edgeHandles.lua:127
----@param gp vec3 Point sur le bord
----@param cp vec3 Centre de la barre
----@param e1 vec3 Extrémité 1
----@param e2 vec3 Extrémité 2
----@param base integer Couleur de base (packée)
----@param glow integer Couleur de halo (packée)
----@param hovered boolean true si survolée
+--- Draws the handle (points from handleGeom): stem from the edge to the bar, bar with end points, central button that pulses on hover.
+---Source: lua/ge/extensions/editor/toolUtilities/edgeHandles.lua:127
+---@param gp vec3 Point on the edge
+---@param cp vec3 Center of the bar
+---@param e1 vec3 End 1
+---@param e2 vec3 End 2
+---@param base integer Base color (packed)
+---@param glow integer Halo color (packed)
+---@param hovered boolean true if hovered
 function editor_toolUtilities_edgeHandles.drawHandle(gp, cp, e1, e2, base, glow, hovered) end
 
---- Position monde d'une porte et normale unitaire sortante de son arête (à l'opposé du centre du ring).
----Source : lua/ge/extensions/editor/toolUtilities/edgeHandles.lua:84
----@param ring table Liste de points {x,y}
+--- World position of a gate and the outward unit normal of its edge (away from the ring center).
+---Source: lua/ge/extensions/editor/toolUtilities/edgeHandles.lua:84
+---@param ring table List of points {x,y}
 ---@param gate table { edge, t }
 ---@return number  wx
 ---@return number  wy
----@return number  nx (normale sortante)
----@return number  ny (normale sortante)
+---@return number  nx (outward normal)
+---@return number  ny (outward normal)
 function editor_toolUtilities_edgeHandles.gateWorldDir(ring, gate) end
 
---- Géométrie de la poignée saisissable d'une porte : la barre flotte à outDist mètres hors du bord et s'étend de halfWidth mètres de chaque côté.
----Source : lua/ge/extensions/editor/toolUtilities/edgeHandles.lua:115
----@param ring table Liste de points {x,y}
+--- Geometry of a gate's grabbable handle: the bar floats at outDist meters off the edge and extends halfWidth meters on each side.
+---Source: lua/ge/extensions/editor/toolUtilities/edgeHandles.lua:115
+---@param ring table List of points {x,y}
 ---@param gate table|nil { edge, t }
----@param outDist number Distance de la barre au bord (m)
----@param halfWidth number Demi-largeur de la barre (m)
----@param liftFn function|nil function(x,y) -> vec3 qui pose un point sur le terrain ; plan z=0 par défaut.
----@return vec3|nil  Point sur le bord
----@return vec3  Centre de la barre (bouton de saisie)
----@return vec3  Extrémité 1 de la barre
----@return vec3  Extrémité 2 de la barre
+---@param outDist number Distance of the bar from the edge (m)
+---@param halfWidth number Half-width of the bar (m)
+---@param liftFn function|nil function(x,y) -> vec3 that places a point on the terrain; z=0 plane by default.
+---@return vec3|nil  Point on the edge
+---@return vec3  Center of the bar (grab button)
+---@return vec3  End 1 of the bar
+---@return vec3  End 2 of the bar
 function editor_toolUtilities_edgeHandles.handleGeom(ring, gate, outDist, halfWidth, liftFn) end
 
---- Accroche un point du monde (px,py) à la porte la plus proche sur le contour.
----Source : lua/ge/extensions/editor/toolUtilities/edgeHandles.lua:68
----@param ring table Liste de points {x=,y=}
----@param px number x monde
----@param py number y monde
----@return table  { edge = indice d'arête, t = position 0..1 }
+--- Snaps a world point (px,py) to the nearest gate on the outline.
+---Source: lua/ge/extensions/editor/toolUtilities/edgeHandles.lua:68
+---@param ring table List of points {x=,y=}
+---@param px number world x
+---@param py number world y
+---@return table  { edge = edge index, t = position 0..1 }
 function editor_toolUtilities_edgeHandles.nearestGate(ring, px, py) end
 
---- Donne un id unique (Engine.generateUUID) à chaque porte qui n'en a pas, puis renvoie la liste. Une porte n'est sinon repérée que par sa position dans la liste, qui change quand une porte précédente est retirée.
----Source : lua/ge/extensions/editor/toolUtilities/edgeHandles.lua:60
----@param gates table|nil Liste de portes { edge, t, id? }
----@return table|nil  La même liste, portes nommées.
+--- Gives a unique id (Engine.generateUUID) to each gate that has none, then returns the list. A gate is otherwise identified only by its position in the list, which changes when a previous gate is removed.
+---Source: lua/ge/extensions/editor/toolUtilities/edgeHandles.lua:60
+---@param gates table|nil List of gates { edge, t, id? }
+---@return table|nil  The same list, with named gates.
 function editor_toolUtilities_edgeHandles.tagGates(gates) end
 

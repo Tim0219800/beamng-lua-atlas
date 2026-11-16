@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/getLevelData.lua",
+  "module": "Nœud « Get Level Data » (once_instant). Donne des informations sur le niveau courant d'après getMissionFilename() : nom de dossier du niveau (devName), dossier (directory, caché) et chemin complet (path, caché). Pas d'entrée.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "work": {
+          "desc": "Découpe le chemin du fichier de mission (path.split) et écrit devName, directory et path sous forme de chaînes.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "path": "lua/vehicle/bullettime.lua",
+  "module": "Ancienne API de ralenti (bullet time) côté véhicule, conservée pour la compatibilité des mods. Elle ne fait que relayer vers `simTimeAuthority` dans le moteur de jeu (GE Lua). Les fonctions dépréciées affichent un toast d'erreur dans l'UI et loguent une trace ; il faut utiliser `get`, `set` ou `selectPreset`.",
+  "usage": "local scale = bullettime.get() -- échelle de temps actuelle\nbullettime.set(0.5)             -- demi-vitesse",
+  "notes": [
+    "L'ancien champ `bullettime.simulationSpeed` est encore lu via une métatable : il renvoie `get() * 100` et logue une erreur de dépréciation (une seule fois).",
+    "`set(v)` envoie à simTimeAuthority la valeur `1/v` : v est donc un facteur de vitesse (0.5 = moitié moins vite) ; v = 0 donnerait une division par zéro (inf).",
+    "`update`, `reset` et `slowMotion` sont tous la même fonction `deprecated` ; `requestValue` appelle aussi deprecated puis transmet la requête."
+  ],
+  "fields": {
+    "simulationSpeed": {"type": "number", "desc": "Champ virtuel déprécié (via métatable __index) : échelle de simulation × 100."}
+  },
+  "functions": {
+    "get": {
+      "desc": "Renvoie l'échelle de temps de simulation actuelle (`obj:getSimulationTimeScale()`).",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Échelle de temps (1 = temps réel)."}],
+      "internal": false
+    },
+    "set": {
+      "desc": "Demande au moteur de jeu de changer la vitesse de simulation, en exécutant `simTimeAuthority.set(1/v)` côté GE.",
+      "params": {"v": {"type": "number", "desc": "Facteur de vitesse voulu (déduit du code : la valeur envoyée est 1/v)."}},
+      "returns": [],
+      "internal": false
+    },
+    "selectPreset": {
+      "desc": "Demande à `simTimeAuthority.selectPreset` (côté GE) de choisir un préréglage de vitesse.",
+      "params": {"v": {"type": "any", "desc": "Préréglage, sérialisé par dumps (déduit du code)."}},
+      "returns": [],
+      "internal": false
+    },
+    "requestValue": {
+      "desc": "Déprécié : affiche l'avertissement puis appelle `simTimeAuthority.requestValue()` côté GE.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "update": {
+      "desc": "Déprécié : affiche un toast d'erreur « Deprecated API: bullettime » et logue une trace.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "reset": {
+      "desc": "Déprécié (même fonction que update) : toast d'erreur et trace.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "slowMotion": {
+      "desc": "Déprécié (même fonction que update) : toast d'erreur et trace.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

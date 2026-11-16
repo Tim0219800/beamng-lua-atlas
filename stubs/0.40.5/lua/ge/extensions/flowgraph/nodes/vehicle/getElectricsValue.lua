@@ -2,47 +2,47 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+--- Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 ---@class flowgraph_nodes_vehicle_getElectricsValue_C
 local flowgraph_nodes_vehicle_getElectricsValue_C = {}
 
---- Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:41
+--- Called by the manager when the flowgraph project execution starts; resets the internal state to zero.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:41
 function flowgraph_nodes_vehicle_getElectricsValue_C:_executionStarted() end
 
---- Appelé par le gestionnaire quand l'exécution du projet s'arrête ; nettoie l'état interne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:44
+--- Called by the manager when the project execution stops; cleans up the internal state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:44
 function flowgraph_nodes_vehicle_getElectricsValue_C:_executionStopped() end
 
---- Se désabonne de la notification de changement de valeur (`unregisterValueChangeNotification`) et vide `_setupData`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:48
+--- Unsubscribes from the value change notification (`unregisterValueChangeNotification`) and clears `_setupData`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:48
 function flowgraph_nodes_vehicle_getElectricsValue_C:clearNotification() end
 
---- Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:25
+--- Node constructor, called at its creation by the flowgraph editor/manager; initializes the internal state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:25
 function flowgraph_nodes_vehicle_getElectricsValue_C:init() end
 
---- Passe en durée `inactive` et supprime la notification.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:59
+--- Goes to `inactive` duration and removes the notification.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:59
 function flowgraph_nodes_vehicle_getElectricsValue_C:onNodeReset() end
 
---- Définit `hardTemplates` du pin `key` : liste de clés electrics courantes proposées dans l'éditeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:28
+--- Defines `hardTemplates` of the `key` pin: list of common electrics keys offered in the editor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:28
 function flowgraph_nodes_vehicle_getElectricsValue_C:postInit() end
 
---- Lit la valeur en cache ; si elle existe, l'écrit dans `value` et passe en `finished`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:78
+--- Reads the cached value; if it exists, writes it to `value` and goes to `finished`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:78
 function flowgraph_nodes_vehicle_getElectricsValue_C:work() end
 
---- S'abonne à la valeur `key` du véhicule et passe en durée `started`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:64
+--- Subscribes to the vehicle's `key` value and goes to `started` duration.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua:64
 function flowgraph_nodes_vehicle_getElectricsValue_C:workOnce() end
 

@@ -1,129 +1,129 @@
 # `editor_toolUtilities_surfaceKit`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/surfaceKit.lua` · VM : Game Engine (GE) · 140 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/surfaceKit.lua` · VM: Game Engine (GE) · 140 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_surfaceKit` : `extensions.load("editor_toolUtilities_surfaceKit")`, puis la globale `editor_toolUtilities_surfaceKit`
+**Access:** extension `editor_toolUtilities_surfaceKit`: `extensions.load("editor_toolUtilities_surfaceKit")`, then the global `editor_toolUtilities_surfaceKit`
 
-Kit partagé pour peindre des groundmodels (physique) sur des routes en mesh (mode groundmodel du Hero Road Editor). Le groundmodel est déduit du nom du matériau d'un triangle : les variantes de grip ont le même aspect que la base et ne diffèrent que par groundType. Les variantes sont le matériau de chaussée de la route plus un suffixe (_wet, _snow ou _snowy, _ice) ; Dry est le matériau de base et sert de gomme. Un état n'est peignable que si son matériau existe dans le niveau. La peinture est stockée en tampons monde { x, y, r, m } (m = indice de palette à partir de 1).
+Shared kit for painting groundmodels (physics) on mesh roads (groundmodel mode of the Hero Road Editor). The groundmodel is inferred from the name of a triangle's material: grip variants look the same as the base and differ only by groundType. The variants are the road's pavement material plus a suffix (_wet, _snow or _snowy, _ice); Dry is the base material and serves as an eraser. A state can only be painted if its material exists in the level. The paint is stored in world stamps { x, y, r, m } (m = palette index starting at 1).
 
-## Remarques
+## Notes
 
-- Palette : 1 Dry (ASPHALT1), 2 Wet (ASPHALT_WET), 3 Snow (SNOW), 4 Ice (ICE). Les couleurs ne servent qu'à la surcouche de l'éditeur.
-- Dans materialAt, le tampon d'indice le plus haut (peint en dernier) gagne, y compris un tampon Dry de gomme.
-- La grille spatiale a une cellule égale au plus grand rayon de pinceau (au moins 0.5) et une recherche en voisinage 3x3.
-- materialOf retombe sur le matériau de base si la variante n'existe pas ; sans baseMat, renvoie 'dry' (id de la palette).
+- Palette: 1 Dry (ASPHALT1), 2 Wet (ASPHALT_WET), 3 Snow (SNOW), 4 Ice (ICE). The colors are only used for the editor overlay.
+- In materialAt, the stamp with the highest index (painted last) wins, including a Dry eraser stamp.
+- The spatial grid has a cell equal to the largest brush radius (at least 0.5) and a 3x3 neighborhood search.
+- materialOf falls back to the base material if the variant does not exist; without baseMat, returns 'dry' (palette id).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_surfaceKit.buildGrid(stamps)` | Construit un hachage spatial uniforme sur les tampons pour que la recherche par quad soit environ O(1). Renvoie nil s'il n'y a rien de peint. | 84 |
-| `editor_toolUtilities_surfaceKit.colOf(i)` | Couleur de surcouche { r, g, b } (0-255) ; celle de Dry si l'indice est inconnu. | 41 |
-| `editor_toolUtilities_surfaceKit.count()` | Nombre d'entrées de la palette. | 37 |
-| `editor_toolUtilities_surfaceKit.get(i)` | Entrée de palette (id, label, groundmodel, col, suffixes). | 38 |
-| `editor_toolUtilities_surfaceKit.isAvailable(i, baseMat)` | Vrai si la surface `i` est peignable : Dry toujours, les autres seulement si une variante existe. | 62 |
-| `editor_toolUtilities_surfaceKit.isBase(i)` | Vrai si l'indice est celui de la surface de base (Dry) ; nil est traité comme la base. | 39 |
-| `editor_toolUtilities_surfaceKit.labelOf(i)` | Libellé de l'entrée, '?' si inconnue. | 40 |
-| `editor_toolUtilities_surfaceKit.materialAt(grid, stamps, px, py)` | Indice de palette de la surface peinte au point monde (px, py) : le tampon d'indice le plus élevé couvrant le point gagne. Renvoie l'indice de base si rien ne le couvre. | 101 |
-| `editor_toolUtilities_surfaceKit.materialExists(name)` | Vrai si un matériau de ce nom est présent dans le niveau (scenetree.findObject). | 44 |
-| `editor_toolUtilities_surfaceKit.materialOf(i, baseMat)` | Matériau réellement appliqué à un quad peint de la surface `i` : la variante si elle existe, sinon la base. | 69 |
-| `editor_toolUtilities_surfaceKit.resolveMaterials(baseMat)` | Résout le matériau de chaque surface pour une base donnée, en un passage (appelé une fois par construction de mesh). | 75 |
-| `editor_toolUtilities_surfaceKit.variantMaterial(i, baseMat)` | Nom du matériau variante de la surface `i` pour la chaussée `baseMat`, ou nil si aucune variante n'existe (non peignable). Dry renvoie le matériau de base. | 50 |
+| `editor_toolUtilities_surfaceKit.buildGrid(stamps)` | Builds a uniform spatial hash over the stamps so the per-quad lookup is roughly O(1). Returns nil if nothing is painted. | 84 |
+| `editor_toolUtilities_surfaceKit.colOf(i)` | Overlay color { r, g, b } (0-255); that of Dry if the index is unknown. | 41 |
+| `editor_toolUtilities_surfaceKit.count()` | Number of palette entries. | 37 |
+| `editor_toolUtilities_surfaceKit.get(i)` | Palette entry (id, label, groundmodel, col, suffixes). | 38 |
+| `editor_toolUtilities_surfaceKit.isAvailable(i, baseMat)` | True if surface `i` is paintable: Dry always, the others only if a variant exists. | 62 |
+| `editor_toolUtilities_surfaceKit.isBase(i)` | True if the index is that of the base surface (Dry); nil is treated as the base. | 39 |
+| `editor_toolUtilities_surfaceKit.labelOf(i)` | Label of the entry, '?' if unknown. | 40 |
+| `editor_toolUtilities_surfaceKit.materialAt(grid, stamps, px, py)` | Palette index of the painted surface at world point (px, py): the highest-index stamp covering the point wins. Returns the base index if nothing covers it. | 101 |
+| `editor_toolUtilities_surfaceKit.materialExists(name)` | True if a material of this name is present in the level (scenetree.findObject). | 44 |
+| `editor_toolUtilities_surfaceKit.materialOf(i, baseMat)` | Material actually applied to a painted quad of surface `i`: the variant if it exists, otherwise the base. | 69 |
+| `editor_toolUtilities_surfaceKit.resolveMaterials(baseMat)` | Resolves the material of each surface for a given base, in one pass (called once per mesh build). | 75 |
+| `editor_toolUtilities_surfaceKit.variantMaterial(i, baseMat)` | Name of the variant material of surface `i` for the pavement `baseMat`, or nil if no variant exists (not paintable). Dry returns the base material. | 50 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_surfaceKit.buildGrid(stamps)`
 
-Construit un hachage spatial uniforme sur les tampons pour que la recherche par quad soit environ O(1). Renvoie nil s'il n'y a rien de peint.
+Builds a uniform spatial hash over the stamps so the per-quad lookup is roughly O(1). Returns nil if nothing is painted.
 
-- `stamps` (*table|nil*) : Liste de tampons { x, y, r, m }.
-- **renvoie** : table|nil { cell, map } ou nil.
+- `stamps` (*table|nil*) : List of stamps { x, y, r, m }.
+- **returns**: table|nil { cell, map } or nil.
 
 #### `editor_toolUtilities_surfaceKit.colOf(i)`
 
-Couleur de surcouche { r, g, b } (0-255) ; celle de Dry si l'indice est inconnu.
+Overlay color { r, g, b } (0-255); that of Dry if the index is unknown.
 
-- `i` (*integer*) : Indice.
-- **renvoie** : table { r, g, b }.
+- `i` (*integer*) : Index.
+- **returns**: table { r, g, b }.
 
 #### `editor_toolUtilities_surfaceKit.count()`
 
-Nombre d'entrées de la palette.
+Number of palette entries.
 
-- **renvoie** : integer 4
+- **returns**: integer 4
 
 #### `editor_toolUtilities_surfaceKit.get(i)`
 
-Entrée de palette (id, label, groundmodel, col, suffixes).
+Palette entry (id, label, groundmodel, col, suffixes).
 
-- `i` (*integer*) : Indice à partir de 1.
-- **renvoie** : table|nil Entrée.
+- `i` (*integer*) : Index starting at 1.
+- **returns**: table|nil Entry.
 
 #### `editor_toolUtilities_surfaceKit.isAvailable(i, baseMat)`
 
-Vrai si la surface `i` est peignable : Dry toujours, les autres seulement si une variante existe.
+True if surface `i` is paintable: Dry always, the others only if a variant exists.
 
-- `i` (*integer*) : Indice de palette.
-- `baseMat` (*string*) : Matériau de base.
-- **renvoie** : boolean Disponible.
+- `i` (*integer*) : Palette index.
+- `baseMat` (*string*) : Base material.
+- **returns**: boolean Available.
 
 #### `editor_toolUtilities_surfaceKit.isBase(i)`
 
-Vrai si l'indice est celui de la surface de base (Dry) ; nil est traité comme la base.
+True if the index is that of the base surface (Dry); nil is treated as the base.
 
-- `i` (*integer|nil*) : Indice de palette.
-- **renvoie** : boolean Est la base.
+- `i` (*integer|nil*) : Palette index.
+- **returns**: boolean Is the base.
 
 #### `editor_toolUtilities_surfaceKit.labelOf(i)`
 
-Libellé de l'entrée, '?' si inconnue.
+Label of the entry, '?' if unknown.
 
-- `i` (*integer*) : Indice.
-- **renvoie** : string Libellé.
+- `i` (*integer*) : Index.
+- **returns**: string Label.
 
 #### `editor_toolUtilities_surfaceKit.materialAt(grid, stamps, px, py)`
 
-Indice de palette de la surface peinte au point monde (px, py) : le tampon d'indice le plus élevé couvrant le point gagne. Renvoie l'indice de base si rien ne le couvre.
+Palette index of the painted surface at world point (px, py): the highest-index stamp covering the point wins. Returns the base index if nothing covers it.
 
-- `grid` (*table|nil*) : Résultat de buildGrid.
-- `stamps` (*table*) : Les mêmes tampons.
-- `px` (*number*) : X monde (m).
-- `py` (*number*) : Y monde (m).
-- **renvoie** : integer Indice de palette.
+- `grid` (*table|nil*) : Result of buildGrid.
+- `stamps` (*table*) : The same stamps.
+- `px` (*number*) : World X (m).
+- `py` (*number*) : World Y (m).
+- **returns**: integer Palette index.
 
 #### `editor_toolUtilities_surfaceKit.materialExists(name)`
 
-Vrai si un matériau de ce nom est présent dans le niveau (scenetree.findObject).
+True if a material of this name is present in the level (scenetree.findObject).
 
-- `name` (*string|nil*) : Nom du matériau.
-- **renvoie** : boolean Existe.
+- `name` (*string|nil*) : Material name.
+- **returns**: boolean Exists.
 
 #### `editor_toolUtilities_surfaceKit.materialOf(i, baseMat)`
 
-Matériau réellement appliqué à un quad peint de la surface `i` : la variante si elle existe, sinon la base.
+Material actually applied to a painted quad of surface `i`: the variant if it exists, otherwise the base.
 
-- `i` (*integer*) : Indice.
-- `baseMat` (*string*) : Matériau de base.
-- **renvoie** : string Nom du matériau.
+- `i` (*integer*) : Index.
+- `baseMat` (*string*) : Base material.
+- **returns**: string Material name.
 
 #### `editor_toolUtilities_surfaceKit.resolveMaterials(baseMat)`
 
-Résout le matériau de chaque surface pour une base donnée, en un passage (appelé une fois par construction de mesh).
+Resolves the material of each surface for a given base, in one pass (called once per mesh build).
 
-- `baseMat` (*string*) : Matériau de base.
-- **renvoie** : table<integer, string> Indice de palette -> nom de matériau.
+- `baseMat` (*string*) : Base material.
+- **returns**: table<integer, string> Palette index -> material name.
 
 #### `editor_toolUtilities_surfaceKit.variantMaterial(i, baseMat)`
 
-Nom du matériau variante de la surface `i` pour la chaussée `baseMat`, ou nil si aucune variante n'existe (non peignable). Dry renvoie le matériau de base.
+Name of the variant material of surface `i` for the pavement `baseMat`, or nil if no variant exists (not paintable). Dry returns the base material.
 
-- `i` (*integer*) : Indice de palette.
-- `baseMat` (*string*) : Matériau de base de la chaussée.
-- **renvoie** : string|nil Nom du matériau.
+- `i` (*integer*) : Palette index.
+- `baseMat` (*string*) : Base material of the pavement.
+- **returns**: string|nil Material name.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/surfaceKit.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/surfaceKit.lua`.*

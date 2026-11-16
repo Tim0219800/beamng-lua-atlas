@@ -1,58 +1,58 @@
 # `inputAnalyzer`
 
-*Fichier : `lua/vehicle/extensions/inputAnalyzer.lua` · VM : Véhicule · 147 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/inputAnalyzer.lua` · VM: Vehicle · 147 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `inputAnalyzer` : `extensions.load (VM véhicule)("inputAnalyzer")`, puis la globale `inputAnalyzer`
+**Access:** extension `inputAnalyzer`: `extensions.load (vehicle VM)("inputAnalyzer")`, then the global `inputAnalyzer`
 
-Détecteur de 'codes' à la manette/clavier : à 30 Hz il observe les entrées (accélérateur, frein, direction gauche/droite, embrayage, frein à main), construit une chaîne des 16 dernières pressions et appelle un callback quand la fin de la chaîne correspond à une séquence enregistrée (8 à 16 caractères). Sert à des easter eggs.
+Gamepad/keyboard 'code' detector: at 30 Hz it watches the inputs (throttle, brake, steering left/right, clutch, parking brake), builds a string of the last 16 presses and calls a callback when the end of the string matches a registered sequence (8 to 16 characters). Used for easter eggs.
 
-## Exemple
+## Example
 
 ```lua
--- lettres : u accélérateur, d frein, l gauche, r droite, a embrayage, b frein à main
-extensions.inputAnalyzer.registerInputString('uuddlrlrab', function(s) print('code !') end)
+-- letters: u throttle, d brake, l left, r right, a clutch, b parking brake
+extensions.inputAnalyzer.registerInputString('uuddlrlrab', function(s) print('code!') end)
 ```
 
-## Remarques
+## Notes
 
-- Chaque nouvelle pression (passage de faux à vrai au-dessus de 0,01) ajoute sa lettre à la chaîne. La chaîne est tronquée d'un caractère quand elle dépasse 16.
-- Les entrées lues sont electrics.values.throttle_input, brake_input, steering_input (l = partie négative, r = partie positive), clutch_input et parkingbrake_input.
-- registerInputString ignore les chaînes de moins de 8 ou de plus de 16 caractères.
-- Anomalie : le test de doublon dans registerInputString compare `v.string == string` (la bibliothèque string) au lieu de `str` : il n'est jamais vrai, un même code peut donc être enregistré plusieurs fois.
-- Anomalie : le paramètre de unregisterInputString s'appelle `string` et masque la bibliothèque string (sans conséquence ici).
-- Si une des clés electrics lues est nil, abs(nil) lève une erreur ; elles sont normalement initialisées par les entrées.
+- Each new press (transition from false to true above 0.01) appends its letter to the string. The string is truncated by one character when it exceeds 16.
+- The inputs read are electrics.values.throttle_input, brake_input, steering_input (l = negative part, r = positive part), clutch_input and parkingbrake_input.
+- registerInputString ignores strings shorter than 8 or longer than 16 characters.
+- Anomaly: the duplicate test in registerInputString compares `v.string == string` (the string library) instead of `str`: it is never true, so the same code can be registered several times.
+- Anomaly: the parameter of unregisterInputString is named `string` and shadows the string library (no consequence here).
+- If one of the electrics keys read is nil, abs(nil) raises an error; they are normally initialized by the inputs.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `inputAnalyzer.onInit()` | Hook d'initialisation ; vide. *(interne)* *(hook)* | 136 |
-| `inputAnalyzer.onReset()` | Hook de reset ; vide. *(interne)* *(hook)* | 133 |
-| `inputAnalyzer.registerInputString(str, callback)` | Enregistre une séquence à détecter et le callback appelé avec la chaîne courante quand elle est saisie. | 91 |
-| `inputAnalyzer.unregisterInputString(string, callback)` | Retire une séquence enregistrée (même chaîne et même callback) ; active/désactive updateGFX selon qu'il reste des séquences. | 115 |
-| `inputAnalyzer.updateGFX(dt)` | Appelé chaque frame : exécute l'analyse des entrées à 30 Hz (nop quand aucun code n'est enregistré après un (un)register). *(interne)* | 83 |
+| `inputAnalyzer.onInit()` | Initialization hook; empty. *(internal)* *(hook)* | 136 |
+| `inputAnalyzer.onReset()` | Reset hook; empty. *(internal)* *(hook)* | 133 |
+| `inputAnalyzer.registerInputString(str, callback)` | Registers a sequence to detect and the callback called with the current string when it is entered. | 91 |
+| `inputAnalyzer.unregisterInputString(string, callback)` | Removes a registered sequence (same string and same callback); enables/disables updateGFX depending on whether sequences remain. | 115 |
+| `inputAnalyzer.updateGFX(dt)` | Called every frame: runs the input analysis at 30 Hz (no-op when no code is registered after a (un)register). *(internal)* | 83 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `inputAnalyzer.registerInputString(str, callback)`
 
-Enregistre une séquence à détecter et le callback appelé avec la chaîne courante quand elle est saisie.
+Registers a sequence to detect and the callback called with the current string when it is entered.
 
-- `str` (*string*) : Séquence de 8 à 16 lettres parmi u, d, l, r, a, b.
+- `str` (*string*) : Sequence of 8 to 16 letters among u, d, l, r, a, b.
 - `callback` (*function*) : function(inputString).
 
 #### `inputAnalyzer.unregisterInputString(string, callback)`
 
-Retire une séquence enregistrée (même chaîne et même callback) ; active/désactive updateGFX selon qu'il reste des séquences.
+Removes a registered sequence (same string and same callback); enables/disables updateGFX depending on whether sequences remain.
 
-- `string` (*string*) : Séquence enregistrée.
-- `callback` (*function*) : Callback enregistré.
+- `string` (*string*) : Registered sequence.
+- `callback` (*function*) : Registered callback.
 
 #### `inputAnalyzer.updateGFX(dt)`
 
-Appelé chaque frame : exécute l'analyse des entrées à 30 Hz (nop quand aucun code n'est enregistré après un (un)register).
+Called every frame: runs the input analysis at 30 Hz (no-op when no code is registered after a (un)register).
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/inputAnalyzer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/inputAnalyzer.lua`.*

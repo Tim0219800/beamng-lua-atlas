@@ -1,62 +1,62 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/fire/fire.lua",
-  "module": "Nœud « Fire » (catégorie `once_p_duration`, tags destroy/damage/funstuff). Appelle une action de feu sur un véhicule via `core_vehicleBridge.executeAction(veh,'interactFire', fonction)`. La fonction se choisit dans l'éditeur : `igniteVehicle`, `extinguishVehicle`, `explodeVehicle`, `igniteRandomNode`, `igniteRandomNodeMinimal`, `extinguishVehicleSlowly`. Pin d'entrée : `vehId` (obligatoire).",
+  "module": "Node \"Fire\" (category `once_p_duration`, tags destroy/damage/funstuff). Calls a fire action on a vehicle via `core_vehicleBridge.executeAction(veh,'interactFire', function)`. The function is chosen in the editor: `igniteVehicle`, `extinguishVehicle`, `explodeVehicle`, `igniteRandomNode`, `igniteRandomNodeMinimal`, `extinguishVehicleSlowly`. Input pin: `vehId` (required).",
   "notes": [
-    "Pas de repli sur le véhicule joueur : sans `vehId`, rien ne se passe.",
-    "`_executionStarted` met `self.done = false` mais `done` n'est utilisé nulle part."
+    "No fallback to the player vehicle: without `vehId`, nothing happens.",
+    "`_executionStarted` sets `self.done = false` but `done` is not used anywhere."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_executionStarted": {
-          "desc": "Met `done = false` (champ inutilisé).",
+          "desc": "Sets `done = false` (unused field).",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Appelé au chargement du projet ; restaure les réglages du nœud depuis `nodeData`.",
+          "desc": "Called when the project loads; restores the node's settings from `nodeData`.",
           "internal": true,
           "params": {
             "nodeData": {
               "type": "table",
-              "desc": "Données sauvegardées du nœud."
+              "desc": "Saved node data."
             }
           }
         },
         "_onSerialize": {
-          "desc": "Appelé à la sauvegarde du projet ; copie les réglages du nœud dans la table `res`.",
+          "desc": "Called when the project is saved; copies the node's settings into the `res` table.",
           "internal": true,
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde à remplir."
+              "desc": "Save table to fill."
             }
           }
         },
         "drawCustomProperties": {
-          "desc": "Affichage ImGui des propriétés du nœud dans le panneau de l'éditeur ; renvoie une chaîne décrivant la modification faite, ou nil.",
+          "desc": "ImGui display of the node's properties in the editor panel; returns a string describing the change made, or nil.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affichage ImGui au centre du nœud dans l'éditeur de flowgraph ; purement visuel.",
+          "desc": "ImGui display in the center of the node in the flowgraph editor; purely visual.",
           "internal": true,
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+              "desc": "Editor node builder (builder:Middle())."
             },
             "style": {
               "type": "any",
-              "desc": "Style ImGui de l'éditeur."
+              "desc": "Editor ImGui style."
             }
           }
         },
         "init": {
-          "desc": "Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne.",
+          "desc": "Node constructor, called at its creation by the flowgraph editor/manager; initializes the internal state.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Envoie l'action `interactFire` avec la fonction sélectionnée au véhicule `vehId`.",
+          "desc": "Sends the `interactFire` action with the selected function to the vehicle `vehId`.",
           "internal": true
         }
       }

@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/math/smoothers/sigmoid.lua",
+  "module": "Noeud flowgraph 'Sigmoid Smoother' (categorie simple). Lissage sigmoide avec newTemporalSigmoidSmoothing : limites de vitesse upRateLimit/downRateLimit et accelerations de depart/arret (up/down StartAccel et StopAccel) selon le sens ; 'set' force l'etat. Sortie 'value'.",
+  "notes": [
+    "BUG : le pin est declare 'downstopAccel' (s minuscule) mais work lit self.pinIn.downStopAccel (nil) : indexer .value sur nil provoque une erreur des que la valeur d'entree est inferieure a l'etat (sens descendant).",
+    "init ecrit C.smoother (classe) : le lisseur est partage entre toutes les instances du noeud."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Met C.oldSet=0 et C.smoother (au niveau de la classe).",
+          "internal": true
+        },
+        "checkSetValue": {
+          "desc": "Si 'set' a change, force l'etat du lisseur.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sans entree, sort l'etat ; sinon choisit limit/start/stop selon le sens (defaut 1) et sort smoother:getWithRateAccel(sample, dt, limit, start, stop).",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche l'etat du lisseur.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

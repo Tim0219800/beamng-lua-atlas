@@ -1,53 +1,53 @@
 # `remoteControl_remoteControl`
 
-*Fichier : `lua/ge/extensions/remoteControl/remoteControl.lua` · VM : Game Engine (GE) · 95 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/remoteControl/remoteControl.lua` · VM: Game Engine (GE) · 95 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `remoteControl_remoteControl` : `extensions.load("remoteControl_remoteControl")`, puis la globale `remoteControl_remoteControl`
+**Access:** extension `remoteControl_remoteControl`: `extensions.load("remoteControl_remoteControl")`, then the global `remoteControl_remoteControl`
 
-Exemple/prototype de télécommande HTTP : au chargement, démarre un petit serveur HTTP (utils/simpleHttpServer) sur 0.0.0.0:8081 qui sert les fichiers de /lua/ge/extensions/remoteControl/ et quelques routes d'API, et enregistre un périphérique d'entrée virtuel « httpcontrollerv1 » (1 axe, 2 boutons déclarés) auprès du gestionnaire d'entrées virtuelles. Il sert de base pour piloter le jeu depuis un téléphone ou un navigateur.
+Example/prototype of an HTTP remote control: on load, starts a small HTTP server (utils/simpleHttpServer) on 0.0.0.0:8081 that serves the files in /lua/ge/extensions/remoteControl/ and a few API routes, and registers a virtual input device "httpcontrollerv1" (1 axis, 2 buttons declared) with the virtual input manager. It serves as a basis for controlling the game from a phone or a browser.
 
-## Remarques
+## Notes
 
-- Routes HTTP : GET /hello/<nombre> renvoie « hello world: <nombre> » ; /api/getInfo/ renvoie la version, l'architecture, l'ip et le port ; /api/ping renvoie ["pong"] ; /api/btn inverse l'état du bouton 0 et émet un évènement vinput.
-- SÉCURITÉ : le serveur écoute sur toutes les interfaces (0.0.0.0) sans authentification.
-- onUpdate émet en continu une valeur d'axe sinusoïdale (sin(t)+1)/2 sur l'axe 0 : ce n'est qu'une démonstration, pas un vrai contrôle.
-- M.onFirstUpdate est assigné à une variable locale jamais définie (donc nil) : champ sans effet.
-- onUpdate appelle ws.update() même si le serveur n'a pas été créé (ws nil avant onExtensionLoaded) ; en pratique onExtensionLoaded précède onUpdate.
-- Les variables httpListenPort et port sont dupliquées (8081 deux fois) ; le serveur utilise `port`.
+- HTTP routes: GET /hello/<number> returns "hello world: <number>"; /api/getInfo/ returns the version, architecture, ip and port; /api/ping returns ["pong"]; /api/btn toggles the state of button 0 and emits a vinput event.
+- SECURITY: the server listens on all interfaces (0.0.0.0) without authentication.
+- onUpdate continuously emits a sinusoidal axis value (sin(t)+1)/2 on axis 0: it is only a demonstration, not real control.
+- M.onFirstUpdate is assigned to a local variable that is never defined (so nil): field with no effect.
+- onUpdate calls ws.update() even if the server was not created (ws nil before onExtensionLoaded); in practice onExtensionLoaded precedes onUpdate.
+- The variables httpListenPort and port are duplicated (8081 twice); the server uses `port`.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `remoteControl_remoteControl.onExtensionLoaded()` | Hook appelé au chargement de l'extension : démarre le serveur HTTP et déclare les routes. *(interne)* *(hook)* | 17 |
-| `remoteControl_remoteControl.onExtensionUnloaded()` | Hook appelé au déchargement : désenregistre le périphérique virtuel (le serveur HTTP n'est pas arrêté explicitement). *(interne)* *(hook)* | 62 |
-| `remoteControl_remoteControl.onUpdate(dtReal, dtSim, dtRaw)` | Hook appelé à chaque image : traite les requêtes HTTP et émet les évènements du périphérique virtuel (l'enregistre à la première image). *(interne)* *(hook)* | 46 |
+| `remoteControl_remoteControl.onExtensionLoaded()` | Hook called when the extension loads: starts the HTTP server and declares the routes. *(internal)* *(hook)* | 17 |
+| `remoteControl_remoteControl.onExtensionUnloaded()` | Hook called on unload: unregisters the virtual device (the HTTP server is not explicitly stopped). *(internal)* *(hook)* | 62 |
+| `remoteControl_remoteControl.onUpdate(dtReal, dtSim, dtRaw)` | Hook called every frame: processes HTTP requests and emits the virtual device's events (registers it on the first frame). *(internal)* *(hook)* | 46 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `remoteControl_remoteControl.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé à chaque image : traite les requêtes HTTP et émet les évènements du périphérique virtuel (l'enregistre à la première image).
+Hook called every frame: processes HTTP requests and emits the virtual device's events (registers it on the first frame).
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `_unittests` | table | Table de tests unitaires (testExampleSuccess, testExampleFailure_shouldFail) pour le lanceur de tests du jeu. |
-| `onFirstUpdate` | nil | Référence à une variable locale non définie : vaut nil. ⚠ référence `onFirstUpdate` non définie dans le fichier (vaut probablement nil) |
+| `_unittests` | table | Unit test table (testExampleSuccess, testExampleFailure_shouldFail) for the game's test runner. |
+| `onFirstUpdate` | nil | Reference to an undefined local variable: equals nil. ⚠ reference `onFirstUpdate` not defined in the file (probably nil) |
 
-## Classe `tests`
+## Class `tests`
 
-Tests d'exemple exposés par _unittests ; les fonctions doivent commencer par « test ».
+Example tests exposed by _unittests; the functions must start with "test".
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `tests.testExampleFailure_shouldFail(context)` | Test d'exemple qui échoue volontairement. | 83 |
-| `tests.testExampleSuccess(context)` | Test d'exemple qui réussit (42 == 42). | 72 |
+| `tests.testExampleFailure_shouldFail(context)` | Example test that fails on purpose. | 83 |
+| `tests.testExampleSuccess(context)` | Example test that succeeds (42 == 42). | 72 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/remoteControl/remoteControl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/remoteControl/remoteControl.lua`.*

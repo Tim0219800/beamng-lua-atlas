@@ -1,24 +1,24 @@
 # `editor_cameraTransform`
 
-*Fichier : `lua/ge/extensions/editor/cameraTransform.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/cameraTransform.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_cameraTransform` : `extensions.load("editor_cameraTransform")`, puis la globale `editor_cameraTransform`
+**Access:** extension `editor_cameraTransform`: `extensions.load("editor_cameraTransform")`, then the global `editor_cameraTransform`
 
-Petite fenêtre d'éditeur « Camera Transform » (menu Camera). Elle lit la position/rotation de la caméra en JSON (commands.getCameraTransformJson), permet de l'éditer ou de la copier dans le presse-papiers, et de téléporter la caméra libre vers un JSON saisi (commands.setFreeCameraTransformJson).
+Small editor window "Camera Transform" (Camera menu). It reads the camera position/rotation as JSON (commands.getCameraTransformJson), lets you edit it or copy it to the clipboard, and teleport the free camera to an entered JSON (commands.setFreeCameraTransformJson).
 
-## Remarques
+## Notes
 
-- Le tampon de texte fait 512 caractères (im.ArrayChar(512)) : un JSON plus long serait tronqué.
-- Le module n'exporte que des hooks ; onEditorActivated et onEditorDeactivated sont vides.
+- The text buffer is 512 characters (im.ArrayChar(512)): a longer JSON would be truncated.
+- The module only exports hooks; onEditorActivated and onEditorDeactivated are empty.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_cameraTransform.onEditorActivated()` | Appelé à l'activation de l'éditeur ; ne fait rien. *(interne)* *(hook)* | 46 |
-| `editor_cameraTransform.onEditorDeactivated()` | Appelé à la désactivation de l'éditeur ; ne fait rien. *(interne)* *(hook)* | 50 |
-| `editor_cameraTransform.onEditorGui()` | Dessine la fenêtre : boutons « Get Camera Transform », « GoTo » et « Copy », et un champ de texte contenant le JSON de la transformation. Appelé à chaque frame par l'éditeur. *(interne)* *(hook)* | 18 |
-| `editor_cameraTransform.onEditorInitialized()` | Ajoute l'entrée de menu « Camera Transform » (groupe Camera) et enregistre la fenêtre 600x200. *(interne)* *(hook)* | 54 |
+| `editor_cameraTransform.onEditorActivated()` | Called when the editor is activated; does nothing. *(internal)* *(hook)* | 46 |
+| `editor_cameraTransform.onEditorDeactivated()` | Called when the editor is deactivated; does nothing. *(internal)* *(hook)* | 50 |
+| `editor_cameraTransform.onEditorGui()` | Draws the window: "Get Camera Transform", "GoTo" and "Copy" buttons, and a text field containing the transform JSON. Called every frame by the editor. *(internal)* *(hook)* | 18 |
+| `editor_cameraTransform.onEditorInitialized()` | Adds the "Camera Transform" menu entry (Camera group) and registers the 600x200 window. *(internal)* *(hook)* | 54 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/cameraTransform.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/cameraTransform.lua`.*

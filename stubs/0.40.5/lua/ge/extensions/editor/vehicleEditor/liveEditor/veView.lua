@@ -2,29 +2,29 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Vues de scène multiples de l'éditeur de véhicule en mode Live. Chaque « Scene View N » est une fenêtre ImGui qui affiche une caméra de rendu séparée (ImguiRenderViewControl) centrée sur le véhicule du joueur, avec les modes 3d, left, right, front, back, top, bottom (les vues orthographiques dessinent une grille au debugDrawer). Les réglages (mode, near/far clip, fov, ortho, décalage) sont sauvegardés dans la préférence de l'éditeur vehicleEditor.veView.sceneViews. Un clic droit ouvre un menu de contrôle (mode, Ortho, Render Main, Attach to Object, Show Icons, clips, FOV, ajout/suppression de vue).
---- Accès : extension `editor_vehicleEditor_liveEditor_veView` : `extensions.load("editor_vehicleEditor_liveEditor_veView")`, puis la globale `editor_vehicleEditor_liveEditor_veView`
+--- Multiple scene views of the vehicle editor in Live mode. Each "Scene View N" is an ImGui window that displays a separate render camera (ImguiRenderViewControl) centered on the player's vehicle, with the modes 3d, left, right, front, back, top, bottom (the orthographic views draw a grid with debugDrawer). The settings (mode, near/far clip, fov, ortho, offset) are saved in the editor preference vehicleEditor.veView.sceneViews. A right click opens a control menu (mode, Ortho, Render Main, Attach to Object, Show Icons, clips, FOV, add/remove view).
+--- Access: extension `editor_vehicleEditor_liveEditor_veView`: `extensions.load("editor_vehicleEditor_liveEditor_veView")`, then the global `editor_vehicleEditor_liveEditor_veView`
 ---@class editor_vehicleEditor_liveEditor_veView
 editor_vehicleEditor_liveEditor_veView = {}
 
---- Ajoute une vue de scène : réutilise la première vue supprimée ou masquée, sinon prend l'identifiant suivant, puis crée/enregistre la fenêtre « Scene View N » (400x600, outil vehicleEditor) et l'affiche. Appelée par le menu View > Add View de veToolbar en mode Live.
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua:106
+--- Adds a scene view: reuses the first deleted or hidden view, otherwise takes the next identifier, then creates/registers the "Scene View N" window (400x600, vehicleEditor tool) and displays it. Called by the View > Add View menu of veToolbar in Live mode.
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua:106
 function editor_vehicleEditor_liveEditor_veView.addSceneView() end
 
---- Hook de l'éditeur appelé à chaque frame : pour chaque vue enregistrée, ouvre la fenêtre, crée le contrôle de rendu et dessine son contenu (caméra, grille, menu clic droit) ; détruit le contrôle quand la fenêtre est fermée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua:462
+--- Editor hook called every frame: for each registered view, opens the window, creates the render control and draws its content (camera, grid, right-click menu); destroys the control when the window is closed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua:462
 function editor_vehicleEditor_liveEditor_veView.onEditorGui() end
 
---- Hook de l'éditeur appelé quand un outil passe en mode headless ou en sort. Pour l'outil 'vehicleEditor' : recharge les vues sauvegardées (enabled = true) ou les décharge et détruit les contrôles de rendu (enabled = false).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua:497
----@param enabled boolean true à l'activation de l'outil
----@param toolName string nom de l'outil, seul 'vehicleEditor' est traité
+--- Editor hook called when a tool enters or leaves headless mode. For the 'vehicleEditor' tool: reloads the saved views (enabled = true) or unloads them and destroys the render controls (enabled = false).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua:497
+---@param enabled boolean true when the tool is activated
+---@param toolName string tool name, only 'vehicleEditor' is handled
 function editor_vehicleEditor_liveEditor_veView.onEditorHeadlessChange(enabled, toolName) end
 
---- Hook de l'éditeur appelé à l'initialisation : charge les vues sauvegardées dans les préférences (une seule fois).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua:507
+--- Editor hook called at initialization: loads the views saved in the preferences (only once).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua:507
 function editor_vehicleEditor_liveEditor_veView.onEditorInitialized() end
 

@@ -1,0 +1,110 @@
+{
+  "path": "lua/ge/extensions/gameplay/route/route.lua",
+  "module": "Classe d'itinéraire sur le navgraph (module `map`) : calcule un chemin via une liste de positions, mémorise les distances restantes (distToTarget), suit un véhicule, la caméra ou une position, raccourcit le chemin au fil de l'avancée et le recalcule quand on s'en écarte de plus de 18 m. Les calculs peuvent se faire de façon asynchrone dans core_jobsystem (setupPathMultiJob, recalculateRoute). Le module renvoie un constructeur : `require('/lua/ge/extensions/gameplay/route/route')()`. Chaque point du chemin est une table {pos, wp, linkCount, distToTarget, fixed}.",
+  "usage": "local route = require('/lua/ge/extensions/gameplay/route/route')()\nroute:setRouteParams(nil, nil, nil, nil, nil, nil)\nroute:setupPathMulti({vec3(0,0,0), vec3(500,200,0)})\nlocal idx, dist = route:trackVehicle(be:getPlayerVehicle(0))",
+  "notes": [
+    "Un point `fixed` est une étape imposée (arrivée de chaque segment) ; recalculateRoute ne recalcule que jusqu'au premier point fixed puis recolle le reste du chemin (« queue »).",
+    "Distance de « sur le chemin » : onPathDist = 18 m ; les points à moins de 1 m (closeDistSquared = 1) sont fusionnés.",
+    "Le champ lockFixedNodes (non initialisé, à positionner de l'extérieur) empêche de dépasser un point fixed lors du suivi.",
+    "updatePathForPos fait un print(\"recalculateRoute(pos)\") quand un recalcul en cours est remplacé car le véhicule s'est trop éloigné de l'ancre.",
+    "Le hook onRecalculatedRoute (sans argument) est émis à la fin d'un recalcul asynchrone. Le module raceRoute équivalent émet le même hook avec l'argument 'raceRoute'.",
+    "La fonction debugLog est neutralisée (debugLog = nop) : aucun log de debug n'est émis. Les jobs utilisent global_pathJobMaxDt ou un dt quasi nul (1e-11) pour céder à chaque étape de recherche."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Itinéraire. Champs : path, dirMult (1e3), distance, cutOffDrivability, penaltyAboveCutoff, penaltyBelowCutoff, wD, wZ, done, lastDist, lastIndexAtDist, lockFixedNodes.",
+      "functions": {
+        "init": {"desc": "Constructeur : chemin vide, dirMult = 1e3, pas de job en cours.", "internal": true},
+        "setRouteParams": {
+          "desc": "Fixe les paramètres de recherche transmis à map.getPointToPointPath / map.getPath.",
+          "params": {
+            "cutOffDrivability": {"type": "number|nil", "desc": "Seuil de praticabilité des routes."},
+            "dirMult": {"type": "number|nil", "desc": "Multiplicateur de sens ; défaut 1e3."},
+            "penaltyAboveCutoff": {"type": "number|nil", "desc": "Pénalité au-dessus du seuil."},
+            "penaltyBelowCutoff": {"type": "number|nil", "desc": "Pénalité en dessous du seuil."},
+            "wD": {"type": "number|nil", "desc": "Poids de la distance (déduit du nom)."},
+            "wZ": {"type": "number|nil", "desc": "Poids de l'altitude (déduit du nom)."}
+          }
+        },
+        "stepAhead": {
+          "desc": "Renvoie le point situé à stepDist mètres plus loin le long de la route, en mémorisant la dernière position pour accélérer les appels successifs.",
+          "params": {
+            "stepDist": {"type": "number", "desc": "Distance à avancer (m), cumulée avec la précédente sauf si reset."},
+            "reset": {"type": "boolean|nil", "desc": "true pour repartir du début."}
+          },
+          "returns": [{"type": "table|nil", "desc": "{n1, n2, idx, pos, xnorm} ; nil si le chemin a moins de 2 points. À la fin de la route, renvoie le dernier segment avec xnorm = 1."}]
+        },
+        "calcDistance": {
+          "desc": "Recalcule distToTarget de chaque point (distance restante jusqu'à la fin) et self.distance.",
+          "returns": [{"type": "number", "desc": "Longueur totale en mètres."}]
+        },
+        "setupPath": {
+          "desc": "Itinéraire simple entre deux positions (appelle setupPathMulti).",
+          "params": {
+            "fromPos": {"type": "vec3", "desc": "Départ."},
+            "toPos": {"type": "vec3", "desc": "Arrivée."}
+          }
+        },
+        "setupPathMultiWaypoints": {
+          "desc": "Ajoute au chemin les nœuds du navgraph entre des waypoints donnés (map.getPath), sans doublons consécutifs, puis calcule les distances.",
+          "params": {"wpList": {"type": "string[]", "desc": "Liste de noms de nœuds du navgraph."}}
+        },
+        "setupPathMulti": {
+          "desc": "Construit (de façon synchrone) un chemin passant par toutes les positions. L'arrivée de chaque segment est un point `fixed`. Les points proches sont fusionnés et les extrémités sont ajustées sur le segment le plus proche.",
+          "params": {"positions": {"type": "vec3[]", "desc": "Au moins 2 positions."}}
+        },
+        "setupPathMultiJob": {
+          "desc": "Comme setupPathMulti mais la recherche tourne dans core_jobsystem (cède entre les étapes). self.path est remplacé une fois le calcul fini. Annule un recalcul ou un job précédent en cours.",
+          "params": {
+            "positions": {"type": "vec3[]", "desc": "Positions à relier."},
+            "onComplete": {"type": "function|nil", "desc": "Appelée avec la route à la fin du job."}
+          }
+        },
+        "clear": {"desc": "Annule les jobs en cours et vide le chemin."},
+        "getNextFixedWP": {
+          "desc": "Position du premier point fixed du chemin.",
+          "returns": [{"type": "vec3|nil", "desc": "Position, nil si aucun."}]
+        },
+        "unflagFirstFixedNode": {
+          "desc": "Retire le drapeau fixed du premier point fixed (étape atteinte).",
+          "returns": [{"type": "boolean", "desc": "true si un point a été modifié."}]
+        },
+        "recalculateRoute": {
+          "desc": "Recalcule en tâche asynchrone la route depuis startPos. S'il existe un point fixed, ne refait que le tronçon jusqu'à lui puis recolle la suite ; sinon refait la route jusqu'au dernier point. Émet le hook onRecalculatedRoute à la fin. Annule les jobs précédents.",
+          "params": {"startPos": {"type": "vec3", "desc": "Nouveau point de départ."}}
+        },
+        "getPositionOffset": {
+          "desc": "Cherche le segment du chemin le plus proche d'une position.",
+          "params": {"currentPos": {"type": "vec3", "desc": "Position à tester."}},
+          "returns": [
+            {"type": "integer", "desc": "Indice du segment si à moins de 18 m, 0 sinon."},
+            {"type": "number", "desc": "Distance minimale au chemin en mètres."}
+          ]
+        },
+        "shortenPath": {
+          "desc": "Supprime les points avant l'indice idx (les idx-1 premiers).",
+          "params": {"idx": {"type": "integer", "desc": "Indice du segment courant."}}
+        },
+        "trackVehicle": {
+          "desc": "Suit un véhicule (updatePathForPos sur sa position).",
+          "params": {"veh": {"type": "table", "desc": "Objet véhicule."}},
+          "returns": [{"type": "integer|nil", "desc": "Indice du segment."}, {"type": "number|nil", "desc": "Distance au chemin."}]
+        },
+        "trackCamera": {
+          "desc": "Suit la caméra (core_camera.getPosition).",
+          "returns": [{"type": "integer|nil", "desc": "Indice du segment."}, {"type": "number|nil", "desc": "Distance au chemin."}]
+        },
+        "trackPosition": {
+          "desc": "Suit une position quelconque.",
+          "params": {"pos": {"type": "vec3", "desc": "Position."}},
+          "returns": [{"type": "integer|nil", "desc": "Indice du segment."}, {"type": "number|nil", "desc": "Distance au chemin."}]
+        },
+        "updatePathForPos": {
+          "desc": "Met à jour la route pour une position : lance un recalcul si on est à 18 m ou plus de tout segment, annule un recalcul devenu inutile, raccourcit le chemin et ajuste le premier point sur la position. Met done = true si le chemin a moins de 2 points.",
+          "params": {"pos": {"type": "vec3", "desc": "Position actuelle."}},
+          "returns": [{"type": "integer|nil", "desc": "Indice du segment (0 hors chemin)."}, {"type": "number|nil", "desc": "Distance au chemin en mètres."}]
+        }
+      }
+    }
+  }
+}

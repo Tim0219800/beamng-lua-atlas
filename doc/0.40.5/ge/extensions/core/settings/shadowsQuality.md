@@ -1,22 +1,22 @@
 # `core_settings_shadowsQuality`
 
-*Fichier : `lua/ge/extensions/core/settings/shadowsQuality.lua` · VM : Game Engine (GE) · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/settings/shadowsQuality.lua` · VM: Game Engine (GE) · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_settings_shadowsQuality` : `extensions.load("core_settings_shadowsQuality")`, puis la globale `core_settings_shadowsQuality`
+**Access:** extension `core_settings_shadowsQuality`: `extensions.load("core_settings_shadowsQuality")`, then the global `core_settings_shadowsQuality`
 
-Préréglages de qualité des ombres, consommés par graphicsQualityGroup. Chaque niveau fixe $pref::Shadows::textureScalar et $pref::Shadows::disable. vehicleTexSizes donne en plus la taille de texture d'ombre des véhicules par niveau.
+Shadow quality presets, consumed by graphicsQualityGroup. Each level sets $pref::Shadows::textureScalar and $pref::Shadows::disable. vehicleTexSizes additionally gives the vehicle shadow texture size per level.
 
-## Remarques
+## Notes
 
-- Le niveau Disabled met $pref::Shadows::disable à 2 ; les autres niveaux à 0.
-- vehicleTexSizes n'est pas appliqué par ce module : c'est une table de données lue ailleurs (graphic.lua).
+- The Disabled level sets $pref::Shadows::disable to 2; the other levels to 0.
+- vehicleTexSizes is not applied by this module: it is a data table read elsewhere (graphic.lua).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `qualityLevels` | table<string, table<string, number>> | Niveaux Disabled, Lowest, Low, Normal, High, Ultra. textureScalar : 0.25, 0.25, 0.5, 1.0, 2.0, 4.0. |
-| `vehicleTexSizes` | table<string, integer> | Taille de texture d'ombre véhicule par niveau : Disabled 512, Lowest 512, Low 1024, Normal 2048, High 4096, Ultra 8192. |
+| `qualityLevels` | table<string, table<string, number>> | Levels Disabled, Lowest, Low, Normal, High, Ultra. textureScalar: 0.25, 0.25, 0.5, 1.0, 2.0, 4.0. |
+| `vehicleTexSizes` | table<string, integer> | Vehicle shadow texture size per level: Disabled 512, Lowest 512, Low 1024, Normal 2048, High 4096, Ultra 8192. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/settings/shadowsQuality.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/settings/shadowsQuality.lua`.*

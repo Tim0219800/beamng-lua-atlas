@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veTCSDebug.lua",
+  "module": "Fenêtre 'TCS Debug' du Vehicle Editor live : trace en temps réel (600 points d'historique) les données de contrôle de traction du premier contrôleur de type 'esc' du véhicule (debugData.tcs) : facteurs de freinage par roue, glissement par roue avec seuil, facteurs d'accélérateur et glissement global. Trois graphes PlotMultiLines.",
+  "notes": [
+    "Si le véhicule n'a pas de contrôleur esc, vEditor.tcsData est nil et rien n'est tracé.",
+    "Les historiques sont initialisés une seule fois (didInit) avec les clés vues à la première réception ; un changement de véhicule ne les réinitialise pas.",
+    "Au plus 4 couleurs de roues (5 pour le graphe 2) sont définies ; au-delà, la couleur est nil."
+  ],
+  "fields": {
+    "menuEntry": {"type": "string", "desc": "'TCS'."}
+  },
+  "functions": {
+    "onUpdate": {"desc": "Appelé chaque frame : demande les données TCS au véhicule, met à jour les historiques et dessine les graphes.", "params": {"dt": {"type": "number", "desc": "Delta temps."}}, "internal": true},
+    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
+    "onExtensionLoaded": {"desc": "Appelé au chargement de l'extension : remplit l'historique slipThresholds de 600 zéros.", "internal": true},
+    "onExtensionUnloaded": {"desc": "Appelé au déchargement (ne fait rien).", "internal": true},
+    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
+    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+  }
+}

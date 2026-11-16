@@ -1,12 +1,12 @@
 # `scenario_scenariohelper`
 
-*Fichier : `lua/ge/extensions/scenario/scenariohelper.lua` · VM : Game Engine (GE) · 220 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/scenariohelper.lua` · VM: Game Engine (GE) · 220 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_scenariohelper` : `extensions.load("scenario_scenariohelper")`, puis la globale `scenario_scenariohelper`
+**Access:** extension `scenario_scenariohelper`: `extensions.load("scenario_scenariohelper")`, then the global `scenario_scenariohelper`
 
-Boîte à outils des scénarios (extension GE scenario_scenariohelper). Elle enveloppe l'envoi de commandes Lua à un véhicule par son nom dans le scenetree, le pilotage de l'IA (mode, agressivité, route, cible, évitement), la casse de groupes de poutres, et deux messages d'interface. C'est l'API utilisée par les scénarios de moddeurs. Chaque fonction IA envoie une commande textuelle ai.xxx(...) au VM du véhicule, puis, si scenario_scenarios est chargé, mémorise l'état via scenario_scenarios.updateVehicleAiState pour pouvoir le rejouer après un reset.
+Scenario toolbox (GE extension scenario_scenariohelper). It wraps sending Lua commands to a vehicle by its name in the scenetree, AI control (mode, aggression, route, target, avoidance), breaking beam groups, and two interface messages. It is the API used by modders' scenarios. Each AI function sends a textual ai.xxx(...) command to the vehicle VM, then, if scenario_scenarios is loaded, stores the state via scenario_scenarios.updateVehicleAiState so it can be replayed after a reset.
 
-## Exemple
+## Example
 
 ```lua
 local h = scenario_scenariohelper
@@ -22,169 +22,169 @@ h.setAiPath({
 h.flashUiMessage('Go !', 3)
 ```
 
-## Remarques
+## Notes
 
-- Les commandes sont construites par concaténation de chaînes puis exécutées dans le VM du véhicule via queueLuaCommand : les valeurs de type string sont insérées entre guillemets doubles sans échappement, un nom ou une valeur contenant un guillemet casse la commande.
-- breakBreakGroup et triggerDeformGroup n'ont aucun test : si vehicleName est introuvable dans le scenetree, getVehicleByName renvoie nil et l'appel plante (erreur sur nil). Seul queueLuaCommandByName journalise une erreur 'Vehicle not found' et continue.
-- setAiMode : si targetVehicleName est donné mais introuvable, vehicle.obj plante (pas de test nil).
-- Le nom de la cible de setAiMode est converti en ID numérique (vehicle.obj:getId()) et envoyé comme targetObjectID.
-- setAiAvoidCars mémorise l'état sous la clé 'value' ({value = value}) et non 'avoidCars' : incohérence probable avec les autres fonctions qui utilisent un nom de clé explicite (aggression, mode, target...).
-- setAiPath : valeurs par défaut quand une option est absente : routeSpeed 0, routeSpeedMode 'off', driveInLane 'off', speeds {}, lapCount 0, aggression 1, avoidCars 'off', aggressionMode ''. avoidCars est converti par tostring() donc un booléen est accepté.
-- setAiPath n'envoie pas resetLearning dans la commande ai.driveUsingPath construite ici, bien que le commentaire d'usage le documente : l'option reste seulement stockée dans arg (checkpoints / état scénario). À vérifier côté ai.lua.
-- setAiPath sauvegarde arg via core_checkpoints.saveAIPath (si core_checkpoints est chargé) afin de réappliquer le chemin au reset des véhicules IA.
-- Unités : routeSpeed en m/s. Aggression maximale 2 d'après le commentaire du code (le multiplicateur interne est 0.7 par unité).
-- getDistanceBetweenSceneObjects renvoie -1 (et non nil) si l'un des deux objets n'existe pas, distance en mètres sinon.
-- M.setAiTargetVehicle est commenté dans l'interface publique : non exporté.
+- The commands are built by string concatenation then executed in the vehicle VM via queueLuaCommand: string values are inserted between double quotes without escaping, so a name or value containing a quote breaks the command.
+- breakBreakGroup and triggerDeformGroup have no check: if vehicleName is not found in the scenetree, getVehicleByName returns nil and the call crashes (nil error). Only queueLuaCommandByName logs a 'Vehicle not found' error and continues.
+- setAiMode: if targetVehicleName is given but not found, vehicle.obj crashes (no nil check).
+- The target name of setAiMode is converted to a numeric ID (vehicle.obj:getId()) and sent as targetObjectID.
+- setAiAvoidCars stores the state under the key 'value' ({value = value}) and not 'avoidCars': probable inconsistency with the other functions that use an explicit key name (aggression, mode, target...).
+- setAiPath: default values when an option is absent: routeSpeed 0, routeSpeedMode 'off', driveInLane 'off', speeds {}, lapCount 0, aggression 1, avoidCars 'off', aggressionMode ''. avoidCars is converted by tostring() so a boolean is accepted.
+- setAiPath does not send resetLearning in the ai.driveUsingPath command built here, although the usage comment documents it: the option is only stored in arg (checkpoints / scenario state). To check in ai.lua.
+- setAiPath saves arg via core_checkpoints.saveAIPath (if core_checkpoints is loaded) in order to reapply the path when AI vehicles are reset.
+- Units: routeSpeed in m/s. Maximum aggression 2 according to the code comment (the internal multiplier is 0.7 per unit).
+- getDistanceBetweenSceneObjects returns -1 (not nil) if either object does not exist, distance in meters otherwise.
+- M.setAiTargetVehicle is commented out in the public interface: not exported.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_scenariohelper.breakBreakGroup(vehicleName, group)` | Casse un groupe de rupture (breakGroup) du véhicule en exécutant beamstate.breakBreakGroup(group) dans son VM. | 29 |
-| `scenario_scenariohelper.flashUiMessage(msg, duration, useBiggerText)` | Affiche un message flash à l'écran via guihooks.trigger('ScenarioFlashMessage', {{msg, duration, 0, useBiggerText}}). | 178 |
-| `scenario_scenariohelper.getDistanceBetweenSceneObjects(sceneObjectName1, sceneObjectName2)` | Calcule la distance entre les positions de deux objets du scenetree. | 189 |
-| `scenario_scenariohelper.getVehicleByName(name)` | Renvoie l'objet du scenetree portant ce nom (scenetree.findObject), typiquement un véhicule. | 14 |
-| `scenario_scenariohelper.queueLuaCommand(vehicle, command)` | Envoie une chaîne de code Lua à exécuter dans le VM du véhicule donné (appelle vehicle:queueLuaCommand). Aucun test sur vehicle. | 9 |
-| `scenario_scenariohelper.queueLuaCommandByName(vehicleName, command)` | Envoie une commande Lua à un véhicule retrouvé par son nom. Si le véhicule n'existe pas, écrit une erreur dans le log (tag scenarioHelper) et ne fait rien d'autre. | 19 |
-| `scenario_scenariohelper.realTimeUiDisplay(msg)` | Met à jour l'affichage temps réel du scénario via guihooks.trigger('ScenarioRealtimeDisplay', {msg = msg}). | 185 |
-| `scenario_scenariohelper.setAiAggression(vehicleName, aggression)` | Règle l'agressivité de l'IA (ai.setAggression) et la mémorise dans l'état scénario. | 58 |
-| `scenario_scenariohelper.setAiAggressionMode(vehicleName, aggrMode)` | Choisit le mode d'agressivité dynamique de l'IA en mode manual (ai.setAggressionMode). Avec 'rubberBand', l'agressivité varie avec la distance à l'adversaire : plus l'IA est proche, moins elle est agressive. | 67 |
-| `scenario_scenariohelper.setAiAvoidCars(vehicleName, value)` | Active ou désactive l'évitement des autres voitures par l'IA (ai.setAvoidCars). | 81 |
-| `scenario_scenariohelper.setAiMode(vehicleName, mode, targetVehicleName)` | Fixe le mode de l'IA du véhicule via ai.setState({mode=...}). Si targetVehicleName est fourni, l'ID de ce véhicule est transmis comme targetObjectID (utile pour les modes qui visent un autre véhicule, par exemple chase ou flee). Mémorise le mode dans l'état scénario. | 44 |
-| `scenario_scenariohelper.setAiPath(arg)` | Fait suivre à un véhicule IA une route entre waypoints (ai.driveUsingPath) avec de nombreuses options. L'IA calcule le plus court chemin entre waypoints consécutifs. Le tableau arg est aussi sauvegardé (core_checkpoints.saveAIPath et scenario_scenarios.updateVehicleAiState) pour être réappliqué au reset. | 104 |
-| `scenario_scenariohelper.setAiRoute(vehicleName, waypoints)` | Active la progression automatique de l'IA le long d'une liste de waypoints (ai.driveUsingPath avec wpTargetList). Le mode IA doit être manual ou flee. Version simple de setAiPath, sans options de vitesse ou de tours. | 90 |
-| `scenario_scenariohelper.setAiTarget(vehicleName, target)` | Définit la cible de l'IA (ai.setTarget) et la mémorise dans l'état scénario. | 74 |
-| `scenario_scenariohelper.setCutOffDrivability(vehicleName, drivability)` | Règle le seuil de drivabilité de coupure de l'IA (ai.setCutOffDrivability), qui sert à écarter les routes de trop faible drivabilité. | 97 |
-| `scenario_scenariohelper.trackVehicle(vehicleName, trackingName)` | Active le suivi cartographique du véhicule (mapmgr.enableTracking) sous un nom de suivi personnalisé. | 39 |
-| `scenario_scenariohelper.triggerDeformGroup(vehicleName, group)` | Déclenche un groupe de déformation (beamstate.triggerDeformGroup) : bascule vers un matériau cassé, par exemple pour briser une vitre. | 34 |
+| `scenario_scenariohelper.breakBreakGroup(vehicleName, group)` | Breaks a break group (breakGroup) of the vehicle by executing beamstate.breakBreakGroup(group) in its VM. | 29 |
+| `scenario_scenariohelper.flashUiMessage(msg, duration, useBiggerText)` | Displays a flash message on screen via guihooks.trigger('ScenarioFlashMessage', {{msg, duration, 0, useBiggerText}}). | 178 |
+| `scenario_scenariohelper.getDistanceBetweenSceneObjects(sceneObjectName1, sceneObjectName2)` | Computes the distance between the positions of two scenetree objects. | 189 |
+| `scenario_scenariohelper.getVehicleByName(name)` | Returns the scenetree object with this name (scenetree.findObject), typically a vehicle. | 14 |
+| `scenario_scenariohelper.queueLuaCommand(vehicle, command)` | Sends a string of Lua code to be executed in the given vehicle's VM (calls vehicle:queueLuaCommand). No check on vehicle. | 9 |
+| `scenario_scenariohelper.queueLuaCommandByName(vehicleName, command)` | Sends a Lua command to a vehicle found by its name. If the vehicle does not exist, writes an error to the log (tag scenarioHelper) and does nothing else. | 19 |
+| `scenario_scenariohelper.realTimeUiDisplay(msg)` | Updates the scenario's real-time display via guihooks.trigger('ScenarioRealtimeDisplay', {msg = msg}). | 185 |
+| `scenario_scenariohelper.setAiAggression(vehicleName, aggression)` | Sets the AI aggression (ai.setAggression) and stores it in the scenario state. | 58 |
+| `scenario_scenariohelper.setAiAggressionMode(vehicleName, aggrMode)` | Chooses the AI's dynamic aggression mode in manual mode (ai.setAggressionMode). With 'rubberBand', the aggression varies with the distance to the opponent: the closer the AI, the less aggressive. | 67 |
+| `scenario_scenariohelper.setAiAvoidCars(vehicleName, value)` | Enables or disables the AI's avoidance of other cars (ai.setAvoidCars). | 81 |
+| `scenario_scenariohelper.setAiMode(vehicleName, mode, targetVehicleName)` | Sets the vehicle's AI mode via ai.setState({mode=...}). If targetVehicleName is provided, that vehicle's ID is passed as targetObjectID (useful for modes that target another vehicle, for example chase or flee). Stores the mode in the scenario state. | 44 |
+| `scenario_scenariohelper.setAiPath(arg)` | Makes an AI vehicle follow a route between waypoints (ai.driveUsingPath) with many options. The AI computes the shortest path between consecutive waypoints. The arg table is also saved (core_checkpoints.saveAIPath and scenario_scenarios.updateVehicleAiState) to be reapplied on reset. | 104 |
+| `scenario_scenariohelper.setAiRoute(vehicleName, waypoints)` | Enables the AI's automatic progression along a list of waypoints (ai.driveUsingPath with wpTargetList). The AI mode must be manual or flee. Simple version of setAiPath, without speed or lap options. | 90 |
+| `scenario_scenariohelper.setAiTarget(vehicleName, target)` | Sets the AI target (ai.setTarget) and stores it in the scenario state. | 74 |
+| `scenario_scenariohelper.setCutOffDrivability(vehicleName, drivability)` | Sets the AI's cut-off drivability threshold (ai.setCutOffDrivability), used to discard roads of too low drivability. | 97 |
+| `scenario_scenariohelper.trackVehicle(vehicleName, trackingName)` | Enables map tracking of the vehicle (mapmgr.enableTracking) under a custom tracking name. | 39 |
+| `scenario_scenariohelper.triggerDeformGroup(vehicleName, group)` | Triggers a deform group (beamstate.triggerDeformGroup): switches to a broken material, for example to shatter a window. | 34 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_scenariohelper.breakBreakGroup(vehicleName, group)`
 
-Casse un groupe de rupture (breakGroup) du véhicule en exécutant beamstate.breakBreakGroup(group) dans son VM.
+Breaks a break group (breakGroup) of the vehicle by executing beamstate.breakBreakGroup(group) in its VM.
 
-- `vehicleName` (*string*) : Nom du véhicule. Doit exister, sinon erreur.
-- `group` (*string*) : Nom du breakGroup défini dans le jbeam.
+- `vehicleName` (*string*) : Vehicle name. Must exist, otherwise error.
+- `group` (*string*) : Name of the breakGroup defined in the jbeam.
 
 #### `scenario_scenariohelper.flashUiMessage(msg, duration, useBiggerText)`
 
-Affiche un message flash à l'écran via guihooks.trigger('ScenarioFlashMessage', {{msg, duration, 0, useBiggerText}}).
+Displays a flash message on screen via guihooks.trigger('ScenarioFlashMessage', {{msg, duration, 0, useBiggerText}}).
 
-- `msg` (*string*) : Texte à afficher.
-- `duration` (*number*) : Durée d'affichage (secondes, déduit du code).
-- `useBiggerText` (*boolean|nil*) : true pour un texte plus gros ; toute autre valeur est traitée comme false.
+- `msg` (*string*) : Text to display.
+- `duration` (*number*) : Display duration (seconds, inferred from code).
+- `useBiggerText` (*boolean|nil*) : true for larger text; any other value is treated as false.
 
 #### `scenario_scenariohelper.getDistanceBetweenSceneObjects(sceneObjectName1, sceneObjectName2)`
 
-Calcule la distance entre les positions de deux objets du scenetree.
+Computes the distance between the positions of two scenetree objects.
 
-- `sceneObjectName1` (*string*) : Nom du premier objet.
-- `sceneObjectName2` (*string*) : Nom du second objet.
-- **renvoie** : number Distance en mètres, ou -1 si l'un des objets est introuvable.
+- `sceneObjectName1` (*string*) : Name of the first object.
+- `sceneObjectName2` (*string*) : Name of the second object.
+- **returns**: number Distance in meters, or -1 if either object is not found.
 
 #### `scenario_scenariohelper.getVehicleByName(name)`
 
-Renvoie l'objet du scenetree portant ce nom (scenetree.findObject), typiquement un véhicule.
+Returns the scenetree object with this name (scenetree.findObject), typically a vehicle.
 
-- `name` (*string*) : Nom de l'objet dans le scenetree.
-- **renvoie** : table|nil L'objet, ou nil s'il n'existe pas.
+- `name` (*string*) : Object name in the scenetree.
+- **returns**: table|nil The object, or nil if it does not exist.
 
 #### `scenario_scenariohelper.queueLuaCommand(vehicle, command)`
 
-Envoie une chaîne de code Lua à exécuter dans le VM du véhicule donné (appelle vehicle:queueLuaCommand). Aucun test sur vehicle.
+Sends a string of Lua code to be executed in the given vehicle's VM (calls vehicle:queueLuaCommand). No check on vehicle.
 
-- `vehicle` (*table*) : Objet véhicule (BeamObject) déjà résolu, par exemple renvoyé par getVehicleByName.
-- `command` (*string*) : Code Lua à exécuter côté véhicule.
+- `vehicle` (*table*) : Already resolved vehicle object (BeamObject), for example returned by getVehicleByName.
+- `command` (*string*) : Lua code to execute on the vehicle side.
 
 #### `scenario_scenariohelper.queueLuaCommandByName(vehicleName, command)`
 
-Envoie une commande Lua à un véhicule retrouvé par son nom. Si le véhicule n'existe pas, écrit une erreur dans le log (tag scenarioHelper) et ne fait rien d'autre.
+Sends a Lua command to a vehicle found by its name. If the vehicle does not exist, writes an error to the log (tag scenarioHelper) and does nothing else.
 
-- `vehicleName` (*string*) : Nom du véhicule dans le scenetree.
-- `command` (*string*) : Code Lua à exécuter côté véhicule.
+- `vehicleName` (*string*) : Vehicle name in the scenetree.
+- `command` (*string*) : Lua code to execute on the vehicle side.
 
 #### `scenario_scenariohelper.realTimeUiDisplay(msg)`
 
-Met à jour l'affichage temps réel du scénario via guihooks.trigger('ScenarioRealtimeDisplay', {msg = msg}).
+Updates the scenario's real-time display via guihooks.trigger('ScenarioRealtimeDisplay', {msg = msg}).
 
-- `msg` (*any*) : Contenu transmis à l'UI dans le champ msg.
+- `msg` (*any*) : Content passed to the UI in the msg field.
 
 #### `scenario_scenariohelper.setAiAggression(vehicleName, aggression)`
 
-Règle l'agressivité de l'IA (ai.setAggression) et la mémorise dans l'état scénario.
+Sets the AI aggression (ai.setAggression) and stores it in the scenario state.
 
-- `vehicleName` (*string*) : Nom du véhicule.
-- `aggression` (*number*) : Agressivité, insérée telle quelle dans la commande (le commentaire de setAiPath indique un maximum de 2).
+- `vehicleName` (*string*) : Vehicle name.
+- `aggression` (*number*) : Aggression, inserted as is in the command (the setAiPath comment states a maximum of 2).
 
 #### `scenario_scenariohelper.setAiAggressionMode(vehicleName, aggrMode)`
 
-Choisit le mode d'agressivité dynamique de l'IA en mode manual (ai.setAggressionMode). Avec 'rubberBand', l'agressivité varie avec la distance à l'adversaire : plus l'IA est proche, moins elle est agressive.
+Chooses the AI's dynamic aggression mode in manual mode (ai.setAggressionMode). With 'rubberBand', the aggression varies with the distance to the opponent: the closer the AI, the less aggressive.
 
-- `vehicleName` (*string*) : Nom du véhicule.
-- `aggrMode` (*string*) : Actuellement 'rubberBand' (seule valeur citée dans le code).
+- `vehicleName` (*string*) : Vehicle name.
+- `aggrMode` (*string*) : Currently 'rubberBand' (only value mentioned in the code).
 
 #### `scenario_scenariohelper.setAiAvoidCars(vehicleName, value)`
 
-Active ou désactive l'évitement des autres voitures par l'IA (ai.setAvoidCars).
+Enables or disables the AI's avoidance of other cars (ai.setAvoidCars).
 
-- `vehicleName` (*string*) : Nom du véhicule.
-- `value` (*string*) : 'on' ou 'off'.
+- `vehicleName` (*string*) : Vehicle name.
+- `value` (*string*) : 'on' or 'off'.
 
 #### `scenario_scenariohelper.setAiMode(vehicleName, mode, targetVehicleName)`
 
-Fixe le mode de l'IA du véhicule via ai.setState({mode=...}). Si targetVehicleName est fourni, l'ID de ce véhicule est transmis comme targetObjectID (utile pour les modes qui visent un autre véhicule, par exemple chase ou flee). Mémorise le mode dans l'état scénario.
+Sets the vehicle's AI mode via ai.setState({mode=...}). If targetVehicleName is provided, that vehicle's ID is passed as targetObjectID (useful for modes that target another vehicle, for example chase or flee). Stores the mode in the scenario state.
 
-- `vehicleName` (*string*) : Nom du véhicule piloté par l'IA.
-- `mode` (*string*) : Mode IA (valeurs du ai.lua du véhicule, par exemple 'manual', 'chase', 'flee', 'stop', 'disabled' : déduit du code, non vérifié ici).
-- `targetVehicleName` (*string|nil*) : Nom du véhicule cible, facultatif. Doit exister s'il est fourni.
+- `vehicleName` (*string*) : Name of the vehicle driven by the AI.
+- `mode` (*string*) : AI mode (values from the vehicle's ai.lua, for example 'manual', 'chase', 'flee', 'stop', 'disabled': inferred from code, not verified here).
+- `targetVehicleName` (*string|nil*) : Target vehicle name, optional. Must exist if provided.
 
 #### `scenario_scenariohelper.setAiPath(arg)`
 
-Fait suivre à un véhicule IA une route entre waypoints (ai.driveUsingPath) avec de nombreuses options. L'IA calcule le plus court chemin entre waypoints consécutifs. Le tableau arg est aussi sauvegardé (core_checkpoints.saveAIPath et scenario_scenarios.updateVehicleAiState) pour être réappliqué au reset.
+Makes an AI vehicle follow a route between waypoints (ai.driveUsingPath) with many options. The AI computes the shortest path between consecutive waypoints. The arg table is also saved (core_checkpoints.saveAIPath and scenario_scenarios.updateVehicleAiState) to be reapplied on reset.
 
-- `arg` (*table*) : Table d'options. Seuls vehicleName et waypoints sont obligatoires.
+- `arg` (*table*) : Options table. Only vehicleName and waypoints are required.
 
 #### `scenario_scenariohelper.setAiRoute(vehicleName, waypoints)`
 
-Active la progression automatique de l'IA le long d'une liste de waypoints (ai.driveUsingPath avec wpTargetList). Le mode IA doit être manual ou flee. Version simple de setAiPath, sans options de vitesse ou de tours.
+Enables the AI's automatic progression along a list of waypoints (ai.driveUsingPath with wpTargetList). The AI mode must be manual or flee. Simple version of setAiPath, without speed or lap options.
 
-- `vehicleName` (*string*) : Nom du véhicule.
-- `waypoints` (*string[]*) : Liste de noms de waypoints, sérialisée avec serialize().
+- `vehicleName` (*string*) : Vehicle name.
+- `waypoints` (*string[]*) : List of waypoint names, serialized with serialize().
 
 #### `scenario_scenariohelper.setAiTarget(vehicleName, target)`
 
-Définit la cible de l'IA (ai.setTarget) et la mémorise dans l'état scénario.
+Sets the AI target (ai.setTarget) and stores it in the scenario state.
 
-- `vehicleName` (*string*) : Nom du véhicule piloté par l'IA.
-- `target` (*string*) : Cible transmise à ai.setTarget (nom, entre guillemets dans la commande).
+- `vehicleName` (*string*) : Name of the vehicle driven by the AI.
+- `target` (*string*) : Target passed to ai.setTarget (name, in quotes in the command).
 
 #### `scenario_scenariohelper.setCutOffDrivability(vehicleName, drivability)`
 
-Règle le seuil de drivabilité de coupure de l'IA (ai.setCutOffDrivability), qui sert à écarter les routes de trop faible drivabilité.
+Sets the AI's cut-off drivability threshold (ai.setCutOffDrivability), used to discard roads of too low drivability.
 
-- `vehicleName` (*string*) : Nom du véhicule.
-- `drivability` (*number*) : Valeur de drivabilité, insérée telle quelle dans la commande.
+- `vehicleName` (*string*) : Vehicle name.
+- `drivability` (*number*) : Drivability value, inserted as is in the command.
 
 #### `scenario_scenariohelper.trackVehicle(vehicleName, trackingName)`
 
-Active le suivi cartographique du véhicule (mapmgr.enableTracking) sous un nom de suivi personnalisé.
+Enables map tracking of the vehicle (mapmgr.enableTracking) under a custom tracking name.
 
-- `vehicleName` (*string*) : Nom du véhicule dans le scenetree.
-- `trackingName` (*string*) : Nom de suivi à utiliser.
+- `vehicleName` (*string*) : Vehicle name in the scenetree.
+- `trackingName` (*string*) : Tracking name to use.
 
 #### `scenario_scenariohelper.triggerDeformGroup(vehicleName, group)`
 
-Déclenche un groupe de déformation (beamstate.triggerDeformGroup) : bascule vers un matériau cassé, par exemple pour briser une vitre.
+Triggers a deform group (beamstate.triggerDeformGroup): switches to a broken material, for example to shatter a window.
 
-- `vehicleName` (*string*) : Nom du véhicule. Doit exister, sinon erreur.
-- `group` (*string*) : Nom du deformGroup défini dans le jbeam.
+- `vehicleName` (*string*) : Vehicle name. Must exist, otherwise error.
+- `group` (*string*) : Name of the deformGroup defined in the jbeam.
 
-**Évènements UI (guihooks.trigger) :** `ScenarioFlashMessage`, `ScenarioRealtimeDisplay`
+**UI events (guihooks.trigger):** `ScenarioFlashMessage`, `ScenarioRealtimeDisplay`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/scenariohelper.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/scenariohelper.lua`.*

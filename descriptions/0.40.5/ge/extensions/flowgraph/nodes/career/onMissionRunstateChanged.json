@@ -1,17 +1,52 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/career/onMissionRunstateChanged.lua",
-  "module": "Nœud flowgraph « On Mission Start/Stop » (catégorie repeat_instant, couleur/icône ui). Détecte quand le joueur démarre (hook onMissionStartWithFade) ou arrête (onAnyMissionChanged avec l'état 'stopped') une mission. Sorties en impulsion : started et stopped.",
-  "notes": ["work() remet à faux seulement started ; stopped n'est jamais remis à faux explicitement après avoir été levé (probable oubli). Une sortie « abandoned » est commentée."],
+  "module": "Flowgraph node \"On Mission Start/Stop\" (category repeat_instant, ui color/icon). Detects when the player starts (onMissionStartWithFade hook) or stops (onAnyMissionChanged with the 'stopped' state) a mission. Impulse outputs: started and stopped.",
+  "notes": [
+    "work() sets back to false only started; stopped is never explicitly set back to false after being raised (probably an oversight). An \"abandoned\" output is commented out."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
-        "work": {"desc": "Chaque frame : started à faux, applique puis efface les drapeaux.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
-        "onMissionStartWithFade": {"desc": "Hook : lève started.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
-        "onAnyMissionChanged": {"desc": "Hook : lève stopped quand le nouvel état est 'stopped'.", "params": {"newState": {"type": "string", "desc": "nouvel état de la mission"}, "mission": {"type": "table", "desc": "mission concernée (non utilisée)"}}, "internal": true}
+        "init": {
+          "desc": "Creates the flag table.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Every frame: started to false, applies then clears the flags.",
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "unused"
+            }
+          }
+        },
+        "onMissionStartWithFade": {
+          "desc": "Hook: raises started.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        },
+        "onAnyMissionChanged": {
+          "desc": "Hook: raises stopped when the new state is 'stopped'.",
+          "params": {
+            "newState": {
+              "type": "string",
+              "desc": "new mission state"
+            },
+            "mission": {
+              "type": "table",
+              "desc": "mission concerned (unused)"
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

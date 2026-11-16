@@ -1,12 +1,12 @@
 # `jbeam_expressionParser`
 
-*Fichier : `lua/common/jbeam/expressionParser.lua` · VM : Commun (GE + véhicule) · 190 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/expressionParser.lua` · VM: Common (GE + vehicle) · 190 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/expressionParser")`
+**Access:** `require("jbeam/expressionParser")`
 
-Évalue les expressions JBeam de la forme "$=..." (valeurs calculées dans les fichiers jbeam). L'expression est transformée en code Lua (le préfixe '$=' est retiré, chaque '$' devient 'var_'), compilée dans un environnement restreint (fonctions math, round, square, clamp, smoothstep, case, vec3, quat, include...) puis exécutée. Les variables jbeam ($nom) sont lues dans la table vars fournie. Utilisé par le chargeur jbeam, pas par les mods directement.
+Evaluates JBeam expressions of the form "$=..." (computed values in jbeam files). The expression is transformed into Lua code (the '$=' prefix is removed, each '$' becomes 'var_'), compiled in a restricted environment (math functions, round, square, clamp, smoothstep, case, vec3, quat, include...) then executed. The jbeam variables ($name) are read from the provided vars table. Used by the jbeam loader, not by mods directly.
 
-## Exemple
+## Example
 
 ```lua
 local ep = require('jbeam/expressionParser')
@@ -16,58 +16,58 @@ vars['$a'] = 4
 print(f())  -- 5
 ```
 
-## Remarques
+## Notes
 
-- Les affectations (un '=' isolé) sont refusées ; les opérateurs >=, <=, == et ~= restent permis.
-- Environnement de l'expression : toutes les fonctions de math, round, square, clamp, smoothstep, smootherstep, smoothmin, sign, case, vec3, quat, concat (table.concat), include, print(val, label) (affiche et renvoie val), var(nom) (renvoie '$nom'), et la lecture de variables par var_nom. La table est en lecture seule (toute écriture lève une erreur).
-- Variables jbeam : une valeur de vars qui est une table est lue via son champ val.
-- case(selector, ...) : avec un booléen, renvoie le 1er argument suivant le sélecteur si true, le 2e si false ; avec un nombre n, renvoie le n-ième argument (indice 1-based sur les arguments après le sélecteur, tronqué), et le dernier si n est hors plage ou 0. Le commentaire du code parle de n+1 mais le code indexe directement arg[floor(n)].
-- include(uri, feuille, cellule) lit un fichier .csv (csvlib.readFileCSV) ou .xlsx (libs/xlsxlib) ; autre extension : erreur journalisée et renvoie nil, message.
-- parse n'a aucune protection : une expression qui ne compile pas fait appeler nil (erreur Lua) et une erreur d'exécution n'est pas interceptée. Préférer parseSafe ou compileSafe.
-- Dans compileSafe, le contexte est recréé à chaque appel ; la table de variables renvoyée est celle qu'il faut remplir avant d'appeler la fonction compilée.
+- Assignments (an isolated '=') are rejected; the operators >=, <=, == and ~= remain allowed.
+- Expression environment: all math functions, round, square, clamp, smoothstep, smootherstep, smoothmin, sign, case, vec3, quat, concat (table.concat), include, print(val, label) (prints and returns val), var(name) (returns '$name'), and reading variables via var_name. The table is read-only (any write raises an error).
+- Jbeam variables: a value of vars that is a table is read via its val field.
+- case(selector, ...): with a boolean, returns the 1st following argument if the selector is true, the 2nd if false; with a number n, returns the n-th argument (1-based index over the arguments after the selector, truncated), and the last one if n is out of range or 0. The code comment mentions n+1 but the code indexes arg[floor(n)] directly.
+- include(uri, sheet, cell) reads a .csv (csvlib.readFileCSV) or .xlsx (libs/xlsxlib) file; other extension: error logged and returns nil, message.
+- parse has no protection: an expression that does not compile causes a call on nil (Lua error) and a runtime error is not caught. Prefer parseSafe or compileSafe.
+- In compileSafe, the context is recreated on each call; the returned variables table is the one to fill before calling the compiled function.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_expressionParser.compileSafe(expr)` | Compile une expression pour la réutiliser sans recompiler : renvoie la fonction et la table de variables qu'elle lira. | 154 |
-| `jbeam_expressionParser.parse(expr, vars)` | Évalue l'expression sans protection (voir notes). Les assignations sont refusées et renvoient nil. | 131 |
-| `jbeam_expressionParser.parseSafe(expr, vars)` | Évalue l'expression dans un pcall : en cas d'assignation interdite, de syntaxe invalide ou d'erreur d'exécution, journalise une erreur et renvoie nil. | 98 |
+| `jbeam_expressionParser.compileSafe(expr)` | Compiles an expression for reuse without recompiling: returns the function and the variables table it will read. | 154 |
+| `jbeam_expressionParser.parse(expr, vars)` | Evaluates the expression without protection (see notes). Assignments are rejected and return nil. | 131 |
+| `jbeam_expressionParser.parseSafe(expr, vars)` | Evaluates the expression in a pcall: on a forbidden assignment, invalid syntax or runtime error, logs an error and returns nil. | 98 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_expressionParser.compileSafe(expr)`
 
-Compile une expression pour la réutiliser sans recompiler : renvoie la fonction et la table de variables qu'elle lira.
+Compiles an expression for reuse without recompiling: returns the function and the variables table it will read.
 
-- `expr` (*string*) : Expression commençant par '$='.
-- **renvoie** : function|nil Fonction sans argument qui évalue l'expression ; nil en cas d'erreur.
-- **renvoie** : table|nil Table de variables (clés '$nom') à remplir avant l'appel.
+- `expr` (*string*) : Expression starting with '$='.
+- **returns**: function|nil Function with no arguments that evaluates the expression; nil on error.
+- **returns**: table|nil Variables table (keys '$name') to fill before the call.
 
 #### `jbeam_expressionParser.parse(expr, vars)`
 
-Évalue l'expression sans protection (voir notes). Les assignations sont refusées et renvoient nil.
+Evaluates the expression without protection (see notes). Assignments are rejected and return nil.
 
-- `expr` (*string*) : Expression commençant par '$='.
-- `vars` (*table<string, any>*) : Variables jbeam.
-- **renvoie** : any|nil Résultat.
+- `expr` (*string*) : Expression starting with '$='.
+- `vars` (*table<string, any>*) : Jbeam variables.
+- **returns**: any|nil Result.
 
 #### `jbeam_expressionParser.parseSafe(expr, vars)`
 
-Évalue l'expression dans un pcall : en cas d'assignation interdite, de syntaxe invalide ou d'erreur d'exécution, journalise une erreur et renvoie nil.
+Evaluates the expression in a pcall: on a forbidden assignment, invalid syntax or runtime error, logs an error and returns nil.
 
-- `expr` (*string*) : Expression commençant par '$='.
-- `vars` (*table<string, any>*) : Variables jbeam (clés '$nom').
-- **renvoie** : any|nil Résultat de l'expression, nil en cas d'erreur.
+- `expr` (*string*) : Expression starting with '$='.
+- `vars` (*table<string, any>*) : Jbeam variables (keys '$name').
+- **returns**: any|nil Result of the expression, nil on error.
 
-## Classe `c`
+## Class `c`
 
-Objet `c` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `c` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `c.case(selector, ...)` | function used as a case selector, input can be both int and bool as the first argument, any number of arguments after that<br>in case it's a bool, it works like a ternary if, returning the second param if true, the third if false<br>if the selector is an int n, it simply returns the nth+1 param it was given, if n > #params it returns the last given param | 13 |
 | `c.include(resourceURI, sheetName, cellRef)` |  | 29 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/expressionParser.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/expressionParser.lua`.*

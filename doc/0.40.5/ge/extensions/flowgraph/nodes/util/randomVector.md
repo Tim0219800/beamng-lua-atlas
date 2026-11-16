@@ -1,18 +1,18 @@
 # `flowgraph_nodes_util_randomVector`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/randomVector.lua` · VM : Game Engine (GE) · 33 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/randomVector.lua` · VM: Game Engine (GE) · 33 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/randomVector")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/randomVector")` (file under extensions/ but not a regular extension)
 
-Nœud « Random Vector » (repeat_instant, icône casino). Fournit un vecteur aléatoire non normalisé. Entrées : xMin/xMax, yMin/yMax, zMin/zMax (par défaut -1 et 1). Sortie : vector ({x, y, z}).
+Node "Random Vector" (repeat_instant, casino icon). Provides a non-normalized random vector. Inputs: xMin/xMax, yMin/yMax, zMin/zMax (default -1 and 1). Output: vector ({x, y, z}).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Tire chaque composante uniformément entre son min et son max et écrit {x, y, z}. | 25 |
+| `C:work()` | Draws each component uniformly between its min and max and writes {x, y, z}. | 25 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/randomVector.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/randomVector.lua`.*

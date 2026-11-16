@@ -1,12 +1,12 @@
 # `scenario_raceMarkers_parkingraceSpotMarker`
 
-*Fichier : `lua/ge/extensions/scenario/raceMarkers/parkingraceSpotMarker.lua` · VM : Game Engine (GE) · 169 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/raceMarkers/parkingraceSpotMarker.lua` · VM: Game Engine (GE) · 169 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/scenario/raceMarkers/parkingraceSpotMarker")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/scenario/raceMarkers/parkingraceSpotMarker")` (file under extensions/ but not a regular extension)
 
-Marqueur d'une place de parking pour les courses de parking : trois contours empilés (park_outline_marker.dae, hauteur 1.2 m) et un décalque rayé au sol (parkDecalStripes.png, via Engine.Render.DynamicDecalMgr), dont la couleur est lissée dans le temps. Ce n'est pas un marqueur de checkpoint classique : il n'a pas de setToCheckpoint ni de setMode, on le règle avec setSpot et setColor. Le module renvoie un constructeur : require('scenario/raceMarkers/parkingraceSpotMarker')(id) donne un objet de la classe C.
+Parking spot marker for parking races: three stacked outlines (park_outline_marker.dae, height 1.2 m) and a striped ground decal (parkDecalStripes.png, via Engine.Render.DynamicDecalMgr), whose color is smoothed over time. It is not a classic checkpoint marker: it has no setToCheckpoint or setMode, it is set with setSpot and setColor. The module returns a constructor: require('scenario/raceMarkers/parkingraceSpotMarker')(id) gives an object of class C.
 
-## Exemple
+## Example
 
 ```lua
 local m = require('scenario/raceMarkers/parkingraceSpotMarker')('spot1')
@@ -14,41 +14,41 @@ m:createMarkers()
 m:setSpot(vec3(100, 50, 10), quat(0, 0, 0, 1), vec3(2.5, 5, 0.5))
 m:setColor({0, 1, 0, 1})
 m:show()
--- à chaque image :
+-- every frame:
 m:update(dt)
 ```
 
-## Remarques
+## Notes
 
-- setSpot(pos, rot, scl) : pos est le centre, scl la taille COMPLÈTE de la place sur chaque axe. L'échelle XY des contours suit la convention parkingMarker.lua (scl.y / 2.05).
-- setColor accepte {r, g, b, a} (indices 1 à 4) ou une table avec champs r/g/b/a ; les composantes sont lissées avec un taux de 8. Les contours sont toujours opaques (alpha 1), le décalque a un alpha multiplié par 0.9 et un fondu entre 3.5 et 6 m.
-- Les décalques doivent être renvoyés à chaque image : update appelle Engine.Render.DynamicDecalMgr.addDecals à chaque appel (alors que visible est vrai).
-- Ce marqueur ne possède pas de méthode setMode ni setToCheckpoint : l'utiliser via scenario_race_marker.setModes ou setToCheckpoints échouerait.
-- update ne prend que dt (le lisseur de couleur en dépend). Les contours ne sont pas ajoutés à ScenarioObjectsGroup.
-- La page extraite affiche setSpot(rot, scl) ; la signature réelle est setSpot(pos, rot, scl).
+- setSpot(pos, rot, scl): pos is the center, scl is the FULL size of the spot on each axis. The XY scale of the outlines follows the parkingMarker.lua convention (scl.y / 2.05).
+- setColor accepts {r, g, b, a} (indices 1 to 4) or a table with r/g/b/a fields; the components are smoothed at a rate of 8. The outlines are always opaque (alpha 1), the decal has its alpha multiplied by 0.9 and a fade between 3.5 and 6 m.
+- The decals must be resubmitted every frame: update calls Engine.Render.DynamicDecalMgr.addDecals on each call (while visible is true).
+- This marker has no setMode or setToCheckpoint method: using it via scenario_race_marker.setModes or setToCheckpoints would fail.
+- update only takes dt (the color smoother depends on it). The outlines are not added to ScenarioObjectsGroup.
+- The extracted page shows setSpot(rot, scl); the actual signature is setSpot(pos, rot, scl).
 
-## Classe `C`
+## Class `C`
 
-Marqueur de place de parking avec contours et décalque.
+Parking spot marker with outlines and decal.
 
-Le module renvoie un constructeur : `local obj = require("scenario_raceMarkers_parkingraceSpotMarker")(options)`.
+The module returns a constructor: `local obj = require("scenario_raceMarkers_parkingraceSpotMarker")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearMarkers()` | Supprime les contours (après vérification qu'ils existent encore) et les données de décalque. | 70 |
-| `C:createMarkers()` | Supprime les anciens objets puis crée trois contours TSStatic (collision et décalque désactivés) et prépare les données du décalque au sol. | 39 |
-| `C:hide()` | Appelle setVisibility(false). | 131 |
-| `C:init(id)` | Constructeur : initialise position, rotation, taille (2.5 x 5 x 0.5), couleurs et lisseurs. | 18 |
-| `C:setColor(color)` | Fixe la couleur cible (lissée ensuite). | 114 |
-| `C:setSpot(pos, rot, scl)` | Configure la place : position, rotation et taille, appliquées aux contours et au décalque. | 86 |
-| `C:setVisibility(v)` | Affiche ou cache les contours. | 122 |
-| `C:show()` | Appelle setVisibility(true). | 130 |
-| `C:update(dt)` | Appel par image quand visible : avance les lisseurs de couleur, colore les contours et renvoie le décalque au gestionnaire de décalques dynamiques. | 133 |
+| `C:clearMarkers()` | Removes the outlines (after checking they still exist) and the decal data. | 70 |
+| `C:createMarkers()` | Removes the old objects then creates three TSStatic outlines (collision and decal disabled) and prepares the ground decal data. | 39 |
+| `C:hide()` | Calls setVisibility(false). | 131 |
+| `C:init(id)` | Constructor: initializes position, rotation, size (2.5 x 5 x 0.5), colors and smoothers. | 18 |
+| `C:setColor(color)` | Sets the target color (smoothed afterwards). | 114 |
+| `C:setSpot(pos, rot, scl)` | Configures the spot: position, rotation and size, applied to the outlines and the decal. | 86 |
+| `C:setVisibility(v)` | Shows or hides the outlines. | 122 |
+| `C:show()` | Calls setVisibility(true). | 130 |
+| `C:update(dt)` | Per-frame call when visible: advances the color smoothers, colors the outlines and resubmits the decal to the dynamic decal manager. | 133 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `delete`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/raceMarkers/parkingraceSpotMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/raceMarkers/parkingraceSpotMarker.lua`.*

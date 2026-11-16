@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/nativeGizmo.lua",
+  "module": "Enveloppe de l'outil Easy Select autour du gizmo d'axes natif de l'éditeur (editor.updateAxisGizmo / drawAxisGizmo). Capture les transformations/échelles de la sélection au début du glisser, applique translation (avec snap grille), rotation et échelle pendant le glisser, puis à la fin enregistre des actions d'historique annulables (SetObjectTransform / SetObjectScale, transaction « EasySelectNativeTransform » ou « EasySelectNativeScale ») et émet le hook onEditorObjectSelectionTransformChanged. Les offsets de prefab sont mis à jour pour les objets contenus dans un prefab.",
+  "notes": [
+    "Le snap grille/rotation natif est désactivé pendant la mise à jour du gizmo puis restauré ; Alt gauche force le snap traditionnel. Le snap grille est appliqué par ce module lui-même (options.gridSnapEnabled, gridRelative, gridSize), en relatif ou en absolu selon gridRelative.",
+    "Si la sélection change pendant un glisser, l'état est restauré (reset) et le gizmo ne dessine rien cette frame.",
+    "Un simple clic sans mouvement ne crée aucune action d'historique."
+  ],
+  "functions": {
+    "draw": {
+      "desc": "À appeler chaque frame : vérifie que la sélection correspond au glisser capturé et que les objets supportent le mode courant (position/rotation/scale non vides, editor.canManipulateObject), met à jour le gizmo avec les options de snap puis le dessine.",
+      "params": {"options": {"type": "table|nil", "desc": "{gridSnapEnabled, gridRelative, gridSize, rotateSnapEnabled, rotateSnapSize}"}},
+      "returns": [{"type": "boolean", "desc": "false si rien n'a été dessiné (sélection changée ou mode non supporté), sinon true"}]
+    },
+    "isInteracting": {
+      "desc": "Indique si un glisser du gizmo est en cours.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": ""}]
+    },
+    "consumeFinished": {
+      "desc": "Lit et efface l'indicateur « glisser terminé cette frame ».",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si un glisser s'est terminé"}, {"type": "table|nil", "desc": "{mode, anchorDistance} (distance de translation appliquée, 0 hors translation) si des changements ont été validés"}]
+    },
+    "reset": {
+      "desc": "Annule le glisser en cours : restaure transformations et échelles d'origine, efface les indicateurs et annule l'interaction du gizmo.",
+      "params": {}
+    }
+  }
+}

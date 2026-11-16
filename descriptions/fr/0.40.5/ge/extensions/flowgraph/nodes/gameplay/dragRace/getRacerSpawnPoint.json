@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerSpawnPoint.lua",
+  "module": "Nœud flowgraph « Get Drag Racer Spawn Point » (catégorie repeat_instant). Donne la position et la rotation de spawn de la voie d'un pilote (vehId), généralement utilisé une fois lors de la préparation. Sorties : spawnPos (vec3), spawnRot (quat), lane, available (faux si le pilote, la voie ou le waypoint spawn est introuvable).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "_executionStarted": {"desc": "Vide data et dragData.", "internal": true},
+        "work": {"desc": "Lit dragData.strip.lanes[lane].waypoints.spawn.transform et écrit les pins utilisés."}
+      }
+    }
+  }
+}

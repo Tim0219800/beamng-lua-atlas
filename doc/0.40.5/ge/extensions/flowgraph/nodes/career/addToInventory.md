@@ -1,23 +1,23 @@
 # `flowgraph_nodes_career_addToInventory`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/career/addToInventory.lua` · VM : Game Engine (GE) · 39 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/career/addToInventory.lua` · VM: Game Engine (GE) · 39 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/career/addToInventory")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/career/addToInventory")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Add To Inventory » (catégorie once_instant, couleur/icône career). Ajoute le véhicule d'id donné à l'inventaire du joueur via career_modules_inventory.addVehicle. Entrée : vehId (number). Positionne une erreur de nœud si le module carrière n'est pas chargé ou si aucun id n'est donné. Recopie le flux d'entrée sur la sortie.
+Flowgraph node "Add To Inventory" (category once_instant, career color/icon). Adds the vehicle with the given id to the player's inventory via career_modules_inventory.addVehicle. Input: vehId (number). Sets a node error if the career module is not loaded or if no id is given. Copies the input flow to the output.
 
-## Remarques
+## Notes
 
-- Le module d'inventaire n'existe qu'en mode carrière.
+- The inventory module exists only in career mode.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Vide. | 22 |
-| `C:workOnce()` | Ajoute le véhicule à l'inventaire ou signale une erreur, puis copie flow vers la sortie. | 26 |
+| `C:init()` | Empty. | 22 |
+| `C:workOnce()` | Adds the vehicle to the inventory or reports an error, then copies flow to the output. | 26 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/career/addToInventory.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/career/addToInventory.lua`.*

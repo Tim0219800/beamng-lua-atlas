@@ -1,62 +1,62 @@
 # `gameplay_freeformDelivery_debug`
 
-*Fichier : `lua/ge/extensions/gameplay/freeformDelivery/debug.lua` · VM : Game Engine (GE) · 671 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/freeformDelivery/debug.lua` · VM: Game Engine (GE) · 671 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_freeformDelivery_debug` : `extensions.load("gameplay_freeformDelivery_debug")`, puis la globale `gameplay_freeformDelivery_debug`
+**Access:** extension `gameplay_freeformDelivery_debug`: `extensions.load("gameplay_freeformDelivery_debug")`, then the global `gameplay_freeformDelivery_debug`
 
-Fenêtre imgui de debug « Freeform Delivery Debug » du mode de livraison libre. Quand elle est activée (setEnableDebugWindow(true)), elle collecte chaque frame l'état de la livraison courante et affiche des sections : état de la livraison, état du setup, attelages, véhicules, objectifs, zones cibles, itinéraires, places de parking et mise en veille des véhicules. Utile à un moddeur pour déboguer un fichier delivery.json.
+"Freeform Delivery Debug" imgui debug window of the freeform delivery mode. When enabled (setEnableDebugWindow(true)), it collects the current delivery's state every frame and displays sections: delivery state, setup state, couplings, vehicles, goals, target areas, routes, parking spots and vehicle sleep. Useful to a modder for debugging a delivery.json file.
 
-## Exemple
+## Example
 
 ```lua
 gameplay_freeformDelivery_debug.setEnableDebugWindow(true)
 ```
 
-## Remarques
+## Notes
 
-- La fenêtre est contrôlée uniquement par enableDebugWindow (setEnableDebugWindow / getEnableDebugWindow). toggleDebugWindow ne modifie que debugWindowOpen, une variable jamais lue : l'appeler (comme le fait gameplay_freeformDelivery_freeformDelivery.load) n'ouvre donc rien.
-- Quand le debug est désactivé, les données collectées sont vidées. Sans livraison chargée, la fenêtre affiche « No delivery loaded ».
-- La collecte et le dessin se font dans onPreRender, pas dans onUpdate.
+- The window is controlled only by enableDebugWindow (setEnableDebugWindow / getEnableDebugWindow). toggleDebugWindow only modifies debugWindowOpen, a variable that is never read: calling it (as gameplay_freeformDelivery_freeformDelivery.load does) therefore opens nothing.
+- When debug is disabled, the collected data is cleared. Without a loaded delivery, the window displays "No delivery loaded".
+- Collection and drawing happen in onPreRender, not in onUpdate.
 
-**Dépendances (chargées avant) :** `ui_imgui`, `gameplay_freeformDelivery_utils`
+**Dependencies (loaded first):** `ui_imgui`, `gameplay_freeformDelivery_utils`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_freeformDelivery_debug.clearDebugData()` | Vide les données de debug collectées. | 663 |
-| `gameplay_freeformDelivery_debug.getEnableDebugWindow()` | Indique si la fenêtre de debug est activée. | 654 |
-| `gameplay_freeformDelivery_debug.onPreRender(dtReal, dtSim, dtRaw)` | Hook appelé avant le rendu de chaque frame : si la fenêtre est activée, met à jour les données de debug depuis gameplay_freeformDelivery_freeformDelivery puis dessine la fenêtre. *(interne)* *(hook)* | 638 |
-| `gameplay_freeformDelivery_debug.setEnableDebugWindow(enabled)` | Active ou désactive l'affichage de la fenêtre de debug. La désactivation vide les données collectées. | 645 |
-| `gameplay_freeformDelivery_debug.toggleDebugWindow()` | Inverse debugWindowOpen et logge le nouvel état ; sans effet visible (voir notes). | 658 |
+| `gameplay_freeformDelivery_debug.clearDebugData()` | Clears the collected debug data. | 663 |
+| `gameplay_freeformDelivery_debug.getEnableDebugWindow()` | Tells whether the debug window is enabled. | 654 |
+| `gameplay_freeformDelivery_debug.onPreRender(dtReal, dtSim, dtRaw)` | Hook called before rendering each frame: if the window is enabled, updates the debug data from gameplay_freeformDelivery_freeformDelivery then draws the window. *(internal)* *(hook)* | 638 |
+| `gameplay_freeformDelivery_debug.setEnableDebugWindow(enabled)` | Enables or disables the display of the debug window. Disabling clears the collected data. | 645 |
+| `gameplay_freeformDelivery_debug.toggleDebugWindow()` | Inverts debugWindowOpen and logs the new state; no visible effect (see notes). | 658 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_freeformDelivery_debug.getEnableDebugWindow()`
 
-Indique si la fenêtre de debug est activée.
+Tells whether the debug window is enabled.
 
-- **renvoie** : boolean true si activée.
+- **returns**: boolean true if enabled.
 
 #### `gameplay_freeformDelivery_debug.onPreRender(dtReal, dtSim, dtRaw)`
 
-Hook appelé avant le rendu de chaque frame : si la fenêtre est activée, met à jour les données de debug depuis gameplay_freeformDelivery_freeformDelivery puis dessine la fenêtre.
+Hook called before rendering each frame: if the window is enabled, updates the debug data from gameplay_freeformDelivery_freeformDelivery then draws the window.
 
-- `dtReal` (*number*) : Delta temps réel (inutilisé).
-- `dtSim` (*number*) : Delta temps simulé (inutilisé).
-- `dtRaw` (*number*) : Delta temps brut (inutilisé).
+- `dtReal` (*number*) : Real time delta (unused).
+- `dtSim` (*number*) : Simulated time delta (unused).
+- `dtRaw` (*number*) : Raw time delta (unused).
 
 #### `gameplay_freeformDelivery_debug.setEnableDebugWindow(enabled)`
 
-Active ou désactive l'affichage de la fenêtre de debug. La désactivation vide les données collectées.
+Enables or disables the display of the debug window. Disabling clears the collected data.
 
-- `enabled` (*boolean*) : true pour afficher la fenêtre.
+- `enabled` (*boolean*) : true to display the window.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | ui_imgui et gameplay_freeformDelivery_utils. |
+| `dependencies` | string[] | ui_imgui and gameplay_freeformDelivery_utils. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/freeformDelivery/debug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/freeformDelivery/debug.lua`.*

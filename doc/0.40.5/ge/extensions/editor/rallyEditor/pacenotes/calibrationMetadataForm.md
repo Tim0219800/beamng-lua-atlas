@@ -1,31 +1,31 @@
 # `editor_rallyEditor_pacenotes_calibrationMetadataForm`
 
-*Fichier : `lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationMetadataForm.lua` · VM : Game Engine (GE) · 160 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationMetadataForm.lua` · VM: Game Engine (GE) · 160 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_rallyEditor_pacenotes_calibrationMetadataForm` : `extensions.load("editor_rallyEditor_pacenotes_calibrationMetadataForm")`, puis la globale `editor_rallyEditor_pacenotes_calibrationMetadataForm`
+**Access:** extension `editor_rallyEditor_pacenotes_calibrationMetadataForm`: `extensions.load("editor_rallyEditor_pacenotes_calibrationMetadataForm")`, then the global `editor_rallyEditor_pacenotes_calibrationMetadataForm`
 
-Formulaire imgui « Calibration Metadata » affiché dans l'éditeur de pacenotes. Il permet de choisir, pour le pacenote sélectionné, cinq valeurs de calibration (intensité, descripteur, direction, longueur, forme) via des listes déroulantes alimentées par la configuration du compositeur de texte du carnet (componentTypes.corner). Les choix sont stockés dans pacenote.metadata.calibration. Rien n'est affiché si le carnet n'a pas de metadata.calibrationFields.
+"Calibration Metadata" imgui form displayed in the pacenote editor. It lets you choose, for the selected pacenote, five calibration values (intensity, descriptor, direction, length, shape) via dropdowns fed by the notebook's text composer configuration (componentTypes.corner). The choices are stored in pacenote.metadata.calibration. Nothing is displayed if the notebook has no metadata.calibrationFields.
 
-## Remarques
+## Notes
 
-- Choisir « - » supprime la clé ; quand la table calibration devient vide, pacenote.metadata.calibration est remise à nil.
-- Les valeurs enregistrées pour descriptor, direction, longueur et forme sont les libellés (texte), pas des identifiants ; seule l'intensité stocke l'identifiant.
-- Les modifications n'utilisent pas l'historique d'annulation de l'éditeur.
+- Choosing "-" removes the key; when the calibration table becomes empty, pacenote.metadata.calibration is reset to nil.
+- The values saved for descriptor, direction, length and shape are the labels (text), not identifiers; only the intensity stores the identifier.
+- Modifications do not use the editor's undo history.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_rallyEditor_pacenotes_calibrationMetadataForm.draw(pacenote, pacenoteToolsWindow)` | Dessine la section de métadonnées de calibration pour un pacenote. Ne fait rien si le pacenote n'a pas de carnet, si le carnet n'a pas de calibrationFields, ou si le compositeur n'a pas de configuration corner. | 140 |
+| `editor_rallyEditor_pacenotes_calibrationMetadataForm.draw(pacenote, pacenoteToolsWindow)` | Draws the calibration metadata section for a pacenote. Does nothing if the pacenote has no notebook, if the notebook has no calibrationFields, or if the composer has no corner configuration. | 140 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_rallyEditor_pacenotes_calibrationMetadataForm.draw(pacenote, pacenoteToolsWindow)`
 
-Dessine la section de métadonnées de calibration pour un pacenote. Ne fait rien si le pacenote n'a pas de carnet, si le carnet n'a pas de calibrationFields, ou si le compositeur n'a pas de configuration corner.
+Draws the calibration metadata section for a pacenote. Does nothing if the pacenote has no notebook, if the notebook has no calibrationFields, or if the composer has no corner configuration.
 
-- `pacenote` (*table*) : Pacenote édité (accède à pacenote.notebook et pacenote.metadata).
-- `pacenoteToolsWindow` (*table*) : Fenêtre d'outils pacenotes (non utilisée dans le code).
+- `pacenote` (*table*) : Edited pacenote (accesses pacenote.notebook and pacenote.metadata).
+- `pacenoteToolsWindow` (*table*) : Pacenote tools window (not used in the code).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationMetadataForm.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationMetadataForm.lua`.*

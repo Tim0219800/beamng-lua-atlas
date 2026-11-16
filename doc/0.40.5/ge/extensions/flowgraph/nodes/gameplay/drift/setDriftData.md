@@ -1,23 +1,23 @@
 # `flowgraph_nodes_gameplay_drift_setDriftData`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftData.lua` · VM : Game Engine (GE) · 28 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftData.lua` · VM: Game Engine (GE) · 28 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/drift/setDriftData")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/drift/setDriftData")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Set Drift Data » (catégorie repeat_instant). Charge les données de drift (par exemple les zones de cascade) depuis un fichier (pin driftDataFile) via gameplay_drift_saveLoad.loadDriftData.
+Flowgraph node "Set Drift Data" (category repeat_instant). Loads the drift data (for example stunt zones) from a file (driftDataFile pin) via gameplay_drift_saveLoad.loadDriftData.
 
-## Remarques
+## Notes
 
-- Chemin résolu avec mgr:getRelativeAbsolutePath ; ignoré s'il est invalide.
-- Appelé à chaque frame tant que le nœud est atteint.
+- Path resolved with mgr:getRelativeAbsolutePath; ignored if invalid.
+- Called every frame as long as the node is reached.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Résout le chemin puis appelle gameplay_drift_saveLoad.loadDriftData(file). | 21 |
+| `C:work()` | Resolves the path then calls gameplay_drift_saveLoad.loadDriftData(file). | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftData.lua`.*

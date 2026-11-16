@@ -1,91 +1,91 @@
 # `ui_arrowGPS`
 
-*Fichier : `lua/ge/extensions/ui/arrowGPS.lua` · VM : Game Engine (GE) · 196 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/arrowGPS.lua` · VM: Game Engine (GE) · 196 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_arrowGPS` : `extensions.load("ui_arrowGPS")`, puis la globale `ui_arrowGPS`
+**Access:** extension `ui_arrowGPS`: `extensions.load("ui_arrowGPS")`, then the global `ui_arrowGPS`
 
-Affiche une flèche GPS 3D (TSStatic art/shapes/interface/s_mm_arrow_floating.dae) flottant devant la caméra, à l'emplacement de l'app d'interface arrowGPS, et orientée vers une cible du monde. Plusieurs sources peuvent enregistrer une cible avec une priorité (setTarget) ; la plus prioritaire (nombre le plus petit) est suivie. La flèche est créée à la demande, cachée si aucune cible ou aucun véhicule joueur, et supprimée au déchargement.
+Displays a 3D GPS arrow (TSStatic art/shapes/interface/s_mm_arrow_floating.dae) floating in front of the camera, at the location of the arrowGPS interface app, and oriented toward a world target. Several sources can register a target with a priority (setTarget); the highest-priority one (smallest number) is followed. The arrow is created on demand, hidden if there is no target or no player vehicle, and deleted on unload.
 
-## Exemple
+## Example
 
 ```lua
-ui_arrowGPS.setTarget('maMission', 10, {pos = vec3(100, 200, 50), color = {1, 0.4, 0.2}})
-ui_arrowGPS.removeTarget('maMission')
+ui_arrowGPS.setTarget('myMission', 10, {pos = vec3(100, 200, 50), color = {1, 0.4, 0.2}})
+ui_arrowGPS.removeTarget('myMission')
 ```
 
-## Remarques
+## Notes
 
-- Priorité : la plus petite valeur gagne (comparaison « reg.priority < bestPriority »).
-- setTarget accepte pos sous forme vec3, {x,y,z} ou {1,2,3}. Une inscription sans pos est ignorée pour le choix de la cible active. color = {r,g,b} avec valeurs de 0 à 1, par défaut {1, 0.4, 0.2}.
-- La position écran de l'app (0 à 1) est fixée côté Vue par setAppScreenPos ; la flèche est placée à arrowDepth (0,15 m par défaut) devant la caméra en tenant compte du FOV et du ratio d'écran.
-- Échelle par défaut 0.04. La flèche reste cachée si le joueur n'a pas de véhicule (getPlayerVehicle(0)) ou si la cible est à moins de 0,1 m.
+- Priority: the smallest value wins (comparison "reg.priority < bestPriority").
+- setTarget accepts pos as vec3, {x,y,z} or {1,2,3}. A registration without pos is ignored when choosing the active target. color = {r,g,b} with values from 0 to 1, default {1, 0.4, 0.2}.
+- The app's screen position (0 to 1) is set on the Vue side by setAppScreenPos; the arrow is placed at arrowDepth (0.15 m by default) in front of the camera, taking the FOV and the screen ratio into account.
+- Default scale 0.04. The arrow stays hidden if the player has no vehicle (getPlayerVehicle(0)) or if the target is less than 0.1 m away.
 
-**Dépendances (chargées avant) :** `core_camera`
+**Dependencies (loaded first):** `core_camera`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_arrowGPS.onExtensionUnloaded()` | Hook de déchargement : supprime l'objet flèche et vide toutes les inscriptions. *(interne)* *(hook)* | 179 |
-| `ui_arrowGPS.onPreRender(dt)` | Hook appelé avant chaque rendu : crée la flèche si besoin, calcule sa position écran-vers-monde, l'oriente vers la cible active (quatFromDir) et l'affiche ; la cache si aucune cible ou aucun véhicule joueur. *(interne)* *(hook)* | 144 |
-| `ui_arrowGPS.removeTarget(key)` | Retire la cible d'une source et recalcule la cible active (la flèche se cache s'il n'en reste aucune). | 68 |
-| `ui_arrowGPS.setAppScreenPos(sx, sy)` | Fixe la position écran de l'app (fractions de 0 à 1) où la flèche est dessinée ; appelé côté interface. | 128 |
-| `ui_arrowGPS.setDepth(depth)` | Change la distance devant la caméra à laquelle la flèche est placée (0.15 par défaut). | 140 |
-| `ui_arrowGPS.setScale(scale)` | Change l'échelle de la flèche (0.04 par défaut). | 133 |
-| `ui_arrowGPS.setTarget(key, priority, data)` | Enregistre ou remplace la cible d'une source (clé) avec sa priorité, puis recalcule la cible active et la couleur de la flèche. | 54 |
+| `ui_arrowGPS.onExtensionUnloaded()` | Unload hook: deletes the arrow object and empties all registrations. *(internal)* *(hook)* | 179 |
+| `ui_arrowGPS.onPreRender(dt)` | Hook called before each render: creates the arrow if needed, computes its screen-to-world position, orients it toward the active target (quatFromDir) and shows it; hides it if there is no target or no player vehicle. *(internal)* *(hook)* | 144 |
+| `ui_arrowGPS.removeTarget(key)` | Removes a source's target and recomputes the active target (the arrow hides if none remains). | 68 |
+| `ui_arrowGPS.setAppScreenPos(sx, sy)` | Sets the app's screen position (fractions from 0 to 1) where the arrow is drawn; called from the interface side. | 128 |
+| `ui_arrowGPS.setDepth(depth)` | Changes the distance in front of the camera at which the arrow is placed (0.15 by default). | 140 |
+| `ui_arrowGPS.setScale(scale)` | Changes the arrow's scale (0.04 by default). | 133 |
+| `ui_arrowGPS.setTarget(key, priority, data)` | Registers or replaces a source's target (key) with its priority, then recomputes the active target and the arrow's color. | 54 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_arrowGPS.onPreRender(dt)`
 
-Hook appelé avant chaque rendu : crée la flèche si besoin, calcule sa position écran-vers-monde, l'oriente vers la cible active (quatFromDir) et l'affiche ; la cache si aucune cible ou aucun véhicule joueur.
+Hook called before each render: creates the arrow if needed, computes its screen-to-world position, orients it toward the active target (quatFromDir) and shows it; hides it if there is no target or no player vehicle.
 
-- `dt` (*number*) : Temps écoulé (non utilisé).
+- `dt` (*number*) : Elapsed time (not used).
 
 #### `ui_arrowGPS.removeTarget(key)`
 
-Retire la cible d'une source et recalcule la cible active (la flèche se cache s'il n'en reste aucune).
+Removes a source's target and recomputes the active target (the arrow hides if none remains).
 
-- `key` (*string*) : Identifiant de la source.
+- `key` (*string*) : Source identifier.
 
 #### `ui_arrowGPS.setAppScreenPos(sx, sy)`
 
-Fixe la position écran de l'app (fractions de 0 à 1) où la flèche est dessinée ; appelé côté interface.
+Sets the app's screen position (fractions from 0 to 1) where the arrow is drawn; called from the interface side.
 
-- `sx` (*number*) : Position horizontale, 0 gauche, 1 droite.
-- `sy` (*number*) : Position verticale, 0 haut, 1 bas.
+- `sx` (*number*) : Horizontal position, 0 left, 1 right.
+- `sy` (*number*) : Vertical position, 0 top, 1 bottom.
 
 #### `ui_arrowGPS.setDepth(depth)`
 
-Change la distance devant la caméra à laquelle la flèche est placée (0.15 par défaut).
+Changes the distance in front of the camera at which the arrow is placed (0.15 by default).
 
-- `depth` (*number*) : Distance en mètres.
+- `depth` (*number*) : Distance in meters.
 
 #### `ui_arrowGPS.setScale(scale)`
 
-Change l'échelle de la flèche (0.04 par défaut).
+Changes the arrow's scale (0.04 by default).
 
-- `scale` (*number*) : Facteur d'échelle uniforme.
+- `scale` (*number*) : Uniform scale factor.
 
 #### `ui_arrowGPS.setTarget(key, priority, data)`
 
-Enregistre ou remplace la cible d'une source (clé) avec sa priorité, puis recalcule la cible active et la couleur de la flèche.
+Registers or replaces a source's target (key) with its priority, then recomputes the active target and the arrow's color.
 
-- `key` (*string*) : Identifiant de la source.
-- `priority` (*number*) : Priorité ; la plus petite valeur l'emporte.
+- `key` (*string*) : Source identifier.
+- `priority` (*number*) : Priority; the smallest value wins.
 - `data` (*table|nil*) : {pos=vec3|{x,y,z}, color={r,g,b}|nil}.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | { "core_camera" } : chargé avant ce module. |
+| `dependencies` | table<integer, string> | { "core_camera" }: loaded before this module. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `getUniqueName`
 - `obj:` `delete`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/arrowGPS.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/arrowGPS.lua`.*

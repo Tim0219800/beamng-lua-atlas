@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/modules/threadModule.lua",
+  "module": "Module flowgraph (moduleOrder 1000) qui permet à un projet flowgraph d'en lancer d'autres (projets enfants) et d'échanger des messages avec eux. Les messages reçus sont mis en file puis distribués au début de la mise à jour suivante (hook onFlowgraphManagerPreUpdate) aux nœuds via broadcastCall. À l'arrêt, tous les enfants lancés sont arrêtés et retirés.",
+  "notes": [
+    "Un message avec un champ hook est diffusé comme appel mgr:broadcastCall(message.hook, message.data) ; sinon il l'est comme 'onThreadMessageProcess'.",
+    "targetId == -1 désigne le parent (parentId) ; un projet racine a parentId = -1, donc l'envoi échoue (renvoie false).",
+    "startProjectFromFilepath affiche un dump de la liste des enfants (dumpz)."
+  ],
+  "functions": {
+    "init": {"desc": "Appelé à la création du module : appelle clear().", "internal": true},
+    "clear": {"desc": "Vide les enfants et les messages, remet parentId = -1.", "internal": true},
+    "afterTrigger": {"desc": "Appelé après le tick du graphe (ne fait rien).", "internal": true},
+    "sendMessage": {"desc": "Envoie un message au manager cible (ou au parent si targetId vaut -1). Journalise l'envoi.", "params": {"targetId": {"type": "integer", "desc": "id du manager flowgraph cible, -1 pour le parent"}, "message": {"type": "table", "desc": "message (champs facultatifs name, hook, data)"}, "sourceNode": {"type": "table|nil", "desc": "nœud émetteur, pour le log"}}, "returns": [{"type": "boolean", "desc": "true si la cible existe"}]},
+    "onFlowgraphManagerPreUpdate": {"desc": "Hook appelé avant la mise à jour des managers : diffuse puis vide la file de messages reçus.", "internal": true},
+    "receiveMessage": {"desc": "Ajoute un message à la file de réception et le journalise.", "params": {"message": {"type": "table", "desc": "message"}, "sourceId": {"type": "integer", "desc": "id du manager émetteur"}}},
+    "startProjectFromFilepath": {"desc": "Charge un projet flowgraph depuis un fichier (core_flowgraphManager.loadManager), le démarre, l'enregistre comme enfant et lui donne ce manager comme parent.", "params": {"file": {"type": "string", "desc": "chemin du projet"}, "sourceNode": {"type": "table|nil", "desc": "nœud à l'origine, pour le log"}}, "returns": [{"type": "integer", "desc": "id du manager enfant"}]},
+    "executionStopped": {"desc": "Appelé à l'arrêt du projet : arrête immédiatement chaque enfant, les retire à la frame suivante, puis appelle clear().", "internal": true},
+    "executionStarted": {"desc": "Appelé au démarrage du projet (ne fait rien).", "internal": true}
+  }
+}

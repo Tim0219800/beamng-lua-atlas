@@ -1,12 +1,12 @@
 # `util_trackBuilder_proceduralPrimitives`
 
-*Fichier : `lua/ge/extensions/util/trackBuilder/proceduralPrimitives.lua` · VM : Game Engine (GE) · 681 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/trackBuilder/proceduralPrimitives.lua` · VM: Game Engine (GE) · 681 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_trackBuilder_proceduralPrimitives` : `extensions.load("util_trackBuilder_proceduralPrimitives")`, puis la globale `util_trackBuilder_proceduralPrimitives`
+**Access:** extension `util_trackBuilder_proceduralPrimitives`: `extensions.load("util_trackBuilder_proceduralPrimitives")`, then the global `util_trackBuilder_proceduralPrimitives`
 
-Générateurs de formes simples pour les obstacles du Track Builder : tore (ring), cylindre, cône, cube, bosse (bump) et rampe. Chaque fonction renvoie une table de mesh procédural {verts, uvs, normals, faces, material} prête à être passée à ProceduralMesh:createMesh({{mesh}}) (verts et normals sont des {x,y,z}, uvs des {u,v}, faces des {v,n,u} indexés depuis 0). Le matériau par défaut est 'track_editor_A_border'.
+Simple shape generators for Track Builder obstacles: torus (ring), cylinder, cone, cube, bump and ramp. Each function returns a procedural mesh table {verts, uvs, normals, faces, material} ready to be passed to ProceduralMesh:createMesh({{mesh}}) (verts and normals are {x,y,z}, uvs are {u,v}, faces are {v,n,u} 0-indexed). The default material is 'track_editor_A_border'.
 
-## Exemple
+## Example
 
 ```lua
 local mesh = util_trackBuilder_proceduralPrimitives.createCylinder(2, 5)
@@ -16,90 +16,90 @@ scenetree.MissionGroup:add(obj.obj)
 obj:createMesh({{mesh}})
 ```
 
-## Remarques
+## Notes
 
-- Les paramètres sont d'abord normalisés (valeur absolue, valeurs par défaut) ; certains sont des diamètres : createCylinder et createCone divisent le paramètre radius par 2, et createRing multiplie radius par 2.
-- Le nombre de segments dépend de la taille (par exemple cylindre : radius*8 borné entre 12 et 72), donc les gros objets sont plus détaillés.
-- createCube échange les axes : size.x et size.y sont inversés (size = vec3(|size.y|, |size.x|, |size.z|)).
-- Le fichier contient aussi createIcosphere (locale, non exportée, avec appel à be:reloadCollision) ; elle n'est pas accessible depuis l'extérieur.
+- Parameters are first normalized (absolute value, default values); some are diameters: createCylinder and createCone divide the radius parameter by 2, and createRing multiplies radius by 2.
+- The number of segments depends on the size (for example cylinder: radius*8 clamped between 12 and 72), so large objects are more detailed.
+- createCube swaps the axes: size.x and size.y are inverted (size = vec3(|size.y|, |size.x|, |size.z|)).
+- The file also contains createIcosphere (local, not exported, with a call to be:reloadCollision); it is not accessible from outside.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_trackBuilder_proceduralPrimitives.createBump(length, width, height, upperLength, upperWidth, material)` | Bosse (dos d'âne) : base de length × width et plateau supérieur de upperLength × upperWidth, d'une hauteur height. | 289 |
-| `util_trackBuilder_proceduralPrimitives.createCone(radius, height, material)` | Cône d'axe Z centré sur l'origine, pointe en haut. | 406 |
-| `util_trackBuilder_proceduralPrimitives.createCube(size, material, uvStyle)` | Parallélépipède centré sur l'origine. uvStyle choisit la disposition des UV (1 par défaut). | 472 |
-| `util_trackBuilder_proceduralPrimitives.createCylinder(radius, height, material)` | Cylindre d'axe Z centré sur l'origine, avec faces haut et bas. | 66 |
-| `util_trackBuilder_proceduralPrimitives.createRamp(width, len, hei, thinning, attack, twist, material)` | Rampe de longueur len, qui monte jusqu'à la hauteur hei. thinning rétrécit la largeur en haut, attack règle la courbure du profil (puissance), twist ajoute une torsion le long de la rampe. | 160 |
-| `util_trackBuilder_proceduralPrimitives.createRing(radius, thickness, material)` | Tore (anneau) centré sur l'origine, dans le plan YZ. | 8 |
+| `util_trackBuilder_proceduralPrimitives.createBump(length, width, height, upperLength, upperWidth, material)` | Bump (speed bump): base of length × width and top plateau of upperLength × upperWidth, with height height. | 289 |
+| `util_trackBuilder_proceduralPrimitives.createCone(radius, height, material)` | Cone with a Z axis centered on the origin, tip pointing up. | 406 |
+| `util_trackBuilder_proceduralPrimitives.createCube(size, material, uvStyle)` | Cuboid centered on the origin. uvStyle chooses the UV layout (1 by default). | 472 |
+| `util_trackBuilder_proceduralPrimitives.createCylinder(radius, height, material)` | Cylinder with a Z axis centered on the origin, with top and bottom faces. | 66 |
+| `util_trackBuilder_proceduralPrimitives.createRamp(width, len, hei, thinning, attack, twist, material)` | Ramp of length len, rising up to height hei. thinning narrows the width at the top, attack sets the curvature of the profile (power), twist adds a twist along the ramp. | 160 |
+| `util_trackBuilder_proceduralPrimitives.createRing(radius, thickness, material)` | Torus (ring) centered on the origin, in the YZ plane. | 8 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_trackBuilder_proceduralPrimitives.createBump(length, width, height, upperLength, upperWidth, material)`
 
-Bosse (dos d'âne) : base de length × width et plateau supérieur de upperLength × upperWidth, d'une hauteur height.
+Bump (speed bump): base of length × width and top plateau of upperLength × upperWidth, with height height.
 
-- `length` (*number|nil*) : Longueur de la base (2 par défaut).
-- `width` (*number|nil*) : Largeur de la base (5 par défaut).
-- `height` (*number|nil*) : Hauteur (1 par défaut).
-- `upperLength` (*number|nil*) : Longueur du plateau (0,5 par défaut).
-- `upperWidth` (*number|nil*) : Largeur du plateau (4 par défaut).
-- `material` (*string|nil*) : Matériau.
-- **renvoie** : table Mesh procédural.
+- `length` (*number|nil*) : Base length (2 by default).
+- `width` (*number|nil*) : Base width (5 by default).
+- `height` (*number|nil*) : Height (1 by default).
+- `upperLength` (*number|nil*) : Plateau length (0.5 by default).
+- `upperWidth` (*number|nil*) : Plateau width (4 by default).
+- `material` (*string|nil*) : Material.
+- **returns**: table Procedural mesh.
 
 #### `util_trackBuilder_proceduralPrimitives.createCone(radius, height, material)`
 
-Cône d'axe Z centré sur l'origine, pointe en haut.
+Cone with a Z axis centered on the origin, tip pointing up.
 
-- `radius` (*number*) : Diamètre de la base (divisé par 2 en interne).
-- `height` (*number*) : Hauteur en mètres.
-- `material` (*string|nil*) : Matériau.
-- **renvoie** : table Mesh procédural.
+- `radius` (*number*) : Base diameter (divided by 2 internally).
+- `height` (*number*) : Height in meters.
+- `material` (*string|nil*) : Material.
+- **returns**: table Procedural mesh.
 
 #### `util_trackBuilder_proceduralPrimitives.createCube(size, material, uvStyle)`
 
-Parallélépipède centré sur l'origine. uvStyle choisit la disposition des UV (1 par défaut).
+Cuboid centered on the origin. uvStyle chooses the UV layout (1 by default).
 
-- `size` (*vec3|nil*) : Dimensions ; vec3(1,1,1) par défaut. x et y sont échangés en interne.
-- `material` (*string|nil*) : Matériau.
-- `uvStyle` (*any*) : Style d'UV (1 par défaut ; la valeur est comparée à 1).
-- **renvoie** : table Mesh procédural.
+- `size` (*vec3|nil*) : Dimensions; vec3(1,1,1) by default. x and y are swapped internally.
+- `material` (*string|nil*) : Material.
+- `uvStyle` (*any*) : UV style (1 by default; the value is compared to 1).
+- **returns**: table Procedural mesh.
 
 #### `util_trackBuilder_proceduralPrimitives.createCylinder(radius, height, material)`
 
-Cylindre d'axe Z centré sur l'origine, avec faces haut et bas.
+Cylinder with a Z axis centered on the origin, with top and bottom faces.
 
-- `radius` (*number*) : Diamètre (divisé par 2 en interne).
-- `height` (*number*) : Hauteur en mètres.
-- `material` (*string|nil*) : Matériau.
-- **renvoie** : table Mesh procédural.
+- `radius` (*number*) : Diameter (divided by 2 internally).
+- `height` (*number*) : Height in meters.
+- `material` (*string|nil*) : Material.
+- **returns**: table Procedural mesh.
 
 #### `util_trackBuilder_proceduralPrimitives.createRamp(width, len, hei, thinning, attack, twist, material)`
 
-Rampe de longueur len, qui monte jusqu'à la hauteur hei. thinning rétrécit la largeur en haut, attack règle la courbure du profil (puissance), twist ajoute une torsion le long de la rampe.
+Ramp of length len, rising up to height hei. thinning narrows the width at the top, attack sets the curvature of the profile (power), twist adds a twist along the ramp.
 
-- `width` (*number|nil*) : Largeur de la base (5 par défaut).
-- `len` (*number|nil*) : Longueur (10 par défaut).
-- `hei` (*number|nil*) : Hauteur finale (2 par défaut).
-- `thinning` (*number|nil*) : Facteur de largeur en haut, borné à [0, 2] (0,5 par défaut).
-- `attack` (*number|nil*) : Exposant du profil de hauteur, minimum 1.
-- `twist` (*number|nil*) : Torsion totale (0 par défaut ; unité déduite du code : radians).
-- `material` (*string|nil*) : Matériau.
-- **renvoie** : table Mesh procédural.
+- `width` (*number|nil*) : Base width (5 by default).
+- `len` (*number|nil*) : Length (10 by default).
+- `hei` (*number|nil*) : Final height (2 by default).
+- `thinning` (*number|nil*) : Width factor at the top, clamped to [0, 2] (0.5 by default).
+- `attack` (*number|nil*) : Exponent of the height profile, minimum 1.
+- `twist` (*number|nil*) : Total twist (0 by default; unit inferred from code: radians).
+- `material` (*string|nil*) : Material.
+- **returns**: table Procedural mesh.
 
 #### `util_trackBuilder_proceduralPrimitives.createRing(radius, thickness, material)`
 
-Tore (anneau) centré sur l'origine, dans le plan YZ.
+Torus (ring) centered on the origin, in the YZ plane.
 
-- `radius` (*number*) : Paramètre de rayon ; multiplié par 2 en interne.
-- `thickness` (*number*) : Épaisseur du tube ; divisée par 2 en interne.
-- `material` (*string|nil*) : Matériau (défaut 'track_editor_A_border').
-- **renvoie** : table Mesh procédural.
+- `radius` (*number*) : Radius parameter; multiplied by 2 internally.
+- `thickness` (*number*) : Tube thickness; divided by 2 internally.
+- `material` (*string|nil*) : Material (default 'track_editor_A_border').
+- **returns**: table Procedural mesh.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `reloadCollision`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/trackBuilder/proceduralPrimitives.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/trackBuilder/proceduralPrimitives.lua`.*

@@ -1,24 +1,24 @@
 # `flowgraph_nodes_career_customTowAction`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/career/customTowAction.lua` · VM : Game Engine (GE) · 38 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/career/customTowAction.lua` · VM: Game Engine (GE) · 38 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/career/customTowAction")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/career/customTowAction")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « On Custom Tow » (catégorie repeat_instant, couleur/icône career). Détecte quand le joueur utilise une action de remorquage personnalisée dans le tutoriel de carrière. Sortie : tow (flow, impulsion) à vrai une frame après le hook onCareerCustomTowHook. Le flowgraph doit refaire un fondu depuis le noir après l'action.
+Flowgraph node "On Custom Tow" (category repeat_instant, career color/icon). Detects when the player uses a custom tow action in the career tutorial. Output: tow (flow, impulse) true one frame after the onCareerCustomTowHook hook. The flowgraph must fade back in from black after the action.
 
-## Remarques
+## Notes
 
-- Schéma d'évènement commun : le hook pose un drapeau, work() le transforme en impulsion d'une frame puis efface les drapeaux.
+- Common event pattern: the hook sets a flag, work() turns it into a one-frame impulse then clears the flags.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Crée la table de drapeaux. | 21 |
-| `C:onCareerCustomTowHook(poiId)` | Hook de carrière : lève le drapeau tow. | 33 |
-| `C:work(args)` | Chaque frame : met tow à faux, applique les drapeaux reçus puis les efface. | 25 |
+| `C:init()` | Creates the flag table. | 21 |
+| `C:onCareerCustomTowHook(poiId)` | Career hook: raises the tow flag. | 33 |
+| `C:work(args)` | Every frame: sets tow to false, applies the received flags then clears them. | 25 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/career/customTowAction.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/career/customTowAction.lua`.*

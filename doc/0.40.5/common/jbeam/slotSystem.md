@@ -1,12 +1,12 @@
 # `jbeam_slotSystem`
 
-*Fichier : `lua/common/jbeam/slotSystem.lua` · VM : Commun (GE + véhicule) · 527 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/slotSystem.lua` · VM: Common (GE + vehicle) · 527 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/slotSystem")`
+**Access:** `require("jbeam/slotSystem")`
 
-Système de slots du jbeam : à partir de la configuration du véhicule (pièces choisies), il parcourt récursivement les slots (sections slots / slots2) de la pièce principale, choisit pour chaque slot la pièce de l'utilisateur, sinon la pièce par défaut du slot, vérifie la compatibilité de type (slotType) et construit l'arbre des pièces choisies, les tables d'état et un 'journal' des fusions. unifyPartJournal rejoue ce journal pour fusionner toutes les pièces en un seul véhicule (unifyParts). Utilisé par le chargeur jbeam ; un moddeur ne l'appelle normalement pas, mais ses règles décrivent comment les pièces s'emboîtent.
+jbeam slot system: from the vehicle configuration (chosen parts), it recursively walks the slots (slots / slots2 sections) of the main part, picks for each slot the user's part, otherwise the slot's default part, checks type compatibility (slotType) and builds the tree of chosen parts, the state tables and a merge 'journal'. unifyPartJournal replays this journal to merge all parts into a single vehicle (unifyParts). Used by the jbeam loader; a modder does not normally call it, but its rules describe how parts fit together.
 
-## Exemple
+## Example
 
 ```lua
 local slotSystem = require('jbeam/slotSystem')
@@ -14,57 +14,57 @@ local rootPart, unifyJournal, unifyJournalC, chosenPartsTree, slotPartMap, activ
 slotSystem.unifyPartJournal(ioCtx, unifyJournal)
 ```
 
-## Remarques
+## Notes
 
-- Configuration de pièces utilisateur : soit vehicleConfig.parts (table plate slotId ou chemin de slot -> nom de pièce, 'none' = slot vide), soit vehicleConfig.partsTree (arbre {children = {slotId = {chosenPartName, children}}}). Valeur '' = slot volontairement vide (decisionMethod 'user-empty').
-- Décision pour chaque slot (decisionMethod) : 'user' (pièce demandée, si elle existe et convient), 'default' (slot.default, 'default-empty' si default == ''), sinon slot laissé vide avec message d'erreur si une pièce demandée est introuvable. Une pièce de type incompatible est rejetée avec une erreur et remplacée par la valeur par défaut.
-- Identifiant d'un slot : slotDef.name ou slotDef.type ; chemin de slot : '/<slot>/<sous-slot>/…' ; chemin de pièce : chemin du slot + nom de la pièce. slotDef.maxRecursion limite le nombre d'occurrences d'un même slotId dans la chaîne ; au-delà de 50 niveaux de récursion le code journalise une erreur (cycle probable).
-- Les options du slot (tout sauf name, type, allowTypes, denyTypes, default, description, maxRecursion) sont héritées par les sections de la pièce enfant : unifyParts les insère comme ligne d'options (avec partOrigin = nom de la pièce, partPath) avant les lignes de la pièce, puis une ligne de remise à zéro (valeurs '') après. variables est retiré des options (traité par jbeam/variables) et coreSlot est effacé.
-- Fusion (unifyParts, locale) : les sections slots, slots2 et information ne sont pas fusionnées ; les sections tabulaires s'ajoutent bout à bout ; pour les sections dictionnaires, une clé commençant par '$' suivie d'un opérateur et d'un nombre ('$+nom', '$*nom', '$<nom' = min, '$>nom' = max) combine la valeur numérique avec l'existante ; les autres valeurs écrasent (sauf slotType et partName).
-- BUG probable (slots version 1) : dans partFitsSlot, quand part.slotType est une table, la condition est `not tableContains(part.slotType, slot.type)` : elle renvoie true si le type N'EST PAS contenu et tombe sur 'Part type does not match' sinon, c'est-à-dire inversée par rapport à l'intention.
-- BUG probable (slots2) : quand part.slotType est une table et que slot.denyTypes est nil, tableContains(slot.denyTypes, …) est appelé avec nil (comportement dépend de tableContains).
-- findParts renvoie sept valeurs ; sans pièce principale (vehicleConfig.mainPartName introuvable) ou sans table de slots disponibles, il journalise une erreur et renvoie nil.
+- User part configuration: either vehicleConfig.parts (flat table slotId or slot path -> part name, 'none' = empty slot), or vehicleConfig.partsTree (tree {children = {slotId = {chosenPartName, children}}}). Value '' = deliberately empty slot (decisionMethod 'user-empty').
+- Decision for each slot (decisionMethod): 'user' (requested part, if it exists and fits), 'default' (slot.default, 'default-empty' if default == ''), otherwise the slot is left empty with an error message if a requested part cannot be found. A part of incompatible type is rejected with an error and replaced by the default value.
+- Slot identifier: slotDef.name or slotDef.type; slot path: '/<slot>/<sub-slot>/...'; part path: slot path + part name. slotDef.maxRecursion limits the number of occurrences of the same slotId in the chain; beyond 50 levels of recursion the code logs an error (probable cycle).
+- The slot options (everything except name, type, allowTypes, denyTypes, default, description, maxRecursion) are inherited by the child part's sections: unifyParts inserts them as an options row (with partOrigin = part name, partPath) before the part's rows, then a reset row (values '') after. variables is removed from the options (handled by jbeam/variables) and coreSlot is cleared.
+- Merge (unifyParts, local): the slots, slots2 and information sections are not merged; tabular sections are appended end to end; for dictionary sections, a key starting with '$' followed by an operator and a number ('$+name', '$*name', '$<name' = min, '$>name' = max) combines the numeric value with the existing one; other values overwrite (except slotType and partName).
+- Probable BUG (slots version 1): in partFitsSlot, when part.slotType is a table, the condition is `not tableContains(part.slotType, slot.type)`: it returns true if the type is NOT contained and falls through to 'Part type does not match' otherwise, i.e. inverted relative to the intent.
+- Probable BUG (slots2): when part.slotType is a table and slot.denyTypes is nil, tableContains(slot.denyTypes, ...) is called with nil (behavior depends on tableContains).
+- findParts returns seven values; without a main part (vehicleConfig.mainPartName not found) or without an available slots table, it logs an error and returns nil.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_slotSystem.findParts(ioCtx, vehicleConfig)` | Choisit récursivement les pièces de tous les slots à partir de la pièce principale vehicleConfig.mainPartName. Renvoie la pièce racine, le journal de fusion (pièces dans l'ordre enfant-avant-parent), le journal de fusion 'C' (ordre parent-avant-enfant), l'arbre des pièces choisies, la table slot->pièce, les données des pièces actives (copie profonde) et la table chemin de pièce -> nom. *(interne)* | 441 |
-| `jbeam_slotSystem.partFitsSlot(part, slot)` | Détermine si une pièce peut aller dans un slot. Version 1 : compare part.slotType (chaîne ou tableau) à slot.type. Version 2 : slot.allowTypes (liste blanche) et slot.denyTypes (liste noire), part.slotType chaîne ou tableau. Renvoie un booléen et un message d'erreur éventuel. | 182 |
-| `jbeam_slotSystem.unifyPartJournal(ioCtx, unifyJournal)` | Rejoue le journal de fusion : pour chaque entrée appelle unifyParts(parent, enfant, niveau, optionsDuSlot, chemin) pour fusionner les sections de chaque pièce enfant dans sa pièce parente, jusqu'à obtenir une seule pièce racine. ioCtx n'est pas utilisé. *(interne)* | 513 |
+| `jbeam_slotSystem.findParts(ioCtx, vehicleConfig)` | Recursively chooses the parts of all slots starting from the main part vehicleConfig.mainPartName. Returns the root part, the merge journal (parts in child-before-parent order), the 'C' merge journal (parent-before-child order), the tree of chosen parts, the slot->part table, the active parts data (deep copy) and the part path -> name table. *(internal)* | 441 |
+| `jbeam_slotSystem.partFitsSlot(part, slot)` | Determines whether a part can go in a slot. Version 1: compares part.slotType (string or array) to slot.type. Version 2: slot.allowTypes (whitelist) and slot.denyTypes (blacklist), part.slotType string or array. Returns a boolean and an optional error message. | 182 |
+| `jbeam_slotSystem.unifyPartJournal(ioCtx, unifyJournal)` | Replays the merge journal: for each entry calls unifyParts(parent, child, level, slotOptions, path) to merge the sections of each child part into its parent part, until a single root part remains. ioCtx is not used. *(internal)* | 513 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_slotSystem.findParts(ioCtx, vehicleConfig)`
 
-Choisit récursivement les pièces de tous les slots à partir de la pièce principale vehicleConfig.mainPartName. Renvoie la pièce racine, le journal de fusion (pièces dans l'ordre enfant-avant-parent), le journal de fusion 'C' (ordre parent-avant-enfant), l'arbre des pièces choisies, la table slot->pièce, les données des pièces actives (copie profonde) et la table chemin de pièce -> nom.
+Recursively chooses the parts of all slots starting from the main part vehicleConfig.mainPartName. Returns the root part, the merge journal (parts in child-before-parent order), the 'C' merge journal (parent-before-child order), the tree of chosen parts, the slot->part table, the active parts data (deep copy) and the part path -> name table.
 
-- `ioCtx` (*table*) : contexte du module jbeam/io (accès aux pièces et slots)
-- `vehicleConfig` (*table*) : configuration du véhicule : mainPartName, mainPartPath, parts ou partsTree
-- **renvoie** : table|nil rootPart (pièce principale)
-- **renvoie** : table unifyJournal : liste {partParent, partEnfant, niveau, optionsDuSlot, cheminPièce, slotDef}
-- **renvoie** : table unifyJournalC
-- **renvoie** : table chosenPartsTree (arbre : id, path, suitablePartNames, unsuitablePartNames, chosenPartName, partPath, children, decisionMethod)
-- **renvoie** : table<string, string> slotPartMap : chemin de slot -> nom de pièce ('' = vide)
-- **renvoie** : table<string, table> activePartsData : nom de pièce -> données
-- **renvoie** : table<string, string> activeParts : chemin de pièce -> nom
+- `ioCtx` (*table*) : context of the jbeam/io module (access to parts and slots)
+- `vehicleConfig` (*table*) : vehicle configuration: mainPartName, mainPartPath, parts or partsTree
+- **returns**: table|nil rootPart (main part)
+- **returns**: table unifyJournal: list {partParent, partChild, level, slotOptions, partPath, slotDef}
+- **returns**: table unifyJournalC
+- **returns**: table chosenPartsTree (tree: id, path, suitablePartNames, unsuitablePartNames, chosenPartName, partPath, children, decisionMethod)
+- **returns**: table<string, string> slotPartMap: slot path -> part name ('' = empty)
+- **returns**: table<string, table> activePartsData: part name -> data
+- **returns**: table<string, string> activeParts: part path -> name
 
 #### `jbeam_slotSystem.partFitsSlot(part, slot)`
 
-Détermine si une pièce peut aller dans un slot. Version 1 : compare part.slotType (chaîne ou tableau) à slot.type. Version 2 : slot.allowTypes (liste blanche) et slot.denyTypes (liste noire), part.slotType chaîne ou tableau. Renvoie un booléen et un message d'erreur éventuel.
+Determines whether a part can go in a slot. Version 1: compares part.slotType (string or array) to slot.type. Version 2: slot.allowTypes (whitelist) and slot.denyTypes (blacklist), part.slotType string or array. Returns a boolean and an optional error message.
 
-- `part` (*table*) : pièce jbeam (champ slotType : chaîne ou liste de chaînes)
-- `slot` (*table*) : définition du slot (type pour la v1, allowTypes / denyTypes pour la v2)
-- **renvoie** : boolean la pièce convient
-- **renvoie** : string|nil motif du refus ('Part type does not match slot type', 'Part type not in allowed types', 'No matching allowed types found', 'Part type is in deny list', 'Invalid slot configuration')
+- `part` (*table*) : jbeam part (slotType field: string or list of strings)
+- `slot` (*table*) : slot definition (type for v1, allowTypes / denyTypes for v2)
+- **returns**: boolean the part fits
+- **returns**: string|nil reason for rejection ('Part type does not match slot type', 'Part type not in allowed types', 'No matching allowed types found', 'Part type is in deny list', 'Invalid slot configuration')
 
 #### `jbeam_slotSystem.unifyPartJournal(ioCtx, unifyJournal)`
 
-Rejoue le journal de fusion : pour chaque entrée appelle unifyParts(parent, enfant, niveau, optionsDuSlot, chemin) pour fusionner les sections de chaque pièce enfant dans sa pièce parente, jusqu'à obtenir une seule pièce racine. ioCtx n'est pas utilisé.
+Replays the merge journal: for each entry calls unifyParts(parent, child, level, slotOptions, path) to merge the sections of each child part into its parent part, until a single root part remains. ioCtx is not used.
 
-- `ioCtx` (*table*) : contexte io (non utilisé)
-- `unifyJournal` (*table[]*) : journal renvoyé par findParts (second résultat)
-- **renvoie** : boolean toujours true
+- `ioCtx` (*table*) : io context (not used)
+- `unifyJournal` (*table[]*) : journal returned by findParts (second result)
+- **returns**: boolean always true
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/slotSystem.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/slotSystem.lua`.*

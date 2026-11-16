@@ -1,24 +1,24 @@
 # `flowgraph_nodes_macro_getForeach`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/macro/getForeach.lua` · VM : Game Engine (GE) · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/macro/getForeach.lua` · VM: Game Engine (GE) · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/macro/getForeach")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/macro/getForeach")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Get Foreach' (categorie provider). Dans un flowgraph cree par un noeud Foreach, expose la cle (key) et la valeur (value) de l'element courant, lues dans self.mgr.modules.foreach.
+Flowgraph node 'Get Foreach' (provider category). In a flowgraph created by a Foreach node, exposes the key and value of the current element, read from self.mgr.modules.foreach.
 
-## Remarques
+## Notes
 
-- C.tags est defini deux fois ; la seconde definition ecrase la premiere.
+- C.tags is defined twice; the second definition overwrites the first.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Copie mgr.modules.foreach.key et .value vers les pins de sortie. | 32 |
-| `C:init(mgr, ...)` | Vide. | 24 |
-| `C:postInit()` | Vide. | 28 |
+| `C:_executionStarted()` | Copies mgr.modules.foreach.key and .value to the output pins. | 32 |
+| `C:init(mgr, ...)` | Empty. | 24 |
+| `C:postInit()` | Empty. | 28 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/macro/getForeach.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/macro/getForeach.lua`.*

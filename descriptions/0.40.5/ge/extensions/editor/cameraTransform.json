@@ -1,25 +1,25 @@
 {
   "path": "lua/ge/extensions/editor/cameraTransform.lua",
-  "module": "Petite fenêtre d'éditeur « Camera Transform » (menu Camera). Elle lit la position/rotation de la caméra en JSON (commands.getCameraTransformJson), permet de l'éditer ou de la copier dans le presse-papiers, et de téléporter la caméra libre vers un JSON saisi (commands.setFreeCameraTransformJson).",
+  "module": "Small editor window \"Camera Transform\" (Camera menu). It reads the camera position/rotation as JSON (commands.getCameraTransformJson), lets you edit it or copy it to the clipboard, and teleport the free camera to an entered JSON (commands.setFreeCameraTransformJson).",
   "notes": [
-    "Le tampon de texte fait 512 caractères (im.ArrayChar(512)) : un JSON plus long serait tronqué.",
-    "Le module n'exporte que des hooks ; onEditorActivated et onEditorDeactivated sont vides."
+    "The text buffer is 512 characters (im.ArrayChar(512)): a longer JSON would be truncated.",
+    "The module only exports hooks; onEditorActivated and onEditorDeactivated are empty."
   ],
   "functions": {
     "onEditorGui": {
-      "desc": "Dessine la fenêtre : boutons « Get Camera Transform », « GoTo » et « Copy », et un champ de texte contenant le JSON de la transformation. Appelé à chaque frame par l'éditeur.",
+      "desc": "Draws the window: \"Get Camera Transform\", \"GoTo\" and \"Copy\" buttons, and a text field containing the transform JSON. Called every frame by the editor.",
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Ajoute l'entrée de menu « Camera Transform » (groupe Camera) et enregistre la fenêtre 600x200.",
+      "desc": "Adds the \"Camera Transform\" menu entry (Camera group) and registers the 600x200 window.",
       "internal": true
     },
     "onEditorActivated": {
-      "desc": "Appelé à l'activation de l'éditeur ; ne fait rien.",
+      "desc": "Called when the editor is activated; does nothing.",
       "internal": true
     },
     "onEditorDeactivated": {
-      "desc": "Appelé à la désactivation de l'éditeur ; ne fait rien.",
+      "desc": "Called when the editor is deactivated; does nothing.",
       "internal": true
     }
   }

@@ -1,60 +1,60 @@
 # `powertrain_torsionReactor`
 
-*Fichier : `lua/vehicle/powertrain/torsionReactor.lua` · VM : Véhicule · 115 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/torsionReactor.lua` · VM: Vehicle · 115 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `torsionReactor` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `torsionReactor` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Device « arbre fictif » qui sert de réacteur de torsion : il transmet le couple de son parent à ses enfants (multiplié par gearRatio) en conservant les noeuds de réaction du couple (torqueReactionNodes_nodes) qui permettent d'appliquer la réaction du couple moteur sur la carrosserie. Le powertrain l'utilise comme point d'ancrage des réactions de couple. Catégorie shaft, un seul port de sortie.
+"Dummy shaft" device that serves as a torsion reactor: it transmits the torque of its parent to its children (multiplied by gearRatio) while keeping the torque reaction nodes (torqueReactionNodes_nodes) that allow applying the engine torque reaction to the body. The powertrain uses it as the anchor point for torque reactions. Category shaft, a single output port.
 
-## Exemple
+## Example
 
 ```lua
--- jbeam : ["torsionReactor", "torsionReactor", "mainEngine", 1, {"torqueReactionNodes_nodes":[10,11,12]}]
+-- jbeam: ["torsionReactor", "torsionReactor", "mainEngine", 1, {"torqueReactionNodes_nodes":[10,11,12]}]
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam : gearRatio (1), torqueReactionNodes_nodes (liste de 3 numéros de noeuds, seuls les nombres sont conservés ; absent = nil), electricsName, visualShaftAVName, inputName, inputIndex. breakTriggerBeam vaut toujours nil.
-- validate : si le nombre de noeuds de réaction n'est pas exactement 3, un avertissement est loggé et torqueUpdate est remplacé par updateTorqueDisabled, qui fait EXACTEMENT la même chose que updateTorque (aucun effet réel, les deux fonctions sont identiques).
-- velocityUpdate écrit device.parent[device.parentOutputAVName] = inputAV (champ du parent, nom renseigné par le powertrain), et torqueUpdate lit device.parent[device.parentOutputTorqueName] : ces deux noms sont posés par powertrain.lua lors du câblage.
-- Bug mineur : new() lit shallowcopy(M.requiredExternalInertiaOutputs) alors que M.requiredExternalInertiaOutputs n'est pas défini dans ce fichier (nil) : device.requiredExternalInertiaOutputs vaut donc nil (shallowcopy de nil).
-- Bug mineur : new() ne copie pas gearRatio vers reset ; reset(device, jbeamData) relit jbeamData.gearRatio (1 par défaut), cohérent. Mais onBreak = nop (nop est un global du jeu).
+- jbeam keys: gearRatio (1), torqueReactionNodes_nodes (list of 3 node numbers, only numbers are kept; absent = nil), electricsName, visualShaftAVName, inputName, inputIndex. breakTriggerBeam is always nil.
+- validate: if the number of reaction nodes is not exactly 3, a warning is logged and torqueUpdate is replaced by updateTorqueDisabled, which does EXACTLY the same thing as updateTorque (no real effect, the two functions are identical).
+- velocityUpdate writes device.parent[device.parentOutputAVName] = inputAV (parent field, name supplied by the powertrain), and torqueUpdate reads device.parent[device.parentOutputTorqueName]: these two names are set by powertrain.lua during wiring.
+- Minor bug: new() reads shallowcopy(M.requiredExternalInertiaOutputs) while M.requiredExternalInertiaOutputs is not defined in this file (nil): device.requiredExternalInertiaOutputs is therefore nil (shallowcopy of nil).
+- Minor bug: new() does not copy gearRatio to reset; reset(device, jbeamData) rereads jbeamData.gearRatio (1 by default), which is consistent. But onBreak = nop (nop is a game global).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_torsionReactor.new(jbeamData)` | Construit le device à partir du jbeam. Filtre torqueReactionNodes_nodes pour ne garder que les valeurs numériques. *(interne)* | 67 |
+| `powertrain_torsionReactor.new(jbeamData)` | Builds the device from the jbeam. Filters torqueReactionNodes_nodes to keep only the numeric values. *(internal)* | 67 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_torsionReactor.new(jbeamData)`
 
-Construit le device à partir du jbeam. Filtre torqueReactionNodes_nodes pour ne garder que les valeurs numériques.
+Builds the device from the jbeam. Filters torqueReactionNodes_nodes to keep only the numeric values.
 
-- `jbeamData` (*table*) : Données jbeam du composant.
-- **renvoie** : table Objet device.
+- `jbeamData` (*table*) : jbeam data of the component.
+- **returns**: table Device object.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `deviceCategories` | table<string, boolean> | {shaft=true}. |
 | `outputPorts` | table<integer, boolean> | {[1]=true}. |
 
-## Classe `device`
+## Class `device`
 
-Objet renvoyé par new(jbeamData). Champs : gearRatio, inputAV, outputAV1 (rad/s), outputTorque1 (N·m), torqueReactionNodes (liste de 3 noeuds ou nil), cumulativeInertia (kg·m²), cumulativeGearRatio, parent/children (posés par le powertrain).
+Object returned by new(jbeamData). Fields: gearRatio, inputAV, outputAV1 (rad/s), outputTorque1 (N·m), torqueReactionNodes (list of 3 nodes or nil), cumulativeInertia (kg·m²), cumulativeGearRatio, parent/children (set by the powertrain).
 
-Objet `device` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `device` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `device:calculateInertia()` | Calcule l'inertie cumulée (celle de l'enfant divisée par gearRatio²), son inverse et les rapports cumulés à partir du premier enfant. | 37 |
-| `device:reset(jbeamData)` | Remet à zéro vitesses, couple et inerties ; relit gearRatio depuis le jbeam. | 54 |
-| `device:torqueUpdate()` | Pas de physique : outputTorque1 = couple de sortie du parent * gearRatio. | 15 |
-| `device:validate()` | Vérifie la présence du parent et que torqueReactionNodes contient 3 noeuds (sinon avertissement et torqueUpdate désactivé en nom seulement). | 23 |
-| `device:velocityUpdate(dt)` | Pas de physique : inputAV = outputAV1 * gearRatio, puis recopie dans le champ du parent désigné par parentOutputAVName. | 10 |
+| `device:calculateInertia()` | Computes the cumulative inertia (that of the child divided by gearRatio²), its inverse and the cumulative ratios from the first child. | 37 |
+| `device:reset(jbeamData)` | Resets speeds, torque and inertias; rereads gearRatio from the jbeam. | 54 |
+| `device:torqueUpdate()` | Physics step: outputTorque1 = output torque of the parent * gearRatio. | 15 |
+| `device:validate()` | Checks that the parent exists and that torqueReactionNodes contains 3 nodes (otherwise a warning and torqueUpdate disabled by name only). | 23 |
+| `device:velocityUpdate(dt)` | Physics step: inputAV = outputAV1 * gearRatio, then copied into the parent field designated by parentOutputAVName. | 10 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/torsionReactor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/torsionReactor.lua`.*

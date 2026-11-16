@@ -1,74 +1,74 @@
 # `mcp_tools_perf`
 
-*Fichier : `lua/ge/extensions/mcp/tools/perf.lua` · VM : Game Engine (GE) · 112 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/mcp/tools/perf.lua` · VM: Game Engine (GE) · 112 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `mcp_tools_perf` : `extensions.load("mcp_tools_perf")`, puis la globale `mcp_tools_perf`
+**Access:** extension `mcp_tools_perf`: `extensions.load("mcp_tools_perf")`, then the global `mcp_tools_perf`
 
-Outils MCP de performance : métriques de la dernière frame, raison du limiteur de FPS, usage de la VRAM, et captures du profileur Optick (builds BNG_PROFILER=OPTICK seulement).
+MCP performance tools: metrics of the last frame, FPS limiter reason, VRAM usage, and Optick profiler captures (BNG_PROFILER=OPTICK builds only).
 
-## Remarques
+## Notes
 
-- profiler_run n'est pas bloquant : un job (core_jobsystem) attend delay puis capture pendant duration secondes puis sauvegarde le .opt ; un seul à la fois (« already running »).
-- Chemin de sortie : par défaut <dossier utilisateur>/optick/optick_AAAA-MM-JJ_HH-MM-SS.opt ; un chemin relatif est placé sous optick/ ; un chemin absolu (lecteur ou UNC) est utilisé tel quel.
+- profiler_run is non-blocking: a job (core_jobsystem) waits delay then captures for duration seconds then saves the .opt; only one at a time ("already running").
+- Output path: by default <user folder>/optick/optick_YYYY-MM-DD_HH-MM-SS.opt; a relative path is placed under optick/; an absolute path (drive or UNC) is used as is.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mcp_tools_perf.get_fps_limit_reason()` | Sources et plafonds actuels du limiteur de FPS (vsync, limites avant/arrière-plan, focus), via Engine.getCurrentFpsLimitReason. | 17 |
-| `mcp_tools_perf.get_performance_metrics()` | Métriques de la dernière frame (timings, mémoire, compteurs) via Engine.Debug.getLastPerformanceMetrics, en JSON. | 9 |
-| `mcp_tools_perf.get_vram_usage()` | Usage de la mémoire vidéo via Engine.Render.getVRAMUsage. | 22 |
-| `mcp_tools_perf.profiler_run(args)` | Déclenche une capture Optick de `duration` secondes après `delay` et enregistre un fichier .opt ; renvoie son chemin et le délai de disponibilité. | 52 |
-| `mcp_tools_perf.run_optick_ui()` | Lance l'interface externe Optick (comme le raccourci Ctrl+Alt+O) en appelant la fonction globale launchOptick si elle existe. | 89 |
+| `mcp_tools_perf.get_fps_limit_reason()` | Current sources and caps of the FPS limiter (vsync, foreground/background limits, focus), via Engine.getCurrentFpsLimitReason. | 17 |
+| `mcp_tools_perf.get_performance_metrics()` | Metrics of the last frame (timings, memory, counters) via Engine.Debug.getLastPerformanceMetrics, as JSON. | 9 |
+| `mcp_tools_perf.get_vram_usage()` | Video memory usage via Engine.Render.getVRAMUsage. | 22 |
+| `mcp_tools_perf.profiler_run(args)` | Triggers an Optick capture of `duration` seconds after `delay` and saves a .opt file; returns its path and the availability delay. | 52 |
+| `mcp_tools_perf.run_optick_ui()` | Launches the external Optick interface (like the Ctrl+Alt+O shortcut) by calling the global function launchOptick if it exists. | 89 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mcp_tools_perf.get_fps_limit_reason()`
 
-Sources et plafonds actuels du limiteur de FPS (vsync, limites avant/arrière-plan, focus), via Engine.getCurrentFpsLimitReason.
+Current sources and caps of the FPS limiter (vsync, foreground/background limits, focus), via Engine.getCurrentFpsLimitReason.
 
-- **renvoie** : string JSON ou erreur.
-- **renvoie** : boolean true si indisponible.
+- **returns**: string JSON or error.
+- **returns**: boolean true if unavailable.
 
 #### `mcp_tools_perf.get_performance_metrics()`
 
-Métriques de la dernière frame (timings, mémoire, compteurs) via Engine.Debug.getLastPerformanceMetrics, en JSON.
+Metrics of the last frame (timings, memory, counters) via Engine.Debug.getLastPerformanceMetrics, as JSON.
 
-- **renvoie** : string JSON (objet vide si l'API manque).
-- **renvoie** : boolean false.
+- **returns**: string JSON (empty object if the API is missing).
+- **returns**: boolean false.
 
 #### `mcp_tools_perf.get_vram_usage()`
 
-Usage de la mémoire vidéo via Engine.Render.getVRAMUsage.
+Video memory usage via Engine.Render.getVRAMUsage.
 
-- **renvoie** : string JSON (ou tostring si ce n'est pas une table).
-- **renvoie** : boolean true si indisponible.
+- **returns**: string JSON (or tostring if it is not a table).
+- **returns**: boolean true if unavailable.
 
 #### `mcp_tools_perf.profiler_run(args)`
 
-Déclenche une capture Optick de `duration` secondes après `delay` et enregistre un fichier .opt ; renvoie son chemin et le délai de disponibilité.
+Triggers an Optick capture of `duration` seconds after `delay` and saves a .opt file; returns its path and the availability delay.
 
-- `args` (*table|nil*) : {duration?: number s (défaut 5), delay?: number s (défaut 0), path?: string}
-- **renvoie** : string JSON {ok, path, duration, delay, readyInSeconds, note} ou erreur.
-- **renvoie** : boolean true en cas d'erreur.
+- `args` (*table|nil*) : {duration?: number s (default 5), delay?: number s (default 0), path?: string}
+- **returns**: string JSON {ok, path, duration, delay, readyInSeconds, note} or error.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_perf.run_optick_ui()`
 
-Lance l'interface externe Optick (comme le raccourci Ctrl+Alt+O) en appelant la fonction globale launchOptick si elle existe.
+Launches the external Optick interface (like the Ctrl+Alt+O shortcut) by calling the global function launchOptick if it exists.
 
-- **renvoie** : string JSON {ok=true} (même si launchOptick est absent).
-- **renvoie** : boolean false.
+- **returns**: string JSON {ok=true} (even if launchOptick is missing).
+- **returns**: boolean false.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `schemas` | table<string, table> | Schémas des outils de performance. |
+| `schemas` | table<string, table> | Schemas of the performance tools. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `getCurrentFpsLimitReason`
 - `FS:` `directoryCreate`, `getUserPath`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/mcp/tools/perf.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/mcp/tools/perf.lua`.*

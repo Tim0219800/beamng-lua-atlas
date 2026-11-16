@@ -2,79 +2,79 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Étape 9 et dernière du tutoriel de carrière (« spmSignup ») : le joueur accède à l'ordinateur du garage, signe le contrat d'embauche (popup de contrat, prime de départ de 10 000), ouvre la boutique de véhicules, choisit un vendeur, ouvre l'écran d'achat et achète son premier véhicule. À l'ajout au inventaire, la popup v2/careerUnlocked s'affiche, puis career_modules_tutorial.endTutorial() est appelé. Le véhicule du tutoriel est supprimé à l'ouverture de l'écran d'achat.
---- Accès : extension `career_modules_tutorial_step09spmSignup` : `extensions.load("career_modules_tutorial_step09spmSignup")`, puis la globale `career_modules_tutorial_step09spmSignup`
+--- Career tutorial step 9 and last ("spmSignup"): the player accesses the garage computer, signs the hiring contract (contract popup, starting bonus of 10,000), opens the vehicle shop, chooses a seller, opens the purchase screen and buys their first vehicle. When it is added to the inventory, the v2/careerUnlocked popup is displayed, then career_modules_tutorial.endTutorial() is called. The tutorial vehicle is deleted when the purchase screen opens.
+--- Access: extension `career_modules_tutorial_step09spmSignup`: `extensions.load("career_modules_tutorial_step09spmSignup")`, then the global `career_modules_tutorial_step09spmSignup`
 ---@class career_modules_tutorial_step09spmSignup
 career_modules_tutorial_step09spmSignup = {}
 
---- Supprime marqueur et son d'argent, vide zones, reset et liste de tâches.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:291
+--- Removes the marker and money sound, clears zones, reset and task list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:291
 function career_modules_tutorial_step09spmSignup.cleanup() end
 
---- Hook émis quand le bon de contrat est utilisé : crédite la prime de départ.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:202
+--- Hook emitted when the contract voucher is used: credits the starting bonus.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:202
 function career_modules_tutorial_step09spmSignup.onCareerTutorialRedeemedContractVoucher() end
 
---- Hook émis à l'ouverture du menu de l'ordinateur : valide l'objectif et ouvre la popup de signature du contrat (utilisateur = profil courant).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:171
+--- Hook emitted when the computer menu opens: validates the objective and opens the contract signing popup (user = current profile).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:171
 function career_modules_tutorial_step09spmSignup.onComputerMenuOpened() end
 
---- Affiche la phase et un bouton « Skip Step 9 » (valide tous les objectifs et ouvre la popup careerUnlocked).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:305
----@param im table Table ui_imgui.
+--- Displays the phase and a "Skip Step 9" button (validates all objectives and opens the careerUnlocked popup).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:305
+---@param im table ui_imgui table.
 function career_modules_tutorial_step09spmSignup.onDebugMenu(im) end
 
---- Ajoute à la liste de POI l'ordinateur du garage (facilité servicestationGarageComputer) pendant l'étape 09spmSignup.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:283
----@param elements table Liste de POI à compléter.
+--- Adds the garage computer (servicestationGarageComputer facility) to the POI list during step 09spmSignup.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:283
+---@param elements table POI list to complete.
 function career_modules_tutorial_step09spmSignup.onGetRawPoiListForTutorial(elements) end
 
---- Hook de fermeture de popup : contractSign (prime + succès), v2/apmOnboarding (objectif d'ouverture du marché) et v2/careerUnlocked (succès puis fin du tutoriel).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:207
----@param id string Id de la popup.
+--- Popup close hook: contractSign (bonus + achievement), v2/apmOnboarding (marketplace opening objective) and v2/careerUnlocked (achievement then end of the tutorial).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:207
+---@param id string Popup id.
 function career_modules_tutorial_step09spmSignup.onIntroPopupCareerClosed(id) end
 
---- Appelé chaque frame (phase waitComputer) : masque le marqueur d'entrée à moins de 3 m et efface le tracé de guidage à moins de 1 m du point de départ de marche.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:186
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta simulation (s).
----@param dtRaw number Delta brut (s).
+--- Called every frame (waitComputer phase): hides the entrance marker within 3 m and clears the guidance path within 1 m of the walking start point.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:186
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulation delta (s).
+---@param dtRaw number Raw delta (s).
 function career_modules_tutorial_step09spmSignup.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook émis quand un véhicule est ajouté à l'inventaire : désactive zones et reset, valide l'objectif final et affiche la popup v2/careerUnlocked.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:266
----@param data any Données du véhicule ajouté (non utilisées).
+--- Hook emitted when a vehicle is added to the inventory: deactivates zones and reset, validates the final objective and displays the v2/careerUnlocked popup.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:266
+---@param data any Data of the added vehicle (unused).
 function career_modules_tutorial_step09spmSignup.onVehicleAddedToInventory(data) end
 
---- Hook émis à l'ouverture de la boutique de véhicules : valide l'objectif et demande de choisir un vendeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:235
----@param data any Données du menu (non utilisées).
+--- Hook emitted when the vehicle shop opens: validates the objective and asks to choose a seller.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:235
+---@param data any Menu data (unused).
 function career_modules_tutorial_step09spmSignup.onVehicleShoppingMenuOpened(data) end
 
---- Hook émis à l'ouverture de l'écran d'achat : supprime le véhicule du tutoriel et affiche la popup v2/vehiclePurchaseAndInsurance.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:253
----@param data any Données du menu (non utilisées).
+--- Hook emitted when the purchase screen opens: deletes the tutorial vehicle and displays the v2/vehiclePurchaseAndInsurance popup.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:253
+---@param data any Menu data (unused).
 function career_modules_tutorial_step09spmSignup.onVehicleShoppingPurchaseMenuOpened(data) end
 
---- Hook émis quand le vendeur sélectionné change : valide l'objectif et demande d'ouvrir l'achat.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:244
----@param payload any Données du changement (non utilisées).
+--- Hook emitted when the selected seller changes: validates the objective and asks to open the purchase.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:244
+---@param payload any Change data (unused).
 function career_modules_tutorial_step09spmSignup.onVehicleShoppingSelectedSellerIdChanged(payload) end
 
---- Appelé à l'activation : remet les objectifs à zéro, active la zone garageBounds, récupère les places garageInteriorWalkStart et garageEntranceMarker, affiche l'objectif « accéder à l'ordinateur » et le marqueur d'entrée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:146
----@param stepData any Données de l'étape (non utilisées).
+--- Called on activation: resets the objectives, activates the garageBounds zone, gets the garageInteriorWalkStart and garageEntranceMarker spots, displays the "access the computer" objective and the entrance marker.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua:146
+---@param stepData any Step data (unused).
 function career_modules_tutorial_step09spmSignup.setup(stepData) end
 

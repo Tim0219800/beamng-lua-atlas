@@ -1,43 +1,43 @@
 # `jbeam_optimization`
 
-*Fichier : `lua/common/jbeam/optimization.lua` · VM : Commun (GE + véhicule) · 242 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/optimization.lua` · VM: Common (GE + vehicle) · 242 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/optimization")`
+**Access:** `require("jbeam/optimization")`
 
-Étapes de finalisation des données jbeam avant envoi à la physique. assignCIDs numérote chaque ligne des sections « valides » avec un cid continu (0, 1, 2...) dans un ordre déterministe (clés triées) et calcule vehicle.maxIDs. process réordonne les nœuds de poutres (id1 < id2), supprime les champs inutiles à l'exécution, remplace les références objet par des cid (hydros, roues), retire les sections désactivées (disableSection) puis supprime vehicle.validTables.
+Finalization steps of the jbeam data before sending to the physics. assignCIDs numbers each row of the "valid" sections with a continuous cid (0, 1, 2...) in a deterministic order (sorted keys) and computes vehicle.maxIDs. process reorders the beams' nodes (id1 < id2), removes fields not needed at runtime, replaces object references with cids (hydros, wheels), removes disabled sections (disableSection) then deletes vehicle.validTables.
 
-## Remarques
+## Notes
 
-- Ordre des cid des nœuds : d'abord les nœuds fixes, puis les nœuds sans collision (collision == false), puis tous les autres (nœuds non fixes à la fin), chaque groupe trié par clé.
-- Les sections hors nœuds sont numérotées par ordre alphabétique des clés de ligne.
-- optimize échange id1/id2 d'une poutre quand id1 > id2 et met à jour son cid avec la clé de table ; il n'est pas exporté.
-- cleanup (non exporté) supprime group et engineGroup (sauf en mode debug), les chaînes vides (sauf la clé mesh), et remet à nil les valeurs par défaut des nœuds, poutres et triangles pour alléger les données.
-- dereference (non exporté) remplace hydro.beam par hydro.beamCID et les listes de poutres/nœuds des roues par des cid.
-- Une section dont la ligne d'indice 0 contient disableSection est supprimée du véhicule.
+- Node cid order: first the fixed nodes, then the nodes without collision (collision == false), then all the others (non-fixed nodes at the end), each group sorted by key.
+- Sections other than nodes are numbered in alphabetical order of the row keys.
+- optimize swaps a beam's id1/id2 when id1 > id2 and updates its cid with the table key; it is not exported.
+- cleanup (not exported) removes group and engineGroup (except in debug mode), empty strings (except the mesh key), and resets the default values of nodes, beams and triangles to nil to lighten the data.
+- dereference (not exported) replaces hydro.beam with hydro.beamCID and the wheels' beam/node lists with cids.
+- A section whose row at index 0 contains disableSection is removed from the vehicle.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_optimization.assignCIDs(vehicle)` | Attribue à chaque ligne des sections listées dans vehicle.validTables un cid continu et enregistre le nombre de lignes par section dans vehicle.maxIDs. *(interne)* | 53 |
-| `jbeam_optimization.process(vehicle, debugEnabled)` | Optimise et nettoie les données du véhicule : poutres id1<id2, nettoyage des valeurs par défaut, déréférencement en cid, suppression des sections désactivées et de validTables. *(interne)* | 218 |
+| `jbeam_optimization.assignCIDs(vehicle)` | Assigns a continuous cid to each row of the sections listed in vehicle.validTables and records the number of rows per section in vehicle.maxIDs. *(internal)* | 53 |
+| `jbeam_optimization.process(vehicle, debugEnabled)` | Optimizes and cleans the vehicle data: beams id1<id2, default value cleanup, dereferencing to cids, removal of disabled sections and validTables. *(internal)* | 218 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_optimization.assignCIDs(vehicle)`
 
-Attribue à chaque ligne des sections listées dans vehicle.validTables un cid continu et enregistre le nombre de lignes par section dans vehicle.maxIDs.
+Assigns a continuous cid to each row of the sections listed in vehicle.validTables and records the number of rows per section in vehicle.maxIDs.
 
-- `vehicle` (*table*) : Données jbeam du véhicule (avec validTables), modifiées en place.
-- **renvoie** : boolean Toujours true.
+- `vehicle` (*table*) : Vehicle jbeam data (with validTables), modified in place.
+- **returns**: boolean Always true.
 
 #### `jbeam_optimization.process(vehicle, debugEnabled)`
 
-Optimise et nettoie les données du véhicule : poutres id1<id2, nettoyage des valeurs par défaut, déréférencement en cid, suppression des sections désactivées et de validTables.
+Optimizes and cleans the vehicle data: beams id1<id2, default value cleanup, dereferencing to cids, removal of disabled sections and validTables.
 
-- `vehicle` (*table*) : Données jbeam du véhicule.
-- `debugEnabled` (*boolean|nil*) : Si vrai, conserve les champs group et engineGroup.
-- **renvoie** : boolean Toujours true.
+- `vehicle` (*table*) : Vehicle jbeam data.
+- `debugEnabled` (*boolean|nil*) : If true, keeps the group and engineGroup fields.
+- **returns**: boolean Always true.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/optimization.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/optimization.lua`.*

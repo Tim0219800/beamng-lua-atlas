@@ -1,16 +1,16 @@
 # `ui_router_guards_multiseat`
 
-*Fichier : `lua/ge/extensions/ui/router/guards/multiseat.lua` · VM : Game Engine (GE) · 31 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/guards/multiseat.lua` · VM: Game Engine (GE) · 31 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_guards_multiseat` : `extensions.load("ui_router_guards_multiseat")`, puis la globale `ui_router_guards_multiseat`
+**Access:** extension `ui_router_guards_multiseat`: `extensions.load("ui_router_guards_multiseat")`, then the global `ui_router_guards_multiseat`
 
-Garde de sortie « confirmMultiseatSettingsExit » : lorsqu'on quitte l'écran des réglages multi-sièges, délègue la confirmation à ui_multiseat_multiseatSettings.confirmExit(route, params, context). Les déplacements entre pause.multiseatSettings et pause.multiseatSettings.vehicleSelector restent dans le flux et sont autorisés ; si ui_multiseat_multiseatSettings n'est pas chargé, la sortie est autorisée.
+Exit guard "confirmMultiseatSettingsExit": when leaving the multi-seat settings screen, delegates the confirmation to ui_multiseat_multiseatSettings.confirmExit(route, params, context). Moves between pause.multiseatSettings and pause.multiseatSettings.vehicleSelector stay in the flow and are allowed; if ui_multiseat_multiseatSettings is not loaded, the exit is allowed.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `guards` | table<string, function> | Table des gardes exposées : {confirmMultiseatSettingsExit = function(route, params, context)}. |
+| `guards` | table<string, function> | Table of exposed guards: {confirmMultiseatSettingsExit = function(route, params, context)}. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/guards/multiseat.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/guards/multiseat.lua`.*

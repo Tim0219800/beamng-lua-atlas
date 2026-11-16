@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/tonumber.lua",
+  "module": "Nœud « To Number » (catégorie simple). Convertit l'entrée en nombre avec tonumber. Entrée : value (any). Sortie : value (number). Le champ todo avertit que le résultat peut être nil.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "work": {
+          "desc": "Écrit tonumber(entrée) dans la sortie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,141 +1,237 @@
 {
   "path": "lua/ge/extensions/ui/photomode/presets.lua",
-  "module": "Gestion des presets du mode photo, de trois types : camera, scene et effects. Chaque type est stocké dans un fichier JSON sous settings/photomode/presets/ (camera.json, scene.json, effects.json) ; l'état est capturé ou appliqué par les modules ui_photomode_camera, _scene et _effects. Le module gère aussi un preset temporaire « Defaults » (état capturé au début de la session) et les presets temporaires fournis par ces modules.",
+  "module": "Management of photo mode presets, of three types: camera, scene and effects. Each type is stored in a JSON file under settings/photomode/presets/ (camera.json, scene.json, effects.json); the state is captured or applied by the modules ui_photomode_camera, _scene and _effects. The module also manages a temporary \"Defaults\" preset (state captured at the start of the session) and the temporary presets provided by these modules.",
   "notes": [
-    "Format du fichier : {version=1, presets={...}} ; chaque preset a id (UUID), type, version=1, name, createdAt, updatedAt, origin, data. Les nouveaux presets sont insérés en tête de liste.",
-    "Le preset par défaut a l'identifiant \"__defaults\" et temporary=true ; le supprimer ne l'efface pas du disque, il est seulement masqué jusqu'à resetTemporaryPresets.",
-    "Les presets de caméra de type scène (data.cameraPresetType == \"scene\") ne sont listés/applicables que dans le niveau dont l'identifiant correspond à data.levelId.",
-    "Les fonctions renvoient {ok=false, reason=...} en cas d'échec (preset_type_invalid, preset_not_found, preset_capture_failed, preset_write_failed, preset_bundle_invalid). En cas de succès, la table ne contient pas forcément le champ ok.",
-    "renamePreset et deletePreset ne touchent que les presets du fichier (le renommage d'un preset temporaire renvoie preset_not_found).",
-    "Nom vide : remplacé par \"Untitled preset\"."
+    "File format: {version=1, presets={...}}; each preset has id (UUID), type, version=1, name, createdAt, updatedAt, origin, data. New presets are inserted at the head of the list.",
+    "The default preset has the identifier \"__defaults\" and temporary=true; deleting it does not erase it from disk, it is only hidden until resetTemporaryPresets.",
+    "Scene-type camera presets (data.cameraPresetType == \"scene\") are listed/applicable only in the level whose identifier matches data.levelId.",
+    "The functions return {ok=false, reason=...} on failure (preset_type_invalid, preset_not_found, preset_capture_failed, preset_write_failed, preset_bundle_invalid). On success, the table does not necessarily contain the ok field.",
+    "renamePreset and deletePreset only affect presets in the file (renaming a temporary preset returns preset_not_found).",
+    "Empty name: replaced by \"Untitled preset\"."
   ],
   "fields": {
     "dependencies": {
       "type": "table<integer, string>",
-      "desc": "Extensions chargées avant : ui_photomode_camera, ui_photomode_scene, ui_photomode_effects."
+      "desc": "Extensions loaded before: ui_photomode_camera, ui_photomode_scene, ui_photomode_effects."
     }
   },
   "functions": {
     "resetTemporaryPresets": {
-      "desc": "Réinitialise l'état temporaire : presets découverts, presets masqués et états par défaut capturés de la session.",
+      "desc": "Resets the temporary state: discovered presets, hidden presets and the session's captured default states.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "captureSessionDefaultPresets": {
-      "desc": "Capture, pour chaque type de preset, l'état par défaut courant (captureDefaultPresetState du module concerné). Sert de contenu au preset « Defaults ». À appeler au début d'une session photo.",
+      "desc": "Captures, for each preset type, the current default state (captureDefaultPresetState of the relevant module). Serves as the content of the \"Defaults\" preset. To be called at the start of a photo session.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "listPresets": {
-      "desc": "Liste les presets d'un type : le preset par défaut (s'il n'est pas masqué), les presets temporaires déjà découverts, puis ceux du fichier disponibles dans le niveau courant.",
+      "desc": "Lists the presets of a type: the default preset (if not hidden), the temporary presets already discovered, then those from the file available in the current level.",
       "params": {
-        "presetType": {"type": "string", "desc": "\"camera\", \"scene\" ou \"effects\"."}
+        "presetType": {
+          "type": "string",
+          "desc": "\"camera\", \"scene\" or \"effects\"."
+        }
       },
       "returns": [
-        {"type": "table", "desc": "{presets=table[]} ou {ok=false, reason, presets={}}."}
+        {
+          "type": "table",
+          "desc": "{presets=table[]} or {ok=false, reason, presets={}}."
+        }
       ],
       "internal": false
     },
     "discoverTemporaryPresets": {
-      "desc": "Active l'inclusion des presets temporaires du module (getTemporaryPresetList) pour ce type, puis renvoie la liste complète.",
+      "desc": "Enables the inclusion of the module's temporary presets (getTemporaryPresetList) for this type, then returns the full list.",
       "params": {
-        "presetType": {"type": "string", "desc": "\"camera\", \"scene\" ou \"effects\"."}
+        "presetType": {
+          "type": "string",
+          "desc": "\"camera\", \"scene\" or \"effects\"."
+        }
       },
       "returns": [
-        {"type": "table", "desc": "{presets=table[]} ou {ok=false, reason, presets={}}."}
+        {
+          "type": "table",
+          "desc": "{presets=table[]} or {ok=false, reason, presets={}}."
+        }
       ],
       "internal": false
     },
     "saveCurrentPreset": {
-      "desc": "Capture l'état courant du module du type donné (capturePresetState) et l'enregistre comme nouveau preset en tête du fichier.",
+      "desc": "Captures the current state of the module of the given type (capturePresetState) and saves it as a new preset at the head of the file.",
       "params": {
-        "presetType": {"type": "string", "desc": "\"camera\", \"scene\" ou \"effects\"."},
-        "name": {"type": "string", "desc": "Nom du preset."},
-        "options": {"type": "table|nil", "desc": "Options passées à capturePresetState ({} par défaut)."}
+        "presetType": {
+          "type": "string",
+          "desc": "\"camera\", \"scene\" or \"effects\"."
+        },
+        "name": {
+          "type": "string",
+          "desc": "Preset name."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "Options passed to capturePresetState ({} by default)."
+        }
       },
       "returns": [
-        {"type": "table", "desc": "{preset, presets} ou {ok=false, reason}."}
+        {
+          "type": "table",
+          "desc": "{preset, presets} or {ok=false, reason}."
+        }
       ],
       "internal": false
     },
     "applyPreset": {
-      "desc": "Applique un preset par identifiant (défaut, temporaire ou du fichier) via applyPresetState du module concerné.",
+      "desc": "Applies a preset by identifier (default, temporary or from the file) via the relevant module's applyPresetState.",
       "params": {
-        "presetType": {"type": "string", "desc": "\"camera\", \"scene\" ou \"effects\"."},
-        "presetId": {"type": "string", "desc": "Identifiant du preset, ou \"__defaults\"."},
-        "options": {"type": "table|nil", "desc": "Options transmises à applyPresetState ({} par défaut)."}
+        "presetType": {
+          "type": "string",
+          "desc": "\"camera\", \"scene\" or \"effects\"."
+        },
+        "presetId": {
+          "type": "string",
+          "desc": "Preset identifier, or \"__defaults\"."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "Options passed to applyPresetState ({} by default)."
+        }
       },
       "returns": [
-        {"type": "table", "desc": "{preset, state} ou {ok=false, reason}."}
+        {
+          "type": "table",
+          "desc": "{preset, state} or {ok=false, reason}."
+        }
       ],
       "internal": false
     },
     "deletePreset": {
-      "desc": "Supprime un preset du fichier ; pour le preset par défaut ou un preset temporaire, le masque seulement.",
+      "desc": "Deletes a preset from the file; for the default preset or a temporary preset, only hides it.",
       "params": {
-        "presetType": {"type": "string", "desc": "\"camera\", \"scene\" ou \"effects\"."},
-        "presetId": {"type": "string", "desc": "Identifiant du preset."}
+        "presetType": {
+          "type": "string",
+          "desc": "\"camera\", \"scene\" or \"effects\"."
+        },
+        "presetId": {
+          "type": "string",
+          "desc": "Preset identifier."
+        }
       },
       "returns": [
-        {"type": "table", "desc": "{presets} (liste à jour) ou {ok=false, reason}."}
+        {
+          "type": "table",
+          "desc": "{presets} (updated list) or {ok=false, reason}."
+        }
       ],
       "internal": false
     },
     "renamePreset": {
-      "desc": "Renomme un preset enregistré dans le fichier et met à jour updatedAt.",
+      "desc": "Renames a preset saved in the file and updates updatedAt.",
       "params": {
-        "presetType": {"type": "string", "desc": "\"camera\", \"scene\" ou \"effects\"."},
-        "presetId": {"type": "string", "desc": "Identifiant du preset."},
-        "name": {"type": "string", "desc": "Nouveau nom."}
+        "presetType": {
+          "type": "string",
+          "desc": "\"camera\", \"scene\" or \"effects\"."
+        },
+        "presetId": {
+          "type": "string",
+          "desc": "Preset identifier."
+        },
+        "name": {
+          "type": "string",
+          "desc": "New name."
+        }
       },
       "returns": [
-        {"type": "table", "desc": "{preset, presets} ou {ok=false, reason}."}
+        {
+          "type": "table",
+          "desc": "{preset, presets} or {ok=false, reason}."
+        }
       ],
       "internal": false
     },
     "applyPresetPayload": {
-      "desc": "Applique directement une charge utile de preset (par exemple importée depuis les métadonnées d'une capture), sans passer par le stockage.",
+      "desc": "Directly applies a preset payload (for example imported from a capture's metadata), without going through storage.",
       "params": {
-        "presetType": {"type": "string", "desc": "\"camera\", \"scene\" ou \"effects\"."},
-        "payload": {"type": "table", "desc": "Table de preset ; si elle contient un champ data, c'est lui qui est appliqué, sinon la table entière."}
+        "presetType": {
+          "type": "string",
+          "desc": "\"camera\", \"scene\" or \"effects\"."
+        },
+        "payload": {
+          "type": "table",
+          "desc": "Preset table; if it contains a data field, that is what is applied, otherwise the whole table."
+        }
       },
       "returns": [
-        {"type": "table", "desc": "{state} ou {ok=false, reason}."}
+        {
+          "type": "table",
+          "desc": "{state} or {ok=false, reason}."
+        }
       ],
       "internal": false
     },
     "savePresetPayload": {
-      "desc": "Enregistre une charge utile fournie (sans capture de l'état courant) comme nouveau preset en tête du fichier.",
+      "desc": "Saves a given payload (without capturing the current state) as a new preset at the head of the file.",
       "params": {
-        "presetType": {"type": "string", "desc": "\"camera\", \"scene\" ou \"effects\"."},
-        "name": {"type": "string", "desc": "Nom du preset."},
-        "payload": {"type": "table", "desc": "Données du preset (champ data ou table entière)."},
-        "origin": {"type": "any", "desc": "Provenance stockée dans le champ origin du preset (déduit du code)."}
+        "presetType": {
+          "type": "string",
+          "desc": "\"camera\", \"scene\" or \"effects\"."
+        },
+        "name": {
+          "type": "string",
+          "desc": "Preset name."
+        },
+        "payload": {
+          "type": "table",
+          "desc": "Preset data (data field or whole table)."
+        },
+        "origin": {
+          "type": "any",
+          "desc": "Provenance stored in the preset's origin field (inferred from code)."
+        }
       },
       "returns": [
-        {"type": "table", "desc": "{preset, presets} ou {ok=false, reason}."}
+        {
+          "type": "table",
+          "desc": "{preset, presets} or {ok=false, reason}."
+        }
       ],
       "internal": false
     },
     "savePresetBundle": {
-      "desc": "Enregistre un bundle de presets : pour chacun de camera, scene, effects présent dans le bundle, appelle savePresetPayload avec le nom « <préfixe> <type> ». S'arrête au premier échec.",
+      "desc": "Saves a preset bundle: for each of camera, scene, effects present in the bundle, calls savePresetPayload with the name \"<prefix> <type>\". Stops at the first failure.",
       "params": {
-        "bundle": {"type": "table", "desc": "Table {camera=..., scene=..., effects=...}."},
-        "namePrefix": {"type": "string", "desc": "Préfixe des noms."},
-        "origin": {"type": "any", "desc": "Provenance transmise à chaque preset."}
+        "bundle": {
+          "type": "table",
+          "desc": "Table {camera=..., scene=..., effects=...}."
+        },
+        "namePrefix": {
+          "type": "string",
+          "desc": "Name prefix."
+        },
+        "origin": {
+          "type": "any",
+          "desc": "Provenance passed to each preset."
+        }
       },
       "returns": [
-        {"type": "table", "desc": "{imported={camera=preset, scene=preset, effects=preset}} ou {ok=false, reason}."}
+        {
+          "type": "table",
+          "desc": "{imported={camera=preset, scene=preset, effects=preset}} or {ok=false, reason}."
+        }
       ],
       "internal": false
     },
     "getScreenshotPresetBundle": {
-      "desc": "Capture l'état courant des trois modules sous forme de bundle destiné aux métadonnées d'une capture d'écran.",
+      "desc": "Captures the current state of the three modules as a bundle intended for a screenshot's metadata.",
       "params": {},
       "returns": [
-        {"type": "table", "desc": "{schemaVersion=1, camera={version,type,data}, scene={...}, effects={...}}."}
+        {
+          "type": "table",
+          "desc": "{schemaVersion=1, camera={version,type,data}, scene={...}, effects={...}}."
+        }
       ],
       "internal": false
     }

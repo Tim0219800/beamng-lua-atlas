@@ -1,12 +1,12 @@
 # `career_modules_partInventory`
 
-*Fichier : `lua/ge/extensions/career/modules/partInventory.lua` · VM : Game Engine (GE) · 595 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/partInventory.lua` · VM: Game Engine (GE) · 595 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_partInventory` : `extensions.load("career_modules_partInventory")`, puis la globale `career_modules_partInventory`
+**Access:** extension `career_modules_partInventory`: `extensions.load("career_modules_partInventory")`, then the global `career_modules_partInventory`
 
-Inventaire des pièces de la carrière. Chaque pièce (installée sur un véhicule de l'inventaire ou en stockage, location = 0) est une entrée de la table partInventory indexée par un partId entier. Le module génère les pièces d'un véhicule depuis son arbre de pièces (partsTree), les réconcilie avec le véhicule réel après modification, vend les pièces stockées, alimente l'écran « Mes pièces » de l'ordinateur de garage et sauvegarde le tout dans career/partInventory.json (sérialisé).
+Career parts inventory. Each part (installed on an inventory vehicle or in storage, location = 0) is an entry of the partInventory table keyed by an integer partId. The module generates a vehicle's parts from its parts tree (partsTree), reconciles them with the actual vehicle after modification, sells stored parts, feeds the "My parts" screen of the garage computer and saves everything to career/partInventory.json (serialized).
 
-## Exemple
+## Example
 
 ```lua
 local inv = career_modules_partInventory.getInventory()
@@ -14,164 +14,164 @@ local id = career_modules_partInventory.getPartPathToPartIdMap()[inventoryId]["/
 local part = inv[id]
 ```
 
-## Remarques
+## Notes
 
-- Champs d'une pièce : name, value (100 par défaut), description (infos JBeam, non sauvegardé), partCondition, tags, vehicleModel, location (0 = stockage, sinon inventoryId du véhicule), containingSlot (chemin du slot), partPath (= containingSlot .. name), mainPart (slot "/"), et selon le cas year, repairCount, primered.
-- slotToPartIdMap : location -> containingSlot -> partId. partPathToPartIdMap : inventoryId -> partPath -> partId (seulement pour location > 0). Ces tables sont reconstruites par updateVehicleMaps (de façon asynchrone dans onUpdate après un changement de véhicule).
-- À l'ajout d'un véhicule (onVehicleAdded), ses pièces sont ajoutées dans onUpdate dès que le véhicule est présent et que partConditions existe ; le hook onAddedVehiclePartsToInventory(inventoryId, newParts) est alors émis.
-- Une pièce auxiliaire (description.isAuxiliary) de valeur 0 est masquée de l'UI et supprimée du stockage.
-- Si la version de sauvegarde est inférieure à celle du système de sauvegarde, toutes les pièces en stockage sont vendues au chargement. Si la sauvegarde est plus ancienne que la version 42, l'inventaire est vide.
-- sellParts abandonne en silence (sans rien vendre) si l'un des ids est inconnu ou n'est pas en stockage ; la vente rapporte la somme de career_modules_valueCalculator.getPartValue, avec tags partsSold et selling.
-- debugMenu (fenêtre ImGui) est défini mais son appel est commenté.
+- Part fields: name, value (100 by default), description (JBeam info, not saved), partCondition, tags, vehicleModel, location (0 = storage, otherwise the vehicle's inventoryId), containingSlot (slot path), partPath (= containingSlot .. name), mainPart (slot "/"), and depending on the case year, repairCount, primered.
+- slotToPartIdMap: location -> containingSlot -> partId. partPathToPartIdMap: inventoryId -> partPath -> partId (only for location > 0). These tables are rebuilt by updateVehicleMaps (asynchronously in onUpdate after a vehicle change).
+- When a vehicle is added (onVehicleAdded), its parts are added in onUpdate as soon as the vehicle is present and partConditions exists; the onAddedVehiclePartsToInventory(inventoryId, newParts) hook is then emitted.
+- An auxiliary part (description.isAuxiliary) with value 0 is hidden from the UI and removed from storage.
+- If the save version is lower than that of the save system, all parts in storage are sold on load. If the save is older than version 42, the inventory is empty.
+- sellParts silently gives up (selling nothing) if one of the ids is unknown or not in storage; the sale yields the sum of career_modules_valueCalculator.getPartValue, with tags partsSold and selling.
+- debugMenu (ImGui window) is defined but its call is commented out.
 
-**Dépendances (chargées avant) :** `career_career`
+**Dependencies (loaded first):** `career_career`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_partInventory.addPartToInventory(part)` | Ajoute une pièce sous le plus petit partId libre (à partir de 1). | 121 |
-| `career_modules_partInventory.closeMenu()` | Ferme l'écran : si l'autosauvegarde est active et des véhicules sont modifiés, les sauvegarde d'abord (la fermeture se fait dans onSaveFinished), sinon retourne directement à l'ordinateur ou ferme les menus. | 508 |
-| `career_modules_partInventory.getInventory()` | Renvoie la table de toutes les pièces (partId -> pièce), par référence. | 548 |
-| `career_modules_partInventory.getPart(inventoryId, path)` | Cherche la pièce installée dans un slot d'un véhicule. | 467 |
-| `career_modules_partInventory.getPartPathToPartIdMap()` | Renvoie la table inventoryId -> partPath -> partId (véhicules seulement). | 544 |
-| `career_modules_partInventory.getSlotToPartIdMap()` | Renvoie la table location -> containingSlot -> partId. | 540 |
-| `career_modules_partInventory.isHiddenInUI(part)` | Indique si la pièce doit être cachée dans l'UI : auxiliaire (description.isAuxiliary) et de valeur nulle. | 129 |
-| `career_modules_partInventory.onComputerAddFunctions(menuData, computerFunctions)` | Hook de l'ordinateur : ajoute la fonction « Mes pièces » (ordre 5), désactivée tant que le véhicule de départ n'est pas acheté. *(interne)* *(hook)* | 552 |
-| `career_modules_partInventory.onEnterVehicleFinished(currentVehicle)` | Hook : planifie la mise à jour des tables d'index lors de l'entrée dans un véhicule. *(interne)* *(hook)* | 438 |
-| `career_modules_partInventory.onExtensionLoaded()` | Hook : charge partInventory.json (désérialisé), vend les pièces en stockage si la sauvegarde est d'une version plus ancienne, recharge les descriptions JBeam, supprime les pièces cachées en stockage et reconstruit les tables d'index. *(interne)* *(hook)* | 399 |
-| `career_modules_partInventory.onPartShoppingTransactionComplete()` | Hook : après un achat de pièces, supprime les pièces cachées en stockage et reconstruit les index. *(interne)* *(hook)* | 445 |
-| `career_modules_partInventory.onRouteMount(context, toRoute, fromRoute, data)` | Cycle de vie du routeur UI : renvoie les données de l'inventaire une fois la vue montée si le menu est ouvert. *(interne)* *(hook)* | 493 |
-| `career_modules_partInventory.onSaveFinished()` | Hook de fin de sauvegarde : ferme le menu si closeMenu l'attendait. *(interne)* *(hook)* | 529 |
-| `career_modules_partInventory.onUpdate()` | Hook de frame : ajoute les pièces d'un véhicule nouvellement ajouté et met à jour les tables d'index après un changement de véhicule, dès que partConditions est disponible. *(interne)* *(hook)* | 282 |
-| `career_modules_partInventory.onVehicleAdded(inventoryId)` | Hook : mémorise le véhicule dont il faudra ajouter les pièces dans onUpdate. *(interne)* *(hook)* | 450 |
-| `career_modules_partInventory.onVehicleRemoved(inventoryId)` | Hook : supprime toutes les pièces localisées sur le véhicule retiré. *(interne)* *(hook)* | 454 |
-| `career_modules_partInventory.onVehicleSaveFinished(currentSavePath)` | Hook de sauvegarde : écrit partInventory.json dans <save>/career/ (sans le champ description, via serialize). *(interne)* *(hook)* | 355 |
-| `career_modules_partInventory.openMenu(_originComputerId)` | Ouvre l'écran des pièces : choisit le véhicule courant ou celui du garage le plus proche, met à jour ses conditions de pièces puis navigue vers career.computer.partInventory. | 476 |
-| `career_modules_partInventory.partInventoryClosed()` | Notifie que l'UI de l'inventaire est fermée (partInventoryOpen = false). | 536 |
-| `career_modules_partInventory.requestExit()` | Point d'entrée du bouton retour du routeur UI : appelle closeMenu pour conserver le comportement d'autosauvegarde. | 525 |
-| `career_modules_partInventory.sellParts(partIds)` | Vend des pièces en stockage : crédite la somme de leurs valeurs, joue le son d'achat, les supprime et rafraîchit l'UI si le menu est ouvert. | 24 |
-| `career_modules_partInventory.sendUIData()` | Envoie à l'UI (guihooks partInventoryData) la liste des pièces visibles (hors pièces principales), leur valeur finale, leur accessibilité (non installées sur un véhicule) et les données des véhicules. | 316 |
-| `career_modules_partInventory.updatePartConditionsInInventory()` | Recopie dans chaque pièce la condition (partCondition) connue du véhicule qui la contient. | 110 |
-| `career_modules_partInventory.updatePartsToMatchSpawnedVehicle(inventoryId)` | Relit les pièces du véhicule actuellement présent et les réconcilie avec l'inventaire : met à jour vehicle.config, conserve condition, tags, année, repairCount et primered des pièces existantes (même slot), ajoute les nouvelles (condition par défaut intégrité 1, odomètre 0, visuel 1) et supprime celles disparues. Marque le véhicule comme modifié. | 152 |
+| `career_modules_partInventory.addPartToInventory(part)` | Adds a part under the smallest free partId (starting from 1). | 121 |
+| `career_modules_partInventory.closeMenu()` | Closes the screen: if autosave is active and vehicles are modified, saves them first (closing happens in onSaveFinished), otherwise returns directly to the computer or closes the menus. | 508 |
+| `career_modules_partInventory.getInventory()` | Returns the table of all parts (partId -> part), by reference. | 548 |
+| `career_modules_partInventory.getPart(inventoryId, path)` | Looks up the part installed in a slot of a vehicle. | 467 |
+| `career_modules_partInventory.getPartPathToPartIdMap()` | Returns the table inventoryId -> partPath -> partId (vehicles only). | 544 |
+| `career_modules_partInventory.getSlotToPartIdMap()` | Returns the table location -> containingSlot -> partId. | 540 |
+| `career_modules_partInventory.isHiddenInUI(part)` | Indicates whether the part must be hidden in the UI: auxiliary (description.isAuxiliary) and of zero value. | 129 |
+| `career_modules_partInventory.onComputerAddFunctions(menuData, computerFunctions)` | Computer hook: adds the "My parts" function (order 5), disabled while the starter vehicle is not bought. *(internal)* *(hook)* | 552 |
+| `career_modules_partInventory.onEnterVehicleFinished(currentVehicle)` | Hook: schedules the update of the index tables when entering a vehicle. *(internal)* *(hook)* | 438 |
+| `career_modules_partInventory.onExtensionLoaded()` | Hook: loads partInventory.json (deserialized), sells parts in storage if the save is of an older version, reloads the JBeam descriptions, removes hidden parts in storage and rebuilds the index tables. *(internal)* *(hook)* | 399 |
+| `career_modules_partInventory.onPartShoppingTransactionComplete()` | Hook: after a parts purchase, removes hidden parts in storage and rebuilds the indexes. *(internal)* *(hook)* | 445 |
+| `career_modules_partInventory.onRouteMount(context, toRoute, fromRoute, data)` | UI router lifecycle: sends the inventory data once the view is mounted if the menu is open. *(internal)* *(hook)* | 493 |
+| `career_modules_partInventory.onSaveFinished()` | End-of-save hook: closes the menu if closeMenu was waiting for it. *(internal)* *(hook)* | 529 |
+| `career_modules_partInventory.onUpdate()` | Frame hook: adds the parts of a newly added vehicle and updates the index tables after a vehicle change, as soon as partConditions is available. *(internal)* *(hook)* | 282 |
+| `career_modules_partInventory.onVehicleAdded(inventoryId)` | Hook: remembers the vehicle whose parts must be added in onUpdate. *(internal)* *(hook)* | 450 |
+| `career_modules_partInventory.onVehicleRemoved(inventoryId)` | Hook: removes all parts located on the removed vehicle. *(internal)* *(hook)* | 454 |
+| `career_modules_partInventory.onVehicleSaveFinished(currentSavePath)` | Save hook: writes partInventory.json to <save>/career/ (without the description field, via serialize). *(internal)* *(hook)* | 355 |
+| `career_modules_partInventory.openMenu(_originComputerId)` | Opens the parts screen: picks the current vehicle or the nearest garage one, updates its part conditions then navigates to career.computer.partInventory. | 476 |
+| `career_modules_partInventory.partInventoryClosed()` | Notifies that the inventory UI is closed (partInventoryOpen = false). | 536 |
+| `career_modules_partInventory.requestExit()` | Entry point of the UI router back button: calls closeMenu to keep the autosave behavior. | 525 |
+| `career_modules_partInventory.sellParts(partIds)` | Sells parts in storage: credits the sum of their values, plays the purchase sound, deletes them and refreshes the UI if the menu is open. | 24 |
+| `career_modules_partInventory.sendUIData()` | Sends to the UI (guihooks partInventoryData) the list of visible parts (excluding main parts), their final value, their accessibility (not installed on a vehicle) and the vehicle data. | 316 |
+| `career_modules_partInventory.updatePartConditionsInInventory()` | Copies into each part the condition (partCondition) known by the vehicle containing it. | 110 |
+| `career_modules_partInventory.updatePartsToMatchSpawnedVehicle(inventoryId)` | Re-reads the parts of the currently present vehicle and reconciles them with the inventory: updates vehicle.config, keeps condition, tags, year, repairCount and primered of existing parts (same slot), adds new ones (default condition integrity 1, odometer 0, visual 1) and removes those that disappeared. Marks the vehicle as modified. | 152 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_partInventory.addPartToInventory(part)`
 
-Ajoute une pièce sous le plus petit partId libre (à partir de 1).
+Adds a part under the smallest free partId (starting from 1).
 
-- `part` (*table*) : Pièce à ajouter.
+- `part` (*table*) : Part to add.
 
 #### `career_modules_partInventory.getInventory()`
 
-Renvoie la table de toutes les pièces (partId -> pièce), par référence.
+Returns the table of all parts (partId -> part), by reference.
 
-- **renvoie** : table<integer, table> Inventaire des pièces.
+- **returns**: table<integer, table> Parts inventory.
 
 #### `career_modules_partInventory.getPart(inventoryId, path)`
 
-Cherche la pièce installée dans un slot d'un véhicule.
+Looks up the part installed in a slot of a vehicle.
 
-- `inventoryId` (*integer*) : Id d'inventaire du véhicule (location).
-- `path` (*string*) : Chemin du slot (containingSlot).
-- **renvoie** : table|nil La pièce.
+- `inventoryId` (*integer*) : Vehicle inventory id (location).
+- `path` (*string*) : Slot path (containingSlot).
+- **returns**: table|nil The part.
 
 #### `career_modules_partInventory.getPartPathToPartIdMap()`
 
-Renvoie la table inventoryId -> partPath -> partId (véhicules seulement).
+Returns the table inventoryId -> partPath -> partId (vehicles only).
 
-- **renvoie** : table Table des chemins de pièces.
+- **returns**: table Part path table.
 
 #### `career_modules_partInventory.getSlotToPartIdMap()`
 
-Renvoie la table location -> containingSlot -> partId.
+Returns the table location -> containingSlot -> partId.
 
-- **renvoie** : table Table des slots.
+- **returns**: table Slot table.
 
 #### `career_modules_partInventory.isHiddenInUI(part)`
 
-Indique si la pièce doit être cachée dans l'UI : auxiliaire (description.isAuxiliary) et de valeur nulle.
+Indicates whether the part must be hidden in the UI: auxiliary (description.isAuxiliary) and of zero value.
 
-- `part` (*table*) : Pièce.
-- **renvoie** : boolean|nil true si masquée.
+- `part` (*table*) : Part.
+- **returns**: boolean|nil true if hidden.
 
 #### `career_modules_partInventory.onComputerAddFunctions(menuData, computerFunctions)`
 
-Hook de l'ordinateur : ajoute la fonction « Mes pièces » (ordre 5), désactivée tant que le véhicule de départ n'est pas acheté.
+Computer hook: adds the "My parts" function (order 5), disabled while the starter vehicle is not bought.
 
-- `menuData` (*table*) : Données du menu.
-- `computerFunctions` (*table*) : Fonctions à compléter (general).
+- `menuData` (*table*) : Menu data.
+- `computerFunctions` (*table*) : Functions to complete (general).
 
 #### `career_modules_partInventory.onEnterVehicleFinished(currentVehicle)`
 
-Hook : planifie la mise à jour des tables d'index lors de l'entrée dans un véhicule.
+Hook: schedules the update of the index tables when entering a vehicle.
 
-- `currentVehicle` (*integer|nil*) : Id d'inventaire du véhicule courant.
+- `currentVehicle` (*integer|nil*) : Inventory id of the current vehicle.
 
 #### `career_modules_partInventory.onRouteMount(context, toRoute, fromRoute, data)`
 
-Cycle de vie du routeur UI : renvoie les données de l'inventaire une fois la vue montée si le menu est ouvert.
+UI router lifecycle: sends the inventory data once the view is mounted if the menu is open.
 
-- `context` (*any*) : Contexte du routeur.
-- `toRoute` (*any*) : Route cible.
-- `fromRoute` (*any*) : Route précédente.
+- `context` (*any*) : Router context.
+- `toRoute` (*any*) : Target route.
+- `fromRoute` (*any*) : Previous route.
 - `data` (*table*) : routeData.
 
 #### `career_modules_partInventory.onVehicleAdded(inventoryId)`
 
-Hook : mémorise le véhicule dont il faudra ajouter les pièces dans onUpdate.
+Hook: remembers the vehicle whose parts must be added in onUpdate.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
+- `inventoryId` (*integer*) : Inventory id.
 
 #### `career_modules_partInventory.onVehicleRemoved(inventoryId)`
 
-Hook : supprime toutes les pièces localisées sur le véhicule retiré.
+Hook: removes all parts located on the removed vehicle.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
+- `inventoryId` (*integer*) : Inventory id.
 
 #### `career_modules_partInventory.onVehicleSaveFinished(currentSavePath)`
 
-Hook de sauvegarde : écrit partInventory.json dans <save>/career/ (sans le champ description, via serialize).
+Save hook: writes partInventory.json to <save>/career/ (without the description field, via serialize).
 
-- `currentSavePath` (*string*) : Dossier de sauvegarde.
+- `currentSavePath` (*string*) : Save folder.
 
 #### `career_modules_partInventory.openMenu(_originComputerId)`
 
-Ouvre l'écran des pièces : choisit le véhicule courant ou celui du garage le plus proche, met à jour ses conditions de pièces puis navigue vers career.computer.partInventory.
+Opens the parts screen: picks the current vehicle or the nearest garage one, updates its part conditions then navigates to career.computer.partInventory.
 
-- `_originComputerId` (*string|nil*) : Id de l'ordinateur d'origine.
+- `_originComputerId` (*string|nil*) : Originating computer id.
 
 #### `career_modules_partInventory.sellParts(partIds)`
 
-Vend des pièces en stockage : crédite la somme de leurs valeurs, joue le son d'achat, les supprime et rafraîchit l'UI si le menu est ouvert.
+Sells parts in storage: credits the sum of their values, plays the purchase sound, deletes them and refreshes the UI if the menu is open.
 
-- `partIds` (*integer[]*) : Ids des pièces à vendre (location 0 obligatoire).
+- `partIds` (*integer[]*) : Ids of the parts to sell (location 0 required).
 
 #### `career_modules_partInventory.updatePartsToMatchSpawnedVehicle(inventoryId)`
 
-Relit les pièces du véhicule actuellement présent et les réconcilie avec l'inventaire : met à jour vehicle.config, conserve condition, tags, année, repairCount et primered des pièces existantes (même slot), ajoute les nouvelles (condition par défaut intégrité 1, odomètre 0, visuel 1) et supprime celles disparues. Marque le véhicule comme modifié.
+Re-reads the parts of the currently present vehicle and reconciles them with the inventory: updates vehicle.config, keeps condition, tags, year, repairCount and primered of existing parts (same slot), adds new ones (default condition integrity 1, odometer 0, visual 1) and removes those that disappeared. Marks the vehicle as modified.
 
-- `inventoryId` (*integer*) : Id d'inventaire du véhicule.
-- **renvoie** : {added: table[], removed: table[], changed: {old: table, new: table}[]} Différences détectées.
+- `inventoryId` (*integer*) : Inventory id of the vehicle.
+- **returns**: {added: table[], removed: table[], changed: {old: table, new: table}[]} Detected differences.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_career. |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_career. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onAddedVehiclePartsToInventory` — écouté par 1 module(s)
+- `onAddedVehiclePartsToInventory` — listened to by 1 module(s)
 
-**Évènements UI (guihooks.trigger) :** `partInventoryData`
+**UI events (guihooks.trigger):** `partInventoryData`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/partInventory.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/partInventory.lua`.*

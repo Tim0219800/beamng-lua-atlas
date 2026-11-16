@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/managePool.lua",
+  "module": "Nœud flowgraph « Manage Vehicle Pool » (once_instant). Règle et lit un pool de véhicules : maxActive (nombre max de véhicules actifs ; -1 ou nil = illimité), globalPoolingMode (useSceneVehiclesCap : limite les véhicules actifs de toute la scène). Sorties : vehicleIds, activeVehIds, inactiveVehIds, activeAmount, inactiveAmount. Nécessite le module core_vehicleActivePooling ; l'objet pool vient du nœud Create Vehicle Pool.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "workOnce": {
+          "desc": "Applique les réglages au pool puis publie ses listes de véhicules et leurs effectifs.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

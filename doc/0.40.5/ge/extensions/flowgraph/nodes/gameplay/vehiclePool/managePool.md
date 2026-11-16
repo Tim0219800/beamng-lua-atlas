@@ -1,20 +1,20 @@
 # `flowgraph_nodes_gameplay_vehiclePool_managePool`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/managePool.lua` · VM : Game Engine (GE) · 50 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/managePool.lua` · VM: Game Engine (GE) · 50 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/vehiclePool/managePool")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/vehiclePool/managePool")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Manage Vehicle Pool » (once_instant). Règle et lit un pool de véhicules : maxActive (nombre max de véhicules actifs ; -1 ou nil = illimité), globalPoolingMode (useSceneVehiclesCap : limite les véhicules actifs de toute la scène). Sorties : vehicleIds, activeVehIds, inactiveVehIds, activeAmount, inactiveAmount. Nécessite le module core_vehicleActivePooling ; l'objet pool vient du nœud Create Vehicle Pool.
+Flowgraph node "Manage Vehicle Pool" (once_instant). Sets and reads a vehicle pool: maxActive (max number of active vehicles; -1 or nil = unlimited), globalPoolingMode (useSceneVehiclesCap: limits the active vehicles of the whole scene). Outputs: vehicleIds, activeVehIds, inactiveVehIds, activeAmount, inactiveAmount. Requires the core_vehicleActivePooling module; the pool object comes from the Create Vehicle Pool node.
 
-**Dépendances (chargées avant) :** `core_vehicleActivePooling`
+**Dependencies (loaded first):** `core_vehicleActivePooling`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Applique les réglages au pool puis publie ses listes de véhicules et leurs effectifs. | 30 |
+| `C:workOnce()` | Applies the settings to the pool then publishes its vehicle lists and their counts. | 30 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/managePool.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/managePool.lua`.*

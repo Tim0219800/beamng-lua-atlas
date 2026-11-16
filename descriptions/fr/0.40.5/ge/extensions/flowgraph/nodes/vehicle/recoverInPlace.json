@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/recoverInPlace.lua",
+  "module": "Nœud « Recover In Place » (catégorie `once_instant`). Récupère un véhicule sur place : `veh:resetBrokenFlexMesh()` puis `spawn.safeTeleport` à la position actuelle avec la direction/haut actuels, pour qu'il ne soit pas dans un obstacle (il peut être un peu déplacé). Pin d'entrée : `vehId` (défaut : joueur).",
+  "notes": [
+    "La description du pin `vehId` dit « to freeze » (copier-coller)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur vide.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Remet à zéro les flexmeshes cassés puis téléporte le véhicule en sécurité sur place.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

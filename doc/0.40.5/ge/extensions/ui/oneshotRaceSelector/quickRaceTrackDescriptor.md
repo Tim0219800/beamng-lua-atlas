@@ -1,37 +1,37 @@
 # `ui_oneshotRaceSelector_quickRaceTrackDescriptor`
 
-*Fichier : `lua/ge/extensions/ui/oneshotRaceSelector/quickRaceTrackDescriptor.lua` · VM : Game Engine (GE) · 104 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/oneshotRaceSelector/quickRaceTrackDescriptor.lua` · VM: Game Engine (GE) · 104 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_oneshotRaceSelector_quickRaceTrackDescriptor` : `extensions.load("ui_oneshotRaceSelector_quickRaceTrackDescriptor")`, puis la globale `ui_oneshotRaceSelector_quickRaceTrackDescriptor`
+**Access:** extension `ui_oneshotRaceSelector_quickRaceTrackDescriptor`: `extensions.load("ui_oneshotRaceSelector_quickRaceTrackDescriptor")`, then the global `ui_oneshotRaceSelector_quickRaceTrackDescriptor`
 
-Descriptor de back-end gridSelector partagé par quickrace et lightRunner. Les deux tirent leurs listes de niveaux et de pistes de scenario_quickRaceLoader.getQuickraceList() et ne diffèrent que par le nom du back-end (les restrictions de véhicules et le comportement au départ sont gérés ailleurs). Le résultat de build est destiné à ui_oneshotRaceSelector_core.createBackend.
+gridSelector back-end descriptor shared by quickrace and lightRunner. Both draw their lists of levels and tracks from scenario_quickRaceLoader.getQuickraceList() and differ only by the back-end name (vehicle restrictions and start behavior are handled elsewhere). The result of build is meant for ui_oneshotRaceSelector_core.createBackend.
 
-## Exemple
+## Example
 
 ```lua
 local descriptor = ui_oneshotRaceSelector_quickRaceTrackDescriptor.build("quickraceSelector")
 local backend = ui_oneshotRaceSelector_core.createBackend(descriptor)
 ```
 
-## Remarques
+## Notes
 
-- level.name reprend levelInfo.title : id de traduction pour les niveaux normaux, texte brut pour les entrées synthétiques « Procedural Tracks » / « Track Editor Tracks ». _tr laisse passer les ids inconnus, donc l'appel est systématique.
-- Les spécifications de piste affichent difficulté (via difficultyLabel), réversible, départ lancé, tours, auteurs et longueur (en m).
+- level.name takes levelInfo.title: translation id for normal levels, raw text for the synthetic "Procedural Tracks" / "Track Editor Tracks" entries. _tr lets unknown ids through, so the call is systematic.
+- Track specifications display difficulty (via difficultyLabel), reversible, rolling start, laps, authors and length (in m).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_oneshotRaceSelector_quickRaceTrackDescriptor.build(backendName)` | Renvoie la table descriptor (backendName, middlePathKey = "tracks", clés de titre quickrace, getLevels, getMiddleItems, middleName, noms d'affichage, levelToTile, middleToTile, getLevelDetails, getMiddleDetails) pour le back-end nommé. | 21 |
+| `ui_oneshotRaceSelector_quickRaceTrackDescriptor.build(backendName)` | Returns the descriptor table (backendName, middlePathKey = "tracks", quickrace title keys, getLevels, getMiddleItems, middleName, display names, levelToTile, middleToTile, getLevelDetails, getMiddleDetails) for the named back-end. | 21 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_oneshotRaceSelector_quickRaceTrackDescriptor.build(backendName)`
 
-Renvoie la table descriptor (backendName, middlePathKey = "tracks", clés de titre quickrace, getLevels, getMiddleItems, middleName, noms d'affichage, levelToTile, middleToTile, getLevelDetails, getMiddleDetails) pour le back-end nommé.
+Returns the descriptor table (backendName, middlePathKey = "tracks", quickrace title keys, getLevels, getMiddleItems, middleName, display names, levelToTile, middleToTile, getLevelDetails, getMiddleDetails) for the named back-end.
 
-- `backendName` (*string*) : Nom du back-end ; sert aussi de base au fichier de sauvegarde des options d'affichage.
-- **renvoie** : table Descriptor à passer à ui_oneshotRaceSelector_core.createBackend.
+- `backendName` (*string*) : Back-end name; also serves as the base of the display options save file.
+- **returns**: table Descriptor to pass to ui_oneshotRaceSelector_core.createBackend.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/oneshotRaceSelector/quickRaceTrackDescriptor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/oneshotRaceSelector/quickRaceTrackDescriptor.lua`.*

@@ -2,64 +2,64 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+--- Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 ---@class flowgraph_nodes_scene_particleEmitter_C
 local flowgraph_nodes_scene_particleEmitter_C = {}
 
---- Apres le declenchement : si le flow d'entree est false et que l'emetteur est affiche, tente de le cacher.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:77
+--- After the trigger: if the input flow is false and the emitter is shown, tries to hide it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:77
 function flowgraph_nodes_scene_particleEmitter_C:_afterTrigger() end
 
---- A l'arret : retire l'objet de l'arbre de l'editeur si possible, le supprime et remet l'etat a zero.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:83
+--- On stop: removes the object from the editor tree if possible, deletes it and resets the state to zero.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:83
 function flowgraph_nodes_scene_particleEmitter_C:_executionStopped() end
 
---- Cree le ParticleEmitterNode (canSave = false) et l'enregistre sous le nom donne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:33
----@param objectName any nom de l'objet dans la scene
+--- Creates the ParticleEmitterNode (canSave = false) and registers it under the given name.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:33
+---@param objectName any name of the object in the scene
 function flowgraph_nodes_scene_particleEmitter_C:createObject(objectName) end
 
---- Appele a la destruction du noeud : supprime l'emetteur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:147
+--- Called when the node is destroyed: deletes the emitter.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:147
 function flowgraph_nodes_scene_particleEmitter_C:destroy() end
 
---- Lit position/radius/color des pins avec des valeurs par defaut (rayon 2, couleur {1,0,0,0.8}).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:96
+--- Reads position/radius/color from the pins with default values (radius 2, color {1,0,0,0.8}).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:96
 function flowgraph_nodes_scene_particleEmitter_C:fillFields() end
 
---- Cache l'objet (hidden = true) et met shown a false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:69
+--- Hides the object (hidden = true) and sets shown to false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:69
 function flowgraph_nodes_scene_particleEmitter_C:hideObject() end
 
---- Initialise position, radius, clr, object et shown.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:24
----@param mgr any gestionnaire flowgraph
+--- Initializes position, radius, clr, object and shown.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:24
+---@param mgr any flowgraph manager
 ---@param ... any
 function flowgraph_nodes_scene_particleEmitter_C:init(mgr, ...) end
 
---- Hook de fin de mission : supprime l'emetteur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:142
+--- End-of-mission hook: deletes the emitter.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:142
 function flowgraph_nodes_scene_particleEmitter_C:onClientEndMission() end
 
---- Positionne et met a l'echelle (radius, radius, 50) l'objet.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:109
+--- Positions and scales (radius, radius, 50) the object.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:109
 function flowgraph_nodes_scene_particleEmitter_C:setPosition() end
 
---- Affiche l'objet existant ou le cree (nom particles__<time>_<id>) et l'ajoute a scenetree.MissionGroup.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:49
+--- Shows the existing object or creates it (name particles__<time>_<id>) and adds it to scenetree.MissionGroup.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:49
 function flowgraph_nodes_scene_particleEmitter_C:showObject() end
 
---- Cree/affiche l'emetteur ; sur flow, le montre et le positionne (flow sortie true) ; sur clear, le cache (flow sortie false).
----Source : lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:122
+--- Creates/shows the emitter; on flow, shows and positions it (flow output true); on clear, hides it (flow output false).
+---Source: lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua:122
 function flowgraph_nodes_scene_particleEmitter_C:work() end
 

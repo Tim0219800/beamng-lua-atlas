@@ -2,166 +2,166 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/appContainers/topCenter.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Conteneur d'apps « topCenter » (haut-centre de l'interface : arrowGPS, rally, drift, drag, pointsBar, speedTargetBar, flashMessage, countdown, moveOff ; trigger UI setTopCenterAppVisibility). Il délègue la visibilité à ui_appContainers et ajoute une file de messages flash (événement TopCenterAppsFlashMessage), la gestion du compte à rebours de scénario et la cible de vitesse de la barre speedTargetBar. Un moddeur l'utilise surtout pour afficher un message flash ou une cible de vitesse.
---- Accès : extension `ui_appContainers_topCenter` : `extensions.load("ui_appContainers_topCenter")`, puis la globale `ui_appContainers_topCenter`
+--- "topCenter" app container (top-center of the interface: arrowGPS, rally, drift, drag, pointsBar, speedTargetBar, flashMessage, countdown, moveOff; UI trigger setTopCenterAppVisibility). It delegates visibility to ui_appContainers and adds a flash message queue (event TopCenterAppsFlashMessage), scenario countdown handling and the speed target of the speedTargetBar. A modder mostly uses it to show a flash message or a speed target.
+--- Access: extension `ui_appContainers_topCenter`: `extensions.load("ui_appContainers_topCenter")`, then the global `ui_appContainers_topCenter`
 ---@class ui_appContainers_topCenter
----@field dependencies table<integer, string> { "ui_appContainers", "ui_firstDrive_moveOff" } : chargés avant ce module.
+---@field dependencies table<integer, string> { "ui_appContainers", "ui_firstDrive_moveOff" }: loaded before this module.
 ui_appContainers_topCenter = {}
 
---- Vide la file, le message courant et le message actif, et cache l'app flashMessage.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:183
+--- Empties the queue, the current message and the active message, and hides the flashMessage app.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:183
 function ui_appContainers_topCenter.clearAllFlashMessages() end
 
---- Supprime de la file les messages d'une source donnée (drift, drag…) ; si le message en cours en provient, passe au suivant ou cache flashMessage.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:166
----@param source string Nom de la source.
+--- Removes from the queue the messages of a given source (drift, drag…); if the current message comes from it, moves on to the next or hides flashMessage.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:166
+---@param source string Source name.
 function ui_appContainers_topCenter.clearMessagesFromSource(source) end
 
---- Oublie la cible de vitesse mémorisée (sans prévenir l'interface).
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:60
+--- Forgets the stored speed target (without notifying the interface).
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:60
 function ui_appContainers_topCenter.clearSpeedTarget() end
 
---- Utilisé par l'app HUD pour rattraper un message envoyé avant son montage : renvoie le message actif avec le ttl restant, ou nil s'il n'y en a pas ou si l'app flashMessage est cachée.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:200
----@return table|nil  {msg, ttl (restant), big}.
+--- Used by the HUD app to catch up on a message sent before it was mounted: returns the active message with the remaining ttl, or nil if there is none or if the flashMessage app is hidden.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:200
+---@return table|nil  {msg, ttl (remaining), big}.
 function ui_appContainers_topCenter.getActiveFlashMessage() end
 
---- Passe-plat vers ui_appContainers.getAppVisibility.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:27
----@param containerId string Conteneur.
+--- Pass-through to ui_appContainers.getAppVisibility.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:27
+---@param containerId string Container.
 ---@param appId string App.
----@return boolean  true si visible.
+---@return boolean  true if visible.
 function ui_appContainers_topCenter.getAppVisibility(containerId, appId) end
 
---- Renvoie la copie des apps déclarées du conteneur avec leur visibilité.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:64
----@param containerId string Conteneur.
+--- Returns a copy of the container's declared apps with their visibility.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:64
+---@param containerId string Container.
 ---@return table<string, table>  {[appId]={visible=boolean}}.
 function ui_appContainers_topCenter.getAvailableApps(containerId) end
 
---- Alias déprécié de getAvailableApps.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:64
----@param containerId string Conteneur.
----@return table<string, table>  Voir getAvailableApps.
+--- Deprecated alias of getAvailableApps.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:64
+---@param containerId string Container.
+---@return table<string, table>  See getAvailableApps.
 function ui_appContainers_topCenter.getAvailableContexts(containerId) end
 
---- Déprécié : renvoie la première app visible de la liste (l'ordre n'est pas garanti s'il y en a plusieurs).
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:87
----@param containerId string Conteneur.
----@return string|nil  appId ou nil.
+--- Deprecated: returns the first visible app in the list (order not guaranteed if there are several).
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:87
+---@param containerId string Container.
+---@return string|nil  appId or nil.
 function ui_appContainers_topCenter.getContainerContext(containerId) end
 
---- Renvoie la dernière cible de vitesse mémorisée.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:56
----@return table|nil  Dernière valeur passée à setSpeedTarget.
+--- Returns the last stored speed target.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:56
+---@return table|nil  Last value passed to setSpeedTarget.
 function ui_appContainers_topCenter.getSpeedTarget() end
 
---- Liste les apps visibles du conteneur (via ui_appContainers).
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:47
----@param containerId string Conteneur.
----@return table<integer, string>  Identifiants des apps visibles.
+--- Lists the visible apps of the container (via ui_appContainers).
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:47
+---@param containerId string Container.
+---@return table<integer, string>  Identifiers of the visible apps.
 function ui_appContainers_topCenter.getVisibleApps(containerId) end
 
---- Cache toutes les apps du conteneur (via ui_appContainers).
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:31
----@param containerId string Conteneur.
+--- Hides all apps of the container (via ui_appContainers).
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:31
+---@param containerId string Container.
 function ui_appContainers_topCenter.hideAllApps(containerId) end
 
---- Cache une app du conteneur.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:39
----@param containerId string Conteneur.
+--- Hides an app of the container.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:39
+---@param containerId string Container.
 ---@param appId string App.
 function ui_appContainers_topCenter.hideApp(containerId, appId) end
 
---- Hook de chargement : enregistre le conteneur topCenter et ses neuf apps (toutes cachées au départ).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:267
+--- Load hook: registers the topCenter container and its nine apps (all hidden at start).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:267
 function ui_appContainers_topCenter.onExtensionLoaded() end
 
---- Hook de déchargement : vide la file et les messages actifs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:285
+--- Unload hook: empties the queue and the active messages.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:285
 function ui_appContainers_topCenter.onExtensionUnloaded() end
 
---- Hook : message flash de gameplay. Accepte seulement les sources 'drift' et 'drag', et seulement si l'app du même nom est visible ; met alors le message en file et lance le suivant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:206
----@param data table {source='drift'|'drag', data=liste de messages (data[1][2] = durée)}.
+--- Hook: gameplay flash message. Only accepts the sources 'drift' and 'drag', and only if the app of the same name is visible; then queues the message and starts the next one.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:206
+---@param data table {source='drift'|'drag', data=list of messages (data[1][2] = duration)}.
 function ui_appContainers_topCenter.onGameplayFlashMessage(data) end
 
---- Hook : message flash de scénario. Affiche flashMessage si la liste n'est pas vide, et countdown si un élément commence par un nombre ou 'ui.scenarios.go' (dans ce dernier cas, masque countdown après le ttl).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:103
----@param data table Liste de messages {texte|nombre, ttl, …}.
+--- Hook: scenario flash message. Shows flashMessage if the list is not empty, and countdown if an item starts with a number or 'ui.scenarios.go' (in the latter case, hides countdown after the ttl).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:103
+---@param data table List of messages {text|number, ttl, …}.
 function ui_appContainers_topCenter.onScenarioFlashMessage(data) end
 
---- Hook : cache l'app flashMessage quand le scénario efface ses messages.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:130
+--- Hook: hides the flashMessage app when the scenario clears its messages.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:130
 function ui_appContainers_topCenter.onScenarioFlashMessageClear() end
 
---- Hook : cache flashMessage quand aucun scénario ne tourne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:134
+--- Hook: hides flashMessage when no scenario is running.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:134
 function ui_appContainers_topCenter.onScenarioNotRunning() end
 
---- Hook de frame : décompte le message actif, fait avancer la file de messages, gère le masquage différé du compte à rebours et dessine la fenêtre de debug.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:229
----@param dtReal number Temps réel écoulé (s).
----@param dtSim number Temps de simulation écoulé (s).
----@param dtRaw number Temps brut (non utilisé).
+--- Frame hook: counts down the active message, advances the message queue, handles the deferred hiding of the countdown and draws the debug window.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:229
+---@param dtReal number Elapsed real time (s).
+---@param dtSim number Simulation elapsed time (s).
+---@param dtRaw number Raw time (not used).
 function ui_appContainers_topCenter.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Déprécié : équivaut à hideAllApps.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:80
----@param containerId string Conteneur.
+--- Deprecated: equivalent to hideAllApps.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:80
+---@param containerId string Container.
 function ui_appContainers_topCenter.resetContainerContext(containerId) end
 
---- Passe-plat vers ui_appContainers.setAppVisibility.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:23
----@param containerId string Conteneur (normalement 'topCenter').
+--- Pass-through to ui_appContainers.setAppVisibility.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:23
+---@param containerId string Container (normally 'topCenter').
 ---@param appId string App.
----@param visible boolean Visibilité.
+---@param visible boolean Visibility.
 function ui_appContainers_topCenter.setAppVisibility(containerId, appId, visible) end
 
---- Déprécié. Cache toutes les apps puis affiche seulement l'app nommée par context (si context est nil, tout est caché).
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:68
----@param containerId string Conteneur.
----@param context string|nil appId à afficher.
+--- Deprecated. Hides all apps then shows only the app named by context (if context is nil, everything is hidden).
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:68
+---@param containerId string Container.
+---@param context string|nil appId to show.
 function ui_appContainers_topCenter.setContainerContext(containerId, context) end
 
---- Active une petite fenêtre ImGui « TopCenter App Containers Debug » (taille de la file, message actif).
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:95
----@param enabled boolean true pour afficher.
+--- Enables a small "TopCenter App Containers Debug" ImGui window (queue size, active message).
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:95
+---@param enabled boolean true to show.
 function ui_appContainers_topCenter.setDebug(enabled) end
 
---- Mémorise la cible de vitesse active et l'envoie à l'interface via guihooks.trigger('TechDriverTrainingSpeedBarTarget', data) pour la barre speedTargetBar.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:51
----@param data table Données de la cible, transmises telles quelles à l'interface (structure non définie ici).
+--- Stores the active speed target and sends it to the interface via guihooks.trigger('TechDriverTrainingSpeedBarTarget', data) for the speedTargetBar.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:51
+---@param data table Target data, passed as is to the interface (structure not defined here).
 function ui_appContainers_topCenter.setSpeedTarget(data) end
 
---- Active les avertissements de dépréciation et les logs de messages invalides.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:99
----@param enabled boolean true pour activer.
+--- Enables deprecation warnings and logs of invalid messages.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:99
+---@param enabled boolean true to enable.
 function ui_appContainers_topCenter.setVerboseLogging(enabled) end
 
---- Affiche une app du conteneur.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:35
----@param containerId string Conteneur.
+--- Shows an app of the container.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:35
+---@param containerId string Container.
 ---@param appId string App.
 function ui_appContainers_topCenter.showApp(containerId, appId) end
 
---- Affiche un message flash unique, affiche l'app flashMessage et envoie {msg, ttl, big} sur l'événement TopCenterAppsFlashMessage. Le message est mémorisé pendant ttl pour qu'une app montée en retard puisse le récupérer.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:191
----@param msg string Texte (ou clé de traduction) du message.
----@param ttl number|nil Durée en secondes, 3 par défaut.
----@param big boolean|nil Affichage en grand.
+--- Shows a single flash message, shows the flashMessage app and sends {msg, ttl, big} on the TopCenterAppsFlashMessage event. The message is kept for ttl so that an app mounted late can retrieve it.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:191
+---@param msg string Message text (or translation key).
+---@param ttl number|nil Duration in seconds, 3 by default.
+---@param big boolean|nil Display in large size.
 function ui_appContainers_topCenter.showFlashMessage(msg, ttl, big) end
 
---- Inverse la visibilité d'une app du conteneur.
----Source : lua/ge/extensions/ui/appContainers/topCenter.lua:43
----@param containerId string Conteneur.
+--- Toggles the visibility of an app of the container.
+---Source: lua/ge/extensions/ui/appContainers/topCenter.lua:43
+---@param containerId string Container.
 ---@param appId string App.
 function ui_appContainers_topCenter.toggleApp(containerId, appId) end
 

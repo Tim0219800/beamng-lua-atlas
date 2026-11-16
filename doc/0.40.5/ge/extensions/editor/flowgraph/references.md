@@ -1,43 +1,43 @@
 # `editor_flowgraph_references`
 
-*Fichier : `lua/ge/extensions/editor/flowgraph/references.lua` · VM : Game Engine (GE) · 615 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/flowgraph/references.lua` · VM: Game Engine (GE) · 615 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/flowgraph/references")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/flowgraph/references")` (file under extensions/ but not a regular extension)
 
-Fenêtre « References » (fg_references) de l'éditeur Flowgraph : statistiques d'utilisation des types de nœuds. Au clic sur « Load Data », elle recense tous les modèles de nœuds (core_flowgraphManager.getAvailableNodeTemplates), puis compte leurs occurrences dans tous les fichiers *.flow.json de /levels/, /gameplay/ et /lua/ge/extensions/flowgraph/examples, plus dans le projet courant (placeholder « CurrentLocalFile »). Deux vues : liste filtrable (All / Current / unused) et détail d'un nœud (pins, projets qui l'utilisent).
+"References" window (fg_references) of the Flowgraph editor: usage statistics of node types. On clicking "Load Data", it lists all node templates (core_flowgraphManager.getAvailableNodeTemplates), then counts their occurrences in all *.flow.json files of /levels/, /gameplay/ and /lua/ge/extensions/flowgraph/examples, plus in the current project (placeholder "CurrentLocalFile"). Two views: filterable list (All / Current / unused) and node detail (pins, projects that use it).
 
-## Remarques
+## Notes
 
-- Charger les données lit tous les fichiers de flowgraph du jeu : peut être lent.
-- Un nœud trouvé dans un projet mais sans modèle est classé dans la catégorie 'OBSOLETE'.
-- addPinsAndBehavioursForCategory reproduit la logique de basenode pour les pins créés à l'exécution (flow, incomplete/complete/completed, reset).
-- Bugs probables : draw teste `self.nodeTable == {}` (toujours faux en Lua) ; updateNodeOccurrence crée la branche OBSOLETE avec la clé littérale `filename` au lieu du nom de fichier ; dans le cas f_duration, le test d'existence du pin 'completed' vérifie 'flow' ; showNodeReferences de flowgraphEditor appelle winReferences:searchFor qui n'existe pas dans cette fenêtre.
+- Loading the data reads all of the game's flowgraph files: can be slow.
+- A node found in a project but without a template is classified in the 'OBSOLETE' category.
+- addPinsAndBehavioursForCategory reproduces the basenode logic for pins created at runtime (flow, incomplete/complete/completed, reset).
+- Probable bugs: draw tests `self.nodeTable == {}` (always false in Lua); updateNodeOccurrence creates the OBSOLETE branch with the literal key `filename` instead of the file name; in the f_duration case, the existence test of the 'completed' pin checks 'flow'; showNodeReferences of flowgraphEditor calls winReferences:searchFor which does not exist in this window.
 
-## Classe `C`
+## Class `C`
 
-Classe de la fenêtre (windowName 'fg_references', windowDescription 'References'). Principales données : nodeTable (par nom de nœud : displayName, amount, pins {inPins,outPins}, category, behaviour, amountForProjects), nodeStatistics, filteredNodes, sortedProjects, sortedCategories, viewMode (1 liste, 2 détail).
+Window class (windowName 'fg_references', windowDescription 'References'). Main data: nodeTable (by node name: displayName, amount, pins {inPins,outPins}, category, behaviour, amountForProjects), nodeStatistics, filteredNodes, sortedProjects, sortedCategories, viewMode (1 list, 2 detail).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:addPinsAndBehavioursForCategory(nodeName, category)` | Ajoute à l'entrée nodeTable les pins et comportements (simple, duration, once) qui ne sont créés qu'à l'exécution selon la catégorie du nœud. | 232 |
-| `C:checkFilesForNodes(initialCheck)` | Recalcule les occurrences de chaque nœud dans les fichiers .flow.json et dans le projet courant, puis refiltre et retrie. | 82 |
-| `C:createNodeTable()` | Construit nodeTable à partir des modèles de nœuds disponibles puis compte les usages (checkFilesForNodes(true)). | 35 |
-| `C:draw()` | Dessine la fenêtre : bouton « Load Data » tant que nodeTable est vide, sinon flèches de navigation et vue 1 ou 2. | 343 |
-| `C:drawViewMode1()` | Vue liste : champ de recherche, combo de mode de filtre, statistiques et liste des nœuds. | 376 |
-| `C:drawViewMode2()` | Vue détail du nœud inspecté : pins et projets qui l'utilisent. | 497 |
-| `C:fillNodeTable(flowgraphDirectory)` | Lit chaque fichier de flowgraph de la liste et met à jour les occurrences de ses nœuds. | 131 |
-| `C:filterNodes()` | Construit filteredNodes selon le texte saisi et le mode de filtre (All, Current, unused), trié par nombre d'usages décroissant. | 179 |
-| `C:findNodesRecursive(nodeDirectory)` | Parcourt récursivement l'arbre des dossiers de nœuds et crée une entrée nodeTable par nœud (pins in/out du pinSchema, catégorie, comportements) en mettant à jour les statistiques par catégorie. | 47 |
-| `C:highlightText(label, highlightText)` | Écrit un libellé en surlignant les occurrences du texte cherché (copie de nodelibrary). | 294 |
-| `C:init()` | Enregistre la fenêtre et initialise les tables, le mode de vue (1) et le filtre (All). | 21 |
-| `C:pinExists(nodeName, direction, pinName)` | Indique si un pin de ce nom existe déjà dans l'entrée du nœud. | 278 |
-| `C:sortCategories()` | Trie les catégories par nombre de types de nœuds décroissant dans self.sortedCategories. | 116 |
-| `C:sortProjects()` | Trie les projets utilisant le nœud inspecté par nombre d'occurrences décroissant dans self.sortedProjects. | 326 |
-| `C:updateNodeOccurrence(nodeName, fileName)` | Incrémente les compteurs d'usage d'un nœud (total, par projet, par catégorie) ; crée une entrée 'OBSOLETE' si le nœud est inconnu. | 146 |
+| `C:addPinsAndBehavioursForCategory(nodeName, category)` | Adds to the nodeTable entry the pins and behaviors (simple, duration, once) that are only created at runtime depending on the node's category. | 232 |
+| `C:checkFilesForNodes(initialCheck)` | Recomputes the occurrences of each node in the .flow.json files and in the current project, then re-filters and re-sorts. | 82 |
+| `C:createNodeTable()` | Builds nodeTable from the available node templates then counts the usages (checkFilesForNodes(true)). | 35 |
+| `C:draw()` | Draws the window: "Load Data" button while nodeTable is empty, otherwise navigation arrows and view 1 or 2. | 343 |
+| `C:drawViewMode1()` | List view: search field, filter mode combo, statistics and node list. | 376 |
+| `C:drawViewMode2()` | Detail view of the inspected node: pins and projects that use it. | 497 |
+| `C:fillNodeTable(flowgraphDirectory)` | Reads each flowgraph file of the list and updates the occurrences of its nodes. | 131 |
+| `C:filterNodes()` | Builds filteredNodes according to the typed text and the filter mode (All, Current, unused), sorted by decreasing number of usages. | 179 |
+| `C:findNodesRecursive(nodeDirectory)` | Recursively walks the node folder tree and creates one nodeTable entry per node (in/out pins from the pinSchema, category, behaviors) while updating the per-category statistics. | 47 |
+| `C:highlightText(label, highlightText)` | Writes a label, highlighting the occurrences of the searched text (copy from nodelibrary). | 294 |
+| `C:init()` | Registers the window and initializes the tables, the view mode (1) and the filter (All). | 21 |
+| `C:pinExists(nodeName, direction, pinName)` | Indicates whether a pin of this name already exists in the node's entry. | 278 |
+| `C:sortCategories()` | Sorts the categories by decreasing number of node types in self.sortedCategories. | 116 |
+| `C:sortProjects()` | Sorts the projects using the inspected node by decreasing number of occurrences in self.sortedProjects. | 326 |
+| `C:updateNodeOccurrence(nodeName, fileName)` | Increments the usage counters of a node (total, per project, per category); creates an 'OBSOLETE' entry if the node is unknown. | 146 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/flowgraph/references.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/flowgraph/references.lua`.*

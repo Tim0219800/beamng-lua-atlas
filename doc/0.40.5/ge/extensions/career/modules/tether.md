@@ -1,147 +1,147 @@
 # `career_modules_tether`
 
-*Fichier : `lua/ge/extensions/career/modules/tether.lua` · VM : Game Engine (GE) · 287 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/tether.lua` · VM: Game Engine (GE) · 287 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_tether` : `extensions.load("career_modules_tether")`, puis la globale `career_modules_tether`
+**Access:** extension `career_modules_tether`: `extensions.load("career_modules_tether")`, then the global `career_modules_tether`
 
-Système de « laisses » (tethers) du mode carrière : une zone (boîte, sphère, capsule, porte ou véhicule) autour de laquelle le joueur doit rester. Quand le joueur (véhicule joueur 0, ou unicycle à pied) sort de la zone, le callback est appelé une fois et la laisse est retirée. Le hook onUpdate de l'extension n'est branché que tant qu'au moins une laisse est active.
+Career mode "tether" system: a zone (box, sphere, capsule, gate or vehicle) the player must stay around. When the player (player vehicle 0, or unicycle on foot) leaves the zone, the callback is called once and the tether is removed. The extension's onUpdate hook is wired only while at least one tether is active.
 
-## Exemple
+## Example
 
 ```lua
-local t = career_modules_tether.startSphereTether(vec3(100,200,50), 30, function(tether) log('I','','trop loin') end)
--- plus tard, pour annuler sans déclencher le callback :
+local t = career_modules_tether.startSphereTether(vec3(100,200,50), 30, function(tether) log('I','','too far') end)
+-- later, to cancel without triggering the callback:
 career_modules_tether.removeTether(t)
 ```
 
-## Remarques
+## Notes
 
-- Distances en mètres. Les laisses sont testées à chaque onUpdate ; le callback reçoit la table de la laisse.
-- Bug : startCapsuleTetherBetweenStaticAndVehicle utilise checkfun = checkWalkawayCapsuleTether, qui n'est pas défini dans le fichier (nil) ; la fonction checkCapsuleTetherWithVeh, qui semble prévue pour cet usage, n'est jamais utilisée. Une telle laisse provoquerait une erreur dans onUpdate.
-- Bug mineur : startVehicleTether lit une variable globale `data` inexistante (data = data or {}) : data vaut toujours {} ; le paramètre callback est bien utilisé mais aucun paramètre data n'existe.
-- Si le véhicule cible d'une laisse véhicule n'existe plus, la laisse se déclenche (callback appelé).
-- Les fonctions check* retournent nil (pas de déclenchement) si aucun véhicule joueur n'existe.
+- Distances in meters. Tethers are tested on each onUpdate; the callback receives the tether table.
+- Bug: startCapsuleTetherBetweenStaticAndVehicle uses checkfun = checkWalkawayCapsuleTether, which is not defined in the file (nil); the checkCapsuleTetherWithVeh function, which seems intended for this use, is never used. Such a tether would cause an error in onUpdate.
+- Minor bug: startVehicleTether reads a nonexistent global variable `data` (data = data or {}): data is always {}; the callback parameter is used correctly but no data parameter exists.
+- If the target vehicle of a vehicle tether no longer exists, the tether triggers (callback called).
+- The check* functions return nil (no trigger) if no player vehicle exists.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_tether.addTether(t)` | Ajoute une table de laisse (avec checkfun et callback) à la liste active et active le hook onUpdate si c'est la première. | 205 |
-| `career_modules_tether.drawAxisBox(corner, x, y, z, clr)` | Dessine une boîte translucide avec debugDrawer (faces en triangles, arêtes noires), utile pour visualiser une laisse en boîte. | 228 |
-| `career_modules_tether.removeTether(t)` | Retire une laisse de la liste sans appeler son callback. Sans effet si t est nil ou absente. | 213 |
-| `career_modules_tether.startBoxTether(p1, x1, y1, z1, callback, data)` | Crée une laisse en boîte orientée : se déclenche quand le joueur sort de la boîte définie par le coin p1 et les vecteurs d'arêtes x1, y1, z1. | 27 |
-| `career_modules_tether.startCapsuleTetherBetweenStaticAndVehicle(p1, r1, vehId, r2, callback, data)` | Prévue pour une capsule entre un point fixe et un véhicule (p2 suit le véhicule). Voir notes : checkfun référence une fonction non définie. | 112 |
-| `career_modules_tether.startCapsuleTetherBetweenStatics(p1, r1, p2, r2, callback, data)` | Crée une laisse en capsule conique entre deux points fixes, le rayon variant linéairement de r1 à r2 le long du segment. | 94 |
-| `career_modules_tether.startDoorTether(door, bufferLength, callback, data)` | Crée une laisse en boîte à partir d'un objet de zone de la scène (door[1] = nom de l'objet), agrandie de bufferLength mètres sur chaque axe. Ne retourne rien si l'objet n'est pas trouvé. | 38 |
-| `career_modules_tether.startSphereTether(p1, r1, callback, data)` | Crée une laisse sphérique : se déclenche quand le véhicule du joueur est à plus de r1 mètres de p1. | 63 |
-| `career_modules_tether.startVehicleTether(vehId, radius, inverse, callback)` | Crée une laisse autour d'un véhicule : se déclenche quand le joueur est à plus de radius mètres du véhicule, ou, si inverse est vrai, quand il est à moins de radius mètres. | 156 |
+| `career_modules_tether.addTether(t)` | Adds a tether table (with checkfun and callback) to the active list and enables the onUpdate hook if it is the first. | 205 |
+| `career_modules_tether.drawAxisBox(corner, x, y, z, clr)` | Draws a translucent box with debugDrawer (faces as triangles, black edges), useful to visualize a box tether. | 228 |
+| `career_modules_tether.removeTether(t)` | Removes a tether from the list without calling its callback. No effect if t is nil or absent. | 213 |
+| `career_modules_tether.startBoxTether(p1, x1, y1, z1, callback, data)` | Creates an oriented box tether: triggers when the player leaves the box defined by corner p1 and edge vectors x1, y1, z1. | 27 |
+| `career_modules_tether.startCapsuleTetherBetweenStaticAndVehicle(p1, r1, vehId, r2, callback, data)` | Intended for a capsule between a fixed point and a vehicle (p2 follows the vehicle). See notes: checkfun references an undefined function. | 112 |
+| `career_modules_tether.startCapsuleTetherBetweenStatics(p1, r1, p2, r2, callback, data)` | Creates a conical capsule tether between two fixed points, with the radius varying linearly from r1 to r2 along the segment. | 94 |
+| `career_modules_tether.startDoorTether(door, bufferLength, callback, data)` | Creates a box tether from a zone object in the scene (door[1] = object name), enlarged by bufferLength meters on each axis. Returns nothing if the object is not found. | 38 |
+| `career_modules_tether.startSphereTether(p1, r1, callback, data)` | Creates a spherical tether: triggers when the player's vehicle is more than r1 meters from p1. | 63 |
+| `career_modules_tether.startVehicleTether(vehId, radius, inverse, callback)` | Creates a tether around a vehicle: triggers when the player is more than radius meters from the vehicle, or, if inverse is true, when they are less than radius meters away. | 156 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_tether.addTether(t)`
 
-Ajoute une table de laisse (avec checkfun et callback) à la liste active et active le hook onUpdate si c'est la première.
+Adds a tether table (with checkfun and callback) to the active list and enables the onUpdate hook if it is the first.
 
-- `t` (*table*) : Laisse avec checkfun(t) et callback(t).
+- `t` (*table*) : Tether with checkfun(t) and callback(t).
 
 #### `career_modules_tether.drawAxisBox(corner, x, y, z, clr)`
 
-Dessine une boîte translucide avec debugDrawer (faces en triangles, arêtes noires), utile pour visualiser une laisse en boîte.
+Draws a translucent box with debugDrawer (faces as triangles, black edges), useful to visualize a box tether.
 
-- `corner` (*vec3*) : Coin de la boîte.
-- `x` (*vec3*) : Vecteur d'arête X.
-- `y` (*vec3*) : Vecteur d'arête Y.
-- `z` (*vec3*) : Vecteur d'arête Z.
-- `clr` (*any*) : Couleur des faces, défaut color(128,64,64,32).
+- `corner` (*vec3*) : Corner of the box.
+- `x` (*vec3*) : X edge vector.
+- `y` (*vec3*) : Y edge vector.
+- `z` (*vec3*) : Z edge vector.
+- `clr` (*any*) : Face color, default color(128,64,64,32).
 
 #### `career_modules_tether.removeTether(t)`
 
-Retire une laisse de la liste sans appeler son callback. Sans effet si t est nil ou absente.
+Removes a tether from the list without calling its callback. No effect if t is nil or absent.
 
-- `t` (*table|nil*) : Laisse retournée par un start*Tether.
+- `t` (*table|nil*) : Tether returned by a start*Tether.
 
 #### `career_modules_tether.startBoxTether(p1, x1, y1, z1, callback, data)`
 
-Crée une laisse en boîte orientée : se déclenche quand le joueur sort de la boîte définie par le coin p1 et les vecteurs d'arêtes x1, y1, z1.
+Creates an oriented box tether: triggers when the player leaves the box defined by corner p1 and edge vectors x1, y1, z1.
 
-- `p1` (*vec3*) : Coin de la boîte.
-- `x1` (*vec3*) : Vecteur d'arête X.
-- `y1` (*vec3*) : Vecteur d'arête Y.
-- `z1` (*vec3*) : Vecteur d'arête Z.
-- `callback` (*function*) : Appelé avec la laisse quand le joueur est sorti.
-- `data` (*any*) : Données libres conservées dans la laisse (t.data).
-- **renvoie** : table La table de la laisse (à passer à removeTether).
+- `p1` (*vec3*) : Corner of the box.
+- `x1` (*vec3*) : X edge vector.
+- `y1` (*vec3*) : Y edge vector.
+- `z1` (*vec3*) : Z edge vector.
+- `callback` (*function*) : Called with the tether when the player has left.
+- `data` (*any*) : Free-form data kept in the tether (t.data).
+- **returns**: table The tether table (to pass to removeTether).
 
 #### `career_modules_tether.startCapsuleTetherBetweenStaticAndVehicle(p1, r1, vehId, r2, callback, data)`
 
-Prévue pour une capsule entre un point fixe et un véhicule (p2 suit le véhicule). Voir notes : checkfun référence une fonction non définie.
+Intended for a capsule between a fixed point and a vehicle (p2 follows the vehicle). See notes: checkfun references an undefined function.
 
-- `p1` (*vec3*) : Point fixe.
-- `r1` (*number*) : Rayon au point fixe.
-- `vehId` (*integer*) : Id du véhicule.
-- `r2` (*number*) : Rayon côté véhicule.
-- `callback` (*function*) : Appelé quand le joueur sort.
-- `data` (*any*) : Données libres.
-- **renvoie** : table La laisse.
+- `p1` (*vec3*) : Fixed point.
+- `r1` (*number*) : Radius at the fixed point.
+- `vehId` (*integer*) : Vehicle id.
+- `r2` (*number*) : Radius on the vehicle side.
+- `callback` (*function*) : Called when the player leaves.
+- `data` (*any*) : Free-form data.
+- **returns**: table The tether.
 
 #### `career_modules_tether.startCapsuleTetherBetweenStatics(p1, r1, p2, r2, callback, data)`
 
-Crée une laisse en capsule conique entre deux points fixes, le rayon variant linéairement de r1 à r2 le long du segment.
+Creates a conical capsule tether between two fixed points, with the radius varying linearly from r1 to r2 along the segment.
 
-- `p1` (*vec3*) : Premier point.
-- `r1` (*number*) : Rayon au premier point.
+- `p1` (*vec3*) : First point.
+- `r1` (*number*) : Radius at the first point.
 - `p2` (*vec3*) : Second point.
-- `r2` (*number*) : Rayon au second point.
-- `callback` (*function*) : Appelé quand le joueur sort.
-- `data` (*any*) : Données libres.
-- **renvoie** : table La laisse.
+- `r2` (*number*) : Radius at the second point.
+- `callback` (*function*) : Called when the player leaves.
+- `data` (*any*) : Free-form data.
+- **returns**: table The tether.
 
 #### `career_modules_tether.startDoorTether(door, bufferLength, callback, data)`
 
-Crée une laisse en boîte à partir d'un objet de zone de la scène (door[1] = nom de l'objet), agrandie de bufferLength mètres sur chaque axe. Ne retourne rien si l'objet n'est pas trouvé.
+Creates a box tether from a zone object in the scene (door[1] = object name), enlarged by bufferLength meters on each axis. Returns nothing if the object is not found.
 
-- `door` (*table*) : Table dont le premier élément est le nom de l'objet de la scène.
-- `bufferLength` (*number|nil*) : Marge ajoutée à chaque axe, défaut 1.
-- `callback` (*function*) : Appelé quand le joueur sort.
-- `data` (*any*) : Données libres.
-- **renvoie** : table|nil La laisse, ou nil si l'objet est introuvable.
+- `door` (*table*) : Table whose first element is the scene object name.
+- `bufferLength` (*number|nil*) : Margin added to each axis, default 1.
+- `callback` (*function*) : Called when the player leaves.
+- `data` (*any*) : Free-form data.
+- **returns**: table|nil The tether, or nil if the object is not found.
 
 #### `career_modules_tether.startSphereTether(p1, r1, callback, data)`
 
-Crée une laisse sphérique : se déclenche quand le véhicule du joueur est à plus de r1 mètres de p1.
+Creates a spherical tether: triggers when the player's vehicle is more than r1 meters from p1.
 
-- `p1` (*vec3*) : Centre.
-- `r1` (*number*) : Rayon en mètres.
-- `callback` (*function*) : Appelé quand le joueur sort.
-- `data` (*any*) : Données libres.
-- **renvoie** : table La laisse.
+- `p1` (*vec3*) : Center.
+- `r1` (*number*) : Radius in meters.
+- `callback` (*function*) : Called when the player leaves.
+- `data` (*any*) : Free-form data.
+- **returns**: table The tether.
 
 #### `career_modules_tether.startVehicleTether(vehId, radius, inverse, callback)`
 
-Crée une laisse autour d'un véhicule : se déclenche quand le joueur est à plus de radius mètres du véhicule, ou, si inverse est vrai, quand il est à moins de radius mètres.
+Creates a tether around a vehicle: triggers when the player is more than radius meters from the vehicle, or, if inverse is true, when they are less than radius meters away.
 
-- `vehId` (*integer*) : Id du véhicule suivi.
-- `radius` (*number*) : Rayon en mètres.
-- `inverse` (*boolean|nil*) : Si vrai, déclenche à l'approche plutôt qu'à l'éloignement.
-- `callback` (*function*) : Appelé au déclenchement.
-- **renvoie** : table La laisse.
+- `vehId` (*integer*) : Id of the tracked vehicle.
+- `radius` (*number*) : Radius in meters.
+- `inverse` (*boolean|nil*) : If true, triggers on approach rather than on moving away.
+- `callback` (*function*) : Called on trigger.
+- **returns**: table The tether.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `onUpdate` | function | Vaut nop au départ ; remplacé par la vraie boucle de vérification dès qu'une laisse est ajoutée, remis à nil quand la dernière est retirée (avec extensions.hookUpdate pour (dés)enregistrer le hook). |
+| `onUpdate` | function | Is nop at the start; replaced by the real checking loop as soon as a tether is added, set back to nil when the last one is removed (with extensions.hookUpdate to (un)register the hook). |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onUpdate` — écouté par 186 module(s)
+- `onUpdate` — listened to by 186 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawSphere`, `drawTriSolid`
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/tether.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/tether.lua`.*

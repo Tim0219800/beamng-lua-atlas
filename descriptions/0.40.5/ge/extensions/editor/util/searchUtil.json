@@ -1,30 +1,186 @@
 {
   "path": "lua/ge/extensions/editor/util/searchUtil.lua",
-  "module": "Aide d'éditeur pour la recherche floue avec classement « frecency » (fréquence/récence d'usage). Le module renvoie un constructeur : require('/lua/ge/extensions/editor/util/searchUtil')(). On appelle startSearch, queryElement pour chaque candidat, puis finishSearch qui renvoie les résultats triés par score final. Fournit aussi un combo imgui avec recherche intégrée (beginSearchableSimpleCombo).",
+  "module": "Editor helper for fuzzy search with \"frecency\" ranking (frequency/recency of use). The module returns a constructor: require('/lua/ge/extensions/editor/util/searchUtil')(). You call startSearch, queryElement for each candidate, then finishSearch which returns the results sorted by final score. Also provides an imgui combo with built-in search (beginSearchableSimpleCombo).",
   "usage": "local s = require('/lua/ge/extensions/editor/util/searchUtil')()\ns:startSearch('veh')\nfor _, e in ipairs(liste) do s:queryElement({name = e, frecencyId = e}) end\nlocal res = s:finishSearch()",
-  "notes": ["matchStringScore(name, match, ignoreEarly) est exposé en C.matchStringScore : score = caractères appariés / longueur du libellé (jusqu'à 7 occurrences), mélangé à 50 % avec un bonus de position précoce.", "Score final = score*(1-frecencyWeight) + frecency*frecencyWeight, frecencyWeight = 0.5.", "Frecency : 1/1.25^(jours écoulés) ; la valeur stockée est os.time() du dernier usage. updateFrecencyEntry annule la mise à jour précédente si elle date de moins de 10 s.", "beginSearchableSimpleCombo utilise ffi.string sans déclarer ffi localement (dépend de la globale ffi) ; imgui est reçu en paramètre."],
+  "notes": [
+    "matchStringScore(name, match, ignoreEarly) is exposed as C.matchStringScore: score = matched characters / label length (up to 7 occurrences), blended 50% with an early-position bonus.",
+    "Final score = score*(1-frecencyWeight) + frecency*frecencyWeight, frecencyWeight = 0.5.",
+    "Frecency: 1/1.25^(elapsed days); the stored value is the os.time() of the last use. updateFrecencyEntry cancels the previous update if it is less than 10 s old.",
+    "beginSearchableSimpleCombo uses ffi.string without declaring ffi locally (depends on the global ffi); imgui is received as a parameter."
+  ],
   "classes": {
     "C": {
-      "desc": "Instance de recherche.",
+      "desc": "Search instance.",
       "functions": {
-        "init": {"desc": "Installe la fonction de score et de départage par défaut (par nom) et frecencyWeight = 0.5.", "internal": true},
-        "setScoringFunction": {"desc": "Remplace la fonction de score (element, match) -> number.", "params": {"fun": {"type": "function", "desc": "Renvoie un score ; > 0 garde l'élément."}}},
-        "setSameScoreResolvingFunction": {"desc": "Remplace la fonction de départage (a, b) -> boolean utilisée à score final égal.", "params": {"fun": {"type": "function", "desc": "Comparateur."}}},
-        "startSearch": {"desc": "Démarre une recherche : vide les résultats, mémorise la chaîne cherchée et oublie l'annulation de frecency.", "params": {"matchString": {"type": "string", "desc": "Texte recherché."}}},
-        "queryElement": {"desc": "Évalue un élément : écrit elem.score et l'ajoute aux résultats si le score est > 0.", "params": {"elem": {"type": "table", "desc": "Élément (name, frecencyId…)."}, "scoringFunction": {"type": "function|nil", "desc": "Fonction de score ponctuelle."}}},
-        "finishSearch": {"desc": "Calcule frecency et finalScore de chaque résultat, trie (finalScore décroissant) et renvoie la liste.", "returns": [{"type": "table", "desc": "Résultats triés."}]},
-        "setFrecencyData": {"desc": "Définit la table frecencyId -> horodatage.", "params": {"frecencyData": {"type": "table", "desc": "Données de frecency."}}},
-        "getFrecencyData": {"desc": "Renvoie la table de frecency.", "returns": [{"type": "table|nil", "desc": "Données de frecency."}]},
-        "updateFrecencyEntry": {"desc": "Marque un identifiant comme utilisé maintenant (os.time()). Si la mise à jour précédente date de 10 s ou moins, elle est d'abord annulée.", "params": {"fId": {"type": "any", "desc": "Identifiant frecency ; ignoré si nil."}}},
-        "getFrecencyScore": {"desc": "Score de récence entre 0 et 1 (0 si inconnu).", "params": {"fId": {"type": "any", "desc": "Identifiant frecency."}}, "returns": [{"type": "number", "desc": "1/1.25^(secondes/86400)."}]},
-        "beginSearchableSimpleCombo": {"desc": "Dessine un combo imgui avec champ de recherche, bouton X et liste filtrée (140 px de haut, mise à l'échelle UI). Renvoie l'élément cliqué.", "params": {"im": {"type": "table", "desc": "Module imgui."}, "string_label": {"type": "string", "desc": "Libellé/identifiant."}, "string_preview_value": {"type": "string|nil", "desc": "Texte affiché, défaut « (None Selected) »."}, "elementsAsList": {"type": "string[]", "desc": "Candidats."}, "ImGuiComboFlags_flags": {"type": "integer|nil", "desc": "Drapeaux du combo."}}, "returns": [{"type": "string|nil", "desc": "Élément choisi, sinon nil."}]}
+        "init": {
+          "desc": "Installs the default scoring and tie-breaking function (by name) and frecencyWeight = 0.5.",
+          "internal": true
+        },
+        "setScoringFunction": {
+          "desc": "Replaces the scoring function (element, match) -> number.",
+          "params": {
+            "fun": {
+              "type": "function",
+              "desc": "Returns a score; > 0 keeps the element."
+            }
+          }
+        },
+        "setSameScoreResolvingFunction": {
+          "desc": "Replaces the tie-breaking function (a, b) -> boolean used when the final score is equal.",
+          "params": {
+            "fun": {
+              "type": "function",
+              "desc": "Comparator."
+            }
+          }
+        },
+        "startSearch": {
+          "desc": "Starts a search: clears the results, remembers the searched string and forgets the frecency undo.",
+          "params": {
+            "matchString": {
+              "type": "string",
+              "desc": "Searched text."
+            }
+          }
+        },
+        "queryElement": {
+          "desc": "Evaluates an element: writes elem.score and adds it to the results if the score is > 0.",
+          "params": {
+            "elem": {
+              "type": "table",
+              "desc": "Element (name, frecencyId...)."
+            },
+            "scoringFunction": {
+              "type": "function|nil",
+              "desc": "One-off scoring function."
+            }
+          }
+        },
+        "finishSearch": {
+          "desc": "Computes frecency and finalScore of each result, sorts (finalScore descending) and returns the list.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Sorted results."
+            }
+          ]
+        },
+        "setFrecencyData": {
+          "desc": "Sets the frecencyId -> timestamp table.",
+          "params": {
+            "frecencyData": {
+              "type": "table",
+              "desc": "Frecency data."
+            }
+          }
+        },
+        "getFrecencyData": {
+          "desc": "Returns the frecency table.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Frecency data."
+            }
+          ]
+        },
+        "updateFrecencyEntry": {
+          "desc": "Marks an identifier as used now (os.time()). If the previous update is 10 s old or less, it is canceled first.",
+          "params": {
+            "fId": {
+              "type": "any",
+              "desc": "Frecency identifier; ignored if nil."
+            }
+          }
+        },
+        "getFrecencyScore": {
+          "desc": "Recency score between 0 and 1 (0 if unknown).",
+          "params": {
+            "fId": {
+              "type": "any",
+              "desc": "Frecency identifier."
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "1/1.25^(seconds/86400)."
+            }
+          ]
+        },
+        "beginSearchableSimpleCombo": {
+          "desc": "Draws an imgui combo with a search field, X button and filtered list (140 px high, UI-scaled). Returns the clicked element.",
+          "params": {
+            "im": {
+              "type": "table",
+              "desc": "Imgui module."
+            },
+            "string_label": {
+              "type": "string",
+              "desc": "Label/identifier."
+            },
+            "string_preview_value": {
+              "type": "string|nil",
+              "desc": "Displayed text, default \"(None Selected)\"."
+            },
+            "elementsAsList": {
+              "type": "string[]",
+              "desc": "Candidates."
+            },
+            "ImGuiComboFlags_flags": {
+              "type": "integer|nil",
+              "desc": "Combo flags."
+            }
+          },
+          "returns": [
+            {
+              "type": "string|nil",
+              "desc": "Chosen element, otherwise nil."
+            }
+          ]
+        }
       }
     },
     "self": {
-      "desc": "Champs de fonction posés sur l'instance par init.",
+      "desc": "Function fields set on the instance by init.",
       "functions": {
-        "sameScoreResolvingFunction": {"desc": "Départage par défaut : a.name < b.name.", "params": {"a": {"type": "table", "desc": "Élément."}, "b": {"type": "table", "desc": "Élément."}}, "returns": [{"type": "boolean", "desc": "Vrai si a passe avant b."}]},
-        "scoringFunction": {"desc": "Score par défaut : matchStringScore(element.name, match).", "params": {"element": {"type": "table", "desc": "Élément avec name."}, "match": {"type": "string", "desc": "Texte cherché."}}, "returns": [{"type": "number", "desc": "Score."}]}
+        "sameScoreResolvingFunction": {
+          "desc": "Default tie-break: a.name < b.name.",
+          "params": {
+            "a": {
+              "type": "table",
+              "desc": "Element."
+            },
+            "b": {
+              "type": "table",
+              "desc": "Element."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "True if a comes before b."
+            }
+          ]
+        },
+        "scoringFunction": {
+          "desc": "Default score: matchStringScore(element.name, match).",
+          "params": {
+            "element": {
+              "type": "table",
+              "desc": "Element with name."
+            },
+            "match": {
+              "type": "string",
+              "desc": "Searched text."
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Score."
+            }
+          ]
+        }
       }
     }
   }

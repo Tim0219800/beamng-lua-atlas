@@ -2,50 +2,50 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/missionInfo.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère la fenêtre d'information de mission et l'invite d'activité (« activity accept ») affichée en jeu. Il mémorise les boutons actifs, envoie le contenu à l'interface par guihooks, joue le son d'ouverture, suit l'état ouvert/fermé et émet les hooks correspondants. Il bloque aussi, pendant l'invite sur la route « play », les actions qui partagent les mêmes touches que gameplay_interact.
---- Accès : extension `ui_missionInfo` : `extensions.load("ui_missionInfo")`, puis la globale `ui_missionInfo`
+--- Manages the mission info window and the activity prompt ("activity accept") displayed in game. It stores the active buttons, sends the content to the UI via guihooks, plays the opening sound, tracks the opened/closed state and emits the corresponding hooks. It also blocks, during the prompt on the "play" route, the actions that share the same keys as gameplay_interact.
+--- Access: extension `ui_missionInfo`: `extensions.load("ui_missionInfo")`, then the global `ui_missionInfo`
 ---@class ui_missionInfo
----@field buttonsTable table|nil Boutons/fonctions du dialogue courant (indexés par action ou par numéro selon le type d'ouverture).
----@field openState string|nil « opened » ou « closed » ; nil avant la première ouverture.
+---@field buttonsTable table|nil Buttons/functions of the current dialogue (keyed by action or by number depending on the opening type).
+---@field openState string|nil "opened" or "closed"; nil before the first opening.
 ui_missionInfo = {}
 
---- Ferme la fenêtre/l'invite : dépile MissionUIActionMap, vide buttonsTable, lève le blocage des actions, envoie MissionInfoUpdate(nil) et ActivityAcceptClose, passe à l'état « closed ».
----Source : lua/ge/extensions/ui/missionInfo.lua:82
+--- Closes the window/prompt: pops MissionUIActionMap, empties buttonsTable, lifts the action blocking, sends MissionInfoUpdate(nil) and ActivityAcceptClose, switches to the "closed" state.
+---Source: lua/ge/extensions/ui/missionInfo.lua:82
 function ui_missionInfo.closeDialogue() end
 
---- Hook appelé après un changement de route de l'interface ; active le blocage des actions en conflit seulement si l'invite a du contenu et que la route est « play ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/missionInfo.lua:109
----@param routeEntry table Entrée de route (resolved.name).
+--- Hook called after a UI route change; enables blocking of conflicting actions only if the prompt has content and the route is "play".
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/missionInfo.lua:109
+---@param routeEntry table Route entry (resolved.name).
 function ui_missionInfo.onAfterRouteChange(routeEntry) end
 
---- Hook appelé quand les liaisons de touches changent ; recalcule le filtre d'actions si le blocage est actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/missionInfo.lua:105
+--- Hook called when key bindings change; recomputes the action filter if blocking is active.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/missionInfo.lua:105
 function ui_missionInfo.onInputBindingsChanged() end
 
---- Affiche l'invite d'activités : mémorise elem.buttonFun et elem.data de chaque élément, active ou non le blocage des actions en conflit, émet onActivityAcceptUpdate puis ActivityAcceptUpdate et passe à l'état « opened ».
----Source : lua/ge/extensions/ui/missionInfo.lua:58
----@param content table Liste d'éléments {buttonFun, data, ...} ; vide pour retirer l'invite.
+--- Displays the activities prompt: stores elem.buttonFun and elem.data of each element, enables or not the blocking of conflicting actions, emits onActivityAcceptUpdate then ActivityAcceptUpdate and switches to the "opened" state.
+---Source: lua/ge/extensions/ui/missionInfo.lua:58
+---@param content table List of elements {buttonFun, data, ...}; empty to remove the prompt.
 function ui_missionInfo.openActivityAcceptDialogue(content) end
 
---- Ouvre la fenêtre d'information : pousse l'action map MissionUIActionMap (sauf si content.actionMap == false), mémorise content.buttons, envoie MissionInfoUpdate à l'UI et joue le son UI>Missions>Info_Open.
----Source : lua/ge/extensions/ui/missionInfo.lua:38
----@param content table|nil Contenu à afficher, avec éventuellement buttons et actionMap.
+--- Opens the info window: pushes the action map MissionUIActionMap (unless content.actionMap == false), stores content.buttons, sends MissionInfoUpdate to the UI and plays the sound UI>Missions>Info_Open.
+---Source: lua/ge/extensions/ui/missionInfo.lua:38
+---@param content table|nil Content to display, optionally with buttons and actionMap.
 function ui_missionInfo.openDialogue(content) end
 
---- Cherche dans buttonsTable le bouton dont action vaut actionName et exécute sa commande Lua (button.cmd).
----Source : lua/ge/extensions/ui/missionInfo.lua:26
----@param actionName string Nom de l'action du bouton.
+--- Looks in buttonsTable for the button whose action equals actionName and runs its Lua command (button.cmd).
+---Source: lua/ge/extensions/ui/missionInfo.lua:26
+---@param actionName string Button action name.
 function ui_missionInfo.performAction(actionName) end
 
---- Appelle la fonction du bouton d'index id dans buttonsTable (rien si elle n'existe pas).
----Source : lua/ge/extensions/ui/missionInfo.lua:51
----@param id integer Index du bouton (missionInfoPerformActionIndex de l'élément).
+--- Calls the function of the button with index id in buttonsTable (nothing if it does not exist).
+---Source: lua/ge/extensions/ui/missionInfo.lua:51
+---@param id integer Button index (the element's missionInfoPerformActionIndex).
 function ui_missionInfo.performActivityAction(id) end
 
---- Signale quel élément de l'invite est visible : émet onActivityIndexVisible avec ses données, ou nil si index vaut -1.
----Source : lua/ge/extensions/ui/missionInfo.lua:96
----@param index integer Index à partir de 0 côté interface (-1 pour aucun) ; converti en index Lua +1.
+--- Signals which prompt element is visible: emits onActivityIndexVisible with its data, or nil if index is -1.
+---Source: lua/ge/extensions/ui/missionInfo.lua:96
+---@param index integer 0-based index on the UI side (-1 for none); converted to a Lua index +1.
 function ui_missionInfo.setActivityIndexVisible(index) end
 

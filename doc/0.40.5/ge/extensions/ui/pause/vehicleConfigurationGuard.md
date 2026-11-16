@@ -1,73 +1,73 @@
 # `ui_pause_vehicleConfigurationGuard`
 
-*Fichier : `lua/ge/extensions/ui/pause/vehicleConfigurationGuard.lua` · VM : Game Engine (GE) · 103 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/pause/vehicleConfigurationGuard.lua` · VM: Game Engine (GE) · 103 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_pause_vehicleConfigurationGuard` : `extensions.load("ui_pause_vehicleConfigurationGuard")`, puis la globale `ui_pause_vehicleConfigurationGuard`
+**Access:** extension `ui_pause_vehicleConfigurationGuard`: `extensions.load("ui_pause_vehicleConfigurationGuard")`, then the global `ui_pause_vehicleConfigurationGuard`
 
-Garde de sortie de l'écran de configuration véhicule du menu pause. Quand l'UI signale des modifications non appliquées (setHasPendingChanges), toute navigation hors de l'écran est interceptée par confirmExit : un dialogue de confirmation (Annuler / Abandonner / Appliquer) est affiché et la navigation est mise en attente, puis reprise une fois la décision prise. Utile à un moddeur qui ajoute une sous-route de configuration ou veut comprendre pourquoi une navigation est bloquée.
+Exit guard for the pause menu's vehicle configuration screen. When the UI reports unapplied changes (setHasPendingChanges), any navigation away from the screen is intercepted by confirmExit: a confirmation dialog (Cancel / Discard / Apply) is shown and the navigation is held pending, then resumed once the decision is made. Useful to a modder who adds a configuration sub-route or wants to understand why a navigation is blocked.
 
-## Exemple
+## Example
 
 ```lua
 ui_pause_vehicleConfigurationGuard.setHasPendingChanges(true)
--- le routeur appelle ensuite confirmExit(route, params, context) avant de quitter l'écran
+-- the router then calls confirmExit(route, params, context) before leaving the screen
 ```
 
-## Remarques
+## Notes
 
-- Les sous-routes pause.vehicle.configurationcombined.save, .configlistmanage et .mirrors ne déclenchent jamais le dialogue (table SUB_ROUTES).
-- confirmExit renvoie false quand il bloque la navigation ; elle est alors rejouée via ui_router.navigate par resumePendingExit avec un drapeau de contournement (exitConfirmationBypass) pour ne pas redemander la confirmation.
-- La cible en attente est toujours rafraîchie à chaque appel de confirmExit : un dialogue fermé sans callback ne bloque donc pas la navigation indéfiniment.
-- Les modifications non appliquées n'existent que dans l'UI ; abandonner revient simplement à poursuivre la navigation.
+- The sub-routes pause.vehicle.configurationcombined.save, .configlistmanage and .mirrors never trigger the dialog (SUB_ROUTES table).
+- confirmExit returns false when it blocks the navigation; it is then replayed via ui_router.navigate by resumePendingExit with a bypass flag (exitConfirmationBypass) so as not to ask for confirmation again.
+- The pending target is always refreshed on each confirmExit call: a dialog closed without a callback therefore does not block navigation indefinitely.
+- Unapplied changes exist only in the UI; discarding simply means continuing the navigation.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_pause_vehicleConfigurationGuard.cancelExit()` | Callback du bouton Annuler : oublie la navigation en attente. *(interne)* | 83 |
-| `ui_pause_vehicleConfigurationGuard.confirmExit(route, params, context)` | Appelée avant de quitter l'écran. Renvoie true (navigation autorisée) si le contournement est actif, s'il n'y a pas de changement en attente, si le nom de route est invalide ou s'il s'agit d'une sous-route de la configuration. Sinon mémorise la navigation demandée, affiche le dialogue showConfirmationDialog (boutons Annuler, Abandonner, Appliquer) et renvoie false. *(interne)* | 39 |
-| `ui_pause_vehicleConfigurationGuard.confirmExitApplying()` | Callback du bouton Appliquer : déclenche l'évènement UI VehicleConfigurationCombinedApplyAndExit. L'arbre de pièces et le tuning en attente vivent dans l'UI, qui les applique puis rappelle resumePendingExit(). *(interne)* | 94 |
-| `ui_pause_vehicleConfigurationGuard.confirmExitDiscarding()` | Callback du bouton Abandonner : reprend la navigation en attente sans appliquer les changements. *(interne)* | 88 |
-| `ui_pause_vehicleConfigurationGuard.navigateBack()` | Navigue vers la route de retour : core_vehicle_configTarget.getReturnRoute() si l'extension est chargée, sinon « pause.vehicle ». Utilise l'option restoreLastScope = true. | 21 |
-| `ui_pause_vehicleConfigurationGuard.resumePendingExit()` | Rejoue la navigation mise en attente en contournant la confirmation. Renvoie false s'il n'y a aucune navigation en attente. | 98 |
-| `ui_pause_vehicleConfigurationGuard.setHasPendingChanges(value)` | Indique si l'écran de configuration contient des modifications non appliquées. Toute valeur différente de true est convertie en false. | 17 |
+| `ui_pause_vehicleConfigurationGuard.cancelExit()` | Callback of the Cancel button: forgets the pending navigation. *(internal)* | 83 |
+| `ui_pause_vehicleConfigurationGuard.confirmExit(route, params, context)` | Called before leaving the screen. Returns true (navigation allowed) if the bypass is active, if there are no pending changes, if the route name is invalid or if it is a configuration sub-route. Otherwise stores the requested navigation, shows the showConfirmationDialog dialog (buttons Cancel, Discard, Apply) and returns false. *(internal)* | 39 |
+| `ui_pause_vehicleConfigurationGuard.confirmExitApplying()` | Callback of the Apply button: triggers the UI event VehicleConfigurationCombinedApplyAndExit. The pending parts tree and tuning live in the UI, which applies them then calls resumePendingExit() back. *(internal)* | 94 |
+| `ui_pause_vehicleConfigurationGuard.confirmExitDiscarding()` | Callback of the Discard button: resumes the pending navigation without applying the changes. *(internal)* | 88 |
+| `ui_pause_vehicleConfigurationGuard.navigateBack()` | Navigates to the return route: core_vehicle_configTarget.getReturnRoute() if the extension is loaded, otherwise "pause.vehicle". Uses the option restoreLastScope = true. | 21 |
+| `ui_pause_vehicleConfigurationGuard.resumePendingExit()` | Replays the pending navigation, bypassing the confirmation. Returns false if there is no pending navigation. | 98 |
+| `ui_pause_vehicleConfigurationGuard.setHasPendingChanges(value)` | Indicates whether the configuration screen contains unapplied changes. Any value other than true is converted to false. | 17 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_pause_vehicleConfigurationGuard.confirmExit(route, params, context)`
 
-Appelée avant de quitter l'écran. Renvoie true (navigation autorisée) si le contournement est actif, s'il n'y a pas de changement en attente, si le nom de route est invalide ou s'il s'agit d'une sous-route de la configuration. Sinon mémorise la navigation demandée, affiche le dialogue showConfirmationDialog (boutons Annuler, Abandonner, Appliquer) et renvoie false.
+Called before leaving the screen. Returns true (navigation allowed) if the bypass is active, if there are no pending changes, if the route name is invalid or if it is a configuration sub-route. Otherwise stores the requested navigation, shows the showConfirmationDialog dialog (buttons Cancel, Discard, Apply) and returns false.
 
-- `route` (*table|any*) : Route cible ; son champ name sert si context.routeName est absent
-- `params` (*table|nil*) : Paramètres de navigation à rejouer plus tard
-- `context` (*table|nil*) : Contexte du routeur : routeName et options (déduit du code)
-- **renvoie** : boolean true si la navigation peut continuer, false si elle est suspendue en attendant le dialogue
+- `route` (*table|any*) : Target route; its name field is used if context.routeName is absent
+- `params` (*table|nil*) : Navigation parameters to replay later
+- `context` (*table|nil*) : Router context: routeName and options (inferred from code)
+- **returns**: boolean true if navigation can continue, false if it is suspended pending the dialog
 
 #### `ui_pause_vehicleConfigurationGuard.confirmExitDiscarding()`
 
-Callback du bouton Abandonner : reprend la navigation en attente sans appliquer les changements.
+Callback of the Discard button: resumes the pending navigation without applying the changes.
 
-- **renvoie** : any Résultat de la navigation rejouée, ou false s'il n'y avait rien en attente
+- **returns**: any Result of the replayed navigation, or false if nothing was pending
 
 #### `ui_pause_vehicleConfigurationGuard.navigateBack()`
 
-Navigue vers la route de retour : core_vehicle_configTarget.getReturnRoute() si l'extension est chargée, sinon « pause.vehicle ». Utilise l'option restoreLastScope = true.
+Navigates to the return route: core_vehicle_configTarget.getReturnRoute() if the extension is loaded, otherwise "pause.vehicle". Uses the option restoreLastScope = true.
 
-- **renvoie** : any Résultat de ui_router.navigate
+- **returns**: any Result of ui_router.navigate
 
 #### `ui_pause_vehicleConfigurationGuard.resumePendingExit()`
 
-Rejoue la navigation mise en attente en contournant la confirmation. Renvoie false s'il n'y a aucune navigation en attente.
+Replays the pending navigation, bypassing the confirmation. Returns false if there is no pending navigation.
 
-- **renvoie** : any Résultat de ui_router.navigate, ou false
+- **returns**: any Result of ui_router.navigate, or false
 
 #### `ui_pause_vehicleConfigurationGuard.setHasPendingChanges(value)`
 
-Indique si l'écran de configuration contient des modifications non appliquées. Toute valeur différente de true est convertie en false.
+Indicates whether the configuration screen contains unapplied changes. Any value other than true is converted to false.
 
-- `value` (*boolean*) : true s'il y a des changements en attente
+- `value` (*boolean*) : true if there are pending changes
 
-**Évènements UI (guihooks.trigger) :** `VehicleConfigurationCombinedApplyAndExit`, `showConfirmationDialog`
+**UI events (guihooks.trigger):** `VehicleConfigurationCombinedApplyAndExit`, `showConfirmationDialog`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/pause/vehicleConfigurationGuard.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/pause/vehicleConfigurationGuard.lua`.*

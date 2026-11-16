@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/ui/gameplaySelector/tiles.lua",
+  "module": "Cœur du backend « gameplaySelector » : il choisit les tuiles à afficher selon le chemin de navigation (toutes les activités, détail d'un système ou d'un niveau, points d'apparition d'un niveau, page « découverte »). Au chargement il scanne le dossier tileGenerators/ et déclare chaque générateur (ui_gameplaySelector_tileGenerators_<nom>) comme dépendance. Il s'appuie sur les modules tileClustering et tileSorting et fournit les fonctions de regroupement et de tri du sélecteur.",
+  "notes": [
+    "Les tuiles viennent de backend.getUiData(routeName).items, remplies par les hooks onGameplaySelectorGetTiles des générateurs ; getTiles ne les recalcule pas.",
+    "Pour le backend freeroamSelector, la liste validItems est construite en filtrant sur validBackends mais n'est jamais utilisée ensuite : les handlers reçoivent la liste complète items (incohérence probable).",
+    "Types de chemin reconnus (path.keys[1]) : allGameplay (défaut et chemin inconnu), detailGameplay, spawnPointsForLevel, discoverPage."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "core_locales plus une extension par fichier trouvé dans lua/ge/extensions/ui/gameplaySelector/tileGenerators/ (liste construite au chargement du fichier)."}
+  },
+  "functions": {
+    "getTiles": {
+      "desc": "Renvoie les tuiles ou groupes à afficher pour un chemin. Mémorise le backend, met à jour showFavouriteIconPercent de chaque tuile (1 si favori) et le cornerIcon « road » des points d'apparition freeroam sélectionnés, puis route vers le gestionnaire correspondant à path.keys[1].",
+      "params": {
+        "path": {"type": "table", "desc": "Chemin de navigation : table avec keys (liste de chaînes)."},
+        "_backend": {"type": "table", "desc": "Backend appelant (gameplaySelector ou freeroamSelector), avec getUiData, isFavourite, backendName."},
+        "routeName": {"type": "string|nil", "desc": "Nom de la route passé à backend.getUiData."}
+      },
+      "returns": [{"type": "table", "desc": "Tuiles ou groupes selon le gestionnaire de chemin."}],
+      "internal": false
+    },
+    "getUiData": {
+      "desc": "Renvoie les données d'interface du backend : backendName (« gameplaySelector »), les fonctions de regroupement (Type, Category, Difficulty, Source, System), les fonctions de tri (Name, Difficulty, Duration, Popularity) et le module tileSorting.",
+      "returns": [{"type": "table", "desc": "Table backendName, groupModeFunctions, sortModeFunctions, tileSorting."}],
+      "internal": false
+    }
+  }
+}

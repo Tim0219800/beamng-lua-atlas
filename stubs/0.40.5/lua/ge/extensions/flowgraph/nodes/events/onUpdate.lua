@@ -2,38 +2,38 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/events/onUpdate.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_events_onUpdate_C
 local flowgraph_nodes_events_onUpdate_C = {}
 
---- Vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/events/onUpdate.lua:28
----@param mgr table Gestionnaire du flowgraph
+--- Empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/events/onUpdate.lua:28
+---@param mgr table Flowgraph manager
 ---@param ... any
 function flowgraph_nodes_events_onUpdate_C:init(mgr, ...) end
 
---- Appelé quand le projet entre dans l'état : enterState vrai, delta times à 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/events/onUpdate.lua:44
+--- Called when the project enters the state: enterState true, delta times at 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/events/onUpdate.lua:44
 function flowgraph_nodes_events_onUpdate_C:onStateStartedTrigger() end
 
---- Appelé quand le projet quitte l'état : exitState vrai, delta times à 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/events/onUpdate.lua:58
+--- Called when the project leaves the state: exitState true, delta times at 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/events/onUpdate.lua:58
 function flowgraph_nodes_events_onUpdate_C:onStateStoppedTrigger() end
 
---- Hook appelé à chaque frame : met flow à vrai, copie les delta times dans mgr et les pins, déclenche le nœud.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/events/onUpdate.lua:31
----@param dtReal number Delta temps réel (s)
----@param dtSim number Delta temps simulé (s)
----@param dtRaw number Delta temps brut (s)
+--- Hook called every frame: sets flow to true, copies the delta times to mgr and the pins, triggers the node.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/events/onUpdate.lua:31
+---@param dtReal number Real delta time (s)
+---@param dtSim number Simulated delta time (s)
+---@param dtRaw number Raw delta time (s)
 function flowgraph_nodes_events_onUpdate_C:onUpdate(dtReal, dtSim, dtRaw) end
 
---- Vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/events/onUpdate.lua:72
----@param args table Arguments du flowgraph
+--- Empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/events/onUpdate.lua:72
+---@param args table Flowgraph arguments
 function flowgraph_nodes_events_onUpdate_C:work(args) end
 

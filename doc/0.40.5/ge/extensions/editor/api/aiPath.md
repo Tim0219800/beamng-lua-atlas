@@ -1,24 +1,24 @@
 # `editor_api_aiPath`
 
-*Fichier : `lua/ge/extensions/editor/api/aiPath.lua` · VM : Game Engine (GE) · 15 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/aiPath.lua` · VM: Game Engine (GE) · 15 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_aiPath` : `extensions.load("editor_api_aiPath")`, puis la globale `editor_api_aiPath`
+**Access:** extension `editor_api_aiPath`: `extensions.load("editor_api_aiPath")`, then the global `editor_api_aiPath`
 
-Module d'API de l'éditeur « aiPath » : coquille vide. Il mémorise seulement l'instance de l'éditeur reçue à l'initialisation et ne définit aucune autre fonction dans cette version.
+Editor API module "aiPath": empty shell. It only stores the editor instance received at initialization and defines no other function in this version.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_aiPath.initialize(editorInstance)` | Appelé par l'éditeur au chargement des modules d'API : mémorise l'instance de l'éditeur (variable locale) ; ne fait rien d'autre. *(interne)* | 8 |
+| `editor_api_aiPath.initialize(editorInstance)` | Called by the editor when loading the API modules: stores the editor instance (local variable); does nothing else. *(internal)* | 8 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_aiPath.initialize(editorInstance)`
 
-Appelé par l'éditeur au chargement des modules d'API : mémorise l'instance de l'éditeur (variable locale) ; ne fait rien d'autre.
+Called by the editor when loading the API modules: stores the editor instance (local variable); does nothing else.
 
-- `editorInstance` (*table*) : Instance de l'éditeur.
+- `editorInstance` (*table*) : Editor instance.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/aiPath.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/aiPath.lua`.*

@@ -2,196 +2,196 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/appSelector/general.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Backend (`backendName = "appSelector"`) du sélecteur d'apps de l'interface, branché sur le composant générique GridSelector. Il liste les apps connues de `ui_apps.getUIAppsData()` sous forme de tuiles groupées par catégorie (Dashboard, Telemetry, General, Gameplay, Debug, puis les autres par ordre alphabétique), gère la recherche, le filtre par type, les options d'affichage (taille, contenu auxiliaire, enregistrées dans `/settings/appSelectorData.json`) et la fiche de détails avec le bouton « Ajouter au layout ». Utile pour comprendre comment l'écran d'édition des apps est alimenté ; peu utile directement à un moddeur.
---- Accès : extension `ui_appSelector_general` : `extensions.load("ui_appSelector_general")`, puis la globale `ui_appSelector_general`
+--- Backend (`backendName = "appSelector"`) of the interface's app selector, plugged into the generic GridSelector component. It lists the apps known from `ui_apps.getUIAppsData()` as tiles grouped by category (Dashboard, Telemetry, General, Gameplay, Debug, then the others in alphabetical order), handles search, filtering by type, display options (size, auxiliary content, saved in `/settings/appSelectorData.json`) and the details sheet with the "Add to layout" button. Useful to understand how the app editing screen is fed; of little direct use to a modder.
+--- Access: extension `ui_appSelector_general`: `extensions.load("ui_appSelector_general")`, then the global `ui_appSelector_general`
 ---@class ui_appSelector_general
----@field backendName string Nom du backend : "appSelector".
----@field dependencies table<integer, string> Extensions chargées avant : `{'ui_apps'}`.
+---@field backendName string Backend name: "appSelector".
+---@field dependencies table<integer, string> Extensions loaded before: `{'ui_apps'}`.
 ui_appSelector_general = {}
 
---- Efface tous les filtres.
----Source : lua/ge/extensions/ui/appSelector/general.lua:487
----@param requestId any|nil Identifiant de requête côté UI.
----@return any  Résultat du module de filtres.
+--- Clears all filters.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:487
+---@param requestId any|nil UI-side request identifier.
+---@return any  Result of the filters module.
 function ui_appSelector_general.clearAllFilters(requestId) end
 
---- Fonction vide, présente pour l'API de GridSelector.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/appSelector/general.lua:756
+--- Empty function, present for the GridSelector API.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/appSelector/general.lua:756
 function ui_appSelector_general.closedFromUI() end
 
---- Reconstruit l'instantané complet (tuiles, filtres, options, en-tête) et l'envoie à l'UI par `appSelectorDisplayDataSnapshot`.
----Source : lua/ge/extensions/ui/appSelector/general.lua:736
----@param requestId any Identifiant de requête côté UI.
----@return boolean  true si envoyé, false si la construction a échoué (erreur loggée).
+--- Rebuilds the complete snapshot (tiles, filters, options, header) and sends it to the UI via `appSelectorDisplayDataSnapshot`.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:736
+---@param requestId any UI-side request identifier.
+---@return boolean  true if sent, false if the build failed (error logged).
 function ui_appSelector_general.emitDisplayDataSnapshot(requestId) end
 
---- Exécute le callback d'un bouton de la fiche via le module de boutons.
----Source : lua/ge/extensions/ui/appSelector/general.lua:665
----@param buttonId any Identifiant du bouton.
----@param data any Données transmises au callback.
----@return any  Retour du callback.
+--- Runs the callback of a details sheet button via the buttons module.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:665
+---@param buttonId any Button identifier.
+---@param data any Data passed to the callback.
+---@return any  Callback return.
 function ui_appSelector_general.executeButton(buttonId, data) end
 
---- Sur double-clic d'une tuile, exécute le bouton « Ajouter au layout » de l'app.
----Source : lua/ge/extensions/ui/appSelector/general.lua:690
----@param details table Table contenant `appName`.
+--- On a tile double-click, runs the app's "Add to layout" button.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:690
+---@param details table Table containing `appName`.
 function ui_appSelector_general.executeDoubleClick(details) end
 
---- Sans effet : écrit seulement un message dans le log.
----Source : lua/ge/extensions/ui/appSelector/general.lua:680
----@param path any Chemin (loggé).
+--- No effect: only writes a message to the log.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:680
+---@param path any Path (logged).
 function ui_appSelector_general.exploreFolder(path) end
 
---- Renvoie les filtres actuellement actifs.
----Source : lua/ge/extensions/ui/appSelector/general.lua:446
----@return table  Filtres actifs.
+--- Returns the currently active filters.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:446
+---@return table  Active filters.
 function ui_appSelector_general.getActiveFilters() end
 
---- Renvoie les données du sélecteur (apps, instance de filtres, liste de filtres, options d'affichage), en les (ré)initialisant si nécessaire.
----Source : lua/ge/extensions/ui/appSelector/general.lua:287
----@return table  Table avec `apps`, `filterInstance`, `filterList`, `activeFilters`, `lockedFiltersByProp`, `displayData`.
+--- Returns the selector data (apps, filter instance, filter list, display options), (re)initializing them if needed.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:287
+---@return table  Table with `apps`, `filterInstance`, `filterList`, `activeFilters`, `lockedFiltersByProp`, `displayData`.
 function ui_appSelector_general.getAppData() end
 
---- Construit la fiche d'une app : titre, aperçu, description, spécifications (interactivité, version, types, dossier hors build shipping) et bouton « Ajouter au layout ». Renvoie un titre de secours si l'app est inconnue.
----Source : lua/ge/extensions/ui/appSelector/general.lua:565
----@param details table Table contenant `appName`.
+--- Builds an app's details sheet: title, preview, description, specifications (interactivity, version, types, folder outside the shipping build) and "Add to layout" button. Returns a fallback title if the app is unknown.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:565
+---@param details table Table containing `appName`.
 ---@return table  `{headerTitle, preview, description, specifications, buttonInfo, appName}`.
 function ui_appSelector_general.getDetails(details) end
 
---- Renvoie les options d'affichage (taille des tuiles : list/tiny/small/medium/large/huge ; inclusion du contenu auxiliaire).
----Source : lua/ge/extensions/ui/appSelector/general.lua:496
----@return table  Options d'affichage.
+--- Returns the display options (tile size: list/tiny/small/medium/large/huge; inclusion of auxiliary content).
+---Source: lua/ge/extensions/ui/appSelector/general.lua:496
+---@return table  Display options.
 function ui_appSelector_general.getDisplayDataOptions() end
 
---- Renvoie les filtres disponibles (filtre de type « set » sur les types d'apps).
----Source : lua/ge/extensions/ui/appSelector/general.lua:441
----@return table  Filtres du module de filtres.
+--- Returns the available filters ("set" type filter on app types).
+---Source: lua/ge/extensions/ui/appSelector/general.lua:441
+---@return table  Filters of the filters module.
 function ui_appSelector_general.getFilters() end
 
---- Fonction facultative de l'API GridSelector : renvoie toujours `{buttons = {}}`.
----Source : lua/ge/extensions/ui/appSelector/general.lua:671
+--- Optional function of the GridSelector API: always returns `{buttons = {}}`.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:671
 ---@return table  `{buttons = {}}`.
 function ui_appSelector_general.getManagementDetails() end
 
---- Construit le titre et le fil d'Ariane de l'écran (Menu, Édition des apps, Apps, puis « Filtré »/« Recherche : … » si besoin).
----Source : lua/ge/extensions/ui/appSelector/general.lua:530
----@param path table Chemin courant (non utilisé).
+--- Builds the screen's title and breadcrumb (Menu, Edit apps, Apps, then "Filtered"/"Search: …" if needed).
+---Source: lua/ge/extensions/ui/appSelector/general.lua:530
+---@param path table Current path (not used).
 ---@return table  `{title, pathSegments, isFiltered}`.
 function ui_appSelector_general.getScreenHeaderTitleAndPath(path) end
 
---- Renvoie le texte de recherche courant.
----Source : lua/ge/extensions/ui/appSelector/general.lua:516
----@return string|nil  Texte de recherche.
+--- Returns the current search text.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:516
+---@return string|nil  Search text.
 function ui_appSelector_general.getSearchText() end
 
---- Construit les groupes de tuiles d'apps (filtrés, triés : non auxiliaires d'abord puis par nom, groupés par catégorie).
----Source : lua/ge/extensions/ui/appSelector/general.lua:354
----@param path table Chemin de navigation (non utilisé pour le contenu).
----@return table<integer, table>  Liste de `{label, tiles}`.
+--- Builds the app tile groups (filtered, sorted: non-auxiliary first then by name, grouped by category).
+---Source: lua/ge/extensions/ui/appSelector/general.lua:354
+---@param path table Navigation path (not used for the content).
+---@return table<integer, table>  List of `{label, tiles}`.
 function ui_appSelector_general.getTiles(path) end
 
---- Sans effet : écrit seulement un message dans le log.
----Source : lua/ge/extensions/ui/appSelector/general.lua:685
----@param modId any Id du mod (loggé).
+--- No effect: only writes a message to the log.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:685
+---@param modId any Mod ID (logged).
 function ui_appSelector_general.goToMod(modId) end
 
---- Hook appelé quand un mod est activé : force le rechargement des données au prochain accès.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/appSelector/general.lua:301
+--- Hook called when a mod is activated: forces the data to reload on next access.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/appSelector/general.lua:301
 function ui_appSelector_general.onModActivated() end
 
---- Hook appelé quand un mod est désactivé : force le rechargement des données au prochain accès.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/appSelector/general.lua:300
+--- Hook called when a mod is deactivated: forces the data to reload on next access.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/appSelector/general.lua:300
 function ui_appSelector_general.onModDeactivated() end
 
---- Hook appelé quand le gestionnaire de mods est prêt : force le rechargement des données.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/appSelector/general.lua:302
+--- Hook called when the mod manager is ready: forces the data to reload.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/appSelector/general.lua:302
 function ui_appSelector_general.onModManagerReady() end
 
---- Hook appelé par le routeur UI au montage de la route : attache à `data.appSelector` un instantané du sélecteur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/appSelector/general.lua:751
----@param context any Contexte de la route (non utilisé).
----@param toRoute any Route d'arrivée (non utilisé).
----@param fromRoute any Route de départ (non utilisé).
----@param data table Données de route auxquelles l'instantané est ajouté.
+--- Hook called by the UI router when the route is mounted: attaches a selector snapshot to `data.appSelector`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/appSelector/general.lua:751
+---@param context any Route context (not used).
+---@param toRoute any Destination route (not used).
+---@param fromRoute any Source route (not used).
+---@param data table Route data to which the snapshot is added.
 function ui_appSelector_general.onRouteMount(context, toRoute, fromRoute, data) end
 
---- Fonction vide, présente pour l'API de GridSelector.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/appSelector/general.lua:755
+--- Empty function, present for the GridSelector API.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/appSelector/general.lua:755
 function ui_appSelector_general.profilerFinish() end
 
---- Calcule la fiche d'une app et l'envoie à l'UI par le hook `appSelectorDetails`.
----Source : lua/ge/extensions/ui/appSelector/general.lua:653
----@param item table Élément sélectionné (avec `appName`).
----@param requestId any Identifiant de requête côté UI.
----@return table  Charge envoyée : `{backendName, requestId, item, details}`.
+--- Computes an app's details sheet and sends it to the UI via the `appSelectorDetails` hook.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:653
+---@param item table Selected item (with `appName`).
+---@param requestId any UI-side request identifier.
+---@return table  Payload sent: `{backendName, requestId, item, details}`.
 function ui_appSelector_general.requestDetails(item, requestId) end
 
---- Remet les options d'affichage à leurs valeurs par défaut.
----Source : lua/ge/extensions/ui/appSelector/general.lua:508
----@param requestId any|nil Identifiant de requête côté UI.
----@return table  Données d'affichage à jour.
+--- Resets the display options to their default values.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:508
+---@param requestId any|nil UI-side request identifier.
+---@return table  Updated display data.
 function ui_appSelector_general.resetDisplayDataToDefaults(requestId) end
 
---- Réinitialise un filtre par intervalle.
----Source : lua/ge/extensions/ui/appSelector/general.lua:469
----@param filterKey string Nom du filtre.
----@param requestId any|nil Identifiant de requête côté UI.
----@return any  Résultat du module de filtres.
+--- Resets a range filter.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:469
+---@param filterKey string Filter name.
+---@param requestId any|nil UI-side request identifier.
+---@return any  Result of the filters module.
 function ui_appSelector_general.resetRangeFilter(filterKey, requestId) end
 
---- Réinitialise un filtre de type « set ».
----Source : lua/ge/extensions/ui/appSelector/general.lua:478
----@param filterKey string Nom du filtre.
----@param requestId any|nil Identifiant de requête côté UI.
----@return any  Résultat du module de filtres.
+--- Resets a "set" type filter.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:478
+---@param filterKey string Filter name.
+---@param requestId any|nil UI-side request identifier.
+---@return any  Result of the filters module.
 function ui_appSelector_general.resetSetFilter(filterKey, requestId) end
 
---- Renvoie le chemin par défaut du sélecteur : `{keys = {"allApps"}}`.
----Source : lua/ge/extensions/ui/appSelector/general.lua:732
----@return table  Chemin normalisé.
+--- Returns the selector's default path: `{keys = {"allApps"}}`.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:732
+---@return table  Normalized path.
 function ui_appSelector_general.resolveCurrentSelectorPath() end
 
---- Modifie une option d'affichage et la sauvegarde.
----Source : lua/ge/extensions/ui/appSelector/general.lua:500
----@param key string Clé de l'option (displaySize, includeAuxContent).
----@param value any Nouvelle valeur.
----@param requestId any|nil Identifiant de requête côté UI.
----@return table  Données d'affichage à jour.
+--- Changes a display option and saves it.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:500
+---@param key string Option key (displaySize, includeAuxContent).
+---@param value any New value.
+---@param requestId any|nil UI-side request identifier.
+---@return table  Updated display data.
 function ui_appSelector_general.setDisplayDataOption(key, value, requestId) end
 
---- Définit le texte de recherche (comparé en minuscules au nom, au nom d'app et à la description traduits).
----Source : lua/ge/extensions/ui/appSelector/general.lua:521
----@param val string Texte recherché.
----@param requestId any|nil Identifiant de requête côté UI.
----@return any  Résultat du module de filtres.
+--- Sets the search text (compared in lowercase against the translated name, app name and description).
+---Source: lua/ge/extensions/ui/appSelector/general.lua:521
+---@param val string Searched text.
+---@param requestId any|nil UI-side request identifier.
+---@return any  Result of the filters module.
 function ui_appSelector_general.setSearchText(val, requestId) end
 
---- Sans effet : les apps n'ont pas de favoris. Renvoie false.
----Source : lua/ge/extensions/ui/appSelector/general.lua:675
----@param itemDetails table Non utilisé.
----@return boolean  Toujours false.
+--- No effect: apps have no favorites. Returns false.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:675
+---@param itemDetails table Not used.
+---@return boolean  Always false.
 function ui_appSelector_general.toggleFavourite(itemDetails) end
 
---- Active ou désactive une valeur d'un filtre. Si `requestId` est fourni, renvoie aussi un instantané à l'UI.
----Source : lua/ge/extensions/ui/appSelector/general.lua:451
----@param filterKey string Nom du filtre (par exemple "Type").
----@param value any Valeur à basculer.
----@param requestId any|nil Identifiant de requête côté UI.
----@return any  Résultat du module de filtres.
+--- Enables or disables a filter value. If `requestId` is provided, also returns a snapshot to the UI.
+---Source: lua/ge/extensions/ui/appSelector/general.lua:451
+---@param filterKey string Filter name (for example "Type").
+---@param value any Value to toggle.
+---@param requestId any|nil UI-side request identifier.
+---@return any  Result of the filters module.
 function ui_appSelector_general.toggleFilter(filterKey, value, requestId) end
 
---- Met à jour un filtre par intervalle (non utilisé par les filtres actuels, qui sont tous de type « set »).
----Source : lua/ge/extensions/ui/appSelector/general.lua:460
----@param filterKey string Nom du filtre.
+--- Updates a range filter (not used by the current filters, which are all of "set" type).
+---Source: lua/ge/extensions/ui/appSelector/general.lua:460
+---@param filterKey string Filter name.
 ---@param min number Minimum.
 ---@param max number Maximum.
----@param requestId any|nil Identifiant de requête côté UI.
----@return any  Résultat du module de filtres.
+---@param requestId any|nil UI-side request identifier.
+---@return any  Result of the filters module.
 function ui_appSelector_general.updateRangeFilter(filterKey, min, max, requestId) end
 

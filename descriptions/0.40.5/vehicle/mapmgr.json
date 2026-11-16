@@ -1,147 +1,285 @@
 {
   "path": "lua/vehicle/mapmgr.lua",
-  "module": "Pont entre le véhicule et la carte routière (navgraph) du jeu. Il reçoit la carte du Lua du jeu (GE) par boîte aux lettres (mailbox), la décode en graphe (graphpath) et arbre spatial (kd-tree des arêtes), et fournit à l'IA et aux extensions : recherche de la route la plus proche (findClosestRoad, findBestRoad), chemin point à point (getPointToPointPath), normale de surface (surfaceNormalBelow), objets proches (getObjects) et signaux de circulation. Il envoie aussi chaque frame au GE l'état du véhicule (map.objectData : joueur assis, dégâts, klaxon, feux, collisions) via sendTracking.",
+  "module": "Bridge between the vehicle and the game's road map (navgraph). It receives the map from the game Lua (GE) through a mailbox, decodes it into a graph (graphpath) and a spatial tree (kd-tree of edges), and provides to the AI and the extensions: nearest road search (findClosestRoad, findBestRoad), point-to-point path (getPointToPointPath), surface normal (surfaceNormalBelow), nearby objects (getObjects) and traffic signals. It also sends the vehicle state to the GE every frame (map.objectData: seated player, damage, horn, lights, collisions) via sendTracking.",
   "usage": "local a, b, dist = mapmgr.findBestRoad(obj:getPosition(), obj:getDirectionVector())\nlocal path = mapmgr.getPointToPointPath(obj:getPosition(), vec3(100, 200, 0), 0.5, 1e4, 1, 100)\nlocal n = mapmgr.surfaceNormalBelow(obj:getPosition(), 2)",
   "notes": [
-    "mapData (aussi M.mapData) est un graphpath importé de la carte ; M.nodeAliases, M.rules, M.signalsData et M.changeSet sont aussi publiés. mapData reste nil tant que la carte n'a pas été reçue (appeler requestMap ou attendre le hook onVehicleMapmgrUpdate côté GE) : findClosestRoad / findBestRoad planteraient si mapData ou edgeKdTree est nil (aucune vérification), contrairement à getPointToPointPath qui renvoie {}.",
-    "sendTracking est un nop par défaut (affecté dynamiquement) : enableTracking le remplace par la vraie fonction, disableTracking le remet à nop. main.lua appelle mapmgr.sendTracking() à chaque frame (avant ai.updateGFX). Le champ apparaît donc comme « nop non défini » dans l'extraction mais nop est une fonction globale définie ailleurs.",
-    "init active le suivi si le véhicule a des roues (wheels.wheelCount > 0) ou si v.data.general.enableTracking est vrai.",
-    "sendTracking envoie au GE un appel `map.objectData(id, anyPlayerSeated, degats, états, collisions)`, où états = horn, lightbar, hazard_enabled, turnsignal (si non nuls) et ignitionLevel (si 0 ou 1) lus dans electrics.values ; collisions = ids d'objets en collision (obj:getObjectCollisionIds). Il demande aussi la carte au GE (map.request(id, -2)) quand les signaux de circulation changent de version de façon inattendue.",
-    "Drivabilité dynamique : updateDrivabilities lit la mailbox 'updateDrivabilities' (liste plate {nœudA, nœudB, drivabilité,…}) et modifie la longueur et la drivabilité des arêtes du graphe.",
-    "findClosestRoad double la zone de recherche jusqu'à trouver une arête ou dépasser 200 m ; la distance renvoyée est en mètres, avec un biais wZ (défaut 1.85) qui pénalise les écarts de hauteur. Le commentaire du code note que la même fonction existe dans ge/map.lua.",
-    "findBestRoad choisit parmi les arêtes dont le rayon couvre la position celle qui est la plus alignée avec la direction du véhicule (valeur absolue si l'arête est à double sens), pénalisée par edge.gated ; repli sur findClosestRoad."
+    "mapData (also M.mapData) is a graphpath imported from the map; M.nodeAliases, M.rules, M.signalsData and M.changeSet are also published. mapData stays nil until the map has been received (call requestMap or wait for the onVehicleMapmgrUpdate hook on the GE side): findClosestRoad / findBestRoad would crash if mapData or edgeKdTree is nil (no check), unlike getPointToPointPath which returns {}.",
+    "sendTracking is a nop by default (dynamically assigned): enableTracking replaces it with the real function, disableTracking sets it back to nop. main.lua calls mapmgr.sendTracking() every frame (before ai.updateGFX). The field therefore appears as \"undefined nop\" in the extraction but nop is a global function defined elsewhere.",
+    "init enables tracking if the vehicle has wheels (wheels.wheelCount > 0) or if v.data.general.enableTracking is true.",
+    "sendTracking sends the GE a call `map.objectData(id, anyPlayerSeated, damage, states, collisions)`, where states = horn, lightbar, hazard_enabled, turnsignal (if non-zero) and ignitionLevel (if 0 or 1) read from electrics.values; collisions = ids of colliding objects (obj:getObjectCollisionIds). It also requests the map from the GE (map.request(id, -2)) when the traffic signals change version unexpectedly.",
+    "Dynamic drivability: updateDrivabilities reads the 'updateDrivabilities' mailbox (flat list {nodeA, nodeB, drivability,…}) and modifies the length and drivability of the graph's edges.",
+    "findClosestRoad doubles the search area until it finds an edge or exceeds 200 m; the returned distance is in meters, with a wZ bias (default 1.85) that penalizes height differences. The code comment notes that the same function exists in ge/map.lua.",
+    "findBestRoad picks, among the edges whose radius covers the position, the one most aligned with the vehicle direction (absolute value if the edge is two-way), penalized by edge.gated; falls back to findClosestRoad."
   ],
   "fields": {
-    "objects": {"type": "table", "desc": "Objets proches décodés depuis la mailbox 'objUpdate' (rempli par getObjects ; remis à {} par reset)."},
-    "objectCollisionIds": {"type": "table", "desc": "Ids des objets en collision avec ce véhicule, rafraîchi à chaque sendTracking."},
-    "sendTracking": {"type": "function", "desc": "nop tant que le suivi n'est pas activé (enableTracking), puis la fonction d'envoi d'état au GE. Appelée à chaque frame par main.lua."},
-    "mapData": {"type": "table|nil", "desc": "Graphe routier importé (graphpath) ou carte personnalisée ; nil avant réception."},
-    "nodeAliases": {"type": "table", "desc": "Alias de noeuds fournis avec la carte (créé par setMap)."},
-    "rules": {"type": "table", "desc": "Règles de circulation de la carte (créé par setMap)."},
-    "signalsData": {"type": "table|nil", "desc": "Signaux de circulation (défini par setSignals)."},
-    "changeSet": {"type": "table", "desc": "Dernier lot de modifications de drivabilité (défini par updateDrivabilities)."}
+    "objects": {
+      "type": "table",
+      "desc": "Nearby objects decoded from the 'objUpdate' mailbox (filled by getObjects; reset to {} by reset)."
+    },
+    "objectCollisionIds": {
+      "type": "table",
+      "desc": "Ids of the objects colliding with this vehicle, refreshed at each sendTracking."
+    },
+    "sendTracking": {
+      "type": "function",
+      "desc": "nop until tracking is enabled (enableTracking), then the function that sends the state to the GE. Called every frame by main.lua."
+    },
+    "mapData": {
+      "type": "table|nil",
+      "desc": "Imported road graph (graphpath) or custom map; nil before reception."
+    },
+    "nodeAliases": {
+      "type": "table",
+      "desc": "Node aliases provided with the map (created by setMap)."
+    },
+    "rules": {
+      "type": "table",
+      "desc": "Traffic rules of the map (created by setMap)."
+    },
+    "signalsData": {
+      "type": "table|nil",
+      "desc": "Traffic signals (set by setSignals)."
+    },
+    "changeSet": {
+      "type": "table",
+      "desc": "Last batch of drivability changes (set by updateDrivabilities)."
+    }
   },
   "functions": {
     "init": {
-      "desc": "Active le suivi vers le GE si le véhicule a des roues ou general.enableTracking. Appelée par main.lua (initSystems, dernière étape).",
+      "desc": "Enables tracking to the GE if the vehicle has wheels or general.enableTracking. Called by main.lua (initSystems, last step).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Vide la liste d'objets M.objects au reset du véhicule.",
+      "desc": "Empties the M.objects list on vehicle reset.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "requestMap": {
-      "desc": "Demande au GE d'envoyer la carte (map.request(id, serial de la carte actuelle)).",
+      "desc": "Asks the GE to send the map (map.request(id, serial of the current map)).",
       "params": {},
       "returns": []
     },
     "setMap": {
-      "desc": "Charge la carte depuis la mailbox 'mapData' : construit le graphe, le kd-tree des arêtes, les règles et alias, applique les drivabilités puis notifie le GE par le hook onVehicleMapmgrUpdate. Ne fait rien si le numéro de build est déjà celui chargé ou si les données sont incomplètes.",
-      "params": {"newbuildSerial": {"type": "number|nil", "desc": "Numéro de build de la carte annoncée ; ignoré s'il est identique à celui déjà chargé."}},
+      "desc": "Loads the map from the 'mapData' mailbox: builds the graph, the edge kd-tree, the rules and aliases, applies the drivabilities then notifies the GE via the onVehicleMapmgrUpdate hook. Does nothing if the build number is already the loaded one or if the data is incomplete.",
+      "params": {
+        "newbuildSerial": {
+          "type": "number|nil",
+          "desc": "Build number of the announced map; ignored if identical to the one already loaded."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setCustomMap": {
-      "desc": "Remplace la carte par un graphe fourni (outil/scénario) et oublie le numéro de build.",
-      "params": {"map": {"type": "table", "desc": "Graphe au format graphpath."}},
+      "desc": "Replaces the map with a provided graph (tool/scenario) and forgets the build number.",
+      "params": {
+        "map": {
+          "type": "table",
+          "desc": "Graph in graphpath format."
+        }
+      },
       "returns": []
     },
     "clearCustomMap": {
-      "desc": "Supprime la carte personnalisée si elle était active (mapData remis à nil).",
+      "desc": "Removes the custom map if it was active (mapData set back to nil).",
       "params": {},
       "returns": []
     },
     "setSignals": {
-      "desc": "Définit la table des signaux de circulation (M.signalsData).",
-      "params": {"data": {"type": "table", "desc": "Signaux indexés [groupe][?][?] avec un champ action."}},
+      "desc": "Sets the table of traffic signals (M.signalsData).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Signals indexed [group][?][?] with an action field."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "updateSignals": {
-      "desc": "Met à jour l'action des signaux d'après un lot {clé1, clé2, clé3, action, …} (par groupes de 4).",
-      "params": {"data": {"type": "table|nil", "desc": "Liste plate de mises à jour."}},
+      "desc": "Updates the signals' action from a batch {key1, key2, key3, action, …} (in groups of 4).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Flat list of updates."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "enableTracking": {
-      "desc": "Active l'envoi d'état au GE : associe un nom d'objet à l'id (map.setNameForId) et installe sendTracking.",
-      "params": {"name": {"type": "string|nil", "desc": "Nom du véhicule dans la carte ; l'id du véhicule si nil."}},
+      "desc": "Enables sending the state to the GE: associates an object name with the id (map.setNameForId) and installs sendTracking.",
+      "params": {
+        "name": {
+          "type": "string|nil",
+          "desc": "Vehicle name in the map; the vehicle id if nil."
+        }
+      },
       "returns": []
     },
     "disableTracking": {
-      "desc": "Désactive l'envoi d'état (sendTracking = nop) si forceDisable ou si aucun joueur n'est assis.",
-      "params": {"forceDisable": {"type": "boolean|nil", "desc": "true pour désactiver même si un joueur est assis."}},
+      "desc": "Disables sending the state (sendTracking = nop) if forceDisable or if no player is seated.",
+      "params": {
+        "forceDisable": {
+          "type": "boolean|nil",
+          "desc": "true to disable even if a player is seated."
+        }
+      },
       "returns": []
     },
     "getObjects": {
-      "desc": "Renvoie la table des objets proches (mailbox 'objUpdate'), décodée au plus une fois par instant de simulation.",
+      "desc": "Returns the table of nearby objects (mailbox 'objUpdate'), decoded at most once per simulation instant.",
       "params": {},
-      "returns": [{"type": "table", "desc": "M.objects (partagée, ne pas conserver entre frames)."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "M.objects (shared, do not keep between frames)."
+        }
+      ]
     },
     "updateDrivabilities": {
-      "desc": "Applique au graphe les changements de drivabilité reçus par la mailbox 'updateDrivabilities' ; ne fait rien si la mailbox est vide ou sans graphe.",
+      "desc": "Applies to the graph the drivability changes received through the 'updateDrivabilities' mailbox; does nothing if the mailbox is empty or there is no graph.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "setSurfaceNormalBelow": {
-      "desc": "Calcule la normale de la surface sous un point en échantillonnant la hauteur du sol en 3 points d'un triangle de rayon r autour de p (obj:getSurfaceHeightBelow). Précis jusqu'à environ 50° de pente ; renvoie (0,0,1) si le terrain est trop bas/irrégulier. Écrit le résultat dans v sans allocation.",
+      "desc": "Computes the surface normal under a point by sampling the ground height at 3 points of a triangle of radius r around p (obj:getSurfaceHeightBelow). Accurate up to about 50° of slope; returns (0,0,1) if the terrain is too low/irregular. Writes the result into v without allocation.",
       "params": {
-        "v": {"type": "vec3", "desc": "Vecteur de sortie (modifié ; utilisé aussi comme point d'échantillon temporaire)."},
-        "p": {"type": "vec3", "desc": "Point au-dessus de la surface."},
-        "r": {"type": "number|nil", "desc": "Rayon d'échantillonnage en mètres (2 par défaut)."}
+        "v": {
+          "type": "vec3",
+          "desc": "Output vector (modified; also used as a temporary sample point)."
+        },
+        "p": {
+          "type": "vec3",
+          "desc": "Point above the surface."
+        },
+        "r": {
+          "type": "number|nil",
+          "desc": "Sampling radius in meters (2 by default)."
+        }
       },
       "returns": []
     },
     "surfaceNormalBelow": {
-      "desc": "Version allouante de setSurfaceNormalBelow : renvoie un nouveau vec3.",
+      "desc": "Allocating version of setSurfaceNormalBelow: returns a new vec3.",
       "params": {
-        "p": {"type": "vec3", "desc": "Point au-dessus de la surface."},
-        "r": {"type": "number|nil", "desc": "Rayon d'échantillonnage (2 par défaut)."}
-      },
-      "returns": [{"type": "vec3", "desc": "Normale unitaire de la surface."}]
-    },
-    "findClosestRoad": {
-      "desc": "Trouve l'arête de route la plus proche d'une position (distance au segment avec biais de hauteur wZ). Nécessite que la carte soit chargée.",
-      "params": {
-        "pos": {"type": "vec3|nil", "desc": "Position ; celle du véhicule si nil."},
-        "wZ": {"type": "number|nil", "desc": "Poids de la différence de hauteur (1.85 par défaut)."}
+        "p": {
+          "type": "vec3",
+          "desc": "Point above the surface."
+        },
+        "r": {
+          "type": "number|nil",
+          "desc": "Sampling radius (2 by default)."
+        }
       },
       "returns": [
-        {"type": "any", "desc": "Identifiant du premier noeud de l'arête (nil si rien trouvé à moins de 200 m)."},
-        {"type": "any", "desc": "Identifiant du second noeud de l'arête."},
-        {"type": "number", "desc": "Distance à l'arête en mètres."}
+        {
+          "type": "vec3",
+          "desc": "Unit normal of the surface."
+        }
+      ]
+    },
+    "findClosestRoad": {
+      "desc": "Finds the road edge closest to a position (distance to the segment with wZ height bias). Requires the map to be loaded.",
+      "params": {
+        "pos": {
+          "type": "vec3|nil",
+          "desc": "Position; the vehicle's if nil."
+        },
+        "wZ": {
+          "type": "number|nil",
+          "desc": "Weight of the height difference (1.85 by default)."
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Identifier of the first node of the edge (nil if nothing found within 200 m)."
+        },
+        {
+          "type": "any",
+          "desc": "Identifier of the second node of the edge."
+        },
+        {
+          "type": "number",
+          "desc": "Distance to the edge in meters."
+        }
       ]
     },
     "findBestRoad": {
-      "desc": "Trouve l'arête de route la plus pertinente selon la position ET la direction (alignement, sens unique, barrières), avec repli sur findClosestRoad.",
+      "desc": "Finds the most relevant road edge according to position AND direction (alignment, one-way, gates), falling back to findClosestRoad.",
       "params": {
-        "pos": {"type": "vec3|nil", "desc": "Position ; celle du véhicule si nil."},
-        "dir": {"type": "vec3|nil", "desc": "Direction ; celle du véhicule si nil."},
-        "wZ": {"type": "number|nil", "desc": "Poids de la différence de hauteur."}
+        "pos": {
+          "type": "vec3|nil",
+          "desc": "Position; the vehicle's if nil."
+        },
+        "dir": {
+          "type": "vec3|nil",
+          "desc": "Direction; the vehicle's if nil."
+        },
+        "wZ": {
+          "type": "number|nil",
+          "desc": "Weight of the height difference."
+        }
       },
       "returns": [
-        {"type": "any", "desc": "Premier noeud de l'arête."},
-        {"type": "any", "desc": "Second noeud de l'arête."},
-        {"type": "number", "desc": "Distance en mètres."}
+        {
+          "type": "any",
+          "desc": "First node of the edge."
+        },
+        {
+          "type": "any",
+          "desc": "Second node of the edge."
+        },
+        {
+          "type": "number",
+          "desc": "Distance in meters."
+        }
       ]
     },
     "getPointToPointPath": {
-      "desc": "Calcule un chemin sur le navgraph entre deux positions (le point de départ et la cible sont rattachés aux arêtes proches). Renvoie {} si la carte n'est pas chargée.",
+      "desc": "Computes a path on the navgraph between two positions (the start point and the target are attached to nearby edges). Returns {} if the map is not loaded.",
       "params": {
-        "startPos": {"type": "vec3", "desc": "Position de départ."},
-        "targetPos": {"type": "vec3", "desc": "Position cible."},
-        "cutOffDrivability": {"type": "number|nil", "desc": "Les routes de drivabilité inférieure ou égale sont pénalisées."},
-        "dirMult": {"type": "number|nil", "desc": "Pénalité si le chemin ne respecte pas les sens légaux (> 1, typiquement >= 1e4) ; nil ou 1 = aucune."},
-        "penaltyAboveCutoff": {"type": "number|nil", "desc": "Multiplicateur de coût au-dessus du seuil de drivabilité."},
-        "penaltyBelowCutoff": {"type": "number|nil", "desc": "Multiplicateur de coût sous le seuil."},
-        "wZ": {"type": "number|nil", "desc": "Biais de hauteur (4 par défaut) pour choisir le noeud d'arrivée."}
+        "startPos": {
+          "type": "vec3",
+          "desc": "Start position."
+        },
+        "targetPos": {
+          "type": "vec3",
+          "desc": "Target position."
+        },
+        "cutOffDrivability": {
+          "type": "number|nil",
+          "desc": "Roads of lower or equal drivability are penalized."
+        },
+        "dirMult": {
+          "type": "number|nil",
+          "desc": "Penalty if the path does not respect legal directions (> 1, typically >= 1e4); nil or 1 = none."
+        },
+        "penaltyAboveCutoff": {
+          "type": "number|nil",
+          "desc": "Cost multiplier above the drivability threshold."
+        },
+        "penaltyBelowCutoff": {
+          "type": "number|nil",
+          "desc": "Cost multiplier below the threshold."
+        },
+        "wZ": {
+          "type": "number|nil",
+          "desc": "Height bias (4 by default) to choose the arrival node."
+        }
       },
-      "returns": [{"type": "table", "desc": "Liste des noeuds du chemin (format graphpath), {} si impossible."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of path nodes (graphpath format), {} if impossible."
+        }
+      ]
     }
   }
 }

@@ -1,44 +1,89 @@
 {
   "path": "lua/common/tcpServer.lua",
-  "module": "Serveur TCP non bloquant servant aux outils externes (chaîne d'outils d'édition, scripts). Utilise ASIO via createNetworkServer s'il est disponible, sinon LuaSocket. Les messages sont des charges JSON précédées d'un en-tête fixe de 8 octets. Un moddeur l'utilise pour dialoguer avec un programme externe : on crée un serveur puis on appelle receiveData() à chaque frame.",
-  "usage": "local TCPServer = require('tcpServer')\nlocal server = TCPServer:new('localhost', 12345)\n-- à chaque mise à jour :\nlocal received = server:receiveData()\nfor _, entry in ipairs(received) do\n  local connection, message = unpack(entry)\n  if message == 'disconnect' then ... else server:send(connection, {cmd = 'pong'}, message) end\nend\nserver:destroy()",
+  "module": "Non-blocking TCP server used by external tools (editing toolchain, scripts). Uses ASIO via createNetworkServer if available, otherwise LuaSocket. Messages are JSON payloads preceded by a fixed 8-byte header. A modder uses it to talk to an external program: you create a server then call receiveData() every frame.",
+  "usage": "local TCPServer = require('tcpServer')\nlocal server = TCPServer:new('localhost', 12345)\n-- on every update:\nlocal received = server:receiveData()\nfor _, entry in ipairs(received) do\n  local connection, message = unpack(entry)\n  if message == 'disconnect' then ... else server:send(connection, {cmd = 'pong'}, message) end\nend\nserver:destroy()",
   "notes": [
-    "Protocole : 4 octets 'BN01' (identifiant), 4 octets uint32 little-endian = longueur de la charge utile JSON, terminateur nul inclus, puis le JSON suivi de '\\0'.",
-    "receiveData() renvoie une liste d'entrées {connection, message} ; message est la table JSON décodée, ou la chaîne 'disconnect' (avec éventuellement un 3e élément = erreur) quand une connexion LuaSocket se ferme.",
-    "send(connection, sendData, recData) copie temporairement recData.context dans sendData.context (corrélation requête/réponse), encode avec jsonEncode puis envoie en-tête et JSON.",
-    "Appeler TCPServer:new(...) avec deux-points. En cas d'échec de bind LuaSocket, new renvoie false (pas un objet).",
-    "BUG : dans _onDataRaw, en cas d'échec de décodage JSON, le code appelle self:sendData(...) qui n'existe pas (la méthode s'appelle send) : une erreur Lua sera levée au lieu d'envoyer la réponse d'erreur.",
-    "BUG/PIÈGE : new() stocke serverLuasocket/serverASIO et headerBuffer sur la CLASSE (self = TCPServer) et non sur newObj ; plusieurs serveurs partagent donc ces champs. Si l'identifiant 'BN01' est invalide, _onDataRaw retourne sans vider le tampon : la connexion reste bloquée sur ces octets.",
-    "La version ASIO ne dispose pas de la détection de déconnexion ('disconnect') : elle relaie seulement les données reçues. Port d'écoute : listenHost n'est utilisé que par LuaSocket ; avec ASIO seul le port est passé."
+    "Protocol: 4 bytes 'BN01' (identifier), 4 bytes little-endian uint32 = length of the JSON payload, null terminator included, then the JSON followed by '\\0'.",
+    "receiveData() returns a list of {connection, message} entries; message is the decoded JSON table, or the string 'disconnect' (possibly with a 3rd element = error) when a LuaSocket connection closes.",
+    "send(connection, sendData, recData) temporarily copies recData.context into sendData.context (request/response correlation), encodes with jsonEncode then sends the header and the JSON.",
+    "Call TCPServer:new(...) with a colon. If the LuaSocket bind fails, new returns false (not an object).",
+    "BUG: in _onDataRaw, when JSON decoding fails, the code calls self:sendData(...) which does not exist (the method is called send): a Lua error will be raised instead of sending the error response.",
+    "BUG/PITFALL: new() stores serverLuasocket/serverASIO and headerBuffer on the CLASS (self = TCPServer) and not on newObj; several servers therefore share these fields. If the 'BN01' identifier is invalid, _onDataRaw returns without emptying the buffer: the connection stays stuck on these bytes.",
+    "The ASIO version has no disconnection detection ('disconnect'): it only relays the received data. Listening port: listenHost is only used by LuaSocket; with ASIO only the port is passed."
   ],
   "fields": {},
   "functions": {
     "new": {
-      "desc": "Crée un serveur TCP écoutant sur le port donné (appel `TCPServer:new(host, port)`). Choisit ASIO si createNetworkServer existe, sinon LuaSocket non bloquant. Renvoie false si LuaSocket ne peut pas se lier.",
-      "params": {"listenHost": {"type": "string", "desc": "adresse d'écoute (LuaSocket), par ex. 'localhost'"}, "port": {"type": "integer", "desc": "port TCP"}},
-      "returns": [{"type": "table|boolean", "desc": "objet serveur, ou false en cas d'échec"}],
+      "desc": "Creates a TCP server listening on the given port (call `TCPServer:new(host, port)`). Picks ASIO if createNetworkServer exists, otherwise non-blocking LuaSocket. Returns false if LuaSocket cannot bind.",
+      "params": {
+        "listenHost": {
+          "type": "string",
+          "desc": "listening address (LuaSocket), e.g. 'localhost'"
+        },
+        "port": {
+          "type": "integer",
+          "desc": "TCP port"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|boolean",
+          "desc": "server object, or false on failure"
+        }
+      ],
       "internal": false
     },
     "send": {
-      "desc": "Envoie un message JSON (en-tête BN01 + taille + JSON + '\\0') sur une connexion. Si recData.context existe, il est copié dans sendData.context pour la réponse (puis retiré de sendData).",
-      "params": {"connection": {"type": "table", "desc": "connexion (premier élément d'une entrée de receiveData)"}, "sendData": {"type": "table", "desc": "message à encoder en JSON"}, "recData": {"type": "table|nil", "desc": "message reçu auquel on répond (pour recopier context)"}},
+      "desc": "Sends a JSON message (BN01 header + size + JSON + '\\0') on a connection. If recData.context exists, it is copied into sendData.context for the response (then removed from sendData).",
+      "params": {
+        "connection": {
+          "type": "table",
+          "desc": "connection (first element of a receiveData entry)"
+        },
+        "sendData": {
+          "type": "table",
+          "desc": "message to encode as JSON"
+        },
+        "recData": {
+          "type": "table|nil",
+          "desc": "received message being answered (to copy context)"
+        }
+      },
       "returns": [],
       "internal": false
     },
     "_onDataRaw": {
-      "desc": "Interne : accumule les octets reçus d'une connexion dans un tampon, extrait les messages complets (en-tête valide, longueur, terminateur nul), décode le JSON (jsonDecode) et ajoute {connection, données} à res.",
-      "params": {"connection": {"type": "table", "desc": "connexion"}, "dataRaw": {"type": "string", "desc": "octets reçus"}, "res": {"type": "table", "desc": "liste de résultats à compléter"}},
+      "desc": "Internal: accumulates the bytes received from a connection in a buffer, extracts complete messages (valid header, length, null terminator), decodes the JSON (jsonDecode) and adds {connection, data} to res.",
+      "params": {
+        "connection": {
+          "type": "table",
+          "desc": "connection"
+        },
+        "dataRaw": {
+          "type": "string",
+          "desc": "bytes received"
+        },
+        "res": {
+          "type": "table",
+          "desc": "list of results to complete"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "receiveData": {
-      "desc": "À appeler régulièrement. Accepte les nouvelles connexions, lit les données disponibles, extrait les messages complets. Renvoie une liste d'entrées {connection, message}.",
+      "desc": "To be called regularly. Accepts new connections, reads the available data, extracts complete messages. Returns a list of {connection, message} entries.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "liste de {connection, message | 'disconnect'[, erreur]}"}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "list of {connection, message | 'disconnect'[, error]}"
+        }
+      ],
       "internal": false
     },
     "destroy": {
-      "desc": "Ferme toutes les connexions et le socket serveur (LuaSocket) ou détruit le serveur ASIO (destroyNetworkServer), et vide les tampons.",
+      "desc": "Closes all connections and the server socket (LuaSocket) or destroys the ASIO server (destroyNetworkServer), and empties the buffers.",
       "params": {},
       "returns": [],
       "internal": false

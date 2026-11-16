@@ -1,246 +1,246 @@
 # `editor_toolUtilities_render_spheres`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/render/spheres.lua` · VM : Game Engine (GE) · 228 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/render/spheres.lua` · VM: Game Engine (GE) · 228 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_render_spheres` : `extensions.load("editor_toolUtilities_render_spheres")`, puis la globale `editor_toolUtilities_render_spheres`
+**Access:** extension `editor_toolUtilities_render_spheres`: `extensions.load("editor_toolUtilities_render_spheres")`, then the global `editor_toolUtilities_render_spheres`
 
-Dessin de sphères et de poignées de debug pour les outils d'édition de splines (issu de l'ancien render.lua). Module feuille : dépend de utils/debugDraw et du style partagé. Le rayon est proportionnel à la distance à la caméra (taille apparente constante jusqu'à 60 m, puis taille monde fixe), via getSphereScale que réutilisent les modules render/spline, transport et graph. Contient les nœuds, jonctions, poignées de barre et de courbe, surbrillances (survol, sélection, pulsées dans le temps) et fantômes « rayons X » sans test de profondeur.
+Drawing of debug spheres and handles for the spline editing tools (from the old render.lua). Leaf module: depends on utils/debugDraw and the shared style. The radius is proportional to the distance to the camera (constant apparent size up to 60 m, then fixed world size), via getSphereScale which the render/spline, transport and graph modules reuse. Contains nodes, junctions, bar and curve handles, highlights (hover, selection, pulsing over time) and "X-ray" ghosts without depth test.
 
-## Remarques
+## Notes
 
-- Les variantes « Culled » (et la plupart des dessins de nœuds) ne dessinent qu'à moins de 600 m de la caméra ; drawSphereCursor et drawSphereImmediate ne sont pas filtrées.
-- Les surbrillances pulsent avec os.clock() selon les fréquences du style (highlightPulseHz, highlightHoverPulseHz).
-- Les fonctions « Fixed » prennent un rayon monde fixe au lieu de l'échelle liée à la distance.
-- Les fantômes (Ghost) et surbrillances sont dessinés sans test de profondeur : visibles à travers le terrain.
+- The "Culled" variants (and most node drawings) only draw within 600 m of the camera; drawSphereCursor and drawSphereImmediate are not filtered.
+- The highlights pulse with os.clock() according to the style frequencies (highlightPulseHz, highlightHoverPulseHz).
+- The "Fixed" functions take a fixed world radius instead of the distance-linked scale.
+- Ghosts (Ghost) and highlights are drawn without depth test: visible through the terrain.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_render_spheres.drawHoverNavGraphNode(p)` | Halo pulsé d'un nœud de navGraph survolé. | 122 |
-| `editor_toolUtilities_render_spheres.drawPathNode(p)` | Nœud de chemin (colourPathNode). | 112 |
-| `editor_toolUtilities_render_spheres.drawSelectedNavGraphNode(p)` | Gros nœud pulsé du graphe de navigation sélectionné. | 113 |
-| `editor_toolUtilities_render_spheres.drawSphereBar(p)` | Poignée de barre (halo puis cœur). | 43 |
-| `editor_toolUtilities_render_spheres.drawSphereBarGhost(p)` | Fantôme rayons X de la poignée de barre. | 191 |
-| `editor_toolUtilities_render_spheres.drawSphereBarHover(p)` | Poignée de barre survolée : halo pulsé plus grand. | 49 |
-| `editor_toolUtilities_render_spheres.drawSphereCornerHandleGhost(p)` | Fantôme rayons X de la poignée de coin. | 188 |
-| `editor_toolUtilities_render_spheres.drawSphereCulled(p, scale, col)` | Sphère à l'échelle liée à la distance, si le point est à moins de 600 m. | 31 |
-| `editor_toolUtilities_render_spheres.drawSphereCursor(p, isActive)` | Sphère du curseur souris sur la carte ; distance plafonnée à 100 m pour la taille. Non filtrée. | 154 |
-| `editor_toolUtilities_render_spheres.drawSphereCurveHandle(p)` | Poignée d'apex de courbe (flexion d'arête, rayon de coin), verte par défaut. | 76 |
-| `editor_toolUtilities_render_spheres.drawSphereCurveHandleCol(p, coreCol, glowCol)` | Poignée de courbe avec couleurs de cœur et de halo choisies par l'outil : point stable avec halo doux. | 61 |
-| `editor_toolUtilities_render_spheres.drawSphereCurveHandleHover(p)` | Poignée de courbe survolée (halo pulsé). | 77 |
-| `editor_toolUtilities_render_spheres.drawSphereCurveHandleHoverCol(p, coreCol, glowCol)` | Version survolée de drawSphereCurveHandleCol : halo plus grand, plus brillant et pulsé. | 66 |
-| `editor_toolUtilities_render_spheres.drawSphereHighlight(p)` | Surbrillance de nœud (colourHighlight, sans test de profondeur), filtrée à 600 m. | 163 |
-| `editor_toolUtilities_render_spheres.drawSphereHighlightForeground(p)` | Surbrillance de nœud sans filtrage de distance. | 177 |
-| `editor_toolUtilities_render_spheres.drawSphereHighlightHover(p)` | Surbrillance de survol pulsée, à l'échelle liée à la distance. | 78 |
-| `editor_toolUtilities_render_spheres.drawSphereHighlightHoverFixed(p, radius)` | Surbrillance de survol pulsée de rayon monde fixe. | 88 |
-| `editor_toolUtilities_render_spheres.drawSphereHighlightSelected(p)` | Surbrillance de sélection pulsée, à l'échelle liée à la distance. | 95 |
-| `editor_toolUtilities_render_spheres.drawSphereHighlightSelectedFixed(p, radius)` | Surbrillance de sélection pulsée de rayon monde fixe. | 105 |
-| `editor_toolUtilities_render_spheres.drawSphereImmediate(p, scale, col)` | Sphère à l'échelle liée à la distance, sans filtrage par distance. | 153 |
-| `editor_toolUtilities_render_spheres.drawSphereJunction(p)` | Centre de jonction (halo puis cœur). | 144 |
-| `editor_toolUtilities_render_spheres.drawSphereJunctionDull(p)` | Centre de jonction atténué. | 150 |
-| `editor_toolUtilities_render_spheres.drawSphereJunctionGhost(p)` | Fantôme rayons X d'une jonction. | 185 |
-| `editor_toolUtilities_render_spheres.drawSphereNode(p)` | Nœud standard : halo puis cœur. | 131 |
-| `editor_toolUtilities_render_spheres.drawSphereNodeDull(p)` | Nœud atténué. | 162 |
-| `editor_toolUtilities_render_spheres.drawSphereNodeForeground(p)` | Nœud (halo puis cœur) dessiné sans test de profondeur. | 170 |
-| `editor_toolUtilities_render_spheres.drawSphereNodeGhost(p)` | Fantôme rayons X d'un nœud : seule la partie enfouie dans le terrain ou un maillage se voit. | 182 |
-| `editor_toolUtilities_render_spheres.drawSphereNodeLocked(p)` | Nœud verrouillé (couleurs colourNodeLocked). | 137 |
-| `editor_toolUtilities_render_spheres.drawSphereRib(p)` | Poignée de nervure : halo puis cœur. | 37 |
-| `editor_toolUtilities_render_spheres.getSphereScale(d)` | Facteur d'échelle de sphère pour une distance d à la caméra : d plafonné à 60 m, multiplié par une pente (1/sqrt(30) * 0.8). | 26 |
+| `editor_toolUtilities_render_spheres.drawHoverNavGraphNode(p)` | Pulsing halo of a hovered navGraph node. | 122 |
+| `editor_toolUtilities_render_spheres.drawPathNode(p)` | Path node (colourPathNode). | 112 |
+| `editor_toolUtilities_render_spheres.drawSelectedNavGraphNode(p)` | Large pulsing node of the selected navigation graph. | 113 |
+| `editor_toolUtilities_render_spheres.drawSphereBar(p)` | Bar handle (halo then core). | 43 |
+| `editor_toolUtilities_render_spheres.drawSphereBarGhost(p)` | X-ray ghost of the bar handle. | 191 |
+| `editor_toolUtilities_render_spheres.drawSphereBarHover(p)` | Hovered bar handle: larger pulsing halo. | 49 |
+| `editor_toolUtilities_render_spheres.drawSphereCornerHandleGhost(p)` | X-ray ghost of the corner handle. | 188 |
+| `editor_toolUtilities_render_spheres.drawSphereCulled(p, scale, col)` | Sphere at the distance-linked scale, if the point is within 600 m. | 31 |
+| `editor_toolUtilities_render_spheres.drawSphereCursor(p, isActive)` | Mouse cursor sphere on the map; distance capped at 100 m for the size. Not filtered. | 154 |
+| `editor_toolUtilities_render_spheres.drawSphereCurveHandle(p)` | Curve apex handle (edge bending, corner radius), green by default. | 76 |
+| `editor_toolUtilities_render_spheres.drawSphereCurveHandleCol(p, coreCol, glowCol)` | Curve handle with core and halo colors chosen by the tool: stable point with soft halo. | 61 |
+| `editor_toolUtilities_render_spheres.drawSphereCurveHandleHover(p)` | Hovered curve handle (pulsing halo). | 77 |
+| `editor_toolUtilities_render_spheres.drawSphereCurveHandleHoverCol(p, coreCol, glowCol)` | Hovered version of drawSphereCurveHandleCol: larger, brighter, pulsing halo. | 66 |
+| `editor_toolUtilities_render_spheres.drawSphereHighlight(p)` | Node highlight (colourHighlight, no depth test), filtered at 600 m. | 163 |
+| `editor_toolUtilities_render_spheres.drawSphereHighlightForeground(p)` | Node highlight without distance filtering. | 177 |
+| `editor_toolUtilities_render_spheres.drawSphereHighlightHover(p)` | Pulsing hover highlight, at the distance-linked scale. | 78 |
+| `editor_toolUtilities_render_spheres.drawSphereHighlightHoverFixed(p, radius)` | Pulsing hover highlight with fixed world radius. | 88 |
+| `editor_toolUtilities_render_spheres.drawSphereHighlightSelected(p)` | Pulsing selection highlight, at the distance-linked scale. | 95 |
+| `editor_toolUtilities_render_spheres.drawSphereHighlightSelectedFixed(p, radius)` | Pulsing selection highlight with fixed world radius. | 105 |
+| `editor_toolUtilities_render_spheres.drawSphereImmediate(p, scale, col)` | Sphere at the distance-linked scale, without distance filtering. | 153 |
+| `editor_toolUtilities_render_spheres.drawSphereJunction(p)` | Junction center (halo then core). | 144 |
+| `editor_toolUtilities_render_spheres.drawSphereJunctionDull(p)` | Dimmed junction center. | 150 |
+| `editor_toolUtilities_render_spheres.drawSphereJunctionGhost(p)` | X-ray ghost of a junction. | 185 |
+| `editor_toolUtilities_render_spheres.drawSphereNode(p)` | Standard node: halo then core. | 131 |
+| `editor_toolUtilities_render_spheres.drawSphereNodeDull(p)` | Dimmed node. | 162 |
+| `editor_toolUtilities_render_spheres.drawSphereNodeForeground(p)` | Node (halo then core) drawn without depth test. | 170 |
+| `editor_toolUtilities_render_spheres.drawSphereNodeGhost(p)` | X-ray ghost of a node: only the part buried in the terrain or a mesh is visible. | 182 |
+| `editor_toolUtilities_render_spheres.drawSphereNodeLocked(p)` | Locked node (colourNodeLocked colors). | 137 |
+| `editor_toolUtilities_render_spheres.drawSphereRib(p)` | Rib handle: halo then core. | 37 |
+| `editor_toolUtilities_render_spheres.getSphereScale(d)` | Sphere scale factor for a distance d to the camera: d capped at 60 m, multiplied by a slope (1/sqrt(30) * 0.8). | 26 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_render_spheres.drawHoverNavGraphNode(p)`
 
-Halo pulsé d'un nœud de navGraph survolé.
+Pulsing halo of a hovered navGraph node.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawPathNode(p)`
 
-Nœud de chemin (colourPathNode).
+Path node (colourPathNode).
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSelectedNavGraphNode(p)`
 
-Gros nœud pulsé du graphe de navigation sélectionné.
+Large pulsing node of the selected navigation graph.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereBar(p)`
 
-Poignée de barre (halo puis cœur).
+Bar handle (halo then core).
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereBarGhost(p)`
 
-Fantôme rayons X de la poignée de barre.
+X-ray ghost of the bar handle.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereBarHover(p)`
 
-Poignée de barre survolée : halo pulsé plus grand.
+Hovered bar handle: larger pulsing halo.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereCornerHandleGhost(p)`
 
-Fantôme rayons X de la poignée de coin.
+X-ray ghost of the corner handle.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereCulled(p, scale, col)`
 
-Sphère à l'échelle liée à la distance, si le point est à moins de 600 m.
+Sphere at the distance-linked scale, if the point is within 600 m.
 
-- `p` (*vec3*) : Centre.
-- `scale` (*number*) : Multiplicateur d'échelle.
-- `col` (*integer*) : Couleur packée.
+- `p` (*vec3*) : Center.
+- `scale` (*number*) : Scale multiplier.
+- `col` (*integer*) : Packed color.
 
 #### `editor_toolUtilities_render_spheres.drawSphereCursor(p, isActive)`
 
-Sphère du curseur souris sur la carte ; distance plafonnée à 100 m pour la taille. Non filtrée.
+Mouse cursor sphere on the map; distance capped at 100 m for the size. Not filtered.
 
 - `p` (*vec3*) : Position.
-- `isActive` (*boolean|nil*) : true pour la couleur active, sinon couleur inactive.
+- `isActive` (*boolean|nil*) : true for the active color, otherwise inactive color.
 
 #### `editor_toolUtilities_render_spheres.drawSphereCurveHandle(p)`
 
-Poignée d'apex de courbe (flexion d'arête, rayon de coin), verte par défaut.
+Curve apex handle (edge bending, corner radius), green by default.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereCurveHandleCol(p, coreCol, glowCol)`
 
-Poignée de courbe avec couleurs de cœur et de halo choisies par l'outil : point stable avec halo doux.
+Curve handle with core and halo colors chosen by the tool: stable point with soft halo.
 
-- `p` (*vec3*) : Centre.
-- `coreCol` (*integer*) : Couleur du cœur.
-- `glowCol` (*integer*) : Couleur du halo.
+- `p` (*vec3*) : Center.
+- `coreCol` (*integer*) : Core color.
+- `glowCol` (*integer*) : Halo color.
 
 #### `editor_toolUtilities_render_spheres.drawSphereCurveHandleHover(p)`
 
-Poignée de courbe survolée (halo pulsé).
+Hovered curve handle (pulsing halo).
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereCurveHandleHoverCol(p, coreCol, glowCol)`
 
-Version survolée de drawSphereCurveHandleCol : halo plus grand, plus brillant et pulsé.
+Hovered version of drawSphereCurveHandleCol: larger, brighter, pulsing halo.
 
-- `p` (*vec3*) : Centre.
-- `coreCol` (*integer*) : Couleur du cœur.
-- `glowCol` (*integer*) : Couleur du halo.
+- `p` (*vec3*) : Center.
+- `coreCol` (*integer*) : Core color.
+- `glowCol` (*integer*) : Halo color.
 
 #### `editor_toolUtilities_render_spheres.drawSphereHighlight(p)`
 
-Surbrillance de nœud (colourHighlight, sans test de profondeur), filtrée à 600 m.
+Node highlight (colourHighlight, no depth test), filtered at 600 m.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereHighlightForeground(p)`
 
-Surbrillance de nœud sans filtrage de distance.
+Node highlight without distance filtering.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereHighlightHover(p)`
 
-Surbrillance de survol pulsée, à l'échelle liée à la distance.
+Pulsing hover highlight, at the distance-linked scale.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereHighlightHoverFixed(p, radius)`
 
-Surbrillance de survol pulsée de rayon monde fixe.
+Pulsing hover highlight with fixed world radius.
 
-- `p` (*vec3*) : Centre.
-- `radius` (*number*) : Rayon de base en mètres.
+- `p` (*vec3*) : Center.
+- `radius` (*number*) : Base radius in meters.
 
 #### `editor_toolUtilities_render_spheres.drawSphereHighlightSelected(p)`
 
-Surbrillance de sélection pulsée, à l'échelle liée à la distance.
+Pulsing selection highlight, at the distance-linked scale.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereHighlightSelectedFixed(p, radius)`
 
-Surbrillance de sélection pulsée de rayon monde fixe.
+Pulsing selection highlight with fixed world radius.
 
-- `p` (*vec3*) : Centre.
-- `radius` (*number*) : Rayon de base en mètres.
+- `p` (*vec3*) : Center.
+- `radius` (*number*) : Base radius in meters.
 
 #### `editor_toolUtilities_render_spheres.drawSphereImmediate(p, scale, col)`
 
-Sphère à l'échelle liée à la distance, sans filtrage par distance.
+Sphere at the distance-linked scale, without distance filtering.
 
-- `p` (*vec3*) : Centre.
-- `scale` (*number*) : Multiplicateur d'échelle.
-- `col` (*integer*) : Couleur packée.
+- `p` (*vec3*) : Center.
+- `scale` (*number*) : Scale multiplier.
+- `col` (*integer*) : Packed color.
 
 #### `editor_toolUtilities_render_spheres.drawSphereJunction(p)`
 
-Centre de jonction (halo puis cœur).
+Junction center (halo then core).
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereJunctionDull(p)`
 
-Centre de jonction atténué.
+Dimmed junction center.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereJunctionGhost(p)`
 
-Fantôme rayons X d'une jonction.
+X-ray ghost of a junction.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereNode(p)`
 
-Nœud standard : halo puis cœur.
+Standard node: halo then core.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereNodeDull(p)`
 
-Nœud atténué.
+Dimmed node.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereNodeForeground(p)`
 
-Nœud (halo puis cœur) dessiné sans test de profondeur.
+Node (halo then core) drawn without depth test.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereNodeGhost(p)`
 
-Fantôme rayons X d'un nœud : seule la partie enfouie dans le terrain ou un maillage se voit.
+X-ray ghost of a node: only the part buried in the terrain or a mesh is visible.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereNodeLocked(p)`
 
-Nœud verrouillé (couleurs colourNodeLocked).
+Locked node (colourNodeLocked colors).
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.drawSphereRib(p)`
 
-Poignée de nervure : halo puis cœur.
+Rib handle: halo then core.
 
-- `p` (*vec3*) : Centre.
+- `p` (*vec3*) : Center.
 
 #### `editor_toolUtilities_render_spheres.getSphereScale(d)`
 
-Facteur d'échelle de sphère pour une distance d à la caméra : d plafonné à 60 m, multiplié par une pente (1/sqrt(30) * 0.8).
+Sphere scale factor for a distance d to the camera: d capped at 60 m, multiplied by a slope (1/sqrt(30) * 0.8).
 
-- `d` (*number*) : Distance caméra-point en mètres.
-- **renvoie** : number Échelle de base.
+- `d` (*number*) : Camera-to-point distance in meters.
+- **returns**: number Base scale.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/render/spheres.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/render/spheres.lua`.*

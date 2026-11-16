@@ -1,41 +1,55 @@
 {
   "path": "lua/ge/extensions/telemetry/trackers/ui.lua",
-  "module": "Traceur de télémétrie de l'interface. Il suit les écrans (routes UI) que le joueur ouvre et quitte : chaque écran est une activité `uiScreen` dont la durée est le temps passé dessus, avec le champ `from` (écran d'origine) pour reconstituer le parcours dans les menus. Seuls les noms de routes sont rapportés, jamais les paramètres d'écran. Dépend de `telemetry_core`.",
+  "module": "UI telemetry tracker. It tracks the screens (UI routes) the player opens and leaves: each screen is a `uiScreen` activity whose duration is the time spent on it, with the `from` field (origin screen) to reconstruct the path through the menus. Only route names are reported, never screen parameters. Depends on `telemetry_core`.",
   "notes": [
-    "Le temps de chargement de l'écran (`loadMs`, `loadToMount`) est joint à la fin de l'activité plutôt que d'être un événement séparé, pour limiter le volume de données (uiScreen est déjà le plus fréquent).",
-    "`loadEnterMs` et `loadReadyMs` ne sont ajoutés que si le total de chargement atteint `loadDetailMs` (250 ms).",
-    "Une navigation annulée ou expirée n'appelle jamais onRouteTiming : cet écran est rapporté sans temps de chargement.",
-    "Le code utilise le hook moderne onAfterRouteChange et non l'ancien hook de compatibilité onUiChangedState."
+    "The screen load time (`loadMs`, `loadToMount`) is attached at the end of the activity rather than being a separate event, to limit data volume (uiScreen is already the most frequent).",
+    "`loadEnterMs` and `loadReadyMs` are only added if the total load reaches `loadDetailMs` (250 ms).",
+    "A cancelled or expired navigation never calls onRouteTiming: that screen is reported without load time.",
+    "The code uses the modern hook onAfterRouteChange and not the old compatibility hook onUiChangedState."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions à charger avant celle-ci : `{'telemetry_core'}`."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions to load before this one: `{'telemetry_core'}`."
+    }
   },
   "functions": {
     "onAfterRouteChange": {
-      "desc": "Hook appelé par le routeur UI une fois une navigation terminée : l'écran affiché est alors `entry.request.name`. Ferme l'activité de l'écran précédent puis ouvre `uiScreen` avec `screen` et `from` (`entry.origin.route`). Sans nom d'écran, ne fait rien.",
-      "params": {"entry": {"type": "table", "desc": "Entrée de navigation du routeur ; champs lus : `request.name` et `origin.route`."}},
+      "desc": "Hook called by the UI router once a navigation is finished: the displayed screen is then `entry.request.name`. Closes the previous screen's activity then opens `uiScreen` with `screen` and `from` (`entry.origin.route`). Without a screen name, does nothing.",
+      "params": {
+        "entry": {
+          "type": "table",
+          "desc": "Router navigation entry; fields read: `request.name` and `origin.route`."
+        }
+      },
       "internal": true
     },
     "onRouteTiming": {
-      "desc": "Hook appelé par le routeur après qu'il a validé la route, donc juste après l'ouverture de l'activité. Mémorise les temps si la route correspond à l'écran courant ; ils sont envoyés à la fermeture.",
+      "desc": "Hook called by the router after it has validated the route, so just after the activity is opened. Remembers the timings if the route matches the current screen; they are sent on close.",
       "params": {
-        "routeName": {"type": "string", "desc": "Nom de la route concernée."},
-        "timings": {"type": "table", "desc": "Temps de la navigation ; champs lus : total, mountAcked, enter, ready."}
+        "routeName": {
+          "type": "string",
+          "desc": "Name of the route concerned."
+        },
+        "timings": {
+          "type": "table",
+          "desc": "Navigation timings; fields read: total, mountAcked, enter, ready."
+        }
       },
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement de l'extension. Passe l'extension en déchargement manuel.",
+      "desc": "Hook called when the extension loads. Sets the extension to manual unload.",
       "params": {},
       "internal": true
     },
     "onExit": {
-      "desc": "Hook appelé à la fermeture du jeu. Ferme l'écran ouvert, sinon le dernier n'aurait pas de durée.",
+      "desc": "Hook called when the game exits. Closes the open screen, otherwise the last one would have no duration.",
       "params": {},
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook appelé au déchargement de l'extension (un rechargement Lua ne passe pas par onExit). Ferme l'écran ouvert.",
+      "desc": "Hook called when the extension is unloaded (a Lua reload does not go through onExit). Closes the open screen.",
       "params": {},
       "internal": true
     }

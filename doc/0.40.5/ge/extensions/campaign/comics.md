@@ -1,39 +1,39 @@
 # `campaign_comics`
 
-*Fichier : `lua/ge/extensions/campaign/comics.lua` · VM : Game Engine (GE) · 79 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/campaign/comics.lua` · VM: Game Engine (GE) · 79 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `campaign_comics` : `extensions.load("campaign_comics")`, puis la globale `campaign_comics`
+**Access:** extension `campaign_comics`: `extensions.load("campaign_comics")`, then the global `campaign_comics`
 
-Affiche une bande dessinée (suite de planches) dans l'interface de la campagne. playComic construit la liste des planches à partir de comicData puis ouvre l'écran UI « campaign.comic » ; quand l'animation Spine est terminée, le callback fourni est appelé. Le canal audio GUI est joué pendant l'affichage.
+Shows a comic (sequence of panels) in the campaign interface. playComic builds the list of panels from comicData then opens the UI screen "campaign.comic"; when the Spine animation is finished, the provided callback is called. The GUI audio channel is played during the display.
 
-## Remarques
+## Notes
 
-- comicData : {path = dossier, order = liste, backgroundSound = ...}. Chaque entrée de order est soit une chaîne (nom de planche), soit une table {comic = nom, sound = ...}. Chaque planche devient « path/nom/ ».
-- Le code qui coupait les autres canaux audio est commenté (« buggy »), mais reset() restaure encore lastVolumes s'il est renseigné ; en pratique lastVolumes reste vide.
-- Si comicData est nil, playComic revient sans rien afficher et sans appeler le callback.
+- comicData: {path = folder, order = list, backgroundSound = ...}. Each entry of order is either a string (panel name) or a table {comic = name, sound = ...}. Each panel becomes "path/name/".
+- The code that muted the other audio channels is commented out ("buggy"), but reset() still restores lastVolumes if it is set; in practice lastVolumes stays empty.
+- If comicData is nil, playComic returns without showing anything and without calling the callback.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `campaign_comics.onScenarioChange(sc)` | Hook de changement de scénario : si sc est nil ou si son état est « pre-start », restaure les volumes audio mémorisés. *(interne)* *(hook)* | 68 |
-| `campaign_comics.onSpineAnimationFinished()` | Hook appelé par l'interface à la fin de l'animation Spine : exécute le callback mémorisé (une seule fois), restaure les volumes et arrête le canal AudioChannelGui (arrêt avec paramètre 1). *(interne)* *(hook)* | 56 |
-| `campaign_comics.playComic(comicData, comicFinishedCallback)` | Prépare les planches, lance le canal audio AudioChannelGui et navigue vers l'écran « campaign.comic » avec la liste des planches. Mémorise le callback de fin. | 18 |
+| `campaign_comics.onScenarioChange(sc)` | Scenario change hook: if sc is nil or its state is "pre-start", restores the stored audio volumes. *(internal)* *(hook)* | 68 |
+| `campaign_comics.onSpineAnimationFinished()` | Hook called by the interface at the end of the Spine animation: runs the stored callback (only once), restores the volumes and stops the AudioChannelGui channel (stop with parameter 1). *(internal)* *(hook)* | 56 |
+| `campaign_comics.playComic(comicData, comicFinishedCallback)` | Prepares the panels, starts the AudioChannelGui audio channel and navigates to the "campaign.comic" screen with the list of panels. Stores the end callback. | 18 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `campaign_comics.onScenarioChange(sc)`
 
-Hook de changement de scénario : si sc est nil ou si son état est « pre-start », restaure les volumes audio mémorisés.
+Scenario change hook: if sc is nil or its state is "pre-start", restores the stored audio volumes.
 
-- `sc` (*table|nil*) : Scénario courant ; son champ state est lu.
+- `sc` (*table|nil*) : Current scenario; its state field is read.
 
 #### `campaign_comics.playComic(comicData, comicFinishedCallback)`
 
-Prépare les planches, lance le canal audio AudioChannelGui et navigue vers l'écran « campaign.comic » avec la liste des planches. Mémorise le callback de fin.
+Prepares the panels, starts the AudioChannelGui audio channel and navigates to the "campaign.comic" screen with the list of panels. Stores the end callback.
 
-- `comicData` (*table*) : Description de la BD : path, order, backgroundSound.
-- `comicFinishedCallback` (*function|nil*) : Appelée une fois la BD terminée ; nop si absente.
+- `comicData` (*table*) : Description of the comic: path, order, backgroundSound.
+- `comicFinishedCallback` (*function|nil*) : Called once the comic is finished; nop if absent.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/campaign/comics.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/campaign/comics.lua`.*

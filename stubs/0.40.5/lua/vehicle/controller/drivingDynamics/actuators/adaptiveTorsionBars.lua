@@ -2,67 +2,67 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Actionneur de la Driving Dynamics Suite : barres de torsion (anti-roulis) à raideur variable. Il regroupe des barres de torsion par nom et applique, selon un mode nommé, des coefficients multiplicatifs à leur raideur et amortissement jbeam via `obj:setTorsionbarSpringDamp`. Le mode se choisit par `setParameters({torsionBarMode = "nom"})`, typiquement depuis un mode `driveModes` de type "controller". Ordre d'appel : `defaultOrder = 80`.
---- Accès : contrôleur `drivingDynamics/actuators/adaptiveTorsionBars` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Driving Dynamics Suite actuator: variable-stiffness torsion bars (anti-roll). It groups torsion bars by name and, according to a named mode, applies multiplicative coefficients to their jbeam stiffness and damping via `obj:setTorsionbarSpringDamp`. The mode is chosen with `setParameters({torsionBarMode = "name"})`, typically from a `driveModes` mode of type "controller". Call order: `defaultOrder = 80`.
+--- Access: controller `drivingDynamics/actuators/adaptiveTorsionBars` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_drivingDynamics_actuators_adaptiveTorsionBars
 ---@field defaultOrder number 80.
----@field isActing boolean false : jamais modifié dans ce fichier.
----@field isActive boolean true après init.
+---@field isActing boolean false: never modified in this file.
+---@field isActive boolean true after init.
 ---@field type string "auxiliary".
 local controller_drivingDynamics_actuators_adaptiveTorsionBars = {}
 
---- Renvoie une copie des paramètres.
----Source : lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:103
----@return table  Copie profonde ({isEnabled = true} par défaut).
+--- Returns a copy of the parameters.
+---Source: lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:103
+---@return table  Deep copy ({isEnabled = true} by default).
 function controller_drivingDynamics_actuators_adaptiveTorsionBars.getConfig() end
 
---- Retrouve les barres de torsion par nom et lit les modes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:43
----@param jbeamData table Données jbeam.
+--- Finds the torsion bars by name and reads the modes.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:43
+---@param jbeamData table Jbeam data.
 function controller_drivingDynamics_actuators_adaptiveTorsionBars.init(jbeamData) end
 
---- Vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:76
+--- Empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:76
 function controller_drivingDynamics_actuators_adaptiveTorsionBars.initLastStage() end
 
---- Appelée par le CMU pour donner une référence vers lui.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:83
----@param cmu table Module CMU.
+--- Called by the CMU to give it a reference to itself.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:83
+---@param cmu table CMU module.
 function controller_drivingDynamics_actuators_adaptiveTorsionBars.registerCMU(cmu) end
 
---- Vide (les barres ne sont pas remises à l'état initial).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:40
+--- Empty (the bars are not restored to their initial state).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:40
 function controller_drivingDynamics_actuators_adaptiveTorsionBars.reset() end
 
---- Envoie les paramètres au CMU dans un paquet de debug config.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:107
+--- Sends the parameters to the CMU in a config debug packet.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:107
 function controller_drivingDynamics_actuators_adaptiveTorsionBars.sendConfigData() end
 
---- Remplace la table de paramètres (sans effet sur les modes).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:99
----@param configTable table Nouveaux paramètres.
+--- Replaces the parameter table (no effect on the modes).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:99
+---@param configTable table New parameters.
 function controller_drivingDynamics_actuators_adaptiveTorsionBars.setConfig(configTable) end
 
---- Mémorise le mode debug (sans autre effet).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:79
----@param debugEnabled boolean État du mode debug.
+--- Stores the debug mode (no other effect).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:79
+---@param debugEnabled boolean Debug mode state.
 function controller_drivingDynamics_actuators_adaptiveTorsionBars.setDebugMode(debugEnabled) end
 
---- Applique un mode de raideur si `parameters.torsionBarMode` est fourni.
----Source : lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:93
----@param parameters table Champ : torsionBarMode (nom d'un mode défini dans `modes`).
+--- Applies a stiffness mode if `parameters.torsionBarMode` is provided.
+---Source: lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:93
+---@param parameters table Field: torsionBarMode (name of a mode defined in `modes`).
 function controller_drivingDynamics_actuators_adaptiveTorsionBars.setParameters(parameters) end
 
---- Arrête l'actionneur (isActive = false).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:87
+--- Stops the actuator (isActive = false).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/actuators/adaptiveTorsionBars.lua:87
 function controller_drivingDynamics_actuators_adaptiveTorsionBars.shutdown() end
 
 return controller_drivingDynamics_actuators_adaptiveTorsionBars

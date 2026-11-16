@@ -1,68 +1,572 @@
 {
   "path": "lua/common/utils.test.lua",
-  "module": "Tests unitaires des fonctions utilitaires globales de `utils` (couleurs, chaînes, tables, JSON, sérialisation, copie, chemins, itérateurs triés/mélangés), à exécuter avec testFramework/TestManager. Lancement : `require('testFramework/TestManager'):runTestFiles('utils')` dans la console GE. Utile à un moddeur comme exemples de comportement attendu (cas limites compris) des helpers globaux.",
+  "module": "Unit tests of the global utility functions of `utils` (colors, strings, tables, JSON, serialization, copying, paths, sorted/shuffled iterators), to run with testFramework/TestManager. Launch: `require('testFramework/TestManager'):runTestFiles('utils')` in the GE console. Useful to a modder as examples of the expected behavior (edge cases included) of the global helpers.",
   "usage": "require('testFramework/TestManager'):runTestFiles('utils')",
   "notes": [
-    "Chaque fonction prend un contexte `ctx` fourni par TestManager et n'est pas destinée à être appelée directement ; le fichier fait `require('utils')` pour charger les helpers.",
-    "Plusieurs tests « NoGarbage »/« single-shot » vérifient un budget d'allocation (ctx:allowGarbage / checkGarbage).",
-    "Les tests de table testTableEndC, testTableInsertC et testTableSizeC couvrent les enveloppes de fonctions C du moteur (table.new-like)."
+    "Each function takes a context `ctx` provided by TestManager and is not meant to be called directly; the file does `require('utils')` to load the helpers.",
+    "Several \"NoGarbage\"/\"single-shot\" tests check an allocation budget (ctx:allowGarbage / checkGarbage).",
+    "The table tests testTableEndC, testTableInsertC and testTableSizeC cover the engine's C function wrappers (table.new-like)."
   ],
   "functions": {
-    "testColorConversion": {"desc": "Teste les conversions RGB/HSV et hexadécimal des couleurs.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testRainbowColor": {"desc": "Teste la génération de couleurs arc-en-ciel aux bornes de la plage.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testColorCreation": {"desc": "Teste les constructeurs de couleur RGBA et de valeurs empaquetées.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableToColor": {"desc": "Teste la conversion table vers couleur, y compris avec des valeurs nil.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testParseColor": {"desc": "Teste parseColor avec un hexadécimal, une table et des valeurs invalides.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testColorGenerators": {"desc": "Teste que les générateurs procéduraux de couleurs renvoient des couleurs valides.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testDumps": {"desc": "Teste le format de dumps pour quelques formes d'arguments (table, plusieurs arguments, aucun).", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testNoGarbageDumpDumpsSingleShot": {"desc": "Teste le budget de garbage (12288 octets) de dump/dumps pour les chemins d'appel courants, en un seul appel.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testLpadRpad": {"desc": "Teste les helpers de remplissage à gauche (lpad) et à droite (rpad).", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTrim": {"desc": "Teste la suppression des espaces en début et fin de chaîne.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testSplit": {"desc": "Teste split : limites et cas limites de délimiteur.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testStringStartEnd": {"desc": "Teste les helpers startswith/endswith des chaînes.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testStringStrip": {"desc": "Teste string.strip avec des classes de caractères explicites.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testStringSplit": {"desc": "Teste les variantes de l'API string.split et ses limites.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testStringSentenceCase": {"desc": "Teste la conversion en casse de phrase.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testStringHash": {"desc": "Teste que le hachage de chaînes est déterministe.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testBytesToString": {"desc": "Teste le formatage de tailles en octets selon les unités et les cas limites.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testFormatTimeStringNow": {"desc": "Teste la forme de la sortie du helper de formatage de l'heure courante.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testGraphs": {"desc": "Teste le rendu de graphes ASCII (signes, écrêtage).", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testJsonRoundtrip": {"desc": "Teste l'aller-retour encode/decode JSON sur des tables simples.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testJsonEncodePretty": {"desc": "Teste que l'encodage JSON lisible (pretty) contient des clés formatées.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testJsonEncodePrefix": {"desc": "Teste l'encodage JSON avec un préfixe de sortie facultatif.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testJsonEncodePrettyDecodeRoundtrip": {"desc": "Teste la stabilité de encodePretty puis decode.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testJsonDecodeEncodePrettyRoundtrip": {"desc": "Teste la stabilité de decode puis encodePretty.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testJsonCdataRoundtrip": {"desc": "Teste la gestion JSON des valeurs cdata vec3/quat de BeamNG.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testJsonDecodeInvalid": {"desc": "Teste le comportement du décodage JSON invalide et la suppression des logs.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testSetOperations": {"desc": "Teste les helpers de type ensemble : appartenance et mises à jour.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableHelpers": {"desc": "Teste des helpers de table courants.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableIsArray": {"desc": "Teste la classification de tableIsArray.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableIsEmpty": {"desc": "Teste la détection de table vide.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableKeysSorted": {"desc": "Teste l'extraction triée des clés d'une table.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableValuesAsLookupDict": {"desc": "Teste la conversion d'un tableau de valeurs en dictionnaire de recherche.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testArrayConcat": {"desc": "Teste la concaténation de tableaux.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableMerge": {"desc": "Teste la fusion superficielle de tables.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableRecursive": {"desc": "Teste la sémantique de la fusion récursive de tables.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableRecursiveArray": {"desc": "Teste la fusion récursive quand les valeurs sont des tableaux.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableReadOnly": {"desc": "Teste la protection des tables en lecture seule.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableSizeC": {"desc": "Teste l'enveloppe du helper de taille de table côté C.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableEndC": {"desc": "Teste l'enveloppe du helper « fin de table » côté C.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableInsertC": {"desc": "Teste l'enveloppe du helper d'insertion côté C.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableFindKey": {"desc": "Teste la recherche d'une clé à partir d'une valeur.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableContainsCaseInsensitive": {"desc": "Teste l'appartenance d'une valeur à une table sans tenir compte de la casse.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testArrayFindValueIndex": {"desc": "Teste la recherche de l'indice d'une valeur dans un tableau.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testArrayShuffle": {"desc": "Teste que le mélange d'un tableau conserve les éléments et la taille.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testArrayReverse": {"desc": "Teste l'inversion d'un tableau.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableDepth": {"desc": "Teste le calcul récursif de la profondeur d'une table.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testTableRoundRobinKey": {"desc": "Teste le helper de sélection de clé en tourniquet.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testShallowCopy": {"desc": "Teste que la copie superficielle conserve les références du premier niveau.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testDeepCopy": {"desc": "Teste la copie profonde, y compris les références partagées en losange.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testCheckTableDataTypes": {"desc": "Teste le helper de validation des types de données d'une table.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testPathUtils": {"desc": "Teste les helpers de chemins et d'extraction de nom de niveau.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testSerialization": {"desc": "Teste les helpers de sérialisation et de désérialisation.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testLoadIni": {"desc": "Teste l'analyse de fichiers INI et le traitement des lignes mal formées.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testFlattenTable": {"desc": "Teste l'aplatissement de tables imbriquées.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testSortedPairs": {"desc": "Teste l'ordre d'itération déterministe de sortedPairs.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
-    "testShuffledPairs": {"desc": "Teste que shuffledPairs renvoie chaque paire exactement une fois.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true}
+    "testColorConversion": {
+      "desc": "Tests RGB/HSV and hexadecimal color conversions.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testRainbowColor": {
+      "desc": "Tests rainbow color generation at the range bounds.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testColorCreation": {
+      "desc": "Tests the RGBA color constructors and packed value constructors.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableToColor": {
+      "desc": "Tests table to color conversion, including with nil values.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testParseColor": {
+      "desc": "Tests parseColor with a hexadecimal, a table and invalid values.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testColorGenerators": {
+      "desc": "Tests that the procedural color generators return valid colors.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testDumps": {
+      "desc": "Tests the dumps format for a few argument shapes (table, several arguments, none).",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testNoGarbageDumpDumpsSingleShot": {
+      "desc": "Tests the garbage budget (12288 bytes) of dump/dumps for the common call paths, in a single call.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testLpadRpad": {
+      "desc": "Tests the left padding (lpad) and right padding (rpad) helpers.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTrim": {
+      "desc": "Tests removal of spaces at the start and end of a string.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testSplit": {
+      "desc": "Tests split: limits and delimiter edge cases.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testStringStartEnd": {
+      "desc": "Tests the string startswith/endswith helpers.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testStringStrip": {
+      "desc": "Tests string.strip with explicit character classes.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testStringSplit": {
+      "desc": "Tests the variants of the string.split API and its limits.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testStringSentenceCase": {
+      "desc": "Tests conversion to sentence case.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testStringHash": {
+      "desc": "Tests that string hashing is deterministic.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testBytesToString": {
+      "desc": "Tests formatting of byte sizes across units and edge cases.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testFormatTimeStringNow": {
+      "desc": "Tests the shape of the output of the current-time formatting helper.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testGraphs": {
+      "desc": "Tests ASCII graph rendering (signs, clipping).",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testJsonRoundtrip": {
+      "desc": "Tests the JSON encode/decode round trip on simple tables.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testJsonEncodePretty": {
+      "desc": "Tests that pretty (readable) JSON encoding contains formatted keys.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testJsonEncodePrefix": {
+      "desc": "Tests JSON encoding with an optional output prefix.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testJsonEncodePrettyDecodeRoundtrip": {
+      "desc": "Tests the stability of encodePretty followed by decode.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testJsonDecodeEncodePrettyRoundtrip": {
+      "desc": "Tests the stability of decode followed by encodePretty.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testJsonCdataRoundtrip": {
+      "desc": "Tests the JSON handling of BeamNG vec3/quat cdata values.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testJsonDecodeInvalid": {
+      "desc": "Tests the behavior of invalid JSON decoding and log suppression.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testSetOperations": {
+      "desc": "Tests the set-like helpers: membership and updates.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableHelpers": {
+      "desc": "Tests common table helpers.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableIsArray": {
+      "desc": "Tests the classification of tableIsArray.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableIsEmpty": {
+      "desc": "Tests empty table detection.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableKeysSorted": {
+      "desc": "Tests the sorted extraction of a table's keys.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableValuesAsLookupDict": {
+      "desc": "Tests converting an array of values into a lookup dictionary.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testArrayConcat": {
+      "desc": "Tests array concatenation.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableMerge": {
+      "desc": "Tests the shallow merge of tables.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableRecursive": {
+      "desc": "Tests the semantics of the recursive table merge.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableRecursiveArray": {
+      "desc": "Tests the recursive merge when the values are arrays.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableReadOnly": {
+      "desc": "Tests read-only table protection.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableSizeC": {
+      "desc": "Tests the wrapper of the C-side table size helper.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableEndC": {
+      "desc": "Tests the wrapper of the C-side \"table end\" helper.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableInsertC": {
+      "desc": "Tests the wrapper of the C-side insertion helper.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableFindKey": {
+      "desc": "Tests looking up a key from a value.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableContainsCaseInsensitive": {
+      "desc": "Tests whether a value belongs to a table, ignoring case.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testArrayFindValueIndex": {
+      "desc": "Tests looking up the index of a value in an array.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testArrayShuffle": {
+      "desc": "Tests that shuffling an array preserves its elements and size.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testArrayReverse": {
+      "desc": "Tests array reversal.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableDepth": {
+      "desc": "Tests the recursive computation of a table's depth.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testTableRoundRobinKey": {
+      "desc": "Tests the round-robin key selection helper.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testShallowCopy": {
+      "desc": "Tests that the shallow copy preserves first-level references.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testDeepCopy": {
+      "desc": "Tests the deep copy, including shared diamond-shaped references.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testCheckTableDataTypes": {
+      "desc": "Tests the helper that validates the data types of a table.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testPathUtils": {
+      "desc": "Tests the path helpers and level name extraction.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testSerialization": {
+      "desc": "Tests the serialization and deserialization helpers.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testLoadIni": {
+      "desc": "Tests INI file parsing and the handling of malformed lines.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testFlattenTable": {
+      "desc": "Tests flattening of nested tables.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testSortedPairs": {
+      "desc": "Tests the deterministic iteration order of sortedPairs.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    },
+    "testShuffledPairs": {
+      "desc": "Tests that shuffledPairs returns each pair exactly once.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test context."
+        }
+      },
+      "internal": true
+    }
   }
 }

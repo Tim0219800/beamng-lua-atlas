@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/getPlayerVehicle.lua",
+  "module": "Noeud flowgraph « Get Player Vehicle ID » (categorie provider). Sorties : vehId (number) id du vehicule controle par le joueur (be:getPlayerVehicleID(0), -1 si aucun) et exist (bool, cache). Ancien nom de pin : objID -> vehId (legacyPins).",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Rien a initialiser.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Ecrit vehId = be:getPlayerVehicleID(0) or -1 et exist = (vehId ~= -1).",
+          "internal": false
+        }
+      }
+    }
+  }
+}

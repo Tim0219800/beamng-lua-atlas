@@ -1,85 +1,113 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/meshAuditionMgr.lua",
-  "module": "Utilitaire d'« audition » de meshes statiques et fenêtre imgui de sélection, partagé entre outils de l'éditeur. Il liste les fichiers .dae (par défaut art/shapes/objects et art/shapes/garage_and_dealership/Clutter, ou un dossier choisi), crée un TSStatic temporaire 'Temp Audition Mesh' à 1000 m d'altitude, fait tourner la caméra autour et appelle un callback avec le mesh choisi. À la fermeture, la caméra revient à son ancienne pose et le mesh temporaire est supprimé.",
-  "usage": "local mam = require('editor/toolUtilities/meshAuditionMgr')\nmam.registerWindow()\nmam.addMeshToAudition(1, function(obj, path) ... end) -- ouvre la fenêtre\n-- à chaque frame imgui :\nmam.handleMeshAuditionAndSelection('lampadaire', function(obj, path) ... end)",
+  "module": "Static mesh \"audition\" utility and imgui selection window, shared between editor tools. It lists .dae files (by default art/shapes/objects and art/shapes/garage_and_dealership/Clutter, or a chosen folder), creates a temporary TSStatic 'Temp Audition Mesh' at 1000 m altitude, rotates the camera around it and calls a callback with the chosen mesh. On close, the camera returns to its former pose and the temporary mesh is deleted.",
+  "usage": "local mam = require('editor/toolUtilities/meshAuditionMgr')\nmam.registerWindow()\nmam.addMeshToAudition(1, function(obj, path) ... end) -- opens the window\n-- every imgui frame:\nmam.handleMeshAuditionAndSelection('lampadaire', function(obj, path) ... end)",
   "notes": [
-    "La fenêtre 'meshSelect' (300x300) n'est ouverte que par addMeshToAudition : handleMeshAuditionAndSelection ne fait rien tant que cette fenêtre n'a pas été ouverte.",
-    "Le mesh temporaire est créé avec canSave = false, donc n'est pas sauvegardé avec le niveau.",
-    "La caméra passe en caméra libre (commands.setFreeCamera) et tourne de pi/500 rad toutes les 0.05 s ; la distance se règle sur 1.2 fois la longueur de la boîte du mesh.",
-    "La liste de fichiers est calculée une seule fois (au premier addMeshToAudition), triée par nom de fichier ; populateAvailableStaticMeshes la recalcule à la demande."
+    "The 'meshSelect' window (300x300) is opened only by addMeshToAudition: handleMeshAuditionAndSelection does nothing until this window has been opened.",
+    "The temporary mesh is created with canSave = false, so it is not saved with the level.",
+    "The camera switches to the free camera (commands.setFreeCamera) and rotates by pi/500 rad every 0.05 s; the distance is set to 1.2 times the length of the mesh's box.",
+    "The file list is computed only once (on the first addMeshToAudition), sorted by file name; populateAvailableStaticMeshes recomputes it on demand."
   ],
   "functions": {
     "getAvailableStaticMeshes": {
-      "desc": "Renvoie la liste (non copiée) des meshes statiques disponibles : { path, filename }.",
+      "desc": "Returns the (uncopied) list of available static meshes: { path, filename }.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Éléments { path = chemin complet, filename = nom du fichier }."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Items { path = full path, filename = file name }."
+        }
+      ],
       "internal": false
     },
     "populateAvailableStaticMeshes": {
-      "desc": "Reconstruit la liste des fichiers *.dae (recherche récursive dans les dossiers courants via FS:findFiles) et la trie par nom de fichier.",
+      "desc": "Rebuilds the list of *.dae files (recursive search in the current folders via FS:findFiles) and sorts it by file name.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "addMeshToAudition": {
-      "desc": "Ajoute ou remplace le mesh en audition par celui d'indice donné : supprime l'ancien, ouvre la fenêtre si besoin, crée le TSStatic temporaire (position 0, 0, 1000), ajuste la caméra si la vue d'audition est active, puis appelle le callback.",
+      "desc": "Adds or replaces the mesh under audition with the one at the given index: deletes the old one, opens the window if needed, creates the temporary TSStatic (position 0, 0, 1000), adjusts the camera if the audition view is active, then calls the callback.",
       "params": {
-        "selectedMeshIdx": {"type": "integer", "desc": "Indice dans la liste des meshes disponibles (1-based)."},
-        "callback": {"type": "function|nil", "desc": "callback(auditionMesh, path) appelé après la création."}
+        "selectedMeshIdx": {
+          "type": "integer",
+          "desc": "Index in the list of available meshes (1-based)."
+        },
+        "callback": {
+          "type": "function|nil",
+          "desc": "callback(auditionMesh, path) called after creation."
+        }
       },
       "returns": [],
       "internal": false
     },
     "goToMeshView": {
-      "desc": "Déplace la caméra à la pose d'audition (mémorise l'ancienne pose, remet le chrono à zéro). Sans effet si on y est déjà. Renvoie le temps remis à zéro (0.0) à la première entrée, sinon le temps passé.",
+      "desc": "Moves the camera to the audition pose (remembers the old pose, resets the timer to zero). No effect if already there. Returns the reset time (0.0) on first entry, otherwise the elapsed time.",
       "params": {
-        "timer": {"type": "hptimer", "desc": "Chrono à remettre à zéro."},
-        "time": {"type": "number", "desc": "Temps accumulé courant (s)."}
+        "timer": {
+          "type": "hptimer",
+          "desc": "Timer to reset."
+        },
+        "time": {
+          "type": "number",
+          "desc": "Current accumulated time (s)."
+        }
       },
-      "returns": [{"type": "number", "desc": "Nouveau temps accumulé."}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "New accumulated time."
+        }
+      ],
       "internal": false
     },
     "goToOldView": {
-      "desc": "Ramène la caméra à la pose mémorisée avant l'audition et sort de la vue d'audition.",
+      "desc": "Brings the camera back to the pose saved before the audition and leaves the audition view.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "manageRotateCam": {
-      "desc": "Fait avancer la caméra d'un pas autour du centre d'audition (angle modulo 2 pi).",
+      "desc": "Advances the camera one step around the audition center (angle modulo 2 pi).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "removeAuditionMesh": {
-      "desc": "Supprime le mesh en audition s'il existe.",
+      "desc": "Deletes the mesh under audition if it exists.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "updateCameraPose": {
-      "desc": "Place la caméra libre face au centre d'audition selon le rayon du mesh courant (distance 1.6 fois le rayon, élévation 0.8 fois).",
+      "desc": "Places the free camera facing the audition center according to the current mesh's radius (distance 1.6 times the radius, elevation 0.8 times).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "registerWindow": {
-      "desc": "Enregistre la fenêtre de sélection 'meshSelect' dans l'éditeur.",
+      "desc": "Registers the 'meshSelect' selection window in the editor.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "leaveAuditionView": {
-      "desc": "Quitte l'audition : supprime le mesh temporaire, restaure la caméra et masque la fenêtre. Sans effet si la fenêtre n'est pas ouverte.",
+      "desc": "Exits the audition: deletes the temporary mesh, restores the camera and hides the window. No effect if the window is not open.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "handleMeshAuditionAndSelection": {
-      "desc": "À appeler à chaque frame imgui : fait tourner la caméra et dessine la fenêtre 'Static Mesh Selector' (recherche, choix de dossier, remise aux dossiers par défaut, liste filtrable, bouton Close). Un clic sur un nom met le mesh en audition et appelle le callback.",
+      "desc": "To be called every imgui frame: rotates the camera and draws the 'Static Mesh Selector' window (search, folder choice, reset to default folders, filterable list, Close button). Clicking a name puts the mesh under audition and calls the callback.",
       "params": {
-        "meshTarget": {"type": "string", "desc": "Nom du composant pour lequel on choisit un mesh (affiché dans l'en-tête)."},
-        "onMeshSelectedFunct": {"type": "function|nil", "desc": "callback(auditionMesh, path) à chaque sélection."}
+        "meshTarget": {
+          "type": "string",
+          "desc": "Name of the component for which a mesh is being chosen (shown in the header)."
+        },
+        "onMeshSelectedFunct": {
+          "type": "function|nil",
+          "desc": "callback(auditionMesh, path) on each selection."
+        }
       },
       "returns": [],
       "internal": false

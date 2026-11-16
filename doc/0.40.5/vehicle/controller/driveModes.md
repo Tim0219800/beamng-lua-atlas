@@ -1,12 +1,12 @@
 # `controller_driveModes`
 
-*Fichier : `lua/vehicle/controller/driveModes.lua` · VM : Véhicule · 450 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/driveModes.lua` · VM: Vehicle · 450 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `driveModes` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `driveModes` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de modes de conduite (Eco, Sport, Neige, etc., ou modes de différentiel/gamme pour un 4x4). Chaque mode est un ensemble de réglages typés qui sont appliqués d'un coup quand on change de mode : échappement, turbo, compresseur, boîte automatique, paramètres d'un autre contrôleur (`setParameters`), mode d'un périphérique powertrain, valeur electrics, entrée de menu radial et bouton du panneau de contrôle simplifié. On peut en instancier plusieurs (un par fonction : conduite, différentiel, gamme...). Le mode par défaut est appliqué dans initLastStage.
+Auxiliary drive modes controller (Eco, Sport, Snow, etc., or differential/range modes for a 4x4). Each mode is a set of typed settings applied all at once when the mode changes: exhaust, turbo, supercharger, automatic gearbox, parameters of another controller (`setParameters`), mode of a powertrain device, electrics value, radial menu entry and simplified control panel button. Several can be instantiated (one per function: driving, differential, range...). The default mode is applied in initLastStage.
 
-## Exemple
+## Example
 
 ```lua
 local dm = controller.getControllerSafe("driveModes")
@@ -15,125 +15,125 @@ print(dm.getCurrentDriveModeKey())
 dm.setDriveMode("sport", true)
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam de l'instance : `uiName`, `quickAccessTitle` ("ui.radialmenu2.ESC"), `quickAccessIcon`, `quickAccessLevel` ("/vehicleFeatures/"), `radialIcon`, `defaultMode` (clé du mode initial), `defaultSettings` (table d'en-tête de réglages appliqués à tous les modes). Toutes les clés commençant par `modes` (par ex. modes, modes_sport) sont fusionnées en une seule table de modes ; toutes celles commençant par `enabledModes` listent les clés de modes réellement utilisables.
-- Un mode : `{name, order, settings}` où settings est une table d'en-tête de réglages. Types de réglage reconnus par applyDriveMode : "exhaust" (name, mufflingOffset, gainOffset), "turbocharger" (name, wastegateOffset), "supercharger" (name, bypassPressure), "transmission" (defaultForwardMode, appelle `controller.mainController.setDefaultForwardMode`), "quickAccess" (icon, title), "simpleControlButton" (buttonId, uiName, icon, color, offColor, offColorElectric, onClick, remove), "controller" (controllerName + autres champs passés à `setParameters` du contrôleur cible), "powertrainDeviceMode" (deviceName, mode), "electricsValue" (electricsName, value).
-- Clé d'un réglage = `key`, sinon deviceName, electricsName, controllerName ou type. Un réglage d'un mode remplace celui de `defaultSettings` de même clé. Ordre d'application : les réglages de clé `yawControl` et `tractionControl` sont triés en premier (rang 0), tous les autres ont le rang 1 (ordre relatif entre eux non garanti).
-- Anomalie : le test de doublon d'ordre dans init regarde `driveModes[mode.order]` alors que la table est indexée par clé de mode, il ne détecte donc normalement rien.
-- Les tables `driveModes` et `enabledDriveModes` sont de niveau module et ne sont pas vidées dans init.
-- `reset` ne réinitialise que le titre et l'icône du menu radial ; le mode actif est réappliqué par resetLastStage.
-- État sauvegardé : `getState` renvoie la clé sous `<nom>ActiveMode`; `serialize` renvoie {activeDriveModeKey, activeDriveModeIndex}.
+- Instance jbeam keys: `uiName`, `quickAccessTitle` ("ui.radialmenu2.ESC"), `quickAccessIcon`, `quickAccessLevel` ("/vehicleFeatures/"), `radialIcon`, `defaultMode` (key of the initial mode), `defaultSettings` (header table of settings applied to all modes). All keys starting with `modes` (e.g. modes, modes_sport) are merged into a single table of modes; all those starting with `enabledModes` list the keys of the modes actually usable.
+- A mode: `{name, order, settings}` where settings is a header table of settings. Setting types recognized by applyDriveMode: "exhaust" (name, mufflingOffset, gainOffset), "turbocharger" (name, wastegateOffset), "supercharger" (name, bypassPressure), "transmission" (defaultForwardMode, calls `controller.mainController.setDefaultForwardMode`), "quickAccess" (icon, title), "simpleControlButton" (buttonId, uiName, icon, color, offColor, offColorElectric, onClick, remove), "controller" (controllerName + other fields passed to the target controller's `setParameters`), "powertrainDeviceMode" (deviceName, mode), "electricsValue" (electricsName, value).
+- A setting's key = `key`, otherwise deviceName, electricsName, controllerName or type. A mode's setting replaces the one from `defaultSettings` with the same key. Application order: the settings with key `yawControl` and `tractionControl` are sorted first (rank 0), all others have rank 1 (relative order among them not guaranteed).
+- Anomaly: the duplicate order test in init looks at `driveModes[mode.order]` whereas the table is keyed by mode key, so it normally detects nothing.
+- The `driveModes` and `enabledDriveModes` tables are module-level and are not emptied in init.
+- `reset` only resets the radial menu title and icon; the active mode is reapplied by resetLastStage.
+- Saved state: `getState` returns the key under `<name>ActiveMode`; `serialize` returns {activeDriveModeKey, activeDriveModeIndex}.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_driveModes.deserialize(data)` | Restaure le mode actif depuis serialize. *(interne)* | 237 |
-| `controller_driveModes.getCurrentDriveModeKey()` | Renvoie la clé du mode actif. | 208 |
-| `controller_driveModes.getDriveModeData(modeKey)` | Renvoie les données d'un mode (key, name, order, settings, settingsOrder). | 214 |
-| `controller_driveModes.getState()` | Renvoie la clé du mode actif sous `<nom>ActiveMode`. | 246 |
-| `controller_driveModes.init(jbeamData)` | Lit les modes (clés `modes*`), les modes activés (`enabledModes*`) et les réglages par défaut depuis le jbeam, trie les modes et enregistre l'entrée du menu radial. *(interne)* | 295 |
-| `controller_driveModes.initLastStage(jbeamData)` | Choisit le mode par défaut (`defaultMode` s'il est activé, sinon le premier) et l'applique. *(interne)* | 409 |
-| `controller_driveModes.nextDriveMode()` | Passe au mode activé suivant, avec retour au premier à la fin. | 190 |
-| `controller_driveModes.previousDriveMode()` | Passe au mode activé précédent, avec retour au dernier au début. | 199 |
-| `controller_driveModes.reset(jbeamData)` | Restaure le titre et l'icône du menu radial lus dans le jbeam. *(interne)* | 220 |
-| `controller_driveModes.resetLastStage()` | Réapplique le mode actif après le reset. *(interne)* | 225 |
-| `controller_driveModes.serialize()` | Renvoie le mode actif pour la sauvegarde. *(interne)* | 231 |
-| `controller_driveModes.setDriveMode(modeKey, silent)` | Active le mode de clé donnée : retrouve son index parmi les modes activés, applique tous ses réglages et affiche un message UI sauf si silent. Clé inconnue ou nil : ne fait rien. | 164 |
-| `controller_driveModes.setSimpleControlButton(id, buttonUIName, icon, color, offColor, offColorElectric, onClick, remove)` | Crée, met à jour ou supprime un bouton du panneau de contrôle simplifié (`ui_simplePowertrainControl`). Le clic par défaut appelle `nextDriveMode()` de ce contrôleur. | 75 |
-| `controller_driveModes.setState(data)` | Active silencieusement le mode donné s'il existe et diffère du mode actif. | 253 |
-| `controller_driveModes.updateGFX(dt)` | Chaque frame : met à jour la couleur (active ou éteinte) des boutons de contrôle simplifié selon leur electrics `offColorElectric`. *(interne)* | 154 |
-| `controller_driveModes.updateSimpleControlButtons()` | Renvoie l'état de tous les boutons au panneau de contrôle simplifié (appelée par controller.updateSimpleControlButtons). | 94 |
+| `controller_driveModes.deserialize(data)` | Restores the active mode from serialize. *(internal)* | 237 |
+| `controller_driveModes.getCurrentDriveModeKey()` | Returns the key of the active mode. | 208 |
+| `controller_driveModes.getDriveModeData(modeKey)` | Returns a mode's data (key, name, order, settings, settingsOrder). | 214 |
+| `controller_driveModes.getState()` | Returns the key of the active mode under `<name>ActiveMode`. | 246 |
+| `controller_driveModes.init(jbeamData)` | Reads the modes (`modes*` keys), the enabled modes (`enabledModes*`) and the default settings from the jbeam, sorts the modes and registers the radial menu entry. *(internal)* | 295 |
+| `controller_driveModes.initLastStage(jbeamData)` | Chooses the default mode (`defaultMode` if enabled, otherwise the first) and applies it. *(internal)* | 409 |
+| `controller_driveModes.nextDriveMode()` | Switches to the next enabled mode, wrapping back to the first at the end. | 190 |
+| `controller_driveModes.previousDriveMode()` | Switches to the previous enabled mode, wrapping back to the last at the start. | 199 |
+| `controller_driveModes.reset(jbeamData)` | Restores the radial menu title and icon read from the jbeam. *(internal)* | 220 |
+| `controller_driveModes.resetLastStage()` | Reapplies the active mode after the reset. *(internal)* | 225 |
+| `controller_driveModes.serialize()` | Returns the active mode for the save. *(internal)* | 231 |
+| `controller_driveModes.setDriveMode(modeKey, silent)` | Activates the mode with the given key: finds its index among the enabled modes, applies all its settings and displays a UI message unless silent. Unknown or nil key: does nothing. | 164 |
+| `controller_driveModes.setSimpleControlButton(id, buttonUIName, icon, color, offColor, offColorElectric, onClick, remove)` | Creates, updates or removes a button of the simplified control panel (`ui_simplePowertrainControl`). The default click calls this controller's `nextDriveMode()`. | 75 |
+| `controller_driveModes.setState(data)` | Silently activates the given mode if it exists and differs from the active mode. | 253 |
+| `controller_driveModes.updateGFX(dt)` | Every frame: updates the color (active or off) of the simplified control buttons according to their `offColorElectric` electrics. *(internal)* | 154 |
+| `controller_driveModes.updateSimpleControlButtons()` | Sends the state of all buttons back to the simplified control panel (called by controller.updateSimpleControlButtons). | 94 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_driveModes.deserialize(data)`
 
-Restaure le mode actif depuis serialize.
+Restores the active mode from serialize.
 
-- `data` (*table|nil*) : Données de serialize.
+- `data` (*table|nil*) : Serialize data.
 
 #### `controller_driveModes.getCurrentDriveModeKey()`
 
-Renvoie la clé du mode actif.
+Returns the key of the active mode.
 
-- **renvoie** : string|nil Clé du mode actif, nil si aucun.
+- **returns**: string|nil Key of the active mode, nil if none.
 
 #### `controller_driveModes.getDriveModeData(modeKey)`
 
-Renvoie les données d'un mode (key, name, order, settings, settingsOrder).
+Returns a mode's data (key, name, order, settings, settingsOrder).
 
-- `modeKey` (*string|nil*) : Clé du mode.
-- **renvoie** : table|nil Données du mode, nil si inconnu.
+- `modeKey` (*string|nil*) : Mode key.
+- **returns**: table|nil Mode data, nil if unknown.
 
 #### `controller_driveModes.getState()`
 
-Renvoie la clé du mode actif sous `<nom>ActiveMode`.
+Returns the key of the active mode under `<name>ActiveMode`.
 
-- **renvoie** : table Table d'état.
+- **returns**: table State table.
 
 #### `controller_driveModes.init(jbeamData)`
 
-Lit les modes (clés `modes*`), les modes activés (`enabledModes*`) et les réglages par défaut depuis le jbeam, trie les modes et enregistre l'entrée du menu radial.
+Reads the modes (`modes*` keys), the enabled modes (`enabledModes*`) and the default settings from the jbeam, sorts the modes and registers the radial menu entry.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_driveModes.initLastStage(jbeamData)`
 
-Choisit le mode par défaut (`defaultMode` s'il est activé, sinon le premier) et l'applique.
+Chooses the default mode (`defaultMode` if enabled, otherwise the first) and applies it.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_driveModes.reset(jbeamData)`
 
-Restaure le titre et l'icône du menu radial lus dans le jbeam.
+Restores the radial menu title and icon read from the jbeam.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_driveModes.serialize()`
 
-Renvoie le mode actif pour la sauvegarde.
+Returns the active mode for the save.
 
-- **renvoie** : table|nil {activeDriveModeKey, activeDriveModeIndex}, nil si aucun mode.
+- **returns**: table|nil {activeDriveModeKey, activeDriveModeIndex}, nil if no mode.
 
 #### `controller_driveModes.setDriveMode(modeKey, silent)`
 
-Active le mode de clé donnée : retrouve son index parmi les modes activés, applique tous ses réglages et affiche un message UI sauf si silent. Clé inconnue ou nil : ne fait rien.
+Activates the mode with the given key: finds its index among the enabled modes, applies all its settings and displays a UI message unless silent. Unknown or nil key: does nothing.
 
-- `modeKey` (*string|nil*) : Clé du mode.
-- `silent` (*boolean|nil*) : true pour ne pas afficher de message.
+- `modeKey` (*string|nil*) : Mode key.
+- `silent` (*boolean|nil*) : true to not display a message.
 
 #### `controller_driveModes.setSimpleControlButton(id, buttonUIName, icon, color, offColor, offColorElectric, onClick, remove)`
 
-Crée, met à jour ou supprime un bouton du panneau de contrôle simplifié (`ui_simplePowertrainControl`). Le clic par défaut appelle `nextDriveMode()` de ce contrôleur.
+Creates, updates or removes a button of the simplified control panel (`ui_simplePowertrainControl`). The default click calls this controller's `nextDriveMode()`.
 
-- `id` (*string*) : Identifiant du bouton.
-- `buttonUIName` (*string*) : Nom affiché.
-- `icon` (*string*) : Icône.
-- `color` (*string*) : Couleur (hexadécimal) quand actif.
-- `offColor` (*string|nil*) : Couleur éteinte (défaut "343434").
-- `offColorElectric` (*string|nil*) : Nom d'electrics : à 1 ou plus, le bouton prend `offColor`.
-- `onClick` (*string|nil*) : Code Lua exécuté au clic.
-- `remove` (*boolean|nil*) : true pour supprimer le bouton.
+- `id` (*string*) : Button identifier.
+- `buttonUIName` (*string*) : Displayed name.
+- `icon` (*string*) : Icon.
+- `color` (*string*) : Color (hexadecimal) when active.
+- `offColor` (*string|nil*) : Off color (default "343434").
+- `offColorElectric` (*string|nil*) : Electrics name: at 1 or more, the button takes `offColor`.
+- `onClick` (*string|nil*) : Lua code run on click.
+- `remove` (*boolean|nil*) : true to remove the button.
 
 #### `controller_driveModes.setState(data)`
 
-Active silencieusement le mode donné s'il existe et diffère du mode actif.
+Silently activates the given mode if it exists and differs from the active mode.
 
-- `data` (*table|nil*) : Table d'état.
+- `data` (*table|nil*) : State table.
 
 #### `controller_driveModes.updateGFX(dt)`
 
-Chaque frame : met à jour la couleur (active ou éteinte) des boutons de contrôle simplifié selon leur electrics `offColorElectric`.
+Every frame: updates the color (active or off) of the simplified control buttons according to their `offColorElectric` electrics.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/driveModes.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/driveModes.lua`.*

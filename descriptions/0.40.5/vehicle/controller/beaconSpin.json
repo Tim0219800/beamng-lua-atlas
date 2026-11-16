@@ -1,24 +1,37 @@
 {
   "path": "lua/vehicle/controller/beaconSpin.lua",
-  "module": "Contrôleur auxiliaire minimal qui anime les éléments rotatifs d'une rampe lumineuse : tant que `electrics.values.lightbar` est supérieur à 0, il fait tourner une valeur electrics (angle en degrés, modulo 360) ; sinon il la remet à 0.",
+  "module": "Minimal auxiliary controller that animates the rotating elements of a light bar: as long as `electrics.values.lightbar` is greater than 0, it rotates an electrics value (angle in degrees, modulo 360); otherwise it resets it to 0.",
   "notes": [
-    "Clés jbeam lues par init : `spinSpeed` (320 degrés par seconde par défaut) et `electricsName` (\"beaconSpin\" par défaut).",
-    "Le commentaire du code précise que la valeur doit revenir à 0 quand la rampe est éteinte, sinon les projecteurs restent allumés.",
-    "updateGFX lit `electrics.values.lightbar` sans test de nil : il faut que la valeur existe (sinon erreur de comparaison)."
+    "Jbeam keys read by init: `spinSpeed` (320 degrees per second by default) and `electricsName` (\"beaconSpin\" by default).",
+    "The code comment specifies that the value must return to 0 when the light bar is off, otherwise the projectors stay lit.",
+    "updateGFX reads `electrics.values.lightbar` without a nil test: the value must exist (otherwise comparison error)."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
   },
   "functions": {
     "updateGFX": {
-      "desc": "Chaque frame : avance l'angle de dt × spinSpeed (modulo 360) si la rampe est active, sinon met la valeur à 0.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "desc": "Every frame: advances the angle by dt × spinSpeed (modulo 360) if the light bar is active, otherwise sets the value to 0.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "init": {
-      "desc": "Lit `spinSpeed` et `electricsName` et initialise la valeur electrics à 1.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "desc": "Reads `spinSpeed` and `electricsName` and initializes the electrics value to 1.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     }

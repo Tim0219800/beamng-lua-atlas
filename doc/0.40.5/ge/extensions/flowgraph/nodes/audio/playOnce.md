@@ -1,27 +1,27 @@
 # `flowgraph_nodes_audio_playOnce`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/audio/playOnce.lua` · VM : Game Engine (GE) · 73 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/audio/playOnce.lua` · VM: Game Engine (GE) · 73 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/audio/playOnce")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/audio/playOnce")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Play Sound » (catégorie dynamic_p_duration, mode dynamique 'repeat', tags sound/audio/volume). Joue un échantillon audio avec Engine.Audio.playOnce. Entrées : file (source, défaut 'event:UI_Checkpoint'), channel (caché, défaut 'AudioGui'), et pins cachés volume (défaut 1), pitch (1), fadeInTime (-1), fadeOutTime (-1), unique (false). En mode 'repeat', le son est rejoué à chaque frame de flux ; sinon une seule fois.
+Flowgraph node "Play Sound" (category dynamic_p_duration, dynamic mode 'repeat', tags sound/audio/volume). Plays an audio sample with Engine.Audio.playOnce. Inputs: file (source, default 'event:UI_Checkpoint'), channel (hidden, default 'AudioGui'), and hidden pins volume (default 1), pitch (1), fadeInTime (-1), fadeOutTime (-1), unique (false). In 'repeat' mode, the sound is replayed on every flow frame; otherwise only once.
 
-## Remarques
+## Notes
 
-- Le pin file accepte aussi des fichiers « .prefab.json » dans le sélecteur de l'éditeur (reste du modèle, sans rapport avec l'audio).
-- Ancien pin renommé : source -> file.
-- Le résultat de playOnce est stocké dans une variable locale et non utilisé.
+- The file pin also accepts ".prefab.json" files in the editor's picker (leftover from the template, unrelated to audio).
+- Old pin renamed: source -> file.
+- The result of playOnce is stored in a local variable and unused.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:playSound()` | Construit les données (volume, pitch, fades, unique, sampleSource, channel) depuis les pins et appelle Engine.Audio.playOnce(channel, source, data). | 58 |
-| `C:postInit()` | Configure l'éditeur : filtre de fichiers du pin file et curseur 0-1 pour volume. | 35 |
-| `C:work()` | Si dynamicMode vaut 'repeat', rejoue le son à chaque frame. | 52 |
-| `C:workOnce()` | Joue le son une fois (playSound). | 48 |
+| `C:playSound()` | Builds the data (volume, pitch, fades, unique, sampleSource, channel) from the pins and calls Engine.Audio.playOnce(channel, source, data). | 58 |
+| `C:postInit()` | Configures the editor: file filter of the file pin and a 0-1 slider for volume. | 35 |
+| `C:work()` | If dynamicMode is 'repeat', replays the sound every frame. | 52 |
+| `C:workOnce()` | Plays the sound once (playSound). | 48 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/audio/playOnce.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/audio/playOnce.lua`.*

@@ -2,17 +2,17 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlResults.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_gameplay_crawl_getCrawlResults_C
 local flowgraph_nodes_gameplay_crawl_getCrawlResults_C = {}
 
---- Charge le bridge du crawl.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlResults.lua:27
----@param mgr table Gestionnaire du flowgraph
+--- Loads the crawl bridge.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlResults.lua:27
+---@param mgr table Flowgraph manager
 function flowgraph_nodes_gameplay_crawl_getCrawlResults_C:init(mgr) end
 
---- Copie les champs de getCrawlEndData vers les pins de sortie.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlResults.lua:31
+--- Copies the fields of getCrawlEndData to the output pins.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlResults.lua:31
 function flowgraph_nodes_gameplay_crawl_getCrawlResults_C:work() end
 

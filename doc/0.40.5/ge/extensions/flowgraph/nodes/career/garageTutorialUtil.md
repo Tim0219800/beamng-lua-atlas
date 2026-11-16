@@ -1,29 +1,29 @@
 # `flowgraph_nodes_career_garageTutorialUtil`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/career/garageTutorialUtil.lua` · VM : Game Engine (GE) · 53 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/career/garageTutorialUtil.lua` · VM: Game Engine (GE) · 53 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/career/garageTutorialUtil")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/career/garageTutorialUtil")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Garage Tutorial Util » (catégorie repeat_instant, couleur/icône ui), aide pour le tutoriel du garage. Sorties bool : parkedInGarage (un véhicule de l'inventaire est dans le garage le plus proche et sa vitesse est < 0,25 m/s) et isRepaired (le véhicule du joueur n'a pas besoin de réparation selon l'assurance). Toutes les secondes de temps simulé, met à jour l'état des pièces du véhicule du joueur (hors marche à pied).
+Flowgraph node "Garage Tutorial Util" (category repeat_instant, ui color/icon), helper for the garage tutorial. Bool outputs: parkedInGarage (an inventory vehicle is in the nearest garage and its speed is < 0.25 m/s) and isRepaired (the player's vehicle does not need repair according to insurance). Every second of simulated time, updates the part state of the player's vehicle (not when on foot).
 
-## Remarques
+## Notes
 
-- Utilise career_modules_inventory et career_modules_insurance_insurance : nécessite la carrière.
-- Le code lit map.objects[objId] sans test de nil.
+- Uses career_modules_inventory and career_modules_insurance_insurance: requires career.
+- The code reads map.objects[objId] without a nil check.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Minuteur à 0 au démarrage du graphe. | 24 |
-| `C:init()` | Minuteur à 0. | 20 |
-| `C:work(args)` | Chaque frame : calcule parkedInGarage et isRepaired ; chaque seconde, appelle career_modules_inventory.updatePartConditions pour le véhicule du joueur s'il ne marche pas. | 28 |
+| `C:_executionStarted()` | Timer at 0 when the graph starts. | 24 |
+| `C:init()` | Timer at 0. | 20 |
+| `C:work(args)` | Every frame: computes parkedInGarage and isRepaired; every second, calls career_modules_inventory.updatePartConditions for the player's vehicle if they are not walking. | 28 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/career/garageTutorialUtil.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/career/garageTutorialUtil.lua`.*

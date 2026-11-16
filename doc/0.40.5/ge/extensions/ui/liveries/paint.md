@@ -1,66 +1,66 @@
 # `ui_liveries_paint`
 
-*Fichier : `lua/ge/extensions/ui/liveries/paint.lua` · VM : Game Engine (GE) · 106 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/liveries/paint.lua` · VM: Game Engine (GE) · 106 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_liveries_paint` : `extensions.load("ui_liveries_paint")`, puis la globale `ui_liveries_paint`
+**Access:** extension `ui_liveries_paint`: `extensions.load("ui_liveries_paint")`, then the global `ui_liveries_paint`
 
-Lit et modifie la peinture (couleur RGBA, métallisation, rugosité) d'une couche de l'éditeur de livrées, retrouvée par son uid dans editor_api_dynamicDecals. Il fournit aussi les peintures prédéfinies du modèle de véhicule actuel. Il sert à l'écran de peinture de l'interface et à l'éditeur de décalques.
+Reads and modifies the paint (RGBA color, metallic, roughness) of a livery editor layer, found by its uid in editor_api_dynamicDecals. It also provides the current vehicle model's preset paints. It is used by the UI's paint screen and by the decals editor.
 
-## Remarques
+## Notes
 
-- Toutes les valeurs venant de l'interface sont normalisées entre 0 et 1 : une valeur hors plage est ramenée par clamp, une valeur non numérique est remplacée par celle de la couche.
-- setLayerPaint travaille sur une copie profonde de la couche et appelle setLayer(updatedLayer, true), pour ne pas polluer l'historique de l'API.
-- Une couche liée à une palette de couleurs du véhicule (colorPaletteMapId différent de nil) repasse en palette 0 dès qu'on modifie sa peinture ici.
-- Les couches fill n'ont ni metallicIntensity ni roughnessIntensity : ces champs restent nil dans getLayerPaint et sont ignorés par setLayerPaint.
+- All values coming from the UI are normalized between 0 and 1: an out-of-range value is clamped, a non-numeric value is replaced by the layer's value.
+- setLayerPaint works on a deep copy of the layer and calls setLayer(updatedLayer, true), so as not to pollute the API history.
+- A layer linked to a vehicle color palette (colorPaletteMapId not nil) goes back to palette 0 as soon as its paint is modified here.
+- Fill layers have neither metallicIntensity nor roughnessIntensity: these fields stay nil in getLayerPaint and are ignored by setLayerPaint.
 
-**Dépendances (chargées avant) :** `editor_api_dynamicDecals`
+**Dependencies (loaded first):** `editor_api_dynamicDecals`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_liveries_paint.getLayerPaint(layerUid)` | Renvoie la peinture de la couche d'uid donné : layerUid, color {r, g, b, a} (blanc par défaut), metallic, roughness et presets. Renvoie nil, avec un avertissement, si l'uid n'est pas une chaîne ou si la couche n'existe pas. | 59 |
-| `ui_liveries_paint.getVehiclePaintPresets()` | Renvoie la liste model.paints du modèle du véhicule du joueur 0 (via core_vehicles.getModel), ou une table vide s'il n'y a pas de véhicule. Partagée avec l'éditeur de décalques. | 12 |
-| `ui_liveries_paint.readNormalized(value, fallback)` | Convertit value en nombre et le borne entre 0 et 1 ; renvoie fallback si la conversion échoue. | 21 |
-| `ui_liveries_paint.setLayerPaint(layerUid, paint)` | Applique color, metallic et roughness à la couche d'uid donné, via une copie de la couche passée à editor_api_dynamicDecals.setLayer. Renvoie false si la couche est introuvable ou si paint n'est pas une table. | 67 |
+| `ui_liveries_paint.getLayerPaint(layerUid)` | Returns the paint of the layer with the given uid: layerUid, color {r, g, b, a} (white by default), metallic, roughness and presets. Returns nil, with a warning, if the uid is not a string or the layer does not exist. | 59 |
+| `ui_liveries_paint.getVehiclePaintPresets()` | Returns the model.paints list of player 0's vehicle model (via core_vehicles.getModel), or an empty table if there is no vehicle. Shared with the decals editor. | 12 |
+| `ui_liveries_paint.readNormalized(value, fallback)` | Converts value to a number and clamps it between 0 and 1; returns fallback if the conversion fails. | 21 |
+| `ui_liveries_paint.setLayerPaint(layerUid, paint)` | Applies color, metallic and roughness to the layer with the given uid, via a copy of the layer passed to editor_api_dynamicDecals.setLayer. Returns false if the layer is not found or paint is not a table. | 67 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_liveries_paint.getLayerPaint(layerUid)`
 
-Renvoie la peinture de la couche d'uid donné : layerUid, color {r, g, b, a} (blanc par défaut), metallic, roughness et presets. Renvoie nil, avec un avertissement, si l'uid n'est pas une chaîne ou si la couche n'existe pas.
+Returns the paint of the layer with the given uid: layerUid, color {r, g, b, a} (white by default), metallic, roughness and presets. Returns nil, with a warning, if the uid is not a string or the layer does not exist.
 
-- `layerUid` (*string*) : Uid de la couche.
-- **renvoie** : table|nil Table de peinture.
+- `layerUid` (*string*) : Layer uid.
+- **returns**: table|nil Paint table.
 
 #### `ui_liveries_paint.getVehiclePaintPresets()`
 
-Renvoie la liste model.paints du modèle du véhicule du joueur 0 (via core_vehicles.getModel), ou une table vide s'il n'y a pas de véhicule. Partagée avec l'éditeur de décalques.
+Returns the model.paints list of player 0's vehicle model (via core_vehicles.getModel), or an empty table if there is no vehicle. Shared with the decals editor.
 
-- **renvoie** : table Peintures prédéfinies du modèle.
+- **returns**: table Model preset paints.
 
 #### `ui_liveries_paint.readNormalized(value, fallback)`
 
-Convertit value en nombre et le borne entre 0 et 1 ; renvoie fallback si la conversion échoue.
+Converts value to a number and clamps it between 0 and 1; returns fallback if the conversion fails.
 
-- `value` (*any*) : Valeur reçue de l'interface.
-- `fallback` (*number*) : Valeur renvoyée si value n'est pas numérique.
-- **renvoie** : number Valeur dans [0, 1] ou fallback.
+- `value` (*any*) : Value received from the UI.
+- `fallback` (*number*) : Value returned if value is not numeric.
+- **returns**: number Value in [0, 1] or fallback.
 
 #### `ui_liveries_paint.setLayerPaint(layerUid, paint)`
 
-Applique color, metallic et roughness à la couche d'uid donné, via une copie de la couche passée à editor_api_dynamicDecals.setLayer. Renvoie false si la couche est introuvable ou si paint n'est pas une table.
+Applies color, metallic and roughness to the layer with the given uid, via a copy of the layer passed to editor_api_dynamicDecals.setLayer. Returns false if the layer is not found or paint is not a table.
 
-- `layerUid` (*string*) : Uid de la couche.
-- `paint` (*table*) : Champs facultatifs color {r, g, b, a}, metallic, roughness, tous normalisés entre 0 et 1.
-- **renvoie** : boolean true si la mise à jour a été faite.
+- `layerUid` (*string*) : Layer uid.
+- `paint` (*table*) : Optional fields color {r, g, b, a}, metallic, roughness, all normalized between 0 and 1.
+- **returns**: boolean true if the update was done.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `EDITABLE_COLOR_PALETTE_MAP_ID` | integer | Vaut 0. C'est le seul mode où une couche affiche sa propre couleur ; tout autre id prend la couleur dans un emplacement de palette du véhicule et ignore celle de la couche. |
-| `dependencies` | string[] | Extensions chargées avant celle-ci : editor_api_dynamicDecals. |
+| `EDITABLE_COLOR_PALETTE_MAP_ID` | integer | Equals 0. This is the only mode where a layer displays its own color; any other id takes the color from a vehicle palette slot and ignores the layer's. |
+| `dependencies` | string[] | Extensions loaded before this one: editor_api_dynamicDecals. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/liveries/paint.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/liveries/paint.lua`.*

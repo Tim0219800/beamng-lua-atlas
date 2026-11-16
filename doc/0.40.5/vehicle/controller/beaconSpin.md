@@ -1,43 +1,43 @@
 # `controller_beaconSpin`
 
-*Fichier : `lua/vehicle/controller/beaconSpin.lua` · VM : Véhicule · 27 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/beaconSpin.lua` · VM: Vehicle · 27 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `beaconSpin` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `beaconSpin` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire minimal qui anime les éléments rotatifs d'une rampe lumineuse : tant que `electrics.values.lightbar` est supérieur à 0, il fait tourner une valeur electrics (angle en degrés, modulo 360) ; sinon il la remet à 0.
+Minimal auxiliary controller that animates the rotating elements of a light bar: as long as `electrics.values.lightbar` is greater than 0, it rotates an electrics value (angle in degrees, modulo 360); otherwise it resets it to 0.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues par init : `spinSpeed` (320 degrés par seconde par défaut) et `electricsName` ("beaconSpin" par défaut).
-- Le commentaire du code précise que la valeur doit revenir à 0 quand la rampe est éteinte, sinon les projecteurs restent allumés.
-- updateGFX lit `electrics.values.lightbar` sans test de nil : il faut que la valeur existe (sinon erreur de comparaison).
+- Jbeam keys read by init: `spinSpeed` (320 degrees per second by default) and `electricsName` ("beaconSpin" by default).
+- The code comment specifies that the value must return to 0 when the light bar is off, otherwise the projectors stay lit.
+- updateGFX reads `electrics.values.lightbar` without a nil test: the value must exist (otherwise comparison error).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_beaconSpin.init(jbeamData)` | Lit `spinSpeed` et `electricsName` et initialise la valeur electrics à 1. *(interne)* | 17 |
-| `controller_beaconSpin.updateGFX(dt)` | Chaque frame : avance l'angle de dt × spinSpeed (modulo 360) si la rampe est active, sinon met la valeur à 0. *(interne)* | 13 |
+| `controller_beaconSpin.init(jbeamData)` | Reads `spinSpeed` and `electricsName` and initializes the electrics value to 1. *(internal)* | 17 |
+| `controller_beaconSpin.updateGFX(dt)` | Every frame: advances the angle by dt × spinSpeed (modulo 360) if the light bar is active, otherwise sets the value to 0. *(internal)* | 13 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_beaconSpin.init(jbeamData)`
 
-Lit `spinSpeed` et `electricsName` et initialise la valeur electrics à 1.
+Reads `spinSpeed` and `electricsName` and initializes the electrics value to 1.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_beaconSpin.updateGFX(dt)`
 
-Chaque frame : avance l'angle de dt × spinSpeed (modulo 360) si la rampe est active, sinon met la valeur à 0.
+Every frame: advances the angle by dt × spinSpeed (modulo 360) if the light bar is active, otherwise sets the value to 0.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/beaconSpin.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/beaconSpin.lua`.*

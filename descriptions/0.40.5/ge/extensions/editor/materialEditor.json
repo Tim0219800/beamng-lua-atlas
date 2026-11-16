@@ -1,127 +1,253 @@
 {
   "path": "lua/ge/extensions/editor/materialEditor.lua",
-  "module": "Éditeur de matériaux du monde (fenêtre « materialEditor » de l'éditeur de niveau). Il liste les matériaux du niveau et de art/, permet de modifier leurs propriétés par couche (textures, couleurs, flottants, cases à cocher, animation, mélange alpha, cubemap…), avec undo/redo, aperçu 3D (cube de art/shapes/material_preview), détection de problèmes de textures, estimation de taille GPU, usage du matériau dans la scène, focus/isolation dans la vue et sauvegarde des matériaux modifiés. Les fonctions exportées servent surtout à d'autres outils de l'éditeur : sélectionner un matériau, changer une propriété, réutiliser les widgets.",
+  "module": "World material editor (\"materialEditor\" window of the level editor). It lists the materials of the level and of art/, lets you edit their properties per layer (textures, colors, floats, checkboxes, animation, alpha blending, cubemap...), with undo/redo, 3D preview (cube from art/shapes/material_preview), texture problem detection, GPU size estimation, material usage in the scene, focus/isolation in the view and saving of modified materials. The exported functions are mostly used by other editor tools: select a material, change a property, reuse the widgets.",
   "usage": "local me = extensions.editor_materialEditor\nme.showMaterialEditor()\nme.selectMaterialByName('road_asphalt_2lane', true)",
   "notes": [
-    "setProperty modifie le matériau courant (currentMaterial) si materialObj est nil, via editor.setMaterialProperty, puis le marque dirty et rafraîchit l'aperçu ; il ne crée pas d'entrée d'historique (les widgets utilisent setPropertyWithUndo en interne).",
-    "Les widgets exportés (inputFloat, colorEdit4, imageButton, deleteMapButton) lisent currentMaterial et la couche courante o.layer[0] si layer est nil ; ils n'ont de sens que dans un contexte imgui de l'éditeur.",
-    "Matériaux custom proposés par défaut : 'Standard' et 'MetalicCarPaint' (customMaterialsArray).",
-    "onFilesChanged recharge la liste des matériaux quand un fichier main.materials.json de /levels/ ou /art/ change.",
-    "Préférences enregistrées (catégorie materialEditor.general) : thumbnailSize (32 à 256, défaut 64), maxMaterialPreviewSize (64 à 1024, défaut 256), textFilterResultsWithSameFirstCharAtTop (true), showEstimatedSizeInList (false), plus columnSizes et levelMaterialNames cachés ; la sélection est mémorisée par niveau dans levelMaterialNames.",
-    "onEditorObjectSelectionChanged et onEditorDeleteSelection sont des hooks vides."
+    "setProperty modifies the current material (currentMaterial) if materialObj is nil, via editor.setMaterialProperty, then marks it dirty and refreshes the preview; it does not create a history entry (the widgets use setPropertyWithUndo internally).",
+    "The exported widgets (inputFloat, colorEdit4, imageButton, deleteMapButton) read currentMaterial and the current layer o.layer[0] if layer is nil; they only make sense in an editor imgui context.",
+    "Custom materials offered by default: 'Standard' and 'MetalicCarPaint' (customMaterialsArray).",
+    "onFilesChanged reloads the materials list when a main.materials.json file under /levels/ or /art/ changes.",
+    "Registered preferences (category materialEditor.general): thumbnailSize (32 to 256, default 64), maxMaterialPreviewSize (64 to 1024, default 256), textFilterResultsWithSameFirstCharAtTop (true), showEstimatedSizeInList (false), plus hidden columnSizes and levelMaterialNames; the selection is remembered per level in levelMaterialNames.",
+    "onEditorObjectSelectionChanged and onEditorDeleteSelection are empty hooks."
   ],
   "fields": {
-    "dbg": {"type": "boolean", "desc": "Drapeau de debug (copie de la valeur locale initiale, false)."},
-    "v": {"type": "table", "desc": "État de l'interface : materialNameList, currentMaterialIndex, dirtyMaterials, materialUsage, inputWidgetHeight, style…"},
-    "o": {"type": "table", "desc": "Pointeurs imgui des options de l'éditeur, notamment o.layer (IntPtr, couche courante) et o.reflectionMode."},
-    "customMaterialsArray": {"type": "string[]", "desc": "Classes de matériaux proposées : 'Standard', 'MetalicCarPaint'."},
-    "customMaterialsArrayPtr": {"type": "any", "desc": "Tableau de chaînes imgui (ArrayCharPtrByTbl) construit à partir de customMaterialsArray."}
+    "dbg": {
+      "type": "boolean",
+      "desc": "Debug flag (copy of the initial local value, false)."
+    },
+    "v": {
+      "type": "table",
+      "desc": "Interface state: materialNameList, currentMaterialIndex, dirtyMaterials, materialUsage, inputWidgetHeight, style..."
+    },
+    "o": {
+      "type": "table",
+      "desc": "imgui pointers of the editor options, notably o.layer (IntPtr, current layer) and o.reflectionMode."
+    },
+    "customMaterialsArray": {
+      "type": "string[]",
+      "desc": "Material classes offered: 'Standard', 'MetalicCarPaint'."
+    },
+    "customMaterialsArrayPtr": {
+      "type": "any",
+      "desc": "imgui string array (ArrayCharPtrByTbl) built from customMaterialsArray."
+    }
   },
   "functions": {
     "showMaterialEditor": {
-      "desc": "Affiche la fenêtre de l'éditeur de matériaux, ou lui donne le focus si elle est déjà visible."
+      "desc": "Shows the material editor window, or gives it focus if it is already visible."
     },
     "selectMaterialByName": {
-      "desc": "Sélectionne dans la liste le matériau portant ce nom, met à jour ses propriétés affichées et mémorise le choix pour le niveau courant dans la préférence levelMaterialNames. Si le nom est introuvable, l'indice courant passe à 0. Ne fait rien tant que la liste n'est pas chargée (éditeur non activé).",
+      "desc": "Selects in the list the material with this name, updates its displayed properties and remembers the choice for the current level in the levelMaterialNames preference. If the name is not found, the current index becomes 0. Does nothing while the list is not loaded (editor not activated).",
       "params": {
-        "matName": {"type": "string", "desc": "Nom du matériau."},
-        "clearFilter": {"type": "boolean|nil", "desc": "Si vrai, vide d'abord le filtre texte (sinon la sélection peut échouer)."}
+        "matName": {
+          "type": "string",
+          "desc": "Material name."
+        },
+        "clearFilter": {
+          "type": "boolean|nil",
+          "desc": "If true, first clears the text filter (otherwise the selection may fail)."
+        }
       }
     },
     "setMaterialDirty": {
-      "desc": "Marque le matériau comme modifié (v.dirtyMaterials[nom] = true) pour qu'il soit sauvegardé.",
-      "params": {"materialObj": {"type": "userdata|nil", "desc": "Objet matériau ; matériau courant si nil."}}
+      "desc": "Marks the material as modified (v.dirtyMaterials[name] = true) so that it gets saved.",
+      "params": {
+        "materialObj": {
+          "type": "userdata|nil",
+          "desc": "Material object; current material if nil."
+        }
+      }
     },
     "setProperty": {
-      "desc": "Définit une propriété d'une couche du matériau via editor.setMaterialProperty ; en cas de succès, marque dirty, invalide l'estimation de taille et redessine l'aperçu. Mémorise la valeur précédente pour l'undo.",
+      "desc": "Sets a property of a material layer via editor.setMaterialProperty; on success, marks dirty, invalidates the size estimate and redraws the preview. Remembers the previous value for undo.",
       "params": {
-        "materialObj": {"type": "userdata|nil", "desc": "Matériau à modifier ; courant si nil."},
-        "property": {"type": "string", "desc": "Nom du champ (ex. diffuseMap, diffuseColor)."},
-        "layer": {"type": "integer", "desc": "Indice de couche du matériau."},
-        "value": {"type": "any", "desc": "Nouvelle valeur."}
+        "materialObj": {
+          "type": "userdata|nil",
+          "desc": "Material to modify; current if nil."
+        },
+        "property": {
+          "type": "string",
+          "desc": "Field name (e.g. diffuseMap, diffuseColor)."
+        },
+        "layer": {
+          "type": "integer",
+          "desc": "Material layer index."
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value."
+        }
       }
     },
     "deleteMapButton": {
-      "desc": "Dessine un bouton d'icône qui vide la texture de la propriété (valeur \"\") avec undo.",
+      "desc": "Draws an icon button that clears the property's texture (value \"\") with undo.",
       "params": {
-        "label": {"type": "string", "desc": "Libellé utilisé dans l'infobulle « Remove … »."},
-        "property": {"type": "string", "desc": "Propriété texture à vider."},
-        "layer": {"type": "integer|nil", "desc": "Couche ; o.layer[0] si nil."}
+        "label": {
+          "type": "string",
+          "desc": "Label used in the \"Remove ...\" tooltip."
+        },
+        "property": {
+          "type": "string",
+          "desc": "Texture property to clear."
+        },
+        "layer": {
+          "type": "integer|nil",
+          "desc": "Layer; o.layer[0] if nil."
+        }
       }
     },
     "imageButton": {
-      "desc": "Widget imgui : miniature de la texture d'une propriété, avec aperçu, glisser-déposer et sélection de fichier ; modifie la propriété avec undo.",
+      "desc": "imgui widget: thumbnail of a property's texture, with preview, drag-and-drop and file selection; modifies the property with undo.",
       "params": {
-        "label": {"type": "string", "desc": "Libellé du widget."},
-        "property": {"type": "string", "desc": "Propriété texture."},
-        "layer": {"type": "integer|nil", "desc": "Couche ; o.layer[0] si nil."},
-        "additionalGuiFn": {"type": "function|nil", "desc": "Fonction de dessin additionnelle (déduit du code)."}
+        "label": {
+          "type": "string",
+          "desc": "Widget label."
+        },
+        "property": {
+          "type": "string",
+          "desc": "Texture property."
+        },
+        "layer": {
+          "type": "integer|nil",
+          "desc": "Layer; o.layer[0] if nil."
+        },
+        "additionalGuiFn": {
+          "type": "function|nil",
+          "desc": "Additional draw function (inferred from code)."
+        }
       }
     },
     "colorEdit4": {
-      "desc": "Widget imgui : éditeur de couleur RGBA lié à une propriété du matériau courant ; applique la valeur en direct et crée une entrée d'undo en fin d'édition.",
+      "desc": "imgui widget: RGBA color editor bound to a property of the current material; applies the value live and creates an undo entry at the end of the edit.",
       "params": {
-        "label": {"type": "string", "desc": "Libellé (affiché si non vide)."},
-        "property": {"type": "string", "desc": "Propriété couleur (chaîne « r g b a »)."},
-        "id": {"type": "string|nil", "desc": "Identifiant imgui ; property par défaut."},
-        "layer": {"type": "integer|nil", "desc": "Couche ; o.layer[0] si nil."},
-        "labelSameLine": {"type": "boolean|nil", "desc": "Si vrai, le widget est placé sur la même ligne que le libellé."}
+        "label": {
+          "type": "string",
+          "desc": "Label (displayed if non-empty)."
+        },
+        "property": {
+          "type": "string",
+          "desc": "Color property (\"r g b a\" string)."
+        },
+        "id": {
+          "type": "string|nil",
+          "desc": "imgui id; property by default."
+        },
+        "layer": {
+          "type": "integer|nil",
+          "desc": "Layer; o.layer[0] if nil."
+        },
+        "labelSameLine": {
+          "type": "boolean|nil",
+          "desc": "If true, the widget is placed on the same line as the label."
+        }
       }
     },
     "inputFloat": {
-      "desc": "Widget imgui : champ numérique lié à une propriété flottante du matériau courant ; applique en direct et ajoute une entrée d'undo en fin d'édition.",
+      "desc": "imgui widget: numeric field bound to a float property of the current material; applies live and adds an undo entry at the end of the edit.",
       "params": {
-        "label": {"type": "string", "desc": "Libellé."},
-        "property": {"type": "string", "desc": "Propriété flottante."},
-        "float_step": {"type": "number|nil", "desc": "Pas (0.01 par défaut)."},
-        "float_step_fast": {"type": "number|nil", "desc": "Pas rapide (0.1 par défaut)."},
-        "string_format": {"type": "string|nil", "desc": "Format d'affichage (\"%.2f\" par défaut)."},
-        "layer": {"type": "integer|nil", "desc": "Couche ; o.layer[0] si nil."},
-        "tooltip": {"type": "string|nil", "desc": "Texte d'aide affiché à côté du libellé."}
+        "label": {
+          "type": "string",
+          "desc": "Label."
+        },
+        "property": {
+          "type": "string",
+          "desc": "Float property."
+        },
+        "float_step": {
+          "type": "number|nil",
+          "desc": "Step (0.01 by default)."
+        },
+        "float_step_fast": {
+          "type": "number|nil",
+          "desc": "Fast step (0.1 by default)."
+        },
+        "string_format": {
+          "type": "string|nil",
+          "desc": "Display format (\"%.2f\" by default)."
+        },
+        "layer": {
+          "type": "integer|nil",
+          "desc": "Layer; o.layer[0] if nil."
+        },
+        "tooltip": {
+          "type": "string|nil",
+          "desc": "Help text displayed next to the label."
+        }
       }
     },
     "onEditorGui": {
-      "desc": "Hook appelé à chaque image de l'éditeur : dessine la fenêtre principale et les fenêtres annexes (aperçu, usage du matériau, création, copie, matériaux par tag), gère le focus et les travaux d'arrière-plan.",
+      "desc": "Hook called every editor frame: draws the main window and the auxiliary windows (preview, material usage, creation, copy, materials by tag), handles focus and background jobs.",
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Hook d'initialisation de l'éditeur : ajoute le menu « Material Editor », enregistre les six fenêtres (cinq annexes masquées) et lance le job de cartographie des tags.",
+      "desc": "Editor initialization hook: adds the \"Material Editor\" menu, registers the six windows (five auxiliary ones hidden) and starts the tag mapping job.",
       "internal": true
     },
     "onEditorActivated": {
-      "desc": "Hook appelé à l'activation de l'éditeur : charge matériaux, ground models et meshes d'aperçu, prépare les aperçus 3D (cube_1m.dae) et le chemin du niveau.",
+      "desc": "Hook called when the editor is activated: loads materials, ground models and preview meshes, prepares the 3D previews (cube_1m.dae) and the level path.",
       "internal": true
     },
     "onEditorDeactivated": {
-      "desc": "Hook appelé à la désactivation de l'éditeur : retire le focus de scène, libère listes de matériaux, caches de taille et meshes d'aperçu.",
+      "desc": "Hook called when the editor is deactivated: removes the scene focus, frees the material lists, size caches and preview meshes.",
       "internal": true
     },
-    "onEditorDeleteSelection": {"desc": "Hook de suppression de la sélection ; vide.", "internal": true},
-    "onEditorObjectSelectionChanged": {"desc": "Hook de changement de sélection d'objets ; vide.", "internal": true},
+    "onEditorDeleteSelection": {
+      "desc": "Selection deletion hook; empty.",
+      "internal": true
+    },
+    "onEditorObjectSelectionChanged": {
+      "desc": "Object selection change hook; empty.",
+      "internal": true
+    },
     "onEditorPreferenceValueChanged": {
-      "desc": "Hook appelé quand une préférence change ; réagit à thumbnailSize, maxMaterialPreviewSize, textFilterResultsWithSameFirstCharAtTop (recharge la liste) et showEstimatedSizeInList.",
+      "desc": "Hook called when a preference changes; reacts to thumbnailSize, maxMaterialPreviewSize, textFilterResultsWithSameFirstCharAtTop (reloads the list) and showEstimatedSizeInList.",
       "params": {
-        "path": {"type": "string", "desc": "Chemin de la préférence, ex. materialEditor.general.thumbnailSize."},
-        "value": {"type": "any", "desc": "Nouvelle valeur."}
+        "path": {
+          "type": "string",
+          "desc": "Preference path, e.g. materialEditor.general.thumbnailSize."
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value."
+        }
       },
       "internal": true
     },
     "onEditorRegisterPreferences": {
-      "desc": "Hook d'enregistrement des préférences : crée la catégorie materialEditor et la sous-catégorie general.",
-      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "desc": "Preferences registration hook: creates the materialEditor category and the general subcategory.",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Editor preferences registry."
+        }
+      },
       "internal": true
     },
     "onFilesChanged": {
-      "desc": "Hook appelé quand des fichiers changent sur disque ; recharge les matériaux si un main.materials.json sous /levels/ ou /art/ est concerné.",
-      "params": {"files": {"type": "table[]", "desc": "Liste d'entrées avec un champ filename."}},
+      "desc": "Hook called when files change on disk; reloads the materials if a main.materials.json under /levels/ or /art/ is concerned.",
+      "params": {
+        "files": {
+          "type": "table[]",
+          "desc": "List of entries with a filename field."
+        }
+      },
       "internal": true
     },
     "onVehicleSwitched": {
-      "desc": "Hook appelé au changement de véhicule joué ; si la fenêtre est visible et l'éditeur actif, relance le job de tags et recharge les matériaux.",
+      "desc": "Hook called when the player vehicle changes; if the window is visible and the editor active, restarts the tags job and reloads the materials.",
       "params": {
-        "oid": {"type": "integer", "desc": "Id de l'ancien véhicule."},
-        "nid": {"type": "integer", "desc": "Id du nouveau véhicule."},
-        "player": {"type": "integer", "desc": "Indice du joueur (non utilisé)."}
+        "oid": {
+          "type": "integer",
+          "desc": "Id of the old vehicle."
+        },
+        "nid": {
+          "type": "integer",
+          "desc": "Id of the new vehicle."
+        },
+        "player": {
+          "type": "integer",
+          "desc": "Player index (unused)."
+        }
       },
       "internal": true
     }

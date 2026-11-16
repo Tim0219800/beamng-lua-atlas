@@ -1,61 +1,61 @@
 # `gameplay_rally_notebook_noSelectionPreview`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/notebook/noSelectionPreview.lua` · VM : Game Engine (GE) · 517 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/notebook/noSelectionPreview.lua` · VM: Game Engine (GE) · 517 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_notebook_noSelectionPreview` : `extensions.load("gameplay_rally_notebook_noSelectionPreview")`, puis la globale `gameplay_rally_notebook_noSelectionPreview`
+**Access:** extension `gameplay_rally_notebook_noSelectionPreview`: `extensions.load("gameplay_rally_notebook_noSelectionPreview")`, then the global `gameplay_rally_notebook_noSelectionPreview`
 
-Aperçu de l'éditeur de notes de rallye (pacenotes) quand aucune note n'est sélectionnée. Loin de la route (au-delà de overviewDistance), dessine toute la route en dégradé arc-en-ciel avec un marqueur par note ; près de la route, dessine seulement la fenêtre autour du point visé par la caméra, avec les étiquettes des notes voisines. Un modèle (points, distances, entrées de notes triées) est mis en cache dans pacenoteToolsState.
+Preview of the rally note (pacenotes) editor when no note is selected. Far from the road (beyond overviewDistance), draws the whole road in a rainbow gradient with one marker per note; near the road, only draws the window around the point the camera is aimed at, with the labels of the neighboring notes. A model (points, distances, sorted note entries) is cached in pacenoteToolsState.
 
-## Remarques
+## Notes
 
-- Cache : pacenoteToolsState._noSelectionPreviewModel (invalidé si path, snaproad ou points changent) et _noSelectionPreviewRaycastCache ; invalidate() les supprime tous les deux.
-- Écrit pacenoteToolsState._pacenoteLabelRaycastCursorPos (point visé) en vue proche.
-- Vue d'ensemble : la route est découpée en au plus 700 segments (overviewMaxRouteSegments). Couleur arc-en-ciel = position le long de la route (0 rouge, 1 bleu).
-- opts.labelMode == 'all' affiche toutes les étiquettes ; sinon seules celles des notes autour du pivot (opts.nearCameraCount, défaut 3).
-- La recherche du pivot est limitée à overviewDistance * 1.25 autour de la caméra, du dernier pivot et d'un point en avant sur le rayon.
+- Cache: pacenoteToolsState._noSelectionPreviewModel (invalidated if path, snaproad or points change) and _noSelectionPreviewRaycastCache; invalidate() deletes both.
+- Writes pacenoteToolsState._pacenoteLabelRaycastCursorPos (aimed point) in near view.
+- Overview: the route is split into at most 700 segments (overviewMaxRouteSegments). Rainbow color = position along the route (0 red, 1 blue).
+- opts.labelMode == 'all' shows all labels; otherwise only those of the notes around the pivot (opts.nearCameraCount, default 3).
+- The pivot search is limited to overviewDistance * 1.25 around the camera, the last pivot and a point ahead on the ray.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_notebook_noSelectionPreview.draw(path, snaproad, pacenoteToolsState, globalOpacity, prismWidth, drawOnTop, opts)` | Dessine l'aperçu sans sélection (route et notes via pacenote:drawDebugPacenoteNoSelectionRainbow). | 460 |
-| `gameplay_rally_notebook_noSelectionPreview.invalidate(pacenoteToolsState)` | Supprime le modèle et le cache de rayon de l'aperçu ; à appeler quand le notebook ou le snaproad change. | 200 |
-| `gameplay_rally_notebook_noSelectionPreview.nearWindow(path, snaproad, pacenoteToolsState, opts)` | Renvoie la fenêtre de route proche de la caméra utilisée par la vue proche, sans dessiner. | 490 |
+| `gameplay_rally_notebook_noSelectionPreview.draw(path, snaproad, pacenoteToolsState, globalOpacity, prismWidth, drawOnTop, opts)` | Draws the no-selection preview (route and notes via pacenote:drawDebugPacenoteNoSelectionRainbow). | 460 |
+| `gameplay_rally_notebook_noSelectionPreview.invalidate(pacenoteToolsState)` | Deletes the preview's model and ray cache; call when the notebook or the snaproad changes. | 200 |
+| `gameplay_rally_notebook_noSelectionPreview.nearWindow(path, snaproad, pacenoteToolsState, opts)` | Returns the route window near the camera used by the near view, without drawing. | 490 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_notebook_noSelectionPreview.draw(path, snaproad, pacenoteToolsState, globalOpacity, prismWidth, drawOnTop, opts)`
 
-Dessine l'aperçu sans sélection (route et notes via pacenote:drawDebugPacenoteNoSelectionRainbow).
+Draws the no-selection preview (route and notes via pacenote:drawDebugPacenoteNoSelectionRainbow).
 
 - `path` (*table*) : Notebook (path.pacenotes.sorted).
 - `snaproad` (*table*) : Snaproad.
-- `pacenoteToolsState` (*table*) : État de l'outil (sert de cache).
-- `globalOpacity` (*number|nil*) : Opacité globale (défaut 1).
-- `prismWidth` (*number|nil*) : Largeur des prismes en mètres (défaut 1.945).
-- `drawOnTop` (*boolean|nil*) : true pour dessiner sans test de profondeur.
-- `opts` (*table|nil*) : {overviewDistance = 650, labelMode = 'all'|autre, nearCameraCount = 3}.
-- **renvoie** : boolean true si quelque chose a été dessiné, false si les données sont insuffisantes.
+- `pacenoteToolsState` (*table*) : Tool state (serves as cache).
+- `globalOpacity` (*number|nil*) : Global opacity (default 1).
+- `prismWidth` (*number|nil*) : Prism width in meters (default 1.945).
+- `drawOnTop` (*boolean|nil*) : true to draw without depth test.
+- `opts` (*table|nil*) : {overviewDistance = 650, labelMode = 'all'|other, nearCameraCount = 3}.
+- **returns**: boolean true if something was drawn, false if the data is insufficient.
 
 #### `gameplay_rally_notebook_noSelectionPreview.invalidate(pacenoteToolsState)`
 
-Supprime le modèle et le cache de rayon de l'aperçu ; à appeler quand le notebook ou le snaproad change.
+Deletes the preview's model and ray cache; call when the notebook or the snaproad changes.
 
-- `pacenoteToolsState` (*table|nil*) : État de l'outil.
+- `pacenoteToolsState` (*table|nil*) : Tool state.
 
 #### `gameplay_rally_notebook_noSelectionPreview.nearWindow(path, snaproad, pacenoteToolsState, opts)`
 
-Renvoie la fenêtre de route proche de la caméra utilisée par la vue proche, sans dessiner.
+Returns the route window near the camera used by the near view, without drawing.
 
 - `path` (*table*) : Notebook.
 - `snaproad` (*table*) : Snaproad.
-- `pacenoteToolsState` (*table*) : État de l'outil.
+- `pacenoteToolsState` (*table*) : Tool state.
 - `opts` (*table|nil*) : {overviewDistance = 650}.
-- **renvoie** : table|nil {startDistance, endDistance, pivotDistance, pivotPos} ou nil (aucune note, caméra trop loin ou données manquantes).
+- **returns**: table|nil {startDistance, endDistance, pivotDistance, pivotPos} or nil (no notes, camera too far or missing data).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSquarePrism`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/notebook/noSelectionPreview.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/notebook/noSelectionPreview.lua`.*

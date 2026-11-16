@@ -1,0 +1,25 @@
+{
+  "path": "lua/vehicle/extensions/core/quickAccess.lua",
+  "module": "Proxy côté véhicule du menu radial (quick access) du GE Lua : les modules du véhicule y déclarent des entrées de menu (addEntry), le GE demande la liste (requestItems) puis signale la sélection d'un élément (selectItem). Gère aussi les entrées du régulateur de vitesse (cruise control) et les catégories de base du menu véhicule.",
+  "usage": "extensions.core_quickAccess.addEntry({\n  level = \"/root/playerVehicle/lights/\",\n  title = \"Mon action\", icon = \"lowBeam\", uniqueID = \"monAction\",\n  onSelect = function() print(\"clic\") return {\"hide\"} end\n})",
+  "notes": [
+    "addEntry doit rester synchronisé avec GE/core/quickAccess/addEntry (commentaire du code). Champs d'une entrée : title (clé de traduction ou {txt, context}), level (défaut '/root/playerVehicle/general/'), onSelect/onSecondarySelect/onTertiarySelect(item), onDeselect/onSecondaryDeselect/onTertiaryDeselect, goto (niveau cible), generator(entries) (fonction qui ajoute dynamiquement des entrées au niveau), uniqueID (remplace une entrée existante du même niveau), icon, color, priority, startSlot/endSlot, desc, holdRepeat, originalActionInfo.",
+    "Le niveau est normalisé : préfixé par '/root/playerVehicle' s'il ne commence pas par '/root/playerVehicle/' ou '/root/sandbox/', et terminé par '/'. Le contrôle `type(args.level) ~= 'string'` est fait après les appels string.startswith : un niveau non chaîne produit une erreur avant d'atteindre ce contrôle.",
+    "Valeurs de retour possibles d'un onSelect : nil (masquer le menu), {'hide'}, {'reload'} (recharge le menu 2 frames plus tard) ou {'goto', niveau}, {'error', raison}.",
+    "Le menu est reconstruit à chaque requestItems : les generator sont exécutés sur une copie profonde de l'arbre, les entrées avec generator sont retirées et chaque entrée reçoit objID et id = niveau .. titre .. index.",
+    "Cruise control : à onInit, si le véhicule a des roues motrices, une entrée niveau '/root/playerVehicle/cruise_control/' ajoute 4 boutons (activer/désactiver, +/reprise, -/fixer, annuler) qui pilotent l'extension cruiseControl. adjustCruiseSpeed change la consigne de ±1 km/h ou ±1 mph (selon uiUnitLength), exprimé en m/s.",
+    "registerMenu est obsolète : il écrit un log d'erreur et ne fait rien ; utiliser addEntry.",
+    "updateGFX n'est actif que pendant le délai de rechargement ; il est mis à nil sinon (extensions.hookUpdate)."
+  ],
+  "fields": {},
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : ajoute les catégories de base du menu véhicule (aides à la conduite, éclairage, actions rapides, fonctionnalités du véhicule, régulateur de vitesse).", "params": {}, "returns": [], "internal": true},
+    "onInit": {"desc": "Hook d'initialisation du véhicule : déclare les entrées du régulateur de vitesse s'il y a des roues motrices.", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Boucle temporaire (valeur nil au repos) qui compte 2 frames avant de notifier le GE d'une demande 'reload'.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true},
+    "requestItems": {"desc": "Interface pour le GE : génère l'arbre complet (exécute les generator) et le renvoie au GE via core_quickAccess.vehicleItemsCallback.", "params": {"level": {"type": "string", "desc": "Niveau demandé (le GE reçoit l'arbre complet et le niveau)."}}, "returns": [{"type": "boolean", "desc": "Toujours true."}], "internal": false},
+    "selectItem": {"desc": "Interface pour le GE : exécute l'action d'une entrée désignée par son id selon que le bouton est enfoncé ou relâché et selon l'index d'action (1 principal, 2 secondaire, 3 tertiaire). Le résultat est renvoyé au GE via vehicleItemSelectCallback.", "params": {"id": {"type": "string", "desc": "Identifiant généré par requestItems."}, "buttonDown": {"type": "boolean", "desc": "true à l'appui, false au relâchement."}, "actionIndex": {"type": "integer", "desc": "1, 2 ou 3."}}, "returns": [{"type": "boolean|any", "desc": "true, ou le résultat de itemSelectCallback en cas de goto/erreur."}], "internal": false},
+    "adjustCruiseSpeed": {"desc": "Augmente ou diminue la consigne du régulateur d'un cran (1 km/h ou 1 mph) si l'extension cruiseControl est chargée.", "params": {"direction": {"type": "number", "desc": "Positif pour augmenter, négatif pour diminuer (0 et non-nombre sont ignorés)."}}, "returns": [], "internal": false},
+    "addEntry": {"desc": "Ajoute (ou remplace via uniqueID) une entrée de menu pour ce véhicule.", "params": {"_args": {"type": "table", "desc": "Description de l'entrée (voir notes)."}}, "returns": [{"type": "boolean", "desc": "true si ajoutée, false si le niveau est invalide."}], "internal": false},
+    "registerMenu": {"desc": "Obsolète : écrit une erreur dans le log (utiliser addEntry).", "params": {}, "returns": [], "internal": false}
+  }
+}

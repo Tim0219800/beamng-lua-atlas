@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/onboard.lua",
+  "module": "Caméra embarquée (cockpit, capot, rider...) définie dans le jbeam du véhicule (section camera) : se fixe sur le nœud refNodes.ref (ou camNodeID) avec un décalage offset, oriente la vue selon les nœuds de référence et laisse tourner la tête (yaw ±, pitch limité à ±85 degrés) si canRotate (vrai par défaut). Regarder en arrière (data.lookBack) place la caméra à l'arrière de la boîte englobante. Intègre un manualzoom. Renvoie un constructeur.",
+  "notes": ["Le nom de la caméra détermine l'icône : onboard.driver -> personSolid, onboard.hood -> vehicleHood, autre -> info. « driver » est masquée mais ses données restent utilisées par d'autres caméras. rider/onboard.rider active canUseVehicleTriggerCrosshair.", "`self.canRotate = self.canRotate ~= nil and self.canRotate or true` vaut toujours true (si canRotate est false, l'expression redonne true) : bug, canRotate=false du jbeam est ignoré.", "Si rotation (jbeam) a z nul, ses x,y s'ajoutent à la rotation courante à chaque image et le clamp ±85 n'est pas appliqué."],
+  "classes": {
+    "C": {
+      "desc": "Caméra embarquée. Champs jbeam : refNodes{ref,left,back}, offset{x,y,z}, rotation, fov, name, idRef/idUp/idBack, canRotate.",
+      "functions": {
+        "init": {"desc": "Crée le manualzoom, applique la configuration véhicule et réinitialise.", "internal": true},
+        "onVehicleCameraConfigChanged": {"desc": "Hook : recalcule hidden, icône et canUseVehicleTriggerCrosshair d'après le nom.", "internal": true},
+        "reset": {"desc": "Remet la rotation de tête à zéro et le zoom par défaut."},
+        "update": {"desc": "Place la caméra et applique rotation et zoom à data.res.", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "false si les nœuds de référence sont dégénérés, sinon true"}], "internal": true},
+        "setRefNodes": {"desc": "Définit les nœuds de référence.", "params": {"centerNodeID": {"type": "integer", "desc": "nœud du centre/caméra"}, "leftNodeID": {"type": "integer", "desc": "nœud gauche"}, "backNodeID": {"type": "integer", "desc": "nœud arrière"}}}
+      }
+    }
+  }
+}

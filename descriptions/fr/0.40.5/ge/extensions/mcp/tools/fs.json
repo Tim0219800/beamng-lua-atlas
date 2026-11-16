@@ -1,0 +1,63 @@
+{
+  "path": "lua/ge/extensions/mcp/tools/fs.lua",
+  "module": "Outils MCP système de fichiers : lire/écrire des fichiers texte, lister, chercher, supprimer, copier, renommer, créer des dossiers. Lecture/écriture passent par io.open (relatif au dossier courant du jeu : fichiers « loose » sur disque seulement) ; le listage et la recherche passent par le VFS de BeamNG (voient aussi le contenu des zip).",
+  "notes": [
+    "Attention sécurité : ces outils permettent de lire, écrire et supprimer des fichiers sans restriction de chemin côté Lua (la seule limite est le bac à sable d'io.open ; delete/copy/rename/make_dir passent par FS:).",
+    "read_file/write_file retirent les '/' initiaux du chemin (chemin VFS -> chemin disque relatif) ; read_file tronque à maxBytes (défaut 100000).",
+    "find_files renvoie au plus 1000 entrées (count donne le total) ; depth -1 = récursif complet.",
+    "delete_file, copy_file, rename_file, make_dir considèrent le code de retour 0 comme succès et renvoient « failed » dans le texte sans mettre isError à true."
+  ],
+  "fields": {
+    "schemas": {"type": "table<string, table>", "desc": "Schémas des outils de fichiers."}
+  },
+  "functions": {
+    "read_file": {
+      "desc": "Lit un fichier texte (jbeam, json, lua…) et le renvoie, tronqué à maxBytes.",
+      "params": {"args": {"type": "table", "desc": "{path: string, maxBytes?: integer}"}},
+      "returns": [{"type": "string", "desc": "Contenu ou message d'erreur."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "write_file": {
+      "desc": "Écrit (écrase) un fichier texte, en créant les dossiers parents (FS:directoryCreate).",
+      "params": {"args": {"type": "table", "desc": "{path: string, content: string}"}},
+      "returns": [{"type": "string", "desc": "« wrote N bytes to … » ou erreur."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "list_dir": {
+      "desc": "Liste un dossier (VFS) en JSON via FS:directoryList.",
+      "params": {"args": {"type": "table|nil", "desc": "{path?: string (défaut '/'), files?: boolean, dirs?: boolean} ; si ni files ni dirs, les deux sont inclus."}},
+      "returns": [{"type": "string", "desc": "JSON."}, {"type": "boolean", "desc": "toujours false."}],
+      "internal": false
+    },
+    "find_files": {
+      "desc": "Cherche des fichiers par motif glob (FS:findFiles).",
+      "params": {"args": {"type": "table|nil", "desc": "{path?: string (défaut '/'), pattern?: string (défaut '*'), depth?: integer (défaut 1, -1 = tout)}"}},
+      "returns": [{"type": "string", "desc": "JSON {count, files}."}, {"type": "boolean", "desc": "false."}],
+      "internal": false
+    },
+    "delete_file": {
+      "desc": "Supprime un fichier (FS:removeFile).",
+      "params": {"args": {"type": "table", "desc": "{path: string}"}},
+      "returns": [{"type": "string", "desc": "« deleted … » ou « delete failed: … »."}, {"type": "boolean", "desc": "true seulement si path manquant."}],
+      "internal": false
+    },
+    "copy_file": {
+      "desc": "Copie un fichier (FS:copyFile).",
+      "params": {"args": {"type": "table", "desc": "{from: string, to: string}"}},
+      "returns": [{"type": "string", "desc": "Résultat."}, {"type": "boolean", "desc": "true si from/to manquants."}],
+      "internal": false
+    },
+    "rename_file": {
+      "desc": "Renomme ou déplace un fichier (FS:renameFile).",
+      "params": {"args": {"type": "table", "desc": "{from: string, to: string}"}},
+      "returns": [{"type": "string", "desc": "Résultat."}, {"type": "boolean", "desc": "true si from/to manquants."}],
+      "internal": false
+    },
+    "make_dir": {
+      "desc": "Crée un dossier de façon récursive (FS:directoryCreate).",
+      "params": {"args": {"type": "table", "desc": "{path: string}"}},
+      "returns": [{"type": "string", "desc": "Résultat."}, {"type": "boolean", "desc": "true si path manquant."}],
+      "internal": false
+    }
+  }
+}

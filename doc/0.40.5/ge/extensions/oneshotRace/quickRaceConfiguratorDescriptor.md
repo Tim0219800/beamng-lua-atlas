@@ -1,39 +1,39 @@
 # `oneshotRace_quickRaceConfiguratorDescriptor`
 
-*Fichier : `lua/ge/extensions/oneshotRace/quickRaceConfiguratorDescriptor.lua` · VM : Game Engine (GE) · 118 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/oneshotRace/quickRaceConfiguratorDescriptor.lua` · VM: Game Engine (GE) · 118 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `oneshotRace_quickRaceConfiguratorDescriptor` : `extensions.load("oneshotRace_quickRaceConfiguratorDescriptor")`, puis la globale `oneshotRace_quickRaceConfiguratorDescriptor`
+**Access:** extension `oneshotRace_quickRaceConfiguratorDescriptor`: `extensions.load("oneshotRace_quickRaceConfiguratorDescriptor")`, then the global `oneshotRace_quickRaceConfiguratorDescriptor`
 
-Fabrique le descripteur commun aux configurateurs de course rapide (quickrace, Light Runner). Le descripteur est consommé par oneshotRaceCore.createConfigurator : il définit les réglages par défaut (reverse, rollingStart, lapCount, tod, seed), la façon de résumer niveau et piste pour l'interface, la clé de meilleurs scores et le démarrage via scenario_quickRaceLoader.startQuickrace.
+Builds the descriptor common to the quick race configurators (quickrace, Light Runner). The descriptor is consumed by oneshotRaceCore.createConfigurator: it defines the default settings (reverse, rollingStart, lapCount, tod, seed), how to summarize level and track for the interface, the best scores key and the start via scenario_quickRaceLoader.startQuickrace.
 
-## Exemple
+## Example
 
 ```lua
 local descriptor = require("ge/extensions/oneshotRace/quickRaceConfiguratorDescriptor").build({logTag = "monConfigurateur", gridBackendName = "quickraceSelector", routeDataKey = "quickraceWizard"})
 ```
 
-## Remarques
+## Notes
 
-- Réglages par défaut : reverse false, rollingStart false, lapCount 1, tod 3, seed nil ; seed est la seule clé supplémentaire acceptée (extraSettingKeys).
-- Si lapCount passe à 0 et que la piste autorise le départ lancé (allowRollingStart), rollingStart est forcé à true.
-- À la sélection d'une piste : reverse et rollingStart valent false (`track.reversible and false` donne nil si la piste n'est pas réversible, ou false), lapCount, tod et seed (pistes procédurales) viennent de la piste.
-- Clé de meilleurs scores : « standing » ou « rolling » (départ lancé, lapCount > 0 et pas d'affichage des records au tour), suffixée « Reverse » si inversé, puis le nombre de tours (0 pour les records au tour).
-- Au démarrage, le niveau et la piste sont copiés (deepcopy), tracks est retiré du niveau, et reverse/rollingStart/lapCount/tod/seed sont écrits dans la copie de la piste ; opts.raceType est passé comme type de course.
+- Default settings: reverse false, rollingStart false, lapCount 1, tod 3, seed nil; seed is the only additional key accepted (extraSettingKeys).
+- If lapCount drops to 0 and the track allows a rolling start (allowRollingStart), rollingStart is forced to true.
+- When a track is selected: reverse and rollingStart are false (`track.reversible and false` gives nil if the track is not reversible, or false), lapCount, tod and seed (procedural tracks) come from the track.
+- Best scores key: "standing" or "rolling" (rolling start, lapCount > 0 and no lap records display), suffixed "Reverse" if reversed, then the lap count (0 for lap records).
+- On start, the level and track are copied (deepcopy), tracks is removed from the level, and reverse/rollingStart/lapCount/tod/seed are written into the track copy; opts.raceType is passed as the race type.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `oneshotRace_quickRaceConfiguratorDescriptor.build(opts)` | Construit le descripteur de configurateur de course rapide. | 13 |
+| `oneshotRace_quickRaceConfiguratorDescriptor.build(opts)` | Builds the quick race configurator descriptor. | 13 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `oneshotRace_quickRaceConfiguratorDescriptor.build(opts)`
 
-Construit le descripteur de configurateur de course rapide.
+Builds the quick race configurator descriptor.
 
-- `opts` (*table*) : {logTag, gridBackendName, routeDataKey, vehicleRestrictionMode (facultatif), getDefaultSelection (facultatif), raceType (facultatif)}
-- **renvoie** : table Descripteur pour oneshotRaceCore.createConfigurator.
+- `opts` (*table*) : {logTag, gridBackendName, routeDataKey, vehicleRestrictionMode (optional), getDefaultSelection (optional), raceType (optional)}
+- **returns**: table Descriptor for oneshotRaceCore.createConfigurator.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/oneshotRace/quickRaceConfiguratorDescriptor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/oneshotRace/quickRaceConfiguratorDescriptor.lua`.*

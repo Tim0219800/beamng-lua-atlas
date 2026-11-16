@@ -1,0 +1,23 @@
+{
+  "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactPartCondition.lua",
+  "module": "Module de gameplayInterface pour partCondition : initialiser ou lire les conditions des pièces (odomètre, intégrité, visuel, peintures par défaut), lire l'odomètre de la pièce racine et gérer les instantanés (snapshots) de condition, y compris celui utilisé au reset.",
+  "usage": "gameplayInterface.executeAction(0, 16, 'createPartConditionSnapshot', 'avantCourse')\ngameplayInterface.executeAction(0, 17, 'applyPartConditionSnapshot', 'avantCourse')",
+  "notes": [
+    "Action 'initPartConditions'(conditions?:table, fallbackOdometer?:number, fallbackIntegrityValue?:number, fallbackVisualValue?:number, defaultPaints?:table) : partCondition.initConditions(...).",
+    "Action 'ensurePartConditionsInit'(fallbackOdometer, fallbackIntegrityValue, fallbackVisualValue : number) : partCondition.ensureConditionsInit(...).",
+    "Action 'createPartConditionSnapshot'(key:string) : partCondition.createConditionSnapshot(key).",
+    "Action 'applyPartConditionSnapshot'(key:string) : partCondition.applyConditionSnapshot(key).",
+    "Action 'deletePartConditionSnapshots'() : partCondition.deleteConditionSnapshots().",
+    "Action 'setPartConditionResetSnapshotKey'(key:string) : partCondition.setResetSnapshotKey(key).",
+    "Action 'createAndSetPartConditionResetSnapshotKey'(key:string) : crée l'instantané puis le désigne comme instantané de reset.",
+    "Lookup 'getPartConditions'() : renvoie {result = partCondition.getConditions()}. Lookup 'getRootPartOdometer'() : renvoie {result = partCondition.getRootPartOdometerValue()}."
+  ],
+  "fields": {
+    "moduleActions": {"type": "table<string, function>", "desc": "Actions : initPartConditions, ensurePartConditionsInit, createPartConditionSnapshot, applyPartConditionSnapshot, deletePartConditionSnapshots, setPartConditionResetSnapshotKey, createAndSetPartConditionResetSnapshotKey."},
+    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups : getPartConditions, getRootPartOdometer."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : remplit moduleActions et moduleLookups.", "params": {}, "returns": [], "internal": true},
+    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+  }
+}

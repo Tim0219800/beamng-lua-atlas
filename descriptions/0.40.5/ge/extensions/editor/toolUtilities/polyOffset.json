@@ -1,64 +1,161 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/polyOffset.lua",
-  "module": "Décalage latéral d'une polyligne 2D dont chaque arête porte une normale sortante. Gère les coins par jonction en onglet (miter), en chanfrein ou par intersection de droites, avec une limite d'onglet pour les angles aigus. run construit un ruban fermé entre la ligne et son décalage.",
+  "module": "Lateral offset of a 2D polyline whose every edge carries an outward normal. Handles corners by miter join, bevel (chamfer) or line intersection, with a miter limit for sharp angles. run builds a closed ribbon between the line and its offset.",
   "notes": [
-    "Travaille en 2D (x, y) uniquement.",
-    "nrm doit contenir une normale par arête (#nrm >= #pts - 1) ; nrm[i] est la normale de l'arête entre pts[i] et pts[i+1].",
-    "Une polyligne fermée (premier et dernier point confondus, plus de 3 points) voit sa couture traitée comme un coin ordinaire.",
-    "MITER_LIMIT = 4 : un onglet ne dépasse jamais 4 fois la distance de décalage."
+    "Works in 2D (x, y) only.",
+    "nrm must contain one normal per edge (#nrm >= #pts - 1); nrm[i] is the normal of the edge between pts[i] and pts[i+1].",
+    "A closed polyline (first and last points coincident, more than 3 points) has its seam handled as an ordinary corner.",
+    "MITER_LIMIT = 4: a miter never exceeds 4 times the offset distance."
   ],
   "fields": {
-    "MITER_LIMIT": {"type": "number", "desc": "Facteur maximal (4.0) de longueur d'onglet par rapport à |d|."}
+    "MITER_LIMIT": {
+      "type": "number",
+      "desc": "Maximum factor (4.0) of miter length relative to |d|."
+    }
   },
   "functions": {
     "lineIntersect": {
-      "desc": "Intersection de deux droites P + t*D et Q + s*E en 2D. Renvoie nil si elles sont parallèles (déterminant < 1e-9).",
+      "desc": "Intersection of two 2D lines P + t*D and Q + s*E. Returns nil if they are parallel (determinant < 1e-9).",
       "params": {
-        "px": {"type": "number", "desc": "x du point de la première droite."},
-        "py": {"type": "number", "desc": "y du point de la première droite."},
-        "dx": {"type": "number", "desc": "x de la direction de la première droite."},
-        "dy": {"type": "number", "desc": "y de la direction de la première droite."},
-        "qx": {"type": "number", "desc": "x du point de la seconde droite."},
-        "qy": {"type": "number", "desc": "y du point de la seconde droite."},
-        "ex": {"type": "number", "desc": "x de la direction de la seconde droite."},
-        "ey": {"type": "number", "desc": "y de la direction de la seconde droite."}
+        "px": {
+          "type": "number",
+          "desc": "x of the point of the first line."
+        },
+        "py": {
+          "type": "number",
+          "desc": "y of the point of the first line."
+        },
+        "dx": {
+          "type": "number",
+          "desc": "x of the direction of the first line."
+        },
+        "dy": {
+          "type": "number",
+          "desc": "y of the direction of the first line."
+        },
+        "qx": {
+          "type": "number",
+          "desc": "x of the point of the second line."
+        },
+        "qy": {
+          "type": "number",
+          "desc": "y of the point of the second line."
+        },
+        "ex": {
+          "type": "number",
+          "desc": "x of the direction of the second line."
+        },
+        "ey": {
+          "type": "number",
+          "desc": "y of the direction of the second line."
+        }
       },
-      "returns": [{"type": "number|nil", "desc": "x de l'intersection."}, {"type": "number|nil", "desc": "y de l'intersection."}],
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "x of the intersection."
+        },
+        {
+          "type": "number|nil",
+          "desc": "y of the intersection."
+        }
+      ],
       "internal": false
     },
     "mitrePt": {
-      "desc": "Point décalé d'un sommet entre deux normales d'arêtes : l'onglet, ramené le long de sa bissectrice quand l'angle est trop aigu (limite MITER_LIMIT * |d|).",
+      "desc": "Offset point of a vertex between two edge normals: the miter, brought back along its bisector when the angle is too sharp (limit MITER_LIMIT * |d|).",
       "params": {
-        "cx": {"type": "number", "desc": "x du sommet."},
-        "cy": {"type": "number", "desc": "y du sommet."},
-        "n1": {"type": "table", "desc": "Normale {x,y} de l'arête entrante."},
-        "n2": {"type": "table", "desc": "Normale {x,y} de l'arête sortante."},
-        "d": {"type": "number", "desc": "Distance de décalage signée."}
+        "cx": {
+          "type": "number",
+          "desc": "x of the vertex."
+        },
+        "cy": {
+          "type": "number",
+          "desc": "y of the vertex."
+        },
+        "n1": {
+          "type": "table",
+          "desc": "Normal {x,y} of the incoming edge."
+        },
+        "n2": {
+          "type": "table",
+          "desc": "Normal {x,y} of the outgoing edge."
+        },
+        "d": {
+          "type": "number",
+          "desc": "Signed offset distance."
+        }
       },
-      "returns": [{"type": "number", "desc": "x du point décalé."}, {"type": "number", "desc": "y du point décalé."}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "x of the offset point."
+        },
+        {
+          "type": "number",
+          "desc": "y of the offset point."
+        }
+      ],
       "internal": false
     },
     "polyline": {
-      "desc": "Décale une polyligne latéralement de la distance signée d. Le type de jonction aux coins est choisi par join : 'chamfer' (deux points), 'miter' (un point par sommet) ou autre/nil (intersection des arêtes décalées, repli en deux points si trop loin).",
+      "desc": "Offsets a polyline laterally by the signed distance d. The corner join type is chosen by join: 'chamfer' (two points), 'miter' (one point per vertex) or other/nil (intersection of the offset edges, falling back to two points if too far).",
       "params": {
-        "pts": {"type": "table", "desc": "Liste de points {x,y}."},
-        "nrm": {"type": "table", "desc": "Normales {x,y} unitaires, une par arête."},
-        "d": {"type": "number", "desc": "Distance de décalage signée, en mètres."},
-        "join": {"type": "string|nil", "desc": "'chamfer', 'miter' ou nil pour la jonction par intersection."}
+        "pts": {
+          "type": "table",
+          "desc": "List of {x,y} points."
+        },
+        "nrm": {
+          "type": "table",
+          "desc": "Unit {x,y} normals, one per edge."
+        },
+        "d": {
+          "type": "number",
+          "desc": "Signed offset distance, in meters."
+        },
+        "join": {
+          "type": "string|nil",
+          "desc": "'chamfer', 'miter' or nil for the intersection join."
+        }
       },
-      "returns": [{"type": "table", "desc": "Liste de points {x,y} décalés."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of offset {x,y} points."
+        }
+      ],
       "internal": false
     },
     "run": {
-      "desc": "Construit un anneau fermé allant de la ligne à son décalage : la base est enfoncée de overlap dans la masse derrière (côté opposé), puis le bord extérieur est parcouru en sens inverse.",
+      "desc": "Builds a closed ring going from the line to its offset: the base is sunk by overlap into the mass behind (opposite side), then the outer edge is traversed in reverse.",
       "params": {
-        "pts": {"type": "table", "desc": "Liste de points {x,y}."},
-        "nrm": {"type": "table", "desc": "Normales par arête."},
-        "d": {"type": "number", "desc": "Distance de décalage signée."},
-        "join": {"type": "string|nil", "desc": "Type de jonction, voir polyline."},
-        "overlap": {"type": "number|nil", "desc": "Enfoncement de la base (défaut 0.05 m)."}
+        "pts": {
+          "type": "table",
+          "desc": "List of {x,y} points."
+        },
+        "nrm": {
+          "type": "table",
+          "desc": "Normals per edge."
+        },
+        "d": {
+          "type": "number",
+          "desc": "Signed offset distance."
+        },
+        "join": {
+          "type": "string|nil",
+          "desc": "Join type, see polyline."
+        },
+        "overlap": {
+          "type": "number|nil",
+          "desc": "Sinking of the base (default 0.05 m)."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Anneau de points {x,y}, ou nil si moins de 2 points ou |d| < 1e-4."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Ring of {x,y} points, or nil if fewer than 2 points or |d| < 1e-4."
+        }
+      ],
       "internal": false
     }
   }

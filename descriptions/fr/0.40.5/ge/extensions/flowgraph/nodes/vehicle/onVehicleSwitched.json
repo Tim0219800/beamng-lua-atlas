@@ -1,0 +1,45 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.lua",
+  "module": "Nœud événement « On Vehicle Switched » (catégorie `logic`, tag event). Émet une impulsion sur `flow` quand le joueur change de véhicule (hook `onVehicleSwitched`). Sorties : `oldID`, `newID` (number) et `player` (caché).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_afterTrigger": {
+          "desc": "Appelé par le gestionnaire après le déclenchement du nœud ; remet le drapeau d'événement à false.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Constructeur vide.",
+          "internal": true
+        },
+        "onVehicleSwitched": {
+          "desc": "Hook appelé quand le joueur change de véhicule ; `oid` ancien id, `nid` nouvel id, `player` id du joueur.",
+          "internal": true,
+          "params": {
+            "oid": {
+              "type": "integer",
+              "desc": "Ancien véhicule."
+            },
+            "nid": {
+              "type": "integer",
+              "desc": "Nouveau véhicule."
+            },
+            "player": {
+              "type": "integer",
+              "desc": "Id du joueur."
+            }
+          }
+        },
+        "work": {
+          "desc": "Si un changement a été signalé, remplit `oldID`, `newID`, `player` et met `flow` à true une frame.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

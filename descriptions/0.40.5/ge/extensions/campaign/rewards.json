@@ -1,64 +1,124 @@
 {
   "path": "lua/ge/extensions/campaign/rewards.lua",
-  "module": "Calcul et attribution des récompenses de scénario de la campagne. À partir de scenarioData.onEvent.onSucceed (ou onFail), getRewards sélectionne les récompenses ; processRewards les ajoute à l'inventaire (core_inventory.addItem avec la clé « $$$_ »..type) et renvoie ce qui a été gagné ainsi que les choix à faire par le joueur (clé « choices »). processUserSelection applique le choix du joueur et envoie les autres options au concessionnaire (campaign_dealer.addToStock).",
+  "module": "Computation and granting of campaign scenario rewards. From scenarioData.onEvent.onSucceed (or onFail), getRewards selects the rewards; processRewards adds them to the inventory (core_inventory.addItem with the key \"$$$_\"..type) and returns what was won as well as the choices to be made by the player (\"choices\" key). processUserSelection applies the player's choice and sends the other options to the dealer (campaign_dealer.addToStock).",
   "notes": [
-    "Les clés de médaille sont reconnues par statistics_statistics.getMedalRanking(clé) >= 0 ; les autres clés de rewards sont toujours accordées.",
-    "Dans processRewards, « choices » doit être un tableau (sinon erreur journalisée) et est mémorisé dans M.pendingUserChoices[scenarioKey].",
-    "Bug : iterateRewardsConst lit une globale « players » qui n'est définie nulle part dans ce fichier ; la fonction échoue ou ne parcourt rien si elle n'existe pas ailleurs.",
-    "getScenarioReward est vide : tout son corps est commenté et elle retourne toujours nil.",
-    "processUserSelection traite seulement la première clé de pendingUserChoices[scenarioKey] puis retourne ; l'index sélectionné est 1-based, et les autres entrées de la liste partent au concessionnaire."
+    "Medal keys are recognized by statistics_statistics.getMedalRanking(key) >= 0; the other keys of rewards are always granted.",
+    "In processRewards, \"choices\" must be an array (otherwise an error is logged) and is stored in M.pendingUserChoices[scenarioKey].",
+    "Bug: iterateRewardsConst reads a global \"players\" that is defined nowhere in this file; the function fails or iterates over nothing if it does not exist elsewhere.",
+    "getScenarioReward is empty: its whole body is commented out and it always returns nil.",
+    "processUserSelection only handles the first key of pendingUserChoices[scenarioKey] then returns; the selected index is 1-based, and the other entries of the list go to the dealer."
   ],
   "fields": {
-    "pendingUserChoices": {"type": "table<string, table>", "desc": "Choix en attente par clé de scénario, remplis par processRewards."}
+    "pendingUserChoices": {
+      "type": "table<string, table>",
+      "desc": "Pending choices by scenario key, filled by processRewards."
+    }
   },
   "functions": {
     "iterateRewardsConst": {
-      "desc": "Appelle callback(clé, valeur) pour chaque entrée de players[player] (table globale non définie dans ce fichier).",
+      "desc": "Calls callback(key, value) for each entry of players[player] (global table not defined in this file).",
       "params": {
-        "player": {"type": "any", "desc": "Clé du joueur dans la table globale players."},
-        "callback": {"type": "function", "desc": "Reçoit (clé, valeur)."}
+        "player": {
+          "type": "any",
+          "desc": "Player key in the global table players."
+        },
+        "callback": {
+          "type": "function",
+          "desc": "Receives (key, value)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "getRewards": {
-      "desc": "Retourne la table des récompenses du scénario : onSucceed si le résultat n'est pas échoué, sinon onFail. Inclut la récompense de la médaille obtenue et toutes les clés qui ne sont pas des médailles.",
+      "desc": "Returns the scenario's rewards table: onSucceed if the result is not failed, otherwise onFail. Includes the reward for the medal obtained and all keys that are not medals.",
       "params": {
-        "scenarioKey": {"type": "string", "desc": "Identifiant du scénario (non utilisé dans le calcul)."},
-        "scenarioData": {"type": "table", "desc": "Données du scénario avec onEvent.onSucceed / onFail."},
-        "scenarioResult": {"type": "table", "desc": "Résultat ; le champ failed est lu."},
-        "medal": {"type": "string|nil", "desc": "Médaille obtenue."}
+        "scenarioKey": {
+          "type": "string",
+          "desc": "Scenario identifier (not used in the computation)."
+        },
+        "scenarioData": {
+          "type": "table",
+          "desc": "Scenario data with onEvent.onSucceed / onFail."
+        },
+        "scenarioResult": {
+          "type": "table",
+          "desc": "Result; the failed field is read."
+        },
+        "medal": {
+          "type": "string|nil",
+          "desc": "Medal obtained."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Récompenses, ou nil s'il n'y en a pas."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Rewards, or nil if there are none."
+        }
+      ],
       "internal": false
     },
     "processRewards": {
-      "desc": "Ajoute les récompenses à l'inventaire, mémorise les choix en attente, et retourne une table fusionnant ce qui est gagné (nombres cumulés ou listes) et les choix proposés.",
+      "desc": "Adds the rewards to the inventory, stores the pending choices, and returns a table merging what is won (accumulated numbers or lists) and the proposed choices.",
       "params": {
-        "scenarioKey": {"type": "string", "desc": "Identifiant du scénario."},
-        "scenarioData": {"type": "table", "desc": "Données du scénario."},
-        "scenarioResult": {"type": "table", "desc": "Résultat du scénario."},
-        "medal": {"type": "string|nil", "desc": "Médaille obtenue."}
+        "scenarioKey": {
+          "type": "string",
+          "desc": "Scenario identifier."
+        },
+        "scenarioData": {
+          "type": "table",
+          "desc": "Scenario data."
+        },
+        "scenarioResult": {
+          "type": "table",
+          "desc": "Scenario result."
+        },
+        "medal": {
+          "type": "string|nil",
+          "desc": "Medal obtained."
+        }
       },
-      "returns": [{"type": "table", "desc": "Récompenses gagnées plus éventuel champ « choices »."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Rewards won plus an optional \"choices\" field."
+        }
+      ],
       "internal": false
     },
     "processUserSelection": {
-      "desc": "Applique le choix du joueur : ajoute l'élément choisi à l'inventaire et envoie toutes les autres options de la liste au concessionnaire.",
+      "desc": "Applies the player's choice: adds the chosen item to the inventory and sends all the other options of the list to the dealer.",
       "params": {
-        "scenarioKey": {"type": "string", "desc": "Scénario dont des choix sont en attente."},
-        "selectionIndex": {"type": "integer", "desc": "Index (à partir de 1) de l'option retenue."}
+        "scenarioKey": {
+          "type": "string",
+          "desc": "Scenario with pending choices."
+        },
+        "selectionIndex": {
+          "type": "integer",
+          "desc": "Index (1-based) of the selected option."
+        }
       },
       "returns": [],
       "internal": false
     },
     "getScenarioReward": {
-      "desc": "Fonction prévue pour lire les récompenses d'un événement ; son corps est entièrement commenté dans cette version.",
+      "desc": "Function intended to read the rewards of an event; its body is entirely commented out in this version.",
       "params": {
-        "scenarioData": {"type": "table", "desc": "Données du scénario."},
-        "eventName": {"type": "string", "desc": "Nom de l'événement."}
+        "scenarioData": {
+          "type": "table",
+          "desc": "Scenario data."
+        },
+        "eventName": {
+          "type": "string",
+          "desc": "Event name."
+        }
       },
-      "returns": [{"type": "nil", "desc": "Toujours nil."}],
+      "returns": [
+        {
+          "type": "nil",
+          "desc": "Always nil."
+        }
+      ],
       "internal": false
     }
   }

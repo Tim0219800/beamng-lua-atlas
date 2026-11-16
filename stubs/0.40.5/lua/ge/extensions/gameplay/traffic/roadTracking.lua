@@ -2,51 +2,51 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/traffic/roadTracking.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Objet de suivi de route d'un véhicule. Champs principaux : vehId, pos/dirVec/vel (vec3), speed, n1/n2 (noms des nœuds de la route), linkData, speedLimit, speedRatio, alignment (≈1 si parallèle à la route), roadOffset, roadXnorm/roadYnorm (0 à 1), halfWidth, isOnRoad, isNearRoad, isPublicRoad, isOneWay, isReverse, legalSide, faults, timers, collisionIds, collisionCount, currSignal, signalAction, signalFault.
+--- A vehicle's road tracking object. Main fields: vehId, pos/dirVec/vel (vec3), speed, n1/n2 (road node names), linkData, speedLimit, speedRatio, alignment (~1 if parallel to the road), roadOffset, roadXnorm/roadYnorm (0 to 1), halfWidth, isOnRoad, isNearRoad, isPublicRoad, isOneWay, isReverse, legalSide, faults, timers, collisionIds, collisionCount, currSignal, signalAction, signalFault.
 ---@class gameplay_traffic_roadTracking
 local gameplay_traffic_roadTracking = {}
 
---- Calcule la position du véhicule sur le segment n1-n2 : position longitudinale et latérale normalisée, demi-largeur interpolée, alignement, décalage par rapport à la ligne centrale, et isOnRoad.
----Source : lua/ge/extensions/gameplay/traffic/roadTracking.lua:109
----@return boolean  true si le segment actuel reste valide ; false si le véhicule en est sorti ou que la direction a changé (il faut alors rechercher un nouveau segment).
+--- Computes the vehicle's position on the n1-n2 segment: normalized longitudinal and lateral position, interpolated half-width, alignment, offset from the centerline, and isOnRoad.
+---Source: lua/ge/extensions/gameplay/traffic/roadTracking.lua:109
+---@return boolean  true if the current segment is still valid; false if the vehicle has left it or the direction has changed (a new segment must then be searched).
 function gameplay_traffic_roadTracking:calcVehOnRoad() end
 
---- Initialise l'objet : mesure l'emprise du véhicule (initialNodePosBB), calcule vehBasicRadius (demi-largeur ou demi-longueur minimale), fixe les seuils de vitesse, puis appelle refresh.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/traffic/roadTracking.lua:16
----@param vehId integer Id du véhicule à suivre.
+--- Initializes the object: measures the vehicle's footprint (initialNodePosBB), computes vehBasicRadius (minimum half-width or half-length), sets the speed thresholds, then calls refresh.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/traffic/roadTracking.lua:16
+---@param vehId integer Id of the vehicle to track.
 function gameplay_traffic_roadTracking:init(vehId) end
 
---- Restaure la configuration depuis la table produite par onSerialize.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/traffic/roadTracking.lua:338
----@param data table Données issues de onSerialize.
+--- Restores the configuration from the table produced by onSerialize.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/traffic/roadTracking.lua:338
+---@param data table Data produced by onSerialize.
 function gameplay_traffic_roadTracking:onDeserialized(data) end
 
---- Sérialise la configuration (vehId, speedLimitFloor, speedLimitCoef, highFrequency, fullStats).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/traffic/roadTracking.lua:328
----@return table  Table de données sérialisables.
+--- Serializes the configuration (vehId, speedLimitFloor, speedLimitCoef, highFrequency, fullStats).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/traffic/roadTracking.lua:328
+---@return table  Serializable data table.
 function gameplay_traffic_roadTracking:onSerialize() end
 
---- Mise à jour par frame : actualise véhicule et route, cumule les collisions, puis fait évoluer les scores de faute (excès de vitesse, mauvais sens/côté, conduite imprudente) et suit les signaux de circulation (feu rouge, stop) pour renseigner signalAction et signalFault.
----Source : lua/ge/extensions/gameplay/traffic/roadTracking.lua:193
----@param dt number Delta temps en secondes.
+--- Per-frame update: refreshes vehicle and road, accumulates collisions, then evolves the fault scores (speeding, wrong direction/side, reckless driving) and tracks traffic signals (red light, stop) to fill in signalAction and signalFault.
+---Source: lua/ge/extensions/gameplay/traffic/roadTracking.lua:193
+---@param dt number Delta time in seconds.
 function gameplay_traffic_roadTracking:onUpdate(dt) end
 
---- Remet à zéro toutes les tables et valeurs (fautes, timers, collisions, route), recalcule le côté légal (conduite à droite ou à gauche selon map.getRoadRules()), puis, si le véhicule est dans map.objects, met à jour le véhicule et la route courante.
----Source : lua/ge/extensions/gameplay/traffic/roadTracking.lua:38
+--- Resets all tables and values (faults, timers, collisions, road), recalculates the legal side (right- or left-hand driving according to map.getRoadRules()), then, if the vehicle is in map.objects, updates the vehicle and the current road.
+---Source: lua/ge/extensions/gameplay/traffic/roadTracking.lua:38
 function gameplay_traffic_roadTracking:refresh() end
 
---- Remet à leurs valeurs neutres les valeurs de suivi actives (ratio de vitesse, alignement, décalage, fautes, timers, signal, collisions).
----Source : lua/ge/extensions/gameplay/traffic/roadTracking.lua:68
+--- Resets the active tracking values to their neutral values (speed ratio, alignment, offset, faults, timers, signal, collisions).
+---Source: lua/ge/extensions/gameplay/traffic/roadTracking.lua:68
 function gameplay_traffic_roadTracking:resetValues() end
 
---- Cherche le meilleur segment de route (map.findBestRoad) pour la position et la direction actuelles, met à jour limite de vitesse, sens unique, route publique et ligne centrale (d'après la chaîne de voies '+'/'-'), oriente n1->n2 dans le sens de marche, puis appelle calcVehOnRoad. Si aucune route proche : isNearRoad = false et reset des valeurs.
----Source : lua/ge/extensions/gameplay/traffic/roadTracking.lua:152
+--- Looks for the best road segment (map.findBestRoad) for the current position and direction, updates speed limit, one-way, public road and centerline (from the lane string '+'/'-'), orients n1->n2 in the direction of travel, then calls calcVehOnRoad. If no road is nearby: isNearRoad = false and values reset.
+---Source: lua/ge/extensions/gameplay/traffic/roadTracking.lua:152
 function gameplay_traffic_roadTracking:updateCurrentRoad() end
 
---- Met à jour la position au sol (centre de l'OOBB abaissé de la demi-hauteur), la direction, la vitesse (m/s) et isReverse (vitesse d'au moins 1 m/s dans le sens opposé à l'avant du véhicule).
----Source : lua/ge/extensions/gameplay/traffic/roadTracking.lua:97
+--- Updates the ground position (OOBB center lowered by half the height), the direction, the speed (m/s) and isReverse (speed of at least 1 m/s in the direction opposite to the vehicle's front).
+---Source: lua/ge/extensions/gameplay/traffic/roadTracking.lua:97
 function gameplay_traffic_roadTracking:updateVehicle() end
 

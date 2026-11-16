@@ -1,35 +1,35 @@
 # `editor_rallyEditor_pacenotes_structuredForm`
 
-*Fichier : `lua/ge/extensions/editor/rallyEditor/pacenotes/structuredForm.lua` · VM : Game Engine (GE) · 1037 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/rallyEditor/pacenotes/structuredForm.lua` · VM: Game Engine (GE) · 1037 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_rallyEditor_pacenotes_structuredForm` : `extensions.load("editor_rallyEditor_pacenotes_structuredForm")`, puis la globale `editor_rallyEditor_pacenotes_structuredForm`
+**Access:** extension `editor_rallyEditor_pacenotes_structuredForm`: `extensions.load("editor_rallyEditor_pacenotes_structuredForm")`, then the global `editor_rallyEditor_pacenotes_structuredForm`
 
-Formulaire d'édition « structuré » d'un pacenote dans l'éditeur de rallye. Il affiche un aperçu du texte et des fichiers audio, puis les sections Caution, Modifiers Before (preMod1/preMod2), Corner (descripteur d'intensité, direction, forme, pas signés, mode de longueur, type de relâchement des virages lents), Modifiers After (postMod1/postMod2) et Distance. Les modifieurs se choisissent par menu ou par recherche textuelle, avec liste des derniers utilisés (10 max). Les options viennent de la configuration du compositeur de texte du notebook. Utilisé par pacenoteForm.
+"Structured" editing form of a pacenote in the rally editor. It displays a preview of the text and audio files, then the sections Caution, Modifiers Before (preMod1/preMod2), Corner (intensity descriptor, direction, shape, signed steps, length mode, slow corner release type), Modifiers After (postMod1/postMod2) and Distance. Modifiers are chosen by menu or by text search, with a list of the most recently used (10 max). The options come from the notebook's text composer configuration. Used by pacenoteForm.
 
-## Remarques
+## Notes
 
-- La configuration (types, modifieurs, formes, descripteurs) est chargée au premier draw après un clear().
-- Appeler clear() quand le pacenote affiché change, sinon le formulaire garde les données de l'ancien.
+- The configuration (types, modifiers, shapes, descriptors) is loaded at the first draw after a clear().
+- Call clear() when the displayed pacenote changes, otherwise the form keeps the old one's data.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_rallyEditor_pacenotes_structuredForm.clear()` | Réinitialise l'état interne du formulaire (configuration, options, états de recherche, fenêtre active). | 1022 |
-| `editor_rallyEditor_pacenotes_structuredForm.draw(pacenote, pacenoteToolsWindow)` | Dessine tout le formulaire structuré pour le pacenote donné (charge la configuration si besoin). | 989 |
+| `editor_rallyEditor_pacenotes_structuredForm.clear()` | Resets the form's internal state (configuration, options, search states, active window). | 1022 |
+| `editor_rallyEditor_pacenotes_structuredForm.draw(pacenote, pacenoteToolsWindow)` | Draws the whole structured form for the given pacenote (loads the configuration if needed). | 989 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_rallyEditor_pacenotes_structuredForm.draw(pacenote, pacenoteToolsWindow)`
 
-Dessine tout le formulaire structuré pour le pacenote donné (charge la configuration si besoin).
+Draws the whole structured form for the given pacenote (loads the configuration if needed).
 
-- `pacenote` (*table*) : Pacenote en cours d'édition.
-- `pacenoteToolsWindow` (*table*) : Fenêtre d'outils des pacenotes, mémorisée pour les rafraîchissements.
+- `pacenote` (*table*) : Pacenote being edited.
+- `pacenoteToolsWindow` (*table*) : Pacenote tools window, stored for refreshes.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/rallyEditor/pacenotes/structuredForm.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/rallyEditor/pacenotes/structuredForm.lua`.*

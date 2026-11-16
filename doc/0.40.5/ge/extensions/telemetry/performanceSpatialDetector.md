@@ -1,41 +1,41 @@
 # `telemetry_performanceSpatialDetector`
 
-*Fichier : `lua/ge/extensions/telemetry/performanceSpatialDetector.lua` · VM : Game Engine (GE) · 123 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/performanceSpatialDetector.lua` · VM: Game Engine (GE) · 123 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_performanceSpatialDetector` : `extensions.load("telemetry_performanceSpatialDetector")`, puis la globale `telemetry_performanceSpatialDetector`
+**Access:** extension `telemetry_performanceSpatialDetector`: `extensions.load("telemetry_performanceSpatialDetector")`, then the global `telemetry_performanceSpatialDetector`
 
-Détecteur de chutes de performance (« dips ») pour le tracker performanceSpatial. Il suit une moyenne mobile exponentielle du temps de frame (baseline, alpha 0,05) et ouvre un épisode quand les FPS passent sous un seuil absolu ou quand le temps de frame dépasse baseline * ratio. L'épisode se termine au retour à la normale et ne produit un événement que s'il a duré assez longtemps. Un délai de repos et un plafond d'événements par session limitent le bruit.
+Performance dip detector for the performanceSpatial tracker. It follows an exponential moving average of the frame time (baseline, alpha 0.05) and opens an episode when the FPS drops below an absolute threshold or when the frame time exceeds baseline * ratio. The episode ends on return to normal and only produces an event if it lasted long enough. A cooldown delay and a per-session event cap limit the noise.
 
-## Remarques
+## Notes
 
-- Les temps sont en millisecondes. Un épisode est découpé automatiquement après maxEpisodeMs (1 800 000 ms par défaut).
-- Le champ 'trigger' de l'événement vaut 'absolute', 'relative' ou 'both'.
+- Times are in milliseconds. An episode is automatically split after maxEpisodeMs (1,800,000 ms by default).
+- The event's 'trigger' field is 'absolute', 'relative' or 'both'.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_performanceSpatialDetector.new(config)` | Crée un détecteur. | 107 |
+| `telemetry_performanceSpatialDetector.new(config)` | Creates a detector. | 107 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_performanceSpatialDetector.new(config)`
 
-Crée un détecteur.
+Creates a detector.
 
-- `config` (*table*) : dipFpsThreshold, dipFrameTimeRatio, dipMinDurationMs, dipCooldownSeconds, maxDipEventsPerSession, maxEpisodeMs (facultatif).
-- **renvoie** : Detector Instance du détecteur.
+- `config` (*table*) : dipFpsThreshold, dipFrameTimeRatio, dipMinDurationMs, dipCooldownSeconds, maxDipEventsPerSession, maxEpisodeMs (optional).
+- **returns**: Detector Detector instance.
 
-## Classe `Detector`
+## Class `Detector`
 
-Détecteur renvoyé par new(config).
+Detector returned by new(config).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `Detector:canReport(nowMs)` | Vrai si le délai de repos est écoulé et si le plafond d'événements de la session n'est pas atteint. | 58 |
-| `Detector:finish(nowMs)` | Force la fin de l'épisode ouvert et renvoie son événement s'il a duré au moins dipMinDurationMs. | 62 |
-| `Detector:reset()` | Oublie la baseline et l'épisode en cours. | 53 |
-| `Detector:update(nowMs, fps, frameMs, absoluteAllowed)` | Traite un échantillon. Renvoie un booléen « capturer cette frame » (début d'épisode ou nouveau pire temps de frame) puis éventuellement l'événement d'un épisode terminé. Hors épisode, met à jour la baseline. | 66 |
+| `Detector:canReport(nowMs)` | True if the cooldown delay has elapsed and the session's event cap is not reached. | 58 |
+| `Detector:finish(nowMs)` | Forces the end of the open episode and returns its event if it lasted at least dipMinDurationMs. | 62 |
+| `Detector:reset()` | Forgets the baseline and the current episode. | 53 |
+| `Detector:update(nowMs, fps, frameMs, absoluteAllowed)` | Processes a sample. Returns a "capture this frame" boolean (episode start or new worst frame time) then possibly the event of a finished episode. Outside an episode, updates the baseline. | 66 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/performanceSpatialDetector.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/performanceSpatialDetector.lua`.*

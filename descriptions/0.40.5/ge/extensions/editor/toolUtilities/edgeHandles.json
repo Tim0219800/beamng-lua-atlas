@@ -1,73 +1,174 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/edgeHandles.lua",
-  "module": "Utilitaire d'outils d'éditeur pour des poignées « portes » (gates) déplaçables le long du contour d'un polygone (ring : liste de points {x,y}). Une porte est { edge, t, id } : indice d'arête et position t (0..1) sur cette arête. Fournit l'accrochage au contour, les portes par défaut (extrémités du grand axe), la géométrie d'une poignée flottante hors du bord et son dessin via debugDraw.",
+  "module": "Editor tool utility for \"gate\" handles that can be moved along the outline of a polygon (ring: list of {x,y} points). A gate is { edge, t, id }: edge index and position t (0..1) on that edge. Provides snapping to the outline, default gates (ends of the long axis), the geometry of a floating handle outside the edge and its drawing via debugDraw.",
   "notes": [
-    "Le ring est fermé implicitement : l'arête i va du point i au point (i % n) + 1.",
-    "Le centre utilisé (centroid) est la moyenne simple des sommets, pas pondérée par l'aire.",
-    "gateWorldDir renvoie 4 valeurs (wx, wy, nx, ny), la normale pointant à l'opposé du centre du ring."
+    "The ring is implicitly closed: edge i goes from point i to point (i % n) + 1.",
+    "The center used (centroid) is the simple average of the vertices, not area-weighted.",
+    "gateWorldDir returns 4 values (wx, wy, nx, ny), the normal pointing away from the ring center."
   ],
   "functions": {
     "tagGates": {
-      "desc": "Donne un id unique (Engine.generateUUID) à chaque porte qui n'en a pas, puis renvoie la liste. Une porte n'est sinon repérée que par sa position dans la liste, qui change quand une porte précédente est retirée.",
-      "params": {"gates": {"type": "table|nil", "desc": "Liste de portes { edge, t, id? }"}},
-      "returns": [{"type": "table|nil", "desc": "La même liste, portes nommées."}]
-    },
-    "nearestGate": {
-      "desc": "Accroche un point du monde (px,py) à la porte la plus proche sur le contour.",
+      "desc": "Gives a unique id (Engine.generateUUID) to each gate that has none, then returns the list. A gate is otherwise identified only by its position in the list, which changes when a previous gate is removed.",
       "params": {
-        "ring": {"type": "table", "desc": "Liste de points {x=,y=}"},
-        "px": {"type": "number", "desc": "x monde"},
-        "py": {"type": "number", "desc": "y monde"}
-      },
-      "returns": [{"type": "table", "desc": "{ edge = indice d'arête, t = position 0..1 }"}]
-    },
-    "gateWorldDir": {
-      "desc": "Position monde d'une porte et normale unitaire sortante de son arête (à l'opposé du centre du ring).",
-      "params": {
-        "ring": {"type": "table", "desc": "Liste de points {x,y}"},
-        "gate": {"type": "table", "desc": "{ edge, t }"}
+        "gates": {
+          "type": "table|nil",
+          "desc": "List of gates { edge, t, id? }"
+        }
       },
       "returns": [
-        {"type": "number", "desc": "wx"},
-        {"type": "number", "desc": "wy"},
-        {"type": "number", "desc": "nx (normale sortante)"},
-        {"type": "number", "desc": "ny (normale sortante)"}
+        {
+          "type": "table|nil",
+          "desc": "The same list, with named gates."
+        }
+      ]
+    },
+    "nearestGate": {
+      "desc": "Snaps a world point (px,py) to the nearest gate on the outline.",
+      "params": {
+        "ring": {
+          "type": "table",
+          "desc": "List of points {x=,y=}"
+        },
+        "px": {
+          "type": "number",
+          "desc": "world x"
+        },
+        "py": {
+          "type": "number",
+          "desc": "world y"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ edge = edge index, t = position 0..1 }"
+        }
+      ]
+    },
+    "gateWorldDir": {
+      "desc": "World position of a gate and the outward unit normal of its edge (away from the ring center).",
+      "params": {
+        "ring": {
+          "type": "table",
+          "desc": "List of points {x,y}"
+        },
+        "gate": {
+          "type": "table",
+          "desc": "{ edge, t }"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "wx"
+        },
+        {
+          "type": "number",
+          "desc": "wy"
+        },
+        {
+          "type": "number",
+          "desc": "nx (outward normal)"
+        },
+        {
+          "type": "number",
+          "desc": "ny (outward normal)"
+        }
       ]
     },
     "defaultGates": {
-      "desc": "Deux portes par défaut aux extrémités opposées du grand axe du ring (entrée, sortie).",
-      "params": {"ring": {"type": "table", "desc": "Liste de points {x,y}"}},
+      "desc": "Two default gates at opposite ends of the ring's long axis (entry, exit).",
+      "params": {
+        "ring": {
+          "type": "table",
+          "desc": "List of points {x,y}"
+        }
+      },
       "returns": [
-        {"type": "table", "desc": "Porte d'entrée { edge, t }"},
-        {"type": "table", "desc": "Porte de sortie { edge, t }"}
+        {
+          "type": "table",
+          "desc": "Entry gate { edge, t }"
+        },
+        {
+          "type": "table",
+          "desc": "Exit gate { edge, t }"
+        }
       ]
     },
     "handleGeom": {
-      "desc": "Géométrie de la poignée saisissable d'une porte : la barre flotte à outDist mètres hors du bord et s'étend de halfWidth mètres de chaque côté.",
+      "desc": "Geometry of a gate's grabbable handle: the bar floats at outDist meters off the edge and extends halfWidth meters on each side.",
       "params": {
-        "ring": {"type": "table", "desc": "Liste de points {x,y}"},
-        "gate": {"type": "table|nil", "desc": "{ edge, t }"},
-        "outDist": {"type": "number", "desc": "Distance de la barre au bord (m)"},
-        "halfWidth": {"type": "number", "desc": "Demi-largeur de la barre (m)"},
-        "liftFn": {"type": "function|nil", "desc": "function(x,y) -> vec3 qui pose un point sur le terrain ; plan z=0 par défaut."}
+        "ring": {
+          "type": "table",
+          "desc": "List of points {x,y}"
+        },
+        "gate": {
+          "type": "table|nil",
+          "desc": "{ edge, t }"
+        },
+        "outDist": {
+          "type": "number",
+          "desc": "Distance of the bar from the edge (m)"
+        },
+        "halfWidth": {
+          "type": "number",
+          "desc": "Half-width of the bar (m)"
+        },
+        "liftFn": {
+          "type": "function|nil",
+          "desc": "function(x,y) -> vec3 that places a point on the terrain; z=0 plane by default."
+        }
       },
       "returns": [
-        {"type": "vec3|nil", "desc": "Point sur le bord"},
-        {"type": "vec3", "desc": "Centre de la barre (bouton de saisie)"},
-        {"type": "vec3", "desc": "Extrémité 1 de la barre"},
-        {"type": "vec3", "desc": "Extrémité 2 de la barre"}
+        {
+          "type": "vec3|nil",
+          "desc": "Point on the edge"
+        },
+        {
+          "type": "vec3",
+          "desc": "Center of the bar (grab button)"
+        },
+        {
+          "type": "vec3",
+          "desc": "End 1 of the bar"
+        },
+        {
+          "type": "vec3",
+          "desc": "End 2 of the bar"
+        }
       ]
     },
     "drawHandle": {
-      "desc": "Dessine la poignée (points de handleGeom) : tige du bord à la barre, barre avec points d'extrémité, bouton central qui pulse au survol.",
+      "desc": "Draws the handle (points from handleGeom): stem from the edge to the bar, bar with end points, central button that pulses on hover.",
       "params": {
-        "gp": {"type": "vec3", "desc": "Point sur le bord"},
-        "cp": {"type": "vec3", "desc": "Centre de la barre"},
-        "e1": {"type": "vec3", "desc": "Extrémité 1"},
-        "e2": {"type": "vec3", "desc": "Extrémité 2"},
-        "base": {"type": "integer", "desc": "Couleur de base (packée)"},
-        "glow": {"type": "integer", "desc": "Couleur de halo (packée)"},
-        "hovered": {"type": "boolean", "desc": "true si survolée"}
+        "gp": {
+          "type": "vec3",
+          "desc": "Point on the edge"
+        },
+        "cp": {
+          "type": "vec3",
+          "desc": "Center of the bar"
+        },
+        "e1": {
+          "type": "vec3",
+          "desc": "End 1"
+        },
+        "e2": {
+          "type": "vec3",
+          "desc": "End 2"
+        },
+        "base": {
+          "type": "integer",
+          "desc": "Base color (packed)"
+        },
+        "glow": {
+          "type": "integer",
+          "desc": "Halo color (packed)"
+        },
+        "hovered": {
+          "type": "boolean",
+          "desc": "true if hovered"
+        }
       }
     }
   }

@@ -1,68 +1,68 @@
 # `editor_masterSpline`
 
-*Fichier : `lua/ge/extensions/editor/masterSpline.lua` · VM : Game Engine (GE) · 1954 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/masterSpline.lua` · VM: Game Engine (GE) · 1954 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_masterSpline` : `extensions.load("editor_masterSpline")`, puis la globale `editor_masterSpline`
+**Access:** extension `editor_masterSpline`: `extensions.load("editor_masterSpline")`, then the global `editor_masterSpline`
 
-Outil Master Spline de l'éditeur de monde (mode d'édition « masterSpline »). Une Master Spline est une courbe maîtresse (nœuds, largeurs, normales) qui pilote une pile de couches, chacune liée à une spline enfant d'un autre outil (mesh, assembly, decal, road, tree) décalée latéralement. Le fichier contient surtout l'interface imgui (fenêtre « masterSpline », poignées de virage, gizmo, terraformage, route automatique, homologation, session) ; les données sont dans masterSpline/splineMgr.lua. Elle sert aux créateurs de niveaux, pas aux véhicules.
+Master Spline tool of the World Editor ("masterSpline" edit mode). A Master Spline is a master curve (nodes, widths, normals) that drives a stack of layers, each linked to a child spline of another tool (mesh, assembly, decal, road, tree) offset laterally. The file mostly contains the imgui interface ("masterSpline" window, turn handles, gizmo, terraforming, auto road, homologation, session); the data lives in masterSpline/splineMgr.lua. It is meant for level creators, not for vehicles.
 
-## Remarques
+## Notes
 
-- L'API publique est réduite : deux setters de sélection et les hooks de sérialisation/éditeur ; presque tout le reste est local au fichier.
-- onEditorGui reconstruit les Master Splines dirty à chaque image même si l'outil n'est pas actif (il dessine alors seulement les contours via rSpline.renderShells).
-- onSerialize est destructif : après avoir sérialisé, il délie toutes les splines, supprime toutes les Master Splines puis appelle be:reloadCollision() (la collision est cuite dans la scène). Les données doivent donc être rechargées par onDeserialized.
-- Valeurs par défaut de la route automatique : baseWidth 10, slopeAvoidance 1, bankingStrength 0.35, widthBlend 0.5. Curseur de position latérale entre -5 et 5, DOI entre 0 et 500.
-- Le fichier s'enregistre auprès de splineInput.registerSplineTool et déclare une spec de session (Save/Load Session) groupant masters et enfants liés.
+- The public API is small: two selection setters and the serialization/editor hooks; almost everything else is local to the file.
+- onEditorGui rebuilds the dirty Master Splines every frame even if the tool is not active (it then only draws the outlines via rSpline.renderShells).
+- onSerialize is destructive: after serializing, it unlinks all the splines, deletes all the Master Splines then calls be:reloadCollision() (the collision is baked into the scene). The data must therefore be reloaded by onDeserialized.
+- Auto road defaults: baseWidth 10, slopeAvoidance 1, bankingStrength 0.35, widthBlend 0.5. Lateral position slider between -5 and 5, DOI between 0 and 500.
+- The file registers with splineInput.registerSplineTool and declares a session spec (Save/Load Session) grouping masters and linked children.
 
-**Dépendances (chargées avant) :** `editor_assemblySpline`, `editor_decalSpline`, `editor_meshSpline`, `editor_roadSpline`, `editor_treeSpline`
+**Dependencies (loaded first):** `editor_assemblySpline`, `editor_decalSpline`, `editor_meshSpline`, `editor_roadSpline`, `editor_treeSpline`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_masterSpline.onClientEndMission()` | Hook appelé en quittant la carte : délie et supprime toutes les Master Splines et recalcule la table id vers indice. *(interne)* *(hook)* | 1922 |
-| `editor_masterSpline.onDeserialized(data)` | Hook de désérialisation : supprime les Master Splines existantes, recrée celles de data, puis recalcule la table id vers indice. *(interne)* *(hook)* | 203 |
-| `editor_masterSpline.onEditorGui()` | Hook appelé à chaque image de l'éditeur : optimisation en direct de la spline sélectionnée, reconstruction des splines dirty, puis, si l'outil est actif, fenêtre, caméra panoramique, poignées de virage engineered, événements souris/clavier, terraformage et dessin. *(interne)* *(hook)* | 1788 |
-| `editor_masterSpline.onEditorInitialized()` | Hook d'initialisation de l'éditeur : enregistre le mode d'édition « Master Spline » (editor.editModes.masterSpline) et la fenêtre « masterSpline ». *(interne)* *(hook)* | 1908 |
-| `editor_masterSpline.onSerialize()` | Hook de sérialisation de l'éditeur : sérialise toutes les Master Splines, délie leurs enfants, supprime les Master Splines et recharge la collision. *(interne)* *(hook)* | 183 |
-| `editor_masterSpline.setSelectedNodeIdx(idx)` | Définit l'indice du nœud sélectionné (sélection croisée entre outils). | 145 |
-| `editor_masterSpline.setSelectedSplineIdx(idx)` | Définit l'indice de la Master Spline sélectionnée (sélection croisée entre outils). | 142 |
+| `editor_masterSpline.onClientEndMission()` | Hook called when leaving the map: unlinks and deletes all the Master Splines and recomputes the id-to-index table. *(internal)* *(hook)* | 1922 |
+| `editor_masterSpline.onDeserialized(data)` | Deserialization hook: deletes the existing Master Splines, recreates those from data, then recomputes the id-to-index table. *(internal)* *(hook)* | 203 |
+| `editor_masterSpline.onEditorGui()` | Hook called every editor frame: live optimization of the selected spline, rebuilding of dirty splines, then, if the tool is active, window, pan camera, engineered turn handles, mouse/keyboard events, terraforming and drawing. *(internal)* *(hook)* | 1788 |
+| `editor_masterSpline.onEditorInitialized()` | Editor initialization hook: registers the "Master Spline" edit mode (editor.editModes.masterSpline) and the "masterSpline" window. *(internal)* *(hook)* | 1908 |
+| `editor_masterSpline.onSerialize()` | Editor serialization hook: serializes all the Master Splines, unlinks their children, deletes the Master Splines and reloads the collision. *(internal)* *(hook)* | 183 |
+| `editor_masterSpline.setSelectedNodeIdx(idx)` | Sets the index of the selected node (cross-selection between tools). | 145 |
+| `editor_masterSpline.setSelectedSplineIdx(idx)` | Sets the index of the selected Master Spline (cross-selection between tools). | 142 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_masterSpline.onDeserialized(data)`
 
-Hook de désérialisation : supprime les Master Splines existantes, recrée celles de data, puis recalcule la table id vers indice.
+Deserialization hook: deletes the existing Master Splines, recreates those from data, then recomputes the id-to-index table.
 
-- `data` (*table[]*) : Données produites par onSerialize.
+- `data` (*table[]*) : Data produced by onSerialize.
 
 #### `editor_masterSpline.onSerialize()`
 
-Hook de sérialisation de l'éditeur : sérialise toutes les Master Splines, délie leurs enfants, supprime les Master Splines et recharge la collision.
+Editor serialization hook: serializes all the Master Splines, unlinks their children, deletes the Master Splines and reloads the collision.
 
-- **renvoie** : table[] Tableau des Master Splines sérialisées.
+- **returns**: table[] Array of the serialized Master Splines.
 
 #### `editor_masterSpline.setSelectedNodeIdx(idx)`
 
-Définit l'indice du nœud sélectionné (sélection croisée entre outils).
+Sets the index of the selected node (cross-selection between tools).
 
-- `idx` (*integer*) : Indice du nœud (à partir de 1).
+- `idx` (*integer*) : Node index (1-based).
 
 #### `editor_masterSpline.setSelectedSplineIdx(idx)`
 
-Définit l'indice de la Master Spline sélectionnée (sélection croisée entre outils).
+Sets the index of the selected Master Spline (cross-selection between tools).
 
-- `idx` (*integer*) : Indice dans la liste (à partir de 1).
+- `idx` (*integer*) : Index in the list (1-based).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant celle-ci pour garantir l'ordre de sérialisation : editor_assemblySpline, editor_decalSpline, editor_meshSpline, editor_roadSpline, editor_treeSpline. |
+| `dependencies` | string[] | Extensions loaded before this one to guarantee the serialization order: editor_assemblySpline, editor_decalSpline, editor_meshSpline, editor_roadSpline, editor_treeSpline. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `reloadCollision`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/masterSpline.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/masterSpline.lua`.*

@@ -1,16 +1,75 @@
 {
   "path": "lua/ge/extensions/core/cameraModes/transition.lua",
-  "module": "Filtre global (runningOrder 0.2) qui adoucit les changements de caméra : mémorise la pose de l'image précédente (position relative au véhicule, rotation, FOV, nearClip) et, quand start() est appelé, mélange la nouvelle caméra avec l'ancienne pendant la durée configurée (réglages cameraTransitionTime, 300 ms par défaut, et cameraVehicleTransitionTime, 500 ms pour un changement de véhicule). Le mélange est quadratique (perc^2) avec nlerp de la rotation. Pas de fondu si les deux points ne se voient pas ou sont à plus de 100 m (pour les changements de caméra simples). Renvoie un constructeur.",
-  "notes": ["Utilisé aussi pour les transitions de chemin caméra : si camPathTransitionData est fourni, son callback reçoit une copie de data.res et la caméra reprend l'ancienne pose.", "Une demande reçue avant la première image enregistrée attend qu'une pose existe (camLastPosAbs différente de l'infini).", "La page extraite indique start(camPathTransitionData, duration) mais le code est start(isVehicleSwitch, camPathTransitionData, duration) ; canTransition(origin, target) a deux paramètres."],
+  "module": "Global filter (runningOrder 0.2) that softens camera changes: stores the previous frame's pose (position relative to the vehicle, rotation, FOV, nearClip) and, when start() is called, blends the new camera with the old one over the configured duration (settings cameraTransitionTime, 300 ms by default, and cameraVehicleTransitionTime, 500 ms for a vehicle change). The blend is quadratic (perc^2) with nlerp of the rotation. No blend if the two points cannot see each other or are more than 100 m apart (for simple camera changes). Returns a constructor.",
+  "notes": [
+    "Also used for camera path transitions: if camPathTransitionData is provided, its callback receives a copy of data.res and the camera takes back the old pose.",
+    "A request received before the first recorded frame waits until a pose exists (camLastPosAbs different from infinity).",
+    "The extracted page says start(camPathTransitionData, duration) but the code is start(isVehicleSwitch, camPathTransitionData, duration); canTransition(origin, target) has two parameters."
+  ],
   "classes": {
     "C": {
-      "desc": "Filtre de transition.",
+      "desc": "Transition filter.",
       "functions": {
-        "init": {"desc": "isGlobal, isFilter, hidden, runningOrder 0.2, état initial et lecture des réglages.", "internal": true},
-        "onSettingsChanged": {"desc": "Hook : relit cameraTransitionTime et cameraVehicleTransitionTime (millisecondes).", "internal": true},
-        "canTransition": {"desc": "Dit si le fondu est autorisé entre deux points : toujours pour une demande de type « caméra » (false), sinon seulement si distance <= 100 m et visibilité mutuelle (rayons statiques).", "params": {"origin": {"type": "vec3", "desc": "position de la nouvelle caméra"}, "target": {"type": "vec3", "desc": "position de l'ancienne caméra"}}, "returns": [{"type": "boolean", "desc": "true si autorisé"}]},
-        "start": {"desc": "Demande un fondu depuis la dernière pose ; il démarre à la prochaine image.", "params": {"isVehicleSwitch": {"type": "boolean", "desc": "vrai pour un changement de véhicule (durée véhicule, test de visibilité)"}, "camPathTransitionData": {"type": "table|nil", "desc": "données de transition de chemin caméra (avec callback(res))"}, "duration": {"type": "number|nil", "desc": "durée en secondes qui remplace la durée configurée pour cette transition"}}},
-        "update": {"desc": "Enregistre la pose ou applique le fondu à data.res.", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "true"}], "internal": true}
+        "init": {
+          "desc": "isGlobal, isFilter, hidden, runningOrder 0.2, initial state and settings reading.",
+          "internal": true
+        },
+        "onSettingsChanged": {
+          "desc": "Hook: re-reads cameraTransitionTime and cameraVehicleTransitionTime (milliseconds).",
+          "internal": true
+        },
+        "canTransition": {
+          "desc": "Says whether the blend is allowed between two points: always for a \"camera\"-type request (false), otherwise only if distance <= 100 m and mutual visibility (static rays).",
+          "params": {
+            "origin": {
+              "type": "vec3",
+              "desc": "position of the new camera"
+            },
+            "target": {
+              "type": "vec3",
+              "desc": "position of the old camera"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if allowed"
+            }
+          ]
+        },
+        "start": {
+          "desc": "Requests a blend from the last pose; it starts on the next frame.",
+          "params": {
+            "isVehicleSwitch": {
+              "type": "boolean",
+              "desc": "true for a vehicle change (vehicle duration, visibility test)"
+            },
+            "camPathTransitionData": {
+              "type": "table|nil",
+              "desc": "camera path transition data (with callback(res))"
+            },
+            "duration": {
+              "type": "number|nil",
+              "desc": "duration in seconds that replaces the configured duration for this transition"
+            }
+          }
+        },
+        "update": {
+          "desc": "Records the pose or applies the blend to data.res.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "camData"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true"
+            }
+          ],
+          "internal": true
+        }
       }
     }
   }

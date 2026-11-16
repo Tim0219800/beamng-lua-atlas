@@ -1,121 +1,121 @@
 # `editor_cameraV2_validation`
 
-*Fichier : `lua/ge/extensions/editor/cameraV2/validation.lua` · VM : Game Engine (GE) · 103 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/cameraV2/validation.lua` · VM: Game Engine (GE) · 103 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_cameraV2_validation` : `extensions.load("editor_cameraV2_validation")`, puis la globale `editor_cameraV2_validation`
+**Access:** extension `editor_cameraV2_validation`: `extensions.load("editor_cameraV2_validation")`, then the global `editor_cameraV2_validation`
 
-Contrôles partagés de Camera V2 pour rejeter les NaN, infinis et coordonnées extrêmes issus de raycasts ou de calculs de caméra défaillants, avant d'appliquer une position ou rotation. Utile à un moddeur qui veut valider des points, quaternions ou hauteurs de terrain avant de les passer à la caméra.
+Shared Camera V2 checks to reject NaNs, infinities and extreme coordinates coming from faulty raycasts or camera computations, before applying a position or rotation. Useful to a modder who wants to validate points, quaternions or terrain heights before passing them to the camera.
 
-## Remarques
+## Notes
 
-- Limite 'raisonnable' des coordonnées : 10 000 000 (worldCoordinateLimit). Limite de hauteur de terrain : 1 000 000.
-- Un quaternion est jugé valide si le carré de sa norme est compris entre 0,25 et 2,25 (il n'est pas exigé unitaire).
-- isValidXY/isValidPoint/isReasonableXY/isReasonablePoint renvoient nil (et non false) quand point vaut nil.
+- 'Reasonable' coordinate limit: 10,000,000 (worldCoordinateLimit). Terrain height limit: 1,000,000.
+- A quaternion is considered valid if the square of its norm is between 0.25 and 2.25 (it is not required to be unit length).
+- isValidXY/isValidPoint/isReasonableXY/isReasonablePoint return nil (not false) when point is nil.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_cameraV2_validation.isFinite(value)` | Vrai si value est un nombre ni NaN ni infini. | 14 |
-| `editor_cameraV2_validation.isPointOnRaySegment(point, origin, direction, maximumDistance)` | Vrai si point se trouve près du segment de rayon origin -> origin + direction*maximumDistance : projection sur le rayon normalisé comprise entre -0,01 et maximumDistance+0,01, et distance perpendiculaire <= 1. | 76 |
-| `editor_cameraV2_validation.isReasonableCoordinate(value)` | Vrai si la valeur est finie et sa valeur absolue ne dépasse pas 10 000 000. | 35 |
-| `editor_cameraV2_validation.isReasonablePoint(point)` | Vrai si x, y et z sont des coordonnées raisonnables. | 45 |
-| `editor_cameraV2_validation.isReasonableXY(point)` | Vrai si x et y sont des coordonnées raisonnables. | 39 |
-| `editor_cameraV2_validation.isValidCoordinate(value)` | Alias de isFinite pour une coordonnée. | 21 |
-| `editor_cameraV2_validation.isValidPoint(point)` | Vrai si x, y et z sont des nombres finis. | 31 |
-| `editor_cameraV2_validation.isValidQuaternion(rotation)` | Vrai si x, y, z, w sont finis et si x²+y²+z²+w² est dans [0,25 ; 2,25]. | 49 |
-| `editor_cameraV2_validation.isValidTerrainHeight(value)` | Vrai si la hauteur est finie et \|hauteur\| <= 1 000 000. | 66 |
-| `editor_cameraV2_validation.isValidXY(point)` | Vrai si point.x et point.y sont des nombres finis. | 25 |
-| `editor_cameraV2_validation.terrainHeightAt(point)` | Interroge core_terrain.getTerrainHeight(vec3(x, y, 0)) pour un point raisonnable et renvoie la hauteur si elle est valide. | 70 |
-| `editor_cameraV2_validation.worldCoordinateLimit()` | Renvoie la limite de coordonnée utilisée par les tests 'raisonnable'. | 98 |
+| `editor_cameraV2_validation.isFinite(value)` | True if value is a number that is neither NaN nor infinite. | 14 |
+| `editor_cameraV2_validation.isPointOnRaySegment(point, origin, direction, maximumDistance)` | True if point is near the ray segment origin -> origin + direction*maximumDistance: projection on the normalized ray between -0.01 and maximumDistance+0.01, and perpendicular distance <= 1. | 76 |
+| `editor_cameraV2_validation.isReasonableCoordinate(value)` | True if the value is finite and its absolute value does not exceed 10,000,000. | 35 |
+| `editor_cameraV2_validation.isReasonablePoint(point)` | True if x, y and z are reasonable coordinates. | 45 |
+| `editor_cameraV2_validation.isReasonableXY(point)` | True if x and y are reasonable coordinates. | 39 |
+| `editor_cameraV2_validation.isValidCoordinate(value)` | Alias of isFinite for a coordinate. | 21 |
+| `editor_cameraV2_validation.isValidPoint(point)` | True if x, y and z are finite numbers. | 31 |
+| `editor_cameraV2_validation.isValidQuaternion(rotation)` | True if x, y, z, w are finite and if x²+y²+z²+w² is in [0.25; 2.25]. | 49 |
+| `editor_cameraV2_validation.isValidTerrainHeight(value)` | True if the height is finite and \|height\| <= 1,000,000. | 66 |
+| `editor_cameraV2_validation.isValidXY(point)` | True if point.x and point.y are finite numbers. | 25 |
+| `editor_cameraV2_validation.terrainHeightAt(point)` | Queries core_terrain.getTerrainHeight(vec3(x, y, 0)) for a reasonable point and returns the height if it is valid. | 70 |
+| `editor_cameraV2_validation.worldCoordinateLimit()` | Returns the coordinate limit used by the 'reasonable' tests. | 98 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_cameraV2_validation.isFinite(value)`
 
-Vrai si value est un nombre ni NaN ni infini.
+True if value is a number that is neither NaN nor infinite.
 
-- `value` (*any*) : Valeur à tester
-- **renvoie** : boolean true si nombre fini
+- `value` (*any*) : Value to test
+- **returns**: boolean true if finite number
 
 #### `editor_cameraV2_validation.isPointOnRaySegment(point, origin, direction, maximumDistance)`
 
-Vrai si point se trouve près du segment de rayon origin -> origin + direction*maximumDistance : projection sur le rayon normalisé comprise entre -0,01 et maximumDistance+0,01, et distance perpendiculaire <= 1.
+True if point is near the ray segment origin -> origin + direction*maximumDistance: projection on the normalized ray between -0.01 and maximumDistance+0.01, and perpendicular distance <= 1.
 
-- `point` (*vec3*) : Point à tester
-- `origin` (*vec3*) : Origine du rayon
-- `direction` (*vec3*) : Direction (normalisée en interne ; longueur <= 0,0001 refusée)
-- `maximumDistance` (*number*) : Longueur maximale du segment (>= 0)
-- **renvoie** : boolean true si sur le segment
+- `point` (*vec3*) : Point to test
+- `origin` (*vec3*) : Ray origin
+- `direction` (*vec3*) : Direction (normalized internally; length <= 0.0001 rejected)
+- `maximumDistance` (*number*) : Maximum segment length (>= 0)
+- **returns**: boolean true if on the segment
 
 #### `editor_cameraV2_validation.isReasonableCoordinate(value)`
 
-Vrai si la valeur est finie et sa valeur absolue ne dépasse pas 10 000 000.
+True if the value is finite and its absolute value does not exceed 10,000,000.
 
-- `value` (*any*) : Coordonnée
-- **renvoie** : boolean true si raisonnable
+- `value` (*any*) : Coordinate
+- **returns**: boolean true if reasonable
 
 #### `editor_cameraV2_validation.isReasonablePoint(point)`
 
-Vrai si x, y et z sont des coordonnées raisonnables.
+True if x, y and z are reasonable coordinates.
 
-- `point` (*table|nil*) : Point avec x, y, z
-- **renvoie** : boolean|nil true/false, ou nil si point est nil
+- `point` (*table|nil*) : Point with x, y, z
+- **returns**: boolean|nil true/false, or nil if point is nil
 
 #### `editor_cameraV2_validation.isReasonableXY(point)`
 
-Vrai si x et y sont des coordonnées raisonnables.
+True if x and y are reasonable coordinates.
 
-- `point` (*table|nil*) : Point avec x, y
-- **renvoie** : boolean|nil true/false, ou nil si point est nil
+- `point` (*table|nil*) : Point with x, y
+- **returns**: boolean|nil true/false, or nil if point is nil
 
 #### `editor_cameraV2_validation.isValidCoordinate(value)`
 
-Alias de isFinite pour une coordonnée.
+Alias of isFinite for a coordinate.
 
-- `value` (*any*) : Coordonnée
-- **renvoie** : boolean true si finie
+- `value` (*any*) : Coordinate
+- **returns**: boolean true if finite
 
 #### `editor_cameraV2_validation.isValidPoint(point)`
 
-Vrai si x, y et z sont des nombres finis.
+True if x, y and z are finite numbers.
 
-- `point` (*table|nil*) : Point avec x, y, z
-- **renvoie** : boolean|nil true/false, ou nil si point est nil
+- `point` (*table|nil*) : Point with x, y, z
+- **returns**: boolean|nil true/false, or nil if point is nil
 
 #### `editor_cameraV2_validation.isValidQuaternion(rotation)`
 
-Vrai si x, y, z, w sont finis et si x²+y²+z²+w² est dans [0,25 ; 2,25].
+True if x, y, z, w are finite and if x²+y²+z²+w² is in [0.25; 2.25].
 
-- `rotation` (*table|nil*) : Quaternion avec x, y, z, w
-- **renvoie** : boolean true si valide
+- `rotation` (*table|nil*) : Quaternion with x, y, z, w
+- **returns**: boolean true if valid
 
 #### `editor_cameraV2_validation.isValidTerrainHeight(value)`
 
-Vrai si la hauteur est finie et |hauteur| <= 1 000 000.
+True if the height is finite and |height| <= 1,000,000.
 
-- `value` (*any*) : Hauteur
-- **renvoie** : boolean true si valide
+- `value` (*any*) : Height
+- **returns**: boolean true if valid
 
 #### `editor_cameraV2_validation.isValidXY(point)`
 
-Vrai si point.x et point.y sont des nombres finis.
+True if point.x and point.y are finite numbers.
 
-- `point` (*table|nil*) : Table avec champs x et y (vec3 possible)
-- **renvoie** : boolean|nil true/false, ou nil si point est nil
+- `point` (*table|nil*) : Table with x and y fields (vec3 possible)
+- **returns**: boolean|nil true/false, or nil if point is nil
 
 #### `editor_cameraV2_validation.terrainHeightAt(point)`
 
-Interroge core_terrain.getTerrainHeight(vec3(x, y, 0)) pour un point raisonnable et renvoie la hauteur si elle est valide.
+Queries core_terrain.getTerrainHeight(vec3(x, y, 0)) for a reasonable point and returns the height if it is valid.
 
-- `point` (*table*) : Point avec x, y
-- **renvoie** : number|nil Hauteur du terrain, ou nil si le point ou la hauteur est invalide
+- `point` (*table*) : Point with x, y
+- **returns**: number|nil Terrain height, or nil if the point or the height is invalid
 
 #### `editor_cameraV2_validation.worldCoordinateLimit()`
 
-Renvoie la limite de coordonnée utilisée par les tests 'raisonnable'.
+Returns the coordinate limit used by the 'reasonable' tests.
 
-- **renvoie** : number 10000000
+- **returns**: number 10000000
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/cameraV2/validation.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/cameraV2/validation.lua`.*

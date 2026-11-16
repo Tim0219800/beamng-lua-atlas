@@ -1,75 +1,75 @@
 # `mcp_shared`
 
-*Fichier : `lua/ge/extensions/mcp/shared.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/mcp/shared.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `mcp_shared` : `extensions.load("mcp_shared")`, puis la globale `mcp_shared`
+**Access:** extension `mcp_shared`: `extensions.load("mcp_shared")`, then the global `mcp_shared`
 
-État et petites aides partagés par les modules d'outils MCP (mcp/tools/*.lua). Chargé par `require('mcp/shared')`, donc singleton via le cache de require (ce n'est pas une extension chargée par extensions.load en usage normal). Contient les résultats des appels asynchrones (GE <-> VM véhicule / UI), le journal des instabilités physiques et des helpers pour résoudre l'id de véhicule et lire beamng.log.
+State and small helpers shared by the MCP tool modules (mcp/tools/*.lua). Loaded by `require('mcp/shared')`, therefore a singleton via the require cache (it is not an extension loaded by extensions.load in normal use). Contains the results of asynchronous calls (GE <-> vehicle VM / UI), the physics instability log and helpers to resolve the vehicle id and read beamng.log.
 
-## Exemple
+## Example
 
 ```lua
 local shared = require('mcp/shared')
-local vid = shared.argVehId({id = 12})   -- 12, ou le véhicule joueur si id absent
-local text, eof = shared.readLogFrom(nil) -- eof = taille actuelle du log
+local vid = shared.argVehId({id = 12})   -- 12, or the player vehicle if id is absent
+local text, eof = shared.readLogFrom(nil) -- eof = current size of the log
 ```
 
-## Remarques
+## Notes
 
-- readLogFrom ouvre `beamng.log` en relatif au répertoire courant (dossier du jeu / dossier utilisateur selon le lancement) ; renvoie nil si le fichier est introuvable.
-- instabilityLog est alimenté par mcp/tools/vehicle.lua (hook onInstabilityDetected, 50 entrées max).
+- readLogFrom opens `beamng.log` relative to the current directory (game folder / user folder depending on launch); returns nil if the file is not found.
+- instabilityLog is fed by mcp/tools/vehicle.lua (onInstabilityDetected hook, 50 entries max).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mcp_shared.argModel(args)` | Modèle pris dans args.model, sinon le fichier JBeam du véhicule joueur courant. | 22 |
-| `mcp_shared.argVehId(args)` | Id de véhicule pris dans args.id, sinon celui du véhicule joueur 0. | 16 |
-| `mcp_shared.readLogFrom(pos)` | Lit beamng.log depuis l'octet `pos` jusqu'à la fin. Avec pos=nil, démarre à la fin (renvoie "") : sert à mesurer la taille actuelle. Si le fichier a rétréci (rotation, troncature), repart de 0. | 31 |
-| `mcp_shared.vehData(args)` | Renvoie le paquet de données du véhicule spawné (parts, config, fichiers, ioCtx) via core_vehicle_manager.getVehicleData. | 19 |
+| `mcp_shared.argModel(args)` | Model taken from args.model, otherwise the JBeam file of the current player vehicle. | 22 |
+| `mcp_shared.argVehId(args)` | Vehicle id taken from args.id, otherwise that of player 0's vehicle. | 16 |
+| `mcp_shared.readLogFrom(pos)` | Reads beamng.log from byte `pos` to the end. With pos=nil, starts at the end (returns ""): used to measure the current size. If the file has shrunk (rotation, truncation), restarts from 0. | 31 |
+| `mcp_shared.vehData(args)` | Returns the spawned vehicle's data packet (parts, config, files, ioCtx) via core_vehicle_manager.getVehicleData. | 19 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mcp_shared.argModel(args)`
 
-Modèle pris dans args.model, sinon le fichier JBeam du véhicule joueur courant.
+Model taken from args.model, otherwise the JBeam file of the current player vehicle.
 
-- `args` (*table|nil*) : Arguments de l'outil ; champ `model`.
-- **renvoie** : string|nil Clé du modèle, nil s'il n'y a ni argument ni véhicule joueur.
+- `args` (*table|nil*) : Tool arguments; `model` field.
+- **returns**: string|nil Model key, nil if there is neither argument nor player vehicle.
 
 #### `mcp_shared.argVehId(args)`
 
-Id de véhicule pris dans args.id, sinon celui du véhicule joueur 0.
+Vehicle id taken from args.id, otherwise that of player 0's vehicle.
 
-- `args` (*table|nil*) : Arguments de l'outil ; champ `id` lu avec tonumber.
-- **renvoie** : integer Id du véhicule (peut être -1 ou invalide s'il n'y a pas de véhicule joueur).
+- `args` (*table|nil*) : Tool arguments; `id` field read with tonumber.
+- **returns**: integer Vehicle id (can be -1 or invalid if there is no player vehicle).
 
 #### `mcp_shared.readLogFrom(pos)`
 
-Lit beamng.log depuis l'octet `pos` jusqu'à la fin. Avec pos=nil, démarre à la fin (renvoie "") : sert à mesurer la taille actuelle. Si le fichier a rétréci (rotation, troncature), repart de 0.
+Reads beamng.log from byte `pos` to the end. With pos=nil, starts at the end (returns ""): used to measure the current size. If the file has shrunk (rotation, truncation), restarts from 0.
 
-- `pos` (*integer|nil*) : Offset en octets où commencer.
-- **renvoie** : string|nil Texte lu (nil si le fichier n'a pas pu être ouvert).
-- **renvoie** : integer Taille du fichier (position de fin) à réutiliser comme prochain `pos`.
+- `pos` (*integer|nil*) : Byte offset to start from.
+- **returns**: string|nil Text read (nil if the file could not be opened).
+- **returns**: integer File size (end position) to reuse as the next `pos`.
 
 #### `mcp_shared.vehData(args)`
 
-Renvoie le paquet de données du véhicule spawné (parts, config, fichiers, ioCtx) via core_vehicle_manager.getVehicleData.
+Returns the spawned vehicle's data packet (parts, config, files, ioCtx) via core_vehicle_manager.getVehicleData.
 
-- `args` (*table|nil*) : Arguments de l'outil (voir argVehId).
-- **renvoie** : table|nil Données du véhicule, ou nil.
+- `args` (*table|nil*) : Tool arguments (see argVehId).
+- **returns**: table|nil Vehicle data, or nil.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `asyncResults` | table<string, any> | Résultats des aller-retours asynchrones, indexés par type : `vue`, `ui`, `vehLua` (table vehId -> résultat), `ai`, `electrics`, `hydro`, `testConfigs`. Remplis par les callbacks `mcp_tools._cb.*`, consommés par l'appel d'outil suivant. |
-| `instabilityLog` | table | Liste (max 50) des instabilités physiques détectées : {time, vid, jbeam}. Le commentaire du code dit à tort « async round-trip results » pour ce champ : il s'agit bien du journal d'instabilité. |
-| `vehIdProp` | table | Fragment de schéma JSON réutilisé par les outils véhicule : {id = {type='integer', description='Vehicle id (default: current player vehicle)'}}. |
+| `asyncResults` | table<string, any> | Results of asynchronous round trips, keyed by type: `vue`, `ui`, `vehLua` (table vehId -> result), `ai`, `electrics`, `hydro`, `testConfigs`. Filled by the `mcp_tools._cb.*` callbacks, consumed by the next tool call. |
+| `instabilityLog` | table | List (max 50) of detected physics instabilities: {time, vid, jbeam}. The code comment wrongly says "async round-trip results" for this field: it is indeed the instability log. |
+| `vehIdProp` | table | JSON schema fragment reused by vehicle tools: {id = {type='integer', description='Vehicle id (default: current player vehicle)'}}. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicle`, `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/mcp/shared.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/mcp/shared.lua`.*

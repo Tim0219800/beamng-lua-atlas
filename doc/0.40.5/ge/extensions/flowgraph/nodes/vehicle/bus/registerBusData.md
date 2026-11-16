@@ -1,27 +1,27 @@
 # `flowgraph_nodes_vehicle_bus_registerBusData`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/bus/registerBusData.lua` · VM : Game Engine (GE) · 32 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/bus/registerBusData.lua` · VM: Game Engine (GE) · 32 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/bus/registerBusData")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/bus/registerBusData")` (file under extensions/ but not a regular extension)
 
-Nœud « Register Bus Data » (catégorie `once_instant`). Enregistre le callback de notification de changement de valeurs d'un bus (agenouillement, portes) via `mgr.modules.vehicle:registerBusChangeNotification(vehId)`. À appeler après le spawn du bus ; nécessaire pour « Bus Controls Detection ». Pins : entrées `flow`, `vehId` (défaut 0) ; sortie `flow`.
+Node "Register Bus Data" (category `once_instant`). Registers the callback for notification of bus value changes (kneeling, doors) via `mgr.modules.vehicle:registerBusChangeNotification(vehId)`. To be called after the bus spawns; required for "Bus Controls Detection". Pins: inputs `flow`, `vehId` (default 0); output `flow`.
 
-## Remarques
+## Notes
 
-- L'enregistrement est différé avec `mgr.modules.level:delayOrInstantFunction` (attend que le niveau soit prêt).
-- Le véhicule trouvé (`veh`) dans la closure n'est pas utilisé.
+- The registration is deferred with `mgr.modules.level:delayOrInstantFunction` (waits until the level is ready).
+- The found vehicle (`veh`) in the closure is not used.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Programme (ou exécute tout de suite) l'enregistrement de la notification bus, puis active le flux de sortie. | 20 |
+| `C:workOnce()` | Schedules (or runs right away) the registration of the bus notification, then activates the output flow. | 20 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/bus/registerBusData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/bus/registerBusData.lua`.*

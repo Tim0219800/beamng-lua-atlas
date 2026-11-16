@@ -1,0 +1,13 @@
+{
+  "path": "lua/common/libs/LuaIRC/handlers.lua",
+  "module": "Partie de la bibliothèque tierce LuaIRC (client IRC en Lua). Définit la table globale `irc.handlers` (module \"irc\") : un gestionnaire par commande ou code numérique IRC reçu (PING, 001, PRIVMSG, NOTICE, JOIN, PART, QUIT, NICK, 432/433, 353, 366, 331/332/333, TOPIC, KICK, 221, 324, 474, MODE, ERROR). Chaque gestionnaire met à jour l'état de la connexion (pseudo, salons, utilisateurs) puis déclenche le hook correspondant (OnChat, OnNotice, OnJoin, OnPart, OnQuit, NickChange, NameList, OnTopic, OnTopicInfo, OnKick, OnUserMode, OnChannelMode, OnBan, OnModeChange, OnDisconnect). Appelé par meta:handle de libs/LuaIRC/init.",
+  "notes": [
+    "Signature commune des gestionnaires : function(o, prefix, ...params) où o est la connexion.",
+    "PING répond automatiquement PONG ; 001 marque la connexion comme authentifiée (o.authed) et mémorise o.nick ; 432/433 (pseudo invalide ou pris) renvoient NICK avec o.nickGenerator(badnick).",
+    "ERROR déclenche OnDisconnect, ferme la socket puis lève une erreur Lua (error(message, 3)).",
+    "Avec track_users actif, JOIN/MODE accèdent à o.channels[channel].users sans vérification : une erreur Lua est possible si le salon ou l'utilisateur est inconnu."
+  ],
+  "fields": {
+    "handlers": {"type": "table<string, function>", "desc": "Table globale du module irc, indexée par commande IRC (chaîne, y compris codes numériques comme \"001\")."}
+  }
+}

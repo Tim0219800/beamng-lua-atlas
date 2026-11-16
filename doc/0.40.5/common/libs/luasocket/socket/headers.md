@@ -1,27 +1,27 @@
 # `libs_luasocket_socket_headers`
 
-*Fichier : `lua/common/libs/luasocket/socket/headers.lua` · VM : Commun (GE + véhicule) · 104 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/luasocket/socket/headers.lua` · VM: Common (GE + vehicle) · 104 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/luasocket/socket/headers")`
+**Access:** `require("libs/luasocket/socket/headers")`
 
-Table de mise en forme canonique des noms d'en-têtes (MIME/HTTP) de LuaSocket : associe un nom en minuscules à sa forme usuelle (par ex. 'content-type' -> 'Content-Type'). Le module s'enregistre aussi dans socket.headers. Utilisé par socket.http lors de l'envoi des en-têtes de requête.
+Canonical formatting table for header names (MIME/HTTP) of LuaSocket: maps a lowercase name to its usual form (e.g. 'content-type' -> 'Content-Type'). The module also registers itself in socket.headers. Used by socket.http when sending request headers.
 
-## Exemple
+## Example
 
 ```lua
 local headers = require('libs/luasocket/socket/headers')
 print(headers.canonic['content-type'])  -- 'Content-Type'
 ```
 
-## Remarques
+## Notes
 
-- Le module fait require('socket.socket') (et non libs/luasocket/socket/socket), ce qui suppose que ce nom de module soit résoluble par le chemin de recherche du jeu.
+- The module does require('socket.socket') (and not libs/luasocket/socket/socket), which assumes that this module name is resolvable by the game's search path.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `canonic` | table<string, string> | Noms d'en-têtes en minuscules vers leur capitalisation canonique ; un nom absent de la table est envoyé tel quel. |
+| `canonic` | table<string, string> | Lowercase header names to their canonical capitalization; a name absent from the table is sent as is. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luasocket/socket/headers.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/luasocket/socket/headers.lua`.*

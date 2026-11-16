@@ -1,33 +1,33 @@
 # `jbeam_sections_occupantSlots`
 
-*Fichier : `lua/common/jbeam/sections/occupantSlots.lua` · VM : Commun (GE + véhicule) · 89 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/sections/occupantSlots.lua` · VM: Common (GE + vehicle) · 89 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/sections/occupantSlots")`
+**Access:** `require("jbeam/sections/occupantSlots")`
 
-Traite la section jbeam « occupantSlots » (places d'occupants). Normalise chaque entrée : id (id, name ou clé de table), defaultPermissionMode (driver, passenger ou unrestricted ; déduit de la caméra sinon), seatSide (left/right/center, déduit de exitSide, driverSide ou du suffixe L/R de l'id), cameraName 'occupant.<id>', entryTrigger 'enterSeat_<id>', cargoGroup '<id>Occupant' et actionMaps (toujours une table). Produit vehicle.occupantSlotsById et active vehicle.occupantSystem.enabled s'il y a des places ou si une pièce active expose un slot de type 'seat_occupant'.
+Processes the jbeam "occupantSlots" section (occupant seats). Normalizes each entry: id (id, name or table key), defaultPermissionMode (driver, passenger or unrestricted; otherwise inferred from the camera), seatSide (left/right/center, inferred from exitSide, driverSide or the L/R suffix of the id), cameraName 'occupant.<id>', entryTrigger 'enterSeat_<id>', cargoGroup '<id>Occupant' and actionMaps (always a table). Produces vehicle.occupantSlotsById and enables vehicle.occupantSystem.enabled if there are seats or if an active part exposes a slot of type 'seat_occupant'.
 
-## Remarques
+## Notes
 
-- Les identifiants en double sont rejetés avec une erreur de journal (la seconde entrée est ignorée).
-- Un defaultPermissionMode invalide produit un avertissement puis est remplacé : 'driver' si cameraName vaut 'driver', sinon 'passenger'.
-- cameraName est toujours réécrit en 'occupant.<id>', quelle que soit la valeur d'origine ; la valeur d'origine ne sert qu'à déduire le mode de permission.
-- Le premier paramètre (objID) est ignoré ; appelé seulement côté GE (vmType == 'game').
+- Duplicate ids are rejected with a log error (the second entry is ignored).
+- An invalid defaultPermissionMode produces a warning and is then replaced: 'driver' if cameraName is 'driver', otherwise 'passenger'.
+- cameraName is always rewritten to 'occupant.<id>', whatever the original value; the original value is only used to infer the permission mode.
+- The first parameter (objID) is ignored; only called on the GE side (vmType == 'game').
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_sections_occupantSlots.process(_, vehicle, activePartsData)` | Normalise les occupantSlots du véhicule et active le système d'occupants si nécessaire. *(interne)* | 32 |
+| `jbeam_sections_occupantSlots.process(_, vehicle, activePartsData)` | Normalizes the vehicle's occupantSlots and enables the occupant system if needed. *(internal)* | 32 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_sections_occupantSlots.process(_, vehicle, activePartsData)`
 
-Normalise les occupantSlots du véhicule et active le système d'occupants si nécessaire.
+Normalizes the vehicle's occupantSlots and enables the occupant system if needed.
 
-- `_` (*any*) : Identifiant du véhicule (ignoré).
-- `vehicle` (*table*) : Données jbeam (occupantSlots, occupantSystem).
-- `activePartsData` (*table<string, table>|nil*) : Pièces actives (pour détecter un slot seat_occupant).
+- `_` (*any*) : Vehicle id (ignored).
+- `vehicle` (*table*) : jbeam data (occupantSlots, occupantSystem).
+- `activePartsData` (*table<string, table>|nil*) : Active parts (used to detect a seat_occupant slot).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/sections/occupantSlots.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/sections/occupantSlots.lua`.*

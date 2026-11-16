@@ -1,38 +1,86 @@
 {
   "path": "lua/ge/extensions/career/modules/vehicleClassGrouping.lua",
-  "module": "Génère des groupes de véhicules par classe de performance (S, A, B, C, D) pour le système core_multiSpawn (adversaires, courses). Parcourt tous les modèles Car/Truck et leurs configs, filtre par modèle, config et type de config, garde ceux dont la classe (gameplay_vehiclePerformance.getClassFromConfig) correspond, puis mélange le résultat. Fournit aussi un coefficient d'agressivité de l'IA par classe.",
+  "module": "Generates vehicle groups by performance class (S, A, B, C, D) for the core_multiSpawn system (opponents, races). Walks through all Car/Truck models and their configs, filters by model, config and config type, keeps those whose class (gameplay_vehiclePerformance.getClassFromConfig) matches, then shuffles the result. Also provides an AI aggression coefficient per class.",
   "notes": [
-    "Coefficients d'agressivité : S 1, A 0,9, B 0,8, C 0,7, D 0,6 ; classe par défaut B.",
-    "Filtres par défaut : modèles exclus atv, utv, us_semi, midtruck, citybus, racetruck, rockbouncer, simple_traffic ; types de config exclus Police, Service, Powerglow.",
-    "Avec performanceIndexTarget, ne garde que les configs dans la fenêtre ±performanceIndexWindow (5 par défaut) ; si aucune, prend les 10 plus proches. Si le groupe reste vide, une entrée de secours {model='midsize'} est ajoutée.",
-    "Le « smart shuffle » entrelace les modèles pour éviter les doublons successifs du même modèle.",
-    "L'argument mode (« default » ou « drag ») est lu mais n'a pas d'effet dans le code."
+    "Aggression coefficients: S 1, A 0.9, B 0.8, C 0.7, D 0.6; default class B.",
+    "Default filters: excluded models atv, utv, us_semi, midtruck, citybus, racetruck, rockbouncer, simple_traffic; excluded config types Police, Service, Powerglow.",
+    "With performanceIndexTarget, keeps only configs within the ±performanceIndexWindow window (5 by default); if none, takes the 10 closest. If the group remains empty, a fallback entry {model='midsize'} is added.",
+    "The \"smart shuffle\" interleaves models to avoid successive duplicates of the same model.",
+    "The mode argument (\"default\" or \"drag\") is read but has no effect in the code."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "{\"gameplay_vehiclePerformance\"}."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{\"gameplay_vehiclePerformance\"}."
+    }
   },
   "functions": {
     "getAggressionMultiplier": {
-      "desc": "Retourne le coefficient d'agressivité de l'IA pour une classe.",
-      "params": {"class": {"type": "string|nil", "desc": "Classe S/A/B/C/D, défaut \"B\"."}},
-      "returns": [{"type": "number", "desc": "Coefficient (1 si classe inconnue)."}],
+      "desc": "Returns the AI aggression coefficient for a class.",
+      "params": {
+        "class": {
+          "type": "string|nil",
+          "desc": "Class S/A/B/C/D, default \"B\"."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Coefficient (1 if the class is unknown)."
+        }
+      ],
       "internal": false
     },
     "generateGroup": {
-      "desc": "Construit un groupe de véhicules d'une classe donnée, utilisable par core_multiSpawn.",
+      "desc": "Builds a vehicle group of a given class, usable by core_multiSpawn.",
       "params": {
-        "class": {"type": "string|nil", "desc": "Classe de performance, défaut \"B\"."},
-        "mode": {"type": "string|nil", "desc": "\"default\" ou \"drag\" (sans effet)."},
-        "modelFilter": {"type": "table<string, any>|nil", "desc": "Modèles à exclure (clé = modèle)."},
-        "configFilter": {"type": "table<string, any>|nil", "desc": "Configs à exclure (clé \"modèle/config\")."},
-        "configTypeFilter": {"type": "table<string, any>|nil", "desc": "Types de config à exclure."},
-        "invertedFilters": {"type": "table<string, boolean>|nil", "desc": "Ex. {modelFilter = true} inverse le filtre (liste blanche)."},
-        "randomizePaint": {"type": "boolean|nil", "desc": "Peinture « (Random) », vrai par défaut."},
-        "smartShuffle": {"type": "boolean|nil", "desc": "Entrelacer les modèles, vrai par défaut."},
-        "performanceIndexTarget": {"type": "number|nil", "desc": "Indice de performance visé."},
-        "performanceIndexWindow": {"type": "number|nil", "desc": "Tolérance autour de la cible, défaut 5."}
+        "class": {
+          "type": "string|nil",
+          "desc": "Performance class, default \"B\"."
+        },
+        "mode": {
+          "type": "string|nil",
+          "desc": "\"default\" or \"drag\" (no effect)."
+        },
+        "modelFilter": {
+          "type": "table<string, any>|nil",
+          "desc": "Models to exclude (key = model)."
+        },
+        "configFilter": {
+          "type": "table<string, any>|nil",
+          "desc": "Configs to exclude (key \"model/config\")."
+        },
+        "configTypeFilter": {
+          "type": "table<string, any>|nil",
+          "desc": "Config types to exclude."
+        },
+        "invertedFilters": {
+          "type": "table<string, boolean>|nil",
+          "desc": "E.g. {modelFilter = true} inverts the filter (whitelist)."
+        },
+        "randomizePaint": {
+          "type": "boolean|nil",
+          "desc": "\"(Random)\" paint, true by default."
+        },
+        "smartShuffle": {
+          "type": "boolean|nil",
+          "desc": "Interleave models, true by default."
+        },
+        "performanceIndexTarget": {
+          "type": "number|nil",
+          "desc": "Target performance index."
+        },
+        "performanceIndexWindow": {
+          "type": "number|nil",
+          "desc": "Tolerance around the target, default 5."
+        }
       },
-      "returns": [{"type": "table", "desc": "{name = \"Class X\", type = \"custom\", data = {{model, config, paintName}, ...}}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{name = \"Class X\", type = \"custom\", data = {{model, config, paintName}, ...}}."
+        }
+      ],
       "internal": false
     }
   }

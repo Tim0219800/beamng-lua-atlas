@@ -1,143 +1,143 @@
 # `json_test`
 
-*Fichier : `lua/common/json.test.lua` · VM : Commun (GE + véhicule) · 223 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/json.test.lua` · VM: Common (GE + vehicle) · 223 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("json.test")`
+**Access:** `require("json.test")`
 
-Tests unitaires du module json de BeamNG (require('json')). Chaque fonction testXxx(ctx) reçoit un contexte de test avec assertEqual(a, b, message) et assertNear(a, b, tolérance, message) ; elles vérifient le décodage JSON/SJSON (commentaires, virgules facultatives, nombres, Infinity, échappements, affectations de niveau supérieur sans accolades, entrée depuis string.buffer), les erreurs sur entrées invalides, et l'aller-retour encode/decode (dont vec3 et quat). Utile à un moddeur pour savoir ce que le parseur accepte.
+Unit tests of BeamNG's json module (require('json')). Each testXxx(ctx) function receives a test context with assertEqual(a, b, message) and assertNear(a, b, tolerance, message); they check JSON/SJSON decoding (comments, optional commas, numbers, Infinity, escapes, top-level assignments without braces, input from string.buffer), errors on invalid input, and the encode/decode round trip (including vec3 and quat). Useful to a modder to know what the parser accepts.
 
-## Remarques
+## Notes
 
-- Ce sont des tests : ils ne servent pas en jeu normal ; le lanceur de tests (non lu ici) appelle chaque fonction avec ctx.
-- Le parseur accepte les virgules manquantes, les commentaires // et /* */ mais pas les commentaires imbriqués ni un '/' isolé.
-- json.decode(nil) renvoie nil ; json.decode(123) (non-chaîne) et un JSON invalide lèvent une erreur (vérifiée par pcall).
-- Les vec3 et quat encodés en JSON sont décodés comme tables avec champs x, y, z (et w pour quat).
+- These are tests: they are not used in normal gameplay; the test runner (not read here) calls each function with ctx.
+- The parser accepts missing commas, // and /* */ comments but not nested comments or a lone '/'.
+- json.decode(nil) returns nil; json.decode(123) (non-string) and invalid JSON raise an error (checked with pcall).
+- vec3 and quat encoded as JSON are decoded as tables with x, y, z fields (and w for quat).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `json_test.testJsonDecodeArrayString(ctx)` | Décode un tableau JSON simple. *(interne)* | 28 |
-| `json_test.testJsonDecodeComments(ctx)` | Teste la gestion des commentaires dans les objets et les tableaux. *(interne)* | 85 |
-| `json_test.testJsonDecodeEscapes(ctx)` | Teste le décodage des séquences d'échappement des chaînes. *(interne)* | 103 |
-| `json_test.testJsonDecodeFromBuffer(ctx)` | Teste le décodage depuis une instance string.buffer. *(interne)* | 37 |
-| `json_test.testJsonDecodeInfinityTokens(ctx)` | Teste les graphies d'Infinity acceptées par le parseur SJSON. *(interne)* | 121 |
-| `json_test.testJsonDecodeInvalidInputType(ctx)` | Vérifie que json.decode(123) lève une erreur. *(interne)* | 194 |
-| `json_test.testJsonDecodeInvalidNumberTokens(ctx)` | Vérifie le rejet de nombres/Infinity mal formés. *(interne)* | 129 |
-| `json_test.testJsonDecodeInvalidString(ctx)` | Vérifie qu'un texte invalide (« {bad ») lève une erreur. *(interne)* | 186 |
-| `json_test.testJsonDecodeMalformedCases(ctx)` | Liste de cas mal formés (« : » manquant, fermeture manquante, chaîne non terminée, tokens true/false/null invalides, exposant invalide, commentaires imbriqués) qui doivent tous échouer. *(interne)* | 202 |
-| `json_test.testJsonDecodeMissingCommasAccepted(ctx)` | Vérifie que le parseur tolère les virgules omises. *(interne)* | 65 |
-| `json_test.testJsonDecodeNil(ctx)` | Vérifie que json.decode(nil) renvoie nil. *(interne)* | 14 |
-| `json_test.testJsonDecodeNumbers(ctx)` | Teste les variantes de nombres acceptées. *(interne)* | 112 |
-| `json_test.testJsonDecodeObjectString(ctx)` | Décode un objet JSON simple et vérifie les champs. *(interne)* | 19 |
-| `json_test.testJsonDecodeSjsonFeatures(ctx)` | Teste les fonctionnalités de type SJSON attendues par le parseur BeamNG. *(interne)* | 47 |
-| `json_test.testJsonDecodeTopLevelAssignments(ctx)` | Vérifie le format clé/valeur de niveau supérieur sans accolades. *(interne)* | 76 |
-| `json_test.testJsonEncodeDecodeRoundtrip(ctx)` | Aller-retour encode/decode d'une structure imbriquée (nombre, chaîne, booléen, tableau, objet). *(interne)* | 167 |
-| `json_test.testJsonEncodeDecodeVec3Quat(ctx)` | Vérifie que vec3 et quat survivent à encode puis decode (tables x,y,z[,w], tolérance 1e-6). *(interne)* | 145 |
+| `json_test.testJsonDecodeArrayString(ctx)` | Decodes a simple JSON array. *(internal)* | 28 |
+| `json_test.testJsonDecodeComments(ctx)` | Tests comment handling in objects and arrays. *(internal)* | 85 |
+| `json_test.testJsonDecodeEscapes(ctx)` | Tests decoding of string escape sequences. *(internal)* | 103 |
+| `json_test.testJsonDecodeFromBuffer(ctx)` | Tests decoding from a string.buffer instance. *(internal)* | 37 |
+| `json_test.testJsonDecodeInfinityTokens(ctx)` | Tests the Infinity spellings accepted by the SJSON parser. *(internal)* | 121 |
+| `json_test.testJsonDecodeInvalidInputType(ctx)` | Checks that json.decode(123) raises an error. *(internal)* | 194 |
+| `json_test.testJsonDecodeInvalidNumberTokens(ctx)` | Checks the rejection of malformed numbers/Infinity. *(internal)* | 129 |
+| `json_test.testJsonDecodeInvalidString(ctx)` | Checks that invalid text ("{bad") raises an error. *(internal)* | 186 |
+| `json_test.testJsonDecodeMalformedCases(ctx)` | List of malformed cases (missing ":", missing closing, unterminated string, invalid true/false/null tokens, invalid exponent, nested comments) that must all fail. *(internal)* | 202 |
+| `json_test.testJsonDecodeMissingCommasAccepted(ctx)` | Checks that the parser tolerates omitted commas. *(internal)* | 65 |
+| `json_test.testJsonDecodeNil(ctx)` | Checks that json.decode(nil) returns nil. *(internal)* | 14 |
+| `json_test.testJsonDecodeNumbers(ctx)` | Tests the accepted number variants. *(internal)* | 112 |
+| `json_test.testJsonDecodeObjectString(ctx)` | Decodes a simple JSON object and checks the fields. *(internal)* | 19 |
+| `json_test.testJsonDecodeSjsonFeatures(ctx)` | Tests the SJSON-like features expected by the BeamNG parser. *(internal)* | 47 |
+| `json_test.testJsonDecodeTopLevelAssignments(ctx)` | Checks the top-level key/value format without braces. *(internal)* | 76 |
+| `json_test.testJsonEncodeDecodeRoundtrip(ctx)` | Encode/decode round trip of a nested structure (number, string, boolean, array, object). *(internal)* | 167 |
+| `json_test.testJsonEncodeDecodeVec3Quat(ctx)` | Checks that vec3 and quat survive encode then decode (tables x,y,z[,w], tolerance 1e-6). *(internal)* | 145 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `json_test.testJsonDecodeArrayString(ctx)`
 
-Décode un tableau JSON simple.
+Decodes a simple JSON array.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonDecodeComments(ctx)`
 
-Teste la gestion des commentaires dans les objets et les tableaux.
+Tests comment handling in objects and arrays.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonDecodeEscapes(ctx)`
 
-Teste le décodage des séquences d'échappement des chaînes.
+Tests decoding of string escape sequences.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonDecodeFromBuffer(ctx)`
 
-Teste le décodage depuis une instance string.buffer.
+Tests decoding from a string.buffer instance.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonDecodeInfinityTokens(ctx)`
 
-Teste les graphies d'Infinity acceptées par le parseur SJSON.
+Tests the Infinity spellings accepted by the SJSON parser.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonDecodeInvalidInputType(ctx)`
 
-Vérifie que json.decode(123) lève une erreur.
+Checks that json.decode(123) raises an error.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonDecodeInvalidNumberTokens(ctx)`
 
-Vérifie le rejet de nombres/Infinity mal formés.
+Checks the rejection of malformed numbers/Infinity.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonDecodeInvalidString(ctx)`
 
-Vérifie qu'un texte invalide (« {bad ») lève une erreur.
+Checks that invalid text ("{bad") raises an error.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonDecodeMalformedCases(ctx)`
 
-Liste de cas mal formés (« : » manquant, fermeture manquante, chaîne non terminée, tokens true/false/null invalides, exposant invalide, commentaires imbriqués) qui doivent tous échouer.
+List of malformed cases (missing ":", missing closing, unterminated string, invalid true/false/null tokens, invalid exponent, nested comments) that must all fail.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonDecodeMissingCommasAccepted(ctx)`
 
-Vérifie que le parseur tolère les virgules omises.
+Checks that the parser tolerates omitted commas.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonDecodeNil(ctx)`
 
-Vérifie que json.decode(nil) renvoie nil.
+Checks that json.decode(nil) returns nil.
 
-- `ctx` (*table*) : Contexte de test (assertEqual, assertNear).
+- `ctx` (*table*) : Test context (assertEqual, assertNear).
 
 #### `json_test.testJsonDecodeNumbers(ctx)`
 
-Teste les variantes de nombres acceptées.
+Tests the accepted number variants.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonDecodeObjectString(ctx)`
 
-Décode un objet JSON simple et vérifie les champs.
+Decodes a simple JSON object and checks the fields.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonDecodeSjsonFeatures(ctx)`
 
-Teste les fonctionnalités de type SJSON attendues par le parseur BeamNG.
+Tests the SJSON-like features expected by the BeamNG parser.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonDecodeTopLevelAssignments(ctx)`
 
-Vérifie le format clé/valeur de niveau supérieur sans accolades.
+Checks the top-level key/value format without braces.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonEncodeDecodeRoundtrip(ctx)`
 
-Aller-retour encode/decode d'une structure imbriquée (nombre, chaîne, booléen, tableau, objet).
+Encode/decode round trip of a nested structure (number, string, boolean, array, object).
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `json_test.testJsonEncodeDecodeVec3Quat(ctx)`
 
-Vérifie que vec3 et quat survivent à encode puis decode (tables x,y,z[,w], tolérance 1e-6).
+Checks that vec3 and quat survive encode then decode (tables x,y,z[,w], tolerance 1e-6).
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/json.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/json.test.lua`.*

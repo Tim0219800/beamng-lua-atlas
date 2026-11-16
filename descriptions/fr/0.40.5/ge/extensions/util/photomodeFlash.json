@@ -1,0 +1,76 @@
+{
+  "path": "lua/ge/extensions/util/photomodeFlash.lua",
+  "module": "Flash de mode photo : crée un projecteur (SpotLight, avec ombres, non sauvegardé dans le niveau) collé à la caméra pendant le mode photo, orienté vers le point visé (raycast depuis la caméra, sinon distance de mise au point DOF). Deux modes : « always » (allumé en continu) et « pulse » (allumé uniquement pendant la prise de capture). En mode pulse, runCapture attend 2 frames de préchauffage, déclenche la capture via le module screenshot, puis éteint le flash à la réception de onScreenshotAllDone (ou après 60 frames de secours). L'interface du mode photo appelle applyFromUi.",
+  "usage": "extensions.util_photomodeFlash.applyFromUi(true, true, 25000, 55, 0, 0)\nextensions.util_photomodeFlash.runCapture('takeScreenShot')",
+  "fields": {
+    "enabled": {"type": "boolean", "desc": "true si le flash est actif (le projecteur existe)"},
+    "mode": {"type": "string", "desc": "\"always\" (continu) ou \"pulse\" (seulement pendant une capture)"},
+    "intensity": {"type": "number", "desc": "Intensité du projecteur (défaut 25000, de 0 à 1 000 000)"},
+    "outerAngle": {"type": "integer", "desc": "Angle extérieur du cône en degrés (défaut 55, de 1 à 179)"},
+    "hue": {"type": "integer", "desc": "Teinte de la couleur en degrés, 0 à 360 (défaut 0)"},
+    "saturation": {"type": "integer", "desc": "Saturation en pourcentage, 0 à 100 (défaut 0 : lumière blanche)"},
+    "capturePulseActive": {"type": "boolean", "desc": "true pendant une impulsion de flash liée à une capture"}
+  },
+  "notes": [
+    "Le projecteur est décalé de la caméra : 0,12 m à droite, 0,06 m vers le haut et 0,05 m vers l'avant ; portée 40 m ; carte d'ombre 1024.",
+    "Le flash ne s'applique que si le mode photo est ouvert (variable globale photoModeOpen ou ui_photomode_shared.S.photoModeOpen) et si la caméra active n'est pas « path ».",
+    "Types de capture acceptés par runCapture (kind) : takeScreenShot, takeBigScreenShot, takeHugeScreenShot, takeCustomScreenShot, takeMotionBlurScreenShot, publish, steam. Ils délèguent au module screenshot ; « steam » ne passe pas par le hook de fin de capture.",
+    "runCapture sans flash actif lance simplement la capture. En mode pulse, une deuxième demande pendant une impulsion est refusée (false, \"capture_busy\").",
+    "Les valeurs hue, saturation et outerAngle sont arrondies à l'entier ; l'intensité n'est que bornée."
+  ],
+  "functions": {
+    "enable": {
+      "desc": "Active ou désactive le flash : à l'activation crée le SpotLight dans MissionGroup et l'oriente ; à la désactivation le supprime. Annule toute impulsion en attente.",
+      "params": {"en": {"type": "boolean", "desc": "true pour activer (toute autre valeur désactive)"}},
+      "returns": [],
+      "internal": false
+    },
+    "runCapture": {
+      "desc": "Déclenche une capture d'écran en tenant compte du flash : direct si le flash est inactif ou en mode always, avec impulsion de lumière en mode pulse.",
+      "params": {
+        "kind": {"type": "string", "desc": "Type de capture (voir notes)"},
+        "...": {"type": "any", "desc": "Arguments transmis à la fonction du module screenshot correspondante (jusqu'à 6 selon le type)"}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "true si la capture est lancée ou planifiée"},
+        {"type": "string|nil", "desc": "Code d'erreur : \"capture_busy\" ou \"screenshot_request_failed\""}
+      ],
+      "internal": false
+    },
+    "applyFromUi": {
+      "desc": "Applique les réglages issus de l'interface du mode photo : bornage des valeurs puis activation du flash (ou désactivation si enabled n'est pas true).",
+      "params": {
+        "enabled": {"type": "boolean", "desc": "Active le flash (désactive sinon)"},
+        "fireOnCapture": {"type": "boolean", "desc": "true pour le mode pulse, sinon always"},
+        "intensity": {"type": "number", "desc": "Intensité (0 à 1 000 000)"},
+        "outerAngle": {"type": "number", "desc": "Angle extérieur en degrés (1 à 179)"},
+        "hue": {"type": "number", "desc": "Teinte en degrés (0 à 360)"},
+        "saturation": {"type": "number", "desc": "Saturation en pourcentage (0 à 100)"}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "onPreRender": {
+      "desc": "Hook appelé chaque frame avant le rendu : replace le projecteur sur la caméra et fait avancer la machine à états de l'impulsion (préchauffage, capture, nettoyage, délai de secours).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta de temps réel (non utilisé)"},
+        "dtSim": {"type": "number", "desc": "Delta de temps de simulation (non utilisé)"},
+        "dtRaw": {"type": "number", "desc": "Delta de temps brut (non utilisé)"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onScreenshotAllDone": {
+      "desc": "Hook appelé quand toutes les captures d'écran en cours sont terminées : démarre le nettoyage (extinction du flash) d'une impulsion en attente. Ignoré si le mode photo n'est pas ouvert.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement : désactive le flash et supprime le projecteur.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

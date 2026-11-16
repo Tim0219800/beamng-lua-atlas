@@ -1,43 +1,69 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/meshStats.lua",
-  "module": "Diagnostic du poids de maillage lors d'un import (importeur de ville/réseau de l'éditeur). Distingue la géométrie UNIQUE (ProceduralMesh : bâtiments, tabliers de pont ou de tunnel, portiques, chacun avec son propre tampon et sa propre construction de collision) de la géométrie INSTANCIÉE (TSStatic regroupés par forme, items Forest). Les générateurs appellent recordMesh pendant la construction ; l'importeur appelle begin() au début et report() à la fin, ce qui journalise un récapitulatif par famille.",
+  "module": "Mesh weight diagnostic during an import (the editor's city/network importer). Distinguishes UNIQUE geometry (ProceduralMesh: buildings, bridge or tunnel decks, gantries, each with its own buffer and its own collision build) from INSTANCED geometry (TSStatics grouped by shape, Forest items). Generators call recordMesh during construction; the importer calls begin() at the start and report() at the end, which logs a summary per family.",
   "usage": "local ms = require('editor/toolUtilities/meshStats')\nms.begin()\nms.recordMesh('bld_12', 'building', nVerts, nTris)\nms.recordParts('bridge.deck', nVerts, nTris)\nms.report('import')",
   "notes": [
-    "La collecte n'est active qu'entre begin() et report() : hors de cette fenêtre, recordMesh et recordParts sont sans effet, donc l'édition normale ne touche pas aux compteurs.",
-    "report() revérifie chaque nom enregistré dans la scène (scenetree.findObject) : un mesh renommé ou supprimé en cours d'import n'est pas compté ; il énumère aussi tous les TSStatic (groupés par fichier shapeName), les items du Forest et les objets WaterBlock/WaterPlane.",
-    "Les sorties sont des lignes de log niveau I préfixées '[mesh]' (par famille : meshes, triangles, sommets ; répartition des parties fusionnées ; props instanciés ; ligne HEADLINE)."
+    "Collection is active only between begin() and report(): outside this window, recordMesh and recordParts have no effect, so normal editing does not touch the counters.",
+    "report() re-checks each recorded name in the scene (scenetree.findObject): a mesh renamed or deleted during the import is not counted; it also enumerates all TSStatics (grouped by shapeName file), the Forest's items and the WaterBlock/WaterPlane objects.",
+    "The outputs are level I log lines prefixed '[mesh]' (per family: meshes, triangles, vertices; breakdown of merged parts; instanced props; HEADLINE line)."
   ],
   "functions": {
     "begin": {
-      "desc": "Démarre une fenêtre de collecte : active la collecte et efface les enregistrements précédents.",
+      "desc": "Starts a collection window: enables collection and clears previous records.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "recordMesh": {
-      "desc": "Enregistre un ProceduralMesh par son NOM dans l'arbre de scène (une reconstruction sous le même nom écrase l'entrée). Sans effet hors collecte ou si name est nil.",
+      "desc": "Records a ProceduralMesh by its NAME in the scene tree (a rebuild under the same name overwrites the entry). No effect outside collection or if name is nil.",
       "params": {
-        "name": {"type": "string", "desc": "Nom de l'objet dans la scène."},
-        "family": {"type": "string|nil", "desc": "Famille pour le récapitulatif (défaut 'other')."},
-        "nVerts": {"type": "integer|nil", "desc": "Nombre de sommets (défaut 0)."},
-        "nTris": {"type": "integer|nil", "desc": "Nombre de triangles (défaut 0)."}
+        "name": {
+          "type": "string",
+          "desc": "Name of the object in the scene."
+        },
+        "family": {
+          "type": "string|nil",
+          "desc": "Family for the summary (default 'other')."
+        },
+        "nVerts": {
+          "type": "integer|nil",
+          "desc": "Number of vertices (default 0)."
+        },
+        "nTris": {
+          "type": "integer|nil",
+          "desc": "Number of triangles (default 0)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "recordParts": {
-      "desc": "Enregistre la géométrie d'UNE partie d'un maillage fusionné par catégorie structurelle (bridge.deck, tunnel.floor, tunnel.shell). Additif : les valeurs s'ajoutent. C'est une ventilation des totaux de maillage, pas un doublon.",
+      "desc": "Records the geometry of ONE part of a mesh merged by structural category (bridge.deck, tunnel.floor, tunnel.shell). Additive: values add up. It is a breakdown of the mesh totals, not a duplicate.",
       "params": {
-        "category": {"type": "string", "desc": "Catégorie de la partie."},
-        "nVerts": {"type": "integer|nil", "desc": "Sommets à ajouter."},
-        "nTris": {"type": "integer|nil", "desc": "Triangles à ajouter."}
+        "category": {
+          "type": "string",
+          "desc": "Category of the part."
+        },
+        "nVerts": {
+          "type": "integer|nil",
+          "desc": "Vertices to add."
+        },
+        "nTris": {
+          "type": "integer|nil",
+          "desc": "Triangles to add."
+        }
       },
       "returns": [],
       "internal": false
     },
     "report": {
-      "desc": "Agrège tout et journalise le récapitulatif, puis termine la fenêtre de collecte. Sans collecte active, journalise '[mesh] no active mesh-stats session' et revient.",
-      "params": {"tag": {"type": "string|nil", "desc": "Tag de log ; défaut 'meshStats'."}},
+      "desc": "Aggregates everything and logs the summary, then ends the collection window. Without an active collection, logs '[mesh] no active mesh-stats session' and returns.",
+      "params": {
+        "tag": {
+          "type": "string|nil",
+          "desc": "Log tag; default 'meshStats'."
+        }
+      },
       "returns": [],
       "internal": false
     }

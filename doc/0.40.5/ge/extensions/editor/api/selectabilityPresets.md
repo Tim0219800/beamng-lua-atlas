@@ -1,111 +1,111 @@
 # `editor_api_selectabilityPresets`
 
-*Fichier : `lua/ge/extensions/editor/api/selectabilityPresets.lua` · VM : Game Engine (GE) · 191 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/selectabilityPresets.lua` · VM: Game Engine (GE) · 191 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_selectabilityPresets` : `extensions.load("editor_api_selectabilityPresets")`, puis la globale `editor_api_selectabilityPresets`
+**Access:** extension `editor_api_selectabilityPresets`: `extensions.load("editor_api_selectabilityPresets")`, then the global `editor_api_selectabilityPresets`
 
-Gère des préréglages (presets) de « sélectionnabilité » des types d'objets dans l'éditeur du monde : quelles classes d'objets (TSStatic, Prefab, BeamNGVehicle…) peuvent être cliquées/sélectionnées. Préréglages : current, all, staticsAndProps (BeamNGVehicle, Prefab, PrefabInstance, TSStatic), default (masque capturé à la première initialisation). Il lit/écrit via editor.getObjectTypeSelectable / setObjectTypeSelectable et la préférence gizmos.visualization.selectable. Un outil peut prendre temporairement le contrôle du masque avec beginScope/endScope.
+Manages "selectability" presets of object types in the world editor: which object classes (TSStatic, Prefab, BeamNGVehicle...) can be clicked/selected. Presets: current, all, staticsAndProps (BeamNGVehicle, Prefab, PrefabInstance, TSStatic), default (mask captured at the first initialization). It reads/writes via editor.getObjectTypeSelectable / setObjectTypeSelectable and the gizmos.visualization.selectable preference. A tool can temporarily take control of the mask with beginScope/endScope.
 
-## Exemple
+## Example
 
 ```lua
 local sp = extensions.editor_api_selectabilityPresets
 local owner = {}
-if sp.beginScope(owner, 'staticsAndProps', 'Mon outil') then
-  -- ... travail ...
+if sp.beginScope(owner, 'staticsAndProps', 'My tool') then
+  -- ... work ...
   sp.endScope(owner)
 end
 ```
 
-## Remarques
+## Notes
 
-- Le module utilise la globale editor (non déclarée localement) et worldEditorCppApi.getObjectClassNames() pour la liste des classes.
-- Le preset 'current' n'est pas applicable : applyPreset et beginScope renvoient false pour lui.
-- Pendant un scope, applyPreset avec un autre owner est refusé, markCurrent et syncActivePresetFromMask renvoient false, et les boutons de drawControls sont désactivés.
-- Le preset 'default' est le masque capturé au premier appel de initialize (donc l'état au moment de la première utilisation, pas une valeur fixe).
+- The module uses the global editor (not declared locally) and worldEditorCppApi.getObjectClassNames() for the class list.
+- The 'current' preset is not applicable: applyPreset and beginScope return false for it.
+- During a scope, applyPreset with a different owner is refused, markCurrent and syncActivePresetFromMask return false, and the drawControls buttons are disabled.
+- The 'default' preset is the mask captured on the first call of initialize (so the state at the time of first use, not a fixed value).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_selectabilityPresets.applyPreset(presetId, persist, owner)` | Applique un préréglage (all, staticsAndProps ou default) au masque de sélectionnabilité. Si persist est vrai et qu'aucun scope n'est actif, enregistre aussi le masque dans les préférences. | 72 |
-| `editor_api_selectabilityPresets.beginScope(owner, presetId, ownerLabel)` | Prend temporairement le contrôle du masque : sauvegarde le masque et les préférences actuels puis applique le preset, sans le persister. Si le scope existe déjà, renvoie si l'owner est le même. | 83 |
-| `editor_api_selectabilityPresets.drawControls()` | Dessine en ImGui la ligne de boutons « Presets » : All, Statics and Props, Restore Default (avec persistance). Désactivés pendant un scope, avec un texte indiquant qui contrôle le masque. À appeler depuis une fenêtre d'éditeur. | 163 |
-| `editor_api_selectabilityPresets.endScope(owner)` | Termine le scope : restaure le masque, les préférences et le preset actif sauvegardés, puis sauvegarde les préférences si saveVisualizationSettings est actif. | 102 |
-| `editor_api_selectabilityPresets.getActivePresetId()` | Renvoie l'id du preset actif. | 155 |
-| `editor_api_selectabilityPresets.getActivePresetLabel()` | Renvoie le libellé affichable du preset actif. | 159 |
-| `editor_api_selectabilityPresets.getScopeOwner()` | Renvoie le propriétaire du scope actif, ou nil. | 120 |
-| `editor_api_selectabilityPresets.initialize()` | Capture le masque de sélectionnabilité actuel comme masque « default » s'il n'est pas déjà capturé. Appelé automatiquement par les autres fonctions. | 68 |
-| `editor_api_selectabilityPresets.isScoped()` | Indique si un scope temporaire est actif. | 124 |
-| `editor_api_selectabilityPresets.markCurrent()` | Marque le preset actif comme 'current' (masque modifié à la main). Sans effet pendant un scope. | 128 |
-| `editor_api_selectabilityPresets.syncActivePresetFromMask()` | Compare le masque réel aux presets all, staticsAndProps, default et met activePresetId sur le premier qui correspond, sinon 'current'. | 134 |
+| `editor_api_selectabilityPresets.applyPreset(presetId, persist, owner)` | Applies a preset (all, staticsAndProps or default) to the selectability mask. If persist is true and no scope is active, also saves the mask in the preferences. | 72 |
+| `editor_api_selectabilityPresets.beginScope(owner, presetId, ownerLabel)` | Temporarily takes control of the mask: saves the current mask and preferences then applies the preset, without persisting it. If the scope already exists, returns whether the owner is the same. | 83 |
+| `editor_api_selectabilityPresets.drawControls()` | Draws in ImGui the "Presets" button row: All, Statics and Props, Restore Default (with persistence). Disabled during a scope, with a text indicating who controls the mask. To be called from an editor window. | 163 |
+| `editor_api_selectabilityPresets.endScope(owner)` | Ends the scope: restores the saved mask, preferences and active preset, then saves the preferences if saveVisualizationSettings is active. | 102 |
+| `editor_api_selectabilityPresets.getActivePresetId()` | Returns the id of the active preset. | 155 |
+| `editor_api_selectabilityPresets.getActivePresetLabel()` | Returns the displayable label of the active preset. | 159 |
+| `editor_api_selectabilityPresets.getScopeOwner()` | Returns the owner of the active scope, or nil. | 120 |
+| `editor_api_selectabilityPresets.initialize()` | Captures the current selectability mask as the "default" mask if not already captured. Called automatically by the other functions. | 68 |
+| `editor_api_selectabilityPresets.isScoped()` | Indicates whether a temporary scope is active. | 124 |
+| `editor_api_selectabilityPresets.markCurrent()` | Marks the active preset as 'current' (mask modified by hand). No effect during a scope. | 128 |
+| `editor_api_selectabilityPresets.syncActivePresetFromMask()` | Compares the actual mask to the all, staticsAndProps, default presets and sets activePresetId to the first that matches, otherwise 'current'. | 134 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_selectabilityPresets.applyPreset(presetId, persist, owner)`
 
-Applique un préréglage (all, staticsAndProps ou default) au masque de sélectionnabilité. Si persist est vrai et qu'aucun scope n'est actif, enregistre aussi le masque dans les préférences.
+Applies a preset (all, staticsAndProps or default) to the selectability mask. If persist is true and no scope is active, also saves the mask in the preferences.
 
-- `presetId` (*string*) : 'all', 'staticsAndProps' ou 'default' ('current' est refusé).
-- `persist` (*boolean|nil*) : Sauvegarder dans la préférence gizmos.visualization.selectable (et sur disque si saveVisualizationSettings est actif).
-- `owner` (*table|nil*) : Propriétaire du scope : doit correspondre au propriétaire courant si un scope est actif.
-- **renvoie** : boolean true si appliqué, false si preset inconnu/'current' ou scope détenu par un autre.
+- `presetId` (*string*) : 'all', 'staticsAndProps' or 'default' ('current' is refused).
+- `persist` (*boolean|nil*) : Save to the gizmos.visualization.selectable preference (and to disk if saveVisualizationSettings is active).
+- `owner` (*table|nil*) : Scope owner: must match the current owner if a scope is active.
+- **returns**: boolean true if applied, false if unknown preset/'current' or scope held by another.
 
 #### `editor_api_selectabilityPresets.beginScope(owner, presetId, ownerLabel)`
 
-Prend temporairement le contrôle du masque : sauvegarde le masque et les préférences actuels puis applique le preset, sans le persister. Si le scope existe déjà, renvoie si l'owner est le même.
+Temporarily takes control of the mask: saves the current mask and preferences then applies the preset, without persisting it. If the scope already exists, returns whether the owner is the same.
 
-- `owner` (*table*) : Table identifiant l'appelant (comparée par identité).
-- `presetId` (*string*) : 'all', 'staticsAndProps' ou 'default'.
-- `ownerLabel` (*string|nil*) : Nom affiché dans drawControls (« X is temporarily controlling this mask »).
-- **renvoie** : boolean true si le scope est actif pour cet owner.
+- `owner` (*table*) : Table identifying the caller (compared by identity).
+- `presetId` (*string*) : 'all', 'staticsAndProps' or 'default'.
+- `ownerLabel` (*string|nil*) : Name displayed in drawControls ("X is temporarily controlling this mask").
+- **returns**: boolean true if the scope is active for this owner.
 
 #### `editor_api_selectabilityPresets.endScope(owner)`
 
-Termine le scope : restaure le masque, les préférences et le preset actif sauvegardés, puis sauvegarde les préférences si saveVisualizationSettings est actif.
+Ends the scope: restores the saved mask, preferences and active preset, then saves the preferences if saveVisualizationSettings is active.
 
-- `owner` (*table*) : Doit être le propriétaire du scope.
-- **renvoie** : boolean true si restauré, false s'il n'y a pas de scope ou autre owner.
+- `owner` (*table*) : Must be the scope owner.
+- **returns**: boolean true if restored, false if there is no scope or another owner.
 
 #### `editor_api_selectabilityPresets.getActivePresetId()`
 
-Renvoie l'id du preset actif.
+Returns the id of the active preset.
 
-- **renvoie** : string 'current', 'all', 'staticsAndProps' ou 'default'.
+- **returns**: string 'current', 'all', 'staticsAndProps' or 'default'.
 
 #### `editor_api_selectabilityPresets.getActivePresetLabel()`
 
-Renvoie le libellé affichable du preset actif.
+Returns the displayable label of the active preset.
 
-- **renvoie** : string Ex. 'Statics and Props'.
+- **returns**: string E.g. 'Statics and Props'.
 
 #### `editor_api_selectabilityPresets.getScopeOwner()`
 
-Renvoie le propriétaire du scope actif, ou nil.
+Returns the owner of the active scope, or nil.
 
-- **renvoie** : table|nil owner du scope.
+- **returns**: table|nil scope owner.
 
 #### `editor_api_selectabilityPresets.isScoped()`
 
-Indique si un scope temporaire est actif.
+Indicates whether a temporary scope is active.
 
-- **renvoie** : boolean true si scope actif.
+- **returns**: boolean true if a scope is active.
 
 #### `editor_api_selectabilityPresets.markCurrent()`
 
-Marque le preset actif comme 'current' (masque modifié à la main). Sans effet pendant un scope.
+Marks the active preset as 'current' (mask modified by hand). No effect during a scope.
 
-- **renvoie** : boolean false si un scope est actif, sinon true.
+- **returns**: boolean false if a scope is active, otherwise true.
 
 #### `editor_api_selectabilityPresets.syncActivePresetFromMask()`
 
-Compare le masque réel aux presets all, staticsAndProps, default et met activePresetId sur le premier qui correspond, sinon 'current'.
+Compares the actual mask to the all, staticsAndProps, default presets and sets activePresetId to the first that matches, otherwise 'current'.
 
-- **renvoie** : boolean false si un scope est actif, sinon true.
+- **returns**: boolean false if a scope is active, otherwise true.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `worldEditorCppApi.` `getObjectClassNames`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/selectabilityPresets.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/selectabilityPresets.lua`.*

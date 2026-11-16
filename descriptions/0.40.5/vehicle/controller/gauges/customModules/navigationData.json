@@ -1,9 +1,9 @@
 {
   "path": "lua/vehicle/controller/gauges/customModules/navigationData.lua",
-  "module": "Module de données pour genericGauges : alimente une carte de navigation dans la page HTML. À la configuration il demande à ui_uiNavi (moteur de jeu) d'initialiser la carte du tableau de bord ; à chaque mise à jour il envoie la position (x, y) et l'orientation du véhicule (degrés) par streamJS(\"updateMap\").",
+  "module": "Data module for genericGauges: feeds a navigation map in the HTML page. At setup it asks ui_uiNavi (game engine) to initialize the dashboard map; at each update it sends the vehicle's position (x, y) and orientation (degrees) via streamJS(\"updateMap\").",
   "notes": [
-    "setupGaugeData reçoit en second argument la texture HTML fournie par genericGauges ; elle est indispensable.",
-    "moduleData n'est pas rempli : les données partent directement dans le flux updateMap {x, y, rotation}."
+    "setupGaugeData receives as its second argument the HTML texture provided by genericGauges; it is required.",
+    "moduleData is not filled: the data goes directly into the updateMap stream {x, y, rotation}."
   ],
   "fields": {
     "type": {
@@ -13,58 +13,58 @@
   },
   "functions": {
     "init": {
-      "desc": "Ne fait rien.",
+      "desc": "Does nothing.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Réinitialise l'état interne du module.",
+      "desc": "Resets the module's internal state.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Ne fait rien (la mise à jour se fait par updateGaugeData).",
+      "desc": "Does nothing (the update is done by updateGaugeData).",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "setupGaugeData": {
-      "desc": "Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : aucune propriété n'est lue.",
+      "desc": "Called by genericGauges with the properties requested in displayData.customModules: no property is read.",
       "params": {
         "properties": {
           "type": "table",
-          "desc": "Propriétés demandées (non utilisées)."
+          "desc": "Requested properties (unused)."
         },
         "htmlTexture": {
           "type": "table",
-          "desc": "Texture HTML du tableau de bord (htmlTexture.new)."
+          "desc": "Dashboard HTML texture (htmlTexture.new)."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGaugeData": {
-      "desc": "Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées.",
+      "desc": "Called by genericGauges before each send: fills moduleData with the requested values.",
       "params": {
         "moduleData": {
           "type": "table",
-          "desc": "Table de données du module, envoyée ensuite à la page HTML."
+          "desc": "Module data table, then sent to the HTML page."
         },
         "dt": {
           "type": "number",
-          "desc": "Temps écoulé depuis le dernier envoi (s)."
+          "desc": "Time elapsed since the last send (s)."
         }
       },
       "returns": [],

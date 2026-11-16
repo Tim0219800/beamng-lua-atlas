@@ -1,31 +1,31 @@
 # `flowgraph_nodes_mission_clearLightsDragRace`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua` · VM : Game Engine (GE) · 91 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua` · VM: Game Engine (GE) · 91 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/mission/clearLightsDragRace")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/mission/clearLightsDragRace")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Clear Lights Dragrace' (categorie repeat_instant). Cache les lumieres de prestage/stage et du compte a rebours (objets scene Prestagelight_l/r, Stagelight_l/r, Amberlight1-3_L/R, Greenlight_L/R, Redlight_L/R) ainsi que les 20 afficheurs de chiffres (display_time_i / display_speed_i), a la fin ou l'abandon d'une mission de drag race.
+Flowgraph node 'Clear Lights Dragrace' (repeat_instant category). Hides the prestage/stage and countdown lights (scene objects Prestagelight_l/r, Stagelight_l/r, Amberlight1-3_L/R, Greenlight_L/R, Redlight_L/R) as well as the 20 digit displays (display_time_i / display_speed_i), at the end or abandonment of a drag race mission.
 
-## Remarques
+## Notes
 
-- Le pin d'entree 'flow' n'est pas teste : le noeud agit a chaque appel de work.
-- Plante si les objets de la scene (lumieres, afficheurs) n'existent pas.
+- The input pin 'flow' is not tested: the node acts on every call of work.
+- Crashes if the scene objects (lights, displays) do not exist.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Vide la table lights et met flow a false. | 71 |
-| `C:clearDigits()` | Cache les afficheurs display_time_i_l/r et display_speed_i_l/r (i de 1 a 5). | 55 |
-| `C:init()` | Meme initialisation. | 76 |
-| `C:initLights()` | Recherche les objets lumineux dans la scene et les cache tous (setHidden(true)). | 18 |
-| `C:work()` | Appelle initLights et clearDigits a chaque frame de flux (pas de verification du flux d'entree) et met flow a true. | 81 |
+| `C:_executionStarted()` | Clears the lights table and sets flow to false. | 71 |
+| `C:clearDigits()` | Hides the displays display_time_i_l/r and display_speed_i_l/r (i from 1 to 5). | 55 |
+| `C:init()` | Same initialization. | 76 |
+| `C:initLights()` | Searches the scene for the light objects and hides them all (setHidden(true)). | 18 |
+| `C:work()` | Calls initLights and clearDigits on every frame of flow (no check of the input flow) and sets flow to true. | 81 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.lua`.*

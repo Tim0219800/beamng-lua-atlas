@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/gameplay/vehiclePresencePolicy.test.lua",
+  "module": "Tests unitaires de gameplay/vehiclePresencePolicy. Chaque fonction testXxx reçoit un contexte de test `ctx` (avec assert et assertEqual) fourni par le lanceur de tests du jeu ; ce n'est pas une extension de gameplay à charger.",
+  "notes": [
+    "Les tests couvrent la validation/normalisation des modes, le mode non assis par défaut selon le contexte et les permissions de cartes d'actions."
+  ],
+  "functions": {
+    "testModeValidationAndNormalization": {
+      "desc": "Vérifie isValidMode (driver, passenger, unrestricted valides ; observer invalide) et normalizeMode (repli, valeur par défaut « passenger »).",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test avec assert et assertEqual."}},
+      "returns": [],
+      "internal": true
+    },
+    "testDefaultUnseatedMode": {
+      "desc": "Vérifie defaultUnseatedMode : unrestricted seulement en freeroam sans multi-siège, passenger dans les autres cas (multiplayer, career, nil).",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test."}},
+      "returns": [],
+      "internal": true
+    },
+    "testActionMapPermissions": {
+      "desc": "Vérifie allowsActionMap : driver seulement sur « driving », passenger jamais, unrestricted toujours.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

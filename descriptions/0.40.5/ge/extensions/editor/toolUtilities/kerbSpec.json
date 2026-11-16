@@ -1,21 +1,38 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/kerbSpec.lua",
-  "module": "Section unique de bordure (kerb) et de trottoir (footway) à laquelle tous les outils de l'éditeur construisent, et pierre dont elles sont taillées. Les dimensions vivent ici pour qu'une voiture ressente le même ressaut sur une rue, un parking, un pont ou une place. Donne aussi les lignes de texture d'une variante de bordure.",
+  "module": "Single kerb and footway section that all the editor tools build to, and the stone they are cut from. The dimensions live here so that a car feels the same step on a street, a car park, a bridge or a plaza. Also gives the texture rows of a kerb variant.",
   "notes": [
-    "Spec : slabW 1.65 m (une dalle de large), slabThick 0.12, kerbW 0.15, kerbH 0.12 (12 cm hors de la route), buryM 0.30 (profondeur à partir de laquelle un bord est dit enterré), matériaux slabs_large et m_sidewalk_curb_trim_01.",
-    "La feuille de texture de bordure empile 5 variantes en V (un cinquième chacune) ; l'arête vive doit rester sur la rangée centrale car la normal map y porte un arrondi."
+    "Spec: slabW 1.65 m (one slab wide), slabThick 0.12, kerbW 0.15, kerbH 0.12 (12 cm above the road), buryM 0.30 (depth from which an edge is said to be buried), materials slabs_large and m_sidewalk_curb_trim_01.",
+    "The kerb texture sheet stacks 5 variants in V (a fifth each); the sharp edge must stay on the central row because the normal map carries a rounding there."
   ],
   "fields": {
-    "spec": {"type": "table", "desc": "Dimensions et matériaux : slabW, slabThick, kerbW, kerbH, buryM, slabMaterial, kerbMaterial."}
+    "spec": {
+      "type": "table",
+      "desc": "Dimensions and materials: slabW, slabThick, kerbW, kerbH, buryM, slabMaterial, kerbMaterial."
+    }
   },
   "functions": {
     "kerbRows": {
-      "desc": "Renvoie les trois lignes V de la texture occupées par une variante de bordure : le dos de la marche, l'arête et le pied de la face. La variante est tronquée à l'entier et bornée à 0..4 ; une valeur non numérique donne 0.",
-      "params": {"variant": {"type": "integer|nil", "desc": "Indice de variante, 0 à 4."}},
+      "desc": "Returns the three V rows of the texture occupied by a kerb variant: the back of the step, the edge and the foot of the face. The variant is truncated to an integer and clamped to 0..4; a non-numeric value gives 0.",
+      "params": {
+        "variant": {
+          "type": "integer|nil",
+          "desc": "Variant index, 0 to 4."
+        }
+      },
       "returns": [
-        {"type": "number", "desc": "Rangée du dos de la marche (variante * 0.2)."},
-        {"type": "number", "desc": "Rangée de l'arête (+0.1)."},
-        {"type": "number", "desc": "Rangée du pied de la face (+0.2 moins un petit écart de 0.00332)."}
+        {
+          "type": "number",
+          "desc": "Row of the back of the step (variant * 0.2)."
+        },
+        {
+          "type": "number",
+          "desc": "Row of the edge (+0.1)."
+        },
+        {
+          "type": "number",
+          "desc": "Row of the foot of the face (+0.2 minus a small gap of 0.00332)."
+        }
       ],
       "internal": false
     }

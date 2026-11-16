@@ -1,38 +1,38 @@
 # `editor_suspensionAudioDebug`
 
-*Fichier : `lua/ge/extensions/editor/suspensionAudioDebug.lua` · VM : Game Engine (GE) · 155 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/suspensionAudioDebug.lua` · VM: Game Engine (GE) · 155 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_suspensionAudioDebug` : `extensions.load("editor_suspensionAudioDebug")`, puis la globale `editor_suspensionAudioDebug`
+**Access:** extension `editor_suspensionAudioDebug`: `extensions.load("editor_suspensionAudioDebug")`, then the global `editor_suspensionAudioDebug`
 
-Petite fenêtre de débogage de l'éditeur (menu Audio) qui trace les sons de suspension du véhicule joueur. À chaque frame elle demande au véhicule (queueLuaCommand) de renvoyer sounds.getBeamSounds() vers la GE dans editor_suspensionAudioDebug.beamSounds, puis affiche, pour chaque roue (avant/arrière, gauche/droite), des courbes sur 200 échantillons de l'impulsion, du pitch et du volume. La position de la roue est déduite de la position du noeud id1 de la poutre.
+Small editor debug window (Audio menu) that plots the player vehicle's suspension sounds. Every frame it asks the vehicle (queueLuaCommand) to send sounds.getBeamSounds() back to the GE in editor_suspensionAudioDebug.beamSounds, then displays, for each wheel (front/rear, left/right), curves over 200 samples of the impulse, pitch and volume. The wheel position is inferred from the position of the beam's node id1.
 
-## Remarques
+## Notes
 
-- La position est déduite du signe de pos.y (<0 = Front, sinon Rear) et pos.x (<0 = Right, sinon Left), d'après les coordonnées jbeam du véhicule.
-- Le commentaire du code précise que l'impulsion affichée n'est pas vraiment du stress : le nommage est approximatif dans sounds.lua.
-- Rien n'est affiché sans véhicule joueur ni vdata.
-- Le fichier est présenté dans le code comme une petite application d'exemple à copier avant modification.
+- The position is inferred from the sign of pos.y (<0 = Front, otherwise Rear) and pos.x (<0 = Right, otherwise Left), based on the vehicle's jbeam coordinates.
+- The code comment states that the displayed impulse is not really stress: the naming is approximate in sounds.lua.
+- Nothing is displayed without a player vehicle or vdata.
+- The file is presented in the code as a small example app to copy before modifying.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_suspensionAudioDebug.onEditorGui()` | Hook de dessin appelé chaque frame : récupère les sons de poutres du véhicule, met à jour les historiques et dessine les courbes par roue. *(interne)* *(hook)* | 19 |
-| `editor_suspensionAudioDebug.onEditorInitialized()` | Hook d'initialisation de l'éditeur : enregistre la fenêtre (500x200) et l'entrée de menu dans le groupe Audio. *(interne)* *(hook)* | 134 |
-| `editor_suspensionAudioDebug.onExtensionLoaded()` | Hook de chargement de l'extension ; vide. *(interne)* *(hook)* | 127 |
-| `editor_suspensionAudioDebug.onExtensionUnloaded()` | Hook de déchargement de l'extension ; vide. *(interne)* *(hook)* | 131 |
-| `editor_suspensionAudioDebug.onVehicleSwitched(oldVehicle, newVehicle, player)` | Hook appelé au changement de véhicule : vide les historiques et remet le compteur à 1. *(interne)* *(hook)* | 139 |
-| `editor_suspensionAudioDebug.open()` | Affiche la fenêtre 'Suspension Audio Debug'. | 122 |
+| `editor_suspensionAudioDebug.onEditorGui()` | Draw hook called every frame: fetches the vehicle's beam sounds, updates the histories and draws the curves per wheel. *(internal)* *(hook)* | 19 |
+| `editor_suspensionAudioDebug.onEditorInitialized()` | Editor initialization hook: registers the window (500x200) and the menu entry in the Audio group. *(internal)* *(hook)* | 134 |
+| `editor_suspensionAudioDebug.onExtensionLoaded()` | Extension load hook; empty. *(internal)* *(hook)* | 127 |
+| `editor_suspensionAudioDebug.onExtensionUnloaded()` | Extension unload hook; empty. *(internal)* *(hook)* | 131 |
+| `editor_suspensionAudioDebug.onVehicleSwitched(oldVehicle, newVehicle, player)` | Hook called when the vehicle changes: clears the histories and resets the counter to 1. *(internal)* *(hook)* | 139 |
+| `editor_suspensionAudioDebug.open()` | Shows the 'Suspension Audio Debug' window. | 122 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_suspensionAudioDebug.onVehicleSwitched(oldVehicle, newVehicle, player)`
 
-Hook appelé au changement de véhicule : vide les historiques et remet le compteur à 1.
+Hook called when the vehicle changes: clears the histories and resets the counter to 1.
 
-- `oldVehicle` (*any*) : Ancien véhicule.
-- `newVehicle` (*any*) : Nouveau véhicule.
-- `player` (*any*) : Joueur concerné.
+- `oldVehicle` (*any*) : Old vehicle.
+- `newVehicle` (*any*) : New vehicle.
+- `player` (*any*) : Player concerned.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/suspensionAudioDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/suspensionAudioDebug.lua`.*

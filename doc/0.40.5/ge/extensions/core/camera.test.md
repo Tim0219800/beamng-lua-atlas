@@ -1,65 +1,65 @@
 # `core_camera.test`
 
-*Fichier : `lua/ge/extensions/core/camera.test.lua` · VM : Game Engine (GE) · 52 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/camera.test.lua` · VM: Game Engine (GE) · 52 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_camera.test` : `extensions.load("core_camera.test")`, puis la globale `core_camera.test`
+**Access:** extension `core_camera.test`: `extensions.load("core_camera.test")`, then the global `core_camera.test`
 
-Tests unitaires du système de caméras, pour le framework de tests du jeu. À lancer depuis la console Lua GE : extensions.testFramework_TestManager:runTestFiles('camera'). Chaque fonction testXxx reçoit un contexte ctx (assert, assertEqual). Elle vérifie notamment l'anneau de groupes de caméras, l'appartenance des caméras libres au groupe 'world', la caméra Drone Chase, la caméra conducteur 'occupant' et la présence de l'API de configuration des caméras libres. Utile comme exemple d'usage de core_camera.
+Unit tests of the camera system, for the game's test framework. Run from the GE Lua console: extensions.testFramework_TestManager:runTestFiles('camera'). Each testXxx function receives a context ctx (assert, assertEqual). Among other things it checks the camera group ring, the membership of free cameras in the 'world' group, the Drone Chase camera, the 'occupant' driver camera and the presence of the free camera configuration API. Useful as a usage example of core_camera.
 
-## Exemple
+## Example
 
 ```lua
 extensions.testFramework_TestManager:runTestFiles('camera')
 ```
 
-## Remarques
+## Notes
 
-- Charge core_camera à la demande (extensions.load) si elle n'est pas chargée.
-- Les tests documentent des comportements : nextCameraGroup({'world'}, nil) -> 'world', ('world') -> nil, (false) -> nil ; free, smoothFree et steadycam sont dans le groupe 'world' ; le mode droneChase est lié au véhicule, visible dans les options et désactivé par défaut ; une caméra 'driver' ancienne devient un mode 'occupant' avec seatSide 'right' si rightHandCamera.
+- Loads core_camera on demand (extensions.load) if it is not loaded.
+- The tests document behaviors: nextCameraGroup({'world'}, nil) -> 'world', ('world') -> nil, (false) -> nil; free, smoothFree and steadycam are in the 'world' group; the droneChase mode is vehicle-bound, visible in the options and disabled by default; a legacy 'driver' camera becomes an 'occupant' mode with seatSide 'right' if rightHandCamera.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_camera.test.testCameraGroupRing(ctx)` | Teste core_camera.nextCameraGroup : caméras de jeu vers caméras libres vers caméras de jeu. *(interne)* | 11 |
-| `core_camera.test.testDroneIsRegularCamera(ctx)` | Vérifie le mode core/cameraModes/droneChase : non global, non caché, désactivé par défaut. *(interne)* | 25 |
-| `core_camera.test.testFreeCameraConfigurationApi(ctx)` | Vérifie que core_camera expose getFreeCameraConfigurationReadOnly, changeFreeCameraOrder, toggleFreeCameraEnabledById et setCameraByNameFromOptions. *(interne)* | 43 |
-| `core_camera.test.testFreeCameraModes(ctx)` | Vérifie que les caméras free, smoothFree et steadycam appartiennent au groupe 'world'. *(interne)* | 18 |
-| `core_camera.test.testLegacyDriverIsOccupant(ctx)` | Vérifie la conversion d'une ancienne caméra 'driver' en mode occupant (noeud 5, côté 'right', épaule droite à 0.6 m). *(interne)* | 32 |
+| `core_camera.test.testCameraGroupRing(ctx)` | Tests core_camera.nextCameraGroup: game cameras to free cameras to game cameras. *(internal)* | 11 |
+| `core_camera.test.testDroneIsRegularCamera(ctx)` | Checks the core/cameraModes/droneChase mode: not global, not hidden, disabled by default. *(internal)* | 25 |
+| `core_camera.test.testFreeCameraConfigurationApi(ctx)` | Checks that core_camera exposes getFreeCameraConfigurationReadOnly, changeFreeCameraOrder, toggleFreeCameraEnabledById and setCameraByNameFromOptions. *(internal)* | 43 |
+| `core_camera.test.testFreeCameraModes(ctx)` | Checks that the free, smoothFree and steadycam cameras belong to the 'world' group. *(internal)* | 18 |
+| `core_camera.test.testLegacyDriverIsOccupant(ctx)` | Checks the conversion of a legacy 'driver' camera into an occupant mode (node 5, 'right' side, right shoulder at 0.6 m). *(internal)* | 32 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_camera.test.testCameraGroupRing(ctx)`
 
-Teste core_camera.nextCameraGroup : caméras de jeu vers caméras libres vers caméras de jeu.
+Tests core_camera.nextCameraGroup: game cameras to free cameras to game cameras.
 
-- `ctx` (*table*) : Contexte de test (assert, assertEqual)
+- `ctx` (*table*) : Test context (assert, assertEqual)
 
 #### `core_camera.test.testDroneIsRegularCamera(ctx)`
 
-Vérifie le mode core/cameraModes/droneChase : non global, non caché, désactivé par défaut.
+Checks the core/cameraModes/droneChase mode: not global, not hidden, disabled by default.
 
-- `ctx` (*table*) : Contexte de test
+- `ctx` (*table*) : Test context
 
 #### `core_camera.test.testFreeCameraConfigurationApi(ctx)`
 
-Vérifie que core_camera expose getFreeCameraConfigurationReadOnly, changeFreeCameraOrder, toggleFreeCameraEnabledById et setCameraByNameFromOptions.
+Checks that core_camera exposes getFreeCameraConfigurationReadOnly, changeFreeCameraOrder, toggleFreeCameraEnabledById and setCameraByNameFromOptions.
 
-- `ctx` (*table*) : Contexte de test
+- `ctx` (*table*) : Test context
 
 #### `core_camera.test.testFreeCameraModes(ctx)`
 
-Vérifie que les caméras free, smoothFree et steadycam appartiennent au groupe 'world'.
+Checks that the free, smoothFree and steadycam cameras belong to the 'world' group.
 
-- `ctx` (*table*) : Contexte de test
+- `ctx` (*table*) : Test context
 
 #### `core_camera.test.testLegacyDriverIsOccupant(ctx)`
 
-Vérifie la conversion d'une ancienne caméra 'driver' en mode occupant (noeud 5, côté 'right', épaule droite à 0.6 m).
+Checks the conversion of a legacy 'driver' camera into an occupant mode (node 5, 'right' side, right shoulder at 0.6 m).
 
-- `ctx` (*table*) : Contexte de test
+- `ctx` (*table*) : Test context
 
-**Charge les extensions :** `core_camera`
+**Loads extensions:** `core_camera`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/camera.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/camera.test.lua`.*

@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/flowgraph/modules/aiRecordingModule.lua",
+  "module": "Module flowgraph (moduleOrder 1, après missionReplayModule) qui enregistre ou rejoue le parcours IA (script AI) du véhicule joueur pour les missions. Il n'est actif que si l'argument de ligne de commande enableAiRecordingForMissions vaut true, ou si la mission a startingOptions.aiPath. À l'arrêt de l'enregistrement, le véhicule renvoie son tracé via le hook onVehicleSubmitRecordingForMission et le module écrit un fichier recording_<date>.missionTestData.json dans <dossier de mission>/tests/.",
+  "notes": [
+    "Le flag 'enabled' et les tables d'état sont des variables locales au fichier (partagées entre toutes les instances du module).",
+    "Le fichier de test contient aiPath, userSettings, vehicle (model, config, isConfigFile, licensePlate), attemptData, attemptStars et aiDuration.",
+    "Incohérence : la clé attemptStars est définie deux fois dans la table testData (la seconde, lastAttempt.unlockedStars, écrase la première, lastTotalChange.unlockedStarsAttempt).",
+    "onVehicleSubmitRecordingForMission suppose que lastAttempt et lastTotalChange ne sont pas nil (erreur si stopAiRecording a été appelé sans arguments, ce que fait executionStopped).",
+    "startAiReplay met aussi vehicleStates[...] = 'recording' : le replay est lui aussi ré-enregistré."
+  ],
+  "functions": {
+    "init": {"desc": "Appelé à la création du module (vide).", "internal": true},
+    "executionStarted": {"desc": "Appelé au démarrage du projet : active le module si parseArgs.args.enableAiRecordingForMissions est true ou si la mission a startingOptions.aiPath.", "internal": true},
+    "executionStopped": {"desc": "Appelé à l'arrêt du projet : appelle stopAiRecording() sans arguments.", "internal": true},
+    "stopAiRecording": {"desc": "Mémorise attempt et totalChange puis, si le module est actif et que le véhicule joueur est en état 'recording', demande au véhicule d'arrêter l'enregistrement (ai.stopRecording()) et de renvoyer le résultat via le hook onVehicleSubmitRecordingForMission.", "params": {"attempt": {"type": "table|nil", "desc": "tentative de mission (champs data, unlockedStars) (déduit du code)"}, "totalChange": {"type": "table|nil", "desc": "changements totaux de progression (champ unlockedStarsAttempt) (déduit du code)"}}},
+    "stopAiReplay": {"desc": "Si actif et que la mission a un aiPath, envoie 'ai:scriptStop(false, false)' au véhicule joueur.", "params": {}},
+    "onVehicleSubmitRecordingForMission": {"desc": "Hook appelé via extensions.hook depuis le véhicule quand l'enregistrement IA est terminé. Écrit le fichier missionTestData.json dans le dossier tests de la mission.", "params": {"vehId": {"type": "integer", "desc": "id du véhicule"}, "aiPath": {"type": "table", "desc": "tracé IA (champ path = liste de points avec t)"}}},
+    "startAiRecording": {"desc": "Si actif, marque le véhicule joueur comme 'recording' et lui envoie ai.startRecording().", "params": {}},
+    "startAiReplay": {"desc": "Si actif et que la mission a startingOptions.aiPath, lance ai.startFollowing avec ce tracé (mode 'noReset') sur le véhicule joueur.", "params": {}},
+    "setenabled": {"desc": "Force l'activation ou la désactivation du module.", "params": {"newEnabled": {"type": "boolean", "desc": "nouvel état"}}},
+    "isRecordingScriptAi": {"desc": "Indique si le module est actif.", "returns": [{"type": "boolean", "desc": "valeur du flag enabled"}]},
+    "getVehicleStates": {"desc": "Renvoie la table des états par id de véhicule (valeur 'recording' ou nil).", "returns": [{"type": "table<integer, string>", "desc": "états des véhicules"}]}
+  }
+}

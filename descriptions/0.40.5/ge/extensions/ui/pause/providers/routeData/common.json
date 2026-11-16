@@ -1,49 +1,127 @@
 {
   "path": "lua/ge/extensions/ui/pause/providers/routeData/common.lua",
-  "module": "Outils partagés par les fournisseurs routeData du menu pause : navigation par séquence d'états, enregistrement de boutons via ui_pause_actions, confirmation de sortie (niveau ou jeu) adaptée à la carrière, exécution d'une sortie avec sauvegarde préalable, et construction de groupes de rail. Les ids de texte de confirmation sont exposés dans ExitLevelTexts et ExitGameTexts.",
+  "module": "Tools shared by the pause menu routeData providers: navigation by state sequence, button registration via ui_pause_actions, exit confirmation (level or game) adapted to career, execution of an exit with prior save, and building of rail groups. The confirmation text ids are exposed in ExitLevelTexts and ExitGameTexts.",
   "notes": [
-    "asRailGroup renvoie nil (et non un groupe vide) quand la liste d'actions est vide : cela évite que le JSON encode les actions en objet au lieu de tableau.",
-    "withExitConfirm en carrière : si une sauvegarde existe, confirmText = {txt = texts.career} et confirmSince = date de sauvegarde (l'UI remplit {{time}}) ; sinon texte notSaved, et si career_career.isAutosaveEnabled() le bouton propose « Enregistrer et quitter » (confirmDestructive = false) avec une option « Quitter sans enregistrer » (altLabel).",
-    "registerPauseButton nécessite que ui_pause_actions soit chargé (variable globale non protégée)."
+    "asRailGroup returns nil (and not an empty group) when the action list is empty: this prevents the JSON from encoding the actions as an object instead of an array.",
+    "withExitConfirm in career: if a save exists, confirmText = {txt = texts.career} and confirmSince = save date (the UI fills {{time}}); otherwise notSaved text, and if career_career.isAutosaveEnabled() the button offers \"Save and quit\" (confirmDestructive = false) with a \"Quit without saving\" option (altLabel).",
+    "registerPauseButton requires ui_pause_actions to be loaded (unprotected global variable)."
   ],
   "fields": {
-    "ExitLevelTexts": {"type": "table<string, string>", "desc": "Ids de traduction pour quitter le niveau : default, career, notSaved."},
-    "ExitGameTexts": {"type": "table<string, string>", "desc": "Ids de traduction pour quitter le jeu : default, career, notSaved."}
+    "ExitLevelTexts": {
+      "type": "table<string, string>",
+      "desc": "Translation ids for quitting the level: default, career, notSaved."
+    },
+    "ExitGameTexts": {
+      "type": "table<string, string>",
+      "desc": "Translation ids for quitting the game: default, career, notSaved."
+    }
   },
   "functions": {
-    "bool": {"desc": "Convertit n'importe quelle valeur en booléen (truthy -> true, sinon false).", "params": {"value": {"type": "any", "desc": "Valeur à convertir."}}, "returns": [{"type": "boolean", "desc": "Booléen."}], "internal": false},
+    "bool": {
+      "desc": "Converts any value to a boolean (truthy -> true, otherwise false).",
+      "params": {
+        "value": {
+          "type": "any",
+          "desc": "Value to convert."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Boolean."
+        }
+      ],
+      "internal": false
+    },
     "tryPushStateSequence": {
-      "desc": "Essaie de naviguer vers chaque état via ui_router.navigate (dans un pcall) jusqu'à ce qu'un réussisse (result.result ~= false).",
-      "params": {"states": {"type": "string|string[]|nil", "desc": "Nom d'état ou liste d'états à essayer dans l'ordre."}},
-      "returns": [{"type": "boolean", "desc": "true si une navigation a réussi."}],
+      "desc": "Tries to navigate to each state via ui_router.navigate (in a pcall) until one succeeds (result.result ~= false).",
+      "params": {
+        "states": {
+          "type": "string|string[]|nil",
+          "desc": "State name or list of states to try in order."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a navigation succeeded."
+        }
+      ],
       "internal": false
     },
     "registerPauseButton": {
-      "desc": "Enregistre un bouton de pause : extrait button.callback, copie le reste des métadonnées et appelle ui_pause_actions.registerButton. Sans callback, utilise une fonction qui renvoie false.",
-      "params": {"button": {"type": "table|nil", "desc": "Métadonnées du bouton plus callback."}},
-      "returns": [{"type": "table|nil", "desc": "Métadonnées enregistrées (avec buttonId) ou nil si button est nil."}],
+      "desc": "Registers a pause button: extracts button.callback, copies the rest of the metadata and calls ui_pause_actions.registerButton. Without a callback, uses a function that returns false.",
+      "params": {
+        "button": {
+          "type": "table|nil",
+          "desc": "Button metadata plus callback."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Registered metadata (with buttonId) or nil if button is nil."
+        }
+      ],
       "internal": false
     },
     "withExitConfirm": {
-      "desc": "Complète un bouton de sortie avec les champs de confirmation (cancelLabel, confirmText, confirmSince, confirmLabel, altLabel…) selon le mode (carrière ou non) et l'état de sauvegarde.",
+      "desc": "Completes an exit button with the confirmation fields (cancelLabel, confirmText, confirmSince, confirmLabel, altLabel...) depending on the mode (career or not) and the save state.",
       "params": {
-        "button": {"type": "table", "desc": "Métadonnées du bouton, modifiées en place."},
-        "context": {"type": "table", "desc": "Contexte pause (champ lu : mode)."},
-        "texts": {"type": "table", "desc": "ExitLevelTexts ou ExitGameTexts."}
+        "button": {
+          "type": "table",
+          "desc": "Button metadata, modified in place."
+        },
+        "context": {
+          "type": "table",
+          "desc": "Pause context (field read: mode)."
+        },
+        "texts": {
+          "type": "table",
+          "desc": "ExitLevelTexts or ExitGameTexts."
+        }
       },
-      "returns": [{"type": "table", "desc": "Le même bouton."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The same button."
+        }
+      ],
       "internal": false
     },
     "runExit": {
-      "desc": "Exécute la fonction de sortie ; si payload.saveFirst est vrai, sauvegarde d'abord la carrière via ui_pause_actions.saveCareerThen.",
-      "params": {"exitFn": {"type": "function", "desc": "Fonction de sortie (returnToMainMenu, quit…)."}, "payload": {"type": "table|nil", "desc": "Charge utile du bouton (champ lu : saveFirst)."}},
+      "desc": "Executes the exit function; if payload.saveFirst is true, first saves the career via ui_pause_actions.saveCareerThen.",
+      "params": {
+        "exitFn": {
+          "type": "function",
+          "desc": "Exit function (returnToMainMenu, quit...)."
+        },
+        "payload": {
+          "type": "table|nil",
+          "desc": "Button payload (field read: saveFirst)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "asRailGroup": {
-      "desc": "Crée un groupe de rail {id, actions}, ou nil si la liste est vide.",
-      "params": {"id": {"type": "string", "desc": "Id du groupe."}, "actions": {"type": "table[]|nil", "desc": "Boutons du groupe."}},
-      "returns": [{"type": "table|nil", "desc": "Groupe ou nil."}],
+      "desc": "Creates a rail group {id, actions}, or nil if the list is empty.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Group id."
+        },
+        "actions": {
+          "type": "table[]|nil",
+          "desc": "Group buttons."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Group or nil."
+        }
+      ],
       "internal": false
     }
   }

@@ -1,86 +1,148 @@
 {
   "path": "lua/vehicle/powertrain/linearActuator.lua",
-  "module": "Composant powertrain `linearActuator` : vérin à vis (actionneur linéaire mécanique) entraîné par un arbre. Il transforme le couple d'entrée en force axiale sur des poutres (obj:screwBeam) repérées par les tags `beamTags` et mesure la vitesse d'extension, qu'il renvoie à son parent comme vitesse de rotation (vitesse / pas de vis). Catégorie `torqueConsumer`, sans port de sortie. Utile pour benne, plateforme ou vérin électrique. Il suit l'extension (`currentExtend`, `currentExtendPercent`).",
+  "module": "Powertrain component `linearActuator`: screw jack (mechanical linear actuator) driven by a shaft. It converts the input torque into axial force on beams (obj:screwBeam) identified by the `beamTags` tags and measures the extension speed, which it returns to its parent as a rotation speed (speed / screw lead). Category `torqueConsumer`, without an output port. Useful for dump bed, platform or electric cylinder. It tracks the extension (`currentExtend`, `currentExtendPercent`).",
   "usage": "local act = powertrain.getDevice(\"tailgateActuator\")\nprint(act.currentExtend, act.currentExtendPercent, act.velocity) -- m, 0..1, m/s",
   "notes": [
-    "Clés jbeam lues : name, type, inputName, inputIndex, gearRatio (1), friction (N·m), dynamicFriction, electricsName, virtualInertia (kg·m², 2), minExtend (m, 1), maxExtend (m, 2), frictionForce (N, 1), speedLimit (m/s, 100), movementIntentElectricsName, node, screwDiameter (m, 0.05), leadMillimeterPerRevolution (mm par tour, OBLIGATOIRE), beamTags (liste de tags de poutres), breakTriggerBeam.",
-    "Champs principaux : inputAV (rad/s côté parent = velocity / pas par radian * gearRatio), velocity (m/s, moyenne sur les poutres), currentExtend (m, moyenne des longueurs de poutre), currentExtendPercent (0..1 entre minExtend et maxExtend), minExtend, maxExtend, screwDiameter, invLeadRadian (rad/m), leadAngle (rad), actuatorBeams (liste de cid de poutres), actuatorBeamCount, speedLimit, frictionForce, cumulativeInertia (virtualInertia / gearRatio²), isBroken. outputTorque1/outputAV1 existent mais valent 0.",
-    "La force de vis = couple net * gearRatio / screwDiameter, répartie à parts égales entre les poutres. Si movementIntentElectricsName est défini et que sa valeur est exactement 0, la vitesse remontée est forcée à 0 (le vérin est considéré à l'arrêt).",
-    "Bugs / pièges : new plante si leadMillimeterPerRevolution est absent (division nil), et invActuatorBeamCount = 1 / 0 = inf si aucune poutre ne porte les tags demandés (velocity et currentExtend deviennent alors nan). onBreak ne déconnecte rien (le obj:breakBeam est commenté) : le vérin cassé continue de fonctionner. M.requiredExternalInertiaOutputs n'est pas défini dans ce module."
+    "Jbeam keys read: name, type, inputName, inputIndex, gearRatio (1), friction (N·m), dynamicFriction, electricsName, virtualInertia (kg·m², 2), minExtend (m, 1), maxExtend (m, 2), frictionForce (N, 1), speedLimit (m/s, 100), movementIntentElectricsName, node, screwDiameter (m, 0.05), leadMillimeterPerRevolution (mm per revolution, REQUIRED), beamTags (list of beam tags), breakTriggerBeam.",
+    "Main fields: inputAV (rad/s parent side = velocity / lead per radian * gearRatio), velocity (m/s, average over the beams), currentExtend (m, average of the beam lengths), currentExtendPercent (0..1 between minExtend and maxExtend), minExtend, maxExtend, screwDiameter, invLeadRadian (rad/m), leadAngle (rad), actuatorBeams (list of beam cids), actuatorBeamCount, speedLimit, frictionForce, cumulativeInertia (virtualInertia / gearRatio²), isBroken. outputTorque1/outputAV1 exist but are 0.",
+    "The screw force = net torque * gearRatio / screwDiameter, split equally between the beams. If movementIntentElectricsName is defined and its value is exactly 0, the reported speed is forced to 0 (the actuator is considered stopped).",
+    "Bugs / pitfalls: new crashes if leadMillimeterPerRevolution is absent (nil division), and invActuatorBeamCount = 1 / 0 = inf if no beam carries the requested tags (velocity and currentExtend then become nan). onBreak disconnects nothing (obj:breakBeam is commented out): the broken actuator keeps working. M.requiredExternalInertiaOutputs is not defined in this module."
   ],
   "fields": {
-    "outputPorts": {"type": "table", "desc": "Table vide : aucun port de sortie."},
-    "deviceCategories": {"type": "table<string, boolean>", "desc": "{torqueConsumer=true}."}
+    "outputPorts": {
+      "type": "table",
+      "desc": "Empty table: no output port."
+    },
+    "deviceCategories": {
+      "type": "table<string, boolean>",
+      "desc": "{torqueConsumer=true}."
+    }
   },
   "functions": {
     "new": {
-      "desc": "Construit le vérin à vis : géométrie de la vis (diamètre, pas, angle d'hélice), limites d'extension, vitesse limite et liste des poutres motrices à partir des tags beamTags.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (leadMillimeterPerRevolution obligatoire)."}},
-      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "desc": "Builds the screw jack: screw geometry (diameter, lead, helix angle), extension limits, speed limit and the list of driving beams from the beamTags tags.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "jbeam data of the component (leadMillimeterPerRevolution required)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The device (class `device`)."
+        }
+      ],
       "internal": true
     }
   },
   "classes": {
     "device": {
-      "desc": "Objet renvoyé par new(jbeamData).",
+      "desc": "Object returned by new(jbeamData).",
       "functions": {
         "velocityUpdate": {
-          "desc": "Appelée à chaque pas physique : inputAV = velocity * invLeadRadian * gearRatio, écrit dans le parent ; outputAV1 = 0.",
-          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (inutilisé)."}},
+          "desc": "Called at each physics step: inputAV = velocity * invLeadRadian * gearRatio, written to the parent; outputAV1 = 0.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds (unused)."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "torqueUpdate": {
-          "desc": "Appelée à chaque pas physique : calcule la force de vis depuis le couple parent (moins frottements), l'applique à chaque poutre par obj:screwBeam avec minExtend/maxExtend/speedLimit, puis met à jour velocity, currentExtend et currentExtendPercent.",
+          "desc": "Called at each physics step: computes the screw force from the parent torque (minus friction), applies it to each beam via obj:screwBeam with minExtend/maxExtend/speedLimit, then updates velocity, currentExtend and currentExtendPercent.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "applyDeformGroupDamage": {
-          "desc": "Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1).",
-          "params": {"damageAmount": {"type": "number", "desc": "Quantité de dégâts du groupe de déformation."}},
+          "desc": "Increases the damage friction coefficient (0.01 of damage = +0.1).",
+          "params": {
+            "damageAmount": {
+              "type": "number",
+              "desc": "Amount of damage of the deformation group."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "setPartCondition": {
-          "desc": "Applique usure (coefficient de 1 à 1.5) et dégâts selon l'odomètre et l'intégrité ; appelle onBreak si isBroken.",
+          "desc": "Applies wear (coefficient from 1 to 1.5) and damage according to the odometer and the integrity; calls onBreak if isBroken.",
           "params": {
-            "subSystem": {"type": "any", "desc": "Non utilisé."},
-            "odometer": {"type": "number", "desc": "Distance parcourue en mètres."},
-            "integrity": {"type": "number|table", "desc": "Nombre 0..1 ou table {damageFrictionCoef, isBroken}."},
-            "visual": {"type": "any", "desc": "Non utilisé."}
+            "subSystem": {
+              "type": "any",
+              "desc": "Not used."
+            },
+            "odometer": {
+              "type": "number",
+              "desc": "Distance traveled in meters."
+            },
+            "integrity": {
+              "type": "number|table",
+              "desc": "Number 0..1 or table {damageFrictionCoef, isBroken}."
+            },
+            "visual": {
+              "type": "any",
+              "desc": "Not used."
+            }
           },
           "returns": [],
           "internal": true
         },
         "getPartCondition": {
-          "desc": "Renvoie l'intégrité 0..1 (0 si cassé) et {damageFrictionCoef, isBroken}.",
+          "desc": "Returns the integrity 0..1 (0 if broken) and {damageFrictionCoef, isBroken}.",
           "params": {},
-          "returns": [{"type": "number", "desc": "Intégrité 0..1."}, {"type": "table", "desc": "État sauvegardable."}],
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Integrity 0..1."
+            },
+            {
+              "type": "table",
+              "desc": "Saveable state."
+            }
+          ],
           "internal": true
         },
         "validate": {
-          "desc": "Appelée après construction du powertrain ; renvoie toujours true.",
+          "desc": "Called after the powertrain is built; always returns true.",
           "params": {},
-          "returns": [{"type": "boolean", "desc": "true."}],
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true."
+            }
+          ],
           "internal": true
         },
         "onBreak": {
-          "desc": "Marque le vérin comme cassé (isBroken = true) et réselectionne les mises à jour (sans effet réel).",
+          "desc": "Marks the actuator as broken (isBroken = true) and reselects the updates (no real effect).",
           "params": {},
           "returns": [],
           "internal": true
         },
         "calculateInertia": {
-          "desc": "Inertie purement virtuelle : cumulativeInertia = virtualInertia / gearRatio² ; rapports cumulés = gearRatio.",
+          "desc": "Purely virtual inertia: cumulativeInertia = virtualInertia / gearRatio²; cumulative ratios = gearRatio.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "reset": {
-          "desc": "Remet à zéro vitesses, extension, coefficients d'usure/dégâts et isBroken ; relit gearRatio et friction.",
-          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
-          "returns": [{"type": "table", "desc": "Le device."}],
+          "desc": "Resets speeds, extension, wear/damage coefficients and isBroken; rereads gearRatio and friction.",
+          "params": {
+            "jbeamData": {
+              "type": "table",
+              "desc": "jbeam data of the component."
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "The device."
+            }
+          ],
           "internal": true
         }
       }

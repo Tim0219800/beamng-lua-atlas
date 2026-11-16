@@ -1,78 +1,78 @@
 # `flowgraph_modules_buttonModule`
 
-*Fichier : `lua/ge/extensions/flowgraph/modules/buttonModule.lua` · VM : Game Engine (GE) · 98 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/modules/buttonModule.lua` · VM: Game Engine (GE) · 98 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/modules/buttonModule")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/modules/buttonModule")` (file under extensions/ but not a regular extension)
 
-Module flowgraph (moduleOrder 0) qui gère des boutons personnalisés affichés dans l'interface pendant un projet flowgraph. Chaque bouton a un label, un style, un état actif, un ordre, et des variables clicked/complete stockées dans un variableStorage. Dans afterTrigger, la liste des boutons actifs, triée par ordre puis id, est envoyée à l'UI via guihooks.trigger('CustomFGButtons', data). Le clic revient par une commande Lua qui appelle buttonClicked.
+Flowgraph module (moduleOrder 0) that manages custom buttons shown in the UI during a flowgraph project. Each button has a label, a style, an active state, an order, and clicked/complete variables stored in a variableStorage. In afterTrigger, the list of active buttons, sorted by order then id, is sent to the UI via guihooks.trigger('CustomFGButtons', data). The click comes back through a Lua command that calls buttonClicked.
 
-## Remarques
+## Notes
 
-- La variable 'clicked' est remise à false à chaque afterTrigger : elle n'est vraie que pendant un tick.
-- La liste n'est renvoyée à l'UI que si buttonsChanged est vrai (ajout ou set).
-- Le module est appelé 'button' dans mgr.modules (cf. getCmd).
+- The 'clicked' variable is reset to false on every afterTrigger: it is true for only one tick.
+- The list is sent back to the UI only if buttonsChanged is true (add or set).
+- The module is called 'button' in mgr.modules (see getCmd).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `flowgraph_modules_buttonModule.addButton(data)` | Ajoute un bouton et renvoie son id. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_buttonModule.afterTrigger()` | Appelé après le tick du graphe : finalise les variables, envoie les boutons actifs triés à l'UI si modifiés, puis remet clicked à false. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_buttonModule.buttonClicked(id)` | Appelé quand l'UI signale un clic : met clicked et complete à true. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_buttonModule.clear()` | Vide variables et boutons, remet le compteur d'ids à 0 et envoie une liste vide à l'UI (CustomFGButtons). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_buttonModule.executionStopped()` | Appelé à l'arrêt du projet : appelle clear() (les boutons disparaissent de l'UI). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_buttonModule.getButton(id)` | Renvoie la table du bouton (champs de type variable : label, style, active, order, clicked, complete). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_buttonModule.getCmd(id)` | Construit la chaîne de commande Lua exécutée par l'UI au clic : récupère le module 'button' du manager et appelle buttonClicked(id). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_buttonModule.getFreeId()` | Incrémente et renvoie un id de bouton. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_buttonModule.init()` | Crée le variableStorage et appelle clear(). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_buttonModule.set(id, field, val)` | Change un champ du bouton via le variableStorage (appliqué à la fin du tick) et marque la liste comme modifiée. (assignée dynamiquement) | dyn |
+| `flowgraph_modules_buttonModule.addButton(data)` | Adds a button and returns its id. (dynamically assigned) | dyn |
+| `flowgraph_modules_buttonModule.afterTrigger()` | Called after the graph tick: finalizes the variables, sends the sorted active buttons to the UI if modified, then sets clicked back to false. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_buttonModule.buttonClicked(id)` | Called when the UI reports a click: sets clicked and complete to true. (dynamically assigned) | dyn |
+| `flowgraph_modules_buttonModule.clear()` | Clears variables and buttons, resets the id counter to 0 and sends an empty list to the UI (CustomFGButtons). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_buttonModule.executionStopped()` | Called when the project stops: calls clear() (the buttons disappear from the UI). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_buttonModule.getButton(id)` | Returns the button's table (variable-type fields: label, style, active, order, clicked, complete). (dynamically assigned) | dyn |
+| `flowgraph_modules_buttonModule.getCmd(id)` | Builds the Lua command string executed by the UI on click: gets the manager's 'button' module and calls buttonClicked(id). (dynamically assigned) | dyn |
+| `flowgraph_modules_buttonModule.getFreeId()` | Increments and returns a button id. (dynamically assigned) | dyn |
+| `flowgraph_modules_buttonModule.init()` | Creates the variableStorage and calls clear(). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_buttonModule.set(id, field, val)` | Changes a button field via the variableStorage (applied at the end of the tick) and marks the list as modified. (dynamically assigned) | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `flowgraph_modules_buttonModule.addButton(data)`
 
-Ajoute un bouton et renvoie son id. (assignée dynamiquement)
+Adds a button and returns its id. (dynamically assigned)
 
-- `data` (*table*) : champs facultatifs label (défaut 'Button <id>'), style (défaut 'default'), active (défaut true), order (défaut id)
-- **renvoie** : integer id du bouton
+- `data` (*table*) : optional fields label (default 'Button <id>'), style (default 'default'), active (default true), order (default id)
+- **returns**: integer button id
 
 #### `flowgraph_modules_buttonModule.buttonClicked(id)`
 
-Appelé quand l'UI signale un clic : met clicked et complete à true. (assignée dynamiquement)
+Called when the UI reports a click: sets clicked and complete to true. (dynamically assigned)
 
-- `id` (*integer*) : id du bouton
+- `id` (*integer*) : button id
 
 #### `flowgraph_modules_buttonModule.getButton(id)`
 
-Renvoie la table du bouton (champs de type variable : label, style, active, order, clicked, complete). (assignée dynamiquement)
+Returns the button's table (variable-type fields: label, style, active, order, clicked, complete). (dynamically assigned)
 
-- `id` (*integer*) : id du bouton
-- **renvoie** : table|nil bouton
+- `id` (*integer*) : button id
+- **returns**: table|nil button
 
 #### `flowgraph_modules_buttonModule.getCmd(id)`
 
-Construit la chaîne de commande Lua exécutée par l'UI au clic : récupère le module 'button' du manager et appelle buttonClicked(id). (assignée dynamiquement)
+Builds the Lua command string executed by the UI on click: gets the manager's 'button' module and calls buttonClicked(id). (dynamically assigned)
 
-- `id` (*integer*) : id du bouton
-- **renvoie** : string code Lua
+- `id` (*integer*) : button id
+- **returns**: string Lua code
 
 #### `flowgraph_modules_buttonModule.getFreeId()`
 
-Incrémente et renvoie un id de bouton. (assignée dynamiquement)
+Increments and returns a button id. (dynamically assigned)
 
-- **renvoie** : integer id
+- **returns**: integer id
 
 #### `flowgraph_modules_buttonModule.set(id, field, val)`
 
-Change un champ du bouton via le variableStorage (appliqué à la fin du tick) et marque la liste comme modifiée. (assignée dynamiquement)
+Changes a button field via the variableStorage (applied at the end of the tick) and marks the list as modified. (dynamically assigned)
 
-- `id` (*integer*) : id du bouton
-- `field` (*string*) : label, style, active, order, clicked ou complete
-- `val` (*any*) : nouvelle valeur
+- `id` (*integer*) : button id
+- `field` (*string*) : label, style, active, order, clicked or complete
+- `val` (*any*) : new value
 
-## Classe `C`
+## Class `C`
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:addButton(data)` | adds a new Button. | 27 |
 | `C:afterTrigger()` |  | 67 |
@@ -85,7 +85,7 @@ Change un champ du bouton via le variableStorage (appliqué à la fin du tick) e
 | `C:init()` |  | 13 |
 | `C:set(id, field, val)` |  | 55 |
 
-**Évènements UI (guihooks.trigger) :** `CustomFGButtons`
+**UI events (guihooks.trigger):** `CustomFGButtons`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/modules/buttonModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/modules/buttonModule.lua`.*

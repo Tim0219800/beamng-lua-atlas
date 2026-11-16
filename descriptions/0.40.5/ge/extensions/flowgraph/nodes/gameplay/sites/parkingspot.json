@@ -1,63 +1,63 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/sites/parkingspot.lua",
-  "module": "Nœud flowgraph « Parking Spot » (catégorie repeat_instant). Décompose une place de parking (parkingSpotData) : sorties name, pos, rot (quat), scl (vec3). Option data.fixedHeight (>0) remplace la hauteur de scl. Des pins dynamiques exposent les champs personnalisés (options, défaut « key »).",
+  "module": "Flowgraph node \"Parking Spot\" (category repeat_instant). Decomposes a parking spot (parkingSpotData): outputs name, pos, rot (quat), scl (vec3). Option data.fixedHeight (>0) overrides the height of scl. Dynamic pins expose the custom fields (options, default \"key\").",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStarted": {
-          "desc": "Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud.",
+          "desc": "Called when the flowgraph project execution starts; resets the node's internal state.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure les réglages propres au nœud à partir des données sauvegardées.",
+          "desc": "Restores the node's own settings from the saved data.",
           "internal": true,
           "params": {
             "nodeData": {
               "type": "table",
-              "desc": "données sauvegardées du nœud"
+              "desc": "saved node data"
             }
           }
         },
         "_onSerialize": {
-          "desc": "Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.",
+          "desc": "Adds the node's own settings to the `res` table when saving the graph.",
           "internal": true,
           "params": {
             "res": {
               "type": "table",
-              "desc": "table de sérialisation à remplir"
+              "desc": "serialization table to fill"
             }
           }
         },
         "drawCustomProperties": {
-          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "desc": "Draws the node's custom properties in the flowgraph editor panel (ImGui).",
           "internal": true
         },
         "init": {
-          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "desc": "Initializes the node's internal state at creation (called by the flowgraph engine).",
           "internal": true,
           "params": {
             "mgr": {
               "type": "table",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           }
         },
         "postInit": {
-          "desc": "Appelé après la création des pins du nœud ; sert à ajuster les pins (modèles de valeurs, filtres de fichiers, clés dynamiques).",
+          "desc": "Called after the node's pins are created; used to adjust the pins (value templates, file filters, dynamic keys).",
           "internal": true
         },
         "updateKeys": {
-          "desc": "Reconstruit les pins de sortie dynamiques à partir de la liste d'options du nœud.",
+          "desc": "Rebuilds the dynamic output pins from the node's options list.",
           "internal": true
         },
         "work": {
-          "desc": "Recopie nom, position, rotation et échelle de la place sur les sorties, applique fixedHeight si > 0 et lit les champs personnalisés.",
+          "desc": "Copies the spot's name, position, rotation and scale to the outputs, applies fixedHeight if > 0 and reads the custom fields.",
           "internal": true,
           "params": {
             "args": {
               "type": "table",
-              "desc": "arguments transmis par le moteur (non utilisés)"
+              "desc": "arguments passed by the engine (unused)"
             }
           }
         }

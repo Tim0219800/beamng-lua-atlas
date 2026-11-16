@@ -1,29 +1,29 @@
 # `flowgraph_nodes_scene_camera_cameraPath`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/camera/cameraPath.lua` · VM : Game Engine (GE) · 95 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/camera/cameraPath.lua` · VM: Game Engine (GE) · 95 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/camera/cameraPath")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/camera/cameraPath")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Simple Cam Path' (categorie once_f_duration, fichier cameraPath). Lance une trajectoire de camera (fichier .camPath.json designe par 'pathName') via le module camera du gestionnaire, avec option 'loop'. Sorties : id de la trajectoire, impulsion 'activated' au demarrage, 'inactive' si la trajectoire n'est plus active, 'duration'. L'etat de duree passe a 'finished' quand la trajectoire est complete.
+Flowgraph node 'Simple Cam Path' (once_f_duration category, file cameraPath). Starts a camera path (.camPath.json file designated by 'pathName') via the manager's camera module, with option 'loop'. Outputs: path id, impulse 'activated' on start, 'inactive' if the path is no longer active, 'duration'. The duration state goes to 'finished' when the path is complete.
 
-## Remarques
+## Notes
 
-- legacyPins renvoie vers 'complete' et 'flow', des pins qui n'existent pas dans le schema actuel.
+- legacyPins point to 'complete' and 'flow', pins that do not exist in the current schema.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet activatedFlag et l'etat de duree 'inactive'. | 45 |
-| `C:_onDeserialized(data)` | Migre l'ancien champ data.loop vers le pin code en dur 'loop'. | 89 |
-| `C:drawMiddle(builder, style)` | Dessine le milieu du noeud (vide). | 86 |
-| `C:init()` | Vide. | 36 |
-| `C:onNodeReset()` | Meme remise a zero. | 50 |
-| `C:postInit()` | Restreint le pin pathName aux fichiers '.camPath.json'. | 39 |
-| `C:work()` | Pendant l'etat started : gere l'impulsion activated, met inactive/duration selon que la trajectoire est active, passe a 'finished' quand isPathComplete. | 64 |
-| `C:workOnce()` | Trouve la trajectoire (camera:findPath), la demarre (startPath), ecrit id, activated=true et passe a l'etat 'started'. | 55 |
+| `C:_executionStarted()` | Resets activatedFlag and the duration state to 'inactive'. | 45 |
+| `C:_onDeserialized(data)` | Migrates the old field data.loop to the hard-coded pin 'loop'. | 89 |
+| `C:drawMiddle(builder, style)` | Draws the middle of the node (empty). | 86 |
+| `C:init()` | Empty. | 36 |
+| `C:onNodeReset()` | Same reset. | 50 |
+| `C:postInit()` | Restricts the pathName pin to '.camPath.json' files. | 39 |
+| `C:work()` | During the started state: handles the activated impulse, sets inactive/duration depending on whether the path is active, goes to 'finished' when isPathComplete. | 64 |
+| `C:workOnce()` | Finds the path (camera:findPath), starts it (startPath), writes id, activated=true and goes to the 'started' state. | 55 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/camera/cameraPath.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/camera/cameraPath.lua`.*

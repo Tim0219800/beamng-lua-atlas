@@ -1,9 +1,9 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/cameraBookmarks.lua",
-  "module": "Panneau imgui de signets de caméra pour l'outil Easy Select. Permet d'ajouter la position/rotation courante de la caméra (core_camera.getPosition / getQuat), de renommer, de retourner à un signet, de le mettre à jour ou de le supprimer. Les signets ne vivent qu'en mémoire (table locale) : ils ne sont pas sauvegardés.",
+  "module": "ImGui camera bookmarks panel for the Easy Select tool. Lets you add the current camera position/rotation (core_camera.getPosition / getQuat), rename, go back to a bookmark, update it or delete it. Bookmarks only live in memory (local table): they are not saved.",
   "functions": {
     "draw": {
-      "desc": "Dessine le panneau « Camera Bookmarks » (champ de nom, bouton Add Current Position, liste, Rename, Go To, Update View, Delete). Go To vide les entrées/mouvements de la caméra puis fixe position et rotation via core_camera.setPosition/setRotation. À appeler chaque frame depuis une fenêtre imgui.",
+      "desc": "Draws the \"Camera Bookmarks\" panel (name field, Add Current Position button, list, Rename, Go To, Update View, Delete). Go To clears the camera's inputs/movements then sets position and rotation via core_camera.setPosition/setRotation. To be called every frame from an imgui window.",
       "params": {},
       "internal": false
     }

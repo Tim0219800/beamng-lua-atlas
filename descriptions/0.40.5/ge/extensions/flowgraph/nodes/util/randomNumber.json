@@ -1,15 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/randomNumber.lua",
-  "module": "Nœud « Random Number » (repeat_instant, icône casino). Génère un nombre aléatoire dans [rangeStart, rangeEnd] à chaque frame. Entrées : rangeStart (0), rangeEnd (10), float (caché, false : entier). Sortie : random.",
+  "module": "Node \"Random Number\" (repeat_instant, casino icon). Generates a random number in [rangeStart, rangeEnd] every frame. Inputs: rangeStart (0), rangeEnd (10), float (hidden, false: integer). Output: random.",
   "notes": [
-    "En mode entier, math.random exige des entiers et rangeStart <= rangeEnd."
+    "In integer mode, math.random requires integers and rangeStart <= rangeEnd."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "work": {
-          "desc": "Si les bornes sont définies, renvoie un entier (math.random(a, b)) ou un flottant (a + random × (b-a)) selon float ; sans bornes, renvoie math.random().",
+          "desc": "If the bounds are defined, returns an integer (math.random(a, b)) or a float (a + random × (b-a)) depending on float; without bounds, returns math.random().",
           "internal": true
         }
       }

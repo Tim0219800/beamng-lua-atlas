@@ -1,163 +1,163 @@
 # `hydros`
 
-*Fichier : `lua/vehicle/hydros.lua` · VM : Véhicule · 790 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/hydros.lua` · VM: Vehicle · 790 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `hydros`
+**Access:** global `hydros`
 
-Gère les hydros jbeam (poutres/barres de torsion pilotées par une entrée : direction, bennes, grues, etc.) et le retour de force (FFB) du volant. À l'init il lit v.data.hydros (poutres) et v.data.torsionHydros, normalise leurs limites et centre, et sépare les hydros de direction (inputSource 'steering_input') des autres. À chaque pas de physique (update) il déplace chaque hydro vers sa commande (cmd, lue dans electrics.values via inputFlex) avec des taux inRate/outRate ; pour le volant physique, la position du volant pilote la direction et la force mesurée sur les poutres de direction est renvoyée au matériel (FFBcalc : lissage, compression, amortissement, butée logicielle « softlock »). Fournit aussi un volant virtuel pour les tests (enableVirtualWheel).
+Manages jbeam hydros (beams/torsion bars driven by an input: steering, dump beds, cranes, etc.) and steering wheel force feedback (FFB). At init it reads v.data.hydros (beams) and v.data.torsionHydros, normalizes their limits and center, and separates steering hydros (inputSource 'steering_input') from the others. At each physics step (update) it moves each hydro toward its command (cmd, read from electrics.values via inputFlex) with inRate/outRate rates; for the physical steering wheel, the wheel position drives the steering and the force measured on the steering beams is sent back to the hardware (FFBcalc: smoothing, compression, damping, software stop "softlock"). Also provides a virtual wheel for tests (enableVirtualWheel).
 
-## Exemple
+## Example
 
 ```lua
--- lire la force de volant normalisée (-1..1)
+-- read the normalized steering wheel force (-1..1)
 local f = hydros.forceAtWheelNorm
--- couper le FFB matériel temporairement
+-- temporarily cut the hardware FFB
 hydros.enableFFB = false
 hydros.setFFBConfig({forceCoef = 80, smoothing = 40})
 ```
 
-## Remarques
+## Notes
 
-- UNITÉS/ÉCHELLES : FFmax = 10 (force maximale interne du pilote FFB). forceAtDriver est dans [-10, 10] ; forceAtDriverNorm et forceAtWheelNorm = valeur / 10 ; curForceLimit croît de 0 à wheelFFBForceLimit en quelques secondes après spawn/reset/pause (anti-pic), curForceLimitNorm = curForceLimit / 10. Les descriptions de champs générées automatiquement dans la page d'extraction sont décalées d'un cran ; les définitions ci-dessous sont celles du code.
-- Chaque hydro (table dans M.hydros) reçoit à l'init : bcid (cid de la poutre ou de la barre), fIsBroken/fgetDisplacement/fsetRelDisplacement (fonctions obj adaptées poutre ou barre de torsion), center, multOut/multIn/cOut/cIn (conversion entrée -> état), cmd (commande), state (position -1..1 environ), _inrate/_outrate (par pas de physique), smoothrate. Clés jbeam utilisées : beamCID/cid, inputSource (ex. 'throttle', 'steering' -> normalisé en 'steering_input'), inputFactor, inputCenter, inputInLimit, inputOutLimit, inLimit, outLimit, inRate, outRate, autoCenterRate, analogue, forceLimit, steeringWheelLock, steeringAutocenterEnabled, lowspeedCoefFFB.
-- Le mécanisme inputFlex permet à un hydro avec forceLimit de « céder » : si la contrainte de la poutre dépasse forceLimit, l'entrée source est décalée pour limiter l'effort (hystérésis).
-- Le hook d'extension onFFBConfigChanged(config) est appelé par le moteur quand les périphériques FFB changent (périphériques steering / accelerate / brake). Il choisit FFBID, la fréquence d'envoi (30 Hz mini, jusqu'à 400 Hz par heuristique sur ffbSendms, ou la fréquence utilisateur plafonnée), la courbe de réponse corrigée (responseCurve), le mode vibration manette, et appelle input_haptics.
-- Les mises à jour FFB sont limitées en temps réel (horloge murale os.clockhp) à FFBperiod (1/200 s par défaut), pas en temps simulé ; enableFFBflood supprime cette limite (debug).
-- Bug repéré : sendHydroStateToGUI envoie `M.state` qui n'est défini nulle part dans ce fichier (nil). Le champ torqueCurrent n'est défini qu'après onFFBConfigChanged (valeur ffbParams.torqueCurrent ou 100).
-- M.update et M.updateGFX sont remplacés par nop si le véhicule n'a aucun hydro (init/reset). isPhysicsStepUsed() renvoie vrai seulement quand update n'est pas nop (utilisé par main.lua).
-- Un champ optionnel M.testHook(dtSim, simWheelPos, hydroPos) peut être défini par des outils de test (ex. ffbCalibration) pour intercepter le calcul FFB.
+- UNITS/SCALES: FFmax = 10 (maximum internal force of the FFB driver). forceAtDriver is in [-10, 10]; forceAtDriverNorm and forceAtWheelNorm = value / 10; curForceLimit grows from 0 to wheelFFBForceLimit over a few seconds after spawn/reset/pause (anti-spike), curForceLimitNorm = curForceLimit / 10. The field descriptions automatically generated in the extraction page are shifted by one; the definitions below are those from the code.
+- Each hydro (table in M.hydros) receives at init: bcid (cid of the beam or the bar), fIsBroken/fgetDisplacement/fsetRelDisplacement (obj functions adapted to beam or torsion bar), center, multOut/multIn/cOut/cIn (input -> state conversion), cmd (command), state (position about -1..1), _inrate/_outrate (per physics step), smoothrate. jbeam keys used: beamCID/cid, inputSource (e.g. 'throttle', 'steering' -> normalized to 'steering_input'), inputFactor, inputCenter, inputInLimit, inputOutLimit, inLimit, outLimit, inRate, outRate, autoCenterRate, analogue, forceLimit, steeringWheelLock, steeringAutocenterEnabled, lowspeedCoefFFB.
+- The inputFlex mechanism lets a hydro with forceLimit "give way": if the beam's stress exceeds forceLimit, the source input is shifted to limit the effort (hysteresis).
+- The extension hook onFFBConfigChanged(config) is called by the engine when the FFB devices change (steering / accelerate / brake devices). It chooses FFBID, the send frequency (30 Hz minimum, up to 400 Hz by heuristic on ffbSendms, or the user frequency capped), the corrected response curve (responseCurve), the gamepad vibration mode, and calls input_haptics.
+- FFB updates are limited in real time (wall clock os.clockhp) to FFBperiod (1/200 s by default), not in simulated time; enableFFBflood removes this limit (debug).
+- Bug spotted: sendHydroStateToGUI sends `M.state`, which is not defined anywhere in this file (nil). The torqueCurrent field is only defined after onFFBConfigChanged (value ffbParams.torqueCurrent or 100).
+- M.update and M.updateGFX are replaced by nop if the vehicle has no hydro (init/reset). isPhysicsStepUsed() returns true only when update is not nop (used by main.lua).
+- An optional field M.testHook(dtSim, simWheelPos, hydroPos) can be defined by test tools (e.g. ffbCalibration) to intercept the FFB computation.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `hydros.debugDraw()` | Appelée par main.lua:onDebugDraw. Réinitialise le lisseur FFB quand le temps réel d'image est aberrant (moins de 10 fps ou à l'arrêt) pour éviter des pics. *(interne)* | 288 |
-| `hydros.destroy()` | Appelée à la suppression du véhicule (main.lua:onDespawnObject) : coupe toutes les interfaces FFB (force 0). *(interne)* | 731 |
-| `hydros.enableVirtualWheel(isEnabled, wheelAngleFun, sendForceFun)` | Active ou désactive un volant virtuel (simulation logicielle d'un volant FFB) : active FFB avec FFBID 0, remplace la fonction d'envoi de force et celle de lecture d'angle. | 116 |
-| `hydros.getAngleFunction()` | Renvoie la fonction qui donne l'angle de volant actuel : celle du volant virtuel si activé, sinon une fonction lisant electrics.values.steering_input. | 761 |
-| `hydros.getFFBConfig()` | Renvoie la configuration FFB courante. | 488 |
-| `hydros.getFFBID()` | Renvoie l'identifiant du périphérique FFB de direction (-1 si aucun). | 753 |
-| `hydros.getForceFeedbackFunction()` | Renvoie la fonction d'envoi de force courante (obj.sendForceFeedback, ou celle du volant virtuel). | 749 |
-| `hydros.init()` | Prépare les hydros à partir de v.data.hydros et v.data.torsionHydros : calcul des multiplicateurs/centres, répartition direction / autres, inputFlex, coefficient FFB du véhicule (v.data.input.FFBcoef x 1.2), initialisation des haptiques, puis reset(). Appelée par main.lua (initSystems). *(interne)* | 603 |
-| `hydros.isPhysicsStepUsed()` | Indique si hydros a besoin du pas de physique (update actif). *(interne)* | 745 |
-| `hydros.onFFBConfigChanged(newFFBConfig)` | Hook appelé quand la configuration des périphériques FFB change : coupe les interfaces, relit steering/accelerate/brake, choisit FFBID, force, lissage, softlock, courbe de réponse, fréquence d'envoi et configure input_haptics. *(interne)* *(hook)* | 513 |
-| `hydros.reset()` | Remet les états des hydros au centre, réinitialise lisseurs FFB et volant virtuel, coupe les interfaces FFB ; réactive update/updateGFX s'il y a des hydros (sinon nop). *(interne)* | 701 |
-| `hydros.resetFFBSmoother()` | Remet à 0 le lisseur de force FFB et la limite de force (anti-pic). | 203 |
-| `hydros.sendHydroStateToGUI()` | Envoie guihooks.trigger('HydrosUpdate', M.state) ; M.state n'est jamais défini dans ce fichier (voir notes). *(interne)* | 735 |
-| `hydros.sendRPMLeds(currentRPM, rpmFirstLedTurnsOn, rpmRedLine)` | Envoie au périphérique FFB les LED de régime (obj:sendRPMLeds) si FFBID est valide et deviceLightingMode vaut 'default'. | 739 |
-| `hydros.setExternalForce(force)` | Ajoute une force externe au calcul du FFB au volant (avant le coefficient de force). | 134 |
-| `hydros.setFFBConfig(ffbParams)` | Met à jour des paramètres FFB à chaud (seuls les champs fournis sont modifiés) puis coupe les interfaces FFB. | 498 |
-| `hydros.update(dtSim)` | Pas de physique (main.lua:onPhysicsStep, après controller.update). Avance chaque hydro vers sa commande ; pour les hydros de direction avec FFB actif, suit la position du volant réel et lance le calcul FFB (FFBcalc). *(interne)* | 418 |
-| `hydros.updateGFX(dt)` | Frame graphique (après extensions et electrics, avant powertrain). Met à jour le volant virtuel, l'inputFlex, les commandes (cmd) et taux de lissage, le modèle de mouvement du volant pour le FFB, la limite de force, le coefficient de force selon la vitesse, et electrics.values.steering (angle en degrés). *(interne)* | 293 |
+| `hydros.debugDraw()` | Called by main.lua:onDebugDraw. Resets the FFB smoother when the real frame time is aberrant (less than 10 fps or at standstill) to avoid spikes. *(internal)* | 288 |
+| `hydros.destroy()` | Called when the vehicle is removed (main.lua:onDespawnObject): cuts all FFB interfaces (force 0). *(internal)* | 731 |
+| `hydros.enableVirtualWheel(isEnabled, wheelAngleFun, sendForceFun)` | Enables or disables a virtual wheel (software simulation of an FFB wheel): enables FFB with FFBID 0, replaces the force send function and the angle read function. | 116 |
+| `hydros.getAngleFunction()` | Returns the function that gives the current wheel angle: the virtual wheel's if enabled, otherwise a function reading electrics.values.steering_input. | 761 |
+| `hydros.getFFBConfig()` | Returns the current FFB configuration. | 488 |
+| `hydros.getFFBID()` | Returns the identifier of the steering FFB device (-1 if none). | 753 |
+| `hydros.getForceFeedbackFunction()` | Returns the current force send function (obj.sendForceFeedback, or the virtual wheel's). | 749 |
+| `hydros.init()` | Prepares the hydros from v.data.hydros and v.data.torsionHydros: computation of multipliers/centers, steering / others split, inputFlex, vehicle FFB coefficient (v.data.input.FFBcoef x 1.2), haptics initialization, then reset(). Called by main.lua (initSystems). *(internal)* | 603 |
+| `hydros.isPhysicsStepUsed()` | Indicates whether hydros needs the physics step (update active). *(internal)* | 745 |
+| `hydros.onFFBConfigChanged(newFFBConfig)` | Hook called when the FFB device configuration changes: cuts the interfaces, rereads steering/accelerate/brake, chooses FFBID, force, smoothing, softlock, response curve, send frequency and configures input_haptics. *(internal)* *(hook)* | 513 |
+| `hydros.reset()` | Resets the hydro states to center, reinitializes FFB smoothers and the virtual wheel, cuts the FFB interfaces; re-enables update/updateGFX if there are hydros (otherwise nop). *(internal)* | 701 |
+| `hydros.resetFFBSmoother()` | Resets the FFB force smoother and the force limit to 0 (anti-spike). | 203 |
+| `hydros.sendHydroStateToGUI()` | Sends guihooks.trigger('HydrosUpdate', M.state); M.state is never defined in this file (see notes). *(internal)* | 735 |
+| `hydros.sendRPMLeds(currentRPM, rpmFirstLedTurnsOn, rpmRedLine)` | Sends the RPM LEDs to the FFB device (obj:sendRPMLeds) if FFBID is valid and deviceLightingMode is 'default'. | 739 |
+| `hydros.setExternalForce(force)` | Adds an external force to the steering wheel FFB computation (before the force coefficient). | 134 |
+| `hydros.setFFBConfig(ffbParams)` | Updates FFB parameters on the fly (only the fields provided are modified) then cuts the FFB interfaces. | 498 |
+| `hydros.update(dtSim)` | Physics step (main.lua:onPhysicsStep, after controller.update). Moves each hydro toward its command; for steering hydros with FFB active, follows the real wheel position and runs the FFB computation (FFBcalc). *(internal)* | 418 |
+| `hydros.updateGFX(dt)` | Graphics frame (after extensions and electrics, before powertrain). Updates the virtual wheel, inputFlex, commands (cmd) and smoothing rates, the wheel motion model for FFB, the force limit, the force coefficient according to speed, and electrics.values.steering (angle in degrees). *(internal)* | 293 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `hydros.enableVirtualWheel(isEnabled, wheelAngleFun, sendForceFun)`
 
-Active ou désactive un volant virtuel (simulation logicielle d'un volant FFB) : active FFB avec FFBID 0, remplace la fonction d'envoi de force et celle de lecture d'angle.
+Enables or disables a virtual wheel (software simulation of an FFB wheel): enables FFB with FFBID 0, replaces the force send function and the angle read function.
 
-- `isEnabled` (*boolean|nil*) : true (par défaut si nil) pour activer.
-- `wheelAngleFun` (*function|nil*) : Fonction renvoyant l'angle de volant -1..1 (volant virtuel par défaut).
-- `sendForceFun` (*function|nil*) : Fonction d'envoi de force (o, FFBID, torque, dampCoef, inertia, friction) ; virtualSendForceFeedback par défaut.
+- `isEnabled` (*boolean|nil*) : true (default if nil) to enable.
+- `wheelAngleFun` (*function|nil*) : Function returning the wheel angle -1..1 (virtual wheel by default).
+- `sendForceFun` (*function|nil*) : Force send function (o, FFBID, torque, dampCoef, inertia, friction); virtualSendForceFeedback by default.
 
 #### `hydros.getAngleFunction()`
 
-Renvoie la fonction qui donne l'angle de volant actuel : celle du volant virtuel si activé, sinon une fonction lisant electrics.values.steering_input.
+Returns the function that gives the current wheel angle: the virtual wheel's if enabled, otherwise a function reading electrics.values.steering_input.
 
-- **renvoie** : function Fonction sans argument renvoyant l'angle.
+- **returns**: function Argument-less function returning the angle.
 
 #### `hydros.getFFBConfig()`
 
-Renvoie la configuration FFB courante.
+Returns the current FFB configuration.
 
-- **renvoie** : table {forceCoef, softlockForce, smoothing, gforceCoef, wheelFFBDampLimit}.
+- **returns**: table {forceCoef, softlockForce, smoothing, gforceCoef, wheelFFBDampLimit}.
 
 #### `hydros.getFFBID()`
 
-Renvoie l'identifiant du périphérique FFB de direction (-1 si aucun).
+Returns the identifier of the steering FFB device (-1 if none).
 
-- **renvoie** : integer FFBID (>= 0 valide).
+- **returns**: integer FFBID (>= 0 valid).
 
 #### `hydros.getForceFeedbackFunction()`
 
-Renvoie la fonction d'envoi de force courante (obj.sendForceFeedback, ou celle du volant virtuel).
+Returns the current force send function (obj.sendForceFeedback, or the virtual wheel's).
 
-- **renvoie** : function Fonction sendForceFeedback(obj, FFBID, force, ...).
+- **returns**: function Function sendForceFeedback(obj, FFBID, force, ...).
 
 #### `hydros.isPhysicsStepUsed()`
 
-Indique si hydros a besoin du pas de physique (update actif).
+Indicates whether hydros needs the physics step (update active).
 
-- **renvoie** : boolean true si M.update ~= nop.
+- **returns**: boolean true if M.update ~= nop.
 
 #### `hydros.onFFBConfigChanged(newFFBConfig)`
 
-Hook appelé quand la configuration des périphériques FFB change : coupe les interfaces, relit steering/accelerate/brake, choisit FFBID, force, lissage, softlock, courbe de réponse, fréquence d'envoi et configure input_haptics.
+Hook called when the FFB device configuration changes: cuts the interfaces, rereads steering/accelerate/brake, chooses FFBID, force, smoothing, softlock, response curve, send frequency and configures input_haptics.
 
-- `newFFBConfig` (*table|nil*) : Config {steering = {FFBID, ffbParams, ffbSendms}, accelerate = {FFBID}, brake = {FFBID}} ; nil pour désactiver.
+- `newFFBConfig` (*table|nil*) : Config {steering = {FFBID, ffbParams, ffbSendms}, accelerate = {FFBID}, brake = {FFBID}}; nil to disable.
 
 #### `hydros.sendRPMLeds(currentRPM, rpmFirstLedTurnsOn, rpmRedLine)`
 
-Envoie au périphérique FFB les LED de régime (obj:sendRPMLeds) si FFBID est valide et deviceLightingMode vaut 'default'.
+Sends the RPM LEDs to the FFB device (obj:sendRPMLeds) if FFBID is valid and deviceLightingMode is 'default'.
 
-- `currentRPM` (*number*) : Régime moteur courant.
-- `rpmFirstLedTurnsOn` (*number*) : Régime d'allumage de la première LED.
-- `rpmRedLine` (*number*) : Régime de la zone rouge.
+- `currentRPM` (*number*) : Current engine RPM.
+- `rpmFirstLedTurnsOn` (*number*) : RPM at which the first LED lights up.
+- `rpmRedLine` (*number*) : RPM of the red zone.
 
 #### `hydros.setExternalForce(force)`
 
-Ajoute une force externe au calcul du FFB au volant (avant le coefficient de force).
+Adds an external force to the steering wheel FFB computation (before the force coefficient).
 
-- `force` (*number*) : Force externe (même échelle que le déplacement de volant).
+- `force` (*number*) : External force (same scale as the wheel displacement).
 
 #### `hydros.setFFBConfig(ffbParams)`
 
-Met à jour des paramètres FFB à chaud (seuls les champs fournis sont modifiés) puis coupe les interfaces FFB.
+Updates FFB parameters on the fly (only the fields provided are modified) then cuts the FFB interfaces.
 
-- `ffbParams` (*table*) : Champs possibles : forceCoef, softlockForce (0..1), smoothing, gforceCoef, enableThrottleForceFeedback, enableBrakeForceFeedback, deviceLightingMode, wheelFFBDampLimit.
+- `ffbParams` (*table*) : Possible fields: forceCoef, softlockForce (0..1), smoothing, gforceCoef, enableThrottleForceFeedback, enableBrakeForceFeedback, deviceLightingMode, wheelFFBDampLimit.
 
 #### `hydros.update(dtSim)`
 
-Pas de physique (main.lua:onPhysicsStep, après controller.update). Avance chaque hydro vers sa commande ; pour les hydros de direction avec FFB actif, suit la position du volant réel et lance le calcul FFB (FFBcalc).
+Physics step (main.lua:onPhysicsStep, after controller.update). Moves each hydro toward its command; for steering hydros with FFB active, follows the real wheel position and runs the FFB computation (FFBcalc).
 
-- `dtSim` (*number*) : Pas de physique en secondes.
+- `dtSim` (*number*) : Physics step in seconds.
 
 #### `hydros.updateGFX(dt)`
 
-Frame graphique (après extensions et electrics, avant powertrain). Met à jour le volant virtuel, l'inputFlex, les commandes (cmd) et taux de lissage, le modèle de mouvement du volant pour le FFB, la limite de force, le coefficient de force selon la vitesse, et electrics.values.steering (angle en degrés).
+Graphics frame (after extensions and electrics, before powertrain). Updates the virtual wheel, inputFlex, commands (cmd) and smoothing rates, the wheel motion model for FFB, the force limit, the force coefficient according to speed, and electrics.values.steering (angle in degrees).
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `GforceCoef` | number | Coefficient d'effet des forces G latérales (sensors.gx) sur la force du volant (défaut 0). |
-| `curForceLimit` | number | Limite de force courante (préventeur de pics) : repart de 0 après spawn/reload/pause et grimpe jusqu'à wheelFFBForceLimit. |
+| `GforceCoef` | number | Effect coefficient of lateral G forces (sensors.gx) on the steering wheel force (default 0). |
+| `curForceLimit` | number | Current force limit (spike preventer): restarts from 0 after spawn/reload/pause and climbs up to wheelFFBForceLimit. |
 | `curForceLimitNorm` | number | curForceLimit / FFmax. |
-| `deviceLightingMode` | string | Configuration d'éclairage du périphérique ('off' par défaut ; 'default' active l'envoi des LED de régime). |
-| `enableBrakeForceFeedback` | boolean | Active le retour de force du frein en mode vibration de manette (défaut true). |
-| `enableFFB` | boolean | true par défaut ; mis à false les requêtes réelles vers le matériel FFB sont ignorées (les calculs continuent). |
-| `enableFFBflood` | boolean | false par défaut ; true = ignore les contrôles de temps et envoie à ~2 kHz (debug uniquement : sature les pilotes). |
-| `enableThrottleForceFeedback` | boolean | Active le retour de force de l'accélérateur en mode vibration de manette (défaut true). |
-| `enableVibration` | boolean | false par défaut ; true en mode vibration (manette), le FFB volant est alors désactivé (FFBHydrosExist = false). |
-| `ffbSpeedFast` | number | Vitesse (m/s) au-delà de laquelle la force FFB atteint son coefficient normal (5 / 3.6). |
-| `forceAtDriver` | number | Force envoyée au pilote matériel dans [-FFmax, FFmax]. |
-| `forceAtDriverNorm` | number | Force envoyée au pilote matériel, normalisée. |
-| `forceAtWheelNorm` | number | Force mesurée au volant, normalisée (force / FFmax). |
-| `hydros` | table[] | Liste de tous les hydros (poutres puis barres de torsion) avec leurs champs calculés. |
-| `wheelFFBForceCoef` | number | Coefficient de force FFB à vitesse normale (défaut 100). |
-| `wheelFFBForceCoefCurrent` | number | Coefficient courant, interpolé entre bas régime et normal selon la vitesse (ffbSpeedFast), 0 quand l'IA conduit. |
-| `wheelFFBForceCoefLowSpeed` | number | Coefficient de force aux vitesses de parking (initialement = wheelFFBForceCoef ; = forceCoef/10 si lowspeedCoef). |
-| `wheelFFBForceCompressionCoef` | number | Part de la limite à partir de laquelle la force est comprimée (0..1, défaut 0.9). |
-| `wheelFFBForceLimit` | number | Limite de force FFB stable (échelle 0..FFmax = 10). |
-| `wheelPowerSteeringCoef` | number | Coefficient de direction assistée (défaut 1) appliqué au déplacement de volant dans la force FFB. |
+| `deviceLightingMode` | string | Device lighting configuration ('off' by default; 'default' enables sending the RPM LEDs). |
+| `enableBrakeForceFeedback` | boolean | Enables brake force feedback in gamepad vibration mode (default true). |
+| `enableFFB` | boolean | true by default; when set to false the real requests to the FFB hardware are ignored (the computations continue). |
+| `enableFFBflood` | boolean | false by default; true = ignores the time checks and sends at ~2 kHz (debug only: saturates the drivers). |
+| `enableThrottleForceFeedback` | boolean | Enables throttle force feedback in gamepad vibration mode (default true). |
+| `enableVibration` | boolean | false by default; true in vibration mode (gamepad), the steering wheel FFB is then disabled (FFBHydrosExist = false). |
+| `ffbSpeedFast` | number | Speed (m/s) above which the FFB force reaches its normal coefficient (5 / 3.6). |
+| `forceAtDriver` | number | Force sent to the hardware driver in [-FFmax, FFmax]. |
+| `forceAtDriverNorm` | number | Force sent to the hardware driver, normalized. |
+| `forceAtWheelNorm` | number | Force measured at the wheel, normalized (force / FFmax). |
+| `hydros` | table[] | List of all hydros (beams then torsion bars) with their computed fields. |
+| `wheelFFBForceCoef` | number | FFB force coefficient at normal speed (default 100). |
+| `wheelFFBForceCoefCurrent` | number | Current coefficient, interpolated between low and normal speed according to the speed (ffbSpeedFast), 0 when the AI is driving. |
+| `wheelFFBForceCoefLowSpeed` | number | Force coefficient at parking speeds (initially = wheelFFBForceCoef; = forceCoef/10 if lowspeedCoef). |
+| `wheelFFBForceCompressionCoef` | number | Fraction of the limit from which the force is compressed (0..1, default 0.9). |
+| `wheelFFBForceLimit` | number | Stable FFB force limit (scale 0..FFmax = 10). |
+| `wheelPowerSteeringCoef` | number | Power steering coefficient (default 1) applied to the wheel displacement in the FFB force. |
 
-**Évènements UI (guihooks.trigger) :** `HydrosUpdate`
+**UI events (guihooks.trigger):** `HydrosUpdate`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getBeamRefLength`, `getBeamStress`, `getId`, `getRealdt`, `sendRPMLeds`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/hydros.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/hydros.lua`.*

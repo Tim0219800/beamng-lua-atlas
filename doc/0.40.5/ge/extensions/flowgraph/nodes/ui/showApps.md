@@ -1,22 +1,22 @@
 # `flowgraph_nodes_ui_showApps`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/showApps.lua` · VM : Game Engine (GE) · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/showApps.lua` · VM: Game Engine (GE) · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/showApps")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/showApps")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Show Apps » (catégorie once_instant, auteur BeamNG) : affiche ou masque les apps de l'UI (hook 'ShowApps'). Entrée « value » (bool).
+Flowgraph node "Show Apps" (category once_instant, author BeamNG): shows or hides the UI apps ('ShowApps' hook). Input "value" (bool).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_afterTrigger()` | Envoie 'ShowApps' avec la valeur mémorisée. | 31 |
-| `C:_executionStarted()` | Efface la demande en attente. | 23 |
-| `C:workOnce()` | Mémorise la valeur. | 27 |
+| `C:_afterTrigger()` | Sends 'ShowApps' with the stored value. | 31 |
+| `C:_executionStarted()` | Clears the pending request. | 23 |
+| `C:workOnce()` | Stores the value. | 27 |
 
-**Évènements UI (guihooks.trigger) :** `ShowApps`
+**UI events (guihooks.trigger):** `ShowApps`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/showApps.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/showApps.lua`.*

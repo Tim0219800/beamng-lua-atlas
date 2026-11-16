@@ -1,12 +1,12 @@
 # `editor_toolUtilities_sweep`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/sweep.lua` · VM : Game Engine (GE) · 246 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/sweep.lua` · VM: Game Engine (GE) · 246 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_sweep` : `extensions.load("editor_toolUtilities_sweep")`, puis la globale `editor_toolUtilities_sweep`
+**Access:** extension `editor_toolUtilities_sweep`: `extensions.load("editor_toolUtilities_sweep")`, then the global `editor_toolUtilities_sweep`
 
-Géométrie par balayage (loft) pour les outils de bâtiment de l'éditeur : une pièce est une section (polygone 2D en coordonnées (s, t)) et un chemin de repères (frames). Sert à tailler gouttières, tuyaux, coudes, conduits, colonnes montantes. Écrit des faces dans un accumulateur `p` via meshPart.face4 et meshPart.face3. Un repère est une origine et deux axes : le point (s, t) de la section tombe en o + a*s + b*t, donc la même section balayée le long de +X, de +Z ou d'un virage ressort bien orientée sans être réécrite.
+Sweep geometry (loft) for the editor's building tools: a piece is a section (2D polygon in (s, t) coordinates) and a path of frames. Used to cut gutters, pipes, elbows, ducts, risers. Writes faces into an accumulator `p` via meshPart.face4 and meshPart.face3. A frame is an origin and two axes: the section point (s, t) lands at o + a*s + b*t, so the same section swept along +X, +Z or a turn comes out correctly oriented without being rewritten.
 
-## Exemple
+## Example
 
 ```lua
 local sweep = require('editor/toolUtilities/sweep')
@@ -17,233 +17,233 @@ sweep.cap(p, sect, path[1], -1, 1.0)
 sweep.cap(p, sect, path[2], 1, 1.0)
 ```
 
-## Remarques
+## Notes
 
-- Un repère est une table { ox, oy, oz, ax, ay, az, bx, by, bz } ; un point de section est { s, t }.
-- Le sens d'enroulement de la section détermine la normale des faces : fournir la même section inversée (reversed) tourne les faces vers l'intérieur, utile pour un alésage.
-- cap utilise un éventail de triangles : la section doit être convexe, sinon il faut la buter contre la pièce suivante.
-- Le paramètre uv est l'échelle des coordonnées de texture (U suit la longueur d'arc de la section, V la distance parcourue).
+- A frame is a table { ox, oy, oz, ax, ay, az, bx, by, bz }; a section point is { s, t }.
+- The winding direction of the section determines the face normals: providing the same section reversed (reversed) turns the faces inward, useful for a bore.
+- cap uses a triangle fan: the section must be convex, otherwise it must be butted against the next piece.
+- The uv parameter is the texture coordinate scale (U follows the arc length of the section, V the distance traveled).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_sweep.P(x, y, z)` | Crée un point { x, y, z }. | 23 |
-| `editor_toolUtilities_sweep.alongX(x0, x1)` | Course le long de +X portant une section posée en (y, z). | 121 |
-| `editor_toolUtilities_sweep.alongY(y0, y1)` | Course le long de +Y portant une section posée en (x, z). | 126 |
-| `editor_toolUtilities_sweep.alongZ(z0, z1, cx, cy)` | Course montante le long de +Z portant une section posée en (x, y), éventuellement décalée de l'axe. | 131 |
-| `editor_toolUtilities_sweep.at(f, s, t)` | Point monde correspondant au point (s, t) de la section dans le repère f. | 30 |
-| `editor_toolUtilities_sweep.boxSection(hx, hy)` | Section carrée autour de l'origine, ou rectangulaire si on donne une seconde demi-taille. | 165 |
-| `editor_toolUtilities_sweep.boxX(p, x0, x1, y0, y1, z0, z1, uv)` | Boîte fermée (loft plus deux capuchons) étendue le long de X, section en (y, z). | 136 |
-| `editor_toolUtilities_sweep.boxZ(p, x0, x1, y0, y1, z0, z1, uv)` | La même boîte, dressée et balayée sur Z. Un loft pose U autour de la section et V le long du chemin : les deux posent la texture d'une face à angle droit l'une de l'autre. À utiliser pour un matériau qui a un SENS (comme la brique, dont les assises ressortent debout avec boxX). | 147 |
-| `editor_toolUtilities_sweep.cap(p, sect, f, sgn, uv)` | Ferme une extrémité d'un loft, orientée dans le sens du chemin (sgn 1) ou en sens inverse. Triangulation en éventail, donc section convexe uniquement. | 73 |
-| `editor_toolUtilities_sweep.circleSection(r, n)` | Section circulaire de rayon r à n points, autour de l'origine. | 155 |
-| `editor_toolUtilities_sweep.fr(ox, oy, oz, ax, ay, az, bx, by, bz)` | Un repère d'un chemin balayé : le (s, t) de la section tombe en o + a*s + b*t. | 26 |
-| `editor_toolUtilities_sweep.kinkPath(R, ang, segs)` | Un coude dans le plan vertical : entre le long de +Z à l'origine, ressort en penchant vers -Y (vers l'extérieur du mur). | 213 |
-| `editor_toolUtilities_sweep.loft(p, sect, path, uv)` | Balaye une section fermée le long d'un chemin de repères : un quad par arête de section et par pas. Les UV suivent la longueur d'arc de la section en travers et la distance parcourue en long, donc une pièce étirée par le placeur reste texturée en carrelage. | 47 |
-| `editor_toolUtilities_sweep.octPost(p, m, z0, z1, uv)` | Poteau octogonal dressé sur +Z entre deux hauteurs, fermé aux deux bouts (loft plus deux capuchons). | 178 |
-| `editor_toolUtilities_sweep.octSection(m)` | OCTOGONE régulier autour de l'origine ; `m` va du centre à chacun des huit plats. | 171 |
-| `editor_toolUtilities_sweep.rect8(hx, hy, cy)` | Rectangle écrit en HUIT points (et non quatre), pris aux mêmes angles qu'un cercle de même nombre, pour fermer une plaque plate d'une section sur l'autre. Centré en (0, cy). | 194 |
-| `editor_toolUtilities_sweep.reversed(sect)` | Renvoie la section parcourue en sens inverse (les faces regarderont à l'intérieur). | 186 |
-| `editor_toolUtilities_sweep.ring(p, inner, outer, f, sgn, uv)` | La bande plate entre deux sections de même nombre de points, à un repère : l'embouchure d'un tuyau ouvert. | 86 |
-| `editor_toolUtilities_sweep.taper(p, s0, s1, f0, f1, uv)` | Balaye ENTRE deux sections de même nombre de points, un repère chacune : un rétrécissement de l'embouchure vers le col. Même quad par arête que le loft droit, mais chaque bout a sa forme. | 102 |
-| `editor_toolUtilities_sweep.turnPath(R, sy, ang, segs)` | Quart de tour en plan : entre le long de +X à l'origine, sort vers `sy` sur Y. La section est portée sans se dérouler, donc une gouttière reste droite dans le virage. | 202 |
+| `editor_toolUtilities_sweep.P(x, y, z)` | Creates a point { x, y, z }. | 23 |
+| `editor_toolUtilities_sweep.alongX(x0, x1)` | Run along +X carrying a section laid out in (y, z). | 121 |
+| `editor_toolUtilities_sweep.alongY(y0, y1)` | Run along +Y carrying a section laid out in (x, z). | 126 |
+| `editor_toolUtilities_sweep.alongZ(z0, z1, cx, cy)` | Upward run along +Z carrying a section laid out in (x, y), optionally offset from the axis. | 131 |
+| `editor_toolUtilities_sweep.at(f, s, t)` | World point corresponding to the section point (s, t) in frame f. | 30 |
+| `editor_toolUtilities_sweep.boxSection(hx, hy)` | Square section around the origin, or rectangular if a second half-size is given. | 165 |
+| `editor_toolUtilities_sweep.boxX(p, x0, x1, y0, y1, z0, z1, uv)` | Closed box (loft plus two caps) extended along X, section in (y, z). | 136 |
+| `editor_toolUtilities_sweep.boxZ(p, x0, x1, y0, y1, z0, z1, uv)` | The same box, stood upright and swept on Z. A loft lays U around the section and V along the path: the two lay a face's texture at right angles to each other. Use it for a material that has a DIRECTION (such as brick, whose courses come out upright with boxX). | 147 |
+| `editor_toolUtilities_sweep.cap(p, sect, f, sgn, uv)` | Closes one end of a loft, oriented in the path direction (sgn 1) or the opposite direction. Fan triangulation, so convex section only. | 73 |
+| `editor_toolUtilities_sweep.circleSection(r, n)` | Circular section of radius r with n points, around the origin. | 155 |
+| `editor_toolUtilities_sweep.fr(ox, oy, oz, ax, ay, az, bx, by, bz)` | A frame of a swept path: the section's (s, t) lands at o + a*s + b*t. | 26 |
+| `editor_toolUtilities_sweep.kinkPath(R, ang, segs)` | An elbow in the vertical plane: enters along +Z at the origin, exits leaning toward -Y (toward the outside of the wall). | 213 |
+| `editor_toolUtilities_sweep.loft(p, sect, path, uv)` | Sweeps a closed section along a path of frames: one quad per section edge and per step. The UVs follow the section's arc length across and the distance traveled lengthwise, so a piece stretched by the placer stays tiled-textured. | 47 |
+| `editor_toolUtilities_sweep.octPost(p, m, z0, z1, uv)` | Octagonal post standing on +Z between two heights, closed at both ends (loft plus two caps). | 178 |
+| `editor_toolUtilities_sweep.octSection(m)` | Regular OCTAGON around the origin; `m` goes from the center to each of the eight flats. | 171 |
+| `editor_toolUtilities_sweep.rect8(hx, hy, cy)` | Rectangle written as EIGHT points (not four), taken at the same angles as a circle with the same count, to close a flat plate from one section to the other. Centered at (0, cy). | 194 |
+| `editor_toolUtilities_sweep.reversed(sect)` | Returns the section traversed in the opposite direction (the faces will look inward). | 186 |
+| `editor_toolUtilities_sweep.ring(p, inner, outer, f, sgn, uv)` | The flat strip between two sections with the same number of points, at one frame: the mouth of an open pipe. | 86 |
+| `editor_toolUtilities_sweep.taper(p, s0, s1, f0, f1, uv)` | Sweeps BETWEEN two sections with the same number of points, one frame each: a taper from the mouth to the throat. Same quad per edge as the straight loft, but each end has its own shape. | 102 |
+| `editor_toolUtilities_sweep.turnPath(R, sy, ang, segs)` | Quarter turn in plan: enters along +X at the origin, exits toward `sy` on Y. The section is carried without unrolling, so a gutter stays straight in the turn. | 202 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_sweep.P(x, y, z)`
 
-Crée un point { x, y, z }.
+Creates a point { x, y, z }.
 
 - `x` (*number*) : X.
 - `y` (*number*) : Y.
 - `z` (*number*) : Z.
-- **renvoie** : table Point { x, y, z }.
+- **returns**: table Point { x, y, z }.
 
 #### `editor_toolUtilities_sweep.alongX(x0, x1)`
 
-Course le long de +X portant une section posée en (y, z).
+Run along +X carrying a section laid out in (y, z).
 
-- `x0` (*number*) : X de départ.
-- `x1` (*number*) : X d'arrivée.
-- **renvoie** : table Deux repères.
+- `x0` (*number*) : Start X.
+- `x1` (*number*) : End X.
+- **returns**: table Two frames.
 
 #### `editor_toolUtilities_sweep.alongY(y0, y1)`
 
-Course le long de +Y portant une section posée en (x, z).
+Run along +Y carrying a section laid out in (x, z).
 
-- `y0` (*number*) : Y de départ.
-- `y1` (*number*) : Y d'arrivée.
-- **renvoie** : table Deux repères.
+- `y0` (*number*) : Start Y.
+- `y1` (*number*) : End Y.
+- **returns**: table Two frames.
 
 #### `editor_toolUtilities_sweep.alongZ(z0, z1, cx, cy)`
 
-Course montante le long de +Z portant une section posée en (x, y), éventuellement décalée de l'axe.
+Upward run along +Z carrying a section laid out in (x, y), optionally offset from the axis.
 
-- `z0` (*number*) : Z de départ.
-- `z1` (*number*) : Z d'arrivée.
-- `cx` (*number|nil*) : Décalage X (0 par défaut).
-- `cy` (*number|nil*) : Décalage Y (0 par défaut).
-- **renvoie** : table Deux repères.
+- `z0` (*number*) : Start Z.
+- `z1` (*number*) : End Z.
+- `cx` (*number|nil*) : X offset (0 by default).
+- `cy` (*number|nil*) : Y offset (0 by default).
+- **returns**: table Two frames.
 
 #### `editor_toolUtilities_sweep.at(f, s, t)`
 
-Point monde correspondant au point (s, t) de la section dans le repère f.
+World point corresponding to the section point (s, t) in frame f.
 
-- `f` (*table*) : Repère.
-- `s` (*number*) : Coordonnée s.
-- `t` (*number*) : Coordonnée t.
-- **renvoie** : table Point { x, y, z }.
+- `f` (*table*) : Frame.
+- `s` (*number*) : Coordinate s.
+- `t` (*number*) : Coordinate t.
+- **returns**: table Point { x, y, z }.
 
 #### `editor_toolUtilities_sweep.boxSection(hx, hy)`
 
-Section carrée autour de l'origine, ou rectangulaire si on donne une seconde demi-taille.
+Square section around the origin, or rectangular if a second half-size is given.
 
-- `hx` (*number*) : Demi-taille en s.
-- `hy` (*number|nil*) : Demi-taille en t (= hx par défaut).
-- **renvoie** : table 4 points.
+- `hx` (*number*) : Half-size in s.
+- `hy` (*number|nil*) : Half-size in t (= hx by default).
+- **returns**: table 4 points.
 
 #### `editor_toolUtilities_sweep.boxX(p, x0, x1, y0, y1, z0, z1, uv)`
 
-Boîte fermée (loft plus deux capuchons) étendue le long de X, section en (y, z).
+Closed box (loft plus two caps) extended along X, section in (y, z).
 
-- `p` (*table*) : Accumulateur de faces.
+- `p` (*table*) : Face accumulator.
 - `x0` (*number*) : X min.
 - `x1` (*number*) : X max.
 - `y0` (*number*) : Y min.
 - `y1` (*number*) : Y max.
-- `z0` (*number*) : Z min.
-- `z1` (*number*) : Z max.
-- `uv` (*number*) : Échelle UV.
+- `z0` (*number*) : Min Z.
+- `z1` (*number*) : Max Z.
+- `uv` (*number*) : UV scale.
 
 #### `editor_toolUtilities_sweep.boxZ(p, x0, x1, y0, y1, z0, z1, uv)`
 
-La même boîte, dressée et balayée sur Z. Un loft pose U autour de la section et V le long du chemin : les deux posent la texture d'une face à angle droit l'une de l'autre. À utiliser pour un matériau qui a un SENS (comme la brique, dont les assises ressortent debout avec boxX).
+The same box, stood upright and swept on Z. A loft lays U around the section and V along the path: the two lay a face's texture at right angles to each other. Use it for a material that has a DIRECTION (such as brick, whose courses come out upright with boxX).
 
-- `p` (*table*) : Accumulateur de faces.
+- `p` (*table*) : Face accumulator.
 - `x0` (*number*) : X min.
 - `x1` (*number*) : X max.
 - `y0` (*number*) : Y min.
 - `y1` (*number*) : Y max.
-- `z0` (*number*) : Z min.
-- `z1` (*number*) : Z max.
-- `uv` (*number*) : Échelle UV.
+- `z0` (*number*) : Min Z.
+- `z1` (*number*) : Max Z.
+- `uv` (*number*) : UV scale.
 
 #### `editor_toolUtilities_sweep.cap(p, sect, f, sgn, uv)`
 
-Ferme une extrémité d'un loft, orientée dans le sens du chemin (sgn 1) ou en sens inverse. Triangulation en éventail, donc section convexe uniquement.
+Closes one end of a loft, oriented in the path direction (sgn 1) or the opposite direction. Fan triangulation, so convex section only.
 
-- `p` (*table*) : Accumulateur de faces.
-- `sect` (*table*) : Section convexe.
-- `f` (*table*) : Repère de l'extrémité.
-- `sgn` (*integer*) : 1 ou -1 : sens de la normale.
-- `uv` (*number*) : Échelle UV.
+- `p` (*table*) : Face accumulator.
+- `sect` (*table*) : Convex section.
+- `f` (*table*) : Frame of the end.
+- `sgn` (*integer*) : 1 or -1: normal direction.
+- `uv` (*number*) : UV scale.
 
 #### `editor_toolUtilities_sweep.circleSection(r, n)`
 
-Section circulaire de rayon r à n points, autour de l'origine.
+Circular section of radius r with n points, around the origin.
 
-- `r` (*number*) : Rayon.
-- `n` (*integer*) : Nombre de points.
-- **renvoie** : table Liste de { s, t }.
+- `r` (*number*) : Radius.
+- `n` (*integer*) : Number of points.
+- **returns**: table List of { s, t }.
 
 #### `editor_toolUtilities_sweep.fr(ox, oy, oz, ax, ay, az, bx, by, bz)`
 
-Un repère d'un chemin balayé : le (s, t) de la section tombe en o + a*s + b*t.
+A frame of a swept path: the section's (s, t) lands at o + a*s + b*t.
 
-- `ox` (*number*) : Origine X.
-- `oy` (*number*) : Origine Y.
-- `oz` (*number*) : Origine Z.
-- `ax` (*number*) : Axe a, X.
-- `ay` (*number*) : Axe a, Y.
-- `az` (*number*) : Axe a, Z.
-- `bx` (*number*) : Axe b, X.
-- `by` (*number*) : Axe b, Y.
-- `bz` (*number*) : Axe b, Z.
-- **renvoie** : table Repère.
+- `ox` (*number*) : Origin X.
+- `oy` (*number*) : Origin Y.
+- `oz` (*number*) : Origin Z.
+- `ax` (*number*) : Axis a, X.
+- `ay` (*number*) : Axis a, Y.
+- `az` (*number*) : Axis a, Z.
+- `bx` (*number*) : Axis b, X.
+- `by` (*number*) : Axis b, Y.
+- `bz` (*number*) : Axis b, Z.
+- **returns**: table Frame.
 
 #### `editor_toolUtilities_sweep.kinkPath(R, ang, segs)`
 
-Un coude dans le plan vertical : entre le long de +Z à l'origine, ressort en penchant vers -Y (vers l'extérieur du mur).
+An elbow in the vertical plane: enters along +Z at the origin, exits leaning toward -Y (toward the outside of the wall).
 
-- `R` (*number*) : Rayon du coude.
-- `ang` (*number*) : Angle total en radians.
-- `segs` (*integer*) : Nombre de segments.
-- **renvoie** : table segs + 1 repères.
+- `R` (*number*) : Elbow radius.
+- `ang` (*number*) : Total angle in radians.
+- `segs` (*integer*) : Number of segments.
+- **returns**: table segs + 1 frames.
 
 #### `editor_toolUtilities_sweep.loft(p, sect, path, uv)`
 
-Balaye une section fermée le long d'un chemin de repères : un quad par arête de section et par pas. Les UV suivent la longueur d'arc de la section en travers et la distance parcourue en long, donc une pièce étirée par le placeur reste texturée en carrelage.
+Sweeps a closed section along a path of frames: one quad per section edge and per step. The UVs follow the section's arc length across and the distance traveled lengthwise, so a piece stretched by the placer stays tiled-textured.
 
-- `p` (*table*) : Accumulateur de faces (meshPart).
-- `sect` (*table*) : Section fermée, liste de { s, t }.
-- `path` (*table*) : Liste de repères.
-- `uv` (*number*) : Échelle UV.
+- `p` (*table*) : Face accumulator (meshPart).
+- `sect` (*table*) : Closed section, list of { s, t }.
+- `path` (*table*) : List of frames.
+- `uv` (*number*) : UV scale.
 
 #### `editor_toolUtilities_sweep.octPost(p, m, z0, z1, uv)`
 
-Poteau octogonal dressé sur +Z entre deux hauteurs, fermé aux deux bouts (loft plus deux capuchons).
+Octagonal post standing on +Z between two heights, closed at both ends (loft plus two caps).
 
-- `p` (*table*) : Accumulateur de faces.
-- `m` (*number*) : Distance du centre à un plat.
-- `z0` (*number*) : Hauteur de départ.
-- `z1` (*number*) : Hauteur d'arrivée.
-- `uv` (*number*) : Échelle UV.
+- `p` (*table*) : Face accumulator.
+- `m` (*number*) : Distance from the center to a flat.
+- `z0` (*number*) : Start height.
+- `z1` (*number*) : End height.
+- `uv` (*number*) : UV scale.
 
 #### `editor_toolUtilities_sweep.octSection(m)`
 
-OCTOGONE régulier autour de l'origine ; `m` va du centre à chacun des huit plats.
+Regular OCTAGON around the origin; `m` goes from the center to each of the eight flats.
 
-- `m` (*number*) : Distance du centre à un plat.
-- **renvoie** : table 8 points.
+- `m` (*number*) : Distance from the center to a flat.
+- **returns**: table 8 points.
 
 #### `editor_toolUtilities_sweep.rect8(hx, hy, cy)`
 
-Rectangle écrit en HUIT points (et non quatre), pris aux mêmes angles qu'un cercle de même nombre, pour fermer une plaque plate d'une section sur l'autre. Centré en (0, cy).
+Rectangle written as EIGHT points (not four), taken at the same angles as a circle with the same count, to close a flat plate from one section to the other. Centered at (0, cy).
 
-- `hx` (*number*) : Demi-largeur.
-- `hy` (*number*) : Demi-hauteur.
-- `cy` (*number|nil*) : Décalage du centre en t (0 par défaut).
-- **renvoie** : table 8 points.
+- `hx` (*number*) : Half-width.
+- `hy` (*number*) : Half-height.
+- `cy` (*number|nil*) : Center offset in t (0 by default).
+- **returns**: table 8 points.
 
 #### `editor_toolUtilities_sweep.reversed(sect)`
 
-Renvoie la section parcourue en sens inverse (les faces regarderont à l'intérieur).
+Returns the section traversed in the opposite direction (the faces will look inward).
 
 - `sect` (*table*) : Section.
-- **renvoie** : table Nouvelle section inversée.
+- **returns**: table New reversed section.
 
 #### `editor_toolUtilities_sweep.ring(p, inner, outer, f, sgn, uv)`
 
-La bande plate entre deux sections de même nombre de points, à un repère : l'embouchure d'un tuyau ouvert.
+The flat strip between two sections with the same number of points, at one frame: the mouth of an open pipe.
 
-- `p` (*table*) : Accumulateur de faces.
-- `inner` (*table*) : Section intérieure.
-- `outer` (*table*) : Section extérieure.
-- `f` (*table*) : Repère.
-- `sgn` (*integer*) : Sens de la normale (1 ou -1).
-- `uv` (*number*) : Échelle UV.
+- `p` (*table*) : Face accumulator.
+- `inner` (*table*) : Inner section.
+- `outer` (*table*) : Outer section.
+- `f` (*table*) : Frame.
+- `sgn` (*integer*) : Normal direction (1 or -1).
+- `uv` (*number*) : UV scale.
 
 #### `editor_toolUtilities_sweep.taper(p, s0, s1, f0, f1, uv)`
 
-Balaye ENTRE deux sections de même nombre de points, un repère chacune : un rétrécissement de l'embouchure vers le col. Même quad par arête que le loft droit, mais chaque bout a sa forme.
+Sweeps BETWEEN two sections with the same number of points, one frame each: a taper from the mouth to the throat. Same quad per edge as the straight loft, but each end has its own shape.
 
-- `p` (*table*) : Accumulateur de faces.
-- `s0` (*table*) : Section de départ.
-- `s1` (*table*) : Section d'arrivée (même nombre de points).
-- `f0` (*table*) : Repère de départ.
-- `f1` (*table*) : Repère d'arrivée.
-- `uv` (*number*) : Échelle UV.
+- `p` (*table*) : Face accumulator.
+- `s0` (*table*) : Start section.
+- `s1` (*table*) : End section (same number of points).
+- `f0` (*table*) : Start frame.
+- `f1` (*table*) : End frame.
+- `uv` (*number*) : UV scale.
 
 #### `editor_toolUtilities_sweep.turnPath(R, sy, ang, segs)`
 
-Quart de tour en plan : entre le long de +X à l'origine, sort vers `sy` sur Y. La section est portée sans se dérouler, donc une gouttière reste droite dans le virage.
+Quarter turn in plan: enters along +X at the origin, exits toward `sy` on Y. The section is carried without unrolling, so a gutter stays straight in the turn.
 
-- `R` (*number*) : Rayon du virage.
-- `sy` (*number*) : Côté du virage sur Y (signe).
-- `ang` (*number*) : Angle total en radians.
-- `segs` (*integer*) : Nombre de segments.
-- **renvoie** : table segs + 1 repères.
+- `R` (*number*) : Turn radius.
+- `sy` (*number*) : Side of the turn on Y (sign).
+- `ang` (*number*) : Total angle in radians.
+- `segs` (*integer*) : Number of segments.
+- **returns**: table segs + 1 frames.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/sweep.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/sweep.lua`.*

@@ -1,0 +1,230 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/audioManager.lua",
+  "module": "Gestionnaire de la file audio du copilote de rallye. Il met en file des 'audioObj' (clips de notes, notes système, pauses) et les joue un par un via Engine.Audio.intercomPlayPacenote, en respectant la durée de chaque clip plus un espacement configurable (entre virages, phrases, mots de liaison et notes). Les espacements viennent de l'entrée du pack vocal actif (voicepack) et sont bornés par gameplay_rally_audioTiming. Le module renvoie un constructeur : require(...)(rallyManager). onUpdate doit être appelé à chaque frame.",
+  "usage": "local am = require('/lua/ge/extensions/gameplay/rally/audioManager')(rallyManager)\nam:enqueuePacenoteAudio(pacenote)\n-- chaque frame :\nam:onUpdate(dtReal, dtSim, dtRaw)",
+  "notes": [
+    "Les durées audioLen et timeouts sont en secondes ; les écarts (gap) sont en millisecondes et peuvent être négatifs (chevauchement).",
+    "Un clip a une durée effective minimale de 0,01 s.",
+    "Un audioObj peut porter audioCandidates : un candidat est alors tiré au hasard (math.random) au moment de la mise en file.",
+    "Un canal audio est arrêté de force après audioLen + 0,25 s (audioStopGraceSecs) s'il n'est pas terminé.",
+    "Une pause (audioType='pause') ne joue aucun son, elle bloque simplement la file pendant audioLen secondes.",
+    "enqueueSystemPacenote : le test d'erreur 'else' lit pacenote.name alors que pacenote est nil : plantage si on lui passe nil.",
+    "C:_loadPacenoteMetadata est vide ; pacenoteMetadataOfflineStructured et pacenoteMetadataOnlineStructuredAndFreeform restent nil."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Gestionnaire audio renvoyé par le constructeur du module. Attributs : rallyManager, queue (dequeue), currAudioObj, activeAudioChannels, cornerGapMs, phraseGapMs, linkWordGapMs, pacenoteGapMs, enableSpeedScaling, codriverTimingOffsetSeconds.",
+      "functions": {
+        "init": {
+          "desc": "Initialise l'état (file vide, espacements à 0) puis charge les réglages de temps du pack vocal actif du carnet de notes du rallyManager.",
+          "params": {"rallyManager": {"type": "table", "desc": "Gestionnaire de rallye ; son champ notebook (méthode resolveActiveVoicepack) fournit le pack vocal."}},
+          "returns": [],
+          "internal": true
+        },
+        "_loadPacenoteMetadata": {
+          "desc": "Fonction vide (ne fait rien).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "_loadVoicepackTimingDefaults": {
+          "desc": "Résout le pack vocal actif du carnet (notebook:resolveActiveVoicepack) et applique ses réglages via setVoicepackTiming.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "setVoicepackTiming": {
+          "desc": "Applique les réglages d'un pack vocal : cornerGapMs, phraseGapMs, linkWordGapMs (par défaut = phraseGapMs), pacenoteGapMs, enableSpeedScaling (vrai sauf si égal à false) et codriverTimingOffsetSeconds. Sans entrée, tout est à 0 et la mise à l'échelle par la vitesse est active.",
+          "params": {"voicepackEntry": {"type": "table|nil", "desc": "Entrée de pack vocal."}},
+          "returns": [],
+          "internal": false
+        },
+        "getCornerGapMs": {
+          "desc": "Écart (ms) entre deux clips de virage consécutifs.",
+          "params": {},
+          "returns": [{"type": "integer", "desc": "Écart en ms."}],
+          "internal": false
+        },
+        "setCornerGapMs": {
+          "desc": "Règle l'écart entre virages (borné par audioTiming.clampCornerGapMs).",
+          "params": {"ms": {"type": "number", "desc": "Écart en ms."}},
+          "returns": [],
+          "internal": false
+        },
+        "getPhraseGapMs": {
+          "desc": "Écart (ms) entre deux phrases (clips) d'une même note.",
+          "params": {},
+          "returns": [{"type": "integer", "desc": "Écart en ms."}],
+          "internal": false
+        },
+        "setPhraseGapMs": {
+          "desc": "Règle l'écart entre phrases (borné).",
+          "params": {"ms": {"type": "number", "desc": "Écart en ms."}},
+          "returns": [],
+          "internal": false
+        },
+        "getLinkWordGapMs": {
+          "desc": "Écart (ms) appliqué après un mot de liaison (clip de catégorie 'linkword').",
+          "params": {},
+          "returns": [{"type": "integer", "desc": "Écart en ms."}],
+          "internal": false
+        },
+        "setLinkWordGapMs": {
+          "desc": "Règle l'écart après mot de liaison (borné).",
+          "params": {"ms": {"type": "number", "desc": "Écart en ms."}},
+          "returns": [],
+          "internal": false
+        },
+        "getPacenoteGapMs": {
+          "desc": "Écart (ms) entre la fin d'une note et la suivante.",
+          "params": {},
+          "returns": [{"type": "integer", "desc": "Écart en ms."}],
+          "internal": false
+        },
+        "setPacenoteGapMs": {
+          "desc": "Règle l'écart entre notes (borné).",
+          "params": {"ms": {"type": "number", "desc": "Écart en ms."}},
+          "returns": [],
+          "internal": false
+        },
+        "isSpeedScalingEnabled": {
+          "desc": "Indique si le délai du copilote dépend de la vitesse (true sauf si le pack vocal l'a désactivé).",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "État de la mise à l'échelle."}],
+          "internal": false
+        },
+        "getCodriverTimingOffsetSeconds": {
+          "desc": "Décalage de timing du copilote propre au pack vocal, en secondes.",
+          "params": {},
+          "returns": [{"type": "number", "desc": "Décalage (0 si invalide)."}],
+          "internal": false
+        },
+        "_getAudioObjGapAfterMs": {
+          "desc": "Écart à appliquer après un clip : linkWordGap pour la catégorie 'linkword' ; si structuredTimingAfter=='clip', cornerGap entre deux clips 'corner' consécutifs sinon phraseGap ; si 'pacenote', pacenoteGap ; sinon 0.",
+          "params": {"audioObj": {"type": "table|nil", "desc": "Clip (category, nextCategory, structuredTimingAfter)."}},
+          "returns": [{"type": "integer", "desc": "Écart en ms."}],
+          "internal": true
+        },
+        "_audioObjEffectiveLen": {
+          "desc": "Source unique de la durée de lecture d'un clip, écart de fin inclus : max(audioLen + gap/1000, 0.01).",
+          "params": {"audioObj": {"type": "table|nil", "desc": "Clip."}},
+          "returns": [{"type": "number", "desc": "Durée effective en secondes."}],
+          "internal": true
+        },
+        "pacenoteEffectiveAudioLen": {
+          "desc": "Durée parlée totale d'une note : somme des durées effectives de ses clips moins l'écart de fin de note (c'est de l'espacement vers la note suivante, pas la fin de la note).",
+          "params": {"pacenote": {"type": "table|nil", "desc": "Note avec la méthode audioObjs()."}},
+          "returns": [{"type": "number", "desc": "Durée en secondes (0 si pas de clips)."}],
+          "internal": false
+        },
+        "resetQueue": {
+          "desc": "Vide la file, arrête tous les canaux audio en cours et oublie le clip courant.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "_trackAudioChannel": {
+          "desc": "Mémorise un canal audio actif et son heure d'expiration (rallyUtil.getTime) pour l'arrêt automatique ; ignore un identifiant non numérique.",
+          "params": {
+            "channelId": {"type": "number", "desc": "Identifiant de canal renvoyé par intercomPlayPacenote."},
+            "expiresAt": {"type": "number|nil", "desc": "Heure d'expiration, nil = pas d'expiration."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "_stopExpiredAudioChannels": {
+          "desc": "Arrête (Engine.Audio.intercomStopPacenote) les canaux dont l'heure d'expiration est dépassée et recalcule la prochaine expiration.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "_stopAudio": {
+          "desc": "Arrête immédiatement tous les canaux audio actifs.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "handleDamage": {
+          "desc": "Si une note sans drapeau 'damage' est en cours de lecture sur un canal actif, la coupe, vide la file et oublie le clip : la note interrompue ne sera pas rejouée.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "enqueuePauseSecs": {
+          "desc": "Ajoute une pause silencieuse à la file (utilisé aux lignes de départ et d'arrivée).",
+          "params": {
+            "secs": {"type": "number", "desc": "Durée en secondes."},
+            "addToFront": {"type": "boolean|nil", "desc": "true pour placer en tête de file."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "enqueueAudioObjs": {
+          "desc": "Met en file une liste d'audioObj.",
+          "params": {
+            "audioObjs": {"type": "table[]|nil", "desc": "Liste de clips."},
+            "addToFront": {"type": "boolean|nil", "desc": "true pour insérer en tête."}
+          },
+          "returns": [{"type": "integer", "desc": "Nombre de clips traités (0 si nil)."}],
+          "internal": false
+        },
+        "enqueuePacenoteAudio": {
+          "desc": "Met en file tous les clips d'une note (pacenote:audioObjs()). Journalise une erreur si aucun clip.",
+          "params": {
+            "pacenote": {"type": "table", "desc": "Note avec la méthode audioObjs()."},
+            "addToFront": {"type": "boolean|nil", "desc": "true pour insérer en tête."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "enqueueSystemPacenote": {
+          "desc": "Met en file une note système (fichier audio audioFname). Si le fichier est absent, affiche un message d'erreur à l'écran et ne fait rien. La durée par défaut est 1,0 s.",
+          "params": {
+            "pacenote": {"type": "table", "desc": "Note système (name, text, audioFname)."},
+            "addToFront": {"type": "boolean|nil", "desc": "true pour insérer en tête."},
+            "audioLen": {"type": "number|nil", "desc": "Durée du clip en secondes (1.0 par défaut)."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "_enqueueAudioObj": {
+          "desc": "Ajoute un clip à la file (tête ou queue). Si le clip a des audioCandidates, en tire un au hasard et copie ses fname/audioLen.",
+          "params": {
+            "audioObj": {"type": "table", "desc": "Clip."},
+            "addToFront": {"type": "boolean|nil", "desc": "true = push_left, sinon push_right."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "isPlaying": {
+          "desc": "Vrai tant que le clip (ou la pause) courant n'a pas atteint son timeout.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true si une lecture est en cours."}],
+          "internal": false
+        },
+        "getQueueInfo": {
+          "desc": "Renvoie une table réutilisée {queueSize, paused} ; paused vaut true quand rien n'est en cours de lecture. La table est partagée entre appels : ne pas la conserver.",
+          "params": {},
+          "returns": [{"type": "table", "desc": "{queueSize = integer, paused = boolean}."}],
+          "internal": false
+        },
+        "playNextInQueue": {
+          "desc": "Si rien ne joue, retire le prochain clip de la file : pour une note, lance Engine.Audio.intercomPlayPacenote (fichier pacenoteFname) et calcule le timeout ; pour une pause, calcule seulement le timeout. Ignore les notes sans nom de fichier.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "onUpdate": {
+          "desc": "Appelé à chaque frame : arrête les canaux expirés puis lance le clip suivant si possible.",
+          "params": {
+            "dtReal": {"type": "number", "desc": "Delta de temps réel (s)."},
+            "dtSim": {"type": "number", "desc": "Delta de temps de simulation (s)."},
+            "dtRaw": {"type": "number", "desc": "Delta de temps brut (s)."}
+          },
+          "returns": [],
+          "internal": true
+        }
+      }
+    }
+  }
+}

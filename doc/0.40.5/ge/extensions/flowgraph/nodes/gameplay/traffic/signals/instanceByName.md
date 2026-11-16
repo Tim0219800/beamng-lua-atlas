@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gameplay_traffic_signals_instanceByName`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceByName.lua` · VM : Game Engine (GE) · 50 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceByName.lua` · VM: Game Engine (GE) · 50 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/instanceByName")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/instanceByName")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Signal by Name » (once_instant). Cherche une instance de feu par nom dans signalsData.instances. Sorties : exists (caché), instanceData.
+Flowgraph node "Signal by Name" (once_instant). Looks up a traffic light instance by name in signalsData.instances. Outputs: exists (hidden), instanceData.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelle onNodeReset(). | 31 |
-| `C:init()` | Appelle onNodeReset(). | 27 |
-| `C:onNodeReset()` | Vide la sortie instanceData. | 23 |
-| `C:work(args)` | Parcourt signalsData.instances et publie l'instance de même nom. | 35 |
+| `C:_executionStopped()` | Calls onNodeReset(). | 31 |
+| `C:init()` | Calls onNodeReset(). | 27 |
+| `C:onNodeReset()` | Clears the instanceData output. | 23 |
+| `C:work(args)` | Iterates over signalsData.instances and publishes the instance with the same name. | 35 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceByName.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceByName.lua`.*

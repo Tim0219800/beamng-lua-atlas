@@ -1,24 +1,24 @@
 # `flowgraph_nodes_debug_multiFlow`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/debug/multiFlow.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/debug/multiFlow.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/debug/multiFlow")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/debug/multiFlow")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Multi Flow » (type simple, catégorie logic), nœud de test avec quatre entrées flow a, b, c, d. Affiche dans le nœud une case par entrée (vert, jaune, rouge, magenta) cochée si l'entrée a du flux ; si data.logOnWork est vrai, imprime leurs valeurs à chaque exécution.
+Flowgraph node "Multi Flow" (simple type, category logic), a test node with four flow inputs a, b, c, d. Displays in the node one box per input (green, yellow, red, magenta), checked if the input has flow; if data.logOnWork is true, prints their values on each execution.
 
-## Remarques
+## Notes
 
-- C.todo du jeu : « Maybe merge this with displayFlow node ».
+- Game C.todo: "Maybe merge this with displayFlow node".
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Éditeur : dessine quatre cases cochées selon l'état des pins. | 37 |
-| `C:init()` | Met data.logOnWork à faux. | 24 |
-| `C:work()` | Si data.logOnWork, imprime l'état des quatre entrées. | 28 |
+| `C:drawMiddle(builder, style)` | Editor: draws four checked boxes according to the pin state. | 37 |
+| `C:init()` | Sets data.logOnWork to false. | 24 |
+| `C:work()` | If data.logOnWork, prints the state of the four inputs. | 28 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/debug/multiFlow.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/debug/multiFlow.lua`.*

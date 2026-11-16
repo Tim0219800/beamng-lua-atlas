@@ -1,16 +1,21 @@
 {
   "path": "lua/ge/extensions/core/settings/multiplayer.lua",
-  "module": "Fournit les « option helpers » des réglages multijoueur. Chaque helper a une fonction set(value) qui répercute le réglage sur l'extension multiplayer_* correspondante si elle est chargée. Utilisé par core_settings_settings pour relier les options mp* à leurs extensions.",
+  "module": "Provides the \"option helpers\" of the multiplayer settings. Each helper has a set(value) function that forwards the setting to the matching multiplayer_* extension if it is loaded. Used by core_settings_settings to link the mp* options to their extensions.",
   "notes": [
-    "Les fonctions get sont commentées dans le code : seuls des set existent.",
-    "Chaque set vérifie que l'extension cible (multiplayer_nametags, multiplayer_vehicleSync, multiplayer_multiplayer, multiplayer_sessionManager) existe avant d'écrire."
+    "The get functions are commented out in the code: only set functions exist.",
+    "Each set checks that the target extension (multiplayer_nametags, multiplayer_vehicleSync, multiplayer_multiplayer, multiplayer_sessionManager) exists before writing."
   ],
   "fields": {},
   "functions": {
     "buildOptionHelpers": {
-      "desc": "Construit et renvoie la table des helpers. Clés : mpNametagsEnabled (multiplayer_nametags.nametagsEnabled), mpNametagDistance (multiplayer_nametags.nametagDistance), mpEnableSwitchingToPlayerVehicles (multiplayer_vehicleSync.enableSwitchingToPlayerVehicles(value)), mpDebugMode (multiplayer_multiplayer.debugMode), mpUseCustomServiceURL (multiplayer_sessionManager.useCustomServiceURL), mpCustomServiceURL (multiplayer_sessionManager.customServiceURL).",
+      "desc": "Builds and returns the helpers table. Keys: mpNametagsEnabled (multiplayer_nametags.nametagsEnabled), mpNametagDistance (multiplayer_nametags.nametagDistance), mpEnableSwitchingToPlayerVehicles (multiplayer_vehicleSync.enableSwitchingToPlayerVehicles(value)), mpDebugMode (multiplayer_multiplayer.debugMode), mpUseCustomServiceURL (multiplayer_sessionManager.useCustomServiceURL), mpCustomServiceURL (multiplayer_sessionManager.customServiceURL).",
       "params": {},
-      "returns": [{"type": "table<string, {set: fun(value: any)}>", "desc": "Table nom d'option -> {set = function}."}],
+      "returns": [
+        {
+          "type": "table<string, {set: fun(value: any)}>",
+          "desc": "Table option name -> {set = function}."
+        }
+      ],
       "internal": false
     }
   }

@@ -1,34 +1,53 @@
 {
   "path": "lua/ge/extensions/editor/api/assets.lua",
-  "module": "API de l'éditeur pour le glisser-déposer d'assets (chemins de fichiers sous forme de chaînes) entre fenêtres ImGui. À l'initialisation, ajoute à l'instance de l'éditeur : editor.dragDropAsset (état interne), editor.dragDropSource et editor.dragDropTarget. Une source et une cible se correspondent si elles utilisent le même dragDropId ; la donnée est transportée dans un tampon de 2048 caractères.",
-  "usage": "-- source\neditor.dragDropSource(\"MonAsset\", \"/art/shapes/x.dae\", function(str) end)\n-- cible\neditor.dragDropTarget(\"MonAsset\")",
+  "module": "Editor API for drag-and-drop of assets (file paths as strings) between ImGui windows. On initialization, adds to the editor instance: editor.dragDropAsset (internal state), editor.dragDropSource and editor.dragDropTarget. A source and a target match if they use the same dragDropId; the data is carried in a 2048-character buffer.",
+  "usage": "-- source\neditor.dragDropSource(\"MyAsset\", \"/art/shapes/x.dae\", function(str) end)\n-- target\neditor.dragDropTarget(\"MyAsset\")",
   "notes": [
-    "dragDropTarget vérifie par assert que la taille de la charge utile vaut 2048 ; le callback enregistré par la source est appelé avec la chaîne déposée, puis l'état est réinitialisé.",
-    "Dans dragDropSource, le code utilise `im.ArrayChar` et `im.ArraySize` alors que la variable locale s'appelle `imgui` : `im` n'est pas défini dans ce fichier, ce qui provoquerait une erreur si une globale `im` n'existe pas (déduit du code).",
-    "Les deux fonctions sont installées sur l'objet editor, pas sur le module ; seule initialize est exportée par le module."
+    "dragDropTarget checks by assert that the payload size equals 2048; the callback registered by the source is called with the dropped string, then the state is reset.",
+    "In dragDropSource, the code uses `im.ArrayChar` and `im.ArraySize` while the local variable is called `imgui`: `im` is not defined in this file, which would cause an error if a global `im` does not exist (inferred from code).",
+    "Both functions are installed on the editor object, not on the module; only initialize is exported by the module."
   ],
   "functions": {
     "initialize": {
-      "desc": "Initialise le module : mémorise l'éditeur et y installe dragDropAsset, dragDropSource et dragDropTarget.",
-      "params": {"editorInstance": {"type": "table", "desc": "Instance de l'éditeur."}},
+      "desc": "Initializes the module: stores the editor and installs dragDropAsset, dragDropSource and dragDropTarget on it.",
+      "params": {
+        "editorInstance": {
+          "type": "table",
+          "desc": "Editor instance."
+        }
+      },
       "internal": true
     }
   },
   "classes": {
     "editor": {
-      "desc": "Méthodes ajoutées à l'instance de l'éditeur par ce module.",
+      "desc": "Methods added to the editor instance by this module.",
       "functions": {
         "dragDropSource": {
-          "desc": "À appeler pendant le dessin de l'élément ImGui qui sert de source : si un glissement commence, crée la charge utile (data, tampon de 2048 caractères), mémorise le callback et affiche le texte pendant le glissement.",
+          "desc": "To be called while drawing the ImGui element that serves as the source: if a drag begins, creates the payload (data, 2048-character buffer), stores the callback and displays the text during the drag.",
           "params": {
-            "dragDropId": {"type": "string", "desc": "Identifiant de type de charge utile ; les cibles n'acceptent que le même identifiant."},
-            "data": {"type": "string", "desc": "Chaîne transportée (ex. chemin d'asset)."},
-            "callback": {"type": "function|nil", "desc": "Appelée avec la chaîne quand le dépôt a réussi."}
+            "dragDropId": {
+              "type": "string",
+              "desc": "Payload type identifier; targets only accept the same identifier."
+            },
+            "data": {
+              "type": "string",
+              "desc": "String carried (e.g. asset path)."
+            },
+            "callback": {
+              "type": "function|nil",
+              "desc": "Called with the string when the drop succeeded."
+            }
           }
         },
         "dragDropTarget": {
-          "desc": "À appeler après l'élément ImGui qui sert de cible : accepte une charge utile du même dragDropId, appelle le callback de la source avec la chaîne reçue puis réinitialise l'état.",
-          "params": {"dragDropId": {"type": "string", "desc": "Identifiant de type de charge utile accepté."}}
+          "desc": "To be called after the ImGui element that serves as the target: accepts a payload with the same dragDropId, calls the source's callback with the received string then resets the state.",
+          "params": {
+            "dragDropId": {
+              "type": "string",
+              "desc": "Accepted payload type identifier."
+            }
+          }
         }
       }
     }

@@ -1,37 +1,37 @@
 # `core_cameraModes_steadycam`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/steadycam.lua` · VM : Game Engine (GE) · 242 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/steadycam.lua` · VM: Game Engine (GE) · 242 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/steadycam")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/steadycam")` (file under extensions/ but not a regular extension)
 
-Steadycam : caméra à pied à la première personne du groupe « world » (ordre 30, après free et smoothFree, masquée). Marche aux touches de déplacement, regard à la souris, course avec le modificateur rapide, saut avec la barre d'espace (action map « Steadycam »). Gravité et rayon vers le bas gardent l'opérateur au sol (marches jusqu'à 0.4 m franchies, plus haut = mur, chute plus basse = il tombe). Avec groundWalk = false, c'est un vol vertical libre. Balancement de marche via le filtre bobbing. Renvoie un constructeur.
+Steadycam: first-person on-foot camera of the "world" group (order 30, after free and smoothFree, hidden). Walks with the movement keys, looks with the mouse, runs with the fast modifier, jumps with the space bar ("Steadycam" action map). Gravity and a downward ray keep the operator on the ground (steps up to 0.4 m are climbed, higher = wall, lower drop = falls). With groundWalk = false, it is free vertical flight. Walking sway via the bobbing filter. Returns a constructor.
 
-## Remarques
+## Notes
 
-- Constantes : vitesse de marche 2.45 m/s (réglable 1 à 12), course x2, gravité 14 m/s2, saut 5.5 m/s (environ 1.1 m), rayon du corps 0.35 m, hauteur des yeux 1.7 m (réglage cameraSteadycamEyeHeight, 1.0 à 2.5), FOV réglage cameraSteadycamFov (60).
-- Sans sol sous la caméra (vide), elle flotte au lieu de tomber indéfiniment.
+- Constants: walking speed 2.45 m/s (adjustable 1 to 12), run x2, gravity 14 m/s2, jump 5.5 m/s (about 1.1 m), body radius 0.35 m, eye height 1.7 m (setting cameraSteadycamEyeHeight, 1.0 to 2.5), FOV setting cameraSteadycamFov (60).
+- With no ground under the camera (void), it floats instead of falling indefinitely.
 - data.res.collisionCompatible = false.
 
-## Classe `C`
+## Class `C`
 
-Mode steadycam. Champs : pos (vec3 yeux), yaw, pitch (radians), vel, vz, grounded, walkSpeed, groundWalk, eyeHeight, manualzoom, bobbing.
+Steadycam mode. Fields: pos (vec3 eyes), yaw, pitch (radians), vel, vz, grounded, walkSpeed, groundWalk, eyeHeight, manualzoom, bobbing.
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_steadycam")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_steadycam")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:deserialize(s)` | Restaure l'état (accepte l'ancienne clé bob). | 129 |
-| `C:init()` | Définit groupe, constantes de sensation et crée zoom et bobbing. | 30 |
-| `C:listParams()` | Réglages UI : height, walkSpeed, walkBob, standingBob, groundWalk, fov. | 104 |
-| `C:onCameraChanged(focused)` | Hook : pousse l'action map « Steadycam » au gain de focus et la retire à la perte. | 94 |
-| `C:onSettingsChanged()` | Hook : relit hauteur des yeux, FOV et réglages de bobbing. | 55 |
-| `C:reset()` | Annule vitesses, saut et état au sol, réinitialise bobbing et zoom. | 65 |
-| `C:serialize()` | État pour les vues flux vidéo. | 124 |
-| `C:setFOV(fov)` | Fixe le FOV configuré (10 à 140). | 87 |
-| `C:setParam(key, value)` | Modifie un réglage de listParams. | 115 |
-| `C:setPosition(p)` | Place la caméra (alimenté à l'entrée du groupe de caméras pour ne pas sauter) et annule la vitesse. | 80 |
-| `C:setRotation(q)` | Oriente le regard depuis un quaternion (la caméra regarde vers +Y). | 81 |
-| `C:update(data)` | Intègre regard, marche, gravité, saut et écrit data.res (pos, rot, fov, targetPos 10 m devant). | 139 |
+| `C:deserialize(s)` | Restores the state (accepts the old key bob). | 129 |
+| `C:init()` | Sets group, feel constants and creates zoom and bobbing. | 30 |
+| `C:listParams()` | UI settings: height, walkSpeed, walkBob, standingBob, groundWalk, fov. | 104 |
+| `C:onCameraChanged(focused)` | Hook: pushes the "Steadycam" action map on focus gain and removes it on loss. | 94 |
+| `C:onSettingsChanged()` | Hook: re-reads eye height, FOV and bobbing settings. | 55 |
+| `C:reset()` | Cancels velocities, jump and grounded state, resets bobbing and zoom. | 65 |
+| `C:serialize()` | State for video stream views. | 124 |
+| `C:setFOV(fov)` | Sets the configured FOV (10 to 140). | 87 |
+| `C:setParam(key, value)` | Changes a listParams setting. | 115 |
+| `C:setPosition(p)` | Places the camera (fed on entering the camera group so it does not jump) and cancels the velocity. | 80 |
+| `C:setRotation(q)` | Orients the look from a quaternion (the camera looks toward +Y). | 81 |
+| `C:update(data)` | Integrates look, walking, gravity, jump and writes data.res (pos, rot, fov, targetPos 10 m ahead). | 139 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/steadycam.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/steadycam.lua`.*

@@ -1,129 +1,129 @@
 # `controller_vehicleController_shiftLogic_cvtGearbox2`
 
-*Fichier : `lua/vehicle/controller/vehicleController/shiftLogic/cvtGearbox2.lua` · VM : Véhicule · 620 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/vehicleController/shiftLogic/cvtGearbox2.lua` · VM: Vehicle · 620 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `vehicleController/shiftLogic/cvtGearbox2` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `vehicleController/shiftLogic/cvtGearbox2` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Seconde logique de boîte CVT, pilotée par une carte (régime cible = f(vitesse roues, agressivité)) au lieu d'un simple interpolateur. Modes P R N D S. Le mode S active des rapports fixes simulés (« paliers » sport) avec délai entre changements. Chargé par vehicleController via jbeam shiftLogicName = "cvtGearbox2" (le device « gearbox » doit être de type cvtGearbox pour la sélection automatique, sinon nommer le module explicitement). Règle le rapport continu par gearbox:setGearRatio et un verrouillage de convertisseur par hystérésis.
+Second CVT gearbox logic, driven by a map (target speed = f(wheel speed, aggression)) instead of a simple interpolator. Modes P R N D S. S mode enables simulated fixed gears (sport "steps") with a delay between changes. Loaded by vehicleController via jbeam shiftLogicName = "cvtGearbox2" (the "gearbox" device must be of type cvtGearbox for automatic selection, otherwise name the module explicitly). Sets the continuous ratio through gearbox:setGearRatio and a converter lockup with hysteresis.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues dans init : cvtGearRatioSmoothingIn (6), cvtGearRatioSmoothingOut (4), cvtLockupSmoothing (5), automaticModes ("PRND"), defaultAutomaticMode ("N"), lockupMinWheelspeed (2 m/s), lockupMinRpmDiff (50), lockupMaxRpmDiff (400), cvtTargetRPMMap (données pour interpolatedMap : axes vitesse roues / agressivité -> tr/min), cvtSportGearShiftCooldown (1 s), cvtSportGearRatios (tableau de rapports décroissants).
-- Le régime cible vient de cvtTargetRPMMap:get(wheelspeed, drivingAggression) ; rapport visé = régime cible / vitesse de sortie de boîte, borné par minGearRatio/maxGearRatio, puis lissé. En R, rapport = maxGearRatio.
-- Bug repéré : init met toujours cvtHandling.useFixedGearRatios = false à la lecture de cvtSportGearRatios (valide ou non) ; l'option n'est réactivée que par applyGearboxMode en mode S, appelée en fin d'init. Si cvtTargetRPMMap est absent, loadData reçoit nil.
-- Le verrouillage (lockupClutchRatio) n'est actif que si un device « torqueConverter » existe et lockupMinWheelspeed > 0 ; il dépend de l'écart régime cible - régime moteur, de la vitesse et des gaz.
-- Pas de logique « whileShifting » : updateGearboxGFX reste inGear. En arcade shiftUp/Down affichent un avertissement ; shiftToGearIndex bascule en realistic.
-- Rapport virtuel : P=-2, R=-1, N=0, D=1, S=2. currentGearIndex = 0 en P/N.
-- Contrat commun shiftLogic : gearboxHandling, timer, timerConstants, inputValues, shiftPreventionData, shiftBehavior, smoothedValues injectés par vehicleController. M.running écrit sans déclaration.
+- jbeam keys read in init: cvtGearRatioSmoothingIn (6), cvtGearRatioSmoothingOut (4), cvtLockupSmoothing (5), automaticModes ("PRND"), defaultAutomaticMode ("N"), lockupMinWheelspeed (2 m/s), lockupMinRpmDiff (50), lockupMaxRpmDiff (400), cvtTargetRPMMap (data for interpolatedMap: wheel speed / aggression axes -> RPM), cvtSportGearShiftCooldown (1 s), cvtSportGearRatios (array of decreasing ratios).
+- The target speed comes from cvtTargetRPMMap:get(wheelspeed, drivingAggression); target ratio = target speed / gearbox output speed, bounded by minGearRatio/maxGearRatio, then smoothed. In R, ratio = maxGearRatio.
+- Bug spotted: init always sets cvtHandling.useFixedGearRatios = false when reading cvtSportGearRatios (valid or not); the option is only re-enabled by applyGearboxMode in S mode, called at the end of init. If cvtTargetRPMMap is missing, loadData receives nil.
+- The lockup (lockupClutchRatio) is only active if a "torqueConverter" device exists and lockupMinWheelspeed > 0; it depends on the gap between target speed and engine speed, on speed and on throttle.
+- No "whileShifting" logic: updateGearboxGFX stays inGear. In arcade shiftUp/Down display a warning; shiftToGearIndex switches to realistic.
+- Virtual gear: P=-2, R=-1, N=0, D=1, S=2. currentGearIndex = 0 in P/N.
+- Common shiftLogic contract: gearboxHandling, timer, timerConstants, inputValues, shiftPreventionData, shiftBehavior, smoothedValues injected by vehicleController. M.running written without declaration.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_vehicleController_shiftLogic_cvtGearbox2.areShiftLEDsInUse()` | Vrai hors arcade en mode manuel (jamais en pratique). *(interne)* | 104 |
-| `controller_vehicleController_shiftLogic_cvtGearbox2.gearboxBehaviorChanged(behavior)` | Sélectionne la logique arcade ou realistic. *(interne)* | 144 |
-| `controller_vehicleController_shiftLogic_cvtGearbox2.getGearName()` | Nom du mode : P, R, N, D, ou "S<n>" en sport (n = palier fixe courant). | 108 |
-| `controller_vehicleController_shiftLogic_cvtGearbox2.getGearPosition()` | Position du levier normalisée et index de mode. | 118 |
-| `controller_vehicleController_shiftLogic_cvtGearbox2.getState()` | État sauvegardable {grb_mde = mode}. | 588 |
-| `controller_vehicleController_shiftLogic_cvtGearbox2.init(jbeamData, sharedFunctionTable)` | Crée lisseurs, liste des modes, paramètres de lockup, carte de régime cible et rapports fixes du mode S ; applique le mode par défaut. Appelé par vehicleController (init et reset). *(interne)* | 430 |
-| `controller_vehicleController_shiftLogic_cvtGearbox2.sendTorqueData()` | Demande au moteur d'envoyer ses courbes de couple à l'UI. *(interne)* | 424 |
-| `controller_vehicleController_shiftLogic_cvtGearbox2.setState(data)` | Restaure le mode depuis data.grb_mde. | 594 |
-| `controller_vehicleController_shiftLogic_cvtGearbox2.shiftDown()` | Realistic : mode précédent. | 189 |
-| `controller_vehicleController_shiftLogic_cvtGearbox2.shiftToGearIndex(index)` | Realistic : mode correspondant à la position du levier ; inexistant -> message et N. | 201 |
-| `controller_vehicleController_shiftLogic_cvtGearbox2.shiftUp()` | Realistic : mode suivant (P->R->N->D->S). | 177 |
+| `controller_vehicleController_shiftLogic_cvtGearbox2.areShiftLEDsInUse()` | True outside arcade in manual mode (never in practice). *(internal)* | 104 |
+| `controller_vehicleController_shiftLogic_cvtGearbox2.gearboxBehaviorChanged(behavior)` | Selects the arcade or realistic logic. *(internal)* | 144 |
+| `controller_vehicleController_shiftLogic_cvtGearbox2.getGearName()` | Mode name: P, R, N, D, or "S<n>" in sport (n = current fixed step). | 108 |
+| `controller_vehicleController_shiftLogic_cvtGearbox2.getGearPosition()` | Normalized lever position and mode index. | 118 |
+| `controller_vehicleController_shiftLogic_cvtGearbox2.getState()` | Saveable state {grb_mde = mode}. | 588 |
+| `controller_vehicleController_shiftLogic_cvtGearbox2.init(jbeamData, sharedFunctionTable)` | Creates smoothers, mode list, lockup parameters, target speed map and S mode fixed ratios; applies the default mode. Called by vehicleController (init and reset). *(internal)* | 430 |
+| `controller_vehicleController_shiftLogic_cvtGearbox2.sendTorqueData()` | Asks the engine to send its torque curves to the UI. *(internal)* | 424 |
+| `controller_vehicleController_shiftLogic_cvtGearbox2.setState(data)` | Restores the mode from data.grb_mde. | 594 |
+| `controller_vehicleController_shiftLogic_cvtGearbox2.shiftDown()` | Realistic: previous mode. | 189 |
+| `controller_vehicleController_shiftLogic_cvtGearbox2.shiftToGearIndex(index)` | Realistic: mode matching the lever position; nonexistent -> message and N. | 201 |
+| `controller_vehicleController_shiftLogic_cvtGearbox2.shiftUp()` | Realistic: next mode (P->R->N->D->S). | 177 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_vehicleController_shiftLogic_cvtGearbox2.areShiftLEDsInUse()`
 
-Vrai hors arcade en mode manuel (jamais en pratique).
+True outside arcade in manual mode (never in practice).
 
-- **renvoie** : boolean LEDs utilisées ?
+- **returns**: boolean LEDs used?
 
 #### `controller_vehicleController_shiftLogic_cvtGearbox2.gearboxBehaviorChanged(behavior)`
 
-Sélectionne la logique arcade ou realistic.
+Selects the arcade or realistic logic.
 
-- `behavior` (*string*) : "arcade" ou "realistic".
+- `behavior` (*string*) : "arcade" or "realistic".
 
 #### `controller_vehicleController_shiftLogic_cvtGearbox2.getGearName()`
 
-Nom du mode : P, R, N, D, ou "S<n>" en sport (n = palier fixe courant).
+Mode name: P, R, N, D, or "S<n>" in sport (n = current fixed step).
 
-- **renvoie** : string Nom affiché.
+- **returns**: string Displayed name.
 
 #### `controller_vehicleController_shiftLogic_cvtGearbox2.getGearPosition()`
 
-Position du levier normalisée et index de mode.
+Normalized lever position and mode index.
 
-- **renvoie** : number (index-1)/(nombre de modes-1)
-- **renvoie** : integer Index de mode.
+- **returns**: number (index-1)/(number of modes-1)
+- **returns**: integer Mode index.
 
 #### `controller_vehicleController_shiftLogic_cvtGearbox2.getState()`
 
-État sauvegardable {grb_mde = mode}.
+Saveable state {grb_mde = mode}.
 
-- **renvoie** : table|nil État.
+- **returns**: table|nil State.
 
 #### `controller_vehicleController_shiftLogic_cvtGearbox2.init(jbeamData, sharedFunctionTable)`
 
-Crée lisseurs, liste des modes, paramètres de lockup, carte de régime cible et rapports fixes du mode S ; applique le mode par défaut. Appelé par vehicleController (init et reset).
+Creates smoothers, mode list, lockup parameters, target speed map and S mode fixed ratios; applies the default mode. Called by vehicleController (init and reset).
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 - `sharedFunctionTable` (*table*) : sharedFunctions.
 
 #### `controller_vehicleController_shiftLogic_cvtGearbox2.setState(data)`
 
-Restaure le mode depuis data.grb_mde.
+Restores the mode from data.grb_mde.
 
-- `data` (*table*) : Table produite par getState.
+- `data` (*table*) : Table produced by getState.
 
 #### `controller_vehicleController_shiftLogic_cvtGearbox2.shiftToGearIndex(index)`
 
-Realistic : mode correspondant à la position du levier ; inexistant -> message et N.
+Realistic: mode matching the lever position; nonexistent -> message and N.
 
-- `index` (*integer*) : Position du levier (-1 R, 0 N, 1 P, 2 D, 3 S).
+- `index` (*integer*) : Lever position (-1 R, 0 N, 1 P, 2 D, 3 S).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `brake` | number | Frein (0..1). |
-| `checkEngine` | boolean | Moteur désactivé. |
-| `clutchRatio` | number | Toujours 1. |
-| `currentGearIndex` | integer | Index virtuel (R -1, N/P 0, D 1, S 2). |
-| `energyStorages` | table<integer, string> | Réservoirs du moteur. |
-| `engineLoad` | number | Charge moteur. |
-| `engineThrottle` | number | Gaz appliqués au moteur. |
-| `engineTorque` | number | Couple de combustion. |
+| `brake` | number | Brake (0..1). |
+| `checkEngine` | boolean | Engine disabled. |
+| `clutchRatio` | number | Always 1. |
+| `currentGearIndex` | integer | Virtual index (R -1, N/P 0, D 1, S 2). |
+| `energyStorages` | table<integer, string> | Engine tanks. |
+| `engineLoad` | number | Engine load. |
+| `engineThrottle` | number | Throttle applied to the engine. |
+| `engineTorque` | number | Combustion torque. |
 | `engineTorqueData` | table |  |
-| `flywheelTorque` | number | Couple moteur. |
-| `gearboxHandling` | table|nil | Injecté par vehicleController. |
-| `gearboxTorque` | number | Couple de sortie de boîte. |
-| `idleRPM` | number | Ralenti. |
+| `flywheelTorque` | number | Engine torque. |
+| `gearboxHandling` | table|nil | Injected by vehicleController. |
+| `gearboxTorque` | number | Gearbox output torque. |
+| `idleRPM` | number | Idle. |
 | `ignition` | boolean | ignitionLevel > 1. |
-| `inputValues` | table|nil | Injecté. |
-| `isArcadeSwitched` | boolean | Gaz/frein permutés. |
-| `isEngineRunning` | number | 1 si le moteur tourne. |
-| `isManualModeActive` | boolean | Vrai en modes M (non disponibles en pratique). |
-| `isSportModeActive` | boolean | Vrai en mode S. |
-| `maxGearIndex` | integer | Plus grand index de la boîte. |
-| `maxRPM` | number | Régime max. |
-| `minGearIndex` | integer | Valeur absolue du plus petit index (init). |
-| `oilTemp` | number | Température d'huile. |
-| `rpm` | number | Régime moteur (tr/min). |
-| `shiftBehavior` | table|nil | Injecté. |
-| `shiftPreventionData` | table|nil | Injecté. |
-| `shiftingAggression` | number | Recopie de drivingAggression. |
-| `smoothedAvgAVInput` | number | Vitesse angulaire de sortie de boîte (rad/s). |
-| `smoothedValues` | table|nil | Injecté. |
-| `throttle` | number | Gaz (0..1), permutés avec le frein en marche arrière arcade. |
+| `inputValues` | table|nil | Injected. |
+| `isArcadeSwitched` | boolean | Throttle/brake swapped. |
+| `isEngineRunning` | number | 1 if the engine is running. |
+| `isManualModeActive` | boolean | True in M modes (not available in practice). |
+| `isSportModeActive` | boolean | True in S mode. |
+| `maxGearIndex` | integer | Largest gearbox index. |
+| `maxRPM` | number | Max RPM. |
+| `minGearIndex` | integer | Absolute value of the smallest index (init). |
+| `oilTemp` | number | Oil temperature. |
+| `rpm` | number | Engine speed (RPM). |
+| `shiftBehavior` | table|nil | Injected. |
+| `shiftPreventionData` | table|nil | Injected. |
+| `shiftingAggression` | number | Copy of drivingAggression. |
+| `smoothedAvgAVInput` | number | Gearbox output angular velocity (rad/s). |
+| `smoothedValues` | table|nil | Injected. |
+| `throttle` | number | Throttle (0..1), swapped with the brake in arcade reverse. |
 | `throttleInput` | number |  |
-| `timer` | table|nil | Injecté. |
-| `timerConstants` | table|nil | Injecté. |
+| `timer` | table|nil | Injected. |
+| `timerConstants` | table|nil | Injected. |
 | `torqueToMinRPM` | table |  |
-| `updateGearboxGFX` | function | nop puis inGear du mode actif. |
-| `waterTemp` | number | Température du liquide de refroidissement. |
+| `updateGearboxGFX` | function | nop then inGear of the active mode. |
+| `waterTemp` | number | Coolant temperature. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/vehicleController/shiftLogic/cvtGearbox2.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/vehicleController/shiftLogic/cvtGearbox2.lua`.*

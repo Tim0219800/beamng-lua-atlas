@@ -2,72 +2,72 @@
 -- tim19Atlas stub generated from lua/ge/extensions/scenario/scenariosLoader.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Charge et normalise les fichiers de scénario (.json dans levels/<niveau>/scenarios/), les listes pour l'UI et les démarre. processScenarioData complète la table lue du JSON avec des valeurs par défaut (véhicules, extensions, prefabs, aperçus, nombre de joueurs, lapConfig, listes d'actions autorisées/interdites, tentatives). start() décharge le niveau courant si besoin, charge les extensions de scénario (scenario_scenarios, scenario_waypoints, statistics_statistics, scenario_raceUI, scenario_raceGoals) et appelle scenario_scenarios.executeScenario, ou lance un flowgraph. Un moddeur l'utilise pour lister (getList) ou lancer (startByPath, load) un scénario.
---- Accès : extension `scenario_scenariosLoader` : `extensions.load("scenario_scenariosLoader")`, puis la globale `scenario_scenariosLoader`
+--- Loads and normalizes scenario files (.json in levels/<level>/scenarios/), lists them for the UI and starts them. processScenarioData completes the table read from the JSON with default values (vehicles, extensions, prefabs, previews, player count, lapConfig, allowed/forbidden action lists, attempts). start() unloads the current level if needed, loads the scenario extensions (scenario_scenarios, scenario_waypoints, statistics_statistics, scenario_raceUI, scenario_raceGoals) and calls scenario_scenarios.executeScenario, or launches a flowgraph. A modder uses it to list (getList) or start (startByPath, load) a scenario.
+--- Access: extension `scenario_scenariosLoader`: `extensions.load("scenario_scenariosLoader")`, then the global `scenario_scenariosLoader`
 ---@class scenario_scenariosLoader
 ---@field dependencies table<integer, string> {'core_levels'}
----@field prefabCache table Cache [cheminDuNiveau][dossier][nomMinuscule] = chemin du prefab, rempli par buildPrefabCache.
----@field processedScenarioCache table Table vide, jamais utilisée dans ce fichier.
----@field scenarioModules table<integer, string> Extensions chargées par start() : scenario_scenarios, scenario_waypoints, statistics_statistics, scenario_raceUI, scenario_raceGoals.
+---@field prefabCache table Cache [levelPath][folder][lowercaseName] = prefab path, filled by buildPrefabCache.
+---@field processedScenarioCache table Empty table, never used in this file.
+---@field scenarioModules table<integer, string> Extensions loaded by start(): scenario_scenarios, scenario_waypoints, statistics_statistics, scenario_raceUI, scenario_raceGoals.
 scenario_scenariosLoader = {}
 
---- Liste les niveaux contenant un sous-dossier de scénarios (cas des routes de bus) avec, pour chaque ligne de bus (*.buslines.json), une copie du premier scénario du niveau adaptée à la route (nom, aperçu, véhicule, point de départ, busdriver.routeID, variance, strictStop=true, traffic=false).
----Source : lua/ge/extensions/scenario/scenariosLoader.lua:552
----@param subdirectory string sous-dossier dans scenarios/ (ex. 'busdriver')
----@param levelList table<integer, string>|nil niveaux à parcourir (tous par défaut)
----@return table<integer, table>  niveaux {levelName, levelInfo, official, previews, scenarios}
+--- Lists the levels containing a scenario subfolder (bus route case) with, for each bus line (*.buslines.json), a copy of the level's first scenario adapted to the route (name, preview, vehicle, start point, busdriver.routeID, variance, strictStop=true, traffic=false).
+---Source: lua/ge/extensions/scenario/scenariosLoader.lua:552
+---@param subdirectory string subfolder in scenarios/ (e.g. 'busdriver')
+---@param levelList table<integer, string>|nil levels to walk through (all by default)
+---@return table<integer, table>  levels {levelName, levelInfo, official, previews, scenarios}
 function scenario_scenariosLoader.getLevels(subdirectory, levelList) end
 
---- Liste tous les scénarios disponibles : fichiers .json des niveaux, flowgraphs isScenario, et missions disponibles comme scénarios. Sert à l'UI et à techCore.
----Source : lua/ge/extensions/scenario/scenariosLoader.lua:326
----@param subdirectory string|nil sous-dossier de scenarios/ à restreindre
----@param includeAll boolean|nil inclure aussi les scénarios restreints à la campagne et toutes les missions
----@param skipMissions boolean|nil ne pas ajouter les missions
----@return table<integer, table>  scénarios
+--- Lists all available scenarios: level .json files, isScenario flowgraphs, and missions available as scenarios. Used by the UI and techCore.
+---Source: lua/ge/extensions/scenario/scenariosLoader.lua:326
+---@param subdirectory string|nil subfolder of scenarios/ to restrict to
+---@param includeAll boolean|nil also include campaign-restricted scenarios and all missions
+---@param skipMissions boolean|nil do not add the missions
+---@return table<integer, table>  scenarios
 function scenario_scenariosLoader.getList(subdirectory, includeAll, skipMissions) end
 
---- Transforme une mission (gameplay_missions) en scénario utilisable par l'UI (flowgraph loadMissionAsScenario.flow.json, variables level et missionId, previews, auteur, difficulté, infos de mod).
----Source : lua/ge/extensions/scenario/scenariosLoader.lua:283
+--- Turns a mission (gameplay_missions) into a scenario usable by the UI (flowgraph loadMissionAsScenario.flow.json, variables level and missionId, previews, author, difficulty, mod info).
+---Source: lua/ge/extensions/scenario/scenariosLoader.lua:283
 ---@param m table mission
----@return table  scénario normalisé
+---@return table  normalized scenario
 function scenario_scenariosLoader.getScenarioDataForMission(m) end
 
---- Cherche dans getList() les scénarios dont name == name et démarre chacun (pas de break).
----Source : lua/ge/extensions/scenario/scenariosLoader.lua:515
----@param name string nom du scénario
+--- Searches getList() for the scenarios whose name == name and starts each one (no break).
+---Source: lua/ge/extensions/scenario/scenariosLoader.lua:515
+---@param name string scenario name
 function scenario_scenariosLoader.load(name) end
 
---- Lit un fichier de scénario (JSON, tableau à 1 élément) et le passe à processScenarioData. Logue une erreur si le fichier est introuvable.
----Source : lua/ge/extensions/scenario/scenariosLoader.lua:261
----@param scenarioPath string chemin du fichier
----@param key any clé de scénario (facultatif)
----@return table|nil  scénario normalisé
+--- Reads a scenario file (JSON, 1-element array) and passes it to processScenarioData. Logs an error if the file is not found.
+---Source: lua/ge/extensions/scenario/scenariosLoader.lua:261
+---@param scenarioPath string file path
+---@param key any scenario key (optional)
+---@return table|nil  normalized scenario
 function scenario_scenariosLoader.loadScenario(scenarioPath, key) end
 
---- Hook (émis par main.lua pour chaque fichier modifié) : censé recharger le scénario si son fichier source change (inopérant, voir notes).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenariosLoader.lua:506
----@param filename string fichier modifié
----@param type string type de changement
+--- Hook (emitted by main.lua for each modified file): supposed to reload the scenario if its source file changes (inoperative, see notes).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenariosLoader.lua:506
+---@param filename string modified file
+---@param type string type of change
 function scenario_scenariosLoader.onFileChanged(filename, type) end
 
---- Complète et normalise une table de scénario (voir notes) : déduit levelName, scenarioName, directory, mission, previews, prefabs, métadonnées de mod, applique les valeurs par défaut et renvoie la même table.
----Source : lua/ge/extensions/scenario/scenariosLoader.lua:39
----@param scenarioKey any clé mémorisée dans scenarioData.scenarioKey (nil possible)
----@param scenarioData table scénario brut (modifié en place)
----@param scenarioFilename string|nil chemin du .json ; nil pour un scénario créé depuis une mission
----@return table  scénario normalisé
+--- Completes and normalizes a scenario table (see notes): deduces levelName, scenarioName, directory, mission, previews, prefabs, mod metadata, applies the default values and returns the same table.
+---Source: lua/ge/extensions/scenario/scenariosLoader.lua:39
+---@param scenarioKey any key stored in scenarioData.scenarioKey (nil possible)
+---@param scenarioData table raw scenario (modified in place)
+---@param scenarioFilename string|nil path of the .json; nil for a scenario created from a mission
+---@return table  normalized scenario
 function scenario_scenariosLoader.processScenarioData(scenarioKey, scenarioData, scenarioFilename) end
 
---- Appelée quand l'utilisateur choisit un scénario dans l'UI : arrête la campagne, décharge le niveau en cours si besoin, puis lance le scénario (classique ou flowgraph).
----Source : lua/ge/extensions/scenario/scenariosLoader.lua:426
----@param sc table scénario normalisé
----@return boolean|nil  true si le flowgraph est introuvable
+--- Called when the user chooses a scenario in the UI: stops the campaign, unloads the current level if needed, then starts the scenario (classic or flowgraph).
+---Source: lua/ge/extensions/scenario/scenariosLoader.lua:426
+---@param sc table normalized scenario
+---@return boolean|nil  true if the flowgraph is not found
 function scenario_scenariosLoader.start(sc) end
 
---- Charge puis démarre le scénario d'un fichier (ajoute .json si absent).
----Source : lua/ge/extensions/scenario/scenariosLoader.lua:470
----@param path string chemin du scénario
----@return boolean  false si le fichier n'existe pas, sinon true
+--- Loads then starts the scenario of a file (adds .json if absent).
+---Source: lua/ge/extensions/scenario/scenariosLoader.lua:470
+---@param path string scenario path
+---@return boolean  false if the file does not exist, otherwise true
 function scenario_scenariosLoader.startByPath(path) end
 

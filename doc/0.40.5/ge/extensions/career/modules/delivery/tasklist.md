@@ -1,69 +1,69 @@
 # `career_modules_delivery_tasklist`
 
-*Fichier : `lua/ge/extensions/career/modules/delivery/tasklist.lua` · VM : Game Engine (GE) · 305 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/delivery/tasklist.lua` · VM: Game Engine (GE) · 305 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_delivery_tasklist` : `extensions.load("career_modules_delivery_tasklist")`, puis la globale `career_modules_delivery_tasklist`
+**Access:** extension `career_modules_delivery_tasklist`: `extensions.load("career_modules_delivery_tasklist")`, then the global `career_modules_delivery_tasklist`
 
-Alimente la liste de tâches affichée à l'écran (tasklist) pendant la livraison en carrière. Il regroupe les cargaisons chargées par destination, les cargaisons à récupérer par lieu de ramassage, les tâches de remorque/véhicule, et un en-tête « livraisons actives ». Chaque élément est marqué à mettre à jour ou à effacer, puis envoyé à l'UI à chaque image via guihooks (SetTasklistTask, SetTasklistHeader, DiscardTasklistItem).
+Feeds the on-screen task list (tasklist) during career delivery. It groups the loaded cargos by destination, the cargos to pick up by pickup location, the trailer/vehicle tasks, and an "active deliveries" header. Each element is marked to update or to discard, then sent to the UI every frame via guihooks (SetTasklistTask, SetTasklistHeader, DiscardTasklistItem).
 
-## Remarques
+## Notes
 
-- Types d'éléments : parcels, pickup, header, et le type de l'offre de véhicule (trailer ou vehicle).
-- Les groupes 'parcels' sont regroupés par libellé de destination ; sans modificateur la clé est 'noMods', sinon elle inclut groupId et l'heure de chargement.
-- Pour les colis timed, le sous-texte affiche le temps restant avant retard, puis avant « très en retard », puis « late ».
-- offerIdToTasklistElementId n'est jamais vidé (seul cargoIdToTasklistElementId est réinitialisé à chaque sendCargoToTasklist).
-- À l'effacement, seuls les éléments parcels, pickup, header, trailer et vehicle envoient un message de suppression à l'UI.
+- Element types: parcels, pickup, header, and the vehicle offer type (trailer or vehicle).
+- The 'parcels' groups are grouped by destination label; without a modifier the key is 'noMods', otherwise it includes groupId and the loading time.
+- For timed parcels, the subtext shows the time left before delayed, then before "very late", then "late".
+- offerIdToTasklistElementId is never emptied (only cargoIdToTasklistElementId is reset on each sendCargoToTasklist).
+- On discard, only the parcels, pickup, header, trailer and vehicle elements send a removal message to the UI.
 
-**Dépendances (chargées avant) :** `core_vehicleBridge`
+**Dependencies (loaded first):** `core_vehicleBridge`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_delivery_tasklist.clearAll()` | Marque tous les éléments à effacer ; ils sont retirés à la prochaine mise à jour. | 150 |
-| `career_modules_delivery_tasklist.clearTasklistForOfferId(offerId)` | Marque à effacer l'élément lié à une offre de véhicule/remorque. | 143 |
-| `career_modules_delivery_tasklist.onCareerActivated()` | Hook appelé à l'activation de la carrière : mémorise les extensions de livraison. *(interne)* *(hook)* | 8 |
-| `career_modules_delivery_tasklist.onUpdate(dtReal, dtSim, dtRaw)` | Hook par image : appelle updateCargoTasklistElements. *(interne)* *(hook)* | 301 |
-| `career_modules_delivery_tasklist.sendCargoToTasklist()` | Reconstruit les éléments de tasklist à partir des conteneurs de cargaison des véhicules proches (asynchrone) : marque tous les anciens éléments à effacer, recrée les groupes parcels et pickup, les tâches de véhicules (dVehicleTasks.getVehicleTasks) et l'en-tête avec le nombre de tâches ou d'objets chargés. | 22 |
-| `career_modules_delivery_tasklist.updateCargoTasklistElements()` | Parcourt les éléments : envoie à l'UI les suppressions (DiscardTasklistItem / SetTasklistHeader nil) et les mises à jour (SetTasklistTask avec label, subtext, active, type='message'), puis supprime les éléments effacés. Les libellés dépendent de l'étape en cours des tâches de véhicule (coupleTrailer, enterVehicle, bringToDestination/confirmDropOff, putIntoParkingSpot). | 159 |
-| `career_modules_delivery_tasklist.updateTasklistForCargoId(cargoId)` | Marque à rafraîchir l'élément de tasklist qui contient cette cargaison (utile pour le compte à rebours des colis timed). | 129 |
-| `career_modules_delivery_tasklist.updateTasklistForOfferId(offerId)` | Marque à rafraîchir l'élément lié à une offre de véhicule/remorque. | 136 |
+| `career_modules_delivery_tasklist.clearAll()` | Marks all elements to discard; they are removed at the next update. | 150 |
+| `career_modules_delivery_tasklist.clearTasklistForOfferId(offerId)` | Marks to discard the element linked to a vehicle/trailer offer. | 143 |
+| `career_modules_delivery_tasklist.onCareerActivated()` | Hook called on career activation: stores the delivery extensions. *(internal)* *(hook)* | 8 |
+| `career_modules_delivery_tasklist.onUpdate(dtReal, dtSim, dtRaw)` | Per-frame hook: calls updateCargoTasklistElements. *(internal)* *(hook)* | 301 |
+| `career_modules_delivery_tasklist.sendCargoToTasklist()` | Rebuilds the tasklist elements from the cargo containers of nearby vehicles (asynchronous): marks all the old elements to discard, recreates the parcels and pickup groups, the vehicle tasks (dVehicleTasks.getVehicleTasks) and the header with the number of tasks or loaded items. | 22 |
+| `career_modules_delivery_tasklist.updateCargoTasklistElements()` | Walks through the elements: sends the removals (DiscardTasklistItem / SetTasklistHeader nil) and updates (SetTasklistTask with label, subtext, active, type='message') to the UI, then deletes the discarded elements. The labels depend on the current step of the vehicle tasks (coupleTrailer, enterVehicle, bringToDestination/confirmDropOff, putIntoParkingSpot). | 159 |
+| `career_modules_delivery_tasklist.updateTasklistForCargoId(cargoId)` | Marks to refresh the tasklist element that contains this cargo (useful for the countdown of timed parcels). | 129 |
+| `career_modules_delivery_tasklist.updateTasklistForOfferId(offerId)` | Marks to refresh the element linked to a vehicle/trailer offer. | 136 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_delivery_tasklist.clearTasklistForOfferId(offerId)`
 
-Marque à effacer l'élément lié à une offre de véhicule/remorque.
+Marks to discard the element linked to a vehicle/trailer offer.
 
-- `offerId` (*integer*) : Identifiant de l'offre.
+- `offerId` (*integer*) : Offer identifier.
 
 #### `career_modules_delivery_tasklist.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook par image : appelle updateCargoTasklistElements.
+Per-frame hook: calls updateCargoTasklistElements.
 
-- `dtReal` (*number*) : Delta temps réel (s), inutilisé.
-- `dtSim` (*number*) : Delta temps simulation (s), inutilisé.
-- `dtRaw` (*number*) : Delta temps brut (s), inutilisé.
+- `dtReal` (*number*) : Real time delta (s), unused.
+- `dtSim` (*number*) : Simulation time delta (s), unused.
+- `dtRaw` (*number*) : Raw time delta (s), unused.
 
 #### `career_modules_delivery_tasklist.updateTasklistForCargoId(cargoId)`
 
-Marque à rafraîchir l'élément de tasklist qui contient cette cargaison (utile pour le compte à rebours des colis timed).
+Marks to refresh the tasklist element that contains this cargo (useful for the countdown of timed parcels).
 
-- `cargoId` (*integer*) : Identifiant de la cargaison.
+- `cargoId` (*integer*) : Cargo identifier.
 
 #### `career_modules_delivery_tasklist.updateTasklistForOfferId(offerId)`
 
-Marque à rafraîchir l'élément lié à une offre de véhicule/remorque.
+Marks to refresh the element linked to a vehicle/trailer offer.
 
-- `offerId` (*integer*) : Identifiant de l'offre.
+- `offerId` (*integer*) : Offer identifier.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : core_vehicleBridge. |
+| `dependencies` | table<integer, string> | Extensions loaded before: core_vehicleBridge. |
 
-**Évènements UI (guihooks.trigger) :** `DiscardTasklistItem`, `SetTasklistHeader`, `SetTasklistTask`
+**UI events (guihooks.trigger):** `DiscardTasklistItem`, `SetTasklistHeader`, `SetTasklistTask`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/delivery/tasklist.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/delivery/tasklist.lua`.*

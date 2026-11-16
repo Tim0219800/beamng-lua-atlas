@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/editor/measuresInspectorHeader.lua",
+  "module": "Petite extension de l'éditeur qui ajoute une ligne « Size: X x Y x Z » dans l'en-tête de l'inspecteur d'objets. Elle affiche la taille (boîte englobante, échelle comprise) de l'objet sélectionné, ou de la boîte englobante de la sélection s'il y en a plusieurs. Elle n'agit qu'une fois l'éditeur initialisé.",
+  "notes": [
+    "Pour un seul objet : getObjBox() puis scale3F(getScale()), puis getExtents() ; pour plusieurs objets : editor.objectSelectionBBox:getExtents().",
+    "Rien n'est affiché si la sélection ne contient pas d'objets (selection.object nil) ou si l'objet n'a pas getObjBox/getScale.",
+    "Valeurs affichées avec 2 décimales, en mètres (unités du monde)."
+  ],
+  "functions": {
+    "onEditorInspectorHeaderGui": {
+      "desc": "Hook appelé par l'inspecteur de l'éditeur pour dessiner son en-tête. Dessine le texte « Size » et son infobulle. Utilise inspectorInfo.selection si présent, sinon editor.selection. Ne fait rien tant que l'éditeur n'est pas initialisé.",
+      "params": {"inspectorInfo": {"type": "table", "desc": "Informations de l'inspecteur ; le champ facultatif selection remplace editor.selection."}},
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook de chargement de l'extension ; ne fait rien.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook appelé quand l'éditeur est initialisé ; active l'affichage de la taille.",
+      "internal": true
+    }
+  }
+}

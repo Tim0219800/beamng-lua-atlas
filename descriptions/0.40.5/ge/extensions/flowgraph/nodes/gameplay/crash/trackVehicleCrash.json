@@ -1,11 +1,13 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crash/trackVehicleCrash.lua",
-  "module": "Nœud flowgraph « Track Vehicle Crash » (catégorie repeat_instant). Ajoute un véhicule (pin vehId) au suivi des crashs via gameplay_util_crashDetection.addTrackedVehicleById.",
+  "module": "Flowgraph node \"Track Vehicle Crash\" (category repeat_instant). Adds a vehicle (vehId pin) to crash tracking via gameplay_util_crashDetection.addTrackedVehicleById.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Appelle addTrackedVehicleById(vehId) à chaque frame."}
+        "work": {
+          "desc": "Calls addTrackedVehicleById(vehId) every frame."
+        }
       }
     }
   }

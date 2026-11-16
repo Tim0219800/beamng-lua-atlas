@@ -1,39 +1,82 @@
 {
   "path": "lua/ge/extensions/career/modules/vehicleDeletionService.lua",
-  "module": "Service de suppression différée de véhicules en carrière : un véhicule « marqué » est supprimé (avec appel d'un callback) quand il est à plus de 100 m de la caméra et derrière elle, pour qu'il disparaisse sans que le joueur le voie. Les véhicules d'inventaire sont retirés via career_modules_inventory.removeVehicleObject, les autres via obj:delete(). Le hook onUpdate n'est branché que tant qu'au moins un véhicule est marqué.",
+  "module": "Deferred vehicle deletion service in career: a \"marked\" vehicle is deleted (with a callback call) when it is more than 100 m from the camera and behind it, so that it disappears without the player seeing it. Inventory vehicles are removed via career_modules_inventory.removeVehicleObject, others via obj:delete(). The onUpdate hook is wired only while at least one vehicle is marked.",
   "notes": [
-    "Bug potentiel : onUpdate appelle obj:getPositionXYZ() sans vérifier que getObjectByID a retourné un objet ; un véhicule supprimé ailleurs sans passer par onVehicleDestroyed provoquerait une erreur.",
-    "onExtensionLoaded retourne false si la carrière n'est pas active, ce qui empêche le chargement du module.",
-    "À chaque démarrage de mission (onAnyMissionChanged, état started), tous les véhicules marqués sont supprimés immédiatement (sans callback)."
+    "Potential bug: onUpdate calls obj:getPositionXYZ() without checking that getObjectByID returned an object; a vehicle deleted elsewhere without going through onVehicleDestroyed would cause an error.",
+    "onExtensionLoaded returns false if the career is not active, which prevents the module from loading.",
+    "At each mission start (onAnyMissionChanged, started state), all marked vehicles are deleted immediately (without callback)."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "{'career_career'}."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{'career_career'}."
+    }
   },
   "functions": {
     "flagForDeletion": {
-      "desc": "Marque un véhicule pour suppression différée et active la boucle onUpdate.",
+      "desc": "Marks a vehicle for deferred deletion and activates the onUpdate loop.",
       "params": {
-        "vehId": {"type": "integer", "desc": "Id du véhicule."},
-        "callback": {"type": "function|nil", "desc": "Appelé juste avant la suppression (défaut nop)."}
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        },
+        "callback": {
+          "type": "function|nil",
+          "desc": "Called just before deletion (default nop)."
+        }
       },
       "internal": false
     },
     "clearFlags": {
-      "desc": "Retire le marquage d'un véhicule (et débranche onUpdate s'il ne reste rien).",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "desc": "Removes a vehicle's marking (and unwires onUpdate if nothing remains).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
       "internal": false
     },
-    "deleteFlaggedVehicles": {"desc": "Supprime immédiatement tous les véhicules marqués.", "internal": false},
-    "onExtensionLoaded": {"desc": "Hook de chargement : retourne false si la carrière n'est pas active.", "returns": [{"type": "boolean|nil", "desc": "false pour refuser le chargement."}], "internal": true},
-    "onAnyMissionChanged": {
-      "desc": "Hook émis à chaque changement d'état de mission : à « started » en carrière, supprime les véhicules marqués.",
-      "params": {"state": {"type": "string", "desc": "État de la mission."}, "mission": {"type": "table|nil", "desc": "Mission concernée."}},
+    "deleteFlaggedVehicles": {
+      "desc": "Immediately deletes all marked vehicles.",
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Load hook: returns false if the career is not active.",
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "false to refuse loading."
+        }
+      ],
       "internal": true
     },
-    "onClientStartMission": {"desc": "Hook de démarrage de niveau : vide la liste des véhicules marqués.", "internal": true},
+    "onAnyMissionChanged": {
+      "desc": "Hook emitted on each mission state change: on \"started\" in career, deletes the marked vehicles.",
+      "params": {
+        "state": {
+          "type": "string",
+          "desc": "Mission state."
+        },
+        "mission": {
+          "type": "table|nil",
+          "desc": "Mission concerned."
+        }
+      },
+      "internal": true
+    },
+    "onClientStartMission": {
+      "desc": "Level start hook: clears the list of marked vehicles.",
+      "internal": true
+    },
     "onVehicleDestroyed": {
-      "desc": "Hook émis quand un véhicule est détruit : retire son marquage.",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "desc": "Hook emitted when a vehicle is destroyed: removes its marking.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
       "internal": true
     }
   }

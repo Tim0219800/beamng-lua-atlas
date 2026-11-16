@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/core/reproGuard.lua",
+  "module": "Garde de sécurité pour la commande de schéma v1/runRepro : décide si une ligne de commande décodée peut être transmise à run_repro.bat, d'après une liste blanche de motifs glob. La logique pure (isAllowed) est séparée de la lecture du fichier de liste blanche (loadPatterns).",
+  "usage": "local ok, reason = core_reproGuard.isCommandAllowed(cmd)",
+  "notes": [
+    "La liste blanche est lue dans /DevTools/tests/micropy/resources/repro_allowlist.json, champ permissions.allow (tableau de motifs). Si le fichier est absent ou invalide, la liste est vide donc tout est refusé (fail closed).",
+    "Les caractères < > ^ ` \" et les caractères de contrôle (dont CR/LF) sont interdits partout dans la commande.",
+    "La commande est découpée sur && || ; | & ; chaque segment doit correspondre à au moins un motif. Dans un motif, '*' remplace n'importe quelle suite de caractères ; les autres caractères sont littéraux.",
+    "Seuls les espaces de début de segment sont retirés ; l'espace final reste dans le segment."
+  ],
+  "fields": {},
+  "functions": {
+    "isAllowed": {
+      "desc": "Fonction pure : teste si command satisfait la liste de motifs. Refuse une commande vide, avec caractère interdit, une liste vide, ou dont un segment ne correspond à aucun motif.",
+      "params": {
+        "command": {"type": "string", "desc": "Ligne de commande décodée."},
+        "patterns": {"type": "string[]", "desc": "Motifs glob autorisés."}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "true si autorisée."},
+        {"type": "string", "desc": "'ok' ou la raison du refus (empty command, forbidden shell metacharacter, empty allowlist, no command segments, segment not allowed: ...)."}
+      ],
+      "internal": false
+    },
+    "loadPatterns": {
+      "desc": "Lit les motifs autorisés depuis le fichier JSON de liste blanche. Journalise une erreur et renvoie {} si le fichier est absent ou mal formé.",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Motifs permissions.allow, ou {}."}],
+      "internal": false
+    },
+    "isCommandAllowed": {
+      "desc": "Raccourci : charge les motifs depuis le disque puis appelle isAllowed.",
+      "params": {"command": {"type": "string", "desc": "Ligne de commande."}},
+      "returns": [
+        {"type": "boolean", "desc": "true si autorisée."},
+        {"type": "string", "desc": "Raison."}
+      ],
+      "internal": false
+    }
+  }
+}

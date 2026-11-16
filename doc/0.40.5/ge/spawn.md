@@ -1,152 +1,152 @@
 # `spawn`
 
-*Fichier : `lua/ge/spawn.lua` · VM : Game Engine (GE) · 1155 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/spawn.lua` · VM: Game Engine (GE) · 1155 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `spawn`
+**Access:** global `spawn`
 
-Création et placement de véhicules côté Game Engine. Il crée un objet BeamNGVehicle (spawnVehicle), choisit un point d'apparition (pickSpawnPoint), et surtout place ou téléporte un véhicule sans collision (safeTeleport, safeReset) : le module construit la boîte orientée du véhicule, la pose au sol par raycast, puis la décale en spirale jusqu'à trouver une place libre (autres véhicules, statiques, trafic). Il gère aussi la téléportation vers la dernière route (récupération) et le placement d'une remorque sur un attelage.
+Vehicle creation and placement on the Game Engine side. It creates a BeamNGVehicle object (spawnVehicle), picks a spawn point (pickSpawnPoint), and above all places or teleports a vehicle without collisions (safeTeleport, safeReset): the module builds the vehicle's oriented box, drops it onto the ground by raycast, then offsets it in a spiral until it finds a free spot (other vehicles, statics, traffic). It also handles teleporting to the last road (recovery) and placing a trailer on a coupler.
 
-## Exemple
+## Example
 
 ```lua
--- téléporter le véhicule joueur à une position en évitant les collisions
+-- teleport the player vehicle to a position while avoiding collisions
 local veh = getPlayerVehicle(0)
 spawn.safeTeleport(veh, vec3(100, 200, 50), quatFromDir(vec3(0,1,0), vec3(0,0,1)))
--- remettre un véhicule à sa position d'origine
+-- put a vehicle back at its original position
 spawn.safeReset(veh)
 ```
 
-## Remarques
+## Notes
 
-- Convention de rotation : spawnVehicle/setVehicleObject et safeTeleport multiplient la rotation par quat(0,0,1,0) (180 degrés autour de z) car les véhicules BeamNG pointent vers -y. Passer la rotation « visuelle » (avant = direction du véhicule) ; safeReset compense avec le même quat. Le code note lui-même 'the order might still be wrong in some places'.
-- safeTeleport ne renvoie rien (pas de booléen) : le résultat n'est lisible que via takeLastSafeTeleportPose(vid), qui contient la pose réellement appliquée. En cas d'échec la pose reste nil.
-- L'état de placement est global au module (visibilityPoint, checkOnlyStatics, removeTraffic, caches de boîtes) : les options passées à safeTeleport/spawnVehicle sont gardées jusqu'à la fin du placement puis réinitialisées (removeTraffic repasse à true).
-- Les véhicules positionnés pendant la frame courante sont mémorisés dans un cache (vehiclesPositionedThisFrame) pour que les suivants évitent leur nouvelle boîte ; clearCache() le vide, appelé par le moteur à la frame suivante.
-- Si aucune place libre n'est trouvée avec safeSpawn actif, spawnVehicle supprime le véhicule (veh:delete()) et affiche un toast 'ui.spawn.noPositionFound' ; passer options.removeWhenNoPositionFound = false pour le garder à sa position initiale.
-- Bug probable dans spawnVehicle : le test 'if not datablock' utilise une variable en minuscules jamais définie (la variable s'appelle dataBlock) ; la condition est donc toujours vraie, le datablock 'default_vehicle' est toujours affecté et la branche d'erreur 'Failed to find dataBlock' est inatteignable.
-- Bug probable dans pickSpawnPoint : setSpawnpoint.loadDefaultSpawnpoint() renvoie '' (chaîne vide, vraie en Lua) quand il n'y a pas de point par défaut ; 'if defaultSpawnPoint' est donc toujours vrai, scenetree.findObject('') est tenté et un avertissement 'No SpawnPointName in mission file' est loggé à chaque appel avant de passer aux groupes de spawn.
-- teleportToLastRoadCallback : le repli final suppose que findClosestRoad a trouvé une arête ; si le graphe est vide la fonction est déjà sortie plus haut, mais si dist < 50 avec n1Id nil l'accès à n1.pos planterait (cas improbable car dist est alors grande).
-- spawnPlayer : l'ancien chemin (spawnPlayerOld, variable $beamngVehicle) est conservé pour compatibilité et logue un avertissement ; le chemin normal est core_levels.maybeSpawnDefaultVehicle().
-- spawnTrailerBehindVehicle est local au fichier (non exporté) bien qu'utile.
+- Rotation convention: spawnVehicle/setVehicleObject and safeTeleport multiply the rotation by quat(0,0,1,0) (180 degrees around z) because BeamNG vehicles point toward -y. Pass the "visual" rotation (front = vehicle direction); safeReset compensates with the same quat. The code itself notes 'the order might still be wrong in some places'.
+- safeTeleport returns nothing (no boolean): the result can only be read through takeLastSafeTeleportPose(vid), which contains the pose actually applied. On failure the pose stays nil.
+- The placement state is global to the module (visibilityPoint, checkOnlyStatics, removeTraffic, box caches): the options passed to safeTeleport/spawnVehicle are kept until placement ends and then reset (removeTraffic goes back to true).
+- Vehicles positioned during the current frame are stored in a cache (vehiclesPositionedThisFrame) so that the following ones avoid their new box; clearCache() empties it, called by the engine on the next frame.
+- If no free spot is found with safeSpawn active, spawnVehicle deletes the vehicle (veh:delete()) and shows a toast 'ui.spawn.noPositionFound'; pass options.removeWhenNoPositionFound = false to keep it at its initial position.
+- Probable bug in spawnVehicle: the test 'if not datablock' uses a lowercase variable that is never defined (the variable is named dataBlock); the condition is therefore always true, the datablock 'default_vehicle' is always assigned and the 'Failed to find dataBlock' error branch is unreachable.
+- Probable bug in pickSpawnPoint: setSpawnpoint.loadDefaultSpawnpoint() returns '' (empty string, truthy in Lua) when there is no default point; 'if defaultSpawnPoint' is therefore always true, scenetree.findObject('') is attempted and a 'No SpawnPointName in mission file' warning is logged on every call before moving on to the spawn groups.
+- teleportToLastRoadCallback: the final fallback assumes findClosestRoad found an edge; if the graph is empty the function has already exited earlier, but if dist < 50 with n1Id nil, accessing n1.pos would crash (unlikely case because dist is then large).
+- spawnPlayer: the old path (spawnPlayerOld, variable $beamngVehicle) is kept for compatibility and logs a warning; the normal path is core_levels.maybeSpawnDefaultVehicle().
+- spawnTrailerBehindVehicle is local to the file (not exported) even though it is useful.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `spawn.calculateRelativeVehiclePlacement(transform0, coupler0_offset, coupler1_offset, rotOffset)` | Calcule la matrice monde d'un second véhicule pour que son attelage coïncide avec celui du premier : transform0 x décalage coupler0 x rotOffset x inverse(décalage coupler1). | 1058 |
-| `spawn.clearCache()` | Vide le cache des véhicules placés pendant la frame courante, s'il y en a. Appelée par le moteur pour que le cache ne dure qu'une frame. *(interne)* | 33 |
-| `spawn.pickSpawnPoint(spawnName)` | Cherche un point d'apparition valide : d'abord le point par défaut du niveau (setSpawnpoint), puis un objet pris au hasard dans les groupes CameraSpawnPoints, PlayerSpawnPoints, PlayerDropPoints, puis DefaultPlayerSpawnSphere (mods anciens), sinon crée une SpawnSphere par défaut dans MissionCleanup. Voir notes sur le test du point par défaut. | 880 |
-| `spawn.placeTrailer(vehId, couplerOffsetVeh, trailerId, couplerOffsetTrailer, couplerTag, rotOffset)` | Positionne une remorque sur le véhicule tracteur en faisant coïncider les attelages, la remet à zéro (requestReset(RESET_PHYSICS), resetBrokenFlexMesh) et active l'attelage automatique si l'option du tag est 'autoCouple'. Si les deux attelages sont du même côté (avant/avant ou arrière/arrière), la remorque est retournée de 180 degrés. | 1088 |
-| `spawn.safeReset(veh, checkOnlyStatics_, visibilityPoint_, removeTraffic_)` | Remplacement conseillé de be:resetVehicle(0) : téléporte le véhicule à sa position et rotation d'origine (veh:getOriginalPosition/Rotation) en cherchant une place libre, avec réinitialisation du véhicule. | 696 |
-| `spawn.safeTeleport(veh, pos, rot, checkOnlyStatics_, visibilityPoint_, removeTraffic_, centeredPosition, resetVehicle, player, unlimitedSafeSpawnRange)` | Téléporte un véhicule en évitant les collisions : (si resetVehicle) le place à pos/rot et le répare du maillage souple, puis cherche la place libre la plus proche (pose au sol par raycast, spirale de décalages). Applique la pose finale au groupe de noeuds, remet la vitesse à zéro et mémorise la pose finale. | 659 |
-| `spawn.setVehicleObject(veh, options)` | Configure puis fait apparaître un objet BeamNGVehicle déjà créé : modèle, config de pièces, peintures (3 palettes), position/rotation (avec rotation de 180 degrés), l'ajoute à MissionGroup et au groupe SpawnedVehicles (canSave = false), puis cherche une place libre sauf si options.safeSpawn == false. | 575 |
-| `spawn.spawnCamera()` | Crée (si besoin) la caméra de jeu 'gameCamera' (datablock Observer), l'ajoute à MissionCleanup et la fixe comme caméra de la vue 'main'. *(interne)* | 946 |
-| `spawn.spawnPlayer()` | Fait apparaître le véhicule joueur au chargement du niveau : via core_levels.maybeSpawnDefaultVehicle(), ou via l'ancien code (variable $beamngVehicle) avec avertissement. Si preventPlayerSpawning est vrai, ne fait rien une fois. *(interne)* | 1037 |
-| `spawn.spawnVehicle(model, partConfig, pos, rot, options)` | Crée un objet BeamNGVehicle, lui donne un nom unique (options.vehicleName ou 'clone', 'clone0'…), applique les options (autoEnterVehicle, autoEnterVehiclePlayer) puis délègue à setVehicleObject. Le véhicule apparaît tourné de 180 degrés autour de z. | 821 |
-| `spawn.takeLastSafeTeleportPose(vid)` | Renvoie et efface la dernière pose appliquée par safeTeleport pour ce véhicule (utilisé par la capture du multijoueur). | 690 |
-| `spawn.teleportToLastRoad(veh, options)` | Récupération : téléporte le véhicule sur la dernière position de route connue. Demande les points de récupération (recovery.recoveryPoints) à la VM véhicule, puis le callback teleportToLastRoadCallback place le véhicule sur la route côté légal. Le multijoueur peut intercepter l'appel. | 810 |
-| `spawn.teleportToLastRoadCallback(data, options, vehId)` | Callback de teleportToLastRoad, exécuté côté GE avec les points de récupération du véhicule. Parcourt les points du plus récent au plus ancien, retient le premier proche d'une route (distance <= rayon moyen), le projette sur l'arête, choisit le côté légal (règles map.getRoadRules) et la direction, puis appelle safeTeleport. Sans point valide, cherche la route la plus proche (< 50 m), sinon garde la position actuelle. *(interne)* | 701 |
+| `spawn.calculateRelativeVehiclePlacement(transform0, coupler0_offset, coupler1_offset, rotOffset)` | Computes the world matrix of a second vehicle so that its coupler coincides with that of the first: transform0 x coupler0 offset x rotOffset x inverse(coupler1 offset). | 1058 |
+| `spawn.clearCache()` | Empties the cache of vehicles placed during the current frame, if any. Called by the engine so that the cache lasts only one frame. *(internal)* | 33 |
+| `spawn.pickSpawnPoint(spawnName)` | Looks for a valid spawn point: first the level's default point (setSpawnpoint), then a randomly picked object from the groups CameraSpawnPoints, PlayerSpawnPoints, PlayerDropPoints, then DefaultPlayerSpawnSphere (old mods), otherwise creates a default SpawnSphere in MissionCleanup. See the notes on the default point test. | 880 |
+| `spawn.placeTrailer(vehId, couplerOffsetVeh, trailerId, couplerOffsetTrailer, couplerTag, rotOffset)` | Positions a trailer on the towing vehicle by making the couplers coincide, resets it (requestReset(RESET_PHYSICS), resetBrokenFlexMesh) and enables automatic coupling if the tag's option is 'autoCouple'. If both couplers are on the same side (front/front or rear/rear), the trailer is flipped by 180 degrees. | 1088 |
+| `spawn.safeReset(veh, checkOnlyStatics_, visibilityPoint_, removeTraffic_)` | Recommended replacement for be:resetVehicle(0): teleports the vehicle to its original position and rotation (veh:getOriginalPosition/Rotation) while looking for a free spot, with vehicle reset. | 696 |
+| `spawn.safeTeleport(veh, pos, rot, checkOnlyStatics_, visibilityPoint_, removeTraffic_, centeredPosition, resetVehicle, player, unlimitedSafeSpawnRange)` | Teleports a vehicle while avoiding collisions: (if resetVehicle) places it at pos/rot and repairs its soft mesh, then looks for the nearest free spot (ground placement by raycast, spiral of offsets). Applies the final pose to the node group, resets the velocity to zero and stores the final pose. | 659 |
+| `spawn.setVehicleObject(veh, options)` | Configures and then spawns an already created BeamNGVehicle object: model, parts config, paints (3 palettes), position/rotation (with 180-degree rotation), adds it to MissionGroup and to the SpawnedVehicles group (canSave = false), then looks for a free spot unless options.safeSpawn == false. | 575 |
+| `spawn.spawnCamera()` | Creates (if needed) the game camera 'gameCamera' (Observer datablock), adds it to MissionCleanup and sets it as the camera of the 'main' view. *(internal)* | 946 |
+| `spawn.spawnPlayer()` | Spawns the player vehicle when the level loads: via core_levels.maybeSpawnDefaultVehicle(), or via the old code (variable $beamngVehicle) with a warning. If preventPlayerSpawning is true, does nothing once. *(internal)* | 1037 |
+| `spawn.spawnVehicle(model, partConfig, pos, rot, options)` | Creates a BeamNGVehicle object, gives it a unique name (options.vehicleName or 'clone', 'clone0'...), applies the options (autoEnterVehicle, autoEnterVehiclePlayer) then delegates to setVehicleObject. The vehicle appears rotated by 180 degrees around z. | 821 |
+| `spawn.takeLastSafeTeleportPose(vid)` | Returns and clears the last pose applied by safeTeleport for this vehicle (used by multiplayer capture). | 690 |
+| `spawn.teleportToLastRoad(veh, options)` | Recovery: teleports the vehicle to the last known road position. Requests the recovery points (recovery.recoveryPoints) from the vehicle VM, then the callback teleportToLastRoadCallback places the vehicle on the road on the legal side. Multiplayer can intercept the call. | 810 |
+| `spawn.teleportToLastRoadCallback(data, options, vehId)` | Callback of teleportToLastRoad, run on the GE side with the vehicle's recovery points. Walks through the points from newest to oldest, keeps the first one close to a road (distance <= average radius), projects it onto the edge, chooses the legal side (map.getRoadRules rules) and the direction, then calls safeTeleport. With no valid point, looks for the nearest road (< 50 m), otherwise keeps the current position. *(internal)* | 701 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `spawn.calculateRelativeVehiclePlacement(transform0, coupler0_offset, coupler1_offset, rotOffset)`
 
-Calcule la matrice monde d'un second véhicule pour que son attelage coïncide avec celui du premier : transform0 x décalage coupler0 x rotOffset x inverse(décalage coupler1).
+Computes the world matrix of a second vehicle so that its coupler coincides with that of the first: transform0 x coupler0 offset x rotOffset x inverse(coupler1 offset).
 
-- `transform0` (*MatrixF*) : Matrice monde du premier véhicule (par ex. veh:getRefNodeMatrix()).
-- `coupler0_offset` (*vec3*) : Position de l'attelage sur le premier véhicule, par rapport à son noeud de référence.
-- `coupler1_offset` (*vec3*) : Position de l'attelage sur le second véhicule, par rapport à son noeud de référence.
-- `rotOffset` (*MatrixF|nil*) : Rotation supplémentaire appliquée entre les deux attelages.
-- **renvoie** : MatrixF Matrice de placement du second véhicule.
+- `transform0` (*MatrixF*) : World matrix of the first vehicle (e.g. veh:getRefNodeMatrix()).
+- `coupler0_offset` (*vec3*) : Coupler position on the first vehicle, relative to its reference node.
+- `coupler1_offset` (*vec3*) : Coupler position on the second vehicle, relative to its reference node.
+- `rotOffset` (*MatrixF|nil*) : Additional rotation applied between the two couplers.
+- **returns**: MatrixF Placement matrix of the second vehicle.
 
 #### `spawn.pickSpawnPoint(spawnName)`
 
-Cherche un point d'apparition valide : d'abord le point par défaut du niveau (setSpawnpoint), puis un objet pris au hasard dans les groupes CameraSpawnPoints, PlayerSpawnPoints, PlayerDropPoints, puis DefaultPlayerSpawnSphere (mods anciens), sinon crée une SpawnSphere par défaut dans MissionCleanup. Voir notes sur le test du point par défaut.
+Looks for a valid spawn point: first the level's default point (setSpawnpoint), then a randomly picked object from the groups CameraSpawnPoints, PlayerSpawnPoints, PlayerDropPoints, then DefaultPlayerSpawnSphere (old mods), otherwise creates a default SpawnSphere in MissionCleanup. See the notes on the default point test.
 
-- `spawnName` (*string*) : 'player' ou 'camera' : type de SpawnSphere à créer si rien n'est trouvé.
-- **renvoie** : table|nil Objet de scène du point d'apparition (SpawnSphere, marqueur…), nil en cas d'erreur.
+- `spawnName` (*string*) : 'player' or 'camera': type of SpawnSphere to create if nothing is found.
+- **returns**: table|nil Scene object of the spawn point (SpawnSphere, marker...), nil on error.
 
 #### `spawn.placeTrailer(vehId, couplerOffsetVeh, trailerId, couplerOffsetTrailer, couplerTag, rotOffset)`
 
-Positionne une remorque sur le véhicule tracteur en faisant coïncider les attelages, la remet à zéro (requestReset(RESET_PHYSICS), resetBrokenFlexMesh) et active l'attelage automatique si l'option du tag est 'autoCouple'. Si les deux attelages sont du même côté (avant/avant ou arrière/arrière), la remorque est retournée de 180 degrés.
+Positions a trailer on the towing vehicle by making the couplers coincide, resets it (requestReset(RESET_PHYSICS), resetBrokenFlexMesh) and enables automatic coupling if the tag's option is 'autoCouple'. If both couplers are on the same side (front/front or rear/rear), the trailer is flipped by 180 degrees.
 
-- `vehId` (*integer*) : Id du véhicule tracteur.
-- `couplerOffsetVeh` (*vec3*) : Position de l'attelage du tracteur par rapport à son noeud de référence.
-- `trailerId` (*integer*) : Id de la remorque.
-- `couplerOffsetTrailer` (*vec3*) : Position de l'attelage de la remorque.
-- `couplerTag` (*string*) : Tag de l'attelage ; consulté dans core_vehicles.couplerTagsOptions pour l'attelage automatique.
-- `rotOffset` (*MatrixF|nil*) : Rotation supplémentaire à appliquer.
+- `vehId` (*integer*) : Id of the towing vehicle.
+- `couplerOffsetVeh` (*vec3*) : Position of the tow vehicle's coupler relative to its reference node.
+- `trailerId` (*integer*) : Id of the trailer.
+- `couplerOffsetTrailer` (*vec3*) : Position of the trailer's coupler.
+- `couplerTag` (*string*) : Coupler tag; looked up in core_vehicles.couplerTagsOptions for automatic coupling.
+- `rotOffset` (*MatrixF|nil*) : Additional rotation to apply.
 
 #### `spawn.safeReset(veh, checkOnlyStatics_, visibilityPoint_, removeTraffic_)`
 
-Remplacement conseillé de be:resetVehicle(0) : téléporte le véhicule à sa position et rotation d'origine (veh:getOriginalPosition/Rotation) en cherchant une place libre, avec réinitialisation du véhicule.
+Recommended replacement for be:resetVehicle(0): teleports the vehicle to its original position and rotation (veh:getOriginalPosition/Rotation) while looking for a free spot, with vehicle reset.
 
-- `veh` (*table*) : Objet véhicule.
-- `checkOnlyStatics_` (*boolean|nil*) : Ne tester que les objets statiques.
-- `visibilityPoint_` (*vec3|nil*) : Point d'où la place trouvée ne doit pas être visible.
-- `removeTraffic_` (*boolean|nil*) : Écarter le trafic de la zone.
+- `veh` (*table*) : Vehicle object.
+- `checkOnlyStatics_` (*boolean|nil*) : Test only static objects.
+- `visibilityPoint_` (*vec3|nil*) : Point from which the spot found must not be visible.
+- `removeTraffic_` (*boolean|nil*) : Move traffic away from the area.
 
 #### `spawn.safeTeleport(veh, pos, rot, checkOnlyStatics_, visibilityPoint_, removeTraffic_, centeredPosition, resetVehicle, player, unlimitedSafeSpawnRange)`
 
-Téléporte un véhicule en évitant les collisions : (si resetVehicle) le place à pos/rot et le répare du maillage souple, puis cherche la place libre la plus proche (pose au sol par raycast, spirale de décalages). Applique la pose finale au groupe de noeuds, remet la vitesse à zéro et mémorise la pose finale.
+Teleports a vehicle while avoiding collisions: (if resetVehicle) places it at pos/rot and repairs its soft mesh, then looks for the nearest free spot (ground placement by raycast, spiral of offsets). Applies the final pose to the node group, resets the velocity to zero and stores the final pose.
 
-- `veh` (*table*) : Objet véhicule (BeamNGVehicle).
-- `pos` (*vec3*) : Position souhaitée (noeud de référence, ou centre de la boîte si centeredPosition).
-- `rot` (*quat|nil*) : Rotation souhaitée (quat(0,0,0,-1) par défaut), multipliée en interne par une rotation de 180 degrés autour de z.
-- `checkOnlyStatics_` (*boolean|nil*) : Si vrai, ne teste que les statiques (et ne déplace pas le trafic).
-- `visibilityPoint_` (*vec3|nil*) : Position de la caméra : la place trouvée doit être hors de sa vue si possible.
-- `removeTraffic_` (*boolean|nil*) : Écarter les véhicules de trafic (gameplay_traffic) de la zone. Conserve la valeur précédente si nil (true au départ).
-- `centeredPosition` (*boolean|nil*) : true si pos désigne le centre de la boîte du véhicule.
-- `resetVehicle` (*boolean|nil*) : true par défaut : utilise les positions initiales des noeuds (véhicule réparé). false : déplace le véhicule tel qu'il est (boîte du groupe de noeuds principal).
-- `player` (*any*) : Transmis à setSafePosition (déduit du code : non utilisé dans les fonctions de placement lues).
-- `unlimitedSafeSpawnRange` (*boolean|nil*) : Supprime la limite de distance de recherche d'une place.
+- `veh` (*table*) : Vehicle object (BeamNGVehicle).
+- `pos` (*vec3*) : Desired position (reference node, or center of the box if centeredPosition).
+- `rot` (*quat|nil*) : Desired rotation (quat(0,0,0,-1) by default), internally multiplied by a 180-degree rotation around z.
+- `checkOnlyStatics_` (*boolean|nil*) : If true, tests only statics (and does not move traffic).
+- `visibilityPoint_` (*vec3|nil*) : Camera position: the spot found must be out of its view if possible.
+- `removeTraffic_` (*boolean|nil*) : Move traffic vehicles (gameplay_traffic) away from the area. Keeps the previous value if nil (true initially).
+- `centeredPosition` (*boolean|nil*) : true if pos designates the center of the vehicle's box.
+- `resetVehicle` (*boolean|nil*) : true by default: uses the initial node positions (repaired vehicle). false: moves the vehicle as it is (box of the main node group).
+- `player` (*any*) : Passed to setSafePosition (inferred from code: not used in the placement functions read).
+- `unlimitedSafeSpawnRange` (*boolean|nil*) : Removes the distance limit when searching for a spot.
 
 #### `spawn.setVehicleObject(veh, options)`
 
-Configure puis fait apparaître un objet BeamNGVehicle déjà créé : modèle, config de pièces, peintures (3 palettes), position/rotation (avec rotation de 180 degrés), l'ajoute à MissionGroup et au groupe SpawnedVehicles (canSave = false), puis cherche une place libre sauf si options.safeSpawn == false.
+Configures and then spawns an already created BeamNGVehicle object: model, parts config, paints (3 palettes), position/rotation (with 180-degree rotation), adds it to MissionGroup and to the SpawnedVehicles group (canSave = false), then looks for a free spot unless options.safeSpawn == false.
 
-- `veh` (*table*) : Objet créé par createObject('BeamNGVehicle').
-- `options` (*table*) : model (string), config (string ou table), paint/paint2/paint3 ({baseColor = {r,g,b,a}, ...}), pos (vec3), rot (quat), centeredPosition, safeSpawn (true par défaut), unlimitedSafeSpawnRange, removeWhenNoPositionFound (true par défaut).
-- **renvoie** : boolean|nil true si le véhicule est placé ; nil si veh manque, si MissionGroup n'existe pas, ou si aucune place n'est trouvée (véhicule supprimé).
+- `veh` (*table*) : Object created by createObject('BeamNGVehicle').
+- `options` (*table*) : model (string), config (string or table), paint/paint2/paint3 ({baseColor = {r,g,b,a}, ...}), pos (vec3), rot (quat), centeredPosition, safeSpawn (true by default), unlimitedSafeSpawnRange, removeWhenNoPositionFound (true by default).
+- **returns**: boolean|nil true if the vehicle is placed; nil if veh is missing, if MissionGroup does not exist, or if no spot is found (vehicle deleted).
 
 #### `spawn.spawnVehicle(model, partConfig, pos, rot, options)`
 
-Crée un objet BeamNGVehicle, lui donne un nom unique (options.vehicleName ou 'clone', 'clone0'…), applique les options (autoEnterVehicle, autoEnterVehiclePlayer) puis délègue à setVehicleObject. Le véhicule apparaît tourné de 180 degrés autour de z.
+Creates a BeamNGVehicle object, gives it a unique name (options.vehicleName or 'clone', 'clone0'...), applies the options (autoEnterVehicle, autoEnterVehiclePlayer) then delegates to setVehicleObject. The vehicle appears rotated by 180 degrees around z.
 
-- `model` (*string*) : Nom du modèle JBeam (ex. 'pickup').
-- `partConfig` (*string|table*) : Chemin du fichier .pc ou table de config de pièces.
+- `model` (*string*) : Name of the JBeam model (e.g. 'pickup').
+- `partConfig` (*string|table*) : Path of the .pc file or parts config table.
 - `pos` (*vec3*) : Position.
 - `rot` (*quat*) : Rotation.
-- `options` (*table|nil*) : vehicleName, autoEnterVehicle (true par défaut), autoEnterVehiclePlayer, visibilityPoint, removeTraffic, paint/paint2/paint3, centeredPosition, safeSpawn, unlimitedSafeSpawnRange, removeWhenNoPositionFound. La table est modifiée (vehicleName, model, config, pos, rot, cling y sont écrits).
-- **renvoie** : table|nil Objet véhicule, ou nil si la création ou le placement échoue.
+- `options` (*table|nil*) : vehicleName, autoEnterVehicle (true by default), autoEnterVehiclePlayer, visibilityPoint, removeTraffic, paint/paint2/paint3, centeredPosition, safeSpawn, unlimitedSafeSpawnRange, removeWhenNoPositionFound. The table is modified (vehicleName, model, config, pos, rot, cling are written into it).
+- **returns**: table|nil Vehicle object, or nil if creation or placement fails.
 
 #### `spawn.takeLastSafeTeleportPose(vid)`
 
-Renvoie et efface la dernière pose appliquée par safeTeleport pour ce véhicule (utilisé par la capture du multijoueur).
+Returns and clears the last pose applied by safeTeleport for this vehicle (used by multiplayer capture).
 
-- `vid` (*integer*) : Id du véhicule.
-- **renvoie** : table|nil {x, y, z, rx, ry, rz, rw} (noeud de référence et quaternion), ou nil si aucune pose.
+- `vid` (*integer*) : Vehicle id.
+- **returns**: table|nil {x, y, z, rx, ry, rz, rw} (reference node and quaternion), or nil if there is no pose.
 
 #### `spawn.teleportToLastRoad(veh, options)`
 
-Récupération : téléporte le véhicule sur la dernière position de route connue. Demande les points de récupération (recovery.recoveryPoints) à la VM véhicule, puis le callback teleportToLastRoadCallback place le véhicule sur la route côté légal. Le multijoueur peut intercepter l'appel.
+Recovery: teleports the vehicle to the last known road position. Requests the recovery points (recovery.recoveryPoints) from the vehicle VM, then the callback teleportToLastRoadCallback places the vehicle on the road on the legal side. Multiplayer can intercept the call.
 
-- `veh` (*table|nil*) : Véhicule (joueur 0 par défaut).
-- `options` (*table|nil*) : destinationPos (vec3 : oriente le véhicule vers cette destination), resetVehicle (boolean), unlimitedSafeSpawnRange (boolean).
+- `veh` (*table|nil*) : Vehicle (player 0 by default).
+- `options` (*table|nil*) : destinationPos (vec3: orients the vehicle toward this destination), resetVehicle (boolean), unlimitedSafeSpawnRange (boolean).
 
 #### `spawn.teleportToLastRoadCallback(data, options, vehId)`
 
-Callback de teleportToLastRoad, exécuté côté GE avec les points de récupération du véhicule. Parcourt les points du plus récent au plus ancien, retient le premier proche d'une route (distance <= rayon moyen), le projette sur l'arête, choisit le côté légal (règles map.getRoadRules) et la direction, puis appelle safeTeleport. Sans point valide, cherche la route la plus proche (< 50 m), sinon garde la position actuelle.
+Callback of teleportToLastRoad, run on the GE side with the vehicle's recovery points. Walks through the points from newest to oldest, keeps the first one close to a road (distance <= average radius), projects it onto the edge, chooses the legal side (map.getRoadRules rules) and the direction, then calls safeTeleport. With no valid point, looks for the nearest road (< 50 m), otherwise keeps the current position.
 
-- `data` (*table|nil*) : File de points de récupération {head, tail, [i] = {pos = vec3, ...}}.
-- `options` (*table*) : Mêmes options que teleportToLastRoad.
-- `vehId` (*integer|nil*) : Id du véhicule (joueur 0 par défaut).
+- `data` (*table|nil*) : Queue of recovery points {head, tail, [i] = {pos = vec3, ...}}.
+- `options` (*table*) : Same options as teleportToLastRoad.
+- `vehId` (*integer|nil*) : Vehicle id (player 0 by default).
 
-**Évènements UI (guihooks.trigger) :** `toastrMsg`
+**UI events (guihooks.trigger):** `toastrMsg`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/spawn.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/spawn.lua`.*

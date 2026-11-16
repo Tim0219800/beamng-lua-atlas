@@ -1,143 +1,233 @@
 {
   "path": "lua/ge/extensions/gameplay/race/path.lua",
-  "module": "Classe du chemin de course (race path) : conteneur de pathnodes, segments, positions de départ (startPositions) et pacenotes, avec métadonnées (nom, auteurs, difficulté, tours par défaut, préfabs). Il construit une configuration de parcours (autoConfig : graphe de segments, branchement, circuit fermé, parcours linéaire), la classe (classify), calcule un chemin pour l'IA, se sérialise en JSON et peut être converti depuis d'anciens formats (scénarios, checkpoints de scène, 'tracks'). Le module renvoie une fabrique : require('/lua/ge/extensions/gameplay/race/path')(name). Il est utilisé par l'éditeur de course et par race.lua.",
+  "module": "Race path class: container of pathnodes, segments, start positions (startPositions) and pacenotes, with metadata (name, authors, difficulty, default laps, prefabs). It builds a route configuration (autoConfig: segment graph, branching, closed circuit, linear route), classifies it (classify), computes a path for the AI, serializes itself to JSON and can be converted from old formats (scenarios, scene checkpoints, 'tracks'). The module returns a factory: require('/lua/ge/extensions/gameplay/race/path')(name). It is used by the race editor and by race.lua.",
   "notes": [
-    "init(name) ignore son argument : le nom reste « Path » (valeur codée en dur). copy() passe un nom, sans effet.",
-    "copy() est cassé : il appelle cpy.onDeserialized(self.onSerialize()) avec un point au lieu de deux-points, donc sans self (erreur Lua).",
-    "autoConfig référence une variable globale reverse (jamais définie) : targetNode vaut toujours seg.to.",
-    "autoConfig suppose qu'il n'y a qu'un seul premier segment ; startNode doit exister (sinon config vide).",
-    "classify() appelle autoConfig puis lit les startPositions et pathnodes d'ids invalides : un objet 'missing' est renvoyé par sortedList pour un id absent ; classify échoue si endNode ne correspond à rien et que le circuit n'est pas fermé de manière valide.",
-    "Champs d'identifiants : startNode, endNode, defaultStartPosition, reverseStartPosition, rollingStartPosition, rollingReverseStartPosition (-1 si non défini) ; champs de préfabs : prefabs, forwardPrefabs, reversePrefabs.",
-    "Les quatre collections (pathnodes, segments, startPositions, pacenotes) sont des gameplay/util/sortedList avec .objects (par id), .sorted (liste triée), create, clear.",
-    "postCreate : le premier pathnode créé devient startNode, la première position de départ devient defaultStartPosition.",
-    "getAiPath ne gère pas les chemins avec branchement ; elle utilise map.findClosestRoad pour associer chaque pathnode à un nœud de route.",
-    "reverse() inverse from/to de tous les segments et permute startNode/endNode (si endNode défini) ; les startPositions ne changent pas."
+    "init(name) ignores its argument: the name stays \"Path\" (hardcoded value). copy() passes a name, with no effect.",
+    "copy() is broken: it calls cpy.onDeserialized(self.onSerialize()) with a dot instead of a colon, so without self (Lua error).",
+    "autoConfig references a global variable reverse (never defined): targetNode is always seg.to.",
+    "autoConfig assumes there is only one first segment; startNode must exist (otherwise empty config).",
+    "classify() calls autoConfig then reads the startPositions and pathnodes of invalid ids: a 'missing' object is returned by sortedList for an absent id; classify fails if endNode matches nothing and the circuit is not validly closed.",
+    "Identifier fields: startNode, endNode, defaultStartPosition, reverseStartPosition, rollingStartPosition, rollingReverseStartPosition (-1 if not defined); prefab fields: prefabs, forwardPrefabs, reversePrefabs.",
+    "The four collections (pathnodes, segments, startPositions, pacenotes) are gameplay/util/sortedList with .objects (by id), .sorted (sorted list), create, clear.",
+    "postCreate: the first pathnode created becomes startNode, the first start position becomes defaultStartPosition.",
+    "getAiPath does not handle paths with branching; it uses map.findClosestRoad to associate each pathnode with a road node.",
+    "reverse() swaps from/to of all segments and swaps startNode/endNode (if endNode is defined); the startPositions do not change."
   ],
   "classes": {
     "C": {
-      "desc": "Chemin de course. Champs principaux : id, name, description, authors, date, difficulty (24 par défaut), defaultLaps (1), config (résultat d'autoConfig), simplifyAiPath, hideMission, isReversed, aiPath, aiDetailedPath, aiPathDistance.",
+      "desc": "Race path. Main fields: id, name, description, authors, date, difficulty (24 by default), defaultLaps (1), config (autoConfig result), simplifyAiPath, hideMission, isReversed, aiPath, aiDetailedPath, aiPathDistance.",
       "functions": {
         "getNextUniqueIdentifier": {
-          "desc": "Renvoie un identifiant unique croissant pour les objets du chemin.",
+          "desc": "Returns an increasing unique identifier for the path's objects.",
           "params": {},
-          "returns": [{"type": "integer", "desc": "Nouvel id."}],
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "New id."
+            }
+          ],
           "internal": false
         },
         "init": {
-          "desc": "Constructeur / réinitialisation : valeurs par défaut, collections vides. L'argument name est ignoré.",
-          "params": {"name": {"type": "string|nil", "desc": "Ignoré."}},
+          "desc": "Constructor / reset: default values, empty collections. The name argument is ignored.",
+          "params": {
+            "name": {
+              "type": "string|nil",
+              "desc": "Ignored."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "autoConfig": {
-          "desc": "Construit la configuration automatique dans self.config : à partir du startNode, graphe des segments (successeurs, prédécesseurs, lastInLap, targetNode, segments visibles suivants), indicateurs branching et closed, liste linearPathnodes pour un parcours non branché, et pacenotes associés à chaque segment (segmentToPacenotes).",
+          "desc": "Builds the automatic configuration in self.config: from the startNode, segment graph (successors, predecessors, lastInLap, targetNode, next visible segments), branching and closed indicators, linearPathnodes list for an unbranched route, and pacenotes associated with each segment (segmentToPacenotes).",
           "params": {},
           "returns": [],
           "internal": false
         },
         "findSegments": {
-          "desc": "Ids des segments valides dont le départ vaut from et/ou l'arrivée vaut to (nil = pas de filtre).",
+          "desc": "Ids of the valid segments whose start equals from and/or whose end equals to (nil = no filter).",
           "params": {
-            "from": {"type": "integer|nil", "desc": "Id du pathnode de départ."},
-            "to": {"type": "integer|nil", "desc": "Id du pathnode d'arrivée."}
+            "from": {
+              "type": "integer|nil",
+              "desc": "Start pathnode id."
+            },
+            "to": {
+              "type": "integer|nil",
+              "desc": "End pathnode id."
+            }
           },
-          "returns": [{"type": "integer[]", "desc": "Ids de segments."}],
+          "returns": [
+            {
+              "type": "integer[]",
+              "desc": "Segment ids."
+            }
+          ],
           "internal": false
         },
         "drawDebug": {
-          "desc": "Dessine pathnodes, segments, positions de départ et pacenotes.",
-          "params": {"drawMode": {"type": "string|nil", "desc": "Mode de dessin des pathnodes ('none', 'faded', 'normal', 'highlight')."}},
+          "desc": "Draws pathnodes, segments, start positions and pacenotes.",
+          "params": {
+            "drawMode": {
+              "type": "string|nil",
+              "desc": "Pathnode draw mode ('none', 'faded', 'normal', 'highlight')."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "drawAiRouteDebug": {
-          "desc": "Dessine le chemin détaillé de l'IA (sphères de 1 m et prismes colorés) s'il existe.",
+          "desc": "Draws the AI's detailed path (1 m spheres and colored prisms) if it exists.",
           "params": {},
           "returns": [],
           "internal": false
         },
         "getAiPath": {
-          "desc": "Calcule le chemin IA à partir de la configuration : liste des nœuds de route (noms) proches de chaque pathnode, puis chemin détaillé via le module route. Renvoie deux tables vides si la configuration n'est pas prête. S'arrête aux branchements.",
+          "desc": "Computes the AI path from the configuration: list of road nodes (names) close to each pathnode, then detailed path via the route module. Returns two empty tables if the configuration is not ready. Stops at branchings.",
           "params": {},
           "returns": [
-            {"type": "string[]", "desc": "Noms de nœuds de route (chemin de base)."},
-            {"type": "table[]", "desc": "Chemin détaillé (points avec pos et wp)."}
+            {
+              "type": "string[]",
+              "desc": "Road node names (base path)."
+            },
+            {
+              "type": "table[]",
+              "desc": "Detailed path (points with pos and wp)."
+            }
           ],
           "internal": false
         },
         "findStartPositionByName": {
-          "desc": "Cherche une position de départ par son nom.",
-          "params": {"name": {"type": "string", "desc": "Nom."}},
-          "returns": [{"type": "table|nil", "desc": "startPosition trouvée."}],
+          "desc": "Looks for a start position by its name.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Name."
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "startPosition found."
+            }
+          ],
           "internal": false
         },
         "onSerialize": {
-          "desc": "Sérialise le chemin en table JSON (métadonnées, collections, ids de départ/arrivée, préfabs, classification, options).",
+          "desc": "Serializes the path into a JSON table (metadata, collections, start/end ids, prefabs, classification, options).",
           "params": {},
-          "returns": [{"type": "table", "desc": "Données JSON."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "JSON data."
+            }
+          ],
           "internal": false
         },
         "onDeserialized": {
-          "desc": "Restaure le chemin à partir de données sérialisées (vide puis recrée collections, convertit les ids avec une table oldIdMap).",
-          "params": {"data": {"type": "table|nil", "desc": "Données de onSerialize."}},
+          "desc": "Restores the path from serialized data (clears then recreates the collections, converts the ids with an oldIdMap table).",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "Data from onSerialize."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "copy": {
-          "desc": "Prévu pour dupliquer le chemin ; cassé dans cette version (voir notes).",
+          "desc": "Intended to duplicate the path; broken in this version (see notes).",
           "params": {},
-          "returns": [{"type": "table", "desc": "Nouveau chemin (en théorie)."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "New path (in theory)."
+            }
+          ],
           "internal": false
         },
         "reverse": {
-          "desc": "Inverse le sens du chemin : permute startNode et endNode, inverse from/to des segments, bascule isReversed.",
+          "desc": "Reverses the path direction: swaps startNode and endNode, swaps from/to of the segments, toggles isReversed.",
           "params": {},
           "returns": [],
           "internal": false
         },
         "fromLapConfig": {
-          "desc": "Réinitialise le chemin et le construit à partir d'une liste de checkpoints d'un ancien scénario (positions lues dans le scénario actif extensions.scenario_scenarios), reliés dans l'ordre par des segments ; le dernier rejoint le premier si closed.",
+          "desc": "Resets the path and builds it from a list of checkpoints of an old scenario (positions read from the active scenario extensions.scenario_scenarios), linked in order by segments; the last one joins the first if closed.",
           "params": {
-            "lapConfig": {"type": "string[]", "desc": "Noms de checkpoints."},
-            "closed": {"type": "boolean|nil", "desc": "true pour un circuit fermé."}
+            "lapConfig": {
+              "type": "string[]",
+              "desc": "Checkpoint names."
+            },
+            "closed": {
+              "type": "boolean|nil",
+              "desc": "true for a closed circuit."
+            }
           },
           "returns": [],
           "internal": false
         },
         "fromCheckpointList": {
-          "desc": "Réinitialise le chemin à partir d'objets de scène (CameraBookmark/waypoints) : un pathnode par objet (rayon = plus grande échelle, normale si directionalWaypoint), segments dans l'ordre.",
+          "desc": "Resets the path from scene objects (CameraBookmark/waypoints): one pathnode per object (radius = largest scale, normal if directionalWaypoint), segments in order.",
           "params": {
-            "list": {"type": "userdata[]", "desc": "Objets de scène (checkpoints)."},
-            "closed": {"type": "boolean|nil", "desc": "true pour un circuit fermé."}
+            "list": {
+              "type": "userdata[]",
+              "desc": "Scene objects (checkpoints)."
+            },
+            "closed": {
+              "type": "boolean|nil",
+              "desc": "true for a closed circuit."
+            }
           },
           "returns": [],
           "internal": false
         },
         "fromTrack": {
-          "desc": "Réinitialise le chemin à partir d'une description de track (ancien format) : ligne de départ/arrivée, lapConfig, préfabs optionnels (auto-détectés _forward et _reverse), segments, métadonnées et positions de départ des sphères d'apparition.",
+          "desc": "Resets the path from a track description (old format): start/finish line, lapConfig, optional prefabs (auto-detected _forward and _reverse), segments, metadata and start positions of the spawn spheres.",
           "params": {
-            "trackInfo": {"type": "table", "desc": "Données du track (originalInfo.lapConfig, startLineCheckpoint, finishLineCheckpoint, closed, spawnSpheres, prefabs, lapCount…)."},
-            "usePrefabs": {"type": "boolean|nil", "desc": "true pour faire apparaître temporairement les préfabs pendant la conversion."}
+            "trackInfo": {
+              "type": "table",
+              "desc": "Track data (originalInfo.lapConfig, startLineCheckpoint, finishLineCheckpoint, closed, spawnSpheres, prefabs, lapCount...)."
+            },
+            "usePrefabs": {
+              "type": "boolean|nil",
+              "desc": "true to temporarily spawn the prefabs during the conversion."
+            }
           },
-          "returns": [{"type": "boolean|nil", "desc": "true si réussi, nil si un checkpoint est introuvable."}],
+          "returns": [
+            {
+              "type": "boolean|nil",
+              "desc": "true if successful, nil if a checkpoint is not found."
+            }
+          ],
           "internal": false
         },
         "classify": {
-          "desc": "Appelle autoConfig et renvoie la classification du chemin : départ lancé autorisé, inversible, fermé, branché.",
+          "desc": "Calls autoConfig and returns the path's classification: rolling start allowed, reversible, closed, branching.",
           "params": {},
-          "returns": [{"type": "table", "desc": "{allowRollingStart, reversible, closed, branching}"}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "{allowRollingStart, reversible, closed, branching}"
+            }
+          ],
           "internal": false
         },
         "recalculateSegments": {
-          "desc": "Recrée les segments en reliant les pathnodes dans l'ordre trié.",
+          "desc": "Recreates the segments by linking the pathnodes in sorted order.",
           "params": {},
           "returns": [],
           "internal": false
         },
         "getLastPathnode": {
-          "desc": "Dernier pathnode de la liste triée.",
+          "desc": "Last pathnode of the sorted list.",
           "params": {},
-          "returns": [{"type": "table|nil", "desc": "Pathnode."}],
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Pathnode."
+            }
+          ],
           "internal": false
         }
       }

@@ -2,149 +2,149 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/crawlEditor.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Éditeur de données de « crawl » (escalade/rock crawling) du World Editor, fenêtre « Crawl Data Editor » (menu Gameplay). Il charge, édite et sauvegarde quatre types d'objets via gameplay/crawl/saveSystem : trails (parcours reliant un chemin, une frontière et une position de départ), paths (nœuds), boundaries (zones) et starting positions. Il liste aussi les objets venant de missions (/gameplay/missions/<niveau>/crawl/<mission>/). Il délègue l'édition aux sous-modules crawlEditor/paths, boundaries, trails, startingPositions, input et missionPortTool, enregistre quatre modes d'édition (pathEditMode, boundaryEditMode, startingPositionEditMode, trailEditMode) et dessine en permanence les nœuds, frontières et positions de départ sélectionnés. Utile à un moddeur qui crée des parcours de crawl pour un niveau ou veut lire les données chargées depuis une autre extension.
---- Accès : extension `editor_crawlEditor` : `extensions.load("editor_crawlEditor")`, puis la globale `editor_crawlEditor`
+--- World Editor "crawl" (rock crawling) data editor, "Crawl Data Editor" window (Gameplay menu). It loads, edits and saves four kinds of objects via gameplay/crawl/saveSystem: trails (routes linking a path, a boundary and a starting position), paths (nodes), boundaries (zones) and starting positions. It also lists objects coming from missions (/gameplay/missions/<level>/crawl/<mission>/). It delegates editing to the submodules crawlEditor/paths, boundaries, trails, startingPositions, input and missionPortTool, registers four edit modes (pathEditMode, boundaryEditMode, startingPositionEditMode, trailEditMode) and permanently draws the selected nodes, boundaries and starting positions. Useful to a modder who creates crawl routes for a level or wants to read the loaded data from another extension.
+--- Access: extension `editor_crawlEditor`: `extensions.load("editor_crawlEditor")`, then the global `editor_crawlEditor`
 ---@class editor_crawlEditor
 editor_crawlEditor = {}
 
---- Renvoie la liste des frontières de niveau.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1419
----@return table  Liste de frontières
+--- Returns the list of level boundaries.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1419
+---@return table  List of boundaries
 function editor_crawlEditor.getAllBoundaries() end
 
---- Renvoie la liste des frontières issues des missions.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1420
----@return table  Liste de frontières de mission
+--- Returns the list of boundaries coming from missions.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1420
+---@return table  List of mission boundaries
 function editor_crawlEditor.getAllMissionBoundaries() end
 
---- Renvoie la liste des chemins issus des missions.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1418
----@return table  Liste de chemins de mission
+--- Returns the list of paths coming from missions.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1418
+---@return table  List of mission paths
 function editor_crawlEditor.getAllMissionPaths() end
 
---- Renvoie la liste des trails provenant des missions crawl du niveau courant.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1416
----@return table  Liste de trails de mission
+--- Returns the list of trails coming from the crawl missions of the current level.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1416
+---@return table  List of mission trails
 function editor_crawlEditor.getAllMissionTrails() end
 
---- Renvoie la liste des chemins de niveau.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1417
----@return table  Liste de chemins
+--- Returns the list of level paths.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1417
+---@return table  List of paths
 function editor_crawlEditor.getAllPaths() end
 
---- Renvoie la liste des positions de départ.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1421
----@return table  Liste de positions de départ
+--- Returns the list of starting positions.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1421
+---@return table  List of starting positions
 function editor_crawlEditor.getAllStartingPositions() end
 
---- Renvoie la liste des trails de niveau chargés.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1415
----@return table  Liste de trails (table interne)
+--- Returns the list of loaded level trails.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1415
+---@return table  List of trails (internal table)
 function editor_crawlEditor.getAllTrails() end
 
---- Renvoie la frontière sélectionnée (de niveau ou de mission).
----Source : lua/ge/extensions/editor/crawlEditor.lua:280
----@return table|nil  Frontière ou nil
+--- Returns the selected boundary (level or mission).
+---Source: lua/ge/extensions/editor/crawlEditor.lua:280
+---@return table|nil  Boundary or nil
 function editor_crawlEditor.getSelectedBoundary() end
 
---- Renvoie l'index de la frontière sélectionnée.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1424
+--- Returns the index of the selected boundary.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1424
 ---@return integer  Index
 function editor_crawlEditor.getSelectedBoundaryIndex() end
 
---- Renvoie le chemin sélectionné (de niveau ou de mission).
----Source : lua/ge/extensions/editor/crawlEditor.lua:271
----@return table|nil  Chemin ou nil
+--- Returns the selected path (level or mission).
+---Source: lua/ge/extensions/editor/crawlEditor.lua:271
+---@return table|nil  Path or nil
 function editor_crawlEditor.getSelectedPath() end
 
---- Renvoie l'index du chemin sélectionné.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1423
+--- Returns the index of the selected path.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1423
 ---@return integer  Index
 function editor_crawlEditor.getSelectedPathIndex() end
 
---- Renvoie la position de départ sélectionnée.
----Source : lua/ge/extensions/editor/crawlEditor.lua:289
----@return table|nil  Position de départ ou nil
+--- Returns the selected starting position.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:289
+---@return table|nil  Starting position or nil
 function editor_crawlEditor.getSelectedStartingPosition() end
 
---- Renvoie l'index de la position de départ sélectionnée.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1425
+--- Returns the index of the selected starting position.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1425
 ---@return integer  Index
 function editor_crawlEditor.getSelectedStartingPositionIndex() end
 
---- Renvoie le trail sélectionné (de niveau ou de mission).
----Source : lua/ge/extensions/editor/crawlEditor.lua:262
----@return table|nil  Trail ou nil
+--- Returns the selected trail (level or mission).
+---Source: lua/ge/extensions/editor/crawlEditor.lua:262
+---@return table|nil  Trail or nil
 function editor_crawlEditor.getSelectedTrail() end
 
---- Renvoie l'index du trail sélectionné.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1422
----@return integer  Index (> 0 si sélectionné)
+--- Returns the index of the selected trail.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1422
+---@return integer  Index (> 0 if selected)
 function editor_crawlEditor.getSelectedTrailIndex() end
 
---- Recharge depuis le disque trails, paths, boundaries et starting positions (via saveSystem.getAll...Files / get...ById), ainsi que ceux des missions crawl du niveau courant. Vide d'abord les listes en mémoire.
----Source : lua/ge/extensions/editor/crawlEditor.lua:167
+--- Reloads from disk the trails, paths, boundaries and starting positions (via saveSystem.getAll...Files / get...ById), as well as those of the crawl missions of the current level. First clears the in-memory lists.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:167
 function editor_crawlEditor.loadAllObjects() end
 
---- Marque un objet comme modifié (non sauvegardé).
----Source : lua/ge/extensions/editor/crawlEditor.lua:304
----@param objectType string « trail », « path », « boundary » ou « startingPosition »
----@param index integer Index global (objets de mission inclus sauf pour startingPosition)
+--- Marks an object as modified (unsaved).
+---Source: lua/ge/extensions/editor/crawlEditor.lua:304
+---@param objectType string "trail", "path", "boundary" or "startingPosition"
+---@param index integer Global index (mission objects included except for startingPosition)
 function editor_crawlEditor.markAsDirty(objectType, index) end
 
---- Déplace un trail de mission vers /levels/<niveau>/crawls/ : réécrit pathId et boundaryId vers ce dossier, sauve le trail, supprime l'ancien fichier, puis recharge tout. Échoue si le trail n'est pas de mission, si aucun niveau n'est chargé ou si le fichier existe déjà.
----Source : lua/ge/extensions/editor/crawlEditor.lua:456
----@param trail table Trail avec _isFromMission = true
----@return boolean  true si déplacé
+--- Moves a mission trail to /levels/<level>/crawls/: rewrites pathId and boundaryId to point to this folder, saves the trail, deletes the old file, then reloads everything. Fails if the trail is not from a mission, if no level is loaded or if the file already exists.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:456
+---@param trail table Trail with _isFromMission = true
+---@return boolean  true if moved
 function editor_crawlEditor.moveTrailToLevel(trail) end
 
---- Restaure l'état renvoyé par onSerialize (index à -1 par défaut).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/crawlEditor.lua:860
----@param data table|nil Données de onSerialize
+--- Restores the state returned by onSerialize (indices default to -1).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/crawlEditor.lua:860
+---@param data table|nil Data from onSerialize
 function editor_crawlEditor.onDeserialized(data) end
 
---- Appelé à chaque frame : met à jour la souris (crawlEditor/input), dessine les surcouches permanentes (nœuds, frontières, positions de départ), la fenêtre (menu File avec Save All, listes à gauche, détails à droite, boutons Save/Delete) et la fenêtre de portage de missions.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/crawlEditor.lua:873
+--- Called every frame: updates the mouse (crawlEditor/input), draws the permanent overlays (nodes, boundaries, starting positions), the window (File menu with Save All, lists on the left, details on the right, Save/Delete buttons) and the mission porting window.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/crawlEditor.lua:873
 function editor_crawlEditor.onEditorGui() end
 
---- Enregistre la fenêtre « Crawl Data Editor » (1800x900), l'entrée de menu (groupe Gameplay) et les quatre modes d'édition avec leurs raccourcis auxiliaires. Appelé une fois à l'initialisation de l'éditeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/crawlEditor.lua:781
+--- Registers the "Crawl Data Editor" window (1800x900), the menu entry (Gameplay group) and the four edit modes with their auxiliary shortcuts. Called once at editor initialization.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/crawlEditor.lua:781
 function editor_crawlEditor.onEditorInitialized() end
 
---- Hook de sérialisation avant rechargement Lua : renvoie dossier/nom de fichier courants, crawlData, onglet courant et index de sélection.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/crawlEditor.lua:846
----@return table  Données à restaurer
+--- Serialization hook before Lua reload: returns the current folder/file name, crawlData, current tab and selection indices.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/crawlEditor.lua:846
+---@return table  Data to restore
 function editor_crawlEditor.onSerialize() end
 
---- Renomme le fichier d'un objet crawl et met à jour les références des trails.
----Source : lua/ge/extensions/editor/crawlEditor.lua:74
----@param oldFilePath string Ancien chemin
----@param newFilePath string Nouveau chemin (ne doit pas exister)
----@param objectType string « trail », « path », « boundary » ou « startingPosition »
----@return boolean  true si renommé ; false si chemins identiques/nil, cible existante ou échec
+--- Renames the file of a crawl object and updates the trails' references.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:74
+---@param oldFilePath string Old path
+---@param newFilePath string New path (must not exist)
+---@param objectType string "trail", "path", "boundary" or "startingPosition"
+---@return boolean  true if renamed; false if identical/nil paths, existing target or failure
 function editor_crawlEditor.renameObjectFile(oldFilePath, newFilePath, objectType) end
 
---- Définit l'index de la frontière sélectionnée.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1428
+--- Sets the index of the selected boundary.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1428
 ---@param index integer Index
 function editor_crawlEditor.setSelectedBoundaryIndex(index) end
 
---- Définit l'index du chemin sélectionné.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1427
+--- Sets the index of the selected path.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1427
 ---@param index integer Index
 function editor_crawlEditor.setSelectedPathIndex(index) end
 
---- Définit l'index de la position de départ sélectionnée.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1429
+--- Sets the index of the selected starting position.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1429
 ---@param index integer Index
 function editor_crawlEditor.setSelectedStartingPositionIndex(index) end
 
---- Définit l'index du trail sélectionné sans toucher aux autres sélections.
----Source : lua/ge/extensions/editor/crawlEditor.lua:1426
----@param index integer Index (1 = premier)
+--- Sets the index of the selected trail without touching the other selections.
+---Source: lua/ge/extensions/editor/crawlEditor.lua:1426
+---@param index integer Index (1 = first)
 function editor_crawlEditor.setSelectedTrailIndex(index) end
 

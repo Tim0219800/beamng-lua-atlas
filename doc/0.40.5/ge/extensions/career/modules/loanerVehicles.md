@@ -1,108 +1,108 @@
 # `career_modules_loanerVehicles`
 
-*Fichier : `lua/ge/extensions/career/modules/loanerVehicles.lua` · VM : Game Engine (GE) · 440 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/loanerVehicles.lua` · VM: Game Engine (GE) · 440 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_loanerVehicles` : `extensions.load("career_modules_loanerVehicles")`, puis la globale `career_modules_loanerVehicles`
+**Access:** extension `career_modules_loanerVehicles`: `extensions.load("career_modules_loanerVehicles")`, then the global `career_modules_loanerVehicles`
 
-Véhicules prêtés (loaners) par les organisations de livraison en carrière. Il construit les offres affichées dans l'UI (formatLoanerOfferForUi), gère la sélection puis le spawn de véhicules prêtés via une séquence util_stepHandler (fondu, spawn, placement sur une place de parking, ajout à l'inventaire avec owned = false, fondu retour), le retour des véhicules et une surveillance : un véhicule « work » laissé à plus de 100 m pendant 300 s est rendu automatiquement.
+Vehicles loaned (loaners) by the career delivery organizations. It builds the offers displayed in the UI (formatLoanerOfferForUi), handles the selection then the spawning of loaned vehicles via a util_stepHandler sequence (fade, spawn, placement on a parking spot, adding to the inventory with owned = false, fade back in), returning the vehicles and a monitoring: a "work" vehicle left more than 100 m away for 300 s is returned automatically.
 
-## Remarques
+## Notes
 
-- Réglages : walkAwayRadius 100 m, comeBackRadius 95 m, walkAwayTimeLimit 300 s, avertissement à 60 s restantes.
-- Un véhicule loaner est ajouté à l'inventaire avec owningOrganization (facility.associatedOrganization) et loanType (offer.loanType, "work").
-- Rendre un véhicule work endommagé (inventoryVehNeedsRepair) coûte la réputation returnLoanerDamaged (-20) de l'organisation et affiche un toast.
-- Offre non disponible si : pas de place libre, déjà un loaner non-remorque de cette organisation (limite 1, y compris ceux en attente de spawn), réputation insuffisante, ou niveau de livraison (branche delivery) insuffisant. Une offre déjà cochée reste activée.
-- Kilométrage proposé : mileage de l'offre selon le niveau de réputation, plus environ 5,8 * (1 ± 10 %) par seconde écoulée depuis la création de la sauvegarde (soit 500 km par jour selon le commentaire du code).
-- Bug : M.spawnAndLoanVehicle = spawnAndLoanVehicle référence une variable non définie : le champ vaut nil.
-- spawnAllOffers : la dernière étape ne traite que la première offre de markedForSpawningLoaners (next) pour orienter la caméra, puis vide la liste.
-- onUpdate utilise `break` après chaque action : un seul véhicule est traité par frame.
+- Settings: walkAwayRadius 100 m, comeBackRadius 95 m, walkAwayTimeLimit 300 s, warning at 60 s remaining.
+- A loaner vehicle is added to the inventory with owningOrganization (facility.associatedOrganization) and loanType (offer.loanType, "work").
+- Returning a damaged work vehicle (inventoryVehNeedsRepair) costs the organization's returnLoanerDamaged reputation (-20) and shows a toast.
+- Offer unavailable if: no free slot, already a non-trailer loaner from this organization (limit 1, including those waiting to spawn), insufficient reputation, or insufficient delivery level (delivery branch). An offer already ticked stays enabled.
+- Proposed mileage: the offer's mileage according to the reputation level, plus about 5.8 * (1 ± 10%) per second elapsed since the save was created (i.e. 500 km per day according to the code comment).
+- Bug: M.spawnAndLoanVehicle = spawnAndLoanVehicle references an undefined variable: the field is nil.
+- spawnAllOffers: the last step only processes the first offer of markedForSpawningLoaners (next) to orient the camera, then empties the list.
+- onUpdate uses `break` after each action: only one vehicle is processed per frame.
 
-**Dépendances (chargées avant) :** `util_stepHandler`
+**Dependencies (loaded first):** `util_stepHandler`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_loanerVehicles.formatLoanerOfferForUi(facility)` | Prépare pour l'UI les offres de prêt d'une installation : disponibilité (enabled), raison d'indisponibilité, infos de déblocage, kilométrage, capacité, miniature. | 288 |
-| `career_modules_loanerVehicles.formatSpawnedLoanersForUi()` | Prépare pour l'UI la liste des loaners déjà dans l'inventaire : part de l'organisation (loanerCut), nom, kilométrage, type véhicule/remorque, capacité en fluides. | 254 |
-| `career_modules_loanerVehicles.getLoanedVehiclesByOrg(organizationId)` | Liste (copies profondes avec miniature) les véhicules de l'inventaire prêtés par l'organisation donnée. | 139 |
-| `career_modules_loanerVehicles.getLoaningOrgsOfVehicle(vehId)` | Renvoie les organisations propriétaires du véhicule et, s'il est attelé, du véhicule tracteur non-remorque. | 210 |
-| `career_modules_loanerVehicles.markForSpawning(offer)` | Bascule la sélection d'une offre : l'ajoute à la liste des loaners à faire apparaître, ou la retire si elle y était déjà. | 18 |
-| `career_modules_loanerVehicles.onUpdate(dtReal, dtSim, dtRaw)` | Hook de frame : surveille l'éloignement des véhicules work (avertissement, puis retour automatique après le délai). *(interne)* *(hook)* | 151 |
-| `career_modules_loanerVehicles.onVehicleAdded(id)` | Hook appelé à l'ajout d'un véhicule à l'inventaire : débloque l'étape d'attente de la séquence de spawn. *(interne)* *(hook)* | 33 |
-| `career_modules_loanerVehicles.returnVehicle(inventoryId, callback)` | Rend un véhicule prêté : met à jour les conditions de pièces s'il est présent dans le monde, applique la pénalité de réputation si le véhicule work est endommagé, puis le retire de l'inventaire et appelle callback. | 114 |
-| `career_modules_loanerVehicles.spawnAllOffers()` | Fait apparaître toutes les offres sélectionnées avec un fondu : spawn, initialisation des conditions de pièces (kilométrage), placement sur la meilleure place de parking (remorques ou non), ajout à l'inventaire. Ne fait rien si rien n'est sélectionné. | 37 |
-| `career_modules_loanerVehicles.unmarkAllForSpawning()` | Vide la liste des offres sélectionnées. | 27 |
+| `career_modules_loanerVehicles.formatLoanerOfferForUi(facility)` | Prepares for the UI a facility's loan offers: availability (enabled), reason for unavailability, unlock info, mileage, capacity, thumbnail. | 288 |
+| `career_modules_loanerVehicles.formatSpawnedLoanersForUi()` | Prepares for the UI the list of loaners already in the inventory: organization share (loanerCut), name, mileage, vehicle/trailer type, fluid capacity. | 254 |
+| `career_modules_loanerVehicles.getLoanedVehiclesByOrg(organizationId)` | Lists (deep copies with thumbnail) the inventory vehicles loaned by the given organization. | 139 |
+| `career_modules_loanerVehicles.getLoaningOrgsOfVehicle(vehId)` | Returns the organizations that own the vehicle and, if it is coupled, the non-trailer towing vehicle. | 210 |
+| `career_modules_loanerVehicles.markForSpawning(offer)` | Toggles the selection of an offer: adds it to the list of loaners to spawn, or removes it if it was already there. | 18 |
+| `career_modules_loanerVehicles.onUpdate(dtReal, dtSim, dtRaw)` | Frame hook: monitors work vehicles moving away (warning, then automatic return after the delay). *(internal)* *(hook)* | 151 |
+| `career_modules_loanerVehicles.onVehicleAdded(id)` | Hook called when a vehicle is added to the inventory: unblocks the waiting step of the spawn sequence. *(internal)* *(hook)* | 33 |
+| `career_modules_loanerVehicles.returnVehicle(inventoryId, callback)` | Returns a loaned vehicle: updates the part conditions if it is present in the world, applies the reputation penalty if the work vehicle is damaged, then removes it from the inventory and calls callback. | 114 |
+| `career_modules_loanerVehicles.spawnAllOffers()` | Spawns all the selected offers with a fade: spawn, initialization of the part conditions (mileage), placement on the best parking spot (trailers or not), adding to the inventory. Does nothing if nothing is selected. | 37 |
+| `career_modules_loanerVehicles.unmarkAllForSpawning()` | Empties the list of selected offers. | 27 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_loanerVehicles.formatLoanerOfferForUi(facility)`
 
-Prépare pour l'UI les offres de prêt d'une installation : disponibilité (enabled), raison d'indisponibilité, infos de déblocage, kilométrage, capacité, miniature.
+Prepares for the UI a facility's loan offers: availability (enabled), reason for unavailability, unlock info, mileage, capacity, thumbnail.
 
-- `facility` (*table*) : Installation de livraison (associatedOrganization, loanerTrailerSpots, loanerNonTrailerSpots, id).
-- **renvoie** : table[]|nil Offres, nil si l'organisation est inconnue.
+- `facility` (*table*) : Delivery facility (associatedOrganization, loanerTrailerSpots, loanerNonTrailerSpots, id).
+- **returns**: table[]|nil Offers, nil if the organization is unknown.
 
 #### `career_modules_loanerVehicles.formatSpawnedLoanersForUi()`
 
-Prépare pour l'UI la liste des loaners déjà dans l'inventaire : part de l'organisation (loanerCut), nom, kilométrage, type véhicule/remorque, capacité en fluides.
+Prepares for the UI the list of loaners already in the inventory: organization share (loanerCut), name, mileage, vehicle/trailer type, fluid capacity.
 
-- **renvoie** : table[] Entrées d'UI (isSpawnedLoaner = true).
+- **returns**: table[] UI entries (isSpawnedLoaner = true).
 
 #### `career_modules_loanerVehicles.getLoanedVehiclesByOrg(organizationId)`
 
-Liste (copies profondes avec miniature) les véhicules de l'inventaire prêtés par l'organisation donnée.
+Lists (deep copies with thumbnail) the inventory vehicles loaned by the given organization.
 
-- `organizationId` (*string*) : Id de l'organisation.
-- **renvoie** : table[] Infos de véhicules.
+- `organizationId` (*string*) : Organization id.
+- **returns**: table[] Vehicle info.
 
 #### `career_modules_loanerVehicles.getLoaningOrgsOfVehicle(vehId)`
 
-Renvoie les organisations propriétaires du véhicule et, s'il est attelé, du véhicule tracteur non-remorque.
+Returns the organizations that own the vehicle and, if it is coupled, the non-trailer towing vehicle.
 
-- `vehId` (*integer*) : Id d'objet du véhicule.
-- **renvoie** : table<string, boolean> Ensemble des ids d'organisations.
+- `vehId` (*integer*) : Vehicle object id.
+- **returns**: table<string, boolean> Set of organization ids.
 
 #### `career_modules_loanerVehicles.markForSpawning(offer)`
 
-Bascule la sélection d'une offre : l'ajoute à la liste des loaners à faire apparaître, ou la retire si elle y était déjà.
+Toggles the selection of an offer: adds it to the list of loaners to spawn, or removes it if it was already there.
 
-- `offer` (*table*) : Offre (id, model, config, sourceFacility, loanType, vehMileage).
+- `offer` (*table*) : Offer (id, model, config, sourceFacility, loanType, vehMileage).
 
 #### `career_modules_loanerVehicles.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook de frame : surveille l'éloignement des véhicules work (avertissement, puis retour automatique après le délai).
+Frame hook: monitors work vehicles moving away (warning, then automatic return after the delay).
 
-- `dtReal` (*number*) : Temps réel (s).
-- `dtSim` (*number*) : Temps de simulation (s).
-- `dtRaw` (*number*) : Temps brut (s).
+- `dtReal` (*number*) : Real time (s).
+- `dtSim` (*number*) : Simulation time (s).
+- `dtRaw` (*number*) : Raw time (s).
 
 #### `career_modules_loanerVehicles.onVehicleAdded(id)`
 
-Hook appelé à l'ajout d'un véhicule à l'inventaire : débloque l'étape d'attente de la séquence de spawn.
+Hook called when a vehicle is added to the inventory: unblocks the waiting step of the spawn sequence.
 
-- `id` (*integer*) : Id du véhicule.
+- `id` (*integer*) : Vehicle id.
 
 #### `career_modules_loanerVehicles.returnVehicle(inventoryId, callback)`
 
-Rend un véhicule prêté : met à jour les conditions de pièces s'il est présent dans le monde, applique la pénalité de réputation si le véhicule work est endommagé, puis le retire de l'inventaire et appelle callback.
+Returns a loaned vehicle: updates the part conditions if it is present in the world, applies the reputation penalty if the work vehicle is damaged, then removes it from the inventory and calls callback.
 
-- `inventoryId` (*integer*) : Id d'inventaire du véhicule.
-- `callback` (*function|nil*) : Appelée une fois le véhicule retiré.
+- `inventoryId` (*integer*) : Inventory id of the vehicle.
+- `callback` (*function|nil*) : Called once the vehicle is removed.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : util_stepHandler. |
-| `spawnAndLoanVehicle` | nil | Toujours nil : variable inexistante dans le fichier (bug). ⚠ référence `spawnAndLoanVehicle` non définie dans le fichier (vaut probablement nil) |
+| `dependencies` | table<integer, string> | Extensions loaded before: util_stepHandler. |
+| `spawnAndLoanVehicle` | nil | Always nil: variable that does not exist in the file (bug). ⚠ reference `spawnAndLoanVehicle` not defined in the file (probably nil) |
 
-**Évènements UI (guihooks.trigger) :** `toastrMsg`
+**UI events (guihooks.trigger):** `toastrMsg`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectPositionXYZ`, `getPlayerVehicleID`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/loanerVehicles.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/loanerVehicles.lua`.*

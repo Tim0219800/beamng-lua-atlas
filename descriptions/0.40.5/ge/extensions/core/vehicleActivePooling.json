@@ -1,125 +1,515 @@
 {
   "path": "lua/ge/extensions/core/vehicleActivePooling.lua",
-  "module": "Extension GE `core_vehicleActivePooling` : gère des « pools » de véhicules dont seule une partie est active (visible et simulée) à la fois, pour limiter la charge (trafic, véhicules garés…). Un pool (classe VehPool) garde deux listes (activeVehs, inactiveVehs), une limite maxActiveAmount, un mode distance (activation selon la distance à la caméra) et un fondu (fade) des meshes. L'état actif d'un véhicule est celui de l'objet (`obj:setActive(0|1)`).",
-  "usage": "local pool = core_vehicleActivePooling.createPool({name = 'monTrafic', maxActiveAmount = 8})\npool:insertVeh(vehId)            -- ajoute un véhicule (actif si la limite le permet)\npool.useDistanceMode = true      -- active/désactive selon la distance à la caméra\npool.activeDistance = 250\npool:cycle()                     -- désactive le 1er actif, active le 1er inactif",
+  "module": "GE extension `core_vehicleActivePooling`: manages vehicle \"pools\" of which only a part is active (visible and simulated) at a time, to limit the load (traffic, parked vehicles...). A pool (class VehPool) keeps two lists (activeVehs, inactiveVehs), a maxActiveAmount limit, a distance mode (activation based on distance to the camera) and a mesh fade. A vehicle's active state is that of the object (`obj:setActive(0|1)`).",
+  "usage": "local pool = core_vehicleActivePooling.createPool({name = 'myTraffic', maxActiveAmount = 8})\npool:insertVeh(vehId)            -- adds a vehicle (active if the limit allows it)\npool.useDistanceMode = true      -- activates/deactivates based on distance to the camera\npool.activeDistance = 250\npool:cycle()                     -- deactivates the 1st active, activates the 1st inactive",
   "notes": [
-    "Champs d'un pool : id, name, activeVehs (tableau d'ids), inactiveVehs (tableau d'ids), allVehs ([id] = 1 actif / 0 inactif), fadeQueue ([id] = 1 fondu entrant / 0 sortant), total, maxActiveAmount (math.huge par défaut), useSceneVehiclesCap (compter tous les véhicules actifs de la scène au lieu de ceux du pool), useDistanceMode (prioritaire sur les autres méthodes), updateActiveStatePostFade (changer l'état actif après le fondu), activeDistance (300 m), fadeDuration (0.25 s).",
-    "Les changements d'état actif passent par obj:setActive, qui déclenche le hook onVehicleActiveChanged, lequel appelle VehPool:_setVeh pour tenir les listes à jour.",
-    "Incohérence : la fonction de module deletePool(id) se contente de retirer le pool de la table (pas de suppression des véhicules inactifs, pas de hook onVehiclePoolRemoved), alors que VehPool:deletePool() supprime les véhicules inactifs (sauf keepVehicles) et émet onVehiclePoolRemoved.",
-    "VehPool:getSceneActiveAmount(vehTypes) lit un argument vehTypes (liste de types) que la liste automatique ne signale pas ; nil = types par défaut de getAllVehiclesByType, véhicules garés (isParked) exclus.",
-    "Les signatures de plusieurs méthodes dans la liste automatique omettent le premier argument vehId (ex. fadeVeh(vehId, dt)) ; les signatures réelles sont données ci-dessous."
+    "Pool fields: id, name, activeVehs (array of ids), inactiveVehs (array of ids), allVehs ([id] = 1 active / 0 inactive), fadeQueue ([id] = 1 fading in / 0 fading out), total, maxActiveAmount (math.huge by default), useSceneVehiclesCap (count all active vehicles of the scene instead of those of the pool), useDistanceMode (takes precedence over the other methods), updateActiveStatePostFade (change the active state after the fade), activeDistance (300 m), fadeDuration (0.25 s).",
+    "Active state changes go through obj:setActive, which triggers the onVehicleActiveChanged hook, which calls VehPool:_setVeh to keep the lists up to date.",
+    "Inconsistency: the module function deletePool(id) merely removes the pool from the table (no deletion of inactive vehicles, no onVehiclePoolRemoved hook), whereas VehPool:deletePool() deletes the inactive vehicles (except keepVehicles) and emits onVehiclePoolRemoved.",
+    "VehPool:getSceneActiveAmount(vehTypes) reads a vehTypes argument (list of types) that the automatic list does not report; nil = default types of getAllVehiclesByType, parked vehicles (isParked) excluded.",
+    "The signatures of several methods in the automatic list omit the first argument vehId (e.g. fadeVeh(vehId, dt)); the actual signatures are given below."
   ],
   "fields": {
-    "logErrors": {"type": "boolean", "desc": "false par défaut ; si true, les avertissements (véhicule déjà actif, limite atteinte…) sont logués."}
+    "logErrors": {
+      "type": "boolean",
+      "desc": "false by default; if true, warnings (vehicle already active, limit reached...) are logged."
+    }
   },
   "functions": {
     "createPool": {
-      "desc": "Crée un pool, l'enregistre et émet onVehiclePoolAdded(id).",
-      "params": {"data": {"type": "table|nil", "desc": "{id?, name?, activeVehs?, inactiveVehs?, maxActiveAmount?} ; name par défaut 'pool<id>'"}},
-      "returns": [{"type": "VehPool", "desc": "le pool créé"}]
+      "desc": "Creates a pool, registers it and emits onVehiclePoolAdded(id).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "{id?, name?, activeVehs?, inactiveVehs?, maxActiveAmount?}; name defaults to 'pool<id>'"
+        }
+      },
+      "returns": [
+        {
+          "type": "VehPool",
+          "desc": "the created pool"
+        }
+      ]
     },
     "deletePool": {
-      "desc": "Retire le pool de la table des pools (sans supprimer de véhicules ni émettre de hook ; voir notes).",
-      "params": {"id": {"type": "integer", "desc": "identifiant du pool"}},
+      "desc": "Removes the pool from the pool table (without deleting vehicles or emitting a hook; see notes).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "pool identifier"
+        }
+      },
       "returns": []
     },
     "deleteAllPools": {
-      "desc": "Appelle VehPool:deletePool() sur chaque pool (supprime leurs véhicules inactifs) puis vide la table.",
+      "desc": "Calls VehPool:deletePool() on each pool (deletes their inactive vehicles) then empties the table.",
       "params": {},
       "returns": []
     },
     "getPool": {
-      "desc": "Trouve un pool par son nom.",
-      "params": {"name": {"type": "string|nil", "desc": "nom du pool"}},
-      "returns": [{"type": "VehPool|nil", "desc": "pool trouvé"}]
+      "desc": "Finds a pool by its name.",
+      "params": {
+        "name": {
+          "type": "string|nil",
+          "desc": "pool name"
+        }
+      },
+      "returns": [
+        {
+          "type": "VehPool|nil",
+          "desc": "pool found"
+        }
+      ]
     },
     "getPoolById": {
-      "desc": "Trouve un pool par son id.",
-      "params": {"id": {"type": "integer|nil", "desc": "identifiant"}},
-      "returns": [{"type": "VehPool|nil", "desc": "pool trouvé"}]
+      "desc": "Finds a pool by its id.",
+      "params": {
+        "id": {
+          "type": "integer|nil",
+          "desc": "identifier"
+        }
+      },
+      "returns": [
+        {
+          "type": "VehPool|nil",
+          "desc": "pool found"
+        }
+      ]
     },
     "getPoolOfVeh": {
-      "desc": "Trouve le pool contenant un véhicule.",
-      "params": {"vehId": {"type": "integer", "desc": "identifiant du véhicule"}},
+      "desc": "Finds the pool containing a vehicle.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "vehicle identifier"
+        }
+      },
       "returns": [
-        {"type": "VehPool|nil", "desc": "pool"},
-        {"type": "boolean|nil", "desc": "true si le véhicule y est actif"}
+        {
+          "type": "VehPool|nil",
+          "desc": "pool"
+        },
+        {
+          "type": "boolean|nil",
+          "desc": "true if the vehicle is active in it"
+        }
       ]
     },
     "getAllPools": {
-      "desc": "Renvoie la table de tous les pools (pas une copie).",
+      "desc": "Returns the table of all pools (not a copy).",
       "params": {},
-      "returns": [{"type": "table<integer, VehPool>", "desc": "[id] = pool"}]
+      "returns": [
+        {
+          "type": "table<integer, VehPool>",
+          "desc": "[id] = pool"
+        }
+      ]
     },
     "onVehicleActiveChanged": {
-      "desc": "Hook : l'état actif d'un véhicule change ; met à jour les listes de tous les pools qui le contiennent.",
+      "desc": "Hook: a vehicle's active state changes; updates the lists of all pools that contain it.",
       "params": {
-        "vehId": {"type": "integer", "desc": "véhicule"},
-        "active": {"type": "boolean", "desc": "nouvel état"}
+        "vehId": {
+          "type": "integer",
+          "desc": "vehicle"
+        },
+        "active": {
+          "type": "boolean",
+          "desc": "new state"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook : un véhicule est détruit ; le retire de tous les pools.",
-      "params": {"vehId": {"type": "integer", "desc": "véhicule"}},
+      "desc": "Hook: a vehicle is destroyed; removes it from all pools.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "vehicle"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook : fin du niveau ; supprime tous les pools (deleteAllPools).",
+      "desc": "Hook: end of the level; deletes all pools (deleteAllPools).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook appelé à chaque frame : applique le mode distance (activateByDistanceTo) et fait progresser les fondus de fadeQueue avec dtSim / fadeDuration.",
+      "desc": "Hook called every frame: applies the distance mode (activateByDistanceTo) and advances the fadeQueue fades with dtSim / fadeDuration.",
       "params": {
-        "dt": {"type": "number", "desc": "temps réel écoulé (s)"},
-        "dtSim": {"type": "number", "desc": "temps de simulation écoulé (s)"}
+        "dt": {
+          "type": "number",
+          "desc": "real elapsed time (s)"
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "simulation elapsed time (s)"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook : sérialise tous les pools avant un rechargement Lua.",
+      "desc": "Hook: serializes all pools before a Lua reload.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "données des pools"}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "pool data"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook : recrée les pools à partir des données sérialisées.",
-      "params": {"data": {"type": "table[]", "desc": "données de onSerialize"}},
+      "desc": "Hook: recreates the pools from the serialized data.",
+      "params": {
+        "data": {
+          "type": "table[]",
+          "desc": "data from onSerialize"
+        }
+      },
       "returns": [],
       "internal": true
     }
   },
   "classes": {
     "VehPool": {
-      "desc": "Pool de véhicules créé par createPool. Les méthodes s'appellent avec `:` (pool:insertVeh(id)).",
+      "desc": "Vehicle pool created by createPool. Methods are called with `:` (pool:insertVeh(id)).",
       "functions": {
-        "__tostring": {"desc": "Texte '[id] active: {...}, inactive: {...}'.", "params": {}, "returns": [{"type": "string", "desc": "description"}]},
-        "new": {"desc": "Constructeur (utiliser plutôt createPool). Initialise listes, limites et valeurs par défaut, et garantit un id unique.", "params": {"data": {"type": "table|nil", "desc": "id, name, activeVehs, inactiveVehs, maxActiveAmount"}}, "returns": [{"type": "VehPool", "desc": "nouveau pool"}], "internal": true},
-        "onSerialize": {"desc": "Renvoie les données du pool à sauvegarder.", "params": {}, "returns": [{"type": "table", "desc": "données"}], "internal": true},
-        "onDeserialized": {"desc": "Copie les champs de data dans le pool.", "params": {"data": {"type": "table|nil", "desc": "données"}}, "returns": [], "internal": true},
-        "getSceneActiveAmount": {"desc": "Nombre total de véhicules actifs de la scène (tous pools confondus), véhicules garés exclus sauf si 'PropParked' est demandé.", "params": {"vehTypes": {"type": "string[]|nil", "desc": "types de véhicules à compter ; nil = défaut"}}, "returns": [{"type": "integer", "desc": "nombre"}]},
-        "checkActiveLimit": {"desc": "Renvoie true si la limite de véhicules actifs est atteinte (compte les actifs du pool, ou de la scène si useSceneVehiclesCap).", "params": {}, "returns": [{"type": "boolean", "desc": "limite atteinte"}]},
-        "clearPool": {"desc": "Vide toutes les listes du pool sans toucher aux véhicules.", "params": {}, "returns": []},
-        "deletePool": {"desc": "Supprime le pool ; sauf si keepVehicles, supprime aussi les véhicules inactifs. Émet onVehiclePoolRemoved(id).", "params": {"keepVehicles": {"type": "boolean|nil", "desc": "true : ne supprime aucun véhicule"}}, "returns": []},
-        "cycle": {"desc": "Désactive un véhicule actif et en active un inactif du même pool (la limite est ignorée pendant l'opération).", "params": {"vehId1": {"type": "integer|nil", "desc": "véhicule à désactiver ; défaut = 1er actif"}, "vehId2": {"type": "integer|nil", "desc": "véhicule à activer ; défaut = 1er inactif"}}, "returns": [{"type": "integer|false", "desc": "vehId1 (ou false si impossible)"}, {"type": "integer|nil", "desc": "vehId2"}]},
-        "crossCycle": {"desc": "Désactive un véhicule de ce pool et active un véhicule d'un autre pool.", "params": {"otherPool": {"type": "VehPool|nil", "desc": "autre pool ; nil ou même pool = cycle"}, "vehId1": {"type": "integer|nil", "desc": "véhicule de ce pool à désactiver"}, "vehId2": {"type": "integer|nil", "desc": "véhicule de l'autre pool à activer"}}, "returns": [{"type": "integer|false", "desc": "vehId1 (ou false)"}, {"type": "integer|nil", "desc": "vehId2"}]},
-        "fadeVeh": {"desc": "Augmente ou diminue directement l'alpha des meshes du véhicule de `dt` (clampé 0..1). À utiliser à chaque frame pour un fondu progressif.", "params": {"vehId": {"type": "integer", "desc": "véhicule du pool et actif"}, "dt": {"type": "number", "desc": "variation d'alpha (négatif pour disparaître)"}}, "returns": [{"type": "number", "desc": "nouvel alpha, -1 si le véhicule n'est pas dans le pool ou inactif"}]},
-        "fadeInVeh": {"desc": "Programme un fondu vers opaque. Si le véhicule est inactif et updateActiveStatePostFade est true, l'active d'abord.", "params": {"vehId": {"type": "integer", "desc": "véhicule du pool"}}, "returns": [{"type": "boolean", "desc": "true si programmé"}]},
-        "fadeOutVeh": {"desc": "Programme un fondu vers transparent (véhicule actif requis). Avec updateActiveStatePostFade, il est désactivé en fin de fondu.", "params": {"vehId": {"type": "integer", "desc": "véhicule du pool"}}, "returns": [{"type": "boolean", "desc": "true si programmé"}]},
-        "tryInsertActiveVeh": {"desc": "Vérifie si un véhicule actif de plus est autorisé ; avec forceInsert, augmente maxActiveAmount de 1 au lieu de refuser.", "params": {"vehId": {"type": "integer", "desc": "véhicule (non utilisé dans le calcul)"}, "forceInsert": {"type": "boolean|nil", "desc": "forcer en relevant la limite"}}, "returns": [{"type": "boolean", "desc": "true si autorisé"}]},
-        "insertVeh": {"desc": "Ajoute un véhicule au pool ; il est actif si l'objet est actif et que la limite le permet, sinon inactif (et désactivé via obj:setActive).", "params": {"vehId": {"type": "integer", "desc": "véhicule existant, pas déjà dans ce pool"}, "forceInsert": {"type": "boolean|nil", "desc": "relever la limite si nécessaire"}}, "returns": [{"type": "boolean", "desc": "true si inséré"}]},
-        "removeVeh": {"desc": "Retire un véhicule du pool (sans le supprimer).", "params": {"vehId": {"type": "integer", "desc": "véhicule"}}, "returns": [{"type": "boolean", "desc": "true si retiré"}]},
-        "setAllVehs": {"desc": "Active (dans la limite de maxActiveAmount) ou désactive tous les véhicules du pool.", "params": {"activate": {"type": "boolean", "desc": "true pour activer, false pour désactiver"}}, "returns": [{"type": "boolean", "desc": "true si au moins un véhicule est concerné"}]},
-        "_setVeh": {"desc": "Interne : met à jour les listes quand l'état actif d'un véhicule a changé (appelé par onVehicleActiveChanged). Ne pas appeler.", "params": {"vehId": {"type": "integer", "desc": "véhicule"}, "activate": {"type": "boolean", "desc": "nouvel état"}}, "returns": [], "internal": true},
-        "setVeh": {"desc": "Active ou désactive un véhicule du pool en respectant la limite.", "params": {"vehId": {"type": "integer", "desc": "véhicule du pool"}, "activate": {"type": "boolean", "desc": "état voulu"}, "forceInsert": {"type": "boolean|nil", "desc": "relever la limite si elle est atteinte"}}, "returns": [{"type": "boolean", "desc": "true si l'état a changé"}]},
-        "setMaxActiveAmount": {"desc": "Fixe la limite de véhicules actifs et désactive l'excédent s'il y en a.", "params": {"amount": {"type": "integer|nil", "desc": "nouvelle limite ; nil la conserve"}}, "returns": []},
-        "activateByDistanceTo": {"desc": "Désactive les véhicules actifs plus loin que dist + buffer et active les inactifs plus proches que dist (le buffer évite les basculements rapides).", "params": {"pos": {"type": "vec3|nil", "desc": "position de référence ; défaut = caméra"}, "dist": {"type": "number|nil", "desc": "distance (m) ; défaut = activeDistance"}, "buffer": {"type": "number|nil", "desc": "marge de désactivation (m) ; défaut 10"}}, "returns": []},
-        "getVehs": {"desc": "Liste de tous les ids du pool (actifs d'abord).", "params": {}, "returns": [{"type": "integer[]", "desc": "ids"}]}
+        "__tostring": {
+          "desc": "Text '[id] active: {...}, inactive: {...}'.",
+          "params": {},
+          "returns": [
+            {
+              "type": "string",
+              "desc": "description"
+            }
+          ]
+        },
+        "new": {
+          "desc": "Constructor (prefer createPool). Initializes lists, limits and default values, and guarantees a unique id.",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "id, name, activeVehs, inactiveVehs, maxActiveAmount"
+            }
+          },
+          "returns": [
+            {
+              "type": "VehPool",
+              "desc": "new pool"
+            }
+          ],
+          "internal": true
+        },
+        "onSerialize": {
+          "desc": "Returns the pool data to save.",
+          "params": {},
+          "returns": [
+            {
+              "type": "table",
+              "desc": "data"
+            }
+          ],
+          "internal": true
+        },
+        "onDeserialized": {
+          "desc": "Copies the fields of data into the pool.",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "data"
+            }
+          },
+          "returns": [],
+          "internal": true
+        },
+        "getSceneActiveAmount": {
+          "desc": "Total number of active vehicles in the scene (all pools combined), parked vehicles excluded unless 'PropParked' is requested.",
+          "params": {
+            "vehTypes": {
+              "type": "string[]|nil",
+              "desc": "vehicle types to count; nil = default"
+            }
+          },
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "count"
+            }
+          ]
+        },
+        "checkActiveLimit": {
+          "desc": "Returns true if the active vehicle limit is reached (counts the pool's active vehicles, or the scene's if useSceneVehiclesCap).",
+          "params": {},
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "limit reached"
+            }
+          ]
+        },
+        "clearPool": {
+          "desc": "Empties all the pool's lists without touching the vehicles.",
+          "params": {},
+          "returns": []
+        },
+        "deletePool": {
+          "desc": "Deletes the pool; unless keepVehicles, also deletes the inactive vehicles. Emits onVehiclePoolRemoved(id).",
+          "params": {
+            "keepVehicles": {
+              "type": "boolean|nil",
+              "desc": "true: deletes no vehicle"
+            }
+          },
+          "returns": []
+        },
+        "cycle": {
+          "desc": "Deactivates an active vehicle and activates an inactive one from the same pool (the limit is ignored during the operation).",
+          "params": {
+            "vehId1": {
+              "type": "integer|nil",
+              "desc": "vehicle to deactivate; default = 1st active"
+            },
+            "vehId2": {
+              "type": "integer|nil",
+              "desc": "vehicle to activate; default = 1st inactive"
+            }
+          },
+          "returns": [
+            {
+              "type": "integer|false",
+              "desc": "vehId1 (or false if impossible)"
+            },
+            {
+              "type": "integer|nil",
+              "desc": "vehId2"
+            }
+          ]
+        },
+        "crossCycle": {
+          "desc": "Deactivates a vehicle of this pool and activates a vehicle of another pool.",
+          "params": {
+            "otherPool": {
+              "type": "VehPool|nil",
+              "desc": "other pool; nil or same pool = cycle"
+            },
+            "vehId1": {
+              "type": "integer|nil",
+              "desc": "vehicle of this pool to deactivate"
+            },
+            "vehId2": {
+              "type": "integer|nil",
+              "desc": "vehicle of the other pool to activate"
+            }
+          },
+          "returns": [
+            {
+              "type": "integer|false",
+              "desc": "vehId1 (or false)"
+            },
+            {
+              "type": "integer|nil",
+              "desc": "vehId2"
+            }
+          ]
+        },
+        "fadeVeh": {
+          "desc": "Directly increases or decreases the alpha of the vehicle's meshes by `dt` (clamped 0..1). Use it every frame for a progressive fade.",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "vehicle in the pool and active"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "alpha change (negative to disappear)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "new alpha, -1 if the vehicle is not in the pool or inactive"
+            }
+          ]
+        },
+        "fadeInVeh": {
+          "desc": "Schedules a fade toward opaque. If the vehicle is inactive and updateActiveStatePostFade is true, activates it first.",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "vehicle in the pool"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if scheduled"
+            }
+          ]
+        },
+        "fadeOutVeh": {
+          "desc": "Schedules a fade toward transparent (active vehicle required). With updateActiveStatePostFade, it is deactivated at the end of the fade.",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "vehicle in the pool"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if scheduled"
+            }
+          ]
+        },
+        "tryInsertActiveVeh": {
+          "desc": "Checks whether one more active vehicle is allowed; with forceInsert, increases maxActiveAmount by 1 instead of refusing.",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "vehicle (not used in the computation)"
+            },
+            "forceInsert": {
+              "type": "boolean|nil",
+              "desc": "force by raising the limit"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if allowed"
+            }
+          ]
+        },
+        "insertVeh": {
+          "desc": "Adds a vehicle to the pool; it is active if the object is active and the limit allows it, otherwise inactive (and deactivated via obj:setActive).",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "existing vehicle, not already in this pool"
+            },
+            "forceInsert": {
+              "type": "boolean|nil",
+              "desc": "raise the limit if needed"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if inserted"
+            }
+          ]
+        },
+        "removeVeh": {
+          "desc": "Removes a vehicle from the pool (without deleting it).",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "vehicle"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if removed"
+            }
+          ]
+        },
+        "setAllVehs": {
+          "desc": "Activates (within the maxActiveAmount limit) or deactivates all vehicles of the pool.",
+          "params": {
+            "activate": {
+              "type": "boolean",
+              "desc": "true to activate, false to deactivate"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if at least one vehicle is concerned"
+            }
+          ]
+        },
+        "_setVeh": {
+          "desc": "Internal: updates the lists when a vehicle's active state has changed (called by onVehicleActiveChanged). Do not call.",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "vehicle"
+            },
+            "activate": {
+              "type": "boolean",
+              "desc": "new state"
+            }
+          },
+          "returns": [],
+          "internal": true
+        },
+        "setVeh": {
+          "desc": "Activates or deactivates a vehicle of the pool while respecting the limit.",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "vehicle in the pool"
+            },
+            "activate": {
+              "type": "boolean",
+              "desc": "desired state"
+            },
+            "forceInsert": {
+              "type": "boolean|nil",
+              "desc": "raise the limit if it is reached"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if the state changed"
+            }
+          ]
+        },
+        "setMaxActiveAmount": {
+          "desc": "Sets the active vehicle limit and deactivates the excess if any.",
+          "params": {
+            "amount": {
+              "type": "integer|nil",
+              "desc": "new limit; nil keeps it"
+            }
+          },
+          "returns": []
+        },
+        "activateByDistanceTo": {
+          "desc": "Deactivates active vehicles farther than dist + buffer and activates inactive ones closer than dist (the buffer avoids rapid toggling).",
+          "params": {
+            "pos": {
+              "type": "vec3|nil",
+              "desc": "reference position; default = camera"
+            },
+            "dist": {
+              "type": "number|nil",
+              "desc": "distance (m); default = activeDistance"
+            },
+            "buffer": {
+              "type": "number|nil",
+              "desc": "deactivation margin (m); default 10"
+            }
+          },
+          "returns": []
+        },
+        "getVehs": {
+          "desc": "List of all pool ids (active first).",
+          "params": {},
+          "returns": [
+            {
+              "type": "integer[]",
+              "desc": "ids"
+            }
+          ]
+        }
       }
     }
   }

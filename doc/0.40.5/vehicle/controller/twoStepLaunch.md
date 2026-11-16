@@ -1,104 +1,104 @@
 # `controller_twoStepLaunch`
 
-*Fichier : `lua/vehicle/controller/twoStepLaunch.lua` · VM : Véhicule · 229 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/twoStepLaunch.lua` · VM: Vehicle · 229 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `twoStepLaunch` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `twoStepLaunch` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de « two-step » (limiteur de régime de départ arrêté). Une fois activé, il s'arme quand le véhicule est quasi à l'arrêt avec gaz ET frein enfoncés, puis impose au moteur un limiteur de régime temporaire (engine:setTempRevLimiter) à tempRevLimiterRPM. Relâcher frein ou gaz le désarme. Un moddeur l'active par toggleTwoStep/setTwoStep ou via le menu radial qu'il enregistre. Publie electrics.values.twoStep (nom jbeam electricsName).
+Auxiliary "two-step" controller (standing-start rev limiter). Once enabled, it arms when the vehicle is almost stopped with throttle AND brake pressed, then imposes a temporary rev limiter on the engine (engine:setTempRevLimiter) at tempRevLimiterRPM. Releasing brake or throttle disarms it. A modder enables it through toggleTwoStep/setTwoStep or via the radial menu it registers. Publishes electrics.values.twoStep (jbeam name electricsName).
 
-## Exemple
+## Example
 
 ```lua
 local ts = controller.getController("twoStepLaunch")
 ts.setParameters({isEnabled = true, launchRPM = 4500})
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues dans init : engineName ("mainEngine"), electricsName ("twoStep"), rpmLimit (2000 tr/min).
-- États internes : deactivated -> idle -> armed. Armement au clavier : vitesse <= 2 m/s, gaz >= 0.2, frein >= 0.2 ; sinon (manette/volant) : vitesse <= 0.5 m/s, gaz >= 0.8, frein >= 0.8.
-- Sans moteur, updateGFX est nop et les fonctions de commande ne font rien.
-- init enregistre (une seule fois) des entrées de menu rapide « Two-Step » (bascule, RPM +/-100) via core_quickAccess ; l'appel suppose que core_quickAccess existe dans la VM de jeu (pas de test nil).
-- M.updateGFX vaut nop à la déclaration puis est réaffecté dans init (nop est un global moteur non défini dans ce fichier).
+- jbeam keys read in init: engineName ("mainEngine"), electricsName ("twoStep"), rpmLimit (2000 RPM).
+- Internal states: deactivated -> idle -> armed. Arming with keyboard: speed <= 2 m/s, throttle >= 0.2, brake >= 0.2; otherwise (gamepad/wheel): speed <= 0.5 m/s, throttle >= 0.8, brake >= 0.8.
+- Without an engine, updateGFX is nop and the command functions do nothing.
+- init registers (only once) "Two-Step" quick menu entries (toggle, RPM +/-100) via core_quickAccess; the call assumes core_quickAccess exists in the game VM (no nil check).
+- M.updateGFX is nop at declaration then reassigned in init (nop is an engine global not defined in this file).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_twoStepLaunch.changeTwoStepRPM(amount)` | Ajoute une valeur à la limite de régime du two-step et affiche un message. | 56 |
-| `controller_twoStepLaunch.deserialize(data)` | Restaure l'état et le régime depuis la table de serialize. | 176 |
-| `controller_twoStepLaunch.getState()` | État synchronisable : <nom>_enabled (booléen) et <nom>_rpm. | 192 |
-| `controller_twoStepLaunch.init(jbeamData)` | Lit les clés jbeam, récupère le moteur, fixe la limite de régime et enregistre les entrées du menu rapide. *(interne)* | 91 |
-| `controller_twoStepLaunch.reset()` | Réinitialise le limiteur temporaire du moteur et repasse l'état en idle s'il était actif. *(interne)* | 82 |
-| `controller_twoStepLaunch.serialize()` | Renvoie {state, rpm} pour la sauvegarde. | 169 |
-| `controller_twoStepLaunch.setParameters(parameters)` | Applique des paramètres externes : isEnabled (booléen) et launchRPM (tr/min). | 183 |
-| `controller_twoStepLaunch.setState(data)` | Restaure activation et régime depuis la table de getState (silencieux). | 198 |
-| `controller_twoStepLaunch.setTwoStep(enabled, silent)` | Active (état idle) ou désactive le two-step (réinitialise le limiteur temporaire) et affiche un message sauf si silent. | 28 |
-| `controller_twoStepLaunch.toggleTwoStep()` | Bascule l'activation du two-step. | 42 |
-| `controller_twoStepLaunch.updateGFX(dt)` | Chaque frame : fait avancer l'état (idle -> armed) et applique/enlève le limiteur temporaire, publie l'electric. (assignée dynamiquement) *(interne)* | dyn |
+| `controller_twoStepLaunch.changeTwoStepRPM(amount)` | Adds a value to the two-step rev limit and displays a message. | 56 |
+| `controller_twoStepLaunch.deserialize(data)` | Restores the state and RPM from the serialize table. | 176 |
+| `controller_twoStepLaunch.getState()` | Synchronizable state: <name>_enabled (boolean) and <name>_rpm. | 192 |
+| `controller_twoStepLaunch.init(jbeamData)` | Reads the jbeam keys, gets the engine, sets the rev limit and registers the quick menu entries. *(internal)* | 91 |
+| `controller_twoStepLaunch.reset()` | Resets the engine's temporary limiter and sets the state back to idle if it was active. *(internal)* | 82 |
+| `controller_twoStepLaunch.serialize()` | Returns {state, rpm} for saving. | 169 |
+| `controller_twoStepLaunch.setParameters(parameters)` | Applies external parameters: isEnabled (boolean) and launchRPM (RPM). | 183 |
+| `controller_twoStepLaunch.setState(data)` | Restores activation and RPM from the getState table (silent). | 198 |
+| `controller_twoStepLaunch.setTwoStep(enabled, silent)` | Enables (idle state) or disables the two-step (resets the temporary limiter) and displays a message unless silent. | 28 |
+| `controller_twoStepLaunch.toggleTwoStep()` | Toggles the two-step activation. | 42 |
+| `controller_twoStepLaunch.updateGFX(dt)` | Every frame: advances the state (idle -> armed) and applies/removes the temporary limiter, publishes the electric. (dynamically assigned) *(internal)* | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_twoStepLaunch.changeTwoStepRPM(amount)`
 
-Ajoute une valeur à la limite de régime du two-step et affiche un message.
+Adds a value to the two-step rev limit and displays a message.
 
-- `amount` (*number*) : Variation en tr/min.
+- `amount` (*number*) : Change in RPM.
 
 #### `controller_twoStepLaunch.deserialize(data)`
 
-Restaure l'état et le régime depuis la table de serialize.
+Restores the state and RPM from the serialize table.
 
 - `data` (*table*) : Table {state, rpm}.
 
 #### `controller_twoStepLaunch.getState()`
 
-État synchronisable : <nom>_enabled (booléen) et <nom>_rpm.
+Synchronizable state: <name>_enabled (boolean) and <name>_rpm.
 
-- **renvoie** : table Table d'état.
+- **returns**: table State table.
 
 #### `controller_twoStepLaunch.init(jbeamData)`
 
-Lit les clés jbeam, récupère le moteur, fixe la limite de régime et enregistre les entrées du menu rapide.
+Reads the jbeam keys, gets the engine, sets the rev limit and registers the quick menu entries.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_twoStepLaunch.serialize()`
 
-Renvoie {state, rpm} pour la sauvegarde.
+Returns {state, rpm} for saving.
 
-- **renvoie** : table État courant.
+- **returns**: table Current state.
 
 #### `controller_twoStepLaunch.setParameters(parameters)`
 
-Applique des paramètres externes : isEnabled (booléen) et launchRPM (tr/min).
+Applies external parameters: isEnabled (boolean) and launchRPM (RPM).
 
 - `parameters` (*table*) : Table {isEnabled?, launchRPM?}.
 
 #### `controller_twoStepLaunch.setState(data)`
 
-Restaure activation et régime depuis la table de getState (silencieux).
+Restores activation and RPM from the getState table (silent).
 
-- `data` (*table|nil*) : Table produite par getState.
+- `data` (*table|nil*) : Table produced by getState.
 
 #### `controller_twoStepLaunch.setTwoStep(enabled, silent)`
 
-Active (état idle) ou désactive le two-step (réinitialise le limiteur temporaire) et affiche un message sauf si silent.
+Enables (idle state) or disables the two-step (resets the temporary limiter) and displays a message unless silent.
 
-- `enabled` (*boolean*) : Activer ?
-- `silent` (*boolean|nil*) : Ne pas afficher de message.
+- `enabled` (*boolean*) : Enable?
+- `silent` (*boolean|nil*) : Do not display a message.
 
 #### `controller_twoStepLaunch.updateGFX(dt)`
 
-Chaque frame : fait avancer l'état (idle -> armed) et applique/enlève le limiteur temporaire, publie l'electric. (assignée dynamiquement)
+Every frame: advances the state (idle -> armed) and applies/removes the temporary limiter, publishes the electric. (dynamically assigned)
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/twoStepLaunch.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/twoStepLaunch.lua`.*

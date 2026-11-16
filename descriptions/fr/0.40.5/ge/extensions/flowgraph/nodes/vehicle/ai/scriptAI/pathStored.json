@@ -1,0 +1,53 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/pathStored.lua",
+  "module": "Nœud « Stored AI Path » (provider, couleur ai). Stocke dans le projet un chemin ScriptAI enregistré avec l'éditeur ScriptAIManager et le fournit. Sortie : path (type aiPath) = {path = aiPath}. L'inspecteur permet d'ouvrir ScriptAIManager, de choisir un enregistrement courant et de le charger dans le nœud ; le chemin est dessiné en debug (prismes magenta).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Initialise un chemin vide et l'identifiant « Select... ».",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Ne fait rien.",
+          "internal": true
+        },
+        "drawDebugPath": {
+          "desc": "Dessine le chemin stocké avec debugDrawer:drawSquarePrism pour les points proches de la caméra (100 à 200 m).",
+          "internal": false
+        },
+        "drawCustomProperties": {
+          "desc": "Affiche le nombre d'éléments, le chemin de debug, le bouton d'ouverture de ScriptAIManager, le sélecteur d'enregistrement et le bouton de chargement.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Publie {path = self.aiPath} sur la sortie path.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche le nombre d'éléments du chemin.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Constructeur de nœud."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style du nœud."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde aiPath dans le projet.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure aiPath (vide par défaut).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

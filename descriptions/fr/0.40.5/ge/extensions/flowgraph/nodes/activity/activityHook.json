@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/activity/activityHook.lua",
+  "module": "Nœud flowgraph « Activity Hook Trigger » (catégorie once_instant, tag activity). Déclenche un hook de mission nommé par data.eventName (« start » par défaut) en passant en argument tous les pins d'entrée personnalisés (sauf flow et reset) via mgr.modules.mission:missionHook. Marqué « généralement inutilisé » (C.todo). Pas de pins fixes ; tous types sauf flow autorisés comme pins personnalisés.",
+  "notes": ["C.todo du jeu : « This node is generally unused. »"],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Fixe data.eventName = 'start' et active allowCustomInPins et savePins.", "internal": true},
+        "workOnce": {"desc": "Construit une table {nomPin = valeur} avec les pins d'entrée (sauf flow, reset) et appelle mgr.modules.mission:missionHook(eventName, données)."}
+      }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/singleMarker.lua",
+  "module": "Noeud flowgraph « Single Marker » (auteur BeamNG). Affiche un marqueur de course (scenario/race_marker) à une position avec un rayon. Doit être réinitialisé manuellement (pin reset) ; la transparence selon la caméra n'est mise à jour qu'avec un flux continu. Types de marqueur : overhead, ringMarker, sideColumnMarker, sideMarker, cylinderMarker, attention, sideHologramMarker, singleHologramMarker. Entrées : flow, reset, position, radius, markerType, color, fadeNearDist, fadeFarDist ; sortie : flow.",
+  "notes": [
+    "Bug : _afterTrigger teste self.shown qui n'est jamais mis à true : le marqueur n'est pas caché quand le flow retombe, seul reset le supprime.",
+    "Ancien nom de pin : clear -> reset (legacyPins)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise l'état ; data.zOffset = 0.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Propose les types de marqueur comme modèles du pin markerType.",
+          "internal": true
+        },
+        "hideMarker": {
+          "desc": "Efface le marqueur (clearMarkers) et l'oublie.",
+          "internal": true
+        },
+        "_afterTrigger": {
+          "desc": "Après déclenchement : si flow est faux et le marqueur affiché, tente de le cacher.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Cache le marqueur à l'arrêt.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Réinitialise le cache de position/rayon.",
+          "internal": true
+        },
+        "fillFields": {
+          "desc": "Lit position (+ data.zOffset sur z), rayon (2 par défaut, 1er composant si table) et couleur ; renvoie true si position ou rayon ont changé.",
+          "internal": true
+        },
+        "blend": {
+          "desc": "Vide (non utilisé).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sur reset, cache le marqueur ; sur flow, crée le marqueur si besoin, le met à jour (setToCheckpoint, couleur, update) et active flow en sortie.",
+          "internal": false
+        },
+        "onDrawOnMinimap": {
+          "desc": "Dessine un cercle avec pointeur de bord sur la minimap tant que le marqueur existe.",
+          "params": {
+            "td": {
+              "type": "any",
+              "desc": "données de dessin de la minimap"
+            }
+          },
+          "internal": true
+        },
+        "onClientEndMission": {
+          "desc": "Hook de fin de mission : nettoie les objets créés par le noeud.",
+          "internal": true
+        },
+        "destroy": {
+          "desc": "Appelé à la destruction du noeud : nettoie les objets créés.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,36 +1,36 @@
 # `career_modules_debug_precisionParkingDebug`
 
-*Fichier : `lua/ge/extensions/career/modules/debug/precisionParkingDebug.lua` · VM : Game Engine (GE) · 409 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/debug/precisionParkingDebug.lua` · VM: Game Engine (GE) · 409 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_debug_precisionParkingDebug` : `extensions.load("career_modules_debug_precisionParkingDebug")`, puis la globale `career_modules_debug_precisionParkingDebug`
+**Access:** extension `career_modules_debug_precisionParkingDebug`: `extensions.load("career_modules_debug_precisionParkingDebug")`, then the global `career_modules_debug_precisionParkingDebug`
 
-Onglet de debug carrière « Precision Parking ». Un bouton active/désactive le debug ; quand il est actif, le module cherche (toutes les 0,1 s) la place de parking de livraison la plus proche du véhicule joueur (accessPointsByName des deliveryProviders), calcule des données de précision de stationnement et les affiche en ImGui, avec des dessins 3D (sphères, lignes, flèches via debugDrawer).
+"Precision Parking" career debug tab. A button toggles the debug; when active, the module looks (every 0.1 s) for the delivery parking spot nearest to the player vehicle (accessPointsByName of the deliveryProviders), computes parking precision data and displays it in ImGui, with 3D drawings (spheres, lines, arrows via debugDrawer).
 
-## Remarques
+## Notes
 
-- Outil de développement ; debugOrder = 10.
-- En cas d'absence de véhicule joueur, debugData.error est affiché en rouge.
+- Development tool; debugOrder = 10.
+- If there is no player vehicle, debugData.error is displayed in red.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_debug_precisionParkingDebug.drawDebugMenu()` | Dessine le bouton d'activation et, si actif, met à jour puis affiche les données de précision de stationnement. *(interne)* | 154 |
-| `career_modules_debug_precisionParkingDebug.drawDebugVisualization()` | Dessine la visualisation 3D de debug si le mode est actif. *(interne)* | 396 |
-| `career_modules_debug_precisionParkingDebug.onDebugDisabled()` | Nettoyage quand le debug est désactivé : coupe le mode et vide debugData. *(interne)* *(hook)* | 403 |
+| `career_modules_debug_precisionParkingDebug.drawDebugMenu()` | Draws the toggle button and, if active, updates then displays the parking precision data. *(internal)* | 154 |
+| `career_modules_debug_precisionParkingDebug.drawDebugVisualization()` | Draws the 3D debug visualization if the mode is active. *(internal)* | 396 |
+| `career_modules_debug_precisionParkingDebug.onDebugDisabled()` | Cleanup when the debug is disabled: turns off the mode and clears debugData. *(internal)* *(hook)* | 403 |
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `debugName` | string | 'Precision Parking'. |
-| `debugOrder` | number | Ordre de tri (10). |
+| `debugOrder` | number | Sort order (10). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `debugDrawer:` `drawArrow`, `drawLine`, `drawSphere`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/debug/precisionParkingDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/debug/precisionParkingDebug.lua`.*

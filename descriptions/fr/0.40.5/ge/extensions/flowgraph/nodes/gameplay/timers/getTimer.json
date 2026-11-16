@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/timers/getTimer.lua",
+  "module": "Nœud flowgraph « Get Timer ». Lit l'état d'un timer (timerId). Sorties : flow, complete, completed (impulsion unique), incomplete, elapsed, remaining, duration, elapsedPercent (0 à 1). Si capTime est vrai, elapsed/remaining/elapsedPercent sont bornés quand le timer est terminé. Entrée reset : remet à zéro la détection de fin.",
+  "notes": [
+    "elapsedPercent divise par la durée : durée 0 donne inf/NaN."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Si le timer existe, remplit les sorties et déclenche completed une seule fois à la fin ; sinon flow reste false.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

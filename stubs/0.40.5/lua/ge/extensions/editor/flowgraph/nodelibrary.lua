@@ -2,268 +2,268 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/flowgraph/nodelibrary.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe de la fenêtre (windowName 'fg_nodelib', windowDescription 'Node library', arrowControllable = true). Une instance statique est créée par flowgraphEditor (M.nodelib) et sert aussi au menu contextuel.
+--- Window class (windowName 'fg_nodelib', windowDescription 'Node library', arrowControllable = true). A static instance is created by flowgraphEditor (M.nodelib) and also serves the context menu.
 ---@class editor_flowgraph_nodelibrary_C
 local editor_flowgraph_nodelibrary_C = {}
 
---- Comparateur de tri par nom, insensible à la casse.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:796
----@param a table Élément avec champ name.
----@param b table Élément avec champ name.
----@return boolean  a avant b.
+--- Sort comparator by name, case-insensitive.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:796
+---@param a table Item with name field.
+---@param b table Item with name field.
+---@return boolean  a before b.
 function editor_flowgraph_nodelibrary_C._sortFunc(a, b) end
 
---- Compte les éléments de la liste et dessine le cadre de sélection/survol avec défilement automatique.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1271
----@param cursor ImVec2 Position avant l'élément.
----@param itemSize ImVec2 Taille.
----@param doHover boolean Gérer le survol.
----@param hoverFun function|nil Callback au survol.
+--- Counts the list items and draws the selection/hover frame with automatic scrolling.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1271
+---@param cursor ImVec2 Position before the item.
+---@param itemSize ImVec2 Size.
+---@param doHover boolean Handle hover.
+---@param hoverFun function|nil Hover callback.
 function editor_flowgraph_nodelibrary_C:arrowHelper(cursor, itemSize, doHover, hoverFun) end
 
---- Marque récursivement dir.isEmpty selon qu'un dossier contient des éléments.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:837
----@param dir table Dossier.
----@param mode string 'nodes' ou 'states'.
+--- Recursively marks dir.isEmpty depending on whether a folder contains elements.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:837
+---@param dir table Folder.
+---@param mode string 'nodes' or 'states'.
 function editor_flowgraph_nodelibrary_C:checkEmpty(dir, mode) end
 
---- Vide le champ de recherche, refiltre nœuds et macros et remet sélection, focus et défilement à zéro.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:34
+--- Clears the search field, re-filters nodes and macros and resets selection, focus and scrolling to zero.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:34
 function editor_flowgraph_nodelibrary_C:clear() end
 
---- Demande la création du nœud sélectionné (Entrée) ou redonne le focus au champ de recherche s'il n'y a aucun bouton.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:127
+--- Requests creation of the selected node (Enter) or gives focus back to the search field if there is no button.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:127
 function editor_flowgraph_nodelibrary_C:createNode() end
 
---- Crée un nœud depuis un modèle à la position donnée, le relie au pin en cours et ajoute une entrée d'historique. (Le nom de la fonction contient la faute « Buton ».)
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1214
+--- Creates a node from a template at the given position, links it to the current pin and adds a history entry. (The function name contains the typo "Buton".)
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1214
 ---@param menuPos ImVec2|nil Position.
----@param node table Modèle de nœud.
----@return table  Nœud créé (déduit de l'usage dans createStateExitNode).
+---@param node table Node template.
+---@return table  Created node (inferred from its use in createStateExitNode).
 function editor_flowgraph_nodelibrary_C:createNodeFromButon(menuPos, node) end
 
---- Crée un état depuis un modèle et le relie.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1177
+--- Creates a state from a template and links it.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1177
 ---@param menuPos ImVec2|nil Position.
----@param state table Modèle d'état.
+---@param state table State template.
 function editor_flowgraph_nodelibrary_C:createStateButton(menuPos, state) end
 
---- Crée le nœud getter/setter correspondant à la variable (et le relie au pin en cours).
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:981
+--- Creates the getter/setter node corresponding to the variable (and links it to the current pin).
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:981
 ---@param var table Variable.
 ---@param menuPos ImVec2|nil Position.
----@param read boolean Getter ou setter.
----@param fromMgr boolean Variable de projet ?
+---@param read boolean Getter or setter.
+---@param fromMgr boolean Project variable?
 function editor_flowgraph_nodelibrary_C:createVariableButton(var, menuPos, read, fromMgr) end
 
---- Affiche un dossier en TreeNodes (sous-dossiers puis éléments).
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1054
----@param dir table Dossier.
+--- Displays a folder as TreeNodes (subfolders then items).
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1054
+---@param dir table Folder.
 ---@param menuPos ImVec2|nil Position.
----@param elementFieldName string Champ contenant les éléments.
----@param elementFunction function Fonction d'affichage d'un élément.
+---@param elementFieldName string Field containing the items.
+---@param elementFunction function Item display function.
 function editor_flowgraph_nodelibrary_C:displayDir(dir, menuPos, elementFieldName, elementFunction) end
 
---- Affiche une macro avec aperçu au survol et création d'une instance au clic.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1008
----@param macroName string Nom.
+--- Displays a macro with hover preview and creation of an instance on click.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1008
+---@param macroName string Name.
 ---@param macro table Macro.
 ---@param menuPos ImVec2|nil Position.
 function editor_flowgraph_nodelibrary_C:displayMacro(macroName, macro, menuPos) end
 
---- Affiche un modèle de nœud (bouton, tooltip, aperçu, glisser-déposer).
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1194
----@param dir table Dossier.
+--- Displays a node template (button, tooltip, preview, drag and drop).
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1194
+---@param dir table Folder.
 ---@param menuPos ImVec2|nil Position.
----@param nodeName string Nom.
----@param node table Modèle.
+---@param nodeName string Name.
+---@param node table Template.
 function editor_flowgraph_nodelibrary_C:displayNode(dir, menuPos, nodeName, node) end
 
---- Affiche les résultats triés (frecency puis score) : nœuds, variables, états, macros.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:637
----@param menuPos ImVec2|nil Position de création.
+--- Displays the sorted results (frecency then score): nodes, variables, states, macros.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:637
+---@param menuPos ImVec2|nil Creation position.
 function editor_flowgraph_nodelibrary_C:displayResults(menuPos) end
 
---- Affiche un bouton simple avec un texte et une fonction de clic.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1086
+--- Displays a simple button with a text and a click function.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1086
 ---@param menuPos ImVec2|nil Position.
----@param text string Libellé.
----@param clickFun function Callback au clic.
----@param ... any Arguments supplémentaires (déduit du code).
+---@param text string Label.
+---@param clickFun function Click callback.
+---@param ... any Additional arguments (inferred from code).
 function editor_flowgraph_nodelibrary_C:displaySimpleElement(menuPos, text, clickFun, ...) end
 
---- Affiche le bouton de création d'un nœud « State Exit » (avec nom de transition).
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1114
+--- Displays the creation button of a "State Exit" node (with transition name).
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1114
 ---@param menuPos ImVec2|nil Position.
----@param label string|nil Nom de la transition.
+---@param label string|nil Transition name.
 function editor_flowgraph_nodelibrary_C:displayStateExitButton(menuPos, label) end
 
---- Affiche un modèle d'état dans l'arborescence.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1157
----@param dir table Dossier.
+--- Displays a state template in the tree.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1157
+---@param dir table Folder.
 ---@param menuPos ImVec2|nil Position.
----@param stateName string Nom.
----@param state table Modèle.
+---@param stateName string Name.
+---@param state table Template.
 function editor_flowgraph_nodelibrary_C:displayStateTemplate(dir, menuPos, stateName, state) end
 
---- Affiche une variable (Get/Set) comme bouton de création de nœud avec support du glisser-déposer.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:934
+--- Displays a variable (Get/Set) as a node creation button with drag and drop support.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:934
 ---@param var table Variable.
----@param menuPos ImVec2|nil Position de création.
----@param read boolean true pour un getter.
----@param fromMgr boolean true si variable de projet.
+---@param menuPos ImVec2|nil Creation position.
+---@param read boolean true for a getter.
+---@param fromMgr boolean true if project variable.
 function editor_flowgraph_nodelibrary_C:displayVariable(var, menuPos, read, fromMgr) end
 
---- Dessine la fenêtre « Node Library » si visible (pas le menu contextuel).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:704
+--- Draws the "Node Library" window if visible (not the context menu).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:704
 function editor_flowgraph_nodelibrary_C:draw() end
 
---- Dessine le contenu complet (filtre, résultats de recherche ou arborescence) pour la fenêtre ou le menu contextuel.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:563
----@param menuPos ImVec2|nil Position de création.
----@param usedForContextMenu boolean|nil true dans le menu contextuel.
+--- Draws the full content (filter, search results or tree) for the window or the context menu.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:563
+---@param menuPos ImVec2|nil Creation position.
+---@param usedForContextMenu boolean|nil true in the context menu.
 function editor_flowgraph_nodelibrary_C:drawContent(menuPos, usedForContextMenu) end
 
---- Fenêtre qui montre tous les nœuds disponibles en arborescence, avec glisser-déposer.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:185
----@param menuPos ImVec2|nil Position de création des nœuds.
+--- Window that shows all available nodes as a tree, with drag and drop.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:185
+---@param menuPos ImVec2|nil Node creation position.
 function editor_flowgraph_nodelibrary_C:drawContentAsTreeNodes(menuPos) end
 
---- Dessine le champ « Search: », le bouton d'effacement et, dans le menu contextuel, le bouton Coller.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:66
----@param usedForContextMenu boolean true dans le menu contextuel.
+--- Draws the "Search:" field, the clear button and, in the context menu, the Paste button.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:66
+---@param usedForContextMenu boolean true in the context menu.
 function editor_flowgraph_nodelibrary_C:drawTextFilter(usedForContextMenu) end
 
---- Recalcule filteredMacro à partir de mgr:getAvailableMacros().
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:901
----@param filterPins boolean Filtre de pins.
+--- Recomputes filteredMacro from mgr:getAvailableMacros().
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:901
+---@param filterPins boolean Pin filter.
 function editor_flowgraph_nodelibrary_C:filterMacroTemplates(filterPins) end
 
---- Renvoie les macros (les filtres de nom/tag sont désactivés : tout passe).
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:869
----@param dir table Macros disponibles.
----@param filterPins boolean Non utilisé.
----@return table|nil  Macros retenues.
+--- Returns the macros (name/tag filters are disabled: everything passes).
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:869
+---@param dir table Available macros.
+---@param filterPins boolean Not used.
+---@return table|nil  Retained macros.
 function editor_flowgraph_nodelibrary_C:filterMacros(dir, filterPins) end
 
---- Filtre récursivement un dossier de modèles (exclut les nœuds cachés ; applique le filtre de pins en mode 'nodes').
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:798
----@param dir table Dossier.
----@param filterPins boolean Appliquer le filtre de pins.
----@param mode string 'nodes' ou 'states'.
----@return table|nil  Arbre filtré.
+--- Recursively filters a template folder (excludes hidden nodes; applies the pin filter in 'nodes' mode).
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:798
+---@param dir table Folder.
+---@param filterPins boolean Apply the pin filter.
+---@param mode string 'nodes' or 'states'.
+---@return table|nil  Filtered tree.
 function editor_flowgraph_nodelibrary_C:filterNodes(dir, filterPins, mode) end
 
---- Recalcule filteredTemplates/filteredFolders pour le mode demandé (si le mode a changé) puis marque les dossiers vides.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:907
----@param filterPins boolean Filtre de pins.
----@param mode string 'nodes' ou 'states'.
+--- Recomputes filteredTemplates/filteredFolders for the requested mode (if the mode has changed) then marks the empty folders.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:907
+---@param filterPins boolean Pin filter.
+---@param mode string 'nodes' or 'states'.
 function editor_flowgraph_nodelibrary_C:filterTemplates(filterPins, mode) end
 
---- Soumet à la recherche tous les nœuds visibles qui passent le filtre de pins, puis les variables du projet et du graphe.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:435
+--- Submits to the search all visible nodes that pass the pin filter, then the project and graph variables.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:435
 function editor_flowgraph_nodelibrary_C:findFlowNodes() end
 
---- Soumet à la recherche les modèles d'états, « New State », « New Group State », « State Exit » (par transition) et le nœud « Comment ».
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:495
+--- Submits to the search the state templates, "New State", "New Group State", "State Exit" (per transition) and the "Comment" node.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:495
 function editor_flowgraph_nodelibrary_C:findStateNodes() end
 
---- Soumet à la recherche les entrées « Get x » / « Set x » de chaque variable d'une source.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:456
----@param source table Conteneur de variables.
----@param sourceName string Libellé ('Project Variable', 'Graph Variable').
----@param sourceNameTag string 'mgr' ou 'graph'.
+--- Submits to the search the "Get x" / "Set x" entries of each variable of a source.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:456
+---@param source table Variable container.
+---@param sourceName string Label ('Project Variable', 'Graph Variable').
+---@param sourceNameTag string 'mgr' or 'graph'.
 function editor_flowgraph_nodelibrary_C:findVar(source, sourceName, sourceNameTag) end
 
---- Extrait un préfixe de type du texte de recherche (table typeOrder vide : renvoie en pratique nil et le texte).
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:404
+--- Extracts a type prefix from the search text (empty typeOrder table: in practice returns nil and the text).
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:404
 ---@return string|nil  Type.
----@return string  Texte.
+---@return string  Text.
 function editor_flowgraph_nodelibrary_C:getFilterType() end
 
---- Indique si un dossier ne contient (au premier élément examiné) que des sous-dossiers.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:46
----@param dir table Dossier de modèles.
----@return boolean  Résultat du test.
+--- Indicates whether a folder contains only subfolders (at the first element examined).
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:46
+---@param dir table Template folder.
+---@return boolean  Test result.
 function editor_flowgraph_nodelibrary_C:hasFoldersOnly(dir) end
 
---- Écrit un libellé en surlignant les occurrences du texte cherché.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:610
----@param label string Texte.
----@param highlightText string Texte à surligner.
+--- Writes a label, highlighting the occurrences of the searched text.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:610
+---@param label string Text.
+---@param highlightText string Text to highlight.
 function editor_flowgraph_nodelibrary_C:highlightText(label, highlightText) end
 
---- Initialise recherche, focus, indices de liste, enregistre la fenêtre (visible par défaut) et charge la frecency partagée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:16
+--- Initializes search, focus, list indices, registers the window (visible by default) and loads the shared frecency.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:16
 function editor_flowgraph_nodelibrary_C:init() end
 
---- Relie un nouvel état au pin de lien en cours (flow d'entrée si le pin est une sortie, sinon première sortie vers ce pin).
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1139
----@param node table Nœud d'état créé.
+--- Links a new state to the current link pin (input flow if the pin is an output, otherwise first output to this pin).
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1139
+---@param node table Created state node.
 function editor_flowgraph_nodelibrary_C:linkState(node) end
 
---- Déplace la sélection clavier (haut/bas) dans la liste.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:135
----@param up boolean true pour monter.
+--- Moves the keyboard selection (up/down) in the list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:135
+---@param up boolean true to move up.
 function editor_flowgraph_nodelibrary_C:navigateList(up) end
 
---- Indique si un modèle de nœud possède un pin compatible avec newNodeLinkPin (et n'est pas le nœud source).
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:720
----@param node table Modèle de nœud.
----@return boolean  true s'il passe le filtre.
+--- Indicates whether a node template has a pin compatible with newNodeLinkPin (and is not the source node).
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:720
+---@param node table Node template.
+---@return boolean  true if it passes the filter.
 function editor_flowgraph_nodelibrary_C:pinsFilter(node) end
 
---- Ajoute à libtxt une ligne par nœud d'un dossier (récursif) pour l'export CSV.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1337
----@param dir table Dossier.
----@param name string Nom du dossier.
----@param tagIndex table Index des tags.
----@param libtxt string[] Lignes de sortie.
+--- Appends to libtxt one line per node of a folder (recursive) for the CSV export.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1337
+---@param dir table Folder.
+---@param name string Folder name.
+---@param tagIndex table Tag index.
+---@param libtxt string[] Output lines.
 function editor_flowgraph_nodelibrary_C:printDir(dir, name, tagIndex, libtxt) end
 
---- Exporte nodeLib.csv (Name, File, Path, Pin Schema, Todo, Description) et pinLib.csv (Pin, Count, Node, Desc). Outil développeur.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1308
+--- Exports nodeLib.csv (Name, File, Path, Pin Schema, Todo, Description) and pinLib.csv (Pin, Count, Node, Desc). Developer tool.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1308
 function editor_flowgraph_nodelibrary_C:printNodesWithTags() end
 
---- Calcule a.__matchScore pour l'auto-connexion : +1000 nom identique, +300 type identique, +100 nom inclus, -1150 si l'un s'appelle 'reset'. Ne renvoie rien. Utilisée par uiAutoConnectShortcut.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1035
----@param a table Pin source (reçoit __matchScore).
----@param b table Pin cible.
+--- Computes a.__matchScore for auto-connect: +1000 identical name, +300 identical type, +100 name included, -1150 if one is named 'reset'. Returns nothing. Used by uiAutoConnectShortcut.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1035
+---@param a table Source pin (receives __matchScore).
+---@param b table Target pin.
 function editor_flowgraph_nodelibrary_C:ratePinSimilarity(a, b) end
 
---- Collecte récursivement les tags et pins de tous les nœuds pour l'export.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1386
----@param dir table Dossier.
----@param list table Table des tags.
----@param pins table Table {names, pins} des pins.
+--- Recursively collects the tags and pins of all nodes for the export.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:1386
+---@param dir table Folder.
+---@param list table Tag table.
+---@param pins table Table {names, pins} of the pins.
 function editor_flowgraph_nodelibrary_C:recursiveGetTags(dir, list, pins) end
 
---- Recharge la liste des macros si mgr.newMacroAdded est vrai.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:882
+--- Reloads the macro list if mgr.newMacroAdded is true.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:882
 function editor_flowgraph_nodelibrary_C:refreshMacro() end
 
---- Recharge et trie par nom la liste des modèles d'états.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:889
+--- Reloads and sorts by name the list of state templates.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:889
 function editor_flowgraph_nodelibrary_C:refreshStateTemplates() end
 
---- Définit le pin dont on tire un lien : la liste est alors filtrée sur les nœuds/variables compatibles.
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:62
----@param newNodeLinkPin table|nil Pin source du lien en cours de création.
+--- Sets the pin a link is being dragged from: the list is then filtered to compatible nodes/variables.
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:62
+---@param newNodeLinkPin table|nil Source pin of the link being created.
 function editor_flowgraph_nodelibrary_C:setNewNodeLinkPin(newNodeLinkPin) end
 
---- Marque l'instance comme statique (fenêtre/menu permanent).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:57
+--- Marks the instance as static (permanent window/menu).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:57
 function editor_flowgraph_nodelibrary_C:setStatic() end
 
---- Indique si une variable est compatible avec le pin de lien en cours (type identique, 'any', ou flow pour sortie).
----Source : lua/ge/extensions/editor/flowgraph/nodelibrary.lua:386
----@param var table Variable (champ type).
----@param dir string|nil 'in' ou 'out'.
----@return boolean|nil  true si compatible.
+--- Indicates whether a variable is compatible with the current link pin (identical type, 'any', or flow for output).
+---Source: lua/ge/extensions/editor/flowgraph/nodelibrary.lua:386
+---@param var table Variable (type field).
+---@param dir string|nil 'in' or 'out'.
+---@return boolean|nil  true if compatible.
 function editor_flowgraph_nodelibrary_C:variablePinFilter(var, dir) end
 

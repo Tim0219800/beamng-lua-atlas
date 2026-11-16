@@ -1,14 +1,19 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/debug/debugCylinder.lua",
-  "module": "Nœud flowgraph « Debug Cylinder » (catégorie repeat_instant, tags util/draw). Dessine chaque frame un cylindre de débogage (debugDrawer:drawCylinder) entre posA et posB. Entrées : radius (number, 1 par défaut), posA et posB (vec3, requis), color (caché, {r,g,b,a} 0-1, rose {0.91,0.05,0.48,0.5} par défaut).",
+  "module": "Flowgraph node \"Debug Cylinder\" (category repeat_instant, tags util/draw). Draws a debug cylinder (debugDrawer:drawCylinder) between posA and posB every frame. Inputs: radius (number, 1 by default), posA and posB (vec3, required), color (hidden, {r,g,b,a} 0-1, pink {0.91,0.05,0.48,0.5} by default).",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Vide.", "internal": true},
-        "work": {"desc": "Si posA et posB sont définis, convertit la couleur (alpha 0.5 si absent) et dessine le cylindre."}
+        "init": {
+          "desc": "Empty.",
+          "internal": true
+        },
+        "work": {
+          "desc": "If posA and posB are set, converts the color (alpha 0.5 if absent) and draws the cylinder."
+        }
       }
     }
   }

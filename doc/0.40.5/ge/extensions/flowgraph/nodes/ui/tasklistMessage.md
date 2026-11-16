@@ -1,23 +1,23 @@
 # `flowgraph_nodes_ui_tasklistMessage`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/tasklistMessage.lua` · VM : Game Engine (GE) · 45 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/tasklistMessage.lua` · VM: Game Engine (GE) · 45 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/tasklistMessage")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/tasklistMessage")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Tasklist Message » (catégorie once_instant, durée) : affiche un objectif de type message dans l'app Goal List (hook 'SetTasklistTask', type 'message'). Entrées : « label », « sub » (sous-texte, caché), « identifier » (flowgraph), « clear » (caché, vrai par défaut), « active » (caché, vrai). Sortie : flow propagé.
+Flowgraph node "Tasklist Message" (category once_instant, duration): displays a message-type objective in the Goal List app ('SetTasklistTask' hook, type 'message'). Inputs: "label", "sub" (subtext, hidden), "identifier" (flowgraph), "clear" (hidden, true by default), "active" (hidden, true). Output: propagated flow.
 
-## Remarques
+## Notes
 
-- L'app n'accepte pas un libellé qui commence par un chiffre (todo du code).
-- Par défaut 'clear' vaut true : l'objectif est effacé sauf si le pin est mis à false.
+- The app does not accept a label that starts with a digit (todo from the code).
+- By default 'clear' is true: the objective is cleared unless the pin is set to false.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Envoie l'objectif à l'UI et propage le flux. | 27 |
+| `C:workOnce()` | Sends the objective to the UI and propagates the flow. | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/tasklistMessage.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/tasklistMessage.lua`.*

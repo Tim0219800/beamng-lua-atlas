@@ -1,32 +1,32 @@
 # `gameplay_rally_compositors_helpers_styleValidator`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/compositors/helpers/styleValidator.lua` · VM : Game Engine (GE) · 539 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/compositors/helpers/styleValidator.lua` · VM: Game Engine (GE) · 539 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_compositors_helpers_styleValidator` : `extensions.load("gameplay_rally_compositors_helpers_styleValidator")`, puis la globale `gameplay_rally_compositors_helpers_styleValidator`
+**Access:** extension `gameplay_rally_compositors_helpers_styleValidator`: `extensions.load("gameplay_rally_compositors_helpers_styleValidator")`, then the global `gameplay_rally_compositors_helpers_styleValidator`
 
-Vérifie la cohérence interne d'un style de compositeur de notes de rallye (fichier sous compositors/styles/). Il contrôle la table distance (callsEnabled, liens avec seuils croissants, unités base/large/point, arrondis, max), les composants componentTypes (corner avec numbering/intensité/longueurs/direction, caution, modifiers, modifierAliases) et les notes système via notebook/systemPacenotes. Il n'impose aucun schéma commun entre styles : chaque style peut définir ses propres types. Chaque erreur est journalisée (log 'E', tag styleValidator) et la validation s'arrête à la première erreur.
+Checks the internal consistency of a rally note compositor style (file under compositors/styles/). It checks the distance table (callsEnabled, links with increasing thresholds, base/large/point units, rounding, max), the componentTypes components (corner with numbering/intensity/lengths/direction, caution, modifiers, modifierAliases) and the system notes via notebook/systemPacenotes. It enforces no common schema between styles: each style can define its own types. Each error is logged (log 'E', tag styleValidator) and validation stops at the first error.
 
-## Remarques
+## Notes
 
-- Les plages d'intensité/longueur doivent être des tables {min, max} explicites (pas {a, b}), contiguës depuis 0 : chaque min égale le max précédent ; max peut manquer seulement sur la dernière plage et doit être supérieur à min.
-- distance.links doit être un tableau non vide de {threshold = number, text = string|nil} à seuils strictement croissants.
-- Les clés de premier niveau de componentTypes autorisées sont : corner, caution, modifiers, modifierAliases ; toute autre clé est refusée (les modificateurs atomiques vont dans componentTypes.modifiers).
+- Intensity/length ranges must be explicit {min, max} tables (not {a, b}), contiguous from 0: each min equals the previous max; max may be missing only on the last range and must be greater than min.
+- distance.links must be a non-empty array of {threshold = number, text = string|nil} with strictly increasing thresholds.
+- Allowed top-level keys of componentTypes are: corner, caution, modifiers, modifierAliases; any other key is rejected (atomic modifiers go in componentTypes.modifiers).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_compositors_helpers_styleValidator.validate(style, name)` | Valide un style. Appelé par textCompositor:load après application des calibrages ; en cas d'échec le style n'est pas chargé. | 495 |
+| `gameplay_rally_compositors_helpers_styleValidator.validate(style, name)` | Validates a style. Called by textCompositor:load after applying the calibrations; on failure the style is not loaded. | 495 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_compositors_helpers_styleValidator.validate(style, name)`
 
-Valide un style. Appelé par textCompositor:load après application des calibrages ; en cas d'échec le style n'est pas chargé.
+Validates a style. Called by textCompositor:load after applying the calibrations; on failure the style is not loaded.
 
-- `style` (*table*) : Table du style (distance, componentTypes, system...).
-- `name` (*string|nil*) : Nom du style pour les messages d'erreur ('?' par défaut).
-- **renvoie** : boolean true si le style est valide.
+- `style` (*table*) : Style table (distance, componentTypes, system...).
+- `name` (*string|nil*) : Style name for error messages ('?' by default).
+- **returns**: boolean true if the style is valid.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/compositors/helpers/styleValidator.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/compositors/helpers/styleValidator.lua`.*

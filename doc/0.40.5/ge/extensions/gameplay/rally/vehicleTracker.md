@@ -1,44 +1,44 @@
 # `gameplay_rally_vehicleTracker`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/vehicleTracker.lua` · VM : Game Engine (GE) · 253 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/vehicleTracker.lua` · VM: Game Engine (GE) · 253 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/vehicleTracker")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/vehicleTracker")` (file under extensions/ but not a regular extension)
 
-Suivi du véhicule joueur (slot 0) pour le rallye : position, vitesse et détection de dégâts. À chaque onUpdate, il relit map.objects[vehicleId] et déclenche un indicateur « vient de prendre des dégâts » quand la valeur `damage` augmente d'au moins un seuil. Un dessin de debug optionnel affiche position, vecteur vitesse et texte. Le module renvoie un constructeur : `require(...)(damageThreshold)`.
+Tracking of the player vehicle (slot 0) for rally: position, speed and damage detection. At each onUpdate, it rereads map.objects[vehicleId] and triggers a "just took damage" flag when the `damage` value increases by at least a threshold. An optional debug drawing displays position, velocity vector and text. The module returns a constructor: `require(...)(damageThreshold)`.
 
-## Remarques
+## Notes
 
-- Le véhicule suivi est toujours getPlayerVehicle(0), pas un véhicule passé en paramètre.
-- Un commentaire du code indique que retourner vehicle:getPosition() directement « fait fonctionner » alors que la copie via getPositionXYZ dans un vec3 partagé est conservée : pos() et velocity() renvoient un vec3 réutilisé (même objet à chaque appel), il faut le copier si on le conserve.
-- pos() et velocity() journalisent une erreur 'E' à chaque appel quand il n'y a pas de véhicule joueur.
-- Le dégât est une valeur cumulée (map.objects[id].damage) ; seul un accroissement >= damageThreshold depuis la dernière valeur retenue lève justHadDamage, et seulement pour le tick concerné.
-- Les champs wheelOffsets/currentCorners/previousCorners sont remplis dans init mais plus mis à jour (updateVehicleCorners est commenté).
+- The tracked vehicle is always getPlayerVehicle(0), not a vehicle passed as a parameter.
+- A code comment says that returning vehicle:getPosition() directly "makes it work" whereas the copy via getPositionXYZ into a shared vec3 is kept: pos() and velocity() return a reused vec3 (same object on every call), it must be copied if kept.
+- pos() and velocity() log an 'E' error on every call when there is no player vehicle.
+- The damage is a cumulative value (map.objects[id].damage); only an increase >= damageThreshold since the last retained value raises justHadDamage, and only for the relevant tick.
+- The wheelOffsets/currentCorners/previousCorners fields are filled in init but no longer updated (updateVehicleCorners is commented out).
 
-## Classe `C`
+## Class `C`
 
-Traqueur de véhicule. Champs : damageThreshold (1 par défaut), vehicleData, lastDamage, lastDamageDiff, justHadDamage, debugDraw, wheelOffsets, currentCorners, previousCorners.
+Vehicle tracker. Fields: damageThreshold (1 by default), vehicleData, lastDamage, lastDamageDiff, justHadDamage, debugDraw, wheelOffsets, currentCorners, previousCorners.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_vehicleTracker")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_vehicleTracker")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:damage()` | Dégât cumulé du véhicule d'après map.objects. | 185 |
-| `C:didJustHaveDamage()` | Indique si un choc d'au moins damageThreshold a eu lieu au dernier tick. | 193 |
-| `C:drawDebugInfo()` | Si activé : sphère magenta (rayon 1,5) 2 m au-dessus du véhicule, ligne cyan pour la vitesse (x2, au-delà de 0,1 m/s) et texte « VehicleTracker \| Pos \| Speed » en km/h et m/s. | 204 |
-| `C:getVehicle()` | Renvoie getPlayerVehicle(0). | 54 |
-| `C:getVehicleId()` | Id du véhicule joueur 0. | 48 |
-| `C:init(damageThreshold)` | Constructeur. Récupère les données du véhicule joueur, mémorise le dégât courant et calcule les décalages des roues dans le repère du véhicule. | 9 |
-| `C:onUpdate(dtReal, dtSim, dtRaw)` | À appeler chaque image : met à jour vehicleData et l'état de dégâts, puis dessine le debug si activé. Sans véhicule, réinitialise vehicleData, lastDamage et justHadDamage. | 70 |
-| `C:pos()` | Position du véhicule joueur (vec3 partagé, réutilisé entre appels). | 151 |
-| `C:setDebugDraw(enabled)` | Active ou coupe le dessin de debug. | 200 |
-| `C:speedMs()` | Norme de la vitesse. | 180 |
-| `C:updateVehicleDamage()` | Compare le dégât courant au dernier retenu et met à jour lastDamage, lastDamageDiff et justHadDamage. | 115 |
-| `C:updateVehicleData(vehicleId)` | Met vehicleData à map.objects[vehicleId] (ou nil). | 145 |
-| `C:velocity()` | Vitesse du véhicule joueur (vec3 partagé, réutilisé). | 168 |
+| `C:damage()` | Cumulative damage of the vehicle according to map.objects. | 185 |
+| `C:didJustHaveDamage()` | Indicates whether an impact of at least damageThreshold occurred on the last tick. | 193 |
+| `C:drawDebugInfo()` | If enabled: magenta sphere (radius 1.5) 2 m above the vehicle, cyan line for the velocity (x2, beyond 0.1 m/s) and text "VehicleTracker \| Pos \| Speed" in km/h and m/s. | 204 |
+| `C:getVehicle()` | Returns getPlayerVehicle(0). | 54 |
+| `C:getVehicleId()` | Id of player vehicle 0. | 48 |
+| `C:init(damageThreshold)` | Constructor. Gets the player vehicle's data, stores the current damage and computes the wheel offsets in the vehicle's frame. | 9 |
+| `C:onUpdate(dtReal, dtSim, dtRaw)` | To be called every frame: updates vehicleData and the damage state, then draws the debug if enabled. Without a vehicle, resets vehicleData, lastDamage and justHadDamage. | 70 |
+| `C:pos()` | Position of the player vehicle (shared vec3, reused between calls). | 151 |
+| `C:setDebugDraw(enabled)` | Enables or disables the debug drawing. | 200 |
+| `C:speedMs()` | Norm of the velocity. | 180 |
+| `C:updateVehicleDamage()` | Compares the current damage to the last retained one and updates lastDamage, lastDamageDiff and justHadDamage. | 115 |
+| `C:updateVehicleData(vehicleId)` | Sets vehicleData to map.objects[vehicleId] (or nil). | 145 |
+| `C:velocity()` | Velocity of the player vehicle (shared vec3, reused). | 168 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawSphere`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/vehicleTracker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/vehicleTracker.lua`.*

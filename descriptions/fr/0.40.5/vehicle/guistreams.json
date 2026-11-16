@@ -1,0 +1,68 @@
+{
+  "path": "lua/vehicle/guistreams.lua",
+  "module": "Flux de données envoyés à l'UI (apps du HUD) à haute fréquence. Chaque flux a un nom (wheelInfo, engineInfo, stats, electrics, sensors, environment, genericGraphAdvanced…) ; l'UI indique ceux dont elle a besoin via setRequiredStreams, et seuls ceux-là sont calculés puis mis en file avec guihooks.queueStream. Accessible en globale `streams` (main.lua : streams = require('guistreams')). guihooks.lua appelle streams.update() lors de l'envoi.",
+  "usage": "if streams.willSend('myStream') then\n  guihooks.queueStream('myStream', {value = 42})\nend\nstreams.drawGraph('speed', electrics.values.wheelspeed)",
+  "notes": [
+    "willSend(name) est vrai seulement si guihooks.updateStreams (calculé dans main.lua:onGraphicsStep = flux actifs ET indicateur d'actualisation UI de obj) est vrai et si le flux est demandé : utile pour éviter de construire des données inutilement.",
+    "hasActiveStreams() renvoie true tant que setRequiredStreams n'a jamais été appelée (par prudence au démarrage), puis seulement s'il reste au moins un flux demandé.",
+    "wheelInfo : par roue, tableau à index numériques : [1] nom, [2] rayon, [3] wheelDir, [4] vitesse angulaire, [5] propulsionTorque, [6] lastSlip, [7] 0 (obsolète), [8] downForce, [9] brakingTorque, [10] brakeTorque, [11..13] centre statique de la roue x,y,z, [14] décalage le long de l'axe, [15] rotatorType ('wheel' par défaut), [16] parkingTorque. Les tables par roue sont réutilisées (cache).",
+    "sensors : gx, gy, gz, gx2, gy2, gz2, forceAtWheelNorm, forceAtDriverNorm, curForceLimitNorm, torqueCurrent (hydros), position {x,y,z}, roll, pitch, yaw, gravity. environment : temperature (K), pressure (obj:getEnvPressure). stats : obj:calcBeamStats() + tri_count + collidable_tri_count. engineInfo : controller.mainController.engineInfo. electrics : electrics.values.",
+    "La table streamsHandlers (une fonction par flux) est locale et n'est pas exportée dans M ; seuls reset, update, setRequiredStreams, willSend, hasActiveStreams et drawGraph le sont.",
+    "drawGraph envoie le flux 'genericGraphAdvanced' avec un compteur de frame _fidx qui s'incrémente à chaque appel et la valeur de chaque clé k."
+  ],
+  "fields": {},
+  "functions": {
+    "willSend": {
+      "desc": "Indique si un flux doit être envoyé cette frame (flux demandé par l'UI et envoi actif).",
+      "params": {"name": {"type": "string", "desc": "Nom du flux."}},
+      "returns": [{"type": "boolean|nil", "desc": "Vrai si le flux doit être produit (peut renvoyer nil/false sinon)."}],
+      "internal": false
+    },
+    "reset": {
+      "desc": "Vide les flux demandés et le cache des positions statiques de roues.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "update": {
+      "desc": "Appelée par guihooks lors de l'envoi des flux : exécute le gestionnaire de chaque flux demandé (ceux de streamsHandlers) qui met ses données en file.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "setRequiredStreams": {
+      "desc": "Définit la liste des flux demandés par l'UI (remplace la précédente). Appelée par le moteur/l'UI.",
+      "params": {"state": {"type": "string[]", "desc": "Liste de noms de flux."}},
+      "returns": [],
+      "internal": true
+    },
+    "hasActiveStreams": {
+      "desc": "Indique si au moins un flux est demandé (ou si la liste n'a jamais été définie). Utilisé par main.lua:onGraphicsStep.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si des flux sont actifs."}],
+      "internal": true
+    },
+    "drawGraph": {
+      "desc": "Ajoute une valeur au graphe générique avancé de l'UI (flux 'genericGraphAdvanced'), si ce flux est demandé.",
+      "params": {
+        "k": {"type": "string", "desc": "Nom de la série."},
+        "val": {"type": "number", "desc": "Valeur courante."}
+      },
+      "returns": [],
+      "internal": false
+    }
+  },
+  "classes": {
+    "streamsHandlers": {
+      "desc": "Table locale (non exportée) des gestionnaires de flux, une fonction sans argument par nom de flux ; update() les appelle.",
+      "functions": {
+        "wheelInfo": {"desc": "Construit et met en file le flux 'wheelInfo' (voir notes pour le format par roue).", "params": {}, "internal": true},
+        "engineInfo": {"desc": "Met en file controller.mainController.engineInfo.", "params": {}, "internal": true},
+        "stats": {"desc": "Met en file obj:calcBeamStats() complété par tri_count et collidable_tri_count.", "params": {}, "internal": true},
+        "electrics": {"desc": "Met en file electrics.values.", "params": {}, "internal": true},
+        "sensors": {"desc": "Met en file accélérations, forces de volant, position, roulis/tangage/lacet et gravité.", "params": {}, "internal": true},
+        "environment": {"desc": "Met en file température et pression ambiantes.", "params": {}, "internal": true}
+      }
+    }
+  }
+}

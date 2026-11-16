@@ -1,129 +1,259 @@
 {
   "path": "lua/common/utils/filterchain.lua",
-  "module": "Preuve de concept de 'chaîne de filtres' fonctionnelle : on décrit une chaîne par des textes comme 'smooth(2)' ou 'interval(0.1, 0.1)' qui sont compilés (load) en une fonction update chaînant les filtres. Les filtres sont dans la table locale F (smooth, interval, scale, digitize, floor, clamp, examine, startdelay) ; chaque filtre est un objet avec une méthode get(self, dt, ...). Se charge avec require('utils/filterchain') mais seule la fonction de test est exportée : la fabrique newFilterchain est locale et inaccessible. Le fichier définit aussi deux globales de debug (locals, getVarByName).",
-  "usage": "-- Les filtres se manipulent directement uniquement depuis ce fichier (F est local).\n-- Exemple d'idée : chaîne {'smooth(2)', 'clamp(0,1)'}, appelée avec update(dt, valeur).",
+  "module": "Proof of concept of a functional 'filter chain': a chain is described by text strings like 'smooth(2)' or 'interval(0.1, 0.1)' that are compiled (load) into an update function chaining the filters. The filters are in the local table F (smooth, interval, scale, digitize, floor, clamp, examine, startdelay); each filter is an object with a get(self, dt, ...) method. Loaded with require('utils/filterchain') but only the test function is exported: the newFilterchain factory is local and inaccessible. The file also defines two debug globals (locals, getVarByName).",
+  "usage": "-- Filters can only be manipulated directly from this file (F is local).\n-- Example idea: chain {'smooth(2)', 'clamp(0,1)'}, called with update(dt, value).",
   "notes": [
-    "Seule M.test est exportée ; newFilterchain, F et les classes Smooth/Interval/Startdelay sont locales au fichier (le .md d'index les liste mais elles ne sont pas accessibles de l'extérieur).",
-    "La page d'index indique Smooth:get(sample) et Startdelay:get(sample) : en réalité la signature est get(self, dt, sample).",
-    "Convention : le premier argument de chaque filtre est dt (commonFilterArguments = {'dt'} par défaut) ; la valeur filtrée suit.",
-    "newFilterchain compose les filtres de la fin vers le début (le dernier de la liste est appelé en premier sur l'entrée, d'après la construction de la chaîne s) et fait des print() du code généré.",
-    "Les filtres sont créés via load('return '..texte, nil, 't', F) : l'environnement est F, donc seuls les noms de F sont utilisables dans les chaînes.",
-    "Incohérence : Interval:get renvoie une table {dt, ...} au lieu d'une valeur."
+    "Only M.test is exported; newFilterchain, F and the Smooth/Interval/Startdelay classes are local to the file (the index .md lists them but they are not accessible from outside).",
+    "The index page states Smooth:get(sample) and Startdelay:get(sample): in reality the signature is get(self, dt, sample).",
+    "Convention: the first argument of each filter is dt (commonFilterArguments = {'dt'} by default); the filtered value follows.",
+    "newFilterchain composes the filters from the end to the start (the last one in the list is called first on the input, based on how the chain s is built) and print()s the generated code.",
+    "Filters are created via load('return '..text, nil, 't', F): the environment is F, so only the names in F can be used in the strings.",
+    "Inconsistency: Interval:get returns a table {dt, ...} instead of a value."
   ],
   "fields": {},
   "functions": {
     "test": {
-      "desc": "Exemple d'utilisation : crée une chaîne avec le filtre 'interval(0.1, 0.1)' en mode debug (examine) et appelle update 30 fois avec dt = 0.02, en affichant la sortie par dump.",
+      "desc": "Usage example: creates a chain with the filter 'interval(0.1, 0.1)' in debug mode (examine) and calls update 30 times with dt = 0.02, printing the output via dump.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "locals": {
-      "desc": "GLOBALE de debug : renvoie une table {nomLocal = valeur} des variables locales de la fonction appelante (debug.getlocal au niveau 2).",
+      "desc": "Debug GLOBAL: returns a table {localName = value} of the local variables of the calling function (debug.getlocal at level 2).",
       "params": {},
-      "returns": [{"type": "table<string, any>", "desc": "Variables locales de l'appelant"}]
+      "returns": [
+        {
+          "type": "table<string, any>",
+          "desc": "Local variables of the caller"
+        }
+      ]
     },
     "getVarByName": {
-      "desc": "GLOBALE de debug : retrouve une variable à partir d'un nom pointé (ex. 'mv.foo') dans une portée (par défaut _G). Le motif utilisé ('([^.]*).(.*)') découpe seulement en deux morceaux au premier séparateur ; fonctionne pour des noms à un ou deux niveaux (déduit du code).",
+      "desc": "Debug GLOBAL: finds a variable from a dotted name (e.g. 'mv.foo') in a scope (default _G). The pattern used ('([^.]*).(.*)') only splits into two pieces at the first separator; works for names with one or two levels (inferred from code).",
       "params": {
-        "name": {"type": "string", "desc": "Nom pointé, ex. 'a.b'"},
-        "scope": {"type": "table|nil", "desc": "Table de départ, _G par défaut"}
+        "name": {
+          "type": "string",
+          "desc": "Dotted name, e.g. 'a.b'"
+        },
+        "scope": {
+          "type": "table|nil",
+          "desc": "Starting table, _G by default"
+        }
       },
-      "returns": [{"type": "any", "desc": "Valeur trouvée"}]
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Value found"
+        }
+      ]
     }
   },
   "classes": {
     "F": {
-      "desc": "Table locale des fabriques de filtres (non exportée). Chaque fonction renvoie un objet filtre avec get(self, dt, ...).",
+      "desc": "Local table of filter factories (not exported). Each function returns a filter object with get(self, dt, ...).",
       "functions": {
         "smooth": {
-          "desc": "Fabrique un filtre de lissage à vitesse limitée (Smooth).",
-          "params": {"rate": {"type": "number|nil", "desc": "Variation maximale par seconde, 1 par défaut"}},
-          "returns": [{"type": "table", "desc": "Objet Smooth"}]
+          "desc": "Builds a rate-limited smoothing filter (Smooth).",
+          "params": {
+            "rate": {
+              "type": "number|nil",
+              "desc": "Maximum change per second, 1 by default"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Smooth object"
+            }
+          ]
         },
         "interval": {
-          "desc": "Fabrique un filtre clignotant (Interval) : alterne état actif et inactif.",
+          "desc": "Builds a blinking filter (Interval): alternates between active and inactive states.",
           "params": {
-            "offsetTime": {"type": "number|nil", "desc": "Décalage de phase, 0 par défaut (stocké mais non utilisé dans get)"},
-            "timeOn": {"type": "number|nil", "desc": "Durée à l'état actif en s, 0.1 par défaut"},
-            "timeOff": {"type": "number|nil", "desc": "Durée à l'état inactif en s, 0.1 par défaut"}
+            "offsetTime": {
+              "type": "number|nil",
+              "desc": "Phase offset, 0 by default (stored but not used in get)"
+            },
+            "timeOn": {
+              "type": "number|nil",
+              "desc": "Duration in the active state in s, 0.1 by default"
+            },
+            "timeOff": {
+              "type": "number|nil",
+              "desc": "Duration in the inactive state in s, 0.1 by default"
+            }
           },
-          "returns": [{"type": "table", "desc": "Objet Interval"}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Interval object"
+            }
+          ]
         },
         "scale": {
-          "desc": "Filtre qui multiplie la valeur par scaleVal.",
-          "params": {"scaleVal": {"type": "number", "desc": "Facteur"}},
-          "returns": [{"type": "table", "desc": "Filtre {get}"}]
+          "desc": "Filter that multiplies the value by scaleVal.",
+          "params": {
+            "scaleVal": {
+              "type": "number",
+              "desc": "Factor"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Filter {get}"
+            }
+          ]
         },
         "digitize": {
-          "desc": "Filtre qui renvoie 1 si la valeur dépasse le seuil, sinon 0.",
-          "params": {"threshold": {"type": "number|nil", "desc": "Seuil, 0.5 par défaut"}},
-          "returns": [{"type": "table", "desc": "Filtre {get}"}]
+          "desc": "Filter that returns 1 if the value exceeds the threshold, otherwise 0.",
+          "params": {
+            "threshold": {
+              "type": "number|nil",
+              "desc": "Threshold, 0.5 by default"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Filter {get}"
+            }
+          ]
         },
         "floor": {
-          "desc": "Filtre qui renvoie math.floor(valeur).",
+          "desc": "Filter that returns math.floor(value).",
           "params": {},
-          "returns": [{"type": "table", "desc": "Filtre {get}"}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Filter {get}"
+            }
+          ]
         },
         "clamp": {
-          "desc": "Filtre qui borne la valeur entre minval et maxval.",
+          "desc": "Filter that clamps the value between minval and maxval.",
           "params": {
-            "minval": {"type": "number|nil", "desc": "Minimum, 0 par défaut"},
-            "maxval": {"type": "number|nil", "desc": "Maximum, 1 par défaut"}
+            "minval": {
+              "type": "number|nil",
+              "desc": "Minimum, 0 by default"
+            },
+            "maxval": {
+              "type": "number|nil",
+              "desc": "Maximum, 1 by default"
+            }
           },
-          "returns": [{"type": "table", "desc": "Filtre {get}"}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Filter {get}"
+            }
+          ]
         },
         "examine": {
-          "desc": "Filtre de debug : loggue (niveau D, origine filterchain.examine) le texte str suivi des arguments, et renvoie les arguments à partir de commonArgumentsCount+1 (retire les arguments communs comme dt).",
+          "desc": "Debug filter: logs (level D, origin filterchain.examine) the text str followed by the arguments, and returns the arguments starting from commonArgumentsCount+1 (removes common arguments like dt).",
           "params": {
-            "str": {"type": "string", "desc": "Étiquette du log"},
-            "commonArgumentsCount": {"type": "integer|nil", "desc": "Nombre d'arguments communs à ne pas renvoyer, 0 par défaut"}
+            "str": {
+              "type": "string",
+              "desc": "Log label"
+            },
+            "commonArgumentsCount": {
+              "type": "integer|nil",
+              "desc": "Number of common arguments not to return, 0 by default"
+            }
           },
-          "returns": [{"type": "table", "desc": "Filtre {get}"}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Filter {get}"
+            }
+          ]
         },
         "startdelay": {
-          "desc": "Fabrique un filtre (Startdelay) qui retarde une montée de valeur : tant que l'entrée croît depuis moins de startdelay secondes, la sortie reste à l'ancienne valeur.",
-          "params": {"startdelay": {"type": "number|nil", "desc": "Délai en secondes, 0 par défaut"}},
-          "returns": [{"type": "table", "desc": "Objet Startdelay"}]
+          "desc": "Builds a filter (Startdelay) that delays a rise in value: as long as the input has been rising for less than startdelay seconds, the output stays at the old value.",
+          "params": {
+            "startdelay": {
+              "type": "number|nil",
+              "desc": "Delay in seconds, 0 by default"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Startdelay object"
+            }
+          ]
         }
       }
     },
     "Smooth": {
-      "desc": "Objet renvoyé par F.smooth : rapproche son état de l'échantillon à vitesse maximale rate (unités par seconde).",
+      "desc": "Object returned by F.smooth: moves its state toward the sample at maximum rate `rate` (units per second).",
       "functions": {
         "get": {
-          "desc": "Fait avancer l'état vers sample d'au plus dt*rate et le renvoie. Au premier appel l'état est initialisé à sample.",
+          "desc": "Advances the state toward sample by at most dt*rate and returns it. On the first call the state is initialized to sample.",
           "params": {
-            "dt": {"type": "number", "desc": "Pas de temps (s)"},
-            "sample": {"type": "number", "desc": "Valeur cible"}
+            "dt": {
+              "type": "number",
+              "desc": "Time step (s)"
+            },
+            "sample": {
+              "type": "number",
+              "desc": "Target value"
+            }
           },
-          "returns": [{"type": "number", "desc": "Valeur lissée"}]
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Smoothed value"
+            }
+          ]
         }
       }
     },
     "Interval": {
-      "desc": "Objet renvoyé par F.interval : alterne un état actif (onTime) et inactif (offTime).",
+      "desc": "Object returned by F.interval: alternates an active state (onTime) and an inactive state (offTime).",
       "functions": {
         "get": {
-          "desc": "Fait avancer le chronomètre interne de dt. Quand l'état est actif, renvoie {dt, ...} (arguments inchangés), sinon {dt, 0, 0, ...} (autant de zéros que d'arguments).",
+          "desc": "Advances the internal timer by dt. When the state is active, returns {dt, ...} (arguments unchanged), otherwise {dt, 0, 0, ...} (as many zeros as arguments).",
           "params": {
-            "dt": {"type": "number", "desc": "Pas de temps (s)"},
-            "...": {"type": "number", "desc": "Valeurs à transmettre ou annuler (la première décide, déduit du code)"}
+            "dt": {
+              "type": "number",
+              "desc": "Time step (s)"
+            },
+            "...": {
+              "type": "number",
+              "desc": "Values to pass through or zero out (the first one decides, inferred from code)"
+            }
           },
-          "returns": [{"type": "table", "desc": "{dt, valeurs...}"}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "{dt, values...}"
+            }
+          ]
         }
       }
     },
     "Startdelay": {
-      "desc": "Objet renvoyé par F.startdelay.",
+      "desc": "Object returned by F.startdelay.",
       "functions": {
         "get": {
-          "desc": "Si l'échantillon ne dépasse pas la valeur précédente, la mémorise et la renvoie. S'il la dépasse, renvoie l'ancienne valeur tant que le temps de montée cumulé est inférieur à startdelay, puis l'échantillon.",
+          "desc": "If the sample does not exceed the previous value, stores it and returns it. If it exceeds it, returns the old value as long as the accumulated rise time is below startdelay, then the sample.",
           "params": {
-            "dt": {"type": "number", "desc": "Pas de temps (s)"},
-            "sample": {"type": "number", "desc": "Valeur d'entrée"}
+            "dt": {
+              "type": "number",
+              "desc": "Time step (s)"
+            },
+            "sample": {
+              "type": "number",
+              "desc": "Input value"
+            }
           },
-          "returns": [{"type": "number", "desc": "Valeur filtrée"}]
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Filtered value"
+            }
+          ]
         }
       }
     }

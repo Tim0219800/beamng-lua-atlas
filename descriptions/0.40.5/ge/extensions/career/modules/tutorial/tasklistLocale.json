@@ -1,31 +1,61 @@
 {
   "path": "lua/ge/extensions/career/modules/tutorial/tasklistLocale.lua",
-  "module": "Aide utilisée par les étapes du tutoriel de carrière pour envoyer la liste de tâches à l'UI : elle traduit les champs texte (label, subtext, labelController, subtextController) qui sont des clés commençant par « ui. » ou des tables {txt=...}, remplit les libellés des actionItems (fillActionLabels), puis déclenche les guihooks SetTasklistHeader / SetTasklistTask. Chargé par require, pas comme extension.",
+  "module": "Helper used by the career tutorial steps to send the task list to the UI: it translates the text fields (label, subtext, labelController, subtextController) that are keys starting with \"ui.\" or tables {txt=...}, fills the actionItems labels (fillActionLabels), then triggers the guihooks SetTasklistHeader / SetTasklistTask. Loaded by require, not as an extension.",
   "notes": [
-    "Les entrées avec le champ clear sont renvoyées telles quelles, sans traduction.",
-    "La traduction travaille sur une copie : la table d'origine n'est pas modifiée."
+    "Entries with the clear field are returned as is, without translation.",
+    "The translation works on a copy: the original table is not modified."
   ],
   "functions": {
     "resolveHeader": {
-      "desc": "Retourne une copie d'un en-tête de liste de tâches avec ses textes traduits.",
-      "params": {"header": {"type": "table", "desc": "En-tête (ex. {label = \"ui.…\"})."}},
-      "returns": [{"type": "table", "desc": "Copie traduite."}],
+      "desc": "Returns a copy of a task list header with its texts translated.",
+      "params": {
+        "header": {
+          "type": "table",
+          "desc": "Header (e.g. {label = \"ui.…\"})."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Translated copy."
+        }
+      ],
       "internal": false
     },
     "resolveTask": {
-      "desc": "Retourne une copie d'une tâche (goal ou message) avec textes traduits et libellés d'actions résolus.",
-      "params": {"task": {"type": "table", "desc": "Tâche (id, type, label, subtext, actionItems, attention…)."}},
-      "returns": [{"type": "table", "desc": "Copie traduite."}],
+      "desc": "Returns a copy of a task (goal or message) with translated texts and resolved action labels.",
+      "params": {
+        "task": {
+          "type": "table",
+          "desc": "Task (id, type, label, subtext, actionItems, attention...)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Translated copy."
+        }
+      ],
       "internal": false
     },
     "setTasklistHeader": {
-      "desc": "Envoie l'en-tête traduit à l'UI via guihooks.trigger(\"SetTasklistHeader\").",
-      "params": {"header": {"type": "table", "desc": "En-tête à afficher."}},
+      "desc": "Sends the translated header to the UI via guihooks.trigger(\"SetTasklistHeader\").",
+      "params": {
+        "header": {
+          "type": "table",
+          "desc": "Header to display."
+        }
+      },
       "internal": false
     },
     "setTasklistTask": {
-      "desc": "Envoie ou met à jour une tâche traduite dans l'UI via guihooks.trigger(\"SetTasklistTask\").",
-      "params": {"task": {"type": "table", "desc": "Tâche à afficher ou mettre à jour."}},
+      "desc": "Sends or updates a translated task in the UI via guihooks.trigger(\"SetTasklistTask\").",
+      "params": {
+        "task": {
+          "type": "table",
+          "desc": "Task to display or update."
+        }
+      },
       "internal": false
     }
   }

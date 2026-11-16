@@ -1,0 +1,81 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/vehicleSelector.lua",
+  "module": "Nœud « Vehicle Selector » (couleur ui, singleActive, dépend de core_input_bindings). Ouvre un écran de démarrage (via le module ui) avec un sélecteur de véhicule pour un adversaire : panneau texte, panneau vehicleSelector (nom, miniature, stats Power/Weight/Top Speed), boutons « Change Opponent » et « Abandon ». Entrées : flow, reset (impulsion), title, text, startButtonText (caché), changeOpponentLabel, abandonLabel, saveSelection (garde le dernier choix entre redémarrages ; sinon retour au véhicule du joueur). Sorties : flow (une fois Start pressé), exit (Abandon pressé), model, config, color, dial (caché, temps 1/4 de mile, 12 par défaut).",
+  "notes": [
+    "Fonctions locales : getVehicleDial (core_vehicles config « Performance Data »/« Drag Times » .time_1_4, sinon 12), getVehicleColor (peinture par défaut du modèle/config), getVehicleDisplayData.",
+    "Les statistiques sont obtenues via ui_vehicleSelector_vehicleSpecifications.makeSpec, chargée à la demande."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Initialise built/done/exited/_needsRebuild et la sélection.",
+          "internal": true
+        },
+        "getSavedVehData": {
+          "desc": "Renvoie la sélection mémorisée sur le gestionnaire flowgraph (mgr._vehicleSelectorSavedVeh), partagée entre tous les Vehicle Selector du projet.",
+          "internal": false
+        },
+        "setSavedVehData": {
+          "desc": "Mémorise la sélection sur le gestionnaire flowgraph.",
+          "params": {
+            "vehData": {
+              "type": "table",
+              "desc": "{model, config, additionalData}."
+            }
+          },
+          "internal": false
+        },
+        "_executionStarted": {
+          "desc": "Remet les pins de sortie à false et réinitialise l'état.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Ferme le dialogue et réinitialise l'état.",
+          "internal": true
+        },
+        "onClientEndMission": {
+          "desc": "Hook de fin de mission côté client ; ferme le dialogue.",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Réinitialise built/done/exited et remet les pins de sortie à false (appelée via le pin reset).",
+          "internal": false
+        },
+        "closeDialogue": {
+          "desc": "Si l'écran est construit, navigue vers « play » et efface modules.ui.uiLayout.",
+          "internal": false
+        },
+        "getSelectedVehicleDisplayData": {
+          "desc": "Renvoie les données d'affichage (nom, miniature, stats) du véhicule sélectionné, ou nil.",
+          "internal": false
+        },
+        "getDefaultVehicle": {
+          "desc": "Renvoie {model, config} du véhicule actuel du joueur (core_vehicles.getCurrentVehicleDetails) ou nil.",
+          "internal": false
+        },
+        "buildScreen": {
+          "desc": "Construit l'écran de démarrage via le module ui (en-tête, bouton Start, panneaux, boutons Change Opponent / Abandon) puis finishUIBuilding. Logue une erreur si le module ui est absent.",
+          "internal": false
+        },
+        "requestChangeOpponent": {
+          "desc": "Ouvre le sélecteur de véhicules du jeu (ui_vehicleSelector_general.openVehicleSelectorForChallenge, chargé au besoin). Au retour, mémorise le choix et demande une reconstruction de l'écran.",
+          "internal": false
+        },
+        "startFromUi": {
+          "desc": "Marque le choix comme validé (done=true) et ferme le dialogue.",
+          "internal": false
+        },
+        "abandonFromUi": {
+          "desc": "Marque exited=true et ferme le dialogue.",
+          "internal": false
+        },
+        "work": {
+          "desc": "Gère reset ; à la première frame choisit le véhicule (sauvegardé si saveSelection, sinon défaut) et construit l'écran ; reconstruit si demandé ; publie model, config, color, dial, flow (done) et exit.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

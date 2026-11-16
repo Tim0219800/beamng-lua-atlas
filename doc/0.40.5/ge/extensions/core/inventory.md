@@ -1,110 +1,110 @@
 # `core_inventory`
 
-*Fichier : `lua/ge/extensions/core/inventory.lua` · VM : Game Engine (GE) · 216 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/inventory.lua` · VM: Game Engine (GE) · 216 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_inventory` : `extensions.load("core_inventory")`, puis la globale `core_inventory`
+**Access:** extension `core_inventory`: `extensions.load("core_inventory")`, then the global `core_inventory`
 
-Extension GE `core_inventory` : inventaire simple de la campagne/scénarios. Stocke par type (clé en MAJUSCULES) soit un compteur numérique (argent), soit une liste d'objets (véhicules, pièces). Fournit des fonctions pour ajouter, retirer et lire des éléments, et interprète les blocs `onEvent` des fichiers de campagne (récompenses ou pertes selon la médaille obtenue).
+GE extension `core_inventory`: simple inventory for the campaign/scenarios. Stores per type (UPPERCASE key) either a numeric counter (money) or a list of objects (vehicles, parts). Provides functions to add, remove and read items, and interprets the `onEvent` blocks of the campaign files (rewards or losses depending on the medal earned).
 
-## Exemple
+## Example
 
 ```lua
 core_inventory.addItem('$$$_MONEY', 200)
 core_inventory.addItem('$$$_VEHICLE', {model='etk800', config='etk800_m', color='1 1 1 1'})
-print(core_inventory.getItem('$$$_MONEY'))      -- 200 (la clé doit être en majuscules)
+print(core_inventory.getItem('$$$_MONEY'))      -- 200 (the key must be uppercase)
 local liste = core_inventory.getItemList('$$$_VEHICLE')
 ```
 
-## Remarques
+## Notes
 
-- Les types sont convertis en MAJUSCULES par addItem/removeItem, mais PAS par getItem/getItemList : il faut passer le type en majuscules (ex. '$$$_MONEY') pour lire ce qu'on a ajouté.
-- Un type contenant des nombres est un compteur (addItem additionne, removeItem soustrait, pas de limite basse) ; avec une table, le type devient une liste. Le premier ajout fixe la nature du type.
-- Doublons : addItem d'une table n'ajoute rien si un élément existant a TOUS ses champs égaux aux champs correspondants de la nouvelle valeur (comparaison clé par clé depuis l'élément existant). removeItem d'une table supprime le premier élément dont model et config sont égaux à ceux de valueObj (les autres champs sont ignorés).
-- processOnEvent : clés d'un bloc onEvent : 'remove' (retire) ou toute autre clé (ajoute) ; la clé est préfixée par '$$$_' et mise en majuscules. Dans 'remove', les sous-clés 'gold'/'silver'/'bronze' ne sont appliquées que si elles égalent earnedMedal ; les autres sous-clés sont retirées sans condition.
-- Incohérence : onSerialize renvoie une copie de itemsTable mais onDeserialized est vide ; après un rechargement des extensions l'inventaire n'est donc pas restauré par ce mécanisme (seul onResumeCampaign le recharge). existItem renvoie nil (et non false) pour une liste vide ; getItem renvoie le dernier élément trouvé si plusieurs ont le même itemId.
+- Types are converted to UPPERCASE by addItem/removeItem, but NOT by getItem/getItemList: you must pass the type in uppercase (e.g. '$$$_MONEY') to read what you added.
+- A type containing numbers is a counter (addItem adds, removeItem subtracts, no lower limit); with a table, the type becomes a list. The first addition sets the nature of the type.
+- Duplicates: addItem of a table adds nothing if an existing element has ALL its fields equal to the corresponding fields of the new value (key-by-key comparison starting from the existing element). removeItem of a table deletes the first element whose model and config equal those of valueObj (the other fields are ignored).
+- processOnEvent: keys of an onEvent block: 'remove' (removes) or any other key (adds); the key is prefixed with '$$$_' and uppercased. In 'remove', the sub-keys 'gold'/'silver'/'bronze' are only applied if they equal earnedMedal; the other sub-keys are removed unconditionally.
+- Inconsistency: onSerialize returns a copy of itemsTable but onDeserialized is empty; after an extensions reload the inventory is therefore not restored by this mechanism (only onResumeCampaign reloads it). existItem returns nil (not false) for an empty list; getItem returns the last element found if several have the same itemId.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_inventory.addItem(itemType, valueObj)` | Ajoute à l'inventaire : somme d'un nombre ou insertion d'un objet (sans doublon). Ignoré si itemType ou valueObj est nil/false. | 29 |
-| `core_inventory.getItem(itemType, itemId)` | Lit un type. Pour un compteur renvoie sa valeur (0 si absent) ; pour une liste renvoie une copie de l'élément dont itemId est égal à itemId. | 85 |
-| `core_inventory.getItemList(itemType)` | Copie profonde de la liste d'un type ; crée une liste vide pour ce type si absente (effet de bord). | 101 |
-| `core_inventory.onDeserialized(data)` | Hook de restauration : ne fait rien (voir notes). *(interne)* *(hook)* | 196 |
-| `core_inventory.onResumeCampaign(campaignInProgress, data)` | Hook de reprise de campagne : remplace itemsTable par les données sauvegardées. *(interne)* *(hook)* | 185 |
-| `core_inventory.onSaveCampaign(saveCallback)` | Hook de sauvegarde de campagne : appelle saveCallback(alias de l'extension, copie de itemsTable). *(interne)* *(hook)* | 180 |
-| `core_inventory.onSerialize()` | Hook de sérialisation avant rechargement des extensions : renvoie une copie de itemsTable. *(interne)* *(hook)* | 190 |
-| `core_inventory.processOnEvent(onEventData, earnedMedal)` | Applique un bloc 'onEvent' de campagne : clés 'add' directes (type -> valeur ou liste) et bloc 'remove' (par médaille ou inconditionnel). | 129 |
-| `core_inventory.removeItem(itemType, valueObj)` | Retire de l'inventaire : soustrait un nombre ou supprime l'objet dont model et config correspondent. | 58 |
+| `core_inventory.addItem(itemType, valueObj)` | Adds to the inventory: sum of a number or insertion of an object (without duplicates). Ignored if itemType or valueObj is nil/false. | 29 |
+| `core_inventory.getItem(itemType, itemId)` | Reads a type. For a counter returns its value (0 if absent); for a list returns a copy of the element whose itemId equals itemId. | 85 |
+| `core_inventory.getItemList(itemType)` | Deep copy of a type's list; creates an empty list for this type if absent (side effect). | 101 |
+| `core_inventory.onDeserialized(data)` | Restore hook: does nothing (see notes). *(internal)* *(hook)* | 196 |
+| `core_inventory.onResumeCampaign(campaignInProgress, data)` | Campaign resume hook: replaces itemsTable with the saved data. *(internal)* *(hook)* | 185 |
+| `core_inventory.onSaveCampaign(saveCallback)` | Campaign save hook: calls saveCallback(extension alias, copy of itemsTable). *(internal)* *(hook)* | 180 |
+| `core_inventory.onSerialize()` | Serialization hook before extensions reload: returns a copy of itemsTable. *(internal)* *(hook)* | 190 |
+| `core_inventory.processOnEvent(onEventData, earnedMedal)` | Applies a campaign 'onEvent' block: direct 'add' keys (type -> value or list) and 'remove' block (by medal or unconditional). | 129 |
+| `core_inventory.removeItem(itemType, valueObj)` | Removes from the inventory: subtracts a number or deletes the object whose model and config match. | 58 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_inventory.addItem(itemType, valueObj)`
 
-Ajoute à l'inventaire : somme d'un nombre ou insertion d'un objet (sans doublon). Ignoré si itemType ou valueObj est nil/false.
+Adds to the inventory: sum of a number or insertion of an object (without duplicates). Ignored if itemType or valueObj is nil/false.
 
-- `itemType` (*string*) : Type d'objet (converti en majuscules), par convention préfixé '$$$_'.
-- `valueObj` (*number|table*) : Quantité à ajouter, ou objet (ex. {model, config, color}).
+- `itemType` (*string*) : Object type (converted to uppercase), by convention prefixed '$$$_'.
+- `valueObj` (*number|table*) : Quantity to add, or object (e.g. {model, config, color}).
 
 #### `core_inventory.getItem(itemType, itemId)`
 
-Lit un type. Pour un compteur renvoie sa valeur (0 si absent) ; pour une liste renvoie une copie de l'élément dont itemId est égal à itemId.
+Reads a type. For a counter returns its value (0 if absent); for a list returns a copy of the element whose itemId equals itemId.
 
-- `itemType` (*string*) : Type exact (déjà en majuscules).
-- `itemId` (*any*) : Valeur du champ itemId recherchée (liste seulement).
-- **renvoie** : number|table|nil Quantité, copie de l'élément, ou nil si non trouvé dans une liste.
+- `itemType` (*string*) : Exact type (already in uppercase).
+- `itemId` (*any*) : Value of the itemId field searched for (list only).
+- **returns**: number|table|nil Quantity, copy of the element, or nil if not found in a list.
 
 #### `core_inventory.getItemList(itemType)`
 
-Copie profonde de la liste d'un type ; crée une liste vide pour ce type si absente (effet de bord).
+Deep copy of a type's list; creates an empty list for this type if absent (side effect).
 
-- `itemType` (*string*) : Type exact (déjà en majuscules).
-- **renvoie** : table Copie de la liste (ou du compteur numérique s'il s'agit d'un nombre).
+- `itemType` (*string*) : Exact type (already in uppercase).
+- **returns**: table Copy of the list (or of the numeric counter if it is a number).
 
 #### `core_inventory.onDeserialized(data)`
 
-Hook de restauration : ne fait rien (voir notes).
+Restore hook: does nothing (see notes).
 
-- `data` (*table*) : Données de onSerialize (non utilisées).
+- `data` (*table*) : Data from onSerialize (unused).
 
 #### `core_inventory.onResumeCampaign(campaignInProgress, data)`
 
-Hook de reprise de campagne : remplace itemsTable par les données sauvegardées.
+Campaign resume hook: replaces itemsTable with the saved data.
 
-- `campaignInProgress` (*any*) : Campagne en cours (non utilisé).
-- `data` (*table*) : Données sauvegardées.
+- `campaignInProgress` (*any*) : Current campaign (not used).
+- `data` (*table*) : Saved data.
 
 #### `core_inventory.onSaveCampaign(saveCallback)`
 
-Hook de sauvegarde de campagne : appelle saveCallback(alias de l'extension, copie de itemsTable).
+Campaign save hook: calls saveCallback(extension alias, copy of itemsTable).
 
-- `saveCallback` (*function*) : Fonction (nomExtension, données).
+- `saveCallback` (*function*) : Function (extensionName, data).
 
 #### `core_inventory.onSerialize()`
 
-Hook de sérialisation avant rechargement des extensions : renvoie une copie de itemsTable.
+Serialization hook before extensions reload: returns a copy of itemsTable.
 
-- **renvoie** : table Inventaire.
+- **returns**: table Inventory.
 
 #### `core_inventory.processOnEvent(onEventData, earnedMedal)`
 
-Applique un bloc 'onEvent' de campagne : clés 'add' directes (type -> valeur ou liste) et bloc 'remove' (par médaille ou inconditionnel).
+Applies a campaign 'onEvent' block: direct 'add' keys (type -> value or list) and 'remove' block (by medal or unconditional).
 
-- `onEventData` (*table|nil*) : Bloc onEvent ; nil = rien.
-- `earnedMedal` (*string|nil*) : 'bronze', 'silver' ou 'gold' : sélectionne le sous-bloc de 'remove'.
+- `onEventData` (*table|nil*) : onEvent block; nil = nothing.
+- `earnedMedal` (*string|nil*) : 'bronze', 'silver' or 'gold': selects the sub-block of 'remove'.
 
 #### `core_inventory.removeItem(itemType, valueObj)`
 
-Retire de l'inventaire : soustrait un nombre ou supprime l'objet dont model et config correspondent.
+Removes from the inventory: subtracts a number or deletes the object whose model and config match.
 
-- `itemType` (*string*) : Type d'objet (converti en majuscules).
-- `valueObj` (*number|table*) : Quantité à retirer, ou objet avec model et config.
+- `itemType` (*string*) : Object type (converted to uppercase).
+- `valueObj` (*number|table*) : Quantity to remove, or object with model and config.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `itemsTable` | table<string, number|table[]> | Inventaire : type (MAJUSCULES) -> compteur ou liste d'objets. |
+| `itemsTable` | table<string, number|table[]> | Inventory: type (UPPERCASE) -> counter or list of objects. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/inventory.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/inventory.lua`.*

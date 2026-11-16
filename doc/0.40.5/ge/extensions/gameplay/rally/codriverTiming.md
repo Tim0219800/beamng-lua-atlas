@@ -1,73 +1,73 @@
 # `gameplay_rally_codriverTiming`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/codriverTiming.lua` · VM : Game Engine (GE) · 61 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/codriverTiming.lua` · VM: Game Engine (GE) · 61 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_codriverTiming` : `extensions.load("gameplay_rally_codriverTiming")`, puis la globale `gameplay_rally_codriverTiming`
+**Access:** extension `gameplay_rally_codriverTiming`: `extensions.load("gameplay_rally_codriverTiming")`, then the global `gameplay_rally_codriverTiming`
 
-Calcule le délai du copilote de rallye : l'écart (en secondes) entre la fin de l'annonce d'une note et l'arrivée de la voiture au virage. Le délai minimum vient du réglage utilisateur 'rallyCodriverTiming' (plus un décalage propre au pack vocal) ; il augmente avec la vitesse entre startSpeedMph et endSpeedMph jusqu'à un supplément maxDelayOffsetSeconds. Les valeurs par défaut sont lues dans /gameplay/rally/codriverTiming.json.
+Computes the rally co-driver delay: the gap (in seconds) between the end of a note announcement and the car's arrival at the corner. The minimum delay comes from the user setting 'rallyCodriverTiming' (plus an offset specific to the voice pack); it increases with speed between startSpeedMph and endSpeedMph up to an extra maxDelayOffsetSeconds. Default values are read from /gameplay/rally/codriverTiming.json.
 
-## Exemple
+## Example
 
 ```lua
 local d = gameplay_rally_codriverTiming.delayForSpeed(speedMph, true, 0)
 ```
 
-## Remarques
+## Notes
 
-- Les vitesses sont en mph (pas en m/s).
-- Défauts si le JSON est absent : maxDelayOffsetSeconds=0.5, startSpeedMph=40, endSpeedMph=80.
-- enableSpeedScaling == false (comparaison stricte) désactive la partie dépendante de la vitesse ; nil la laisse active.
-- nudge borne le délai minimum entre 1 et 10 s et l'écrit dans les settings.
+- Speeds are in mph (not m/s).
+- Defaults if the JSON is missing: maxDelayOffsetSeconds=0.5, startSpeedMph=40, endSpeedMph=80.
+- enableSpeedScaling == false (strict comparison) disables the speed-dependent part; nil leaves it active.
+- nudge clamps the minimum delay between 1 and 10 s and writes it to the settings.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_codriverTiming.config()` | Renvoie la configuration chargée (et mise en cache) : maxDelayOffsetSeconds, startSpeedMph, endSpeedMph. | 28 |
-| `gameplay_rally_codriverTiming.delayForSpeed(speedMph, enableSpeedScaling, offsetSeconds)` | Délai pour une vitesse donnée : minDelay en dessous de startSpeedMph, puis interpolation linéaire jusqu'à minDelay + maxDelayOffsetSeconds à endSpeedMph (plafonné). | 42 |
-| `gameplay_rally_codriverTiming.maxDelay(enableSpeedScaling, offsetSeconds)` | Délai maximum en secondes (atteint à endSpeedMph) : minDelay + maxDelayOffsetSeconds, ou minDelay si la mise à l'échelle par la vitesse est désactivée. | 36 |
-| `gameplay_rally_codriverTiming.minDelay(offsetSeconds)` | Délai minimum en secondes : réglage rallyCodriverTiming + décalage du pack vocal. | 32 |
-| `gameplay_rally_codriverTiming.nudge(tick)` | Décale la plage de délais de 'tick' secondes : seul le minimum (réglage rallyCodriverTiming, borné à [1, 10]) bouge, le maximum suit via le décalage. Enregistre le nouveau réglage. | 54 |
+| `gameplay_rally_codriverTiming.config()` | Returns the loaded (and cached) configuration: maxDelayOffsetSeconds, startSpeedMph, endSpeedMph. | 28 |
+| `gameplay_rally_codriverTiming.delayForSpeed(speedMph, enableSpeedScaling, offsetSeconds)` | Delay for a given speed: minDelay below startSpeedMph, then linear interpolation up to minDelay + maxDelayOffsetSeconds at endSpeedMph (capped). | 42 |
+| `gameplay_rally_codriverTiming.maxDelay(enableSpeedScaling, offsetSeconds)` | Maximum delay in seconds (reached at endSpeedMph): minDelay + maxDelayOffsetSeconds, or minDelay if speed scaling is disabled. | 36 |
+| `gameplay_rally_codriverTiming.minDelay(offsetSeconds)` | Minimum delay in seconds: rallyCodriverTiming setting + voice pack offset. | 32 |
+| `gameplay_rally_codriverTiming.nudge(tick)` | Shifts the delay range by 'tick' seconds: only the minimum (rallyCodriverTiming setting, clamped to [1, 10]) moves, the maximum follows via the offset. Saves the new setting. | 54 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_codriverTiming.config()`
 
-Renvoie la configuration chargée (et mise en cache) : maxDelayOffsetSeconds, startSpeedMph, endSpeedMph.
+Returns the loaded (and cached) configuration: maxDelayOffsetSeconds, startSpeedMph, endSpeedMph.
 
-- **renvoie** : table {maxDelayOffsetSeconds, startSpeedMph, endSpeedMph}.
+- **returns**: table {maxDelayOffsetSeconds, startSpeedMph, endSpeedMph}.
 
 #### `gameplay_rally_codriverTiming.delayForSpeed(speedMph, enableSpeedScaling, offsetSeconds)`
 
-Délai pour une vitesse donnée : minDelay en dessous de startSpeedMph, puis interpolation linéaire jusqu'à minDelay + maxDelayOffsetSeconds à endSpeedMph (plafonné).
+Delay for a given speed: minDelay below startSpeedMph, then linear interpolation up to minDelay + maxDelayOffsetSeconds at endSpeedMph (capped).
 
-- `speedMph` (*number*) : Vitesse du véhicule en mph.
-- `enableSpeedScaling` (*boolean|nil*) : false pour toujours renvoyer le minimum.
-- `offsetSeconds` (*number|nil*) : Décalage du pack vocal.
-- **renvoie** : number Délai en secondes.
+- `speedMph` (*number*) : Vehicle speed in mph.
+- `enableSpeedScaling` (*boolean|nil*) : false to always return the minimum.
+- `offsetSeconds` (*number|nil*) : Voice pack offset.
+- **returns**: number Timeout in seconds.
 
 #### `gameplay_rally_codriverTiming.maxDelay(enableSpeedScaling, offsetSeconds)`
 
-Délai maximum en secondes (atteint à endSpeedMph) : minDelay + maxDelayOffsetSeconds, ou minDelay si la mise à l'échelle par la vitesse est désactivée.
+Maximum delay in seconds (reached at endSpeedMph): minDelay + maxDelayOffsetSeconds, or minDelay if speed scaling is disabled.
 
-- `enableSpeedScaling` (*boolean|nil*) : false pour désactiver la partie liée à la vitesse.
-- `offsetSeconds` (*number|nil*) : Décalage du pack vocal.
-- **renvoie** : number Délai maximum en secondes.
+- `enableSpeedScaling` (*boolean|nil*) : false to disable the speed-related part.
+- `offsetSeconds` (*number|nil*) : Voice pack offset.
+- **returns**: number Maximum delay in seconds.
 
 #### `gameplay_rally_codriverTiming.minDelay(offsetSeconds)`
 
-Délai minimum en secondes : réglage rallyCodriverTiming + décalage du pack vocal.
+Minimum delay in seconds: rallyCodriverTiming setting + voice pack offset.
 
-- `offsetSeconds` (*number|nil*) : Décalage du pack vocal (0 si nil).
-- **renvoie** : number Délai minimum en secondes.
+- `offsetSeconds` (*number|nil*) : Voice pack offset (0 if nil).
+- **returns**: number Minimum delay in seconds.
 
 #### `gameplay_rally_codriverTiming.nudge(tick)`
 
-Décale la plage de délais de 'tick' secondes : seul le minimum (réglage rallyCodriverTiming, borné à [1, 10]) bouge, le maximum suit via le décalage. Enregistre le nouveau réglage.
+Shifts the delay range by 'tick' seconds: only the minimum (rallyCodriverTiming setting, clamped to [1, 10]) moves, the maximum follows via the offset. Saves the new setting.
 
-- `tick` (*number*) : Variation en secondes (positive ou négative).
-- **renvoie** : number Nouveau délai minimum.
-- **renvoie** : number Nouveau délai maximum (min + maxDelayOffsetSeconds).
+- `tick` (*number*) : Change in seconds (positive or negative).
+- **returns**: number New minimum delay.
+- **returns**: number New maximum delay (min + maxDelayOffsetSeconds).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/codriverTiming.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/codriverTiming.lua`.*

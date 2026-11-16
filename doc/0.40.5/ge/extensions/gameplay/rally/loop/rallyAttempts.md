@@ -1,49 +1,49 @@
 # `gameplay_rally_loop_rallyAttempts`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/loop/rallyAttempts.lua` · VM : Game Engine (GE) · 106 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/loop/rallyAttempts.lua` · VM: Game Engine (GE) · 106 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_loop_rallyAttempts` : `extensions.load("gameplay_rally_loop_rallyAttempts")`, puis la globale `gameplay_rally_loop_rallyAttempts`
+**Access:** extension `gameplay_rally_loop_rallyAttempts`: `extensions.load("gameplay_rally_loop_rallyAttempts")`, then the global `gameplay_rally_loop_rallyAttempts`
 
-Crée et enregistre une tentative (attempt) de mission pour une boucle de rallye (rally loop) à travers le système de progression des missions (gameplay_missions_progress). Une tentative de fin normale reçoit le temps total, la pénalité, les temps de chaque spéciale (timeSS1, timeSS2…), les données du véhicule et les étoiles gagnées ; une tentative DNF (abandon ou redémarrage) ne reçoit que le type de DNF et le véhicule. Appelé par le gestionnaire de boucle (rallyLoopManager) via l'objet mgr.
+Creates and records a mission attempt for a rally loop through the mission progress system (gameplay_missions_progress). A normal-finish attempt receives the total time, the penalty, the time of each stage (timeSS1, timeSS2...), the vehicle data and the stars earned; a DNF attempt (abandon or restart) receives only the DNF type and the vehicle. Called by the loop manager (rallyLoopManager) via the mgr object.
 
-## Exemple
+## Example
 
 ```lua
 local attempt, totalChange = gameplay_rally_loop_rallyAttempts.createRallyLoopAttemptForFinish(mgr)
 ```
 
-## Remarques
+## Notes
 
-- Les deux fonctions publiques renvoient (attempt, totalChange) dans cet ordre, alors que le commentaire du code ne cite que totalChange (et, pour la fin normale, l'ordre annoncé dans le commentaire est inversé).
-- Si mgr:getRallyLoopMissionId() renvoie nil, un log d'erreur est émis et la fonction renvoie nil sans rien enregistrer.
-- addVehicleData appelle dump(vData) : la table du véhicule est affichée dans la console à chaque tentative.
-- Le module charge rallyLoopStars via require('/lua/ge/extensions/gameplay/rally/loop/rallyLoopStars').
+- Both public functions return (attempt, totalChange) in this order, whereas the code comment only mentions totalChange (and, for the normal finish, the order stated in the comment is reversed).
+- If mgr:getRallyLoopMissionId() returns nil, an error log is emitted and the function returns nil without recording anything.
+- addVehicleData calls dump(vData): the vehicle table is printed to the console on every attempt.
+- The module loads rallyLoopStars via require('/lua/ge/extensions/gameplay/rally/loop/rallyLoopStars').
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_loop_rallyAttempts.createRallyLoopAttemptForDnf(mgr, dnfType)` | Crée une tentative abandonnée (DNF) : marque attempt.dnf = true, enregistre le dnfType et l'id de la mission courante, ajoute le véhicule, agrège et sauvegarde. Aucune étoile ni temps n'est enregistré. | 85 |
-| `gameplay_rally_loop_rallyAttempts.createRallyLoopAttemptForFinish(mgr)` | Crée une tentative de fin normale : temps et pénalités de mgr, temps de chaque spéciale, véhicule du joueur, notation en étoiles (RallyLoopStars.gradeAttempt), agrégation dans la progression de la mission, puis sauvegarde. | 66 |
+| `gameplay_rally_loop_rallyAttempts.createRallyLoopAttemptForDnf(mgr, dnfType)` | Creates an abandoned (DNF) attempt: sets attempt.dnf = true, records the dnfType and the current mission id, adds the vehicle, aggregates and saves. No stars or times are recorded. | 85 |
+| `gameplay_rally_loop_rallyAttempts.createRallyLoopAttemptForFinish(mgr)` | Creates a normal-finish attempt: time and penalties from mgr, time of each stage, player vehicle, star rating (RallyLoopStars.gradeAttempt), aggregation into the mission progress, then save. | 66 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_loop_rallyAttempts.createRallyLoopAttemptForDnf(mgr, dnfType)`
 
-Crée une tentative abandonnée (DNF) : marque attempt.dnf = true, enregistre le dnfType et l'id de la mission courante, ajoute le véhicule, agrège et sauvegarde. Aucune étoile ni temps n'est enregistré.
+Creates an abandoned (DNF) attempt: sets attempt.dnf = true, records the dnfType and the current mission id, adds the vehicle, aggregates and saves. No stars or times are recorded.
 
-- `mgr` (*table*) : Gestionnaire de boucle (rallyLoopManager) : doit fournir getRallyLoopMissionId et getCurrentMissionId.
-- `dnfType` (*string*) : Type de DNF : "restart" ou "abandon".
-- **renvoie** : table|nil L'objet attempt créé (nil si l'id de mission est introuvable).
-- **renvoie** : table|nil Résultat d'agrégation (totalChange).
+- `mgr` (*table*) : Loop manager (rallyLoopManager): must provide getRallyLoopMissionId and getCurrentMissionId.
+- `dnfType` (*string*) : DNF type: "restart" or "abandon".
+- **returns**: table|nil The attempt object created (nil if the mission id is not found).
+- **returns**: table|nil Aggregation result (totalChange).
 
 #### `gameplay_rally_loop_rallyAttempts.createRallyLoopAttemptForFinish(mgr)`
 
-Crée une tentative de fin normale : temps et pénalités de mgr, temps de chaque spéciale, véhicule du joueur, notation en étoiles (RallyLoopStars.gradeAttempt), agrégation dans la progression de la mission, puis sauvegarde.
+Creates a normal-finish attempt: time and penalties from mgr, time of each stage, player vehicle, star rating (RallyLoopStars.gradeAttempt), aggregation into the mission progress, then save.
 
-- `mgr` (*table*) : Gestionnaire de boucle (rallyLoopManager) : doit fournir getRallyLoopMissionId, getTotalPenalty, getTotalTime, getEventLog et éventuellement getRallyLoopMission.
-- **renvoie** : table|nil L'objet attempt créé (nil si l'id de mission est introuvable).
-- **renvoie** : table|nil Résultat d'agrégation (totalChange) renvoyé par gameplay_missions_progress.aggregateAttempt.
+- `mgr` (*table*) : Loop manager (rallyLoopManager): must provide getRallyLoopMissionId, getTotalPenalty, getTotalTime, getEventLog and optionally getRallyLoopMission.
+- **returns**: table|nil The attempt object created (nil if the mission id is not found).
+- **returns**: table|nil Aggregation result (totalChange) returned by gameplay_missions_progress.aggregateAttempt.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/loop/rallyAttempts.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/loop/rallyAttempts.lua`.*

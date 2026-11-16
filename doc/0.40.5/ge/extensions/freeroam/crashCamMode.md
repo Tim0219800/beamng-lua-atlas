@@ -1,124 +1,124 @@
 # `freeroam_crashCamMode`
 
-*Fichier : `lua/ge/extensions/freeroam/crashCamMode.lua` · VM : Game Engine (GE) · 734 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/freeroam/crashCamMode.lua` · VM: Game Engine (GE) · 734 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `freeroam_crashCamMode` : `extensions.load("freeroam_crashCamMode")`, puis la globale `freeroam_crashCamMode`
+**Access:** extension `freeroam_crashCamMode`: `extensions.load("freeroam_crashCamMode")`, then the global `freeroam_crashCamMode`
 
-Caméra de crash (ralenti automatique) du mode freeroam. Chaque image, il prédit (0,2 s à l'avance) si le véhicule du joueur va percuter un véhicule de trafic/garé, un mur (rayons statiques) ou subit un brusque changement de vitesse ; si la différence de vitesse dépasse 13 m/s, il passe en ralenti (simTimeAuthority 0,15), cache l'interface et bascule sur la caméra 'crash' ou sur un chemin de caméra. Il restaure ensuite vitesse, interface et caméra précédentes et émet onCrashCamEnded. Chargé par freeroam_crashCamModeLoader selon le réglage enableCrashCam.
+Crash camera (automatic slow motion) of freeroam mode. Every frame, it predicts (0.2 s ahead) whether the player's vehicle will hit a traffic/parked vehicle, a wall (static rays) or suffers a sudden speed change; if the speed difference exceeds 13 m/s, it switches to slow motion (simTimeAuthority 0.15), hides the UI and switches to the 'crash' camera or to a camera path. It then restores the previous speed, UI and camera and emits onCrashCamEnded. Loaded by freeroam_crashCamModeLoader according to the enableCrashCam setting.
 
-## Exemple
+## Example
 
 ```lua
--- forcer l'activation hors freeroam (par ex. pour un scénario) et suivre aussi les véhicules non-trafic
+-- force activation outside freeroam (e.g. for a scenario) and also track non-traffic vehicles
 freeroam_crashCamMode.setForcedEnabled(true)
 freeroam_crashCamMode.setTrackingMode(2)
 ```
 
-## Remarques
+## Notes
 
-- Constantes : seuil de vitesse 13 m/s, délai minimal entre deux déclenchements 1 s, durée 4 s, anticipation 0,2 s, boîtes englobantes réduites à 85 %, vérification de vitesse toutes les 0,1 s (seuil +3 m/s).
-- Trois modes de crash tirés au hasard : 1 (45 %) caméra proche au-dessus, fixe ; 2 (45 %) caméra au sol qui tourne ; 3 (10 %, seulement si plus de 5 s depuis le dernier crash cam) temps figé pendant que la caméra tourne autour du point d'impact via core_paths.playPath. Les crashs contre un mur ou par variation de vitesse n'utilisent que les modes 1 et 2.
-- Modes de suivi (trackingMode) : 1 = joueur contre trafic, véhicules garés, murs et variation de vitesse ; 2 = joueur contre tous les véhicules actifs et murs.
-- La détection est ignorée si : une relecture (replay) est en lecture, la caméra libre est active, le temps de simulation n'est pas à 1, le joueur vient d'être téléporté ou il n'y a pas de véhicule joueur.
-- Hors état de jeu 'freeroam' (et sans forcedEnabled), onUpdate met crashCamEnabled à false de façon définitive jusqu'au prochain onClientStartMission en freeroam ou à la fin d'une mission (onAnyMissionChanged 'stopped').
-- onExtensionLoaded renvoie false si enableCrashCam est désactivé (l'extension ne reste pas chargée dans ce cas, sauf si le moteur ignore la valeur).
-- En VR (render_openxr en cours), le retour automatique à la caméra 'external' quand le véhicule sort du champ n'est pas fait.
-- rolloverCheck (retournement) est défini mais son appel est commenté dans onUpdate : jamais utilisé.
-- Le hook onCrashCamEnded n'est émis que si previousCamMode n'est pas nil.
+- Constants: speed threshold 13 m/s, minimum delay between two triggers 1 s, duration 4 s, lookahead 0.2 s, bounding boxes reduced to 85%, speed check every 0.1 s (threshold +3 m/s).
+- Three crash modes drawn at random: 1 (45%) close camera above, fixed; 2 (45%) ground camera that rotates; 3 (10%, only if more than 5 s since the last crash cam) time frozen while the camera orbits around the impact point via core_paths.playPath. Crashes against a wall or by speed change only use modes 1 and 2.
+- Tracking modes (trackingMode): 1 = player against traffic, parked vehicles, walls and speed change; 2 = player against all active vehicles and walls.
+- Detection is skipped if: a replay is playing, the free camera is active, the simulation time is not 1, the player has just been teleported or there is no player vehicle.
+- Outside the 'freeroam' game state (and without forcedEnabled), onUpdate sets crashCamEnabled to false permanently until the next onClientStartMission in freeroam or the end of a mission (onAnyMissionChanged 'stopped').
+- onExtensionLoaded returns false if enableCrashCam is disabled (the extension does not stay loaded in that case, unless the engine ignores the value).
+- In VR (render_openxr running), the automatic return to the 'external' camera when the vehicle leaves the field of view is not done.
+- rolloverCheck (rollover) is defined but its call is commented out in onUpdate: never used.
+- The onCrashCamEnded hook is only emitted if previousCamMode is not nil.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `freeroam_crashCamMode.getTrackingMode()` | Renvoie le mode de suivi actuel. | 707 |
-| `freeroam_crashCamMode.onAnyMissionChanged(state)` | Hook appelé quand une mission change d'état : désactive la caméra de crash au démarrage ('started'), la réactive à l'arrêt ('stopped'). *(interne)* *(hook)* | 691 |
-| `freeroam_crashCamMode.onBeforeBigMapActivated()` | Hook appelé juste avant l'ouverture de la grande carte : arrête la caméra de crash. *(interne)* *(hook)* | 668 |
-| `freeroam_crashCamMode.onBeforeMenuOpened()` | Hook appelé avant l'ouverture d'un menu : arrête la caméra de crash si elle est active. *(interne)* *(hook)* | 678 |
-| `freeroam_crashCamMode.onClientEndMission(levelPath)` | Hook appelé à la fin du niveau : désactive la caméra de crash. *(interne)* *(hook)* | 643 |
-| `freeroam_crashCamMode.onClientStartMission()` | Hook appelé au démarrage du niveau : active la caméra de crash si l'état de jeu est 'freeroam'. *(interne)* *(hook)* | 647 |
-| `freeroam_crashCamMode.onExtensionLoaded()` | Hook appelé au chargement : renvoie false si le réglage enableCrashCam est désactivé. *(interne)* *(hook)* | 653 |
-| `freeroam_crashCamMode.onExtensionUnloaded()` | Hook appelé au déchargement : arrête proprement la caméra de crash (restaure vitesse, interface et caméra). *(interne)* *(hook)* | 657 |
-| `freeroam_crashCamMode.onReplayStateChanged(state)` | Hook appelé quand l'état du replay change : arrête la caméra de crash. *(interne)* *(hook)* | 635 |
-| `freeroam_crashCamMode.onSerialize()` | Hook appelé avant un rechargement des extensions : arrête la caméra de crash. *(interne)* *(hook)* | 639 |
-| `freeroam_crashCamMode.onTogglePause()` | Hook appelé à la mise en pause ou reprise du jeu : arrête la caméra de crash si elle est active. *(interne)* *(hook)* | 672 |
-| `freeroam_crashCamMode.onUpdate(dtReal, dtSim)` | Hook appelé à chaque image : détecte les crashs imminents (trafic, mur, variation de vitesse) quand la caméra de crash est inactive ; quand elle est active, suit sa durée, vérifie l'impact entre véhicules, lance le chemin de caméra en mode 3 et l'arrête après 4 s ou en cas de téléportation. *(interne)* *(hook)* | 535 |
-| `freeroam_crashCamMode.onVehicleResetted(vehId)` | Hook appelé quand un véhicule est remis en place : arrête la caméra de crash si c'est le véhicule du joueur. *(interne)* *(hook)* | 629 |
-| `freeroam_crashCamMode.onVehicleSwitched(oldVehId)` | Hook appelé au changement de véhicule joueur : si la caméra de crash est active, remet la caméra précédente sur l'ancien véhicule, puis arrête la caméra de crash. *(interne)* *(hook)* | 684 |
-| `freeroam_crashCamMode.setForcedEnabled(enabled)` | Force l'exécution de la détection même hors freeroam ou si la caméra de crash est désactivée. | 711 |
-| `freeroam_crashCamMode.setTrackingMode(mode)` | Choisit le mode de suivi (1 ou 2, voir notes). | 703 |
-| `freeroam_crashCamMode.trackCamMode()` | À appeler quand l'utilisateur change de mode de caméra : arrête la caméra de crash si elle est active (aucun appelant dans ce fichier). | 662 |
-| `freeroam_crashCamMode.trackVehReset()` | Arrête la caméra de crash (appelée en cas de reset du véhicule ; contrairement à onVehicleResetted, ne vérifie pas quel véhicule). | 699 |
+| `freeroam_crashCamMode.getTrackingMode()` | Returns the current tracking mode. | 707 |
+| `freeroam_crashCamMode.onAnyMissionChanged(state)` | Hook called when a mission changes state: disables the crash camera on start ('started'), re-enables it on stop ('stopped'). *(internal)* *(hook)* | 691 |
+| `freeroam_crashCamMode.onBeforeBigMapActivated()` | Hook called just before the big map opens: stops the crash camera. *(internal)* *(hook)* | 668 |
+| `freeroam_crashCamMode.onBeforeMenuOpened()` | Hook called before a menu opens: stops the crash camera if it is active. *(internal)* *(hook)* | 678 |
+| `freeroam_crashCamMode.onClientEndMission(levelPath)` | Hook called at the end of the level: disables the crash camera. *(internal)* *(hook)* | 643 |
+| `freeroam_crashCamMode.onClientStartMission()` | Hook called when the level starts: enables the crash camera if the game state is 'freeroam'. *(internal)* *(hook)* | 647 |
+| `freeroam_crashCamMode.onExtensionLoaded()` | Hook called on load: returns false if the enableCrashCam setting is disabled. *(internal)* *(hook)* | 653 |
+| `freeroam_crashCamMode.onExtensionUnloaded()` | Hook called on unload: cleanly stops the crash camera (restores speed, UI and camera). *(internal)* *(hook)* | 657 |
+| `freeroam_crashCamMode.onReplayStateChanged(state)` | Hook called when the replay state changes: stops the crash camera. *(internal)* *(hook)* | 635 |
+| `freeroam_crashCamMode.onSerialize()` | Hook called before an extension reload: stops the crash camera. *(internal)* *(hook)* | 639 |
+| `freeroam_crashCamMode.onTogglePause()` | Hook called when the game is paused or resumed: stops the crash camera if it is active. *(internal)* *(hook)* | 672 |
+| `freeroam_crashCamMode.onUpdate(dtReal, dtSim)` | Hook called every frame: detects imminent crashes (traffic, wall, speed change) when the crash camera is inactive; when it is active, tracks its duration, checks the impact between vehicles, starts the camera path in mode 3 and stops it after 4 s or on teleportation. *(internal)* *(hook)* | 535 |
+| `freeroam_crashCamMode.onVehicleResetted(vehId)` | Hook called when a vehicle is put back in place: stops the crash camera if it is the player's vehicle. *(internal)* *(hook)* | 629 |
+| `freeroam_crashCamMode.onVehicleSwitched(oldVehId)` | Hook called when the player vehicle changes: if the crash camera is active, puts the previous camera back on the old vehicle, then stops the crash camera. *(internal)* *(hook)* | 684 |
+| `freeroam_crashCamMode.setForcedEnabled(enabled)` | Forces the detection to run even outside freeroam or if the crash camera is disabled. | 711 |
+| `freeroam_crashCamMode.setTrackingMode(mode)` | Chooses the tracking mode (1 or 2, see notes). | 703 |
+| `freeroam_crashCamMode.trackCamMode()` | To be called when the user changes camera mode: stops the crash camera if it is active (no caller in this file). | 662 |
+| `freeroam_crashCamMode.trackVehReset()` | Stops the crash camera (called on vehicle reset; unlike onVehicleResetted, does not check which vehicle). | 699 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `freeroam_crashCamMode.getTrackingMode()`
 
-Renvoie le mode de suivi actuel.
+Returns the current tracking mode.
 
-- **renvoie** : integer 1 (trafic et murs) ou 2 (tous les véhicules actifs et murs).
+- **returns**: integer 1 (traffic and walls) or 2 (all active vehicles and walls).
 
 #### `freeroam_crashCamMode.onAnyMissionChanged(state)`
 
-Hook appelé quand une mission change d'état : désactive la caméra de crash au démarrage ('started'), la réactive à l'arrêt ('stopped').
+Hook called when a mission changes state: disables the crash camera on start ('started'), re-enables it on stop ('stopped').
 
-- `state` (*string*) : État de la mission : 'started' ou 'stopped' (les autres valeurs sont ignorées).
+- `state` (*string*) : Mission state: 'started' or 'stopped' (other values are ignored).
 
 #### `freeroam_crashCamMode.onClientEndMission(levelPath)`
 
-Hook appelé à la fin du niveau : désactive la caméra de crash.
+Hook called at the end of the level: disables the crash camera.
 
-- `levelPath` (*string*) : Chemin du niveau quitté (non utilisé).
+- `levelPath` (*string*) : Path of the level being left (unused).
 
 #### `freeroam_crashCamMode.onExtensionLoaded()`
 
-Hook appelé au chargement : renvoie false si le réglage enableCrashCam est désactivé.
+Hook called on load: returns false if the enableCrashCam setting is disabled.
 
-- **renvoie** : boolean|nil false si désactivée, nil sinon.
+- **returns**: boolean|nil false if disabled, nil otherwise.
 
 #### `freeroam_crashCamMode.onReplayStateChanged(state)`
 
-Hook appelé quand l'état du replay change : arrête la caméra de crash.
+Hook called when the replay state changes: stops the crash camera.
 
-- `state` (*string*) : Nouvel état du replay (non utilisé).
+- `state` (*string*) : New replay state (unused).
 
 #### `freeroam_crashCamMode.onUpdate(dtReal, dtSim)`
 
-Hook appelé à chaque image : détecte les crashs imminents (trafic, mur, variation de vitesse) quand la caméra de crash est inactive ; quand elle est active, suit sa durée, vérifie l'impact entre véhicules, lance le chemin de caméra en mode 3 et l'arrête après 4 s ou en cas de téléportation.
+Hook called every frame: detects imminent crashes (traffic, wall, speed change) when the crash camera is inactive; when it is active, tracks its duration, checks the impact between vehicles, starts the camera path in mode 3 and stops it after 4 s or on teleportation.
 
-- `dtReal` (*number*) : Temps réel écoulé (s).
-- `dtSim` (*number*) : Temps de simulation écoulé (s).
+- `dtReal` (*number*) : Elapsed real time (s).
+- `dtSim` (*number*) : Simulation elapsed time (s).
 
 #### `freeroam_crashCamMode.onVehicleResetted(vehId)`
 
-Hook appelé quand un véhicule est remis en place : arrête la caméra de crash si c'est le véhicule du joueur.
+Hook called when a vehicle is put back in place: stops the crash camera if it is the player's vehicle.
 
-- `vehId` (*integer*) : Id du véhicule réinitialisé.
+- `vehId` (*integer*) : Id of the reset vehicle.
 
 #### `freeroam_crashCamMode.onVehicleSwitched(oldVehId)`
 
-Hook appelé au changement de véhicule joueur : si la caméra de crash est active, remet la caméra précédente sur l'ancien véhicule, puis arrête la caméra de crash.
+Hook called when the player vehicle changes: if the crash camera is active, puts the previous camera back on the old vehicle, then stops the crash camera.
 
-- `oldVehId` (*integer*) : Id de l'ancien véhicule du joueur.
+- `oldVehId` (*integer*) : Id of the player's old vehicle.
 
 #### `freeroam_crashCamMode.setForcedEnabled(enabled)`
 
-Force l'exécution de la détection même hors freeroam ou si la caméra de crash est désactivée.
+Forces the detection to run even outside freeroam or if the crash camera is disabled.
 
-- `enabled` (*boolean*) : true pour forcer.
+- `enabled` (*boolean*) : true to force.
 
 #### `freeroam_crashCamMode.setTrackingMode(mode)`
 
-Choisit le mode de suivi (1 ou 2, voir notes).
+Chooses the tracking mode (1 or 2, see notes).
 
-- `mode` (*integer*) : 1 ou 2.
+- `mode` (*integer*) : 1 or 2.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onCrashCamEnded` — écouté par 1 module(s)
+- `onCrashCamEnded` — listened to by 1 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `sceneGetCameraFrustum`
 - `be:` `getObjectActive`, `getObjectOOBBAxisNormalizedXYZ`, `getObjectOOBBCenterXYZ`, `getObjectOOBBHalfAxisXYZ`, `getObjectOOBBHalfExtentsXYZ`, `getObjectPositionXYZ`, `getObjectVelocityXYZ`, `getPlayerVehicleID`
@@ -126,4 +126,4 @@ Choisit le mode de suivi (1 ou 2, voir notes).
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/freeroam/crashCamMode.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/freeroam/crashCamMode.lua`.*

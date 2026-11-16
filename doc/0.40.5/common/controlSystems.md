@@ -1,66 +1,66 @@
 # `controlSystems`
 
-*Fichier : `lua/common/controlSystems.lua` · VM : Commun (GE + véhicule) · 191 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/controlSystems.lua` · VM: Common (GE + vehicle) · 191 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("controlSystems")`
+**Access:** `require("controlSystems")`
 
-Fournit deux régulateurs PID : forme parallèle (newPIDParallel, gains kP/kI/kD) et forme standard (newPIDStandard, kP avec temps intégral tI et dérivé tD). Les deux dérivent sur la variable de process (et non sur l'erreur) pour éviter les pics quand la consigne change, et gèrent saturation de sortie, anti-windup de l'intégrale et zone morte d'erreur. Un moddeur s'en sert pour réguler un couple, un régime, une vitesse, etc.
+Provides two PID controllers: parallel form (newPIDParallel, gains kP/kI/kD) and standard form (newPIDStandard, kP with integral time tI and derivative time tD). Both differentiate on the process variable (not on the error) to avoid spikes when the setpoint changes, and handle output saturation, integral anti-windup and an error deadzone. A modder uses them to regulate a torque, an RPM, a speed, etc.
 
-## Exemple
+## Example
 
 ```lua
 local pid = newPIDParallel(1, 0.5, 0.1, 0, 1)
--- à chaque pas de temps :
+-- at each time step:
 local output, err = pid:get(currentValue, targetValue, dt)
 ```
 
-## Remarques
+## Notes
 
-- Les constructeurs sont des fonctions globales ; les objets renvoyés ont une méthode get (affectée dans la table de données) qui pointe vers getMethod, ou getWithDebugMethod si setDebug(true).
-- get renvoie deux valeurs : la sortie du PID et l'erreur courante (utile pour détecter un état quasi stable).
-- dt doit être > 0 (division par dt dans le terme dérivé).
-- Si |erreur| < errorDeadzone, l'erreur est mise à 0 ET l'intégrale remise à 0.
-- integralInCoef s'applique quand l'intégrale et l'erreur sont de signes opposés ou nuls (l'intégrale diminue), integralOutCoef quand elles ont le même signe (l'intégrale grandit).
-- Bug probable : PIDParallel:setConfig calcule maxIntegral avec le paramètre kI (et non self.kI) : appeler setConfig sans kI ni maxIntegral provoque une erreur arithmétique sur nil.
-- Incohérence : PIDStandard:reset ne remet à zéro ni error ni output (contrairement à PIDParallel:reset).
-- Les méthodes debug utilisent guihooks.graph pour tracer error, integral et output.
+- The constructors are global functions; the returned objects have a get method (assigned in the data table) that points to getMethod, or getWithDebugMethod if setDebug(true).
+- get returns two values: the PID output and the current error (useful to detect a near-steady state).
+- dt must be > 0 (division by dt in the derivative term).
+- If |error| < errorDeadzone, the error is set to 0 AND the integral is reset to 0.
+- integralInCoef applies when the integral and the error have opposite signs or are zero (the integral decreases), integralOutCoef when they have the same sign (the integral grows).
+- Probable bug: PIDParallel:setConfig computes maxIntegral with the kI parameter (not self.kI): calling setConfig without kI or maxIntegral causes an arithmetic error on nil.
+- Inconsistency: PIDStandard:reset resets neither error nor output (unlike PIDParallel:reset).
+- The debug methods use guihooks.graph to plot error, integral and output.
 
-## Classe `PIDParallel`
+## Class `PIDParallel`
 
-Objet renvoyé par newPIDParallel. Champs publics : kP, kI, kD, error, integral, output, minOutput, maxOutput, minIntegral, maxIntegral, errorDeadzone, integralInCoef, integralOutCoef, lastProcessVariable, debugEnabled, get.
+Object returned by newPIDParallel. Public fields: kP, kI, kD, error, integral, output, minOutput, maxOutput, minIntegral, maxIntegral, errorDeadzone, integralInCoef, integralOutCoef, lastProcessVariable, debugEnabled, get.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `PIDParallel:drawDebug()` | Envoie error, integral et output au graphe debug via guihooks.graph. | 89 |
-| `PIDParallel:dump()` | Affiche la configuration du PID avec print. | 98 |
-| `PIDParallel:get(processVariable, setPoint, dt)` | Alias de champ vers getMethod (ou getWithDebugMethod en mode debug). Utilisation : pid:get(processVariable, setPoint, dt). | dyn |
-| `PIDParallel:getMethod(processVariable, setPoint, dt)` | Calcule la sortie du PID pour ce pas de temps et met à jour error, integral, output, lastProcessVariable. | 58 |
-| `PIDParallel:getWithDebugMethod(processVariable, setPoint, dt)` | Comme getMethod mais appelle aussi drawDebug. Ne renvoie que la sortie (pas l'erreur). | 76 |
-| `PIDParallel:reset()` | Remet error, output, integral et lastProcessVariable à 0. | 82 |
-| `PIDParallel:setConfig(kP, kI, kD, minOutput, maxOutput, integralInCoef, integralOutCoef, minIntegral, maxIntegral, errorDeadzone)` | Modifie les paramètres ; chaque argument nil conserve la valeur actuelle. | 41 |
-| `PIDParallel:setDebug(debugEnabled)` | Active/désactive le tracé debug en changeant la méthode get. | 93 |
+| `PIDParallel:drawDebug()` | Sends error, integral and output to the debug graph via guihooks.graph. | 89 |
+| `PIDParallel:dump()` | Prints the PID configuration with print. | 98 |
+| `PIDParallel:get(processVariable, setPoint, dt)` | Field alias to getMethod (or getWithDebugMethod in debug mode). Usage: pid:get(processVariable, setPoint, dt). | dyn |
+| `PIDParallel:getMethod(processVariable, setPoint, dt)` | Computes the PID output for this time step and updates error, integral, output, lastProcessVariable. | 58 |
+| `PIDParallel:getWithDebugMethod(processVariable, setPoint, dt)` | Like getMethod but also calls drawDebug. Returns only the output (not the error). | 76 |
+| `PIDParallel:reset()` | Resets error, output, integral and lastProcessVariable to 0. | 82 |
+| `PIDParallel:setConfig(kP, kI, kD, minOutput, maxOutput, integralInCoef, integralOutCoef, minIntegral, maxIntegral, errorDeadzone)` | Changes the parameters; each nil argument keeps the current value. | 41 |
+| `PIDParallel:setDebug(debugEnabled)` | Enables/disables debug plotting by changing the get method. | 93 |
 
-## Classe `PIDStandard`
+## Class `PIDStandard`
 
-Objet renvoyé par newPIDStandard. Champs publics : kP, tICoef (1/tI), tD, error, integral, output, minOutput, maxOutput, minIntegral, maxIntegral, errorDeadzone, integralInCoef, integralOutCoef, lastProcessVariable, debugEnabled, get.
+Object returned by newPIDStandard. Public fields: kP, tICoef (1/tI), tD, error, integral, output, minOutput, maxOutput, minIntegral, maxIntegral, errorDeadzone, integralInCoef, integralOutCoef, lastProcessVariable, debugEnabled, get.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `PIDStandard:drawDebug()` | Envoie error, integral et output au graphe debug via guihooks.graph. | 179 |
-| `PIDStandard:dump()` | Affiche la configuration du PID avec print. | 188 |
-| `PIDStandard:get(processVariable, setPoint, dt)` | Alias de champ vers getMethod (ou getWithDebugMethod en mode debug). Utilisation : pid:get(processVariable, setPoint, dt). | dyn |
-| `PIDStandard:getMethod(processVariable, setPoint, dt)` | Calcule la sortie du PID standard pour ce pas de temps. | 151 |
-| `PIDStandard:getWithDebugMethod(processVariable, setPoint, dt)` | Comme getMethod mais appelle drawDebug ; ne renvoie que la sortie. | 168 |
-| `PIDStandard:reset()` | Remet integral et lastProcessVariable à 0 (error et output non touchés). | 174 |
-| `PIDStandard:setConfig(kP, tI, tD, minOutput, maxOutput, integralInCoef, integralOutCoef, minIntegral, maxIntegral, errorDeadzone)` | Modifie les paramètres ; nil conserve la valeur. tI n'est pris en compte que s'il est > 0. | 134 |
-| `PIDStandard:setDebug(debugEnabled)` | Active/désactive le tracé debug en changeant la méthode get. | 183 |
+| `PIDStandard:drawDebug()` | Sends error, integral and output to the debug graph via guihooks.graph. | 179 |
+| `PIDStandard:dump()` | Prints the PID configuration with print. | 188 |
+| `PIDStandard:get(processVariable, setPoint, dt)` | Field alias to getMethod (or getWithDebugMethod in debug mode). Usage: pid:get(processVariable, setPoint, dt). | dyn |
+| `PIDStandard:getMethod(processVariable, setPoint, dt)` | Computes the standard PID output for this time step. | 151 |
+| `PIDStandard:getWithDebugMethod(processVariable, setPoint, dt)` | Like getMethod but calls drawDebug; returns only the output. | 168 |
+| `PIDStandard:reset()` | Resets integral and lastProcessVariable to 0 (error and output are untouched). | 174 |
+| `PIDStandard:setConfig(kP, tI, tD, minOutput, maxOutput, integralInCoef, integralOutCoef, minIntegral, maxIntegral, errorDeadzone)` | Changes the parameters; nil keeps the value. tI is only taken into account if it is > 0. | 134 |
+| `PIDStandard:setDebug(debugEnabled)` | Enables/disables debug plotting by changing the get method. | 183 |
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `newPIDParallel(kP, kI, kD, minOutput, maxOutput, integralInCoef, integralOutCoef, minIntegral, maxIntegral, errorDeadzone)` | Crée un PID en forme parallèle : sortie = kP*erreur + kI*intégrale + kD*(−dPV/dt). | 18 |
-| `newPIDStandard(kP, tI, tD, minOutput, maxOutput, integralInCoef, integralOutCoef, minIntegral, maxIntegral, errorDeadzone)` | Crée un PID en forme standard : sortie = kP*(erreur + intégrale/tI + tD*(−dPV/dt)). | 111 |
+| `newPIDParallel(kP, kI, kD, minOutput, maxOutput, integralInCoef, integralOutCoef, minIntegral, maxIntegral, errorDeadzone)` | Creates a parallel-form PID: output = kP*error + kI*integral + kD*(−dPV/dt). | 18 |
+| `newPIDStandard(kP, tI, tD, minOutput, maxOutput, integralInCoef, integralOutCoef, minIntegral, maxIntegral, errorDeadzone)` | Creates a standard-form PID: output = kP*(error + integral/tI + tD*(−dPV/dt)). | 111 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/controlSystems.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/controlSystems.lua`.*

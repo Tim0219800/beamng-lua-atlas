@@ -1,30 +1,30 @@
 # `core_cameraModes_transition`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/transition.lua` · VM : Game Engine (GE) · 116 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/transition.lua` · VM: Game Engine (GE) · 116 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/transition")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/transition")` (file under extensions/ but not a regular extension)
 
-Filtre global (runningOrder 0.2) qui adoucit les changements de caméra : mémorise la pose de l'image précédente (position relative au véhicule, rotation, FOV, nearClip) et, quand start() est appelé, mélange la nouvelle caméra avec l'ancienne pendant la durée configurée (réglages cameraTransitionTime, 300 ms par défaut, et cameraVehicleTransitionTime, 500 ms pour un changement de véhicule). Le mélange est quadratique (perc^2) avec nlerp de la rotation. Pas de fondu si les deux points ne se voient pas ou sont à plus de 100 m (pour les changements de caméra simples). Renvoie un constructeur.
+Global filter (runningOrder 0.2) that softens camera changes: stores the previous frame's pose (position relative to the vehicle, rotation, FOV, nearClip) and, when start() is called, blends the new camera with the old one over the configured duration (settings cameraTransitionTime, 300 ms by default, and cameraVehicleTransitionTime, 500 ms for a vehicle change). The blend is quadratic (perc^2) with nlerp of the rotation. No blend if the two points cannot see each other or are more than 100 m apart (for simple camera changes). Returns a constructor.
 
-## Remarques
+## Notes
 
-- Utilisé aussi pour les transitions de chemin caméra : si camPathTransitionData est fourni, son callback reçoit une copie de data.res et la caméra reprend l'ancienne pose.
-- Une demande reçue avant la première image enregistrée attend qu'une pose existe (camLastPosAbs différente de l'infini).
-- La page extraite indique start(camPathTransitionData, duration) mais le code est start(isVehicleSwitch, camPathTransitionData, duration) ; canTransition(origin, target) a deux paramètres.
+- Also used for camera path transitions: if camPathTransitionData is provided, its callback receives a copy of data.res and the camera takes back the old pose.
+- A request received before the first recorded frame waits until a pose exists (camLastPosAbs different from infinity).
+- The extracted page says start(camPathTransitionData, duration) but the code is start(isVehicleSwitch, camPathTransitionData, duration); canTransition(origin, target) has two parameters.
 
-## Classe `C`
+## Class `C`
 
-Filtre de transition.
+Transition filter.
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_transition")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_transition")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:canTransition(origin, target)` | Dit si le fondu est autorisé entre deux points : toujours pour une demande de type « caméra » (false), sinon seulement si distance <= 100 m et visibilité mutuelle (rayons statiques). | 29 |
-| `C:init()` | isGlobal, isFilter, hidden, runningOrder 0.2, état initial et lecture des réglages. | 8 |
-| `C:onSettingsChanged()` | Hook : relit cameraTransitionTime et cameraVehicleTransitionTime (millisecondes). | 22 |
-| `C:start(isVehicleSwitch, camPathTransitionData, duration)` | Demande un fondu depuis la dernière pose ; il démarre à la prochaine image. | 102 |
-| `C:update(data)` | Enregistre la pose ou applique le fondu à data.res. | 39 |
+| `C:canTransition(origin, target)` | Says whether the blend is allowed between two points: always for a "camera"-type request (false), otherwise only if distance <= 100 m and mutual visibility (static rays). | 29 |
+| `C:init()` | isGlobal, isFilter, hidden, runningOrder 0.2, initial state and settings reading. | 8 |
+| `C:onSettingsChanged()` | Hook: re-reads cameraTransitionTime and cameraVehicleTransitionTime (milliseconds). | 22 |
+| `C:start(isVehicleSwitch, camPathTransitionData, duration)` | Requests a blend from the last pose; it starts on the next frame. | 102 |
+| `C:update(data)` | Records the pose or applies the blend to data.res. | 39 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/transition.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/transition.lua`.*

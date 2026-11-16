@@ -1,61 +1,61 @@
 # `career_modules_speedTraps`
 
-*Fichier : `lua/ge/extensions/career/modules/speedTraps.lua` · VM : Game Engine (GE) · 139 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/speedTraps.lua` · VM: Game Engine (GE) · 139 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_speedTraps` : `extensions.load("career_modules_speedTraps")`, puis la globale `career_modules_speedTraps`
+**Access:** extension `career_modules_speedTraps`: `extensions.load("career_modules_speedTraps")`, then the global `career_modules_speedTraps`
 
-Réaction de la carrière aux radars (gameplay_speedTraps) : amendes pour excès de vitesse et feu rouge, messages UI, son du flash, et enregistrement dans les classements de radars (gameplay_speedTrapLeaderboards) sauvegardés dans <save>/career/speedTrapLeaderboards/. Seul le véhicule du joueur (index 0) est concerné.
+Career reaction to speed traps (gameplay_speedTraps): fines for speeding and running red lights, UI messages, flash sound, and recording into the speed trap leaderboards (gameplay_speedTrapLeaderboards) saved in <save>/career/speedTrapLeaderboards/. Only the player's vehicle (index 0) is concerned.
 
-## Remarques
+## Notes
 
-- Amende d'excès de vitesse (overSpeed en m/s) : <= 6.7056 m/s (15 mph) 35 ; <= 11.176 m/s (25 mph) 70 ; au-delà 100. Elle est payée avec canBeNegative = true (le solde peut devenir négatif).
-- Type de pénalité : véhicule hors inventaire ou possédé avec plaque (partie dont le nom contient "licenseplate") = amende normale ; sans plaque = message sans amende ; véhicule prêté de type "work" avec plaque = perte de 10 points de réputation de l'organisation propriétaire. Un véhicule non possédé et non « work » avec plaque ne reçoit aucune pénalité (penaltyType nil).
-- Feu rouge : amende fixe de 500 si le véhicule est hors inventaire ou a une plaque ; sinon seulement un message.
-- Quel que soit le résultat, onSpeedTrapTriggered ajoute un record au classement et affiche un message (nouveau record, record sans ancien, ou pas de nouveau record).
+- Speeding fine (overSpeed in m/s): <= 6.7056 m/s (15 mph) 35; <= 11.176 m/s (25 mph) 70; beyond that 100. It is paid with canBeNegative = true (the balance can become negative).
+- Penalty type: vehicle outside the inventory or owned with a plate (part whose name contains "licenseplate") = normal fine; without a plate = message without a fine; loaned "work" type vehicle with a plate = loss of 10 reputation points of the owning organization. A non-owned, non-"work" vehicle with a plate receives no penalty (penaltyType nil).
+- Red light: fixed fine of 500 if the vehicle is outside the inventory or has a plate; otherwise only a message.
+- Whatever the outcome, onSpeedTrapTriggered adds a record to the leaderboard and displays a message (new record, record with no previous one, or no new record).
 
-**Dépendances (chargées avant) :** `career_career`, `gameplay_speedTraps`
+**Dependencies (loaded first):** `career_career`, `gameplay_speedTraps`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_speedTraps.onExtensionLoaded()` | Hook : charge les classements de radars du profil si la carrière est active (renvoie false sinon). *(interne)* *(hook)* | 122 |
-| `career_modules_speedTraps.onRedLightCamTriggered(speedTrapData, playerSpeed)` | Hook appelé quand une caméra de feu rouge se déclenche : amende de 500 avec message et son si le véhicule du joueur est identifiable par une plaque. *(interne)* *(hook)* | 97 |
-| `career_modules_speedTraps.onSaveCurrentProfile(currentSavePath)` | Hook de sauvegarde : écrit les classements de radars dans career/speedTrapLeaderboards/. *(interne)* *(hook)* | 129 |
-| `career_modules_speedTraps.onSpeedTrapTriggered(speedTrapData, playerSpeed, overSpeed)` | Hook appelé quand un radar de vitesse se déclenche : applique l'amende ou la pénalité selon la plaque et le type de véhicule, puis met à jour le classement du radar. *(interne)* *(hook)* | 35 |
+| `career_modules_speedTraps.onExtensionLoaded()` | Hook: loads the profile's speed trap leaderboards if the career is active (returns false otherwise). *(internal)* *(hook)* | 122 |
+| `career_modules_speedTraps.onRedLightCamTriggered(speedTrapData, playerSpeed)` | Hook called when a red light camera triggers: fine of 500 with message and sound if the player's vehicle is identifiable by a plate. *(internal)* *(hook)* | 97 |
+| `career_modules_speedTraps.onSaveCurrentProfile(currentSavePath)` | Save hook: writes the speed trap leaderboards to career/speedTrapLeaderboards/. *(internal)* *(hook)* | 129 |
+| `career_modules_speedTraps.onSpeedTrapTriggered(speedTrapData, playerSpeed, overSpeed)` | Hook called when a speed trap triggers: applies the fine or penalty depending on the plate and vehicle type, then updates the speed trap's leaderboard. *(internal)* *(hook)* | 35 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_speedTraps.onRedLightCamTriggered(speedTrapData, playerSpeed)`
 
-Hook appelé quand une caméra de feu rouge se déclenche : amende de 500 avec message et son si le véhicule du joueur est identifiable par une plaque.
+Hook called when a red light camera triggers: fine of 500 with message and sound if the player's vehicle is identifiable by a plate.
 
-- `speedTrapData` (*table*) : Données de la caméra (subjectID).
-- `playerSpeed` (*number*) : Vitesse enregistrée (non utilisée ici).
+- `speedTrapData` (*table*) : Camera data (subjectID).
+- `playerSpeed` (*number*) : Recorded speed (not used here).
 
 #### `career_modules_speedTraps.onSaveCurrentProfile(currentSavePath)`
 
-Hook de sauvegarde : écrit les classements de radars dans career/speedTrapLeaderboards/.
+Save hook: writes the speed trap leaderboards to career/speedTrapLeaderboards/.
 
-- `currentSavePath` (*string*) : Dossier de sauvegarde.
+- `currentSavePath` (*string*) : Save folder.
 
 #### `career_modules_speedTraps.onSpeedTrapTriggered(speedTrapData, playerSpeed, overSpeed)`
 
-Hook appelé quand un radar de vitesse se déclenche : applique l'amende ou la pénalité selon la plaque et le type de véhicule, puis met à jour le classement du radar.
+Hook called when a speed trap triggers: applies the fine or penalty depending on the plate and vehicle type, then updates the speed trap's leaderboard.
 
-- `speedTrapData` (*table*) : Données du radar (speedLimit, subjectID...).
-- `playerSpeed` (*number*) : Vitesse enregistrée en m/s.
-- `overSpeed` (*number*) : Dépassement de la limite en m/s.
+- `speedTrapData` (*table*) : Speed trap data (speedLimit, subjectID...).
+- `playerSpeed` (*number*) : Recorded speed in m/s.
+- `overSpeed` (*number*) : Excess over the limit in m/s.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_career, gameplay_speedTraps. |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_career, gameplay_speedTraps. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/speedTraps.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/speedTraps.lua`.*

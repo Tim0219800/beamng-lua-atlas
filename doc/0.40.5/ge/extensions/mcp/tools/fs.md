@@ -1,106 +1,106 @@
 # `mcp_tools_fs`
 
-*Fichier : `lua/ge/extensions/mcp/tools/fs.lua` · VM : Game Engine (GE) · 114 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/mcp/tools/fs.lua` · VM: Game Engine (GE) · 114 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `mcp_tools_fs` : `extensions.load("mcp_tools_fs")`, puis la globale `mcp_tools_fs`
+**Access:** extension `mcp_tools_fs`: `extensions.load("mcp_tools_fs")`, then the global `mcp_tools_fs`
 
-Outils MCP système de fichiers : lire/écrire des fichiers texte, lister, chercher, supprimer, copier, renommer, créer des dossiers. Lecture/écriture passent par io.open (relatif au dossier courant du jeu : fichiers « loose » sur disque seulement) ; le listage et la recherche passent par le VFS de BeamNG (voient aussi le contenu des zip).
+MCP file system tools: read/write text files, list, search, delete, copy, rename, create folders. Read/write go through io.open (relative to the game's current folder: loose files on disk only); listing and search go through BeamNG's VFS (also see the contents of zips).
 
-## Remarques
+## Notes
 
-- Attention sécurité : ces outils permettent de lire, écrire et supprimer des fichiers sans restriction de chemin côté Lua (la seule limite est le bac à sable d'io.open ; delete/copy/rename/make_dir passent par FS:).
-- read_file/write_file retirent les '/' initiaux du chemin (chemin VFS -> chemin disque relatif) ; read_file tronque à maxBytes (défaut 100000).
-- find_files renvoie au plus 1000 entrées (count donne le total) ; depth -1 = récursif complet.
-- delete_file, copy_file, rename_file, make_dir considèrent le code de retour 0 comme succès et renvoient « failed » dans le texte sans mettre isError à true.
+- Security warning: these tools allow reading, writing and deleting files with no path restriction on the Lua side (the only limit is io.open's sandbox; delete/copy/rename/make_dir go through FS:).
+- read_file/write_file strip leading '/' from the path (VFS path -> relative disk path); read_file truncates at maxBytes (default 100000).
+- find_files returns at most 1000 entries (count gives the total); depth -1 = fully recursive.
+- delete_file, copy_file, rename_file, make_dir treat return code 0 as success and return "failed" in the text without setting isError to true.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mcp_tools_fs.copy_file(args)` | Copie un fichier (FS:copyFile). | 62 |
-| `mcp_tools_fs.delete_file(args)` | Supprime un fichier (FS:removeFile). | 56 |
-| `mcp_tools_fs.find_files(args)` | Cherche des fichiers par motif glob (FS:findFiles). | 46 |
-| `mcp_tools_fs.list_dir(args)` | Liste un dossier (VFS) en JSON via FS:directoryList. | 39 |
-| `mcp_tools_fs.make_dir(args)` | Crée un dossier de façon récursive (FS:directoryCreate). | 72 |
-| `mcp_tools_fs.read_file(args)` | Lit un fichier texte (jbeam, json, lua…) et le renvoie, tronqué à maxBytes. | 14 |
-| `mcp_tools_fs.rename_file(args)` | Renomme ou déplace un fichier (FS:renameFile). | 67 |
-| `mcp_tools_fs.write_file(args)` | Écrit (écrase) un fichier texte, en créant les dossiers parents (FS:directoryCreate). | 26 |
+| `mcp_tools_fs.copy_file(args)` | Copies a file (FS:copyFile). | 62 |
+| `mcp_tools_fs.delete_file(args)` | Deletes a file (FS:removeFile). | 56 |
+| `mcp_tools_fs.find_files(args)` | Searches for files by glob pattern (FS:findFiles). | 46 |
+| `mcp_tools_fs.list_dir(args)` | Lists a folder (VFS) as JSON via FS:directoryList. | 39 |
+| `mcp_tools_fs.make_dir(args)` | Creates a folder recursively (FS:directoryCreate). | 72 |
+| `mcp_tools_fs.read_file(args)` | Reads a text file (jbeam, json, lua…) and returns it, truncated at maxBytes. | 14 |
+| `mcp_tools_fs.rename_file(args)` | Renames or moves a file (FS:renameFile). | 67 |
+| `mcp_tools_fs.write_file(args)` | Writes (overwrites) a text file, creating the parent folders (FS:directoryCreate). | 26 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mcp_tools_fs.copy_file(args)`
 
-Copie un fichier (FS:copyFile).
+Copies a file (FS:copyFile).
 
 - `args` (*table*) : {from: string, to: string}
-- **renvoie** : string Résultat.
-- **renvoie** : boolean true si from/to manquants.
+- **returns**: string Result.
+- **returns**: boolean true if from/to are missing.
 
 #### `mcp_tools_fs.delete_file(args)`
 
-Supprime un fichier (FS:removeFile).
+Deletes a file (FS:removeFile).
 
 - `args` (*table*) : {path: string}
-- **renvoie** : string « deleted … » ou « delete failed: … ».
-- **renvoie** : boolean true seulement si path manquant.
+- **returns**: string "deleted …" or "delete failed: …".
+- **returns**: boolean true only if path is missing.
 
 #### `mcp_tools_fs.find_files(args)`
 
-Cherche des fichiers par motif glob (FS:findFiles).
+Searches for files by glob pattern (FS:findFiles).
 
-- `args` (*table|nil*) : {path?: string (défaut '/'), pattern?: string (défaut '*'), depth?: integer (défaut 1, -1 = tout)}
-- **renvoie** : string JSON {count, files}.
-- **renvoie** : boolean false.
+- `args` (*table|nil*) : {path?: string (default '/'), pattern?: string (default '*'), depth?: integer (default 1, -1 = all)}
+- **returns**: string JSON {count, files}.
+- **returns**: boolean false.
 
 #### `mcp_tools_fs.list_dir(args)`
 
-Liste un dossier (VFS) en JSON via FS:directoryList.
+Lists a folder (VFS) as JSON via FS:directoryList.
 
-- `args` (*table|nil*) : {path?: string (défaut '/'), files?: boolean, dirs?: boolean} ; si ni files ni dirs, les deux sont inclus.
-- **renvoie** : string JSON.
-- **renvoie** : boolean toujours false.
+- `args` (*table|nil*) : {path?: string (default '/'), files?: boolean, dirs?: boolean}; if neither files nor dirs, both are included.
+- **returns**: string JSON.
+- **returns**: boolean always false.
 
 #### `mcp_tools_fs.make_dir(args)`
 
-Crée un dossier de façon récursive (FS:directoryCreate).
+Creates a folder recursively (FS:directoryCreate).
 
 - `args` (*table*) : {path: string}
-- **renvoie** : string Résultat.
-- **renvoie** : boolean true si path manquant.
+- **returns**: string Result.
+- **returns**: boolean true if path is missing.
 
 #### `mcp_tools_fs.read_file(args)`
 
-Lit un fichier texte (jbeam, json, lua…) et le renvoie, tronqué à maxBytes.
+Reads a text file (jbeam, json, lua…) and returns it, truncated at maxBytes.
 
 - `args` (*table*) : {path: string, maxBytes?: integer}
-- **renvoie** : string Contenu ou message d'erreur.
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string Content or error message.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_fs.rename_file(args)`
 
-Renomme ou déplace un fichier (FS:renameFile).
+Renames or moves a file (FS:renameFile).
 
 - `args` (*table*) : {from: string, to: string}
-- **renvoie** : string Résultat.
-- **renvoie** : boolean true si from/to manquants.
+- **returns**: string Result.
+- **returns**: boolean true if from/to are missing.
 
 #### `mcp_tools_fs.write_file(args)`
 
-Écrit (écrase) un fichier texte, en créant les dossiers parents (FS:directoryCreate).
+Writes (overwrites) a text file, creating the parent folders (FS:directoryCreate).
 
 - `args` (*table*) : {path: string, content: string}
-- **renvoie** : string « wrote N bytes to … » ou erreur.
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string "wrote N bytes to …" or error.
+- **returns**: boolean true on error.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `schemas` | table<string, table> | Schémas des outils de fichiers. |
+| `schemas` | table<string, table> | Schemas of the file tools. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `copyFile`, `directoryCreate`, `directoryExists`, `directoryList`, `findFiles`, `removeFile`, `renameFile`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/mcp/tools/fs.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/mcp/tools/fs.lua`.*

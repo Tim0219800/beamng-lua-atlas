@@ -1,12 +1,12 @@
 # `libs_lunajson_lunajson_encoder`
 
-*Fichier : `lua/common/libs/lunajson/lunajson/encoder.lua` · VM : Commun (GE + véhicule) · 185 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lunajson/lunajson/encoder.lua` · VM: Common (GE + vehicle) · 185 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/lunajson/lunajson/encoder")`
+**Access:** `require("libs/lunajson/lunajson/encoder")`
 
-Bibliothèque tierce lunajson : encodeur JSON. Le module renvoie une fabrique `newencoder()` ; chaque appel crée un contexte indépendant et renvoie la fonction `encode(valeur, nullv?)` qui sérialise booléens, nombres, chaînes et tables (tableau ou objet, détection automatique) en chaîne JSON compacte.
+Third-party library lunajson: JSON encoder. The module returns a factory `newencoder()`; each call creates an independent context and returns the function `encode(value, nullv?)`, which serializes booleans, numbers, strings and tables (array or object, automatic detection) into a compact JSON string.
 
-## Exemple
+## Example
 
 ```lua
 local newencoder = require('libs/lunajson/lunajson.encoder')
@@ -14,12 +14,12 @@ local encode = newencoder()
 local s = encode({a = {1, 2, 3}})
 ```
 
-## Remarques
+## Notes
 
-- Le module renvoie directement la fonction fabrique `newencoder`.
-- encode(valeur, nullv) : toute valeur égale à `nullv` est écrite `null`.
-- Erreurs levées : « loop detected » (table qui se contient elle-même), « non-string key » (objet avec une clé non chaîne), « invalid number » (NaN ou infini), « invalid type value » (fonction, userdata, nil non remplacé par nullv…).
-- Les nombres sont écrits avec `%.17g` (précision aller-retour complète).
+- The module directly returns the factory function `newencoder`.
+- encode(value, nullv): any value equal to `nullv` is written as `null`.
+- Errors raised: "loop detected" (table that contains itself), "non-string key" (object with a non-string key), "invalid number" (NaN or infinity), "invalid type value" (function, userdata, nil not replaced by nullv...).
+- Numbers are written with `%.17g` (full round-trip precision).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lunajson/lunajson/encoder.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lunajson/lunajson/encoder.lua`.*

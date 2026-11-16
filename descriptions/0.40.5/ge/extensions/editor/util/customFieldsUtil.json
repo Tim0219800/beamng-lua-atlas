@@ -1,21 +1,66 @@
 {
   "path": "lua/ge/extensions/editor/util/customFieldsUtil.lua",
-  "module": "Aide d'éditeur : widget imgui pour éditer des tags et des champs personnalisés (nom, valeur, type) d'un objet de type gameplay/util/customFields. Le module renvoie un constructeur : require('/lua/ge/extensions/editor/util/customFieldsUtil')(name, fields, options). Utile à un moddeur d'outil d'éditeur qui veut afficher la liste de tags et la table de champs, avec ajout et suppression.",
-  "usage": "local cf = require('/lua/ge/extensions/editor/util/customFieldsUtil')('monOutil', monObjetCustomFields, {presetTags = {'a','b'}})\n-- à chaque frame, dans une fenêtre imgui :\ncf:widget()",
-  "notes": ["Les options ne remplacent que les attributs déjà existants (if self[k]) : enableTags, enableFields, tagsText, fieldsText, presetTags, allowedTypes.", "Types autorisés par défaut : string et number (le code mentionne aussi boolean, vec3, quat).", "Si fields est nil, un nouvel objet gameplay/util/customFields est créé."],
+  "module": "Editor helper: imgui widget to edit tags and custom fields (name, value, type) of a gameplay/util/customFields object. The module returns a constructor: require('/lua/ge/extensions/editor/util/customFieldsUtil')(name, fields, options). Useful to an editor tool modder who wants to display the list of tags and the table of fields, with add and remove.",
+  "usage": "local cf = require('/lua/ge/extensions/editor/util/customFieldsUtil')('monOutil', monObjetCustomFields, {presetTags = {'a','b'}})\n-- every frame, in an imgui window:\ncf:widget()",
+  "notes": [
+    "Options only override attributes that already exist (if self[k]): enableTags, enableFields, tagsText, fieldsText, presetTags, allowedTypes.",
+    "Default allowed types: string and number (the code also mentions boolean, vec3, quat).",
+    "If fields is nil, a new gameplay/util/customFields object is created."
+  ],
   "classes": {
     "C": {
-      "desc": "Instance du widget de champs personnalisés.",
+      "desc": "Instance of the custom fields widget.",
       "functions": {
-        "init": {"desc": "Initialise le widget : nom unique (utilisé dans les identifiants imgui), textes, drapeaux enableTags/enableFields, liste presetTags, types autorisés ; applique les options puis setFields et refresh.", "params": {"name": {"type": "string|nil", "desc": "Nom unique de l'instance, défaut « Custom Fields »."}, "fields": {"type": "table|nil", "desc": "Objet customFields à éditer."}, "options": {"type": "table|nil", "desc": "Surcharges des attributs existants."}}, "internal": true},
-        "refresh": {"desc": "Réinitialise les zones de saisie (nom, valeur, tag) et le type courant à « string »."},
-        "setFields": {"desc": "Définit l'objet customFields édité (en crée un vide si nil).", "params": {"fields": {"type": "table|nil", "desc": "Objet customFields."}}},
-        "drawCustomFields": {"desc": "Dessine la table des champs (Nom, Valeur, Type, bouton Remove) et la ligne d'ajout avec choix du type et bouton Add."},
-        "drawTags": {"desc": "Dessine la liste des tags (clic : popup « Remove Tag »), la saisie d'un tag, le combo des presetTags et le bouton Add Tag."},
-        "addTag": {"desc": "Ajoute le tag saisi aux fields (ignoré si vide) puis vide la zone de saisie."},
-        "widget": {"desc": "Dessine les tags puis les champs, selon enableTags et enableFields."},
-        "onActivate": {"desc": "Callback pour le mode d'édition ; vide.", "internal": true},
-        "onDeactivate": {"desc": "Callback pour le mode d'édition ; vide.", "internal": true}
+        "init": {
+          "desc": "Initializes the widget: unique name (used in imgui identifiers), texts, enableTags/enableFields flags, presetTags list, allowed types; applies the options then setFields and refresh.",
+          "params": {
+            "name": {
+              "type": "string|nil",
+              "desc": "Unique name of the instance, default \"Custom Fields\"."
+            },
+            "fields": {
+              "type": "table|nil",
+              "desc": "customFields object to edit."
+            },
+            "options": {
+              "type": "table|nil",
+              "desc": "Overrides of existing attributes."
+            }
+          },
+          "internal": true
+        },
+        "refresh": {
+          "desc": "Resets the input areas (name, value, tag) and the current type to \"string\"."
+        },
+        "setFields": {
+          "desc": "Sets the customFields object being edited (creates an empty one if nil).",
+          "params": {
+            "fields": {
+              "type": "table|nil",
+              "desc": "customFields object."
+            }
+          }
+        },
+        "drawCustomFields": {
+          "desc": "Draws the table of fields (Name, Value, Type, Remove button) and the add row with type choice and Add button."
+        },
+        "drawTags": {
+          "desc": "Draws the list of tags (click: \"Remove Tag\" popup), the tag input, the presetTags combo and the Add Tag button."
+        },
+        "addTag": {
+          "desc": "Adds the entered tag to the fields (ignored if empty) then empties the input area."
+        },
+        "widget": {
+          "desc": "Draws the tags then the fields, according to enableTags and enableFields."
+        },
+        "onActivate": {
+          "desc": "Callback for the edit mode; empty.",
+          "internal": true
+        },
+        "onDeactivate": {
+          "desc": "Callback for the edit mode; empty.",
+          "internal": true
+        }
       }
     }
   }

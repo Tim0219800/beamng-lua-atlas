@@ -1,111 +1,111 @@
 {
   "path": "lua/ge/extensions/util/export.lua",
-  "module": "Exporte le véhicule du joueur au format glTF 2.0 (.gltf avec JSON ou .glb binaire), ou une séquence d'images clés. Il récupère le maillage GPU du véhicule (GPUMesh.bng_getGPUMesh) puis écrit les buffers (sommets, normales, tangentes, UV, couleurs, indices), les flexbodies et les props, l'arbre de pièces JBeam (sous forme de hiérarchie de nœuds glTF), les matériaux (textures converties en PNG, données du matériau BeamNG dans extras.bngMaterial) et, si exportBeams est vrai, les nœuds et poutres de chaque pièce (extension BNG_JBeamData). La direction du véhicule est écrite dans l'extension BNG_Direction. Les coordonnées sont converties en {x, z, -y}. L'export est asynchrone : il a lieu dans updateGFX quand les données GPU sont prêtes. Utile pour importer un véhicule BeamNG dans Blender ou un autre outil 3D.",
+  "module": "Exports the player's vehicle in glTF 2.0 format (.gltf with JSON or binary .glb), or a keyframe sequence. It fetches the vehicle's GPU mesh (GPUMesh.bng_getGPUMesh) then writes the buffers (vertices, normals, tangents, UVs, colors, indices), the flexbodies and props, the JBeam part tree (as a hierarchy of glTF nodes), the materials (textures converted to PNG, BeamNG material data in extras.bngMaterial) and, if exportBeams is true, the nodes and beams of each part (BNG_JBeamData extension). The vehicle direction is written in the BNG_Direction extension. Coordinates are converted to {x, z, -y}. The export is asynchronous: it happens in updateGFX when the GPU data is ready. Useful to import a BeamNG vehicle into Blender or another 3D tool.",
   "usage": "extensions.util_export.gltfBinaryFormat = false\nextensions.util_export.exportFile('vehicle.gltf')",
   "fields": {
     "embedBuffers": {
       "type": "boolean",
-      "desc": "true (défaut) : buffers intégrés en base64 dans le JSON ; false : fichiers .bin externes (<nom>_buffer_NNN_<type>.bin). Ignoré en format binaire."
+      "desc": "true (default): buffers embedded in base64 in the JSON; false: external .bin files (<name>_buffer_NNN_<type>.bin). Ignored in binary format."
     },
     "gltfBinaryFormat": {
       "type": "boolean",
-      "desc": "true (défaut) : écrit un .glb ; false : écrit un .gltf JSON"
+      "desc": "true (default): writes a .glb; false: writes a JSON .gltf"
     },
     "exportNormals": {
       "type": "boolean",
-      "desc": "Exporte les normales (défaut true)"
+      "desc": "Exports normals (default true)"
     },
     "exportTangents": {
       "type": "boolean",
-      "desc": "Exporte les tangentes (défaut false)"
+      "desc": "Exports tangents (default false)"
     },
     "exportTexCoords": {
       "type": "boolean",
-      "desc": "Exporte les deux jeux de coordonnées de texture (défaut false)"
+      "desc": "Exports both texture coordinate sets (default false)"
     },
     "exportColors": {
       "type": "boolean",
-      "desc": "Exporte les couleurs de sommets (défaut false)"
+      "desc": "Exports vertex colors (default false)"
     },
     "exportBeams": {
       "type": "boolean",
-      "desc": "Exporte les nœuds et poutres par pièce dans extras (défaut true)"
+      "desc": "Exports the nodes and beams per part in extras (default true)"
     }
   },
   "notes": [
-    "L'export prend le véhicule joueur 0 à l'état courant (déformations comprises : positions de nœuds actuelles pour les poutres).",
-    "export(handler) : si un export est déjà en cours (lastMeshInfo non nil), le handler est appelé avec nil et rien d'autre n'est fait.",
-    "startRecording écrit une première image puis continue à exporter à chaque frame jusqu'à stopRecording ; les temps sont stockés dans une animation glTF. La sortie journalise chaque image.",
-    "suggestFilename cherche export_001 à export_100 dans le dossier du véhicule, avec l'extension .glb ou .gltf selon gltfBinaryFormat ; si tous existent, renvoie le dernier nom testé.",
-    "Bug : dans _addTimeBuffers, le buffer des numéros d'images clés utilise la variable bufferID (non définie, donc nil) au lieu de bufferIDKeyframes, et la borne max du temps utilise keyFrameTimes[#keyFrameTimes - 1]. L'enregistrement d'animation est donc probablement incorrect.",
-    "Bug : dans _convertType, `dumps(value)\" to \"` (opérateur .. manquant) est un appel de fonction sur une chaîne et provoquerait une erreur Lua dans les cas d'erreur de conversion.",
-    "Bug : _isTextureCookerFilepath teste `not string.sub(filepath, -4) == \".png\"`, expression toujours fausse en pratique (priorité de l'opérateur not) ; le test d'extension n'est donc pas fait.",
-    "Après un export, le hook GUI ThreeDExported est déclenché et un message « GLTF Vehicle exported » s'affiche 5 s."
+    "The export takes player vehicle 0 in its current state (deformations included: current node positions for the beams).",
+    "export(handler): if an export is already in progress (lastMeshInfo not nil), the handler is called with nil and nothing else is done.",
+    "startRecording writes a first frame then keeps exporting every frame until stopRecording; the times are stored in a glTF animation. The output logs each frame.",
+    "suggestFilename looks for export_001 to export_100 in the vehicle's folder, with the .glb or .gltf extension depending on gltfBinaryFormat; if all exist, returns the last name tested.",
+    "Bug: in _addTimeBuffers, the keyframe number buffer uses the variable bufferID (undefined, so nil) instead of bufferIDKeyframes, and the max time bound uses keyFrameTimes[#keyFrameTimes - 1]. Animation recording is therefore probably incorrect.",
+    "Bug: in _convertType, `dumps(value)\" to \"` (missing .. operator) is a function call on a string and would cause a Lua error in conversion error cases.",
+    "Bug: _isTextureCookerFilepath tests `not string.sub(filepath, -4) == \".png\"`, an expression that is always false in practice (precedence of the not operator); the extension test is therefore not done.",
+    "After an export, the GUI hook ThreeDExported is triggered and a \"GLTF Vehicle exported\" message is displayed for 5 s."
   ],
   "functions": {
     "export": {
-      "desc": "Lance l'export du véhicule joueur et appelle handler(gltfRoot) avec la table glTF construite quand les données GPU sont prêtes (dans updateGFX).",
+      "desc": "Starts the player vehicle export and calls handler(gltfRoot) with the built glTF table when the GPU data is ready (in updateGFX).",
       "params": {
         "handler": {
           "type": "function",
-          "desc": "Fonction recevant la table glTF racine (ou nil si un export est déjà en cours)"
+          "desc": "Function receiving the root glTF table (or nil if an export is already in progress)"
         }
       },
       "returns": [],
       "internal": false
     },
     "exportFile": {
-      "desc": "Exporte le véhicule joueur dans un fichier glTF (JSON ou binaire selon gltfBinaryFormat). Réinitialise le cache d'images et affiche un message d'interface.",
+      "desc": "Exports the player vehicle to a glTF file (JSON or binary depending on gltfBinaryFormat). Resets the image cache and displays an interface message.",
       "params": {
         "filename": {
           "type": "string",
-          "desc": "Chemin du fichier de sortie (.gltf ou .glb)"
+          "desc": "Output file path (.gltf or .glb)"
         }
       },
       "returns": [],
       "internal": false
     },
     "startRecording": {
-      "desc": "Exporte une première image dans le fichier puis continue d'exporter à chaque frame (animation) jusqu'à l'appel de stopRecording.",
+      "desc": "Exports a first frame to the file then keeps exporting every frame (animation) until stopRecording is called.",
       "params": {
         "filename": {
           "type": "string",
-          "desc": "Chemin du fichier de sortie"
+          "desc": "Output file path"
         }
       },
       "returns": [],
       "internal": false
     },
     "stopRecording": {
-      "desc": "Arrête l'enregistrement d'animation démarré par startRecording.",
+      "desc": "Stops the animation recording started by startRecording.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "updateGFX": {
-      "desc": "Hook appelé chaque frame : si les données GPU du maillage sont prêtes, termine l'export en cours (processExport).",
+      "desc": "Hook called every frame: if the mesh GPU data is ready, finishes the export in progress (processExport).",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Delta de temps (non utilisé)"
+          "desc": "Time delta (unused)"
         }
       },
       "returns": [],
       "internal": true
     },
     "suggestFilename": {
-      "desc": "Propose un nom de fichier libre export_NNN.glb ou .gltf dans le dossier du véhicule joueur (pour l'interface).",
+      "desc": "Suggests a free file name export_NNN.glb or .gltf in the player vehicle's folder (for the interface).",
       "params": {},
       "returns": [
         {
           "type": "string",
-          "desc": "Chemin proposé, ou chaîne vide s'il n'y a pas de véhicule joueur"
+          "desc": "Suggested path, or empty string if there is no player vehicle"
         }
       ],
       "internal": false
     },
     "getGeInfo": {
-      "desc": "Renvoie les réglages de l'export utiles à l'interface (actuellement seulement gltfBinaryFormat).",
+      "desc": "Returns the export settings useful to the interface (currently only gltfBinaryFormat).",
       "params": {},
       "returns": [
         {

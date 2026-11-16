@@ -1,130 +1,291 @@
 {
   "path": "lua/ge/extensions/gameplay/sites/parkingSpot.lua",
-  "module": "Classe « ParkingSpot » d'un jeu de sites : un rectangle orienté (position, rotation, dimensions scl = largeur X, longueur Y, hauteur Z) représentant une place de parking. Permet de tester si un véhicule y rentre, s'il y est garé, si elle est occupée, et d'y téléporter un véhicule. Peut générer plusieurs places côte à côte (« multi-spot »). Le module renvoie un constructeur.",
+  "module": "\"ParkingSpot\" class of a sites set: an oriented rectangle (position, rotation, dimensions scl = width X, length Y, height Z) representing a parking spot. Allows testing whether a vehicle fits in it, whether it is parked in it, whether it is occupied, and teleporting a vehicle into it. Can generate several side-by-side spots (\"multi-spot\"). The module returns a constructor.",
   "usage": "local ok, corners = spot:checkParking(vehId, 0.8, 5, 1)\nif spot:vehicleFits(vehId) and not spot:hasAnyVehicles(vehId) then\n  spot:moveResetVehicleTo(vehId, false, false, nil, nil, true)\nend",
   "notes": [
-    "Axes locaux : X = largeur, Y = direction de la place (avant), Z = hauteur ; scl contient les dimensions totales.",
-    "Les places multiples (isMultiSpot) sont étendues par generateMultiSpots lors de finalizeSites : les copies sont marquées isProcedural et n'ont pas de dessin debug propre.",
-    "multiSpotData.spotDirection vaut 'Left', 'Right', 'Front' ou 'Back'. Si une autre valeur est donnée, le décalage reste celui du dernier calcul (variable temporaire partagée).",
-    "checkParking : les vitesses sont comparées au carré de la norme de la vitesse (m/s). Par défaut drivingSpeed 5 m/s, parkingSpeed 1 m/s, precision 0,8.",
-    "moveResetVehicleTo en mode non safeTeleport multiplie toujours le quaternion final par backwardsQuat (rotation de 180° autour de Z), même si backwards est faux ; le quaternion renvoyé est modifié en place par cette multiplication."
+    "Local axes: X = width, Y = direction of the spot (front), Z = height; scl holds the total dimensions.",
+    "Multiple spots (isMultiSpot) are expanded by generateMultiSpots during finalizeSites: the copies are marked isProcedural and have no debug drawing of their own.",
+    "multiSpotData.spotDirection is 'Left', 'Right', 'Front' or 'Back'. If another value is given, the offset stays that of the last computation (shared temporary variable).",
+    "checkParking: speeds are compared to the square of the speed norm (m/s). Defaults: drivingSpeed 5 m/s, parkingSpeed 1 m/s, precision 0.8.",
+    "moveResetVehicleTo in non-safeTeleport mode always multiplies the final quaternion by backwardsQuat (180° rotation around Z), even if backwards is false; the returned quaternion is modified in place by this multiplication."
   ],
   "classes": {
     "C": {
-      "desc": "Objet place de parking. Champs : sites, id, name, color, vertices (4 coins 2D), pos, rot, scl, isMultiSpot, multiSpotData {spotAmount, spotOffset, spotDirection, spotRotation}, wasGenerated, isProcedural, customFields.",
+      "desc": "Parking spot object. Fields: sites, id, name, color, vertices (4 2D corners), pos, rot, scl, isMultiSpot, multiSpotData {spotAmount, spotOffset, spotDirection, spotRotation}, wasGenerated, isProcedural, customFields.",
       "functions": {
         "init": {
-          "desc": "Constructeur. Nom par défaut « Parking <id> ».",
+          "desc": "Constructor. Default name \"Parking <id>\".",
           "params": {
-            "sites": {"type": "table", "desc": "Objet sites parent."},
-            "name": {"type": "string|nil", "desc": "Nom."},
-            "forceId": {"type": "integer|nil", "desc": "Identifiant imposé."}
+            "sites": {
+              "type": "table",
+              "desc": "Parent sites object."
+            },
+            "name": {
+              "type": "string|nil",
+              "desc": "Name."
+            },
+            "forceId": {
+              "type": "integer|nil",
+              "desc": "Imposed identifier."
+            }
           },
           "internal": true
         },
         "onSerialize": {
-          "desc": "Sérialise la place (position, rotation d'origine, dimensions, paramètres multi-spot, couleur, champs personnalisés).",
-          "returns": [{"type": "table", "desc": "Données JSON-compatibles."}]
+          "desc": "Serializes the spot (position, original rotation, dimensions, multi-spot parameters, color, custom fields).",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "JSON-compatible data."
+            }
+          ]
         },
         "onDeserialized": {
-          "desc": "Restaure la place depuis les données et recalcule les coins.",
-          "params": {"data": {"type": "table", "desc": "Données de onSerialize."}}
+          "desc": "Restores the spot from the data and recalculates the corners.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Data from onSerialize."
+            }
+          }
         },
         "set": {
-          "desc": "Modifie position, rotation et/ou dimensions (valeurs nil ignorées) et recalcule les coins.",
+          "desc": "Changes position, rotation and/or dimensions (nil values ignored) and recalculates the corners.",
           "params": {
-            "pos": {"type": "vec3|nil", "desc": "Position du centre."},
-            "rot": {"type": "quat|nil", "desc": "Rotation."},
-            "scl": {"type": "vec3|nil", "desc": "Dimensions (largeur, longueur, hauteur)."}
+            "pos": {
+              "type": "vec3|nil",
+              "desc": "Center position."
+            },
+            "rot": {
+              "type": "quat|nil",
+              "desc": "Rotation."
+            },
+            "scl": {
+              "type": "vec3|nil",
+              "desc": "Dimensions (width, length, height)."
+            }
           }
         },
         "getPath": {
-          "desc": "Identifiant textuel de la place : dossier + fichier du jeu de sites + « # » + nom.",
-          "returns": [{"type": "string", "desc": "Chemin de la forme dir..filename#name."}]
+          "desc": "Text identifier of the spot: folder + file of the sites set + \"#\" + name.",
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Path of the form dir..filename#name."
+            }
+          ]
         },
         "drawDebug": {
-          "desc": "Dessine la place en debug (surface, direction, nom selon le mode). Ignore les places procédurales.",
+          "desc": "Draws the spot in debug (surface, direction, name depending on the mode). Ignores procedural spots.",
           "params": {
-            "drawMode": {"type": "string|nil", "desc": "'none', 'faded', 'normal' ou 'highlight'."},
-            "clr": {"type": "table|nil", "desc": "Couleur {r,g,b}."},
-            "customHeight": {"type": "number|nil", "desc": "Hauteur de dessin personnalisée."},
-            "drawDirection": {"type": "boolean|nil", "desc": "Dessiner la flèche de direction (défaut true)."}
+            "drawMode": {
+              "type": "string|nil",
+              "desc": "'none', 'faded', 'normal' or 'highlight'."
+            },
+            "clr": {
+              "type": "table|nil",
+              "desc": "Color {r,g,b}."
+            },
+            "customHeight": {
+              "type": "number|nil",
+              "desc": "Custom drawing height."
+            },
+            "drawDirection": {
+              "type": "boolean|nil",
+              "desc": "Draw the direction arrow (default true)."
+            }
           }
         },
         "drawSide": {
-          "desc": "Dessine un côté vertical de la place entre deux points (aide au debug).",
+          "desc": "Draws a vertical side of the spot between two points (debug aid).",
           "params": {
-            "a": {"type": "vec3", "desc": "Premier point."},
-            "b": {"type": "vec3", "desc": "Second point."},
-            "z": {"type": "number", "desc": "Hauteur du côté."},
-            "clrI": {"type": "any", "desc": "Couleur ColorI (déduit du code)."}
+            "a": {
+              "type": "vec3",
+              "desc": "First point."
+            },
+            "b": {
+              "type": "vec3",
+              "desc": "Second point."
+            },
+            "z": {
+              "type": "number",
+              "desc": "Side height."
+            },
+            "clrI": {
+              "type": "any",
+              "desc": "ColorI color (inferred from code)."
+            }
           },
           "internal": true
         },
         "generateMultiSpots": {
-          "desc": "Pour une place multi-spot, crée les places supplémentaires (nom « <nom>.<n> ») décalées selon spotDirection/spotOffset, avec la rotation spotRotation, et copie tags et champs personnalisés. N'agit qu'une fois (wasGenerated).",
+          "desc": "For a multi-spot, creates the additional spots (name \"<name>.<n>\") offset according to spotDirection/spotOffset, with the spotRotation rotation, and copies tags and custom fields. Acts only once (wasGenerated).",
           "params": {
-            "parkingSpotList": {"type": "table", "desc": "Liste triée (sites.parkingSpots) où créer les places."},
-            "skipSort": {"type": "boolean|nil", "desc": "Ne pas retrier à chaque création."}
+            "parkingSpotList": {
+              "type": "table",
+              "desc": "Sorted list (sites.parkingSpots) in which to create the spots."
+            },
+            "skipSort": {
+              "type": "boolean|nil",
+              "desc": "Do not re-sort on each creation."
+            }
           }
         },
-        "calcVerts": {"desc": "Recalcule les 4 coins 2D (vertices) à partir de pos, rot et scl."},
-        "containsPoint": {
-          "desc": "Teste si un point est dans le volume de la place (boîte orientée, avec contrôle rapide par rayon).",
-          "params": {"pos": {"type": "vec3", "desc": "Point monde."}},
-          "returns": [{"type": "boolean", "desc": "true si dans la place."}]
+        "calcVerts": {
+          "desc": "Recalculates the 4 2D corners (vertices) from pos, rot and scl."
         },
-        "checkParking": {
-          "desc": "Vérifie si un véhicule est correctement garé : vitesse faible, orienté dans l'axe de la place (|cos| >= 0,707) et coins de sa boîte englobante à l'intérieur. Avec precision <= 0, seul le centre du véhicule est testé.",
+        "containsPoint": {
+          "desc": "Tests whether a point is inside the spot's volume (oriented box, with a quick radius check).",
           "params": {
-            "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
-            "precision": {"type": "number|nil", "desc": "Fraction (0..1) du centre vers chaque coin à tester ; défaut 0,8."},
-            "drivingSpeed": {"type": "number|nil", "desc": "Vitesse max (m/s) pour tester ; défaut 5."},
-            "parkingSpeed": {"type": "number|nil", "desc": "Vitesse max (m/s) pour être valide ; défaut 1."}
+            "pos": {
+              "type": "vec3",
+              "desc": "World point."
+            }
           },
           "returns": [
-            {"type": "boolean", "desc": "true si garé."},
-            {"type": "boolean[]", "desc": "État des 4 coins (ordre dépendant de l'avant/arrière)."}
+            {
+              "type": "boolean",
+              "desc": "true if inside the spot."
+            }
+          ]
+        },
+        "checkParking": {
+          "desc": "Checks whether a vehicle is correctly parked: low speed, aligned with the spot's axis (|cos| >= 0.707) and the corners of its bounding box inside. With precision <= 0, only the vehicle's center is tested.",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "Vehicle identifier."
+            },
+            "precision": {
+              "type": "number|nil",
+              "desc": "Fraction (0..1) from the center toward each corner to test; default 0.8."
+            },
+            "drivingSpeed": {
+              "type": "number|nil",
+              "desc": "Max speed (m/s) to test; default 5."
+            },
+            "parkingSpeed": {
+              "type": "number|nil",
+              "desc": "Max speed (m/s) to be valid; default 1."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if parked."
+            },
+            {
+              "type": "boolean[]",
+              "desc": "State of the 4 corners (order depends on front/back)."
+            }
           ]
         },
         "boxFits": {
-          "desc": "Teste si une boîte de dimensions données rentre dans les dimensions de la place (comparaison par axe, sans rotation).",
+          "desc": "Tests whether a box of given dimensions fits in the spot's dimensions (per-axis comparison, no rotation).",
           "params": {
-            "extentsX": {"type": "number", "desc": "Largeur."},
-            "extentsY": {"type": "number", "desc": "Longueur."},
-            "extentsZ": {"type": "number", "desc": "Hauteur."}
+            "extentsX": {
+              "type": "number",
+              "desc": "Width."
+            },
+            "extentsY": {
+              "type": "number",
+              "desc": "Length."
+            },
+            "extentsZ": {
+              "type": "number",
+              "desc": "Height."
+            }
           },
-          "returns": [{"type": "boolean", "desc": "true si ça rentre."}]
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if it fits."
+            }
+          ]
         },
         "vehicleFits": {
-          "desc": "Teste si le véhicule rentre (boîte englobante initiale des noeuds, initialNodePosBB).",
-          "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
-          "returns": [{"type": "boolean", "desc": "true si ça rentre ; false si le véhicule n'existe pas."}]
+          "desc": "Tests whether the vehicle fits (initial node bounding box, initialNodePosBB).",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "Vehicle identifier."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if it fits; false if the vehicle does not exist."
+            }
+          ]
         },
         "hasAnyVehicles": {
-          "desc": "Indique si un véhicule actif occupe la place (centre de la boîte englobante dedans ; pour les véhicules suivis par map, test des arêtes aussi).",
-          "params": {"playerId": {"type": "integer|nil", "desc": "Identifiant d'un véhicule à ignorer."}},
+          "desc": "Indicates whether an active vehicle occupies the spot (bounding box center inside it; for vehicles tracked by map, edges are also tested).",
+          "params": {
+            "playerId": {
+              "type": "integer|nil",
+              "desc": "Identifier of a vehicle to ignore."
+            }
+          },
           "returns": [
-            {"type": "boolean", "desc": "true si au moins un véhicule."},
-            {"type": "integer[]", "desc": "Identifiants des véhicules présents (peut contenir des doublons)."}
+            {
+              "type": "boolean",
+              "desc": "true if at least one vehicle."
+            },
+            {
+              "type": "integer[]",
+              "desc": "Identifiers of the vehicles present (may contain duplicates)."
+            }
           ]
         },
         "moveResetVehicleTo": {
-          "desc": "Place un véhicule sur la place, aligné sur sa rotation. Avec useSafeTeleport, passe par spawn.safeTeleport ; sinon calcule le décalage de la boîte englobante, positionne le véhicule, réinitialise le flexmesh et appelle autoplace.",
+          "desc": "Places a vehicle on the spot, aligned to its rotation. With useSafeTeleport, goes through spawn.safeTeleport; otherwise computes the bounding box offset, positions the vehicle, resets the flexmesh and calls autoplace.",
           "params": {
-            "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
-            "lowPrecision": {"type": "boolean|nil", "desc": "À utiliser si le véhicule vient d'être chargé à la première frame (OOBB invalide) : place le véhicule 2 m derrière et 0,5 m au-dessus."},
-            "backwards": {"type": "boolean|nil", "desc": "Orienter le véhicule dans le sens opposé."},
-            "addedOffsetPos": {"type": "vec3|nil", "desc": "Décalage de position (repère véhicule, x/y)."},
-            "addedOffsetRot": {"type": "quat|nil", "desc": "Rotation additionnelle."},
-            "useSafeTeleport": {"type": "boolean|nil", "desc": "Utiliser spawn.safeTeleport."},
-            "removeTraffic": {"type": "boolean|nil", "desc": "Transmis à safeTeleport."},
-            "resetVehicleInSafeTeleport": {"type": "boolean|nil", "desc": "Transmis à safeTeleport."},
-            "options": {"type": "table|nil", "desc": "Options ; skipVehicleIntersectionCheck est transmis à safeTeleport."}
+            "vehId": {
+              "type": "integer",
+              "desc": "Vehicle identifier."
+            },
+            "lowPrecision": {
+              "type": "boolean|nil",
+              "desc": "To use if the vehicle has just been loaded on the first frame (invalid OOBB): places the vehicle 2 m behind and 0.5 m above."
+            },
+            "backwards": {
+              "type": "boolean|nil",
+              "desc": "Orient the vehicle in the opposite direction."
+            },
+            "addedOffsetPos": {
+              "type": "vec3|nil",
+              "desc": "Position offset (vehicle frame, x/y)."
+            },
+            "addedOffsetRot": {
+              "type": "quat|nil",
+              "desc": "Additional rotation."
+            },
+            "useSafeTeleport": {
+              "type": "boolean|nil",
+              "desc": "Use spawn.safeTeleport."
+            },
+            "removeTraffic": {
+              "type": "boolean|nil",
+              "desc": "Passed to safeTeleport."
+            },
+            "resetVehicleInSafeTeleport": {
+              "type": "boolean|nil",
+              "desc": "Passed to safeTeleport."
+            },
+            "options": {
+              "type": "table|nil",
+              "desc": "Options; skipVehicleIntersectionCheck is passed to safeTeleport."
+            }
           },
           "returns": [
-            {"type": "vec3|nil", "desc": "Nouvelle position (nil si véhicule introuvable)."},
-            {"type": "quat", "desc": "Rotation appliquée."}
+            {
+              "type": "vec3|nil",
+              "desc": "New position (nil if vehicle not found)."
+            },
+            {
+              "type": "quat",
+              "desc": "Applied rotation."
+            }
           ]
         }
       }

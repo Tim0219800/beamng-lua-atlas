@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/activity/missionAttemptStars.lua",
+  "module": "Nœud flowgraph « Mission Attempt Stars » (catégorie once_instant, tags activity/mission). Ajoute des étoiles à une tentative « via le constructeur » : les pins d'entrée personnalisés sont rassemblés dans une table et passés à mission:addAttemptData(attempt, données), à charge du type de mission de remplir unlockedStars. Entrée et sortie fixes « attempt » (attemptData).",
+  "notes": ["Plante sans activité associée (self.mgr.activity nil est indexé). Si addAttemptData n'existe pas, la tentative est renvoyée telle quelle (avec unlockedStars = {} au minimum)."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Active savePins et allowCustomInPins.", "internal": true},
+        "workOnce": {"desc": "Initialise attempt.unlockedStars, collecte les pins personnalisés, appelle activity:addAttemptData si présent, puis sort attempt."}
+      }
+    }
+  }
+}

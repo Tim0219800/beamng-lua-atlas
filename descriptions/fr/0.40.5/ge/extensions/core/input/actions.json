@@ -1,0 +1,100 @@
+{
+  "path": "lua/ge/extensions/core/input/actions.lua",
+  "module": "Extension GE `core_input_actions` : registre des actions d'entrée (ce que les touches/manettes peuvent déclencher). Il lit les fichiers lua/ge/extensions/core/input/actions/*.json (actions communes) et vehicles/<véhicule>/input_actions*.json plus les inputActions des fichiers jbeam (actions spécifiques à un véhicule), les met en cache, crée côté C++ les ActionMap nécessaires et traduit une action en paramètres de commande pour le moteur. Un moddeur s'en sert pour déclencher une action par son nom ou lister les actions disponibles.",
+  "usage": "extensions.load('core_input_actions')\nlocal actions = core_input_actions.getActiveActions()   -- table uniqueName -> définition\ncore_input_actions.triggerDownUp('toggleMenues')       -- simule appui + relâchement",
+  "notes": [
+    "Nom unique : une action de véhicule est renommée '<véhicule>__<action>' (nameToUniqueName) pour éviter les collisions entre véhicules ; les actions communes gardent leur nom.",
+    "Champs d'une définition d'action (lus dans le code) : cat (catégorie, voir core_input_categories), ctx ('vlua' défaut pour véhicule, 'tlua', 'elua', 'bvlua' ; 'slua' remplacé par 'elua', 'ts' et 'ui' dépréciés), actionMap, onDown / onUp / onChange / onRelative (chaînes de code Lua), isCentered, vehicle, namespace ('common' = non spécifique), source (ajouté = chemin du fichier).",
+    "Jetons remplacés dans les chaînes de commande par executeCommand : VALUE, VEHICLEID, FILTERTYPE (-1), PLAYER (0 par défaut), TRIGGERID, ANGLE (900), LOCKTYPE (0). Remplacement par simple gsub de sous-chaîne : éviter ces mots dans le code d'une action.",
+    "Actif/inactif : une action est inactive si license.isAllowedActionsPath refuse son fichier, ou si le chemin contient '_nonshipping' dans une version shipping.",
+    "Les caches sont vidés au premier update, au changement de véhicule et à la modification d'un fichier de actions/*.json.",
+    "Incohérences : le commentaire de executeCommand annonce 'returns the executed action count' mais pour le contexte vlua il renvoie le retour de queueCmd, qui ne retourne rien (nil) ; les messages de doublon d'action utilisent `vid`, hors de portée dans la boucle des actions normales (affiche nil)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'core_input_categories', 'core_input_deprecatedActions', 'license'}."},
+    "menuIndependentPrefix": {"type": "string", "desc": "'MenuIndependent_' : préfixe des ActionMap dont l'action déclare actionMap = 'MenuIndependent'."},
+    "menuActionMapNames": {"type": "table<string, boolean>", "desc": "Ensemble des noms d'ActionMap 'menu indépendants' (poussés/pushés dès leur création). Vidé et reconstruit à chaque lecture des actions actives."}
+  },
+  "functions": {
+    "getActiveActions": {
+      "desc": "Actions actuellement actives : actions des véhicules existants (marquées cat 'vehicle_specific' si utilisables, sinon 'vehicle_specific_unusable') plus les actions communes. Crée au passage les ActionMap C++ manquantes.",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Nom unique de l'action -> définition."}]
+    },
+    "getInactiveActions": {
+      "desc": "Actions désactivées (licence ou fichiers _nonshipping en version shipping).",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Nom unique -> définition."}]
+    },
+    "upgradeAction": {
+      "desc": "Résout un nom d'action : renvoie le nom s'il est actif ; suit récursivement les remplacements de core_input_deprecatedActions ; renvoie nil (avec log) si l'action est inactive, obsolète ou inconnue.",
+      "params": {"action": {"type": "string", "desc": "Nom unique de l'action."}},
+      "returns": [{"type": "string|nil", "desc": "Nom valide ou nil."}]
+    },
+    "actionToCommands": {
+      "desc": "Convertit une action en paramètres utilisés par le moteur lors d'un déclenchement. Détermine l'ActionMap (Normal, Menu, VehicleCommon, VehicleSpecific, ou celle de l'action), les callbacks onChange/onDown/onUp, le contexte de commande et isCentered. Loggue les catégories invalides et les contextes dépréciés.",
+      "params": {
+        "actionName": {"type": "string", "desc": "Nom unique de l'action."},
+        "actionCache": {"type": "table|nil", "desc": "Définition déjà connue de l'action ; nécessaire uniquement quand l'appel vient de getActions (évite une récursion infinie)."}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "true."},
+        {"type": "string", "desc": "Nom de l'actionmap."},
+        {"type": "boolean", "desc": "actsOnChange."},
+        {"type": "string", "desc": "Code onChange (ou onRelative)."},
+        {"type": "boolean", "desc": "actsOnDown."},
+        {"type": "string", "desc": "Code onDown."},
+        {"type": "boolean", "desc": "actsOnUp."},
+        {"type": "string", "desc": "Code onUp."},
+        {"type": "boolean", "desc": "isRelative (onRelative utilisé)."},
+        {"type": "userdata", "desc": "ActionMapCommandContext (type VLUA/ELUA/TLUA/BVLUA/TS)."},
+        {"type": "boolean", "desc": "isCentered."}
+      ]
+    },
+    "nameToUniqueName": {
+      "desc": "Préfixe le nom d'action par le nom du véhicule : '<véhicule>__<action>'.",
+      "params": {
+        "actionName": {"type": "string", "desc": "Nom court."},
+        "vehicleName": {"type": "string|nil", "desc": "Nom du véhicule ; nil = nom inchangé."}
+      },
+      "returns": [{"type": "string", "desc": "Nom unique."}]
+    },
+    "uniqueNameToName": {
+      "desc": "Opération inverse : retire le préfixe '<véhicule>__'. Loggue une erreur et renvoie le nom inchangé si le préfixe manque.",
+      "params": {
+        "uniqueActionName": {"type": "string", "desc": "Nom unique."},
+        "vehicleName": {"type": "string|nil", "desc": "Nom du véhicule."}
+      },
+      "returns": [{"type": "string", "desc": "Nom court."}]
+    },
+    "executeCommand": {
+      "desc": "Exécute le code d'une action : vlua -> envoyé au véhicule vehicleId ; elua/tlua -> Lua:queueLuaCommand (GE) ; bvlua -> à tous les objets. onDown est utilisé si actionValue == 1, onUp si actionValue == 0, sinon onChange. Les jetons VALUE, VEHICLEID, PLAYER, TRIGGERID… sont remplacés dans le code.",
+      "params": {
+        "evt": {"type": "table", "desc": "Définition d'action avec ctx (nil = vlua), onDown, onUp, onChange."},
+        "actionValue": {"type": "number", "desc": "Valeur de l'action (1 = appui, 0 = relâché, ou valeur analogique pour onChange)."},
+        "vehicleId": {"type": "integer", "desc": "Id du véhicule cible (contexte vlua)."},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur ; défaut 0."},
+        "triggerId": {"type": "any", "desc": "Valeur pour TRIGGERID (chaîne vide si nil)."}
+      },
+      "returns": [{"type": "integer|nil", "desc": "1 pour GE/bvlua si une commande a été envoyée, 0 sinon ; pour vlua le retour de queueCmd, donc nil (voir notes)."}]
+    },
+    "triggerDown": {
+      "desc": "Simule l'appui d'une action nommée (ActionMap.triggerBindingByNameDigital(name, true)).",
+      "params": {"actionName": {"type": "string", "desc": "Nom de l'action."}},
+      "returns": []
+    },
+    "triggerUp": {
+      "desc": "Simule le relâchement d'une action nommée.",
+      "params": {"actionName": {"type": "string", "desc": "Nom de l'action."}},
+      "returns": []
+    },
+    "triggerDownUp": {
+      "desc": "Simule un appui puis un relâchement immédiats.",
+      "params": {"actionName": {"type": "string", "desc": "Nom de l'action."}},
+      "returns": []
+    },
+    "onFirstUpdate": {"desc": "Hook au premier update : vide le cache des actions.", "params": {}, "returns": [], "internal": true},
+    "onVehicleSwitched": {"desc": "Hook au changement de véhicule joueur : vide le cache des actions (les actions spécifiques changent).", "params": {"oldId": {"type": "integer", "desc": "Ancien véhicule."}, "newId": {"type": "integer", "desc": "Nouveau véhicule."}, "player": {"type": "integer", "desc": "Indice du joueur."}}, "returns": [], "internal": true},
+    "onFileChanged": {"desc": "Hook de modification de fichier : si un JSON sous /lua/ge/extensions/core/input/actions change, vide les caches.", "params": {"filename": {"type": "string", "desc": "Chemin du fichier modifié."}}, "returns": [], "internal": true}
+  }
+}

@@ -1,108 +1,108 @@
 # `ui_liveries_saves`
 
-*Fichier : `lua/ge/extensions/ui/liveries/saves.lua` · VM : Game Engine (GE) · 186 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/liveries/saves.lua` · VM: Game Engine (GE) · 186 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_liveries_saves` : `extensions.load("ui_liveries_saves")`, puis la globale `ui_liveries_saves`
+**Access:** extension `ui_liveries_saves`: `extensions.load("ui_liveries_saves")`, then the global `ui_liveries_saves`
 
-Gère les sauvegardes de livrées (éditeur de décalcomanies dynamiques) dans settings/dynamicDecals/*.dynDecals.json. Permet de lister, créer, renommer, supprimer, enregistrer et recharger une pile de calques, et mémorise le nom de la sauvegarde courante de la session d'édition. S'appuie sur l'extension editor_api_dynamicDecals pour la sérialisation réelle.
+Manages livery saves (dynamic decals editor) in settings/dynamicDecals/*.dynDecals.json. Allows listing, creating, renaming, deleting, saving and reloading a layer stack, and stores the name of the current save of the editing session. Relies on the editor_api_dynamicDecals extension for the actual serialization.
 
-## Remarques
+## Notes
 
-- Les noms de fichier doivent correspondre à ^[a-zA-Z0-9_-]+$ (lettres, chiffres, _ et -) ; sinon save/create/load/rename renvoient false avec un avertissement dans le log.
-- Les fichiers sont stockés dans settings/dynamicDecals/ avec l'extension .dynDecals.json.
-- exists et delete n'appellent pas la validation du nom : ils testent directement le chemin construit.
-- create et save renvoient le chemin du fichier (string) en cas de succès, et false en cas d'échec ; load, rename et delete renvoient un booléen.
+- File names must match ^[a-zA-Z0-9_-]+$ (letters, digits, _ and -); otherwise save/create/load/rename return false with a warning in the log.
+- Files are stored in settings/dynamicDecals/ with the extension .dynDecals.json.
+- exists and delete do not call name validation: they directly test the built path.
+- create and save return the file path (string) on success, and false on failure; load, rename and delete return a boolean.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_liveries_saves.clearCurrentSave()` | Oublie la sauvegarde courante et la skin préparée (stagedApplySkinName). | 115 |
-| `ui_liveries_saves.consumeStagedApplySkin()` | Renvoie le nom de la skin préparée par un save avec applySkin et l'efface (lecture unique, prévue à la sortie de l'éditeur). | 120 |
-| `ui_liveries_saves.create(filename)` | Écrit la pile de calques actuelle dans un nouveau fichier via editor_api_dynamicDecals.saveLayerStackToFile. Ne vérifie pas si le fichier existe déjà et ne change pas la sauvegarde courante. | 52 |
-| `ui_liveries_saves.delete(filename)` | Supprime le fichier de sauvegarde. Si c'était la sauvegarde courante, réinitialise l'état de session via clearCurrentSave (la skin préparée n'est plus appliquée). | 90 |
-| `ui_liveries_saves.exists(filename)` | Indique si une sauvegarde portant ce nom existe dans settings/dynamicDecals/. | 32 |
-| `ui_liveries_saves.getAll()` | Liste toutes les sauvegardes présentes. Chaque entrée contient name, location (chemin), created, modified et fileSize. | 36 |
-| `ui_liveries_saves.getCurrentSaveName()` | Renvoie le nom de la sauvegarde chargée ou enregistrée en dernier dans cette session d'édition. | 111 |
-| `ui_liveries_saves.getFilename(file)` | Extrait le nom de sauvegarde (sans dossier ni extension .dynDecals.json) d'un chemin de fichier. | 19 |
-| `ui_liveries_saves.load(filename)` | Charge une sauvegarde dans l'éditeur via editor_api_dynamicDecals.loadLayerStackFromFile (appelée sous pcall). Définit la sauvegarde courante et efface la skin préparée. | 163 |
-| `ui_liveries_saves.rename(filename, newFilename)` | Renomme une sauvegarde. Échoue si le nouveau nom est invalide, si l'ancien fichier n'existe pas, si le nouveau nom est déjà pris ou si le renommage échoue. Met à jour le nom de la sauvegarde courante s'il s'agissait de ce fichier. | 62 |
-| `ui_liveries_saves.save(filename, applySkin)` | Enregistre la livrée : refuse un nom invalide ou déjà pris par une autre sauvegarde que la courante, exige un véhicule joueur, écrit la pile de calques puis exporte la skin (exportSkin) sous le même nom. Définit ensuite la sauvegarde courante et, si applySkin est vrai, prépare la skin pour la sortie de l'éditeur. | 137 |
+| `ui_liveries_saves.clearCurrentSave()` | Forgets the current save and the staged skin (stagedApplySkinName). | 115 |
+| `ui_liveries_saves.consumeStagedApplySkin()` | Returns the name of the skin staged by a save with applySkin and clears it (single read, intended for when the editor exits). | 120 |
+| `ui_liveries_saves.create(filename)` | Writes the current layer stack to a new file via editor_api_dynamicDecals.saveLayerStackToFile. Does not check whether the file already exists and does not change the current save. | 52 |
+| `ui_liveries_saves.delete(filename)` | Deletes the save file. If it was the current save, resets the session state via clearCurrentSave (the staged skin is no longer applied). | 90 |
+| `ui_liveries_saves.exists(filename)` | Returns whether a save with this name exists in settings/dynamicDecals/. | 32 |
+| `ui_liveries_saves.getAll()` | Lists all existing saves. Each entry contains name, location (path), created, modified and fileSize. | 36 |
+| `ui_liveries_saves.getCurrentSaveName()` | Returns the name of the last save loaded or saved in this editing session. | 111 |
+| `ui_liveries_saves.getFilename(file)` | Extracts the save name (without folder or .dynDecals.json extension) from a file path. | 19 |
+| `ui_liveries_saves.load(filename)` | Loads a save into the editor via editor_api_dynamicDecals.loadLayerStackFromFile (called under pcall). Sets the current save and clears the staged skin. | 163 |
+| `ui_liveries_saves.rename(filename, newFilename)` | Renames a save. Fails if the new name is invalid, the old file does not exist, the new name is already taken or the rename fails. Updates the current save name if it was this file. | 62 |
+| `ui_liveries_saves.save(filename, applySkin)` | Saves the livery: refuses a name that is invalid or already taken by a save other than the current one, requires a player vehicle, writes the layer stack then exports the skin (exportSkin) under the same name. Then sets the current save and, if applySkin is true, stages the skin for when the editor exits. | 137 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_liveries_saves.consumeStagedApplySkin()`
 
-Renvoie le nom de la skin préparée par un save avec applySkin et l'efface (lecture unique, prévue à la sortie de l'éditeur).
+Returns the name of the skin staged by a save with applySkin and clears it (single read, intended for when the editor exits).
 
-- **renvoie** : string|nil Nom de la skin à appliquer, ou nil.
+- **returns**: string|nil Name of the skin to apply, or nil.
 
 #### `ui_liveries_saves.create(filename)`
 
-Écrit la pile de calques actuelle dans un nouveau fichier via editor_api_dynamicDecals.saveLayerStackToFile. Ne vérifie pas si le fichier existe déjà et ne change pas la sauvegarde courante.
+Writes the current layer stack to a new file via editor_api_dynamicDecals.saveLayerStackToFile. Does not check whether the file already exists and does not change the current save.
 
-- `filename` (*string*) : Nom sans extension (validé).
-- **renvoie** : string|boolean Chemin du fichier écrit, ou false si le nom est invalide.
+- `filename` (*string*) : Name without extension (validated).
+- **returns**: string|boolean Path of the written file, or false if the name is invalid.
 
 #### `ui_liveries_saves.delete(filename)`
 
-Supprime le fichier de sauvegarde. Si c'était la sauvegarde courante, réinitialise l'état de session via clearCurrentSave (la skin préparée n'est plus appliquée).
+Deletes the save file. If it was the current save, resets the session state via clearCurrentSave (the staged skin is no longer applied).
 
-- `filename` (*string*) : Nom sans extension.
-- **renvoie** : boolean true si le fichier existait et a été supprimé.
+- `filename` (*string*) : Name without extension.
+- **returns**: boolean true if the file existed and was deleted.
 
 #### `ui_liveries_saves.exists(filename)`
 
-Indique si une sauvegarde portant ce nom existe dans settings/dynamicDecals/.
+Returns whether a save with this name exists in settings/dynamicDecals/.
 
-- `filename` (*string*) : Nom sans extension.
-- **renvoie** : boolean true si le fichier existe.
+- `filename` (*string*) : Name without extension.
+- **returns**: boolean true if the file exists.
 
 #### `ui_liveries_saves.getAll()`
 
-Liste toutes les sauvegardes présentes. Chaque entrée contient name, location (chemin), created, modified et fileSize.
+Lists all existing saves. Each entry contains name, location (path), created, modified and fileSize.
 
-- **renvoie** : table[] Tableau d'entrées {name, location, created, modified, fileSize}.
+- **returns**: table[] Array of entries {name, location, created, modified, fileSize}.
 
 #### `ui_liveries_saves.getCurrentSaveName()`
 
-Renvoie le nom de la sauvegarde chargée ou enregistrée en dernier dans cette session d'édition.
+Returns the name of the last save loaded or saved in this editing session.
 
-- **renvoie** : string|nil nil pour une nouvelle livrée non enregistrée.
+- **returns**: string|nil nil for a new unsaved livery.
 
 #### `ui_liveries_saves.getFilename(file)`
 
-Extrait le nom de sauvegarde (sans dossier ni extension .dynDecals.json) d'un chemin de fichier.
+Extracts the save name (without folder or .dynDecals.json extension) from a file path.
 
-- `file` (*string*) : Chemin complet d'un fichier de sauvegarde.
-- **renvoie** : string Nom sans extension.
+- `file` (*string*) : Full path of a save file.
+- **returns**: string Name without extension.
 
 #### `ui_liveries_saves.load(filename)`
 
-Charge une sauvegarde dans l'éditeur via editor_api_dynamicDecals.loadLayerStackFromFile (appelée sous pcall). Définit la sauvegarde courante et efface la skin préparée.
+Loads a save into the editor via editor_api_dynamicDecals.loadLayerStackFromFile (called under pcall). Sets the current save and clears the staged skin.
 
-- `filename` (*string*) : Nom sans extension (validé).
-- **renvoie** : boolean true si le chargement a réussi.
+- `filename` (*string*) : Name without extension (validated).
+- **returns**: boolean true if loading succeeded.
 
 #### `ui_liveries_saves.rename(filename, newFilename)`
 
-Renomme une sauvegarde. Échoue si le nouveau nom est invalide, si l'ancien fichier n'existe pas, si le nouveau nom est déjà pris ou si le renommage échoue. Met à jour le nom de la sauvegarde courante s'il s'agissait de ce fichier.
+Renames a save. Fails if the new name is invalid, the old file does not exist, the new name is already taken or the rename fails. Updates the current save name if it was this file.
 
-- `filename` (*string*) : Nom actuel.
-- `newFilename` (*string*) : Nouveau nom (validé).
-- **renvoie** : boolean true si le renommage a réussi.
+- `filename` (*string*) : Current name.
+- `newFilename` (*string*) : New name (validated).
+- **returns**: boolean true if the rename succeeded.
 
 #### `ui_liveries_saves.save(filename, applySkin)`
 
-Enregistre la livrée : refuse un nom invalide ou déjà pris par une autre sauvegarde que la courante, exige un véhicule joueur, écrit la pile de calques puis exporte la skin (exportSkin) sous le même nom. Définit ensuite la sauvegarde courante et, si applySkin est vrai, prépare la skin pour la sortie de l'éditeur.
+Saves the livery: refuses a name that is invalid or already taken by a save other than the current one, requires a player vehicle, writes the layer stack then exports the skin (exportSkin) under the same name. Then sets the current save and, if applySkin is true, stages the skin for when the editor exits.
 
-- `filename` (*string*) : Nom sans extension (validé).
-- `applySkin` (*boolean|nil*) : Si vrai, la skin exportée sera appliquée à la sortie de l'éditeur (voir consumeStagedApplySkin).
-- **renvoie** : string|boolean Chemin du fichier écrit, ou false en cas d'échec (nom invalide, doublon, pas de véhicule).
+- `filename` (*string*) : Name without extension (validated).
+- `applySkin` (*boolean|nil*) : If true, the exported skin will be applied when the editor exits (see consumeStagedApplySkin).
+- **returns**: string|boolean Path of the written file, or false on failure (invalid name, duplicate, no vehicle).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`, `removeFile`, `renameFile`, `stat`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/liveries/saves.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/liveries/saves.lua`.*

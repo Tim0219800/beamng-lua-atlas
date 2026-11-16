@@ -2,51 +2,51 @@
 -- tim19Atlas stub generated from lua/common/kdtreebox3d.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Arbre k-d pour boîtes 3D (xmin, ymin, zmin, xmax, ymax, zmax), soit 6 dimensions. Permet de retrouver rapidement tous les éléments dont la boîte intersecte une boîte de requête. Même API que kdtreebox2d en 3D : new -> preLoad -> build -> query/queryNotNested ; export/import pour réutiliser un arbre.
---- Accès : `require("kdtreebox3d")`
+--- K-d tree for 3D boxes (xmin, ymin, zmin, xmax, ymax, zmax), i.e. 6 dimensions. Allows quick retrieval of all the elements whose box intersects a query box. Same API as kdtreebox2d in 3D: new -> preLoad -> build -> query/queryNotNested; export/import to reuse a tree.
+--- Access: `require("kdtreebox3d")`
 ---@class kdtreebox3d
 local kdtreebox3d = {}
 
---- Crée un arbre k-d de boîtes 3D vide.
----Source : lua/common/kdtreebox3d.lua:115
----@param itemCount integer|nil nombre d'éléments prévus (préallocation, facultatif)
----@return kdTree  arbre vide
+--- Creates an empty 3D box k-d tree.
+---Source: lua/common/kdtreebox3d.lua:115
+---@param itemCount integer|nil expected number of elements (preallocation, optional)
+---@return kdTree  empty tree
 function kdtreebox3d.new(itemCount) end
 
---- Objet renvoyé par new().
+--- Object returned by new().
 ---@class kdtreebox3d_kdTree
 local kdtreebox3d_kdTree = {}
 
---- Interne : construction récursive d'un noeud.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/kdtreebox3d.lua:158
----@param axis integer axe courant
----@param left integer indice de début dans items
----@param right integer indice de fin
----@param treeIdx integer indice du noeud
+--- Internal: recursive construction of a node.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/kdtreebox3d.lua:158
+---@param axis integer current axis
+---@param left integer start index in items
+---@param right integer end index
+---@param treeIdx integer node index
 function kdtreebox3d_kdTree:_build(axis, left, right, treeIdx) end
 
---- Affiche (print) des statistiques de l'arbre.
----Source : lua/common/kdtreebox3d.lua:284
+--- Prints (print) tree statistics.
+---Source: lua/common/kdtreebox3d.lua:284
 function kdtreebox3d_kdTree:analytics() end
 
---- Construit l'arbre (médiane récursive en alternant les axes) à partir des éléments chargés.
----Source : lua/common/kdtreebox3d.lua:192
+--- Builds the tree (recursive median alternating the axes) from the loaded elements.
+---Source: lua/common/kdtreebox3d.lua:192
 function kdtreebox3d_kdTree:build() end
 
---- Renvoie les données de l'arbre (références) pour sérialisation/réutilisation.
----Source : lua/common/kdtreebox3d.lua:130
----@return table  données exportées
+--- Returns the tree data (references) for serialization/reuse.
+---Source: lua/common/kdtreebox3d.lua:130
+---@return table  exported data
 function kdtreebox3d_kdTree:export() end
 
---- Charge des données produites par export().
----Source : lua/common/kdtreebox3d.lua:139
----@param kdTreeData table table d'export
+--- Loads data produced by export().
+---Source: lua/common/kdtreebox3d.lua:139
+---@param kdTreeData table export table
 function kdtreebox3d_kdTree:import(kdTreeData) end
 
---- Ajoute un élément (avant build).
----Source : lua/common/kdtreebox3d.lua:146
----@param id any identifiant renvoyé par les requêtes
+--- Adds an element (before build).
+---Source: lua/common/kdtreebox3d.lua:146
+---@param id any id returned by the queries
 ---@param xmin number xmin
 ---@param ymin number ymin
 ---@param zmin number zmin
@@ -55,28 +55,28 @@ function kdtreebox3d_kdTree:import(kdTreeData) end
 ---@param zmax number zmax
 function kdtreebox3d_kdTree:preLoad(id, xmin, ymin, zmin, xmax, ymax, zmax) end
 
---- Itérateur sur les ids des éléments dont la boîte intersecte la boîte de requête ; imbrication possible.
----Source : lua/common/kdtreebox3d.lua:254
+--- Iterator over the ids of the elements whose box intersects the query box; nesting possible.
+---Source: lua/common/kdtreebox3d.lua:254
 ---@param query_xmin number xmin
 ---@param query_ymin number ymin
 ---@param query_zmin number zmin
 ---@param query_xmax number xmax
 ---@param query_ymax number ymax
 ---@param query_zmax number zmax
----@return function  itérateur renvoyant les ids
----@return table  état d'itération
+---@return function  iterator returning the ids
+---@return table  iteration state
 function kdtreebox3d_kdTree:query(query_xmin, query_ymin, query_zmin, query_xmax, query_ymax, query_zmax) end
 
---- Comme query sans allocation ; interdit d'imbriquer.
----Source : lua/common/kdtreebox3d.lua:268
+--- Like query without allocation; nesting forbidden.
+---Source: lua/common/kdtreebox3d.lua:268
 ---@param query_xmin number xmin
 ---@param query_ymin number ymin
 ---@param query_zmin number zmin
 ---@param query_xmax number xmax
 ---@param query_ymax number ymax
 ---@param query_zmax number zmax
----@return function  itérateur renvoyant les ids
----@return table  état d'itération (l'arbre)
+---@return function  iterator returning the ids
+---@return table  iteration state (the tree)
 function kdtreebox3d_kdTree:queryNotNested(query_xmin, query_ymin, query_zmin, query_xmax, query_ymax, query_zmax) end
 
 return kdtreebox3d

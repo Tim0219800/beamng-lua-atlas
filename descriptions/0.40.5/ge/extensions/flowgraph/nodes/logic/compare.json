@@ -1,54 +1,54 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/logic/compare.lua",
-  "module": "Noeud flowgraph 'Compare' (categorie logic). Compare les entrees A et B (type any) avec une fonction de comparaison choisie dans l'editeur (liste issue de getComparisonOps(), triee par nom). Sorties : flow, flow 'true', flow 'false' et le bool cache 'value'. Si A ou B vaut nil pour un operateur autre que == et ~=, un evenement d'erreur est journalise et toutes les sorties passent a false.",
+  "module": "Flowgraph node 'Compare' (logic category). Compares inputs A and B (type any) with a comparison function chosen in the editor (list from getComparisonOps(), sorted by name). Outputs: flow, flow 'true', flow 'false' and the hidden bool 'value'. If A or B is nil for an operator other than == and ~=, an error event is logged and all outputs go to false.",
   "notes": [
-    "Dans _onPropertyChanged le commentaire de log reference une variable 'value' inexistante, sans effet (ligne commentee).",
-    "Si flow n'est pas connecte, pinOut.flow reflete simplement la valeur de pinIn.flow."
+    "In _onPropertyChanged the log comment references a nonexistent variable 'value', with no effect (commented-out line).",
+    "If flow is not connected, pinOut.flow simply reflects the value of pinIn.flow."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Trie les operateurs de comparaison par nom et selectionne le premier par defaut.",
+          "desc": "Sorts the comparison operators by name and selects the first one by default.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Panneau de proprietes : liste deroulante des fonctions de comparaison.",
+          "desc": "Properties panel: dropdown of comparison functions.",
           "internal": true
         },
         "refreshFunction": {
-          "desc": "Met a jour compFunc depuis la comparaison choisie ; si absente, installe une fonction vide et signale l'erreur 'Invalid comparison'.",
+          "desc": "Updates compFunc from the chosen comparison; if absent, installs an empty function and reports the error 'Invalid comparison'.",
           "internal": true
         },
         "_onPropertyChanged": {
-          "desc": "Appele quand une propriete change ; relance refreshFunction.",
+          "desc": "Called when a property changes; reruns refreshFunction.",
           "internal": true,
           "params": {
             "key": {
               "type": "string",
-              "desc": "nom de la propriete"
+              "desc": "property name"
             },
             "val": {
               "type": "any",
-              "desc": "nouvelle valeur"
+              "desc": "new value"
             }
           }
         },
         "_onSerialize": {
-          "desc": "Sauvegarde opSymbol de la comparaison courante.",
+          "desc": "Saves opSymbol of the current comparison.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Retrouve la comparaison via opSymbol (ou l'ancien champ data.comparisonFunc) puis appelle refreshFunction.",
+          "desc": "Finds the comparison via opSymbol (or the old field data.comparisonFunc) then calls refreshFunction.",
           "internal": true
         },
         "work": {
-          "desc": "Calcule value = compFunc(A, B) ; flow suit l'entree flow, true = value, false = not value. Cas nil decrit ci-dessus.",
+          "desc": "Computes value = compFunc(A, B); flow follows the flow input, true = value, false = not value. nil case described above.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche le symbole de l'operateur.",
+          "desc": "Displays the operator symbol.",
           "internal": true
         }
       }

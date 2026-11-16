@@ -1,26 +1,26 @@
 # `flowgraph_nodes_career_onGarageEvent`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/career/onGarageEvent.lua` · VM : Game Engine (GE) · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/career/onGarageEvent.lua` · VM: Game Engine (GE) · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/career/onGarageEvent")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/career/onGarageEvent")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « On Garage Event » (catégorie repeat_instant, couleur/icône ui). Impulsions d'une frame sur les évènements de garage de la carrière : beforeGarageInventoryOpened (menu de sélection avant garage ouvert), beforeGarageVehicleSelected (véhicule choisi), endMode (mode garage terminé).
+Flowgraph node "On Garage Event" (category repeat_instant, ui color/icon). One-frame impulses on career garage events: beforeGarageInventoryOpened (selection menu before garage opened), beforeGarageVehicleSelected (vehicle chosen), endMode (garage mode ended).
 
-## Remarques
+## Notes
 
-- work() remet à faux seulement les deux premières sorties ; endMode n'est jamais remis à faux explicitement (il reste à la dernière valeur écrite, true après un évènement), probable oubli.
+- work() sets back to false only the first two outputs; endMode is never explicitly set back to false (it stays at the last written value, true after an event), probably an oversight.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Crée la table de drapeaux. | 22 |
-| `C:onBeforeGarageVehicleSelected(data)` | Hook : lève beforeGarageVehicleSelected. | 39 |
-| `C:onBeforeGarageVehicleSelectionMenuOpened(data)` | Hook : lève beforeGarageInventoryOpened. | 35 |
-| `C:onEndGarageMode(data)` | Hook : lève endMode. | 43 |
-| `C:work(args)` | Chaque frame : remet à faux deux sorties, applique puis efface les drapeaux. | 26 |
+| `C:init()` | Creates the flag table. | 22 |
+| `C:onBeforeGarageVehicleSelected(data)` | Hook: raises beforeGarageVehicleSelected. | 39 |
+| `C:onBeforeGarageVehicleSelectionMenuOpened(data)` | Hook: raises beforeGarageInventoryOpened. | 35 |
+| `C:onEndGarageMode(data)` | Hook: raises endMode. | 43 |
+| `C:work(args)` | Every frame: sets two outputs back to false, applies then clears the flags. | 26 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/career/onGarageEvent.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/career/onGarageEvent.lua`.*

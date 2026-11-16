@@ -1,100 +1,180 @@
 {
   "path": "lua/vehicle/powertrain/cvtGearbox.lua",
-  "module": "Composant powertrain `cvtGearbox` : boîte à variation continue (CVT) à rapport variable entre minGearRatio et maxGearRatio. Le rapport n'est pas choisi par ce fichier : un contrôleur extérieur appelle setGearRatio chaque pas. Les modes possibles sont posés par setMode : 'neutral' (masse virtuelle), 'park' (verrou de parking par ressort), 'reverse' (inverse le sens), sinon marche avant. Un accouplement visqueux à sens unique empêche le recul. Le fichier ne contient pas de logique de commande automatique.",
-  "usage": "local cvt = powertrain.getDevice(\"gearbox\")\ncvt:setMode(\"drive\")      -- tout mode autre que neutral/park/reverse = marche avant\ncvt:setGearRatio(1.2)     -- borné à [minGearRatio, maxGearRatio]",
+  "module": "Powertrain component `cvtGearbox`: continuously variable transmission (CVT) with a variable ratio between minGearRatio and maxGearRatio. The ratio is not chosen by this file: an external controller calls setGearRatio each step. The possible modes are set by setMode: 'neutral' (virtual mass), 'park' (spring parking lock), 'reverse' (reverses the direction), otherwise forward. A one-way viscous coupling prevents rolling backward. The file contains no automatic control logic.",
+  "usage": "local cvt = powertrain.getDevice(\"gearbox\")\ncvt:setMode(\"drive\")      -- any mode other than neutral/park/reverse = forward\ncvt:setGearRatio(1.2)     -- clamped to [minGearRatio, maxGearRatio]",
   "notes": [
-    "Clés jbeam lues : name, type, inputName, inputIndex, gearRatio (valeur de départ, immédiatement écrasée par maxGearRatio), friction (N·m), dynamicFriction (N·m par rad/s), torqueLossCoef (0..1), minGearRatio (0.5), maxGearRatio (2.5), parkLockSpring (N·m/rad, sinon calculé), parkLockTorque (N·m, 1000), parkLockDampRatio (0.4), oneWayViscousCoef (5), oneWayViscousTorque (= oneWayViscousCoef * 25), oneWayViscousSmoothing (50), gearboxNode_nodes (premier nœud = transmissionNodeID), breakTriggerBeam.",
-    "Champs principaux : inputAV (rad/s côté moteur/embrayage = outputAV1 * gearRatio * lockCoef * reverseGearRatioCoef), outputAV1 (rad/s, posé par l'enfant), outputTorque1 (N·m), gearRatio (rapport courant, borné), minGearRatio, maxGearRatio, mode ('neutral', 'park', 'reverse' ou autre), reverseGearRatioCoef (+1 ou -1), lockCoef (0 si setLock(true)), virtualMassAV, parkEngaged (0 ou 1), parkClutchAngle (rad), cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, isBroken. gearCount, minGearIndex, maxGearIndex et gearIndex valent toujours 1 (compatibilité avec les boîtes à rapports).",
-    "Park : le verrou ne s'engage (parkEngaged = 1) que lorsque |outputAV1| < 100 rad/s, puis applique un couple ressort/amortisseur sur parkClutchAngle, borné par maxParkClutchAngle = parkLockTorque / parkLockSpring.",
-    "Le couple de sortie est (couple d'entrée - frottement) * gearRatio - couple visqueux à sens unique, multiplié par reverseGearRatioCoef et lockCoef.",
-    "Bug : setPartCondition appelle device:onBreak() si l'état contient isBroken = true, mais cvtGearbox ne définit pas onBreak (erreur Lua). Il n'y a pas non plus de logique pour isBroken dans selectUpdates.",
-    "calculateInertia divise par maxGearRatio² et calcule invCumulativeInertia = 1 / cumulativeInertia sans garde contre une inertie nulle."
+    "Jbeam keys read: name, type, inputName, inputIndex, gearRatio (starting value, immediately overwritten by maxGearRatio), friction (N·m), dynamicFriction (N·m per rad/s), torqueLossCoef (0..1), minGearRatio (0.5), maxGearRatio (2.5), parkLockSpring (N·m/rad, otherwise computed), parkLockTorque (N·m, 1000), parkLockDampRatio (0.4), oneWayViscousCoef (5), oneWayViscousTorque (= oneWayViscousCoef * 25), oneWayViscousSmoothing (50), gearboxNode_nodes (first node = transmissionNodeID), breakTriggerBeam.",
+    "Main fields: inputAV (rad/s engine/clutch side = outputAV1 * gearRatio * lockCoef * reverseGearRatioCoef), outputAV1 (rad/s, set by the child), outputTorque1 (N·m), gearRatio (current ratio, clamped), minGearRatio, maxGearRatio, mode ('neutral', 'park', 'reverse' or other), reverseGearRatioCoef (+1 or -1), lockCoef (0 if setLock(true)), virtualMassAV, parkEngaged (0 or 1), parkClutchAngle (rad), cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, isBroken. gearCount, minGearIndex, maxGearIndex and gearIndex are always 1 (compatibility with geared gearboxes).",
+    "Park: the lock only engages (parkEngaged = 1) when |outputAV1| < 100 rad/s, then applies a spring/damper torque on parkClutchAngle, clamped by maxParkClutchAngle = parkLockTorque / parkLockSpring.",
+    "The output torque is (input torque - friction) * gearRatio - one-way viscous torque, multiplied by reverseGearRatioCoef and lockCoef.",
+    "Bug: setPartCondition calls device:onBreak() if the state contains isBroken = true, but cvtGearbox does not define onBreak (Lua error). There is also no logic for isBroken in selectUpdates.",
+    "calculateInertia divides by maxGearRatio² and computes invCumulativeInertia = 1 / cumulativeInertia with no guard against a zero inertia."
   ],
   "fields": {
-    "outputPorts": {"type": "table<integer, boolean>", "desc": "{[1]=true}."},
-    "deviceCategories": {"type": "table<string, boolean>", "desc": "{gearbox=true}."},
-    "requiredExternalInertiaOutputs": {"type": "table<integer, integer>", "desc": "{1}."}
+    "outputPorts": {
+      "type": "table<integer, boolean>",
+      "desc": "{[1]=true}."
+    },
+    "deviceCategories": {
+      "type": "table<string, boolean>",
+      "desc": "{gearbox=true}."
+    },
+    "requiredExternalInertiaOutputs": {
+      "type": "table<integer, integer>",
+      "desc": "{1}."
+    }
   },
   "functions": {
     "new": {
-      "desc": "Construit la boîte CVT : paramètres de rapport minimal/maximal, verrou de parking, accouplement à sens unique, puis règle le rapport sur maxGearRatio.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
-      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "desc": "Builds the CVT gearbox: minimum/maximum ratio parameters, parking lock, one-way coupling, then sets the ratio to maxGearRatio.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "jbeam data of the component."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The device (class `device`)."
+        }
+      ],
       "internal": true
     }
   },
   "classes": {
     "device": {
-      "desc": "Objet renvoyé par new(jbeamData). velocityUpdate/torqueUpdate dépendent du mode (normal, neutral, park).",
+      "desc": "Object returned by new(jbeamData). velocityUpdate/torqueUpdate depend on the mode (normal, neutral, park).",
       "functions": {
         "velocityUpdate": {
-          "desc": "Appelée à chaque pas physique : inputAV = outputAV1 * gearRatio * lockCoef * reverseGearRatioCoef, écrit dans le parent. En neutre et en park : utilise la masse virtuelle.",
-          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+          "desc": "Called at each physics step: inputAV = outputAV1 * gearRatio * lockCoef * reverseGearRatioCoef, written to the parent. In neutral and park: uses the virtual mass.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "torqueUpdate": {
-          "desc": "Appelée à chaque pas physique : calcule outputTorque1 selon le mode. Normal : transmission avec frottement et accouplement à sens unique ; neutre : couple de sortie 0 et accélération de la masse virtuelle ; park : couple de verrouillage ressort/amortisseur.",
-          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (utilisé en neutre et park)."}},
+          "desc": "Called at each physics step: computes outputTorque1 according to the mode. Normal: transmission with friction and one-way coupling; neutral: output torque 0 and acceleration of the virtual mass; park: spring/damper lock torque.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds (used in neutral and park)."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "applyDeformGroupDamage": {
-          "desc": "Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1).",
-          "params": {"damageAmount": {"type": "number", "desc": "Quantité de dégâts du groupe de déformation."}},
+          "desc": "Increases the damage friction coefficient (0.01 of damage = +0.1).",
+          "params": {
+            "damageAmount": {
+              "type": "number",
+              "desc": "Amount of damage of the deformation group."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "setPartCondition": {
-          "desc": "Applique l'usure (odomètre, coefficient de 1 à 2) et les dégâts (intégrité nombre 0..1 ou table {damageFrictionCoef, isBroken}). Appelle onBreak si isBroken, qui n'est pas défini sur ce device (voir notes).",
+          "desc": "Applies wear (odometer, coefficient from 1 to 2) and damage (integrity number 0..1 or table {damageFrictionCoef, isBroken}). Calls onBreak if isBroken, which is not defined on this device (see notes).",
           "params": {
-            "subSystem": {"type": "any", "desc": "Non utilisé."},
-            "odometer": {"type": "number", "desc": "Distance parcourue en mètres."},
-            "integrity": {"type": "number|table", "desc": "Nombre 0..1 ou table d'état."},
-            "visual": {"type": "any", "desc": "Non utilisé."}
+            "subSystem": {
+              "type": "any",
+              "desc": "Not used."
+            },
+            "odometer": {
+              "type": "number",
+              "desc": "Distance traveled in meters."
+            },
+            "integrity": {
+              "type": "number|table",
+              "desc": "Number 0..1 or state table."
+            },
+            "visual": {
+              "type": "any",
+              "desc": "Not used."
+            }
           },
           "returns": [],
           "internal": true
         },
         "getPartCondition": {
-          "desc": "Renvoie l'intégrité 0..1 (0 si cassé) et {damageFrictionCoef, isBroken}.",
+          "desc": "Returns the integrity 0..1 (0 if broken) and {damageFrictionCoef, isBroken}.",
           "params": {},
-          "returns": [{"type": "number", "desc": "Intégrité 0..1."}, {"type": "table", "desc": "État sauvegardable."}],
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Integrity 0..1."
+            },
+            {
+              "type": "table",
+              "desc": "Saveable state."
+            }
+          ],
           "internal": true
         },
         "validate": {
-          "desc": "Appelée après construction du powertrain ; renvoie toujours true.",
+          "desc": "Called after the powertrain is built; always returns true.",
           "params": {},
-          "returns": [{"type": "boolean", "desc": "true."}],
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true."
+            }
+          ],
           "internal": true
         },
         "setMode": {
-          "desc": "Change le mode de la boîte (aucune validation de la chaîne). 'reverse' inverse le sens (reverseGearRatioCoef = -1) ; 'neutral' et 'park' sélectionnent des fonctions de mise à jour dédiées avec masse virtuelle ; toute autre valeur = marche avant.",
-          "params": {"mode": {"type": "string", "desc": "'neutral', 'park', 'reverse' ou autre (marche avant)."}},
+          "desc": "Changes the gearbox mode (no validation of the string). 'reverse' reverses the direction (reverseGearRatioCoef = -1); 'neutral' and 'park' select dedicated update functions with virtual mass; any other value = forward.",
+          "params": {
+            "mode": {
+              "type": "string",
+              "desc": "'neutral', 'park', 'reverse' or other (forward)."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "setGearRatio": {
-          "desc": "Fixe le rapport courant, borné entre minGearRatio et maxGearRatio. Appelée par un contrôleur de CVT.",
-          "params": {"ratio": {"type": "number", "desc": "Rapport voulu (entrée / sortie, sans signe)."}},
+          "desc": "Sets the current ratio, clamped between minGearRatio and maxGearRatio. Called by a CVT controller.",
+          "params": {
+            "ratio": {
+              "type": "number",
+              "desc": "Desired ratio (input / output, unsigned)."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "setLock": {
-          "desc": "Verrouille (lockCoef = 0 : aucune vitesse ni couple transmis) ou déverrouille (1) la transmission.",
-          "params": {"enabled": {"type": "boolean", "desc": "true pour verrouiller."}},
+          "desc": "Locks (lockCoef = 0: no speed or torque transmitted) or unlocks (1) the transmission.",
+          "params": {
+            "enabled": {
+              "type": "boolean",
+              "desc": "true to lock."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "calculateInertia": {
-          "desc": "Prend l'inertie et les rapports cumulés du premier enfant ; calcule cumulativeInertia (divisée par maxGearRatio²), les paramètres du verrou de parking (ressort, amortissement, angle max) et les rapports cumulés.",
+          "desc": "Takes the cumulative inertia and ratios of the first child; computes cumulativeInertia (divided by maxGearRatio²), the parking lock parameters (spring, damping, max angle) and the cumulative ratios.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "reset": {
-          "desc": "Remet à zéro vitesses, couple, masse virtuelle, coefficients, lisseur de sens unique et angle de parking, puis règle le rapport sur maxGearRatio.",
-          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (gearRatio, friction)."}},
+          "desc": "Resets speeds, torque, virtual mass, coefficients, the one-way smoother and the parking angle, then sets the ratio to maxGearRatio.",
+          "params": {
+            "jbeamData": {
+              "type": "table",
+              "desc": "jbeam data of the component (gearRatio, friction)."
+            }
+          },
           "returns": [],
           "internal": true
         }

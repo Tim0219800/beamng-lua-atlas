@@ -1,159 +1,159 @@
 # `career_modules_playerAttributes`
 
-*Fichier : `lua/ge/extensions/career/modules/playerAttributes.lua` · VM : Game Engine (GE) · 328 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/playerAttributes.lua` · VM: Game Engine (GE) · 328 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_playerAttributes` : `extensions.load("career_modules_playerAttributes")`, puis la globale `career_modules_playerAttributes`
+**Access:** extension `career_modules_playerAttributes`: `extensions.load("career_modules_playerAttributes")`, then the global `career_modules_playerAttributes`
 
-Registre central des attributs du joueur en carrière : money, beamXP, vouchers, un attribut par branche/compétence (branch.attributeKey) et <orgId>Reputation par organisation. Chaque attribut a une valeur, des gains et des pertes cumulés par tag (+ "all"), et éventuellement min/max. Toute modification passe par addAttributes (ou setAttributes) qui met à jour les statistiques, tient le journal des changements, écrit dans career_modules_log et émet le hook onPlayerAttributesChanged(change, reason). Sauvegarde dans career/playerAttributes.json et career/attributeLog.json.
+Central registry of the player's career attributes: money, beamXP, vouchers, one attribute per branch/skill (branch.attributeKey) and <orgId>Reputation per organization. Each attribute has a value, cumulative gains and losses per tag (+ "all"), and optionally min/max. Every change goes through addAttributes (or setAttributes), which updates the statistics, keeps the change log, writes to career_modules_log and emits the onPlayerAttributesChanged(change, reason) hook. Saved to career/playerAttributes.json and career/attributeLog.json.
 
-## Exemple
+## Example
 
 ```lua
 career_modules_playerAttributes.addAttributes({money = 250, beamXP = 10}, {label = "ui.career.attributeLog.unknownReason", tags = {"gameplay", "reward"}})
 local money = career_modules_playerAttributes.getAttributeValue("money")
 ```
 
-## Remarques
+## Notes
 
-- reason = {label, tags}. label est une clé de traduction ou une table {txt, context} ; tags est une liste convertie en dictionnaire. Sans reason, un avertissement est loggé avec la trace d'appel.
-- Les tags servent aux jalons : money.gains/losses[tag] alimentent career_modules_milestones_generalMilestones_money (reward, buying, selling, delivery, fine, partsBought, vehicleBought).
-- Une modification d'un attribut se terminant par "Reputation" appelle career_career.interactWithOrganization(orgId).
-- Les valeurs sont bornées par attribute.min/max (réputation : -50 à 700).
-- Tag gameplay avec argent (hors tutoriel) débloque le succès FIRST_ASSIGNMENT ; tag fine avec argent débloque PAID_THE_PRICE.
-- Bug : M.logAttributeChange = logAttributeChange référence une variable non définie : le champ exporté vaut nil.
-- init() (non exportée) est appelée seulement par onExtensionLoaded quand attributes est nil ; le mode de départ de la carrière peut fournir initPlayerAttributes(M), sinon l'argent de départ est 10000 (label startingCapital).
-- Compatibilité : bonusStars devient vouchers si la version de sauvegarde < 37 ; les anciens noms de branches sont remappés via career_branches.oldAttributeNamesToNewNames.
-- onLogbookGetEntries est un hook vide.
+- reason = {label, tags}. label is a translation key or a table {txt, context}; tags is a list converted into a dictionary. Without reason, a warning is logged with the call stack.
+- Tags are used by milestones: money.gains/losses[tag] feed career_modules_milestones_generalMilestones_money (reward, buying, selling, delivery, fine, partsBought, vehicleBought).
+- A change to an attribute ending in "Reputation" calls career_career.interactWithOrganization(orgId).
+- Values are bounded by attribute.min/max (reputation: -50 to 700).
+- Gameplay tag with money (outside the tutorial) unlocks the FIRST_ASSIGNMENT achievement; fine tag with money unlocks PAID_THE_PRICE.
+- Bug: M.logAttributeChange = logAttributeChange references an undefined variable: the exported field is nil.
+- init() (not exported) is called only by onExtensionLoaded when attributes is nil; the career's starting mode may provide initPlayerAttributes(M), otherwise the starting money is 10000 (label startingCapital).
+- Compatibility: bonusStars becomes vouchers if the save version is < 37; old branch names are remapped via career_branches.oldAttributeNamesToNewNames.
+- onLogbookGetEntries is an empty hook.
 
-**Dépendances (chargées avant) :** `career_career`
+**Dependencies (loaded first):** `career_career`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_playerAttributes.addAttributes(change, reason)` | Ajoute les variations données aux attributs (création si absent), met à jour gains/losses par tag, enregistre l'entrée dans attributeLog, écrit un log carrière et émet onPlayerAttributesChanged(change, reason). | 66 |
-| `career_modules_playerAttributes.getAllAttributes()` | Renvoie la table de tous les attributs (référence directe, non copiée). | 152 |
-| `career_modules_playerAttributes.getAttribute(attributeName)` | Renvoie l'objet complet d'un attribut {value, gains, losses, min, max}. | 145 |
-| `career_modules_playerAttributes.getAttributeLog()` | Renvoie le journal des changements d'attributs ({attributeChange, reason, time}). | 320 |
-| `career_modules_playerAttributes.getAttributeValue(attributeName)` | Renvoie la valeur numérique d'un attribut (0 s'il n'existe pas). | 148 |
-| `career_modules_playerAttributes.getCareerHistoryInfo(historyType)` | Renvoie le titre (clé de traduction) de l'écran d'historique : gameplay ou financier (défaut). | 215 |
-| `career_modules_playerAttributes.getFinancialHistory(limit)` | Historique des changements d'argent, du plus récent au plus ancien. | 207 |
-| `career_modules_playerAttributes.getGameplayHistory(limit)` | Historique des récompenses de gameplay (changements dont les tags contiennent gameplay), avec noms d'affichage et icônes. | 211 |
-| `career_modules_playerAttributes.getRecentFinancialChanges(limit)` | Historique financier récent (les 5 derniers changements d'argent par défaut), du plus récent au plus ancien. | 203 |
-| `career_modules_playerAttributes.getRewardDisplayName(attributeKey)` | Renvoie la clé de traduction d'affichage d'un attribut : money, beamXP, vouchers, reputation, XP de branche {txt, context} ou la clé brute. | 22 |
-| `career_modules_playerAttributes.onCareerActive(active)` | Hook : crée l'attribut <orgId>Reputation (min/max de career_modules_reputation) pour chaque organisation qui n'en a pas. *(interne)* *(hook)* | 294 |
-| `career_modules_playerAttributes.onExtensionLoaded()` | Hook : si la carrière est active, initialise les attributs puis charge playerAttributes.json et attributeLog.json avec conversions de compatibilité (renvoie false sinon). *(interne)* *(hook)* | 226 |
-| `career_modules_playerAttributes.onLogbookGetEntries(_)` | Hook d'intégration au journal de bord (corps vide). *(interne)* *(hook)* | 307 |
-| `career_modules_playerAttributes.onSaveCurrentProfile(currentSavePath)` | Hook de sauvegarde : écrit playerAttributes.json et attributeLog.json dans <save>/career/. *(interne)* *(hook)* | 288 |
-| `career_modules_playerAttributes.setAttributes(newValues, reason)` | Fixe des valeurs absolues en appelant addAttributes avec la différence par rapport à la valeur actuelle. | 136 |
+| `career_modules_playerAttributes.addAttributes(change, reason)` | Adds the given changes to the attributes (creating them if absent), updates gains/losses per tag, records the entry in attributeLog, writes a career log and emits onPlayerAttributesChanged(change, reason). | 66 |
+| `career_modules_playerAttributes.getAllAttributes()` | Returns the table of all attributes (direct reference, not copied). | 152 |
+| `career_modules_playerAttributes.getAttribute(attributeName)` | Returns the full object of an attribute {value, gains, losses, min, max}. | 145 |
+| `career_modules_playerAttributes.getAttributeLog()` | Returns the attribute change log ({attributeChange, reason, time}). | 320 |
+| `career_modules_playerAttributes.getAttributeValue(attributeName)` | Returns the numeric value of an attribute (0 if it does not exist). | 148 |
+| `career_modules_playerAttributes.getCareerHistoryInfo(historyType)` | Returns the title (translation key) of the history screen: gameplay or financial (default). | 215 |
+| `career_modules_playerAttributes.getFinancialHistory(limit)` | Money change history, from most recent to oldest. | 207 |
+| `career_modules_playerAttributes.getGameplayHistory(limit)` | Gameplay reward history (changes whose tags contain gameplay), with display names and icons. | 211 |
+| `career_modules_playerAttributes.getRecentFinancialChanges(limit)` | Recent financial history (the last 5 money changes by default), from most recent to oldest. | 203 |
+| `career_modules_playerAttributes.getRewardDisplayName(attributeKey)` | Returns the display translation key of an attribute: money, beamXP, vouchers, reputation, branch XP {txt, context} or the raw key. | 22 |
+| `career_modules_playerAttributes.onCareerActive(active)` | Hook: creates the <orgId>Reputation attribute (min/max from career_modules_reputation) for each organization that does not have one. *(internal)* *(hook)* | 294 |
+| `career_modules_playerAttributes.onExtensionLoaded()` | Hook: if the career is active, initializes the attributes then loads playerAttributes.json and attributeLog.json with compatibility conversions (returns false otherwise). *(internal)* *(hook)* | 226 |
+| `career_modules_playerAttributes.onLogbookGetEntries(_)` | Logbook integration hook (empty body). *(internal)* *(hook)* | 307 |
+| `career_modules_playerAttributes.onSaveCurrentProfile(currentSavePath)` | Save hook: writes playerAttributes.json and attributeLog.json to <save>/career/. *(internal)* *(hook)* | 288 |
+| `career_modules_playerAttributes.setAttributes(newValues, reason)` | Sets absolute values by calling addAttributes with the difference from the current value. | 136 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_playerAttributes.addAttributes(change, reason)`
 
-Ajoute les variations données aux attributs (création si absent), met à jour gains/losses par tag, enregistre l'entrée dans attributeLog, écrit un log carrière et émet onPlayerAttributesChanged(change, reason).
+Adds the given changes to the attributes (creating them if absent), updates gains/losses per tag, records the entry in attributeLog, writes a career log and emits onPlayerAttributesChanged(change, reason).
 
-- `change` (*table<string, number>*) : Variation par attribut (positif = gain, négatif = perte).
-- `reason` (*{label: string|table, tags: string[]}|nil*) : Raison : libellé et liste de tags.
+- `change` (*table<string, number>*) : Change per attribute (positive = gain, negative = loss).
+- `reason` (*{label: string|table, tags: string[]}|nil*) : Reason: label and list of tags.
 
 #### `career_modules_playerAttributes.getAllAttributes()`
 
-Renvoie la table de tous les attributs (référence directe, non copiée).
+Returns the table of all attributes (direct reference, not copied).
 
-- **renvoie** : table<string, table> Attributs par nom.
+- **returns**: table<string, table> Attributes by name.
 
 #### `career_modules_playerAttributes.getAttribute(attributeName)`
 
-Renvoie l'objet complet d'un attribut {value, gains, losses, min, max}.
+Returns the full object of an attribute {value, gains, losses, min, max}.
 
-- `attributeName` (*string*) : Nom de l'attribut.
-- **renvoie** : table|nil Attribut, nil s'il n'existe pas.
+- `attributeName` (*string*) : Attribute name.
+- **returns**: table|nil Attribute, nil if it does not exist.
 
 #### `career_modules_playerAttributes.getAttributeLog()`
 
-Renvoie le journal des changements d'attributs ({attributeChange, reason, time}).
+Returns the attribute change log ({attributeChange, reason, time}).
 
-- **renvoie** : table[] Entrées du journal.
+- **returns**: table[] Logbook entries.
 
 #### `career_modules_playerAttributes.getAttributeValue(attributeName)`
 
-Renvoie la valeur numérique d'un attribut (0 s'il n'existe pas).
+Returns the numeric value of an attribute (0 if it does not exist).
 
-- `attributeName` (*string*) : Nom de l'attribut.
-- **renvoie** : number Valeur.
+- `attributeName` (*string*) : Attribute name.
+- **returns**: number Value.
 
 #### `career_modules_playerAttributes.getCareerHistoryInfo(historyType)`
 
-Renvoie le titre (clé de traduction) de l'écran d'historique : gameplay ou financier (défaut).
+Returns the title (translation key) of the history screen: gameplay or financial (default).
 
-- `historyType` (*string*) : "gameplay" ou autre pour le financier.
-- **renvoie** : {title: string} Titre.
+- `historyType` (*string*) : "gameplay" or anything else for financial.
+- **returns**: {title: string} Title.
 
 #### `career_modules_playerAttributes.getFinancialHistory(limit)`
 
-Historique des changements d'argent, du plus récent au plus ancien.
+Money change history, from most recent to oldest.
 
-- `limit` (*integer|nil*) : Nombre maximal (tout si nil).
-- **renvoie** : table[] Lignes d'historique.
+- `limit` (*integer|nil*) : Maximum number (all if nil).
+- **returns**: table[] History rows.
 
 #### `career_modules_playerAttributes.getGameplayHistory(limit)`
 
-Historique des récompenses de gameplay (changements dont les tags contiennent gameplay), avec noms d'affichage et icônes.
+Gameplay reward history (changes whose tags contain gameplay), with display names and icons.
 
-- `limit` (*integer|nil*) : Nombre maximal (tout si nil).
-- **renvoie** : table[] Lignes d'historique.
+- `limit` (*integer|nil*) : Maximum number (all if nil).
+- **returns**: table[] History rows.
 
 #### `career_modules_playerAttributes.getRecentFinancialChanges(limit)`
 
-Historique financier récent (les 5 derniers changements d'argent par défaut), du plus récent au plus ancien.
+Recent financial history (the last 5 money changes by default), from most recent to oldest.
 
-- `limit` (*integer|nil*) : Nombre maximal, 5 par défaut.
-- **renvoie** : {reason: any, time: integer, rewards: table[]}[] Lignes d'historique.
+- `limit` (*integer|nil*) : Maximum number, 5 by default.
+- **returns**: {reason: any, time: integer, rewards: table[]}[] History rows.
 
 #### `career_modules_playerAttributes.getRewardDisplayName(attributeKey)`
 
-Renvoie la clé de traduction d'affichage d'un attribut : money, beamXP, vouchers, reputation, XP de branche {txt, context} ou la clé brute.
+Returns the display translation key of an attribute: money, beamXP, vouchers, reputation, branch XP {txt, context} or the raw key.
 
-- `attributeKey` (*string*) : Clé d'attribut.
-- **renvoie** : string|table Clé de traduction ou table {txt, context}.
+- `attributeKey` (*string*) : Attribute key.
+- **returns**: string|table Translation key or table {txt, context}.
 
 #### `career_modules_playerAttributes.onCareerActive(active)`
 
-Hook : crée l'attribut <orgId>Reputation (min/max de career_modules_reputation) pour chaque organisation qui n'en a pas.
+Hook: creates the <orgId>Reputation attribute (min/max from career_modules_reputation) for each organization that does not have one.
 
-- `active` (*boolean*) : Rien si false.
+- `active` (*boolean*) : Nothing if false.
 
 #### `career_modules_playerAttributes.onLogbookGetEntries(_)`
 
-Hook d'intégration au journal de bord (corps vide).
+Logbook integration hook (empty body).
 
-- `_` (*any*) : Non utilisé.
+- `_` (*any*) : Not used.
 
 #### `career_modules_playerAttributes.onSaveCurrentProfile(currentSavePath)`
 
-Hook de sauvegarde : écrit playerAttributes.json et attributeLog.json dans <save>/career/.
+Save hook: writes playerAttributes.json and attributeLog.json to <save>/career/.
 
-- `currentSavePath` (*string*) : Dossier de sauvegarde.
+- `currentSavePath` (*string*) : Save folder.
 
 #### `career_modules_playerAttributes.setAttributes(newValues, reason)`
 
-Fixe des valeurs absolues en appelant addAttributes avec la différence par rapport à la valeur actuelle.
+Sets absolute values by calling addAttributes with the difference from the current value.
 
-- `newValues` (*table<string, number>*) : Nouvelle valeur par attribut.
-- `reason` (*table|nil*) : Même format que pour addAttributes.
+- `newValues` (*table<string, number>*) : New value per attribute.
+- `reason` (*table|nil*) : Same format as for addAttributes.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_career. |
-| `logAttributeChange` | nil | Toujours nil : référence une variable locale inexistante dans le fichier (bug). ⚠ référence `logAttributeChange` non définie dans le fichier (vaut probablement nil) |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_career. |
+| `logAttributeChange` | nil | Always nil: references a local variable that does not exist in the file (bug). ⚠ reference `logAttributeChange` not defined in the file (probably nil) |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onPlayerAttributesChanged` — écouté par 3 module(s)
+- `onPlayerAttributesChanged` — listened to by 3 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/playerAttributes.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/playerAttributes.lua`.*

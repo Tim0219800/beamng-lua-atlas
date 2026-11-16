@@ -1,0 +1,42 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/compositors/helpers/visualCompositor.lua",
+  "module": "Compositeur visuel des notes de rallye : transforme une note structurée en une liste (4 maximum) de 'visuels' pour l'application d'UI des notes visuelles (icônes de virage turn1..turn6/turnHp/turnSq, caution/doubleCaution, icônes atomiques, modificateurs, distance). Il lit les visuels dans le registre componentTypes du style actif via le textCompositor, avec le même ordre et les mêmes règles que le compositeur de texte (descripteur prioritaire sur l'intensité, ajustement de risque). Les éléments sans visuel ou de type inconnu sont ignorés sans erreur. Le module renvoie un constructeur : require(...)(textCompositor).",
+  "notes": [
+    "Un modificateur 'turnModifier' ou 'additionalNote' se rattache au dernier visuel de virage déjà émis ; s'il n'y en a pas encore, il est mis en attente pour le prochain virage.",
+    "Un visuel de virage porte : type (icône), turnModifier, colorNoteIcon, colorNoteText, background {color, strokeColor, opacity=1}, isLeft (direction == -1), size=2, turnTypeValue.",
+    "caution : l'icône est 'doubleCaution' si level >= 3, sinon 'caution'.",
+    "Le premier visuel reçoit isInto/intoColor (la note est chaînée à la précédente si 0 < distance avant < distance max des liens) ; le dernier reçoit distance et colorDistance (config.visualGeneral.distanceColor).",
+    "Chaque visuel reçoit id = '<nom de la note avec _>_<index>' et pnId = pacenote.id.",
+    "Si distAfterMeters > 0 et que les appels de distance sont activés, config.visualGeneral doit exister sinon erreur d'indexation (déduit du code)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Compositeur visuel renvoyé par le constructeur du module.",
+      "functions": {
+        "init": {
+          "desc": "Mémorise le compositeur de texte dont on lit la configuration.",
+          "params": {"textCompositor": {"type": "table", "desc": "Instance de textCompositor."}},
+          "returns": [],
+          "internal": true
+        },
+        "_getMaxLinkDistance": {
+          "desc": "Distance maximale (seuil du dernier lien) en dessous de laquelle deux notes sont enchaînées ('into').",
+          "params": {},
+          "returns": [{"type": "number", "desc": "Distance en mètres."}],
+          "internal": true
+        },
+        "compositeVisual": {
+          "desc": "Construit la liste de visuels d'une note structurée.",
+          "params": {
+            "pacenote": {"type": "table", "desc": "Note (name, id) pour les identifiants des visuels."},
+            "structured": {"type": "table", "desc": "Contenu structuré de la note (éléments par emplacement)."},
+            "distBeforeMeters": {"type": "number|nil", "desc": "Distance depuis la note précédente en mètres."},
+            "distAfterMeters": {"type": "number|nil", "desc": "Distance jusqu'à la note suivante en mètres (affichée sous le dernier visuel)."}
+          },
+          "returns": [{"type": "table[]", "desc": "Visuels (4 au plus)."}],
+          "internal": false
+        }
+      }
+    }
+  }
+}

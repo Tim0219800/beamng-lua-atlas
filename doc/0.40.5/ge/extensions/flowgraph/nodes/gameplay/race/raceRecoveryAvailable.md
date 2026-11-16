@@ -1,22 +1,22 @@
 # `flowgraph_nodes_gameplay_race_raceRecoveryAvailable`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceRecoveryAvailable.lua` · VM : Game Engine (GE) · 36 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceRecoveryAvailable.lua` · VM: Game Engine (GE) · 36 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/race/raceRecoveryAvailable")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/race/raceRecoveryAvailable")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Race Recovery Available » (catégorie logic). Teste si un véhicule dispose d'un point de recovery (race:hasRecoveryPosition(vehId)). Sorties flow 'true' (recovery disponible) et 'false' (sinon).
+Flowgraph node "Race Recovery Available" (category logic). Tests whether a vehicle has a recovery point (race:hasRecoveryPosition(vehId)). Flow outputs 'true' (recovery available) and 'false' (otherwise).
 
-## Remarques
+## Notes
 
-- Le code assigne C.tags deux fois ; la seconde (tableau vide) écrase {'scenario'}.
+- The code assigns C.tags twice; the second (empty table) overwrites {'scenario'}.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Met à jour les sorties 'true' et 'false' selon hasRecoveryPosition. | 28 |
+| `C:work()` | Updates the 'true' and 'false' outputs according to hasRecoveryPosition. | 28 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceRecoveryAvailable.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceRecoveryAvailable.lua`.*

@@ -1,0 +1,24 @@
+{
+  "path": "lua/common/utils/languageMap.lua",
+  "module": "Tables de correspondance pour les langues : codes pays ISO 3166-1, codes de langue ISO 639-1, et codes spécifiques de Weblate (la plateforme de traduction de BeamNG). La fonction resolve() transforme un code de langue du jeu (ex. 'fr-FR', 'de_at') en nom lisible en anglais (ex. 'French (France)'). Se charge avec require('utils/languageMap'). Utile pour afficher le nom d'une langue dans un menu.",
+  "usage": "local lm = require('utils/languageMap')\nprint(lm.resolve('de-AT'))   -- nom lisible\nprint(lm.countries['FR'])",
+  "notes": [
+    "Les clés de weblateCodes sont uniquement en minuscules (le commentaire du fichier insiste) ; resolve met la clé en minuscules et remplace '-' par '_'.",
+    "countries est indexé par code pays en MAJUSCULES, languages par code en minuscules.",
+    "Si le code n'est pas dans weblateCodes, resolve le découpe sur '_' : langue (via languages) puis pays optionnel entre parenthèses (via countries). Un code inconnu est renvoyé tel quel.",
+    "La fonction utilise la globale split() de utils.lua."
+  ],
+  "fields": {
+    "countries": {"type": "table<string, string>", "desc": "ISO 3166-1 : code pays à 2 lettres majuscules -> nom anglais (ex. ['FR'])."},
+    "languages": {"type": "table<string, string>", "desc": "ISO 639-1 (et quelques codes à 3 lettres) : code langue minuscule -> nom anglais."},
+    "weblateCodes": {"type": "table<string, string>", "desc": "Codes Weblate en minuscules (ex. 'de_at', 'kokr_com', 'zhhans_com') -> nom lisible ; prioritaires dans resolve."}
+  },
+  "functions": {
+    "resolve": {
+      "desc": "Convertit un code de langue en nom lisible. Cherche d'abord dans weblateCodes, sinon compose 'Langue (Pays)'.",
+      "params": {"key": {"type": "string", "desc": "Code de langue, ex. 'en-US', 'fr_FR', 'de_at'"}},
+      "returns": [{"type": "string", "desc": "Nom lisible, ou le code d'origine si le découpage échoue"}]
+    }
+  },
+  "classes": {}
+}

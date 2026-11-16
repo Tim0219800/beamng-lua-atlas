@@ -1,0 +1,47 @@
+{
+  "path": "lua/vehicle/aiDebugDraw.lua",
+  "module": "Dessin de debug de l'IA véhicule (sphères, cylindres, textes via obj.debugDrawProxy). Chargé par ai.lua (require 'aiDebugDraw') ; ai.setVehicleDebugMode l'active ou le coupe selon ai.debugMode. Il lit un contexte (ego, twt, route courante, carte, scriptai…) fourni par ai.lua via setContextBinder, et n'écrit que dans ai.debugDraw (fonction appelée par la boucle principale pour dessiner). Un moddeur ne l'appelle normalement pas directement.",
+  "notes": [
+    "Modes dessinés d'après ai.debugMode : 'target', 'route', 'speeds', 'trajectory', 'rays'. En mode 'script' avec scriptai actif, scriptai.debugDraw() est aussi appelé.",
+    "enable() initialise le contexte au premier appel (via le binder), puis remplace ai.debugDraw par la fonction de dessin ; disable() remet ai.debugDraw = nop.",
+    "Bug mineur : dans onDebugModeChanged, quand le mode n'est pas 'speeds' c'est visDebug.trajecRec qui est vidé (et non un tampon propre aux vitesses), même si ce tampon est déjà vidé hors 'trajectory'."
+  ],
+  "functions": {
+    "setContextBinder": {
+      "desc": "Enregistre la fonction qui construira le contexte (ego, twt, accès route/carte/scriptai, castRay…) au premier enable().",
+      "params": {"fn": {"type": "function", "desc": "Fonction sans argument qui appelle aiDebugDraw.init(context)."}},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Stocke le contexte utilisé par le dessin.",
+      "params": {"context": {"type": "table", "desc": "Table avec ego, twt, lastCommand, player (fonction), getCurrentRoute, getMapData, getScriptai, roadNaturalContinuation, castRay, populateOBBinRange."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDebugModeChanged": {
+      "desc": "Hook appelé par ai.setVehicleDebugMode quand le mode debug change : vide les historiques de dessin (trajectoire, route) qui ne correspondent plus au mode choisi.",
+      "params": {"debugMode": {"type": "string", "desc": "Nouveau ai.debugMode ('off', 'target', 'route', 'speeds', 'trajectory', 'rays', 'all')."}},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Vide les historiques de dessin (trajectoire et route). Appelée par ai.setMode.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "enable": {
+      "desc": "Active le dessin debug : lie le contexte si nécessaire puis place la fonction de dessin dans ai.debugDraw.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "disable": {
+      "desc": "Désactive le dessin debug (ai.debugDraw = nop).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

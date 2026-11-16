@@ -1,69 +1,69 @@
 # `mcp_tools_input`
 
-*Fichier : `lua/ge/extensions/mcp/tools/input.lua` · VM : Game Engine (GE) · 112 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/mcp/tools/input.lua` · VM: Game Engine (GE) · 112 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `mcp_tools_input` : `extensions.load("mcp_tools_input")`, puis la globale `mcp_tools_input`
+**Access:** extension `mcp_tools_input`: `extensions.load("mcp_tools_input")`, then the global `mcp_tools_input`
 
-Outils MCP d'entrées véhicule : injecter un évènement de contrôle (direction, accélérateur, frein…), tester un contrôle « hydro » en aller-retour avec détection d'erreurs dans le log, et exécuter du Lua dans la VM d'un ou de tous les véhicules.
+MCP vehicle input tools: inject a control event (steering, throttle, brake…), test a "hydro" control round trip with error detection in the log, and run Lua in the VM of one or all vehicles.
 
-## Remarques
+## Notes
 
-- run_lua_vehicle est asynchrone : il renvoie les résultats de l'appel PRÉCÉDENT (JSON vehId -> résultat) et lance le nouveau ; rappeler pour obtenir le dernier. Le code est compilé avec loadstring dans la VM véhicule, erreurs capturées par pcall.
-- test_hydro enchaîne input.event(event, 1) -> (0,6 s) -> -1 -> (0,6 s) -> 0 -> (0,3 s) puis scanne beamng.log à la recherche de lignes « |E| » ; résultat dans shared.asyncResults.hydro, renvoyé à l'appel suivant.
-- filter 2 = FILTER_DIRECT (valeur par défaut).
-- Attention sécurité : run_lua_vehicle exécute du code arbitraire dans les VM véhicule.
+- run_lua_vehicle is asynchronous: it returns the results of the PREVIOUS call (JSON vehId -> result) and launches the new one; call again to get the latest. The code is compiled with loadstring in the vehicle VM, errors caught by pcall.
+- test_hydro chains input.event(event, 1) -> (0.6 s) -> -1 -> (0.6 s) -> 0 -> (0.3 s) then scans beamng.log for "|E|" lines; result in shared.asyncResults.hydro, returned on the next call.
+- filter 2 = FILTER_DIRECT (default value).
+- Security warning: run_lua_vehicle runs arbitrary code in the vehicle VMs.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mcp_tools_input.inject_input(args)` | Envoie input.event(event, value, filter) dans la VM du véhicule via be:queueObjectLua. | 43 |
-| `mcp_tools_input.onUpdate(dtReal)` | Appelé chaque frame : fait avancer la séquence test_hydro (étapes 1 à 3 temporisées) et, à la fin, lit les erreurs du log. *(interne)* *(hook)* | 26 |
-| `mcp_tools_input.run_lua_vehicle(args)` | Exécute du Lua dans la VM d'un véhicule (ou de tous avec all=true) ; résultats asynchrones. | 66 |
-| `mcp_tools_input.test_hydro(args)` | Lance le test haut/bas/neutre d'un évènement d'entrée et détecte les erreurs loggées. Asynchrone : rappeler après ~2 s. | 54 |
+| `mcp_tools_input.inject_input(args)` | Sends input.event(event, value, filter) into the vehicle's VM via be:queueObjectLua. | 43 |
+| `mcp_tools_input.onUpdate(dtReal)` | Called every frame: advances the test_hydro sequence (timed steps 1 to 3) and, at the end, reads the errors from the log. *(internal)* *(hook)* | 26 |
+| `mcp_tools_input.run_lua_vehicle(args)` | Runs Lua in a vehicle's VM (or all of them with all=true); asynchronous results. | 66 |
+| `mcp_tools_input.test_hydro(args)` | Runs the up/down/neutral test of an input event and detects logged errors. Asynchronous: call again after ~2 s. | 54 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mcp_tools_input.inject_input(args)`
 
-Envoie input.event(event, value, filter) dans la VM du véhicule via be:queueObjectLua.
+Sends input.event(event, value, filter) into the vehicle's VM via be:queueObjectLua.
 
-- `args` (*table*) : {event: string (steering, throttle, brake, parkingbrake, clutch…), value?: number (défaut 0, typ. -1..1 ou 0..1), filter?: integer (défaut 2), id?: integer}
-- **renvoie** : string Confirmation.
-- **renvoie** : boolean true en cas d'erreur.
+- `args` (*table*) : {event: string (steering, throttle, brake, parkingbrake, clutch…), value?: number (default 0, typ. -1..1 or 0..1), filter?: integer (default 2), id?: integer}
+- **returns**: string Confirmation.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_input.onUpdate(dtReal)`
 
-Appelé chaque frame : fait avancer la séquence test_hydro (étapes 1 à 3 temporisées) et, à la fin, lit les erreurs du log.
+Called every frame: advances the test_hydro sequence (timed steps 1 to 3) and, at the end, reads the errors from the log.
 
-- `dtReal` (*number*) : Durée réelle (s).
+- `dtReal` (*number*) : Real duration (s).
 
 #### `mcp_tools_input.run_lua_vehicle(args)`
 
-Exécute du Lua dans la VM d'un véhicule (ou de tous avec all=true) ; résultats asynchrones.
+Runs Lua in a vehicle's VM (or all of them with all=true); asynchronous results.
 
 - `args` (*table*) : {code: string, id?: integer, all?: boolean}
-- **renvoie** : string JSON des résultats précédents ou message « queued ».
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string JSON of the previous results or "queued" message.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_input.test_hydro(args)`
 
-Lance le test haut/bas/neutre d'un évènement d'entrée et détecte les erreurs loggées. Asynchrone : rappeler après ~2 s.
+Runs the up/down/neutral test of an input event and detects logged errors. Asynchronous: call again after ~2 s.
 
-- `args` (*table|nil*) : {event?: string (défaut 'steering'), id?: integer}
-- **renvoie** : string JSON {event, vid, ok, errors} du test précédent, ou message de démarrage.
-- **renvoie** : boolean true si le véhicule n'existe pas.
+- `args` (*table|nil*) : {event?: string (default 'steering'), id?: integer}
+- **returns**: string JSON {event, vid, ok, errors} from the previous test, or start message.
+- **returns**: boolean true if the vehicle does not exist.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `cb` | table<string, function> | Callback `vehLua(vid, result)` : stocke result dans shared.asyncResults.vehLua[tostring(vid)]. |
-| `schemas` | table<string, table> | Schémas de inject_input, test_hydro, run_lua_vehicle. |
+| `cb` | table<string, function> | Callback `vehLua(vid, result)`: stores result in shared.asyncResults.vehLua[tostring(vid)]. |
+| `schemas` | table<string, table> | Schemas of inject_input, test_hydro, run_lua_vehicle. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `queueAllObjectLua`, `queueObjectLua`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/mcp/tools/input.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/mcp/tools/input.lua`.*

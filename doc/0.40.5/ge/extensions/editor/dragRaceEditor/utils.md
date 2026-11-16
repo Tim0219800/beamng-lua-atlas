@@ -1,101 +1,101 @@
 # `editor_dragRaceEditor_utils`
 
-*Fichier : `lua/ge/extensions/editor/dragRaceEditor/utils.lua` · VM : Game Engine (GE) · 244 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dragRaceEditor/utils.lua` · VM: Game Engine (GE) · 244 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dragRaceEditor_utils` : `extensions.load("editor_dragRaceEditor_utils")`, puis la globale `editor_dragRaceEditor_utils`
+**Access:** extension `editor_dragRaceEditor_utils`: `extensions.load("editor_dragRaceEditor_utils")`, then the global `editor_dragRaceEditor_utils`
 
-Utilitaires de l'éditeur de drag race : affichage des erreurs, drapeau de modifications non sauvées, pile undo/redo sur dragRaceData, validation et création de données de course/voies par défaut, mise à jour de la souris, création d'un transformUtil et widgets d'en-tête ImGui.
+Utilities of the drag race editor: error display, unsaved changes flag, undo/redo stack on dragRaceData, validation and creation of default race/lane data, mouse update, creation of a transformUtil and ImGui header widgets.
 
-## Remarques
+## Notes
 
-- La pile d'annulation est limitée à state.getMaxUndoSteps() (20) entrées ; saveToUndoStack vide la pile de rétablissement.
-- updateMouseInfo ici (contrairement à input.updateMouseInfo) suppose que core_forest existe et force down/hold/up à false si le raycast échoue.
-- dragHeaderLabel renvoie deux valeurs (gsub renvoie aussi le nombre de remplacements) ; seule la première est utilisée à la concaténation.
-- La validation exige stripId non vide ou strip.lanes, plus un dragType non vide.
+- The undo stack is limited to state.getMaxUndoSteps() (20) entries; saveToUndoStack clears the redo stack.
+- updateMouseInfo here (unlike input.updateMouseInfo) assumes core_forest exists and forces down/hold/up to false if the raycast fails.
+- dragHeaderLabel returns two values (gsub also returns the number of replacements); only the first is used in the concatenation.
+- Validation requires a non-empty stripId or strip.lanes, plus a non-empty dragType.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dragRaceEditor_utils.clearUnsavedChanges()` | Efface le drapeau de modifications non sauvées. | 34 |
-| `editor_dragRaceEditor_utils.createNewDragRaceData()` | Crée un dragRaceData par défaut : contexte activity, type headsUpRace, 4 phases (stage, countdown, race, stop), prefabs (christmasTree .500, displaySign, paths, decorations) non utilisés. | 116 |
-| `editor_dragRaceEditor_utils.createNewLane(laneIndex)` | Crée une voie par défaut : noms « Lane N », couleur blue, waypoints stage et endLine, boundary, tous avec la transformation par défaut. | 94 |
-| `editor_dragRaceEditor_utils.dragHeaderLabel(s)` | Texte d'en-tête sûr pour ImGui : « Untitled » si vide, sinon la chaîne sans caractère #. | 227 |
-| `editor_dragRaceEditor_utils.dragSectionHeader(visibleLabel, idSuffix, defaultOpen)` | Dessine un CollapsingHeader avec un padding plus grand. | 235 |
-| `editor_dragRaceEditor_utils.logError(message)` | Mémorise le message comme dernière erreur, l'affiche 3 s et l'écrit dans le log (niveau E, tag DragRaceEditor). | 11 |
-| `editor_dragRaceEditor_utils.markUnsavedChanges()` | Marque l'état comme modifié non sauvegardé. | 30 |
-| `editor_dragRaceEditor_utils.redo()` | Rétablit l'état annulé : le courant retourne dans la pile undo. | 62 |
-| `editor_dragRaceEditor_utils.reorderLanes(t, old, new)` | Déplace un élément d'un tableau de la position old à new en décalant les autres (modifie t sur place). | 163 |
-| `editor_dragRaceEditor_utils.saveToUndoStack()` | Empile une copie profonde de dragRaceData (supprime la plus ancienne si la pile est pleine) et vide la pile redo. | 38 |
-| `editor_dragRaceEditor_utils.setupTransform(label, transform, allowTranslate, allowRotate, allowScale)` | Crée un transformUtil (gizmo) initialisé depuis une table transform {position, rotation, scale}. | 212 |
-| `editor_dragRaceEditor_utils.showError()` | Affiche en rouge l'erreur courante tant que son délai n'est pas écoulé ; décrémente le délai avec le DeltaTime ImGui. À appeler à chaque frame. | 17 |
-| `editor_dragRaceEditor_utils.undo()` | Dépile l'état précédent : le courant va dans la pile redo. Ne fait rien si la pile est vide. | 50 |
-| `editor_dragRaceEditor_utils.updateMouseInfo()` | Met à jour la table souris de state (rayon caméra, raycast, clic/maintien/relâchement bouton gauche si ImGui ne capture pas la souris). | 173 |
-| `editor_dragRaceEditor_utils.validateDragRaceData(data)` | Vérifie qu'un dragRaceData est exploitable. | 74 |
+| `editor_dragRaceEditor_utils.clearUnsavedChanges()` | Clears the unsaved changes flag. | 34 |
+| `editor_dragRaceEditor_utils.createNewDragRaceData()` | Creates a default dragRaceData: context activity, type headsUpRace, 4 phases (stage, countdown, race, stop), prefabs (christmasTree .500, displaySign, paths, decorations) unused. | 116 |
+| `editor_dragRaceEditor_utils.createNewLane(laneIndex)` | Creates a default lane: names "Lane N", color blue, stage and endLine waypoints, boundary, all with the default transform. | 94 |
+| `editor_dragRaceEditor_utils.dragHeaderLabel(s)` | ImGui-safe header text: "Untitled" if empty, otherwise the string without # characters. | 227 |
+| `editor_dragRaceEditor_utils.dragSectionHeader(visibleLabel, idSuffix, defaultOpen)` | Draws a CollapsingHeader with larger padding. | 235 |
+| `editor_dragRaceEditor_utils.logError(message)` | Stores the message as the last error, displays it for 3 s and writes it to the log (level E, tag DragRaceEditor). | 11 |
+| `editor_dragRaceEditor_utils.markUnsavedChanges()` | Marks the state as modified and unsaved. | 30 |
+| `editor_dragRaceEditor_utils.redo()` | Restores the undone state: the current one returns to the undo stack. | 62 |
+| `editor_dragRaceEditor_utils.reorderLanes(t, old, new)` | Moves an element of an array from position old to new, shifting the others (modifies t in place). | 163 |
+| `editor_dragRaceEditor_utils.saveToUndoStack()` | Pushes a deep copy of dragRaceData (removes the oldest if the stack is full) and clears the redo stack. | 38 |
+| `editor_dragRaceEditor_utils.setupTransform(label, transform, allowTranslate, allowRotate, allowScale)` | Creates a transformUtil (gizmo) initialized from a transform table {position, rotation, scale}. | 212 |
+| `editor_dragRaceEditor_utils.showError()` | Displays the current error in red until its delay has elapsed; decrements the delay with the ImGui DeltaTime. To be called every frame. | 17 |
+| `editor_dragRaceEditor_utils.undo()` | Pops the previous state: the current one goes to the redo stack. Does nothing if the stack is empty. | 50 |
+| `editor_dragRaceEditor_utils.updateMouseInfo()` | Updates the state's mouse table (camera ray, raycast, left button click/hold/release if ImGui does not capture the mouse). | 173 |
+| `editor_dragRaceEditor_utils.validateDragRaceData(data)` | Checks that a dragRaceData is usable. | 74 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dragRaceEditor_utils.createNewDragRaceData()`
 
-Crée un dragRaceData par défaut : contexte activity, type headsUpRace, 4 phases (stage, countdown, race, stop), prefabs (christmasTree .500, displaySign, paths, decorations) non utilisés.
+Creates a default dragRaceData: context activity, type headsUpRace, 4 phases (stage, countdown, race, stop), prefabs (christmasTree .500, displaySign, paths, decorations) unused.
 
-- **renvoie** : table données
+- **returns**: table data
 
 #### `editor_dragRaceEditor_utils.createNewLane(laneIndex)`
 
-Crée une voie par défaut : noms « Lane N », couleur blue, waypoints stage et endLine, boundary, tous avec la transformation par défaut.
+Creates a default lane: names "Lane N", color blue, stage and endLine waypoints, boundary, all with the default transform.
 
-- `laneIndex` (*integer*) : numéro de voie (laneOrder)
-- **renvoie** : table voie
+- `laneIndex` (*integer*) : lane number (laneOrder)
+- **returns**: table lane
 
 #### `editor_dragRaceEditor_utils.dragHeaderLabel(s)`
 
-Texte d'en-tête sûr pour ImGui : « Untitled » si vide, sinon la chaîne sans caractère #.
+ImGui-safe header text: "Untitled" if empty, otherwise the string without # characters.
 
-- `s` (*string|nil*) : texte
-- **renvoie** : string libellé
+- `s` (*string|nil*) : text
+- **returns**: string label
 
 #### `editor_dragRaceEditor_utils.dragSectionHeader(visibleLabel, idSuffix, defaultOpen)`
 
-Dessine un CollapsingHeader avec un padding plus grand.
+Draws a CollapsingHeader with larger padding.
 
-- `visibleLabel` (*string|nil*) : texte affiché
-- `idSuffix` (*string*) : suffixe d'ID ImGui (ex. "##xyz")
-- `defaultOpen` (*boolean*) : ouvert par défaut
-- **renvoie** : boolean true si la section est ouverte
+- `visibleLabel` (*string|nil*) : displayed text
+- `idSuffix` (*string*) : ImGui ID suffix (e.g. "##xyz")
+- `defaultOpen` (*boolean*) : open by default
+- **returns**: boolean true if the section is open
 
 #### `editor_dragRaceEditor_utils.logError(message)`
 
-Mémorise le message comme dernière erreur, l'affiche 3 s et l'écrit dans le log (niveau E, tag DragRaceEditor).
+Stores the message as the last error, displays it for 3 s and writes it to the log (level E, tag DragRaceEditor).
 
-- `message` (*string*) : texte de l'erreur
+- `message` (*string*) : error text
 
 #### `editor_dragRaceEditor_utils.reorderLanes(t, old, new)`
 
-Déplace un élément d'un tableau de la position old à new en décalant les autres (modifie t sur place).
+Moves an element of an array from position old to new, shifting the others (modifies t in place).
 
-- `t` (*table*) : tableau
-- `old` (*integer*) : index source
-- `new` (*integer*) : index destination
+- `t` (*table*) : array
+- `old` (*integer*) : source index
+- `new` (*integer*) : destination index
 
 #### `editor_dragRaceEditor_utils.setupTransform(label, transform, allowTranslate, allowRotate, allowScale)`
 
-Crée un transformUtil (gizmo) initialisé depuis une table transform {position, rotation, scale}.
+Creates a transformUtil (gizmo) initialized from a transform table {position, rotation, scale}.
 
-- `label` (*string*) : nom/identifiant du transformUtil
-- `transform` (*table*) : position {x,y,z}, rotation quaternion {x,y,z,w}, scale {x,y,z}
-- `allowTranslate` (*boolean|nil*) : faux seulement si false explicite
-- `allowRotate` (*boolean|nil*) : faux seulement si false explicite
-- `allowScale` (*boolean|nil*) : faux seulement si false explicite
-- **renvoie** : table transformUtil
+- `label` (*string*) : name/identifier of the transformUtil
+- `transform` (*table*) : position {x,y,z}, quaternion rotation {x,y,z,w}, scale {x,y,z}
+- `allowTranslate` (*boolean|nil*) : false only if explicitly false
+- `allowRotate` (*boolean|nil*) : false only if explicitly false
+- `allowScale` (*boolean|nil*) : false only if explicitly false
+- **returns**: table transformUtil
 
 #### `editor_dragRaceEditor_utils.validateDragRaceData(data)`
 
-Vérifie qu'un dragRaceData est exploitable.
+Checks that a dragRaceData is usable.
 
-- `data` (*table|nil*) : données à vérifier
-- **renvoie** : boolean validité
-- **renvoie** : string|nil message d'erreur si invalide
+- `data` (*table|nil*) : data to check
+- **returns**: boolean validity
+- **returns**: string|nil error message if invalid
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dragRaceEditor/utils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dragRaceEditor/utils.lua`.*

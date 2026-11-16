@@ -1,51 +1,51 @@
 # `ui_pause_providers_routeData_multiplayer`
 
-*Fichier : `lua/ge/extensions/ui/pause/providers/routeData/multiplayer.lua` · VM : Game Engine (GE) · 124 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/pause/providers/routeData/multiplayer.lua` · VM: Game Engine (GE) · 124 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_pause_providers_routeData_multiplayer` : `extensions.load("ui_pause_providers_routeData_multiplayer")`, puis la globale `ui_pause_providers_routeData_multiplayer`
+**Access:** extension `ui_pause_providers_routeData_multiplayer`: `extensions.load("ui_pause_providers_routeData_multiplayer")`, then the global `ui_pause_providers_routeData_multiplayer`
 
-Fournisseur de données du menu pause pour le multijoueur : page d'accueil multijoueur (boutons Paramètres de session / Modes de jeu / Gérer les joueurs), réglages de session (PauseMultiplayerSessionTab) et liste des joueurs (PauseMultiplayerPlayerList). Les actions sont en lecture seule en mode freeroamTutorial.
+Pause menu data provider for multiplayer: multiplayer home page (Session Settings / Game Modes / Manage Players buttons), session settings (PauseMultiplayerSessionTab) and player list (PauseMultiplayerPlayerList). Actions are read-only in freeroamTutorial mode.
 
-## Remarques
+## Notes
 
-- Plusieurs libellés sont en anglais en dur, non traduits : « Session Settings », « Create Session... », « Manage Players », « Players », « Read-only in this mode ».
-- getMultiplayerData accède à multiplayer_gamemodeManager.getCurrentGamemodeExt() : le bouton Modes de jeu mène à pause.gamemodeSettings si un mode tourne, sinon à pause.gamemodes.
+- Several labels are hardcoded in English, not translated: "Session Settings", "Create Session...", "Manage Players", "Players", "Read-only in this mode".
+- getMultiplayerData accesses multiplayer_gamemodeManager.getCurrentGamemodeExt(): the Game Modes button leads to pause.gamemodeSettings if a mode is running, otherwise to pause.gamemodes.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_pause_providers_routeData_multiplayer.getMultiplayerData(context)` | Renvoie la page d'accueil multijoueur avec trois boutons de navigation (routes pause.multiplayer.settings, pause.gamemodes ou pause.gamemodeSettings, pause.multiplayer.playerList). Les deux derniers ne sont activés que si une session multijoueur est active. | 30 |
-| `ui_pause_providers_routeData_multiplayer.getMultiplayerPlayerListData()` | Renvoie la page de gestion des joueurs (composant PauseMultiplayerPlayerList avec interactive = true). | 103 |
-| `ui_pause_providers_routeData_multiplayer.getMultiplayerSettingsData()` | Renvoie la page de réglages de session (composant PauseMultiplayerSessionTab) avec la liste des joueurs en panneau latéral. | 88 |
-| `ui_pause_providers_routeData_multiplayer.getPlayerListSidePanelContents()` | Renvoie le contenu du panneau latéral « Joueurs » (titre ui.multiplayer.players et composant PauseMultiplayerPlayerList). Aussi utilisé par routeData_gamemodes. | 13 |
+| `ui_pause_providers_routeData_multiplayer.getMultiplayerData(context)` | Returns the multiplayer home page with three navigation buttons (routes pause.multiplayer.settings, pause.gamemodes or pause.gamemodeSettings, pause.multiplayer.playerList). The last two are only enabled if a multiplayer session is active. | 30 |
+| `ui_pause_providers_routeData_multiplayer.getMultiplayerPlayerListData()` | Returns the player management page (PauseMultiplayerPlayerList component with interactive = true). | 103 |
+| `ui_pause_providers_routeData_multiplayer.getMultiplayerSettingsData()` | Returns the session settings page (PauseMultiplayerSessionTab component) with the player list as a side panel. | 88 |
+| `ui_pause_providers_routeData_multiplayer.getPlayerListSidePanelContents()` | Returns the content of the "Players" side panel (title ui.multiplayer.players and PauseMultiplayerPlayerList component). Also used by routeData_gamemodes. | 13 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_pause_providers_routeData_multiplayer.getMultiplayerData(context)`
 
-Renvoie la page d'accueil multijoueur avec trois boutons de navigation (routes pause.multiplayer.settings, pause.gamemodes ou pause.gamemodeSettings, pause.multiplayer.playerList). Les deux derniers ne sont activés que si une session multijoueur est active.
+Returns the multiplayer home page with three navigation buttons (routes pause.multiplayer.settings, pause.gamemodes or pause.gamemodeSettings, pause.multiplayer.playerList). The last two are only enabled if a multiplayer session is active.
 
-- `context` (*table*) : Contexte pause (champs lus : isMultiplayerActive, mode).
-- **renvoie** : table {active, disabledReason, mainPanelContent, sidePanelContents}
+- `context` (*table*) : Pause context (fields read: isMultiplayerActive, mode).
+- **returns**: table {active, disabledReason, mainPanelContent, sidePanelContents}
 
 #### `ui_pause_providers_routeData_multiplayer.getMultiplayerPlayerListData()`
 
-Renvoie la page de gestion des joueurs (composant PauseMultiplayerPlayerList avec interactive = true).
+Returns the player management page (PauseMultiplayerPlayerList component with interactive = true).
 
-- **renvoie** : table {mainPanelContent}
+- **returns**: table {mainPanelContent}
 
 #### `ui_pause_providers_routeData_multiplayer.getMultiplayerSettingsData()`
 
-Renvoie la page de réglages de session (composant PauseMultiplayerSessionTab) avec la liste des joueurs en panneau latéral.
+Returns the session settings page (PauseMultiplayerSessionTab component) with the player list as a side panel.
 
-- **renvoie** : table {mainPanelContent, sidePanelContents}
+- **returns**: table {mainPanelContent, sidePanelContents}
 
 #### `ui_pause_providers_routeData_multiplayer.getPlayerListSidePanelContents()`
 
-Renvoie le contenu du panneau latéral « Joueurs » (titre ui.multiplayer.players et composant PauseMultiplayerPlayerList). Aussi utilisé par routeData_gamemodes.
+Returns the content of the "Players" side panel (title ui.multiplayer.players and PauseMultiplayerPlayerList component). Also used by routeData_gamemodes.
 
-- **renvoie** : table Liste de panneaux latéraux.
+- **returns**: table List of side panels.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/pause/providers/routeData/multiplayer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/pause/providers/routeData/multiplayer.lua`.*

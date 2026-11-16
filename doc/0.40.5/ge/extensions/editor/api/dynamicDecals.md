@@ -1,12 +1,12 @@
 # `editor_api_dynamicDecals`
 
-*Fichier : `lua/ge/extensions/editor/api/dynamicDecals.lua` · VM : Game Engine (GE) · 3082 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/dynamicDecals.lua` · VM: Game Engine (GE) · 3082 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_dynamicDecals` : `extensions.load("editor_api_dynamicDecals")`, puis la globale `editor_api_dynamicDecals`
+**Access:** extension `editor_api_dynamicDecals`: `extensions.load("editor_api_dynamicDecals")`, then the global `editor_api_dynamicDecals`
 
-API du système de decals dynamiques (peinture de livrée sur le véhicule joueur) utilisé par l'outil Dynamic Decals de l'éditeur. Il gère une pile de calques (layerStack : decal, fill, textureFill, group, brushStroke, path, linkedSet) avec historique undo/redo, projette/cuit ces calques dans les textures dynamiques du véhicule via le binding C++ DecalProjection, expose les réglages courants de projection (couleur, échelle, rotation, masque alpha, miroir, SDF, chemin, pinceau) sous forme de get/set, sérialise la pile en JSON et exporte textures et skins (jbeam + matériaux) dans /mods/unpacked. setup() doit être appelé avant tout le reste.
+API of the dynamic decals system (livery painting on the player vehicle) used by the editor's Dynamic Decals tool. It manages a layer stack (layerStack: decal, fill, textureFill, group, brushStroke, path, linkedSet) with undo/redo history, projects/bakes these layers into the vehicle's dynamic textures via the C++ DecalProjection binding, exposes the current projection settings (color, scale, rotation, alpha mask, mirror, SDF, path, brush) as get/set, serializes the stack to JSON and exports textures and skins (jbeam + materials) to /mods/unpacked. setup() must be called before anything else.
 
-## Exemple
+## Example
 
 ```lua
 local dd = extensions.editor_api_dynamicDecals
@@ -17,1433 +17,1433 @@ dd.setLayerVisibility(layer.uid, false)
 dd.undo()
 ```
 
-## Remarques
+## Notes
 
-- Toutes les fonctions get/set de réglages lisent ou écrivent un champ du decalProjection C++ (ou appellent sa méthode du même nom) ; elles plantent si setup() n'a pas été appelé (decalProjection = nil).
-- Les ajouts/suppressions/déplacements/modifications de calques passent par history:commitAction : ils sont annulables avec undo()/redo().
-- setLayerVisibility modifie le calque directement (sans historique), contrairement à toggleLayerVisibility.
-- Un calque est une table avec au minimum uid (chaîne "XXXX-XXXX" hexadécimale aléatoire), name, type (M.layerTypes), enabled, locked, children.
-- Dans createLayerName, le bloc final « uid » référence une variable inexistante `layer` (au lieu de layerData) : il est mort car startIndex vaut nil à ce stade, donc la balise {@uid} n'est remplacée que par le gsub final sur layerData.uid.
-- addLinkedSet_Undo/addBrushStrokeLayer_Undo suppriment le dernier calque de la pile racine (#layerStack) et ignorent parentUid.
-- Les commentaires de M.toggleEnabled/onVehicleSwitched dans la page auto proviennent de blocs de code commentés (onEditorDeactivated, onExtensionLoaded) : ces hooks ne sont pas actifs.
-- Le fichier de skin exporté (exportSkin) est écrit dans /mods/unpacked/<skin>/vehicles/<véhicule>/<skin>/, puis core_modmanager.checkUpdate() est appelé.
-- Types de calque : decal=0, fill=1, textureFill=2, group=3, brushStroke=4, path=5, linkedSet=6.
+- All get/set settings functions read or write a field of the C++ decalProjection (or call its method of the same name); they crash if setup() has not been called (decalProjection = nil).
+- Layer additions/deletions/moves/modifications go through history:commitAction: they can be undone with undo()/redo().
+- setLayerVisibility modifies the layer directly (without history), unlike toggleLayerVisibility.
+- A layer is a table with at least uid (random hexadecimal "XXXX-XXXX" string), name, type (M.layerTypes), enabled, locked, children.
+- In createLayerName, the final "uid" block references a nonexistent variable `layer` (instead of layerData): it is dead because startIndex is nil at that point, so the {@uid} tag is only replaced by the final gsub on layerData.uid.
+- addLinkedSet_Undo/addBrushStrokeLayer_Undo remove the last layer of the root stack (#layerStack) and ignore parentUid.
+- The comments of M.toggleEnabled/onVehicleSwitched in the auto page come from commented-out code blocks (onEditorDeactivated, onExtensionLoaded): these hooks are not active.
+- The exported skin file (exportSkin) is written to /mods/unpacked/<skin>/vehicles/<vehicle>/<skin>/, then core_modmanager.checkUpdate() is called.
+- Layer types: decal=0, fill=1, textureFill=2, group=3, brushStroke=4, path=5, linkedSet=6.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_dynamicDecals.addBrushStrokeLayer(params)` | Ajoute un calque de coup de pinceau à partir de getBrushStrokeLayerData(), annulable. | 1342 |
-| `editor_api_dynamicDecals.addDecal(params)` | Crée un calque decal à partir de la projection courante (caméra + réglages), le cuit et l'ajoute à la pile (annulable). Si tous les meshes ne sont pas activés, limite le decal aux meshes activés du véhicule. | 1098 |
-| `editor_api_dynamicDecals.addFillLayer(params)` | Ajoute un calque de remplissage de couleur (couleur et palette de fillLayer courantes), annulable. | 1187 |
-| `editor_api_dynamicDecals.addGroup(params)` | Ajoute un calque groupe (peut contenir des enfants), annulable. | 1270 |
-| `editor_api_dynamicDecals.addLinkedSet(params)` | Ajoute un calque « linked set » (type 6, avec table properties), annulable. L'annulation supprime le dernier calque racine. | 1305 |
-| `editor_api_dynamicDecals.addMaskDecal(layerUid_string)` | Ajoute un decal dans le masque (layer.mask.layers) du calque donné, à partir de la projection courante (annulable). | 1053 |
-| `editor_api_dynamicDecals.addMaterialIdx(materialIdx_int)` | Ajoute un matériau aux cibles. | 2427 |
-| `editor_api_dynamicDecals.addPathDataPoint()` | Ajoute un point au calque chemin en cours (le crée au premier appel avec les réglages de chemin courants : orientDecals, pathType, interpolationSteps, text, fontPath), puis reprojette. | 1142 |
-| `editor_api_dynamicDecals.addTextureFillLayer(params)` | Ajoute un calque de remplissage par texture (fillTexturePath, scale, offset courants), annulable. | 1229 |
-| `editor_api_dynamicDecals.areAllMeshesEnabled()` | true si tous les meshes sont activés. | 2639 |
-| `editor_api_dynamicDecals.bakeBrush()` | Cuit le coup de pinceau courant. | 2751 |
-| `editor_api_dynamicDecals.bakeLayers(layers)` | Cuit une liste de calques dans les textures du véhicule joueur (decalProjection:bakeLayers). Renvoie nil avec un message s'il n'y a pas de véhicule. | 1584 |
-| `editor_api_dynamicDecals.changeDecalRotation(clockwise_bool, step_radian_number)` | Tourne le decal courant d'un pas (15 degrés par défaut, en radians). | 1579 |
-| `editor_api_dynamicDecals.changeDecalSize(increase_bool, step_number)` | Agrandit/réduit le decal courant (x et z de decalScale) d'un pas (0.025 par défaut). | 1573 |
-| `editor_api_dynamicDecals.clearLayerStack()` | Vide la pile de calques et les textures cuites (annulable). | 1638 |
-| `editor_api_dynamicDecals.clearMaterialIdx()` | Vide la liste des matériaux ciblés. | 2415 |
-| `editor_api_dynamicDecals.deserializeLayer(layer)` | Reconstruit un calque à partir de données sérialisées. | 483 |
-| `editor_api_dynamicDecals.disableAllMeshes()` | Désactive tous les meshes. | 2635 |
-| `editor_api_dynamicDecals.disableDecalHighlighting()` | Supprime la mise en évidence. | 1524 |
-| `editor_api_dynamicDecals.drawBakedTextures(maxImageWidth)` | Affiche les textures cuites dans ImGui. | 2218 |
-| `editor_api_dynamicDecals.drawBrushInputTextures(maxImageWidth)` | Affiche les textures d'entrée du pinceau dans ImGui. | 2226 |
-| `editor_api_dynamicDecals.drawDynamicTextures(maxImageWidth)` | Affiche les textures dynamiques dans ImGui. | 2214 |
-| `editor_api_dynamicDecals.drawHighlightTextures(maxImageWidth)` | Affiche les textures de surbrillance dans ImGui. | 2222 |
-| `editor_api_dynamicDecals.drawMaskTextures(maxImageWidth)` | Affiche les textures de masque dans ImGui. | 2230 |
-| `editor_api_dynamicDecals.drawTextureSet(textureSet, name, maxImageWidth)` | Affiche un textureSet donné dans ImGui. | 2234 |
-| `editor_api_dynamicDecals.duplicateAndMirrorLayer(layerId_number, parentUid_string, mirrorChildren)` | Duplique un calque en le miroitant (nom + " Mirrored Copy") juste après l'original (annulable). | 2008 |
-| `editor_api_dynamicDecals.duplicateLayer(layerId_number, parentUid_string)` | Duplique un calque (nouveaux uids, nom + " Copy") juste après l'original (annulable). | 1980 |
-| `editor_api_dynamicDecals.enableAllMeshes()` | Active tous les meshes pour la projection. | 2631 |
-| `editor_api_dynamicDecals.exportLayerMask(layer, directory, filename, extension)` | Exporte le masque d'un calque dans un fichier. | 2074 |
-| `editor_api_dynamicDecals.exportSkin(vehicleName, skinName)` | Exporte un skin utilisable comme mod : textures png (_d, _m, _r, _cp), matériaux <mat>.skin.<skinName> copiés des presets <mat>.skin.dynamicTextures et fichier jbeam du skin (slotType paint_design) dans /mods/unpacked/<skinName>/..., puis rafraîchit le gestionnaire de mods. | 2078 |
-| `editor_api_dynamicDecals.exportTextures(directoryPath, exportName, extension)` | Exporte les textures cuites dans un dossier. | 2070 |
-| `editor_api_dynamicDecals.finishPathLayer()` | Termine le chemin en cours (les prochains points créeront un nouveau chemin). | 2590 |
-| `editor_api_dynamicDecals.getAlphaMaskBlendMode()` | Mode de fusion du masque alpha (0 ou 1 d'après les bornes de propriété). | 2463 |
-| `editor_api_dynamicDecals.getAlphaMaskChannel()` | Canal du masque alpha (0 à 3 d'après les bornes de propriété). | 2455 |
-| `editor_api_dynamicDecals.getAlphaMaskIntensity()` | Intensité du masque alpha. | 2311 |
-| `editor_api_dynamicDecals.getAlphaMaskOffset()` | Décalage du masque alpha. | 2303 |
-| `editor_api_dynamicDecals.getAlphaMaskRotation()` | Rotation du masque alpha (radians). | 2471 |
-| `editor_api_dynamicDecals.getAlphaMaskScale()` | Échelle du masque alpha. | 2295 |
-| `editor_api_dynamicDecals.getBlendMode()` | Mode de fusion courant (M.blendModes). | 2062 |
-| `editor_api_dynamicDecals.getBrushStrokeInterpolationSteps()` | Pas d'interpolation du pinceau. | 2519 |
-| `editor_api_dynamicDecals.getBrushStrokeLayerData()` | Données du calque pinceau courant (côté C++). | 2623 |
-| `editor_api_dynamicDecals.getColorPaletteMapId()` | Index de palette de couleurs du véhicule utilisé par le decal. | 2375 |
-| `editor_api_dynamicDecals.getColorTextureScale()` | Échelle de la texture de couleur. | 2287 |
-| `editor_api_dynamicDecals.getCursorPosition()` | Position du curseur de projection (écran, UV). | 2759 |
-| `editor_api_dynamicDecals.getDecalColor()` | Couleur courante du decal (RGBA). | 2190 |
-| `editor_api_dynamicDecals.getDecalLayerFontCharacter()` | Caractère de police utilisé par le decal. | 2671 |
-| `editor_api_dynamicDecals.getDecalLayerFontPath()` | Chemin de la police du decal. | 2679 |
-| `editor_api_dynamicDecals.getDecalLocalPos(decal)` | Position locale (véhicule) d'un calque decal. | 2651 |
-| `editor_api_dynamicDecals.getDecalRotation()` | Rotation courante du decal (radians). | 2206 |
-| `editor_api_dynamicDecals.getDecalScale()` | Échelle courante du decal. | 2198 |
-| `editor_api_dynamicDecals.getDecalSkew()` | Cisaillement du decal. | 2279 |
-| `editor_api_dynamicDecals.getDecalTexturePath(type_string)` | Chemin de la texture courante d'un type de decal. | 2174 |
-| `editor_api_dynamicDecals.getDecalUv()` | Décalage UV du decal. | 2271 |
-| `editor_api_dynamicDecals.getDecalWorldPos(decal)` | Position monde d'un calque decal. | 2647 |
-| `editor_api_dynamicDecals.getDecalWorldTransform(decal)` | Matrice de transformation monde d'un calque. | 2659 |
-| `editor_api_dynamicDecals.getDepth()` | Profondeur de projection. | 2547 |
-| `editor_api_dynamicDecals.getEnablePathLayer()` | Indique si le mode chemin est actif. | 2582 |
-| `editor_api_dynamicDecals.getEnabled()` | Projection dynamique activée ? | 2238 |
-| `editor_api_dynamicDecals.getFillLayerColor()` | Couleur des calques de remplissage. | 2439 |
-| `editor_api_dynamicDecals.getFillLayerColorPaletteMapId()` | Index de palette pour le remplissage. | 2447 |
-| `editor_api_dynamicDecals.getFillTexturePath()` | Texture de remplissage courante. | 2182 |
-| `editor_api_dynamicDecals.getFlipMirroredDecal()` | Inverser le decal côté miroir ? | 2695 |
-| `editor_api_dynamicDecals.getFontTextureAtlasPath()` | Chemin de l'atlas de texture de police. | 2263 |
-| `editor_api_dynamicDecals.getGradientColorBottomLeft()` | Couleur du dégradé, coin bas-gauche. | 2359 |
-| `editor_api_dynamicDecals.getGradientColorBottomRight()` | Couleur du dégradé, coin bas-droit. | 2367 |
-| `editor_api_dynamicDecals.getGradientColorTopLeft()` | Couleur du dégradé, coin haut-gauche. | 2343 |
-| `editor_api_dynamicDecals.getGradientColorTopRight()` | Couleur du dégradé, coin haut-droit. | 2351 |
-| `editor_api_dynamicDecals.getHighlightedLayer()` | Calque actuellement surligné, ou nil. | 1598 |
-| `editor_api_dynamicDecals.getHistory()` | Historique undo/redo propre à ce module. | 3046 |
-| `editor_api_dynamicDecals.getLayerById(layerId_number, parentUid_string)` | Renvoie le calque d'indice donné (à partir de 1) dans la pile racine ou dans les enfants du parent. | 1708 |
-| `editor_api_dynamicDecals.getLayerByUid(layerUid_string)` | Cherche un calque (récursivement) par uid ; logge un message et renvoie nil s'il est introuvable. | 1699 |
-| `editor_api_dynamicDecals.getLayerCount()` | Nombre total de calques (enfants compris). | 1567 |
-| `editor_api_dynamicDecals.getLayerNameBuildString()` | Renvoie le modèle de nom de calque. | 1009 |
-| `editor_api_dynamicDecals.getLayerStack()` | Renvoie la pile de calques racine (table partagée, pas une copie). | 1563 |
-| `editor_api_dynamicDecals.getLockDepth()` | Profondeur verrouillée ? | 2539 |
-| `editor_api_dynamicDecals.getLockSurfaceNormal()` | Normale de surface verrouillée ? | 2551 |
-| `editor_api_dynamicDecals.getMaterialIndices()` | Liste des index de matériaux ciblés. | 2419 |
-| `editor_api_dynamicDecals.getMeshObjectCount()` | Nombre de meshes du shape. | 2435 |
-| `editor_api_dynamicDecals.getMetallicIntensity()` | Intensité métallique. | 2327 |
-| `editor_api_dynamicDecals.getMirrorDebug()` | Affichage de debug du miroir actif ? | 2495 |
-| `editor_api_dynamicDecals.getMirrorOffset()` | Décalage du plan de miroir. | 2487 |
-| `editor_api_dynamicDecals.getMirrored()` | Mode miroir actif ? | 2479 |
-| `editor_api_dynamicDecals.getNormalIntensity()` | Intensité de la normal map. | 2319 |
-| `editor_api_dynamicDecals.getOrientPathDecals()` | Si les decals suivent la direction du chemin. | 2607 |
-| `editor_api_dynamicDecals.getPathLayerFontPath()` | Chemin de la police du chemin. | 2687 |
-| `editor_api_dynamicDecals.getPathLayerInterpolationSteps()` | Pas d'interpolation du chemin. | 2527 |
-| `editor_api_dynamicDecals.getPathLayerText()` | Texte posé le long du chemin. | 2663 |
-| `editor_api_dynamicDecals.getPathType()` | Type de chemin (M.pathTypes). | 2615 |
-| `editor_api_dynamicDecals.getRandomUid()` | Génère un uid pseudo-unique "XXXX-XXXX" (hexadécimal). | 48 |
-| `editor_api_dynamicDecals.getRoughnessIntensity()` | Intensité de rugosité. | 2335 |
-| `editor_api_dynamicDecals.getSdfEnabled()` | Rendu SDF actif ? | 2711 |
-| `editor_api_dynamicDecals.getSdfOutlineColor()` | Couleur du contour SDF. | 2703 |
-| `editor_api_dynamicDecals.getSdfOutlineSoftness()` | Douceur du contour SDF. | 2743 |
-| `editor_api_dynamicDecals.getSdfOutlineThickness()` | Épaisseur du contour SDF. | 2735 |
-| `editor_api_dynamicDecals.getSdfSoftness()` | Douceur SDF. | 2727 |
-| `editor_api_dynamicDecals.getSdfThickness()` | Épaisseur SDF. | 2719 |
-| `editor_api_dynamicDecals.getSettings()` | Masque de bits des réglages du projecteur (M.settingsFlags). | 2026 |
-| `editor_api_dynamicDecals.getShapeMaterialNames()` | Matériaux du shape (index -> nom). | 2535 |
-| `editor_api_dynamicDecals.getShapeMeshes()` | Meshes du shape et leur état d'activation. | 2627 |
-| `editor_api_dynamicDecals.getShapePath()` | Chemin du modèle 3D (shape) sur lequel on projette. | 2385 |
-| `editor_api_dynamicDecals.getSurfaceNormal()` | Normale de surface courante. | 2559 |
-| `editor_api_dynamicDecals.getTextureFillLayerScale()` | Échelle des calques de remplissage par texture. | 2503 |
-| `editor_api_dynamicDecals.getTextureFillOffset()` | Décalage du remplissage par texture. | 2511 |
-| `editor_api_dynamicDecals.getTextureResolution()` | Résolution des textures dynamiques. | 2394 |
-| `editor_api_dynamicDecals.getTextureSet()` | TextureSet des textures dynamiques (nil avant setup). | 2755 |
-| `editor_api_dynamicDecals.getUseSurfaceNormal()` | Orienter le decal selon la normale de surface ? | 2563 |
-| `editor_api_dynamicDecals.getUvLayer()` | Canal UV utilisé. | 2406 |
-| `editor_api_dynamicDecals.hasActivePathLayer()` | true si un calque chemin est en cours d'édition. | 2586 |
-| `editor_api_dynamicDecals.highlightLayer(layer_table)` | Surligne un calque (table). | 1603 |
-| `editor_api_dynamicDecals.highlightLayerByUid(layerUid_string)` | Surligne un calque par uid. | 1612 |
-| `editor_api_dynamicDecals.isAlphaMaskInvertEnabled()` | Drapeau AlphaMaskInvert actif ? | 2034 |
-| `editor_api_dynamicDecals.isDecalGradientColorEnabled()` | Drapeau UseGradientColor actif ? | 2030 |
-| `editor_api_dynamicDecals.isUseMousePos()` | Drapeau UseMousePos actif (projection au curseur souris plutôt qu'au centre) ? | 2054 |
-| `editor_api_dynamicDecals.isWrapAlphaMaskXEnabled()` | Drapeau WrapAlphaMaskX actif ? | 2038 |
-| `editor_api_dynamicDecals.isWrapAlphaMaskYEnabled()` | Drapeau WrapAlphaMaskY actif ? | 2042 |
-| `editor_api_dynamicDecals.isWrapColorTextureXEnabled()` | Drapeau WrapColorTextureX actif ? | 2046 |
-| `editor_api_dynamicDecals.isWrapColorTextureYEnabled()` | Drapeau WrapColorTextureY actif ? | 2050 |
-| `editor_api_dynamicDecals.loadLayerStackFromFile(path_string, mode_number)` | Charge une pile depuis un JSON, en écrasant (Overwrite, défaut) ou ajoutant (Append), puis reprojette. | 3017 |
-| `editor_api_dynamicDecals.moveLayer(from_number, fromParentUid_string, to_number, toParentUid_string)` | Déplace un calque vers une autre position/parent (annulable). Refuse de faire d'un calque son propre enfant. Émet dynamicDecals_moveLayer. | 1899 |
-| `editor_api_dynamicDecals.moveLayerLocalPos(layerUid, newLocalPosition, includeChildren, referenceLayerUid)` | Déplace un calque (decal, brushStroke, path ou group) à une nouvelle position locale au véhicule. Pour un groupe, referenceLayerUid est obligatoire. | 2921 |
-| `editor_api_dynamicDecals.onDeserialized(data)` | Hook appelé avec les données sauvegardées : recrée la pile de calques et mémorise materialIdx pour setup(). *(interne)* *(hook)* | 3004 |
-| `editor_api_dynamicDecals.onSerialize()` | Hook de sérialisation d'extension : renvoie {layerStackData, materialIdx} (nil sans projecteur). *(interne)* *(hook)* | 2994 |
-| `editor_api_dynamicDecals.onUpdate_()` | Appelé à chaque frame par l'outil : met à jour l'app, projette le decal de prévisualisation si projectDynamicDecals, puis combine les textures dans le textureSet. *(interne)* *(hook)* | 3028 |
-| `editor_api_dynamicDecals.onVehicleSwitched()` | Hook appelé au changement de véhicule : rafraîchit le shape et les matériaux. *(interne)* *(hook)* | 3071 |
-| `editor_api_dynamicDecals.redo()` | Refait la dernière action annulée. | 3054 |
-| `editor_api_dynamicDecals.removeLastPathLayerPoint()` | Retire le dernier point du chemin en cours ; s'il n'en reste qu'un, supprime le calque. | 2594 |
-| `editor_api_dynamicDecals.removeLayer(index_number, parentUid_string)` | Supprime un calque (annulable) et coupe la mise en évidence s'il était surligné. | 1941 |
-| `editor_api_dynamicDecals.removeMaterialIdx(materialIdx_int)` | Retire un matériau des cibles. | 2431 |
-| `editor_api_dynamicDecals.renderSdfTextureImgui(sizeX, sizeY)` | Affiche la texture SDF dans ImGui. | 2767 |
-| `editor_api_dynamicDecals.replaceDecalTransformFromCurrentProjection(layerUid_string, originalLayer)` | Replace un decal déjà posé selon la caméra/projection courante en ne changeant que ses champs de transformation (camPosition, decalPos, decalScale, decalRotation, miroir…). Refuse si le curseur capturé n'est pas centré (0.5 ± 0.01) ou si le calque n'est pas un decal. Commit une action « Transform Decal ». | 1827 |
-| `editor_api_dynamicDecals.reprojectLayers()` | Efface les textures cuites et recuit toute la pile ; affiche un échec si le cuisson renvoie nil. | 1647 |
-| `editor_api_dynamicDecals.rotateLayer(layer, delta_vec3)` | Applique une rotation delta à un calque et à ses enfants. | 2938 |
-| `editor_api_dynamicDecals.saveLayerStackToFile(path_string)` | Écrit la pile de calques dans un fichier JSON (sans materialIdx). | 3011 |
-| `editor_api_dynamicDecals.scaleLayer(layer, delta_vec3)` | Met à l'échelle un calque et ses enfants de (1,1,1) + delta. | 2960 |
-| `editor_api_dynamicDecals.serializeLayer(layer)` | Convertit un calque en table sérialisable JSON (types moteur convertis). | 230 |
-| `editor_api_dynamicDecals.setAlphaMaskBlendMode(value_int)` | Définit le mode de fusion du masque alpha. | 2467 |
-| `editor_api_dynamicDecals.setAlphaMaskChannel(value_int)` | Définit le canal du masque alpha. | 2459 |
-| `editor_api_dynamicDecals.setAlphaMaskIntensity(value_float)` | Définit l'intensité du masque alpha. | 2315 |
-| `editor_api_dynamicDecals.setAlphaMaskOffset(value_Point2F)` | Définit le décalage du masque alpha. | 2307 |
-| `editor_api_dynamicDecals.setAlphaMaskRotation(value_radian_float)` | Définit la rotation du masque alpha. | 2475 |
-| `editor_api_dynamicDecals.setAlphaMaskScale(value_Point2F)` | Définit l'échelle du masque alpha. | 2299 |
-| `editor_api_dynamicDecals.setBlendMode(blendMode_int)` | Définit le mode de fusion courant. | 2066 |
-| `editor_api_dynamicDecals.setBrushStrokeInterpolationSteps(value_u32)` | Définit les pas d'interpolation du pinceau. | 2523 |
-| `editor_api_dynamicDecals.setColorPaletteMapId(value_int)` | Définit l'index de palette du decal. | 2379 |
-| `editor_api_dynamicDecals.setColorTextureScale(value_Point2F)` | Définit l'échelle de la texture de couleur. | 2291 |
-| `editor_api_dynamicDecals.setCursorPosition(value_Point2F)` | Définit la position du curseur de projection. | 2763 |
-| `editor_api_dynamicDecals.setDecalColor(value_Point4F)` | Définit la couleur du decal. | 2194 |
-| `editor_api_dynamicDecals.setDecalLayerFontCharacter(value_char)` | Définit le caractère de police du decal. | 2675 |
-| `editor_api_dynamicDecals.setDecalLayerFontPath(value_string)` | Définit la police du decal. | 2683 |
-| `editor_api_dynamicDecals.setDecalLocalPos(decal, worldPos)` | Définit la position d'un decal (nom du paramètre worldPos dans le code). | 2655 |
-| `editor_api_dynamicDecals.setDecalRotation(value_radian_number)` | Définit la rotation du decal. | 2210 |
-| `editor_api_dynamicDecals.setDecalScale(value_vec3)` | Définit l'échelle du decal. | 2202 |
-| `editor_api_dynamicDecals.setDecalSkew(value_Point2F)` | Définit le cisaillement du decal. | 2283 |
-| `editor_api_dynamicDecals.setDecalTexturePath(type_string, path_string)` | Définit la texture courante d'un type de decal. | 2178 |
-| `editor_api_dynamicDecals.setDecalUv(value_Point2F)` | Définit le décalage UV du decal. | 2275 |
-| `editor_api_dynamicDecals.setEnableBrushStroke(value_bool)` | Active/désactive le mode pinceau du projecteur (avec un nouvel uid aléatoire). | 2571 |
-| `editor_api_dynamicDecals.setEnablePathLayer(value_bool)` | Active/désactive le mode chemin ; à false, termine le chemin en cours. | 2575 |
-| `editor_api_dynamicDecals.setEnabled(enabled)` | Active/désactive le projecteur ; à false, vide les textures dynamiques et recombine le textureSet. | 2242 |
-| `editor_api_dynamicDecals.setFillLayerColor(value_Point4F)` | Définit la couleur des calques de remplissage. | 2443 |
-| `editor_api_dynamicDecals.setFillLayerColorPaletteMapId(value_int)` | Définit l'index de palette pour le remplissage. | 2451 |
-| `editor_api_dynamicDecals.setFillTexturePath(path_string)` | Définit la texture de remplissage. | 2186 |
-| `editor_api_dynamicDecals.setFlipMirroredDecal(value_bool)` | Active l'inversion du decal côté miroir. | 2699 |
-| `editor_api_dynamicDecals.setFontTextureAtlasPath(path_string)` | Définit l'atlas de texture de police. | 2267 |
-| `editor_api_dynamicDecals.setGradientColorBottomLeft(value_ColorI)` | Définit la couleur du dégradé, coin bas-gauche. | 2363 |
-| `editor_api_dynamicDecals.setGradientColorBottomRight(value_ColorI)` | Définit la couleur du dégradé, coin bas-droit. | 2371 |
-| `editor_api_dynamicDecals.setGradientColorTopLeft(value_ColorI)` | Définit la couleur du dégradé, coin haut-gauche. | 2347 |
-| `editor_api_dynamicDecals.setGradientColorTopRight(value_ColorI)` | Définit la couleur du dégradé, coin haut-droit. | 2355 |
-| `editor_api_dynamicDecals.setLayer(layerData_table, doReproject_bool)` | Remplace un calque (par uid) par les données fournies, annulable, et émet dynamicDecals_setLayer(uid) ; dynamicDecals_onLayerUpdated(uid) est émis à l'application. | 1754 |
-| `editor_api_dynamicDecals.setLayerNameBuildString(value_string)` | Définit le modèle de nom des nouveaux calques (défaut "$type Layer"). Balises : @type, @colormap, @normalmap, @metallicmap, @roughnessmap, @alphamap, @uid ; un bloc {texte@balise texte} n'apparaît que si la balise n'est pas vide. | 1005 |
-| `editor_api_dynamicDecals.setLayerVisibility(layerUid_string, visibility_bool)` | Affiche/masque un calque directement (sans historique) et reprojette. | 1530 |
-| `editor_api_dynamicDecals.setLockDepth(value_bool)` | Verrouille/déverrouille la profondeur de projection. | 2543 |
-| `editor_api_dynamicDecals.setLockSurfaceNormal(value_bool)` | Verrouille/déverrouille la normale de surface. | 2555 |
-| `editor_api_dynamicDecals.setMaterialIdx(materialIdx_int)` | Définit le matériau unique ciblé par la projection. | 2423 |
-| `editor_api_dynamicDecals.setMeshEnable(name_string, value_bool)` | Active/désactive un mesh par nom. | 2643 |
-| `editor_api_dynamicDecals.setMetallicIntensity(value_float)` | Définit l'intensité métallique. | 2331 |
-| `editor_api_dynamicDecals.setMirrorDebug(value_bool)` | Active le debug du miroir. | 2499 |
-| `editor_api_dynamicDecals.setMirrorOffset(value_float)` | Définit le décalage du plan de miroir. | 2491 |
-| `editor_api_dynamicDecals.setMirrored(value_bool)` | Active/désactive le miroir. | 2483 |
-| `editor_api_dynamicDecals.setNormalIntensity(value_float)` | Définit l'intensité de la normal map. | 2323 |
-| `editor_api_dynamicDecals.setOrientPathDecals(value_bool)` | Définit si les decals du chemin s'orientent selon le chemin. | 2611 |
-| `editor_api_dynamicDecals.setPathLayerFontPath(value_string)` | Définit la police du chemin. | 2691 |
-| `editor_api_dynamicDecals.setPathLayerInterpolationSteps(value_u32)` | Définit les pas d'interpolation du chemin. | 2531 |
-| `editor_api_dynamicDecals.setPathLayerText(value_string)` | Définit le texte posé le long du chemin. | 2667 |
-| `editor_api_dynamicDecals.setPathType(value_int)` | Définit le type de chemin. | 2619 |
-| `editor_api_dynamicDecals.setProjectDynamicDecalsState(value)` | Active/désactive la projection de prévisualisation (M.projectDynamicDecals). | 1013 |
-| `editor_api_dynamicDecals.setRoughnessIntensity(value_float)` | Définit l'intensité de rugosité. | 2339 |
-| `editor_api_dynamicDecals.setSdfEnabled(value_bool)` | Active/désactive le rendu SDF. | 2715 |
-| `editor_api_dynamicDecals.setSdfOutlineColor(value_ColorI)` | Définit la couleur du contour SDF. | 2707 |
-| `editor_api_dynamicDecals.setSdfOutlineSoftness(value_f32)` | Définit la douceur du contour SDF. | 2747 |
-| `editor_api_dynamicDecals.setSdfOutlineThickness(value_f32)` | Définit l'épaisseur du contour SDF. | 2739 |
-| `editor_api_dynamicDecals.setSdfSoftness(value_f32)` | Définit la douceur SDF. | 2731 |
-| `editor_api_dynamicDecals.setSdfThickness(value_f32)` | Définit l'épaisseur SDF. | 2723 |
-| `editor_api_dynamicDecals.setShapePath(path)` | Change le modèle de projection puis reprojette. | 2389 |
-| `editor_api_dynamicDecals.setTextureFillLayerScale(value_Point2F)` | Définit l'échelle du remplissage par texture. | 2507 |
-| `editor_api_dynamicDecals.setTextureFillOffset(value_Point2F)` | Définit le décalage du remplissage par texture. | 2515 |
-| `editor_api_dynamicDecals.setTextureResolution(resolution_point2i)` | Change la résolution ; si le moteur l'accepte, reprojette et réassigne le textureSet @DynamicTexture. | 2398 |
-| `editor_api_dynamicDecals.setUseSurfaceNormal(value_bool)` | Active l'orientation selon la normale de surface. | 2567 |
-| `editor_api_dynamicDecals.setUvLayer(uvLayerId_int)` | Change le canal UV puis reprojette. | 2410 |
-| `editor_api_dynamicDecals.setup()` | Initialise le projecteur : utilise l'app DecalShapeRenderApp active si elle existe, sinon crée un DecalProjection (4096x2048) lié au véhicule joueur ; récupère le textureSet, met à jour les matériaux du véhicule et ajoute un calque fill de base si la pile est vide. Sans effet si déjà fait. | 1452 |
-| `editor_api_dynamicDecals.toggleEnabled()` | Inverse l'état du projecteur (mêmes effets que setEnabled). | 2255 |
-| `editor_api_dynamicDecals.toggleLayerVisibility(layerUid_string)` | Inverse la visibilité d'un calque (annulable) et reprojette. | 1549 |
-| `editor_api_dynamicDecals.toggleSetting(value_int)` | Inverse un drapeau de réglage. | 2058 |
-| `editor_api_dynamicDecals.undo()` | Annule la dernière action de l'historique des decals. | 3050 |
-| `editor_api_dynamicDecals.updateVehicleMaterials()` | Lance un job qui choisit le(s) matériau(x) de décalque par défaut selon le véhicule joueur (matériaux de ses parts, sinon matériau portant le nom jbeam, sinon se terminant par main puis body). | 1447 |
+| `editor_api_dynamicDecals.addBrushStrokeLayer(params)` | Adds a brush stroke layer from getBrushStrokeLayerData(), undoable. | 1342 |
+| `editor_api_dynamicDecals.addDecal(params)` | Creates a decal layer from the current projection (camera + settings), bakes it and adds it to the stack (undoable). If not all meshes are enabled, limits the decal to the vehicle's enabled meshes. | 1098 |
+| `editor_api_dynamicDecals.addFillLayer(params)` | Adds a color fill layer (current fillLayer color and palette), undoable. | 1187 |
+| `editor_api_dynamicDecals.addGroup(params)` | Adds a group layer (can contain children), undoable. | 1270 |
+| `editor_api_dynamicDecals.addLinkedSet(params)` | Adds a "linked set" layer (type 6, with a properties table), undoable. Undo removes the last root layer. | 1305 |
+| `editor_api_dynamicDecals.addMaskDecal(layerUid_string)` | Adds a decal to the mask (layer.mask.layers) of the given layer, from the current projection (undoable). | 1053 |
+| `editor_api_dynamicDecals.addMaterialIdx(materialIdx_int)` | Adds a material to the targets. | 2427 |
+| `editor_api_dynamicDecals.addPathDataPoint()` | Adds a point to the current path layer (creates it on the first call with the current path settings: orientDecals, pathType, interpolationSteps, text, fontPath), then reprojects. | 1142 |
+| `editor_api_dynamicDecals.addTextureFillLayer(params)` | Adds a texture fill layer (current fillTexturePath, scale, offset), undoable. | 1229 |
+| `editor_api_dynamicDecals.areAllMeshesEnabled()` | true if all meshes are enabled. | 2639 |
+| `editor_api_dynamicDecals.bakeBrush()` | Bakes the current brush stroke. | 2751 |
+| `editor_api_dynamicDecals.bakeLayers(layers)` | Bakes a list of layers into the player vehicle's textures (decalProjection:bakeLayers). Returns nil with a message if there is no vehicle. | 1584 |
+| `editor_api_dynamicDecals.changeDecalRotation(clockwise_bool, step_radian_number)` | Rotates the current decal by one step (15 degrees by default, in radians). | 1579 |
+| `editor_api_dynamicDecals.changeDecalSize(increase_bool, step_number)` | Enlarges/shrinks the current decal (x and z of decalScale) by one step (0.025 by default). | 1573 |
+| `editor_api_dynamicDecals.clearLayerStack()` | Clears the layer stack and the baked textures (undoable). | 1638 |
+| `editor_api_dynamicDecals.clearMaterialIdx()` | Clears the list of targeted materials. | 2415 |
+| `editor_api_dynamicDecals.deserializeLayer(layer)` | Rebuilds a layer from serialized data. | 483 |
+| `editor_api_dynamicDecals.disableAllMeshes()` | Disables all meshes. | 2635 |
+| `editor_api_dynamicDecals.disableDecalHighlighting()` | Removes the highlight. | 1524 |
+| `editor_api_dynamicDecals.drawBakedTextures(maxImageWidth)` | Displays the baked textures in ImGui. | 2218 |
+| `editor_api_dynamicDecals.drawBrushInputTextures(maxImageWidth)` | Displays the brush input textures in ImGui. | 2226 |
+| `editor_api_dynamicDecals.drawDynamicTextures(maxImageWidth)` | Displays the dynamic textures in ImGui. | 2214 |
+| `editor_api_dynamicDecals.drawHighlightTextures(maxImageWidth)` | Displays the highlight textures in ImGui. | 2222 |
+| `editor_api_dynamicDecals.drawMaskTextures(maxImageWidth)` | Displays the mask textures in ImGui. | 2230 |
+| `editor_api_dynamicDecals.drawTextureSet(textureSet, name, maxImageWidth)` | Displays a given textureSet in ImGui. | 2234 |
+| `editor_api_dynamicDecals.duplicateAndMirrorLayer(layerId_number, parentUid_string, mirrorChildren)` | Duplicates a layer by mirroring it (name + " Mirrored Copy") right after the original (undoable). | 2008 |
+| `editor_api_dynamicDecals.duplicateLayer(layerId_number, parentUid_string)` | Duplicates a layer (new uids, name + " Copy") right after the original (undoable). | 1980 |
+| `editor_api_dynamicDecals.enableAllMeshes()` | Enables all meshes for projection. | 2631 |
+| `editor_api_dynamicDecals.exportLayerMask(layer, directory, filename, extension)` | Exports a layer's mask to a file. | 2074 |
+| `editor_api_dynamicDecals.exportSkin(vehicleName, skinName)` | Exports a skin usable as a mod: png textures (_d, _m, _r, _cp), <mat>.skin.<skinName> materials copied from the <mat>.skin.dynamicTextures presets and the skin's jbeam file (slotType paint_design) to /mods/unpacked/<skinName>/..., then refreshes the mod manager. | 2078 |
+| `editor_api_dynamicDecals.exportTextures(directoryPath, exportName, extension)` | Exports the baked textures to a folder. | 2070 |
+| `editor_api_dynamicDecals.finishPathLayer()` | Finishes the current path (the next points will create a new path). | 2590 |
+| `editor_api_dynamicDecals.getAlphaMaskBlendMode()` | Alpha mask blend mode (0 or 1 according to the property bounds). | 2463 |
+| `editor_api_dynamicDecals.getAlphaMaskChannel()` | Alpha mask channel (0 to 3 according to the property bounds). | 2455 |
+| `editor_api_dynamicDecals.getAlphaMaskIntensity()` | Alpha mask intensity. | 2311 |
+| `editor_api_dynamicDecals.getAlphaMaskOffset()` | Alpha mask offset. | 2303 |
+| `editor_api_dynamicDecals.getAlphaMaskRotation()` | Alpha mask rotation (radians). | 2471 |
+| `editor_api_dynamicDecals.getAlphaMaskScale()` | Alpha mask scale. | 2295 |
+| `editor_api_dynamicDecals.getBlendMode()` | Current blend mode (M.blendModes). | 2062 |
+| `editor_api_dynamicDecals.getBrushStrokeInterpolationSteps()` | Brush interpolation steps. | 2519 |
+| `editor_api_dynamicDecals.getBrushStrokeLayerData()` | Data of the current brush layer (C++ side). | 2623 |
+| `editor_api_dynamicDecals.getColorPaletteMapId()` | Index of the vehicle color palette used by the decal. | 2375 |
+| `editor_api_dynamicDecals.getColorTextureScale()` | Color texture scale. | 2287 |
+| `editor_api_dynamicDecals.getCursorPosition()` | Position of the projection cursor (screen, UV). | 2759 |
+| `editor_api_dynamicDecals.getDecalColor()` | Current decal color (RGBA). | 2190 |
+| `editor_api_dynamicDecals.getDecalLayerFontCharacter()` | Font character used by the decal. | 2671 |
+| `editor_api_dynamicDecals.getDecalLayerFontPath()` | Path of the decal's font. | 2679 |
+| `editor_api_dynamicDecals.getDecalLocalPos(decal)` | Local (vehicle) position of a decal layer. | 2651 |
+| `editor_api_dynamicDecals.getDecalRotation()` | Current decal rotation (radians). | 2206 |
+| `editor_api_dynamicDecals.getDecalScale()` | Current decal scale. | 2198 |
+| `editor_api_dynamicDecals.getDecalSkew()` | Decal skew. | 2279 |
+| `editor_api_dynamicDecals.getDecalTexturePath(type_string)` | Path of the current texture of a decal type. | 2174 |
+| `editor_api_dynamicDecals.getDecalUv()` | Decal UV offset. | 2271 |
+| `editor_api_dynamicDecals.getDecalWorldPos(decal)` | World position of a decal layer. | 2647 |
+| `editor_api_dynamicDecals.getDecalWorldTransform(decal)` | World transform matrix of a layer. | 2659 |
+| `editor_api_dynamicDecals.getDepth()` | Projection depth. | 2547 |
+| `editor_api_dynamicDecals.getEnablePathLayer()` | Returns whether path mode is active. | 2582 |
+| `editor_api_dynamicDecals.getEnabled()` | Is dynamic projection enabled? | 2238 |
+| `editor_api_dynamicDecals.getFillLayerColor()` | Color of the fill layers. | 2439 |
+| `editor_api_dynamicDecals.getFillLayerColorPaletteMapId()` | Palette index for the fill. | 2447 |
+| `editor_api_dynamicDecals.getFillTexturePath()` | Current fill texture. | 2182 |
+| `editor_api_dynamicDecals.getFlipMirroredDecal()` | Flip the decal on the mirror side? | 2695 |
+| `editor_api_dynamicDecals.getFontTextureAtlasPath()` | Path of the font texture atlas. | 2263 |
+| `editor_api_dynamicDecals.getGradientColorBottomLeft()` | Gradient color, bottom-left corner. | 2359 |
+| `editor_api_dynamicDecals.getGradientColorBottomRight()` | Gradient color, bottom-right corner. | 2367 |
+| `editor_api_dynamicDecals.getGradientColorTopLeft()` | Gradient color, top-left corner. | 2343 |
+| `editor_api_dynamicDecals.getGradientColorTopRight()` | Gradient color, top-right corner. | 2351 |
+| `editor_api_dynamicDecals.getHighlightedLayer()` | Currently highlighted layer, or nil. | 1598 |
+| `editor_api_dynamicDecals.getHistory()` | Undo/redo history specific to this module. | 3046 |
+| `editor_api_dynamicDecals.getLayerById(layerId_number, parentUid_string)` | Returns the layer at the given index (1-based) in the root stack or in the parent's children. | 1708 |
+| `editor_api_dynamicDecals.getLayerByUid(layerUid_string)` | Looks up a layer (recursively) by uid; logs a message and returns nil if not found. | 1699 |
+| `editor_api_dynamicDecals.getLayerCount()` | Total number of layers (children included). | 1567 |
+| `editor_api_dynamicDecals.getLayerNameBuildString()` | Returns the layer name template. | 1009 |
+| `editor_api_dynamicDecals.getLayerStack()` | Returns the root layer stack (shared table, not a copy). | 1563 |
+| `editor_api_dynamicDecals.getLockDepth()` | Is depth locked? | 2539 |
+| `editor_api_dynamicDecals.getLockSurfaceNormal()` | Is the surface normal locked? | 2551 |
+| `editor_api_dynamicDecals.getMaterialIndices()` | List of targeted material indices. | 2419 |
+| `editor_api_dynamicDecals.getMeshObjectCount()` | Number of meshes in the shape. | 2435 |
+| `editor_api_dynamicDecals.getMetallicIntensity()` | Metallic intensity. | 2327 |
+| `editor_api_dynamicDecals.getMirrorDebug()` | Is mirror debug display active? | 2495 |
+| `editor_api_dynamicDecals.getMirrorOffset()` | Mirror plane offset. | 2487 |
+| `editor_api_dynamicDecals.getMirrored()` | Is mirror mode active? | 2479 |
+| `editor_api_dynamicDecals.getNormalIntensity()` | Normal map intensity. | 2319 |
+| `editor_api_dynamicDecals.getOrientPathDecals()` | Whether decals follow the path direction. | 2607 |
+| `editor_api_dynamicDecals.getPathLayerFontPath()` | Path of the path's font. | 2687 |
+| `editor_api_dynamicDecals.getPathLayerInterpolationSteps()` | Path interpolation steps. | 2527 |
+| `editor_api_dynamicDecals.getPathLayerText()` | Text placed along the path. | 2663 |
+| `editor_api_dynamicDecals.getPathType()` | Path type (M.pathTypes). | 2615 |
+| `editor_api_dynamicDecals.getRandomUid()` | Generates a pseudo-unique "XXXX-XXXX" uid (hexadecimal). | 48 |
+| `editor_api_dynamicDecals.getRoughnessIntensity()` | Roughness intensity. | 2335 |
+| `editor_api_dynamicDecals.getSdfEnabled()` | Is SDF rendering active? | 2711 |
+| `editor_api_dynamicDecals.getSdfOutlineColor()` | SDF outline color. | 2703 |
+| `editor_api_dynamicDecals.getSdfOutlineSoftness()` | SDF outline softness. | 2743 |
+| `editor_api_dynamicDecals.getSdfOutlineThickness()` | SDF outline thickness. | 2735 |
+| `editor_api_dynamicDecals.getSdfSoftness()` | SDF softness. | 2727 |
+| `editor_api_dynamicDecals.getSdfThickness()` | SDF thickness. | 2719 |
+| `editor_api_dynamicDecals.getSettings()` | Bit mask of the projector settings (M.settingsFlags). | 2026 |
+| `editor_api_dynamicDecals.getShapeMaterialNames()` | Shape materials (index -> name). | 2535 |
+| `editor_api_dynamicDecals.getShapeMeshes()` | Shape meshes and their activation state. | 2627 |
+| `editor_api_dynamicDecals.getShapePath()` | Path of the 3D model (shape) projected onto. | 2385 |
+| `editor_api_dynamicDecals.getSurfaceNormal()` | Current surface normal. | 2559 |
+| `editor_api_dynamicDecals.getTextureFillLayerScale()` | Scale of the texture fill layers. | 2503 |
+| `editor_api_dynamicDecals.getTextureFillOffset()` | Texture fill offset. | 2511 |
+| `editor_api_dynamicDecals.getTextureResolution()` | Resolution of the dynamic textures. | 2394 |
+| `editor_api_dynamicDecals.getTextureSet()` | TextureSet of the dynamic textures (nil before setup). | 2755 |
+| `editor_api_dynamicDecals.getUseSurfaceNormal()` | Orient the decal along the surface normal? | 2563 |
+| `editor_api_dynamicDecals.getUvLayer()` | UV channel used. | 2406 |
+| `editor_api_dynamicDecals.hasActivePathLayer()` | true if a path layer is currently being edited. | 2586 |
+| `editor_api_dynamicDecals.highlightLayer(layer_table)` | Highlights a layer (table). | 1603 |
+| `editor_api_dynamicDecals.highlightLayerByUid(layerUid_string)` | Highlights a layer by uid. | 1612 |
+| `editor_api_dynamicDecals.isAlphaMaskInvertEnabled()` | Is the AlphaMaskInvert flag active? | 2034 |
+| `editor_api_dynamicDecals.isDecalGradientColorEnabled()` | Is the UseGradientColor flag active? | 2030 |
+| `editor_api_dynamicDecals.isUseMousePos()` | Is the UseMousePos flag active (projection at the mouse cursor rather than the center)? | 2054 |
+| `editor_api_dynamicDecals.isWrapAlphaMaskXEnabled()` | Is the WrapAlphaMaskX flag active? | 2038 |
+| `editor_api_dynamicDecals.isWrapAlphaMaskYEnabled()` | Is the WrapAlphaMaskY flag active? | 2042 |
+| `editor_api_dynamicDecals.isWrapColorTextureXEnabled()` | Is the WrapColorTextureX flag active? | 2046 |
+| `editor_api_dynamicDecals.isWrapColorTextureYEnabled()` | Is the WrapColorTextureY flag active? | 2050 |
+| `editor_api_dynamicDecals.loadLayerStackFromFile(path_string, mode_number)` | Loads a stack from a JSON, overwriting (Overwrite, default) or appending (Append), then reprojects. | 3017 |
+| `editor_api_dynamicDecals.moveLayer(from_number, fromParentUid_string, to_number, toParentUid_string)` | Moves a layer to another position/parent (undoable). Refuses to make a layer its own child. Emits dynamicDecals_moveLayer. | 1899 |
+| `editor_api_dynamicDecals.moveLayerLocalPos(layerUid, newLocalPosition, includeChildren, referenceLayerUid)` | Moves a layer (decal, brushStroke, path or group) to a new vehicle-local position. For a group, referenceLayerUid is required. | 2921 |
+| `editor_api_dynamicDecals.onDeserialized(data)` | Hook called with the saved data: recreates the layer stack and remembers materialIdx for setup(). *(internal)* *(hook)* | 3004 |
+| `editor_api_dynamicDecals.onSerialize()` | Extension serialization hook: returns {layerStackData, materialIdx} (nil without a projector). *(internal)* *(hook)* | 2994 |
+| `editor_api_dynamicDecals.onUpdate_()` | Called every frame by the tool: updates the app, projects the preview decal if projectDynamicDecals is set, then combines the textures into the textureSet. *(internal)* *(hook)* | 3028 |
+| `editor_api_dynamicDecals.onVehicleSwitched()` | Hook called on vehicle switch: refreshes the shape and the materials. *(internal)* *(hook)* | 3071 |
+| `editor_api_dynamicDecals.redo()` | Redoes the last undone action. | 3054 |
+| `editor_api_dynamicDecals.removeLastPathLayerPoint()` | Removes the last point of the current path; if only one remains, deletes the layer. | 2594 |
+| `editor_api_dynamicDecals.removeLayer(index_number, parentUid_string)` | Deletes a layer (undoable) and turns off highlighting if it was highlighted. | 1941 |
+| `editor_api_dynamicDecals.removeMaterialIdx(materialIdx_int)` | Removes a material from the targets. | 2431 |
+| `editor_api_dynamicDecals.renderSdfTextureImgui(sizeX, sizeY)` | Displays the SDF texture in ImGui. | 2767 |
+| `editor_api_dynamicDecals.replaceDecalTransformFromCurrentProjection(layerUid_string, originalLayer)` | Repositions an already placed decal according to the current camera/projection, changing only its transform fields (camPosition, decalPos, decalScale, decalRotation, mirror...). Refuses if the captured cursor is not centered (0.5 ± 0.01) or if the layer is not a decal. Commits a "Transform Decal" action. | 1827 |
+| `editor_api_dynamicDecals.reprojectLayers()` | Clears the baked textures and rebakes the whole stack; shows a failure if baking returns nil. | 1647 |
+| `editor_api_dynamicDecals.rotateLayer(layer, delta_vec3)` | Applies a delta rotation to a layer and its children. | 2938 |
+| `editor_api_dynamicDecals.saveLayerStackToFile(path_string)` | Writes the layer stack to a JSON file (without materialIdx). | 3011 |
+| `editor_api_dynamicDecals.scaleLayer(layer, delta_vec3)` | Scales a layer and its children by (1,1,1) + delta. | 2960 |
+| `editor_api_dynamicDecals.serializeLayer(layer)` | Converts a layer to a JSON-serializable table (engine types converted). | 230 |
+| `editor_api_dynamicDecals.setAlphaMaskBlendMode(value_int)` | Sets the alpha mask blend mode. | 2467 |
+| `editor_api_dynamicDecals.setAlphaMaskChannel(value_int)` | Sets the alpha mask channel. | 2459 |
+| `editor_api_dynamicDecals.setAlphaMaskIntensity(value_float)` | Sets the alpha mask intensity. | 2315 |
+| `editor_api_dynamicDecals.setAlphaMaskOffset(value_Point2F)` | Sets the alpha mask offset. | 2307 |
+| `editor_api_dynamicDecals.setAlphaMaskRotation(value_radian_float)` | Sets the alpha mask rotation. | 2475 |
+| `editor_api_dynamicDecals.setAlphaMaskScale(value_Point2F)` | Sets the alpha mask scale. | 2299 |
+| `editor_api_dynamicDecals.setBlendMode(blendMode_int)` | Sets the current blend mode. | 2066 |
+| `editor_api_dynamicDecals.setBrushStrokeInterpolationSteps(value_u32)` | Sets the brush interpolation steps. | 2523 |
+| `editor_api_dynamicDecals.setColorPaletteMapId(value_int)` | Sets the decal's palette index. | 2379 |
+| `editor_api_dynamicDecals.setColorTextureScale(value_Point2F)` | Sets the color texture scale. | 2291 |
+| `editor_api_dynamicDecals.setCursorPosition(value_Point2F)` | Sets the position of the projection cursor. | 2763 |
+| `editor_api_dynamicDecals.setDecalColor(value_Point4F)` | Sets the decal color. | 2194 |
+| `editor_api_dynamicDecals.setDecalLayerFontCharacter(value_char)` | Sets the decal's font character. | 2675 |
+| `editor_api_dynamicDecals.setDecalLayerFontPath(value_string)` | Sets the decal's font. | 2683 |
+| `editor_api_dynamicDecals.setDecalLocalPos(decal, worldPos)` | Sets a decal's position (parameter name is worldPos in the code). | 2655 |
+| `editor_api_dynamicDecals.setDecalRotation(value_radian_number)` | Sets the decal rotation. | 2210 |
+| `editor_api_dynamicDecals.setDecalScale(value_vec3)` | Sets the decal scale. | 2202 |
+| `editor_api_dynamicDecals.setDecalSkew(value_Point2F)` | Sets the decal skew. | 2283 |
+| `editor_api_dynamicDecals.setDecalTexturePath(type_string, path_string)` | Sets the current texture of a decal type. | 2178 |
+| `editor_api_dynamicDecals.setDecalUv(value_Point2F)` | Sets the decal UV offset. | 2275 |
+| `editor_api_dynamicDecals.setEnableBrushStroke(value_bool)` | Enables/disables the projector's brush mode (with a new random uid). | 2571 |
+| `editor_api_dynamicDecals.setEnablePathLayer(value_bool)` | Enables/disables path mode; when set to false, finishes the current path. | 2575 |
+| `editor_api_dynamicDecals.setEnabled(enabled)` | Enables/disables the projector; when set to false, clears the dynamic textures and recombines the textureSet. | 2242 |
+| `editor_api_dynamicDecals.setFillLayerColor(value_Point4F)` | Sets the color of the fill layers. | 2443 |
+| `editor_api_dynamicDecals.setFillLayerColorPaletteMapId(value_int)` | Sets the palette index for the fill. | 2451 |
+| `editor_api_dynamicDecals.setFillTexturePath(path_string)` | Sets the fill texture. | 2186 |
+| `editor_api_dynamicDecals.setFlipMirroredDecal(value_bool)` | Enables flipping of the decal on the mirror side. | 2699 |
+| `editor_api_dynamicDecals.setFontTextureAtlasPath(path_string)` | Sets the font texture atlas. | 2267 |
+| `editor_api_dynamicDecals.setGradientColorBottomLeft(value_ColorI)` | Sets the gradient color, bottom-left corner. | 2363 |
+| `editor_api_dynamicDecals.setGradientColorBottomRight(value_ColorI)` | Sets the gradient color, bottom-right corner. | 2371 |
+| `editor_api_dynamicDecals.setGradientColorTopLeft(value_ColorI)` | Sets the gradient color, top-left corner. | 2347 |
+| `editor_api_dynamicDecals.setGradientColorTopRight(value_ColorI)` | Sets the gradient color, top-right corner. | 2355 |
+| `editor_api_dynamicDecals.setLayer(layerData_table, doReproject_bool)` | Replaces a layer (by uid) with the given data, undoable, and emits dynamicDecals_setLayer(uid); dynamicDecals_onLayerUpdated(uid) is emitted on apply. | 1754 |
+| `editor_api_dynamicDecals.setLayerNameBuildString(value_string)` | Sets the name template for new layers (default "$type Layer"). Tags: @type, @colormap, @normalmap, @metallicmap, @roughnessmap, @alphamap, @uid; a {text@tag text} block only appears if the tag is not empty. | 1005 |
+| `editor_api_dynamicDecals.setLayerVisibility(layerUid_string, visibility_bool)` | Shows/hides a layer directly (without history) and reprojects. | 1530 |
+| `editor_api_dynamicDecals.setLockDepth(value_bool)` | Locks/unlocks the projection depth. | 2543 |
+| `editor_api_dynamicDecals.setLockSurfaceNormal(value_bool)` | Locks/unlocks the surface normal. | 2555 |
+| `editor_api_dynamicDecals.setMaterialIdx(materialIdx_int)` | Sets the single material targeted by the projection. | 2423 |
+| `editor_api_dynamicDecals.setMeshEnable(name_string, value_bool)` | Enables/disables a mesh by name. | 2643 |
+| `editor_api_dynamicDecals.setMetallicIntensity(value_float)` | Sets the metallic intensity. | 2331 |
+| `editor_api_dynamicDecals.setMirrorDebug(value_bool)` | Enables mirror debug. | 2499 |
+| `editor_api_dynamicDecals.setMirrorOffset(value_float)` | Sets the mirror plane offset. | 2491 |
+| `editor_api_dynamicDecals.setMirrored(value_bool)` | Enables/disables the mirror. | 2483 |
+| `editor_api_dynamicDecals.setNormalIntensity(value_float)` | Sets the normal map intensity. | 2323 |
+| `editor_api_dynamicDecals.setOrientPathDecals(value_bool)` | Sets whether the path's decals are oriented along the path. | 2611 |
+| `editor_api_dynamicDecals.setPathLayerFontPath(value_string)` | Sets the path's font. | 2691 |
+| `editor_api_dynamicDecals.setPathLayerInterpolationSteps(value_u32)` | Sets the path interpolation steps. | 2531 |
+| `editor_api_dynamicDecals.setPathLayerText(value_string)` | Sets the text placed along the path. | 2667 |
+| `editor_api_dynamicDecals.setPathType(value_int)` | Sets the path type. | 2619 |
+| `editor_api_dynamicDecals.setProjectDynamicDecalsState(value)` | Enables/disables the preview projection (M.projectDynamicDecals). | 1013 |
+| `editor_api_dynamicDecals.setRoughnessIntensity(value_float)` | Sets the roughness intensity. | 2339 |
+| `editor_api_dynamicDecals.setSdfEnabled(value_bool)` | Enables/disables SDF rendering. | 2715 |
+| `editor_api_dynamicDecals.setSdfOutlineColor(value_ColorI)` | Sets the SDF outline color. | 2707 |
+| `editor_api_dynamicDecals.setSdfOutlineSoftness(value_f32)` | Sets the SDF outline softness. | 2747 |
+| `editor_api_dynamicDecals.setSdfOutlineThickness(value_f32)` | Sets the SDF outline thickness. | 2739 |
+| `editor_api_dynamicDecals.setSdfSoftness(value_f32)` | Sets the SDF softness. | 2731 |
+| `editor_api_dynamicDecals.setSdfThickness(value_f32)` | Sets the SDF thickness. | 2723 |
+| `editor_api_dynamicDecals.setShapePath(path)` | Changes the projection model then reprojects. | 2389 |
+| `editor_api_dynamicDecals.setTextureFillLayerScale(value_Point2F)` | Sets the texture fill scale. | 2507 |
+| `editor_api_dynamicDecals.setTextureFillOffset(value_Point2F)` | Sets the texture fill offset. | 2515 |
+| `editor_api_dynamicDecals.setTextureResolution(resolution_point2i)` | Changes the resolution; if the engine accepts it, reprojects and reassigns the @DynamicTexture textureSet. | 2398 |
+| `editor_api_dynamicDecals.setUseSurfaceNormal(value_bool)` | Enables orientation along the surface normal. | 2567 |
+| `editor_api_dynamicDecals.setUvLayer(uvLayerId_int)` | Changes the UV channel then reprojects. | 2410 |
+| `editor_api_dynamicDecals.setup()` | Initializes the projector: uses the active DecalShapeRenderApp app if it exists, otherwise creates a DecalProjection (4096x2048) bound to the player vehicle; fetches the textureSet, updates the vehicle materials and adds a base fill layer if the stack is empty. No effect if already done. | 1452 |
+| `editor_api_dynamicDecals.toggleEnabled()` | Toggles the projector state (same effects as setEnabled). | 2255 |
+| `editor_api_dynamicDecals.toggleLayerVisibility(layerUid_string)` | Toggles a layer's visibility (undoable) and reprojects. | 1549 |
+| `editor_api_dynamicDecals.toggleSetting(value_int)` | Toggles a settings flag. | 2058 |
+| `editor_api_dynamicDecals.undo()` | Undoes the last action of the decals history. | 3050 |
+| `editor_api_dynamicDecals.updateVehicleMaterials()` | Starts a job that chooses the default decal material(s) based on the player vehicle (materials of its parts, otherwise the material named after the jbeam, otherwise ending with main then body). | 1447 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_dynamicDecals.addBrushStrokeLayer(params)`
 
-Ajoute un calque de coup de pinceau à partir de getBrushStrokeLayerData(), annulable.
+Adds a brush stroke layer from getBrushStrokeLayerData(), undoable.
 
-- `params` (*table|nil*) : name (déduit du code)
-- **renvoie** : table Calque créé (déduit du code)
+- `params` (*table|nil*) : name (inferred from code)
+- **returns**: table Created layer (inferred from code)
 
 #### `editor_api_dynamicDecals.addDecal(params)`
 
-Crée un calque decal à partir de la projection courante (caméra + réglages), le cuit et l'ajoute à la pile (annulable). Si tous les meshes ne sont pas activés, limite le decal aux meshes activés du véhicule.
+Creates a decal layer from the current projection (camera + settings), bakes it and adds it to the stack (undoable). If not all meshes are enabled, limits the decal to the vehicle's enabled meshes.
 
-- `params` (*table|nil*) : name (défaut généré), parentUid (calque groupe parent)
-- **renvoie** : table Données du calque créé
+- `params` (*table|nil*) : name (generated default), parentUid (parent group layer)
+- **returns**: table Data of the created layer
 
 #### `editor_api_dynamicDecals.addFillLayer(params)`
 
-Ajoute un calque de remplissage de couleur (couleur et palette de fillLayer courantes), annulable.
+Adds a color fill layer (current fillLayer color and palette), undoable.
 
 - `params` (*table|nil*) : name, parentUid
-- **renvoie** : table Calque créé
+- **returns**: table Created layer
 
 #### `editor_api_dynamicDecals.addGroup(params)`
 
-Ajoute un calque groupe (peut contenir des enfants), annulable.
+Adds a group layer (can contain children), undoable.
 
 - `params` (*table|nil*) : name, parentUid
-- **renvoie** : table Calque créé
+- **returns**: table Created layer
 
 #### `editor_api_dynamicDecals.addLinkedSet(params)`
 
-Ajoute un calque « linked set » (type 6, avec table properties), annulable. L'annulation supprime le dernier calque racine.
+Adds a "linked set" layer (type 6, with a properties table), undoable. Undo removes the last root layer.
 
 - `params` (*table|nil*) : name, parentUid
-- **renvoie** : table Calque créé
+- **returns**: table Created layer
 
 #### `editor_api_dynamicDecals.addMaskDecal(layerUid_string)`
 
-Ajoute un decal dans le masque (layer.mask.layers) du calque donné, à partir de la projection courante (annulable).
+Adds a decal to the mask (layer.mask.layers) of the given layer, from the current projection (undoable).
 
-- `layerUid_string` (*string*) : uid du calque à masquer
+- `layerUid_string` (*string*) : uid of the layer to mask
 
 #### `editor_api_dynamicDecals.addMaterialIdx(materialIdx_int)`
 
-Ajoute un matériau aux cibles.
+Adds a material to the targets.
 
 - `materialIdx_int` (*integer*) : Index
 
 #### `editor_api_dynamicDecals.addPathDataPoint()`
 
-Ajoute un point au calque chemin en cours (le crée au premier appel avec les réglages de chemin courants : orientDecals, pathType, interpolationSteps, text, fontPath), puis reprojette.
+Adds a point to the current path layer (creates it on the first call with the current path settings: orientDecals, pathType, interpolationSteps, text, fontPath), then reprojects.
 
-- **renvoie** : table Données du point/calque
+- **returns**: table Point/layer data
 
 #### `editor_api_dynamicDecals.addTextureFillLayer(params)`
 
-Ajoute un calque de remplissage par texture (fillTexturePath, scale, offset courants), annulable.
+Adds a texture fill layer (current fillTexturePath, scale, offset), undoable.
 
 - `params` (*table|nil*) : name, parentUid
-- **renvoie** : table Calque créé
+- **returns**: table Created layer
 
 #### `editor_api_dynamicDecals.areAllMeshesEnabled()`
 
-true si tous les meshes sont activés.
+true if all meshes are enabled.
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.bakeLayers(layers)`
 
-Cuit une liste de calques dans les textures du véhicule joueur (decalProjection:bakeLayers). Renvoie nil avec un message s'il n'y a pas de véhicule.
+Bakes a list of layers into the player vehicle's textures (decalProjection:bakeLayers). Returns nil with a message if there is no vehicle.
 
-- `layers` (*table[]*) : Calques à cuire
-- **renvoie** : table|nil Résultat (champ status : M.layerBakingStatusCode)
+- `layers` (*table[]*) : Layers to bake
+- **returns**: table|nil Result (status field: M.layerBakingStatusCode)
 
 #### `editor_api_dynamicDecals.changeDecalRotation(clockwise_bool, step_radian_number)`
 
-Tourne le decal courant d'un pas (15 degrés par défaut, en radians).
+Rotates the current decal by one step (15 degrees by default, in radians).
 
-- `clockwise_bool` (*boolean*) : Sens horaire
-- `step_radian_number` (*number|nil*) : Pas en radians
+- `clockwise_bool` (*boolean*) : Clockwise
+- `step_radian_number` (*number|nil*) : Step in radians
 
 #### `editor_api_dynamicDecals.changeDecalSize(increase_bool, step_number)`
 
-Agrandit/réduit le decal courant (x et z de decalScale) d'un pas (0.025 par défaut).
+Enlarges/shrinks the current decal (x and z of decalScale) by one step (0.025 by default).
 
-- `increase_bool` (*boolean*) : true pour agrandir
-- `step_number` (*number|nil*) : Pas
+- `increase_bool` (*boolean*) : true to enlarge
+- `step_number` (*number|nil*) : Steps
 
 #### `editor_api_dynamicDecals.deserializeLayer(layer)`
 
-Reconstruit un calque à partir de données sérialisées.
+Rebuilds a layer from serialized data.
 
-- `layer` (*table*) : Données sérialisées
-- **renvoie** : table Calque
+- `layer` (*table*) : Serialized data
+- **returns**: table Layer
 
 #### `editor_api_dynamicDecals.drawBakedTextures(maxImageWidth)`
 
-Affiche les textures cuites dans ImGui.
+Displays the baked textures in ImGui.
 
-- `maxImageWidth` (*number*) : Largeur max
+- `maxImageWidth` (*number*) : Max width
 
 #### `editor_api_dynamicDecals.drawBrushInputTextures(maxImageWidth)`
 
-Affiche les textures d'entrée du pinceau dans ImGui.
+Displays the brush input textures in ImGui.
 
-- `maxImageWidth` (*number*) : Largeur max
+- `maxImageWidth` (*number*) : Max width
 
 #### `editor_api_dynamicDecals.drawDynamicTextures(maxImageWidth)`
 
-Affiche les textures dynamiques dans ImGui.
+Displays the dynamic textures in ImGui.
 
-- `maxImageWidth` (*number*) : Largeur max
+- `maxImageWidth` (*number*) : Max width
 
 #### `editor_api_dynamicDecals.drawHighlightTextures(maxImageWidth)`
 
-Affiche les textures de surbrillance dans ImGui.
+Displays the highlight textures in ImGui.
 
-- `maxImageWidth` (*number*) : Largeur max
+- `maxImageWidth` (*number*) : Max width
 
 #### `editor_api_dynamicDecals.drawMaskTextures(maxImageWidth)`
 
-Affiche les textures de masque dans ImGui.
+Displays the mask textures in ImGui.
 
-- `maxImageWidth` (*number*) : Largeur max
+- `maxImageWidth` (*number*) : Max width
 
 #### `editor_api_dynamicDecals.drawTextureSet(textureSet, name, maxImageWidth)`
 
-Affiche un textureSet donné dans ImGui.
+Displays a given textureSet in ImGui.
 
 - `textureSet` (*userdata*) : TextureSet
-- `name` (*string*) : Titre
-- `maxImageWidth` (*number*) : Largeur max
+- `name` (*string*) : Title
+- `maxImageWidth` (*number*) : Max width
 
 #### `editor_api_dynamicDecals.duplicateAndMirrorLayer(layerId_number, parentUid_string, mirrorChildren)`
 
-Duplique un calque en le miroitant (nom + " Mirrored Copy") juste après l'original (annulable).
+Duplicates a layer by mirroring it (name + " Mirrored Copy") right after the original (undoable).
 
-- `layerId_number` (*integer*) : Indice
+- `layerId_number` (*integer*) : Index
 - `parentUid_string` (*string|nil*) : Parent
-- `mirrorChildren` (*boolean|nil*) : Miroiter aussi les enfants
+- `mirrorChildren` (*boolean|nil*) : Also mirror the children
 
 #### `editor_api_dynamicDecals.duplicateLayer(layerId_number, parentUid_string)`
 
-Duplique un calque (nouveaux uids, nom + " Copy") juste après l'original (annulable).
+Duplicates a layer (new uids, name + " Copy") right after the original (undoable).
 
-- `layerId_number` (*integer*) : Indice
+- `layerId_number` (*integer*) : Index
 - `parentUid_string` (*string|nil*) : Parent
 
 #### `editor_api_dynamicDecals.exportLayerMask(layer, directory, filename, extension)`
 
-Exporte le masque d'un calque dans un fichier.
+Exports a layer's mask to a file.
 
-- `layer` (*table*) : Calque
-- `directory` (*string*) : Dossier
-- `filename` (*string*) : Nom de fichier
+- `layer` (*table*) : Layer
+- `directory` (*string*) : Folder
+- `filename` (*string*) : File name
 - `extension` (*string*) : Extension
 
 #### `editor_api_dynamicDecals.exportSkin(vehicleName, skinName)`
 
-Exporte un skin utilisable comme mod : textures png (_d, _m, _r, _cp), matériaux <mat>.skin.<skinName> copiés des presets <mat>.skin.dynamicTextures et fichier jbeam du skin (slotType paint_design) dans /mods/unpacked/<skinName>/..., puis rafraîchit le gestionnaire de mods.
+Exports a skin usable as a mod: png textures (_d, _m, _r, _cp), <mat>.skin.<skinName> materials copied from the <mat>.skin.dynamicTextures presets and the skin's jbeam file (slotType paint_design) to /mods/unpacked/<skinName>/..., then refreshes the mod manager.
 
-- `vehicleName` (*string*) : Nom du véhicule
-- `skinName` (*string*) : Nom du skin
+- `vehicleName` (*string*) : Vehicle name
+- `skinName` (*string*) : Skin name
 
 #### `editor_api_dynamicDecals.exportTextures(directoryPath, exportName, extension)`
 
-Exporte les textures cuites dans un dossier.
+Exports the baked textures to a folder.
 
-- `directoryPath` (*string*) : Dossier
-- `exportName` (*string*) : Nom de base
-- `extension` (*string*) : Extension (ex. png)
-- **renvoie** : any Résultat du moteur
+- `directoryPath` (*string*) : Folder
+- `exportName` (*string*) : Base name
+- `extension` (*string*) : Extension (e.g. png)
+- **returns**: any Engine result
 
 #### `editor_api_dynamicDecals.getAlphaMaskBlendMode()`
 
-Mode de fusion du masque alpha (0 ou 1 d'après les bornes de propriété).
+Alpha mask blend mode (0 or 1 according to the property bounds).
 
-- **renvoie** : integer Mode
+- **returns**: integer Mode
 
 #### `editor_api_dynamicDecals.getAlphaMaskChannel()`
 
-Canal du masque alpha (0 à 3 d'après les bornes de propriété).
+Alpha mask channel (0 to 3 according to the property bounds).
 
-- **renvoie** : integer Canal
+- **returns**: integer Channel
 
 #### `editor_api_dynamicDecals.getAlphaMaskIntensity()`
 
-Intensité du masque alpha.
+Alpha mask intensity.
 
-- **renvoie** : number Intensité
+- **returns**: number Intensity
 
 #### `editor_api_dynamicDecals.getAlphaMaskOffset()`
 
-Décalage du masque alpha.
+Alpha mask offset.
 
-- **renvoie** : Point2F Décalage
+- **returns**: Point2F Offset
 
 #### `editor_api_dynamicDecals.getAlphaMaskRotation()`
 
-Rotation du masque alpha (radians).
+Alpha mask rotation (radians).
 
-- **renvoie** : number Radians
+- **returns**: number Radians
 
 #### `editor_api_dynamicDecals.getAlphaMaskScale()`
 
-Échelle du masque alpha.
+Alpha mask scale.
 
-- **renvoie** : Point2F Échelle
+- **returns**: Point2F Scale
 
 #### `editor_api_dynamicDecals.getBlendMode()`
 
-Mode de fusion courant (M.blendModes).
+Current blend mode (M.blendModes).
 
-- **renvoie** : integer Valeur
+- **returns**: integer Value
 
 #### `editor_api_dynamicDecals.getBrushStrokeInterpolationSteps()`
 
-Pas d'interpolation du pinceau.
+Brush interpolation steps.
 
-- **renvoie** : integer Pas
+- **returns**: integer Steps
 
 #### `editor_api_dynamicDecals.getBrushStrokeLayerData()`
 
-Données du calque pinceau courant (côté C++).
+Data of the current brush layer (C++ side).
 
-- **renvoie** : table Données
+- **returns**: table Data
 
 #### `editor_api_dynamicDecals.getColorPaletteMapId()`
 
-Index de palette de couleurs du véhicule utilisé par le decal.
+Index of the vehicle color palette used by the decal.
 
-- **renvoie** : integer Index
+- **returns**: integer Index
 
 #### `editor_api_dynamicDecals.getColorTextureScale()`
 
-Échelle de la texture de couleur.
+Color texture scale.
 
-- **renvoie** : Point2F Échelle
+- **returns**: Point2F Scale
 
 #### `editor_api_dynamicDecals.getCursorPosition()`
 
-Position du curseur de projection (écran, UV).
+Position of the projection cursor (screen, UV).
 
-- **renvoie** : Point2F Position
+- **returns**: Point2F Position
 
 #### `editor_api_dynamicDecals.getDecalColor()`
 
-Couleur courante du decal (RGBA).
+Current decal color (RGBA).
 
-- **renvoie** : Point4F Couleur
+- **returns**: Point4F Color
 
 #### `editor_api_dynamicDecals.getDecalLayerFontCharacter()`
 
-Caractère de police utilisé par le decal.
+Font character used by the decal.
 
-- **renvoie** : string Caractère
+- **returns**: string Character
 
 #### `editor_api_dynamicDecals.getDecalLayerFontPath()`
 
-Chemin de la police du decal.
+Path of the decal's font.
 
-- **renvoie** : string Chemin
+- **returns**: string Path
 
 #### `editor_api_dynamicDecals.getDecalLocalPos(decal)`
 
-Position locale (véhicule) d'un calque decal.
+Local (vehicle) position of a decal layer.
 
-- `decal` (*table*) : Calque
-- **renvoie** : vec3 Position
+- `decal` (*table*) : Layer
+- **returns**: vec3 Position
 
 #### `editor_api_dynamicDecals.getDecalRotation()`
 
-Rotation courante du decal (radians).
+Current decal rotation (radians).
 
-- **renvoie** : number Radians
+- **returns**: number Radians
 
 #### `editor_api_dynamicDecals.getDecalScale()`
 
-Échelle courante du decal.
+Current decal scale.
 
-- **renvoie** : vec3 Échelle
+- **returns**: vec3 Scale
 
 #### `editor_api_dynamicDecals.getDecalSkew()`
 
-Cisaillement du decal.
+Decal skew.
 
-- **renvoie** : Point2F Skew
+- **returns**: Point2F Skew
 
 #### `editor_api_dynamicDecals.getDecalTexturePath(type_string)`
 
-Chemin de la texture courante d'un type de decal.
+Path of the current texture of a decal type.
 
-- `type_string` (*string*) : Type de texture (color, normal, metallic, roughness, alpha, déduit des champs decal*TexturePath)
-- **renvoie** : string Chemin
+- `type_string` (*string*) : Texture type (color, normal, metallic, roughness, alpha, inferred from the decal*TexturePath fields)
+- **returns**: string Path
 
 #### `editor_api_dynamicDecals.getDecalUv()`
 
-Décalage UV du decal.
+Decal UV offset.
 
-- **renvoie** : Point2F UV
+- **returns**: Point2F UV
 
 #### `editor_api_dynamicDecals.getDecalWorldPos(decal)`
 
-Position monde d'un calque decal.
+World position of a decal layer.
 
-- `decal` (*table*) : Calque
-- **renvoie** : vec3 Position
+- `decal` (*table*) : Layer
+- **returns**: vec3 Position
 
 #### `editor_api_dynamicDecals.getDecalWorldTransform(decal)`
 
-Matrice de transformation monde d'un calque.
+World transform matrix of a layer.
 
-- `decal` (*table*) : Calque
-- **renvoie** : MatrixF Transformation
+- `decal` (*table*) : Layer
+- **returns**: MatrixF Transform
 
 #### `editor_api_dynamicDecals.getDepth()`
 
-Profondeur de projection.
+Projection depth.
 
-- **renvoie** : number Profondeur
+- **returns**: number Depth
 
 #### `editor_api_dynamicDecals.getEnablePathLayer()`
 
-Indique si le mode chemin est actif.
+Returns whether path mode is active.
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.getEnabled()`
 
-Projection dynamique activée ?
+Is dynamic projection enabled?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.getFillLayerColor()`
 
-Couleur des calques de remplissage.
+Color of the fill layers.
 
-- **renvoie** : Point4F Couleur
+- **returns**: Point4F Color
 
 #### `editor_api_dynamicDecals.getFillLayerColorPaletteMapId()`
 
-Index de palette pour le remplissage.
+Palette index for the fill.
 
-- **renvoie** : integer Index
+- **returns**: integer Index
 
 #### `editor_api_dynamicDecals.getFillTexturePath()`
 
-Texture de remplissage courante.
+Current fill texture.
 
-- **renvoie** : string Chemin
+- **returns**: string Path
 
 #### `editor_api_dynamicDecals.getFlipMirroredDecal()`
 
-Inverser le decal côté miroir ?
+Flip the decal on the mirror side?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.getFontTextureAtlasPath()`
 
-Chemin de l'atlas de texture de police.
+Path of the font texture atlas.
 
-- **renvoie** : string Chemin
+- **returns**: string Path
 
 #### `editor_api_dynamicDecals.getGradientColorBottomLeft()`
 
-Couleur du dégradé, coin bas-gauche.
+Gradient color, bottom-left corner.
 
-- **renvoie** : ColorI Couleur
+- **returns**: ColorI Color
 
 #### `editor_api_dynamicDecals.getGradientColorBottomRight()`
 
-Couleur du dégradé, coin bas-droit.
+Gradient color, bottom-right corner.
 
-- **renvoie** : ColorI Couleur
+- **returns**: ColorI Color
 
 #### `editor_api_dynamicDecals.getGradientColorTopLeft()`
 
-Couleur du dégradé, coin haut-gauche.
+Gradient color, top-left corner.
 
-- **renvoie** : ColorI Couleur
+- **returns**: ColorI Color
 
 #### `editor_api_dynamicDecals.getGradientColorTopRight()`
 
-Couleur du dégradé, coin haut-droit.
+Gradient color, top-right corner.
 
-- **renvoie** : ColorI Couleur
+- **returns**: ColorI Color
 
 #### `editor_api_dynamicDecals.getHighlightedLayer()`
 
-Calque actuellement surligné, ou nil.
+Currently highlighted layer, or nil.
 
-- **renvoie** : table|nil Calque
+- **returns**: table|nil Layer
 
 #### `editor_api_dynamicDecals.getHistory()`
 
-Historique undo/redo propre à ce module.
+Undo/redo history specific to this module.
 
-- **renvoie** : table Historique
+- **returns**: table History
 
 #### `editor_api_dynamicDecals.getLayerById(layerId_number, parentUid_string)`
 
-Renvoie le calque d'indice donné (à partir de 1) dans la pile racine ou dans les enfants du parent.
+Returns the layer at the given index (1-based) in the root stack or in the parent's children.
 
-- `layerId_number` (*integer*) : Indice
-- `parentUid_string` (*string|nil*) : uid du parent
-- **renvoie** : table|nil Calque
+- `layerId_number` (*integer*) : Index
+- `parentUid_string` (*string|nil*) : Parent uid
+- **returns**: table|nil Layer
 
 #### `editor_api_dynamicDecals.getLayerByUid(layerUid_string)`
 
-Cherche un calque (récursivement) par uid ; logge un message et renvoie nil s'il est introuvable.
+Looks up a layer (recursively) by uid; logs a message and returns nil if not found.
 
 - `layerUid_string` (*string*) : uid
-- **renvoie** : table|nil Calque
+- **returns**: table|nil Layer
 
 #### `editor_api_dynamicDecals.getLayerCount()`
 
-Nombre total de calques (enfants compris).
+Total number of layers (children included).
 
-- **renvoie** : integer Nombre
+- **returns**: integer Count
 
 #### `editor_api_dynamicDecals.getLayerNameBuildString()`
 
-Renvoie le modèle de nom de calque.
+Returns the layer name template.
 
-- **renvoie** : string Modèle
+- **returns**: string Template
 
 #### `editor_api_dynamicDecals.getLayerStack()`
 
-Renvoie la pile de calques racine (table partagée, pas une copie).
+Returns the root layer stack (shared table, not a copy).
 
-- **renvoie** : table[] Calques
+- **returns**: table[] Layers
 
 #### `editor_api_dynamicDecals.getLockDepth()`
 
-Profondeur verrouillée ?
+Is depth locked?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.getLockSurfaceNormal()`
 
-Normale de surface verrouillée ?
+Is the surface normal locked?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.getMaterialIndices()`
 
-Liste des index de matériaux ciblés.
+List of targeted material indices.
 
-- **renvoie** : integer[] Index
+- **returns**: integer[] Index
 
 #### `editor_api_dynamicDecals.getMeshObjectCount()`
 
-Nombre de meshes du shape.
+Number of meshes in the shape.
 
-- **renvoie** : integer Nombre
+- **returns**: integer Count
 
 #### `editor_api_dynamicDecals.getMetallicIntensity()`
 
-Intensité métallique.
+Metallic intensity.
 
-- **renvoie** : number Intensité
+- **returns**: number Intensity
 
 #### `editor_api_dynamicDecals.getMirrorDebug()`
 
-Affichage de debug du miroir actif ?
+Is mirror debug display active?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.getMirrorOffset()`
 
-Décalage du plan de miroir.
+Mirror plane offset.
 
-- **renvoie** : number Décalage
+- **returns**: number Offset
 
 #### `editor_api_dynamicDecals.getMirrored()`
 
-Mode miroir actif ?
+Is mirror mode active?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.getNormalIntensity()`
 
-Intensité de la normal map.
+Normal map intensity.
 
-- **renvoie** : number Intensité
+- **returns**: number Intensity
 
 #### `editor_api_dynamicDecals.getOrientPathDecals()`
 
-Si les decals suivent la direction du chemin.
+Whether decals follow the path direction.
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.getPathLayerFontPath()`
 
-Chemin de la police du chemin.
+Path of the path's font.
 
-- **renvoie** : string Chemin
+- **returns**: string Path
 
 #### `editor_api_dynamicDecals.getPathLayerInterpolationSteps()`
 
-Pas d'interpolation du chemin.
+Path interpolation steps.
 
-- **renvoie** : integer Pas
+- **returns**: integer Steps
 
 #### `editor_api_dynamicDecals.getPathLayerText()`
 
-Texte posé le long du chemin.
+Text placed along the path.
 
-- **renvoie** : string Texte
+- **returns**: string Text
 
 #### `editor_api_dynamicDecals.getPathType()`
 
-Type de chemin (M.pathTypes).
+Path type (M.pathTypes).
 
-- **renvoie** : integer 0 Linear, 1 Bezier
+- **returns**: integer 0 Linear, 1 Bezier
 
 #### `editor_api_dynamicDecals.getRandomUid()`
 
-Génère un uid pseudo-unique "XXXX-XXXX" (hexadécimal).
+Generates a pseudo-unique "XXXX-XXXX" uid (hexadecimal).
 
-- **renvoie** : string uid
+- **returns**: string uid
 
 #### `editor_api_dynamicDecals.getRoughnessIntensity()`
 
-Intensité de rugosité.
+Roughness intensity.
 
-- **renvoie** : number Intensité
+- **returns**: number Intensity
 
 #### `editor_api_dynamicDecals.getSdfEnabled()`
 
-Rendu SDF actif ?
+Is SDF rendering active?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.getSdfOutlineColor()`
 
-Couleur du contour SDF.
+SDF outline color.
 
-- **renvoie** : ColorI Couleur
+- **returns**: ColorI Color
 
 #### `editor_api_dynamicDecals.getSdfOutlineSoftness()`
 
-Douceur du contour SDF.
+SDF outline softness.
 
-- **renvoie** : number Valeur
+- **returns**: number Value
 
 #### `editor_api_dynamicDecals.getSdfOutlineThickness()`
 
-Épaisseur du contour SDF.
+SDF outline thickness.
 
-- **renvoie** : number Valeur
+- **returns**: number Value
 
 #### `editor_api_dynamicDecals.getSdfSoftness()`
 
-Douceur SDF.
+SDF softness.
 
-- **renvoie** : number Valeur
+- **returns**: number Value
 
 #### `editor_api_dynamicDecals.getSdfThickness()`
 
-Épaisseur SDF.
+SDF thickness.
 
-- **renvoie** : number Valeur
+- **returns**: number Value
 
 #### `editor_api_dynamicDecals.getSettings()`
 
-Masque de bits des réglages du projecteur (M.settingsFlags).
+Bit mask of the projector settings (M.settingsFlags).
 
-- **renvoie** : integer Drapeaux
+- **returns**: integer Flags
 
 #### `editor_api_dynamicDecals.getShapeMaterialNames()`
 
-Matériaux du shape (index -> nom).
+Shape materials (index -> name).
 
-- **renvoie** : table<integer, string> Noms
+- **returns**: table<integer, string> Names
 
 #### `editor_api_dynamicDecals.getShapeMeshes()`
 
-Meshes du shape et leur état d'activation.
+Shape meshes and their activation state.
 
-- **renvoie** : table<string, boolean> name -> activé
+- **returns**: table<string, boolean> name -> enabled
 
 #### `editor_api_dynamicDecals.getShapePath()`
 
-Chemin du modèle 3D (shape) sur lequel on projette.
+Path of the 3D model (shape) projected onto.
 
-- **renvoie** : string Chemin
+- **returns**: string Path
 
 #### `editor_api_dynamicDecals.getSurfaceNormal()`
 
-Normale de surface courante.
+Current surface normal.
 
-- **renvoie** : vec3 Normale
+- **returns**: vec3 Normal
 
 #### `editor_api_dynamicDecals.getTextureFillLayerScale()`
 
-Échelle des calques de remplissage par texture.
+Scale of the texture fill layers.
 
-- **renvoie** : Point2F Échelle
+- **returns**: Point2F Scale
 
 #### `editor_api_dynamicDecals.getTextureFillOffset()`
 
-Décalage du remplissage par texture.
+Texture fill offset.
 
-- **renvoie** : Point2F Décalage
+- **returns**: Point2F Offset
 
 #### `editor_api_dynamicDecals.getTextureResolution()`
 
-Résolution des textures dynamiques.
+Resolution of the dynamic textures.
 
-- **renvoie** : Point2I Résolution
+- **returns**: Point2I Resolution
 
 #### `editor_api_dynamicDecals.getTextureSet()`
 
-TextureSet des textures dynamiques (nil avant setup).
+TextureSet of the dynamic textures (nil before setup).
 
-- **renvoie** : userdata|nil TextureSet
+- **returns**: userdata|nil TextureSet
 
 #### `editor_api_dynamicDecals.getUseSurfaceNormal()`
 
-Orienter le decal selon la normale de surface ?
+Orient the decal along the surface normal?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.getUvLayer()`
 
-Canal UV utilisé.
+UV channel used.
 
-- **renvoie** : integer Index UV
+- **returns**: integer UV index
 
 #### `editor_api_dynamicDecals.hasActivePathLayer()`
 
-true si un calque chemin est en cours d'édition.
+true if a path layer is currently being edited.
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.highlightLayer(layer_table)`
 
-Surligne un calque (table).
+Highlights a layer (table).
 
-- `layer_table` (*table*) : Calque
+- `layer_table` (*table*) : Layer
 
 #### `editor_api_dynamicDecals.highlightLayerByUid(layerUid_string)`
 
-Surligne un calque par uid.
+Highlights a layer by uid.
 
 - `layerUid_string` (*string*) : uid
 
 #### `editor_api_dynamicDecals.isAlphaMaskInvertEnabled()`
 
-Drapeau AlphaMaskInvert actif ?
+Is the AlphaMaskInvert flag active?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.isDecalGradientColorEnabled()`
 
-Drapeau UseGradientColor actif ?
+Is the UseGradientColor flag active?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.isUseMousePos()`
 
-Drapeau UseMousePos actif (projection au curseur souris plutôt qu'au centre) ?
+Is the UseMousePos flag active (projection at the mouse cursor rather than the center)?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.isWrapAlphaMaskXEnabled()`
 
-Drapeau WrapAlphaMaskX actif ?
+Is the WrapAlphaMaskX flag active?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.isWrapAlphaMaskYEnabled()`
 
-Drapeau WrapAlphaMaskY actif ?
+Is the WrapAlphaMaskY flag active?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.isWrapColorTextureXEnabled()`
 
-Drapeau WrapColorTextureX actif ?
+Is the WrapColorTextureX flag active?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.isWrapColorTextureYEnabled()`
 
-Drapeau WrapColorTextureY actif ?
+Is the WrapColorTextureY flag active?
 
-- **renvoie** : boolean État
+- **returns**: boolean State
 
 #### `editor_api_dynamicDecals.loadLayerStackFromFile(path_string, mode_number)`
 
-Charge une pile depuis un JSON, en écrasant (Overwrite, défaut) ou ajoutant (Append), puis reprojette.
+Loads a stack from a JSON, overwriting (Overwrite, default) or appending (Append), then reprojects.
 
-- `path_string` (*string*) : Fichier
-- `mode_number` (*integer|nil*) : M.loadingModes : 0 Overwrite, 1 Append
-- **renvoie** : table|nil Résultat de reprojectLayers (nil dans le code actuel, la fonction ne renvoie rien)
+- `path_string` (*string*) : File
+- `mode_number` (*integer|nil*) : M.loadingModes: 0 Overwrite, 1 Append
+- **returns**: table|nil Result of reprojectLayers (nil in the current code, the function returns nothing)
 
 #### `editor_api_dynamicDecals.moveLayer(from_number, fromParentUid_string, to_number, toParentUid_string)`
 
-Déplace un calque vers une autre position/parent (annulable). Refuse de faire d'un calque son propre enfant. Émet dynamicDecals_moveLayer.
+Moves a layer to another position/parent (undoable). Refuses to make a layer its own child. Emits dynamicDecals_moveLayer.
 
-- `from_number` (*integer*) : Indice source
-- `fromParentUid_string` (*string|nil*) : Parent source
-- `to_number` (*integer*) : Indice destination
-- `toParentUid_string` (*string|nil*) : Parent destination
+- `from_number` (*integer*) : Source index
+- `fromParentUid_string` (*string|nil*) : Source parent
+- `to_number` (*integer*) : Destination index
+- `toParentUid_string` (*string|nil*) : Destination parent
 
 #### `editor_api_dynamicDecals.moveLayerLocalPos(layerUid, newLocalPosition, includeChildren, referenceLayerUid)`
 
-Déplace un calque (decal, brushStroke, path ou group) à une nouvelle position locale au véhicule. Pour un groupe, referenceLayerUid est obligatoire.
+Moves a layer (decal, brushStroke, path or group) to a new vehicle-local position. For a group, referenceLayerUid is required.
 
-- `layerUid` (*string*) : uid du calque
-- `newLocalPosition` (*vec3*) : Nouvelle position
-- `includeChildren` (*boolean|nil*) : Déplacer aussi les enfants
-- `referenceLayerUid` (*string|nil*) : Calque de référence (groupes)
+- `layerUid` (*string*) : uid of the layer
+- `newLocalPosition` (*vec3*) : New position
+- `includeChildren` (*boolean|nil*) : Also move the children
+- `referenceLayerUid` (*string|nil*) : Reference layer (groups)
 
 #### `editor_api_dynamicDecals.onDeserialized(data)`
 
-Hook appelé avec les données sauvegardées : recrée la pile de calques et mémorise materialIdx pour setup().
+Hook called with the saved data: recreates the layer stack and remembers materialIdx for setup().
 
-- `data` (*table*) : Données de onSerialize
+- `data` (*table*) : Data from onSerialize
 
 #### `editor_api_dynamicDecals.onSerialize()`
 
-Hook de sérialisation d'extension : renvoie {layerStackData, materialIdx} (nil sans projecteur).
+Extension serialization hook: returns {layerStackData, materialIdx} (nil without a projector).
 
-- **renvoie** : table|nil Données
+- **returns**: table|nil Data
 
 #### `editor_api_dynamicDecals.removeLayer(index_number, parentUid_string)`
 
-Supprime un calque (annulable) et coupe la mise en évidence s'il était surligné.
+Deletes a layer (undoable) and turns off highlighting if it was highlighted.
 
-- `index_number` (*integer*) : Indice
+- `index_number` (*integer*) : Index
 - `parentUid_string` (*string|nil*) : Parent
 
 #### `editor_api_dynamicDecals.removeMaterialIdx(materialIdx_int)`
 
-Retire un matériau des cibles.
+Removes a material from the targets.
 
 - `materialIdx_int` (*integer*) : Index
 
 #### `editor_api_dynamicDecals.renderSdfTextureImgui(sizeX, sizeY)`
 
-Affiche la texture SDF dans ImGui.
+Displays the SDF texture in ImGui.
 
-- `sizeX` (*number*) : Largeur
-- `sizeY` (*number*) : Hauteur
+- `sizeX` (*number*) : Width
+- `sizeY` (*number*) : Height
 
 #### `editor_api_dynamicDecals.replaceDecalTransformFromCurrentProjection(layerUid_string, originalLayer)`
 
-Replace un decal déjà posé selon la caméra/projection courante en ne changeant que ses champs de transformation (camPosition, decalPos, decalScale, decalRotation, miroir…). Refuse si le curseur capturé n'est pas centré (0.5 ± 0.01) ou si le calque n'est pas un decal. Commit une action « Transform Decal ».
+Repositions an already placed decal according to the current camera/projection, changing only its transform fields (camPosition, decalPos, decalScale, decalRotation, mirror...). Refuses if the captured cursor is not centered (0.5 ± 0.01) or if the layer is not a decal. Commits a "Transform Decal" action.
 
-- `layerUid_string` (*string*) : uid du decal
-- `originalLayer` (*table*) : Instantané du calque avant l'édition
-- **renvoie** : boolean true si réussi
+- `layerUid_string` (*string*) : uid of the decal
+- `originalLayer` (*table*) : Snapshot of the layer before the edit
+- **returns**: boolean true if successful
 
 #### `editor_api_dynamicDecals.rotateLayer(layer, delta_vec3)`
 
-Applique une rotation delta à un calque et à ses enfants.
+Applies a delta rotation to a layer and its children.
 
-- `layer` (*table*) : Calque (uid utilisé)
-- `delta_vec3` (*vec3*) : Delta de rotation (déduit du code)
+- `layer` (*table*) : Layer (uid used)
+- `delta_vec3` (*vec3*) : Rotation delta (inferred from code)
 
 #### `editor_api_dynamicDecals.saveLayerStackToFile(path_string)`
 
-Écrit la pile de calques dans un fichier JSON (sans materialIdx).
+Writes the layer stack to a JSON file (without materialIdx).
 
-- `path_string` (*string*) : Fichier
+- `path_string` (*string*) : File
 
 #### `editor_api_dynamicDecals.scaleLayer(layer, delta_vec3)`
 
-Met à l'échelle un calque et ses enfants de (1,1,1) + delta.
+Scales a layer and its children by (1,1,1) + delta.
 
-- `layer` (*table*) : Calque (uid utilisé)
-- `delta_vec3` (*vec3*) : Delta d'échelle
+- `layer` (*table*) : Layer (uid used)
+- `delta_vec3` (*vec3*) : Scale delta
 
 #### `editor_api_dynamicDecals.serializeLayer(layer)`
 
-Convertit un calque en table sérialisable JSON (types moteur convertis).
+Converts a layer to a JSON-serializable table (engine types converted).
 
-- `layer` (*table*) : Calque
-- **renvoie** : table Données sérialisées
+- `layer` (*table*) : Layer
+- **returns**: table Serialized data
 
 #### `editor_api_dynamicDecals.setAlphaMaskBlendMode(value_int)`
 
-Définit le mode de fusion du masque alpha.
+Sets the alpha mask blend mode.
 
 - `value_int` (*integer*) : Mode
 
 #### `editor_api_dynamicDecals.setAlphaMaskChannel(value_int)`
 
-Définit le canal du masque alpha.
+Sets the alpha mask channel.
 
-- `value_int` (*integer*) : Canal
+- `value_int` (*integer*) : Channel
 
 #### `editor_api_dynamicDecals.setAlphaMaskIntensity(value_float)`
 
-Définit l'intensité du masque alpha.
+Sets the alpha mask intensity.
 
-- `value_float` (*number*) : Intensité
+- `value_float` (*number*) : Intensity
 
 #### `editor_api_dynamicDecals.setAlphaMaskOffset(value_Point2F)`
 
-Définit le décalage du masque alpha.
+Sets the alpha mask offset.
 
-- `value_Point2F` (*Point2F*) : Décalage
+- `value_Point2F` (*Point2F*) : Offset
 
 #### `editor_api_dynamicDecals.setAlphaMaskRotation(value_radian_float)`
 
-Définit la rotation du masque alpha.
+Sets the alpha mask rotation.
 
 - `value_radian_float` (*number*) : Radians
 
 #### `editor_api_dynamicDecals.setAlphaMaskScale(value_Point2F)`
 
-Définit l'échelle du masque alpha.
+Sets the alpha mask scale.
 
-- `value_Point2F` (*Point2F*) : Échelle
+- `value_Point2F` (*Point2F*) : Scale
 
 #### `editor_api_dynamicDecals.setBlendMode(blendMode_int)`
 
-Définit le mode de fusion courant.
+Sets the current blend mode.
 
-- `blendMode_int` (*integer*) : Valeur de M.blendModes
+- `blendMode_int` (*integer*) : Value of M.blendModes
 
 #### `editor_api_dynamicDecals.setBrushStrokeInterpolationSteps(value_u32)`
 
-Définit les pas d'interpolation du pinceau.
+Sets the brush interpolation steps.
 
-- `value_u32` (*integer*) : Pas
+- `value_u32` (*integer*) : Steps
 
 #### `editor_api_dynamicDecals.setColorPaletteMapId(value_int)`
 
-Définit l'index de palette du decal.
+Sets the decal's palette index.
 
 - `value_int` (*integer*) : Index
 
 #### `editor_api_dynamicDecals.setColorTextureScale(value_Point2F)`
 
-Définit l'échelle de la texture de couleur.
+Sets the color texture scale.
 
-- `value_Point2F` (*Point2F*) : Échelle
+- `value_Point2F` (*Point2F*) : Scale
 
 #### `editor_api_dynamicDecals.setCursorPosition(value_Point2F)`
 
-Définit la position du curseur de projection.
+Sets the position of the projection cursor.
 
 - `value_Point2F` (*Point2F*) : Position
 
 #### `editor_api_dynamicDecals.setDecalColor(value_Point4F)`
 
-Définit la couleur du decal.
+Sets the decal color.
 
-- `value_Point4F` (*Point4F*) : Couleur RGBA
+- `value_Point4F` (*Point4F*) : RGBA color
 
 #### `editor_api_dynamicDecals.setDecalLayerFontCharacter(value_char)`
 
-Définit le caractère de police du decal.
+Sets the decal's font character.
 
-- `value_char` (*string*) : Caractère
+- `value_char` (*string*) : Character
 
 #### `editor_api_dynamicDecals.setDecalLayerFontPath(value_string)`
 
-Définit la police du decal.
+Sets the decal's font.
 
-- `value_string` (*string*) : Chemin
+- `value_string` (*string*) : Path
 
 #### `editor_api_dynamicDecals.setDecalLocalPos(decal, worldPos)`
 
-Définit la position d'un decal (nom du paramètre worldPos dans le code).
+Sets a decal's position (parameter name is worldPos in the code).
 
-- `decal` (*table*) : Calque
-- `worldPos` (*vec3*) : Position (déduit du code)
+- `decal` (*table*) : Layer
+- `worldPos` (*vec3*) : Position (inferred from code)
 
 #### `editor_api_dynamicDecals.setDecalRotation(value_radian_number)`
 
-Définit la rotation du decal.
+Sets the decal rotation.
 
 - `value_radian_number` (*number*) : Radians
 
 #### `editor_api_dynamicDecals.setDecalScale(value_vec3)`
 
-Définit l'échelle du decal.
+Sets the decal scale.
 
-- `value_vec3` (*vec3*) : Échelle
+- `value_vec3` (*vec3*) : Scale
 
 #### `editor_api_dynamicDecals.setDecalSkew(value_Point2F)`
 
-Définit le cisaillement du decal.
+Sets the decal skew.
 
 - `value_Point2F` (*Point2F*) : Skew
 
 #### `editor_api_dynamicDecals.setDecalTexturePath(type_string, path_string)`
 
-Définit la texture courante d'un type de decal.
+Sets the current texture of a decal type.
 
-- `type_string` (*string*) : Type de texture
-- `path_string` (*string*) : Chemin
+- `type_string` (*string*) : Texture type
+- `path_string` (*string*) : Path
 
 #### `editor_api_dynamicDecals.setDecalUv(value_Point2F)`
 
-Définit le décalage UV du decal.
+Sets the decal UV offset.
 
 - `value_Point2F` (*Point2F*) : UV
 
 #### `editor_api_dynamicDecals.setEnableBrushStroke(value_bool)`
 
-Active/désactive le mode pinceau du projecteur (avec un nouvel uid aléatoire).
+Enables/disables the projector's brush mode (with a new random uid).
 
-- `value_bool` (*boolean*) : État
+- `value_bool` (*boolean*) : State
 
 #### `editor_api_dynamicDecals.setEnablePathLayer(value_bool)`
 
-Active/désactive le mode chemin ; à false, termine le chemin en cours.
+Enables/disables path mode; when set to false, finishes the current path.
 
-- `value_bool` (*boolean*) : État
+- `value_bool` (*boolean*) : State
 
 #### `editor_api_dynamicDecals.setEnabled(enabled)`
 
-Active/désactive le projecteur ; à false, vide les textures dynamiques et recombine le textureSet.
+Enables/disables the projector; when set to false, clears the dynamic textures and recombines the textureSet.
 
-- `enabled` (*boolean*) : État
+- `enabled` (*boolean*) : State
 
 #### `editor_api_dynamicDecals.setFillLayerColor(value_Point4F)`
 
-Définit la couleur des calques de remplissage.
+Sets the color of the fill layers.
 
-- `value_Point4F` (*Point4F*) : Couleur RGBA
+- `value_Point4F` (*Point4F*) : RGBA color
 
 #### `editor_api_dynamicDecals.setFillLayerColorPaletteMapId(value_int)`
 
-Définit l'index de palette pour le remplissage.
+Sets the palette index for the fill.
 
 - `value_int` (*integer*) : Index
 
 #### `editor_api_dynamicDecals.setFillTexturePath(path_string)`
 
-Définit la texture de remplissage.
+Sets the fill texture.
 
-- `path_string` (*string*) : Chemin
+- `path_string` (*string*) : Path
 
 #### `editor_api_dynamicDecals.setFlipMirroredDecal(value_bool)`
 
-Active l'inversion du decal côté miroir.
+Enables flipping of the decal on the mirror side.
 
-- `value_bool` (*boolean*) : État
+- `value_bool` (*boolean*) : State
 
 #### `editor_api_dynamicDecals.setFontTextureAtlasPath(path_string)`
 
-Définit l'atlas de texture de police.
+Sets the font texture atlas.
 
-- `path_string` (*string*) : Chemin
+- `path_string` (*string*) : Path
 
 #### `editor_api_dynamicDecals.setGradientColorBottomLeft(value_ColorI)`
 
-Définit la couleur du dégradé, coin bas-gauche.
+Sets the gradient color, bottom-left corner.
 
-- `value_ColorI` (*ColorI*) : Couleur
+- `value_ColorI` (*ColorI*) : Color
 
 #### `editor_api_dynamicDecals.setGradientColorBottomRight(value_ColorI)`
 
-Définit la couleur du dégradé, coin bas-droit.
+Sets the gradient color, bottom-right corner.
 
-- `value_ColorI` (*ColorI*) : Couleur
+- `value_ColorI` (*ColorI*) : Color
 
 #### `editor_api_dynamicDecals.setGradientColorTopLeft(value_ColorI)`
 
-Définit la couleur du dégradé, coin haut-gauche.
+Sets the gradient color, top-left corner.
 
-- `value_ColorI` (*ColorI*) : Couleur
+- `value_ColorI` (*ColorI*) : Color
 
 #### `editor_api_dynamicDecals.setGradientColorTopRight(value_ColorI)`
 
-Définit la couleur du dégradé, coin haut-droit.
+Sets the gradient color, top-right corner.
 
-- `value_ColorI` (*ColorI*) : Couleur
+- `value_ColorI` (*ColorI*) : Color
 
 #### `editor_api_dynamicDecals.setLayer(layerData_table, doReproject_bool)`
 
-Remplace un calque (par uid) par les données fournies, annulable, et émet dynamicDecals_setLayer(uid) ; dynamicDecals_onLayerUpdated(uid) est émis à l'application.
+Replaces a layer (by uid) with the given data, undoable, and emits dynamicDecals_setLayer(uid); dynamicDecals_onLayerUpdated(uid) is emitted on apply.
 
-- `layerData_table` (*table*) : Nouvelles données (uid existant)
-- `doReproject_bool` (*boolean|nil*) : Recuire la pile après modification
+- `layerData_table` (*table*) : New data (existing uid)
+- `doReproject_bool` (*boolean|nil*) : Rebake the stack after modification
 
 #### `editor_api_dynamicDecals.setLayerNameBuildString(value_string)`
 
-Définit le modèle de nom des nouveaux calques (défaut "$type Layer"). Balises : @type, @colormap, @normalmap, @metallicmap, @roughnessmap, @alphamap, @uid ; un bloc {texte@balise texte} n'apparaît que si la balise n'est pas vide.
+Sets the name template for new layers (default "$type Layer"). Tags: @type, @colormap, @normalmap, @metallicmap, @roughnessmap, @alphamap, @uid; a {text@tag text} block only appears if the tag is not empty.
 
-- `value_string` (*string*) : Modèle
+- `value_string` (*string*) : Template
 
 #### `editor_api_dynamicDecals.setLayerVisibility(layerUid_string, visibility_bool)`
 
-Affiche/masque un calque directement (sans historique) et reprojette.
+Shows/hides a layer directly (without history) and reprojects.
 
 - `layerUid_string` (*string*) : uid
 - `visibility_bool` (*boolean*) : true visible
 
 #### `editor_api_dynamicDecals.setLockDepth(value_bool)`
 
-Verrouille/déverrouille la profondeur de projection.
+Locks/unlocks the projection depth.
 
-- `value_bool` (*boolean*) : État
+- `value_bool` (*boolean*) : State
 
 #### `editor_api_dynamicDecals.setLockSurfaceNormal(value_bool)`
 
-Verrouille/déverrouille la normale de surface.
+Locks/unlocks the surface normal.
 
-- `value_bool` (*boolean*) : État
+- `value_bool` (*boolean*) : State
 
 #### `editor_api_dynamicDecals.setMaterialIdx(materialIdx_int)`
 
-Définit le matériau unique ciblé par la projection.
+Sets the single material targeted by the projection.
 
-- `materialIdx_int` (*integer*) : Index de matériau
+- `materialIdx_int` (*integer*) : Material index
 
 #### `editor_api_dynamicDecals.setMeshEnable(name_string, value_bool)`
 
-Active/désactive un mesh par nom.
+Enables/disables a mesh by name.
 
-- `name_string` (*string*) : Nom du mesh
-- `value_bool` (*boolean*) : État
+- `name_string` (*string*) : Mesh name
+- `value_bool` (*boolean*) : State
 
 #### `editor_api_dynamicDecals.setMetallicIntensity(value_float)`
 
-Définit l'intensité métallique.
+Sets the metallic intensity.
 
-- `value_float` (*number*) : Intensité
+- `value_float` (*number*) : Intensity
 
 #### `editor_api_dynamicDecals.setMirrorDebug(value_bool)`
 
-Active le debug du miroir.
+Enables mirror debug.
 
-- `value_bool` (*boolean*) : État
+- `value_bool` (*boolean*) : State
 
 #### `editor_api_dynamicDecals.setMirrorOffset(value_float)`
 
-Définit le décalage du plan de miroir.
+Sets the mirror plane offset.
 
-- `value_float` (*number*) : Décalage
+- `value_float` (*number*) : Offset
 
 #### `editor_api_dynamicDecals.setMirrored(value_bool)`
 
-Active/désactive le miroir.
+Enables/disables the mirror.
 
-- `value_bool` (*boolean*) : État
+- `value_bool` (*boolean*) : State
 
 #### `editor_api_dynamicDecals.setNormalIntensity(value_float)`
 
-Définit l'intensité de la normal map.
+Sets the normal map intensity.
 
-- `value_float` (*number*) : Intensité
+- `value_float` (*number*) : Intensity
 
 #### `editor_api_dynamicDecals.setOrientPathDecals(value_bool)`
 
-Définit si les decals du chemin s'orientent selon le chemin.
+Sets whether the path's decals are oriented along the path.
 
-- `value_bool` (*boolean*) : État
+- `value_bool` (*boolean*) : State
 
 #### `editor_api_dynamicDecals.setPathLayerFontPath(value_string)`
 
-Définit la police du chemin.
+Sets the path's font.
 
-- `value_string` (*string*) : Chemin
+- `value_string` (*string*) : Path
 
 #### `editor_api_dynamicDecals.setPathLayerInterpolationSteps(value_u32)`
 
-Définit les pas d'interpolation du chemin.
+Sets the path interpolation steps.
 
-- `value_u32` (*integer*) : Pas
+- `value_u32` (*integer*) : Steps
 
 #### `editor_api_dynamicDecals.setPathLayerText(value_string)`
 
-Définit le texte posé le long du chemin.
+Sets the text placed along the path.
 
-- `value_string` (*string*) : Texte
+- `value_string` (*string*) : Text
 
 #### `editor_api_dynamicDecals.setPathType(value_int)`
 
-Définit le type de chemin.
+Sets the path type.
 
 - `value_int` (*integer*) : 0 Linear, 1 Bezier
 
 #### `editor_api_dynamicDecals.setProjectDynamicDecalsState(value)`
 
-Active/désactive la projection de prévisualisation (M.projectDynamicDecals).
+Enables/disables the preview projection (M.projectDynamicDecals).
 
-- `value` (*boolean*) : État
+- `value` (*boolean*) : State
 
 #### `editor_api_dynamicDecals.setRoughnessIntensity(value_float)`
 
-Définit l'intensité de rugosité.
+Sets the roughness intensity.
 
-- `value_float` (*number*) : Intensité
+- `value_float` (*number*) : Intensity
 
 #### `editor_api_dynamicDecals.setSdfEnabled(value_bool)`
 
-Active/désactive le rendu SDF.
+Enables/disables SDF rendering.
 
-- `value_bool` (*boolean*) : État
+- `value_bool` (*boolean*) : State
 
 #### `editor_api_dynamicDecals.setSdfOutlineColor(value_ColorI)`
 
-Définit la couleur du contour SDF.
+Sets the SDF outline color.
 
-- `value_ColorI` (*ColorI*) : Couleur
+- `value_ColorI` (*ColorI*) : Color
 
 #### `editor_api_dynamicDecals.setSdfOutlineSoftness(value_f32)`
 
-Définit la douceur du contour SDF.
+Sets the SDF outline softness.
 
-- `value_f32` (*number*) : Valeur
+- `value_f32` (*number*) : Value
 
 #### `editor_api_dynamicDecals.setSdfOutlineThickness(value_f32)`
 
-Définit l'épaisseur du contour SDF.
+Sets the SDF outline thickness.
 
-- `value_f32` (*number*) : Valeur
+- `value_f32` (*number*) : Value
 
 #### `editor_api_dynamicDecals.setSdfSoftness(value_f32)`
 
-Définit la douceur SDF.
+Sets the SDF softness.
 
-- `value_f32` (*number*) : Valeur
+- `value_f32` (*number*) : Value
 
 #### `editor_api_dynamicDecals.setSdfThickness(value_f32)`
 
-Définit l'épaisseur SDF.
+Sets the SDF thickness.
 
-- `value_f32` (*number*) : Valeur
+- `value_f32` (*number*) : Value
 
 #### `editor_api_dynamicDecals.setShapePath(path)`
 
-Change le modèle de projection puis reprojette.
+Changes the projection model then reprojects.
 
-- `path` (*string*) : Chemin du shape
+- `path` (*string*) : Shape path
 
 #### `editor_api_dynamicDecals.setTextureFillLayerScale(value_Point2F)`
 
-Définit l'échelle du remplissage par texture.
+Sets the texture fill scale.
 
-- `value_Point2F` (*Point2F*) : Échelle
+- `value_Point2F` (*Point2F*) : Scale
 
 #### `editor_api_dynamicDecals.setTextureFillOffset(value_Point2F)`
 
-Définit le décalage du remplissage par texture.
+Sets the texture fill offset.
 
-- `value_Point2F` (*Point2F*) : Décalage
+- `value_Point2F` (*Point2F*) : Offset
 
 #### `editor_api_dynamicDecals.setTextureResolution(resolution_point2i)`
 
-Change la résolution ; si le moteur l'accepte, reprojette et réassigne le textureSet @DynamicTexture.
+Changes the resolution; if the engine accepts it, reprojects and reassigns the @DynamicTexture textureSet.
 
-- `resolution_point2i` (*Point2I*) : Résolution
+- `resolution_point2i` (*Point2I*) : Resolution
 
 #### `editor_api_dynamicDecals.setUseSurfaceNormal(value_bool)`
 
-Active l'orientation selon la normale de surface.
+Enables orientation along the surface normal.
 
-- `value_bool` (*boolean*) : État
+- `value_bool` (*boolean*) : State
 
 #### `editor_api_dynamicDecals.setUvLayer(uvLayerId_int)`
 
-Change le canal UV puis reprojette.
+Changes the UV channel then reprojects.
 
-- `uvLayerId_int` (*integer*) : Index UV
+- `uvLayerId_int` (*integer*) : UV index
 
 #### `editor_api_dynamicDecals.toggleLayerVisibility(layerUid_string)`
 
-Inverse la visibilité d'un calque (annulable) et reprojette.
+Toggles a layer's visibility (undoable) and reprojects.
 
 - `layerUid_string` (*string*) : uid
-- **renvoie** : boolean Nouvelle valeur de enabled
+- **returns**: boolean New value of enabled
 
 #### `editor_api_dynamicDecals.toggleSetting(value_int)`
 
-Inverse un drapeau de réglage.
+Toggles a settings flag.
 
-- `value_int` (*integer*) : Valeur de M.settingsFlags.X.value
-- **renvoie** : any Résultat du moteur
+- `value_int` (*integer*) : Value of M.settingsFlags.X.value
+- **returns**: any Engine result
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `blendModes` | table[] | Modes de fusion {name, value} : Clear 0, Normal 1, Screen / Add 2, Subtract 3, Multiply 4, Eraser 5. |
-| `blendModesMap` | table<string, integer> | name -> value de blendModes. |
-| `debug` | boolean | Active des logs détaillés (print) dans la plupart des fonctions. false par défaut. |
-| `layerBakingStatusCode` | table<string, integer> | Drapeaux de résultat du cuisson (res.status) : Ok 0, Warning 1, Error 2, LayerStackDataTypeIncorrect 4, LayerDataTypeIncorrect 8, TextureFileMissing 16, FontFileMissing 32. |
+| `blendModes` | table[] | Blend modes {name, value}: Clear 0, Normal 1, Screen / Add 2, Subtract 3, Multiply 4, Eraser 5. |
+| `blendModesMap` | table<string, integer> | name -> value of blendModes. |
+| `debug` | boolean | Enables detailed logs (print) in most functions. false by default. |
+| `layerBakingStatusCode` | table<string, integer> | Baking result flags (res.status): Ok 0, Warning 1, Error 2, LayerStackDataTypeIncorrect 4, LayerDataTypeIncorrect 8, TextureFileMissing 16, FontFileMissing 32. |
 | `layerTypes` | table<string, integer> | decal 0, fill 1, textureFill 2, group 3, brushStroke 4, path 5, linkedSet 6. |
-| `layerTypesMap` | table<integer, string> | Inverse de layerTypes (valeur -> nom). |
-| `loadingModes` | table[] | Modes de chargement de pile {key, value} : Overwrite 0, Append 1 (pour loadLayerStackFromFile). |
+| `layerTypesMap` | table<integer, string> | Inverse of layerTypes (value -> name). |
+| `loadingModes` | table[] | Stack loading modes {key, value}: Overwrite 0, Append 1 (for loadLayerStackFromFile). |
 | `pathTypes` | table<string, integer> | Linear 0, Bezier 1. |
-| `projectDynamicDecals` | boolean | Si true (défaut), onUpdate_ projette chaque frame le decal de prévisualisation sous la caméra. |
-| `properties` | table<string, table[]> | Description des propriétés éditables par type de calque (Decal, etc.) : id, name, description, type, default, min/max pour le widget, format, getMod/setMod, widgetType. |
-| `propertiesMap` | table | Index des propriétés (construit à partir de properties). |
-| `ready` | boolean | true une fois setup() terminé. |
-| `settingsFlags` | table<string, table> | Drapeaux de réglage du projecteur ({name, value[, description]}) : None, UseMousePos (bit 2), UseGradientColor (3), AlphaMaskInvert (4), WrapAlphaMaskX (5), WrapAlphaMaskY (6), WrapColorTextureX (7), WrapColorTextureY (8). |
-| `textureResolutions` | table[] | Résolutions possibles {name, value} : 512, 1024, 2048, 4096. |
-| `types` | table<string, integer> | Types de propriété pour M.properties : bool 0, int 1, float 2, Point2F 3, Point3F 4, Point4F 5, string 6, Texture 7, File 8, ColorI 9, MultiColor 10. |
-| `typesMap` | table<integer, string> | Inverse de types. |
-| `widgetTypes` | table | Pour chaque type de propriété, table des widgets possibles (Default, Input, Slider, Drag, Combo, Checkbox, Color, File, ImageButton, ColorGradient, InputMultiline selon le type). |
+| `projectDynamicDecals` | boolean | If true (default), onUpdate_ projects the preview decal under the camera every frame. |
+| `properties` | table<string, table[]> | Description of the editable properties per layer type (Decal, etc.): id, name, description, type, default, min/max for the widget, format, getMod/setMod, widgetType. |
+| `propertiesMap` | table | Property index (built from properties). |
+| `ready` | boolean | true once setup() has finished. |
+| `settingsFlags` | table<string, table> | Projector setting flags ({name, value[, description]}): None, UseMousePos (bit 2), UseGradientColor (3), AlphaMaskInvert (4), WrapAlphaMaskX (5), WrapAlphaMaskY (6), WrapColorTextureX (7), WrapColorTextureY (8). |
+| `textureResolutions` | table[] | Possible resolutions {name, value}: 512, 1024, 2048, 4096. |
+| `types` | table<string, integer> | Property types for M.properties: bool 0, int 1, float 2, Point2F 3, Point3F 4, Point4F 5, string 6, Texture 7, File 8, ColorI 9, MultiColor 10. |
+| `typesMap` | table<integer, string> | Inverse of types. |
+| `widgetTypes` | table | For each property type, table of possible widgets (Default, Input, Slider, Drag, Combo, Checkbox, Color, File, ImageButton, ColorGradient, InputMultiline depending on the type). |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `dynamicDecals_moveLayer`
 - `dynamicDecals_onLayerAdded`
@@ -1451,9 +1451,9 @@ Inverse un drapeau de réglage.
 - `dynamicDecals_onLayerUpdated`
 - `dynamicDecals_setLayer`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/dynamicDecals.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/dynamicDecals.lua`.*

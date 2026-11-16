@@ -2,252 +2,252 @@
 -- tim19Atlas stub generated from lua/ge/extensions/scenario/scenarios.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Cœur du mode « scénario » : machine à états qui charge le niveau d'un scénario, fait apparaître ses prefabs et véhicules, gère la phase d'introduction, le compte à rebours, la course (chrono, tentatives, suivi de dégâts), la fin avec agrégation des résultats, les statistiques et l'écran de fin. Un scénario est une table (produite par scenario_scenariosLoader) stockée dans une variable locale unique ; on la lit avec getScenario(). Un moddeur s'en sert pour lancer/arrêter un scénario (executeScenario, stop, restartScenario), terminer (endScenario, finish) ou écouter les hooks émis (onScenarioChange, onRaceStart, onRaceResult…).
---- Accès : extension `scenario_scenarios` : `extensions.load("scenario_scenarios")`, puis la globale `scenario_scenarios`
+--- Core of the "scenario" mode: a state machine that loads a scenario's level, spawns its prefabs and vehicles, handles the intro phase, the countdown, the race (timer, attempts, damage tracking), the end with result aggregation, the statistics and the end screen. A scenario is a table (produced by scenario_scenariosLoader) stored in a single local variable; it is read with getScenario(). A modder uses it to start/stop a scenario (executeScenario, stop, restartScenario), end it (endScenario, finish) or listen to the emitted hooks (onScenarioChange, onRaceStart, onRaceResult...).
+--- Access: extension `scenario_scenarios`: `extensions.load("scenario_scenarios")`, then the global `scenario_scenarios`
 ---@class scenario_scenarios
----@field onRaceWaypointReached nil Exporté mais vaut nil (variable locale non définie dans le fichier).
+---@field onRaceWaypointReached nil Exported but is nil (local variable not defined in the file).
 scenario_scenarios = {}
 
---- Change scenario.state et exécute les actions d'entrée de l'état ('pre-start', 'pre-running', 'deferredRunning', 'running', 'finished', 'post'), puis émet onScenarioChange(scenario). Ne fait rien sans scénario.
----Source : lua/ge/extensions/scenario/scenarios.lua:252
+--- Changes scenario.state and runs the entry actions of the state ('pre-start', 'pre-running', 'deferredRunning', 'running', 'finished', 'post'), then emits onScenarioChange(scenario). Does nothing without a scenario.
+---Source: lua/ge/extensions/scenario/scenarios.lua:252
 ---@param newState string 'pre-start', 'pre-running', 'deferredRunning', 'running', 'finished', 'post', 'restart', 'physicsPaused'
 function scenario_scenarios.changeState(newState) end
 
---- Reprend le temps de simulation (simTimeAuthority.pause(false)).
----Source : lua/ge/extensions/scenario/scenarios.lua:396
+--- Resumes simulation time (simTimeAuthority.pause(false)).
+---Source: lua/ge/extensions/scenario/scenarios.lua:396
 function scenario_scenarios.continueScenario() end
 
---- Efface displayEndUIRefs (autorise l'affichage de l'écran de fin).
----Source : lua/ge/extensions/scenario/scenarios.lua:1523
+--- Clears displayEndUIRefs (allows the end screen to be displayed).
+---Source: lua/ge/extensions/scenario/scenarios.lua:1523
 function scenario_scenarios.displayEndUI() end
 
---- Navigue vers l'écran 'scenario.start' (ui_router) et efface displayStartUIRefs.
----Source : lua/ge/extensions/scenario/scenarios.lua:1518
+--- Navigates to the 'scenario.start' screen (ui_router) and clears displayStartUIRefs.
+---Source: lua/ge/extensions/scenario/scenarios.lua:1518
 function scenario_scenarios.displayStartUI() end
 
---- Passe en état 'finished' (sauf si déjà finished/post), fixe le délai avant les résultats (countDownTime, sinon scenario.endCountDownTime, sinon 3 s) et mémorise le temps final.
----Source : lua/ge/extensions/scenario/scenarios.lua:401
----@param countDownTime number|nil délai en s
+--- Switches to the 'finished' state (unless already finished/post), sets the delay before results (countDownTime, otherwise scenario.endCountDownTime, otherwise 3 s) and stores the final time.
+---Source: lua/ge/extensions/scenario/scenarios.lua:401
+---@param countDownTime number|nil delay in s
 function scenario_scenarios.endRace(countDownTime) end
 
---- Termine la course (endRace), émet onEndScenario(countDownTime) pour laisser buts et Lua custom décider du résultat, et ralentit le temps à 1/8 si besoin.
----Source : lua/ge/extensions/scenario/scenarios.lua:1452
----@param countDownTime number|nil délai avant le résultat (s, temps réel)
+--- Ends the race (endRace), emits onEndScenario(countDownTime) to let goals and custom Lua decide the result, and slows time to 1/8 if needed.
+---Source: lua/ge/extensions/scenario/scenarios.lua:1452
+---@param countDownTime number|nil delay before the result (s, real time)
 function scenario_scenarios.endScenario(countDownTime) end
 
---- Lance un scénario : arrête le scénario courant s'il y en a un, mémorise sc, charge ses extensions (scenario.extensions), interdit le spawn automatique du joueur puis démarre le niveau scenario.mission via core_levels.startLevel. La suite se passe dans onClientStartMission.
----Source : lua/ge/extensions/scenario/scenarios.lua:1110
----@param sc table table de scénario traitée par scenario_scenariosLoader
+--- Starts a scenario: stops the current scenario if there is one, stores sc, loads its extensions (scenario.extensions), forbids automatic player spawn then starts the level scenario.mission via core_levels.startLevel. The rest happens in onClientStartMission.
+---Source: lua/ge/extensions/scenario/scenarios.lua:1110
+---@param sc table scenario table processed by scenario_scenariosLoader
 function scenario_scenarios.executeScenario(sc) end
 
---- Ajoute un résultat à scenario.pooledResults et termine la course si elle n'est pas déjà finie (endRace(0), sans délai). result.failed (chaîne) = échec ; result.msg = succès.
----Source : lua/ge/extensions/scenario/scenarios.lua:677
+--- Adds a result to scenario.pooledResults and ends the race if it is not already finished (endRace(0), no delay). result.failed (string) = failure; result.msg = success.
+---Source: lua/ge/extensions/scenario/scenarios.lua:677
 ---@param result table {failed = ..., msg = ...}
 function scenario_scenarios.finish(result) end
 
---- Gèle ou dégèle tous les véhicules du scénario via controller.setFreeze côté véhicule (utilisé avant la fin du compte à rebours).
----Source : lua/ge/extensions/scenario/scenarios.lua:118
----@param state integer 1 pour geler, 0 pour dégeler
+--- Freezes or unfreezes all the scenario's vehicles via controller.setFreeze on the vehicle side (used before the end of the countdown).
+---Source: lua/ge/extensions/scenario/scenarios.lua:118
+---@param state integer 1 to freeze, 0 to unfreeze
 function scenario_scenarios.freezeAll(state) end
 
---- Longueur d'un tour : somme des distances entre les points successifs de scenario.lapConfig (noeuds de la carte ou objets de scène).
----Source : lua/ge/extensions/scenario/scenarios.lua:336
----@param scenario table scénario (utilise lapConfig)
----@return number  distance en m (0 si pas de lapConfig)
+--- Length of a lap: sum of the distances between successive points of scenario.lapConfig (map nodes or scene objects).
+---Source: lua/ge/extensions/scenario/scenarios.lua:336
+---@param scenario table scenario (uses lapConfig)
+---@return number  distance in m (0 if no lapConfig)
 function scenario_scenarios.getRaceDistance(scenario) end
 
---- Renvoie la table du scénario actuellement chargé.
----Source : lua/ge/extensions/scenario/scenarios.lua:1440
----@return table|nil  scénario ou nil
+--- Returns the table of the currently loaded scenario.
+---Source: lua/ge/extensions/scenario/scenarios.lua:1440
+---@return table|nil  scenario or nil
 function scenario_scenarios.getScenario() end
 
---- État du scénario mémorisé au moment de la pause physique.
----Source : lua/ge/extensions/scenario/scenarios.lua:2276
----@return string|nil  état
+--- Scenario state stored at the time of the physics pause.
+---Source: lua/ge/extensions/scenario/scenarios.lua:2276
+---@return string|nil  state
 function scenario_scenarios.getScenarioStateAtPauseEvent() end
 
---- Nom de scénario d'un véhicule à partir de son id.
----Source : lua/ge/extensions/scenario/scenarios.lua:1489
----@param vehicleID integer id du véhicule
----@return string|nil  nom, nil si aucun scénario ou inconnu
+--- Scenario name of a vehicle from its id.
+---Source: lua/ge/extensions/scenario/scenarios.lua:1489
+---@param vehicleID integer vehicle id
+---@return string|nil  name, nil if no scenario or unknown
 function scenario_scenarios.getVehicleName(vehicleID) end
 
---- Renvoie scenario.name du scénario courant (erreur Lua s'il n'y en a pas).
----Source : lua/ge/extensions/scenario/scenarios.lua:2345
----@return string  nom du scénario
+--- Returns scenario.name of the current scenario (Lua error if there is none).
+---Source: lua/ge/extensions/scenario/scenarios.lua:2345
+---@return string  scenario name
 function scenario_scenarios.getscenarioName() end
 
---- Hook : gère les tentatives (scenario.attemptsInfo) quand le véhicule joueur entre dans un trigger : émet onAttemptFailed ou onAttemptCompleted selon failAttempts/completeAttempt et arme le minuteur d'attente.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:2395
+--- Hook: handles attempts (scenario.attemptsInfo) when the player vehicle enters a trigger: emits onAttemptFailed or onAttemptCompleted according to failAttempts/completeAttempt and arms the wait timer.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:2395
 ---@param data table {event, subjectID, triggerName, ...}
 function scenario_scenarios.onBeamNGTrigger(data) end
 
---- Hook : mémorise le dernier mode de caméra (sauf 'path' et 'observer') dans scenario.lastModeName, pour le restaurer au départ de la course.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:1444
----@param modeName string nom du mode de caméra
+--- Hook: stores the last camera mode (except 'path' and 'observer') in scenario.lastModeName, to restore it at the start of the race.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:1444
+---@param modeName string camera mode name
 function scenario_scenarios.onCameraModeChanged(modeName) end
 
---- Hook de fin de niveau : nettoie raceMarker.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:2426
+--- Level end hook: cleans up raceMarker.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:2426
 function scenario_scenarios.onClientEndMission() end
 
---- Hook appelé par main.lua quand le niveau est chargé (clientStartMission). Si un scénario est en attente : crée ScenarioObjectsGroup, spawne les prefabs et le véhicule choisi, émet onLoadCustomPrefabs et passe en 'pre-start'. Supprime toujours l'ancien groupe d'objets de scénario et lève preventPlayerSpawning.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:999
----@param levelPath string chemin du niveau
+--- Hook called by main.lua when the level is loaded (clientStartMission). If a scenario is pending: creates ScenarioObjectsGroup, spawns the prefabs and the chosen vehicle, emits onLoadCustomPrefabs and switches to 'pre-start'. Always removes the old scenario object group and lifts preventPlayerSpawning.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:999
+---@param levelPath string level path
 function scenario_scenarios.onClientStartMission(levelPath) end
 
---- Hook de désérialisation après rechargement Lua : recharge le scénario depuis sourceFile/scenarioKey et restaure l'état.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:2314
----@param data table données produites par onSerialize
+--- Deserialization hook after Lua reload: reloads the scenario from sourceFile/scenarioKey and restores the state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:2314
+---@param data table data produced by onSerialize
 function scenario_scenarios.onDeserialized(data) end
 
---- Hook de dessin debug : si l'éditeur est activé et le réglage BeamNGRaceDrawDebug vrai, dessine sphères et noms des noeuds de waypoints du scénario dans un rayon de 200 m.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:1168
----@param focusPos vec3 position de focalisation de debug
+--- Debug draw hook: if the editor is enabled and the BeamNGRaceDrawDebug setting is true, draws spheres and names of the scenario's waypoint nodes within a 200 m radius.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:1168
+---@param focusPos vec3 debug focus position
 function scenario_scenarios.onDrawDebug(focusPos) end
 
---- Hook de chargement de l'extension : crée la globale obsolète scenario_race qui redirige vers scenario_scenarios.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:2355
+--- Extension load hook: creates the obsolete global scenario_race that redirects to scenario_scenarios.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:2355
 function scenario_scenarios.onExtensionLoaded() end
 
---- Hook de déchargement : appelle stop() et efface scenario_race.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:2350
+--- Unload hook: calls stop() and clears scenario_race.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:2350
 function scenario_scenarios.onExtensionUnloaded() end
 
---- Hook : en scénario multiseat, un mouvement de direction (steering, steer_left, steer_right) d'un périphérique change le véhicule assigné (limité à une fois par 500 ms, seuil 0,2).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:1354
----@param devName string périphérique
+--- Hook: in a multiseat scenario, a steering movement (steering, steer_left, steer_right) from a device changes the assigned vehicle (limited to once per 500 ms, threshold 0.2).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:1354
+---@param devName string device
 ---@param action string action
----@param value number valeur de l'axe
+---@param value number axis value
 function scenario_scenarios.onFilteredInputChanged(devName, action, value) end
 
---- Hook : rapproche les périphériques et les places multiseat quand les assignations d'entrée changent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:1350
----@param assignedPlayers table joueurs assignés
+--- Hook: matches devices and multiseat seats when the input assignments change.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:1350
+---@param assignedPlayers table assigned players
 function scenario_scenarios.onInputBindingsChanged(assignedPlayers) end
 
---- Hook : mémorise l'état courant et passe en 'physicsPaused' (sauf éditeur actif).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:2267
+--- Hook: stores the current state and switches to 'physicsPaused' (unless the editor is active).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:2267
 function scenario_scenarios.onPhysicsPaused() end
 
---- Hook : restaure l'état mémorisé au moment de la pause (sauf si le scénario est en 'restart').
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:2256
+--- Hook: restores the state stored at the time of the pause (unless the scenario is in 'restart').
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:2256
 function scenario_scenarios.onPhysicsUnpaused() end
 
---- Hook appelé chaque frame depuis luaPreRender : exécute la fonction de tick de l'état courant (tickPreStart, tickPreRunning, tickRunning, tickFinished, tickPost, tickRestart) puis dessine les marqueurs de course. Ne fait rien pendant une lecture de replay qui interdit le gameplay.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:2119
+--- Hook called every frame from luaPreRender: runs the current state's tick function _anon(tickPreStart, tickPreRunning, tickRunning, tickFinished, tickPost, tickRestart) then draws the race markers. Does nothing during a replay playback that forbids gameplay.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:2119
 ---@param dt number dtReal (s)
----@param dtSim number temps simulé (s)
+---@param dtSim number simulated time (s)
 function scenario_scenarios.onPreRender(dt, dtSim) end
 
---- Hook du replay : lève ou rétablit le filtre d'actions du scénario selon que le replay autorise le gameplay.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:2223
----@param data table données de l'évènement (non utilisées)
+--- Replay hook: lifts or restores the scenario's action filter depending on whether the replay allows gameplay.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:2223
+---@param data table event data (unused)
 function scenario_scenarios.onReplayCoreEvent(data) end
 
---- Hook : un reset du gameplay redémarre le scénario (restartScenario).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:2250
----@param playerID integer joueur
+--- Hook: a gameplay reset restarts the scenario (restartScenario).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:2250
+---@param playerID integer player
 function scenario_scenarios.onResetGameplay(playerID) end
 
---- Callback envoyé par l'UI : 'start' (en pre-start) lance la phase d'introduction (pre-running) ; 'play' (en pre-running) lance la course (running). Re-publie ScenarioChange à l'UI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:1400
----@param state string 'start' ou 'play'
+--- Callback sent by the UI: 'start' (in pre-start) starts the introduction phase (pre-running); 'play' (in pre-running) starts the race (running). Republishes ScenarioChange to the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:1400
+---@param state string 'start' or 'play'
 function scenario_scenarios.onScenarioUIReady(state) end
 
---- Hook de sérialisation avant rechargement Lua : renvoie l'état minimal du scénario.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:2287
----@return table  données (vide si aucun scénario)
+--- Serialization hook before Lua reload: returns the scenario's minimal state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:2287
+---@return table  data (empty if no scenario)
 function scenario_scenarios.onSerialize() end
 
---- Hook appelé quand le joueur choisit un véhicule dans l'UI du scénario : remplace ou spawne le véhicule du joueur avec model/config/color/licenseText, puis gèle tous les véhicules.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:1985
+--- Hook called when the player chooses a vehicle in the scenario UI: replaces or spawns the player's vehicle with model/config/color/licenseText, then freezes all vehicles.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:1985
 ---@param vehicleData table {model, config, color, licenseText}
 function scenario_scenarios.onVehicleSelected(vehicleData) end
 
---- Hook : si trackPlayerVehicle est actif et que le véhicule est le joueur 0, marque playerIsDamaged et playerHasStopped.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:2239
----@param vehicleID integer id du véhicule
+--- Hook: if trackPlayerVehicle is active and the vehicle is player 0, sets playerIsDamaged and playerHasStopped.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:2239
+---@param vehicleID integer vehicle id
 function scenario_scenarios.onVehicleStoppedMoving(vehicleID) end
 
---- Met le temps de simulation en pause (simTimeAuthority.pause(true)).
----Source : lua/ge/extensions/scenario/scenarios.lua:391
+--- Pauses simulation time (simTimeAuthority.pause(true)).
+---Source: lua/ge/extensions/scenario/scenarios.lua:391
 function scenario_scenarios.pauseScenario() end
 
---- Remet à 0 le compteur displayStartUIRefs du scénario ; l'UI de départ s'affiche tant que ce compteur vaut 0 au stage 1 de pre-start.
----Source : lua/ge/extensions/scenario/scenarios.lua:413
+--- Resets the scenario's displayStartUIRefs counter to 0; the start UI is displayed while this counter is 0 at stage 1 of pre-start.
+---Source: lua/ge/extensions/scenario/scenarios.lua:413
 function scenario_scenarios.prepareStartUI() end
 
---- Redémarre le scénario courant depuis le début en conservant le niveau chargé : copie le scénario, appelle stop(), puis passe à l'état 'restart'. Doit rester un « reload » et non un « onload » (commentaire du code).
----Source : lua/ge/extensions/scenario/scenarios.lua:1136
+--- Restarts the current scenario from the beginning while keeping the loaded level: copies the scenario, calls stop(), then switches to the 'restart' state. Must remain a "reload" and not an "onload" (code comment).
+---Source: lua/ge/extensions/scenario/scenarios.lua:1136
 function scenario_scenarios.restartScenario() end
 
---- À appeler pour un départ lancé (scenario.rollingStart) : remet le chrono à 0 et lance processRaceStart (onRaceStart).
----Source : lua/ge/extensions/scenario/scenarios.lua:1581
+--- To be called for a rolling start (scenario.rollingStart): resets the timer to 0 and runs processRaceStart (onRaceStart).
+---Source: lua/ge/extensions/scenario/scenarios.lua:1581
 function scenario_scenarios.rollingStartTriggered() end
 
---- Force l'état à restaurer à la reprise de la physique.
----Source : lua/ge/extensions/scenario/scenarios.lua:2280
----@param state string|nil état
+--- Forces the state to restore when physics resumes.
+---Source: lua/ge/extensions/scenario/scenarios.lua:2280
+---@param state string|nil state
 function scenario_scenarios.setScenarioStateAtPauseEvent(state) end
 
---- OBSOLÈTE : utiliser spawnPrefab/addPrefab/removePrefab de ge_utils. val 2 = ajouter et charger, 1 = ajouter sans charger, 0 = décharger.
----Source : lua/ge/extensions/scenario/scenarios.lua:687
----@param val integer 0, 1 ou 2
----@param objName string nom
----@param objFileName string fichier
+--- OBSOLETE: use spawnPrefab/addPrefab/removePrefab from ge_utils. val 2 = add and load, 1 = add without loading, 0 = unload.
+---Source: lua/ge/extensions/scenario/scenarios.lua:687
+---@param val integer 0, 1 or 2
+---@param objName string name
+---@param objFileName string file
 ---@param objPos string position
 ---@param objRotation string rotation
----@param objScale string échelle
+---@param objScale string scale
 ---@return table|nil  prefab
 function scenario_scenarios.spawnPrefab(val, objName, objFileName, objPos, objRotation, objScale) end
 
---- Arrête et décharge complètement le scénario : coupe le multiseat, décharge les extensions du scénario, remet la vitesse du temps à 1, retire le filtre d'actions, réactive trailerRespawn, vide la variable scénario, nettoie raceMarker, envoie ScenarioChange(nil) à l'UI et émet onScenarioChange sans argument. Ne fait rien s'il n'y a pas de scénario.
----Source : lua/ge/extensions/scenario/scenarios.lua:469
+--- Stops and fully unloads the scenario: turns off multiseat, unloads the scenario's extensions, resets the time speed to 1, removes the action filter, re-enables trailerRespawn, clears the scenario variable, cleans up raceMarker, sends ScenarioChange(nil) to the UI and emits onScenarioChange with no argument. Does nothing if there is no scenario.
+---Source: lua/ge/extensions/scenario/scenarios.lua:469
 function scenario_scenarios.stop() end
 
---- Arrête le chronomètre du scénario (timerActive = false).
----Source : lua/ge/extensions/scenario/scenarios.lua:386
+--- Stops the scenario timer (timerActive = false).
+---Source: lua/ge/extensions/scenario/scenarios.lua:386
 function scenario_scenarios.stopRaceTimer() end
 
---- Enregistre un véhicule dans scenario.vehicleTrackingTable : le suivi émet ensuite onObjectCollision, onVehicleTakenDamage et onVehicleStoppedMoving pendant la course.
----Source : lua/ge/extensions/scenario/scenarios.lua:1493
----@param vehicleName string nom de l'objet véhicule
----@param trackingOptions table|nil {waitTimerLimit (s, défaut 1.0), vehDisplacementLimit (m, défaut 0.25)}
+--- Registers a vehicle in scenario.vehicleTrackingTable: the tracking then emits onObjectCollision, onVehicleTakenDamage and onVehicleStoppedMoving during the race.
+---Source: lua/ge/extensions/scenario/scenarios.lua:1493
+---@param vehicleName string vehicle object name
+---@param trackingOptions table|nil {waitTimerLimit (s, default 1.0), vehDisplacementLimit (m, default 0.25)}
 function scenario_scenarios.trackVehicleMovementAfterDamage(vehicleName, trackingOptions) end
 
---- Appelée par l'UI (bouton Free roam) : supprime les véhicules IA du scénario, arrête le scénario et passe l'état de jeu en 'freeroam' sans restaurer l'état du niveau.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:1481
+--- Called by the UI (Free roam button): removes the scenario's AI vehicles, stops the scenario and sets the game state to 'freeroam' without restoring the level state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:1481
 function scenario_scenarios.uiEventFreeRoam() end
 
---- Appelée par l'UI (bouton Réessayer) : restartScenario puis prepareStartUI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/scenarios.lua:1475
+--- Called by the UI (Retry button): restartScenario then prepareStartUI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/scenarios.lua:1475
 function scenario_scenarios.uiEventRetry() end
 
---- Met à jour scenario.aiControlledVehiclesById pour un véhicule (mode 'disable' le retire) et émet onVehicleAIStateChanged({vehicleId, vehicleName, aiControlled}).
----Source : lua/ge/extensions/scenario/scenarios.lua:2374
----@param vehicleName string nom du véhicule
----@param data table {mode = 'disable'|autre}
+--- Updates scenario.aiControlledVehiclesById for a vehicle (mode 'disable' removes it) and emits onVehicleAIStateChanged({vehicleId, vehicleName, aiControlled}).
+---Source: lua/ge/extensions/scenario/scenarios.lua:2374
+---@param vehicleName string vehicle name
+---@param data table {mode = 'disable'|other}
 function scenario_scenarios.updateVehicleAiState(vehicleName, data) end
 

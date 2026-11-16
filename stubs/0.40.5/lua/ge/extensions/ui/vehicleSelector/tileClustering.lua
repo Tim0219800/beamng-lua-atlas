@@ -2,57 +2,57 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/vehicleSelector/tileClustering.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Regroupe les configurations de véhicules en « clusters » (une tuile par modèle ou par marque + sous-modèle) pour la grille du sélecteur de véhicules, et fabrique la tuile de chaque cluster : nom, aperçu, chemin de navigation, favoris et récents, statistiques de la config représentative, icônes de source. Il est appelé par ui_vehicleSelector_tiles ; un moddeur s'en sert peu directement.
---- Accès : extension `ui_vehicleSelector_tileClustering` : `extensions.load("ui_vehicleSelector_tileClustering")`, puis la globale `ui_vehicleSelector_tileClustering`
+--- Groups vehicle configurations into "clusters" (one tile per model or per brand + sub-model) for the vehicle selector grid, and builds each cluster's tile: name, preview, navigation path, favorites and recents, statistics of the representative config, source icons. It is called by ui_vehicleSelector_tiles; a modder rarely uses it directly.
+--- Access: extension `ui_vehicleSelector_tileClustering`: `extensions.load("ui_vehicleSelector_tileClustering")`, then the global `ui_vehicleSelector_tileClustering`
 ---@class ui_vehicleSelector_tileClustering
 ui_vehicleSelector_tileClustering = {}
 
---- Regroupe des configs selon le mode de cluster. Chaque cluster contient configsByKey, count, list, ainsi que years et value (minimums des configs, pour le tri).
----Source : lua/ge/extensions/ui/vehicleSelector/tileClustering.lua:280
----@param configs table Configs à regrouper (chacune avec key et model_key).
----@param clusterMode string 'brandSubModelOrModel' ou 'model'.
----@return table<string, table>  Clusters indexés par nom de groupe.
+--- Groups configs according to the cluster mode. Each cluster contains configsByKey, count, list, as well as years and value (minimums of the configs, for sorting).
+---Source: lua/ge/extensions/ui/vehicleSelector/tileClustering.lua:280
+---@param configs table Configs to group (each with key and model_key).
+---@param clusterMode string 'brandSubModelOrModel' or 'model'.
+---@return table<string, table>  Clusters keyed by group name.
 function ui_vehicleSelector_tileClustering.clusterItems(configs, clusterMode) end
 
---- Crée la tuile d'un cluster selon le mode demandé.
----Source : lua/ge/extensions/ui/vehicleSelector/tileClustering.lua:309
----@param clusteredItems table Un cluster issu de clusterItems.
----@param group table Groupe parent (key, gotoParams).
----@param clusterMode string 'brandSubModelOrModel' ou 'model'.
----@return table|nil  Tuile (key, name, preview, subElementCount, favouriteIdx, recentIdx, gotoPath, doubleClickDetails, sourceIcons, Value, Weight, Top Speed, Power, Power/Weight, 0-60 mph, 0-100 km/h, isAuxiliary...), ou nil si mode inconnu.
+--- Creates a cluster's tile according to the requested mode.
+---Source: lua/ge/extensions/ui/vehicleSelector/tileClustering.lua:309
+---@param clusteredItems table A cluster from clusterItems.
+---@param group table Parent group (key, gotoParams).
+---@param clusterMode string 'brandSubModelOrModel' or 'model'.
+---@return table|nil  Tile (key, name, preview, subElementCount, favouriteIdx, recentIdx, gotoPath, doubleClickDetails, sourceIcons, Value, Weight, Top Speed, Power, Power/Weight, 0-60 mph, 0-100 km/h, isAuxiliary...), or nil if the mode is unknown.
 function ui_vehicleSelector_tileClustering.createTileFromClusteredItems(clusteredItems, group, clusterMode) end
 
---- Renvoie la fonction qui calcule le nom de cluster d'une config pour un mode donné.
----Source : lua/ge/extensions/ui/vehicleSelector/tileClustering.lua:318
----@param clusterMode string Mode de cluster.
----@return function|nil  Fonction (config) -> string, ou nil.
+--- Returns the function that computes a config's cluster name for a given mode.
+---Source: lua/ge/extensions/ui/vehicleSelector/tileClustering.lua:318
+---@param clusterMode string Cluster mode.
+---@return function|nil  Function (config) -> string, or nil.
 function ui_vehicleSelector_tileClustering.getClusterModeFunction(clusterMode) end
 
---- Parcourt un cluster pour déterminer les favoris et récents qu'il contient.
----Source : lua/ge/extensions/ui/vehicleSelector/tileClustering.lua:24
+--- Walks a cluster to determine the favorites and recents it contains.
+---Source: lua/ge/extensions/ui/vehicleSelector/tileClustering.lua:24
 ---@param clusteredItems table Cluster (configsByKey, count).
----@return number  Plus grand indice de favori (0 si aucun).
----@return number  Plus petit indice de récent (math.huge si aucun).
----@return number  Part des configs favorites, entre 0 et 1.
----@return table|nil  Config favorite d'indice le plus haut.
----@return table|nil  Config la plus récente.
+---@return number  Highest favorite index (0 if none).
+---@return number  Lowest recent index (math.huge if none).
+---@return number  Share of favorite configs, between 0 and 1.
+---@return table|nil  Favorite config with the highest index.
+---@return table|nil  Most recent config.
 function ui_vehicleSelector_tileClustering.getClusteredItemsFavouriteIconPercent(clusteredItems) end
 
---- Choisit l'aperçu, le modèle, la config et la config représentative d'un cluster selon sortMode.
----Source : lua/ge/extensions/ui/vehicleSelector/tileClustering.lua:46
+--- Chooses a cluster's preview, model, config and representative config according to sortMode.
+---Source: lua/ge/extensions/ui/vehicleSelector/tileClustering.lua:46
 ---@param clusteredItems table Cluster.
----@param sortMode string Mode de tri (Automatic, Name, Value, Weight, ...).
----@return string  Chemin de l'image d'aperçu.
----@return string  Clé du modèle.
----@return string  Clé de la config représentative.
----@return table  Config représentative.
+---@param sortMode string Sort mode (Automatic, Name, Value, Weight, ...).
+---@return string  Path of the preview image.
+---@return string  Model key.
+---@return string  Key of the representative config.
+---@return table  Representative config.
 function ui_vehicleSelector_tileClustering.getClusteredItemsStats(clusteredItems, sortMode) end
 
---- Renvoie les étiquettes et icônes de provenance d'une config : officielle BeamNG ('beamNG'), personnalisée ('wrench'), Automation (logo SVG), mod ('puzzleModule'), fichiers jbeam manquants ('danger').
----Source : lua/ge/extensions/ui/vehicleSelector/tileClustering.lua:92
----@param config table Config du véhicule.
----@param model table Données du modèle.
----@param onlyIcons boolean true pour ne renvoyer que les icônes, sans le texte traduit.
----@return string[]  Liste d'icônes (et textes si onlyIcons est faux).
+--- Returns the provenance labels and icons of a config: official BeamNG ('beamNG'), custom ('wrench'), Automation (SVG logo), mod ('puzzleModule'), missing jbeam files ('danger').
+---Source: lua/ge/extensions/ui/vehicleSelector/tileClustering.lua:92
+---@param config table Vehicle config.
+---@param model table Model data.
+---@param onlyIcons boolean true to return only the icons, without the translated text.
+---@return string[]  List of icons (and texts if onlyIcons is false).
 function ui_vehicleSelector_tileClustering.getSources(config, model, onlyIcons) end
 

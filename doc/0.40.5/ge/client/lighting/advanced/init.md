@@ -1,19 +1,19 @@
 # `client_lighting_advanced_init`
 
-*Fichier : `lua/ge/client/lighting/advanced/init.lua` · VM : Game Engine (GE) · 63 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/client/lighting/advanced/init.lua` · VM: Game Engine (GE) · 63 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("client/lighting/advanced/init")`
+**Access:** `require("client/lighting/advanced/init")`
 
-Light manager « Advanced Lighting ». Charge les sous-modules shaders, lightViz et shadowViz, puis, si le gestionnaire existe (LightManager.findByName), publie la table globale ADVLMCallbacks avec onActivate/onDeactivate. À l'activation, il active l'objet AL_FormatToken (cible hors écran nécessaire à MSAA et HDR) ; à la désactivation, il le désactive.
+"Advanced Lighting" light manager. Loads the submodules shaders, lightViz and shadowViz, then, if the manager exists (LightManager.findByName), publishes the global table ADVLMCallbacks with onActivate/onDeactivate. On activation, it enables the AL_FormatToken object (off-screen target needed for MSAA and HDR); on deactivation, it disables it.
 
-## Remarques
+## Notes
 
-- Sur macOS (variable $platform == « macos »), onActivate ne fait rien.
-- Le bloc de préférences $pref::LightManager::* du début est entièrement commenté.
+- On macOS (variable $platform == "macos"), onActivate does nothing.
+- The $pref::LightManager::* preferences block at the start is entirely commented out.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/client/lighting/advanced/init.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/client/lighting/advanced/init.lua`.*

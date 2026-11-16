@@ -2,36 +2,36 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/roadArchitect/link.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Module de l'éditeur Road Architect qui relie des routes entre elles. Il détecte si l'extrémité d'une route peut être raccordée à celle d'une autre (profil identique, passage trottoir/sans trottoir, autoroute/urbain, route à sens unique/double, évasement de voies, superposition) et crée la route de jonction correspondante. Il calcule aussi les candidats de jonction en T/Y (une route se terminant au milieu d'une autre) et construit la jonction qui coupe la route tronc. Il s'appuie sur les modules roads, profiles, junctions et utilities de Road Architect.
---- Accès : extension `editor_roadArchitect_link` : `extensions.load("editor_roadArchitect_link")`, puis la globale `editor_roadArchitect_link`
+--- Road Architect editor module that links roads together. It detects whether the end of a road can be connected to that of another (identical profile, sidewalk/no sidewalk, highway/urban, one-way/two-way road, lane flaring, overlay) and creates the corresponding junction road. It also computes T/Y junction candidates (a road ending in the middle of another) and builds the junction that cuts the trunk road. It relies on the Road Architect roads, profiles, junctions and utilities modules.
+--- Access: extension `editor_roadArchitect_link`: `extensions.load("editor_roadArchitect_link")`, then the global `editor_roadArchitect_link`
 ---@class editor_roadArchitect_link
 editor_roadArchitect_link = {}
 
---- Cherche, parmi les routes candidates, la route sur laquelle l'extrémité nIdx de la route rIdx peut s'accrocher en jonction (type 'T' ou 'Y'). Exige que les deux routes aient ou n'aient pas de trottoirs, ignore ponts et superpositions, et retient la candidate la plus proche. Le type vaut 'T' si la route est à peu près perpendiculaire à la route tronc (produit scalaire < 0.4), 'Y' sinon (cas profil identique seulement).
----Source : lua/ge/extensions/editor/roadArchitect/link.lua:1071
----@param rIdx integer Indice de la route qui doit se connecter.
----@param nIdx integer Indice du nœud d'extrémité de cette route (1 = début, sinon fin).
----@param rIdxs integer[] Indices des routes tronc candidates.
----@param nIdxs integer[] Indice du nœud de la route tronc le plus proche, pour chaque candidate.
----@return table|nil  Table { jName, jNode, tName, tNode, type, class } (route de jonction, son nœud, route tronc, son nœud, 'T' ou 'Y', description de la classe) ou nil si aucun candidat.
+--- Looks, among the candidate roads, for the road onto which the end nIdx of road rIdx can attach as a junction (type 'T' or 'Y'). Requires both roads to have or not have sidewalks, ignores bridges and overlays, and keeps the closest candidate. The type is 'T' if the road is roughly perpendicular to the trunk road (dot product < 0.4), 'Y' otherwise (identical profile case only).
+---Source: lua/ge/extensions/editor/roadArchitect/link.lua:1071
+---@param rIdx integer Index of the road that must connect.
+---@param nIdx integer Index of the end node of this road (1 = start, otherwise end).
+---@param rIdxs integer[] Indices of the candidate trunk roads.
+---@param nIdxs integer[] Index of the closest trunk road node, for each candidate.
+---@return table|nil  Table { jName, jNode, tName, tNode, type, class } (junction road, its node, trunk road, its node, 'T' or 'Y', class description) or nil if no candidate.
 function editor_roadArchitect_link.computePossibleJct(rIdx, nIdx, rIdxs, nIdxs) end
 
---- Parcourt les routes candidates rIdxs et teste chaque cas de raccord possible avec la route rIdx1 (identité des profils, trottoirs, autoroute/rural, sens unique/double, évasement). Renvoie le lien le plus proche sous forme de table { r1Name, r1Lie, r2Name, r2Lie, class }, ou nil si aucun raccord n'est possible. nIdx1 == 1 signifie que l'on regarde le début de la route 1, sinon sa fin.
----Source : lua/ge/extensions/editor/roadArchitect/link.lua:371
----@param rIdx1 integer Indice (dans roadMgr.roads) de la route de départ.
----@param nIdx1 integer Indice du nœud d'extrémité de la route de départ (1 = début, sinon fin).
----@param rIdxs integer[] Indices des routes candidates à tester.
----@param nIdxs integer[] Indice du nœud d'extrémité pour chaque route candidate (1 = début, sinon fin), aligné sur rIdxs.
----@return table|nil  Table { r1Name, r1Lie, r2Name, r2Lie, class } décrivant le raccord retenu, ou nil.
+--- Iterates over the candidate roads rIdxs and tests each possible connection case with road rIdx1 (profile identity, sidewalks, highway/rural, one-way/two-way, flaring). Returns the closest link as a table { r1Name, r1Lie, r2Name, r2Lie, class }, or nil if no connection is possible. nIdx1 == 1 means we look at the start of road 1, otherwise its end.
+---Source: lua/ge/extensions/editor/roadArchitect/link.lua:371
+---@param rIdx1 integer Index (in roadMgr.roads) of the starting road.
+---@param nIdx1 integer Index of the end node of the starting road (1 = start, otherwise end).
+---@param rIdxs integer[] Indices of the candidate roads to test.
+---@param nIdxs integer[] Index of the end node for each candidate road (1 = start, otherwise end), aligned with rIdxs.
+---@return table|nil  Table { r1Name, r1Lie, r2Name, r2Lie, class } describing the chosen connection, or nil.
 function editor_roadArchitect_link.computePossibleLinks(rIdx1, nIdx1, rIdxs, nIdxs) end
 
---- Construit la jonction proposée : sauvegarde l'état des routes, coupe la route tronc au nœud tNode en deux routes, supprime les nœuds proches, repousse les extrémités au bord de la sphère de jonction, crée la jonction (T) avec la route de jonction puis raccorde les trois branches par des liaisons 'Perfect'. Si une des routes tronc résultantes a moins de 2 nœuds, restaure l'état d'origine et sort.
----Source : lua/ge/extensions/editor/roadArchitect/link.lua:1180
----@param candJct table Candidat renvoyé par computePossibleJct ({ jName, jNode, tName, tNode, type, class }).
+--- Builds the proposed junction: saves the state of the roads, cuts the trunk road at node tNode into two roads, removes nearby nodes, pushes the ends back to the edge of the junction sphere, creates the junction (T) with the junction road then connects the three branches with 'Perfect' links. If one of the resulting trunk roads has fewer than 2 nodes, restores the original state and exits.
+---Source: lua/ge/extensions/editor/roadArchitect/link.lua:1180
+---@param candJct table Candidate returned by computePossibleJct ({ jName, jNode, tName, tNode, type, class }).
 function editor_roadArchitect_link.createSplitJunction(candJct) end
 
---- Crée la route de raccord décrite par le lien (fusion en une seule route pour 'Perfect', route de transition ou de taper pour les autres classes). Le choix de la fonction interne dépend de link.class. Ne fait rien si la classe est inconnue.
----Source : lua/ge/extensions/editor/roadArchitect/link.lua:1020
----@param link table Table { r1Name, r1Lie, r2Name, r2Lie, class } telle que renvoyée par computePossibleLinks.
+--- Creates the connecting road described by the link (merge into a single road for 'Perfect', transition or taper road for the other classes). The choice of the internal function depends on link.class. Does nothing if the class is unknown.
+---Source: lua/ge/extensions/editor/roadArchitect/link.lua:1020
+---@param link table Table { r1Name, r1Lie, r2Name, r2Lie, class } as returned by computePossibleLinks.
 function editor_roadArchitect_link.joinRoads(link) end
 

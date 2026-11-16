@@ -1,52 +1,52 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/imVehicleSelect.lua",
-  "module": "Nœud flowgraph « im Vehicle Selector » (catégorie once_instant, tags imgui/vehicle/config) : fenêtre imgui de choix de véhicule basée sur editor/util/vehicleSelectUtil. Sorties : « selected » (flux après le bouton Select), « model », « config », « configPath » et, cachées, « paintName1/2/3 ». Options dans data : enableConfigs (vrai), enablePaints (faux), enableCustomConfig (faux).",
+  "module": "Flowgraph node \"im Vehicle Selector\" (category once_instant, tags imgui/vehicle/config): imgui vehicle selection window based on editor/util/vehicleSelectUtil. Outputs: \"selected\" (flow after the Select button), \"model\", \"config\", \"configPath\" and, hidden, \"paintName1/2/3\". Options in data: enableConfigs (true), enablePaints (false), enableCustomConfig (false).",
   "notes": [
-    "La fenêtre fait 480 x 300 px.",
-    "Le flux « selected » n'est remis à false qu'au reset du nœud."
+    "The window is 480 x 300 px.",
+    "The \"selected\" flow is reset to false only when the node is reset."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStarted": {
-          "desc": "Crée l'utilitaire de sélection avec les options data.",
+          "desc": "Creates the selection utility with the data options.",
           "internal": true
         },
         "displayWindow": {
-          "desc": "Dessine la fenêtre « Vehicle Select » (widget, boutons Select et Reset) et met à jour les sorties.",
+          "desc": "Draws the \"Vehicle Select\" window (widget, Select and Reset buttons) and updates the outputs.",
           "internal": false
         },
         "drawMiddle": {
-          "desc": "Zone centrale vide.",
+          "desc": "Empty central area.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale)."
+              "desc": "Editor node builder (builder:Middle() opens the central area)."
             },
             "style": {
               "type": "any",
-              "desc": "Style d'affichage du nœud fourni par l'éditeur."
+              "desc": "Node display style provided by the editor."
             }
           },
           "internal": true
         },
         "init": {
-          "desc": "Options data par défaut.",
+          "desc": "Default data options.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Ferme la fenêtre et remet selected à false.",
+          "desc": "Closes the window and resets selected to false.",
           "internal": true
         },
         "work": {
-          "desc": "Affiche la fenêtre si ouverte.",
+          "desc": "Displays the window if open.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Ouvre la fenêtre.",
+          "desc": "Opens the window.",
           "internal": true
         }
       }

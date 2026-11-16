@@ -1,104 +1,104 @@
 # `controller_drivingDynamics_actuators_activeCenterDiffLock`
 
-*Fichier : `lua/vehicle/controller/drivingDynamics/actuators/activeCenterDiffLock.lua` · VM : Véhicule · 260 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/drivingDynamics/actuators/activeCenterDiffLock.lua` · VM: Vehicle · 260 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `drivingDynamics/actuators/activeCenterDiffLock` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `drivingDynamics/actuators/activeCenterDiffLock` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Actionneur de la Driving Dynamics Suite : verrouillage actif du différentiel central (embrayage à commande électronique). À chaque étape physique intermédiaire, il lit les vitesses de sortie du différentiel central, mesure l'écart de vitesse entre essieux et règle, par un PID, un coefficient de verrouillage 0..1 écrit dans `relevantDiff.activeLockCoef`. Le verrouillage est coupé au freinage, sans accélérateur ou au frein de stationnement, figé pendant un changement de rapport, et peut avoir un minimum. Les superviseurs du CMU peuvent le limiter avec `overrideMin`/`overrideMax`. Ordre d'appel : `defaultOrder = 80`.
+Driving Dynamics Suite actuator: active locking of the center differential (electronically controlled clutch). At each intermediate physics step, it reads the center differential's output speeds, measures the speed difference between axles and sets, via a PID, a locking coefficient 0..1 written into `relevantDiff.activeLockCoef`. The locking is cut when braking, without throttle or with the parking brake, frozen during a gear change, and can have a minimum. The CMU's supervisors can limit it with `overrideMin`/`overrideMax`. Call order: `defaultOrder = 80`.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues par init : `avDiffThreshold` (4 rad/s), `avThreshold` (1 rad/s : vitesse moyenne minimale), `minimumLock` (0), `clutchPIDkP` (0.15), `clutchPIDkI` (0.001), `clutchPIDkD` (0), `applyMinimumLockOnlyWithThrottle` (true), `name` (utilisé pour la source de debug). Lue par initSecondStage : `centerDiffName` (nom du différentiel central dans le powertrain).
-- Le coefficient final = clamp(lockCoef, overrideMin, overrideMax) ; le commentaire du code précise que selon la disposition du groupe motopropulseur c'est le min ou le max de l'override qui est utilisé.
-- Sans CMU enregistré (registerCMU non appelé), initSecondStage appelle shutdown ; si le différentiel est introuvable, l'actionneur reste inactif (isActive = false).
-- Le test `isESCActive` est une constante false dans le code (jamais activé). `electrics.values.brake`, `parkingbrake`, `throttle` sont lus sans valeur par défaut.
-- Les paquets de debug portent le type "electronicCenterDiffLock" (ancien nom du système) ; `configPacket.sourceName` n'est pas défini.
-- `shutdown` met `isActive` et `isActing` à false et retire `updateGFX` et `updateWheelsIntermediate` (nil).
+- Jbeam keys read by init: `avDiffThreshold` (4 rad/s), `avThreshold` (1 rad/s: minimum average speed), `minimumLock` (0), `clutchPIDkP` (0.15), `clutchPIDkI` (0.001), `clutchPIDkD` (0), `applyMinimumLockOnlyWithThrottle` (true), `name` (used for the debug source). Read by initSecondStage: `centerDiffName` (name of the center differential in the powertrain).
+- The final coefficient = clamp(lockCoef, overrideMin, overrideMax); the code comment specifies that depending on the powertrain layout it is the min or the max of the override that is used.
+- Without a registered CMU (registerCMU not called), initSecondStage calls shutdown; if the differential is not found, the actuator stays inactive (isActive = false).
+- The `isESCActive` test is a constant false in the code (never activated). `electrics.values.brake`, `parkingbrake`, `throttle` are read without a default value.
+- The debug packets carry the type "electronicCenterDiffLock" (old name of the system); `configPacket.sourceName` is not defined.
+- `shutdown` sets `isActive` and `isActing` to false and removes `updateGFX` and `updateWheelsIntermediate` (nil).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_drivingDynamics_actuators_activeCenterDiffLock.getConfig()` | Renvoie une copie des paramètres. | 232 |
-| `controller_drivingDynamics_actuators_activeCenterDiffLock.init(jbeamData)` | Lit les paramètres jbeam et crée le PID de verrouillage. *(interne)* | 147 |
-| `controller_drivingDynamics_actuators_activeCenterDiffLock.initSecondStage(jbeamData)` | Retrouve le différentiel central (`centerDiffName`) et active le système ; l'arrête si le CMU est absent. *(interne)* | 176 |
-| `controller_drivingDynamics_actuators_activeCenterDiffLock.registerCMU(cmu)` | Appelée par le CMU pour donner une référence vers lui. *(interne)* | 206 |
-| `controller_drivingDynamics_actuators_activeCenterDiffLock.reset()` | Remet les états, vitesses lissées, override et `activeLockCoef` à zéro. *(interne)* | 132 |
-| `controller_drivingDynamics_actuators_activeCenterDiffLock.resetOverride()` | Remet les bornes d'override à 0 et 1. | 43 |
-| `controller_drivingDynamics_actuators_activeCenterDiffLock.sendConfigData()` | Envoie les paramètres au CMU dans un paquet de debug de type config. *(interne)* | 236 |
-| `controller_drivingDynamics_actuators_activeCenterDiffLock.setConfig(configTable)` | Remplace toute la table de paramètres (utilisé par l'outil de debug). *(interne)* | 228 |
-| `controller_drivingDynamics_actuators_activeCenterDiffLock.setDebugMode(debugEnabled)` | Active ou désactive l'envoi de paquets de debug à chaque frame. *(interne)* | 200 |
-| `controller_drivingDynamics_actuators_activeCenterDiffLock.setParameters(parameters)` | Modifie à chaud les paramètres (avDiffThreshold, avThreshold, minimumLock, isEnabled, clutchPIDkP/kI/kD) via CMU.applyParameter ; la valeur "default" restaure l'initial. | 210 |
-| `controller_drivingDynamics_actuators_activeCenterDiffLock.shutdown()` | Arrête l'actionneur (appelée par le CMU en cas de système incomplet). *(interne)* | 125 |
-| `controller_drivingDynamics_actuators_activeCenterDiffLock.updateGFX(dt)` | Chaque frame : ne fait rien d'utile (retourne si désactivé). Variante debug : envoie les valeurs au CMU. *(interne)* | 98 |
-| `controller_drivingDynamics_actuators_activeCenterDiffLock.updateWheelsIntermediate(dt)` | Étape physique intermédiaire : calcule le coefficient de verrouillage (PID sur l'écart de vitesse entre sorties, conditions de frein, accélérateur, rapport et frein de stationnement), applique l'override et l'écrit dans `activeLockCoef` du différentiel. *(interne)* | 48 |
+| `controller_drivingDynamics_actuators_activeCenterDiffLock.getConfig()` | Returns a copy of the parameters. | 232 |
+| `controller_drivingDynamics_actuators_activeCenterDiffLock.init(jbeamData)` | Reads the jbeam parameters and creates the locking PID. *(internal)* | 147 |
+| `controller_drivingDynamics_actuators_activeCenterDiffLock.initSecondStage(jbeamData)` | Finds the center differential (`centerDiffName`) and enables the system; stops if the CMU is missing. *(internal)* | 176 |
+| `controller_drivingDynamics_actuators_activeCenterDiffLock.registerCMU(cmu)` | Called by the CMU to give it a reference to itself. *(internal)* | 206 |
+| `controller_drivingDynamics_actuators_activeCenterDiffLock.reset()` | Resets the states, smoothed speeds, override and `activeLockCoef` to zero. *(internal)* | 132 |
+| `controller_drivingDynamics_actuators_activeCenterDiffLock.resetOverride()` | Resets the override bounds to 0 and 1. | 43 |
+| `controller_drivingDynamics_actuators_activeCenterDiffLock.sendConfigData()` | Sends the parameters to the CMU in a debug packet of type config. *(internal)* | 236 |
+| `controller_drivingDynamics_actuators_activeCenterDiffLock.setConfig(configTable)` | Replaces the whole parameter table (used by the debug tool). *(internal)* | 228 |
+| `controller_drivingDynamics_actuators_activeCenterDiffLock.setDebugMode(debugEnabled)` | Enables or disables sending debug packets every frame. *(internal)* | 200 |
+| `controller_drivingDynamics_actuators_activeCenterDiffLock.setParameters(parameters)` | Changes the parameters at runtime (avDiffThreshold, avThreshold, minimumLock, isEnabled, clutchPIDkP/kI/kD) via CMU.applyParameter; the value "default" restores the initial one. | 210 |
+| `controller_drivingDynamics_actuators_activeCenterDiffLock.shutdown()` | Stops the actuator (called by the CMU in case of an incomplete system). *(internal)* | 125 |
+| `controller_drivingDynamics_actuators_activeCenterDiffLock.updateGFX(dt)` | Every frame: does nothing useful (returns if disabled). Debug variant: sends the values to the CMU. *(internal)* | 98 |
+| `controller_drivingDynamics_actuators_activeCenterDiffLock.updateWheelsIntermediate(dt)` | Intermediate physics step: computes the locking coefficient (PID on the speed difference between outputs, brake, throttle, gear and parking brake conditions), applies the override and writes it into the differential's `activeLockCoef`. *(internal)* | 48 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_drivingDynamics_actuators_activeCenterDiffLock.getConfig()`
 
-Renvoie une copie des paramètres.
+Returns a copy of the parameters.
 
-- **renvoie** : table Copie profonde des paramètres.
+- **returns**: table Deep copy of the parameters.
 
 #### `controller_drivingDynamics_actuators_activeCenterDiffLock.init(jbeamData)`
 
-Lit les paramètres jbeam et crée le PID de verrouillage.
+Reads the jbeam parameters and creates the locking PID.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_actuators_activeCenterDiffLock.initSecondStage(jbeamData)`
 
-Retrouve le différentiel central (`centerDiffName`) et active le système ; l'arrête si le CMU est absent.
+Finds the center differential (`centerDiffName`) and enables the system; stops if the CMU is missing.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_actuators_activeCenterDiffLock.registerCMU(cmu)`
 
-Appelée par le CMU pour donner une référence vers lui.
+Called by the CMU to give it a reference to itself.
 
-- `cmu` (*table*) : Module CMU.
+- `cmu` (*table*) : CMU module.
 
 #### `controller_drivingDynamics_actuators_activeCenterDiffLock.setConfig(configTable)`
 
-Remplace toute la table de paramètres (utilisé par l'outil de debug).
+Replaces the whole parameter table (used by the debug tool).
 
-- `configTable` (*table*) : Nouveaux paramètres.
+- `configTable` (*table*) : New parameters.
 
 #### `controller_drivingDynamics_actuators_activeCenterDiffLock.setDebugMode(debugEnabled)`
 
-Active ou désactive l'envoi de paquets de debug à chaque frame.
+Enables or disables sending debug packets every frame.
 
-- `debugEnabled` (*boolean*) : true pour envoyer.
+- `debugEnabled` (*boolean*) : true to send.
 
 #### `controller_drivingDynamics_actuators_activeCenterDiffLock.setParameters(parameters)`
 
-Modifie à chaud les paramètres (avDiffThreshold, avThreshold, minimumLock, isEnabled, clutchPIDkP/kI/kD) via CMU.applyParameter ; la valeur "default" restaure l'initial.
+Changes the parameters at runtime (avDiffThreshold, avThreshold, minimumLock, isEnabled, clutchPIDkP/kI/kD) via CMU.applyParameter; the value "default" restores the initial one.
 
-- `parameters` (*table*) : Table des paramètres à changer.
+- `parameters` (*table*) : Table of parameters to change.
 
 #### `controller_drivingDynamics_actuators_activeCenterDiffLock.updateGFX(dt)`
 
-Chaque frame : ne fait rien d'utile (retourne si désactivé). Variante debug : envoie les valeurs au CMU.
+Every frame: does nothing useful (returns if disabled). Debug variant: sends the values to the CMU.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
 #### `controller_drivingDynamics_actuators_activeCenterDiffLock.updateWheelsIntermediate(dt)`
 
-Étape physique intermédiaire : calcule le coefficient de verrouillage (PID sur l'écart de vitesse entre sorties, conditions de frein, accélérateur, rapport et frein de stationnement), applique l'override et l'écrit dans `activeLockCoef` du différentiel.
+Intermediate physics step: computes the locking coefficient (PID on the speed difference between outputs, brake, throttle, gear and parking brake conditions), applies the override and writes it into the differential's `activeLockCoef`.
 
-- `dt` (*number*) : Pas en secondes.
+- `dt` (*number*) : Step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `defaultOrder` | number | 80. |
-| `isActing` | boolean | true si le coefficient de verrouillage dépasse 0.01. |
-| `isActive` | boolean | true si le système a trouvé son différentiel et son CMU. |
-| `overrideMax` | number | Borne haute imposée par un superviseur (1 par défaut). |
-| `overrideMin` | number | Borne basse imposée par un superviseur (0 par défaut). |
+| `isActing` | boolean | true if the locking coefficient exceeds 0.01. |
+| `isActive` | boolean | true if the system found its differential and its CMU. |
+| `overrideMax` | number | Upper bound imposed by a supervisor (1 by default). |
+| `overrideMin` | number | Lower bound imposed by a supervisor (0 by default). |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/drivingDynamics/actuators/activeCenterDiffLock.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/drivingDynamics/actuators/activeCenterDiffLock.lua`.*

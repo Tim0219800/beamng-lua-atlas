@@ -2,55 +2,55 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/lowPerformance.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Détecteur de faible fréquence d'images en freeroam et en écran partagé (modes freeroam et multiseatGamemode uniquement ; missions, scénarios, carrière et tutoriels ne sont jamais contrôlés). Quand la moyenne lissée de FPS reste sous 25 pendant 5 s, il passe en état « low performance », affiche un toast d'avertissement et peut demander confirmation avant l'apparition d'un nouveau véhicule (confirmSpawn). Un moddeur qui spawne des véhicules peut passer par confirmSpawn pour respecter cet avertissement.
---- Accès : extension `gameplay_lowPerformance` : `extensions.load("gameplay_lowPerformance")`, puis la globale `gameplay_lowPerformance`
+--- Low frame rate detector in freeroam and split screen (only freeroam and multiseatGamemode modes; missions, scenarios, career and tutorials are never monitored). When the smoothed FPS average stays below 25 for 5 s, it switches to a "low performance" state, displays a warning toast and can ask for confirmation before a new vehicle spawns (confirmSpawn). A modder who spawns vehicles can go through confirmSpawn to respect this warning.
+--- Access: extension `gameplay_lowPerformance`: `extensions.load("gameplay_lowPerformance")`, then the global `gameplay_lowPerformance`
 ---@class gameplay_lowPerformance
 gameplay_lowPerformance = {}
 
---- Abandonne la fonction de spawn en attente (bouton Annuler).
----Source : lua/ge/extensions/gameplay/lowPerformance.lua:125
+--- Abandons the pending spawn function _anon(Cancel button).
+---Source: lua/ge/extensions/gameplay/lowPerformance.lua:125
 function gameplay_lowPerformance.cancelPendingSpawn() end
 
---- Exécute la fonction de spawn en attente, si elle existe (bouton Continuer).
----Source : lua/ge/extensions/gameplay/lowPerformance.lua:119
+--- Executes the pending spawn function, if any (Continue button).
+---Source: lua/ge/extensions/gameplay/lowPerformance.lua:119
 function gameplay_lowPerformance.confirmPendingSpawn() end
 
---- Exécute spawnFn directement, sauf si l'état de faible performance est actif, l'avertissement pas encore montré pour cet épisode et les notifications activées : dans ce cas affiche un dialogue de confirmation (Annuler / Ne plus afficher / Continuer) et diffère spawnFn.
----Source : lua/ge/extensions/gameplay/lowPerformance.lua:93
----@param spawnFn function Fonction qui effectue le spawn.
----@return any  Résultat de spawnFn si exécutée immédiatement (nil si elle ne renvoie rien), ou false tant que le joueur doit décider.
+--- Executes spawnFn directly, unless the low performance state is active, the warning has not yet been shown for this episode and notifications are enabled: in that case displays a confirmation dialog (Cancel / Don't show again / Continue) and defers spawnFn.
+---Source: lua/ge/extensions/gameplay/lowPerformance.lua:93
+---@param spawnFn function Function that performs the spawn.
+---@return any  Result of spawnFn if executed immediately (nil if it returns nothing), or false while the player has to decide.
 function gameplay_lowPerformance.confirmSpawn(spawnFn) end
 
---- Renvoie les textes traduits à afficher dans le menu pause quand la faible performance est active et les notifications autorisées.
----Source : lua/ge/extensions/gameplay/lowPerformance.lua:141
----@return table|nil  {notice, hint, infoTitle, infoMessage} ou nil.
+--- Returns the translated texts to display in the pause menu when low performance is active and notifications are allowed.
+---Source: lua/ge/extensions/gameplay/lowPerformance.lua:141
+---@return table|nil  {notice, hint, infoTitle, infoMessage} or nil.
 function gameplay_lowPerformance.getPauseNotice() end
 
---- Indique si le jeu est actuellement considéré en faible performance, et si la détection est encore applicable (gate actif).
----Source : lua/ge/extensions/gameplay/lowPerformance.lua:88
----@return boolean  true si faible performance.
+--- Returns whether the game is currently considered in low performance, and whether detection is still applicable (gate active).
+---Source: lua/ge/extensions/gameplay/lowPerformance.lua:88
+---@return boolean  true if low performance.
 function gameplay_lowPerformance.isLowPerformance() end
 
---- Désactive les notifications (réglage notifyLowPerformance = false), affiche un toast d'information puis exécute le spawn en attente.
----Source : lua/ge/extensions/gameplay/lowPerformance.lua:129
+--- Disables notifications (notifyLowPerformance setting = false), displays an info toast then executes the pending spawn.
+---Source: lua/ge/extensions/gameplay/lowPerformance.lua:129
 function gameplay_lowPerformance.muteAndConfirmPendingSpawn() end
 
---- Hook d'état du fondu d'écran : l'échantillonnage est suspendu tant que l'état n'est pas 3 (fondu terminé).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/lowPerformance.lua:196
----@param state integer État du fondu ; 3 = terminé.
+--- Screen fade state hook: sampling is suspended as long as the state is not 3 (fade finished).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/lowPerformance.lua:196
+---@param state integer Fade state; 3 = finished.
 function gameplay_lowPerformance.onScreenFadeState(state) end
 
---- Hook de mise à jour chaque frame : vérifie périodiquement (1 s) le gate, gère la période de grâce, lisse les FPS et bascule l'état de faible performance.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/lowPerformance.lua:151
----@param dtReal number Delta temps réel (non utilisé).
----@param dtSim number Delta temps de simulation (non utilisé).
----@param dtRaw number Delta temps brut en secondes, utilisé pour le chronométrage et les FPS.
+--- Per-frame update hook: periodically (1 s) checks the gate, manages the grace period, smooths the FPS and toggles the low performance state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/lowPerformance.lua:151
+---@param dtReal number Real-time delta (unused).
+---@param dtSim number Simulation delta time (unused).
+---@param dtRaw number Raw delta time in seconds, used for timing and FPS.
 function gameplay_lowPerformance.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook d'apparition d'un véhicule : redémarre la période de grâce (le spawn fait chuter temporairement les FPS).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/lowPerformance.lua:192
+--- Vehicle spawn hook: restarts the grace period (spawning temporarily drops the FPS).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/lowPerformance.lua:192
 function gameplay_lowPerformance.onVehicleSpawned() end
 

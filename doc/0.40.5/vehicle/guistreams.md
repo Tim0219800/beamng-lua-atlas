@@ -1,12 +1,12 @@
 # `streams`
 
-*Fichier : `lua/vehicle/guistreams.lua` · VM : Véhicule · 169 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/guistreams.lua` · VM: Vehicle · 169 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `streams`
+**Access:** global `streams`
 
-Flux de données envoyés à l'UI (apps du HUD) à haute fréquence. Chaque flux a un nom (wheelInfo, engineInfo, stats, electrics, sensors, environment, genericGraphAdvanced…) ; l'UI indique ceux dont elle a besoin via setRequiredStreams, et seuls ceux-là sont calculés puis mis en file avec guihooks.queueStream. Accessible en globale `streams` (main.lua : streams = require('guistreams')). guihooks.lua appelle streams.update() lors de l'envoi.
+Data streams sent to the UI (HUD apps) at high frequency. Each stream has a name (wheelInfo, engineInfo, stats, electrics, sensors, environment, genericGraphAdvanced…); the UI indicates which ones it needs via setRequiredStreams, and only those are computed then queued with guihooks.queueStream. Accessible as the global `streams` (main.lua: streams = require('guistreams')). guihooks.lua calls streams.update() when sending.
 
-## Exemple
+## Example
 
 ```lua
 if streams.willSend('myStream') then
@@ -15,70 +15,70 @@ end
 streams.drawGraph('speed', electrics.values.wheelspeed)
 ```
 
-## Remarques
+## Notes
 
-- willSend(name) est vrai seulement si guihooks.updateStreams (calculé dans main.lua:onGraphicsStep = flux actifs ET indicateur d'actualisation UI de obj) est vrai et si le flux est demandé : utile pour éviter de construire des données inutilement.
-- hasActiveStreams() renvoie true tant que setRequiredStreams n'a jamais été appelée (par prudence au démarrage), puis seulement s'il reste au moins un flux demandé.
-- wheelInfo : par roue, tableau à index numériques : [1] nom, [2] rayon, [3] wheelDir, [4] vitesse angulaire, [5] propulsionTorque, [6] lastSlip, [7] 0 (obsolète), [8] downForce, [9] brakingTorque, [10] brakeTorque, [11..13] centre statique de la roue x,y,z, [14] décalage le long de l'axe, [15] rotatorType ('wheel' par défaut), [16] parkingTorque. Les tables par roue sont réutilisées (cache).
-- sensors : gx, gy, gz, gx2, gy2, gz2, forceAtWheelNorm, forceAtDriverNorm, curForceLimitNorm, torqueCurrent (hydros), position {x,y,z}, roll, pitch, yaw, gravity. environment : temperature (K), pressure (obj:getEnvPressure). stats : obj:calcBeamStats() + tri_count + collidable_tri_count. engineInfo : controller.mainController.engineInfo. electrics : electrics.values.
-- La table streamsHandlers (une fonction par flux) est locale et n'est pas exportée dans M ; seuls reset, update, setRequiredStreams, willSend, hasActiveStreams et drawGraph le sont.
-- drawGraph envoie le flux 'genericGraphAdvanced' avec un compteur de frame _fidx qui s'incrémente à chaque appel et la valeur de chaque clé k.
+- willSend(name) is true only if guihooks.updateStreams (computed in main.lua:onGraphicsStep = active streams AND obj's UI refresh flag) is true and the stream is requested: useful to avoid building data needlessly.
+- hasActiveStreams() returns true as long as setRequiredStreams has never been called (as a precaution at startup), then only if at least one stream remains requested.
+- wheelInfo: per wheel, numerically indexed array: [1] name, [2] radius, [3] wheelDir, [4] angular velocity, [5] propulsionTorque, [6] lastSlip, [7] 0 (obsolete), [8] downForce, [9] brakingTorque, [10] brakeTorque, [11..13] static wheel center x,y,z, [14] offset along the axis, [15] rotatorType ('wheel' by default), [16] parkingTorque. The per-wheel tables are reused (cache).
+- sensors: gx, gy, gz, gx2, gy2, gz2, forceAtWheelNorm, forceAtDriverNorm, curForceLimitNorm, torqueCurrent (hydros), position {x,y,z}, roll, pitch, yaw, gravity. environment: temperature (K), pressure (obj:getEnvPressure). stats: obj:calcBeamStats() + tri_count + collidable_tri_count. engineInfo: controller.mainController.engineInfo. electrics: electrics.values.
+- The streamsHandlers table (one function per stream) is local and is not exported in M; only reset, update, setRequiredStreams, willSend, hasActiveStreams and drawGraph are.
+- drawGraph sends the 'genericGraphAdvanced' stream with a frame counter _fidx that increments on each call and the value of each key k.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `streams.drawGraph(k, val)` | Ajoute une valeur au graphe générique avancé de l'UI (flux 'genericGraphAdvanced'), si ce flux est demandé. | 151 |
-| `streams.hasActiveStreams()` | Indique si au moins un flux est demandé (ou si la liste n'a jamais été définie). Utilisé par main.lua:onGraphicsStep. *(interne)* | 146 |
-| `streams.reset()` | Vide les flux demandés et le cache des positions statiques de roues. *(interne)* | 21 |
-| `streams.setRequiredStreams(state)` | Définit la liste des flux demandés par l'UI (remplace la précédente). Appelée par le moteur/l'UI. *(interne)* | 137 |
-| `streams.update()` | Appelée par guihooks lors de l'envoi des flux : exécute le gestionnaire de chaque flux demandé (ceux de streamsHandlers) qui met ses données en file. *(interne)* | 128 |
-| `streams.willSend(name)` | Indique si un flux doit être envoyé cette frame (flux demandé par l'UI et envoi actif). | 17 |
+| `streams.drawGraph(k, val)` | Adds a value to the UI's advanced generic graph ('genericGraphAdvanced' stream), if this stream is requested. | 151 |
+| `streams.hasActiveStreams()` | Indicates whether at least one stream is requested (or whether the list has never been set). Used by main.lua:onGraphicsStep. *(internal)* | 146 |
+| `streams.reset()` | Clears the requested streams and the cache of static wheel positions. *(internal)* | 21 |
+| `streams.setRequiredStreams(state)` | Sets the list of streams requested by the UI (replaces the previous one). Called by the engine/the UI. *(internal)* | 137 |
+| `streams.update()` | Called by guihooks when sending the streams: runs the handler of each requested stream (those of streamsHandlers), which queues its data. *(internal)* | 128 |
+| `streams.willSend(name)` | Indicates whether a stream must be sent this frame (stream requested by the UI and sending active). | 17 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `streams.drawGraph(k, val)`
 
-Ajoute une valeur au graphe générique avancé de l'UI (flux 'genericGraphAdvanced'), si ce flux est demandé.
+Adds a value to the UI's advanced generic graph ('genericGraphAdvanced' stream), if this stream is requested.
 
-- `k` (*string*) : Nom de la série.
-- `val` (*number*) : Valeur courante.
+- `k` (*string*) : Series name.
+- `val` (*number*) : Current value.
 
 #### `streams.hasActiveStreams()`
 
-Indique si au moins un flux est demandé (ou si la liste n'a jamais été définie). Utilisé par main.lua:onGraphicsStep.
+Indicates whether at least one stream is requested (or whether the list has never been set). Used by main.lua:onGraphicsStep.
 
-- **renvoie** : boolean true si des flux sont actifs.
+- **returns**: boolean true if streams are active.
 
 #### `streams.setRequiredStreams(state)`
 
-Définit la liste des flux demandés par l'UI (remplace la précédente). Appelée par le moteur/l'UI.
+Sets the list of streams requested by the UI (replaces the previous one). Called by the engine/the UI.
 
-- `state` (*string[]*) : Liste de noms de flux.
+- `state` (*string[]*) : List of stream names.
 
 #### `streams.willSend(name)`
 
-Indique si un flux doit être envoyé cette frame (flux demandé par l'UI et envoi actif).
+Indicates whether a stream must be sent this frame (stream requested by the UI and sending active).
 
-- `name` (*string*) : Nom du flux.
-- **renvoie** : boolean|nil Vrai si le flux doit être produit (peut renvoyer nil/false sinon).
+- `name` (*string*) : Stream name.
+- **returns**: boolean|nil True if the stream must be produced (may return nil/false otherwise).
 
-## Classe `streamsHandlers`
+## Class `streamsHandlers`
 
-Table locale (non exportée) des gestionnaires de flux, une fonction sans argument par nom de flux ; update() les appelle.
+Local (non-exported) table of stream handlers, one argument-less function per stream name; update() calls them.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `streamsHandlers.electrics()` | Met en file electrics.values. | 100 |
-| `streamsHandlers.engineInfo()` | Met en file controller.mainController.engineInfo. | 89 |
-| `streamsHandlers.environment()` | Met en file température et pression ambiantes. | 122 |
-| `streamsHandlers.sensors()` | Met en file accélérations, forces de volant, position, roulis/tangage/lacet et gravité. | 104 |
-| `streamsHandlers.stats()` | Met en file obj:calcBeamStats() complété par tri_count et collidable_tri_count. | 93 |
-| `streamsHandlers.wheelInfo()` | Construit et met en file le flux 'wheelInfo' (voir notes pour le format par roue). | 26 |
+| `streamsHandlers.electrics()` | Queues electrics.values. | 100 |
+| `streamsHandlers.engineInfo()` | Queues controller.mainController.engineInfo. | 89 |
+| `streamsHandlers.environment()` | Queues ambient temperature and pressure. | 122 |
+| `streamsHandlers.sensors()` | Queues accelerations, steering wheel forces, position, roll/pitch/yaw and gravity. | 104 |
+| `streamsHandlers.stats()` | Queues obj:calcBeamStats() completed with tri_count and collidable_tri_count. | 93 |
+| `streamsHandlers.wheelInfo()` | Builds and queues the 'wheelInfo' stream (see notes for the per-wheel format). | 26 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `calcBeamStats`, `getCollidableTriangleCount`, `getEnvPressure`, `getEnvTemperature`, `getGravity`, `getPositionXYZ`, `getRollPitchYaw`, `getTriangleCount`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/guistreams.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/guistreams.lua`.*

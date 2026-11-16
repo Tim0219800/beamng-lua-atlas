@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/render/tris.lua",
+  "module": "Dessin de triangles pleins pour les outils d'édition de splines (issu de l'ancien render.lua). Triangles filtrés à 600 m de la caméra, remplissage de polygones simples (triangulation par découpe d'oreilles) et remplissage de régions 2D avec trous par balayage de lignes (règle pair-impair). Sert aux aperçus de surfaces dans l'éditeur.",
+  "notes": [
+    "drawTriCulled ne dessine que si les trois sommets sont à moins de 600 m de la caméra ; le triangle est dessiné plein avec debugDraw.drawTriSolid.",
+    "drawFilledRegions2D est destiné aux aperçus, pas à de la géométrie finale : l'escalier dû au pas de balayage sur les arêtes diagonales est masqué par le contour exact tracé par l'appelant."
+  ],
+  "functions": {
+    "drawTriCulled": {"desc": "Dessine un triangle plein de couleur col s'il est entièrement à moins de 600 m de la caméra.", "params": {"a": {"type": "vec3", "desc": "Sommet 1."}, "b": {"type": "vec3", "desc": "Sommet 2."}, "c": {"type": "vec3", "desc": "Sommet 3."}, "col": {"type": "integer", "desc": "Couleur packée."}}, "returns": []},
+    "drawTriNotSelectedSurface": {"desc": "Triangle de surface non sélectionnée (colourNotSelectedSurf).", "params": {"a": {"type": "vec3", "desc": "Sommet 1."}, "b": {"type": "vec3", "desc": "Sommet 2."}, "c": {"type": "vec3", "desc": "Sommet 3."}}, "returns": []},
+    "drawTriPreviewSurface": {"desc": "Triangle de surface d'aperçu (colourPreviewSurf).", "params": {"a": {"type": "vec3", "desc": "Sommet 1."}, "b": {"type": "vec3", "desc": "Sommet 2."}, "c": {"type": "vec3", "desc": "Sommet 3."}}, "returns": []},
+    "drawTriActiveSurface": {"desc": "Triangle de surface active (colourActiveSurf).", "params": {"a": {"type": "vec3", "desc": "Sommet 1."}, "b": {"type": "vec3", "desc": "Sommet 2."}, "c": {"type": "vec3", "desc": "Sommet 3."}}, "returns": []},
+    "drawFilledPolygon": {"desc": "Remplit un polygone simple, éventuellement concave, dont les sommets sont des vec3 déjà à la hauteur de dessin. Triangule en 2D (x,y) par découpe d'oreilles (geom.triangulatePolygon2D), puis dessine les triangles. Sans effet pour moins de 3 sommets ou un anneau dégénéré.", "params": {"verts": {"type": "vec3[]", "desc": "Sommets du polygone."}, "col": {"type": "integer", "desc": "Couleur packée."}}, "returns": []},
+    "drawFilledRegions2D": {"desc": "Remplit un ensemble de régions 2D (anneaux {x=,y=}), trous compris, par balayage horizontal avec la règle pair-impair : un point dans un nombre impair d'anneaux est rempli. Gère formes concaves et régions disjointes sans triangulation.", "params": {"regions": {"type": "table", "desc": "Liste d'anneaux, chacun une liste de {x=,y=}."}, "col": {"type": "integer", "desc": "Couleur packée."}, "zFn": {"type": "function", "desc": "zFn(x, y) renvoie la hauteur de dessin (ex. hauteur du terrain)."}, "step": {"type": "number|nil", "desc": "Pas de balayage ; auto entre 0.25 et 3 m (hauteur/100) si nil."}}, "returns": []}
+  }
+}

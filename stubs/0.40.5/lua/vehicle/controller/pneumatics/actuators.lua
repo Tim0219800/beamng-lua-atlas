@@ -2,109 +2,109 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/pneumatics/actuators.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur auxiliaire (type "auxiliary", defaultOrder 50) de vérins pneumatiques avec physique de gaz simplifiée : un réservoir d'air (energyStorage) alimente, via des vannes, des « tampons virtuels » (cross-flow groups) puis les poutres pressurées d'un groupe. Les débits dépendent des différences de pression et des sections de passage, l'énergie de l'air est conservée (PV = e) et la consommation d'air vide le réservoir. Une vanne par groupe (valveState -1..1) ouvre l'admission (> 0) ou l'échappement ; elle peut être lue depuis une valeur electrics. Il joue aussi des sons selon le débit.
---- Accès : contrôleur `pneumatics/actuators` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Auxiliary controller (type "auxiliary", defaultOrder 50) for pneumatic cylinders with simplified gas physics: an air tank (energyStorage) feeds, via valves, "virtual buffers" (cross-flow groups) then the pressurized beams of a group. The flows depend on pressure differences and passage cross-sections, the air's energy is conserved (PV = e) and the air consumption empties the tank. One valve per group (valveState -1..1) opens the intake (> 0) or the exhaust; it can be read from an electrics value. It also plays sounds according to the flow.
+--- Access: controller `pneumatics/actuators` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_pneumatics_actuators
 ---@field defaultOrder number 50.
 ---@field type string "auxiliary".
 local controller_pneumatics_actuators = {}
 
---- Renvoie le débit moyen vers les poutres d'un groupe (m³/s ; 0 si introuvable).
----Source : lua/vehicle/controller/pneumatics/actuators.lua:210
----@param groupName string Nom du groupe.
----@return number  Débit moyen.
+--- Returns the average flow to the beams of a group (m³/s; 0 if not found).
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:210
+---@param groupName string Group name.
+---@return number  Average flow.
 function controller_pneumatics_actuators.getAverageFlowRate(groupName) end
 
---- Renvoie la pression moyenne des poutres d'un groupe (Pa absolus ; 0 si introuvable).
----Source : lua/vehicle/controller/pneumatics/actuators.lua:219
----@param groupName string Nom du groupe.
----@return number  Pression moyenne.
+--- Returns the average pressure of the beams of a group (absolute Pa; 0 if not found).
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:219
+---@param groupName string Group name.
+---@return number  Average pressure.
 function controller_pneumatics_actuators.getAveragePressure(groupName) end
 
---- Renvoie la moyenne des débits moyens de plusieurs groupes.
----Source : lua/vehicle/controller/pneumatics/actuators.lua:228
----@param groupNames string[] Noms de groupes.
----@return number  Débit moyen (0 si liste vide).
+--- Returns the average of the average flows of several groups.
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:228
+---@param groupNames string[] Group names.
+---@return number  Average flow (0 if the list is empty).
 function controller_pneumatics_actuators.getBeamGroupsAverageFlowRate(groupNames) end
 
---- Renvoie l'état de la vanne d'un groupe (0 si introuvable).
----Source : lua/vehicle/controller/pneumatics/actuators.lua:201
----@param groupName string Nom du groupe.
----@return number  État de vanne -1..1.
+--- Returns the valve state of a group (0 if not found).
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:201
+---@param groupName string Group name.
+---@return number  Valve state -1..1.
 function controller_pneumatics_actuators.getValveState(groupName) end
 
---- Construit groupes de poutres, tampons virtuels et paramètres de débit à partir du jbeam et retrouve le réservoir d'air.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/pneumatics/actuators.lua:528
----@param jbeamData table Données jbeam du contrôleur.
+--- Builds beam groups, virtual buffers and flow parameters from the jbeam and finds the air tank.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:528
+---@param jbeamData table Controller jbeam data.
 function controller_pneumatics_actuators.init(jbeamData) end
 
---- Crée les sources sonores d'augmentation/diminution de débit pour chaque groupe. Appelé par le gestionnaire de contrôleurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/pneumatics/actuators.lua:683
----@param jbeamData table Données jbeam du contrôleur.
+--- Creates the flow increase/decrease sound sources for each group. Called by the controller manager.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:683
+---@param jbeamData table Controller jbeam data.
 function controller_pneumatics_actuators.initSounds(jbeamData) end
 
---- Remet pressions, énergies stockées, vannes et tampons virtuels à leur état initial.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/pneumatics/actuators.lua:500
+--- Resets pressures, stored energies, valves and virtual buffers to their initial state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:500
 function controller_pneumatics_actuators.reset() end
 
---- Coupe le volume des sons et réinitialise leur état.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/pneumatics/actuators.lua:717
+--- Cuts the sound volume and resets their state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:717
 function controller_pneumatics_actuators.resetSounds() end
 
---- Change le tampon virtuel (cross-flow group) auquel un groupe est relié ; réinitialise le tampon si le groupe est le premier à l'utiliser.
----Source : lua/vehicle/controller/pneumatics/actuators.lua:169
----@param groupName string Nom du groupe.
----@param crossFlowTag string Nom du tampon virtuel.
+--- Changes the virtual buffer (cross-flow group) a group is connected to; resets the buffer if the group is the first to use it.
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:169
+---@param groupName string Group name.
+---@param crossFlowTag string Virtual buffer name.
 function controller_pneumatics_actuators.setBeamGroupCrossFlowTag(groupName, crossFlowTag) end
 
---- Fixe la pression d'alimentation maximale d'un groupe.
----Source : lua/vehicle/controller/pneumatics/actuators.lua:154
----@param groupName string Nom du groupe.
----@param maxSupplyPressure number Pression absolue maximale (Pa).
+--- Sets the maximum supply pressure of a group.
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:154
+---@param groupName string Group name.
+---@param maxSupplyPressure number Maximum absolute pressure (Pa).
 function controller_pneumatics_actuators.setBeamGroupMaximumSupplyPressure(groupName, maxSupplyPressure) end
 
---- Fixe l'état de la vanne d'un groupe.
----Source : lua/vehicle/controller/pneumatics/actuators.lua:122
----@param groupName string Nom du groupe.
----@param valveState number -1..1 ; > 0 admission, <= 0 échappement ; la valeur absolue règle l'ouverture.
+--- Sets the valve state of a group.
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:122
+---@param groupName string Group name.
+---@param valveState number -1..1; > 0 intake, <= 0 exhaust; the absolute value sets the opening.
 function controller_pneumatics_actuators.setBeamGroupValveState(groupName, valveState) end
 
---- Même chose pour plusieurs groupes.
----Source : lua/vehicle/controller/pneumatics/actuators.lua:163
----@param groupNames string[] Noms de groupes.
----@param maxSupplyPressure number Pression absolue maximale (Pa).
+--- Same for several groups.
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:163
+---@param groupNames string[] Group names.
+---@param maxSupplyPressure number Maximum absolute pressure (Pa).
 function controller_pneumatics_actuators.setBeamGroupsMaximumSupplyPressure(groupNames, maxSupplyPressure) end
 
---- Même chose pour plusieurs groupes.
----Source : lua/vehicle/controller/pneumatics/actuators.lua:131
----@param groupNames string[] Noms de groupes.
+--- Same for several groups.
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:131
+---@param groupNames string[] Group names.
 ---@param valveState number -1..1.
 function controller_pneumatics_actuators.setBeamGroupsValveState(groupNames, valveState) end
 
---- Bascule la vanne entre 1 (admission) et -1 (échappement) : si l'état courant est < 0 elle passe à 1, sinon à -1.
----Source : lua/vehicle/controller/pneumatics/actuators.lua:137
----@param groupName string Nom du groupe.
+--- Toggles the valve between 1 (intake) and -1 (exhaust): if the current state is < 0 it goes to 1, otherwise to -1.
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:137
+---@param groupName string Group name.
 function controller_pneumatics_actuators.toggleBeamGroupValveState(groupName) end
 
---- Même chose pour plusieurs groupes.
----Source : lua/vehicle/controller/pneumatics/actuators.lua:148
----@param groupNames string[] Noms de groupes.
+--- Same for several groups.
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:148
+---@param groupNames string[] Group names.
 function controller_pneumatics_actuators.toggleBeamGroupsValveState(groupNames) end
 
---- Chaque pas physique : calcule les débits réservoir -> tampons -> poutres, met à jour pressions et énergie du réservoir, applique les pressions aux poutres.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/pneumatics/actuators.lua:243
----@param dt number Pas de temps (s).
+--- Every physics step: computes the tank -> buffers -> beams flows, updates the pressures and the tank's energy, applies the pressures to the beams.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:243
+---@param dt number Time step (s).
 function controller_pneumatics_actuators.updateFixedStep(dt) end
 
---- Chaque image : gère les sons selon le débit, remet à zéro les énergies par tick, écrit la pression moyenne relative dans electrics et trace les graphes de debug.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/pneumatics/actuators.lua:415
----@param dt number Pas de temps (s).
+--- Every frame: handles the sounds according to the flow, resets the per-tick energies to zero, writes the average relative pressure into electrics and draws the debug graphs.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/pneumatics/actuators.lua:415
+---@param dt number Time step (s).
 function controller_pneumatics_actuators.updateGFX(dt) end
 
 return controller_pneumatics_actuators

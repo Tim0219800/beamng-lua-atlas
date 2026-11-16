@@ -1,22 +1,28 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/selectionScreenDebug.lua",
-  "module": "Dessin en surcouche ImGui (plein écran, sans entrées) de la sélection de l'outil Easy Object Select : contours/enveloppes convexes et remplissages des candidats (vert pour le pick actif, jaune pour le reste de la pile, blanc pour la découverte, orange pour les objets sélectionnés, magenta pendant le glisser), cercle de découverte autour du curseur, étiquettes, et fenêtre de debug avec courbe de performance (180 échantillons).",
+  "module": "ImGui overlay drawing (full screen, no inputs) of the Easy Object Select selection: outlines/convex hulls and fills of the candidates (green for the active pick, yellow for the rest of the stack, white for discovery, orange for selected objects, magenta during drag), discovery circle around the cursor, labels, and a debug window with a performance curve (180 samples).",
   "notes": [
-    "Dessine dans une fenêtre ImGui « ##easySelectProxyOverlay » couvrant le viewport principal, avec les flags NoInputs/NoBackground.",
-    "Ne dessine rien s'il n'y a ni pick, ni proxy de découverte, ni debugEnabled, ni showHoverRing.",
-    "Hors debug, le nombre de contours de découverte est limité par options.maxDiscoveryOutlines (5 par défaut)."
+    "Draws in an ImGui window \"##easySelectProxyOverlay\" covering the main viewport, with the NoInputs/NoBackground flags.",
+    "Draws nothing if there is no pick, no discovery proxy, no debugEnabled and no showHoverRing.",
+    "Outside debug, the number of discovery outlines is limited by options.maxDiscoveryOutlines (5 by default)."
   ],
   "functions": {
     "draw": {
-      "desc": "Dessine la surcouche pour un snapshot de selectionModel.update et enregistre le temps de performance de la frame. Sort immédiatement si le snapshot n'a pas de caméra.",
+      "desc": "Draws the overlay for a snapshot from selectionModel.update and records the frame's performance time. Exits immediately if the snapshot has no camera.",
       "params": {
-        "snapshot": {"type": "table|nil", "desc": "Snapshot produit par editor_ezObjectSelect_selectionModel.update."},
-        "options": {"type": "table|nil", "desc": "Options d'affichage : debugEnabled, showHoverRing, outlineMode (1 = pas d'enveloppes convexes), discoveryPixels, maxDiscoveryOutlines… (déduit du code)."}
+        "snapshot": {
+          "type": "table|nil",
+          "desc": "Snapshot produced by editor_ezObjectSelect_selectionModel.update."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "Display options: debugEnabled, showHoverRing, outlineMode (1 = no convex hulls), discoveryPixels, maxDiscoveryOutlines... (inferred from code)."
+        }
       },
       "internal": false
     },
     "reset": {
-      "desc": "Remet à zéro l'historique de performance (échantillons et compteurs).",
+      "desc": "Resets the performance history (samples and counters).",
       "params": {},
       "internal": false
     }

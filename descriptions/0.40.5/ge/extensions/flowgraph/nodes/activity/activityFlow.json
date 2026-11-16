@@ -1,29 +1,82 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua",
-  "module": "Nœud flowgraph « Activity Flow » (catégorie logic, tag activity). Point d'entrée d'un graphe de mission : sort du flux une fois au démarrage (pin « started »), à chaque frame tant que l'activité est en cours (« update »), puis une fois à l'arrêt (« stopped »). Pins cachés de sortie : dtReal, dtSim, dtRaw (delta times). Sans activité associée (graphe autonome), il fonctionne sur onUpdate ; avec une activité, il est piloté par le gestionnaire de missions.",
+  "module": "Flowgraph node \"Activity Flow\" (category logic, tag activity). Entry point of a mission graph: outputs flow once at start (pin \"started\"), every frame while the activity is running (\"update\"), then once at stop (\"stopped\"). Hidden output pins: dtReal, dtSim, dtRaw (delta times). Without an associated activity (standalone graph), it runs on onUpdate; with an activity, it is driven by the mission manager.",
   "notes": [
-    "legacyPins renomme les anciens pins de sortie start -> started et stop -> stopped.",
-    "Le code écrit encore dans self.pinOut.start/stop (anciens noms) ; cela passe grâce au renommage des legacyPins.",
-    "Écrit aussi les delta times dans self.mgr.dtReal, dtSim et dtRaw.",
-    "Au changement d'état 'stopped' avec activité : déclenche stopped puis appelle gameplay_missions_missionManager.stop."
+    "legacyPins renames the old output pins start -> started and stop -> stopped.",
+    "The code still writes to self.pinOut.start/stop (old names); this works thanks to the legacyPins renaming.",
+    "Also writes the delta times into self.mgr.dtReal, dtSim and dtRaw.",
+    "On the 'stopped' state change with an activity: triggers stopped then calls gameplay_missions_missionManager.stop."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "start": {"desc": "Met le flux de « started » à vrai (update et stopped à faux) et déclenche le nœud.", "internal": true},
-        "onExecutionStarted": {"desc": "Hook : au démarrage du graphe, si une activité existe et n'est pas en cours, la démarre via gameplay_missions_missionManager.start ; sans activité, appelle start().", "internal": true},
-        "onStartActivity": {"desc": "Hook appelé au démarrage de l'activité ; appelle start().", "internal": true},
-        "update": {"desc": "Met à jour dtReal/dtSim/dtRaw (pins et gestionnaire), active « update » et déclenche le nœud.", "params": {"dtReal": {"type": "number", "desc": "delta temps réel (s)"}, "dtSim": {"type": "number", "desc": "delta temps simulé (s)"}, "dtRaw": {"type": "number", "desc": "delta temps brut (s)"}}, "internal": true},
-        "onUpdate": {"desc": "Hook par frame ; n'appelle update que si le graphe n'a pas d'activité.", "internal": true},
-        "onUpdateActivity": {"desc": "Hook par frame envoyé par l'activité ; appelle update.", "internal": true},
-        "stop": {"desc": "Active le flux « stopped » et déclenche le nœud.", "internal": true},
-        "changedRunningState": {"desc": "Hook : quand le graphe passe à 'stopped', déclenche stop() et arrête la mission (si activité en cours).", "params": {"newState": {"type": "string", "desc": "nouvel état d'exécution"}}, "internal": true},
-        "onStopActivity": {"desc": "Hook appelé à l'arrêt de l'activité ; appelle stop().", "internal": true},
-        "drawMiddle": {"desc": "Éditeur : affiche si une activité est associée et la fin de son id.", "internal": true},
-        "drawTooltip": {"desc": "Éditeur : infobulle indiquant l'id de l'activité ou le mode de compatibilité limitée.", "internal": true}
+        "start": {
+          "desc": "Sets the \"started\" flow to true (update and stopped to false) and triggers the node.",
+          "internal": true
+        },
+        "onExecutionStarted": {
+          "desc": "Hook: when the graph starts, if an activity exists and is not running, starts it via gameplay_missions_missionManager.start; without an activity, calls start().",
+          "internal": true
+        },
+        "onStartActivity": {
+          "desc": "Hook called when the activity starts; calls start().",
+          "internal": true
+        },
+        "update": {
+          "desc": "Updates dtReal/dtSim/dtRaw (pins and manager), enables \"update\" and triggers the node.",
+          "params": {
+            "dtReal": {
+              "type": "number",
+              "desc": "real time delta (s)"
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "simulation time delta (s)"
+            },
+            "dtRaw": {
+              "type": "number",
+              "desc": "raw time delta (s)"
+            }
+          },
+          "internal": true
+        },
+        "onUpdate": {
+          "desc": "Per-frame hook; calls update only if the graph has no activity.",
+          "internal": true
+        },
+        "onUpdateActivity": {
+          "desc": "Per-frame hook sent by the activity; calls update.",
+          "internal": true
+        },
+        "stop": {
+          "desc": "Enables the \"stopped\" flow and triggers the node.",
+          "internal": true
+        },
+        "changedRunningState": {
+          "desc": "Hook: when the graph becomes 'stopped', triggers stop() and stops the mission (if an activity is running).",
+          "params": {
+            "newState": {
+              "type": "string",
+              "desc": "new execution state"
+            }
+          },
+          "internal": true
+        },
+        "onStopActivity": {
+          "desc": "Hook called when the activity stops; calls stop().",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Editor: shows whether an activity is associated and the end of its id.",
+          "internal": true
+        },
+        "drawTooltip": {
+          "desc": "Editor: tooltip showing the activity id or the limited compatibility mode.",
+          "internal": true
+        }
       }
     }
   }

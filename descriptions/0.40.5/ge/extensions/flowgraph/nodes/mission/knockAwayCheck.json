@@ -1,69 +1,69 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/mission/knockAwayCheck.lua",
-  "module": "Noeud flowgraph 'KnockAway Check' (categorie repeat_instant). Detecte si les vehicules d'un prefab (pin prefabId) ont ete renverses (angle d'inclinaison) ou deplaces (distance) par rapport a leur position d'origine. Compte les vehicules touches (count), le total, les points (par vehicule, champ dynamique knockAwayPoints ou defaultPoints, 1 par defaut) et emet 'done' quand tous sont touches. Peut afficher des marqueurs au-dessus des cibles et des pointeurs sur la minimap. Les vehicules dont le nom interne contient 'ignore' sont exclus.",
+  "module": "Flowgraph node 'KnockAway Check' (repeat_instant category). Detects whether the vehicles of a prefab (pin prefabId) have been knocked over (tilt angle) or moved (distance) relative to their original position. Counts the hit vehicles (count), the total, the points (per vehicle, dynamic field knockAwayPoints or defaultPoints, 1 by default) and emits 'done' when all are hit. Can display markers above the targets and pointers on the minimap. Vehicles whose internal name contains 'ignore' are excluded.",
   "notes": [
-    "Le test d'inclinaison compare up:dot(val.up) (un cosinus) a (pi * angle / 180) (un angle en radians) : les deux grandeurs ne sont pas comparables, donc tippingMinAngle ne correspond pas reellement a un angle en degres.",
-    "Les pins de sortie 'points' et 'maxPoints' ont des descriptions copiees des pins 'count' et 'total'.",
-    "work appelle self:_executionStopped() lors d'un reset pour liberer les marqueurs.",
-    "Le noeud ecrit 'no mapdata!' dans la console tant que le vehicule n'est pas suivi par mapmgr."
+    "The tilt test compares up:dot(val.up) (a cosine) to (pi * angle / 180) (an angle in radians): the two quantities are not comparable, so tippingMinAngle does not actually correspond to an angle in degrees.",
+    "The output pins 'points' and 'maxPoints' have descriptions copied from the pins 'count' and 'total'.",
+    "work calls self:_executionStopped() on a reset to release the markers.",
+    "The node writes 'no mapdata!' to the console as long as the vehicle is not tracked by mapmgr."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "_executionStarted": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         },
         "init": {
-          "desc": "data.zOffset=0, positions vide.",
+          "desc": "data.zOffset=0, positions empty.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Termine et libere les marqueurs (scenario/race_marker).",
+          "desc": "Ends and releases the markers (scenario/race_marker).",
           "internal": true
         },
         "getOriginalVehicleTransforms": {
-          "desc": "Pour chaque BeamNGVehicle du prefab, enregistre position, rotation et vecteur haut, et ajoute le vehicule au module vehicle du gestionnaire.",
+          "desc": "For each BeamNGVehicle of the prefab, records position, rotation and up vector, and adds the vehicle to the manager's vehicle module.",
           "internal": true,
           "params": {
             "data": {
               "type": "table",
-              "desc": "donnees du prefab (allChildrenIds)"
+              "desc": "prefab data (allChildrenIds)"
             }
           },
           "returns": [
             {
               "type": "table",
-              "desc": "transformations par id de vehicule"
+              "desc": "transforms by vehicle id"
             }
           ]
         },
         "work": {
-          "desc": "Sur reset, reinitialise. A la premiere frame de flux, initialise les compteurs, les points et les marqueurs ; ensuite teste chaque vehicule (inclinaison via dirVecUp, deplacement via pos) et met a jour les compteurs et les marqueurs ; ecrit count, total, points, done, flow.",
+          "desc": "On reset, reinitializes. On the first frame of flow, initializes the counters, points and markers; then tests each vehicle (tilt via dirVecUp, displacement via pos) and updates the counters and markers; writes count, total, points, done, flow.",
           "internal": true
         },
         "onPreRender": {
-          "desc": "Appele chaque frame de rendu ; dessine les marqueurs.",
+          "desc": "Called every render frame; draws the markers.",
           "internal": true,
           "params": {
             "dt": {
               "type": "number",
-              "desc": "delta temps reel"
+              "desc": "real-time delta"
             },
             "dtSim": {
               "type": "number",
-              "desc": "delta temps simulation"
+              "desc": "simulation-time delta"
             }
           }
         },
         "onDrawOnMinimap": {
-          "desc": "Dessine sur la minimap un pointeur (bord) ou un cercle pour chaque vehicule non encore renverse.",
+          "desc": "Draws on the minimap a pointer (edge) or a circle for each vehicle not yet knocked over.",
           "internal": true,
           "params": {
             "td": {
               "type": "table",
-              "desc": "donnees de dessin de la minimap"
+              "desc": "minimap drawing data"
             }
           }
         }

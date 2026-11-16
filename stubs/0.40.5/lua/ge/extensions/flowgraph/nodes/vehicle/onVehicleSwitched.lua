@@ -2,38 +2,38 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+--- Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 ---@class flowgraph_nodes_vehicle_onVehicleSwitched_C
 local flowgraph_nodes_vehicle_onVehicleSwitched_C = {}
 
---- Appelé par le gestionnaire après le déclenchement du nœud ; remet le drapeau d'événement à false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.lua:49
+--- Called by the manager after the node is triggered; resets the event flag to false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.lua:49
 function flowgraph_nodes_vehicle_onVehicleSwitched_C:_afterTrigger() end
 
---- Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.lua:31
+--- Called by the manager when the flowgraph project execution starts; resets the internal state to zero.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.lua:31
 function flowgraph_nodes_vehicle_onVehicleSwitched_C:_executionStarted() end
 
---- Constructeur vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.lua:27
+--- Empty constructor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.lua:27
 ---@param mgr any
 ---@param ... any
 function flowgraph_nodes_vehicle_onVehicleSwitched_C:init(mgr, ...) end
 
---- Hook appelé quand le joueur change de véhicule ; `oid` ancien id, `nid` nouvel id, `player` id du joueur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.lua:53
----@param oid integer Ancien véhicule.
----@param nid integer Nouveau véhicule.
----@param player integer Id du joueur.
+--- Hook called when the player changes vehicle; `oid` old id, `nid` new id, `player` player id.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.lua:53
+---@param oid integer Old vehicle.
+---@param nid integer New vehicle.
+---@param player integer Player id.
 function flowgraph_nodes_vehicle_onVehicleSwitched_C:onVehicleSwitched(oid, nid, player) end
 
---- Si un changement a été signalé, remplit `oldID`, `newID`, `player` et met `flow` à true une frame.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.lua:37
+--- If a change was signaled, fills `oldID`, `newID`, `player` and sets `flow` to true for one frame.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.lua:37
 ---@param args any
 function flowgraph_nodes_vehicle_onVehicleSwitched_C:work(args) end
 

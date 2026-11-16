@@ -1,0 +1,42 @@
+{
+  "path": "lua/ge/extensions/core/input/tests.lua",
+  "module": "Extension GE `core_input_tests` : orchestre les tests de latence/fréquence des entrées (système, moteur, véhicule, oscillation) affichés dans l'UI. Elle met la simulation en marche (dépause), lance côté véhicule l'extension `inputTests` pour chaque test d'une file, reçoit les statistiques et pousse l'état à l'UI par `InputTestStateChanged`. Surtout destinée à l'interface de diagnostic, peu utile à un moddeur.",
+  "notes": [
+    "Tests déclarés : systemFrequencyTest, systemResolutionTest, systemLatencyTest (run 'systemTest'), engineLatencyTest ('simulationTest'), vehicleLatencyTest ('vehicleTest'), oscillationTest et vehicleFrequencyTest ('vehicleOscillationTest'). startTests reçoit des runId, pas des id de test.",
+    "La pause de simulation précédente est mémorisée (simTimeAuthority.getPause) et restaurée à la fin ; les tests déclenchent simTimeAuthority.pause(false).",
+    "Message affiché si le véhicule disparaît : 'Vehicle lost while the test was running.'.",
+    "M.updateUI et onVehicleSpawned/onVehicleSwitched sont la même fonction (updateUI)."
+  ],
+  "functions": {
+    "updateUI": {
+      "desc": "Met à jour state.hasVehicle (véhicule joueur 0 présent) et envoie l'état complet à l'UI via guihooks InputTestStateChanged.",
+      "params": {},
+      "returns": []
+    },
+    "startTests": {
+      "desc": "Démarre une file de tests. Supprime les doublons, efface messages et stats des tests concernés, dépause la simulation puis lance le premier run sur le véhicule joueur (extensions.load('inputTests') ; inputTests.start(runId)).",
+      "params": {"runIds": {"type": "string[]", "desc": "Liste de runId : 'systemTest', 'simulationTest', 'vehicleTest', 'vehicleOscillationTest'. Liste vide : ne fait que rafraîchir l'UI."}},
+      "returns": []
+    },
+    "onInputTestStats": {
+      "desc": "Hook appelé (depuis le véhicule) avec les statistiques d'un test : enregistre message et stats sur la ligne du test et rafraîchit l'UI.",
+      "params": {"stats": {"type": "table", "desc": "{testId, message?, sampleCount, …}."}},
+      "returns": [],
+      "internal": true
+    },
+    "onInputTestStatus": {
+      "desc": "Hook appelé quand un run se termine : si c'est le run en cours, passe au suivant de la file.",
+      "params": {"testId": {"type": "string", "desc": "runId du run terminé."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook : si le véhicule joueur a disparu pendant un test, termine les tests avec un message d'erreur ; sinon rafraîchit l'UI.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSpawned": {"desc": "Hook : alias de updateUI.", "params": {}, "returns": [], "internal": true},
+    "onVehicleSwitched": {"desc": "Hook : alias de updateUI.", "params": {}, "returns": [], "internal": true}
+  }
+}

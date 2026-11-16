@@ -1,21 +1,57 @@
 {
   "path": "lua/ge/extensions/editor/rallyEditor/systemPacenotesTab.lua",
-  "module": "Onglet « System Pacenotes » de l'éditeur de rallye : tableau en lecture seule des pacenotes système (usage interne, par ex. compte à rebours) du notebook, avec nom, poids, texte et bouton de lecture audio. Disponible seulement pour les missions de type rallyStage. Le bouton « Refresh System Pacenotes » vide les compositeurs en cache, recharge le module du style de compositeur, sauvegarde le notebook puis relit les pacenotes. Le module renvoie un constructeur de classe C.",
+  "module": "\"System Pacenotes\" tab of the rally editor: read-only table of the notebook's system pacenotes (internal use, e.g. countdown), with name, weight, text and an audio playback button. Only available for rallyStage missions. The \"Refresh System Pacenotes\" button empties the cached composers, reloads the composer style module, saves the notebook then re-reads the pacenotes. The module returns a class C constructor.",
   "notes": [
-    "Aucune fonction exportée : on obtient une instance avec require(...)(rallyEditor).",
-    "Les pacenotes requis (systemPacenotes.required) sont affichés en premier, les autres triés par nom.",
-    "Couleur du bouton audio : vert si audio perso présent, rouge si audio perso manquant, gris si fichier standard absent."
+    "No exported function: you get an instance with require(...)(rallyEditor).",
+    "The required pacenotes (systemPacenotes.required) are displayed first, the others sorted by name.",
+    "Audio button color: green if custom audio is present, red if custom audio is missing, gray if the standard file is absent."
   ],
   "classes": {
     "C": {
-      "desc": "Instance de l'onglet (windowDescription = 'System Pacenotes').",
+      "desc": "Tab instance (windowDescription = 'System Pacenotes').",
       "functions": {
-        "init": {"desc": "Constructeur : mémorise rallyEditor, liste vide de pacenotes système.", "params": {"rallyEditor": {"type": "table", "desc": "Éditeur de rallye parent."}}, "internal": true},
-        "clearState": {"desc": "Oublie le notebook et les pacenotes système affichés.", "internal": true},
-        "setPath": {"desc": "Définit le notebook courant (le commentaire du code précise que « path » désigne le notebook) ; active l'affichage seulement si path:getMissionType() == 'rallyStage'.", "params": {"path": {"type": "table|nil", "desc": "Notebook."}}, "internal": true},
-        "selected": {"desc": "Appelé quand l'onglet est sélectionné : charge path:getSystemPacenotesForAudioMode() puis émet onEditorEditModeChanged(nil, nil).", "internal": true},
-        "unselect": {"desc": "Appelé quand l'onglet est quitté : émet onEditorEditModeChanged(nil, nil).", "internal": true},
-        "draw": {"desc": "Dessine l'onglet (message si mission non rallyStage, sinon bouton de rafraîchissement et tableau à 4 colonnes).", "params": {"mouseInfo": {"type": "table", "desc": "Informations souris (non utilisé)."}}, "internal": true}
+        "init": {
+          "desc": "Constructor: stores rallyEditor, empty list of system pacenotes.",
+          "params": {
+            "rallyEditor": {
+              "type": "table",
+              "desc": "Parent rally editor."
+            }
+          },
+          "internal": true
+        },
+        "clearState": {
+          "desc": "Forgets the notebook and the displayed system pacenotes.",
+          "internal": true
+        },
+        "setPath": {
+          "desc": "Sets the current notebook (the code comment specifies that \"path\" refers to the notebook); enables the display only if path:getMissionType() == 'rallyStage'.",
+          "params": {
+            "path": {
+              "type": "table|nil",
+              "desc": "Notebook."
+            }
+          },
+          "internal": true
+        },
+        "selected": {
+          "desc": "Called when the tab is selected: loads path:getSystemPacenotesForAudioMode() then emits onEditorEditModeChanged(nil, nil).",
+          "internal": true
+        },
+        "unselect": {
+          "desc": "Called when the tab is left: emits onEditorEditModeChanged(nil, nil).",
+          "internal": true
+        },
+        "draw": {
+          "desc": "Draws the tab (message if the mission is not rallyStage, otherwise refresh button and 4-column table).",
+          "params": {
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Mouse information (not used)."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

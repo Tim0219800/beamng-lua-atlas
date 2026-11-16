@@ -1,23 +1,28 @@
 {
   "path": "lua/ge/extensions/editor/vehicleEditor/staticEditor/vePartPropertyView.lua",
-  "module": "Fenêtre « Part Properties » du Static Editor. Elle affiche dans un inspecteur générique les propriétés scalaires (hors tables) de la table sélectionnée dans l'éditeur (vEditor.propertyTableEditTarget), et écrit directement les modifications dans cette table. Les nombres sont éditables en float, les booléens en case à cocher, le reste en chaîne.",
+  "module": "\"Part Properties\" window of the Static Editor. It shows in a generic inspector the scalar (non-table) properties of the table selected in the editor (vEditor.propertyTableEditTarget), and writes changes directly into that table. Numbers are editable as float, booleans as checkbox, everything else as string.",
   "notes": [
-    "Les clés '__astNodeIdx' et '__schemaProcessed' ainsi que toutes les valeurs de type table sont ignorées.",
-    "L'inspecteur est créé avec editor/api/genericInspector ; le setter écrit newValue dans lastEditTarget[fieldName] (donc modifie la donnée JBeam en mémoire).",
-    "Bug mineur : une chaîne éditée est réécrite telle quelle (string) même si le champ d'origine était un nombre converti en float ; seule la valeur du champ change, le type du champ n'est pas revalidé.",
-    "Le champ type d'un entier est 'float' (tout number est traité comme float)."
+    "The keys '__astNodeIdx' and '__schemaProcessed' as well as all table values are ignored.",
+    "The inspector is created with editor/api/genericInspector; the setter writes newValue into lastEditTarget[fieldName] (so it modifies the in-memory JBeam data).",
+    "Minor bug: an edited string is written back as is (string) even if the original field was a number converted to float; only the field value changes, the field type is not revalidated.",
+    "The type field of an integer is 'float' (every number is treated as float)."
   ],
   "fields": {
-    "menuEntry": {"type": "string", "desc": "Texte de l'entrée du menu Apps : « Part Properties »."}
+    "menuEntry": {
+      "type": "string",
+      "desc": "Apps menu entry text: \"Part Properties\"."
+    }
   },
   "functions": {
-    "open": {"desc": "Affiche la fenêtre « Part Properties » (editor.showWindow)."},
+    "open": {
+      "desc": "Shows the \"Part Properties\" window (editor.showWindow)."
+    },
     "onEditorGui": {
-      "desc": "Hook de l'éditeur appelé à chaque frame : reconstruit la liste de champs quand la cible d'édition change, puis dessine l'inspecteur générique.",
+      "desc": "Editor hook called every frame: rebuilds the field list when the edit target changes, then draws the generic inspector.",
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Hook de l'éditeur appelé à l'initialisation : enregistre la fenêtre (500x400, outil vehicleEditor) et crée l'inspecteur générique avec son setter.",
+      "desc": "Editor hook called at initialization: registers the window (500x400, vehicleEditor tool) and creates the generic inspector with its setter.",
       "internal": true
     }
   }

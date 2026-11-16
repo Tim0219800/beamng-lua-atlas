@@ -1,23 +1,28 @@
 {
   "path": "lua/ge/extensions/editor/measuresInspectorHeader.lua",
-  "module": "Petite extension de l'éditeur qui ajoute une ligne « Size: X x Y x Z » dans l'en-tête de l'inspecteur d'objets. Elle affiche la taille (boîte englobante, échelle comprise) de l'objet sélectionné, ou de la boîte englobante de la sélection s'il y en a plusieurs. Elle n'agit qu'une fois l'éditeur initialisé.",
+  "module": "Small editor extension that adds a \"Size: X x Y x Z\" line to the object inspector header. It shows the size (bounding box, scale included) of the selected object, or of the selection's bounding box if there are several. It only acts once the editor is initialized.",
   "notes": [
-    "Pour un seul objet : getObjBox() puis scale3F(getScale()), puis getExtents() ; pour plusieurs objets : editor.objectSelectionBBox:getExtents().",
-    "Rien n'est affiché si la sélection ne contient pas d'objets (selection.object nil) ou si l'objet n'a pas getObjBox/getScale.",
-    "Valeurs affichées avec 2 décimales, en mètres (unités du monde)."
+    "For a single object: getObjBox() then scale3F(getScale()), then getExtents(); for several objects: editor.objectSelectionBBox:getExtents().",
+    "Nothing is displayed if the selection contains no objects (selection.object nil) or if the object lacks getObjBox/getScale.",
+    "Values displayed with 2 decimals, in meters (world units)."
   ],
   "functions": {
     "onEditorInspectorHeaderGui": {
-      "desc": "Hook appelé par l'inspecteur de l'éditeur pour dessiner son en-tête. Dessine le texte « Size » et son infobulle. Utilise inspectorInfo.selection si présent, sinon editor.selection. Ne fait rien tant que l'éditeur n'est pas initialisé.",
-      "params": {"inspectorInfo": {"type": "table", "desc": "Informations de l'inspecteur ; le champ facultatif selection remplace editor.selection."}},
+      "desc": "Hook called by the editor inspector to draw its header. Draws the \"Size\" text and its tooltip. Uses inspectorInfo.selection if present, otherwise editor.selection. Does nothing until the editor is initialized.",
+      "params": {
+        "inspectorInfo": {
+          "type": "table",
+          "desc": "Inspector information; the optional selection field replaces editor.selection."
+        }
+      },
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook de chargement de l'extension ; ne fait rien.",
+      "desc": "Extension load hook; does nothing.",
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Hook appelé quand l'éditeur est initialisé ; active l'affichage de la taille.",
+      "desc": "Hook called when the editor is initialized; enables the size display.",
       "internal": true
     }
   }

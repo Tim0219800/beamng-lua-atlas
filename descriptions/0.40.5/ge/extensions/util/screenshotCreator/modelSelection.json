@@ -1,34 +1,47 @@
 {
   "path": "lua/ge/extensions/util/screenshotCreator/modelSelection.lua",
-  "module": "Onglet « Models selection » de l'outil de création de vignettes (ImGui) : liste tous les modèles de véhicules (core_vehicles.getModelList), regroupés par type, avec des cases à cocher pour choisir lesquels seront photographiés. Il propose des filtres par type (Cars, Trucks, Heavy Machinery, Trailers, Props, Other), des boutons Player Vehicle Model, Select All, Unselect All, Invert Selection, et deux colonnes « Unselected / Selected Models ». Le module job.lua l'interroge via getSelectedModels pour construire la liste de travail.",
+  "module": "\"Models selection\" tab of the thumbnail creation tool (ImGui): lists all vehicle models (core_vehicles.getModelList), grouped by type, with checkboxes to choose which ones will be photographed. It offers filters by type (Cars, Trucks, Heavy Machinery, Trailers, Props, Other), Player Vehicle Model, Select All, Unselect All, Invert Selection buttons, and two \"Unselected / Selected Models\" columns. The job.lua module queries it via getSelectedModels to build the work list.",
   "notes": [
-    "La liste est construite au premier usage (ensurePopulated) puis conservée ; appeler repopulate() pour la reconstruire.",
-    "Si le réglage shippedConfigsOnly est actif, seuls les modèles livrés avec le jeu (shippedConfigs.isModelShipped) sont visibles et sélectionnables.",
-    "Les filtres de type sont combinés par OU ; les modèles qui ne correspondent pas restent affichés mais grisés.",
-    "getSelectedModels renvoie le JBeam du véhicule du joueur si rien n'est coché : cela provoque une erreur Lua s'il n'y a aucun véhicule joueur (getPlayerVehicle(0) vaut nil).",
-    "getSelectedCount, lui, compte uniquement les cases cochées (0 si rien) et ne tient pas compte de ce repli."
+    "The list is built on first use (ensurePopulated) then kept; call repopulate() to rebuild it.",
+    "If the shippedConfigsOnly setting is active, only the models shipped with the game (shippedConfigs.isModelShipped) are visible and selectable.",
+    "Type filters are combined with OR; models that do not match stay displayed but grayed out.",
+    "getSelectedModels returns the player vehicle's JBeam if nothing is checked: this causes a Lua error if there is no player vehicle (getPlayerVehicle(0) is nil).",
+    "getSelectedCount, however, counts only the checked boxes (0 if none) and does not take this fallback into account."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : ui_imgui, ui_vehicleSelector_tileGrouping, core_vehicles, util_screenshotCreator_settings, util_screenshotCreator_shippedConfigs."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extensions loaded before: ui_imgui, ui_vehicleSelector_tileGrouping, core_vehicles, util_screenshotCreator_settings, util_screenshotCreator_shippedConfigs."
+    }
   },
   "functions": {
     "drawTab": {
-      "desc": "Dessine l'onglet ImGui « Models selection » (filtres, boutons, listes). À appeler à chaque frame dans la fenêtre de l'outil, entre BeginTabBar et EndTabBar ; ne dessine rien si l'onglet n'est pas actif.",
+      "desc": "Draws the ImGui \"Models selection\" tab (filters, buttons, lists). To be called every frame in the tool window, between BeginTabBar and EndTabBar; draws nothing if the tab is not active.",
       "internal": true
     },
     "selectPlayerVehicle": {
-      "desc": "Coche uniquement le modèle du véhicule du joueur (comparaison avec JBeam) et décoche tous les autres. Journalise une erreur (tag selectCurVeh) s'il n'y a pas de véhicule joueur."
+      "desc": "Checks only the player vehicle's model (compared with JBeam) and unchecks all the others. Logs an error (tag selectCurVeh) if there is no player vehicle."
     },
     "getSelectedModels": {
-      "desc": "Renvoie les clés des modèles cochés et visibles. Si aucun n'est coché, renvoie le modèle du véhicule joueur.",
-      "returns": [{"type": "string[]", "desc": "Clés de modèles (dossier de véhicule, ex. « pickup »)."}]
+      "desc": "Returns the keys of the checked and visible models. If none is checked, returns the player vehicle's model.",
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Model keys (vehicle folder, e.g. \"pickup\")."
+        }
+      ]
     },
     "getSelectedCount": {
-      "desc": "Compte les modèles cochés et visibles.",
-      "returns": [{"type": "integer", "desc": "Nombre de modèles sélectionnés."}]
+      "desc": "Counts the checked and visible models.",
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of selected models."
+        }
+      ]
     },
     "repopulate": {
-      "desc": "Reconstruit la liste des modèles depuis core_vehicles.getModelList() ; toutes les sélections sont perdues."
+      "desc": "Rebuilds the model list from core_vehicles.getModelList(); all selections are lost."
     }
   }
 }

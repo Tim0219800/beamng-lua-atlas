@@ -1,29 +1,29 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/onCannonFired.lua",
-  "module": "Nœud événement « on Cannon Fired » (catégorie `repeat_instant`). Émet une impulsion sur la sortie flux `cannonFired` quand le hook `onCannonFired` est reçu. Aucune entrée.",
+  "module": "Event node \"on Cannon Fired\" (category `repeat_instant`). Emits a pulse on the flow output `cannonFired` when the `onCannonFired` hook is received. No input.",
   "notes": [
-    "Le paramètre `id` du hook n'est pas exposé sur une sortie."
+    "The hook's `id` parameter is not exposed on an output."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "onCannonFired": {
-          "desc": "Hook appelé quand un canon tire ; lève le drapeau interne. `id` : identifiant du véhicule/objet (déduit du nom, non utilisé).",
+          "desc": "Hook called when a cannon fires; raises the internal flag. `id`: vehicle/object identifier (inferred from the name, unused).",
           "internal": true,
           "params": {
             "id": {
               "type": "any",
-              "desc": "Identifiant transmis par le hook (non utilisé)."
+              "desc": "Identifier passed by the hook (unused)."
             }
           }
         },
         "work": {
-          "desc": "Met `cannonFired` à true pendant une frame si un tir a été signalé, sinon false.",
+          "desc": "Sets `cannonFired` to true for one frame if a shot was signaled, otherwise false.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Met le drapeau interne `flag` à false.",
+          "desc": "Sets the internal flag `flag` to false.",
           "internal": true
         }
       }

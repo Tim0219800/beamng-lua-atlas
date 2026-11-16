@@ -1,30 +1,30 @@
 # `core_cameraModes_collision`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/collision.lua` · VM : Game Engine (GE) · 154 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/collision.lua` · VM: Game Engine (GE) · 154 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/collision")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/collision")` (file under extensions/ but not a regular extension)
 
-Filtre anti-traversée des décors : lance des rayons statiques (castRayStatic) depuis la cible vers les quatre coins du plan proche de la caméra et rapproche la caméra de la cible si un mur gêne (distance minimale 0.5 m). En l'absence d'obstacle, un seul coin est testé par image (tour de rôle) ; au premier contact, les quatre le sont à chaque image jusqu'à une image libre. Actif seulement si le réglage 'cameraCollision' est vrai. Renvoie un constructeur.
+Filter that prevents the camera passing through scenery: casts static rays (castRayStatic) from the target to the four corners of the camera's near plane and moves the camera closer to the target if a wall is in the way (minimum distance 0.5 m). With no obstacle, only one corner is tested per frame (in turn); on first contact, all four are tested every frame until a clear frame. Active only if the 'cameraCollision' setting is true. Returns a constructor.
 
-## Remarques
+## Notes
 
-- État par instance (chaque vue/split-screen a son filtre). Marge de sécurité 0.1 m ; plan proche supposé 0.4 x 0.2 m. Le lissage n'agit que quand la caméra s'éloigne (retour progressif) ; le rapprochement est immédiat.
-- La page extraite indique isObstacleInFrontOfCam(cornerIdx) mais le code prend (rayDestinations, cornerIdx).
+- Per-instance state (each view/split-screen has its own filter). Safety margin 0.1 m; near plane assumed 0.4 x 0.2 m. Smoothing only acts when the camera moves away (gradual return); moving closer is immediate.
+- The extracted page says isObstacleInFrontOfCam(cornerIdx) but the code takes (rayDestinations, cornerIdx).
 
-## Classe `C`
+## Class `C`
 
-Filtre de collision de caméra.
+Camera collision filter.
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_collision")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_collision")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:collidingCamDistance()` | Distance cible -> caméra imposée par la collision. | 142 |
-| `C:init()` | Réinitialise l'état (distances, indice de rayon, lissage) et lit le réglage cameraCollision. | 18 |
-| `C:isObstacleInFrontOfCam(rayDestinations, cornerIdx)` | Détecte une géométrie que les rayons de coin ne voient pas : traversée complète d'un mur en une image, ou arête du plan proche qui coupe une surface. | 36 |
-| `C:onSettingsChanged()` | Hook : relit le réglage 'cameraCollision' (true par défaut). | 30 |
-| `C:onVehicleSwitched()` | Hook : réinitialise le filtre (appelle init). | 138 |
-| `C:update(data)` | Calcule la nouvelle position de caméra sur l'axe cible -> caméra et écrit data.res.pos. | 54 |
+| `C:collidingCamDistance()` | Target -> camera distance imposed by collision. | 142 |
+| `C:init()` | Resets the state (distances, ray index, smoothing) and reads the cameraCollision setting. | 18 |
+| `C:isObstacleInFrontOfCam(rayDestinations, cornerIdx)` | Detects geometry that the corner rays do not see: full crossing of a wall in one frame, or a near-plane edge that cuts a surface. | 36 |
+| `C:onSettingsChanged()` | Hook: re-reads the 'cameraCollision' setting (true by default). | 30 |
+| `C:onVehicleSwitched()` | Hook: resets the filter (calls init). | 138 |
+| `C:update(data)` | Computes the new camera position on the target -> camera axis and writes data.res.pos. | 54 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/collision.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/collision.lua`.*

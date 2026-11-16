@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenDriftStats.lua",
+  "module": "Nœud « EndScreen Drift Stats » (catégorie repeat_instant, couleur ui). Ajoute à l'écran de fin un panneau de statistiques de drift. Chaîne : flow en entrée, flow en sortie (chainFlow). À placer entre EndScreen Begin et Screen Finish.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "work": {
+          "desc": "Recopie flow en sortie, puis appelle modules.ui:addDriftStats avec gameplay_drift_scoreboard.getPerformanceStats(), getTiersStats() et getDriftEventStats().",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,30 +1,30 @@
 # `flowgraph_nodes_gameplay_delivery_loadDelivery`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/loadDelivery.lua` · VM : Game Engine (GE) · 108 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/loadDelivery.lua` · VM: Game Engine (GE) · 108 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/delivery/loadDelivery")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/delivery/loadDelivery")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Load Delivery » (catégorie once_f_duration, livraison). Charge un fichier de livraison, prépare véhicules et routes et met le joueur dans le bon véhicule ; l'installation prend quelques frames. Utiliser ensuite Start Delivery. Pins d'entrée : flow, reset (caché), deliveryPath (défaut 'delivery.delivery.json'). Sorties : flow, success, isLoaded.
+Flowgraph node "Load Delivery" (category once_f_duration, delivery). Loads a delivery file, prepares vehicles and routes and puts the player in the right vehicle; the setup takes a few frames. Use Start Delivery afterwards. Input pins: flow, reset (hidden), deliveryPath (default 'delivery.delivery.json'). Outputs: flow, success, isLoaded.
 
-## Remarques
+## Notes
 
-- Si missionTypeData.deliveryPath existe dans l'activité, il remplace deliveryPath quand celui-ci est vide ou égal à la valeur par défaut.
-- Le chemin est résolu avec mgr:getRelativeAbsolutePath.
+- If missionTypeData.deliveryPath exists in the activity, it replaces deliveryPath when the latter is empty or equal to the default value.
+- The path is resolved with mgr:getRelativeAbsolutePath.
 
-**Dépendances (chargées avant) :** `gameplay_freeformDelivery_freeformDelivery`
+**Dependencies (loaded first):** `gameplay_freeformDelivery_freeformDelivery`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelle reset. | 34 |
-| `C:init()` | Initialise les sorties et l'état de durée à 'inactive'. | 27 |
-| `C:onNodeReset()` | Appelle reset. | 38 |
-| `C:reset()` | Remet les sorties à faux et l'état à 'inactive'. | 42 |
-| `C:work()` | En état 'started', attend isLoaded() puis active success, isLoaded et flow ('finished') ; ensuite maintient flow. | 87 |
-| `C:workOnce()` | Résout le chemin, appelle freeformDelivery.load et passe en état 'started' ; journalise les erreurs. | 49 |
+| `C:_executionStopped()` | Calls reset. | 34 |
+| `C:init()` | Initializes the outputs and the duration state to 'inactive'. | 27 |
+| `C:onNodeReset()` | Calls reset. | 38 |
+| `C:reset()` | Resets the outputs to false and the state to 'inactive'. | 42 |
+| `C:work()` | In the 'started' state, waits for isLoaded() then activates success, isLoaded and flow ('finished'); afterwards keeps flow. | 87 |
+| `C:workOnce()` | Resolves the path, calls freeformDelivery.load and switches to the 'started' state; logs errors. | 49 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/loadDelivery.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/loadDelivery.lua`.*

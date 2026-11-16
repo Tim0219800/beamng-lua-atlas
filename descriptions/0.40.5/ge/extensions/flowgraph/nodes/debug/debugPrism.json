@@ -1,15 +1,22 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/debug/debugPrism.lua",
-  "module": "Nœud flowgraph « Debug Prism » (catégorie repeat_instant, tags util/draw). Dessine chaque frame un prisme à base carrée/rectangulaire (debugDrawer:drawSquarePrism) entre posA et posB, avec une largeur et une hauteur à chaque extrémité. Entrées : posA, posB (vec3 requis), widthA, heightA, widthB, heightB (number, 1 par défaut), color (caché, rose par défaut).",
-  "notes": ["Le code construit Point2F(hauteur, largeur) : l'ordre passé au moteur est (height, width)."],
+  "module": "Flowgraph node \"Debug Prism\" (category repeat_instant, tags util/draw). Draws a square/rectangular-base prism (debugDrawer:drawSquarePrism) between posA and posB every frame, with a width and a height at each end. Inputs: posA, posB (vec3 required), widthA, heightA, widthB, heightB (number, 1 by default), color (hidden, pink by default).",
+  "notes": [
+    "The code builds Point2F(height, width): the order passed to the engine is (height, width)."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Vide.", "internal": true},
-        "work": {"desc": "Si posA et posB sont définis, dessine le prisme."}
+        "init": {
+          "desc": "Empty.",
+          "internal": true
+        },
+        "work": {
+          "desc": "If posA and posB are set, draws the prism."
+        }
       }
     }
   }

@@ -1,62 +1,62 @@
 # `flowgraph_modules_actionModule`
 
-*Fichier : `lua/ge/extensions/flowgraph/modules/actionModule.lua` · VM : Game Engine (GE) · 77 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/modules/actionModule.lua` · VM: Game Engine (GE) · 77 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/modules/actionModule")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/modules/actionModule")` (file under extensions/ but not a regular extension)
 
-Module flowgraph (moduleOrder 0) qui bloque ou autorise des actions d'entrée (input actions) pendant l'exécution d'un projet flowgraph. Il garde un ensemble d'actions bloquées et, dans afterTrigger, pousse la liste vers core_input_actionFilter sous le groupe 'fg_filter_<id du manager>'. Il mémorise aussi l'état d'autorisation du mode marche (gameplay_walk) au démarrage pour le restaurer à l'arrêt.
+Flowgraph module (moduleOrder 0) that blocks or allows input actions while a flowgraph project is running. It keeps a set of blocked actions and, in afterTrigger, pushes the list to core_input_actionFilter under the group 'fg_filter_<manager id>'. It also stores the walking mode (gameplay_walk) allowed state at start to restore it on stop.
 
-## Remarques
+## Notes
 
-- Les blocages ne sont appliqués qu'à la fin du tick (afterTrigger), seulement si self.changed est vrai.
-- Bug probable : dans executionStopped, la variable 'list' n'est pas définie (global nil), donc setGroup est appelé avec nil.
-- Bug probable : blockActions/allowActions utilisent la clé 'k' (index de la liste) pour addActions/removeActions, et afterTrigger les parcourt avec ipairs : des blocages de listes différentes s'écrasent mutuellement par index.
-- Les valeurs de addActions/removeActions ne sont jamais vidées après application.
+- Blocks are applied only at the end of the tick (afterTrigger), only if self.changed is true.
+- Probable bug: in executionStopped, the variable 'list' is not defined (nil global), so setGroup is called with nil.
+- Probable bug: blockActions/allowActions use the key 'k' (list index) for addActions/removeActions, and afterTrigger iterates over them with ipairs: blocks from different lists overwrite each other by index.
+- The values of addActions/removeActions are never cleared after being applied.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `flowgraph_modules_actionModule.afterTrigger()` | Appelé par le manager après le tick du graphe. Si des changements ont eu lieu, recalcule la liste des actions bloquées et l'envoie à core_input_actionFilter (setGroup puis addAction(0, groupe, true)). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_actionModule.allowActions(id)` | Marque les actions de la liste enregistrée comme à autoriser de nouveau (appliqué dans afterTrigger). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_actionModule.blockActions(id)` | Marque les actions de la liste enregistrée comme à bloquer (appliqué dans afterTrigger). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_actionModule.clear()` | Réinitialise les tables storedActions, actionsByName, addActions, removeActions et lists. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_actionModule.executionStarted()` | Appelé au démarrage du projet : mémorise gameplay_walk.isTogglingEnabled(). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_actionModule.executionStopped()` | Appelé à l'arrêt du projet : désactive le groupe de filtre et restaure la permission de basculer en mode marche mémorisée au démarrage. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_actionModule.getFreeId()` | Incrémente et renvoie un identifiant unique pour enregistrer une liste d'actions. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_actionModule.init()` | Appelé à la création du module : appelle clear(). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_actionModule.registerList(list)` | Enregistre une liste de noms d'actions et renvoie son identifiant, utilisable ensuite avec blockActions/allowActions. (assignée dynamiquement) | dyn |
+| `flowgraph_modules_actionModule.afterTrigger()` | Called by the manager after the graph tick. If changes occurred, recomputes the list of blocked actions and sends it to core_input_actionFilter (setGroup then addAction(0, group, true)). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_actionModule.allowActions(id)` | Marks the actions of the registered list as to be allowed again (applied in afterTrigger). (dynamically assigned) | dyn |
+| `flowgraph_modules_actionModule.blockActions(id)` | Marks the actions of the registered list as to be blocked (applied in afterTrigger). (dynamically assigned) | dyn |
+| `flowgraph_modules_actionModule.clear()` | Resets the tables storedActions, actionsByName, addActions, removeActions and lists. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_actionModule.executionStarted()` | Called when the project starts: stores gameplay_walk.isTogglingEnabled(). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_actionModule.executionStopped()` | Called when the project stops: disables the filter group and restores the permission to toggle walking mode that was stored at start. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_actionModule.getFreeId()` | Increments and returns a unique identifier for registering an action list. (dynamically assigned) | dyn |
+| `flowgraph_modules_actionModule.init()` | Called when the module is created: calls clear(). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_actionModule.registerList(list)` | Registers a list of action names and returns its identifier, which can then be used with blockActions/allowActions. (dynamically assigned) | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `flowgraph_modules_actionModule.allowActions(id)`
 
-Marque les actions de la liste enregistrée comme à autoriser de nouveau (appliqué dans afterTrigger). (assignée dynamiquement)
+Marks the actions of the registered list as to be allowed again (applied in afterTrigger). (dynamically assigned)
 
-- `id` (*integer*) : identifiant renvoyé par registerList
+- `id` (*integer*) : identifier returned by registerList
 
 #### `flowgraph_modules_actionModule.blockActions(id)`
 
-Marque les actions de la liste enregistrée comme à bloquer (appliqué dans afterTrigger). (assignée dynamiquement)
+Marks the actions of the registered list as to be blocked (applied in afterTrigger). (dynamically assigned)
 
-- `id` (*integer*) : identifiant renvoyé par registerList
+- `id` (*integer*) : identifier returned by registerList
 
 #### `flowgraph_modules_actionModule.getFreeId()`
 
-Incrémente et renvoie un identifiant unique pour enregistrer une liste d'actions. (assignée dynamiquement)
+Increments and returns a unique identifier for registering an action list. (dynamically assigned)
 
-- **renvoie** : integer nouvel identifiant
+- **returns**: integer new identifier
 
 #### `flowgraph_modules_actionModule.registerList(list)`
 
-Enregistre une liste de noms d'actions et renvoie son identifiant, utilisable ensuite avec blockActions/allowActions. (assignée dynamiquement)
+Registers a list of action names and returns its identifier, which can then be used with blockActions/allowActions. (dynamically assigned)
 
-- `list` (*string[]*) : noms d'actions d'entrée
-- **renvoie** : integer identifiant de la liste
+- `list` (*string[]*) : input action names
+- **returns**: integer list identifier
 
-## Classe `C`
+## Class `C`
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:afterTrigger()` |  | 44 |
 | `C:allowActions(id)` |  | 37 |
@@ -69,4 +69,4 @@ Enregistre une liste de noms d'actions et renvoie son identifiant, utilisable en
 | `C:registerList(list)` |  | 24 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/modules/actionModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/modules/actionModule.lua`.*

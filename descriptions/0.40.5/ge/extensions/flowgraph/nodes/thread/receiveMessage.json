@@ -1,31 +1,31 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/thread/receiveMessage.lua",
-  "module": "Noeud « Receive Message » (thread). Reçoit un message envoyé par un autre projet flowgraph en cours (Send Message) et expose ses champs sur des pins de sortie personnalisés (nom des pins = clés du message). Pins : flow, reset, isNetwork, name (filtre), sorties flow, receiving (impulsion), received. Un seul message est consommé jusqu'au reset.",
+  "module": "Node \"Receive Message\" (thread). Receives a message sent by another running flowgraph project (Send Message) and exposes its fields on custom output pins (pin names = message keys). Pins: flow, reset, isNetwork, name (filter), outputs flow, receiving (impulse), received. Only one message is consumed until reset.",
   "notes": [
-    "La description du noeud dit « Sends a message... » (copie de Send Message), alors qu'il reçoit.",
-    "Le pin name est seulement requis non nil : le code ne compare pas le nom du message (le filtre « matches exactly » n'est pas appliqué ici).",
-    "Le pin isNetwork n'est pas utilisé."
+    "The node's description says \"Sends a message...\" (copy of Send Message), whereas it receives.",
+    "The name pin is only required to be non-nil: the code does not compare the message name (the \"matches exactly\" filter is not applied here).",
+    "The isNetwork pin is not used."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
           "desc": "savePins = true, allowCustomOutPins = true.",
           "internal": true
         },
         "onThreadMessageProcess": {
-          "desc": "Hook : mémorise le message reçu s'il n'a pas déjà été traité (done = false).",
+          "desc": "Hook: stores the received message if it has not already been processed (done = false).",
           "params": {
             "message": {
               "type": "any",
-              "desc": "table du message"
+              "desc": "message table"
             }
           },
           "internal": true
         },
         "work": {
-          "desc": "Sur reset, remet à zéro ; sinon, si un message est en attente et name est donné, copie ses champs sur les pins, active receiving et received.",
+          "desc": "On reset, resets to zero; otherwise, if a message is pending and name is given, copies its fields to the pins, activates receiving and received.",
           "internal": false
         },
         "_executionStarted": {
@@ -33,15 +33,15 @@
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "desc": "Draws the central content of the node in the editor.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true

@@ -1,10 +1,10 @@
 # `flowgraph_nodes_states_stateEntry`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/states/stateEntry.lua` · VM : Game Engine (GE) · 24 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/states/stateEntry.lua` · VM: Game Engine (GE) · 24 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/states/stateEntry")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/states/stateEntry")` (file under extensions/ but not a regular extension)
 
-Noeud d'état « State Entry » du stategraph (créé par _flowgraph_createStateNode, pas _flowgraph_createNode). Point d'entrée du graphe d'états, caché dans les menus, non supprimable ni copiable (undeleteable, uncopyable). Un seul pin de sortie 'flow' de type state. Aucune méthode propre.
+Stategraph state node "State Entry" (created by _flowgraph_createStateNode, not _flowgraph_createNode). Entry point of the state graph, hidden in the menus, not deletable or copyable (undeleteable, uncopyable). A single output pin 'flow' of type state. No methods of its own.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/states/stateEntry.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/states/stateEntry.lua`.*

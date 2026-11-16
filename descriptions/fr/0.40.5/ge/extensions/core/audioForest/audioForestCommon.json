@@ -1,0 +1,55 @@
+{
+  "path": "lua/ge/extensions/core/audioForest/audioForestCommon.lua",
+  "module": "Code partagé entre l'exécution (audioForest.lua) et l'éditeur : transforme les objets d'une Forest en un nuage de noeuds audio éclaircis. Se charge avec require('core/audioForest/audioForestCommon'). L'algorithme : (1) pré-passe qui lit les items de la forêt (par blocs) et calcule volume et hauteur par modèle (shape) ; (2) classement S/M/L par volume normalisé (percentile 95) avec surcharge possible ; (3) éclaircissement glouton : on garde un item et on absorbe tous ses voisins à moins de minNodeSpacing (20 m) ; (4) construction d'un KD-tree 3D des noeuds.",
+  "usage": "local c = require('core/audioForest/audioForestCommon')\nlocal cloud = c.buildNodeCloudFromForest(forestObj, toolState, nil, {})\n-- cloud.nodeCount, cloud.kdNodes ...",
+  "notes": [
+    "Config par défaut (defaultCfg) : minNodeSpacing 20 m, thinningOuterRadiusMul 1.5, nodeHeightBlend 0.5, classT0 1/3, classT1 2/3, volumeClassPercentile 0.95, pitchNormPercentile 0.95.",
+    "Classes : 1 = petit (valeur audio 0.0), 2 = moyen (0.5), 3 = grand (1.0).",
+    "Le volume d'un item est le volume de sa boîte englobante multiplié par son échelle.",
+    "Seules ces fonctions sont exportées ; le reste (file de priorité de l'éclaircissement, emptyCloud, etc.) est local."
+  ],
+  "fields": {},
+  "functions": {
+    "getItemVolume": {
+      "desc": "Volume (m³) de la boîte englobante d'un item de forêt, multiplié par son échelle. Renvoie 0 sans boîte.",
+      "params": {"item": {"type": "userdata|nil", "desc": "Item de forêt (getObjBox, getScale)"}},
+      "returns": [{"type": "number", "desc": "Volume"}]
+    },
+    "computeDefaultClassFromNormVol": {
+      "desc": "Convertit un volume normalisé [0..1] en classe de taille : 1 sous t0, 2 sous t1, sinon 3.",
+      "params": {
+        "normVol": {"type": "number", "desc": "Volume normalisé"},
+        "classT0": {"type": "number|nil", "desc": "Seuil 1/2, 1/3 par défaut"},
+        "classT1": {"type": "number|nil", "desc": "Seuil 2/3, 2/3 par défaut (échangé avec t0 si t0 > t1)"}
+      },
+      "returns": [{"type": "integer", "desc": "1, 2 ou 3"}]
+    },
+    "startRuntimePrepass": {
+      "desc": "Prépare l'état d'une pré-passe incrémentale : récupère tous les items de la forêt (forestObj:getData():getItems()).",
+      "params": {
+        "forestObj": {"type": "userdata", "desc": "Objet Forest"},
+        "st": {"type": "table|nil", "desc": "État d'outil ; utilise includeByShape (un modèle absent ou true est inclus, false est exclu)"}
+      },
+      "returns": [{"type": "table", "desc": "État de pré-passe {all, allCount, i, includeByShape, shapeVol, shapeMaxZ, includedItem, includedShape, volList, volN, itemCount, isReady}"}]
+    },
+    "stepRuntimePrepass": {
+      "desc": "Traite jusqu'à maxSteps items de la pré-passe : retient les items inclus et mesure le volume et la hauteur max une fois par modèle. Passe isReady à true quand tous les items ont été vus.",
+      "params": {
+        "p": {"type": "table", "desc": "État renvoyé par startRuntimePrepass"},
+        "maxSteps": {"type": "integer|nil", "desc": "Nombre maximal d'items par appel, 10000 par défaut"}
+      },
+      "returns": [{"type": "boolean", "desc": "true quand la pré-passe est terminée"}]
+    },
+    "buildNodeCloudFromForest": {
+      "desc": "Construit le nuage de noeuds audio. Termine la pré-passe si besoin, classe les modèles, éclaircit les items et construit un KD-tree (kdtreepoint3d). Renvoie un nuage vide (nodeCount 0) s'il n'y a aucun item inclus.",
+      "params": {
+        "forestObj": {"type": "userdata", "desc": "Objet Forest"},
+        "st": {"type": "table|nil", "desc": "État d'outil : classSelByShape, classOverrideByShape, includeByShape"},
+        "cfg": {"type": "table|nil", "desc": "Configuration (clés de defaultCfg, ainsi que pitchDensityPercentile)"},
+        "opts": {"type": "table|nil", "desc": "Options : prepass (pré-passe déjà faite), shapeToRow + includeEditorFields (ajoute nodeTypeRow et nodeClassId pour l'éditeur)"}
+      },
+      "returns": [{"type": "table", "desc": "{minNodeSpacing, nodeCount, nodeX, nodeY, nodeZ, nodeDepth, nodeAvgNormVol, nodeSourceCount, pitchDensityInv, nodeTypeRow, nodeClassId, kdNodes}"}]
+    }
+  },
+  "classes": {}
+}

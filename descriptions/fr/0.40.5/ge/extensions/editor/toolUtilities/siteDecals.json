@@ -1,0 +1,83 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/siteDecals.lua",
+  "module": "Décalques estampillés tels qu'un site les porte : flèches de circulation, texte EXIT peint, rustines de réparation d'asphalte. Ce sont des glyphes pris dans une planche (atlas) et posés en un point, orientés dans une direction, et non de la peinture tracée le long d'une ligne (c'est ce qui les distingue de siteMarks). Le module crée les DecalData (modèles), pose les instances via l'éditeur, les convertit vers/depuis le format du manifeste et les rend persistantes.",
+  "notes": [
+    "Un enregistrement de décalque (plan) : { mat, rows, cols, prio, tplSize (taille du modèle), x, y, a (angle en radians), size, frame (cellule de l'atlas), lift (surélévation en m) }.",
+    "Les modèles sont nommés « SiteDecal_<tag>_<n> » par site, car graver un site rend persistants ses propres modèles et ne doit pas faire de même pour ceux d'un voisin.",
+    "localise arrondit les coordonnées au millimètre et écrit l'orientation en angle, de sorte que tourner le site est une addition par décalque.",
+    "Les instances sont créées par editor.addDecalInstanceWithTan avec la normale vers le haut, le z du terrain obtenu par terrainZ(x, y) + lift. Les deux derniers arguments de l'appel (3, 1) sont des constantes du code.",
+    "Les décalques sont retirés par editor.deleteDecalInstance ; commit marque les modèles « sales » dans decalPersistMan pour qu'ils survivent à la sauvegarde du niveau."
+  ],
+  "functions": {
+    "template": {
+      "desc": "Récupère ou crée le DecalData d'un groupe de décalques, nommé d'après le site qui le dresse. Champs posés : material, frame, texRows, texCols, size, renderPriority (défaut 5).",
+      "params": {
+        "name": {"type": "string", "desc": "Nom d'objet du modèle."},
+        "spec": {"type": "table", "desc": "{ mat, frame, rows, cols, size, prio }."}
+      },
+      "returns": [{"type": "userdata|nil", "desc": "Objet DecalData, ou nil si la création échoue."}],
+      "internal": false
+    },
+    "emit": {
+      "desc": "Pose un décalque depuis son enregistrement : position (x, y) à la hauteur du terrain plus lift, normale vers le haut, tangente dirigée selon l'angle a.",
+      "params": {
+        "tpl": {"type": "userdata", "desc": "Modèle DecalData."},
+        "rec": {"type": "table", "desc": "{ x, y, a, size, frame, lift }."},
+        "terrainZ": {"type": "function", "desc": "terrainZ(x, y) renvoie la hauteur du terrain."}
+      },
+      "returns": [{"type": "any", "desc": "Instance de décalque renvoyée par editor.addDecalInstanceWithTan."}],
+      "internal": false
+    },
+    "localise": {
+      "desc": "Convertit un plan de décalques au format du manifeste, local à l'origine de cuisson (ox, oy). Groupés par modèle (même mat, rows, cols, prio). Renvoie nil si le plan est vide.",
+      "params": {
+        "plan": {"type": "table|nil", "desc": "Liste d'enregistrements de décalques."},
+        "ox": {"type": "number", "desc": "x de l'origine de cuisson."},
+        "oy": {"type": "number", "desc": "y de l'origine de cuisson."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{ tpls = { {mat, rows, cols, prio, size}, ... }, items = { {t, x, y, a, size, frame, lift}, ... } }."}],
+      "internal": false
+    },
+    "place": {
+      "desc": "L'inverse de localise : les décalques du manifeste comme plan, posés là où se trouve un placement et tournés sur son cap. (ox, oy) est le point du repère du site autour duquel le placement tourne.",
+      "params": {
+        "rec": {"type": "table|nil", "desc": "Enregistrement du manifeste { tpls, items }."},
+        "px": {"type": "number", "desc": "x du placement."},
+        "py": {"type": "number", "desc": "y du placement."},
+        "yaw": {"type": "number|nil", "desc": "Cap en radians (défaut 0)."},
+        "ox": {"type": "number|nil", "desc": "x du pivot dans le repère du site (défaut 0)."},
+        "oy": {"type": "number|nil", "desc": "y du pivot (défaut 0)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Plan de décalques en coordonnées monde, ou nil s'il est vide."}],
+      "internal": false
+    },
+    "build": {
+      "desc": "Estampille tout un plan d'un coup, en créant les modèles requis. tag distingue ces modèles de ceux des autres sites. Renvoie les instances et les identifiants de modèles, deux choses à nettoyer différemment : une instance part avec le site, un modèle est partagé par tous les décalques du site.",
+      "params": {
+        "plan": {"type": "table|nil", "desc": "Liste d'enregistrements de décalques."},
+        "tag": {"type": "string", "desc": "Étiquette du site."},
+        "terrainZ": {"type": "function", "desc": "terrainZ(x, y) renvoie la hauteur du terrain."}
+      },
+      "returns": [{"type": "table", "desc": "Instances de décalques."}, {"type": "integer[]", "desc": "Identifiants des modèles DecalData créés."}],
+      "internal": false
+    },
+    "remove": {
+      "desc": "Retire des décalques posés (editor.deleteDecalInstance).",
+      "params": {"objs": {"type": "table|nil", "desc": "Instances renvoyées par build."}},
+      "returns": [],
+      "internal": false
+    },
+    "commit": {
+      "desc": "Donne les modèles au niveau, ce qui fait survivre à la sauvegarde les décalques posés d'après eux : le gestionnaire de persistance garde les instances contre leur modèle, donc marquer les quelques modèles « sales » écrit tous les décalques. Sans effet si decalPersistMan n'existe pas.",
+      "params": {"tplIds": {"type": "integer[]|nil", "desc": "Identifiants de modèles renvoyés par build."}},
+      "returns": [],
+      "internal": false
+    },
+    "facing": {
+      "desc": "Angle de cap d'un décalque (atan2(ty, tx)) à partir du vecteur direction qu'un constructeur a déjà.",
+      "params": {"tx": {"type": "number", "desc": "Composante x de la direction."}, "ty": {"type": "number", "desc": "Composante y de la direction."}},
+      "returns": [{"type": "number", "desc": "Angle en radians."}],
+      "internal": false
+    }
+  }
+}

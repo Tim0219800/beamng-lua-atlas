@@ -1,79 +1,118 @@
 {
   "path": "lua/ge/extensions/editor/raceEditor/startPositions.lua",
-  "module": "Sous-fenêtre « Start Positions » de l'éditeur de course (raceEditor). Elle liste, crée (Shift + glisser : position et orientation), sélectionne, déplace au gizmo (translation et rotation), renomme, supprime et réordonne les positions de départ (path.startPositions). On peut aussi poser la position au sol (Down to Terrain), l'aligner sur le terrain, téléporter le véhicule joueur dessus (Move Vehicle Here) ou copier la position du véhicule (Set to Current Vehicle), et choisir un groupe (start, rollingStart, recovery, other, ou texte libre). Actions via editor.history. Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/startPositions')(raceEditor).",
+  "module": "\"Start Positions\" sub-window of the race editor (raceEditor). It lists, creates (Shift + drag: position and orientation), selects, moves with the gizmo (translation and rotation), renames, deletes and reorders start positions (path.startPositions). You can also place the position on the ground (Down to Terrain), align it to the terrain, teleport the player vehicle onto it (Move Vehicle Here) or copy the vehicle's position (Set to Current Vehicle), and choose a group (start, rollingStart, recovery, other, or free text). Actions via editor.history. The module returns a constructor: require('/lua/ge/extensions/editor/raceEditor/startPositions')(raceEditor).",
   "notes": [
-    "Les positions du groupe « recovery » servent de positions de récupération pour les pathnodes (champs recovery/reverseRecovery).",
-    "Le survol d'une position utilise une sphère fixe de rayon 3 m.",
-    "« Down to Terrain » et « Align with Terrain » n'apparaissent que si la scène contient un TerrainBlock ; ils utilisent core_terrain.getTerrainHeight."
+    "The positions in the \"recovery\" group serve as recovery positions for pathnodes (recovery/reverseRecovery fields).",
+    "Hovering a position uses a fixed sphere of radius 3 m.",
+    "\"Down to Terrain\" and \"Align with Terrain\" only appear if the scene contains a TerrainBlock; they use core_terrain.getTerrainHeight."
   ],
   "classes": {
     "C": {
-      "desc": "Fenêtre Start Positions (windowDescription = 'Start Positions'). Instanciée avec init(raceEditor).",
+      "desc": "Start Positions window (windowDescription = 'Start Positions'). Instantiated with init(raceEditor).",
       "functions": {
         "init": {
-          "desc": "Mémorise raceEditor et met l'index de sélection à nil.",
-          "params": {"raceEditor": {"type": "table", "desc": "Module editor_raceEditor."}},
+          "desc": "Stores raceEditor and sets the selection index to nil.",
+          "params": {
+            "raceEditor": {
+              "type": "table",
+              "desc": "Module editor_raceEditor."
+            }
+          },
           "internal": true
         },
         "setPath": {
-          "desc": "Définit le chemin de course édité.",
-          "params": {"path": {"type": "table", "desc": "Objet gameplay/race/path."}}
+          "desc": "Sets the race path being edited.",
+          "params": {
+            "path": {
+              "type": "table",
+              "desc": "gameplay/race/path object."
+            }
+          }
         },
         "selected": {
-          "desc": "Appelé quand l'onglet devient actif : désélectionne, dessine les positions en « normal » et ajoute le raccourci Shift « Add New ».",
+          "desc": "Called when the tab becomes active: deselects, draws positions in \"normal\" and adds the Shift shortcut \"Add New\".",
           "internal": true
         },
         "unselect": {
-          "desc": "Appelé quand l'onglet est quitté : positions en « faded », retire le raccourci Shift.",
+          "desc": "Called when the tab is left: positions in \"faded\", removes the Shift shortcut.",
           "internal": true
         },
         "selectStartPosition": {
-          "desc": "Sélectionne la position d'ID id (nil pour aucune) : surbrillance, charge nom et groupe, place le gizmo.",
-          "params": {"id": {"type": "integer|nil", "desc": "ID de la position de départ."}}
+          "desc": "Selects the position with ID id (nil for none): highlight, loads name and group, places the gizmo.",
+          "params": {
+            "id": {
+              "type": "integer|nil",
+              "desc": "Start position ID."
+            }
+          }
         },
         "updateTransform": {
-          "desc": "Place le gizmo sur la position (orienté selon sp.rot en alignement local). Sans effet si le gizmo est interdit.",
-          "params": {"index": {"type": "integer", "desc": "ID de la position."}}
+          "desc": "Places the gizmo on the position (oriented along sp.rot in local alignment). No effect if the gizmo is forbidden.",
+          "params": {
+            "index": {
+              "type": "integer",
+              "desc": "Position ID."
+            }
+          }
         },
         "hoveringStartPosition": {
-          "desc": "Renvoie la position de départ survolée par le rayon souris (sphère de 3 m), la plus proche de la caméra.",
-          "returns": [{"type": "table|nil", "desc": "Position survolée."}]
+          "desc": "Returns the start position hovered by the mouse ray (3 m sphere), the one closest to the camera.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Hovered position."
+            }
+          ]
         },
         "input": {
-          "desc": "Gère la souris : avec Shift, création ; sinon clic pour sélectionner ou désélectionner.",
+          "desc": "Handles the mouse: with Shift, creation; otherwise click to select or deselect.",
           "internal": true
         },
         "beginDrag": {
-          "desc": "Début de manipulation au gizmo : mémorise la rotation et l'état sérialisé.",
+          "desc": "Start of gizmo manipulation: stores the rotation and the serialized state.",
           "internal": true
         },
         "dragging": {
-          "desc": "Pendant la manipulation : applique translation (pos) ou rotation (rot).",
+          "desc": "During manipulation: applies translation (pos) or rotation (rot).",
           "internal": true
         },
         "endDragging": {
-          "desc": "Fin de manipulation : valide l'action « Moved Start Position by Gizmo ».",
+          "desc": "End of manipulation: commits the \"Moved Start Position by Gizmo\" action.",
           "internal": true
         },
         "addHistory": {
-          "desc": "Valide une action d'historique pour la position courante à partir de l'état sérialisé précédent et de l'état actuel.",
-          "params": {"name": {"type": "string", "desc": "Nom de l'action."}, "old": {"type": "table", "desc": "Résultat de sp:onSerialize() avant la modification."}}
+          "desc": "Commits a history action for the current position from the previous serialized state and the current state.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Name of the action."
+            },
+            "old": {
+              "type": "table",
+              "desc": "Result of sp:onSerialize() before the modification."
+            }
+          }
         },
         "createStartPosition": {
-          "desc": "Affiche l'aide et l'aperçu (prismes) pendant le glisser, puis au relâchement crée une position (position = point d'appui, orientation = direction du glisser) via l'historique.",
+          "desc": "Displays the help and the preview (prisms) during the drag, then on release creates a position (position = anchor point, orientation = drag direction) via history.",
           "internal": true
         },
         "onEditModeActivate": {
-          "desc": "Appelé à l'activation du mode d'édition : resélectionne la position courante si elle existe.",
+          "desc": "Called when the edit mode is activated: reselects the current position if it exists.",
           "internal": true
         },
         "draw": {
-          "desc": "Appelé à chaque frame : mémorise mouseInfo, gère gizmo et entrées si autorisé, puis dessine la liste et le panneau.",
-          "params": {"mouseInfo": {"type": "table", "desc": "Infos souris (valid, down, hold, up, camPos, rayDir, rayCast, _downPos, _holdPos, _upPos)."}},
+          "desc": "Called every frame: stores mouseInfo, handles gizmo and inputs if allowed, then draws the list and the panel.",
+          "params": {
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Mouse info (valid, down, hold, up, camPos, rayDir, rayCast, _downPos, _holdPos, _upPos)."
+            }
+          },
           "internal": true
         },
         "drawStartPositions": {
-          "desc": "Dessine la liste des positions et le panneau de la position courante : suppression, déplacement dans la liste, nom, position, terrain, véhicule, groupe.",
+          "desc": "Draws the position list and the current position panel: delete, move in the list, name, position, terrain, vehicle, group.",
           "internal": true
         }
       }

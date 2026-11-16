@@ -1,27 +1,57 @@
 {
   "path": "lua/common/libs/lua-websockets/websocket/server_copas.lua",
-  "module": "Backend serveur WebSocket de lua-websockets pour la bibliothèque coopérative 'copas'. listen ouvre un socket serveur luasocket, réalise la poignée de main pour chaque connexion entrante et appelle le gestionnaire du sous-protocole négocié (ou le gestionnaire par défaut) avec un objet client.",
+  "module": "WebSocket server backend of lua-websockets for the cooperative 'copas' library. listen opens a luasocket server socket, performs the handshake for each incoming connection and calls the handler of the negotiated subprotocol (or the default handler) with a client object.",
   "usage": "local srv = require('libs/lua-websockets/websocket/server_copas').listen({\n  port = 8080,\n  default = function(client)\n    local msg, opcode = client:receive()\n    client:send(msg)\n  end\n})",
   "notes": [
-    "Nécessite libs/copas/copas ; il faut faire tourner la boucle copas pour traiter les connexions.",
-    "Le gestionnaire par défaut est indexé par la clé magique true dans la table interne des clients."
+    "Requires libs/copas/copas; the copas loop must be run to process the connections.",
+    "The default handler is indexed by the magic key true in the internal clients table."
   ],
   "functions": {
     "listen": {
-      "desc": "Démarre un serveur WebSocket. Lève une erreur si le socket ne peut pas être ouvert. Chaque client accepté est enregistré, passé au gestionnaire, puis la coroutine reste en vie tant que client.state n'est pas 'CLOSED'.",
-      "params": {"opts": {"type": "table", "desc": "port (défaut 80), interface (défaut '*'), protocols (table sous-protocole -> fonction(client)), default (fonction(client) pour les autres cas), on_error (fonction(message), défaut print). protocols ou default est obligatoire."}},
-      "returns": [{"type": "table", "desc": "Objet avec la méthode close(_, keep_clients) qui retire le serveur de copas et, sauf keep_clients, ferme les clients."}]
+      "desc": "Starts a WebSocket server. Raises an error if the socket cannot be opened. Each accepted client is registered and passed to the handler, then the coroutine stays alive as long as client.state is not 'CLOSED'.",
+      "params": {
+        "opts": {
+          "type": "table",
+          "desc": "port (default 80), interface (default '*'), protocols (table subprotocol -> function(client)), default (function(client) for the other cases), on_error (function(message), default print). protocols or default is required."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Object with the method close(_, keep_clients) that removes the server from copas and, unless keep_clients, closes the clients."
+        }
+      ]
     }
   },
   "classes": {
     "client": {
-      "desc": "Objet client passé au gestionnaire (état 'OPEN', is_server = true). Hérite de websocket/sync (send, receive, close).",
+      "desc": "Client object passed to the handler (state 'OPEN', is_server = true). Inherits from websocket/sync (send, receive, close).",
       "functions": {
-        "broadcast": {"desc": "Envoie le message à tous les clients du même sous-protocole, puis à lui-même.", "params": {"...": {"type": "any", "desc": "Mêmes arguments que send (data, opcode)."}}},
-        "on_close": {"desc": "Appelé à la fermeture : retire le client de la liste du sous-protocole.", "internal": true},
-        "sock_send": {"desc": "Envoi via copas.send.", "internal": true},
-        "sock_receive": {"desc": "Lecture via copas.receive.", "internal": true},
-        "sock_close": {"desc": "Shutdown puis fermeture du socket.", "internal": true}
+        "broadcast": {
+          "desc": "Sends the message to all the clients of the same subprotocol, then to itself.",
+          "params": {
+            "...": {
+              "type": "any",
+              "desc": "Same arguments as send (data, opcode)."
+            }
+          }
+        },
+        "on_close": {
+          "desc": "Called on close: removes the client from the subprotocol's list.",
+          "internal": true
+        },
+        "sock_send": {
+          "desc": "Send via copas.send.",
+          "internal": true
+        },
+        "sock_receive": {
+          "desc": "Read via copas.receive.",
+          "internal": true
+        },
+        "sock_close": {
+          "desc": "Shutdown then closing the socket.",
+          "internal": true
+        }
       }
     }
   }

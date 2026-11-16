@@ -1,12 +1,12 @@
 # `editor_api_guiInstancer`
 
-*Fichier : `lua/ge/extensions/editor/api/guiInstancer.lua` · VM : Game Engine (GE) · 42 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/guiInstancer.lua` · VM: Game Engine (GE) · 42 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/api/guiInstancer")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/api/guiInstancer")` (file under extensions/ but not a regular extension)
 
-Petite classe utilitaire de l'éditeur qui gère une liste d'instances d'une fenêtre GUI (par ex. plusieurs copies d'un même panneau). Chaque instance est une table `{ locked = false }` rangée dans `instances` avec un index entier. Le module renvoie un constructeur sans argument qui crée l'objet et appelle `init`.
+Small editor utility class that manages a list of instances of a GUI window (e.g. several copies of the same panel). Each instance is a `{ locked = false }` table stored in `instances` with an integer index. The module returns a constructor with no arguments that creates the object and calls `init`.
 
-## Exemple
+## Example
 
 ```lua
 local instancer = require("editor/api/guiInstancer")()
@@ -14,24 +14,24 @@ local idx = instancer:addInstance()
 instancer:removeInstance(idx)
 ```
 
-## Remarques
+## Notes
 
-- `nextInstanceIndex` est remis à 1 quand la table d'instances est vide au moment de `addInstance`.
-- `removeInstance` met seulement la case à nil : les indices ne sont pas décalés.
+- `nextInstanceIndex` is reset to 1 when the instances table is empty at the time of `addInstance`.
+- `removeInstance` only sets the slot to nil: indices are not shifted.
 
-## Classe `C`
+## Class `C`
 
-Objet renvoyé par le constructeur du module. Champs : `instances` (table index -> {locked}), `nextInstanceIndex` (integer).
+Object returned by the module constructor. Fields: `instances` (table index -> {locked}), `nextInstanceIndex` (integer).
 
-Le module renvoie un constructeur : `local obj = require("editor_api_guiInstancer")(options)`.
+The module returns a constructor: `local obj = require("editor_api_guiInstancer")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:addInstance()` | Ajoute une instance `{ locked = false }` et renvoie son index. Repart de 1 si aucune instance n'existe. | 12 |
-| `C:deserialize(name, state)` | Restaure `instances` et `nextInstanceIndex` depuis `state[name]` s'il existe (défauts `{}` et 1). | 29 |
-| `C:init()` | Initialise `instances` à vide et `nextInstanceIndex` à 1. Appelé par le constructeur. | 7 |
-| `C:removeInstance(instanceIndex)` | Supprime l'instance à l'index donné (met la case à nil). | 21 |
-| `C:serialize(name, state)` | Écrit `{ instances, nextInstanceIndex }` dans `state[name]` pour la sauvegarde de l'état de l'éditeur. | 25 |
+| `C:addInstance()` | Adds an instance `{ locked = false }` and returns its index. Restarts at 1 if no instance exists. | 12 |
+| `C:deserialize(name, state)` | Restores `instances` and `nextInstanceIndex` from `state[name]` if it exists (defaults `{}` and 1). | 29 |
+| `C:init()` | Initializes `instances` to empty and `nextInstanceIndex` to 1. Called by the constructor. | 7 |
+| `C:removeInstance(instanceIndex)` | Removes the instance at the given index (sets the slot to nil). | 21 |
+| `C:serialize(name, state)` | Writes `{ instances, nextInstanceIndex }` into `state[name]` for saving the editor state. | 25 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/guiInstancer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/guiInstancer.lua`.*

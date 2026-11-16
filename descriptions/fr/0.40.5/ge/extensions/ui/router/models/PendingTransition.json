@@ -1,0 +1,54 @@
+{
+  "path": "lua/ge/extensions/ui/router/models/PendingTransition.lua",
+  "module": "Modèle de données « PendingTransition » : représente une transition de navigation en cours {transitionId, action, toRoute, fromRoute, options}. Fournit un constructeur, une validation et des prédicats sur l'action (retour, avant, mise à jour de l'historique, effacement de la pile avant).",
+  "notes": [
+    "Dans router.lua actuel, les transitions sont gérées par transitionManager : ce modèle semble peu ou pas utilisé par le routeur (déduit du code ; non vérifié ailleurs).",
+    "Actions valides : push, replace, back, forward (Constants.NavigationAction) ; une action invalide devient push avec un avertissement. L'identifiant est « transition_<compteur>_<UUID> »."
+  ],
+  "functions": {
+    "create": {
+      "desc": "Crée une PendingTransition. Renvoie nil (erreur journalisée) si toRoute est absent.",
+      "params": {
+        "action": {"type": "string", "desc": "push, replace, back ou forward."},
+        "toRoute": {"type": "table", "desc": "ResolvedRoute de destination."},
+        "fromRoute": {"type": "table|nil", "desc": "Entrée d'historique d'origine."},
+        "options": {"type": "table|nil", "desc": "Options de navigation ({} par défaut)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{transitionId, action, toRoute, fromRoute, options}."}],
+      "internal": false
+    },
+    "validate": {
+      "desc": "Vérifie la présence de transitionId, action et toRoute.",
+      "params": {"transition": {"type": "table|nil", "desc": "Transition à valider."}},
+      "returns": [
+        {"type": "boolean", "desc": "true si valide."},
+        {"type": "string[]", "desc": "Liste des erreurs."}
+      ],
+      "internal": false
+    },
+    "isBackward": {
+      "desc": "Indique si l'action est « back ».",
+      "params": {"transition": {"type": "table|nil", "desc": "Transition."}},
+      "returns": [{"type": "boolean|nil", "desc": "true si action == back (nil/false si transition nil)."}],
+      "internal": false
+    },
+    "isForward": {
+      "desc": "Indique si l'action est « forward ».",
+      "params": {"transition": {"type": "table|nil", "desc": "Transition."}},
+      "returns": [{"type": "boolean|nil", "desc": "true si action == forward."}],
+      "internal": false
+    },
+    "shouldUpdateHistory": {
+      "desc": "Indique si la navigation ajoute une entrée à l'historique (uniquement push).",
+      "params": {"transition": {"type": "table|nil", "desc": "Transition."}},
+      "returns": [{"type": "boolean", "desc": "true pour push."}],
+      "internal": false
+    },
+    "shouldClearForward": {
+      "desc": "Indique si la navigation efface la pile « avant » (push et replace).",
+      "params": {"transition": {"type": "table|nil", "desc": "Transition."}},
+      "returns": [{"type": "boolean", "desc": "true pour push et replace."}],
+      "internal": false
+    }
+  }
+}

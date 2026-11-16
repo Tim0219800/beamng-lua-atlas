@@ -2,93 +2,93 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/tutorial/runtime.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Moteur générique de didacticiel : il enchaîne des « étapes » qui sont chacune une extension Lua distincte (préfixe + identifiant d'étape). Il charge/décharge l'extension de l'étape courante, mémorise la progression (étapes terminées, étape courante) et relaie onUpdate/onPreRender vers l'étape active, vers le suivi de dégâts, les marqueurs et le système de limites de zone. Un moddeur s'en sert en appelant configure() puis start().
---- Accès : extension `gameplay_tutorial_runtime` : `extensions.load("gameplay_tutorial_runtime")`, puis la globale `gameplay_tutorial_runtime`
+--- Generic tutorial engine: it chains "steps" that are each a separate Lua extension (prefix + step identifier). It loads/unloads the current step's extension, stores progress (completed steps, current step) and relays onUpdate/onPreRender to the active step, to damage tracking, to the markers and to the zone bounds system. A modder uses it by calling configure() then start().
+--- Access: extension `gameplay_tutorial_runtime`: `extensions.load("gameplay_tutorial_runtime")`, then the global `gameplay_tutorial_runtime`
 ---@class gameplay_tutorial_runtime
----@field dependencies string[] Extensions chargées avant celle-ci : gameplay_tutorial_setup, _markers, _damageTracker et _bounds.
----@field sharedTutorialData table Table vide partagée que les étapes peuvent utiliser pour s'échanger des données.
+---@field dependencies string[] Extensions loaded before this one: gameplay_tutorial_setup, _markers, _damageTracker and _bounds.
+---@field sharedTutorialData table Shared empty table that steps can use to exchange data.
 gameplay_tutorial_runtime = {}
 
---- Nettoie et décharge l'étape précédente, charge l'extension de la nouvelle étape, met à jour la progression et appelle son setup({}).
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:150
----@param stepId string|integer Identifiant d'étape présent dans stepOrder.
----@return boolean  false si inactif, id invalide ou extension introuvable.
+--- Cleans up and unloads the previous step, loads the new step's extension, updates progress and calls its setup({}).
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:150
+---@param stepId string|integer Step identifier present in stepOrder.
+---@return boolean  false if inactive, invalid id or extension not found.
 function gameplay_tutorial_runtime.activateStep(stepId) end
 
---- Termine l'étape courante puis active la suivante ; s'il n'y en a plus, appelle endTutorial().
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:200
----@return boolean  false si inactif ou si l'étape courante n'est pas dans stepOrder.
+--- Completes the current step then activates the next one; if there are none left, calls endTutorial().
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:200
+---@return boolean  false if inactive or if the current step is not in stepOrder.
 function gameplay_tutorial_runtime.advanceToNextStep() end
 
---- Marque une étape comme terminée dans completedSteps.
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:192
----@param stepId string Identifiant de l'étape.
----@return boolean  false si le didacticiel n'est pas actif.
+--- Marks a step as completed in completedSteps.
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:192
+---@param stepId string Step identifier.
+---@return boolean  false if the tutorial is not active.
 function gameplay_tutorial_runtime.completeStep(stepId) end
 
---- Fixe la configuration : ordre des étapes, préfixe des extensions d'étape, préfabs initiaux, chargement des sites et des actions bloquées au démarrage, callbacks onStarted/onEnded. Branche aussi les getters du module bounds et des marqueurs (véhicule du didacticiel).
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:57
----@param opts table Champs facultatifs : stepOrder (liste d'ids), stepExtensionPrefix, initialPrefabs, loadSitesOnStart, setupBlockedActionsOnStart, onStarted, onEnded.
+--- Sets the configuration: step order, step extension prefix, initial prefabs, loading of sites and blocked actions at start, onStarted/onEnded callbacks. Also wires the getters of the bounds and markers modules (tutorial vehicle).
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:57
+---@param opts table Optional fields: stepOrder (list of ids), stepExtensionPrefix, initialPrefabs, loadSitesOnStart, setupBlockedActionsOnStart, onStarted, onEnded.
 function gameplay_tutorial_runtime.configure(opts) end
 
---- Fin normale : cleanup de l'étape, des marqueurs, du suivi de dégâts, des limites et du setup ; passe isCompleted à true, efface la liste de tâches de l'interface (ClearTasklist) et appelle onEnded.
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:227
----@return boolean  false si le didacticiel n'était pas actif.
+--- Normal end: cleanup of the step, markers, damage tracking, bounds and setup; sets isCompleted to true, clears the UI task list (ClearTasklist) and calls onEnded.
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:227
+---@return boolean  false if the tutorial was not active.
 function gameplay_tutorial_runtime.endTutorial() end
 
---- Identifiant de l'étape courante.
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:103
----@return string|nil  nil si aucune étape n'est active.
+--- Identifier of the current step.
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:103
+---@return string|nil  nil if no step is active.
 function gameplay_tutorial_runtime.getCurrentStep() end
 
---- Renvoie la table de progression interne (pas une copie).
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:95
+--- Returns the internal progress table (not a copy).
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:95
 ---@return table  {currentStepId, completedSteps, isCompleted}
 function gameplay_tutorial_runtime.getProgressData() end
 
---- Identifiant d'étape à une position donnée de l'ordre configuré.
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:111
----@param index integer Position à partir de 1.
----@return string|nil  nil hors limites.
+--- Step identifier at a given position in the configured order.
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:111
+---@param index integer Position starting at 1.
+---@return string|nil  nil if out of bounds.
 function gameplay_tutorial_runtime.getStepIdByIndex(index) end
 
---- Renvoie la liste ordonnée des identifiants d'étapes configurée.
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:107
----@return string[]  Liste des ids.
+--- Returns the configured ordered list of step identifiers.
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:107
+---@return string[]  List of ids.
 function gameplay_tutorial_runtime.getStepOrder() end
 
---- Indique si le didacticiel est en cours.
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:99
----@return boolean  true entre start() et endTutorial()/stop().
+--- Indicates whether the tutorial is in progress.
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:99
+---@return boolean  true between start() and endTutorial()/stop().
 function gameplay_tutorial_runtime.isActive() end
 
---- Hook appelé avant le rendu : relaie à l'étape active (dtReal, dtSim seulement) et au module bounds.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:293
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulé (s).
----@param dtRaw number Delta temps brut (s).
+--- Hook called before rendering: relays to the active step (dtReal, dtSim only) and to the bounds module.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:293
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulated time delta (s).
+---@param dtRaw number Raw time delta (s).
 function gameplay_tutorial_runtime.onPreRender(dtReal, dtSim, dtRaw) end
 
---- Hook appelé à chaque image par le moteur d'extensions : transmet l'id du véhicule du didacticiel au damageTracker, relaie à l'étape active, met à jour dégâts, marqueurs et limites.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:277
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulé (s).
----@param dtRaw number Delta temps brut (s).
+--- Hook called every frame by the extension engine: passes the tutorial vehicle id to the damageTracker, relays to the active step, updates damage, markers and bounds.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:277
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulated time delta (s).
+---@param dtRaw number Raw time delta (s).
 function gameplay_tutorial_runtime.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Remplace la progression (étape courante, étapes terminées, drapeau terminé), typiquement après chargement d'une sauvegarde.
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:88
----@param data table Table avec currentStepId, completedSteps (table id -> true) et isCompleted.
+--- Replaces the progress (current step, completed steps, completed flag), typically after loading a save.
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:88
+---@param data table Table with currentStepId, completedSteps (table id -> true) and isCompleted.
 function gameplay_tutorial_runtime.setProgressData(data) end
 
---- Démarre le didacticiel : active les préfabs initiaux, charge les sites, installe les actions bloquées, puis active l'étape mémorisée (ou la première si elle est invalide). Appelle onStarted en cas de succès.
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:115
----@return boolean  false si déjà actif, si stepOrder est vide ou si l'étape n'a pas pu être activée.
+--- Starts the tutorial: activates the initial prefabs, loads the sites, installs the blocked actions, then activates the stored step (or the first one if invalid). Calls onStarted on success.
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:115
+---@return boolean  false if already active, if stepOrder is empty or if the step could not be activated.
 function gameplay_tutorial_runtime.start() end
 
---- Décharge l'étape active sans marquer le didacticiel comme terminé et sans nettoyer les autres modules.
----Source : lua/ge/extensions/gameplay/tutorial/runtime.lua:262
+--- Unloads the active step without marking the tutorial as completed and without cleaning up the other modules.
+---Source: lua/ge/extensions/gameplay/tutorial/runtime.lua:262
 function gameplay_tutorial_runtime.stop() end
 

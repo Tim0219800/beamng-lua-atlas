@@ -1,0 +1,308 @@
+{
+  "path": "lua/ge/extensions/core/quickAccess.lua",
+  "module": "Extension GE `core_quickAccess` : le menu radial (menu rapide) du jeu. Elle garde un arbre de menus (chemins du type '/root/sandbox/other/'), l'assemble à l'ouverture (entrées statiques, générateurs, entrées demandées au véhicule joueur), le positionne sur les 8 emplacements du cercle puis l'envoie à l'interface (guihooks 'radialMenuUpdated', route UI 'radial'). Elle ralentit le temps pendant que le menu est ouvert, mémorise les actions récentes et la configuration des emplacements dynamiques (settings/radialRecentActions.json et settings/radialDynamicSlotSettings.json). Un mod ajoute ses propres boutons avec core_quickAccess.addEntry, de préférence dans le hook onRegisterQuickAccessMenus.",
+  "usage": "-- dans l'extension du mod (GE)\nlocal M = {}\nlocal function onRegisterQuickAccessMenus()\n  if not core_quickAccess then return end\n  core_quickAccess.addEntry({\n    level = '/root/sandbox/other/',   -- sous-menu \"Autres\"\n    uniqueID = 'monModAction',        -- remplace l'entrée si déjà présente, permet les actions récentes\n    generator = function(entries)     -- appelé à chaque ouverture, ajoute des boutons à `entries`\n      table.insert(entries, {\n        title = 'Mon action', icon = 'wrench', uniqueID = 'monModAction',\n        onSelect = function() log('I','','clic') return {'hide'} end,\n      })\n    end,\n  })\nend\nM.onRegisterQuickAccessMenus = onRegisterQuickAccessMenus\nreturn M",
+  "notes": [
+    "COMMENT UN MOD AJOUTE DES ENTRÉES : (1) définir dans son extension GE le hook onRegisterQuickAccessMenus (appelé par registerDefaultMenus au premier onInit de core_quickAccess, après les menus de base) et y appeler core_quickAccess.addEntry(...). (2) Si l'extension est chargée plus tard, appeler addEntry directement ou écouter onQuickAccessLoaded (émis à onExtensionLoaded de quickAccess). Les entrées ajoutées après le premier onInit ne sont prises en compte qu'à la prochaine ouverture du menu (l'arbre est recopié à chaque show). core_quickAccess.registerMenu est obsolète : il se contente de logger une erreur.",
+    "Arguments de addEntry : `level` (chemin du menu ; défaut '/root/sandbox/general/' ; s'il ne commence pas par '/root/' il est préfixé par '/root/sandbox' ; un '/' final est ajouté) ; soit `generator = function(entries)` qui insère des tables-boutons dans `entries`, soit directement `title` + (`onSelect` ou `goto`). Si `uniqueID` est donné, une entrée existante du même level avec le même uniqueID est remplacée. L'argument est copié par deepcopy : ne pas y mettre d'objets partagés dont l'identité compte, mais les fonctions sont conservées.",
+    "Champs d'un bouton (lus dans le code) : title (clé de traduction ou texte), desc, icon (nom d'icône ; les anciens noms listés dans ui/assets/iconMappings/iconTags.json sont remplacés avec un avertissement), goto (chemin d'un sous-menu : le bouton devient un dossier), onSelect/onSecondarySelect/onTertiarySelect(item) pour les actions 1, 2, 3, onDeselect/onSecondaryDeselect/onTertiaryDeselect(item) au relâchement, startSlot/endSlot (position), priority, uniqueID, enabled (défaut true), categoryOrder (pour les catégories), ignoreAsRecentAction, ignoreForCheckingIfMenuIsEmpty, contextAction (fonction, appelée par contextAction()), dynamicSlot = {id=...}.",
+    "Valeur de retour de onSelect/onDeselect : une table dont le 1er élément est l'ordre : {'hide'} ferme le menu, {'reload'} le reconstruit, {'goto', chemin} ouvre un sous-menu, {'back'} revient, {'hideMeOnly'} ferme, {'temporaryHide'} masque l'interface en remettant le temps normal (pour viser/cliquer), {'temporaryUnhide'} la réaffiche et ralentit de nouveau, {'hideAndIgnoreSlowmotion'} ferme sans restaurer le temps. Tout autre retour (nil compris) est loggé comme erreur 'invalid item result args' : toujours renvoyer une table.",
+    "Emplacements du cercle (maxSlotAmount = 8) : 1 gauche, 3 haut, 5 droite, 7 bas, 2/4/6/8 diagonales. startSlot seul = 1 case ; startSlot + endSlot = bouton large couvrant la plage. Deux boutons aux emplacements qui se chevauchent : le second perd sa position avec un avertissement. Les boutons sans emplacement sont répartis dans les trous. Plus de boutons que de place restent possibles (ils rétrécissent).",
+    "Les niveaux racines valides sont '/root/playerVehicle/' (actions véhicule, défaut '/root/playerVehicle/general/') et '/root/sandbox/' (défaut '/root/sandbox/quick/'; remplacé par '/root/sandbox/career/' en carrière et '/root/sandbox/mission/' pendant un défi). Catégories sandbox de base : other, funStuff, repair, quick, mission, career, vehicles, traffic, ai. Les boutons goto manquants entre niveaux sont ajoutés automatiquement (titre via toNiceName, icône 'material_traffic'). Un niveau vide (aucun bouton utile) est retiré de l'arbre sauf les chemins protégés.",
+    "Les entrées côté véhicule (VM véhicule) passent par vehicle/extensions core_quickAccess.requestItems : à l'ouverture le GE envoie requestItems(level) au véhicule joueur et attend jusqu'à 4 frames GFX (vehicleWaitFrames). Au-delà, onUpdate affiche le menu quand même avec une erreur 'vehicle didn't respond in time'. Le véhicule rappelle vehicleItemsCallback(objID, level, tree). Les sélections d'items venant du véhicule sont renvoyées à son extension via selectItem.",
+    "Emplacements dynamiques (dynamicSlot) : emplacements configurables par le joueur (ids comme root_up, sandbox_left, vehicle_down, funstuff_left...) avec un mode 'recentActions', 'uniqueAction' (action précise identifiée par level + uniqueID) ou 'empty'. Seules les actions ayant un uniqueID et sans ignoreAsRecentAction sont mémorisées comme actions récentes (10 max pour 'all'). Donner un uniqueID stable permet donc à un mod d'apparaître dans ces emplacements.",
+    "Bug probable : dans _assembleMenuComplete, `if not item.title then item.title = toNiceName(str) end` utilise une variable `str` jamais définie (nil), donc une catégorie sans title provoquerait une erreur dans toNiceName (déduit du code).",
+    "Incohérence : au chargement, `recentActions` ne contient que la catégorie 'all', mais clearRecentActions() la remplace par une table avec playerVehicle, sandbox, other et all.",
+    "Dans selectItem et contextAction, si l'item n'existe pas, l'erreur est loggée mais le code continue : selectItem appelle itemAction(nil) (ignoré) mais contextAction lit m.contextAction sur nil et plante.",
+    "Dépendances chargées avant : core_vehicleTriggers, core_funstuff. Le module utilise aussi le global ui_imgui (im) et lit settings/radialFavorites.json comme nom (variable safeFile non utilisée dans les parties lues)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{ 'core_vehicleTriggers', 'core_funstuff' }, chargées avant cette extension."}
+  },
+  "functions": {
+    "setSlowMoFactor": {
+      "desc": "Définit le facteur de temps (simTimeAuthority) appliqué pendant que le menu radial est ouvert. 0.01 par défaut.",
+      "params": {"factor": {"type": "number", "desc": "Facteur de vitesse de simulation (1 = temps réel)."}},
+      "returns": [],
+      "internal": false
+    },
+    "resetSlowMoFactor": {
+      "desc": "Remet le facteur de ralenti à sa valeur d'origine (0.01).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "addEntry": {
+      "desc": "Ajoute (ou remplace, si uniqueID identique au même level) une entrée dans l'arbre du menu radial. Voir notes pour tous les champs. Renvoie false seulement si `level` n'est pas une chaîne ; un avertissement est loggé si l'entrée n'a ni générateur, ni title avec onSelect/goto, mais l'entrée est quand même ajoutée.",
+      "params": {"_args": {"type": "table", "desc": "{ level, generator | (title, onSelect|goto, icon, desc, uniqueID, priority, startSlot, endSlot, ... ) }"}},
+      "returns": [{"type": "boolean", "desc": "true si ajoutée, false si level invalide."}],
+      "internal": false
+    },
+    "registerMenu": {
+      "desc": "Obsolète : logge une erreur demandant d'utiliser addEntry, ne fait rien d'autre.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "isEnabled": {
+      "desc": "Indique si le menu radial est actuellement affiché.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si l'interface radiale est visible."}],
+      "internal": false
+    },
+    "setEnabled": {
+      "desc": "Ouvre ou ferme le menu. L'ouverture n'a lieu que si l'état UI est 'play' ou inconnu, ou si le menu est déjà visible, ou si force. Émet le hook onQuickAccessOpened(level). La fermeture est ignorée pendant un route handoff.",
+      "params": {
+        "enabled": {"type": "boolean", "desc": "true pour ouvrir, false pour fermer."},
+        "level": {"type": "string|nil", "desc": "Niveau à ouvrir (ex. '/root/sandbox/other/') ; nil = '/root/'."},
+        "force": {"type": "boolean|nil", "desc": "Ouvre même si un autre écran est actif."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "toggle": {
+      "desc": "Ouvre le menu s'il est fermé, le ferme sinon. Utilisée par l'action 'toggleRadialMenuMulti'.",
+      "params": {"level": {"type": "string|nil", "desc": "Niveau à ouvrir."}},
+      "returns": [],
+      "internal": false
+    },
+    "gotoLevel": {
+      "desc": "Va vers un autre niveau de menu en empilant le niveau actuel dans l'historique (pour back).",
+      "params": {"level": {"type": "string", "desc": "Chemin du niveau cible."}},
+      "returns": [],
+      "internal": false
+    },
+    "back": {
+      "desc": "Revient au niveau précédent (historique), ou au niveau parent selon le chemin si l'historique est vide.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si on a changé de niveau, false sinon (menu fermé ou déjà en haut)."}],
+      "internal": false
+    },
+    "reload": {
+      "desc": "Reconstruit et réaffiche le niveau courant (si le menu est ouvert).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "selectItem": {
+      "desc": "Appelée par l'interface quand le joueur appuie/relâche un bouton : exécute l'action de l'item d'index id dans le menu courant.",
+      "params": {
+        "id": {"type": "integer", "desc": "Indice (base 1) de l'item dans currentMenuItems."},
+        "buttonDown": {"type": "boolean", "desc": "true à l'appui, false au relâchement."},
+        "actionIndex": {"type": "integer|nil", "desc": "1 = principale, 2 = secondaire, 3 = tertiaire (défaut 1)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "contextAction": {
+      "desc": "Appelée par l'interface pour l'action contextuelle d'un bouton (ex. ouvrir la configuration d'un emplacement dynamique).",
+      "params": {
+        "id": {"type": "integer", "desc": "Indice de l'item."},
+        "buttonDown": {"type": "boolean", "desc": "Non utilisé (déduit du code)."},
+        "actionIndex": {"type": "integer|nil", "desc": "Non utilisé (déduit du code)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "adjustCruiseSpeed": {
+      "desc": "Callback de l'interface : demande au véhicule joueur d'ajuster la vitesse du régulateur (extension côté véhicule).",
+      "params": {"direction": {"type": "number", "desc": "Positif = augmenter, négatif = diminuer ; 0 ou non-nombre ignoré."}},
+      "returns": [],
+      "internal": true
+    },
+    "getUiData": {
+      "desc": "Renvoie les données envoyées à l'interface du menu : canGoBack, items, categories, pathBeforeCategory, selectedCategory, backButtonIndex, currentLevel, breadcrumbs, menuIcon, hasLRShoulderButtons, tutorialHighlightTargets.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "uiData, nil avant la première ouverture."}],
+      "internal": true
+    },
+    "setTutorialHighlightTargets": {
+      "desc": "Définit la liste d'identifiants à mettre en évidence dans le menu (tutoriel). Les valeurs non chaînes, vides ou en double sont filtrées. Rafraîchit l'interface si visible.",
+      "params": {"targets": {"type": "string[]", "desc": "Identifiants de cibles."}},
+      "returns": [],
+      "internal": false
+    },
+    "getMostRecentAvailableActions": {
+      "desc": "Renvoie les actions récentes (de la catégorie donnée) encore disponibles dans le menu, hors celles déjà affectées à un emplacement 'uniqueAction', limitées à `limit`.",
+      "params": {
+        "category": {"type": "string", "desc": "Catégorie (ex. 'all')."},
+        "limit": {"type": "integer|nil", "desc": "Nombre max ; nil ou 0 renvoie {}."},
+        "dynamicItems": {"type": "table[]|nil", "desc": "Items de type dynamicSlot du niveau courant."}
+      },
+      "returns": [{"type": "table[]", "desc": "Enregistrements { uniqueID, level, title, timestamp, icon }."}],
+      "internal": true
+    },
+    "clearRecentActions": {
+      "desc": "Efface l'historique des actions récentes et émet onQuickAccessClearRecentActions.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "resetDynamicSlotSettings": {
+      "desc": "Restaure la configuration par défaut des emplacements dynamiques, la sauvegarde et émet onQuickAccessResetDynamicSlotSettings.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "openDynamicSlotConfigurator": {
+      "desc": "Ouvre l'écran de configuration d'un emplacement dynamique (guihooks 'OpenDynamicSlotConfigurator', hook onOpenDynamicSlotConfigurator).",
+      "params": {"dynamicSlotKey": {"type": "string", "desc": "Id de l'emplacement (ex. 'root_up')."}},
+      "returns": [],
+      "internal": false
+    },
+    "getDynamicSlotConfigurationData": {
+      "desc": "Prépare pour l'interface les données de configuration de l'emplacement ouvert par openDynamicSlotConfigurator (arbre de menus et réglage courant). Plante si aucun emplacement n'a été ouvert.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Données pour l'interface."}],
+      "internal": true
+    },
+    "setDynamicSlotConfiguration": {
+      "desc": "Enregistre le choix du joueur pour un emplacement dynamique (modes uniqueAction, recentActions ou empty), émet les hooks onQuickAccessSetUniqueAction / SetRecentActions / SetEmpty puis onQuickAccessSetDynamicSlotConfiguration, sauvegarde et recharge le menu.",
+      "params": {
+        "dynamicSlotKey": {"type": "string", "desc": "Id de l'emplacement."},
+        "data": {"type": "table", "desc": "{ mode, uniqueID, level } ou { mode, category }."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "toNiceName": {
+      "desc": "Transforme un identifiant en nom lisible : '_' devient espace, espace avant chaque majuscule collée à une minuscule, première lettre de chaque mot en majuscule, reste en minuscules.",
+      "params": {"str": {"type": "string", "desc": "Identifiant, ex. 'funStuff'."}},
+      "returns": [{"type": "string", "desc": "Ex. 'Fun Stuff'."}],
+      "internal": false
+    },
+    "beginRouteHandoff": {
+      "desc": "Marque le passage du menu radial vers un écran enfant (ex. radial.mirrors) sans vraie fermeture, et masque temporairement l'interface.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "endRouteHandoff": {
+      "desc": "Termine le handoff et réaffiche le menu (temps ralenti de nouveau).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "isRouteHandoffActive": {
+      "desc": "Indique si un handoff vers un écran enfant est en cours.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si actif."}],
+      "internal": true
+    },
+    "finishRouteHandoffExit": {
+      "desc": "Nettoie l'état radial quand un écran enfant retourne directement au jeu, sans renaviguer vers 'play'.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "getMovedRadialLastTimeMs": {
+      "desc": "Renvoie l'instant (ms système) du dernier appel de moved().",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Millisecondes (0 si jamais)."}],
+      "internal": true
+    },
+    "moved": {
+      "desc": "Enregistre l'instant actuel comme dernier mouvement du curseur radial (appelé par l'interface).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "getVehicleName": {
+      "desc": "Construit un nom lisible du véhicule : marque, nom et configuration d'après core_vehicles.getModel ; sinon le nom JBeam.",
+      "params": {"veh": {"type": "userdata|nil", "desc": "Objet véhicule ; nil renvoie la clé de traduction 'ui.radialmenu2.noVehicle'."}},
+      "returns": [{"type": "string", "desc": "Nom du véhicule."}],
+      "internal": false
+    },
+    "tryAction": {
+      "desc": "Exécute une action liée aux touches du menu parmi : toggleBigMap, toggleRadialMenuMulti, recoverVehicle, resetVehicle, activateStarterMotor. Ignorée si core_input_actionFilter la bloque ; une action inconnue est loggée en erreur.",
+      "params": {"action": {"type": "string", "desc": "Nom de l'action."}},
+      "returns": [],
+      "internal": false
+    },
+    "vehicleItemsCallback": {
+      "desc": "Rappel du véhicule joueur avec ses entrées de menu pour un niveau : les mémorise et affiche le menu.",
+      "params": {
+        "objID": {"type": "integer", "desc": "Id du véhicule."},
+        "level": {"type": "string", "desc": "Niveau demandé."},
+        "vehicleMenuTree": {"type": "table", "desc": "Table niveau -> liste d'entrées."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "vehicleItemSelectCallback": {
+      "desc": "Rappel du véhicule après exécution d'une action d'item : traite l'ordre renvoyé ({'hide'}, {'goto', ...}, etc.).",
+      "params": {
+        "objID": {"type": "integer", "desc": "Id du véhicule (inutilisé)."},
+        "args": {"type": "table", "desc": "Ordre à exécuter, même format que le retour de onSelect."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onInit": {
+      "desc": "Hook d'initialisation de l'extension : au premier appel enregistre les menus par défaut (puis émet onRegisterQuickAccessMenus), puis ferme le menu.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Au chargement : émet onQuickAccessLoaded, lit les actions récentes et les réglages d'emplacements dynamiques.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Au déchargement : sauvegarde les actions récentes.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExit": {
+      "desc": "À la fermeture du jeu : sauvegarde les actions récentes.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "À la fin d'un niveau : sauvegarde les actions récentes.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Quand un véhicule apparaît : sauvegarde les actions récentes.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Au changement de véhicule joueur : recharge le menu s'il est ouvert.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque frame GFX : gère le délai d'attente des entrées du véhicule (4 frames) et force l'assemblage si le véhicule ne répond pas.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUiChangedState": {
+      "desc": "Quand la route UI change : si une autre route prend le dessus pendant que le menu est visible, le ferme sans naviguer ; termine aussi un handoff quand l'état devient 'play'.",
+      "params": {"toState": {"type": "string", "desc": "Nouvel état/route UI."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Avant un rechargement Lua : ferme le menu et sauvegarde actions récentes et emplacements dynamiques.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onBeforeBigMapActivated": {
+      "desc": "Avant l'ouverture de la grande carte : ferme le menu radial.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

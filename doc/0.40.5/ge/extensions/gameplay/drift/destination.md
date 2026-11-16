@@ -1,119 +1,119 @@
 # `gameplay_drift_destination`
 
-*Fichier : `lua/ge/extensions/gameplay/drift/destination.lua` · VM : Game Engine (GE) · 226 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drift/destination.lua` · VM: Game Engine (GE) · 226 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drift_destination` : `extensions.load("gameplay_drift_destination")`, puis la globale `gameplay_drift_destination`
+**Access:** extension `gameplay_drift_destination`: `extensions.load("gameplay_drift_destination")`, then the global `gameplay_drift_destination`
 
-Suivi d'itinéraire du mode drift (« A vers B »). setRacePath charge un chemin de course (gameplay/race/path) depuis un fichier JSON, éventuellement inversé, et en extrait les points. Chaque frame, il calcule la distance restante le long de ce chemin, la distance à la route prévue, si le véhicule roule à contresens, et cumule la distance parcourue à contresens : au-delà d'un seuil (10 m par défaut) wrongWayFail passe à true. Un moddeur de mission de drift lit ces valeurs pour afficher la progression ou faire échouer la mission.
+Route tracking of drift mode ("A to B"). setRacePath loads a race path (gameplay/race/path) from a JSON file, optionally reversed, and extracts its points. Every frame, it computes the remaining distance along this path, the distance to the planned route, whether the vehicle is driving the wrong way, and accumulates the distance driven the wrong way: beyond a threshold (10 m by default) wrongWayFail becomes true. A drift mission modder reads these values to display progress or fail the mission.
 
-## Exemple
+## Example
 
 ```lua
 gameplay_drift_destination.setRacePath({filePath = '/levels/west_coast_usa/race/driftRoute.race.json', reverse = false, maxWrongWayDist = 15})
 local reste = gameplay_drift_destination.getRemainingDist()
 ```
 
-## Remarques
+## Notes
 
-- Le véhicule suivi est celui de gameplay_drift_drift.getVehId() (une seule voiture), contrairement à bounds.lua qui gère plusieurs véhicules.
-- setRacePath complète data en place : reverse = false, maxWrongWayDist = 10 (defaultMaxWrongWayDist), disableWrongWayAndDist = false. Sans data.filePath, il logue un warning et ne fait rien.
-- Contresens : vitesse > 0.5 m/s et produit scalaire (direction du segment, vitesse) <= 0 ; désactivé si disableWrongWayAndDist. Le hook onDriftWrongWay est émis à chaque frame tant que le véhicule est à contresens.
-- wrongWayFail passe à true avec 0,2 s de délai (job asynchrone) pour laisser la priorité au message de reset du véhicule ; il revient à false dès que le véhicule n'est plus à contresens.
-- reset() remet remainingDist, la distance de contresens cumulée et la dernière position à zéro mais ne remet pas wrongWayFail ni goingWrongWay à false.
-- getRemainingDist, getGoingWrongWay et getWrongWayFail valent nil tant qu'aucun chemin n'est chargé ou calculé.
-- Les distances sont en mètres.
+- The tracked vehicle is that of gameplay_drift_drift.getVehId() (a single car), unlike bounds.lua which handles several vehicles.
+- setRacePath completes data in place: reverse = false, maxWrongWayDist = 10 (defaultMaxWrongWayDist), disableWrongWayAndDist = false. Without data.filePath, it logs a warning and does nothing.
+- Wrong way: speed > 0.5 m/s and dot product (segment direction, velocity) <= 0; disabled if disableWrongWayAndDist. The onDriftWrongWay hook is emitted every frame as long as the vehicle is going the wrong way.
+- wrongWayFail becomes true with a 0.2 s delay (asynchronous job) to give priority to the vehicle reset message; it goes back to false as soon as the vehicle is no longer going the wrong way.
+- reset() sets remainingDist, the accumulated wrong-way distance and the last position back to zero but does not set wrongWayFail or goingWrongWay back to false.
+- getRemainingDist, getGoingWrongWay and getWrongWayFail are nil as long as no path is loaded or computed.
+- Distances are in meters.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drift_destination.getDisableWrongWayAndDist()` | Indique si la détection de contresens et le calcul de distance sont désactivés (valeur passée à setRacePath). | 196 |
-| `gameplay_drift_destination.getDistToIntendedRoad()` | Distance (m) du véhicule au segment de route prévu le plus proche. | 192 |
-| `gameplay_drift_destination.getDriftDebugInfo()` | Table de configuration du debug de l'extension : {default = false, canBeChanged = true}. | 184 |
-| `gameplay_drift_destination.getGC()` | Garbage Lua produit par la dernière frame mesurée par le profileur. | 188 |
-| `gameplay_drift_destination.getGoingWrongWay()` | Indique si le véhicule roule actuellement à contresens. | 176 |
-| `gameplay_drift_destination.getPathData()` | Objet chemin de course chargé (gameplay/race/path). | 164 |
-| `gameplay_drift_destination.getRemainingDist()` | Distance restante (m) le long du chemin jusqu'au dernier point. | 172 |
-| `gameplay_drift_destination.getWaypoints()` | Positions des points du chemin (dans l'ordre de parcours, inversées si reverse). | 168 |
-| `gameplay_drift_destination.getWrongWayFail()` | Vrai quand la distance cumulée à contresens dépasse maxWrongWayDist. | 180 |
-| `gameplay_drift_destination.onUpdate()` | Hook par frame : met à jour distance restante, contresens et échec de contresens (rien si gameplay_drift_drift n'a pas de position de véhicule). *(interne)* *(hook)* | 147 |
-| `gameplay_drift_destination.onVehicleResetted(vehicleId)` | Hook : véhicule réinitialisé ; remet la dernière position à zéro pour ne pas compter le saut de reset comme distance. *(interne)* *(hook)* | 206 |
-| `gameplay_drift_destination.reset()` | Remet à zéro la distance restante, la distance cumulée à contresens et la dernière position (pas wrongWayFail). | 200 |
-| `gameplay_drift_destination.setRacePath(data)` | Charge le chemin de course depuis data.filePath (JSON), l'inverse si data.reverse, applique autoConfig et extrait les positions des points de passage triés. | 27 |
+| `gameplay_drift_destination.getDisableWrongWayAndDist()` | Indicates whether wrong-way detection and distance computation are disabled (value passed to setRacePath). | 196 |
+| `gameplay_drift_destination.getDistToIntendedRoad()` | Distance (m) of the vehicle to the nearest planned road segment. | 192 |
+| `gameplay_drift_destination.getDriftDebugInfo()` | Debug configuration table of the extension: {default = false, canBeChanged = true}. | 184 |
+| `gameplay_drift_destination.getGC()` | Lua garbage produced by the last frame measured by the profiler. | 188 |
+| `gameplay_drift_destination.getGoingWrongWay()` | Indicates whether the vehicle is currently going the wrong way. | 176 |
+| `gameplay_drift_destination.getPathData()` | Loaded race path object (gameplay/race/path). | 164 |
+| `gameplay_drift_destination.getRemainingDist()` | Remaining distance (m) along the path to the last point. | 172 |
+| `gameplay_drift_destination.getWaypoints()` | Positions of the path points (in travel order, reversed if reverse). | 168 |
+| `gameplay_drift_destination.getWrongWayFail()` | True when the accumulated wrong-way distance exceeds maxWrongWayDist. | 180 |
+| `gameplay_drift_destination.onUpdate()` | Per-frame hook: updates remaining distance, wrong way and wrong-way failure (nothing if gameplay_drift_drift has no vehicle position). *(internal)* *(hook)* | 147 |
+| `gameplay_drift_destination.onVehicleResetted(vehicleId)` | Hook: vehicle reset; sets the last position back to zero so the reset jump is not counted as distance. *(internal)* *(hook)* | 206 |
+| `gameplay_drift_destination.reset()` | Sets the remaining distance, the accumulated wrong-way distance and the last position back to zero (not wrongWayFail). | 200 |
+| `gameplay_drift_destination.setRacePath(data)` | Loads the race path from data.filePath (JSON), reverses it if data.reverse, applies autoConfig and extracts the positions of the sorted waypoints. | 27 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drift_destination.getDisableWrongWayAndDist()`
 
-Indique si la détection de contresens et le calcul de distance sont désactivés (valeur passée à setRacePath).
+Indicates whether wrong-way detection and distance computation are disabled (value passed to setRacePath).
 
-- **renvoie** : boolean|nil disableWrongWayAndDist, nil avant setRacePath.
+- **returns**: boolean|nil disableWrongWayAndDist, nil before setRacePath.
 
 #### `gameplay_drift_destination.getDistToIntendedRoad()`
 
-Distance (m) du véhicule au segment de route prévu le plus proche.
+Distance (m) of the vehicle to the nearest planned road segment.
 
-- **renvoie** : number Distance, 0 par défaut.
+- **returns**: number Distance, 0 by default.
 
 #### `gameplay_drift_destination.getDriftDebugInfo()`
 
-Table de configuration du debug de l'extension : {default = false, canBeChanged = true}.
+Debug configuration table of the extension: {default = false, canBeChanged = true}.
 
-- **renvoie** : table Infos de debug.
+- **returns**: table Debug info.
 
 #### `gameplay_drift_destination.getGC()`
 
-Garbage Lua produit par la dernière frame mesurée par le profileur.
+Lua garbage produced by the last frame measured by the profiler.
 
-- **renvoie** : number Quantité de garbage.
+- **returns**: number Garbage amount.
 
 #### `gameplay_drift_destination.getGoingWrongWay()`
 
-Indique si le véhicule roule actuellement à contresens.
+Indicates whether the vehicle is currently going the wrong way.
 
-- **renvoie** : boolean|nil true si contresens.
+- **returns**: boolean|nil true if wrong way.
 
 #### `gameplay_drift_destination.getPathData()`
 
-Objet chemin de course chargé (gameplay/race/path).
+Loaded race path object (gameplay/race/path).
 
-- **renvoie** : table|nil Chemin, nil avant setRacePath.
+- **returns**: table|nil Path, nil before setRacePath.
 
 #### `gameplay_drift_destination.getRemainingDist()`
 
-Distance restante (m) le long du chemin jusqu'au dernier point.
+Remaining distance (m) along the path to the last point.
 
-- **renvoie** : number|nil Distance restante.
+- **returns**: number|nil Remaining distance.
 
 #### `gameplay_drift_destination.getWaypoints()`
 
-Positions des points du chemin (dans l'ordre de parcours, inversées si reverse).
+Positions of the path points (in travel order, reversed if reverse).
 
-- **renvoie** : vec3[]|nil Liste de positions.
+- **returns**: vec3[]|nil List of positions.
 
 #### `gameplay_drift_destination.getWrongWayFail()`
 
-Vrai quand la distance cumulée à contresens dépasse maxWrongWayDist.
+True when the accumulated wrong-way distance exceeds maxWrongWayDist.
 
-- **renvoie** : boolean|nil Échec contresens.
+- **returns**: boolean|nil Wrong-way failure.
 
 #### `gameplay_drift_destination.onVehicleResetted(vehicleId)`
 
-Hook : véhicule réinitialisé ; remet la dernière position à zéro pour ne pas compter le saut de reset comme distance.
+Hook: vehicle reset; sets the last position back to zero so the reset jump is not counted as distance.
 
-- `vehicleId` (*integer*) : ID du véhicule réinitialisé.
+- `vehicleId` (*integer*) : ID of the reset vehicle.
 
 #### `gameplay_drift_destination.setRacePath(data)`
 
-Charge le chemin de course depuis data.filePath (JSON), l'inverse si data.reverse, applique autoConfig et extrait les positions des points de passage triés.
+Loads the race path from data.filePath (JSON), reverses it if data.reverse, applies autoConfig and extracts the positions of the sorted waypoints.
 
-- `data` (*table*) : {filePath = string, reverse = boolean|nil, maxWrongWayDist = number|nil (défaut 10), disableWrongWayAndDist = boolean|nil}.
+- `data` (*table*) : {filePath = string, reverse = boolean|nil, maxWrongWayDist = number|nil (default 10), disableWrongWayAndDist = boolean|nil}.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onDriftWrongWay`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drift/destination.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drift/destination.lua`.*

@@ -1,64 +1,64 @@
 # `core_terrain`
 
-*Fichier : `lua/ge/extensions/core/terrain.lua` · VM : Game Engine (GE) · 49 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/terrain.lua` · VM: Game Engine (GE) · 49 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_terrain` : `extensions.load("core_terrain")`, puis la globale `core_terrain`
+**Access:** extension `core_terrain`: `extensions.load("core_terrain")`, then the global `core_terrain`
 
-Accès simplifié au premier TerrainBlock de la scène : hauteur et normale du terrain en un point. Un moddeur s'en sert pour poser des objets au sol ou orienter un élément selon la pente. Le bloc trouvé est mis en cache par son id.
+Simplified access to the first TerrainBlock of the scene: terrain height and normal at a point. A modder uses it to place objects on the ground or orient an element along the slope. The block found is cached by its id.
 
-## Exemple
+## Example
 
 ```lua
 local z = core_terrain.getTerrainHeight(vec3(x, y, 0))
 local n = core_terrain.getTerrainNormal(vec3(x, y, 0))
 ```
 
-## Remarques
+## Notes
 
-- Toutes les fonctions renvoient nil s'il n'y a aucun TerrainBlock dans la scène.
-- Seul le premier TerrainBlock trouvé est utilisé.
+- All functions return nil if there is no TerrainBlock in the scene.
+- Only the first TerrainBlock found is used.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_terrain.getTerrain()` | Renvoie l'objet TerrainBlock (cache par id, sinon premier résultat de scenetree.findClassObjects("TerrainBlock")). | 9 |
-| `core_terrain.getTerrainHeight(point)` | Hauteur du terrain au point donné (terrain:getHeight). | 21 |
-| `core_terrain.getTerrainNormal(point)` | Normale du terrain au point (terrain:getNormal(point, true, true)). | 28 |
-| `core_terrain.getTerrainSmoothNormal(point)` | Normale lissée du terrain au point (terrain:getSmoothNormal(point, true, true)). | 35 |
+| `core_terrain.getTerrain()` | Returns the TerrainBlock object (cached by id, otherwise the first result of scenetree.findClassObjects("TerrainBlock")). | 9 |
+| `core_terrain.getTerrainHeight(point)` | Returns the terrain height at the given point (terrain:getHeight). | 21 |
+| `core_terrain.getTerrainNormal(point)` | Returns the terrain normal at the point (terrain:getNormal(point, true, true)). | 28 |
+| `core_terrain.getTerrainSmoothNormal(point)` | Returns the smoothed terrain normal at the point (terrain:getSmoothNormal(point, true, true)). | 35 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_terrain.getTerrain()`
 
-Renvoie l'objet TerrainBlock (cache par id, sinon premier résultat de scenetree.findClassObjects("TerrainBlock")).
+Returns the TerrainBlock object (cached by id, otherwise the first result of scenetree.findClassObjects("TerrainBlock")).
 
-- **renvoie** : userdata|nil Objet TerrainBlock ou nil.
+- **returns**: userdata|nil TerrainBlock object or nil.
 
 #### `core_terrain.getTerrainHeight(point)`
 
-Hauteur du terrain au point donné (terrain:getHeight).
+Returns the terrain height at the given point (terrain:getHeight).
 
-- `point` (*vec3*) : Position monde ; seuls x et y comptent (déduit du code).
-- **renvoie** : number|nil Altitude, nil sans terrain.
+- `point` (*vec3*) : World position; only x and y matter (inferred from code).
+- **returns**: number|nil Altitude, nil without terrain.
 
 #### `core_terrain.getTerrainNormal(point)`
 
-Normale du terrain au point (terrain:getNormal(point, true, true)).
+Returns the terrain normal at the point (terrain:getNormal(point, true, true)).
 
-- `point` (*vec3*) : Position monde.
-- **renvoie** : vec3|nil Normale, nil sans terrain.
+- `point` (*vec3*) : World position.
+- **returns**: vec3|nil Normal, nil without terrain.
 
 #### `core_terrain.getTerrainSmoothNormal(point)`
 
-Normale lissée du terrain au point (terrain:getSmoothNormal(point, true, true)).
+Returns the smoothed terrain normal at the point (terrain:getSmoothNormal(point, true, true)).
 
-- `point` (*vec3*) : Position monde.
-- **renvoie** : vec3|nil Normale lissée, nil sans terrain.
+- `point` (*vec3*) : World position.
+- **returns**: vec3|nil Smoothed normal, nil without terrain.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/terrain.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/terrain.lua`.*

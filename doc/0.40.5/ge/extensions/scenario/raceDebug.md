@@ -1,40 +1,40 @@
 # `scenario_raceDebug`
 
-*Fichier : `lua/ge/extensions/scenario/raceDebug.lua` · VM : Game Engine (GE) · 90 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/raceDebug.lua` · VM: Game Engine (GE) · 90 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_raceDebug` : `extensions.load("scenario_raceDebug")`, puis la globale `scenario_raceDebug`
+**Access:** extension `scenario_raceDebug`: `extensions.load("scenario_raceDebug")`, then the global `scenario_raceDebug`
 
-Aide de débogage visuel pour les courses de scénario : calcule le chemin entre les waypoints de lapConfig (map.getPath) et le dessine avec debugDrawer (sphères rouges aux waypoints, prismes verts le long de la route, rouges quand le segment est direct). N'est actif que si l'éditeur est activé et que le réglage BeamNGRaceDrawDebug est vrai.
+Visual debugging aid for scenario races: computes the path between the lapConfig waypoints (map.getPath) and draws it with debugDrawer (red spheres at waypoints, green prisms along the road, red when the segment is direct). Only active if the editor is enabled and the BeamNGRaceDrawDebug setting is true.
 
-## Remarques
+## Notes
 
-- Dans onScenarioChange, la variable lastwp n'est pas déclarée local : c'est une globale partagée, jamais réinitialisée entre deux appels.
-- Les données debugPath et debugNodes ne servent qu'au dessin ; le commentaire du code interdit de s'en servir pour autre chose.
+- In onScenarioChange, the variable lastwp is not declared local: it is a global shared between calls and never reset.
+- The debugPath and debugNodes data are only used for drawing; the code comment forbids using them for anything else.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_raceDebug.onDrawDebug(focusPos)` | Hook de dessin debug appelé à chaque image : dessine les waypoints (sphère de rayon n.radius et libellé 'wp i/N') et le chemin calculé. *(interne)* *(hook)* | 46 |
-| `scenario_raceDebug.onScenarioChange(scenario)` | Hook appelé à chaque changement d'état du scénario. Si le scénario est 'running' et possède lapConfig, remplit currentScenario.debugPath (noeuds de la route) et currentScenario.debugNodes. *(interne)* *(hook)* | 7 |
+| `scenario_raceDebug.onDrawDebug(focusPos)` | Debug draw hook called every frame: draws the waypoints (sphere of radius n.radius and label 'wp i/N') and the computed path. *(internal)* *(hook)* | 46 |
+| `scenario_raceDebug.onScenarioChange(scenario)` | Hook called on every scenario state change. If the scenario is 'running' and has lapConfig, fills currentScenario.debugPath (road nodes) and currentScenario.debugNodes. *(internal)* *(hook)* | 7 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_raceDebug.onDrawDebug(focusPos)`
 
-Hook de dessin debug appelé à chaque image : dessine les waypoints (sphère de rayon n.radius et libellé 'wp i/N') et le chemin calculé.
+Debug draw hook called every frame: draws the waypoints (sphere of radius n.radius and label 'wp i/N') and the computed path.
 
-- `focusPos` (*vec3*) : Position de focus de la caméra (non utilisée).
+- `focusPos` (*vec3*) : Camera focus position (unused).
 
 #### `scenario_raceDebug.onScenarioChange(scenario)`
 
-Hook appelé à chaque changement d'état du scénario. Si le scénario est 'running' et possède lapConfig, remplit currentScenario.debugPath (noeuds de la route) et currentScenario.debugNodes.
+Hook called on every scenario state change. If the scenario is 'running' and has lapConfig, fills currentScenario.debugPath (road nodes) and currentScenario.debugNodes.
 
-- `scenario` (*table*) : Scénario (non utilisé, le scénario courant est relu).
+- `scenario` (*table*) : Scenario (unused, the current scenario is re-read).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawSquarePrism`, `drawText`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/raceDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/raceDebug.lua`.*

@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/mission/goToStartLine.lua",
+  "module": "Noeud flowgraph 'Check Players Position' (categorie repeat_instant, fichier goToStartLine). Classe la position du vehicule par rapport a la ligne de depart selon le pin 'distance' : > 0,35 = outLineForward (trop avance), < 0 = outLineBackward (trop en arriere), sinon inLine (bien positionne). Le pin impulsion 'reset' remet les sorties a false.",
+  "notes": [
+    "Le pin de sortie 'flow' n'est jamais ecrit dans work.",
+    "Les pins 'velocity' et le vehicule recupere ne sont pas utilises.",
+    "Les deux sorties outLineForward et outLineBackward ont la meme description ('Outflow when the vehicle is not in position')."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Recupere le vehicule via self.mgr.modules.vehicle:getVehicle(vehId).",
+          "internal": true
+        },
+        "init": {
+          "desc": "vehicle = nil.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sur reset : tout a false. Sinon met inLine/outLineForward/outLineBackward selon distance.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,130 +1,130 @@
 # `controller_drivingDynamics_supervisors_components_diffControl`
 
-*Fichier : `lua/vehicle/controller/drivingDynamics/supervisors/components/diffControl.lua` · VM : Véhicule · 301 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/drivingDynamics/supervisors/components/diffControl.lua` · VM: Vehicle · 301 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `drivingDynamics/supervisors/components/diffControl` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `drivingDynamics/supervisors/components/diffControl` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Composant de contrôle de lacet agissant sur les différentiels avant/arrière à pilotage électronique (type "auxiliary", defaultOrder 70). Il s'enregistre auprès de tractionControl (ordre 20, sans action) et de yawControl (ordre 10). Quand le véhicule survire sous accélération, il règle overrideMin/overrideMax des contrôleurs de différentiel (activeDiffLock ou electronicDiffLock) pour verrouiller ou ouvrir le différentiel selon l'angle de dérive de caisse.
+Yaw control component acting on electronically controlled front/rear differentials (type "auxiliary", defaultOrder 70). It registers with tractionControl (order 20, no action) and yawControl (order 10). When the vehicle oversteers under acceleration, it sets overrideMin/overrideMax of the differential controllers (activeDiffLock or electronicDiffLock) to lock or open the differential according to the body slip angle.
 
-## Remarques
+## Notes
 
-- Clés jbeam : frontDiffName (défaut "lockFront") et rearDiffName (défaut "lockRear") = noms de contrôleurs de différentiel ; seuils d'angle de dérive (rad) openFrontDiffOversteerThresholdMin/Max (0/0), openRearDiffOversteerThresholdMin/Max (0/0.1), lockableFrontDiffOversteerThresholdMin/Max (0/0.2), lockableRearDiffOversteerThresholdMin/Max (0/0.2).
-- Le type de contrôleur de différentiel (champ typeName) détermine la méthode : "drivingDynamics/actuators/activeDiffLock" (différentiel verrouillable) ou "drivingDynamics/actuators/electronicDiffLock" (différentiel ouvert). Autre type = nop. Si aucun des deux différentiels n'existe, le composant se neutralise (actAs... = nop).
-- actAsYawControl renvoie toujours false pour ne pas déclencher le voyant ESC ; l'état réel est dans isActingAsYC. Il ne réagit que si electrics.values.throttle > 0.
-- Les fonctions internes yawControlBiasFrontDiff/yawControlBiasRearDiff sont définies mais jamais utilisées.
-- Le différentiel avant ouvert est sans effet (override max fixé à 1, « TODO » dans le code).
-- Les paramètres tractionControl.isEnabled sont déclarés dans controlParameters mais setParameters ne les traite pas (seule la branche yawControl est appliquée).
+- jbeam keys: frontDiffName (default "lockFront") and rearDiffName (default "lockRear") = differential controller names; slip angle thresholds (rad) openFrontDiffOversteerThresholdMin/Max (0/0), openRearDiffOversteerThresholdMin/Max (0/0.1), lockableFrontDiffOversteerThresholdMin/Max (0/0.2), lockableRearDiffOversteerThresholdMin/Max (0/0.2).
+- The differential controller type (typeName field) determines the method: "drivingDynamics/actuators/activeDiffLock" (lockable differential) or "drivingDynamics/actuators/electronicDiffLock" (open differential). Any other type = nop. If neither differential exists, the component neutralizes itself (actAs... = nop).
+- actAsYawControl always returns false so as not to trigger the ESC light; the real state is in isActingAsYC. It only reacts if electrics.values.throttle > 0.
+- The internal functions yawControlBiasFrontDiff/yawControlBiasRearDiff are defined but never used.
+- The open front differential has no effect (max override set to 1, "TODO" in the code).
+- The tractionControl.isEnabled parameters are declared in controlParameters but setParameters does not process them (only the yawControl branch is applied).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_drivingDynamics_supervisors_components_diffControl.actAsTractionControl(wheelGroup, dt)` | Appelé par tractionControl ; ne fait rien et renvoie false. *(interne)* | 52 |
-| `controller_drivingDynamics_supervisors_components_diffControl.actAsYawControl(measuredYaw, expectedYaw, yawDifference, bodySlipAngle, frontSlipAngle, rearSlipAngle, dt)` | Appelé par yawControl : remet à zéro les overrides puis, en cas de survirage sous accélération, applique les méthodes de contrôle avant/arrière. *(interne)* | 126 |
-| `controller_drivingDynamics_supervisors_components_diffControl.getConfig()` | Renvoie une copie de la configuration. | 271 |
-| `controller_drivingDynamics_supervisors_components_diffControl.init(jbeamData)` | Remet à false les indicateurs. *(interne)* | 178 |
-| `controller_drivingDynamics_supervisors_components_diffControl.initLastStage(jbeamData)` | Ne fait rien. *(interne)* | 235 |
-| `controller_drivingDynamics_supervisors_components_diffControl.initSecondStage(jbeamData)` | Cherche les contrôleurs de différentiel, s'enregistre auprès des superviseurs et lit les seuils. *(interne)* | 184 |
-| `controller_drivingDynamics_supervisors_components_diffControl.registerCMU(cmu)` | Mémorise la référence au CMU. *(interne)* | 165 |
-| `controller_drivingDynamics_supervisors_components_diffControl.reset()` | Remet à false les indicateurs. *(interne)* | 172 |
-| `controller_drivingDynamics_supervisors_components_diffControl.sendConfigData()` | Envoie la configuration au CMU (paquet de debug). | 275 |
-| `controller_drivingDynamics_supervisors_components_diffControl.setConfig(configTable)` | Remplace la configuration complète. | 266 |
-| `controller_drivingDynamics_supervisors_components_diffControl.setDebugMode(debugEnabled)` | Active/désactive les paquets de debug. | 159 |
-| `controller_drivingDynamics_supervisors_components_diffControl.setParameters(parameters)` | Applique les paramètres yawControl.* (isEnabled et les huit seuils) via CMU.applyParameter. | 247 |
-| `controller_drivingDynamics_supervisors_components_diffControl.shutdown()` | Désactive le composant. | 238 |
-| `controller_drivingDynamics_supervisors_components_diffControl.updateGFX(dt)` | Vide (version debug : envoie un paquet d'état). *(interne)* | 147 |
+| `controller_drivingDynamics_supervisors_components_diffControl.actAsTractionControl(wheelGroup, dt)` | Called by tractionControl; does nothing and returns false. *(internal)* | 52 |
+| `controller_drivingDynamics_supervisors_components_diffControl.actAsYawControl(measuredYaw, expectedYaw, yawDifference, bodySlipAngle, frontSlipAngle, rearSlipAngle, dt)` | Called by yawControl: resets the overrides to zero then, in case of oversteer under acceleration, applies the front/rear control methods. *(internal)* | 126 |
+| `controller_drivingDynamics_supervisors_components_diffControl.getConfig()` | Returns a copy of the configuration. | 271 |
+| `controller_drivingDynamics_supervisors_components_diffControl.init(jbeamData)` | Resets the flags to false. *(internal)* | 178 |
+| `controller_drivingDynamics_supervisors_components_diffControl.initLastStage(jbeamData)` | Does nothing. *(internal)* | 235 |
+| `controller_drivingDynamics_supervisors_components_diffControl.initSecondStage(jbeamData)` | Looks for the differential controllers, registers with the supervisors and reads the thresholds. *(internal)* | 184 |
+| `controller_drivingDynamics_supervisors_components_diffControl.registerCMU(cmu)` | Stores the reference to the CMU. *(internal)* | 165 |
+| `controller_drivingDynamics_supervisors_components_diffControl.reset()` | Resets the flags to false. *(internal)* | 172 |
+| `controller_drivingDynamics_supervisors_components_diffControl.sendConfigData()` | Sends the configuration to the CMU (debug packet). | 275 |
+| `controller_drivingDynamics_supervisors_components_diffControl.setConfig(configTable)` | Replaces the entire configuration. | 266 |
+| `controller_drivingDynamics_supervisors_components_diffControl.setDebugMode(debugEnabled)` | Enables/disables debug packets. | 159 |
+| `controller_drivingDynamics_supervisors_components_diffControl.setParameters(parameters)` | Applies the yawControl.* parameters (isEnabled and the eight thresholds) via CMU.applyParameter. | 247 |
+| `controller_drivingDynamics_supervisors_components_diffControl.shutdown()` | Disables the component. | 238 |
+| `controller_drivingDynamics_supervisors_components_diffControl.updateGFX(dt)` | Empty (debug version: sends a state packet). *(internal)* | 147 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_drivingDynamics_supervisors_components_diffControl.actAsTractionControl(wheelGroup, dt)`
 
-Appelé par tractionControl ; ne fait rien et renvoie false.
+Called by tractionControl; does nothing and returns false.
 
-- `wheelGroup` (*table*) : Groupe de roues.
-- `dt` (*number*) : Pas de temps (s).
-- **renvoie** : boolean false.
+- `wheelGroup` (*table*) : Wheel group.
+- `dt` (*number*) : Time step (s).
+- **returns**: boolean false.
 
 #### `controller_drivingDynamics_supervisors_components_diffControl.actAsYawControl(measuredYaw, expectedYaw, yawDifference, bodySlipAngle, frontSlipAngle, rearSlipAngle, dt)`
 
-Appelé par yawControl : remet à zéro les overrides puis, en cas de survirage sous accélération, applique les méthodes de contrôle avant/arrière.
+Called by yawControl: resets the overrides to zero then, in case of oversteer under acceleration, applies the front/rear control methods.
 
-- `measuredYaw` (*number*) : Lacet mesuré (rad/s).
-- `expectedYaw` (*number*) : Lacet attendu.
-- `yawDifference` (*number*) : Écart de lacet.
-- `bodySlipAngle` (*number*) : Angle de dérive de caisse ajusté (rad).
-- `frontSlipAngle` (*number*) : Non utilisé.
-- `rearSlipAngle` (*number*) : Non utilisé.
-- `dt` (*number*) : Pas de temps (s).
-- **renvoie** : boolean Toujours false (voir notes).
+- `measuredYaw` (*number*) : Measured yaw (rad/s).
+- `expectedYaw` (*number*) : Expected yaw.
+- `yawDifference` (*number*) : Yaw error.
+- `bodySlipAngle` (*number*) : Adjusted body slip angle (rad).
+- `frontSlipAngle` (*number*) : Not used.
+- `rearSlipAngle` (*number*) : Not used.
+- `dt` (*number*) : Time step (s).
+- **returns**: boolean Always false (see notes).
 
 #### `controller_drivingDynamics_supervisors_components_diffControl.getConfig()`
 
-Renvoie une copie de la configuration.
+Returns a copy of the configuration.
 
-- **renvoie** : table Copie de la configuration.
+- **returns**: table Copy of the configuration.
 
 #### `controller_drivingDynamics_supervisors_components_diffControl.init(jbeamData)`
 
-Remet à false les indicateurs.
+Resets the flags to false.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_supervisors_components_diffControl.initLastStage(jbeamData)`
 
-Ne fait rien.
+Does nothing.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_supervisors_components_diffControl.initSecondStage(jbeamData)`
 
-Cherche les contrôleurs de différentiel, s'enregistre auprès des superviseurs et lit les seuils.
+Looks for the differential controllers, registers with the supervisors and reads the thresholds.
 
-- `jbeamData` (*table*) : Données jbeam (voir notes).
+- `jbeamData` (*table*) : jbeam data (see notes).
 
 #### `controller_drivingDynamics_supervisors_components_diffControl.registerCMU(cmu)`
 
-Mémorise la référence au CMU.
+Stores the reference to the CMU.
 
-- `cmu` (*table*) : Contrôleur CMU.
+- `cmu` (*table*) : CMU controller.
 
 #### `controller_drivingDynamics_supervisors_components_diffControl.setConfig(configTable)`
 
-Remplace la configuration complète.
+Replaces the entire configuration.
 
 - `configTable` (*table*) : Table {tractionControl, yawControl}.
 
 #### `controller_drivingDynamics_supervisors_components_diffControl.setDebugMode(debugEnabled)`
 
-Active/désactive les paquets de debug.
+Enables/disables debug packets.
 
-- `debugEnabled` (*boolean*) : Vrai pour activer.
+- `debugEnabled` (*boolean*) : True to enable.
 
 #### `controller_drivingDynamics_supervisors_components_diffControl.setParameters(parameters)`
 
-Applique les paramètres yawControl.* (isEnabled et les huit seuils) via CMU.applyParameter.
+Applies the yawControl.* parameters (isEnabled and the eight thresholds) via CMU.applyParameter.
 
-- `parameters` (*table<string, any>*) : Paramètres à appliquer.
+- `parameters` (*table<string, any>*) : Parameters to apply.
 
 #### `controller_drivingDynamics_supervisors_components_diffControl.updateGFX(dt)`
 
-Vide (version debug : envoie un paquet d'état).
+Empty (debug version: sends a state packet).
 
-- `dt` (*number*) : Pas de temps graphique (s).
+- `dt` (*number*) : Graphics time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `actAsABSControl` | function | nop. |
-| `componentOrderABSControl` | number | 1000 : inutilisé. |
+| `componentOrderABSControl` | number | 1000: unused. |
 | `componentOrderTractionControl` | number | 20. |
 | `componentOrderYawControl` | number | 10. |
-| `defaultOrder` | number | Ordre d'exécution par défaut (70). |
-| `isActingAsABS` | boolean | Toujours false. |
-| `isActingAsTC` | boolean | Toujours false. |
-| `isActingAsYC` | boolean | Vrai quand un différentiel est actuellement forcé. |
-| `isActive` | boolean | Vrai après initSecondStage. |
+| `defaultOrder` | number | Default execution order (70). |
+| `isActingAsABS` | boolean | Always false. |
+| `isActingAsTC` | boolean | Always false. |
+| `isActingAsYC` | boolean | True when a differential is currently forced. |
+| `isActive` | boolean | True after initSecondStage. |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/drivingDynamics/supervisors/components/diffControl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/drivingDynamics/supervisors/components/diffControl.lua`.*

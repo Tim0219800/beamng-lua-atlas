@@ -1,11 +1,16 @@
 {
   "path": "lua/ge/extensions/ui/router/routeHandlers/radialExitHandlers.lua",
-  "module": "Gestionnaire de retour du menu radial (accès rapide).",
+  "module": "Back handler of the radial menu (quick access).",
   "functions": {
     "radialBackHandler": {
-      "desc": "Retour dans le menu radial : appelle core_quickAccess.back() ; si cela ne renvoie rien de vrai, ferme le menu avec core_quickAccess.setEnabled(false, \"\", false). Échoue avec reason=\"quick_access_unavailable\" si core_quickAccess est indisponible.",
+      "desc": "Back in the radial menu: calls core_quickAccess.back(); if that returns nothing truthy, closes the menu with core_quickAccess.setEnabled(false, \"\", false). Fails with reason=\"quick_access_unavailable\" if core_quickAccess is unavailable.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{result=true, success=true, data=nil} ou {result=false, success=false, reason=\"quick_access_unavailable\"}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{result=true, success=true, data=nil} or {result=false, success=false, reason=\"quick_access_unavailable\"}."
+        }
+      ],
       "internal": false
     }
   }

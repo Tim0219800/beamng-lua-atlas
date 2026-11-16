@@ -1,34 +1,34 @@
 # `util_photomode`
 
-*Fichier : `lua/ge/extensions/util/photomode.lua` · VM : Game Engine (GE) · 16 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/photomode.lua` · VM: Game Engine (GE) · 16 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_photomode` : `extensions.load("util_photomode")`, puis la globale `util_photomode`
+**Access:** extension `util_photomode`: `extensions.load("util_photomode")`, then the global `util_photomode`
 
-Petit module du mode photo : liste les images PNG d'overlays disponibles dans ui/modules/photomode/ui-overlays (cadres, filigranes) que l'interface propose à l'utilisateur. Un moddeur peut y déposer ses propres PNG pour les rendre disponibles.
+Small photo mode module: lists the PNG overlay images available in ui/modules/photomode/ui-overlays (frames, watermarks) that the UI offers to the user. A modder can drop their own PNGs there to make them available.
 
-## Exemple
+## Example
 
 ```lua
 dump(extensions.util_photomode.getPhotomodeOverlays())
 ```
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_photomode.getPhotomodeOverlays()` | Liste les fichiers *.png de ui/modules/photomode/ui-overlays (non récursif). | 7 |
+| `util_photomode.getPhotomodeOverlays()` | Lists the *.png files in ui/modules/photomode/ui-overlays (non-recursive). | 7 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_photomode.getPhotomodeOverlays()`
 
-Liste les fichiers *.png de ui/modules/photomode/ui-overlays (non récursif).
+Lists the *.png files in ui/modules/photomode/ui-overlays (non-recursive).
 
-- **renvoie** : table[] Liste de tables {filename = chemin du PNG}
+- **returns**: table[] List of tables {filename = PNG path}
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/photomode.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/photomode.lua`.*

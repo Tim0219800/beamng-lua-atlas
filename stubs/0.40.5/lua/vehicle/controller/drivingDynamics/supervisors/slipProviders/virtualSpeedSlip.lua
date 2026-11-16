@@ -2,93 +2,93 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fournisseur de glissement (type "auxiliary", defaultOrder 70, providerOrder 10) qui compare la vitesse de chaque roue à la vitesse virtuelle du véhicule (virtualSensors.virtual.speed) pour estimer le glissement. Il s'enregistre auprès des superviseurs tractionControl et absControl (si présents) et leur répond via calculateSlipTractionControl et calculateSlipABSControl. Les résultats sont écrits dans les structures de roue du superviseur (wheelData.slip, wheelGroup.maxSlip/minSlip/slipRange).
---- Accès : contrôleur `drivingDynamics/supervisors/slipProviders/virtualSpeedSlip` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Slip provider (type "auxiliary", defaultOrder 70, providerOrder 10) that compares each wheel's speed to the vehicle's virtual speed (virtualSensors.virtual.speed) to estimate slip. It registers with the tractionControl and absControl supervisors (if present) and answers them via calculateSlipTractionControl and calculateSlipABSControl. The results are written into the supervisor's wheel structures (wheelData.slip, wheelGroup.maxSlip/minSlip/slipRange).
+--- Access: controller `drivingDynamics/supervisors/slipProviders/virtualSpeedSlip` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip
----@field defaultOrder number Ordre d'exécution par défaut (70).
----@field isActive boolean Vrai après init.
----@field providerOrder number Ordre de priorité parmi les fournisseurs (10, plus petit = essayé en premier).
+---@field defaultOrder number Default execution order (70).
+---@field isActive boolean True after init.
+---@field providerOrder number Priority order among the providers (10, lower = tried first).
 ---@field type string "auxiliary".
 local controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip = {}
 
---- Calcule le glissement (en valeur absolue) d'une seule roue pour l'ABS. Appelé par le superviseur absControl.
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:65
----@param wheelData table Données de roue {wd, slip, slipSmoother}.
----@param velocityOffset number Décalage de vitesse (m/s).
----@param dt number Pas de temps (s), non utilisé.
----@return boolean  Vrai si le glissement a été calculé, false si désactivé.
+--- Computes the slip (as an absolute value) of a single wheel for the ABS. Called by the absControl supervisor.
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:65
+---@param wheelData table Wheel data {wd, slip, slipSmoother}.
+---@param velocityOffset number Speed offset (m/s).
+---@param dt number Time step (s), unused.
+---@return boolean  True if the slip was computed, false if disabled.
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.calculateSlipABSControl(wheelData, velocityOffset, dt) end
 
---- Calcule le glissement de chaque roue d'un groupe motorisé et les extrêmes du groupe. Appelé par tractionControl.
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:27
----@param wheelGroup table Groupe de roues {motor, wheels, wheelCount, maxSlip, minSlip, slipRange}.
----@param steeringCoef number Facteur 0.5..1 lié au braquage.
----@param velocityOffset number Décalage de vitesse (m/s) évitant la division par ~0 à basse vitesse.
----@param dt number Pas de temps (s), non utilisé.
----@return boolean  Vrai si le glissement a été calculé, false si désactivé.
+--- Computes the slip of each wheel of a powered group and the group's extremes. Called by tractionControl.
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:27
+---@param wheelGroup table Wheel group {motor, wheels, wheelCount, maxSlip, minSlip, slipRange}.
+---@param steeringCoef number 0.5..1 factor tied to steering.
+---@param velocityOffset number Speed offset (m/s) avoiding division by ~0 at low speed.
+---@param dt number Time step (s), unused.
+---@return boolean  True if the slip was computed, false if disabled.
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.calculateSlipTractionControl(wheelGroup, steeringCoef, velocityOffset, dt) end
 
---- Renvoie une copie de la configuration.
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:144
----@return table  Copie.
+--- Returns a copy of the configuration.
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:144
+---@return table  Copy.
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.getConfig() end
 
---- Passe isActive à true.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:109
----@param jbeamData table Données jbeam.
+--- Sets isActive to true.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:109
+---@param jbeamData table Jbeam data.
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.init(jbeamData) end
 
---- Sauvegarde les paramètres initiaux.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:125
----@param jbeamData table Données jbeam.
+--- Saves the initial parameters.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:125
+---@param jbeamData table Jbeam data.
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.initLastStage(jbeamData) end
 
---- S'enregistre comme fournisseur de glissement auprès de tractionControl et absControl.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:113
----@param jbeamData table Données jbeam.
+--- Registers as a slip provider with tractionControl and absControl.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:113
+---@param jbeamData table Jbeam data.
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.initSecondStage(jbeamData) end
 
---- Mémorise la référence au CMU.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:102
----@param cmu table Contrôleur CMU.
+--- Stores the reference to the CMU.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:102
+---@param cmu table CMU controller.
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.registerCMU(cmu) end
 
---- Ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:106
+--- Does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:106
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.reset() end
 
---- Envoie la configuration au CMU.
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:148
+--- Sends the configuration to the CMU.
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:148
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.sendConfigData() end
 
---- Remplace la configuration.
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:140
+--- Replaces the configuration.
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:140
 ---@param configTable table Table {tractionControl = {isEnabled}, absControl = {isEnabled}}.
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.setConfig(configTable) end
 
---- Active/désactive les paquets de debug.
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:96
----@param debugEnabled boolean Vrai pour activer.
+--- Enables/disables debug packets.
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:96
+---@param debugEnabled boolean True to enable.
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.setDebugMode(debugEnabled) end
 
---- Applique tractionControl.isEnabled et absControl.isEnabled.
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:135
----@param parameters table<string, any> Paramètres à appliquer.
+--- Applies tractionControl.isEnabled and absControl.isEnabled.
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:135
+---@param parameters table<string, any> Parameters to apply.
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.setParameters(parameters) end
 
---- Désactive le fournisseur.
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:129
+--- Disables the provider.
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:129
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.shutdown() end
 
---- Vide (version debug : envoie l'état d'activation).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:84
----@param dt number Pas de temps graphique (s).
+--- Empty (debug version: sends the enabled state).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua:84
+---@param dt number Graphics time step (s).
 function controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.updateGFX(dt) end
 
 return controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip

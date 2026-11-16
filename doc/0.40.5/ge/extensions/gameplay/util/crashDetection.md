@@ -1,131 +1,131 @@
 # `gameplay_util_crashDetection`
 
-*Fichier : `lua/ge/extensions/gameplay/util/crashDetection.lua` · VM : Game Engine (GE) · 770 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/util/crashDetection.lua` · VM: Game Engine (GE) · 770 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_util_crashDetection` : `extensions.load("gameplay_util_crashDetection")`, puis la globale `gameplay_util_crashDetection`
+**Access:** extension `gameplay_util_crashDetection`: `extensions.load("gameplay_util_crashDetection")`, then the global `gameplay_util_crashDetection`
 
-Détecteur de collisions (« crashes ») pour des véhicules suivis. Il compare à chaque image les dégâts du véhicule (map.objects[id].damage et somme des dégâts de sections) à un seuil qui baisse quand la secousse (jerk d'accélération avant/arrière) augmente, regroupe les impacts proches en un crash, puis émet des hooks. Un moddeur ajoute un véhicule avec addTrackedVehicleById() et écoute onVehicleCrashStarted / onVehicleCrashEnded (utilisé notamment par les missions et le gameplay de dégâts). Dépend de gameplay_util_damageAssessment pour décrire les zones endommagées.
+Collision ("crash") detector for tracked vehicles. On each frame it compares the vehicle's damage (map.objects[id].damage and sum of section damage) to a threshold that drops as the jerk (forward/backward acceleration jerk) increases, groups close impacts into one crash, then emits hooks. A modder adds a vehicle with addTrackedVehicleById() and listens to onVehicleCrashStarted / onVehicleCrashEnded (used notably by missions and damage gameplay). Depends on gameplay_util_damageAssessment to describe the damaged areas.
 
-## Exemple
+## Example
 
 ```lua
 gameplay_util_crashDetection.addTrackedVehicleById(be:getPlayerVehicleID(0), {minDamage = 150, enableImpactLocationData = true}, "monMod")
 local function onVehicleCrashEnded(data) dump(data.totalDamage, data.vehId) end
 ```
 
-## Remarques
+## Notes
 
-- Hooks émis : onVehicleCrashStarted({vehId, vehImpactPos, vehImpactSpeed}) au premier impact d'un crash ; onNewImpactStarted({newImpactData}) pour les impacts suivants du même crash ; onVehicleCrashEnded({impacts, sanitizedData = {touchedVehIds, initialImpactPos, initialImpactSpeed}, totalDamage, vehId}).
-- Constantes internes : seuil de dégâts par image 40, fin de crash après 1,8 s sans nouvel impact (ou vitesse < minVelocity), durée maximale d'un impact 0,3 s.
-- Valeurs par défaut de crashSettings : minAccel 0, maxAccel 100, minDamage 150, maxDamage 5000, verticallyUnweighted false, minVelocity 1, groupImpactsDist 1 (minimum 0,1), enableImpactLocationData false. La table passée en argument est modifiée sur place.
-- addTrackedVehicleById ne fait rien (sans log) si l'id est nil/négatif ou si le véhicule est absent de map.objects ou de l'arbre de scène ; il ne vérifie pas si le véhicule est déjà suivi et réinitialise alors ses données.
-- Le véhicule est retiré automatiquement de la liste s'il disparaît de map.objects ou sur onVehicleDestroyed.
-- Le mode debug (setDebug(true)) dessine des sphères/textes et ouvre une fenêtre ImGui de graphiques.
-- onSerialize/onDeserialized sérialisent toute la table trackedVehIds, y compris des pointeurs ImGui de debug.
+- Emitted hooks: onVehicleCrashStarted({vehId, vehImpactPos, vehImpactSpeed}) on the first impact of a crash; onNewImpactStarted({newImpactData}) for subsequent impacts of the same crash; onVehicleCrashEnded({impacts, sanitizedData = {touchedVehIds, initialImpactPos, initialImpactSpeed}, totalDamage, vehId}).
+- Internal constants: per-frame damage threshold 40, crash ends after 1.8 s without a new impact (or speed < minVelocity), maximum impact duration 0.3 s.
+- crashSettings defaults: minAccel 0, maxAccel 100, minDamage 150, maxDamage 5000, verticallyUnweighted false, minVelocity 1, groupImpactsDist 1 (minimum 0.1), enableImpactLocationData false. The table passed as argument is modified in place.
+- addTrackedVehicleById does nothing (no log) if the id is nil/negative or if the vehicle is missing from map.objects or from the scene tree; it does not check whether the vehicle is already tracked and then resets its data.
+- The vehicle is automatically removed from the list if it disappears from map.objects or on onVehicleDestroyed.
+- Debug mode (setDebug(true)) draws spheres/texts and opens an ImGui window with graphs.
+- onSerialize/onDeserialized serialize the whole trackedVehIds table, including debug ImGui pointers.
 
-**Dépendances (chargées avant) :** `gameplay_util_damageAssessment`
+**Dependencies (loaded first):** `gameplay_util_damageAssessment`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_util_crashDetection.addTrackedVehicleById(vehId_, crashSettings, owner)` | Commence à suivre un véhicule pour détecter ses crashes, avec des réglages de sensibilité optionnels. | 633 |
-| `gameplay_util_crashDetection.isVehCrashing(vehId)` | Indique si un véhicule suivi est actuellement en crash. | 728 |
-| `gameplay_util_crashDetection.isVehTracked(vehId)` | Indique si le véhicule est dans la liste de suivi. | 733 |
-| `gameplay_util_crashDetection.onDeserialized(data)` | Hook appelé après rechargement : restaure l'état sérialisé. *(interne)* *(hook)* | 745 |
-| `gameplay_util_crashDetection.onSerialize()` | Hook appelé lors du rechargement des extensions Lua : renvoie l'état (véhicules suivis, debug). *(interne)* *(hook)* | 737 |
-| `gameplay_util_crashDetection.onUpdate(dtReal, _dtSim)` | Hook appelé à chaque image : met à jour accélérations, détection d'impacts, fin de pré-impact/impact/crash pour chaque véhicule suivi ; supprime ceux qui n'existent plus. *(interne)* *(hook)* | 599 |
-| `gameplay_util_crashDetection.onVehicleDestroyed(vehId)` | Hook appelé à la destruction d'un véhicule : le retire du suivi. *(interne)* *(hook)* | 751 |
-| `gameplay_util_crashDetection.removeTrackedVehicleById(vehId)` | Arrête de suivre un véhicule. | 718 |
-| `gameplay_util_crashDetection.resetCrashData(vehId)` | Réinitialise les données de crash, d'impact en cours et de pré-impact d'un véhicule suivi (sans le retirer). | 73 |
-| `gameplay_util_crashDetection.setDebug(_debug)` | Active ou désactive le dessin de debug et la fenêtre ImGui. | 724 |
+| `gameplay_util_crashDetection.addTrackedVehicleById(vehId_, crashSettings, owner)` | Starts tracking a vehicle to detect its crashes, with optional sensitivity settings. | 633 |
+| `gameplay_util_crashDetection.isVehCrashing(vehId)` | Returns whether a tracked vehicle is currently in a crash. | 728 |
+| `gameplay_util_crashDetection.isVehTracked(vehId)` | Returns whether the vehicle is in the tracking list. | 733 |
+| `gameplay_util_crashDetection.onDeserialized(data)` | Hook called after reload: restores the serialized state. *(internal)* *(hook)* | 745 |
+| `gameplay_util_crashDetection.onSerialize()` | Hook called when Lua extensions are reloaded: returns the state (tracked vehicles, debug). *(internal)* *(hook)* | 737 |
+| `gameplay_util_crashDetection.onUpdate(dtReal, _dtSim)` | Hook called every frame: updates accelerations, impact detection, end of pre-impact/impact/crash for each tracked vehicle; removes those that no longer exist. *(internal)* *(hook)* | 599 |
+| `gameplay_util_crashDetection.onVehicleDestroyed(vehId)` | Hook called when a vehicle is destroyed: removes it from tracking. *(internal)* *(hook)* | 751 |
+| `gameplay_util_crashDetection.removeTrackedVehicleById(vehId)` | Stops tracking a vehicle. | 718 |
+| `gameplay_util_crashDetection.resetCrashData(vehId)` | Resets the crash, current impact and pre-impact data of a tracked vehicle (without removing it). | 73 |
+| `gameplay_util_crashDetection.setDebug(_debug)` | Enables or disables debug drawing and the ImGui window. | 724 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_util_crashDetection.addTrackedVehicleById(vehId_, crashSettings, owner)`
 
-Commence à suivre un véhicule pour détecter ses crashes, avec des réglages de sensibilité optionnels.
+Starts tracking a vehicle to detect its crashes, with optional sensitivity settings.
 
-- `vehId_` (*integer*) : Id du véhicule.
+- `vehId_` (*integer*) : Vehicle id.
 - `crashSettings` (*table|nil*) : minAccel, maxAccel, minDamage, maxDamage, verticallyUnweighted, minVelocity (m/s), groupImpactsDist (m), enableImpactLocationData.
-- `owner` (*string|nil*) : Nom de l'appelant, pour le debug (« unknown » par défaut).
+- `owner` (*string|nil*) : Caller name, for debugging ("unknown" by default).
 
 #### `gameplay_util_crashDetection.isVehCrashing(vehId)`
 
-Indique si un véhicule suivi est actuellement en crash.
+Returns whether a tracked vehicle is currently in a crash.
 
-- `vehId` (*integer*) : Id du véhicule.
-- **renvoie** : boolean false si non suivi.
+- `vehId` (*integer*) : Vehicle id.
+- **returns**: boolean false if not tracked.
 
 #### `gameplay_util_crashDetection.isVehTracked(vehId)`
 
-Indique si le véhicule est dans la liste de suivi.
+Returns whether the vehicle is in the tracking list.
 
-- `vehId` (*integer*) : Id du véhicule.
-- **renvoie** : boolean 
+- `vehId` (*integer*) : Vehicle id.
+- **returns**: boolean 
 
 #### `gameplay_util_crashDetection.onDeserialized(data)`
 
-Hook appelé après rechargement : restaure l'état sérialisé.
+Hook called after reload: restores the serialized state.
 
-- `data` (*table*) : Table renvoyée par onSerialize.
+- `data` (*table*) : Table returned by onSerialize.
 
 #### `gameplay_util_crashDetection.onSerialize()`
 
-Hook appelé lors du rechargement des extensions Lua : renvoie l'état (véhicules suivis, debug).
+Hook called when Lua extensions are reloaded: returns the state (tracked vehicles, debug).
 
-- **renvoie** : table {trackedVehIds, debug, debugDamageAssessmentUIPtr}
+- **returns**: table {trackedVehIds, debug, debugDamageAssessmentUIPtr}
 
 #### `gameplay_util_crashDetection.onUpdate(dtReal, _dtSim)`
 
-Hook appelé à chaque image : met à jour accélérations, détection d'impacts, fin de pré-impact/impact/crash pour chaque véhicule suivi ; supprime ceux qui n'existent plus.
+Hook called every frame: updates accelerations, impact detection, end of pre-impact/impact/crash for each tracked vehicle; removes those that no longer exist.
 
-- `dtReal` (*number*) : Delta temps réel (s), inutilisé.
-- `_dtSim` (*number*) : Delta temps simulé (s).
+- `dtReal` (*number*) : Real time delta (s), unused.
+- `_dtSim` (*number*) : Simulated time delta (s).
 
 #### `gameplay_util_crashDetection.onVehicleDestroyed(vehId)`
 
-Hook appelé à la destruction d'un véhicule : le retire du suivi.
+Hook called when a vehicle is destroyed: removes it from tracking.
 
-- `vehId` (*integer*) : Id du véhicule détruit.
+- `vehId` (*integer*) : Id of the destroyed vehicle.
 
 #### `gameplay_util_crashDetection.removeTrackedVehicleById(vehId)`
 
-Arrête de suivre un véhicule.
+Stops tracking a vehicle.
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `gameplay_util_crashDetection.resetCrashData(vehId)`
 
-Réinitialise les données de crash, d'impact en cours et de pré-impact d'un véhicule suivi (sans le retirer).
+Resets the crash, current impact and pre-impact data of a tracked vehicle (without removing it).
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `gameplay_util_crashDetection.setDebug(_debug)`
 
-Active ou désactive le dessin de debug et la fenêtre ImGui.
+Enables or disables debug drawing and the ImGui window.
 
-- `_debug` (*boolean*) : true pour activer.
+- `_debug` (*boolean*) : true to enable.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {"gameplay_util_damageAssessment"} |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onNewImpactStarted`
-- `onVehicleCrashEnded` — écouté par 2 module(s)
-- `onVehicleCrashStarted` — écouté par 2 module(s)
+- `onVehicleCrashEnded` — listened to by 2 module(s)
+- `onVehicleCrashStarted` — listened to by 2 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectByID`
 - `debugDrawer:` `drawSphere`, `drawText`, `drawTextAdvanced`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/util/crashDetection.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/util/crashDetection.lua`.*

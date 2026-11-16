@@ -1,97 +1,160 @@
 {
   "path": "lua/vehicle/controller/drivingDynamics/actuators/activeCenterDiffLock.lua",
-  "module": "Actionneur de la Driving Dynamics Suite : verrouillage actif du différentiel central (embrayage à commande électronique). À chaque étape physique intermédiaire, il lit les vitesses de sortie du différentiel central, mesure l'écart de vitesse entre essieux et règle, par un PID, un coefficient de verrouillage 0..1 écrit dans `relevantDiff.activeLockCoef`. Le verrouillage est coupé au freinage, sans accélérateur ou au frein de stationnement, figé pendant un changement de rapport, et peut avoir un minimum. Les superviseurs du CMU peuvent le limiter avec `overrideMin`/`overrideMax`. Ordre d'appel : `defaultOrder = 80`.",
+  "module": "Driving Dynamics Suite actuator: active locking of the center differential (electronically controlled clutch). At each intermediate physics step, it reads the center differential's output speeds, measures the speed difference between axles and sets, via a PID, a locking coefficient 0..1 written into `relevantDiff.activeLockCoef`. The locking is cut when braking, without throttle or with the parking brake, frozen during a gear change, and can have a minimum. The CMU's supervisors can limit it with `overrideMin`/`overrideMax`. Call order: `defaultOrder = 80`.",
   "notes": [
-    "Clés jbeam lues par init : `avDiffThreshold` (4 rad/s), `avThreshold` (1 rad/s : vitesse moyenne minimale), `minimumLock` (0), `clutchPIDkP` (0.15), `clutchPIDkI` (0.001), `clutchPIDkD` (0), `applyMinimumLockOnlyWithThrottle` (true), `name` (utilisé pour la source de debug). Lue par initSecondStage : `centerDiffName` (nom du différentiel central dans le powertrain).",
-    "Le coefficient final = clamp(lockCoef, overrideMin, overrideMax) ; le commentaire du code précise que selon la disposition du groupe motopropulseur c'est le min ou le max de l'override qui est utilisé.",
-    "Sans CMU enregistré (registerCMU non appelé), initSecondStage appelle shutdown ; si le différentiel est introuvable, l'actionneur reste inactif (isActive = false).",
-    "Le test `isESCActive` est une constante false dans le code (jamais activé). `electrics.values.brake`, `parkingbrake`, `throttle` sont lus sans valeur par défaut.",
-    "Les paquets de debug portent le type \"electronicCenterDiffLock\" (ancien nom du système) ; `configPacket.sourceName` n'est pas défini.",
-    "`shutdown` met `isActive` et `isActing` à false et retire `updateGFX` et `updateWheelsIntermediate` (nil)."
+    "Jbeam keys read by init: `avDiffThreshold` (4 rad/s), `avThreshold` (1 rad/s: minimum average speed), `minimumLock` (0), `clutchPIDkP` (0.15), `clutchPIDkI` (0.001), `clutchPIDkD` (0), `applyMinimumLockOnlyWithThrottle` (true), `name` (used for the debug source). Read by initSecondStage: `centerDiffName` (name of the center differential in the powertrain).",
+    "The final coefficient = clamp(lockCoef, overrideMin, overrideMax); the code comment specifies that depending on the powertrain layout it is the min or the max of the override that is used.",
+    "Without a registered CMU (registerCMU not called), initSecondStage calls shutdown; if the differential is not found, the actuator stays inactive (isActive = false).",
+    "The `isESCActive` test is a constant false in the code (never activated). `electrics.values.brake`, `parkingbrake`, `throttle` are read without a default value.",
+    "The debug packets carry the type \"electronicCenterDiffLock\" (old name of the system); `configPacket.sourceName` is not defined.",
+    "`shutdown` sets `isActive` and `isActing` to false and removes `updateGFX` and `updateWheelsIntermediate` (nil)."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "defaultOrder": {"type": "number", "desc": "80."},
-    "isActive": {"type": "boolean", "desc": "true si le système a trouvé son différentiel et son CMU."},
-    "isActing": {"type": "boolean", "desc": "true si le coefficient de verrouillage dépasse 0.01."},
-    "overrideMin": {"type": "number", "desc": "Borne basse imposée par un superviseur (0 par défaut)."},
-    "overrideMax": {"type": "number", "desc": "Borne haute imposée par un superviseur (1 par défaut)."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "80."
+    },
+    "isActive": {
+      "type": "boolean",
+      "desc": "true if the system found its differential and its CMU."
+    },
+    "isActing": {
+      "type": "boolean",
+      "desc": "true if the locking coefficient exceeds 0.01."
+    },
+    "overrideMin": {
+      "type": "number",
+      "desc": "Lower bound imposed by a supervisor (0 by default)."
+    },
+    "overrideMax": {
+      "type": "number",
+      "desc": "Upper bound imposed by a supervisor (1 by default)."
+    }
   },
   "functions": {
     "resetOverride": {
-      "desc": "Remet les bornes d'override à 0 et 1.",
+      "desc": "Resets the override bounds to 0 and 1.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "updateWheelsIntermediate": {
-      "desc": "Étape physique intermédiaire : calcule le coefficient de verrouillage (PID sur l'écart de vitesse entre sorties, conditions de frein, accélérateur, rapport et frein de stationnement), applique l'override et l'écrit dans `activeLockCoef` du différentiel.",
-      "params": {"dt": {"type": "number", "desc": "Pas en secondes."}},
+      "desc": "Intermediate physics step: computes the locking coefficient (PID on the speed difference between outputs, brake, throttle, gear and parking brake conditions), applies the override and writes it into the differential's `activeLockCoef`.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Chaque frame : ne fait rien d'utile (retourne si désactivé). Variante debug : envoie les valeurs au CMU.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "desc": "Every frame: does nothing useful (returns if disabled). Debug variant: sends the values to the CMU.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "shutdown": {
-      "desc": "Arrête l'actionneur (appelée par le CMU en cas de système incomplet).",
+      "desc": "Stops the actuator (called by the CMU in case of an incomplete system).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Remet les états, vitesses lissées, override et `activeLockCoef` à zéro.",
+      "desc": "Resets the states, smoothed speeds, override and `activeLockCoef` to zero.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "init": {
-      "desc": "Lit les paramètres jbeam et crée le PID de verrouillage.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "desc": "Reads the jbeam parameters and creates the locking PID.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "initSecondStage": {
-      "desc": "Retrouve le différentiel central (`centerDiffName`) et active le système ; l'arrête si le CMU est absent.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "desc": "Finds the center differential (`centerDiffName`) and enables the system; stops if the CMU is missing.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "registerCMU": {
-      "desc": "Appelée par le CMU pour donner une référence vers lui.",
-      "params": {"cmu": {"type": "table", "desc": "Module CMU."}},
+      "desc": "Called by the CMU to give it a reference to itself.",
+      "params": {
+        "cmu": {
+          "type": "table",
+          "desc": "CMU module."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setDebugMode": {
-      "desc": "Active ou désactive l'envoi de paquets de debug à chaque frame.",
-      "params": {"debugEnabled": {"type": "boolean", "desc": "true pour envoyer."}},
+      "desc": "Enables or disables sending debug packets every frame.",
+      "params": {
+        "debugEnabled": {
+          "type": "boolean",
+          "desc": "true to send."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setParameters": {
-      "desc": "Modifie à chaud les paramètres (avDiffThreshold, avThreshold, minimumLock, isEnabled, clutchPIDkP/kI/kD) via CMU.applyParameter ; la valeur \"default\" restaure l'initial.",
-      "params": {"parameters": {"type": "table", "desc": "Table des paramètres à changer."}},
+      "desc": "Changes the parameters at runtime (avDiffThreshold, avThreshold, minimumLock, isEnabled, clutchPIDkP/kI/kD) via CMU.applyParameter; the value \"default\" restores the initial one.",
+      "params": {
+        "parameters": {
+          "type": "table",
+          "desc": "Table of parameters to change."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setConfig": {
-      "desc": "Remplace toute la table de paramètres (utilisé par l'outil de debug).",
-      "params": {"configTable": {"type": "table", "desc": "Nouveaux paramètres."}},
+      "desc": "Replaces the whole parameter table (used by the debug tool).",
+      "params": {
+        "configTable": {
+          "type": "table",
+          "desc": "New parameters."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "getConfig": {
-      "desc": "Renvoie une copie des paramètres.",
+      "desc": "Returns a copy of the parameters.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Copie profonde des paramètres."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Deep copy of the parameters."
+        }
+      ],
       "internal": false
     },
     "sendConfigData": {
-      "desc": "Envoie les paramètres au CMU dans un paquet de debug de type config.",
+      "desc": "Sends the parameters to the CMU in a debug packet of type config.",
       "params": {},
       "returns": [],
       "internal": true

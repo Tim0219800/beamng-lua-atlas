@@ -1,12 +1,12 @@
 # `ui_gameplayScoreboard`
 
-*Fichier : `lua/ge/extensions/ui/gameplayScoreboard.lua` · VM : Game Engine (GE) · 172 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/gameplayScoreboard.lua` · VM: Game Engine (GE) · 172 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_gameplayScoreboard` : `extensions.load("ui_gameplayScoreboard")`, puis la globale `ui_gameplayScoreboard`
+**Access:** extension `ui_gameplayScoreboard`: `extensions.load("ui_gameplayScoreboard")`, then the global `ui_gameplayScoreboard`
 
-Couche de données de tableau des scores, indépendante de la source (écran partagé local ou réseau multijoueur). Garde l'état des joueurs (nom, couleur, scores, statut, rang) et le pousse à l'UI par le stream « scoreboard » (guihooks.queueStream). Le tri se fait selon le style (orderBy.key, direction asc/desc), les joueurs « disqualified » passant après les autres ; les ex-aequo partagent le rang.
+Scoreboard data layer, independent of the source (local split screen or multiplayer network). Keeps the players' state (name, color, scores, status, rank) and pushes it to the UI through the "scoreboard" stream (guihooks.queueStream). Sorting is done according to the style (orderBy.key, asc/desc direction), with "disqualified" players placed after the others; ties share the rank.
 
-## Exemple
+## Example
 
 ```lua
 ui_gameplayScoreboard.startNewScoreboard({entries={{key='score', name='Score', order=1, type='points'}}, orderBy={key='score', direction='desc'}})
@@ -14,101 +14,101 @@ ui_gameplayScoreboard.ensurePlayer('p1', 'Alice', {1,0,0,1}, 1)
 ui_gameplayScoreboard.updatePlayerScores('p1', {score = 10})
 ```
 
-## Remarques
+## Notes
 
-- Il faut appeler startNewScoreboard pour activer le tableau : updatePlayerScores, updatePlayerStatus et pulsePlayerColor ne font rien tant que active est faux (et après clear).
-- Style par défaut : une colonne « score » (type points), tri décroissant sur score.
-- Un score absent vaut 0 ; à égalité, l'ordre suit playerIndex.
-- setPlayerName ne pousse pas à l'UI (pas de pushToUI) : le nom n'apparaît qu'au prochain push.
-- clear() remet le style par défaut, désactive le tableau et pousse un état vide à l'UI.
+- startNewScoreboard must be called to activate the scoreboard: updatePlayerScores, updatePlayerStatus and pulsePlayerColor do nothing as long as active is false (and after clear).
+- Default style: one "score" column (type points), descending sort on score.
+- A missing score is 0; on a tie, the order follows playerIndex.
+- setPlayerName does not push to the UI (no pushToUI): the name only appears at the next push.
+- clear() resets the default style, deactivates the scoreboard and pushes an empty state to the UI.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_gameplayScoreboard.clear()` | Vide les joueurs, remet le style par défaut, désactive le tableau et pousse l'état vide à l'UI. | 86 |
-| `ui_gameplayScoreboard.ensurePlayer(playerId, name, color, playerIndex)` | Crée le joueur s'il n'existe pas (nom par défaut = playerId, scores vides) ; sinon met à jour couleur, index et nom fournis (non nil). Ne pousse pas à l'UI. | 100 |
-| `ui_gameplayScoreboard.getPlayers()` | Renvoie la table des joueurs (playerId -> {mpClientId, name, scores, status, color, playerIndex, rank}). | 147 |
-| `ui_gameplayScoreboard.isActive()` | Indique si un tableau est actif (startNewScoreboard appelé et pas de clear depuis). | 96 |
-| `ui_gameplayScoreboard.pulsePlayerColor(playerId, color)` | Déclenche une pulsation de couleur sur la ligne du joueur via guihooks.trigger('scoreboardPlayerPulseColor', {mpClientId, color}). Sans effet si inactif. | 137 |
-| `ui_gameplayScoreboard.setLocalMPClientId(id)` | Indique à l'UI quel joueur est le client local (mpClientId) et pousse l'état. | 142 |
-| `ui_gameplayScoreboard.setPlayerColor(playerId, color)` | Change la couleur d'un joueur (le crée au besoin) et pousse à l'UI. | 115 |
-| `ui_gameplayScoreboard.setPlayerName(playerId, name)` | Change le nom d'un joueur (le crée au besoin). N'envoie pas de mise à jour à l'UI. | 110 |
-| `ui_gameplayScoreboard.startNewScoreboard(_scoreboardStyle)` | Réinitialise (clear), active le tableau avec le style donné et pousse l'état à l'UI. | 152 |
-| `ui_gameplayScoreboard.updatePlayerScores(playerId, scores)` | Fusionne les valeurs données dans les scores du joueur (clé par clé) et pousse à l'UI. Sans effet si le tableau n'est pas actif. | 121 |
-| `ui_gameplayScoreboard.updatePlayerStatus(playerId, status)` | Définit le statut d'un joueur (ex. "disqualified" le classe en dernier) et pousse à l'UI. Sans effet si inactif. | 130 |
+| `ui_gameplayScoreboard.clear()` | Empties the players, resets the default style, deactivates the scoreboard and pushes the empty state to the UI. | 86 |
+| `ui_gameplayScoreboard.ensurePlayer(playerId, name, color, playerIndex)` | Creates the player if it does not exist (default name = playerId, empty scores); otherwise updates the color, index and name provided (non-nil). Does not push to the UI. | 100 |
+| `ui_gameplayScoreboard.getPlayers()` | Returns the players table (playerId -> {mpClientId, name, scores, status, color, playerIndex, rank}). | 147 |
+| `ui_gameplayScoreboard.isActive()` | Indicates whether a scoreboard is active (startNewScoreboard called and no clear since). | 96 |
+| `ui_gameplayScoreboard.pulsePlayerColor(playerId, color)` | Triggers a color pulse on the player's row via guihooks.trigger('scoreboardPlayerPulseColor', {mpClientId, color}). No effect if inactive. | 137 |
+| `ui_gameplayScoreboard.setLocalMPClientId(id)` | Tells the UI which player is the local client (mpClientId) and pushes the state. | 142 |
+| `ui_gameplayScoreboard.setPlayerColor(playerId, color)` | Changes a player's color (creates it if needed) and pushes to the UI. | 115 |
+| `ui_gameplayScoreboard.setPlayerName(playerId, name)` | Changes a player's name (creates it if needed). Does not send an update to the UI. | 110 |
+| `ui_gameplayScoreboard.startNewScoreboard(_scoreboardStyle)` | Resets (clear), activates the scoreboard with the given style and pushes the state to the UI. | 152 |
+| `ui_gameplayScoreboard.updatePlayerScores(playerId, scores)` | Merges the given values into the player's scores (key by key) and pushes to the UI. No effect if the scoreboard is not active. | 121 |
+| `ui_gameplayScoreboard.updatePlayerStatus(playerId, status)` | Sets a player's status (e.g. "disqualified" ranks them last) and pushes to the UI. No effect if inactive. | 130 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_gameplayScoreboard.ensurePlayer(playerId, name, color, playerIndex)`
 
-Crée le joueur s'il n'existe pas (nom par défaut = playerId, scores vides) ; sinon met à jour couleur, index et nom fournis (non nil). Ne pousse pas à l'UI.
+Creates the player if it does not exist (default name = playerId, empty scores); otherwise updates the color, index and name provided (non-nil). Does not push to the UI.
 
-- `playerId` (*string*) : Identifiant du joueur (stocké aussi dans mpClientId).
-- `name` (*string|nil*) : Nom affiché.
-- `color` (*any*) : Couleur du joueur (format transmis tel quel à l'UI).
-- `playerIndex` (*integer|nil*) : Index du joueur, sert de départage au tri.
+- `playerId` (*string*) : Player identifier (also stored in mpClientId).
+- `name` (*string|nil*) : Displayed name.
+- `color` (*any*) : Player color (format passed as is to the UI).
+- `playerIndex` (*integer|nil*) : Player index, used as the sort tiebreaker.
 
 #### `ui_gameplayScoreboard.getPlayers()`
 
-Renvoie la table des joueurs (playerId -> {mpClientId, name, scores, status, color, playerIndex, rank}).
+Returns the players table (playerId -> {mpClientId, name, scores, status, color, playerIndex, rank}).
 
-- **renvoie** : table<string, table> Table interne des joueurs (non copiée).
+- **returns**: table<string, table> Internal players table (not copied).
 
 #### `ui_gameplayScoreboard.isActive()`
 
-Indique si un tableau est actif (startNewScoreboard appelé et pas de clear depuis).
+Indicates whether a scoreboard is active (startNewScoreboard called and no clear since).
 
-- **renvoie** : boolean true si actif.
+- **returns**: boolean true if active.
 
 #### `ui_gameplayScoreboard.pulsePlayerColor(playerId, color)`
 
-Déclenche une pulsation de couleur sur la ligne du joueur via guihooks.trigger('scoreboardPlayerPulseColor', {mpClientId, color}). Sans effet si inactif.
+Triggers a color pulse on the player's row via guihooks.trigger('scoreboardPlayerPulseColor', {mpClientId, color}). No effect if inactive.
 
-- `playerId` (*string*) : Identifiant du joueur.
-- `color` (*any*) : Couleur de la pulsation.
+- `playerId` (*string*) : Player identifier.
+- `color` (*any*) : Pulse color.
 
 #### `ui_gameplayScoreboard.setLocalMPClientId(id)`
 
-Indique à l'UI quel joueur est le client local (mpClientId) et pousse l'état.
+Tells the UI which player is the local client (mpClientId) and pushes the state.
 
-- `id` (*string|nil*) : Identifiant du joueur local.
+- `id` (*string|nil*) : Local player identifier.
 
 #### `ui_gameplayScoreboard.setPlayerColor(playerId, color)`
 
-Change la couleur d'un joueur (le crée au besoin) et pousse à l'UI.
+Changes a player's color (creates it if needed) and pushes to the UI.
 
-- `playerId` (*string*) : Identifiant du joueur.
-- `color` (*any*) : Nouvelle couleur.
+- `playerId` (*string*) : Player identifier.
+- `color` (*any*) : New color.
 
 #### `ui_gameplayScoreboard.setPlayerName(playerId, name)`
 
-Change le nom d'un joueur (le crée au besoin). N'envoie pas de mise à jour à l'UI.
+Changes a player's name (creates it if needed). Does not send an update to the UI.
 
-- `playerId` (*string*) : Identifiant du joueur.
-- `name` (*string*) : Nouveau nom.
+- `playerId` (*string*) : Player identifier.
+- `name` (*string*) : New name.
 
 #### `ui_gameplayScoreboard.startNewScoreboard(_scoreboardStyle)`
 
-Réinitialise (clear), active le tableau avec le style donné et pousse l'état à l'UI.
+Resets (clear), activates the scoreboard with the given style and pushes the state to the UI.
 
-- `_scoreboardStyle` (*table|nil*) : Définition du style : entries (liste {key, name, order, type}) et orderBy ({key, direction}). Défaut : style à une colonne score.
+- `_scoreboardStyle` (*table|nil*) : Style definition: entries (list of {key, name, order, type}) and orderBy ({key, direction}). Default: one-column score style.
 
 #### `ui_gameplayScoreboard.updatePlayerScores(playerId, scores)`
 
-Fusionne les valeurs données dans les scores du joueur (clé par clé) et pousse à l'UI. Sans effet si le tableau n'est pas actif.
+Merges the given values into the player's scores (key by key) and pushes to the UI. No effect if the scoreboard is not active.
 
-- `playerId` (*string*) : Identifiant du joueur.
-- `scores` (*table<string, number>*) : Valeurs par clé de colonne (ex. {score = 10}).
+- `playerId` (*string*) : Player identifier.
+- `scores` (*table<string, number>*) : Values by column key (e.g. {score = 10}).
 
 #### `ui_gameplayScoreboard.updatePlayerStatus(playerId, status)`
 
-Définit le statut d'un joueur (ex. "disqualified" le classe en dernier) et pousse à l'UI. Sans effet si inactif.
+Sets a player's status (e.g. "disqualified" ranks them last) and pushes to the UI. No effect if inactive.
 
-- `playerId` (*string*) : Identifiant du joueur.
-- `status` (*string|nil*) : Statut ; seule la valeur "disqualified" est interprétée par le tri.
+- `playerId` (*string*) : Player identifier.
+- `status` (*string|nil*) : Status; only the value "disqualified" is interpreted by the sort.
 
-**Évènements UI (guihooks.trigger) :** `scoreboardPlayerPulseColor`
+**UI events (guihooks.trigger):** `scoreboardPlayerPulseColor`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/gameplayScoreboard.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/gameplayScoreboard.lua`.*

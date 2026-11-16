@@ -2,66 +2,66 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/traffic/source.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère les « sources » (foyers) du gestionnaire de trafic, utile quand plusieurs joueurs (écran partagé) doivent chacun avoir du trafic autour d'eux. Une source est un véhicule ou une position fixe ; le module fait tourner le foyer du trafic (gameplay_traffic.setFocus) de source en source à intervalle régulier. Chargé à la demande.
---- Accès : extension `gameplay_traffic_source` : `extensions.load("gameplay_traffic_source")`, puis la globale `gameplay_traffic_source`
+--- Manages the traffic manager's "sources" (focuses), useful when several players (split screen) must each have traffic around them. A source is a vehicle or a fixed position; the module rotates the traffic focus (gameplay_traffic.setFocus) from source to source at regular intervals. Loaded on demand.
+--- Access: extension `gameplay_traffic_source`: `extensions.load("gameplay_traffic_source")`, then the global `gameplay_traffic_source`
 ---@class gameplay_traffic_source
 gameplay_traffic_source = {}
 
---- Ajoute une source au trafic. Mode 'vehicle' : data est un id de véhicule ou une table {vehId}. Mode 'custom' : data = {pos, dir, speed?}. Autre mode (ex. 'camera') : entrée sans donnée.
----Source : lua/ge/extensions/gameplay/traffic/source.lua:34
----@param mode string 'camera', 'vehicle' ou 'custom'.
----@param data integer|table|nil Id de véhicule, ou table {vehId=…} ou {pos=vec3, dir=vec3, speed=number}.
----@return table|boolean  L'entrée de source ajoutée, ou false si les données sont invalides (véhicule inexistant, pos/dir manquants).
+--- Adds a source to traffic. 'vehicle' mode: data is a vehicle id or a {vehId} table. 'custom' mode: data = {pos, dir, speed?}. Other mode (e.g. 'camera'): entry without data.
+---Source: lua/ge/extensions/gameplay/traffic/source.lua:34
+---@param mode string 'camera', 'vehicle' or 'custom'.
+---@param data integer|table|nil Vehicle id, or table {vehId=...} or {pos=vec3, dir=vec3, speed=number}.
+---@return table|boolean  The added source entry, or false if the data is invalid (nonexistent vehicle, missing pos/dir).
 function gameplay_traffic_source.addSource(mode, data) end
 
---- Réinitialise les sources puis ajoute comme source le véhicule de chaque joueur (multiseat), si au moins 2 joueurs ont rejoint. Active ensuite le mode de mise à jour.
----Source : lua/ge/extensions/gameplay/traffic/source.lua:118
----@param defaultMode string|nil Mode de mise à jour, 'default' si nil.
+--- Resets the sources then adds each player's vehicle as a source (multiseat), if at least 2 players have joined. Then enables the update mode.
+---Source: lua/ge/extensions/gameplay/traffic/source.lua:118
+---@param defaultMode string|nil Update mode, 'default' if nil.
 function gameplay_traffic_source.autoAddPlayers(defaultMode) end
 
---- Renvoie la table des sources courantes (référence directe, pas une copie).
----Source : lua/ge/extensions/gameplay/traffic/source.lua:72
----@return table  Liste d'entrées {mode, auto, vehId?, pos?, dirVec?, speed?}.
+--- Returns the table of current sources (direct reference, not a copy).
+---Source: lua/ge/extensions/gameplay/traffic/source.lua:72
+---@return table  List of entries {mode, auto, vehId?, pos?, dirVec?, speed?}.
 function gameplay_traffic_source.getSources() end
 
---- Hook appelé à chaque frame. Fait avancer le timer ; à l'intervalle, appelle updateSource puis gèle le timer (-1).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/traffic/source.lua:167
----@param dt number Delta temps réel (s).
----@param dtSim number Delta temps de simulation (s), utilisé par le timer.
+--- Hook called every frame. Advances the timer; at the interval, calls updateSource then freezes the timer (-1).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/traffic/source.lua:167
+---@param dt number Real time delta (s).
+---@param dtSim number Simulation delta time (s), used by the timer.
 function gameplay_traffic_source.onUpdate(dt, dtSim) end
 
---- Hook appelé quand un véhicule est réinitialisé. Si le timer de rotation est gelé (-1) et que le véhicule est une IA de trafic, relance le timer à 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/traffic/source.lua:157
----@param vehId integer Id du véhicule réinitialisé.
+--- Hook called when a vehicle is reset. If the rotation timer is frozen (-1) and the vehicle is an AI traffic vehicle, restarts the timer at 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/traffic/source.lua:157
+---@param vehId integer Id of the reset vehicle.
 function gameplay_traffic_source.onVehicleResetted(vehId) end
 
---- Hook appelé quand un joueur change de véhicule. En écran partagé, autoAddPlayers est souvent appelé avant que chacun soit assis : si le nouveau véhicule n'est pas déjà source et qu'il y a au moins 2 joueurs, relance autoAddPlayers.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/traffic/source.lua:151
----@param oldId integer Ancien id de véhicule.
----@param newId integer Nouvel id de véhicule.
----@param player integer Joueur concerné (non utilisé).
+--- Hook called when a player changes vehicle. In split screen, autoAddPlayers is often called before everyone is seated: if the new vehicle is not already a source and there are at least 2 players, calls autoAddPlayers again.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/traffic/source.lua:151
+---@param oldId integer Old vehicle id.
+---@param newId integer New vehicle id.
+---@param player integer Player concerned (unused).
 function gameplay_traffic_source.onVehicleSwitched(oldId, newId, player) end
 
---- Retire la source à l'indice donné ; si c'était l'indice courant de rotation, la rotation repart à 1.
----Source : lua/ge/extensions/gameplay/traffic/source.lua:65
----@param index integer Indice (à partir de 1) dans la liste des sources.
+--- Removes the source at the given index; if it was the current rotation index, the rotation restarts at 1.
+---Source: lua/ge/extensions/gameplay/traffic/source.lua:65
+---@param index integer Index (starting at 1) in the sources list.
 function gameplay_traffic_source.removeSource(index) end
 
---- Supprime toutes les sources (remet trafficClearRadius à 0 sur les véhicules concernés), rétablit le foyer par défaut du trafic et réactive enableDynamicValues.
----Source : lua/ge/extensions/gameplay/traffic/source.lua:17
+--- Removes all sources (resets trafficClearRadius to 0 on the affected vehicles), restores the default traffic focus and re-enables enableDynamicValues.
+---Source: lua/ge/extensions/gameplay/traffic/source.lua:17
 function gameplay_traffic_source.resetSources() end
 
---- Définit le mode de mise à jour des sources et réinitialise l'état de rotation. En mode 'default', crée un timer et un intervalle (minimum 1 s, 5 s par défaut).
----Source : lua/ge/extensions/gameplay/traffic/source.lua:76
----@param mode string 'off' ou 'default'.
----@param options table|nil Options ; options.interval = intervalle de rotation en secondes.
+--- Sets the sources update mode and resets the rotation state. In 'default' mode, creates a timer and an interval (minimum 1 s, 5 s by default).
+---Source: lua/ge/extensions/gameplay/traffic/source.lua:76
+---@param mode string 'off' or 'default'.
+---@param options table|nil Options; options.interval = rotation interval in seconds.
 function gameplay_traffic_source.setSourceMode(mode, options) end
 
---- Passe à la source suivante (en privilégiant une source dont le véhicule roule à plus de 1 m/s) ou à l'indice donné, puis appelle gameplay_traffic.setFocus(mode, source). Appelée automatiquement par onUpdate ou manuellement.
----Source : lua/ge/extensions/gameplay/traffic/source.lua:96
----@param index integer|nil Indice forcé ; si nil, avance à la prochaine source.
+--- Moves to the next source (favoring a source whose vehicle is moving faster than 1 m/s) or to the given index, then calls gameplay_traffic.setFocus(mode, source). Called automatically by onUpdate or manually.
+---Source: lua/ge/extensions/gameplay/traffic/source.lua:96
+---@param index integer|nil Forced index; if nil, advances to the next source.
 function gameplay_traffic_source.updateSource(index) end
 

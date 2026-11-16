@@ -1,28 +1,28 @@
 # `flowgraph_nodes_debug_debugText`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/debug/debugText.lua` · VM : Game Engine (GE) · 41 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/debug/debugText.lua` · VM: Game Engine (GE) · 41 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/debug/debugText")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/debug/debugText")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Debug Text » (catégorie repeat_instant, tags util/draw). Dessine chaque frame un texte en 3D à une position (debugDrawer:drawTextAdvanced). Entrées : pos (vec3), text (any, converti par tostring), colorText (caché, blanc par défaut), colorBG (caché, noir semi-transparent {0,0,0,0.75} par défaut).
+Flowgraph node "Debug Text" (category repeat_instant, tags util/draw). Draws 3D text at a position (debugDrawer:drawTextAdvanced) every frame. Inputs: pos (vec3), text (any, converted by tostring), colorText (hidden, white by default), colorBG (hidden, semi-transparent black {0,0,0,0.75} by default).
 
-## Remarques
+## Notes
 
-- Pas de test sur pos : vec3(nil) est construit si le pin est vide.
-- Les couleurs sont lues avec 4 composantes sans valeur par défaut pour l'alpha.
+- No test on pos: vec3(nil) is built if the pin is empty.
+- Colors are read with 4 components with no default value for alpha.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Vide. | 24 |
-| `C:work()` | Construit les couleurs (ColorF texte, ColorI fond *255) et dessine le texte. | 27 |
+| `C:init()` | Empty. | 24 |
+| `C:work()` | Builds the colors (ColorF text, ColorI background *255) and draws the text. | 27 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/debug/debugText.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/debug/debugText.lua`.*

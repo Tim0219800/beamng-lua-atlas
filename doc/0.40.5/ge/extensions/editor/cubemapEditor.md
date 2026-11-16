@@ -1,46 +1,46 @@
 # `editor_cubemapEditor`
 
-*Fichier : `lua/ge/extensions/editor/cubemapEditor.lua` · VM : Game Engine (GE) · 760 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/cubemapEditor.lua` · VM: Game Engine (GE) · 760 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_cubemapEditor` : `extensions.load("editor_cubemapEditor")`, puis la globale `editor_cubemapEditor`
+**Access:** extension `editor_cubemapEditor`: `extensions.load("editor_cubemapEditor")`, then the global `editor_cubemapEditor`
 
-Éditeur de cubemaps du World Editor (menu Assets > « Cubemap Editor », fenêtre « cubemapEditor »). Il liste les objets de classe CubemapData du niveau, permet de créer, enregistrer et supprimer un cubemap, d'assigner chacune des 6 faces (glisser-déposer ou bouton), et de capturer les 6 faces depuis la position de la caméra (captureCameraCubemap, résolution 128 à 2048 px, puissance de 2) avant de les assigner automatiquement. Il exporte aussi les données dans un fichier main.materials.json. Peut être ouvert par un autre outil via show(onSelectCb) pour choisir un cubemap.
+World Editor cubemap editor (Assets > "Cubemap Editor" menu, "cubemapEditor" window). It lists the CubemapData class objects of the level, lets you create, save and delete a cubemap, assign each of the 6 faces (drag and drop or button), and capture the 6 faces from the camera position (captureCameraCubemap, resolution 128 to 2048 px, power of 2) before assigning them automatically. It also exports the data to a main.materials.json file. Can be opened by another tool via show(onSelectCb) to pick a cubemap.
 
-## Exemple
+## Example
 
 ```lua
-editor_cubemapEditor.show(function(nom) print('cubemap choisi : '..nom) end, 'monCubemap')
+editor_cubemapEditor.show(function(name) print('chosen cubemap: '..name) end, 'myCubemap')
 ```
 
-## Remarques
+## Notes
 
-- Les fichiers de faces capturées doivent s'appeler <préfixe><0..5>.hdr.dds ; si l'un manque, l'assignation échoue avec un message d'erreur de statut.
-- Ordre des faces affiché : 0 +X droite, 1 -X gauche, 2 -Y arrière, 3 +Y avant, 4 +Z haut, 5 -Z bas.
-- Le dossier de base par défaut est <chemin du niveau>/art/cubemaps/<nom du datablock> ; il est créé s'il n'existe pas.
-- La position de capture est mémorisée dans le champ captureLocation (« x,y,z »), utilisé par le bouton « Go to cubemap location ».
+- Captured face files must be named <prefix><0..5>.hdr.dds; if one is missing, the assignment fails with a status error message.
+- Face order displayed: 0 +X right, 1 -X left, 2 -Y back, 3 +Y front, 4 +Z up, 5 -Z down.
+- The default base folder is <level path>/art/cubemaps/<datablock name>; it is created if it does not exist.
+- The capture position is stored in the captureLocation field ("x,y,z"), used by the "Go to cubemap location" button.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_cubemapEditor.onEditorGui()` | Hook appelé à chaque frame de l'éditeur : dessine la fenêtre. *(interne)* *(hook)* | 751 |
-| `editor_cubemapEditor.onEditorInitialized()` | Hook appelé à l'initialisation du World Editor : enregistre la fenêtre (750x380, masquée) et l'entrée de menu « Cubemap Editor » dans le groupe Assets. *(interne)* *(hook)* | 745 |
-| `editor_cubemapEditor.show(onSelectCb, preselectName)` | Ouvre la fenêtre de l'éditeur de cubemaps. Charge la liste des cubemaps au premier appel, présélectionne celui dont le nom est donné (sinon le premier si rien n'est sélectionné). Si un callback est fourni, la fenêtre affiche des boutons Select/Cancel ; Select appelle le callback avec le nom du cubemap et ferme la fenêtre. | 734 |
+| `editor_cubemapEditor.onEditorGui()` | Hook called every editor frame: draws the window. *(internal)* *(hook)* | 751 |
+| `editor_cubemapEditor.onEditorInitialized()` | Hook called at World Editor initialization: registers the window (750x380, hidden) and the "Cubemap Editor" menu entry in the Assets group. *(internal)* *(hook)* | 745 |
+| `editor_cubemapEditor.show(onSelectCb, preselectName)` | Opens the cubemap editor window. Loads the cubemap list on the first call, preselects the one whose name is given (otherwise the first if nothing is selected). If a callback is provided, the window shows Select/Cancel buttons; Select calls the callback with the cubemap name and closes the window. | 734 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_cubemapEditor.show(onSelectCb, preselectName)`
 
-Ouvre la fenêtre de l'éditeur de cubemaps. Charge la liste des cubemaps au premier appel, présélectionne celui dont le nom est donné (sinon le premier si rien n'est sélectionné). Si un callback est fourni, la fenêtre affiche des boutons Select/Cancel ; Select appelle le callback avec le nom du cubemap et ferme la fenêtre.
+Opens the cubemap editor window. Loads the cubemap list on the first call, preselects the one whose name is given (otherwise the first if nothing is selected). If a callback is provided, the window shows Select/Cancel buttons; Select calls the callback with the cubemap name and closes the window.
 
-- `onSelectCb` (*function|nil*) : appelé avec le nom (string) du cubemap choisi
-- `preselectName` (*string|nil*) : nom du cubemap à présélectionner
+- `onSelectCb` (*function|nil*) : called with the name (string) of the chosen cubemap
+- `preselectName` (*string|nil*) : name of the cubemap to preselect
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`, `directoryExists`, `fileExists`
 - `obj:` `setField`
 - `scenetree.` `findClassObjects`, `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/cubemapEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/cubemapEditor.lua`.*

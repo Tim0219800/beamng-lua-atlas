@@ -1,0 +1,90 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/template.lua",
+  "module": "Nœud « Template Node » : exemple documenté de tout ce qu'un programmeur peut utiliser pour créer un nœud flowgraph. Montre les catégories possibles (repeat_instant, repeat_p_duration, repeat_f_duration, once_instant, once_p_duration, once_f_duration, dynamic_*, simple, provider, logic), tous les types de pins (flow, number, bool, string, vec3, quat, color, table, any, multi-type), les options de pin (default, hidden, hardcoded, tableType), C.todo, C.dependencies, C.color, C.type, C.tags et les fonctions de cycle de vie. Chaque fonction se contente d'afficher un message avec print. Utile comme modèle pour un moddeur.",
+  "notes": [
+    "Dans _onDeserialized, myField reste nil si l'ancien enregistrement n'avait pas ce champ, ce qui ferait échouer im.ArrayChar dans drawCustomProperties."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Appelé à la première création du nœud ; initialise myField, la table data et le curseur sliderWidth.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Gestionnaire flowgraph."
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Appelé au démarrage du projet, avant tout work.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Appelé quand le nœud doit exécuter sa fonction.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Appelé à l'arrêt du projet.",
+          "internal": true
+        },
+        "_onClear": {
+          "desc": "Appelé quand le nœud doit être nettoyé (avant sérialisation, avant démarrage...) ; par défaut appelle _executionStopped.",
+          "internal": true
+        },
+        "showProperties": {
+          "desc": "Appelé quand les propriétés du nœud sont affichées.",
+          "internal": false
+        },
+        "drawCustomProperties": {
+          "desc": "Code imgui affiché dans la fenêtre de propriétés (champ texte et curseur) ; renvoyer une chaîne crée un point d'historique (annuler/rétablir).",
+          "internal": true
+        },
+        "hideProperties": {
+          "desc": "Appelé quand les propriétés ne sont plus affichées.",
+          "internal": false
+        },
+        "drawMiddle": {
+          "desc": "Code imgui affiché dans le nœud ; doit commencer par builder:Middle().",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Constructeur de nœud."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style du nœud."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde les champs personnalisés dans res (self.data est sauvegardé automatiquement).",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde."
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure les champs personnalisés (self.data est restauré automatiquement).",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Données sauvegardées."
+            }
+          },
+          "internal": true
+        },
+        "destroy": {
+          "desc": "Appelé quand le nœud est supprimé.",
+          "internal": false
+        }
+      }
+    }
+  }
+}

@@ -1,33 +1,64 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/polyBool.lua",
-  "module": "Booléens 2D sur polygones (union, différence), maison, de type Martinez, adaptés de l'approche polybooljs (MIT). Un polygone est une table { regions = { ring, ... }, inverted = bool } où chaque ring est une liste de points {x,y}. Les calculs se font dans un repère local proche de l'origine pour que l'epsilon absolu ne s'écrase pas aux coordonnées monde. areas range ensuite une liste d'anneaux en anneaux extérieurs avec leurs trous, prêts pour une triangulation.",
-  "usage": "local pb = extensions.editor_toolUtilities_polyBool\nlocal res = pb.difference(terrainRing, roadRing)\nfor _, a in ipairs(pb.areas(res.regions)) do\n  -- a.ring (CCW), a.holes (liste d'anneaux CW)\nend",
+  "module": "In-house 2D polygon booleans (union, difference), Martinez-like, adapted from the polybooljs approach (MIT). A polygon is a table { regions = { ring, ... }, inverted = bool } where each ring is a list of {x,y} points. Computations are done in a local frame near the origin so that the absolute epsilon does not get crushed at world coordinates. areas then sorts a list of rings into outer rings with their holes, ready for triangulation.",
+  "usage": "local pb = extensions.editor_toolUtilities_polyBool\nlocal res = pb.difference(terrainRing, roadRing)\nfor _, a in ipairs(pb.areas(res.regions)) do\n  -- a.ring (CCW), a.holes (list of CW rings)\nend",
   "notes": [
-    "difference accepte une entrée souple : { regions }, un anneau seul, ou une liste d'anneaux ; les points peuvent être {x=,y=} ou {[1],[2]}.",
-    "unionMany attend en revanche des tables avec le champ regions (et inverted) pour chaque élément.",
-    "Les anneaux de moins de 3 points sont ignorés. Si le clip est vide, difference renvoie le sujet tel quel.",
-    "Tolérances internes : eps 1e-10 pour le balayage, SNAP 1e-6 pour la grille d'entrée, WELD 1e-4 pour souder des coins presque confondus."
+    "difference accepts flexible input: { regions }, a single ring, or a list of rings; points can be {x=,y=} or {[1],[2]}.",
+    "unionMany, in contrast, expects tables with the regions field (and inverted) for each element.",
+    "Rings of fewer than 3 points are ignored. If the clip is empty, difference returns the subject as is.",
+    "Internal tolerances: eps 1e-10 for the sweep, SNAP 1e-6 for the input grid, WELD 1e-4 to weld nearly coincident corners."
   ],
   "functions": {
     "unionMany": {
-      "desc": "Réunit plusieurs polygones en un seul. Renvoie un polygone vide si la liste est vide.",
-      "params": {"polys": {"type": "table", "desc": "Liste de polygones { regions = {ring,...}, inverted = bool }."}},
-      "returns": [{"type": "table", "desc": "Polygone résultat { regions, inverted } en coordonnées monde."}],
+      "desc": "Merges several polygons into one. Returns an empty polygon if the list is empty.",
+      "params": {
+        "polys": {
+          "type": "table",
+          "desc": "List of polygons { regions = {ring,...}, inverted = bool }."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Result polygon { regions, inverted } in world coordinates."
+        }
+      ],
       "internal": false
     },
     "difference": {
-      "desc": "Différence booléenne : subject moins clip. Travaille dans un repère local comme unionMany.",
+      "desc": "Boolean difference: subject minus clip. Works in a local frame like unionMany.",
       "params": {
-        "subject": {"type": "table", "desc": "Polygone, anneau ou liste d'anneaux dont on soustrait."},
-        "clip": {"type": "table", "desc": "Polygone, anneau ou liste d'anneaux à soustraire."}
+        "subject": {
+          "type": "table",
+          "desc": "Polygon, ring or list of rings to subtract from."
+        },
+        "clip": {
+          "type": "table",
+          "desc": "Polygon, ring or list of rings to subtract."
+        }
       },
-      "returns": [{"type": "table", "desc": "Polygone résultat { regions, inverted }."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Result polygon { regions, inverted }."
+        }
+      ],
       "internal": false
     },
     "areas": {
-      "desc": "Trie la liste plate d'anneaux d'un résultat booléen en anneaux extérieurs portant chacun leurs trous. L'imbrication se déduit de la profondeur de contenance : pair = plein, impair = trou. Extérieurs orientés CCW, trous CW. Chaque trou est rattaché à l'anneau le plus profond qui le contient.",
-      "params": {"regions": {"type": "table", "desc": "Liste d'anneaux {x,y} (par ex. result.regions de difference)."}},
-      "returns": [{"type": "table", "desc": "Liste de { ring = anneau, holes = { anneau, ... } }."}],
+      "desc": "Sorts the flat list of rings of a boolean result into outer rings each carrying their holes. Nesting is deduced from containment depth: even = solid, odd = hole. Outer rings oriented CCW, holes CW. Each hole is attached to the deepest ring that contains it.",
+      "params": {
+        "regions": {
+          "type": "table",
+          "desc": "List of {x,y} rings (e.g. result.regions from difference)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of { ring = ring, holes = { ring, ... } }."
+        }
+      ],
       "internal": false
     }
   }

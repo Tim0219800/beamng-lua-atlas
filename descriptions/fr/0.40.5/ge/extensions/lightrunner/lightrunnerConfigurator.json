@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/lightrunner/lightrunnerConfigurator.lua",
+  "module": "Configurateur de l'assistant (wizard) « Light Runner » : course rapide sur le niveau glow_city. Il construit un descripteur à partir de quickRaceConfiguratorDescriptor (backend de grille lightRunnerSelector, clé de route lightrunnerWizard, type de course lightRunner, restriction de véhicule lightRunner) et le passe à oneshotRaceCore.createConfigurator. Le module renvoyé expose donc l'API du configurateur (getSelection, selectLevel, selectMiddle, selectVehicle, updateSetting, getConfiguration, start, onWizard…RouteEnter) décrite dans oneshotRaceCore.",
+  "notes": [
+    "Sélection par défaut (à la première entrée dans l'assistant) : niveau glow_city, piste « Argon Curves » (ou la première piste du niveau), véhicule sbr / config powerglow.",
+    "Le démarrage de la course passe par scenario_quickRaceLoader.startQuickrace avec le type « lightRunner »."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "scenario_quickRaceLoader, core_highscores, ui_vehicleSelector_general, ui_lightRunnerSelector_general."}
+  },
+  "functions": {}
+}

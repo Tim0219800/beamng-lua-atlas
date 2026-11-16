@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/ui/pause/providers/routeData/career.lua",
+  "module": "Fournisseur de données du menu pause pour les écrans de carrière : progression (digest et missions APM suggérées), historique (financier, gameplay, jalons, journal de bord) et détail d'un historique. Les fonctions renvoient des tables décrivant le contenu (panneaux, composants Vue, rail de boutons) que l'UI pause affiche. Les données viennent de career_modules_playerAttributes, career_modules_milestones_milestones et career_career.",
+  "notes": [
+    "La navigation des boutons passe par extensions.ui_router.navigate dans un pcall ; le succès est ok and result and result.result ~= false.",
+    "Les entrées d'historique du digest sont limitées à 5 (getHistoryChanges(type, 5)) ; la vue complète n'a pas de limite.",
+    "Les types d'historique connus : \"financial\" (défaut) et \"gameplay\"."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{\"career_career\", \"career_saveSystem\"}"}
+  },
+  "functions": {
+    "isCareerProgressAvailable": {
+      "desc": "Indique si l'écran de progression de carrière est disponible : faux pendant le tutoriel de carrière, sinon vrai seulement si le véhicule de départ a été acheté.",
+      "params": {},
+      "returns": [{"type": "boolean|nil", "desc": "Disponibilité (peut valoir nil si career_career est absent)."}],
+      "internal": false
+    },
+    "getCareerProgressData": {
+      "desc": "Renvoie les données de la page de progression : titre ui.career.landingPage.name, panneau principal (ProgressDigest, ApmSuggestedMissions) et panneaux latéraux ProgressDomainInfo pour les domaines apm, bmra, logistics et freestyle.",
+      "params": {"context": {"type": "table", "desc": "Contexte du menu pause (champ lu : mode)."}},
+      "returns": [{"type": "table", "desc": "{mode, heading, mainPanelContent, focusSidePanelContents}"}],
+      "internal": false
+    },
+    "getCareerHistoryData": {
+      "desc": "Renvoie les données de la page d'historique : un rail de quatre boutons (financier, gameplay, jalons avec indicateur s'il y en a de non réclamés, journal de bord) et les panneaux latéraux d'aperçu (5 dernières entrées, digest des jalons).",
+      "params": {"context": {"type": "table", "desc": "Contexte du menu pause (champ lu : mode)."}},
+      "returns": [{"type": "table", "desc": "{mode, heading, rail, focusSidePanelContents}"}],
+      "internal": false
+    },
+    "getCareerHistoryDetailData": {
+      "desc": "Renvoie la vue complète d'un historique (composant CareerHistoryDigest avec full = true), avec le titre fourni par career_modules_playerAttributes.getCareerHistoryInfo ou un titre par défaut.",
+      "params": {
+        "context": {"type": "table", "desc": "Contexte du menu pause (champ lu : mode)."},
+        "historyType": {"type": "string", "desc": "\"financial\" ou \"gameplay\"."}
+      },
+      "returns": [{"type": "table", "desc": "{mode, heading, mainCardClass, mainPanelContent}"}],
+      "internal": false
+    }
+  }
+}

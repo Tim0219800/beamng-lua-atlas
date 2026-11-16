@@ -2,74 +2,74 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/hydraulicSuspension.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur auxiliaire de suspension hydraulique (type "auxiliary") : pilote la longueur de référence de poutres (vérins de suspension) regroupées en groupes nommés. Une pompe virtuelle limite la vitesse d'extension ; la descente se fait à vitesse fixe ; en mode « bleed » la poutre est relâchée (ressort nul, amortissement variable) et suit librement. Il joue aussi les sons de pompe et de décharge. Un moddeur appelle setGroupsPosition / setGroupsBleed / setGroupsMomentaryIncrease depuis des entrées ou d'autres contrôleurs.
---- Accès : contrôleur `hydraulicSuspension` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Auxiliary hydraulic suspension controller (type "auxiliary"): drives the reference length of beams (suspension cylinders) grouped into named groups. A virtual pump limits the extension speed; lowering is done at a fixed speed; in "bleed" mode the beam is released (zero spring, variable damping) and follows freely. It also plays the pump and release sounds. A modder calls setGroupsPosition / setGroupsBleed / setGroupsMomentaryIncrease from inputs or other controllers.
+--- Access: controller `hydraulicSuspension` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_hydraulicSuspension
 ---@field type string "auxiliary".
 local controller_hydraulicSuspension = {}
 
---- Renvoie l'état de toutes les poutres pour la sauvegarde/synchronisation.
----Source : lua/vehicle/controller/hydraulicSuspension.lua:238
----@return table<string, number>  Table d'état (réutilisée).
+--- Returns the state of all beams for saving/synchronization.
+---Source: lua/vehicle/controller/hydraulicSuspension.lua:238
+---@return table<string, number>  State table (reused).
 function controller_hydraulicSuspension.getState() end
 
---- Construit les groupes de poutres à partir de la table hydraulique jbeam, mémorise les paramètres de pompe.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/hydraulicSuspension.lua:166
----@param jbeamData table Données jbeam du contrôleur.
+--- Builds the beam groups from the jbeam hydraulic table, stores the pump parameters.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/hydraulicSuspension.lua:166
+---@param jbeamData table Controller jbeam data.
 function controller_hydraulicSuspension.init(jbeamData) end
 
---- Crée les sources sonores de pompe et de décharge sur pumpNode. Appelé par le gestionnaire de contrôleurs lors de l'initialisation des sons.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/hydraulicSuspension.lua:289
----@param jbeamData table Données jbeam du contrôleur.
+--- Creates the pump and release sound sources on pumpNode. Called by the controller manager during sound initialization.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/hydraulicSuspension.lua:289
+---@param jbeamData table Controller jbeam data.
 function controller_hydraulicSuspension.initSounds(jbeamData) end
 
---- Remet toutes les poutres à leur position d'origine et en mode relâché.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/hydraulicSuspension.lua:153
+--- Returns all beams to their original position and to released mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/hydraulicSuspension.lua:153
 function controller_hydraulicSuspension.reset() end
 
---- Remet à zéro l'état des sons de pompe et de décharge.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/hydraulicSuspension.lua:305
+--- Resets the state of the pump and release sounds.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/hydraulicSuspension.lua:305
 function controller_hydraulicSuspension.resetSounds() end
 
---- Relâche les groupes : bleedCoef > 0 supprime le ressort et laisse la poutre suivre librement ; l'amortissement dépend de 1 - bleedCoef.
----Source : lua/vehicle/controller/hydraulicSuspension.lua:61
----@param groupNames string[] Noms de groupes.
----@param bleedCoef number 0 (pas de relâchement) à 1 (relâchement complet), borné.
+--- Releases the groups: bleedCoef > 0 removes the spring and lets the beam follow freely; the damping depends on 1 - bleedCoef.
+---Source: lua/vehicle/controller/hydraulicSuspension.lua:61
+---@param groupNames string[] Group names.
+---@param bleedCoef number 0 (no release) to 1 (full release), bounded.
 function controller_hydraulicSuspension.setGroupsBleed(groupNames, bleedCoef) end
 
---- Active/désactive l'augmentation continue de la cible des groupes (à la vitesse de base de la pompe) tant que enabled est vrai, dans les limites min/max de chaque poutre.
----Source : lua/vehicle/controller/hydraulicSuspension.lua:77
----@param groupNames string[] Noms de groupes.
----@param enabled boolean Vrai pour monter en continu.
----@param speedCoef number|nil Multiplicateur de vitesse (1 par défaut).
+--- Enables/disables the continuous increase of the groups' target (at the pump's base speed) as long as enabled is true, within the min/max limits of each beam.
+---Source: lua/vehicle/controller/hydraulicSuspension.lua:77
+---@param groupNames string[] Group names.
+---@param enabled boolean True to raise continuously.
+---@param speedCoef number|nil Speed multiplier (1 by default).
 function controller_hydraulicSuspension.setGroupsMomentaryIncrease(groupNames, enabled, speedCoef) end
 
---- Fixe la position cible de tous les groupes nommés : position 0 = extension min, 1 = extension max de chaque poutre. Désactive le bleed de ces poutres.
----Source : lua/vehicle/controller/hydraulicSuspension.lua:42
----@param groupNames string[] Noms de groupes (groupName dans la table hydraulique).
----@param position number 0..1, interpolation entre min et max de chaque poutre.
----@param speedCoef number|nil Multiplicateur de la vitesse de pompe (1 par défaut).
+--- Sets the target position of all named groups: position 0 = min extension, 1 = max extension of each beam. Disables the bleed of these beams.
+---Source: lua/vehicle/controller/hydraulicSuspension.lua:42
+---@param groupNames string[] Group names (groupName in the hydraulic table).
+---@param position number 0..1, interpolation between min and max of each beam.
+---@param speedCoef number|nil Pump speed multiplier (1 by default).
 function controller_hydraulicSuspension.setGroupsPosition(groupNames, position, speedCoef) end
 
---- Restaure l'état renvoyé par getState (valeurs numériques valides uniquement).
----Source : lua/vehicle/controller/hydraulicSuspension.lua:248
----@param data table|nil Table d'état.
+--- Restores the state returned by getState (valid numeric values only).
+---Source: lua/vehicle/controller/hydraulicSuspension.lua:248
+---@param data table|nil State table.
 function controller_hydraulicSuspension.setState(data) end
 
---- Chaque pas physique : fait avancer chaque poutre vers sa position cible à la vitesse de pompe et applique la longueur et le ressort/amortissement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/hydraulicSuspension.lua:132
----@param dt number Pas de temps (s).
+--- Every physics step: advances each beam toward its target position at the pump speed and applies the length and the spring/damping.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/hydraulicSuspension.lua:132
+---@param dt number Time step (s).
 function controller_hydraulicSuspension.updateFixedStep(dt) end
 
---- Chaque image : gère le son de pompe (volume 0.5, hauteur selon le débit) et le son de décharge selon les poutres relâchées qui raccourcissent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/hydraulicSuspension.lua:95
----@param dt number Pas de temps (s).
+--- Every frame: handles the pump sound (volume 0.5, pitch depending on the flow) and the release sound according to the released beams that shorten.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/hydraulicSuspension.lua:95
+---@param dt number Time step (s).
 function controller_hydraulicSuspension.updateGFX(dt) end
 
 return controller_hydraulicSuspension

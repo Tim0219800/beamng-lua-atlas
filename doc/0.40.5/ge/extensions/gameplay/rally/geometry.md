@@ -1,41 +1,41 @@
 # `gameplay_rally_geometry`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/geometry.lua` · VM : Game Engine (GE) · 544 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/geometry.lua` · VM: Game Engine (GE) · 544 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_geometry` : `extensions.load("gameplay_rally_geometry")`, puis la globale `gameplay_rally_geometry`
+**Access:** extension `gameplay_rally_geometry`: `extensions.load("gameplay_rally_geometry")`, then the global `gameplay_rally_geometry`
 
-Prototype de génération automatique de notes de rallye à partir de la géométrie de la route. Quand un marqueur de route (ground marker) est actif, il calcule une trajectoire optimisée entre départ et arrivée (map.optimizePath), la sauvegarde dans temp/, puis estime pour chaque nœud le rayon de courbure, la vitesse de passage (pneus slick, frottement 1,7) et une sévérité (Hairpin, Medium, Fast, Easy, Flat, Straight), regroupe les nœuds en notes (ex. 'Medium left long tightens') et les dessine avec debugDrawer. Pendant la conduite, il affiche les notes à venir et envoie le texte à l'UI via guihooks 'ScenarioRealtimeDisplay'. Sans marqueur, il recharge la dernière route sauvegardée.
+Prototype for automatic generation of rally notes from the road geometry. When a ground marker is active, it computes an optimized path between start and finish (map.optimizePath), saves it to temp/, then estimates for each node the curvature radius, the cornering speed (slick tires, friction 1.7) and a severity (Hairpin, Medium, Fast, Easy, Flat, Straight), groups the nodes into notes (e.g. 'Medium left long tightens') and draws them with debugDrawer. While driving, it displays the upcoming notes and sends the text to the UI via the guihooks 'ScenarioRealtimeDisplay'. Without a marker, it reloads the last saved route.
 
-## Remarques
+## Notes
 
-- Seul le hook onUpdate est exporté ; tout le reste est local.
-- BUG : getRouteJsonPath appelle string.format avec les variables `level` et `map` non définies localement (la variable locale s'appelle levelName). Le format ne contient qu'un %s : le fichier est donc toujours temp/rally_route_nil.json, quel que soit le niveau.
-- BUG : renderNode lit `currentVelocity`, variable globale inexistante (nil) : la vitesse affichée est toujours celle du nœud.
-- Deux tables 'severities' sont déclarées ; la seconde (Hairpin, 2 à 6, vitesses max 50/80/110/150/200/300 km/h) masque la première et seule elle est utilisée.
-- Les vitesses des nœuds sont en km/h, les longueurs en m, les angles en degrés (positif = droite).
-- Le seuil 'debug = true' fait dessiner toutes les notes quand le véhicule est à l'arrêt (vitesse < 1 m/s) ; en mouvement seules les notes proches sont dessinées.
-- Outil de développement : il ne produit pas de carnet de notes utilisable par le système de rallye principal.
+- Only the onUpdate hook is exported; everything else is local.
+- BUG: getRouteJsonPath calls string.format with the variables `level` and `map` which are not defined locally (the local variable is named levelName). The format only contains one %s: the file is therefore always temp/rally_route_nil.json, whatever the level.
+- BUG: renderNode reads `currentVelocity`, a nonexistent global variable (nil): the displayed speed is always the node's.
+- Two 'severities' tables are declared; the second (Hairpin, 2 to 6, max speeds 50/80/110/150/200/300 km/h) shadows the first and only it is used.
+- Node speeds are in km/h, lengths in m, angles in degrees (positive = right).
+- The 'debug = true' threshold makes all notes be drawn when the vehicle is stopped (speed < 1 m/s); when moving, only nearby notes are drawn.
+- Development tool: it does not produce a notebook usable by the main rally system.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_geometry.onUpdate(dt, dtSim)` | Hook appelé à chaque frame. (Re)génère les notes si la source change (marqueur de route actif ou cache fichier), puis lit la position et la vitesse du véhicule joueur et dessine les notes : toutes si le véhicule est à l'arrêt, sinon les notes des 4 prochaines secondes (au moins 2), et envoie la 2e note (si ce n'est pas une ligne droite) au message d'UI ScenarioRealtimeDisplay. *(interne)* *(hook)* | 502 |
+| `gameplay_rally_geometry.onUpdate(dt, dtSim)` | Hook called every frame. (Re)generates the notes if the source changes (active ground marker or file cache), then reads the player vehicle's position and speed and draws the notes: all of them if the vehicle is stopped, otherwise the notes for the next 4 seconds (at least 2), and sends the 2nd note (if it is not a straight) to the ScenarioRealtimeDisplay UI message. *(internal)* *(hook)* | 502 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_geometry.onUpdate(dt, dtSim)`
 
-Hook appelé à chaque frame. (Re)génère les notes si la source change (marqueur de route actif ou cache fichier), puis lit la position et la vitesse du véhicule joueur et dessine les notes : toutes si le véhicule est à l'arrêt, sinon les notes des 4 prochaines secondes (au moins 2), et envoie la 2e note (si ce n'est pas une ligne droite) au message d'UI ScenarioRealtimeDisplay.
+Hook called every frame. (Re)generates the notes if the source changes (active ground marker or file cache), then reads the player vehicle's position and speed and draws the notes: all of them if the vehicle is stopped, otherwise the notes for the next 4 seconds (at least 2), and sends the 2nd note (if it is not a straight) to the ScenarioRealtimeDisplay UI message.
 
-- `dt` (*number*) : Delta de temps réel (s).
-- `dtSim` (*number*) : Delta de temps de simulation (s) ; inférieur à 0,001 = jeu en pause (affiche alors le détail des nœuds).
+- `dt` (*number*) : Real-time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s); below 0.001 = game paused (then shows the node details).
 
-**Évènements UI (guihooks.trigger) :** `ScenarioRealtimeDisplay`
+**UI events (guihooks.trigger):** `ScenarioRealtimeDisplay`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawCylinder`, `drawSphere`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/geometry.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/geometry.lua`.*

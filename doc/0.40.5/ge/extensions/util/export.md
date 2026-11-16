@@ -1,98 +1,98 @@
 # `util_export`
 
-*Fichier : `lua/ge/extensions/util/export.lua` · VM : Game Engine (GE) · 1311 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/export.lua` · VM: Game Engine (GE) · 1311 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_export` : `extensions.load("util_export")`, puis la globale `util_export`
+**Access:** extension `util_export`: `extensions.load("util_export")`, then the global `util_export`
 
-Exporte le véhicule du joueur au format glTF 2.0 (.gltf avec JSON ou .glb binaire), ou une séquence d'images clés. Il récupère le maillage GPU du véhicule (GPUMesh.bng_getGPUMesh) puis écrit les buffers (sommets, normales, tangentes, UV, couleurs, indices), les flexbodies et les props, l'arbre de pièces JBeam (sous forme de hiérarchie de nœuds glTF), les matériaux (textures converties en PNG, données du matériau BeamNG dans extras.bngMaterial) et, si exportBeams est vrai, les nœuds et poutres de chaque pièce (extension BNG_JBeamData). La direction du véhicule est écrite dans l'extension BNG_Direction. Les coordonnées sont converties en {x, z, -y}. L'export est asynchrone : il a lieu dans updateGFX quand les données GPU sont prêtes. Utile pour importer un véhicule BeamNG dans Blender ou un autre outil 3D.
+Exports the player's vehicle in glTF 2.0 format (.gltf with JSON or binary .glb), or a keyframe sequence. It fetches the vehicle's GPU mesh (GPUMesh.bng_getGPUMesh) then writes the buffers (vertices, normals, tangents, UVs, colors, indices), the flexbodies and props, the JBeam part tree (as a hierarchy of glTF nodes), the materials (textures converted to PNG, BeamNG material data in extras.bngMaterial) and, if exportBeams is true, the nodes and beams of each part (BNG_JBeamData extension). The vehicle direction is written in the BNG_Direction extension. Coordinates are converted to {x, z, -y}. The export is asynchronous: it happens in updateGFX when the GPU data is ready. Useful to import a BeamNG vehicle into Blender or another 3D tool.
 
-## Exemple
+## Example
 
 ```lua
 extensions.util_export.gltfBinaryFormat = false
 extensions.util_export.exportFile('vehicle.gltf')
 ```
 
-## Remarques
+## Notes
 
-- L'export prend le véhicule joueur 0 à l'état courant (déformations comprises : positions de nœuds actuelles pour les poutres).
-- export(handler) : si un export est déjà en cours (lastMeshInfo non nil), le handler est appelé avec nil et rien d'autre n'est fait.
-- startRecording écrit une première image puis continue à exporter à chaque frame jusqu'à stopRecording ; les temps sont stockés dans une animation glTF. La sortie journalise chaque image.
-- suggestFilename cherche export_001 à export_100 dans le dossier du véhicule, avec l'extension .glb ou .gltf selon gltfBinaryFormat ; si tous existent, renvoie le dernier nom testé.
-- Bug : dans _addTimeBuffers, le buffer des numéros d'images clés utilise la variable bufferID (non définie, donc nil) au lieu de bufferIDKeyframes, et la borne max du temps utilise keyFrameTimes[#keyFrameTimes - 1]. L'enregistrement d'animation est donc probablement incorrect.
-- Bug : dans _convertType, `dumps(value)" to "` (opérateur .. manquant) est un appel de fonction sur une chaîne et provoquerait une erreur Lua dans les cas d'erreur de conversion.
-- Bug : _isTextureCookerFilepath teste `not string.sub(filepath, -4) == ".png"`, expression toujours fausse en pratique (priorité de l'opérateur not) ; le test d'extension n'est donc pas fait.
-- Après un export, le hook GUI ThreeDExported est déclenché et un message « GLTF Vehicle exported » s'affiche 5 s.
+- The export takes player vehicle 0 in its current state (deformations included: current node positions for the beams).
+- export(handler): if an export is already in progress (lastMeshInfo not nil), the handler is called with nil and nothing else is done.
+- startRecording writes a first frame then keeps exporting every frame until stopRecording; the times are stored in a glTF animation. The output logs each frame.
+- suggestFilename looks for export_001 to export_100 in the vehicle's folder, with the .glb or .gltf extension depending on gltfBinaryFormat; if all exist, returns the last name tested.
+- Bug: in _addTimeBuffers, the keyframe number buffer uses the variable bufferID (undefined, so nil) instead of bufferIDKeyframes, and the max time bound uses keyFrameTimes[#keyFrameTimes - 1]. Animation recording is therefore probably incorrect.
+- Bug: in _convertType, `dumps(value)" to "` (missing .. operator) is a function call on a string and would cause a Lua error in conversion error cases.
+- Bug: _isTextureCookerFilepath tests `not string.sub(filepath, -4) == ".png"`, an expression that is always false in practice (precedence of the not operator); the extension test is therefore not done.
+- After an export, the GUI hook ThreeDExported is triggered and a "GLTF Vehicle exported" message is displayed for 5 s.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_export.export(handler)` | Lance l'export du véhicule joueur et appelle handler(gltfRoot) avec la table glTF construite quand les données GPU sont prêtes (dans updateGFX). | 1124 |
-| `util_export.exportFile(filename)` | Exporte le véhicule joueur dans un fichier glTF (JSON ou binaire selon gltfBinaryFormat). Réinitialise le cache d'images et affiche un message d'interface. | 1140 |
-| `util_export.getGeInfo()` | Renvoie les réglages de l'export utiles à l'interface (actuellement seulement gltfBinaryFormat). | 1284 |
-| `util_export.startRecording(filename)` | Exporte une première image dans le fichier puis continue d'exporter à chaque frame (animation) jusqu'à l'appel de stopRecording. | 1248 |
-| `util_export.stopRecording()` | Arrête l'enregistrement d'animation démarré par startRecording. | 1253 |
-| `util_export.suggestFilename()` | Propose un nom de fichier libre export_NNN.glb ou .gltf dans le dossier du véhicule joueur (pour l'interface). | 1263 |
-| `util_export.updateGFX(dt)` | Hook appelé chaque frame : si les données GPU du maillage sont prêtes, termine l'export en cours (processExport). *(interne)* | 1257 |
+| `util_export.export(handler)` | Starts the player vehicle export and calls handler(gltfRoot) with the built glTF table when the GPU data is ready (in updateGFX). | 1124 |
+| `util_export.exportFile(filename)` | Exports the player vehicle to a glTF file (JSON or binary depending on gltfBinaryFormat). Resets the image cache and displays an interface message. | 1140 |
+| `util_export.getGeInfo()` | Returns the export settings useful to the interface (currently only gltfBinaryFormat). | 1284 |
+| `util_export.startRecording(filename)` | Exports a first frame to the file then keeps exporting every frame (animation) until stopRecording is called. | 1248 |
+| `util_export.stopRecording()` | Stops the animation recording started by startRecording. | 1253 |
+| `util_export.suggestFilename()` | Suggests a free file name export_NNN.glb or .gltf in the player vehicle's folder (for the interface). | 1263 |
+| `util_export.updateGFX(dt)` | Hook called every frame: if the mesh GPU data is ready, finishes the export in progress (processExport). *(internal)* | 1257 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_export.export(handler)`
 
-Lance l'export du véhicule joueur et appelle handler(gltfRoot) avec la table glTF construite quand les données GPU sont prêtes (dans updateGFX).
+Starts the player vehicle export and calls handler(gltfRoot) with the built glTF table when the GPU data is ready (in updateGFX).
 
-- `handler` (*function*) : Fonction recevant la table glTF racine (ou nil si un export est déjà en cours)
+- `handler` (*function*) : Function receiving the root glTF table (or nil if an export is already in progress)
 
 #### `util_export.exportFile(filename)`
 
-Exporte le véhicule joueur dans un fichier glTF (JSON ou binaire selon gltfBinaryFormat). Réinitialise le cache d'images et affiche un message d'interface.
+Exports the player vehicle to a glTF file (JSON or binary depending on gltfBinaryFormat). Resets the image cache and displays an interface message.
 
-- `filename` (*string*) : Chemin du fichier de sortie (.gltf ou .glb)
+- `filename` (*string*) : Output file path (.gltf or .glb)
 
 #### `util_export.getGeInfo()`
 
-Renvoie les réglages de l'export utiles à l'interface (actuellement seulement gltfBinaryFormat).
+Returns the export settings useful to the interface (currently only gltfBinaryFormat).
 
-- **renvoie** : table {gltfBinaryFormat = boolean}
+- **returns**: table {gltfBinaryFormat = boolean}
 
 #### `util_export.startRecording(filename)`
 
-Exporte une première image dans le fichier puis continue d'exporter à chaque frame (animation) jusqu'à l'appel de stopRecording.
+Exports a first frame to the file then keeps exporting every frame (animation) until stopRecording is called.
 
-- `filename` (*string*) : Chemin du fichier de sortie
+- `filename` (*string*) : Output file path
 
 #### `util_export.suggestFilename()`
 
-Propose un nom de fichier libre export_NNN.glb ou .gltf dans le dossier du véhicule joueur (pour l'interface).
+Suggests a free file name export_NNN.glb or .gltf in the player vehicle's folder (for the interface).
 
-- **renvoie** : string Chemin proposé, ou chaîne vide s'il n'y a pas de véhicule joueur
+- **returns**: string Suggested path, or empty string if there is no player vehicle
 
 #### `util_export.updateGFX(dt)`
 
-Hook appelé chaque frame : si les données GPU du maillage sont prêtes, termine l'export en cours (processExport).
+Hook called every frame: if the mesh GPU data is ready, finishes the export in progress (processExport).
 
-- `dt` (*number*) : Delta de temps (non utilisé)
+- `dt` (*number*) : Time delta (unused)
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `embedBuffers` | boolean | true (défaut) : buffers intégrés en base64 dans le JSON ; false : fichiers .bin externes (<nom>_buffer_NNN_<type>.bin). Ignoré en format binaire. |
-| `exportBeams` | boolean | Exporte les nœuds et poutres par pièce dans extras (défaut true) |
-| `exportColors` | boolean | Exporte les couleurs de sommets (défaut false) |
-| `exportNormals` | boolean | Exporte les normales (défaut true) |
-| `exportTangents` | boolean | Exporte les tangentes (défaut false) |
-| `exportTexCoords` | boolean | Exporte les deux jeux de coordonnées de texture (défaut false) |
-| `gltfBinaryFormat` | boolean | true (défaut) : écrit un .glb ; false : écrit un .gltf JSON |
+| `embedBuffers` | boolean | true (default): buffers embedded in base64 in the JSON; false: external .bin files (<name>_buffer_NNN_<type>.bin). Ignored in binary format. |
+| `exportBeams` | boolean | Exports the nodes and beams per part in extras (default true) |
+| `exportColors` | boolean | Exports vertex colors (default false) |
+| `exportNormals` | boolean | Exports normals (default true) |
+| `exportTangents` | boolean | Exports tangents (default false) |
+| `exportTexCoords` | boolean | Exports both texture coordinate sets (default false) |
+| `gltfBinaryFormat` | boolean | true (default): writes a .glb; false: writes a JSON .gltf |
 
-**Évènements UI (guihooks.trigger) :** `ThreeDExported`
+**UI events (guihooks.trigger):** `ThreeDExported`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`
 - `be:` `getPlayerVehicleID`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/export.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/export.lua`.*

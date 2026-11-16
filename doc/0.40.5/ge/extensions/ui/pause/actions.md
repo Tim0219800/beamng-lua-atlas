@@ -1,106 +1,106 @@
 # `ui_pause_actions`
 
-*Fichier : `lua/ge/extensions/ui/pause/actions.lua` · VM : Game Engine (GE) · 223 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/pause/actions.lua` · VM: Game Engine (GE) · 223 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_pause_actions` : `extensions.load("ui_pause_actions")`, puis la globale `ui_pause_actions`
+**Access:** extension `ui_pause_actions`: `extensions.load("ui_pause_actions")`, then the global `ui_pause_actions`
 
-Registre des actions du menu pause. Il enregistre des boutons (via ui/gridSelectorUtils/buttonModule) exécutables par id, gère l'enchaînement « sauvegarder la carrière puis exécuter un callback », et maintient les onglets et boutons ajoutés par des mods au menu pause. Un mod peut y déclarer un onglet et des boutons ; le module notifie l'UI par le hook GUI PauseModActionsChanged.
+Pause menu action registry. It registers buttons (via ui/gridSelectorUtils/buttonModule) executable by id, handles the "save the career then run a callback" chain, and maintains the tabs and buttons added by mods to the pause menu. A mod can declare a tab and buttons there; the module notifies the UI through the GUI hook PauseModActionsChanged.
 
-## Exemple
+## Example
 
 ```lua
 ui_pause_actions.registerModButton({id = "monBouton", tabId = "mods", label = "Mon outil", icon = "wrench", componentName = "MonComposant"})
 ```
 
-## Remarques
+## Notes
 
-- Si tabId vaut "mods" et que l'onglet n'existe pas, il est créé automatiquement (label ui.dashboard.mods, icône wrench) puis supprimé quand il n'a plus de bouton. Tout autre tabId inconnu donne reason = "unknown_tab".
-- getVisibleModTabs ne renvoie que les onglets ayant au moins un bouton ; leur tabId est préfixé par "mod:".
-- saveCareerThen : le callback expire après 30 s (une sauvegarde échouée ne déclenche jamais onSaveFinished) ; il est alors ignoré.
-- L'extension passe en déchargement manuel (setExtensionUnloadMode manual) à son chargement.
+- If tabId is "mods" and the tab does not exist, it is created automatically (label ui.dashboard.mods, icon wrench) then removed when it no longer has any button. Any other unknown tabId gives reason = "unknown_tab".
+- getVisibleModTabs only returns tabs that have at least one button; their tabId is prefixed with "mod:".
+- saveCareerThen: the callback expires after 30 s (a failed save never triggers onSaveFinished); it is then ignored.
+- The extension switches to manual unloading (setExtensionUnloadMode manual) when it loads.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_pause_actions.clearActions()` | Efface tous les boutons enregistrés via registerButton et annule le callback de sauvegarde en attente. Ne touche pas aux onglets/boutons de mods. | 24 |
-| `ui_pause_actions.executeAction(buttonId, payload)` | Exécute le bouton enregistré portant cet id. | 42 |
-| `ui_pause_actions.getAllButtonInfos()` | Renvoie les infos de tous les boutons enregistrés. | 50 |
-| `ui_pause_actions.getVisibleModTabs()` | Renvoie les onglets de mods non vides, au format attendu par buildPauseTabs (tabId "mod:<id>", isModTab, label, icon, buttons, visible, enabled). | 194 |
-| `ui_pause_actions.onExtensionLoaded()` | Hook appelé au chargement ; met le mode de déchargement en manuel. *(interne)* *(hook)* | 54 |
-| `ui_pause_actions.onSaveFinished()` | Hook appelé quand une sauvegarde de carrière se termine ; exécute le callback en attente de saveCareerThen s'il n'a pas expiré. *(interne)* *(hook)* | 34 |
-| `ui_pause_actions.registerButton(metadata, callback)` | Enregistre un bouton d'action et renvoie une copie des métadonnées avec buttonId. Si metadata.visible == false, rien n'est enregistré et les métadonnées sont renvoyées telles quelles. | 46 |
-| `ui_pause_actions.registerModButton(button)` | Ajoute ou met à jour un bouton de mod dans un onglet (déplace le bouton si son tabId change) et notifie l'UI. | 133 |
-| `ui_pause_actions.registerModTab(tab)` | Crée ou met à jour un onglet de mod (conserve l'ordre des boutons existants) et notifie l'UI. | 102 |
-| `ui_pause_actions.saveCareerThen(callback)` | Mémorise un callback puis lance career_saveSystem.saveCurrent(). Le callback est appelé dans onSaveFinished s'il n'a pas plus de 30 s. | 29 |
-| `ui_pause_actions.unregisterModButton(id)` | Retire un bouton de mod ; supprime l'onglet "mods" s'il devient vide ; notifie l'UI. | 173 |
-| `ui_pause_actions.unregisterModTab(id)` | Supprime un onglet de mod et ses boutons, puis notifie l'UI. | 124 |
+| `ui_pause_actions.clearActions()` | Clears all buttons registered via registerButton and cancels the pending save callback. Does not touch the mods' tabs/buttons. | 24 |
+| `ui_pause_actions.executeAction(buttonId, payload)` | Executes the registered button with this id. | 42 |
+| `ui_pause_actions.getAllButtonInfos()` | Returns the info of all registered buttons. | 50 |
+| `ui_pause_actions.getVisibleModTabs()` | Returns the non-empty mod tabs, in the format expected by buildPauseTabs (tabId "mod:<id>", isModTab, label, icon, buttons, visible, enabled). | 194 |
+| `ui_pause_actions.onExtensionLoaded()` | Hook called on load; sets the unload mode to manual. *(internal)* *(hook)* | 54 |
+| `ui_pause_actions.onSaveFinished()` | Hook called when a career save finishes; runs the pending saveCareerThen callback if it has not expired. *(internal)* *(hook)* | 34 |
+| `ui_pause_actions.registerButton(metadata, callback)` | Registers an action button and returns a copy of the metadata with buttonId. If metadata.visible == false, nothing is registered and the metadata is returned as is. | 46 |
+| `ui_pause_actions.registerModButton(button)` | Adds or updates a mod button in a tab (moves the button if its tabId changes) and notifies the UI. | 133 |
+| `ui_pause_actions.registerModTab(tab)` | Creates or updates a mod tab (keeps the order of existing buttons) and notifies the UI. | 102 |
+| `ui_pause_actions.saveCareerThen(callback)` | Stores a callback then launches career_saveSystem.saveCurrent(). The callback is called in onSaveFinished if it is no more than 30 s old. | 29 |
+| `ui_pause_actions.unregisterModButton(id)` | Removes a mod button; removes the "mods" tab if it becomes empty; notifies the UI. | 173 |
+| `ui_pause_actions.unregisterModTab(id)` | Removes a mod tab and its buttons, then notifies the UI. | 124 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_pause_actions.executeAction(buttonId, payload)`
 
-Exécute le bouton enregistré portant cet id.
+Executes the registered button with this id.
 
-- `buttonId` (*any*) : Id attribué par registerButton.
-- `payload` (*any*) : Données transmises au callback du bouton.
-- **renvoie** : any Résultat de buttonInstance.executeButton.
+- `buttonId` (*any*) : Id assigned by registerButton.
+- `payload` (*any*) : Data passed to the button's callback.
+- **returns**: any Result of buttonInstance.executeButton.
 
 #### `ui_pause_actions.getAllButtonInfos()`
 
-Renvoie les infos de tous les boutons enregistrés.
+Returns the info of all registered buttons.
 
-- **renvoie** : table Résultat de buttonInstance.getAllButtonInfos.
+- **returns**: table Result of buttonInstance.getAllButtonInfos.
 
 #### `ui_pause_actions.getVisibleModTabs()`
 
-Renvoie les onglets de mods non vides, au format attendu par buildPauseTabs (tabId "mod:<id>", isModTab, label, icon, buttons, visible, enabled).
+Returns the non-empty mod tabs, in the format expected by buildPauseTabs (tabId "mod:<id>", isModTab, label, icon, buttons, visible, enabled).
 
-- **renvoie** : table[] Liste d'onglets.
+- **returns**: table[] List of tabs.
 
 #### `ui_pause_actions.registerButton(metadata, callback)`
 
-Enregistre un bouton d'action et renvoie une copie des métadonnées avec buttonId. Si metadata.visible == false, rien n'est enregistré et les métadonnées sont renvoyées telles quelles.
+Registers an action button and returns a copy of the metadata with buttonId. If metadata.visible == false, nothing is registered and the metadata is returned as is.
 
-- `metadata` (*table|nil*) : Description du bouton (nil devient {}).
-- `callback` (*function|nil*) : Fonction appelée à l'exécution ; défaut : fonction renvoyant false.
-- **renvoie** : table Copie des métadonnées, avec buttonId si enregistré.
+- `metadata` (*table|nil*) : Button description (nil becomes {}).
+- `callback` (*function|nil*) : Function called on execution; default: a function returning false.
+- **returns**: table Copy of the metadata, with buttonId if registered.
 
 #### `ui_pause_actions.registerModButton(button)`
 
-Ajoute ou met à jour un bouton de mod dans un onglet (déplace le bouton si son tabId change) et notifie l'UI.
+Adds or updates a mod button in a tab (moves the button if its tabId changes) and notifies the UI.
 
-- `button` (*table*) : Champs : id et tabId (requis), label, icon, componentName, props, card2ComponentName, card2Props.
-- **renvoie** : table {success = true} ou {success = false, reason = "missing_id_or_tab" | "unknown_tab"}.
+- `button` (*table*) : Fields: id and tabId (required), label, icon, componentName, props, card2ComponentName, card2Props.
+- **returns**: table {success = true} or {success = false, reason = "missing_id_or_tab" | "unknown_tab"}.
 
 #### `ui_pause_actions.registerModTab(tab)`
 
-Crée ou met à jour un onglet de mod (conserve l'ordre des boutons existants) et notifie l'UI.
+Creates or updates a mod tab (keeps the order of existing buttons) and notifies the UI.
 
-- `tab` (*table*) : Champs : id (requis), label (défaut id), icon, card2ComponentName, card2Props.
-- **renvoie** : table {success = true} ou {success = false, reason = "missing_id"}.
+- `tab` (*table*) : Fields: id (required), label (default id), icon, card2ComponentName, card2Props.
+- **returns**: table {success = true} or {success = false, reason = "missing_id"}.
 
 #### `ui_pause_actions.saveCareerThen(callback)`
 
-Mémorise un callback puis lance career_saveSystem.saveCurrent(). Le callback est appelé dans onSaveFinished s'il n'a pas plus de 30 s.
+Stores a callback then launches career_saveSystem.saveCurrent(). The callback is called in onSaveFinished if it is no more than 30 s old.
 
-- `callback` (*function*) : Fonction sans argument appelée après la sauvegarde.
+- `callback` (*function*) : Function with no argument called after the save.
 
 #### `ui_pause_actions.unregisterModButton(id)`
 
-Retire un bouton de mod ; supprime l'onglet "mods" s'il devient vide ; notifie l'UI.
+Removes a mod button; removes the "mods" tab if it becomes empty; notifies the UI.
 
-- `id` (*string*) : Id du bouton.
-- **renvoie** : table {success = true} ou {success = false, reason = "not_found"}.
+- `id` (*string*) : Button id.
+- **returns**: table {success = true} or {success = false, reason = "not_found"}.
 
 #### `ui_pause_actions.unregisterModTab(id)`
 
-Supprime un onglet de mod et ses boutons, puis notifie l'UI.
+Removes a mod tab and its buttons, then notifies the UI.
 
-- `id` (*string*) : Id de l'onglet.
-- **renvoie** : table {success = true} ou {success = false, reason = "not_found"}.
+- `id` (*string*) : Tab id.
+- **returns**: table {success = true} or {success = false, reason = "not_found"}.
 
-**Évènements UI (guihooks.trigger) :** `PauseModActionsChanged`
+**UI events (guihooks.trigger):** `PauseModActionsChanged`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/pause/actions.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/pause/actions.lua`.*

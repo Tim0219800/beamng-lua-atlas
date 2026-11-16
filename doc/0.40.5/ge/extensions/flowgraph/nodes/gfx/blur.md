@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gfx_blur`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gfx/blur.lua` · VM : Game Engine (GE) · 62 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gfx/blur.lua` · VM: Game Engine (GE) · 62 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gfx/blur")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gfx/blur")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Blur » (repeat_instant, tags gfx/blur). Floute la scène : pin blurAmount (0 à 1, défaut 1) devient l'alpha d'un rectangle plein écran ajouté à l'effet ScreenBlurFX à chaque frame de rendu. Ne dessine rien si l'UI CEF n'est pas visible ou si work n'a pas tourné depuis plus de 10 frames.
+Flowgraph node "Blur" (repeat_instant, tags gfx/blur). Blurs the scene: pin blurAmount (0 to 1, default 1) becomes the alpha of a full-screen rectangle added to the ScreenBlurFX effect every render frame. Draws nothing if the CEF UI is not visible or if work has not run for more than 10 frames.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr, ...)` | Initialise lastWorking, blurAmount et blurColor. | 24 |
-| `C:onPreRender(dt, dtSim)` | Hook appelé avant le rendu (dt, dtSim) ; ajoute un rectangle de flou plein écran à ScreenBlurFX si le nœud a été actif dans les 10 dernières frames. | 45 |
-| `C:postInit()` | Configure le pin blurAmount comme curseur float entre 0 et 1. | 30 |
-| `C:work()` | Mémorise la quantité de flou, la couleur correspondante et le numéro de frame courant. | 39 |
+| `C:init(mgr, ...)` | Initializes lastWorking, blurAmount and blurColor. | 24 |
+| `C:onPreRender(dt, dtSim)` | Hook called before rendering (dt, dtSim); adds a full-screen blur rectangle to ScreenBlurFX if the node was active within the last 10 frames. | 45 |
+| `C:postInit()` | Configures the blurAmount pin as a float slider between 0 and 1. | 30 |
+| `C:work()` | Stores the blur amount, the corresponding color and the current frame number. | 39 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gfx/blur.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gfx/blur.lua`.*

@@ -1,27 +1,27 @@
 # `flowgraph_nodes_vehicle_beamstate_breakgroup`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/breakgroup.lua` · VM : Game Engine (GE) · 61 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/breakgroup.lua` · VM: Game Engine (GE) · 61 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/beamstate/breakgroup")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/beamstate/breakgroup")` (file under extensions/ but not a regular extension)
 
-Nœud « Breakgroup » (catégorie `repeat_p_duration`, tags destroy/damage). Casse un ou plusieurs breakgroups du véhicule. Pins d'entrée : `vehId` (number), `group` (string, défaut `*`). `*` appelle `beamstate.breakAllBreakgroups()`. Si `vehId` n'est pas branché, le nœud prend le véhicule joueur (`getPlayerVehicle(0)`).
+Node "Breakgroup" (category `repeat_p_duration`, tags destroy/damage). Breaks one or several breakgroups of the vehicle. Input pins: `vehId` (number), `group` (string, default `*`). `*` calls `beamstate.breakAllBreakgroups()`. If `vehId` is not connected, the node takes the player vehicle (`getPlayerVehicle(0)`).
 
-## Remarques
+## Notes
 
-- Bug : `type(self.pinIn.group.value == 'string')` compare d'abord puis prend `type` d'un booléen : le résultat est toujours 'boolean' (donc vrai), la branche « table » n'est jamais utilisée malgré la description du pin (« table or string »).
-- `beamstate.breakBreakGroup('nom')` : le nom est inséré tel quel entre apostrophes dans la commande Lua.
+- Bug: `type(self.pinIn.group.value == 'string')` compares first then takes the `type` of a boolean: the result is always 'boolean' (hence true), the "table" branch is never used despite the pin description ("table or string").
+- `beamstate.breakBreakGroup('name')`: the name is inserted as is between apostrophes in the Lua command.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Si `group` est `*`, casse tous les breakgroups ; sinon appelle `beamstate.breakBreakGroup('<group>')` sur le véhicule. Sort si `group` vaut nil ou si le véhicule est introuvable (log E). | 27 |
+| `C:work()` | If `group` is `*`, breaks all breakgroups; otherwise calls `beamstate.breakBreakGroup('<group>')` on the vehicle. Exits if `group` is nil or if the vehicle is not found (E log). | 27 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/breakgroup.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/breakgroup.lua`.*

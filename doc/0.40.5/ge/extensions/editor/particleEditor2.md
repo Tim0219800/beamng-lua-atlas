@@ -1,44 +1,44 @@
 # `editor_particleEditor2`
 
-*Fichier : `lua/ge/extensions/editor/particleEditor2.lua` · VM : Game Engine (GE) · 541 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/particleEditor2.lua` · VM: Game Engine (GE) · 541 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_particleEditor2` : `extensions.load("editor_particleEditor2")`, puis la globale `editor_particleEditor2`
+**Access:** extension `editor_particleEditor2`: `extensions.load("editor_particleEditor2")`, then the global `editor_particleEditor2`
 
-Seconde version, expérimentale, de l'éditeur de particules : une fenêtre d'outil « Particle Editor 2 » (menu Fenêtre > Experimental) avec, à gauche, un aperçu 3D rendu dans une RenderView dédiée (caméra orbitale, grille tracée au debugDrawer) et, à droite, les contrôles. Elle utilise deux genericInspector (ParticleEmitterData et ParticleData) pour modifier les champs, et gère création, sauvegarde (fichier d'origine, niveau, « sous... ») et suppression des émetteurs et particules (4 particules max par émetteur).
+Second, experimental version of the particle editor: a tool window "Particle Editor 2" (Window > Experimental menu) with, on the left, a 3D preview rendered in a dedicated RenderView (orbital camera, grid drawn with debugDrawer) and, on the right, the controls. It uses two genericInspector (ParticleEmitterData and ParticleData) to edit the fields, and handles creation, saving (original file, level, "as...") and deletion of emitters and particles (4 particles max per emitter).
 
-## Remarques
+## Notes
 
-- Aperçu : clic droit glissé = rotation, clic milieu glissé = déplacement, molette = distance (0.5 à 200), double-clic gauche = recentrage.
-- La caméra d'aperçu est limitée en tangage à ±1.5 rad ; le masque de vue vaut 30 et le fond est gris foncé (20,20,20).
-- DefaultEmitter ne peut pas être supprimé.
+- Preview: right-click drag = rotation, middle-click drag = pan, wheel = distance (0.5 to 200), left double-click = recenter.
+- The preview camera's pitch is limited to ±1.5 rad; the view mask is 30 and the background is dark gray (20,20,20).
+- DefaultEmitter cannot be deleted.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_particleEditor2.onEditorGui()` | Appelé à chaque frame par l'éditeur. Ouvre la fenêtre « Particle Editor 2 » (avec barre de menu) et dessine l'aperçu puis les contrôles. *(interne)* *(hook)* | 463 |
-| `editor_particleEditor2.onEditorInitialized()` | Enregistre la fenêtre (900x600), l'entrée de menu Experimental et crée les deux inspecteurs génériques (ParticleEmitterData / ParticleData). *(interne)* *(hook)* | 517 |
-| `editor_particleEditor2.onEditorToolWindowHide(windowName)` | Si la fenêtre masquée est particleEditor2, désactive l'aperçu et détruit le nœud d'aperçu. *(interne)* *(hook)* | 507 |
-| `editor_particleEditor2.onEditorToolWindowShow(windowName)` | Si la fenêtre affichée est particleEditor2, active l'aperçu, relit la liste des datablocks, crée le nœud d'aperçu et sélectionne le premier émetteur si aucun n'est choisi. *(interne)* *(hook)* | 497 |
-| `editor_particleEditor2.onExtensionUnloaded()` | Détruit l'aperçu au déchargement de l'extension. *(interne)* *(hook)* | 528 |
-| `editor_particleEditor2.onPreRender()` | Appelé avant le rendu ; dessine la grille d'aperçu (lignes debugDrawer limitées au masque de vue de l'aperçu) quand l'aperçu est actif. *(interne)* *(hook)* | 488 |
-| `editor_particleEditor2.onUpdate()` | Appelé à chaque frame ; si l'éditeur est actif et l'aperçu ouvert, met à jour la RenderView (taille, fov 60, matrice caméra). *(interne)* *(hook)* | 492 |
+| `editor_particleEditor2.onEditorGui()` | Called every frame by the editor. Opens the "Particle Editor 2" window (with menu bar) and draws the preview then the controls. *(internal)* *(hook)* | 463 |
+| `editor_particleEditor2.onEditorInitialized()` | Registers the window (900x600), the Experimental menu entry and creates the two generic inspectors (ParticleEmitterData / ParticleData). *(internal)* *(hook)* | 517 |
+| `editor_particleEditor2.onEditorToolWindowHide(windowName)` | If the hidden window is particleEditor2, disables the preview and destroys the preview node. *(internal)* *(hook)* | 507 |
+| `editor_particleEditor2.onEditorToolWindowShow(windowName)` | If the displayed window is particleEditor2, enables the preview, rereads the datablocks list, creates the preview node and selects the first emitter if none is chosen. *(internal)* *(hook)* | 497 |
+| `editor_particleEditor2.onExtensionUnloaded()` | Destroys the preview when the extension unloads. *(internal)* *(hook)* | 528 |
+| `editor_particleEditor2.onPreRender()` | Called before rendering; draws the preview grid (debugDrawer lines limited to the preview's view mask) when the preview is active. *(internal)* *(hook)* | 488 |
+| `editor_particleEditor2.onUpdate()` | Called every frame; if the editor is active and the preview open, updates the RenderView (size, fov 60, camera matrix). *(internal)* *(hook)* | 492 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_particleEditor2.onEditorToolWindowHide(windowName)`
 
-Si la fenêtre masquée est particleEditor2, désactive l'aperçu et détruit le nœud d'aperçu.
+If the hidden window is particleEditor2, disables the preview and destroys the preview node.
 
-- `windowName` (*string*) : Nom de la fenêtre d'outil masquée.
+- `windowName` (*string*) : Name of the hidden tool window.
 
 #### `editor_particleEditor2.onEditorToolWindowShow(windowName)`
 
-Si la fenêtre affichée est particleEditor2, active l'aperçu, relit la liste des datablocks, crée le nœud d'aperçu et sélectionne le premier émetteur si aucun n'est choisi.
+If the displayed window is particleEditor2, enables the preview, rereads the datablocks list, creates the preview node and selects the first emitter if none is chosen.
 
-- `windowName` (*string*) : Nom de la fenêtre d'outil affichée.
+- `windowName` (*string*) : Name of the displayed tool window.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `getDataBlockSet`, `getUniqueName`, `upcast`
 - `debugDrawer:` `currentRenderViewMaskClear`, `currentRenderViewMaskSet`, `drawLine`
@@ -46,4 +46,4 @@ Si la fenêtre affichée est particleEditor2, active l'aperçu, relit la liste d
 - `worldEditorCppApi.` `createObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/particleEditor2.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/particleEditor2.lua`.*

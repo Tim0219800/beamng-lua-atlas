@@ -1,12 +1,12 @@
 # `libs_timerwheel_timerwheel`
 
-*Fichier : `lua/common/libs/timerwheel/timerwheel.lua` · VM : Commun (GE + véhicule) · 305 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/timerwheel/timerwheel.lua` · VM: Common (GE + vehicle) · 305 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/timerwheel/timerwheel")`
+**Access:** `require("libs/timerwheel/timerwheel")`
 
-Bibliothèque tierce timerwheel (roue de minuteries, issue de l'écosystème Kong/lua-resty) : minuteries de type timeout avec insertion, annulation et exécution en O(1), au prix d'une précision limitée (taille d'un créneau). Le module ne fournit pas de boucle : l'appelant doit appeler `wheel:step()` régulièrement (au moins toutes les `precision` secondes), par exemple depuis onUpdate.
+Third-party library timerwheel (timer wheel, from the Kong/lua-resty ecosystem): timeout-type timers with O(1) insertion, cancellation and execution, at the cost of limited precision (size of a slot). The module provides no loop: the caller must call `wheel:step()` regularly (at least every `precision` seconds), for example from onUpdate.
 
-## Exemple
+## Example
 
 ```lua
 local timerwheel = require('libs/timerwheel/timerwheel')
@@ -17,41 +17,41 @@ wheel:step()
 wheel:cancel(id)
 ```
 
-## Remarques
+## Notes
 
-- Appeler `timerwheel.new(opts)` avec un point (pas `timerwheel:new`), sinon une assertion échoue.
-- Sans option `now`, la fonction d'horloge par défaut est `ngx.now` ou `socket.gettime` si le module `socket` est chargeable ; sinon aucune horloge n'existe et `new` échoue sur « expected 'now' to be a function ». Dans le jeu, passer `now` explicitement est le plus sûr.
-- Les callbacks sont exécutés dans un xpcall ; en cas d'erreur le gestionnaire par défaut écrit la pile sur stderr.
-- Les identifiants de minuteries sont des entiers négatifs uniques.
-- Un `set` avec un délai déjà écoulé s'exécute au prochain `step` (la position ne peut pas être dans le passé). Un callback qui crée un nouveau timer ne le voit pas exécuté dans le même créneau.
-- `wheel:peek` parcourt la roue : opération O(n).
+- Call `timerwheel.new(opts)` with a dot (not `timerwheel:new`), otherwise an assertion fails.
+- Without the `now` option, the default clock function is `ngx.now` or `socket.gettime` if the `socket` module can be loaded; otherwise no clock exists and `new` fails with "expected 'now' to be a function". In the game, passing `now` explicitly is safest.
+- Callbacks are run in an xpcall; on error the default handler writes the stack to stderr.
+- Timer identifiers are unique negative integers.
+- A `set` with an already elapsed delay runs at the next `step` (the position cannot be in the past). A callback that creates a new timer does not see it run in the same slot.
+- `wheel:peek` walks the wheel: O(n) operation.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_timerwheel_timerwheel.new(opts)` | Crée une roue de minuteries et renvoie l'objet `wheel` (méthodes step, count, set, cancel, peek). Valide les options par assertions. | 59 |
+| `libs_timerwheel_timerwheel.new(opts)` | Creates a timer wheel and returns the `wheel` object (methods step, count, set, cancel, peek). Validates the options with assertions. | 59 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_timerwheel_timerwheel.new(opts)`
 
-Crée une roue de minuteries et renvoie l'objet `wheel` (méthodes step, count, set, cancel, peek). Valide les options par assertions.
+Creates a timer wheel and returns the `wheel` object (methods step, count, set, cancel, peek). Validates the options with assertions.
 
-- `opts` (*table|nil*) : Options : precision (secondes par créneau, défaut 0.050), ringsize (créneaux par anneau, entier > 0, défaut 72000 = 1 h), now (fonction renvoyant l'heure en secondes), err_handler (gestionnaire d'erreur du xpcall).
-- **renvoie** : table Objet roue.
+- `opts` (*table|nil*) : Options: precision (seconds per slot, default 0.050), ringsize (slots per ring, integer > 0, default 72000 = 1 h), now (function returning the time in seconds), err_handler (xpcall error handler).
+- **returns**: table Wheel object.
 
-## Classe `wheel`
+## Class `wheel`
 
-Objet renvoyé par new(opts). Les méthodes s'appellent avec les deux-points.
+Object returned by new(opts). The methods are called with a colon.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `wheel:cancel(id)` | Annule une minuterie. | dyn |
-| `wheel:count()` | Nombre de minuteries en attente. | dyn |
-| `wheel:peek(max_ahead)` | Cherche la prochaine minuterie à échoir (parcours O(n)). | dyn |
-| `wheel:set(expire_in, cb, arg)` | Programme une minuterie qui appellera cb(arg) dans `expire_in` secondes. Lève une erreur si `cb` est nil. | dyn |
-| `wheel:step()` | Vérifie et exécute les minuteries échues. À appeler régulièrement par votre boucle (au moins toutes les `precision` secondes). | dyn |
+| `wheel:cancel(id)` | Cancels a timer. | dyn |
+| `wheel:count()` | Number of pending timers. | dyn |
+| `wheel:peek(max_ahead)` | Finds the next timer to expire (O(n) walk). | dyn |
+| `wheel:set(expire_in, cb, arg)` | Schedules a timer that will call cb(arg) in `expire_in` seconds. Raises an error if `cb` is nil. | dyn |
+| `wheel:step()` | Checks and runs the expired timers. To be called regularly by your loop (at least every `precision` seconds). | dyn |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/timerwheel/timerwheel.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/timerwheel/timerwheel.lua`.*

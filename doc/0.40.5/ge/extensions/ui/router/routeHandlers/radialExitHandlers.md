@@ -1,24 +1,24 @@
 # `ui_router_routeHandlers_radialExitHandlers`
 
-*Fichier : `lua/ge/extensions/ui/router/routeHandlers/radialExitHandlers.lua` · VM : Game Engine (GE) · 33 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/routeHandlers/radialExitHandlers.lua` · VM: Game Engine (GE) · 33 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_routeHandlers_radialExitHandlers` : `extensions.load("ui_router_routeHandlers_radialExitHandlers")`, puis la globale `ui_router_routeHandlers_radialExitHandlers`
+**Access:** extension `ui_router_routeHandlers_radialExitHandlers`: `extensions.load("ui_router_routeHandlers_radialExitHandlers")`, then the global `ui_router_routeHandlers_radialExitHandlers`
 
-Gestionnaire de retour du menu radial (accès rapide).
+Back handler of the radial menu (quick access).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_routeHandlers_radialExitHandlers.radialBackHandler()` | Retour dans le menu radial : appelle core_quickAccess.back() ; si cela ne renvoie rien de vrai, ferme le menu avec core_quickAccess.setEnabled(false, "", false). Échoue avec reason="quick_access_unavailable" si core_quickAccess est indisponible. | 7 |
+| `ui_router_routeHandlers_radialExitHandlers.radialBackHandler()` | Back in the radial menu: calls core_quickAccess.back(); if that returns nothing truthy, closes the menu with core_quickAccess.setEnabled(false, "", false). Fails with reason="quick_access_unavailable" if core_quickAccess is unavailable. | 7 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_routeHandlers_radialExitHandlers.radialBackHandler()`
 
-Retour dans le menu radial : appelle core_quickAccess.back() ; si cela ne renvoie rien de vrai, ferme le menu avec core_quickAccess.setEnabled(false, "", false). Échoue avec reason="quick_access_unavailable" si core_quickAccess est indisponible.
+Back in the radial menu: calls core_quickAccess.back(); if that returns nothing truthy, closes the menu with core_quickAccess.setEnabled(false, "", false). Fails with reason="quick_access_unavailable" if core_quickAccess is unavailable.
 
-- **renvoie** : table {result=true, success=true, data=nil} ou {result=false, success=false, reason="quick_access_unavailable"}.
+- **returns**: table {result=true, success=true, data=nil} or {result=false, success=false, reason="quick_access_unavailable"}.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/routeHandlers/radialExitHandlers.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/routeHandlers/radialExitHandlers.lua`.*

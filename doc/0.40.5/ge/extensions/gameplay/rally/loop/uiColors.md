@@ -1,12 +1,12 @@
 # `gameplay_rally_loop_uiColors`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/loop/uiColors.lua` · VM : Game Engine (GE) · 52 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/loop/uiColors.lua` · VM: Game Engine (GE) · 52 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_loop_uiColors` : `extensions.load("gameplay_rally_loop_uiColors")`, puis la globale `gameplay_rally_loop_uiColors`
+**Access:** extension `gameplay_rally_loop_uiColors`: `extensions.load("gameplay_rally_loop_uiColors")`, then the global `gameplay_rally_loop_uiColors`
 
-Palette de couleurs d'interface pour le rallye : une couleur de thème pour la boucle (loop) et une pour la spéciale (stage), avec une variante en mode NGRC. Les fonctions écrivent la couleur dans le champ theme d'une table cible (données envoyées à l'UI). Une couleur de thème globale peut surcharger toutes les autres.
+UI color palette for the rally: one theme color for the loop and one for the stage, with an NGRC mode variant. The functions write the color into the theme field of a target table (data sent to the UI). A global theme color can override all the others.
 
-## Exemple
+## Example
 
 ```lua
 local data = {}
@@ -14,47 +14,47 @@ gameplay_rally_loop_uiColors.updateForStage(data, false)
 -- data.theme == '#1f8fff'
 ```
 
-## Remarques
+## Notes
 
-- Couleurs : loop #009a1a, loopNgrc #00B890, stage #1f8fff, stageNgrc #1998b8.
-- Le override est normalisé : espaces retirés, # ajouté si absent, format #RRGGBB exigé ; sinon il vaut nil (donc désactivé).
+- Colors: loop #009a1a, loopNgrc #00B890, stage #1f8fff, stageNgrc #1998b8.
+- The override is normalized: spaces removed, # added if absent, #RRGGBB format required; otherwise it is nil (thus disabled).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_loop_uiColors.getThemeOverride()` | Renvoie l'override normalisé courant. | 30 |
-| `gameplay_rally_loop_uiColors.setThemeOverride(hexOrNil)` | Définit (ou efface avec nil / valeur invalide) une couleur de thème qui remplace les couleurs par défaut. | 26 |
-| `gameplay_rally_loop_uiColors.updateForLoop(target, isNgrcMode)` | Écrit target.theme avec la couleur de la boucle (ou de l'override s'il existe). Ne fait rien si target est nil. | 43 |
-| `gameplay_rally_loop_uiColors.updateForStage(target, isNgrcMode)` | Idem pour la couleur de spéciale. | 47 |
+| `gameplay_rally_loop_uiColors.getThemeOverride()` | Returns the current normalized override. | 30 |
+| `gameplay_rally_loop_uiColors.setThemeOverride(hexOrNil)` | Sets (or clears with nil / invalid value) a theme color that replaces the default colors. | 26 |
+| `gameplay_rally_loop_uiColors.updateForLoop(target, isNgrcMode)` | Writes target.theme with the loop color (or the override if it exists). Does nothing if target is nil. | 43 |
+| `gameplay_rally_loop_uiColors.updateForStage(target, isNgrcMode)` | Same for the stage color. | 47 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_loop_uiColors.getThemeOverride()`
 
-Renvoie l'override normalisé courant.
+Returns the current normalized override.
 
-- **renvoie** : string|nil Couleur '#RRGGBB' ou nil.
+- **returns**: string|nil '#RRGGBB' color or nil.
 
 #### `gameplay_rally_loop_uiColors.setThemeOverride(hexOrNil)`
 
-Définit (ou efface avec nil / valeur invalide) une couleur de thème qui remplace les couleurs par défaut.
+Sets (or clears with nil / invalid value) a theme color that replaces the default colors.
 
-- `hexOrNil` (*string|nil*) : Couleur hexadécimale, avec ou sans '#', 6 chiffres.
+- `hexOrNil` (*string|nil*) : Hexadecimal color, with or without '#', 6 digits.
 
 #### `gameplay_rally_loop_uiColors.updateForLoop(target, isNgrcMode)`
 
-Écrit target.theme avec la couleur de la boucle (ou de l'override s'il existe). Ne fait rien si target est nil.
+Writes target.theme with the loop color (or the override if it exists). Does nothing if target is nil.
 
-- `target` (*table|nil*) : Table à modifier.
-- `isNgrcMode` (*boolean*) : true pour la variante NGRC.
+- `target` (*table|nil*) : Table to modify.
+- `isNgrcMode` (*boolean*) : true for the NGRC variant.
 
 #### `gameplay_rally_loop_uiColors.updateForStage(target, isNgrcMode)`
 
-Idem pour la couleur de spéciale.
+Same for the stage color.
 
-- `target` (*table|nil*) : Table à modifier.
-- `isNgrcMode` (*boolean*) : true pour la variante NGRC.
+- `target` (*table|nil*) : Table to modify.
+- `isNgrcMode` (*boolean*) : true for the NGRC variant.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/loop/uiColors.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/loop/uiColors.lua`.*

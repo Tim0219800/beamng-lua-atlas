@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua",
+  "module": "Marqueur de checkpoint « portique hologramme » : deux piliers (portail gauche et droit), chacun avec un cône au sol, une colonne haute, un cylindre fin qui relie le sol au cône, plus une flèche flottante au centre qui pointe vers le checkpoint suivant. Les pieds des piliers sont posés sur le sol par lancer de rayon (Engine.castRay, collision des arbres de la forêt temporairement coupée). Le module renvoie un constructeur : require('scenario/raceMarkers/sideHologramMarker')(id) donne un objet de la classe C.",
+  "notes": [
+    "setToCheckpoint(wp) lit wp.pos, wp.radius (demi-écart entre piliers), wp.normal (défaut (1,1,0) normalisé), wp.nextPos (position du checkpoint suivant, oriente la flèche), wp.fadeNear, wp.fadeFar, wp.minAlpha.",
+    "Couleurs de pilier par mode : default bleu (0, 0.4, 1), next noir (piliers amincis à 0.75), start et lap vert (0.4, 1, 0.2), recovery jaune, final bleu (0.1, 0.3, 1), branch orange, hidden amincit à 0. Fondu de 0.8 s entre deux modes.",
+    "Le dernier checkpoint n'a pas de flèche orientée tant que wp.nextPos est absent : la flèche garde alors sa dernière orientation.",
+    "Le lancer de rayon part de 6 m au-dessus et descend de 25 m ; si le sol est plus de 1 m sous la position d'origine, la position d'origine est conservée (cas des ponts).",
+    "Les 9 objets créés sont des TSStatic nommés cylinder_marker_<rôle><id>, ajoutés à ScenarioObjectsGroup si présent.",
+    "La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim).",
+    "update référence self.leftPillarPos : si update est appelé avant setToCheckpoint (position nil), l'appel plante ; scenario_race_marker appelle toujours setToCheckpoint avant render."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Marqueur portique avec piliers, cônes, colonnes et flèche.",
+      "functions": {
+        "init": {"desc": "Constructeur : initialise l'état et les couleurs.", "params": {"id": {"type": "integer", "desc": "Identifiant unique."}}, "internal": true},
+        "update": {"desc": "Appel par image : balancement vertical, fondu de couleur, taille des colonnes selon la distance, orientation de la flèche vers nextPos.", "params": {"dt": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}}, "internal": true},
+        "setToCheckpoint": {"desc": "Calcule les positions au sol des deux piliers par lancers de rayon et place tous les objets.", "params": {"wp": {"type": "table", "desc": "{pos, radius, normal?, nextPos?, fadeNear?, fadeFar?, minAlpha?}."}}},
+        "setMode": {"desc": "Change de mode : affiche (sauf 'hidden') et lance le fondu.", "params": {"mode": {"type": "string", "desc": "default, next, start, lap, recovery, final, branch ou hidden."}}},
+        "setVisibility": {"desc": "Affiche ou cache les 9 objets.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
+        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
+        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
+        "createObject": {"desc": "Crée un TSStatic caché enregistré sous objectName et ajouté à ScenarioObjectsGroup.", "params": {"shapeName": {"type": "string", "desc": "Chemin du modèle."}, "objectName": {"type": "string", "desc": "Nom d'enregistrement."}}, "returns": [{"type": "table", "desc": "L'objet créé."}]},
+        "createMarkers": {"desc": "Supprime les anciens objets puis crée les 9 objets.", "params": {}},
+        "clearMarker": {"desc": "Supprime un objet à partir de son identifiant.", "params": {"id": {"type": "integer|nil", "desc": "Identifiant d'objet."}}},
+        "clearMarkers": {"desc": "Supprime tous les objets créés.", "params": {}}
+      }
+    }
+  }
+}

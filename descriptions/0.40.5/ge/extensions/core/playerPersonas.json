@@ -1,113 +1,244 @@
 {
   "path": "lua/ge/extensions/core/playerPersonas.lua",
-  "module": "Extension GE `core_playerPersonas` : identité visuelle des joueurs locaux en multi-joueur (multiseat). Une 'persona' regroupe un nom affiché, une icône, une couleur et éventuellement un véhicule favori, numérotées à partir de 1 (joueur 0 = persona 1). Les valeurs par défaut sont générées : nom traduit 'ui.multiseat.playerTag', icône tirée d'un pool (décalage aléatoire par session), couleur d'une palette de 8 teintes (calculées en OKLCH). Un moddeur s'en sert pour récupérer le nom, la couleur et l'icône d'un joueur local.",
+  "module": "GE extension `core_playerPersonas`: visual identity of local players in multiplayer (multiseat). A 'persona' groups a displayed name, an icon, a color and optionally a favorite vehicle, numbered from 1 (player 0 = persona 1). Default values are generated: translated name 'ui.multiseat.playerTag', icon drawn from a pool (random offset per session), color from a palette of 8 hues (computed in OKLCH). A modder uses it to get the name, color and icon of a local player.",
   "usage": "local n = core_playerPersonas.getNumberForPlayer(0) -- 1\nlocal p = core_playerPersonas.get(n)\nlog('I','', p.displayName .. ' ' .. p.colorHex .. ' ' .. p.icon)",
   "notes": [
-    "get(numéro) renvoie une table construite à la volée : { id ('local-persona:N' par défaut), number, displayName, icon, color = {r,g,b} (0..1), colorHex ('#rrggbb'), vehicleFallbackPaint (peinture de /vehicles/common/paintLibraries/common.paintLibrary.json la plus proche de la couleur, par distance RGB au carré), vehicle }. Modifier la table renvoyée ne change pas la persona stockée.",
-    "set(numéro, data) mémorise id, displayName, icon, color, vehicle ; un displayName égal au nom par défaut n'est pas stocké (pour suivre les changements de langue). Chaque modification incrémente la révision (getRevision), ce qui permet aux interfaces de détecter un changement.",
-    "Couleur 'solo' : applySoloColor remplace la couleur d'une persona par un gris (0.37, 0.37, 0.39) et recalcule colorHex et vehicleFallbackPaint ; utile quand il n'y a qu'un joueur.",
-    "Icônes autorisées (pool de 19) : explosion, hingeBroken, drag01, trafficCone, engine, mirrorInteriorMiddle, doorFrontDetached, vehicleTrunk, carCrash, barrelKnocker01, bollard, drift01, hazardLights, N2OHoriz, rangeboxHi, rallyHelmet, road, tire3Fourth, tireDeflated. Les icônes par défaut avancent d'un cran par numéro de persona, donc sans doublon tant qu'il y a moins de 19 joueurs.",
-    "Le module est un simple module de fonctions (pas de hooks)."
+    "get(number) returns a table built on the fly: { id ('local-persona:N' by default), number, displayName, icon, color = {r,g,b} (0..1), colorHex ('#rrggbb'), vehicleFallbackPaint (paint from /vehicles/common/paintLibraries/common.paintLibrary.json closest to the color, by squared RGB distance), vehicle }. Modifying the returned table does not change the stored persona.",
+    "set(number, data) stores id, displayName, icon, color, vehicle; a displayName equal to the default name is not stored (to follow language changes). Each modification increments the revision (getRevision), which lets UIs detect a change.",
+    "'Solo' color: applySoloColor replaces a persona's color with a gray (0.37, 0.37, 0.39) and recomputes colorHex and vehicleFallbackPaint; useful when there is only one player.",
+    "Allowed icons (pool of 19): explosion, hingeBroken, drag01, trafficCone, engine, mirrorInteriorMiddle, doorFrontDetached, vehicleTrunk, carCrash, barrelKnocker01, bollard, drift01, hazardLights, N2OHoriz, rangeboxHi, rallyHelmet, road, tire3Fourth, tireDeflated. Default icons advance one step per persona number, so there are no duplicates as long as there are fewer than 19 players.",
+    "The module is a simple module of functions (no hooks)."
   ],
   "fields": {},
   "functions": {
     "get": {
-      "desc": "Construit et renvoie la persona du numéro donné (valeurs enregistrées + valeurs par défaut).",
-      "params": {"personaNumber": {"type": "integer", "desc": "Numéro de persona >= 1."}},
-      "returns": [{"type": "table|nil", "desc": "Persona, ou nil si le numéro n'est pas valide."}],
+      "desc": "Builds and returns the persona of the given number (stored values + default values).",
+      "params": {
+        "personaNumber": {
+          "type": "integer",
+          "desc": "Persona number >= 1."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Persona, or nil if the number is not valid."
+        }
+      ],
       "internal": false
     },
     "preview": {
-      "desc": "Construit une persona purement par défaut (sans les valeurs enregistrées) pour un numéro (1 si invalide).",
-      "params": {"personaNumber": {"type": "integer|nil", "desc": "Numéro de persona."}},
-      "returns": [{"type": "table", "desc": "Persona par défaut."}],
+      "desc": "Builds a purely default persona (without the stored values) for a number (1 if invalid).",
+      "params": {
+        "personaNumber": {
+          "type": "integer|nil",
+          "desc": "Persona number."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Default persona."
+        }
+      ],
       "internal": false
     },
     "applySoloColor": {
-      "desc": "Remplace en place la couleur d'une persona par le gris 'solo' et recalcule colorHex et vehicleFallbackPaint.",
-      "params": {"persona": {"type": "table", "desc": "Persona renvoyée par get/preview."}},
-      "returns": [{"type": "table", "desc": "La même table (ou la valeur reçue si ce n'est pas une table)."}],
+      "desc": "Replaces in place a persona's color with the 'solo' gray and recomputes colorHex and vehicleFallbackPaint.",
+      "params": {
+        "persona": {
+          "type": "table",
+          "desc": "Persona returned by get/preview."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The same table (or the received value if it is not a table)."
+        }
+      ],
       "internal": false
     },
     "getNumberForPlayer": {
-      "desc": "Convertit un indice de joueur local (0, 1, 2...) en numéro de persona (indice + 1).",
-      "params": {"player": {"type": "integer", "desc": "Indice de joueur >= 0."}},
-      "returns": [{"type": "integer|nil", "desc": "Numéro, ou nil si invalide."}],
+      "desc": "Converts a local player index (0, 1, 2...) to a persona number (index + 1).",
+      "params": {
+        "player": {
+          "type": "integer",
+          "desc": "Player index >= 0."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Number, or nil if invalid."
+        }
+      ],
       "internal": false
     },
     "getDefaultDisplayName": {
-      "desc": "Nom par défaut : traduction de 'ui.multiseat.playerTag' avec { number }, sinon 'Player N' si core_locales n'est pas chargé.",
-      "params": {"personaNumber": {"type": "integer", "desc": "Numéro de persona."}},
-      "returns": [{"type": "string", "desc": "Nom par défaut."}],
+      "desc": "Default name: translation of 'ui.multiseat.playerTag' with { number }, otherwise 'Player N' if core_locales is not loaded.",
+      "params": {
+        "personaNumber": {
+          "type": "integer",
+          "desc": "Persona number."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Default name."
+        }
+      ],
       "internal": false
     },
     "getDefaultIcon": {
-      "desc": "Icône par défaut d'une persona, prise dans le pool avec un décalage aléatoire fixé pour la session.",
-      "params": {"personaNumber": {"type": "integer", "desc": "Numéro de persona."}},
-      "returns": [{"type": "string", "desc": "Nom d'icône."}],
+      "desc": "Default icon of a persona, taken from the pool with a random offset fixed for the session.",
+      "params": {
+        "personaNumber": {
+          "type": "integer",
+          "desc": "Persona number."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Icon name."
+        }
+      ],
       "internal": false
     },
     "getIconPool": {
-      "desc": "Renvoie une copie de la liste des icônes de persona disponibles.",
+      "desc": "Returns a copy of the list of available persona icons.",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Noms d'icônes."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Icon names."
+        }
+      ],
       "internal": false
     },
     "isPersonaIcon": {
-      "desc": "Indique si une icône fait partie du pool des icônes de persona.",
-      "params": {"icon": {"type": "string", "desc": "Nom d'icône."}},
-      "returns": [{"type": "boolean", "desc": "true si valide."}],
+      "desc": "Indicates whether an icon is part of the persona icon pool.",
+      "params": {
+        "icon": {
+          "type": "string",
+          "desc": "Icon name."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if valid."
+        }
+      ],
       "internal": false
     },
     "set": {
-      "desc": "Enregistre les données d'une persona (id, displayName, icon, color, vehicle) et incrémente la révision.",
+      "desc": "Stores a persona's data (id, displayName, icon, color, vehicle) and increments the revision.",
       "params": {
-        "personaNumber": {"type": "integer", "desc": "Numéro >= 1."},
-        "data": {"type": "table", "desc": "{ id, displayName, icon, color = {r,g,b}, vehicle }"}
+        "personaNumber": {
+          "type": "integer",
+          "desc": "Number >= 1."
+        },
+        "data": {
+          "type": "table",
+          "desc": "{ id, displayName, icon, color = {r,g,b}, vehicle }"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si enregistré, false si les arguments sont invalides."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if stored, false if the arguments are invalid."
+        }
+      ],
       "internal": false
     },
     "clear": {
-      "desc": "Efface les données enregistrées d'une persona (retour aux valeurs par défaut).",
-      "params": {"personaNumber": {"type": "integer", "desc": "Numéro de persona."}},
-      "returns": [{"type": "boolean", "desc": "true si quelque chose a été effacé."}],
+      "desc": "Clears a persona's stored data (back to default values).",
+      "params": {
+        "personaNumber": {
+          "type": "integer",
+          "desc": "Persona number."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if something was cleared."
+        }
+      ],
       "internal": false
     },
     "clearAll": {
-      "desc": "Efface toutes les personas enregistrées.",
+      "desc": "Clears all stored personas.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si quelque chose a été effacé."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if something was cleared."
+        }
+      ],
       "internal": false
     },
     "getRevision": {
-      "desc": "Renvoie le compteur de révision, incrémenté à chaque changement des personas.",
+      "desc": "Returns the revision counter, incremented on every persona change.",
       "params": {},
-      "returns": [{"type": "integer", "desc": "Révision courante."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Current revision."
+        }
+      ],
       "internal": false
     },
     "invalidate": {
-      "desc": "Incrémente la révision sans rien modifier, pour forcer les interfaces à se rafraîchir.",
+      "desc": "Increments the revision without changing anything, to force UIs to refresh.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "snapshot": {
-      "desc": "Copie profonde de l'état : { personas, revision }.",
+      "desc": "Deep copy of the state: { personas, revision }.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Instantané."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Snapshot."
+        }
+      ],
       "internal": false
     },
     "replaceAll": {
-      "desc": "Remplace toutes les personas par celles d'une table (clés = numéros, ou champ number de chaque élément) puis incrémente la révision.",
-      "params": {"values": {"type": "table", "desc": "Table de personas { id, displayName, icon, color, vehicle }."}},
-      "returns": [{"type": "boolean", "desc": "false si values n'est pas une table."}],
+      "desc": "Replaces all personas with those of a table (keys = numbers, or the number field of each element) then increments the revision.",
+      "params": {
+        "values": {
+          "type": "table",
+          "desc": "Table of personas { id, displayName, icon, color, vehicle }."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if values is not a table."
+        }
+      ],
       "internal": false
     },
     "restoreSnapshot": {
-      "desc": "Restaure l'état à partir d'un instantané de snapshot() et incrémente la révision.",
-      "params": {"value": {"type": "table", "desc": "Instantané avec champ personas."}},
-      "returns": [{"type": "boolean", "desc": "false si l'instantané est invalide."}],
+      "desc": "Restores the state from a snapshot() snapshot and increments the revision.",
+      "params": {
+        "value": {
+          "type": "table",
+          "desc": "Snapshot with a personas field."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the snapshot is invalid."
+        }
+      ],
       "internal": false
     }
   }

@@ -1,74 +1,74 @@
 # `gameplay_lowPerformance`
 
-*Fichier : `lua/ge/extensions/gameplay/lowPerformance.lua` · VM : Game Engine (GE) · 365 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/lowPerformance.lua` · VM: Game Engine (GE) · 365 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_lowPerformance` : `extensions.load("gameplay_lowPerformance")`, puis la globale `gameplay_lowPerformance`
+**Access:** extension `gameplay_lowPerformance`: `extensions.load("gameplay_lowPerformance")`, then the global `gameplay_lowPerformance`
 
-Détecteur de faible fréquence d'images en freeroam et en écran partagé (modes freeroam et multiseatGamemode uniquement ; missions, scénarios, carrière et tutoriels ne sont jamais contrôlés). Quand la moyenne lissée de FPS reste sous 25 pendant 5 s, il passe en état « low performance », affiche un toast d'avertissement et peut demander confirmation avant l'apparition d'un nouveau véhicule (confirmSpawn). Un moddeur qui spawne des véhicules peut passer par confirmSpawn pour respecter cet avertissement.
+Low frame rate detector in freeroam and split screen (only freeroam and multiseatGamemode modes; missions, scenarios, career and tutorials are never monitored). When the smoothed FPS average stays below 25 for 5 s, it switches to a "low performance" state, displays a warning toast and can ask for confirmation before a new vehicle spawns (confirmSpawn). A modder who spawns vehicles can go through confirmSpawn to respect this warning.
 
-## Remarques
+## Notes
 
-- Constantes : seuil 25 FPS, lissage 5 s, entrée après 5 s sous le seuil, sortie après 10 s au-dessus, période de grâce de 5 s, images de plus de 0.25 s ignorées (considérées comme des blocages de chargement).
-- La détection est désactivée (gate) si aucun niveau n'est chargé, mode non contrôlé, premier trajet (isFirstDriveActive), session OpenXR active, ou limite de FPS activée à une valeur <= 25.
-- Un échantillonnage n'a lieu que si l'écran n'est pas en fondu, le jeu n'est pas en pause, la fenêtre a le focus, l'éditeur est inactif et la route UI courante est « play » ; sinon la période de grâce redémarre.
-- Le réglage notifyLowPerformance (false) coupe toasts, avertissement de spawn et pause-notice, mais la détection continue ; en menu simple (Engine.UI.isSimpleMenu) les notifications restent toujours actives.
-- La fenêtre ImGui de debug (onDrawDebug) existe dans le fichier mais son affectation est commentée : elle est désactivée.
-- Les callbacks du dialogue de confirmation sont référencés par chaîne Lua (luaCallback), ce qui rend ces quatre fonctions appelables depuis l'UI.
+- Constants: threshold 25 FPS, smoothing 5 s, enter after 5 s below the threshold, exit after 10 s above, grace period of 5 s, frames longer than 0.25 s ignored (considered loading stalls).
+- Detection is disabled (gate) if no level is loaded, mode not monitored, first drive (isFirstDriveActive), active OpenXR session, or FPS limit enabled at a value <= 25.
+- Sampling only happens if the screen is not fading, the game is not paused, the window has focus, the editor is inactive and the current UI route is "play"; otherwise the grace period restarts.
+- The notifyLowPerformance setting (false) turns off toasts, spawn warning and pause notice, but detection continues; in simple menu (Engine.UI.isSimpleMenu) notifications always stay active.
+- The ImGui debug window (onDrawDebug) exists in the file but its assignment is commented out: it is disabled.
+- The confirmation dialog's callbacks are referenced by Lua string (luaCallback), which makes these four functions callable from the UI.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_lowPerformance.cancelPendingSpawn()` | Abandonne la fonction de spawn en attente (bouton Annuler). | 125 |
-| `gameplay_lowPerformance.confirmPendingSpawn()` | Exécute la fonction de spawn en attente, si elle existe (bouton Continuer). | 119 |
-| `gameplay_lowPerformance.confirmSpawn(spawnFn)` | Exécute spawnFn directement, sauf si l'état de faible performance est actif, l'avertissement pas encore montré pour cet épisode et les notifications activées : dans ce cas affiche un dialogue de confirmation (Annuler / Ne plus afficher / Continuer) et diffère spawnFn. | 93 |
-| `gameplay_lowPerformance.getPauseNotice()` | Renvoie les textes traduits à afficher dans le menu pause quand la faible performance est active et les notifications autorisées. | 141 |
-| `gameplay_lowPerformance.isLowPerformance()` | Indique si le jeu est actuellement considéré en faible performance, et si la détection est encore applicable (gate actif). | 88 |
-| `gameplay_lowPerformance.muteAndConfirmPendingSpawn()` | Désactive les notifications (réglage notifyLowPerformance = false), affiche un toast d'information puis exécute le spawn en attente. | 129 |
-| `gameplay_lowPerformance.onScreenFadeState(state)` | Hook d'état du fondu d'écran : l'échantillonnage est suspendu tant que l'état n'est pas 3 (fondu terminé). *(interne)* *(hook)* | 196 |
-| `gameplay_lowPerformance.onUpdate(dtReal, dtSim, dtRaw)` | Hook de mise à jour chaque frame : vérifie périodiquement (1 s) le gate, gère la période de grâce, lisse les FPS et bascule l'état de faible performance. *(interne)* *(hook)* | 151 |
-| `gameplay_lowPerformance.onVehicleSpawned()` | Hook d'apparition d'un véhicule : redémarre la période de grâce (le spawn fait chuter temporairement les FPS). *(interne)* *(hook)* | 192 |
+| `gameplay_lowPerformance.cancelPendingSpawn()` | Abandons the pending spawn function (Cancel button). | 125 |
+| `gameplay_lowPerformance.confirmPendingSpawn()` | Executes the pending spawn function, if any (Continue button). | 119 |
+| `gameplay_lowPerformance.confirmSpawn(spawnFn)` | Executes spawnFn directly, unless the low performance state is active, the warning has not yet been shown for this episode and notifications are enabled: in that case displays a confirmation dialog (Cancel / Don't show again / Continue) and defers spawnFn. | 93 |
+| `gameplay_lowPerformance.getPauseNotice()` | Returns the translated texts to display in the pause menu when low performance is active and notifications are allowed. | 141 |
+| `gameplay_lowPerformance.isLowPerformance()` | Returns whether the game is currently considered in low performance, and whether detection is still applicable (gate active). | 88 |
+| `gameplay_lowPerformance.muteAndConfirmPendingSpawn()` | Disables notifications (notifyLowPerformance setting = false), displays an info toast then executes the pending spawn. | 129 |
+| `gameplay_lowPerformance.onScreenFadeState(state)` | Screen fade state hook: sampling is suspended as long as the state is not 3 (fade finished). *(internal)* *(hook)* | 196 |
+| `gameplay_lowPerformance.onUpdate(dtReal, dtSim, dtRaw)` | Per-frame update hook: periodically (1 s) checks the gate, manages the grace period, smooths the FPS and toggles the low performance state. *(internal)* *(hook)* | 151 |
+| `gameplay_lowPerformance.onVehicleSpawned()` | Vehicle spawn hook: restarts the grace period (spawning temporarily drops the FPS). *(internal)* *(hook)* | 192 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_lowPerformance.confirmSpawn(spawnFn)`
 
-Exécute spawnFn directement, sauf si l'état de faible performance est actif, l'avertissement pas encore montré pour cet épisode et les notifications activées : dans ce cas affiche un dialogue de confirmation (Annuler / Ne plus afficher / Continuer) et diffère spawnFn.
+Executes spawnFn directly, unless the low performance state is active, the warning has not yet been shown for this episode and notifications are enabled: in that case displays a confirmation dialog (Cancel / Don't show again / Continue) and defers spawnFn.
 
-- `spawnFn` (*function*) : Fonction qui effectue le spawn.
-- **renvoie** : any Résultat de spawnFn si exécutée immédiatement (nil si elle ne renvoie rien), ou false tant que le joueur doit décider.
+- `spawnFn` (*function*) : Function that performs the spawn.
+- **returns**: any Result of spawnFn if executed immediately (nil if it returns nothing), or false while the player has to decide.
 
 #### `gameplay_lowPerformance.getPauseNotice()`
 
-Renvoie les textes traduits à afficher dans le menu pause quand la faible performance est active et les notifications autorisées.
+Returns the translated texts to display in the pause menu when low performance is active and notifications are allowed.
 
-- **renvoie** : table|nil {notice, hint, infoTitle, infoMessage} ou nil.
+- **returns**: table|nil {notice, hint, infoTitle, infoMessage} or nil.
 
 #### `gameplay_lowPerformance.isLowPerformance()`
 
-Indique si le jeu est actuellement considéré en faible performance, et si la détection est encore applicable (gate actif).
+Returns whether the game is currently considered in low performance, and whether detection is still applicable (gate active).
 
-- **renvoie** : boolean true si faible performance.
+- **returns**: boolean true if low performance.
 
 #### `gameplay_lowPerformance.onScreenFadeState(state)`
 
-Hook d'état du fondu d'écran : l'échantillonnage est suspendu tant que l'état n'est pas 3 (fondu terminé).
+Screen fade state hook: sampling is suspended as long as the state is not 3 (fade finished).
 
-- `state` (*integer*) : État du fondu ; 3 = terminé.
+- `state` (*integer*) : Fade state; 3 = finished.
 
 #### `gameplay_lowPerformance.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook de mise à jour chaque frame : vérifie périodiquement (1 s) le gate, gère la période de grâce, lisse les FPS et bascule l'état de faible performance.
+Per-frame update hook: periodically (1 s) checks the gate, manages the grace period, smooths the FPS and toggles the low performance state.
 
-- `dtReal` (*number*) : Delta temps réel (non utilisé).
-- `dtSim` (*number*) : Delta temps de simulation (non utilisé).
-- `dtRaw` (*number*) : Delta temps brut en secondes, utilisé pour le chronométrage et les FPS.
+- `dtReal` (*number*) : Real-time delta (unused).
+- `dtSim` (*number*) : Simulation delta time (unused).
+- `dtRaw` (*number*) : Raw delta time in seconds, used for timing and FPS.
 
-**Évènements UI (guihooks.trigger) :** `showConfirmationDialog`, `toastrMsg`
+**UI events (guihooks.trigger):** `showConfirmationDialog`, `toastrMsg`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `isProgramFocused`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/lowPerformance.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/lowPerformance.lua`.*

@@ -1,179 +1,179 @@
 # `core_repository`
 
-*Fichier : `lua/ge/extensions/core/repository.lua` · VM : Game Engine (GE) · 655 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/repository.lua` · VM: Game Engine (GE) · 655 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_repository` : `extensions.load("core_repository")`, puis la globale `core_repository`
+**Access:** extension `core_repository`: `extensions.load("core_repository")`, then the global `core_repository`
 
-Client du dépôt de mods en ligne (repository BeamNG) côté GE. Il interroge l'API (core_online.apiCall, routes s1/v4 et s2/v4), gère les abonnements aux mods, tient une file de téléchargement/mise à jour (mods installés dans /mods/repo/) et pousse l'état à l'UI par guihooks (ModListReceived, ModReceived, UpdateQueueState, downloadStatesChanged, etc.). Il dépend de core_modmanager pour monter ou supprimer les mods.
+Client of the online mod repository (BeamNG repository) on the GE side. It queries the API (core_online.apiCall, routes s1/v4 and s2/v4), manages mod subscriptions, keeps a download/update queue (mods installed in /mods/repo/) and pushes the state to the UI through guihooks (ModListReceived, ModReceived, UpdateQueueState, downloadStatesChanged, etc.). It depends on core_modmanager to mount or delete mods.
 
-## Exemple
+## Example
 
 ```lua
--- depuis l'UI JS : bngApi.engineLua('extensions.core_repository.requestMods(' + bngApi.serializeToLua({query='drift'}) + ')')
+-- from the JS UI: bngApi.engineLua('extensions.core_repository.requestMods(' + bngApi.serializeToLua({query='drift'}) + ')')
 core_repository.modSubscribe('1234')
 ```
 
-## Remarques
+## Notes
 
-- Les résultats des requêtes ne sont pas retournés : ils sont envoyés à l'UI par guihooks.trigger (requestMods -> ModListReceived, requestMod -> ModReceived sauf si un callback est fourni, requestMyMods -> MyModsReceived).
-- Les pages de l'UI commencent à 1 : requestMods et requestMyMods envoient page - 1 au serveur.
-- Si le réglage onlineFeatures n'est pas 'enable', requestMod passe en mode hors ligne (requestModOffline, données locales du mod manager).
-- File de mises à jour : chaque élément a un état (waiting, updating, downloading, downloaded, done). Le nombre de téléchargements simultanés vient du réglage modNumParallelDownload (3 par défaut). Quand tout est fini, le serveur est informé (s2/v4/modUpdateSuccess) et UpdateFinished est émis.
-- modSubscribe consigne aussi un opt-out dans /settings/cloud/mods-optout.json ; modUnsubscribe y inscrit le mod (désabonnement volontaire). Si le gestionnaire de mods n'est pas prêt ou qu'on n'est pas authentifié, l'abonnement est mis en attente (subList) puis rejoué par runSubscription.
-- BUG : M.requestSubscriptions = requestSubscriptions référence une variable locale non définie, donc le champ vaut nil.
-- BUG probable : dans installMod, 'completeCallback' est une variable globale jamais définie dans ce fichier ; son test 'if completeCallback' est toujours faux. De plus requestMyMods utilise v.id pour 'pending' là où requestMods utilise v.tagid.
-- Dans installMod, un fichier du même nom à la racine /mods/ est supprimé avant le téléchargement.
+- Request results are not returned: they are sent to the UI by guihooks.trigger (requestMods -> ModListReceived, requestMod -> ModReceived unless a callback is provided, requestMyMods -> MyModsReceived).
+- UI pages start at 1: requestMods and requestMyMods send page - 1 to the server.
+- If the onlineFeatures setting is not 'enable', requestMod switches to offline mode (requestModOffline, local mod manager data).
+- Update queue: each element has a state (waiting, updating, downloading, downloaded, done). The number of simultaneous downloads comes from the modNumParallelDownload setting (3 by default). When everything is finished, the server is informed (s2/v4/modUpdateSuccess) and UpdateFinished is emitted.
+- modSubscribe also records an opt-out in /settings/cloud/mods-optout.json; modUnsubscribe registers the mod there (voluntary unsubscription). If the mod manager is not ready or the user is not authenticated, the subscription is put on hold (subList) then replayed by runSubscription.
+- BUG: M.requestSubscriptions = requestSubscriptions references an undefined local variable, so the field is nil.
+- Probable BUG: in installMod, 'completeCallback' is a global variable never defined in this file; its test 'if completeCallback' is always false. Also requestMyMods uses v.id for 'pending' where requestMods uses v.tagid.
+- In installMod, a file with the same name at the root of /mods/ is deleted before the download.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_repository.addUpdateQueue(data)` | Ajoute un mod à la file de téléchargement (sans doublon par id). Complète les champs : dirname '/mods/repo/', outfile, uri '<id>/<ver>/<filename>', icon, état initial (updating pour une subscription, waiting sinon). | 486 |
-| `core_repository.changeStateUpdateQueue(fname, nstate)` | Change l'état d'un élément de la file (par nom de fichier), puis notifie l'UI (UpdateQueueState et RepoModChangeStatus). | 139 |
-| `core_repository.installMod(uri, filename, localPath, callback)` | Télécharge un mod (s1/v4/download/mods/<uri>) vers localPath..filename et gère la fin : erreurs (notification toastr), suppression d'un ancien fichier du même mod hors du dossier repo, mise à jour de la file, rapport au serveur et lancement du téléchargement suivant. | 152 |
-| `core_repository.modSubscribe(mod_id, useOptOut)` | Abonne l'utilisateur à un mod : l'ajoute à la file en tant que 'subscription' et lance le téléchargement. Peut être ignoré si l'utilisateur s'est désabonné volontairement (useOptOut). | 388 |
-| `core_repository.modUnsubscribe(mod_id)` | Désabonne l'utilisateur : inscrit le mod dans la liste d'opt-out, le retire de la file (refusé s'il est en téléchargement), supprime le mod local via core_modmanager.deleteMod et prévient le serveur (s2/v4/modUnsubscribe) si besoin. | 441 |
-| `core_repository.onModManagerReady()` | Hook appelé quand le gestionnaire de mods est prêt : rejoue les abonnements en attente, puis applique les ordres de repoCmd (installer, supprimer, désactiver des mods) et les efface. *(interne)* *(hook)* | 567 |
-| `core_repository.onOnlineStateChanged(connected)` | Hook appelé quand l'état de connexion change : appelle runSubscription. *(interne)* *(hook)* | 621 |
-| `core_repository.onUpdate(dt)` | Hook de mise à jour : si la progression des téléchargements a changé, envoie 'downloadStatesChanged' à l'UI. *(interne)* *(hook)* | 46 |
-| `core_repository.requestMod(mod_id, callback)` | Demande les détails d'un mod (s1/v4/getMod/<id>). Résultat passé au callback s'il est fourni, sinon envoyé par 'ModReceived'. Hors ligne ou en cas d'échec avec des données locales, utilise requestModOffline. | 324 |
-| `core_repository.requestModOffline(mod_id)` | Envoie à l'UI ('ModReceived') les informations locales d'un mod installé ; ok = 1 si trouvé, 0 sinon. | 299 |
-| `core_repository.requestMods(query, order_by, order, page, categories)` | Demande la liste des mods au serveur (s1/v4/getMods). Chaque entrée est enrichie de pending, unpacked et downState. Résultat envoyé à l'UI par 'ModListReceived'. | 262 |
-| `core_repository.requestMyMods(query, order_by, order, page, categories)` | Comme requestMods mais limité aux mods de l'utilisateur (own = 1). Résultat envoyé par 'MyModsReceived'. | 352 |
-| `core_repository.runSubscription()` | Rejoue les abonnements mis en attente si le gestionnaire de mods est prêt et si l'utilisateur est authentifié. | 612 |
-| `core_repository.setRepoCmd(cmddata)` | Mémorise les ordres du serveur (forceInstall, forceRemove, forceDisable) appliqués à onModManagerReady. | 559 |
-| `core_repository.setRepoMsg(data)` | Mémorise le message du dépôt, inclus ensuite dans les listes envoyées à l'UI. | 555 |
-| `core_repository.setrepoAutomationMsg(data)` | Mémorise un message d'automatisation, inclus dans les listes envoyées à l'UI (automationMsg). | 563 |
-| `core_repository.uiShowMod(modId)` | Demande à l'UI d'afficher la fiche d'un mod (évènement 'ShowMod'). | 605 |
-| `core_repository.uiShowRepo()` | Affiche le menu des mods (état UI 'menu.mods.local') après MenuHide. | 600 |
-| `core_repository.uiUpdateQueue()` | Envoie à l'UI 'UpdateQueueState' avec les listes updatingList, doneList, missingList et le drapeau updating. | 53 |
-| `core_repository.updateAllMissing()` | Passe tous les éléments d'action 'missing' en mise à jour et relance la file. | 542 |
-| `core_repository.updateAllMods()` | Désactive le montage auto, marque tous les éléments d'action 'update' pour mise à jour et relance la file. | 516 |
-| `core_repository.updateOneMod(id)` | Met à jour un seul mod de la file. | 529 |
+| `core_repository.addUpdateQueue(data)` | Adds a mod to the download queue (no duplicates by id). Fills in the fields: dirname '/mods/repo/', outfile, uri '<id>/<ver>/<filename>', icon, initial state (updating for a subscription, waiting otherwise). | 486 |
+| `core_repository.changeStateUpdateQueue(fname, nstate)` | Changes the state of a queue element (by file name), then notifies the UI (UpdateQueueState and RepoModChangeStatus). | 139 |
+| `core_repository.installMod(uri, filename, localPath, callback)` | Downloads a mod (s1/v4/download/mods/<uri>) to localPath..filename and handles the end: errors (toastr notification), deletion of an old file of the same mod outside the repo folder, queue update, report to the server and start of the next download. | 152 |
+| `core_repository.modSubscribe(mod_id, useOptOut)` | Subscribes the user to a mod: adds it to the queue as a 'subscription' and starts the download. May be ignored if the user voluntarily unsubscribed (useOptOut). | 388 |
+| `core_repository.modUnsubscribe(mod_id)` | Unsubscribes the user: registers the mod in the opt-out list, removes it from the queue (refused if it is downloading), deletes the local mod via core_modmanager.deleteMod and notifies the server (s2/v4/modUnsubscribe) if needed. | 441 |
+| `core_repository.onModManagerReady()` | Hook called when the mod manager is ready: replays the pending subscriptions, then applies the repoCmd orders (install, delete, disable mods) and clears them. *(internal)* *(hook)* | 567 |
+| `core_repository.onOnlineStateChanged(connected)` | Hook called when the connection state changes: calls runSubscription. *(internal)* *(hook)* | 621 |
+| `core_repository.onUpdate(dt)` | Update hook: if the download progress has changed, sends 'downloadStatesChanged' to the UI. *(internal)* *(hook)* | 46 |
+| `core_repository.requestMod(mod_id, callback)` | Requests a mod's details (s1/v4/getMod/<id>). Result passed to the callback if provided, otherwise sent via 'ModReceived'. Offline or on failure with local data, uses requestModOffline. | 324 |
+| `core_repository.requestModOffline(mod_id)` | Sends to the UI ('ModReceived') the local information of an installed mod; ok = 1 if found, 0 otherwise. | 299 |
+| `core_repository.requestMods(query, order_by, order, page, categories)` | Requests the mod list from the server (s1/v4/getMods). Each entry is enriched with pending, unpacked and downState. Result sent to the UI via 'ModListReceived'. | 262 |
+| `core_repository.requestMyMods(query, order_by, order, page, categories)` | Like requestMods but limited to the user's mods (own = 1). Result sent via 'MyModsReceived'. | 352 |
+| `core_repository.runSubscription()` | Replays the pending subscriptions if the mod manager is ready and the user is authenticated. | 612 |
+| `core_repository.setRepoCmd(cmddata)` | Stores the server's orders (forceInstall, forceRemove, forceDisable) applied at onModManagerReady. | 559 |
+| `core_repository.setRepoMsg(data)` | Stores the repository message, then included in the lists sent to the UI. | 555 |
+| `core_repository.setrepoAutomationMsg(data)` | Stores an automation message, included in the lists sent to the UI (automationMsg). | 563 |
+| `core_repository.uiShowMod(modId)` | Asks the UI to display a mod's page ('ShowMod' event). | 605 |
+| `core_repository.uiShowRepo()` | Displays the mods menu (UI state 'menu.mods.local') after MenuHide. | 600 |
+| `core_repository.uiUpdateQueue()` | Sends 'UpdateQueueState' to the UI with the lists updatingList, doneList, missingList and the updating flag. | 53 |
+| `core_repository.updateAllMissing()` | Sets all elements with action 'missing' to update and restarts the queue. | 542 |
+| `core_repository.updateAllMods()` | Disables auto-mount, marks all elements with action 'update' for update and restarts the queue. | 516 |
+| `core_repository.updateOneMod(id)` | Updates a single mod of the queue. | 529 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_repository.addUpdateQueue(data)`
 
-Ajoute un mod à la file de téléchargement (sans doublon par id). Complète les champs : dirname '/mods/repo/', outfile, uri '<id>/<ver>/<filename>', icon, état initial (updating pour une subscription, waiting sinon).
+Adds a mod to the download queue (no duplicates by id). Fills in the fields: dirname '/mods/repo/', outfile, uri '<id>/<ver>/<filename>', icon, initial state (updating for a subscription, waiting otherwise).
 
-- `data` (*table*) : Données du mod : id, ver, filename, reason (ex. 'subscription').
+- `data` (*table*) : Mod data: id, ver, filename, reason (e.g. 'subscription').
 
 #### `core_repository.changeStateUpdateQueue(fname, nstate)`
 
-Change l'état d'un élément de la file (par nom de fichier), puis notifie l'UI (UpdateQueueState et RepoModChangeStatus).
+Changes the state of a queue element (by file name), then notifies the UI (UpdateQueueState and RepoModChangeStatus).
 
-- `fname` (*string*) : Nom de fichier du mod.
-- `nstate` (*string*) : Nouvel état (waiting, updating, downloading, downloaded, done).
+- `fname` (*string*) : File name of the mod.
+- `nstate` (*string*) : New state (waiting, updating, downloading, downloaded, done).
 
 #### `core_repository.installMod(uri, filename, localPath, callback)`
 
-Télécharge un mod (s1/v4/download/mods/<uri>) vers localPath..filename et gère la fin : erreurs (notification toastr), suppression d'un ancien fichier du même mod hors du dossier repo, mise à jour de la file, rapport au serveur et lancement du téléchargement suivant.
+Downloads a mod (s1/v4/download/mods/<uri>) to localPath..filename and handles the end: errors (toastr notification), deletion of an old file of the same mod outside the repo folder, queue update, report to the server and start of the next download.
 
-- `uri` (*string*) : '<id>/<version>/<nomdefichier>'.
-- `filename` (*string*) : Nom du fichier zip à écrire.
-- `localPath` (*string|nil*) : Dossier cible, '/mods/repo/' par défaut.
-- `callback` (*function|nil*) : Appelé avec la réponse de téléchargement si le code HTTP est 200.
+- `uri` (*string*) : '<id>/<version>/<filename>'.
+- `filename` (*string*) : Name of the zip file to write.
+- `localPath` (*string|nil*) : Target folder, '/mods/repo/' by default.
+- `callback` (*function|nil*) : Called with the download response if the HTTP code is 200.
 
 #### `core_repository.modSubscribe(mod_id, useOptOut)`
 
-Abonne l'utilisateur à un mod : l'ajoute à la file en tant que 'subscription' et lance le téléchargement. Peut être ignoré si l'utilisateur s'est désabonné volontairement (useOptOut).
+Subscribes the user to a mod: adds it to the queue as a 'subscription' and starts the download. May be ignored if the user voluntarily unsubscribed (useOptOut).
 
-- `mod_id` (*string*) : Identifiant du mod.
-- `useOptOut` (*boolean|nil*) : Si vrai, ignore la demande si le mod figure dans la liste d'opt-out.
+- `mod_id` (*string*) : Mod identifier.
+- `useOptOut` (*boolean|nil*) : If true, ignores the request if the mod is in the opt-out list.
 
 #### `core_repository.modUnsubscribe(mod_id)`
 
-Désabonne l'utilisateur : inscrit le mod dans la liste d'opt-out, le retire de la file (refusé s'il est en téléchargement), supprime le mod local via core_modmanager.deleteMod et prévient le serveur (s2/v4/modUnsubscribe) si besoin.
+Unsubscribes the user: registers the mod in the opt-out list, removes it from the queue (refused if it is downloading), deletes the local mod via core_modmanager.deleteMod and notifies the server (s2/v4/modUnsubscribe) if needed.
 
-- `mod_id` (*string*) : Identifiant du mod.
+- `mod_id` (*string*) : Mod identifier.
 
 #### `core_repository.onOnlineStateChanged(connected)`
 
-Hook appelé quand l'état de connexion change : appelle runSubscription.
+Hook called when the connection state changes: calls runSubscription.
 
-- `connected` (*boolean*) : Non utilisé.
+- `connected` (*boolean*) : Not used.
 
 #### `core_repository.onUpdate(dt)`
 
-Hook de mise à jour : si la progression des téléchargements a changé, envoie 'downloadStatesChanged' à l'UI.
+Update hook: if the download progress has changed, sends 'downloadStatesChanged' to the UI.
 
-- `dt` (*number*) : Durée de l'image (non utilisée).
+- `dt` (*number*) : Frame duration (unused).
 
 #### `core_repository.requestMod(mod_id, callback)`
 
-Demande les détails d'un mod (s1/v4/getMod/<id>). Résultat passé au callback s'il est fourni, sinon envoyé par 'ModReceived'. Hors ligne ou en cas d'échec avec des données locales, utilise requestModOffline.
+Requests a mod's details (s1/v4/getMod/<id>). Result passed to the callback if provided, otherwise sent via 'ModReceived'. Offline or on failure with local data, uses requestModOffline.
 
-- `mod_id` (*string*) : Identifiant du mod sur le dépôt.
-- `callback` (*function|nil*) : Reçoit request.responseData.
+- `mod_id` (*string*) : Mod identifier on the repository.
+- `callback` (*function|nil*) : Receives request.responseData.
 
 #### `core_repository.requestModOffline(mod_id)`
 
-Envoie à l'UI ('ModReceived') les informations locales d'un mod installé ; ok = 1 si trouvé, 0 sinon.
+Sends to the UI ('ModReceived') the local information of an installed mod; ok = 1 if found, 0 otherwise.
 
-- `mod_id` (*string*) : Identifiant du mod.
+- `mod_id` (*string*) : Mod identifier.
 
 #### `core_repository.requestMods(query, order_by, order, page, categories)`
 
-Demande la liste des mods au serveur (s1/v4/getMods). Chaque entrée est enrichie de pending, unpacked et downState. Résultat envoyé à l'UI par 'ModListReceived'.
+Requests the mod list from the server (s1/v4/getMods). Each entry is enriched with pending, unpacked and downState. Result sent to the UI via 'ModListReceived'.
 
-- `query` (*string|nil*) : Texte de recherche.
-- `order_by` (*string|nil*) : Champ de tri.
-- `order` (*string|nil*) : Sens du tri.
-- `page` (*integer*) : Numéro de page, à partir de 1.
-- `categories` (*any*) : Filtre de catégories (transmis tel quel).
+- `query` (*string|nil*) : Search text.
+- `order_by` (*string|nil*) : Sort field.
+- `order` (*string|nil*) : Sort direction.
+- `page` (*integer*) : Page number, starting at 1.
+- `categories` (*any*) : Category filter (passed as is).
 
 #### `core_repository.requestMyMods(query, order_by, order, page, categories)`
 
-Comme requestMods mais limité aux mods de l'utilisateur (own = 1). Résultat envoyé par 'MyModsReceived'.
+Like requestMods but limited to the user's mods (own = 1). Result sent via 'MyModsReceived'.
 
-- `query` (*string|nil*) : Recherche.
-- `order_by` (*string|nil*) : Champ de tri.
-- `order` (*string|nil*) : Sens du tri.
-- `page` (*integer*) : Numéro de page, à partir de 1.
-- `categories` (*any*) : Filtre de catégories.
+- `query` (*string|nil*) : Search.
+- `order_by` (*string|nil*) : Sort field.
+- `order` (*string|nil*) : Sort direction.
+- `page` (*integer*) : Page number, starting at 1.
+- `categories` (*any*) : Category filter.
 
 #### `core_repository.setRepoCmd(cmddata)`
 
-Mémorise les ordres du serveur (forceInstall, forceRemove, forceDisable) appliqués à onModManagerReady.
+Stores the server's orders (forceInstall, forceRemove, forceDisable) applied at onModManagerReady.
 
-- `cmddata` (*table*) : Listes d'identifiants de mods par clé.
+- `cmddata` (*table*) : Lists of mod identifiers by key.
 
 #### `core_repository.setRepoMsg(data)`
 
-Mémorise le message du dépôt, inclus ensuite dans les listes envoyées à l'UI.
+Stores the repository message, then included in the lists sent to the UI.
 
 - `data` (*table*) : Message.
 
 #### `core_repository.setrepoAutomationMsg(data)`
 
-Mémorise un message d'automatisation, inclus dans les listes envoyées à l'UI (automationMsg).
+Stores an automation message, included in the lists sent to the UI (automationMsg).
 
 - `data` (*table*) : Message.
 
 #### `core_repository.uiShowMod(modId)`
 
-Demande à l'UI d'afficher la fiche d'un mod (évènement 'ShowMod').
+Asks the UI to display a mod's page ('ShowMod' event).
 
-- `modId` (*string*) : Identifiant du mod.
+- `modId` (*string*) : Mod identifier.
 
 #### `core_repository.updateOneMod(id)`
 
-Met à jour un seul mod de la file.
+Updates a single mod of the queue.
 
-- `id` (*string*) : Identifiant du mod.
+- `id` (*string*) : Mod identifier.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `requestSubscriptions` | nil | Vaut nil : référence à une variable non définie dans le fichier. ⚠ référence `requestSubscriptions` non définie dans le fichier (vaut probablement nil) |
+| `requestSubscriptions` | nil | Is nil: reference to a variable not defined in the file. ⚠ reference `requestSubscriptions` not defined in the file (probably nil) |
 
-**Évènements UI (guihooks.trigger) :** `MenuHide`, `ModDownloaded`, `ModListReceived`, `ModReceived`, `ModSubscribed`, `ModUnsubscribed`, `MyModsReceived`, `RepoModChangeStatus`, `ShowMod`, `UpdateFinished`, `UpdateQueueState`, `downloadStateChanged`, `downloadStatesChanged`, `repoError`, `toastrMsg`
+**UI events (guihooks.trigger):** `MenuHide`, `ModDownloaded`, `ModListReceived`, `ModReceived`, `ModSubscribed`, `ModUnsubscribed`, `MyModsReceived`, `RepoModChangeStatus`, `ShowMod`, `UpdateFinished`, `UpdateQueueState`, `downloadStateChanged`, `downloadStatesChanged`, `repoError`, `toastrMsg`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `removeFile`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/repository.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/repository.lua`.*

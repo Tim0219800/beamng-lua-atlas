@@ -1,21 +1,31 @@
 {
   "path": "lua/ge/extensions/scenario/raceDebug.lua",
-  "module": "Aide de débogage visuel pour les courses de scénario : calcule le chemin entre les waypoints de lapConfig (map.getPath) et le dessine avec debugDrawer (sphères rouges aux waypoints, prismes verts le long de la route, rouges quand le segment est direct). N'est actif que si l'éditeur est activé et que le réglage BeamNGRaceDrawDebug est vrai.",
+  "module": "Visual debugging aid for scenario races: computes the path between the lapConfig waypoints (map.getPath) and draws it with debugDrawer (red spheres at waypoints, green prisms along the road, red when the segment is direct). Only active if the editor is enabled and the BeamNGRaceDrawDebug setting is true.",
   "notes": [
-    "Dans onScenarioChange, la variable lastwp n'est pas déclarée local : c'est une globale partagée, jamais réinitialisée entre deux appels.",
-    "Les données debugPath et debugNodes ne servent qu'au dessin ; le commentaire du code interdit de s'en servir pour autre chose."
+    "In onScenarioChange, the variable lastwp is not declared local: it is a global shared between calls and never reset.",
+    "The debugPath and debugNodes data are only used for drawing; the code comment forbids using them for anything else."
   ],
   "fields": {},
   "functions": {
     "onScenarioChange": {
-      "desc": "Hook appelé à chaque changement d'état du scénario. Si le scénario est 'running' et possède lapConfig, remplit currentScenario.debugPath (noeuds de la route) et currentScenario.debugNodes.",
-      "params": {"scenario": {"type": "table", "desc": "Scénario (non utilisé, le scénario courant est relu)."}},
+      "desc": "Hook called on every scenario state change. If the scenario is 'running' and has lapConfig, fills currentScenario.debugPath (road nodes) and currentScenario.debugNodes.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Scenario (unused, the current scenario is re-read)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onDrawDebug": {
-      "desc": "Hook de dessin debug appelé à chaque image : dessine les waypoints (sphère de rayon n.radius et libellé 'wp i/N') et le chemin calculé.",
-      "params": {"focusPos": {"type": "vec3", "desc": "Position de focus de la caméra (non utilisée)."}},
+      "desc": "Debug draw hook called every frame: draws the waypoints (sphere of radius n.radius and label 'wp i/N') and the computed path.",
+      "params": {
+        "focusPos": {
+          "type": "vec3",
+          "desc": "Camera focus position (unused)."
+        }
+      },
       "returns": [],
       "internal": true
     }

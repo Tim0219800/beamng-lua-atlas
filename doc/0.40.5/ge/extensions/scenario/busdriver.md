@@ -1,117 +1,117 @@
 # `scenario_busdriver`
 
-*Fichier : `lua/ge/extensions/scenario/busdriver.lua` · VM : Game Engine (GE) · 861 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/busdriver.lua` · VM: Game Engine (GE) · 861 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_busdriver` : `extensions.load("scenario_busdriver")`, puis la globale `scenario_busdriver`
+**Access:** extension `scenario_busdriver`: `extensions.load("scenario_busdriver")`, then the global `scenario_busdriver`
 
-Scénario de conduite de bus (itinéraire de ligne avec arrêts). À partir de la configuration scenario.busdriver (routeID, variance, strictStop, simulatePassengers, traffic), il récupère la ligne via core_busRouteManager.setLine, trace le chemin au sol (core_groundMarkers), suit les déclencheurs d'arrêts de bus (BeamNGTrigger de type 'busstop' et 'buswp'), gère le temps d'attente de 5 s à l'arrêt, les portes et la position agenouillée, déplace 4 marqueurs de cadre d'arrêt et termine le scénario en réussite au dernier arrêt ou en échec si un arrêt est sauté. Le joueur est le véhicule 'scenario_player0'.
+Bus driving scenario (line route with stops). From the scenario.busdriver configuration (routeID, variance, strictStop, simulatePassengers, traffic), it retrieves the line via core_busRouteManager.setLine, draws the ground path (core_groundMarkers), tracks the bus stop triggers (BeamNGTrigger of type 'busstop' and 'buswp'), handles the 5 s wait time at the stop, the doors and the kneeling position, moves 4 stop frame markers and ends the scenario as a success at the last stop or as a failure if a stop is skipped. The player is the vehicle 'scenario_player0'.
 
-## Exemple
+## Example
 
 ```lua
--- dans le JSON du scénario :
+-- in the scenario JSON:
 -- "busdriver": {"routeID": "ligne1", "variance": "a", "strictStop": true, "simulatePassengers": true, "traffic": true}
 ```
 
-## Remarques
+## Notes
 
-- Dépend de scenario_scenarios et core_groundMarkers. Le joueur est supposé être le véhicule nommé 'scenario_player0'.
-- Une tâche (arrêt) de currentLine.tasklist est une liste : [1] nom du déclencheur, [2] nom affiché, [3] position {x,y,z}, [4] rotation (quaternion), [5] taille {longueur, largeur} (déduit du code).
-- Les déclencheurs ont data.type 'busstop' (arrêts de la ligne) ou 'buswp' (points de passage) ; data.event vaut 'enter' ou 'exit', data.subjectName le véhicule, data.triggerName le déclencheur.
-- Entrer dans un arrêt sans avoir passé le précédent fait échouer le scénario (clé 'scenarios.busRoutes.skip'). Quitter avant la fin de l'attente (stopTimer < 5) ou avant stopComplete n'accomplit pas l'arrêt.
-- Avec busConfig.strictStop, il faut ouvrir les portes (bus_dooropen) et s'agenouiller (bus_kneel) à l'arrêt, sinon des messages invitent à le faire. La caméra passe en 'onboard.rider' puis 'external' pendant l'arrêt, et la caméra précédente est restaurée à la fin.
-- Messages UI envoyés via ScenarioRealtimeDisplay : clés scenarios.busRoutes.alreadyStop, stop, kneel, open, wait (context.remaining), close, raise, proceed, success. Évènements UI : BusDisplayUpdate (ligne restante) et BusRouteStats (désactivé).
-- Le calcul de statistiques (douceur, angle d'arrêt, distance d'arrêt, dégâts) est exécuté dans onPreRender mais son envoi à l'UI et à statistics_statistics est désactivé (if false, ticket #2783).
-- Bug probable : dans onPreRender, la variable playerVehicle utilisée pour calculer vehPos (près de la gestion de navhelp) n'est pas déclarée localement (seul pv l'est) : si elle n'existe pas comme globale, l'appel plante.
-- Dans onPreRender, la variable debugPath est toujours nil (sa déclaration est commentée) : le dessin debug des sphères ne s'exécute jamais. Utiliser M.enabledLineDebug à la place pour tracer la ligne complète.
-- requestState modifie en place currentLine.tasklist (tmp = currentLine n'est pas une copie) : après un appel, la liste est tronquée aux arrêts restants.
-- onVehicleStoppedMoving et computeStats existent mais le hook n'est pas exporté (M.onVehicleStoppedMoving est commenté).
-- onExtensionUnloaded dégèle le véhicule joueur (controller.setFreeze(0)) et efface le chemin de groundMarkers ; reset() le gèle (setFreeze(1)).
+- Depends on scenario_scenarios and core_groundMarkers. The player is assumed to be the vehicle named 'scenario_player0'.
+- A task (stop) of currentLine.tasklist is a list: [1] trigger name, [2] displayed name, [3] position {x,y,z}, [4] rotation (quaternion), [5] size {length, width} (inferred from code).
+- Triggers have data.type 'busstop' (line stops) or 'buswp' (waypoints); data.event is 'enter' or 'exit', data.subjectName the vehicle, data.triggerName the trigger.
+- Entering a stop without having passed the previous one fails the scenario (key 'scenarios.busRoutes.skip'). Leaving before the end of the wait (stopTimer < 5) or before stopComplete does not complete the stop.
+- With busConfig.strictStop, you must open the doors (bus_dooropen) and kneel (bus_kneel) at the stop, otherwise messages prompt you to do so. The camera switches to 'onboard.rider' then 'external' during the stop, and the previous camera is restored at the end.
+- UI messages sent via ScenarioRealtimeDisplay: keys scenarios.busRoutes.alreadyStop, stop, kneel, open, wait (context.remaining), close, raise, proceed, success. UI events: BusDisplayUpdate (remaining line) and BusRouteStats (disabled).
+- The statistics computation (smoothness, stop angle, stop distance, damage) runs in onPreRender but its sending to the UI and to statistics_statistics is disabled (if false, ticket #2783).
+- Probable bug: in onPreRender, the variable playerVehicle used to compute vehPos (near the navhelp handling) is not declared locally (only pv is): if it does not exist as a global, the call crashes.
+- In onPreRender, the variable debugPath is always nil (its declaration is commented out): the sphere debug drawing never runs. Use M.enabledLineDebug instead to draw the full line.
+- requestState modifies currentLine.tasklist in place (tmp = currentLine is not a copy): after a call, the list is truncated to the remaining stops.
+- onVehicleStoppedMoving and computeStats exist but the hook is not exported (M.onVehicleStoppedMoving is commented out).
+- onExtensionUnloaded unfreezes the player vehicle (controller.setFreeze(0)) and clears the groundMarkers path; reset() freezes it (setFreeze(1)).
 
-**Dépendances (chargées avant) :** `scenario_scenarios`, `core_groundMarkers`
+**Dependencies (loaded first):** `scenario_scenarios`, `core_groundMarkers`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_busdriver.fail(reason)` | Termine le scénario en échec (scenario_scenarios.finish({failed = reason})) puis réinitialise l'état du module. | 80 |
-| `scenario_busdriver.onBeamNGTrigger(data)` | Hook appelé quand un BeamNGTrigger est franchi. Gère l'entrée et la sortie des arrêts de bus de la ligne (type 'busstop') et l'enregistrement des points de passage (type 'buswp'). *(interne)* *(hook)* | 347 |
-| `scenario_busdriver.onBusUpdate(state)` | Hook envoyé par le contrôleur du bus (véhicule) avec des évènements : 'onTriggerTick' (progression de l'arrêt : vitesse, portes, agenouillement), 'onApproachStop' (affiche les marqueurs d'arrêt, alpha cible 1) et 'onDepartedStop' (restaure la boîte englobante d'origine). *(interne)* *(hook)* | 668 |
-| `scenario_busdriver.onClientEndMission()` | Hook de fin de mission : vide la liste des marqueurs. *(interne)* *(hook)* | 838 |
-| `scenario_busdriver.onExtensionUnloaded()` | Hook de déchargement : vide les marqueurs, efface le chemin de groundMarkers et dégèle le véhicule joueur. *(interne)* *(hook)* | 801 |
-| `scenario_busdriver.onPhysicsPaused()` | Hook : la physique est en pause ; le chronomètre d'arrêt ne progresse plus. *(interne)* *(hook)* | 812 |
-| `scenario_busdriver.onPhysicsUnpaused()` | Hook : la physique reprend. *(interne)* *(hook)* | 816 |
-| `scenario_busdriver.onPreRender(dt, dtSim)` | Hook appelé avant chaque image. Anime l'alpha des marqueurs, calcule les statistiques de conduite (accélération, à-coups, dégâts, distance et angle d'arrêt), met à jour le chemin au sol vers le prochain arrêt (core_groundMarkers.setPath) et colore les marqueurs selon que le bus est dans la zone d'arrêt. *(interne)* *(hook)* | 501 |
-| `scenario_busdriver.onRaceResult(final)` | Hook de fin de course : si playerWon est vrai, enregistre le temps final dans les highscores (core_highscores.setScenarioHighscoresCustom, clé 'busRoute'). *(interne)* *(hook)* | 421 |
-| `scenario_busdriver.onRaceStart()` | Hook de début de course : réinitialise, charge la ligne, dégèle le joueur, crée les 4 marqueurs TSStatic (busMarkerTL, TR, BL, BR, modèle position_marker.dae) dans ScenarioObjectsGroup, vérifie les points navhelp de la carte routière et trace le chemin vers le premier arrêt (couleur routeColor de la ligne). Met running à true. *(interne)* *(hook)* | 229 |
-| `scenario_busdriver.onScenarioLoaded(scenario)` | Hook appelé quand le scénario est chargé. Si busdriver.simulatePassengers, ajoute la pièce 'citybus_seats_ballast' à la configuration du véhicule joueur ; si busdriver.traffic et que le trafic est éteint, démarre le trafic avec trafficAmount (ou le maximum pour 12 véhicules si 0). *(interne)* *(hook)* | 781 |
-| `scenario_busdriver.onScenarioRestarted(scenario)` | Hook appelé au redémarrage du scénario : réinitialise l'état et recharge la ligne. *(interne)* *(hook)* | 188 |
-| `scenario_busdriver.onVehicleSwitched(oldId, newId, player)` | Hook appelé au changement de véhicule. Pour le joueur 0, réinitialise, gèle le nouveau véhicule et recharge la ligne ; échoue si la ligne est introuvable. *(interne)* *(hook)* | 448 |
-| `scenario_busdriver.requestState()` | Demandé par l'UI : envoie à l'évènement BusDisplayUpdate la ligne courante réduite aux arrêts restants (à partir du prochain). Journalise une erreur et sort si aucune ligne n'est chargée. | 820 |
+| `scenario_busdriver.fail(reason)` | Ends the scenario as a failure (scenario_scenarios.finish({failed = reason})) then resets the module state. | 80 |
+| `scenario_busdriver.onBeamNGTrigger(data)` | Hook called when a BeamNGTrigger is crossed. Handles entering and leaving the line's bus stops (type 'busstop') and recording waypoints (type 'buswp'). *(internal)* *(hook)* | 347 |
+| `scenario_busdriver.onBusUpdate(state)` | Hook sent by the bus (vehicle) controller with events: 'onTriggerTick' (stop progress: speed, doors, kneeling), 'onApproachStop' (shows the stop markers, target alpha 1) and 'onDepartedStop' (restores the original bounding box). *(internal)* *(hook)* | 668 |
+| `scenario_busdriver.onClientEndMission()` | End-of-mission hook: clears the marker list. *(internal)* *(hook)* | 838 |
+| `scenario_busdriver.onExtensionUnloaded()` | Unload hook: clears the markers, clears the groundMarkers path and unfreezes the player vehicle. *(internal)* *(hook)* | 801 |
+| `scenario_busdriver.onPhysicsPaused()` | Hook: physics is paused; the stop timer no longer advances. *(internal)* *(hook)* | 812 |
+| `scenario_busdriver.onPhysicsUnpaused()` | Hook: physics resumes. *(internal)* *(hook)* | 816 |
+| `scenario_busdriver.onPreRender(dt, dtSim)` | Hook called before each frame. Animates the markers' alpha, computes driving statistics (acceleration, jerk, damage, stop distance and angle), updates the ground path to the next stop (core_groundMarkers.setPath) and colors the markers depending on whether the bus is in the stop zone. *(internal)* *(hook)* | 501 |
+| `scenario_busdriver.onRaceResult(final)` | End-of-race hook: if playerWon is true, records the final time in the highscores (core_highscores.setScenarioHighscoresCustom, key 'busRoute'). *(internal)* *(hook)* | 421 |
+| `scenario_busdriver.onRaceStart()` | Race start hook: resets, loads the line, unfreezes the player, creates the 4 TSStatic markers (busMarkerTL, TR, BL, BR, model position_marker.dae) in ScenarioObjectsGroup, checks the road map's navhelp points and draws the path to the first stop (line's routeColor color). Sets running to true. *(internal)* *(hook)* | 229 |
+| `scenario_busdriver.onScenarioLoaded(scenario)` | Hook called when the scenario is loaded. If busdriver.simulatePassengers, adds the part 'citybus_seats_ballast' to the player vehicle's configuration; if busdriver.traffic and traffic is off, starts traffic with trafficAmount (or the maximum for 12 vehicles if 0). *(internal)* *(hook)* | 781 |
+| `scenario_busdriver.onScenarioRestarted(scenario)` | Hook called when the scenario restarts: resets the state and reloads the line. *(internal)* *(hook)* | 188 |
+| `scenario_busdriver.onVehicleSwitched(oldId, newId, player)` | Hook called on vehicle switch. For player 0, resets, freezes the new vehicle and reloads the line; fails if the line is not found. *(internal)* *(hook)* | 448 |
+| `scenario_busdriver.requestState()` | Requested by the UI: sends to the BusDisplayUpdate event the current line reduced to the remaining stops (from the next one). Logs an error and exits if no line is loaded. | 820 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_busdriver.fail(reason)`
 
-Termine le scénario en échec (scenario_scenarios.finish({failed = reason})) puis réinitialise l'état du module.
+Ends the scenario as a failure (scenario_scenarios.finish({failed = reason})) then resets the module state.
 
-- `reason` (*string|table*) : Message ou clé de traduction d'échec.
+- `reason` (*string|table*) : Failure message or translation key.
 
 #### `scenario_busdriver.onBeamNGTrigger(data)`
 
-Hook appelé quand un BeamNGTrigger est franchi. Gère l'entrée et la sortie des arrêts de bus de la ligne (type 'busstop') et l'enregistrement des points de passage (type 'buswp').
+Hook called when a BeamNGTrigger is crossed. Handles entering and leaving the line's bus stops (type 'busstop') and recording waypoints (type 'buswp').
 
 - `data` (*table*) : {type, event ('enter'|'exit'), subjectName, triggerName}.
 
 #### `scenario_busdriver.onBusUpdate(state)`
 
-Hook envoyé par le contrôleur du bus (véhicule) avec des évènements : 'onTriggerTick' (progression de l'arrêt : vitesse, portes, agenouillement), 'onApproachStop' (affiche les marqueurs d'arrêt, alpha cible 1) et 'onDepartedStop' (restaure la boîte englobante d'origine).
+Hook sent by the bus (vehicle) controller with events: 'onTriggerTick' (stop progress: speed, doors, kneeling), 'onApproachStop' (shows the stop markers, target alpha 1) and 'onDepartedStop' (restores the original bounding box).
 
 - `state` (*table*) : {event, triggerName, speed, bus_dooropen, bus_kneel}.
 
 #### `scenario_busdriver.onPreRender(dt, dtSim)`
 
-Hook appelé avant chaque image. Anime l'alpha des marqueurs, calcule les statistiques de conduite (accélération, à-coups, dégâts, distance et angle d'arrêt), met à jour le chemin au sol vers le prochain arrêt (core_groundMarkers.setPath) et colore les marqueurs selon que le bus est dans la zone d'arrêt.
+Hook called before each frame. Animates the markers' alpha, computes driving statistics (acceleration, jerk, damage, stop distance and angle), updates the ground path to the next stop (core_groundMarkers.setPath) and colors the markers depending on whether the bus is in the stop zone.
 
-- `dt` (*number*) : Durée réelle de l'image (s).
-- `dtSim` (*number*) : Durée simulée (s).
+- `dt` (*number*) : Real frame duration (s).
+- `dtSim` (*number*) : Simulated duration (s).
 
 #### `scenario_busdriver.onRaceResult(final)`
 
-Hook de fin de course : si playerWon est vrai, enregistre le temps final dans les highscores (core_highscores.setScenarioHighscoresCustom, clé 'busRoute').
+End-of-race hook: if playerWon is true, records the final time in the highscores (core_highscores.setScenarioHighscoresCustom, key 'busRoute').
 
-- `final` (*table*) : Résultat, final.finalTime en secondes.
+- `final` (*table*) : Result, final.finalTime in seconds.
 
 #### `scenario_busdriver.onScenarioLoaded(scenario)`
 
-Hook appelé quand le scénario est chargé. Si busdriver.simulatePassengers, ajoute la pièce 'citybus_seats_ballast' à la configuration du véhicule joueur ; si busdriver.traffic et que le trafic est éteint, démarre le trafic avec trafficAmount (ou le maximum pour 12 véhicules si 0).
+Hook called when the scenario is loaded. If busdriver.simulatePassengers, adds the part 'citybus_seats_ballast' to the player vehicle's configuration; if busdriver.traffic and traffic is off, starts traffic with trafficAmount (or the maximum for 12 vehicles if 0).
 
-- `scenario` (*table*) : Scénario chargé (scenario.busdriver).
+- `scenario` (*table*) : Loaded scenario (scenario.busdriver).
 
 #### `scenario_busdriver.onScenarioRestarted(scenario)`
 
-Hook appelé au redémarrage du scénario : réinitialise l'état et recharge la ligne.
+Hook called when the scenario restarts: resets the state and reloads the line.
 
-- `scenario` (*table*) : Scénario redémarré.
+- `scenario` (*table*) : Restarted scenario.
 
 #### `scenario_busdriver.onVehicleSwitched(oldId, newId, player)`
 
-Hook appelé au changement de véhicule. Pour le joueur 0, réinitialise, gèle le nouveau véhicule et recharge la ligne ; échoue si la ligne est introuvable.
+Hook called on vehicle switch. For player 0, resets, freezes the new vehicle and reloads the line; fails if the line is not found.
 
-- `oldId` (*integer*) : Ancien identifiant de véhicule.
-- `newId` (*integer*) : Nouvel identifiant.
-- `player` (*integer*) : Indice du joueur.
+- `oldId` (*integer*) : Old vehicle identifier.
+- `newId` (*integer*) : New identifier.
+- `player` (*integer*) : Player index.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant : scenario_scenarios, core_groundMarkers. |
-| `enabledLineDebug` | boolean | Si true, onPreRender dessine tout l'itinéraire (renderDebugLine) avec des textes debug. Faux par défaut. |
+| `dependencies` | string[] | Extensions loaded first: scenario_scenarios, core_groundMarkers. |
+| `enabledLineDebug` | boolean | If true, onPreRender draws the whole route (renderDebugLine) with debug texts. False by default. |
 
-**Évènements UI (guihooks.trigger) :** `BusDisplayUpdate`, `BusRouteStats`, `ScenarioRealtimeDisplay`
+**UI events (guihooks.trigger):** `BusDisplayUpdate`, `BusRouteStats`, `ScenarioRealtimeDisplay`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `upcast`
 - `be:` `castRay`
@@ -120,4 +120,4 @@ Hook appelé au changement de véhicule. Pour le joueur 0, réinitialise, gèle 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/busdriver.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/busdriver.lua`.*

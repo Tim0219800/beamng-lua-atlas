@@ -2,242 +2,242 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/replay.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Interface Lua du système de replays (fichiers .rpl sous replays/). Elle pilote le flux de fichier C++ (be:getFileStream) : enregistrement manuel ou de mission, lecture, pause, vitesse, saut, renommage, suppression. Elle reçoit l'état du moteur par stateChanged, le republie à l'UI (guihooks replayStateChanged) et aux extensions (hooks onReplayStateChanged et onReplayCoreEvent), et active ou désactive les action maps de lecture. Gère aussi les replays automatiques de mission (replays/missionReplays/ et replays/userSavedMissionReplays/).
---- Accès : extension `core_replay` : `extensions.load("core_replay")`, puis la globale `core_replay`
+--- Lua interface of the replay system (.rpl files under replays/). It drives the C++ file stream (be:getFileStream): manual or mission recording, playback, pause, speed, seek, rename, delete. It receives the engine state through stateChanged, republishes it to the UI (guihooks replayStateChanged) and to extensions (hooks onReplayStateChanged and onReplayCoreEvent), and enables or disables the playback action maps. Also handles automatic mission replays (replays/missionReplays/ and replays/userSavedMissionReplays/).
+--- Access: extension `core_replay`: `extensions.load("core_replay")`, then the global `core_replay`
 ---@class core_replay
 core_replay = {}
 
---- Appelé par le C++ : renvoie les données du véhicule (core_vehicle_manager.getVehicleData) encodées en JSON.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/replay.lua:1054
----@param id integer Id du véhicule.
----@return string  JSON ; doit être une chaîne.
+--- Called by C++: returns the vehicle data (core_vehicle_manager.getVehicleData) encoded as JSON.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/replay.lua:1054
+---@param id integer Vehicle id.
+---@return string  JSON; must be a string.
 function core_replay._getReplayVehicleData(id) end
 
---- Renomme un replay (et son .rplMeta.json). Un nouveau nom sans '/' reste dans le même dossier ; refusé si la cible existe. Si le replay était chargé, il est rechargé sous son nouveau nom.
----Source : lua/ge/extensions/core/replay.lua:909
----@param oldFilename string Ancien chemin sous replays/.
----@param newFilename string Nouveau nom ou chemin.
+--- Renames a replay (and its .rplMeta.json). A new name without '/' stays in the same folder; refused if the target exists. If the replay was loaded, it is reloaded under its new name.
+---Source: lua/ge/extensions/core/replay.lua:909
+---@param oldFilename string Old path under replays/.
+---@param newFilename string New name or path.
 ---@return table  {success, filename, newFilename?, message?}.
 function core_replay.acceptRename(oldFilename, newFilename) end
 
---- Si un enregistrement est en cours : l'arrête et supprime le fichier, puis publie l'état vide.
----Source : lua/ge/extensions/core/replay.lua:689
+--- If a recording is in progress: stops it and deletes the file, then publishes the empty state.
+---Source: lua/ge/extensions/core/replay.lua:689
 function core_replay.cancelRecording() end
 
---- Affiche une notification (toastrMsg) 'Replay <level>' et écrit un log.
----Source : lua/ge/extensions/core/replay.lua:546
----@param level string Catégorie toastr : error, info, warning…
----@param msg string Clé de traduction ou texte.
----@param context table|nil Variables de traduction.
+--- Displays a notification (toastrMsg) 'Replay <level>' and writes a log.
+---Source: lua/ge/extensions/core/replay.lua:546
+---@param level string Toastr category: error, info, warning...
+---@param msg string Translation key or text.
+---@param context table|nil Translation variables.
 function core_replay.displayMsg(level, msg, context) end
 
---- Indique si les logs de debug du replay sont actifs.
----Source : lua/ge/extensions/core/replay.lua:40
----@return boolean  État du debug.
+--- Indicates whether the replay debug logs are active.
+---Source: lua/ge/extensions/core/replay.lua:40
+---@return boolean  Debug state.
 function core_replay.getDebugEnabled() end
 
---- Nom du fichier replay chargé.
----Source : lua/ge/extensions/core/replay.lua:483
----@return string|nil  Chemin du fichier.
+--- Name of the loaded replay file.
+---Source: lua/ge/extensions/core/replay.lua:483
+---@return string|nil  File path.
 function core_replay.getLoadedFile() end
 
---- Liste les replays de mission (automatiques et sauvegardés par l'utilisateur pour la carrière/freeroam courante) correspondant à une mission, triés par meta.time.
----Source : lua/ge/extensions/core/replay.lua:971
----@param mission table Mission, avec champ id.
----@param returnOnlyWithAttempt boolean|nil Si vrai, ne garde que ceux dont le meta contient attempt.
----@return table[]  Entrées {replayFile, replayFileName, meta, userSaved}.
+--- Lists the mission replays (automatic and user-saved for the current career/freeroam) matching a mission, sorted by meta.time.
+---Source: lua/ge/extensions/core/replay.lua:971
+---@param mission table Mission, with an id field.
+---@param returnOnlyWithAttempt boolean|nil If true, keeps only those whose meta contains attempt.
+---@return table[]  Entries {replayFile, replayFileName, meta, userSaved}.
 function core_replay.getMissionReplayFiles(mission, returnOnlyWithAttempt) end
 
---- Renvoie le dossier des replays de mission automatiques.
----Source : lua/ge/extensions/core/replay.lua:1104
+--- Returns the folder of automatic mission replays.
+---Source: lua/ge/extensions/core/replay.lua:1104
 ---@return string  "replays/missionReplays/".
 function core_replay.getMissionReplaysPath() end
 
---- Indique si un replay peut être lu et s'il faut d'abord charger son niveau.
----Source : lua/ge/extensions/core/replay.lua:298
----@param filename string Fichier replay (sous replays/).
----@return table  {success, filename, code, recordedLevel, currentLevel, levelKnown, requiresLevelLoad} ou échec avec code invalidFilename / fileNotFound.
+--- Indicates whether a replay can be played and whether its level must be loaded first.
+---Source: lua/ge/extensions/core/replay.lua:298
+---@param filename string Replay file (under replays/).
+---@return table  {success, filename, code, recordedLevel, currentLevel, levelKnown, requiresLevelLoad} or failure with code invalidFilename / fileNotFound.
 function core_replay.getPlaybackContext(filename) end
 
---- Position de lecture courante en secondes.
----Source : lua/ge/extensions/core/replay.lua:458
----@return number|nil  Position (nil avant le premier stateChanged).
+--- Current playback position in seconds.
+---Source: lua/ge/extensions/core/replay.lua:458
+---@return number|nil  Position (nil before the first stateChanged).
 function core_replay.getPositionSeconds() end
 
---- Liste les .rpl du dossier replays/ (sans sous-dossiers). Chaque entrée : filename, path, key, basename, displayName, size, sortTime, map, levelName, metadataAvailable, missingMetadataFields. Le niveau est deviné en scannant le début du fichier (jusqu'à 1 Mo) ; tri : niveau courant d'abord, puis le plus récent.
----Source : lua/ge/extensions/core/replay.lua:261
----@return table[]  Liste d'enregistrements.
+--- Lists the .rpl files of the replays/ folder (without subfolders). Each entry: filename, path, key, basename, displayName, size, sortTime, map, levelName, metadataAvailable, missingMetadataFields. The level is guessed by scanning the start of the file (up to 1 MB); sort: current level first, then most recent.
+---Source: lua/ge/extensions/core/replay.lua:261
+---@return table[]  List of recordings.
 function core_replay.getRecordings() end
 
---- État du système de replay.
----Source : lua/ge/extensions/core/replay.lua:466
----@return string|nil  'inactive', 'playback' ou 'recording'.
+--- State of the replay system.
+---Source: lua/ge/extensions/core/replay.lua:466
+---@return string|nil  'inactive', 'playback' or 'recording'.
 function core_replay.getState() end
 
---- Durée totale du replay chargé en secondes.
----Source : lua/ge/extensions/core/replay.lua:462
----@return number|nil  Durée.
+--- Total duration of the loaded replay in seconds.
+---Source: lua/ge/extensions/core/replay.lua:462
+---@return number|nil  Duration.
 function core_replay.getTotalSeconds() end
 
---- Indique si le gameplay est autorisé pendant le replay. Renvoie toujours true actuellement (un TODO dans le code prévoit une option).
----Source : lua/ge/extensions/core/replay.lua:470
----@return boolean  Toujours true.
+--- Indicates whether gameplay is allowed during the replay. Currently always returns true (a TODO in the code plans an option).
+---Source: lua/ge/extensions/core/replay.lua:470
+---@return boolean  Always true.
 function core_replay.isGameplayAllowed() end
 
---- Indique si la lecture est en pause.
----Source : lua/ge/extensions/core/replay.lua:479
----@return boolean|nil  État de pause.
+--- Indicates whether playback is paused.
+---Source: lua/ge/extensions/core/replay.lua:479
+---@return boolean|nil  Pause state.
 function core_replay.isPaused() end
 
---- Alias de jumpFrames (ancien nom).
----Source : lua/ge/extensions/core/replay.lua:842
----@param offset integer Nombre d'images.
+--- Alias of jumpFrames (old name).
+---Source: lua/ge/extensions/core/replay.lua:842
+---@param offset integer Number of frames.
 function core_replay.jump(offset) end
 
---- Avance ou recule d'un nombre d'images (stream:stepFrames) et affiche un message UI.
----Source : lua/ge/extensions/core/replay.lua:842
----@param offset integer Nombre d'images (négatif = recul).
+--- Moves forward or backward by a number of frames (stream:stepFrames) and displays a UI message.
+---Source: lua/ge/extensions/core/replay.lua:842
+---@param offset integer Number of frames (negative = backward).
 function core_replay.jumpFrames(offset) end
 
---- Avance ou recule d'une durée (stream:stepTime) et affiche un message UI.
----Source : lua/ge/extensions/core/replay.lua:849
----@param timeDiffInSeconds number Durée en secondes (négatif = recul).
+--- Moves forward or backward by a duration (stream:stepTime) and displays a UI message.
+---Source: lua/ge/extensions/core/replay.lua:849
+---@param timeDiffInSeconds number Duration in seconds (negative = backward).
 function core_replay.jumpTime(timeDiffInSeconds) end
 
---- Met en attente le chargement d'un replay (affiche l'écran d'attente ; la lecture démarre dans onUiWaitingState). Valide le nom de fichier.
----Source : lua/ge/extensions/core/replay.lua:631
----@param filename string Chemin sous replays/ (extension .rpl).
----@param autoplay boolean|nil Si vrai, la lecture démarre immédiatement ; sinon elle démarre en pause.
----@param options table|nil options.pauseWhenReady = true : remet en pause au début quand le monde est prêt.
----@return table  {success, filename, code = 'queued'} ou échec.
+--- Queues the loading of a replay (displays the waiting screen; playback starts in onUiWaitingState). Validates the file name.
+---Source: lua/ge/extensions/core/replay.lua:631
+---@param filename string Path under replays/ (.rpl extension).
+---@param autoplay boolean|nil If true, playback starts immediately; otherwise it starts paused.
+---@param options table|nil options.pauseWhenReady = true: pauses again at the start when the world is ready.
+---@return table  {success, filename, code = 'queued'} or failure.
 function core_replay.loadFile(filename, autoplay, options) end
 
---- Écrit dans le log de debug (si actif) une action venue de l'UI, avec le préfixe 'ui.'.
----Source : lua/ge/extensions/core/replay.lua:36
----@param scope string Nom de l'action.
----@param data any Données à journaliser.
+--- Writes to the debug log (if active) an action coming from the UI, with the prefix 'ui.'.
+---Source: lua/ge/extensions/core/replay.lua:36
+---@param scope string Name of the action.
+---@param data any Data to log.
 function core_replay.logUiAction(scope, data) end
 
---- Hook appelé à la fin d'un niveau : si une lecture est en cours et que le changement de niveau n'a pas été demandé par startLevel, la lecture est arrêtée avec un message.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/replay.lua:863
----@param levelPath string Chemin du niveau quitté (déduit du code).
+--- Hook called at the end of a level: if playback is in progress and the level change was not requested by startLevel, playback is stopped with a message.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/replay.lua:863
+---@param levelPath string Path of the level being left (inferred from code).
 function core_replay.onClientEndMission(levelPath) end
 
---- Hook d'initialisation de l'extension : demande au flux de fichier de renvoyer son état (stream:requestState).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/replay.lua:254
+--- Extension initialization hook: asks the file stream to send back its state (stream:requestState).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/replay.lua:254
 function core_replay.onInit() end
 
---- Hook appelé quand l'écran d'attente de l'UI est affiché. Lance alors la lecture du fichier mis en attente par loadFile (stop du flux puis play).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/replay.lua:608
----@param state boolean Vrai quand l'attente est active ; sinon ignoré.
+--- Hook called when the UI waiting screen is displayed. It then starts playback of the file queued by loadFile (stream stop then play).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/replay.lua:608
+---@param state boolean True when waiting is active; otherwise ignored.
 function core_replay.onUiWaitingState(state) end
 
---- Ouvre l'emplacement d'un fichier replay dans l'explorateur ; journalise une erreur s'il n'existe pas.
----Source : lua/ge/extensions/core/replay.lua:1044
----@param replayFileName string Chemin du fichier.
+--- Opens the location of a replay file in the explorer; logs an error if it does not exist.
+---Source: lua/ge/extensions/core/replay.lua:1044
+---@param replayFileName string File path.
 function core_replay.openMissionReplayFolder(replayFileName) end
 
---- Ouvre le dossier replays/ dans l'explorateur de fichiers (le crée s'il manque).
----Source : lua/ge/extensions/core/replay.lua:856
+--- Opens the replays/ folder in the file explorer (creates it if missing).
+---Source: lua/ge/extensions/core/replay.lua:856
 function core_replay.openReplayFolderInExplorer() end
 
---- Met en pause ou relance la lecture. Sans effet hors 'playback'.
----Source : lua/ge/extensions/core/replay.lua:538
+--- Pauses or resumes playback. No effect outside 'playback'.
+---Source: lua/ge/extensions/core/replay.lua:538
 ---@param v boolean true = pause.
 function core_replay.pause(v) end
 
---- Opération inverse : déplace un replay sauvegardé vers replays/missionReplays/ (pour qu'il soit de nouveau géré automatiquement), puis notifie l'UI.
----Source : lua/ge/extensions/core/replay.lua:1028
----@param replayFileName string Chemin du .rpl.
+--- Reverse operation: moves a saved replay to replays/missionReplays/ (so that it is managed automatically again), then notifies the UI.
+---Source: lua/ge/extensions/core/replay.lua:1028
+---@param replayFileName string Path of the .rpl.
 function core_replay.removeMissionSavedReplay(replayFileName) end
 
---- Supprime un replay et son fichier .rplMeta.json ; l'arrête d'abord s'il est chargé ; met à jour le catalogue.
----Source : lua/ge/extensions/core/replay.lua:882
----@param filename string Fichier sous replays/.
+--- Deletes a replay and its .rplMeta.json file; stops it first if it is loaded; updates the catalog.
+---Source: lua/ge/extensions/core/replay.lua:882
+---@param filename string File under replays/.
 ---@return table  {success, filename, message?}.
 function core_replay.removeRecording(filename) end
 
---- Déplace un replay de mission automatique vers le dossier des replays sauvegardés par l'utilisateur (carrière/<slot>/ ou freeroam/) avec son .rplMeta.json, puis notifie l'UI (recordingFilesUpdated).
----Source : lua/ge/extensions/core/replay.lua:1011
----@param replayFileName string Chemin du .rpl.
+--- Moves an automatic mission replay to the user-saved replays folder (career/<slot>/ or freeroam/) with its .rplMeta.json, then notifies the UI (recordingFilesUpdated).
+---Source: lua/ge/extensions/core/replay.lua:1011
+---@param replayFileName string Path of the .rpl.
 function core_replay.saveMissionReplay(replayFileName) end
 
---- Se place à une position normalisée du replay. Sans effet hors playback.
----Source : lua/ge/extensions/core/replay.lua:834
----@param percent number Position entre 0 et 1 (borné).
+--- Jumps to a normalized position of the replay. No effect outside playback.
+---Source: lua/ge/extensions/core/replay.lua:834
+---@param percent number Position between 0 and 1 (clamped).
 function core_replay.seek(percent) end
 
---- Active ou désactive les logs de debug du replay (tag core_replay.debug).
----Source : lua/ge/extensions/core/replay.lua:31
----@param enabled boolean Vrai pour activer.
+--- Enables or disables the replay debug logs (tag core_replay.debug).
+---Source: lua/ge/extensions/core/replay.lua:31
+---@param enabled boolean True to enable.
 function core_replay.setDebugEnabled(enabled) end
 
---- Fixe la vitesse de lecture (1 = temps réel, 0.5 = ralenti, 2 = accéléré), sans lissage. Ne fait rien si la vitesse est déjà celle-ci.
----Source : lua/ge/extensions/core/replay.lua:487
----@param speed number Facteur de vitesse.
+--- Sets the playback speed (1 = realtime, 0.5 = slow motion, 2 = fast motion), without smoothing. Does nothing if the speed is already this value.
+---Source: lua/ge/extensions/core/replay.lua:487
+---@param speed number Speed factor.
 function core_replay.setSpeed(speed) end
 
---- Lance le niveau donné en freeroam sans faire apparaître de véhicule (freeroam_freeroam.startFreeroamByName), en marquant requestedStartLevel pour ne pas arrêter la lecture.
----Source : lua/ge/extensions/core/replay.lua:873
----@param levelPath string Chemin du niveau.
+--- Starts the given level in freeroam without spawning a vehicle (freeroam_freeroam.startFreeroamByName), marking requestedStartLevel so as not to stop playback.
+---Source: lua/ge/extensions/core/replay.lua:873
+---@param levelPath string Level path.
 function core_replay.startLevel(levelPath) end
 
---- Démarre un enregistrement manuel dans replays/ (nom 'AAAA-MM-JJ_HH-MM-SS <niveau>.rpl'). Refusé si déjà en enregistrement, en lecture, ou si un enregistrement de mission est actif.
----Source : lua/ge/extensions/core/replay.lua:774
+--- Starts a manual recording in replays/ (name 'YYYY-MM-DD_HH-MM-SS <level>.rpl'). Refused if already recording, playing back, or if a mission recording is active.
+---Source: lua/ge/extensions/core/replay.lua:774
 ---@return table  {success, filename, code, ...}.
 function core_replay.startRecording() end
 
---- Appelé par le C++ à chaque changement d'état du flux de replay. À l'entrée en 'playback', désactive les action maps VehicleCommon/VehicleSpecific et pousse ReplayPlaybackActionMap ; à la sortie, l'inverse. Met à jour M.state, déclenche guihooks 'replayStateChanged', hook 'onReplayStateChanged'(state) et 'onReplayCoreEvent'({event, state, ...}) avec event parmi playbackStarted, playbackStopped, recordingStarted, recordingStopped, playbackPaused, playbackResumed, loadedFileChanged.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/replay.lua:376
----@param loadedFile string Fichier chargé.
----@param positionSeconds number Position de lecture (s).
----@param totalSeconds number Durée totale (s).
----@param speed number Vitesse de lecture.
----@param paused boolean En pause.
----@param fpsPlay number Images par seconde en lecture.
----@param fpsRec number Images par seconde à l'enregistrement.
----@param statestr string 'inactive', 'playback' ou 'recording'.
----@param framePositionSeconds number Position de l'image courante (s).
+--- Called by C++ on every change of the replay stream state. On entering 'playback', disables the VehicleCommon/VehicleSpecific action maps and pushes ReplayPlaybackActionMap; on leaving, the reverse. Updates M.state, triggers guihooks 'replayStateChanged', hook 'onReplayStateChanged'(state) and 'onReplayCoreEvent'({event, state, ...}) with event among playbackStarted, playbackStopped, recordingStarted, recordingStopped, playbackPaused, playbackResumed, loadedFileChanged.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/replay.lua:376
+---@param loadedFile string Loaded file.
+---@param positionSeconds number Playback position (s).
+---@param totalSeconds number Total duration (s).
+---@param speed number Playback speed.
+---@param paused boolean Paused.
+---@param fpsPlay number Frames per second in playback.
+---@param fpsRec number Frames per second when recording.
+---@param statestr string 'inactive', 'playback' or 'recording'.
+---@param framePositionSeconds number Position of the current frame (s).
 function core_replay.stateChanged(loadedFile, positionSeconds, totalSeconds, speed, paused, fpsPlay, fpsRec, statestr, framePositionSeconds) end
 
---- Annule un chargement en attente et arrête le flux (lecture ou enregistrement).
----Source : lua/ge/extensions/core/replay.lua:662
+--- Cancels a pending load and stops the stream (playback or recording).
+---Source: lua/ge/extensions/core/replay.lua:662
 function core_replay.stop() end
 
---- Arrête la lecture et publie un état vide 'inactive'. Refusé pendant un enregistrement (code recordingActive).
----Source : lua/ge/extensions/core/replay.lua:672
----@return table  Résultat {success, filename, message?, code}.
+--- Stops playback and publishes an empty 'inactive' state. Refused during a recording (code recordingActive).
+---Source: lua/ge/extensions/core/replay.lua:672
+---@return table  Result {success, filename, message?, code}.
 function core_replay.stopAndUnload() end
 
---- Arrête l'enregistrement manuel et met à jour le catalogue (guihooks replayRecordingsUpdated).
----Source : lua/ge/extensions/core/replay.lua:790
----@param options table|nil options.autoplayAfterStopping = true : charge le replay à l'arrêt.
+--- Stops the manual recording and updates the catalog (guihooks replayRecordingsUpdated).
+---Source: lua/ge/extensions/core/replay.lua:790
+---@param options table|nil options.autoplayAfterStopping = true: loads the replay on stop.
 ---@return table  {success, filename, code, playbackResult?}.
 function core_replay.stopRecording(options) end
 
---- Raccourci de toggleRecording(false, true) : bascule l'enregistrement du replay de mission.
----Source : lua/ge/extensions/core/replay.lua:830
----@return string|nil  Nom du fichier si un enregistrement vient de démarrer.
+--- Shortcut for toggleRecording(false, true): toggles mission replay recording.
+---Source: lua/ge/extensions/core/replay.lua:830
+---@return string|nil  File name if a recording has just started.
 function core_replay.toggleMissionRecording() end
 
---- Bascule lecture/pause du replay chargé. Si l'état est 'inactive', recharge et lance le fichier ; hors playback et inactive, journalise une erreur.
----Source : lua/ge/extensions/core/replay.lua:552
+--- Toggles play/pause of the loaded replay. If the state is 'inactive', reloads and starts the file; outside playback and inactive, logs an error.
+---Source: lua/ge/extensions/core/replay.lua:552
 function core_replay.togglePlay() end
 
---- Bascule l'enregistrement : en enregistrement, l'arrête ; en lecture, arrête la lecture ; sinon démarre un enregistrement.
----Source : lua/ge/extensions/core/replay.lua:808
----@param autoplayAfterStopping boolean|nil Lire le replay après l'arrêt. Si nil : vrai pour un enregistrement manuel, faux pour un replay de mission.
----@param isMissionReplay boolean|nil Replay automatique de mission (dossier replays/missionReplays/).
----@return string|nil  Nom du fichier si un enregistrement vient de démarrer.
+--- Toggles recording: while recording, stops it; during playback, stops playback; otherwise starts a recording.
+---Source: lua/ge/extensions/core/replay.lua:808
+---@param autoplayAfterStopping boolean|nil Play the replay after stopping. If nil: true for a manual recording, false for a mission replay.
+---@param isMissionReplay boolean|nil Automatic mission replay (replays/missionReplays/ folder).
+---@return string|nil  File name if a recording has just started.
 function core_replay.toggleRecording(autoplayAfterStopping, isMissionReplay) end
 
---- Change la vitesse. 'realtime' alterne entre 1 et la dernière autre vitesse (1/8 au départ) ; 'slowmotion' met 1/8 ; un nombre positif ou négatif monte ou descend d'autant de crans dans la liste des vitesses. Informe simTimeAuthority.
----Source : lua/ge/extensions/core/replay.lua:496
----@param val string|integer 'realtime', 'slowmotion', ou nombre de crans (+1, -1…).
+--- Changes the speed. 'realtime' alternates between 1 and the last other speed (1/8 at start); 'slowmotion' sets 1/8; a positive or negative number goes up or down that many steps in the speed list. Informs simTimeAuthority.
+---Source: lua/ge/extensions/core/replay.lua:496
+---@param val string|integer 'realtime', 'slowmotion', or number of steps (+1, -1...).
 function core_replay.toggleSpeed(val) end
 

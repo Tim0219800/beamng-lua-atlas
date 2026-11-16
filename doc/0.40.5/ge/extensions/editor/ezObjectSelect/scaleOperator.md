@@ -1,74 +1,74 @@
 # `editor_ezObjectSelect_scaleOperator`
 
-*Fichier : `lua/ge/extensions/editor/ezObjectSelect/scaleOperator.lua` · VM : Game Engine (GE) · 135 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ezObjectSelect/scaleOperator.lua` · VM: Game Engine (GE) · 135 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ezObjectSelect_scaleOperator` : `extensions.load("editor_ezObjectSelect_scaleOperator")`, puis la globale `editor_ezObjectSelect_scaleOperator`
+**Access:** extension `editor_ezObjectSelect_scaleOperator`: `extensions.load("editor_ezObjectSelect_scaleOperator")`, then the global `editor_ezObjectSelect_scaleOperator`
 
-Opérateur modal « Scale » (touche S) de l'outil Easy Select. Au démarrage il ouvre une session de transformation (modalOperatorCommon.begin, historique « EasySelectScale ») ; le facteur d'échelle est la distance souris-pivot à l'écran divisée par la distance initiale (ou une valeur saisie au clavier), bornée à [0.0001, 100000]. Contraintes d'axe X/Y/Z, Shift+axe pour exclure un axe, double appui pour l'espace local. Clic gauche/Entrée valide, clic droit/Échap annule.
+"Scale" modal operator (S key) of the Easy Select tool. On start it opens a transform session (modalOperatorCommon.begin, history "EasySelectScale"); the scale factor is the screen mouse-pivot distance divided by the initial distance (or a value typed on the keyboard), clamped to [0.0001, 100000]. X/Y/Z axis constraints, Shift+axis to exclude an axis, double press for local space. Left click/Enter confirms, right click/Esc cancels.
 
-## Remarques
+## Notes
 
-- Le suivi radial n'est actif qu'après que la souris s'est éloignée d'au moins 10 px (x uiscale) du pivot ; avant cela le facteur vaut 1.
-- Refuse de démarrer si un opérateur ou une transformSession est déjà actif.
+- Radial tracking is only active after the mouse has moved at least 10 px (x uiscale) away from the pivot; before that the factor is 1.
+- Refuses to start if an operator or a transformSession is already active.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ezObjectSelect_scaleOperator.begin(options)` | Démarre l'opérateur sur la sélection. Renvoie false si déjà actif, si la session n'a pas pu démarrer ou si le pivot n'est pas projetable à l'écran (la session est alors annulée). | 46 |
-| `editor_ezObjectSelect_scaleOperator.cancel()` | Annule l'opérateur en cours (restaure les objets). | 97 |
-| `editor_ezObjectSelect_scaleOperator.drawScreen()` | Dessine l'indicateur près du pivot et le HUD (contrainte UNIFORM/axe, WORLD/LOCAL, facteur « 1.000x », aide des touches). | 115 |
-| `editor_ezObjectSelect_scaleOperator.getObjectIds()` | Ids des objets manipulés par la session ({} si inactif). | 111 |
-| `editor_ezObjectSelect_scaleOperator.isActive()` | Indique si l'opérateur est en cours. | 107 |
-| `editor_ezObjectSelect_scaleOperator.setLocalSpace(localSpace)` | Bascule espace local/monde pour la contrainte courante. | 103 |
-| `editor_ezObjectSelect_scaleOperator.update()` | À appeler chaque frame : gère fin demandée, contraintes, saisie numérique, calcule le facteur, l'applique via transformSession.updateScale et dessine le gizmo. | 67 |
-| `editor_ezObjectSelect_scaleOperator.wantsBegin()` | Renvoie true si la touche S vient d'être pressée. | 42 |
+| `editor_ezObjectSelect_scaleOperator.begin(options)` | Starts the operator on the selection. Returns false if already active, if the session could not start or if the pivot is not projectable on screen (the session is then cancelled). | 46 |
+| `editor_ezObjectSelect_scaleOperator.cancel()` | Cancels the current operator (restores the objects). | 97 |
+| `editor_ezObjectSelect_scaleOperator.drawScreen()` | Draws the indicator near the pivot and the HUD (UNIFORM/axis constraint, WORLD/LOCAL, factor "1.000x", key help). | 115 |
+| `editor_ezObjectSelect_scaleOperator.getObjectIds()` | Ids of the objects manipulated by the session ({} if inactive). | 111 |
+| `editor_ezObjectSelect_scaleOperator.isActive()` | Indicates whether the operator is in progress. | 107 |
+| `editor_ezObjectSelect_scaleOperator.setLocalSpace(localSpace)` | Toggles local/world space for the current constraint. | 103 |
+| `editor_ezObjectSelect_scaleOperator.update()` | To be called every frame: handles the requested end, constraints, numeric input, computes the factor, applies it via transformSession.updateScale and draws the gizmo. | 67 |
+| `editor_ezObjectSelect_scaleOperator.wantsBegin()` | Returns true if the S key has just been pressed. | 42 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_ezObjectSelect_scaleOperator.begin(options)`
 
-Démarre l'opérateur sur la sélection. Renvoie false si déjà actif, si la session n'a pas pu démarrer ou si le pivot n'est pas projetable à l'écran (la session est alors annulée).
+Starts the operator on the selection. Returns false if already active, if the session could not start or if the pivot is not projectable on screen (the session is then cancelled).
 
-- `options` (*table|nil*) : {defaultLocal = boolean} : espace local par défaut
-- **renvoie** : boolean true si démarré
+- `options` (*table|nil*) : {defaultLocal = boolean}: default local space
+- **returns**: boolean true if started
 
 #### `editor_ezObjectSelect_scaleOperator.cancel()`
 
-Annule l'opérateur en cours (restaure les objets).
+Cancels the current operator (restores the objects).
 
-- **renvoie** : boolean true si un opérateur était actif
+- **returns**: boolean true if an operator was active
 
 #### `editor_ezObjectSelect_scaleOperator.getObjectIds()`
 
-Ids des objets manipulés par la session ({} si inactif).
+Ids of the objects manipulated by the session ({} if inactive).
 
-- **renvoie** : table liste d'ids
+- **returns**: table list of ids
 
 #### `editor_ezObjectSelect_scaleOperator.isActive()`
 
-Indique si l'opérateur est en cours.
+Indicates whether the operator is in progress.
 
-- **renvoie** : boolean 
+- **returns**: boolean 
 
 #### `editor_ezObjectSelect_scaleOperator.setLocalSpace(localSpace)`
 
-Bascule espace local/monde pour la contrainte courante.
+Toggles local/world space for the current constraint.
 
-- `localSpace` (*boolean*) : true pour l'espace local
-- **renvoie** : boolean résultat de modalOperatorCommon.setLocalSpace
+- `localSpace` (*boolean*) : true for local space
+- **returns**: boolean result of modalOperatorCommon.setLocalSpace
 
 #### `editor_ezObjectSelect_scaleOperator.update()`
 
-À appeler chaque frame : gère fin demandée, contraintes, saisie numérique, calcule le facteur, l'applique via transformSession.updateScale et dessine le gizmo.
+To be called every frame: handles the requested end, constraints, numeric input, computes the factor, applies it via transformSession.updateScale and draws the gizmo.
 
-- **renvoie** : string|nil "active" tant que l'opérateur tourne ; sinon résultat de finish (valeur résolue et complétion) ; nil si inactif
+- **returns**: string|nil "active" while the operator runs; otherwise result of finish (resolved value and completion); nil if inactive
 
 #### `editor_ezObjectSelect_scaleOperator.wantsBegin()`
 
-Renvoie true si la touche S vient d'être pressée.
+Returns true if the S key has just been pressed.
 
-- **renvoie** : boolean touche S pressée cette frame
+- **returns**: boolean S key pressed this frame
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ezObjectSelect/scaleOperator.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ezObjectSelect/scaleOperator.lua`.*

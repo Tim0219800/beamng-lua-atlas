@@ -1,41 +1,78 @@
 {
   "path": "lua/ge/extensions/ui/visibility.lua",
-  "module": "Affiche ou masque l'interface du jeu : l'UI web (CEF) et les fenêtres imgui. Utile pour les captures d'écran, les vidéos ou les outils. Il mémorise l'état dans M.state (cefVisible, imguiVisible) et diffuse le changement de visibilité CEF.",
-  "usage": "ui_visibility.set(false)  -- masque tout\nui_visibility.setCef(true)  -- réaffiche seulement l'UI web",
+  "module": "Shows or hides the game interface: the web UI (CEF) and the imgui windows. Useful for screenshots, videos or tools. It stores the state in M.state (cefVisible, imguiVisible) and broadcasts the CEF visibility change.",
+  "usage": "ui_visibility.set(false)  -- hides everything\nui_visibility.setCef(true)  -- shows only the web UI again",
   "notes": [
-    "L'état initial est cefVisible = true et imguiVisible = état actuel de Engine.imgui.",
-    "Le changement de visibilité CEF émet l'évènement UI 'onCefVisibilityChanged' (guihooks) et le hook du même nom (extensions.hook), avec un booléen, uniquement si la valeur change.",
-    "get() ne renvoie que l'état CEF, pas l'état imgui."
+    "The initial state is cefVisible = true and imguiVisible = current state of Engine.imgui.",
+    "The CEF visibility change emits the UI event 'onCefVisibilityChanged' (guihooks) and the hook of the same name (extensions.hook), with a boolean, only if the value changes.",
+    "get() returns only the CEF state, not the imgui state."
   ],
   "fields": {
-    "state": {"type": "table", "desc": "{cefVisible = boolean, imguiVisible = boolean}."}
+    "state": {
+      "type": "table",
+      "desc": "{cefVisible = boolean, imguiVisible = boolean}."
+    }
   },
   "functions": {
     "getCef": {
-      "desc": "Indique si l'UI web (CEF) est visible.",
-      "returns": [{"type": "boolean", "desc": "true si visible."}]
+      "desc": "Returns whether the web UI (CEF) is visible.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if visible."
+        }
+      ]
     },
     "setCef": {
-      "desc": "Affiche ou masque l'UI web ; émet 'onCefVisibilityChanged' (UI et extensions) seulement si l'état change.",
-      "params": {"visible": {"type": "boolean", "desc": "true pour afficher."}}
+      "desc": "Shows or hides the web UI; emits 'onCefVisibilityChanged' (UI and extensions) only if the state changes.",
+      "params": {
+        "visible": {
+          "type": "boolean",
+          "desc": "true to show."
+        }
+      }
     },
-    "toggleCef": {"desc": "Inverse la visibilité de l'UI web."},
+    "toggleCef": {
+      "desc": "Toggles the web UI visibility."
+    },
     "getImgui": {
-      "desc": "Indique si imgui est activé.",
-      "returns": [{"type": "boolean", "desc": "true si visible."}]
+      "desc": "Returns whether imgui is enabled.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if visible."
+        }
+      ]
     },
     "setImgui": {
-      "desc": "Active ou désactive imgui (Engine.imgui.setEnabled) si l'état change.",
-      "params": {"visible": {"type": "boolean", "desc": "true pour activer."}}
+      "desc": "Enables or disables imgui (Engine.imgui.setEnabled) if the state changes.",
+      "params": {
+        "visible": {
+          "type": "boolean",
+          "desc": "true to enable."
+        }
+      }
     },
     "get": {
-      "desc": "Renvoie l'état de visibilité général, qui est celui de l'UI web (CEF).",
-      "returns": [{"type": "boolean", "desc": "true si visible."}]
+      "desc": "Returns the general visibility state, which is that of the web UI (CEF).",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if visible."
+        }
+      ]
     },
     "set": {
-      "desc": "Affiche ou masque en même temps l'UI web et imgui.",
-      "params": {"visible": {"type": "boolean", "desc": "true pour afficher."}}
+      "desc": "Shows or hides the web UI and imgui at the same time.",
+      "params": {
+        "visible": {
+          "type": "boolean",
+          "desc": "true to show."
+        }
+      }
     },
-    "toggle": {"desc": "Inverse la visibilité générale (selon get(), donc l'état CEF) et l'applique à CEF et imgui."}
+    "toggle": {
+      "desc": "Toggles the general visibility (according to get(), so the CEF state) and applies it to CEF and imgui."
+    }
   }
 }

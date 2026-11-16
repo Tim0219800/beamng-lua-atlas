@@ -1,63 +1,63 @@
 # `ui_router_routeReference`
 
-*Fichier : `lua/ge/extensions/ui/router/routeReference.lua` · VM : Game Engine (GE) · 140 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/routeReference.lua` · VM: Game Engine (GE) · 140 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_routeReference` : `extensions.load("ui_router_routeReference")`, puis la globale `ui_router_routeReference`
+**Access:** extension `ui_router_routeReference`: `extensions.load("ui_router_routeReference")`, then the global `ui_router_routeReference`
 
-Fonctions pures pour décomposer une référence de navigation décorée de la forme `route[?clé=valeur&...][:portée]`. La partie route peut rester relative (« ./options ») : ce module ne la résout pas, il sépare seulement la requête inline et la portée (scope) et décode les paramètres inline.
+Pure functions to decompose a decorated navigation reference of the form `route[?key=value&...][:scope]`. The route part may stay relative ("./options"): this module does not resolve it, it only separates the inline query and the scope and decodes the inline parameters.
 
-## Exemple
+## Example
 
 ```lua
 local r = extensions.ui_router_routeReference.parse("menu.options?tab=audio&x=1:scope1")
 -- r.route == "menu.options", r.scope == "scope1", r.params == {tab="audio", x="1"}
 ```
 
-## Remarques
+## Notes
 
-- Les valeurs inline restent des chaînes. Les paramètres explicites passés par programme l'emportent sur les inline en cas de collision (mergeParams, avec avertissement).
-- Sans '?', le séparateur de portée est le premier ':' de la référence ; avec '?', c'est le premier ':' situé après le '?'.
-- Une référence dont la route est vide, ou dont la portée est vide, est traitée comme une route non décorée (portée nil).
+- Inline values stay strings. Explicit parameters passed programmatically win over inline ones on collision (mergeParams, with a warning).
+- Without '?', the scope separator is the first ':' of the reference; with '?', it is the first ':' after the '?'.
+- A reference whose route is empty, or whose scope is empty, is treated as an undecorated route (scope nil).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_routeReference.mergeParams(inlineParams, explicitParams)` | Superpose les paramètres explicites sur les paramètres inline (copie). Les explicites gagnent et un avertissement est journalisé si la valeur diffère. | 118 |
-| `ui_router_routeReference.parse(reference)` | Sépare « route[?requête][:portée] » en ses parties. Une référence non-chaîne est renvoyée sans changement avec des params vides. | 70 |
-| `ui_router_routeReference.parseQuery(query)` | Analyse un segment « a=1&b=2 » en table. Les valeurs restent des chaînes ; une clé répétée garde la dernière valeur (avertissement) ; une clé nue (« flag ») vaut une chaîne vide ; les clés vides sont ignorées. | 38 |
-| `ui_router_routeReference.urlDecode(value)` | Décode un composant de requête : '+' devient une espace, puis les séquences %XX sont décodées. | 24 |
+| `ui_router_routeReference.mergeParams(inlineParams, explicitParams)` | Overlays explicit parameters on inline parameters (copy). Explicit ones win and a warning is logged if the value differs. | 118 |
+| `ui_router_routeReference.parse(reference)` | Splits "route[?query][:scope]" into its parts. A non-string reference is returned unchanged with empty params. | 70 |
+| `ui_router_routeReference.parseQuery(query)` | Parses an "a=1&b=2" segment into a table. Values stay strings; a repeated key keeps the last value (warning); a bare key ("flag") is an empty string; empty keys are ignored. | 38 |
+| `ui_router_routeReference.urlDecode(value)` | Decodes a query component: '+' becomes a space, then %XX sequences are decoded. | 24 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_routeReference.mergeParams(inlineParams, explicitParams)`
 
-Superpose les paramètres explicites sur les paramètres inline (copie). Les explicites gagnent et un avertissement est journalisé si la valeur diffère.
+Overlays explicit parameters on inline parameters (copy). Explicit ones win and a warning is logged if the value differs.
 
-- `inlineParams` (*table|nil*) : Paramètres issus de la référence.
-- `explicitParams` (*table|nil*) : Paramètres passés explicitement.
-- **renvoie** : table Table fusionnée.
+- `inlineParams` (*table|nil*) : Parameters coming from the reference.
+- `explicitParams` (*table|nil*) : Explicitly passed parameters.
+- **returns**: table Merged table.
 
 #### `ui_router_routeReference.parse(reference)`
 
-Sépare « route[?requête][:portée] » en ses parties. Une référence non-chaîne est renvoyée sans changement avec des params vides.
+Splits "route[?query][:scope]" into its parts. A non-string reference is returned unchanged with empty params.
 
-- `reference` (*string|any*) : Référence de navigation brute.
-- **renvoie** : table { route = string, scope = string|nil, params = table<string, string> }
+- `reference` (*string|any*) : Raw navigation reference.
+- **returns**: table { route = string, scope = string|nil, params = table<string, string> }
 
 #### `ui_router_routeReference.parseQuery(query)`
 
-Analyse un segment « a=1&b=2 » en table. Les valeurs restent des chaînes ; une clé répétée garde la dernière valeur (avertissement) ; une clé nue (« flag ») vaut une chaîne vide ; les clés vides sont ignorées.
+Parses an "a=1&b=2" segment into a table. Values stay strings; a repeated key keeps the last value (warning); a bare key ("flag") is an empty string; empty keys are ignored.
 
-- `query` (*string|nil*) : Segment de requête sans le '?'.
-- **renvoie** : table<string, string> Paramètres décodés.
+- `query` (*string|nil*) : Query segment without the '?'.
+- **returns**: table<string, string> Decoded parameters.
 
 #### `ui_router_routeReference.urlDecode(value)`
 
-Décode un composant de requête : '+' devient une espace, puis les séquences %XX sont décodées.
+Decodes a query component: '+' becomes a space, then %XX sequences are decoded.
 
-- `value` (*string*) : Texte encodé ; une valeur non-chaîne est renvoyée telle quelle.
-- **renvoie** : string Texte décodé.
+- `value` (*string*) : Encoded text; a non-string value is returned as is.
+- **returns**: string Decoded text.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/routeReference.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/routeReference.lua`.*

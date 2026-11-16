@@ -1,14 +1,23 @@
 {
   "path": "lua/ge/extensions/career/modules/debug/organizationsDebug.lua",
-  "module": "Onglet de debug carrière « Organizations ». Deux entrées de triche : donner une réputation aléatoire (-50 à 150) à environ 30 % des organisations (via career_modules_playerAttributes.addAttributes) et marquer environ 30 % des facilités de livraison comme 'interacted'.",
-  "notes": ["Outil de développement ; debugOrder = 3.", "La première entrée appelle aussi career_career.interactWithOrganization pour chaque organisation tirée."],
+  "module": "\"Organizations\" career debug tab. Two cheat entries: give a random reputation (-50 to 150) to about 30% of organizations (via career_modules_playerAttributes.addAttributes) and mark about 30% of delivery facilities as 'interacted'.",
+  "notes": [
+    "Development tool; debugOrder = 3.",
+    "The first entry also calls career_career.interactWithOrganization for each organization drawn."
+  ],
   "fields": {
-    "debugOrder": {"type": "number", "desc": "Ordre de tri (3)."},
-    "debugName": {"type": "string", "desc": "'Organizations'."}
+    "debugOrder": {
+      "type": "number",
+      "desc": "Sort order (3)."
+    },
+    "debugName": {
+      "type": "string",
+      "desc": "'Organizations'."
+    }
   },
   "functions": {
     "drawDebugFunctions": {
-      "desc": "Dessine les entrées '> Give random reputation to 30% of organizations' et 'Interact with random facilities'.",
+      "desc": "Draws the entries '> Give random reputation to 30% of organizations' and 'Interact with random facilities'.",
       "params": {},
       "returns": [],
       "internal": true

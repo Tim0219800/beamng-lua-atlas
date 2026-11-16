@@ -1,0 +1,65 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/notebookInfo.lua",
+  "module": "Onglet « Notebook » de l'éditeur de rallye. Il affiche les informations du carnet courant (id, fichier, issues de validation) et permet de modifier son nom, ses auteurs, sa description et son mode audio par défaut, chaque modification passant par l'historique d'annulation de l'éditeur. Il contient aussi la section « Calibration Metadata Fields » (définition des champs de calibration au niveau du carnet) et le sélecteur de « Ghost Notebook ». Le module renvoie un constructeur (classe C).",
+  "notes": [
+    "Les champs de calibration initialisés par le bouton « Initialize Calibration Fields » sont : cornerIntensity, cornerDescriptor, direction, cornerLength, shape (stockés dans notebook.metadata.calibrationFields).",
+    "Le mode audio proposé exclut 'auto' et les modes masqués (RallyEnums.pacenoteAudioModeHidden).",
+    "Incohérence : dans selected(), le champ description est recréé avec un tampon de 1024 caractères alors que clearState() et la déclaration initiale utilisent 2048.",
+    "Les variables des champs de texte sont des locales du fichier (partagées par toutes les instances)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet onglet renvoyé par le constructeur (new(rallyEditor)). Champs : rallyEditor, path (carnet édité), valid, windowDescription = 'Notebook'.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur interne : mémorise l'éditeur, valid = true.",
+          "params": {"rallyEditor": {"type": "table", "desc": "Instance de l'éditeur de rallye."}},
+          "internal": true
+        },
+        "clearState": {
+          "desc": "Oublie le carnet et vide les champs de texte.",
+          "internal": true
+        },
+        "isValid": {
+          "desc": "Renvoie le résultat de la dernière validation.",
+          "returns": [{"type": "boolean", "desc": "true si le carnet est valide."}],
+          "internal": false
+        },
+        "validate": {
+          "desc": "Lance path:validate() et met à jour valid selon path:is_valid(). Les problèmes sont dans path.validation_issues.",
+          "internal": false
+        },
+        "setPath": {
+          "desc": "Définit le carnet édité par l'onglet.",
+          "params": {"path": {"type": "table", "desc": "Objet carnet."}},
+          "internal": true
+        },
+        "selected": {
+          "desc": "Appelée par l'éditeur quand l'onglet est sélectionné : recopie nom, auteurs et description du carnet dans les champs, puis émet onEditorEditModeChanged(nil, nil) pour redessiner la légende des raccourcis.",
+          "internal": true
+        },
+        "unselect": {
+          "desc": "Appelée quand l'onglet est quitté : émet onEditorEditModeChanged(nil, nil).",
+          "internal": true
+        },
+        "draw": {
+          "desc": "Dessine l'onglet (délègue à drawNotebook).",
+          "params": {"mouseInfo": {"type": "table", "desc": "Informations souris (non utilisées)."}},
+          "internal": true
+        },
+        "drawGhostNotebook": {
+          "desc": "Dessine le sélecteur du carnet fantôme (liste des choix, option « (none) », message d'erreur) en appelant les fonctions ghostNotebook de l'éditeur de rallye.",
+          "internal": true
+        },
+        "drawCalibrationMetadataFields": {
+          "desc": "Affiche les champs de calibration définis dans le carnet, ou un bouton pour les initialiser s'ils n'existent pas.",
+          "internal": true
+        },
+        "drawNotebook": {
+          "desc": "Valide puis dessine les informations du carnet (erreurs éventuelles, id, fichier), les champs éditables avec annulation/rétablissement, le mode audio, puis les sections calibration et ghost.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

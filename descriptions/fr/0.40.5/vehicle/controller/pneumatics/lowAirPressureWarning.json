@@ -1,0 +1,19 @@
+{
+  "path": "lua/vehicle/controller/pneumatics/lowAirPressureWarning.lua",
+  "module": "Contrôleur auxiliaire d'alerte de basse pression d'air (poids lourds). Surveille la pression d'un réservoir : sous airTooLowPressure et contact mis (ignitionLevel > 0), il met l'electric d'alerte à 1, joue une boucle sonore et affiche un message ; au-dessus de airOkPressure ou contact coupé il remet tout à zéro (hystérésis).",
+  "notes": [
+    "Clés jbeam lues : lowAirWarningElectric (\"lowAirPressure\"), airTooLowPressure (600000 Pa relatifs) et airOkPressure (650000 Pa), tous deux additionnés à powertrain.currentEnvPressure, relevantPressureTankName (\"mainAirTank\"), lowAirWarningSoundEvent (nom d'évènement audio, facultatif), lowAirWarningSoundNode (nom de nœud, 0 si absent), lowAirWarningSoundVolume (0.5).",
+    "Si le réservoir n'existe pas, la pression est considérée à 0 et l'alerte se déclenche dès que le contact est mis.",
+    "Le son est une source en boucle « AudioDefaultLoop3D » créée dans initSounds."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Lit les seuils de pression et le réservoir surveillé.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "initSounds": {"desc": "Crée la source sonore d'alerte (si lowAirWarningSoundEvent est défini) et règle son volume. Appelé par le moteur à l'initialisation des sons.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "reset": {"desc": "Remet l'electric d'alerte à 0.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "resetSounds": {"desc": "Arrête le son d'alerte et réinitialise l'état de lecture.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "updateGFX": {"desc": "Chaque frame : compare la pression du réservoir aux seuils et met à jour l'electric d'alerte, le son et le message.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+  }
+}

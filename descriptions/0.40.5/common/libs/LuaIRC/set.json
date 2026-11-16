@@ -1,39 +1,70 @@
 {
   "path": "lua/common/libs/LuaIRC/set.lua",
-  "module": "Partie de la bibliothèque tierce LuaIRC. Module \"irc.set\" : un ensemble de connexions IRC surveillées ensemble avec socket.select. Permet de gérer plusieurs clients et de ne traiter que ceux qui ont des données à lire.",
+  "module": "Part of the third-party LuaIRC library. Module \"irc.set\": a set of IRC connections monitored together with socket.select. Allows managing several clients and processing only those that have data to read.",
   "notes": [
-    "Dans set:remove, self.connections est à la fois indexé par socket et par position ; la suppression par position (remove(self.connections, k)) suppose que sockets et connections restent alignés.",
-    "L'objet passé à new peut définir un champ timeout, utilisé par select."
+    "In set:remove, self.connections is indexed both by socket and by position; removal by position (remove(self.connections, k)) assumes that sockets and connections remain aligned.",
+    "The object passed to new can define a timeout field, used by select."
   ],
   "functions": {
     "new": {
-      "desc": "Transforme la table t en ensemble (champs connections et sockets créés vides, métatable set).",
-      "params": {"t": {"type": "table", "desc": "Table de configuration, ex. {timeout = 1}"}},
-      "returns": [{"type": "table", "desc": "L'ensemble"}]
+      "desc": "Turns the table t into a set (connections and sockets fields created empty, set metatable).",
+      "params": {
+        "t": {
+          "type": "table",
+          "desc": "Configuration table, e.g. {timeout = 1}"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The set"
+        }
+      ]
     }
   },
   "classes": {
     "set": {
-      "desc": "Ensemble de connexions IRC.",
+      "desc": "Set of IRC connections.",
       "functions": {
         "add": {
-          "desc": "Ajoute une connexion (sa socket est ajoutée à la liste surveillée).",
-          "params": {"connection": {"type": "table", "desc": "Connexion IRC avec champ socket"}}
+          "desc": "Adds a connection (its socket is added to the monitored list).",
+          "params": {
+            "connection": {
+              "type": "table",
+              "desc": "IRC connection with a socket field"
+            }
+          }
         },
         "remove": {
-          "desc": "Retire une connexion de l'ensemble.",
-          "params": {"connection": {"type": "table", "desc": "Connexion à retirer"}}
+          "desc": "Removes a connection from the set.",
+          "params": {
+            "connection": {
+              "type": "table",
+              "desc": "Connection to remove"
+            }
+          }
         },
         "select": {
-          "desc": "Appelle socket.select sur les sockets avec self.timeout et renvoie la liste des connexions prêtes à lire.",
+          "desc": "Calls socket.select on the sockets with self.timeout and returns the list of connections ready to read.",
           "returns": [
-            {"type": "table|nil", "desc": "Connexions prêtes en lecture"},
-            {"type": "string|nil", "desc": "Erreur (ex. \"timeout\")"}
+            {
+              "type": "table|nil",
+              "desc": "Connections ready for reading"
+            },
+            {
+              "type": "string|nil",
+              "desc": "Error (e.g. \"timeout\")"
+            }
           ]
         },
         "poll": {
-          "desc": "Comme select, mais en cas de timeout renvoie toutes les connexions (pour qu'elles puissent faire leur travail périodique).",
-          "returns": [{"type": "table", "desc": "Connexions à traiter"}]
+          "desc": "Like select, but on timeout returns all the connections (so that they can do their periodic work).",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Connections to process"
+            }
+          ]
         }
       }
     }

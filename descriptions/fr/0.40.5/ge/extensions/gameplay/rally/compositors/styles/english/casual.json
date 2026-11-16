@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/compositors/styles/english/casual.lua",
+  "module": "Style de notes de rallye 'English casual' : un copilote anglais simplifié qui annonce les virages en 'easy / medium / hard' (numérotation easy_medium_hard) plus les descripteurs flat, square et hairpin. Il n'énonce ni appel de distance (distance.callsEnabled = false), ni longueur, ni forme de virage. Il n'utilise qu'un sous-ensemble de modificateurs (sauts, crêtes, éclaboussures, changements de surface, stop/finish, chicanes) et des alias qui ramènent les autres variantes vers ces modificateurs. Réutilise les modules distance, visual, caution, systemPacenotes et modifiers du dossier english.",
+  "notes": [
+    "AVERTISSEMENT du fichier : toute modification d'une chaîne utilisée pour une note impose de régénérer les fichiers audio.",
+    "Le style se compose de la même façon que les autres : M.composite = compositorUtil.compositeFromPhrases, M.enumerate = compositorUtil.enumerateConcise.",
+    "Les alias (casualModifierAliases) : jump/badDipJump/badJump/bigJump -> overJump ; variantes de crête -> crest ; water/intoWater -> watersplash ; overFinish -> finish ; openHairpin/tightHairpin -> hairpin.",
+    "Le champ descriptorAliases n'existe que dans ce style parmi les trois styles de cette série.",
+    "Validé par styleValidator au chargement par textCompositor."
+  ],
+  "fields": {
+    "composite": {"type": "function", "desc": "compositorUtil.compositeFromPhrases : (config, structured, distBefore, distAfter, escapeVars) -> liste de textes."},
+    "enumerate": {"type": "function", "desc": "compositorUtil.enumerateConcise : (textCompositor, config) -> liste de phrases uniques."},
+    "distance": {"type": "table", "desc": "Config de distance copiée du style english/distance mais avec callsEnabled = false (aucun appel de distance parlé)."},
+    "visualGeneral": {"type": "table", "desc": "Couleurs générales des notes visuelles (intoColor, distanceColor), depuis english/visual."},
+    "componentTypes": {"type": "table", "desc": "Registre des composants : corner (numérotation easy_medium_hard, direction left/right, descripteurs flat/square/hairpin), caution (english/caution), modifiers (sous-ensemble) et modifierAliases."},
+    "system": {"type": "table", "desc": "Notes système localisées (english/systemPacenotes)."}
+  }
+}

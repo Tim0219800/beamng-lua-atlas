@@ -1,25 +1,25 @@
 # `flowgraph_nodes_gameplay_race_raceAiParameters`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceAiParameters.lua` · VM : Game Engine (GE) · 76 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceAiParameters.lua` · VM: Game Engine (GE) · 76 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/race/raceAiParameters")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/race/raceAiParameters")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Race AI Parameters » (catégorie once_instant, tags ai et race, auteur BeamNG). Règle une fois les paramètres de pilotage de tous les véhicules IA (non contrôlés par un joueur) listés dans raceData.states, via veh:queueLuaCommand vers le module ai du véhicule : ai.setAggression, ai.setParameters (edgeDist, turnForceCoef, awarenessForceCoef), ai.setRacing(true), puis, si les pins sont définies, ai.setAvoidCars, ai.setAggressionMode (rubberBand/off) et driveStyle (offRoad/default). Entrées : raceData (doit être actif avec tous les états véhicules), aggression, racerSkill, randomizationScale, avoidCollisions, rubberband, offroad.
+Flowgraph node "Race AI Parameters" (category once_instant, tags ai and race, author BeamNG). Sets once the driving parameters of all AI vehicles (not controlled by a player) listed in raceData.states, via veh:queueLuaCommand to the vehicle's ai module: ai.setAggression, ai.setParameters (edgeDist, turnForceCoef, awarenessForceCoef), ai.setRacing(true), then, if the pins are set, ai.setAvoidCars, ai.setAggressionMode (rubberBand/off) and driveStyle (offRoad/default). Inputs: raceData (must be active with all vehicle states), aggression, racerSkill, randomizationScale, avoidCollisions, rubberband, offroad.
 
-## Remarques
+## Notes
 
-- Valeurs par défaut : aggression 0,9 (bornée 0,25 à 2), racerSkill 1 (bornée 0 à 1), randomizationScale 0 (bornée 0 à 2). Un bruit aléatoire est ajouté à chaque valeur selon randomizationScale.
-- Formules dérivées de racerSkill : edgeDist = 1,5 - 1,5*skill (m, bornée 0 à 1,5), turnForceCoef = 4*skill^1,5, awarenessForceCoef = 0,25*skill^1,5.
-- state.baseAggression reçoit l'agressivité calculée, pour un usage ultérieur.
+- Default values: aggression 0.9 (clamped 0.25 to 2), racerSkill 1 (clamped 0 to 1), randomizationScale 0 (clamped 0 to 2). Random noise is added to each value according to randomizationScale.
+- Formulas derived from racerSkill: edgeDist = 1.5 - 1.5*skill (m, clamped 0 to 1.5), turnForceCoef = 4*skill^1.5, awarenessForceCoef = 0.25*skill^1.5.
+- state.baseAggression receives the computed aggression, for later use.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:getRandomNumber(scale)` | Renvoie un nombre aléatoire uniforme dans [-scale, scale]. | 27 |
-| `C:workOnce()` | Applique les paramètres IA à chaque véhicule IA de la course (une seule fois, au premier flux). | 32 |
+| `C:getRandomNumber(scale)` | Returns a uniform random number in [-scale, scale]. | 27 |
+| `C:workOnce()` | Applies the AI parameters to each AI vehicle of the race (only once, on first flow). | 32 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceAiParameters.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceAiParameters.lua`.*

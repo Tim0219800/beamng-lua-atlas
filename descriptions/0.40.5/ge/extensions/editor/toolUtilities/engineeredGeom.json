@@ -1,84 +1,172 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/engineeredGeom.lua",
-  "module": "Géométrie de route « d'ingénieur » pour les outils d'édition de splines de l'éditeur : transforme la polyligne des noeuds d'une spline en axe ligne - clothoïde - arc - clothoïde - ligne (virages arrondis à rayon adaptatif, profil vertical lissé, élargissement dans les virages serrés). Les outils l'appellent via sampleInto selon group.geometryMode ('engineered' ou 'spline'). Il remplit divPoints, divWidths, normals, divCurv et discMap de la spline, puis calcule le repère de Frenet via geom.computeFrenetFrame.",
-  "usage": "local eng = require('editor/toolUtilities/engineeredGeom')\neng.applyDefaults(group)\nif not eng.sampleInto(group, {zMode = 'free', lonRes = 1.5}) then\n  -- mode spline : l'outil échantillonne lui-même avec geom.catmullRom*\nend",
+  "module": "'Engineer' road geometry for the editor's spline editing tools: transforms the polyline of a spline's nodes into a line - clothoid - arc - clothoid - line axis (rounded turns with adaptive radius, smoothed vertical profile, widening in tight turns). The tools call it via sampleInto according to group.geometryMode ('engineered' or 'spline'). It fills the spline's divPoints, divWidths, normals, divCurv and discMap, then computes the Frenet frame via geom.computeFrenetFrame.",
+  "usage": "local eng = require('editor/toolUtilities/engineeredGeom')\neng.applyDefaults(group)\nif not eng.sampleInto(group, {zMode = 'free', lonRes = 1.5}) then\n  -- spline mode: the tool samples itself with geom.catmullRom*\nend",
   "notes": [
-    "Unités : mètres et radians. Constantes par défaut : rayon 40 m, transition (clothoïde) 15 m, rayon minimal 8 m, angle minimal 0.75 degré (en dessous, le noeud est traversé sans arrondi), élargissement max 2.5 m, longueur de lissage vertical 40 m.",
-    "Les boucles (spline.isLoop) et les splines de moins de 3 noeuds n'ont pas de virage intérieur : buildCenterline retombe sur geom.catmullRomRaycast / catmullRomConformToTerrain / catmullRomFree selon zMode, et met divCurv à nil.",
-    "Le rayon est ajusté sur des arcs durs (Ls = 0) puis les spirales sont ajoutées ensuite : la transition n'influence donc jamais le rayon retenu. Des surcharges par noeud existent dans spline.corners[i] ({ radiusM, taperM }).",
-    "sampleInto ne transmet pas minAngleDeg ni stepM à buildCenterline ; seuls minR, lonRes, deckZ, maxStep, zMode, levelStart et levelFinish sont repris.",
-    "Le module s'appuie sur editor/toolUtilities/geom, util et style."
+    "Units: meters and radians. Default constants: radius 40 m, transition (clothoid) 15 m, minimum radius 8 m, minimum angle 0.75 degree (below it, the node is passed through without rounding), max widening 2.5 m, vertical smoothing length 40 m.",
+    "Loops (spline.isLoop) and splines with fewer than 3 nodes have no inner turn: buildCenterline falls back to geom.catmullRomRaycast / catmullRomConformToTerrain / catmullRomFree depending on zMode, and sets divCurv to nil.",
+    "The radius is fitted on hard arcs (Ls = 0) and the spirals are added afterwards: the transition therefore never influences the retained radius. Per-node overrides exist in spline.corners[i] ({ radiusM, taperM }).",
+    "sampleInto does not pass minAngleDeg or stepM to buildCenterline; only minR, lonRes, deckZ, maxStep, zMode, levelStart and levelFinish are carried over.",
+    "The module relies on editor/toolUtilities/geom, util and style."
   ],
   "fields": {
-    "CONTROLS": {"type": "table", "desc": "Métadonnées pour l'inspecteur, afin que tous les outils affichent les mêmes curseurs : radius, transition, vertical, widthTaper, widenAmount (chacun avec key, default, min, max, fmt, label, tooltip) et les infobulles toggleTooltip, modeEngTip, modeSmoothTip."},
-    "DEFAULT_MIN_R": {"type": "number", "desc": "Rayon plancher d'un virage (8.0 m)."}
+    "CONTROLS": {
+      "type": "table",
+      "desc": "Metadata for the inspector, so that all tools display the same sliders: radius, transition, vertical, widthTaper, widenAmount (each with key, default, min, max, fmt, label, tooltip) and the tooltips toggleTooltip, modeEngTip, modeSmoothTip."
+    },
+    "DEFAULT_MIN_R": {
+      "type": "number",
+      "desc": "Floor radius of a turn (8.0 m)."
+    }
   },
   "functions": {
     "solveCorner": {
-      "desc": "Résout la géométrie d'un virage au noeud pI : déviation signée, rayon, longueur de spirale (réduite à R*|delta| si trop longue), angle de spirale, angle d'arc et distance tangente T absorbée sur chaque ligne droite voisine. Travaille en plan (x, y). Renvoie { through = true, T = 0 } si un segment est quasi nul ou si la déviation est inférieure à minAngle.",
+      "desc": "Resolves the geometry of a turn at node pI: signed deviation, radius, spiral length (reduced to R*|delta| if too long), spiral angle, arc angle and tangent distance T absorbed on each neighboring straight line. Works in plan (x, y). Returns { through = true, T = 0 } if a segment is nearly zero or if the deviation is below minAngle.",
       "params": {
-        "pPrev": {"type": "vec3", "desc": "Noeud précédent."},
-        "pI": {"type": "vec3", "desc": "Noeud du virage (point d'intersection)."},
-        "pNext": {"type": "vec3", "desc": "Noeud suivant."},
-        "R": {"type": "number", "desc": "Rayon d'arc voulu (m)."},
-        "Ls": {"type": "number", "desc": "Longueur de spirale voulue (m)."},
-        "minAngle": {"type": "number", "desc": "Déviation minimale (rad) sous laquelle aucun arrondi n'est fait."}
+        "pPrev": {
+          "type": "vec3",
+          "desc": "Previous node."
+        },
+        "pI": {
+          "type": "vec3",
+          "desc": "Turn node (intersection point)."
+        },
+        "pNext": {
+          "type": "vec3",
+          "desc": "Next node."
+        },
+        "R": {
+          "type": "number",
+          "desc": "Desired arc radius (m)."
+        },
+        "Ls": {
+          "type": "number",
+          "desc": "Desired spiral length (m)."
+        },
+        "minAngle": {
+          "type": "number",
+          "desc": "Minimum deviation (rad) below which no rounding is done."
+        }
       },
-      "returns": [{"type": "table", "desc": "{ through, delta, absD, turn (+1 gauche, -1 droite), R, Ls, thetaS, arc, T }."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ through, delta, absD, turn (+1 left, -1 right), R, Ls, thetaS, arc, T }."
+        }
+      ],
       "internal": false
     },
     "buildCenterline": {
-      "desc": "Construit l'axe en plan de la spline à partir de ses noeuds (virages à clothoïdes), puis le profil vertical selon zMode, et met à jour spline.divPoints, divWidths, normals, divCurv, discMap avant d'appeler geom.computeFrenetFrame. Ne renvoie rien (sauf pour le repli Catmull-Rom).",
+      "desc": "Builds the spline's plan axis from its nodes (turns with clothoids), then the vertical profile according to zMode, and updates spline.divPoints, divWidths, normals, divCurv, discMap before calling geom.computeFrenetFrame. Returns nothing (except for the Catmull-Rom fallback).",
       "params": {
-        "spline": {"type": "table", "desc": "Spline avec nodes, widths, nmls, divPoints, divWidths, normals, discMap (et optionnellement isLoop, corners)."},
-        "p": {"type": "table|nil", "desc": "{ R, Ls, minR, minAngleDeg, stepM, lonRes, vertLen, deckZ, maxStep, levelStart, levelFinish, zMode = 'free'|'raycast'|'conform' }."}
+        "spline": {
+          "type": "table",
+          "desc": "Spline with nodes, widths, nmls, divPoints, divWidths, normals, discMap (and optionally isLoop, corners)."
+        },
+        "p": {
+          "type": "table|nil",
+          "desc": "{ R, Ls, minR, minAngleDeg, stepM, lonRes, vertLen, deckZ, maxStep, levelStart, levelFinish, zMode = 'free'|'raycast'|'conform' }."
+        }
       },
       "returns": [],
       "internal": false
     },
     "buildCenterlineFree": {
-      "desc": "Enveloppe de buildCenterline avec zMode = 'free' (hauteurs des noeuds libres).",
-      "params": {"spline": {"type": "table", "desc": "Spline."}, "p": {"type": "table|nil", "desc": "Paramètres (voir buildCenterline) ; p.zMode est écrasé."}},
+      "desc": "Wrapper of buildCenterline with zMode = 'free' (free node heights).",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Spline."
+        },
+        "p": {
+          "type": "table|nil",
+          "desc": "Parameters (see buildCenterline); p.zMode is overwritten."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "buildCenterlineRaycast": {
-      "desc": "Enveloppe de buildCenterline avec zMode = 'raycast' (axe posé sur le terrain par lancer de rayon).",
-      "params": {"spline": {"type": "table", "desc": "Spline."}, "p": {"type": "table|nil", "desc": "Paramètres (voir buildCenterline) ; p.zMode est écrasé."}},
+      "desc": "Wrapper of buildCenterline with zMode = 'raycast' (axis placed on the terrain by raycast).",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Spline."
+        },
+        "p": {
+          "type": "table|nil",
+          "desc": "Parameters (see buildCenterline); p.zMode is overwritten."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "buildCenterlineConform": {
-      "desc": "Enveloppe de buildCenterline avec zMode = 'conform' (axe conforme au terrain).",
-      "params": {"spline": {"type": "table", "desc": "Spline."}, "p": {"type": "table|nil", "desc": "Paramètres (voir buildCenterline) ; p.zMode est écrasé."}},
+      "desc": "Wrapper of buildCenterline with zMode = 'conform' (axis conforming to the terrain).",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Spline."
+        },
+        "p": {
+          "type": "table|nil",
+          "desc": "Parameters (see buildCenterline); p.zMode is overwritten."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "applyDefaults": {
-      "desc": "Complète un groupe avec les champs du mode ingénieur uniquement s'ils sont nil (geometryMode = 'spline', engRadiusM, engTransM, engVertLenM, curveWidenMaxM, curveWidenRunoffM, corners = {}). À appeler à la création d'un groupe et à la désérialisation de sessions anciennes.",
-      "params": {"group": {"type": "table", "desc": "Groupe modifié sur place."}},
+      "desc": "Completes a group with the engineered mode fields only if they are nil (geometryMode = 'spline', engRadiusM, engTransM, engVertLenM, curveWidenMaxM, curveWidenRunoffM, corners = {}). To be called when a group is created and when deserializing old sessions.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Group modified in place."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "sampleInto": {
-      "desc": "Point d'entrée unique d'échantillonnage selon group.geometryMode. En mode 'engineered', appelle buildCenterline avec les champs eng* du groupe et renvoie true. Sinon, met group.divCurv à nil et renvoie false pour que l'outil lance son propre échantillonneur geom.catmullRom*.",
+      "desc": "Single sampling entry point according to group.geometryMode. In 'engineered' mode, calls buildCenterline with the group's eng* fields and returns true. Otherwise, sets group.divCurv to nil and returns false so that the tool runs its own geom.catmullRom* sampler.",
       "params": {
-        "group": {"type": "table", "desc": "Groupe/spline avec geometryMode, engRadiusM, engTransM, engVertLenM."},
-        "opts": {"type": "table|nil", "desc": "{ zMode = 'free'|'raycast'|'conform' (défaut 'free'), lonRes, deckZ, maxStep, minR, levelStart, levelFinish }. levelStart/levelFinish : en mode free, cette extrémité rejoint une plateforme plate, le profil arrive à plat."}
+        "group": {
+          "type": "table",
+          "desc": "Group/spline with geometryMode, engRadiusM, engTransM, engVertLenM."
+        },
+        "opts": {
+          "type": "table|nil",
+          "desc": "{ zMode = 'free'|'raycast'|'conform' (default 'free'), lonRes, deckZ, maxStep, minR, levelStart, levelFinish }. levelStart/levelFinish: in free mode, this end joins a flat platform, the profile arrives flat."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si le mode ingénieur a échantillonné, false si l'appelant doit le faire."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the engineered mode sampled, false if the caller must do it."
+        }
+      ],
       "internal": false
     },
     "drawControlPolygon": {
-      "desc": "Dessine en debugDrawer, pour un groupe en mode ingénieur : le polygone des noeuds (guide fin), une sphère sur chaque noeud intérieur et l'axe résultant coloré par courbure (turquoise en ligne droite, ambre au virage le plus serré). Fondu selon la distance caméra (plein sous 90 m, invisible au-delà de 550 m). Sans effet hors mode 'engineered' ou avec moins de 2 noeuds.",
-      "params": {"group": {"type": "table|nil", "desc": "Groupe/spline à dessiner."}},
+      "desc": "Draws in debugDrawer, for a group in engineered mode: the node polygon (thin guide), a sphere on each inner node and the resulting axis colored by curvature (turquoise on a straight line, amber at the tightest turn). Fades with camera distance (full below 90 m, invisible beyond 550 m). No effect outside 'engineered' mode or with fewer than 2 nodes.",
+      "params": {
+        "group": {
+          "type": "table|nil",
+          "desc": "Group/spline to draw."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "selfTest": {
-      "desc": "Auto-test manuel : construit un virage de 90 degrés (R 30, Ls 20) et journalise le nombre de points, l'écart max entre points et le coude max par pas.",
+      "desc": "Manual self-test: builds a 90 degree turn (R 30, Ls 20) and logs the number of points, the max gap between points and the max bend per step.",
       "params": {},
-      "returns": [{"type": "integer", "desc": "Nombre de points d'axe générés."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of generated axis points."
+        }
+      ],
       "internal": false
     }
   }

@@ -1,25 +1,25 @@
 # `ui_router_routes_mods`
 
-*Fichier : `lua/ge/extensions/ui/router/routes/mods.lua` · VM : Game Engine (GE) · 43 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/routes/mods.lua` · VM: Game Engine (GE) · 43 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_routes_mods` : `extensions.load("ui_router_routes_mods")`, puis la globale `ui_router_routes_mods`
+**Access:** extension `ui_router_routes_mods`: `extensions.load("ui_router_routes_mods")`, then the global `ui_router_routes_mods`
 
-Routes du gestionnaire de mods (interface Angular héritée) : local, downloaded, scheduled, repository, automation, automationDetails, details, tous avec un screenId « menu.mods.* ». Module abstrait inclus par menu.lua et pause.lua (pause y ajoute les hooks de pause).
+Mod manager routes (legacy Angular interface): local, downloaded, scheduled, repository, automation, automationDetails, details, all with a "menu.mods.*" screenId. Abstract module included by menu.lua and pause.lua (pause adds the pause hooks there).
 
-## Remarques
+## Notes
 
-- Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = "<nom>" }`.
-- Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.
-- `ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change.
-- Le commentaire du code explique que forcer uiTypes = angular évite que le routeur attende un accusé de montage Vue qui ne vient jamais (sinon la transition expire et efface les données de retour).
+- Route configuration module: it exports no function. routeManager reads it (via the ui_router_routes_<name> extension) when routes.lua includes it with `{ include = "<name>" }`.
+- The keys of `Children` form the segments of the dotted name: "<module>.<child>". `children` (lowercase) in a node designates its sub-routes; `include` mounts another module there.
+- `ui` is inherited by child routes (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause): a child redefines it only for what changes.
+- The code comment explains that forcing uiTypes = angular prevents the router from waiting for a Vue mount acknowledgment that never comes (otherwise the transition expires and clears the back data).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `Children` | table<string, table> | local, downloaded, scheduled, repository, automation, automationDetails, details. |
-| `ModuleName` | string | Nom du module de routes (premier segment du nom pointé). |
-| `Root` | table | {screenId = "menu.mods", abstract = true, ui = Angular uniquement} |
+| `ModuleName` | string | Name of the routes module (first segment of the dotted name). |
+| `Root` | table | {screenId = "menu.mods", abstract = true, ui = Angular only} |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/routes/mods.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/routes/mods.lua`.*

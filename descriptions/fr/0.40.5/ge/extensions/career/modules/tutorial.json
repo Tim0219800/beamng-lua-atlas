@@ -1,0 +1,65 @@
+{
+  "path": "lua/ge/extensions/career/modules/tutorial.lua",
+  "module": "Tutoriel de la carrière, en 9 étapes (01enterVehicle à 09spmSignup). Ce module est une fine couche au-dessus de gameplay_tutorial_runtime : il lui fournit l'ordre des étapes, le préfixe des extensions d'étapes (career_modules_tutorial_step<id>), les préfabriqués initiaux et l'action de fin, et il sauvegarde la progression dans <profil>/career/tutorialState.json.",
+  "notes": [
+    "Au démarrage de la carrière (onCareerActive), le tutoriel ne se lance que si career_career.tutorialEnabled est vrai.",
+    "À la fin du tutoriel : autosave réactivé, sauvegarde, récupération par défaut de la carrière, reset de l'état du joueur, vidage des POI bruts et retour à l'état de jeu « career ».",
+    "Une étape sauvegardée invalide est ignorée (retour à la première étape).",
+    "Les fonctions de contrôle retournent le booléen du runtime et resynchronisent la progression en cas de succès.",
+    "sharedTutorialData est capturé à la fin du chargement du module (copie de la référence du runtime)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "gameplay_tutorial_runtime, _setup, _markers, _damageTracker, _bounds."},
+    "sharedTutorialData": {"type": "table", "desc": "Données partagées entre étapes, issues de gameplay_tutorial_runtime."}
+  },
+  "functions": {
+    "isActive": {"desc": "Indique si le tutoriel est en cours.", "returns": [{"type": "boolean", "desc": "Résultat du runtime."}], "internal": false},
+    "getCurrentStep": {"desc": "Retourne l'id de l'étape courante.", "returns": [{"type": "string|nil", "desc": "Ex. \"03basicManeuvers\"."}], "internal": false},
+    "getStepOrder": {"desc": "Retourne la liste ordonnée des ids d'étapes.", "returns": [{"type": "string[]", "desc": "Les 9 étapes."}], "internal": false},
+    "getStepIdByIndex": {
+      "desc": "Retourne l'id d'étape à un indice donné (à partir de 1).",
+      "params": {"index": {"type": "integer", "desc": "Indice dans l'ordre des étapes."}},
+      "returns": [{"type": "string|nil", "desc": "Id de l'étape."}],
+      "internal": false
+    },
+    "start": {"desc": "Démarre le tutoriel via le runtime.", "returns": [{"type": "boolean", "desc": "Succès."}], "internal": false},
+    "activateStep": {
+      "desc": "Active directement une étape.",
+      "params": {"stepId": {"type": "string", "desc": "Id de l'étape."}},
+      "returns": [{"type": "boolean", "desc": "Succès."}],
+      "internal": false
+    },
+    "completeStep": {
+      "desc": "Marque une étape comme terminée.",
+      "params": {"stepId": {"type": "string", "desc": "Id de l'étape."}},
+      "returns": [{"type": "boolean", "desc": "Succès."}],
+      "internal": false
+    },
+    "advanceToNextStep": {"desc": "Passe à l'étape suivante.", "returns": [{"type": "boolean", "desc": "Succès."}], "internal": false},
+    "endTutorial": {"desc": "Termine le tutoriel (déclenche l'action de fin configurée).", "returns": [{"type": "boolean", "desc": "Succès."}], "internal": false},
+    "getCompletedSteps": {"desc": "Retourne les étapes terminées.", "returns": [{"type": "table", "desc": "completedSteps du runtime (vide si aucune)."}], "internal": false},
+    "onExtensionLoaded": {"desc": "Hook de chargement : configure le runtime, lit tutorialState.json du profil courant et envoie la progression au runtime.", "internal": true},
+    "onExtensionUnloaded": {"desc": "Hook de déchargement : arrête le runtime.", "internal": true},
+    "onSaveCurrentProfile": {
+      "desc": "Hook de sauvegarde du profil : écrit la progression dans tutorialState.json.",
+      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde du profil."}},
+      "internal": true
+    },
+    "onCareerActive": {"desc": "Hook appelé quand la carrière devient active ; démarre le tutoriel si activé.", "returns": [{"type": "boolean|nil", "desc": "false si le tutoriel est désactivé."}], "internal": true},
+    "onUpdate": {
+      "desc": "Hook de mise à jour : relaie au runtime.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Hook de pré-rendu : relaie au runtime.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "internal": true
+    },
+    "onGetRawPoiListForTutorial": {
+      "desc": "Pendant le tutoriel, ajoute à la liste de POI le point « garage » (tutorial_apm_parking) sur la place de parking garageExteriorPark, avec icône, nom et miniature de la grande carte.",
+      "params": {"elements": {"type": "table", "desc": "Liste de POI à compléter (table.insert)."}},
+      "internal": true
+    }
+  }
+}

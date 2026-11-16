@@ -1,15 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/shiftToGearIndex.lua",
-  "module": "Nœud « Shift to Gear Index » (catégorie `repeat_instant`). Passe un rapport précis sur une boîte manuelle : `core_vehicleBridge.executeAction(veh,'shiftToGearIndex', gear)`. `gear` : 0 point mort, -1 marche arrière, 1 première, etc. Pins d'entrée : `vehId`, `gear`.",
+  "module": "Node \"Shift to Gear Index\" (category `repeat_instant`). Shifts to a specific gear on a manual gearbox: `core_vehicleBridge.executeAction(veh,'shiftToGearIndex', gear)`. `gear`: 0 neutral, -1 reverse, 1 first, etc. Input pins: `vehId`, `gear`.",
   "notes": [
-    "Comportement indéfini selon le code (description du nœud) pour une boîte automatique ou un rapport hors plage."
+    "Undefined behavior according to the code (node description) for an automatic gearbox or an out-of-range gear."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "work": {
-          "desc": "Envoie `shiftToGearIndex` au véhicule.",
+          "desc": "Sends `shiftToGearIndex` to the vehicle.",
           "internal": true
         }
       }

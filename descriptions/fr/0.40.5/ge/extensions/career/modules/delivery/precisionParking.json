@@ -1,0 +1,59 @@
+{
+  "path": "lua/ge/extensions/career/modules/delivery/precisionParking.lua",
+  "module": "Évalue la précision de stationnement du véhicule du joueur à la destination d'une livraison (colis, matériaux ou véhicule) et applique des bonus ou pénalités de récompenses. Le score (2 à 20) combine l'alignement angulaire, l'écart latéral et l'écart longitudinal du centre de la boîte englobante par rapport à la place de parking ; il donne un niveau perfect/great/good/bad/horrible. Les bonus touchent l'argent, l'XP logistique, l'XP de compétence et la réputation de l'organisation.",
+  "notes": [
+    "Seuils de score : perfect >= 20, great >= 15, good >= 10, bad >= 5, sinon horrible. Score = min(20, (angleScore+sideScore+forwardScore)*6 + 2) arrondi, chaque sous-score étant dans [0,1].",
+    "Angles en degrés, distances en mètres. Un stationnement à 180° compte comme 0° (angle ajusté = 180 - angle si > 90). Place par défaut 2.5 m x 5.0 m si width/length absents.",
+    "Les tolérances sont adaptatives : maxSide = max(0.3, (largeurPlace - largeurVéhicule)*0.3), maxForward = max(0.4, (longueurPlace - longueurVéhicule)*0.3) ; les minimums valent 30 % des maximums (planchers 0.1 et 0.15). L'angle va de 7.5 deg (0 point) à 1.6 deg (plein score).",
+    "Le bonus 'skill' est ajouté à la même clé de récompense que le bonus 'logistics' ('logistics-vehicleDelivery', 'logistics-materials' ou 'logistics-delivery') : les deux s'additionnent sur une seule entrée.",
+    "calculateCargoPrecisionScore (interne) ignore son paramètre cargo et utilise toujours le véhicule du joueur (be:getPlayerVehicleID(0)).",
+    "Les montants sont modifiés en place : appeler deux fois la fonction principale sur le même colis appliquerait le bonus deux fois."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : util_stepHandler."}
+  },
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook appelé à l'activation de la carrière : mémorise les références vers parcelManager, general, generator et vehicleTasks.",
+      "internal": true
+    },
+    "calculateVehiclePrecisionScore": {
+      "desc": "Calcule le score de stationnement d'un véhicule par rapport à une place (position, rotation, largeur et longueur optionnelles), selon la logique de parkingPointsNode.lua.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
+        "targetParkingSpot": {"type": "table", "desc": "Place de parking avec pos (vec3), rot (quat) et optionnellement width, length."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Table avec precisionLevel, totalScore, angle, adjustedAngle, sideDist, forwardDist, sous-scores et tolérances ; nil si le véhicule est introuvable."}]
+    },
+    "getPrecisionParkingBonus": {
+      "desc": "Convertit un résultat de précision en bonus : montants fixes et pourcentages pour l'argent (positif ou négatif), l'XP logistique, l'XP de compétence (good/great/perfect) et la réputation (bonus great/perfect, pénalité horrible). Sans donnée, renvoie un bonus nul de niveau 'none'.",
+      "params": {"precisionData": {"type": "table|nil", "desc": "Résultat de calculateVehiclePrecisionScore."}},
+      "returns": [{"type": "table", "desc": "Table avec precisionLevel, totalScore, mesures et champs moneyFlat/Percent, logisticsFlat/Percent, skillFlat/Percent, reputationFlat/Percent."}]
+    },
+    "calculateVehiclePrecisionParking": {
+      "desc": "Pour une livraison de véhicule : calcule la précision à taskData.dropOffPsPath et ajoute le bonus à taskData.adjustedRewards, avec le détail dans taskData.breakdown.precisionParking. Renvoie taskData inchangé si les données manquent.",
+      "params": {"taskData": {"type": "table", "desc": "Tâche de livraison avec dropOffPsPath, vehId, originalRewards, adjustedRewards, breakdown et offer.organization."}},
+      "returns": [{"type": "table", "desc": "taskData modifié."}]
+    },
+    "calculateCargoPrecisionParking": {
+      "desc": "Pour un colis ou des matériaux : évalue le véhicule du joueur à la place targetLocation.psPath et applique le bonus à cargo.rewards (money, logistics-materials ou logistics-delivery, réputation de l'organisation) ; stocke le détail dans cargo.precisionParking.",
+      "params": {
+        "cargo": {"type": "table", "desc": "Colis à livrer (rewards, organization, materialType)."},
+        "targetLocation": {"type": "table", "desc": "Destination contenant psPath, le chemin de la place de parking."}
+      },
+      "returns": [{"type": "table", "desc": "Le colis, modifié si le score a pu être calculé."}]
+    },
+    "getPrecisionParkingConfig": {
+      "desc": "Renvoie la table de configuration (seuils de score et montants/pourcentages de récompense) pour l'UI ou le débogage.",
+      "returns": [{"type": "table", "desc": "Table PRECISION_PARKING_CONFIG (référence, non copiée)."}]
+    },
+    "debugPrecisionParking": {
+      "desc": "Fonction de débogage : renvoie le score de précision d'un véhicule pour une place (le log est commenté dans le code).",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
+        "targetParkingSpot": {"type": "table", "desc": "Place de parking (pos, rot, width, length)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Données de précision."}]
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "path": "lua/ge/extensions/career/modules/log.lua",
+  "module": "Petit journal texte de la carrière. Les modules appellent addLog pour accumuler des lignes en mémoire ; à chaque sauvegarde du profil, les lignes sont ajoutées (mode append) au fichier career.log du slot de sauvegarde, puis la liste est vidée.",
+  "notes": [
+    "Format d'une ligne : timestamp os.time()|sévérité|origine|message. Sévérité par défaut \"I\", origine par défaut chaîne vide.",
+    "La liste en mémoire est vidée à l'activation de la carrière (onCareerActive) : les lignes non sauvegardées avant sont perdues."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_saveSystem."}
+  },
+  "functions": {
+    "addLog": {
+      "desc": "Ajoute une ligne au journal en mémoire (écrite dans career.log à la prochaine sauvegarde).",
+      "params": {
+        "message": {"type": "string", "desc": "Texte du message."},
+        "origin": {"type": "string|nil", "desc": "Nom du module émetteur (\"\" par défaut)."},
+        "severity": {"type": "string|nil", "desc": "Sévérité, \"I\" par défaut (la valeur n'est pas validée)."}
+      },
+      "internal": false
+    },
+    "onSaveCurrentProfile": {
+      "desc": "Hook appelé lors de la sauvegarde du profil : ajoute une ligne « Save game to ... » puis écrit (append) toutes les lignes dans <saveRoot>/<slot>/career.log et vide la liste.",
+      "params": {"currentSavePath": {"type": "string", "desc": "Chemin de la sauvegarde en cours."}},
+      "internal": true
+    },
+    "onCareerActive": {
+      "desc": "Hook appelé quand la carrière devient active : vide la liste et ajoute « Loaded game <chemin> ».",
+      "params": {"active": {"type": "boolean", "desc": "true à l'activation ; rien n'est fait si false."}},
+      "internal": true
+    }
+  }
+}

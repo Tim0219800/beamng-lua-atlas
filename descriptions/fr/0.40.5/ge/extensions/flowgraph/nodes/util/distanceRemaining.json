@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/distanceRemaining.lua",
+  "module": "Nœud « Waypoints Distance » (repeat_instant). Calcule la distance restante le long d'une liste de waypoints pour un véhicule et indique s'il roule dans le bon sens. Entrées : alwaysUpdate (flow caché), vehId, waypoints (table de vec3). Sorties : distLeft, rightWay (bool), goingRightWay et goingWrongWay (flow). Sans alwaysUpdate, la distance n'est mise à jour que si le véhicule roule à plus de 0,5 m/s.",
+  "notes": [
+    "Bug : le code écrit self.pinOut.goingRigthWay (faute de frappe) alors que le pin s'appelle goingRightWay : cet accès vaut nil et lève une erreur dès que le calcul est atteint.",
+    "Seuil de vitesse 0,5 m/s ; sous ce seuil le sens est considéré correct."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "work": {
+          "desc": "Trouve le segment le plus proche du véhicule (map.objects), somme la distance jusqu'à la fin, compare la vitesse à la direction du segment pour le sens de marche et écrit les pins.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

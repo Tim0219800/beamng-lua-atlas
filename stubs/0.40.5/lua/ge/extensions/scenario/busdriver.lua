@@ -2,89 +2,89 @@
 -- tim19Atlas stub generated from lua/ge/extensions/scenario/busdriver.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Scénario de conduite de bus (itinéraire de ligne avec arrêts). À partir de la configuration scenario.busdriver (routeID, variance, strictStop, simulatePassengers, traffic), il récupère la ligne via core_busRouteManager.setLine, trace le chemin au sol (core_groundMarkers), suit les déclencheurs d'arrêts de bus (BeamNGTrigger de type 'busstop' et 'buswp'), gère le temps d'attente de 5 s à l'arrêt, les portes et la position agenouillée, déplace 4 marqueurs de cadre d'arrêt et termine le scénario en réussite au dernier arrêt ou en échec si un arrêt est sauté. Le joueur est le véhicule 'scenario_player0'.
---- Accès : extension `scenario_busdriver` : `extensions.load("scenario_busdriver")`, puis la globale `scenario_busdriver`
+--- Bus driving scenario (line route with stops). From the scenario.busdriver configuration (routeID, variance, strictStop, simulatePassengers, traffic), it retrieves the line via core_busRouteManager.setLine, draws the ground path (core_groundMarkers), tracks the bus stop triggers (BeamNGTrigger of type 'busstop' and 'buswp'), handles the 5 s wait time at the stop, the doors and the kneeling position, moves 4 stop frame markers and ends the scenario as a success at the last stop or as a failure if a stop is skipped. The player is the vehicle 'scenario_player0'.
+--- Access: extension `scenario_busdriver`: `extensions.load("scenario_busdriver")`, then the global `scenario_busdriver`
 ---@class scenario_busdriver
----@field dependencies string[] Extensions chargées avant : scenario_scenarios, core_groundMarkers.
----@field enabledLineDebug boolean Si true, onPreRender dessine tout l'itinéraire (renderDebugLine) avec des textes debug. Faux par défaut.
+---@field dependencies string[] Extensions loaded first: scenario_scenarios, core_groundMarkers.
+---@field enabledLineDebug boolean If true, onPreRender draws the whole route (renderDebugLine) with debug texts. False by default.
 scenario_busdriver = {}
 
---- Termine le scénario en échec (scenario_scenarios.finish({failed = reason})) puis réinitialise l'état du module.
----Source : lua/ge/extensions/scenario/busdriver.lua:80
----@param reason string|table Message ou clé de traduction d'échec.
+--- Ends the scenario as a failure (scenario_scenarios.finish({failed = reason})) then resets the module state.
+---Source: lua/ge/extensions/scenario/busdriver.lua:80
+---@param reason string|table Failure message or translation key.
 function scenario_busdriver.fail(reason) end
 
---- Hook appelé quand un BeamNGTrigger est franchi. Gère l'entrée et la sortie des arrêts de bus de la ligne (type 'busstop') et l'enregistrement des points de passage (type 'buswp').
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/busdriver.lua:347
+--- Hook called when a BeamNGTrigger is crossed. Handles entering and leaving the line's bus stops (type 'busstop') and recording waypoints (type 'buswp').
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/busdriver.lua:347
 ---@param data table {type, event ('enter'|'exit'), subjectName, triggerName}.
 function scenario_busdriver.onBeamNGTrigger(data) end
 
---- Hook envoyé par le contrôleur du bus (véhicule) avec des évènements : 'onTriggerTick' (progression de l'arrêt : vitesse, portes, agenouillement), 'onApproachStop' (affiche les marqueurs d'arrêt, alpha cible 1) et 'onDepartedStop' (restaure la boîte englobante d'origine).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/busdriver.lua:668
+--- Hook sent by the bus (vehicle) controller with events: 'onTriggerTick' (stop progress: speed, doors, kneeling), 'onApproachStop' (shows the stop markers, target alpha 1) and 'onDepartedStop' (restores the original bounding box).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/busdriver.lua:668
 ---@param state table {event, triggerName, speed, bus_dooropen, bus_kneel}.
 function scenario_busdriver.onBusUpdate(state) end
 
---- Hook de fin de mission : vide la liste des marqueurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/busdriver.lua:838
+--- End-of-mission hook: clears the marker list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/busdriver.lua:838
 function scenario_busdriver.onClientEndMission() end
 
---- Hook de déchargement : vide les marqueurs, efface le chemin de groundMarkers et dégèle le véhicule joueur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/busdriver.lua:801
+--- Unload hook: clears the markers, clears the groundMarkers path and unfreezes the player vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/busdriver.lua:801
 function scenario_busdriver.onExtensionUnloaded() end
 
---- Hook : la physique est en pause ; le chronomètre d'arrêt ne progresse plus.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/busdriver.lua:812
+--- Hook: physics is paused; the stop timer no longer advances.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/busdriver.lua:812
 function scenario_busdriver.onPhysicsPaused() end
 
---- Hook : la physique reprend.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/busdriver.lua:816
+--- Hook: physics resumes.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/busdriver.lua:816
 function scenario_busdriver.onPhysicsUnpaused() end
 
---- Hook appelé avant chaque image. Anime l'alpha des marqueurs, calcule les statistiques de conduite (accélération, à-coups, dégâts, distance et angle d'arrêt), met à jour le chemin au sol vers le prochain arrêt (core_groundMarkers.setPath) et colore les marqueurs selon que le bus est dans la zone d'arrêt.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/busdriver.lua:501
----@param dt number Durée réelle de l'image (s).
----@param dtSim number Durée simulée (s).
+--- Hook called before each frame. Animates the markers' alpha, computes driving statistics (acceleration, jerk, damage, stop distance and angle), updates the ground path to the next stop (core_groundMarkers.setPath) and colors the markers depending on whether the bus is in the stop zone.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/busdriver.lua:501
+---@param dt number Real frame duration (s).
+---@param dtSim number Simulated duration (s).
 function scenario_busdriver.onPreRender(dt, dtSim) end
 
---- Hook de fin de course : si playerWon est vrai, enregistre le temps final dans les highscores (core_highscores.setScenarioHighscoresCustom, clé 'busRoute').
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/busdriver.lua:421
----@param final table Résultat, final.finalTime en secondes.
+--- End-of-race hook: if playerWon is true, records the final time in the highscores (core_highscores.setScenarioHighscoresCustom, key 'busRoute').
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/busdriver.lua:421
+---@param final table Result, final.finalTime in seconds.
 function scenario_busdriver.onRaceResult(final) end
 
---- Hook de début de course : réinitialise, charge la ligne, dégèle le joueur, crée les 4 marqueurs TSStatic (busMarkerTL, TR, BL, BR, modèle position_marker.dae) dans ScenarioObjectsGroup, vérifie les points navhelp de la carte routière et trace le chemin vers le premier arrêt (couleur routeColor de la ligne). Met running à true.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/busdriver.lua:229
+--- Race start hook: resets, loads the line, unfreezes the player, creates the 4 TSStatic markers (busMarkerTL, TR, BL, BR, model position_marker.dae) in ScenarioObjectsGroup, checks the road map's navhelp points and draws the path to the first stop (line's routeColor color). Sets running to true.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/busdriver.lua:229
 function scenario_busdriver.onRaceStart() end
 
---- Hook appelé quand le scénario est chargé. Si busdriver.simulatePassengers, ajoute la pièce 'citybus_seats_ballast' à la configuration du véhicule joueur ; si busdriver.traffic et que le trafic est éteint, démarre le trafic avec trafficAmount (ou le maximum pour 12 véhicules si 0).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/busdriver.lua:781
----@param scenario table Scénario chargé (scenario.busdriver).
+--- Hook called when the scenario is loaded. If busdriver.simulatePassengers, adds the part 'citybus_seats_ballast' to the player vehicle's configuration; if busdriver.traffic and traffic is off, starts traffic with trafficAmount (or the maximum for 12 vehicles if 0).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/busdriver.lua:781
+---@param scenario table Loaded scenario (scenario.busdriver).
 function scenario_busdriver.onScenarioLoaded(scenario) end
 
---- Hook appelé au redémarrage du scénario : réinitialise l'état et recharge la ligne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/busdriver.lua:188
----@param scenario table Scénario redémarré.
+--- Hook called when the scenario restarts: resets the state and reloads the line.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/busdriver.lua:188
+---@param scenario table Restarted scenario.
 function scenario_busdriver.onScenarioRestarted(scenario) end
 
---- Hook appelé au changement de véhicule. Pour le joueur 0, réinitialise, gèle le nouveau véhicule et recharge la ligne ; échoue si la ligne est introuvable.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/busdriver.lua:448
----@param oldId integer Ancien identifiant de véhicule.
----@param newId integer Nouvel identifiant.
----@param player integer Indice du joueur.
+--- Hook called on vehicle switch. For player 0, resets, freezes the new vehicle and reloads the line; fails if the line is not found.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/busdriver.lua:448
+---@param oldId integer Old vehicle identifier.
+---@param newId integer New identifier.
+---@param player integer Player index.
 function scenario_busdriver.onVehicleSwitched(oldId, newId, player) end
 
---- Demandé par l'UI : envoie à l'évènement BusDisplayUpdate la ligne courante réduite aux arrêts restants (à partir du prochain). Journalise une erreur et sort si aucune ligne n'est chargée.
----Source : lua/ge/extensions/scenario/busdriver.lua:820
+--- Requested by the UI: sends to the BusDisplayUpdate event the current line reduced to the remaining stops (from the next one). Logs an error and exits if no line is loaded.
+---Source: lua/ge/extensions/scenario/busdriver.lua:820
 function scenario_busdriver.requestState() end
 

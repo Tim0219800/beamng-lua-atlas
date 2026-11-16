@@ -1,22 +1,22 @@
 # `flowgraph_nodes_scene_reloadCollision`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/reloadCollision.lua` · VM : Game Engine (GE) · 24 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/reloadCollision.lua` · VM: Game Engine (GE) · 24 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/reloadCollision")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/reloadCollision")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Reload Collision » (once_instant). Recharge les données de collision du niveau une seule fois via be:reloadCollision(). Aucun pin.
+Flowgraph node "Reload Collision" (once_instant). Reloads the level's collision data once via be:reloadCollision(). No pins.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Appelle be:reloadCollision(). | 19 |
+| `C:workOnce()` | Calls be:reloadCollision(). | 19 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `reloadCollision`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/reloadCollision.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/reloadCollision.lua`.*

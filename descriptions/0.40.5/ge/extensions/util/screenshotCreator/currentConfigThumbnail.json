@@ -1,34 +1,55 @@
 {
   "path": "lua/ge/extensions/util/screenshotCreator/currentConfigThumbnail.lua",
-  "module": "Sous-module de screenshotCreator qui génère la vignette de la configuration courante d'un véhicule. start() prépare une capture asynchrone : à chaque frame (onPreRender), une coroutine résout le cadrage selon le mode sélectionné (framingManager), capture la vignette hors écran (délai de 5 s maximum) puis appelle le callback avec le résultat. Une seule capture peut être active à la fois.",
+  "module": "Submodule of screenshotCreator that generates the thumbnail of a vehicle's current configuration. start() prepares an asynchronous capture: every frame (onPreRender), a coroutine resolves the framing according to the selected mode (framingManager), captures the thumbnail off-screen (5 s maximum delay) then calls the callback with the result. Only one capture can be active at a time.",
   "notes": [
-    "Si le cadrage ne peut pas être résolu, le callback est appelé avec success = false et le message d'erreur en quatrième argument.",
-    "Le nom du modèle est lu dans vehicle.jbeam ou vehicle.JBeam."
+    "If the framing cannot be resolved, the callback is called with success = false and the error message as the fourth argument.",
+    "The model name is read from vehicle.jbeam or vehicle.JBeam."
   ],
   "functions": {
     "start": {
-      "desc": "Démarre la capture de la vignette d'un véhicule. Refuse (false, \"busy\") si une capture est déjà en cours.",
+      "desc": "Starts the thumbnail capture of a vehicle. Refuses (false, \"busy\") if a capture is already in progress.",
       "params": {
-        "vehicle": {"type": "userdata", "desc": "Véhicule à photographier"},
-        "configName": {"type": "string", "desc": "Nom de la configuration"},
-        "outputPath": {"type": "string", "desc": "Chemin du fichier image à produire"},
-        "callback": {"type": "function", "desc": "callback(success, outputPath, token, errorMessage?) appelé à la fin"},
-        "token": {"type": "any", "desc": "Valeur renvoyée telle quelle au callback"}
+        "vehicle": {
+          "type": "userdata",
+          "desc": "Vehicle to photograph"
+        },
+        "configName": {
+          "type": "string",
+          "desc": "Configuration name"
+        },
+        "outputPath": {
+          "type": "string",
+          "desc": "Path of the image file to produce"
+        },
+        "callback": {
+          "type": "function",
+          "desc": "callback(success, outputPath, token, errorMessage?) called at the end"
+        },
+        "token": {
+          "type": "any",
+          "desc": "Value returned as is to the callback"
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "true si la capture est lancée, false si occupé"},
-        {"type": "string|nil", "desc": "\"busy\" en cas de refus"}
+        {
+          "type": "boolean",
+          "desc": "true if the capture is started, false if busy"
+        },
+        {
+          "type": "string|nil",
+          "desc": "\"busy\" on refusal"
+        }
       ],
       "internal": false
     },
     "onPreRender": {
-      "desc": "Hook appelé chaque frame avant le rendu : fait avancer la coroutine de capture. En cas d'erreur Lua, logue l'erreur, libère la capture et appelle le callback avec success = false.",
+      "desc": "Hook called every frame before rendering: advances the capture coroutine. On a Lua error, logs the error, releases the capture and calls the callback with success = false.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook appelé au déchargement : abandonne la capture en cours sans appeler son callback.",
+      "desc": "Hook called on unload: abandons the capture in progress without calling its callback.",
       "params": {},
       "returns": [],
       "internal": true

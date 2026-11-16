@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/scenario/demolitionDerby.lua",
+  "module": "Extension de scénario de type démolition : elle déclare vainqueur le dernier véhicule encore en mouvement. Chaque seconde, elle compare la position de chaque véhicule du scénario à sa dernière position connue ; un véhicule qui bouge de 1 m ou moins pendant plus de 15 secondes est considéré à l'arrêt.",
+  "notes": [
+    "Il faut qu'un seul véhicule soit en mouvement et que tous les autres aient dépassé 15 ticks d'arrêt pour que scenario_scenarios.finish soit appelé avec le message '<nom> WINS!!!' (texte codé en dur, non traduit).",
+    "Le test de mouvement se fait environ une fois par seconde (accumulation de dt dans onPreRender), distance seuil 1 m.",
+    "L'extension ne fait rien si le scénario n'est pas à l'état 'running'. La liste des véhicules est reconstruite à chaque onScenarioChange quand scenario.state == 'running'."
+  ],
+  "fields": {},
+  "functions": {
+    "onScenarioChange": {
+      "desc": "Hook appelé par scenario_scenarios à chaque changement d'état du scénario. Quand le scénario passe en 'running', réinitialise le suivi et enregistre chaque véhicule de scenario.vehicles trouvé dans le scenetree. Sans scénario, remet tout à zéro.",
+      "params": {"sc": {"type": "any", "desc": "Argument transmis par le hook, non utilisé (le scénario est relu via scenario_scenarios.getScenario())."}},
+      "returns": [],
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Hook appelé avant le rendu de chaque image. Toutes les secondes, détecte les véhicules immobiles et termine le scénario s'il ne reste qu'un véhicule en mouvement.",
+      "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

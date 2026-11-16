@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerData.lua",
+  "module": "Nœud flowgraph « Get Drag Racer Data » (catégorie repeat_instant, LEGACY). Nœud de commodité qui donne l'état d'un pilote (vehId) : isPlayable, lane, isDesqualified, desqualifiedReason, isFinished. Le code recommande plutôt « Get Drag Racer Status » et « Get Drag Racer Spawn Point ».",
+  "notes": ["Écrit les sorties seulement si elles sont utilisées (isUsed).", "Si les données ne sont pas prêtes, les sorties gardent leur valeur précédente.", "L'orthographe « desqualified » (sans i) est celle du jeu."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "_executionStarted": {"desc": "Vide data et dragData.", "internal": true},
+        "work": {"desc": "Lit dragBridge.getData et getRacerData(vehId), puis alimente les pins utilisés."}
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "path": "lua/common/libs/lua-websockets/websocket/ev_common.lua",
+  "module": "Fonctions communes aux backends client_ev et server_ev de lua-websockets (boucle d'événements lua-ev) : envoi asynchrone avec tampon et lecture/décodage de trames WebSocket sur un socket. Nécessite le module 'ev' (non fourni par le jeu).",
+  "notes": [
+    "Le fichier est une table de retour {async_send, message_io} ; le doc auto liste des noms 'message_io' en globale, mais ce sont des variables locales.",
+    "Une partie de async_send est tronquée dans l'extraction auto (corps réel : fonction send/stop/send_async plus bas dans le fichier)."
+  ],
+  "functions": {
+    "async_send": {
+      "desc": "Prépare l'envoi asynchrone sur un socket : crée un IO d'écriture ev et renvoie deux fonctions, send_async(data, on_sent, on_err) qui ajoute les données au tampon et renvoie le nombre d'octets en attente, et stop() qui arrête l'IO et vide le tampon. on_sent reçoit les données envoyées ; on_err reçoit l'erreur.",
+      "params": {"sock": {"type": "table", "desc": "Socket luasocket."}, "loop": {"type": "table", "desc": "Boucle ev (défaut ev.Loop.default)."}},
+      "returns": [{"type": "function", "desc": "send_async(data, on_sent, on_err)."}, {"type": "function", "desc": "stop()."}]
+    },
+    "message_io": {
+      "desc": "Surveille la lecture d'un socket, reconstitue les trames WebSocket (via frame.decode), concatène les fragments et appelle on_message pour chaque message complet. Appelle on_error à la déconnexion ou à une erreur autre que timeout.",
+      "params": {"sock": {"type": "table", "desc": "Socket luasocket avec descripteur valide."}, "loop": {"type": "table", "desc": "Boucle ev."}, "on_message": {"type": "function", "desc": "fonction(message, opcode)."}, "on_error": {"type": "function", "desc": "fonction(err, io, sock)."}},
+      "returns": [{"type": "table", "desc": "L'IO ev de lecture (arrêt avec :stop(loop))."}]
+    }
+  }
+}

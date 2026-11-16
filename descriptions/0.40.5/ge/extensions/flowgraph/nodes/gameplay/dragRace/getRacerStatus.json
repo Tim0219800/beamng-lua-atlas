@@ -1,13 +1,20 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerStatus.lua",
-  "module": "Nœud flowgraph « Get Drag Racer Status » (catégorie repeat_instant). Donne l'état d'un pilote (pin vehId) : isPlayable, lane, isDesqualified, desqualifiedReason, isFinished. Quand les données manquent, les sorties utilisées valent faux, 0 ou chaîne vide.",
-  "notes": ["L'orthographe « desqualified » est celle du jeu."],
+  "module": "Flowgraph node \"Get Drag Racer Status\" (category repeat_instant). Gives the state of a driver (vehId pin): isPlayable, lane, isDesqualified, desqualifiedReason, isFinished. When data is missing, the used outputs are false, 0 or empty string.",
+  "notes": [
+    "The spelling \"desqualified\" is the game's."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "_executionStarted": {"desc": "Vide data et dragData.", "internal": true},
-        "work": {"desc": "Lit dragBridge.getData et getRacerData(vehId) puis écrit les pins utilisés."}
+        "_executionStarted": {
+          "desc": "Clears data and dragData.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Reads dragBridge.getData and getRacerData(vehId) then writes the used pins."
+        }
       }
     }
   }

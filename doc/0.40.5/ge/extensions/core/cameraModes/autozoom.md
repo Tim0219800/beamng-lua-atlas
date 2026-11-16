@@ -1,42 +1,42 @@
 # `core_cameraModes_autozoom`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/autozoom.lua` · VM : Game Engine (GE) · 82 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/autozoom.lua` · VM: Game Engine (GE) · 82 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/autozoom")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/autozoom")` (file under extensions/ but not a regular extension)
 
-Filtre de caméra (isFilter = true, hidden = true) : règle automatiquement le champ de vision selon la distance entre la caméra et sa cible, par paliers discrets (comme un zoom manuel par à-coups), avec lissage vers le palier. Ce n'est pas une caméra sélectionnable : il est instancié par d'autres modes (ex. cameraModes/external.lua avec ses propres paliers et son lisseur) qui appellent autozoom:update(data) à chaque frame. Le zoom manuel de l'utilisateur (entrées zoomIn/zoomOut de MoveManager, touches pavé numérique 9/3) s'ajoute au palier. Le module renvoie un constructeur : require('core/cameraModes/autozoom')(options).
+Camera filter (isFilter = true, hidden = true): automatically sets the field of view according to the distance between the camera and its target, in discrete steps (like a jerky manual zoom), with smoothing toward the step. It is not a selectable camera: it is instantiated by other modes (e.g. cameraModes/external.lua with its own steps and smoother) which call autozoom:update(data) every frame. The user's manual zoom (MoveManager zoomIn/zoomOut inputs, numpad keys 9/3) is added to the step. The module returns a constructor: require('core/cameraModes/autozoom')(options).
 
-## Exemple
+## Example
 
 ```lua
 local autozoom = require('core/cameraModes/autozoom')
 local az = autozoom()
-az:init(newTemporalSpring(15, 10))   -- facultatif : autre lisseur
-az.steps = { {0, 60}, {3, 40}, {50, 15} } -- {distance en m, FOV en degrés}
--- chaque frame : az:update(data)  -> écrit data.res.fov
+az:init(newTemporalSpring(15, 10))   -- optional: another smoother
+az.steps = { {0, 60}, {3, 40}, {50, 15} } -- {distance in m, FOV in degrees}
+-- every frame: az:update(data)  -> writes data.res.fov
 ```
 
-## Remarques
+## Notes
 
-- L'index automatique abrège les signatures : les vraies sont init(smoother), getFov(distance, dt), reset() et update(data).
-- Paliers par défaut (distance m -> FOV deg) : 0->120, 1.5->100, 3->70, 8->50, 20->20, 50->10, 125->4, 200->2. Le palier retenu est le dernier dont la distance est <= distance courante.
-- Le delta utilisateur est limité de façon que le FOV final reste entre 2 et 100 degrés (avec une marge de tolérance de +20/-1).
-- mustReset est vrai au départ : le premier appel de getFov fixe le FOV sans lissage. Il faut le remettre à true (ex. external le fait lors d'un reset) pour éviter un saut visible.
-- Le lisseur peut avoir getUncapped (utilisé de préférence) ou get ; il doit exposer set(valeur).
-- Incohérence : baseFov est initialisé à `self.fov or 90`, mais self.fov vaut déjà 60 juste avant, donc la valeur de repli 90 n'est jamais utilisée.
+- The automatic index abbreviates the signatures: the real ones are init(smoother), getFov(distance, dt), reset() and update(data).
+- Default steps (distance m -> FOV deg): 0->120, 1.5->100, 3->70, 8->50, 20->20, 50->10, 125->4, 200->2. The step retained is the last one whose distance is <= the current distance.
+- The user delta is limited so that the final FOV stays between 2 and 100 degrees (with a tolerance margin of +20/-1).
+- mustReset is true at start: the first getFov call sets the FOV without smoothing. It must be set back to true (e.g. external does this on a reset) to avoid a visible jump.
+- The smoother may have getUncapped (preferred) or get; it must expose set(value).
+- Inconsistency: baseFov is initialized to `self.fov or 90`, but self.fov is already 60 just before, so the fallback value 90 is never used.
 
-## Classe `C`
+## Class `C`
 
-Objet filtre renvoyé par le constructeur. Champs : steps, fov, baseFov, userFov, mustReset, fovSmoother, smooth.
+Filter object returned by the constructor. Fields: steps, fov, baseFov, userFov, mustReset, fovSmoother, smooth.
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_autozoom")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_autozoom")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:getFov(distance, dt)` | Calcule le FOV pour une distance : choisit le palier, ajoute la correction manuelle de l'utilisateur (2.5 * dt * (zoomIn - zoomOut) * FOV actuel, limitée) puis lisse vers la cible (instantané si mustReset). | 37 |
-| `C:init(smoother)` | Initialise (ou réinitialise) le filtre : choisit le lisseur de FOV (par défaut newTemporalSpring(30, 10)), remet mustReset, fov=60, userFov=0 et les paliers par défaut. Peut être rappelé pour changer de lisseur. | 8 |
-| `C:reset()` | Annule le zoom manuel de l'utilisateur (userFov = 0), touches pavé numérique 9/3. | 65 |
-| `C:update(data)` | Calcule la distance entre data.res.targetPos et data.res.pos et écrit data.res.fov. Appelé par la caméra propriétaire. | 68 |
+| `C:getFov(distance, dt)` | Computes the FOV for a distance: chooses the step, adds the user's manual correction (2.5 * dt * (zoomIn - zoomOut) * current FOV, clamped) then smooths toward the target (instant if mustReset). | 37 |
+| `C:init(smoother)` | Initializes (or reinitializes) the filter: chooses the FOV smoother (default newTemporalSpring(30, 10)), resets mustReset, fov=60, userFov=0 and the default steps. Can be called again to change the smoother. | 8 |
+| `C:reset()` | Cancels the user's manual zoom (userFov = 0), numpad keys 9/3. | 65 |
+| `C:update(data)` | Computes the distance between data.res.targetPos and data.res.pos and writes data.res.fov. Called by the owning camera. | 68 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/autozoom.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/autozoom.lua`.*

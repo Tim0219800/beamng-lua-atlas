@@ -1,63 +1,63 @@
 # `editor_heroRoadEditor_exportMgr`
 
-*Fichier : `lua/ge/extensions/editor/heroRoadEditor/exportMgr.lua` · VM : Game Engine (GE) · 247 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/heroRoadEditor/exportMgr.lua` · VM: Game Engine (GE) · 247 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_heroRoadEditor_exportMgr` : `extensions.load("editor_heroRoadEditor_exportMgr")`, puis la globale `editor_heroRoadEditor_exportMgr`
+**Access:** extension `editor_heroRoadEditor_exportMgr`: `extensions.load("editor_heroRoadEditor_exportMgr")`, then the global `editor_heroRoadEditor_exportMgr`
 
-Cuisson (bake) en fichiers DAE et gestion de l'état Edit/Live d'un groupe du Hero Road Editor. Le bake écrit le maillage de conduite du groupe dans <niveau>/art/heroRoad/heroRoad_<id>/heroRoad_<id>_NNN.dae, puis passe le groupe en état désactivé (Live), où un TSStatic persistant (canSave=true) remplace le ProceduralMesh éditable. Il « brûle » aussi trottoirs et mobilier (sidewalkMgr, barrierMgr) et rend les décals persistants (layerMgr).
+Baking to DAE files and management of the Edit/Live state of a Hero Road Editor group. The bake writes the group's driving mesh to <level>/art/heroRoad/heroRoad_<id>/heroRoad_<id>_NNN.dae, then puts the group in the disabled (Live) state, where a persistent TSStatic (canSave=true) replaces the editable ProceduralMesh. It also "burns" sidewalks and furniture (sidewalkMgr, barrierMgr) and makes the decals persistent (layerMgr).
 
-## Remarques
+## Notes
 
-- L'état est piloté par group.isEnabled : true = Edit (surface procédurale transitoire, rien n'est écrit dans le niveau), false = Live (statique cuit, persistant).
-- Les sommets sont écrits relatifs au centre AABB de chaque chunk et le TSStatic est placé à ce centre, pour garder de petites coordonnées locales même loin de l'origine monde (limite moteur 2048 m citée dans le code).
-- Les statiques cuits sont nommés 'HeroRoadBaked_<id>_<n>' (n à partir de 1) ; collisionType 'Collision Mesh', decalType 'Visible Mesh Final'.
-- Longueur de chunk par défaut : group.chunkLenM ou 120 m.
-- Pour une route terrain (group.isMesh == false) aucun DAE n'est écrit ; terrainFinalized remplace le manifeste.
-- Le niveau courant est obtenu par getMissionPath() ; sans niveau chargé, bakeGroup échoue.
+- The state is driven by group.isEnabled: true = Edit (transient procedural surface, nothing is written to the level), false = Live (baked static, persistent).
+- The vertices are written relative to each chunk's AABB center and the TSStatic is placed at that center, to keep small local coordinates even far from the world origin (2048 m engine limit cited in the code).
+- The baked statics are named 'HeroRoadBaked_<id>_<n>' (n starting at 1); collisionType 'Collision Mesh', decalType 'Visible Mesh Final'.
+- Default chunk length: group.chunkLenM or 120 m.
+- For a terrain road (group.isMesh == false) no DAE is written; terrainFinalized replaces the manifest.
+- The current level is obtained by getMissionPath(); with no level loaded, bakeGroup fails.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_heroRoadEditor_exportMgr.applyState(group)` | Réconcilie le maillage du groupe avec son état Edit/Live. Edit : supprime le statique cuit et les pièces brûlées, rend décals et dossier transitoires, marque le groupe sale (reconstruction). Live : supprime la surface procédurale et l'aperçu, fait apparaître le statique cuit, rend décals et dossier persistants, et recharge la collision (be:reloadCollision). Si un groupe Live n'a pas de bake valide (ou si les .dae ont disparu), il repasse en Edit. C'est aussi la séparation de sauvegarde du niveau : seule une route Live est écrite. | 126 |
-| `editor_heroRoadEditor_exportMgr.bakeGroup(group)` | Cuit le groupe : génère les chunks avec LODs et maillage de collision (mesh.buildChunkLODs), vide le dossier de bake, écrit les DAE (daeExport.writeDaeLODs), brûle trottoirs et mobilier, met group.isEnabled=false puis appelle applyState. | 179 |
-| `editor_heroRoadEditor_exportMgr.hasBaked(group)` | Indique si le groupe possède un bake (état final affichable en mode désactivé) : terrainFinalized pour une route terrain, sinon un bakedManifest non vide. | 91 |
-| `editor_heroRoadEditor_exportMgr.unbakeGroup(group)` | Annule le bake : seule façon de quitter l'état Live. Remet isEnabled=true, appelle applyState, puis efface bakedManifest et terrainFinalized. Les fichiers DAE ne sont supprimés qu'au prochain bake (wipeFolder). | 233 |
+| `editor_heroRoadEditor_exportMgr.applyState(group)` | Reconciles the group's mesh with its Edit/Live state. Edit: deletes the baked static and the burned pieces, makes decals and folder transient, marks the group dirty (rebuild). Live: deletes the procedural surface and the preview, makes the baked static appear, makes decals and folder persistent, and reloads the collision (be:reloadCollision). If a Live group has no valid bake (or if the .dae files have disappeared), it goes back to Edit. This is also the level save separation: only a Live road is written. | 126 |
+| `editor_heroRoadEditor_exportMgr.bakeGroup(group)` | Bakes the group: generates the chunks with LODs and collision mesh (mesh.buildChunkLODs), empties the bake folder, writes the DAEs (daeExport.writeDaeLODs), burns sidewalks and furniture, sets group.isEnabled=false then calls applyState. | 179 |
+| `editor_heroRoadEditor_exportMgr.hasBaked(group)` | Indicates whether the group has a bake (final state displayable in disabled mode): terrainFinalized for a terrain road, otherwise a non-empty bakedManifest. | 91 |
+| `editor_heroRoadEditor_exportMgr.unbakeGroup(group)` | Cancels the bake: the only way to leave the Live state. Sets isEnabled=true, calls applyState, then clears bakedManifest and terrainFinalized. The DAE files are only deleted at the next bake (wipeFolder). | 233 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_heroRoadEditor_exportMgr.applyState(group)`
 
-Réconcilie le maillage du groupe avec son état Edit/Live. Edit : supprime le statique cuit et les pièces brûlées, rend décals et dossier transitoires, marque le groupe sale (reconstruction). Live : supprime la surface procédurale et l'aperçu, fait apparaître le statique cuit, rend décals et dossier persistants, et recharge la collision (be:reloadCollision). Si un groupe Live n'a pas de bake valide (ou si les .dae ont disparu), il repasse en Edit. C'est aussi la séparation de sauvegarde du niveau : seule une route Live est écrite.
+Reconciles the group's mesh with its Edit/Live state. Edit: deletes the baked static and the burned pieces, makes decals and folder transient, marks the group dirty (rebuild). Live: deletes the procedural surface and the preview, makes the baked static appear, makes decals and folder persistent, and reloads the collision (be:reloadCollision). If a Live group has no valid bake (or if the .dae files have disappeared), it goes back to Edit. This is also the level save separation: only a Live road is written.
 
-- `group` (*table*) : Groupe Hero Road (isEnabled, bakedManifest, sceneTreeFolderId…).
+- `group` (*table*) : Hero Road group (isEnabled, bakedManifest, sceneTreeFolderId...).
 
 #### `editor_heroRoadEditor_exportMgr.bakeGroup(group)`
 
-Cuit le groupe : génère les chunks avec LODs et maillage de collision (mesh.buildChunkLODs), vide le dossier de bake, écrit les DAE (daeExport.writeDaeLODs), brûle trottoirs et mobilier, met group.isEnabled=false puis appelle applyState.
+Bakes the group: generates the chunks with LODs and collision mesh (mesh.buildChunkLODs), empties the bake folder, writes the DAEs (daeExport.writeDaeLODs), burns sidewalks and furniture, sets group.isEnabled=false then calls applyState.
 
-- `group` (*table*) : Groupe Hero Road avec au moins 2 nœuds.
-- **renvoie** : boolean true si le bake a réussi.
-- **renvoie** : string Message de résultat ou d'erreur (ex. 'need at least 2 nodes', 'no level loaded…', 'mesh has no geometry', 'write failed: <chemin>').
+- `group` (*table*) : Hero Road group with at least 2 nodes.
+- **returns**: boolean true if the bake succeeded.
+- **returns**: string Result or error message (e.g. 'need at least 2 nodes', 'no level loaded...', 'mesh has no geometry', 'write failed: <path>').
 
 #### `editor_heroRoadEditor_exportMgr.hasBaked(group)`
 
-Indique si le groupe possède un bake (état final affichable en mode désactivé) : terrainFinalized pour une route terrain, sinon un bakedManifest non vide.
+Indicates whether the group has a bake (final state displayable in disabled mode): terrainFinalized for a terrain road, otherwise a non-empty bakedManifest.
 
-- `group` (*table*) : Groupe Hero Road.
-- **renvoie** : boolean true si un bake existe.
+- `group` (*table*) : Hero Road group.
+- **returns**: boolean true if a bake exists.
 
 #### `editor_heroRoadEditor_exportMgr.unbakeGroup(group)`
 
-Annule le bake : seule façon de quitter l'état Live. Remet isEnabled=true, appelle applyState, puis efface bakedManifest et terrainFinalized. Les fichiers DAE ne sont supprimés qu'au prochain bake (wipeFolder).
+Cancels the bake: the only way to leave the Live state. Sets isEnabled=true, calls applyState, then clears bakedManifest and terrainFinalized. The DAE files are only deleted at the next bake (wipeFolder).
 
-- `group` (*table*) : Groupe Hero Road.
+- `group` (*table*) : Hero Road group.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`, `directoryExists`, `fileExists`, `findFiles`, `removeFile`
 - `be:` `reloadCollision`
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/heroRoadEditor/exportMgr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/heroRoadEditor/exportMgr.lua`.*

@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/environment/pauseGame.lua",
+  "module": "Nœud flowgraph « Pause Game » (catégorie once_p_duration, auteur BeamNG, tags pause/freeze/halt/stop/interrupt). Met la simulation en pause via simTimeAuthority.pause. L'action est différée à _afterTrigger (après le déclenchement de tous les nœuds de la frame).",
+  "notes": ["Bug : le pin d'entrée « value » (« si le jeu doit être en pause ») n'est jamais lu. workOnce met toujours _pauseGame à true, donc le nœud ne fait que mettre en pause, jamais reprendre."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "_executionStarted": {"desc": "Remet le drapeau interne à faux.", "internal": true},
+        "workOnce": {"desc": "Demande la pause (drapeau à true)."},
+        "_afterTrigger": {"desc": "Si demandé et si le jeu n'est pas déjà en pause, appelle simTimeAuthority.pause(true), puis remet le drapeau à faux.", "internal": true}
+      }
+    }
+  }
+}

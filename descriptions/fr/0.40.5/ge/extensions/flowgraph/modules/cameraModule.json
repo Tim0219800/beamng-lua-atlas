@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/flowgraph/modules/cameraModule.lua",
+  "module": "Module flowgraph (moduleOrder -500, donc l'un des premiers) qui gère les trajectoires de caméra (camPath) pendant un projet. Il charge un fichier <nom>/<nom>.camPath.json relatif au projet via core_paths.loadPath, ou stocke un chemin fourni en mémoire, puis le joue avec core_paths.playPath. Il suit le chemin actif, le nombre de fins de parcours (completions) et le mode boucle.",
+  "notes": [
+    "Les chemins sont identifiés par un id entier local au module (getFreeId) et indexés par nom dans pathIds.",
+    "Bug (copier-coller) : getCmd renvoie une commande qui appelle le module 'button' (buttonClicked) ; inutilisable pour la caméra.",
+    "afterTrigger contient un bloc scheduleAction vide.",
+    "isPathComplete provoque une erreur si activePathId == id mais completions est nil (ne devrait pas arriver après startPath).",
+    "getPathDuration lit le temps du dernier marqueur ; erreur si le chemin n'a aucun marqueur."
+  ],
+  "functions": {
+    "getFreeId": {"desc": "Incrémente et renvoie un id.", "returns": [{"type": "integer", "desc": "id"}]},
+    "getUniqueName": {"desc": "Renvoie prefix..'-'..id unique.", "params": {"prefix": {"type": "string", "desc": "préfixe"}}, "returns": [{"type": "string", "desc": "nom unique"}]},
+    "init": {"desc": "Crée le variableStorage et appelle clear().", "internal": true},
+    "clear": {"desc": "Réinitialise le chemin actif, les complétions et les tables de chemins stockés.", "internal": true},
+    "findPath": {"desc": "Renvoie l'id du chemin de ce nom, en le chargeant si besoin depuis <nom>/<nom>.camPath.json (résolu par mgr:getRelativeAbsolutePath). Journalise une erreur si le fichier est introuvable.", "params": {"name": {"type": "string", "desc": "nom du chemin / dossier"}}, "returns": [{"type": "integer", "desc": "id du chemin"}]},
+    "addCustomPath": {"desc": "Enregistre un chemin déjà construit sous un nom. Sans force, renvoie l'id existant si le nom est déjà connu.", "params": {"name": {"type": "string", "desc": "nom"}, "path": {"type": "table", "desc": "chemin de caméra (avec markers)"}, "force": {"type": "boolean|nil", "desc": "remplacer le nom existant"}}, "returns": [{"type": "integer", "desc": "id du chemin"}]},
+    "getPath": {"desc": "Renvoie la table du chemin stocké.", "params": {"id": {"type": "integer", "desc": "id du chemin"}}, "returns": [{"type": "table|nil", "desc": "chemin"}]},
+    "getPathDuration": {"desc": "Durée du chemin = temps du dernier marqueur, 0 si le chemin est inconnu.", "params": {"id": {"type": "integer", "desc": "id du chemin"}}, "returns": [{"type": "number", "desc": "durée (s)"}]},
+    "isPathComplete": {"desc": "Vrai si ce chemin est le chemin actif et a été terminé au moins une fois.", "params": {"id": {"type": "integer", "desc": "id du chemin"}}, "returns": [{"type": "boolean", "desc": "terminé"}]},
+    "startPath": {"desc": "Passe en caméra de jeu si la caméra libre est active, puis joue le chemin avec core_paths.playPath (useDtReal = true) et mémorise l'id, la boucle et complétions = 0. Ne fait rien si l'id est inconnu.", "params": {"id": {"type": "integer", "desc": "id du chemin"}, "loop": {"type": "boolean|nil", "desc": "rejouer en boucle"}}},
+    "cancelPathCam": {"desc": "Arrête le chemin de caméra en cours (core_paths.stopCurrentPath).", "params": {}},
+    "finishedPath": {"desc": "Callback appelé par core_paths en fin de parcours : sans boucle, arrête la caméra ; dans tous les cas incrémente completions.", "internal": true},
+    "endActivePath": {"desc": "Arrête le chemin actif (si id est nil ou égal à l'actif) et efface l'état.", "params": {"id": {"type": "integer|nil", "desc": "id attendu"}}},
+    "restartActivePath": {"desc": "Relance le chemin actif avec le même réglage de boucle (si id est nil ou égal à l'actif).", "params": {"id": {"type": "integer|nil", "desc": "id attendu"}}},
+    "getCmd": {"desc": "Construit une commande Lua pour le module 'button' (voir notes : copier-coller probable).", "params": {"id": {"type": "integer", "desc": "id"}}, "returns": [{"type": "string", "desc": "code Lua"}]},
+    "afterTrigger": {"desc": "Appelé après le tick du graphe : finalise les variables.", "internal": true},
+    "executionStopped": {"desc": "Appelé à l'arrêt du projet : arrête la caméra de chemin si active puis appelle clear().", "internal": true}
+  }
+}

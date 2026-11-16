@@ -1,59 +1,59 @@
 # `telemetry_trackers_session`
 
-*Fichier : `lua/ge/extensions/telemetry/trackers/session.lua` · VM : Game Engine (GE) · 124 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/trackers/session.lua` · VM: Game Engine (GE) · 124 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_trackers_session` : `extensions.load("telemetry_trackers_session")`, puis la globale `telemetry_trackers_session`
+**Access:** extension `telemetry_trackers_session`: `extensions.load("telemetry_trackers_session")`, then the global `telemetry_trackers_session`
 
-Suiveur de télémétrie de session : marque le début et la fin de la session. Il se charge en premier et se décharge en dernier, donc encadre tous les autres évènements. Un rechargement Lua du moteur de jeu poursuit la session en cours. Au début : évènement « session » (type start) avec faits sur le client, langues, version de télémétrie, licence tech, fuseau horaire, identifiant anonyme, mode Big Picture, alimentation et VR. À la fin : « session » (type end) avec la durée.
+Session telemetry tracker: marks the start and end of the session. It loads first and unloads last, so it brackets all other events. A game engine Lua reload continues the current session. At the start: "session" event (type start) with facts about the client, languages, telemetry version, tech license, timezone, anonymous ID, Big Picture mode, power and VR. At the end: "session" (type end) with the duration.
 
-## Remarques
+## Notes
 
-- Toutes les heures locales peuvent être fausses de plusieurs heures. L'évènement « login » (émis dès que l'authentification est disponible) donne le décalage avec l'horloge serveur (clockOffset), l'heure UTC locale, l'heure ajustée et l'horodatage serveur tel que reçu, pour ancrer les autres évènements.
-- Lors d'une session poursuivie après rechargement Lua, aucun nouvel évènement start n'est émis ; loginLogged est repris de l'état précédent.
-- La fin de session n'est émise qu'une fois et pas pendant un rechargement Lua (onSerialize avec reason == « reload »).
+- All local times can be off by several hours. The "login" event (emitted as soon as authentication is available) gives the offset from the server clock (clockOffset), the local UTC time, the adjusted time and the server timestamp as received, to anchor the other events.
+- On a session continued after a Lua reload, no new start event is emitted; loginLogged is taken from the previous state.
+- The session end is emitted only once and not during a Lua reload (onSerialize with reason == "reload").
 
-**Dépendances (chargées avant) :** `telemetry_core`
+**Dependencies (loaded first):** `telemetry_core`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_trackers_session.onExtensionLoaded(previousState)` | Hook appelé au chargement : émet l'évènement de début de session (sauf session poursuivie), tente d'émettre le login et passe en déchargement manuel. *(interne)* *(hook)* | 59 |
-| `telemetry_trackers_session.onExtensionUnloaded()` | Hook appelé au déchargement : émet l'évènement de fin de session avec la durée (hors rechargement Lua). *(interne)* *(hook)* | 95 |
-| `telemetry_trackers_session.onOnlineStateChanged(connected)` | Hook appelé quand l'état de connexion en ligne change : une fois la connexion revenue (premier moment où l'horloge serveur est connue), émet l'évènement login. *(interne)* *(hook)* | 115 |
-| `telemetry_trackers_session.onSerialize(reason)` | Hook appelé avant déchargement : retient si c'est un rechargement Lua et renvoie {loginLogged}. *(interne)* *(hook)* | 108 |
+| `telemetry_trackers_session.onExtensionLoaded(previousState)` | Hook called on load: emits the session start event (except for a continued session), tries to emit the login and switches to manual unload. *(internal)* *(hook)* | 59 |
+| `telemetry_trackers_session.onExtensionUnloaded()` | Hook called on unload: emits the session end event with the duration (except on a Lua reload). *(internal)* *(hook)* | 95 |
+| `telemetry_trackers_session.onOnlineStateChanged(connected)` | Hook called when the online connection state changes: once the connection is back (first moment the server clock is known), emits the login event. *(internal)* *(hook)* | 115 |
+| `telemetry_trackers_session.onSerialize(reason)` | Hook called before unload: remembers whether it is a Lua reload and returns {loginLogged}. *(internal)* *(hook)* | 108 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_trackers_session.onExtensionLoaded(previousState)`
 
-Hook appelé au chargement : émet l'évènement de début de session (sauf session poursuivie), tente d'émettre le login et passe en déchargement manuel.
+Hook called on load: emits the session start event (except for a continued session), tries to emit the login and switches to manual unload.
 
-- `previousState` (*table|nil*) : État renvoyé par onSerialize ({loginLogged}) lors d'un rechargement.
+- `previousState` (*table|nil*) : State returned by onSerialize ({loginLogged}) during a reload.
 
 #### `telemetry_trackers_session.onOnlineStateChanged(connected)`
 
-Hook appelé quand l'état de connexion en ligne change : une fois la connexion revenue (premier moment où l'horloge serveur est connue), émet l'évènement login.
+Hook called when the online connection state changes: once the connection is back (first moment the server clock is known), emits the login event.
 
-- `connected` (*boolean*) : true si connecté.
+- `connected` (*boolean*) : true if connected.
 
 #### `telemetry_trackers_session.onSerialize(reason)`
 
-Hook appelé avant déchargement : retient si c'est un rechargement Lua et renvoie {loginLogged}.
+Hook called before unload: remembers whether it is a Lua reload and returns {loginLogged}.
 
-- `reason` (*string*) : Raison (« reload » pour un rechargement).
-- **renvoie** : table {loginLogged}
+- `reason` (*string*) : Reason ("reload" for a reload).
+- **returns**: table {loginLogged}
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | telemetry_core. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Lua:` `getOSLanguage`, `getSelectedLanguage`
 - `ResearchVerifier.` `isTechLicenseVerified`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/trackers/session.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/trackers/session.lua`.*

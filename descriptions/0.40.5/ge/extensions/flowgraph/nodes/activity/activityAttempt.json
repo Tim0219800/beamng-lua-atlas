@@ -1,19 +1,27 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/activity/activityAttempt.lua",
-  "module": "Nœud flowgraph « Activity Attempt » (catégorie once_instant, tags activity/mission). Crée une tentative de mission via gameplay_missions_progress.newAttempt et la sort sur le pin table « attempt » (tableType attemptData) pour les autres nœuds d'activité. Pins fixes : entrées bool « passed » et « completed » ; sortie « attempt ». Les pins d'entrée personnalisés ajoutés par l'utilisateur (tous types sauf flow) sont copiés dans les données de la tentative. S'exécute une fois quand le flux arrive (workOnce).",
+  "module": "Flowgraph node \"Activity Attempt\" (category once_instant, tags activity/mission). Creates a mission attempt via gameplay_missions_progress.newAttempt and outputs it on the table pin \"attempt\" (tableType attemptData) for the other activity nodes. Fixed pins: bool inputs \"passed\" and \"completed\"; output \"attempt\". Custom input pins added by the user (all types except flow) are copied into the attempt data. Runs once when the flow arrives (workOnce).",
   "notes": [
-    "Le type de la tentative est toujours 'attempted' : les lignes qui le passaient à 'passed'/'completed' selon les pins sont commentées, donc les pins « passed » et « completed » sont sans effet dans ce nœud.",
-    "Les pins fixes (passed, completed) ne sont pas copiés dans les données ; seuls les pins non fixes le sont."
+    "The attempt type is always 'attempted': the lines that set it to 'passed'/'completed' depending on the pins are commented out, so the \"passed\" and \"completed\" pins have no effect in this node.",
+    "The fixed pins (passed, completed) are not copied into the data; only non-fixed pins are."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Active savePins et allowCustomInPins (pins d'entrée personnalisés sauvegardés).", "internal": true},
-        "postInit": {"desc": "Vide (code commenté sur des modèles de types de tentative).", "internal": true},
-        "workOnce": {"desc": "Si le flux est actif, rassemble les pins non fixes dans une table, crée la tentative 'attempted' avec ces données et la place sur le pin de sortie attempt."}
+        "init": {
+          "desc": "Enables savePins and allowCustomInPins (saved custom input pins).",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Empty (code commented out on attempt type templates).",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "If the flow is active, gathers the non-fixed pins into a table, creates the 'attempted' attempt with this data and puts it on the attempt output pin."
+        }
       }
     }
   }

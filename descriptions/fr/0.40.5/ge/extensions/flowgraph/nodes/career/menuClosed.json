@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/menuClosed.lua",
+  "module": "Nœud flowgraph « Menu Closed » (catégorie repeat_instant, couleur/icône ui). Impulsion d'une frame sur la sortie menuClosed quand un menu a été fermé et que le joueur est de retour en jeu (hook onUIPlayStateChanged avec enteredPlay vrai).",
+  "notes": ["Sa description dans le jeu est « Util Helper for Garage tutorial » (copier-coller)."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
+        "work": {"desc": "Chaque frame : menuClosed à faux, applique puis efface les drapeaux.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
+        "onUIPlayStateChanged": {"desc": "Hook : si le joueur est revenu en état de jeu, lève le drapeau menuClosed.", "params": {"enteredPlay": {"type": "boolean", "desc": "vrai si on entre dans l'état de jeu"}}, "internal": true}
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "path": "lua/ge/extensions/flowgraph/modules/vehicleModule.lua",
+  "module": "Module flowgraph (moduleOrder -150) qui suit les véhicules utilisés par un graphe : ceux qu'il fait apparaître ou qu'on lui déclare avec addForeignVehicle. Il attend que chaque véhicule soit prêt, récupère les décalages de ses attelages (tow_hitch, fifthwheel…), suit les attelages entre véhicules, gère les données de bus (agenouillement, portes, arrêts) et supprime les véhicules à l'arrêt du graphe sauf ceux marqués dontDelete. Dépend de gameplay_walk et core_vehicleBridge.",
+  "usage": "local vm = mgr.modules.vehicle\nlocal id = vm:getVehicleIdByInternalName('mon_vehicule')\nif vm:isBus(id) then vm:registerBusChangeNotification(id) end",
+  "notes": [
+    "Hooks écoutés : onCouplerAttached, onCouplerDetached, onBusUpdate, onVehicleResetted (onBusUpdate n'a pas de méthode dans ce fichier).",
+    "Les véhicules suivis ont veh.canSave = false.",
+    "getVehicle renvoie une table vide (jamais nil) si l'id est inconnu.",
+    "Bug possible : onCouplerAttached/onCouplerDetached plantent si l'un des deux ids n'est pas suivi (self.couplings[id] est nil).",
+    "requestBusData est vide (son contenu est commenté) ; la fonction ne fait rien.",
+    "Ordre de priorité des attelages pour le tri de couplerOffset : tow_hitch, fifthwheel, gooseneck_hitch, fifthwheel_v2, pintle. Plus d'un attelage sur un véhicule génère un log I.",
+    "executionStopped : supprime les véhicules non dontDelete, restaure le carburant stocké des autres, restaure la blacklist de gameplay_walk et l'état de core_trailerRespawn."
+  ],
+  "fields": {
+    "moduleOrder": {"type": "integer", "desc": "Ordre de chargement (-150, tôt)."},
+    "dependencies": {"type": "string[]", "desc": "gameplay_walk, core_vehicleBridge."},
+    "hooks": {"type": "string[]", "desc": "Hooks auxquels le module s'abonne."}
+  },
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Instance du module véhicule (mgr.modules.vehicle). Tables internes : vehicles (id -> données : id, ready, internalName, couplerOffset, couplerTags, dontDelete, storedEnergyStorage…), sortedIds (ids triés), couplings (id -> {autreId = true}).",
+      "functions": {
+        "init": {"desc": "Crée les tables internes puis appelle clear().", "internal": true},
+        "clear": {"desc": "Vide vehicles, sortedIds et couplings.", "internal": true},
+        "getSpawnedVehicles": {"desc": "Copie profonde de la liste triée des ids de véhicules suivis.", "returns": [{"type": "integer[]", "desc": "ids de véhicules"}]},
+        "addForeignVehicle": {"desc": "Déclare un véhicule non créé par le flowgraph mais à suivre ; il est marqué dontDelete (non supprimé à l'arrêt).", "params": {"veh": {"type": "userdata", "desc": "objet véhicule"}, "moreData": {"type": "table|nil", "desc": "champs supplémentaires fusionnés dans les données"}}},
+        "addVehicle": {"desc": "Commence à suivre un véhicule (ignoré s'il l'est déjà). Si le véhicule est prêt, appelle readyUpVehicle.", "params": {"veh": {"type": "userdata", "desc": "objet véhicule"}, "moreData": {"type": "table|nil", "desc": "champs supplémentaires (ex. dontDelete, ignoreReadyUp)"}}},
+        "getVehicle": {"desc": "Renvoie les données suivies d'un véhicule, ou une table vide.", "params": {"id": {"type": "integer", "desc": "id du véhicule"}}, "returns": [{"type": "table", "desc": "données du véhicule"}]},
+        "getVehicleIdByInternalName": {"desc": "Cherche l'id d'un véhicule d'après son nom interne exact.", "params": {"name": {"type": "string", "desc": "nom interne"}}, "returns": [{"type": "integer", "desc": "id, ou -1 si introuvable"}]},
+        "getVehiclesIdByInternalNameMatch": {"desc": "Renvoie les ids dont le nom interne correspond au motif (string.find, donc motif Lua).", "params": {"name": {"type": "string", "desc": "motif Lua"}}, "returns": [{"type": "integer[]", "desc": "ids correspondants"}]},
+        "onUpdate": {"desc": "Appelée à chaque frame : repère les véhicules devenus prêts et appelle readyUpVehicle.", "internal": true},
+        "readyUpVehicle": {"desc": "Marque le véhicule prêt ; sauf ignoreReadyUp, active le suivi mapmgr (via le module level, éventuellement différé) et demande les décalages d'attelage pour chaque tag.", "params": {"id": {"type": "integer", "desc": "id du véhicule"}}, "internal": true},
+        "addCouplerOffset": {"desc": "Enregistre les décalages d'attelage reçus (vec3, nom, tag) pour un véhicule et les trie par priorité de tag puis par nom.", "params": {"id": {"type": "integer", "desc": "id du véhicule"}, "off": {"type": "table", "desc": "nom d'attelage -> position"}, "tag": {"type": "string", "desc": "tag d'attelage"}}, "internal": true},
+        "executionStarted": {"desc": "Mémorise la blacklist de gameplay_walk et l'état de core_trailerRespawn pour les restaurer à l'arrêt.", "internal": true},
+        "storeFuelAmount": {"desc": "Demande et mémorise l'énergie des réservoirs du véhicule, pour la restaurer à l'arrêt (s'il n'est pas supprimé). Log W si le véhicule n'est pas suivi.", "params": {"id": {"type": "integer", "desc": "id du véhicule"}}},
+        "setKeepVehicle": {"desc": "Définit dontDelete pour un véhicule suivi ; s'il est dans un prefab, demande au module prefab de le dépaqueter avant suppression.", "params": {"id": {"type": "integer", "desc": "id du véhicule"}, "keep": {"type": "boolean", "desc": "true pour ne pas le supprimer à l'arrêt"}}},
+        "executionStopped": {"desc": "Appelée à l'arrêt du graphe : supprime les véhicules non dontDelete, restaure l'énergie des autres, la blacklist de marche et core_trailerRespawn, puis clear().", "internal": true},
+        "onCouplerAttached": {"desc": "Hook : enregistre l'attelage entre deux véhicules (dans les deux sens).", "params": {"objId1": {"type": "integer", "desc": "premier véhicule"}, "objId2": {"type": "integer", "desc": "second véhicule"}, "nodeId": {"type": "integer", "desc": "noeud d'attelage (non utilisé)"}, "obj2nodeId": {"type": "integer", "desc": "noeud d'attelage du second (non utilisé)"}}, "internal": true},
+        "onCouplerDetached": {"desc": "Hook : supprime l'attelage entre deux véhicules.", "params": {"objId1": {"type": "integer", "desc": "premier véhicule"}, "objId2": {"type": "integer", "desc": "second véhicule"}, "nodeId": {"type": "integer", "desc": "non utilisé"}, "obj2nodeId": {"type": "integer", "desc": "non utilisé"}}, "internal": true},
+        "isCoupled": {"desc": "Indique si le véhicule est attelé à au moins un autre.", "params": {"id": {"type": "integer", "desc": "id du véhicule"}}, "returns": [{"type": "any", "desc": "valeur non nil (truthy) si attelé, sinon nil"}]},
+        "isCoupledTo": {"desc": "Indique si le véhicule est attelé au véhicule other.", "params": {"id": {"type": "integer", "desc": "id du véhicule"}, "other": {"type": "integer", "desc": "id de l'autre véhicule"}}, "returns": [{"type": "boolean|nil", "desc": "true si attelé, sinon nil"}]},
+        "requestBusData": {"desc": "Ne fait rien : le corps (envoi bus_onTriggerTick) est commenté.", "params": {"id": {"type": "integer", "desc": "id du véhicule"}}},
+        "updateBusDisplayData": {"desc": "Envoie au véhicule l'évènement bus_onRouteChange avec les données d'affichage de ligne.", "params": {"id": {"type": "integer", "desc": "id du bus"}, "data": {"type": "table", "desc": "données sérialisées envoyées au contrôleur"}}},
+        "registerBusChangeNotification": {"desc": "Demande à core_vehicleBridge d'être notifié des changements de « kneel » et « dooropen » du véhicule.", "params": {"id": {"type": "integer", "desc": "id du bus"}}},
+        "isBusKneel": {"desc": "Indique si le bus est agenouillé (valeur en cache 'kneel' == 1).", "params": {"id": {"type": "integer", "desc": "id du bus"}}, "returns": [{"type": "boolean", "desc": "true si agenouillé"}]},
+        "isBusDoorOpen": {"desc": "Indique si la porte du bus est ouverte (valeur en cache 'dooropen' == 1).", "params": {"id": {"type": "integer", "desc": "id du bus"}}, "returns": [{"type": "boolean", "desc": "true si ouverte"}]},
+        "requestBusStop": {"desc": "Envoie au bus l'évènement bus_onSetStopRequest (demande d'arrêt).", "params": {"id": {"type": "integer", "desc": "id du bus"}, "data": {"type": "table", "desc": "données de la demande d'arrêt"}}},
+        "isBus": {"desc": "Indique si le modèle du véhicule a le Body Style « Bus ».", "params": {"id": {"type": "integer", "desc": "id du véhicule"}}, "returns": [{"type": "boolean|nil", "desc": "true/false, nil si id absent"}]},
+        "onVehicleResetted": {"desc": "Hook appelé quand un véhicule est réinitialisé ; relaie à activity:onVehicleReset(id) si l'activité existe.", "params": {"id": {"type": "integer", "desc": "id du véhicule"}}, "internal": true}
+      }
+    }
+  }
+}

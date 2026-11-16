@@ -1,0 +1,183 @@
+{
+  "path": "lua/ge/extensions/career/branches.lua",
+  "module": "Arbre des domaines, branches et compétences (skills) du mode carrière. Il lit tous les fichiers info.json sous /gameplay/domains/ (récursivement) et en déduit, d'après l'arborescence des dossiers (domains / branches / skills), l'identifiant pathId (noms de dossiers joints par « - », par ex. « apm-motorsport »), le parent et le type (isDomain, isBranch, isSkill). Il calcule niveaux et XP à partir de la valeur de l'attribut du joueur (career_modules_playerAttributes), les multiplicateurs de récompense par niveau, les conditions de déverrouillage (flags) et sauvegarde l'état « unlocked » dans career/branchUnlocks.json.",
+  "notes": [
+    "Un niveau d'une branche est défini par levels[i].requiredValue ; calcBranchLevelFromValue retourne -1 si aucun seuil n'est atteint. Un branch « missing » (id = « missing ») est retourné quand l'identifiant est inconnu.",
+    "Anciens noms d'attributs (timeTrials, drift, delivery, police…) sont traduits vers les nouveaux chemins via oldAttributeNamesToNewNames, avec un avertissement dans le log.",
+    "Une branche avec isInDevelopment est verrouillée (unlockCondition type « never »). Types de unlockCondition gérés dans checkUnlocks : unlockFlag, anyNunlockFlags (au moins n flags parmi une liste) et never.",
+    "Ordre d'affichage : domaines triés par order, puis leurs enfants récursivement ; order[attributeKey] (money = 0, beamXP = 1, vouchers = 9999) sert à trier les attributs.",
+    "Le niveau « max » est le dernier niveau dont isInDevelopment est faux (levels[i].isMaxLevel).",
+    "Bug : M.onPlayerAttributesChanged = onPlayerAttributesChanged exporte une variable non définie (nil).",
+    "Bug : onCareerActive relit branchUnlocks.json mais la boucle interne qui devrait réappliquer les champs est vide ; les valeurs « unlocked » sauvegardées ne sont donc pas restaurées ici (checkUnlocks les recalcule).",
+    "Bug potentiel : getLevelRewardMultiplier indexe branch.levels[level] sans test ; si le niveau vaut -1 (aucun seuil atteint), l'index est nil et l'accès au champ échoue. getBranchSimpleInfo peut aussi diviser par neededForNext = -1 au dernier niveau.",
+    "moduleVersion = 42 : une sauvegarde plus ancienne (info.json version < 42) est considérée périmée."
+  ],
+  "fields": {
+    "oldAttributeNamesToNewNames": {"type": "table<string, string>", "desc": "Anciens noms d'attributs vers les chemins actuels (par ex. drift vers bmra-drift)."},
+    "newAttributeNamesToOldNames": {"type": "table<string, string>", "desc": "Table inverse. Construite à partir de l'ancienne table ; si plusieurs anciens noms visent le même chemin, le dernier parcouru gagne."},
+    "onPlayerAttributesChanged": {"type": "nil", "desc": "Toujours nil : référence à une variable non définie dans le fichier."}
+  },
+  "functions": {
+    "getOrder": {
+      "desc": "Retourne l'ordre d'une clé d'attribut (table order) ou -math.huge si inconnue.",
+      "params": {"key": {"type": "string", "desc": "Clé d'attribut (money, beamXP, ...)."}},
+      "returns": [{"type": "number", "desc": "Rang d'ordre."}],
+      "internal": false
+    },
+    "getBranches": {
+      "desc": "Retourne toutes les branches indexées par id. Au premier appel, charge les info.json de /gameplay/domains/, les trie (domaines puis enfants) et propage la couleur du parent.",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Branches par id."}],
+      "internal": false
+    },
+    "getBranchById": {
+      "desc": "Alias de getBranchByPath.",
+      "params": {"id": {"type": "string", "desc": "Identifiant (pathId)."}},
+      "returns": [{"type": "table", "desc": "La branche, ou la branche « missing »."}],
+      "internal": false
+    },
+    "getBranchByPath": {
+      "desc": "Cherche une branche par pathId ; accepte les anciens noms (avertissement journalisé).",
+      "params": {"pathId": {"type": "string", "desc": "Chemin comme « apm-motorsport »."}},
+      "returns": [{"type": "table", "desc": "La branche ou la branche « missing »."}],
+      "internal": false
+    },
+    "getBranchByDomainBranchSkill": {
+      "desc": "Construit le pathId « domaine-branche-compétence » (les parties absentes sont omises) et retourne la branche.",
+      "params": {
+        "domainId": {"type": "string", "desc": "Domaine."},
+        "branchId": {"type": "string|nil", "desc": "Branche."},
+        "skillId": {"type": "string|nil", "desc": "Compétence (utilisée seulement si branchId est donné)."}
+      },
+      "returns": [{"type": "table", "desc": "La branche."}],
+      "internal": false
+    },
+    "getSortedBranches": {
+      "desc": "Retourne la liste des branches triée par ordre (mise en cache).",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Branches triées."}],
+      "internal": false
+    },
+    "calcBranchLevelFromValue": {
+      "desc": "Calcule le niveau d'une branche pour une valeur d'XP : dernier niveau dont requiredValue <= val, plus la progression vers le suivant.",
+      "params": {
+        "val": {"type": "number", "desc": "Valeur de l'attribut (XP)."},
+        "id": {"type": "string", "desc": "Identifiant de la branche."}
+      },
+      "returns": [
+        {"type": "integer", "desc": "Niveau (-1 si aucun)."},
+        {"type": "number", "desc": "Progression dans le niveau courant (-1 si pas de suivant)."},
+        {"type": "number", "desc": "XP nécessaire pour passer au suivant (-1 si pas de suivant)."},
+        {"type": "number", "desc": "Seuil du niveau courant (-1 si pas de suivant)."},
+        {"type": "number", "desc": "Seuil du niveau suivant (-1 si pas de suivant)."}
+      ],
+      "internal": false
+    },
+    "getBranchSimpleInfo": {
+      "desc": "Retourne un résumé pour l'UI : label, level, icon, curLvlProgress, neededForNext, processPercent et max (nombre de niveaux).",
+      "params": {"id": {"type": "string", "desc": "Identifiant de la branche."}},
+      "returns": [{"type": "table", "desc": "Résumé."}],
+      "internal": false
+    },
+    "getBranchLevel": {
+      "desc": "Niveau actuel du joueur dans une branche (d'après son attribut). Retourne nil si la branche est inconnue ; renvoie aussi les valeurs de calcBranchLevelFromValue.",
+      "params": {"id": {"type": "string", "desc": "Identifiant de la branche."}},
+      "returns": [{"type": "integer|nil", "desc": "Niveau."}],
+      "internal": false
+    },
+    "getBranchLevelByPath": {
+      "desc": "Même chose que getBranchLevel, en passant un pathId.",
+      "params": {"pathId": {"type": "string", "desc": "Chemin de la branche."}},
+      "returns": [{"type": "integer|nil", "desc": "Niveau."}],
+      "internal": false
+    },
+    "getBranchXP": {
+      "desc": "Valeur de l'attribut (XP) du joueur pour la branche, -1 si elle est inconnue du système d'attributs, nil si la branche est « missing ».",
+      "params": {"id": {"type": "string", "desc": "Identifiant de la branche."}},
+      "returns": [{"type": "number|nil", "desc": "XP."}],
+      "internal": false
+    },
+    "getXPNeededForLevel": {
+      "desc": "XP requis (requiredValue) pour atteindre un niveau, -1 si le niveau n'existe pas.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant de la branche."},
+        "level": {"type": "integer", "desc": "Niveau visé."}
+      },
+      "returns": [{"type": "number|nil", "desc": "XP requis."}],
+      "internal": false
+    },
+    "getBranchIcon": {
+      "desc": "Retourne l'icône de la branche (nil si « missing »).",
+      "params": {"id": {"type": "string", "desc": "Identifiant de la branche."}},
+      "returns": [{"type": "string|nil", "desc": "Icône."}],
+      "internal": false
+    },
+    "getLevelLabel": {
+      "desc": "Libellé d'un niveau : « ui.career.lvlLabelMax » pour le dernier, levelName du niveau sinon, ou un texte avec contexte {lvl}.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant de la branche."},
+        "level": {"type": "integer|nil", "desc": "Niveau."}
+      },
+      "returns": [{"type": "string|table|nil", "desc": "Clé de traduction ou table {txt, context}."}],
+      "internal": false
+    },
+    "getLevelRewardMultiplier": {
+      "desc": "Multiplicateur de récompense du niveau actuel du joueur (levels[niveau].rewardMultiplier). Les multiplicateurs par défaut vont de 1 à 5 par pas de 0,25 quand la branche déclare defaultRewardMultipliers.",
+      "params": {"id": {"type": "string", "desc": "Identifiant de la branche."}},
+      "returns": [{"type": "number|nil", "desc": "Multiplicateur."}],
+      "internal": false
+    },
+    "orderAttributeKeysByBranchOrder": {
+      "desc": "Trie une liste de clés d'attributs sur place selon l'ordre des branches et la retourne.",
+      "params": {"list": {"type": "string[]", "desc": "Clés à trier."}},
+      "returns": [{"type": "string[]", "desc": "La même liste triée."}],
+      "internal": false
+    },
+    "orderBranchNamesKeysByBranchOrder": {
+      "desc": "Trie une liste d'identifiants de branche (par défaut toutes) selon l'ordre des branches.",
+      "params": {"list": {"type": "string[]|nil", "desc": "Identifiants ; défaut : toutes les branches."}},
+      "returns": [{"type": "string[]", "desc": "Liste triée."}],
+      "internal": false
+    },
+    "expandUnlocks": {
+      "desc": "Remplace dans la liste d'unlocks d'un niveau chaque entrée « automaticMission » par une carte « unlockCard » donnant le nombre de défis disponibles pour cette branche ; les autres entrées sont conservées.",
+      "params": {
+        "skill": {"type": "table", "desc": "Branche (id utilisé)."},
+        "level": {"type": "integer", "desc": "Niveau (non utilisé dans le calcul)."},
+        "unlocks": {"type": "table[]", "desc": "Liste d'unlocks du niveau."}
+      },
+      "returns": [{"type": "table[]", "desc": "Nouvelle liste."}],
+      "internal": false
+    },
+    "checkUnlocks": {
+      "desc": "Recalcule unlocked, unlockInfo, lockedReason et unlockInfos de chaque branche selon unlockCondition et career_modules_unlockFlags.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "extractBranchPathIdFromFilePath": {
+      "desc": "Déduit le pathId d'un chemin de fichier situé sous /gameplay/domains/.",
+      "params": {"filePath": {"type": "string", "desc": "Chemin d'un fichier d'une branche."}},
+      "returns": [{"type": "string", "desc": "pathId."}],
+      "internal": false
+    },
+    "onSaveCurrentProfile": {
+      "desc": "Hook de sauvegarde du profil : écrit <save>/career/branchUnlocks.json avec le champ unlocked de chaque branche (career_saveSystem.jsonWriteFileSafe).",
+      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de la sauvegarde courante."}},
+      "returns": [],
+      "internal": true
+    },
+    "onCareerActive": {
+      "desc": "Hook appelé à l'activation/désactivation de la carrière ; à l'activation lit branchUnlocks.json (voir notes : la restauration est vide).",
+      "params": {"active": {"type": "boolean", "desc": "Carrière active ou non."}},
+      "returns": [],
+      "internal": true
+    },
+    "onGetUnlockFlagDefinitions": {
+      "desc": "Hook où chaque branche déclare des flags de déverrouillage : « <id>-level-<n> » pour chaque niveau (et unlockFlags du niveau) et un flag par certification (réussi quand la mission requise est passée).",
+      "params": {"flagDefinitions": {"type": "table<string, table>", "desc": "Table à remplir avec les définitions de flags."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

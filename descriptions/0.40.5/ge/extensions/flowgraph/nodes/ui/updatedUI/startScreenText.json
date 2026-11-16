@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenText.lua",
-  "module": "Nœud « StartScreen Text Panel » (repeat_instant, couleur ui). Ajoute à l'écran de démarrage un panneau texte avec en-tête. Entrées : flow, header et text (string ou table), experimental (caché, obsolète), flavour (caché ; default, experimental ou info). Sortie : flow (chainFlow).",
+  "module": "Node \"StartScreen Text Panel\" (repeat_instant, color ui). Adds a text panel with a header to the start screen. Inputs: flow, header and text (string or table), experimental (hidden, obsolete), flavour (hidden; default, experimental or info). Output: flow (chainFlow).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "postInit": {
-          "desc": "Définit les modèles imposés du pin flavour : default, experimental, info.",
+          "desc": "Defines the enforced templates of the flavour pin: default, experimental, info.",
           "internal": true
         },
         "work": {
-          "desc": "Recopie flow ; si text est non vide, ajoute un textPanel. Si l'en-tête est « missions.missions.general.rules » ou « Rules », le panneau va sur la page rules au lieu de main. experimental=true force le flavour « experimental ».",
+          "desc": "Copies flow; if text is non-empty, adds a textPanel. If the header is \"missions.missions.general.rules\" or \"Rules\", the panel goes on the rules page instead of main. experimental=true forces the \"experimental\" flavour.",
           "internal": true
         }
       }

@@ -1,17 +1,25 @@
 {
   "path": "lua/ge/extensions/ui/pause/providers/routeData/photomode.lua",
-  "module": "Fournisseur de données du menu pause pour la page du mode photo. Il renvoie la charge utile (payload) fournie par ui_pause_photomode.getRoutePayload(), ou à défaut une charge utile de repli (contractVersion 6) où toutes les sections et fonctions sont désactivées (caméra, scène, effets, capture, upload, Steam, etc.) et où la supersampling vaut 1 avec des limites de 1 à 24.",
+  "module": "Pause menu data provider for the photo mode page. It returns the payload provided by ui_pause_photomode.getRoutePayload(), or failing that a fallback payload (contractVersion 6) where all sections and functions are disabled (camera, scene, effects, capture, upload, Steam, etc.) and where supersampling is 1 with limits from 1 to 24.",
   "notes": [
-    "La charge utile de repli décrit aussi les limites de capture : superSampling et downscaleLevel de 1 à 24 (pas 1), seuil d'avertissement 9."
+    "The fallback payload also describes the capture limits: superSampling and downscaleLevel from 1 to 24 (step 1), warning threshold 9."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "{\"ui_pause_photomode\"}"}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{\"ui_pause_photomode\"}"
+    }
   },
   "functions": {
     "getPhotomodeData": {
-      "desc": "Renvoie {mainPanelContent = {}, photomode = payload}, où payload vient de ui_pause_photomode.getRoutePayload() si disponible, sinon la charge utile de repli.",
+      "desc": "Returns {mainPanelContent = {}, photomode = payload}, where payload comes from ui_pause_photomode.getRoutePayload() if available, otherwise the fallback payload.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Données de la route photomode."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Photomode route data."
+        }
+      ],
       "internal": false
     }
   }

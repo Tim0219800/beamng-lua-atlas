@@ -1,0 +1,131 @@
+{
+  "path": "lua/ge/extensions/freeroam/crashCamMode.lua",
+  "module": "Caméra de crash (ralenti automatique) du mode freeroam. Chaque image, il prédit (0,2 s à l'avance) si le véhicule du joueur va percuter un véhicule de trafic/garé, un mur (rayons statiques) ou subit un brusque changement de vitesse ; si la différence de vitesse dépasse 13 m/s, il passe en ralenti (simTimeAuthority 0,15), cache l'interface et bascule sur la caméra 'crash' ou sur un chemin de caméra. Il restaure ensuite vitesse, interface et caméra précédentes et émet onCrashCamEnded. Chargé par freeroam_crashCamModeLoader selon le réglage enableCrashCam.",
+  "usage": "-- forcer l'activation hors freeroam (par ex. pour un scénario) et suivre aussi les véhicules non-trafic\nfreeroam_crashCamMode.setForcedEnabled(true)\nfreeroam_crashCamMode.setTrackingMode(2)",
+  "notes": [
+    "Constantes : seuil de vitesse 13 m/s, délai minimal entre deux déclenchements 1 s, durée 4 s, anticipation 0,2 s, boîtes englobantes réduites à 85 %, vérification de vitesse toutes les 0,1 s (seuil +3 m/s).",
+    "Trois modes de crash tirés au hasard : 1 (45 %) caméra proche au-dessus, fixe ; 2 (45 %) caméra au sol qui tourne ; 3 (10 %, seulement si plus de 5 s depuis le dernier crash cam) temps figé pendant que la caméra tourne autour du point d'impact via core_paths.playPath. Les crashs contre un mur ou par variation de vitesse n'utilisent que les modes 1 et 2.",
+    "Modes de suivi (trackingMode) : 1 = joueur contre trafic, véhicules garés, murs et variation de vitesse ; 2 = joueur contre tous les véhicules actifs et murs.",
+    "La détection est ignorée si : une relecture (replay) est en lecture, la caméra libre est active, le temps de simulation n'est pas à 1, le joueur vient d'être téléporté ou il n'y a pas de véhicule joueur.",
+    "Hors état de jeu 'freeroam' (et sans forcedEnabled), onUpdate met crashCamEnabled à false de façon définitive jusqu'au prochain onClientStartMission en freeroam ou à la fin d'une mission (onAnyMissionChanged 'stopped').",
+    "onExtensionLoaded renvoie false si enableCrashCam est désactivé (l'extension ne reste pas chargée dans ce cas, sauf si le moteur ignore la valeur).",
+    "En VR (render_openxr en cours), le retour automatique à la caméra 'external' quand le véhicule sort du champ n'est pas fait.",
+    "rolloverCheck (retournement) est défini mais son appel est commenté dans onUpdate : jamais utilisé.",
+    "Le hook onCrashCamEnded n'est émis que si previousCamMode n'est pas nil."
+  ],
+  "fields": {},
+  "functions": {
+    "getTrackingMode": {
+      "desc": "Renvoie le mode de suivi actuel.",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "1 (trafic et murs) ou 2 (tous les véhicules actifs et murs)."}],
+      "internal": false
+    },
+    "onAnyMissionChanged": {
+      "desc": "Hook appelé quand une mission change d'état : désactive la caméra de crash au démarrage ('started'), la réactive à l'arrêt ('stopped').",
+      "params": {"state": {"type": "string", "desc": "État de la mission : 'started' ou 'stopped' (les autres valeurs sont ignorées)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onBeforeBigMapActivated": {
+      "desc": "Hook appelé juste avant l'ouverture de la grande carte : arrête la caméra de crash.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onBeforeMenuOpened": {
+      "desc": "Hook appelé avant l'ouverture d'un menu : arrête la caméra de crash si elle est active.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook appelé à la fin du niveau : désactive la caméra de crash.",
+      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau quitté (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onClientStartMission": {
+      "desc": "Hook appelé au démarrage du niveau : active la caméra de crash si l'état de jeu est 'freeroam'.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement : renvoie false si le réglage enableCrashCam est désactivé.",
+      "params": {},
+      "returns": [{"type": "boolean|nil", "desc": "false si désactivée, nil sinon."}],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement : arrête proprement la caméra de crash (restaure vitesse, interface et caméra).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onReplayStateChanged": {
+      "desc": "Hook appelé quand l'état du replay change : arrête la caméra de crash.",
+      "params": {"state": {"type": "string", "desc": "Nouvel état du replay (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé avant un rechargement des extensions : arrête la caméra de crash.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onTogglePause": {
+      "desc": "Hook appelé à la mise en pause ou reprise du jeu : arrête la caméra de crash si elle est active.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image : détecte les crashs imminents (trafic, mur, variation de vitesse) quand la caméra de crash est inactive ; quand elle est active, suit sa durée, vérifie l'impact entre véhicules, lance le chemin de caméra en mode 3 et l'arrête après 4 s ou en cas de téléportation.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel écoulé (s)."},
+        "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook appelé quand un véhicule est remis en place : arrête la caméra de crash si c'est le véhicule du joueur.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule réinitialisé."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé au changement de véhicule joueur : si la caméra de crash est active, remet la caméra précédente sur l'ancien véhicule, puis arrête la caméra de crash.",
+      "params": {"oldVehId": {"type": "integer", "desc": "Id de l'ancien véhicule du joueur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setForcedEnabled": {
+      "desc": "Force l'exécution de la détection même hors freeroam ou si la caméra de crash est désactivée.",
+      "params": {"enabled": {"type": "boolean", "desc": "true pour forcer."}},
+      "returns": [],
+      "internal": false
+    },
+    "setTrackingMode": {
+      "desc": "Choisit le mode de suivi (1 ou 2, voir notes).",
+      "params": {"mode": {"type": "integer", "desc": "1 ou 2."}},
+      "returns": [],
+      "internal": false
+    },
+    "trackCamMode": {
+      "desc": "À appeler quand l'utilisateur change de mode de caméra : arrête la caméra de crash si elle est active (aucun appelant dans ce fichier).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "trackVehReset": {
+      "desc": "Arrête la caméra de crash (appelée en cas de reset du véhicule ; contrairement à onVehicleResetted, ne vérifie pas quel véhicule).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  },
+  "classes": {}
+}

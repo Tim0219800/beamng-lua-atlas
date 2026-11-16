@@ -1,0 +1,38 @@
+{
+  "path": "lua/vehicle/controller/braking/brakedDifferentialSteering.lua",
+  "module": "Contrôleur auxiliaire de direction par freinage différentiel (engins à chenilles ou skid-steer) : selon l'entrée de volant `steering_input`, il freine la roue gauche (volant à gauche) ou droite (volant à droite) en ajoutant un couple de freinage au `desiredBrakingTorque` des rotateurs de roue, sans dépasser leur `brakeTorque`.",
+  "notes": [
+    "Clés jbeam lues par init : `steeringPlay` (jeu mort du volant, 0..1, défaut 0), `leftBrakeName` (\"brake_L\"), `rightBrakeName` (\"brake_R\") : noms de rotateurs de `wheels.wheelRotators`, `maxSteeringBrakeTorque` (limite facultative, bornée par le brakeTorque de la roue).",
+    "L'effet est atténué à très basse vitesse : coefficient linéaire de 0 à 1 pour `wheelspeed` de 0 à 0.2 m/s.",
+    "Si une des deux roues est introuvable, init log une erreur et remplace updateGFX et updateWheelsIntermediate par `nop` (le contrôleur est inerte)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "updateWheelsIntermediate": {
+      "desc": "Étape physique intermédiaire : ajoute le couple de freinage de direction (frein × couple max) au couple demandé de chaque roue, borné à son brakeTorque.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Chaque frame : calcule le niveau de freinage gauche/droit à partir de `steering_input` et de la vitesse.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet les niveaux de freinage à 0.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Retrouve les roues gauche/droite, calcule les couples de freinage de direction maximaux.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

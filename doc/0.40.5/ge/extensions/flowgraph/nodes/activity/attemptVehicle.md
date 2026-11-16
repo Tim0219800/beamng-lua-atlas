@@ -1,29 +1,29 @@
 # `flowgraph_nodes_activity_attemptVehicle`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/activity/attemptVehicle.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/activity/attemptVehicle.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/activity/attemptVehicle")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/activity/attemptVehicle")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Activity Attempt Vehicle » (catégorie once_instant, tag activity). Ajoute à une tentative les informations d'un véhicule (modèle jbeam, configuration partConfig, isConfigFile si .pc) sous la clé donnée par « vehKey » (« vehicle » par défaut). Entrées : vehKey (string), vehId (number, sinon véhicule du joueur 0), attempt (attemptData). Sortie : attempt. En carrière, ajoute originId/originKey (inventaire du joueur ou véhicule fourni par le module de mise en place).
+Flowgraph node "Activity Attempt Vehicle" (category once_instant, tag activity). Adds a vehicle's information (jbeam model, partConfig configuration, isConfigFile if .pc) to an attempt under the key given by "vehKey" ("vehicle" by default). Inputs: vehKey (string), vehId (number, otherwise player vehicle 0), attempt (attemptData). Output: attempt. In career, adds originId/originKey (player's inventory or vehicle provided by the setup module).
 
-## Remarques
+## Notes
 
-- Si aucun véhicule n'est trouvé, le pin de sortie attempt n'est pas mis à jour.
-- En carrière, le code lit self.mgr.activity.setupModules sans test : plante sans activité associée.
-- originKey vaut 'careerInventory' (véhicule joueur) ou 'providedBySetupModule' (originId = _selectionIdx).
+- If no vehicle is found, the attempt output pin is not updated.
+- In career, the code reads self.mgr.activity.setupModules without a check: crashes without an associated activity.
+- originKey is 'careerInventory' (player vehicle) or 'providedBySetupModule' (originId = _selectionIdx).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Vide. | 23 |
-| `C:workOnce()` | Cherche le véhicule (vehId ou joueur), construit {model, config, isConfigFile, originId, originKey} et l'écrit dans attempt[vehKey]. | 27 |
+| `C:init()` | Empty. | 23 |
+| `C:workOnce()` | Looks up the vehicle (vehId or player), builds {model, config, isConfigFile, originId, originKey} and writes it into attempt[vehKey]. | 27 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/activity/attemptVehicle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/activity/attemptVehicle.lua`.*

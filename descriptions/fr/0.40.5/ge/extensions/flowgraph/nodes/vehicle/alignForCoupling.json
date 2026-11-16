@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/alignForCoupling.lua",
+  "module": "Nœud « Align for Coupling » (couleur vehicle, icône link, comportement duration + once). Place une remorque derrière un véhicule tracteur pour faciliter l'attelage : aligne le point d'attelage de la remorque sur celui du tracteur avec la rotation voulue, puis active l'attelage automatique. Entrées : flow, reset, vehId (tracteur), trailerId (remorque), rot (number en degrés relatifs, ou quat ; caché), relativeRotationQuat (caché), ignoreCouple (caché, true : ne déplace pas et ne couple pas). Sortie : flow, actif uniquement quand les véhicules sont attelés.",
+  "notes": [
+    "Avec ignoreCouple à true (valeur par défaut), la remorque n'est pas déplacée : coupled est mis à true immédiatement et le flow sort sans aucun alignement.",
+    "Si un véhicule n'a pas de couplerOffset, le nœud retourne sans rien faire à chaque frame."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Ne fait rien.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Efface done, waitForCouple et coupled.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Gère reset. Une fois : retrouve les deux véhicules, lit leurs couplerOffset (modules.vehicle), calcule la matrice d'alignement, puis (si ignoreCouple est faux) déplace la remorque (setTransform), réinitialise sa physique et son flexmesh et active beamstate.activateAutoCoupling() sur le tracteur. Ensuite attend l'attelage (modules.vehicle:isCoupledTo) et active flow.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

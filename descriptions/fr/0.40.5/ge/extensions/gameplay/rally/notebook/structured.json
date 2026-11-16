@@ -1,0 +1,78 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/notebook/structured.lua",
+  "module": "Stockage « structuré » d'une pacenote de rallye en six emplacements fixes (clés de chaîne \"1\" à \"6\", qui sont aussi l'ordre de lecture) : 1 = prudence (caution), 2 et 3 = modificateurs avant le virage, 4 = virage (corner), 5 et 6 = modificateurs après. Un emplacement vide vaut {}. Chaque élément est une table typée { type = ..., ... } ; le style actif fournit les libellés. Le module migre aussi les anciens schémas v1 (liste) et v2 (4 emplacements) à la désérialisation. Le module renvoie un constructeur d'objet (classe C) et expose des helpers M.* qui acceptent un objet ou une table brute.",
+  "usage": "local Structured = require('extensions/gameplay/rally/notebook/structured')\nlocal s = Structured()\ns:setOrderedItems({ {type='caution', level=2}, {type='corner', descriptor='hairpin'} })\nprint(s:slotItem(4).descriptor) -- 'hairpin'",
+  "notes": [
+    "Schéma courant : 3 (six emplacements). Éléments au-delà des six emplacements : ignorés avec un log 'W' (tag rallyStructured).",
+    "Corner canonique : descriptor, shape, measurementType (omis si 'single' ; seuls single/split2/split3 sont valides), riskIntensity (-1, 1 ou nil), lengthMode ('shorter'|'longer'|'skip'|nil). Les anciens champs lengthFeel, radiusChange, intensityVariation sont migrés (intensityVariation -1 -> shape 'opens', 1 -> 'tightens').",
+    "setOrderedItems répartit : caution -> slot 1, corner -> slot 4, modificateurs -> 2/3 avant le corner, 5/6 après.",
+    "Les types d'élément autres que caution/corner sont des modificateurs atomiques copiés tels quels (deepcopy)."
+  ],
+  "fields": {},
+  "functions": {
+    "orderedItems": {
+      "desc": "Version utilitaire : renvoie la liste ordonnée des éléments non vides d'un objet structuré ou d'une table brute (gère aussi les anciens schémas v2).",
+      "params": {"structured": {"type": "table", "desc": "Objet structuré ou table brute (avec ou sans champ items)."}},
+      "returns": [{"type": "table[]", "desc": "Éléments dans l'ordre des emplacements ; {} si l'argument n'est pas une table."}],
+      "internal": false
+    },
+    "slotItems": {
+      "desc": "Version utilitaire : renvoie la table des six emplacements (clés \"1\"..\"6\") normalisée, en migrant les schémas v1/v2 si besoin.",
+      "params": {"structured": {"type": "table", "desc": "Objet structuré ou table brute."}},
+      "returns": [{"type": "table<string, table>", "desc": "Carte d'emplacements ; emplacements vides = {}."}],
+      "internal": false
+    },
+    "slotItem": {
+      "desc": "Version utilitaire : renvoie l'élément d'un emplacement, ou nil s'il est vide.",
+      "params": {
+        "structured": {"type": "table", "desc": "Objet structuré ou table brute."},
+        "index": {"type": "integer", "desc": "Numéro d'emplacement de 1 à 6."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Élément { type = ... } ou nil."}],
+      "internal": false
+    },
+    "setOrderedItems": {
+      "desc": "Version utilitaire : remplace le contenu par une liste ordonnée d'éléments, répartis dans les emplacements. Appelle la méthode d'instance si elle existe, sinon écrit items et schemaVersion dans la table.",
+      "params": {
+        "structured": {"type": "table", "desc": "Objet structuré ou table brute (modifié en place)."},
+        "items": {"type": "table[]", "desc": "Éléments typés."}
+      },
+      "returns": [],
+      "internal": false
+    }
+  },
+  "classes": {
+    "C": {
+      "desc": "Objet renvoyé par Structured() : champs schemaVersion et items (carte des six emplacements).",
+      "functions": {
+        "init": {"desc": "Constructeur : schéma courant, six emplacements vides.", "internal": true},
+        "onDeserialized": {
+          "desc": "Recharge depuis des données sauvegardées (data.items, data.schemaVersion) en migrant les schémas v1 (liste ordonnée) et v2 (quatre emplacements) vers le schéma v3.",
+          "params": {"data": {"type": "table|nil", "desc": "Données sérialisées ; nil laisse l'objet vide."}},
+          "internal": true
+        },
+        "onSerialize": {"desc": "Renvoie { schemaVersion, items } où items est la carte normalisée des six emplacements.", "returns": [{"type": "table", "desc": "Données à écrire en JSON."}], "internal": true},
+        "orderedItems": {"desc": "Liste des éléments non vides dans l'ordre des emplacements 1 à 6.", "returns": [{"type": "table[]", "desc": "Éléments."}]},
+        "slotItems": {"desc": "Copie normalisée de la carte des six emplacements.", "returns": [{"type": "table<string, table>", "desc": "Emplacements \"1\"..\"6\"."}]},
+        "slotItem": {
+          "desc": "Élément d'un emplacement, ou nil s'il est vide.",
+          "params": {"index": {"type": "integer", "desc": "Emplacement de 1 à 6."}},
+          "returns": [{"type": "table|nil", "desc": "Élément ou nil."}]
+        },
+        "setOrderedItems": {
+          "desc": "Remplace le contenu à partir d'une liste ordonnée (caution -> 1, corner -> 4, modificateurs -> 2/3 avant ou 5/6 après le corner). Les surplus sont ignorés avec un avertissement.",
+          "params": {"items": {"type": "table[]", "desc": "Éléments typés."}}
+        },
+        "setSlotItems": {
+          "desc": "Remplace le contenu à partir d'une carte d'emplacements (clés \"1\"..\"6\" ou entiers).",
+          "params": {"items": {"type": "table", "desc": "Carte d'emplacements."}}
+        },
+        "itemCount": {"desc": "Nombre d'éléments non vides.", "returns": [{"type": "integer", "desc": "Compte."}]},
+        "hasItems": {"desc": "true si au moins un emplacement est rempli.", "returns": [{"type": "boolean", "desc": "Résultat."}]}
+      }
+    },
+    "M": {
+      "desc": "Table du module : helpers orderedItems, slotItems, slotItem, setOrderedItems (voir functions). Appeler le module comme une fonction crée une instance de C."
+    }
+  }
+}

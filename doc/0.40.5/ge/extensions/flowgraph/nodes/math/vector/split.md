@@ -1,19 +1,19 @@
 # `flowgraph_nodes_math_vector_split`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/math/vector/split.lua` · VM : Game Engine (GE) · 37 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/math/vector/split.lua` · VM: Game Engine (GE) · 37 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/math/vector/split")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/math/vector/split")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Split' (categorie simple). Decompose une table (vec3, color ou quat, 4 elements max) en nombres x, y, z, w.
+Flowgraph node 'Split' (simple category). Decomposes a table (vec3, color or quat, 4 elements max) into numbers x, y, z, w.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Vide. | 25 |
-| `C:work()` | Ecrit table[1..4] sur x, y, z, w (table vide si l'entree est nil). | 28 |
+| `C:init()` | Empty. | 25 |
+| `C:work()` | Writes table[1..4] to x, y, z, w (empty table if the input is nil). | 28 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/math/vector/split.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/math/vector/split.lua`.*

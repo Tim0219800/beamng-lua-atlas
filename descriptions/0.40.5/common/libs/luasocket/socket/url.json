@@ -1,59 +1,135 @@
 {
   "path": "lua/common/libs/luasocket/socket/url.lua",
-  "module": "Bibliothèque tierce LuaSocket (Diego Nehab), version « URL 1.0.3 » : analyse, composition et résolution d'URL relatives selon la RFC 2396. Utile pour découper une URL en scheme/authority/userinfo/host/port/path/params/query/fragment, la reconstruire, encoder/décoder les caractères réservés (%XX) et manipuler les segments de chemin.",
+  "module": "Third-party LuaSocket library (Diego Nehab), version \"URL 1.0.3\": parsing, building and resolving relative URLs according to RFC 2396. Useful for splitting a URL into scheme/authority/userinfo/host/port/path/params/query/fragment, rebuilding it, encoding/decoding reserved characters (%XX) and handling path segments.",
   "usage": "local url = require('socket.url')\nlocal p = url.parse('http://user:pw@example.com:8080/a/b;p?x=1#frag')\nprint(p.host, p.port, p.path, p.query)  -- example.com 8080 /a/b x=1\nprint(url.absolute('http://example.com/a/b', '../c'))",
   "notes": [
-    "Le module est déclaré localement (`_M`) ; le fichier est chargé via `require` depuis le code qui en a besoin.",
-    "`parse` renvoie nil et \"invalid url\" pour une chaîne vide ; l'authority IPv6 entre crochets est reconnue (host sans les crochets).",
-    "Le commentaire de `unescape` dans le source est une copie de celui d'`escape` : `unescape` décode bien les séquences %XX."
+    "The module is declared locally (`_M`); the file is loaded via `require` from the code that needs it.",
+    "`parse` returns nil and \"invalid url\" for an empty string; the IPv6 authority in brackets is recognized (host without the brackets).",
+    "The comment of `unescape` in the source is a copy of that of `escape`: `unescape` does decode the %XX sequences."
   ],
   "fields": {
-    "_VERSION": {"type": "string", "desc": "Version du module : \"URL 1.0.3\"."}
+    "_VERSION": {
+      "type": "string",
+      "desc": "Module version: \"URL 1.0.3\"."
+    }
   },
   "functions": {
     "escape": {
-      "desc": "Encode une chaîne binaire en remplaçant chaque octet non alphanumérique par sa représentation %XX.",
-      "params": {"s": {"type": "string", "desc": "Chaîne à encoder."}},
-      "returns": [{"type": "string", "desc": "Chaîne échappée."}]
+      "desc": "Encodes a binary string by replacing each non-alphanumeric byte with its %XX representation.",
+      "params": {
+        "s": {
+          "type": "string",
+          "desc": "String to encode."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Escaped string."
+        }
+      ]
     },
     "unescape": {
-      "desc": "Décode les séquences %XX d'une chaîne en octets.",
-      "params": {"s": {"type": "string", "desc": "Chaîne échappée."}},
-      "returns": [{"type": "string", "desc": "Chaîne décodée."}]
+      "desc": "Decodes the %XX sequences of a string into bytes.",
+      "params": {
+        "s": {
+          "type": "string",
+          "desc": "Escaped string."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Decoded string."
+        }
+      ]
     },
     "parse": {
-      "desc": "Découpe une URL en table avec les champs scheme, authority, userinfo, user, password, host, port, path, params, query, fragment (seuls ceux présents sont remplis). Le '/' initial du chemin fait partie de path.",
+      "desc": "Splits a URL into a table with the fields scheme, authority, userinfo, user, password, host, port, path, params, query, fragment (only those present are filled). The leading '/' of the path is part of path.",
       "params": {
-        "url": {"type": "string", "desc": "URL à analyser."},
-        "default": {"type": "table|nil", "desc": "Valeurs par défaut copiées dans le résultat avant l'analyse."}
+        "url": {
+          "type": "string",
+          "desc": "URL to parse."
+        },
+        "default": {
+          "type": "table|nil",
+          "desc": "Default values copied into the result before parsing."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Parties de l'URL, ou nil et \"invalid url\"."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "URL parts, or nil and \"invalid url\"."
+        }
+      ]
     },
     "build": {
-      "desc": "Reconstruit une URL à partir d'une table du type renvoyé par parse ; les composants contenant des caractères réservés sont protégés.",
-      "params": {"parsed": {"type": "table", "desc": "Parties de l'URL."}},
-      "returns": [{"type": "string", "desc": "URL composée."}]
+      "desc": "Rebuilds a URL from a table of the type returned by parse; components containing reserved characters are protected.",
+      "params": {
+        "parsed": {
+          "type": "table",
+          "desc": "URL parts."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Built URL."
+        }
+      ]
     },
     "absolute": {
-      "desc": "Construit une URL absolue à partir d'une URL de base et d'une URL relative (RFC 2396).",
+      "desc": "Builds an absolute URL from a base URL and a relative URL (RFC 2396).",
       "params": {
-        "base_url": {"type": "string|table", "desc": "URL de base (chaîne ou table issue de parse)."},
-        "relative_url": {"type": "string|table", "desc": "URL relative (chaîne ou table issue de parse)."}
+        "base_url": {
+          "type": "string|table",
+          "desc": "Base URL (string or table from parse)."
+        },
+        "relative_url": {
+          "type": "string|table",
+          "desc": "Relative URL (string or table from parse)."
+        }
       },
-      "returns": [{"type": "string", "desc": "URL absolue correspondante."}]
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Corresponding absolute URL."
+        }
+      ]
     },
     "parse_path": {
-      "desc": "Découpe un chemin en segments (désencodés) ; un chemin commençant par '/' donne un champ is_absolute.",
-      "params": {"path": {"type": "string", "desc": "Chemin de l'URL."}},
-      "returns": [{"type": "table", "desc": "Liste des segments (un par entrée)."}]
+      "desc": "Splits a path into (decoded) segments; a path starting with '/' gives an is_absolute field.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "URL path."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of segments (one per entry)."
+        }
+      ]
     },
     "build_path": {
-      "desc": "Recompose un chemin à partir de ses segments en échappant les caractères protégés.",
+      "desc": "Rebuilds a path from its segments, escaping protected characters.",
       "params": {
-        "parsed": {"type": "table", "desc": "Segments du chemin (comme renvoyé par parse_path)."},
-        "unsafe": {"type": "boolean|nil", "desc": "Si true, les segments ne sont pas protégés avant composition."}
+        "parsed": {
+          "type": "table",
+          "desc": "Path segments (as returned by parse_path)."
+        },
+        "unsafe": {
+          "type": "boolean|nil",
+          "desc": "If true, the segments are not protected before building."
+        }
       },
-      "returns": [{"type": "string", "desc": "Chemin composé."}]
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Built path."
+        }
+      ]
     }
   }
 }

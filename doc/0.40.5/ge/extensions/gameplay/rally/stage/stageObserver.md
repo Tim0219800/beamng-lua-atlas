@@ -1,43 +1,43 @@
 # `gameplay_rally_stage_stageObserver`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/stage/stageObserver.lua` · VM : Game Engine (GE) · 350 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/stage/stageObserver.lua` · VM: Game Engine (GE) · 350 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/stage/stageObserver")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/stage/stageObserver")` (file under extensions/ but not a regular extension)
 
-Observateur de spéciale de rallye : à chaque mise à jour, il compare l'emprise (8 coins de la boîte englobante orientée, OOBB) du véhicule entre deux frames et détecte son passage à travers les « pathnodes » de timing (splits, arrivée). Il calcule le temps de franchissement interpolé dans la frame, renseigne les champs tracker* des données d'observation, marque les nœuds manqués (hors fenêtre ou hors route) et alimente stageTimingState. Utilisé par rallyManager. Le module renvoie un constructeur.
+Rally special stage observer: at each update, it compares the vehicle's footprint (8 corners of the oriented bounding box, OOBB) between two frames and detects its crossing of the timing "pathnodes" (splits, finish). It computes the crossing time interpolated within the frame, fills in the tracker* fields of the observation data, marks missed nodes (outside the window or off the road) and feeds stageTimingState. Used by rallyManager. The module returns a constructor.
 
-## Remarques
+## Notes
 
-- Deux modes d'autorité : 'shadow' (par défaut, observation seule) et 'tracker' (toute autre valeur est ramenée à 'shadow').
-- Fenêtres par défaut en mètres le long de la route : vérification 80 derrière / 120 devant, nœud considéré manqué à plus de 120 derrière.
-- Un pathnode est franchi si un coin du véhicule traverse la sphère de rayon pathnodeRadius (sans normale) ou le plan défini par la normale (avec pathnodeHasNormal) pendant la frame.
-- Si tracker.state vaut 'offRoute' au franchissement, le split est marqué manquant avec la raison 'offRoute' (sauf l'arrivée) ; si le nœud est dépassé sans être observé, la raison est 'missedWindow'.
-- Le franchissement d'un nœud de type 'finish' termine l'étape (stageComplete, completeAt sur stageTimingState).
-- setFootprintCorners utilise veh:getSpawnWorldOOBB() si disponible, sinon be:getObjectOOBB*XYZ ; il renvoie false tant que l'OOBB n'est pas initialisée.
+- Two authority modes: 'shadow' (default, observation only) and 'tracker' (any other value falls back to 'shadow').
+- Default windows in meters along the road: check 80 behind / 120 ahead, node considered missed beyond 120 behind.
+- A pathnode is crossed if a vehicle corner passes through the sphere of radius pathnodeRadius (without normal) or the plane defined by the normal (with pathnodeHasNormal) during the frame.
+- If tracker.state is 'offRoute' at the crossing, the split is marked missing with the reason 'offRoute' (except the finish); if the node is passed without being observed, the reason is 'missedWindow'.
+- Crossing a node of type 'finish' ends the stage (stageComplete, completeAt on stageTimingState).
+- setFootprintCorners uses veh:getSpawnWorldOOBB() if available, otherwise be:getObjectOOBB*XYZ; it returns false as long as the OOBB is not initialized.
 
-## Classe `C`
+## Class `C`
 
-Objet observateur renvoyé par le constructeur ; options facultatives : authorityMode, checkWindowBehindMeters, checkWindowAheadMeters, missWindowBehindMeters.
+Observer object returned by the constructor; optional options: authorityMode, checkWindowBehindMeters, checkWindowAheadMeters, missWindowBehindMeters.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_stage_stageObserver")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_stage_stageObserver")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:getAuthorityMode()` | Renvoie le mode d'autorité courant. | 151 |
-| `C:getStageTime()` | Temps de fin d'étape s'il est connu, sinon dernier temps d'étape échantillonné. | 325 |
-| `C:getState()` | Instantané : authorityMode, stageComplete, stageFinishTime, currentStageTime, currentStageTimeRounded (au dixième), trackerState, raceActive, raceComplete. | 330 |
-| `C:init(options)` | Initialise le mode d'autorité, les tailles de fenêtres et le stockage des coins, puis appelle reset. | 137 |
-| `C:recordRaceSplit(splitData, time)` | Renseigne splitData.time et splitData.source ('race') s'ils sont absents. | 220 |
-| `C:reset()` | Remet à zéro la distance précédente, l'index de départ d'observation, l'emprise précédente, l'état de fin d'étape, les dernières valeurs et le compteur updateSerial. | 155 |
-| `C:resetAfterTeleport()` | Oublie la distance et l'emprise précédentes pour éviter un faux franchissement après une téléportation. | 173 |
-| `C:resetFootprint()` | Oublie l'emprise précédente : la prochaine update ne fait que la mémoriser, sans détecter de franchissement. | 169 |
-| `C:setAuthorityMode(mode)` | Définit le mode d'autorité : 'tracker' ou, pour toute autre valeur, 'shadow'. | 147 |
-| `C:update(context)` | Met à jour l'observation pour la frame : lit le temps d'étape, récupère les coins du véhicule, avance la fenêtre d'observation, teste le franchissement des pathnodes proches et met à jour trackerObserved/trackerMissed, trackerTime, time et source, ainsi que stageTimingState. | 226 |
+| `C:getAuthorityMode()` | Returns the current authority mode. | 151 |
+| `C:getStageTime()` | Stage end time if known, otherwise last sampled stage time. | 325 |
+| `C:getState()` | Snapshot: authorityMode, stageComplete, stageFinishTime, currentStageTime, currentStageTimeRounded (to the tenth), trackerState, raceActive, raceComplete. | 330 |
+| `C:init(options)` | Initializes the authority mode, the window sizes and the corner storage, then calls reset. | 137 |
+| `C:recordRaceSplit(splitData, time)` | Fills in splitData.time and splitData.source ('race') if they are absent. | 220 |
+| `C:reset()` | Resets the previous distance, the observation start index, the previous footprint, the stage end state, the last values and the updateSerial counter. | 155 |
+| `C:resetAfterTeleport()` | Forgets the previous distance and footprint to avoid a false crossing after a teleport. | 173 |
+| `C:resetFootprint()` | Forgets the previous footprint: the next update only stores it, without detecting any crossing. | 169 |
+| `C:setAuthorityMode(mode)` | Sets the authority mode: 'tracker' or, for any other value, 'shadow'. | 147 |
+| `C:update(context)` | Updates the observation for the frame: reads the stage time, gets the vehicle corners, advances the observation window, tests the crossing of nearby pathnodes and updates trackerObserved/trackerMissed, trackerTime, time and source, as well as stageTimingState. | 226 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectOOBBCenterXYZ`, `getObjectOOBBHalfAxisXYZ`, `getObjectOOBBIsInitialized`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/stage/stageObserver.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/stage/stageObserver.lua`.*

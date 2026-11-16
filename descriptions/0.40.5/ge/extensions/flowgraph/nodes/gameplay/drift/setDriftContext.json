@@ -1,11 +1,13 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftContext.lua",
-  "module": "Nœud flowgraph « Set Drift Context » (catégorie repeat_instant). Définit le contexte de drift, qui fixe un jeu de règles et d'affichage, via gameplay_drift_general.setContext. Pin d'entrée : driftContext (string ; l'aide du pin cite stopped, inChallenge, inFreeroam).",
+  "module": "Flowgraph node \"Set Drift Context\" (category repeat_instant). Sets the drift context, which defines a set of rules and display, via gameplay_drift_general.setContext. Input pin: driftContext (string; the pin help cites stopped, inChallenge, inFreeroam).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Appelle gameplay_drift_general.setContext(driftContext)."}
+        "work": {
+          "desc": "Calls gameplay_drift_general.setContext(driftContext)."
+        }
       }
     }
   }

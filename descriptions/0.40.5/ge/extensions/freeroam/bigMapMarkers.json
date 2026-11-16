@@ -1,78 +1,145 @@
 {
   "path": "lua/ge/extensions/freeroam/bigMapMarkers.lua",
-  "module": "Gère les marqueurs de la grande carte (big map) : regroupe les points d'intérêt (POI) bruts de gameplay_rawPois qui ont un bigmapMarker en grappes (clusters) selon un rayon, crée un marqueur par grappe (gameplay/markers/bigmapMarker), les met à jour/affiche à chaque image et détecte quel marqueur est survolé par la souris ou le réticule. Utilisé par freeroam_bigMapMode ; un moddeur n'y touche normalement pas.",
+  "module": "Manages the big map markers: groups the raw gameplay POIs (points of interest) from gameplay_rawPois that have a bigmapMarker into clusters according to a radius, creates one marker per cluster (gameplay/markers/bigmapMarker), updates/displays them every frame and detects which marker is hovered by the mouse or the reticle. Used by freeroam_bigMapMode; a modder does not normally touch it.",
   "notes": [
-    "Un « filtre » (setupFilter) = rayon de regroupement + liste d'ids de POI valides. Son identifiant est « rayon#-ids concaténés » ; les anciens filtres restent en mémoire et leurs marqueurs sont masqués en fondu puis nettoyés.",
-    "Les grappes sont recalculées quand la génération de gameplay_rawPois augmente (getAllClustersBySettings).",
-    "Bug/incohérence : M.buildPoiList = buildPoiList référence une variable locale jamais définie, donc vaut nil.",
-    "displayBigMapMarkers commence par profilerPopEvent(\"BigMapMarkers parkingSpeedFactor\") sans push correspondant dans ce fichier (reste d'un ancien code de profilage).",
-    "Champs iconCounter, iconsById et printNext existent mais ne sont pas utilisés dans ce fichier (debug).",
-    "Dans clusterBySettings, un POI ne contient jamais de .cluster avant fusion, donc chaque grappe ne reçoit en pratique que son POI de départ (les voisins du rayon ne sont ajoutés que si bmi.cluster est défini) ; comportement à vérifier en jeu."
+    "A \"filter\" (setupFilter) = grouping radius + list of valid POI ids. Its identifier is \"radius#-concatenated ids\"; old filters stay in memory and their markers are faded out then cleaned up.",
+    "Clusters are recomputed when the generation of gameplay_rawPois increases (getAllClustersBySettings).",
+    "Bug/inconsistency: M.buildPoiList = buildPoiList references a local variable that is never defined, so it is nil.",
+    "displayBigMapMarkers starts with profilerPopEvent(\"BigMapMarkers parkingSpeedFactor\") with no matching push in this file (leftover from old profiling code).",
+    "The fields iconCounter, iconsById and printNext exist but are not used in this file (debug).",
+    "In clusterBySettings, a POI never contains a .cluster before merging, so each cluster in practice only gets its starting POI (neighbors within the radius are only added if bmi.cluster is set); behavior to check in game."
   ],
   "fields": {
-    "buildPoiList": {"type": "nil", "desc": "Toujours nil (référence à une variable non définie)."},
-    "iconCounter": {"type": "number", "desc": "Compteur d'icônes, initialisé à 0 (non utilisé dans ce fichier)."},
-    "iconsById": {"type": "table", "desc": "Table vide réservée au debug."},
-    "printNext": {"type": "boolean", "desc": "Drapeau de debug (impressions commentées), false."}
+    "buildPoiList": {
+      "type": "nil",
+      "desc": "Always nil (reference to an undefined variable)."
+    },
+    "iconCounter": {
+      "type": "number",
+      "desc": "Icon counter, initialized to 0 (not used in this file)."
+    },
+    "iconsById": {
+      "type": "table",
+      "desc": "Empty table reserved for debug."
+    },
+    "printNext": {
+      "type": "boolean",
+      "desc": "Debug flag (commented-out prints), false."
+    }
   },
   "functions": {
     "clearMarkers": {
-      "desc": "Détruit les objets de rendu de tous les marqueurs (courants et anciens) et vide les listes.",
+      "desc": "Destroys the render objects of all markers (current and old) and empties the lists.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "displayBigMapMarkers": {
-      "desc": "À appeler à chaque image tant que la grande carte est affichée : met à jour tous les marqueurs des grappes du filtre actif (affichés) et des filtres précédents (masqués en fondu), ainsi que les anciens marqueurs en cours de disparition.",
-      "params": {"dtReal": {"type": "number", "desc": "Temps réel écoulé (s)."}},
+      "desc": "To be called every frame while the big map is displayed: updates all markers of the active filter's clusters (displayed) and of the previous filters (faded out), as well as the old markers that are disappearing.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Elapsed real time (s)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getAllClustersBySettings": {
-      "desc": "Renvoie (en calculant si besoin) les grappes de POI pour un filtre : POI dont l'id est valide et qui ont un bigmapMarker, triés par id, regroupés par quadtree puis fusionnés via bigmapMarker.merge.",
-      "params": {"settingsId": {"type": "string", "desc": "Identifiant de filtre créé par setupFilter (nommé currentClusterSettingsId en interne)."}},
-      "returns": [{"type": "table[]", "desc": "Liste de grappes (champs id, containedIds, containedIdsLookup…)."}],
+      "desc": "Returns (computing if needed) the POI clusters for a filter: POIs whose id is valid and that have a bigmapMarker, sorted by id, grouped by quadtree then merged via bigmapMarker.merge.",
+      "params": {
+        "settingsId": {
+          "type": "string",
+          "desc": "Filter identifier created by setupFilter (internally named currentClusterSettingsId)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "List of clusters (fields id, containedIds, containedIdsLookup...)."
+        }
+      ],
       "internal": false
     },
     "getClusterMarker": {
-      "desc": "Renvoie le marqueur d'une grappe, en le créant s'il n'existe pas (ou en réutilisant l'ancien marqueur de même id).",
-      "params": {"cluster": {"type": "table", "desc": "Grappe issue de getAllClustersBySettings."}},
-      "returns": [{"type": "table", "desc": "Objet marqueur de la grande carte."}],
+      "desc": "Returns a cluster's marker, creating it if it does not exist (or reusing the old marker with the same id).",
+      "params": {
+        "cluster": {
+          "type": "table",
+          "desc": "Cluster from getAllClustersBySettings."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Big map marker object."
+        }
+      ],
       "internal": false
     },
     "getIdsFromHoveredPoiId": {
-      "desc": "Pour un id de POI, renvoie les ids de tous les POI de sa grappe dans le filtre actif.",
-      "params": {"id": {"type": "string", "desc": "Id d'un POI."}},
-      "returns": [{"type": "string[]|nil", "desc": "Ids contenus dans la grappe, nil si le POI n'est dans aucune grappe."}],
+      "desc": "For a POI id, returns the ids of all the POIs in its cluster in the active filter.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "POI id."
+        }
+      },
+      "returns": [
+        {
+          "type": "string[]|nil",
+          "desc": "Ids contained in the cluster, nil if the POI is in no cluster."
+        }
+      ],
       "internal": false
     },
     "handleMouse": {
-      "desc": "Détermine quelle grappe est survolée : lance un rayon depuis la souris (si elle a bougé) ou depuis le centre de la caméra, et teste la distance rayon/icône avec une sphère dont le rayon dépend du zoom (fov) et de la distance (ou fixe en caméra orthogonale). Ne fait rien en mode manette quand un POI est déjà sélectionné.",
+      "desc": "Determines which cluster is hovered: casts a ray from the mouse (if it moved) or from the camera center, and tests the ray/icon distance with a sphere whose radius depends on the zoom (fov) and distance (or is fixed in an orthographic camera). Does nothing in gamepad mode when a POI is already selected.",
       "params": {
-        "camMode": {"type": "table", "desc": "Mode caméra de la grande carte (utilise camMode.manualzoom.fov)."},
-        "mouseMoved": {"type": "boolean", "desc": "true si le rayon vient de la souris, false si de la caméra."},
-        "poiIsSelected": {"type": "boolean", "desc": "true si un POI est déjà sélectionné."}
+        "camMode": {
+          "type": "table",
+          "desc": "Big map camera mode (uses camMode.manualzoom.fov)."
+        },
+        "mouseMoved": {
+          "type": "boolean",
+          "desc": "true if the ray comes from the mouse, false if from the camera."
+        },
+        "poiIsSelected": {
+          "type": "boolean",
+          "desc": "true if a POI is already selected."
+        }
       },
-      "returns": [{"type": "string|nil", "desc": "Id du premier POI de la grappe survolée, nil sinon."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Id of the first POI of the hovered cluster, nil otherwise."
+        }
+      ],
       "internal": false
     },
     "hideMarkers": {
-      "desc": "Masque (fondu) tous les marqueurs courants et anciens, sans les détruire.",
+      "desc": "Hides (fades out) all current and old markers, without destroying them.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "setNextMarkersFullAlphaInstant": {
-      "desc": "Fait apparaître instantanément en pleine opacité les marqueurs actifs lors de la prochaine mise à jour (une seule fois).",
+      "desc": "Makes the active markers appear instantly at full opacity on the next update (only once).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "setupFilter": {
-      "desc": "Définit le filtre actif : le rayon de regroupement est arrondi au multiple de 5 (20 par défaut), les ids sont triés, et les marqueurs actuels sont déplacés vers la liste des anciens et masqués pour une transition douce. Les anciens marqueurs invisibles sont détruits.",
+      "desc": "Sets the active filter: the grouping radius is rounded to a multiple of 5 (20 by default), the ids are sorted, and the current markers are moved to the old list and hidden for a smooth transition. Invisible old markers are destroyed.",
       "params": {
-        "validIds": {"type": "string[]", "desc": "Ids de POI à afficher (la table est triée sur place)."},
-        "radius": {"type": "number|nil", "desc": "Rayon de regroupement en mètres monde (20 par défaut)."}
+        "validIds": {
+          "type": "string[]",
+          "desc": "POI ids to display (the table is sorted in place)."
+        },
+        "radius": {
+          "type": "number|nil",
+          "desc": "Grouping radius in world meters (20 by default)."
+        }
       },
       "returns": [],
       "internal": false

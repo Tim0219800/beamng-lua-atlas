@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imBegin.lua",
+  "module": "Nœud flowgraph « im Begin » (catégorie repeat_instant, tag imgui) : ouvre une fenêtre imgui (à terminer avec « im End »). Entrées : « title » (sans titre = barre de titre masquée), « width » (200), « height » (150), « posX », « posY » (100), « anchor » (TL, TR, BL, BR : coin de référence de la fenêtre par rapport à la fenêtre du jeu). Sortie « wasClosed » (impulsion quand l'utilisateur ferme la fenêtre).",
+  "notes": [
+    "Taille et position ne sont appliquées qu'une fois (flag done) ; ensuite la fenêtre est librement déplaçable.",
+    "Si anchor est nil, il vaut 100 dans le code (faute : valeur numérique) et aucune position n'est appliquée."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "done = false et sorties à false.",
+          "internal": true
+        },
+        "init": {
+          "desc": "done = false.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Fixe taille/position (une seule fois, via l'ancre) puis appelle im.Begin et écrit wasClosed.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

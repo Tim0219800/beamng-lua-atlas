@@ -2,226 +2,226 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/richPresence.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère la « présence enrichie » du jeu : le statut affiché dans Steam (rich presence et timeline Steam), l'activité UDS (startActivityByID) et le statut Discord. Il déduit l'activité courante (replay, mode photo, carrière et ses sous-modes, garage, mission, scénario, drag, crawl, drift, niveau, menu principal) et le texte du statut (par exemple « Playing X on Niveau with Marque Modèle »), et il ajoute des évènements à la timeline Steam (crash, rollover, tentative, tour de course, résultat…). Les fonctions set et setActivity sont remplacées par nop quand la fonction est désactivée (versions de développement ou réglage richPresence à faux).
---- Accès : extension `util_richPresence` : `extensions.load("util_richPresence")`, puis la globale `util_richPresence`
+--- Manages the game's "rich presence": the status shown in Steam (rich presence and Steam timeline), the UDS activity (startActivityByID) and the Discord status. It infers the current activity (replay, photo mode, career and its sub-modes, garage, mission, scenario, drag, crawl, drift, level, main menu) and the status text (for example "Playing X on Level with Brand Model"), and it adds events to the Steam timeline (crash, rollover, attempt, race lap, result...). The set and setActivity functions are replaced by nop when the feature is disabled (development builds or richPresence setting false).
+--- Access: extension `util_richPresence`: `extensions.load("util_richPresence")`, then the global `util_richPresence`
 ---@class util_richPresence
----@field onDeserialized function nop (à ne pas supprimer, selon le commentaire du code)
----@field richPresenceEnabled boolean true si les fonctions set/setActivity sont actives
----@field state table {levelName, vehicleName, levelIdentifier, vehicleJbeam?} : état utilisé pour composer le message
+---@field onDeserialized function nop (do not remove, according to the code comment)
+---@field richPresenceEnabled boolean true if the set/setActivity functions are active
+---@field state table {levelName, vehicleName, levelIdentifier, vehicleJbeam?}: state used to compose the message
 util_richPresence = {}
 
---- Hook appelé à la fin d'un niveau : passe la timeline Steam en mode écran de chargement (4).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:526
----@param levelpath string Chemin du niveau
+--- Hook called at the end of a level: sets the Steam timeline to loading screen mode (4).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:526
+---@param levelpath string Level path
 function util_richPresence.clientEndMission(levelpath) end
 
---- Hook appelé avant le démarrage d'un niveau : passe la timeline Steam en mode écran de chargement (4).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:526
----@param levelpath string Chemin du niveau
+--- Hook called before a level starts: sets the Steam timeline to loading screen mode (4).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:526
+---@param levelpath string Level path
 function util_richPresence.clientPreStartMission(levelpath) end
 
---- Hook appelé quand une mission change : met à jour le message et l'activité.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:398
+--- Hook called when a mission changes: updates the message and the activity.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:398
 function util_richPresence.onAnyMissionChanged() end
 
---- Hook appelé à la réussite d'une tentative : évènement « Completed » dans la timeline Steam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:616
----@param attemptData table Données de la tentative (non utilisées)
+--- Hook called on attempt success: "Completed" event in the Steam timeline.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:616
+---@param attemptData table Attempt data (not used)
 function util_richPresence.onAttemptCompleted(attemptData) end
 
---- Hook appelé à l'échec d'une tentative : évènement « Failed » dans la timeline Steam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:606
----@param attemptData table Données de la tentative (non utilisées)
+--- Hook called on attempt failure: "Failed" event in the Steam timeline.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:606
+---@param attemptData table Attempt data (not used)
 function util_richPresence.onAttemptFailed(attemptData) end
 
---- Hook : recalcule l'activité quand la carrière devient active.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:230
+--- Hook: recomputes the activity when the career becomes active.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:230
 function util_richPresence.onCareerActive() end
 
---- Hook appelé après le démarrage d'un niveau : mémorise l'identifiant et le nom lisible du niveau, met à jour le message et l'activité.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:357
----@param levelPath string Chemin du niveau
+--- Hook called after a level starts: stores the level's identifier and readable name, updates the message and the activity.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:357
+---@param levelPath string Level path
 function util_richPresence.onClientPostStartMission(levelPath) end
 
---- Hook : recalcule l'activité à la fin d'un parcours de crawl.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:242
+--- Hook: recomputes the activity at the end of a crawl course.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:242
 function util_richPresence.onCrawlCleared() end
 
---- Hook : recalcule l'activité au début d'un parcours de crawl.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:241
+--- Hook: recomputes the activity at the start of a crawl course.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:241
 function util_richPresence.onCrawlStarted() end
 
---- Hook : recalcule l'activité au début du mode livraison.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:231
+--- Hook: recomputes the activity at the start of delivery mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:231
 function util_richPresence.onDeliveryModeStarted() end
 
---- Hook : recalcule l'activité à la fin du mode livraison.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:232
+--- Hook: recomputes the activity at the end of delivery mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:232
 function util_richPresence.onDeliveryModeStopped() end
 
---- Hook : recalcule l'activité à l'effacement des données de drag.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:239
+--- Hook: recomputes the activity when drag data is cleared.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:239
 function util_richPresence.onDragClear() end
 
---- Hook : recalcule l'activité une fois l'effacement du drag terminé.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:240
+--- Hook: recomputes the activity once the drag clearing is complete.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:240
 function util_richPresence.onDragClearComplete() end
 
---- Hook : recalcule l'activité quand les données de drag sont définies.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:238
+--- Hook: recomputes the activity when drag data is set.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:238
 function util_richPresence.onDragDataSet() end
 
---- Hook : recalcule l'activité à la réinitialisation du drag.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:237
+--- Hook: recomputes the activity on drag reset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:237
 function util_richPresence.onDragReset() end
 
---- Hook : recalcule l'activité quand le contexte de drift change.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:243
+--- Hook: recomputes the activity when the drift context changes.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:243
 function util_richPresence.onDriftContextChanged() end
 
---- Hook appelé à l'ouverture de l'éditeur : message « Using World Editor » et mode de jeu Steam 2.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:379
+--- Hook called when the editor opens: message "Using World Editor" and Steam game mode 2.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:379
 function util_richPresence.onEditorActivated() end
 
---- Hook appelé à la fermeture de l'éditeur : met à jour le message et remet le mode de jeu Steam à 1.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:386
+--- Hook called when the editor closes: updates the message and resets the Steam game mode to 1.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:386
 function util_richPresence.onEditorDeactivated() end
 
---- Appelé au chargement : initialise la présence enrichie Steam et Discord selon les réglages et enregistre les rappels de statistiques pour la timeline Steam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:440
+--- Called on load: initializes Steam and Discord rich presence according to the settings and registers the statistics callbacks for the Steam timeline.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:440
 function util_richPresence.onExtensionLoaded() end
 
---- Appelé au déchargement : efface le statut Steam et l'activité Discord et retire les rappels de statistiques.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:460
+--- Called on unload: clears the Steam status and the Discord activity and removes the statistics callbacks.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:460
 function util_richPresence.onExtensionUnloaded() end
 
---- Hook appelé quand l'état du jeu change : met à jour le message et l'activité.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:393
----@param state table Nouvel état (non utilisé directement)
+--- Hook called when the game state changes: updates the message and the activity.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:393
+---@param state table New state (not used directly)
 function util_richPresence.onGameStateUpdate(state) end
 
---- Hook appelé quand une tentative de mission est agrégée : évènement « Mission <type> » avec le nom de la mission dans la timeline Steam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:669
----@param attempt table Tentative (champ type utilisé)
----@param mission table Mission (champ name utilisé)
+--- Hook called when a mission attempt is aggregated: "Mission <type>" event with the mission name in the Steam timeline.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:669
+---@param attempt table Attempt (type field used)
+---@param mission table Mission (name field used)
 function util_richPresence.onMissionAttemptAggregated(attempt, mission) end
 
---- Hook appelé au début d'une tentative : évènement « New attempt » dans la timeline Steam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:596
----@param attemptData table Données de la tentative (non utilisées)
+--- Hook called at the start of an attempt: "New attempt" event in the Steam timeline.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:596
+---@param attemptData table Attempt data (not used)
 function util_richPresence.onNewAttempt(attemptData) end
 
---- Hook : recalcule l'activité à l'annulation d'un achat de pièces.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:236
+--- Hook: recomputes the activity when a part purchase is canceled.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:236
 function util_richPresence.onPartShoppingCancelled() end
 
---- Hook : recalcule l'activité au début d'une session d'achat de pièces.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:233
+--- Hook: recomputes the activity at the start of a part shopping session.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:233
 function util_richPresence.onPartShoppingStarted() end
 
---- Hook : recalcule l'activité après une transaction d'achat de pièces.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:234
+--- Hook: recomputes the activity after a part shopping transaction.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:234
 function util_richPresence.onPartShoppingTransactionComplete() end
 
---- Hook appelé au choix d'une branche de course : évènement « Race branch » dans la timeline Steam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:647
----@param data table Données de la branche (non utilisées)
+--- Hook called when a race branch is chosen: "Race branch" event in the Steam timeline.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:647
+---@param data table Branch data (not used)
 function util_richPresence.onRaceBranchChosen(data) end
 
---- Hook appelé à la fin d'un tour : évènement « Race lap N » avec le temps formaté mm:ss.mmm dans la timeline Steam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:636
----@param data table Contient lap (numéro de tour) et time (secondes)
+--- Hook called at the end of a lap: "Race lap N" event with the time formatted as mm:ss.mmm in the Steam timeline.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:636
+---@param data table Contains lap (lap number) and time (seconds)
 function util_richPresence.onRaceLap(data) end
 
---- Hook appelé au résultat de course : évènement « Race Result » avec le temps final formaté dans la timeline Steam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:658
----@param data table Contient finalTime (secondes)
+--- Hook called on race result: "Race Result" event with the formatted final time in the Steam timeline.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:658
+---@param data table Contains finalTime (seconds)
 function util_richPresence.onRaceResult(data) end
 
---- Hook appelé au passage d'un point de course : évènement « Race waypoint » dans la timeline Steam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:626
----@param data table Données du point (non utilisées)
+--- Hook called when passing a race checkpoint: "Race waypoint" event in the Steam timeline.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:626
+---@param data table Checkpoint data (not used)
 function util_richPresence.onRaceWaypointReached(data) end
 
---- Hook appelé à la réinitialisation du gameplay : ajoute un évènement « reset » à la timeline Steam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:586
+--- Hook called on gameplay reset: adds a "reset" event to the Steam timeline.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:586
 function util_richPresence.onResetGameplay() end
 
---- Hook : recalcule l'activité au changement de scénario.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:235
+--- Hook: recomputes the activity on scenario change.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:235
 function util_richPresence.onScenarioChange() end
 
---- Hook appelé quand les réglages changent : active ou désactive la présence enrichie (Steam, Discord, set/setActivity) selon richPresence et richPresenceDiscord.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:493
+--- Hook called when settings change: enables or disables rich presence (Steam, Discord, set/setActivity) according to richPresence and richPresenceDiscord.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:493
 function util_richPresence.onSettingsChanged() end
 
---- Hook appelé au changement d'état de l'interface : met à jour le mode de jeu et la description d'état de la timeline Steam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:562
----@param toState string Nouvel état (menu.*, loading, scenario-*, autre)
----@param fromState string Ancien état
+--- Hook called when the UI state changes: updates the game mode and the state description of the Steam timeline.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:562
+---@param toState string New state (menu.*, loading, scenario-*, other)
+---@param fromState string Old state
 function util_richPresence.onUiChangedState(toState, fromState) end
 
---- Hook appelé quand l'interface est prête : déduit le mode de jeu Steam (menu, chargement, mise en place, jeu) de l'état courant et met à jour l'activité.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:533
+--- Hook called when the UI is ready: infers the Steam game mode (menu, loading, setup, playing) from the current state and updates the activity.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:533
 function util_richPresence.onUiReady() end
 
---- Hook appelé au changement de véhicule joueur : relit le nom et la marque du véhicule (info.json) et met à jour le message.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:339
----@param oldId integer Ancien identifiant de véhicule
----@param newId integer Nouvel identifiant de véhicule
----@param player integer Index du joueur
+--- Hook called when the player vehicle changes: rereads the vehicle's name and brand (info.json) and updates the message.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:339
+---@param oldId integer Old vehicle id
+---@param newId integer New vehicle id
+---@param player integer Player index
 function util_richPresence.onVehicleSwitched(oldId, newId, player) end
 
---- Hook : recalcule l'activité quand l'état du monde change.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/richPresence.lua:244
----@param levelpath string Chemin du niveau (non utilisé)
+--- Hook: recomputes the activity when the world state changes.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/richPresence.lua:244
+---@param levelpath string Level path (not used)
 function util_richPresence.onWorldReadyState(levelpath) end
 
---- Définit le texte de rich presence Steam (clé 'b') ; renvoie le succès. Remplacée par nop si la présence enrichie est désactivée. (assignée dynamiquement)
----Source : lua/ge/extensions/util/richPresence.lua:dyn
----@param v any Texte à afficher (converti avec tostring)
----@return boolean|nil  true en cas de succès (retour de OnlineServiceProvider.setRichPresence)
+--- Sets the Steam rich presence text (key 'b'); returns success. Replaced by nop if rich presence is disabled. (dynamically assigned)
+---Source: lua/ge/extensions/util/richPresence.lua:dyn
+---@param v any Text to display (converted with tostring)
+---@return boolean|nil  true on success (return value of OnlineServiceProvider.setRichPresence)
 function util_richPresence.set(v) end
 
---- Démarre une activité UDS par identifiant si elle diffère de la dernière envoyée. Remplacée par nop si désactivée. (assignée dynamiquement)
----Source : lua/ge/extensions/util/richPresence.lua:dyn
----@param activityId string Identifiant de l'activité (voir la table activities du fichier)
+--- Starts a UDS activity by identifier if it differs from the last one sent. Replaced by nop if disabled. (dynamically assigned)
+---Source: lua/ge/extensions/util/richPresence.lua:dyn
+---@param activityId string Activity identifier (see the activities table in the file)
 function util_richPresence.setActivity(activityId) end
 

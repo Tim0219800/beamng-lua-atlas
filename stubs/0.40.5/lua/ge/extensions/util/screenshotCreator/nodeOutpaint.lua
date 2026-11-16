@@ -2,191 +2,191 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Outil de « peinture » des nœuds de cadrage pour les vignettes de véhicules. Il permet de désactiver (ou réactiver) des nœuds du véhicule avec un pinceau circulaire dans la vue 3D de l'éditeur, afin qu'ils soient ignorés par le cadrage procédural (antennes, pièces qui dépassent…). La liste des nœuds désactivés est enregistrée par configuration (clé « modèle/config ») dans /settings/thumbnailNodeOutpaintConfig.json, dans la table configs. Il fournit aussi les données de nœuds utilisées par framing/procedural (position monde, nom, marque ignoreForThumbnailFraming, détection automatique des rétroviseurs externes), l'historique annuler/refaire de l'éditeur et des fonctions de dessin de débogage.
---- Accès : extension `util_screenshotCreator_nodeOutpaint` : `extensions.load("util_screenshotCreator_nodeOutpaint")`, puis la globale `util_screenshotCreator_nodeOutpaint`
+--- Framing node "painting" tool for vehicle thumbnails. It lets you disable (or re-enable) vehicle nodes with a circular brush in the editor's 3D view, so that they are ignored by procedural framing (antennas, protruding parts…). The list of disabled nodes is saved per configuration (key "model/config") in /settings/thumbnailNodeOutpaintConfig.json, in the configs table. It also provides the node data used by framing/procedural (world position, name, ignoreForThumbnailFraming mark, automatic detection of external mirrors), the editor's undo/redo history and debug drawing functions.
+--- Access: extension `util_screenshotCreator_nodeOutpaint`: `extensions.load("util_screenshotCreator_nodeOutpaint")`, then the global `util_screenshotCreator_nodeOutpaint`
 ---@class util_screenshotCreator_nodeOutpaint
----@field dependencies string[] Extensions chargées avant : ui_imgui, ui_imguiUtils, core_camera, core_vehicle_manager, util_screenshotCreator_settings.
+---@field dependencies string[] Extensions loaded before: ui_imgui, ui_imguiUtils, core_camera, core_vehicle_manager, util_screenshotCreator_settings.
 util_screenshotCreator_nodeOutpaint = {}
 
---- Remplace les nœuds désactivés d'une config par un instantané (ou supprime l'entrée si vide) et sauvegarde. Utilisé par annuler/refaire.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:171
----@param configKey string Clé « modèle/config ».
----@param snapshot table|nil Table {cid = nom}.
----@return boolean  false si configKey est nil.
+--- Replaces the disabled nodes of a config with a snapshot (or removes the entry if empty) and saves. Used by undo/redo.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:171
+---@param configKey string "model/config" key.
+---@param snapshot table|nil Table {cid = name}.
+---@return boolean  false if configKey is nil.
 function util_screenshotCreator_nodeOutpaint.applySnapshot(configKey, snapshot) end
 
---- Remet tabActive à false au début de chaque frame d'interface ; drawTab le remet à true si l'onglet est affiché.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:424
+--- Resets tabActive to false at the start of each UI frame; drawTab sets it back to true if the tab is displayed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:424
 function util_screenshotCreator_nodeOutpaint.beginUiFrame() end
 
---- Restaure l'état du pinceau (accepte aussi les anciennes clés nodeOutpaintEnabled et nodeOutpaintBrushRadius) ; rayon borné à 4..80.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:525
----@param data table|nil État sauvegardé.
+--- Restores the brush state (also accepts the old keys nodeOutpaintEnabled and nodeOutpaintBrushRadius); radius clamped to 4..80.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:525
+---@param data table|nil Saved state.
 function util_screenshotCreator_nodeOutpaint.deserialize(data) end
 
---- Dessine en debug 3D les données de cadrage : boîte des bornes (orange), OOBB du véhicule (cyan), centre, point de visée, axes, points de cadrage, nœuds de rétroviseurs et nœuds désactivés, avec libellés. Les options par défaut viennent de settings.getFramingContext().debug.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:433
----@param framingData table|nil framingData renvoyé par un mode de cadrage.
+--- Draws the framing data as 3D debug: bounds box (orange), vehicle OOBB (cyan), center, look-at point, axes, framing points, mirror nodes and disabled nodes, with labels. Default options come from settings.getFramingContext().debug.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:433
+---@param framingData table|nil framingData returned by a framing mode.
 ---@param options table|nil {drawBounds, drawOobb, drawInputs}.
 function util_screenshotCreator_nodeOutpaint.drawFramingDebug(framingData, options) end
 
---- Dessine le contenu ImGui de l'onglet : case du pinceau, rayon, légende des couleurs, bouton « Auto-frame vehicle » (si options.autoFrame existe), liste des nœuds désactivés avec bouton Enable et « Enable all ».
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:358
+--- Draws the tab's ImGui content: brush checkbox, radius, color legend, "Auto-frame vehicle" button (if options.autoFrame exists), list of disabled nodes with an Enable button and "Enable all".
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:358
 ---@param options table|nil {vehicle, configName, autoFrame = function}.
 function util_screenshotCreator_nodeOutpaint.drawTab(options) end
 
---- Dessine une petite sphère de debug sur chaque nœud du véhicule, colorée selon son état (ignoré, désactivé, rétroviseur, actif).
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:499
----@param vehicle table Objet véhicule.
----@param explicitConfigName string|nil Nom de config imposé.
+--- Draws a small debug sphere on each vehicle node, colored according to its state (ignored, disabled, mirror, active).
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:499
+---@param vehicle table Vehicle object.
+---@param explicitConfigName string|nil Imposed config name.
 function util_screenshotCreator_nodeOutpaint.drawVehicleNodes(vehicle, explicitConfigName) end
 
---- Réactive tous les nœuds d'une config (supprime son entrée) avec historique et sauvegarde.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:241
----@param vehicleOrKey table|string Véhicule ou clé de config.
----@param explicitConfigName string|nil Nom de config imposé.
----@return boolean  false s'il n'y avait aucun nœud désactivé ou pas de clé.
+--- Re-enables all the nodes of a config (removes its entry) with history and saving.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:241
+---@param vehicleOrKey table|string Vehicle or config key.
+---@param explicitConfigName string|nil Imposed config name.
+---@return boolean  false if there were no disabled nodes or no key.
 function util_screenshotCreator_nodeOutpaint.enableAll(vehicleOrKey, explicitConfigName) end
 
---- Termine le coup de pinceau en cours : s'il a modifié des nœuds, enregistre l'action « Paint Thumbnail Framing Nodes » dans l'historique et sauvegarde.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:251
+--- Ends the brush stroke in progress: if it modified nodes, records the "Paint Thumbnail Framing Nodes" action in the history and saves.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:251
 function util_screenshotCreator_nodeOutpaint.finishStroke() end
 
---- Renvoie le chemin du fichier de configuration (/settings/thumbnailNodeOutpaintConfig.json).
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:543
----@return string  Chemin du fichier.
+--- Returns the path of the configuration file (/settings/thumbnailNodeOutpaintConfig.json).
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:543
+---@return string  File path.
 function util_screenshotCreator_nodeOutpaint.getConfigPath() end
 
---- Renvoie les pointeurs ImGui de l'interface.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:566
+--- Returns the UI's ImGui pointers.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:566
 ---@return table  {enabled = BoolPtr, brushRadius = FloatPtr}.
 function util_screenshotCreator_nodeOutpaint.getControls() end
 
---- Renvoie la table des nœuds désactivés d'une config ({cid string = nom}). Renvoie une table vide non enregistrée si la config n'existe pas, sauf si create vaut true.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:67
----@param vehicleOrKey table|string Véhicule ou clé « modèle/config ».
----@param explicitConfigName string|nil Nom de config imposé quand le premier argument est un véhicule.
----@param create boolean|nil true pour créer et enregistrer en mémoire la table de la config.
----@return table<string, string>  Nœuds désactivés.
+--- Returns the table of disabled nodes of a config ({cid string = name}). Returns an unregistered empty table if the config does not exist, unless create is true.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:67
+---@param vehicleOrKey table|string Vehicle or "model/config" key.
+---@param explicitConfigName string|nil Imposed config name when the first argument is a vehicle.
+---@param create boolean|nil true to create and register the config's table in memory.
+---@return table<string, string>  Disabled nodes.
 function util_screenshotCreator_nodeOutpaint.getDisabledNodes(vehicleOrKey, explicitConfigName, create) end
 
---- Raccourci de getDisabledNodes pour une clé de config.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:551
----@param configKey string Clé « modèle/config ».
----@param create boolean|nil true pour créer la table si absente.
----@return table<string, string>  Nœuds désactivés.
+--- Shortcut of getDisabledNodes for a config key.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:551
+---@param configKey string "model/config" key.
+---@param create boolean|nil true to create the table if absent.
+---@return table<string, string>  Disabled nodes.
 function util_screenshotCreator_nodeOutpaint.getDisabledNodesForKey(configKey, create) end
 
---- Cherche un nœud du véhicule par clé (cid en string), par nom ou par cid.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:162
----@param vehicle table Objet véhicule.
----@param nodeIdentifier string|integer Clé, nom ou cid du nœud.
----@return table|nil  Nœud trouvé (voir getVehicleNodeData), sinon nil.
+--- Looks up a vehicle node by key (cid as string), by name or by cid.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:162
+---@param vehicle table Vehicle object.
+---@param nodeIdentifier string|integer Node key, name or cid.
+---@return table|nil  Node found (see getVehicleNodeData), otherwise nil.
 function util_screenshotCreator_nodeOutpaint.getVehicleNode(vehicle, nodeIdentifier) end
 
---- Liste tous les nœuds physiques du véhicule avec leur position monde et leurs marques. Lance au premier appel le selfCheck de détection de rétroviseurs.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:118
----@param vehicle table Objet véhicule.
----@return table[]  Tableau de {cid, key, name, ignoreForThumbnailFraming, automaticMirrorOutpaint, point (vec3 monde)}.
+--- Lists all the vehicle's physical nodes with their world position and marks. On the first call, runs the mirror detection selfCheck.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:118
+---@param vehicle table Vehicle object.
+---@return table[]  Array of {cid, key, name, ignoreForThumbnailFraming, automaticMirrorOutpaint, point (world vec3)}.
 function util_screenshotCreator_nodeOutpaint.getVehicleNodeData(vehicle) end
 
---- Calcule la clé « modèle/config » d'un véhicule, à partir de son jbeam et de explicitConfigName ou de vehicle.partConfig (normalisé).
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:36
----@param vehicle table Objet véhicule.
----@param explicitConfigName string|nil Nom de config imposé (prioritaire sur partConfig).
----@return string|nil  Clé « modèle/config », nil si le modèle ou la config manque.
----@return string|nil  Nom du modèle.
----@return string|nil  Nom de config normalisé.
+--- Computes the "model/config" key of a vehicle, from its jbeam and explicitConfigName or vehicle.partConfig (normalized).
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:36
+---@param vehicle table Vehicle object.
+---@param explicitConfigName string|nil Imposed config name (takes priority over partConfig).
+---@return string|nil  "model/config" key, nil if the model or the config is missing.
+---@return string|nil  Model name.
+---@return string|nil  Normalized config name.
 function util_screenshotCreator_nodeOutpaint.getVehicleOutpaintKey(vehicle, explicitConfigName) end
 
---- Indique si l'onglet du pinceau est actif.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:559
+--- Indicates whether the brush tab is active.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:559
 ---@return boolean  tabActive.
 function util_screenshotCreator_nodeOutpaint.isTabActive() end
 
---- Charge le fichier de configuration en mémoire (une seule fois sauf force) ; crée une table vide si le fichier est absent ou invalide.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:45
----@param force boolean|nil true pour relire le fichier même s'il est déjà chargé.
+--- Loads the configuration file into memory (only once unless force); creates an empty table if the file is missing or invalid.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:45
+---@param force boolean|nil true to reread the file even if it is already loaded.
 ---@return table  Config {configs = {...}}.
 function util_screenshotCreator_nodeOutpaint.loadConfig(force) end
 
---- Hook après rechargement ; identique à deserialize.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:525
----@param data table|nil État sauvegardé.
+--- Hook after reload; identical to deserialize.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:525
+---@param data table|nil Saved state.
 function util_screenshotCreator_nodeOutpaint.onDeserialized(data) end
 
---- Hook : charge la configuration au chargement de l'extension.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:531
+--- Hook: loads the configuration when the extension is loaded.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:531
 function util_screenshotCreator_nodeOutpaint.onExtensionLoaded() end
 
---- Hook : termine le coup de pinceau en cours au déchargement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:535
+--- Hook: ends the brush stroke in progress on unload.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:535
 function util_screenshotCreator_nodeOutpaint.onExtensionUnloaded() end
 
---- Hook de sérialisation ; identique à serialize.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:518
----@return table  État.
+--- Serialization hook; identical to serialize.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:518
+---@return table  State.
 function util_screenshotCreator_nodeOutpaint.onSerialize() end
 
---- Hook appelé quand un véhicule apparaît : termine le coup de pinceau en cours.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:539
+--- Hook called when a vehicle spawns: ends the brush stroke in progress.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:539
 function util_screenshotCreator_nodeOutpaint.onVehicleSpawned() end
 
---- Refait une modification : applique actionData.new. Callback d'editor.history.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:188
+--- Redoes a change: applies actionData.new. editor.history callback.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:188
 ---@param actionData table {configKey, old, new}.
 function util_screenshotCreator_nodeOutpaint.redo(actionData) end
 
---- Écrit la configuration sur disque (jsonWriteFile, indentée).
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:57
----@return boolean  Résultat de jsonWriteFile.
+--- Writes the configuration to disk (jsonWriteFile, indented).
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:57
+---@return boolean  Result of jsonWriteFile.
 function util_screenshotCreator_nodeOutpaint.saveConfig() end
 
---- Test par assertions de la détection des rétroviseurs externes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:104
----@return boolean  Toujours true (sinon une assertion échoue).
+--- Assertion test of the external mirror detection.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:104
+---@return boolean  Always true (otherwise an assertion fails).
 function util_screenshotCreator_nodeOutpaint.selfCheck() end
 
---- Renvoie {enabled, brushRadius} pour la sauvegarde de l'état.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:518
----@return table  État du pinceau.
+--- Returns {enabled, brushRadius} for state saving.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:518
+---@return table  Brush state.
 function util_screenshotCreator_nodeOutpaint.serialize() end
 
---- Désactive ou réactive un nœud pour une config, avec entrée d'historique annuler/refaire et sauvegarde sur disque.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:222
----@param vehicleOrKey table|string Véhicule ou clé de config.
----@param node table Nœud (avec key et name), tel que renvoyé par getVehicleNode.
----@param disabled boolean true pour désactiver, false pour réactiver.
----@param explicitConfigName string|nil Nom de config imposé.
----@return boolean  true si l'état a changé.
+--- Disables or re-enables a node for a config, with an undo/redo history entry and saving to disk.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:222
+---@param vehicleOrKey table|string Vehicle or config key.
+---@param node table Node (with key and name), as returned by getVehicleNode.
+---@param disabled boolean true to disable, false to re-enable.
+---@param explicitConfigName string|nil Imposed config name.
+---@return boolean  true if the state changed.
 function util_screenshotCreator_nodeOutpaint.setNodeDisabled(vehicleOrKey, node, disabled, explicitConfigName) end
 
---- Force l'état « onglet actif » ; en le désactivant, termine le coup de pinceau en cours.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:428
----@param value boolean true si l'onglet est actif.
+--- Forces the "tab active" state; disabling it ends the brush stroke in progress.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:428
+---@param value boolean true if the tab is active.
 function util_screenshotCreator_nodeOutpaint.setTabActive(value) end
 
---- Annule une modification : applique actionData.old. Callback d'editor.history.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:183
+--- Undoes a change: applies actionData.old. editor.history callback.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:183
 ---@param actionData table {configKey, old, new}.
 function util_screenshotCreator_nodeOutpaint.undo(actionData) end
 
---- Met à jour le pinceau chaque frame : dessine le cercle, colore les nœuds dans la vue 3D (debugDrawer), et pendant un clic gauche désactive les nœuds sous le pinceau (Ctrl : les réactive). Le coup de pinceau est enregistré comme une action d'historique à la fin.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:263
+--- Updates the brush every frame: draws the circle, colors the nodes in the 3D view (debugDrawer), and during a left click disables the nodes under the brush (Ctrl: re-enables them). The brush stroke is recorded as a history action at the end.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:263
 ---@param options table|nil {active, workerRunning, vehicle, configName}.
 function util_screenshotCreator_nodeOutpaint.updateBrush(options) end
 
---- Alias de updateBrush.
----Source : lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:263
----@param options table|nil Voir updateBrush.
+--- Alias of updateBrush.
+---Source: lua/ge/extensions/util/screenshotCreator/nodeOutpaint.lua:263
+---@param options table|nil See updateBrush.
 function util_screenshotCreator_nodeOutpaint.updateNodeOutpainting(options) end
 

@@ -1,86 +1,186 @@
 {
   "path": "lua/vehicle/controller/drivingDynamics/sensors/sensorHub.lua",
-  "module": "Capteur central de la Driving Dynamics Suite : à chaque pas physique il lit les vitesses angulaires (roulis, tangage, lacet), l'attitude (roll, pitch), les accélérations X/Y/Z (via `sensors.ffiSensors`), les entrées du conducteur, et calcule des versions lissées ainsi qu'un « bruit » d'accélération (écart entre enveloppes haute et basse, limité à 150). Les autres contrôleurs de `drivingDynamics/` (superviseurs, actionneurs, CMU) lisent ces champs, accessibles par `CMU.sensorHub` ou `CMU.getSensor(\"sensorHub\")`. Ordre d'appel : `defaultOrder = 52`.",
+  "module": "Central sensor of the Driving Dynamics Suite: at each physics step it reads the angular velocities (roll, pitch, yaw), the attitude (roll, pitch), the X/Y/Z accelerations (via `sensors.ffiSensors`) and the driver inputs, and computes smoothed versions as well as an acceleration \"noise\" (difference between high and low envelopes, limited to 150). The other controllers in `drivingDynamics/` (supervisors, actuators, CMU) read these fields, accessible via `CMU.sensorHub` or `CMU.getSensor(\"sensorHub\")`. Call order: `defaultOrder = 52`.",
   "notes": [
-    "Unités : accélérations en m/s² (repère véhicule : X avant, Y côté, Z vertical non inertiel avec gravité incluse), vitesses angulaires en rad/s, angles roll/pitch en radians, `gravity` en m/s².",
-    "Champs aussi écrits mais non listés ci-dessous : `throttleInput`, `brakeInput` (electrics throttle et brake) ; en mode debug seulement : `worldVelocity`, `directionVector`, `directionVectorUp`, `directionVectorLeft`.",
-    "Bug : `yawAcceleration` = (yawAV - lastYawAV) / dt, mais `lastYawAV` n'est jamais mis à jour après init (reste 0), donc la valeur est yawAV / dt, pas une vraie accélération.",
-    "`vX` et `vY` (vitesse longitudinale et latérale) ne sont calculées que dans la variante debug (`updateDebug`), sinon elles restent à 0.",
-    "`shutdown` met `isActive` à false et `update`/`updateGFX` à nil (le gestionnaire doit rappeler cacheAllControllerFunctions pour les retirer).",
-    "Il n'y a pas de clé jbeam lue."
+    "Units: accelerations in m/s² (vehicle frame: X forward, Y sideways, Z vertical non-inertial with gravity included), angular velocities in rad/s, roll/pitch angles in radians, `gravity` in m/s².",
+    "Fields also written but not listed below: `throttleInput`, `brakeInput` (electrics throttle and brake); in debug mode only: `worldVelocity`, `directionVector`, `directionVectorUp`, `directionVectorLeft`.",
+    "Bug: `yawAcceleration` = (yawAV - lastYawAV) / dt, but `lastYawAV` is never updated after init (stays 0), so the value is yawAV / dt, not a true acceleration.",
+    "`vX` and `vY` (longitudinal and lateral speed) are only computed in the debug variant (`updateDebug`), otherwise they stay at 0.",
+    "`shutdown` sets `isActive` to false and `update`/`updateGFX` to nil (the manager must call cacheAllControllerFunctions again to remove them).",
+    "No jbeam key is read."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "defaultOrder": {"type": "number", "desc": "52."},
-    "isActive": {"type": "boolean", "desc": "true après init, false après shutdown."},
-    "steeringInput": {"type": "number", "desc": "Valeur de `electrics.values.steering_input`."},
-    "roll": {"type": "number", "desc": "Angle de roulis en rad."},
-    "pitch": {"type": "number", "desc": "Angle de tangage en rad."},
-    "rollAV": {"type": "number", "desc": "Vitesse angulaire de roulis en rad/s."},
-    "pitchAV": {"type": "number", "desc": "Vitesse angulaire de tangage en rad/s."},
-    "yawAV": {"type": "number", "desc": "Vitesse angulaire de lacet en rad/s."},
-    "rollAVSmooth": {"type": "number", "desc": "rollAV lissée."},
-    "pitchAVSmooth": {"type": "number", "desc": "pitchAV lissée."},
-    "yawAVSmooth": {"type": "number", "desc": "yawAV lissée."},
-    "vX": {"type": "number", "desc": "Vitesse longitudinale en m/s (calculée seulement en mode debug)."},
-    "vY": {"type": "number", "desc": "Vitesse latérale en m/s (calculée seulement en mode debug)."},
-    "yawAcceleration": {"type": "number", "desc": "Voir la note : vaut yawAV / dt en pratique."},
-    "gravity": {"type": "number", "desc": "Gravité du monde (`obj:getGravity()`), mise à jour chaque frame GFX."},
-    "accelerationX": {"type": "number", "desc": "Accélération longitudinale brute (m/s²)."},
-    "accelerationY": {"type": "number", "desc": "Accélération latérale brute (m/s²)."},
-    "accelerationZ": {"type": "number", "desc": "Accélération verticale brute non inertielle (m/s²)."},
-    "accelerationXSmooth": {"type": "number", "desc": "accelerationX lissée."},
-    "accelerationYSmooth": {"type": "number", "desc": "accelerationY lissée."},
-    "accelerationZSmooth": {"type": "number", "desc": "accelerationZ lissée."},
-    "accNoiseX": {"type": "number", "desc": "Niveau de bruit d'accélération X (0 à 150)."},
-    "accNoiseY": {"type": "number", "desc": "Niveau de bruit d'accélération Y (0 à 150)."},
-    "accNoiseZ": {"type": "number", "desc": "Niveau de bruit d'accélération Z (après retrait de la gravité, 0 à 150)."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "52."
+    },
+    "isActive": {
+      "type": "boolean",
+      "desc": "true after init, false after shutdown."
+    },
+    "steeringInput": {
+      "type": "number",
+      "desc": "Value of `electrics.values.steering_input`."
+    },
+    "roll": {
+      "type": "number",
+      "desc": "Roll angle in rad."
+    },
+    "pitch": {
+      "type": "number",
+      "desc": "Pitch angle in rad."
+    },
+    "rollAV": {
+      "type": "number",
+      "desc": "Roll angular velocity in rad/s."
+    },
+    "pitchAV": {
+      "type": "number",
+      "desc": "Pitch angular velocity in rad/s."
+    },
+    "yawAV": {
+      "type": "number",
+      "desc": "Yaw angular velocity in rad/s."
+    },
+    "rollAVSmooth": {
+      "type": "number",
+      "desc": "Smoothed rollAV."
+    },
+    "pitchAVSmooth": {
+      "type": "number",
+      "desc": "Smoothed pitchAV."
+    },
+    "yawAVSmooth": {
+      "type": "number",
+      "desc": "Smoothed yawAV."
+    },
+    "vX": {
+      "type": "number",
+      "desc": "Longitudinal speed in m/s (computed only in debug mode)."
+    },
+    "vY": {
+      "type": "number",
+      "desc": "Lateral speed in m/s (computed only in debug mode)."
+    },
+    "yawAcceleration": {
+      "type": "number",
+      "desc": "See the note: in practice equals yawAV / dt."
+    },
+    "gravity": {
+      "type": "number",
+      "desc": "World gravity (`obj:getGravity()`), updated every GFX frame."
+    },
+    "accelerationX": {
+      "type": "number",
+      "desc": "Raw longitudinal acceleration (m/s²)."
+    },
+    "accelerationY": {
+      "type": "number",
+      "desc": "Raw lateral acceleration (m/s²)."
+    },
+    "accelerationZ": {
+      "type": "number",
+      "desc": "Raw non-inertial vertical acceleration (m/s²)."
+    },
+    "accelerationXSmooth": {
+      "type": "number",
+      "desc": "Smoothed accelerationX."
+    },
+    "accelerationYSmooth": {
+      "type": "number",
+      "desc": "Smoothed accelerationY."
+    },
+    "accelerationZSmooth": {
+      "type": "number",
+      "desc": "Smoothed accelerationZ."
+    },
+    "accNoiseX": {
+      "type": "number",
+      "desc": "X acceleration noise level (0 to 150)."
+    },
+    "accNoiseY": {
+      "type": "number",
+      "desc": "Y acceleration noise level (0 to 150)."
+    },
+    "accNoiseZ": {
+      "type": "number",
+      "desc": "Z acceleration noise level (after removing gravity, 0 to 150)."
+    }
   },
   "functions": {
     "update": {
-      "desc": "Pas physique : lit et lisse vitesses angulaires, attitude, accélérations et bruit. Remplacée par updateDebug en mode debug.",
-      "params": {"dt": {"type": "number", "desc": "Pas physique en secondes."}},
+      "desc": "Physics step: reads and smooths angular velocities, attitude, accelerations and noise. Replaced by updateDebug in debug mode.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Physics step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Chaque frame : met à jour la gravité. En mode debug, envoie aussi le paquet de debug au CMU.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "desc": "Every frame: updates the gravity. In debug mode, also sends the debug packet to the CMU.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Réinitialise tous les lisseurs.",
+      "desc": "Resets all smoothers.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "init": {
-      "desc": "Lit la gravité, marque le capteur actif.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (non utilisées)."}},
+      "desc": "Reads the gravity, marks the sensor as active.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data (unused)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "initLastStage": {
-      "desc": "Vide.",
+      "desc": "Empty.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "registerCMU": {
-      "desc": "Appelée par le CMU lors de son initSecondStage pour donner une référence vers lui (utilisée pour le debug).",
-      "params": {"cmu": {"type": "table", "desc": "Module CMU."}},
+      "desc": "Called by the CMU during its initSecondStage to give it a reference to itself (used for debugging).",
+      "params": {
+        "cmu": {
+          "type": "table",
+          "desc": "CMU module."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setDebugMode": {
-      "desc": "Bascule entre les variantes normale et debug de update/updateGFX.",
-      "params": {"debugEnabled": {"type": "boolean", "desc": "true pour remplir et envoyer le paquet de debug."}},
+      "desc": "Switches between the normal and debug variants of update/updateGFX.",
+      "params": {
+        "debugEnabled": {
+          "type": "boolean",
+          "desc": "true to fill and send the debug packet."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "shutdown": {
-      "desc": "Arrête le capteur : isActive = false et fonctions d'update retirées.",
+      "desc": "Stops the sensor: isActive = false and update functions removed.",
       "params": {},
       "returns": [],
       "internal": true

@@ -1,12 +1,12 @@
 # `util_materialDebugViz`
 
-*Fichier : `lua/ge/extensions/util/materialDebugViz.lua` · VM : Game Engine (GE) · 432 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/materialDebugViz.lua` · VM: Game Engine (GE) · 432 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_materialDebugViz` : `extensions.load("util_materialDebugViz")`, puis la globale `util_materialDebugViz`
+**Access:** extension `util_materialDebugViz`: `extensions.load("util_materialDebugViz")`, then the global `util_materialDebugViz`
 
-Visualisations de débogage des matériaux (PBR) pour l'éditeur et les outils de rendu. Il définit 22 modes (aucun, quad overdraw, fil de fer, niveau de mipmap, couleur de base, opacité, métallique, rugosité, normales monde, occlusion ambiante, émissif, vernis, rugosité du vernis, UV0/UV1 avec damier et grille, matériau déprécié, nombre de couches, uniformité du Draw ID). Chaque mode active un drapeau de débogage dans le moteur (materialDebugSetFlag / enableMaterialDebug). Quand un mode est actif, une fenêtre de légende ImGui s'affiche en bas de l'écran (dégradé, pastilles de couleur et explications).
+Material (PBR) debug visualizations for the editor and rendering tools. It defines 22 modes (none, quad overdraw, wireframe, mipmap level, base color, opacity, metallic, roughness, world normals, ambient occlusion, emissive, clear coat, clear coat roughness, UV0/UV1 with checkerboard and grid, deprecated material, layer count, Draw ID uniformity). Each mode enables a debug flag in the engine (materialDebugSetFlag / enableMaterialDebug). When a mode is active, an ImGui legend window is shown at the bottom of the screen (gradient, color swatches and explanations).
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('util_materialDebugViz')
@@ -14,43 +14,43 @@ extensions.util_materialDebugViz.set('Material_Roughness')
 extensions.util_materialDebugViz.set('Material_None')
 ```
 
-## Remarques
+## Notes
 
-- Noms de modes valides pour set : Material_None, Material_TriSize, Material_Wireframe, Material_Mip, Material_BaseColor, Material_Opacity, Material_Metallic, Material_Roughness, Material_NormalsWS, Material_AmbientOcclusion, Material_Emissive, Material_ClearCoat, Material_ClearCoatRoughness, Material_UV0, Material_UV0Checkerboard, Material_UV0ColorGrid, Material_UV1, Material_UV1Checkerboard, Material_UV1ColorGrid, Material_MaterialDeprecated, Material_LayerCount, Material_DrawIdUniformity.
-- Les modes Quad Overdraw, Mip et Draw ID Uniformity ne fonctionnent qu'avec Vulkan ou Direct3D12 (indiqué dans la légende).
-- Bug : dans drawLegendWindow, `editor.getPreference(...) or true` vaut toujours true quand la préférence vaut false (false or true), donc la préférence gizmos.visualization.showMaterialDebugLegend ne peut jamais masquer la légende.
-- M.onUpdate est une alias de drawLegendWindow : la légende est dessinée à chaque frame, au plus une fois par identifiant de frame de rendu.
+- Valid mode names for set: Material_None, Material_TriSize, Material_Wireframe, Material_Mip, Material_BaseColor, Material_Opacity, Material_Metallic, Material_Roughness, Material_NormalsWS, Material_AmbientOcclusion, Material_Emissive, Material_ClearCoat, Material_ClearCoatRoughness, Material_UV0, Material_UV0Checkerboard, Material_UV0ColorGrid, Material_UV1, Material_UV1Checkerboard, Material_UV1ColorGrid, Material_MaterialDeprecated, Material_LayerCount, Material_DrawIdUniformity.
+- The Quad Overdraw, Mip and Draw ID Uniformity modes only work with Vulkan or Direct3D12 (stated in the legend).
+- Bug: in drawLegendWindow, `editor.getPreference(...) or true` is always true when the preference is false (false or true), so the gizmos.visualization.showMaterialDebugLegend preference can never hide the legend.
+- M.onUpdate is an alias of drawLegendWindow: the legend is drawn every frame, at most once per render frame id.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_materialDebugViz.drawLegendWindow()` | Dessine la fenêtre de légende du mode actif (au centre horizontal, à 80 % de la hauteur de la vue). Ne dessine rien si aucun mode n'est actif ou s'il n'a pas de légende. Aussi branchée comme onUpdate. | 361 |
-| `util_materialDebugViz.getIndexPtr()` | Renvoie le pointeur ImGui entier (IntPtr) contenant l'index du mode courant (à partir de 0), utilisable avec un combo ImGui. | 359 |
-| `util_materialDebugViz.getTypes()` | Renvoie la liste des modes de visualisation (tables {type='Custom', name, displayName, setter, getter}), nil avant le chargement. | 358 |
-| `util_materialDebugViz.onExtensionLoaded()` | Appelé au chargement : construit la table des modes de visualisation (type, name, displayName, setter, getter) et sélectionne l'index du mode déjà actif dans le moteur. *(interne)* *(hook)* | 257 |
-| `util_materialDebugViz.onUpdate()` | Hook appelé chaque frame ; alias de drawLegendWindow. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `util_materialDebugViz.set(mode)` | Active un mode de visualisation par son nom ; sans argument ou avec Material_None, désactive la visualisation. Logue une erreur pour un nom inconnu. | 410 |
+| `util_materialDebugViz.drawLegendWindow()` | Draws the legend window of the active mode (horizontally centered, at 80% of the view height). Draws nothing if no mode is active or if it has no legend. Also hooked as onUpdate. | 361 |
+| `util_materialDebugViz.getIndexPtr()` | Returns the integer ImGui pointer (IntPtr) holding the current mode index (0-based), usable with an ImGui combo. | 359 |
+| `util_materialDebugViz.getTypes()` | Returns the list of visualization modes (tables {type='Custom', name, displayName, setter, getter}), nil before loading. | 358 |
+| `util_materialDebugViz.onExtensionLoaded()` | Called on load: builds the table of visualization modes (type, name, displayName, setter, getter) and selects the index of the mode already active in the engine. *(internal)* *(hook)* | 257 |
+| `util_materialDebugViz.onUpdate()` | Hook called every frame; alias of drawLegendWindow. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `util_materialDebugViz.set(mode)` | Activates a visualization mode by name; with no argument or with Material_None, disables the visualization. Logs an error for an unknown name. | 410 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_materialDebugViz.getIndexPtr()`
 
-Renvoie le pointeur ImGui entier (IntPtr) contenant l'index du mode courant (à partir de 0), utilisable avec un combo ImGui.
+Returns the integer ImGui pointer (IntPtr) holding the current mode index (0-based), usable with an ImGui combo.
 
-- **renvoie** : userdata im.IntPtr de l'index courant
+- **returns**: userdata im.IntPtr of the current index
 
 #### `util_materialDebugViz.getTypes()`
 
-Renvoie la liste des modes de visualisation (tables {type='Custom', name, displayName, setter, getter}), nil avant le chargement.
+Returns the list of visualization modes (tables {type='Custom', name, displayName, setter, getter}), nil before loading.
 
-- **renvoie** : table[]|nil Modes disponibles
+- **returns**: table[]|nil Available modes
 
 #### `util_materialDebugViz.set(mode)`
 
-Active un mode de visualisation par son nom ; sans argument ou avec Material_None, désactive la visualisation. Logue une erreur pour un nom inconnu.
+Activates a visualization mode by name; with no argument or with Material_None, disables the visualization. Logs an error for an unknown name.
 
-- `mode` (*string|nil*) : Nom du mode, par exemple Material_Roughness
+- `mode` (*string|nil*) : Mode name, for example Material_Roughness
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/materialDebugViz.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/materialDebugViz.lua`.*

@@ -1,19 +1,58 @@
 {
   "path": "lua/ge/extensions/editor/flowgraph/stateView.lua",
-  "module": "Fenêtre « State View » (fg_stateView) de l'éditeur Flowgraph. Elle liste, graphe par graphe (récursivement à partir de mgr.stateGraph), les états (nœuds 'states/stateNode' dont le graphe cible n'est pas un stategraph) avec une icône lecture/pause selon qu'ils tournent. Pur affichage : rien n'est modifié dans le projet. Créée via _flowgraph_createMgrWindow, donc instanciée par flowgraphEditor pour chaque manager.",
+  "module": "\"State View\" window (fg_stateView) of the Flowgraph editor. It lists, graph by graph (recursively from mgr.stateGraph), the states ('states/stateNode' nodes whose target graph is not a stategraph) with a play/pause icon depending on whether they are running. Pure display: nothing is modified in the project. Created via _flowgraph_createMgrWindow, so instantiated by flowgraphEditor for each manager.",
   "notes": [
-    "Un état est affiché comme « en cours » seulement si mgr.runningState == 'running' et mgr.states:isRunning(state.id) renvoie vrai.",
-    "Le tri des états et des graphes enfants se fait par id croissant."
+    "A state is displayed as \"running\" only if mgr.runningState == 'running' and mgr.states:isRunning(state.id) returns true.",
+    "States and child graphs are sorted by increasing id."
   ],
   "classes": {
     "C": {
-      "desc": "Classe de la fenêtre (windowName 'fg_stateView', windowDescription 'State View'). Les méthodes sont celles appelées par flowgraphEditor via basewindow.",
+      "desc": "Window class (windowName 'fg_stateView', windowDescription 'State View'). The methods are those called by flowgraphEditor via basewindow.",
       "functions": {
-        "init": {"desc": "Crée le filtre texte ImGui et enregistre la fenêtre dans l'éditeur (taille 150x300, masquée par défaut).", "internal": true},
-        "attach": {"desc": "Mémorise le manager flowgraph courant dans self.mgr. Appelé à chaque changement de manager.", "params": {"mgr": {"type": "table", "desc": "Manager flowgraph à afficher."}}, "internal": true},
-        "drawStategraphRecursive": {"desc": "Dessine sur deux colonnes le nom du graphe (entre crochets, précédé de ' - ' par niveau de profondeur) puis ses états avec l'icône play_circle_filled (en cours) ou pause_circle_outline (à l'arrêt), puis descend dans les graphes enfants.", "params": {"graph": {"type": "table", "desc": "Graphe à parcourir."}, "depth": {"type": "integer", "desc": "Profondeur d'indentation (0 pour la racine)."}}},
-        "draw": {"desc": "Dessine la fenêtre « States View » si elle est visible, à partir de self.mgr.stateGraph. Appelée à chaque frame par drawEditor.", "internal": true},
-        "selectNode": {"desc": "Sélectionne un nœud dans l'éditeur de graphes (fge.SelectNode).", "params": {"node": {"type": "table", "desc": "Nœud flowgraph (utilise node.id)."}, "append": {"type": "boolean", "desc": "Ajouter à la sélection existante."}}}
+        "init": {
+          "desc": "Creates the ImGui text filter and registers the window in the editor (size 150x300, hidden by default).",
+          "internal": true
+        },
+        "attach": {
+          "desc": "Stores the current flowgraph manager in self.mgr. Called on each manager change.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager to display."
+            }
+          },
+          "internal": true
+        },
+        "drawStategraphRecursive": {
+          "desc": "Draws in two columns the graph name (in brackets, preceded by ' - ' per depth level) then its states with the play_circle_filled icon (running) or pause_circle_outline (stopped), then descends into the child graphs.",
+          "params": {
+            "graph": {
+              "type": "table",
+              "desc": "Graph to walk."
+            },
+            "depth": {
+              "type": "integer",
+              "desc": "Indentation depth (0 for the root)."
+            }
+          }
+        },
+        "draw": {
+          "desc": "Draws the \"States View\" window if it is visible, from self.mgr.stateGraph. Called every frame by drawEditor.",
+          "internal": true
+        },
+        "selectNode": {
+          "desc": "Selects a node in the graph editor (fge.SelectNode).",
+          "params": {
+            "node": {
+              "type": "table",
+              "desc": "Flowgraph node (uses node.id)."
+            },
+            "append": {
+              "type": "boolean",
+              "desc": "Add to the existing selection."
+            }
+          }
+        }
       }
     }
   }

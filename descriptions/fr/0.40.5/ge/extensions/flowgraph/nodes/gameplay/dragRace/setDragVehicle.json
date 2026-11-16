@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/setDragVehicle.lua",
+  "module": "Nœud flowgraph « Set Drag Vehicles » (catégorie once_instant). Enregistre les véhicules de la course dans gameplay_drag_dragBridge.setVehicles. Les pins d'entrée par voie (vehId_i, isPlayable_i, dial_i, lane_i) sont créés dynamiquement selon le nombre choisi dans l'éditeur (count, sauvegardé). Sortie : flow (impulsion).",
+  "notes": ["Les voies sans vehId valide (> 0) sont ignorées ; si la liste est vide, le nœud ne donne pas de flux.", "Valeurs par défaut : isPlayable faux, dial -1, lane 1.", "À la suppression de pins, seuls les liens dont sourcePin correspond sont effacés (comparaison faite sur sourcePin alors que ce sont des pins d'entrée)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "count = 1, mode = 'first'.", "internal": true},
+        "_executionStarted": {"desc": "Vide.", "internal": true},
+        "drawMiddle": {"desc": "Affiche le mode de fusion.", "internal": true},
+        "drawCustomProperties": {"desc": "Éditeur : champ count et choix de la fonction de fusion.", "internal": true},
+        "updatePins": {"desc": "Ajoute ou supprime les pins par voie pour passer de old à new.", "params": {"old": {"type": "integer", "desc": "Ancien nombre"}, "new": {"type": "integer", "desc": "Nouveau nombre"}}, "internal": true},
+        "workOnce": {"desc": "Construit la liste {id, isPlayable, dial, lane} et appelle dragBridge.setVehicles."},
+        "_onSerialize": {"desc": "Sauvegarde mode et count.", "params": {"res": {"type": "table", "desc": "Table de sérialisation"}}, "internal": true},
+        "_onDeserialized": {"desc": "Restaure mode et count et recrée les pins.", "params": {"res": {"type": "table", "desc": "Données sauvegardées"}}, "internal": true}
+      }
+    }
+  }
+}

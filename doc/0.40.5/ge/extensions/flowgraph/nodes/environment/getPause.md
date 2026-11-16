@@ -1,18 +1,18 @@
 # `flowgraph_nodes_environment_getPause`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/environment/getPause.lua` · VM : Game Engine (GE) · 29 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/environment/getPause.lua` · VM: Game Engine (GE) · 29 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/environment/getPause")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/environment/getPause")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Pause » (catégorie provider, auteur BeamNG, tags pause/freeze/halt/stop/interrupt). Sort un bool « value » indiquant si la simulation est en pause (simTimeAuthority.getPause()).
+Flowgraph node "Get Pause" (category provider, author BeamNG, tags pause/freeze/halt/stop/interrupt). Outputs a bool "value" indicating whether the simulation is paused (simTimeAuthority.getPause()).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Chaque frame, écrit l'état de pause sur la sortie value. | 23 |
+| `C:work()` | Every frame, writes the pause state to the value output. | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/environment/getPause.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/environment/getPause.lua`.*

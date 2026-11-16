@@ -1,0 +1,163 @@
+{
+  "path": "lua/ge/extensions/ui/photomode/camera.lua",
+  "module": "Caméra du mode photo : FOV, vitesse de la caméra libre, roulis, exposition (auto ou EV manuel), mouvement lissé, visibilité des nœuds fixes du NodeGrabber, signets de caméra (absolus dans le monde ou relatifs au véhicule du joueur) et presets de caméra. Le module passe par core_camera (via ui_photomode_shared.getCoreCameraFunction) et par commands.setFreeCamera pour basculer en caméra libre, et mémorise l'état d'entrée pour le restaurer à la sortie du mode photo. Il sert de backend au panneau caméra de l'UI du mode photo.",
+  "usage": "ui_photomode_camera.setCameraFov(45)\nlocal r = ui_photomode_camera.saveCurrentCameraBookmark()\n-- plus tard\nui_photomode_camera.restoreSavedFreeCameraBookmark()",
+  "notes": [
+    "Les fonctions renvoient une table. En cas d'échec : {ok = false, reason, ...}. En cas de succès, le champ ok est ABSENT (pas de ok = true) : tester res.ok ~= false plutôt que res.ok.",
+    "Bornes appliquées par clamp : FOV 10 à 120 degrés (défaut 60), vitesse 2 à 300 (défaut 15), roulis -90 à 90 degrés (défaut 0), EV manuel -20 à 20 (défaut 10).",
+    "Raisons d'échec courantes : camera_api_unavailable, camera_mode_unsupported (caméra « path » active, ou roulis hors caméra libre), camera_set_failed, camera_mode_switch_failed, bookmark_unavailable, bookmark_invalid, vehicle_unavailable, exposure_settings_unavailable, camera_exposure_patch_empty, nodegrabber_unavailable, preset_level_mismatch.",
+    "Le roulis n'est modifiable qu'en caméra libre ; le FOV ne l'est pas avec la caméra « path ».",
+    "Un signet relatif (mode relativeFreecam) stocke la position et la rotation de la caméra dans le repère de la boîte englobante (OOBB) du véhicule joueur ; un signet absolu stocke pos (x,y,z), rot (quaternion x,y,z,w) et fov dans le monde.",
+    "L'exposition passe par l'objet scenetree « PostEffectLocalExposureObject » (champs autoExposure et manualEV).",
+    "Au début de la session, captureNodeGrabberRestoreState masque les nœuds fixes du NodeGrabber ; restoreNodeGrabberState les rétablit à la fin (visibles par défaut si aucun getter n'existe)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{\"ui_photomode_shared\"}"}
+  },
+  "functions": {
+    "buildState": {
+      "desc": "Construit l'état de la caméra : sessionActive, disponibilité des signets, availability (exposure, nodeGrabber, smoothMovement), pos, rot, fov, speed, yawDeg, pitchDown, rollDeg, autoExposure, manualEV, nodeGrabberVisible, smoothMovement.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "État de la caméra"}],
+      "internal": false
+    },
+    "getCameraState": {
+      "desc": "Renvoie l'état courant de la caméra (identique à buildState).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "État de la caméra"}],
+      "internal": false
+    },
+    "buildMetadataState": {
+      "desc": "Sous-ensemble de l'état à écrire dans les métadonnées d'une photo : pos, rot, fov, speed, yawDeg, pitchDown, rollDeg.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Données de caméra"}],
+      "internal": false
+    },
+    "setCameraFov": {
+      "desc": "Règle le FOV (borné à 10-120 degrés). Utilise la caméra libre (id 0) ou le véhicule joueur. Refusé avec la caméra « path ».",
+      "params": {"value": {"type": "number", "desc": "FOV en degrés"}},
+      "returns": [{"type": "table", "desc": "{value} en cas de succès, sinon {ok = false, reason, value}"}],
+      "internal": false
+    },
+    "setCameraSpeed": {
+      "desc": "Règle la vitesse de déplacement de la caméra (bornée à 2-300).",
+      "params": {"value": {"type": "number", "desc": "Vitesse de la caméra"}},
+      "returns": [{"type": "table", "desc": "{value} ou {ok = false, reason, value}"}],
+      "internal": false
+    },
+    "setCameraRoll": {
+      "desc": "Règle le roulis de la caméra libre (-90 à 90 degrés) en conservant lacet et tangage actuels.",
+      "params": {"value": {"type": "number", "desc": "Roulis en degrés"}},
+      "returns": [{"type": "table", "desc": "{value} ou {ok = false, reason, value}"}],
+      "internal": false
+    },
+    "setCameraExposureState": {
+      "desc": "Modifie l'exposition de la caméra : autoExposure (booléen) et/ou manualEV (-20 à 20).",
+      "params": {"partialState": {"type": "table", "desc": "{autoExposure?, manualEV?}"}},
+      "returns": [{"type": "table", "desc": "{state} ou {ok = false, reason, state}"}],
+      "internal": false
+    },
+    "setCameraSmoothMovement": {
+      "desc": "Active ou coupe le mouvement lissé de la caméra libre (réglage cameraFreeSmoothMovement) et prévient l'UI des réglages.",
+      "params": {"value": {"type": "boolean|table", "desc": "Booléen, ou table dont le champ smoothMovement est lu"}},
+      "returns": [{"type": "table", "desc": "{value, state} ou {ok = false, reason, state}"}],
+      "internal": false
+    },
+    "setNodeGrabberVisible": {
+      "desc": "Affiche ou masque les nœuds fixes du NodeGrabber (Engine.NodeGrabber_setFixedNodesVisible).",
+      "params": {"value": {"type": "boolean|table", "desc": "Booléen, ou table dont le champ nodeGrabberVisible est lu"}},
+      "returns": [{"type": "table", "desc": "{value, state} ou {ok = false, reason, state}"}],
+      "internal": false
+    },
+    "saveCurrentCameraBookmark": {
+      "desc": "Enregistre la position actuelle de la caméra comme signet de session : un signet absolu, et un signet relatif au véhicule joueur s'il est calculable.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{state} ou {ok = false, reason = \"camera_state_unavailable\", state}"}],
+      "internal": false
+    },
+    "restoreCameraBookmark": {
+      "desc": "Déplace la caméra libre vers un signet (absolu : pos, rot, fov ; ou relatif : offset, rotOffset, fov calculés par rapport au véhicule joueur). Bascule en caméra libre si besoin. Accepte un signet {camera = {...}} ou directement le contenu.",
+      "params": {"bookmark": {"type": "table", "desc": "Signet absolu ou relatif"}},
+      "returns": [{"type": "table", "desc": "{state} ou {ok = false, reason}"}],
+      "internal": false
+    },
+    "restoreSavedFreeCameraBookmark": {
+      "desc": "Restaure le signet absolu enregistré.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Résultat de restoreCameraBookmark, ou {ok = false, reason = \"bookmark_unavailable\"}"}],
+      "internal": false
+    },
+    "restoreSavedRelativeCameraBookmark": {
+      "desc": "Restaure le signet relatif au véhicule enregistré ; l'efface s'il est invalide.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Résultat de restoreCameraBookmark, ou {ok = false, reason = \"bookmark_unavailable\"}"}],
+      "internal": false
+    },
+    "resetCameraDefaults": {
+      "desc": "Remet les valeurs par défaut : mouvement lissé coupé, vitesse 15, roulis 0, exposition automatique avec EV manuel 10. Passe en caméra libre si nécessaire.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{state} ou {ok = false, reason}"}],
+      "internal": false
+    },
+    "restoreSessionCameraTransformState": {
+      "desc": "Replace la caméra libre à la position/rotation (et FOV) capturées au début de la session.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{state} ou {ok = false, reason}"}],
+      "internal": false
+    },
+    "activateSessionFreeCamera": {
+      "desc": "Passe en caméra libre au début de la session (sauf si la caméra d'entrée est « path » ou si la caméra libre est déjà active) et note qu'il faudra restaurer la caméra d'entrée à la sortie.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "captureRestoreState": {
+      "desc": "Capture l'état de la caméra à l'entrée de la session (pos, rot, fov, vitesse, roulis, lissage, exposition, nom de la caméra active). Appelée au début d'une session du mode photo.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "restoreState": {
+      "desc": "Restaure le mode de caméra d'entrée, le FOV, la vitesse, le roulis, le lissage et l'exposition capturés. Appelée à la fin de la session.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "captureNodeGrabberRestoreState": {
+      "desc": "Mémorise la visibilité des nœuds fixes du NodeGrabber puis les masque pour la session.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "restoreNodeGrabberState": {
+      "desc": "Rétablit la visibilité des nœuds fixes mémorisée au début de la session.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "capturePresetState": {
+      "desc": "État de caméra à enregistrer dans un preset. Type « vehicle » : signet relatif au véhicule (nil s'il est indisponible) ; type « scene » (défaut) : position absolue et levelId. Inclut aussi speed, smoothMovement, autoExposure, manualEV.",
+      "params": {"options": {"type": "table|nil", "desc": "{cameraPresetType = \"vehicle\"|\"scene\"}"}},
+      "returns": [{"type": "table|nil", "desc": "État du preset"}],
+      "internal": false
+    },
+    "captureDefaultPresetState": {
+      "desc": "Preset « par défaut » construit à partir de l'état capturé à l'entrée de la session (fov, roulis, vitesse, lissage, exposition, levelId), ou nil si aucune session n'a été capturée.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "État par défaut"}],
+      "internal": false
+    },
+    "applyPresetState": {
+      "desc": "Applique un preset de caméra : refuse un preset de scène d'un autre niveau (preset_level_mismatch), restaure le signet ou applique FOV et roulis, puis vitesse, lissage et exposition.",
+      "params": {"state": {"type": "table", "desc": "État de preset"}},
+      "returns": [{"type": "table", "desc": "{state} ou {ok = false, reason}"}],
+      "internal": false
+    },
+    "getTemporaryPresetList": {
+      "desc": "Convertit les objets CameraBookmark de la scène (scenetree.findClassObjects) en presets temporaires de type camera (id __cameraBookmark_<id>, source cameraBookmark, position absolue). Liste vide si l'API est indisponible.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Presets temporaires"}],
+      "internal": false
+    }
+  }
+}

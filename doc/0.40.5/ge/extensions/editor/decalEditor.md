@@ -1,49 +1,49 @@
 # `editor_decalEditor`
 
-*Fichier : `lua/ge/extensions/editor/decalEditor.lua` · VM : Game Engine (GE) · 1400 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/decalEditor.lua` · VM: Game Engine (GE) · 1400 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_decalEditor` : `extensions.load("editor_decalEditor")`, puis la globale `editor_decalEditor`
+**Access:** extension `editor_decalEditor`: `extensions.load("editor_decalEditor")`, then the global `editor_decalEditor`
 
-Éditeur de decals du World Editor (mode d'édition « Edit Decal », fenêtre « Decal Editor », action map « DecalEditor »). Deux onglets : « Templates » (liste des DecalData avec * pour les modifiés ; créer, supprimer, enregistrer un ou tous les templates) et « Instances » (liste et propriétés des decals posés, remplacement de template, duplication). En mode Templates, un clic sur le terrain crée une instance du template sélectionné ; les instances sont visualisées par des sphères de debug colorées par id, sélectionnables à la souris (Ctrl+clic = multi-sélection) et déplaçables avec le gizmo d'axes (Maj + glisser = dupliquer). Toutes les actions sont annulables via editor.history, et les decals sont enregistrés avant la sauvegarde du niveau.
+World Editor decal editor ("Edit Decal" edit mode, "Decal Editor" window, "DecalEditor" action map). Two tabs: "Templates" (list of DecalData with * for modified ones; create, delete, save one or all templates) and "Instances" (list and properties of placed decals, template replacement, duplication). In Templates mode, a click on the terrain creates an instance of the selected template; instances are visualized by debug spheres colored by id, selectable with the mouse (Ctrl+click = multi-selection) and movable with the axis gizmo (Shift + drag = duplicate). All actions are undoable via editor.history, and decals are saved before the level is saved.
 
-## Remarques
+## Notes
 
-- Les templates DummyDecal et tireTrackDecal sont cachés de la liste.
-- Distances de debug : sphères jusqu'à 250 m, textes jusqu'à 50 m ; l'opacité des sphères se règle avec le curseur « Gizmo sphere alpha ».
-- Une grille spatiale de cellules accélère la recherche des decals visibles et survolés ; elle est reconstruite quand le nombre de decals change.
-- Le gizmo est placé sur la moyenne des positions des instances sélectionnées, ou sur la matrice monde de l'instance en alignement local avec une seule sélection.
-- Possible erreur : dans onEditorInspectorFieldChanged, le résultat de scenetree.findObjectById n'est pas testé avant template:getClassName() (déduit du code).
+- The DummyDecal and tireTrackDecal templates are hidden from the list.
+- Debug distances: spheres up to 250 m, texts up to 50 m; sphere opacity is set with the "Gizmo sphere alpha" slider.
+- A spatial grid of cells speeds up the search for visible and hovered decals; it is rebuilt when the number of decals changes.
+- The gizmo is placed on the average of the selected instances' positions, or on the instance's world matrix in local alignment with a single selection.
+- Possible error: in onEditorInspectorFieldChanged, the result of scenetree.findObjectById is not checked before template:getClassName() (inferred from code).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_decalEditor.onEditorAxisGizmoAligmentChanged()` | Hook appelé quand l'alignement du gizmo (local/monde) change ; si des instances sont sélectionnées en mode Edit Decal, replace le gizmo. *(interne)* *(hook)* | 282 |
-| `editor_decalEditor.onEditorBeforeSaveLevel()` | Hook appelé avant la sauvegarde du niveau ; enregistre tous les templates de decals (editor.saveDecals). *(interne)* *(hook)* | 1335 |
-| `editor_decalEditor.onEditorGui()` | Hook appelé à chaque frame de l'éditeur ; si le mode Edit Decal est actif, dessine la fenêtre (curseur d'opacité des sphères, case « Show info labels », onglets Templates et Instances). *(interne)* *(hook)* | 1359 |
-| `editor_decalEditor.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : déclare editor.editModes.decalEditMode (onActivate, onDeactivate, onUpdate, onDeleteSelection, icône create_decal, raccourcis auxiliaires) et enregistre la fenêtre 400x600. *(interne)* *(hook)* | 1316 |
-| `editor_decalEditor.onEditorInspectorFieldChanged(selectedIds, fieldName, fieldValue, arrayIndex)` | Hook appelé quand un champ change dans l'inspecteur ; pour chaque DecalData modifié, le marque dirty dans scenetree.decalPersistMan et notifie les instances qui l'utilisent (editor.notifyDecalModified). *(interne)* *(hook)* | 1339 |
-| `editor_decalEditor.onEditorInspectorHeaderGui(inspectorInfo)` | Hook appelé pour dessiner l'en-tête de l'inspecteur ; en mode Edit Decal, affiche l'aperçu du matériau du template sélectionné. *(interne)* *(hook)* | 1017 |
-| `editor_decalEditor.onExtensionLoaded()` | Hook appelé au chargement de l'extension ; écrit « initialized » dans le journal. *(interne)* *(hook)* | 1301 |
+| `editor_decalEditor.onEditorAxisGizmoAligmentChanged()` | Hook called when the gizmo alignment (local/world) changes; if instances are selected in Edit Decal mode, repositions the gizmo. *(internal)* *(hook)* | 282 |
+| `editor_decalEditor.onEditorBeforeSaveLevel()` | Hook called before the level is saved; saves all decal templates (editor.saveDecals). *(internal)* *(hook)* | 1335 |
+| `editor_decalEditor.onEditorGui()` | Hook called every editor frame; if the Edit Decal mode is active, draws the window (sphere opacity slider, "Show info labels" checkbox, Templates and Instances tabs). *(internal)* *(hook)* | 1359 |
+| `editor_decalEditor.onEditorInitialized()` | Hook called at editor initialization: declares editor.editModes.decalEditMode (onActivate, onDeactivate, onUpdate, onDeleteSelection, create_decal icon, auxiliary shortcuts) and registers the 400x600 window. *(internal)* *(hook)* | 1316 |
+| `editor_decalEditor.onEditorInspectorFieldChanged(selectedIds, fieldName, fieldValue, arrayIndex)` | Hook called when a field changes in the inspector; for each modified DecalData, marks it dirty in scenetree.decalPersistMan and notifies the instances that use it (editor.notifyDecalModified). *(internal)* *(hook)* | 1339 |
+| `editor_decalEditor.onEditorInspectorHeaderGui(inspectorInfo)` | Hook called to draw the inspector header; in Edit Decal mode, shows the material preview of the selected template. *(internal)* *(hook)* | 1017 |
+| `editor_decalEditor.onExtensionLoaded()` | Hook called when the extension is loaded; writes "initialized" to the log. *(internal)* *(hook)* | 1301 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_decalEditor.onEditorInspectorFieldChanged(selectedIds, fieldName, fieldValue, arrayIndex)`
 
-Hook appelé quand un champ change dans l'inspecteur ; pour chaque DecalData modifié, le marque dirty dans scenetree.decalPersistMan et notifie les instances qui l'utilisent (editor.notifyDecalModified).
+Hook called when a field changes in the inspector; for each modified DecalData, marks it dirty in scenetree.decalPersistMan and notifies the instances that use it (editor.notifyDecalModified).
 
-- `selectedIds` (*integer[]*) : ids des objets sélectionnés
-- `fieldName` (*string*) : champ modifié
-- `fieldValue` (*any*) : nouvelle valeur
-- `arrayIndex` (*integer*) : index dans le champ tableau
+- `selectedIds` (*integer[]*) : ids of the selected objects
+- `fieldName` (*string*) : modified field
+- `fieldValue` (*any*) : new value
+- `arrayIndex` (*integer*) : index in the array field
 
 #### `editor_decalEditor.onEditorInspectorHeaderGui(inspectorInfo)`
 
-Hook appelé pour dessiner l'en-tête de l'inspecteur ; en mode Edit Decal, affiche l'aperçu du matériau du template sélectionné.
+Hook called to draw the inspector header; in Edit Decal mode, shows the material preview of the selected template.
 
-- `inspectorInfo` (*table*) : infos de l'inspecteur (inutilisé)
+- `inspectorInfo` (*table*) : inspector info (unused)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 - `Sim.` `upcast`
@@ -51,4 +51,4 @@ Hook appelé pour dessiner l'en-tête de l'inspecteur ; en mode Edit Decal, affi
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/decalEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/decalEditor.lua`.*

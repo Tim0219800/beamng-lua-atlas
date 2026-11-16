@@ -1,0 +1,29 @@
+{
+  "path": "lua/vehicle/extensions/cruiseControl.lua",
+  "module": "Régulateur de vitesse (cruise control) : un PID pilote electrics.values.throttleOverride pour maintenir la vitesse de roue (electrics.values.wheelspeed, m/s) à une consigne. Il s'arrête au freinage, après un freinage post-crash et ne pilote pas la pédale si le conducteur appuie sur l'embrayage ou l'accélérateur. Un moddeur peut le piloter via setSpeed, changeSpeed, holdCurrentSpeed et setEnabled.",
+  "usage": "extensions.cruiseControl.setSpeed(100 / 3.6)  -- 100 km/h en m/s, active le régulateur\nextensions.cruiseControl.setEnabled(false)",
+  "notes": [
+    "Unités : vitesses en m/s. M.minimumSpeed = 30 / 3.6 (30 km/h) : la consigne est toujours bornée à ce minimum ; holdCurrentSpeed ne fait rien si la vitesse actuelle est inférieure.",
+    "Écrit electrics.values.throttleOverride (nil quand désactivé), cruiseControlTarget (consigne) et cruiseControlActive (booléen). Lit electrics.values.wheelspeed et postCrashBrakeTriggered. Envoie l'état à l'UI avec le hook 'CruiseControlState' ({targetSpeed, isEnabled}) si le premier joueur est assis.",
+    "La consigne est rampée (accélération cible 3 m/s², modifiable par setTargetAcceleration) pour éviter l'emballement de l'intégrateur ; le PID est newPIDStandard(0.3, 2, 0, ...) et la sortie est lissée par un lisseur temporel.",
+    "Si input.throttle > 0 ou input.clutch > 0, le régulateur reste actif mais n'écrase pas la pédale : throttleOverride prend la valeur de input.throttle.",
+    "hasReachedTargetSpeed devient vrai quand l'erreur relative à la consigne est <= 3 %.",
+    "disableOnReset (local, toujours false) : le régulateur reste donc armé au reset du véhicule ; seul hasReachedTargetSpeed et l'état interne sont remis à zéro.",
+    "Anomalie : le log de onReset dit 'Cruise Control online' à chaque reset."
+  ],
+  "fields": {
+    "hasReachedTargetSpeed": {"type": "boolean", "desc": "true quand la vitesse est à moins de 3 % de la consigne."},
+    "minimumSpeed": {"type": "number", "desc": "Consigne minimale en m/s (30 km/h)."}
+  },
+  "functions": {
+    "onReset": {"desc": "Hook de reset du véhicule : remet hasReachedTargetSpeed, l'état et le lisseur à zéro.", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Appelé chaque frame : si actif, applique la régulation PID et gère les conditions d'arrêt.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true},
+    "setSpeed": {"desc": "Active le régulateur avec la consigne donnée (bornée au minimum).", "params": {"speed": {"type": "number", "desc": "Consigne en m/s."}}, "returns": [], "internal": false},
+    "changeSpeed": {"desc": "Active le régulateur et ajoute un décalage à la consigne actuelle.", "params": {"offset": {"type": "number", "desc": "Variation en m/s (positive ou négative)."}}, "returns": [], "internal": false},
+    "holdCurrentSpeed": {"desc": "Fixe la consigne sur la vitesse actuelle si elle dépasse la vitesse minimale.", "params": {}, "returns": [], "internal": false},
+    "setEnabled": {"desc": "Active ou désactive le régulateur ; remet throttleOverride à nil et le lisseur à zéro.", "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}}, "returns": [], "internal": false},
+    "requestState": {"desc": "Publie l'état (electrics.cruiseControlTarget/Active) et envoie 'CruiseControlState' à l'UI.", "params": {}, "returns": [], "internal": false},
+    "getConfiguration": {"desc": "Renvoie la configuration courante.", "params": {}, "returns": [{"type": "table", "desc": "{isEnabled, targetSpeed, minimumSpeed, hasReachedTargetSpeed}."}], "internal": false},
+    "setTargetAcceleration": {"desc": "Fixe l'accélération (en m/s²) de la rampe de consigne.", "params": {"target": {"type": "number", "desc": "Accélération cible, défaut 3."}}, "returns": [], "internal": false}
+  }
+}

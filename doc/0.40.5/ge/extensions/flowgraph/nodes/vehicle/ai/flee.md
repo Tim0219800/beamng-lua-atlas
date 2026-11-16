@@ -1,22 +1,22 @@
 # `flowgraph_nodes_vehicle_ai_flee`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/flee.lua` · VM : Game Engine (GE) · 36 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/flee.lua` · VM: Game Engine (GE) · 36 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/ai/flee")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/ai/flee")` (file under extensions/ but not a regular extension)
 
-Nœud « AI Flee » (couleur ai, once_p_duration). Met un véhicule en mode IA « flee » pour fuir un autre véhicule. Entrées : aiVehId (sans valeur = véhicule du joueur), targetId (par défaut le véhicule du joueur).
+Node "AI Flee" (color ai, once_p_duration). Puts a vehicle in "flee" AI mode to flee from another vehicle. Inputs: aiVehId (no value = player vehicle), targetId (defaults to the player vehicle).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Envoie au véhicule ai.setMode("flee") puis ai.setTargetObjectID(targetId). | 21 |
+| `C:workOnce()` | Sends ai.setMode("flee") then ai.setTargetObjectID(targetId) to the vehicle. | 21 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/flee.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/flee.lua`.*

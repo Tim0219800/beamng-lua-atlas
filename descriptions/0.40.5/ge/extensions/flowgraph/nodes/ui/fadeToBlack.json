@@ -1,43 +1,43 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/fadeToBlack.lua",
-  "module": "Nœud flowgraph « Fade To Black » (catégorie once_f_duration) : fait passer l'écran au noir. Entrée « duration » (0.75 s). Sortie de durée par setDurationState (flow « complete », ancien nom « done »). Passe directement à 'finished' si l'écran est déjà noir (ui_fadeScreen.isBlack).",
+  "module": "Flowgraph node \"Fade To Black\" (category once_f_duration): fades the screen to black. Input \"duration\" (0.75 s). Duration output via setDurationState (flow \"complete\", former name \"done\"). Goes directly to 'finished' if the screen is already black (ui_fadeScreen.isBlack).",
   "notes": [
-    "Met self.mgr.modules.ui.isFadeScreenActive = true pour que Fade From Black sache qu'un fondu est actif."
+    "Sets self.mgr.modules.ui.isFadeScreenActive = true so that Fade From Black knows a fade is active."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStopped": {
-          "desc": "Remet l'état 'inactive' et isFadeScreenActive = false.",
+          "desc": "Resets the 'inactive' state and isFadeScreenActive = false.",
           "internal": true
         },
         "init": {
-          "desc": "État de durée 'inactive'.",
+          "desc": "Duration state 'inactive'.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Remet l'état 'inactive'.",
+          "desc": "Resets the 'inactive' state.",
           "internal": true
         },
         "onScreenFadeState": {
-          "desc": "Hook : état 1 (noir atteint) -> terminé.",
+          "desc": "Hook: state 1 (black reached) -> finished.",
           "params": {
             "state": {
               "type": "integer",
-              "desc": "État du fondu d'écran (1 = noir atteint, 3 = fondu terminé)."
+              "desc": "Screen fade state (1 = black reached, 3 = fade finished)."
             }
           },
           "internal": true
         },
         "postInit": {
-          "desc": "Modèle de durée à 0.75.",
+          "desc": "Duration template at 0.75.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Lance ui_fadeScreen.fadeToBlack (sauf si déjà noir).",
+          "desc": "Starts ui_fadeScreen.fadeToBlack (unless already black).",
           "internal": true
         }
       }

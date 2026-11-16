@@ -1,33 +1,67 @@
 {
   "path": "lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua",
-  "module": "Étape 8 du tutoriel de carrière (« driveToGarage ») : le joueur conduit jusqu'au garage, se gare sur la place garageExteriorPark (immobile 1 s, à moins de 25 m pour déclencher la phase de parking), puis sort du véhicule (mode marche). Phases : driveToGarage, parkAtGarage, hopOut, waitArrivalPopups. Deux popups d'arrivée (v2/garageArrivalIntro1 et 2) concluent l'étape, puis le guidage mène au point garageInteriorWalkStart.",
+  "module": "Career tutorial step 8 (\"driveToGarage\"): the player drives to the garage, parks in the garageExteriorPark spot (stationary 1 s, within 25 m to trigger the parking phase), then gets out of the vehicle (walking mode). Phases: driveToGarage, parkAtGarage, hopOut, waitArrivalPopups. Two arrival popups (v2/garageArrivalIntro1 and 2) conclude the step, then the guidance leads to the garageInteriorWalkStart point.",
   "notes": [
-    "Trois zones driveToGarageZone1 à 3 servent de points de reprise : en cas de sortie de zone, le véhicule est replacé sur la place driveToGarageReset<N> du dernier checkpoint atteint.",
-    "Si aucune zone de reprise n'existe dans les sites du tutoriel, les zones actives sont vidées et aucun reset n'est installé.",
-    "Une fois garé : moteur coupé, véhicule gelé et mis sur liste noire pour la marche (joueur non remontable), suivi de dégâts désactivé à la sortie.",
-    "Au début de l'étape, la course de drag éventuelle est arrêtée (gameplay_drag_dragBridge.stopDragRace)."
+    "Three zones driveToGarageZone1 to 3 serve as respawn points: when leaving the zone, the vehicle is put back on the driveToGarageReset<N> spot of the last checkpoint reached.",
+    "If no respawn zone exists in the tutorial sites, the active zones are cleared and no reset is installed.",
+    "Once parked: engine off, vehicle frozen and blacklisted for walking (player cannot get back in), damage tracking disabled on exit.",
+    "At the start of the step, any drag race is stopped (gameplay_drag_dragBridge.stopDragRace)."
   ],
   "functions": {
     "setup": {
-      "desc": "Appelé à l'activation : arrête le drag, retrouve le véhicule joueur, les places et zones du garage, installe zones et reset, autorise la marche et l'entrée dans le véhicule, crée le marqueur et affiche l'objectif.",
-      "params": {"stepData": {"type": "any", "desc": "Données de l'étape (non utilisées)."}},
+      "desc": "Called on activation: stops the drag, finds the player vehicle, the garage spots and zones, installs zones and reset, allows walking and entering the vehicle, creates the marker and displays the objective.",
+      "params": {
+        "stepData": {
+          "type": "any",
+          "desc": "Step data (unused)."
+        }
+      },
       "internal": true
     },
-    "onCareerTutorialLeftBounds": {"desc": "Hook de sortie de zone : lance le reset de sortie de zone de l'étape.", "internal": true},
+    "onCareerTutorialLeftBounds": {
+      "desc": "Out-of-bounds hook: starts the step's out-of-bounds reset.",
+      "internal": true
+    },
     "onIntroPopupCareerClosed": {
-      "desc": "Hook de fermeture de popup : à la fermeture de v2/garageArrivalIntro2 (phase waitArrivalPopups), trace la route vers l'intérieur du garage et programme l'avance d'étape après 1 s.",
-      "params": {"id": {"type": "string", "desc": "Id de la popup."}},
+      "desc": "Popup close hook: when v2/garageArrivalIntro2 closes (waitArrivalPopups phase), draws the route to the garage interior and schedules the step advance after 1 s.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Popup id."
+        }
+      },
       "internal": true
     },
     "onUpdate": {
-      "desc": "Appelé chaque frame : met à jour le checkpoint de reprise, gère les phases conduite / parking / sortie du véhicule.",
-      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "desc": "Called every frame: updates the respawn checkpoint, handles the driving / parking / exiting the vehicle phases.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw delta (s)."
+        }
+      },
       "internal": true
     },
-    "cleanup": {"desc": "Retire le reset de zone, débloque la marche, vide les tâches et supprime les visuels du parking.", "internal": true},
+    "cleanup": {
+      "desc": "Removes the zone reset, unlocks walking, clears the tasks and deletes the parking visuals.",
+      "internal": true
+    },
     "onDebugMenu": {
-      "desc": "Affiche la phase et un bouton « Skip Step 8 » (téléporte au garage, passe en mode marche, avance).",
-      "params": {"im": {"type": "table", "desc": "Table ui_imgui."}},
+      "desc": "Displays the phase and a \"Skip Step 8\" button (teleports to the garage, switches to walking mode, advances).",
+      "params": {
+        "im": {
+          "type": "table",
+          "desc": "ui_imgui table."
+        }
+      },
       "internal": true
     }
   }

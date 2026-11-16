@@ -1,26 +1,26 @@
 # `client_postFx_fxaa`
 
-*Fichier : `lua/ge/client/postFx/fxaa.lua` · VM : Game Engine (GE) · 51 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/client/postFx/fxaa.lua` · VM: Game Engine (GE) · 51 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("client/postFx/fxaa")`
+**Access:** `require("client/postFx/fxaa")`
 
-Anti-aliasing FXAA. Crée le state block FXAA_StateBlock, le shader FXAA_ShaderData (fxaa.cs.hlsl) et le PostEffect « FXAA_PostEffect » (désactivé au départ, PFXAfterDiffuse, lit et écrit $backBuffer). Activer FXAA désactive SMAA et SMAA T2x.
+FXAA anti-aliasing. Creates the state block FXAA_StateBlock, the shader FXAA_ShaderData (fxaa.cs.hlsl) and the PostEffect "FXAA_PostEffect" (disabled at the start, PFXAfterDiffuse, reads and writes $backBuffer). Enabling FXAA disables SMAA and SMAA T2x.
 
-## Remarques
+## Notes
 
-- Si FXAA_PostEffect existe déjà, rien n'est recréé ; la création des trois objets est groupée dans le même bloc if.
+- If FXAA_PostEffect already exists, nothing is recreated; the creation of the three objects is grouped in the same if block.
 
-## Classe `fxaa_PostEffectCallbacks`
+## Class `fxaa_PostEffectCallbacks`
 
-Callbacks de FXAA_PostEffect (globale FXAA_PostEffectCallbacks).
+Callbacks of FXAA_PostEffect (global FXAA_PostEffectCallbacks).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `fxaa_PostEffectCallbacks.onEnabled()` | Désactive SMAA_PostEffect s'il existe, appelle disableSmaaT2x() si cette globale existe, puis retourne true. | 13 |
+| `fxaa_PostEffectCallbacks.onEnabled()` | Disables SMAA_PostEffect if it exists, calls disableSmaaT2x() if this global exists, then returns true. | 13 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/client/postFx/fxaa.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/client/postFx/fxaa.lua`.*

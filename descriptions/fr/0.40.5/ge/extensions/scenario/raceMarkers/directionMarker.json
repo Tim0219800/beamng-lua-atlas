@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/scenario/raceMarkers/directionMarker.lua",
+  "module": "Marqueur de checkpoint « flèche de direction » : une flèche flottante (s_mm_arrow_floating.dae) orientée selon la rotation du checkpoint, avec un léger va-et-vient le long de son axe avant. Sa couleur suit core_groundMarkers.floatingArrowColor (bleu 0, 0.4, 1 par défaut). Le module renvoie un constructeur : require('scenario/raceMarkers/directionMarker')(id) donne un objet de la classe C.",
+  "notes": [
+    "setToCheckpoint(wp) exige wp.pos ; wp.rot (quaternion sous forme de table ou userdata x,y,z,w) donne l'orientation, wp.radius l'échelle (3 par défaut). Sans wp.pos, l'appel est ignoré.",
+    "Amplitude du va-et-vient : 0.08 m, fréquence liée à os.clock()*3.",
+    "Le mode n'a aucun effet visuel : seul 'hidden' masque, les autres modes affichent."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Marqueur flèche de direction.",
+      "functions": {
+        "init": {"desc": "Constructeur : initialise l'état.", "params": {"id": {"type": "integer", "desc": "Identifiant unique."}}, "internal": true},
+        "update": {"desc": "Appel par image : applique position (avec va-et-vient), rotation et échelle à la flèche.", "params": {"dt": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}}, "internal": true},
+        "setToCheckpoint": {"desc": "Place la flèche sur un checkpoint et applique la couleur.", "params": {"wp": {"type": "table", "desc": "{pos, rot?, radius?}."}}},
+        "setMode": {"desc": "'hidden' masque, autre mode affiche ; mémorise le mode.", "params": {"mode": {"type": "string", "desc": "Nom du mode."}}},
+        "setVisibility": {"desc": "Affiche ou cache la flèche.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
+        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
+        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
+        "createObject": {"desc": "Crée un TSStatic caché (avec instanceColor et instanceColor1) enregistré sous objectName et ajouté à ScenarioObjectsGroup.", "params": {"shapeName": {"type": "string", "desc": "Chemin du modèle."}, "objectName": {"type": "string", "desc": "Nom d'enregistrement."}}, "returns": [{"type": "table", "desc": "L'objet créé."}]},
+        "createMarkers": {"desc": "Supprime les anciens objets puis crée la flèche.", "params": {}},
+        "clearMarkers": {"desc": "Supprime l'objet créé.", "params": {}}
+      }
+    }
+  }
+}

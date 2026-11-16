@@ -1,140 +1,256 @@
 {
   "path": "lua/vehicle/powertrain/hydraulicAccumulator.lua",
-  "module": "Composant powertrain `hydraulicAccumulator` : accumulateur hydraulique autonome (réservoir sous pression, sans pompe ni entraînement mécanique). Il alimente des consommateurs hydrauliques (`hydraulicCylinder`, déclarés dans `v.data.powertrainHydros` avec `connectedPump` = nom de l'accumulateur) et peut se remplir à distance depuis la pompe d'un autre véhicule couplé (remorque, outil) via des valeurs electrics partagées (PTO hydraulique). Catégorie `hydraulicPowerSource`, sans port de sortie ni couple.",
+  "module": "Powertrain component `hydraulicAccumulator`: standalone hydraulic accumulator (pressurized tank, without pump or mechanical drive). It supplies hydraulic consumers (`hydraulicCylinder`, declared in `v.data.powertrainHydros` with `connectedPump` = name of the accumulator) and can be filled remotely from the pump of another coupled vehicle (trailer, tool) via shared electrics values (hydraulic PTO). Category `hydraulicPowerSource`, without an output port or torque.",
   "usage": "local acc = powertrain.getDevice(\"trailerAccumulator\")\nprint(acc.accumulatorPressure, acc.accumulatorInFlow, acc.accumulatorOutFlow) -- Pa, m^3/s, m^3/s",
   "notes": [
-    "Clés jbeam lues : name, type, inputName, inputIndex, gearRatio, friction, dynamicFriction, electricsName, visualShaftAVName, node, showDebugGraph, accumulatorWorkingPressure (Pa, 25000000), accumulatorMaxVolume (m³, 0.001), initialAccumulatorPressure (Pa) ou initialAccumulatorOilVolume (m³) (sinon plein à la pression de travail), reliefOpeningPressure (1.05 * pression de travail), reliefPressureRange (2000000), reliefValveArea (m², 0.0001), hydraulicPTOPressureElectricsName / hydraulicPTOMaxFlowRateElectricsName / hydraulicPTOFlowElectricsName (lus mais peu utilisés), hydraulicPTOPressureBaseSyncName ('hydraulicPTOPressure'), hydraulicPTOFlowBaseSyncName ('hydraulicPTOFlow'), hydraulicPTOMaxFlowRateBaseSyncName ('hydraulicPTOMaxFlowRate'), hydraulicPTOSupplyCouplerNodeNames (nœuds par lesquels l'accumulateur se connecte à son alimentation), hydraulicPTOConsumerCouplerNodeNames (nœuds par lesquels un autre véhicule se connecte à lui), consumerPressureDiffFlowRateCoef (0.001), breakTriggerBeam.",
-    "Champs principaux : accumulatorPressure (Pa) = accumulatorWorkingPressure / accumulatorMaxVolume * accumulatorOilVolume ; accumulatorOilVolume (m³, borné à 0..2*accumulatorMaxVolume) ; accumulatorMaxVolume ; accumulatorOutFlow (m³/s, consommateurs + décharge) ; accumulatorInFlow (m³/s, débit reçu de l'alimentation distante) ; reliefFlow (m³/s) ; connectedConsumers ; isBroken. outputTorque1/outputAV1 valent 0.",
-    "Alimentation distante : l'accumulateur lit electrics.values[<PressureBase>_<idAlimentation>] et [<MaxFlowRateBase>_<idAlimentation>] et écrit son débit dans [<FlowBase>_<idAlimentation>_<monId>]. Le débit entrant est min((P_alim - P_locale) * consumerPressureDiffFlowRateCoef, 1.1 * débit max de l'alimentation), jamais négatif (pas de reflux).",
-    "Il se comporte aussi comme alimentation pour d'autres véhicules : il publie sa pression dans electrics '<PressureBase>_<monId>' et reçoit les débits demandés par les consommateurs distants (soustraits de son volume).",
-    "Un accumulateur cassé (onBreak) est vidé (pression et volume à 0) et cesse de recevoir de l'alimentation.",
-    "Bugs : updateGFX écrit device.pumpFlowRate (jamais défini sur ce device, donc nil) dans l'electrics de débit max publié ('hydraulicPTOMaxFlowRate_<id>') ; les véhicules en aval qui lisent cette valeur reçoivent donc 0 d'après leur « or 0 ». Le champ device.inputAV ne change jamais (0). applyDeformGroupDamage est vide. M.requiredExternalInertiaOutputs n'est pas défini dans ce module. Un seul consommateur par alimentation est supporté (commentaire TODO dans le code)."
+    "Jbeam keys read: name, type, inputName, inputIndex, gearRatio, friction, dynamicFriction, electricsName, visualShaftAVName, node, showDebugGraph, accumulatorWorkingPressure (Pa, 25000000), accumulatorMaxVolume (m³, 0.001), initialAccumulatorPressure (Pa) or initialAccumulatorOilVolume (m³) (otherwise full at working pressure), reliefOpeningPressure (1.05 * working pressure), reliefPressureRange (2000000), reliefValveArea (m², 0.0001), hydraulicPTOPressureElectricsName / hydraulicPTOMaxFlowRateElectricsName / hydraulicPTOFlowElectricsName (read but barely used), hydraulicPTOPressureBaseSyncName ('hydraulicPTOPressure'), hydraulicPTOFlowBaseSyncName ('hydraulicPTOFlow'), hydraulicPTOMaxFlowRateBaseSyncName ('hydraulicPTOMaxFlowRate'), hydraulicPTOSupplyCouplerNodeNames (nodes through which the accumulator connects to its supply), hydraulicPTOConsumerCouplerNodeNames (nodes through which another vehicle connects to it), consumerPressureDiffFlowRateCoef (0.001), breakTriggerBeam.",
+    "Main fields: accumulatorPressure (Pa) = accumulatorWorkingPressure / accumulatorMaxVolume * accumulatorOilVolume; accumulatorOilVolume (m³, clamped to 0..2*accumulatorMaxVolume); accumulatorMaxVolume; accumulatorOutFlow (m³/s, consumers + discharge); accumulatorInFlow (m³/s, flow received from the remote supply); reliefFlow (m³/s); connectedConsumers; isBroken. outputTorque1/outputAV1 are 0.",
+    "Remote supply: the accumulator reads electrics.values[<PressureBase>_<supplyId>] and [<MaxFlowRateBase>_<supplyId>] and writes its flow into [<FlowBase>_<supplyId>_<myId>]. The incoming flow is min((P_supply - P_local) * consumerPressureDiffFlowRateCoef, 1.1 * max supply flow), never negative (no backflow).",
+    "It also behaves as a supply for other vehicles: it publishes its pressure in electrics '<PressureBase>_<myId>' and receives the flows requested by the remote consumers (subtracted from its volume).",
+    "A broken accumulator (onBreak) is emptied (pressure and volume at 0) and stops receiving supply.",
+    "Bugs: updateGFX writes device.pumpFlowRate (never defined on this device, so nil) into the published max flow electrics ('hydraulicPTOMaxFlowRate_<id>'); downstream vehicles reading this value therefore get 0 because of their \"or 0\". The device.inputAV field never changes (0). applyDeformGroupDamage is empty. M.requiredExternalInertiaOutputs is not defined in this module. Only one consumer per supply is supported (TODO comment in the code)."
   ],
   "fields": {
-    "outputPorts": {"type": "table", "desc": "Table vide : aucun port de sortie."},
-    "deviceCategories": {"type": "table<string, boolean>", "desc": "{hydraulicPowerSource=true}."}
+    "outputPorts": {
+      "type": "table",
+      "desc": "Empty table: no output port."
+    },
+    "deviceCategories": {
+      "type": "table<string, boolean>",
+      "desc": "{hydraulicPowerSource=true}."
+    }
   },
   "functions": {
     "new": {
-      "desc": "Construit l'accumulateur : pression de travail, volume, état initial, soupape de décharge, noms electrics de PTO, nœuds de coupleurs d'alimentation et de consommation, puis crée les consommateurs hydrauliques déclarés pour lui dans v.data.powertrainHydros.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
-      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "desc": "Builds the accumulator: working pressure, volume, initial state, relief valve, PTO electrics names, supply and consumer coupler nodes, then creates the hydraulic consumers declared for it in v.data.powertrainHydros.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "jbeam data of the component."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The device (class `device`)."
+        }
+      ],
       "internal": true
     }
   },
   "classes": {
     "device": {
-      "desc": "Objet renvoyé par new(jbeamData). velocityUpdate vaut nop.",
+      "desc": "Object returned by new(jbeamData). velocityUpdate is nop.",
       "functions": {
         "torqueUpdate": {
-          "desc": "Appelée à chaque pas physique : calcule la pression, interroge chaque consommateur (consumer:update) pour obtenir ses débits, calcule le débit de la soupape de décharge, met outputTorque1 à 0 et retranche les débits sortants du volume d'huile.",
-          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+          "desc": "Called at each physics step: computes the pressure, queries each consumer (consumer:update) to get its flows, computes the relief valve flow, sets outputTorque1 to 0 and subtracts the outgoing flows from the oil volume.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "updateGFX": {
-          "desc": "Mise à jour par image : met à jour les consommateurs, reçoit le débit de l'alimentation distante (côté consommateur), publie la pression dans les electrics (côté alimentation) et soustrait les débits demandés par les consommateurs distants.",
-          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+          "desc": "Per-frame update: updates the consumers, receives the flow from the remote supply (consumer side), publishes the pressure in the electrics (supply side) and subtracts the flows requested by the remote consumers.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Frame duration in seconds."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "updateSounds": {
-          "desc": "Appelle updateSounds de chaque consommateur (l'accumulateur n'a pas de son propre).",
-          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+          "desc": "Calls updateSounds of each consumer (the accumulator has no sound of its own).",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Frame duration in seconds."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "onCouplerAttached": {
-          "desc": "Hook de coupleur. Côté consommateur : quand le coupleur d'alimentation est attaché, crée les noms electrics partagés avec le véhicule alimentant et lui envoie les noms à exporter. Côté alimentation : quand un véhicule se connecte à un coupleur de consommation, crée la valeur electrics de débit pour lui et la lui exporte.",
+          "desc": "Coupler hook. Consumer side: when the supply coupler is attached, creates the electrics names shared with the supplying vehicle and sends it the names to export. Supply side: when a vehicle connects to a consumer coupler, creates the flow electrics value for it and exports it to it.",
           "params": {
-            "nodeId": {"type": "integer", "desc": "Nœud de ce véhicule portant le coupleur."},
-            "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
-            "obj2nodeId": {"type": "integer", "desc": "Nœud de l'autre véhicule."},
-            "attachForce": {"type": "number", "desc": "Force d'attache (non utilisée)."}
+            "nodeId": {
+              "type": "integer",
+              "desc": "Node of this vehicle carrying the coupler."
+            },
+            "obj2id": {
+              "type": "integer",
+              "desc": "Id of the other vehicle."
+            },
+            "obj2nodeId": {
+              "type": "integer",
+              "desc": "Node of the other vehicle."
+            },
+            "attachForce": {
+              "type": "number",
+              "desc": "Attach force (unused)."
+            }
           },
           "returns": [],
           "internal": true
         },
         "onCouplerDetached": {
-          "desc": "Hook de coupleur. Côté consommateur : supprime les valeurs electrics de l'alimentation. Côté alimentation : supprime la valeur de débit du consommateur parti.",
+          "desc": "Coupler hook. Consumer side: removes the electrics values of the supply. Supply side: removes the flow value of the departed consumer.",
           "params": {
-            "nodeId": {"type": "integer", "desc": "Nœud de ce véhicule portant le coupleur."},
-            "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
-            "obj2nodeId": {"type": "integer", "desc": "Nœud de l'autre véhicule."},
-            "breakForce": {"type": "number", "desc": "Force de rupture (non utilisée)."}
+            "nodeId": {
+              "type": "integer",
+              "desc": "Node of this vehicle carrying the coupler."
+            },
+            "obj2id": {
+              "type": "integer",
+              "desc": "Id of the other vehicle."
+            },
+            "obj2nodeId": {
+              "type": "integer",
+              "desc": "Node of the other vehicle."
+            },
+            "breakForce": {
+              "type": "number",
+              "desc": "Breaking force (unused)."
+            }
           },
           "returns": [],
           "internal": true
         },
         "applyDeformGroupDamage": {
-          "desc": "Ne fait rien (corps vide).",
-          "params": {"damageAmount": {"type": "number", "desc": "Ignoré."}},
+          "desc": "Does nothing (empty body).",
+          "params": {
+            "damageAmount": {
+              "type": "number",
+              "desc": "Ignored."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "setPartCondition": {
-          "desc": "Applique isBroken de l'intégrité (nombre : pas cassé ; table : champ isBroken) en appelant onBreak si besoin.",
+          "desc": "Applies isBroken from the integrity (number: not broken; table: isBroken field) by calling onBreak if needed.",
           "params": {
-            "subSystem": {"type": "any", "desc": "Non utilisé."},
-            "odometer": {"type": "number", "desc": "Non utilisé."},
-            "integrity": {"type": "number|table", "desc": "Nombre 0..1 ou table {isBroken}."},
-            "visual": {"type": "any", "desc": "Non utilisé."}
+            "subSystem": {
+              "type": "any",
+              "desc": "Not used."
+            },
+            "odometer": {
+              "type": "number",
+              "desc": "Not used."
+            },
+            "integrity": {
+              "type": "number|table",
+              "desc": "Number 0..1 or table {isBroken}."
+            },
+            "visual": {
+              "type": "any",
+              "desc": "Not used."
+            }
           },
           "returns": [],
           "internal": true
         },
         "getPartCondition": {
-          "desc": "Renvoie 1 (0 si cassé) et la table {isBroken}.",
+          "desc": "Returns 1 (0 if broken) and the table {isBroken}.",
           "params": {},
-          "returns": [{"type": "number", "desc": "Intégrité."}, {"type": "table", "desc": "{isBroken}."}],
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Integrity."
+            },
+            {
+              "type": "table",
+              "desc": "{isBroken}."
+            }
+          ],
           "internal": true
         },
         "validate": {
-          "desc": "Appelée après construction du powertrain ; renvoie toujours true.",
+          "desc": "Called after the powertrain is built; always returns true.",
           "params": {},
-          "returns": [{"type": "boolean", "desc": "true."}],
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true."
+            }
+          ],
           "internal": true
         },
         "onBreak": {
-          "desc": "Marque isBroken = true et vide l'accumulateur : pression, volume, débits et electrics de PTO remis à 0.",
+          "desc": "Sets isBroken = true and empties the accumulator: pressure, volume, flows and PTO electrics reset to 0.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "calculateInertia": {
-          "desc": "Inertie purement virtuelle : cumulativeInertia = virtualInertia / gearRatio² ; rapports cumulés = gearRatio.",
+          "desc": "Purely virtual inertia: cumulativeInertia = virtualInertia / gearRatio²; cumulative ratios = gearRatio.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "getState": {
-          "desc": "Renvoie l'état sauvegardable : volume d'huile (clé '<nom>_accumulatorOilVolume') fusionné avec l'état des consommateurs.",
+          "desc": "Returns the saveable state: oil volume (key '<name>_accumulatorOilVolume') merged with the state of the consumers.",
           "params": {},
-          "returns": [{"type": "table", "desc": "Table stateData."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "stateData table."
+            }
+          ],
           "internal": false
         },
         "setState": {
-          "desc": "Restaure le volume d'huile (nombre fini, borné, ignoré si l'accumulateur est cassé) et la pression, puis transmet l'état aux consommateurs.",
-          "params": {"data": {"type": "table|nil", "desc": "Table d'état produite par getState."}},
+          "desc": "Restores the oil volume (finite number, clamped, ignored if the accumulator is broken) and the pressure, then passes the state on to the consumers.",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "State table produced by getState."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "initSounds": {
-          "desc": "Initialise les sons de chaque consommateur ; l'accumulateur n'a pas de son propre.",
-          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (non utilisées)."}},
+          "desc": "Initializes the sounds of each consumer; the accumulator has no sound of its own.",
+          "params": {
+            "jbeamData": {
+              "type": "table",
+              "desc": "jbeam data of the component (unused)."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "resetSounds": {
-          "desc": "Appelle resetSounds de chaque consommateur.",
-          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (non utilisées)."}},
+          "desc": "Calls resetSounds of each consumer.",
+          "params": {
+            "jbeamData": {
+              "type": "table",
+              "desc": "jbeam data of the component (unused)."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "reset": {
-          "desc": "Remet à zéro l'état (pression et volume initiaux, débits, electrics de PTO, noms d'alimentation), puis réinitialise les consommateurs.",
-          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (gearRatio, friction)."}},
-          "returns": [{"type": "table", "desc": "Le device."}],
+          "desc": "Resets the state (initial pressure and volume, flows, PTO electrics, supply names), then reinitializes the consumers.",
+          "params": {
+            "jbeamData": {
+              "type": "table",
+              "desc": "jbeam data of the component (gearRatio, friction)."
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "The device."
+            }
+          ],
           "internal": true
         }
       }

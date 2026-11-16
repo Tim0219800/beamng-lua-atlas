@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/ui/router/managers/frameworkManager.lua",
+  "module": "Pont sortant du routeur Lua vers les frameworks UI (Vue, Angular) par guihooks. Il émet les évènements de changement de route (démarrage, fin, annulation) et ne garde aucun état : l'état de transition, la progression, les timeouts et la validation des accusés sont dans transitionManager.lua et router.lua.",
+  "notes": [
+    "Quand un transitionId est fourni, une copie superficielle de la charge utile est émise avec transitionId ajouté : l'entrée de navigation d'origine n'est jamais modifiée. Les champs existants (request, resolved, origin, toRoute, fromRoute, routeNode) sont conservés.",
+    "Évènements GUI émis : ui_router_routeChange, ui_router_afterRouteChange (Constants.RouterHooks.AFTER_ROUTE_CHANGE), ui_router_routeChangeCancelled (ROUTE_CHANGE_CANCELLED)."
+  ],
+  "functions": {
+    "sendRouteChange": {
+      "desc": "Émet l'évènement GUI ui_router_routeChange pour demander au framework d'afficher la route.",
+      "params": {
+        "data": {"type": "table", "desc": "Entrée de navigation (traitée comme immuable)."},
+        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition à joindre à la charge utile (copie)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "sendRouteChangeComplete": {
+      "desc": "Émet l'évènement GUI ui_router_afterRouteChange avec l'entrée de navigation validée.",
+      "params": {"data": {"type": "table", "desc": "Entrée courante validée."}},
+      "returns": [],
+      "internal": false
+    },
+    "sendRouteChangeCancelled": {
+      "desc": "Émet l'évènement GUI ui_router_routeChangeCancelled. Si extras contient transitionId ou reason, une copie de la route est émise avec ces champs pour que l'UI n'efface que le handoff correspondant.",
+      "params": {
+        "data": {"type": "table|nil", "desc": "Route annulée (toRoute), traitée comme immuable."},
+        "extras": {"type": "table|nil", "desc": "{transitionId?, reason?}."}
+      },
+      "returns": [],
+      "internal": false
+    }
+  }
+}

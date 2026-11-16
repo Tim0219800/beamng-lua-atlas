@@ -1,152 +1,152 @@
 # `mcp_tools_system`
 
-*Fichier : `lua/ge/extensions/mcp/tools/system.lua` · VM : Game Engine (GE) · 211 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/mcp/tools/system.lua` · VM: Game Engine (GE) · 211 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `mcp_tools_system` : `extensions.load("mcp_tools_system")`, puis la globale `mcp_tools_system`
+**Access:** extension `mcp_tools_system`: `extensions.load("mcp_tools_system")`, then the global `mcp_tools_system`
 
-Outils MCP système : exécuter du Lua dans la VM GE, lire les logs, recharger l'UI ou le Lua, infos de rendu, captures d'écran, infos fichier, chargement de fichiers Lua et d'extensions, lecture/écriture de variables du VariableRegistry.
+MCP system tools: run Lua in the GE VM, read logs, reload the UI or Lua, render info, screenshots, file info, loading Lua files and extensions, reading/writing VariableRegistry variables.
 
-## Remarques
+## Notes
 
-- Attention sécurité : run_lua et load_file exécutent du code arbitraire dans le jeu ; set_var modifie des variables moteur.
-- get_logs : le premier appel renvoie les N dernières lignes de beamng.log (défaut 200, max 5000), les suivants seulement les nouvelles lignes depuis l'appel précédent (offset mémorisé).
-- screenshot enregistre sous <dossier utilisateur>/screenshots/mcp/ (PNG ou JPG) de façon asynchrone ; le chemin est renvoyé immédiatement, le fichier peut apparaître quelques frames plus tard.
-- screenshot_image : asynchrone en deux appels ; le résultat est une table {data=<base64 JPEG>, mimeType='image/jpeg'} que mcp_server convertit en contenu image.
-- unload_extension refuse de décharger mcp_server et mcp_tools.
-- reload_lua : le rechargement est différé à la frame suivante ; le serveur MCP redémarre (onSerialize/onDeserialize) mais la connexion peut sauter.
+- Security warning: run_lua and load_file run arbitrary code in the game; set_var modifies engine variables.
+- get_logs: the first call returns the last N lines of beamng.log (default 200, max 5000), subsequent ones only the new lines since the previous call (stored offset).
+- screenshot saves to <user folder>/screenshots/mcp/ (PNG or JPG) asynchronously; the path is returned immediately, the file may appear a few frames later.
+- screenshot_image: asynchronous in two calls; the result is a table {data=<base64 JPEG>, mimeType='image/jpeg'} that mcp_server converts into image content.
+- unload_extension refuses to unload mcp_server and mcp_tools.
+- reload_lua: the reload is deferred to the next frame; the MCP server restarts (onSerialize/onDeserialize) but the connection may drop.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mcp_tools_system.file_info(args)` | Informations sur un chemin : exists, isDir, realPath (VFS vers disque), virtualPath, expanded et stat. | 99 |
-| `mcp_tools_system.get_logs(args)` | Lit beamng.log (voir notes pour la logique premier appel / appels suivants). | 24 |
-| `mcp_tools_system.get_render_info()` | Infos de rendu en JSON : adapterType, available, vulkanEnabled, gpu (Engine.Render / Engine.Platform). | 56 |
-| `mcp_tools_system.get_var(args)` | Lit une variable moteur/préférence (VariableRegistry.get), ex. $pref::Video::gpu. | 144 |
-| `mcp_tools_system.load_extension(args)` | Charge une extension GE par son nom (forme avec underscore). | 128 |
-| `mcp_tools_system.load_file(args)` | Charge et exécute un fichier Lua dans la VM GE (le chemin VFS est résolu vers le chemin réel). | 116 |
-| `mcp_tools_system.reload_lua()` | Demande le rechargement du VM Lua GE (comme Ctrl+L) via Lua:requestReload ; différé à la frame suivante. | 50 |
-| `mcp_tools_system.reload_ui()` | Recharge complètement l'UI (CEF) en ignorant le cache, via reloadUI(). | 43 |
-| `mcp_tools_system.run_lua(args)` | Compile (loadstring) et exécute du code Lua dans la VM GE, renvoie tostring du résultat du chunk. | 14 |
-| `mcp_tools_system.screenshot(args)` | Prend une capture (module `screenshot`, createScreenshotTracked) et renvoie son chemin absolu. | 66 |
-| `mcp_tools_system.screenshot_image(args)` | Capture un JPG réduit et le renvoie en base64 (asynchrone en deux appels). | 80 |
-| `mcp_tools_system.set_var(args)` | Écrit une variable moteur (VariableRegistry.set) et renvoie la valeur relue. | 150 |
-| `mcp_tools_system.unload_extension(args)` | Décharge une extension GE (mcp_server et mcp_tools protégées). | 135 |
+| `mcp_tools_system.file_info(args)` | Information about a path: exists, isDir, realPath (VFS to disk), virtualPath, expanded and stat. | 99 |
+| `mcp_tools_system.get_logs(args)` | Reads beamng.log (see notes for the first call / subsequent calls logic). | 24 |
+| `mcp_tools_system.get_render_info()` | Render info as JSON: adapterType, available, vulkanEnabled, gpu (Engine.Render / Engine.Platform). | 56 |
+| `mcp_tools_system.get_var(args)` | Reads an engine variable/preference (VariableRegistry.get), e.g. $pref::Video::gpu. | 144 |
+| `mcp_tools_system.load_extension(args)` | Loads a GE extension by its name (underscore form). | 128 |
+| `mcp_tools_system.load_file(args)` | Loads and runs a Lua file in the GE VM (the VFS path is resolved to the real path). | 116 |
+| `mcp_tools_system.reload_lua()` | Requests a reload of the GE Lua VM (like Ctrl+L) via Lua:requestReload; deferred to the next frame. | 50 |
+| `mcp_tools_system.reload_ui()` | Fully reloads the UI (CEF) ignoring the cache, via reloadUI(). | 43 |
+| `mcp_tools_system.run_lua(args)` | Compiles (loadstring) and runs Lua code in the GE VM, returns tostring of the chunk's result. | 14 |
+| `mcp_tools_system.screenshot(args)` | Takes a screenshot (module `screenshot`, createScreenshotTracked) and returns its absolute path. | 66 |
+| `mcp_tools_system.screenshot_image(args)` | Captures a downscaled JPG and returns it as base64 (asynchronous in two calls). | 80 |
+| `mcp_tools_system.set_var(args)` | Writes an engine variable (VariableRegistry.set) and returns the re-read value. | 150 |
+| `mcp_tools_system.unload_extension(args)` | Unloads a GE extension (mcp_server and mcp_tools are protected). | 135 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mcp_tools_system.file_info(args)`
 
-Informations sur un chemin : exists, isDir, realPath (VFS vers disque), virtualPath, expanded et stat.
+Information about a path: exists, isDir, realPath (VFS to disk), virtualPath, expanded and stat.
 
-- `args` (*table*) : {path: string} chemin VFS ou réel.
-- **renvoie** : string JSON.
-- **renvoie** : boolean true si path manquant.
+- `args` (*table*) : {path: string} VFS or real path.
+- **returns**: string JSON.
+- **returns**: boolean true if path is missing.
 
 #### `mcp_tools_system.get_logs(args)`
 
-Lit beamng.log (voir notes pour la logique premier appel / appels suivants).
+Reads beamng.log (see notes for the first call / subsequent calls logic).
 
 - `args` (*table|nil*) : {lines?: integer}
-- **renvoie** : string Lignes de log.
-- **renvoie** : boolean true si le fichier est illisible.
+- **returns**: string Log lines.
+- **returns**: boolean true if the file is unreadable.
 
 #### `mcp_tools_system.get_render_info()`
 
-Infos de rendu en JSON : adapterType, available, vulkanEnabled, gpu (Engine.Render / Engine.Platform).
+Render info as JSON: adapterType, available, vulkanEnabled, gpu (Engine.Render / Engine.Platform).
 
-- **renvoie** : string JSON.
-- **renvoie** : boolean false.
+- **returns**: string JSON.
+- **returns**: boolean false.
 
 #### `mcp_tools_system.get_var(args)`
 
-Lit une variable moteur/préférence (VariableRegistry.get), ex. $pref::Video::gpu.
+Reads an engine variable/preference (VariableRegistry.get), e.g. $pref::Video::gpu.
 
 - `args` (*table*) : {name: string, default?: any}
-- **renvoie** : string Valeur.
-- **renvoie** : boolean true si name manquant.
+- **returns**: string Value.
+- **returns**: boolean true if name is missing.
 
 #### `mcp_tools_system.load_extension(args)`
 
-Charge une extension GE par son nom (forme avec underscore).
+Loads a GE extension by its name (underscore form).
 
 - `args` (*table*) : {name: string}
-- **renvoie** : string « loaded » ou « load failed for ».
-- **renvoie** : boolean true si name manquant.
+- **returns**: string "loaded" or "load failed for".
+- **returns**: boolean true if name is missing.
 
 #### `mcp_tools_system.load_file(args)`
 
-Charge et exécute un fichier Lua dans la VM GE (le chemin VFS est résolu vers le chemin réel).
+Loads and runs a Lua file in the GE VM (the VFS path is resolved to the real path).
 
 - `args` (*table*) : {path: string}
-- **renvoie** : string « loaded … » ou erreur.
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string "loaded …" or error.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_system.reload_lua()`
 
-Demande le rechargement du VM Lua GE (comme Ctrl+L) via Lua:requestReload ; différé à la frame suivante.
+Requests a reload of the GE Lua VM (like Ctrl+L) via Lua:requestReload; deferred to the next frame.
 
-- **renvoie** : string Message.
-- **renvoie** : boolean true si indisponible.
+- **returns**: string Message.
+- **returns**: boolean true if unavailable.
 
 #### `mcp_tools_system.reload_ui()`
 
-Recharge complètement l'UI (CEF) en ignorant le cache, via reloadUI().
+Fully reloads the UI (CEF) ignoring the cache, via reloadUI().
 
-- **renvoie** : string Message.
-- **renvoie** : boolean true si reloadUI absent.
+- **returns**: string Message.
+- **returns**: boolean true if reloadUI is absent.
 
 #### `mcp_tools_system.run_lua(args)`
 
-Compile (loadstring) et exécute du code Lua dans la VM GE, renvoie tostring du résultat du chunk.
+Compiles (loadstring) and runs Lua code in the GE VM, returns tostring of the chunk's result.
 
-- `args` (*table*) : {code: string}. Le code doit faire `return …` pour renvoyer une valeur.
-- **renvoie** : string Résultat ou « compile error / error: … ».
-- **renvoie** : boolean true en cas d'erreur.
+- `args` (*table*) : {code: string}. The code must `return …` to return a value.
+- **returns**: string Result or "compile error / error: …".
+- **returns**: boolean true on error.
 
 #### `mcp_tools_system.screenshot(args)`
 
-Prend une capture (module `screenshot`, createScreenshotTracked) et renvoie son chemin absolu.
+Takes a screenshot (module `screenshot`, createScreenshotTracked) and returns its absolute path.
 
-- `args` (*table|nil*) : {jpg?: boolean} (défaut PNG).
-- **renvoie** : string Chemin du fichier.
-- **renvoie** : boolean true si la capture échoue.
+- `args` (*table|nil*) : {jpg?: boolean} (default PNG).
+- **returns**: string File path.
+- **returns**: boolean true if the capture fails.
 
 #### `mcp_tools_system.screenshot_image(args)`
 
-Capture un JPG réduit et le renvoie en base64 (asynchrone en deux appels).
+Captures a downscaled JPG and returns it as base64 (asynchronous in two calls).
 
-- `args` (*table|nil*) : {scale?: number 0..1 (défaut 0.4)}
-- **renvoie** : table|string {data, mimeType} une fois prêt, sinon message « capturing… ».
-- **renvoie** : boolean true si la capture échoue.
+- `args` (*table|nil*) : {scale?: number 0..1 (default 0.4)}
+- **returns**: table|string {data, mimeType} once ready, otherwise "capturing…" message.
+- **returns**: boolean true if the capture fails.
 
 #### `mcp_tools_system.set_var(args)`
 
-Écrit une variable moteur (VariableRegistry.set) et renvoie la valeur relue.
+Writes an engine variable (VariableRegistry.set) and returns the re-read value.
 
 - `args` (*table*) : {name: string, value: any}
-- **renvoie** : string « nom = valeur ».
-- **renvoie** : boolean true si paramètre manquant.
+- **returns**: string "name = value".
+- **returns**: boolean true if a parameter is missing.
 
 #### `mcp_tools_system.unload_extension(args)`
 
-Décharge une extension GE (mcp_server et mcp_tools protégées).
+Unloads a GE extension (mcp_server and mcp_tools are protected).
 
 - `args` (*table*) : {name: string}
-- **renvoie** : string Message.
-- **renvoie** : boolean true en cas de refus ou d'erreur.
+- **returns**: string Message.
+- **returns**: boolean true on refusal or error.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `schemas` | table<string, table> | Schémas des outils système. |
+| `schemas` | table<string, table> | Schemas of the system tools. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `getVulkanEnabled`
 - `FS:` `directoryCreate`, `directoryExists`, `expandFilename`, `fileExists`, `getFileRealPath`, `getUserPath`, `native2Virtual`, `stat`
 - `Lua:` `requestReload`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/mcp/tools/system.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/mcp/tools/system.lua`.*

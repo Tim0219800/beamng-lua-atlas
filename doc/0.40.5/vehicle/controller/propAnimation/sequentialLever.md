@@ -1,55 +1,55 @@
 # `controller_propAnimation_sequentialLever`
 
-*Fichier : `lua/vehicle/controller/propAnimation/sequentialLever.lua` · VM : Véhicule · 106 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/propAnimation/sequentialLever.lua` · VM: Vehicle · 106 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `propAnimation/sequentialLever` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `propAnimation/sequentialLever` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire d'animation d'un levier séquentiel : à chaque changement de rapport du device « gearbox » (rapport monté = levier poussé, rapport descendu = levier tiré), il fait osciller une valeur lissée entre -1, 0 et 1 publiée dans electrics.values.sequentialLeverY, et joue un son de levier (montée / descente) avec l'agressivité de passage comme paramètre.
+Auxiliary sequential lever animation controller: at each gear change of the "gearbox" device (upshift = lever pushed, downshift = lever pulled), it makes a smoothed value oscillate between -1, 0 and 1 published in electrics.values.sequentialLeverY, and plays a lever sound (up / down) with the shift aggression as a parameter.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : electricsNameYAxis ("sequentialLeverY"), supportedGearboxTypes (liste, {"sequentialGearbox"}), relevantGearboxName ("gearbox"), shiftSoundNode_nodes (premier élément = nœud du son, sinon 0 + log W), shiftSoundEventSequentialGearUp ("event:>Vehicle>Interior>Gearshift>sequential_01_in"), shiftSoundEventSequentialGearDown ("..._01_out"), shiftSoundVolumeSequentialGearUp / Down (0.5).
-- Lit controller.mainController.shiftingAggression pour le paramètre du son.
-- Si le device n'existe pas ou n'est pas d'un type supporté, log E et updateGFX devient nop.
-- La direction du levier : impulsion = {-1 -> 1, 0 -> 0, 1 -> -1} selon le signe de (gearIndex - previousGearIndex) ; le son « down » est joué dès que l'impulsion est non nulle (la valeur de nom « shiftOut » correspond à tout changement de rapport, montée ou descente), le son « up » au retour à 0.
+- jbeam keys read: electricsNameYAxis ("sequentialLeverY"), supportedGearboxTypes (list, {"sequentialGearbox"}), relevantGearboxName ("gearbox"), shiftSoundNode_nodes (first element = sound node, otherwise 0 + log W), shiftSoundEventSequentialGearUp ("event:>Vehicle>Interior>Gearshift>sequential_01_in"), shiftSoundEventSequentialGearDown ("..._01_out"), shiftSoundVolumeSequentialGearUp / Down (0.5).
+- Reads controller.mainController.shiftingAggression for the sound parameter.
+- If the device does not exist or is not of a supported type, logs E and updateGFX becomes nop.
+- Lever direction: impulse = {-1 -> 1, 0 -> 0, 1 -> -1} depending on the sign of (gearIndex - previousGearIndex); the "down" sound is played as soon as the impulse is non-zero (the name value "shiftOut" corresponds to any gear change, up or down), the "up" sound when it returns to 0.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_propAnimation_sequentialLever.init(jbeamData)` | Récupère le device de boîte, vérifie son type et lit les sons. *(interne)* | 59 |
-| `controller_propAnimation_sequentialLever.reset(jbeamData)` | Remet l'état du levier et le lisseur à zéro. *(interne)* | 52 |
-| `controller_propAnimation_sequentialLever.updateGFX(dt)` | Chaque frame : détecte le changement de rapport, lisse l'impulsion, joue le son et publie la valeur. *(interne)* | 28 |
+| `controller_propAnimation_sequentialLever.init(jbeamData)` | Gets the gearbox device, checks its type and reads the sounds. *(internal)* | 59 |
+| `controller_propAnimation_sequentialLever.reset(jbeamData)` | Resets the lever state and the smoother to zero. *(internal)* | 52 |
+| `controller_propAnimation_sequentialLever.updateGFX(dt)` | Every frame: detects the gear change, smooths the impulse, plays the sound and publishes the value. *(internal)* | 28 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_propAnimation_sequentialLever.init(jbeamData)`
 
-Récupère le device de boîte, vérifie son type et lit les sons.
+Gets the gearbox device, checks its type and reads the sounds.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_propAnimation_sequentialLever.reset(jbeamData)`
 
-Remet l'état du levier et le lisseur à zéro.
+Resets the lever state and the smoother to zero.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_propAnimation_sequentialLever.updateGFX(dt)`
 
-Chaque frame : détecte le changement de rapport, lisse l'impulsion, joue le son et publie la valeur.
+Every frame: detects the gear change, smooths the impulse, plays the sound and publishes the value.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `playSFXOnceCT`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/propAnimation/sequentialLever.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/propAnimation/sequentialLever.lua`.*

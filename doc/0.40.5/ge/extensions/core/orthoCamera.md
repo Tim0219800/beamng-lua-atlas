@@ -1,73 +1,73 @@
 # `core_orthoCamera`
 
-*Fichier : `lua/ge/extensions/core/orthoCamera.lua` · VM : Game Engine (GE) · 208 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/orthoCamera.lua` · VM: Game Engine (GE) · 208 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_orthoCamera` : `extensions.load("core_orthoCamera")`, puis la globale `core_orthoCamera`
+**Access:** extension `core_orthoCamera`: `extensions.load("core_orthoCamera")`, then the global `core_orthoCamera`
 
-Extension GE `core_orthoCamera` : active une vue orthographique (sans perspective) sur la vue principale de l'objet OnlyGui, via scenetree.OnlyGui:setOrthoMainView. On définit les plans proches et lointains et la taille de la fenêtre orthographique (soit left/right/top/bottom, soit une taille `size` avec le ratio de la fenêtre). Contient aussi une fenêtre ImGui de débogage (debugMode, désactivé en dur).
+GE extension `core_orthoCamera`: enables an orthographic view (no perspective) on the main view of the OnlyGui object, via scenetree.OnlyGui:setOrthoMainView. You set the near and far planes and the size of the orthographic window (either left/right/top/bottom, or a `size` with the window ratio). Also contains an ImGui debug window (debugMode, hardcoded off).
 
-## Exemple
+## Example
 
 ```lua
 core_orthoCamera.enable(true, {size = 20, nearClip = 1, farClip = 5000})
--- puis
+-- then
 core_orthoCamera.enable(false)
 ```
 
-## Remarques
+## Notes
 
-- Avec useWindowAspectRatio (vrai par défaut), left/right/top/bottom sont recalculés à partir de `size` : hauteur = size, largeur = size * ratio de la résolution du réglage GraphicDisplayResolutions (1280x720 si absent). Le ratio est recalculé à chaque onWindowResized.
-- Si useWindowAspectRatio est faux, les bornes left/right/top/bottom données à enable sont utilisées telles quelles (défauts -1, 1, 1, -1).
-- Valeurs par défaut de enable : nearClip 1, farClip 5000, size 1. setOptions ne modifie ni les bornes ni l'état activé, seulement size, nearClip et farClip, puis recalcule les bornes si le ratio fenêtre est utilisé.
-- Les unités des tailles et plans de clip sont les unités du monde (mètres), déduit du code.
-- Aucun code de désactivation spécifique : enable(false) envoie simplement enabled = false à setOrthoMainView. Avant le premier enable, les hooks ne font rien (enabled == nil).
-- Bug potentiel : updateAspectRatio fait w, h = resolutionString:match(...) puis tonumber(w) ; si la chaîne ne correspond pas au motif, w est nil et le calcul w / h échoue.
-- Le paramètre `size` du hook onWindowResized masque la variable locale `size` du module (non utilisé).
+- With useWindowAspectRatio (true by default), left/right/top/bottom are recomputed from `size`: height = size, width = size * ratio of the GraphicDisplayResolutions setting resolution (1280x720 if absent). The ratio is recomputed on every onWindowResized.
+- If useWindowAspectRatio is false, the left/right/top/bottom bounds given to enable are used as is (defaults -1, 1, 1, -1).
+- Default values of enable: nearClip 1, farClip 5000, size 1. setOptions changes neither the bounds nor the enabled state, only size, nearClip and farClip, then recomputes the bounds if the window ratio is used.
+- The units of sizes and clip planes are world units (meters), inferred from code.
+- No specific disable code: enable(false) simply sends enabled = false to setOrthoMainView. Before the first enable, the hooks do nothing (enabled == nil).
+- Potential bug: updateAspectRatio does w, h = resolutionString:match(...) then tonumber(w); if the string does not match the pattern, w is nil and the w / h computation fails.
+- The `size` parameter of the onWindowResized hook shadows the module's local variable `size` (unused).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_orthoCamera.enable(_enabled, options)` | Active ou désactive la vue orthographique principale et fixe ses paramètres (bornes, plans de clip, taille). | 52 |
-| `core_orthoCamera.getSize()` | Renvoie la taille verticale courante de la vue orthographique. | 85 |
-| `core_orthoCamera.onUpdate(dtReal, dtSim, dtRaw)` | Hook par frame : affiche la fenêtre de débogage ImGui 'OnlyGui OrthoMainView' uniquement si debugMode est vrai (faux dans le code livré, donc inactif). *(interne)* *(hook)* | 106 |
-| `core_orthoCamera.onWindowResized(size)` | Hook appelé quand la fenêtre est redimensionnée : recalcule le ratio et réapplique la vue. *(interne)* *(hook)* | 89 |
-| `core_orthoCamera.setOptions(options)` | Met à jour size, nearClip et farClip (défauts 1, 1, 5000) et réapplique la vue orthographique si elle a déjà été configurée. | 75 |
+| `core_orthoCamera.enable(_enabled, options)` | Enables or disables the main orthographic view and sets its parameters (bounds, clip planes, size). | 52 |
+| `core_orthoCamera.getSize()` | Returns the current vertical size of the orthographic view. | 85 |
+| `core_orthoCamera.onUpdate(dtReal, dtSim, dtRaw)` | Per-frame hook: displays the ImGui debug window 'OnlyGui OrthoMainView' only if debugMode is true (false in the shipped code, so inactive). *(internal)* *(hook)* | 106 |
+| `core_orthoCamera.onWindowResized(size)` | Hook called when the window is resized: recomputes the ratio and reapplies the view. *(internal)* *(hook)* | 89 |
+| `core_orthoCamera.setOptions(options)` | Updates size, nearClip and farClip (defaults 1, 1, 5000) and reapplies the orthographic view if it has already been configured. | 75 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_orthoCamera.enable(_enabled, options)`
 
-Active ou désactive la vue orthographique principale et fixe ses paramètres (bornes, plans de clip, taille).
+Enables or disables the main orthographic view and sets its parameters (bounds, clip planes, size).
 
-- `_enabled` (*boolean*) : true pour activer.
-- `options` (*table|nil*) : { left, right, top, bottom, nearClip, farClip, size, useWindowAspectRatio } ; useWindowAspectRatio vaut true si absent.
+- `_enabled` (*boolean*) : true to enable.
+- `options` (*table|nil*) : { left, right, top, bottom, nearClip, farClip, size, useWindowAspectRatio }; useWindowAspectRatio is true if absent.
 
 #### `core_orthoCamera.getSize()`
 
-Renvoie la taille verticale courante de la vue orthographique.
+Returns the current vertical size of the orthographic view.
 
-- **renvoie** : number size (1 par défaut).
+- **returns**: number size (1 by default).
 
 #### `core_orthoCamera.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook par frame : affiche la fenêtre de débogage ImGui 'OnlyGui OrthoMainView' uniquement si debugMode est vrai (faux dans le code livré, donc inactif).
+Per-frame hook: displays the ImGui debug window 'OnlyGui OrthoMainView' only if debugMode is true (false in the shipped code, so inactive).
 
-- `dtReal` (*number*) : Non utilisé.
-- `dtSim` (*number*) : Non utilisé.
-- `dtRaw` (*number*) : Non utilisé.
+- `dtReal` (*number*) : Not used.
+- `dtSim` (*number*) : Not used.
+- `dtRaw` (*number*) : Not used.
 
 #### `core_orthoCamera.onWindowResized(size)`
 
-Hook appelé quand la fenêtre est redimensionnée : recalcule le ratio et réapplique la vue.
+Hook called when the window is resized: recomputes the ratio and reapplies the view.
 
-- `size` (*any*) : Nouvelle taille de fenêtre (non utilisée).
+- `size` (*any*) : New window size (unused).
 
 #### `core_orthoCamera.setOptions(options)`
 
-Met à jour size, nearClip et farClip (défauts 1, 1, 5000) et réapplique la vue orthographique si elle a déjà été configurée.
+Updates size, nearClip and farClip (defaults 1, 1, 5000) and reapplies the orthographic view if it has already been configured.
 
 - `options` (*table|nil*) : { size, nearClip, farClip }
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/orthoCamera.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/orthoCamera.lua`.*

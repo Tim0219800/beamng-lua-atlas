@@ -1,76 +1,117 @@
 {
   "path": "lua/vehicle/controller/4wd.lua",
-  "module": "Contrôleur auxiliaire qui donne au conducteur la commande du 4x4 sélectionnable : arbre 4WD (connecté/déconnecté), boîte de gamme (haute/basse) et différentiels. Il agit soit via des contrôleurs `driveModes` (si leurs noms sont listés dans le jbeam), soit directement via l'API `powertrain` pour les anciens véhicules. Il écrit `electrics.values.mode4WD` et `modeRangeBox` (1 ou 0) et ajoute des entrées au menu radial.",
+  "module": "Auxiliary controller that gives the driver control of the selectable 4WD: 4WD shaft (connected/disconnected), range box (high/low) and differentials. It acts either via `driveModes` controllers (if their names are listed in the jbeam), or directly via the `powertrain` API for old vehicles. It writes `electrics.values.mode4WD` and `modeRangeBox` (1 or 0) and adds entries to the radial menu.",
   "usage": "controller.getControllerSafe(\"4wd\").toggle4WD()\ncontroller.getControllerSafe(\"4wd\").setRangeMode(\"low\")",
   "notes": [
-    "Clés jbeam lues par init : `shaftName` (arbre du transfert, périphérique powertrain dont `mode` vaut \"connected\" ou \"disconnected\"), `rangeBoxName` (boîte de gamme, mode \"low\" ou \"high\"). Lues par initLastStage : `driveModesRangeNames`, `driveModesTransfercaseNames`, `driveModesDifferentialNames` (tables de noms de contrôleurs driveModes).",
-    "`M.relevantDevice = \"transfercase\"` : sert à trier ce contrôleur par rapport au périphérique powertrain du même nom.",
-    "L'action d'entrée appelle toggleDiffs/toggle4WD/toggleRange si un contrôleur 4wd existe ; sinon elle appelle directement l'API powertrain (code de compatibilité cité dans le fichier).",
-    "La construction du menu radial est faite une seule fois (flag hasBuiltPie) ; elle capture l'objet `shaft`/`rangeBox` du premier init.",
-    "Il n'y a pas de fonction `reset` : controller.reset rappelle donc init à chaque reset."
+    "Jbeam keys read by init: `shaftName` (transfer shaft, powertrain device whose `mode` is \"connected\" or \"disconnected\"), `rangeBoxName` (range box, mode \"low\" or \"high\"). Read by initLastStage: `driveModesRangeNames`, `driveModesTransfercaseNames`, `driveModesDifferentialNames` (tables of driveModes controller names).",
+    "`M.relevantDevice = \"transfercase\"`: used to sort this controller relative to the powertrain device of the same name.",
+    "The input action calls toggleDiffs/toggle4WD/toggleRange if a 4wd controller exists; otherwise it calls the powertrain API directly (compatibility code cited in the file).",
+    "The radial menu is built only once (hasBuiltPie flag); it captures the `shaft`/`rangeBox` object from the first init.",
+    "There is no `reset` function: controller.reset therefore calls init again on every reset."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "relevantDevice": {"type": "string", "desc": "\"transfercase\" : nom du périphérique powertrain utilisé pour l'ordre d'appel."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "relevantDevice": {
+      "type": "string",
+      "desc": "\"transfercase\": name of the powertrain device used for the call order."
+    }
   },
   "functions": {
     "updateGFX": {
-      "desc": "Chaque frame : écrit electrics.values.modeRangeBox (1 si gamme basse) et mode4WD (1 si arbre connecté).",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (non utilisé)."}},
+      "desc": "Every frame: writes electrics.values.modeRangeBox (1 if low range) and mode4WD (1 if shaft connected).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds (unused)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "toggleDiffs": {
-      "desc": "Passe au mode suivant de chaque contrôleur driveModes de différentiels ; sinon appelle powertrain.toggleDefaultDiffs().",
+      "desc": "Switches to the next mode of each differential driveModes controller; otherwise calls powertrain.toggleDefaultDiffs().",
       "params": {},
       "returns": [],
       "internal": false
     },
     "toggleRange": {
-      "desc": "Passe au mode suivant des contrôleurs driveModes de gamme ; sinon bascule le mode de la boîte de gamme via powertrain.toggleDeviceMode.",
+      "desc": "Switches to the next mode of the range driveModes controllers; otherwise toggles the range box mode via powertrain.toggleDeviceMode.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "setRangeMode": {
-      "desc": "Impose le mode de la boîte de gamme (powertrain.setDeviceMode). Sans effet s'il n'y a pas de boîte de gamme.",
-      "params": {"mode": {"type": "string", "desc": "\"low\" ou \"high\" (valeurs vues dans le code)."}},
+      "desc": "Forces the range box mode (powertrain.setDeviceMode). No effect if there is no range box.",
+      "params": {
+        "mode": {
+          "type": "string",
+          "desc": "\"low\" or \"high\" (values seen in the code)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "toggle4WD": {
-      "desc": "Passe au mode suivant des contrôleurs driveModes de transfert ; sinon bascule l'arbre 4WD, sauf s'il est physiquement déconnecté (`isPhysicallyDisconnected`).",
+      "desc": "Switches to the next mode of the transfer driveModes controllers; otherwise toggles the 4WD shaft, unless it is physically disconnected (`isPhysicallyDisconnected`).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "set4WDMode": {
-      "desc": "Impose le mode de l'arbre 4WD, sauf s'il est physiquement déconnecté.",
-      "params": {"mode": {"type": "string", "desc": "\"connected\" ou \"disconnected\"."}},
+      "desc": "Forces the 4WD shaft mode, unless it is physically disconnected.",
+      "params": {
+        "mode": {
+          "type": "string",
+          "desc": "\"connected\" or \"disconnected\"."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "serialize": {
-      "desc": "Renvoie l'état sauvegardé : {mode4WD, modeRange}.",
+      "desc": "Returns the saved state: {mode4WD, modeRange}.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{mode4WD = string|nil, modeRange = string|nil}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{mode4WD = string|nil, modeRange = string|nil}."
+        }
+      ],
       "internal": true
     },
     "deserialize": {
-      "desc": "Restaure les modes 4WD et gamme depuis les données de serialize.",
-      "params": {"data": {"type": "table|nil", "desc": "Données retournées par serialize."}},
+      "desc": "Restores the 4WD and range modes from the serialize data.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Data returned by serialize."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "init": {
-      "desc": "Retrouve les périphériques powertrain (`shaftName`, `rangeBoxName`), initialise les valeurs electrics et ajoute les entrées du menu radial (une seule fois).",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "desc": "Finds the powertrain devices (`shaftName`, `rangeBoxName`), initializes the electrics values and adds the radial menu entries (only once).",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "initLastStage": {
-      "desc": "Retrouve les contrôleurs driveModes nommés dans `driveModesRangeNames`, `driveModesTransfercaseNames` et `driveModesDifferentialNames` (ceux qui existent).",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "desc": "Finds the driveModes controllers named in `driveModesRangeNames`, `driveModesTransfercaseNames` and `driveModesDifferentialNames` (those that exist).",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     }

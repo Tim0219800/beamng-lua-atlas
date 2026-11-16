@@ -1,22 +1,22 @@
 # `flowgraph_nodes_vehicle_setActive`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/setActive.lua` · VM : Game Engine (GE) · 34 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/setActive.lua` · VM: Game Engine (GE) · 34 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/setActive")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/setActive")` (file under extensions/ but not a regular extension)
 
-Nœud « Set Vehicle Active » (catégorie `once_instant`). Rend un véhicule visible ou invisible (`obj:setActive(1 ou 0)`). Pins d'entrée : `vehId` (défaut : joueur), `active` (bool).
+Node "Set Vehicle Active" (category `once_instant`). Makes a vehicle visible or invisible (`obj:setActive(1 or 0)`). Input pins: `vehId` (default: player), `active` (bool).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Applique `setActive` au véhicule selon le pin `active`. | 20 |
+| `C:workOnce()` | Applies `setActive` to the vehicle according to the `active` pin. | 20 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `setActive`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/setActive.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/setActive.lua`.*

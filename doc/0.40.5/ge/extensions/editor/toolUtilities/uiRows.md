@@ -1,12 +1,12 @@
 # `editor_toolUtilities_uiRows`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/uiRows.lua` · VM : Game Engine (GE) · 121 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/uiRows.lua` · VM: Game Engine (GE) · 121 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_uiRows` : `extensions.load("editor_toolUtilities_uiRows")`, puis la globale `editor_toolUtilities_uiRows`
+**Access:** extension `editor_toolUtilities_uiRows`: `extensions.load("editor_toolUtilities_uiRows")`, then the global `editor_toolUtilities_uiRows`
 
-Formes de lignes ImGui dont sont faits les panneaux des outils d'éditeur : un slider précédé de son bouton de réinitialisation, un libellé devant une rangée de boutons d'option, et un sous-onglet qui se ferme sur une ligne de séparation. Partagé pour que les fenêtres se ressemblent (colonne de 30 px pour le reset, libellés sur 118 px). Utilise la palette 'crystal' et util.beginSubTab/endSubTab.
+ImGui row shapes that the editor tool panels are made of: a slider preceded by its reset button, a label in front of a row of option buttons, and a sub-tab that closes with a separator line. Shared so the windows look alike (30 px column for the reset, labels 118 px wide). Uses the 'crystal' palette and util.beginSubTab/endSubTab.
 
-## Exemple
+## Example
 
 ```lua
 local rows = require('editor/toolUtilities/uiRows')
@@ -15,73 +15,73 @@ im.SliderFloat('##w', widthPtr, 1, 10)
 rows.endSliderRow()
 ```
 
-## Remarques
+## Notes
 
-- beginSliderRow pousse un style (GrabMinSize 20), ouvre 2 colonnes et un PushItemWidth(-1) ; endSliderRow doit toujours suivre pour tout refermer.
-- optIcon retombe sur l'icône crop_square pour un nom inconnu, car uiIconImageButton plante sur une icône nil.
-- mixRow accepte des lignes { id, tip, icon } ou des tableaux { id, tip, icon } positionnels.
+- beginSliderRow pushes a style (GrabMinSize 20), opens 2 columns and a PushItemWidth(-1); endSliderRow must always follow to close everything.
+- optIcon falls back to the crop_square icon for an unknown name, because uiIconImageButton crashes on a nil icon.
+- mixRow accepts rows { id, tip, icon } or positional arrays { id, tip, icon }.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_uiRows.beginSliderRow(id, atDefault, onReset)` | Icône de réinitialisation à gauche du slider (espace vide si déjà à la valeur par défaut). L'appelant dessine le slider entre beginSliderRow et endSliderRow. | 31 |
-| `editor_toolUtilities_uiRows.beginSubTab(label, flags)` | Ouvre un sous-onglet via util.beginSubTab et réinitialise la mémoire de séparateur. | 92 |
-| `editor_toolUtilities_uiRows.endSliderRow()` | Referme la ligne de slider (largeur, colonnes, style). | 45 |
-| `editor_toolUtilities_uiRows.endSubTab()` | Ferme un sous-onglet par une ligne de séparation, sauf si la dernière chose dessinée en était déjà une ou s'il n'y a plus de place verticale. | 99 |
-| `editor_toolUtilities_uiRows.markSep()` | Dessine la ligne de fin d'une liste et retient sa position, pour que le sous-onglet qui la contient n'en dessine pas une seconde juste dessous. | 87 |
-| `editor_toolUtilities_uiRows.mixRow(opts, id, has, offCol)` | Rangée de boutons dont plusieurs peuvent être allumés à la fois, pour un choix qui est un mélange. `has(id)` dit lesquels sont allumés. L'infobulle précise « In the mix » ou non. | 70 |
-| `editor_toolUtilities_uiRows.optIcon(name)` | Renvoie l'icône de l'éditeur de ce nom, ou un carré simple si elle est inconnue. | 63 |
-| `editor_toolUtilities_uiRows.rowLabel(label, tip, col)` | Libellé à gauche d'une rangée de boutons, suivi d'un SameLine à X fixe (au moins la largeur du libellé). | 53 |
+| `editor_toolUtilities_uiRows.beginSliderRow(id, atDefault, onReset)` | Reset icon to the left of the slider (empty space if already at the default value). The caller draws the slider between beginSliderRow and endSliderRow. | 31 |
+| `editor_toolUtilities_uiRows.beginSubTab(label, flags)` | Opens a sub-tab via util.beginSubTab and resets the separator memory. | 92 |
+| `editor_toolUtilities_uiRows.endSliderRow()` | Closes the slider row (width, columns, style). | 45 |
+| `editor_toolUtilities_uiRows.endSubTab()` | Closes a sub-tab with a separator line, unless the last thing drawn was already one or there is no vertical space left. | 99 |
+| `editor_toolUtilities_uiRows.markSep()` | Draws the closing line of a list and remembers its position, so that the sub-tab containing it does not draw a second one just below. | 87 |
+| `editor_toolUtilities_uiRows.mixRow(opts, id, has, offCol)` | Button row where several can be lit at the same time, for a choice that is a mix. `has(id)` tells which ones are lit. The tooltip says "In the mix" or not. | 70 |
+| `editor_toolUtilities_uiRows.optIcon(name)` | Returns the editor icon of that name, or a plain square if it is unknown. | 63 |
+| `editor_toolUtilities_uiRows.rowLabel(label, tip, col)` | Label to the left of a button row, followed by a SameLine at a fixed X (at least the label width). | 53 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_uiRows.beginSliderRow(id, atDefault, onReset)`
 
-Icône de réinitialisation à gauche du slider (espace vide si déjà à la valeur par défaut). L'appelant dessine le slider entre beginSliderRow et endSliderRow.
+Reset icon to the left of the slider (empty space if already at the default value). The caller draws the slider between beginSliderRow and endSliderRow.
 
-- `id` (*string*) : Identifiant ImGui de base.
-- `atDefault` (*boolean*) : Vrai : valeur par défaut, pas de bouton.
-- `onReset` (*function*) : Appelée au clic sur le bouton de réinitialisation.
+- `id` (*string*) : Base ImGui identifier.
+- `atDefault` (*boolean*) : True: default value, no button.
+- `onReset` (*function*) : Called when the reset button is clicked.
 
 #### `editor_toolUtilities_uiRows.beginSubTab(label, flags)`
 
-Ouvre un sous-onglet via util.beginSubTab et réinitialise la mémoire de séparateur.
+Opens a sub-tab via util.beginSubTab and resets the separator memory.
 
-- `label` (*string*) : Titre.
-- `flags` (*integer|nil*) : Drapeaux ImGui transmis à util.beginSubTab.
-- **renvoie** : boolean Vrai si l'onglet est ouvert (déduit du code).
+- `label` (*string*) : Title.
+- `flags` (*integer|nil*) : ImGui flags passed to util.beginSubTab.
+- **returns**: boolean True if the tab is open (inferred from code).
 
 #### `editor_toolUtilities_uiRows.mixRow(opts, id, has, offCol)`
 
-Rangée de boutons dont plusieurs peuvent être allumés à la fois, pour un choix qui est un mélange. `has(id)` dit lesquels sont allumés. L'infobulle précise « In the mix » ou non.
+Button row where several can be lit at the same time, for a choice that is a mix. `has(id)` tells which ones are lit. The tooltip says "In the mix" or not.
 
-- `opts` (*table*) : Liste d'options { id, tip, icon } ou de triplets positionnels.
-- `id` (*string*) : Préfixe d'identifiant ImGui.
-- `has` (*function*) : has(optId) renvoie vrai si l'option est allumée.
-- `offCol` (*ImVec4*) : Couleur du bouton éteint.
-- **renvoie** : string|nil Identifiant de l'option cliquée, nil sinon.
+- `opts` (*table*) : List of options { id, tip, icon } or positional triplets.
+- `id` (*string*) : ImGui identifier prefix.
+- `has` (*function*) : has(optId) returns true if the option is lit.
+- `offCol` (*ImVec4*) : Color of the unlit button.
+- **returns**: string|nil Identifier of the clicked option, nil otherwise.
 
 #### `editor_toolUtilities_uiRows.optIcon(name)`
 
-Renvoie l'icône de l'éditeur de ce nom, ou un carré simple si elle est inconnue.
+Returns the editor icon of that name, or a plain square if it is unknown.
 
-- `name` (*string*) : Nom dans editor.icons.
-- **renvoie** : any Icône.
+- `name` (*string*) : Name in editor.icons.
+- **returns**: any Icon.
 
 #### `editor_toolUtilities_uiRows.rowLabel(label, tip, col)`
 
-Libellé à gauche d'une rangée de boutons, suivi d'un SameLine à X fixe (au moins la largeur du libellé).
+Label to the left of a button row, followed by a SameLine at a fixed X (at least the label width).
 
-- `label` (*string*) : Texte.
-- `tip` (*string|nil*) : Infobulle.
-- `col` (*ImVec4|nil*) : Couleur (greenB par défaut).
+- `label` (*string*) : Text.
+- `tip` (*string|nil*) : Tooltip.
+- `col` (*ImVec4|nil*) : Color (greenB by default).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `LABEL_COL_W` | number | Largeur de la colonne de libellés (118), pour aligner les rangées de boutons empilées. |
+| `LABEL_COL_W` | number | Width of the label column (118), to align stacked button rows. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/uiRows.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/uiRows.lua`.*

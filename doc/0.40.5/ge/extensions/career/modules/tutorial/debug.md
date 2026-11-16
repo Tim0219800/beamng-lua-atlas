@@ -1,42 +1,42 @@
 # `career_modules_tutorial_debug`
 
-*Fichier : `lua/ge/extensions/career/modules/tutorial/debug.lua` · VM : Game Engine (GE) · 132 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/tutorial/debug.lua` · VM: Game Engine (GE) · 132 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_tutorial_debug` : `extensions.load("career_modules_tutorial_debug")`, puis la globale `career_modules_tutorial_debug`
+**Access:** extension `career_modules_tutorial_debug`: `extensions.load("career_modules_tutorial_debug")`, then the global `career_modules_tutorial_debug`
 
-Menu de debug imgui du tutoriel de carrière. Il affiche l'étape courante, des boutons pour démarrer/avancer/terminer le tutoriel, sauter à une étape, ouvrir l'écran de signature de contrat, simuler un véhicule endommagé ou une sortie de zone, et gérer l'affichage des zones de limites. Il appelle aussi onDebugMenu(im) de l'extension de l'étape courante si elle en a un.
+Career tutorial imgui debug menu. It shows the current step, buttons to start/advance/end the tutorial, jump to a step, open the contract signing screen, simulate a damaged vehicle or leaving the zone, and manage the display of bounds zones. It also calls onDebugMenu(im) of the current step's extension if it has one.
 
-## Remarques
+## Notes
 
-- debugName vaut "Tutorial" et debugOrder 100 : ces champs servent au système de menus de debug.
-- Si career_modules_tutorial n'est pas chargé, le menu affiche seulement « Tutorial module not loaded ».
+- debugName is "Tutorial" and debugOrder 100: these fields are used by the debug menu system.
+- If career_modules_tutorial is not loaded, the menu only displays "Tutorial module not loaded".
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_tutorial_debug.drawDebugMenu(dt)` | Dessine le contenu imgui du menu de debug du tutoriel (appelé chaque frame par le système de debug). *(interne)* | 19 |
+| `career_modules_tutorial_debug.drawDebugMenu(dt)` | Draws the imgui content of the tutorial debug menu (called every frame by the debug system). *(internal)* | 19 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_tutorial_debug.drawDebugMenu(dt)`
 
-Dessine le contenu imgui du menu de debug du tutoriel (appelé chaque frame par le système de debug).
+Draws the imgui content of the tutorial debug menu (called every frame by the debug system).
 
-- `dt` (*number*) : Delta temps.
+- `dt` (*number*) : Time delta.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `debugName` | string | Nom de l'onglet de debug : "Tutorial". |
-| `debugOrder` | number | Ordre d'affichage : 100. |
+| `debugName` | string | Debug tab name: "Tutorial". |
+| `debugOrder` | number | Display order: 100. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onCareerTutorialLeftBounds` — écouté par 8 module(s)
+- `onCareerTutorialLeftBounds` — listened to by 8 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/tutorial/debug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/tutorial/debug.lua`.*

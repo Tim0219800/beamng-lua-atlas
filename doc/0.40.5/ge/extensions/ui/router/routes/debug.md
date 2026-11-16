@@ -1,23 +1,23 @@
 # `ui_router_routes_debug`
 
-*Fichier : `lua/ge/extensions/ui/router/routes/debug.lua` · VM : Game Engine (GE) · 35 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/routes/debug.lua` · VM: Game Engine (GE) · 35 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_routes_debug` : `extensions.load("ui_router_routes_debug")`, puis la globale `ui_router_routes_debug`
+**Access:** extension `ui_router_routes_debug`: `extensions.load("ui_router_routes_debug")`, then the global `ui_router_routes_debug`
 
-Routes de débogage de l'UI (Vue, barres masquées, module abstrait) : composants de démonstration, test des apps UI, chargeur asynchrone en masse, surbrillance de tutoriel (voir ui_tutorialHighlight).
+UI debug routes (Vue, bars hidden, abstract module): demo components, UI apps test, bulk async loader, tutorial highlight (see ui_tutorialHighlight).
 
-## Remarques
+## Notes
 
-- Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = "<nom>" }`.
-- Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.
-- `ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change.
+- Route configuration module: it exports no function. routeManager reads it (via the ui_router_routes_<name> extension) when routes.lua includes it with `{ include = "<name>" }`.
+- The keys of `Children` form the segments of the dotted name: "<module>.<child>". `children` (lowercase) in a node designates its sub-routes; `include` mounts another module there.
+- `ui` is inherited by child routes (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause): a child redefines it only for what changes.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `Children` | table<string, table> | components (scopeTree root > demo), ui-apps-test, asyncBulkLoader, tutorialHighlight. |
-| `Root` | table | {abstract = true, ui = Vue, infoBar et topBar masquées, uiApps par défaut} |
+| `Root` | table | {abstract = true, ui = Vue, infoBar and topBar hidden, default uiApps} |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/routes/debug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/routes/debug.lua`.*

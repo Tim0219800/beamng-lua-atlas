@@ -1,25 +1,25 @@
 # `flowgraph_nodes_activity_aggregateAttempt`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/activity/aggregateAttempt.lua` · VM : Game Engine (GE) · 98 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/activity/aggregateAttempt.lua` · VM: Game Engine (GE) · 98 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/activity/aggregateAttempt")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/activity/aggregateAttempt")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Aggregate Attempt » (catégorie once_p_duration, tags activity/mission). Intègre une tentative à la progression de la mission (gameplay_missions_progress.aggregateAttempt), sauvegarde les données hors carrière, arrête l'enregistrement IA et calcule le texte d'outro de l'étoile par défaut la plus haute débloquée. Entrées : « attempt » (attemptData), « progressKey » (string, sinon currentProgressKey puis defaultProgressKey de la mission). Sorties : « change » (table), « outroText », « outroTranslation » (table translationObject {txt, context}), « newBestType » (bool, caché) ; des pins de sortie personnalisés reçoivent les champs de aggregateChange du même nom.
+Flowgraph node "Aggregate Attempt" (category once_p_duration, tags activity/mission). Integrates an attempt into the mission's progression (gameplay_missions_progress.aggregateAttempt), saves the data outside career, stops the AI recording and computes the outro text of the highest unlocked default star. Inputs: "attempt" (attemptData), "progressKey" (string, otherwise currentProgressKey then the mission's defaultProgressKey). Outputs: "change" (table), "outroText", "outroTranslation" (translationObject table {txt, context}), "newBestType" (bool, hidden); custom output pins receive the fields of aggregateChange with the same name.
 
-## Remarques
+## Notes
 
-- Ne fait rien sans activité associée (self.mgr.activity nil).
-- Hors carrière, appelle gameplay_missions_progress.saveMissionSaveData pour la mission ; en carrière la sauvegarde est laissée au mode carrière.
-- Le texte d'outro prend d'abord careerSetup.starOutroTexts puis defaultStarOutroTexts ; 'noStarExists' sert quand aucune étoile par défaut n'existe ou n'est débloquée.
+- Does nothing without an associated activity (self.mgr.activity is nil).
+- Outside career, calls gameplay_missions_progress.saveMissionSaveData for the mission; in career, saving is left to career mode.
+- The outro text first takes careerSetup.starOutroTexts then defaultStarOutroTexts; 'noStarExists' is used when no default star exists or is unlocked.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Vide. | 28 |
-| `C:workOnce()` | Agrège la tentative, sauvegarde si hors carrière, stoppe l'enregistrement IA (module aiRecording), calcule outroText/outroTranslation et remplit change et les pins de sortie personnalisés. | 32 |
+| `C:init()` | Empty. | 28 |
+| `C:workOnce()` | Aggregates the attempt, saves if outside career, stops the AI recording (aiRecording module), computes outroText/outroTranslation and fills change and the custom output pins. | 32 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/activity/aggregateAttempt.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/activity/aggregateAttempt.lua`.*

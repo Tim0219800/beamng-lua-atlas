@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/environment/setGravity.lua",
+  "module": "Nœud flowgraph « Set Gravity » (catégorie dynamic_instant). Règle la gravité globale (pin value, en m/s², 0 par défaut) via core_environment.setGravity. La gravité d'origine est mémorisée au démarrage du graphe et restaurée à l'arrêt (data.restoreGravity).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Définit data.restoreGravity = true.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "_executionStarted": {"desc": "Mémorise la gravité actuelle.", "internal": true},
+        "_executionStopped": {"desc": "Restaure la gravité mémorisée si data.restoreGravity est vrai.", "internal": true},
+        "workOnce": {"desc": "Applique la gravité du pin value une fois."},
+        "work": {"desc": "En mode repeat, réapplique la gravité à chaque frame seulement si le pin value est utilisé (branché)."}
+      }
+    }
+  }
+}

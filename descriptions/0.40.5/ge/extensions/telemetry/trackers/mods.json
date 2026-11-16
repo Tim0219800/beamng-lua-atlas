@@ -1,17 +1,30 @@
 {
   "path": "lua/ge/extensions/telemetry/trackers/mods.lua",
-  "module": "Suiveur de télémétrie des mods : rapporte quels mods sont installés et actifs, pour distinguer plantages et performances entre installations modées et propres. Seuls le nom, le type, l'identifiant du dépôt (modID), l'état actif et si le mod est décompressé sont envoyés, jamais les chemins de fichiers (évènement « modSurvey » avec les décomptes du gestionnaire de mods).",
+  "module": "Mods telemetry tracker: reports which mods are installed and active, to distinguish crashes and performance between modded and clean installations. Only the name, type, repository identifier (modID), active state and whether the mod is unpacked are sent, never file paths (event \"modSurvey\" with the mod manager's counts).",
   "notes": [
-    "La liste n'est renvoyée que tous les surveyIntervalHours (7 jours par défaut) si elle est inchangée ; une liste modifiée est rapportée au démarrage suivant. La comparaison utilise un SHA-256 des couples (nom, actif).",
-    "La base de données des mods n'est remplie qu'une fois le gestionnaire de mods prêt, bien après le démarrage de la télémétrie : l'enquête se fait donc dans onModManagerReady et non dans onExtensionLoaded.",
-    "La dernière enquête envoyée est conservée dans surveys/modSurvey.json ; sa date de modification est la date d'envoi.",
-    "modID est absent quand le mod ne vient pas du dépôt officiel."
+    "The list is only resent every surveyIntervalHours (7 days by default) if unchanged; a changed list is reported at the next startup. The comparison uses a SHA-256 of the (name, active) pairs.",
+    "The mods database is only filled once the mod manager is ready, well after telemetry starts: the survey is therefore done in onModManagerReady and not in onExtensionLoaded.",
+    "The last survey sent is kept in surveys/modSurvey.json; its modification date is the send date.",
+    "modID is absent when the mod does not come from the official repository."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "telemetry_core."
+    }
   },
   "functions": {
-    "onModManagerReady": {"desc": "Hook appelé quand le gestionnaire de mods est prêt : collecte la liste triée des mods et envoie l'enquête si nécessaire (une fois par session).", "params": {}, "returns": [], "internal": true},
-    "onExtensionLoaded": {"desc": "Hook appelé au chargement : déchargement manuel.", "params": {}, "returns": [], "internal": true}
+    "onModManagerReady": {
+      "desc": "Hook called when the mod manager is ready: collects the sorted list of mods and sends the survey if needed (once per session).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook called on load: manual unload.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
   }
 }

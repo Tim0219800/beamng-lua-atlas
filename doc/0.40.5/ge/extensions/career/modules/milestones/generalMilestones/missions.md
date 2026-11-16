@@ -1,80 +1,80 @@
 # `career_modules_milestones_generalMilestones_missions`
 
-*Fichier : `lua/ge/extensions/career/modules/milestones/generalMilestones/missions.lua` · VM : Game Engine (GE) · 347 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/milestones/generalMilestones/missions.lua` · VM: Game Engine (GE) · 347 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_milestones_generalMilestones_missions` : `extensions.load("career_modules_milestones_generalMilestones_missions")`, puis la globale `career_modules_milestones_generalMilestones_missions`
+**Access:** extension `career_modules_milestones_generalMilestones_missions`: `extensions.load("career_modules_milestones_generalMilestones_missions")`, then the global `career_modules_milestones_generalMilestones_missions`
 
-Jalons liés aux missions de la carrière. Pour l'ensemble des missions showInCareer puis pour chaque branche (déduite de gameplay_missions_unlocks.getForwardMissionInfo(...).branchTags), crée trois jalons : étoiles collectées (mission_totalStarCount / mission_totalStar_branch_<b>), missions réussies avec au moins une étoile par défaut (mission_passMissions[_<b>]) et missions complétées à 100 % des étoiles (mission_completeMissions[_<b>]). Six paliers : 10, 18, 30, 54, 74 et 100 % du total (arrondi au supérieur). Notifie à la fin d'une mission (état stopped).
+Milestones related to career missions. For the set of showInCareer missions, then for each branch (inferred from gameplay_missions_unlocks.getForwardMissionInfo(...).branchTags), creates three milestones: stars collected (mission_totalStarCount / mission_totalStar_branch_<b>), missions passed with at least one default star (mission_passMissions[_<b>]) and missions completed at 100% of stars (mission_completeMissions[_<b>]). Six tiers: 10, 18, 30, 54, 74 and 100% of the total (rounded up). Notifies at the end of a mission (stopped state).
 
-## Remarques
+## Notes
 
-- Seul mission_totalStarCount (global) a le filtre general et la récompense majorLinear ; les autres utilisent minorLinear.
-- makeUnlockMissionsMilestones (jalon mission_unlockMissions) est défini mais son appel est commenté dans onGeneralMilestonesCollect ; de même onMissionUnlocked n'est pas exporté (inactif).
-- missionIdToMilestonesList et milestoneConfigs ne sont jamais vidés entre deux onGeneralMilestonesCollect : une réactivation de la carrière peut dupliquer les jalons dans ces tables.
-- Les étoiles utilisent mission.careerSetup._activeStarCache (defaultStarCount + bonusStarCount) pour le total et gameplay_missions_progress.getUnlockedStarCountsForMissionById pour la progression.
+- Only mission_totalStarCount (global) has the general filter and the majorLinear reward; the others use minorLinear.
+- makeUnlockMissionsMilestones (milestone mission_unlockMissions) is defined but its call is commented out in onGeneralMilestonesCollect; likewise onMissionUnlocked is not exported (inactive).
+- missionIdToMilestonesList and milestoneConfigs are never cleared between two onGeneralMilestonesCollect calls: reactivating the career may duplicate milestones in these tables.
+- Stars use mission.careerSetup._activeStarCache (defaultStarCount + bonusStarCount) for the total and gameplay_missions_progress.getUnlockedStarCountsForMissionById for progress.
 
-**Dépendances (chargées avant) :** `gameplay_missions_missions`, `gameplay_missions_progress`
+**Dependencies (loaded first):** `gameplay_missions_missions`, `gameplay_missions_progress`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_milestones_generalMilestones_missions.makeAllMissionStarMilestones(missions, milestonesList)` | Crée les trois jalons globaux (étoiles, missions réussies, missions complétées), les enregistre pour chaque mission concernée et les ajoute à milestonesList. | 48 |
-| `career_modules_milestones_generalMilestones_missions.makeBranchMissionStarMilestones(missions, branchKey, milestonesList)` | Crée les trois mêmes jalons pour une branche (ou compétence) donnée, avec le nom de la branche dans les libellés. | 157 |
-| `career_modules_milestones_generalMilestones_missions.makeUnlockMissionsMilestones(missions, milestonesList)` | Crée un jalon de déblocage de missions (mission_unlockMissions, cible (step+1)). Non utilisé : son appel est commenté. | 267 |
-| `career_modules_milestones_generalMilestones_missions.onAnyMissionChanged(state, mission)` | Hook appelé quand l'état d'une mission change ; à l'état "stopped", vérifie les jalons liés à cette mission, notifie les paliers atteints et avance notificationStep. *(interne)* *(hook)* | 311 |
-| `career_modules_milestones_generalMilestones_missions.onGeneralMilestonesCollect(milestonesList)` | Hook : rassemble les missions de carrière, les groupe par branche et crée les jalons globaux puis par branche. *(interne)* *(hook)* | 20 |
-| `career_modules_milestones_generalMilestones_missions.onGeneralMilestonesSetupCallbacks()` | Hook : fixe la cible de notification de chaque jalon de mission. *(interne)* *(hook)* | 293 |
-| `career_modules_milestones_generalMilestones_missions.setNotificationTarget(milestone)` | Stocke dans milestone._target la cible du prochain palier à notifier (rien si tous notifiés). | 301 |
+| `career_modules_milestones_generalMilestones_missions.makeAllMissionStarMilestones(missions, milestonesList)` | Creates the three global milestones (stars, missions passed, missions completed), registers them for each relevant mission and adds them to milestonesList. | 48 |
+| `career_modules_milestones_generalMilestones_missions.makeBranchMissionStarMilestones(missions, branchKey, milestonesList)` | Creates the same three milestones for a given branch (or skill), with the branch name in the labels. | 157 |
+| `career_modules_milestones_generalMilestones_missions.makeUnlockMissionsMilestones(missions, milestonesList)` | Creates a mission unlock milestone (mission_unlockMissions, target (step+1)). Unused: its call is commented out. | 267 |
+| `career_modules_milestones_generalMilestones_missions.onAnyMissionChanged(state, mission)` | Hook called when a mission's state changes; in the "stopped" state, checks the milestones related to that mission, notifies the reached tiers and advances notificationStep. *(internal)* *(hook)* | 311 |
+| `career_modules_milestones_generalMilestones_missions.onGeneralMilestonesCollect(milestonesList)` | Hook: gathers career missions, groups them by branch and creates the global then per-branch milestones. *(internal)* *(hook)* | 20 |
+| `career_modules_milestones_generalMilestones_missions.onGeneralMilestonesSetupCallbacks()` | Hook: sets the notification target of each mission milestone. *(internal)* *(hook)* | 293 |
+| `career_modules_milestones_generalMilestones_missions.setNotificationTarget(milestone)` | Stores in milestone._target the target of the next tier to notify (nothing if all are notified). | 301 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_milestones_generalMilestones_missions.makeAllMissionStarMilestones(missions, milestonesList)`
 
-Crée les trois jalons globaux (étoiles, missions réussies, missions complétées), les enregistre pour chaque mission concernée et les ajoute à milestonesList.
+Creates the three global milestones (stars, missions passed, missions completed), registers them for each relevant mission and adds them to milestonesList.
 
-- `missions` (*table[]*) : Missions de carrière.
-- `milestonesList` (*table[]*) : Liste à compléter.
+- `missions` (*table[]*) : Career missions.
+- `milestonesList` (*table[]*) : List to fill.
 
 #### `career_modules_milestones_generalMilestones_missions.makeBranchMissionStarMilestones(missions, branchKey, milestonesList)`
 
-Crée les trois mêmes jalons pour une branche (ou compétence) donnée, avec le nom de la branche dans les libellés.
+Creates the same three milestones for a given branch (or skill), with the branch name in the labels.
 
-- `missions` (*table[]*) : Missions de la branche.
-- `branchKey` (*string*) : Identifiant de branche (career_branches.getBranchById).
-- `milestonesList` (*table[]*) : Liste à compléter.
+- `missions` (*table[]*) : Branch missions.
+- `branchKey` (*string*) : Branch identifier (career_branches.getBranchById).
+- `milestonesList` (*table[]*) : List to fill.
 
 #### `career_modules_milestones_generalMilestones_missions.makeUnlockMissionsMilestones(missions, milestonesList)`
 
-Crée un jalon de déblocage de missions (mission_unlockMissions, cible (step+1)). Non utilisé : son appel est commenté.
+Creates a mission unlock milestone (mission_unlockMissions, target (step+1)). Unused: its call is commented out.
 
-- `missions` (*table[]*) : Missions de carrière.
-- `milestonesList` (*table[]*) : Liste à compléter.
+- `missions` (*table[]*) : Career missions.
+- `milestonesList` (*table[]*) : List to fill.
 
 #### `career_modules_milestones_generalMilestones_missions.onAnyMissionChanged(state, mission)`
 
-Hook appelé quand l'état d'une mission change ; à l'état "stopped", vérifie les jalons liés à cette mission, notifie les paliers atteints et avance notificationStep.
+Hook called when a mission's state changes; in the "stopped" state, checks the milestones related to that mission, notifies the reached tiers and advances notificationStep.
 
-- `state` (*string*) : État de la mission (stopped...).
-- `mission` (*table*) : Mission concernée (id).
+- `state` (*string*) : Mission state (stopped...).
+- `mission` (*table*) : Mission concerned (id).
 
 #### `career_modules_milestones_generalMilestones_missions.onGeneralMilestonesCollect(milestonesList)`
 
-Hook : rassemble les missions de carrière, les groupe par branche et crée les jalons globaux puis par branche.
+Hook: gathers career missions, groups them by branch and creates the global then per-branch milestones.
 
-- `milestonesList` (*table[]*) : Liste à compléter.
+- `milestonesList` (*table[]*) : List to fill.
 
 #### `career_modules_milestones_generalMilestones_missions.setNotificationTarget(milestone)`
 
-Stocke dans milestone._target la cible du prochain palier à notifier (rien si tous notifiés).
+Stores in milestone._target the target of the next tier to notify (nothing if all are notified).
 
-- `milestone` (*table*) : Configuration du jalon.
+- `milestone` (*table*) : Milestone configuration.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : gameplay_missions_missions, gameplay_missions_progress. |
+| `dependencies` | table<integer, string> | Extensions loaded before: gameplay_missions_missions, gameplay_missions_progress. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/milestones/generalMilestones/missions.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/milestones/generalMilestones/missions.lua`.*

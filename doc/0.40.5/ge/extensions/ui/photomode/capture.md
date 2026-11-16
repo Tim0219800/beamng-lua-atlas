@@ -1,12 +1,12 @@
 # `ui_photomode_capture`
 
-*Fichier : `lua/ge/extensions/ui/photomode/capture.lua` · VM : Game Engine (GE) · 1686 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/photomode/capture.lua` · VM: Game Engine (GE) · 1686 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_photomode_capture` : `extensions.load("ui_photomode_capture")`, puis la globale `ui_photomode_capture`
+**Access:** extension `ui_photomode_capture`: `extensions.load("ui_photomode_capture")`, then the global `ui_photomode_capture`
 
-Capture d'images du mode photo : réglages (supersampling, niveau de réduction, HDR, capture avec flou de mouvement, passes supplémentaires scène/véhicule et normales/profondeur), présets de résolution de fenêtre, échelle de rendu des upscalers temporels, et les demandes de capture elles-mêmes (basique, publication/upload, Steam, flou de mouvement). Le module s'appuie sur le module « screenshot » (takeScreenShot, takeCustomScreenShot, takeMotionBlurScreenShot, publish, doSteamScreenshot) et sur ui_photomode_flash pour le flash. Il est piloté par l'UI du mode photo et par ui_photomode_shared.
+Photo mode image capture: settings (supersampling, downscale level, HDR, capture with motion blur, extra scene/vehicle passes and normals/depth), window resolution presets, render scale of temporal upscalers, and the capture requests themselves (basic, publish/upload, Steam, motion blur). The module relies on the "screenshot" module (takeScreenShot, takeCustomScreenShot, takeMotionBlurScreenShot, publish, doSteamScreenshot) and on ui_photomode_flash for the flash. It is driven by the photo mode UI and by ui_photomode_shared.
 
-## Exemple
+## Example
 
 ```lua
 local r = ui_photomode_capture.setCaptureState({superSampling = 4, downscaleLevel = 4})
@@ -14,215 +14,215 @@ local res = ui_photomode_capture.requestScreenshot({motion = false})
 if not res.ok then log('W', 'x', res.reason) end
 ```
 
-## Remarques
+## Notes
 
-- Les fonctions de capture renvoient {ok, reason?, mode, captureUiHoldFrames?}. Raisons possibles : session_inactive, capture_busy, screenshot_unavailable, screenshot_method_missing, hdr_unavailable, screenshot_request_failed, upload_unavailable, steam_unavailable, motion_blur_disabled, shipping_build_required, resolution_preset_invalid, resolution_apply_failed, capture_state_invalid.
-- Limites : supersampling 1 à 8 (plafonné par getMaxSafeScreenshotSuperSampling selon la VRAM), niveau de réduction 1 à 8, valeurs par défaut 2 et 2. Avec un upscaler temporel (DLSS, FSR3, FSR4, XeSS, fsrCustom, PSSR) actif, les deux sont forcés à 1.
-- rescaleFactor = 1 / sqrt(downscaleLevel) ; la résolution de rendu est fenêtre x sqrt(superSampling) (ou x resolutionScale avec un upscaler temporel), la sortie est ensuite multipliée par rescaleFactor.
-- Les présets de résolution (current, 1280x720, 1600x900, 1920x1080, 2560x1440, 3840x2160) ne sont disponibles que hors build shipping (isResolutionPresetFeatureEnabled = shipping_build ~= true). Incohérence : en build shipping, setResolutionPreset renvoie la raison « shipping_build_required », alors que c'est l'inverse qui est exigé (un build non shipping).
-- Comportement de mouvement : motionBehavior vaut static, followVehicle (défaut) ou followVehicleWithRotation ; hors static, util/photomodeAttach attache la caméra au véhicule pendant la capture. La simulation est temporairement dépausée pendant une capture avec flou de mouvement, puis remise en pause. Il faut que PostFxMotionBlur soit activé.
-- requestBasicScreenshot contient un TODO du jeu : takeScreenShot() ne gère pas bien la capture des normales ; lorsque des passes supplémentaires sont demandées avec les valeurs par défaut (2, 2), la capture passe par takeCustomScreenShot avec 2 et 2.
-- Le basculement HDR attend jusqu'à 10 images pour se stabiliser (timeout avec warning dans les logs) ; l'état HDR d'origine est restauré par finishPendingBasicCapture.
-- Le module utilise ui_photomode_shared, gameplay_achievement (succès SCREENSHOT_TAKEN) et core_locales sans les déclarer tous dans M.dependencies (seul ui_photomode_flash l'est).
-- handlePreRender fait avancer les captures en attente (HDR, flou de mouvement) et doit être appelé à chaque image par le module principal du mode photo ; onScreenshotAllDone est le hook de fin de capture émis par le module screenshot.
+- The capture functions return {ok, reason?, mode, captureUiHoldFrames?}. Possible reasons: session_inactive, capture_busy, screenshot_unavailable, screenshot_method_missing, hdr_unavailable, screenshot_request_failed, upload_unavailable, steam_unavailable, motion_blur_disabled, shipping_build_required, resolution_preset_invalid, resolution_apply_failed, capture_state_invalid.
+- Limits: supersampling 1 to 8 (capped by getMaxSafeScreenshotSuperSampling depending on VRAM), downscale level 1 to 8, default values 2 and 2. With an active temporal upscaler (DLSS, FSR3, FSR4, XeSS, fsrCustom, PSSR), both are forced to 1.
+- rescaleFactor = 1 / sqrt(downscaleLevel); the render resolution is window x sqrt(superSampling) (or x resolutionScale with a temporal upscaler), the output is then multiplied by rescaleFactor.
+- Resolution presets (current, 1280x720, 1600x900, 1920x1080, 2560x1440, 3840x2160) are available only outside shipping builds (isResolutionPresetFeatureEnabled = shipping_build ~= true). Inconsistency: in a shipping build, setResolutionPreset returns the reason "shipping_build_required", whereas the opposite is required (a non-shipping build).
+- Motion behavior: motionBehavior is static, followVehicle (default) or followVehicleWithRotation; outside static, util/photomodeAttach attaches the camera to the vehicle during the capture. The simulation is temporarily unpaused during a motion blur capture, then paused again. PostFxMotionBlur must be enabled.
+- requestBasicScreenshot contains a game TODO: takeScreenShot() does not handle normals capture well; when extra passes are requested with the default values (2, 2), the capture goes through takeCustomScreenShot with 2 and 2.
+- The HDR switch waits up to 10 frames to stabilize (timeout with a warning in the logs); the original HDR state is restored by finishPendingBasicCapture.
+- The module uses ui_photomode_shared, gameplay_achievement (achievement SCREENSHOT_TAKEN) and core_locales without declaring them all in M.dependencies (only ui_photomode_flash is).
+- handlePreRender advances pending captures (HDR, motion blur) and must be called every frame by the main photo mode module; onScreenshotAllDone is the end-of-capture hook emitted by the screenshot module.
 
-**Dépendances (chargées avant) :** `ui_photomode_flash`
+**Dependencies (loaded first):** `ui_photomode_flash`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_photomode_capture.applyCaptureStatePatch(currentCaptureSettings, partialState)` | Applique un patch partiel sur des réglages donnés sans toucher à l'état du module : superSampling, downscaleLevel, motion {enabled, behavior}, artifacts {splitSceneVehicle, saveNormalDepth}, hdr {enabled}, flash (transmis à ui_photomode_flash.applyStatePatch) et resolutionScale (appliqué tout de suite aux réglages graphiques GraphicUpscalingQuality, entre 0.33 et 1). | 816 |
-| `ui_photomode_capture.applyResolutionPreset(preset)` | Applique un préset de résolution en fenêtré via util_resolution.setWindowedResolution (charge l'extension util/resolution). Le préset « current » ne fait rien. | 393 |
-| `ui_photomode_capture.applySelectedResolutionPresetBeforeCapture(selectedResolutionPresetId)` | Cherche puis applique le préset dont l'identifiant est donné (applyResolutionPreset(findResolutionPreset(id))). Si l'identifiant est inconnu, findResolutionPreset renvoie nil et applyResolutionPreset renvoie true sans rien faire. | 412 |
-| `ui_photomode_capture.buildCaptureRescaleFactor(downscaleLevel)` | Calcule le facteur de réduction final de l'image : 1 / racine carrée du niveau de réduction normalisé. | 524 |
-| `ui_photomode_capture.buildCaptureState(captureSettings)` | Construit l'état complet d'affichage de la capture pour l'UI : réglages, facteur de réduction, limites, libellés de résolutions (fenêtre, cible de rendu, sortie), format, rapport d'aspect, taille de fichier estimée, avertissement VRAM / supersampling élevé (seuil 6), mouvement, artefacts, HDR et état du flash. | 716 |
-| `ui_photomode_capture.buildDefaultSettings()` | Renvoie les réglages de capture par défaut en tenant compte du contexte : supersampling et réduction à 1 si un upscaler temporel est actif (sinon 2), HDR activé par défaut seulement si le HDR est pris en charge et actif. | 254 |
-| `ui_photomode_capture.buildMetadataState()` | Sous-ensemble des réglages à écrire dans les métadonnées d'une photo : superSampling, downscaleLevel, rescaleFactor, motion, artifacts, hdr, flash, resolutionScale. | 1043 |
-| `ui_photomode_capture.buildNormalizedCaptureSettings(captureSettings)` | Normalise un jeu de réglages de capture : bornes de supersampling et de réduction (selon la VRAM), booléens, mode de mouvement, HDR désactivé si non pris en charge, supersampling et réduction forcés à 1 avec un upscaler temporel. Ajoute safeSuperSamplingMax et temporalUpscalersEnabled. | 529 |
-| `ui_photomode_capture.buildResolutionPresetState()` | Construit l'état de l'interface des présets de résolution : visible, enabled, selectedId, libellés, applyOnCapture (toujours false) et la liste items {value, label}. | 1039 |
-| `ui_photomode_capture.buildState()` | État d'affichage de la capture avec les réglages courants du module. | 1035 |
-| `ui_photomode_capture.findResolutionPreset(presetId)` | Cherche un préset de résolution par identifiant ; un identifiant vide vaut « current ». | 278 |
-| `ui_photomode_capture.finishPendingMotionCapture(immediateAttachRelease)` | Termine une capture avec flou de mouvement : restaure la demande de pause du mode photo ou remet la simulation en pause, puis détache la caméra du véhicule (immédiatement ou après quelques images). | 959 |
-| `ui_photomode_capture.getCaptureState()` | Renvoie buildState() avec ok = session de mode photo active, et reason = session_inactive sinon. | 1065 |
-| `ui_photomode_capture.getResolutionPresetState()` | Renvoie {ok = fonction active, state = buildResolutionPresetState()}. | 1074 |
-| `ui_photomode_capture.handlePreRender(dtReal, dtSim, dtRaw)` | À appeler à chaque image avant le rendu : décrémente le compteur de capture en cours, fait avancer la capture basique en attente (attente du HDR, envoi de la capture) et la capture avec flou de mouvement (images de préchauffage, envoi, nettoyage). *(interne)* | 1596 |
-| `ui_photomode_capture.isCaptureInProgress()` | Indique si une capture est en cours (basique en attente, mouvement en attente, ou compteur d'images de capture non nul), pour que l'UI reste masquée. | 1029 |
-| `ui_photomode_capture.isResolutionPresetFeatureEnabled()` | Indique si les présets de résolution sont disponibles : true quand le jeu n'est pas un build shipping. | 266 |
-| `ui_photomode_capture.markCaptureInProgress(frames)` | Prolonge le compteur d'images pendant lesquelles la capture est considérée en cours (prend le maximum de la valeur actuelle et de frames). | 1018 |
-| `ui_photomode_capture.normalizeCaptureSuperSampling(value, safeMax)` | Arrondit la valeur de supersampling à l'entier le plus proche puis la borne entre 1 et safeMax (maximum 8). | 451 |
-| `ui_photomode_capture.onScreenshotAllDone()` | Hook appelé quand le module screenshot a fini toutes les captures : termine la capture basique en attente et restaure le HDR. *(interne)* *(hook)* | 1680 |
-| `ui_photomode_capture.refreshSessionDefaults()` | Mémorise l'échelle de résolution de départ, remet supersampling, réduction et HDR à leurs valeurs par défaut du moment, puis réapplique le flash. Appelée au début d'une session du mode photo. *(interne)* | 1007 |
-| `ui_photomode_capture.requestScreenshot(options)` | Demande une capture. options.motion = capture avec flou de mouvement ; options.upload = publication en ligne ; options.steam = capture Steam ; ils se combinent (upload + steam). Sans option : capture basique (chemin par défaut si supersampling et réduction valent 1 sans passe supplémentaire, sinon capture personnalisée). Gère le flash, le changement HDR (différé de quelques images) et déclenche le succès SCREENSHOT_TAKEN. | 1532 |
-| `ui_photomode_capture.resetSettings()` | Annule toute capture basique en attente, remet les réglages de capture par défaut et réinitialise le flash. | 995 |
-| `ui_photomode_capture.restoreCaptureRuntimeState()` | Termine la capture basique en attente (restaure le HDR), coupe le flash et restaure l'échelle de résolution d'avant la session. *(interne)* | 1001 |
-| `ui_photomode_capture.setCaptureState(partialState)` | Applique un patch partiel aux réglages de capture du module (voir applyCaptureStatePatch), puis réapplique les réglages du flash. Exige une session active. | 1081 |
-| `ui_photomode_capture.setResolutionPreset(presetId)` | Sélectionne et applique immédiatement un préset de résolution, et le mémorise comme sélection courante. | 1560 |
+| `ui_photomode_capture.applyCaptureStatePatch(currentCaptureSettings, partialState)` | Applies a partial patch to given settings without touching the module state: superSampling, downscaleLevel, motion {enabled, behavior}, artifacts {splitSceneVehicle, saveNormalDepth}, hdr {enabled}, flash (passed to ui_photomode_flash.applyStatePatch) and resolutionScale (applied immediately to the GraphicUpscalingQuality graphics settings, between 0.33 and 1). | 816 |
+| `ui_photomode_capture.applyResolutionPreset(preset)` | Applies a resolution preset in windowed mode via util_resolution.setWindowedResolution (loads the util/resolution extension). The "current" preset does nothing. | 393 |
+| `ui_photomode_capture.applySelectedResolutionPresetBeforeCapture(selectedResolutionPresetId)` | Looks up then applies the preset whose identifier is given (applyResolutionPreset(findResolutionPreset(id))). If the identifier is unknown, findResolutionPreset returns nil and applyResolutionPreset returns true without doing anything. | 412 |
+| `ui_photomode_capture.buildCaptureRescaleFactor(downscaleLevel)` | Computes the final image reduction factor: 1 / square root of the normalized downscale level. | 524 |
+| `ui_photomode_capture.buildCaptureState(captureSettings)` | Builds the full capture display state for the UI: settings, downscale factor, limits, resolution labels (window, render target, output), format, aspect ratio, estimated file size, VRAM / high supersampling warning (threshold 6), motion, artifacts, HDR and flash state. | 716 |
+| `ui_photomode_capture.buildDefaultSettings()` | Returns the default capture settings taking the context into account: supersampling and downscale at 1 if a temporal upscaler is active (otherwise 2), HDR enabled by default only if HDR is supported and active. | 254 |
+| `ui_photomode_capture.buildMetadataState()` | Subset of the settings to write into a photo's metadata: superSampling, downscaleLevel, rescaleFactor, motion, artifacts, hdr, flash, resolutionScale. | 1043 |
+| `ui_photomode_capture.buildNormalizedCaptureSettings(captureSettings)` | Normalizes a set of capture settings: supersampling and downscale bounds (depending on VRAM), booleans, motion mode, HDR disabled if unsupported, supersampling and downscale forced to 1 with a temporal upscaler. Adds safeSuperSamplingMax and temporalUpscalersEnabled. | 529 |
+| `ui_photomode_capture.buildResolutionPresetState()` | Builds the resolution presets UI state: visible, enabled, selectedId, labels, applyOnCapture (always false) and the items list {value, label}. | 1039 |
+| `ui_photomode_capture.buildState()` | Capture display state with the module's current settings. | 1035 |
+| `ui_photomode_capture.findResolutionPreset(presetId)` | Looks up a resolution preset by identifier; an empty identifier means "current". | 278 |
+| `ui_photomode_capture.finishPendingMotionCapture(immediateAttachRelease)` | Ends a motion blur capture: restores the photo mode pause request or puts the simulation back in pause, then detaches the camera from the vehicle (immediately or after a few frames). | 959 |
+| `ui_photomode_capture.getCaptureState()` | Returns buildState() with ok = photo mode session active, and reason = session_inactive otherwise. | 1065 |
+| `ui_photomode_capture.getResolutionPresetState()` | Returns {ok = feature active, state = buildResolutionPresetState()}. | 1074 |
+| `ui_photomode_capture.handlePreRender(dtReal, dtSim, dtRaw)` | To be called every frame before rendering: decrements the capture-in-progress counter, advances the pending basic capture (waiting for HDR, sending the capture) and the motion blur capture (warm-up frames, sending, cleanup). *(internal)* | 1596 |
+| `ui_photomode_capture.isCaptureInProgress()` | Indicates whether a capture is in progress (basic pending, motion pending, or non-zero capture frame counter), so that the UI stays hidden. | 1029 |
+| `ui_photomode_capture.isResolutionPresetFeatureEnabled()` | Indicates whether resolution presets are available: true when the game is not a shipping build. | 266 |
+| `ui_photomode_capture.markCaptureInProgress(frames)` | Extends the frame counter during which the capture is considered in progress (takes the maximum of the current value and frames). | 1018 |
+| `ui_photomode_capture.normalizeCaptureSuperSampling(value, safeMax)` | Rounds the supersampling value to the nearest integer then clamps it between 1 and safeMax (maximum 8). | 451 |
+| `ui_photomode_capture.onScreenshotAllDone()` | Hook called when the screenshot module has finished all captures: ends the pending basic capture and restores HDR. *(internal)* *(hook)* | 1680 |
+| `ui_photomode_capture.refreshSessionDefaults()` | Stores the starting resolution scale, resets supersampling, downscale and HDR to their current default values, then reapplies the flash. Called at the start of a photo mode session. *(internal)* | 1007 |
+| `ui_photomode_capture.requestScreenshot(options)` | Requests a capture. options.motion = capture with motion blur; options.upload = online publishing; options.steam = Steam capture; they combine (upload + steam). With no option: basic capture (default path if supersampling and downscale are 1 with no extra pass, otherwise custom capture). Handles the flash, the HDR switch (deferred by a few frames) and triggers the SCREENSHOT_TAKEN achievement. | 1532 |
+| `ui_photomode_capture.resetSettings()` | Cancels any pending basic capture, resets the capture settings to default and resets the flash. | 995 |
+| `ui_photomode_capture.restoreCaptureRuntimeState()` | Ends the pending basic capture (restores HDR), turns off the flash and restores the pre-session resolution scale. *(internal)* | 1001 |
+| `ui_photomode_capture.setCaptureState(partialState)` | Applies a partial patch to the module's capture settings (see applyCaptureStatePatch), then reapplies the flash settings. Requires an active session. | 1081 |
+| `ui_photomode_capture.setResolutionPreset(presetId)` | Selects and immediately applies a resolution preset, and stores it as the current selection. | 1560 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_photomode_capture.applyCaptureStatePatch(currentCaptureSettings, partialState)`
 
-Applique un patch partiel sur des réglages donnés sans toucher à l'état du module : superSampling, downscaleLevel, motion {enabled, behavior}, artifacts {splitSceneVehicle, saveNormalDepth}, hdr {enabled}, flash (transmis à ui_photomode_flash.applyStatePatch) et resolutionScale (appliqué tout de suite aux réglages graphiques GraphicUpscalingQuality, entre 0.33 et 1).
+Applies a partial patch to given settings without touching the module state: superSampling, downscaleLevel, motion {enabled, behavior}, artifacts {splitSceneVehicle, saveNormalDepth}, hdr {enabled}, flash (passed to ui_photomode_flash.applyStatePatch) and resolutionScale (applied immediately to the GraphicUpscalingQuality graphics settings, between 0.33 and 1).
 
-- `currentCaptureSettings` (*table*) : Réglages de départ
-- `partialState` (*table*) : Patch partiel
-- **renvoie** : table|nil Nouveaux réglages normalisés, ou nil
-- **renvoie** : string|nil capture_state_invalid ou capture_resolution_scale_set_failed
+- `currentCaptureSettings` (*table*) : Starting settings
+- `partialState` (*table*) : Partial patch
+- **returns**: table|nil New normalized settings, or nil
+- **returns**: string|nil capture_state_invalid or capture_resolution_scale_set_failed
 
 #### `ui_photomode_capture.applyResolutionPreset(preset)`
 
-Applique un préset de résolution en fenêtré via util_resolution.setWindowedResolution (charge l'extension util/resolution). Le préset « current » ne fait rien.
+Applies a resolution preset in windowed mode via util_resolution.setWindowedResolution (loads the util/resolution extension). The "current" preset does nothing.
 
-- `preset` (*table*) : Préset renvoyé par findResolutionPreset
-- **renvoie** : boolean succès
-- **renvoie** : string|nil resolution_api_unavailable ou resolution_apply_failed
+- `preset` (*table*) : Preset returned by findResolutionPreset
+- **returns**: boolean success
+- **returns**: string|nil resolution_api_unavailable or resolution_apply_failed
 
 #### `ui_photomode_capture.applySelectedResolutionPresetBeforeCapture(selectedResolutionPresetId)`
 
-Cherche puis applique le préset dont l'identifiant est donné (applyResolutionPreset(findResolutionPreset(id))). Si l'identifiant est inconnu, findResolutionPreset renvoie nil et applyResolutionPreset renvoie true sans rien faire.
+Looks up then applies the preset whose identifier is given (applyResolutionPreset(findResolutionPreset(id))). If the identifier is unknown, findResolutionPreset returns nil and applyResolutionPreset returns true without doing anything.
 
-- `selectedResolutionPresetId` (*string|nil*) : Identifiant du préset choisi
-- **renvoie** : boolean succès
-- **renvoie** : string|nil raison de l'échec
+- `selectedResolutionPresetId` (*string|nil*) : Identifier of the chosen preset
+- **returns**: boolean success
+- **returns**: string|nil failure reason
 
 #### `ui_photomode_capture.buildCaptureRescaleFactor(downscaleLevel)`
 
-Calcule le facteur de réduction final de l'image : 1 / racine carrée du niveau de réduction normalisé.
+Computes the final image reduction factor: 1 / square root of the normalized downscale level.
 
-- `downscaleLevel` (*number*) : Niveau de réduction (1 à 8)
-- **renvoie** : number Facteur d'échelle entre 0.35 et 1
+- `downscaleLevel` (*number*) : Downscale level (1 to 8)
+- **returns**: number Scale factor between 0.35 and 1
 
 #### `ui_photomode_capture.buildCaptureState(captureSettings)`
 
-Construit l'état complet d'affichage de la capture pour l'UI : réglages, facteur de réduction, limites, libellés de résolutions (fenêtre, cible de rendu, sortie), format, rapport d'aspect, taille de fichier estimée, avertissement VRAM / supersampling élevé (seuil 6), mouvement, artefacts, HDR et état du flash.
+Builds the full capture display state for the UI: settings, downscale factor, limits, resolution labels (window, render target, output), format, aspect ratio, estimated file size, VRAM / high supersampling warning (threshold 6), motion, artifacts, HDR and flash state.
 
-- `captureSettings` (*table|nil*) : Réglages à décrire
-- **renvoie** : table État d'affichage
+- `captureSettings` (*table|nil*) : Settings to describe
+- **returns**: table Display state
 
 #### `ui_photomode_capture.buildDefaultSettings()`
 
-Renvoie les réglages de capture par défaut en tenant compte du contexte : supersampling et réduction à 1 si un upscaler temporel est actif (sinon 2), HDR activé par défaut seulement si le HDR est pris en charge et actif.
+Returns the default capture settings taking the context into account: supersampling and downscale at 1 if a temporal upscaler is active (otherwise 2), HDR enabled by default only if HDR is supported and active.
 
-- **renvoie** : table {superSampling, downscaleLevel, motionEnabled, motionBehavior, splitSceneVehicle, saveNormalDepth, hdrScreenshot}
+- **returns**: table {superSampling, downscaleLevel, motionEnabled, motionBehavior, splitSceneVehicle, saveNormalDepth, hdrScreenshot}
 
 #### `ui_photomode_capture.buildMetadataState()`
 
-Sous-ensemble des réglages à écrire dans les métadonnées d'une photo : superSampling, downscaleLevel, rescaleFactor, motion, artifacts, hdr, flash, resolutionScale.
+Subset of the settings to write into a photo's metadata: superSampling, downscaleLevel, rescaleFactor, motion, artifacts, hdr, flash, resolutionScale.
 
-- **renvoie** : table Réglages de capture
+- **returns**: table Capture settings
 
 #### `ui_photomode_capture.buildNormalizedCaptureSettings(captureSettings)`
 
-Normalise un jeu de réglages de capture : bornes de supersampling et de réduction (selon la VRAM), booléens, mode de mouvement, HDR désactivé si non pris en charge, supersampling et réduction forcés à 1 avec un upscaler temporel. Ajoute safeSuperSamplingMax et temporalUpscalersEnabled.
+Normalizes a set of capture settings: supersampling and downscale bounds (depending on VRAM), booleans, motion mode, HDR disabled if unsupported, supersampling and downscale forced to 1 with a temporal upscaler. Adds safeSuperSamplingMax and temporalUpscalersEnabled.
 
-- `captureSettings` (*table|nil*) : Réglages bruts
-- **renvoie** : table Réglages normalisés
+- `captureSettings` (*table|nil*) : Raw settings
+- **returns**: table Normalized settings
 
 #### `ui_photomode_capture.buildResolutionPresetState()`
 
-Construit l'état de l'interface des présets de résolution : visible, enabled, selectedId, libellés, applyOnCapture (toujours false) et la liste items {value, label}.
+Builds the resolution presets UI state: visible, enabled, selectedId, labels, applyOnCapture (always false) and the items list {value, label}.
 
-- **renvoie** : table État des présets
+- **returns**: table Presets state
 
 #### `ui_photomode_capture.buildState()`
 
-État d'affichage de la capture avec les réglages courants du module.
+Capture display state with the module's current settings.
 
-- **renvoie** : table Voir buildCaptureState
+- **returns**: table See buildCaptureState
 
 #### `ui_photomode_capture.findResolutionPreset(presetId)`
 
-Cherche un préset de résolution par identifiant ; un identifiant vide vaut « current ».
+Looks up a resolution preset by identifier; an empty identifier means "current".
 
-- `presetId` (*string|nil*) : Identifiant du préset
-- **renvoie** : table|nil Préset {id, labelKey, width?, height?} ou nil
+- `presetId` (*string|nil*) : Preset identifier
+- **returns**: table|nil Preset {id, labelKey, width?, height?} or nil
 
 #### `ui_photomode_capture.finishPendingMotionCapture(immediateAttachRelease)`
 
-Termine une capture avec flou de mouvement : restaure la demande de pause du mode photo ou remet la simulation en pause, puis détache la caméra du véhicule (immédiatement ou après quelques images).
+Ends a motion blur capture: restores the photo mode pause request or puts the simulation back in pause, then detaches the camera from the vehicle (immediately or after a few frames).
 
-- `immediateAttachRelease` (*boolean|nil*) : true pour détacher sans délai
+- `immediateAttachRelease` (*boolean|nil*) : true to detach without delay
 
 #### `ui_photomode_capture.getCaptureState()`
 
-Renvoie buildState() avec ok = session de mode photo active, et reason = session_inactive sinon.
+Returns buildState() with ok = photo mode session active, and reason = session_inactive otherwise.
 
-- **renvoie** : table État de capture
+- **returns**: table Capture state
 
 #### `ui_photomode_capture.getResolutionPresetState()`
 
-Renvoie {ok = fonction active, state = buildResolutionPresetState()}.
+Returns {ok = feature active, state = buildResolutionPresetState()}.
 
-- **renvoie** : table {ok, state}
+- **returns**: table {ok, state}
 
 #### `ui_photomode_capture.handlePreRender(dtReal, dtSim, dtRaw)`
 
-À appeler à chaque image avant le rendu : décrémente le compteur de capture en cours, fait avancer la capture basique en attente (attente du HDR, envoi de la capture) et la capture avec flou de mouvement (images de préchauffage, envoi, nettoyage).
+To be called every frame before rendering: decrements the capture-in-progress counter, advances the pending basic capture (waiting for HDR, sending the capture) and the motion blur capture (warm-up frames, sending, cleanup).
 
-- `dtReal` (*number*) : Temps réel de l'image (s)
-- `dtSim` (*number*) : Temps de simulation (s)
-- `dtRaw` (*number*) : Temps brut (s)
+- `dtReal` (*number*) : Frame real time (s)
+- `dtSim` (*number*) : Simulation time (s)
+- `dtRaw` (*number*) : Raw time (s)
 
 #### `ui_photomode_capture.isCaptureInProgress()`
 
-Indique si une capture est en cours (basique en attente, mouvement en attente, ou compteur d'images de capture non nul), pour que l'UI reste masquée.
+Indicates whether a capture is in progress (basic pending, motion pending, or non-zero capture frame counter), so that the UI stays hidden.
 
-- **renvoie** : boolean capture en cours
+- **returns**: boolean capture in progress
 
 #### `ui_photomode_capture.isResolutionPresetFeatureEnabled()`
 
-Indique si les présets de résolution sont disponibles : true quand le jeu n'est pas un build shipping.
+Indicates whether resolution presets are available: true when the game is not a shipping build.
 
-- **renvoie** : boolean fonction active
+- **returns**: boolean feature active
 
 #### `ui_photomode_capture.markCaptureInProgress(frames)`
 
-Prolonge le compteur d'images pendant lesquelles la capture est considérée en cours (prend le maximum de la valeur actuelle et de frames).
+Extends the frame counter during which the capture is considered in progress (takes the maximum of the current value and frames).
 
-- `frames` (*integer*) : Nombre d'images ; ignoré si <= 0
+- `frames` (*integer*) : Number of frames; ignored if <= 0
 
 #### `ui_photomode_capture.normalizeCaptureSuperSampling(value, safeMax)`
 
-Arrondit la valeur de supersampling à l'entier le plus proche puis la borne entre 1 et safeMax (maximum 8).
+Rounds the supersampling value to the nearest integer then clamps it between 1 and safeMax (maximum 8).
 
-- `value` (*number*) : Valeur demandée (défaut 2 si non numérique)
-- `safeMax` (*number|nil*) : Maximum sûr (8 par défaut)
-- **renvoie** : integer Supersampling normalisé
+- `value` (*number*) : Requested value (default 2 if non-numeric)
+- `safeMax` (*number|nil*) : Safe maximum (8 by default)
+- **returns**: integer Normalized supersampling
 
 #### `ui_photomode_capture.requestScreenshot(options)`
 
-Demande une capture. options.motion = capture avec flou de mouvement ; options.upload = publication en ligne ; options.steam = capture Steam ; ils se combinent (upload + steam). Sans option : capture basique (chemin par défaut si supersampling et réduction valent 1 sans passe supplémentaire, sinon capture personnalisée). Gère le flash, le changement HDR (différé de quelques images) et déclenche le succès SCREENSHOT_TAKEN.
+Requests a capture. options.motion = capture with motion blur; options.upload = online publishing; options.steam = Steam capture; they combine (upload + steam). With no option: basic capture (default path if supersampling and downscale are 1 with no extra pass, otherwise custom capture). Handles the flash, the HDR switch (deferred by a few frames) and triggers the SCREENSHOT_TAKEN achievement.
 
 - `options` (*table|nil*) : {motion?, upload?, steam?}
-- **renvoie** : table {ok, reason?, mode, captureUiHoldFrames?}
+- **returns**: table {ok, reason?, mode, captureUiHoldFrames?}
 
 #### `ui_photomode_capture.setCaptureState(partialState)`
 
-Applique un patch partiel aux réglages de capture du module (voir applyCaptureStatePatch), puis réapplique les réglages du flash. Exige une session active.
+Applies a partial patch to the module's capture settings (see applyCaptureStatePatch), then reapplies the flash settings. Requires an active session.
 
-- `partialState` (*table*) : Patch partiel
-- **renvoie** : table {ok, reason?, state}
+- `partialState` (*table*) : Partial patch
+- **returns**: table {ok, reason?, state}
 
 #### `ui_photomode_capture.setResolutionPreset(presetId)`
 
-Sélectionne et applique immédiatement un préset de résolution, et le mémorise comme sélection courante.
+Selects and immediately applies a resolution preset, and stores it as the current selection.
 
-- `presetId` (*string*) : Identifiant du préset
-- **renvoie** : table {ok, reason?, state}
+- `presetId` (*string*) : Preset identifier
+- **returns**: table {ok, reason?, state}
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `DEFAULTS` | table | Valeurs par défaut statiques : superSampling = 2, downscaleLevel = 2, motionEnabled = false, motionBehavior = "followVehicle", splitSceneVehicle = false, saveNormalDepth = false, hdrScreenshot = false. Pour les valeurs réellement appliquées (upscaler temporel, HDR), utiliser buildDefaultSettings(). |
+| `DEFAULTS` | table | Static default values: superSampling = 2, downscaleLevel = 2, motionEnabled = false, motionBehavior = "followVehicle", splitSceneVehicle = false, saveNormalDepth = false, hdrScreenshot = false. For the values actually applied (temporal upscaler, HDR), use buildDefaultSettings(). |
 | `dependencies` | string[] | {"ui_photomode_flash"} |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
-**Charge les extensions :** `util/photomodeAttach`, `util/resolution`
+**Loads extensions:** `util/photomodeAttach`, `util/resolution`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/photomode/capture.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/photomode/capture.lua`.*

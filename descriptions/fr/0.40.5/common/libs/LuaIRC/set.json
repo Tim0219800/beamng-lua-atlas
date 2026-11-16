@@ -1,0 +1,41 @@
+{
+  "path": "lua/common/libs/LuaIRC/set.lua",
+  "module": "Partie de la bibliothèque tierce LuaIRC. Module \"irc.set\" : un ensemble de connexions IRC surveillées ensemble avec socket.select. Permet de gérer plusieurs clients et de ne traiter que ceux qui ont des données à lire.",
+  "notes": [
+    "Dans set:remove, self.connections est à la fois indexé par socket et par position ; la suppression par position (remove(self.connections, k)) suppose que sockets et connections restent alignés.",
+    "L'objet passé à new peut définir un champ timeout, utilisé par select."
+  ],
+  "functions": {
+    "new": {
+      "desc": "Transforme la table t en ensemble (champs connections et sockets créés vides, métatable set).",
+      "params": {"t": {"type": "table", "desc": "Table de configuration, ex. {timeout = 1}"}},
+      "returns": [{"type": "table", "desc": "L'ensemble"}]
+    }
+  },
+  "classes": {
+    "set": {
+      "desc": "Ensemble de connexions IRC.",
+      "functions": {
+        "add": {
+          "desc": "Ajoute une connexion (sa socket est ajoutée à la liste surveillée).",
+          "params": {"connection": {"type": "table", "desc": "Connexion IRC avec champ socket"}}
+        },
+        "remove": {
+          "desc": "Retire une connexion de l'ensemble.",
+          "params": {"connection": {"type": "table", "desc": "Connexion à retirer"}}
+        },
+        "select": {
+          "desc": "Appelle socket.select sur les sockets avec self.timeout et renvoie la liste des connexions prêtes à lire.",
+          "returns": [
+            {"type": "table|nil", "desc": "Connexions prêtes en lecture"},
+            {"type": "string|nil", "desc": "Erreur (ex. \"timeout\")"}
+          ]
+        },
+        "poll": {
+          "desc": "Comme select, mais en cas de timeout renvoie toutes les connexions (pour qu'elles puissent faire leur travail périodique).",
+          "returns": [{"type": "table", "desc": "Connexions à traiter"}]
+        }
+      }
+    }
+  }
+}

@@ -1,36 +1,62 @@
 {
   "path": "lua/ge/extensions/editor/cameraV2/zoom.lua",
-  "module": "Zoom de Camera V2 : remplace le mouvement de molette standard par un dolly lissé le long du centre de la vue. Chaque cran de molette change la distance au point focal de façon proportionnelle (en espace logarithmique), avec lissage exponentiel et collision contre le terrain et la géométrie statique pour ne pas traverser le décor. Lit les préférences camera.cameraV2.zoomMinDistance, zoomMaxDistance, zoomFactorPerNotch et zoomResponse.",
+  "module": "Camera V2 zoom: replaces the standard wheel movement with a smoothed dolly along the view center. Each wheel notch changes the distance to the focal point proportionally (in logarithmic space), with exponential smoothing and collision against the terrain and static geometry so as not to pass through the scenery. Reads the preferences camera.cameraV2.zoomMinDistance, zoomMaxDistance, zoomFactorPerNotch and zoomResponse.",
   "notes": [
-    "Le point focal est le point touché par Engine.castRay depuis la caméra vers l'avant (portée 100000 m) ; sans impact, il est placé à 50 m (limité entre min et max) devant la caméra.",
-    "Distance max codée en dur à 2500 m (clamp sur zoomMaxDistance). Réponse : amount = 1 - exp(-zoomResponse * dt), dt limité à 0,05 s.",
-    "Le zoom est annulé si le bouton droit ou milieu de la souris est enfoncé, ou si la caméra a été déplacée/tournée par ailleurs de façon incompatible (reconcileCameraTranslation).",
-    "Incohérence : zoomAnchor renvoie toujours terrainOnly = false et onMouseWheel met terrainOnly = false avec un focus fixe ; la branche clampDistanceToTerrainOnly et lastZoomUsedTerrainOnly() ne peuvent donc jamais être vraies dans cette version."
+    "The focal point is the point hit by Engine.castRay from the camera forward (range 100000 m); with no hit, it is placed 50 m (clamped between min and max) in front of the camera.",
+    "Max distance hard-coded to 2500 m (clamp on zoomMaxDistance). Response: amount = 1 - exp(-zoomResponse * dt), dt limited to 0.05 s.",
+    "The zoom is cancelled if the right or middle mouse button is held, or if the camera was otherwise moved/rotated in an incompatible way (reconcileCameraTranslation).",
+    "Inconsistency: zoomAnchor always returns terrainOnly = false and onMouseWheel sets terrainOnly = false with a fixed focus; the clampDistanceToTerrainOnly branch and lastZoomUsedTerrainOnly() can therefore never be true in this version."
   ],
   "functions": {
     "onMouseWheel": {
-      "desc": "Démarre ou prolonge un zoom : calcule le point focal, la distance courante et la distance cible (distance * facteur^-value, bornée), puis mémorise l'état que update() fait converger. Les crans successifs dans le même sens s'accumulent.",
+      "desc": "Starts or extends a zoom: computes the focal point, the current distance and the target distance (distance * factor^-value, clamped), then stores the state that update() makes converge. Successive notches in the same direction accumulate.",
       "params": {
-        "value": {"type": "number", "desc": "Crans de molette ; > 0 rapproche (zoom avant), < 0 éloigne. |value| <= 0,0001 est ignoré"},
-        "fixedFocus": {"type": "vec3|nil", "desc": "Point focal imposé (s'il est raisonnable) à la place du raycast central"}
+        "value": {
+          "type": "number",
+          "desc": "Wheel notches; > 0 moves closer (zoom in), < 0 moves away. |value| <= 0.0001 is ignored"
+        },
+        "fixedFocus": {
+          "type": "vec3|nil",
+          "desc": "Imposed focal point (if reasonable) instead of the central raycast"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si la valeur est négligeable, true sinon (événement traité, même en cas d'échec de validation)"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the value is negligible, true otherwise (event handled, even if validation fails)"
+        }
+      ]
     },
     "update": {
-      "desc": "Fait avancer le zoom lissé d'une frame : déplace la caméra le long de la direction vers le focus. Met fin au zoom (état annulé) en cas de geste souris, de pose incohérente ou de collision.",
-      "params": {"deltaTime": {"type": "number|nil", "desc": "Secondes ; limité à [0 ; 0,05], à défaut ui_imgui.GetIO().DeltaTime"}},
+      "desc": "Advances the smoothed zoom by one frame: moves the camera along the direction toward the focus. Ends the zoom (state cancelled) in case of a mouse gesture, an inconsistent pose or a collision.",
+      "params": {
+        "deltaTime": {
+          "type": "number|nil",
+          "desc": "Seconds; clamped to [0; 0.05], defaults to ui_imgui.GetIO().DeltaTime"
+        }
+      },
       "internal": true
     },
     "cancel": {
-      "desc": "Abandonne le zoom en cours."
+      "desc": "Abandons the zoom in progress."
     },
     "isActive": {
-      "desc": "Indique si un zoom lissé est en cours.",
-      "returns": [{"type": "boolean", "desc": "true si un état de zoom existe"}]
+      "desc": "Indicates whether a smoothed zoom is in progress.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a zoom state exists"
+        }
+      ]
     },
     "lastZoomUsedTerrainOnly": {
-      "desc": "Indique si le dernier zoom utilisait seulement la collision avec le terrain (voir notes : toujours false dans le code actuel).",
-      "returns": [{"type": "boolean", "desc": "dernier terrainOnly"}]
+      "desc": "Indicates whether the last zoom used only terrain collision (see notes: always false in the current code).",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "last terrainOnly"
+        }
+      ]
     }
   }
 }

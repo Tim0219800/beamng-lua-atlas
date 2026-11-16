@@ -2,30 +2,30 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/showroom.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Petit utilitaire de « showroom » : fait apparaître à la demande un préfabriqué de garage (art/prefabs/garage_simple.prefab) à la position fixe (0, 0, 1000) dans le niveau courant et permet d'y déplacer un véhicule. Le préfabriqué est chargé au premier appel qui a besoin de sa position (moveInside, getPosRot) et déchargé à la fin du niveau (onClientEndMission).
---- Accès : extension `util_showroom` : `extensions.load("util_showroom")`, puis la globale `util_showroom`
+--- Small "showroom" utility: spawns on demand a garage prefab (art/prefabs/garage_simple.prefab) at the fixed position (0, 0, 1000) in the current level and lets you move a vehicle into it. The prefab is loaded at the first call that needs its position (moveInside, getPosRot) and unloaded at the end of the level (onClientEndMission).
+--- Access: extension `util_showroom`: `extensions.load("util_showroom")`, then the global `util_showroom`
 ---@class util_showroom
 util_showroom = {}
 
---- Renvoie la position et la rotation de l'intérieur du garage (charge le préfabriqué si besoin).
----Source : lua/ge/extensions/util/showroom.lua:39
----@return vec3  Position monde du garage (0, 0, 1000).
----@return quat  Rotation identité (0, 0, 0, 1).
+--- Returns the position and rotation of the garage interior (loads the prefab if needed).
+---Source: lua/ge/extensions/util/showroom.lua:39
+---@return vec3  World position of the garage (0, 0, 1000).
+---@return quat  Identity rotation (0, 0, 0, 1).
 function util_showroom.getPosRot() end
 
---- Indique si une position est dans le garage (distance au centre < 20 m). Sans argument, utilise la position du véhicule du joueur ou à défaut celle de la caméra.
----Source : lua/ge/extensions/util/showroom.lua:49
----@param pos vec3|nil Position monde à tester.
----@return boolean|nil  true si dedans ; false hors du garage ; nil si le préfabriqué n'est pas chargé.
+--- Indicates whether a position is in the garage (distance to center < 20 m). With no argument, uses the player vehicle's position or, failing that, the camera's.
+---Source: lua/ge/extensions/util/showroom.lua:49
+---@param pos vec3|nil World position to test.
+---@return boolean|nil  true if inside; false outside the garage; nil if the prefab is not loaded.
 function util_showroom.isInside(pos) end
 
---- Charge le garage si nécessaire, place le véhicule à sa position (setPosRot) puis appelle veh:autoplace(false) pour le poser.
----Source : lua/ge/extensions/util/showroom.lua:42
----@param veh table Objet véhicule à déplacer.
+--- Loads the garage if needed, places the vehicle at its position (setPosRot) then calls veh:autoplace(false) to set it down.
+---Source: lua/ge/extensions/util/showroom.lua:42
+---@param veh table Vehicle object to move.
 function util_showroom.moveInside(veh) end
 
---- Hook appelé à la fin du niveau : supprime le préfabriqué et recharge la collision (be:reloadCollision).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/showroom.lua:26
+--- Hook called at the end of the level: removes the prefab and reloads collision (be:reloadCollision).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/showroom.lua:26
 function util_showroom.onClientEndMission() end
 

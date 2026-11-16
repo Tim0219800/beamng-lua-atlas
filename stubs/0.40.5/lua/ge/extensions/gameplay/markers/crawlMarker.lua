@@ -2,84 +2,84 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/markers/crawlMarker.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Marqueur de zone de crawling (rock crawling) en mode jeu : une icône flottante au-dessus d'une zone sphérique. Le véhicule du joueur qui entre dans la sphère (centre de sa boîte englobante à moins de radius, 2 m par défaut) fait monter l'icône et la rend interactive (liste d'activités à accepter). Le module renvoie {create, cluster} : cluster regroupe les POI crawlMarker, create fabrique l'objet marqueur (classe C).
---- Accès : extension `gameplay_markers_crawlMarker` : `extensions.load("gameplay_markers_crawlMarker")`, puis la globale `gameplay_markers_crawlMarker`
+--- Crawling zone marker (rock crawling) in play mode: a floating icon above a spherical zone. The player's vehicle entering the sphere (center of its bounding box within radius, 2 m by default) raises the icon and makes it interactive (list of activities to accept). The module returns {create, cluster}: cluster groups the crawlMarker POIs, create builds the marker object (class C).
+--- Access: extension `gameplay_markers_crawlMarker`: `extensions.load("gameplay_markers_crawlMarker")`, then the global `gameplay_markers_crawlMarker`
 ---@class gameplay_markers_crawlMarker
 gameplay_markers_crawlMarker = {}
 
---- Regroupe les POI crawlMarker identiques (même pos et iconPos) en clusters et les ajoute à allClusters.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/markers/crawlMarker.lua:245
----@param pois table[] POI avec markerInfo.crawlMarker.
----@param allClusters table[] Liste de clusters complétée en place.
+--- Groups identical crawlMarker POIs (same pos and iconPos) into clusters and adds them to allClusters.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/markers/crawlMarker.lua:245
+---@param pois table[] POIs with markerInfo.crawlMarker.
+---@param allClusters table[] List of clusters completed in place.
 function gameplay_markers_crawlMarker.cluster(pois, allClusters) end
 
---- Fabrique un objet marqueur de crawling (instance de C) et appelle init.
----Source : lua/ge/extensions/gameplay/markers/crawlMarker.lua:236
----@param ... any Arguments transmis à C:init (non utilisés).
----@return table  Instance de marqueur.
+--- Builds a crawling marker object (instance of C) and calls init.
+---Source: lua/ge/extensions/gameplay/markers/crawlMarker.lua:236
+---@param ... any Arguments passed to C:init (unused).
+---@return table  Marker instance.
 function gameplay_markers_crawlMarker.create(...) end
 
---- Marqueur de zone de crawling avec icône animée.
+--- Crawling zone marker with animated icon.
 ---@class gameplay_markers_crawlMarker_C
 local gameplay_markers_crawlMarker_C = {}
 
---- Retire l'icône de l'icon renderer et efface triggerArea.
----Source : lua/ge/extensions/gameplay/markers/crawlMarker.lua:145
+--- Removes the icon from the icon renderer and clears triggerArea.
+---Source: lua/ge/extensions/gameplay/markers/crawlMarker.lua:145
 function gameplay_markers_crawlMarker_C:clearObjects() end
 
---- Nettoie les objets existants (n'en crée pas de nouveaux).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/markers/crawlMarker.lua:123
+--- Cleans up existing objects (does not create new ones).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/markers/crawlMarker.lua:123
 function gameplay_markers_crawlMarker_C:createObjects() end
 
---- Dessine une boîte alignée (arêtes et faces semi-transparentes) par debugDrawer ; utilitaire de debug.
----Source : lua/ge/extensions/gameplay/markers/crawlMarker.lua:170
----@param corner vec3 Coin de départ.
----@param x vec3 Vecteur de l'arête X.
----@param y vec3 Vecteur de l'arête Y.
----@param z vec3 Vecteur de l'arête Z.
----@param clr ColorI|nil Couleur des faces (défaut 128,64,64,32).
+--- Draws an axis-aligned box (semi-transparent edges and faces) via debugDrawer; debug utility.
+---Source: lua/ge/extensions/gameplay/markers/crawlMarker.lua:170
+---@param corner vec3 Starting corner.
+---@param x vec3 X edge vector.
+---@param y vec3 Y edge vector.
+---@param z vec3 Z edge vector.
+---@param clr ColorI|nil Face color (default 128,64,64,32).
 function gameplay_markers_crawlMarker_C:drawAxisBox(corner, x, y, z, clr) end
 
---- Dessine un cercle à la position de l'icône sur la minimap (ui_apps_minimap_utils.simpleCircle).
----Source : lua/ge/extensions/gameplay/markers/crawlMarker.lua:228
----@param td table Données de dessin de la minimap (non utilisées).
+--- Draws a circle at the icon's position on the minimap (ui_apps_minimap_utils.simpleCircle).
+---Source: lua/ge/extensions/gameplay/markers/crawlMarker.lua:228
+---@param td table Minimap drawing data (unused).
 function gameplay_markers_crawlMarker_C:drawOnMinimap(td) end
 
---- Passe invisible et met l'opacité de l'icône à 0.
----Source : lua/ge/extensions/gameplay/markers/crawlMarker.lua:127
+--- Becomes invisible and sets the icon opacity to 0.
+---Source: lua/ge/extensions/gameplay/markers/crawlMarker.lua:127
 function gameplay_markers_crawlMarker_C:hide() end
 
---- Initialise visible = true.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/markers/crawlMarker.lua:22
+--- Initializes visible = true.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/markers/crawlMarker.lua:22
 function gameplay_markers_crawlMarker_C:init() end
 
---- Ne fait rien.
----Source : lua/ge/extensions/gameplay/markers/crawlMarker.lua:166
----@param visible boolean Ignoré.
+--- Does nothing.
+---Source: lua/ge/extensions/gameplay/markers/crawlMarker.lua:166
+---@param visible boolean Ignored.
 function gameplay_markers_crawlMarker_C:instantFade(visible) end
 
---- Si canInteract et que le joueur est dans la zone, ajoute les données (elemData) du cluster à la liste des éléments interactifs.
----Source : lua/ge/extensions/gameplay/markers/crawlMarker.lua:156
----@param interactData table Données de frame avec canInteract.
----@param interactableElements table[] Liste complétée en place.
+--- If canInteract and the player is in the zone, adds the cluster's data (elemData) to the list of interactive elements.
+---Source: lua/ge/extensions/gameplay/markers/crawlMarker.lua:156
+---@param interactData table Frame data with canInteract.
+---@param interactableElements table[] List completed in place.
 function gameplay_markers_crawlMarker_C:interactInPlayMode(interactData, interactableElements) end
 
---- Lit pos, rot, scl du cluster et crée l'icône (id <cluster.id>-gsIcon) avec ses lisseurs ; décalage d'icône 0.5 m, levée 1.0 m.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/markers/crawlMarker.lua:26
----@param cluster table Cluster issu de cluster().
+--- Reads pos, rot, scl from the cluster and creates the icon (id <cluster.id>-gsIcon) with its smoothers; icon offset 0.5 m, lift 1.0 m.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/markers/crawlMarker.lua:26
+---@param cluster table Cluster from cluster().
 function gameplay_markers_crawlMarker_C:setup(cluster) end
 
---- Repasse visible.
----Source : lua/ge/extensions/gameplay/markers/crawlMarker.lua:140
+--- Becomes visible again.
+---Source: lua/ge/extensions/gameplay/markers/crawlMarker.lua:140
 function gameplay_markers_crawlMarker_C:show() end
 
---- Chaque frame : teste l'entrée dans la sphère, anime la hauteur et l'opacité de l'icône, dessine un trait quand l'icône est levée, met à jour isInAreaChanged, anyOverlap.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/markers/crawlMarker.lua:65
----@param data table Données de frame : veh, bbCenter, camPos, dt, bigMapActive.
+--- Every frame: tests entry into the sphere, animates the icon's height and opacity, draws a line when the icon is raised, updates isInAreaChanged, anyOverlap.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/markers/crawlMarker.lua:65
+---@param data table Frame data: veh, bbCenter, camPos, dt, bigMapActive.
 function gameplay_markers_crawlMarker_C:update(data) end
 

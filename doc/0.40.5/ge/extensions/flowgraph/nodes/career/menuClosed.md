@@ -1,24 +1,24 @@
 # `flowgraph_nodes_career_menuClosed`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/career/menuClosed.lua` · VM : Game Engine (GE) · 38 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/career/menuClosed.lua` · VM: Game Engine (GE) · 38 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/career/menuClosed")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/career/menuClosed")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Menu Closed » (catégorie repeat_instant, couleur/icône ui). Impulsion d'une frame sur la sortie menuClosed quand un menu a été fermé et que le joueur est de retour en jeu (hook onUIPlayStateChanged avec enteredPlay vrai).
+Flowgraph node "Menu Closed" (category repeat_instant, ui color/icon). One-frame impulse on the menuClosed output when a menu has been closed and the player is back in game (onUIPlayStateChanged hook with enteredPlay true).
 
-## Remarques
+## Notes
 
-- Sa description dans le jeu est « Util Helper for Garage tutorial » (copier-coller).
+- Its in-game description is "Util Helper for Garage tutorial" (copy-paste).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Crée la table de drapeaux. | 19 |
-| `C:onUIPlayStateChanged(enteredPlay)` | Hook : si le joueur est revenu en état de jeu, lève le drapeau menuClosed. | 31 |
-| `C:work(args)` | Chaque frame : menuClosed à faux, applique puis efface les drapeaux. | 23 |
+| `C:init()` | Creates the flag table. | 19 |
+| `C:onUIPlayStateChanged(enteredPlay)` | Hook: if the player has returned to the play state, raises the menuClosed flag. | 31 |
+| `C:work(args)` | Every frame: menuClosed to false, applies then clears the flags. | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/career/menuClosed.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/career/menuClosed.lua`.*

@@ -1,109 +1,109 @@
 # `gameplay_city`
 
-*Fichier : `lua/ge/extensions/gameplay/city.lua` · VM : Game Engine (GE) · 140 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/city.lua` · VM: Game Engine (GE) · 140 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_city` : `extensions.load("gameplay_city")`, puis la globale `gameplay_city`
+**Access:** extension `gameplay_city`: `extensions.load("gameplay_city")`, then the global `gameplay_city`
 
-Extension qui charge le fichier city.sites.json du niveau courant (via gameplay_sites_sitesManager) et offre des requêtes sur ses zones et places de parking : zone de plus haute priorité à une position, valeurs fusionnées de champs personnalisés de zones, et tirage de deux places de parking distantes. La priorité d'une zone est le champ personnalisé 'priority' (0 par défaut). Les sites sont chargés au démarrage du niveau et libérés à la fin.
+Extension that loads the current level's city.sites.json file (via gameplay_sites_sitesManager) and offers queries on its zones and parking spots: highest-priority zone at a position, merged values of zones' custom fields, and drawing of two distant parking spots. A zone's priority is the custom field 'priority' (0 by default). The sites are loaded at level start and freed at the end.
 
-## Exemple
+## Example
 
 ```lua
 local zone = gameplay_city.getHighestPrioZone(getPlayerVehicle(0):getPosition())
 ```
 
-## Remarques
+## Notes
 
-- loadSites() sans argument utilise le dossier de getMissionFilename() + 'city.sites.json' ; rien n'est chargé si le fichier n'existe pas.
-- getMergedFieldsFromZones fait ipairs(getHighestPrioZone(pos)), or cette fonction retourne une seule zone (table non tableau) ou nil : ipairs sur nil provoque une erreur et sur une zone n'itère rien d'utile. Bug probable du jeu.
-- getRandomParkingSpots utilise sites directement sans test de nil ; elle plante si aucun site n'est chargé.
-- Les champs de zone sont lus avec les suffixes '', '1', '2', '3', '4' (jusqu'à 5 groupes par zone).
+- loadSites() with no argument uses the folder of getMissionFilename() + 'city.sites.json'; nothing is loaded if the file does not exist.
+- getMergedFieldsFromZones does ipairs(getHighestPrioZone(pos)), but that function returns a single zone (non-array table) or nil: ipairs on nil causes an error and on a zone iterates nothing useful. Probable game bug.
+- getRandomParkingSpots uses sites directly without a nil test; it crashes if no sites are loaded.
+- Zone fields are read with the suffixes '', '1', '2', '3', '4' (up to 5 groups per zone).
 
-**Dépendances (chargées avant) :** `gameplay_sites_sitesManager`
+**Dependencies (loaded first):** `gameplay_sites_sitesManager`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_city.getHighestPrioZone(pos)` | Retourne la première zone de plus haute priorité qui contient la position. | 30 |
-| `gameplay_city.getMergedFieldsFromZones(pos, fieldName)` | Doit renvoyer les valeurs uniques, triées, des champs personnalisés fieldName (avec suffixes '' à '4') de la zone de plus haute priorité à la position. Voir notes : l'implémentation itère sur le résultat de getHighestPrioZone. | 47 |
-| `gameplay_city.getRandomParkingSpots(minDist, startName)` | Tire deux places de parking au hasard dont la distance est au moins minDist, et donne la zone de plus haute priorité de chacune. | 61 |
-| `gameplay_city.getSites()` | Retourne l'objet sites actuellement chargé. | 112 |
-| `gameplay_city.getZonesByPrioForPosition(pos)` | Regroupe les zones contenant la position par priorité. | 13 |
-| `gameplay_city.loadSites(file)` | Charge un fichier de sites via sitesManager.loadSites. Sans argument, charge city.sites.json du niveau courant (sauf si déjà chargé). | 97 |
-| `gameplay_city.onClientEndMission(levelPath)` | Hook appelé à la fin d'un niveau : appelle reset(). *(interne)* *(hook)* | 124 |
-| `gameplay_city.onClientStartMission(levelPath)` | Hook appelé au démarrage d'un niveau : charge les sites par défaut. *(interne)* *(hook)* | 120 |
-| `gameplay_city.reset()` | Oublie les sites chargés (sites = nil). | 116 |
+| `gameplay_city.getHighestPrioZone(pos)` | Returns the first highest-priority zone that contains the position. | 30 |
+| `gameplay_city.getMergedFieldsFromZones(pos, fieldName)` | Should return the unique, sorted values of the custom fields fieldName (with suffixes '' to '4') of the highest-priority zone at the position. See notes: the implementation iterates over the result of getHighestPrioZone. | 47 |
+| `gameplay_city.getRandomParkingSpots(minDist, startName)` | Draws two parking spots at random whose distance is at least minDist, and gives the highest-priority zone of each. | 61 |
+| `gameplay_city.getSites()` | Returns the currently loaded sites object. | 112 |
+| `gameplay_city.getZonesByPrioForPosition(pos)` | Groups the zones containing the position by priority. | 13 |
+| `gameplay_city.loadSites(file)` | Loads a sites file via sitesManager.loadSites. With no argument, loads the current level's city.sites.json (unless already loaded). | 97 |
+| `gameplay_city.onClientEndMission(levelPath)` | Hook called at the end of a level: calls reset(). *(internal)* *(hook)* | 124 |
+| `gameplay_city.onClientStartMission(levelPath)` | Hook called when a level starts: loads the default sites. *(internal)* *(hook)* | 120 |
+| `gameplay_city.reset()` | Forgets the loaded sites (sites = nil). | 116 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_city.getHighestPrioZone(pos)`
 
-Retourne la première zone de plus haute priorité qui contient la position.
+Returns the first highest-priority zone that contains the position.
 
-- `pos` (*vec3*) : Position monde.
-- **renvoie** : table|nil Zone, ou nil si aucun site chargé ou aucune zone.
+- `pos` (*vec3*) : World position.
+- **returns**: table|nil Zone, or nil if no sites loaded or no zone.
 
 #### `gameplay_city.getMergedFieldsFromZones(pos, fieldName)`
 
-Doit renvoyer les valeurs uniques, triées, des champs personnalisés fieldName (avec suffixes '' à '4') de la zone de plus haute priorité à la position. Voir notes : l'implémentation itère sur le résultat de getHighestPrioZone.
+Should return the unique, sorted values of the custom fields fieldName (with suffixes '' to '4') of the highest-priority zone at the position. See notes: the implementation iterates over the result of getHighestPrioZone.
 
-- `pos` (*vec3*) : Position monde.
-- `fieldName` (*string*) : Nom de base du champ personnalisé (ex. 'vehicleGroup').
-- **renvoie** : table Tableau trié de valeurs ; vide si pos ou fieldName manque.
+- `pos` (*vec3*) : World position.
+- `fieldName` (*string*) : Base name of the custom field (e.g. 'vehicleGroup').
+- **returns**: table Sorted array of values; empty if pos or fieldName is missing.
 
 #### `gameplay_city.getRandomParkingSpots(minDist, startName)`
 
-Tire deux places de parking au hasard dont la distance est au moins minDist, et donne la zone de plus haute priorité de chacune.
+Draws two parking spots at random whose distance is at least minDist, and gives the highest-priority zone of each.
 
-- `minDist` (*number|nil*) : Distance minimale en mètres (300 par défaut).
-- `startName` (*string|nil*) : Nom imposé pour la place de départ, s'il existe.
-- **renvoie** : string|nil Nom de la place de départ.
-- **renvoie** : string Nom de la place d'arrivée.
-- **renvoie** : string Nom de la zone de départ.
-- **renvoie** : string Nom de la zone d'arrivée.
+- `minDist` (*number|nil*) : Minimum distance in meters (300 by default).
+- `startName` (*string|nil*) : Name imposed for the start spot, if it exists.
+- **returns**: string|nil Start spot name.
+- **returns**: string End spot name.
+- **returns**: string Start zone name.
+- **returns**: string End zone name.
 
 #### `gameplay_city.getSites()`
 
-Retourne l'objet sites actuellement chargé.
+Returns the currently loaded sites object.
 
-- **renvoie** : table|nil Objet sites, ou nil.
+- **returns**: table|nil Sites object, or nil.
 
 #### `gameplay_city.getZonesByPrioForPosition(pos)`
 
-Regroupe les zones contenant la position par priorité.
+Groups the zones containing the position by priority.
 
-- `pos` (*vec3*) : Position monde.
-- **renvoie** : table<number, table[]> Dictionnaire priorité -> liste de zones (la clé -math.huge existe toujours, avec une liste vide).
-- **renvoie** : number Plus haute priorité trouvée (-math.huge si aucune).
+- `pos` (*vec3*) : World position.
+- **returns**: table<number, table[]> Dictionary priority -> list of zones (the key -math.huge always exists, with an empty list).
+- **returns**: number Highest priority found (-math.huge if none).
 
 #### `gameplay_city.loadSites(file)`
 
-Charge un fichier de sites via sitesManager.loadSites. Sans argument, charge city.sites.json du niveau courant (sauf si déjà chargé).
+Loads a sites file via sitesManager.loadSites. With no argument, loads the current level's city.sites.json (unless already loaded).
 
-- `file` (*string|nil*) : Chemin du fichier .sites.json.
+- `file` (*string|nil*) : Path of the .sites.json file.
 
 #### `gameplay_city.onClientEndMission(levelPath)`
 
-Hook appelé à la fin d'un niveau : appelle reset().
+Hook called at the end of a level: calls reset().
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `gameplay_city.onClientStartMission(levelPath)`
 
-Hook appelé au démarrage d'un niveau : charge les sites par défaut.
+Hook called when a level starts: loads the default sites.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : {"gameplay_sites_sitesManager"}. |
+| `dependencies` | table<integer, string> | Extensions loaded before: {"gameplay_sites_sitesManager"}. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/city.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/city.lua`.*

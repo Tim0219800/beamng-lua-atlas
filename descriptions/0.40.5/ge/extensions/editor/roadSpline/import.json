@@ -1,20 +1,30 @@
 {
   "path": "lua/ge/extensions/editor/roadSpline/import.lua",
-  "module": "Import de DecalRoads existants dans l'outil Road Spline. Estime une ligne centrale de référence (nœuds, largeurs, normales) à partir des routes choisies en cherchant leurs bords (recherche exponentielle puis dichotomie, jusqu'à 50 m latéralement), simplifie par RDP, crée un nouveau groupe Road Spline « Import N » et recrée les routes d'origine sous forme de couches relatives à cette ligne. Les DecalRoads source sont ensuite supprimés (undo possible).",
+  "module": "Import of existing DecalRoads into the Road Spline tool. Estimates a reference centerline (nodes, widths, normals) from the chosen roads by searching for their edges (exponential search then bisection, up to 50 m laterally), simplifies it with RDP, creates a new Road Spline group \"Import N\" and recreates the original roads as layers relative to that line. The source DecalRoads are then deleted (undo possible).",
   "notes": [
-    "BUG : importSelectedIntoNewGroup appelle groupMgr.getSplineMap(), qui n'existe pas dans groupMgr (la fonction s'appelle getIdToIdxMap). L'appel plante donc avec une erreur « attempt to call a nil value » après la création du groupe ; l'import via menu contextuel ou polygone ne peut pas aboutir en l'état (même appel aux lignes 116 et 138 pour les fonctions d'annulation).",
-    "Toutes les couches importées sont créées avec les couches automatiques désactivées (marques de pneus, lignes, fondus, etc.)."
+    "BUG: importSelectedIntoNewGroup calls groupMgr.getSplineMap(), which does not exist in groupMgr (the function is called getIdToIdxMap). The call therefore crashes with an \"attempt to call a nil value\" error after the group is created; the import via context menu or polygon cannot succeed as is (same call at lines 116 and 138 for the undo functions).",
+    "All imported layers are created with the automatic layers disabled (tire marks, lines, fades, etc.)."
   ],
   "functions": {
     "importSelectedIntoNewGroup": {
-      "desc": "Convertit les DecalRoads donnés en un nouveau groupe Road Spline : calcule la spline de référence, crée le groupe, génère les couches, supprime les DecalRoads (et leurs groupes de scène devenus vides) et enregistre une action d'annulation. Retourne sans rien faire si la liste est vide.",
-      "params": {"decalRoads": {"type": "table", "desc": "Liste d'objets DecalRoad (scenetree), par ex. la sélection de l'éditeur."}},
+      "desc": "Converts the given DecalRoads into a new Road Spline group: computes the reference spline, creates the group, generates the layers, deletes the DecalRoads (and their scene groups that became empty) and records an undo action. Returns without doing anything if the list is empty.",
+      "params": {
+        "decalRoads": {
+          "type": "table",
+          "desc": "List of DecalRoad objects (scenetree), e.g. the editor selection."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "importFromPolygon": {
-      "desc": "Importe tous les DecalRoads dont au moins un nœud se trouve dans le polygone, puis appelle importSelectedIntoNewGroup avec eux.",
-      "params": {"polygon": {"type": "table", "desc": "Polygone de sélection (liste de points) tracé par l'utilisateur."}},
+      "desc": "Imports all DecalRoads with at least one node inside the polygon, then calls importSelectedIntoNewGroup with them.",
+      "params": {
+        "polygon": {
+          "type": "table",
+          "desc": "Selection polygon (list of points) drawn by the user."
+        }
+      },
       "returns": [],
       "internal": false
     }

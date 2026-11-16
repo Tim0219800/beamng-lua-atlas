@@ -1,27 +1,27 @@
 # `editor_ezObjectSelect_selectionLabelOverlay`
 
-*Fichier : `lua/ge/extensions/editor/ezObjectSelect/selectionLabelOverlay.lua` · VM : Game Engine (GE) · 105 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ezObjectSelect/selectionLabelOverlay.lua` · VM: Game Engine (GE) · 105 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ezObjectSelect_selectionLabelOverlay` : `extensions.load("editor_ezObjectSelect_selectionLabelOverlay")`, puis la globale `editor_ezObjectSelect_selectionLabelOverlay`
+**Access:** extension `editor_ezObjectSelect_selectionLabelOverlay`: `extensions.load("editor_ezObjectSelect_selectionLabelOverlay")`, then the global `editor_ezObjectSelect_selectionLabelOverlay`
 
-Dessine les étiquettes (panneaux sombres à bordure colorée) de l'outil Easy Select avec la drawList imgui. Les étiquettes « followMouse » sont empilées près du curseur (décalage 18 px, côté gauche si elles sortent du viewport) ; les autres sont ancrées au-dessus de leur position écran. Les étiquettes prioritaires (label.priority == true) passent en premier.
+Draws the labels (dark panels with colored border) of the Easy Select tool with the imgui drawList. "followMouse" labels are stacked near the cursor (18 px offset, left side if they exit the viewport); the others are anchored above their screen position. Priority labels (label.priority == true) come first.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ezObjectSelect_selectionLabelOverlay.draw(drawList, labels, mouse, viewport)` | Dessine toutes les étiquettes de la liste. | 68 |
+| `editor_ezObjectSelect_selectionLabelOverlay.draw(drawList, labels, mouse, viewport)` | Draws all labels of the list. | 68 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_ezObjectSelect_selectionLabelOverlay.draw(drawList, labels, mouse, viewport)`
 
-Dessine toutes les étiquettes de la liste.
+Draws all labels of the list.
 
-- `drawList` (*ImDrawList**) : Liste de dessin imgui
-- `labels` (*table*) : Liste d'étiquettes {text, color (U32), followMouse, priority, position (ImVec2, si non followMouse)}
-- `mouse` (*ImVec2*) : Position de la souris
-- `viewport` (*ImGuiViewport*) : Viewport (Pos et Size) servant à garder les étiquettes visibles
+- `drawList` (*ImDrawList**) : imgui draw list
+- `labels` (*table*) : List of labels {text, color (U32), followMouse, priority, position (ImVec2, if not followMouse)}
+- `mouse` (*ImVec2*) : Mouse position
+- `viewport` (*ImGuiViewport*) : Viewport (Pos and Size) used to keep labels visible
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ezObjectSelect/selectionLabelOverlay.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ezObjectSelect/selectionLabelOverlay.lua`.*

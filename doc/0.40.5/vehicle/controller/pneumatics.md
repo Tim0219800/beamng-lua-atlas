@@ -1,135 +1,135 @@
 # `controller_pneumatics`
 
-*Fichier : `lua/vehicle/controller/pneumatics.lua` · VM : Véhicule · 375 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/pneumatics.lua` · VM: Vehicle · 375 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `pneumatics` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `pneumatics` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de suspension/vérins pneumatiques simples (type "auxiliary") : il pilote la pression de poutres « pressurées » (obj:setBeamPressureRel) regroupées en groupes nommés, avec niveaux de pression nommés (minPressure, maxPressure, defaultPressure…), vitesses de montée/descente et sons de gonflage/dégonflage. Contrairement à pneumatics/actuators, aucune physique de gaz ni réservoir n'est modélisée : la pression suit simplement la cible à vitesse limitée. Les fonctions publiques s'appellent depuis des entrées ou d'autres contrôleurs avec une liste de noms de groupes.
+Simple pneumatic suspension/cylinder auxiliary controller (type "auxiliary"): it drives the pressure of "pressurized" beams (obj:setBeamPressureRel) grouped into named groups, with named pressure levels (minPressure, maxPressure, defaultPressure...), rise/fall speeds and inflation/deflation sounds. Unlike pneumatics/actuators, no gas physics or tank is modeled: the pressure simply follows the target at a limited speed. The public functions are called from inputs or other controllers with a list of group names.
 
-## Exemple
+## Example
 
 ```lua
 local p = controller.getControllerSafe('pneumatics')
-p.setBeamMax({"suspension"})        -- gonfle au maximum
-p.setBeamPressure({"suspension"}, 30) -- 30 PSI brut
+p.setBeamMax({"suspension"})        -- inflate to the maximum
+p.setBeamPressure({"suspension"}, 30) -- 30 PSI raw
 ```
 
-## Remarques
+## Notes
 
-- Unités : les pressions du jbeam et des fonctions sont en PSI ; la conversion en pascals (1 PSI = 6894.757 Pa) est faite en interne pour obj:setBeamPressureRel.
-- Clés jbeam du contrôleur : pressuredBeams (nom de la table de v.data qui liste les poutres ; chaque entrée contient beamName, groupName et éventuellement des champs se terminant par « Pressure » (niveaux propres), increaseRate, decreaseRate), pressureLevels (table d'en-tête name/pressure pour des niveaux communs ; minPressure et maxPressure valent 0 par défaut), increaseRate (0), decreaseRate (0) en PSI/s, groupSounds (nom de table de v.data pour les sons : groupName, node, volumeUp, volumeDown, soundUp, soundDown, stopVelocityThresholdPressureIncrease, stopVelocityThresholdPressureDecrease).
-- Champs de poutre lus sur la poutre elle-même : name, pressurePSI (pression par défaut), maxPressure, beamSpring, beamDamp.
-- Si un taux increaseRate/decreaseRate vaut 0, la pression ne bouge pas.
-- Les sons s'arrêtent soit quand la pression a atteint sa cible, soit quand la vitesse moyenne des poutres repasse sous un seuil (si défini). Les appels de son échouent si un groupe n'a pas de sons définis (soundLoopUp/soundLoopDown nil), déduit du code.
+- Units: the pressures in the jbeam and in the functions are in PSI; the conversion to pascals (1 PSI = 6894.757 Pa) is done internally for obj:setBeamPressureRel.
+- Controller jbeam keys: pressuredBeams (name of the v.data table listing the beams; each entry contains beamName, groupName and possibly fields ending in "Pressure" (own levels), increaseRate, decreaseRate), pressureLevels (header table name/pressure for common levels; minPressure and maxPressure are 0 by default), increaseRate (0), decreaseRate (0) in PSI/s, groupSounds (v.data table name for the sounds: groupName, node, volumeUp, volumeDown, soundUp, soundDown, stopVelocityThresholdPressureIncrease, stopVelocityThresholdPressureDecrease).
+- Beam fields read from the beam itself: name, pressurePSI (default pressure), maxPressure, beamSpring, beamDamp.
+- If an increaseRate/decreaseRate is 0, the pressure does not move.
+- The sounds stop either when the pressure has reached its target, or when the beams' average speed falls back below a threshold (if defined). The sound calls fail if a group has no sounds defined (soundLoopUp/soundLoopDown nil), inferred from code.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_pneumatics.init(jbeamData)` | Construit les groupes de poutres à partir des tables jbeam et des niveaux de pression. *(interne)* | 245 |
-| `controller_pneumatics.initSounds(jbeamData)` | Crée les sources sonores de montée/descente de chaque groupe. Appelé par le gestionnaire de contrôleurs. *(interne)* | 317 |
-| `controller_pneumatics.isBeamGroupAtPressureLevel(groupName, levelName)` | Indique si toutes les poutres d'un groupe sont exactement au niveau de pression nommé. | 167 |
-| `controller_pneumatics.reset()` | Remet toutes les poutres à leur pression par défaut. *(interne)* | 235 |
-| `controller_pneumatics.resetSounds()` | Coupe le volume des sons et réinitialise leur état. *(interne)* | 344 |
-| `controller_pneumatics.setBeamDefault(groupNames)` | Cible la pression par défaut (defaultPressure) des groupes. | 104 |
-| `controller_pneumatics.setBeamMax(groupNames)` | Cible la pression maximale (maxPressure) des groupes. | 100 |
-| `controller_pneumatics.setBeamMin(groupNames)` | Cible la pression minimale (minPressure) des groupes. | 96 |
-| `controller_pneumatics.setBeamMomentaryDecrease(groupNames, enabled)` | Active/désactive la diminution continue de pression des groupes ; désactive l'augmentation. | 147 |
-| `controller_pneumatics.setBeamMomentaryIncrease(groupNames, enabled)` | Active/désactive l'augmentation continue de pression des groupes (tant que enabled est vrai) ; désactive la diminution. | 127 |
-| `controller_pneumatics.setBeamPressure(groupNames, pressure)` | Fixe directement la pression cible des groupes, bornée par le min et le max de chaque poutre. | 61 |
-| `controller_pneumatics.setBeamPressureLevel(groupNames, pressureName)` | Cible un niveau de pression nommé (clé de poutre, ex. "maxPressure" ou un niveau défini dans pressureLevels). | 90 |
-| `controller_pneumatics.toggleBeamMinMax(groupNames)` | Pour chaque groupe : passe au minimum si tout est au maximum, sinon au maximum. | 108 |
-| `controller_pneumatics.updateGFX(dt)` | Chaque image : applique les augmentations/diminutions momentanées, fait avancer la pression courante vers la cible à vitesse limitée et gère l'arrêt des sons. *(interne)* | 181 |
+| `controller_pneumatics.init(jbeamData)` | Builds the beam groups from the jbeam tables and the pressure levels. *(internal)* | 245 |
+| `controller_pneumatics.initSounds(jbeamData)` | Creates the rise/fall sound sources of each group. Called by the controller manager. *(internal)* | 317 |
+| `controller_pneumatics.isBeamGroupAtPressureLevel(groupName, levelName)` | Indicates whether all beams of a group are exactly at the named pressure level. | 167 |
+| `controller_pneumatics.reset()` | Returns all beams to their default pressure. *(internal)* | 235 |
+| `controller_pneumatics.resetSounds()` | Cuts the sound volume and resets their state. *(internal)* | 344 |
+| `controller_pneumatics.setBeamDefault(groupNames)` | Targets the default pressure (defaultPressure) of the groups. | 104 |
+| `controller_pneumatics.setBeamMax(groupNames)` | Targets the maximum pressure (maxPressure) of the groups. | 100 |
+| `controller_pneumatics.setBeamMin(groupNames)` | Targets the minimum pressure (minPressure) of the groups. | 96 |
+| `controller_pneumatics.setBeamMomentaryDecrease(groupNames, enabled)` | Enables/disables the continuous pressure decrease of the groups; disables the increase. | 147 |
+| `controller_pneumatics.setBeamMomentaryIncrease(groupNames, enabled)` | Enables/disables the continuous pressure increase of the groups (as long as enabled is true); disables the decrease. | 127 |
+| `controller_pneumatics.setBeamPressure(groupNames, pressure)` | Directly sets the target pressure of the groups, bounded by the min and max of each beam. | 61 |
+| `controller_pneumatics.setBeamPressureLevel(groupNames, pressureName)` | Targets a named pressure level (beam key, e.g. "maxPressure" or a level defined in pressureLevels). | 90 |
+| `controller_pneumatics.toggleBeamMinMax(groupNames)` | For each group: switches to the minimum if everything is at the maximum, otherwise to the maximum. | 108 |
+| `controller_pneumatics.updateGFX(dt)` | Every frame: applies the momentary increases/decreases, advances the current pressure toward the target at a limited speed and handles stopping the sounds. *(internal)* | 181 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_pneumatics.init(jbeamData)`
 
-Construit les groupes de poutres à partir des tables jbeam et des niveaux de pression.
+Builds the beam groups from the jbeam tables and the pressure levels.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_pneumatics.initSounds(jbeamData)`
 
-Crée les sources sonores de montée/descente de chaque groupe. Appelé par le gestionnaire de contrôleurs.
+Creates the rise/fall sound sources of each group. Called by the controller manager.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_pneumatics.isBeamGroupAtPressureLevel(groupName, levelName)`
 
-Indique si toutes les poutres d'un groupe sont exactement au niveau de pression nommé.
+Indicates whether all beams of a group are exactly at the named pressure level.
 
-- `groupName` (*string*) : Nom du groupe.
-- `levelName` (*string*) : Nom du niveau (ex. "maxPressure").
-- **renvoie** : boolean Vrai si le groupe est à ce niveau ; false aussi si le groupe n'existe pas.
+- `groupName` (*string*) : Group name.
+- `levelName` (*string*) : Level name (e.g. "maxPressure").
+- **returns**: boolean True if the group is at this level; also false if the group does not exist.
 
 #### `controller_pneumatics.setBeamDefault(groupNames)`
 
-Cible la pression par défaut (defaultPressure) des groupes.
+Targets the default pressure (defaultPressure) of the groups.
 
-- `groupNames` (*string[]*) : Noms de groupes de poutres (groupName de la table des poutres sous pression).
+- `groupNames` (*string[]*) : Beam group names (groupName of the pressurized beams table).
 
 #### `controller_pneumatics.setBeamMax(groupNames)`
 
-Cible la pression maximale (maxPressure) des groupes.
+Targets the maximum pressure (maxPressure) of the groups.
 
-- `groupNames` (*string[]*) : Noms de groupes de poutres (groupName de la table des poutres sous pression).
+- `groupNames` (*string[]*) : Beam group names (groupName of the pressurized beams table).
 
 #### `controller_pneumatics.setBeamMin(groupNames)`
 
-Cible la pression minimale (minPressure) des groupes.
+Targets the minimum pressure (minPressure) of the groups.
 
-- `groupNames` (*string[]*) : Noms de groupes de poutres (groupName de la table des poutres sous pression).
+- `groupNames` (*string[]*) : Beam group names (groupName of the pressurized beams table).
 
 #### `controller_pneumatics.setBeamMomentaryDecrease(groupNames, enabled)`
 
-Active/désactive la diminution continue de pression des groupes ; désactive l'augmentation.
+Enables/disables the continuous pressure decrease of the groups; disables the increase.
 
-- `groupNames` (*string[]*) : Noms de groupes de poutres (groupName de la table des poutres sous pression).
-- `enabled` (*boolean*) : Vrai pour diminuer.
+- `groupNames` (*string[]*) : Beam group names (groupName of the pressurized beams table).
+- `enabled` (*boolean*) : True to decrease.
 
 #### `controller_pneumatics.setBeamMomentaryIncrease(groupNames, enabled)`
 
-Active/désactive l'augmentation continue de pression des groupes (tant que enabled est vrai) ; désactive la diminution.
+Enables/disables the continuous pressure increase of the groups (as long as enabled is true); disables the decrease.
 
-- `groupNames` (*string[]*) : Noms de groupes de poutres (groupName de la table des poutres sous pression).
-- `enabled` (*boolean*) : Vrai pour augmenter.
+- `groupNames` (*string[]*) : Beam group names (groupName of the pressurized beams table).
+- `enabled` (*boolean*) : True to increase.
 
 #### `controller_pneumatics.setBeamPressure(groupNames, pressure)`
 
-Fixe directement la pression cible des groupes, bornée par le min et le max de chaque poutre.
+Directly sets the target pressure of the groups, bounded by the min and max of each beam.
 
-- `groupNames` (*string[]*) : Noms de groupes de poutres (groupName de la table des poutres sous pression).
-- `pressure` (*number*) : Pression cible en PSI.
+- `groupNames` (*string[]*) : Beam group names (groupName of the pressurized beams table).
+- `pressure` (*number*) : Target pressure in PSI.
 
 #### `controller_pneumatics.setBeamPressureLevel(groupNames, pressureName)`
 
-Cible un niveau de pression nommé (clé de poutre, ex. "maxPressure" ou un niveau défini dans pressureLevels).
+Targets a named pressure level (beam key, e.g. "maxPressure" or a level defined in pressureLevels).
 
-- `groupNames` (*string[]*) : Noms de groupes de poutres (groupName de la table des poutres sous pression).
-- `pressureName` (*string*) : Nom du niveau de pression.
+- `groupNames` (*string[]*) : Beam group names (groupName of the pressurized beams table).
+- `pressureName` (*string*) : Name of the pressure level.
 
 #### `controller_pneumatics.toggleBeamMinMax(groupNames)`
 
-Pour chaque groupe : passe au minimum si tout est au maximum, sinon au maximum.
+For each group: switches to the minimum if everything is at the maximum, otherwise to the maximum.
 
-- `groupNames` (*string[]*) : Noms de groupes de poutres (groupName de la table des poutres sous pression).
+- `groupNames` (*string[]*) : Beam group names (groupName of the pressurized beams table).
 
 #### `controller_pneumatics.updateGFX(dt)`
 
-Chaque image : applique les augmentations/diminutions momentanées, fait avancer la pression courante vers la cible à vitesse limitée et gère l'arrêt des sons.
+Every frame: applies the momentary increases/decreases, advances the current pressure toward the target at a limited speed and handles stopping the sounds.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `createSFXSource`, `cutSFX`, `getBeamVelocity`, `playSFX`, `setBeamPressureRel`, `setVolume`, `stopSFX`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/pneumatics.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/pneumatics.lua`.*

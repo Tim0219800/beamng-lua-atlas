@@ -1,66 +1,66 @@
 # `career_modules_quickTravel`
 
-*Fichier : `lua/ge/extensions/career/modules/quickTravel.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/quickTravel.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_quickTravel` : `extensions.load("career_modules_quickTravel")`, puis la globale `career_modules_quickTravel`
+**Access:** extension `career_modules_quickTravel`: `extensions.load("career_modules_quickTravel")`, then the global `career_modules_quickTravel`
 
-Voyage rapide payant en carrière : calcule un prix selon la distance de route entre le joueur et une destination, puis téléporte le joueur (en mode marche) et le débite. Sert à rejoindre un garage.
+Paid quick travel in career: computes a price based on the road distance between the player and a destination, then teleports the player (in walking mode) and debits them. Used to reach a garage.
 
-## Remarques
+## Notes
 
-- Tarif : gratuit sous 300 m ; sinon 5 + distance(m) * 0.004 (arrondi au centime).
-- La distance vient d'un planificateur de route (gameplay/route/route) depuis la position du véhicule joueur.
-- Le voyage avec le véhicule n'est pas implémenté (TODO dans le code) : sans useWalkingMode, seul le paiement est effectué, sans téléportation.
-- getPriceForQuickTravel renvoie deux valeurs : prix et distance.
+- Rate: free under 300 m; otherwise 5 + distance(m) * 0.004 (rounded to the cent).
+- The distance comes from a route planner (gameplay/route/route) from the player vehicle's position.
+- Traveling with the vehicle is not implemented (TODO in the code): without useWalkingMode, only the payment is made, without teleportation.
+- getPriceForQuickTravel returns two values: price and distance.
 
-**Dépendances (chargées avant) :** `career_career`
+**Dependencies (loaded first):** `career_career`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_quickTravel.getPriceForQuickTravel(pos)` | Calcule le prix et la distance de route jusqu'à pos. | 19 |
-| `career_modules_quickTravel.getPriceForQuickTravelToGarage(garage)` | Prix du voyage jusqu'à la position du garage donnée par freeroam_facilities.getGaragePosRot. | 54 |
-| `career_modules_quickTravel.quickTravelToGarage(garagePoi)` | Voyage rapide vers le premier emplacement de stationnement du garage (en mode marche, libellé quickTravelGarageTaxi). | 45 |
-| `career_modules_quickTravel.quickTravelToPos(pos, useWalkingMode, reasonString)` | Si le joueur peut payer, active le mode marche, téléporte le véhicule en sécurité vers pos et oriente le joueur vers pos, puis débite le prix (tags quickTravel, buying). | 33 |
+| `career_modules_quickTravel.getPriceForQuickTravel(pos)` | Computes the price and road distance to pos. | 19 |
+| `career_modules_quickTravel.getPriceForQuickTravelToGarage(garage)` | Travel price to the garage position given by freeroam_facilities.getGaragePosRot. | 54 |
+| `career_modules_quickTravel.quickTravelToGarage(garagePoi)` | Quick travel to the garage's first parking spot (in walking mode, label quickTravelGarageTaxi). | 45 |
+| `career_modules_quickTravel.quickTravelToPos(pos, useWalkingMode, reasonString)` | If the player can pay, enables walking mode, safely teleports the vehicle to pos and orients the player toward pos, then debits the price (tags quickTravel, buying). | 33 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_quickTravel.getPriceForQuickTravel(pos)`
 
-Calcule le prix et la distance de route jusqu'à pos.
+Computes the price and road distance to pos.
 
 - `pos` (*vec3*) : Destination.
-- **renvoie** : number Prix en argent.
-- **renvoie** : number Distance de route en mètres.
+- **returns**: number Price in money.
+- **returns**: number Road distance in meters.
 
 #### `career_modules_quickTravel.getPriceForQuickTravelToGarage(garage)`
 
-Prix du voyage jusqu'à la position du garage donnée par freeroam_facilities.getGaragePosRot.
+Travel price to the garage position given by freeroam_facilities.getGaragePosRot.
 
 - `garage` (*table*) : Garage.
-- **renvoie** : number Prix.
-- **renvoie** : number Distance en mètres.
+- **returns**: number Price.
+- **returns**: number Distance in meters.
 
 #### `career_modules_quickTravel.quickTravelToGarage(garagePoi)`
 
-Voyage rapide vers le premier emplacement de stationnement du garage (en mode marche, libellé quickTravelGarageTaxi).
+Quick travel to the garage's first parking spot (in walking mode, label quickTravelGarageTaxi).
 
-- `garagePoi` (*table*) : POI du garage (champ id).
+- `garagePoi` (*table*) : Garage POI (id field).
 
 #### `career_modules_quickTravel.quickTravelToPos(pos, useWalkingMode, reasonString)`
 
-Si le joueur peut payer, active le mode marche, téléporte le véhicule en sécurité vers pos et oriente le joueur vers pos, puis débite le prix (tags quickTravel, buying).
+If the player can pay, enables walking mode, safely teleports the vehicle to pos and orients the player toward pos, then debits the price (tags quickTravel, buying).
 
 - `pos` (*vec3*) : Destination.
-- `useWalkingMode` (*boolean|nil*) : Si vrai, effectue la téléportation en mode marche.
-- `reasonString` (*string|nil*) : Clé de traduction du libellé, ui.career.attributeLog.quickTravelPaid par défaut.
+- `useWalkingMode` (*boolean|nil*) : If true, performs the teleport in walking mode.
+- `reasonString` (*string|nil*) : Translation key of the label, ui.career.attributeLog.quickTravelPaid by default.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_career. |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_career. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/quickTravel.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/quickTravel.lua`.*

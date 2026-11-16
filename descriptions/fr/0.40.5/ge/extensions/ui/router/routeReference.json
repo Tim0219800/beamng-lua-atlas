@@ -1,0 +1,39 @@
+{
+  "path": "lua/ge/extensions/ui/router/routeReference.lua",
+  "module": "Fonctions pures pour décomposer une référence de navigation décorée de la forme `route[?clé=valeur&...][:portée]`. La partie route peut rester relative (« ./options ») : ce module ne la résout pas, il sépare seulement la requête inline et la portée (scope) et décode les paramètres inline.",
+  "usage": "local r = extensions.ui_router_routeReference.parse(\"menu.options?tab=audio&x=1:scope1\")\n-- r.route == \"menu.options\", r.scope == \"scope1\", r.params == {tab=\"audio\", x=\"1\"}",
+  "notes": [
+    "Les valeurs inline restent des chaînes. Les paramètres explicites passés par programme l'emportent sur les inline en cas de collision (mergeParams, avec avertissement).",
+    "Sans '?', le séparateur de portée est le premier ':' de la référence ; avec '?', c'est le premier ':' situé après le '?'.",
+    "Une référence dont la route est vide, ou dont la portée est vide, est traitée comme une route non décorée (portée nil)."
+  ],
+  "functions": {
+    "urlDecode": {
+      "desc": "Décode un composant de requête : '+' devient une espace, puis les séquences %XX sont décodées.",
+      "params": {"value": {"type": "string", "desc": "Texte encodé ; une valeur non-chaîne est renvoyée telle quelle."}},
+      "returns": [{"type": "string", "desc": "Texte décodé."}],
+      "internal": false
+    },
+    "parseQuery": {
+      "desc": "Analyse un segment « a=1&b=2 » en table. Les valeurs restent des chaînes ; une clé répétée garde la dernière valeur (avertissement) ; une clé nue (« flag ») vaut une chaîne vide ; les clés vides sont ignorées.",
+      "params": {"query": {"type": "string|nil", "desc": "Segment de requête sans le '?'."}},
+      "returns": [{"type": "table<string, string>", "desc": "Paramètres décodés."}],
+      "internal": false
+    },
+    "parse": {
+      "desc": "Sépare « route[?requête][:portée] » en ses parties. Une référence non-chaîne est renvoyée sans changement avec des params vides.",
+      "params": {"reference": {"type": "string|any", "desc": "Référence de navigation brute."}},
+      "returns": [{"type": "table", "desc": "{ route = string, scope = string|nil, params = table<string, string> }"}],
+      "internal": false
+    },
+    "mergeParams": {
+      "desc": "Superpose les paramètres explicites sur les paramètres inline (copie). Les explicites gagnent et un avertissement est journalisé si la valeur diffère.",
+      "params": {
+        "inlineParams": {"type": "table|nil", "desc": "Paramètres issus de la référence."},
+        "explicitParams": {"type": "table|nil", "desc": "Paramètres passés explicitement."}
+      },
+      "returns": [{"type": "table", "desc": "Table fusionnée."}],
+      "internal": false
+    }
+  }
+}

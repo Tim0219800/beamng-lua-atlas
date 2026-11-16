@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/thread/sendMessage.lua",
+  "module": "Noeud « Send Message » (thread). Envoie un message (table des pins d'entrée non fixes) au projet flowgraph d'id donné (-1 = parent) via modules.thread:sendMessage, ou sendNetworkedMessage si le pin networked est vrai. Envoie une seule fois jusqu'au reset. Pins fixes : flow, reset, networked, id, name ; sortie flow.",
+  "notes": [
+    "Le pin name (nom du message) est fixe donc n'est pas ajouté au contenu du message.",
+    "Le résultat de sendMessage n'est pas utilisé."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "savePins = true, allowCustomInPins = true.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sur reset, done = false ; sinon, au flow avec un id, assemble les pins non fixes en table et envoie le message, puis recopie flow.",
+          "internal": false
+        },
+        "_executionStarted": {
+          "desc": "done = false.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

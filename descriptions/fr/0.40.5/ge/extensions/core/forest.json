@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/core/forest.lua",
+  "module": "Extension GE `core_forest` : fournit un accès mis en cache à l'objet `Forest` de la scène (la forêt/végétation instanciée du niveau). Un moddeur l'utilise pour obtenir cet objet sans refaire une recherche dans la scène.",
+  "usage": "local forest = core_forest.getForestObject()\nif forest then print(forest:getId()) end",
+  "notes": [
+    "L'id du premier objet de classe Forest trouvé est mémorisé dans forestId ; si l'objet est supprimé, une nouvelle recherche est faite au prochain appel. Seul le premier Forest de la scène est utilisé."
+  ],
+  "functions": {
+    "getForestObject": {
+      "desc": "Renvoie l'objet Forest de la scène (premier de classe 'Forest'), avec cache de son id.",
+      "params": {},
+      "returns": [{"type": "userdata|nil", "desc": "Objet Forest, nil s'il n'y en a pas dans le niveau."}]
+    }
+  }
+}

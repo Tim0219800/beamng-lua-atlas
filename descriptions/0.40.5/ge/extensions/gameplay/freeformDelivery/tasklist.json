@@ -1,33 +1,46 @@
 {
   "path": "lua/ge/extensions/gameplay/freeformDelivery/tasklist.lua",
-  "module": "Alimente l'app « tasks » (liste de tâches en haut à gauche) pendant une livraison libre. Il affiche un en-tête (nom de la livraison), une tâche par objectif actif (placement, playerInVehicle, engineRunning, coupled, unhitched), une tâche groupée « ne pas abîmer la cargaison » pour les objectifs damage, les objectifs de distance quand leur seuil d'alerte est dépassé, et un message d'invite à choisir une route. La liste n'est reconstruite que lorsqu'un hash d'état des objectifs change.",
+  "module": "Feeds the \"tasks\" app (task list at the top left) during a freeform delivery. It displays a header (delivery name), one task per active goal (placement, playerInVehicle, engineRunning, coupled, unhitched), a grouped \"do not damage the cargo\" task for damage goals, distance goals when their warning threshold is exceeded, and a message prompting to choose a route. The list is only rebuilt when a goal state hash changes.",
   "notes": [
-    "Les tâches sont envoyées à l'UI par guihooks.trigger : ClearTasklist, SetTasklistHeader, SetTasklistTask {id, type, label, subtext, done, fail} et DiscardTasklistItem (id, délai facultatif).",
-    "Ids de tâches : delivery_goal_<goalId>, delivery_damage, delivery_distance_<goalId>, delivery_route_prompt. Un objectif avec showInTasklist == false n'est jamais affiché.",
-    "Un objectif terminé avec removeOnComplete est retiré après un délai et ne revient plus dans la liste (sauf s'il redevient non terminé).",
-    "L'invite de route n'apparaît qu'une fois par livraison : dès qu'une route est active, elle est considérée comme déjà montrée.",
-    "Dépend des globales gameplay_freeformDelivery_goals et _odometer et de ui_appContainers, sans les déclarer dans dependencies."
+    "Tasks are sent to the UI by guihooks.trigger: ClearTasklist, SetTasklistHeader, SetTasklistTask {id, type, label, subtext, done, fail} and DiscardTasklistItem (id, optional delay).",
+    "Task ids: delivery_goal_<goalId>, delivery_damage, delivery_distance_<goalId>, delivery_route_prompt. A goal with showInTasklist == false is never displayed.",
+    "A completed goal with removeOnComplete is removed after a delay and does not return to the list (unless it becomes incomplete again).",
+    "The route prompt only appears once per delivery: as soon as a route is active, it is considered already shown.",
+    "Depends on the globals gameplay_freeformDelivery_goals and _odometer and on ui_appContainers, without declaring them in dependencies."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "gameplay_freeformDelivery_utils, gameplay_freeformDelivery_routes et core_groundMarkers."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "gameplay_freeformDelivery_utils, gameplay_freeformDelivery_routes and core_groundMarkers."
+    }
   },
   "functions": {
     "setup": {
-      "desc": "Affiche l'app « tasks », vide la liste, réinitialise les caches, envoie l'en-tête (nom de la livraison), construit la liste initiale et le message de route.",
-      "params": {"delivery": {"type": "table", "desc": "Données de livraison (name...)."}},
+      "desc": "Displays the \"tasks\" app, clears the list, resets the caches, sends the header (delivery name), builds the initial list and the route message.",
+      "params": {
+        "delivery": {
+          "type": "table",
+          "desc": "Delivery data (name...)."
+        }
+      },
       "internal": true
     },
     "update": {
-      "desc": "Appelée chaque frame : met à jour le message d'odomètre, calcule un hash de l'état des objectifs (y compris la progression des objectifs multi-véhicules) et reconstruit la liste si quelque chose a changé.",
-      "params": {"profiler": {"type": "table|nil", "desc": "Profileur optionnel (méthode add)."}},
+      "desc": "Called every frame: updates the odometer message, computes a hash of the goal state (including the progress of multi-vehicle goals) and rebuilds the list if something changed.",
+      "params": {
+        "profiler": {
+          "type": "table|nil",
+          "desc": "Optional profiler (add method)."
+        }
+      },
       "internal": true
     },
     "updateRouteMessage": {
-      "desc": "Retire les anciens messages de route et, s'il existe des routes mais pas de guidage actif (core_groundMarkers.currentlyHasTarget) et que l'invite n'a pas encore été montrée, affiche le message invitant à choisir une route via la grande carte. Appelée par routes.lua.",
+      "desc": "Removes the old route messages and, if there are routes but no active guidance (core_groundMarkers.currentlyHasTarget) and the prompt has not yet been shown, displays the message prompting to choose a route via the big map. Called by routes.lua.",
       "internal": false
     },
     "cleanup": {
-      "desc": "Efface l'en-tête, les tâches et les messages de route de l'UI.",
+      "desc": "Clears the header, tasks and route messages from the UI.",
       "internal": true
     }
   }

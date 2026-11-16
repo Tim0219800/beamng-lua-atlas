@@ -1,18 +1,18 @@
 # `flowgraph_nodes_ui_updatedUI_startScreenCrashAnalysisStepDetails`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenCrashAnalysisStepDetails.lua` · VM : Game Engine (GE) · 31 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenCrashAnalysisStepDetails.lua` · VM: Game Engine (GE) · 31 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/updatedUI/startScreenCrashAnalysisStepDetails")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/updatedUI/startScreenCrashAnalysisStepDetails")` (file under extensions/ but not a regular extension)
 
-Nœud « Start Screen Crash Analysis Step Details » (repeat_instant, couleur ui). Ajoute à l'écran de démarrage simple un panneau de détails d'une étape d'analyse de crash. Entrées : flow, stepScoreData (table). Sortie : flow (chainFlow).
+Node "Start Screen Crash Analysis Step Details" (repeat_instant, color ui). Adds a crash analysis step details panel to the simple start screen. Inputs: flow, stepScoreData (table). Output: flow (chainFlow).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Recopie flow puis appelle modules.ui:addCrashAnalysisStepDetails({stepScoreData = ...}). | 22 |
+| `C:work()` | Copies flow then calls modules.ui:addCrashAnalysisStepDetails({stepScoreData = ...}). | 22 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenCrashAnalysisStepDetails.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenCrashAnalysisStepDetails.lua`.*

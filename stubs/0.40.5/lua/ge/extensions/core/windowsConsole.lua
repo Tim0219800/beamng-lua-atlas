@@ -2,52 +2,52 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/windowsConsole.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Pont entre la fenêtre console native de Windows (C++) et Lua. Il remplit la liste déroulante des contextes d'exécution (GE-Lua, véhicule courant, chaque véhicule actif, GE-TorqueScript, CEF/UI - JS) et exécute la commande saisie dans le contexte choisi. Tout est appelé par le moteur ; un moddeur peut seulement écouter le hook onConsoleExecuteCommand.
---- Accès : extension `core_windowsConsole` : `extensions.load("core_windowsConsole")`, puis la globale `core_windowsConsole`
+--- Bridge between the native Windows console window (C++) and Lua. It fills the dropdown list of execution contexts (GE-Lua, current vehicle, each active vehicle, GE-TorqueScript, CEF/UI - JS) and executes the typed command in the chosen context. Everything is called by the engine; a modder can only listen to the onConsoleExecuteCommand hook.
+--- Access: extension `core_windowsConsole`: `extensions.load("core_windowsConsole")`, then the global `core_windowsConsole`
 ---@class core_windowsConsole
 core_windowsConsole = {}
 
---- Reconstruit la liste des contextes disponibles dans la console (alias de refreshCombo). Appelé par le C++ quand la fenêtre console est activée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/windowsConsole.lua:47
+--- Rebuilds the list of contexts available in the console (alias of refreshCombo). Called by C++ when the console window is activated.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/windowsConsole.lua:47
 function core_windowsConsole.configure() end
 
---- Exécute une commande dans un contexte et émet le hook onConsoleExecuteCommand(context, cmd). 'GE-TorqueScript' passe par TorqueScript.eval, 'CEF/UI - JS' par be:queueJS, un nom de véhicule par queueLuaCommand sur ce véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/windowsConsole.lua:10
----@param context string Nom du contexte choisi dans la console.
----@param cmd string Texte de la commande.
+--- Executes a command in a context and emits the onConsoleExecuteCommand(context, cmd) hook. 'GE-TorqueScript' goes through TorqueScript.eval, 'CEF/UI - JS' through be:queueJS, a vehicle name through queueLuaCommand on that vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/windowsConsole.lua:10
+---@param context string Name of the context chosen in the console.
+---@param cmd string Command text.
 function core_windowsConsole.executeCommand(context, cmd) end
 
---- Hook appelé au chargement : active l'extension si les fonctions console du C++ existent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/windowsConsole.lua:77
----@return boolean|nil  false si la console n'est pas disponible sur la plateforme.
+--- Hook called on load: enables the extension if the C++ console functions exist.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/windowsConsole.lua:77
+---@return boolean|nil  false if the console is not available on the platform.
 function core_windowsConsole.onExtensionLoaded() end
 
---- Hook appelé quand un véhicule devient actif ou inactif : rafraîchit la liste des contextes (même fonction que configure).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/windowsConsole.lua:47
+--- Hook called when a vehicle becomes active or inactive: refreshes the context list (same function as configure).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/windowsConsole.lua:47
 function core_windowsConsole.onVehicleActiveChanged() end
 
---- Hook appelé à la destruction d'un véhicule : rafraîchit la liste des contextes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/windowsConsole.lua:47
+--- Hook called when a vehicle is destroyed: refreshes the context list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/windowsConsole.lua:47
 function core_windowsConsole.onVehicleDestroyed() end
 
---- Hook appelé à l'apparition d'un véhicule : rafraîchit la liste des contextes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/windowsConsole.lua:47
+--- Hook called when a vehicle spawns: refreshes the context list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/windowsConsole.lua:47
 function core_windowsConsole.onVehicleSpawned() end
 
---- Hook appelé au changement de véhicule joueur : rafraîchit la liste des contextes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/windowsConsole.lua:47
+--- Hook called when the player vehicle changes: refreshes the context list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/windowsConsole.lua:47
 function core_windowsConsole.onVehicleSwitched() end
 
---- Exécute du texte Lua dans la VM GE : essaie loadstring(cmd), sinon loadstring('return ' .. cmd) pour afficher la valeur d'une expression, puis dump le résultat s'il n'est pas nil. Journalise « syntax error » si rien ne compile.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/windowsConsole.lua:28
----@param cmd string Code ou expression Lua.
+--- Executes Lua text in the GE VM: tries loadstring(cmd), otherwise loadstring('return ' .. cmd) to display the value of an expression, then dumps the result if it is not nil. Logs "syntax error" if nothing compiles.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/windowsConsole.lua:28
+---@param cmd string Lua code or expression.
 function core_windowsConsole.tryRunCommand(cmd) end
 

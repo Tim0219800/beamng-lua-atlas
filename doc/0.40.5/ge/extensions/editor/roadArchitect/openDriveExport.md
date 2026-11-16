@@ -1,30 +1,30 @@
 # `editor_roadArchitect_openDriveExport`
 
-*Fichier : `lua/ge/extensions/editor/roadArchitect/openDriveExport.lua` · VM : Game Engine (GE) · 367 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadArchitect/openDriveExport.lua` · VM: Game Engine (GE) · 367 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadArchitect_openDriveExport` : `extensions.load("editor_roadArchitect_openDriveExport")`, puis la globale `editor_roadArchitect_openDriveExport`
+**Access:** extension `editor_roadArchitect_openDriveExport`: `extensions.load("editor_roadArchitect_openDriveExport")`, then the global `editor_roadArchitect_openDriveExport`
 
-Export du réseau Road Architect au format OpenDRIVE 1.8 (.xodr). Chaque route (hors superpositions) est convertie en géométrie OpenDRIVE : ligne de référence approchée par des cubiques paramétriques 2D (paramPoly3, tangentes de type Chordal Catmull-Rom), profil d'élévation en cubiques explicites, largeurs et hauteurs de voies par section. Le fichier est écrit via le sélecteur de fichier de l'éditeur (editor_fileDialog.saveFile). Si aucune route Road Architect n'existe, l'export se rabat sur tech_openDriveExporter pour exporter le réseau routier de la carte chargée.
+Export of the Road Architect network in OpenDRIVE 1.8 format (.xodr). Each road (excluding overlays) is converted to OpenDRIVE geometry: reference line approximated by 2D parametric cubics (paramPoly3, Chordal Catmull-Rom tangents), elevation profile in explicit cubics, lane widths and heights per section. The file is written via the editor file selector (editor_fileDialog.saveFile). If no Road Architect road exists, the export falls back to tech_openDriveExporter to export the road network of the loaded map.
 
-## Exemple
+## Example
 
 ```lua
 editor_roadArchitect_openDriveExport.export()
 ```
 
-## Remarques
+## Notes
 
-- Types de voies exportés : 'road_lane' -> driving, 'sidewalk' -> walking, tout autre type (îlots, béton…) -> restricted.
-- Les routes sans nœud sont ignorées ; les superpositions (isOverlay) ne sont pas exportées. Chaque route est écrite avec rule="RHT", junction="-1" et un id égal à son rang - 1.
-- Les liens prédécesseur/successeur (balise link des routes et des voies), objets, signaux et surface ne sont pas exportés : les balises sont écrites vides ou en commentaire (le code contient un TODO pour le lien des voies). L'en-tête écrit north/south/east/west à 0.0.
-- La marque centrale est toujours écrite comme ligne discontinue (broken) standard, quelles que soient les peintures du profil.
-- Si le fichier ne peut pas être ouvert en écriture, io.open renvoie nil et l'écriture échoue (pas de test dans le code).
+- Exported lane types: 'road_lane' -> driving, 'sidewalk' -> walking, any other type (islands, concrete...) -> restricted.
+- Roads without nodes are ignored; overlays (isOverlay) are not exported. Each road is written with rule="RHT", junction="-1" and an id equal to its rank - 1.
+- Predecessor/successor links (link tag of roads and lanes), objects, signals and surface are not exported: the tags are written empty or as comments (the code contains a TODO for the lane link). The header writes north/south/east/west as 0.0.
+- The center mark is always written as a standard broken line, whatever the profile's paint.
+- If the file cannot be opened for writing, io.open returns nil and the write fails (no check in the code).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadArchitect_openDriveExport.export()` | Exporte le réseau Road Architect courant en .xodr. Filtre les routes vides, convertit les routes non superposées en géométrie OpenDRIVE, puis ouvre une boîte de dialogue d'enregistrement (extension .xodr, confirmation d'écrasement) et écrit le fichier. Sans route, exporte à la place le réseau routier de la carte via tech_openDriveExporter. | 336 |
+| `editor_roadArchitect_openDriveExport.export()` | Exports the current Road Architect network to .xodr. Filters out empty roads, converts non-overlay roads to OpenDRIVE geometry, then opens a save dialog (.xodr extension, overwrite confirmation) and writes the file. With no roads, exports the map's road network instead via tech_openDriveExporter. | 336 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadArchitect/openDriveExport.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadArchitect/openDriveExport.lua`.*

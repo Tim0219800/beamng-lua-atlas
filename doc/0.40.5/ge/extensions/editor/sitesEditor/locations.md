@@ -1,45 +1,45 @@
 # `editor_sitesEditor_locations`
 
-*Fichier : `lua/ge/extensions/editor/sitesEditor/locations.lua` · VM : Game Engine (GE) · 152 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/sitesEditor/locations.lua` · VM: Game Engine (GE) · 152 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/sitesEditor/locations")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/sitesEditor/locations")` (file under extensions/ but not a regular extension)
 
-Sous-éditeur 'Locations' de l'éditeur de sites. Le module renvoie un constructeur de classe C (appelé avec sitesEditor et la clé 'locations'). Il gère la sélection, le test de clic (sphère de rayon node.radius), le gizmo de translation et de mise à l'échelle (le rayon du lieu), la création et la suppression avec historique annulable (editor.history). Il est utilisé avec sortedListDisplay comme éditeur d'élément.
+'Locations' sub-editor of the sites editor. The module returns a class constructor C (called with sitesEditor and the key 'locations'). It handles selection, the click test (sphere of radius node.radius), the translation and scale gizmo (the location's radius), creation and deletion with undoable history (editor.history). It is used with sortedListDisplay as the element editor.
 
-## Exemple
+## Example
 
 ```lua
 local locations = require('/lua/ge/extensions/editor/sitesEditor/locations')(editor_sitesEditor, 'locations')
 ```
 
-## Remarques
+## Notes
 
-- Le rayon minimal d'un lieu est 0.1 (math.max(0.1, ...)).
-- Dans drawElement, le texte 'Closest Road' affiche les deux noeuds renvoyés par map.findClosestRoad.
+- The minimum radius of a location is 0.1 (math.max(0.1, ...)).
+- In drawElement, the 'Closest Road' text displays the two nodes returned by map.findClosestRoad.
 
-## Classe `C`
+## Class `C`
 
-Objet renvoyé par le constructeur du module. Champs : sitesEditor, key, current (lieu sélectionné), sites, list.
+Object returned by the module constructor. Fields: sitesEditor, key, current (selected location), sites, list.
 
-Le module renvoie un constructeur : `local obj = require("editor_sitesEditor_locations")(options)`.
+The module returns a constructor: `local obj = require("editor_sitesEditor_locations")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:beginDrag()` | Début de glissement du gizmo : mémorise la position et le rayon de départ. | 69 |
-| `C:create(pos)` | Crée un lieu à la position donnée (action annulable 'Create Location') et le renvoie. | 121 |
-| `C:dragging()` | Pendant le glissement : en mode translation met à jour pos, en mode échelle recalcule radius (minimum 0.1) à partir du facteur du gizmo. | 74 |
-| `C:drawElement(loc)` | Dessine l'éditeur de l'élément : gizmo (si allowGizmo) et texte du segment de route le plus proche. | 134 |
-| `C:endDragging()` | Fin de glissement : enregistre une action annulable 'Update Transform of ...' (ancienne et nouvelle pos/radius). | 93 |
-| `C:hitTest(mouseInfo, objects)` | Renvoie le lieu le plus proche de la caméra dont la sphère (rayon node.radius) est traversée par le rayon souris. | 28 |
-| `C:init(sitesEditor, key)` | Constructeur (appelé par le module) : mémorise sitesEditor et la clé, sans sélection. | 9 |
-| `C:remove(loc)` | Supprime un lieu (action annulable 'Remove Location'). | 128 |
-| `C:select(loc)` | Sélectionne un lieu et place le gizmo sur lui. | 21 |
-| `C:setSites(sites)` | Définit les sites édités, retient la liste sites[key] et désélectionne. | 15 |
-| `C:updateTransform()` | Place le gizmo sur la position du lieu courant. | 45 |
+| `C:beginDrag()` | Start of a gizmo drag: stores the starting position and radius. | 69 |
+| `C:create(pos)` | Creates a location at the given position (undoable action 'Create Location') and returns it. | 121 |
+| `C:dragging()` | During the drag: in translation mode updates pos, in scale mode recomputes radius (minimum 0.1) from the gizmo factor. | 74 |
+| `C:drawElement(loc)` | Draws the element editor: gizmo (if allowGizmo) and the text of the closest road segment. | 134 |
+| `C:endDragging()` | End of drag: records an undoable action 'Update Transform of ...' (old and new pos/radius). | 93 |
+| `C:hitTest(mouseInfo, objects)` | Returns the location closest to the camera whose sphere (radius node.radius) is crossed by the mouse ray. | 28 |
+| `C:init(sitesEditor, key)` | Constructor (called by the module): stores sitesEditor and the key, with no selection. | 9 |
+| `C:remove(loc)` | Removes a location (undoable action 'Remove Location'). | 128 |
+| `C:select(loc)` | Selects a location and places the gizmo on it. | 21 |
+| `C:setSites(sites)` | Sets the edited sites, keeps the list sites[key] and deselects. | 15 |
+| `C:updateTransform()` | Places the gizmo on the position of the current location. | 45 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `worldEditorCppApi.` `getAxisGizmoScale`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/sitesEditor/locations.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/sitesEditor/locations.lua`.*

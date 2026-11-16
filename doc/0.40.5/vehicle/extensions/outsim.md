@@ -1,15 +1,15 @@
 # `outsim`
 
-*Fichier : `lua/vehicle/extensions/outsim.lua` · VM : Véhicule · 7 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/outsim.lua` · VM: Vehicle · 7 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `outsim` : `extensions.load (VM véhicule)("outsim")`, puis la globale `outsim`
+**Access:** extension `outsim`: `extensions.load (vehicle VM)("outsim")`, then the global `outsim`
 
-Fichier obsolète : il se contente d'écrire une erreur dans le log (avec la trace d'appel) disant que quelque chose a tenté d'utiliser l'ancienne extension outsim, et renvoie une table vide. Le protocole OutSim est géré ailleurs (voir https://go.beamng.com/protocols et le module protocols).
+Obsolete file: it only writes an error to the log (with the call trace) saying that something tried to use the old outsim extension, and returns an empty table. The OutSim protocol is handled elsewhere (see https://go.beamng.com/protocols and the protocols module).
 
-## Remarques
+## Notes
 
-- Le module renvoie {} : toute fonction appelée dessus sera nil.
-- L'erreur de log se produit au chargement du fichier.
+- The module returns {}: any function called on it will be nil.
+- The log error occurs when the file is loaded.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/outsim.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/outsim.lua`.*

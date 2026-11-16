@@ -1,160 +1,160 @@
 # `career_modules_delivery_vehicleOfferManager`
 
-*Fichier : `lua/ge/extensions/career/modules/delivery/vehicleOfferManager.lua` · VM : Game Engine (GE) · 405 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/delivery/vehicleOfferManager.lua` · VM: Game Engine (GE) · 405 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_delivery_vehicleOfferManager` : `extensions.load("career_modules_delivery_vehicleOfferManager")`, puis la globale `career_modules_delivery_vehicleOfferManager`
+**Access:** extension `career_modules_delivery_vehicleOfferManager`: `extensions.load("career_modules_delivery_vehicleOfferManager")`, then the global `career_modules_delivery_vehicleOfferManager`
 
-Gère les offres de livraison de véhicules et de remorques en mode carrière (la liste allOffers) : ajout, recherche (par lieu, par installation, non expirées), libellés de catégories de véhicules (junkerVeh, smallVeh, largeVeh, fleetVeh, exoticVeh, remorques vides/chargées petites, moyennes, grandes) avec leur drapeau de déblocage, et apparition (spawn) d'un véhicule d'offre dans le monde via une séquence util_stepHandler. Sert aussi à fabriquer le libellé d'une tâche de véhicule pour l'UI.
+Manages vehicle and trailer delivery offers in career mode (the allOffers list): adding, lookup (by location, by facility, non-expired), vehicle category labels (junkerVeh, smallVeh, largeVeh, fleetVeh, exoticVeh, empty/loaded small, medium, large trailers) with their unlock flag, and spawning an offer vehicle in the world via a util_stepHandler sequence. Also used to build the label of a vehicle task for the UI.
 
-## Remarques
+## Notes
 
-- Spawn d'une offre : fondu au noir, spawn du véhicule (model/config de offer.vehicle), placement sur la place offer.spawnLocation.psPath, initialisation du kilométrage (partCondition.initConditions), contact coupé (setIgnitionLevel 0), ping puis lecture de l'odomètre de la pièce principale (offer.startingOdometer, -1 si introuvable), création de la tâche via vehicleTasks.addVehicleTask, démarrage du mode livraison, fondu retour.
-- offer.spawned = true est posé dès le début de spawnOffer : l'offre disparaît des listes 'unexpired' immédiatement.
-- Les filtres getAllOfferUnexpired et getAllOfferAtFacilityUnexpired ne regardent pas la visibilité/déblocage de l'installation (code commenté).
-- Le paramètre psPath de getAllOfferAtFacilityUnexpired est ignoré.
-- sameLocation(a, b) est asymétrique : seules les clés de a sont comparées (comme dans parcelManager).
-- Tous les appels de filtrage déclenchent d'abord triggerAllGenerators() : de nouvelles offres peuvent être générées comme effet de bord.
-- La table vehicleTags associe emptyLargeTrailer (singulier, sans 's' final) alors que les autres sont au pluriel : à respecter si on utilise la clé.
+- Offer spawn: fade to black, vehicle spawn (model/config of offer.vehicle), placement on the spot offer.spawnLocation.psPath, mileage initialization (partCondition.initConditions), ignition off (setIgnitionLevel 0), ping then reading of the main part's odometer (offer.startingOdometer, -1 if not found), task creation via vehicleTasks.addVehicleTask, starting delivery mode, fade back in.
+- offer.spawned = true is set at the very start of spawnOffer: the offer immediately disappears from the 'unexpired' lists.
+- The filters getAllOfferUnexpired and getAllOfferAtFacilityUnexpired do not look at the facility's visibility/unlocking (commented code).
+- The psPath parameter of getAllOfferAtFacilityUnexpired is ignored.
+- sameLocation(a, b) is asymmetric: only the keys of a are compared (as in parcelManager).
+- All filtering calls first trigger triggerAllGenerators(): new offers can be generated as a side effect.
+- The vehicleTags table associates emptyLargeTrailer (singular, no final 's') whereas the others are plural: keep this in mind if you use the key.
 
-**Dépendances (chargées avant) :** `util_stepHandler`
+**Dependencies (loaded first):** `util_stepHandler`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_delivery_vehicleOfferManager.addOffer(offer)` | Ajoute une offre à la liste globale. | 206 |
-| `career_modules_delivery_vehicleOfferManager.getAllOfferAtFacilityUnexpired(facId, psPath)` | Offres non expirées et non apparues dont l'origine est l'installation facId. | 250 |
-| `career_modules_delivery_vehicleOfferManager.getAllOfferCustomFilter(filter, ...)` | Renvoie les offres pour lesquelles filter(offer, ...) est vrai, après avoir déclenché les générateurs. | 222 |
-| `career_modules_delivery_vehicleOfferManager.getAllOfferForLocation(loc)` | Offres dont l'origine est le lieu donné. | 233 |
-| `career_modules_delivery_vehicleOfferManager.getAllOfferUnexpired()` | Offres non expirées et non encore apparues (spawned faux). | 237 |
-| `career_modules_delivery_vehicleOfferManager.getDefaultVehicleModifiersForUI()` | Renvoie les deux modificateurs affichés par défaut pour une offre de véhicule : 'route' (suivre le trajet) et 'damage' (dégâts), avec icône, libellé et description traduits. | 141 |
-| `career_modules_delivery_vehicleOfferManager.getOfferById(id)` | Cherche une offre par id. | 268 |
-| `career_modules_delivery_vehicleOfferManager.getVehicleTagLabelPlural(tag)` | Libellé traduit au pluriel de la catégorie (ou « noCategory » si inconnue). | 135 |
-| `career_modules_delivery_vehicleOfferManager.getVehicleTagLabelSingular(tag)` | Libellé traduit au singulier de la catégorie (ou « noCategory » si inconnue). | 130 |
-| `career_modules_delivery_vehicleOfferManager.getVehicleTagUnlockedSimple()` | État de déblocage de toutes les catégories de véhicules. | 121 |
-| `career_modules_delivery_vehicleOfferManager.isVehicleTagUnlocked(tag)` | Indique si le drapeau de déblocage de la catégorie est actif dans career_modules_unlockFlags. Une catégorie inconnue est considérée débloquée. | 110 |
-| `career_modules_delivery_vehicleOfferManager.makeTaskLabel(task)` | Fabrique le libellé traduit d'une tâche d'offre : vehicleDropOff selon lookupType (réparation, domicile privé, retour après réparation, camion, par défaut « bringTo »), trailerDropOff (« towTo »), ou « dropOffAt » si la tâche a une destination ; sinon « unknown ». | 21 |
-| `career_modules_delivery_vehicleOfferManager.onCareerActivated()` | Hook appelé à l'activation de la carrière : mémorise les autres extensions de livraison et util_stepHandler. *(interne)* *(hook)* | 8 |
-| `career_modules_delivery_vehicleOfferManager.sameLocation(a, b)` | Teste l'égalité de deux lieux en comparant chaque clé de a avec celle de b. | 214 |
-| `career_modules_delivery_vehicleOfferManager.sameLocationOffer(offer, otherLoc)` | Compare l'origine d'une offre avec un lieu via sameLocation. | 210 |
-| `career_modules_delivery_vehicleOfferManager.spawnOffer(offerId, fadeToBlack, callback)` | Fait apparaître le véhicule d'une offre (voir notes), l'enregistre comme tâche de véhicule et démarre le mode livraison. Logue une erreur et s'arrête si l'offre est introuvable. | 277 |
+| `career_modules_delivery_vehicleOfferManager.addOffer(offer)` | Adds an offer to the global list. | 206 |
+| `career_modules_delivery_vehicleOfferManager.getAllOfferAtFacilityUnexpired(facId, psPath)` | Non-expired, non-spawned offers whose origin is the facility facId. | 250 |
+| `career_modules_delivery_vehicleOfferManager.getAllOfferCustomFilter(filter, ...)` | Returns the offers for which filter(offer, ...) is true, after triggering the generators. | 222 |
+| `career_modules_delivery_vehicleOfferManager.getAllOfferForLocation(loc)` | Offers whose origin is the given location. | 233 |
+| `career_modules_delivery_vehicleOfferManager.getAllOfferUnexpired()` | Non-expired offers not yet spawned (spawned false). | 237 |
+| `career_modules_delivery_vehicleOfferManager.getDefaultVehicleModifiersForUI()` | Returns the two modifiers displayed by default for a vehicle offer: 'route' (follow the route) and 'damage', with translated icon, label and description. | 141 |
+| `career_modules_delivery_vehicleOfferManager.getOfferById(id)` | Looks up an offer by id. | 268 |
+| `career_modules_delivery_vehicleOfferManager.getVehicleTagLabelPlural(tag)` | Translated plural label of the category (or "noCategory" if unknown). | 135 |
+| `career_modules_delivery_vehicleOfferManager.getVehicleTagLabelSingular(tag)` | Translated singular label of the category (or "noCategory" if unknown). | 130 |
+| `career_modules_delivery_vehicleOfferManager.getVehicleTagUnlockedSimple()` | Unlock state of all vehicle categories. | 121 |
+| `career_modules_delivery_vehicleOfferManager.isVehicleTagUnlocked(tag)` | Indicates whether the category's unlock flag is active in career_modules_unlockFlags. An unknown category is considered unlocked. | 110 |
+| `career_modules_delivery_vehicleOfferManager.makeTaskLabel(task)` | Builds the translated label of an offer task: vehicleDropOff according to lookupType (repair, private home, return after repair, truck, default "bringTo"), trailerDropOff ("towTo"), or "dropOffAt" if the task has a destination; otherwise "unknown". | 21 |
+| `career_modules_delivery_vehicleOfferManager.onCareerActivated()` | Hook called on career activation: stores the other delivery extensions and util_stepHandler. *(internal)* *(hook)* | 8 |
+| `career_modules_delivery_vehicleOfferManager.sameLocation(a, b)` | Tests the equality of two locations by comparing each key of a with that of b. | 214 |
+| `career_modules_delivery_vehicleOfferManager.sameLocationOffer(offer, otherLoc)` | Compares an offer's origin with a location via sameLocation. | 210 |
+| `career_modules_delivery_vehicleOfferManager.spawnOffer(offerId, fadeToBlack, callback)` | Spawns an offer's vehicle (see notes), registers it as a vehicle task and starts delivery mode. Logs an error and stops if the offer is not found. | 277 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_delivery_vehicleOfferManager.addOffer(offer)`
 
-Ajoute une offre à la liste globale.
+Adds an offer to the global list.
 
-- `offer` (*table*) : Offre (id, origin, offerExpiresAt, vehicle, task, rewards…).
+- `offer` (*table*) : Offer (id, origin, offerExpiresAt, vehicle, task, rewards…).
 
 #### `career_modules_delivery_vehicleOfferManager.getAllOfferAtFacilityUnexpired(facId, psPath)`
 
-Offres non expirées et non apparues dont l'origine est l'installation facId.
+Non-expired, non-spawned offers whose origin is the facility facId.
 
-- `facId` (*string*) : Identifiant de l'installation.
-- `psPath` (*string|nil*) : Ignoré.
-- **renvoie** : table Liste d'offres.
+- `facId` (*string*) : Facility identifier.
+- `psPath` (*string|nil*) : Ignored.
+- **returns**: table List of offers.
 
 #### `career_modules_delivery_vehicleOfferManager.getAllOfferCustomFilter(filter, ...)`
 
-Renvoie les offres pour lesquelles filter(offer, ...) est vrai, après avoir déclenché les générateurs.
+Returns the offers for which filter(offer, ...) is true, after triggering the generators.
 
-- `filter` (*function*) : fonction(offer, ...) -> boolean.
-- `...` (*any*) : Arguments supplémentaires pour filter.
-- **renvoie** : table Liste d'offres.
+- `filter` (*function*) : function(offer, ...) -> boolean.
+- `...` (*any*) : Extra arguments for filter.
+- **returns**: table List of offers.
 
 #### `career_modules_delivery_vehicleOfferManager.getAllOfferForLocation(loc)`
 
-Offres dont l'origine est le lieu donné.
+Offers whose origin is the given location.
 
-- `loc` (*table*) : Lieu.
-- **renvoie** : table Liste d'offres.
+- `loc` (*table*) : Location.
+- **returns**: table List of offers.
 
 #### `career_modules_delivery_vehicleOfferManager.getAllOfferUnexpired()`
 
-Offres non expirées et non encore apparues (spawned faux).
+Non-expired offers not yet spawned (spawned false).
 
-- **renvoie** : table Liste d'offres.
+- **returns**: table List of offers.
 
 #### `career_modules_delivery_vehicleOfferManager.getDefaultVehicleModifiersForUI()`
 
-Renvoie les deux modificateurs affichés par défaut pour une offre de véhicule : 'route' (suivre le trajet) et 'damage' (dégâts), avec icône, libellé et description traduits.
+Returns the two modifiers displayed by default for a vehicle offer: 'route' (follow the route) and 'damage', with translated icon, label and description.
 
-- **renvoie** : table Liste de {type, icon, active, label, description}.
+- **returns**: table List of {type, icon, active, label, description}.
 
 #### `career_modules_delivery_vehicleOfferManager.getOfferById(id)`
 
-Cherche une offre par id.
+Looks up an offer by id.
 
-- `id` (*integer*) : Identifiant de l'offre.
-- **renvoie** : table|nil Offre ou nil.
+- `id` (*integer*) : Offer identifier.
+- **returns**: table|nil Offer or nil.
 
 #### `career_modules_delivery_vehicleOfferManager.getVehicleTagLabelPlural(tag)`
 
-Libellé traduit au pluriel de la catégorie (ou « noCategory » si inconnue).
+Translated plural label of the category (or "noCategory" if unknown).
 
-- `tag` (*string*) : Catégorie.
-- **renvoie** : string Libellé.
+- `tag` (*string*) : Category.
+- **returns**: string Label.
 
 #### `career_modules_delivery_vehicleOfferManager.getVehicleTagLabelSingular(tag)`
 
-Libellé traduit au singulier de la catégorie (ou « noCategory » si inconnue).
+Translated singular label of the category (or "noCategory" if unknown).
 
-- `tag` (*string*) : Catégorie.
-- **renvoie** : string Libellé.
+- `tag` (*string*) : Category.
+- **returns**: string Label.
 
 #### `career_modules_delivery_vehicleOfferManager.getVehicleTagUnlockedSimple()`
 
-État de déblocage de toutes les catégories de véhicules.
+Unlock state of all vehicle categories.
 
-- **renvoie** : table<string, boolean> tag -> débloqué.
+- **returns**: table<string, boolean> tag -> unlocked.
 
 #### `career_modules_delivery_vehicleOfferManager.isVehicleTagUnlocked(tag)`
 
-Indique si le drapeau de déblocage de la catégorie est actif dans career_modules_unlockFlags. Une catégorie inconnue est considérée débloquée.
+Indicates whether the category's unlock flag is active in career_modules_unlockFlags. An unknown category is considered unlocked.
 
-- `tag` (*string*) : Catégorie de véhicule (ex. 'smallVeh', 'loadedLargeTrailers').
-- **renvoie** : boolean true si débloquée.
-- **renvoie** : table|nil Définition du drapeau (absente pour une catégorie inconnue).
+- `tag` (*string*) : Vehicle category (e.g. 'smallVeh', 'loadedLargeTrailers').
+- **returns**: boolean true if unlocked.
+- **returns**: table|nil Flag definition (absent for an unknown category).
 
 #### `career_modules_delivery_vehicleOfferManager.makeTaskLabel(task)`
 
-Fabrique le libellé traduit d'une tâche d'offre : vehicleDropOff selon lookupType (réparation, domicile privé, retour après réparation, camion, par défaut « bringTo »), trailerDropOff (« towTo »), ou « dropOffAt » si la tâche a une destination ; sinon « unknown ».
+Builds the translated label of an offer task: vehicleDropOff according to lookupType (repair, private home, return after repair, truck, default "bringTo"), trailerDropOff ("towTo"), or "dropOffAt" if the task has a destination; otherwise "unknown".
 
-- `task` (*table*) : Tâche d'offre (type, lookupType, destination).
-- **renvoie** : string Libellé traduit.
+- `task` (*table*) : Offer task (type, lookupType, destination).
+- **returns**: string Translated label.
 
 #### `career_modules_delivery_vehicleOfferManager.sameLocation(a, b)`
 
-Teste l'égalité de deux lieux en comparant chaque clé de a avec celle de b.
+Tests the equality of two locations by comparing each key of a with that of b.
 
-- `a` (*table*) : Lieu de référence.
-- `b` (*table*) : Lieu comparé.
-- **renvoie** : boolean true si égaux.
+- `a` (*table*) : Reference location.
+- `b` (*table*) : Compared location.
+- **returns**: boolean true if equal.
 
 #### `career_modules_delivery_vehicleOfferManager.sameLocationOffer(offer, otherLoc)`
 
-Compare l'origine d'une offre avec un lieu via sameLocation.
+Compares an offer's origin with a location via sameLocation.
 
-- `offer` (*table*) : Offre.
-- `otherLoc` (*table*) : Lieu.
-- **renvoie** : boolean true si identique.
+- `offer` (*table*) : Offer.
+- `otherLoc` (*table*) : Location.
+- **returns**: boolean true if identical.
 
 #### `career_modules_delivery_vehicleOfferManager.spawnOffer(offerId, fadeToBlack, callback)`
 
-Fait apparaître le véhicule d'une offre (voir notes), l'enregistre comme tâche de véhicule et démarre le mode livraison. Logue une erreur et s'arrête si l'offre est introuvable.
+Spawns an offer's vehicle (see notes), registers it as a vehicle task and starts delivery mode. Logs an error and stops if the offer is not found.
 
-- `offerId` (*integer*) : Identifiant de l'offre.
-- `fadeToBlack` (*boolean|nil*) : Fondu au noir autour du spawn ; true par défaut.
-- `callback` (*function|nil*) : Appelé à la fin de la séquence d'étapes.
+- `offerId` (*integer*) : Offer identifier.
+- `fadeToBlack` (*boolean|nil*) : Fade to black around the spawn; true by default.
+- `callback` (*function|nil*) : Called at the end of the step sequence.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : util_stepHandler. |
+| `dependencies` | table<integer, string> | Extensions loaded before: util_stepHandler. |
 
-**Évènements UI (guihooks.trigger) :** `updateCargoData`
+**UI events (guihooks.trigger):** `updateCargoData`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/delivery/vehicleOfferManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/delivery/vehicleOfferManager.lua`.*

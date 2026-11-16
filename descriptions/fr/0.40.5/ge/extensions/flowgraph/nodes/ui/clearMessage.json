@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/clearMessage.lua",
+  "module": "Nœud flowgraph « Clear Messages » (catégorie once_instant, auteur BeamNG) : efface tous les messages affichés dans l'UI. Aucun pin. Déclenche le hook UI 'ClearAllMessages' (guihooks.trigger).",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "workOnce": {
+          "desc": "Appelle guihooks.trigger('ClearAllMessages').",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,91 +1,149 @@
 {
   "path": "lua/ge/extensions/gameplay/drift/freeroam/driftSpots.lua",
-  "module": "Gère les spots de drift du roaming libre (et de la carrière) : zones de départ/arrivée sous forme de lignes (lineOne/lineTwo), à traverser en drift. Il détecte le départ (le joueur drifte dans le rectangle d'une ligne, dans le sens de startDir), passe en contexte inFreeroamChallenge, configure les limites (gameplay_drift_bounds) et le trajet (gameplay_drift_destination), puis détecte la fin propre (ligne d'arrivée franchie à contresens de sa startDir) ou impropre (contresens, hors route, arrêt, remise en place du véhicule). Enregistre le score (10 meilleurs), valide les objectifs et expose les spots comme POI sur la carte.",
+  "module": "Manages the drift spots of free roaming (and of career): start/finish zones as lines (lineOne/lineTwo), to be crossed while drifting. It detects the start (the player drifts in a line's rectangle, in the direction of startDir), switches to the inFreeroamChallenge context, configures the bounds (gameplay_drift_bounds) and the route (gameplay_drift_destination), then detects a clean end (finish line crossed against its startDir) or an unclean one (wrong way, off road, stop, vehicle reset). Records the score (top 10), validates the objectives and exposes the spots as POIs on the map.",
   "notes": [
-    "Réglages : maxWrongWayDist 5 m, maxDistToIntendedRoad 30 m, phase de conclusion 2.5 s, arrêt (vitesse < 2 m/s) pendant plus de 1 s = abandon (reason stopped).",
-    "Raisons d'échec : wrongWay, outOfBounds, stopped, vehReset (clés de traduction missions.drift.display.endReason.*).",
-    "lineTwo est parcourue en sens inverse : le trajet est chargé avec reverse = (line.name == \"lineTwo\"). La ligne d'arrivée est la ligne correspondante (lineOne <-> lineTwo) du même spot.",
-    "Ne garde que 10 scores par spot ; les objectifs atteints donnent des récompenses, versées en carrière via career_modules_playerAttributes.",
-    "Les spots ne sont proposés comme POI que si la carrière est active ou si le réglage enableDriftInFreeroam est vrai. Ignoré en multiseat et pendant un gamemode multijoueur.",
-    "Hooks émis : onDriftSpotStarted({lineId}), onDriftSpotFinishLineCrossed(), onDriftSpotCompleted({duration, score, newRecord}), onDriftSpotFailed({reason, concludingPhaseDuration, lineId}), onFreeroamDriftZoneNewHighscore(), onDriftSpotForcedEnd({lineId}).",
-    "Bug : dans onDriftCompletedScored, le champ done du message « New Highscore! » utilise la variable `completed`, qui n'existe pas dans cette portée (nil global).",
-    "Bug mineur : dans onUpdate, un return anticipé (pas de position de véhicule) saute profiler:finish(false) quand le debug général est actif.",
-    "findNearestStartLine est défini mais jamais appelé (code mort)."
+    "Settings: maxWrongWayDist 5 m, maxDistToIntendedRoad 30 m, concluding phase 2.5 s, stopping (speed < 2 m/s) for more than 1 s = abandonment (reason stopped).",
+    "Failure reasons: wrongWay, outOfBounds, stopped, vehReset (translation keys missions.drift.display.endReason.*).",
+    "lineTwo is driven in the opposite direction: the route is loaded with reverse = (line.name == \"lineTwo\"). The finish line is the corresponding line (lineOne <-> lineTwo) of the same spot.",
+    "Keeps only 10 scores per spot; achieved objectives give rewards, paid out in career via career_modules_playerAttributes.",
+    "The spots are only offered as POIs if career is active or if the enableDriftInFreeroam setting is true. Ignored in multiseat and during a multiplayer gamemode.",
+    "Emitted hooks: onDriftSpotStarted({lineId}), onDriftSpotFinishLineCrossed(), onDriftSpotCompleted({duration, score, newRecord}), onDriftSpotFailed({reason, concludingPhaseDuration, lineId}), onFreeroamDriftZoneNewHighscore(), onDriftSpotForcedEnd({lineId}).",
+    "Bug: in onDriftCompletedScored, the done field of the \"New Highscore!\" message uses the variable `completed`, which does not exist in this scope (global nil).",
+    "Minor bug: in onUpdate, an early return (no vehicle position) skips profiler:finish(false) when general debug is active.",
+    "findNearestStartLine is defined but never called (dead code)."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "gameplay_drift_general, gameplay_drift_drift, gameplay_drift_scoring, gameplay_drift_saveLoad."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "gameplay_drift_general, gameplay_drift_drift, gameplay_drift_scoring, gameplay_drift_saveLoad."
+    }
   },
   "functions": {
     "detectStart": {
-      "desc": "Teste si le joueur démarre un spot par la ligne indiquée : il doit être dans le rectangle de la ligne, rouler dans le sens de startDir (produit scalaire > 0) et être en train de drifter. Si oui, lance le spot (contexte inFreeroamChallenge, limites, trajet, hook onDriftSpotStarted, tasklist). Sans effet si déjà dans un défi, en multiseat ou en gamemode multijoueur. Logge une erreur si l'id de ligne est inconnu.",
-      "params": {"lineId": {"type": "string", "desc": "Id de ligne de la forme spotId..lineName (clé de la table lines)."}}
+      "desc": "Tests whether the player starts a spot through the given line: they must be in the line's rectangle, drive in the direction of startDir (dot product > 0) and be drifting. If so, starts the spot (inFreeroamChallenge context, bounds, route, onDriftSpotStarted hook, tasklist). No effect if already in a challenge, in multiseat or in a multiplayer gamemode. Logs an error if the line id is unknown.",
+      "params": {
+        "lineId": {
+          "type": "string",
+          "desc": "Line id of the form spotId..lineName (key of the lines table)."
+        }
+      }
     },
     "getDriftDebugInfo": {
-      "desc": "Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift.",
-      "returns": [{"type": "table", "desc": "{default = false, canBeChanged = true}"}]
+      "desc": "Returns {default=false, canBeChanged=true} for the drift debug window.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{default = false, canBeChanged = true}"
+        }
+      ]
     },
     "getGC": {
-      "desc": "Renvoie la quantité de garbage mesurée par le profileur (0 hors debug).",
-      "returns": [{"type": "number", "desc": "Garbage de la section « Drift driftSpots »."}]
+      "desc": "Returns the amount of garbage measured by the profiler (0 outside debug).",
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Garbage of the \"Drift driftSpots\" section."
+        }
+      ]
     },
     "getIsInFreeroamChallenge": {
-      "desc": "Indique si un spot de drift est en cours.",
-      "returns": [{"type": "boolean", "desc": "true pendant un défi de spot."}]
+      "desc": "Indicates whether a drift spot is in progress.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true during a spot challenge."
+        }
+      ]
     },
     "getIsInTheConcludingPhase": {
-      "desc": "Indique si le spot est dans sa phase de conclusion (réussite ou échec), pendant laquelle le drift est gelé.",
-      "returns": [{"type": "boolean", "desc": "true pendant les ~2.5 s de conclusion."}]
+      "desc": "Indicates whether the spot is in its concluding phase (success or failure), during which the drift is frozen.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true during the ~2.5 s of conclusion."
+        }
+      ]
     },
     "onUpdate": {
-      "desc": "Appelé à chaque frame : met à jour position/vitesse du joueur puis, pendant un spot, vérifie la fin propre et les fins impropres.",
+      "desc": "Called every frame: updates the player's position/speed then, during a spot, checks the clean end and the unclean ends.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (inutilisé)."},
-        "dtSim": {"type": "number", "desc": "Delta temps simulé, utilisé pour le chrono d'arrêt."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut (inutilisé)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (unused)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time delta, used for the stop timer."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (unused)."
+        }
       },
       "internal": true
     },
     "onVehicleResetted": {
-      "desc": "Hook : si le véhicule remis en place est celui du drift pendant un spot, termine le spot en échec (reason vehReset).",
-      "params": {"id": {"type": "integer", "desc": "Id du véhicule."}},
+      "desc": "Hook: if the vehicle put back in place is the drift vehicle during a spot, ends the spot as a failure (reason vehReset).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
       "internal": true
     },
     "onGetRawPoiListForLevel": {
-      "desc": "Hook : recharge les lignes du niveau puis ajoute un POI par ligne (marqueur de ligne de drift) ; lineOne ajoute aussi un marqueur de grande carte avec nom, aperçu, meilleur score et position de téléportation.",
+      "desc": "Hook: reloads the level's lines then adds one POI per line (drift line marker); lineOne also adds a big map marker with name, preview, best score and teleport position.",
       "params": {
-        "levelIdentifier": {"type": "string", "desc": "Identifiant du niveau (inutilisé)."},
-        "elements": {"type": "table", "desc": "Liste de POI bruts à compléter."}
+        "levelIdentifier": {
+          "type": "string",
+          "desc": "Level identifier (unused)."
+        },
+        "elements": {
+          "type": "table",
+          "desc": "List of raw POIs to fill."
+        }
       },
       "internal": true
     },
     "onDriftCompletedScored": {
-      "desc": "Hook : à la fin d'une chaîne de drifts scorée, met à jour la tasklist des objectifs et affiche « New Highscore! » (une fois par spot) si le record est battu.",
+      "desc": "Hook: at the end of a scored drift chain, updates the objectives tasklist and shows \"New Highscore!\" (once per spot) if the record is beaten.",
       "internal": true
     },
     "onMultiplayerGamemodeStarted": {
-      "desc": "Hook : un gamemode multijoueur démarre ; force la fin d'un spot en cours (onDriftSpotForcedEnd), désactive les spots et vide les POI.",
+      "desc": "Hook: a multiplayer gamemode starts; forces the end of a spot in progress (onDriftSpotForcedEnd), disables the spots and empties the POIs.",
       "internal": true
     },
     "onMultiplayerGamemodeStopped": {
-      "desc": "Hook : fin du gamemode multijoueur ; réactive les spots et vide les POI.",
+      "desc": "Hook: end of the multiplayer gamemode; re-enables the spots and empties the POIs.",
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook : fin de niveau ; nettoie la tasklist et l'état du spot en cours.",
+      "desc": "Hook: level end; cleans up the tasklist and the state of the current spot.",
       "internal": true
     },
     "onClientStartMission": {
-      "desc": "Hook : démarrage de niveau ; vide le cache de gameplay_drift_saveLoad et reconstruit les lignes.",
+      "desc": "Hook: level start; empties the gameplay_drift_saveLoad cache and rebuilds the lines.",
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook : sauvegarde isInFreeroamChallenge et activeLine avant un rechargement Lua.",
-      "returns": [{"type": "table", "desc": "{isInFreeroamChallenge, activeLine}"}],
+      "desc": "Hook: saves isInFreeroamChallenge and activeLine before a Lua reload.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{isInFreeroamChallenge, activeLine}"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook : si un spot était en cours avant le rechargement, émet onDriftSpotForcedEnd puis le termine.",
-      "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "desc": "Hook: if a spot was in progress before the reload, emits onDriftSpotForcedEnd then ends it.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Table returned by onSerialize."
+        }
+      },
       "internal": true
     }
   }

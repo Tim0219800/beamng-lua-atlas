@@ -1,0 +1,200 @@
+{
+  "path": "lua/vehicle/sounds.lua",
+  "module": "Sons du véhicule autres que le moteur : bruits de roulement et de dérapage des pneus (selon le matériau du sol : asphalte, terre, gravier, herbe, glace…), projections de gravillons (kickup), impacts et casses de carrosserie, frottements (scrapes), grincements de suspension par poutre (soundFile dans le jbeam), vent, sons de soundscape, banque de sons .sbeam pilotée par electrics, filtre d'habitacle. Fournit aussi les fonctions utilitaires pour créer et jouer des sources FMOD depuis un contrôleur ou un moteur (createSoundObj, playSoundOnceAtNode…) ainsi que les conversions Hz <-> échelle FMOD.",
+  "usage": "-- créer une boucle 3D sur le noeud 0 et la piloter\nlocal snd = sounds.createSoundObj('event:>Vehicle>Aero>windbuffet', 'AudioDefaultLoop3D', 'MySound', 0)\nsnd:setVolumePitch(0.5, 0.3)\n-- son ponctuel\nsounds.playSoundOnceAtNode('event:>Destruction>Vehicle>vehicle_part_impact', 0, 0.8)",
+  "notes": [
+    "Les valeurs volume/pitch/color/texture envoyées au moteur audio sont des paramètres normalisés (RTPC FMOD, en général 0..1), pas des Hz ni des dB. soundObj:setVolumePitch ignore les mises à jour trop petites (volume < 0.01 devient 0 ; écart de pitch < 0.0025 et de volume/color/texture < 0.01 -> pas d'appel).",
+    "Chaîne de fonctionnement de la banque .sbeam : init() charge tous les *.sbeam du dossier 'sounds/' du véhicule (sinon 'vehicles/common/sounds/'), multiplie minVolume/maxVolume par 1.5 (sbeamVolumeFactor), remplace la valeur 'MAXRPM' par le plus grand maxSoundRPM du moteur, et active les sons dont group vaut 'default' ou v.data.engine.soundGroup. À chaque updateGFX la source (champ source : nom d'une valeur electrics, ou 'gear' pour drivetrain.gear) est transformée en volume/pitch via factor/offset, volumeBlendIn/Out*, pitchBlendIn*, minVolume/maxVolume, minPitch/maxPitch et les volumeModifiers/pitchModifiers.",
+    "Clés jbeam lues dans la section 'sounds' : impactGeneric, impactMetal, impactPlastic, impactSoundVolumeCoef, breakGeneric, wind, windNode, scrapeMetal, scrapePlastic, cabinFilterCoef. Clés lues sur les poutres : soundFile, soundType, volumeFactor (1), pitchFactor (0), maxStress (35000), colorFactor (0.5), attackFactor (10), decayFactor (10), noiseFactor (0). Clés lues sur les noeuds : impactPlasticEvent, impactMetalEvent, impactGenericEvent, breakPlasticEvent, breakGenericEvent. Sur la roue : tireSoundVolumeCoef (0 coupe les bruits de pneus).",
+    "Soundscape : v.data.soundscape[name] = {src, descriptor, node}. Le son 'horn' sert de noeud au vent s'il existe.",
+    "Les sons de pneus sont créés pour chaque roue de wheels.wheels (events 'event:>Surfaces>roll_rigid_v2', 'skid_rigid_v2', 'roll_loose_v2', 'skid_loose_v2') ; paramètres statiques c_tirPrpVolRol, c_tirPrpPitch, c_tirPrpSizTrd, c_tirPrpVolSkd, c_tirPrpSoft ; c_objType vaut 0 joueur assis, 1 IA, 2 trafic (updateObjType).",
+    "Bug/incohérence : soundObj:setParameter est déclarée avec (keyName, value) (le moteur appelle setSFXparameter(obj, keyName, value)). Le dummySoundObj renvoyé par createSoundObj quand la source ne peut pas être créée n'a que setVolumePitch : appeler setParameter dessus lève une erreur.",
+    "Bug/incohérence : createSFXSource (module) remplace M.update, M.playSoundOnceAtNode et M.playSoundOnceFollowNode par nop en cas d'échec ; M.update n'existe pas ailleurs dans ce fichier (le hook réel est updateGFX).",
+    "Bug mineur : breakPlasticEvent est utilisé (nœud ou valeur par défaut) mais aucune clé jbeam 'breakPlastic' de la section 'sounds' ne l'écrase, contrairement à breakGeneric.",
+    "Valeurs numériques des surfaces (matériaux de sol) : 2 métal, 3 plastique, 4 caoutchouc, 6 bois, 10 asphalte, 11 asphalte mouillé, 14 terre poussiéreuse, 15 terre, 16 sable, 18 boue, 19 gravier, 20 herbe, 21 glace, 22 neige, 29 bande rugueuse, 30 pavés, 13 roche.",
+    "Hz FMOD : la table interne fait correspondre 11 fréquences (20, 40, 80, 160, 330, 660, 1300, 2700, 5400, 11000, 22000 Hz) à des paliers de 100 (0..1000) ; hzToFMODHz interpole linéairement par segment. Ce code est dupliqué en C++ (trueforceDSP.cpp) : toute modification doit être reportée.",
+    "M.objType est remis à -1 à la désérialisation (onDeserialized) pour forcer la renvoi des paramètres c_objType."
+  ],
+  "fields": {
+    "engineNode": {"type": "integer", "desc": "Noeud d'émission des sons moteur : premier torqueReactionNodes du premier moteur, sinon le noeud ref. La déclaration initiale vaut nil, puis init() lui donne 0 ou un cid."},
+    "refNode": {"type": "integer", "desc": "Noeud de référence du véhicule (refNodes[0].ref ou leftCorner), 0 par défaut. Déclaré nil au départ, défini par init()."},
+    "objType": {"type": "integer", "desc": "Type d'objet audio courant : 0 joueur assis, 1 IA seule, 2 trafic ; -1 force une mise à jour."},
+    "scrapeLoosenessMap": {"type": "table<integer, number>", "desc": "Table matériau -> 'looseness' (0..0.9) du frottement : caoutchouc 0.05, roche 0.1, gravier 0.2, herbe 0.3, feuillage 0.4, feuillage fin 0.5, terre poussiéreuse 0.6, terre 0.7, boue 0.8, sable 0.9. Métal et bois valent 0 par défaut (absents)."},
+    "uiDebugging": {"type": "boolean", "desc": "Vrai si le rapport de debug audio vers l'UI est activé (setUIDebug)."},
+    "usesOldCustomSounds": {"type": "boolean", "desc": "Vrai si le véhicule a ses propres fichiers .sbeam (ancien système de sons personnalisés)."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Réinitialise toutes les sources audio du véhicule (deleteSFXSources), charge les banques .sbeam, crée les sons de suspension par poutre, les sons de scrape, les sons de pneus et lit la section jbeam 'sounds'. Appelée au chargement du véhicule.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet à zéro les sons de vent et de suspension, renvoie les paramètres statiques des pneus (le cache du GE est vidé à chaque reset) et met à jour c_objType. Appelée au reset du véhicule.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Boucle principale des sons (chaque frame graphique) : détection d'impacts/casses toutes les 0,04 s (obj:getImpactDeformEnergyNode), banque .sbeam, sons de suspension, vent (au-dessus de 3 m/s de vitesse relative au vent) et sons de roulement/dérapage/kickup de chaque roue.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps de la frame (s)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook de désérialisation après rechargement du Lua véhicule : remet objType à -1 (tout M est sérialisé et restauré).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "createSoundObj": {
+      "desc": "Crée une source audio FMOD (obj:createSFXSource) et la retourne enveloppée dans un soundObj, avec cache des dernières valeurs pour éviter les appels inutiles. Si la création échoue, renvoie un objet factice dont setVolumePitch ne fait rien.",
+      "params": {
+        "filename": {"type": "string", "desc": "Fichier ou événement FMOD (ex. 'event:>Surfaces>roll_rigid_v2')."},
+        "description": {"type": "string", "desc": "Nom du descripteur audio (ex. 'AudioDefaultLoop3D')."},
+        "SFXProfileName": {"type": "string", "desc": "Nom du profil SFX (peut être vide pour un événement FMOD)."},
+        "nodeID": {"type": "integer", "desc": "Noeud sur lequel la source est attachée."}
+      },
+      "returns": [{"type": "table", "desc": "soundObj (méthodes setVolumePitch, setParameter) ou objet factice."}],
+      "internal": false
+    },
+    "createSFXSource": {
+      "desc": "Crée une source audio brute (obj:createSFXSource) sans enveloppe soundObj. En cas d'échec, désactive playSoundOnceAtNode/FollowNode et logge un avertissement.",
+      "params": {
+        "filename": {"type": "string", "desc": "Fichier ou événement."},
+        "description": {"type": "string", "desc": "Descripteur audio."},
+        "SFXProfileName": {"type": "string", "desc": "Nom du profil SFX."},
+        "nodeID": {"type": "integer", "desc": "Noeud d'attache."}
+      },
+      "returns": [{"type": "any|nil", "desc": "Identifiant de la source ou nil si échec."}],
+      "internal": false
+    },
+    "createSoundscapeSound": {
+      "desc": "Crée la source d'un son de soundscape défini dans v.data.soundscape. Utilise le noeud du soundscape s'il est numérique, sinon refNode.",
+      "params": {"name": {"type": "string", "desc": "Nom du soundscape dans le jbeam."}},
+      "returns": [{"type": "any|nil", "desc": "Source audio, ou nil si le soundscape n'existe pas."}],
+      "internal": false
+    },
+    "playSoundOnceAtNode": {
+      "desc": "Joue un son une seule fois à la position (statique) d'un noeud. Ignoré si le volume est < 0.01 ou le pitch < 0.0039.",
+      "params": {
+        "soundName": {"type": "string", "desc": "Événement FMOD."},
+        "nodeID": {"type": "integer", "desc": "Noeud d'émission."},
+        "volume": {"type": "number", "desc": "Volume 0..1."},
+        "pitch": {"type": "number|nil", "desc": "Pitch normalisé (1 par défaut)."},
+        "color": {"type": "number|nil", "desc": "Paramètre 'color' (0 par défaut)."},
+        "texture": {"type": "number|nil", "desc": "Paramètre 'texture' (0 par défaut)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "playSoundOnceFollowNode": {
+      "desc": "Comme playSoundOnceAtNode mais le son suit le noeud pendant sa lecture.",
+      "params": {
+        "soundName": {"type": "string", "desc": "Événement FMOD."},
+        "nodeID": {"type": "integer", "desc": "Noeud suivi."},
+        "volume": {"type": "number", "desc": "Volume 0..1."},
+        "pitch": {"type": "number|nil", "desc": "Pitch (1 par défaut)."},
+        "color": {"type": "number|nil", "desc": "Paramètre 'color' (0 par défaut)."},
+        "texture": {"type": "number|nil", "desc": "Paramètre 'texture' (0 par défaut)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "playSoundSkipAI": {
+      "desc": "Rejoue une source existante (volume puis cut + play), sauf si aucun joueur n'est assis et que l'IA conduit (le son est alors sauté).",
+      "params": {
+        "sound": {"type": "any", "desc": "Source audio obtenue par createSFXSource (déduit du code)."},
+        "volume": {"type": "number|nil", "desc": "Volume (1 par défaut)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "bodyCollision": {
+      "desc": "Gère le son de frottement (scrape) d'un noeud de carrosserie lors d'un contact : choisit l'événement selon le matériau (métal ou plastique), l'ignore sur les matériaux absorbants (caoutchouc, tissu, sable et boue pour les noeuds de roue) et règle volume, pitch, color et texture de la source.",
+      "params": {"p": {"type": "table", "desc": "Données de collision du moteur (id1, slipVel, normalForce, materialID1, materialID2)."}},
+      "returns": [],
+      "internal": false
+    },
+    "updateCabinFilter": {
+      "desc": "Envoie au jeu (GE) la force du filtre d'habitacle de ce véhicule (cabinFilterCoef borné à 0..1) via core_sounds.setCabinFilterStrength.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "updateObjType": {
+      "desc": "Détermine le type d'objet audio (0 joueur assis, 1 IA, 2 trafic) et, s'il a changé, renvoie le paramètre c_objType à tous les sons de pneus.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "disableOldEngineSounds": {
+      "desc": "Vide la banque de sons .sbeam et empêche son rechargement : appelé par les moteurs qui utilisent le nouveau système de sons moteur.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setUIDebug": {
+      "desc": "Active ou désactive le rapport de debug audio vers l'UI (coûteux en performance, à réserver au debug). Le paramètre data n'est pas utilisé.",
+      "params": {
+        "enabled": {"type": "boolean", "desc": "Activer le rapport."},
+        "data": {"type": "any", "desc": "Non utilisé (todo dans le code)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "hzToFMODHz": {
+      "desc": "Convertit une fréquence réelle en Hz (bornée à 20..22000) vers l'échelle FMOD 0..1000 (interpolation par segments de 100). Code dupliqué en C++ (trueforceDSP.cpp).",
+      "params": {"hzValue": {"type": "number", "desc": "Fréquence en Hz."}},
+      "returns": [{"type": "number", "desc": "Valeur sur l'échelle FMOD (0..1000)."}],
+      "internal": false
+    },
+    "FMODHzToHz": {
+      "desc": "Conversion inverse de hzToFMODHz : valeur FMOD 0..1000 vers Hz.",
+      "params": {"fmodHzValue": {"type": "number", "desc": "Valeur sur l'échelle FMOD (bornée à 0..1000)."}},
+      "returns": [{"type": "number", "desc": "Fréquence en Hz."}],
+      "internal": false
+    },
+    "getBeamSounds": {
+      "desc": "Debug : renvoie la liste des sons de suspension par poutre (avec impulse, pitch, volume du dernier frame).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Liste de tables {beam, clip, volumeFactor, pitchFactor, impulse, pitch, volume…}."}],
+      "internal": false
+    },
+    "getEngineSoundData": {
+      "desc": "Debug (éditeur de sons) : parcourt les moteurs ayant getSoundConfiguration et renvoie leurs configurations sonores.",
+      "params": {},
+      "returns": [
+        {"type": "table", "desc": "Table indexée à partir de 0 : {reference, data, fundamentalFrequencyRPMCoef, engineIndex}."},
+        {"type": "table", "desc": "Liste de libellés 'nom (moteur) -> fichier blend'."}
+      ],
+      "internal": false
+    }
+  },
+  "classes": {
+    "soundObj": {
+      "desc": "Enveloppe d'une source audio renvoyée par createSoundObj. Champs : obj (source brute), lastVol, lastPitch, lastColor, lastTexture.",
+      "functions": {
+        "setVolumePitch": {
+          "desc": "Règle volume, pitch, color et texture (RTPC) de la source en évitant les appels redondants (volume < 0.01 devient 0).",
+          "params": {
+            "vol": {"type": "number", "desc": "Volume 0..1."},
+            "pitch": {"type": "number", "desc": "Pitch normalisé."},
+            "color": {"type": "number|nil", "desc": "Paramètre color (0 par défaut)."},
+            "texture": {"type": "number|nil", "desc": "Paramètre texture (0 par défaut)."}
+          },
+          "returns": [{"type": "boolean", "desc": "true si une valeur a été envoyée au moteur audio, false si ignorée."}]
+        },
+        "setParameter": {
+          "desc": "Règle un paramètre FMOD nommé (obj:setSFXparameter). Pour usage basse fréquence uniquement. La page automatique liste seulement 'value' mais la fonction prend (keyName, value).",
+          "params": {
+            "keyName": {"type": "string", "desc": "Nom du paramètre FMOD (ex. 'c_objType')."},
+            "value": {"type": "number", "desc": "Valeur du paramètre."}
+          },
+          "returns": []
+        }
+      }
+    }
+  }
+}

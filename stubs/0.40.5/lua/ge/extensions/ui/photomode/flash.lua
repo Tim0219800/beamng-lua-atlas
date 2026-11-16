@@ -2,63 +2,63 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/photomode/flash.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Réglages du flash du mode photo. Garde en mémoire l'état du flash (activé, tir à la capture, intensité, angle, teinte, saturation) et le transmet à l'extension util/photomodeFlash, qu'il charge à la demande. Sert de façade au panneau UI du mode photo et au module de capture (ui_photomode_capture) qui déclenche les captures avec flash.
---- Accès : extension `ui_photomode_flash` : `extensions.load("ui_photomode_flash")`, puis la globale `ui_photomode_flash`
+--- Photo mode flash settings. Keeps the flash state in memory (enabled, fire on capture, intensity, angle, hue, saturation) and passes it to the util/photomodeFlash extension, which it loads on demand. Acts as a facade for the photo mode UI panel and for the capture module (ui_photomode_capture) which triggers captures with flash.
+--- Access: extension `ui_photomode_flash`: `extensions.load("ui_photomode_flash")`, then the global `ui_photomode_flash`
 ---@class ui_photomode_flash
 ui_photomode_flash = {}
 
---- Applique un état de preset (fusion puis applyRuntimeSettings). Ne fait rien si l'argument n'est pas une table.
----Source : lua/ge/extensions/ui/photomode/flash.lua:95
----@param flashState table État du flash issu d'un preset
----@return boolean  succès
----@return string|nil  raison de l'échec
+--- Applies a preset state (merge then applyRuntimeSettings). Does nothing if the argument is not a table.
+---Source: lua/ge/extensions/ui/photomode/flash.lua:95
+---@param flashState table Flash state from a preset
+---@return boolean  success
+---@return string|nil  failure reason
 function ui_photomode_flash.applyPresetState(flashState) end
 
---- Si le flash est désactivé, coupe util/photomodeFlash (enable(false)). Sinon charge cette extension et appelle applyFromUi avec les réglages courants.
----Source : lua/ge/extensions/ui/photomode/flash.lua:103
----@return boolean  succès
----@return string|nil  raison de l'échec (flash_unavailable, flash_apply_failed…)
+--- If the flash is disabled, turns off util/photomodeFlash (enable(false)). Otherwise loads this extension and calls applyFromUi with the current settings.
+---Source: lua/ge/extensions/ui/photomode/flash.lua:103
+---@return boolean  success
+---@return string|nil  failure reason (flash_unavailable, flash_apply_failed...)
 function ui_photomode_flash.applyRuntimeSettings() end
 
---- Fusionne dans l'état les champs présents de partialState (enabled et fireOnCapture convertis en booléens). N'agit pas sur le moteur de rendu.
----Source : lua/ge/extensions/ui/photomode/flash.lua:82
----@param partialState table Champs à modifier ; tout autre type est ignoré
----@return boolean  toujours true
+--- Merges into the state the fields present in partialState (enabled and fireOnCapture converted to booleans). Does not act on the render engine.
+---Source: lua/ge/extensions/ui/photomode/flash.lua:82
+---@param partialState table Fields to change; any other type is ignored
+---@return boolean  always true
 function ui_photomode_flash.applyStatePatch(partialState) end
 
---- Renvoie une copie de l'état du flash : enabled, fireOnCapture, intensity, outerAngle, hue, saturation.
----Source : lua/ge/extensions/ui/photomode/flash.lua:63
----@return table  État sérialisable du flash
+--- Returns a copy of the flash state: enabled, fireOnCapture, intensity, outerAngle, hue, saturation.
+---Source: lua/ge/extensions/ui/photomode/flash.lua:63
+---@return table  Serializable flash state
 function ui_photomode_flash.buildState() end
 
---- Renvoie un état de flash aux valeurs par défaut, sans modifier l'état courant.
----Source : lua/ge/extensions/ui/photomode/flash.lua:78
----@return table  Valeurs par défaut
+--- Returns a flash state with default values, without modifying the current state.
+---Source: lua/ge/extensions/ui/photomode/flash.lua:78
+---@return table  Default values
 function ui_photomode_flash.captureDefaultPresetState() end
 
---- État du flash à enregistrer dans un preset (identique à buildState).
----Source : lua/ge/extensions/ui/photomode/flash.lua:74
----@return table  État courant
+--- Flash state to save in a preset (same as buildState).
+---Source: lua/ge/extensions/ui/photomode/flash.lua:74
+---@return table  Current state
 function ui_photomode_flash.capturePresetState() end
 
---- Nombre d'images pendant lesquelles garder l'UI masquée/figée lors d'une capture avec flash : 5 si flash activé et fireOnCapture, sinon 0.
----Source : lua/ge/extensions/ui/photomode/flash.lua:147
----@return integer  0 ou 5
+--- Number of frames during which to keep the UI hidden/frozen during a capture with flash: 5 if flash enabled and fireOnCapture, otherwise 0.
+---Source: lua/ge/extensions/ui/photomode/flash.lua:147
+---@return integer  0 or 5
 function ui_photomode_flash.getCaptureUiHoldFrames() end
 
---- Coupe le flash côté moteur puis remet les réglages Lua aux valeurs par défaut.
----Source : lua/ge/extensions/ui/photomode/flash.lua:154
+--- Turns off the flash on the engine side then resets the Lua settings to default values.
+---Source: lua/ge/extensions/ui/photomode/flash.lua:154
 function ui_photomode_flash.resetSettings() end
 
---- Coupe le flash côté moteur (util/photomodeFlash.enable(false)) s'il est chargé, sans toucher aux réglages Lua.
----Source : lua/ge/extensions/ui/photomode/flash.lua:159
+--- Turns off the flash on the engine side (util/photomodeFlash.enable(false)) if it is loaded, without touching the Lua settings.
+---Source: lua/ge/extensions/ui/photomode/flash.lua:159
 function ui_photomode_flash.restoreRuntimeState() end
 
---- Délègue une capture à util/photomodeFlash.runCapture(kind, ...) en protégeant l'appel par pcall.
----Source : lua/ge/extensions/ui/photomode/flash.lua:130
----@param kind any Type de capture transmis tel quel à util/photomodeFlash (déduit du code)
----@param ... any Arguments supplémentaires transmis tels quels
----@return boolean  true si la capture a été demandée
----@return string|nil  raison de l'échec (screenshot_request_failed par défaut)
+--- Delegates a capture to util/photomodeFlash.runCapture(kind, ...) with the call protected by pcall.
+---Source: lua/ge/extensions/ui/photomode/flash.lua:130
+---@param kind any Capture type passed as is to util/photomodeFlash (inferred from code)
+---@param ... any Additional arguments passed as is
+---@return boolean  true if the capture was requested
+---@return string|nil  failure reason (screenshot_request_failed by default)
 function ui_photomode_flash.runCapture(kind, ...) end
 

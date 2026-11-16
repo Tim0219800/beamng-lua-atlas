@@ -1,0 +1,44 @@
+{
+  "path": "lua/ge/extensions/scenario/distanceGoal.lua",
+  "module": "Objectif de scénario « distance » (goals.vehicles avec id = 'distance') : la distance entre le véhicule du goal et un objet cible du scenetree ne doit pas sortir de [minDistance, maxDistance]. Utile pour des scénarios de poursuite ou de convoi. Appelé par le système de goals de scenario_scenarios.",
+  "usage": "-- JSON du scénario :\n-- {\"id\":\"distance\", \"value\":{\"target\":\"police\", \"maxDistance\":80, \"minDistance\":5, \"distanceEnable\":60, \"purpose\":\"fail\", \"msg\":\"Trop loin\"}}",
+  "notes": [
+    "Options de instance.value : target (nom d'un objet du scenetree, obligatoire en pratique), maxDistance, minDistance, distanceEnable (tous number, mètres), purpose ('fail' par défaut ou 'win'), msg.",
+    "distanceEnable : tant que le véhicule n'est jamais passé sous cette distance de la cible, les limites ne sont pas contrôlées. Une fois passé en dessous, status.checkForCarDistance reste true.",
+    "Les contrôles se font sur l'état 'onRaceTick'.",
+    "Si scenario.targetName existe, le goal échoue en plus dès que le véhicule est à 5 m ou moins de cet objet (message 'DistanceBetweenSceneObjects.fail.msg'), sinon status.result = 'passed'.",
+    "Bug probable : si target est nil, le log d'erreur concatène instance.value.target (nil) et plante ; getVehicleByName(nil) est aussi appelé sans garde.",
+    "Dans showMsg, l'expression {txt = ...} or {...} ne se rabat jamais sur le message par défaut de victoire."
+  ],
+  "fields": {
+    "instances": {"type": "table", "desc": "Liste des goals 'distance' valides, remplie par init()."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Réinitialise instances et ajoute chaque goal id='distance' dont les options numériques sont valides ; purpose vaut 'fail' si absent ; checkForCarDistance est mis à false.",
+      "params": {"scenario": {"type": "table", "desc": "Scénario courant."}},
+      "returns": [],
+      "internal": true
+    },
+    "processState": {
+      "desc": "Appelé à chaque état du scénario ; sur 'onRaceTick' mesure la distance au véhicule cible et termine le scénario (victoire ou défaite selon purpose) si elle sort des bornes.",
+      "params": {
+        "scenario": {"type": "table", "desc": "Scénario courant."},
+        "state": {"type": "string", "desc": "Nom de l'état ; 'onRaceTick' traité."},
+        "stateData": {"type": "table", "desc": "Données de l'état (non utilisées)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateFinalStatus": {
+      "desc": "Envoie le résultat de chaque instance à statistics_statistics.setGoalProgress en fin de scénario.",
+      "params": {
+        "scenario": {"type": "table", "desc": "Scénario courant."},
+        "instance": {"type": "table|nil", "desc": "Non utilisé."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

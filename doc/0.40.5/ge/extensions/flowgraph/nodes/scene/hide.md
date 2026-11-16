@@ -1,28 +1,28 @@
 # `flowgraph_nodes_scene_hide`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/hide.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/hide.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/hide")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/hide")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Show/Hide Object » (repeat_instant). Cache ou montre un objet de la scene. Entrees : objID (number), hide (bool, true = cacher). Met obj.hidden puis appelle updateInstanceRenderData si l'objet l'a.
+Flowgraph node "Show/Hide Object" (repeat_instant). Hides or shows a scene object. Inputs: objID (number), hide (bool, true = hide). Sets obj.hidden then calls updateInstanceRenderData if the object has it.
 
-## Remarques
+## Notes
 
-- Si l'id ne correspond a aucun objet, obj est nil et l'affectation obj.hidden provoque une erreur Lua (pas de garde).
+- If the id matches no object, obj is nil and the assignment obj.hidden raises a Lua error (no guard).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Rien a initialiser. | 23 |
-| `C:work()` | Trouve l'objet par id et applique hidden ; signale l'erreur « objID must be set » si le pin est vide. | 27 |
+| `C:init()` | Nothing to initialize. | 23 |
+| `C:work()` | Finds the object by id and applies hidden; reports the error "objID must be set" if the pin is empty. | 27 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `updateInstanceRenderData`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/hide.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/hide.lua`.*

@@ -1,17 +1,17 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/raceLaps.lua",
-  "module": "Nœud flowgraph « Set UI Race Laps » (catégorie repeat_instant, auteur BeamNG, durée) : met à jour l'app UI de tours. Entrées : « cur » (nil = efface), « max ». Envoie 'RaceLapChange' {current, count} et l'entrée de ui_apps_genericMissionData (catégorie raceLaps, order 110) ; efface avec 'RaceLapClear'.",
+  "module": "Flowgraph node \"Set UI Race Laps\" (category repeat_instant, author BeamNG, duration): updates the laps UI app. Inputs: \"cur\" (nil = clears), \"max\". Sends 'RaceLapChange' {current, count} and the ui_apps_genericMissionData entry (category raceLaps, order 110); clears with 'RaceLapClear'.",
   "notes": [
-    "Si max est nil, la concaténation provoque une erreur."
+    "If max is nil, the concatenation causes an error."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "work": {
-          "desc": "Envoie ou efface le compteur de tours dans l'UI.",
+          "desc": "Sends or clears the lap counter in the UI.",
           "internal": true
         }
       }

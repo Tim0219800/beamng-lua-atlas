@@ -1,0 +1,17 @@
+{
+  "path": "lua/vehicle/extensions/advancedwheeldebug.lua",
+  "module": "Extension de débogage qui calcule pour chaque roue les angles de carrossage (camber), de pincement (toe), de chasse (caster), d'inclinaison de pivot (SAI) et la pression de la roue, par rapport à la surface sous le véhicule, et les envoie à l'UI via gui.send('advancedWheelDebugData'). Actif seulement si au moins un 'utilisateur de debug' l'a activé par registerDebugUser.",
+  "usage": "extensions.advancedwheeldebug.registerDebugUser('monOutil', true)  -- active\nextensions.advancedwheeldebug.registerDebugUser('monOutil', false) -- désactive",
+  "notes": [
+    "Format de l'envoi : liste de {name, caster?, sai?, camber, toe, pressure}. Angles en degrés ; pressure en psi (Pa * 0.000145038), 0 si la roue n'a pas de groupe de pression.",
+    "caster et sai ne sont fournis que si la roue a steerAxisUp et steerAxisDown. Les valeurs NaN/inf de toe et camber sont remplacées par 0.",
+    "Le plan de référence est calculé en moyennant la normale de surface (mapmgr.surfaceNormalBelow) sous chaque roue ayant un lastTreadContactNode ; si aucune roue ne touche le sol, la division par count = 0 produit des valeurs non finies.",
+    "N'envoie à l'UI que si le premier joueur est assis (playerInfo.firstPlayerSeated)."
+  ],
+  "fields": {},
+  "functions": {
+    "onInit": {"desc": "Hook appelé à l'initialisation de l'extension : efface les utilisateurs de debug et désactive le calcul.", "params": {}, "returns": [], "internal": true},
+    "registerDebugUser": {"desc": "Enregistre ou retire un demandeur du debug ; le calcul est actif tant qu'au moins une valeur est vraie.", "params": {"user": {"type": "string", "desc": "Identifiant du demandeur."}, "value": {"type": "boolean", "desc": "true pour demander l'affichage, false pour le retirer."}}, "returns": [], "internal": false},
+    "updateGFX": {"desc": "Appelé chaque frame : calcule et envoie les données de roue si le debug est actif.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (non utilisé)."}}, "returns": [], "internal": true}
+  }
+}

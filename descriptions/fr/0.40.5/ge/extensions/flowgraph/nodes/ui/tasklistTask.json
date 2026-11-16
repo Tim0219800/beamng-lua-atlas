@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/tasklistTask.lua",
+  "module": "Nœud flowgraph « Tasklist Task » (catégorie once_instant, durée) : affiche une tâche dans l'app Tasklist (hook 'SetTasklistTask', type 'goal'). Entrées : « label », « sub », « identifier », « done », « fail », « clear » (vrai par défaut), « active », « attention » (clignote). Sortie : flow propagé.",
+  "notes": [
+    "L'app n'accepte pas un libellé qui commence par un chiffre (todo du code).",
+    "Par défaut 'clear' vaut true."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "workOnce": {
+          "desc": "Envoie la tâche à l'UI et propage le flux.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,53 +1,53 @@
 # `career_modules_log`
 
-*Fichier : `lua/ge/extensions/career/modules/log.lua` · VM : Game Engine (GE) · 42 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/log.lua` · VM: Game Engine (GE) · 42 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_log` : `extensions.load("career_modules_log")`, puis la globale `career_modules_log`
+**Access:** extension `career_modules_log`: `extensions.load("career_modules_log")`, then the global `career_modules_log`
 
-Petit journal texte de la carrière. Les modules appellent addLog pour accumuler des lignes en mémoire ; à chaque sauvegarde du profil, les lignes sont ajoutées (mode append) au fichier career.log du slot de sauvegarde, puis la liste est vidée.
+Small text log of the career. Modules call addLog to accumulate lines in memory; on each profile save, the lines are appended (append mode) to the career.log file of the save slot, then the list is emptied.
 
-## Remarques
+## Notes
 
-- Format d'une ligne : timestamp os.time()|sévérité|origine|message. Sévérité par défaut "I", origine par défaut chaîne vide.
-- La liste en mémoire est vidée à l'activation de la carrière (onCareerActive) : les lignes non sauvegardées avant sont perdues.
+- Line format: timestamp os.time()|severity|origin|message. Default severity "I", default origin empty string.
+- The in-memory list is emptied on career activation (onCareerActive): lines not saved before are lost.
 
-**Dépendances (chargées avant) :** `career_saveSystem`
+**Dependencies (loaded first):** `career_saveSystem`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_log.addLog(message, origin, severity)` | Ajoute une ligne au journal en mémoire (écrite dans career.log à la prochaine sauvegarde). | 11 |
-| `career_modules_log.onCareerActive(active)` | Hook appelé quand la carrière devient active : vide la liste et ajoute « Loaded game <chemin> ». *(interne)* *(hook)* | 30 |
-| `career_modules_log.onSaveCurrentProfile(currentSavePath)` | Hook appelé lors de la sauvegarde du profil : ajoute une ligne « Save game to ... » puis écrit (append) toutes les lignes dans <saveRoot>/<slot>/career.log et vide la liste. *(interne)* *(hook)* | 15 |
+| `career_modules_log.addLog(message, origin, severity)` | Adds a line to the in-memory log (written to career.log at the next save). | 11 |
+| `career_modules_log.onCareerActive(active)` | Hook called when career becomes active: empties the list and adds "Loaded game <path>". *(internal)* *(hook)* | 30 |
+| `career_modules_log.onSaveCurrentProfile(currentSavePath)` | Hook called when the profile is saved: adds a "Save game to ..." line then writes (append) all the lines to <saveRoot>/<slot>/career.log and empties the list. *(internal)* *(hook)* | 15 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_log.addLog(message, origin, severity)`
 
-Ajoute une ligne au journal en mémoire (écrite dans career.log à la prochaine sauvegarde).
+Adds a line to the in-memory log (written to career.log at the next save).
 
-- `message` (*string*) : Texte du message.
-- `origin` (*string|nil*) : Nom du module émetteur ("" par défaut).
-- `severity` (*string|nil*) : Sévérité, "I" par défaut (la valeur n'est pas validée).
+- `message` (*string*) : Message text.
+- `origin` (*string|nil*) : Name of the emitting module ("" by default).
+- `severity` (*string|nil*) : Severity, "I" by default (the value is not validated).
 
 #### `career_modules_log.onCareerActive(active)`
 
-Hook appelé quand la carrière devient active : vide la liste et ajoute « Loaded game <chemin> ».
+Hook called when career becomes active: empties the list and adds "Loaded game <path>".
 
-- `active` (*boolean*) : true à l'activation ; rien n'est fait si false.
+- `active` (*boolean*) : true on activation; nothing is done if false.
 
 #### `career_modules_log.onSaveCurrentProfile(currentSavePath)`
 
-Hook appelé lors de la sauvegarde du profil : ajoute une ligne « Save game to ... » puis écrit (append) toutes les lignes dans <saveRoot>/<slot>/career.log et vide la liste.
+Hook called when the profile is saved: adds a "Save game to ..." line then writes (append) all the lines to <saveRoot>/<slot>/career.log and empties the list.
 
-- `currentSavePath` (*string*) : Chemin de la sauvegarde en cours.
+- `currentSavePath` (*string*) : Path of the current save.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_saveSystem. |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_saveSystem. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/log.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/log.lua`.*

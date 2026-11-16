@@ -1,71 +1,135 @@
 {
   "path": "lua/ge/extensions/editor/meshSpline/populate.lua",
-  "module": "Placement des meshes statiques le long d'une mesh spline. À partir de la géométrie de la spline, il échantillonne des positions (période = longueur du mesh + espacement, plancher de 10 % de la longueur ou 0.1 m), choisit les composants (mesh central, capuchons, alias), gère des réserves (pools) de TSStatic dans le dossier de scène de la spline, applique jitter, décalage vertical et rotation, et synchronise l'état verrouillé. Une spline est « discrète » (lampadaires, espacement > 5 m) ou « en tuilage » (barrières bout à bout).",
+  "module": "Placement of static meshes along a mesh spline. From the spline geometry, it samples positions (period = mesh length + spacing, floor of 10% of the length or 0.1 m), picks the components (central mesh, caps, aliases), manages pools of TSStatic in the spline's scene folder, applies jitter, vertical offset and rotation, and synchronizes the locked state. A spline is \"discrete\" (lampposts, spacing > 5 m) or \"tiled\" (barriers end to end).",
   "notes": [
-    "Un espacement négatif crée un recouvrement ; la période est plancher à max(0.1 m, 10 % de la longueur du mesh) pour éviter un nombre d'instances démesuré.",
-    "Le « Lock ends » (isFixedEnds) ne s'applique qu'aux splines discrètes (spacing > 5) : un élément est posé aux deux extrémités et l'intérieur est réparti uniformément.",
-    "La graine aléatoire est fixée par spline (splineRandomSeed) : le placement est reproductible.",
-    "Une spline verrouillée (isEnabled = false) dont les meshes existent n'est plus déplacée par l'outil, seul son état de verrou est appliqué.",
-    "Le module garde l'état interne (staticMeshes par id de spline) : release/adopt servent à survivre à un rechargement Lua sans détruire les meshes."
+    "A negative spacing creates an overlap; the period is floored to max(0.1 m, 10% of the mesh length) to avoid an excessive number of instances.",
+    "\"Lock ends\" (isFixedEnds) only applies to discrete splines (spacing > 5): an element is placed at both ends and the interior is distributed uniformly.",
+    "The random seed is set per spline (splineRandomSeed): the placement is reproducible.",
+    "A locked spline (isEnabled = false) whose meshes exist is no longer moved by the tool, only its lock state is applied.",
+    "The module keeps the internal state (staticMeshes by spline id): release/adopt are used to survive a Lua reload without destroying the meshes."
   ],
   "functions": {
     "minSpacingFor": {
-      "desc": "Plancher du curseur « Spacing » pour cette pièce : la valeur qui atteint la période minimale autorisée (recouvrement maximal). En dessous, la période serait de toute façon bornée.",
-      "params": {"spline": {"type": "table", "desc": "Mesh spline avec extentsL_Center / extentsW_Center et rot."}},
-      "returns": [{"type": "number|nil", "desc": "Espacement minimal en mètres, nil si la longueur du mesh n'est pas encore mesurée."}],
+      "desc": "Floor of the \"Spacing\" slider for this piece: the value that reaches the minimum allowed period (maximum overlap). Below that, the period would be clamped anyway.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Mesh spline with extentsL_Center / extentsW_Center and rot."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Minimum spacing in meters, nil if the mesh length is not yet measured."
+        }
+      ],
       "internal": false
     },
     "populateMeshSpline": {
-      "desc": "Peuple la spline avec des instances de mesh statique sur sa longueur : échantillonne, répartit les composants, ajuste les réserves de meshes puis positionne et oriente chaque instance. Sort sans rien faire si la spline est verrouillée avec ses meshes, si la longueur ou le chemin du mesh central manque, ou si moins de 2 points subdivisés.",
+      "desc": "Populates the spline with static mesh instances along its length: samples, distributes the components, adjusts the mesh pools then positions and orients each instance. Exits without doing anything if the spline is locked with its meshes, if the length or the central mesh path is missing, or if there are fewer than 2 subdivided points.",
       "params": {
-        "spline": {"type": "table", "desc": "Mesh spline à peupler."},
-        "splineIdx": {"type": "integer", "desc": "Indice de la spline dans la liste (base 1)."}
+        "spline": {
+          "type": "table",
+          "desc": "Mesh spline to populate."
+        },
+        "splineIdx": {
+          "type": "integer",
+          "desc": "Index of the spline in the list (1-based)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "tryRemove": {
-      "desc": "Supprime de la scène les meshes statiques de la spline (s'ils existent encore) et oublie leur état.",
-      "params": {"spline": {"type": "table", "desc": "Mesh spline."}},
+      "desc": "Removes the spline's static meshes from the scene (if they still exist) and forgets their state.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Mesh spline."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "eachObject": {
-      "desc": "Appelle fn(mesh, true) pour chaque mesh que l'outil détient pour cette spline (le « each » de splineLock).",
+      "desc": "Calls fn(mesh, true) for each mesh the tool holds for this spline (the \"each\" of splineLock).",
       "params": {
-        "spline": {"type": "table", "desc": "Mesh spline."},
-        "fn": {"type": "function", "desc": "Callback appelé avec le mesh et true."}
+        "spline": {
+          "type": "table",
+          "desc": "Mesh spline."
+        },
+        "fn": {
+          "type": "function",
+          "desc": "Callback called with the mesh and true."
+        }
       },
       "returns": [],
       "internal": false
     },
     "release": {
-      "desc": "Pour un rechargement Lua : l'outil lâche les meshes d'une spline verrouillée sans les supprimer (ils appartiennent au niveau) et renvoie leurs ids par composant, pour adopt().",
-      "params": {"spline": {"type": "table", "desc": "Mesh spline verrouillée."}},
-      "returns": [{"type": "table<string, integer[]>", "desc": "Ids des meshes par identifiant de composant."}],
+      "desc": "For a Lua reload: the tool lets go of the meshes of a locked spline without deleting them (they belong to the level) and returns their ids per component, for adopt().",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Locked mesh spline."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, integer[]>",
+          "desc": "Mesh ids by component identifier."
+        }
+      ],
       "internal": true
     },
     "adopt": {
-      "desc": "Reprend les meshes lâchés par release() (ceux encore dans la scène), tels quels, et mémorise l'état de verrou de la spline.",
+      "desc": "Takes back the meshes released by release() (those still in the scene), as they are, and remembers the spline's lock state.",
       "params": {
-        "spline": {"type": "table", "desc": "Mesh spline."},
-        "ids": {"type": "table<string, integer[]>", "desc": "Table renvoyée par release()."}
+        "spline": {
+          "type": "table",
+          "desc": "Mesh spline."
+        },
+        "ids": {
+          "type": "table<string, integer[]>",
+          "desc": "Table returned by release()."
+        }
       },
       "returns": [],
       "internal": true
     },
     "isDiscreteSpline": {
-      "desc": "Dit si la spline est « discrète » (éléments posés sur les points d'échantillonnage, comme des lampadaires) plutôt qu'en tuilage : vrai si spacing dépasse 5 m. L'interface s'en sert pour afficher l'option « Lock ends ».",
-      "params": {"spline": {"type": "table|nil", "desc": "Mesh spline."}},
-      "returns": [{"type": "boolean|nil", "desc": "true/false, ou nil/false si la spline ou son spacing est absent."}],
+      "desc": "Tells whether the spline is \"discrete\" (elements placed on the sampling points, like lampposts) rather than tiled: true if spacing exceeds 5 m. The interface uses it to show the \"Lock ends\" option.",
+      "params": {
+        "spline": {
+          "type": "table|nil",
+          "desc": "Mesh spline."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true/false, or nil/false if the spline or its spacing is absent."
+        }
+      ],
       "internal": false
     },
     "evenFitInfo": {
-      "desc": "Pour l'étiquette « Lock ends » : renvoie l'espacement centre à centre effectif (m) et le nombre d'intervalles que produirait l'ajustement uniforme, soit n = max(1, round(longueur / période)) et longueur / n. Renvoie nil si le calcul est impossible (moins de 2 points, pas de longueur de mesh).",
-      "params": {"spline": {"type": "table|nil", "desc": "Mesh spline."}},
+      "desc": "For the \"Lock ends\" label: returns the effective center-to-center spacing (m) and the number of intervals the uniform fit would produce, i.e. n = max(1, round(length / period)) and length / n. Returns nil if the computation is impossible (fewer than 2 points, no mesh length).",
+      "params": {
+        "spline": {
+          "type": "table|nil",
+          "desc": "Mesh spline."
+        }
+      },
       "returns": [
-        {"type": "number|nil", "desc": "Espacement effectif en mètres."},
-        {"type": "integer|nil", "desc": "Nombre d'intervalles."}
+        {
+          "type": "number|nil",
+          "desc": "Effective spacing in meters."
+        },
+        {
+          "type": "integer|nil",
+          "desc": "Number of intervals."
+        }
       ],
       "internal": false
     }

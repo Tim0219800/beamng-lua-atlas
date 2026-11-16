@@ -1,40 +1,40 @@
 # `editor_mainUpdate`
 
-*Fichier : `lua/ge/extensions/editor/mainUpdate.lua` · VM : Game Engine (GE) · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/mainUpdate.lua` · VM: Game Engine (GE) · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_mainUpdate` : `extensions.load("editor_mainUpdate")`, puis la globale `editor_mainUpdate`
+**Access:** extension `editor_mainUpdate`: `extensions.load("editor_mainUpdate")`, then the global `editor_mainUpdate`
 
-Boucle de mise à jour de l'éditeur, appelée à chaque frame via onUpdate quand l'éditeur est actif. Elle met à jour et dessine les icônes d'objets, diffuse les changements de préférences (et les sauvegarde), appelle l'onUpdate du mode d'édition courant, puis présente l'interface (GUI, menus contextuels, boîtes modales, dialogue de sauvegarde des outils modifiés).
+Editor update loop, called every frame via onUpdate when the editor is active. It updates and draws the object icons, broadcasts preference changes (and saves them), calls the current edit mode's onUpdate, then presents the interface (GUI, context menus, modal boxes, save dialog for modified tools).
 
-## Remarques
+## Notes
 
-- Ne fait rien si editor.active est faux.
-- La sauvegarde des préférences se fait dès qu'une préférence a changé dans la frame ; le code contient un TODO pour ajouter un délai.
-- M.onEditorInitialized est explicitement mis à nil.
+- Does nothing if editor.active is false.
+- Preferences are saved as soon as a preference has changed in the frame; the code contains a TODO to add a delay.
+- M.onEditorInitialized is explicitly set to nil.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_mainUpdate.onExtensionLoaded()` | Hook de chargement. Corps vide. *(interne)* *(hook)* | 37 |
-| `editor_mainUpdate.onExtensionUnloaded()` | Hook de déchargement. Corps vide. *(interne)* *(hook)* | 40 |
-| `editor_mainUpdate.onUpdate(dtReal, dtSim, dtRaw)` | Boucle par frame de l'éditeur : icônes d'objets, préférences modifiées, editMode.onUpdate, gizmos (si editor.hideObjectIcons est faux) puis editor.guiModule.presentGui. *(interne)* *(hook)* | 13 |
+| `editor_mainUpdate.onExtensionLoaded()` | Load hook. Empty body. *(internal)* *(hook)* | 37 |
+| `editor_mainUpdate.onExtensionUnloaded()` | Unload hook. Empty body. *(internal)* *(hook)* | 40 |
+| `editor_mainUpdate.onUpdate(dtReal, dtSim, dtRaw)` | Editor per-frame loop: object icons, modified preferences, editMode.onUpdate, gizmos (if editor.hideObjectIcons is false) then editor.guiModule.presentGui. *(internal)* *(hook)* | 13 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_mainUpdate.onUpdate(dtReal, dtSim, dtRaw)`
 
-Boucle par frame de l'éditeur : icônes d'objets, préférences modifiées, editMode.onUpdate, gizmos (si editor.hideObjectIcons est faux) puis editor.guiModule.presentGui.
+Editor per-frame loop: object icons, modified preferences, editMode.onUpdate, gizmos (if editor.hideObjectIcons is false) then editor.guiModule.presentGui.
 
-- `dtReal` (*number*) : Delta de temps réel de la frame (s), transmis au mode d'édition et à presentGui.
-- `dtSim` (*number*) : Delta de temps de simulation (s).
-- `dtRaw` (*number*) : Delta de temps brut (s).
+- `dtReal` (*number*) : Real-time delta of the frame (s), passed to the edit mode and to presentGui.
+- `dtSim` (*number*) : Simulation time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `onEditorInitialized` | nil |  |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/mainUpdate.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/mainUpdate.lua`.*

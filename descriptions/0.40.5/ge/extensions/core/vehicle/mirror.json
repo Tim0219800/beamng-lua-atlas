@@ -1,64 +1,190 @@
 {
   "path": "lua/ge/extensions/core/vehicle/mirror.lua",
-  "module": "Extension GE `core_vehicle_mirror` : réglage des angles des rétroviseurs d'un véhicule. Lit la liste des miroirs de vdata.mirrors, applique un décalage d'angle (offsetNormal) aux miroirs via veh:getMirror(id), mémorise les réglages par modèle et par config dans settings/mirrorOffsets.json, les réapplique à chaque apparition du véhicule, gère le glisser à la souris (vehicleEvent) et déplace la caméra conducteur vers un miroir (focusOnMirror). Contient aussi une petite fenêtre imgui de debug.",
-  "usage": "local offsets = core_vehicle_mirror.getAnglesOffset()   -- [nomMesh] = {name, id, angleOffset = {x, z}, clampX, clampZ, position, icon, row, label}\ncore_vehicle_mirror.setAngleOffset('mirror_L', 5, -3, nil, true)   -- x, z en degrés, sauvegarde",
+  "module": "GE extension `core_vehicle_mirror`: adjustment of a vehicle's mirror angles. Reads the mirror list from vdata.mirrors, applies an angle offset (offsetNormal) to the mirrors through veh:getMirror(id), stores the settings per model and per config in settings/mirrorOffsets.json, reapplies them each time the vehicle spawns, handles mouse dragging (vehicleEvent) and moves the driver camera to a mirror (focusOnMirror). Also contains a small ImGui debug window.",
+  "usage": "local offsets = core_vehicle_mirror.getAnglesOffset()   -- [meshName] = {name, id, angleOffset = {x, z}, clampX, clampZ, position, icon, row, label}\ncore_vehicle_mirror.setAngleOffset('mirror_L', 5, -3, nil, true)   -- x, z in degrees, save",
   "notes": [
-    "Les angles sont en degrés (x : vers le haut/bas, z : gauche/droite), bornés par défaut à ±20° (MAXDEGREE) ou par clampX/clampZ définis dans le jbeam du miroir. Ils sont enregistrés par `veh.JBeam` puis par nom de config ('custom' si la config est une table sérialisée), puis par nom de mesh du miroir.",
-    "Le véhicule visé est celui de core_vehicle_configTarget (ou le véhicule passé en argument).",
-    "BUG : M.onExtensionUnloaded et M.onClientEndMission sont assignés à des variables locales jamais définies (valent nil) ; ces hooks n'existent donc pas.",
-    "onVehicleSpawned teste `if #offset` sur une table à clés textuelles : #offset vaut 0, qui est vrai en Lua, donc le test est toujours passé ; il ne dépend pas du contenu.",
-    "Le conflit de noms avec core_vehicleMirrors (fichier distinct, dans core/) est à noter : core_vehicle_mirror gère l'orientation des miroirs, core_vehicleMirrors le rendu (inactif) de leurs reflets."
+    "Angles are in degrees (x: up/down, z: left/right), clamped by default to ±20° (MAXDEGREE) or by clampX/clampZ defined in the mirror's jbeam. They are saved by `veh.JBeam`, then by config name ('custom' if the config is a serialized table), then by mirror mesh name.",
+    "The targeted vehicle is that of core_vehicle_configTarget (or the vehicle passed as an argument).",
+    "BUG: M.onExtensionUnloaded and M.onClientEndMission are assigned to local variables that are never defined (they equal nil); these hooks therefore do not exist.",
+    "onVehicleSpawned tests `if #offset` on a table with text keys: #offset equals 0, which is truthy in Lua, so the test always passes; it does not depend on the content.",
+    "Note the name conflict with core_vehicleMirrors (separate file, in core/): core_vehicle_mirror handles mirror orientation, core_vehicleMirrors the (inactive) rendering of their reflections."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "{'ui_imgui', 'core_vehicle_configTarget'}"},
-    "onClientEndMission": {"type": "nil", "desc": "Vaut nil (variable locale non définie, voir notes)."},
-    "onExtensionUnloaded": {"type": "nil", "desc": "Vaut nil (variable locale non définie, voir notes)."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{'ui_imgui', 'core_vehicle_configTarget'}"
+    },
+    "onClientEndMission": {
+      "type": "nil",
+      "desc": "Equals nil (undefined local variable, see notes)."
+    },
+    "onExtensionUnloaded": {
+      "type": "nil",
+      "desc": "Equals nil (undefined local variable, see notes)."
+    }
   },
   "functions": {
     "getAnglesOffset": {
-      "desc": "Liste les miroirs du véhicule avec leur décalage d'angle actuel (réglage mémorisé ou 0) et leurs bornes.",
+      "desc": "Lists the vehicle's mirrors with their current angle offset (stored setting or 0) and their limits.",
       "params": {
-        "vid": {"type": "integer|nil", "desc": "id du véhicule ; nil = celui de `v`"},
-        "v": {"type": "userdata|nil", "desc": "objet véhicule ; nil = véhicule configuré"}
+        "vid": {
+          "type": "integer|nil",
+          "desc": "vehicle id; nil = that of `v`"
+        },
+        "v": {
+          "type": "userdata|nil",
+          "desc": "vehicle object; nil = configured vehicle"
+        }
       },
-      "returns": [{"type": "table<string, table>", "desc": "[nomMesh] = {name, id, angleOffset = {x, z}, clampX, clampZ, position (UiColumn), icon, row (UiRow), label} ; {} si pas de miroirs"}]
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "[meshName] = {name, id, angleOffset = {x, z}, clampX, clampZ, position (UiColumn), icon, row (UiRow), label}; {} if no mirrors"
+        }
+      ]
     },
     "setAngleOffset": {
-      "desc": "Applique un décalage d'angle à un miroir (offsetNormal = (0,1,0) tourné de x et z) et mémorise le réglage pour le modèle/la config.",
+      "desc": "Applies an angle offset to a mirror (offsetNormal = (0,1,0) rotated by x and z) and stores the setting for the model/config.",
       "params": {
-        "mirrorName": {"type": "string", "desc": "nom du mesh du miroir"},
-        "x": {"type": "number", "desc": "angle X en degrés"},
-        "z": {"type": "number", "desc": "angle Z en degrés"},
-        "v": {"type": "userdata|nil", "desc": "véhicule ; nil = véhicule configuré"},
-        "save": {"type": "boolean|nil", "desc": "true : écrit settings/mirrorOffsets.json"}
+        "mirrorName": {
+          "type": "string",
+          "desc": "mirror mesh name"
+        },
+        "x": {
+          "type": "number",
+          "desc": "X angle in degrees"
+        },
+        "z": {
+          "type": "number",
+          "desc": "Z angle in degrees"
+        },
+        "v": {
+          "type": "userdata|nil",
+          "desc": "vehicle; nil = configured vehicle"
+        },
+        "save": {
+          "type": "boolean|nil",
+          "desc": "true: writes settings/mirrorOffsets.json"
+        }
       },
       "returns": []
     },
     "setDebug": {
-      "desc": "Ouvre ou ferme la fenêtre imgui « core_vehicle_mirror Debugger » (curseurs X/Z par miroir).",
-      "params": {"newValue": {"type": "boolean", "desc": "true pour ouvrir"}},
+      "desc": "Opens or closes the \"core_vehicle_mirror Debugger\" ImGui window (X/Z sliders per mirror).",
+      "params": {
+        "newValue": {
+          "type": "boolean",
+          "desc": "true to open"
+        }
+      },
       "returns": []
     },
     "vehicleEvent": {
-      "desc": "Évènement de souris sur un miroir dans le monde : 'onDown' commence un réglage par glisser, 'onUp' le termine et sauvegarde. Autre valeur : log d'erreur.",
+      "desc": "Mouse event on a mirror in the world: 'onDown' starts a drag adjustment, 'onUp' ends it and saves. Any other value: error log.",
       "params": {
-        "evtType": {"type": "string", "desc": "'onDown' ou 'onUp'"},
-        "vid": {"type": "integer", "desc": "véhicule"},
-        "mirror_name": {"type": "string", "desc": "nom du mesh du miroir"}
+        "evtType": {
+          "type": "string",
+          "desc": "'onDown' or 'onUp'"
+        },
+        "vid": {
+          "type": "integer",
+          "desc": "vehicle"
+        },
+        "mirror_name": {
+          "type": "string",
+          "desc": "mirror mesh name"
+        }
       },
       "returns": []
     },
     "focusOnMirror": {
-      "desc": "Passe en caméra conducteur et, si le miroir est hors du champ de vision, oriente la caméra (relativeYaw/relativePitch) vers lui. Sans nom, restaure l'orientation d'avant la mise au point.",
-      "params": {"mirror_name": {"type": "string|nil", "desc": "nom du mesh du miroir ; nil = revenir à l'orientation précédente"}},
+      "desc": "Switches to the driver camera and, if the mirror is outside the field of view, orients the camera (relativeYaw/relativePitch) toward it. Without a name, restores the orientation from before the focus.",
+      "params": {
+        "mirror_name": {
+          "type": "string|nil",
+          "desc": "mirror mesh name; nil = return to the previous orientation"
+        }
+      },
       "returns": []
     },
-    "onExtensionLoaded": {"desc": "Hook : charge les réglages depuis settings/mirrorOffsets.json.", "params": {}, "returns": [], "internal": true},
-    "onSerialize": {"desc": "Hook : sauvegarde l'état d'ouverture de la fenêtre de debug.", "params": {}, "returns": [{"type": "table", "desc": "{windowOpen}"}], "internal": true},
-    "onDeserialized": {"desc": "Hook : restaure la fenêtre de debug et recalcule le ratio d'écran.", "params": {"data": {"type": "table", "desc": "données de onSerialize"}}, "returns": [], "internal": true},
-    "onSettingsChanged": {"desc": "Hook : recalcule le ratio degrés/pixel de la souris d'après la résolution (20° sur la moyenne largeur+hauteur).", "params": {}, "returns": [], "internal": true},
-    "onVehicleDestroyed": {"desc": "Hook : un véhicule est détruit (ne fait rien).", "params": {"vid": {"type": "integer", "desc": "véhicule"}}, "returns": [], "internal": true},
-    "onVehicleSpawned": {"desc": "Hook : un véhicule apparaît ; réapplique les réglages mémorisés de tous ses miroirs.", "params": {"vid": {"type": "integer", "desc": "véhicule"}, "veh": {"type": "userdata", "desc": "objet véhicule"}}, "returns": [], "internal": true},
-    "onUpdate": {"desc": "Hook par frame : applique le glisser souris en cours et affiche la fenêtre de debug si ouverte.", "params": {"dtReal": {"type": "number", "desc": "temps réel (s)"}, "dtSim": {"type": "number", "desc": "temps de simulation (s)"}, "dtRaw": {"type": "number", "desc": "temps brut (s)"}}, "returns": [], "internal": true}
+    "onExtensionLoaded": {
+      "desc": "Hook: loads the settings from settings/mirrorOffsets.json.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook: saves the open state of the debug window.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{windowOpen}"
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook: restores the debug window and recomputes the screen ratio.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "data from onSerialize"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onSettingsChanged": {
+      "desc": "Hook: recomputes the mouse degrees/pixel ratio from the resolution (20° over the average of width+height).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook: a vehicle is destroyed (does nothing).",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "vehicle"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Hook: a vehicle spawns; reapplies the stored settings of all its mirrors.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "vehicle"
+        },
+        "veh": {
+          "type": "userdata",
+          "desc": "vehicle object"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Per-frame hook: applies the ongoing mouse drag and shows the debug window if open.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "real time (s)"
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "simulation time (s)"
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "raw time (s)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

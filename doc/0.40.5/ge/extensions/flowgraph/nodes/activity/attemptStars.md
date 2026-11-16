@@ -1,23 +1,23 @@
 # `flowgraph_nodes_activity_attemptStars`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/activity/attemptStars.lua` · VM : Game Engine (GE) · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/activity/attemptStars.lua` · VM: Game Engine (GE) · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/activity/attemptStars")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/activity/attemptStars")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Activity Attempt Stars » (catégorie once_instant, tags activity/mission). Ajoute à une tentative les étoiles remplies : chaque pin d'entrée bool personnalisé (le nom du pin = clé d'étoile) est écrit dans attempt.unlockedStars. Entrée et sortie fixes « attempt » (attemptData). Seul le type bool est autorisé pour les pins manuels.
+Flowgraph node "Activity Attempt Stars" (category once_instant, tags activity/mission). Adds the completed stars to an attempt: each custom bool input pin (pin name = star key) is written into attempt.unlockedStars. Fixed input and output "attempt" (attemptData). Only the bool type is allowed for manual pins.
 
-## Remarques
+## Notes
 
-- Une valeur nil sur un pin devient false dans unlockedStars. La table attempt est modifiée sur place puis renvoyée.
+- A nil value on a pin becomes false in unlockedStars. The attempt table is modified in place then returned.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Active savePins et allowCustomInPins. | 27 |
-| `C:workOnce()` | Pour chaque pin d'entrée non fixe et non flow, met attempt.unlockedStars[nom] = valeur du pin (ou false), puis sort attempt. | 32 |
+| `C:init()` | Enables savePins and allowCustomInPins. | 27 |
+| `C:workOnce()` | For each non-fixed, non-flow input pin, sets attempt.unlockedStars[name] = pin value (or false), then outputs attempt. | 32 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/activity/attemptStars.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/activity/attemptStars.lua`.*

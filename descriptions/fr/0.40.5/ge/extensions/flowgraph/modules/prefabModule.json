@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/flowgraph/modules/prefabModule.lua",
+  "module": "Module flowgraph (moduleOrder 50) qui fait apparaître, suit et supprime des prefabs (groupes d'objets de scène .prefab.json) pendant un projet. À l'ajout d'un prefab, il recense tous les objets enfants par classe, mémorise les transformations des véhicules, détecte si des colliders ou des waypoints / routes (navgraph) sont contenus, puis recharge la collision (be:reloadCollision) et le navgraph (map.reset) au bon moment. À l'arrêt, il supprime tous les prefabs non marqués dontDelete.",
+  "notes": [
+    "spawnPrefab résout <nom>/<nom>.prefab.json relativement au projet, place le prefab en (0,0,0), canSave = false, dans MissionGroup.",
+    "Pendant un chargement de niveau, les rechargements passent par mgr.modules.level:delayOrInstantFunction ; sinon ils sont faits dans afterTrigger via des drapeaux.",
+    "Si un BeamNGGameplayArea fait partie du prefab, collision et navgraph sont rechargés immédiatement (contournement 'hacky' commenté dans le code).",
+    "Les objets non-véhicule portant un Name génèrent un avertissement : utiliser Internal Name. Les véhicules nommés 'clone...' aussi.",
+    "moreData accepte skipCollisionReload et skipNavgraphReload."
+  ],
+  "functions": {
+    "init": {"desc": "Crée les tables prefabs, sortedIds, flags puis appelle clear().", "internal": true},
+    "clear": {"desc": "Vide prefabs, flags et sortedIds.", "internal": true},
+    "afterTrigger": {"desc": "Appelé après le tick du graphe : recharge la collision et reconstruit le navgraph (map.reset, sauf pendant un chargement) si les drapeaux sont levés.", "internal": true},
+    "originalVehicleTransforms": {"desc": "Calcule {pos, rot, up} de chaque véhicule (BeamNGVehicle) du prefab et les ajoute au module vehicle du manager.", "params": {"data": {"type": "table", "desc": "données du prefab, avec allChildrenIds"}}, "returns": [{"type": "table<integer, table>", "desc": "transformations par id de véhicule"}]},
+    "getPrefab": {"desc": "Renvoie les données du prefab suivi, ou une table vide.", "params": {"id": {"type": "integer", "desc": "id du prefab"}}, "returns": [{"type": "table", "desc": "données du prefab"}]},
+    "spawnPrefab": {"desc": "Crée un prefab depuis <nom>.prefab.json (chemin relatif au projet), l'ajoute à MissionGroup et le suit via addPrefab.", "params": {"fileName": {"type": "string", "desc": "nom du prefab (sans extension)"}}, "returns": [{"type": "integer", "desc": "id de l'objet prefab"}]},
+    "addPrefab": {"desc": "Suit un prefab existant de la scène : recense ses enfants, ses véhicules, détecte colliders et navgraph et programme les rechargements nécessaires.", "params": {"id": {"type": "integer", "desc": "id du prefab dans la scène"}, "moreData": {"type": "table|nil", "desc": "champs copiés dans les données ; skipCollisionReload, skipNavgraphReload"}}},
+    "restoreVehiclePositions": {"desc": "Replace les véhicules du prefab à leur position et rotation d'origine et réinitialise la physique et les déformations.", "params": {"id": {"type": "integer", "desc": "id du prefab"}}},
+    "getVehicleIdsForPrefab": {"desc": "Renvoie les ids de véhicules contenus dans le prefab, triés.", "params": {"id": {"type": "integer", "desc": "id du prefab"}}, "returns": [{"type": "integer[]", "desc": "ids"}]},
+    "unpackPrefabAndDelete": {"desc": "Éclate le prefab (obj:explode), supprime le prefab puis réinsère ses véhicules dans MissionGroup à leur position courante avant de supprimer le groupe restant.", "params": {"id": {"type": "integer", "desc": "id du prefab"}, "obj": {"type": "userdata", "desc": "objet prefab de la scène"}}},
+    "setUnpackVehiclesBeforeDeletion": {"desc": "Indique si les véhicules doivent être extraits avant la suppression du prefab.", "params": {"id": {"type": "integer", "desc": "id du prefab"}, "set": {"type": "boolean", "desc": "extraire les véhicules"}}},
+    "setKeepPrefab": {"desc": "Marque le prefab comme à conserver à l'arrêt du projet (dontDelete). Avertit si le prefab n'est pas suivi.", "params": {"id": {"type": "integer", "desc": "id du prefab"}, "keep": {"type": "boolean", "desc": "conserver"}}},
+    "deletePrefab": {"desc": "Supprime le prefab (sauf dontDelete sans force), le retire du suivi et programme un rechargement de collision s'il en contenait.", "params": {"id": {"type": "integer", "desc": "id du prefab"}, "force": {"type": "boolean|nil", "desc": "ignorer dontDelete"}}},
+    "executionStopped": {"desc": "Appelé à l'arrêt du projet : supprime tous les prefabs suivis non marqués dontDelete, recharge collision et navgraph si nécessaire, puis appelle clear().", "internal": true}
+  }
+}

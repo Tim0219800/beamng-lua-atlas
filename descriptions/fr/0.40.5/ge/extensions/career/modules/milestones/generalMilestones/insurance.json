@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/career/modules/milestones/generalMilestones/insurance.lua",
+  "module": "Jalon sur le nombre de réclamations d'assurance pour réparation (id insurance_repair_claims). Paliers : 1, 5, 10, 20, 50 réclamations (career_modules_insurance_history.getInsuranceClaimsCount), récompense minorLinear.",
+  "notes": [
+    "onInsuranceRepairClaim n'appelle pas de setNotificationTarget : il compare directement le compteur à la cible du palier suivant (notificationStep + 1).",
+    "Le hook peut être appelé avant onGeneralMilestonesCollect ; dans ce cas currMilestone est vide et getTarget n'existe pas (non protégé)."
+  ],
+  "functions": {
+    "onGeneralMilestonesCollect": {
+      "desc": "Hook : crée la configuration du jalon, la sauvegarde si absente et l'ajoute à milestonesList.",
+      "params": {"milestonesList": {"type": "table[]", "desc": "Liste à compléter."}},
+      "internal": true
+    },
+    "onInsuranceRepairClaim": {
+      "desc": "Hook appelé à chaque réclamation d'assurance pour réparation : si le compteur atteint la cible du palier suivant, notifie le jalon et avance notificationStep.",
+      "params": {},
+      "internal": true
+    }
+  }
+}

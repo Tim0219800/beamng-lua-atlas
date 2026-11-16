@@ -1,53 +1,53 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/directlyTo.lua",
-  "module": "Nœud « AI Directly To » (couleur ai, comportement duration + once). Fait rouler un véhicule en ligne droite vers une position cible, via un chemin interpolé envoyé à ai.startFollowing (mode « neverReset »). Entrées : flow, reset, vehId, target (vec3), targetVelocity (m/s, 1 par défaut). Sortie : flow, actif quand le véhicule est arrivé. Données : minDistance (1,5 m), handBrakeWhenFinished, straightenWheelsWhenFinished, maxStepDistance (5 m).",
+  "module": "Node \"AI Directly To\" (color ai, duration + once behavior). Makes a vehicle drive in a straight line to a target position, via an interpolated path sent to ai.startFollowing (\"neverReset\" mode). Inputs: flow, reset, vehId, target (vec3), targetVelocity (m/s, 1 by default). Output: flow, active when the vehicle has arrived. Data: minDistance (1.5 m), handBrakeWhenFinished, straightenWheelsWhenFinished, maxStepDistance (5 m).",
   "notes": [
-    "Dans setupAI, la boucle va de 1 à steps+3 : le chemin dépasse la cible de trois points.",
-    "La variable locale target est réassignée (target = target - origin), ce qui crée un nouvel objet à chaque appel.",
-    "Le pin flow de sortie n'est jamais remis à false une fois complete."
+    "In setupAI, the loop goes from 1 to steps+3: the path overshoots the target by three points.",
+    "The local variable target is reassigned (target = target - origin), which creates a new object on each call.",
+    "The output flow pin is never reset to false once complete."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Initialise started/complete et les données par défaut.",
+          "desc": "Initializes started/complete and the default data.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Appelle reset.",
+          "desc": "Calls reset.",
           "internal": true
         },
         "reset": {
-          "desc": "Remet started/complete à false et appelle endAI.",
+          "desc": "Resets started/complete to false and calls endAI.",
           "internal": false
         },
         "getVeh": {
-          "desc": "Renvoie le véhicule de vehId, ou celui du joueur sans entrée.",
+          "desc": "Returns the vehicle of vehId, or the player's without input.",
           "internal": false
         },
         "endAI": {
-          "desc": "Envoie au véhicule ai:scriptStop(handBrake, straightenWheels) selon les données du nœud.",
+          "desc": "Sends ai:scriptStop(handBrake, straightenWheels) to the vehicle according to the node data.",
           "internal": false
         },
         "setupAI": {
-          "desc": "Construit un chemin de points espacés d'au plus maxStepDistance entre la position du véhicule et la cible (temps = distance / vitesse) et l'envoie par ai.startFollowing.",
+          "desc": "Builds a path of points spaced at most maxStepDistance apart between the vehicle position and the target (time = distance / speed) and sends it via ai.startFollowing.",
           "internal": false
         },
         "work": {
-          "desc": "Gère reset ; au premier flow lance setupAI ; ensuite teste la distance au carré à la cible et, sous minDistance, arrête l'IA, marque complete et active la sortie flow.",
+          "desc": "Handles reset; on the first flow runs setupAI; then tests the squared distance to the target and, below minDistance, stops the AI, marks complete and activates the flow output.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche les états Complete et Started.",
+          "desc": "Displays the Complete and Started states.",
           "params": {
             "builder": {
               "type": "table",
-              "desc": "Constructeur de nœud."
+              "desc": "Node constructor."
             },
             "style": {
               "type": "table",
-              "desc": "Style du nœud."
+              "desc": "Node style."
             }
           },
           "internal": true

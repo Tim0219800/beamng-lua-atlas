@@ -1,25 +1,43 @@
 {
   "path": "lua/ge/extensions/ui/messagesDebugger.lua",
-  "module": "Fenêtre ImGui de débogage des messages à l'écran (événements UI « Message »). Elle permet de composer un message (texte, catégorie, icône, durée en secondes), de l'envoyer par guihooks.message, d'effacer une catégorie ou tous les messages, et d'activer un contournement du TTL côté interface. Utile pour tester l'affichage des messages et des liaisons [action=...].",
+  "module": "ImGui debug window for on-screen messages (\"Message\" UI events). It lets you compose a message (text, category, icon, duration in seconds), send it via guihooks.message, clear a category or all messages, and enable a TTL bypass on the UI side. Useful for testing the display of messages and [action=...] bindings.",
   "usage": "extensions.load('ui_messagesDebugger'); ui_messagesDebugger.show()",
   "notes": [
-    "Événements guihooks émis : Message (avec clear = true pour effacer une catégorie), ClearAllMessages, MessagesDebug ({bypassTtl}).",
-    "La case « Regex clear » n'a aucun effet : les deux branches de _clearCategory envoient le même événement (la catégorie est donc traitée telle quelle).",
-    "Le bouton « Test 3 Messages » envoie trois messages dans les catégories <catégorie>.1, .2 et .3 avec des durées de 3, 4 et 5 s."
+    "guihooks events emitted: Message (with clear = true to clear a category), ClearAllMessages, MessagesDebug ({bypassTtl}).",
+    "The \"Regex clear\" checkbox has no effect: both branches of _clearCategory send the same event (the category is therefore used as is).",
+    "The \"Test 3 Messages\" button sends three messages in the categories <category>.1, .2 and .3 with durations of 3, 4 and 5 s."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : ui_imgui."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: ui_imgui."
+    }
   },
   "functions": {
-    "show": {"desc": "Ouvre la fenêtre « Messages Debugger »."},
-    "hide": {"desc": "Ferme la fenêtre."},
-    "toggle": {"desc": "Inverse l'état d'ouverture de la fenêtre."},
+    "show": {
+      "desc": "Opens the \"Messages Debugger\" window."
+    },
+    "hide": {
+      "desc": "Closes the window."
+    },
+    "toggle": {
+      "desc": "Toggles the window's open state."
+    },
     "onUpdate": {
-      "desc": "Hook appelé à chaque image ; dessine la fenêtre si elle est ouverte (rien sinon).",
+      "desc": "Hook called every frame; draws the window if it is open (nothing otherwise).",
       "params": {
-        "dtReal": {"type": "number", "desc": "Temps réel écoulé (s), non utilisé."},
-        "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s), non utilisé."},
-        "dtRaw": {"type": "number", "desc": "Temps brut écoulé (s), non utilisé."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Elapsed real time (s), unused."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Elapsed simulation time (s), unused."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw elapsed time (s), unused."
+        }
       },
       "internal": true
     }

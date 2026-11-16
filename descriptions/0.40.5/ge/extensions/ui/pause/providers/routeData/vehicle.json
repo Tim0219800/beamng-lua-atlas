@@ -1,61 +1,124 @@
 {
   "path": "lua/ge/extensions/ui/pause/providers/routeData/vehicle.lua",
-  "module": "Fournit les données des routes « véhicule » du menu pause (pause.vehicle et sous-routes : configuration combinée, packs, réglages, peinture, sauvegarde, liste des configurations, véhicules apparus, debug). Chaque fonction renvoie une table décrivant les composants Vue à afficher (mainPanelContent, sidePanelContents, rail, mainCardClass, heading). getVehicleData calcule en plus les permissions de chaque action selon le mode de jeu, la première conduite et la présence d'un véhicule.",
+  "module": "Provides the data for the pause menu \"vehicle\" routes (pause.vehicle and sub-routes: combined configuration, packs, tuning, paint, save, configuration list, spawned vehicles, debug). Each function returns a table describing the Vue components to display (mainPanelContent, sidePanelContents, rail, mainCardClass, heading). getVehicleData also computes the permissions of each action based on the game mode, the first drive and the presence of a vehicle.",
   "notes": [
-    "Les éléments de panneau sont des tables {id, type = \"component\"|\"title\", componentName, props}.",
-    "Édition de véhicule autorisée seulement en freeroam, multiplayer, garage et freeroamTutorial ; la récupération (réparer, dernière route, remettre sur les roues) en freeroam, multiplayer et freeroamTutorial ; le sélecteur de véhicule en freeroam, multiplayer, garage et freeroamTutorial.",
-    "En multiseat actif, getVehicleData renvoie uniquement le composant PauseMultiseatVehiclesDigest, sans rail ni actions.",
-    "Sans véhicule joueur (getPlayerVehicle(0) nil), les actions configurationCombined et de récupération sont désactivées avec la raison ui.radialmenu2.noVehicle.",
-    "Pendant une session de première conduite (gameplay_discover_firstDrive_capabilities), les permissions sont ajustées via applyUiPermission (partsAndTuning, vehicleManagement, radialMenu, advancedSandbox).",
-    "Seuls les boutons configurationCombined, vehicleSelector et les trois boutons de récupération sont réellement construits dans le rail ; partpacks, tuning, colorSkin et seatAdjust sont commentés dans le code (mais restent dans la table actions).",
-    "Les boutons de récupération émettent onPauseMenuRightRailButtonPressed avec « repairHere », « recoverToRoad » ou « flipUpright ».",
-    "getVehicleSpawnedData ne renvoie qu'un contenu léger (shell) ; l'écran Vue demande ensuite les données complètes après le montage."
+    "Panel items are tables {id, type = \"component\"|\"title\", componentName, props}.",
+    "Vehicle editing is allowed only in freeroam, multiplayer, garage and freeroamTutorial; recovery (repair, last road, flip upright) in freeroam, multiplayer and freeroamTutorial; the vehicle selector in freeroam, multiplayer, garage and freeroamTutorial.",
+    "When multiseat is active, getVehicleData returns only the PauseMultiseatVehiclesDigest component, with no rail or actions.",
+    "Without a player vehicle (getPlayerVehicle(0) is nil), the configurationCombined and recovery actions are disabled with the reason ui.radialmenu2.noVehicle.",
+    "During a first-drive session (gameplay_discover_firstDrive_capabilities), permissions are adjusted via applyUiPermission (partsAndTuning, vehicleManagement, radialMenu, advancedSandbox).",
+    "Only the configurationCombined and vehicleSelector buttons and the three recovery buttons are actually built in the rail; partpacks, tuning, colorSkin and seatAdjust are commented out in the code (but remain in the actions table).",
+    "The recovery buttons emit onPauseMenuRightRailButtonPressed with \"repairHere\", \"recoverToRoad\" or \"flipUpright\".",
+    "getVehicleSpawnedData returns only a light content (shell); the Vue screen then requests the full data after mounting."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : ui_pause_providers_vehicleTabInteractions, ui_vehicleSelector_general."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded beforehand: ui_pause_providers_vehicleTabInteractions, ui_vehicleSelector_general."
+    }
   },
   "functions": {
     "getVehicleData": {
-      "desc": "Données de la route principale « véhicule » : indicateur editable, rail (groupes vehicleButtons, vehicleSelectorButtons, vehicleRecoveryButtons), composant PauseVehicleSpawned, panneau latéral PauseVehicleTab et table actions avec visible, enabled et disabledReason pour chaque action.",
-      "params": {"context": {"type": "table", "desc": "Contexte du pause : mode, isMultiseatActive, isFirstDriveActive."}},
-      "returns": [{"type": "table", "desc": "{editable, rail, mainCardClass, mainPanelContent, spawnedVehicles, sidePanelContents, actions}."}]
+      "desc": "Data for the main \"vehicle\" route: editable flag, rail (groups vehicleButtons, vehicleSelectorButtons, vehicleRecoveryButtons), PauseVehicleSpawned component, PauseVehicleTab side panel and actions table with visible, enabled and disabledReason for each action.",
+      "params": {
+        "context": {
+          "type": "table",
+          "desc": "Pause context: mode, isMultiseatActive, isFirstDriveActive."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{editable, rail, mainCardClass, mainPanelContent, spawnedVehicles, sidePanelContents, actions}."
+        }
+      ]
     },
     "getVehiclePacksData": {
-      "desc": "Données de la route des packs de pièces : composant PauseVehiclePacks.",
-      "returns": [{"type": "table", "desc": "{mainPanelContent}."}]
+      "desc": "Data for the part packs route: PauseVehiclePacks component.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{mainPanelContent}."
+        }
+      ]
     },
     "getVehicleConfigurationCombinedData": {
-      "desc": "Données de l'écran de configuration combinée (pièces, composant PauseVehicleConfigurationCombined), avec customConfigurationsEnabled selon les capacités de la première conduite.",
-      "returns": [{"type": "table", "desc": "{heading, mainCardClass, mainPanelContent}."}]
+      "desc": "Data for the combined configuration screen (parts, PauseVehicleConfigurationCombined component), with customConfigurationsEnabled depending on the first-drive capabilities.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{heading, mainCardClass, mainPanelContent}."
+        }
+      ]
     },
     "getVehicleTuningData": {
-      "desc": "Données de la route de réglages : composant PauseVehicleTuning.",
-      "returns": [{"type": "table", "desc": "{mainPanelContent}."}]
+      "desc": "Data for the tuning route: PauseVehicleTuning component.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{mainPanelContent}."
+        }
+      ]
     },
     "getVehiclePaintData": {
-      "desc": "Données de la route de peinture : composant PauseVehicleSkin.",
-      "returns": [{"type": "table", "desc": "{mainPanelContent}."}]
+      "desc": "Data for the paint route: PauseVehicleSkin component.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{mainPanelContent}."
+        }
+      ]
     },
     "getVehicleSaveData": {
-      "desc": "Données de la route de sauvegarde de configuration : titre « Enregistrer la configuration - <marque modèle> » du véhicule actuel.",
-      "returns": [{"type": "table", "desc": "{heading}."}]
+      "desc": "Data for the configuration save route: title \"Save configuration - <make model>\" of the current vehicle.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{heading}."
+        }
+      ]
     },
     "getVehicleSaveRouteTitle": {
-      "desc": "Renvoie le titre de la route de sauvegarde : le texte ui.pause.route.saveConfig, suivi de « - marque modèle » si le véhicule joueur est connu.",
-      "returns": [{"type": "string", "desc": "Titre."}]
+      "desc": "Returns the save route title: the text ui.pause.route.saveConfig, followed by \"- make model\" if the player vehicle is known.",
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Title."
+        }
+      ]
     },
     "getVehicleConfigListManageData": {
-      "desc": "Données de la route de gestion de la liste des configurations : composant PauseVehicleConfigListManage.",
-      "returns": [{"type": "table", "desc": "{mainCardClass, mainPanelContent}."}]
+      "desc": "Data for the configuration list management route: PauseVehicleConfigListManage component.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{mainCardClass, mainPanelContent}."
+        }
+      ]
     },
     "getVehicleSpawnedData": {
-      "desc": "Données de la route des véhicules apparus : composant PauseVehicleSpawned et données allégées (shell) de ui_pause_providers_vehicleTabInteractions.getSpawnedVehiclesShellData.",
-      "params": {"context": {"type": "table", "desc": "Contexte du pause."}},
-      "returns": [{"type": "table", "desc": "{mainCardClass, mainPanelContent, spawnedVehicles}."}]
+      "desc": "Data for the spawned vehicles route: PauseVehicleSpawned component and lightweight data (shell) from ui_pause_providers_vehicleTabInteractions.getSpawnedVehiclesShellData.",
+      "params": {
+        "context": {
+          "type": "table",
+          "desc": "Pause context."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{mainCardClass, mainPanelContent, spawnedVehicles}."
+        }
+      ]
     },
     "getVehicleDebugData": {
-      "desc": "Données de la route de debug du véhicule : composant PauseVehicleDebug.",
-      "returns": [{"type": "table", "desc": "{mainCardClass, mainPanelContent}."}]
+      "desc": "Data for the vehicle debug route: PauseVehicleDebug component.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{mainCardClass, mainPanelContent}."
+        }
+      ]
     }
   }
 }

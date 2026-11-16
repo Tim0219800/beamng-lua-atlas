@@ -1,55 +1,214 @@
 {
   "path": "lua/vehicle/controller/vehicleController/shiftLogic/dummy.lua",
-  "module": "Module de logique de boîte « neutre » chargé par vehicleController quand le véhicule n'a pas de device « gearbox » (ou via jbeam shiftLogicName = \"dummy\"). Il recopie simplement les entrées throttle/brake du conducteur, lit le régime du moteur « mainEngine » s'il existe et remplit les valeurs (températures, charge, couples, état moteur) que vehicleController publie dans electrics. Aucun passage de rapport.",
+  "module": "\"Neutral\" gearbox logic module loaded by vehicleController when the vehicle has no \"gearbox\" device (or via jbeam shiftLogicName = \"dummy\"). It simply copies the driver's throttle/brake inputs, reads the speed of the \"mainEngine\" engine if it exists and fills in the values (temperatures, load, torques, engine state) that vehicleController publishes in electrics. No gear changes.",
   "notes": [
-    "Contrat commun à tous les modules shiftLogic : vehicleController injecte avant chaque frame gearboxHandling, timer, timerConstants, inputValues, shiftPreventionData, shiftBehavior et smoothedValues (nil à la création du module), puis lit throttle, brake, clutchRatio, rpm, etc.",
-    "gearboxBehaviorChanged, shiftUp, shiftDown et shiftToGearIndex valent `nop` (global du moteur, non défini dans ce fichier) : ne font rien.",
-    "updateGearboxGFX écrit aussi M.running et M.isShifting, qui ne sont pas déclarés dans le tableau initial du module (vehicleController ne lit pas M.running ; il lit isShifting).",
-    "Le clutchRatio reste à 0 et le moteur reçoit la valeur de throttle brute (0 si moteur désactivé)."
+    "Contract common to all shiftLogic modules: before each frame vehicleController injects gearboxHandling, timer, timerConstants, inputValues, shiftPreventionData, shiftBehavior and smoothedValues (nil at module creation), then reads throttle, brake, clutchRatio, rpm, etc.",
+    "gearboxBehaviorChanged, shiftUp, shiftDown and shiftToGearIndex are `nop` (engine global, not defined in this file): they do nothing.",
+    "updateGearboxGFX also writes M.running and M.isShifting, which are not declared in the module's initial table (vehicleController does not read M.running; it reads isShifting).",
+    "clutchRatio stays at 0 and the engine receives the raw throttle value (0 if engine disabled)."
   ],
   "fields": {
-    "throttle": {"type": "number", "desc": "Recopie de inputValues.throttle."},
-    "brake": {"type": "number", "desc": "Recopie de inputValues.brake."},
-    "clutchRatio": {"type": "number", "desc": "Toujours 0."},
-    "currentGearIndex": {"type": "integer", "desc": "Toujours 0."},
-    "minGearIndex": {"type": "integer", "desc": "Toujours 0."},
-    "maxGearIndex": {"type": "integer", "desc": "Toujours 0."},
-    "shiftingAggression": {"type": "number", "desc": "Toujours 0."},
-    "isArcadeSwitched": {"type": "boolean", "desc": "Toujours false."},
-    "isSportModeActive": {"type": "boolean", "desc": "Toujours false."},
-    "smoothedAvgAVInput": {"type": "number", "desc": "Vitesse angulaire (rad/s) de sortie du device « gearbox » (0 si absent)."},
-    "rpm": {"type": "number", "desc": "Régime moteur en tr/min (outputAV1 du mainEngine)."},
-    "idleRPM": {"type": "number", "desc": "Ralenti du moteur (tr/min) lu à l'init."},
-    "maxRPM": {"type": "number", "desc": "Régime max du moteur lu à l'init."},
-    "engineThrottle": {"type": "number", "desc": "Gaz envoyés au moteur (0 si moteur désactivé)."},
-    "engineLoad": {"type": "number", "desc": "Charge instantanée du moteur."},
-    "engineTorque": {"type": "number", "desc": "Couple de combustion du moteur."},
-    "flywheelTorque": {"type": "number", "desc": "Couple de sortie du moteur (outputTorque1)."},
-    "gearboxTorque": {"type": "number", "desc": "Couple de sortie du device gearbox."},
-    "ignition": {"type": "boolean", "desc": "Vrai si electrics.values.ignitionLevel > 1."},
-    "isEngineRunning": {"type": "number", "desc": "1 si le moteur tourne (régime > 80% de starterMaxAV et démarreur dégagé) ou s'il n'a pas de démarreur, sinon 0."},
-    "oilTemp": {"type": "number", "desc": "Température d'huile du moteur."},
-    "waterTemp": {"type": "number", "desc": "Température de liquide de refroidissement (ou d'huile à défaut)."},
-    "checkEngine": {"type": "boolean", "desc": "Vrai si le moteur est désactivé (isDisabled)."},
-    "energyStorages": {"type": "table<integer, string>", "desc": "Noms des réservoirs du moteur (sharedFunctions.getEnergyStorages)."},
-    "gearboxHandling": {"type": "table|nil", "desc": "Injecté par vehicleController."},
-    "timer": {"type": "table|nil", "desc": "Injecté par vehicleController."},
-    "timerConstants": {"type": "table|nil", "desc": "Injecté par vehicleController."},
-    "inputValues": {"type": "table|nil", "desc": "Injecté : {throttle, clutch} bornés 0..1 (ou overrides electrics)."},
-    "shiftPreventionData": {"type": "table|nil", "desc": "Injecté par vehicleController."},
-    "shiftBehavior": {"type": "table|nil", "desc": "Injecté par vehicleController."},
-    "smoothedValues": {"type": "table|nil", "desc": "Injecté par vehicleController."},
-    "gearboxBehaviorChanged": {"type": "function", "desc": "nop."},
-    "shiftUp": {"type": "function", "desc": "nop."},
-    "shiftDown": {"type": "function", "desc": "nop."},
-    "shiftToGearIndex": {"type": "function", "desc": "nop."}
+    "throttle": {
+      "type": "number",
+      "desc": "Copy of inputValues.throttle."
+    },
+    "brake": {
+      "type": "number",
+      "desc": "Copy of inputValues.brake."
+    },
+    "clutchRatio": {
+      "type": "number",
+      "desc": "Always 0."
+    },
+    "currentGearIndex": {
+      "type": "integer",
+      "desc": "Always 0."
+    },
+    "minGearIndex": {
+      "type": "integer",
+      "desc": "Always 0."
+    },
+    "maxGearIndex": {
+      "type": "integer",
+      "desc": "Always 0."
+    },
+    "shiftingAggression": {
+      "type": "number",
+      "desc": "Always 0."
+    },
+    "isArcadeSwitched": {
+      "type": "boolean",
+      "desc": "Always false."
+    },
+    "isSportModeActive": {
+      "type": "boolean",
+      "desc": "Always false."
+    },
+    "smoothedAvgAVInput": {
+      "type": "number",
+      "desc": "Angular velocity (rad/s) of the \"gearbox\" device output (0 if absent)."
+    },
+    "rpm": {
+      "type": "number",
+      "desc": "Engine speed in RPM (outputAV1 of the mainEngine)."
+    },
+    "idleRPM": {
+      "type": "number",
+      "desc": "Engine idle (RPM) read at init."
+    },
+    "maxRPM": {
+      "type": "number",
+      "desc": "Engine max RPM read at init."
+    },
+    "engineThrottle": {
+      "type": "number",
+      "desc": "Throttle sent to the engine (0 if engine disabled)."
+    },
+    "engineLoad": {
+      "type": "number",
+      "desc": "Instantaneous engine load."
+    },
+    "engineTorque": {
+      "type": "number",
+      "desc": "Engine combustion torque."
+    },
+    "flywheelTorque": {
+      "type": "number",
+      "desc": "Engine output torque (outputTorque1)."
+    },
+    "gearboxTorque": {
+      "type": "number",
+      "desc": "Gearbox device output torque."
+    },
+    "ignition": {
+      "type": "boolean",
+      "desc": "True if electrics.values.ignitionLevel > 1."
+    },
+    "isEngineRunning": {
+      "type": "number",
+      "desc": "1 if the engine is running (speed > 80% of starterMaxAV and starter disengaged) or if it has no starter, otherwise 0."
+    },
+    "oilTemp": {
+      "type": "number",
+      "desc": "Engine oil temperature."
+    },
+    "waterTemp": {
+      "type": "number",
+      "desc": "Coolant temperature (or oil temperature as a fallback)."
+    },
+    "checkEngine": {
+      "type": "boolean",
+      "desc": "True if the engine is disabled (isDisabled)."
+    },
+    "energyStorages": {
+      "type": "table<integer, string>",
+      "desc": "Engine tank names (sharedFunctions.getEnergyStorages)."
+    },
+    "gearboxHandling": {
+      "type": "table|nil",
+      "desc": "Injected by vehicleController."
+    },
+    "timer": {
+      "type": "table|nil",
+      "desc": "Injected by vehicleController."
+    },
+    "timerConstants": {
+      "type": "table|nil",
+      "desc": "Injected by vehicleController."
+    },
+    "inputValues": {
+      "type": "table|nil",
+      "desc": "Injected: {throttle, clutch} bounded 0..1 (or electrics overrides)."
+    },
+    "shiftPreventionData": {
+      "type": "table|nil",
+      "desc": "Injected by vehicleController."
+    },
+    "shiftBehavior": {
+      "type": "table|nil",
+      "desc": "Injected by vehicleController."
+    },
+    "smoothedValues": {
+      "type": "table|nil",
+      "desc": "Injected by vehicleController."
+    },
+    "gearboxBehaviorChanged": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "shiftUp": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "shiftDown": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "shiftToGearIndex": {
+      "type": "function",
+      "desc": "nop."
+    }
   },
   "functions": {
-    "init": {"desc": "Mémorise sharedFunctions, récupère les devices mainEngine et gearbox, remet les valeurs à zéro et lit maxRPM/idleRPM/énergie du moteur. Appelé par vehicleController à l'init et au reset.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (non utilisées)."}, "sharedFunctionTable": {"type": "table", "desc": "Utilitaires sharedFunctions de vehicleController."}}, "internal": true},
-    "updateGearboxGFX": {"desc": "Chaque frame : recopie les entrées et met à jour rpm, températures, charge, couples, ignition et état du moteur.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true},
-    "areShiftLEDsInUse": {"desc": "Toujours false : pas de LEDs de changement de rapport.", "returns": [{"type": "boolean", "desc": "false"}], "internal": true},
-    "getGearName": {"desc": "Nom de rapport affiché : chaîne vide.", "returns": [{"type": "string", "desc": "\"\""}]},
-    "getGearPosition": {"desc": "Position du levier pour animation : 0, 0.", "returns": [{"type": "number", "desc": "gear_A"}, {"type": "number", "desc": "gearModeIndex"}]},
-    "sendTorqueData": {"desc": "Demande au moteur d'envoyer ses courbes de couple à l'UI (si un moteur existe).", "internal": true}
+    "init": {
+      "desc": "Stores sharedFunctions, gets the mainEngine and gearbox devices, resets values to zero and reads the engine's maxRPM/idleRPM/energy. Called by vehicleController at init and reset.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data (unused)."
+        },
+        "sharedFunctionTable": {
+          "type": "table",
+          "desc": "sharedFunctions utilities of vehicleController."
+        }
+      },
+      "internal": true
+    },
+    "updateGearboxGFX": {
+      "desc": "Every frame: copies the inputs and updates rpm, temperatures, load, torques, ignition and engine state.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
+      "internal": true
+    },
+    "areShiftLEDsInUse": {
+      "desc": "Always false: no shift LEDs.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false"
+        }
+      ],
+      "internal": true
+    },
+    "getGearName": {
+      "desc": "Displayed gear name: empty string.",
+      "returns": [
+        {
+          "type": "string",
+          "desc": "\"\""
+        }
+      ]
+    },
+    "getGearPosition": {
+      "desc": "Lever position for animation: 0, 0.",
+      "returns": [
+        {
+          "type": "number",
+          "desc": "gear_A"
+        },
+        {
+          "type": "number",
+          "desc": "gearModeIndex"
+        }
+      ]
+    },
+    "sendTorqueData": {
+      "desc": "Asks the engine to send its torque curves to the UI (if an engine exists).",
+      "internal": true
+    }
   }
 }

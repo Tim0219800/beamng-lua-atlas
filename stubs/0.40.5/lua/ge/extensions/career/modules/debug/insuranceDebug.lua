@@ -2,15 +2,15 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/debug/insuranceDebug.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Onglet de debug carrière « Insurance ». Ajoute une seule entrée de menu '> Reset insurance data' qui appelle career_modules_insurance_insurance.resetPlPolicyData() (réinitialise les données de police d'assurance du joueur).
---- Accès : extension `career_modules_debug_insuranceDebug` : `extensions.load("career_modules_debug_insuranceDebug")`, puis la globale `career_modules_debug_insuranceDebug`
+--- "Insurance" career debug tab. Adds a single menu entry '> Reset insurance data' that calls career_modules_insurance_insurance.resetPlPolicyData() (resets the player's insurance policy data).
+--- Access: extension `career_modules_debug_insuranceDebug`: `extensions.load("career_modules_debug_insuranceDebug")`, then the global `career_modules_debug_insuranceDebug`
 ---@class career_modules_debug_insuranceDebug
 ---@field debugName string 'Insurance'.
----@field debugOrder number Ordre de tri (1).
+---@field debugOrder number Sort order (1).
 career_modules_debug_insuranceDebug = {}
 
---- Dessine l'entrée '> Reset insurance data' ; au clic, réinitialise les données de police d'assurance.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/debug/insuranceDebug.lua:9
+--- Draws the '> Reset insurance data' entry; on click, resets the insurance policy data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/debug/insuranceDebug.lua:9
 function career_modules_debug_insuranceDebug.drawDebugFunctions() end
 

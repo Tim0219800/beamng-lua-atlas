@@ -1,34 +1,34 @@
 # `gameplay_rally_vehicleCapture`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/vehicleCapture.lua` · VM : Game Engine (GE) · 104 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/vehicleCapture.lua` · VM: Game Engine (GE) · 104 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/vehicleCapture")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/vehicleCapture")` (file under extensions/ but not a regular extension)
 
-Enregistreur de trajectoire du véhicule pendant la reconnaissance (recce) d'un rallye. Tous les 2 m parcourus, il capture position, orientation et braquage, met les captures en tampon et les ajoute au fichier `driveline.json` (une ligne JSON par capture) du dossier de reconnaissance de la mission. Le module renvoie un constructeur : `require(...)(vehicle, missionDir)`.
+Recorder of the vehicle's trajectory during a rally recce. Every 2 m traveled, it captures position, orientation and steering, buffers the captures and appends them to the `driveline.json` file (one JSON line per capture) in the mission's recce folder. The module returns a constructor: `require(...)(vehicle, missionDir)`.
 
-## Remarques
+## Notes
 
-- Le braquage est lu via core_vehicleBridge (clé 'steering', enregistrée en notification de changement) ; il vaut nil tant qu'aucune valeur n'est en cache.
-- La première capture sert seulement d'ancrage (last_dist_pos) : rien n'est mis en tampon avant d'avoir parcouru plus de interval_m.
-- Le tampon n'est écrit qu'à partir de 10 captures, sauf si writeCaptures(true) est appelé.
+- The steering is read via core_vehicleBridge (key 'steering', registered as a change notification); it is nil as long as no value is cached.
+- The first capture only serves as an anchor (last_dist_pos): nothing is buffered until more than interval_m has been traveled.
+- The buffer is only written from 10 captures, unless writeCaptures(true) is called.
 
-## Classe `C`
+## Class `C`
 
-Enregistreur lié à un véhicule. Champs : vehicle, interval_m (2), last_dist_pos, capturesBuffer, fname.
+Recorder bound to a vehicle. Fields: vehicle, interval_m (2), last_dist_pos, capturesBuffer, fname.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_vehicleCapture")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_vehicleCapture")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:capture()` | À appeler à chaque image : lit position et orientation (quatf depuis direction et vecteur haut) du véhicule et, si celui-ci s'est éloigné de plus de interval_m de la dernière capture, met en tampon {ts, pos, quat, steering}. Tente ensuite d'écrire le tampon. | 52 |
-| `C:drawDebug()` | Dessine une sphère bleue semi-transparente de rayon 2 à la dernière position capturée (debugDrawer:drawSphere). | 83 |
-| `C:init(vehicle, missionDir)` | Constructeur. Enregistre la notification de changement de 'steering' auprès de core_vehicleBridge et calcule le chemin du fichier driveline.json via rallyUtil.missionReccePath. | 12 |
-| `C:truncateCapturesFile()` | Vide le fichier de captures (ouverture en mode "w"). Journalise une erreur si l'ouverture échoue. | 23 |
-| `C:writeCaptures(force)` | Ajoute les captures du tampon au fichier (une ligne JSON chacune) puis vide le tampon. Sans force, ne fait rien tant que le tampon contient moins de 10 éléments. | 32 |
+| `C:capture()` | To be called every frame: reads the vehicle's position and orientation (quatf from direction and up vector) and, if it has moved more than interval_m away from the last capture, buffers {ts, pos, quat, steering}. Then tries to write the buffer. | 52 |
+| `C:drawDebug()` | Draws a semi-transparent blue sphere of radius 2 at the last captured position (debugDrawer:drawSphere). | 83 |
+| `C:init(vehicle, missionDir)` | Constructor. Registers the 'steering' change notification with core_vehicleBridge and computes the path of the driveline.json file via rallyUtil.missionReccePath. | 12 |
+| `C:truncateCapturesFile()` | Empties the captures file (opened in "w" mode). Logs an error if opening fails. | 23 |
+| `C:writeCaptures(force)` | Appends the buffer's captures to the file (one JSON line each) then empties the buffer. Without force, does nothing as long as the buffer contains fewer than 10 elements. | 32 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/vehicleCapture.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/vehicleCapture.lua`.*

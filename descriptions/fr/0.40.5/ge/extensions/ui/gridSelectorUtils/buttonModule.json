@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/ui/gridSelectorUtils/buttonModule.lua",
+  "module": "Petit utilitaire des sélecteurs en grille : gère un registre de boutons d'action. Chaque bouton reçoit un identifiant numérique incrémental et un callback ; l'UI renvoie l'identifiant pour déclencher l'action. `create()` renvoie une instance indépendante.",
+  "usage": "local bm = ui_gridSelectorUtils_buttonModule.create()\nlocal meta = bm.addButton(function(extra) return 'ok' end, {label = 'Go'})\nbm.executeButton(meta.buttonId)",
+  "notes": [
+    "addButton écrit `buttonId` dans la table meta fournie (ou une table créée) et la renvoie.",
+    "executeButton logue une erreur si l'identifiant est inconnu et renvoie nil."
+  ],
+  "functions": {
+    "create": {
+      "desc": "Crée une instance de gestion de boutons avec son propre compteur et sa propre table.",
+      "returns": [{"type": "table", "desc": "Instance avec getFreeButtonId, clearButtonFunctions, addButton, executeButton, getButtonInfo, getAllButtonInfos."}]
+    }
+  },
+  "classes": {
+    "instance": {
+      "desc": "Objet renvoyé par create().",
+      "functions": {
+        "getFreeButtonId": {"desc": "Incrémente le compteur et renvoie un nouvel identifiant.", "returns": [{"type": "integer", "desc": "Nouvel identifiant."}]},
+        "clearButtonFunctions": {"desc": "Vide la table des boutons (le compteur n'est pas remis à zéro)."},
+        "addButton": {
+          "desc": "Enregistre un callback et renvoie sa meta enrichie de `buttonId`.",
+          "params": {"callback": {"type": "function", "desc": "Appelée avec additionalData lors de l'exécution."}, "meta": {"type": "table|nil", "desc": "Métadonnées du bouton (libellé, etc.)."}},
+          "returns": [{"type": "table", "desc": "meta avec buttonId."}]
+        },
+        "executeButton": {
+          "desc": "Exécute le callback du bouton et renvoie son résultat.",
+          "params": {"buttonId": {"type": "integer", "desc": "Identifiant du bouton."}, "additionalData": {"type": "any", "desc": "Transmis au callback."}},
+          "returns": [{"type": "any", "desc": "Valeur renvoyée par le callback, nil si bouton inconnu."}]
+        },
+        "getButtonInfo": {
+          "desc": "Renvoie { callback, meta } d'un bouton.",
+          "params": {"buttonId": {"type": "integer", "desc": "Identifiant du bouton."}},
+          "returns": [{"type": "table|nil", "desc": "Info du bouton."}]
+        },
+        "getAllButtonInfos": {"desc": "Renvoie la table complète des boutons indexée par identifiant.", "returns": [{"type": "table<integer, table>", "desc": "Tous les boutons."}]}
+      }
+    }
+  }
+}

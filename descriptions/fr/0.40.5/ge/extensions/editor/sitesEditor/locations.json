@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/editor/sitesEditor/locations.lua",
+  "module": "Sous-éditeur 'Locations' de l'éditeur de sites. Le module renvoie un constructeur de classe C (appelé avec sitesEditor et la clé 'locations'). Il gère la sélection, le test de clic (sphère de rayon node.radius), le gizmo de translation et de mise à l'échelle (le rayon du lieu), la création et la suppression avec historique annulable (editor.history). Il est utilisé avec sortedListDisplay comme éditeur d'élément.",
+  "usage": "local locations = require('/lua/ge/extensions/editor/sitesEditor/locations')(editor_sitesEditor, 'locations')",
+  "notes": [
+    "Le rayon minimal d'un lieu est 0.1 (math.max(0.1, ...)).",
+    "Dans drawElement, le texte 'Closest Road' affiche les deux noeuds renvoyés par map.findClosestRoad."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet renvoyé par le constructeur du module. Champs : sitesEditor, key, current (lieu sélectionné), sites, list.",
+      "functions": {
+        "init": {"desc": "Constructeur (appelé par le module) : mémorise sitesEditor et la clé, sans sélection.", "params": {"sitesEditor": {"type": "table", "desc": "Module editor_sitesEditor."}, "key": {"type": "string", "desc": "Clé dans l'objet sites ('locations')."}}, "returns": [], "internal": true},
+        "setSites": {"desc": "Définit les sites édités, retient la liste sites[key] et désélectionne.", "params": {"sites": {"type": "table", "desc": "Objet sites."}}, "returns": [], "internal": false},
+        "select": {"desc": "Sélectionne un lieu et place le gizmo sur lui.", "params": {"loc": {"type": "table|nil", "desc": "Lieu à sélectionner."}}, "returns": [], "internal": false},
+        "hitTest": {"desc": "Renvoie le lieu le plus proche de la caméra dont la sphère (rayon node.radius) est traversée par le rayon souris.", "params": {"mouseInfo": {"type": "table", "desc": "Infos souris (camPos, rayDir) construites par sitesEditor."}, "objects": {"type": "table", "desc": "Table des lieux."}}, "returns": [{"type": "table|nil", "desc": "Lieu touché ou nil."}], "internal": false},
+        "updateTransform": {"desc": "Place le gizmo sur la position du lieu courant.", "params": {}, "returns": [], "internal": false},
+        "beginDrag": {"desc": "Début de glissement du gizmo : mémorise la position et le rayon de départ.", "params": {}, "returns": [], "internal": true},
+        "dragging": {"desc": "Pendant le glissement : en mode translation met à jour pos, en mode échelle recalcule radius (minimum 0.1) à partir du facteur du gizmo.", "params": {}, "returns": [], "internal": true},
+        "endDragging": {"desc": "Fin de glissement : enregistre une action annulable 'Update Transform of ...' (ancienne et nouvelle pos/radius).", "params": {}, "returns": [], "internal": true},
+        "create": {"desc": "Crée un lieu à la position donnée (action annulable 'Create Location') et le renvoie.", "params": {"pos": {"type": "vec3", "desc": "Position du nouveau lieu."}}, "returns": [{"type": "table", "desc": "Lieu créé (self.current)."}], "internal": false},
+        "remove": {"desc": "Supprime un lieu (action annulable 'Remove Location').", "params": {"loc": {"type": "table", "desc": "Lieu à supprimer."}}, "returns": [], "internal": false},
+        "drawElement": {"desc": "Dessine l'éditeur de l'élément : gizmo (si allowGizmo) et texte du segment de route le plus proche.", "params": {"loc": {"type": "table", "desc": "Lieu affiché."}}, "returns": [], "internal": false}
+      }
+    }
+  }
+}

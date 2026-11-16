@@ -1,25 +1,25 @@
 # `flowgraph_nodes_gameplay_sites_posInZone`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/sites/posInZone.lua` · VM : Game Engine (GE) · 60 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/sites/posInZone.lua` · VM: Game Engine (GE) · 60 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/sites/posInZone")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/sites/posInZone")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Position in Zone » (catégorie repeat_instant). Teste en 2D (zone:containsPoint2D) si une position est dans une zone Sites. Sorties : inside, outside, et impulsions enter/exit lors du changement entre deux frames.
+Flowgraph node "Position in Zone" (category repeat_instant). Tests in 2D (zone:containsPoint2D) whether a position is inside a Sites zone. Outputs: inside, outside, and enter/exit pulses when the state changes between two frames.
 
-## Remarques
+## Notes
 
-- Affiche dump("No zone data!") à chaque frame si la zone ou la position manque.
-- enter et exit ne sont écrites qu'à partir de la 2e frame (self._lastInside non nil).
+- Prints dump("No zone data!") every frame if the zone or the position is missing.
+- enter and exit are only written from the 2nd frame onward (self._lastInside not nil).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud. | 29 |
-| `C:init(mgr, ...)` | Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph). | 26 |
-| `C:work(args)` | Calcule inside/outside et détecte l'entrée ou la sortie en comparant à l'état de la frame précédente. | 33 |
+| `C:_executionStarted()` | Called when the flowgraph project execution starts; resets the node's internal state. | 29 |
+| `C:init(mgr, ...)` | Initializes the node's internal state at creation (called by the flowgraph engine). | 26 |
+| `C:work(args)` | Computes inside/outside and detects entering or leaving by comparing with the previous frame's state. | 33 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/sites/posInZone.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/sites/posInZone.lua`.*

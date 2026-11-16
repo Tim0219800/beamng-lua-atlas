@@ -1,62 +1,62 @@
 # `controller_mechanics_beamSegments`
 
-*Fichier : `lua/vehicle/controller/mechanics/beamSegments.lua` · VM : Véhicule · 89 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/mechanics/beamSegments.lua` · VM: Vehicle · 89 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `mechanics/beamSegments` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `mechanics/beamSegments` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur de mécanique (type "auxiliary") qui répartit la longueur d'une poutre « capteur » sur plusieurs poutres « segments » : à chaque image, chaque segment reçoit la longueur du capteur divisée par le nombre de segments, multipliée par un facteur. Sert à construire des éléments téléscopiques ou des chaînes de segments dont la longueur totale suit un capteur.
+Mechanics controller (type "auxiliary") that distributes the length of a "sensor" beam over several "segment" beams: every frame, each segment receives the sensor length divided by the number of segments, multiplied by a factor. Used to build telescopic elements or chains of segments whose total length follows a sensor.
 
-## Remarques
+## Notes
 
-- Clés jbeam (défaut) : segmentBeamTag (obligatoire, tag des segments), sensorBeamTag (obligatoire, la première poutre trouvée sert de capteur), sensorBeamLengthMultiplier (1, mettre le nombre de portées parallèles).
-- Si aucun segment ou pas de capteur, une erreur est journalisée et le contrôleur reste inactif.
-- Incohérence : beamBroken met isActiveCoef à 0 mais updateGFX ne le consulte jamais, donc rien ne s'arrête quand une poutre casse.
+- jbeam keys (default): segmentBeamTag (required, tag of the segments), sensorBeamTag (required, the first beam found serves as the sensor), sensorBeamLengthMultiplier (1, set the number of parallel spans).
+- If there is no segment or no sensor, an error is logged and the controller stays inactive.
+- Inconsistency: beamBroken sets isActiveCoef to 0 but updateGFX never checks it, so nothing stops when a beam breaks.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_mechanics_beamSegments.beamBroken(id, energy)` | Hook : appelé quand une poutre casse ; marque le contrôleur inactif si c'est un segment ou le capteur (voir notes). *(interne)* | 29 |
-| `controller_mechanics_beamSegments.init(jbeamData)` | Retrouve les poutres de segments et de capteur par tag. *(interne)* | 40 |
-| `controller_mechanics_beamSegments.reset(jbeamData)` | Réactive le contrôleur. *(interne)* | 36 |
-| `controller_mechanics_beamSegments.updateGFX(dt)` | Règle la longueur de chaque segment d'après celle du capteur. (assignée dynamiquement) *(interne)* | dyn |
+| `controller_mechanics_beamSegments.beamBroken(id, energy)` | Hook: called when a beam breaks; marks the controller inactive if it is a segment or the sensor (see notes). *(internal)* | 29 |
+| `controller_mechanics_beamSegments.init(jbeamData)` | Finds the segment and sensor beams by tag. *(internal)* | 40 |
+| `controller_mechanics_beamSegments.reset(jbeamData)` | Reactivates the controller. *(internal)* | 36 |
+| `controller_mechanics_beamSegments.updateGFX(dt)` | Sets the length of each segment from that of the sensor. (dynamically assigned) *(internal)* | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_mechanics_beamSegments.beamBroken(id, energy)`
 
-Hook : appelé quand une poutre casse ; marque le contrôleur inactif si c'est un segment ou le capteur (voir notes).
+Hook: called when a beam breaks; marks the controller inactive if it is a segment or the sensor (see notes).
 
-- `id` (*integer*) : Identifiant (cid) de la poutre cassée.
-- `energy` (*number*) : Énergie de rupture.
+- `id` (*integer*) : Identifier (cid) of the broken beam.
+- `energy` (*number*) : Break energy.
 
 #### `controller_mechanics_beamSegments.init(jbeamData)`
 
-Retrouve les poutres de segments et de capteur par tag.
+Finds the segment and sensor beams by tag.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_mechanics_beamSegments.reset(jbeamData)`
 
-Réactive le contrôleur.
+Reactivates the controller.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_mechanics_beamSegments.updateGFX(dt)`
 
-Règle la longueur de chaque segment d'après celle du capteur. (assignée dynamiquement)
+Sets the length of each segment from that of the sensor. (dynamically assigned)
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getBeamLength`, `setBeamLength`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/mechanics/beamSegments.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/mechanics/beamSegments.lua`.*

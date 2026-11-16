@@ -2,33 +2,33 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/onScreenKeyboard.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_onScreenKeyboard` : façade vers les claviers virtuels de la plateforme (Steam Deck, console...). Elle ouvre le clavier avec un titre, un texte initial, une longueur maximale et un type d'entrée, et relaie à l'interface le résultat via guihooks 'onScreenKeyboardClosed'.
---- Accès : extension `core_onScreenKeyboard` : `extensions.load("core_onScreenKeyboard")`, puis la globale `core_onScreenKeyboard`
+--- GE extension `core_onScreenKeyboard`: facade to the platform's virtual keyboards (Steam Deck, console...). It opens the keyboard with a title, an initial text, a maximum length and an input type, and relays the result to the UI via the guihooks 'onScreenKeyboardClosed'.
+--- Access: extension `core_onScreenKeyboard`: `extensions.load("core_onScreenKeyboard")`, then the global `core_onScreenKeyboard`
 ---@class core_onScreenKeyboard
 core_onScreenKeyboard = {}
 
---- Indique si la plateforme propose un clavier virtuel (appelle la fonction globale du moteur de même nom).
----Source : lua/ge/extensions/core/onScreenKeyboard.lua:24
----@return boolean  true si disponible.
+--- Indicates whether the platform offers a virtual keyboard (calls the engine global function of the same name).
+---Source: lua/ge/extensions/core/onScreenKeyboard.lua:24
+---@return boolean  true if available.
 function core_onScreenKeyboard.isOnScreenKeyboardAvailable() end
 
---- Hook appelé par le moteur quand le clavier virtuel se ferme : transmet à l'interface (guihooks 'onScreenKeyboardClosed', applied, text).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/onScreenKeyboard.lua:20
----@param applied boolean true si l'utilisateur a validé.
----@param text string Texte saisi.
+--- Hook called by the engine when the virtual keyboard closes: forwards to the UI (guihooks 'onScreenKeyboardClosed', applied, text).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/onScreenKeyboard.lua:20
+---@param applied boolean true if the user confirmed.
+---@param text string Entered text.
 function core_onScreenKeyboard.onScreenKeyboardClosed(applied, text) end
 
---- Ouvre le clavier virtuel de la plateforme (si la fonction globale du moteur existe). Une maxLength non numérique ou <= 0 devient 1000 ; placeholder et initialText valent '' par défaut, inputType 'string'.
----Source : lua/ge/extensions/core/onScreenKeyboard.lua:11
----@param title string Titre du clavier.
----@param placeholder string|nil Texte d'indication.
----@param initialText string|nil Texte initial.
----@param maxLength integer|nil Longueur maximale (1000 par défaut).
----@param inputType string|nil Type d'entrée ('string' par défaut).
----@param textBoxLeft number|nil Position gauche de la zone de texte à l'écran, pour que le clavier ne la masque pas (déduit du code).
----@param textBoxTop number|nil Position haute de la zone de texte.
----@param textBoxWidth number|nil Largeur de la zone de texte.
----@param textBoxHeight number|nil Hauteur de la zone de texte.
+--- Opens the platform's virtual keyboard (if the engine global function exists). A non-numeric or <= 0 maxLength becomes 1000; placeholder and initialText default to '', inputType to 'string'.
+---Source: lua/ge/extensions/core/onScreenKeyboard.lua:11
+---@param title string Keyboard title.
+---@param placeholder string|nil Hint text.
+---@param initialText string|nil Initial text.
+---@param maxLength integer|nil Maximum length (1000 by default).
+---@param inputType string|nil Input type ('string' by default).
+---@param textBoxLeft number|nil Left position of the text area on screen, so that the keyboard does not hide it (inferred from code).
+---@param textBoxTop number|nil Top position of the text area.
+---@param textBoxWidth number|nil Width of the text area.
+---@param textBoxHeight number|nil Height of the text area.
 function core_onScreenKeyboard.openOnScreenKeyboard(title, placeholder, initialText, maxLength, inputType, textBoxLeft, textBoxTop, textBoxWidth, textBoxHeight) end
 

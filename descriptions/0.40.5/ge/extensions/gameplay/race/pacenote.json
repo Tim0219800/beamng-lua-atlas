@@ -1,91 +1,162 @@
 {
   "path": "lua/ge/extensions/gameplay/race/pacenote.lua",
-  "module": "Classe d'une annonce de copilote (pacenote) d'un chemin de course : une sphère positionnée (manuellement ou sur un nœud du navgraph) avec une normale, un texte note et l'id d'un segment associé. Le module renvoie une fabrique : require('/lua/ge/extensions/gameplay/race/pacenote')(path, name, forceId). Elle sert à l'éditeur de course et à la sérialisation des chemins.",
+  "module": "Class of a co-driver call (pacenote) of a race path: a positioned sphere (manually or on a navgraph node) with a normal, a note text and the id of an associated segment. The module returns a factory: require('/lua/ge/extensions/gameplay/race/pacenote')(path, name, forceId). It is used by the race editor and for path serialization.",
   "notes": [
-    "setNormal : quand normal est nil, la valeur par défaut vec3(0,1,0) est posée mais la fonction continue et appelle normal:length() sur nil : erreur Lua (pas de return).",
-    "setNavgraph utilise self.navRadiusScale et inside lit self.hasNormal, deux champs jamais initialisés dans init (contrairement à pathnode) : setNavgraph échoue sur un nœud existant, inside ne teste que la sphère.",
-    "intersectCorners ne tient pas compte de hasNormal : il utilise toujours le plan de la normale.",
-    "Modes possibles : 'manual' ou 'navgraph' (liste modes locale).",
-    "onSerialize n'enregistre pas le mode : la désérialisation recrée toujours la note en mode manuel."
+    "setNormal: when normal is nil, the default value vec3(0,1,0) is set but the function continues and calls normal:length() on nil: Lua error (no return).",
+    "setNavgraph uses self.navRadiusScale and inside reads self.hasNormal, two fields never initialized in init (unlike pathnode): setNavgraph fails on an existing node, inside only tests the sphere.",
+    "intersectCorners ignores hasNormal: it always uses the normal's plane.",
+    "Possible modes: 'manual' or 'navgraph' (local modes list).",
+    "onSerialize does not save the mode: deserialization always recreates the note in manual mode."
   ],
   "classes": {
     "C": {
-      "desc": "Annonce de copilote. Champs : path, id, name, pos (vec3), normal (vec3, défaut (0,1,0)), radius, note (texte), segment (id, -1 si aucun), sortOrder (999999 par défaut), mode, navgraphName.",
+      "desc": "Co-driver call. Fields: path, id, name, pos (vec3), normal (vec3, default (0,1,0)), radius, note (text), segment (id, -1 if none), sortOrder (999999 by default), mode, navgraphName.",
       "functions": {
         "init": {
-          "desc": "Constructeur : attribue l'id (forceId ou path:getNextUniqueIdentifier()), le nom par défaut « Pacenote <id> », la position nulle, la note vide et le segment -1.",
+          "desc": "Constructor: assigns the id (forceId or path:getNextUniqueIdentifier()), the default name \"Pacenote <id>\", the null position, the empty note and the segment -1.",
           "params": {
-            "path": {"type": "table", "desc": "Chemin de course propriétaire."},
-            "name": {"type": "string|nil", "desc": "Nom."},
-            "forceId": {"type": "integer|nil", "desc": "Id imposé."}
+            "path": {
+              "type": "table",
+              "desc": "Owning race path."
+            },
+            "name": {
+              "type": "string|nil",
+              "desc": "Name."
+            },
+            "forceId": {
+              "type": "integer|nil",
+              "desc": "Forced id."
+            }
           },
           "returns": [],
           "internal": true
         },
         "setNormal": {
-          "desc": "Définit la normale de l'annonce si sa longueur dépasse 0,9 (elle est alors normalisée).",
-          "params": {"normal": {"type": "vec3|nil", "desc": "Direction ; nil provoque une erreur (voir notes)."}},
+          "desc": "Sets the call's normal if its length exceeds 0.9 (it is then normalized).",
+          "params": {
+            "normal": {
+              "type": "vec3|nil",
+              "desc": "Direction; nil causes an error (see notes)."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "setManual": {
-          "desc": "Passe en mode manuel avec position, rayon et normale données (oublie le nom de nœud navgraph).",
+          "desc": "Switches to manual mode with the given position, radius and normal (forgets the navgraph node name).",
           "params": {
-            "pos": {"type": "vec3", "desc": "Position."},
-            "radius": {"type": "number", "desc": "Rayon en mètres."},
-            "normal": {"type": "vec3", "desc": "Normale."}
+            "pos": {
+              "type": "vec3",
+              "desc": "Position."
+            },
+            "radius": {
+              "type": "number",
+              "desc": "Radius in meters."
+            },
+            "normal": {
+              "type": "vec3",
+              "desc": "Normal."
+            }
           },
           "returns": [],
           "internal": false
         },
         "setNavgraph": {
-          "desc": "Passe en mode navgraph : prend position et rayon d'un nœud de la carte routière, ou de fallback si le nœud n'existe pas.",
+          "desc": "Switches to navgraph mode: takes position and radius from a road map node, or from fallback if the node does not exist.",
           "params": {
-            "navgraphName": {"type": "string", "desc": "Nom du nœud."},
-            "fallback": {"type": "table|nil", "desc": "{pos, radius} utilisé si le nœud est absent."}
+            "navgraphName": {
+              "type": "string",
+              "desc": "Node name."
+            },
+            "fallback": {
+              "type": "table|nil",
+              "desc": "{pos, radius} used if the node is absent."
+            }
           },
           "returns": [],
           "internal": false
         },
         "inside": {
-          "desc": "Indique si un point est dans la sphère de l'annonce (et du bon côté de la normale si hasNormal).",
-          "params": {"pos": {"type": "vec3", "desc": "Point à tester."}},
-          "returns": [{"type": "boolean", "desc": "true si dedans."}],
+          "desc": "Indicates whether a point is inside the call's sphere (and on the correct side of the normal if hasNormal).",
+          "params": {
+            "pos": {
+              "type": "vec3",
+              "desc": "Point to test."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if inside."
+            }
+          ],
           "internal": false
         },
         "intersectCorners": {
-          "desc": "Teste si un des segments reliant les coins d'un véhicule (fromCorners[i] vers toCorners[i]) traverse le plan de l'annonce à l'intérieur de la sphère.",
+          "desc": "Tests whether one of the segments connecting a vehicle's corners (fromCorners[i] to toCorners[i]) crosses the call's plane inside the sphere.",
           "params": {
-            "fromCorners": {"type": "vec3[]", "desc": "Coins à l'image précédente."},
-            "toCorners": {"type": "vec3[]", "desc": "Coins à l'image actuelle."}
+            "fromCorners": {
+              "type": "vec3[]",
+              "desc": "Corners at the previous frame."
+            },
+            "toCorners": {
+              "type": "vec3[]",
+              "desc": "Corners at the current frame."
+            }
           },
           "returns": [
-            {"type": "boolean", "desc": "true si traversé."},
-            {"type": "number", "desc": "Plus petit paramètre t (0..1) de traversée, math.huge sinon."}
+            {
+              "type": "boolean",
+              "desc": "true if crossed."
+            },
+            {
+              "type": "number",
+              "desc": "Smallest crossing parameter t (0..1), math.huge otherwise."
+            }
           ],
           "internal": false
         },
         "onSerialize": {
-          "desc": "Sérialise l'annonce : name, pos, radius, normal, oldId, note, segment.",
+          "desc": "Serializes the call: name, pos, radius, normal, oldId, note, segment.",
           "params": {},
-          "returns": [{"type": "table", "desc": "Données JSON."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "JSON data."
+            }
+          ],
           "internal": false
         },
         "onDeserialized": {
-          "desc": "Restaure l'annonce (mode manuel) à partir de données sérialisées ; convertit l'id de segment avec oldIdMap.",
+          "desc": "Restores the call (manual mode) from serialized data; converts the segment id with oldIdMap.",
           "params": {
-            "data": {"type": "table", "desc": "Données de onSerialize."},
-            "oldIdMap": {"type": "table<integer, integer>|nil", "desc": "Correspondance ancien id -> nouvel id."}
+            "data": {
+              "type": "table",
+              "desc": "Data from onSerialize."
+            },
+            "oldIdMap": {
+              "type": "table<integer, integer>|nil",
+              "desc": "Old id -> new id mapping."
+            }
           },
           "returns": [],
           "internal": false
         },
         "drawDebug": {
-          "desc": "Dessine la sphère, le texte (note, ou « (nom) » si vide) et les flèches de la normale avec debugDrawer.",
+          "desc": "Draws the sphere, the text (note, or \"(name)\" if empty) and the normal's arrows with debugDrawer.",
           "params": {
-            "drawMode": {"type": "string|nil", "desc": "'none', 'faded', 'normal', 'highlight' (défaut self._drawMode)."},
-            "clr": {"type": "number[]|nil", "desc": "Couleur {r,g,b,a} (défaut arc-en-ciel selon sortOrder)."},
-            "extraText": {"type": "string|nil", "desc": "Texte ajouté au libellé."}
+            "drawMode": {
+              "type": "string|nil",
+              "desc": "'none', 'faded', 'normal', 'highlight' (default self._drawMode)."
+            },
+            "clr": {
+              "type": "number[]|nil",
+              "desc": "Color {r,g,b,a} (default rainbow according to sortOrder)."
+            },
+            "extraText": {
+              "type": "string|nil",
+              "desc": "Text appended to the label."
+            }
           },
           "returns": [],
           "internal": false

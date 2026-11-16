@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/voicepacksTab.lua",
+  "module": "Onglet « Voicepacks » de l'éditeur de rallye. Il permet de choisir le voicepack et le notebook associé (menus déroulants), et liste les voicepacks globaux (jeu/mods) et ceux locaux à la mission (<mission>/rally/voicepacks/<nom>/) avec persona, langue, dialecte, style, style de compositeur, dossier, précédence des notebooks et notebooks qui existent dans cette mission. Le nom est en vert si les fichiers audio requis sont tous présents, en rouge sinon (résultat mis en cache). Le module renvoie un constructeur de classe C.",
+  "notes": [
+    "Aucune fonction exportée : on obtient une instance avec require(...)(rallyEditor).",
+    "Le bouton « Refresh voicepacks » invalide les caches de voicepack.lua et le cache de validation audio.",
+    "Utilise rallyEditor.getCurrentMissionDir, getCurrentVoicepackPick, setVoicepackPick, getCurrentPath et loadNotebook."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance de l'onglet (windowDescription = 'Voicepacks').",
+      "functions": {
+        "init": {"desc": "Constructeur : mémorise rallyEditor et crée le cache de validation audio.", "params": {"rallyEditor": {"type": "table", "desc": "Éditeur de rallye parent."}}, "internal": true},
+        "setPath": {"desc": "Définit le notebook courant.", "params": {"path": {"type": "table|nil", "desc": "Notebook."}}, "internal": true},
+        "selected": {"desc": "Appelé à la sélection de l'onglet : émet onEditorEditModeChanged(nil, nil).", "internal": true},
+        "unselect": {"desc": "Appelé quand l'onglet est quitté : émet onEditorEditModeChanged(nil, nil).", "internal": true},
+        "drawPickers": {"desc": "Dessine les menus « Voicepack » et « Notebook » ; changer de sélection appelle setVoicepackPick ou loadNotebook de l'éditeur.", "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}}, "internal": true},
+        "drawGlobalVoicepacks": {"desc": "Dessine la liste des voicepacks globaux (voicepack.scan()).", "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}}, "internal": true},
+        "drawMissionLocalVoicepacks": {"desc": "Dessine la liste des voicepacks de la mission (voicepack.scanMission).", "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}}, "internal": true},
+        "draw": {"desc": "Dessine l'onglet ; message si aucune mission n'est chargée.", "params": {"mouseInfo": {"type": "table", "desc": "Informations souris (non utilisé)."}}, "internal": true}
+      }
+    }
+  }
+}

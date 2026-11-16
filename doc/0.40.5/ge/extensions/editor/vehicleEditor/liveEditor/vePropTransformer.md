@@ -1,83 +1,83 @@
 # `editor_vehicleEditor_liveEditor_vePropTransformer`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua` · VM : Game Engine (GE) · 573 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua` · VM: Game Engine (GE) · 573 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_liveEditor_vePropTransformer` : `extensions.load("editor_vehicleEditor_liveEditor_vePropTransformer")`, puis la globale `editor_vehicleEditor_liveEditor_vePropTransformer`
+**Access:** extension `editor_vehicleEditor_liveEditor_vePropTransformer`: `extensions.load("editor_vehicleEditor_liveEditor_vePropTransformer")`, then the global `editor_vehicleEditor_liveEditor_vePropTransformer`
 
-Fenêtre 'Prop Transformer' du Vehicle Editor live : permet de choisir un prop (pièce visuelle comme un rétroviseur ou une lampe) du véhicule en visant son nœud de référence ('Pick Prop', molette pour parcourir les props superposés) puis de modifier sa transformation en direct : baseTranslation, baseTranslationGlobal (m), baseRotation, baseRotationGlobal (affichées en degrés, converties en radians pour le moteur), soit par champs numériques, soit avec le gizmo d'axes. Les valeurs « sans nodeRotate/Offset/Move » peuvent être copiées dans le presse-papiers au format JSON "x":…, "y":…, "z":… pour les coller dans le jbeam.
+'Prop Transformer' window of the live Vehicle Editor: lets you choose a prop (visual part such as a mirror or a lamp) of the vehicle by aiming at its reference node ('Pick Prop', wheel to cycle through overlapping props) then modify its transformation live: baseTranslation, baseTranslationGlobal (m), baseRotation, baseRotationGlobal (displayed in degrees, converted to radians for the engine), either by numeric fields or with the axis gizmo. The values "without nodeRotate/Offset/Move" can be copied to the clipboard in the JSON format "x":…, "y":…, "z":… to paste them into the jbeam.
 
-## Remarques
+## Notes
 
-- Les modifications ne s'appliquent qu'à la session live ; il faut recopier les valeurs dans le jbeam.
-- Les valeurs du presse-papiers ignorent les transformations de nœuds (nodeRotate/nodeOffset/nodeMove) : ce sont celles du jbeam d'origine.
-- Les rotations sont saisies en degrés (champs EnterReturnsTrue : validées avec Entrée) mais stockées en radians côté moteur.
-- État conservé par ID de véhicule (copie de vehData) ; onVehicleSpawned le supprime et le recrée.
-- Utilise les mêmes gizmos que nodeTransformer (setAxisGizmoRenderPlane, MoveGrid, PlaneHashes).
+- The changes only apply to the live session; the values must be copied back into the jbeam.
+- The clipboard values ignore the node transformations (nodeRotate/nodeOffset/nodeMove): they are those of the original jbeam.
+- Rotations are entered in degrees (EnterReturnsTrue fields: confirmed with Enter) but stored in radians on the engine side.
+- State kept per vehicle ID (copy of vehData); onVehicleSpawned deletes it and recreates it.
+- Uses the same gizmos as nodeTransformer (setAxisGizmoRenderPlane, MoveGrid, PlaneHashes).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_liveEditor_vePropTransformer.onDeserialized(data)` | Restaure l'état d'ouverture. *(interne)* *(hook)* | 560 |
-| `editor_vehicleEditor_liveEditor_vePropTransformer.onSerialize()` | Renvoie {windowOpen}. *(interne)* *(hook)* | 554 |
-| `editor_vehicleEditor_liveEditor_vePropTransformer.onUpdate(dt)` | Appelé chaque frame : dessine la fenêtre (bouton Pick Prop, champs de translation/rotation, boutons de copie et de gizmo). *(interne)* *(hook)* | 452 |
-| `editor_vehicleEditor_liveEditor_vePropTransformer.onVehicleEditorRenderJBeams(dtReal, dtSim, dtRaw)` | Hook de rendu émis par editor_veMain : initialise l'état si besoin, dessine le prop choisi, applique la transformation via gizmo et exécute le picking de prop (mode 2). *(interne)* *(hook)* | 433 |
-| `editor_vehicleEditor_liveEditor_vePropTransformer.onVehicleSpawned(id)` | Quand un véhicule apparaît, oublie puis recrée son état. *(interne)* *(hook)* | 545 |
-| `editor_vehicleEditor_liveEditor_vePropTransformer.onVehicleSwitched(oldVehicle, newVehicle, player)` | Au changement de véhicule, bascule vers l'état du nouveau véhicule. *(interne)* *(hook)* | 541 |
-| `editor_vehicleEditor_liveEditor_vePropTransformer.open()` | Ouvre la fenêtre. | 550 |
+| `editor_vehicleEditor_liveEditor_vePropTransformer.onDeserialized(data)` | Restores the open state. *(internal)* *(hook)* | 560 |
+| `editor_vehicleEditor_liveEditor_vePropTransformer.onSerialize()` | Returns {windowOpen}. *(internal)* *(hook)* | 554 |
+| `editor_vehicleEditor_liveEditor_vePropTransformer.onUpdate(dt)` | Called every frame: draws the window (Pick Prop button, translation/rotation fields, copy and gizmo buttons). *(internal)* *(hook)* | 452 |
+| `editor_vehicleEditor_liveEditor_vePropTransformer.onVehicleEditorRenderJBeams(dtReal, dtSim, dtRaw)` | Render hook emitted by editor_veMain: initializes the state if needed, draws the chosen prop, applies the transformation via the gizmo and runs the prop picking (mode 2). *(internal)* *(hook)* | 433 |
+| `editor_vehicleEditor_liveEditor_vePropTransformer.onVehicleSpawned(id)` | When a vehicle spawns, forgets then recreates its state. *(internal)* *(hook)* | 545 |
+| `editor_vehicleEditor_liveEditor_vePropTransformer.onVehicleSwitched(oldVehicle, newVehicle, player)` | On vehicle change, switches to the state of the new vehicle. *(internal)* *(hook)* | 541 |
+| `editor_vehicleEditor_liveEditor_vePropTransformer.open()` | Opens the window. | 550 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_liveEditor_vePropTransformer.onDeserialized(data)`
 
-Restaure l'état d'ouverture.
+Restores the open state.
 
-- `data` (*table*) : Table de onSerialize.
+- `data` (*table*) : onSerialize table.
 
 #### `editor_vehicleEditor_liveEditor_vePropTransformer.onSerialize()`
 
-Renvoie {windowOpen}.
+Returns {windowOpen}.
 
-- **renvoie** : table {windowOpen = boolean}
+- **returns**: table {windowOpen = boolean}
 
 #### `editor_vehicleEditor_liveEditor_vePropTransformer.onUpdate(dt)`
 
-Appelé chaque frame : dessine la fenêtre (bouton Pick Prop, champs de translation/rotation, boutons de copie et de gizmo).
+Called every frame: draws the window (Pick Prop button, translation/rotation fields, copy and gizmo buttons).
 
-- `dt` (*number*) : Delta temps.
+- `dt` (*number*) : Time delta.
 
 #### `editor_vehicleEditor_liveEditor_vePropTransformer.onVehicleEditorRenderJBeams(dtReal, dtSim, dtRaw)`
 
-Hook de rendu émis par editor_veMain : initialise l'état si besoin, dessine le prop choisi, applique la transformation via gizmo et exécute le picking de prop (mode 2).
+Render hook emitted by editor_veMain: initializes the state if needed, draws the chosen prop, applies the transformation via the gizmo and runs the prop picking (mode 2).
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulation (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
 #### `editor_vehicleEditor_liveEditor_vePropTransformer.onVehicleSpawned(id)`
 
-Quand un véhicule apparaît, oublie puis recrée son état.
+When a vehicle spawns, forgets then recreates its state.
 
-- `id` (*integer*) : ID du véhicule.
+- `id` (*integer*) : Vehicle ID.
 
 #### `editor_vehicleEditor_liveEditor_vePropTransformer.onVehicleSwitched(oldVehicle, newVehicle, player)`
 
-Au changement de véhicule, bascule vers l'état du nouveau véhicule.
+On vehicle change, switches to the state of the new vehicle.
 
-- `oldVehicle` (*integer*) : ID de l'ancien véhicule.
-- `newVehicle` (*integer*) : ID du nouveau véhicule.
-- `player` (*integer*) : Index du joueur.
+- `oldVehicle` (*integer*) : ID of the old vehicle.
+- `newVehicle` (*integer*) : ID of the new vehicle.
+- `player` (*integer*) : Player index.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `menuEntry` | string | 'Prop Transformer'. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawSphere`, `drawTextAdvanced`, `drawTriSolid`
 - `worldEditorCppApi.` `setAxisGizmoRenderMoveGrid`, `setAxisGizmoRenderPlane`, `setAxisGizmoRenderPlaneHashes`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua`.*

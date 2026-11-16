@@ -1,68 +1,68 @@
 # `perf`
 
-*Fichier : `lua/common/utils/perf.lua` · VM : Commun (GE + véhicule) · 138 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/utils/perf.lua` · VM: Common (GE + vehicle) · 138 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `perf`
+**Access:** global `perf`
 
-Petite bibliothèque de mesure de performance par hook : pendant qu'elle est activée, chaque appel/retour de fonction Lua est chronométré, et des statistiques par fonction sont calculées par fenêtres de temps. Se charge avec require('utils/perf'). Réservé au débogage, ralentit fortement l'exécution ; peut alimenter l'UI de debug via un évènement guihooks.
+Small hook-based performance measurement library: while enabled, each Lua function call/return is timed, and per-function statistics are computed over time windows. Loaded with require('utils/perf'). Debugging only, slows execution heavily; can feed the debug UI via a guihooks event.
 
-## Exemple
+## Example
 
 ```lua
 local perf = require('utils/perf')
 perf.enable(1)
--- code à mesurer, et perf.update() à chaque frame
+-- code to measure, and perf.update() every frame
 perf.disable()
 perf.saveDataToCSV('vehicleloading.csv')
 ```
 
-## Remarques
+## Notes
 
-- enable() remplace tout hook debug existant ; disable() le retire (debug.sethook()).
-- M.update vaut nop tant que enable() n'a pas été appelé : il faut appeler perf.update() à chaque frame une fois activé.
-- M.data contient {frameCount, size, memory, fcts = {{f=nom, t=temps cumulé, c=nombre d'appels, s=score}}} plus les champs de srcData ; la mémoire vient de gcinfo().
-- Le score s = t * c / (windowSize * 1000) : produit temps cumulé x appels (formule étrange, déduit du code ; il ne s'agit pas d'un simple temps moyen).
-- Incohérence : la fenêtre par défaut de enable() est 10 s alors que la variable de module windowSize est initialisée à 2.
-- saveDataToCSV écrit l'en-tête ';function, time' puis des lignes 'nom, score' triées par score décroissant ; renvoie false si le fichier ne s'ouvre pas, mais rien (nil) en cas de succès.
+- enable() replaces any existing debug hook; disable() removes it (debug.sethook()).
+- M.update is nop until enable() has been called: perf.update() must be called every frame once enabled.
+- M.data contains {frameCount, size, memory, fcts = {{f=name, t=cumulative time, c=call count, s=score}}} plus the fields of srcData; memory comes from gcinfo().
+- The score s = t * c / (windowSize * 1000): product of cumulative time x calls (odd formula, inferred from code; it is not a simple average time).
+- Inconsistency: the default window of enable() is 10 s whereas the module variable windowSize is initialized to 2.
+- saveDataToCSV writes the header ';function, time' then 'name, score' lines sorted by descending score; returns false if the file cannot be opened, but nothing (nil) on success.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `perf.disable()` | Désactive le profilage et remet M.update à nop. | 124 |
-| `perf.enable(_windowSize, _guiHook, _srcData)` | Active le profilage par hook (événements 'call' et 'return'). | 116 |
-| `perf.getData()` | Force le calcul des statistiques de la fenêtre en cours (et remet les compteurs à zéro), puis renvoie M.data. | 89 |
-| `perf.saveDataToCSV(filename)` | Calcule les statistiques courantes et les écrit dans un CSV, trié par score décroissant. | 94 |
-| `perf.update()` | À appeler à chaque frame une fois activé : compte les frames et déclenche le calcul des statistiques à chaque fenêtre écoulée. nop si désactivé. | 38 |
+| `perf.disable()` | Disables profiling and resets M.update to nop. | 124 |
+| `perf.enable(_windowSize, _guiHook, _srcData)` | Enables hook-based profiling ('call' and 'return' events). | 116 |
+| `perf.getData()` | Forces the computation of the current window's statistics (and resets the counters), then returns M.data. | 89 |
+| `perf.saveDataToCSV(filename)` | Computes the current statistics and writes them to a CSV, sorted by descending score. | 94 |
+| `perf.update()` | To be called every frame once enabled: counts frames and triggers the statistics computation at each elapsed window. nop if disabled. | 38 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `perf.enable(_windowSize, _guiHook, _srcData)`
 
-Active le profilage par hook (événements 'call' et 'return').
+Enables hook-based profiling ('call' and 'return' events).
 
-- `_windowSize` (*number|nil*) : Durée d'une fenêtre de statistiques en secondes, 10 par défaut
-- `_guiHook` (*string|nil*) : Nom d'évènement guihooks.trigger auquel envoyer M.data à chaque fenêtre
-- `_srcData` (*table|nil*) : Champs ajoutés tels quels à M.data
+- `_windowSize` (*number|nil*) : Duration of a statistics window in seconds, 10 by default
+- `_guiHook` (*string|nil*) : guihooks.trigger event name to which M.data is sent on each window
+- `_srcData` (*table|nil*) : Fields added as is to M.data
 
 #### `perf.getData()`
 
-Force le calcul des statistiques de la fenêtre en cours (et remet les compteurs à zéro), puis renvoie M.data.
+Forces the computation of the current window's statistics (and resets the counters), then returns M.data.
 
-- **renvoie** : table Statistiques (voir notes)
+- **returns**: table Statistics (see notes)
 
 #### `perf.saveDataToCSV(filename)`
 
-Calcule les statistiques courantes et les écrit dans un CSV, trié par score décroissant.
+Computes the current statistics and writes them to a CSV, sorted by descending score.
 
-- `filename` (*string*) : Fichier de sortie
-- **renvoie** : boolean|nil false si ouverture impossible, nil sinon
+- `filename` (*string*) : Output file
+- **returns**: boolean|nil false if it cannot be opened, nil otherwise
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `data` | table | Dernières statistiques calculées (voir notes). Vide tant qu'aucune fenêtre n'est terminée. |
+| `data` | table | Last computed statistics (see notes). Empty until a window has completed. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/utils/perf.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/utils/perf.lua`.*

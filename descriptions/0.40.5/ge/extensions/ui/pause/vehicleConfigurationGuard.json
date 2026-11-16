@@ -1,58 +1,92 @@
 {
   "path": "lua/ge/extensions/ui/pause/vehicleConfigurationGuard.lua",
-  "module": "Garde de sortie de l'écran de configuration véhicule du menu pause. Quand l'UI signale des modifications non appliquées (setHasPendingChanges), toute navigation hors de l'écran est interceptée par confirmExit : un dialogue de confirmation (Annuler / Abandonner / Appliquer) est affiché et la navigation est mise en attente, puis reprise une fois la décision prise. Utile à un moddeur qui ajoute une sous-route de configuration ou veut comprendre pourquoi une navigation est bloquée.",
-  "usage": "ui_pause_vehicleConfigurationGuard.setHasPendingChanges(true)\n-- le routeur appelle ensuite confirmExit(route, params, context) avant de quitter l'écran",
+  "module": "Exit guard for the pause menu's vehicle configuration screen. When the UI reports unapplied changes (setHasPendingChanges), any navigation away from the screen is intercepted by confirmExit: a confirmation dialog (Cancel / Discard / Apply) is shown and the navigation is held pending, then resumed once the decision is made. Useful to a modder who adds a configuration sub-route or wants to understand why a navigation is blocked.",
+  "usage": "ui_pause_vehicleConfigurationGuard.setHasPendingChanges(true)\n-- the router then calls confirmExit(route, params, context) before leaving the screen",
   "notes": [
-    "Les sous-routes pause.vehicle.configurationcombined.save, .configlistmanage et .mirrors ne déclenchent jamais le dialogue (table SUB_ROUTES).",
-    "confirmExit renvoie false quand il bloque la navigation ; elle est alors rejouée via ui_router.navigate par resumePendingExit avec un drapeau de contournement (exitConfirmationBypass) pour ne pas redemander la confirmation.",
-    "La cible en attente est toujours rafraîchie à chaque appel de confirmExit : un dialogue fermé sans callback ne bloque donc pas la navigation indéfiniment.",
-    "Les modifications non appliquées n'existent que dans l'UI ; abandonner revient simplement à poursuivre la navigation."
+    "The sub-routes pause.vehicle.configurationcombined.save, .configlistmanage and .mirrors never trigger the dialog (SUB_ROUTES table).",
+    "confirmExit returns false when it blocks the navigation; it is then replayed via ui_router.navigate by resumePendingExit with a bypass flag (exitConfirmationBypass) so as not to ask for confirmation again.",
+    "The pending target is always refreshed on each confirmExit call: a dialog closed without a callback therefore does not block navigation indefinitely.",
+    "Unapplied changes exist only in the UI; discarding simply means continuing the navigation."
   ],
   "functions": {
     "setHasPendingChanges": {
-      "desc": "Indique si l'écran de configuration contient des modifications non appliquées. Toute valeur différente de true est convertie en false.",
-      "params": {"value": {"type": "boolean", "desc": "true s'il y a des changements en attente"}},
+      "desc": "Indicates whether the configuration screen contains unapplied changes. Any value other than true is converted to false.",
+      "params": {
+        "value": {
+          "type": "boolean",
+          "desc": "true if there are pending changes"
+        }
+      },
       "returns": [],
       "internal": false
     },
     "navigateBack": {
-      "desc": "Navigue vers la route de retour : core_vehicle_configTarget.getReturnRoute() si l'extension est chargée, sinon « pause.vehicle ». Utilise l'option restoreLastScope = true.",
+      "desc": "Navigates to the return route: core_vehicle_configTarget.getReturnRoute() if the extension is loaded, otherwise \"pause.vehicle\". Uses the option restoreLastScope = true.",
       "params": {},
-      "returns": [{"type": "any", "desc": "Résultat de ui_router.navigate"}],
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of ui_router.navigate"
+        }
+      ],
       "internal": false
     },
     "confirmExit": {
-      "desc": "Appelée avant de quitter l'écran. Renvoie true (navigation autorisée) si le contournement est actif, s'il n'y a pas de changement en attente, si le nom de route est invalide ou s'il s'agit d'une sous-route de la configuration. Sinon mémorise la navigation demandée, affiche le dialogue showConfirmationDialog (boutons Annuler, Abandonner, Appliquer) et renvoie false.",
+      "desc": "Called before leaving the screen. Returns true (navigation allowed) if the bypass is active, if there are no pending changes, if the route name is invalid or if it is a configuration sub-route. Otherwise stores the requested navigation, shows the showConfirmationDialog dialog (buttons Cancel, Discard, Apply) and returns false.",
       "params": {
-        "route": {"type": "table|any", "desc": "Route cible ; son champ name sert si context.routeName est absent"},
-        "params": {"type": "table|nil", "desc": "Paramètres de navigation à rejouer plus tard"},
-        "context": {"type": "table|nil", "desc": "Contexte du routeur : routeName et options (déduit du code)"}
+        "route": {
+          "type": "table|any",
+          "desc": "Target route; its name field is used if context.routeName is absent"
+        },
+        "params": {
+          "type": "table|nil",
+          "desc": "Navigation parameters to replay later"
+        },
+        "context": {
+          "type": "table|nil",
+          "desc": "Router context: routeName and options (inferred from code)"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si la navigation peut continuer, false si elle est suspendue en attendant le dialogue"}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if navigation can continue, false if it is suspended pending the dialog"
+        }
+      ],
       "internal": true
     },
     "cancelExit": {
-      "desc": "Callback du bouton Annuler : oublie la navigation en attente.",
+      "desc": "Callback of the Cancel button: forgets the pending navigation.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "confirmExitDiscarding": {
-      "desc": "Callback du bouton Abandonner : reprend la navigation en attente sans appliquer les changements.",
+      "desc": "Callback of the Discard button: resumes the pending navigation without applying the changes.",
       "params": {},
-      "returns": [{"type": "any", "desc": "Résultat de la navigation rejouée, ou false s'il n'y avait rien en attente"}],
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of the replayed navigation, or false if nothing was pending"
+        }
+      ],
       "internal": true
     },
     "confirmExitApplying": {
-      "desc": "Callback du bouton Appliquer : déclenche l'évènement UI VehicleConfigurationCombinedApplyAndExit. L'arbre de pièces et le tuning en attente vivent dans l'UI, qui les applique puis rappelle resumePendingExit().",
+      "desc": "Callback of the Apply button: triggers the UI event VehicleConfigurationCombinedApplyAndExit. The pending parts tree and tuning live in the UI, which applies them then calls resumePendingExit() back.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "resumePendingExit": {
-      "desc": "Rejoue la navigation mise en attente en contournant la confirmation. Renvoie false s'il n'y a aucune navigation en attente.",
+      "desc": "Replays the pending navigation, bypassing the confirmation. Returns false if there is no pending navigation.",
       "params": {},
-      "returns": [{"type": "any", "desc": "Résultat de ui_router.navigate, ou false"}],
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of ui_router.navigate, or false"
+        }
+      ],
       "internal": false
     }
   }

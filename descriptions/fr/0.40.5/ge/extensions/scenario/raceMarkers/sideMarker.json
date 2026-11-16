@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/scenario/raceMarkers/sideMarker.lua",
+  "module": "Marqueur de checkpoint « courbes latérales » : une base au sol (checkpoint_curve_base.dae), des courbes latérales actives (checkpoint_curve_active.dae, ou _finish pour lap et final) et une version « distante » (checkpoint_curve_distant.dae) qui apparaît en fondu quand on est loin (bascule entre 50 m et 75 m par défaut). Orientation selon la normale du checkpoint ou la caméra. Le module renvoie un constructeur : require('scenario/raceMarkers/sideMarker')(id) donne un objet de la classe C.",
+  "notes": [
+    "Couleurs par mode : default rouge (1, 0.07, 0), next noir, start et lap vert (0.4, 1, 0.2), final bleu (0.1, 0.3, 1), branch orange (1, 0.6, 0), hidden noir. Changement de mode avec fondu de couleur de 0.3 s.",
+    "setToCheckpoint(wp) lit wp.pos, wp.radius, wp.normal (facultatif), wp.fadeNear, wp.fadeFar, wp.mode (choix du modèle).",
+    "La bascule proche/lointain dure 0.8 s (blendDuration) avec hystérésis entre fadeNear et fadeFar.",
+    "Le champ self.sides et la fonction C:hide/C:show utilisent des couleurs (oldColor/newColor) mémorisées mais jamais lues par update : code résiduel.",
+    "La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Marqueur à courbes latérales.",
+      "functions": {
+        "init": {"desc": "Constructeur : initialise l'état et copie la table des modes.", "params": {"id": {"type": "integer", "desc": "Identifiant unique."}}, "internal": true},
+        "update": {"desc": "Appel par image : gère le fondu proche/lointain, la rotation vers la normale ou la caméra, les couleurs et l'alpha de la base, des côtés et de la version distante.", "params": {"dt": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}}, "internal": true},
+        "setToCheckpoint": {"desc": "Place base, côtés et marqueur distant sur un checkpoint.", "params": {"wp": {"type": "table", "desc": "{pos, radius, normal?, fadeNear?, fadeFar?, mode?}."}}},
+        "setMode": {"desc": "Change de mode : affiche (sauf 'hidden'), lance le fondu de couleur et change le modèle des côtés.", "params": {"mode": {"type": "string", "desc": "default, next, start, lap, final, branch ou hidden."}}},
+        "setVisibility": {"desc": "Affiche ou cache les trois objets.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
+        "hide": {"desc": "Masque et mémorise la couleur 'hidden'.", "params": {}},
+        "show": {"desc": "Affiche en restaurant la couleur mémorisée.", "params": {}},
+        "createObject": {"desc": "Crée un TSStatic caché enregistré sous objectName et ajouté à ScenarioObjectsGroup.", "params": {"shapeName": {"type": "string", "desc": "Chemin du modèle."}, "objectName": {"type": "string", "desc": "Nom d'enregistrement."}}, "returns": [{"type": "table", "desc": "L'objet créé."}]},
+        "createMarkers": {"desc": "Supprime les anciens objets puis crée base, côtés et version distante.", "params": {}},
+        "clearMarkers": {"desc": "Supprime les objets créés.", "params": {}}
+      }
+    }
+  }
+}

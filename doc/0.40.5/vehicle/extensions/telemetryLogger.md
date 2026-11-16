@@ -1,56 +1,56 @@
 # `telemetryLogger`
 
-*Fichier : `lua/vehicle/extensions/telemetryLogger.lua` · VM : Véhicule · 87 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/telemetryLogger.lua` · VM: Vehicle · 87 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetryLogger` : `extensions.load (VM véhicule)("telemetryLogger")`, puis la globale `telemetryLogger`
+**Access:** extension `telemetryLogger`: `extensions.load (vehicle VM)("telemetryLogger")`, then the global `telemetryLogger`
 
-Enregistreur de télémétrie simple : à chaque frame graphique (quand l'enregistrement est actif) il mémorise timestamp, position, vitesse, gaz, frein, direction, frein à main et forces G (sensors.gx2/gy2), puis saveDataToDisk écrit le tout dans un fichier CSV `telemetryData_HH-MM-SS.csv`. Pratique pour un moddeur qui veut exporter une session de conduite.
+Simple telemetry recorder: every graphics frame (when recording is active) it stores timestamp, position, speed, throttle, brake, steering, parking brake and G forces (sensors.gx2/gy2), then saveDataToDisk writes it all to a CSV file `telemetryData_HH-MM-SS.csv`. Handy for a modder who wants to export a driving session.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('telemetryLogger')
 telemetryLogger.startRecording()
--- ... conduire ...
+-- ... drive ...
 telemetryLogger.saveDataToDisk()
 ```
 
-## Remarques
+## Notes
 
-- Colonnes du CSV : frame, timestamp, position, velocity, throttle, brake, steering, parkingbrake, gForceX, gForceY. La position est une chaîne "(x,y,z)" (entre guillemets dans le CSV car elle contient des virgules). La ligne se termine par une virgule en trop ; fins de ligne \r\n.
-- timestamp = somme des dt reçus (secondes de simulation), velocity = norme de obj:getVelocity() (m/s).
-- Le fichier est créé avec un chemin relatif (répertoire de travail du jeu, pas un dossier utilisateur dédié). L'ordre des lignes vient de pairs() sur un tableau indexé, donc normalement croissant mais non garanti.
-- saveDataToDisk arrête l'enregistrement, écrit, puis appelle onInit() qui vide les données. Il renvoie false si le fichier ne peut pas être ouvert (et dans ce cas n'efface pas les données) ; sinon il ne renvoie rien.
-- escapeCSV plante si une valeur est nil (ex. sensors.gx2 absent).
+- CSV columns: frame, timestamp, position, velocity, throttle, brake, steering, parkingbrake, gForceX, gForceY. The position is a string "(x,y,z)" (quoted in the CSV because it contains commas). The line ends with an extra comma; line endings \r\n.
+- timestamp = sum of the dt received (simulation seconds), velocity = norm of obj:getVelocity() (m/s).
+- The file is created with a relative path (the game's working directory, not a dedicated user folder). The line order comes from pairs() on an indexed array, so normally ascending but not guaranteed.
+- saveDataToDisk stops recording, writes, then calls onInit() which clears the data. It returns false if the file cannot be opened (and in that case does not clear the data); otherwise it returns nothing.
+- escapeCSV crashes if a value is nil (e.g. sensors.gx2 missing).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetryLogger.onInit()` | Hook appelé à l'initialisation du véhicule : vide les données, remet l'index et le timestamp à zéro et arrête l'enregistrement. *(interne)* *(hook)* | 72 |
-| `telemetryLogger.onReset()` | Hook appelé au reset du véhicule ; même fonction que onInit (efface les données et arrête l'enregistrement). *(interne)* *(hook)* | 72 |
-| `telemetryLogger.saveDataToDisk()` | Arrête l'enregistrement et écrit les données collectées dans `telemetryData_<heure>.csv`, puis réinitialise l'état. | 40 |
-| `telemetryLogger.startRecording()` | Active l'enregistrement : updateGFX ajoute un point de données à chaque frame. Ne remet pas les données à zéro (utiliser onInit/onReset ou saveDataToDisk pour cela). | 64 |
-| `telemetryLogger.stopRecording()` | Suspend l'enregistrement sans vider les données déjà collectées. | 68 |
-| `telemetryLogger.updateGFX(dt)` | Appelé à chaque frame graphique (extensions.hook('updateGFX')). Si l'enregistrement est actif, ajoute un point de données. *(interne)* | 13 |
+| `telemetryLogger.onInit()` | Hook called on vehicle initialization: clears the data, resets the index and the timestamp to zero and stops recording. *(internal)* *(hook)* | 72 |
+| `telemetryLogger.onReset()` | Hook called on vehicle reset; same function as onInit (clears the data and stops recording). *(internal)* *(hook)* | 72 |
+| `telemetryLogger.saveDataToDisk()` | Stops recording and writes the collected data to `telemetryData_<time>.csv`, then resets the state. | 40 |
+| `telemetryLogger.startRecording()` | Enables recording: updateGFX adds a data point every frame. Does not reset the data (use onInit/onReset or saveDataToDisk for that). | 64 |
+| `telemetryLogger.stopRecording()` | Pauses recording without clearing the data already collected. | 68 |
+| `telemetryLogger.updateGFX(dt)` | Called every graphics frame (extensions.hook('updateGFX')). If recording is active, adds a data point. *(internal)* | 13 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetryLogger.saveDataToDisk()`
 
-Arrête l'enregistrement et écrit les données collectées dans `telemetryData_<heure>.csv`, puis réinitialise l'état.
+Stops recording and writes the collected data to `telemetryData_<time>.csv`, then resets the state.
 
-- **renvoie** : boolean|nil false si le fichier n'a pas pu être ouvert, nil sinon.
+- **returns**: boolean|nil false if the file could not be opened, nil otherwise.
 
 #### `telemetryLogger.updateGFX(dt)`
 
-Appelé à chaque frame graphique (extensions.hook('updateGFX')). Si l'enregistrement est actif, ajoute un point de données.
+Called every graphics frame (extensions.hook('updateGFX')). If recording is active, adds a data point.
 
-- `dt` (*number*) : Pas de temps en secondes, ajouté au timestamp.
+- `dt` (*number*) : Time step in seconds, added to the timestamp.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getPosition`, `getVelocity`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/telemetryLogger.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/telemetryLogger.lua`.*

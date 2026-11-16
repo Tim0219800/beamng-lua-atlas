@@ -1,252 +1,252 @@
 # `core_hotlapping`
 
-*Fichier : `lua/ge/extensions/core/hotlapping.lua` · VM : Game Engine (GE) · 1072 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/hotlapping.lua` · VM: Game Engine (GE) · 1072 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_hotlapping` : `extensions.load("core_hotlapping")`, puis la globale `core_hotlapping`
+**Access:** extension `core_hotlapping`: `extensions.load("core_hotlapping")`, then the global `core_hotlapping`
 
-Extension GE `core_hotlapping` : mode « tours chronométrés » du freeroam (appli Hotlapping). Le joueur pose des checkpoints (points de passage avec position, direction et rayon) pour définir un circuit, le chrono démarre quand il passe dans le premier, puis les tours et sections sont chronométrés avec écarts par rapport au meilleur tour. Le circuit peut être sauvegardé/chargé (gameplay/hotlapping/<niveau>/*.race.json) et les véhicules IA peuvent le parcourir. Le module sert aussi d'afficheur de temps pour les scénarios de course (ancien système `onRace*`) et pour le nouveau système de course (`newRace*`).
+GE extension `core_hotlapping`: freeroam "timed laps" mode (Hotlapping app). The player places checkpoints (waypoints with position, direction and radius) to define a circuit, the timer starts when passing through the first one, then laps and sections are timed with gaps relative to the best lap. The circuit can be saved/loaded (gameplay/hotlapping/<level>/*.race.json) and AI vehicles can drive it. The module also serves as a time display for race scenarios (old `onRace*` system) and for the new race system (`newRace*`).
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('core_hotlapping')
-core_hotlapping.startHotlapping()      -- entre en mode édition (crée le 1er checkpoint à la position du véhicule)
--- rouler jusqu'au prochain point puis :
+core_hotlapping.startHotlapping()      -- enters edit mode (creates the 1st checkpoint at the vehicle's position)
+-- drive to the next point then:
 core_hotlapping.addCheckPoint()
--- repasser dans le 1er checkpoint pour démarrer le chrono
-core_hotlapping.save()                 -- sauvegarde sous <date>.race.json
+-- go through the 1st checkpoint again to start the timer
+core_hotlapping.save()                 -- saves as <date>.race.json
 ```
 
-## Remarques
+## Notes
 
-- Unités : tous les temps internes sont en MILLISECONDES (os.clock()*1000, ou race.time*1000 pour le nouveau système). formatMillis donne 'MM:SS.mmm'. Les rayons de checkpoint sont en mètres : défaut automatique (autoRadius) = 5, sinon max(3, rayon de la route interpolé + 1) si une route est à moins de 30 m ; changeRadius borne à 1..15.
-- Structure de getTimeInfoRaw() : times[lap] = {startTime, endTime, duration, diff, skipped, lap, [cp] = {startTime, endTime, duration, diff, cp, current}} ; lap et cp sont numérotés à partir de 1. L'écart (diff) d'un tour/section est en ms par rapport au meilleur tour (bestLapIndex), absent pendant le 1er tour et pour les circuits à branches.
-- getTimeInfo() renvoie {normal = liste par tour, detail = liste à plat sections puis tour} prête pour l'UI (champs formatés duration, total, diff, diffColor 'red'/'green', durationStyle en CSS inline, best, isSection, isLap).
-- Évènements UI : HotlappingTimer (état du chrono, envoyé au passage d'un checkpoint, à la fin d'un tour ou quand forceSendToGui est vrai), HotlappingTimerPause, HotlappingResetApp, HotlappingSuccessfullyLoaded(nom), HotlappingSuccessfullySaved(nom).
-- Pause : quand be:getEnabled() est faux (simulation en pause), la durée de pause est cumulée puis retranchée du temps total.
-- Trois chemins d'alimentation selon la source de course : le mode freeroam interne (onCheckPointPassed + onUpdate), l'ancien système de scénario (onRaceStart, onRaceWaypointReached, onRaceResult, timer du scénario en secondes x1000) et le nouveau système (newRaceStart, newRacePathnodeReached, newRaceLapSkipped, newRaceStop).
-- Incohérences : le commentaire de refreshTracklist dit qu'il envoie la liste à l'appli mais il se contente de la renvoyer ; rename appelle renameFile puis removeFile de l'ancien chemin (le second appel est inutile) ; onCheckPointPassed n'est jamais appelé dans ce fichier ; la liste automatique cite deux fois les mêmes hooks onRace* qui sont des hooks de l'ancien système.
-- En mode freeroam, le mode IA (startAi) impose aux véhicules non joueurs et non trafic/garés ai.driveUsingPath avec 1000 tours, aggression 0.9, turnForceCoef 4, awarenessForceCoef 0.15 ; il marque ces véhicules avec le champ dynamique isHotlapping.
+- Units: all internal times are in MILLISECONDS (os.clock()*1000, or race.time*1000 for the new system). formatMillis gives 'MM:SS.mmm'. Checkpoint radii are in meters: automatic default (autoRadius) = 5, otherwise max(3, interpolated road radius + 1) if a road is within 30 m; changeRadius clamps to 1..15.
+- Structure of getTimeInfoRaw(): times[lap] = {startTime, endTime, duration, diff, skipped, lap, [cp] = {startTime, endTime, duration, diff, cp, current}}; lap and cp are numbered from 1. The gap (diff) of a lap/section is in ms relative to the best lap (bestLapIndex), absent during the 1st lap and for branching circuits.
+- getTimeInfo() returns {normal = list per lap, detail = flat list sections then lap} ready for the UI (formatted fields duration, total, diff, diffColor 'red'/'green', durationStyle in inline CSS, best, isSection, isLap).
+- UI events: HotlappingTimer (timer state, sent when passing a checkpoint, at the end of a lap or when forceSendToGui is true), HotlappingTimerPause, HotlappingResetApp, HotlappingSuccessfullyLoaded(name), HotlappingSuccessfullySaved(name).
+- Pause: when be:getEnabled() is false (simulation paused), the pause duration is accumulated then subtracted from the total time.
+- Three feeding paths depending on the race source: the internal freeroam mode (onCheckPointPassed + onUpdate), the old scenario system (onRaceStart, onRaceWaypointReached, onRaceResult, scenario timer in seconds x1000) and the new system (newRaceStart, newRacePathnodeReached, newRaceLapSkipped, newRaceStop).
+- Inconsistencies: the comment of refreshTracklist says it sends the list to the app but it only returns it; rename calls renameFile then removeFile of the old path (the second call is useless); onCheckPointPassed is never called in this file; the automatic list cites the same onRace* hooks twice, which are hooks of the old system.
+- In freeroam mode, the AI mode (startAi) imposes on non-player, non-traffic/non-parked vehicles ai.driveUsingPath with 1000 laps, aggression 0.9, turnForceCoef 4, awarenessForceCoef 0.15; it marks these vehicles with the dynamic field isHotlapping.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_hotlapping.addCheckPoint(cpPos, cpDir, cpRadius)` | Ajoute un checkpoint au circuit (mode édition seulement) et le relie au précédent par un segment. Sans argument, utilise la position du véhicule joueur posée sur la surface (ou la caméra), sa direction si le véhicule est à moins de 5 m, et le rayon courant (automatique ou fixé par changeRadius). | 250 |
-| `core_hotlapping.changeRadius(sign)` | Modifie le rayon de tous les checkpoints : +1 m si sign > 0, -1 m si sign < 0 (borné 1..15), retour au rayon automatique si sign == 0 (le 1er changement part de 5). | 842 |
-| `core_hotlapping.clearAllCP()` | Oublie le compteur et l'id du dernier checkpoint et arrête l'IA. Ne vide pas le chemin lui-même. | 291 |
-| `core_hotlapping.formatMillis(timeInMillis, addSign)` | Formate des millisecondes en 'MM:SS.mmm' (arrondi à l'entier) ; avec addSign, préfixe '+' ou '-'. | 714 |
-| `core_hotlapping.getDiffColor(val)` | Couleur CSS d'un écart : 'red' si > 0 (plus lent), 'green' si < 0, '' si nul. | 732 |
-| `core_hotlapping.getTimeInfo()` | Données de temps formatées pour l'UI : {normal = résumé par tour, detail = sections puis tour}. La table est réutilisée à chaque appel. | 592 |
-| `core_hotlapping.getTimeInfoRaw()` | Table brute des temps par tour et section (voir notes). | 584 |
-| `core_hotlapping.load(originalFilename)` | Charge un circuit depuis gameplay/hotlapping/<niveau>/<nom>.race.json ; à défaut, cherche l'ancien format dans settings/hotlapping (fichiers dont le chemin contient le nom). Puis arrête le chrono, vide, relance le mode hotlapping et prévient l'UI. | 748 |
-| `core_hotlapping.newRaceLapSkipped(state, info)` | Hook du nouveau système : le tour courant a été sauté ; le marque 'skipped' et remet le checkpoint à 1 si state.skippedLap. *(interne)* | 932 |
-| `core_hotlapping.newRacePathnodeReached(state, info)` | Hook du nouveau système : passage d'un pathnode du joueur. Termine la course si state.complete, sinon avance tour/checkpoint (ignore les recoveries) et met à jour les temps. *(interne)* | 906 |
-| `core_hotlapping.newRaceStart(race)` | Hook du nouveau système de course : démarre le suivi (course fermée, tours depuis 1, horloge = race.time*1000) et détecte les circuits à branches (comparaisons désactivées). *(interne)* | 890 |
-| `core_hotlapping.newRaceStop()` | Hook du nouveau système : arrêt de la course (started = false). *(interne)* | 961 |
-| `core_hotlapping.onCheckPointPassed(index)` | Prévu pour le passage d'un checkpoint (mode freeroam hérité) : si index est le prochain attendu, avance le compteur de tours/checkpoints. Aucun appel dans ce fichier. *(interne)* *(hook)* | 329 |
-| `core_hotlapping.onClientEndMission()` | Hook de fin de niveau : arrête le mode hotlapping. *(interne)* *(hook)* | 878 |
-| `core_hotlapping.onClientStartMission()` | Hook de début de niveau : arrête le mode hotlapping et remet l'appli à zéro (HotlappingResetApp). *(interne)* *(hook)* | 873 |
-| `core_hotlapping.onExtensionUnloaded()` | Hook de déchargement : arrête le mode hotlapping. *(interne)* *(hook)* | 882 |
-| `core_hotlapping.onGameStateUpdate(...)` | Hook de changement d'état de jeu : force le prochain envoi à l'UI. *(interne)* *(hook)* | 949 |
-| `core_hotlapping.onMenuToggled(...)` | Hook d'ouverture/fermeture de menu : force le prochain envoi à l'UI. *(interne)* *(hook)* | 953 |
-| `core_hotlapping.onPreRender(dt, dtSim)` | Hook de rendu : en édition, dessine sphères, colonnes verticales (la première en orange) et flèches de direction des checkpoints ; sinon fait rendre les marqueurs de course. *(interne)* *(hook)* | 362 |
-| `core_hotlapping.onRaceResult(final)` | Hook de l'ancien système : fin de course ; arrête le chrono et stocke les temps détaillés dans scenario.detailedTimes. *(interne)* *(hook)* | 1017 |
-| `core_hotlapping.onRaceStart()` | Hook de l'ancien système de scénario de course : démarre le suivi avec le chrono du scénario (scenario.timer en secondes), course fermée, tours depuis 1 ; circuits à branches si lapConfigBranches est défini. *(interne)* *(hook)* | 969 |
-| `core_hotlapping.onRaceWaypointReached(wpInfo)` | Hook de l'ancien système : le joueur a atteint un waypoint. Gère fin de course, changement de tour (lapDiff == 1) ou de checkpoint et met à jour les temps. Ignore les autres véhicules. *(interne)* *(hook)* | 986 |
-| `core_hotlapping.onScreenFadeState(...)` | Hook de fondu d'écran : force le prochain envoi à l'UI. *(interne)* *(hook)* | 957 |
-| `core_hotlapping.onUpdate(dt, dtSim)` | Hook par image : démarre la course quand le joueur entre dans le premier checkpoint, gère la pause, met à jour la course et le temps total, puis envoie l'état à l'UI. *(interne)* *(hook)* | 389 |
-| `core_hotlapping.onVehicleResetted(id)` | Hook de reset de véhicule : si le joueur est remis près (moins de 80 m) du départ pendant une course, arrête l'IA et la replace à son point de départ. *(interne)* *(hook)* | 866 |
-| `core_hotlapping.passTimeToGUI()` | Envoie à l'UI (HotlappingTimer) l'état du chrono (getTimeInfo plus stop, justLapped, delta, closed, running, justStarted) si un checkpoint vient d'être passé, un tour terminé ou un envoi forcé est demandé. | 459 |
-| `core_hotlapping.refreshTracklist()` | Liste les circuits disponibles (niveau courant, plus anciens dans settings/hotlapping) sans extension. | 827 |
-| `core_hotlapping.rename(oldName, newName)` | Renomme un circuit du niveau courant (<ancien>.race.json -> <nouveau>.race.json). | 813 |
-| `core_hotlapping.save(filePath)` | Sauvegarde le circuit en JSON (gameplay/hotlapping/<niveau>/<date>.race.json par défaut), envoie HotlappingSuccessfullySaved à l'UI. Refuse si le chemin est invalide. | 797 |
-| `core_hotlapping.setEndTime()` | Fige les temps de la section et du tour à totalTime à la fin de la course et met à jour écart et meilleur tour. | 475 |
-| `core_hotlapping.setTime(ignoreNewLap)` | Met à jour les temps courants : crée au besoin l'enregistrement du tour et du checkpoint, ferme le précédent, calcule durées, écarts par rapport au meilleur tour et met à jour le meilleur tour (comparaisons désactivées pour les courses à branches). | 504 |
-| `core_hotlapping.setVisible(value)` | Affiche ou cache les marqueurs de la course et coupe/remet le son des checkpoints. | 298 |
-| `core_hotlapping.skipLap(keepLapProgress)` | Passe le tour en cours (marqué 'skipped' dans les temps) via raceData:skipLap pour le véhicule joueur. | 209 |
-| `core_hotlapping.start()` | Démarre le chrono (appelé automatiquement quand le joueur passe dans le premier checkpoint). En mode édition, valide le chemin, crée l'objet de course (1000 tours, appli hotlapping, audio de checkpoint), les marqueurs visuels et joue le son UI_Checkpoint. Arrête immédiatement si le chemin est invalide. | 168 |
-| `core_hotlapping.startAi()` | Fait parcourir le circuit en boucle (1000 tours, évitement de véhicules activé) à tous les véhicules IA non trafic/non garés. Si aucune course n'est démarrée et que l'on est en édition, démarre d'abord la course. | 104 |
-| `core_hotlapping.startHotlapping()` | Entre en mode édition du circuit : réinitialise l'état, crée un objet de chemin (gameplay/race/path) et ajoute le premier checkpoint à la position du véhicule. Désactive le mode (avertissement) s'il n'y a pas de véhicule joueur. | 56 |
-| `core_hotlapping.stopAi(respawn)` | Arrête les véhicules marqués isHotlapping (ai.setMode('stop')) et, si respawn, les replace à leur position sauvegardée (recovery.loadHome). | 135 |
-| `core_hotlapping.stopHotlapping()` | Arrête tout : stoppe le chrono, quitte le mode édition, détruit le chemin et retire le marquage isHotlapping des véhicules. | 88 |
-| `core_hotlapping.stopTimer()` | Arrête le chrono, vide les temps, arrête la course et les marqueurs ; repasse en mode édition si une course tournait ; arrête l'IA. | 216 |
+| `core_hotlapping.addCheckPoint(cpPos, cpDir, cpRadius)` | Adds a checkpoint to the circuit (edit mode only) and links it to the previous one with a segment. Without arguments, uses the player vehicle's position placed on the surface (or the camera), its direction if the vehicle is within 5 m, and the current radius (automatic or set by changeRadius). | 250 |
+| `core_hotlapping.changeRadius(sign)` | Changes the radius of all checkpoints: +1 m if sign > 0, -1 m if sign < 0 (clamped 1..15), back to the automatic radius if sign == 0 (the 1st change starts from 5). | 842 |
+| `core_hotlapping.clearAllCP()` | Forgets the counter and the id of the last checkpoint and stops the AI. Does not clear the path itself. | 291 |
+| `core_hotlapping.formatMillis(timeInMillis, addSign)` | Formats milliseconds as 'MM:SS.mmm' (rounded to the integer); with addSign, prefixes '+' or '-'. | 714 |
+| `core_hotlapping.getDiffColor(val)` | CSS color of a gap: 'red' if > 0 (slower), 'green' if < 0, '' if zero. | 732 |
+| `core_hotlapping.getTimeInfo()` | Time data formatted for the UI: {normal = summary per lap, detail = sections then lap}. The table is reused on every call. | 592 |
+| `core_hotlapping.getTimeInfoRaw()` | Raw table of times per lap and section (see notes). | 584 |
+| `core_hotlapping.load(originalFilename)` | Loads a circuit from gameplay/hotlapping/<level>/<name>.race.json; failing that, looks for the old format in settings/hotlapping (files whose path contains the name). Then stops the timer, clears, restarts hotlapping mode and notifies the UI. | 748 |
+| `core_hotlapping.newRaceLapSkipped(state, info)` | New system hook: the current lap was skipped; marks it 'skipped' and resets the checkpoint to 1 if state.skippedLap. *(internal)* | 932 |
+| `core_hotlapping.newRacePathnodeReached(state, info)` | New system hook: player passes a pathnode. Ends the race if state.complete, otherwise advances lap/checkpoint (ignores recoveries) and updates the times. *(internal)* | 906 |
+| `core_hotlapping.newRaceStart(race)` | New race system hook: starts tracking (closed race, laps from 1, clock = race.time*1000) and detects branching circuits (comparisons disabled). *(internal)* | 890 |
+| `core_hotlapping.newRaceStop()` | New system hook: race stop (started = false). *(internal)* | 961 |
+| `core_hotlapping.onCheckPointPassed(index)` | Intended for passing a checkpoint (legacy freeroam mode): if index is the next expected one, advances the lap/checkpoint counter. No call in this file. *(internal)* *(hook)* | 329 |
+| `core_hotlapping.onClientEndMission()` | Level end hook: stops hotlapping mode. *(internal)* *(hook)* | 878 |
+| `core_hotlapping.onClientStartMission()` | Level start hook: stops hotlapping mode and resets the app (HotlappingResetApp). *(internal)* *(hook)* | 873 |
+| `core_hotlapping.onExtensionUnloaded()` | Unload hook: stops hotlapping mode. *(internal)* *(hook)* | 882 |
+| `core_hotlapping.onGameStateUpdate(...)` | Game state change hook: forces the next send to the UI. *(internal)* *(hook)* | 949 |
+| `core_hotlapping.onMenuToggled(...)` | Menu open/close hook: forces the next send to the UI. *(internal)* *(hook)* | 953 |
+| `core_hotlapping.onPreRender(dt, dtSim)` | Render hook: in edit mode, draws spheres, vertical columns (the first in orange) and direction arrows of the checkpoints; otherwise renders the race markers. *(internal)* *(hook)* | 362 |
+| `core_hotlapping.onRaceResult(final)` | Old system hook: race end; stops the timer and stores the detailed times in scenario.detailedTimes. *(internal)* *(hook)* | 1017 |
+| `core_hotlapping.onRaceStart()` | Old race scenario system hook: starts tracking with the scenario timer (scenario.timer in seconds), closed race, laps from 1; branching circuits if lapConfigBranches is defined. *(internal)* *(hook)* | 969 |
+| `core_hotlapping.onRaceWaypointReached(wpInfo)` | Old system hook: the player reached a waypoint. Handles race end, lap change (lapDiff == 1) or checkpoint change and updates the times. Ignores the other vehicles. *(internal)* *(hook)* | 986 |
+| `core_hotlapping.onScreenFadeState(...)` | Screen fade hook: forces the next send to the UI. *(internal)* *(hook)* | 957 |
+| `core_hotlapping.onUpdate(dt, dtSim)` | Per-frame hook: starts the race when the player enters the first checkpoint, handles pause, updates the race and the total time, then sends the state to the UI. *(internal)* *(hook)* | 389 |
+| `core_hotlapping.onVehicleResetted(id)` | Vehicle reset hook: if the player is reset near (less than 80 m) the start during a race, stops the AI and puts it back at its start point. *(internal)* *(hook)* | 866 |
+| `core_hotlapping.passTimeToGUI()` | Sends the timer state (getTimeInfo plus stop, justLapped, delta, closed, running, justStarted) to the UI (HotlappingTimer) if a checkpoint was just passed, a lap was completed or a forced send is requested. | 459 |
+| `core_hotlapping.refreshTracklist()` | Lists the available circuits (current level, plus older ones in settings/hotlapping) without extension. | 827 |
+| `core_hotlapping.rename(oldName, newName)` | Renames a circuit of the current level (<old>.race.json -> <new>.race.json). | 813 |
+| `core_hotlapping.save(filePath)` | Saves the circuit as JSON (gameplay/hotlapping/<level>/<date>.race.json by default), sends HotlappingSuccessfullySaved to the UI. Refuses if the path is invalid. | 797 |
+| `core_hotlapping.setEndTime()` | Freezes the section and lap times at totalTime at the end of the race and updates the gap and best lap. | 475 |
+| `core_hotlapping.setTime(ignoreNewLap)` | Updates the current times: creates the lap and checkpoint record if needed, closes the previous one, computes durations, gaps relative to the best lap and updates the best lap (comparisons disabled for branching races). | 504 |
+| `core_hotlapping.setVisible(value)` | Shows or hides the race markers and mutes/unmutes the checkpoint sound. | 298 |
+| `core_hotlapping.skipLap(keepLapProgress)` | Skips the current lap (marked 'skipped' in the times) via raceData:skipLap for the player vehicle. | 209 |
+| `core_hotlapping.start()` | Starts the timer (called automatically when the player passes through the first checkpoint). In edit mode, validates the path, creates the race object (1000 laps, hotlapping app, checkpoint audio), the visual markers and plays the UI_Checkpoint sound. Stops immediately if the path is invalid. | 168 |
+| `core_hotlapping.startAi()` | Makes all non-traffic/non-parked AI vehicles drive the circuit in a loop (1000 laps, vehicle avoidance enabled). If no race is started and we are in edit mode, starts the race first. | 104 |
+| `core_hotlapping.startHotlapping()` | Enters circuit edit mode: resets the state, creates a path object (gameplay/race/path) and adds the first checkpoint at the vehicle's position. Disables the mode (warning) if there is no player vehicle. | 56 |
+| `core_hotlapping.stopAi(respawn)` | Stops the vehicles marked isHotlapping (ai.setMode('stop')) and, if respawn, puts them back at their saved position (recovery.loadHome). | 135 |
+| `core_hotlapping.stopHotlapping()` | Stops everything: stops the timer, leaves edit mode, destroys the path and removes the isHotlapping marking from the vehicles. | 88 |
+| `core_hotlapping.stopTimer()` | Stops the timer, clears the times, stops the race and the markers; goes back to edit mode if a race was running; stops the AI. | 216 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_hotlapping.addCheckPoint(cpPos, cpDir, cpRadius)`
 
-Ajoute un checkpoint au circuit (mode édition seulement) et le relie au précédent par un segment. Sans argument, utilise la position du véhicule joueur posée sur la surface (ou la caméra), sa direction si le véhicule est à moins de 5 m, et le rayon courant (automatique ou fixé par changeRadius).
+Adds a checkpoint to the circuit (edit mode only) and links it to the previous one with a segment. Without arguments, uses the player vehicle's position placed on the surface (or the camera), its direction if the vehicle is within 5 m, and the current radius (automatic or set by changeRadius).
 
-- `cpPos` (*vec3|nil*) : Position monde du centre.
-- `cpDir` (*vec3|nil*) : Direction/normal ; nil = pas de normal (passage dans les deux sens).
-- `cpRadius` (*number|nil*) : Rayon en mètres.
+- `cpPos` (*vec3|nil*) : World position of the center.
+- `cpDir` (*vec3|nil*) : Direction/normal; nil = no normal (passing in both directions).
+- `cpRadius` (*number|nil*) : Radius in meters.
 
 #### `core_hotlapping.changeRadius(sign)`
 
-Modifie le rayon de tous les checkpoints : +1 m si sign > 0, -1 m si sign < 0 (borné 1..15), retour au rayon automatique si sign == 0 (le 1er changement part de 5).
+Changes the radius of all checkpoints: +1 m if sign > 0, -1 m if sign < 0 (clamped 1..15), back to the automatic radius if sign == 0 (the 1st change starts from 5).
 
-- `sign` (*number*) : +1, -1 ou 0.
+- `sign` (*number*) : +1, -1 or 0.
 
 #### `core_hotlapping.formatMillis(timeInMillis, addSign)`
 
-Formate des millisecondes en 'MM:SS.mmm' (arrondi à l'entier) ; avec addSign, préfixe '+' ou '-'.
+Formats milliseconds as 'MM:SS.mmm' (rounded to the integer); with addSign, prefixes '+' or '-'.
 
-- `timeInMillis` (*number|nil*) : Temps en ms.
-- `addSign` (*boolean|nil*) : true = ajoute le signe (écarts).
-- **renvoie** : string|nil Texte ; nil si timeInMillis est nil.
+- `timeInMillis` (*number|nil*) : Time in ms.
+- `addSign` (*boolean|nil*) : true = adds the sign (gaps).
+- **returns**: string|nil Text; nil if timeInMillis is nil.
 
 #### `core_hotlapping.getDiffColor(val)`
 
-Couleur CSS d'un écart : 'red' si > 0 (plus lent), 'green' si < 0, '' si nul.
+CSS color of a gap: 'red' if > 0 (slower), 'green' if < 0, '' if zero.
 
-- `val` (*number*) : Écart en ms.
-- **renvoie** : string 'red', 'green' ou ''.
+- `val` (*number*) : Gap in ms.
+- **returns**: string 'red', 'green' or ''.
 
 #### `core_hotlapping.getTimeInfo()`
 
-Données de temps formatées pour l'UI : {normal = résumé par tour, detail = sections puis tour}. La table est réutilisée à chaque appel.
+Time data formatted for the UI: {normal = summary per lap, detail = sections then lap}. The table is reused on every call.
 
-- **renvoie** : table {normal, detail}.
+- **returns**: table {normal, detail}.
 
 #### `core_hotlapping.getTimeInfoRaw()`
 
-Table brute des temps par tour et section (voir notes).
+Raw table of times per lap and section (see notes).
 
-- **renvoie** : table times (référence interne).
+- **returns**: table times (internal reference).
 
 #### `core_hotlapping.load(originalFilename)`
 
-Charge un circuit depuis gameplay/hotlapping/<niveau>/<nom>.race.json ; à défaut, cherche l'ancien format dans settings/hotlapping (fichiers dont le chemin contient le nom). Puis arrête le chrono, vide, relance le mode hotlapping et prévient l'UI.
+Loads a circuit from gameplay/hotlapping/<level>/<name>.race.json; failing that, looks for the old format in settings/hotlapping (files whose path contains the name). Then stops the timer, clears, restarts hotlapping mode and notifies the UI.
 
-- `originalFilename` (*string*) : Nom du circuit sans extension.
+- `originalFilename` (*string*) : Circuit name without extension.
 
 #### `core_hotlapping.newRaceLapSkipped(state, info)`
 
-Hook du nouveau système : le tour courant a été sauté ; le marque 'skipped' et remet le checkpoint à 1 si state.skippedLap.
+New system hook: the current lap was skipped; marks it 'skipped' and resets the checkpoint to 1 if state.skippedLap.
 
-- `state` (*table*) : État du véhicule.
-- `info` (*table*) : Non utilisé.
+- `state` (*table*) : Vehicle state.
+- `info` (*table*) : Not used.
 
 #### `core_hotlapping.newRacePathnodeReached(state, info)`
 
-Hook du nouveau système : passage d'un pathnode du joueur. Termine la course si state.complete, sinon avance tour/checkpoint (ignore les recoveries) et met à jour les temps.
+New system hook: player passes a pathnode. Ends the race if state.complete, otherwise advances lap/checkpoint (ignores recoveries) and updates the times.
 
-- `state` (*table*) : État du véhicule dans la course (complete, events).
-- `info` (*table*) : Infos du passage (lapped).
+- `state` (*table*) : Vehicle state in the race (complete, events).
+- `info` (*table*) : Passing info (lapped).
 
 #### `core_hotlapping.newRaceStart(race)`
 
-Hook du nouveau système de course : démarre le suivi (course fermée, tours depuis 1, horloge = race.time*1000) et détecte les circuits à branches (comparaisons désactivées).
+New race system hook: starts tracking (closed race, laps from 1, clock = race.time*1000) and detects branching circuits (comparisons disabled).
 
-- `race` (*table*) : Objet course (time, path.pathnodes, path.config.branching).
+- `race` (*table*) : Race object (time, path.pathnodes, path.config.branching).
 
 #### `core_hotlapping.onCheckPointPassed(index)`
 
-Prévu pour le passage d'un checkpoint (mode freeroam hérité) : si index est le prochain attendu, avance le compteur de tours/checkpoints. Aucun appel dans ce fichier.
+Intended for passing a checkpoint (legacy freeroam mode): if index is the next expected one, advances the lap/checkpoint counter. No call in this file.
 
-- `index` (*integer*) : Indice du checkpoint passé (0 = ligne de départ).
+- `index` (*integer*) : Index of the passed checkpoint (0 = start line).
 
 #### `core_hotlapping.onGameStateUpdate(...)`
 
-Hook de changement d'état de jeu : force le prochain envoi à l'UI.
+Game state change hook: forces the next send to the UI.
 
-- `...` (*any*) : Non utilisé.
+- `...` (*any*) : Not used.
 
 #### `core_hotlapping.onMenuToggled(...)`
 
-Hook d'ouverture/fermeture de menu : force le prochain envoi à l'UI.
+Menu open/close hook: forces the next send to the UI.
 
-- `...` (*any*) : Non utilisé.
+- `...` (*any*) : Not used.
 
 #### `core_hotlapping.onPreRender(dt, dtSim)`
 
-Hook de rendu : en édition, dessine sphères, colonnes verticales (la première en orange) et flèches de direction des checkpoints ; sinon fait rendre les marqueurs de course.
+Render hook: in edit mode, draws spheres, vertical columns (the first in orange) and direction arrows of the checkpoints; otherwise renders the race markers.
 
-- `dt` (*number*) : Delta temps de rendu en secondes.
-- `dtSim` (*number*) : Delta temps de simulation.
+- `dt` (*number*) : Render time delta in seconds.
+- `dtSim` (*number*) : Simulation time delta.
 
 #### `core_hotlapping.onRaceResult(final)`
 
-Hook de l'ancien système : fin de course ; arrête le chrono et stocke les temps détaillés dans scenario.detailedTimes.
+Old system hook: race end; stops the timer and stores the detailed times in scenario.detailedTimes.
 
-- `final` (*any*) : Non utilisé.
+- `final` (*any*) : Not used.
 
 #### `core_hotlapping.onRaceWaypointReached(wpInfo)`
 
-Hook de l'ancien système : le joueur a atteint un waypoint. Gère fin de course, changement de tour (lapDiff == 1) ou de checkpoint et met à jour les temps. Ignore les autres véhicules.
+Old system hook: the player reached a waypoint. Handles race end, lap change (lapDiff == 1) or checkpoint change and updates the times. Ignores the other vehicles.
 
 - `wpInfo` (*table*) : {vehicleId, next, lapDiff, …}.
 
 #### `core_hotlapping.onScreenFadeState(...)`
 
-Hook de fondu d'écran : force le prochain envoi à l'UI.
+Screen fade hook: forces the next send to the UI.
 
-- `...` (*any*) : Non utilisé.
+- `...` (*any*) : Not used.
 
 #### `core_hotlapping.onUpdate(dt, dtSim)`
 
-Hook par image : démarre la course quand le joueur entre dans le premier checkpoint, gère la pause, met à jour la course et le temps total, puis envoie l'état à l'UI.
+Per-frame hook: starts the race when the player enters the first checkpoint, handles pause, updates the race and the total time, then sends the state to the UI.
 
-- `dt` (*number*) : Delta temps réel en secondes.
-- `dtSim` (*number*) : Delta temps de simulation.
+- `dt` (*number*) : Real-time delta in seconds.
+- `dtSim` (*number*) : Simulation time delta.
 
 #### `core_hotlapping.onVehicleResetted(id)`
 
-Hook de reset de véhicule : si le joueur est remis près (moins de 80 m) du départ pendant une course, arrête l'IA et la replace à son point de départ.
+Vehicle reset hook: if the player is reset near (less than 80 m) the start during a race, stops the AI and puts it back at its start point.
 
-- `id` (*integer*) : Id du véhicule.
+- `id` (*integer*) : Vehicle id.
 
 #### `core_hotlapping.refreshTracklist()`
 
-Liste les circuits disponibles (niveau courant, plus anciens dans settings/hotlapping) sans extension.
+Lists the available circuits (current level, plus older ones in settings/hotlapping) without extension.
 
-- **renvoie** : string[] Noms de circuits (caractères alphanumériques, '-' et '_' avant le premier autre caractère).
+- **returns**: string[] Circuit names (alphanumeric characters, '-' and '_' before the first other character).
 
 #### `core_hotlapping.rename(oldName, newName)`
 
-Renomme un circuit du niveau courant (<ancien>.race.json -> <nouveau>.race.json).
+Renames a circuit of the current level (<old>.race.json -> <new>.race.json).
 
-- `oldName` (*string*) : Ancien nom sans extension.
-- `newName` (*string*) : Nouveau nom sans extension.
+- `oldName` (*string*) : Old name without extension.
+- `newName` (*string*) : New name without extension.
 
 #### `core_hotlapping.save(filePath)`
 
-Sauvegarde le circuit en JSON (gameplay/hotlapping/<niveau>/<date>.race.json par défaut), envoie HotlappingSuccessfullySaved à l'UI. Refuse si le chemin est invalide.
+Saves the circuit as JSON (gameplay/hotlapping/<level>/<date>.race.json by default), sends HotlappingSuccessfullySaved to the UI. Refuses if the path is invalid.
 
-- `filePath` (*string|nil*) : Chemin de sortie ; défaut daté dans le dossier du niveau courant.
+- `filePath` (*string|nil*) : Output path; default dated in the current level's folder.
 
 #### `core_hotlapping.setTime(ignoreNewLap)`
 
-Met à jour les temps courants : crée au besoin l'enregistrement du tour et du checkpoint, ferme le précédent, calcule durées, écarts par rapport au meilleur tour et met à jour le meilleur tour (comparaisons désactivées pour les courses à branches).
+Updates the current times: creates the lap and checkpoint record if needed, closes the previous one, computes durations, gaps relative to the best lap and updates the best lap (comparisons disabled for branching races).
 
-- `ignoreNewLap` (*any*) : Non utilisé dans le code.
+- `ignoreNewLap` (*any*) : Not used in the code.
 
 #### `core_hotlapping.setVisible(value)`
 
-Affiche ou cache les marqueurs de la course et coupe/remet le son des checkpoints.
+Shows or hides the race markers and mutes/unmutes the checkpoint sound.
 
-- `value` (*boolean*) : true = visibles.
+- `value` (*boolean*) : true = visible.
 
 #### `core_hotlapping.skipLap(keepLapProgress)`
 
-Passe le tour en cours (marqué 'skipped' dans les temps) via raceData:skipLap pour le véhicule joueur.
+Skips the current lap (marked 'skipped' in the times) via raceData:skipLap for the player vehicle.
 
-- `keepLapProgress` (*boolean|nil*) : Transmis à raceData:skipLap : conserver ou non la progression dans le tour (déduit du code).
+- `keepLapProgress` (*boolean|nil*) : Passed to raceData:skipLap: whether or not to keep the progress within the lap (inferred from code).
 
 #### `core_hotlapping.stopAi(respawn)`
 
-Arrête les véhicules marqués isHotlapping (ai.setMode('stop')) et, si respawn, les replace à leur position sauvegardée (recovery.loadHome).
+Stops the vehicles marked isHotlapping (ai.setMode('stop')) and, if respawn, puts them back at their saved position (recovery.loadHome).
 
-- `respawn` (*boolean|nil*) : true = remettre les véhicules à leur 'home'.
+- `respawn` (*boolean|nil*) : true = put the vehicles back to their 'home'.
 
-**Évènements UI (guihooks.trigger) :** `HotlappingResetApp`, `HotlappingSuccessfullyLoaded`, `HotlappingSuccessfullySaved`, `HotlappingTimer`, `HotlappingTimerPause`
+**UI events (guihooks.trigger):** `HotlappingResetApp`, `HotlappingSuccessfullyLoaded`, `HotlappingSuccessfullySaved`, `HotlappingTimer`, `HotlappingTimerPause`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`, `removeFile`, `renameFile`
 - `be:` `getEnabled`, `getObjectOOBBCenterXYZ`, `getPlayerVehicleID`, `getSurfaceHeightBelow`
 - `debugDrawer:` `drawCylinder`, `drawSphere`, `drawSquarePrism`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/hotlapping.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/hotlapping.lua`.*

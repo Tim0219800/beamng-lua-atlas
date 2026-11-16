@@ -1,0 +1,64 @@
+{
+  "path": "lua/ge/extensions/core/windowsConsole.lua",
+  "module": "Pont entre la fenêtre console native de Windows (C++) et Lua. Il remplit la liste déroulante des contextes d'exécution (GE-Lua, véhicule courant, chaque véhicule actif, GE-TorqueScript, CEF/UI - JS) et exécute la commande saisie dans le contexte choisi. Tout est appelé par le moteur ; un moddeur peut seulement écouter le hook onConsoleExecuteCommand.",
+  "notes": [
+    "Si les fonctions C++ consoleClearAvailableContexts etc. n'existent pas (autre plateforme), onExtensionLoaded renvoie false et l'extension reste inactive (refreshCombo ne fait rien).",
+    "Le contexte 'GE-Lua' n'est pas géré dans executeCommand : il est exécuté côté C++ (tryRunCommand est le rappel utilisé).",
+    "Les contextes véhicule sont nommés d'après mainPartName ; deux véhicules du même modèle partagent le même nom, donc nameVidMap n'en conserve qu'un."
+  ],
+  "fields": {},
+  "functions": {
+    "configure": {
+      "desc": "Reconstruit la liste des contextes disponibles dans la console (alias de refreshCombo). Appelé par le C++ quand la fenêtre console est activée.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "executeCommand": {
+      "desc": "Exécute une commande dans un contexte et émet le hook onConsoleExecuteCommand(context, cmd). 'GE-TorqueScript' passe par TorqueScript.eval, 'CEF/UI - JS' par be:queueJS, un nom de véhicule par queueLuaCommand sur ce véhicule.",
+      "params": {
+        "context": {"type": "string", "desc": "Nom du contexte choisi dans la console."},
+        "cmd": {"type": "string", "desc": "Texte de la commande."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement : active l'extension si les fonctions console du C++ existent.",
+      "params": {},
+      "returns": [{"type": "boolean|nil", "desc": "false si la console n'est pas disponible sur la plateforme."}],
+      "internal": true
+    },
+    "onVehicleActiveChanged": {
+      "desc": "Hook appelé quand un véhicule devient actif ou inactif : rafraîchit la liste des contextes (même fonction que configure).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook appelé à la destruction d'un véhicule : rafraîchit la liste des contextes.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Hook appelé à l'apparition d'un véhicule : rafraîchit la liste des contextes.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé au changement de véhicule joueur : rafraîchit la liste des contextes.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "tryRunCommand": {
+      "desc": "Exécute du texte Lua dans la VM GE : essaie loadstring(cmd), sinon loadstring('return ' .. cmd) pour afficher la valeur d'une expression, puis dump le résultat s'il n'est pas nil. Journalise « syntax error » si rien ne compile.",
+      "params": {"cmd": {"type": "string", "desc": "Code ou expression Lua."}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

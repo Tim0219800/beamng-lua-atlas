@@ -1,78 +1,174 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/rdp.lua",
-  "module": "Implémentation optimisée de l'algorithme de Ramer-Douglas-Peucker (RDP) pour simplifier des polylignes ayant trop de points. Utilise la distance au segment (et non à la droite infinie), une pile explicite à la place de la récursion et des tables réutilisées. Les variantes simplifyNodes* compactent les tableaux en place, y compris les tableaux parallèles (largeurs, normales, vitesses, limites de vitesse).",
-  "usage": "local rdp = extensions.editor_toolUtilities_rdp\nlocal n = rdp.simplifyNodes(nodes, 2.0) -- nodes : liste de vec3, modifiée en place\n-- n = nombre de points conservés",
+  "module": "Optimized implementation of the Ramer-Douglas-Peucker (RDP) algorithm to simplify polylines with too many points. Uses the distance to the segment (not to the infinite line), an explicit stack instead of recursion and reused tables. The simplifyNodes* variants compact the arrays in place, including parallel arrays (widths, normals, velocities, speed limits).",
+  "usage": "local rdp = extensions.editor_toolUtilities_rdp\nlocal n = rdp.simplifyNodes(nodes, 2.0) -- nodes: list of vec3, modified in place\n-- n = number of points kept",
   "notes": [
-    "Les nœuds doivent être des vec3 (ou objets ayant la méthode squaredDistanceToLineSegment).",
-    "Le premier et le dernier point sont toujours conservés.",
-    "Tolérance par défaut 6.0 (unités du monde, mètres) quand tol vaut nil.",
-    "Avec 2 points ou moins, les fonctions simplify* renvoient #nodes sans rien modifier.",
-    "Les tables d'indices et la pile sont partagées au niveau du module : non réentrant, et la table renvoyée par rdpIndices est écrasée si on ne passe pas retListP.",
-    "Les tableaux parallèles (widths, normals…) doivent avoir au moins la longueur de nodes."
+    "The nodes must be vec3 (or objects with the squaredDistanceToLineSegment method).",
+    "The first and last points are always kept.",
+    "Default tolerance 6.0 (world units, meters) when tol is nil.",
+    "With 2 points or fewer, the simplify* functions return #nodes without modifying anything.",
+    "The index tables and the stack are shared at module level: not reentrant, and the table returned by rdpIndices is overwritten if retListP is not passed.",
+    "The parallel arrays (widths, normals...) must be at least as long as nodes."
   ],
   "functions": {
     "rdpIndices": {
-      "desc": "Calcule les indices à conserver par RDP entre startIdx et endIdx. La table de sortie est vidée puis remplie ; l'ordre n'est pas strictement croissant selon la pile mais le premier indice est startIdx.",
+      "desc": "Computes the indices to keep by RDP between startIdx and endIdx. The output table is emptied then filled; the order is not strictly increasing because of the stack, but the first index is startIdx.",
       "params": {
-        "nodes": {"type": "table", "desc": "Liste de vec3."},
-        "startIdx": {"type": "integer", "desc": "Indice de départ (1 pour tout le tracé)."},
-        "endIdx": {"type": "integer", "desc": "Indice de fin."},
-        "tol": {"type": "number", "desc": "Distance maximale tolérée au segment."},
-        "retListP": {"type": "table|nil", "desc": "Table de sortie réutilisable ; créée si nil."}
+        "nodes": {
+          "type": "table",
+          "desc": "List of vec3."
+        },
+        "startIdx": {
+          "type": "integer",
+          "desc": "Start index (1 for the whole path)."
+        },
+        "endIdx": {
+          "type": "integer",
+          "desc": "End index."
+        },
+        "tol": {
+          "type": "number",
+          "desc": "Maximum tolerated distance to the segment."
+        },
+        "retListP": {
+          "type": "table|nil",
+          "desc": "Reusable output table; created if nil."
+        }
       },
-      "returns": [{"type": "table", "desc": "Liste des indices conservés."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of kept indices."
+        }
+      ],
       "internal": false
     },
     "simplifyNodes": {
-      "desc": "Simplifie nodes en place et supprime les points en trop.",
+      "desc": "Simplifies nodes in place and removes the excess points.",
       "params": {
-        "nodes": {"type": "table", "desc": "Liste de vec3, modifiée."},
-        "tol": {"type": "number|nil", "desc": "Tolérance (défaut 6.0)."}
+        "nodes": {
+          "type": "table",
+          "desc": "List of vec3, modified."
+        },
+        "tol": {
+          "type": "number|nil",
+          "desc": "Tolerance (default 6.0)."
+        }
       },
-      "returns": [{"type": "integer", "desc": "Nombre de points restants."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of remaining points."
+        }
+      ],
       "internal": false
     },
     "simplifyNodesWidths": {
-      "desc": "Comme simplifyNodes, en gardant le tableau widths aligné avec nodes.",
+      "desc": "Like simplifyNodes, keeping the widths array aligned with nodes.",
       "params": {
-        "nodes": {"type": "table", "desc": "Points, modifiés en place."},
-        "widths": {"type": "table", "desc": "Largeurs associées, modifiées en place."},
-        "tol": {"type": "number|nil", "desc": "Tolérance (défaut 6.0)."}
+        "nodes": {
+          "type": "table",
+          "desc": "Points, modified in place."
+        },
+        "widths": {
+          "type": "table",
+          "desc": "Associated widths, modified in place."
+        },
+        "tol": {
+          "type": "number|nil",
+          "desc": "Tolerance (default 6.0)."
+        }
       },
-      "returns": [{"type": "integer", "desc": "Nombre de points restants."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of remaining points."
+        }
+      ],
       "internal": false
     },
     "simplifyNodesWidthsNormals": {
-      "desc": "Comme simplifyNodes, en gardant widths et normals alignés avec nodes.",
+      "desc": "Like simplifyNodes, keeping widths and normals aligned with nodes.",
       "params": {
-        "nodes": {"type": "table", "desc": "Points."},
-        "widths": {"type": "table", "desc": "Largeurs."},
-        "normals": {"type": "table", "desc": "Normales."},
-        "tol": {"type": "number|nil", "desc": "Tolérance (défaut 6.0)."}
+        "nodes": {
+          "type": "table",
+          "desc": "Points."
+        },
+        "widths": {
+          "type": "table",
+          "desc": "Widths."
+        },
+        "normals": {
+          "type": "table",
+          "desc": "Normals."
+        },
+        "tol": {
+          "type": "number|nil",
+          "desc": "Tolerance (default 6.0)."
+        }
       },
-      "returns": [{"type": "integer", "desc": "Nombre de points restants."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of remaining points."
+        }
+      ],
       "internal": false
     },
     "simplifyNodesVels": {
-      "desc": "Comme simplifyNodes, en gardant velocities aligné avec nodes.",
+      "desc": "Like simplifyNodes, keeping velocities aligned with nodes.",
       "params": {
-        "nodes": {"type": "table", "desc": "Points."},
-        "velocities": {"type": "table", "desc": "Vitesses associées."},
-        "tol": {"type": "number|nil", "desc": "Tolérance (défaut 6.0)."}
+        "nodes": {
+          "type": "table",
+          "desc": "Points."
+        },
+        "velocities": {
+          "type": "table",
+          "desc": "Associated velocities."
+        },
+        "tol": {
+          "type": "number|nil",
+          "desc": "Tolerance (default 6.0)."
+        }
       },
-      "returns": [{"type": "integer", "desc": "Nombre de points restants."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of remaining points."
+        }
+      ],
       "internal": false
     },
     "simplifyNodesWidthsVelVelLimits": {
-      "desc": "Comme simplifyNodes, en gardant widths, velocities et velLimits alignés avec nodes.",
+      "desc": "Like simplifyNodes, keeping widths, velocities and velLimits aligned with nodes.",
       "params": {
-        "nodes": {"type": "table", "desc": "Points."},
-        "widths": {"type": "table", "desc": "Largeurs."},
-        "velocities": {"type": "table", "desc": "Vitesses."},
-        "velLimits": {"type": "table", "desc": "Limites de vitesse."},
-        "tol": {"type": "number|nil", "desc": "Tolérance (défaut 6.0)."}
+        "nodes": {
+          "type": "table",
+          "desc": "Points."
+        },
+        "widths": {
+          "type": "table",
+          "desc": "Widths."
+        },
+        "velocities": {
+          "type": "table",
+          "desc": "Speeds."
+        },
+        "velLimits": {
+          "type": "table",
+          "desc": "Speed limits."
+        },
+        "tol": {
+          "type": "number|nil",
+          "desc": "Tolerance (default 6.0)."
+        }
       },
-      "returns": [{"type": "integer", "desc": "Nombre de points restants."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of remaining points."
+        }
+      ],
       "internal": false
     }
   }

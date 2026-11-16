@@ -1,56 +1,56 @@
 # `util_windDebug`
 
-*Fichier : `lua/ge/extensions/util/windDebug.lua` · VM : Game Engine (GE) · 70 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/windDebug.lua` · VM: Game Engine (GE) · 70 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_windDebug` : `extensions.load("util_windDebug")`, puis la globale `util_windDebug`
+**Access:** extension `util_windDebug`: `extensions.load("util_windDebug")`, then the global `util_windDebug`
 
-Visualise le champ de vent partagé : échantillonne `be:getWindAt()` sur une grille de 21 x 21 points espacés de 5 m centrée sur la caméra, et dessine une flèche par point (direction = vent, longueur et couleur = vitesse, du bleu au rouge à 20 m/s). Un texte au centre affiche la vitesse du vent en m/s et km/h. Les rafales s'animent car le champ varie dans le temps.
+Visualizes the shared wind field: samples `be:getWindAt()` on a 21 x 21 grid of points spaced 5 m apart centered on the camera, and draws one arrow per point (direction = wind, length and color = speed, from blue to red at 20 m/s). Text in the center shows the wind speed in m/s and km/h. Gusts are animated because the field varies over time.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('util_windDebug'); util_windDebug.toggle()
 ```
 
-## Remarques
+## Notes
 
-- Désactivé par défaut (enabled = false) ; ne dessine que si enabled est vrai.
-- Les flèches sont posées à 1 m au-dessus du terrain (core_terrain.getTerrainHeight) ou à 2 m sous la caméra si le terrain n'est pas disponible.
-- Les cellules où le vent est inférieur à 0,05 m/s ne sont pas dessinées. Longueur d'une flèche : 0,15 m par m/s, plafonnée à 4,5 m.
+- Disabled by default (enabled = false); draws only if enabled is true.
+- The arrows are placed 1 m above the terrain (core_terrain.getTerrainHeight) or 2 m below the camera if the terrain is not available.
+- Cells where the wind is below 0.05 m/s are not drawn. Arrow length: 0.15 m per m/s, capped at 4.5 m.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_windDebug.onPreRender(dtReal, dtSim)` | Hook de pré-rendu : si enabled, dessine la grille de flèches de vent autour de la caméra et le texte de vitesse au centre. *(interne)* *(hook)* | 43 |
-| `util_windDebug.setEnabled(v)` | Active ou désactive l'affichage. | 66 |
-| `util_windDebug.toggle()` | Inverse l'état d'affichage. | 67 |
+| `util_windDebug.onPreRender(dtReal, dtSim)` | Pre-render hook: if enabled, draws the grid of wind arrows around the camera and the speed text in the center. *(internal)* *(hook)* | 43 |
+| `util_windDebug.setEnabled(v)` | Enables or disables the display. | 66 |
+| `util_windDebug.toggle()` | Toggles the display state. | 67 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_windDebug.onPreRender(dtReal, dtSim)`
 
-Hook de pré-rendu : si enabled, dessine la grille de flèches de vent autour de la caméra et le texte de vitesse au centre.
+Pre-render hook: if enabled, draws the grid of wind arrows around the camera and the speed text in the center.
 
-- `dtReal` (*number*) : temps réel écoulé, en secondes
-- `dtSim` (*number*) : temps simulé écoulé, en secondes
+- `dtReal` (*number*) : real time elapsed, in seconds
+- `dtSim` (*number*) : simulated time elapsed, in seconds
 
 #### `util_windDebug.setEnabled(v)`
 
-Active ou désactive l'affichage.
+Enables or disables the display.
 
-- `v` (*any*) : toute valeur ; convertie en booléen (vrai si truthy)
+- `v` (*any*) : any value; converted to a boolean (true if truthy)
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `enabled` | boolean | Vrai quand la visualisation du vent est active. |
+| `enabled` | boolean | True when the wind visualization is active. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getWindAt`
 - `debugDrawer:` `drawLineInstance`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/windDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/windDebug.lua`.*

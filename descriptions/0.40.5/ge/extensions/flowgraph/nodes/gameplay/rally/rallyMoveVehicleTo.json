@@ -1,12 +1,24 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyMoveVehicleTo.lua",
-  "module": "Nœud flowgraph « Rally Move Vehicle To » (catégorie repeat_instant, tag rally). Déplace un véhicule pour que le milieu de son pare-chocs avant, au niveau du bas de sa boîte englobante de spawn (OOBB), soit à la position pos avec la rotation rot. Il calcule le décalage entre la position du véhicule et ce point avant-bas dans le repère du véhicule, le réapplique dans le repère cible, puis appelle veh:setPositionRotation. Entrées : vehId, pos (vec3), rot (quat).",
-  "notes": ["La coordonnée Z finale vaut pos.z + 0.25 (marge fixe), et non la valeur calculée par le décalage.", "Si le véhicule est introuvable, un avertissement est loggé."],
+  "module": "Flowgraph node \"Rally Move Vehicle To\" (category repeat_instant, tag rally). Moves a vehicle so that the middle of its front bumper, at the level of the bottom of its spawn bounding box (OOBB), is at position pos with rotation rot. It computes the offset between the vehicle position and this front-bottom point in the vehicle frame, reapplies it in the target frame, then calls veh:setPositionRotation. Inputs: vehId, pos (vec3), rot (quat).",
+  "notes": [
+    "The final Z coordinate is pos.z + 0.25 (fixed margin), not the value computed from the offset.",
+    "If the vehicle cannot be found, a warning is logged."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Si vehId, pos et rot sont fournis, replace le véhicule selon la position avant-bas cible.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+        "work": {
+          "desc": "If vehId, pos and rot are provided, repositions the vehicle according to the target front-bottom position.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph engine arguments (unused)."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

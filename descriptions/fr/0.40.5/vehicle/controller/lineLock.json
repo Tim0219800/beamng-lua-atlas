@@ -1,0 +1,90 @@
+{
+  "path": "lua/vehicle/controller/lineLock.lua",
+  "module": "Contrôleur auxiliaire « line lock » de dragster (type \"auxiliary\", defaultOrder 40) : verrouille la pression de frein des roues listées (typiquement l'avant) au niveau actuel pour permettre de chauffer les pneus arrière. À l'activation, il mémorise le couple de frein principal courant de chaque roue verrouillée et le réapplique à chaque pas dans wd.desiredBrakingTorque tant que le line lock est actif. Une entrée « Line Lock » est ajoutée au menu radial.",
+  "usage": "local ll = controller.getControllerSafe('lineLock')\nll.toggleLineLock()",
+  "notes": [
+    "Clés jbeam (défaut) : name (nom du contrôleur, utilisé par le menu radial pour le retrouver), lockedLines (liste de noms de roues), electricsName (\"linelock\").",
+    "electrics.values[electricsName] vaut 1 quand actif, 0 sinon. Un message d'interface indique les roues verrouillées et le pourcentage de frein au moment de l'activation.",
+    "setLineLock(value) : value >= 1 active ; toute valeur < 1 désactive (couples mémorisés remis à 0)."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "40."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Lit les roues à verrouiller, enregistre l'entrée du menu radial.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Écrit l'état dans electrics.values.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateWheelsIntermediate": {
+      "desc": "Chaque pas : applique les couples de frein mémorisés aux roues verrouillées quand le line lock est actif.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setLineLock": {
+      "desc": "Active ou désactive le line lock et mémorise le couple de frein courant des roues verrouillées.",
+      "params": {
+        "value": {
+          "type": "number",
+          "desc": "1 pour activer, 0 pour désactiver."
+        }
+      },
+      "returns": []
+    },
+    "toggleLineLock": {
+      "desc": "Inverse l'état du line lock.",
+      "params": {},
+      "returns": []
+    },
+    "getState": {
+      "desc": "Renvoie l'état actif et les couples mémorisés par roue.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Table d'état (réutilisée)."
+        }
+      ]
+    },
+    "setState": {
+      "desc": "Restaure l'état renvoyé par getState.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Table d'état."
+        }
+      },
+      "returns": []
+    }
+  }
+}

@@ -1,142 +1,142 @@
 # `core_audioRibbon`
 
-*Fichier : `lua/ge/extensions/core/audioRibbon.lua` · VM : Game Engine (GE) · 846 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/audioRibbon.lua` · VM: Game Engine (GE) · 846 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_audioRibbon` : `extensions.load("core_audioRibbon")`, puis la globale `core_audioRibbon`
+**Access:** extension `core_audioRibbon`: `extensions.load("core_audioRibbon")`, then the global `core_audioRibbon`
 
-Extension GE (core_audioRibbon) : audio dynamique pour des 'rubans' (rivières, cascades, etc.) définis dans l'éditeur. Un ruban est une bande de quadrilatères (nodes par paires gauche/droite, avec profondeur). À chaque frame, pour l'auditeur (SFXSystem), le module suit le point le plus proche sur chaque ruban proche et pilote jusqu'à 5 émetteurs SFX par évènement (1 'A' central/ambiant, puis 4 autour de l'auditeur : F devant, B derrière, R droite, L gauche) en réglant volume, pitch, color et texture (RTPC) d'après largeur, profondeur et vitesse du ruban. Les rubans sont chargés de levels/<niveau>/dynamicAudioEmitters/ribbonData.audioSFX.json (format JSON lignes, un ruban par ligne), écrits par l'éditeur à la sauvegarde. Beaucoup de fonctions exportées servent surtout à l'éditeur.
+GE extension (core_audioRibbon): dynamic audio for 'ribbons' (rivers, waterfalls, etc.) defined in the editor. A ribbon is a strip of quadrilaterals (nodes in left/right pairs, with depth). Every frame, for the listener (SFXSystem), the module tracks the closest point on each nearby ribbon and drives up to 5 SFX emitters per event (1 central/ambient 'A', then 4 around the listener: F front, B back, R right, L left), setting volume, pitch, color and texture (RTPC) from the ribbon's width, depth and speed. Ribbons are loaded from levels/<level>/dynamicAudioEmitters/ribbonData.audioSFX.json (JSON lines format, one ribbon per line), written by the editor on save. Many exported functions are mainly for the editor.
 
-## Exemple
+## Example
 
 ```lua
 local rib = core_audioRibbon.getRibbons()
 for i, r in ipairs(rib or {}) do print(r.name, r.numSegs) end
 ```
 
-## Remarques
+## Notes
 
-- Structure d'un ruban : {persistantId, name, isEnabled, isAmbient, isUpRibbon, isTopActive, isQuadAndVolume, isMuteA..D, speed, nodes (vec3 par paires), depths (par noeud), widths (par paire, calculé), numSegs (calculé), emitters[1..5]}.
-- Les émetteurs d'un ruban (emitters) sont des 'hôtes' : {bestSeg, dir, vol, pos, bN, eventNameStr}. emitters[1] = évènement A (centre/ambiance), 2 = F (devant), 3 = B (derrière), 4 = R (droite), 5 = L (gauche).
-- Gestion de distance : liste 'near' (au plus les 2 rubans les plus proches, tous émetteurs actifs), 'mid' (point interne seulement) et 'far' (un ruban par frame en round robin). Limite near/far : 400 m (nearFarLimitSq = 400²).
-- Le suivi du point le plus proche utilise une marche directionnelle (1 segment par frame) et une sonde aléatoire (bruit bleu) toutes les 3 frames pour échapper aux minima locaux.
-- Coefficients de pondération provisoires dans le code (commentaire 'TODO - REMOVE LATER WHEN SYSTEM IS TUNED') : largeur 100, profondeur 100, vitesse 100, offset exponentiel 800.
-- Incohérence : readRibbonsFromFile ne relit pas isMuteA..D (le fichier ne les contient pas) : après chargement d'un niveau ils valent nil (donc non muets) ; seul onSerialize/onDeserialized les conserve lors d'un rechargement Lua.
-- Effet de bord : onSerialize supprime tous les rubans et émetteurs après les avoir copiés (removeRibbon pour chaque ruban).
-- Incohérence : createSfxEmitter utilise ffi.string(eventName) alors que eventName est une chaîne Lua (accepté par LuaJIT) ; le nom d'évènement est donc converti inutilement.
+- Ribbon structure: {persistantId, name, isEnabled, isAmbient, isUpRibbon, isTopActive, isQuadAndVolume, isMuteA..D, speed, nodes (vec3 in pairs), depths (per node), widths (per pair, computed), numSegs (computed), emitters[1..5]}.
+- A ribbon's emitters (emitters) are 'hosts': {bestSeg, dir, vol, pos, bN, eventNameStr}. emitters[1] = event A (center/ambient), 2 = F (front), 3 = B (back), 4 = R (right), 5 = L (left).
+- Distance management: 'near' list (at most the 2 closest ribbons, all emitters active), 'mid' (internal point only) and 'far' (one ribbon per frame in round robin). Near/far limit: 400 m (nearFarLimitSq = 400²).
+- Closest-point tracking uses a directional walk (1 segment per frame) and a random probe (blue noise) every 3 frames to escape local minima.
+- Provisional weighting coefficients in the code (comment 'TODO - REMOVE LATER WHEN SYSTEM IS TUNED'): width 100, depth 100, speed 100, exponential offset 800.
+- Inconsistency: readRibbonsFromFile does not re-read isMuteA..D (the file does not contain them): after a level loads they are nil (so not muted); only onSerialize/onDeserialized keeps them across a Lua reload.
+- Side effect: onSerialize deletes all ribbons and emitters after copying them (removeRibbon for each ribbon).
+- Inconsistency: createSfxEmitter uses ffi.string(eventName) although eventName is a Lua string (accepted by LuaJIT); the event name is therefore converted needlessly.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_audioRibbon.clearAllSFXEmitters()` | Supprime tous les objets SFXEmitter dynamiques (5 axes) et vide leur table. | 494 |
-| `core_audioRibbon.clearNearFarLists()` | Vide les listes near, mid et far (elles seront reconstruites à la frame suivante). | 802 |
-| `core_audioRibbon.clearRibbonNames()` | Vide la table des noms de rubans. | 809 |
-| `core_audioRibbon.createEmitterHost(eventName)` | Crée l'enregistrement d'un hôte d'émetteur dynamique (position initiale à l'infini, bestSeg 0, direction 1). | 535 |
-| `core_audioRibbon.getFarList()` | Renvoie la liste far (rubans lointains, un seul visité par frame). | 817 |
-| `core_audioRibbon.getMidList()` | Renvoie la liste mid (rubans à moins de 400 m, seulement le point interne mis à jour). | 816 |
-| `core_audioRibbon.getNearList()` | Renvoie la liste near (persistantId -> indice de ruban), au plus 2 rubans. | 815 |
-| `core_audioRibbon.getRibbonNames()` | Renvoie la table des identifiants de rubans connus (persistantId -> true). | 814 |
-| `core_audioRibbon.getRibbons()` | Renvoie la liste des rubans (nil avant le premier chargement). | 812 |
-| `core_audioRibbon.getSfxEmitters()` | Renvoie les 5 tables d'émetteurs SFX par axe, indexées par nom d'évènement ({emitter, vol, pitch, color, texture, pos}). | 818 |
-| `core_audioRibbon.onClientCustomObjectSpawning()` | Hook appelé quand les objets du niveau sont créés : réinitialise les rubans puis relit le fichier ribbonData.audioSFX.json du niveau. *(interne)* *(hook)* | 792 |
-| `core_audioRibbon.onClientEndMission()` | Hook appelé à la fin du niveau : supprime les émetteurs et vide les rubans (resetRibbons). *(interne)* *(hook)* | 778 |
-| `core_audioRibbon.onDeserialized(data)` | Hook de restauration après rechargement Lua : reconstruit les rubans (nodes en vec3, hôtes d'émetteurs, widths, numSegs) et la table des noms. *(interne)* *(hook)* | 721 |
-| `core_audioRibbon.onEditorBeforeSaveLevel()` | Hook appelé avant la sauvegarde du niveau dans l'éditeur : écrit les rubans dans levels/<niveau>/dynamicAudioEmitters/ribbonData.audioSFX.json (triés par nom). *(interne)* *(hook)* | 769 |
-| `core_audioRibbon.onExit()` | Hook appelé à la fermeture du jeu : supprime tous les émetteurs SFX dynamiques. *(interne)* *(hook)* | 494 |
-| `core_audioRibbon.onSerialize()` | Hook de sérialisation avant rechargement Lua : renvoie une copie complète des rubans puis SUPPRIME tous les rubans et émetteurs. Renvoie nil s'il n'y a pas de ruban. *(interne)* *(hook)* | 708 |
-| `core_audioRibbon.onUpdate(dtReal, dtSim, dtRaw)` | Hook appelé à chaque frame : lit la pose de l'auditeur, met à jour les listes near/mid/far, calcule pour chaque ruban proche les points les plus proches et les RTPC, puis crée/pilote les émetteurs SFXEmitter (positions et setVolumePitchCT). Ne fait rien s'il n'y a pas de ruban. *(interne)* *(hook)* | 311 |
-| `core_audioRibbon.recomputeMap()` | Reconstruit la table des noms (persistantId -> true) à partir des rubans. | 486 |
-| `core_audioRibbon.removeRibbon(idx)` | Supprime tous les émetteurs SFX, retire le ruban d'indice idx de la liste et de la table des noms, et vide les listes near/mid/far. | 506 |
-| `core_audioRibbon.setRibbons(val)` | Remplace la liste des rubans (utilisé par l'éditeur). | 813 |
-| `core_audioRibbon.updateRibbonData(ribbon)` | À appeler après toute modification des noeuds d'un ruban : remet bestSeg=1 et dir=1 pour les 5 hôtes, recalcule ribbon.numSegs = max(0, (#nodes - 4)/2 + 1) et ribbon.widths (distance entre les deux noeuds de chaque paire). | 517 |
+| `core_audioRibbon.clearAllSFXEmitters()` | Removes all dynamic SFXEmitter objects (5 axes) and empties their table. | 494 |
+| `core_audioRibbon.clearNearFarLists()` | Empties the near, mid and far lists (they will be rebuilt next frame). | 802 |
+| `core_audioRibbon.clearRibbonNames()` | Empties the ribbon names table. | 809 |
+| `core_audioRibbon.createEmitterHost(eventName)` | Creates the record of a dynamic emitter host (initial position at infinity, bestSeg 0, direction 1). | 535 |
+| `core_audioRibbon.getFarList()` | Returns the far list (distant ribbons, only one visited per frame). | 817 |
+| `core_audioRibbon.getMidList()` | Returns the mid list (ribbons within 400 m, only the internal point updated). | 816 |
+| `core_audioRibbon.getNearList()` | Returns the near list (persistantId -> ribbon index), at most 2 ribbons. | 815 |
+| `core_audioRibbon.getRibbonNames()` | Returns the table of known ribbon identifiers (persistantId -> true). | 814 |
+| `core_audioRibbon.getRibbons()` | Returns the list of ribbons (nil before the first load). | 812 |
+| `core_audioRibbon.getSfxEmitters()` | Returns the 5 per-axis SFX emitter tables, keyed by event name ({emitter, vol, pitch, color, texture, pos}). | 818 |
+| `core_audioRibbon.onClientCustomObjectSpawning()` | Hook called when the level objects are created: resets the ribbons then re-reads the level's ribbonData.audioSFX.json file. *(internal)* *(hook)* | 792 |
+| `core_audioRibbon.onClientEndMission()` | Hook called at the end of the level: removes the emitters and empties the ribbons (resetRibbons). *(internal)* *(hook)* | 778 |
+| `core_audioRibbon.onDeserialized(data)` | Restore hook after Lua reload: rebuilds the ribbons (nodes as vec3, emitter hosts, widths, numSegs) and the names table. *(internal)* *(hook)* | 721 |
+| `core_audioRibbon.onEditorBeforeSaveLevel()` | Hook called before the level is saved in the editor: writes the ribbons to levels/<level>/dynamicAudioEmitters/ribbonData.audioSFX.json (sorted by name). *(internal)* *(hook)* | 769 |
+| `core_audioRibbon.onExit()` | Hook called when the game closes: removes all dynamic SFX emitters. *(internal)* *(hook)* | 494 |
+| `core_audioRibbon.onSerialize()` | Serialization hook before Lua reload: returns a full copy of the ribbons then DELETES all ribbons and emitters. Returns nil if there are no ribbons. *(internal)* *(hook)* | 708 |
+| `core_audioRibbon.onUpdate(dtReal, dtSim, dtRaw)` | Hook called every frame: reads the listener pose, updates the near/mid/far lists, computes the closest points and RTPCs for each nearby ribbon, then creates/drives the SFXEmitter emitters (positions and setVolumePitchCT). Does nothing if there are no ribbons. *(internal)* *(hook)* | 311 |
+| `core_audioRibbon.recomputeMap()` | Rebuilds the names table (persistantId -> true) from the ribbons. | 486 |
+| `core_audioRibbon.removeRibbon(idx)` | Removes all SFX emitters, removes the ribbon at index idx from the list and from the names table, and empties the near/mid/far lists. | 506 |
+| `core_audioRibbon.setRibbons(val)` | Replaces the list of ribbons (used by the editor). | 813 |
+| `core_audioRibbon.updateRibbonData(ribbon)` | To call after any change to a ribbon's nodes: resets bestSeg=1 and dir=1 for the 5 hosts, recomputes ribbon.numSegs = max(0, (#nodes - 4)/2 + 1) and ribbon.widths (distance between the two nodes of each pair). | 517 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_audioRibbon.createEmitterHost(eventName)`
 
-Crée l'enregistrement d'un hôte d'émetteur dynamique (position initiale à l'infini, bestSeg 0, direction 1).
+Creates the record of a dynamic emitter host (initial position at infinity, bestSeg 0, direction 1).
 
-- `eventName` (*string*) : Nom de l'évènement FMOD
-- **renvoie** : table {bestSeg, dir, vol, pos, bN, eventNameStr}
+- `eventName` (*string*) : FMOD event name
+- **returns**: table {bestSeg, dir, vol, pos, bN, eventNameStr}
 
 #### `core_audioRibbon.getFarList()`
 
-Renvoie la liste far (rubans lointains, un seul visité par frame).
+Returns the far list (distant ribbons, only one visited per frame).
 
-- **renvoie** : table<string, integer> Liste far
+- **returns**: table<string, integer> Far list
 
 #### `core_audioRibbon.getMidList()`
 
-Renvoie la liste mid (rubans à moins de 400 m, seulement le point interne mis à jour).
+Returns the mid list (ribbons within 400 m, only the internal point updated).
 
-- **renvoie** : table<string, integer> Liste mid
+- **returns**: table<string, integer> Mid list
 
 #### `core_audioRibbon.getNearList()`
 
-Renvoie la liste near (persistantId -> indice de ruban), au plus 2 rubans.
+Returns the near list (persistantId -> ribbon index), at most 2 ribbons.
 
-- **renvoie** : table<string, integer> Liste near
+- **returns**: table<string, integer> Near list
 
 #### `core_audioRibbon.getRibbonNames()`
 
-Renvoie la table des identifiants de rubans connus (persistantId -> true).
+Returns the table of known ribbon identifiers (persistantId -> true).
 
-- **renvoie** : table<string, boolean> Table des identifiants
+- **returns**: table<string, boolean> Table of identifiers
 
 #### `core_audioRibbon.getRibbons()`
 
-Renvoie la liste des rubans (nil avant le premier chargement).
+Returns the list of ribbons (nil before the first load).
 
-- **renvoie** : table|nil Liste de rubans
+- **returns**: table|nil List of ribbons
 
 #### `core_audioRibbon.getSfxEmitters()`
 
-Renvoie les 5 tables d'émetteurs SFX par axe, indexées par nom d'évènement ({emitter, vol, pitch, color, texture, pos}).
+Returns the 5 per-axis SFX emitter tables, keyed by event name ({emitter, vol, pitch, color, texture, pos}).
 
-- **renvoie** : table Tableau de 5 tables
+- **returns**: table Array of 5 tables
 
 #### `core_audioRibbon.onDeserialized(data)`
 
-Hook de restauration après rechargement Lua : reconstruit les rubans (nodes en vec3, hôtes d'émetteurs, widths, numSegs) et la table des noms.
+Restore hook after Lua reload: rebuilds the ribbons (nodes as vec3, emitter hosts, widths, numSegs) and the names table.
 
-- `data` (*table|nil*) : Données de onSerialize
+- `data` (*table|nil*) : Data from onSerialize
 
 #### `core_audioRibbon.onSerialize()`
 
-Hook de sérialisation avant rechargement Lua : renvoie une copie complète des rubans puis SUPPRIME tous les rubans et émetteurs. Renvoie nil s'il n'y a pas de ruban.
+Serialization hook before Lua reload: returns a full copy of the ribbons then DELETES all ribbons and emitters. Returns nil if there are no ribbons.
 
-- **renvoie** : table|nil Liste de rubans sérialisés
+- **returns**: table|nil List of serialized ribbons
 
 #### `core_audioRibbon.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé à chaque frame : lit la pose de l'auditeur, met à jour les listes near/mid/far, calcule pour chaque ruban proche les points les plus proches et les RTPC, puis crée/pilote les émetteurs SFXEmitter (positions et setVolumePitchCT). Ne fait rien s'il n'y a pas de ruban.
+Hook called every frame: reads the listener pose, updates the near/mid/far lists, computes the closest points and RTPCs for each nearby ribbon, then creates/drives the SFXEmitter emitters (positions and setVolumePitchCT). Does nothing if there are no ribbons.
 
-- `dtReal` (*number*) : Pas de temps réel (s)
-- `dtSim` (*number*) : Pas de temps simulation (s)
-- `dtRaw` (*number*) : Pas de temps brut (s)
+- `dtReal` (*number*) : Real time step (s)
+- `dtSim` (*number*) : Simulation time step (s)
+- `dtRaw` (*number*) : Raw time step (s)
 
 #### `core_audioRibbon.removeRibbon(idx)`
 
-Supprime tous les émetteurs SFX, retire le ruban d'indice idx de la liste et de la table des noms, et vide les listes near/mid/far.
+Removes all SFX emitters, removes the ribbon at index idx from the list and from the names table, and empties the near/mid/far lists.
 
-- `idx` (*integer*) : Indice du ruban dans getRibbons()
+- `idx` (*integer*) : Ribbon index in getRibbons()
 
 #### `core_audioRibbon.setRibbons(val)`
 
-Remplace la liste des rubans (utilisé par l'éditeur).
+Replaces the list of ribbons (used by the editor).
 
-- `val` (*table*) : Nouvelle liste
+- `val` (*table*) : New list
 
 #### `core_audioRibbon.updateRibbonData(ribbon)`
 
-À appeler après toute modification des noeuds d'un ruban : remet bestSeg=1 et dir=1 pour les 5 hôtes, recalcule ribbon.numSegs = max(0, (#nodes - 4)/2 + 1) et ribbon.widths (distance entre les deux noeuds de chaque paire).
+To call after any change to a ribbon's nodes: resets bestSeg=1 and dir=1 for the 5 hosts, recomputes ribbon.numSegs = max(0, (#nodes - 4)/2 + 1) and ribbon.widths (distance between the two nodes of each pair).
 
-- `ribbon` (*table*) : Ruban (nodes, emitters) modifié en place
+- `ribbon` (*table*) : Ribbon (nodes, emitters) modified in place
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 - `Sim.` `upcast`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/audioRibbon.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/audioRibbon.lua`.*

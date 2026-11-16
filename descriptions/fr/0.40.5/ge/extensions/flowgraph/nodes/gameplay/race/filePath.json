@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/filePath.lua",
+  "module": "Nœud flowgraph « File Path » (catégorie once_p_duration, tag scenario). Charge un chemin de course (fichier .race.json) en objet gameplay/race/path, le désérialise, l'inverse si demandé, appelle autoConfig() et le publie. Entrées : file (string, chemin avec ou sans .race.json, résolu par mgr:getRelativeAbsolutePath), reverse (bool). Sorties : pathData (table 'pathData' pour les autres nœuds de course), name, desc, branching, closed, laps (tours par défaut), checkpointCount (nombre de pathnodes triés) et recoveryCount (pathnodes ayant un point de recovery, selon le sens). Le chargement se fait une seule fois (tant que self.path est nil).",
+  "notes": ["Si le fichier est introuvable, une erreur de nœud est posée sur la pin 'file'.", "Dans l'éditeur, le panneau de propriétés propose d'ouvrir le Race Editor et de coder en dur le fichier ouvert dans la pin file.", "La description de checkpointCount précise que le décompte ne marche pas pour les chemins branchants."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise self.path à nil et désactive clearOutPinsOnStart.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
+        "postInit": {"desc": "Restreint le sélecteur de fichier de la pin 'file' aux fichiers « Race Files » (.race.json).", "internal": true},
+        "drawCustomProperties": {"desc": "Panneau de propriétés de l'éditeur : bouton d'ouverture du Race Editor, nom du fichier ouvert et bouton « Hardcode to File Pin ».", "internal": true},
+        "onNodeReset": {"desc": "Oublie le chemin chargé (self.path = nil) pour forcer un rechargement.", "internal": true},
+        "_executionStopped": {"desc": "Oublie le chemin chargé à l'arrêt du graphe.", "internal": true},
+        "work": {"desc": "Charge le fichier de course s'il ne l'est pas encore, applique reverse/autoConfig et remplit toutes les pins de sortie.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

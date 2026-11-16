@@ -1,0 +1,11 @@
+{
+  "path": "lua/common/libs/resty/template/html.lua",
+  "module": "Bibliothèque tierce lua-resty-template : petit générateur de balises HTML. `html.nom(attributs)(contenu)` ou `html.nom(contenu)` produit `<nom attr=\"...\">contenu</nom>` avec échappement HTML du contenu et des valeurs d'attributs. Il s'enregistre aussi comme `template.html`.",
+  "usage": "local html = require('resty.template.html')\nprint(html.a{href = '/x'}('lien'))   -- <a href=\"&#47;x\">lien</a>\nprint(html.br())                       -- <br />",
+  "notes": [
+    "Le fichier fait `require \"resty.template\"` (séparateur point) alors que le module est dans libs/resty/template : ce nom doit être résolvable par le chemin de recherche de require.",
+    "Si le contenu n'est pas une chaîne, la balise est auto-fermante (` />`). Les attributs à clé numérique sont écrits tels quels (échappés), les autres en clé=\"valeur\".",
+    "Les valeurs d'attributs sont échappées avec template.escape : les '/' deviennent &#47;."
+  ],
+  "fields": {}
+}

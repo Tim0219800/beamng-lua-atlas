@@ -1,50 +1,50 @@
 # `career_modules_tutorial_step02moveOff`
 
-*Fichier : `lua/ge/extensions/career/modules/tutorial/step02moveOff.lua` · VM : Game Engine (GE) · 262 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/tutorial/step02moveOff.lua` · VM: Game Engine (GE) · 262 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_tutorial_step02moveOff` : `extensions.load("career_modules_tutorial_step02moveOff")`, puis la globale `career_modules_tutorial_step02moveOff`
+**Access:** extension `career_modules_tutorial_step02moveOff`: `extensions.load("career_modules_tutorial_step02moveOff")`, then the global `career_modules_tutorial_step02moveOff`
 
-Étape 2 du tutoriel de carrière (« moveOff ») : apprendre à démarrer le véhicule selon le mode de boîte réglé à l'étape 1. Trois modes (déduits du réglage gearboxMode et de autoClutch) : arcade, realistic_clutch (passer la 1re puis accélérer) et realistic_no_clutch (embrayage manuel, avec récupération en cas de calage moteur). L'étape se termine quand le véhicule s'est déplacé d'au moins 3 m, puis active 03basicManeuvers après 1 s.
+Career tutorial step 2 ("moveOff"): learning to move off according to the gearbox mode set in step 1. Three modes (inferred from the gearboxMode setting and autoClutch): arcade, realistic_clutch (engage 1st gear then accelerate) and realistic_no_clutch (manual clutch, with recovery on engine stall). The step ends when the vehicle has moved at least 3 m, then activates 03basicManeuvers after 1 s.
 
-## Remarques
+## Notes
 
-- Seuils : déplacement 3 m, entrée d'accélérateur 0,2, 1re vitesse = gearIndex 1.
-- Le calage est détecté par un passage de ignitionLevel de 2 à 0 ou 1 (mode sans embrayage uniquement).
-- Les hooks sont appelés par le runtime du tutoriel.
+- Thresholds: movement 3 m, throttle input 0.2, 1st gear = gearIndex 1.
+- A stall is detected by a change of ignitionLevel from 2 to 0 or 1 (no-clutch mode only).
+- The hooks are called by the tutorial runtime.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_tutorial_step02moveOff.cleanup()` | Retire le gestionnaire de sortie de zone, désenregistre les notifications du véhicule et vide la liste de tâches. *(interne)* | 229 |
-| `career_modules_tutorial_step02moveOff.onCareerTutorialLeftBounds()` | Hook de sortie de zone : lance le reset de sortie de zone de l'étape. *(interne)* *(hook)* | 149 |
-| `career_modules_tutorial_step02moveOff.onDebugMenu(im)` | Affiche le mode courant et un bouton pour sauter l'étape (active 03basicManeuvers). *(interne)* *(hook)* | 252 |
-| `career_modules_tutorial_step02moveOff.onUpdate(dtReal, dtSim, dtRaw)` | Appelé chaque frame : lit les entrées du véhicule en cache, gère le calage, valide les objectifs et avance à l'étape 03 quand la distance de 3 m est atteinte. *(interne)* *(hook)* | 153 |
-| `career_modules_tutorial_step02moveOff.setup(stepData)` | Appelé à l'activation : réinitialise l'état, active la zone evalZone, enregistre les notifications throttle_input, clutch, gearIndex, ignitionLevel, lit le comportement de boîte (mainController/gearboxMode), choisit le mode, débloque les actions de changement de vitesse, dégèle le véhicule et construit la liste de tâches. *(interne)* | 93 |
+| `career_modules_tutorial_step02moveOff.cleanup()` | Removes the out-of-bounds handler, unregisters the vehicle notifications and clears the task list. *(internal)* | 229 |
+| `career_modules_tutorial_step02moveOff.onCareerTutorialLeftBounds()` | Out-of-bounds hook: starts the step's out-of-bounds reset. *(internal)* *(hook)* | 149 |
+| `career_modules_tutorial_step02moveOff.onDebugMenu(im)` | Displays the current mode and a button to skip the step (activates 03basicManeuvers). *(internal)* *(hook)* | 252 |
+| `career_modules_tutorial_step02moveOff.onUpdate(dtReal, dtSim, dtRaw)` | Called every frame: reads the cached vehicle inputs, handles stalling, validates the objectives and advances to step 03 when the 3 m distance is reached. *(internal)* *(hook)* | 153 |
+| `career_modules_tutorial_step02moveOff.setup(stepData)` | Called on activation: resets the state, activates the evalZone zone, registers the throttle_input, clutch, gearIndex, ignitionLevel notifications, reads the gearbox behavior (mainController/gearboxMode), chooses the mode, unlocks the gear change actions, unfreezes the vehicle and builds the task list. *(internal)* | 93 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_tutorial_step02moveOff.onDebugMenu(im)`
 
-Affiche le mode courant et un bouton pour sauter l'étape (active 03basicManeuvers).
+Displays the current mode and a button to skip the step (activates 03basicManeuvers).
 
-- `im` (*table*) : Table ui_imgui.
+- `im` (*table*) : ui_imgui table.
 
 #### `career_modules_tutorial_step02moveOff.onUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé chaque frame : lit les entrées du véhicule en cache, gère le calage, valide les objectifs et avance à l'étape 03 quand la distance de 3 m est atteinte.
+Called every frame: reads the cached vehicle inputs, handles stalling, validates the objectives and advances to step 03 when the 3 m distance is reached.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta simulation (s).
-- `dtRaw` (*number*) : Delta brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation delta (s).
+- `dtRaw` (*number*) : Raw delta (s).
 
 #### `career_modules_tutorial_step02moveOff.setup(stepData)`
 
-Appelé à l'activation : réinitialise l'état, active la zone evalZone, enregistre les notifications throttle_input, clutch, gearIndex, ignitionLevel, lit le comportement de boîte (mainController/gearboxMode), choisit le mode, débloque les actions de changement de vitesse, dégèle le véhicule et construit la liste de tâches.
+Called on activation: resets the state, activates the evalZone zone, registers the throttle_input, clutch, gearIndex, ignitionLevel notifications, reads the gearbox behavior (mainController/gearboxMode), chooses the mode, unlocks the gear change actions, unfreezes the vehicle and builds the task list.
 
-- `stepData` (*any*) : Données de l'étape (non utilisées).
+- `stepData` (*any*) : Step data (unused).
 
-**Évènements UI (guihooks.trigger) :** `ClearTasklist`
+**UI events (guihooks.trigger):** `ClearTasklist`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/tutorial/step02moveOff.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/tutorial/step02moveOff.lua`.*

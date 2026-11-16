@@ -2,90 +2,90 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/biomeTool.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Outil « Biome Tool » (mode d'édition « Edit Biome ») de l'éditeur de niveaux : génère de la végétation (objets Forest) et peint des matériaux de terrain par couches. Deux types de couches (terrain = 0, area = 1) ; les couches « area » contiennent des zones au lasso (inclusion/exclusion) ou par matériau de terrain. Chaque couche a des champs (densité de forêt, influence et plage de pente, falloff et densité de bordure, méthode de fusion Add/Replace/Delete, placement en champ avec distance/rangées/orientation, zone aléatoire par bruit RA_*, placement sur les bords EP_*). L'outil s'appuie sur ForestBrushTool et les brosses de forêt. Les couches sont lues dans <niveau>/art/biomeTool/biomeTool.json à l'initialisation et réécrites après chaque sauvegarde du niveau.
---- Accès : extension `editor_biomeTool` : `extensions.load("editor_biomeTool")`, puis la globale `editor_biomeTool`
+--- "Biome Tool" (edit mode "Edit Biome") of the level editor: generates vegetation (Forest objects) and paints terrain materials in layers. Two layer types (terrain = 0, area = 1); "area" layers contain lasso zones (inclusion/exclusion) or zones by terrain material. Each layer has fields (forest density, slope influence and range, falloff and border density, Add/Replace/Delete blending method, field placement with distance/rows/orientation, random area by RA_* noise, edge placement EP_*). The tool relies on ForestBrushTool and the forest brushes. Layers are read from <level>/art/biomeTool/biomeTool.json at initialization and rewritten after each level save.
+--- Access: extension `editor_biomeTool`: `extensions.load("editor_biomeTool")`, then the global `editor_biomeTool`
 ---@class editor_biomeTool
----@field onExtensionLoaded nil Vaut nil : référence à une variable jamais définie dans le fichier.
+---@field onExtensionLoaded nil Is nil: reference to a variable never defined in the file.
 editor_biomeTool = {}
 
---- Hook appelé après la sauvegarde du niveau : écrit les couches (var.layers) dans <niveau>/art/biomeTool/biomeTool.json (ancien fichier supprimé d'abord). Ne fait rien si aucune couche.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/biomeTool.lua:3962
+--- Hook called after the level is saved: writes the layers (var.layers) to <level>/art/biomeTool/biomeTool.json (old file deleted first). Does nothing if there is no layer.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/biomeTool.lua:3962
 function editor_biomeTool.onEditorAfterSaveLevel() end
 
---- Appelé chaque frame de l'éditeur. Ne fait rien hors du mode « Edit Biome ». Sinon vérifie la présence d'un objet Forest (dialogue de création sinon) et dessine l'interface (onglets Level Biome / Biome Areas), le lasso, les zones et les animations de mise en évidence.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/biomeTool.lua:3623
+--- Called every editor frame. Does nothing outside the "Edit Biome" mode. Otherwise checks for the presence of a Forest object (creation dialog otherwise) and draws the interface (Level Biome / Biome Areas tabs), the lasso, the zones and the highlight animations.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/biomeTool.lua:3623
 function editor_biomeTool.onEditorGui() end
 
---- Initialisation : charge biomeTool.json du niveau s'il existe, remplit la liste des brosses de forêt et des matériaux, enregistre le mode d'édition biomeEditMode (icône biome_tool), la fenêtre « biomeTool » (500x560), la fenêtre modale NoForestObjDialog et les éditeurs de champs personnalisés (TerrainMaterial, BlendingMethod, SlopeRange, VegetationFalloff, FieldPlacement, RA_Map).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/biomeTool.lua:3903
+--- Initialization: loads the level's biomeTool.json if it exists, fills the list of forest brushes and materials, registers the biomeEditMode edit mode (biome_tool icon), the "biomeTool" window (500x560), the NoForestObjDialog modal window and the custom field editors (TerrainMaterial, BlendingMethod, SlopeRange, VegetationFalloff, FieldPlacement, RA_Map).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/biomeTool.lua:3903
 function editor_biomeTool.onEditorInitialized() end
 
---- Hook : quand la fenêtre « biomeTool » prend le focus, active le mode d'édition biomeEditMode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/biomeTool.lua:3956
----@param windowName string Nom de la fenêtre qui a pris le focus.
+--- Hook: when the "biomeTool" window gets focus, activates the biomeEditMode edit mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/biomeTool.lua:3956
+---@param windowName string Name of the window that got focus.
 function editor_biomeTool.onEditorToolWindowGotFocus(windowName) end
 
---- Hook : quand la fenêtre « biomeTool » est masquée, repasse en mode d'édition objectSelect.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/biomeTool.lua:3950
----@param windowName string Nom de la fenêtre masquée.
+--- Hook: when the "biomeTool" window is hidden, switches back to the objectSelect edit mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/biomeTool.lua:3950
+---@param windowName string Name of the hidden window.
 function editor_biomeTool.onEditorToolWindowHide(windowName) end
 
---- Table d'état interne de l'outil (couches, zones, lasso, brosses de forêt, file de génération). Seules quelques méthodes d'accès aux champs « edge placement » et aux bornes sont définies dessus ; layerType vaut 0 (terrain), 1 (area) ou 2 (any, dans les modèles de champs).
+--- Internal state table of the tool (layers, zones, lasso, forest brushes, generation queue). Only a few accessor methods for the "edge placement" fields and the bounds are defined on it; layerType is 0 (terrain), 1 (area) or 2 (any, in the field templates).
 ---@class editor_biomeTool_var
 local editor_biomeTool_var = {}
 
---- Renvoie l'atténuation de bordure (EP_BorderFalloff, -10 à 10) d'une couche ; crée le champ avec la valeur par défaut (0.0) s'il manque.
----Source : lua/ge/extensions/editor/biomeTool.lua:1473
+--- Returns the border falloff (EP_BorderFalloff, -10 to 10) of a layer; creates the field with the default value (0.0) if missing.
+---Source: lua/ge/extensions/editor/biomeTool.lua:1473
 ---@param layerType integer 0 terrain, 1 area.
----@param layerID integer ID de la couche.
----@return number|nil  Valeur courante, nil si le champ est inconnu.
+---@param layerID integer Layer ID.
+---@return number|nil  Current value, nil if the field is unknown.
 function editor_biomeTool_var.getEPFalloff(layerType, layerID) end
 
---- Renvoie la distance entre objets pour le placement sur les bords (EP_ItemDistance, -10 à 10, défaut 1) ; crée le champ s'il manque.
----Source : lua/ge/extensions/editor/biomeTool.lua:1516
+--- Returns the distance between objects for edge placement (EP_ItemDistance, -10 to 10, default 1); creates the field if missing.
+---Source: lua/ge/extensions/editor/biomeTool.lua:1516
 ---@param layerType integer 0 terrain, 1 area.
----@param layerID integer ID de la couche.
----@return number|nil  Valeur courante.
+---@param layerID integer Layer ID.
+---@return number|nil  Current value.
 function editor_biomeTool_var.getEPItemDistance(layerType, layerID) end
 
---- Renvoie la plage d'inclinaison aléatoire (champ EP_RandomTilt) d'une couche ; {-5, 5} par défaut si la couche n'a pas ce champ.
----Source : lua/ge/extensions/editor/biomeTool.lua:1431
+--- Returns the random tilt range (EP_RandomTilt field) of a layer; {-5, 5} by default if the layer does not have this field.
+---Source: lua/ge/extensions/editor/biomeTool.lua:1431
 ---@param layerType integer 0 terrain, 1 area.
----@param layerID integer ID de la couche.
----@return table<integer, number>  {min, max} en degrés (déduit du code, plage -40 à 40).
+---@param layerID integer Layer ID.
+---@return table<integer, number>  {min, max} in degrees (inferred from code, range -40 to 40).
 function editor_biomeTool_var.getEPRandomTiltRange(layerType, layerID) end
 
---- Renvoie les bornes {min, max} d'un champ du modèle fieldInfoTemplate pour ce type de couche ; {0, 0} si introuvable.
----Source : lua/ge/extensions/editor/biomeTool.lua:1421
+--- Returns the {min, max} bounds of a field of the fieldInfoTemplate template for this layer type; {0, 0} if not found.
+---Source: lua/ge/extensions/editor/biomeTool.lua:1421
 ---@param layerType integer 0 terrain, 1 area.
----@param layerID integer ID de la couche (non utilisé dans le calcul).
----@param fieldName string Nom du champ, ex. "EP_ItemDistance".
+---@param layerID integer Layer ID (not used in the computation).
+---@param fieldName string Field name, e.g. "EP_ItemDistance".
 ---@return table<integer, number>  {minValue, maxValue}.
 function editor_biomeTool_var.getFieldMinMax(layerType, layerID, fieldName) end
 
---- Fixe EP_BorderFalloff d'une couche, bornée aux minValue/maxValue du champ ; crée le champ s'il manque.
----Source : lua/ge/extensions/editor/biomeTool.lua:1494
+--- Sets EP_BorderFalloff of a layer, clamped to the field's minValue/maxValue; creates the field if missing.
+---Source: lua/ge/extensions/editor/biomeTool.lua:1494
 ---@param layerType integer 0 terrain, 1 area.
----@param layerID integer ID de la couche.
----@param val number Nouvelle valeur.
+---@param layerID integer Layer ID.
+---@param val number New value.
 function editor_biomeTool_var.setEPFalloff(layerType, layerID, val) end
 
---- Fixe EP_ItemDistance d'une couche, bornée à -10..10 ; crée le champ s'il manque.
----Source : lua/ge/extensions/editor/biomeTool.lua:1537
+--- Sets EP_ItemDistance of a layer, clamped to -10..10; creates the field if missing.
+---Source: lua/ge/extensions/editor/biomeTool.lua:1537
 ---@param layerType integer 0 terrain, 1 area.
----@param layerID integer ID de la couche.
----@param val number Nouvelle valeur.
+---@param layerID integer Layer ID.
+---@param val number New value.
 function editor_biomeTool_var.setEPItemDistance(layerType, layerID, val) end
 
---- Fixe la plage EP_RandomTilt d'une couche, bornée à -40..40 ; crée le champ s'il manque. La table passée est modifiée.
----Source : lua/ge/extensions/editor/biomeTool.lua:1447
+--- Sets the EP_RandomTilt range of a layer, clamped to -40..40; creates the field if missing. The passed table is modified.
+---Source: lua/ge/extensions/editor/biomeTool.lua:1447
 ---@param layerType integer 0 terrain, 1 area.
----@param layerID integer ID de la couche.
----@param range table<integer, number> {min, max} demandés.
+---@param layerID integer Layer ID.
+---@param range table<integer, number> Requested {min, max}.
 function editor_biomeTool_var.setEPRandomTiltRange(layerType, layerID, range) end
 

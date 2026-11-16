@@ -1,57 +1,57 @@
 # `gameplay_markers_zoneMarker`
 
-*Fichier : `lua/ge/extensions/gameplay/markers/zoneMarker.lua` · VM : Game Engine (GE) · 77 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/markers/zoneMarker.lua` · VM: Game Engine (GE) · 77 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_markers_zoneMarker` : `extensions.load("gameplay_markers_zoneMarker")`, puis la globale `gameplay_markers_zoneMarker`
+**Access:** extension `gameplay_markers_zoneMarker`: `extensions.load("gameplay_markers_zoneMarker")`, then the global `gameplay_markers_zoneMarker`
 
-Marqueur de zone sans visuel : rend un POI interactif quand le véhicule du joueur (ses quatre coins au sol de la boîte englobante) est entièrement dans l'un des polygones de zone donnés. Aucune icône ni décalque n'est dessiné. Le module renvoie {create, cluster} ; chaque POI zoneMarker forme son propre cluster.
+Zone marker without visual: makes a POI interactive when the player's vehicle (the four ground corners of its bounding box) is entirely inside one of the given zone polygons. No icon or decal is drawn. The module returns {create, cluster}; each zoneMarker POI forms its own cluster.
 
-## Remarques
+## Notes
 
-- cluster : un par POI (id 'zoneMarker#<poi.id>'). Lit poi.markerInfo.zoneMarker.{zones, pos, radius} ; elemData = {poi.data}.
-- interactInPlayMode ne fait rien si le joueur marche (interactData.isWalking). La distance 2D du véhicule au centre doit être <= rayon + 2 m, puis les points 1, 4, 5 et 8 de bbPoints (coins du bas ou du haut de la boîte, déduit du code) doivent tous être dans une zone (containsPoint2D).
-- Le résultat 'inside' est évalué même sans canInteract ; l'ajout aux éléments interactifs exige canInteract.
-- Toutes les autres méthodes (update, hide, show, createObjects, clearObjects, setHidden, instantFade) sont vides.
+- cluster: one per POI (id 'zoneMarker#<poi.id>'). Reads poi.markerInfo.zoneMarker.{zones, pos, radius}; elemData = {poi.data}.
+- interactInPlayMode does nothing if the player is walking (interactData.isWalking). The vehicle's 2D distance to the center must be <= radius + 2 m, then points 1, 4, 5 and 8 of bbPoints (bottom or top corners of the box, inferred from code) must all be in a zone (containsPoint2D).
+- The 'inside' result is evaluated even without canInteract; adding to the interactive elements requires canInteract.
+- All the other methods (update, hide, show, createObjects, clearObjects, setHidden, instantFade) are empty.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_markers_zoneMarker.cluster(pois, allClusters)` | Transforme chaque POI zoneMarker en un cluster distinct (pas de fusion) et l'ajoute à allClusters. *(interne)* | 57 |
-| `gameplay_markers_zoneMarker.create(...)` | Fabrique un marqueur de zone (instance de C). | 48 |
+| `gameplay_markers_zoneMarker.cluster(pois, allClusters)` | Turns each zoneMarker POI into a distinct cluster (no merging) and adds it to allClusters. *(internal)* | 57 |
+| `gameplay_markers_zoneMarker.create(...)` | Builds a zone marker (instance of C). | 48 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_markers_zoneMarker.cluster(pois, allClusters)`
 
-Transforme chaque POI zoneMarker en un cluster distinct (pas de fusion) et l'ajoute à allClusters.
+Turns each zoneMarker POI into a distinct cluster (no merging) and adds it to allClusters.
 
-- `pois` (*table[]*) : POI avec markerInfo.zoneMarker {zones, pos, radius}.
-- `allClusters` (*table[]*) : Liste de clusters complétée en place.
+- `pois` (*table[]*) : POIs with markerInfo.zoneMarker {zones, pos, radius}.
+- `allClusters` (*table[]*) : List of clusters completed in place.
 
 #### `gameplay_markers_zoneMarker.create(...)`
 
-Fabrique un marqueur de zone (instance de C).
+Builds a zone marker (instance of C).
 
-- `...` (*any*) : Arguments transmis à C:init (non utilisés).
-- **renvoie** : table Instance de marqueur.
+- `...` (*any*) : Arguments passed to C:init (unused).
+- **returns**: table Marker instance.
 
-## Classe `C`
+## Class `C`
 
-Marqueur de zone sans rendu.
+Zone marker without rendering.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearObjects()` | Ne fait rien. | 24 |
-| `C:createObjects()` | Ne fait rien. | 20 |
-| `C:hide()` | Ne fait rien. | 21 |
-| `C:init()` | Ne fait rien. | 7 |
-| `C:instantFade(visible)` | Ne fait rien. | 23 |
-| `C:interactInPlayMode(interactData, interactableElements)` | Ajoute les données (elemData) du cluster aux éléments interactifs si le véhicule est entièrement dans une zone et que canInteract est vrai ; sans effet à pied. | 27 |
-| `C:setHidden(value)` | Ne fait rien. | 19 |
-| `C:setup(cluster)` | Mémorise zones, cluster, centre 2D (visibilityPos avec z = 0) et rayon (visibilityRadius). | 12 |
-| `C:show()` | Ne fait rien. | 22 |
-| `C:update(data)` | Ne fait rien. | 9 |
+| `C:clearObjects()` | Does nothing. | 24 |
+| `C:createObjects()` | Does nothing. | 20 |
+| `C:hide()` | Does nothing. | 21 |
+| `C:init()` | Does nothing. | 7 |
+| `C:instantFade(visible)` | Does nothing. | 23 |
+| `C:interactInPlayMode(interactData, interactableElements)` | Adds the cluster's data (elemData) to the interactive elements if the vehicle is entirely in a zone and canInteract is true; no effect on foot. | 27 |
+| `C:setHidden(value)` | Does nothing. | 19 |
+| `C:setup(cluster)` | Stores zones, cluster, 2D center (visibilityPos with z = 0) and radius (visibilityRadius). | 12 |
+| `C:show()` | Does nothing. | 22 |
+| `C:update(data)` | Does nothing. | 9 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/markers/zoneMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/markers/zoneMarker.lua`.*

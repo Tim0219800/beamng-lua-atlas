@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/logic/bundle.lua",
+  "module": "Noeud flowgraph 'Bundle' (categorie logic). Recopie simplement le flux d'entree vers la sortie ; sert seulement a regrouper visuellement des liens pour la lisibilite du graphe.",
+  "notes": [
+    "Utilise C.type = 'simple' (les autres noeuds utilisent C.category)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "work": {
+          "desc": "pinOut.flow = pinIn.flow.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

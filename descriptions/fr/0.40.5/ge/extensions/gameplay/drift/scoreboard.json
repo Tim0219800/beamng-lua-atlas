@@ -1,0 +1,58 @@
+{
+  "path": "lua/ge/extensions/gameplay/drift/scoreboard.lua",
+  "module": "Accumule les statistiques d'un défi de drift pour l'écran de fin : score et nombre de drifts par palier (tier), messages rapides obtenus (quick messages) et statistiques de performance (vitesse, angle, facteur de performance moyens, distance, durée, combo max). Les stats se remettent à zéro au premier onUpdate et via reset(). Fournit aussi une petite fenêtre imgui de debug.",
+  "notes": [
+    "Les hooks de score ignorent les évènements quand le drift général est en pause ou gelé (gameplay_drift_general.getPaused/getFrozen).",
+    "Le score des quick messages est soustrait du score du palier (multiplié par le combo) pour ne pas être compté deux fois.",
+    "getPerformanceStats divise par des compteurs qui valent 0 avant le premier drift : les moyennes donnent alors NaN ; et table.sort sur la table compiledStats (clés texte) ne trie rien, l'ordre est porté par le champ order.",
+    "La vitesse moyenne est convertie de km/h vers m/s (/3.6) avant translateVelocity ; la distance passe par translateDistance."
+  ],
+  "functions": {
+    "reset": {
+      "desc": "Remet à zéro les stats de performance, recrée les entrées de paliers (depuis gameplay_drift_scoring.getDriftTiers) et de quick messages (depuis gameplay_drift_quickMessages.getQuickMessages)."
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque frame : au premier appel fait reset(), puis affiche la fenêtre de debug imgui si activée.",
+      "internal": true
+    },
+    "onDriftQuickMessageReached": {
+      "desc": "Hook : met en attente un quick message atteint (compteur et récompense) ; il n'est validé qu'à la fin du drift scoré.",
+      "params": {"data": {"type": "table", "desc": "{quickMessageId, reward}."}},
+      "internal": true
+    },
+    "onDriftCompletedScored": {
+      "desc": "Hook : valide les quick messages en attente, met à jour le combo max et ajoute le score (hors quick messages) et le compte au palier du drift.",
+      "params": {"data": {"type": "table", "desc": "{combo, tier = {id}, addedScore}."}},
+      "internal": true
+    },
+    "onDriftActiveDataFinished": {
+      "desc": "Hook : à la fin d'un drift individuel, cumule vitesses, facteurs de performance, angles, durée et distance dans les stats brutes.",
+      "params": {"data": {"type": "table", "desc": "{totalSpeeds, totalSteps, totalPerformanceFactors, totalAngles, totalDriftTime, driftDistance}."}},
+      "internal": true
+    },
+    "onDriftCrash": {
+      "desc": "Hook : un crash annule les quick messages en attente.",
+      "internal": true
+    },
+    "onDriftSpinout": {
+      "desc": "Hook : un spinout annule les quick messages en attente.",
+      "internal": true
+    },
+    "getDriftDebugInfo": {
+      "desc": "Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift.",
+      "returns": [{"type": "table", "desc": "{default = false, canBeChanged = true}"}]
+    },
+    "getPerformanceStats": {
+      "desc": "Compile à la demande les statistiques de performance (moyennes calculées à l'appel, pas à chaque frame), formatées pour l'UI et traduites (missions.drift.stats.<nom>).",
+      "returns": [{"type": "table<string, {order:integer, value:string|number, name:string}>", "desc": "Clés : avrgDriftPerformanceFactor, avrgDriftSpeed, avrgDriftAngle, maxDriftAngle, maxDriftCombo, totalDriftDist, totalIndividualDrifts, totalDriftDuration."}]
+    },
+    "getTiersStats": {
+      "desc": "Renvoie les stats par palier.",
+      "returns": [{"type": "table<string, {totalScore:number, count:integer, name:string, order:integer}>", "desc": "Indexé par id de palier."}]
+    },
+    "getDriftEventStats": {
+      "desc": "Renvoie les stats par quick message.",
+      "returns": [{"type": "table<string, {count:integer, totalScoreEarned:number, msg:string}>", "desc": "Indexé par id de quick message."}]
+    }
+  }
+}

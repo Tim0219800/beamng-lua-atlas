@@ -2,61 +2,61 @@
 -- tim19Atlas stub generated from lua/vehicle/thrusters.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Applique des poussées au véhicule : propulseurs jbeam (section 'thrusters', commandés par une valeur electrics ou en mode 'auto' qui fabrique une poussée proportionnelle à la vitesse relative entre deux noeuds), impulsions de force entre deux noeuds, et accélérations/vitesses imposées à un cluster de noeuds. Un moddeur ou un outil (scénarios, script) s'en sert pour pousser ou lancer un véhicule pendant une durée donnée. Le module n'est actif dans la boucle de physique que lorsqu'il y a quelque chose à appliquer.
---- Accès : globale `thrusters`
+--- Applies thrust to the vehicle: jbeam thrusters ('thrusters' section, driven by an electrics value or in 'auto' mode which produces a thrust proportional to the relative speed between two nodes), force impulses between two nodes, and imposed accelerations/velocities on a cluster of nodes. A modder or a tool (scenarios, script) uses it to push or throw a vehicle for a given duration. The module is only active in the physics loop when there is something to apply.
+--- Access: global `thrusters`
 ---@class thrusters
----@field update function nop, ou la fonction de physique de ce module quand au moins un propulseur, impulsion ou cluster est actif. Appelée à chaque pas de physique. ⚠ nop est un global du jeu.
----@field updateGFX function nop, ou la fonction qui recalcule les poussées commandées par electrics à chaque frame graphique si le véhicule a des thrusters jbeam.
+---@field update function nop, or this module's physics function when at least one thruster, impulse or cluster is active. Called at each physics step. ⚠ nop is a game global.
+---@field updateGFX function nop, or the function that recomputes the electrics-driven thrusts each graphics frame if the vehicle has jbeam thrusters.
 thrusters = {}
 
---- Impose une accélération linéaire (et angulaire facultative) au cluster de noeuds contenant nodeId pendant dt secondes (obj:applyClusterLinearAngularAccel). Une seule accélération par nodeId à la fois : un nouvel appel remplace l'ancien.
----Source : lua/vehicle/thrusters.lua:124
----@param accel vec3 Accélération linéaire en m/s² (modifiée sur place en fin de durée).
----@param dt number|nil Durée en secondes (lastDt par défaut).
----@param nodeId integer|nil Noeud du cluster (noeud ref par défaut, ou 0).
----@param angularAccel vec3|nil Accélération angulaire en rad/s² (zéro par défaut).
+--- Imposes a linear (and optionally angular) acceleration on the cluster of nodes containing nodeId for dt seconds (obj:applyClusterLinearAngularAccel). Only one acceleration per nodeId at a time: a new call replaces the old one.
+---Source: lua/vehicle/thrusters.lua:124
+---@param accel vec3 Linear acceleration in m/s² (modified in place at the end of the duration).
+---@param dt number|nil Duration in seconds (lastDt by default).
+---@param nodeId integer|nil Node of the cluster (ref node by default, or 0).
+---@param angularAccel vec3|nil Angular acceleration in rad/s² (zero by default).
 function thrusters.applyAccel(accel, dt, nodeId, angularAccel) end
 
---- Applique une force constante entre deux noeuds pendant dt secondes ; si l'impulsion existe déjà pour cette paire de noeuds, met à jour sa force et sa durée.
----Source : lua/vehicle/thrusters.lua:95
----@param n1 integer Noeud (cid) auquel la force est appliquée en premier.
----@param n2 integer Noeud (cid) de l'autre extrémité.
----@param force number Force en N (obj:applyForce(n1, n2, force)).
----@param dt number Durée en secondes (à fournir : voir bug dans notes).
+--- Applies a constant force between two nodes for dt seconds; if the impulse already exists for this node pair, updates its force and duration.
+---Source: lua/vehicle/thrusters.lua:95
+---@param n1 integer Node (cid) to which the force is applied first.
+---@param n2 integer Node (cid) of the other end.
+---@param force number Force in N (obj:applyForce(n1, n2, force)).
+---@param dt number Duration in seconds (must be provided: see bug in notes).
 function thrusters.applyImpulse(n1, n2, force, dt) end
 
---- Comme applyImpulse mais entre le noeud ref et le noeud back du véhicule (refNodes[0].ref et .back), c'est-à-dire selon l'axe longitudinal du châssis.
----Source : lua/vehicle/thrusters.lua:109
----@param force number Force en N.
----@param dt number Durée en secondes.
+--- Like applyImpulse but between the vehicle's ref node and back node (refNodes[0].ref and .back), i.e. along the longitudinal axis of the chassis.
+---Source: lua/vehicle/thrusters.lua:109
+---@param force number Force in N.
+---@param dt number Duration in seconds.
 function thrusters.applyImpulseBody(force, dt) end
 
---- Fait atteindre une vitesse donnée au cluster en une durée dt, en appliquant l'accélération (velocity - vitesse actuelle hors roues) / dt. Ne fait rien si dt vaut 0.
----Source : lua/vehicle/thrusters.lua:137
----@param velocity vec3 Vitesse cible en m/s.
----@param dt number|nil Durée en secondes (lastDt par défaut).
----@param nodeId integer|nil Noeud du cluster (noeud ref par défaut).
+--- Makes the cluster reach a given speed over a duration dt, by applying the acceleration (velocity - current speed excluding wheels) / dt. Does nothing if dt is 0.
+---Source: lua/vehicle/thrusters.lua:137
+---@param velocity vec3 Target speed in m/s.
+---@param dt number|nil Duration in seconds (lastDt by default).
+---@param nodeId integer|nil Node of the cluster (ref node by default).
 function thrusters.applyVelocity(velocity, dt, nodeId) end
 
---- Renvoie la durée restante d'une accélération appliquée par applyAccel/applyVelocity sur ce noeud.
----Source : lua/vehicle/thrusters.lua:132
----@param nodeId integer Noeud du cluster.
----@return number  Durée restante en secondes (0 s'il n'y en a pas).
+--- Returns the remaining duration of an acceleration applied by applyAccel/applyVelocity on this node.
+---Source: lua/vehicle/thrusters.lua:132
+---@param nodeId integer Node of the cluster.
+---@return number  Remaining duration in seconds (0 if there is none).
 function thrusters.getAccelDt(nodeId) end
 
---- Charge les propulseurs jbeam du véhicule (séparés en auto et commandés), remet à zéro les impulsions et choisit update/updateGFX. Si le véhicule n'a pas de thrusters, met les deux à nop.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/thrusters.lua:148
+--- Loads the vehicle's jbeam thrusters (split into auto and controlled), resets the impulses and chooses update/updateGFX. If the vehicle has no thrusters, sets both to nop.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/thrusters.lua:148
 function thrusters.init() end
 
---- Indique si le module est actuellement appelé à chaque pas de physique (M.update == update).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/thrusters.lua:144
----@return boolean  true s'il y a des poussées en cours.
+--- Indicates whether the module is currently called at each physics step (M.update == update).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/thrusters.lua:144
+---@return boolean  true if there are thrusts in progress.
 function thrusters.isPhysicsStepUsed() end
 
---- Identique à init (M.reset = init) : réinitialise les propulseurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/thrusters.lua:148
+--- Identical to init (M.reset = init): reinitializes the thrusters.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/thrusters.lua:148
 function thrusters.reset() end
 

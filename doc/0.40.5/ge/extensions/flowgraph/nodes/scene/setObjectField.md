@@ -1,28 +1,28 @@
 # `flowgraph_nodes_scene_setObjectField`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/setObjectField.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/setObjectField.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/setObjectField")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/setObjectField")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Set Object Field » (repeat_instant). Modifie un champ d'un objet de la scène par id. Entrées : objectId, fieldName, fieldArrayNum (caché, 0), value (any ; une table est convertie en chaîne séparée par des espaces). Sortie : objectFound. Utilise setField si le champ est déclaré, sinon setDynDataFieldbyName, puis updateInstanceRenderData si dispo.
+Flowgraph node "Set Object Field" (repeat_instant). Modifies a field of a scene object by id. Inputs: objectId, fieldName, fieldArrayNum (hidden, 0), value (any; a table is converted to a space-separated string). Output: objectFound. Uses setField if the field is declared, otherwise setDynDataFieldbyName, then updateInstanceRenderData if available.
 
-## Remarques
+## Notes
 
-- Ne fait rien si value est nil ou false (test `not value`) : impossible d'écrire false avec ce noeud.
-- Les tables sont concaténées par table.concat : seulement valable pour des listes de nombres/chaînes.
+- Does nothing if value is nil or false (test `not value`): impossible to write false with this node.
+- Tables are concatenated by table.concat: only valid for lists of numbers/strings.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Cherche l'objet, convertit la valeur et l'écrit dans le champ (déclaré ou dynamique). | 24 |
+| `C:work()` | Looks up the object, converts the value and writes it to the field (declared or dynamic). | 24 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getFields`, `setDynDataFieldbyName`, `setField`, `updateInstanceRenderData`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/setObjectField.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/setObjectField.lua`.*

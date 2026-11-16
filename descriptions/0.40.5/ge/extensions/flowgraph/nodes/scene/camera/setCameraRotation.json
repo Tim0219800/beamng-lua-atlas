@@ -1,59 +1,59 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua",
-  "module": "Noeud flowgraph « Set Camera Rotation » (repeat_instant). Applique une rotation (quaternion) a la camera libre, saisie dans le noeud (mode 'custom') ou fournie par un pin quat 'rot' (mode 'from Pin'). La position courante de la camera est conservee. Le pin de sortie value (quat) renvoie la rotation appliquee.",
+  "module": "Flowgraph node \"Set Camera Rotation\" (repeat_instant). Applies a rotation (quaternion) to the free camera, entered in the node ('custom' mode) or supplied by a quat pin 'rot' ('from Pin' mode). The camera's current position is kept. The output pin value (quat) returns the applied rotation.",
   "notes": [
-    "La rotation par defaut quat(0,0,0,0) n'est pas un quaternion valide (non normalise) : elle n'est normalisee que si l'utilisateur edite les champs."
+    "The default rotation quat(0,0,0,0) is not a valid quaternion (not normalized): it is only normalized if the user edits the fields."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Initialise la rotation a quat(0,0,0,0), le mode a 'custom' et la liste des modes.",
+          "desc": "Initializes the rotation to quat(0,0,0,0), the mode to 'custom' and the mode list.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Panneau de proprietes de l'editeur : choix du mode, champs x/y/z/w (normalises), boutons « Set from camera » et « Preview ». Cree/supprime le pin 'rot'.",
+          "desc": "Editor properties panel: mode choice, x/y/z/w fields (normalized), buttons \"Set from camera\" and \"Preview\". Creates/deletes the 'rot' pin.",
           "internal": true
         },
         "work": {
-          "desc": "Passe en camera libre si besoin, lit le pin 'rot' en mode 'from Pin', applique la rotation (SetCamera) et ecrit le pin value.",
+          "desc": "Switches to the free camera if needed, reads the 'rot' pin in 'from Pin' mode, applies the rotation (SetCamera) and writes the value pin.",
           "internal": false
         },
         "drawMiddle": {
-          "desc": "Zone centrale du noeud (rien d'affiche).",
+          "desc": "Central area of the node (nothing displayed).",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true
         },
         "SetCamera": {
-          "desc": "Appelle core_camera.setPosRot(0, ...) avec la position courante de la camera et la rotation du noeud.",
+          "desc": "Calls core_camera.setPosRot(0, ...) with the camera's current position and the node's rotation.",
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde la rotation (res.rot) et le mode.",
+          "desc": "Saves the rotation (res.rot) and the mode.",
           "params": {
             "res": {
               "type": "any",
-              "desc": "table de sauvegarde"
+              "desc": "save table"
             }
           },
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure rotation et mode ; recree le pin 'rot' si besoin.",
+          "desc": "Restores rotation and mode; recreates the 'rot' pin if needed.",
           "params": {
             "nodeData": {
               "type": "any",
-              "desc": "donnees sauvegardees"
+              "desc": "saved data"
             }
           },
           "internal": true

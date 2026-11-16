@@ -1,40 +1,40 @@
 # `editor_meshSpline_import`
 
-*Fichier : `lua/ge/extensions/editor/meshSpline/import.lua` · VM : Game Engine (GE) · 648 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/meshSpline/import.lua` · VM: Game Engine (GE) · 648 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_meshSpline_import` : `extensions.load("editor_meshSpline_import")`, puis la globale `editor_meshSpline_import`
+**Access:** extension `editor_meshSpline_import`: `extensions.load("editor_meshSpline_import")`, then the global `editor_meshSpline_import`
 
-Import dans l'outil Mesh Spline : transforme des objets TSStatic déjà placés dans le niveau en une mesh spline équivalente. Les TSStatic sont ordonnés en polyligne (editor/toolUtilities/fitPoly), simplifiés (RDP), analysés (motif de meshes, capuchons de début et de fin) puis convertis ; les objets d'origine sont supprimés, leurs groupes vides aussi, et l'opération est enregistrée dans l'historique (undo/redo). Appelé depuis meshSpline.lua (menu contextuel du scenetree ou polygone de sélection).
+Import into the Mesh Spline tool: turns TSStatic objects already placed in the level into an equivalent mesh spline. The TSStatic are ordered into a polyline (editor/toolUtilities/fitPoly), simplified (RDP), analyzed (mesh pattern, start and end caps) then converted; the original objects are deleted, along with their empty groups, and the operation is recorded in the history (undo/redo). Called from meshSpline.lua (scenetree context menu or selection polygon).
 
-## Remarques
+## Notes
 
-- Il faut au moins 2 TSStatic avec un shapeName non vide, sinon l'import s'arrête avec un avertissement dans le log.
-- Après l'import, be:reloadCollision() est appelé et la dernière spline est marquée « dirty » 2 images plus tard (handleDelayedSplineUpdates), le temps que la collision soit à jour : il faut appeler handleDelayedSplineUpdates chaque image (meshSpline.onEditorGui le fait).
-- Les TSStatic supprimés sont sauvegardés (id, nom, shapeName, position, rotation, échelle, groupe) pour permettre l'undo.
+- At least 2 TSStatic with a non-empty shapeName are required, otherwise the import stops with a warning in the log.
+- After the import, be:reloadCollision() is called and the last spline is marked "dirty" 2 frames later (handleDelayedSplineUpdates), while the collision updates: handleDelayedSplineUpdates must be called every frame (meshSpline.onEditorGui does it).
+- The deleted TSStatic are saved (id, name, shapeName, position, rotation, scale, group) to allow undo.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_meshSpline_import.convertTSStatics2MeshSpline(collection)` | Convertit les TSStatic donnés en une mesh spline : filtre les TSStatic valides, les ordonne en polyligne, crée la spline, supprime les objets d'origine (et leurs groupes devenus vides), enregistre l'action d'historique et déclenche le rechargement de la collision. | 508 |
-| `editor_meshSpline_import.handleDelayedSplineUpdates()` | Gère la mise à jour différée après un import : si un import vient d'avoir lieu, compte les images ; à la 2e, marque la dernière mesh spline comme isDirty pour forcer sa reconstruction une fois la collision rechargée. *(interne)* | 35 |
-| `editor_meshSpline_import.importFromPolygon(polygon)` | Importe une mesh spline à partir d'un polygone de sélection dessiné par l'utilisateur : collecte les TSStatic dont la position est dans le polygone (pos:inPolygon) puis les convertit. | 627 |
+| `editor_meshSpline_import.convertTSStatics2MeshSpline(collection)` | Converts the given TSStatic into a mesh spline: filters the valid TSStatic, orders them into a polyline, creates the spline, deletes the original objects (and their groups that became empty), records the history action and triggers the collision reload. | 508 |
+| `editor_meshSpline_import.handleDelayedSplineUpdates()` | Handles the deferred update after an import: if an import has just happened, counts frames; at the 2nd, marks the last mesh spline as isDirty to force its rebuild once the collision is reloaded. *(internal)* | 35 |
+| `editor_meshSpline_import.importFromPolygon(polygon)` | Imports a mesh spline from a selection polygon drawn by the user: collects the TSStatic whose position is inside the polygon (pos:inPolygon) then converts them. | 627 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_meshSpline_import.convertTSStatics2MeshSpline(collection)`
 
-Convertit les TSStatic donnés en une mesh spline : filtre les TSStatic valides, les ordonne en polyligne, crée la spline, supprime les objets d'origine (et leurs groupes devenus vides), enregistre l'action d'historique et déclenche le rechargement de la collision.
+Converts the given TSStatic into a mesh spline: filters the valid TSStatic, orders them into a polyline, creates the spline, deletes the original objects (and their groups that became empty), records the history action and triggers the collision reload.
 
-- `collection` (*integer[]*) : Identifiants d'objets (typiquement editor.selection.object).
+- `collection` (*integer[]*) : Object identifiers (typically editor.selection.object).
 
 #### `editor_meshSpline_import.importFromPolygon(polygon)`
 
-Importe une mesh spline à partir d'un polygone de sélection dessiné par l'utilisateur : collecte les TSStatic dont la position est dans le polygone (pos:inPolygon) puis les convertit.
+Imports a mesh spline from a selection polygon drawn by the user: collects the TSStatic whose position is inside the polygon (pos:inPolygon) then converts them.
 
-- `polygon` (*table*) : Polygone de sélection (liste de points) fourni par toolUtilities/polygon.
+- `polygon` (*table*) : Selection polygon (list of points) provided by toolUtilities/polygon.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `upcast`
 - `be:` `reloadCollision`
@@ -42,4 +42,4 @@ Importe une mesh spline à partir d'un polygone de sélection dessiné par l'uti
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/meshSpline/import.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/meshSpline/import.lua`.*

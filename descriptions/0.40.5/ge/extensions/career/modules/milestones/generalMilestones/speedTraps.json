@@ -1,24 +1,38 @@
 {
   "path": "lua/ge/extensions/career/modules/milestones/generalMilestones/speedTraps.lua",
-  "module": "Jalons liés aux radars (gameplay_speedTraps) en carrière : record de vitesse atteinte devant un radar (velocitySpeedTrapMilestone, paliers 70, 90, 120, 150, 180 et 220 km/h stockés en m/s) et nombre total de déclenchements de radar par le joueur (speedTrapTriggerCounterMilestone, 10 paliers de 15 déclenchements). Les jalons par radar individuel et « tous les radars » sont désactivés (code commenté).",
+  "module": "Milestones related to speed traps (gameplay_speedTraps) in career: speed record reached in front of a speed trap (velocitySpeedTrapMilestone, tiers 70, 90, 120, 150, 180 and 220 km/h stored in m/s) and total number of speed trap triggers by the player (speedTrapTriggerCounterMilestone, 10 tiers of 15 triggers). The per-individual-speed-trap and \"all speed traps\" milestones are disabled (commented-out code).",
   "notes": [
-    "Bug : `M.onGeneralMilestoneClaimed = registerStastisticCallback` référence une variable qui n'existe pas dans ce fichier (copier-coller de statistic.lua) : elle vaut nil, le champ exporté est donc nil.",
-    "Le compteur de déclenchements ne s'arrête pas à maxStep (10) : getTarget(step) = step*15 n'est jamais nil, donc triggerCount continue d'augmenter et notificationStep aussi.",
-    "onSpeedTrapTriggered ignore les radars sans speedLimit et ceux déclenchés par un autre véhicule que le véhicule joueur 0.",
-    "Les vitesses sont en m/s (km/h / 3.6)."
+    "Bug: `M.onGeneralMilestoneClaimed = registerStastisticCallback` references a variable that does not exist in this file (copy-paste from statistic.lua): it is nil, so the exported field is nil.",
+    "The trigger counter does not stop at maxStep (10): getTarget(step) = step*15 is never nil, so triggerCount keeps increasing and so does notificationStep.",
+    "onSpeedTrapTriggered ignores speed traps without a speedLimit and those triggered by a vehicle other than player vehicle 0.",
+    "Speeds are in m/s (km/h / 3.6)."
   ],
   "functions": {
     "onGeneralMilestonesCollect": {
-      "desc": "Hook : crée les deux jalons actifs (record de vitesse et compteur) avec leur sauvegarde (maxVelocityReachedByPlayer, triggerCount) et les ajoute à milestonesList.",
-      "params": {"milestonesList": {"type": "table[]", "desc": "Liste à compléter."}},
+      "desc": "Hook: creates the two active milestones (speed record and counter) with their save data (maxVelocityReachedByPlayer, triggerCount) and adds them to milestonesList.",
+      "params": {
+        "milestonesList": {
+          "type": "table[]",
+          "desc": "List to fill."
+        }
+      },
       "internal": true
     },
     "onSpeedTrapTriggered": {
-      "desc": "Hook appelé quand un radar se déclenche : met à jour le record de vitesse du joueur, notifie tous les paliers de vitesse franchis, et incrémente le compteur de déclenchements.",
+      "desc": "Hook called when a speed trap triggers: updates the player's speed record, notifies all speed tiers passed, and increments the trigger counter.",
       "params": {
-        "speedTrapData": {"type": "table", "desc": "Données du radar (speedLimit, subjectID...)."},
-        "playerSpeed": {"type": "number", "desc": "Vitesse mesurée en m/s."},
-        "overSpeed": {"type": "number", "desc": "Excès de vitesse (non utilisé ici)."}
+        "speedTrapData": {
+          "type": "table",
+          "desc": "Speed trap data (speedLimit, subjectID...)."
+        },
+        "playerSpeed": {
+          "type": "number",
+          "desc": "Measured speed in m/s."
+        },
+        "overSpeed": {
+          "type": "number",
+          "desc": "Speed excess (not used here)."
+        }
       },
       "internal": true
     }

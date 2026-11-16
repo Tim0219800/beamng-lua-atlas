@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/core/settings/multiplayer.lua",
+  "module": "Fournit les « option helpers » des réglages multijoueur. Chaque helper a une fonction set(value) qui répercute le réglage sur l'extension multiplayer_* correspondante si elle est chargée. Utilisé par core_settings_settings pour relier les options mp* à leurs extensions.",
+  "notes": [
+    "Les fonctions get sont commentées dans le code : seuls des set existent.",
+    "Chaque set vérifie que l'extension cible (multiplayer_nametags, multiplayer_vehicleSync, multiplayer_multiplayer, multiplayer_sessionManager) existe avant d'écrire."
+  ],
+  "fields": {},
+  "functions": {
+    "buildOptionHelpers": {
+      "desc": "Construit et renvoie la table des helpers. Clés : mpNametagsEnabled (multiplayer_nametags.nametagsEnabled), mpNametagDistance (multiplayer_nametags.nametagDistance), mpEnableSwitchingToPlayerVehicles (multiplayer_vehicleSync.enableSwitchingToPlayerVehicles(value)), mpDebugMode (multiplayer_multiplayer.debugMode), mpUseCustomServiceURL (multiplayer_sessionManager.useCustomServiceURL), mpCustomServiceURL (multiplayer_sessionManager.customServiceURL).",
+      "params": {},
+      "returns": [{"type": "table<string, {set: fun(value: any)}>", "desc": "Table nom d'option -> {set = function}."}],
+      "internal": false
+    }
+  }
+}

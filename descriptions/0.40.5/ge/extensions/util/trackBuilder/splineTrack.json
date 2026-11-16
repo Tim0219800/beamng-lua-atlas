@@ -1,542 +1,1107 @@
 {
   "path": "lua/ge/extensions/util/trackBuilder/splineTrack.lua",
-  "module": "Cœur du Track Builder (éditeur de pistes procédurales). Le module garde deux niveaux de données par sous-piste : subPieces (description abstraite : liste de pièces avec leurs marqueurs bank, height, width, checkpoint, murs, plafond, matériaux, obstacles) et subTracks (segments concrets avec points, mesh, markerInfo). Il convertit les pièces en segments (toSegments), calcule les points de Bézier, d'arc ou personnalisés, mesure la piste, interpole les marqueurs, génère les ProceduralMesh via segmentToProceduralMesh, place marqueurs et obstacles, gère les intersections multi-pistes, les checkpoints de scénario, la sauvegarde et le chargement en JSON (dossier trackEditor/) et le positionnement du véhicule. Il est piloté par l'application UI du Track Builder et par quickraceSetup.",
-  "usage": "extensions.load('util_trackBuilder_splineTrack')\nlocal st = util_trackBuilder_splineTrack\nst.addCurve(4, 0, 1)\nst.addForward(6)\nst.makeTrack(true)\nst.save('maPiste')",
+  "module": "Core of the Track Builder (procedural track editor). The module keeps two levels of data per sub-track: subPieces (abstract description: list of pieces with their bank, height, width, checkpoint, walls, ceiling, materials, obstacles markers) and subTracks (concrete segments with points, mesh, markerInfo). It converts pieces into segments (toSegments), computes Bézier, arc or custom points, measures the track, interpolates the markers, generates the ProceduralMesh objects via segmentToProceduralMesh, places markers and obstacles, handles multi-track intersections, scenario checkpoints, saving and loading in JSON (trackEditor/ folder) and vehicle positioning. It is driven by the Track Builder UI app and by quickraceSetup.",
+  "usage": "extensions.load('util_trackBuilder_splineTrack')\nlocal st = util_trackBuilder_splineTrack\nst.addCurve(4, 0, 1)\nst.addForward(6)\nst.makeTrack(true)\nst.save('monTrack')",
   "notes": [
-    "L'échelle : gridScale = 4 m par unité de grille en x et y, heightScale = 1 pour z. Les positions de pièces sont en unités de grille ; les points du segment en mètres. Les angles de setTrackPosition sont en degrés, ceux des pièces en radians.",
-    "Chargement du module : la dernière ligne exécute M.initTrack(), qui crée une piste initiale (pièce 'init' + addForward(3)) et la positionne devant la caméra libre, au-dessus du véhicule, ou en (0, 0, 15). Dans le niveau glow_city elle est placée en (50, -50, 250).",
-    "Qualité : quality 1 = haute, 4 = basse (1 point sur 4). Après makeTrack(false), les segments sont d'abord en basse qualité puis améliorés un par un par onUpdate (timer de 0,25 s + 0,1 s par segment) ; makeTrack(true) génère tout en haute qualité et recharge la collision.",
-    "Les fichiers de piste sont lus et écrits dans 'trackEditor/<nom>.json' (Documents/BeamNG) ; le format a le champ version = '1.1'.",
-    "Bug probable : load() lit mesher.settings.LUTDetail, mais segmentToProceduralMesh exporte settings = nil ; l'indexation de nil provoque une erreur dès qu'une piste est effectivement chargée.",
-    "Bug : dans load(), la branche finale 'Could not find file…' concatène la variable filename, qui n'existe pas à cet endroit (nil), et lève une erreur quand le fichier est introuvable (un nom de table n'est pas concerné).",
-    "Bug : getLastPieceWithMarker utilise #track alors que 'track' n'est pas défini ; sans argument lastIndex la fonction échoue.",
-    "Bug : positionVehicle teste une variable 'closed' non définie (nil, la variable réelle est trackClosed) : en mode reverse, le véhicule est toujours placé au dernier segment.",
-    "Bug : focusMarkerOn ne déplace la caméra que si M.camActivated est vrai ; ce champ n'est jamais défini ici (la variable locale camActivated n'est pas exportée), il vaut donc nil sauf si l'application l'écrit.",
-    "Plusieurs champs exportés valent nil car leurs fonctions n'existent pas dans ce fichier : applyStack, clearStack, getStackCount, stack, stackToCursor (code de pile commenté), saveHistory, setAllPiecesToAsphalt, interpolateSegment, interpolateField, getHdgVector, initialTrackPiece, forward, curve, offsetCurve, spiral, fresnelSC, loop, emptyOffset. M.deepcopy est également nil (fonction commentée).",
-    "convertToSpline assigne deux fois markerInfo.basePosition : la valeur issue du dernier point est écrasée par segment.position * vectorScale.",
-    "Message UI : guihooks.trigger('Message', {ttl, msg, category, icon}) à la sauvegarde, au chargement et au renommage.",
-    "scénario : addCheckPointPositions et positionVehicle s'appuient sur scenario_scenarios.getScenario() (lapConfig, nodes, startingTransforms['scenario_player0'])."
+    "Scale: gridScale = 4 m per grid unit in x and y, heightScale = 1 for z. Piece positions are in grid units; segment points are in meters. The angles of setTrackPosition are in degrees, those of pieces in radians.",
+    "Module load: the last line runs M.initTrack(), which creates an initial track ('init' piece + addForward(3)) and positions it in front of the free camera, above the vehicle, or at (0, 0, 15). In the glow_city level it is placed at (50, -50, 250).",
+    "Quality: quality 1 = high, 4 = low (1 point out of 4). After makeTrack(false), the segments are first in low quality then improved one by one by onUpdate (0.25 s timer + 0.1 s per segment); makeTrack(true) generates everything in high quality and reloads the collision.",
+    "Track files are read and written in 'trackEditor/<name>.json' (Documents/BeamNG); the format has the field version = '1.1'.",
+    "Probable bug: load() reads mesher.settings.LUTDetail, but segmentToProceduralMesh exports settings = nil; indexing nil causes an error as soon as a track is actually loaded.",
+    "Bug: in load(), the final 'Could not find file…' branch concatenates the variable filename, which does not exist at that point (nil), and raises an error when the file is not found (a table name is not affected).",
+    "Bug: getLastPieceWithMarker uses #track but 'track' is not defined; without the lastIndex argument the function fails.",
+    "Bug: positionVehicle tests an undefined variable 'closed' (nil, the real variable is trackClosed): in reverse mode, the vehicle is always placed at the last segment.",
+    "Bug: focusMarkerOn moves the camera only if M.camActivated is true; this field is never defined here (the local variable camActivated is not exported), so it is nil unless the app writes it.",
+    "Several exported fields are nil because their functions do not exist in this file: applyStack, clearStack, getStackCount, stack, stackToCursor (stack code commented out), saveHistory, setAllPiecesToAsphalt, interpolateSegment, interpolateField, getHdgVector, initialTrackPiece, forward, curve, offsetCurve, spiral, fresnelSC, loop, emptyOffset. M.deepcopy is also nil (function commented out).",
+    "convertToSpline assigns markerInfo.basePosition twice: the value from the last point is overwritten by segment.position * vectorScale.",
+    "UI message: guihooks.trigger('Message', {ttl, msg, category, icon}) on save, load and rename.",
+    "scenario: addCheckPointPositions and positionVehicle rely on scenario_scenarios.getScenario() (lapConfig, nodes, startingTransforms['scenario_player0'])."
   ],
   "fields": {
-    "camDistance": {"type": "number", "desc": "Distance de la caméra au segment sélectionné lors de focusMarkerOn (80 par défaut)."},
-    "materialUtil": {"type": "table", "desc": "Référence vers le module util_trackBuilder_materialUtil (gestion des matériaux A à H)."},
-    "deepcopy": {"type": "nil", "desc": "Toujours nil : la fonction est dans un bloc commenté."},
-    "applyStack": {"type": "nil", "desc": "Toujours nil (code de pile commenté)."},
-    "clearStack": {"type": "nil", "desc": "Toujours nil (code de pile commenté)."},
-    "getStackCount": {"type": "nil", "desc": "Toujours nil (code de pile commenté)."},
-    "stack": {"type": "nil", "desc": "Toujours nil (code de pile commenté)."},
-    "stackToCursor": {"type": "nil", "desc": "Toujours nil (code de pile commenté)."},
-    "saveHistory": {"type": "nil", "desc": "Toujours nil (historique commenté)."},
-    "setAllPiecesToAsphalt": {"type": "nil", "desc": "Toujours nil : fonction non définie."},
-    "interpolateSegment": {"type": "nil", "desc": "Toujours nil : fonction non définie."},
-    "interpolateField": {"type": "nil", "desc": "Toujours nil : fonction non définie."},
-    "getHdgVector": {"type": "nil", "desc": "Toujours nil : fonction non définie ici (existe dans pieces)."},
-    "initialTrackPiece": {"type": "nil", "desc": "Toujours nil : fonction non définie ici (existe dans pieces)."},
-    "forward": {"type": "nil", "desc": "Toujours nil (existe dans pieces)."},
-    "curve": {"type": "nil", "desc": "Toujours nil (existe dans pieces)."},
-    "offsetCurve": {"type": "nil", "desc": "Toujours nil (existe dans pieces)."},
-    "spiral": {"type": "nil", "desc": "Toujours nil."},
-    "fresnelSC": {"type": "nil", "desc": "Toujours nil (existe dans pieces)."},
-    "loop": {"type": "nil", "desc": "Toujours nil (existe dans pieces)."},
-    "emptyOffset": {"type": "nil", "desc": "Toujours nil (existe dans pieces)."}
+    "camDistance": {
+      "type": "number",
+      "desc": "Distance from the camera to the selected segment during focusMarkerOn (80 by default)."
+    },
+    "materialUtil": {
+      "type": "table",
+      "desc": "Reference to the util_trackBuilder_materialUtil module (management of materials A to H)."
+    },
+    "deepcopy": {
+      "type": "nil",
+      "desc": "Always nil: the function is in a commented-out block."
+    },
+    "applyStack": {
+      "type": "nil",
+      "desc": "Always nil (stack code commented out)."
+    },
+    "clearStack": {
+      "type": "nil",
+      "desc": "Always nil (stack code commented out)."
+    },
+    "getStackCount": {
+      "type": "nil",
+      "desc": "Always nil (stack code commented out)."
+    },
+    "stack": {
+      "type": "nil",
+      "desc": "Always nil (stack code commented out)."
+    },
+    "stackToCursor": {
+      "type": "nil",
+      "desc": "Always nil (stack code commented out)."
+    },
+    "saveHistory": {
+      "type": "nil",
+      "desc": "Always nil (history commented out)."
+    },
+    "setAllPiecesToAsphalt": {
+      "type": "nil",
+      "desc": "Always nil: function not defined."
+    },
+    "interpolateSegment": {
+      "type": "nil",
+      "desc": "Always nil: function not defined."
+    },
+    "interpolateField": {
+      "type": "nil",
+      "desc": "Always nil: function not defined."
+    },
+    "getHdgVector": {
+      "type": "nil",
+      "desc": "Always nil: function not defined here (exists in pieces)."
+    },
+    "initialTrackPiece": {
+      "type": "nil",
+      "desc": "Always nil: function not defined here (exists in pieces)."
+    },
+    "forward": {
+      "type": "nil",
+      "desc": "Always nil (exists in pieces)."
+    },
+    "curve": {
+      "type": "nil",
+      "desc": "Always nil (exists in pieces)."
+    },
+    "offsetCurve": {
+      "type": "nil",
+      "desc": "Always nil (exists in pieces)."
+    },
+    "spiral": {
+      "type": "nil",
+      "desc": "Always nil."
+    },
+    "fresnelSC": {
+      "type": "nil",
+      "desc": "Always nil (exists in pieces)."
+    },
+    "loop": {
+      "type": "nil",
+      "desc": "Always nil (exists in pieces)."
+    },
+    "emptyOffset": {
+      "type": "nil",
+      "desc": "Always nil (exists in pieces)."
+    }
   },
   "functions": {
     "createNewSubTrack": {
-      "desc": "Ajoute une nouvelle sous-piste à la position et au cap donnés (position divisée par gridScale), la rend courante et renvoie son indice.",
+      "desc": "Adds a new sub-track at the given position and heading (position divided by gridScale), makes it current and returns its index.",
       "params": {
-        "position": {"type": "vec3", "desc": "Position monde en mètres."},
-        "hdg": {"type": "number", "desc": "Cap en degrés."}
+        "position": {
+          "type": "vec3",
+          "desc": "World position in meters."
+        },
+        "hdg": {
+          "type": "number",
+          "desc": "Heading in degrees."
+        }
       },
-      "returns": [{"type": "integer", "desc": "Indice de la nouvelle sous-piste."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Index of the new sub-track."
+        }
+      ],
       "internal": false
     },
     "switchSubTrack": {
-      "desc": "Change la sous-piste courante ; l'initialise si elle n'existe pas.",
-      "params": {"index": {"type": "integer", "desc": "Indice de la sous-piste."}},
+      "desc": "Changes the current sub-track; initializes it if it does not exist.",
+      "params": {
+        "index": {
+          "type": "integer",
+          "desc": "Sub-track index."
+        }
+      },
       "internal": false
     },
     "removeSubTrack": {
-      "desc": "Supprime une sous-piste (meshes compris), décale les suivantes et renomme leurs meshes. Ne fait rien s'il n'y a qu'une sous-piste.",
-      "params": {"index": {"type": "integer", "desc": "Indice de la sous-piste."}},
+      "desc": "Deletes a sub-track (meshes included), shifts the following ones and renames their meshes. Does nothing if there is only one sub-track.",
+      "params": {
+        "index": {
+          "type": "integer",
+          "desc": "Sub-track index."
+        }
+      },
       "internal": false
     },
     "mergeMultiTrack": {
-      "desc": "Crée une intersection (raccord de plusieurs extrémités de segments) avec multiTrackMerger et la mémorise ; les matériaux par défaut viennent du premier segment. Le nom de l'intersection est 'procMerger-…'.",
+      "desc": "Creates an intersection (junction of several segment ends) with multiTrackMerger and stores it; the default materials come from the first segment. The intersection name is 'procMerger-…'.",
       "params": {
-        "segments": {"type": "table[]", "desc": "Liste de {segment, reverse, index, sub}."},
-        "centerMat": {"type": "string|nil", "desc": "Matériau du centre."},
-        "borderMat": {"type": "string|nil", "desc": "Matériau de la bordure."},
-        "borderMesh": {"type": "string|nil", "desc": "Profil de bordure."}
+        "segments": {
+          "type": "table[]",
+          "desc": "List of {segment, reverse, index, sub}."
+        },
+        "centerMat": {
+          "type": "string|nil",
+          "desc": "Center material."
+        },
+        "borderMat": {
+          "type": "string|nil",
+          "desc": "Border material."
+        },
+        "borderMesh": {
+          "type": "string|nil",
+          "desc": "Border profile."
+        }
       },
       "internal": false
     },
     "removeIntersection": {
-      "desc": "Supprime une intersection (objet de scène compris) par son nom. Plante si le nom n'existe pas.",
-      "params": {"name": {"type": "string", "desc": "Nom de l'intersection."}},
+      "desc": "Deletes an intersection (scene object included) by its name. Crashes if the name does not exist.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Intersection name."
+        }
+      },
       "internal": false
     },
     "setIntersectionMaterial": {
-      "desc": "Change les matériaux d'une intersection.",
+      "desc": "Changes the materials of an intersection.",
       "params": {
-        "name": {"type": "string", "desc": "Nom de l'intersection."},
-        "center": {"type": "string|nil", "desc": "Matériau du centre."},
-        "border": {"type": "string|nil", "desc": "Matériau de la bordure."}
+        "name": {
+          "type": "string",
+          "desc": "Intersection name."
+        },
+        "center": {
+          "type": "string|nil",
+          "desc": "Center material."
+        },
+        "border": {
+          "type": "string|nil",
+          "desc": "Border material."
+        }
       },
       "internal": false
     },
     "setIntersectionMesh": {
-      "desc": "Change le profil de bordure d'une intersection en la recréant.",
+      "desc": "Changes the border profile of an intersection by recreating it.",
       "params": {
-        "name": {"type": "string", "desc": "Nom de l'intersection."},
-        "mesh": {"type": "string", "desc": "Nom de profil (voir basicBorders)."}
+        "name": {
+          "type": "string",
+          "desc": "Intersection name."
+        },
+        "mesh": {
+          "type": "string",
+          "desc": "Profile name (see basicBorders)."
+        }
       },
       "internal": false
     },
     "getIntersection": {
-      "desc": "Renvoie la table d'une intersection par son nom.",
-      "params": {"name": {"type": "string", "desc": "Nom de l'intersection."}},
-      "returns": [{"type": "table|nil", "desc": "{segments, centerMat, borderMat, borderMesh, name, obj}."}],
+      "desc": "Returns an intersection's table by its name.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Intersection name."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{segments, centerMat, borderMat, borderMesh, name, obj}."
+        }
+      ],
       "internal": false
     },
     "addCheckPointPositions": {
-      "desc": "Crée des checkpoints (BeamNGWaypoint 'gym_<n>') régulièrement répartis sur la piste (un tous les 300 m environ, au moins 3) ou aux segments marqués hasCheckPoint, et les enregistre dans scenario.lapConfig et scenario.nodes. Réinitialise lapConfig et nodes du scénario courant.",
-      "params": {"reverse": {"type": "boolean|nil", "desc": "Parcours dans le sens inverse."}},
+      "desc": "Creates checkpoints (BeamNGWaypoint 'gym_<n>') evenly distributed along the track (about one every 300 m, at least 3) or at the segments marked hasCheckPoint, and registers them in scenario.lapConfig and scenario.nodes. Resets lapConfig and nodes of the current scenario.",
+      "params": {
+        "reverse": {
+          "type": "boolean|nil",
+          "desc": "Travel in the reverse direction."
+        }
+      },
       "internal": false
     },
     "getAllCheckpoints": {
-      "desc": "Liste les segments portant un checkpoint fixe.",
+      "desc": "Lists the segments carrying a fixed checkpoint.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Éléments {segmentIndex, checkpointSize, checkpointPosition}."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Items {segmentIndex, checkpointSize, checkpointPosition}."
+        }
+      ],
       "internal": false
     },
     "positionVehicle": {
-      "desc": "Place le véhicule du joueur (ou 'thePlayer' hors scénario) 3 m derrière le début d'un segment (0,25 m au-dessus) et recharge la collision si ignoreCollision est faux. Met à jour scenario.startingTransforms['scenario_player0'].",
+      "desc": "Places the player's vehicle ('thePlayer' outside a scenario) 3 m behind the start of a segment (0.25 m above) and reloads the collision if ignoreCollision is false. Updates scenario.startingTransforms['scenario_player0'].",
       "params": {
-        "reverse": {"type": "boolean|nil", "desc": "Départ à l'autre extrémité, dans le sens inverse."},
-        "index": {"type": "integer|nil", "desc": "Indice du segment de départ (1 par défaut)."}
+        "reverse": {
+          "type": "boolean|nil",
+          "desc": "Start at the other end, in the reverse direction."
+        },
+        "index": {
+          "type": "integer|nil",
+          "desc": "Index of the start segment (1 by default)."
+        }
       },
       "internal": false
     },
     "positionTrackBeforeCamera": {
-      "desc": "Place l'origine de la piste 15 m devant la caméra. Renvoie false si la caméra n'est pas libre.",
+      "desc": "Places the track origin 15 m in front of the camera. Returns false if the camera is not free.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "Succès."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Success."
+        }
+      ],
       "internal": false
     },
     "rotateTrackToCamera": {
-      "desc": "Oriente la piste dans la direction de la caméra libre. Renvoie false si la caméra n'est pas libre.",
+      "desc": "Orients the track in the direction of the free camera. Returns false if the camera is not free.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "Succès."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Success."
+        }
+      ],
       "internal": false
     },
     "positionTrackAboveVehicle": {
-      "desc": "Place l'origine de la piste 15 m au-dessus du véhicule joueur. Renvoie false s'il n'y a pas de véhicule.",
+      "desc": "Places the track origin 15 m above the player vehicle. Returns false if there is no vehicle.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "Succès."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Success."
+        }
+      ],
       "internal": false
     },
     "rotateTrackToTrackVehicle": {
-      "desc": "Oriente la piste selon la direction du véhicule joueur. Renvoie false sans véhicule.",
+      "desc": "Orients the track according to the player vehicle's direction. Returns false without a vehicle.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "Succès."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Success."
+        }
+      ],
       "internal": false
     },
     "setTrackPosition": {
-      "desc": "Définit la position de l'origine de la sous-piste (x et y en unités de grille, z en mètres) et, si hdg est donné, son cap en degrés ; recalcule les vecteurs unitaires et invalide toutes les pièces.",
+      "desc": "Sets the position of the sub-track origin (x and y in grid units, z in meters) and, if hdg is given, its heading in degrees; recomputes the unit vectors and invalidates all pieces.",
       "params": {
-        "x": {"type": "number", "desc": "x en unités de grille."},
-        "y": {"type": "number", "desc": "y en unités de grille."},
-        "z": {"type": "number", "desc": "Altitude en mètres."},
-        "hdg": {"type": "number|nil", "desc": "Cap en degrés."},
-        "sub": {"type": "integer|nil", "desc": "Sous-piste (courante par défaut)."}
+        "x": {
+          "type": "number",
+          "desc": "x in grid units."
+        },
+        "y": {
+          "type": "number",
+          "desc": "y in grid units."
+        },
+        "z": {
+          "type": "number",
+          "desc": "Altitude in meters."
+        },
+        "hdg": {
+          "type": "number|nil",
+          "desc": "Heading in degrees."
+        },
+        "sub": {
+          "type": "integer|nil",
+          "desc": "Sub-track (current by default)."
+        }
       },
       "internal": false
     },
     "setDefaultLaps": {
-      "desc": "Définit le nombre de tours par défaut enregistré avec la piste.",
-      "params": {"laps": {"type": "integer", "desc": "Nombre de tours."}},
+      "desc": "Sets the default number of laps saved with the track.",
+      "params": {
+        "laps": {
+          "type": "integer",
+          "desc": "Number of laps."
+        }
+      },
       "internal": false
     },
     "setReversible": {
-      "desc": "Indique si la piste peut être parcourue en sens inverse (enregistré avec la piste).",
-      "params": {"rev": {"type": "boolean", "desc": "Piste réversible."}},
+      "desc": "Indicates whether the track can be driven in the reverse direction (saved with the track).",
+      "params": {
+        "rev": {
+          "type": "boolean",
+          "desc": "Reversible track."
+        }
+      },
       "internal": false
     },
     "getTrackPosition": {
-      "desc": "Renvoie la position et le cap de la sous-piste courante.",
+      "desc": "Returns the position and heading of the current sub-track.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{x, y, z, hdg, unitX, unitY}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{x, y, z, hdg, unitX, unitY}."
+        }
+      ],
       "internal": false
     },
     "getLastPieceWithMarker": {
-      "desc": "Renvoie le dernier segment (à partir de lastIndex en remontant) qui possède le marqueur donné. Voir notes : plante sans lastIndex.",
+      "desc": "Returns the last segment (starting from lastIndex going backward) that has the given marker. See notes: crashes without lastIndex.",
       "params": {
-        "markerName": {"type": "string", "desc": "Nom du marqueur."},
-        "lastIndex": {"type": "integer", "desc": "Indice de départ."}
+        "markerName": {
+          "type": "string",
+          "desc": "Marker name."
+        },
+        "lastIndex": {
+          "type": "integer",
+          "desc": "Starting index."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Segment trouvé."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Segment found."
+        }
+      ],
       "internal": false
     },
     "getPieceInfo": {
-      "desc": "Avec index : renvoie la pièce abstraite. Sans index : renvoie l'état global de l'éditeur (pièces, qualité, marqueurs affichés, position, sélection, piste fermée, tours, réversible, indice de sous-piste).",
+      "desc": "With index: returns the abstract piece. Without index: returns the editor's global state (pieces, quality, markers shown, position, selection, closed track, laps, reversible, sub-track index).",
       "params": {
-        "index": {"type": "integer|nil", "desc": "Indice de la pièce."},
-        "sub": {"type": "integer|nil", "desc": "Sous-piste (courante par défaut)."}
+        "index": {
+          "type": "integer|nil",
+          "desc": "Piece index."
+        },
+        "sub": {
+          "type": "integer|nil",
+          "desc": "Sub-track (current by default)."
+        }
       },
-      "returns": [{"type": "table", "desc": "Pièce ou état global."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Piece or global state."
+        }
+      ],
       "internal": false
     },
     "getSegmentInfo": {
-      "desc": "Renvoie le segment concret (points, mesh, markerInfo) d'indice donné.",
+      "desc": "Returns the concrete segment (points, mesh, markerInfo) at the given index.",
       "params": {
-        "index": {"type": "integer", "desc": "Indice du segment."},
-        "sub": {"type": "integer|nil", "desc": "Sous-piste."}
+        "index": {
+          "type": "integer",
+          "desc": "Segment index."
+        },
+        "sub": {
+          "type": "integer|nil",
+          "desc": "Sub-track."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Segment."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Segment."
+        }
+      ],
       "internal": false
     },
     "getSelectedTrackInfo": {
-      "desc": "Renvoie le segment actuellement sélectionné.",
+      "desc": "Returns the currently selected segment.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Segment sélectionné."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Selected segment."
+        }
+      ],
       "internal": false
     },
     "setHighQuality": {
-      "desc": "Active ou non la haute qualité ; marque tous les segments dont la qualité diffère pour régénération (quality 1 ou 4).",
-      "params": {"hq": {"type": "boolean", "desc": "Haute qualité."}},
+      "desc": "Enables or disables high quality; marks all segments whose quality differs for regeneration (quality 1 or 4).",
+      "params": {
+        "hq": {
+          "type": "boolean",
+          "desc": "High quality."
+        }
+      },
       "internal": false
     },
     "setAllPiecesHighQuality": {
-      "desc": "Régénère immédiatement en qualité 1 tous les segments de la sous-piste courante qui ne l'étaient pas.",
+      "desc": "Immediately regenerates in quality 1 all the segments of the current sub-track that were not.",
       "params": {},
       "internal": false
     },
     "focusCameraOn": {
-      "desc": "Déplace en douceur (0,3 s, via cameraTransition) la caméra libre pour regarder le segment index à la distance donnée.",
+      "desc": "Smoothly moves (0.3 s, via cameraTransition) the free camera to look at segment index at the given distance.",
       "params": {
-        "index": {"type": "integer", "desc": "Indice du segment."},
-        "distance": {"type": "number|nil", "desc": "Distance (camDistance par défaut)."},
-        "force": {"type": "boolean|nil", "desc": "Refait la transition même si le segment est déjà celui de la dernière fois."}
+        "index": {
+          "type": "integer",
+          "desc": "Segment index."
+        },
+        "distance": {
+          "type": "number|nil",
+          "desc": "Distance (camDistance by default)."
+        },
+        "force": {
+          "type": "boolean|nil",
+          "desc": "Redoes the transition even if the segment is the same as last time."
+        }
       },
       "internal": false
     },
     "unselectAll": {
-      "desc": "Désélectionne tous les segments de toutes les sous-pistes et marque leurs matériaux à rafraîchir.",
+      "desc": "Deselects all segments of all sub-tracks and marks their materials for refresh.",
       "params": {},
       "internal": false
     },
     "focusMarkerOn": {
-      "desc": "Place le marqueur de piste sur le segment index, le sélectionne (matériau 'track_editor_grid') et, si M.camActivated est vrai, recentre la caméra. Affiche les marqueurs s'ils sont cachés.",
+      "desc": "Places the track marker on segment index, selects it (material 'track_editor_grid') and, if M.camActivated is true, recenters the camera. Shows the markers if they are hidden.",
       "params": {
-        "index": {"type": "integer", "desc": "Indice du segment."},
-        "dontRefresMaterial": {"type": "boolean|nil", "desc": "Ne change pas les matériaux de sélection."},
-        "force": {"type": "boolean|nil", "desc": "Forcer le recentrage de la caméra."}
+        "index": {
+          "type": "integer",
+          "desc": "Segment index."
+        },
+        "dontRefresMaterial": {
+          "type": "boolean|nil",
+          "desc": "Does not change the selection materials."
+        },
+        "force": {
+          "type": "boolean|nil",
+          "desc": "Force the camera to recenter."
+        }
       },
       "internal": false
     },
     "showMarkers": {
-      "desc": "Affiche (création + placement) ou cache tous les marqueurs d'édition et le marqueur de piste.",
-      "params": {"show": {"type": "boolean", "desc": "Afficher les marqueurs."}},
+      "desc": "Shows (creation + placement) or hides all edit markers and the track marker.",
+      "params": {
+        "show": {
+          "type": "boolean",
+          "desc": "Show the markers."
+        }
+      },
       "internal": false
     },
     "createMarkers": {
-      "desc": "Crée le marqueur de piste ('track_marker') s'il n'existe pas et place tous les marqueurs d'édition (markers.transformMarkers pour chaque type).",
+      "desc": "Creates the track marker ('track_marker') if it does not exist and places all edit markers (markers.transformMarkers for each type).",
       "params": {},
       "internal": false
     },
     "markerChange": {
-      "desc": "Modifie un marqueur (bank, height, width, checkpoint, murs, plafond, obstacles…) d'une pièce et l'invalide ; value nil le supprime. Interdit le checkpoint sur la première pièce. Sur une piste fermée, applique aussi le changement à la première pièce.",
+      "desc": "Modifies a marker (bank, height, width, checkpoint, walls, ceiling, obstacles…) of a piece and invalidates it; value nil deletes it. Forbids the checkpoint on the first piece. On a closed track, also applies the change to the first piece.",
       "params": {
-        "type": {"type": "string", "desc": "Type de marqueur."},
-        "index": {"type": "integer|nil", "desc": "Indice de la pièce (dernière par défaut)."},
-        "value": {"type": "any", "desc": "Valeur du marqueur (table {value, interpolation} pour bank/height/width)."}
+        "type": {
+          "type": "string",
+          "desc": "Marker type."
+        },
+        "index": {
+          "type": "integer|nil",
+          "desc": "Piece index (last by default)."
+        },
+        "value": {
+          "type": "any",
+          "desc": "Marker value (table {value, interpolation} for bank/height/width)."
+        }
       },
       "internal": false
     },
     "onUpdate": {
-      "desc": "Hook appelé à chaque frame. Si la haute qualité et les marqueurs sont actifs, décompte (pas fixe de 0,01) le timer des segments en basse qualité et les régénère un par un en qualité 1.",
+      "desc": "Hook called every frame. If high quality and markers are active, counts down (fixed step of 0.01) the timer of the low-quality segments and regenerates them one by one in quality 1.",
       "params": {},
       "internal": true
     },
     "refreshAllMaterials": {
-      "desc": "Applique les changements de matériaux en attente (materialChanged) sur tous les segments.",
+      "desc": "Applies the pending material changes (materialChanged) to all segments.",
       "params": {},
       "internal": false
     },
     "makeTrack": {
-      "desc": "Génère les meshes de la piste : toSegments, convertToSpline, measureTrack, caps, interpolation des marqueurs, rotation finale des points, regénération des meshes à rafraîchir, marqueurs, obstacles. Recharge la collision si instantHighQuality est vrai et ignoreCollision faux.",
+      "desc": "Generates the track meshes: toSegments, convertToSpline, measureTrack, caps, marker interpolation, final rotation of the points, regeneration of the meshes to refresh, markers, obstacles. Reloads the collision if instantHighQuality is true and ignoreCollision false.",
       "params": {
-        "instantHighQuality": {"type": "boolean|nil", "desc": "Générer tout de suite en qualité 1."},
-        "ignoreCollision": {"type": "boolean|nil", "desc": "Ne pas recharger la collision (paramètre, masque la variable de module)."}
+        "instantHighQuality": {
+          "type": "boolean|nil",
+          "desc": "Generate immediately in quality 1."
+        },
+        "ignoreCollision": {
+          "type": "boolean|nil",
+          "desc": "Do not reload the collision (parameter, shadows the module variable)."
+        }
       },
       "internal": false
     },
     "setMaterial": {
-      "desc": "Change le matériau d'un champ (centerMesh, leftMesh, rightMesh, leftWall, rightWall, ceilingMesh) d'un segment ; avec fill, étend le changement aux segments voisins qui avaient le même matériau.",
+      "desc": "Changes the material of a field (centerMesh, leftMesh, rightMesh, leftWall, rightWall, ceilingMesh) of a segment; with fill, extends the change to the neighboring segments that had the same material.",
       "params": {
-        "index": {"type": "integer", "desc": "Indice du segment."},
-        "sub": {"type": "integer|nil", "desc": "Sous-piste."},
-        "field": {"type": "string", "desc": "Nom du champ de matériau."},
-        "material": {"type": "string", "desc": "Nom du matériau."},
-        "fill": {"type": "boolean|nil", "desc": "Étendre aux voisins."}
+        "index": {
+          "type": "integer",
+          "desc": "Segment index."
+        },
+        "sub": {
+          "type": "integer|nil",
+          "desc": "Sub-track."
+        },
+        "field": {
+          "type": "string",
+          "desc": "Material field name."
+        },
+        "material": {
+          "type": "string",
+          "desc": "Material name."
+        },
+        "fill": {
+          "type": "boolean|nil",
+          "desc": "Extend to the neighbors."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si quelque chose a changé."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if something changed."
+        }
+      ],
       "internal": false
     },
     "setMesh": {
-      "desc": "Change le profil (centerMesh, leftMesh, rightMesh) d'un segment ; avec fill, étend aux segments voisins identiques.",
+      "desc": "Changes the profile (centerMesh, leftMesh, rightMesh) of a segment; with fill, extends it to identical neighboring segments.",
       "params": {
-        "index": {"type": "integer", "desc": "Indice du segment."},
-        "field": {"type": "string", "desc": "Champ de profil."},
-        "mesh": {"type": "string", "desc": "Nom du profil."},
-        "fill": {"type": "boolean|nil", "desc": "Étendre aux voisins."}
+        "index": {
+          "type": "integer",
+          "desc": "Segment index."
+        },
+        "field": {
+          "type": "string",
+          "desc": "Profile field."
+        },
+        "mesh": {
+          "type": "string",
+          "desc": "Profile name."
+        },
+        "fill": {
+          "type": "boolean|nil",
+          "desc": "Extend to the neighbors."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si quelque chose a changé."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if something changed."
+        }
+      ],
       "internal": false
     },
     "setSegmentMaterial": {
-      "desc": "Applique à chaque sous-mesh du segment son matériau (ou 'track_editor_grid' si sélectionné).",
-      "params": {"segment": {"type": "table", "desc": "Segment avec points, mesh et submeshIndexes."}},
+      "desc": "Applies to each sub-mesh of the segment its material (or 'track_editor_grid' if selected).",
+      "params": {
+        "segment": {
+          "type": "table",
+          "desc": "Segment with points, mesh and submeshIndexes."
+        }
+      },
       "internal": false
     },
     "snapToGrid": {
-      "desc": "Aligne un point sur la grille triangulaire (pas de sqrt(3)/2 et 0,5) de la piste, en conservant z.",
-      "params": {"point": {"type": "vec3", "desc": "Point à aligner."}},
-      "returns": [{"type": "vec3", "desc": "Point aligné."}],
+      "desc": "Snaps a point to the track's triangular grid (steps of sqrt(3)/2 and 0.5), keeping z.",
+      "params": {
+        "point": {
+          "type": "vec3",
+          "desc": "Point to snap."
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3",
+          "desc": "Snapped point."
+        }
+      ],
       "internal": false
     },
     "addClosingPiece": {
-      "desc": "Ferme la piste : ajoute une pièce freeBezier absolue vers le point de départ et copie bank, width et height de la première pièce. Ne fait rien si la piste est déjà fermée.",
+      "desc": "Closes the track: adds an absolute freeBezier piece toward the start point and copies bank, width and height from the first piece. Does nothing if the track is already closed.",
       "params": {},
       "internal": false
     },
     "convertToSpline": {
-      "desc": "Pour chaque segment invalide, calcule rotation et points (Bézier, arc ou personnalisés), marque les premiers et derniers points comme toujours présents, fixe markerInfo.basePosition ; détermine ensuite si la piste est fermée (début et fin à moins de 0,1 unité).",
+      "desc": "For each invalid segment, computes rotation and points (Bézier, arc or custom), marks the first and last points as always present, sets markerInfo.basePosition; then determines whether the track is closed (start and end less than 0.1 unit apart).",
       "params": {},
       "internal": false
     },
     "getArcPoints": {
-      "desc": "Calcule les points d'un arc de cercle (polyMult * pointsMultiplier points, 300 au plus).",
-      "params": {"segment": {"type": "table", "desc": "Segment de type 'arc' (position, hdg, direction, angle, radius)."}},
-      "returns": [{"type": "table[]", "desc": "Points {position, rot, quality}."}],
+      "desc": "Computes the points of a circular arc (polyMult * pointsMultiplier points, 300 at most).",
+      "params": {
+        "segment": {
+          "type": "table",
+          "desc": "Segment of type 'arc' (position, hdg, direction, angle, radius)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Points {position, rot, quality}."
+        }
+      ],
       "internal": false
     },
     "getBezierPoints": {
-      "desc": "Calcule les points d'une courbe de Bézier cubique entre origin et position (échelle de grille appliquée) avec les points de contrôle du segment.",
-      "params": {"segment": {"type": "table", "desc": "Segment de type 'bezier'."}},
-      "returns": [{"type": "table[]", "desc": "Points {position, rot, quality, …}."}],
+      "desc": "Computes the points of a cubic Bézier curve between origin and position (grid scale applied) with the segment's control points.",
+      "params": {
+        "segment": {
+          "type": "table",
+          "desc": "Segment of type 'bezier'."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Points {position, rot, quality, …}."
+        }
+      ],
       "internal": false
     },
     "calculateCustomPoints": {
-      "desc": "Met à l'échelle et tourne les points personnalisés d'une pièce (loopings). Renvoie nil sans customPoints.",
-      "params": {"piece": {"type": "table", "desc": "Pièce avec customPoints, position et hdg."}},
-      "returns": [{"type": "table[]|nil", "desc": "Points {position, rot, quality}."}],
+      "desc": "Scales and rotates the custom points of a piece (loops). Returns nil without customPoints.",
+      "params": {
+        "piece": {
+          "type": "table",
+          "desc": "Piece with customPoints, position and hdg."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]|nil",
+          "desc": "Points {position, rot, quality}."
+        }
+      ],
       "internal": false
     },
     "measureTrack": {
-      "desc": "Calcule startLength, endLength et la longueur cumulée de chaque point, à partir du dernier segment valide, pour les segments invalides.",
+      "desc": "Computes startLength, endLength and the cumulative length of each point, from the last valid segment, for the invalid segments.",
       "params": {},
       "internal": false
     },
     "invalidatePiece": {
-      "desc": "Enregistre qu'une pièce doit être recalculée pour un type de marqueur donné, ou pour tous si types est nil (markers.addMarkerChange).",
+      "desc": "Records that a piece must be recomputed for a given marker type, or for all if types is nil (markers.addMarkerChange).",
       "params": {
-        "index": {"type": "integer", "desc": "Indice de la pièce."},
-        "types": {"type": "string|nil", "desc": "Type de marqueur."},
-        "force": {"type": "boolean|nil", "desc": "Non utilisé dans le code."}
+        "index": {
+          "type": "integer",
+          "desc": "Piece index."
+        },
+        "types": {
+          "type": "string|nil",
+          "desc": "Marker type."
+        },
+        "force": {
+          "type": "boolean|nil",
+          "desc": "Not used in the code."
+        }
       },
       "internal": false
     },
     "toSegments": {
-      "desc": "Transforme les pièces invalides de subPieces en segments de subTracks (supprime les anciens meshes et obstacles) à l'aide de pieces.toSegment, et initialise meshInfo, markerInfo et les champs de marqueurs hérités.",
+      "desc": "Transforms the invalid pieces of subPieces into segments of subTracks (deletes the old meshes and obstacles) using pieces.toSegment, and initializes meshInfo, markerInfo and the inherited marker fields.",
       "params": {},
       "internal": false
     },
     "initTrack": {
-      "desc": "(Ré)initialise la sous-piste courante : décharge tout (sauf noUnload), crée la pièce 'init' avec les matériaux 'track_editor_A_*' (G sur glow_city), positionne la piste puis ajoute un addForward(3).",
-      "params": {"noUnload": {"type": "boolean|nil", "desc": "Ne pas appeler unloadAll."}},
+      "desc": "(Re)initializes the current sub-track: unloads everything (except noUnload), creates the 'init' piece with the 'track_editor_A_*' materials (G on glow_city), positions the track then adds an addForward(3).",
+      "params": {
+        "noUnload": {
+          "type": "boolean|nil",
+          "desc": "Do not call unloadAll."
+        }
+      },
       "internal": false
     },
     "unloadAll": {
-      "desc": "Réinitialise tous les champs du module (pistes, pièces, intersections, marqueurs, obstacles) sans supprimer les objets de scène, force highQuality à true, markersShown à false et recharge la collision.",
+      "desc": "Resets all the module's fields (tracks, pieces, intersections, markers, obstacles) without deleting the scene objects, forces highQuality to true, markersShown to false and reloads the collision.",
       "params": {},
       "internal": false
     },
     "removeTrack": {
-      "desc": "Supprime la piste entière : cache les marqueurs, supprime meshes, obstacles procéduraux, marqueurs et intersections, remet l'état à une sous-piste vide.",
+      "desc": "Deletes the entire track: hides the markers, deletes meshes, procedural obstacles, markers and intersections, resets the state to an empty sub-track.",
       "params": {},
       "internal": false
     },
     "getEndOfTrack": {
-      "desc": "Renvoie le dernier segment de la sous-piste courante.",
+      "desc": "Returns the last segment of the current sub-track.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Segment."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Segment."
+        }
+      ],
       "internal": false
     },
     "revert": {
-      "desc": "Supprime la dernière pièce (il en reste au moins deux).",
+      "desc": "Deletes the last piece (at least two remain).",
       "params": {},
       "internal": false
     },
     "removeAt": {
-      "desc": "Supprime la pièce d'indice donné et décale les suivantes. Ignoré si la piste n'a que deux pièces ou si index <= 2.",
-      "params": {"index": {"type": "integer", "desc": "Indice de la pièce."}},
+      "desc": "Deletes the piece at the given index and shifts the following ones. Ignored if the track has only two pieces or if index <= 2.",
+      "params": {
+        "index": {
+          "type": "integer",
+          "desc": "Piece index."
+        }
+      },
       "internal": false
     },
     "addForward": {
-      "desc": "Ajoute une ligne droite ('freeForward').",
+      "desc": "Adds a straight line ('freeForward').",
       "params": {
-        "len": {"type": "number", "desc": "Longueur."},
-        "index": {"type": "integer|nil", "desc": "Position d'insertion (fin par défaut)."},
-        "replace": {"type": "boolean|nil", "desc": "Remplacer la pièce à cet indice."}
+        "len": {
+          "type": "number",
+          "desc": "Length."
+        },
+        "index": {
+          "type": "integer|nil",
+          "desc": "Insertion position (end by default)."
+        },
+        "replace": {
+          "type": "boolean|nil",
+          "desc": "Replace the piece at this index."
+        }
       },
       "internal": false
     },
     "addCurve": {
-      "desc": "Ajoute un virage hexagonal ('hexCurve').",
+      "desc": "Adds a hexagonal curve ('hexCurve').",
       "params": {
-        "len": {"type": "number", "desc": "Taille du virage."},
-        "hardness": {"type": "number", "desc": "Dureté."},
-        "dir": {"type": "number", "desc": "Sens : 1 ou -1."},
-        "index": {"type": "integer|nil", "desc": "Position d'insertion."},
-        "replace": {"type": "boolean|nil", "desc": "Remplacer."}
+        "len": {
+          "type": "number",
+          "desc": "Curve size."
+        },
+        "hardness": {
+          "type": "number",
+          "desc": "Hardness."
+        },
+        "dir": {
+          "type": "number",
+          "desc": "Direction: 1 or -1."
+        },
+        "index": {
+          "type": "integer|nil",
+          "desc": "Insertion position."
+        },
+        "replace": {
+          "type": "boolean|nil",
+          "desc": "Replace."
+        }
       },
       "internal": false
     },
     "addOffsetCurve": {
-      "desc": "Ajoute une courbe en S hexagonale ('hexOffsetCurve').",
+      "desc": "Adds a hexagonal S-curve ('hexOffsetCurve').",
       "params": {
-        "len": {"type": "number", "desc": "Longueur."},
-        "off": {"type": "number", "desc": "Décalage latéral."},
-        "hardness": {"type": "number", "desc": "Dureté."},
-        "index": {"type": "integer|nil", "desc": "Position d'insertion."},
-        "replace": {"type": "boolean|nil", "desc": "Remplacer."}
+        "len": {
+          "type": "number",
+          "desc": "Length."
+        },
+        "off": {
+          "type": "number",
+          "desc": "Lateral offset."
+        },
+        "hardness": {
+          "type": "number",
+          "desc": "Hardness."
+        },
+        "index": {
+          "type": "integer|nil",
+          "desc": "Insertion position."
+        },
+        "replace": {
+          "type": "boolean|nil",
+          "desc": "Replace."
+        }
       },
       "internal": false
     },
     "addSpiral": {
-      "desc": "Ajoute une spirale hexagonale ('hexSpiral').",
+      "desc": "Adds a hexagonal spiral ('hexSpiral').",
       "params": {
-        "size": {"type": "number", "desc": "Taille."},
-        "inside": {"type": "boolean", "desc": "Vers l'intérieur."},
-        "dir": {"type": "number", "desc": "Sens : 1 ou -1."},
-        "index": {"type": "integer|nil", "desc": "Position d'insertion."},
-        "replace": {"type": "boolean|nil", "desc": "Remplacer."}
+        "size": {
+          "type": "number",
+          "desc": "Size."
+        },
+        "inside": {
+          "type": "boolean",
+          "desc": "Inward."
+        },
+        "dir": {
+          "type": "number",
+          "desc": "Direction: 1 or -1."
+        },
+        "index": {
+          "type": "integer|nil",
+          "desc": "Insertion position."
+        },
+        "replace": {
+          "type": "boolean|nil",
+          "desc": "Replace."
+        }
       },
       "internal": false
     },
     "addLoop": {
-      "desc": "Ajoute un looping hexagonal ('hexLoop').",
+      "desc": "Adds a hexagonal loop ('hexLoop').",
       "params": {
-        "rad": {"type": "number", "desc": "Rayon."},
-        "off": {"type": "number", "desc": "Décalage latéral."},
-        "index": {"type": "integer|nil", "desc": "Position d'insertion."},
-        "replace": {"type": "boolean|nil", "desc": "Remplacer."}
+        "rad": {
+          "type": "number",
+          "desc": "Radius."
+        },
+        "off": {
+          "type": "number",
+          "desc": "Lateral offset."
+        },
+        "index": {
+          "type": "integer|nil",
+          "desc": "Insertion position."
+        },
+        "replace": {
+          "type": "boolean|nil",
+          "desc": "Replace."
+        }
       },
       "internal": false
     },
     "addEmptyOffset": {
-      "desc": "Ajoute un déplacement sans géométrie ('hexEmptyOffset').",
+      "desc": "Adds a move without geometry ('hexEmptyOffset').",
       "params": {
-        "xOff": {"type": "number", "desc": "Décalage latéral."},
-        "yOff": {"type": "number", "desc": "Décalage avant."},
-        "zOff": {"type": "number", "desc": "Décalage vertical."},
-        "dirOff": {"type": "number", "desc": "Rotation en pas."},
-        "absolute": {"type": "boolean|nil", "desc": "Relatif à l'origine de la piste."},
-        "index": {"type": "integer|nil", "desc": "Position d'insertion."},
-        "replace": {"type": "boolean|nil", "desc": "Remplacer."}
+        "xOff": {
+          "type": "number",
+          "desc": "Lateral offset."
+        },
+        "yOff": {
+          "type": "number",
+          "desc": "Forward offset."
+        },
+        "zOff": {
+          "type": "number",
+          "desc": "Vertical offset."
+        },
+        "dirOff": {
+          "type": "number",
+          "desc": "Rotation in steps."
+        },
+        "absolute": {
+          "type": "boolean|nil",
+          "desc": "Relative to the track origin."
+        },
+        "index": {
+          "type": "integer|nil",
+          "desc": "Insertion position."
+        },
+        "replace": {
+          "type": "boolean|nil",
+          "desc": "Replace."
+        }
       },
       "internal": false
     },
     "addPiece": {
-      "desc": "Ajoute (ou remplace) une pièce dans subPieces à l'indice donné, l'invalide et invalide les pièces concernées. Avec replace, conserve les marqueurs, profils, matériaux et obstacles de la pièce remplacée ; sinon les profils sont copiés de la pièce précédente (défaut 'regular').",
+      "desc": "Adds (or replaces) a piece in subPieces at the given index, invalidates it and invalidates the affected pieces. With replace, keeps the markers, profiles, materials and obstacles of the replaced piece; otherwise the profiles are copied from the previous piece (default 'regular').",
       "params": {
-        "params": {"type": "table", "desc": "Description de la pièce (champ piece = nom du type, plus ses paramètres ; voir pieces.toSegment)."},
-        "index": {"type": "integer|nil", "desc": "Position d'insertion (fin par défaut)."},
-        "replace": {"type": "boolean|nil", "desc": "Remplacer la pièce existante."}
+        "params": {
+          "type": "table",
+          "desc": "Piece description (field piece = type name, plus its parameters; see pieces.toSegment)."
+        },
+        "index": {
+          "type": "integer|nil",
+          "desc": "Insertion position (end by default)."
+        },
+        "replace": {
+          "type": "boolean|nil",
+          "desc": "Replace the existing piece."
+        }
       },
       "internal": false
     },
     "rotateVectorByQuat": {
-      "desc": "Fonction auxiliaire : renvoie q * v.",
+      "desc": "Helper function: returns q * v.",
       "params": {
-        "v": {"type": "vec3", "desc": "Vecteur."},
-        "q": {"type": "quat", "desc": "Rotation."}
+        "v": {
+          "type": "vec3",
+          "desc": "Vector."
+        },
+        "q": {
+          "type": "quat",
+          "desc": "Rotation."
+        }
       },
-      "returns": [{"type": "vec3", "desc": "Vecteur tourné."}],
+      "returns": [
+        {
+          "type": "vec3",
+          "desc": "Rotated vector."
+        }
+      ],
       "internal": false
     },
     "exportTrackToTable": {
-      "desc": "Exporte la piste en table Lua simple (sous-pistes, positions, pièces, matériaux, matériaux de champs de materialUtil, intersections, tours, réversible, fermée).",
+      "desc": "Exports the track as a simple Lua table (sub-tracks, positions, pieces, materials, materialUtil field materials, intersections, laps, reversible, closed).",
       "params": {},
-      "returns": [{"type": "table", "desc": "Table exportable en JSON."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Table exportable to JSON."
+        }
+      ],
       "internal": false
     },
     "importTrackFromTable": {
-      "desc": "Remplace la piste actuelle par celle de la table (format 1.0 ou 1.1) : reconstruit les sous-pistes, convertit les obstacles en vec3/quat, applique les matériaux, invalide toutes les pièces, et restaure l'heure du jour et le brouillard si le niveau correspond.",
-      "params": {"import": {"type": "table", "desc": "Table au format exporté par exportTrackToTable/save."}},
+      "desc": "Replaces the current track with the one from the table (format 1.0 or 1.1): rebuilds the sub-tracks, converts obstacles to vec3/quat, applies the materials, invalidates all pieces, and restores the time of day and fog if the level matches.",
+      "params": {
+        "import": {
+          "type": "table",
+          "desc": "Table in the format exported by exportTrackToTable/save."
+        }
+      },
       "internal": false
     },
     "load": {
-      "desc": "Charge une piste depuis le fichier trackEditor/<nom>.json ou depuis une table, la construit en haute qualité (makeTrack(true)) pour chaque sous-piste, recrée les intersections et affiche un message à l'UI sauf si silent. increasePointMult multiplie le nombre de points par 1,5 pendant la construction.",
+      "desc": "Loads a track from the file trackEditor/<name>.json or from a table, builds it in high quality (makeTrack(true)) for each sub-track, recreates the intersections and displays a UI message unless silent. increasePointMult multiplies the number of points by 1.5 during the build.",
       "params": {
-        "originalFilename": {"type": "string|table", "desc": "Nom de la piste (sans extension) ou table déjà lue."},
-        "instantHighQuality": {"type": "boolean|nil", "desc": "Non utilisé dans le code (déduit du code)."},
-        "increasePointMult": {"type": "boolean|nil", "desc": "Augmente la densité de points (sauf si read.keepPointMultiplier)."},
-        "clearShapes": {"type": "boolean|nil", "desc": "Appelle mesher.clearShapes à la fin."},
-        "silent": {"type": "boolean|nil", "desc": "Pas de message UI."},
-        "ignoreCol": {"type": "boolean|nil", "desc": "Mémorise ignoreCollision : pas de rechargement de la collision."}
+        "originalFilename": {
+          "type": "string|table",
+          "desc": "Track name (without extension) or already-read table."
+        },
+        "instantHighQuality": {
+          "type": "boolean|nil",
+          "desc": "Not used in the code (inferred from code)."
+        },
+        "increasePointMult": {
+          "type": "boolean|nil",
+          "desc": "Increases the point density (unless read.keepPointMultiplier)."
+        },
+        "clearShapes": {
+          "type": "boolean|nil",
+          "desc": "Calls mesher.clearShapes at the end."
+        },
+        "silent": {
+          "type": "boolean|nil",
+          "desc": "No UI message."
+        },
+        "ignoreCol": {
+          "type": "boolean|nil",
+          "desc": "Stores ignoreCollision: no collision reload."
+        }
       },
       "internal": false
     },
     "loadJSON": {
-      "desc": "Lit seulement le JSON d'une piste (pour connaître longueur, auteur, etc.) sans la construire.",
-      "params": {"originalFilename": {"type": "string", "desc": "Nom de la piste sans extension."}},
-      "returns": [{"type": "table|nil", "desc": "Contenu JSON ou nil."}],
+      "desc": "Only reads a track's JSON (to get length, author, etc.) without building it.",
+      "params": {
+        "originalFilename": {
+          "type": "string",
+          "desc": "Track name without extension."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "JSON content or nil."
+        }
+      ],
       "internal": false
     },
     "save": {
-      "desc": "Exporte la piste, y ajoute version, auteur (plaque du véhicule joueur), date, longueur, niveau (saveForThisMap), environnement (saveEnvironment), difficulté (37 par défaut) et description, puis l'écrit dans trackEditor/<nom>.json. Un nom vide produit un nom daté AAAA-MM-JJ_HH-MM-SS. Un nom nil ne sérialise pas.",
+      "desc": "Exports the track, adds version, author (player vehicle's plate), date, length, level (saveForThisMap), environment (saveEnvironment), difficulty (37 by default) and description, then writes it to trackEditor/<name>.json. An empty name produces a dated name YYYY-MM-DD_HH-MM-SS. A nil name does not serialize.",
       "params": {
-        "filename": {"type": "string|nil", "desc": "Nom de fichier sans extension, '' pour un nom daté, nil pour ne pas écrire."},
-        "saveOptions": {"type": "table|nil", "desc": "{saveForThisMap, saveEnvironment, difficulty, description}."}
+        "filename": {
+          "type": "string|nil",
+          "desc": "File name without extension, '' for a dated name, nil to not write."
+        },
+        "saveOptions": {
+          "type": "table|nil",
+          "desc": "{saveForThisMap, saveEnvironment, difficulty, description}."
+        }
       },
-      "returns": [{"type": "table", "desc": "Table exportée."}, {"type": "string|nil", "desc": "Nom utilisé si un fichier a été écrit."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Exported table."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Name used if a file was written."
+        }
+      ],
       "internal": false
     },
     "rename": {
-      "desc": "Renomme un fichier de piste dans trackEditor/ et affiche un message à l'UI.",
+      "desc": "Renames a track file in trackEditor/ and displays a UI message.",
       "params": {
-        "oldName": {"type": "string", "desc": "Ancien nom (sans extension)."},
-        "newName": {"type": "string", "desc": "Nouveau nom."}
+        "oldName": {
+          "type": "string",
+          "desc": "Old name (without extension)."
+        },
+        "newName": {
+          "type": "string",
+          "desc": "New name."
+        }
       },
       "internal": false
     },
     "getCustomTracks": {
-      "desc": "Liste les pistes JSON de trackEditor/ utilisant le format actuel (champ version présent).",
+      "desc": "Lists the JSON tracks in trackEditor/ using the current format (version field present).",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Noms de pistes."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Track names."
+        }
+      ],
       "internal": false
     },
     "getPreviewNames": {
-      "desc": "Liste les noms des images .png et .jpg de trackEditor/ (aperçus). Les deux boucles écrivent dans les mêmes indices : les jpg écrasent les png (bug).",
+      "desc": "Lists the names of the .png and .jpg images in trackEditor/ (previews). The two loops write to the same indices: the jpgs overwrite the pngs (bug).",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Noms d'aperçus."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Preview names."
+        }
+      ],
       "internal": false
     },
     "onClientEndMission": {
-      "desc": "Hook appelé à la fin du niveau : appelle unloadAll pour oublier la piste.",
+      "desc": "Hook called at the end of the level: calls unloadAll to forget the track.",
       "params": {},
       "internal": true
     },
     "onCollectScreenshotMetadata": {
-      "desc": "Hook appelé quand des métadonnées de capture d'écran sont collectées ; corps entièrement commenté, donc sans effet.",
-      "params": {"metadata": {"type": "table", "desc": "Métadonnées de la capture."}},
+      "desc": "Hook called when screenshot metadata is collected; body entirely commented out, so no effect.",
+      "params": {
+        "metadata": {
+          "type": "table",
+          "desc": "Screenshot metadata."
+        }
+      },
       "internal": true
     },
     "onPreRender": {
-      "desc": "Hook appelé avant le rendu ; relaie à cameraTransition.onPreRender(dt).",
-      "params": {"dt": {"type": "number", "desc": "Temps écoulé (s)."}},
+      "desc": "Hook called before rendering; relays to cameraTransition.onPreRender(dt).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Elapsed time (s)."
+        }
+      },
       "internal": true
     }
   }

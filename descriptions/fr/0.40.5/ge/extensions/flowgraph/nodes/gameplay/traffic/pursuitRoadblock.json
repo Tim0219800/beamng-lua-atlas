@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitRoadblock.lua",
+  "module": "Nœud flowgraph « Pursuit Roadblock » (once_instant). Place jusqu'à 3 véhicules (vehId1..3) en barrage routier avec gameplay_police.placeRoadblock. Entrées : pos, rot, width, angle, centerAngle, checkWidth (déclaré mais non transmis dans le code).",
+  "notes": [
+    "Le pin checkWidth est déclaré mais jamais lu par workOnce.",
+    "pos et rot sont convertis sans test de nil."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "workOnce": {
+          "desc": "Rassemble les ids de véhicules, construit les paramètres {angle, centerAngle, width} et appelle gameplay_police.placeRoadblock.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

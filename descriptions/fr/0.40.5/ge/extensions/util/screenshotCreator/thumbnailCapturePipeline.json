@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/util/screenshotCreator/thumbnailCapturePipeline.lua",
+  "module": "Chaîne de capture d'une vignette de véhicule utilisée par le compositeur de vignettes (thumbnailComposerRun) : remplace le véhicule par la configuration voulue, le place et le laisse se stabiliser, gèle la physique, calcule la caméra avec le cadrage « legacy » (angle « warehouse », marges réduites à 85 %), pointe la caméra principale sur la prise de vue, règle l'éclairage, attend 2 s puis capture l'image avec util_screenshotCreator_capture.captureFramedThumbnail. Contrairement à job.lua, les caméras enregistrées par config ou modèle sont ignorées. processWorkItem doit être appelé depuis une coroutine, car il fait des yield.",
+  "notes": [
+    "processWorkItem utilise coroutine.yield (attentes de 0,7 s et de 2 s) : à appeler uniquement dans une coroutine.",
+    "Le mode de capture « defaults » écrit default.jpg pour la config par défaut ; avec « all », la vignette de la config par défaut est aussi copiée en default.jpg (voir thumbnailPaths).",
+    "La caméra principale est mise en vue libre et son état d'origine est mémorisé (une seule fois) ; resetRenderState() le restaure. Il faut l'appeler à la fin ou en cas d'annulation.",
+    "Le FOV transmis à la capture est framingContext.fieldOfView (réglage utilisateur) alors que le mode legacy cadre avec un FOV fixe de 20° : le FOV réglé doit rester à 20 pour un cadrage cohérent."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : core_vehicles, core_camera et util_screenshotCreator_settings, vehicleSetup, capture, lightingSetup, framing_legacy, framingManager, thumbnailPaths."}
+  },
+  "functions": {
+    "resolveCamera": {
+      "desc": "Calcule la caméra de cadrage « warehouse angle » : contexte de cadrage issu des réglages, mode « legacy », marges multipliées par 0,85. Journalise une erreur et renvoie nil si le cadrage échoue.",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Objet véhicule."},
+        "modelName": {"type": "string", "desc": "Nom du modèle."},
+        "configName": {"type": "string", "desc": "Nom de la configuration."},
+        "outputResolution": {"type": "integer[]|nil", "desc": "{largeur, hauteur} de l'image finale."}
+      },
+      "returns": [
+        {"type": "table|nil", "desc": "Caméra {pos, rot, fov, name, ...} ou nil."},
+        {"type": "table|nil", "desc": "Contexte de cadrage utilisé."}
+      ]
+    },
+    "processWorkItem": {
+      "desc": "Traite un élément de la file : remplace le véhicule, le place, attend sa stabilisation, gèle la physique, cadre, éclaire, capture et restaure l'éclairage. Renvoie un résultat {status = \"saved\", current, camera, outputFolder, outputPath} ou {status = \"failed\", error}, ou nil si l'annulation a été demandée.",
+      "params": {
+        "item": {"type": "table", "desc": "Élément {modelName, modelKey, configName, isDefaultConfig...}."},
+        "index": {"type": "integer", "desc": "Rang de l'élément (à partir de 1)."},
+        "total": {"type": "integer", "desc": "Nombre total d'éléments."},
+        "settingsSnapshot": {"type": "table", "desc": "Instantané des réglages : capture {superSampling, freezePhysics...}, captureTimeout."},
+        "runContext": {"type": "table", "desc": "{initialPosition, initialRotation} : transformation de départ du véhicule."},
+        "options": {"type": "table", "desc": "{sendProgress = function(fait, total, courant), isCancelled = function, outputResolution, captureMode}."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Résultat de l'élément ; nil si annulé."}]
+    },
+    "resetRenderState": {
+      "desc": "Restaure la caméra principale mémorisée par pointMainCameraAt et l'éclairage (lightingSetup.restore)."
+    }
+  }
+}

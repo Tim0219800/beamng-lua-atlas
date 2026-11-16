@@ -1,12 +1,12 @@
 # `ui_multiseat_multiseatConfiguration`
 
-*Fichier : `lua/ge/extensions/ui/multiseat/multiseatConfiguration.lua` · VM : Game Engine (GE) · 913 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/multiseat/multiseatConfiguration.lua` · VM: Game Engine (GE) · 913 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_multiseat_multiseatConfiguration` : `extensions.load("ui_multiseat_multiseatConfiguration")`, puis la globale `ui_multiseat_multiseatConfiguration`
+**Access:** extension `ui_multiseat_multiseatConfiguration`: `extensions.load("ui_multiseat_multiseatConfiguration")`, then the global `ui_multiseat_multiseatConfiguration`
 
-Modèle transactionnel de la configuration multi-sièges : quels périphériques d'entrée (ou groupes de périphériques gérés par la plateforme) appartiennent à quel joueur/persona. begin() ouvre une transaction (copie de l'état actuel ou du cache d'affectations), les fonctions d'édition la modifient, getPreview() fournit l'état à l'interface, puis commit() (ou commitCore + completeCommit) l'applique via core_multiseat.applyConfiguration ; discard() l'abandonne. Utilisé par l'écran de réglages multiseat.
+Transactional model of the multi-seat configuration: which input devices (or platform-managed device groups) belong to which player/persona. begin() opens a transaction (copy of the current state or of the assignment cache), the editing functions modify it, getPreview() provides the state to the UI, then commit() (or commitCore + completeCommit) applies it via core_multiseat.applyConfiguration; discard() abandons it. Used by the multiseat settings screen.
 
-## Exemple
+## Example
 
 ```lua
 local cfg = require('ge/extensions/ui/multiseat/multiseatConfiguration')
@@ -15,206 +15,206 @@ cfg.setDevicePlayer('keyboard-mouse', 1)
 local ok, configOrReason = cfg.commit()
 ```
 
-## Remarques
+## Notes
 
-- Toutes les fonctions d'édition renvoient false quand aucune transaction n'est ouverte (sauf getPreview qui appelle begin() automatiquement).
-- Les fonctions toggleDevicePlayer, setDevicePlayer, removeDevice, moveDevicePlayer et cycleDevicePlayer ne marchent qu'en mode manuel (platformManagesPlayers == false) ; joinDeviceGroup seulement en mode plateforme.
-- Le nombre de personas est limité à MAX_PLAYERS = 64 et par la limite dure du gamemode en cours (core/multiseatPlayerLimits).
-- Les numéros de persona commencent à 1 ; l'indice de joueur (player) commence à 0 et suit l'ordre croissant des numéros de persona.
-- Une persona sans propriétaire (aucun périphérique/groupe) est supprimée automatiquement.
-- En l'absence de session multiseat active, begin() reprend le véhicule du joueur 0 (sauf unicycle) pour la persona 1 et essaie de réutiliser le cache d'affectations (core_multiseat.getCachedPlayerAssignments) si le mode plateforme n'a pas changé.
-- Chaque modification déclenche guihooks MultiseatConfigurationChanged avec un numéro de révision croissant et met à jour l'aperçu des couleurs de périphériques.
-- commitCore refuse une configuration sans joueur (raison « no_players »).
+- All editing functions return false when no transaction is open (except getPreview, which calls begin() automatically).
+- The functions toggleDevicePlayer, setDevicePlayer, removeDevice, moveDevicePlayer and cycleDevicePlayer only work in manual mode (platformManagesPlayers == false); joinDeviceGroup only in platform mode.
+- The number of personas is limited to MAX_PLAYERS = 64 and by the hard limit of the current gamemode (core/multiseatPlayerLimits).
+- Persona numbers start at 1; the player index (player) starts at 0 and follows the ascending order of persona numbers.
+- A persona with no owner (no device/group) is automatically deleted.
+- When there is no active multiseat session, begin() takes player 0's vehicle (except unicycle) for persona 1 and tries to reuse the assignment cache (core_multiseat.getCachedPlayerAssignments) if the platform mode has not changed.
+- Each modification triggers guihooks MultiseatConfigurationChanged with an increasing revision number and updates the device color preview.
+- commitCore refuses a configuration with no player (reason "no_players").
 
-**Dépendances (chargées avant) :** `core_playerPersonas`
+**Dependencies (loaded first):** `core_playerPersonas`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_multiseat_multiseatConfiguration.begin(options)` | Ouvre la transaction de configuration si elle n'existe pas (copie de la configuration active ou du cache), sinon réconcilie l'inventaire des périphériques. Appelle core_multiseat.beginConfigurationEdit. | 328 |
-| `ui_multiseat_multiseatConfiguration.clearCachedAssignments()` | Vide le cache d'affectations de joueurs (core_multiseat.cachePlayerAssignments avec des listes vides). Sans effet si le multiseat est déjà actif. | 823 |
-| `ui_multiseat_multiseatConfiguration.commit()` | commitCore puis completeCommit. | 895 |
-| `ui_multiseat_multiseatConfiguration.commitCore()` | Applique la configuration via core_multiseat.applyConfiguration (notification des participants différée) et mémorise le journal des changements ; la transaction reste ouverte pour permettre rollbackCommit. | 860 |
-| `ui_multiseat_multiseatConfiguration.completeCommit()` | Termine un commit réussi : appelle core_multiseat.finalizeConfiguration, ferme la transaction et journalise les changements. | 873 |
-| `ui_multiseat_multiseatConfiguration.cycleDevicePlayer(deviceId)` | Mode manuel : sans joueur, assigne le périphérique à la première persona libre ; sinon le déplace vers la persona précédente (ou le désassigne s'il n'y en a pas). | 506 |
-| `ui_multiseat_multiseatConfiguration.discard()` | Abandonne la transaction ; si elle avait déjà été appliquée (commitCore), restaure la configuration de départ. Termine l'édition côté core_multiseat. | 367 |
-| `ui_multiseat_multiseatConfiguration.getCommitConfiguration()` | Construit la configuration à appliquer : platformManagesPlayers, personaOptInMode, manualAssignments (deviceId vers joueur, -1 si aucun), manualDeviceMetadata, groupAssignments, platformDeviceGroups, participants {playerIndex, personaNumber, persona} et adoptVehicleId. | 658 |
-| `ui_multiseat_multiseatConfiguration.getPersona(personaNumber)` | Renvoie une copie de la persona de la transaction. | 575 |
-| `ui_multiseat_multiseatConfiguration.getPlayers()` | Renvoie la liste des indices de joueurs (0 à n-1). | 651 |
-| `ui_multiseat_multiseatConfiguration.getPreview()` | Renvoie l'état affichable de la configuration (ouvre la transaction si besoin) : availablePlayers (périphériques en mode manuel), availablePersonas et joinedPersonas, deviceGroups (mode plateforme), maxPlayers, platformManagesPlayers, playerLimit {limit, hard, atLimit, exceeded} et revision. | 581 |
-| `ui_multiseat_multiseatConfiguration.hasChanges()` | Compare la configuration courante à la base de départ : true si multiseat n'était pas actif, si le nombre de joueurs ou les affectations diffèrent. | 834 |
-| `ui_multiseat_multiseatConfiguration.hasUserChanges()` | Indique si l'utilisateur a modifié les affectations depuis l'ouverture (ou si elles viennent du cache). | 814 |
-| `ui_multiseat_multiseatConfiguration.isActive()` | Indique si une transaction est ouverte. | 363 |
-| `ui_multiseat_multiseatConfiguration.joinDeviceGroup(groupId)` | Mode plateforme : fait rejoindre un groupe de périphériques ; la persona porte le numéro du groupe s'il est libre et valide, sinon la première libre. | 531 |
-| `ui_multiseat_multiseatConfiguration.leavePlayer(player)` | Retire un joueur : libère tous ses périphériques/groupes et supprime sa persona. | 547 |
-| `ui_multiseat_multiseatConfiguration.moveDevicePlayer(deviceId, direction)` | Mode manuel : déplace le périphérique vers la persona précédente (direction -1, ou aucune si c'est la première) ou suivante (direction 1, ou une nouvelle persona si c'est la dernière et qu'elle a plusieurs périphériques). | 456 |
-| `ui_multiseat_multiseatConfiguration.onClientEndMission()` | Hook appelé à la fin du niveau ; abandonne la transaction sans restaurer et efface l'aperçu des couleurs. *(interne)* *(hook)* | 902 |
-| `ui_multiseat_multiseatConfiguration.onInputBindingsChanged()` | Hook appelé quand les périphériques ou liaisons changent ; réconcilie l'inventaire et notifie l'interface si la liste a changé. *(interne)* *(hook)* | 908 |
-| `ui_multiseat_multiseatConfiguration.removeDevice(deviceId)` | Mode manuel : oublie un périphérique déconnecté (connected == false), le désassigne et le marque comme supprimé. | 437 |
-| `ui_multiseat_multiseatConfiguration.rollbackCommit()` | Restaure la configuration de départ après un commitCore. | 886 |
-| `ui_multiseat_multiseatConfiguration.setDevicePlayer(deviceId, personaNumber)` | Mode manuel : assigne le périphérique à la persona indiquée (1 à 64), ou le désassigne avec nil ou 0. Renvoie false si rien ne change ou si la limite de joueurs l'interdit. | 418 |
-| `ui_multiseat_multiseatConfiguration.setPersonaData(personaNumber, data, emitChange)` | Copie les clés de data dans la persona (nom, icône, couleur, véhicule…). | 566 |
-| `ui_multiseat_multiseatConfiguration.toggleDevicePlayer(deviceId)` | Mode manuel : retire le périphérique de son joueur s'il en a un, sinon l'assigne à la première persona libre. | 397 |
+| `ui_multiseat_multiseatConfiguration.begin(options)` | Opens the configuration transaction if it does not exist (copy of the active configuration or of the cache), otherwise reconciles the device inventory. Calls core_multiseat.beginConfigurationEdit. | 328 |
+| `ui_multiseat_multiseatConfiguration.clearCachedAssignments()` | Clears the player assignment cache (core_multiseat.cachePlayerAssignments with empty lists). No effect if multiseat is already active. | 823 |
+| `ui_multiseat_multiseatConfiguration.commit()` | commitCore then completeCommit. | 895 |
+| `ui_multiseat_multiseatConfiguration.commitCore()` | Applies the configuration via core_multiseat.applyConfiguration (participant notification deferred) and stores the change log; the transaction stays open to allow rollbackCommit. | 860 |
+| `ui_multiseat_multiseatConfiguration.completeCommit()` | Ends a successful commit: calls core_multiseat.finalizeConfiguration, closes the transaction and logs the changes. | 873 |
+| `ui_multiseat_multiseatConfiguration.cycleDevicePlayer(deviceId)` | Manual mode: with no player, assigns the device to the first free persona; otherwise moves it to the previous persona (or unassigns it if there is none). | 506 |
+| `ui_multiseat_multiseatConfiguration.discard()` | Abandons the transaction; if it had already been applied (commitCore), restores the starting configuration. Ends the edit on the core_multiseat side. | 367 |
+| `ui_multiseat_multiseatConfiguration.getCommitConfiguration()` | Builds the configuration to apply: platformManagesPlayers, personaOptInMode, manualAssignments (deviceId to player, -1 if none), manualDeviceMetadata, groupAssignments, platformDeviceGroups, participants {playerIndex, personaNumber, persona} and adoptVehicleId. | 658 |
+| `ui_multiseat_multiseatConfiguration.getPersona(personaNumber)` | Returns a copy of the transaction's persona. | 575 |
+| `ui_multiseat_multiseatConfiguration.getPlayers()` | Returns the list of player indices (0 to n-1). | 651 |
+| `ui_multiseat_multiseatConfiguration.getPreview()` | Returns the displayable state of the configuration (opens the transaction if needed): availablePlayers (devices in manual mode), availablePersonas and joinedPersonas, deviceGroups (platform mode), maxPlayers, platformManagesPlayers, playerLimit {limit, hard, atLimit, exceeded} and revision. | 581 |
+| `ui_multiseat_multiseatConfiguration.hasChanges()` | Compares the current configuration to the starting baseline: true if multiseat was not active, or if the number of players or the assignments differ. | 834 |
+| `ui_multiseat_multiseatConfiguration.hasUserChanges()` | Returns whether the user has modified the assignments since opening (or whether they come from the cache). | 814 |
+| `ui_multiseat_multiseatConfiguration.isActive()` | Returns whether a transaction is open. | 363 |
+| `ui_multiseat_multiseatConfiguration.joinDeviceGroup(groupId)` | Platform mode: makes a device group join; the persona takes the group's number if it is free and valid, otherwise the first free one. | 531 |
+| `ui_multiseat_multiseatConfiguration.leavePlayer(player)` | Removes a player: frees all its devices/groups and deletes its persona. | 547 |
+| `ui_multiseat_multiseatConfiguration.moveDevicePlayer(deviceId, direction)` | Manual mode: moves the device to the previous persona (direction -1, or none if it is the first) or the next one (direction 1, or a new persona if it is the last and it has several devices). | 456 |
+| `ui_multiseat_multiseatConfiguration.onClientEndMission()` | Hook called at the end of the level; abandons the transaction without restoring and clears the color preview. *(internal)* *(hook)* | 902 |
+| `ui_multiseat_multiseatConfiguration.onInputBindingsChanged()` | Hook called when devices or bindings change; reconciles the inventory and notifies the UI if the list changed. *(internal)* *(hook)* | 908 |
+| `ui_multiseat_multiseatConfiguration.removeDevice(deviceId)` | Manual mode: forgets a disconnected device (connected == false), unassigns it and marks it as removed. | 437 |
+| `ui_multiseat_multiseatConfiguration.rollbackCommit()` | Restores the starting configuration after a commitCore. | 886 |
+| `ui_multiseat_multiseatConfiguration.setDevicePlayer(deviceId, personaNumber)` | Manual mode: assigns the device to the given persona (1 to 64), or unassigns it with nil or 0. Returns false if nothing changes or the player limit forbids it. | 418 |
+| `ui_multiseat_multiseatConfiguration.setPersonaData(personaNumber, data, emitChange)` | Copies the keys of data into the persona (name, icon, color, vehicle...). | 566 |
+| `ui_multiseat_multiseatConfiguration.toggleDevicePlayer(deviceId)` | Manual mode: removes the device from its player if it has one, otherwise assigns it to the first free persona. | 397 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_multiseat_multiseatConfiguration.begin(options)`
 
-Ouvre la transaction de configuration si elle n'existe pas (copie de la configuration active ou du cache), sinon réconcilie l'inventaire des périphériques. Appelle core_multiseat.beginConfigurationEdit.
+Opens the configuration transaction if it does not exist (copy of the active configuration or of the cache), otherwise reconciles the device inventory. Calls core_multiseat.beginConfigurationEdit.
 
-- `options` (*table|nil*) : Options ; source = origine de l'ouverture (par exemple « settings »).
-- **renvoie** : table Aperçu, voir getPreview.
+- `options` (*table|nil*) : Options; source = origin of the opening (for example "settings").
+- **returns**: table Preview, see getPreview.
 
 #### `ui_multiseat_multiseatConfiguration.clearCachedAssignments()`
 
-Vide le cache d'affectations de joueurs (core_multiseat.cachePlayerAssignments avec des listes vides). Sans effet si le multiseat est déjà actif.
+Clears the player assignment cache (core_multiseat.cachePlayerAssignments with empty lists). No effect if multiseat is already active.
 
-- **renvoie** : boolean Résultat du vidage, false si impossible.
+- **returns**: boolean Result of the clearing, false if impossible.
 
 #### `ui_multiseat_multiseatConfiguration.commit()`
 
-commitCore puis completeCommit.
+commitCore then completeCommit.
 
-- **renvoie** : boolean Succès.
-- **renvoie** : table|string Configuration appliquée, ou raison de l'échec.
+- **returns**: boolean Success.
+- **returns**: table|string Applied configuration, or failure reason.
 
 #### `ui_multiseat_multiseatConfiguration.commitCore()`
 
-Applique la configuration via core_multiseat.applyConfiguration (notification des participants différée) et mémorise le journal des changements ; la transaction reste ouverte pour permettre rollbackCommit.
+Applies the configuration via core_multiseat.applyConfiguration (participant notification deferred) and stores the change log; the transaction stays open to allow rollbackCommit.
 
-- **renvoie** : boolean Succès.
-- **renvoie** : table|string Configuration appliquée, ou raison de l'échec (par exemple « no_players »).
+- **returns**: boolean Success.
+- **returns**: table|string Applied configuration, or failure reason (for example "no_players").
 
 #### `ui_multiseat_multiseatConfiguration.completeCommit()`
 
-Termine un commit réussi : appelle core_multiseat.finalizeConfiguration, ferme la transaction et journalise les changements.
+Ends a successful commit: calls core_multiseat.finalizeConfiguration, closes the transaction and logs the changes.
 
-- **renvoie** : boolean false si aucun commitCore réussi.
+- **returns**: boolean false if no successful commitCore.
 
 #### `ui_multiseat_multiseatConfiguration.cycleDevicePlayer(deviceId)`
 
-Mode manuel : sans joueur, assigne le périphérique à la première persona libre ; sinon le déplace vers la persona précédente (ou le désassigne s'il n'y en a pas).
+Manual mode: with no player, assigns the device to the first free persona; otherwise moves it to the previous persona (or unassigns it if there is none).
 
-- `deviceId` (*string*) : Identifiant du périphérique ou du groupe.
-- **renvoie** : boolean true si modifié.
+- `deviceId` (*string*) : Device or group identifier.
+- **returns**: boolean true if modified.
 
 #### `ui_multiseat_multiseatConfiguration.discard()`
 
-Abandonne la transaction ; si elle avait déjà été appliquée (commitCore), restaure la configuration de départ. Termine l'édition côté core_multiseat.
+Abandons the transaction; if it had already been applied (commitCore), restores the starting configuration. Ends the edit on the core_multiseat side.
 
-- **renvoie** : boolean false s'il n'y avait pas de transaction.
+- **returns**: boolean false if there was no transaction.
 
 #### `ui_multiseat_multiseatConfiguration.getCommitConfiguration()`
 
-Construit la configuration à appliquer : platformManagesPlayers, personaOptInMode, manualAssignments (deviceId vers joueur, -1 si aucun), manualDeviceMetadata, groupAssignments, platformDeviceGroups, participants {playerIndex, personaNumber, persona} et adoptVehicleId.
+Builds the configuration to apply: platformManagesPlayers, personaOptInMode, manualAssignments (deviceId to player, -1 if none), manualDeviceMetadata, groupAssignments, platformDeviceGroups, participants {playerIndex, personaNumber, persona} and adoptVehicleId.
 
-- **renvoie** : table|nil Configuration, nil sans transaction.
+- **returns**: table|nil Configuration, nil without a transaction.
 
 #### `ui_multiseat_multiseatConfiguration.getPersona(personaNumber)`
 
-Renvoie une copie de la persona de la transaction.
+Returns a copy of the transaction's persona.
 
-- `personaNumber` (*integer*) : Numéro de persona.
-- **renvoie** : table|nil Persona ou nil.
+- `personaNumber` (*integer*) : Persona number.
+- **returns**: table|nil Persona or nil.
 
 #### `ui_multiseat_multiseatConfiguration.getPlayers()`
 
-Renvoie la liste des indices de joueurs (0 à n-1).
+Returns the list of player indices (0 to n-1).
 
-- **renvoie** : integer[] Indices ; vide sans transaction.
+- **returns**: integer[] Indices; empty without a transaction.
 
 #### `ui_multiseat_multiseatConfiguration.getPreview()`
 
-Renvoie l'état affichable de la configuration (ouvre la transaction si besoin) : availablePlayers (périphériques en mode manuel), availablePersonas et joinedPersonas, deviceGroups (mode plateforme), maxPlayers, platformManagesPlayers, playerLimit {limit, hard, atLimit, exceeded} et revision.
+Returns the displayable state of the configuration (opens the transaction if needed): availablePlayers (devices in manual mode), availablePersonas and joinedPersonas, deviceGroups (platform mode), maxPlayers, platformManagesPlayers, playerLimit {limit, hard, atLimit, exceeded} and revision.
 
-- **renvoie** : table Table d'aperçu.
+- **returns**: table Preview table.
 
 #### `ui_multiseat_multiseatConfiguration.hasChanges()`
 
-Compare la configuration courante à la base de départ : true si multiseat n'était pas actif, si le nombre de joueurs ou les affectations diffèrent.
+Compares the current configuration to the starting baseline: true if multiseat was not active, or if the number of players or the assignments differ.
 
-- **renvoie** : boolean true s'il y a des changements.
+- **returns**: boolean true if there are changes.
 
 #### `ui_multiseat_multiseatConfiguration.hasUserChanges()`
 
-Indique si l'utilisateur a modifié les affectations depuis l'ouverture (ou si elles viennent du cache).
+Returns whether the user has modified the assignments since opening (or whether they come from the cache).
 
-- **renvoie** : boolean true si modifié.
+- **returns**: boolean true if modified.
 
 #### `ui_multiseat_multiseatConfiguration.isActive()`
 
-Indique si une transaction est ouverte.
+Returns whether a transaction is open.
 
-- **renvoie** : boolean true si ouverte.
+- **returns**: boolean true if open.
 
 #### `ui_multiseat_multiseatConfiguration.joinDeviceGroup(groupId)`
 
-Mode plateforme : fait rejoindre un groupe de périphériques ; la persona porte le numéro du groupe s'il est libre et valide, sinon la première libre.
+Platform mode: makes a device group join; the persona takes the group's number if it is free and valid, otherwise the first free one.
 
-- `groupId` (*integer*) : Identifiant de groupe (converti avec tonumber).
-- **renvoie** : boolean false si déjà rejoint ou limite atteinte.
+- `groupId` (*integer*) : Group identifier (converted with tonumber).
+- **returns**: boolean false if already joined or limit reached.
 
 #### `ui_multiseat_multiseatConfiguration.leavePlayer(player)`
 
-Retire un joueur : libère tous ses périphériques/groupes et supprime sa persona.
+Removes a player: frees all its devices/groups and deletes its persona.
 
-- `player` (*integer*) : Indice de joueur (à partir de 0).
-- **renvoie** : boolean false si le joueur n'existe pas.
+- `player` (*integer*) : Player index (0-based).
+- **returns**: boolean false if the player does not exist.
 
 #### `ui_multiseat_multiseatConfiguration.moveDevicePlayer(deviceId, direction)`
 
-Mode manuel : déplace le périphérique vers la persona précédente (direction -1, ou aucune si c'est la première) ou suivante (direction 1, ou une nouvelle persona si c'est la dernière et qu'elle a plusieurs périphériques).
+Manual mode: moves the device to the previous persona (direction -1, or none if it is the first) or the next one (direction 1, or a new persona if it is the last and it has several devices).
 
-- `deviceId` (*string*) : Identifiant du périphérique ou du groupe.
-- `direction` (*integer*) : -1 ou 1.
-- **renvoie** : boolean true si modifié.
+- `deviceId` (*string*) : Device or group identifier.
+- `direction` (*integer*) : -1 or 1.
+- **returns**: boolean true if modified.
 
 #### `ui_multiseat_multiseatConfiguration.removeDevice(deviceId)`
 
-Mode manuel : oublie un périphérique déconnecté (connected == false), le désassigne et le marque comme supprimé.
+Manual mode: forgets a disconnected device (connected == false), unassigns it and marks it as removed.
 
-- `deviceId` (*string*) : Identifiant du périphérique ou du groupe.
-- **renvoie** : boolean false si le périphérique est introuvable ou encore connecté.
+- `deviceId` (*string*) : Device or group identifier.
+- **returns**: boolean false if the device is not found or still connected.
 
 #### `ui_multiseat_multiseatConfiguration.rollbackCommit()`
 
-Restaure la configuration de départ après un commitCore.
+Restores the starting configuration after a commitCore.
 
-- **renvoie** : boolean Résultat de core_multiseat.restoreConfiguration, ou false.
+- **returns**: boolean Result of core_multiseat.restoreConfiguration, or false.
 
 #### `ui_multiseat_multiseatConfiguration.setDevicePlayer(deviceId, personaNumber)`
 
-Mode manuel : assigne le périphérique à la persona indiquée (1 à 64), ou le désassigne avec nil ou 0. Renvoie false si rien ne change ou si la limite de joueurs l'interdit.
+Manual mode: assigns the device to the given persona (1 to 64), or unassigns it with nil or 0. Returns false if nothing changes or the player limit forbids it.
 
-- `deviceId` (*string*) : Identifiant du périphérique ou du groupe.
-- `personaNumber` (*integer|nil*) : 1..64 pour assigner, nil ou 0 pour désassigner.
-- **renvoie** : boolean true si modifié.
+- `deviceId` (*string*) : Device or group identifier.
+- `personaNumber` (*integer|nil*) : 1..64 to assign, nil or 0 to unassign.
+- **returns**: boolean true if modified.
 
 #### `ui_multiseat_multiseatConfiguration.setPersonaData(personaNumber, data, emitChange)`
 
-Copie les clés de data dans la persona (nom, icône, couleur, véhicule…).
+Copies the keys of data into the persona (name, icon, color, vehicle...).
 
-- `personaNumber` (*integer*) : Numéro de persona.
-- `data` (*table*) : Champs à écraser.
-- `emitChange` (*boolean|nil*) : Si false, ne notifie pas l'interface.
-- **renvoie** : boolean false si pas de transaction, data invalide ou persona inconnue.
+- `personaNumber` (*integer*) : Persona number.
+- `data` (*table*) : Fields to overwrite.
+- `emitChange` (*boolean|nil*) : If false, does not notify the UI.
+- **returns**: boolean false if no transaction, invalid data or unknown persona.
 
 #### `ui_multiseat_multiseatConfiguration.toggleDevicePlayer(deviceId)`
 
-Mode manuel : retire le périphérique de son joueur s'il en a un, sinon l'assigne à la première persona libre.
+Manual mode: removes the device from its player if it has one, otherwise assigns it to the first free persona.
 
-- `deviceId` (*string*) : Identifiant du périphérique ou du groupe.
-- **renvoie** : boolean true si modifié.
+- `deviceId` (*string*) : Device or group identifier.
+- **returns**: boolean true if modified.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `AUTOMATIC_COLOR_DEFAULT` | boolean | Valeur par défaut (true) du réglage multiseatAutomaticColor. |
-| `dependencies` | table<integer, string> | Extensions chargées avant : core_playerPersonas. |
+| `AUTOMATIC_COLOR_DEFAULT` | boolean | Default value (true) of the multiseatAutomaticColor setting. |
+| `dependencies` | table<integer, string> | Extensions loaded before: core_playerPersonas. |
 
-**Évènements UI (guihooks.trigger) :** `MultiseatConfigurationChanged`
+**UI events (guihooks.trigger):** `MultiseatConfigurationChanged`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/multiseat/multiseatConfiguration.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/multiseat/multiseatConfiguration.lua`.*

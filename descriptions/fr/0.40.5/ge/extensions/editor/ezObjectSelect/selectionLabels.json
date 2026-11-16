@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/selectionLabels.lua",
+  "module": "Petit utilitaire de l'outil Easy Select : calcule le texte affiché pour nommer un objet de la scène. Priorité : nom de l'objet, nom interne, nom du fichier d'asset (champ shapeName ou getModelFile), sinon « Classe #id ». Un préfixe indique le type : [p] Prefab/PrefabInstance, [s] TSStatic, [v] BeamNGVehicle.",
+  "functions": {
+    "objectName": {
+      "desc": "Renvoie le libellé d'un objet. Si objectId est fourni, l'objet est retrouvé via scenetree.findObjectById ; s'il n'existe plus, renvoie « deleted #id » (ou « missing » si aucun id).",
+      "params": {
+        "obj": {"type": "userdata|nil", "desc": "Objet de la scène (ignoré si objectId est donné)"},
+        "objectId": {"type": "integer|nil", "desc": "Id de l'objet à retrouver dans scenetree"}
+      },
+      "returns": [{"type": "string", "desc": "Libellé, éventuellement préfixé par [p], [s] ou [v]"}]
+    }
+  }
+}

@@ -2,238 +2,238 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/geom.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Bibliothèque géométrique des outils d'édition de splines de l'éditeur (routes, rails, clôtures, bâtiments) : interpolation de splines Catmull-Rom (libre, par lancer de rayon, conforme au terrain, avec dévers), repère de Frenet, échantillonnage à longueur d'arc, géométrie 2D de polygones (point dans anneau, découpe à une boîte, décalage/retrait biseauté, triangulation par ear clipping avec trous), intersections, distances, survol à la souris, découpe/jonction de splines et utilitaires de terrain. Une « spline » est une table avec nodes, widths, nmls (entrée) et divPoints, divWidths, normals, tangents, binormals, discMap (sorties calculées).
---- Accès : extension `editor_toolUtilities_geom` : `extensions.load("editor_toolUtilities_geom")`, puis la globale `editor_toolUtilities_geom`
+--- Geometry library of the editor's spline editing tools (roads, rails, fences, buildings): Catmull-Rom spline interpolation (free, raycast, terrain-conforming, with banking), Frenet frame, arc-length sampling, 2D polygon geometry (point in ring, clipping to a box, beveled offset/inset, ear clipping triangulation with holes), intersections, distances, mouse hover, spline cutting/joining and terrain utilities. A "spline" is a table with nodes, widths, nmls (input) and divPoints, divWidths, normals, tangents, binormals, discMap (computed outputs).
+--- Access: extension `editor_toolUtilities_geom`: `extensions.load("editor_toolUtilities_geom")`, then the global `editor_toolUtilities_geom`
 ---@class editor_toolUtilities_geom
 editor_toolUtilities_geom = {}
 
---- Petit angle entre deux vecteurs de longueur quelconque (rad).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1600
----@param a vec3 Vecteur.
----@param b vec3 Vecteur.
+--- Small angle between two vectors of arbitrary length (rad).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1600
+---@param a vec3 Vector.
+---@param b vec3 Vector.
 ---@return number  Angle (rad).
 function editor_toolUtilities_geom.angleBetweenVecs(a, b) end
 
---- Petit angle entre deux vecteurs unitaires (rad).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1597
----@param a vec3 Vecteur unitaire.
----@param b vec3 Vecteur unitaire.
+--- Small angle between two unit vectors (rad).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1597
+---@param a vec3 Unit vector.
+---@param b vec3 Unit vector.
 ---@return number  Angle (rad).
 function editor_toolUtilities_geom.angleBetweenVecsNorm(a, b) end
 
---- Fait rouler le repère par station d'une spline selon une fraction de dévers TOUTE FAITE (bankT[i] dans [-1, 1], + = courbe à gauche), peakRad étant l'angle atteint par une station de pleine amplitude. L'appelant gère la correspondance courbure -> fraction et le raccord en longueur d'arc (sinon le dévers devient un créneau).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2204
+--- Rolls the frame per station of a spline according to a READY-MADE banking fraction (bankT[i] in [-1, 1], + = left curve), peakRad being the angle reached by a full-amplitude station. The caller handles the curvature -> fraction mapping and the arc-length blending (otherwise the banking becomes a square wave).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2204
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
----@param bankT number[] Fraction de dévers par station.
----@param peakRad number Angle de pleine amplitude (rad).
+---@param bankT number[] Banking fraction per station.
+---@param peakRad number Full-amplitude angle (rad).
 function editor_toolUtilities_geom.applyBankFraction(spline, bankT, peakRad) end
 
---- Fusionne des anneaux de trous dans l'anneau extérieur par des arêtes de pont. count plafonne le nombre de trous pris.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1281
----@param outer table[] Anneau extérieur (remis anti-horaire).
----@param holes table[][] Trous (remis horaires, ponts par min-x croissant).
----@param count integer|nil Nombre maximal de trous pris.
----@return table[]  Anneau fusionné.
+--- Merges hole rings into the outer ring by bridge edges. count caps the number of holes taken.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1281
+---@param outer table[] Outer ring (set back to counter-clockwise).
+---@param holes table[][] Holes (set back to clockwise, bridges by increasing min-x).
+---@param count integer|nil Maximum number of holes taken.
+---@return table[]  Merged ring.
 function editor_toolUtilities_geom.bridgeHoles2D(outer, holes, count) end
 
---- Version rapide et sans allocation de catmullRomCentripetal. Si outVec est fourni, l'écrit et le renvoie ; sinon crée un vec3.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2471
----@param p0 vec3 Point de contrôle.
----@param p1 vec3 Point de contrôle.
----@param p2 vec3 Point de contrôle.
----@param p3 vec3 Point de contrôle.
----@param t number Paramètre.
----@param s number Paramètre de tension/knots (déduit du code).
----@param outVec vec3|nil Sortie facultative.
----@return vec3  Point interpolé.
+--- Fast, allocation-free version of catmullRomCentripetal. If outVec is provided, writes into it and returns it; otherwise creates a vec3.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2471
+---@param p0 vec3 Control point.
+---@param p1 vec3 Control point.
+---@param p2 vec3 Control point.
+---@param p3 vec3 Control point.
+---@param t number Parameter.
+---@param s number Tension/knots parameter (inferred from code).
+---@param outVec vec3|nil Optional output.
+---@return vec3  Interpolated point.
 function editor_toolUtilities_geom.catmullRomCentripetalFast(p0, p1, p2, p3, t, s, outVec) end
 
---- Comme catmullRomRaycast mais les points sont conformés au terrain. Retombe sur catmullRomRaycast s'il n'y a pas de bloc de terrain.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2804
+--- Like catmullRomRaycast but the points are conformed to the terrain. Falls back to catmullRomRaycast if there is no terrain block.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2804
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
----@param minNumDivIn integer|nil Divisions minimales par segment.
----@param minSpacing number|nil Espacement minimal (m).
----@param rayRaise number|nil Élévation de départ du rayon (m).
+---@param minNumDivIn integer|nil Minimum divisions per segment.
+---@param minSpacing number|nil Minimum spacing (m).
+---@param rayRaise number|nil Ray starting elevation (m).
 function editor_toolUtilities_geom.catmullRomConformToTerrain(spline, minNumDivIn, minSpacing, rayRaise) end
 
---- Interpole noeuds et largeurs avec des Catmull-Rom standard (XY centripète ; Z par Steffen pour une route au sol, Catmull-Rom lisse pour un tablier surélevé si deckZ). Les données sont stockées dans la spline.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2860
+--- Interpolates nodes and widths with standard Catmull-Rom (centripetal XY; Z by Steffen for a ground road, smooth Catmull-Rom for an elevated deck if deckZ). The data is stored in the spline.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2860
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
----@param minNumDivIn integer|nil Divisions minimales par segment (défaut 10).
----@param deckZ boolean|nil Tablier surélevé : Z lissé par Catmull-Rom.
----@param maxSpacingIn number|nil Espacement maximal entre divisions (défaut 20 m).
+---@param minNumDivIn integer|nil Minimum divisions per segment (default 10).
+---@param deckZ boolean|nil Elevated deck: Z smoothed by Catmull-Rom.
+---@param maxSpacingIn number|nil Maximum spacing between divisions (default 20 m).
 function editor_toolUtilities_geom.catmullRomFree(spline, minNumDivIn, deckZ, maxSpacingIn) end
 
---- Comme catmullRomFree avec dévers automatique et raccord.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2918
+--- Like catmullRomFree with automatic banking and blending.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2918
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
----@param minNumDivIn integer|nil Divisions minimales.
----@param bankStrength number Intensité du dévers.
----@param maxDegIn number|nil Dévers maximal (degrés, défaut 15).
----@param tuningIn number|nil Réglage de saturation (défaut 500).
----@param deckZ boolean|nil Tablier surélevé.
----@param maxSpacingIn number|nil Espacement maximal.
+---@param minNumDivIn integer|nil Minimum divisions.
+---@param bankStrength number Banking intensity.
+---@param maxDegIn number|nil Maximum banking (degrees, default 15).
+---@param tuningIn number|nil Saturation setting (default 500).
+---@param deckZ boolean|nil Elevated deck.
+---@param maxSpacingIn number|nil Maximum spacing.
 function editor_toolUtilities_geom.catmullRomFreeWithBanking(spline, minNumDivIn, bankStrength, maxDegIn, tuningIn, deckZ, maxSpacingIn) end
 
---- Interpole les points donnés par des Catmull-Rom.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2590
+--- Interpolates the given points with Catmull-Rom.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2590
 ---@param nodes vec3[] Points.
----@param gran integer Granularité (subdivisions par segment).
----@return vec3[]  Points interpolés.
+---@param gran integer Granularity (subdivisions per segment).
+---@return vec3[]  Interpolated points.
 function editor_toolUtilities_geom.catmullRomNodesOnly(nodes, gran) end
 
---- Interpole points et largeurs par Catmull-Rom (un seul tableau de noeuds).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2613
+--- Interpolates points and widths with Catmull-Rom (a single array of nodes).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2613
 ---@param nodes vec3[] Points.
----@param widths number[] Largeurs.
----@param gran integer Granularité.
----@param isLoop boolean|nil Boucle.
+---@param widths number[] Widths.
+---@param gran integer Granularity.
+---@param isLoop boolean|nil Loop.
 ---@return vec3[]  Points.
----@return number[]  Largeurs.
+---@return number[]  Widths.
 function editor_toolUtilities_geom.catmullRomNodesWidthsOnly(nodes, widths, gran, isLoop) end
 
---- Interpole points, largeurs, vitesses et limites de vitesse d'une spline par Catmull-Rom (un seul tableau de noeuds).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2645
----@param spline table Spline avec nodes, widths, vels, velLimits.
----@param gran integer Granularité.
+--- Interpolates points, widths, speeds and speed limits of a spline with Catmull-Rom (a single array of nodes).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2645
+---@param spline table Spline with nodes, widths, vels, velLimits.
+---@param gran integer Granularity.
 ---@return vec3[]  Points.
----@return number[]  Largeurs.
----@return number[]  Vitesses.
----@return number[]  Limites de vitesse.
+---@return number[]  Widths.
+---@return number[]  Speeds.
+---@return number[]  Speed limits.
 function editor_toolUtilities_geom.catmullRomNodesWidthsVelVelLimits(spline, gran) end
 
---- Interpole noeuds et largeurs d'une spline par Catmull-Rom standard pour produire sa géométrie secondaire ; les points sont posés par lancer de rayon sur la surface en dessous. Les données sont stockées dans la spline (divPoints, divWidths, normals, discMap).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2753
+--- Interpolates the nodes and widths of a spline with standard Catmull-Rom to produce its secondary geometry; points are placed by raycast onto the surface below. The data is stored in the spline (divPoints, divWidths, normals, discMap).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2753
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
----@param minNumDivIn integer|nil Nombre minimal de divisions par segment (défaut 10).
----@param minSpacing number|nil Espacement minimal entre points (m).
----@param rayRaise number|nil Élévation de départ du rayon (m) ; défaut spline.rayRaise.
+---@param minNumDivIn integer|nil Minimum number of divisions per segment (default 10).
+---@param minSpacing number|nil Minimum spacing between points (m).
+---@param rayRaise number|nil Ray starting elevation (m); default spline.rayRaise.
 function editor_toolUtilities_geom.catmullRomRaycast(spline, minNumDivIn, minSpacing, rayRaise) end
 
---- Réduit une courbe tessellée à des cordes d'environ chord mètres ; les points drapeautés (flags) sont toujours gardés, ainsi que les extrémités.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:945
+--- Reduces a tessellated curve to chords of about chord meters; flagged points (flags) are always kept, as are the ends.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:945
 ---@param pts table[] Points.
----@param n integer Nombre de points.
----@param chord number Longueur de corde (m).
----@param flags table|nil Drapeaux par point.
----@return table[]  Points gardés.
----@return table|nil  Drapeaux correspondants.
+---@param n integer Number of points.
+---@param chord number Chord length (m).
+---@param flags table|nil Flags per point.
+---@return table[]  Kept points.
+---@return table|nil  Corresponding flags.
 function editor_toolUtilities_geom.chordify(pts, n, chord, flags) end
 
---- Découpe un anneau à la boîte x0..x1, y0..y1. Un anneau concave revient en un seul anneau qui longe le bord de la boîte entre ses morceaux, ce qui couvre la même surface dans la boîte.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1123
----@param pts table[] Anneau.
+--- Clips a ring to the box x0..x1, y0..y1. A concave ring comes back as a single ring that runs along the edge of the box between its pieces, which covers the same area in the box.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1123
+---@param pts table[] Ring.
 ---@param x0 number X min.
 ---@param x1 number X max.
 ---@param y0 number Y min.
 ---@param y1 number Y max.
----@return table[]  Anneau découpé (peut avoir moins de 3 points).
+---@return table[]  Clipped ring (may have fewer than 3 points).
 function editor_toolUtilities_geom.clipRingRect2D(pts, x0, x1, y0, y1) end
 
---- Point le plus proche de p sur une polyligne 3D. Écrit le résultat dans outPos et renvoie la distance au carré.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:77
----@param pts vec3[] Polyligne.
+--- Closest point to p on a 3D polyline. Writes the result into outPos and returns the squared distance.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:77
+---@param pts vec3[] Polyline.
 ---@param p vec3 Point.
----@param outPos vec3 Reçoit le point le plus proche.
----@return number  Distance au carré (m^2).
+---@param outPos vec3 Receives the closest point.
+---@return number  Squared distance (m^2).
 function editor_toolUtilities_geom.closestPointOnPolyline(pts, p, outPos) end
 
---- Point le plus proche de p sur une polyligne, mesuré en XY (Z interpolé). Écrit dans outPos et renvoie la distance au carré.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:123
----@param pts vec3[] Polyligne.
+--- Closest point to p on a polyline, measured in XY (Z interpolated). Writes into outPos and returns the squared distance.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:123
+---@param pts vec3[] Polyline.
 ---@param p vec3 Point.
----@param outPos vec3 Reçoit le point.
----@param tMin number|nil Borne basse de recherche (déduit du code).
----@param tMax number|nil Borne haute de recherche (déduit du code).
----@param closed boolean|nil Polyligne fermée.
----@return number  Distance au carré.
+---@param outPos vec3 Receives the point.
+---@param tMin number|nil Lower search bound (inferred from code).
+---@param tMax number|nil Upper search bound (inferred from code).
+---@param closed boolean|nil Closed polyline.
+---@return number  Squared distance.
 function editor_toolUtilities_geom.closestPointOnPolyline2D(pts, p, outPos, tMin, tMax, closed) end
 
---- Point le plus proche, sur un segment de ruban donné, d'un point donné.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1897
----@param segIdx integer Indice du segment.
----@param ribbon table Ruban.
+--- Closest point, on a given ribbon segment, to a given point.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1897
+---@param segIdx integer Segment index.
+---@param ribbon table Ribbon.
 ---@param p vec3 Point.
----@return any|nil  Point le plus proche (nil, nil si indisponible).
----@return number|nil  Distance au carré.
+---@return any|nil  Closest point (nil, nil if unavailable).
+---@return number|nil  Squared distance.
 function editor_toolUtilities_geom.closestRibbonSegPointToPoint(segIdx, ribbon, p) end
 
---- Calcule le repère de Frenet local à chaque point de division (tangents, binormals, normals). Les segments de longueur nulle ne doivent pas être normalisés (sinon binormales NaN et noeuds DecalRoad infinis).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2689
+--- Computes the local Frenet frame at each division point (tangents, binormals, normals). Zero-length segments must not be normalized (otherwise NaN binormals and infinite DecalRoad nodes).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2689
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
 function editor_toolUtilities_geom.computeFrenetFrame(spline) end
 
---- Calcule le chemin de graphe à partir des noeuds et remplit la géométrie de la spline (divPoints, divWidths, normals). Sans effet s'il n'y a pas assez de noeuds.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2990
+--- Computes the graph path from the nodes and fills the spline geometry (divPoints, divWidths, normals). No effect if there are not enough nodes.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2990
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
 function editor_toolUtilities_geom.computeGraphPathFromNodes(spline) end
 
---- Quaternion de variation aléatoire, par composante.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2226
+--- Random variation quaternion, per component.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2226
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
----@param tgt vec3 Tangente.
----@param rightVec vec3 Vecteur droit.
----@param nmlVec vec3 Normale.
----@param outQuat quat Reçoit le résultat.
+---@param tgt vec3 Tangent.
+---@param rightVec vec3 Right vector.
+---@param nmlVec vec3 Normal.
+---@param outQuat quat Receives the result.
 ---@return quat  outQuat.
 function editor_toolUtilities_geom.computeRandomJitterQuat(spline, tgt, rightVec, nmlVec, outQuat) end
 
---- Quaternion de variation aléatoire d'après les axes de liberté de jointure.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2249
+--- Random variation quaternion based on the joint's freedom axes.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2249
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
----@param freedomAxes table Axes de liberté.
----@param outQuat quat Reçoit le résultat.
+---@param freedomAxes table Freedom axes.
+---@param outQuat quat Receives the result.
 ---@return quat  outQuat.
 function editor_toolUtilities_geom.computeRandomJitterQuatFromFreedomAxes(spline, freedomAxes, outQuat) end
 
---- Quaternion de variation aléatoire autour de Z seulement.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2219
+--- Random variation quaternion around Z only.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2219
 ---@param jitter number Amplitude.
----@param nmlVec vec3 Normale.
----@param outQuat quat Reçoit le résultat.
+---@param nmlVec vec3 Normal.
+---@param outQuat quat Receives the result.
 ---@return quat  outQuat.
 function editor_toolUtilities_geom.computeRandomJitterQuat_ZOnly(jitter, nmlVec, outQuat) end
 
---- Calcule le champ de distance signé (SDF) d'un masque (tableau 2D, 0 = dedans).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2431
----@param mask number[][] Masque mask[y][x].
----@return number[][]  Champ de distance.
+--- Computes the signed distance field (SDF) of a mask (2D array, 0 = inside).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2431
+---@param mask number[][] Mask mask[y][x].
+---@return number[][]  Distance field.
 function editor_toolUtilities_geom.computeSDF(mask) end
 
---- Boîte englobante (XY) des sources données.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1686
----@param sources table[] Sources (points ou splines, déduit du code).
+--- Bounding box (XY) of the given sources.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1686
+---@param sources table[] Sources (points or splines, inferred from code).
 ---@return table  { xMin, xMax, yMin, yMax }.
 function editor_toolUtilities_geom.computeSourcesAABB(sources) end
 
---- Calcule un contour polygonal autour d'une spline (bords gauche et droit à la demi-largeur + marge, prolongés de 10 m aux deux bouts). Rapide à traiter par spans de scanline. Remplit le tableau polygon.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:372
----@param spline table Spline avec divPoints, tangents, binormals, divWidths.
----@param margin number Marge latérale (m).
----@param polygon table Tableau de sortie, vidé puis rempli de vec3.
+--- Computes a polygonal outline around a spline (left and right edges at the half-width + margin, extended by 10 m at both ends). Fast to process by scanline spans. Fills the polygon array.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:372
+---@param spline table Spline with divPoints, tangents, binormals, divWidths.
+---@param margin number Lateral margin (m).
+---@param polygon table Output array, cleared then filled with vec3.
 function editor_toolUtilities_geom.computeSplinePolygon(spline, margin, polygon) end
 
---- Rayon de courbure approché par 3 points consécutifs (moyenne des longueurs des deux côtés divisée par tan(angle/2)).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:481
+--- Radius of curvature approximated by 3 consecutive points (average of the lengths of the two sides divided by tan(angle/2)).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:481
 ---@param p1 vec3 Point.
----@param p2 vec3 Point central.
+---@param p2 vec3 Center point.
 ---@param p3 vec3 Point.
----@return number  Rayon (m).
+---@return number  Radius (m).
 function editor_toolUtilities_geom.computeTurningRadius(p1, p2, p3) end
 
---- Direction que prend un poteau, un pilier ou un potelet PLACÉ SUR UN COIN, d'après la direction d'entrée et de sortie : l'axe est tourné de la moitié du virage réduit modulo period (défaut pi/2). Les égalités vont au plus petit virage pour que des coins à gauche et à droite se miroitent.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:3070
----@param ix number Direction d'entrée x.
----@param iy number Direction d'entrée y.
----@param ox number Direction de sortie x.
----@param oy number Direction de sortie y.
----@param period number|nil Période de symétrie du poteau (rad, défaut pi/2).
----@return number  cos de l'axe.
----@return number  sin de l'axe.
+--- Direction taken by a post, pillar or bollard PLACED ON A CORNER, from the entry and exit direction: the axis is rotated by half the turn reduced modulo period (default pi/2). Ties go to the smaller turn so that left and right corners mirror each other.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:3070
+---@param ix number Entry direction x.
+---@param iy number Entry direction y.
+---@param ox number Exit direction x.
+---@param oy number Exit direction y.
+---@param period number|nil Symmetry period of the post (rad, default pi/2).
+---@return number  cos of the axis.
+---@return number  sin of the axis.
 function editor_toolUtilities_geom.cornerAxis(ix, iy, ox, oy, period) end
 
---- Produit vectoriel scalaire 2D de (ax, ay) et (bx, by), sur composantes simples (sans allocation de vec3 ou de table).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:3059
+--- 2D scalar cross product of (ax, ay) and (bx, by), on plain components (without allocating a vec3 or a table).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:3059
 ---@param ax number A x.
 ---@param ay number A y.
 ---@param bx number B x.
@@ -241,35 +241,35 @@ function editor_toolUtilities_geom.cornerAxis(ix, iy, ox, oy, period) end
 ---@return number  ax*by - ay*bx.
 function editor_toolUtilities_geom.cross2(ax, ay, bx, by) end
 
---- Convertit une courbure en angle de dévers (rad). maxDeg (plafond sur les virages les plus serrés, défaut 15) et tuning (courbure à laquelle le plafond est atteint, défaut 500) sont des surcharges facultatives.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2194
----@param curv number Courbure.
----@param bankStrength number Intensité du dévers.
----@param maxDeg number|nil Plafond (degrés).
----@param tuning number|nil Réglage de saturation.
----@return number  Angle de dévers (rad).
+--- Converts a curvature into a banking angle (rad). maxDeg (cap on the tightest turns, default 15) and tuning (curvature at which the cap is reached, default 500) are optional overrides.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2194
+---@param curv number Curvature.
+---@param bankStrength number Banking intensity.
+---@param maxDeg number|nil Cap (degrees).
+---@param tuning number|nil Saturation setting.
+---@return number  Banking angle (rad).
 function editor_toolUtilities_geom.curvatureToBankAngle(curv, bankStrength, maxDeg, tuning) end
 
---- Densifie une polyligne pour qu'aucun segment ne dépasse maxSpacing.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:989
----@param points table[] Polyligne.
----@param maxSpacing number Espacement maximal (m).
----@return table[]  Polyligne densifiée.
+--- Densifies a polyline so that no segment exceeds maxSpacing.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:989
+---@param points table[] Polyline.
+---@param maxSpacing number Maximum spacing (m).
+---@return table[]  Densified polyline.
 function editor_toolUtilities_geom.densifyByMaxSpacing(points, maxSpacing) end
 
---- Distance au carré du point (px, py) au segment FINI AB (t borné au segment). Pour les tests de proximité fréquents.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1063
+--- Squared distance from the point (px, py) to the FINITE segment AB (t clamped to the segment). For frequent proximity tests.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1063
 ---@param px number Point x.
 ---@param py number Point y.
 ---@param ax number A x.
 ---@param ay number A y.
 ---@param bx number B x.
 ---@param by number B y.
----@return number  Distance au carré.
+---@return number  Squared distance.
 function editor_toolUtilities_geom.distSqPointSeg2D(px, py, ax, ay, bx, by) end
 
---- Produit scalaire 2D sur composantes simples.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:3061
+--- 2D dot product on plain components.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:3061
 ---@param ax number A x.
 ---@param ay number A y.
 ---@param bx number B x.
@@ -277,177 +277,177 @@ function editor_toolUtilities_geom.distSqPointSeg2D(px, py, ax, ay, bx, by) end
 ---@return number  ax*bx + ay*by.
 function editor_toolUtilities_geom.dot2(ax, ay, bx, by) end
 
---- Inverse le sens d'une spline sur place (noeuds, normales, corners) et marque spline.isDirty.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1878
+--- Reverses the direction of a spline in place (nodes, normals, corners) and marks spline.isDirty.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1878
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
 function editor_toolUtilities_geom.flipSplineDirection(spline) end
 
---- Boîte englobante alignée aux axes (XY) d'un tableau de points.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:335
+--- Axis-aligned bounding box (XY) of an array of points.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:335
 ---@param points vec3[] Points.
 ---@return table  { xMin, xMax, yMin, yMax }.
 function editor_toolUtilities_geom.getAABB(points) end
 
---- Construit les quadrilatères des sources, avec gonflement latéral (sans étirement longitudinal).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1700
----@param sources table[] Sources de type spline.
----@param margin number Marge latérale (m).
+--- Builds the quadrilaterals of the sources, with lateral inflation (without longitudinal stretching).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1700
+---@param sources table[] Spline-type sources.
+---@param margin number Lateral margin (m).
 ---@return table[]  Quads.
 function editor_toolUtilities_geom.getAllQuadrilaterals(sources, margin) end
 
---- Renvoie le facteur d'échelle des barres de vitesse (hauteur = barScale * vitesse, 0.5).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:68
----@return number  Facteur.
+--- Returns the scale factor of the speed bars (height = barScale * speed, 0.5).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:68
+---@return number  Factor.
 function editor_toolUtilities_geom.getBarScale() end
 
---- Étant donné une polyligne et un polygone, renvoie les suites d'indices consécutifs qui sont dans le polygone.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1915
----@param nodes vec3[] Polyligne.
----@param polygon table[] Polygone.
----@return table[]  Suites d'indices.
+--- Given a polyline and a polygon, returns the runs of consecutive indices that are in the polygon.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1915
+---@param nodes vec3[] Polyline.
+---@param polygon table[] Polygon.
+---@return table[]  Runs of indices.
 function editor_toolUtilities_geom.getNodeSpansInsidePolygon(nodes, polygon) end
 
---- Renvoie la table des quaternions de pré-rotation indexée de 0 à 3 (0, 90, 180, 270 degrés autour de Z).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:65
----@return table<integer, quat>  Quaternions de pré-rotation.
+--- Returns the table of pre-rotation quaternions indexed from 0 to 3 (0, 90, 180, 270 degrees around Z).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:65
+---@return table<integer, quat>  Pre-rotation quaternions.
 function editor_toolUtilities_geom.getPreRotQuats() end
 
---- Calcule les spans de scanline d'un polygone sur l'axe Y, en espace de grille de terrain. Stocke les résultats dans spansXMin, spansXMax et spansY.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2397
----@param gMinY integer Rangée de grille minimale.
----@param gMaxY integer Rangée de grille maximale.
----@param te userdata Éditeur de terrain (gridToWorldByPoint2I).
----@param tb userdata Bloc de terrain.
----@param polygon table[] Polygone en monde.
----@param spansXMin table Sortie, vidée.
----@param spansXMax table Sortie.
----@param spansY table Sortie.
+--- Computes the scanline spans of a polygon on the Y axis, in terrain grid space. Stores the results in spansXMin, spansXMax and spansY.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2397
+---@param gMinY integer Minimum grid row.
+---@param gMaxY integer Maximum grid row.
+---@param te userdata Terrain editor (gridToWorldByPoint2I).
+---@param tb userdata Terrain block.
+---@param polygon table[] Polygon in world.
+---@param spansXMin table Output, cleared.
+---@param spansXMax table Output.
+---@param spansY table Output.
 function editor_toolUtilities_geom.getScanlineSpans(gMinY, gMaxY, te, tb, polygon, spansXMin, spansXMax, spansY) end
 
---- Normale du terrain au point monde donné.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:420
----@param p vec3 Point monde.
----@return vec3  Normale.
+--- Terrain normal at the given world point.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:420
+---@param p vec3 World point.
+---@return vec3  Normal.
 function editor_toolUtilities_geom.getTerrainNormal(p) end
 
---- Normale du terrain au point monde donné, écrite dans out.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:433
----@param p vec3 Point monde.
----@param out vec3 Reçoit la normale.
+--- Terrain normal at the given world point, written into out.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:433
+---@param p vec3 World point.
+---@param out vec3 Receives the normal.
 function editor_toolUtilities_geom.getTerrainNormalInPlace(p, out) end
 
---- Rétrécit un polygone fermé de {x, y} vers l'intérieur d'au plus dist, le long de la normale moyenne des arêtes de chaque sommet (vraie direction intérieure locale, correcte pour les anneaux concaves).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1465
----@param ring table[] Anneau.
+--- Shrinks a closed polygon of {x, y} inward by at most dist, along the average normal of the edges of each vertex (true local inward direction, correct for concave rings).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1465
+---@param ring table[] Ring.
 ---@param dist number Distance (m).
----@return table[]  Anneau rétréci.
+---@return table[]  Shrunk ring.
 function editor_toolUtilities_geom.insetClosedRing2D(ring, dist) end
 
---- Décale un chemin 2D vers le centre (cx, cy) de insetM le long de la normale locale (déduit du code).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:705
----@param path table[] Chemin.
----@param cx number Centre x.
----@param cy number Centre y.
----@param insetM number Retrait (m).
----@return table[]  Nouveau chemin.
+--- Offsets a 2D path toward the center (cx, cy) by insetM along the local normal (inferred from code).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:705
+---@param path table[] Path.
+---@param cx number Center x.
+---@param cy number Center y.
+---@param insetM number Inset (m).
+---@return table[]  New path.
 function editor_toolUtilities_geom.insetPathAlongNormal2D(path, cx, cy, insetM) end
 
---- Point d'intersection de deux segments (en ligne). Renvoie nil sans intersection.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:502
----@param p1 vec3 Début du segment 1.
----@param p2 vec3 Fin du segment 1.
----@param q1 vec3 Début du segment 2.
----@param q2 vec3 Fin du segment 2.
----@param out vec3 Reçoit le point.
----@return vec3|nil  out ou nil.
+--- Intersection point of two segments (inline). Returns nil without an intersection.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:502
+---@param p1 vec3 Start of segment 1.
+---@param p2 vec3 End of segment 1.
+---@param q1 vec3 Start of segment 2.
+---@param q2 vec3 End of segment 2.
+---@param out vec3 Receives the point.
+---@return vec3|nil  out or nil.
 function editor_toolUtilities_geom.intersection2LineSegs(p1, p2, q1, q2, out) end
 
---- Intersecte un point (x, y) avec un quad et renvoie la hauteur interpolée à cet endroit, ou false si hors du quad.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1672
+--- Intersects a point (x, y) with a quad and returns the interpolated height there, or false if outside the quad.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1672
 ---@param p vec3 Point.
----@param q table Quad : 4 sommets vec3.
----@return number|boolean  Hauteur ou false.
+---@param q table Quad: 4 vec3 vertices.
+---@return number|boolean  Height or false.
 function editor_toolUtilities_geom.intersectsUpQuadBarycentric(p, q) end
 
---- Teste si le segment (a, b) coupe le segment (c, d).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:496
----@param a vec3 Début de ab.
----@param b vec3 Fin de ab.
----@param c vec3 Début de cd.
----@param d vec3 Fin de cd.
+--- Tests whether segment (a, b) crosses segment (c, d).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:496
+---@param a vec3 Start of ab.
+---@param b vec3 End of ab.
+---@param c vec3 Start of cd.
+---@param d vec3 End of cd.
 ---@return boolean  Intersection.
 function editor_toolUtilities_geom.isLineSegIntersect(a, b, c, d) end
 
---- Teste si la souris survole une barre (splines avec un tableau barPoints ordonné).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:301
----@param splines table[] Splines à tester.
----@return boolean  Survol.
----@return integer|nil  Indice de spline.
----@return integer|nil  Indice de barre.
+--- Tests whether the mouse hovers a bar (splines with an ordered barPoints array).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:301
+---@param splines table[] Splines to test.
+---@return boolean  Hover.
+---@return integer|nil  Spline index.
+---@return integer|nil  Bar index.
 function editor_toolUtilities_geom.isMouseOverBar(splines) end
 
---- Teste si la souris survole un noeud du graphe de navigation.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:322
----@param nodes table Noeuds du graphe (indexés par clé).
----@return boolean  Survol.
----@return any|nil  Clé du noeud.
+--- Tests whether the mouse hovers a node of the navigation graph.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:322
+---@param nodes table Graph nodes (indexed by key).
+---@return boolean  Hover.
+---@return any|nil  Node key.
 function editor_toolUtilities_geom.isMouseOverGraphNode(nodes) end
 
---- Teste si la souris survole un noeud d'une des splines (tolérance 2 m). Chaque spline doit avoir un tableau nodes.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:258
----@param splines table[] Splines à tester.
----@return boolean  Survol.
----@return integer|nil  Indice de spline.
----@return integer|nil  Indice de noeud.
+--- Tests whether the mouse hovers a node of one of the splines (tolerance 2 m). Each spline must have a nodes array.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:258
+---@param splines table[] Splines to test.
+---@return boolean  Hover.
+---@return integer|nil  Spline index.
+---@return integer|nil  Node index.
 function editor_toolUtilities_geom.isMouseOverNode(splines) end
 
---- Teste si la souris survole une polyligne ; closed teste aussi l'arête du dernier noeud au premier.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:280
----@param points vec3[] Polyligne.
----@param mousePos vec3 Position de la souris.
----@param closed boolean|nil Polygone fermé.
----@return boolean  Survol.
----@return integer|nil  Indice du segment.
+--- Tests whether the mouse hovers a polyline; closed also tests the edge from the last node to the first.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:280
+---@param points vec3[] Polyline.
+---@param mousePos vec3 Mouse position.
+---@param closed boolean|nil Closed polygon.
+---@return boolean  Hover.
+---@return integer|nil  Segment index.
 function editor_toolUtilities_geom.isMouseOverPolyline(points, mousePos, closed) end
 
---- Teste si la souris survole la spline (pour insérer un noeud ou survol). Utilise l'approche la plus proche rayon-caméra / axe, donc les routes surélevées marchent. maxDistSq : tolérance au carré (math.huge pour obtenir le point le plus proche sans condition).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2516
+--- Tests whether the mouse hovers the spline (to insert a node or hover). Uses the closest camera-ray / axis approach, so elevated roads work. maxDistSq: squared tolerance (math.huge to get the closest point unconditionally).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2516
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
----@param maxDistSq number|nil Tolérance rayon-axe au carré (défaut 1).
----@return boolean  Survol.
----@return integer|nil  Indice de segment.
----@return vec3|nil  Point sur la spline.
+---@param maxDistSq number|nil Squared ray-axis tolerance (default 1).
+---@return boolean  Hover.
+---@return integer|nil  Segment index.
+---@return vec3|nil  Point on the spline.
 function editor_toolUtilities_geom.isMouseOverSpline(spline, maxDistSq) end
 
---- Teste si p est dans le triangle (a, b, c) (coordonnées barycentriques).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:406
+--- Tests whether p is in the triangle (a, b, c) (barycentric coordinates).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:406
 ---@param p vec3 Point.
----@param a vec3 Sommet.
----@param b vec3 Sommet.
----@param c vec3 Sommet.
----@return boolean  Dedans.
+---@param a vec3 Vertex.
+---@param b vec3 Vertex.
+---@param c vec3 Vertex.
+---@return boolean  Inside.
 function editor_toolUtilities_geom.isPointInTriangle(p, a, b, c) end
 
---- Joint deux géométries de spline aux indices de noeud donnés. Renvoie nil si les indices sont invalides.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1822
----@param n1 vec3[] Noeuds 1.
----@param w1 number[] Largeurs 1.
----@param nm1 vec3[] Normales 1.
----@param nodeIdx1 integer Indice de jonction 1.
----@param n2 vec3[] Noeuds 2.
----@param w2 number[] Largeurs 2.
----@param nm2 vec3[] Normales 2.
----@param nodeIdx2 integer Indice de jonction 2.
----@param c1 table|nil Surcharges de virages 1.
----@param c2 table|nil Surcharges 2.
+--- Joins two spline geometries at the given node indices. Returns nil if the indices are invalid.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1822
+---@param n1 vec3[] Nodes 1.
+---@param w1 number[] Widths 1.
+---@param nm1 vec3[] Normals 1.
+---@param nodeIdx1 integer Junction index 1.
+---@param n2 vec3[] Nodes 2.
+---@param w2 number[] Widths 2.
+---@param nm2 vec3[] Normals 2.
+---@param nodeIdx2 integer Junction index 2.
+---@param c1 table|nil Turn overrides 1.
+---@param c2 table|nil Overrides 2.
 ---@return table|nil  nodesNew.
 ---@return table|nil  widthsNew.
 ---@return table|nil  nmlsNew.
 ---@return table|nil  cornersNew.
 function editor_toolUtilities_geom.joinSplineGeometry(n1, w1, nm1, nodeIdx1, n2, w2, nm2, nodeIdx2, c1, c2) end
 
---- Paramètre t le long de p0 + t*d0 au point d'intersection avec p1 + u*d1 ; nil si parallèles. Avec d0 unitaire, t est en mètres.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:580
+--- Parameter t along p0 + t*d0 at the intersection point with p1 + u*d1; nil if parallel. With d0 unit, t is in meters.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:580
 ---@param p0x number Point 0 x.
 ---@param p0y number Point 0 y.
 ---@param d0x number Direction 0 x.
@@ -456,12 +456,12 @@ function editor_toolUtilities_geom.joinSplineGeometry(n1, w1, nm1, nodeIdx1, n2,
 ---@param p1y number Point 1 y.
 ---@param d1x number Direction 1 x.
 ---@param d1y number Direction 1 y.
----@param eps number Tolérance de parallélisme.
----@return number|nil  t, ou nil.
+---@param eps number Parallelism tolerance.
+---@return number|nil  t, or nil.
 function editor_toolUtilities_geom.lineDirsHitT2D(p0x, p0y, d0x, d0y, p1x, p1y, d1x, d1y, eps) end
 
---- Intersection de deux droites INFINIES P+s*D et Q+s*E ; renvoie ix, iy ou nil si parallèles.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:3086
+--- Intersection of two INFINITE lines P+s*D and Q+s*E; returns ix, iy or nil if parallel.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:3086
 ---@param px number P x.
 ---@param py number P y.
 ---@param dx number D x.
@@ -470,74 +470,74 @@ function editor_toolUtilities_geom.lineDirsHitT2D(p0x, p0y, d0x, d0y, p1x, p1y, 
 ---@param qy number Q y.
 ---@param ex number E x.
 ---@param ey number E y.
----@param eps number|nil Tolérance de parallélisme.
+---@param eps number|nil Parallelism tolerance.
 ---@return number|nil  ix.
 ---@return number|nil  iy.
 function editor_toolUtilities_geom.lineIntersect2D(px, py, dx, dy, qx, qy, ex, ey, eps) end
 
---- Intersection de deux droites a0-a1 et b0-b1. Renvoie nil si parallèles.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:559
+--- Intersection of two lines a0-a1 and b0-b1. Returns nil if parallel.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:559
 ---@param a0 table Point.
 ---@param a1 table Point.
 ---@param b0 table Point.
 ---@param b1 table Point.
----@param eps number Tolérance.
----@return table|nil  { pt = {x, y}, alongA, alongB } (codes along de Martinez).
+---@param eps number Tolerance.
+---@return table|nil  { pt = {x, y}, alongA, alongB } (Martinez along codes).
 function editor_toolUtilities_geom.linesIntersect2D(a0, a1, b0, b1, eps) end
 
---- Centroïde pondéré par l'aire d'un ou plusieurs anneaux fermés 2D ({x, y}). Renvoie cx, cy ou nil.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:835
----@param regions table[] Anneaux.
+--- Area-weighted centroid of one or more closed 2D rings ({x, y}). Returns cx, cy or nil.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:835
+---@param regions table[] Rings.
 ---@return number|nil  cx.
 ---@return number|nil  cy.
 function editor_toolUtilities_geom.multiPolygonCentroidXY(regions) end
 
---- Normalise un vecteur 2D (x, y).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:3063
+--- Normalizes a 2D vector (x, y).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:3063
 ---@param x number x.
 ---@param y number y.
----@return number  x normalisé.
----@return number  y normalisé.
+---@return number  Normalized x.
+---@return number  Normalized y.
 function editor_toolUtilities_geom.normalize2(x, y) end
 
---- Décale une polyligne 2D à l'opposé de (cx, cy) le long de sa normale locale par sommet.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:816
----@param path table[] Polyligne.
----@param cx number Centre x.
----@param cy number Centre y.
+--- Offsets a 2D polyline away from (cx, cy) along its local normal per vertex.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:816
+---@param path table[] Polyline.
+---@param cx number Center x.
+---@param cy number Center y.
 ---@param distM number Distance (m).
----@param distArr number[]|nil Distances par sommet (déduit du code).
----@return table[]  Points décalés.
+---@param distArr number[]|nil Per-vertex distances (inferred from code).
+---@return table[]  Offset points.
 function editor_toolUtilities_geom.offsetPathFromCenter2D(path, cx, cy, distM, distArr) end
 
---- Décalage parallèle à angles biseautés (miter) d'une polyligne 2D OUVERTE : un point de sortie par sommet (les rails appairés restent alignés), z conservé. Les coins gardent la vraie largeur perpendiculaire. Le côté est choisi UNE fois pour tout le chemin : à l'opposé de (cx, cy), ou vers lui si inward.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:728
----@param pts table[] Polyligne ouverte.
----@param dist number Distance de décalage (m).
----@param cx number Centre x.
----@param cy number Centre y.
----@param z number|nil Z imposé (déduit du code).
----@param inward boolean|nil Décaler vers le centre.
----@return table[]  Points décalés.
+--- Parallel offset with mitered corners of an OPEN 2D polyline: one output point per vertex (paired rails stay aligned), z kept. Corners keep the true perpendicular width. The side is chosen ONCE for the whole path: away from (cx, cy), or toward it if inward.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:728
+---@param pts table[] Open polyline.
+---@param dist number Offset distance (m).
+---@param cx number Center x.
+---@param cy number Center y.
+---@param z number|nil Imposed Z (inferred from code).
+---@param inward boolean|nil Offset toward the center.
+---@return table[]  Offset points.
 function editor_toolUtilities_geom.offsetPathMiter2D(pts, dist, cx, cy, z, inward) end
 
---- Pousse un anneau fermé VERS L'EXTÉRIEUR d'une petite distance, coins biseautés (mitrés).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1400
----@param ring table[] Anneau.
+--- Pushes a closed ring OUTWARD by a small distance, mitered corners.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1400
+---@param ring table[] Ring.
 ---@param dist number Distance (m).
----@return table[]|nil  Anneau agrandi.
+---@return table[]|nil  Enlarged ring.
 function editor_toolUtilities_geom.outsetClosedRing2D(ring, dist) end
 
---- Comme outsetClosedRing2D mais seulement pour les côtés désignés par move[i] ; les autres restent exactement sur leur droite. Un sommet entre un côté mobile et un côté fixe glisse le long du côté fixe : pas d'encoche, nombre de sommets inchangé.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1432
----@param ring table[] Anneau.
+--- Like outsetClosedRing2D but only for the sides designated by move[i]; the others stay exactly on their line. A vertex between a moving side and a fixed side slides along the fixed side: no notch, vertex count unchanged.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1432
+---@param ring table[] Ring.
 ---@param dist number Distance (m).
----@param move table<integer, boolean> Côtés à déplacer.
----@return table[]  Anneau.
+---@param move table<integer, boolean> Sides to move.
+---@return table[]  Ring.
 function editor_toolUtilities_geom.outsetRingSides2D(ring, dist, move) end
 
---- Distance perpendiculaire du point (px, py) au segment (ax, ay)->(bx, by) en XY. Segment dégénéré : distance à A. Attention à l'ordre des arguments : les points du segment d'abord.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:3046
+--- Perpendicular distance from the point (px, py) to the segment (ax, ay)->(bx, by) in XY. Degenerate segment: distance to A. Mind the argument order: the segment points first.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:3046
 ---@param ax number A x.
 ---@param ay number A y.
 ---@param bx number B x.
@@ -547,41 +547,41 @@ function editor_toolUtilities_geom.outsetRingSides2D(ring, dist, move) end
 ---@return number  Distance (m).
 function editor_toolUtilities_geom.perpDistPointSeg2D(ax, ay, bx, by, px, py) end
 
---- Le point est-il au-dessus ou sur la droite left->right (produit vectoriel >= -eps).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:532
+--- Is the point above or on the line left->right (cross product >= -eps).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:532
 ---@param pt table Point.
----@param left table Début.
----@param right table Fin.
----@param eps number Tolérance.
----@return boolean  Résultat.
+---@param left table Start.
+---@param right table End.
+---@param eps number Tolerance.
+---@return boolean  Result.
 function editor_toolUtilities_geom.pointAboveOrOnLine2D(pt, left, right, eps) end
 
---- Pour un p supposé aligné avec left->right : faux s'il est une extrémité ou en dehors. Testé sur le produit scalaire (unité m^2) et non sur la position normalisée, pour ne pas fendre un segment à sa propre extrémité (ce qui donnerait une pièce de longueur nulle).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:547
+--- For a p assumed aligned with left->right: false if it is an endpoint or outside. Tested on the dot product (unit m^2) and not on the normalized position, so as not to split a segment at its own endpoint (which would give a zero-length piece).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:547
 ---@param p table Point.
----@param left table Début.
----@param right table Fin.
----@param eps number Tolérance.
----@return boolean  Strictement entre.
+---@param left table Start.
+---@param right table End.
+---@param eps number Tolerance.
+---@return boolean  Strictly between.
 function editor_toolUtilities_geom.pointBetween2D(p, left, right, eps) end
 
---- Détermine si un point est dans un quad (en XY).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1681
+--- Determines whether a point is in a quad (in XY).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1681
 ---@param p vec3 Point.
----@param q table Quad : 4 sommets.
----@return boolean  Dedans.
+---@param q table Quad: 4 vertices.
+---@return boolean  Inside.
 function editor_toolUtilities_geom.pointInQuadBarycentric(p, q) end
 
---- Point dans un polygone 2D (tir de rayon, pair-impair), indifférent au sens de l'anneau. Les sommets sont des {x, y}.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1087
+--- Point in a 2D polygon (ray casting, even-odd), independent of the ring's direction. The vertices are {x, y}.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1087
 ---@param px number Point x.
 ---@param py number Point y.
----@param ring table[] Anneau.
----@return boolean  Dedans.
+---@param ring table[] Ring.
+---@return boolean  Inside.
 function editor_toolUtilities_geom.pointInRing2D(px, py, ring) end
 
---- Point dans un triangle 2D (barycentrique), en scalaires pour les boucles serrées comme l'ear clipping.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1131
+--- Point in a 2D triangle (barycentric), in scalars for tight loops like ear clipping.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1131
 ---@param px number Point x.
 ---@param py number Point y.
 ---@param ax number A x.
@@ -590,98 +590,98 @@ function editor_toolUtilities_geom.pointInRing2D(px, py, ring) end
 ---@param by number B y.
 ---@param cx number C x.
 ---@param cy number C y.
----@return boolean  Dedans.
+---@return boolean  Inside.
 function editor_toolUtilities_geom.pointInTri2D(px, py, ax, ay, bx, by, cx, cy) end
 
---- Trois points sont-ils alignés en XY (|produit vectoriel| < eps).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:537
+--- Are three points aligned in XY (|cross product| < eps).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:537
 ---@param a table Point.
 ---@param b table Point.
 ---@param c table Point.
----@param eps number Tolérance.
----@return boolean  Alignés.
+---@param eps number Tolerance.
+---@return boolean  Aligned.
 function editor_toolUtilities_geom.pointsCollinear2D(a, b, c, eps) end
 
---- Comparaison de deux points en XY, pour un tri (-1 ou 1, d'abord par x puis par y).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:525
+--- Comparison of two points in XY, for sorting (-1 or 1, first by x then by y).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:525
 ---@param a table Point.
 ---@param b table Point.
----@param eps number Tolérance sur x.
----@return integer  -1 si a avant b, sinon 1.
+---@param eps number Tolerance on x.
+---@return integer  -1 if a is before b, otherwise 1.
 function editor_toolUtilities_geom.pointsCompare2D(a, b, eps) end
 
---- Deux points sont-ils confondus en XY à eps près (par composante).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:520
+--- Are two points coincident in XY within eps (per component).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:520
 ---@param a table Point {x, y}.
 ---@param b table Point.
----@param eps number Tolérance.
----@return boolean  Identiques.
+---@param eps number Tolerance.
+---@return boolean  Identical.
 function editor_toolUtilities_geom.pointsSame2D(a, b, eps) end
 
---- Boîte englobante orientée d'un polygone 2D par ACP. Les points sont des paires [1]=x, [2]=y.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:346
----@param poly number[][] Polygone.
----@return number  Centre x.
----@return number  Centre y.
----@return number  Demi-largeur le long de l'axe principal.
----@return number  Demi-largeur transversale.
----@return number  Angle theta de l'axe principal (rad).
+--- Oriented bounding box of a 2D polygon by PCA. The points are pairs [1]=x, [2]=y.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:346
+---@param poly number[][] Polygon.
+---@return number  Center x.
+---@return number  Center y.
+---@return number  Half-width along the principal axis.
+---@return number  Transverse half-width.
+---@return number  Angle theta of the principal axis (rad).
 function editor_toolUtilities_geom.polygonOBB(poly) end
 
---- Cousine 2D (XY seul) de polylineCumLength3D pour des points {x, y} simples : out[i] = distance de pts[1] à pts[i]. Un tableau out réutilisable évite les allocations.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:875
----@param pts table[] Polyligne.
----@param out number[]|nil Tableau réutilisé (vidé puis rempli).
+--- 2D (XY only) cousin of polylineCumLength3D for plain {x, y} points: out[i] = distance from pts[1] to pts[i]. A reusable out array avoids allocations.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:875
+---@param pts table[] Polyline.
+---@param out number[]|nil Reused array (cleared then filled).
 ---@return number[]  out.
----@return number  Longueur totale.
+---@return number  Total length.
 function editor_toolUtilities_geom.polylineCumLength2D(pts, out) end
 
---- Longueurs cumulées 3D le long d'une polyligne.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:864
----@param pts vec3[] Polyligne.
+--- Cumulative 3D lengths along a polyline.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:864
+---@param pts vec3[] Polyline.
 ---@return number[]  cum[1..n].
----@return number  Longueur totale.
+---@return number  Total length.
 function editor_toolUtilities_geom.polylineCumLength3D(pts) end
 
---- Z du premier échantillon à la distance d'arc dist depuis le bout début ou fin.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1559
----@param pts vec3[] Polyligne.
----@param cum number[] Longueurs cumulées.
----@param total number Longueur totale.
----@param fromStart boolean Mesurer depuis le début.
+--- Z of the first sample at arc distance dist from the start or end tip.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1559
+---@param pts vec3[] Polyline.
+---@param cum number[] Cumulative lengths.
+---@param total number Total length.
+---@param fromStart boolean Measure from the start.
 ---@param dist number Distance (m).
 ---@return number  Z.
 function editor_toolUtilities_geom.polylineZAtArcFromTip(pts, cum, total, fromStart, dist) end
 
---- Crée et remplit un kd-tree contenant les quads donnés.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1723
+--- Creates and fills a kd-tree containing the given quads.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1723
 ---@param quads table[] Quads.
----@return table  Arbre kdtreebox2d.
+---@return table  kdtreebox2d tree.
 function editor_toolUtilities_geom.populateTreeQuads(quads) end
 
---- Projette un point sur une spline. Renvoie nil si hors des bornes des segments.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1942
+--- Projects a point onto a spline. Returns nil if outside the segment bounds.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1942
 ---@param pos vec3 Point.
 ---@param spline table Spline.
----@return vec3|nil  Point projeté le plus proche.
----@return number|nil  s dans [0,1].
----@return number|nil  t latéral dans [-inf, inf].
+---@return vec3|nil  Closest projected point.
+---@return number|nil  s in [0,1].
+---@return number|nil  Lateral t in [-inf, inf].
 function editor_toolUtilities_geom.projectPointToSpline(pos, spline) end
 
---- Bilinéaire inverse dans le plan XY : le (u, v) tel que p = lerp(lerp(q1, q2, u), lerp(q3, q4, u), v), ou nil si p est hors du quad. u court de q1 vers q2, v de q1 vers q3.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1631
+--- Inverse bilinear in the XY plane: the (u, v) such that p = lerp(lerp(q1, q2, u), lerp(q3, q4, u), v), or nil if p is outside the quad. u runs from q1 toward q2, v from q1 toward q3.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1631
 ---@param px number Point x.
 ---@param py number Point y.
----@param q1 table Coin 1.
----@param q2 table Coin 2.
----@param q3 table Coin 3.
----@param q4 table Coin 4.
+---@param q1 table Corner 1.
+---@param q2 table Corner 2.
+---@param q3 table Corner 3.
+---@param q4 table Corner 4.
 ---@return number|nil  u.
 ---@return number|nil  v.
 function editor_toolUtilities_geom.quadUV(px, py, q1, q2, q3, q4) end
 
---- Intersection de deux RAYONS (vers l'avant seulement) P+s*D et Q+u*E ; renvoie ix, iy ou nil (parallèles ou point derrière l'un des rayons).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:3093
+--- Intersection of two RAYS (forward only) P+s*D and Q+u*E; returns ix, iy or nil (parallel or point behind one of the rays).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:3093
 ---@param px number P x.
 ---@param py number P y.
 ---@param dx number D x.
@@ -690,150 +690,150 @@ function editor_toolUtilities_geom.quadUV(px, py, q1, q2, q3, q4) end
 ---@param qy number Q y.
 ---@param ex number E x.
 ---@param ey number E y.
----@param eps number|nil Tolérance.
+---@param eps number|nil Tolerance.
 ---@return number|nil  ix.
 ---@return number|nil  iy.
 function editor_toolUtilities_geom.rayIntersect2D(px, py, dx, dy, qx, qy, ex, ey, eps) end
 
---- Rééchantillonne une polyligne (noeuds et largeurs) à pas régulier.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1008
----@param nodes vec3[] Noeuds.
----@param widths number[] Largeurs.
----@param spacing number Pas (m).
----@return vec3[]  Nouveaux noeuds (les largeurs correspondantes sont aussi produites, déduit du code).
+--- Resamples a polyline (nodes and widths) at a regular step.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1008
+---@param nodes vec3[] Nodes.
+---@param widths number[] Widths.
+---@param spacing number Step (m).
+---@return vec3[]  New nodes (the corresponding widths are also produced, inferred from code).
 function editor_toolUtilities_geom.resampleUniformNodesWidths(nodes, widths, spacing) end
 
---- Remodèle sur place UNE extrémité d'une polyligne de noeuds (x/y, z inchangé) selon une Bézier d'amorce vers un point but, sur une longueur L.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:633
----@param nodes vec3[] Noeuds modifiés.
----@param fromStart boolean true : le début est l'extrémité mobile.
----@param p0x number Pointe x (déduit du code).
----@param p0y number Pointe y.
----@param gx number But x (déduit du code).
----@param gy number But y.
----@param L number Longueur remodelée (m).
+--- Reshapes in place ONE end of a node polyline (x/y, z unchanged) according to a lead-in Bezier toward a goal point, over a length L.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:633
+---@param nodes vec3[] Modified nodes.
+---@param fromStart boolean true: the start is the moving end.
+---@param p0x number Tip x (inferred from code).
+---@param p0y number Tip y.
+---@param gx number Goal x (inferred from code).
+---@param gy number Goal y.
+---@param L number Reshaped length (m).
 function editor_toolUtilities_geom.reshapeLeadInBezier2D(nodes, fromStart, p0x, p0y, gx, gy, L) end
 
---- Repère à mi-intervalle pour des panneaux rigides de kit sur un bord incliné ou en dévers (clôtures, glissières).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2103
----@param p1 vec3 Début.
----@param p2 vec3 Fin.
----@param t1 vec3 Tangente début.
----@param t2 vec3 Tangente fin.
----@param n1 vec3 Normale début.
----@param n2 vec3 Normale fin.
----@param outPos vec3 Reçoit la position.
----@param outTan vec3 Reçoit la tangente.
----@param outUp vec3 Reçoit le haut.
----@param prevAcross vec3|nil Latéral précédent.
+--- Mid-interval frame for rigid kit panels on a sloped or banked edge (fences, guardrails).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2103
+---@param p1 vec3 Start.
+---@param p2 vec3 End.
+---@param t1 vec3 Start tangent.
+---@param t2 vec3 End tangent.
+---@param n1 vec3 Start normal.
+---@param n2 vec3 End normal.
+---@param outPos vec3 Receives the position.
+---@param outTan vec3 Receives the tangent.
+---@param outUp vec3 Receives the up.
+---@param prevAcross vec3|nil Previous lateral.
 function editor_toolUtilities_geom.ribbonIntervalFrame(p1, p2, t1, t2, n1, n2, outPos, outTan, outUp, prevAcross) end
 
---- Où deux rubans (routes) partant d'une même jonction cessent de se chevaucher, en longueur d'arc le long de A depuis le centre (hx, hy). Renvoie maxM si aucun ruban utilisable.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:153
----@param hx number X du centre de jonction.
----@param hy number Y du centre.
----@param a table Points du ruban A.
----@param aFromStart boolean A part de son premier point.
----@param b table Points du ruban B.
----@param bFromStart boolean B part de son premier point.
----@param clearM number Distance de dégagement (m).
----@param stepM number Pas de recherche (m, doit être > 0).
----@param maxM number Longueur maximale (m).
----@return number  Longueur d'arc (m).
+--- Where two ribbons (roads) leaving the same junction stop overlapping, in arc length along A from the center (hx, hy). Returns maxM if no usable ribbon.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:153
+---@param hx number X of the junction center.
+---@param hy number Y of the center.
+---@param a table Points of ribbon A.
+---@param aFromStart boolean A starts from its first point.
+---@param b table Points of ribbon B.
+---@param bFromStart boolean B starts from its first point.
+---@param clearM number Clearance distance (m).
+---@param stepM number Search step (m, must be > 0).
+---@param maxM number Maximum length (m).
+---@return number  Arc length (m).
 function editor_toolUtilities_geom.ribbonOverlapEnd2D(hx, hy, a, aFromStart, b, bFromStart, clearM, stepM, maxM) end
 
---- Vecteur haut du ruban de route pour une direction along unitaire : up perpendiculaire à along, roulis pris sur upRef. prevAcross garde le signe latéral continu le long d'une série de placements.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2076
----@param along vec3 Direction unitaire.
----@param upRef vec3 Haut de référence.
----@param outUp vec3 Reçoit le haut.
----@param prevAcross vec3|nil Vecteur latéral précédent.
+--- Up vector of the road ribbon for a unit along direction: up perpendicular to along, roll taken from upRef. prevAcross keeps the lateral sign continuous along a series of placements.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2076
+---@param along vec3 Unit direction.
+---@param upRef vec3 Reference up.
+---@param outUp vec3 Receives the up.
+---@param prevAcross vec3|nil Previous lateral vector.
 function editor_toolUtilities_geom.ribbonUpFromAlong(along, upRef, outUp, prevAcross) end
 
---- Deux fois l'aire signée d'un anneau 2D de {x, y} ; positif = anti-horaire (x à droite, y en haut).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1223
----@param ring table[] Anneau.
----@return number  2 x aire signée.
+--- Twice the signed area of a 2D ring of {x, y}; positive = counter-clockwise (x to the right, y up).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1223
+---@param ring table[] Ring.
+---@return number  2 x signed area.
 function editor_toolUtilities_geom.ringSignedArea2(ring) end
 
---- Tourne le vecteur v autour de l'axe unitaire k de l'angle theta (formule de Rodrigues).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:453
----@param v vec3 Vecteur.
----@param k vec3 Axe unitaire.
+--- Rotates vector v around the unit axis k by the angle theta (Rodrigues formula).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:453
+---@param v vec3 Vector.
+---@param k vec3 Unit axis.
 ---@param theta number Angle (rad).
----@return vec3  Copie du résultat.
+---@return vec3  Copy of the result.
 function editor_toolUtilities_geom.rotateVecAroundAxis(v, k, theta) end
 
---- Comme rotateVecAroundAxis sans allocation : out = v*cos + (k x v)*sin + k*(k.v)*(1-cos).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:467
----@param v vec3 Vecteur.
----@param k vec3 Axe unitaire.
+--- Like rotateVecAroundAxis without allocation: out = v*cos + (k x v)*sin + k*(k.v)*(1-cos).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:467
+---@param v vec3 Vector.
+---@param k vec3 Unit axis.
 ---@param theta number Angle (rad).
----@param out vec3 Reçoit le résultat.
+---@param out vec3 Receives the result.
 ---@return vec3  out.
 function editor_toolUtilities_geom.rotateVecAroundAxisInlined(v, k, theta, out) end
 
---- Tourne le vecteur v autour de l'axe Z de l'angle donné, sur place (la fonction reçoit vec comme destination).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:445
----@param vec vec3 Vecteur modifié.
----@param v vec3 Vecteur source (déduit du code).
+--- Rotates vector v around the Z axis by the given angle, in place (the function receives vec as destination).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:445
+---@param vec vec3 Modified vector.
+---@param v vec3 Source vector (inferred from code).
 ---@param angle number Angle (rad).
 function editor_toolUtilities_geom.rotateVecAroundZ(vec, v, angle) end
 
---- Échantillonne une Bézier cubique en XY (extrémités incluses).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:589
----@param p0 table Point de contrôle.
----@param p1 table Point de contrôle.
----@param p2 table Point de contrôle.
----@param p3 table Point de contrôle.
----@param segs integer|nil Nombre de segments (défaut 14).
+--- Samples a cubic Bezier in XY (endpoints included).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:589
+---@param p0 table Control point.
+---@param p1 table Control point.
+---@param p2 table Control point.
+---@param p3 table Control point.
+---@param segs integer|nil Number of segments (default 14).
 ---@return table[]  Points.
 function editor_toolUtilities_geom.sampleCubicBezier2D(p0, p1, p2, p3, segs) end
 
---- Échantillonne à longueur d'arc réelle une polyligne pour calculer positions et repère de Frenet à intervalles réguliers. Sans effet si spacing n'est pas > 0.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1996
----@param divPoints vec3[] Points de division.
----@param tangents vec3[] Tangentes.
----@param normals vec3[] Normales.
----@param spacing number Pas (m).
----@param outPosns vec3[] Sortie positions (vidée).
----@param outTans vec3[] Sortie tangentes.
----@param outNormals vec3[] Sortie normales.
+--- Samples a polyline at true arc length to compute positions and Frenet frame at regular intervals. No effect if spacing is not > 0.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1996
+---@param divPoints vec3[] Division points.
+---@param tangents vec3[] Tangents.
+---@param normals vec3[] Normals.
+---@param spacing number Step (m).
+---@param outPosns vec3[] Positions output (cleared).
+---@param outTans vec3[] Tangents output.
+---@param outNormals vec3[] Normals output.
 ---@return vec3[]  outPosns.
 ---@return vec3[]  outTans.
 ---@return vec3[]  outNormals.
 function editor_toolUtilities_geom.sampleSpline(divPoints, tangents, normals, spacing, outPosns, outTans, outNormals) end
 
---- Échantillonnage adaptatif le long d'une spline : calcule positions, repère de Frenet et échelles par pas de meshLength ; l'échelle (minimum 0.01) dépend de la courbure (sensibilité kappaSensitivity = 150). Sans effet si meshLength n'est pas > 0.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2152
----@param divPoints vec3[] Points de division.
----@param tangents vec3[] Tangentes.
----@param normals vec3[] Normales.
----@param meshLength number Longueur de maille nominale (m).
----@param outPosns vec3[] Sortie positions.
----@param outTans vec3[] Sortie tangentes.
----@param outNormals vec3[] Sortie normales.
----@param outScales number[] Sortie échelles (minimum 0.01).
+--- Adaptive sampling along a spline: computes positions, Frenet frame and scales per meshLength step; the scale (minimum 0.01) depends on the curvature (sensitivity kappaSensitivity = 150). No effect if meshLength is not > 0.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2152
+---@param divPoints vec3[] Division points.
+---@param tangents vec3[] Tangents.
+---@param normals vec3[] Normals.
+---@param meshLength number Nominal mesh length (m).
+---@param outPosns vec3[] Positions output.
+---@param outTans vec3[] Tangents output.
+---@param outNormals vec3[] Normals output.
+---@param outScales number[] Scales output (minimum 0.01).
 ---@return vec3[]  outPosns.
 ---@return vec3[]  outTans.
 ---@return vec3[]  outNormals.
 ---@return number[]  outScales.
 function editor_toolUtilities_geom.sampleSplineAdaptive(divPoints, tangents, normals, meshLength, outPosns, outTans, outNormals, outScales) end
 
---- Échantillonneur à répartition ajustée pour des objets discrets (lampadaires, bornes) : le pas est ajusté pour que la longueur totale soit un nombre entier d'intervalles.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2024
----@param divPoints vec3[] Points de division.
----@param tangents vec3[] Tangentes.
----@param normals vec3[] Normales.
----@param targetSpacing number Pas visé (m, > 0).
----@param isLoop boolean Spline en boucle.
----@param outPosns vec3[] Sortie positions.
----@param outTans vec3[] Sortie tangentes.
----@param outNormals vec3[] Sortie normales.
+--- Sampler with adjusted distribution for discrete objects (lamp posts, bollards): the step is adjusted so that the total length is a whole number of intervals.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2024
+---@param divPoints vec3[] Division points.
+---@param tangents vec3[] Tangents.
+---@param normals vec3[] Normals.
+---@param targetSpacing number Target step (m, > 0).
+---@param isLoop boolean Looped spline.
+---@param outPosns vec3[] Positions output.
+---@param outTans vec3[] Tangents output.
+---@param outNormals vec3[] Normals output.
 function editor_toolUtilities_geom.sampleSplineEvenFit(divPoints, tangents, normals, targetSpacing, isLoop, outPosns, outTans, outNormals) end
 
---- Croisement strict de deux segments ouverts AB et CD : renvoie le paramètre t sur AB dans (0,1), sinon nil (parallèles ou croisement sur une extrémité). Les extrémités sont exclues pour que deux bandes qui se touchent ne soient pas lues comme un pli.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1074
+--- Strict crossing of two open segments AB and CD: returns the parameter t on AB in (0,1), otherwise nil (parallel or crossing at an endpoint). Endpoints are excluded so that two strips that touch are not read as a fold.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1074
 ---@param ax number A x.
 ---@param ay number A y.
 ---@param bx number B x.
@@ -842,83 +842,83 @@ function editor_toolUtilities_geom.sampleSplineEvenFit(divPoints, tangents, norm
 ---@param cy number C y.
 ---@param dx number D x.
 ---@param dy number D y.
----@return number|nil  t sur AB, ou nil.
+---@return number|nil  t on AB, or nil.
 function editor_toolUtilities_geom.segCrossParam2D(ax, ay, bx, by, cx, cy, dx, dy) end
 
---- Une signature de forme (liste plate de nombres et de chaînes) a-t-elle bougé depuis old : nombres de plus de tolM, chaînes dès qu'elles diffèrent.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:889
----@param old table|nil Ancienne signature.
----@param new table Nouvelle signature.
----@param tolM number Tolérance numérique.
----@return boolean  true si elle a bougé.
+--- Has a shape signature (flat list of numbers and strings) moved since old: numbers by more than tolM, strings as soon as they differ.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:889
+---@param old table|nil Old signature.
+---@param new table New signature.
+---@param tolM number Numeric tolerance.
+---@return boolean  true if it moved.
 function editor_toolUtilities_geom.sigMoved(old, new, tolM) end
 
---- Angle signé entre deux vecteurs autour d'un axe, après projection sur le plan de rotation. Renvoyé en DEGRÉS (contrairement à signedAngleBetweenVecs).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1620
----@param fromVec vec3 Vecteur de départ.
----@param toVec vec3 Vecteur d'arrivée.
----@param axis vec3 Axe.
----@return number  Angle signé (degrés).
+--- Signed angle between two vectors around an axis, after projection onto the plane of rotation. Returned in DEGREES (unlike signedAngleBetweenVecs).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1620
+---@param fromVec vec3 Start vector.
+---@param toVec vec3 End vector.
+---@param axis vec3 Axis.
+---@return number  Signed angle (degrees).
 function editor_toolUtilities_geom.signedAngleAroundAxis(fromVec, toVec, axis) end
 
---- Angle signé entre deux vecteurs autour d'un axe, en supposant les vecteurs dans le plan de rotation.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1610
----@param a vec3 Vecteur.
----@param b vec3 Vecteur.
----@param axis vec3 Axe.
----@return number  Angle signé (rad).
+--- Signed angle between two vectors around an axis, assuming the vectors are in the plane of rotation.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1610
+---@param a vec3 Vector.
+---@param b vec3 Vector.
+---@param axis vec3 Axis.
+---@return number  Signed angle (rad).
 function editor_toolUtilities_geom.signedAngleBetweenVecs(a, b, axis) end
 
---- Simplification de Ramer-Douglas-Peucker d'une polyligne (distance perpendiculaire mesurée en 3D).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:903
----@param points vec3[] Polyligne.
----@param tolM number Tolérance (m).
----@return vec3[]  Polyligne simplifiée.
+--- Ramer-Douglas-Peucker simplification of a polyline (perpendicular distance measured in 3D).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:903
+---@param points vec3[] Polyline.
+---@param tolM number Tolerance (m).
+---@return vec3[]  Simplified polyline.
 function editor_toolUtilities_geom.simplifyRDP(points, tolM) end
 
---- Coupe de coins de Chaikin d'un polygone fermé de points {x, y}.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1046
----@param poly table[] Polygone.
----@param iterations integer Nombre d'itérations.
----@return table[]  Polygone lissé.
+--- Chaikin corner cutting of a closed polygon of {x, y} points.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1046
+---@param poly table[] Polygon.
+---@param iterations integer Number of iterations.
+---@return table[]  Smoothed polygon.
 function editor_toolUtilities_geom.smoothClosedPolygonChaikin(poly, iterations) end
 
---- Lissage de hauteur d'un bout à l'autre : fixe z[1] et z[n] et réécrit les Z intérieurs par interpolation de Steffen selon la longueur XY. Sans effet (renvoie false) sous 3 noeuds.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:101
----@param nodes vec3[] Noeuds modifiés sur place.
----@return boolean  true si le lissage a été fait.
+--- End-to-end height smoothing: fixes z[1] and z[n] and rewrites the interior Zs by Steffen interpolation along the XY length. No effect (returns false) below 3 nodes.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:101
+---@param nodes vec3[] Nodes modified in place.
+---@return boolean  true if the smoothing was done.
 function editor_toolUtilities_geom.smoothNodesHeightSteffen(nodes) end
 
---- Coupe une spline en boucle à l'indice donné et renvoie la géométrie réordonnée. corners est renvoyé en 4e valeur.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1791
----@param nodes vec3[] Noeuds.
----@param widths number[] Largeurs.
----@param nmls vec3[] Normales.
----@param splitNodeIdx integer Indice de coupe.
----@param corners table|nil Surcharges de virages.
+--- Cuts a looped spline at the given index and returns the reordered geometry. corners is returned as the 4th value.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1791
+---@param nodes vec3[] Nodes.
+---@param widths number[] Widths.
+---@param nmls vec3[] Normals.
+---@param splitNodeIdx integer Cut index.
+---@param corners table|nil Turn overrides.
 ---@return table|nil  nodesNew.
 ---@return table|nil  widthsNew.
 ---@return table|nil  nmlsNew.
 ---@return table|nil  cornersNew.
 function editor_toolUtilities_geom.splitLoopSplineGeometry(nodes, widths, nmls, splitNodeIdx, corners) end
 
---- Coupe une polyligne 2D en tronçons qui restent hors d'une région bloquée.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1508
----@param pts table[] Polyligne {x, y}.
+--- Cuts a 2D polyline into stretches that stay outside a blocked region.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1508
+---@param pts table[] Polyline {x, y}.
 ---@param isBlocked function isBlocked(x, y) -> boolean.
----@param stepM number|nil Pas de test (m, défaut 1.0 si <= 0.05).
----@param minKeepM number|nil Longueur minimale d'un tronçon gardé (déduit du code).
----@return table[][]  Tronçons.
+---@param stepM number|nil Test step (m, default 1.0 if <= 0.05).
+---@param minKeepM number|nil Minimum length of a kept stretch (inferred from code).
+---@return table[][]  Stretches.
 function editor_toolUtilities_geom.splitPolylineByBlocked(pts, isBlocked, stepM, minKeepM) end
 
---- Coupe une géométrie de spline à l'indice de noeud donné (les deux moitiés sont écartées de 2 m au point de coupe). corners (facultatif) est un tableau de surcharges par noeud, conservé pour que les outils d'ingénierie gardent leurs rayons par virage.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1752
----@param nodes vec3[] Noeuds.
----@param widths number[] Largeurs.
----@param nmls vec3[] Normales.
----@param splitNodeIdx integer Indice de coupe.
----@param corners table|nil Surcharges de virages alignées sur les noeuds.
----@return table|nil  nodes1 (nil si indice invalide).
+--- Cuts a spline geometry at the given node index (the two halves are moved 2 m apart at the cut point). corners (optional) is an array of per-node overrides, kept so that the engineering tools keep their per-turn radii.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1752
+---@param nodes vec3[] Nodes.
+---@param widths number[] Widths.
+---@param nmls vec3[] Normals.
+---@param splitNodeIdx integer Cut index.
+---@param corners table|nil Turn overrides aligned with the nodes.
+---@return table|nil  nodes1 (nil if invalid index).
 ---@return table|nil  widths1.
 ---@return table|nil  nmls1.
 ---@return table|nil  nodes2.
@@ -928,83 +928,83 @@ function editor_toolUtilities_geom.splitPolylineByBlocked(pts, isBlocked, stepM,
 ---@return table|nil  corners2.
 function editor_toolUtilities_geom.splitSplineGeometry(nodes, widths, nmls, splitNodeIdx, corners) end
 
---- Distance au carré en XY entre deux points (Z ignoré).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:71
+--- Squared distance in XY between two points (Z ignored).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:71
 ---@param a vec3 Point.
 ---@param b vec3 Point.
----@return number  Distance au carré (m^2).
+---@return number  Squared distance (m^2).
 function editor_toolUtilities_geom.squaredDistance2D(a, b) end
 
---- Distance au carré entre deux segments 3D ; écrit les points les plus proches dans outP1 et outP2.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:219
----@param a0 vec3 Début du segment A.
----@param a1 vec3 Fin du segment A.
----@param b0 vec3 Début de B.
----@param b1 vec3 Fin de B.
----@param outP1 vec3 Point le plus proche sur A.
----@param outP2 vec3 Point le plus proche sur B.
----@return number  Distance au carré.
+--- Squared distance between two 3D segments; writes the closest points into outP1 and outP2.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:219
+---@param a0 vec3 Start of segment A.
+---@param a1 vec3 End of segment A.
+---@param b0 vec3 Start of B.
+---@param b1 vec3 End of B.
+---@param outP1 vec3 Closest point on A.
+---@param outP2 vec3 Closest point on B.
+---@return number  Squared distance.
 function editor_toolUtilities_geom.squaredSegSegDist(a0, a1, b0, b1, outP1, outP2) end
 
---- Direction XY unitaire vers l'extérieur au-delà d'un bout (à l'opposé de la polyligne). Parcourt minWalkM le long de la chaîne pour qu'un premier segment court replié n'inverse pas la visée.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1576
----@param pts table[] Polyligne.
----@param fromStart boolean Bout début ou fin.
----@param minWalkM number Distance minimale parcourue (m).
+--- Outward unit XY direction beyond an end (away from the polyline). Walks minWalkM along the chain so that a short folded-back first segment does not reverse the aim.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1576
+---@param pts table[] Polyline.
+---@param fromStart boolean Start or end tip.
+---@param minWalkM number Minimum walked distance (m).
 ---@return number  Direction x.
 ---@return number  Direction y.
 function editor_toolUtilities_geom.tipOutwardXY(pts, fromStart, minWalkM) end
 
---- Translate une polyligne de t mètres le long de la binormale (direction latérale).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2183
+--- Translates a polyline by t meters along the binormal (lateral direction).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2183
 ---@param pts vec3[] Points.
----@param binormals vec3[] Binormales.
----@param t number Décalage (m).
----@param out table Sortie (vidée) de vec3.
+---@param binormals vec3[] Binormals.
+---@param t number Offset (m).
+---@param out table Output (cleared) of vec3.
 function editor_toolUtilities_geom.translateSpline(pts, binormals, t, out) end
 
---- Triangulation par ear clipping d'un polygone 2D simple (anneau de {x, y}, l'un ou l'autre sens). La répétition de fermeture est retirée avant : arête de longueur nulle, elle bloquerait la découpe et ferait jeter le capot entier.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1162
----@param poly table[] Anneau.
----@return integer[][]  Triplets d'indices dans l'anneau ouvert (liste vide si échec).
+--- Ear clipping triangulation of a simple 2D polygon (ring of {x, y}, either direction). The closing repeat is removed beforehand: a zero-length edge would block the clipping and cause the whole cap to be discarded.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1162
+---@param poly table[] Ring.
+---@return integer[][]  Triplets of indices into the open ring (empty list on failure).
 function editor_toolUtilities_geom.triangulatePolygon2D(poly) end
 
---- Triangule un polygone 2D éventuellement troué. Si l'ear clipping échoue avec un anneau pontant, abandonne les trous un par un plutôt que de perdre tout le capot.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:1374
----@param outer table[] Anneau extérieur.
----@param holes table[][]|nil Trous.
----@return table[]  Anneau auquel les triangles se réfèrent.
----@return integer[][]  Triplets d'indices.
+--- Triangulates a possibly holed 2D polygon. If ear clipping fails with a bridging ring, drops the holes one by one rather than losing the whole cap.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:1374
+---@param outer table[] Outer ring.
+---@param holes table[][]|nil Holes.
+---@return table[]  Ring to which the triangles refer.
+---@return integer[][]  Triplets of indices.
 function editor_toolUtilities_geom.triangulateWithHoles2D(outer, holes) end
 
---- Met à jour les points de barres de vitesse d'une spline ; remplit spline.vels et spline.velLimits.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2318
+--- Updates the speed bar points of a spline; fills spline.vels and spline.velLimits.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2318
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
----@param isBarsLimits boolean Barres pour les limites de vitesse (true) ou les vitesses (false).
+---@param isBarsLimits boolean Bars for speed limits (true) or speeds (false).
 function editor_toolUtilities_geom.updateBarPoints(spline, isBarsLimits) end
 
---- Met à jour les points de barres pour un chemin de graphe de navigation ; remplit spline.vels et spline.velLimits.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2357
+--- Updates the bar points for a navigation graph path; fills spline.vels and spline.velLimits.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2357
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
----@param graphData table Données du graphe de navigation.
----@param isBarsLimit boolean Utiliser velLimits (true) ou vels (false) pour la hauteur des barres.
+---@param graphData table Navigation graph data.
+---@param isBarsLimit boolean Use velLimits (true) or vels (false) for the bar height.
 function editor_toolUtilities_geom.updateBarPointsGraph(spline, graphData, isBarsLimit) end
 
---- Recalcule les points de côtes (ribs) d'une spline en 3D libre. Sans effet sous 2 noeuds.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2263
+--- Recomputes the rib points of a spline in free 3D. No effect below 2 nodes.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2263
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
 function editor_toolUtilities_geom.updateRibPointsFree(spline) end
 
---- Recalcule les points de côtes d'une spline par lancer de rayon vertical vers la surface la plus proche en dessous. Sans effet sous 2 noeuds.
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:2290
+--- Recomputes the rib points of a spline by vertical raycast to the nearest surface below. No effect below 2 nodes.
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:2290
 ---@param spline table Spline (nodes, widths, nmls, divPoints, divWidths, normals, tangents, binormals, discMap, isLoop...).
 function editor_toolUtilities_geom.updateRibPointsRaycast(spline) end
 
---- Soude sur place les noeuds consécutifs presque confondus (segments plus courts que minLen).
----Source : lua/ge/extensions/editor/toolUtilities/geom.lua:964
----@param nodes vec3[] Noeuds modifiés.
----@param widths number[] Largeurs, mises à jour en parallèle.
----@param minLen number Longueur minimale (m).
----@return integer  Nombre de noeuds conservés (déduit du code).
+--- Welds in place consecutive nodes that are almost coincident (segments shorter than minLen).
+---Source: lua/ge/extensions/editor/toolUtilities/geom.lua:964
+---@param nodes vec3[] Modified nodes.
+---@param widths number[] Widths, updated in parallel.
+---@param minLen number Minimum length (m).
+---@return integer  Number of kept nodes (inferred from code).
 function editor_toolUtilities_geom.weldShortSegments(nodes, widths, minLen) end
 

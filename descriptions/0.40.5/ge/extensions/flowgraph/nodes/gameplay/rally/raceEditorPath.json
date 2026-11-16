@@ -1,14 +1,35 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/raceEditorPath.lua",
-  "module": "Nœud flowgraph « Rally Mode Race Editor Path » (catégorie once_instant, tag rally). Renvoie le nom de fichier de course à utiliser dans la pin fname : 'race.race.json' (source « Mission ») si un identifiant de mission du Mission Manager est détecté, sinon le fichier ouvert dans editor_raceEditor (source « Editor ») s'il n'est pas un fichier vierge (/gameplay/races/new.path.json ou NewRace.race.json). Dans l'éditeur, affiche la source et le fichier.",
-  "notes": ["Si editor_raceEditor existe mais que le fichier ouvert est vierge, loadCurrentRaceFileState ne renvoie rien (nil) ; fname est alors nil."],
+  "module": "Flowgraph node \"Rally Mode Race Editor Path\" (category once_instant, tag rally). Returns the race file name to use in the fname pin: 'race.race.json' (source \"Mission\") if a Mission Manager mission identifier is detected, otherwise the file opened in editor_raceEditor (source \"Editor\") if it is not a blank file (/gameplay/races/new.path.json or NewRace.race.json). In the editor, displays the source and the file.",
+  "notes": [
+    "If editor_raceEditor exists but the opened file is blank, loadCurrentRaceFileState returns nothing (nil); fname is then nil."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "drawMiddle": {"desc": "Affiche « Source: … » dans le corps du nœud.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud imgui."}, "style": {"type": "table", "desc": "Style."}}, "internal": true},
-        "drawCustomProperties": {"desc": "Affiche le fichier de course et sa source dans le panneau de propriétés.", "internal": true},
-        "workOnce": {"desc": "Détermine le fichier de course, le logge (niveau D) et l'écrit dans la pin fname.", "internal": true}
+        "drawMiddle": {
+          "desc": "Displays \"Source: ...\" in the node body.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "imgui node constructor."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style."
+            }
+          },
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Displays the race file and its source in the properties panel.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Determines the race file, logs it (level D) and writes it to the fname pin.",
+          "internal": true
+        }
       }
     }
   }

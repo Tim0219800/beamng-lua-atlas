@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageCountdownSetup.lua",
+  "module": "Nœud flowgraph « Rally Stage Countdown Setup » (catégorie once_instant, tag rally, sans pin). Prépare le flux UI du compte à rebours rally avant le fondu d'entrée de la spéciale : charge l'extension de la boucle rally si besoin, efface les temps intermédiaires du rally manager (clearSplitTimes), lit les réglages du compte à rebours (StagedCountdownUtils.getStageCountdownSettings, défauts durée 3 et 3 annonces max) puis lance le hook onRallyDataUpdated avec l'état inactif et countdownData {countdown = durée, state = 'waiting'}.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "workOnce": {"desc": "Exécute la préparation décrite ci-dessus une seule fois.", "internal": true}
+      }
+    }
+  }
+}

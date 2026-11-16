@@ -1,24 +1,44 @@
 {
   "path": "lua/common/utils/dateUtils.lua",
-  "module": "Petits utilitaires de dates : conversion d'une chaîne ISO 8601 en timestamp Unix et calcul du temps écoulé depuis une date. Se charge avec require('utils/dateUtils'). Utile pour comparer des dates reçues d'une API ou d'un fichier.",
-  "usage": "local du = require('utils/dateUtils')\nlocal secondes = du.timeSince('2025-01-31T12:00:00Z')",
+  "module": "Small date utilities: conversion of an ISO 8601 string to a Unix timestamp and computation of the time elapsed since a date. Loaded with require('utils/dateUtils'). Useful to compare dates received from an API or a file.",
+  "usage": "local du = require('utils/dateUtils')\nlocal seconds = du.timeSince('2025-01-31T12:00:00Z')",
   "notes": [
-    "Le motif attendu est AAAA-MM-JJTHH:MM:SSZ. Un second motif de secours accepte 'HH:MM:SS AMZ'/'PMZ'.",
-    "Si la chaîne est illisible, une erreur est loguée et l'heure courante est utilisée (le résultat est alors 'maintenant').",
-    "os.time interprète la table en heure LOCALE, alors que timeSince compare à os.date('!*t') (UTC) reconverti par os.time : le décalage de fuseau horaire peut fausser la différence (déduit du code).",
-    "Bug probable dans la branche de secours AM/PM : hour vaut 0 (nombre) ou une chaîne selon le cas, puis tonumber est appliqué ; une heure '12 PM' reste '12'."
+    "The expected pattern is YYYY-MM-DDTHH:MM:SSZ. A second fallback pattern accepts 'HH:MM:SS AMZ'/'PMZ'.",
+    "If the string is unreadable, an error is logged and the current time is used (the result is then 'now').",
+    "os.time interprets the table as LOCAL time, whereas timeSince compares against os.date('!*t') (UTC) converted back by os.time: the time zone offset can skew the difference (inferred from code).",
+    "Probable bug in the AM/PM fallback branch: hour is 0 (number) or a string depending on the case, then tonumber is applied; '12 PM' stays '12'."
   ],
   "fields": {},
   "functions": {
     "parseIso8601": {
-      "desc": "Convertit une date-heure ISO 8601 (se terminant par Z) en timestamp Unix via os.time. Retourne l'heure courante en cas d'échec de lecture.",
-      "params": {"datetime": {"type": "string", "desc": "Ex. '2025-01-31T12:00:00Z'"}},
-      "returns": [{"type": "integer", "desc": "Timestamp Unix en secondes"}]
+      "desc": "Converts an ISO 8601 date-time (ending with Z) to a Unix timestamp via os.time. Returns the current time if parsing fails.",
+      "params": {
+        "datetime": {
+          "type": "string",
+          "desc": "E.g. '2025-01-31T12:00:00Z'"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Unix timestamp in seconds"
+        }
+      ]
     },
     "timeSince": {
-      "desc": "Calcule le nombre de secondes écoulées entre la date donnée et maintenant (UTC).",
-      "params": {"datetime": {"type": "string", "desc": "Date ISO 8601"}},
-      "returns": [{"type": "number", "desc": "Différence en secondes (os.difftime)"}]
+      "desc": "Computes the number of seconds elapsed between the given date and now (UTC).",
+      "params": {
+        "datetime": {
+          "type": "string",
+          "desc": "ISO 8601 date"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Difference in seconds (os.difftime)"
+        }
+      ]
     }
   },
   "classes": {}

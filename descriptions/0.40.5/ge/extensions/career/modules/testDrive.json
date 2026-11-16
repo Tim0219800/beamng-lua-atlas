@@ -1,102 +1,167 @@
 {
   "path": "lua/ge/extensions/career/modules/testDrive.lua",
-  "module": "Essai routier d'un véhicule chez un concessionnaire en carrière. start() fait monter le joueur dans le véhicule, crée un instantané des conditions de pièces (clé \"beforeTestDrive\"), désactive l'autosauvegarde et active l'essai. À chaque frame, onUpdate décompte le temps limite (timeLimit), vérifie que le joueur reste à moins de 10 m du véhicule (sinon abandon avec frais) et détecte les dégâts toutes les 2 s. stop() ramène le véhicule au point de départ avec un fondu et remet le joueur à pied.",
+  "module": "Test drive of a vehicle at a dealership in career. start() puts the player in the vehicle, creates a snapshot of the part conditions (key \"beforeTestDrive\"), disables autosave and activates the test drive. Each frame, onUpdate counts down the time limit (timeLimit), checks that the player stays within 10 m of the vehicle (otherwise abandon with fees) and detects damage every 2 s. stop() brings the vehicle back to the starting point with a fade and puts the player back on foot.",
   "usage": "career_modules_testDrive.start(vehId, {timeLimit = 120, abandonFees = 50, dealershipName = \"x\", route = \"y\"})\nif career_modules_testDrive.isActive() then print(career_modules_testDrive.getTimeLeft()) end",
   "notes": [
-    "Champs de testDriveInfo utilisés dans le code : timeLimit (s), abandonFees, endParkingSpot, endParkingSpotCreated, dealershipName, route, dealershipPreview.",
-    "Le temps limite est décompté en temps de simulation (dtSim). Quand il est écoulé, stop(false) est appelé (sans le hook onGameplayActivityAborted).",
-    "abandonTestDrive : si abandonFees > 0, paie les frais (canBeNegative = true) ; les ventes privées n'ont pas de frais. Appelle ensuite career_modules_inspectVehicle.onTestDriveAbandoned().",
-    "stop(userAborted) émet onGameplayActivityAborted sauf si userAborted == false ; il relance l'autosauvegarde et lance le job de fin (téléportation au point de départ, vitesse du temps 0.5 puis 1, navigation vers l'écran play, hook onTestDriveEndedAfterFade).",
-    "Hooks émis : onTestDriveStarted (au démarrage), onTestDriveEndedAfterFade (fin).",
-    "Le POI de fin d'essai (type testDriveEnd) est ajouté à la liste des POI bruts et une action « stopTestDrive » est ajoutée au menu radial (niveau /root/sandbox/career/) à la première ouverture."
+    "testDriveInfo fields used in the code: timeLimit (s), abandonFees, endParkingSpot, endParkingSpotCreated, dealershipName, route, dealershipPreview.",
+    "The time limit is counted down in simulation time (dtSim). When it runs out, stop(false) is called (without the onGameplayActivityAborted hook).",
+    "abandonTestDrive: if abandonFees > 0, pays the fees (canBeNegative = true); private sales have no fees. Then calls career_modules_inspectVehicle.onTestDriveAbandoned().",
+    "stop(userAborted) emits onGameplayActivityAborted unless userAborted == false; it re-enables autosave and launches the end job (teleport to the starting point, time speed 0.5 then 1, navigation to the play screen, onTestDriveEndedAfterFade hook).",
+    "Emitted hooks: onTestDriveStarted (at start), onTestDriveEndedAfterFade (at end).",
+    "The test drive end POI (type testDriveEnd) is added to the raw POI list and a \"stopTestDrive\" action is added to the radial menu (level /root/sandbox/career/) on first opening."
   ],
   "fields": {
-    "dependencies": {"type": "table", "desc": "Table vide : aucune dépendance."}
+    "dependencies": {
+      "type": "table",
+      "desc": "Empty table: no dependency."
+    }
   },
   "functions": {
     "start": {
-      "desc": "Démarre l'essai : copie testDriveInfo, fait monter le joueur dans le véhicule, mémorise sa position/rotation de départ, crée et sélectionne l'instantané de pièces beforeTestDrive, dégèle le véhicule, émet onTestDriveStarted, vide les POI bruts et désactive l'autosauvegarde.",
+      "desc": "Starts the test drive: copies testDriveInfo, puts the player in the vehicle, remembers its starting position/rotation, creates and selects the beforeTestDrive parts snapshot, unfreezes the vehicle, emits onTestDriveStarted, clears the raw POIs and disables autosave.",
       "params": {
-        "_vehicleId": {"type": "integer", "desc": "Id d'objet du véhicule d'essai."},
-        "testDriveInfo": {"type": "table", "desc": "Paramètres de l'essai (timeLimit, abandonFees, endParkingSpot, dealershipName, route...)."}
+        "_vehicleId": {
+          "type": "integer",
+          "desc": "Object id of the test drive vehicle."
+        },
+        "testDriveInfo": {
+          "type": "table",
+          "desc": "Test drive parameters (timeLimit, abandonFees, endParkingSpot, dealershipName, route...)."
+        }
       },
       "internal": false
     },
     "stop": {
-      "desc": "Termine l'essai normalement (sans effet si inactif) : réactive l'autosauvegarde et lance le job de fin qui téléporte le véhicule au départ avec fondu.",
-      "params": {"userAborted": {"type": "boolean|nil", "desc": "Émet onGameplayActivityAborted sauf si false."}},
+      "desc": "Ends the test drive normally (no effect if inactive): re-enables autosave and launches the end job that teleports the vehicle to the start with a fade.",
+      "params": {
+        "userAborted": {
+          "type": "boolean|nil",
+          "desc": "Emits onGameplayActivityAborted unless false."
+        }
+      },
       "internal": false
     },
     "abandonTestDrive": {
-      "desc": "Abandonne l'essai (sans effet si inactif) : désactive l'essai, réactive l'autosauvegarde, puis après 0,2 s affiche et paie les frais d'abandon éventuels, réinitialise les données et prévient inspectVehicle.",
+      "desc": "Abandons the test drive (no effect if inactive): deactivates the test drive, re-enables autosave, then after 0.2 s displays and pays any abandon fees, resets the data and notifies inspectVehicle.",
       "params": {},
       "internal": false
     },
     "resetData": {
-      "desc": "Désactive l'essai et vide les POI bruts.",
+      "desc": "Deactivates the test drive and clears the raw POIs.",
       "params": {},
       "internal": false
     },
     "isActive": {
-      "desc": "Indique si un essai est en cours.",
+      "desc": "Indicates whether a test drive is in progress.",
       "params": {},
-      "returns": [{"type": "boolean|nil", "desc": "true si actif."}],
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true if active."
+        }
+      ],
       "internal": false
     },
     "getTimeLeft": {
-      "desc": "Temps restant de l'essai en secondes (nil s'il n'y a pas d'essai ou pas de limite).",
+      "desc": "Remaining test drive time in seconds (nil if there is no test drive or no limit).",
       "params": {},
-      "returns": [{"type": "number|nil", "desc": "Secondes restantes."}],
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Remaining seconds."
+        }
+      ],
       "internal": false
     },
     "isDamageDetected": {
-      "desc": "Indique si des dégâts ont été détectés sur le véhicule pendant l'essai (détection par career_modules_insurance_insurance.genericVehNeedsRepair).",
+      "desc": "Indicates whether damage was detected on the vehicle during the test drive (detection by career_modules_insurance_insurance.genericVehNeedsRepair).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si dégâts détectés."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if damage detected."
+        }
+      ],
       "internal": false
     },
     "formatTestDriveToRawPoi": {
-      "desc": "Ajoute à elements le POI de fin d'essai (id testDrive-<concession>-<route>-parkingEnd, marqueur de parking et marqueur de grande carte) si un emplacement de fin existe et a été créé.",
-      "params": {"elements": {"type": "table[]", "desc": "Liste de POI bruts à compléter."}},
+      "desc": "Adds to elements the test drive end POI (id testDrive-<dealership>-<route>-parkingEnd, parking marker and big map marker) if an end spot exists and was created.",
+      "params": {
+        "elements": {
+          "type": "table[]",
+          "desc": "List of raw POIs to fill."
+        }
+      },
       "internal": false
     },
     "onUpdate": {
-      "desc": "Hook de frame : si un essai est actif, gère le temps limite, l'éloignement du joueur et la détection de dégâts.",
+      "desc": "Frame hook: if a test drive is active, handles the time limit, the player moving away and damage detection.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Temps réel (s)."},
-        "dtSim": {"type": "number", "desc": "Temps de simulation (s)."},
-        "dtRaw": {"type": "number", "desc": "Temps brut (s)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time (s)."
+        }
       },
       "internal": true
     },
     "onVehicleRepairedByInsurance": {
-      "desc": "Hook appelé après une réparation par l'assurance : affiche après 1,8 s le coût de la réparation (message temps réel et son d'achat).",
-      "params": {"amount": {"type": "number", "desc": "Montant de la réparation."}},
+      "desc": "Hook called after an insurance repair: displays the repair cost after 1.8 s (real-time message and purchase sound).",
+      "params": {
+        "amount": {
+          "type": "number",
+          "desc": "Repair amount."
+        }
+      },
       "internal": true
     },
     "onGetRawPoiListForLevel": {
-      "desc": "Hook de la liste de POI : ajoute le POI de fin d'essai via formatTestDriveToRawPoi.",
+      "desc": "POI list hook: adds the test drive end POI via formatTestDriveToRawPoi.",
       "params": {
-        "levelIdentifier": {"type": "string", "desc": "Niveau (non utilisé)."},
-        "elements": {"type": "table[]", "desc": "Liste de POI à compléter."}
+        "levelIdentifier": {
+          "type": "string",
+          "desc": "Level (unused)."
+        },
+        "elements": {
+          "type": "table[]",
+          "desc": "POI list to complete."
+        }
       },
       "internal": true
     },
     "onPoiDetailPromptOpening": {
-      "desc": "Hook d'ouverture du détail d'un POI : si c'est le POI testDriveEnd, ajoute un bouton « arrêter l'essai » appelant stop(false).",
+      "desc": "POI detail open hook: if it is the testDriveEnd POI, adds a \"stop the test drive\" button calling stop(false).",
       "params": {
-        "elemData": {"type": "table[]", "desc": "Éléments du POI."},
-        "promptData": {"type": "table[]", "desc": "Boutons à compléter."}
+        "elemData": {
+          "type": "table[]",
+          "desc": "POI elements."
+        },
+        "promptData": {
+          "type": "table[]",
+          "desc": "Buttons to fill."
+        }
       },
       "internal": true
     },
     "onCareerActive": {
-      "desc": "Hook : réinitialise les données de l'essai à l'activation de la carrière.",
-      "params": {"active": {"type": "boolean", "desc": "Rien si false."}},
+      "desc": "Hook: resets the test drive data when the career is activated.",
+      "params": {
+        "active": {
+          "type": "boolean",
+          "desc": "Nothing if false."
+        }
+      },
       "internal": true
     },
     "onBeforeRadialOpened": {
-      "desc": "Hook avant l'ouverture du menu radial : une seule fois, ajoute une entrée « arrêter l'essai » (visible seulement pendant un essai) au menu rapide.",
+      "desc": "Hook before the radial menu opens: once only, adds a \"stop the test drive\" entry (visible only during a test drive) to the quick menu.",
       "params": {},
       "internal": true
     }

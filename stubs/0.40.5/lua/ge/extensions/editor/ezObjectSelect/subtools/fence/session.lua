@@ -2,80 +2,80 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Session d'édition de clôture d'Easy Object Select. begin() découvre une clôture existante à partir de l'objet sélectionné (fence/anchors) ou démarre une création ; la clôture est représentée par une spline éditable (splineInput, nœuds sphères) sur laquelle le moteur populationEngine de meshSpline place des pièces TSStatic en aperçu (max 512). La validation crée/modifie les objets en une action d'historique annulable (« Edit Fence » ou « Delete Fence »).
---- Accès : extension `editor_ezObjectSelect_subtools_fence_session` : `extensions.load("editor_ezObjectSelect_subtools_fence_session")`, puis la globale `editor_ezObjectSelect_subtools_fence_session`
+--- Fence editing session of Easy Object Select. begin() discovers an existing fence from the selected object (fence/anchors) or starts a creation; the fence is represented by an editable spline (splineInput, sphere nodes) on which the populationEngine of meshSpline places TSStatic pieces as a preview (max 512). Committing creates/modifies the objects in a single undoable history action ("Edit Fence" or "Delete Fence").
+--- Access: extension `editor_ezObjectSelect_subtools_fence_session`: `extensions.load("editor_ezObjectSelect_subtools_fence_session")`, then the global `editor_ezObjectSelect_subtools_fence_session`
 ---@class editor_ezObjectSelect_subtools_fence_session
 editor_ezObjectSelect_subtools_fence_session = {}
 
---- Démarre une session. Échoue si une session est déjà active ou si aucun asset n'est choisi. Si des objets sont sélectionnés, démarre depuis le dernier ; sinon démarre une création vierge. Sauvegarde la sélection d'origine et enregistre l'outil de spline.
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:520
----@param options table|nil assetPaths (string[]), anchorDistance (m), noOverlap (boolean, vrai par défaut sauf false explicite).
----@return boolean  true si la session démarre.
----@return string|nil  Message d'erreur en cas d'échec.
+--- Starts a session. Fails if a session is already active or if no asset is chosen. If objects are selected, starts from the last one; otherwise starts a blank creation. Saves the original selection and registers the spline tool.
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:520
+---@param options table|nil assetPaths (string[]), anchorDistance (m), noOverlap (boolean, true by default unless explicitly false).
+---@return boolean  true if the session starts.
+---@return string|nil  Error message on failure.
 function editor_ezObjectSelect_subtools_fence_session.begin(options) end
 
---- Annule la session : restaure les objets sources et la sélection d'origine.
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:722
+--- Cancels the session: restores the source objects and the original selection.
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:722
 function editor_ezObjectSelect_subtools_fence_session.cancel() end
 
---- Supprime les objets d'origine de la clôture en une action d'historique « Delete Fence ».
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:698
----@return integer  Nombre de pièces supprimées ; 0 si impossible.
+--- Deletes the fence's original objects in a single "Delete Fence" history action.
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:698
+---@return integer  Number of pieces deleted; 0 if impossible.
 function editor_ezObjectSelect_subtools_fence_session.deleteAndCommit() end
 
---- Valide la clôture : sérialise l'état final, termine la session et enregistre l'action d'historique « Edit Fence » (annulable).
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:664
----@return integer  Nombre de pièces créées ; 0 si rien ou en cas d'erreur.
+--- Commits the fence: serializes the final state, ends the session and records the "Edit Fence" history action (undoable).
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:664
+---@return integer  Number of pieces created; 0 if nothing or on error.
 function editor_ezObjectSelect_subtools_fence_session.exitAndCommit() end
 
---- Nombre de nœuds de la spline (0 sans spline).
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:751
----@return integer  Nombre de nœuds.
+--- Number of spline nodes (0 without a spline).
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:751
+---@return integer  Number of nodes.
 function editor_ezObjectSelect_subtools_fence_session.getNodeCount() end
 
---- Nombre de pièces de l'aperçu.
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:743
----@return integer  Nombre de placements.
+--- Number of preview pieces.
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:743
+---@return integer  Number of placements.
 function editor_ezObjectSelect_subtools_fence_session.getPieceCount() end
 
---- Nombre de pièces d'origine sélectionnées au démarrage.
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:747
----@return integer  Nombre.
+--- Number of original pieces selected at start.
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:747
+---@return integer  Number.
 function editor_ezObjectSelect_subtools_fence_session.getSelectedPieceCount() end
 
---- Dernier message d'état (erreur de validation, etc.).
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:770
+--- Last status message (validation error, etc.).
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:770
 ---@return string|nil  Message.
 function editor_ezObjectSelect_subtools_fence_session.getStatusMessage() end
 
---- true si une session est active.
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:735
----@return boolean  Session active.
+--- true if a session is active.
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:735
+---@return boolean  Active session.
 function editor_ezObjectSelect_subtools_fence_session.isActive() end
 
---- true si la découverte ou l'aperçu a atteint la limite de sécurité ; la validation est alors bloquée.
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:759
----@return boolean  Limite atteinte.
+--- true if discovery or preview has reached the safety limit; committing is then blocked.
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:759
+---@return boolean  Limit reached.
 function editor_ezObjectSelect_subtools_fence_session.isCapped() end
 
---- true si un glisser (création initiale ou nœud de spline) est en cours.
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:739
----@return boolean  Glisser en cours.
+--- true if a drag (initial creation or spline node) is in progress.
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:739
+---@return boolean  Drag in progress.
 function editor_ezObjectSelect_subtools_fence_session.isDragging() end
 
---- true si la spline est fermée en boucle.
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:755
----@return boolean  Boucle.
+--- true if the spline is closed as a loop.
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:755
+---@return boolean  Loop.
 function editor_ezObjectSelect_subtools_fence_session.isLoop() end
 
---- Active/désactive le mode sans chevauchement (longueurs de mesh entières, reste laissé vide en bout) et marque la spline à reconstruire.
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:763
----@param enabled boolean true pour activer.
+--- Enables/disables the no-overlap mode (whole mesh lengths, remainder left empty at the end) and marks the spline for rebuilding.
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:763
+---@param enabled boolean true to enable.
 function editor_ezObjectSelect_subtools_fence_session.setNoOverlap(enabled) end
 
---- À appeler chaque frame : gère Échap, la création initiale ou l'édition de spline, reconstruit l'aperçu si la spline est modifiée et dessine nœuds et spline.
----Source : lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:616
----@param canAcceptInput boolean true si les entrées peuvent être traitées.
----@return boolean  false si aucune session active.
+--- To be called every frame: handles Esc, the initial creation or spline editing, rebuilds the preview if the spline is modified and draws nodes and spline.
+---Source: lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua:616
+---@param canAcceptInput boolean true if input can be processed.
+---@return boolean  false if no active session.
 function editor_ezObjectSelect_subtools_fence_session.update(canAcceptInput) end
 

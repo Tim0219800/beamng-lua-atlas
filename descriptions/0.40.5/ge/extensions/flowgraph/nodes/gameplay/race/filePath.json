@@ -1,17 +1,51 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/filePath.lua",
-  "module": "Nœud flowgraph « File Path » (catégorie once_p_duration, tag scenario). Charge un chemin de course (fichier .race.json) en objet gameplay/race/path, le désérialise, l'inverse si demandé, appelle autoConfig() et le publie. Entrées : file (string, chemin avec ou sans .race.json, résolu par mgr:getRelativeAbsolutePath), reverse (bool). Sorties : pathData (table 'pathData' pour les autres nœuds de course), name, desc, branching, closed, laps (tours par défaut), checkpointCount (nombre de pathnodes triés) et recoveryCount (pathnodes ayant un point de recovery, selon le sens). Le chargement se fait une seule fois (tant que self.path est nil).",
-  "notes": ["Si le fichier est introuvable, une erreur de nœud est posée sur la pin 'file'.", "Dans l'éditeur, le panneau de propriétés propose d'ouvrir le Race Editor et de coder en dur le fichier ouvert dans la pin file.", "La description de checkpointCount précise que le décompte ne marche pas pour les chemins branchants."],
+  "module": "Flowgraph node \"File Path\" (category once_p_duration, tag scenario). Loads a race path (.race.json file) into a gameplay/race/path object, deserializes it, reverses it if requested, calls autoConfig() and publishes it. Inputs: file (string, path with or without .race.json, resolved by mgr:getRelativeAbsolutePath), reverse (bool). Outputs: pathData ('pathData' table for the other race nodes), name, desc, branching, closed, laps (default laps), checkpointCount (number of sorted pathnodes) and recoveryCount (pathnodes with a recovery point, depending on direction). Loading happens only once (as long as self.path is nil).",
+  "notes": [
+    "If the file cannot be found, a node error is set on the 'file' pin.",
+    "In the editor, the properties panel offers to open the Race Editor and to hardcode the opened file into the file pin.",
+    "The description of checkpointCount states that the count does not work for branching paths."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise self.path à nil et désactive clearOutPinsOnStart.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
-        "postInit": {"desc": "Restreint le sélecteur de fichier de la pin 'file' aux fichiers « Race Files » (.race.json).", "internal": true},
-        "drawCustomProperties": {"desc": "Panneau de propriétés de l'éditeur : bouton d'ouverture du Race Editor, nom du fichier ouvert et bouton « Hardcode to File Pin ».", "internal": true},
-        "onNodeReset": {"desc": "Oublie le chemin chargé (self.path = nil) pour forcer un rechargement.", "internal": true},
-        "_executionStopped": {"desc": "Oublie le chemin chargé à l'arrêt du graphe.", "internal": true},
-        "work": {"desc": "Charge le fichier de course s'il ne l'est pas encore, applique reverse/autoConfig et remplit toutes les pins de sortie.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+        "init": {
+          "desc": "Initializes self.path to nil and disables clearOutPinsOnStart.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager."
+            }
+          },
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Restricts the file selector of the 'file' pin to \"Race Files\" (.race.json).",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Editor properties panel: button to open the Race Editor, name of the opened file and \"Hardcode to File Pin\" button.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Forgets the loaded path (self.path = nil) to force a reload.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Forgets the loaded path when the graph stops.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Loads the race file if it is not loaded yet, applies reverse/autoConfig and fills all output pins.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph engine arguments (unused)."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

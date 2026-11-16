@@ -1,59 +1,101 @@
 {
   "path": "lua/ge/extensions/editor/dynamicDecals/layerTypes/decal.lua",
-  "module": "Type de calque « Decal » de l'outil Dynamic Decals, le plus important : un decal unique avec couleur, textures (color, alpha, metallic, normal, roughness), échelle, rotation, skew, UV, masque alpha, miroir, dégradé et propriétés SDF (Signed Distance Fields : contours, adoucissement). Fournit la section « Decal Properties » (réglages du decal courant, ordre 60), la GUI d'inspecteur du type decal, la fenêtre d'introduction SDF, la fenêtre de choix d'un caractère de police et les pages de documentation (Decal Layers, Properties, SDF).",
+  "module": "\"Decal\" layer type of the Dynamic Decals tool, the most important one: a single decal with color, textures (color, alpha, metallic, normal, roughness), scale, rotation, skew, UV, alpha mask, mirror, gradient and SDF (Signed Distance Fields: outlines, softening) properties. Provides the \"Decal Properties\" section (settings of the current decal, order 60), the inspector GUI of the decal type, the SDF introduction window, the font character picker window and the documentation pages (Decal Layers, Properties, SDF).",
   "notes": [
-    "Une texture est « compatible SDF » si son fichier sidecar (texturesApi.readSidecarFile) contient isSdfCompatible = true.",
-    "La fenêtre d'intro SDF s'ouvre à l'apparition d'une texture couleur compatible SDF, tant que la préférence `dynamicDecalsTool.decalProperties.doNotShowSdfIntroAgain` est false et que la fenêtre n'a pas été fermée dans la session.",
-    "Dans l'inspecteur, la mise à jour de decalScale n'écrit que .x et .z (pas .y) ; les modifications d'un widget passent par widgets.draw puis api.setLayer(layer, true) quand l'édition est terminée.",
-    "La préférence `dynamicDecalsTool.inspector.applyMirroredPropertyToChildren` (défaut true) propage mirrored et flipMirroredDecal aux calques enfants (via setPropertyInChildrenRec).",
-    "Le fichier enregistre aussi deux propriétés ajoutées localement : « mirroredDebug » (trace la ligne du plan de miroir sur la forme) et « mirrorOffsetProperty » (décale le plan, de -1 à 1)."
+    "A texture is \"SDF-compatible\" if its sidecar file (texturesApi.readSidecarFile) contains isSdfCompatible = true.",
+    "The SDF intro window opens when an SDF-compatible color texture appears, as long as the preference `dynamicDecalsTool.decalProperties.doNotShowSdfIntroAgain` is false and the window has not been closed during the session.",
+    "In the inspector, the update of decalScale only writes .x and .z (not .y); widget changes go through widgets.draw then api.setLayer(layer, true) when editing is finished.",
+    "The preference `dynamicDecalsTool.inspector.applyMirroredPropertyToChildren` (default true) propagates mirrored and flipMirroredDecal to child layers (via setPropertyInChildrenRec).",
+    "The file also registers two locally added properties: \"mirroredDebug\" (traces the mirror plane line on the shape) and \"mirrorOffsetProperty\" (offsets the plane, from -1 to 1)."
   ],
   "functions": {
     "isTexturesSdfCompatible": {
-      "desc": "Indique si la texture donnée est compatible SDF, d'après son fichier de métadonnées.",
-      "params": {"texturePath": {"type": "string|nil", "desc": "Chemin de la texture ; par défaut la texture couleur courante du decal (api.getDecalTexturePath(\"color\"))."}},
-      "returns": [{"type": "boolean", "desc": "true si la métadonnée isSdfCompatible est vraie."}],
+      "desc": "Indicates whether the given texture is SDF-compatible, based on its metadata file.",
+      "params": {
+        "texturePath": {
+          "type": "string|nil",
+          "desc": "Texture path; defaults to the decal's current color texture (api.getDecalTexturePath(\"color\"))."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the isSdfCompatible metadata is true."
+        }
+      ],
       "internal": false
     },
     "checkColorDecalTexturesSdfCompatible": {
-      "desc": "Si la texture couleur courante est compatible SDF, affiche la fenêtre d'introduction SDF (sauf si elle a été fermée ou si la préférence doNotShowSdfIntroAgain est vraie).",
+      "desc": "If the current color texture is SDF-compatible, displays the SDF introduction window (unless it was closed or the doNotShowSdfIntroAgain preference is true).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "showSdfIntroWindow": {
-      "desc": "Ouvre la fenêtre « Dynamic Decals - SDF Introduction ».",
+      "desc": "Opens the \"Dynamic Decals - SDF Introduction\" window.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "hideSdfIntroWindow": {
-      "desc": "Ferme la fenêtre d'introduction SDF.",
+      "desc": "Closes the SDF introduction window.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "editModeUpdate": {
-      "desc": "Appelé à chaque frame par le mode d'édition (via tool.registerEditorOnUpdateFn) : décompte le minuteur de mise en évidence des propriétés SDF.",
-      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}},
+      "desc": "Called every frame by the edit mode (via tool.registerEditorOnUpdateFn): counts down the timer of the SDF property highlight.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (s)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "registerEditorPreferences": {
-      "desc": "Enregistre `dynamicDecalsTool.decalProperties` : scaleStep (float 0.025, de 0.001 à 0.25), rotationStep (float 15 degrés, de 1 à 360), texturePreviewSize (float 128, de 32 à 512), doNotShowSdfIntroAgain (bool false) ; et `dynamicDecalsTool.inspector.applyMirroredPropertyToChildren` (bool true).",
-      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "desc": "Registers `dynamicDecalsTool.decalProperties`: scaleStep (float 0.025, from 0.001 to 0.25), rotationStep (float 15 degrees, from 1 to 360), texturePreviewSize (float 128, from 32 to 512), doNotShowSdfIntroAgain (bool false); and `dynamicDecalsTool.inspector.applyMirroredPropertyToChildren` (bool true).",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Editor preferences registry."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "editorPreferenceValueChanged": {
-      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
-      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "desc": "Hook called when a preference changes. Does nothing here.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "Preference path."
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setup": {
-      "desc": "Appelé par l'outil : récupère les modules liés, enregistre les fenêtres (SDF 400x400, caractère de police 550x550), la section « Decal Properties », les callbacks d'update et de GUI, la GUI d'inspecteur du type decal, les pages de documentation et la liste des blend modes.",
-      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "desc": "Called by the tool: gets the related modules, registers the windows (SDF 400x400, font character 550x550), the \"Decal Properties\" section, the update and GUI callbacks, the inspector GUI of the decal type, the documentation pages and the list of blend modes.",
+      "params": {
+        "tool_in": {
+          "type": "table",
+          "desc": "Reference to the editor_dynamicDecalsTool tool."
+        }
+      },
       "returns": [],
       "internal": true
     }

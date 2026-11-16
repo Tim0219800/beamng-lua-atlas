@@ -1,0 +1,52 @@
+{
+  "path": "lua/ge/extensions/gameplay/drift/saveLoad.lua",
+  "module": "Charge et sauvegarde les spots de drift du roaming libre. Scanne /levels/<niveau>/driftSpots/ à la recherche de spot.driftSpot.json, construit une table de spots indexée par id (niveau/dossier) avec leurs infos UI, leur aperçu, leurs scores et objectifs sauvegardés, cache les objets marqueurs de la scène, et écrit les scores modifiés. Charge aussi les zones de cascade (stuntZones) depuis un fichier JSON.",
+  "notes": [
+    "Sauvegarde freeroam : settings/cloud/driftSpots/<spotId>.json ; sauvegarde carrière : <profil>/career/driftSpots/<spotId>.json (écrite par onSaveCurrentProfile, seulement pour les spots marqués _dirty).",
+    "Le cache spotsById est construit paresseusement par getDriftSpotsById ; clearCache ou onCareerActive le vident pour forcer un rechargement.",
+    "Chaque spot chargé a les champs : id, spatialInfo, racePath, bounds, level, info (avec preview et name), saveData {scores, objectivesCompleted}, unlocked=true.",
+    "Les scores de saveData.scores sont triés par score décroissant au chargement.",
+    "Les objets listés dans spatialInfo.lines[].markerObjects sont masqués (setHidden(true)) dès le chargement ; un avertissement est loggué si un objet est introuvable.",
+    "Le hook onAfterDriftSpotsLoaded(spotsById) n'est émis qu'en carrière active."
+  ],
+  "functions": {
+    "clearCache": {
+      "desc": "Vide le cache des spots ; le prochain appel à getDriftSpotsById relira tout depuis le disque."
+    },
+    "onCareerActive": {
+      "desc": "Hook : appelé à l'activation de la carrière, vide le cache des spots.",
+      "internal": true
+    },
+    "onSaveCurrentProfile": {
+      "desc": "Hook : appelé lors de la sauvegarde du profil carrière ; écrit dans <currentSavePath>/career/driftSpots/ tous les spots marqués _dirty.",
+      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde du profil courant."}},
+      "internal": true
+    },
+    "saveDriftSpotsScoresForSpotById": {
+      "desc": "Marque le spot comme modifié (_dirty). Hors carrière, écrit immédiatement son fichier de scores dans settings/cloud/driftSpots/ ; en carrière, l'écriture est différée à onSaveCurrentProfile.",
+      "params": {"spotId": {"type": "string", "desc": "Id du spot, de la forme \"niveau/dossier\"."}}
+    },
+    "getDriftSpotById": {
+      "desc": "Renvoie les données d'un spot, ou nil s'il n'existe pas dans le niveau courant.",
+      "params": {"spotId": {"type": "string", "desc": "Id du spot."}},
+      "returns": [{"type": "table|nil", "desc": "Données du spot (id, spatialInfo, racePath, bounds, level, info, saveData, unlocked)."}]
+    },
+    "getDriftSpotsById": {
+      "desc": "Renvoie (en la construisant au besoin) la table de tous les spots de drift du niveau courant, indexée par id. Utilise le dossier de sauvegarde carrière si la carrière est active, sinon settings/cloud/driftSpots/.",
+      "returns": [{"type": "table<string, table>", "desc": "Spots indexés par id."}]
+    },
+    "getPreviewWithFallback": {
+      "desc": "Cherche preview.jpg, preview.png ou preview.jpeg dans le dossier donné ; sinon renvoie /ui/images/noPreview.jpg.",
+      "params": {"dir": {"type": "string", "desc": "Dossier du spot."}},
+      "returns": [{"type": "string", "desc": "Chemin de l'image d'aperçu."}]
+    },
+    "loadAndSanitizeDriftFreeroamSpotsCurrMap": {
+      "desc": "Renvoie la liste (tableau) des spots dont le niveau est le niveau courant.",
+      "returns": [{"type": "table[]", "desc": "Tableau de spots."}]
+    },
+    "loadDriftData": {
+      "desc": "Lit un fichier JSON de données de drift, convertit pos/rot/scl de chaque stuntZone en vec3/quat, puis appelle gameplay_drift_stuntZones.setStuntZones(json.stuntZones). Logge une erreur et retourne si le fichier est absent.",
+      "params": {"fileName": {"type": "string|nil", "desc": "Chemin du fichier JSON ; ne fait rien si nil."}}
+    }
+  }
+}

@@ -2,38 +2,38 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/devices.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Pilote l'éclairage RGB des périphériques de jeu (volants, manettes) via l'objet C++ Device. Chaque périphérique assigné à un joueur prend la couleur de ce joueur (orange BeamNG 255,102,0 par défaut), sauf si le retour de force du volant demande le mode d'éclairage « default » et que les LED de changement de rapport du véhicule sont en service : dans ce cas la couleur est réinitialisée (Device.resetRGB).
---- Accès : extension `core_devices` : `extensions.load("core_devices")`, puis la globale `core_devices`
+--- Drives the RGB lighting of gaming peripherals (wheels, gamepads) via the C++ Device object. Each device assigned to a player takes that player's color (BeamNG orange 255,102,0 by default), unless the wheel's force feedback requests the "default" lighting mode and the vehicle's shift LEDs are in use: in that case the color is reset (Device.resetRGB).
+--- Access: extension `core_devices`: `extensions.load("core_devices")`, then the global `core_devices`
 ---@class core_devices
 core_devices = {}
 
---- Hook : oublie l'état des LED du véhicule sur le point d'être remplacé.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/devices.lua:74
----@param vehicleId integer id du véhicule
+--- Hook: forgets the LED state of the vehicle about to be replaced.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/devices.lua:74
+---@param vehicleId integer vehicle id
 function core_devices.onBeforeVehicleReplaced(vehicleId) end
 
---- Hook : la configuration du retour de force a changé, recalcule l'éclairage des périphériques.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/devices.lua:86
+--- Hook: the force feedback configuration changed, recomputes the devices' lighting.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/devices.lua:86
 function core_devices.onFFBConfigChanged() end
 
---- Hook : oublie l'état des LED du véhicule détruit.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/devices.lua:70
----@param vehicleId integer id du véhicule
+--- Hook: forgets the LED state of the destroyed vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/devices.lua:70
+---@param vehicleId integer vehicle id
 function core_devices.onVehicleDestroyed(vehicleId) end
 
---- Hook : un véhicule active ou désactive ses LED de changement de rapport ; si c'est un véhicule de joueur, l'éclairage est recalculé.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/devices.lua:78
----@param vehicleId integer id du véhicule
----@param shiftLEDsInUse boolean vrai si les LED de rapport sont utilisées
+--- Hook: a vehicle enables or disables its shift LEDs; if it is a player vehicle, the lighting is recomputed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/devices.lua:78
+---@param vehicleId integer vehicle id
+---@param shiftLEDsInUse boolean true if the shift LEDs are used
 function core_devices.onVehicleRPMledStateChanged(vehicleId, shiftLEDsInUse) end
 
---- Définit la couleur par numéro de joueur et rafraîchit immédiatement l'éclairage de tous les périphériques.
----Source : lua/ge/extensions/core/devices.lua:91
----@param colors table<integer, vec3>|nil Couleur RGB (composantes 0-255 dans x,y,z) indexée par numéro de joueur ; nil vide la table.
----@param assignments table<string, integer>|nil Remplace temporairement l'assignation nom de périphérique -> numéro de joueur (par exemple pour montrer des assignations pas encore appliquées) ; nil utilise core_input_bindings.assignedPlayers.
+--- Sets the color per player number and immediately refreshes the lighting of all devices.
+---Source: lua/ge/extensions/core/devices.lua:91
+---@param colors table<integer, vec3>|nil RGB color (components 0-255 in x,y,z) keyed by player number; nil clears the table.
+---@param assignments table<string, integer>|nil Temporarily overrides the device name -> player number assignment (for example to show assignments not yet applied); nil uses core_input_bindings.assignedPlayers.
 function core_devices.setPlayerColors(colors, assignments) end
 

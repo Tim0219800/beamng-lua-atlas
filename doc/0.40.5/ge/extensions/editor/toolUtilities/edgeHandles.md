@@ -1,94 +1,94 @@
 # `editor_toolUtilities_edgeHandles`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/edgeHandles.lua` · VM : Game Engine (GE) · 148 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/edgeHandles.lua` · VM: Game Engine (GE) · 148 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_edgeHandles` : `extensions.load("editor_toolUtilities_edgeHandles")`, puis la globale `editor_toolUtilities_edgeHandles`
+**Access:** extension `editor_toolUtilities_edgeHandles`: `extensions.load("editor_toolUtilities_edgeHandles")`, then the global `editor_toolUtilities_edgeHandles`
 
-Utilitaire d'outils d'éditeur pour des poignées « portes » (gates) déplaçables le long du contour d'un polygone (ring : liste de points {x,y}). Une porte est { edge, t, id } : indice d'arête et position t (0..1) sur cette arête. Fournit l'accrochage au contour, les portes par défaut (extrémités du grand axe), la géométrie d'une poignée flottante hors du bord et son dessin via debugDraw.
+Editor tool utility for "gate" handles that can be moved along the outline of a polygon (ring: list of {x,y} points). A gate is { edge, t, id }: edge index and position t (0..1) on that edge. Provides snapping to the outline, default gates (ends of the long axis), the geometry of a floating handle outside the edge and its drawing via debugDraw.
 
-## Remarques
+## Notes
 
-- Le ring est fermé implicitement : l'arête i va du point i au point (i % n) + 1.
-- Le centre utilisé (centroid) est la moyenne simple des sommets, pas pondérée par l'aire.
-- gateWorldDir renvoie 4 valeurs (wx, wy, nx, ny), la normale pointant à l'opposé du centre du ring.
+- The ring is implicitly closed: edge i goes from point i to point (i % n) + 1.
+- The center used (centroid) is the simple average of the vertices, not area-weighted.
+- gateWorldDir returns 4 values (wx, wy, nx, ny), the normal pointing away from the ring center.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_edgeHandles.defaultGates(ring)` | Deux portes par défaut aux extrémités opposées du grand axe du ring (entrée, sortie). | 99 |
-| `editor_toolUtilities_edgeHandles.drawHandle(gp, cp, e1, e2, base, glow, hovered)` | Dessine la poignée (points de handleGeom) : tige du bord à la barre, barre avec points d'extrémité, bouton central qui pulse au survol. | 127 |
-| `editor_toolUtilities_edgeHandles.gateWorldDir(ring, gate)` | Position monde d'une porte et normale unitaire sortante de son arête (à l'opposé du centre du ring). | 84 |
-| `editor_toolUtilities_edgeHandles.handleGeom(ring, gate, outDist, halfWidth, liftFn)` | Géométrie de la poignée saisissable d'une porte : la barre flotte à outDist mètres hors du bord et s'étend de halfWidth mètres de chaque côté. | 115 |
-| `editor_toolUtilities_edgeHandles.nearestGate(ring, px, py)` | Accroche un point du monde (px,py) à la porte la plus proche sur le contour. | 68 |
-| `editor_toolUtilities_edgeHandles.tagGates(gates)` | Donne un id unique (Engine.generateUUID) à chaque porte qui n'en a pas, puis renvoie la liste. Une porte n'est sinon repérée que par sa position dans la liste, qui change quand une porte précédente est retirée. | 60 |
+| `editor_toolUtilities_edgeHandles.defaultGates(ring)` | Two default gates at opposite ends of the ring's long axis (entry, exit). | 99 |
+| `editor_toolUtilities_edgeHandles.drawHandle(gp, cp, e1, e2, base, glow, hovered)` | Draws the handle (points from handleGeom): stem from the edge to the bar, bar with end points, central button that pulses on hover. | 127 |
+| `editor_toolUtilities_edgeHandles.gateWorldDir(ring, gate)` | World position of a gate and the outward unit normal of its edge (away from the ring center). | 84 |
+| `editor_toolUtilities_edgeHandles.handleGeom(ring, gate, outDist, halfWidth, liftFn)` | Geometry of a gate's grabbable handle: the bar floats at outDist meters off the edge and extends halfWidth meters on each side. | 115 |
+| `editor_toolUtilities_edgeHandles.nearestGate(ring, px, py)` | Snaps a world point (px,py) to the nearest gate on the outline. | 68 |
+| `editor_toolUtilities_edgeHandles.tagGates(gates)` | Gives a unique id (Engine.generateUUID) to each gate that has none, then returns the list. A gate is otherwise identified only by its position in the list, which changes when a previous gate is removed. | 60 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_edgeHandles.defaultGates(ring)`
 
-Deux portes par défaut aux extrémités opposées du grand axe du ring (entrée, sortie).
+Two default gates at opposite ends of the ring's long axis (entry, exit).
 
-- `ring` (*table*) : Liste de points {x,y}
-- **renvoie** : table Porte d'entrée { edge, t }
-- **renvoie** : table Porte de sortie { edge, t }
+- `ring` (*table*) : List of points {x,y}
+- **returns**: table Entry gate { edge, t }
+- **returns**: table Exit gate { edge, t }
 
 #### `editor_toolUtilities_edgeHandles.drawHandle(gp, cp, e1, e2, base, glow, hovered)`
 
-Dessine la poignée (points de handleGeom) : tige du bord à la barre, barre avec points d'extrémité, bouton central qui pulse au survol.
+Draws the handle (points from handleGeom): stem from the edge to the bar, bar with end points, central button that pulses on hover.
 
-- `gp` (*vec3*) : Point sur le bord
-- `cp` (*vec3*) : Centre de la barre
-- `e1` (*vec3*) : Extrémité 1
-- `e2` (*vec3*) : Extrémité 2
-- `base` (*integer*) : Couleur de base (packée)
-- `glow` (*integer*) : Couleur de halo (packée)
-- `hovered` (*boolean*) : true si survolée
+- `gp` (*vec3*) : Point on the edge
+- `cp` (*vec3*) : Center of the bar
+- `e1` (*vec3*) : End 1
+- `e2` (*vec3*) : End 2
+- `base` (*integer*) : Base color (packed)
+- `glow` (*integer*) : Halo color (packed)
+- `hovered` (*boolean*) : true if hovered
 
 #### `editor_toolUtilities_edgeHandles.gateWorldDir(ring, gate)`
 
-Position monde d'une porte et normale unitaire sortante de son arête (à l'opposé du centre du ring).
+World position of a gate and the outward unit normal of its edge (away from the ring center).
 
-- `ring` (*table*) : Liste de points {x,y}
+- `ring` (*table*) : List of points {x,y}
 - `gate` (*table*) : { edge, t }
-- **renvoie** : number wx
-- **renvoie** : number wy
-- **renvoie** : number nx (normale sortante)
-- **renvoie** : number ny (normale sortante)
+- **returns**: number wx
+- **returns**: number wy
+- **returns**: number nx (outward normal)
+- **returns**: number ny (outward normal)
 
 #### `editor_toolUtilities_edgeHandles.handleGeom(ring, gate, outDist, halfWidth, liftFn)`
 
-Géométrie de la poignée saisissable d'une porte : la barre flotte à outDist mètres hors du bord et s'étend de halfWidth mètres de chaque côté.
+Geometry of a gate's grabbable handle: the bar floats at outDist meters off the edge and extends halfWidth meters on each side.
 
-- `ring` (*table*) : Liste de points {x,y}
+- `ring` (*table*) : List of points {x,y}
 - `gate` (*table|nil*) : { edge, t }
-- `outDist` (*number*) : Distance de la barre au bord (m)
-- `halfWidth` (*number*) : Demi-largeur de la barre (m)
-- `liftFn` (*function|nil*) : function(x,y) -> vec3 qui pose un point sur le terrain ; plan z=0 par défaut.
-- **renvoie** : vec3|nil Point sur le bord
-- **renvoie** : vec3 Centre de la barre (bouton de saisie)
-- **renvoie** : vec3 Extrémité 1 de la barre
-- **renvoie** : vec3 Extrémité 2 de la barre
+- `outDist` (*number*) : Distance of the bar from the edge (m)
+- `halfWidth` (*number*) : Half-width of the bar (m)
+- `liftFn` (*function|nil*) : function(x,y) -> vec3 that places a point on the terrain; z=0 plane by default.
+- **returns**: vec3|nil Point on the edge
+- **returns**: vec3 Center of the bar (grab button)
+- **returns**: vec3 End 1 of the bar
+- **returns**: vec3 End 2 of the bar
 
 #### `editor_toolUtilities_edgeHandles.nearestGate(ring, px, py)`
 
-Accroche un point du monde (px,py) à la porte la plus proche sur le contour.
+Snaps a world point (px,py) to the nearest gate on the outline.
 
-- `ring` (*table*) : Liste de points {x=,y=}
-- `px` (*number*) : x monde
-- `py` (*number*) : y monde
-- **renvoie** : table { edge = indice d'arête, t = position 0..1 }
+- `ring` (*table*) : List of points {x=,y=}
+- `px` (*number*) : world x
+- `py` (*number*) : world y
+- **returns**: table { edge = edge index, t = position 0..1 }
 
 #### `editor_toolUtilities_edgeHandles.tagGates(gates)`
 
-Donne un id unique (Engine.generateUUID) à chaque porte qui n'en a pas, puis renvoie la liste. Une porte n'est sinon repérée que par sa position dans la liste, qui change quand une porte précédente est retirée.
+Gives a unique id (Engine.generateUUID) to each gate that has none, then returns the list. A gate is otherwise identified only by its position in the list, which changes when a previous gate is removed.
 
-- `gates` (*table|nil*) : Liste de portes { edge, t, id? }
-- **renvoie** : table|nil La même liste, portes nommées.
+- `gates` (*table|nil*) : List of gates { edge, t, id? }
+- **returns**: table|nil The same list, with named gates.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/edgeHandles.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/edgeHandles.lua`.*

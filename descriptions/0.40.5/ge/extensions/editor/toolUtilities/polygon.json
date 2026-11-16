@@ -1,75 +1,121 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/polygon.lua",
-  "module": "Utilitaire de l'éditeur pour dessiner et modifier à la souris un polygone défini par l'utilisateur sur la carte (posé sur le terrain). Un seul polygone est géré par le module. L'outil hôte appelle handleUserPolygon chaque frame : clic pour ajouter un nœud, glissement pour déplacer, double-clic (plus de 2 nœuds) pour terminer, touche Suppr pour retirer le nœud sélectionné, Alt pour afficher/masquer le gizmo de translation. render, isDragging et isMouseOverEditable permettent à un outil qui pilote sa propre interaction de rester cohérent.",
-  "usage": "local poly = extensions.editor_toolUtilities_polygon\n-- chaque frame :\npoly.handleUserPolygon(function(nodes) print('polygone fini', #nodes) end, {clearOnComplete = false, snap = {ox = 0, oy = 0, step = 1}})\nif poly.consumeDirty() then local p = poly.getPolygon() end",
+  "module": "Editor utility to draw and edit with the mouse a user-defined polygon on the map (laid on the terrain). Only one polygon is managed by the module. The host tool calls handleUserPolygon every frame: click to add a node, drag to move, double-click (more than 2 nodes) to finish, Delete key to remove the selected node, Alt to show/hide the translation gizmo. render, isDragging and isMouseOverEditable let a tool that drives its own interaction stay consistent.",
+  "usage": "local poly = extensions.editor_toolUtilities_polygon\n-- every frame:\npoly.handleUserPolygon(function(nodes) print('polygon finished', #nodes) end, {clearOnComplete = false, snap = {ox = 0, oy = 0, step = 1}})\nif poly.consumeDirty() then local p = poly.getPolygon() end",
   "notes": [
-    "Les nœuds sont des vec3 ; la hauteur z est ré-échantillonnée sur le terrain (core_terrain.getTerrainHeight).",
-    "handleUserPolygon accepte aussi opts.ground (booléen) et opts.open (booléen : polyligne ouverte sans arête de fermeture), non documentés dans le commentaire d'en-tête ; render accepte opts.open, opts.foreground, opts.segmentLabels et opts.hover.",
-    "Les bords sont tracés relevés de 0.1 m au-dessus du terrain ; une marque d'angle droit est affichée quand un coin est à environ 1 degré de l'équerre.",
-    "Le callback de double-clic reçoit une copie profonde du polygone ; si clearOnComplete vaut true (défaut) le polygone est ensuite vidé."
+    "The nodes are vec3; the z height is resampled on the terrain (core_terrain.getTerrainHeight).",
+    "handleUserPolygon also accepts opts.ground (boolean) and opts.open (boolean: open polyline without a closing edge), not documented in the header comment; render accepts opts.open, opts.foreground, opts.segmentLabels and opts.hover.",
+    "The edges are drawn raised 0.1 m above the terrain; a right-angle mark is displayed when a corner is within about 1 degree of square.",
+    "The double-click callback receives a deep copy of the polygon; if clearOnComplete is true (default) the polygon is then cleared."
   ],
   "functions": {
     "handleUserPolygon": {
-      "desc": "Gère tout le cycle de vie du polygone utilisateur : rendu, curseur, ajout, insertion sur une arête, glissement de nœuds, gizmo (Alt), suppression (Suppr), fin par double-clic. À appeler chaque frame tant que l'outil est actif.",
+      "desc": "Handles the whole lifecycle of the user polygon: rendering, cursor, adding, inserting on an edge, dragging nodes, gizmo (Alt), deletion (Delete), finishing by double-click. To be called every frame while the tool is active.",
       "params": {
-        "doubleClickCallback": {"type": "function|nil", "desc": "Appelé avec une copie du polygone au double-clic quand il a plus de 2 nœuds."},
-        "opts": {"type": "table|nil", "desc": "clearOnComplete (défaut true), doRender (défaut true), foreground (défaut false : dessin à travers la géométrie), snap = {ox, oy, step} (accrochage à une grille), segmentLabels (longueur de chaque segment), rigid (glisser un nœud déplace tout le polygone), ground, open."}
+        "doubleClickCallback": {
+          "type": "function|nil",
+          "desc": "Called with a copy of the polygon on double-click when it has more than 2 nodes."
+        },
+        "opts": {
+          "type": "table|nil",
+          "desc": "clearOnComplete (default true), doRender (default true), foreground (default false: drawn through geometry), snap = {ox, oy, step} (grid snapping), segmentLabels (length of each segment), rigid (dragging a node moves the whole polygon), ground, open."
+        }
       },
       "returns": [],
       "internal": false
     },
     "render": {
-      "desc": "Passe de dessin seule, sans entrée : affiche nœuds, arêtes et éventuellement les longueurs de segments. Utile quand l'outil hôte gère sa propre interaction (déplacement rigide par exemple). opts.hover fait aussi pulser le nœud sous le curseur.",
-      "params": {"opts": {"type": "table|nil", "desc": "{ open, foreground, segmentLabels, hover }"}},
+      "desc": "Drawing pass only, no input: displays nodes, edges and optionally segment lengths. Useful when the host tool handles its own interaction (rigid movement for example). opts.hover also makes the node under the cursor pulse.",
+      "params": {
+        "opts": {
+          "type": "table|nil",
+          "desc": "{ open, foreground, segmentLabels, hover }"
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getPolygon": {
-      "desc": "Renvoie la table interne du polygone (liste de vec3, pas une copie).",
+      "desc": "Returns the polygon's internal table (list of vec3, not a copy).",
       "params": {},
-      "returns": [{"type": "table", "desc": "Liste de vec3."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of vec3."
+        }
+      ],
       "internal": false
     },
     "setPolygon": {
-      "desc": "Remplace le polygone par une copie des nœuds donnés (nil ou vide = effacer). Réinitialise le glissement et le gizmo, et lève le drapeau dirty.",
-      "params": {"nodes": {"type": "table|nil", "desc": "Liste de points {x,y,z} (vec3 ou équivalent)."}},
+      "desc": "Replaces the polygon with a copy of the given nodes (nil or empty = clear). Resets dragging and the gizmo, and raises the dirty flag.",
+      "params": {
+        "nodes": {
+          "type": "table|nil",
+          "desc": "List of {x,y,z} points (vec3 or equivalent)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "isPolygonValid": {
-      "desc": "Vrai si le polygone a plus de 2 nœuds.",
+      "desc": "True if the polygon has more than 2 nodes.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si valide."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if valid."
+        }
+      ],
       "internal": false
     },
     "clearPolygon": {
-      "desc": "Vide le polygone (lève dirty s'il contenait des nœuds).",
+      "desc": "Clears the polygon (raises dirty if it contained nodes).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "consumeDirty": {
-      "desc": "Renvoie le drapeau dirty (polygone modifié depuis le dernier appel) puis le remet à false.",
+      "desc": "Returns the dirty flag (polygon modified since the last call) then resets it to false.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si le polygone a changé."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the polygon has changed."
+        }
+      ],
       "internal": false
     },
     "isDragging": {
-      "desc": "Vrai tant qu'un nœud est en cours de glissement ; permet à l'outil hôte de suspendre ses propres interactions de scène.",
+      "desc": "True while a node is being dragged; lets the host tool suspend its own scene interactions.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true pendant un glissement."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true during a drag."
+        }
+      ],
       "internal": false
     },
     "beginDragNode": {
-      "desc": "Commence immédiatement le glissement du nœud donné pendant l'appui souris courant, sans nouveau clic. Sans effet si l'indice est invalide.",
-      "params": {"nodeIdx": {"type": "integer", "desc": "Indice (à partir de 1) du nœud."}},
+      "desc": "Immediately starts dragging the given node during the current mouse press, without a new click. No effect if the index is invalid.",
+      "params": {
+        "nodeIdx": {
+          "type": "integer",
+          "desc": "Index (1-based) of the node."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "isMouseOverEditable": {
-      "desc": "Vrai si la souris est sur un nœud ou une arête du polygone (une cible d'édition), pour donner priorité au polygone sur la sélection inter-outils.",
+      "desc": "True if the mouse is over a node or an edge of the polygon (an edit target), to give the polygon priority over cross-tool selection.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si survol d'un élément éditable."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if hovering an editable element."
+        }
+      ],
       "internal": false
     }
   }

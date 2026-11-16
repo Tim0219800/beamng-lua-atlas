@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/scenario/raceMarkers/parkingAttention.lua",
+  "module": "Marqueur d'attention pour une place de parking : dessine en debug (debugDrawer:drawTriSolid) les quatre parois bleues translucides (alpha 25 %) d'un parallélépipède autour de la place, hauteur 1.33 m, double face. Aucun objet de scène n'est créé. Le module renvoie un constructeur : require('scenario/raceMarkers/parkingAttention')(id) donne un objet de la classe C.",
+  "notes": [
+    "setToCheckpoint(wp) accepte soit wp = {pos, rot, scl} (centre, quaternion, taille complète de la place), soit wp.parkingSpot avec ces trois champs ; sinon seul wp.pos et wp.radius sont mémorisés et rien n'est dessiné.",
+    "La couleur est fixe (0, 0.4, 1) quel que soit le mode.",
+    "La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Parois de debug autour d'une place de parking.",
+      "functions": {
+        "init": {"desc": "Constructeur : initialise l'état.", "params": {"id": {"type": "integer", "desc": "Identifiant unique."}}, "internal": true},
+        "update": {"desc": "Appel par image : avance le minuteur de mode, masque après le fondu en 'hidden' et dessine les quatre parois si une place est définie.", "params": {"dt": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}}, "internal": true},
+        "setToCheckpoint": {"desc": "Mémorise la place de parking à entourer.", "params": {"wp": {"type": "table", "desc": "{pos, rot, scl} ou {parkingSpot = {pos, rot, scl}}."}}},
+        "setMode": {"desc": "'hidden' masque, autre mode affiche.", "params": {"mode": {"type": "string", "desc": "Nom du mode."}}},
+        "setVisibility": {"desc": "Active ou désactive le dessin.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
+        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
+        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
+        "createMarkers": {"desc": "Conservé pour la compatibilité d'API avec les autres marqueurs : ne crée aucun objet.", "params": {}},
+        "clearMarkers": {"desc": "Efface la table d'identifiants.", "params": {}}
+      }
+    }
+  }
+}

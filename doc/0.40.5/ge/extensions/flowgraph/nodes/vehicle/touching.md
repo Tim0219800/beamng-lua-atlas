@@ -1,24 +1,24 @@
 # `flowgraph_nodes_vehicle_touching`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/touching.lua` · VM : Game Engine (GE) · 75 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/touching.lua` · VM: Game Engine (GE) · 75 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/touching")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/touching")` (file under extensions/ but not a regular extension)
 
-Nœud « Vehicle Touch » (catégorie `repeat_instant`, tags collision/collide/hit). Détecte via `map.objects[vehIdA].objectCollisions` si un véhicule en touche un autre. Pins d'entrée : `flow`, `vehIdA`, `vehIdB` (optionnel). Sorties : `flow` (toujours true), `touching` (flux), `touchingb` (bool), et `vehId1` à `vehId5` (cachés : jusqu'à 5 ids touchés, triés, -1 si aucun). Sans `vehIdB`, teste toute collision.
+"Vehicle Touch" node (category `repeat_instant`, tags collision/collide/hit). Uses `map.objects[vehIdA].objectCollisions` to detect whether one vehicle touches another. Input pins: `flow`, `vehIdA`, `vehIdB` (optional). Outputs: `flow` (always true), `touching` (flow), `touchingb` (bool), and `vehId1` to `vehId5` (hidden: up to 5 touched ids, sorted, -1 if none). Without `vehIdB`, tests for any collision.
 
-## Remarques
+## Notes
 
-- Avec `vehIdB`, les sorties `vehId1..5` restent à -1.
-- Les descriptions de `vehId1..5` sont identiques (« lowest-id-ed vehicle »).
+- With `vehIdB`, the `vehId1..5` outputs stay at -1.
+- The descriptions of `vehId1..5` are identical ("lowest-id-ed vehicle").
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr, ...)` | Constructeur vide. | 31 |
-| `C:work()` | Réinitialise les sorties puis les remplit selon la table de collisions du véhicule A. | 35 |
+| `C:init(mgr, ...)` | Empty constructor. | 31 |
+| `C:work()` | Resets the outputs, then fills them from vehicle A's collision table. | 35 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/touching.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/touching.lua`.*

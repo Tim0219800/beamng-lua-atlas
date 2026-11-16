@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gameplay_traffic_setupParkedCars`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupParkedCars.lua` · VM : Game Engine (GE) · 43 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupParkedCars.lua` · VM: Game Engine (GE) · 43 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/setupParkedCars")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/setupParkedCars")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Setup Parking System » (once_instant). Active le système de placement sur places de parking : gameplay_parking.setState(true), option sitesData via setSites, puis traffic:activateParkedCars(vehicleIds). Au reset : deactivateParkedCars et setSites() sans argument.
+Flowgraph node "Setup Parking System" (once_instant). Enables the parking spot placement system: gameplay_parking.setState(true), optional sitesData via setSites, then traffic:activateParkedCars(vehicleIds). On reset: deactivateParkedCars and setSites() with no argument.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelle onNodeReset(). | 26 |
-| `C:init()` | Appelle onNodeReset(). | 22 |
-| `C:onNodeReset()` | Désactive les voitures garées et réinitialise les sites du système de parking. | 30 |
-| `C:workOnce()` | Active le parking, applique les sites si fournis et active les voitures garées pour la liste d'ids. | 35 |
+| `C:_executionStopped()` | Calls onNodeReset(). | 26 |
+| `C:init()` | Calls onNodeReset(). | 22 |
+| `C:onNodeReset()` | Deactivates the parked cars and resets the parking system's sites. | 30 |
+| `C:workOnce()` | Enables parking, applies the sites if provided and activates the parked cars for the id list. | 35 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupParkedCars.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupParkedCars.lua`.*

@@ -1,81 +1,81 @@
 # `mcp_server`
 
-*Fichier : `lua/ge/extensions/mcp/server.lua` · VM : Game Engine (GE) · 184 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/mcp/server.lua` · VM: Game Engine (GE) · 184 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `mcp_server` : `extensions.load("mcp_server")`, puis la globale `mcp_server`
+**Access:** extension `mcp_server`: `extensions.load("mcp_server")`, then the global `mcp_server`
 
-Serveur MCP (Model Context Protocol) intégré au jeu. Il ouvre un petit serveur HTTP local (via le serveur C++ BNGWebWSServer) sur http://127.0.0.1:29292/mcp et y parle JSON-RPC 2.0 en transport « Streamable HTTP » (uniquement POST). Un client MCP (Cursor, Claude, etc.) peut ainsi lister et appeler les outils exposés par l'extension mcp_tools (exécuter du Lua dans le jeu, lire les logs, capturer l'écran, piloter véhicules, caméra, éditeur, UI…). Ce module ne contient que la plomberie du protocole ; les outils eux-mêmes sont dans mcp_tools et mcp/tools/*.lua.
+MCP (Model Context Protocol) server built into the game. It opens a small local HTTP server (via the C++ server BNGWebWSServer) at http://127.0.0.1:29292/mcp and speaks JSON-RPC 2.0 there over the "Streamable HTTP" transport (POST only). An MCP client (Cursor, Claude, etc.) can thus list and call the tools exposed by the mcp_tools extension (run Lua in the game, read logs, capture the screen, drive vehicles, camera, editor, UI...). This module only contains the protocol plumbing; the tools themselves are in mcp_tools and mcp/tools/*.lua.
 
-## Exemple
+## Example
 
 ```lua
--- activation : réglage utilisateur enableMcp (défaut false), ou argument de ligne de commande -enablemcp
--- options de ligne de commande : -mcpport 30000 (port de base), -mcpremote (écoute sur toutes les interfaces)
--- chargement manuel possible :
+-- activation: user setting enableMcp (default false), or command-line argument -enablemcp
+-- command-line options: -mcpport 30000 (base port), -mcpremote (listen on all interfaces)
+-- manual loading possible:
 extensions.load('mcp_server')
--- endpoint : POST http://127.0.0.1:29292/mcp
+-- endpoint: POST http://127.0.0.1:29292/mcp
 -- {"jsonrpc":"2.0","id":1,"method":"tools/list"}
 ```
 
-## Remarques
+## Notes
 
-- Activation : le réglage `enableMcp` (défaut `false`, type « local » dans settings/defaults.json) est lu dans core/settings : s'il est vrai et que la ligne de commande ne contient pas `-nowebservers`, l'extension `mcp_server` est chargée ; sinon elle est déchargée. L'argument `-enablemcp` (traité dans ge/main.lua) force `enableMcp = true`. Le moteur est informé de l'état par Engine.setMcpPort : 0 = chargement en cours, -1 = désactivé, sinon le port réel.
-- Transport : seul POST sur la route `/mcp` est traité ; toute autre méthode HTTP (dont GET, donc pas de flux SSE ni de notifications serveur) reçoit 405. Pas d'identifiant de session. Les requêtes JSON-RPC simples et les lots (tableaux) sont acceptés ; une notification (sans id) ou un lot sans requête obtient une réponse vide 202. JSON invalide : erreur -32700 avec statut HTTP 200.
-- Méthodes JSON-RPC gérées : `initialize`, `tools/list`, `tools/call`, `ping`. Toute autre renvoie l'erreur -32601. `initialize` répond avec la version demandée si elle fait partie de 2025-03-26 / 2025-06-18 / 2025-11-25, sinon avec 2025-11-25 ; serverInfo = {name='beamng-game', version='1.0.0'} ; capacités : seulement `tools` (listChanged=false). Ni ressources ni prompts.
-- Outils : tout champ fonction de l'extension `mcp_tools` dont le nom ne commence pas par `on` + majuscule est un outil. `inputSchema` et `description` viennent de `mcp_tools.schemas[nom]` (par défaut `{type='object'}` et description vide). Un outil reçoit la table `arguments` et renvoie `(texte, estErreur)`. Une table `{data=<base64>, mimeType=...}` est renvoyée comme contenu `image`, tout le reste en `text` (tostring). Un outil qui plante est rattrapé par pcall : `isError=true` et texte « tool crashed: … ».
-- Après chaque appel d'outil le hook `onMcpToolCalled(nomOutil, estErreur)` est émis ; seul le tracker de télémétrie (telemetry/trackers/mcp.lua) l'écoute et n'enregistre que le nom et l'indicateur d'erreur, pas les arguments ni le résultat.
-- Réseau et sécurité : écoute par défaut sur 127.0.0.1 uniquement ; `-mcpremote` passe l'hôte à « any » (toutes les interfaces). Aucune authentification ni contrôle d'origine n'est faite dans ce code, alors que les outils permettent d'exécuter du Lua arbitraire (run_lua, load_file) et de lire/écrire des fichiers (read_file, write_file, delete_file…). À réserver à un poste de confiance, surtout avec -mcpremote.
-- Port : `-mcpport N` fixe le port de base (défaut 29292). Si le port est occupé ou si l'écouteur tombe, un chien de garde (vérifié toutes les 2 s dans onUpdate) détruit le serveur et essaie le port suivant, en bouclant sur 20 ports consécutifs (BASE_PORT … BASE_PORT+19). Le port réellement lié est publié au moteur (Engine.setMcpPort) et loggé « MCP listening on http://…/mcp » ; un client doit donc éventuellement retrouver le port (requête « ?info » du superviseur côté C++).
-- Cycle de vie : onInit met l'extension en déchargement manuel (`setExtensionUnloadMode(M, 'manual')`) : elle survit aux changements de niveau et de mode de jeu. onSerialize/onDeserialize relancent le serveur après un rechargement Lua (Ctrl+L). La dépendance `mcp_tools` est chargée avant.
-- Les requêtes HTTP sont traitées dans onUpdate (donc dans le thread principal GE, une fois par frame) : un outil lent bloque le jeu ; une requête n'est donc servie que si le jeu tourne. Les outils « asynchrones » (get_ai, get_electrics, screenshot_image, ui_eval…) renvoient le résultat de l'appel précédent ou un message « call again » : le client doit les rappeler.
+- Activation: the `enableMcp` setting (default `false`, "local" type in settings/defaults.json) is read in core/settings: if true and the command line does not contain `-nowebservers`, the `mcp_server` extension is loaded; otherwise it is unloaded. The `-enablemcp` argument (handled in ge/main.lua) forces `enableMcp = true`. The engine is informed of the state by Engine.setMcpPort: 0 = loading in progress, -1 = disabled, otherwise the actual port.
+- Transport: only POST on the `/mcp` route is handled; any other HTTP method (including GET, so no SSE stream or server notifications) gets 405. No session id. Single JSON-RPC requests and batches (arrays) are accepted; a notification (without id) or a batch with no request gets an empty 202 response. Invalid JSON: error -32700 with HTTP status 200.
+- JSON-RPC methods handled: `initialize`, `tools/list`, `tools/call`, `ping`. Any other returns error -32601. `initialize` replies with the requested version if it is one of 2025-03-26 / 2025-06-18 / 2025-11-25, otherwise with 2025-11-25; serverInfo = {name='beamng-game', version='1.0.0'}; capabilities: only `tools` (listChanged=false). No resources or prompts.
+- Tools: any function field of the `mcp_tools` extension whose name does not start with `on` + uppercase letter is a tool. `inputSchema` and `description` come from `mcp_tools.schemas[name]` (default `{type='object'}` and empty description). A tool receives the `arguments` table and returns `(text, isError)`. A table `{data=<base64>, mimeType=...}` is returned as `image` content, everything else as `text` (tostring). A tool that crashes is caught by pcall: `isError=true` and text "tool crashed: …".
+- After each tool call the hook `onMcpToolCalled(toolName, isError)` is emitted; only the telemetry tracker (telemetry/trackers/mcp.lua) listens to it and records only the name and the error flag, not the arguments or the result.
+- Network and security: listens on 127.0.0.1 only by default; `-mcpremote` sets the host to "any" (all interfaces). No authentication or origin check is done in this code, even though the tools allow running arbitrary Lua (run_lua, load_file) and reading/writing files (read_file, write_file, delete_file…). Reserve for a trusted machine, especially with -mcpremote.
+- Port: `-mcpport N` sets the base port (default 29292). If the port is busy or if the listener goes down, a watchdog (checked every 2 s in onUpdate) destroys the server and tries the next port, looping over 20 consecutive ports (BASE_PORT … BASE_PORT+19). The port actually bound is published to the engine (Engine.setMcpPort) and logged "MCP listening on http://…/mcp"; a client may therefore need to find the port (supervisor's "?info" request on the C++ side).
+- Lifecycle: onInit sets the extension to manual unload mode (`setExtensionUnloadMode(M, 'manual')`): it survives level and game mode changes. onSerialize/onDeserialize restart the server after a Lua reload (Ctrl+L). The `mcp_tools` dependency is loaded first.
+- HTTP requests are handled in onUpdate (so on the main GE thread, once per frame): a slow tool blocks the game; a request is therefore only served if the game is running. "Asynchronous" tools (get_ai, get_electrics, screenshot_image, ui_eval…) return the result of the previous call or a "call again" message: the client must call them again.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mcp_server.isReady()` | Indique si le serveur écoute vraiment : le port publié correspond au port courant, le serveur existe et `server:isListening()` est vrai. Utilisé par ge/main.lua (tryCompleteLuaReload) pour attendre que le serveur soit relancé avant de terminer un rechargement Lua. | 171 |
-| `mcp_server.onDeserialize(data)` | Appelé après un rechargement du VM Lua : relance le serveur si `data.active` était vrai. *(interne)* *(hook)* | 169 |
-| `mcp_server.onExtensionLoaded()` | Hook appelé quand l'extension est chargée : démarre le serveur HTTP (BNGWebWSServer.getOrCreate sur l'hôte/port courant, route /mcp). *(interne)* *(hook)* | 161 |
-| `mcp_server.onExtensionUnloaded()` | Hook appelé au déchargement : détruit le serveur HTTP s'il existe. *(interne)* *(hook)* | 163 |
-| `mcp_server.onInit()` | Hook d'extension appelé au chargement : passe l'extension en mode de déchargement manuel pour qu'elle ne soit pas déchargée lors des changements de niveau ou de mode de jeu. *(interne)* *(hook)* | 159 |
-| `mcp_server.onSerialize()` | Appelé avant un rechargement du VM Lua (Ctrl+L) : mémorise si le serveur était actif. *(interne)* *(hook)* | 168 |
-| `mcp_server.onUpdate(dtReal)` | Hook appelé à chaque frame : publie le port une fois la liaison réussie, exécute le chien de garde (toutes les 2 s, change de port si l'écouteur est tombé), puis lit les requêtes HTTP en attente (getHttpRequests) : POST -> handleRpc et réponse JSON, autre méthode -> 405. *(interne)* *(hook)* | 121 |
+| `mcp_server.isReady()` | Returns whether the server is really listening: the published port matches the current port, the server exists and `server:isListening()` is true. Used by ge/main.lua (tryCompleteLuaReload) to wait for the server to restart before finishing a Lua reload. | 171 |
+| `mcp_server.onDeserialize(data)` | Called after a Lua VM reload: restarts the server if `data.active` was true. *(internal)* *(hook)* | 169 |
+| `mcp_server.onExtensionLoaded()` | Hook called when the extension is loaded: starts the HTTP server (BNGWebWSServer.getOrCreate on the current host/port, route /mcp). *(internal)* *(hook)* | 161 |
+| `mcp_server.onExtensionUnloaded()` | Hook called on unload: destroys the HTTP server if it exists. *(internal)* *(hook)* | 163 |
+| `mcp_server.onInit()` | Extension hook called on load: sets the extension to manual unload mode so that it is not unloaded on level or game mode changes. *(internal)* *(hook)* | 159 |
+| `mcp_server.onSerialize()` | Called before a Lua VM reload (Ctrl+L): remembers whether the server was active. *(internal)* *(hook)* | 168 |
+| `mcp_server.onUpdate(dtReal)` | Hook called every frame: publishes the port once binding succeeds, runs the watchdog (every 2 s, changes port if the listener went down), then reads pending HTTP requests (getHttpRequests): POST -> handleRpc and JSON response, other method -> 405. *(internal)* *(hook)* | 121 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mcp_server.isReady()`
 
-Indique si le serveur écoute vraiment : le port publié correspond au port courant, le serveur existe et `server:isListening()` est vrai. Utilisé par ge/main.lua (tryCompleteLuaReload) pour attendre que le serveur soit relancé avant de terminer un rechargement Lua.
+Returns whether the server is really listening: the published port matches the current port, the server exists and `server:isListening()` is true. Used by ge/main.lua (tryCompleteLuaReload) to wait for the server to restart before finishing a Lua reload.
 
-- **renvoie** : boolean true si l'écouteur HTTP est prêt.
+- **returns**: boolean true if the HTTP listener is ready.
 
 #### `mcp_server.onDeserialize(data)`
 
-Appelé après un rechargement du VM Lua : relance le serveur si `data.active` était vrai.
+Called after a Lua VM reload: restarts the server if `data.active` was true.
 
-- `data` (*table|nil*) : Table renvoyée par onSerialize.
+- `data` (*table|nil*) : Table returned by onSerialize.
 
 #### `mcp_server.onSerialize()`
 
-Appelé avant un rechargement du VM Lua (Ctrl+L) : mémorise si le serveur était actif.
+Called before a Lua VM reload (Ctrl+L): remembers whether the server was active.
 
-- **renvoie** : table {active = boolean}
+- **returns**: table {active = boolean}
 
 #### `mcp_server.onUpdate(dtReal)`
 
-Hook appelé à chaque frame : publie le port une fois la liaison réussie, exécute le chien de garde (toutes les 2 s, change de port si l'écouteur est tombé), puis lit les requêtes HTTP en attente (getHttpRequests) : POST -> handleRpc et réponse JSON, autre méthode -> 405.
+Hook called every frame: publishes the port once binding succeeds, runs the watchdog (every 2 s, changes port if the listener went down), then reads pending HTTP requests (getHttpRequests): POST -> handleRpc and JSON response, other method -> 405.
 
-- `dtReal` (*number*) : Durée réelle de la frame en secondes.
+- `dtReal` (*number*) : Actual frame duration in seconds.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onMcpToolCalled` — écouté par 1 module(s)
+- `onMcpToolCalled` — listened to by 1 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `getStartingArgs`, `setMcpPort`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/mcp/server.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/mcp/server.lua`.*

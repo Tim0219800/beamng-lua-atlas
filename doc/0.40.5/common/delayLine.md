@@ -1,52 +1,52 @@
 # `delayLine`
 
-*Fichier : `lua/common/delayLine.lua` · VM : Commun (GE + véhicule) · 101 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/delayLine.lua` · VM: Common (GE + vehicle) · 101 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("delayLine")`
+**Access:** `require("delayLine")`
 
-Ligne à retard générique : chaque paquet de données poussé dans la ligne ressort après le même délai. Créée à l'origine pour simuler le temps que met le carburant imbrûlé à parcourir l'échappement avant de brûler. Il faut interroger la ligne régulièrement (pop/popSum) avec le pas de temps pour récupérer ce qui est arrivé au bout.
+Generic delay line: each data packet pushed into the line comes out after the same delay. Originally created to simulate the time unburnt fuel takes to travel through the exhaust before burning. The line must be polled regularly (pop/popSum) with the time step to retrieve what has reached the end.
 
-## Exemple
+## Example
 
 ```lua
-local dl = require('delayLine').new(0.2)  -- délai 0,2 s
+local dl = require('delayLine').new(0.2)  -- delay 0.2 s
 dl:push(5)
--- à chaque frame :
+-- every frame:
 local sum = dl:popSum(dt)
 ```
 
-## Remarques
+## Notes
 
-- Le temps interne (currentTime) n'avance que dans pop et popSum, pas dans peek.
-- pop renvoie nil si la ligne est vide, sinon un tableau (éventuellement vide). popSum renvoie 0 si vide ; elle suppose des données numériques.
-- Les paquets sortent dans l'ordre d'entrée (délai identique pour tous).
+- The internal time (currentTime) only advances in pop and popSum, not in peek.
+- pop returns nil if the line is empty, otherwise an array (possibly empty). popSum returns 0 if empty; it assumes numeric data.
+- Packets come out in the order they went in (same delay for all).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `delayLine.new(delay)` | Crée une ligne à retard. | 92 |
+| `delayLine.new(delay)` | Creates a delay line. | 92 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `delayLine.new(delay)`
 
-Crée une ligne à retard.
+Creates a delay line.
 
-- `delay` (*number*) : Délai en secondes appliqué à chaque paquet.
-- **renvoie** : table Objet avec les méthodes push, peek, pop, popSum, reset.
+- `delay` (*number*) : Delay in seconds applied to each packet.
+- **returns**: table Object with the methods push, peek, pop, popSum, reset.
 
-## Classe `delayLine`
+## Class `delayLine`
 
-Objet renvoyé par new(delay). Champs : delay, length, currentTime, data, times.
+Object returned by new(delay). Fields: delay, length, currentTime, data, times.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `delayLine:peek(dt)` | Renvoie, sans les retirer ni avancer le temps, les paquets qui seraient arrivés dans dt secondes. | dyn |
-| `delayLine:pop(dt)` | Fait avancer le temps de dt, retire et renvoie tous les paquets arrivés à échéance. | dyn |
-| `delayLine:popSum(dt)` | Comme pop mais renvoie la somme (numérique) des paquets arrivés. | dyn |
-| `delayLine:push(payload)` | Insère un paquet de données ; il sortira à currentTime + delay. | dyn |
-| `delayLine:reset()` | Vide la ligne et remet le temps interne à 0. | dyn |
+| `delayLine:peek(dt)` | Returns, without removing them or advancing time, the packets that would have arrived within dt seconds. | dyn |
+| `delayLine:pop(dt)` | Advances time by dt, removes and returns all packets that are due. | dyn |
+| `delayLine:popSum(dt)` | Like pop but returns the (numeric) sum of the arrived packets. | dyn |
+| `delayLine:push(payload)` | Inserts a data packet; it will come out at currentTime + delay. | dyn |
+| `delayLine:reset()` | Empties the line and resets the internal time to 0. | dyn |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/delayLine.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/delayLine.lua`.*

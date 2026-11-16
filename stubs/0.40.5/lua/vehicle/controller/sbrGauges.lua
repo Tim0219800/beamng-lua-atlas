@@ -2,38 +2,38 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/sbrGauges.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur auxiliaire OBSOLÈTE (log E au chargement : à remplacer par genericGauges) qui alimente un écran HTML de tableau de bord (htmlTexture) pour un véhicule électrique : vitesse, rapport, capteurs, carte de navigation, consommation moyenne/instantanée (W, kWh/100 km) et autonomie estimée à partir de l'énergie des batteries des moteurs électriques.
---- Accès : contrôleur `sbrGauges` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- OBSOLETE auxiliary controller (log E at load: to be replaced by genericGauges) that feeds an HTML dashboard screen (htmlTexture) for an electric vehicle: speed, gear, sensors, navigation map, average/instantaneous consumption (W, kWh/100 km) and estimated range based on the energy of the electric motors' batteries.
+--- Access: controller `sbrGauges` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_sbrGauges
 ---@field type string "auxiliary".
 local controller_sbrGauges = {}
 
---- Crée la texture HTML, repère les batteries des moteurs électriques et initialise les lisseurs de consommation.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/sbrGauges.lua:95
----@param jbeamData table Données jbeam du contrôleur.
+--- Creates the HTML texture, finds the electric motors' batteries and initializes the consumption smoothers.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/sbrGauges.lua:95
+---@param jbeamData table Controller jbeam data.
 function controller_sbrGauges.init(jbeamData) end
 
---- Renvoie l'unité de longueur à la page HTML.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/sbrGauges.lua:137
+--- Returns the length unit to the HTML page.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/sbrGauges.lua:137
 function controller_sbrGauges.reset() end
 
---- Applique des paramètres externes : si modeName et modeColor sont présents, appelle setUIMode.
----Source : lua/vehicle/controller/sbrGauges.lua:145
+--- Applies external parameters: if modeName and modeColor are present, calls setUIMode.
+---Source: lua/vehicle/controller/sbrGauges.lua:145
 ---@param parameters table Table {modeName, modeColor}.
 function controller_sbrGauges.setParameters(parameters) end
 
---- Affiche le nom et la couleur du mode de conduite sur l'écran HTML (updateMode).
----Source : lua/vehicle/controller/sbrGauges.lua:141
----@param modeName string Texte du mode.
----@param modeColor string Couleur (déduit du code : valeur CSS passée telle quelle).
+--- Displays the name and color of the driving mode on the HTML screen (updateMode).
+---Source: lua/vehicle/controller/sbrGauges.lua:141
+---@param modeName string Mode text.
+---@param modeColor string Color (inferred from code: CSS value passed as is).
 function controller_sbrGauges.setUIMode(modeName, modeColor) end
 
---- Chaque frame : calcule puissance et consommation et envoie les données à la page HTML.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/sbrGauges.lua:37
----@param dt number Pas de temps en secondes.
+--- Every frame: computes power and consumption and sends the data to the HTML page.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/sbrGauges.lua:37
+---@param dt number Time step in seconds.
 function controller_sbrGauges.updateGFX(dt) end
 
 return controller_sbrGauges

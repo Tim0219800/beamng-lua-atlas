@@ -1,22 +1,27 @@
 {
   "path": "lua/console/test.lua",
-  "module": "Fichier de test principal de la console : il charge lua/console/benchphysics et définit deux fonctions globales de test, loadOneVehicle (spawn du pickup) et benchJSON (chargement et fusion des fichiers .jbeam du pickup). Aucun appel automatique, ils sont à lancer à la main.",
+  "module": "Main console test file: it loads lua/console/benchphysics and defines two global test functions, loadOneVehicle (pickup spawn) and benchJSON (loading and merging the pickup's .jbeam files). No automatic call, they must be launched by hand.",
   "notes": [
-    "benchJSON utilise des globales (directory, dir) faute de local.",
-    "benchJSON retourne nil dès qu'un fichier jbeam n'est pas décodable ; sinon ne retourne rien."
+    "benchJSON uses globals (directory, dir) for lack of local.",
+    "benchJSON returns nil as soon as a jbeam file cannot be decoded; otherwise returns nothing."
   ],
   "fields": {},
   "functions": {
     "loadOneVehicle": {
-      "desc": "Supprime tous les objets puis fait apparaître vehicles/pickup à l'origine.",
+      "desc": "Deletes all objects then spawns vehicles/pickup at the origin.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "benchJSON": {
-      "desc": "Liste les fichiers .jbeam (hors .jbeamc) de vehicles/pickup, les lit, les décode avec json.decode et fusionne les parties avec tableMerge. Journalise le nombre de parties de chaque fichier.",
+      "desc": "Lists the .jbeam files (excluding .jbeamc) of vehicles/pickup, reads them, decodes them with json.decode and merges the parts with tableMerge. Logs the number of parts of each file.",
       "params": {},
-      "returns": [{"type": "nil", "desc": "nil en cas d'erreur de décodage JSON, sinon rien."}],
+      "returns": [
+        {
+          "type": "nil",
+          "desc": "nil on a JSON decoding error, otherwise nothing."
+        }
+      ],
       "internal": false
     }
   }

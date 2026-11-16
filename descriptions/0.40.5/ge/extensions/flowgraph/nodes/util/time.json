@@ -1,31 +1,31 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/time.lua",
-  "module": "Nœud « Time » (catégorie provider, sans flow). Fournit le temps courant. Sorties : time (os.clockhp(), horloge haute précision), dtReal (temps réel entre frames en s, ignore la pause), dtSim (temps simulé en s, 0 en pause, réduit au ralenti).",
+  "module": "Node \"Time\" (category provider, no flow). Provides the current time. Outputs: time (os.clockhp(), high-precision clock), dtReal (real time between frames in s, ignores pause), dtSim (simulated time in s, 0 when paused, reduced in slow motion).",
   "notes": [
-    "La description du pin time dit « Time since start of project » mais la valeur est l'horloge absolue os.clockhp(), pas le temps depuis le démarrage."
+    "The description of the time pin says \"Time since start of project\" but the value is the absolute clock os.clockhp(), not the time since start."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Ne fait rien.",
+          "desc": "Does nothing.",
           "internal": true
         },
         "work": {
-          "desc": "Écrit os.clockhp() dans time et mgr.dtReal / mgr.dtSim dans les deux autres sorties.",
+          "desc": "Writes os.clockhp() to time and mgr.dtReal / mgr.dtSim to the other two outputs.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Corps vide.",
+          "desc": "Empty body.",
           "params": {
             "builder": {
               "type": "table",
-              "desc": "Constructeur de nœud."
+              "desc": "Node constructor."
             },
             "style": {
               "type": "table",
-              "desc": "Style du nœud."
+              "desc": "Node style."
             }
           },
           "internal": true

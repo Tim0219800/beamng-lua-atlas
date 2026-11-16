@@ -1,191 +1,191 @@
 # `util_richPresence`
 
-*Fichier : `lua/ge/extensions/util/richPresence.lua` · VM : Game Engine (GE) · 729 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/richPresence.lua` · VM: Game Engine (GE) · 729 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_richPresence` : `extensions.load("util_richPresence")`, puis la globale `util_richPresence`
+**Access:** extension `util_richPresence`: `extensions.load("util_richPresence")`, then the global `util_richPresence`
 
-Gère la « présence enrichie » du jeu : le statut affiché dans Steam (rich presence et timeline Steam), l'activité UDS (startActivityByID) et le statut Discord. Il déduit l'activité courante (replay, mode photo, carrière et ses sous-modes, garage, mission, scénario, drag, crawl, drift, niveau, menu principal) et le texte du statut (par exemple « Playing X on Niveau with Marque Modèle »), et il ajoute des évènements à la timeline Steam (crash, rollover, tentative, tour de course, résultat…). Les fonctions set et setActivity sont remplacées par nop quand la fonction est désactivée (versions de développement ou réglage richPresence à faux).
+Manages the game's "rich presence": the status shown in Steam (rich presence and Steam timeline), the UDS activity (startActivityByID) and the Discord status. It infers the current activity (replay, photo mode, career and its sub-modes, garage, mission, scenario, drag, crawl, drift, level, main menu) and the status text (for example "Playing X on Level with Brand Model"), and it adds events to the Steam timeline (crash, rollover, attempt, race lap, result...). The set and setActivity functions are replaced by nop when the feature is disabled (development builds or richPresence setting false).
 
-## Exemple
+## Example
 
 ```lua
 print(extensions.util_richPresence.set('yolo'))
 ```
 
-## Remarques
+## Notes
 
-- La présence enrichie n'est active que pour une build de release (titre de fenêtre contenant RELEASE et build « shipping ») ou si UDS existe, et si le réglage richPresence est vrai ; le réglage richPresenceDiscord pilote Discord.
-- M.set est défini uniquement par enableToggleableFunctions (appelé à la fin du fichier ou dans onSettingsChanged) ; sans cela il vaut nil jusque-là.
-- Les activités sont des identifiants (challenge_type_*, level_*, career_*, freeroam_*, main_menu, etc.) ; un type de mission ou un niveau inconnu retombe sur challenge_generic ou level_generic.
-- Le niveau « gridmap » correspond à l'activité level_gridmap_v2 dans la table activities, mais getCurrentActivity construit « level_ » + identifiant du niveau : un niveau dont l'identifiant est gridmap_v2 est reconnu, gridmap seul ne l'est pas.
-- Évènements de timeline Steam enregistrés via gameplay_statistic.callbackRegister : vehicle/crash, vehicle/airtime.time (plage), vehicle/rollover, vehicle/jturn, drift/crashes.
-- Modes de jeu Steam timeline utilisés : 1 jeu, 2 mise en place/éditeur, 3 menu, 4 écran de chargement.
-- Les hooks onDragReset, onDragDataSet, onDragClear, onDragClearComplete, onCrawlStarted, onCrawlCleared, onDriftContextChanged, onCareerActive, onDeliveryModeStarted/Stopped, onPartShopping*, onScenarioChange et onWorldReadyState recalculent simplement l'activité.
+- Rich presence is only active for a release build (window title containing RELEASE and "shipping" build) or if UDS exists, and if the richPresence setting is true; the richPresenceDiscord setting controls Discord.
+- M.set is defined only by enableToggleableFunctions (called at the end of the file or in onSettingsChanged); without that it is nil until then.
+- Activities are identifiers (challenge_type_*, level_*, career_*, freeroam_*, main_menu, etc.); an unknown mission type or level falls back to challenge_generic or level_generic.
+- The "gridmap" level corresponds to the level_gridmap_v2 activity in the activities table, but getCurrentActivity builds "level_" + level identifier: a level whose identifier is gridmap_v2 is recognized, gridmap alone is not.
+- Steam timeline events registered via gameplay_statistic.callbackRegister: vehicle/crash, vehicle/airtime.time (range), vehicle/rollover, vehicle/jturn, drift/crashes.
+- Steam timeline game modes used: 1 playing, 2 setup/editor, 3 menu, 4 loading screen.
+- The hooks onDragReset, onDragDataSet, onDragClear, onDragClearComplete, onCrawlStarted, onCrawlCleared, onDriftContextChanged, onCareerActive, onDeliveryModeStarted/Stopped, onPartShopping*, onScenarioChange and onWorldReadyState simply recompute the activity.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_richPresence.clientEndMission(levelpath)` | Hook appelé à la fin d'un niveau : passe la timeline Steam en mode écran de chargement (4). *(interne)* | 526 |
-| `util_richPresence.clientPreStartMission(levelpath)` | Hook appelé avant le démarrage d'un niveau : passe la timeline Steam en mode écran de chargement (4). *(interne)* | 526 |
-| `util_richPresence.onAnyMissionChanged()` | Hook appelé quand une mission change : met à jour le message et l'activité. *(interne)* *(hook)* | 398 |
-| `util_richPresence.onAttemptCompleted(attemptData)` | Hook appelé à la réussite d'une tentative : évènement « Completed » dans la timeline Steam. *(interne)* *(hook)* | 616 |
-| `util_richPresence.onAttemptFailed(attemptData)` | Hook appelé à l'échec d'une tentative : évènement « Failed » dans la timeline Steam. *(interne)* *(hook)* | 606 |
-| `util_richPresence.onCareerActive()` | Hook : recalcule l'activité quand la carrière devient active. *(interne)* *(hook)* | 230 |
-| `util_richPresence.onClientPostStartMission(levelPath)` | Hook appelé après le démarrage d'un niveau : mémorise l'identifiant et le nom lisible du niveau, met à jour le message et l'activité. *(interne)* *(hook)* | 357 |
-| `util_richPresence.onCrawlCleared()` | Hook : recalcule l'activité à la fin d'un parcours de crawl. *(interne)* *(hook)* | 242 |
-| `util_richPresence.onCrawlStarted()` | Hook : recalcule l'activité au début d'un parcours de crawl. *(interne)* *(hook)* | 241 |
-| `util_richPresence.onDeliveryModeStarted()` | Hook : recalcule l'activité au début du mode livraison. *(interne)* *(hook)* | 231 |
-| `util_richPresence.onDeliveryModeStopped()` | Hook : recalcule l'activité à la fin du mode livraison. *(interne)* *(hook)* | 232 |
-| `util_richPresence.onDragClear()` | Hook : recalcule l'activité à l'effacement des données de drag. *(interne)* *(hook)* | 239 |
-| `util_richPresence.onDragClearComplete()` | Hook : recalcule l'activité une fois l'effacement du drag terminé. *(interne)* *(hook)* | 240 |
-| `util_richPresence.onDragDataSet()` | Hook : recalcule l'activité quand les données de drag sont définies. *(interne)* *(hook)* | 238 |
-| `util_richPresence.onDragReset()` | Hook : recalcule l'activité à la réinitialisation du drag. *(interne)* *(hook)* | 237 |
-| `util_richPresence.onDriftContextChanged()` | Hook : recalcule l'activité quand le contexte de drift change. *(interne)* *(hook)* | 243 |
-| `util_richPresence.onEditorActivated()` | Hook appelé à l'ouverture de l'éditeur : message « Using World Editor » et mode de jeu Steam 2. *(interne)* *(hook)* | 379 |
-| `util_richPresence.onEditorDeactivated()` | Hook appelé à la fermeture de l'éditeur : met à jour le message et remet le mode de jeu Steam à 1. *(interne)* *(hook)* | 386 |
-| `util_richPresence.onExtensionLoaded()` | Appelé au chargement : initialise la présence enrichie Steam et Discord selon les réglages et enregistre les rappels de statistiques pour la timeline Steam. *(interne)* *(hook)* | 440 |
-| `util_richPresence.onExtensionUnloaded()` | Appelé au déchargement : efface le statut Steam et l'activité Discord et retire les rappels de statistiques. *(interne)* *(hook)* | 460 |
-| `util_richPresence.onGameStateUpdate(state)` | Hook appelé quand l'état du jeu change : met à jour le message et l'activité. *(interne)* *(hook)* | 393 |
-| `util_richPresence.onMissionAttemptAggregated(attempt, mission)` | Hook appelé quand une tentative de mission est agrégée : évènement « Mission <type> » avec le nom de la mission dans la timeline Steam. *(interne)* *(hook)* | 669 |
-| `util_richPresence.onNewAttempt(attemptData)` | Hook appelé au début d'une tentative : évènement « New attempt » dans la timeline Steam. *(interne)* *(hook)* | 596 |
-| `util_richPresence.onPartShoppingCancelled()` | Hook : recalcule l'activité à l'annulation d'un achat de pièces. *(interne)* *(hook)* | 236 |
-| `util_richPresence.onPartShoppingStarted()` | Hook : recalcule l'activité au début d'une session d'achat de pièces. *(interne)* *(hook)* | 233 |
-| `util_richPresence.onPartShoppingTransactionComplete()` | Hook : recalcule l'activité après une transaction d'achat de pièces. *(interne)* *(hook)* | 234 |
-| `util_richPresence.onRaceBranchChosen(data)` | Hook appelé au choix d'une branche de course : évènement « Race branch » dans la timeline Steam. *(interne)* *(hook)* | 647 |
-| `util_richPresence.onRaceLap(data)` | Hook appelé à la fin d'un tour : évènement « Race lap N » avec le temps formaté mm:ss.mmm dans la timeline Steam. *(interne)* *(hook)* | 636 |
-| `util_richPresence.onRaceResult(data)` | Hook appelé au résultat de course : évènement « Race Result » avec le temps final formaté dans la timeline Steam. *(interne)* *(hook)* | 658 |
-| `util_richPresence.onRaceWaypointReached(data)` | Hook appelé au passage d'un point de course : évènement « Race waypoint » dans la timeline Steam. *(interne)* *(hook)* | 626 |
-| `util_richPresence.onResetGameplay()` | Hook appelé à la réinitialisation du gameplay : ajoute un évènement « reset » à la timeline Steam. *(interne)* *(hook)* | 586 |
-| `util_richPresence.onScenarioChange()` | Hook : recalcule l'activité au changement de scénario. *(interne)* *(hook)* | 235 |
-| `util_richPresence.onSettingsChanged()` | Hook appelé quand les réglages changent : active ou désactive la présence enrichie (Steam, Discord, set/setActivity) selon richPresence et richPresenceDiscord. *(interne)* *(hook)* | 493 |
-| `util_richPresence.onUiChangedState(toState, fromState)` | Hook appelé au changement d'état de l'interface : met à jour le mode de jeu et la description d'état de la timeline Steam. *(interne)* *(hook)* | 562 |
-| `util_richPresence.onUiReady()` | Hook appelé quand l'interface est prête : déduit le mode de jeu Steam (menu, chargement, mise en place, jeu) de l'état courant et met à jour l'activité. *(interne)* *(hook)* | 533 |
-| `util_richPresence.onVehicleSwitched(oldId, newId, player)` | Hook appelé au changement de véhicule joueur : relit le nom et la marque du véhicule (info.json) et met à jour le message. *(interne)* *(hook)* | 339 |
-| `util_richPresence.onWorldReadyState(levelpath)` | Hook : recalcule l'activité quand l'état du monde change. *(interne)* *(hook)* | 244 |
-| `util_richPresence.set(v)` | Définit le texte de rich presence Steam (clé 'b') ; renvoie le succès. Remplacée par nop si la présence enrichie est désactivée. (assignée dynamiquement) | dyn |
-| `util_richPresence.setActivity(activityId)` | Démarre une activité UDS par identifiant si elle diffère de la dernière envoyée. Remplacée par nop si désactivée. (assignée dynamiquement) | dyn |
+| `util_richPresence.clientEndMission(levelpath)` | Hook called at the end of a level: sets the Steam timeline to loading screen mode (4). *(internal)* | 526 |
+| `util_richPresence.clientPreStartMission(levelpath)` | Hook called before a level starts: sets the Steam timeline to loading screen mode (4). *(internal)* | 526 |
+| `util_richPresence.onAnyMissionChanged()` | Hook called when a mission changes: updates the message and the activity. *(internal)* *(hook)* | 398 |
+| `util_richPresence.onAttemptCompleted(attemptData)` | Hook called on attempt success: "Completed" event in the Steam timeline. *(internal)* *(hook)* | 616 |
+| `util_richPresence.onAttemptFailed(attemptData)` | Hook called on attempt failure: "Failed" event in the Steam timeline. *(internal)* *(hook)* | 606 |
+| `util_richPresence.onCareerActive()` | Hook: recomputes the activity when the career becomes active. *(internal)* *(hook)* | 230 |
+| `util_richPresence.onClientPostStartMission(levelPath)` | Hook called after a level starts: stores the level's identifier and readable name, updates the message and the activity. *(internal)* *(hook)* | 357 |
+| `util_richPresence.onCrawlCleared()` | Hook: recomputes the activity at the end of a crawl course. *(internal)* *(hook)* | 242 |
+| `util_richPresence.onCrawlStarted()` | Hook: recomputes the activity at the start of a crawl course. *(internal)* *(hook)* | 241 |
+| `util_richPresence.onDeliveryModeStarted()` | Hook: recomputes the activity at the start of delivery mode. *(internal)* *(hook)* | 231 |
+| `util_richPresence.onDeliveryModeStopped()` | Hook: recomputes the activity at the end of delivery mode. *(internal)* *(hook)* | 232 |
+| `util_richPresence.onDragClear()` | Hook: recomputes the activity when drag data is cleared. *(internal)* *(hook)* | 239 |
+| `util_richPresence.onDragClearComplete()` | Hook: recomputes the activity once the drag clearing is complete. *(internal)* *(hook)* | 240 |
+| `util_richPresence.onDragDataSet()` | Hook: recomputes the activity when drag data is set. *(internal)* *(hook)* | 238 |
+| `util_richPresence.onDragReset()` | Hook: recomputes the activity on drag reset. *(internal)* *(hook)* | 237 |
+| `util_richPresence.onDriftContextChanged()` | Hook: recomputes the activity when the drift context changes. *(internal)* *(hook)* | 243 |
+| `util_richPresence.onEditorActivated()` | Hook called when the editor opens: message "Using World Editor" and Steam game mode 2. *(internal)* *(hook)* | 379 |
+| `util_richPresence.onEditorDeactivated()` | Hook called when the editor closes: updates the message and resets the Steam game mode to 1. *(internal)* *(hook)* | 386 |
+| `util_richPresence.onExtensionLoaded()` | Called on load: initializes Steam and Discord rich presence according to the settings and registers the statistics callbacks for the Steam timeline. *(internal)* *(hook)* | 440 |
+| `util_richPresence.onExtensionUnloaded()` | Called on unload: clears the Steam status and the Discord activity and removes the statistics callbacks. *(internal)* *(hook)* | 460 |
+| `util_richPresence.onGameStateUpdate(state)` | Hook called when the game state changes: updates the message and the activity. *(internal)* *(hook)* | 393 |
+| `util_richPresence.onMissionAttemptAggregated(attempt, mission)` | Hook called when a mission attempt is aggregated: "Mission <type>" event with the mission name in the Steam timeline. *(internal)* *(hook)* | 669 |
+| `util_richPresence.onNewAttempt(attemptData)` | Hook called at the start of an attempt: "New attempt" event in the Steam timeline. *(internal)* *(hook)* | 596 |
+| `util_richPresence.onPartShoppingCancelled()` | Hook: recomputes the activity when a part purchase is canceled. *(internal)* *(hook)* | 236 |
+| `util_richPresence.onPartShoppingStarted()` | Hook: recomputes the activity at the start of a part shopping session. *(internal)* *(hook)* | 233 |
+| `util_richPresence.onPartShoppingTransactionComplete()` | Hook: recomputes the activity after a part shopping transaction. *(internal)* *(hook)* | 234 |
+| `util_richPresence.onRaceBranchChosen(data)` | Hook called when a race branch is chosen: "Race branch" event in the Steam timeline. *(internal)* *(hook)* | 647 |
+| `util_richPresence.onRaceLap(data)` | Hook called at the end of a lap: "Race lap N" event with the time formatted as mm:ss.mmm in the Steam timeline. *(internal)* *(hook)* | 636 |
+| `util_richPresence.onRaceResult(data)` | Hook called on race result: "Race Result" event with the formatted final time in the Steam timeline. *(internal)* *(hook)* | 658 |
+| `util_richPresence.onRaceWaypointReached(data)` | Hook called when passing a race checkpoint: "Race waypoint" event in the Steam timeline. *(internal)* *(hook)* | 626 |
+| `util_richPresence.onResetGameplay()` | Hook called on gameplay reset: adds a "reset" event to the Steam timeline. *(internal)* *(hook)* | 586 |
+| `util_richPresence.onScenarioChange()` | Hook: recomputes the activity on scenario change. *(internal)* *(hook)* | 235 |
+| `util_richPresence.onSettingsChanged()` | Hook called when settings change: enables or disables rich presence (Steam, Discord, set/setActivity) according to richPresence and richPresenceDiscord. *(internal)* *(hook)* | 493 |
+| `util_richPresence.onUiChangedState(toState, fromState)` | Hook called when the UI state changes: updates the game mode and the state description of the Steam timeline. *(internal)* *(hook)* | 562 |
+| `util_richPresence.onUiReady()` | Hook called when the UI is ready: infers the Steam game mode (menu, loading, setup, playing) from the current state and updates the activity. *(internal)* *(hook)* | 533 |
+| `util_richPresence.onVehicleSwitched(oldId, newId, player)` | Hook called when the player vehicle changes: rereads the vehicle's name and brand (info.json) and updates the message. *(internal)* *(hook)* | 339 |
+| `util_richPresence.onWorldReadyState(levelpath)` | Hook: recomputes the activity when the world state changes. *(internal)* *(hook)* | 244 |
+| `util_richPresence.set(v)` | Sets the Steam rich presence text (key 'b'); returns success. Replaced by nop if rich presence is disabled. (dynamically assigned) | dyn |
+| `util_richPresence.setActivity(activityId)` | Starts a UDS activity by identifier if it differs from the last one sent. Replaced by nop if disabled. (dynamically assigned) | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_richPresence.clientEndMission(levelpath)`
 
-Hook appelé à la fin d'un niveau : passe la timeline Steam en mode écran de chargement (4).
+Hook called at the end of a level: sets the Steam timeline to loading screen mode (4).
 
-- `levelpath` (*string*) : Chemin du niveau
+- `levelpath` (*string*) : Level path
 
 #### `util_richPresence.clientPreStartMission(levelpath)`
 
-Hook appelé avant le démarrage d'un niveau : passe la timeline Steam en mode écran de chargement (4).
+Hook called before a level starts: sets the Steam timeline to loading screen mode (4).
 
-- `levelpath` (*string*) : Chemin du niveau
+- `levelpath` (*string*) : Level path
 
 #### `util_richPresence.onAttemptCompleted(attemptData)`
 
-Hook appelé à la réussite d'une tentative : évènement « Completed » dans la timeline Steam.
+Hook called on attempt success: "Completed" event in the Steam timeline.
 
-- `attemptData` (*table*) : Données de la tentative (non utilisées)
+- `attemptData` (*table*) : Attempt data (not used)
 
 #### `util_richPresence.onAttemptFailed(attemptData)`
 
-Hook appelé à l'échec d'une tentative : évènement « Failed » dans la timeline Steam.
+Hook called on attempt failure: "Failed" event in the Steam timeline.
 
-- `attemptData` (*table*) : Données de la tentative (non utilisées)
+- `attemptData` (*table*) : Attempt data (not used)
 
 #### `util_richPresence.onClientPostStartMission(levelPath)`
 
-Hook appelé après le démarrage d'un niveau : mémorise l'identifiant et le nom lisible du niveau, met à jour le message et l'activité.
+Hook called after a level starts: stores the level's identifier and readable name, updates the message and the activity.
 
-- `levelPath` (*string*) : Chemin du niveau
+- `levelPath` (*string*) : Level path
 
 #### `util_richPresence.onGameStateUpdate(state)`
 
-Hook appelé quand l'état du jeu change : met à jour le message et l'activité.
+Hook called when the game state changes: updates the message and the activity.
 
-- `state` (*table*) : Nouvel état (non utilisé directement)
+- `state` (*table*) : New state (not used directly)
 
 #### `util_richPresence.onMissionAttemptAggregated(attempt, mission)`
 
-Hook appelé quand une tentative de mission est agrégée : évènement « Mission <type> » avec le nom de la mission dans la timeline Steam.
+Hook called when a mission attempt is aggregated: "Mission <type>" event with the mission name in the Steam timeline.
 
-- `attempt` (*table*) : Tentative (champ type utilisé)
-- `mission` (*table*) : Mission (champ name utilisé)
+- `attempt` (*table*) : Attempt (type field used)
+- `mission` (*table*) : Mission (name field used)
 
 #### `util_richPresence.onNewAttempt(attemptData)`
 
-Hook appelé au début d'une tentative : évènement « New attempt » dans la timeline Steam.
+Hook called at the start of an attempt: "New attempt" event in the Steam timeline.
 
-- `attemptData` (*table*) : Données de la tentative (non utilisées)
+- `attemptData` (*table*) : Attempt data (not used)
 
 #### `util_richPresence.onRaceBranchChosen(data)`
 
-Hook appelé au choix d'une branche de course : évènement « Race branch » dans la timeline Steam.
+Hook called when a race branch is chosen: "Race branch" event in the Steam timeline.
 
-- `data` (*table*) : Données de la branche (non utilisées)
+- `data` (*table*) : Branch data (not used)
 
 #### `util_richPresence.onRaceLap(data)`
 
-Hook appelé à la fin d'un tour : évènement « Race lap N » avec le temps formaté mm:ss.mmm dans la timeline Steam.
+Hook called at the end of a lap: "Race lap N" event with the time formatted as mm:ss.mmm in the Steam timeline.
 
-- `data` (*table*) : Contient lap (numéro de tour) et time (secondes)
+- `data` (*table*) : Contains lap (lap number) and time (seconds)
 
 #### `util_richPresence.onRaceResult(data)`
 
-Hook appelé au résultat de course : évènement « Race Result » avec le temps final formaté dans la timeline Steam.
+Hook called on race result: "Race Result" event with the formatted final time in the Steam timeline.
 
-- `data` (*table*) : Contient finalTime (secondes)
+- `data` (*table*) : Contains finalTime (seconds)
 
 #### `util_richPresence.onRaceWaypointReached(data)`
 
-Hook appelé au passage d'un point de course : évènement « Race waypoint » dans la timeline Steam.
+Hook called when passing a race checkpoint: "Race waypoint" event in the Steam timeline.
 
-- `data` (*table*) : Données du point (non utilisées)
+- `data` (*table*) : Checkpoint data (not used)
 
 #### `util_richPresence.onUiChangedState(toState, fromState)`
 
-Hook appelé au changement d'état de l'interface : met à jour le mode de jeu et la description d'état de la timeline Steam.
+Hook called when the UI state changes: updates the game mode and the state description of the Steam timeline.
 
-- `toState` (*string*) : Nouvel état (menu.*, loading, scenario-*, autre)
-- `fromState` (*string*) : Ancien état
+- `toState` (*string*) : New state (menu.*, loading, scenario-*, other)
+- `fromState` (*string*) : Old state
 
 #### `util_richPresence.onVehicleSwitched(oldId, newId, player)`
 
-Hook appelé au changement de véhicule joueur : relit le nom et la marque du véhicule (info.json) et met à jour le message.
+Hook called when the player vehicle changes: rereads the vehicle's name and brand (info.json) and updates the message.
 
-- `oldId` (*integer*) : Ancien identifiant de véhicule
-- `newId` (*integer*) : Nouvel identifiant de véhicule
-- `player` (*integer*) : Index du joueur
+- `oldId` (*integer*) : Old vehicle id
+- `newId` (*integer*) : New vehicle id
+- `player` (*integer*) : Player index
 
 #### `util_richPresence.onWorldReadyState(levelpath)`
 
-Hook : recalcule l'activité quand l'état du monde change.
+Hook: recomputes the activity when the world state changes.
 
-- `levelpath` (*string*) : Chemin du niveau (non utilisé)
+- `levelpath` (*string*) : Level path (not used)
 
 #### `util_richPresence.set(v)`
 
-Définit le texte de rich presence Steam (clé 'b') ; renvoie le succès. Remplacée par nop si la présence enrichie est désactivée. (assignée dynamiquement)
+Sets the Steam rich presence text (key 'b'); returns success. Replaced by nop if rich presence is disabled. (dynamically assigned)
 
-- `v` (*any*) : Texte à afficher (converti avec tostring)
-- **renvoie** : boolean|nil true en cas de succès (retour de OnlineServiceProvider.setRichPresence)
+- `v` (*any*) : Text to display (converted with tostring)
+- **returns**: boolean|nil true on success (return value of OnlineServiceProvider.setRichPresence)
 
 #### `util_richPresence.setActivity(activityId)`
 
-Démarre une activité UDS par identifiant si elle diffère de la dernière envoyée. Remplacée par nop si désactivée. (assignée dynamiquement)
+Starts a UDS activity by identifier if it differs from the last one sent. Replaced by nop if disabled. (dynamically assigned)
 
-- `activityId` (*string*) : Identifiant de l'activité (voir la table activities du fichier)
+- `activityId` (*string*) : Activity identifier (see the activities table in the file)
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `onDeserialized` | function | nop (à ne pas supprimer, selon le commentaire du code) |
-| `richPresenceEnabled` | boolean | true si les fonctions set/setActivity sont actives |
-| `state` | table | {levelName, vehicleName, levelIdentifier, vehicleJbeam?} : état utilisé pour composer le message |
+| `onDeserialized` | function | nop (do not remove, according to the code comment) |
+| `richPresenceEnabled` | boolean | true if the set/setActivity functions are active |
+| `state` | table | {levelName, vehicleName, levelIdentifier, vehicleJbeam?}: state used to compose the message |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Steam.` `timelineAddEvent`, `timelineSetGameMode`, `timelineSetStateDescription`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/richPresence.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/richPresence.lua`.*

@@ -1,12 +1,12 @@
 # `editor_toolUtilities_groundClaims`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/groundClaims.lua` · VM : Game Engine (GE) · 162 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/groundClaims.lua` · VM: Game Engine (GE) · 162 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_groundClaims` : `extensions.load("editor_toolUtilities_groundClaims")`, puis la globale `editor_toolUtilities_groundClaims`
+**Access:** extension `editor_toolUtilities_groundClaims`: `extensions.load("editor_toolUtilities_groundClaims")`, then the global `editor_toolUtilities_groundClaims`
 
-Registre partagé des « revendications de terrain » entre les outils de l'éditeur qui posent des surfaces sur le terrain. Chaque outil publie, sous un nom de propriétaire (owner), les anneaux (contours) qu'il occupe et la marge à respecter ; les autres outils lisent ces anneaux pour ne pas empiéter dessus. Un compteur de révision et des empreintes (fp) permettent de détecter qu'un autre outil a bougé son terrain.
+Shared registry of "ground claims" between the editor tools that lay surfaces on the terrain. Each tool publishes, under an owner name, the rings (outlines) it occupies and the margin to respect; the other tools read these rings so as not to encroach on them. A revision counter and fingerprints (fp) make it possible to detect that another tool has moved its terrain.
 
-## Exemple
+## Example
 
 ```lua
 local claims = require('editor/toolUtilities/groundClaims')
@@ -14,85 +14,85 @@ claims.publish('monOutil', {ring1, ring2}, 0.5)
 local obs, roads = claims.obstructions(monRing, 'monOutil', roadRings, 0.1)
 ```
 
-## Remarques
+## Notes
 
-- Les anneaux sont des listes de points {x, y} (au moins 3). publish ne copie pas les anneaux : l'appelant doit republier s'il les modifie.
-- publish ignore un propriétaire nil et ne fait rien si l'empreinte (nombre de points et coordonnées, marge) n'a pas changé ; un publish sans anneau valide efface la revendication.
-- Un anneau étiqueté 'buried' est un terrain tenu au-dessus de quelque chose (couverture de tunnel) : on peut y planter.
-- L'état est local au module (table claims) : il n'est pas sauvegardé.
+- Rings are lists of points {x, y} (at least 3). publish does not copy the rings: the caller must republish if it modifies them.
+- publish ignores a nil owner and does nothing if the fingerprint (number of points and coordinates, margin) has not changed; a publish without a valid ring clears the claim.
+- A ring labeled 'buried' is a terrain held above something (tunnel cover): one can plant on it.
+- The state is local to the module (claims table): it is not saved.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_groundClaims.clear(owner)` | Efface la revendication d'un propriétaire (publish sans anneau). | 71 |
-| `editor_toolUtilities_groundClaims.extents(owner)` | Pour chaque autre propriétaire, son empreinte fp et la boîte {x0, y0, x1, y1} que couvre son terrain, marge comprise. Sert à savoir OÙ le terrain d'un autre a bougé. | 63 |
-| `editor_toolUtilities_groundClaims.keepOut(out, owner)` | Comme others, mais chaque anneau est agrandi de la marge demandée par son propriétaire (geom.outsetClosedRing2D) : ce qu'il faut soustraire à son propre terrain. Une revendication sans marge est renvoyée telle quelle. | 92 |
-| `editor_toolUtilities_groundClaims.obstructions(ring, owner, roadRings, roadMargin, pad, skip)` | Tout ce qui est proche de ring et que son propriétaire ne doit pas recouvrir : les anneaux de route fournis agrandis de roadMargin, plus la revendication de chaque autre outil agrandie de sa marge. Seuls les éléments dont la boîte touche celle de ring sont retenus. | 107 |
-| `editor_toolUtilities_groundClaims.others(out, owner, flushOnly, tags)` | Ajoute à out tous les anneaux des autres propriétaires (sans la marge). L'exclusion évite à un outil de se soustraire son propre terrain. | 77 |
-| `editor_toolUtilities_groundClaims.publish(owner, rings, margin, tags)` | Remplace tout ce que ce propriétaire détient par les anneaux donnés, avec la marge que les autres doivent respecter. Incrémente la révision seulement si le contenu a changé. | 32 |
-| `editor_toolUtilities_groundClaims.sig()` | Compteur de révision, incrémenté à chaque publication qui change quelque chose. Permet à un outil de remarquer que le terrain d'un autre a bougé sans le connaître directement. | 150 |
+| `editor_toolUtilities_groundClaims.clear(owner)` | Clears an owner's claim (publish without a ring). | 71 |
+| `editor_toolUtilities_groundClaims.extents(owner)` | For each other owner, its fingerprint fp and the box {x0, y0, x1, y1} that its terrain covers, margin included. Used to know WHERE another's terrain has moved. | 63 |
+| `editor_toolUtilities_groundClaims.keepOut(out, owner)` | Like others, but each ring is enlarged by the margin requested by its owner (geom.outsetClosedRing2D): what must be subtracted from one's own terrain. A claim without margin is returned as is. | 92 |
+| `editor_toolUtilities_groundClaims.obstructions(ring, owner, roadRings, roadMargin, pad, skip)` | Everything that is near ring and that its owner must not cover: the supplied road rings enlarged by roadMargin, plus the claim of each other tool enlarged by its margin. Only elements whose box touches that of ring are kept. | 107 |
+| `editor_toolUtilities_groundClaims.others(out, owner, flushOnly, tags)` | Adds to out all the rings of the other owners (without the margin). The exclusion prevents a tool from subtracting its own terrain from itself. | 77 |
+| `editor_toolUtilities_groundClaims.publish(owner, rings, margin, tags)` | Replaces everything this owner holds with the given rings, with the margin that the others must respect. Increments the revision only if the content changed. | 32 |
+| `editor_toolUtilities_groundClaims.sig()` | Revision counter, incremented on every publication that changes something. Lets a tool notice that another's terrain has moved without knowing it directly. | 150 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_groundClaims.clear(owner)`
 
-Efface la revendication d'un propriétaire (publish sans anneau).
+Clears an owner's claim (publish without a ring).
 
-- `owner` (*any*) : Nom du propriétaire.
+- `owner` (*any*) : Owner name.
 
 #### `editor_toolUtilities_groundClaims.extents(owner)`
 
-Pour chaque autre propriétaire, son empreinte fp et la boîte {x0, y0, x1, y1} que couvre son terrain, marge comprise. Sert à savoir OÙ le terrain d'un autre a bougé.
+For each other owner, its fingerprint fp and the box {x0, y0, x1, y1} that its terrain covers, margin included. Used to know WHERE another's terrain has moved.
 
-- `owner` (*any*) : Propriétaire exclu du résultat.
-- **renvoie** : table<any, table> owner -> { fp, box }.
+- `owner` (*any*) : Owner excluded from the result.
+- **returns**: table<any, table> owner -> { fp, box }.
 
 #### `editor_toolUtilities_groundClaims.keepOut(out, owner)`
 
-Comme others, mais chaque anneau est agrandi de la marge demandée par son propriétaire (geom.outsetClosedRing2D) : ce qu'il faut soustraire à son propre terrain. Une revendication sans marge est renvoyée telle quelle.
+Like others, but each ring is enlarged by the margin requested by its owner (geom.outsetClosedRing2D): what must be subtracted from one's own terrain. A claim without margin is returned as is.
 
-- `out` (*table|nil*) : Liste de sortie.
-- `owner` (*any*) : Propriétaire exclu.
-- **renvoie** : table La liste out.
+- `out` (*table|nil*) : Output list.
+- `owner` (*any*) : Excluded owner.
+- **returns**: table The out list.
 
 #### `editor_toolUtilities_groundClaims.obstructions(ring, owner, roadRings, roadMargin, pad, skip)`
 
-Tout ce qui est proche de ring et que son propriétaire ne doit pas recouvrir : les anneaux de route fournis agrandis de roadMargin, plus la revendication de chaque autre outil agrandie de sa marge. Seuls les éléments dont la boîte touche celle de ring sont retenus.
+Everything that is near ring and that its owner must not cover: the supplied road rings enlarged by roadMargin, plus the claim of each other tool enlarged by its margin. Only elements whose box touches that of ring are kept.
 
-- `ring` (*table*) : Contour testé (au moins 3 points) ; sinon renvoie deux tables vides.
-- `owner` (*any*) : Propriétaire exclu.
-- `roadRings` (*table[]|nil*) : Anneaux de route fournis par l'appelant.
-- `roadMargin` (*number|nil*) : Marge appliquée aux routes (m).
-- `pad` (*number|nil*) : Élargit la boîte qui définit « proche ».
-- `skip` (*any|nil*) : Ignore les anneaux portant cette étiquette (un site en édition ne se gêne pas lui-même).
-- **renvoie** : table[] Anneaux obstacles.
-- **renvoie** : table<table, boolean> Ensemble des anneaux de sortie qui sont des routes.
+- `ring` (*table*) : Outline tested (at least 3 points); otherwise returns two empty tables.
+- `owner` (*any*) : Excluded owner.
+- `roadRings` (*table[]|nil*) : Road rings supplied by the caller.
+- `roadMargin` (*number|nil*) : Margin applied to roads (m).
+- `pad` (*number|nil*) : Enlarges the box that defines "near".
+- `skip` (*any|nil*) : Ignores the rings carrying this label (a site being edited does not obstruct itself).
+- **returns**: table[] Obstacle rings.
+- **returns**: table<table, boolean> Set of the output rings that are roads.
 
 #### `editor_toolUtilities_groundClaims.others(out, owner, flushOnly, tags)`
 
-Ajoute à out tous les anneaux des autres propriétaires (sans la marge). L'exclusion évite à un outil de se soustraire son propre terrain.
+Adds to out all the rings of the other owners (without the margin). The exclusion prevents a tool from subtracting its own terrain from itself.
 
-- `out` (*table|nil*) : Liste de sortie (créée si nil).
-- `owner` (*any*) : Propriétaire exclu.
-- `flushOnly` (*boolean|nil*) : Ne garde que les revendications sans marge (terrain avec lequel on se joint à ras).
-- `tags` (*table|nil*) : Si fourni, reçoit l'étiquette de chaque anneau (false si aucune) à l'indice de l'anneau dans out.
-- **renvoie** : table La liste out.
+- `out` (*table|nil*) : Output list (created if nil).
+- `owner` (*any*) : Excluded owner.
+- `flushOnly` (*boolean|nil*) : Keeps only the claims without margin (terrain that we join flush with).
+- `tags` (*table|nil*) : If provided, receives the label of each ring (false if none) at the ring's index in out.
+- **returns**: table The out list.
 
 #### `editor_toolUtilities_groundClaims.publish(owner, rings, margin, tags)`
 
-Remplace tout ce que ce propriétaire détient par les anneaux donnés, avec la marge que les autres doivent respecter. Incrémente la révision seulement si le contenu a changé.
+Replaces everything this owner holds with the given rings, with the margin that the others must respect. Increments the revision only if the content changed.
 
-- `owner` (*any*) : Nom du propriétaire (clé de la table) ; nil = sans effet.
-- `rings` (*table[]|nil*) : Anneaux de points {x, y} ; ceux de moins de 3 points sont ignorés.
-- `margin` (*number|nil*) : Marge (m) que les autres outils laissent autour ; défaut 0 (jonction affleurante).
-- `tags` (*table|nil*) : Étiquette par anneau (même indice que rings), pour qu'un outil qui édite cette chose ignore ses propres copies (voir obstructions).
+- `owner` (*any*) : Owner name (table key); nil = no effect.
+- `rings` (*table[]|nil*) : Rings of points {x, y}; those with fewer than 3 points are ignored.
+- `margin` (*number|nil*) : Margin (m) that the other tools leave around; default 0 (flush junction).
+- `tags` (*table|nil*) : Label per ring (same index as rings), so that a tool editing this thing ignores its own copies (see obstructions).
 
 #### `editor_toolUtilities_groundClaims.sig()`
 
-Compteur de révision, incrémenté à chaque publication qui change quelque chose. Permet à un outil de remarquer que le terrain d'un autre a bougé sans le connaître directement.
+Revision counter, incremented on every publication that changes something. Lets a tool notice that another's terrain has moved without knowing it directly.
 
-- **renvoie** : integer Révision courante.
+- **returns**: integer Current revision.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/groundClaims.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/groundClaims.lua`.*

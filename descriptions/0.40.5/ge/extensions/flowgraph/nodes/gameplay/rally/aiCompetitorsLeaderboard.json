@@ -1,12 +1,18 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/aiCompetitorsLeaderboard.lua",
-  "module": "Nœud flowgraph « Rally AI Competitors Leaderboard » (catégorie once_instant, tag rally). Simule les temps de spéciale de concurrents IA à partir de la config aiCompetitors (module gameplay/rally/aiCompetitors) et produit un classement pour l'écran de fin dans la pin leaderboard ({rows, playerRowIndex} ; multiStage et stageCount si plusieurs spéciales). Entrées : playerTime, silverTime (repli ancien), playerTimes et silverTimes (tables, un temps par spéciale, de même longueur), stageLabels (libellés), playerTotalTimeSec (total officiel de la boucle rally, utilisé pour classer le joueur). Exécuté une seule fois (workOnce).",
-  "notes": ["En mode multi-spéciales, si les libellés ne sont ni fournis ni récupérables via gameplay_rallyLoop.getManager():getStageLabels(), une erreur est loggée et le classement est vide ({rows = {}}).", "En mode simple, le temps de référence vient d'aiCompetitors.getReferenceTime(missionTypeData), sinon de la pin silverTime."],
+  "module": "Flowgraph node \"Rally AI Competitors Leaderboard\" (category once_instant, tag rally). Simulates the stage times of AI competitors from the aiCompetitors config (module gameplay/rally/aiCompetitors) and produces a ranking for the end screen in the leaderboard pin ({rows, playerRowIndex}; multiStage and stageCount if several stages). Inputs: playerTime, silverTime (old fallback), playerTimes and silverTimes (tables, one time per stage, of the same length), stageLabels (labels), playerTotalTimeSec (official total of the rally loop, used to rank the player). Executed only once (workOnce).",
+  "notes": [
+    "In multi-stage mode, if the labels are neither provided nor retrievable via gameplay_rallyLoop.getManager():getStageLabels(), an error is logged and the ranking is empty ({rows = {}}).",
+    "In single mode, the reference time comes from aiCompetitors.getReferenceTime(missionTypeData), otherwise from the silverTime pin."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Calcule le classement via aiCompetitors.computeLeaderboard et l'écrit dans la pin leaderboard.", "internal": true}
+        "workOnce": {
+          "desc": "Computes the ranking via aiCompetitors.computeLeaderboard and writes it to the leaderboard pin.",
+          "internal": true
+        }
       }
     }
   }

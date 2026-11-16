@@ -1,40 +1,64 @@
 {
   "path": "lua/ge/extensions/editor/dynamicDecals/settings.lua",
-  "module": "Section « Settings » (ordre 1040) de l'outil Dynamic Decals. Permet d'activer/désactiver l'API de decals, de choisir la position du curseur (UV) ou la souris, la couche UV (0 ou 1), les matériaux et les meshes du véhicule joueur qui reçoivent les decals, et la résolution des textures. Maintient la table nom de matériau <-> indice utilisée par les autres modules.",
+  "module": "\"Settings\" section (order 1040) of the Dynamic Decals tool. Lets you enable/disable the decal API, choose the cursor position (UV) or the mouse, the UV layer (0 or 1), the materials and meshes of the player vehicle that receive decals, and the texture resolution. Maintains the material name <-> index table used by the other modules.",
   "notes": [
-    "Changer la couche UV ou la résolution de texture reprojette tous les calques (peut être long).",
-    "updateMaterials ne fait rien si l'API n'est pas définie ou s'il n'y a pas de véhicule joueur.",
-    "getUsedMaterialNames dépend du dernier updateMaterials : sans mise à jour, des noms peuvent être nil.",
-    "À setup, la liste des meshes est récupérée dans un job retardé d'une frame (« sinon les noms ne sont pas prêts ») et stockée dans shapeMeshes, variable qui n'est pas relue ensuite : sectionGui rappelle api.getShapeMeshes() directement."
+    "Changing the UV layer or the texture resolution reprojects all layers (can take a long time).",
+    "updateMaterials does nothing if the API is not defined or if there is no player vehicle.",
+    "getUsedMaterialNames depends on the last updateMaterials: without an update, names may be nil.",
+    "At setup, the list of meshes is fetched in a job delayed by one frame (\"otherwise the names are not ready\") and stored in shapeMeshes, a variable that is not read afterwards: sectionGui calls api.getShapeMeshes() directly again."
   ],
   "functions": {
     "updateMaterials": {
-      "desc": "Relit api.getShapeMaterialNames() pour le véhicule joueur et reconstruit les tables nom->indice et indice->nom.",
+      "desc": "Rereads api.getShapeMaterialNames() for the player vehicle and rebuilds the name->index and index->name tables.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getUsedMaterialNames": {
-      "desc": "Renvoie les noms des matériaux actuellement activés (indices d'api.getMaterialIndices()).",
+      "desc": "Returns the names of the currently enabled materials (indices of api.getMaterialIndices()).",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Liste de noms de matériaux."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "List of material names."
+        }
+      ],
       "internal": false
     },
     "registerEditorPreferences": {
-      "desc": "Ne déclare aucune préférence (corps commenté).",
-      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "desc": "Declares no preference (body commented out).",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Editor preferences registry."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "editorPreferenceValueChanged": {
-      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
-      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "desc": "Hook called when a preference changes. Does nothing here.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "Preference path."
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setup": {
-      "desc": "Appelé par l'outil : prépare les listes (couches UV, résolutions), initialise les indices de résolution depuis l'API si elle est prête, met à jour les matériaux, lance le job de lecture des meshes et enregistre la section « Settings ».",
-      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "desc": "Called by the tool: prepares the lists (UV layers, resolutions), initializes the resolution indices from the API if it is ready, updates the materials, starts the mesh reading job and registers the \"Settings\" section.",
+      "params": {
+        "tool_in": {
+          "type": "table",
+          "desc": "Reference to the editor_dynamicDecalsTool tool."
+        }
+      },
       "returns": [],
       "internal": true
     }

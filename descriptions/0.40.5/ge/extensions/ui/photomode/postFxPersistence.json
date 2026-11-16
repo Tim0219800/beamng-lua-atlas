@@ -1,34 +1,48 @@
 {
   "path": "lua/ge/extensions/ui/photomode/postFxPersistence.lua",
-  "module": "Sauvegarde et relecture sur disque de l'état des effets de post-traitement du mode photo (profondeur de champ, flou de mouvement, occlusion spéculaire, qualité SSAO/SSR/reflets/miroirs, visibilité des occupants). Le fichier sert à restaurer les réglages d'origine du joueur après une session photo. Les valeurs lues sont normalisées (booléens, nombres, chaînes) et les champs inconnus sont ignorés.",
+  "module": "Disk save and reload of the photo mode post-processing effects state (depth of field, motion blur, specular occlusion, SSAO/SSR/reflections/mirrors quality, occupant visibility). The file is used to restore the player's original settings after a photo session. The values read are normalized (booleans, numbers, strings) and unknown fields are ignored.",
   "notes": [
-    "Fichier écrit : settings/photomodePostFxRestoreState.json, au format {version = 1, effects = {...}}. Un ancien fichier sans enveloppe (table d'effets directe) est aussi accepté à la lecture.",
-    "Champs booléens : dofEnabled, dofAutofocus, specularOcclusionEnabled, screenSpaceShadowsEnabled, motionBlurEnabled, occupantsVisible. Champs numériques : dofMaxBlurNear, dofMaxBlurFar, dofFocusRange, dofAperture, dofFalloffSharpness, motionBlurStrength. Champs chaînes : ssaoQualityMode, ssrQualityMode, reflectionQualityMode, mirrorsQualityMode.",
-    "Si un champ DOF (dofEnabled, dofMaxBlurNear, dofMaxBlurFar, dofFocusRange) est présent mais pas dofAutofocus, dofAutofocus est forcé à false.",
-    "Les booléens acceptent true/false, 1/0, \"1\"/\"0\", \"true\"/\"false\" ; toute autre valeur donne false."
+    "File written: settings/photomodePostFxRestoreState.json, in the format {version = 1, effects = {...}}. An old file without an envelope (direct effects table) is also accepted on read.",
+    "Boolean fields: dofEnabled, dofAutofocus, specularOcclusionEnabled, screenSpaceShadowsEnabled, motionBlurEnabled, occupantsVisible. Numeric fields: dofMaxBlurNear, dofMaxBlurFar, dofFocusRange, dofAperture, dofFalloffSharpness, motionBlurStrength. String fields: ssaoQualityMode, ssrQualityMode, reflectionQualityMode, mirrorsQualityMode.",
+    "If a DOF field (dofEnabled, dofMaxBlurNear, dofMaxBlurFar, dofFocusRange) is present but dofAutofocus is not, dofAutofocus is forced to false.",
+    "Booleans accept true/false, 1/0, \"1\"/\"0\", \"true\"/\"false\"; any other value gives false."
   ],
   "fields": {
     "RESTORE_STATE_FILE": {
       "type": "string",
-      "desc": "Chemin relatif du fichier de sauvegarde : \"settings/photomodePostFxRestoreState.json\"."
+      "desc": "Relative path of the save file: \"settings/photomodePostFxRestoreState.json\"."
     }
   },
   "functions": {
     "saveRestoreState": {
-      "desc": "Normalise la table d'effets puis l'écrit dans RESTORE_STATE_FILE. Renvoie nil, false si la table n'est pas valide ou ne contient aucun champ connu.",
+      "desc": "Normalizes the effects table then writes it to RESTORE_STATE_FILE. Returns nil, false if the table is not valid or contains no known field.",
       "params": {
-        "effectsState": {"type": "table", "desc": "Table d'effets (champs listés dans les notes) ; les champs inconnus sont ignorés."}
+        "effectsState": {
+          "type": "table",
+          "desc": "Effects table (fields listed in the notes); unknown fields are ignored."
+        }
       },
       "returns": [
-        {"type": "table|nil", "desc": "État normalisé, ou nil si rien à sauvegarder."},
-        {"type": "boolean", "desc": "true si l'écriture du fichier a réussi (une erreur est journalisée sinon)."}
+        {
+          "type": "table|nil",
+          "desc": "Normalized state, or nil if there is nothing to save."
+        },
+        {
+          "type": "boolean",
+          "desc": "true if the file write succeeded (an error is logged otherwise)."
+        }
       ],
       "internal": false
     },
     "loadRestoreState": {
-      "desc": "Lit le fichier de sauvegarde et renvoie l'état normalisé des effets, ou nil si le fichier est absent, illisible ou sans champ connu.",
+      "desc": "Reads the save file and returns the normalized effects state, or nil if the file is missing, unreadable or has no known field.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "État normalisé des effets."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Normalized effects state."
+        }
+      ],
       "internal": false
     }
   }

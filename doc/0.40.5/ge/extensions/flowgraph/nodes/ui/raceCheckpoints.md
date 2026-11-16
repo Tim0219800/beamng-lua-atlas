@@ -1,24 +1,24 @@
 # `flowgraph_nodes_ui_raceCheckpoints`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/raceCheckpoints.lua` · VM : Game Engine (GE) · 45 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/raceCheckpoints.lua` · VM: Game Engine (GE) · 45 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/raceCheckpoints")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/raceCheckpoints")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Set UI Race Checkpoints » (catégorie repeat_instant, auteur BeamNG, durée) : met à jour l'app UI de points de passage. Entrées : « cur » (nil = efface), « max ». Envoie 'WayPointChange' {current, count} et une entrée « checkpoint » (texte « cur / max ») dans ui_apps_genericMissionData (catégorie raceCheckpoints, order 100) ; efface avec 'WayPointReset'.
+Flowgraph node "Set UI Race Checkpoints" (category repeat_instant, author BeamNG, duration): updates the checkpoints UI app. Inputs: "cur" (nil = clears), "max". Sends 'WayPointChange' {current, count} and a "checkpoint" entry (text "cur / max") in ui_apps_genericMissionData (category raceCheckpoints, order 100); clears with 'WayPointReset'.
 
-## Remarques
+## Notes
 
-- Si max est nil, la concaténation du texte « cur / max » provoque une erreur.
+- If max is nil, the concatenation of the "cur / max" text causes an error.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Envoie ou efface le compteur de points de passage dans l'UI. | 24 |
+| `C:work()` | Sends or clears the checkpoint counter in the UI. | 24 |
 
-**Évènements UI (guihooks.trigger) :** `WayPointChange`, `WayPointReset`
+**UI events (guihooks.trigger):** `WayPointChange`, `WayPointReset`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/raceCheckpoints.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/raceCheckpoints.lua`.*

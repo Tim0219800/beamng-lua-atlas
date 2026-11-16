@@ -2,68 +2,68 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/types/setVariable.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+--- Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 ---@class flowgraph_nodes_types_setVariable_C
 local flowgraph_nodes_types_setVariable_C = {}
 
---- Restaure portée et variable.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:145
----@param nodeData any données sauvegardées
+--- Restores scope and variable.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:145
+---@param nodeData any saved data
 function flowgraph_nodes_types_setVariable_C:_onDeserialized(nodeData) end
 
---- Sauvegarde l'état du noeud dans la table donnée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:140
----@param res any table de sauvegarde
+--- Saves the node's state in the given table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:140
+---@param res any save table
 function flowgraph_nodes_types_setVariable_C:_onSerialize(res) end
 
---- Case de portée, liste des variables et éditeur de variable.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:43
+--- Scope checkbox, variable list and variable editor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:43
 function flowgraph_nodes_types_setVariable_C:drawCustomProperties() end
 
---- Dessine le contenu central du noeud dans l'éditeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:127
----@param builder any constructeur de noeud imgui
----@param style any style du noeud
+--- Draws the central content of the node in the editor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:127
+---@param builder any imgui node builder
+---@param style any node style
 function flowgraph_nodes_types_setVariable_C:drawMiddle(builder, style) end
 
---- varName = nil, target = variables du graphe, useSuffix = false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:22
+--- varName = nil, target = graph variables, useSuffix = false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:22
 function flowgraph_nodes_types_setVariable_C:init() end
 
---- Hook : met à jour noeud et pin si la variable est renommée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:88
----@param source any table de variables concernée
----@param name any ancien nom
----@param newName any nouveau nom
+--- Hook: updates node and pin if the variable is renamed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:88
+---@param source any variables table concerned
+---@param name any old name
+---@param newName any new name
 function flowgraph_nodes_types_setVariable_C:renameVariable(source, name, newName) end
 
---- Change la portée (projet/graphe), la couleur et retire le pin courant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:28
----@param global any boolean : variables du projet
+--- Changes the scope (project/graph), the color and removes the current pin.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:28
+---@param global any boolean: project variables
 function flowgraph_nodes_types_setVariable_C:setGlobal(global) end
 
---- Choisit la variable : recrée le pin d'entrée et refait les liens.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:62
----@param name any nom de la variable
+--- Chooses the variable: recreates the input pin and redoes the links.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:62
+---@param name any variable name
 function flowgraph_nodes_types_setVariable_C:setVar(name) end
 
---- Hook : recrée le pin quand le type de la variable change.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:109
----@param source any table de variables concernée
----@param name any nom
----@param newType any nouveau type
+--- Hook: recreates the pin when the variable's type changes.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:109
+---@param source any variables table concerned
+---@param name any name
+---@param newType any new type
 function flowgraph_nodes_types_setVariable_C:typeUpdated(source, name, newType) end
 
---- Appelle target:change(varName, valeur du pin) et recopie flow.
----Source : lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:104
+--- Calls target:change(varName, pin value) and copies flow.
+---Source: lua/ge/extensions/flowgraph/nodes/types/setVariable.lua:104
 function flowgraph_nodes_types_setVariable_C:work() end
 

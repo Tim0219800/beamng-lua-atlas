@@ -2,12 +2,12 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/vehicle/getActive.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+--- Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 ---@class flowgraph_nodes_vehicle_getActive_C
 local flowgraph_nodes_vehicle_getActive_C = {}
 
---- Met à jour les sorties `true`, `false` et `isActive` selon `getActive()`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getActive.lua:22
+--- Updates the outputs `true`, `false` and `isActive` according to `getActive()`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getActive.lua:22
 function flowgraph_nodes_vehicle_getActive_C:work() end
 

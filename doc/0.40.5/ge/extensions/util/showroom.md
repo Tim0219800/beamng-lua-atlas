@@ -1,62 +1,62 @@
 # `util_showroom`
 
-*Fichier : `lua/ge/extensions/util/showroom.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/showroom.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_showroom` : `extensions.load("util_showroom")`, puis la globale `util_showroom`
+**Access:** extension `util_showroom`: `extensions.load("util_showroom")`, then the global `util_showroom`
 
-Petit utilitaire de « showroom » : fait apparaître à la demande un préfabriqué de garage (art/prefabs/garage_simple.prefab) à la position fixe (0, 0, 1000) dans le niveau courant et permet d'y déplacer un véhicule. Le préfabriqué est chargé au premier appel qui a besoin de sa position (moveInside, getPosRot) et déchargé à la fin du niveau (onClientEndMission).
+Small "showroom" utility: spawns on demand a garage prefab (art/prefabs/garage_simple.prefab) at the fixed position (0, 0, 1000) in the current level and lets you move a vehicle into it. The prefab is loaded at the first call that needs its position (moveInside, getPosRot) and unloaded at the end of the level (onClientEndMission).
 
-## Exemple
+## Example
 
 ```lua
 local veh = getPlayerVehicle(0)
-util_showroom.moveInside(veh) -- charge le garage au besoin, téléporte et pose le véhicule
+util_showroom.moveInside(veh) -- loads the garage if needed, teleports and places the vehicle
 print(util_showroom.isInside(veh:getPosition()))
 ```
 
-## Remarques
+## Notes
 
-- Position du garage : vec3(0, 0, 1000), rotation identité ; ces valeurs sont fixes (getSuitablePosition).
-- isInside renvoie nil (et non false) si le préfabriqué n'est pas chargé ; sinon true quand la position est à moins de 20 m du centre du garage (test volontairement simple, marqué TODO dans le code).
-- Si le préfabriqué ne se charge pas, le message d'erreur journalisé affiche la variable position, qui est encore nil à ce moment-là ; getPosRot ne vérifie pas l'échec et la fonction suivante ferait alors position + pos avec position nil (erreur Lua).
-- Le code ne détecte pas un préfabriqué déjà présent (commentaire TODO) : un rechargement Lua peut en laisser plusieurs.
-- isInside utilise core_camera sans l'avoir déclaré en dépendance.
+- Garage position: vec3(0, 0, 1000), identity rotation; these values are fixed (getSuitablePosition).
+- isInside returns nil (not false) if the prefab is not loaded; otherwise true when the position is less than 20 m from the garage center (deliberately simple test, marked TODO in the code).
+- If the prefab fails to load, the logged error message displays the position variable, which is still nil at that point; getPosRot does not check the failure and the following function would then do position + pos with position nil (Lua error).
+- The code does not detect an already present prefab (TODO comment): a Lua reload can leave several.
+- isInside uses core_camera without declaring it as a dependency.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_showroom.getPosRot()` | Renvoie la position et la rotation de l'intérieur du garage (charge le préfabriqué si besoin). | 39 |
-| `util_showroom.isInside(pos)` | Indique si une position est dans le garage (distance au centre < 20 m). Sans argument, utilise la position du véhicule du joueur ou à défaut celle de la caméra. | 49 |
-| `util_showroom.moveInside(veh)` | Charge le garage si nécessaire, place le véhicule à sa position (setPosRot) puis appelle veh:autoplace(false) pour le poser. | 42 |
-| `util_showroom.onClientEndMission()` | Hook appelé à la fin du niveau : supprime le préfabriqué et recharge la collision (be:reloadCollision). *(interne)* *(hook)* | 26 |
+| `util_showroom.getPosRot()` | Returns the position and rotation of the garage interior (loads the prefab if needed). | 39 |
+| `util_showroom.isInside(pos)` | Indicates whether a position is in the garage (distance to center < 20 m). With no argument, uses the player vehicle's position or, failing that, the camera's. | 49 |
+| `util_showroom.moveInside(veh)` | Loads the garage if needed, places the vehicle at its position (setPosRot) then calls veh:autoplace(false) to set it down. | 42 |
+| `util_showroom.onClientEndMission()` | Hook called at the end of the level: removes the prefab and reloads collision (be:reloadCollision). *(internal)* *(hook)* | 26 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_showroom.getPosRot()`
 
-Renvoie la position et la rotation de l'intérieur du garage (charge le préfabriqué si besoin).
+Returns the position and rotation of the garage interior (loads the prefab if needed).
 
-- **renvoie** : vec3 Position monde du garage (0, 0, 1000).
-- **renvoie** : quat Rotation identité (0, 0, 0, 1).
+- **returns**: vec3 World position of the garage (0, 0, 1000).
+- **returns**: quat Identity rotation (0, 0, 0, 1).
 
 #### `util_showroom.isInside(pos)`
 
-Indique si une position est dans le garage (distance au centre < 20 m). Sans argument, utilise la position du véhicule du joueur ou à défaut celle de la caméra.
+Indicates whether a position is in the garage (distance to center < 20 m). With no argument, uses the player vehicle's position or, failing that, the camera's.
 
-- `pos` (*vec3|nil*) : Position monde à tester.
-- **renvoie** : boolean|nil true si dedans ; false hors du garage ; nil si le préfabriqué n'est pas chargé.
+- `pos` (*vec3|nil*) : World position to test.
+- **returns**: boolean|nil true if inside; false outside the garage; nil if the prefab is not loaded.
 
 #### `util_showroom.moveInside(veh)`
 
-Charge le garage si nécessaire, place le véhicule à sa position (setPosRot) puis appelle veh:autoplace(false) pour le poser.
+Loads the garage if needed, places the vehicle at its position (setPosRot) then calls veh:autoplace(false) to set it down.
 
-- `veh` (*table*) : Objet véhicule à déplacer.
+- `veh` (*table*) : Vehicle object to move.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `getUniqueName`
 - `be:` `reloadCollision`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/showroom.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/showroom.lua`.*

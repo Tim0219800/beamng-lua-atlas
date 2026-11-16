@@ -1,0 +1,39 @@
+{
+  "path": "lua/ge/extensions/editor/trafficDebug.lua",
+  "module": "Fenêtre d'éditeur « Traffic Debug » (menu Window > Debug) pour inspecter et régler le système de trafic de gameplay_traffic. Deux onglets : General (nombre de véhicules de trafic et de stationnement, réglages globaux via gameplay_traffic.setTrafficVars : activeAmount, spawnValue, spawnDirBias, baseAggression, speedLimit, aiAware, enableRandomEvents ; case debugMode ; bouton de dispersion) et Vehicles (données par véhicule : général, route, réapparition, poursuite, minuteries, rôle, journal d'actions, téléportation forcée). Active gameplay_traffic.debugMode à l'ouverture et le coupe à la désactivation de l'éditeur.",
+  "notes": [
+    "La fenêtre ne dessine rien si l'extension gameplay_traffic n'est pas chargée.",
+    "Le journal d'actions est alimenté par le hook onTrafficAction, avec au plus 100 entrées conservées par véhicule.",
+    "Les réglages sont bornés avant envoi : spawnValue 0..3, spawnDirBias -1..1, baseAggression 0.1..2, speedLimit -1..100."
+  ],
+  "functions": {
+    "onEditorInitialized": {
+      "desc": "Hook de l'éditeur : enregistre la fenêtre 'Traffic Debug' (400x600) et son entrée de menu Window > Debug.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Hook appelé à chaque frame d'interface de l'éditeur : dessine la fenêtre, active gameplay_traffic.debugMode au premier affichage, lit gameplay_traffic.getTrafficData() et dessine l'onglet courant.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Hook appelé à la fermeture de l'éditeur : coupe gameplay_traffic.debugMode et oublie les données de trafic.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onTrafficAction": {
+      "desc": "Hook de trafic : ajoute une ligne au journal du véhicule `id`, avec l'horodatage reçu, l'action et ses données, affichée dans l'onglet Vehicles.",
+      "params": {
+        "id": {"type": "integer", "desc": "Id du véhicule de trafic."},
+        "action": {"type": "string", "desc": "Nom de l'action de trafic."},
+        "data": {"type": "any", "desc": "Données associées, affichées entre parenthèses si présentes."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

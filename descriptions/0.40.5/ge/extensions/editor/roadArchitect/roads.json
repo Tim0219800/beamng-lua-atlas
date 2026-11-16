@@ -1,78 +1,642 @@
 {
   "path": "lua/ge/extensions/editor/roadArchitect/roads.lua",
-  "module": "Conteneur central du Road Architect : il stocke la liste des routes de la session (chaque route = nœuds, profil latéral, options d'affichage, pont, tunnels) et fournit toutes les opérations d'édition (ajout/suppression de nœuds, déplacement, hauteur, rotation latérale, découpe, retournement, copie, sérialisation). Il gère aussi le passage entre l'état « edit » et l'état « finalised » (création des maillages procéduraux, statiques, tunnels et décalcomanies). Un moddeur s'en sert pour créer ou manipuler des routes par script depuis l'éditeur ; les modules du Road Architect (geometry, profiles, decals, roadMesh…) lisent ses tables.",
-  "usage": "local roads = extensions.editor_roadArchitect_roads\nlocal idx = #roads.roads + 1\nroads.roads[idx] = roads.createRoadFromTemplate('Two Lane')  -- nom de modèle de profil (exemple)\nroads.map[roads.roads[idx].name] = idx\nroads.addNodeToRoad(idx, vec3(0, 0, 0))\nroads.addNodeToRoad(idx, vec3(50, 0, 0))\nroads.updateRoads()",
+  "module": "Central container of Road Architect: it stores the list of the session's roads (each road = nodes, lateral profile, display options, bridge, tunnels) and provides all the editing operations (adding/removing nodes, moving, height, lateral rotation, cutting, flipping, copying, serialization). It also handles the transition between the \"edit\" and \"finalised\" states (creation of procedural meshes, static meshes, tunnels and decals). A modder uses it to create or manipulate roads by script from the editor; the Road Architect modules (geometry, profiles, decals, roadMesh...) read its tables.",
+  "usage": "local roads = extensions.editor_roadArchitect_roads\nlocal idx = #roads.roads + 1\nroads.roads[idx] = roads.createRoadFromTemplate('Two Lane')  -- profile template name (example)\nroads.map[roads.roads[idx].name] = idx\nroads.addNodeToRoad(idx, vec3(0, 0, 0))\nroads.addNodeToRoad(idx, vec3(50, 0, 0))\nroads.updateRoads()",
   "notes": [
-    "Une route est une table (champs : name, displayName (im.ArrayChar), nodes, profile, isVis/isDirty…, renderData, tunnels, groupIdx). Beaucoup de paramètres sont des pointeurs ImGui (im.BoolPtr, im.FloatPtr, im.IntPtr) : lire/écrire avec [0].",
-    "Un nœud = {p (vec3), isLocked, rot (FloatPtr, degrés), widths/heightsL/heightsR (tables FloatPtr indexées par clé de voie, -20..20), incircleRad, isAutoBanked, offset}.",
-    "Limites internes : hauteur des nœuds bornée à ±1000 m, rotation latérale bornée à ±50 degrés, largeur locale (setLocalWidth) bornée à [0.5, 10] m par voie.",
-    "createRoadFromProfile/createRoadFromTemplate renvoient seulement la table route : elles ne l'ajoutent PAS à roads.roads ni à roads.map (voir convertDecalRoads2RoadArchitect pour l'ajout manuel).",
-    "Les routes modifiées sont marquées isDirty via setDirty ; updateRoads() recalcule ensuite leur renderData (les routes à moins de 2 nœuds sont ignorées).",
-    "Une route nommée 'temp' (isHidden = true) sert à prévisualiser les profils (manageTempRoadSection).",
-    "BUG/incohérence : M.isAuditionProfileDirty est une copie booléenne figée au chargement (le flag réel est une variable locale) ; lire ce champ ne donne pas l'état courant.",
-    "BUG probable : reparameteriseDecalRoad (interne) utilise `while isError or iter > maxIter` (la borne est inversée) et construit ses points de largeur avec pp1.x/pp1.y pour tous les points.",
-    "BUG probable : updateBridgeParameters fait im.FloatPtr(road.bridgeWidth) alors que bridgeWidth est déjà un FloatPtr (il faudrait [0]).",
-    "convertDecalRoads2RoadArchitect : le commentaire dit que les DecalRoad d'origine sont supprimés, mais l'appel sel:delete() est commenté dans le code ; la fonction ne les supprime donc pas. De plus elle ne l'ajoute pas à roadMap via recomputeMap."
+    "A road is a table (fields: name, displayName (im.ArrayChar), nodes, profile, isVis/isDirty..., renderData, tunnels, groupIdx). Many parameters are ImGui pointers (im.BoolPtr, im.FloatPtr, im.IntPtr): read/write with [0].",
+    "A node = {p (vec3), isLocked, rot (FloatPtr, degrees), widths/heightsL/heightsR (FloatPtr tables keyed by lane key, -20..20), incircleRad, isAutoBanked, offset}.",
+    "Internal limits: node height bounded to ±1000 m, lateral rotation bounded to ±50 degrees, local width (setLocalWidth) bounded to [0.5, 10] m per lane.",
+    "createRoadFromProfile/createRoadFromTemplate only return the road table: they do NOT add it to roads.roads or roads.map (see convertDecalRoads2RoadArchitect for manual addition).",
+    "Modified roads are marked isDirty via setDirty; updateRoads() then recomputes their renderData (roads with fewer than 2 nodes are ignored).",
+    "A road named 'temp' (isHidden = true) is used to preview profiles (manageTempRoadSection).",
+    "BUG/inconsistency: M.isAuditionProfileDirty is a boolean copy frozen at load time (the real flag is a local variable); reading this field does not give the current state.",
+    "BUG probable: reparameteriseDecalRoad (internal) uses `while isError or iter > maxIter` (the bound is inverted) and builds its width points with pp1.x/pp1.y for all points.",
+    "BUG probable: updateBridgeParameters does im.FloatPtr(road.bridgeWidth) whereas bridgeWidth is already a FloatPtr ([0] would be needed).",
+    "convertDecalRoads2RoadArchitect: the comment says the original DecalRoads are deleted, but the sel:delete() call is commented out in the code; the function therefore does not delete them. Moreover it does not add it to roadMap via recomputeMap."
   ],
   "fields": {
-    "roads": {"type": "table<integer, table>", "desc": "Liste des routes de la session (même table que celle utilisée en interne : la modifier agit directement)."},
-    "map": {"type": "table<string, integer>", "desc": "Table de hachage nom de route -> indice dans roads. Reconstruite par recomputeMap()."},
-    "multi": {"type": "table<integer, {r: integer, n: integer}>", "desc": "Multi-sélection de nœuds : chaque entrée donne l'indice de route (r) et de nœud (n)."},
-    "isAuditionProfileDirty": {"type": "boolean", "desc": "Copie initiale (false) du flag d'audition de profil ; voir notes, la valeur réelle n'est pas exposée."}
+    "roads": {
+      "type": "table<integer, table>",
+      "desc": "List of the session's roads (same table as the one used internally: modifying it acts directly)."
+    },
+    "map": {
+      "type": "table<string, integer>",
+      "desc": "Hash table road name -> index in roads. Rebuilt by recomputeMap()."
+    },
+    "multi": {
+      "type": "table<integer, {r: integer, n: integer}>",
+      "desc": "Multi-selection of nodes: each entry gives the road index (r) and node index (n)."
+    },
+    "isAuditionProfileDirty": {
+      "type": "boolean",
+      "desc": "Initial copy (false) of the profile audition flag; see notes, the real value is not exposed."
+    }
   },
   "functions": {
-    "getCurrentMap": {"desc": "Renvoie le nom/identifiant de la carte (niveau) actuellement mémorisée par le module.", "params": {}, "returns": [{"type": "any", "desc": "Valeur stockée par setCurrentMap (nil au départ)."}]},
-    "setCurrentMap": {"desc": "Mémorise la carte (niveau) actuellement chargée.", "params": {"cMap": {"type": "any", "desc": "Valeur à mémoriser (déduit du code)."}}, "returns": []},
-    "createRoadFromProfile": {"desc": "Construit une nouvelle table route à partir d'un profil latéral (met à jour les drapeaux de voies du profil, calcule les clés de voies). La route n'a aucun nœud et n'est pas ajoutée à la liste.", "params": {"profile": {"type": "table", "desc": "Profil latéral (voir editor/roadArchitect/profiles)."}}, "returns": [{"type": "table", "desc": "La route créée (valeurs par défaut : visible, 15 divisions radiales de tunnel, pont de demi-largeur 5.5, profondeur 4, arche -6, etc.)."}]},
-    "createRoadFromTemplate": {"desc": "Comme createRoadFromProfile, mais le profil est créé à partir du nom d'un modèle de profil (avec un identifiant généré par Engine.generateUUID()).", "params": {"profileTemplateName": {"type": "string", "desc": "Nom du modèle de profil."}}, "returns": [{"type": "table", "desc": "La route créée."}]},
-    "computeRoadAABB_2D": {"desc": "Calcule la boîte englobante 2D alignée sur les axes des nœuds d'une route (utilisée uniquement par l'arbre d'accélération).", "params": {"r": {"type": "table", "desc": "Route."}}, "returns": [{"type": "number", "desc": "xMin"}, {"type": "number", "desc": "xMax"}, {"type": "number", "desc": "yMin"}, {"type": "number", "desc": "yMax"}]},
-    "setDirty": {"desc": "Marque la route comme à recalculer (isDirty), met à jour la condition du profil et réinsère la route dans le quadtree d'édition (créé à la demande avec l'étendue du terrain, ou 5000 m par défaut).", "params": {"r": {"type": "table|nil", "desc": "Route ; ne fait rien si nil."}}, "returns": []},
-    "setAllDirty": {"desc": "Appelle setDirty sur toutes les routes.", "params": {}, "returns": []},
-    "getTree": {"desc": "Renvoie le quadtree 2D utilisé pour le culling de l'affichage en édition (nil s'il n'existe pas encore).", "params": {}, "returns": [{"type": "table|nil", "desc": "Le quadtree."}]},
-    "removeTree": {"desc": "Oublie le quadtree (il sera recréé au prochain setDirty).", "params": {}, "returns": []},
-    "setAuditionProfileDirty": {"desc": "Demande la reconstruction de la route temporaire d'audition de profil au prochain appel de manageTempRoadSection.", "params": {}, "returns": []},
-    "addNodeToRoad": {"desc": "Ajoute un nœud à la fin de la route, avec les largeurs/hauteurs par voie issues du profil. Marque la route dirty.", "params": {"rIdx": {"type": "integer", "desc": "Indice de la route dans roads."}, "pos": {"type": "vec3", "desc": "Position monde du nœud."}}, "returns": []},
-    "addNodeToRoadAtIdx": {"desc": "Insère un nœud à l'indice donné de la route. Marque la route dirty.", "params": {"rIdx": {"type": "integer", "desc": "Indice de la route."}, "pos": {"type": "vec3", "desc": "Position monde."}, "idx": {"type": "integer", "desc": "Indice d'insertion dans route.nodes (table.insert)."}}, "returns": []},
-    "isMouseAtIntermediatePos": {"desc": "Teste si la position de la souris est proche (tolérance 3.5 m en 2D) d'un segment de la route, entre deux nœuds, pour proposer l'insertion d'un nœud.", "params": {"rIdx": {"type": "integer", "desc": "Indice de la route."}, "mousePos": {"type": "vec3", "desc": "Position de la souris sur la carte."}}, "returns": [{"type": "boolean", "desc": "true si la souris est sur un segment."}, {"type": "vec3|nil", "desc": "Position interpolée sur le segment."}, {"type": "integer|nil", "desc": "Indice du nœud qui suit le point trouvé."}]},
-    "setLocalWidth": {"desc": "Modifie la largeur de toutes les voies de type 'road_lane' d'un nœud : nouvelle largeur = largeur de départ + offset, bornée à [0.5, 10].", "params": {"rIdx": {"type": "integer", "desc": "Indice de la route."}, "nIdx": {"type": "integer", "desc": "Indice du nœud."}, "offset": {"type": "number", "desc": "Variation de largeur de voie, en mètres."}}, "returns": []},
-    "copyNode": {"desc": "Copie profonde d'un nœud (nouveaux pointeurs ImGui et nouveau vec3).", "params": {"n": {"type": "table", "desc": "Nœud."}}, "returns": [{"type": "table", "desc": "Copie du nœud."}]},
-    "updateWAndHToNewProfile": {"desc": "Réinitialise les largeurs et hauteurs par voie de tous les nœuds de la route selon son profil actuel (après changement de profil).", "params": {"road": {"type": "table", "desc": "Route."}}, "returns": []},
-    "computeAABB2D": {"desc": "Boîte englobante 2D des nœuds d'une route. Renvoie nil pour un pont ou un overlay. (Le commentaire annonce que la largeur du profil est incluse, mais le code ne prend en compte que les nœuds.)", "params": {"rIdx": {"type": "integer", "desc": "Indice de la route."}}, "returns": [{"type": "table|nil", "desc": "{xMin, xMax, yMin, yMax} ou nil."}]},
-    "getRoadsFromGroup": {"desc": "Renvoie les routes (sans doublon) appartenant à un groupe placé ; si group est nil, renvoie toutes les routes de la session.", "params": {"group": {"type": "table|nil", "desc": "Groupe avec group.list = liste d'entrées {r = nom de route, n = indice de nœud}."}}, "returns": [{"type": "table", "desc": "Liste de routes."}]},
-    "recomputeMap": {"desc": "Reconstruit la table nom -> indice (roads.map). À appeler après toute insertion/suppression manuelle dans roads.", "params": {}, "returns": []},
-    "removeRoad": {"desc": "Supprime une route par son nom : retire décalcomanies, maillages de route et statiques, entrée du quadtree, dossier de pont éventuel, puis l'entrée de roads et reconstruit la map.", "params": {"roadName": {"type": "string", "desc": "Nom (identifiant) de la route, pas son displayName."}}, "returns": []},
-    "removeNode": {"desc": "Supprime un nœud d'une route (table.remove). Ne marque pas la route dirty.", "params": {"rIdx": {"type": "integer", "desc": "Indice de la route."}, "nIdx": {"type": "integer", "desc": "Indice du nœud."}}, "returns": []},
-    "addIntermediateNode": {"desc": "Ajoute un nœud entre le nœud sélectionné et son voisin (point milieu, valeurs moyennées). Aux extrémités de la route, copie le nœud et le place 3 m plus loin dans l'axe de la route.", "params": {"rIdx": {"type": "integer", "desc": "Indice de la route."}, "nIdx": {"type": "integer", "desc": "Indice du nœud sélectionné."}, "lie": {"type": "string", "desc": "'above' (avec le nœud précédent) ou 'below' (avec le nœud suivant)."}}, "returns": []},
-    "clearAllRoads": {"desc": "Supprime toutes les routes qui ne sont pas des routes de jonction (isJctRoad).", "params": {}, "returns": []},
-    "removeHiddenRoads": {"desc": "Supprime de roads toutes les routes masquées (isHidden) et leurs maillages, puis recalcule la map.", "params": {}, "returns": []},
-    "goToRoad": {"desc": "Place la caméra libre à la verticale du centre de la route, à une hauteur qui cadre toute la route (selon le champ de vision). Ne fait rien si la route est trop petite (moins de 0.1 m d'étendue).", "params": {"rIdx": {"type": "integer", "desc": "Indice de la route."}}, "returns": []},
-    "moveRoad": {"desc": "Translate une route : soit rigide (tous les nœuds non verrouillés), soit en champ de force (le nœud central suit la souris, les autres bougent proportionnellement à la distance, jusqu'au premier nœud verrouillé). Marque la route dirty.", "params": {"road": {"type": "table", "desc": "Route (table, pas un indice)."}, "nodeIdx": {"type": "integer", "desc": "Nœud saisi."}, "mouseNow": {"type": "vec3", "desc": "Position actuelle de la souris."}, "mouseLast": {"type": "vec3", "desc": "Position précédente."}}, "returns": []},
-    "adjustHeight": {"desc": "Modifie la hauteur d'un nœud (bornée à ±1000 m) et propage la variation aux autres nœuds (rigide ou champ de force). Marque dirty.", "params": {"hNew": {"type": "number", "desc": "Nouvelle hauteur du nœud central, en mètres."}, "hOld": {"type": "number", "desc": "Ancienne hauteur (sert à calculer la variation dz)."}, "nIdx": {"type": "integer", "desc": "Indice du nœud central."}, "rIdx": {"type": "integer", "desc": "Indice de la route."}}, "returns": []},
-    "adjustLateralRotation": {"desc": "Modifie la rotation latérale (devers) d'un nœud et propage aux autres (bornée à ±50 degrés). Sans effet si le profil est en auto-banking.", "params": {"rotNew": {"type": "number", "desc": "Nouvelle rotation du nœud central, en degrés."}, "rotOld": {"type": "number", "desc": "Ancienne rotation."}, "nIdx": {"type": "integer", "desc": "Indice du nœud central."}, "rIdx": {"type": "integer", "desc": "Indice de la route."}}, "returns": []},
-    "copyRoad": {"desc": "Copie profonde d'une route (nœuds, profil, options, paramètres de pont/tunnel). Le nom est conservé identique, renderData est vidé, tunnels est vide et isDirty = true.", "params": {"r": {"type": "table", "desc": "Route."}}, "returns": [{"type": "table", "desc": "Copie de la route."}]},
-    "splitRoad": {"desc": "Coupe une route au nœud donné en deux nouvelles routes ([A] et [B], chacune avec une copie du nœud de coupure repoussé de 1 m), supprime l'ancienne route et les ajoute à roads. Utile pour créer des jonctions.", "params": {"rIdx": {"type": "integer", "desc": "Indice de la route."}, "nIdx": {"type": "integer", "desc": "Indice du nœud de coupure ; doit avoir un voisin de chaque côté (le code lit nodes[nIdx-1] et nodes[nIdx+1])."}}, "returns": []},
-    "flipRoad": {"desc": "Inverse le sens de la route (ordre des nœuds) et recalcule immédiatement son renderData. Utile pour corriger des imports.", "params": {"rIdx": {"type": "integer", "desc": "Indice de la route."}}, "returns": []},
-    "updateRoads": {"desc": "Recalcule le renderData de chaque route dirty ayant au moins 2 nœuds ; pour les ponts, met à jour aussi le maillage de pont dans le dossier de scène « Road Architect - Bridge <nom> ». À appeler à chaque frame d'édition.", "params": {}, "returns": []},
-    "clearBridges": {"desc": "Vide la table des ponts du module roadMesh (sans supprimer les objets de scène).", "params": {}, "returns": []},
-    "removeAll": {"desc": "Supprime toutes les décalcomanies, maillages de routes, statiques, ponts et tunnels, puis vide roads et la map.", "params": {}, "returns": []},
-    "manageTempRoadSection": {"desc": "Crée ou met à jour la route temporaire 'temp' (segment droit de 20 m à 1000 m d'altitude) qui montre le profil en cours d'édition, place la caméra libre dessus et la fait tourner autour. Appelée à chaque frame pendant l'audition.", "params": {"pIdx": {"type": "integer", "desc": "Indice du profil dans profileMgr.profiles."}}, "returns": []},
-    "updateBridgeParameters": {"desc": "Applique la largeur et la profondeur de pont de la route aux deux premiers nœuds (voies -1 et 1). Voir notes : bug probable de pointeur.", "params": {"road": {"type": "table", "desc": "Route de type pont."}}, "returns": []},
-    "createMultiSelect": {"desc": "Remplit roads.multi avec tous les nœuds de toutes les routes situés dans le polygone (en 2D).", "params": {"gPolygon": {"type": "table<integer, vec3>", "desc": "Sommets du polygone de sélection."}}, "returns": []},
-    "getMultiSelectionCentroid": {"desc": "Centre de la boîte englobante 3D des nœuds de la multi-sélection.", "params": {}, "returns": [{"type": "vec3", "desc": "Centre (valeurs absurdes si la sélection est vide)."}]},
-    "computeAllRoadRenderData": {"desc": "Recalcule le renderData de toutes les routes à 2 nœuds ou plus (via geometry).", "params": {}, "returns": []},
-    "computeRoadRenderDataSingle": {"desc": "Recalcule le renderData d'une seule route.", "params": {"i": {"type": "integer", "desc": "Indice de la route."}}, "returns": []},
-    "removeGroupFromRoad": {"desc": "Retire un indice de groupe placé de la liste groupIdx de la route.", "params": {"r": {"type": "table", "desc": "Route."}, "groupIdx": {"type": "integer", "desc": "Indice de groupe à retirer."}}, "returns": []},
-    "updateRoadsAfterRemovingGroup": {"desc": "Reconstruit les groupIdx de toutes les routes à partir de la liste des groupes placés restants (renumérotation après suppression d'un groupe).", "params": {"placedGroups": {"type": "table", "desc": "Liste des groupes placés, chacun avec list = {{r = nom, n = indice}, ...}."}}, "returns": []},
-    "updateMultiAfterRemove": {"desc": "Retire de roads.multi les entrées dont la route ou le nœud n'existe plus.", "params": {}, "returns": []},
-    "convertDecalRoads2RoadArchitect": {"desc": "Pour chaque DecalRoad sélectionné dans l'éditeur, crée une route Road Architect (nœuds re-paramétrés, profil selon lanesLeft/lanesRight) et l'ajoute à roads. Voir notes : les DecalRoad ne sont pas supprimés.", "params": {}, "returns": []},
-    "offsetRoads2Terrain": {"desc": "Active isConformRoadToTerrain sur toutes les routes (elles se posent sur le terrain) et les marque dirty.", "params": {}, "returns": []},
-    "offsetByValue": {"desc": "Ajoute un décalage vertical à tous les nœuds de toutes les routes et les marque dirty.", "params": {"offset": {"type": "number", "desc": "Décalage en mètres (positif = vers le haut)."}}, "returns": []},
-    "finalise": {"desc": "Passe à l'état « finalised » : recalcule tous les renderData, crée un dossier de scène par route (« Road Architect - Road <i> »), génère les maillages de ponts puis de routes, les maillages statiques et les tunnels, recharge la collision (be:reloadCollision), pose les décalcomanies puis recharge le navgraph (map.reset()).", "params": {}, "returns": []},
-    "unfinalise": {"desc": "Quitte l'état « finalised » : supprime décalcomanies, maillages, statiques et tunnels générés par finalise et revient à l'édition.", "params": {}, "returns": []},
-    "setRoadsVisibilityMaster": {"desc": "Affiche ou masque toutes les routes ordinaires (ni ponts ni overlays) en remplaçant leur isVis.", "params": {"isShow": {"type": "boolean", "desc": "true pour afficher."}}, "returns": []},
-    "setBridgesVisibilityMaster": {"desc": "Affiche ou masque tous les ponts.", "params": {"isShow": {"type": "boolean", "desc": "true pour afficher."}}, "returns": []},
-    "setOverlaysVisibilityMaster": {"desc": "Affiche ou masque tous les overlays.", "params": {"isShow": {"type": "boolean", "desc": "true pour afficher."}}, "returns": []},
-    "serialiseRoad": {"desc": "Convertit une route en table simple (valeurs plain, sans pointeurs ImGui) pour la sauvegarde JSON.", "params": {"r": {"type": "table", "desc": "Route."}}, "returns": [{"type": "table", "desc": "Route sérialisée."}]},
-    "deserialiseRoad": {"desc": "Reconstruit une route (avec pointeurs ImGui, isDirty = true) à partir d'une table sérialisée par serialiseRoad.", "params": {"rSer": {"type": "table", "desc": "Route sérialisée."}}, "returns": [{"type": "table", "desc": "Route utilisable dans roads."}]}
+    "getCurrentMap": {
+      "desc": "Returns the name/identifier of the map (level) currently stored by the module.",
+      "params": {},
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Value stored by setCurrentMap (nil at start)."
+        }
+      ]
+    },
+    "setCurrentMap": {
+      "desc": "Stores the map (level) currently loaded.",
+      "params": {
+        "cMap": {
+          "type": "any",
+          "desc": "Value to store (inferred from code)."
+        }
+      },
+      "returns": []
+    },
+    "createRoadFromProfile": {
+      "desc": "Builds a new road table from a lateral profile (updates the profile's lane flags, computes the lane keys). The road has no nodes and is not added to the list.",
+      "params": {
+        "profile": {
+          "type": "table",
+          "desc": "Lateral profile (see editor/roadArchitect/profiles)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The created road (default values: visible, 15 radial tunnel divisions, bridge half-width 5.5, depth 4, arch -6, etc.)."
+        }
+      ]
+    },
+    "createRoadFromTemplate": {
+      "desc": "Like createRoadFromProfile, but the profile is created from the name of a profile template (with an identifier generated by Engine.generateUUID()).",
+      "params": {
+        "profileTemplateName": {
+          "type": "string",
+          "desc": "Profile template name."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The created road."
+        }
+      ]
+    },
+    "computeRoadAABB_2D": {
+      "desc": "Computes the axis-aligned 2D bounding box of a road's nodes (used only by the acceleration tree).",
+      "params": {
+        "r": {
+          "type": "table",
+          "desc": "Road."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "xMin"
+        },
+        {
+          "type": "number",
+          "desc": "xMax"
+        },
+        {
+          "type": "number",
+          "desc": "yMin"
+        },
+        {
+          "type": "number",
+          "desc": "yMax"
+        }
+      ]
+    },
+    "setDirty": {
+      "desc": "Marks the road as needing recomputation (isDirty), updates the profile condition and reinserts the road into the editing quadtree (created on demand with the terrain extent, or 5000 m by default).",
+      "params": {
+        "r": {
+          "type": "table|nil",
+          "desc": "Road; does nothing if nil."
+        }
+      },
+      "returns": []
+    },
+    "setAllDirty": {
+      "desc": "Calls setDirty on all roads.",
+      "params": {},
+      "returns": []
+    },
+    "getTree": {
+      "desc": "Returns the 2D quadtree used for display culling while editing (nil if it does not exist yet).",
+      "params": {},
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "The quadtree."
+        }
+      ]
+    },
+    "removeTree": {
+      "desc": "Forgets the quadtree (it will be recreated on the next setDirty).",
+      "params": {},
+      "returns": []
+    },
+    "setAuditionProfileDirty": {
+      "desc": "Requests the rebuild of the temporary profile audition road on the next call of manageTempRoadSection.",
+      "params": {},
+      "returns": []
+    },
+    "addNodeToRoad": {
+      "desc": "Adds a node at the end of the road, with the per-lane widths/heights from the profile. Marks the road dirty.",
+      "params": {
+        "rIdx": {
+          "type": "integer",
+          "desc": "Index of the road in roads."
+        },
+        "pos": {
+          "type": "vec3",
+          "desc": "World position of the node."
+        }
+      },
+      "returns": []
+    },
+    "addNodeToRoadAtIdx": {
+      "desc": "Inserts a node at the given index of the road. Marks the road dirty.",
+      "params": {
+        "rIdx": {
+          "type": "integer",
+          "desc": "Index of the road."
+        },
+        "pos": {
+          "type": "vec3",
+          "desc": "World position."
+        },
+        "idx": {
+          "type": "integer",
+          "desc": "Insertion index in route.nodes (table.insert)."
+        }
+      },
+      "returns": []
+    },
+    "isMouseAtIntermediatePos": {
+      "desc": "Tests whether the mouse position is close (2D tolerance 3.5 m) to a segment of the road, between two nodes, to offer node insertion.",
+      "params": {
+        "rIdx": {
+          "type": "integer",
+          "desc": "Index of the road."
+        },
+        "mousePos": {
+          "type": "vec3",
+          "desc": "Mouse position on the map."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the mouse is over a segment."
+        },
+        {
+          "type": "vec3|nil",
+          "desc": "Interpolated position on the segment."
+        },
+        {
+          "type": "integer|nil",
+          "desc": "Index of the node following the point found."
+        }
+      ]
+    },
+    "setLocalWidth": {
+      "desc": "Changes the width of all 'road_lane' type lanes of a node: new width = starting width + offset, bounded to [0.5, 10].",
+      "params": {
+        "rIdx": {
+          "type": "integer",
+          "desc": "Index of the road."
+        },
+        "nIdx": {
+          "type": "integer",
+          "desc": "Index of the node."
+        },
+        "offset": {
+          "type": "number",
+          "desc": "Lane width change, in meters."
+        }
+      },
+      "returns": []
+    },
+    "copyNode": {
+      "desc": "Deep copy of a node (new ImGui pointers and new vec3).",
+      "params": {
+        "n": {
+          "type": "table",
+          "desc": "Node."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy of the node."
+        }
+      ]
+    },
+    "updateWAndHToNewProfile": {
+      "desc": "Resets the per-lane widths and heights of all the road's nodes according to its current profile (after a profile change).",
+      "params": {
+        "road": {
+          "type": "table",
+          "desc": "Road."
+        }
+      },
+      "returns": []
+    },
+    "computeAABB2D": {
+      "desc": "2D bounding box of a road's nodes. Returns nil for a bridge or an overlay. (The comment says the profile width is included, but the code only takes the nodes into account.)",
+      "params": {
+        "rIdx": {
+          "type": "integer",
+          "desc": "Index of the road."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{xMin, xMax, yMin, yMax} or nil."
+        }
+      ]
+    },
+    "getRoadsFromGroup": {
+      "desc": "Returns the roads (without duplicates) belonging to a placed group; if group is nil, returns all the session's roads.",
+      "params": {
+        "group": {
+          "type": "table|nil",
+          "desc": "Group with group.list = list of entries {r = road name, n = node index}."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of roads."
+        }
+      ]
+    },
+    "recomputeMap": {
+      "desc": "Rebuilds the name -> index table (roads.map). To be called after any manual insertion/removal in roads.",
+      "params": {},
+      "returns": []
+    },
+    "removeRoad": {
+      "desc": "Deletes a road by its name: removes decals, road and static meshes, quadtree entry, possible bridge folder, then the entry in roads and rebuilds the map.",
+      "params": {
+        "roadName": {
+          "type": "string",
+          "desc": "Name (identifier) of the road, not its displayName."
+        }
+      },
+      "returns": []
+    },
+    "removeNode": {
+      "desc": "Removes a node from a road (table.remove). Does not mark the road dirty.",
+      "params": {
+        "rIdx": {
+          "type": "integer",
+          "desc": "Index of the road."
+        },
+        "nIdx": {
+          "type": "integer",
+          "desc": "Index of the node."
+        }
+      },
+      "returns": []
+    },
+    "addIntermediateNode": {
+      "desc": "Adds a node between the selected node and its neighbor (midpoint, averaged values). At the ends of the road, copies the node and places it 3 m further along the road axis.",
+      "params": {
+        "rIdx": {
+          "type": "integer",
+          "desc": "Index of the road."
+        },
+        "nIdx": {
+          "type": "integer",
+          "desc": "Index of the selected node."
+        },
+        "lie": {
+          "type": "string",
+          "desc": "'above' (with the previous node) or 'below' (with the next node)."
+        }
+      },
+      "returns": []
+    },
+    "clearAllRoads": {
+      "desc": "Deletes all roads that are not junction roads (isJctRoad).",
+      "params": {},
+      "returns": []
+    },
+    "removeHiddenRoads": {
+      "desc": "Removes from roads all hidden roads (isHidden) and their meshes, then recomputes the map.",
+      "params": {},
+      "returns": []
+    },
+    "goToRoad": {
+      "desc": "Places the free camera directly above the center of the road, at a height that frames the whole road (according to the field of view). Does nothing if the road is too small (less than 0.1 m extent).",
+      "params": {
+        "rIdx": {
+          "type": "integer",
+          "desc": "Index of the road."
+        }
+      },
+      "returns": []
+    },
+    "moveRoad": {
+      "desc": "Translates a road: either rigidly (all unlocked nodes), or as a force field (the central node follows the mouse, the others move proportionally to the distance, up to the first locked node). Marks the road dirty.",
+      "params": {
+        "road": {
+          "type": "table",
+          "desc": "Road (table, not an index)."
+        },
+        "nodeIdx": {
+          "type": "integer",
+          "desc": "Grabbed node."
+        },
+        "mouseNow": {
+          "type": "vec3",
+          "desc": "Current mouse position."
+        },
+        "mouseLast": {
+          "type": "vec3",
+          "desc": "Previous position."
+        }
+      },
+      "returns": []
+    },
+    "adjustHeight": {
+      "desc": "Changes the height of a node (bounded to ±1000 m) and propagates the change to the other nodes (rigid or force field). Marks dirty.",
+      "params": {
+        "hNew": {
+          "type": "number",
+          "desc": "New height of the central node, in meters."
+        },
+        "hOld": {
+          "type": "number",
+          "desc": "Old height (used to compute the change dz)."
+        },
+        "nIdx": {
+          "type": "integer",
+          "desc": "Index of the central node."
+        },
+        "rIdx": {
+          "type": "integer",
+          "desc": "Index of the road."
+        }
+      },
+      "returns": []
+    },
+    "adjustLateralRotation": {
+      "desc": "Changes the lateral rotation (banking) of a node and propagates it to the others (bounded to ±50 degrees). No effect if the profile is in auto-banking.",
+      "params": {
+        "rotNew": {
+          "type": "number",
+          "desc": "New rotation of the central node, in degrees."
+        },
+        "rotOld": {
+          "type": "number",
+          "desc": "Old rotation."
+        },
+        "nIdx": {
+          "type": "integer",
+          "desc": "Index of the central node."
+        },
+        "rIdx": {
+          "type": "integer",
+          "desc": "Index of the road."
+        }
+      },
+      "returns": []
+    },
+    "copyRoad": {
+      "desc": "Deep copy of a road (nodes, profile, options, bridge/tunnel parameters). The name is kept identical, renderData is emptied, tunnels is empty and isDirty = true.",
+      "params": {
+        "r": {
+          "type": "table",
+          "desc": "Road."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy of the road."
+        }
+      ]
+    },
+    "splitRoad": {
+      "desc": "Cuts a road at the given node into two new roads ([A] and [B], each with a copy of the cut node pushed back by 1 m), deletes the old road and adds them to roads. Useful for creating junctions.",
+      "params": {
+        "rIdx": {
+          "type": "integer",
+          "desc": "Index of the road."
+        },
+        "nIdx": {
+          "type": "integer",
+          "desc": "Index of the cut node; must have a neighbor on each side (the code reads nodes[nIdx-1] and nodes[nIdx+1])."
+        }
+      },
+      "returns": []
+    },
+    "flipRoad": {
+      "desc": "Reverses the direction of the road (node order) and immediately recomputes its renderData. Useful for fixing imports.",
+      "params": {
+        "rIdx": {
+          "type": "integer",
+          "desc": "Index of the road."
+        }
+      },
+      "returns": []
+    },
+    "updateRoads": {
+      "desc": "Recomputes the renderData of each dirty road having at least 2 nodes; for bridges, also updates the bridge mesh in the scene folder \"Road Architect - Bridge <name>\". To be called every editing frame.",
+      "params": {},
+      "returns": []
+    },
+    "clearBridges": {
+      "desc": "Empties the bridges table of the roadMesh module (without deleting the scene objects).",
+      "params": {},
+      "returns": []
+    },
+    "removeAll": {
+      "desc": "Deletes all decals, road meshes, statics, bridges and tunnels, then empties roads and the map.",
+      "params": {},
+      "returns": []
+    },
+    "manageTempRoadSection": {
+      "desc": "Creates or updates the temporary road 'temp' (20 m straight segment at 1000 m altitude) that shows the profile being edited, places the free camera on it and makes it rotate around. Called every frame during the audition.",
+      "params": {
+        "pIdx": {
+          "type": "integer",
+          "desc": "Index of the profile in profileMgr.profiles."
+        }
+      },
+      "returns": []
+    },
+    "updateBridgeParameters": {
+      "desc": "Applies the road's bridge width and depth to the first two nodes (lanes -1 and 1). See notes: probable pointer bug.",
+      "params": {
+        "road": {
+          "type": "table",
+          "desc": "Bridge type road."
+        }
+      },
+      "returns": []
+    },
+    "createMultiSelect": {
+      "desc": "Fills roads.multi with all the nodes of all roads located inside the polygon (in 2D).",
+      "params": {
+        "gPolygon": {
+          "type": "table<integer, vec3>",
+          "desc": "Vertices of the selection polygon."
+        }
+      },
+      "returns": []
+    },
+    "getMultiSelectionCentroid": {
+      "desc": "Center of the 3D bounding box of the multi-selection nodes.",
+      "params": {},
+      "returns": [
+        {
+          "type": "vec3",
+          "desc": "Center (nonsensical values if the selection is empty)."
+        }
+      ]
+    },
+    "computeAllRoadRenderData": {
+      "desc": "Recomputes the renderData of all roads with 2 or more nodes (via geometry).",
+      "params": {},
+      "returns": []
+    },
+    "computeRoadRenderDataSingle": {
+      "desc": "Recomputes the renderData of a single road.",
+      "params": {
+        "i": {
+          "type": "integer",
+          "desc": "Index of the road."
+        }
+      },
+      "returns": []
+    },
+    "removeGroupFromRoad": {
+      "desc": "Removes a placed group index from the road's groupIdx list.",
+      "params": {
+        "r": {
+          "type": "table",
+          "desc": "Road."
+        },
+        "groupIdx": {
+          "type": "integer",
+          "desc": "Group index to remove."
+        }
+      },
+      "returns": []
+    },
+    "updateRoadsAfterRemovingGroup": {
+      "desc": "Rebuilds the groupIdx of all roads from the list of remaining placed groups (renumbering after a group is deleted).",
+      "params": {
+        "placedGroups": {
+          "type": "table",
+          "desc": "List of placed groups, each with list = {{r = name, n = index}, ...}."
+        }
+      },
+      "returns": []
+    },
+    "updateMultiAfterRemove": {
+      "desc": "Removes from roads.multi the entries whose road or node no longer exists.",
+      "params": {},
+      "returns": []
+    },
+    "convertDecalRoads2RoadArchitect": {
+      "desc": "For each DecalRoad selected in the editor, creates a Road Architect road (re-parameterized nodes, profile according to lanesLeft/lanesRight) and adds it to roads. See notes: the DecalRoads are not deleted.",
+      "params": {},
+      "returns": []
+    },
+    "offsetRoads2Terrain": {
+      "desc": "Enables isConformRoadToTerrain on all roads (they sit on the terrain) and marks them dirty.",
+      "params": {},
+      "returns": []
+    },
+    "offsetByValue": {
+      "desc": "Adds a vertical offset to all nodes of all roads and marks them dirty.",
+      "params": {
+        "offset": {
+          "type": "number",
+          "desc": "Offset in meters (positive = upward)."
+        }
+      },
+      "returns": []
+    },
+    "finalise": {
+      "desc": "Switches to the \"finalised\" state: recomputes all renderData, creates a scene folder per road (\"Road Architect - Road <i>\"), generates the bridge meshes then road meshes, the static meshes and the tunnels, reloads the collision (be:reloadCollision), places the decals then reloads the navgraph (map.reset()).",
+      "params": {},
+      "returns": []
+    },
+    "unfinalise": {
+      "desc": "Leaves the \"finalised\" state: removes the decals, meshes, statics and tunnels generated by finalise and goes back to editing.",
+      "params": {},
+      "returns": []
+    },
+    "setRoadsVisibilityMaster": {
+      "desc": "Shows or hides all ordinary roads (neither bridges nor overlays) by overwriting their isVis.",
+      "params": {
+        "isShow": {
+          "type": "boolean",
+          "desc": "true to show."
+        }
+      },
+      "returns": []
+    },
+    "setBridgesVisibilityMaster": {
+      "desc": "Shows or hides all bridges.",
+      "params": {
+        "isShow": {
+          "type": "boolean",
+          "desc": "true to show."
+        }
+      },
+      "returns": []
+    },
+    "setOverlaysVisibilityMaster": {
+      "desc": "Shows or hides all overlays.",
+      "params": {
+        "isShow": {
+          "type": "boolean",
+          "desc": "true to show."
+        }
+      },
+      "returns": []
+    },
+    "serialiseRoad": {
+      "desc": "Converts a road to a plain table (plain values, without ImGui pointers) for JSON saving.",
+      "params": {
+        "r": {
+          "type": "table",
+          "desc": "Road."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Serialized road."
+        }
+      ]
+    },
+    "deserialiseRoad": {
+      "desc": "Rebuilds a road (with ImGui pointers, isDirty = true) from a table serialized by serialiseRoad.",
+      "params": {
+        "rSer": {
+          "type": "table",
+          "desc": "Serialized road."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Road usable in roads."
+        }
+      ]
+    }
   }
 }

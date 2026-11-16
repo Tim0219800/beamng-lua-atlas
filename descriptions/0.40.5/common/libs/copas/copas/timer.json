@@ -1,25 +1,46 @@
 {
   "path": "lua/common/libs/copas/copas/timer.lua",
-  "module": "Sous-module de la bibliothèque tierce Copas : minuteries (ponctuelles ou récurrentes) exécutées dans le répartiteur Copas. timer.new arme immédiatement un timer qui appellera callback(timer_obj, params) après le délai. Le module renvoie la table timer.",
-  "usage": "local timer = require(\"libs/copas/copas/timer\")\nlocal t = timer.new({delay = 2, recurring = true, callback = function(self, p) print(\"tic\") end})\nt:cancel()",
+  "module": "Submodule of the third-party Copas library: timers (one-shot or recurring) run in the Copas dispatcher. timer.new immediately arms a timer that will call callback(timer_obj, params) after the delay. The module returns the table timer.",
+  "usage": "local timer = require(\"libs/copas/copas/timer\")\nlocal t = timer.new({delay = 2, recurring = true, callback = function(self, p) print(\"tick\") end})\nt:cancel()",
   "notes": [
-    "new lève une erreur (assert) si delay < 0 ou si callback n'est pas une fonction."
+    "new raises an error (assert) if delay < 0 or if callback is not a function."
   ],
   "fields": {
-    "__index": {"type": "table", "desc": "Métatable des objets timer."}
+    "__index": {
+      "type": "table",
+      "desc": "Metatable of the timer objects."
+    }
   },
   "functions": {
     "new": {
-      "desc": "Crée et arme un timer.",
+      "desc": "Creates and arms a timer.",
       "params": {
-        "opts": {"type": "table", "desc": "{delay (s), callback, recurring?, params?, initial_delay? (défaut delay)}"}
+        "opts": {
+          "type": "table",
+          "desc": "{delay (s), callback, recurring?, params?, initial_delay? (default delay)}"
+        }
       },
-      "returns": [{"type": "table", "desc": "Objet timer"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Timer object"
+        }
+      ]
     },
     "cancel": {
-      "desc": "Annule un timer actif (retire sa coroutine du répartiteur).",
-      "params": {"self": {"type": "table", "desc": "Le timer (timer:cancel())"}},
-      "returns": [{"type": "table|nil", "desc": "Le timer, ou nil + erreur si déjà annulé"}]
+      "desc": "Cancels an active timer (removes its coroutine from the dispatcher).",
+      "params": {
+        "self": {
+          "type": "table",
+          "desc": "The timer (timer:cancel())"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "The timer, or nil + error if already cancelled"
+        }
+      ]
     }
   }
 }

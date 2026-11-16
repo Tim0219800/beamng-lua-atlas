@@ -1,73 +1,73 @@
 # `energyStorage_pressureTank`
 
-*Fichier : `lua/vehicle/energyStorage/pressureTank.lua` · VM : Véhicule · 399 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/energyStorage/pressureTank.lua` · VM: Vehicle · 399 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de stockage d'énergie `pressureTank`, accessible par `energyStorage.getStorage("nom")`
+**Access:** energy storage type `pressureTank`, reachable with `energyStorage.getStorage("name")`
 
-Type de stockage d'énergie 'pressureTank' : réservoir de gaz sous pression (air comprimé des camions, remorques, suspensions pneumatiques). L'énergie vaut P·V (loi des gaz parfaits, tient compte de la pression et température ambiantes du powertrain), le réservoir peut fuir (rupture de poutre ou déformation) et peut alimenter ou être alimenté par un autre véhicule via un coupleur (pneumatic PTO, synchronisation par electrics). Instancié par energyStorage.lua pour `type = "pressureTank"`.
+Energy storage type 'pressureTank': pressurized gas tank (compressed air for trucks, trailers, air suspensions). Energy equals P·V (ideal gas law, takes into account the powertrain's ambient pressure and temperature), the tank can leak (beam break or deformation) and can feed or be fed by another vehicle via a coupler (pneumatic PTO, synchronization through electrics). Instantiated by energyStorage.lua for `type = "pressureTank"`.
 
-## Exemple
+## Example
 
 ```lua
 local tank = energyStorage.getStorage("airTank")
 local relativePressurePa = electrics.values[tank.pressureElectricName]  -- "airTank_pressureRelative"
-tank:toggleConsumerPressureCoef()  -- coupe/rétablit l'alimentation de la remorque
+tank:toggleConsumerPressureCoef()  -- cuts/restores the trailer supply
 ```
 
-## Remarques
+## Notes
 
-- Champs jbeam lus : name, type, energyType (défaut 'air'), gasMolarMass (g/mol, défaut 28,9647), capacity (volume en m³), maxPressure (Pa, défaut 1 000 000), startingPressure (Pa relatif, ajoute la pression ambiante), isPrimarySupply, breakTriggerBeam, tankDamageDeformGroup, showDebugGraph, nodes._engineGroup_nodes, pneumaticPTOPressureBaseSyncName, pneumaticPTOFlowBaseSyncName, pneumaticPTOSupplyCouplerNodeNames, pneumaticPTOConsumerCouplerNodeNames, consumerPressureDiffFlowRateCoef (défaut 1e-6).
-- Électricité publiée : <nom>_pressureRelative (pression - pression ambiante, Pa), <nom>_pressureConsumer (pression envoyée aux consommateurs), <nom>_pressureConsumerCoef, et les clés de synchronisation <base>_<objectId> (pneumaticPTOPressure_<id>, pneumaticPTOFlow_<id>).
-- Rôles : une citerne avec isPrimarySupply est source (supplyPressure = pression propre). Au couplage sur un nœud de pneumaticPTOSupplyCouplerNodeNames elle devient consommatrice d'un autre véhicule, sur un nœud de pneumaticPTOConsumerCouplerNodeNames elle devient fournisseur. Un seul consommateur par fournisseur est supporté (TODO dans le code).
-- Unités : storedEnergy et energyCapacity en J (= Pa·m³), capacity en m³, pression en Pa, remainingMass en kg, maxLeakRate = capacity / 3 (m³/s, le commentaire du code dit 5 secondes).
-- Les fuites sont signalées dans damageTracker : groupe 'pressureTank', noms 'breakLeak' et 'deformationLeak'.
-- Anomalie : setConsumerPressureCoef utilise `coef > 0` (valeur non bornée) pour le message d'activation alors que la valeur stockée est bornée entre 0 et 1.
-- Anomalie : onCouplerAttached déclare le dernier paramètre `attachForce`, mais energyStorage.lua lui transmet attachEnergy.
+- jbeam fields read: name, type, energyType (default 'air'), gasMolarMass (g/mol, default 28.9647), capacity (volume in m³), maxPressure (Pa, default 1,000,000), startingPressure (relative Pa, adds the ambient pressure), isPrimarySupply, breakTriggerBeam, tankDamageDeformGroup, showDebugGraph, nodes._engineGroup_nodes, pneumaticPTOPressureBaseSyncName, pneumaticPTOFlowBaseSyncName, pneumaticPTOSupplyCouplerNodeNames, pneumaticPTOConsumerCouplerNodeNames, consumerPressureDiffFlowRateCoef (default 1e-6).
+- Published electrics: <name>_pressureRelative (pressure - ambient pressure, Pa), <name>_pressureConsumer (pressure sent to consumers), <name>_pressureConsumerCoef, and the synchronization keys <base>_<objectId> (pneumaticPTOPressure_<id>, pneumaticPTOFlow_<id>).
+- Roles: a tank with isPrimarySupply is a source (supplyPressure = own pressure). When coupled on a node of pneumaticPTOSupplyCouplerNodeNames it becomes a consumer of another vehicle, on a node of pneumaticPTOConsumerCouplerNodeNames it becomes a supplier. Only one consumer per supplier is supported (TODO in the code).
+- Units: storedEnergy and energyCapacity in J (= Pa·m³), capacity in m³, pressure in Pa, remainingMass in kg, maxLeakRate = capacity / 3 (m³/s, the code comment says 5 seconds).
+- Leaks are reported in damageTracker: group 'pressureTank', names 'breakLeak' and 'deformationLeak'.
+- Anomaly: setConsumerPressureCoef uses `coef > 0` (unclamped value) for the activation message while the stored value is clamped between 0 and 1.
+- Anomaly: onCouplerAttached declares the last parameter `attachForce`, but energyStorage.lua passes it attachEnergy.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `energyStorage_pressureTank.new(jbeamData)` | Crée l'instance de réservoir sous pression, calcule énergie, masse et noms d'electrics, et initialise les valeurs electrics et dommages. *(interne)* | 268 |
+| `energyStorage_pressureTank.new(jbeamData)` | Creates the pressure tank instance, computes energy, mass and electrics names, and initializes the electrics values and damages. *(internal)* | 268 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `energyStorage_pressureTank.new(jbeamData)`
 
-Crée l'instance de réservoir sous pression, calcule énergie, masse et noms d'electrics, et initialise les valeurs electrics et dommages.
+Creates the pressure tank instance, computes energy, mass and electrics names, and initializes the electrics values and damages.
 
-- `jbeamData` (*table*) : Données jbeam fusionnées du stockage.
-- **renvoie** : table Instance de stockage (classe 'storage').
+- `jbeamData` (*table*) : Merged jbeam data of the storage.
+- **returns**: table Storage instance ('storage' class).
 
-## Classe `storage`
+## Class `storage`
 
-Instance renvoyée par new(jbeamData). Champs notables : name, type, energyType, capacity (m³), storedEnergy (J), energyCapacity (J), initialStoredEnergy, remainingMass (kg), remainingRatio, currentPressure (Pa absolu), supplyPressure, maxWorkingPressure, currentLeakRate, maxLeakRate, consumerPressureCoef (0 à 1), pressureElectricName, pressureConsumerElectricName, pressureConsumerCoefElectricName.
+Instance returned by new(jbeamData). Notable fields: name, type, energyType, capacity (m³), storedEnergy (J), energyCapacity (J), initialStoredEnergy, remainingMass (kg), remainingRatio, currentPressure (absolute Pa), supplyPressure, maxWorkingPressure, currentLeakRate, maxLeakRate, consumerPressureCoef (0 to 1), pressureElectricName, pressureConsumerElectricName, pressureConsumerCoefElectricName.
 
-Objet `storage` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `storage` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `storage:deserialize(data)` | Restaure remainingMass si présent. | 258 |
-| `storage:getPartCondition()` | Renvoie l'intégrité (toujours 1) et {storedEnergy}. | 215 |
-| `storage:getRemainingMass()` | Renvoie la masse de gaz restante. | 166 |
-| `storage:onBreak()` | Appelé à la rupture d'une poutre déclencheuse : fuite maximale et dommage 'breakLeak'. | 194 |
-| `storage:onCouplerAttached(nodeId, obj2id, obj2nodeId, attachForce)` | Hook de couplage : si le nœud est un nœud d'alimentation, crée les noms electrics de synchronisation avec le véhicule fournisseur et demande l'export de la pression ; si c'est un nœud consommateur, initialise pression et débit et demande l'export du débit. | 116 |
-| `storage:onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook de détachement : supprime les electrics de synchronisation côté consommateur (supplyPressure remis à 0) ou le débit côté fournisseur. | 142 |
-| `storage:registerDevice(device)` | Enregistre un périphérique dans assignedDevices. | 199 |
-| `storage:reset()` | Remet le réservoir à sa pression de départ, supprime fuites et synchronisations, réinitialise les electrics et les dommages. | 224 |
-| `storage:serialize()` | Renvoie {remainingMass}. | 264 |
-| `storage:setConsumerPressureCoef(coef)` | Fixe le coefficient de pression envoyée aux consommateurs (borné 0 à 1) et affiche un message UI (trailerAir enabled/disabled). | 185 |
-| `storage:setPartCondition(odometer, integrity, visual)` | Restaure storedEnergy depuis la condition de pièce (nombre = fraction de energyCapacity, ou table {storedEnergy}). | 203 |
-| `storage:setRemainingMass(mass)` | Fixe la masse de gaz (convertie en moles puis en énergie). | 170 |
-| `storage:setRemainingRatio(ratio)` | Fixe le taux de remplissage par rapport à la pression maximale. | 179 |
-| `storage:toggleConsumerPressureCoef()` | Bascule entre 0 et 1 pour consumerPressureCoef. | 190 |
-| `storage:updateEnergy(molarQuantity)` | Recalcule storedEnergy, remainingMass et remainingRatio à la température ambiante courante. Sans argument, déduit la quantité de gaz de l'énergie actuelle et de l'ancienne température. | 101 |
-| `storage:updateGFX(dt)` | Appelé chaque frame : calcule la pression, synchronise avec les fournisseurs/consommateurs, applique la fuite (rupture ou déformation), met à jour énergie et masse des nœuds et publie la pression relative dans electrics. | 58 |
-| `storage:updateTankSync(dt)` | Côté consommateur : équilibre l'énergie avec la pression d'alimentation du fournisseur et publie le débit ; côté fournisseur : publie la pression envoyée au consommateur et retire l'énergie correspondant au débit reçu. | 16 |
+| `storage:deserialize(data)` | Restores remainingMass if present. | 258 |
+| `storage:getPartCondition()` | Returns the integrity (always 1) and {storedEnergy}. | 215 |
+| `storage:getRemainingMass()` | Returns the remaining gas mass. | 166 |
+| `storage:onBreak()` | Called when a trigger beam breaks: maximum leak and 'breakLeak' damage. | 194 |
+| `storage:onCouplerAttached(nodeId, obj2id, obj2nodeId, attachForce)` | Coupling hook: if the node is a supply node, creates the synchronization electrics names with the supplier vehicle and requests the pressure export; if it is a consumer node, initializes pressure and flow and requests the flow export. | 116 |
+| `storage:onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Detach hook: removes the synchronization electrics on the consumer side (supplyPressure reset to 0) or the flow on the supplier side. | 142 |
+| `storage:registerDevice(device)` | Registers a device in assignedDevices. | 199 |
+| `storage:reset()` | Resets the tank to its starting pressure, removes leaks and synchronizations, reinitializes the electrics and damages. | 224 |
+| `storage:serialize()` | Returns {remainingMass}. | 264 |
+| `storage:setConsumerPressureCoef(coef)` | Sets the pressure coefficient sent to consumers (clamped 0 to 1) and displays a UI message (trailerAir enabled/disabled). | 185 |
+| `storage:setPartCondition(odometer, integrity, visual)` | Restores storedEnergy from the part condition (number = fraction of energyCapacity, or table {storedEnergy}). | 203 |
+| `storage:setRemainingMass(mass)` | Sets the gas mass (converted to moles then to energy). | 170 |
+| `storage:setRemainingRatio(ratio)` | Sets the fill ratio relative to the maximum pressure. | 179 |
+| `storage:toggleConsumerPressureCoef()` | Toggles consumerPressureCoef between 0 and 1. | 190 |
+| `storage:updateEnergy(molarQuantity)` | Recomputes storedEnergy, remainingMass and remainingRatio at the current ambient temperature. Without an argument, deduces the gas quantity from the current energy and the old temperature. | 101 |
+| `storage:updateGFX(dt)` | Called every frame: computes the pressure, synchronizes with suppliers/consumers, applies the leak (break or deformation), updates energy and node mass and publishes the relative pressure in electrics. | 58 |
+| `storage:updateTankSync(dt)` | Consumer side: balances the energy with the supplier's supply pressure and publishes the flow; supplier side: publishes the pressure sent to the consumer and removes the energy corresponding to the received flow. | 16 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `setNodeMass`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/energyStorage/pressureTank.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/energyStorage/pressureTank.lua`.*

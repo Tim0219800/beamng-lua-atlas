@@ -1,0 +1,123 @@
+{
+  "path": "lua/ge/extensions/freeroam/facilities.lua",
+  "module": "Registre des « facilities » (installations) d'un niveau : garages, stations-service, concessions, ordinateurs, vendeurs privés, fournisseurs de livraison et dragstrips. Lit la section de ces listes dans `<niveau>/info.json` et dans `<niveau>/facilities/*.facilities.json`, normalise chaque entrée (id, aperçu, fichier de sites), puis donne accès aux positions (portes, places de parking, zones), à la téléportation au garage et à la génération des POI (marqueurs de grande carte / jeu). Global : freeroam_facilities.",
+  "usage": "local garage = freeroam_facilities.getGarage('mongarage')\nlocal spots = freeroam_facilities.getParkingSpotsForFacility(garage)\nfor _, g in ipairs(freeroam_facilities.getFacilitiesByType('gasStation')) do print(g.id) end",
+  "notes": [
+    "Types -> listes : garage/garages, gasStation/gasStations, dealership/dealerships, computer/computers, privateSeller/privateSellers, deliveryProvider/deliveryProviders, dragstrip/dragstrips.",
+    "Les facilities sont mises en cache par niveau (facilitiesByLevel) et ne sont donc lues qu'une fois par session.",
+    "Normalisation : id par défaut = « <dossier><fichier>-<type>-<index> » ; preview par défaut 'defaultFacility.jpg' (cherché à côté du fichier puis dans le dossier du niveau, sinon /ui/images/noPreview.jpg) ; sitesFile par défaut 'facilities.sites.json' (chaîne ou liste) ; zoneNames et parkingSpotNames par défaut {}.",
+    "BUG : formatFacilityToRawPoi appelle M[<clusterType>..'FormatFacility'](f, elements) et attend un élément en retour, mais les fonctions zoneMarkerFormatFacility, walkingMarkerFormatFacility et vehicleTriggerFormatFacility ne renvoient rien (elles insèrent directement dans `elements`) : `e` est toujours nil, les valeurs par défaut de facilityPoiDefaults ne sont donc jamais appliquées par ce chemin. Pour clusterType 'gasStationMarker' la fonction M.gasStationMarkerFormatFacility n'existe pas dans ce fichier (erreur d'appel de nil).",
+    "BUG : dans zoneMarkerFormatFacility, le message d'erreur utilise `data.id` alors que `data` n'est pas défini (variable globale nil -> erreur à l'exécution en cas d'échec).",
+    "BUG mineur : dans getZonesForFacility, le message de log « Missing Spot… » utilise `v`, variable non définie (affiche nil) au lieu de zoneName.",
+    "Hors carrière (career_career.isActive() faux), onGetRawPoiListForLevel ne publie que les dragstrips ; concessions et ordinateurs seulement en carrière. Le tutoriel dragstrip est cherché en dur sur le niveau 'west_coast_usa'.",
+    "doors : liste de paires {nomObjetScène, ?, rayon} ; le rayon par défaut utilisé est 6 m."
+  ],
+  "functions": {
+    "getFacilities": {
+      "desc": "Charge (cache) et renvoie toutes les facilities d'un niveau, sous forme de table de listes (garages, gasStations, dealerships, computers, privateSellers, deliveryProviders, dragstrips).",
+      "params": {"levelName": {"type": "string", "desc": "Nom du niveau."}},
+      "returns": [{"type": "table<string, table[]>", "desc": "Listes par type."}],
+      "internal": false
+    },
+    "getFacility": {
+      "desc": "Cherche une facility par type et id dans le niveau courant ; log d'erreur si le type est invalide ou l'id introuvable.",
+      "params": {"type": {"type": "string", "desc": "garage, gasStation, dealership, computer, privateSeller, deliveryProvider ou dragstrip."}, "id": {"type": "string", "desc": "Id de la facility."}},
+      "returns": [{"type": "table|nil", "desc": "Facility."}],
+      "internal": false
+    },
+    "getFacilitiesByType": {
+      "desc": "Liste des facilities d'un type pour un niveau (niveau courant par défaut).",
+      "params": {"type": {"type": "string", "desc": "Type de facility."}, "levelName": {"type": "string|nil", "desc": "Niveau (défaut getCurrentLevelIdentifier())."}},
+      "returns": [{"type": "table[]|nil", "desc": "Liste, nil sans niveau."}],
+      "internal": false
+    },
+    "getGarage": {
+      "desc": "Raccourci getFacility('garage', id).",
+      "params": {"id": {"type": "string", "desc": "Id du garage."}},
+      "returns": [{"type": "table|nil", "desc": "Garage."}],
+      "internal": false
+    },
+    "getGasStation": {
+      "desc": "Raccourci getFacility('gasStation', id).",
+      "params": {"id": {"type": "string", "desc": "Id de la station."}},
+      "returns": [{"type": "table|nil", "desc": "Station."}],
+      "internal": false
+    },
+    "getDealership": {
+      "desc": "Raccourci getFacility('dealership', id).",
+      "params": {"id": {"type": "string", "desc": "Id de la concession."}},
+      "returns": [{"type": "table|nil", "desc": "Concession."}],
+      "internal": false
+    },
+    "getAverageDoorPositionForFacility": {
+      "desc": "Moyenne des positions des objets de scène listés dans facility.doors ; vec3 nul avec log d'erreur s'il n'y en a aucun.",
+      "params": {"facility": {"type": "table", "desc": "Facility avec `doors`."}},
+      "returns": [{"type": "vec3", "desc": "Position moyenne."}],
+      "internal": false
+    },
+    "getClosestDoorPositionForFacility": {
+      "desc": "Position de la porte la plus proche de la caméra (core_camera.getPosition).",
+      "params": {"facility": {"type": "table", "desc": "Facility avec `doors`."}},
+      "returns": [{"type": "vec3|nil", "desc": "Position ou nil."}],
+      "internal": false
+    },
+    "getParkingSpotsForFacility": {
+      "desc": "Charge les fichiers de sites de la facility (gameplay_sites_sitesManager.loadSites) et renvoie les places de parking dont les noms sont dans facility.parkingSpotNames.",
+      "params": {"facility": {"type": "table", "desc": "Facility."}},
+      "returns": [{"type": "table[]", "desc": "Places de parking trouvées (non manquantes)."}],
+      "internal": false
+    },
+    "getZonesForFacility": {
+      "desc": "Idem pour les zones listées dans facility.zoneNames.",
+      "params": {"facility": {"type": "table", "desc": "Facility."}},
+      "returns": [{"type": "table[]", "desc": "Zones trouvées."}],
+      "internal": false
+    },
+    "getGaragePosRot": {
+      "desc": "Meilleure place de parking (pour le véhicule) du garage dont l'id est poi.id.",
+      "params": {"poi": {"type": "table", "desc": "{id = idGarage}"}, "veh": {"type": "userdata|nil", "desc": "Véhicule (défaut joueur 0)."}},
+      "returns": [{"type": "vec3|nil", "desc": "Position."}, {"type": "quat|nil", "desc": "Rotation."}],
+      "internal": false
+    },
+    "teleportToGarage": {
+      "desc": "Téléporte un véhicule au garage (spawn.safeTeleport), réinitialise la caméra, émet onTeleportedToGarage(garageId, veh) et recadre la navigation de la grande carte si un itinéraire est actif.",
+      "params": {"garageId": {"type": "string", "desc": "Id du garage."}, "veh": {"type": "userdata", "desc": "Véhicule."}, "resetVeh": {"type": "boolean|nil", "desc": "Réparer/réinitialiser le véhicule."}},
+      "internal": false
+    },
+    "zoneMarkerFormatFacility": {
+      "desc": "Ajoute à `elements` un POI à marqueur de zone (zones, centre = milieu de la boîte englobante posé sur le terrain, rayon) et un marqueur de grande carte avec téléportation au garage.",
+      "params": {"f": {"type": "table", "desc": "Facility."}, "elements": {"type": "table[]", "desc": "Liste de POI à compléter."}, "bigMapIcon": {"type": "string|nil", "desc": "Non utilisé."}},
+      "internal": false
+    },
+    "walkingMarkerFormatFacility": {
+      "desc": "Ajoute à `elements` un POI à marqueur piéton (centre des portes, rayon = distance max + rayon de porte) et marqueur de grande carte.",
+      "params": {"f": {"type": "table", "desc": "Facility avec `doors`."}, "elements": {"type": "table[]", "desc": "Liste à compléter."}},
+      "internal": false
+    },
+    "vehicleTriggerFormatFacility": {
+      "desc": "Idem walkingMarkerFormatFacility mais avec un marqueur de type vehicleTrigger (dragstrips).",
+      "params": {"f": {"type": "table", "desc": "Facility avec `doors`."}, "elements": {"type": "table[]", "desc": "Liste à compléter."}},
+      "internal": false
+    },
+    "formatFacilityToRawPoi": {
+      "desc": "Tente de formater une facility selon son clusterType par défaut et d'y appliquer les valeurs par défaut de facilityPoiDefaults (clusterInBigMap, interactableInPlayMode, quickTravelAvailable…). Voir le bug dans les notes.",
+      "params": {"f": {"type": "table|nil", "desc": "Facility."}, "elements": {"type": "table[]", "desc": "Liste de POI."}},
+      "internal": false
+    },
+    "onGetRawPoiListForLevel": {
+      "desc": "Hook de collecte des POI d'un niveau : concessions (hors remotePurchaseOnly) et ordinateurs en carrière, dragstrips toujours.",
+      "params": {"levelIdentifier": {"type": "string", "desc": "Niveau."}, "elements": {"type": "table[]", "desc": "Liste à compléter."}},
+      "internal": true
+    },
+    "onGetRawPoiListForTutorial": {
+      "desc": "Hook de collecte des POI du tutoriel : dragstrips avec isTutorialForDragstrip sur le niveau west_coast_usa.",
+      "params": {"elements": {"type": "table[]", "desc": "Liste à compléter."}},
+      "internal": true
+    },
+    "onActivityAcceptGatherData": {
+      "desc": "Hook de collecte des activités proposées par un POI : fiche (icône, titre, props, bouton) pour garage (gameplay_garageMode.start), concession (career_modules_vehicleShopping.openShop), ordinateur (career_modules_computer.openMenu), dragstrip (écran de règles ou d'historique via gameplay_drag_dragBridge). Les stations sont gérées dans gasStations.lua.",
+      "params": {"elemData": {"type": "table[]", "desc": "Éléments du POI."}, "activityData": {"type": "table[]", "desc": "Liste à compléter."}},
+      "internal": true
+    }
+  }
+}

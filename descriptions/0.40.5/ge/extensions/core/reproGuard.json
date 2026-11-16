@@ -1,39 +1,67 @@
 {
   "path": "lua/ge/extensions/core/reproGuard.lua",
-  "module": "Garde de sécurité pour la commande de schéma v1/runRepro : décide si une ligne de commande décodée peut être transmise à run_repro.bat, d'après une liste blanche de motifs glob. La logique pure (isAllowed) est séparée de la lecture du fichier de liste blanche (loadPatterns).",
+  "module": "Security guard for the v1/runRepro schema command: decides whether a decoded command line may be passed to run_repro.bat, based on an allowlist of glob patterns. The pure logic (isAllowed) is separated from reading the allowlist file (loadPatterns).",
   "usage": "local ok, reason = core_reproGuard.isCommandAllowed(cmd)",
   "notes": [
-    "La liste blanche est lue dans /DevTools/tests/micropy/resources/repro_allowlist.json, champ permissions.allow (tableau de motifs). Si le fichier est absent ou invalide, la liste est vide donc tout est refusé (fail closed).",
-    "Les caractères < > ^ ` \" et les caractères de contrôle (dont CR/LF) sont interdits partout dans la commande.",
-    "La commande est découpée sur && || ; | & ; chaque segment doit correspondre à au moins un motif. Dans un motif, '*' remplace n'importe quelle suite de caractères ; les autres caractères sont littéraux.",
-    "Seuls les espaces de début de segment sont retirés ; l'espace final reste dans le segment."
+    "The allowlist is read from /DevTools/tests/micropy/resources/repro_allowlist.json, field permissions.allow (array of patterns). If the file is missing or invalid, the list is empty so everything is refused (fail closed).",
+    "The characters < > ^ ` \" and control characters (including CR/LF) are forbidden everywhere in the command.",
+    "The command is split on && || ; | & ; each segment must match at least one pattern. In a pattern, '*' stands for any sequence of characters; other characters are literal.",
+    "Only leading spaces of a segment are removed; the trailing space stays in the segment."
   ],
   "fields": {},
   "functions": {
     "isAllowed": {
-      "desc": "Fonction pure : teste si command satisfait la liste de motifs. Refuse une commande vide, avec caractère interdit, une liste vide, ou dont un segment ne correspond à aucun motif.",
+      "desc": "Pure function: tests whether command satisfies the pattern list. Refuses an empty command, one with a forbidden character, an empty list, or one with a segment matching no pattern.",
       "params": {
-        "command": {"type": "string", "desc": "Ligne de commande décodée."},
-        "patterns": {"type": "string[]", "desc": "Motifs glob autorisés."}
+        "command": {
+          "type": "string",
+          "desc": "Decoded command line."
+        },
+        "patterns": {
+          "type": "string[]",
+          "desc": "Allowed glob patterns."
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "true si autorisée."},
-        {"type": "string", "desc": "'ok' ou la raison du refus (empty command, forbidden shell metacharacter, empty allowlist, no command segments, segment not allowed: ...)."}
+        {
+          "type": "boolean",
+          "desc": "true if allowed."
+        },
+        {
+          "type": "string",
+          "desc": "'ok' or the reason for the refusal (empty command, forbidden shell metacharacter, empty allowlist, no command segments, segment not allowed: ...)."
+        }
       ],
       "internal": false
     },
     "loadPatterns": {
-      "desc": "Lit les motifs autorisés depuis le fichier JSON de liste blanche. Journalise une erreur et renvoie {} si le fichier est absent ou mal formé.",
+      "desc": "Reads the allowed patterns from the allowlist JSON file. Logs an error and returns {} if the file is missing or malformed.",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Motifs permissions.allow, ou {}."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "permissions.allow patterns, or {}."
+        }
+      ],
       "internal": false
     },
     "isCommandAllowed": {
-      "desc": "Raccourci : charge les motifs depuis le disque puis appelle isAllowed.",
-      "params": {"command": {"type": "string", "desc": "Ligne de commande."}},
+      "desc": "Shortcut: loads the patterns from disk then calls isAllowed.",
+      "params": {
+        "command": {
+          "type": "string",
+          "desc": "Command line."
+        }
+      },
       "returns": [
-        {"type": "boolean", "desc": "true si autorisée."},
-        {"type": "string", "desc": "Raison."}
+        {
+          "type": "boolean",
+          "desc": "true if allowed."
+        },
+        {
+          "type": "string",
+          "desc": "Reason."
+        }
       ],
       "internal": false
     }

@@ -1,27 +1,27 @@
 # `client_postFx_fog`
 
-*Fichier : `lua/ge/client/postFx/fog.lua` · VM : Game Engine (GE) · 114 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/client/postFx/fog.lua` · VM: Game Engine (GE) · 114 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("client/postFx/fog")`
+**Access:** `require("client/postFx/fog")`
 
-Brouillard en post-traitement. Crée le PostEffect « FogPostFx » (shader fog.cs.hlsl, priorité 5, activé, hors passes de réflexion) et le PostEffect « UnderwaterFogPostFx » (underwaterFog.cs.hlsl, priorité 4, oneFrameOnly) avec leurs shaders et state blocks. Les callbacks de l'effet sous-marin activent/désactivent le PostEffect de caustiques.
+Post-processing fog. Creates the PostEffect "FogPostFx" (shader fog.cs.hlsl, priority 5, enabled, excluded from reflection passes) and the PostEffect "UnderwaterFogPostFx" (underwaterFog.cs.hlsl, priority 4, oneFrameOnly) with their shaders and state blocks. The underwater effect's callbacks enable/disable the caustics PostEffect.
 
-## Remarques
+## Notes
 
-- Les callbacks sont publiés sur la globale UnderwaterFogPostFxCallbacks (via rawset).
+- The callbacks are published on the global UnderwaterFogPostFxCallbacks (via rawset).
 
-## Classe `underwaterFogPostFxCallbacks`
+## Class `underwaterFogPostFxCallbacks`
 
-Callbacks appelés par le moteur pour UnderwaterFogPostFx.
+Callbacks called by the engine for UnderwaterFogPostFx.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `underwaterFogPostFxCallbacks.onDisabled()` | Désactive CausticsPFX s'il existe. | 67 |
-| `underwaterFogPostFxCallbacks.onEnabled()` | Active CausticsPFX s'il existe et retourne true. | 59 |
+| `underwaterFogPostFxCallbacks.onDisabled()` | Disables CausticsPFX if it exists. | 67 |
+| `underwaterFogPostFxCallbacks.onEnabled()` | Enables CausticsPFX if it exists and returns true. | 59 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/client/postFx/fog.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/client/postFx/fog.lua`.*

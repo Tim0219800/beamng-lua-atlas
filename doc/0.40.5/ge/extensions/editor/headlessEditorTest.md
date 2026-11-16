@@ -1,25 +1,25 @@
 # `editor_headlessEditorTest`
 
-*Fichier : `lua/ge/extensions/editor/headlessEditorTest.lua` · VM : Game Engine (GE) · 92 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/headlessEditorTest.lua` · VM: Game Engine (GE) · 92 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_headlessEditorTest` : `extensions.load("editor_headlessEditorTest")`, puis la globale `editor_headlessEditorTest`
+**Access:** extension `editor_headlessEditorTest`: `extensions.load("editor_headlessEditorTest")`, then the global `editor_headlessEditorTest`
 
-Exemple de développement du mode « headless » de l'éditeur (masque menus et barres d'outils pour n'afficher que son propre outil). Le module n'exporte ses hooks que si shipping_build est faux : en build de production, il est vide. Il montre comment entrer/sortir du mode (editor.enableHeadless), dessiner sa propre barre de menu via onEditorHeadlessMainMenuBar et ouvrir une fenêtre d'outil et une barre d'outils flottante.
+Development example of the editor's "headless" mode (hides menus and toolbars to show only its own tool). The module only exports its hooks if shipping_build is false: in a production build, it is empty. It shows how to enter/exit the mode (editor.enableHeadless), draw your own menu bar via onEditorHeadlessMainMenuBar and open a tool window and a floating toolbar.
 
-## Exemple
+## Example
 
 ```lua
--- activer le mode headless pour un outil
+-- enable headless mode for a tool
 editor.enableHeadless(true, 'myHeadlessTool')
--- le désactiver
+-- disable it
 editor.enableHeadless(false, 'myHeadlessTool')
 ```
 
-## Remarques
+## Notes
 
-- Aucune fonction n'est exportée en build de production (shipping_build) : les hooks ne sont définis que hors shipping.
-- Le nom d'outil (« myHeadlessTool ») doit être unique ; les fonctions n'agissent que si editor.isHeadlessToolActive(toolName) est vrai.
-- Le menu s'appelle « Headless Editor Test » (groupe Debug) ; les boutons de la barre d'outils ne font que des print.
+- No function is exported in a production build (shipping_build): the hooks are only defined outside shipping.
+- The tool name ("myHeadlessTool") must be unique; the functions only act if editor.isHeadlessToolActive(toolName) is true.
+- The menu is called "Headless Editor Test" (Debug group); the toolbar buttons only do prints.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/headlessEditorTest.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/headlessEditorTest.lua`.*

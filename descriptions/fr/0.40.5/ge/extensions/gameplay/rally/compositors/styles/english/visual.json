@@ -1,0 +1,8 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/compositors/styles/english/visual.lua",
+  "module": "Couleurs générales des notes de rallye visuelles pour les styles anglais : couleur du lien 'into' et couleur du texte de distance. Renvoie directement la table (pas de M) ; elle devient M.visualGeneral dans les styles.",
+  "fields": {
+    "intoColor": {"type": "string", "desc": "Couleur du lien 'into' entre notes (colors.iconAndTextDefault, c.-à-d. offWhite)."},
+    "distanceColor": {"type": "string", "desc": "Couleur du texte de distance (colors.offWhite)."}
+  }
+}

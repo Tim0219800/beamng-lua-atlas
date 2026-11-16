@@ -1,67 +1,117 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/recce.lua",
-  "module": "Gestionnaire de haut niveau des enregistrements de reconnaissance (recce) d'un rallye. Il charge la driveline (points horodatés du parcours roulé, via recce/drivelineRecording) et les cuts (marqueurs vocaux du copilote avec leurs transcriptions, via recce/cutsRecording), les dessine en debug, et convertit les cuts en données de pacenotes (createPacenotesData) à partir d'un snaproad. Il sert surtout à l'éditeur de rallye du worldEditor (import et visualisation de recce).",
+  "module": "High-level manager of a rally's recce recordings. It loads the driveline (timestamped points of the driven route, via recce/drivelineRecording) and the cuts (the co-driver's voice markers with their transcriptions, via recce/cutsRecording), draws them in debug, and converts the cuts into pacenote data (createPacenotesData) from a snaproad. It is mainly used by the worldEditor's rally editor (recce import and visualization).",
   "usage": "local Recce = require('/lua/ge/extensions/gameplay/rally/recce')\nlocal recce = Recce(missionDir)\nrecce:loadDrivelineAndCuts()\nlocal pacenotes = recce:createPacenotesData(notebook)",
   "notes": [
-    "Le module renvoie un constructeur : Recce(missionDir) crée l'objet et appelle init.",
-    "loadDrivelineAndCuts renvoie toujours true ; _loadedDrivelineAndCuts n'est vrai que si la driveline ET au moins un cut ont été trouvés (vérifiable avec drivelineAndCutsLoaded).",
-    "createPacenotesData dépend de editor_rallyEditor.getPrefDefaultRadius() : il ne fonctionne donc que si l'éditeur de rallye est chargé.",
-    "createPacenotesData fusionne les cuts consécutifs tombant sur le même point de snaproad : le texte du doublon est ajouté (séparé par un espace) à la note du pacenote précédent.",
-    "Incohérence probable : createPacenotesData appelle Snaproad(self) avec l'objet Recce, alors que Snaproad lit driveline().points (rallyManager lui passe une PointList) ; la driveline du Recce est dans self.driveline.",
-    "Les RecceSettings sont commentés dans ce fichier (non utilisés)."
+    "The module returns a constructor: Recce(missionDir) creates the object and calls init.",
+    "loadDrivelineAndCuts always returns true; _loadedDrivelineAndCuts is only true if the driveline AND at least one cut were found (checkable with drivelineAndCutsLoaded).",
+    "createPacenotesData depends on editor_rallyEditor.getPrefDefaultRadius(): it therefore only works if the rally editor is loaded.",
+    "createPacenotesData merges consecutive cuts falling on the same snaproad point: the duplicate's text is appended (separated by a space) to the previous pacenote's note.",
+    "Probable inconsistency: createPacenotesData calls Snaproad(self) with the Recce object, whereas Snaproad reads driveline().points (rallyManager passes it a PointList); the Recce's driveline is in self.driveline.",
+    "The RecceSettings are commented out in this file (unused)."
   ],
   "classes": {
     "C": {
-      "desc": "Objet Recce renvoyé par le constructeur du module.",
+      "desc": "Recce object returned by the module's constructor.",
       "functions": {
         "init": {
-          "desc": "Initialise l'objet : mémorise missionDir, marque driveline/cuts comme non chargés et remet l'état à zéro.",
-          "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission"}},
+          "desc": "Initializes the object: stores missionDir, marks driveline/cuts as not loaded and resets the state.",
+          "params": {
+            "missionDir": {
+              "type": "string",
+              "desc": "Mission folder"
+            }
+          },
           "internal": true
         },
         "drivelineAndCutsLoaded": {
-          "desc": "Indique si driveline et cuts ont été chargés avec succès par loadDrivelineAndCuts.",
-          "returns": [{"type": "boolean", "desc": "true si les deux sont chargés"}]
+          "desc": "Indicates whether driveline and cuts were successfully loaded by loadDrivelineAndCuts.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if both are loaded"
+            }
+          ]
         },
         "_resetState": {
-          "desc": "Remet self.driveline et self.cuts à nil.",
+          "desc": "Sets self.driveline and self.cuts back to nil.",
           "internal": true
         },
         "loadDrivelineAndCuts": {
-          "desc": "Charge la driveline puis les cuts, logue un avertissement pour chacun s'il manque (normal pour une nouvelle reconnaissance).",
-          "returns": [{"type": "boolean", "desc": "toujours true"}]
+          "desc": "Loads the driveline then the cuts, logs a warning for each if missing (normal for a new recce).",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "always true"
+            }
+          ]
         },
         "loadCuts": {
-          "desc": "Charge les cuts avec leurs transcriptions dans self.cuts.",
-          "returns": [{"type": "boolean", "desc": "true s'il y a au moins un cut"}]
+          "desc": "Loads the cuts with their transcriptions into self.cuts.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if there is at least one cut"
+            }
+          ]
         },
         "loadDriveline": {
-          "desc": "Charge la driveline (PointList) dans self.driveline.",
-          "returns": [{"type": "boolean", "desc": "false si le fichier est absent ou invalide"}]
+          "desc": "Loads the driveline (PointList) into self.driveline.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false if the file is absent or invalid"
+            }
+          ]
         },
         "drawDebugRecce": {
-          "desc": "Dessine la driveline (via PointList:drawDebug) puis les cuts. Ne fait rien sans driveline.",
+          "desc": "Draws the driveline (via PointList:drawDebug) then the cuts. Does nothing without a driveline.",
           "params": {
-            "drawLabels": {"type": "boolean", "desc": "Afficher les étiquettes des points de la driveline"},
-            "mouseInfo": {"type": "any", "desc": "Non utilisé dans le corps de la fonction"}
+            "drawLabels": {
+              "type": "boolean",
+              "desc": "Show the labels of the driveline points"
+            },
+            "mouseInfo": {
+              "type": "any",
+              "desc": "Not used in the function body"
+            }
           }
         },
         "drawDebugCuts": {
-          "desc": "Dessine chaque cut sous forme de petite voiture, avec le texte de sa transcription.",
+          "desc": "Draws each cut as a small car, with its transcription text.",
           "params": {}
         },
         "drawLittleCar": {
-          "desc": "Dessine avec debugDrawer une voiture schématique (4,4 x 1,8 x 1,6 m, quatre roues en sphères, caisse en prisme) centrée sur pos et orientée par quat ; affiche txt derrière si fourni.",
+          "desc": "Draws with debugDrawer a schematic car (4.4 x 1.8 x 1.6 m, four wheels as spheres, body as a prism) centered on pos and oriented by quat; displays txt behind it if provided.",
           "params": {
-            "pos": {"type": "vec3", "desc": "Centre de la voiture"},
-            "quat": {"type": "quat", "desc": "Orientation (l'avant est l'axe +Y local)"},
-            "txt": {"type": "string|nil", "desc": "Texte à afficher (transcription)"}
+            "pos": {
+              "type": "vec3",
+              "desc": "Center of the car"
+            },
+            "quat": {
+              "type": "quat",
+              "desc": "Orientation (the front is the local +Y axis)"
+            },
+            "txt": {
+              "type": "string|nil",
+              "desc": "Text to display (transcription)"
+            }
           }
         },
         "createPacenotesData": {
-          "desc": "Convertit les cuts en tables de pacenotes pour un notebook : crée un Snaproad sur la driveline, place pour chaque cut un waypoint « corner end » au plus près du cut et un « corner start » reculé d'environ 2 fois le rayon par défaut, nomme la note (Import_<id> ... ou Pacenote ...) et y met la transcription dans la langue copilote par défaut.",
-          "params": {"notebook": {"type": "table", "desc": "Notebook cible (nextImportIdent, getNextUniqueIdentifier)"}},
-          "returns": [{"type": "table[]|nil", "desc": "Liste de tables de pacenotes ; nil si driveline/cuts non chargés"}]
+          "desc": "Converts the cuts into pacenote tables for a notebook: creates a Snaproad on the driveline, places for each cut a \"corner end\" waypoint as close as possible to the cut and a \"corner start\" set back by about 2 times the default radius, names the note (Import_<id> ... or Pacenote ...) and puts the transcription in it in the default co-driver language.",
+          "params": {
+            "notebook": {
+              "type": "table",
+              "desc": "Target notebook (nextImportIdent, getNextUniqueIdentifier)"
+            }
+          },
+          "returns": [
+            {
+              "type": "table[]|nil",
+              "desc": "List of pacenote tables; nil if driveline/cuts not loaded"
+            }
+          ]
         }
       }
     }

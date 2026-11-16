@@ -1,0 +1,17 @@
+{
+  "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactBeamstate.lua",
+  "module": "Module de gameplayInterface donnant accès à beamstate : appel à distance d'une fonction sans argument de beamstate par son nom, et lecture du décalage d'un coupleur. Les actions et lookups sont enregistrés auprès de gameplayInterface.",
+  "usage": "gameplayInterface.executeAction(0, 3, 'interactBeamstate', 'breakAllBreakgroups')",
+  "notes": [
+    "Action 'interactBeamstate'(methodName:string) : appelle beamstate[methodName]() sans argument ; renvoie {failReason} si la fonction n'existe pas. N'importe quelle clé de beamstate non nulle est appelée telle quelle (une valeur non-fonction provoquerait une erreur Lua).",
+    "Lookup 'couplerOffset'(couplerTag:string) : renvoie {result = beamstate.getCouplerOffset(couplerTag)}."
+  ],
+  "fields": {
+    "moduleActions": {"type": "table<string, function>", "desc": "Actions exposées : interactBeamstate."},
+    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups exposés : couplerOffset."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : remplit moduleActions et moduleLookups.", "params": {}, "returns": [], "internal": true},
+    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+  }
+}

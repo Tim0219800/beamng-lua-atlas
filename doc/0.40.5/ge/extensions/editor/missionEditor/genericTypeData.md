@@ -1,52 +1,52 @@
 # `editor_missionEditor_genericTypeData`
 
-*Fichier : `lua/ge/extensions/editor/missionEditor/genericTypeData.lua` · VM : Game Engine (GE) · 398 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/missionEditor/genericTypeData.lua` · VM: Game Engine (GE) · 398 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/missionEditor/genericTypeData")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/missionEditor/genericTypeData")` (file under extensions/ but not a regular extension)
 
-Panneau de l'éditeur de missions qui édite le champ missionTypeData d'une mission. Il liste les types de mission (gameplay_missions_missions.getMissionTypes), choisit l'éditeur spécifique au type (gameplay_missions_missions.getMissionEditorForType) et, à défaut ou en mode « Raw », propose un éditeur JSON brut. Il fournit aussi un popup qui compare les variables de mission avec celles du projet Flowgraph ouvert (ajout et correction de type en un clic). Le module renvoie un constructeur (fonction) : require(...)(missionEditor) crée une instance via C:init.
+Mission editor panel that edits a mission's missionTypeData field. It lists the mission types (gameplay_missions_missions.getMissionTypes), picks the type-specific editor (gameplay_missions_missions.getMissionEditorForType) and, failing that or in "Raw" mode, offers a raw JSON editor. It also provides a popup that compares the mission variables with those of the open Flowgraph project (adding and fixing the type in one click). The module returns a constructor (function): require(...)(missionEditor) creates an instance via C:init.
 
-## Exemple
+## Example
 
 ```lua
 local gtd = require('/lua/ge/extensions/editor/missionEditor/genericTypeData')(missionEditor)
 gtd:setMission(mission)
--- dans la boucle imgui de l'éditeur :
+-- in the editor's imgui loop:
 gtd:draw()
 ```
 
-## Remarques
+## Notes
 
-- Le changement de type (changeMissionType) mémorise les anciennes données par mission et par type dans oldMissionTypeData, et les restaure si on revient au type précédent.
-- L'éditeur JSON brut plafonne le texte à environ 8*(2+max(128, 4*taille)) / 8 caractères (affiché « char limit »). Un JSON invalide n'est pas sauvegardé et affiche un message en rouge.
-- loadEditor n'est pas appelée dans ce fichier ; elle cherche /gameplay/missionTypes/<type>/editor.lua et crée un éditeur par défaut (editorHelper) sinon.
-- Le champ mission._dirty est mis à true à chaque modification pour signaler qu'une sauvegarde est nécessaire.
+- The type change (changeMissionType) remembers the old data per mission and per type in oldMissionTypeData, and restores them if you go back to the previous type.
+- The raw JSON editor caps the text at about 8*(2+max(128, 4*size)) / 8 characters (displayed as "char limit"). An invalid JSON is not saved and displays a message in red.
+- loadEditor is not called in this file; it looks for /gameplay/missionTypes/<type>/editor.lua and creates a default editor (editorHelper) otherwise.
+- The mission._dirty field is set to true at each modification to signal that a save is needed.
 
-## Classe `C`
+## Class `C`
 
-Instance du panneau « Mission Type Data ». Champs principaux : missionEditor, mission, missionTypes (liste triée), missionTypeEditors (éditeur par type), rawEditPerMission, oldMissionTypeData, mtdIssues.
+Instance of the "Mission Type Data" panel. Main fields: missionEditor, mission, missionTypes (sorted list), missionTypeEditors (editor per type), rawEditPerMission, oldMissionTypeData, mtdIssues.
 
-Le module renvoie un constructeur : `local obj = require("editor_missionEditor_genericTypeData")(options)`.
+The module returns a constructor: `local obj = require("editor_missionEditor_genericTypeData")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:changeMissionType(newType, force)` | Change le type de la mission : sauvegarde les données du type actuel, crée (ou restaure) celles du nouveau type, puis rappelle setMission. | 77 |
-| `C:draw()` | Dessine le panneau : combo du type de mission, case « Raw », bouton « Auto fix N issues », puis l'éditeur du type ou l'éditeur JSON brut. | 244 |
-| `C:drawTools()` | Pour chaque type dont l'éditeur définit toolsFunctions, crée un sous-menu et appelle cette fonction. | 340 |
-| `C:drawViews()` | Appelle drawViews(liste des missions) sur chaque éditeur de type qui le définit. | 364 |
-| `C:drawViewsMenu()` | Pour chaque type dont l'éditeur définit viewFunctions, crée un sous-menu et appelle cette fonction. | 352 |
-| `C:fillGeneric(mission)` | Remplace mission.missionTypeData par les données neuves fournies par l'éditeur du type de la mission (getNewData), ou {} s'il n'y en a pas. | 72 |
-| `C:getCurrentEditorHelper()` | Renvoie l'éditeur du type de la mission courante. | 372 |
-| `C:getMissionIssues(m)` | Renvoie la liste des problèmes d'une mission : résultat de checkContainer de l'éditeur de son type, plus ceux de calculateMissionIssues du type s'il existe (appelé en pcall). | 375 |
-| `C:init(missionEditor)` | Constructeur appelé par la fonction renvoyée par le module. Récupère la liste triée des types de mission et l'éditeur de chaque type. | 25 |
-| `C:loadEditor(missionType)` | Cherche /gameplay/missionTypes/<missionType>/editor.lua et l'instancie avec missionEditor. Si le fichier n'existe pas ou ne se charge pas, crée un éditeur générique via gameplay_missions_missions.editorHelper. | 41 |
-| `C:openPopup()` | Ouvre le popup imgui « missionFGVariables » (aide aux variables Flowgraph). | 99 |
-| `C:setMission(mission)` | Définit la mission courante, transmet le conteneur à l'éditeur de son type (setContainer) et recalcule les problèmes (checkContainer) dans self.mtdIssues. | 60 |
-| `C:variablesHelperPopup()` | Dessine le popup qui classe les champs du type de mission en variables manquantes, de type différent, correctes, et variables présentes seulement dans le Flowgraph. Les boutons ajoutent les variables manquantes (valeur par défaut du type) ou corrigent leur type dans le projet Flowgraph courant (editor_flowgraphEditor.getManager()). À appeler à chaque frame. | 103 |
+| `C:changeMissionType(newType, force)` | Changes the mission's type: saves the current type's data, creates (or restores) those of the new type, then calls setMission again. | 77 |
+| `C:draw()` | Draws the panel: mission type combo, "Raw" checkbox, "Auto fix N issues" button, then the type's editor or the raw JSON editor. | 244 |
+| `C:drawTools()` | For each type whose editor defines toolsFunctions, creates a submenu and calls that function. | 340 |
+| `C:drawViews()` | Calls drawViews(list of missions) on each type editor that defines it. | 364 |
+| `C:drawViewsMenu()` | For each type whose editor defines viewFunctions, creates a submenu and calls that function. | 352 |
+| `C:fillGeneric(mission)` | Replaces mission.missionTypeData with the fresh data provided by the mission's type editor (getNewData), or {} if there is none. | 72 |
+| `C:getCurrentEditorHelper()` | Returns the editor of the current mission's type. | 372 |
+| `C:getMissionIssues(m)` | Returns a mission's list of issues: result of checkContainer of its type's editor, plus those of the type's calculateMissionIssues if it exists (called in pcall). | 375 |
+| `C:init(missionEditor)` | Constructor called by the function returned by the module. Gets the sorted list of mission types and the editor of each type. | 25 |
+| `C:loadEditor(missionType)` | Looks for /gameplay/missionTypes/<missionType>/editor.lua and instantiates it with missionEditor. If the file does not exist or does not load, creates a generic editor via gameplay_missions_missions.editorHelper. | 41 |
+| `C:openPopup()` | Opens the imgui popup "missionFGVariables" (Flowgraph variables helper). | 99 |
+| `C:setMission(mission)` | Sets the current mission, passes the container to its type's editor (setContainer) and recomputes the issues (checkContainer) into self.mtdIssues. | 60 |
+| `C:variablesHelperPopup()` | Draws the popup that sorts the mission type's fields into missing variables, variables of a different type, correct ones, and variables present only in the Flowgraph. The buttons add the missing variables (default value of the type) or fix their type in the current Flowgraph project (editor_flowgraphEditor.getManager()). Call every frame. | 103 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionEditor/genericTypeData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/missionEditor/genericTypeData.lua`.*

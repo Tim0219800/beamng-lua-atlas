@@ -1,73 +1,173 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/daeExport.lua",
-  "module": "Exporteur COLLADA (.dae 1.4.1) pour les pièces de kit « baked » des outils de l'éditeur. Sérialise des meshParts ({ verts, normals, uvs, faces, material, tint? }) en documents que le loader Torque de BeamNG lit comme une forme statique, pour les placer en TSStatic. Gère : forme simple, multi-matériaux, et multi-LOD avec mesh de collision (nœuds '<gid>_p<i>_L<taille>', 'Colmesh-1', 'nulldetail<taille>' sous une hiérarchie base00/start01 exigée par l'importeur). Les formes vont soit dans la racine publiée /assets/procedural_meshes/, soit dans la racine de travail /assets/procedural_meshes_wip/ (filtrée du build).",
+  "module": "COLLADA exporter (.dae 1.4.1) for the 'baked' kit pieces of the editor tools. Serializes meshParts ({ verts, normals, uvs, faces, material, tint? }) into documents that BeamNG's Torque loader reads as a static shape, to place them as TSStatic. Handles: simple shape, multi-material, and multi-LOD with collision mesh ('<gid>_p<i>_L<size>', 'Colmesh-1', 'nulldetail<size>' nodes under a base00/start01 hierarchy required by the importer). Shapes go either in the published root /assets/procedural_meshes/ or in the working root /assets/procedural_meshes_wip/ (filtered out of the build).",
   "notes": [
-    "Les fichiers sont écrits via writeFile (chemin VFS) ; les fonctions renvoient le résultat de writeFile.",
-    "prepDir VIDE le dossier : il refuse (log E) tout chemin qui n'est pas sous procRoot ou wipRoot, et vide aussi /temp<dir>. Il n'agit qu'une fois par dossier et par run (réinitialisé par beginBake).",
-    "(ox,oy,oz) est une origine locale soustraite de tous les sommets : placer le TSStatic à cette origine ; évite de dépasser la portée de 2048 m du moteur.",
-    "Si une seule partie a un tint, toutes les parties sont blanchies (tint = {1,1,1}) pour avoir des couleurs cohérentes ; writeDaeLODs et writeDaeParts le font tous deux.",
-    "Deux LODs consécutifs identiques sont fusionnés (conservés à la plus petite taille).",
-    "Dans la table RELEASED (vide pour l'instant), outDir teste RELEASED[folder] : il faut donc y mettre RELEASED['nomDuKit'] = true ; ajouter le nom comme élément de liste comme le suggère le commentaire ne marcherait pas.",
-    "La date écrite dans <created>/<modified> est fixe (2020-01-01)."
+    "Files are written via writeFile (VFS path); the functions return the result of writeFile.",
+    "prepDir EMPTIES the folder: it refuses (E log) any path that is not under procRoot or wipRoot, and also empties /temp<dir>. It acts only once per folder and per run (reset by beginBake).",
+    "(ox,oy,oz) is a local origin subtracted from all vertices: place the TSStatic at this origin; avoids exceeding the engine's 2048 m range.",
+    "If only one part has a tint, all parts are whitened (tint = {1,1,1}) to get consistent colors; writeDaeLODs and writeDaeParts both do this.",
+    "Two consecutive identical LODs are merged (kept at the smallest size).",
+    "In the RELEASED table (empty for now), outDir tests RELEASED[folder]: so RELEASED['kitName'] = true must be set; adding the name as a list element as the comment suggests would not work.",
+    "The date written in <created>/<modified> is fixed (2020-01-01)."
   ],
   "fields": {
-    "procRoot": {"type": "string", "desc": "Racine publiée des formes générées : '/assets/procedural_meshes/'."},
-    "wipRoot": {"type": "string", "desc": "Racine de travail : '/assets/procedural_meshes_wip/' (exclue du build)."}
+    "procRoot": {
+      "type": "string",
+      "desc": "Published root of the generated shapes: '/assets/procedural_meshes/'."
+    },
+    "wipRoot": {
+      "type": "string",
+      "desc": "Working root: '/assets/procedural_meshes_wip/' (excluded from the build)."
+    }
   },
   "functions": {
     "lenTag": {
-      "desc": "Convertit une longueur en étiquette sûre pour nom de fichier/id : 16.0 -> \"16\", 0.5 -> \"0_5\", 0.125 -> \"0_125\".",
-      "params": {"L": {"type": "number", "desc": "Longueur"}},
-      "returns": [{"type": "string", "desc": "Étiquette."}]
+      "desc": "Converts a length into a label safe for file names/ids: 16.0 -> \"16\", 0.5 -> \"0_5\", 0.125 -> \"0_125\".",
+      "params": {
+        "L": {
+          "type": "number",
+          "desc": "Length"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Label."
+        }
+      ]
     },
     "writeDae": {
-      "desc": "Sérialise `part` et l'écrit au chemin VFS `path` comme forme statique simple (un nœud, matériau lié par nom).",
+      "desc": "Serializes `part` and writes it to the VFS path `path` as a simple static shape (one node, material linked by name).",
       "params": {
-        "path": {"type": "string", "desc": "Chemin VFS du .dae"},
-        "part": {"type": "table", "desc": "meshPart { verts, normals, uvs, faces, tint? }"},
-        "matName": {"type": "string", "desc": "Nom du matériau du jeu"},
-        "gid": {"type": "string", "desc": "Id de géométrie/nœud (aussi le nom de base du fichier)"}
+        "path": {
+          "type": "string",
+          "desc": "VFS path of the .dae"
+        },
+        "part": {
+          "type": "table",
+          "desc": "meshPart { verts, normals, uvs, faces, tint? }"
+        },
+        "matName": {
+          "type": "string",
+          "desc": "Name of the game material"
+        },
+        "gid": {
+          "type": "string",
+          "desc": "Geometry/node id (also the base name of the file)"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true en cas de succès."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true on success."
+        }
+      ]
     },
     "writeDaeParts": {
-      "desc": "Écrit une liste de parts (chacune avec .material) dans un seul .dae multi-matériaux (un effect/material/geometry/node par part).",
+      "desc": "Writes a list of parts (each with .material) into a single multi-material .dae (one effect/material/geometry/node per part).",
       "params": {
-        "path": {"type": "string", "desc": "Chemin VFS"},
-        "parts": {"type": "table", "desc": "Liste de meshParts avec .material"},
-        "gid": {"type": "string", "desc": "Base des ids de géométrie/nœud"},
-        "ox": {"type": "number|nil", "desc": "Origine locale x soustraite des sommets (défaut 0)"},
-        "oy": {"type": "number|nil", "desc": "Origine locale y"},
-        "oz": {"type": "number|nil", "desc": "Origine locale z"}
+        "path": {
+          "type": "string",
+          "desc": "VFS path"
+        },
+        "parts": {
+          "type": "table",
+          "desc": "List of meshParts with .material"
+        },
+        "gid": {
+          "type": "string",
+          "desc": "Base of the geometry/node ids"
+        },
+        "ox": {
+          "type": "number|nil",
+          "desc": "Local origin x subtracted from the vertices (default 0)"
+        },
+        "oy": {
+          "type": "number|nil",
+          "desc": "Local origin y"
+        },
+        "oz": {
+          "type": "number|nil",
+          "desc": "Local origin z"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true en cas de succès."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true on success."
+        }
+      ]
     },
     "writeDaeLODs": {
-      "desc": "Écrit une forme multi-LOD avec collision. lods = { {size=S, parts={...}}, ... } par S décroissant (LOD0 = S le plus grand) ; colParts = pièces du mesh de collision (nœud 'Colmesh-1') ; nullSize ajoute un nœud vide 'nulldetail<nullSize>' sous lequel la forme disparaît.",
+      "desc": "Writes a multi-LOD shape with collision. lods = { {size=S, parts={...}}, ... } by decreasing S (LOD0 = largest S); colParts = pieces of the collision mesh ('Colmesh-1' node); nullSize adds an empty node 'nulldetail<nullSize>' under which the shape disappears.",
       "params": {
-        "path": {"type": "string", "desc": "Chemin VFS"},
-        "lods": {"type": "table", "desc": "Liste { size, parts } décroissante"},
-        "colParts": {"type": "table|nil", "desc": "Parts de collision (sans chanfrein)"},
-        "gid": {"type": "string", "desc": "Id de base"},
-        "ox": {"type": "number|nil", "desc": "Origine locale x"},
-        "oy": {"type": "number|nil", "desc": "Origine locale y"},
-        "oz": {"type": "number|nil", "desc": "Origine locale z"},
-        "nullSize": {"type": "number|nil", "desc": "Taille du détail nul (rien rendu en dessous)"}
+        "path": {
+          "type": "string",
+          "desc": "VFS path"
+        },
+        "lods": {
+          "type": "table",
+          "desc": "List { size, parts } decreasing"
+        },
+        "colParts": {
+          "type": "table|nil",
+          "desc": "Collision parts (without chamfer)"
+        },
+        "gid": {
+          "type": "string",
+          "desc": "Base id"
+        },
+        "ox": {
+          "type": "number|nil",
+          "desc": "Local origin x"
+        },
+        "oy": {
+          "type": "number|nil",
+          "desc": "Local origin y"
+        },
+        "oz": {
+          "type": "number|nil",
+          "desc": "Local origin z"
+        },
+        "nullSize": {
+          "type": "number|nil",
+          "desc": "Null detail size (nothing rendered below)"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true en cas de succès."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true on success."
+        }
+      ]
     },
     "beginBake": {
-      "desc": "Démarre un run de bake : le prochain prepDir de chaque dossier le vide à nouveau.",
+      "desc": "Starts a bake run: the next prepDir of each folder empties it again.",
       "params": {}
     },
     "prepDir": {
-      "desc": "Prépare un dossier de sortie : le vide s'il existe, sinon le crée, et vide son équivalent sous /temp. Une seule fois par dossier et par run. Refuse (log erreur) un dossier hors procRoot/wipRoot ; sans effet si FS est absent.",
-      "params": {"dir": {"type": "string", "desc": "Dossier VFS sous procRoot ou wipRoot"}}
+      "desc": "Prepares an output folder: empties it if it exists, otherwise creates it, and empties its equivalent under /temp. Only once per folder and per run. Refuses (error log) a folder outside procRoot/wipRoot; no effect if FS is absent.",
+      "params": {
+        "dir": {
+          "type": "string",
+          "desc": "VFS folder under procRoot or wipRoot"
+        }
+      }
     },
     "outDir": {
-      "desc": "Dossier où vivent les formes baked d'un kit : racine publiée si RELEASED[folder] est vrai, sinon racine de travail. Prend le nom de dossier seul.",
-      "params": {"folder": {"type": "string", "desc": "Nom du dossier du kit"}},
-      "returns": [{"type": "string", "desc": "Chemin se terminant par '/'."}]
+      "desc": "Folder where a kit's baked shapes live: published root if RELEASED[folder] is true, otherwise working root. Takes the folder name alone.",
+      "params": {
+        "folder": {
+          "type": "string",
+          "desc": "Kit folder name"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Path ending with '/'."
+        }
+      ]
     }
   }
 }

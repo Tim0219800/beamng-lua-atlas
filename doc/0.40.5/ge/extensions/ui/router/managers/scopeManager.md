@@ -1,50 +1,50 @@
 # `ui_router_managers_scopeManager`
 
-*Fichier : `lua/ge/extensions/ui/router/managers/scopeManager.lua` · VM : Game Engine (GE) · 90 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/managers/scopeManager.lua` · VM: Game Engine (GE) · 90 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_managers_scopeManager` : `extensions.load("ui_router_managers_scopeManager")`, puis la globale `ui_router_managers_scopeManager`
+**Access:** extension `ui_router_managers_scopeManager`: `extensions.load("ui_router_managers_scopeManager")`, then the global `ui_router_managers_scopeManager`
 
-Gère les portées (scopes) de focus d'une route d'interface. Une route déclare un arbre de portées (scopeTree) ; ce module détermine la portée cible d'une navigation, vérifie qu'une portée existe dans l'arbre et construit la table parent de chaque portée avec ses métadonnées (backTarget, optional, escapeTargets, preferAutoFocus…).
+Manages the focus scopes of a UI route. A route declares a scope tree (scopeTree); this module determines the target scope of a navigation, checks that a scope exists in the tree and builds the parent table of each scope with its metadata (backTarget, optional, escapeTargets, preferAutoFocus...).
 
-## Remarques
+## Notes
 
-- Priorité de la portée cible : options.routeScopeId (suffixe :scope de la route), puis options.preferredScope, puis (si options.restoreLastScope == true) la dernière portée active mémorisée si elle est encore déclarée dans l'arbre (sinon elle est oubliée), puis route.targetScope, puis la première clé de route.scopeTree.
-- Si routeScopeId et preferredScope sont tous deux fournis, un avertissement est journalisé et routeScopeId l'emporte.
-- Clés réservées d'un nœud de portée (non traitées comme des portées enfants) : backTarget, backTargetType, optional, escapeTargets, preferAutoFocus.
-- getScopeTreeRoot utilise pairs sur la table : si l'arbre a plusieurs racines, la « première » clé est indéterminée (ordre de pairs).
+- Target scope priority: options.routeScopeId (the route's :scope suffix), then options.preferredScope, then (if options.restoreLastScope == true) the stored last active scope if it is still declared in the tree (otherwise it is forgotten), then route.targetScope, then the first key of route.scopeTree.
+- If routeScopeId and preferredScope are both provided, a warning is logged and routeScopeId wins.
+- Reserved keys of a scope node (not treated as child scopes): backTarget, backTargetType, optional, escapeTargets, preferAutoFocus.
+- getScopeTreeRoot uses pairs on the table: if the tree has several roots, the "first" key is undetermined (pairs order).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_managers_scopeManager.buildScopeParentMap(scopeTree)` | Parcourt l'arbre de portées et renvoie une table indexée par identifiant de portée. | 67 |
-| `ui_router_managers_scopeManager.getTargetScope(route, options)` | Détermine la portée cible d'une navigation selon la priorité décrite dans les notes. | 38 |
-| `ui_router_managers_scopeManager.isScopeDeclaredInTree(scopeTree, scopeId)` | Indique si scopeId est une portée déclarée dans l'arbre. | 24 |
+| `ui_router_managers_scopeManager.buildScopeParentMap(scopeTree)` | Walks the scope tree and returns a table keyed by scope identifier. | 67 |
+| `ui_router_managers_scopeManager.getTargetScope(route, options)` | Determines the target scope of a navigation according to the priority described in the notes. | 38 |
+| `ui_router_managers_scopeManager.isScopeDeclaredInTree(scopeTree, scopeId)` | Indicates whether scopeId is a scope declared in the tree. | 24 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_managers_scopeManager.buildScopeParentMap(scopeTree)`
 
-Parcourt l'arbre de portées et renvoie une table indexée par identifiant de portée.
+Walks the scope tree and returns a table keyed by scope identifier.
 
-- `scopeTree` (*table|nil*) : Arbre de portées ; nil donne {}.
-- **renvoie** : table<string, table> Pour chaque portée : {parentScopeId (false pour la racine), isRoot, backTarget, backTargetType, optional (booléen), escapeTargets, preferAutoFocus (booléen)}.
+- `scopeTree` (*table|nil*) : Scope tree; nil gives {}.
+- **returns**: table<string, table> For each scope: {parentScopeId (false for the root), isRoot, backTarget, backTargetType, optional (boolean), escapeTargets, preferAutoFocus (boolean)}.
 
 #### `ui_router_managers_scopeManager.getTargetScope(route, options)`
 
-Détermine la portée cible d'une navigation selon la priorité décrite dans les notes.
+Determines the target scope of a navigation according to the priority described in the notes.
 
-- `route` (*table*) : Configuration de route (name, scopeTree, targetScope).
-- `options` (*table|nil*) : Options de navigation : routeScopeId, preferredScope, restoreLastScope.
-- **renvoie** : table {targetScope = string|nil}.
+- `route` (*table*) : Route configuration (name, scopeTree, targetScope).
+- `options` (*table|nil*) : Navigation options: routeScopeId, preferredScope, restoreLastScope.
+- **returns**: table {targetScope = string|nil}.
 
 #### `ui_router_managers_scopeManager.isScopeDeclaredInTree(scopeTree, scopeId)`
 
-Indique si scopeId est une portée déclarée dans l'arbre.
+Indicates whether scopeId is a scope declared in the tree.
 
-- `scopeTree` (*table|nil*) : Arbre de portées de la route.
-- `scopeId` (*string|nil*) : Identifiant de portée (chaîne non vide).
-- **renvoie** : boolean true si la portée existe dans l'arbre.
+- `scopeTree` (*table|nil*) : Route's scope tree.
+- `scopeId` (*string|nil*) : Scope identifier (non-empty string).
+- **returns**: boolean true if the scope exists in the tree.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/managers/scopeManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/managers/scopeManager.lua`.*

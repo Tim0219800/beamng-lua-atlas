@@ -1,22 +1,22 @@
 # `ui_router_routes`
 
-*Fichier : `lua/ge/extensions/ui/router/routes.lua` · VM : Game Engine (GE) · 43 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/routes.lua` · VM: Game Engine (GE) · 43 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_routes` : `extensions.load("ui_router_routes")`, puis la globale `ui_router_routes`
+**Access:** extension `ui_router_routes`: `extensions.load("ui_router_routes")`, then the global `ui_router_routes`
 
-Registre racine des routes du routeur UI : l'unique point d'entrée explicite pour enregistrer les familles de routes de premier niveau. Chaque entrée `{ include = "nom" }` monte le module de routes/nom.lua (Root + Children). Il n'y a pas de découverte automatique par le système de fichiers : un module n'est enregistré que s'il est listé ici (ou ajouté à l'exécution via routeManager.addVueRoutes / registerModRoutes). Lu par routeManager.
+Root registry of the UI router routes: the single explicit entry point for registering top-level route families. Each `{ include = "name" }` entry mounts the routes/name.lua module (Root + Children). There is no automatic filesystem discovery: a module is registered only if it is listed here (or added at runtime via routeManager.addVueRoutes / registerModRoutes). Read by routeManager.
 
-## Remarques
+## Notes
 
-- Global.include désigne le module des routes globales à un seul segment (play, /mainmenu…), ici « global ».
-- La liste contient « livery » alors qu'aucun fichier routes/livery.lua n'est présent dans 0.40.5 ; seul « liveries » existe. Cette entrée est ignorée avec un avertissement.
+- Global.include designates the module of single-segment global routes (play, /mainmenu...), here "global".
+- The list contains "livery" although no routes/livery.lua file is present in 0.40.5; only "liveries" exists. This entry is ignored with a warning.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `Children` | table[] | Liste d'entrées `{ include = "module" }` : bigmap, campaign, career, debug, default, firstDrive, freeroamLevels, freeroamWizard, garage, legal, livery, liveries, menu, mission, mods, multiseat, multiplayer, options, pause, radial, scenario, taxi, trackBuilder. |
-| `Global` | table | `{ include = "global" }` : module des routes globales plates (play, /mainmenu, etc.). |
+| `Children` | table[] | List of `{ include = "module" }` entries: bigmap, campaign, career, debug, default, firstDrive, freeroamLevels, freeroamWizard, garage, legal, livery, liveries, menu, mission, mods, multiseat, multiplayer, options, pause, radial, scenario, taxi, trackBuilder. |
+| `Global` | table | `{ include = "global" }`: module of flat global routes (play, /mainmenu, etc.). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/routes.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/routes.lua`.*

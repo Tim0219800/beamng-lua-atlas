@@ -1,0 +1,27 @@
+{
+  "path": "lua/common/libs/copas/copas/limit.lua",
+  "module": "Sous-module de la bibliothèque tierce Copas : limite le nombre de tâches exécutées simultanément. Chaque tâche ajoutée est planifiée tout de suite s'il y a de la place (sinon mise en file) ; wait permet d'attendre la fin de toutes. Le module renvoie { new = new }.",
+  "usage": "local limit = require(\"libs/copas/copas/limit\")\nlocal r = limit.new(5)\nr:addthread(function(url) --[[ ... ]] end, \"http://...\")\nr:wait()",
+  "notes": [
+    "L'objet renvoyé par new a les méthodes addthread(task, ...), removethread(coro), next() et wait() ; addthread renvoie la coroutine, et relance l'erreur d'une tâche qui échoue.",
+    "Valeur par défaut de maxt : 99999."
+  ],
+  "functions": {
+    "new": {
+      "desc": "Crée un exécuteur de tâches avec au plus maxt tâches simultanées.",
+      "params": {"maxt": {"type": "integer|nil", "desc": "Maximum de tâches simultanées (défaut 99999)"}},
+      "returns": [{"type": "table", "desc": "Exécuteur avec addthread, removethread, next, wait"}]
+    }
+  },
+  "classes": {
+    "ll": {
+      "desc": "Liste chaînée interne servant de file d'attente des tâches.",
+      "functions": {
+        "new": {"desc": "Crée une liste vide.", "internal": true},
+        "push": {"desc": "Ajoute un élément en fin de liste.", "params": {"item": {"type": "any", "desc": "Élément"}}, "internal": true},
+        "pop": {"desc": "Retire et renvoie le premier élément (nil si vide).", "internal": true},
+        "remove": {"desc": "Retire un élément donné de la liste.", "params": {"item": {"type": "any", "desc": "Élément"}}, "internal": true}
+      }
+    }
+  }
+}

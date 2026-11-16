@@ -1,137 +1,137 @@
 # `scenario_scenariosLoader`
 
-*Fichier : `lua/ge/extensions/scenario/scenariosLoader.lua` · VM : Game Engine (GE) · 640 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/scenariosLoader.lua` · VM: Game Engine (GE) · 640 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_scenariosLoader` : `extensions.load("scenario_scenariosLoader")`, puis la globale `scenario_scenariosLoader`
+**Access:** extension `scenario_scenariosLoader`: `extensions.load("scenario_scenariosLoader")`, then the global `scenario_scenariosLoader`
 
-Charge et normalise les fichiers de scénario (.json dans levels/<niveau>/scenarios/), les listes pour l'UI et les démarre. processScenarioData complète la table lue du JSON avec des valeurs par défaut (véhicules, extensions, prefabs, aperçus, nombre de joueurs, lapConfig, listes d'actions autorisées/interdites, tentatives). start() décharge le niveau courant si besoin, charge les extensions de scénario (scenario_scenarios, scenario_waypoints, statistics_statistics, scenario_raceUI, scenario_raceGoals) et appelle scenario_scenarios.executeScenario, ou lance un flowgraph. Un moddeur l'utilise pour lister (getList) ou lancer (startByPath, load) un scénario.
+Loads and normalizes scenario files (.json in levels/<level>/scenarios/), lists them for the UI and starts them. processScenarioData completes the table read from the JSON with default values (vehicles, extensions, prefabs, previews, player count, lapConfig, allowed/forbidden action lists, attempts). start() unloads the current level if needed, loads the scenario extensions (scenario_scenarios, scenario_waypoints, statistics_statistics, scenario_raceUI, scenario_raceGoals) and calls scenario_scenarios.executeScenario, or launches a flowgraph. A modder uses it to list (getList) or start (startByPath, load) a scenario.
 
-## Exemple
+## Example
 
 ```lua
--- lancer un scénario par son chemin (extension .json ajoutée si absente)
+-- start a scenario by its path (.json extension added if absent)
 scenario_scenariosLoader.startByPath('/levels/gridmap_v2/scenarios/monscenario.json')
--- lister
+-- list
 for _, sc in ipairs(scenario_scenariosLoader.getList()) do print(sc.name, sc.levelName) end
 ```
 
-## Remarques
+## Notes
 
-- Dépend de core_levels (M.dependencies). Chargée au démarrage du jeu (liste startupExtensions de main.lua).
-- Format du fichier : le JSON d'un scénario est un tableau d'un seul élément ; loadScenario ignore les fichiers dont le tableau n'a pas exactement 1 élément.
-- Valeurs par défaut posées par processScenarioData : vehicles = {scenario_player0 = {playerUsable=true, startFocus=true}, ['*'] = {playerUsable=false}} ; difficulty 'easy' ; introType 'htmlOnly' ; extensions += {name = scenarioName, optional = true} ; playersCountRange {min>=1, max>=min} ; lapCount 1 ; radiusMultiplierAI 1 ; extraTime 0 ; whiteListActions += 'default_whitelist_scenario' ; blackListActions += 'default_blacklist_scenario' ; BranchLapConfig = lapConfig ; lapConfig = seules les chaînes de BranchLapConfig ; initialLapConfig = copie ; attemptsInfo complété (allowedAttempts 0, delayPerAttempt 1, attemptNumber 0...).
-- Déductions faites à partir du chemin : levelName (dossier avant /scenarios/), scenarioName (nom du fichier), directory, mission (fichier principal du niveau, sinon .mis, sinon dossier du niveau), startHTML (<scenarioName>.html s'il existe), previews (<scenarioName>*.jpg du dossier), prefabs (prefabs du dossier du scénario ou du niveau dont le nom contient scenarioName ou est listé dans prefabs), map (titre de levels/<niveau>/info.json).
-- Le réglage restrictScenarios (vrai par défaut) conserve les listes noires d'actions ; s'il est faux, whiteListActions est vidée et blackListActions ne bloque plus que vehicleTeleporting. Forcé à vrai en build shipping si une campagne est active.
-- getList : parcourt les dossiers scenarios/ de tous les niveaux et flowgraphEditor/scenarios/, puis les flowgraphs *.flow.json avec isScenario, puis les missions marquées isAvailableAsScenario (sauf skipMissions). En build shipping les scénarios restrictToCampaign sont masqués sauf includeAll. Lit les fichiers avec des systemYield : à appeler depuis un job.
-- start(sc) : si un niveau est chargé (scenetree.MissionGroup existe), il appelle endActiveGameMode puis se relance après un délai de 3 frames. Pour un scénario flowgraph (sc.flowgraph) : charge le manager, applique sc.variables, unloadAutoExtensions + loadPresetExtensions, émet onFlowgraphScenarioStarted(sc) et lance le manager (qui s'arrête à la fin du niveau). Pour un scénario classique : unloadAutoExtensions, loadPresetExtensions, charge M.scenarioModules puis scenario_scenarios.executeScenario(sc). Renvoie true seulement dans le cas d'erreur de flowgraph introuvable.
-- Bug/incohérence : reloadScenarioSourcefile (rechargement automatique quand le fichier source change) teste « scenarios and ... » où scenarios est une globale inexistante (nil) à cet endroit (la variable locale du même nom est déclarée plus bas) : la fonction retourne immédiatement et onFileChanged ne recharge donc jamais le scénario. En outre elle logue toujours l'erreur « Unable to reload scenario » même après un start réussi (pas de return).
-- Bug/incohérence : processScenarioData lit scenarioData.levelName pour info.json même si scenarioFilename est nil ; ok pour getScenarioDataForMission qui fournit levelName, mais pas pour un flowgraph sans nom de niveau (tmp = '/levels/nil/info.json').
-- Champs exportés non documentés : M.dependencies, M.scenarioModules (liste des extensions chargées par start), M.prefabCache (cache par niveau des prefabs trouvés), M.processedScenarioCache (table jamais remplie dans ce fichier).
+- Depends on core_levels (M.dependencies). Loaded at game startup (startupExtensions list of main.lua).
+- File format: a scenario's JSON is an array with a single element; loadScenario ignores files whose array does not have exactly 1 element.
+- Default values set by processScenarioData: vehicles = {scenario_player0 = {playerUsable=true, startFocus=true}, ['*'] = {playerUsable=false}}; difficulty 'easy'; introType 'htmlOnly'; extensions += {name = scenarioName, optional = true}; playersCountRange {min>=1, max>=min}; lapCount 1; radiusMultiplierAI 1; extraTime 0; whiteListActions += 'default_whitelist_scenario'; blackListActions += 'default_blacklist_scenario'; BranchLapConfig = lapConfig; lapConfig = only the strings of BranchLapConfig; initialLapConfig = copy; attemptsInfo completed (allowedAttempts 0, delayPerAttempt 1, attemptNumber 0...).
+- Deductions made from the path: levelName (folder before /scenarios/), scenarioName (file name), directory, mission (the level's main file, otherwise .mis, otherwise the level folder), startHTML (<scenarioName>.html if it exists), previews (<scenarioName>*.jpg of the folder), prefabs (prefabs of the scenario or level folder whose name contains scenarioName or is listed in prefabs), map (title from levels/<level>/info.json).
+- The restrictScenarios setting (true by default) keeps the action blacklists; if false, whiteListActions is emptied and blackListActions only blocks vehicleTeleporting. Forced to true in shipping builds if a campaign is active.
+- getList: walks the scenarios/ folders of all levels and flowgraphEditor/scenarios/, then the *.flow.json flowgraphs with isScenario, then the missions marked isAvailableAsScenario (except skipMissions). In shipping builds the restrictToCampaign scenarios are hidden unless includeAll. Reads files with systemYield: to be called from a job.
+- start(sc): if a level is loaded (scenetree.MissionGroup exists), it calls endActiveGameMode then restarts itself after a delay of 3 frames. For a flowgraph scenario (sc.flowgraph): loads the manager, applies sc.variables, unloadAutoExtensions + loadPresetExtensions, emits onFlowgraphScenarioStarted(sc) and launches the manager (which stops at the end of the level). For a classic scenario: unloadAutoExtensions, loadPresetExtensions, loads M.scenarioModules then scenario_scenarios.executeScenario(sc). Returns true only in the case of a missing-flowgraph error.
+- BUG/inconsistency: reloadScenarioSourcefile (automatic reload when the source file changes) tests "scenarios and ..." where scenarios is a nonexistent global (nil) at that point (the local variable of the same name is declared further down): the function returns immediately and onFileChanged therefore never reloads the scenario. Moreover it always logs the error "Unable to reload scenario" even after a successful start (no return).
+- BUG/inconsistency: processScenarioData reads scenarioData.levelName for info.json even if scenarioFilename is nil; fine for getScenarioDataForMission which provides levelName, but not for a flowgraph without a level name (tmp = '/levels/nil/info.json').
+- Undocumented exported fields: M.dependencies, M.scenarioModules (list of extensions loaded by start), M.prefabCache (per-level cache of found prefabs), M.processedScenarioCache (table never filled in this file).
 
-**Dépendances (chargées avant) :** `core_levels`
+**Dependencies (loaded first):** `core_levels`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_scenariosLoader.getLevels(subdirectory, levelList)` | Liste les niveaux contenant un sous-dossier de scénarios (cas des routes de bus) avec, pour chaque ligne de bus (*.buslines.json), une copie du premier scénario du niveau adaptée à la route (nom, aperçu, véhicule, point de départ, busdriver.routeID, variance, strictStop=true, traffic=false). | 552 |
-| `scenario_scenariosLoader.getList(subdirectory, includeAll, skipMissions)` | Liste tous les scénarios disponibles : fichiers .json des niveaux, flowgraphs isScenario, et missions disponibles comme scénarios. Sert à l'UI et à techCore. | 326 |
-| `scenario_scenariosLoader.getScenarioDataForMission(m)` | Transforme une mission (gameplay_missions) en scénario utilisable par l'UI (flowgraph loadMissionAsScenario.flow.json, variables level et missionId, previews, auteur, difficulté, infos de mod). | 283 |
-| `scenario_scenariosLoader.load(name)` | Cherche dans getList() les scénarios dont name == name et démarre chacun (pas de break). | 515 |
-| `scenario_scenariosLoader.loadScenario(scenarioPath, key)` | Lit un fichier de scénario (JSON, tableau à 1 élément) et le passe à processScenarioData. Logue une erreur si le fichier est introuvable. | 261 |
-| `scenario_scenariosLoader.onFileChanged(filename, type)` | Hook (émis par main.lua pour chaque fichier modifié) : censé recharger le scénario si son fichier source change (inopérant, voir notes). *(interne)* *(hook)* | 506 |
-| `scenario_scenariosLoader.processScenarioData(scenarioKey, scenarioData, scenarioFilename)` | Complète et normalise une table de scénario (voir notes) : déduit levelName, scenarioName, directory, mission, previews, prefabs, métadonnées de mod, applique les valeurs par défaut et renvoie la même table. | 39 |
-| `scenario_scenariosLoader.start(sc)` | Appelée quand l'utilisateur choisit un scénario dans l'UI : arrête la campagne, décharge le niveau en cours si besoin, puis lance le scénario (classique ou flowgraph). | 426 |
-| `scenario_scenariosLoader.startByPath(path)` | Charge puis démarre le scénario d'un fichier (ajoute .json si absent). | 470 |
+| `scenario_scenariosLoader.getLevels(subdirectory, levelList)` | Lists the levels containing a scenario subfolder (bus route case) with, for each bus line (*.buslines.json), a copy of the level's first scenario adapted to the route (name, preview, vehicle, start point, busdriver.routeID, variance, strictStop=true, traffic=false). | 552 |
+| `scenario_scenariosLoader.getList(subdirectory, includeAll, skipMissions)` | Lists all available scenarios: level .json files, isScenario flowgraphs, and missions available as scenarios. Used by the UI and techCore. | 326 |
+| `scenario_scenariosLoader.getScenarioDataForMission(m)` | Turns a mission (gameplay_missions) into a scenario usable by the UI (flowgraph loadMissionAsScenario.flow.json, variables level and missionId, previews, author, difficulty, mod info). | 283 |
+| `scenario_scenariosLoader.load(name)` | Searches getList() for the scenarios whose name == name and starts each one (no break). | 515 |
+| `scenario_scenariosLoader.loadScenario(scenarioPath, key)` | Reads a scenario file (JSON, 1-element array) and passes it to processScenarioData. Logs an error if the file is not found. | 261 |
+| `scenario_scenariosLoader.onFileChanged(filename, type)` | Hook (emitted by main.lua for each modified file): supposed to reload the scenario if its source file changes (inoperative, see notes). *(internal)* *(hook)* | 506 |
+| `scenario_scenariosLoader.processScenarioData(scenarioKey, scenarioData, scenarioFilename)` | Completes and normalizes a scenario table (see notes): deduces levelName, scenarioName, directory, mission, previews, prefabs, mod metadata, applies the default values and returns the same table. | 39 |
+| `scenario_scenariosLoader.start(sc)` | Called when the user chooses a scenario in the UI: stops the campaign, unloads the current level if needed, then starts the scenario (classic or flowgraph). | 426 |
+| `scenario_scenariosLoader.startByPath(path)` | Loads then starts the scenario of a file (adds .json if absent). | 470 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_scenariosLoader.getLevels(subdirectory, levelList)`
 
-Liste les niveaux contenant un sous-dossier de scénarios (cas des routes de bus) avec, pour chaque ligne de bus (*.buslines.json), une copie du premier scénario du niveau adaptée à la route (nom, aperçu, véhicule, point de départ, busdriver.routeID, variance, strictStop=true, traffic=false).
+Lists the levels containing a scenario subfolder (bus route case) with, for each bus line (*.buslines.json), a copy of the level's first scenario adapted to the route (name, preview, vehicle, start point, busdriver.routeID, variance, strictStop=true, traffic=false).
 
-- `subdirectory` (*string*) : sous-dossier dans scenarios/ (ex. 'busdriver')
-- `levelList` (*table<integer, string>|nil*) : niveaux à parcourir (tous par défaut)
-- **renvoie** : table<integer, table> niveaux {levelName, levelInfo, official, previews, scenarios}
+- `subdirectory` (*string*) : subfolder in scenarios/ (e.g. 'busdriver')
+- `levelList` (*table<integer, string>|nil*) : levels to walk through (all by default)
+- **returns**: table<integer, table> levels {levelName, levelInfo, official, previews, scenarios}
 
 #### `scenario_scenariosLoader.getList(subdirectory, includeAll, skipMissions)`
 
-Liste tous les scénarios disponibles : fichiers .json des niveaux, flowgraphs isScenario, et missions disponibles comme scénarios. Sert à l'UI et à techCore.
+Lists all available scenarios: level .json files, isScenario flowgraphs, and missions available as scenarios. Used by the UI and techCore.
 
-- `subdirectory` (*string|nil*) : sous-dossier de scenarios/ à restreindre
-- `includeAll` (*boolean|nil*) : inclure aussi les scénarios restreints à la campagne et toutes les missions
-- `skipMissions` (*boolean|nil*) : ne pas ajouter les missions
-- **renvoie** : table<integer, table> scénarios
+- `subdirectory` (*string|nil*) : subfolder of scenarios/ to restrict to
+- `includeAll` (*boolean|nil*) : also include campaign-restricted scenarios and all missions
+- `skipMissions` (*boolean|nil*) : do not add the missions
+- **returns**: table<integer, table> scenarios
 
 #### `scenario_scenariosLoader.getScenarioDataForMission(m)`
 
-Transforme une mission (gameplay_missions) en scénario utilisable par l'UI (flowgraph loadMissionAsScenario.flow.json, variables level et missionId, previews, auteur, difficulté, infos de mod).
+Turns a mission (gameplay_missions) into a scenario usable by the UI (flowgraph loadMissionAsScenario.flow.json, variables level and missionId, previews, author, difficulty, mod info).
 
 - `m` (*table*) : mission
-- **renvoie** : table scénario normalisé
+- **returns**: table normalized scenario
 
 #### `scenario_scenariosLoader.load(name)`
 
-Cherche dans getList() les scénarios dont name == name et démarre chacun (pas de break).
+Searches getList() for the scenarios whose name == name and starts each one (no break).
 
-- `name` (*string*) : nom du scénario
+- `name` (*string*) : scenario name
 
 #### `scenario_scenariosLoader.loadScenario(scenarioPath, key)`
 
-Lit un fichier de scénario (JSON, tableau à 1 élément) et le passe à processScenarioData. Logue une erreur si le fichier est introuvable.
+Reads a scenario file (JSON, 1-element array) and passes it to processScenarioData. Logs an error if the file is not found.
 
-- `scenarioPath` (*string*) : chemin du fichier
-- `key` (*any*) : clé de scénario (facultatif)
-- **renvoie** : table|nil scénario normalisé
+- `scenarioPath` (*string*) : file path
+- `key` (*any*) : scenario key (optional)
+- **returns**: table|nil normalized scenario
 
 #### `scenario_scenariosLoader.onFileChanged(filename, type)`
 
-Hook (émis par main.lua pour chaque fichier modifié) : censé recharger le scénario si son fichier source change (inopérant, voir notes).
+Hook (emitted by main.lua for each modified file): supposed to reload the scenario if its source file changes (inoperative, see notes).
 
-- `filename` (*string*) : fichier modifié
-- `type` (*string*) : type de changement
+- `filename` (*string*) : modified file
+- `type` (*string*) : type of change
 
 #### `scenario_scenariosLoader.processScenarioData(scenarioKey, scenarioData, scenarioFilename)`
 
-Complète et normalise une table de scénario (voir notes) : déduit levelName, scenarioName, directory, mission, previews, prefabs, métadonnées de mod, applique les valeurs par défaut et renvoie la même table.
+Completes and normalizes a scenario table (see notes): deduces levelName, scenarioName, directory, mission, previews, prefabs, mod metadata, applies the default values and returns the same table.
 
-- `scenarioKey` (*any*) : clé mémorisée dans scenarioData.scenarioKey (nil possible)
-- `scenarioData` (*table*) : scénario brut (modifié en place)
-- `scenarioFilename` (*string|nil*) : chemin du .json ; nil pour un scénario créé depuis une mission
-- **renvoie** : table scénario normalisé
+- `scenarioKey` (*any*) : key stored in scenarioData.scenarioKey (nil possible)
+- `scenarioData` (*table*) : raw scenario (modified in place)
+- `scenarioFilename` (*string|nil*) : path of the .json; nil for a scenario created from a mission
+- **returns**: table normalized scenario
 
 #### `scenario_scenariosLoader.start(sc)`
 
-Appelée quand l'utilisateur choisit un scénario dans l'UI : arrête la campagne, décharge le niveau en cours si besoin, puis lance le scénario (classique ou flowgraph).
+Called when the user chooses a scenario in the UI: stops the campaign, unloads the current level if needed, then starts the scenario (classic or flowgraph).
 
-- `sc` (*table*) : scénario normalisé
-- **renvoie** : boolean|nil true si le flowgraph est introuvable
+- `sc` (*table*) : normalized scenario
+- **returns**: boolean|nil true if the flowgraph is not found
 
 #### `scenario_scenariosLoader.startByPath(path)`
 
-Charge puis démarre le scénario d'un fichier (ajoute .json si absent).
+Loads then starts the scenario of a file (adds .json if absent).
 
-- `path` (*string*) : chemin du scénario
-- **renvoie** : boolean false si le fichier n'existe pas, sinon true
+- `path` (*string*) : scenario path
+- **returns**: boolean false if the file does not exist, otherwise true
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | table<integer, string> | {'core_levels'} |
-| `prefabCache` | table | Cache [cheminDuNiveau][dossier][nomMinuscule] = chemin du prefab, rempli par buildPrefabCache. |
-| `processedScenarioCache` | table | Table vide, jamais utilisée dans ce fichier. |
-| `scenarioModules` | table<integer, string> | Extensions chargées par start() : scenario_scenarios, scenario_waypoints, statistics_statistics, scenario_raceUI, scenario_raceGoals. |
+| `prefabCache` | table | Cache [levelPath][folder][lowercaseName] = prefab path, filled by buildPrefabCache. |
+| `processedScenarioCache` | table | Empty table, never used in this file. |
+| `scenarioModules` | table<integer, string> | Extensions loaded by start(): scenario_scenarios, scenario_waypoints, statistics_statistics, scenario_raceUI, scenario_raceGoals. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onFlowgraphScenarioStarted` — écouté par 1 module(s)
+- `onFlowgraphScenarioStarted` — listened to by 1 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryExists`, `fileExists`, `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/scenariosLoader.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/scenariosLoader.lua`.*

@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/mcp/shared.lua",
+  "module": "État et petites aides partagés par les modules d'outils MCP (mcp/tools/*.lua). Chargé par `require('mcp/shared')`, donc singleton via le cache de require (ce n'est pas une extension chargée par extensions.load en usage normal). Contient les résultats des appels asynchrones (GE <-> VM véhicule / UI), le journal des instabilités physiques et des helpers pour résoudre l'id de véhicule et lire beamng.log.",
+  "usage": "local shared = require('mcp/shared')\nlocal vid = shared.argVehId({id = 12})   -- 12, ou le véhicule joueur si id absent\nlocal text, eof = shared.readLogFrom(nil) -- eof = taille actuelle du log",
+  "notes": [
+    "readLogFrom ouvre `beamng.log` en relatif au répertoire courant (dossier du jeu / dossier utilisateur selon le lancement) ; renvoie nil si le fichier est introuvable.",
+    "instabilityLog est alimenté par mcp/tools/vehicle.lua (hook onInstabilityDetected, 50 entrées max)."
+  ],
+  "fields": {
+    "asyncResults": {"type": "table<string, any>", "desc": "Résultats des aller-retours asynchrones, indexés par type : `vue`, `ui`, `vehLua` (table vehId -> résultat), `ai`, `electrics`, `hydro`, `testConfigs`. Remplis par les callbacks `mcp_tools._cb.*`, consommés par l'appel d'outil suivant."},
+    "instabilityLog": {"type": "table", "desc": "Liste (max 50) des instabilités physiques détectées : {time, vid, jbeam}. Le commentaire du code dit à tort « async round-trip results » pour ce champ : il s'agit bien du journal d'instabilité."},
+    "vehIdProp": {"type": "table", "desc": "Fragment de schéma JSON réutilisé par les outils véhicule : {id = {type='integer', description='Vehicle id (default: current player vehicle)'}}."}
+  },
+  "functions": {
+    "argVehId": {
+      "desc": "Id de véhicule pris dans args.id, sinon celui du véhicule joueur 0.",
+      "params": {"args": {"type": "table|nil", "desc": "Arguments de l'outil ; champ `id` lu avec tonumber."}},
+      "returns": [{"type": "integer", "desc": "Id du véhicule (peut être -1 ou invalide s'il n'y a pas de véhicule joueur)."}],
+      "internal": false
+    },
+    "vehData": {
+      "desc": "Renvoie le paquet de données du véhicule spawné (parts, config, fichiers, ioCtx) via core_vehicle_manager.getVehicleData.",
+      "params": {"args": {"type": "table|nil", "desc": "Arguments de l'outil (voir argVehId)."}},
+      "returns": [{"type": "table|nil", "desc": "Données du véhicule, ou nil."}],
+      "internal": false
+    },
+    "argModel": {
+      "desc": "Modèle pris dans args.model, sinon le fichier JBeam du véhicule joueur courant.",
+      "params": {"args": {"type": "table|nil", "desc": "Arguments de l'outil ; champ `model`."}},
+      "returns": [{"type": "string|nil", "desc": "Clé du modèle, nil s'il n'y a ni argument ni véhicule joueur."}],
+      "internal": false
+    },
+    "readLogFrom": {
+      "desc": "Lit beamng.log depuis l'octet `pos` jusqu'à la fin. Avec pos=nil, démarre à la fin (renvoie \"\") : sert à mesurer la taille actuelle. Si le fichier a rétréci (rotation, troncature), repart de 0.",
+      "params": {"pos": {"type": "integer|nil", "desc": "Offset en octets où commencer."}},
+      "returns": [{"type": "string|nil", "desc": "Texte lu (nil si le fichier n'a pas pu être ouvert)."}, {"type": "integer", "desc": "Taille du fichier (position de fin) à réutiliser comme prochain `pos`."}],
+      "internal": false
+    }
+  }
+}

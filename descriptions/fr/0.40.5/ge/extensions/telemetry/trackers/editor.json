@@ -1,0 +1,49 @@
+{
+  "path": "lua/ge/extensions/telemetry/trackers/editor.lua",
+  "module": "Suiveur de télémétrie de l'éditeur de monde : mesure la durée d'ouverture de l'éditeur (activité « editorActive ») et enregistre les fenêtres d'outils ouvertes (évènement « editorToolWindowOpened » avec nom d'outil et point d'entrée). Seuls les noms d'outils sont rapportés, jamais les chemins de niveaux ou d'assets. Le constructeur de pistes est suivi par un autre suiveur de gameplay.",
+  "notes": [
+    "Si l'éditeur est déjà actif au chargement de l'extension (editor.active), l'activité démarre immédiatement.",
+    "onExit et onExtensionUnloaded sont la même fonction : elle ferme l'activité ouverte, sinon la dernière n'aurait pas de durée."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+  },
+  "functions": {
+    "onEditorActivated": {
+      "desc": "Hook appelé à l'activation de l'éditeur : démarre l'activité editorActive (sans effet si déjà ouverte).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Hook appelé à la fermeture de l'éditeur : termine l'activité editorActive.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorToolWindowOpened": {
+      "desc": "Hook appelé à l'ouverture d'une fenêtre d'outil : enregistre l'évènement.",
+      "params": {"toolName": {"type": "string", "desc": "Nom de l'outil."}, "entryPoint": {"type": "string", "desc": "Point d'entrée (menu, raccourci, etc., déduit du code)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement : déchargement manuel, et démarre l'activité si l'éditeur est déjà actif.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExit": {
+      "desc": "Hook appelé à la fermeture du jeu : ferme l'activité éditeur ouverte.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement : ferme l'activité éditeur ouverte (même fonction que onExit).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

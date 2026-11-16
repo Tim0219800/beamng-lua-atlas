@@ -1,20 +1,90 @@
 {
   "path": "lua/ge/extensions/flowgraph/modules/threadModule.lua",
-  "module": "Module flowgraph (moduleOrder 1000) qui permet à un projet flowgraph d'en lancer d'autres (projets enfants) et d'échanger des messages avec eux. Les messages reçus sont mis en file puis distribués au début de la mise à jour suivante (hook onFlowgraphManagerPreUpdate) aux nœuds via broadcastCall. À l'arrêt, tous les enfants lancés sont arrêtés et retirés.",
+  "module": "Flowgraph module (moduleOrder 1000) that lets a flowgraph project launch others (child projects) and exchange messages with them. Received messages are queued then distributed at the start of the next update (onFlowgraphManagerPreUpdate hook) to the nodes via broadcastCall. On stop, all launched children are stopped and removed.",
   "notes": [
-    "Un message avec un champ hook est diffusé comme appel mgr:broadcastCall(message.hook, message.data) ; sinon il l'est comme 'onThreadMessageProcess'.",
-    "targetId == -1 désigne le parent (parentId) ; un projet racine a parentId = -1, donc l'envoi échoue (renvoie false).",
-    "startProjectFromFilepath affiche un dump de la liste des enfants (dumpz)."
+    "A message with a hook field is broadcast as a call mgr:broadcastCall(message.hook, message.data); otherwise it is broadcast as 'onThreadMessageProcess'.",
+    "targetId == -1 designates the parent (parentId); a root project has parentId = -1, so sending fails (returns false).",
+    "startProjectFromFilepath prints a dump of the children list (dumpz)."
   ],
   "functions": {
-    "init": {"desc": "Appelé à la création du module : appelle clear().", "internal": true},
-    "clear": {"desc": "Vide les enfants et les messages, remet parentId = -1.", "internal": true},
-    "afterTrigger": {"desc": "Appelé après le tick du graphe (ne fait rien).", "internal": true},
-    "sendMessage": {"desc": "Envoie un message au manager cible (ou au parent si targetId vaut -1). Journalise l'envoi.", "params": {"targetId": {"type": "integer", "desc": "id du manager flowgraph cible, -1 pour le parent"}, "message": {"type": "table", "desc": "message (champs facultatifs name, hook, data)"}, "sourceNode": {"type": "table|nil", "desc": "nœud émetteur, pour le log"}}, "returns": [{"type": "boolean", "desc": "true si la cible existe"}]},
-    "onFlowgraphManagerPreUpdate": {"desc": "Hook appelé avant la mise à jour des managers : diffuse puis vide la file de messages reçus.", "internal": true},
-    "receiveMessage": {"desc": "Ajoute un message à la file de réception et le journalise.", "params": {"message": {"type": "table", "desc": "message"}, "sourceId": {"type": "integer", "desc": "id du manager émetteur"}}},
-    "startProjectFromFilepath": {"desc": "Charge un projet flowgraph depuis un fichier (core_flowgraphManager.loadManager), le démarre, l'enregistre comme enfant et lui donne ce manager comme parent.", "params": {"file": {"type": "string", "desc": "chemin du projet"}, "sourceNode": {"type": "table|nil", "desc": "nœud à l'origine, pour le log"}}, "returns": [{"type": "integer", "desc": "id du manager enfant"}]},
-    "executionStopped": {"desc": "Appelé à l'arrêt du projet : arrête immédiatement chaque enfant, les retire à la frame suivante, puis appelle clear().", "internal": true},
-    "executionStarted": {"desc": "Appelé au démarrage du projet (ne fait rien).", "internal": true}
+    "init": {
+      "desc": "Called when the module is created: calls clear().",
+      "internal": true
+    },
+    "clear": {
+      "desc": "Clears the children and the messages, sets parentId = -1 back.",
+      "internal": true
+    },
+    "afterTrigger": {
+      "desc": "Called after the graph tick (does nothing).",
+      "internal": true
+    },
+    "sendMessage": {
+      "desc": "Sends a message to the target manager (or to the parent if targetId is -1). Logs the send.",
+      "params": {
+        "targetId": {
+          "type": "integer",
+          "desc": "id of the target flowgraph manager, -1 for the parent"
+        },
+        "message": {
+          "type": "table",
+          "desc": "message (optional fields name, hook, data)"
+        },
+        "sourceNode": {
+          "type": "table|nil",
+          "desc": "sender node, for the log"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the target exists"
+        }
+      ]
+    },
+    "onFlowgraphManagerPreUpdate": {
+      "desc": "Hook called before the managers update: broadcasts then clears the queue of received messages.",
+      "internal": true
+    },
+    "receiveMessage": {
+      "desc": "Adds a message to the receive queue and logs it.",
+      "params": {
+        "message": {
+          "type": "table",
+          "desc": "message"
+        },
+        "sourceId": {
+          "type": "integer",
+          "desc": "id of the sender manager"
+        }
+      }
+    },
+    "startProjectFromFilepath": {
+      "desc": "Loads a flowgraph project from a file (core_flowgraphManager.loadManager), starts it, registers it as a child and gives it this manager as parent.",
+      "params": {
+        "file": {
+          "type": "string",
+          "desc": "project path"
+        },
+        "sourceNode": {
+          "type": "table|nil",
+          "desc": "originating node, for the log"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "id of the child manager"
+        }
+      ]
+    },
+    "executionStopped": {
+      "desc": "Called when the project stops: immediately stops each child, removes them on the next frame, then calls clear().",
+      "internal": true
+    },
+    "executionStarted": {
+      "desc": "Called when the project starts (does nothing).",
+      "internal": true
+    }
   }
 }

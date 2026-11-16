@@ -1,31 +1,31 @@
 # `editor_crawlEditor_input`
 
-*Fichier : `lua/ge/extensions/editor/crawlEditor/input.lua` · VM : Game Engine (GE) · 51 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/crawlEditor/input.lua` · VM: Game Engine (GE) · 51 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_crawlEditor_input` : `extensions.load("editor_crawlEditor_input")`, puis la globale `editor_crawlEditor_input`
+**Access:** extension `editor_crawlEditor_input`: `extensions.load("editor_crawlEditor_input")`, then the global `editor_crawlEditor_input`
 
-Aide de l'éditeur de crawl pour la souris : à chaque appel de updateMouseInfo, calcule le rayon caméra-souris, le raycast sur la scène (forêt désactivée le temps du tir) et les états clic/maintien/relâché du bouton gauche. Les autres fichiers du crawlEditor lisent le résultat via getMouseInfo().
+Crawl editor mouse helper: on each updateMouseInfo call, computes the camera-mouse ray, the raycast on the scene (forest disabled during the cast) and the left button click/hold/release states. The other crawlEditor files read the result via getMouseInfo().
 
-## Remarques
+## Notes
 
-- Champs de la table mouseInfo : camPos, ray, rayDir, rayCast, valid, down, hold, up, closestNodeHovered, et _downPos/_downNormal, _holdPos/_holdNormal, _upPos/_upNormal (vec3 issus de rayCast.pos et rayCast.normal).
-- down/hold/up sont forcés à false quand le raycast ne touche rien ; sinon ils sont aussi faux si imgui capte la souris (WantCaptureMouse).
-- getMouseInfo() renvoie nil tant que updateMouseInfo n'a jamais été appelé.
+- Fields of the mouseInfo table: camPos, ray, rayDir, rayCast, valid, down, hold, up, closestNodeHovered, and _downPos/_downNormal, _holdPos/_holdNormal, _upPos/_upNormal (vec3 from rayCast.pos and rayCast.normal).
+- down/hold/up are forced to false when the raycast hits nothing; otherwise they are also false if imgui captures the mouse (WantCaptureMouse).
+- getMouseInfo() returns nil as long as updateMouseInfo has never been called.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_crawlEditor_input.getMouseInfo()` | Renvoie la table mouseInfo courante. | 45 |
-| `editor_crawlEditor_input.updateMouseInfo()` | Met à jour la table mouseInfo (position caméra, rayon souris, raycast, états du bouton gauche). Désactive puis réactive la collision de la forêt autour du raycast. | 10 |
+| `editor_crawlEditor_input.getMouseInfo()` | Returns the current mouseInfo table. | 45 |
+| `editor_crawlEditor_input.updateMouseInfo()` | Updates the mouseInfo table (camera position, mouse ray, raycast, left button states). Disables then re-enables forest collision around the raycast. | 10 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_crawlEditor_input.getMouseInfo()`
 
-Renvoie la table mouseInfo courante.
+Returns the current mouseInfo table.
 
-- **renvoie** : table|nil mouseInfo, ou nil avant le premier updateMouseInfo
+- **returns**: table|nil mouseInfo, or nil before the first updateMouseInfo
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/crawlEditor/input.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/crawlEditor/input.lua`.*

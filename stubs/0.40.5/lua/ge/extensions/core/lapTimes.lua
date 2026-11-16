@@ -2,79 +2,79 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/lapTimes.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_lapTimes` : prépare pour l'UI (appli de temps au tour) les chronos d'une course du système de course « race » : temps courant, tour et segment courants, historique des tours et segments, meilleurs temps, écarts au précédent/meilleur. Elle est alimentée par les fonctions update*FromRace(race, playerId) appelées par le moteur de course, mémorise les résultats dans quatre tables (rapide, lente, statique, placements) et les envoie à l'UI dans onUpdate sous forme de streams guihooks `lapTimes_fast`, `lapTimes_slow`, `lapTimes_static`, `lapTimes_placement`.
---- Accès : extension `core_lapTimes` : `extensions.load("core_lapTimes")`, puis la globale `core_lapTimes`
+--- GE extension `core_lapTimes`: prepares for the UI (lap times app) the timers of a "race" race system race: current time, current lap and segment, history of laps and segments, best times, gaps to the previous/best. It is fed by the update*FromRace(race, playerId) functions called by the race engine, stores the results in four tables (fast, slow, static, placements) and sends them to the UI in onUpdate as guihooks streams `lapTimes_fast`, `lapTimes_slow`, `lapTimes_static`, `lapTimes_placement`.
+--- Access: extension `core_lapTimes`: `extensions.load("core_lapTimes")`, then the global `core_lapTimes`
 ---@class core_lapTimes
 core_lapTimes = {}
 
---- Formate un temps en secondes au format MM:SS.mmm ; avec addSign, préfixe '+' (>= 0) ou '-' pour les écarts.
----Source : lua/ge/extensions/core/lapTimes.lua:92
----@param timeInSeconds number|nil Temps en secondes (négatif accepté avec addSign).
----@param addSign boolean|nil true = ajoute le signe.
----@return string|nil  Texte formaté ; nil si timeInSeconds est nil.
+--- Formats a time in seconds as MM:SS.mmm; with addSign, prefixes '+' (>= 0) or '-' for gaps.
+---Source: lua/ge/extensions/core/lapTimes.lua:92
+---@param timeInSeconds number|nil Time in seconds (negative accepted with addSign).
+---@param addSign boolean|nil true = adds the sign.
+---@return string|nil  Formatted text; nil if timeInSeconds is nil.
 function core_lapTimes.formatTime(timeInSeconds, addSign) end
 
---- Qualifie un écart de temps pour l'affichage.
----Source : lua/ge/extensions/core/lapTimes.lua:109
----@param val number Écart en secondes (positif = plus lent).
----@return string  'worse', 'better' ou 'same'.
+--- Qualifies a time gap for display.
+---Source: lua/ge/extensions/core/lapTimes.lua:109
+---@param val number Gap in seconds (positive = slower).
+---@return string  'worse', 'better' or 'same'.
 function core_lapTimes.getDiffFlavor(val) end
 
---- Réinitialise tout l'état (statut 'stopped', tours, segments, meilleurs temps, tables de streams) et demande un envoi complet des quatre streams à l'UI.
----Source : lua/ge/extensions/core/lapTimes.lua:53
+--- Resets the whole state (status 'stopped', laps, segments, best times, stream tables) and requests a full send of the four streams to the UI.
+---Source: lua/ge/extensions/core/lapTimes.lua:53
 function core_lapTimes.initialize() end
 
---- Hook du nouveau système de course : configure totalLaps, totalSegments (nombre de pathnodes triés) et closedCircuit à partir de l'objet race.
----Source : lua/ge/extensions/core/lapTimes.lua:641
----@param race table Objet course (lapCount, path.pathnodes.sorted, path.config.closed).
+--- New race system hook: configures totalLaps, totalSegments (number of sorted pathnodes) and closedCircuit from the race object.
+---Source: lua/ge/extensions/core/lapTimes.lua:641
+---@param race table Race object (lapCount, path.pathnodes.sorted, path.config.closed).
 function core_lapTimes.newRaceStart(race) end
 
---- Hook du nouveau système de course : appelle onRaceStop.
----Source : lua/ge/extensions/core/lapTimes.lua:654
+--- New race system hook: calls onRaceStop.
+---Source: lua/ge/extensions/core/lapTimes.lua:654
 function core_lapTimes.newRaceStop() end
 
---- Démarre le suivi d'une course : appelle initialize puis lit le nombre de tours et de segments dans meta, passe le statut à 'started' et demande l'envoi des quatre streams. Sans effet si meta est nil.
----Source : lua/ge/extensions/core/lapTimes.lua:665
+--- Starts tracking a race: calls initialize then reads the number of laps and segments from meta, sets the status to 'started' and requests the sending of the four streams. No effect if meta is nil.
+---Source: lua/ge/extensions/core/lapTimes.lua:665
 function core_lapTimes.onRaceStart() end
 
---- Passe le statut à 'stopped' et demande l'envoi des quatre streams.
----Source : lua/ge/extensions/core/lapTimes.lua:147
+--- Sets the status to 'stopped' and requests the sending of the four streams.
+---Source: lua/ge/extensions/core/lapTimes.lua:147
 function core_lapTimes.onRaceStop() end
 
---- Hook par image : envoie à l'UI (guihooks.queueStream) les streams marqués comme à envoyer puis efface les drapeaux.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/lapTimes.lua:595
----@param dtReal number Non utilisé.
----@param dtSim number Non utilisé.
----@param dtRaw number Non utilisé.
+--- Per-frame hook: sends to the UI (guihooks.queueStream) the streams marked as to be sent then clears the flags.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/lapTimes.lua:595
+---@param dtReal number Not used.
+---@param dtSim number Not used.
+---@param dtRaw number Not used.
 function core_lapTimes.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Met à jour totalLaps, totalSegments et closedCircuit pour les champs présents dans config.
----Source : lua/ge/extensions/core/lapTimes.lua:120
+--- Updates totalLaps, totalSegments and closedCircuit for the fields present in config.
+---Source: lua/ge/extensions/core/lapTimes.lua:120
 ---@param config table {totalLaps?, totalSegments?, closedCircuit?}.
 function core_lapTimes.setConfiguration(config) end
 
---- Calcule les valeurs rapides pour un joueur : temps depuis le départ, durée du tour et du segment courants (avec le temps de fin figé quand la course est terminée) et prépare le stream rapide.
----Source : lua/ge/extensions/core/lapTimes.lua:156
----@param race table Objet course.
----@param playerId integer Clé de race.states.
+--- Computes the fast values for a player: time since start, current lap and segment duration (with the end time frozen when the race is finished) and prepares the fast stream.
+---Source: lua/ge/extensions/core/lapTimes.lua:156
+---@param race table Race object.
+---@param playerId integer Key of race.states.
 function core_lapTimes.updateFastFromRace(race, playerId) end
 
---- Vide et prépare le stream de placements (vide : fonctionnalité non implémentée, TODO dans le code).
----Source : lua/ge/extensions/core/lapTimes.lua:572
----@param race table Objet course.
----@param playerId integer Non utilisé.
+--- Clears and prepares the placements stream (empty: feature not implemented, TODO in the code).
+---Source: lua/ge/extensions/core/lapTimes.lua:572
+---@param race table Race object.
+---@param playerId integer Not used.
 function core_lapTimes.updatePlacementFromRace(race, playerId) end
 
---- Recalcule l'historique pour un joueur : statut, tour/segment courants, meilleur tour, meilleurs segments par index, diffs, listes lapTimes/segmentTimes/combinedTimes et prépare le stream lent.
----Source : lua/ge/extensions/core/lapTimes.lua:242
----@param race table Objet course.
----@param playerId integer Clé de race.states.
+--- Recomputes the history for a player: status, current lap/segment, best lap, best segments by index, diffs, lapTimes/segmentTimes/combinedTimes lists and prepares the slow stream.
+---Source: lua/ge/extensions/core/lapTimes.lua:242
+---@param race table Race object.
+---@param playerId integer Key of race.states.
 function core_lapTimes.updateSlowFromRace(race, playerId) end
 
---- Met à jour les valeurs statiques (nombre de tours, nombre de segments, circuit fermé) à partir de la course et prépare le stream statique.
----Source : lua/ge/extensions/core/lapTimes.lua:546
----@param race table Objet course.
----@param playerId integer Non utilisé.
+--- Updates the static values (number of laps, number of segments, closed circuit) from the race and prepares the static stream.
+---Source: lua/ge/extensions/core/lapTimes.lua:546
+---@param race table Race object.
+---@param playerId integer Not used.
 function core_lapTimes.updateStaticFromRace(race, playerId) end
 

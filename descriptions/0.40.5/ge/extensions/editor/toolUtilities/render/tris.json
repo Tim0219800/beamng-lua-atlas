@@ -1,16 +1,122 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/render/tris.lua",
-  "module": "Dessin de triangles pleins pour les outils d'édition de splines (issu de l'ancien render.lua). Triangles filtrés à 600 m de la caméra, remplissage de polygones simples (triangulation par découpe d'oreilles) et remplissage de régions 2D avec trous par balayage de lignes (règle pair-impair). Sert aux aperçus de surfaces dans l'éditeur.",
+  "module": "Solid triangle drawing for the spline editing tools (from the old render.lua). Triangles filtered at 600 m from the camera, filling of simple polygons (ear clipping triangulation) and filling of 2D regions with holes by scanline (even-odd rule). Used for surface previews in the editor.",
   "notes": [
-    "drawTriCulled ne dessine que si les trois sommets sont à moins de 600 m de la caméra ; le triangle est dessiné plein avec debugDraw.drawTriSolid.",
-    "drawFilledRegions2D est destiné aux aperçus, pas à de la géométrie finale : l'escalier dû au pas de balayage sur les arêtes diagonales est masqué par le contour exact tracé par l'appelant."
+    "drawTriCulled only draws if all three vertices are within 600 m of the camera; the triangle is drawn solid with debugDraw.drawTriSolid.",
+    "drawFilledRegions2D is intended for previews, not final geometry: the staircase effect due to the scan step on diagonal edges is hidden by the exact outline drawn by the caller."
   ],
   "functions": {
-    "drawTriCulled": {"desc": "Dessine un triangle plein de couleur col s'il est entièrement à moins de 600 m de la caméra.", "params": {"a": {"type": "vec3", "desc": "Sommet 1."}, "b": {"type": "vec3", "desc": "Sommet 2."}, "c": {"type": "vec3", "desc": "Sommet 3."}, "col": {"type": "integer", "desc": "Couleur packée."}}, "returns": []},
-    "drawTriNotSelectedSurface": {"desc": "Triangle de surface non sélectionnée (colourNotSelectedSurf).", "params": {"a": {"type": "vec3", "desc": "Sommet 1."}, "b": {"type": "vec3", "desc": "Sommet 2."}, "c": {"type": "vec3", "desc": "Sommet 3."}}, "returns": []},
-    "drawTriPreviewSurface": {"desc": "Triangle de surface d'aperçu (colourPreviewSurf).", "params": {"a": {"type": "vec3", "desc": "Sommet 1."}, "b": {"type": "vec3", "desc": "Sommet 2."}, "c": {"type": "vec3", "desc": "Sommet 3."}}, "returns": []},
-    "drawTriActiveSurface": {"desc": "Triangle de surface active (colourActiveSurf).", "params": {"a": {"type": "vec3", "desc": "Sommet 1."}, "b": {"type": "vec3", "desc": "Sommet 2."}, "c": {"type": "vec3", "desc": "Sommet 3."}}, "returns": []},
-    "drawFilledPolygon": {"desc": "Remplit un polygone simple, éventuellement concave, dont les sommets sont des vec3 déjà à la hauteur de dessin. Triangule en 2D (x,y) par découpe d'oreilles (geom.triangulatePolygon2D), puis dessine les triangles. Sans effet pour moins de 3 sommets ou un anneau dégénéré.", "params": {"verts": {"type": "vec3[]", "desc": "Sommets du polygone."}, "col": {"type": "integer", "desc": "Couleur packée."}}, "returns": []},
-    "drawFilledRegions2D": {"desc": "Remplit un ensemble de régions 2D (anneaux {x=,y=}), trous compris, par balayage horizontal avec la règle pair-impair : un point dans un nombre impair d'anneaux est rempli. Gère formes concaves et régions disjointes sans triangulation.", "params": {"regions": {"type": "table", "desc": "Liste d'anneaux, chacun une liste de {x=,y=}."}, "col": {"type": "integer", "desc": "Couleur packée."}, "zFn": {"type": "function", "desc": "zFn(x, y) renvoie la hauteur de dessin (ex. hauteur du terrain)."}, "step": {"type": "number|nil", "desc": "Pas de balayage ; auto entre 0.25 et 3 m (hauteur/100) si nil."}}, "returns": []}
+    "drawTriCulled": {
+      "desc": "Draws a solid triangle of color col if it is entirely within 600 m of the camera.",
+      "params": {
+        "a": {
+          "type": "vec3",
+          "desc": "Vertex 1."
+        },
+        "b": {
+          "type": "vec3",
+          "desc": "Vertex 2."
+        },
+        "c": {
+          "type": "vec3",
+          "desc": "Vertex 3."
+        },
+        "col": {
+          "type": "integer",
+          "desc": "Packed color."
+        }
+      },
+      "returns": []
+    },
+    "drawTriNotSelectedSurface": {
+      "desc": "Unselected surface triangle (colourNotSelectedSurf).",
+      "params": {
+        "a": {
+          "type": "vec3",
+          "desc": "Vertex 1."
+        },
+        "b": {
+          "type": "vec3",
+          "desc": "Vertex 2."
+        },
+        "c": {
+          "type": "vec3",
+          "desc": "Vertex 3."
+        }
+      },
+      "returns": []
+    },
+    "drawTriPreviewSurface": {
+      "desc": "Preview surface triangle (colourPreviewSurf).",
+      "params": {
+        "a": {
+          "type": "vec3",
+          "desc": "Vertex 1."
+        },
+        "b": {
+          "type": "vec3",
+          "desc": "Vertex 2."
+        },
+        "c": {
+          "type": "vec3",
+          "desc": "Vertex 3."
+        }
+      },
+      "returns": []
+    },
+    "drawTriActiveSurface": {
+      "desc": "Active surface triangle (colourActiveSurf).",
+      "params": {
+        "a": {
+          "type": "vec3",
+          "desc": "Vertex 1."
+        },
+        "b": {
+          "type": "vec3",
+          "desc": "Vertex 2."
+        },
+        "c": {
+          "type": "vec3",
+          "desc": "Vertex 3."
+        }
+      },
+      "returns": []
+    },
+    "drawFilledPolygon": {
+      "desc": "Fills a simple polygon, possibly concave, whose vertices are vec3s already at the drawing height. Triangulates in 2D (x,y) by ear clipping (geom.triangulatePolygon2D), then draws the triangles. No effect for fewer than 3 vertices or a degenerate ring.",
+      "params": {
+        "verts": {
+          "type": "vec3[]",
+          "desc": "Polygon vertices."
+        },
+        "col": {
+          "type": "integer",
+          "desc": "Packed color."
+        }
+      },
+      "returns": []
+    },
+    "drawFilledRegions2D": {
+      "desc": "Fills a set of 2D regions ({x=,y=} rings), holes included, by horizontal scan with the even-odd rule: a point inside an odd number of rings is filled. Handles concave shapes and disjoint regions without triangulation.",
+      "params": {
+        "regions": {
+          "type": "table",
+          "desc": "List of rings, each a list of {x=,y=}."
+        },
+        "col": {
+          "type": "integer",
+          "desc": "Packed color."
+        },
+        "zFn": {
+          "type": "function",
+          "desc": "zFn(x, y) returns the drawing height (e.g. terrain height)."
+        },
+        "step": {
+          "type": "number|nil",
+          "desc": "Scan step; auto between 0.25 and 3 m (height/100) if nil."
+        }
+      },
+      "returns": []
+    }
   }
 }

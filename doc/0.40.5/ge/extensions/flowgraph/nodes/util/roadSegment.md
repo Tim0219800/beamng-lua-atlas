@@ -1,25 +1,25 @@
 # `flowgraph_nodes_util_roadSegment`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/roadSegment.lua` · VM : Game Engine (GE) · 76 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/roadSegment.lua` · VM: Game Engine (GE) · 76 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/roadSegment")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/roadSegment")` (file under extensions/ but not a regular extension)
 
-Nœud « Road Properties » (repeat_instant). Donne les propriétés d'un segment de route du navgraph défini par deux nœuds. Entrées : n1, n2 (noms de nœuds), xnorm (caché, 0,5 par défaut). Sorties : roadDir (direction normalisée, tient compte du sens unique), length, width, drivability (0 à 1), speedLimit (m/s), lanesIncoming, lanesOutgoing, lanesTotal, isOneWay, isPrivate.
+Node "Road Properties" (repeat_instant). Gives the properties of a navgraph road segment defined by two nodes. Inputs: n1, n2 (node names), xnorm (hidden, 0.5 by default). Outputs: roadDir (normalized direction, takes one-way into account), length, width, drivability (0 to 1), speedLimit (m/s), lanesIncoming, lanesOutgoing, lanesTotal, isOneWay, isPrivate.
 
-## Remarques
+## Notes
 
-- Bug : si aucun lien n'existe entre n1 et n2 (link == nil), le code lit quand même link.inNode et lève une erreur.
-- Le nombre de voies est compté sur la chaîne link.lanes (caractères « - » entrants, « + » sortants).
+- Bug: if no link exists between n1 and n2 (link == nil), the code still reads link.inNode and raises an error.
+- The number of lanes is counted on the string link.lanes ("-" characters incoming, "+" outgoing).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Réinitialise le cache des deux noms. | 38 |
-| `C:init()` | Réinitialise le cache des deux noms. | 34 |
-| `C:work()` | Si les deux nœuds existent dans map.getMap().nodes, recalcule (quand la paire change) longueur, drivabilité, limite de vitesse, sens unique, route privée, nombre de voies (comptage des « - » et « + » de link.lanes, « -+ » par défaut) et direction ; recalcule toujours la largeur (2 × rayon interpolé selon xnorm). | 42 |
+| `C:_executionStarted()` | Resets the cache of the two names. | 38 |
+| `C:init()` | Resets the cache of the two names. | 34 |
+| `C:work()` | If both nodes exist in map.getMap().nodes, recomputes (when the pair changes) length, drivability, speed limit, one-way, private road, number of lanes (counting "-" and "+" in link.lanes, "-+" by default) and direction; always recomputes the width (2 × radius interpolated according to xnorm). | 42 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/roadSegment.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/roadSegment.lua`.*

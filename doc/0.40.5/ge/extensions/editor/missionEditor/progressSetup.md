@@ -1,28 +1,28 @@
 # `editor_missionEditor_progressSetup`
 
-*Fichier : `lua/ge/extensions/editor/missionEditor/progressSetup.lua` · VM : Game Engine (GE) · 108 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/missionEditor/progressSetup.lua` · VM: Game Engine (GE) · 108 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/missionEditor/progressSetup")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/missionEditor/progressSetup")` (file under extensions/ but not a regular extension)
 
-Onglet « Progress » (configuration de progression) de l'éditeur de missions. Il récupère la définition de progression du type de mission (gameplay_missions_missions.getMissionProgressSetupData) et propose un mode « Raw » pour éditer le JSON de saveData. Le module renvoie un constructeur : require(...)(missionEditor). Fichier apparemment incomplet.
+"Progress" tab (progress configuration) of the mission editor. It gets the mission type's progress definition (gameplay_missions_missions.getMissionProgressSetupData) and offers a "Raw" mode to edit the saveData JSON. The module returns a constructor: require(...)(missionEditor). File apparently incomplete.
 
-## Remarques
+## Notes
 
-- Bug : draw appelle self:drawProgress(), qui n'est pas définie dans ce fichier (copie de progressSingle) ; hors mode Raw, l'appel provoque une erreur Lua.
-- Bug : self.missionInstance n'est jamais défini dans setMission, alors que le mode Raw lit self.missionInstance.saveData.
-- Le mode Raw affiche missionInstance.saveData mais écrit le résultat dans mission.saveData.
+- Bug: draw calls self:drawProgress(), which is not defined in this file (copy of progressSingle); outside Raw mode, the call causes a Lua error.
+- Bug: self.missionInstance is never set in setMission, while Raw mode reads self.missionInstance.saveData.
+- Raw mode displays missionInstance.saveData but writes the result into mission.saveData.
 
-## Classe `C`
+## Class `C`
 
-Instance de l'onglet. Champs : missionEditor, mission, progressSetup, rawEditPerMission.
+Instance of the tab. Fields: missionEditor, mission, progressSetup, rawEditPerMission.
 
-Le module renvoie un constructeur : `local obj = require("editor_missionEditor_progressSetup")(options)`.
+The module returns a constructor: `local obj = require("editor_missionEditor_progressSetup")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:draw()` | Dessine l'en-tête avec la case Raw puis la vue de progression ou l'éditeur JSON brut (Edit / Finish Editing / Cancel). | 45 |
-| `C:init(missionEditor)` | Constructeur. | 24 |
-| `C:setMission(mission)` | Définit la mission courante et charge progressSetup pour son type. | 33 |
+| `C:draw()` | Draws the header with the Raw checkbox then the progress view or the raw JSON editor (Edit / Finish Editing / Cancel). | 45 |
+| `C:init(missionEditor)` | Constructor. | 24 |
+| `C:setMission(mission)` | Sets the current mission and loads progressSetup for its type. | 33 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionEditor/progressSetup.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/missionEditor/progressSetup.lua`.*

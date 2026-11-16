@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/scenario/raceMarkers/attention.lua",
+  "module": "Marqueur de checkpoint « flèche d'attention » : une flèche bleue (modèle s_mm_arrow_ribbon_down.dae) qui flotte au-dessus du point, tournée vers la caméra, avec un balancement vertical. Le module renvoie un constructeur : require('scenario/raceMarkers/attention')(id) donne un objet de la classe C. Utilisé via scenario_race_marker (setupMarkers avec le nom 'attention') ou directement.",
+  "notes": [
+    "setToCheckpoint(wp) lit wp.pos (vec3) et wp.radius (échelle de la flèche, 1.5 par défaut).",
+    "La couleur est fixe (0, 0.4, 1) quel que soit le mode ; le mode ne sert qu'à masquer (mode 'hidden') ou afficher.",
+    "En marche à pied (gameplay_walk.isWalking), la flèche monte de 1 m quand la caméra est à moins de 4 m du marqueur.",
+    "La flèche est un TSStatic nommé cylinder_marker_left<id> ajouté à ScenarioObjectsGroup, avec useInstanceRenderData.",
+    "La méthode update a pour signature réelle (dt, dtSim) ; la page extraite l'affiche (dtSim) à cause de la déclaration avec ':'.",
+    "Le commentaire de setToCheckpoint décrit des modes (default, branch, next, lap, finish, start) qui ne sont pas utilisés par ce marqueur."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Marqueur flèche d'attention.",
+      "functions": {
+        "init": {"desc": "Constructeur : initialise l'état (invisible, mode 'hidden', lisseur de hauteur).", "params": {"id": {"type": "integer", "desc": "Identifiant unique du marqueur."}}, "internal": true},
+        "update": {"desc": "Appel par image. Masque le marqueur une fois le fondu terminé en mode 'hidden', oriente la flèche vers la caméra (core_camera.getPosition), la fait osciller et applique la couleur.", "params": {"dt": {"type": "number", "desc": "Durée réelle de l'image (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}}, "internal": true},
+        "setToCheckpoint": {"desc": "Place le marqueur sur un checkpoint.", "params": {"wp": {"type": "table", "desc": "{pos = vec3|table, radius = number|nil}."}}},
+        "setMode": {"desc": "Change le mode : 'hidden' masque, tout autre mode affiche. Remet le minuteur de couleur à zéro.", "params": {"mode": {"type": "string", "desc": "Nom du mode."}}},
+        "setVisibility": {"desc": "Affiche ou cache la flèche.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
+        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
+        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
+        "createObject": {"desc": "Crée un objet TSStatic caché (shapeName, couleur d'instance, non sauvegardable) enregistré sous objectName et ajouté à ScenarioObjectsGroup s'il existe.", "params": {"shapeName": {"type": "string", "desc": "Chemin du modèle .dae."}, "objectName": {"type": "string", "desc": "Nom d'enregistrement."}}, "returns": [{"type": "table", "desc": "L'objet TSStatic."}]},
+        "createMarkers": {"desc": "Supprime les anciens objets puis crée la flèche.", "params": {}},
+        "clearMarkers": {"desc": "Supprime les objets créés par ce marqueur.", "params": {}}
+      }
+    }
+  }
+}

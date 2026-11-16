@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/compositors/styles/english/caution.lua",
+  "module": "Composant 'caution' partagé par les styles anglais : textes des trois niveaux d'avertissement ('care', 'caution', 'double caution') et couleurs des notes visuelles correspondantes (fond, contour, icône, texte) tirées de compositors/helpers/colors.",
+  "fields": {
+    "levels": {"type": "table<integer, string>", "desc": "Texte parlé par niveau : [1]='care', [2]='caution', [3]='double caution'."},
+    "levelVisuals": {"type": "table<integer, table>", "desc": "Couleurs par niveau : {colorBg, colorStroke, colorNoteIcon, colorNoteText}. Niveau 1 jaune sur noir, niveaux 2 et 3 rouge sur noir."}
+  },
+  "notes": [
+    "Le module renvoie directement la table {levels, levelVisuals} (pas de M).",
+    "visualCompositor choisit l'icône 'doubleCaution' pour level >= 3, sinon 'caution'."
+  ]
+}

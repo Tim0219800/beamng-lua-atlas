@@ -1,23 +1,23 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/onMenu.lua",
-  "module": "Nœud « On Menu » (repeat_instant). Détecte l'ouverture d'un menu d'interface (menu Échap), d'après core_input_bindings.getMenuActionMapEnabled() et l'absence de chargement. Entrée : reset (impulsion). Sorties : open, close (flow), onOpened et onClosed (impulsions, cachées), openOrClosed (bool, caché).",
+  "module": "Node \"On Menu\" (repeat_instant). Detects the opening of an interface menu (Escape menu), based on core_input_bindings.getMenuActionMapEnabled() and the absence of loading. Input: reset (pulse). Outputs: open, close (flow), onOpened and onClosed (pulses, hidden), openOrClosed (bool, hidden).",
   "notes": [
-    "Laisse des print de débogage (« OnMenu Debug ») à chaque changement d'état."
+    "Leaves debug prints (\"OnMenu Debug\") on every state change."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "reset": {
-          "desc": "Remet l'état précédent à « none » : la prochaine frame émettra une impulsion.",
+          "desc": "Resets the previous state to \"none\": the next frame will emit a pulse.",
           "internal": false
         },
         "_executionStarted": {
-          "desc": "Appelle reset.",
+          "desc": "Calls reset.",
           "internal": true
         },
         "work": {
-          "desc": "Calcule l'état ouvert/fermé et écrit open, close, openOrClosed ; émet l'impulsion onOpened ou onClosed au changement d'état, puis les remet à false à la frame suivante.",
+          "desc": "Computes the open/closed state and writes open, close, openOrClosed; emits the onOpened or onClosed pulse on state change, then resets them to false on the next frame.",
           "internal": true
         }
       }

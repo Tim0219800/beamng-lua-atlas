@@ -1,0 +1,48 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/inspector.lua",
+  "module": "Inspecteur de l'outil Dynamic Decals : affiche et permet de modifier toutes les propriétés des calques (layers) sélectionnés (`editor.selection[\"dynamicDecalLayer\"]`) ou de la brosse sélectionnée (`editor.selection[\"dynamicDecalBrush\"]`). Les champs communs (uid, nom, type, enabled) sont dessinés ici ; le reste est délégué à une fonction GUI enregistrée par type de calque via registerLayerGui (par les modules layerTypes/*).",
+  "notes": [
+    "Si aucune GUI n'est enregistrée pour un type de calque, un texte « No layerGui available for '<type>' » est affiché.",
+    "En multi-sélection, chaque calque est dans un TreeNode « uid - nom ».",
+    "Le bouton « Dump » appelle dump(layer) ; un second bouton dumpz(layer, 3) apparaît si la préférence `dynamicDecalsTool.general.debug` est active.",
+    "Le tooltip du champ uid dit « Read-only type » (copier-coller)."
+  ],
+  "functions": {
+    "inspectorGuiLayer": {
+      "desc": "Dessine l'inspecteur des calques sélectionnés (un seul directement, plusieurs dans des TreeNode). Ne fait rien si la sélection est nil.",
+      "params": {"inspectorInfo": {"type": "table", "desc": "Informations de l'inspecteur de l'éditeur (non utilisées ici)."}},
+      "returns": [],
+      "internal": true
+    },
+    "inspectorGuiBrush": {
+      "desc": "Si une brosse est sélectionnée, appelle brushes.inspectorGui(brush).",
+      "params": {"inspectorInfo": {"type": "table", "desc": "Informations de l'inspecteur (non utilisées)."}},
+      "returns": [],
+      "internal": true
+    },
+    "registerLayerGui": {
+      "desc": "Enregistre la fonction qui dessine les propriétés spécifiques d'un type de calque ; elle est appelée avec (layer, guiId).",
+      "params": {"layerTypeId": {"type": "integer", "desc": "Identifiant du type de calque (valeur de api.layerTypes)."}, "guiFn": {"type": "function", "desc": "function(layer, guiId) qui dessine l'interface."}},
+      "returns": [],
+      "internal": false
+    },
+    "registerEditorPreferences": {
+      "desc": "Enregistre la préférence float `dynamicDecalsTool.inspector.texturePreviewSize` (défaut 128, de 32 à 512).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : récupère API, brushes, docs, widgets et helper, installe une GUI par défaut pour chaque type de calque d'api.layerTypes et enregistre la page de doc « Inspector ».",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

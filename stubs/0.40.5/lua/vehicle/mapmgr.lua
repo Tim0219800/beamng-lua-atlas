@@ -2,117 +2,117 @@
 -- tim19Atlas stub generated from lua/vehicle/mapmgr.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Pont entre le véhicule et la carte routière (navgraph) du jeu. Il reçoit la carte du Lua du jeu (GE) par boîte aux lettres (mailbox), la décode en graphe (graphpath) et arbre spatial (kd-tree des arêtes), et fournit à l'IA et aux extensions : recherche de la route la plus proche (findClosestRoad, findBestRoad), chemin point à point (getPointToPointPath), normale de surface (surfaceNormalBelow), objets proches (getObjects) et signaux de circulation. Il envoie aussi chaque frame au GE l'état du véhicule (map.objectData : joueur assis, dégâts, klaxon, feux, collisions) via sendTracking.
---- Accès : globale `mapmgr`
+--- Bridge between the vehicle and the game's road map (navgraph). It receives the map from the game Lua (GE) through a mailbox, decodes it into a graph (graphpath) and a spatial tree (kd-tree of edges), and provides to the AI and the extensions: nearest road search (findClosestRoad, findBestRoad), point-to-point path (getPointToPointPath), surface normal (surfaceNormalBelow), nearby objects (getObjects) and traffic signals. It also sends the vehicle state to the GE every frame (map.objectData: seated player, damage, horn, lights, collisions) via sendTracking.
+--- Access: global `mapmgr`
 ---@class mapmgr
----@field objectCollisionIds table Ids des objets en collision avec ce véhicule, rafraîchi à chaque sendTracking.
----@field objects table Objets proches décodés depuis la mailbox 'objUpdate' (rempli par getObjects ; remis à {} par reset).
----@field sendTracking function nop tant que le suivi n'est pas activé (enableTracking), puis la fonction d'envoi d'état au GE. Appelée à chaque frame par main.lua.
+---@field objectCollisionIds table Ids of the objects colliding with this vehicle, refreshed at each sendTracking.
+---@field objects table Nearby objects decoded from the 'objUpdate' mailbox (filled by getObjects; reset to {} by reset).
+---@field sendTracking function nop until tracking is enabled (enableTracking), then the function that sends the state to the GE. Called every frame by main.lua.
 mapmgr = {}
 
---- Supprime la carte personnalisée si elle était active (mapData remis à nil).
----Source : lua/vehicle/mapmgr.lua:79
+--- Removes the custom map if it was active (mapData set back to nil).
+---Source: lua/vehicle/mapmgr.lua:79
 function mapmgr.clearCustomMap() end
 
---- Désactive l'envoi d'état (sendTracking = nop) si forceDisable ou si aucun joueur n'est assis.
----Source : lua/vehicle/mapmgr.lua:163
----@param forceDisable boolean|nil true pour désactiver même si un joueur est assis.
+--- Disables sending the state (sendTracking = nop) if forceDisable or if no player is seated.
+---Source: lua/vehicle/mapmgr.lua:163
+---@param forceDisable boolean|nil true to disable even if a player is seated.
 function mapmgr.disableTracking(forceDisable) end
 
---- Active l'envoi d'état au GE : associe un nom d'objet à l'id (map.setNameForId) et installe sendTracking.
----Source : lua/vehicle/mapmgr.lua:158
----@param name string|nil Nom du véhicule dans la carte ; l'id du véhicule si nil.
+--- Enables sending the state to the GE: associates an object name with the id (map.setNameForId) and installs sendTracking.
+---Source: lua/vehicle/mapmgr.lua:158
+---@param name string|nil Vehicle name in the map; the vehicle id if nil.
 function mapmgr.enableTracking(name) end
 
---- Trouve l'arête de route la plus pertinente selon la position ET la direction (alignement, sens unique, barrières), avec repli sur findClosestRoad.
----Source : lua/vehicle/mapmgr.lua:271
----@param pos vec3|nil Position ; celle du véhicule si nil.
----@param dir vec3|nil Direction ; celle du véhicule si nil.
----@param wZ number|nil Poids de la différence de hauteur.
----@return any  Premier noeud de l'arête.
----@return any  Second noeud de l'arête.
----@return number  Distance en mètres.
+--- Finds the most relevant road edge according to position AND direction (alignment, one-way, gates), falling back to findClosestRoad.
+---Source: lua/vehicle/mapmgr.lua:271
+---@param pos vec3|nil Position; the vehicle's if nil.
+---@param dir vec3|nil Direction; the vehicle's if nil.
+---@param wZ number|nil Weight of the height difference.
+---@return any  First node of the edge.
+---@return any  Second node of the edge.
+---@return number  Distance in meters.
 function mapmgr.findBestRoad(pos, dir, wZ) end
 
---- Trouve l'arête de route la plus proche d'une position (distance au segment avec biais de hauteur wZ). Nécessite que la carte soit chargée.
----Source : lua/vehicle/mapmgr.lua:241
----@param pos vec3|nil Position ; celle du véhicule si nil.
----@param wZ number|nil Poids de la différence de hauteur (1.85 par défaut).
----@return any  Identifiant du premier noeud de l'arête (nil si rien trouvé à moins de 200 m).
----@return any  Identifiant du second noeud de l'arête.
----@return number  Distance à l'arête en mètres.
+--- Finds the road edge closest to a position (distance to the segment with wZ height bias). Requires the map to be loaded.
+---Source: lua/vehicle/mapmgr.lua:241
+---@param pos vec3|nil Position; the vehicle's if nil.
+---@param wZ number|nil Weight of the height difference (1.85 by default).
+---@return any  Identifier of the first node of the edge (nil if nothing found within 200 m).
+---@return any  Identifier of the second node of the edge.
+---@return number  Distance to the edge in meters.
 function mapmgr.findClosestRoad(pos, wZ) end
 
---- Renvoie la table des objets proches (mailbox 'objUpdate'), décodée au plus une fois par instant de simulation.
----Source : lua/vehicle/mapmgr.lua:179
----@return table  M.objects (partagée, ne pas conserver entre frames).
+--- Returns the table of nearby objects (mailbox 'objUpdate'), decoded at most once per simulation instant.
+---Source: lua/vehicle/mapmgr.lua:179
+---@return table  M.objects (shared, do not keep between frames).
 function mapmgr.getObjects() end
 
---- Calcule un chemin sur le navgraph entre deux positions (le point de départ et la cible sont rattachés aux arêtes proches). Renvoie {} si la carte n'est pas chargée.
----Source : lua/vehicle/mapmgr.lua:379
----@param startPos vec3 Position de départ.
----@param targetPos vec3 Position cible.
----@param cutOffDrivability number|nil Les routes de drivabilité inférieure ou égale sont pénalisées.
----@param dirMult number|nil Pénalité si le chemin ne respecte pas les sens légaux (> 1, typiquement >= 1e4) ; nil ou 1 = aucune.
----@param penaltyAboveCutoff number|nil Multiplicateur de coût au-dessus du seuil de drivabilité.
----@param penaltyBelowCutoff number|nil Multiplicateur de coût sous le seuil.
----@param wZ number|nil Biais de hauteur (4 par défaut) pour choisir le noeud d'arrivée.
----@return table  Liste des noeuds du chemin (format graphpath), {} si impossible.
+--- Computes a path on the navgraph between two positions (the start point and the target are attached to nearby edges). Returns {} if the map is not loaded.
+---Source: lua/vehicle/mapmgr.lua:379
+---@param startPos vec3 Start position.
+---@param targetPos vec3 Target position.
+---@param cutOffDrivability number|nil Roads of lower or equal drivability are penalized.
+---@param dirMult number|nil Penalty if the path does not respect legal directions (> 1, typically >= 1e4); nil or 1 = none.
+---@param penaltyAboveCutoff number|nil Cost multiplier above the drivability threshold.
+---@param penaltyBelowCutoff number|nil Cost multiplier below the threshold.
+---@param wZ number|nil Height bias (4 by default) to choose the arrival node.
+---@return table  List of path nodes (graphpath format), {} if impossible.
 function mapmgr.getPointToPointPath(startPos, targetPos, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ) end
 
---- Active le suivi vers le GE si le véhicule a des roues ou general.enableTracking. Appelée par main.lua (initSystems, dernière étape).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/mapmgr.lua:173
+--- Enables tracking to the GE if the vehicle has wheels or general.enableTracking. Called by main.lua (initSystems, last step).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/mapmgr.lua:173
 function mapmgr.init() end
 
---- Demande au GE d'envoyer la carte (map.request(id, serial de la carte actuelle)).
----Source : lua/vehicle/mapmgr.lua:68
+--- Asks the GE to send the map (map.request(id, serial of the current map)).
+---Source: lua/vehicle/mapmgr.lua:68
 function mapmgr.requestMap() end
 
---- Vide la liste d'objets M.objects au reset du véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/mapmgr.lua:169
+--- Empties the M.objects list on vehicle reset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/mapmgr.lua:169
 function mapmgr.reset() end
 
---- Remplace la carte par un graphe fourni (outil/scénario) et oublie le numéro de build.
----Source : lua/vehicle/mapmgr.lua:72
----@param map table Graphe au format graphpath.
+--- Replaces the map with a provided graph (tool/scenario) and forgets the build number.
+---Source: lua/vehicle/mapmgr.lua:72
+---@param map table Graph in graphpath format.
 function mapmgr.setCustomMap(map) end
 
---- Charge la carte depuis la mailbox 'mapData' : construit le graphe, le kd-tree des arêtes, les règles et alias, applique les drivabilités puis notifie le GE par le hook onVehicleMapmgrUpdate. Ne fait rien si le numéro de build est déjà celui chargé ou si les données sont incomplètes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/mapmgr.lua:45
----@param newbuildSerial number|nil Numéro de build de la carte annoncée ; ignoré s'il est identique à celui déjà chargé.
+--- Loads the map from the 'mapData' mailbox: builds the graph, the edge kd-tree, the rules and aliases, applies the drivabilities then notifies the GE via the onVehicleMapmgrUpdate hook. Does nothing if the build number is already the loaded one or if the data is incomplete.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/mapmgr.lua:45
+---@param newbuildSerial number|nil Build number of the announced map; ignored if identical to the one already loaded.
 function mapmgr.setMap(newbuildSerial) end
 
---- Définit la table des signaux de circulation (M.signalsData).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/mapmgr.lua:87
----@param data table Signaux indexés [groupe][?][?] avec un champ action.
+--- Sets the table of traffic signals (M.signalsData).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/mapmgr.lua:87
+---@param data table Signals indexed [group][?][?] with an action field.
 function mapmgr.setSignals(data) end
 
---- Calcule la normale de la surface sous un point en échantillonnant la hauteur du sol en 3 points d'un triangle de rayon r autour de p (obj:getSurfaceHeightBelow). Précis jusqu'à environ 50° de pente ; renvoie (0,0,1) si le terrain est trop bas/irrégulier. Écrit le résultat dans v sans allocation.
----Source : lua/vehicle/mapmgr.lua:194
----@param v vec3 Vecteur de sortie (modifié ; utilisé aussi comme point d'échantillon temporaire).
----@param p vec3 Point au-dessus de la surface.
----@param r number|nil Rayon d'échantillonnage en mètres (2 par défaut).
+--- Computes the surface normal under a point by sampling the ground height at 3 points of a triangle of radius r around p (obj:getSurfaceHeightBelow). Accurate up to about 50° of slope; returns (0,0,1) if the terrain is too low/irregular. Writes the result into v without allocation.
+---Source: lua/vehicle/mapmgr.lua:194
+---@param v vec3 Output vector (modified; also used as a temporary sample point).
+---@param p vec3 Point above the surface.
+---@param r number|nil Sampling radius in meters (2 by default).
 function mapmgr.setSurfaceNormalBelow(v, p, r) end
 
---- Version allouante de setSurfaceNormalBelow : renvoie un nouveau vec3.
----Source : lua/vehicle/mapmgr.lua:226
----@param p vec3 Point au-dessus de la surface.
----@param r number|nil Rayon d'échantillonnage (2 par défaut).
----@return vec3  Normale unitaire de la surface.
+--- Allocating version of setSurfaceNormalBelow: returns a new vec3.
+---Source: lua/vehicle/mapmgr.lua:226
+---@param p vec3 Point above the surface.
+---@param r number|nil Sampling radius (2 by default).
+---@return vec3  Unit normal of the surface.
 function mapmgr.surfaceNormalBelow(p, r) end
 
---- Applique au graphe les changements de drivabilité reçus par la mailbox 'updateDrivabilities' ; ne fait rien si la mailbox est vide ou sans graphe.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/mapmgr.lua:21
+--- Applies to the graph the drivability changes received through the 'updateDrivabilities' mailbox; does nothing if the mailbox is empty or there is no graph.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/mapmgr.lua:21
 function mapmgr.updateDrivabilities() end
 
---- Met à jour l'action des signaux d'après un lot {clé1, clé2, clé3, action, …} (par groupes de 4).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/mapmgr.lua:91
----@param data table|nil Liste plate de mises à jour.
+--- Updates the signals' action from a batch {key1, key2, key3, action, …} (in groups of 4).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/mapmgr.lua:91
+---@param data table|nil Flat list of updates.
 function mapmgr.updateSignals(data) end
 

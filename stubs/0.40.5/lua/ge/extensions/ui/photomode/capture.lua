@@ -2,158 +2,158 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/photomode/capture.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Capture d'images du mode photo : réglages (supersampling, niveau de réduction, HDR, capture avec flou de mouvement, passes supplémentaires scène/véhicule et normales/profondeur), présets de résolution de fenêtre, échelle de rendu des upscalers temporels, et les demandes de capture elles-mêmes (basique, publication/upload, Steam, flou de mouvement). Le module s'appuie sur le module « screenshot » (takeScreenShot, takeCustomScreenShot, takeMotionBlurScreenShot, publish, doSteamScreenshot) et sur ui_photomode_flash pour le flash. Il est piloté par l'UI du mode photo et par ui_photomode_shared.
---- Accès : extension `ui_photomode_capture` : `extensions.load("ui_photomode_capture")`, puis la globale `ui_photomode_capture`
+--- Photo mode image capture: settings (supersampling, downscale level, HDR, capture with motion blur, extra scene/vehicle passes and normals/depth), window resolution presets, render scale of temporal upscalers, and the capture requests themselves (basic, publish/upload, Steam, motion blur). The module relies on the "screenshot" module (takeScreenShot, takeCustomScreenShot, takeMotionBlurScreenShot, publish, doSteamScreenshot) and on ui_photomode_flash for the flash. It is driven by the photo mode UI and by ui_photomode_shared.
+--- Access: extension `ui_photomode_capture`: `extensions.load("ui_photomode_capture")`, then the global `ui_photomode_capture`
 ---@class ui_photomode_capture
----@field DEFAULTS table Valeurs par défaut statiques : superSampling = 2, downscaleLevel = 2, motionEnabled = false, motionBehavior = "followVehicle", splitSceneVehicle = false, saveNormalDepth = false, hdrScreenshot = false. Pour les valeurs réellement appliquées (upscaler temporel, HDR), utiliser buildDefaultSettings().
+---@field DEFAULTS table Static default values: superSampling = 2, downscaleLevel = 2, motionEnabled = false, motionBehavior = "followVehicle", splitSceneVehicle = false, saveNormalDepth = false, hdrScreenshot = false. For the values actually applied (temporal upscaler, HDR), use buildDefaultSettings().
 ---@field dependencies string[] {"ui_photomode_flash"}
 ui_photomode_capture = {}
 
---- Applique un patch partiel sur des réglages donnés sans toucher à l'état du module : superSampling, downscaleLevel, motion {enabled, behavior}, artifacts {splitSceneVehicle, saveNormalDepth}, hdr {enabled}, flash (transmis à ui_photomode_flash.applyStatePatch) et resolutionScale (appliqué tout de suite aux réglages graphiques GraphicUpscalingQuality, entre 0.33 et 1).
----Source : lua/ge/extensions/ui/photomode/capture.lua:816
----@param currentCaptureSettings table Réglages de départ
----@param partialState table Patch partiel
----@return table|nil  Nouveaux réglages normalisés, ou nil
----@return string|nil  capture_state_invalid ou capture_resolution_scale_set_failed
+--- Applies a partial patch to given settings without touching the module state: superSampling, downscaleLevel, motion {enabled, behavior}, artifacts {splitSceneVehicle, saveNormalDepth}, hdr {enabled}, flash (passed to ui_photomode_flash.applyStatePatch) and resolutionScale (applied immediately to the GraphicUpscalingQuality graphics settings, between 0.33 and 1).
+---Source: lua/ge/extensions/ui/photomode/capture.lua:816
+---@param currentCaptureSettings table Starting settings
+---@param partialState table Partial patch
+---@return table|nil  New normalized settings, or nil
+---@return string|nil  capture_state_invalid or capture_resolution_scale_set_failed
 function ui_photomode_capture.applyCaptureStatePatch(currentCaptureSettings, partialState) end
 
---- Applique un préset de résolution en fenêtré via util_resolution.setWindowedResolution (charge l'extension util/resolution). Le préset « current » ne fait rien.
----Source : lua/ge/extensions/ui/photomode/capture.lua:393
----@param preset table Préset renvoyé par findResolutionPreset
----@return boolean  succès
----@return string|nil  resolution_api_unavailable ou resolution_apply_failed
+--- Applies a resolution preset in windowed mode via util_resolution.setWindowedResolution (loads the util/resolution extension). The "current" preset does nothing.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:393
+---@param preset table Preset returned by findResolutionPreset
+---@return boolean  success
+---@return string|nil  resolution_api_unavailable or resolution_apply_failed
 function ui_photomode_capture.applyResolutionPreset(preset) end
 
---- Cherche puis applique le préset dont l'identifiant est donné (applyResolutionPreset(findResolutionPreset(id))). Si l'identifiant est inconnu, findResolutionPreset renvoie nil et applyResolutionPreset renvoie true sans rien faire.
----Source : lua/ge/extensions/ui/photomode/capture.lua:412
----@param selectedResolutionPresetId string|nil Identifiant du préset choisi
----@return boolean  succès
----@return string|nil  raison de l'échec
+--- Looks up then applies the preset whose identifier is given (applyResolutionPreset(findResolutionPreset(id))). If the identifier is unknown, findResolutionPreset returns nil and applyResolutionPreset returns true without doing anything.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:412
+---@param selectedResolutionPresetId string|nil Identifier of the chosen preset
+---@return boolean  success
+---@return string|nil  failure reason
 function ui_photomode_capture.applySelectedResolutionPresetBeforeCapture(selectedResolutionPresetId) end
 
---- Calcule le facteur de réduction final de l'image : 1 / racine carrée du niveau de réduction normalisé.
----Source : lua/ge/extensions/ui/photomode/capture.lua:524
----@param downscaleLevel number Niveau de réduction (1 à 8)
----@return number  Facteur d'échelle entre 0.35 et 1
+--- Computes the final image reduction factor: 1 / square root of the normalized downscale level.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:524
+---@param downscaleLevel number Downscale level (1 to 8)
+---@return number  Scale factor between 0.35 and 1
 function ui_photomode_capture.buildCaptureRescaleFactor(downscaleLevel) end
 
---- Construit l'état complet d'affichage de la capture pour l'UI : réglages, facteur de réduction, limites, libellés de résolutions (fenêtre, cible de rendu, sortie), format, rapport d'aspect, taille de fichier estimée, avertissement VRAM / supersampling élevé (seuil 6), mouvement, artefacts, HDR et état du flash.
----Source : lua/ge/extensions/ui/photomode/capture.lua:716
----@param captureSettings table|nil Réglages à décrire
----@return table  État d'affichage
+--- Builds the full capture display state for the UI: settings, downscale factor, limits, resolution labels (window, render target, output), format, aspect ratio, estimated file size, VRAM / high supersampling warning (threshold 6), motion, artifacts, HDR and flash state.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:716
+---@param captureSettings table|nil Settings to describe
+---@return table  Display state
 function ui_photomode_capture.buildCaptureState(captureSettings) end
 
---- Renvoie les réglages de capture par défaut en tenant compte du contexte : supersampling et réduction à 1 si un upscaler temporel est actif (sinon 2), HDR activé par défaut seulement si le HDR est pris en charge et actif.
----Source : lua/ge/extensions/ui/photomode/capture.lua:254
+--- Returns the default capture settings taking the context into account: supersampling and downscale at 1 if a temporal upscaler is active (otherwise 2), HDR enabled by default only if HDR is supported and active.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:254
 ---@return table  {superSampling, downscaleLevel, motionEnabled, motionBehavior, splitSceneVehicle, saveNormalDepth, hdrScreenshot}
 function ui_photomode_capture.buildDefaultSettings() end
 
---- Sous-ensemble des réglages à écrire dans les métadonnées d'une photo : superSampling, downscaleLevel, rescaleFactor, motion, artifacts, hdr, flash, resolutionScale.
----Source : lua/ge/extensions/ui/photomode/capture.lua:1043
----@return table  Réglages de capture
+--- Subset of the settings to write into a photo's metadata: superSampling, downscaleLevel, rescaleFactor, motion, artifacts, hdr, flash, resolutionScale.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1043
+---@return table  Capture settings
 function ui_photomode_capture.buildMetadataState() end
 
---- Normalise un jeu de réglages de capture : bornes de supersampling et de réduction (selon la VRAM), booléens, mode de mouvement, HDR désactivé si non pris en charge, supersampling et réduction forcés à 1 avec un upscaler temporel. Ajoute safeSuperSamplingMax et temporalUpscalersEnabled.
----Source : lua/ge/extensions/ui/photomode/capture.lua:529
----@param captureSettings table|nil Réglages bruts
----@return table  Réglages normalisés
+--- Normalizes a set of capture settings: supersampling and downscale bounds (depending on VRAM), booleans, motion mode, HDR disabled if unsupported, supersampling and downscale forced to 1 with a temporal upscaler. Adds safeSuperSamplingMax and temporalUpscalersEnabled.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:529
+---@param captureSettings table|nil Raw settings
+---@return table  Normalized settings
 function ui_photomode_capture.buildNormalizedCaptureSettings(captureSettings) end
 
---- Construit l'état de l'interface des présets de résolution : visible, enabled, selectedId, libellés, applyOnCapture (toujours false) et la liste items {value, label}.
----Source : lua/ge/extensions/ui/photomode/capture.lua:1039
----@return table  État des présets
+--- Builds the resolution presets UI state: visible, enabled, selectedId, labels, applyOnCapture (always false) and the items list {value, label}.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1039
+---@return table  Presets state
 function ui_photomode_capture.buildResolutionPresetState() end
 
---- État d'affichage de la capture avec les réglages courants du module.
----Source : lua/ge/extensions/ui/photomode/capture.lua:1035
----@return table  Voir buildCaptureState
+--- Capture display state with the module's current settings.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1035
+---@return table  See buildCaptureState
 function ui_photomode_capture.buildState() end
 
---- Cherche un préset de résolution par identifiant ; un identifiant vide vaut « current ».
----Source : lua/ge/extensions/ui/photomode/capture.lua:278
----@param presetId string|nil Identifiant du préset
----@return table|nil  Préset {id, labelKey, width?, height?} ou nil
+--- Looks up a resolution preset by identifier; an empty identifier means "current".
+---Source: lua/ge/extensions/ui/photomode/capture.lua:278
+---@param presetId string|nil Preset identifier
+---@return table|nil  Preset {id, labelKey, width?, height?} or nil
 function ui_photomode_capture.findResolutionPreset(presetId) end
 
---- Termine une capture avec flou de mouvement : restaure la demande de pause du mode photo ou remet la simulation en pause, puis détache la caméra du véhicule (immédiatement ou après quelques images).
----Source : lua/ge/extensions/ui/photomode/capture.lua:959
----@param immediateAttachRelease boolean|nil true pour détacher sans délai
+--- Ends a motion blur capture: restores the photo mode pause request or puts the simulation back in pause, then detaches the camera from the vehicle (immediately or after a few frames).
+---Source: lua/ge/extensions/ui/photomode/capture.lua:959
+---@param immediateAttachRelease boolean|nil true to detach without delay
 function ui_photomode_capture.finishPendingMotionCapture(immediateAttachRelease) end
 
---- Renvoie buildState() avec ok = session de mode photo active, et reason = session_inactive sinon.
----Source : lua/ge/extensions/ui/photomode/capture.lua:1065
----@return table  État de capture
+--- Returns buildState() with ok = photo mode session active, and reason = session_inactive otherwise.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1065
+---@return table  Capture state
 function ui_photomode_capture.getCaptureState() end
 
---- Renvoie {ok = fonction active, state = buildResolutionPresetState()}.
----Source : lua/ge/extensions/ui/photomode/capture.lua:1074
+--- Returns {ok = feature active, state = buildResolutionPresetState()}.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1074
 ---@return table  {ok, state}
 function ui_photomode_capture.getResolutionPresetState() end
 
---- À appeler à chaque image avant le rendu : décrémente le compteur de capture en cours, fait avancer la capture basique en attente (attente du HDR, envoi de la capture) et la capture avec flou de mouvement (images de préchauffage, envoi, nettoyage).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/capture.lua:1596
----@param dtReal number Temps réel de l'image (s)
----@param dtSim number Temps de simulation (s)
----@param dtRaw number Temps brut (s)
+--- To be called every frame before rendering: decrements the capture-in-progress counter, advances the pending basic capture (waiting for HDR, sending the capture) and the motion blur capture (warm-up frames, sending, cleanup).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1596
+---@param dtReal number Frame real time (s)
+---@param dtSim number Simulation time (s)
+---@param dtRaw number Raw time (s)
 function ui_photomode_capture.handlePreRender(dtReal, dtSim, dtRaw) end
 
---- Indique si une capture est en cours (basique en attente, mouvement en attente, ou compteur d'images de capture non nul), pour que l'UI reste masquée.
----Source : lua/ge/extensions/ui/photomode/capture.lua:1029
----@return boolean  capture en cours
+--- Indicates whether a capture is in progress (basic pending, motion pending, or non-zero capture frame counter), so that the UI stays hidden.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1029
+---@return boolean  capture in progress
 function ui_photomode_capture.isCaptureInProgress() end
 
---- Indique si les présets de résolution sont disponibles : true quand le jeu n'est pas un build shipping.
----Source : lua/ge/extensions/ui/photomode/capture.lua:266
----@return boolean  fonction active
+--- Indicates whether resolution presets are available: true when the game is not a shipping build.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:266
+---@return boolean  feature active
 function ui_photomode_capture.isResolutionPresetFeatureEnabled() end
 
---- Prolonge le compteur d'images pendant lesquelles la capture est considérée en cours (prend le maximum de la valeur actuelle et de frames).
----Source : lua/ge/extensions/ui/photomode/capture.lua:1018
----@param frames integer Nombre d'images ; ignoré si <= 0
+--- Extends the frame counter during which the capture is considered in progress (takes the maximum of the current value and frames).
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1018
+---@param frames integer Number of frames; ignored if <= 0
 function ui_photomode_capture.markCaptureInProgress(frames) end
 
---- Arrondit la valeur de supersampling à l'entier le plus proche puis la borne entre 1 et safeMax (maximum 8).
----Source : lua/ge/extensions/ui/photomode/capture.lua:451
----@param value number Valeur demandée (défaut 2 si non numérique)
----@param safeMax number|nil Maximum sûr (8 par défaut)
----@return integer  Supersampling normalisé
+--- Rounds the supersampling value to the nearest integer then clamps it between 1 and safeMax (maximum 8).
+---Source: lua/ge/extensions/ui/photomode/capture.lua:451
+---@param value number Requested value (default 2 if non-numeric)
+---@param safeMax number|nil Safe maximum (8 by default)
+---@return integer  Normalized supersampling
 function ui_photomode_capture.normalizeCaptureSuperSampling(value, safeMax) end
 
---- Hook appelé quand le module screenshot a fini toutes les captures : termine la capture basique en attente et restaure le HDR.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/capture.lua:1680
+--- Hook called when the screenshot module has finished all captures: ends the pending basic capture and restores HDR.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1680
 function ui_photomode_capture.onScreenshotAllDone() end
 
---- Mémorise l'échelle de résolution de départ, remet supersampling, réduction et HDR à leurs valeurs par défaut du moment, puis réapplique le flash. Appelée au début d'une session du mode photo.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/capture.lua:1007
+--- Stores the starting resolution scale, resets supersampling, downscale and HDR to their current default values, then reapplies the flash. Called at the start of a photo mode session.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1007
 function ui_photomode_capture.refreshSessionDefaults() end
 
---- Demande une capture. options.motion = capture avec flou de mouvement ; options.upload = publication en ligne ; options.steam = capture Steam ; ils se combinent (upload + steam). Sans option : capture basique (chemin par défaut si supersampling et réduction valent 1 sans passe supplémentaire, sinon capture personnalisée). Gère le flash, le changement HDR (différé de quelques images) et déclenche le succès SCREENSHOT_TAKEN.
----Source : lua/ge/extensions/ui/photomode/capture.lua:1532
+--- Requests a capture. options.motion = capture with motion blur; options.upload = online publishing; options.steam = Steam capture; they combine (upload + steam). With no option: basic capture (default path if supersampling and downscale are 1 with no extra pass, otherwise custom capture). Handles the flash, the HDR switch (deferred by a few frames) and triggers the SCREENSHOT_TAKEN achievement.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1532
 ---@param options table|nil {motion?, upload?, steam?}
 ---@return table  {ok, reason?, mode, captureUiHoldFrames?}
 function ui_photomode_capture.requestScreenshot(options) end
 
---- Annule toute capture basique en attente, remet les réglages de capture par défaut et réinitialise le flash.
----Source : lua/ge/extensions/ui/photomode/capture.lua:995
+--- Cancels any pending basic capture, resets the capture settings to default and resets the flash.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:995
 function ui_photomode_capture.resetSettings() end
 
---- Termine la capture basique en attente (restaure le HDR), coupe le flash et restaure l'échelle de résolution d'avant la session.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/capture.lua:1001
+--- Ends the pending basic capture (restores HDR), turns off the flash and restores the pre-session resolution scale.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1001
 function ui_photomode_capture.restoreCaptureRuntimeState() end
 
---- Applique un patch partiel aux réglages de capture du module (voir applyCaptureStatePatch), puis réapplique les réglages du flash. Exige une session active.
----Source : lua/ge/extensions/ui/photomode/capture.lua:1081
----@param partialState table Patch partiel
+--- Applies a partial patch to the module's capture settings (see applyCaptureStatePatch), then reapplies the flash settings. Requires an active session.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1081
+---@param partialState table Partial patch
 ---@return table  {ok, reason?, state}
 function ui_photomode_capture.setCaptureState(partialState) end
 
---- Sélectionne et applique immédiatement un préset de résolution, et le mémorise comme sélection courante.
----Source : lua/ge/extensions/ui/photomode/capture.lua:1560
----@param presetId string Identifiant du préset
+--- Selects and immediately applies a resolution preset, and stores it as the current selection.
+---Source: lua/ge/extensions/ui/photomode/capture.lua:1560
+---@param presetId string Preset identifier
 ---@return table  {ok, reason?, state}
 function ui_photomode_capture.setResolutionPreset(presetId) end
 

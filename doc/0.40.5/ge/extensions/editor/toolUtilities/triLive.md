@@ -1,73 +1,73 @@
 # `editor_toolUtilities_triLive`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/triLive.lua` · VM : Game Engine (GE) · 271 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/triLive.lua` · VM: Game Engine (GE) · 271 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_triLive` : `extensions.load("editor_toolUtilities_triLive")`, puis la globale `editor_toolUtilities_triLive`
+**Access:** extension `editor_toolUtilities_triLive`: `extensions.load("editor_toolUtilities_triLive")`, then the global `editor_toolUtilities_triLive`
 
-Compteur de triangles réellement dessinés par un « kit » (pièces instanciées), vu depuis la caméra : chaque instance est comptée au LOD qu'elle dessine vraiment, moins celles hors écran. Sert au pied de page statsFooter. Garde une seule réponse à la fois (l'éditeur n'a qu'un mode d'édition). Les échelles de LOD mesurées, coûteuses, sont partagées et mises en cache sur disque dans /temp/massingEditor/shapeLods.json (avec la date de modification du fichier de forme).
+Counter of the triangles actually drawn by a "kit" (instanced pieces), as seen from the camera: each instance is counted at the LOD it really draws, minus those off screen. Used by the statsFooter footer. Keeps a single answer at a time (the editor has only one edit mode). The measured LOD scales, which are costly, are shared and cached on disk in /temp/massingEditor/shapeLods.json (with the shape file's modification date).
 
-## Exemple
+## Example
 
 ```lua
 local tl = require('editor/toolUtilities/triLive')
-tl.note(instances)     -- à chaque reconstruction
-tl.scanStep()          -- chaque frame
+tl.note(instances)     -- on every rebuild
+tl.scanStep()          -- every frame
 tl.update(instances)
 local tris, dist, live, placed, toScan = tl.get()
 ```
 
-## Remarques
+## Notes
 
-- Chaque instance doit avoir shape (chemin de forme), px, py, pz.
-- Mise à jour limitée à 4 Hz, et 10000 instances traitées par frame pour ne pas figer l'éditeur sur une grande ville.
-- Le calcul suppose une constante moteur ENGINE_SCALE = 4.48 mesurée à 1920x1009 et 65 degrés, avec le FOV et la taille de fenêtre réels. La visibilité est testée par un cône autour de la diagonale de l'écran.
-- Une forme impossible à mesurer est comptée comme ne dessinant rien pour la session, avec un avertissement loggé, et réessayée au prochain rechargement.
-- Une forme dont le fichier a été réécrit depuis la mesure est remesurée.
+- Each instance must have shape (shape path), px, py, pz.
+- Update limited to 4 Hz, and 10000 instances processed per frame so as not to freeze the editor on a large city.
+- The computation assumes an engine constant ENGINE_SCALE = 4.48 measured at 1920x1009 and 65 degrees, with the real FOV and window size. Visibility is tested by a cone around the screen diagonal.
+- A shape that cannot be measured is counted as drawing nothing for the session, with a logged warning, and retried at the next reload.
+- A shape whose file has been rewritten since the measurement is measured again.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_triLive.get()` | Dernier résultat : triangles instanciés dessinés, distance au centroïde des instances (m), instances dessinées, instances placées, formes restant à scanner. | 254 |
-| `editor_toolUtilities_triLive.note(instances)` | Met en file les formes de `instances` jamais mesurées (ou dont le fichier a changé). Assez peu coûteux pour être appelé à chaque reconstruction. | 130 |
-| `editor_toolUtilities_triLive.rescan()` | Vide le cache de mesures, les rayons, la file et les échecs : « tout réessayer ». Le cache sera réécrit. | 258 |
-| `editor_toolUtilities_triLive.scanStep()` | Mesure UNE forme par appel (échelle de LOD), appelé depuis la frame de l'éditeur pour que le scan à froid apparaisse comme une progression et non comme un gel. Sauvegarde le cache quand la file est vide. | 148 |
-| `editor_toolUtilities_triLive.update(instances)` | Calcule le total de triangles instanciés à l'écran et la distance caméra - centroïde des instances. Limité en fréquence et découpé en tranches de 10000 instances par frame. | 197 |
+| `editor_toolUtilities_triLive.get()` | Last result: instanced triangles drawn, distance to the instances' centroid (m), instances drawn, instances placed, shapes left to scan. | 254 |
+| `editor_toolUtilities_triLive.note(instances)` | Queues the shapes of `instances` never measured (or whose file has changed). Cheap enough to be called on every rebuild. | 130 |
+| `editor_toolUtilities_triLive.rescan()` | Clears the measurement cache, the scales, the queue and the failures: "retry everything". The cache will be rewritten. | 258 |
+| `editor_toolUtilities_triLive.scanStep()` | Measures ONE shape per call (LOD scale), called from the editor frame so that the cold scan shows up as progress rather than a freeze. Saves the cache when the queue is empty. | 148 |
+| `editor_toolUtilities_triLive.update(instances)` | Computes the total of instanced triangles on screen and the camera - instance centroid distance. Rate-limited and split into slices of 10000 instances per frame. | 197 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_triLive.get()`
 
-Dernier résultat : triangles instanciés dessinés, distance au centroïde des instances (m), instances dessinées, instances placées, formes restant à scanner.
+Last result: instanced triangles drawn, distance to the instances' centroid (m), instances drawn, instances placed, shapes left to scan.
 
-- **renvoie** : number Triangles dessinés.
-- **renvoie** : number Distance au centroïde (m).
-- **renvoie** : integer Instances dessinées.
-- **renvoie** : integer Instances placées.
-- **renvoie** : integer Formes encore à scanner.
+- **returns**: number Triangles drawn.
+- **returns**: number Distance to the centroid (m).
+- **returns**: integer Instances drawn.
+- **returns**: integer Instances placed.
+- **returns**: integer Shapes still to scan.
 
 #### `editor_toolUtilities_triLive.note(instances)`
 
-Met en file les formes de `instances` jamais mesurées (ou dont le fichier a changé). Assez peu coûteux pour être appelé à chaque reconstruction.
+Queues the shapes of `instances` never measured (or whose file has changed). Cheap enough to be called on every rebuild.
 
-- `instances` (*table*) : Liste d'entrées avec champ shape.
+- `instances` (*table*) : List of entries with a shape field.
 
 #### `editor_toolUtilities_triLive.scanStep()`
 
-Mesure UNE forme par appel (échelle de LOD), appelé depuis la frame de l'éditeur pour que le scan à froid apparaisse comme une progression et non comme un gel. Sauvegarde le cache quand la file est vide.
+Measures ONE shape per call (LOD scale), called from the editor frame so that the cold scan shows up as progress rather than a freeze. Saves the cache when the queue is empty.
 
-- **renvoie** : boolean Vrai si une forme a été traitée.
+- **returns**: boolean True if a shape was processed.
 
 #### `editor_toolUtilities_triLive.update(instances)`
 
-Calcule le total de triangles instanciés à l'écran et la distance caméra - centroïde des instances. Limité en fréquence et découpé en tranches de 10000 instances par frame.
+Computes the total of instanced triangles on screen and the camera - instance centroid distance. Rate-limited and split into slices of 10000 instances per frame.
 
-- `instances` (*table*) : Liste d'entrées { shape, px, py, pz }.
+- `instances` (*table*) : List of entries { shape, px, py, pz }.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `stat`
 - `scenetree.` `findClassObjects`, `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/triLive.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/triLive.lua`.*

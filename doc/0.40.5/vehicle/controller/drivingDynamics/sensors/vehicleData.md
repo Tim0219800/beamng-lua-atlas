@@ -1,91 +1,91 @@
 # `controller_drivingDynamics_sensors_vehicleData`
 
-*Fichier : `lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua` · VM : Véhicule · 370 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua` · VM: Vehicle · 370 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `drivingDynamics/sensors/vehicleData` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `drivingDynamics/sensors/vehicleData` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Capteur « données véhicule » du système drivingDynamics (type "auxiliary", defaultOrder 54). Il identifie les quatre roues d'angle (avant/arrière, gauche/droite) par leur position, calcule une fois la géométrie du véhicule (empattement, distances centre de gravité-essieux, voie, masse, vitesse caractéristique, inertie en lacet) puis, à chaque pas, les angles de braquage réels des roues et les rapports de vitesse de roue dus au rayon de virage. Les autres modules drivingDynamics (yawControl, STMEstimate, virtualSensors, composants) lisent ces valeurs via cmu.vehicleData.
+"Vehicle data" sensor of the drivingDynamics system (type "auxiliary", defaultOrder 54). It identifies the four corner wheels (front/rear, left/right) by their position, computes the vehicle geometry once (wheelbase, center-of-gravity-to-axle distances, track width, mass, characteristic speed, yaw inertia) then, at each step, the actual steering angles of the wheels and the wheel speed ratios due to the turning radius. The other drivingDynamics modules (yawControl, STMEstimate, virtualSensors, components) read these values via cmu.vehicleData.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues dans initSecondStage : skewStiffnessFront, skewStiffnessRear (rigidités de dérive, défaut 0), cornerWheels (liste de noms de roues, défaut {"FR","FL","RR","RL"}). Si v.config.partConfigFilename existe, le fichier <vehiclePath>drivingDynamics/<nomConfig>.stat.json est lu et sa section vehicleData (skewStiffnessFront, skewStiffnessRear, cornerWheelData) prend le dessus.
-- Si exactement 4 roues d'angle ne sont pas trouvées, une erreur est journalisée et isActive reste false (les statistiques ne sont pas calculées).
-- Angles de roue en rad : les angles avant sont multipliés par le signe de sensorHub.steeringInput (positif = braquage à gauche d'après la convention de l'ESC) ; les angles arrière ne reçoivent pas de signe. turningCircleSpeedRatios[nomRoue] = rapport de vitesse attendu dû au virage (1 pour les roues intérieures, outer/inner pour les roues extérieures) ; sous 3 m/s le rayon de virage vient de la géométrie des roues (obj:wheelTurnRadius), au-dessus de 5 m/s de l'accélération latérale, avec transition linéaire entre les deux.
-- vehicleStats contient wheelBase, invWheelBase, distanceCOGFrontAxle, distanceCOGRearAxle, trackWidth, trackWidthRefLeft/Right, mass, characteristicSpeed, invSquaredCharacteristicSpeed, skewStiffnessFront/Rear, inertiaZ, ainsi que cogWithoutWheels, cogWithWheels et refNodePos remplis à l'init (non listés dans la table initiale). Les distances en m, la masse en kg, characteristicSpeed en m/s.
-- Bug/incohérence : setDebugMode affecte M.update = isDebugEnabled and update or updateDebug (inversé par rapport au sens attendu) ; sans conséquence car update et updateDebug font la même chose.
-- updateGFX est vide en mode normal ; en debug il envoie un paquet avec angles et rayons de virage via CMU.sendDebugPacket.
+- jbeam keys read in initSecondStage: skewStiffnessFront, skewStiffnessRear (cornering stiffnesses, default 0), cornerWheels (list of wheel names, default {"FR","FL","RR","RL"}). If v.config.partConfigFilename exists, the file <vehiclePath>drivingDynamics/<configName>.stat.json is read and its vehicleData section (skewStiffnessFront, skewStiffnessRear, cornerWheelData) takes precedence.
+- If exactly 4 corner wheels are not found, an error is logged and isActive stays false (the statistics are not computed).
+- Wheel angles in rad: the front angles are multiplied by the sign of sensorHub.steeringInput (positive = steering left according to the ESC convention); the rear angles are not signed. turningCircleSpeedRatios[wheelName] = expected speed ratio due to cornering (1 for inner wheels, outer/inner for outer wheels); below 3 m/s the turning radius comes from the wheel geometry (obj:wheelTurnRadius), above 5 m/s from the lateral acceleration, with a linear transition between the two.
+- vehicleStats contains wheelBase, invWheelBase, distanceCOGFrontAxle, distanceCOGRearAxle, trackWidth, trackWidthRefLeft/Right, mass, characteristicSpeed, invSquaredCharacteristicSpeed, skewStiffnessFront/Rear, inertiaZ, as well as cogWithoutWheels, cogWithWheels and refNodePos filled at init (not listed in the initial table). Distances in m, mass in kg, characteristicSpeed in m/s.
+- Bug/inconsistency: setDebugMode assigns M.update = isDebugEnabled and update or updateDebug (inverted from the expected meaning); harmless because update and updateDebug do the same thing.
+- updateGFX is empty in normal mode; in debug it sends a packet with angles and turning radii via CMU.sendDebugPacket.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_drivingDynamics_sensors_vehicleData.init(jbeamData)` | Ne fait rien. *(interne)* | 241 |
-| `controller_drivingDynamics_sensors_vehicleData.initSecondStage(jbeamData)` | Lit la configuration, identifie les roues d'angle, calcule la géométrie, la vitesse caractéristique et l'inertie en lacet, puis passe isActive à true. *(interne)* | 244 |
-| `controller_drivingDynamics_sensors_vehicleData.registerCMU(cmu)` | Mémorise la référence au CMU (sensorHub, virtualSensors, sendDebugPacket). *(interne)* | 347 |
-| `controller_drivingDynamics_sensors_vehicleData.reset()` | Réinitialise le lisseur de l'accélération latérale utilisé pour le rayon de virage. *(interne)* | 237 |
-| `controller_drivingDynamics_sensors_vehicleData.setDebugMode(debugEnabled)` | Active/désactive les journaux et paquets de debug. | 340 |
-| `controller_drivingDynamics_sensors_vehicleData.shutdown()` | Désactive le capteur (isActive=false, updateGFX et update à nil). | 351 |
-| `controller_drivingDynamics_sensors_vehicleData.update(dt)` | Pas physique : met à jour angles de roue, rayons de virage et turningCircleSpeedRatios. *(interne)* | 94 |
-| `controller_drivingDynamics_sensors_vehicleData.updateGFX(dt)` | Vide en mode normal ; remplacé par une version qui envoie un paquet de debug en mode debug. *(interne)* | 142 |
+| `controller_drivingDynamics_sensors_vehicleData.init(jbeamData)` | Does nothing. *(internal)* | 241 |
+| `controller_drivingDynamics_sensors_vehicleData.initSecondStage(jbeamData)` | Reads the configuration, identifies the corner wheels, computes the geometry, the characteristic speed and the yaw inertia, then sets isActive to true. *(internal)* | 244 |
+| `controller_drivingDynamics_sensors_vehicleData.registerCMU(cmu)` | Stores the reference to the CMU (sensorHub, virtualSensors, sendDebugPacket). *(internal)* | 347 |
+| `controller_drivingDynamics_sensors_vehicleData.reset()` | Resets the lateral acceleration smoother used for the turning radius. *(internal)* | 237 |
+| `controller_drivingDynamics_sensors_vehicleData.setDebugMode(debugEnabled)` | Enables/disables debug logs and packets. | 340 |
+| `controller_drivingDynamics_sensors_vehicleData.shutdown()` | Disables the sensor (isActive=false, updateGFX and update set to nil). | 351 |
+| `controller_drivingDynamics_sensors_vehicleData.update(dt)` | Physics step: updates wheel angles, turning radii and turningCircleSpeedRatios. *(internal)* | 94 |
+| `controller_drivingDynamics_sensors_vehicleData.updateGFX(dt)` | Empty in normal mode; replaced by a version that sends a debug packet in debug mode. *(internal)* | 142 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_drivingDynamics_sensors_vehicleData.init(jbeamData)`
 
-Ne fait rien.
+Does nothing.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_sensors_vehicleData.initSecondStage(jbeamData)`
 
-Lit la configuration, identifie les roues d'angle, calcule la géométrie, la vitesse caractéristique et l'inertie en lacet, puis passe isActive à true.
+Reads the configuration, identifies the corner wheels, computes the geometry, the characteristic speed and the yaw inertia, then sets isActive to true.
 
-- `jbeamData` (*table*) : Données jbeam (voir notes).
+- `jbeamData` (*table*) : jbeam data (see notes).
 
 #### `controller_drivingDynamics_sensors_vehicleData.registerCMU(cmu)`
 
-Mémorise la référence au CMU (sensorHub, virtualSensors, sendDebugPacket).
+Stores the reference to the CMU (sensorHub, virtualSensors, sendDebugPacket).
 
-- `cmu` (*table*) : Contrôleur CMU.
+- `cmu` (*table*) : CMU controller.
 
 #### `controller_drivingDynamics_sensors_vehicleData.setDebugMode(debugEnabled)`
 
-Active/désactive les journaux et paquets de debug.
+Enables/disables debug logs and packets.
 
-- `debugEnabled` (*boolean*) : Vrai pour activer.
+- `debugEnabled` (*boolean*) : True to enable.
 
 #### `controller_drivingDynamics_sensors_vehicleData.update(dt)`
 
-Pas physique : met à jour angles de roue, rayons de virage et turningCircleSpeedRatios.
+Physics step: updates wheel angles, turning radii and turningCircleSpeedRatios.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_drivingDynamics_sensors_vehicleData.updateGFX(dt)`
 
-Vide en mode normal ; remplacé par une version qui envoie un paquet de debug en mode debug.
+Empty in normal mode; replaced by a version that sends a debug packet in debug mode.
 
-- `dt` (*number*) : Pas de temps graphique (s).
+- `dt` (*number*) : Graphics time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `defaultOrder` | number | Ordre d'exécution par défaut (54). |
-| `frontLeftWheelAngle` | number | Angle de la roue avant gauche (rad), signé par la direction de braquage. |
-| `frontRightWheelAngle` | number | Angle de la roue avant droite (rad), signé par la direction de braquage. |
-| `frontWheelAngle` | number | Moyenne des deux angles avant (rad). |
-| `isActive` | boolean | Vrai quand les quatre roues d'angle ont été trouvées et la géométrie calculée. |
-| `rearLeftWheelAngle` | number | Angle de la roue arrière gauche (rad), non signé. |
-| `rearRightWheelAngle` | number | Angle de la roue arrière droite (rad), non signé. |
-| `rearWheelAngle` | number | Moyenne des deux angles arrière (rad). |
-| `turningCircleSpeedRatios` | table<string, number> | Rapport de vitesse attendu par nom de roue d'angle, dû au virage (1 = pas de correction). |
+| `defaultOrder` | number | Default execution order (54). |
+| `frontLeftWheelAngle` | number | Front-left wheel angle (rad), signed by the steering direction. |
+| `frontRightWheelAngle` | number | Front-right wheel angle (rad), signed by the steering direction. |
+| `frontWheelAngle` | number | Average of the two front angles (rad). |
+| `isActive` | boolean | True when the four corner wheels were found and the geometry computed. |
+| `rearLeftWheelAngle` | number | Rear-left wheel angle (rad), unsigned. |
+| `rearRightWheelAngle` | number | Rear-right wheel angle (rad), unsigned. |
+| `rearWheelAngle` | number | Average of the two rear angles (rad). |
+| `turningCircleSpeedRatios` | table<string, number> | Expected speed ratio per corner wheel name, due to cornering (1 = no correction). |
 | `type` | string | "auxiliary". |
-| `vehicleStats` | table | Géométrie et paramètres dynamiques calculés (voir notes). |
-| `wheelAccess` | table | Accès aux données des roues d'angle : frontRight, frontLeft, rearRight, rearLeft (entrées de wheels.wheels, nil tant que non trouvées). |
+| `vehicleStats` | table | Computed geometry and dynamic parameters (see notes). |
+| `wheelAccess` | table | Access to the corner wheel data: frontRight, frontLeft, rearRight, rearLeft (entries of wheels.wheels, nil until found). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `calcCenterOfGravityRel`, `nodeLength`, `nodeVecPlanarCosRightForward`, `wheelTurnRadius`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua`.*

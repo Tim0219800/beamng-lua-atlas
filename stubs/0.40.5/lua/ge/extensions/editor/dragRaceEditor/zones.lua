@@ -2,98 +2,98 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/dragRaceEditor/zones.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Éditeur de zones du drag race (zone d'un strip ou zone d'une voie), sur le même principe que les frontières du crawl editor. Il s'appuie sur la classe gameplay/sites/zone : sélection de sommets à la souris, ajout/insertion de sommets, déplacement et rotation avec le gizmo d'axes de l'éditeur, accrochage optionnel au terrain, undo/redo via editor.history. init() renvoie une instance d'éditeur ; zoneFromData/zoneToData convertissent entre table sérialisée et objet Zone.
---- Accès : extension `editor_dragRaceEditor_zones` : `extensions.load("editor_dragRaceEditor_zones")`, puis la globale `editor_dragRaceEditor_zones`
+--- Drag race zone editor (strip zone or lane zone), following the same principle as the crawl editor boundaries. It relies on the gameplay/sites/zone class: mouse vertex selection, adding/inserting vertices, moving and rotating with the editor's axis gizmo, optional terrain snapping, undo/redo via editor.history. init() returns an editor instance; zoneFromData/zoneToData convert between a serialized table and a Zone object.
+--- Access: extension `editor_dragRaceEditor_zones`: `extensions.load("editor_dragRaceEditor_zones")`, then the global `editor_dragRaceEditor_zones`
 ---@class editor_dragRaceEditor_zones
----@field zoneFromData function Alias de C.zoneFromData.
----@field zoneToData function Alias de C.zoneToData.
+---@field zoneFromData function Alias of C.zoneFromData.
+---@field zoneToData function Alias of C.zoneToData.
 editor_dragRaceEditor_zones = {}
 
---- Crée et renvoie une instance d'éditeur de zone (classe C) initialisée.
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:334
----@return table  instance avec les méthodes setZone, clearZone, syncBack, draw…
+--- Creates and returns an initialized zone editor instance (class C).
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:334
+---@return table  instance with the methods setZone, clearZone, syncBack, draw...
 function editor_dragRaceEditor_zones.init() end
 
---- Éditeur de zone renvoyé par init(). Champs : zone, target, currentVertices (sommets sélectionnés), currentPlane, snapToTerrain.
+--- Zone editor returned by init(). Fields: zone, target, currentVertices (selected vertices), currentPlane, snapToTerrain.
 ---@class editor_dragRaceEditor_zones_C
 local editor_dragRaceEditor_zones_C = {}
 
---- Début de déplacement du gizmo : mémorise les positions de départ.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:226
+--- Start of gizmo move: stores the starting positions.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:226
 function editor_dragRaceEditor_zones_C:beginDrag() end
 
---- Oublie la zone et la cible courantes.
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:75
+--- Forgets the current zone and target.
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:75
 function editor_dragRaceEditor_zones_C:clearZone() end
 
---- Pendant le déplacement du gizmo : translate (avec accrochage terrain) ou fait pivoter les sommets sélectionnés autour de leur centroïde.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:237
+--- During gizmo move: translates (with terrain snapping) or rotates the selected vertices around their centroid.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:237
 function editor_dragRaceEditor_zones_C:dragging() end
 
---- À appeler chaque frame en mode édition de zone : met à jour/affiche le gizmo, traite la saisie et dessine la zone en debug.
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:318
----@param mouseInfo table info souris (voir input.getMouseInfo)
+--- To be called every frame in zone edit mode: updates/displays the gizmo, handles input and draws the zone as debug.
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:318
+---@param mouseInfo table mouse info (see input.getMouseInfo)
 function editor_dragRaceEditor_zones_C:draw(mouseInfo) end
 
---- Projette une position sur la hauteur du terrain (core_terrain.getTerrainHeight).
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:129
+--- Projects a position onto the terrain height (core_terrain.getTerrainHeight).
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:129
 ---@param pos vec3 position
----@return vec3  nouvelle position
----@return boolean  true si core_terrain existe
+---@return vec3  new position
+---@return boolean  true if core_terrain exists
 function editor_dragRaceEditor_zones_C:dropToTerrain(pos) end
 
---- Fin du déplacement : recale au terrain si activé et enregistre l'action d'historique « Manipulate Zone Vertices ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:295
+--- End of move: re-snaps to terrain if enabled and records the history action "Manipulate Zone Vertices".
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:295
 function editor_dragRaceEditor_zones_C:endDragging() end
 
---- Cherche parmi des objets {pos, index} celui touché par le rayon souris (rayon de sélection = distance caméra/40) le plus proche de la caméra ; dessine aussi les sphères (orange si déjà sélectionné).
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:99
----@param mouseInfo table camPos, rayDir…
----@param objects table objets avec pos
----@return table|nil  objet touché
+--- Among objects {pos, index}, finds the one hit by the mouse ray (selection radius = camera distance/40) that is closest to the camera; also draws the spheres (orange if already selected).
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:99
+---@param mouseInfo table camPos, rayDir...
+---@param objects table objects with pos
+---@return table|nil  hit object
 function editor_dragRaceEditor_zones_C:findVert(mouseInfo, objects) end
 
---- Initialise les champs (aucune zone, snapToTerrain=true).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:57
+--- Initializes the fields (no zone, snapToTerrain=true).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:57
 function editor_dragRaceEditor_zones_C:init() end
 
---- Gère la saisie souris : ajout de sommet (Maj ou zone vide), insertion (Alt), sinon sélection simple ou multiple (Ctrl) de sommets.
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:157
----@param mouseInfo table info souris
+--- Handles mouse input: vertex addition (Shift or empty zone), insertion (Alt), otherwise single or multiple (Ctrl) vertex selection.
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:157
+---@param mouseInfo table mouse info
 function editor_dragRaceEditor_zones_C:input(mouseInfo) end
 
---- Définit la zone éditée et sa cible ; réinitialise la sélection de sommets.
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:68
+--- Sets the edited zone and its target; resets the vertex selection.
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:68
 ---@param zoneInstance table Zone
 ---@param target table {type, strip, lane}
 function editor_dragRaceEditor_zones_C:setZone(zoneInstance, target) end
 
---- Réécrit la zone dans strip.stripZone ou lane.zone, marque le strip _dirty et signale des modifications non sauvées. Sans effet si pas de zone ou de cible.
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:83
+--- Writes the zone back to strip.stripZone or lane.zone, marks the strip _dirty and flags unsaved changes. No effect if there is no zone or target.
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:83
 function editor_dragRaceEditor_zones_C:syncBack() end
 
---- Cherche le milieu d'arête survolé ; au clic, insère un sommet à cet endroit (action d'historique « Insert Zone Vertex »). Demande au moins 2 sommets.
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:138
----@param mouseInfo table info souris
+--- Finds the hovered edge midpoint; on click, inserts a vertex there (history action "Insert Zone Vertex"). Requires at least 2 vertices.
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:138
+---@param mouseInfo table mouse info
 function editor_dragRaceEditor_zones_C:tryInsert(mouseInfo) end
 
---- Place le gizmo d'axes au centroïde des sommets sélectionnés (ou au point du plan courant).
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:201
+--- Places the axis gizmo at the centroid of the selected vertices (or at the point of the current plane).
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:201
 function editor_dragRaceEditor_zones_C:updateTransform() end
 
---- Fonction statique : construit une Zone depuis une table sérialisée (copie profonde ; vertices et customFields par défaut vides, donc zone vide autorisée).
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:41
----@param data table|nil strip.stripZone ou lane.zone
----@return table|nil  instance Zone, nil si data est nil
+--- Static function: builds a Zone from a serialized table (deep copy; vertices and customFields default to empty, so an empty zone is allowed).
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:41
+---@param data table|nil strip.stripZone or lane.zone
+---@return table|nil  Zone instance, nil if data is nil
 function editor_dragRaceEditor_zones_C.zoneFromData(data) end
 
---- Fonction statique : sérialise une Zone via zone:onSerialize().
----Source : lua/ge/extensions/editor/dragRaceEditor/zones.lua:52
----@param zone table|nil instance Zone
----@return table|nil  table sérialisée
+--- Static function: serializes a Zone via zone:onSerialize().
+---Source: lua/ge/extensions/editor/dragRaceEditor/zones.lua:52
+---@param zone table|nil Zone instance
+---@return table|nil  serialized table
 function editor_dragRaceEditor_zones_C.zoneToData(zone) end
 

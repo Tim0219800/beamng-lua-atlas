@@ -1,35 +1,67 @@
 {
   "path": "lua/ge/extensions/ui/router/managers/scopeManager.lua",
-  "module": "Gère les portées (scopes) de focus d'une route d'interface. Une route déclare un arbre de portées (scopeTree) ; ce module détermine la portée cible d'une navigation, vérifie qu'une portée existe dans l'arbre et construit la table parent de chaque portée avec ses métadonnées (backTarget, optional, escapeTargets, preferAutoFocus…).",
+  "module": "Manages the focus scopes of a UI route. A route declares a scope tree (scopeTree); this module determines the target scope of a navigation, checks that a scope exists in the tree and builds the parent table of each scope with its metadata (backTarget, optional, escapeTargets, preferAutoFocus...).",
   "notes": [
-    "Priorité de la portée cible : options.routeScopeId (suffixe :scope de la route), puis options.preferredScope, puis (si options.restoreLastScope == true) la dernière portée active mémorisée si elle est encore déclarée dans l'arbre (sinon elle est oubliée), puis route.targetScope, puis la première clé de route.scopeTree.",
-    "Si routeScopeId et preferredScope sont tous deux fournis, un avertissement est journalisé et routeScopeId l'emporte.",
-    "Clés réservées d'un nœud de portée (non traitées comme des portées enfants) : backTarget, backTargetType, optional, escapeTargets, preferAutoFocus.",
-    "getScopeTreeRoot utilise pairs sur la table : si l'arbre a plusieurs racines, la « première » clé est indéterminée (ordre de pairs)."
+    "Target scope priority: options.routeScopeId (the route's :scope suffix), then options.preferredScope, then (if options.restoreLastScope == true) the stored last active scope if it is still declared in the tree (otherwise it is forgotten), then route.targetScope, then the first key of route.scopeTree.",
+    "If routeScopeId and preferredScope are both provided, a warning is logged and routeScopeId wins.",
+    "Reserved keys of a scope node (not treated as child scopes): backTarget, backTargetType, optional, escapeTargets, preferAutoFocus.",
+    "getScopeTreeRoot uses pairs on the table: if the tree has several roots, the \"first\" key is undetermined (pairs order)."
   ],
   "functions": {
     "isScopeDeclaredInTree": {
-      "desc": "Indique si scopeId est une portée déclarée dans l'arbre.",
+      "desc": "Indicates whether scopeId is a scope declared in the tree.",
       "params": {
-        "scopeTree": {"type": "table|nil", "desc": "Arbre de portées de la route."},
-        "scopeId": {"type": "string|nil", "desc": "Identifiant de portée (chaîne non vide)."}
+        "scopeTree": {
+          "type": "table|nil",
+          "desc": "Route's scope tree."
+        },
+        "scopeId": {
+          "type": "string|nil",
+          "desc": "Scope identifier (non-empty string)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si la portée existe dans l'arbre."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the scope exists in the tree."
+        }
+      ],
       "internal": false
     },
     "getTargetScope": {
-      "desc": "Détermine la portée cible d'une navigation selon la priorité décrite dans les notes.",
+      "desc": "Determines the target scope of a navigation according to the priority described in the notes.",
       "params": {
-        "route": {"type": "table", "desc": "Configuration de route (name, scopeTree, targetScope)."},
-        "options": {"type": "table|nil", "desc": "Options de navigation : routeScopeId, preferredScope, restoreLastScope."}
+        "route": {
+          "type": "table",
+          "desc": "Route configuration (name, scopeTree, targetScope)."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "Navigation options: routeScopeId, preferredScope, restoreLastScope."
+        }
       },
-      "returns": [{"type": "table", "desc": "{targetScope = string|nil}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{targetScope = string|nil}."
+        }
+      ],
       "internal": false
     },
     "buildScopeParentMap": {
-      "desc": "Parcourt l'arbre de portées et renvoie une table indexée par identifiant de portée.",
-      "params": {"scopeTree": {"type": "table|nil", "desc": "Arbre de portées ; nil donne {}."}},
-      "returns": [{"type": "table<string, table>", "desc": "Pour chaque portée : {parentScopeId (false pour la racine), isRoot, backTarget, backTargetType, optional (booléen), escapeTargets, preferAutoFocus (booléen)}."}],
+      "desc": "Walks the scope tree and returns a table keyed by scope identifier.",
+      "params": {
+        "scopeTree": {
+          "type": "table|nil",
+          "desc": "Scope tree; nil gives {}."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "For each scope: {parentScopeId (false for the root), isRoot, backTarget, backTargetType, optional (boolean), escapeTargets, preferAutoFocus (boolean)}."
+        }
+      ],
       "internal": false
     }
   }

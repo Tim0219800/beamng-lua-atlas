@@ -2,281 +2,281 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/api/terrain.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Squelette d'API de l'éditeur pour le terrain (sculpture, peinture de matériaux, feuillage). initialize(editor) ajoute 46 fonctions à l'objet editor, mais toutes ont un corps vide (commentaire TODO) : elles ne font rien et renvoient nil. Les hooks prévus sont cités en commentaire : onEditorTerrainCreated, onEditorTerrainDelete, onEditorTerrainHeightBrushChanged, onEditorTerrainHeightChanged, onEditorTerrainCleared, onEditorTerrainRestored.
---- Accès : extension `editor_api_terrain` : `extensions.load("editor_api_terrain")`, puis la globale `editor_api_terrain`
+--- Skeleton of the editor API for terrain (sculpting, material painting, foliage). initialize(editor) adds 46 functions to the editor object, but all have an empty body (TODO comment): they do nothing and return nil. The planned hooks are mentioned in a comment: onEditorTerrainCreated, onEditorTerrainDelete, onEditorTerrainHeightBrushChanged, onEditorTerrainHeightChanged, onEditorTerrainCleared, onEditorTerrainRestored.
+--- Access: extension `editor_api_terrain`: `extensions.load("editor_api_terrain")`, then the global `editor_api_terrain`
 ---@class editor_api_terrain
 editor_api_terrain = {}
 
---- Ajoute à l'objet editor toutes les fonctions terrain/feuillage listées dans la classe editor. Appelé par le chargeur de l'API de l'éditeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/terrain.lua:205
----@param editorInstance table Objet editor global.
+--- Adds to the editor object all the terrain/foliage functions listed in the editor class. Called by the editor API loader.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/terrain.lua:205
+---@param editorInstance table Global editor object.
 function editor_api_terrain.initialize(editorInstance) end
 
---- Fonctions ajoutées à editor. Toutes sont des stubs vides (TODO).
+--- Functions added to editor. All are empty stubs (TODO).
 ---@class editor_api_terrain_editor
 local editor_api_terrain_editor = {}
 
---- Prévu : ajouter une brosse de feuillage à un groupe. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:157
----@param groupName string Nom du groupe.
----@param foliageBrush any Brosse (déduit du nom).
+--- Planned: add a foliage brush to a group. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:157
+---@param groupName string Group name.
+---@param foliageBrush any Brush (inferred from the name).
 function editor_api_terrain_editor.addFoliageBrushToGroup(groupName, foliageBrush) end
 
---- Prévu : aligner le terrain sur un maillage (haut ou bas). Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:97
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
----@param topOrBottom any Choix haut/bas (déduit du nom).
----@param amount number Intensité.
+--- Planned: align the terrain to a mesh (top or bottom). Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:97
+---@param x number X coordinate.
+---@param y number Y coordinate.
+---@param topOrBottom any Top/bottom choice (inferred from the name).
+---@param amount number Intensity.
 function editor_api_terrain_editor.alignTerrainWithMesh(x, y, topOrBottom, amount) end
 
---- Prévu : appliquer un preset de brosse de hauteur. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:41
----@param name string Nom du preset.
+--- Planned: apply a height brush preset. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:41
+---@param name string Preset name.
 function editor_api_terrain_editor.applyTerrainHeightBrushPreset(name) end
 
---- Prévu : lissage par moyenne. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:73
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
----@param amount number Intensité.
+--- Planned: smoothing by averaging. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:73
+---@param x number X coordinate.
+---@param y number Y coordinate.
+---@param amount number Intensity.
 function editor_api_terrain_editor.averageSmoothTerrain(x, y, amount) end
 
---- Prévu : effacer le terrain en (x, y) (hook onEditorTerrainCleared). Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:89
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
+--- Planned: clear the terrain at (x, y) (onEditorTerrainCleared hook). Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:89
+---@param x number X coordinate.
+---@param y number Y coordinate.
 function editor_api_terrain_editor.clearTerrain(x, y) end
 
---- Prévu : créer un groupe de feuillage. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:137
----@param name string Nom du groupe.
+--- Planned: create a foliage group. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:137
+---@param name string Group name.
 function editor_api_terrain_editor.createFoliageGroup(name) end
 
---- Prévu : créer un maillage de feuillage. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:145
----@param foliageMesh any Définition du maillage (déduit du nom).
+--- Planned: create a foliage mesh. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:145
+---@param foliageMesh any Mesh definition (inferred from the name).
 function editor_api_terrain_editor.createFoliageMesh(foliageMesh) end
 
---- Prévu : créer un terrain. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:17
----@param terrainInfo table Infos de création (déduit du nom).
+--- Planned: create a terrain. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:17
+---@param terrainInfo table Creation info (inferred from the name).
 function editor_api_terrain_editor.createTerrain(terrainInfo) end
 
---- Prévu : créer un matériau de peinture. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:109
----@param mtl any Matériau (déduit du nom).
+--- Planned: create a paint material. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:109
+---@param mtl any Material (inferred from the name).
 function editor_api_terrain_editor.createTerrainPaintMaterial(mtl) end
 
---- Prévu : supprimer une brosse de feuillage. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:161
----@param name string Nom de la brosse.
+--- Planned: delete a foliage brush. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:161
+---@param name string Brush name.
 function editor_api_terrain_editor.deleteFoliageBrush(name) end
 
---- Prévu : supprimer un groupe de feuillage. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:141
----@param name string Nom du groupe.
+--- Planned: delete a foliage group. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:141
+---@param name string Group name.
 function editor_api_terrain_editor.deleteFoliageGroup(name) end
 
---- Prévu : supprimer un maillage de feuillage. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:149
----@param foliageMeshName string Nom du maillage.
+--- Planned: delete a foliage mesh. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:149
+---@param foliageMeshName string Mesh name.
 function editor_api_terrain_editor.deleteFoliageMesh(foliageMeshName) end
 
---- Prévu : supprimer un terrain. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:21
----@param terrainObjectId integer Id du terrain (déduit du nom).
+--- Planned: delete a terrain. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:21
+---@param terrainObjectId integer Terrain id (inferred from the name).
 function editor_api_terrain_editor.deleteTerrain(terrainObjectId) end
 
---- Prévu : supprimer un preset de brosse de hauteur. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:45
----@param name string Nom du preset.
+--- Planned: delete a height brush preset. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:45
+---@param name string Preset name.
 function editor_api_terrain_editor.deleteTerrainHeightBrushPreset(name) end
 
---- Prévu : supprimer un preset de brosse de peinture. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:129
----@param name string Nom du preset.
+--- Planned: delete a paint brush preset. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:129
+---@param name string Preset name.
 function editor_api_terrain_editor.deleteTerrainPaintBrushPreset(name) end
 
---- Prévu : effacer du feuillage en (x, y). Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:181
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
+--- Planned: erase foliage at (x, y). Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:181
+---@param x number X coordinate.
+---@param y number Y coordinate.
 function editor_api_terrain_editor.eraseFoliage(x, y) end
 
---- Prévu : effacer les éléments de la brosse/groupe actif en (x, y). Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:185
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
+--- Planned: erase the elements of the active brush/group at (x, y). Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:185
+---@param x number X coordinate.
+---@param y number Y coordinate.
 function editor_api_terrain_editor.eraseSetFoliageBrushOrGroup(x, y) end
 
---- Prévu : exporter la heightmap d'un terrain. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:29
----@param terrainObjectId integer Id du terrain.
----@param filename string Fichier de sortie.
+--- Planned: export a terrain's heightmap. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:29
+---@param terrainObjectId integer Terrain id.
+---@param filename string Output file.
 function editor_api_terrain_editor.exportTerrainHeightmap(terrainObjectId, filename) end
 
---- Prévu : aplatir le terrain. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:81
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
----@param amount number Intensité.
+--- Planned: flatten the terrain. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:81
+---@param x number X coordinate.
+---@param y number Y coordinate.
+---@param amount number Intensity.
 function editor_api_terrain_editor.flattenTerrain(x, y, amount) end
 
---- Prévu : lister les maillages de feuillage. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:153
+--- Planned: list the foliage meshes. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:153
 function editor_api_terrain_editor.getFoliageMeshes() end
 
---- Prévu : lister les presets de brosse de hauteur. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:49
+--- Planned: list the height brush presets. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:49
 function editor_api_terrain_editor.getTerrainHeightBrushPresets() end
 
---- Prévu : lister les presets de brosse de peinture. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:133
+--- Planned: list the paint brush presets. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:133
 function editor_api_terrain_editor.getTerrainPaintBrushPresets() end
 
---- Prévu : outil « saisir » le terrain en (x, y). Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:53
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
----@param amount number Intensité.
+--- Planned: "grab" terrain tool at (x, y). Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:53
+---@param x number X coordinate.
+---@param y number Y coordinate.
+---@param amount number Intensity.
 function editor_api_terrain_editor.grabTerrain(x, y, amount) end
 
---- Prévu : importer une heightmap. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:25
----@param importInfo table Infos d'import (déduit du nom).
+--- Planned: import a heightmap. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:25
+---@param importInfo table Import info (inferred from the name).
 function editor_api_terrain_editor.importTerrainHeightmap(importInfo) end
 
---- Prévu : charger un preset de brosse de peinture. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:125
----@param name string Nom du preset.
+--- Planned: load a paint brush preset. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:125
+---@param name string Preset name.
 function editor_api_terrain_editor.loadTerrainPaintBrushPreset(name) end
 
---- Prévu : abaisser le terrain en (x, y). Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:61
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
----@param amount number Intensité.
+--- Planned: lower the terrain at (x, y). Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:61
+---@param x number X coordinate.
+---@param y number Y coordinate.
+---@param amount number Intensity.
 function editor_api_terrain_editor.lowerTerrain(x, y, amount) end
 
---- Prévu : ajouter du bruit au terrain. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:77
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
----@param amount number Intensité.
+--- Planned: add noise to the terrain. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:77
+---@param x number X coordinate.
+---@param y number Y coordinate.
+---@param amount number Intensity.
 function editor_api_terrain_editor.noiseTerrain(x, y, amount) end
 
---- Prévu : peindre du feuillage en (x, y). Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:177
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
+--- Planned: paint foliage at (x, y). Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:177
+---@param x number X coordinate.
+---@param y number Y coordinate.
 function editor_api_terrain_editor.paintFoliage(x, y) end
 
---- Prévu : peindre le terrain en (x, y). Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:113
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
+--- Planned: paint the terrain at (x, y). Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:113
+---@param x number X coordinate.
+---@param y number Y coordinate.
 function editor_api_terrain_editor.paintTerrain(x, y) end
 
---- Prévu : lever le terrain en (x, y). Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:57
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
----@param amount number Intensité.
+--- Planned: raise the terrain at (x, y). Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:57
+---@param x number X coordinate.
+---@param y number Y coordinate.
+---@param amount number Intensity.
 function editor_api_terrain_editor.raiseTerrain(x, y, amount) end
 
---- Prévu : restaurer le terrain en (x, y) (hook onEditorTerrainRestored). Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:93
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
+--- Planned: restore the terrain at (x, y) (onEditorTerrainRestored hook). Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:93
+---@param x number X coordinate.
+---@param y number Y coordinate.
 function editor_api_terrain_editor.restoreTerrain(x, y) end
 
---- Prévu : tourner la sélection de feuillage. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:193
----@param delta any Rotation (déduit du nom).
+--- Planned: rotate the foliage selection. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:193
+---@param delta any Rotation (inferred from the name).
 function editor_api_terrain_editor.rotateFoliageSelection(delta) end
 
---- Prévu : sauvegarder un preset de brosse de hauteur. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:37
----@param name string Nom du preset.
+--- Planned: save a height brush preset. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:37
+---@param name string Preset name.
 function editor_api_terrain_editor.saveTerrainHeightBrushPreset(name) end
 
---- Prévu : sauvegarder un preset de brosse de peinture. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:121
----@param name string Nom du preset.
+--- Planned: save a paint brush preset. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:121
+---@param name string Preset name.
 function editor_api_terrain_editor.saveTerrainPaintBrushPreset(name) end
 
---- Prévu : mettre à l'échelle la sélection de feuillage. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:197
----@param delta any Facteur (déduit du nom).
+--- Planned: scale the foliage selection. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:197
+---@param delta any Factor (inferred from the name).
 function editor_api_terrain_editor.scaleFoliageSelection(delta) end
 
---- Prévu : sélectionner du feuillage en (x, y). Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:201
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
+--- Planned: select foliage at (x, y). Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:201
+---@param x number X coordinate.
+---@param y number Y coordinate.
 function editor_api_terrain_editor.selectFoliage(x, y) end
 
---- Prévu : choisir le matériau de peinture. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:105
----@param mtl any Matériau (déduit du nom).
+--- Planned: choose the paint material. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:105
+---@param mtl any Material (inferred from the name).
 function editor_api_terrain_editor.selectTerrainPaintMaterial(mtl) end
 
---- Prévu : choisir la brosse de feuillage active. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:169
----@param brushName string Nom de la brosse.
+--- Planned: choose the active foliage brush. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:169
+---@param brushName string Brush name.
 function editor_api_terrain_editor.setFoliageBrush(brushName) end
 
---- Prévu : choisir le groupe de brosses actif. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:165
----@param name string Nom du groupe.
+--- Planned: choose the active brush group. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:165
+---@param name string Group name.
 function editor_api_terrain_editor.setFoliageBrushGroup(name) end
 
---- Prévu : régler la brosse de peinture de feuillage. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:173
----@param brush table Réglages (déduit du nom).
+--- Planned: set the foliage paint brush. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:173
+---@param brush table Settings (inferred from the name).
 function editor_api_terrain_editor.setFoliagePaintBrushSettings(brush) end
 
---- Prévu : fixer la hauteur du terrain. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:85
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
----@param amount number Hauteur (déduit du nom).
+--- Planned: set the terrain height. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:85
+---@param x number X coordinate.
+---@param y number Y coordinate.
+---@param amount number Height (inferred from the name).
 function editor_api_terrain_editor.setTerrainHeight(x, y, amount) end
 
---- Prévu : définir la brosse de hauteur. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:33
----@param brush table Brosse (déduit du nom).
+--- Planned: set the height brush. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:33
+---@param brush table Brush (inferred from the name).
 function editor_api_terrain_editor.setTerrainHeightBrush(brush) end
 
---- Prévu : définir la brosse de peinture. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:117
----@param brush table Brosse (déduit du nom).
+--- Planned: set the paint brush. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:117
+---@param brush table Brush (inferred from the name).
 function editor_api_terrain_editor.setTerrainPaintBrush(brush) end
 
---- Prévu : lisser la pente. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:69
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
----@param amount number Intensité.
+--- Planned: smooth the slope. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:69
+---@param x number X coordinate.
+---@param y number Y coordinate.
+---@param amount number Intensity.
 function editor_api_terrain_editor.smoothSlopeTerrain(x, y, amount) end
 
---- Prévu : lisser le terrain. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:65
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
----@param amount number Intensité.
+--- Planned: smooth the terrain. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:65
+---@param x number X coordinate.
+---@param y number Y coordinate.
+---@param amount number Intensity.
 function editor_api_terrain_editor.smoothTerrain(x, y, amount) end
 
---- Prévu : soustraire un maillage du terrain. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:101
----@param x number Coordonnée X.
----@param y number Coordonnée Y.
+--- Planned: subtract a mesh from the terrain. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:101
+---@param x number X coordinate.
+---@param y number Y coordinate.
 function editor_api_terrain_editor.subtractMeshFromTerrain(x, y) end
 
---- Prévu : translater la sélection de feuillage. Stub vide.
----Source : lua/ge/extensions/editor/api/terrain.lua:189
----@param delta any Décalage (déduit du nom).
+--- Planned: translate the foliage selection. Empty stub.
+---Source: lua/ge/extensions/editor/api/terrain.lua:189
+---@param delta any Offset (inferred from the name).
 function editor_api_terrain_editor.translateFoliageSelection(delta) end
 

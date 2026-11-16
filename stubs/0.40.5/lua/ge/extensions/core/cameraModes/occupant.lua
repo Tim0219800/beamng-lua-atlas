@@ -2,74 +2,74 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/cameraModes/occupant.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Mode caméra occupant. Champs : camRot, relativeYaw/Pitch, seatPosition (vec3), seatRotation (degrés), manualzoom, occupantDetached, icon 'personSolid', canUseVehicleTriggerCrosshair = true.
+--- Occupant camera mode. Fields: camRot, relativeYaw/Pitch, seatPosition (vec3), seatRotation (degrees), manualzoom, occupantDetached, icon 'personSolid', canUseVehicleTriggerCrosshair = true.
 ---@class core_cameraModes_occupant
 local core_cameraModes_occupant = {}
 
---- Crée lissages, profils d'épaule et paramètres, puis appelle onVehicleCameraConfigChanged et onSettingsChanged.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/occupant.lua:60
+--- Creates smoothers, shoulder profiles and parameters, then calls onVehicleCameraConfigChanged and onSettingsChanged.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/occupant.lua:60
 function core_cameraModes_occupant:init() end
 
---- Indique que la souris est verrouillée ou non ; au déverrouillage avec recentrage automatique et véhicule en mouvement, recentre la tête.
----Source : lua/ge/extensions/core/cameraModes/occupant.lua:451
----@param locked boolean vrai si verrouillée
+--- Indicates whether the mouse is locked or not; on unlock with auto-recentering and the vehicle moving, recenters the head.
+---Source: lua/ge/extensions/core/cameraModes/occupant.lua:451
+---@param locked boolean true if locked
 function core_cameraModes_occupant:mouseLocked(locked) end
 
---- Hook : au gain de focus pousse l'action map « DriverCameraZoom » ; à la perte, la retire et remet le zoom conducteur à 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/occupant.lua:108
----@param focused boolean vrai si le mode prend le focus
+--- Hook: on focus gain pushes the "DriverCameraZoom" action map; on loss, removes it and resets the driver zoom to 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/occupant.lua:108
+---@param focused boolean true if the mode takes focus
 function core_cameraModes_occupant:onCameraChanged(focused) end
 
---- Hook : après rechargement d'extensions, recharge la config et réinitialise.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/occupant.lua:161
+--- Hook: after extensions reload, reloads the config and resets.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/occupant.lua:161
 function core_cameraModes_occupant:onDeserialized() end
 
---- Hook : l'occupant est détaché (groupe de rupture « ocpAttach<seatId> ») : la caméra suivra les nœuds occupant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/occupant.lua:100
----@param breakGroup string nom du groupe cassé
+--- Hook: the occupant is detached (break group "ocpAttach<seatId>"): the camera will follow the occupant nodes.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/occupant.lua:100
+---@param breakGroup string name of the broken group
 function core_cameraModes_occupant:onOccupantDetached(breakGroup) end
 
---- Hook : relit les réglages cameraDriver* et OpenXR.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/occupant.lua:123
+--- Hook: re-reads the cameraDriver* and OpenXR settings.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/occupant.lua:123
 function core_cameraModes_occupant:onSettingsChanged() end
 
---- Hook : réinitialise la position du siège et les nœuds de référence occupant ; rechargera la config de siège au prochain update.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/occupant.lua:88
+--- Hook: resets the seat position and the occupant reference nodes; will reload the seat config on the next update.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/occupant.lua:88
 function core_cameraModes_occupant:onVehicleCameraConfigChanged() end
 
---- Hook : le véhicule a été remis à neuf, l'occupant n'est plus détaché.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/occupant.lua:104
+--- Hook: the vehicle has been repaired, the occupant is no longer detached.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/occupant.lua:104
 function core_cameraModes_occupant:onVehicleResetted() end
 
---- Recentre la tête, remet le balancement et le zoom conducteur à zéro.
----Source : lua/ge/extensions/core/cameraModes/occupant.lua:153
+--- Recenters the head, resets the sway and the driver zoom to zero.
+---Source: lua/ge/extensions/core/cameraModes/occupant.lua:153
 function core_cameraModes_occupant:reset() end
 
---- Remet le siège (position, inclinaison) à zéro pour ce véhicule et l'enregistre immédiatement.
----Source : lua/ge/extensions/core/cameraModes/occupant.lua:136
+--- Resets the seat (position, tilt) to zero for this vehicle and saves it immediately.
+---Source: lua/ge/extensions/core/cameraModes/occupant.lua:136
 function core_cameraModes_occupant:resetSeat() end
 
---- Remet le siège à zéro et efface la config de siège de tous les véhicules (cameraDriverVehicleConfigs = {}).
----Source : lua/ge/extensions/core/cameraModes/occupant.lua:145
+--- Resets the seat to zero and clears the seat config of all vehicles (cameraDriverVehicleConfigs = {}).
+---Source: lua/ge/extensions/core/cameraModes/occupant.lua:145
 function core_cameraModes_occupant:resetSeatAll() end
 
---- Définit les nœuds de référence ; si l'un des trois est nil, utilise les nœuds idRef/Left/BackOccupant.
----Source : lua/ge/extensions/core/cameraModes/occupant.lua:443
----@param centerNodeID integer|nil nœud centre
----@param leftNodeID integer|nil nœud gauche
----@param backNodeID integer|nil nœud arrière
+--- Sets the reference nodes; if any of the three is nil, uses the idRef/Left/BackOccupant nodes.
+---Source: lua/ge/extensions/core/cameraModes/occupant.lua:443
+---@param centerNodeID integer|nil center node
+---@param leftNodeID integer|nil left node
+---@param backNodeID integer|nil rear node
 function core_cameraModes_occupant:setRefNodes(centerNodeID, leftNodeID, backNodeID) end
 
---- Calcule position et orientation de la tête et le FOV, gère réglage du siège et sauvegarde différée (1 s), écrit data.res.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/occupant.lua:179
----@param data table camData (data.driverZoom, data.lookBack, data.player, data.speed, data.fastSpeedModifier lus)
+--- Computes head position and orientation and the FOV, handles seat adjustment and delayed saving (1 s), writes data.res.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/occupant.lua:179
+---@param data table camData (data.driverZoom, data.lookBack, data.player, data.speed, data.fastSpeedModifier read)
 function core_cameraModes_occupant:update(data) end
 

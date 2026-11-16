@@ -1,0 +1,75 @@
+{
+  "path": "lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua",
+  "module": "Moteur d'exécution du « Thumbnail Composer » (v2) : orchestre une série de captures de vignettes de véhicules pour une interface appelante (identifiée par ownerId) qui reçoit des évènements via une table de handlers. Il valide les cibles (thumbnailTargets), filtre éventuellement celles qui ont déjà une vignette (missingOnly), prend le contrôle de la physique, applique pour la durée du travail des réglages graphiques de référence (qualité Ultra, SMAA, pas de flou de mouvement, pas d'occupants…), puis traite chaque élément dans une coroutine (thumbnailCapturePipeline.processWorkItem). Il gère aussi un aperçu de la caméra, un flou d'arrière-plan par profondeur de champ calé sur le mur du fond du showroom, une exposition forcée, et le panneau ImGui « Showroom Tools » (drawShowroomTools) du graphe de flux showroom_thumbnails.",
+  "notes": [
+    "Évènements émis vers handlers.emit(ownerId, nom, données) : Status, Catalog, Progress {runId, stage = \"capture\", completed, total, current}, ItemResult {runId, itemId, index, total, current, status...}, RunComplete {runId}, Failed {runId, error, cancelled}. Les erreurs de handler sont attrapées (pcall) et journalisées.",
+    "Un seul travail à la fois : start renvoie false et émet Failed si une capture est déjà en cours, si les cibles sont invalides, si missingOnly ne laisse rien à faire ou si la physique ne peut pas être prise en charge.",
+    "Options de message pour start : targets (liste {model, config} ; absent = config du véhicule du joueur), captureMode (« defaults » = default.jpg, sinon une vignette par config), missingOnly, outputWidth/outputHeight (16 à 8192, défaut 500x281), backgroundBlur (0 à 1), blurStartDistance (0,5 à 30 m, défaut 8), forceExposure, exposureEV (défaut 8,3).",
+    "Les réglages graphiques d'origine sont sauvegardés (settings.getValue) et rétablis à la fin, à l'annulation ou au déchargement ; l'environnement du showroom est restauré via util_screenshotCreator_settings.",
+    "Le flou d'arrière-plan lance un rayon (Engine.castRay) depuis la caméra pour trouver le mur et règle DOFPostEffect (focalDist, farSlope…) à chaque frame ; l'exposition utilise PostEffectLocalExposureObject. Ces deux effets ne sont actifs que pendant un aperçu ou un travail.",
+    "Le premier échec d'un élément arrête tout le travail (failRun) ; l'annulation émet Failed avec cancelled = true."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : ui_imgui et util_screenshotCreator_settings, lightingSetup, thumbnailCapturePipeline, thumbnailConfig, thumbnailPaths, thumbnailTargets."},
+    "onClientEndMission": {"type": "function", "desc": "Alias de onExtensionUnloaded : nettoie à la fin du niveau."},
+    "onExit": {"type": "function", "desc": "Alias de onExtensionUnloaded : nettoie à la fermeture du jeu."}
+  },
+  "functions": {
+    "start": {
+      "desc": "Démarre un travail de capture pour l'appelant ownerId. Résout les cibles, applique les réglages de capture et lance la coroutine de travail. Renvoie false (et émet « Failed ») en cas de refus.",
+      "params": {
+        "ownerId": {"type": "string", "desc": "Identifiant de l'appelant (converti en chaîne)."},
+        "message": {"type": "table", "desc": "Options : targets, captureMode, missingOnly, outputWidth, outputHeight, backgroundBlur, blurStartDistance, forceExposure, exposureEV."},
+        "handlers": {"type": "table", "desc": "{emit = function(ownerId, nom, données)} qui reçoit les évènements."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si le travail a démarré."}]
+    },
+    "cancel": {
+      "desc": "Annule le travail en cours (émet Failed avec cancelled = true). Si ownerId est donné, il doit correspondre à l'appelant du travail.",
+      "params": {"ownerId": {"type": "string|nil", "desc": "Identifiant de l'appelant."}},
+      "returns": [{"type": "boolean", "desc": "true si un travail a été annulé."}]
+    },
+    "isActive": {
+      "desc": "Indique si un travail est en cours (pour cet ownerId si précisé).",
+      "params": {"ownerId": {"type": "string|nil", "desc": "Identifiant de l'appelant."}},
+      "returns": [{"type": "boolean", "desc": "true si actif."}]
+    },
+    "sendStatus": {
+      "desc": "Émet l'évènement Status : {active, runId, currentModel, currentConfig, currentFlipped} (currentFlipped = rotation de vignette de 180°).",
+      "params": {
+        "ownerId": {"type": "string", "desc": "Identifiant de l'appelant."},
+        "handlers": {"type": "table", "desc": "Handlers avec emit."}
+      }
+    },
+    "subscribe": {
+      "desc": "Enregistre un appelant : émet Status puis Catalog {models = catalogue des véhicules, resolutions = préréglages de résolution}.",
+      "params": {
+        "ownerId": {"type": "string", "desc": "Identifiant de l'appelant."},
+        "handlers": {"type": "table", "desc": "Handlers avec emit."}
+      }
+    },
+    "setViewOptions": {
+      "desc": "Fixe les options de vue (flou d'arrière-plan, distance de début du flou, exposition forcée) à partir d'un message.",
+      "params": {"message": {"type": "table", "desc": "{backgroundBlur, blurStartDistance, forceExposure, exposureEV}."}}
+    },
+    "startPreview": {
+      "desc": "Aperçu : place la caméra libre du joueur sur le cadrage calculé pour le véhicule du joueur (cadrage legacy du pipeline) et ajuste l'éclairage. Ne fait rien s'il n'y a pas de véhicule ou si un travail est actif.",
+      "params": {"message": {"type": "table", "desc": "Options de vue et outputWidth/outputHeight."}}
+    },
+    "stopPreview": {
+      "desc": "Termine l'aperçu : restaure l'état de caméra mémorisé et l'éclairage."
+    },
+    "drawShowroomTools": {
+      "desc": "Dessine dans la fenêtre ImGui du graphe de flux le panneau des outils vignettes : options de flou et d'exposition, résolution, grille de sélection des véhicules, boutons « Capture current config », « Capture all configs » et « Capture missing thumbnails », barre de progression et bouton Cancel.",
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Hook appelé à chaque frame avant le rendu : fait avancer la coroutine de travail (une erreur la fait échouer) et met à jour le flou DOF et l'exposition forcée pendant un aperçu ou un travail.",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook de déchargement : arrête le travail, restaure l'exposition, le flou, les réglages graphiques, l'environnement et la physique.",
+      "internal": true
+    }
+  }
+}

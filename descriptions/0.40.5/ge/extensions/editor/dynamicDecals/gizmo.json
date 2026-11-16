@@ -1,84 +1,149 @@
 {
   "path": "lua/ge/extensions/editor/dynamicDecals/gizmo.lua",
-  "module": "Gère le gizmo d'axes (déplacement / rotation / échelle) de l'outil Dynamic Decals. Les autres modules (decal, path, group…) choisissent le mode avec setTransformMode, installent leur callback translateFn / rotateFn / scaleFn, et mettent à jour M.transform. À chaque frame d'édition, editModeUpdate affiche le gizmo, la boîte englobante du decal sélectionné et une sphère de debug.",
+  "module": "Manages the axis gizmo (move / rotate / scale) of the Dynamic Decals tool. Other modules (decal, path, group...) choose the mode with setTransformMode, install their translateFn / rotateFn / scaleFn callback, and update M.transform. On each edit frame, editModeUpdate displays the gizmo, the bounding box of the selected decal and a debug sphere.",
   "notes": [
-    "Callbacks translateFn / rotateFn / scaleFn : appelés pendant le drag avec la matrice renvoyée par editor.getAxisGizmoTransform() ; s'ils sont nil, un message « not yet implemented » est écrit dans le log.",
-    "Le premier appel de gizmoDragging (dragCount == 1) est ignoré.",
-    "Bug : editModeUpdate teste `data and data.debugObjPos` avec la globale `data` (non définie ici, M.data n'est pas utilisé) ; la sphère de debug ne s'affiche donc jamais, sauf si une globale `data` existe.",
-    "M.data décrit l'objet manipulé : uid, type (« drag », « rotate »…), objectType (« decal », « group », « path », « path_dataPoint »), dataPointIndex optionnel, objectDataCopy (état au début du drag). Il n'est pas rempli par ce module."
+    "Callbacks translateFn / rotateFn / scaleFn: called during the drag with the matrix returned by editor.getAxisGizmoTransform(); if they are nil, a \"not yet implemented\" message is written to the log.",
+    "The first call of gizmoDragging (dragCount == 1) is ignored.",
+    "Bug: editModeUpdate tests `data and data.debugObjPos` with the global `data` (not defined here, M.data is not used); the debug sphere therefore never appears, unless a global `data` exists.",
+    "M.data describes the manipulated object: uid, type (\"drag\", \"rotate\"...), objectType (\"decal\", \"group\", \"path\", \"path_dataPoint\"), optional dataPointIndex, objectDataCopy (state at the start of the drag). It is not filled by this module."
   ],
   "fields": {
-    "data": {"type": "table", "desc": "Informations sur l'objet en cours de manipulation (uid, type, objectType, dataPointIndex, objectDataCopy), remplies par les modules appelants."},
-    "transform": {"type": "MatrixF", "desc": "Matrice du gizmo (MatrixF(true) au départ)."},
-    "translateFn": {"type": "function|nil", "desc": "Callback de translation, reçoit la matrice du gizmo."},
-    "rotateFn": {"type": "function|nil", "desc": "Callback de rotation."},
-    "scaleFn": {"type": "function|nil", "desc": "Callback d'échelle."},
-    "transformModes": {"type": "table<string, integer>", "desc": "none = 0, translate = 1, rotate = 2, scale = 3."}
+    "data": {
+      "type": "table",
+      "desc": "Information about the object being manipulated (uid, type, objectType, dataPointIndex, objectDataCopy), filled by the calling modules."
+    },
+    "transform": {
+      "type": "MatrixF",
+      "desc": "Gizmo matrix (MatrixF(true) initially)."
+    },
+    "translateFn": {
+      "type": "function|nil",
+      "desc": "Translation callback, receives the gizmo matrix."
+    },
+    "rotateFn": {
+      "type": "function|nil",
+      "desc": "Rotation callback."
+    },
+    "scaleFn": {
+      "type": "function|nil",
+      "desc": "Scale callback."
+    },
+    "transformModes": {
+      "type": "table<string, integer>",
+      "desc": "none = 0, translate = 1, rotate = 2, scale = 3."
+    }
   },
   "functions": {
     "getTransformMode": {
-      "desc": "Renvoie le mode de transformation actuel.",
+      "desc": "Returns the current transform mode.",
       "params": {},
-      "returns": [{"type": "integer", "desc": "Valeur de transformModes."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Value of transformModes."
+        }
+      ],
       "internal": false
     },
     "setTransformMode": {
-      "desc": "Définit le mode de transformation ; avec none, le gizmo n'est plus affiché.",
-      "params": {"value": {"type": "integer", "desc": "Une valeur de transformModes."}},
+      "desc": "Sets the transform mode; with none, the gizmo is no longer displayed.",
+      "params": {
+        "value": {
+          "type": "integer",
+          "desc": "A value of transformModes."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "resetTransformFn": {
-      "desc": "Remet à nil translateFn, rotateFn et scaleFn.",
+      "desc": "Resets translateFn, rotateFn and scaleFn to nil.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getDragCount": {
-      "desc": "Nombre de mises à jour de drag depuis le début du drag courant.",
+      "desc": "Number of drag updates since the start of the current drag.",
       "params": {},
-      "returns": [{"type": "integer", "desc": "Compteur."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Counter."
+        }
+      ],
       "internal": false
     },
     "gizmoBeginDrag": {
-      "desc": "Callback passé à editor.updateAxisGizmo : appelé quand le drag du gizmo commence. Remet le compteur à 0.",
+      "desc": "Callback passed to editor.updateAxisGizmo: called when the gizmo drag starts. Resets the counter to 0.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "gizmoEndDrag": {
-      "desc": "Callback appelé à la fin du drag. Remet le compteur à 0 (aucune action d'annulation n'est ajoutée ici).",
+      "desc": "Callback called at the end of the drag. Resets the counter to 0 (no undo action is added here).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "gizmoDragging": {
-      "desc": "Callback appelé à chaque mise à jour du drag : incrémente le compteur puis, selon le mode, appelle translateFn / rotateFn / scaleFn avec editor.getAxisGizmoTransform().",
+      "desc": "Callback called on every drag update: increments the counter then, depending on the mode, calls translateFn / rotateFn / scaleFn with editor.getAxisGizmoTransform().",
       "params": {},
       "returns": [],
       "internal": true
     },
     "registerEditorPreferences": {
-      "desc": "Enregistre `dynamicDecalsTool.gizmo` : displayBoundingBox (bool, vrai), boundingBoxColor (RGBA {1,0,0,0.75}, avec sélecteur de couleur) et displayDebugObjWhileMovingControlPoints (bool, vrai).",
-      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "desc": "Registers `dynamicDecalsTool.gizmo`: displayBoundingBox (bool, true), boundingBoxColor (RGBA {1,0,0,0.75}, with color picker) and displayDebugObjWhileMovingControlPoints (bool, true).",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Editor preferences registry."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "editorPreferenceValueChanged": {
-      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
-      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "desc": "Hook called when a preference changes. Does nothing here.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "Preference path."
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "editModeUpdate": {
-      "desc": "Appelé à chaque frame par le mode d'édition de l'éditeur : met à jour et dessine le gizmo si un mode est actif, dessine la boîte englobante du decal sélectionné, puis la sphère de debug des points de contrôle.",
-      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}},
+      "desc": "Called every frame by the editor's edit mode: updates and draws the gizmo if a mode is active, draws the bounding box of the selected decal, then the debug sphere of the control points.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (s)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setup": {
-      "desc": "Appelé par l'outil : mémorise l'outil et l'API editor_api_dynamicDecals.",
-      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "desc": "Called by the tool: stores the tool and the editor_api_dynamicDecals API.",
+      "params": {
+        "tool_in": {
+          "type": "table",
+          "desc": "Reference to the editor_dynamicDecalsTool tool."
+        }
+      },
       "returns": [],
       "internal": true
     }

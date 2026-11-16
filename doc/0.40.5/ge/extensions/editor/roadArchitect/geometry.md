@@ -1,33 +1,33 @@
 # `editor_roadArchitect_geometry`
 
-*Fichier : `lua/ge/extensions/editor/roadArchitect/geometry.lua` · VM : Game Engine (GE) · 753 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadArchitect/geometry.lua` · VM: Game Engine (GE) · 753 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadArchitect_geometry` : `extensions.load("editor_roadArchitect_geometry")`, puis la globale `editor_roadArchitect_geometry`
+**Access:** extension `editor_roadArchitect_geometry`: `extensions.load("editor_roadArchitect_geometry")`, then the global `editor_roadArchitect_geometry`
 
-Module de géométrie de l'éditeur Road Architect (GE). Il transforme les nœuds de référence d'une route en points discrétisés le long d'une spline, puis calcule pour chaque point et chaque voie les quatre coins de la section transversale, les vecteurs normal et latéral, le dévers, etc. Le résultat est stocké dans road.renderData et sert à l'affichage et à la création des DecalRoads/meshes. Un moddeur ne l'utilise que pour recalculer ou lire ces données depuis un outil d'édition.
+Geometry module of the Road Architect editor (GE). It turns a road's reference nodes into discretized points along a spline, then computes for each point and each lane the four corners of the cross section, the normal and lateral vectors, the banking, etc. The result is stored in road.renderData and is used for display and for creating DecalRoads/meshes. A modder only uses it to recompute or read this data from an editing tool.
 
-## Remarques
+## Notes
 
-- Une seule fonction est exportée ; les fonctions d'ajustement (fitSplineStandardRoad, fitArc, fitCivEngAndFrame, identifyTunnelSections) sont locales.
-- La route (road) est modifiée en place : road.renderData est remplacé, road.tunnels est vidé puis recréé si road.isAllowTunnels[0] est vrai, et les nœuds peuvent changer (p.z projeté sur le terrain, rot recalculé par auto-banking).
-- Les valeurs de road.* telles que isConformRoadToTerrain, isCivilEngRoads, isAllowTunnels, extraS, extraE sont des pointeurs imgui (accès par [0]).
-- Le dévers (indice 12) est converti en radians (rad() du degré stocké sur le nœud). Les largeurs et hauteurs sont en mètres.
-- Le calcul des tunnels n'est fait que si extensions.editor_terrainEditor.getTerrainBlock() renvoie un bloc de terrain.
-- L'élargissement aux épingles (profile.isExtraWidth) ajoute 3 m répartis sur les voies de largeur > 2 m, puis restaure les largeurs d'origine après l'ajustement (il n'y a pas de garde si numLanes vaut 0 : division par zéro possible, déduit du code).
+- Only one function is exported; the fitting functions (fitSplineStandardRoad, fitArc, fitCivEngAndFrame, identifyTunnelSections) are local.
+- The road is modified in place: road.renderData is replaced, road.tunnels is emptied then recreated if road.isAllowTunnels[0] is true, and the nodes may change (p.z projected onto the terrain, rot recomputed by auto-banking).
+- The road.* values such as isConformRoadToTerrain, isCivilEngRoads, isAllowTunnels, extraS, extraE are imgui pointers (accessed with [0]).
+- The banking (index 12) is converted to radians (rad() of the degree stored on the node). Widths and heights are in meters.
+- Tunnel computation is only done if extensions.editor_terrainEditor.getTerrainBlock() returns a terrain block.
+- The hairpin widening (profile.isExtraWidth) adds 3 m spread over lanes wider than 2 m, then restores the original widths after fitting (there is no guard if numLanes is 0: division by zero possible, inferred from code).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadArchitect_geometry.computeRoadRenderData(road)` | Calcule les données de rendu de la route donnée et les stocke dans road.renderData. Choisit l'ajustement selon la route : style génie civil (road.isCivilEngRoads[0]), arc de cercle (road.isArc, trois nœuds) ou spline Catmull-Rom centripète par défaut. Applique avant cela la projection sur le terrain, l'auto-banking et l'élargissement aux épingles si ces options sont actives. | 533 |
+| `editor_roadArchitect_geometry.computeRoadRenderData(road)` | Computes the render data of the given road and stores it in road.renderData. Chooses the fitting according to the road: civil engineering style (road.isCivilEngRoads[0]), circular arc (road.isArc, three nodes) or centripetal Catmull-Rom spline by default. Beforehand, applies terrain projection, auto-banking and hairpin widening if these options are active. | 533 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadArchitect_geometry.computeRoadRenderData(road)`
 
-Calcule les données de rendu de la route donnée et les stocke dans road.renderData. Choisit l'ajustement selon la route : style génie civil (road.isCivilEngRoads[0]), arc de cercle (road.isArc, trois nœuds) ou spline Catmull-Rom centripète par défaut. Applique avant cela la projection sur le terrain, l'auto-banking et l'élargissement aux épingles si ces options sont actives.
+Computes the render data of the given road and stores it in road.renderData. Chooses the fitting according to the road: civil engineering style (road.isCivilEngRoads[0]), circular arc (road.isArc, three nodes) or centripetal Catmull-Rom spline by default. Beforehand, applies terrain projection, auto-banking and hairpin widening if these options are active.
 
-- `road` (*table*) : Route de Road Architect (nodes, profile, laneKeys, leftKeys, rightKeys, renderData, tunnels, options imgui…). Modifiée en place.
+- `road` (*table*) : Road Architect road (nodes, profile, laneKeys, leftKeys, rightKeys, renderData, tunnels, imgui options...). Modified in place.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadArchitect/geometry.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadArchitect/geometry.lua`.*

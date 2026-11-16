@@ -1,65 +1,65 @@
 # `util_screenshotCreator_framing_configured`
 
-*Fichier : `lua/ge/extensions/util/screenshotCreator/framing/configured.lua` · VM : Game Engine (GE) · 97 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/screenshotCreator/framing/configured.lua` · VM: Game Engine (GE) · 97 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_screenshotCreator_framing_configured` : `extensions.load("util_screenshotCreator_framing_configured")`, puis la globale `util_screenshotCreator_framing_configured`
+**Access:** extension `util_screenshotCreator_framing_configured`: `extensions.load("util_screenshotCreator_framing_configured")`, then the global `util_screenshotCreator_framing_configured`
 
-Mode de cadrage « Configured camera » de screenshotCreator : utilise une caméra personnalisée enregistrée dans la configuration de vignette du véhicule (par config, sinon par modèle) et la convertit en position/rotation monde à partir des décalages stockés (rewindCameraOffsets). Si aucune caméra configurée n'est utilisable, retombe sur le cadrage procédural. Il s'enregistre dans la liste des modes via le hook onScreenshotCreatorCollectFramingModes (id « configured », ordre 200).
+"Configured camera" framing mode of screenshotCreator: uses a custom camera saved in the vehicle's thumbnail configuration (per config, otherwise per model) and converts it to a world position/rotation from the stored offsets (rewindCameraOffsets). If no configured camera is usable, falls back to procedural framing. It registers itself in the mode list via the onScreenshotCreatorCollectFramingModes hook (id "configured", order 200).
 
-## Remarques
+## Notes
 
-- Priorité : caméra de la config (configCamEnabled), puis caméra du modèle (modelCamEnabled), puis cadrage procédural.
-- resolveOverride renvoie nil sans erreur quand aucune caméra configurée ne s'applique, et (nil, message) si context.vehicle est absent.
-- frame est un alias de resolve.
+- Priority: config camera (configCamEnabled), then model camera (modelCamEnabled), then procedural framing.
+- resolveOverride returns nil without error when no configured camera applies, and (nil, message) if context.vehicle is missing.
+- frame is an alias of resolve.
 
-**Dépendances (chargées avant) :** `util_screenshotCreator_thumbnailConfig`, `util_screenshotCreator_framing_procedural`
+**Dependencies (loaded first):** `util_screenshotCreator_thumbnailConfig`, `util_screenshotCreator_framing_procedural`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_screenshotCreator_framing_configured.frame(context)` | Alias de resolve. | 75 |
-| `util_screenshotCreator_framing_configured.onScreenshotCreatorCollectFramingModes(modes)` | Hook de collecte des modes de cadrage : ajoute à la liste le mode {id = 'configured', label = 'Configured camera', order = 200, resolve}. *(interne)* *(hook)* | 82 |
-| `util_screenshotCreator_framing_configured.resolve(context)` | Résout la caméra pour le contexte : essaie la caméra configurée, sinon délègue à util_screenshotCreator_framing_procedural.resolve. | 75 |
-| `util_screenshotCreator_framing_configured.resolveOverride(context)` | Résout uniquement la caméra configurée par l'utilisateur (config puis modèle) sans repli procédural. | 37 |
+| `util_screenshotCreator_framing_configured.frame(context)` | Alias of resolve. | 75 |
+| `util_screenshotCreator_framing_configured.onScreenshotCreatorCollectFramingModes(modes)` | Framing mode collection hook: adds the mode {id = 'configured', label = 'Configured camera', order = 200, resolve} to the list. *(internal)* *(hook)* | 82 |
+| `util_screenshotCreator_framing_configured.resolve(context)` | Resolves the camera for the context: tries the configured camera, otherwise delegates to util_screenshotCreator_framing_procedural.resolve. | 75 |
+| `util_screenshotCreator_framing_configured.resolveOverride(context)` | Resolves only the user-configured camera (config then model) without procedural fallback. | 37 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_screenshotCreator_framing_configured.frame(context)`
 
-Alias de resolve.
+Alias of resolve.
 
-- `context` (*table*) : Voir resolve
-- **renvoie** : table|nil Voir resolve
-- **renvoie** : string|nil Message d'erreur
+- `context` (*table*) : See resolve
+- **returns**: table|nil See resolve
+- **returns**: string|nil Error message
 
 #### `util_screenshotCreator_framing_configured.onScreenshotCreatorCollectFramingModes(modes)`
 
-Hook de collecte des modes de cadrage : ajoute à la liste le mode {id = 'configured', label = 'Configured camera', order = 200, resolve}.
+Framing mode collection hook: adds the mode {id = 'configured', label = 'Configured camera', order = 200, resolve} to the list.
 
-- `modes` (*table[]*) : Liste de modes à compléter
+- `modes` (*table[]*) : List of modes to complete
 
 #### `util_screenshotCreator_framing_configured.resolve(context)`
 
-Résout la caméra pour le contexte : essaie la caméra configurée, sinon délègue à util_screenshotCreator_framing_procedural.resolve.
+Resolves the camera for the context: tries the configured camera, otherwise delegates to util_screenshotCreator_framing_procedural.resolve.
 
-- `context` (*table*) : Contexte de cadrage : vehicle (obligatoire), configName, et les champs lus par le cadrage procédural
-- **renvoie** : table|nil {pos, rot, name, debugData} ou nil en cas d'erreur
-- **renvoie** : string|nil Message d'erreur
+- `context` (*table*) : Framing context: vehicle (required), configName, and the fields read by procedural framing
+- **returns**: table|nil {pos, rot, name, debugData} or nil on error
+- **returns**: string|nil Error message
 
 #### `util_screenshotCreator_framing_configured.resolveOverride(context)`
 
-Résout uniquement la caméra configurée par l'utilisateur (config puis modèle) sans repli procédural.
+Resolves only the user-configured camera (config then model) without procedural fallback.
 
-- `context` (*table*) : Contexte de cadrage avec vehicle et configName
-- **renvoie** : table|nil {pos, rot, name = 'config camera' ou 'model camera', debugData} ou nil si aucune caméra configurée
-- **renvoie** : string|nil Message d'erreur si le contexte est invalide
+- `context` (*table*) : Framing context with vehicle and configName
+- **returns**: table|nil {pos, rot, name = 'config camera' or 'model camera', debugData} or nil if no configured camera
+- **returns**: string|nil Error message if the context is invalid
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | table |  |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/screenshotCreator/framing/configured.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/screenshotCreator/framing/configured.lua`.*

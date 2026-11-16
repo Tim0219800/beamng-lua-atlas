@@ -1,143 +1,143 @@
 # `ui_appContainers`
 
-*Fichier : `lua/ge/extensions/ui/appContainers.lua` · VM : Game Engine (GE) · 255 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/appContainers.lua` · VM: Game Engine (GE) · 255 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_appContainers` : `extensions.load("ui_appContainers")`, puis la globale `ui_appContainers`
+**Access:** extension `ui_appContainers`: `extensions.load("ui_appContainers")`, then the global `ui_appContainers`
 
-Registre générique des « conteneurs » d'apps d'interface (topLeft, topCenter, topRight) et de la visibilité de chaque app. Les extensions topLeft/topCenter/topRight s'enregistrent avec registerContainer ; ce module garde l'état visible/caché de chaque app et prévient l'interface Vue via guihooks.trigger sur le trigger du conteneur. Il sauvegarde et restaure la visibilité via onSerialize/onDeserialize (rechargement Lua) et propose une fenêtre ImGui de debug.
+Generic registry of UI app "containers" (topLeft, topCenter, topRight) and of the visibility of each app. The topLeft/topCenter/topRight extensions register with registerContainer; this module keeps the visible/hidden state of each app and notifies the Vue interface via guihooks.trigger on the container's trigger. It saves and restores visibility via onSerialize/onDeserialize (Lua reload) and offers a debug ImGui window.
 
-## Remarques
+## Notes
 
-- Anciens identifiants acceptés partout : utilityApps -> topLeft, gameplayApps -> topCenter, secondaryApps -> topRight (resolveContainerId).
-- setVerboseLogging ne fait rien d'utile : elle renvoie simplement enabled en booléen sans rien mémoriser.
-- Les fonctions d'écriture loguent une erreur et retournent sans rien faire si le conteneur ou l'app est inconnu ; getAppVisibility renvoie alors false.
-- onDeserialize rappelle setAppVisibility pour chaque app, donc émet un trigger UI par app restaurée.
+- Old identifiers accepted everywhere: utilityApps -> topLeft, gameplayApps -> topCenter, secondaryApps -> topRight (resolveContainerId).
+- setVerboseLogging does nothing useful: it simply returns enabled as a boolean without storing anything.
+- The write functions log an error and return without doing anything if the container or the app is unknown; getAppVisibility then returns false.
+- onDeserialize calls setAppVisibility again for each app, so it emits one UI trigger per restored app.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_appContainers.getAppVisibility(containerId, appId)` | Renvoie la visibilité actuelle d'une app (false si conteneur ou app inconnus). | 78 |
-| `ui_appContainers.getAvailableApps(containerId)` | Renvoie une copie de la table des apps d'un conteneur sous la forme {[appId]={visible=boolean}}. | 142 |
-| `ui_appContainers.getVisibleApps(containerId)` | Liste les identifiants des apps visibles d'un conteneur (ordre non garanti, itération pairs). | 125 |
-| `ui_appContainers.hideAllApps(containerId)` | Cache toutes les apps d'un conteneur, envoie {hideAll=true, allApps} à l'interface puis émet le hook onUIContainerAppsHidden(containerId résolu). | 94 |
-| `ui_appContainers.hideApp(containerId, appId)` | Raccourci pour setAppVisibility(containerId, appId, false). | 117 |
-| `ui_appContainers.onDeserialize(data)` | Hook de restauration après rechargement : réapplique la visibilité sauvegardée via setAppVisibility (accepte les anciens identifiants). *(interne)* *(hook)* | 163 |
-| `ui_appContainers.onExtensionLoaded()` | Hook de chargement de l'extension ; ne fait rien. *(interne)* *(hook)* | 186 |
-| `ui_appContainers.onExtensionUnloaded()` | Hook de déchargement : vide la table des conteneurs. *(interne)* *(hook)* | 189 |
-| `ui_appContainers.onSerialize()` | Hook de sérialisation (rechargement des extensions) : renvoie {[containerId]={[appId]=visible}}. *(interne)* *(hook)* | 152 |
-| `ui_appContainers.onUpdate()` | Appelé à chaque frame par le système d'extensions ; dessine la fenêtre ImGui de debug uniquement si setDebug(true). *(interne)* *(hook)* | 193 |
-| `ui_appContainers.registerContainer(config)` | Enregistre un nouveau conteneur. Exige config.id ; refuse (avec avertissement) un identifiant déjà enregistré. Copie la table apps (visible forcé en booléen). | 35 |
-| `ui_appContainers.resolveContainerId(containerId)` | Convertit un ancien identifiant de conteneur (utilityApps, gameplayApps, secondaryApps) en identifiant actuel ; renvoie l'argument tel quel sinon. | 18 |
-| `ui_appContainers.setAppVisibility(containerId, appId, visible)` | Affiche ou cache une app d'un conteneur et envoie {appId, visible, allApps} à l'interface via le trigger du conteneur. | 56 |
-| `ui_appContainers.setDebug(enabled)` | Active ou désactive la fenêtre ImGui « App Containers Debug » (boutons Show/Hide par app, Hide All, Show All). | 178 |
-| `ui_appContainers.setVerboseLogging(enabled)` | Sans effet réel : renvoie enabled converti en booléen. | 182 |
-| `ui_appContainers.showApp(containerId, appId)` | Raccourci pour setAppVisibility(containerId, appId, true). | 113 |
-| `ui_appContainers.toggleApp(containerId, appId)` | Inverse la visibilité d'une app. | 121 |
+| `ui_appContainers.getAppVisibility(containerId, appId)` | Returns the current visibility of an app (false if container or app unknown). | 78 |
+| `ui_appContainers.getAvailableApps(containerId)` | Returns a copy of a container's apps table in the form {[appId]={visible=boolean}}. | 142 |
+| `ui_appContainers.getVisibleApps(containerId)` | Lists the identifiers of the visible apps of a container (order not guaranteed, pairs iteration). | 125 |
+| `ui_appContainers.hideAllApps(containerId)` | Hides all apps of a container, sends {hideAll=true, allApps} to the interface then emits the hook onUIContainerAppsHidden(resolved containerId). | 94 |
+| `ui_appContainers.hideApp(containerId, appId)` | Shortcut for setAppVisibility(containerId, appId, false). | 117 |
+| `ui_appContainers.onDeserialize(data)` | Restore hook after a reload: reapplies the saved visibility via setAppVisibility (accepts old identifiers). *(internal)* *(hook)* | 163 |
+| `ui_appContainers.onExtensionLoaded()` | Extension load hook; does nothing. *(internal)* *(hook)* | 186 |
+| `ui_appContainers.onExtensionUnloaded()` | Unload hook: empties the containers table. *(internal)* *(hook)* | 189 |
+| `ui_appContainers.onSerialize()` | Serialization hook (extension reload): returns {[containerId]={[appId]=visible}}. *(internal)* *(hook)* | 152 |
+| `ui_appContainers.onUpdate()` | Called every frame by the extension system; draws the debug ImGui window only if setDebug(true). *(internal)* *(hook)* | 193 |
+| `ui_appContainers.registerContainer(config)` | Registers a new container. Requires config.id; refuses (with a warning) an already registered identifier. Copies the apps table (visible forced to boolean). | 35 |
+| `ui_appContainers.resolveContainerId(containerId)` | Converts an old container identifier (utilityApps, gameplayApps, secondaryApps) to the current identifier; returns the argument as is otherwise. | 18 |
+| `ui_appContainers.setAppVisibility(containerId, appId, visible)` | Shows or hides an app of a container and sends {appId, visible, allApps} to the interface via the container's trigger. | 56 |
+| `ui_appContainers.setDebug(enabled)` | Enables or disables the "App Containers Debug" ImGui window (Show/Hide buttons per app, Hide All, Show All). | 178 |
+| `ui_appContainers.setVerboseLogging(enabled)` | No real effect: returns enabled converted to a boolean. | 182 |
+| `ui_appContainers.showApp(containerId, appId)` | Shortcut for setAppVisibility(containerId, appId, true). | 113 |
+| `ui_appContainers.toggleApp(containerId, appId)` | Toggles an app's visibility. | 121 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_appContainers.getAppVisibility(containerId, appId)`
 
-Renvoie la visibilité actuelle d'une app (false si conteneur ou app inconnus).
+Returns the current visibility of an app (false if container or app unknown).
 
-- `containerId` (*string*) : Identifiant du conteneur.
-- `appId` (*string*) : Identifiant de l'app.
-- **renvoie** : boolean true si visible.
+- `containerId` (*string*) : Container identifier.
+- `appId` (*string*) : App identifier.
+- **returns**: boolean true if visible.
 
 #### `ui_appContainers.getAvailableApps(containerId)`
 
-Renvoie une copie de la table des apps d'un conteneur sous la forme {[appId]={visible=boolean}}.
+Returns a copy of a container's apps table in the form {[appId]={visible=boolean}}.
 
-- `containerId` (*string*) : Conteneur.
-- **renvoie** : table<string, table> Copie des apps ; vide si conteneur inconnu.
+- `containerId` (*string*) : Container.
+- **returns**: table<string, table> Copy of the apps; empty if container unknown.
 
 #### `ui_appContainers.getVisibleApps(containerId)`
 
-Liste les identifiants des apps visibles d'un conteneur (ordre non garanti, itération pairs).
+Lists the identifiers of the visible apps of a container (order not guaranteed, pairs iteration).
 
-- `containerId` (*string*) : Conteneur.
-- **renvoie** : table<integer, string> Tableau d'appId ; vide si conteneur inconnu.
+- `containerId` (*string*) : Container.
+- **returns**: table<integer, string> Array of appId; empty if container unknown.
 
 #### `ui_appContainers.hideAllApps(containerId)`
 
-Cache toutes les apps d'un conteneur, envoie {hideAll=true, allApps} à l'interface puis émet le hook onUIContainerAppsHidden(containerId résolu).
+Hides all apps of a container, sends {hideAll=true, allApps} to the interface then emits the hook onUIContainerAppsHidden(resolved containerId).
 
-- `containerId` (*string*) : Identifiant du conteneur.
+- `containerId` (*string*) : Container identifier.
 
 #### `ui_appContainers.hideApp(containerId, appId)`
 
-Raccourci pour setAppVisibility(containerId, appId, false).
+Shortcut for setAppVisibility(containerId, appId, false).
 
-- `containerId` (*string*) : Conteneur.
+- `containerId` (*string*) : Container.
 - `appId` (*string*) : App.
 
 #### `ui_appContainers.onDeserialize(data)`
 
-Hook de restauration après rechargement : réapplique la visibilité sauvegardée via setAppVisibility (accepte les anciens identifiants).
+Restore hook after a reload: reapplies the saved visibility via setAppVisibility (accepts old identifiers).
 
-- `data` (*table*) : Table produite par onSerialize.
+- `data` (*table*) : Table produced by onSerialize.
 
 #### `ui_appContainers.onSerialize()`
 
-Hook de sérialisation (rechargement des extensions) : renvoie {[containerId]={[appId]=visible}}.
+Serialization hook (extension reload): returns {[containerId]={[appId]=visible}}.
 
-- **renvoie** : table Visibilité de toutes les apps.
+- **returns**: table Visibility of all apps.
 
 #### `ui_appContainers.registerContainer(config)`
 
-Enregistre un nouveau conteneur. Exige config.id ; refuse (avec avertissement) un identifiant déjà enregistré. Copie la table apps (visible forcé en booléen).
+Registers a new container. Requires config.id; refuses (with a warning) an already registered identifier. Copies the apps table (visible forced to boolean).
 
-- `config` (*table*) : {id=string, trigger=string (nom du guihook), debugLabel=string|nil, apps={[appId]={visible=boolean}}}.
-- **renvoie** : boolean true si enregistré, false sinon.
+- `config` (*table*) : {id=string, trigger=string (guihook name), debugLabel=string|nil, apps={[appId]={visible=boolean}}}.
+- **returns**: boolean true if registered, false otherwise.
 
 #### `ui_appContainers.resolveContainerId(containerId)`
 
-Convertit un ancien identifiant de conteneur (utilityApps, gameplayApps, secondaryApps) en identifiant actuel ; renvoie l'argument tel quel sinon.
+Converts an old container identifier (utilityApps, gameplayApps, secondaryApps) to the current identifier; returns the argument as is otherwise.
 
-- `containerId` (*string*) : Identifiant de conteneur, ancien ou nouveau.
-- **renvoie** : string Identifiant actuel.
+- `containerId` (*string*) : Container identifier, old or new.
+- **returns**: string Current identifier.
 
 #### `ui_appContainers.setAppVisibility(containerId, appId, visible)`
 
-Affiche ou cache une app d'un conteneur et envoie {appId, visible, allApps} à l'interface via le trigger du conteneur.
+Shows or hides an app of a container and sends {appId, visible, allApps} to the interface via the container's trigger.
 
-- `containerId` (*string*) : Identifiant du conteneur.
-- `appId` (*string*) : Identifiant de l'app (doit être déclaré dans le conteneur).
-- `visible` (*boolean*) : Nouvelle visibilité.
+- `containerId` (*string*) : Container identifier.
+- `appId` (*string*) : App identifier (must be declared in the container).
+- `visible` (*boolean*) : New visibility.
 
 #### `ui_appContainers.setDebug(enabled)`
 
-Active ou désactive la fenêtre ImGui « App Containers Debug » (boutons Show/Hide par app, Hide All, Show All).
+Enables or disables the "App Containers Debug" ImGui window (Show/Hide buttons per app, Hide All, Show All).
 
-- `enabled` (*boolean*) : true pour afficher la fenêtre.
+- `enabled` (*boolean*) : true to display the window.
 
 #### `ui_appContainers.setVerboseLogging(enabled)`
 
-Sans effet réel : renvoie enabled converti en booléen.
+No real effect: returns enabled converted to a boolean.
 
-- `enabled` (*boolean*) : Ignoré.
-- **renvoie** : boolean enabled en booléen.
+- `enabled` (*boolean*) : Ignored.
+- **returns**: boolean enabled as a boolean.
 
 #### `ui_appContainers.showApp(containerId, appId)`
 
-Raccourci pour setAppVisibility(containerId, appId, true).
+Shortcut for setAppVisibility(containerId, appId, true).
 
-- `containerId` (*string*) : Conteneur.
+- `containerId` (*string*) : Container.
 - `appId` (*string*) : App.
 
 #### `ui_appContainers.toggleApp(containerId, appId)`
 
-Inverse la visibilité d'une app.
+Toggles an app's visibility.
 
-- `containerId` (*string*) : Conteneur.
+- `containerId` (*string*) : Container.
 - `appId` (*string*) : App.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onUIContainerAppsHidden`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/appContainers.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/appContainers.lua`.*

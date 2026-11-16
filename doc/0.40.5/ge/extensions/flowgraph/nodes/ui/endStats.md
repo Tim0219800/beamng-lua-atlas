@@ -1,31 +1,31 @@
 # `flowgraph_nodes_ui_endStats`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/endStats.lua` · VM : Game Engine (GE) · 111 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/endStats.lua` · VM: Game Engine (GE) · 111 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/endStats")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/endStats")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « End Stats » (catégorie repeat_instant) : rassemble les statistiques à afficher dans l'écran de fin. Pour chaque statistique i : entrées « label_i » (string ou table translationObject), « points_i », « maxPoints_i ». Entrée cachée « statData » (liste précédente) et sortie « statData » (table endStats) à brancher sur End Screen, éventuellement en chaînant plusieurs nœuds.
+Flowgraph node "End Stats" (category repeat_instant): gathers the statistics to display on the end screen. For each statistic i: inputs "label_i" (string or translationObject table), "points_i", "maxPoints_i". Hidden input "statData" (previous list) and output "statData" (endStats table) to connect to End Screen, optionally chaining several nodes.
 
-## Remarques
+## Notes
 
-- Chaque statistique ajoute aussi relativePoints = points*100/maxPoints quand points et maxPoints existent (division par zéro si maxPoints = 0).
-- Le compteur minimum dans l'éditeur est 1 (ptr < 1 -> 1), alors que count vaut 0 à l'initialisation.
-- work() ajoute des éléments à la table d'entrée statData (modifiée en place) à chaque frame.
+- Each statistic also adds relativePoints = points*100/maxPoints when points and maxPoints exist (division by zero if maxPoints = 0).
+- The minimum counter in the editor is 1 (ptr < 1 -> 1), whereas count is 0 at initialization.
+- work() adds elements to the input table statData (modified in place) every frame.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Vide. | 37 |
-| `C:_onDeserialized(res)` | Restaure count. | 105 |
-| `C:_onSerialize(res)` | Sauvegarde count. | 101 |
-| `C:drawCustomProperties()` | Champ « Count » pour le nombre de statistiques. | 41 |
-| `C:drawMiddle(builder, style)` | Zone centrale vide. | 32 |
+| `C:_executionStarted()` | Empty. | 37 |
+| `C:_onDeserialized(res)` | Restores count. | 105 |
+| `C:_onSerialize(res)` | Saves count. | 101 |
+| `C:drawCustomProperties()` | "Count" field for the number of statistics. | 41 |
+| `C:drawMiddle(builder, style)` | Empty central area. | 32 |
 | `C:init()` | count = 0. | 28 |
-| `C:updatePins(old, new)` | Ajuste le nombre de groupes de 3 pins d'entrée (label, points, maxPoints). | 58 |
-| `C:work()` | Reprend la liste en entrée, ajoute une entrée {label, points, maxPoints, relativePoints} par statistique et l'écrit sur « statData ». | 86 |
+| `C:updatePins(old, new)` | Adjusts the number of groups of 3 input pins (label, points, maxPoints). | 58 |
+| `C:work()` | Takes the input list, adds an entry {label, points, maxPoints, relativePoints} per statistic and writes it to "statData". | 86 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/endStats.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/endStats.lua`.*

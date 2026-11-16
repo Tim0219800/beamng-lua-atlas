@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/modules/levelModule.lua",
+  "module": "Module flowgraph (moduleOrder 100) qui synchronise les actions d'un projet avec le chargement d'un niveau. Il permet de différer une fonction jusqu'à la fin du chargement (delayOrInstantFunction) et de recharger la collision (be:reloadCollision) après le chargement d'un niveau ou à la fin du tick quand un prefab est chargé.",
+  "notes": [
+    "Le test de chargement se fait par core_gamestate.loading(). Le champ isLoadingLevel est commenté et inutilisé.",
+    "beginLoadingLevel est vide.",
+    "uniqueFuns est créé et vidé mais jamais utilisé ; la liste prefabs n'est que remplie."
+  ],
+  "functions": {
+    "init": {"desc": "Crée les tables funs, uniqueFuns et prefabs, initialise les drapeaux de rechargement de collision puis appelle clear().", "internal": true},
+    "clear": {"desc": "Vide les tables et remet les drapeaux reloadCollisionOnLevelLoading / reloadCollisionOnAfterTrigger à false.", "internal": true},
+    "beginLoadingLevel": {"desc": "Prévu pour signaler le début d'un chargement de niveau (corps vide).", "internal": true},
+    "finishedLevelLoading": {"desc": "À appeler à la fin du chargement du niveau : recharge la collision si demandé, exécute puis vide les fonctions différées.", "internal": true},
+    "afterTrigger": {"desc": "Appelé après le tick du graphe : si reloadCollisionOnAfterTrigger est vrai, appelle be:reloadCollision().", "internal": true},
+    "delayOrInstantFunction": {"desc": "Exécute fun tout de suite si aucun niveau n'est en chargement, sinon la met en file jusqu'à finishedLevelLoading.", "params": {"fun": {"type": "function", "desc": "fonction sans argument"}}},
+    "prefabLoaded": {"desc": "Signale qu'un prefab a été chargé : demande un rechargement de collision (à la fin du chargement du niveau si en cours, sinon après le tick) et mémorise l'id.", "params": {"id": {"type": "integer", "desc": "id de l'objet prefab"}}},
+    "executionStopped": {"desc": "Appelé à l'arrêt du projet : appelle clear().", "internal": true}
+  }
+}

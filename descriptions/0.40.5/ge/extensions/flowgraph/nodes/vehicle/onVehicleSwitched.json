@@ -1,42 +1,42 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.lua",
-  "module": "Nœud événement « On Vehicle Switched » (catégorie `logic`, tag event). Émet une impulsion sur `flow` quand le joueur change de véhicule (hook `onVehicleSwitched`). Sorties : `oldID`, `newID` (number) et `player` (caché).",
+  "module": "Event node \"On Vehicle Switched\" (category `logic`, tag event). Emits a pulse on `flow` when the player changes vehicle (hook `onVehicleSwitched`). Outputs: `oldID`, `newID` (number) and `player` (hidden).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_afterTrigger": {
-          "desc": "Appelé par le gestionnaire après le déclenchement du nœud ; remet le drapeau d'événement à false.",
+          "desc": "Called by the manager after the node is triggered; resets the event flag to false.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.",
+          "desc": "Called by the manager when the flowgraph project execution starts; resets the internal state to zero.",
           "internal": true
         },
         "init": {
-          "desc": "Constructeur vide.",
+          "desc": "Empty constructor.",
           "internal": true
         },
         "onVehicleSwitched": {
-          "desc": "Hook appelé quand le joueur change de véhicule ; `oid` ancien id, `nid` nouvel id, `player` id du joueur.",
+          "desc": "Hook called when the player changes vehicle; `oid` old id, `nid` new id, `player` player id.",
           "internal": true,
           "params": {
             "oid": {
               "type": "integer",
-              "desc": "Ancien véhicule."
+              "desc": "Old vehicle."
             },
             "nid": {
               "type": "integer",
-              "desc": "Nouveau véhicule."
+              "desc": "New vehicle."
             },
             "player": {
               "type": "integer",
-              "desc": "Id du joueur."
+              "desc": "Player id."
             }
           }
         },
         "work": {
-          "desc": "Si un changement a été signalé, remplit `oldID`, `newID`, `player` et met `flow` à true une frame.",
+          "desc": "If a change was signaled, fills `oldID`, `newID`, `player` and sets `flow` to true for one frame.",
           "internal": true
         }
       }

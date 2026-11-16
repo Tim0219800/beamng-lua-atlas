@@ -1,18 +1,23 @@
 {
   "path": "lua/ge/extensions/career/modules/milestones/generalMilestones/insurance.lua",
-  "module": "Jalon sur le nombre de réclamations d'assurance pour réparation (id insurance_repair_claims). Paliers : 1, 5, 10, 20, 50 réclamations (career_modules_insurance_history.getInsuranceClaimsCount), récompense minorLinear.",
+  "module": "Milestone on the number of insurance repair claims (id insurance_repair_claims). Tiers: 1, 5, 10, 20, 50 claims (career_modules_insurance_history.getInsuranceClaimsCount), minorLinear reward.",
   "notes": [
-    "onInsuranceRepairClaim n'appelle pas de setNotificationTarget : il compare directement le compteur à la cible du palier suivant (notificationStep + 1).",
-    "Le hook peut être appelé avant onGeneralMilestonesCollect ; dans ce cas currMilestone est vide et getTarget n'existe pas (non protégé)."
+    "onInsuranceRepairClaim does not call setNotificationTarget: it directly compares the counter with the next tier's target (notificationStep + 1).",
+    "The hook may be called before onGeneralMilestonesCollect; in that case currMilestone is empty and getTarget does not exist (unguarded)."
   ],
   "functions": {
     "onGeneralMilestonesCollect": {
-      "desc": "Hook : crée la configuration du jalon, la sauvegarde si absente et l'ajoute à milestonesList.",
-      "params": {"milestonesList": {"type": "table[]", "desc": "Liste à compléter."}},
+      "desc": "Hook: creates the milestone configuration, its save data if absent, and adds it to milestonesList.",
+      "params": {
+        "milestonesList": {
+          "type": "table[]",
+          "desc": "List to fill."
+        }
+      },
       "internal": true
     },
     "onInsuranceRepairClaim": {
-      "desc": "Hook appelé à chaque réclamation d'assurance pour réparation : si le compteur atteint la cible du palier suivant, notifie le jalon et avance notificationStep.",
+      "desc": "Hook called on each insurance repair claim: if the counter reaches the next tier's target, notifies the milestone and advances notificationStep.",
       "params": {},
       "internal": true
     }

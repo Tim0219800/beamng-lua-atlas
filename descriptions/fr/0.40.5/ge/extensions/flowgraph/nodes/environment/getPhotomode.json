@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/environment/getPhotomode.lua",
+  "module": "Nœud flowgraph « Get Photomode » (catégorie provider, auteur BeamNG, tags photomode/photo/camera/screenshot/capture). Sort un bool « value » : vrai si le mode photo est ouvert, lu dans la variable globale photoModeOpen.",
+  "notes": ["Dépend d'une variable globale (photoModeOpen) ; elle vaut nil si le mode photo n'a jamais été initialisé."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Chaque frame, copie photoModeOpen sur la sortie value."}
+      }
+    }
+  }
+}

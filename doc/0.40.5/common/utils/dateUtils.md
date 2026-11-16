@@ -1,47 +1,47 @@
 # `utils_dateUtils`
 
-*Fichier : `lua/common/utils/dateUtils.lua` · VM : Commun (GE + véhicule) · 49 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/utils/dateUtils.lua` · VM: Common (GE + vehicle) · 49 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("utils/dateUtils")`
+**Access:** `require("utils/dateUtils")`
 
-Petits utilitaires de dates : conversion d'une chaîne ISO 8601 en timestamp Unix et calcul du temps écoulé depuis une date. Se charge avec require('utils/dateUtils'). Utile pour comparer des dates reçues d'une API ou d'un fichier.
+Small date utilities: conversion of an ISO 8601 string to a Unix timestamp and computation of the time elapsed since a date. Loaded with require('utils/dateUtils'). Useful to compare dates received from an API or a file.
 
-## Exemple
+## Example
 
 ```lua
 local du = require('utils/dateUtils')
-local secondes = du.timeSince('2025-01-31T12:00:00Z')
+local seconds = du.timeSince('2025-01-31T12:00:00Z')
 ```
 
-## Remarques
+## Notes
 
-- Le motif attendu est AAAA-MM-JJTHH:MM:SSZ. Un second motif de secours accepte 'HH:MM:SS AMZ'/'PMZ'.
-- Si la chaîne est illisible, une erreur est loguée et l'heure courante est utilisée (le résultat est alors 'maintenant').
-- os.time interprète la table en heure LOCALE, alors que timeSince compare à os.date('!*t') (UTC) reconverti par os.time : le décalage de fuseau horaire peut fausser la différence (déduit du code).
-- Bug probable dans la branche de secours AM/PM : hour vaut 0 (nombre) ou une chaîne selon le cas, puis tonumber est appliqué ; une heure '12 PM' reste '12'.
+- The expected pattern is YYYY-MM-DDTHH:MM:SSZ. A second fallback pattern accepts 'HH:MM:SS AMZ'/'PMZ'.
+- If the string is unreadable, an error is logged and the current time is used (the result is then 'now').
+- os.time interprets the table as LOCAL time, whereas timeSince compares against os.date('!*t') (UTC) converted back by os.time: the time zone offset can skew the difference (inferred from code).
+- Probable bug in the AM/PM fallback branch: hour is 0 (number) or a string depending on the case, then tonumber is applied; '12 PM' stays '12'.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `utils_dateUtils.parseIso8601(datetime)` | Convertit une date-heure ISO 8601 (se terminant par Z) en timestamp Unix via os.time. Retourne l'heure courante en cas d'échec de lecture. | 8 |
-| `utils_dateUtils.timeSince(datetime)` | Calcule le nombre de secondes écoulées entre la date donnée et maintenant (UTC). | 38 |
+| `utils_dateUtils.parseIso8601(datetime)` | Converts an ISO 8601 date-time (ending with Z) to a Unix timestamp via os.time. Returns the current time if parsing fails. | 8 |
+| `utils_dateUtils.timeSince(datetime)` | Computes the number of seconds elapsed between the given date and now (UTC). | 38 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `utils_dateUtils.parseIso8601(datetime)`
 
-Convertit une date-heure ISO 8601 (se terminant par Z) en timestamp Unix via os.time. Retourne l'heure courante en cas d'échec de lecture.
+Converts an ISO 8601 date-time (ending with Z) to a Unix timestamp via os.time. Returns the current time if parsing fails.
 
-- `datetime` (*string*) : Ex. '2025-01-31T12:00:00Z'
-- **renvoie** : integer Timestamp Unix en secondes
+- `datetime` (*string*) : E.g. '2025-01-31T12:00:00Z'
+- **returns**: integer Unix timestamp in seconds
 
 #### `utils_dateUtils.timeSince(datetime)`
 
-Calcule le nombre de secondes écoulées entre la date donnée et maintenant (UTC).
+Computes the number of seconds elapsed between the given date and now (UTC).
 
-- `datetime` (*string*) : Date ISO 8601
-- **renvoie** : number Différence en secondes (os.difftime)
+- `datetime` (*string*) : ISO 8601 date
+- **returns**: number Difference in seconds (os.difftime)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/utils/dateUtils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/utils/dateUtils.lua`.*

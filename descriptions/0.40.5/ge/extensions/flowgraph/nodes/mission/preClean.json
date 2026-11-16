@@ -1,12 +1,12 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/mission/preClean.lua",
-  "module": "Noeud flowgraph 'Mission Cleanup' (categorie once_p_duration). Nettoie l'etat du monde avant une mission via le module mission du gestionnaire (processVehicles) avec les options keepPlayer et keepTraffic (le vehicule joueur / le trafic restent actifs au lieu d'etre mis de cote). Sortie : vehId, l'id du vehicule joueur d'origine.",
+  "module": "Flowgraph node 'Mission Cleanup' (once_p_duration category). Cleans up the world state before a mission via the manager's mission module (processVehicles) with the options keepPlayer and keepTraffic (the player vehicle / traffic stay active instead of being stashed). Output: vehId, the id of the original player vehicle.",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "workOnce": {
-          "desc": "Appelle self.mgr.modules.mission:processVehicles{keepPlayer, keepTraffic} puis ecrit vehId (id d'origine ou be:getPlayerVehicleID(0)).",
+          "desc": "Calls self.mgr.modules.mission:processVehicles{keepPlayer, keepTraffic} then writes vehId (original id or be:getPlayerVehicleID(0)).",
           "internal": true
         }
       }

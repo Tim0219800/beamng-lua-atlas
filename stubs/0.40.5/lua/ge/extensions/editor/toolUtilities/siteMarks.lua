@@ -2,50 +2,50 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/siteMarks.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Marquages routiers tels qu'un site les porte : lignes de places, hachures, barres de cédez-le-passage, lignes d'axe d'allée, traces d'usure de pneus, fissures et zébras. Chacun est un DecalRoad, c'est-à-dire de la peinture posée SUR le sol et non de la géométrie : rien n'entre dans une coque, donc un parking cuit porte ce qu'il faut peindre et le repeint là où on le pose (même arrangement que pour l'eau). Le module crée les DecalRoad, convertit le plan vers/depuis le format du manifeste et les remet au niveau.
---- Accès : extension `editor_toolUtilities_siteMarks` : `extensions.load("editor_toolUtilities_siteMarks")`, puis la globale `editor_toolUtilities_siteMarks`
+--- Road markings as a site carries them: parking space lines, hatching, give-way bars, aisle centerlines, tire wear tracks, cracks and zebra crossings. Each is a DecalRoad, that is, paint laid ON the ground and not geometry: nothing goes into a shell, so a baked parking lot carries what needs painting and repaints it where it is placed (same arrangement as for water). The module creates the DecalRoads, converts the plan to/from the manifest format and puts them back into the level.
+--- Access: extension `editor_toolUtilities_siteMarks`: `extensions.load("editor_toolUtilities_siteMarks")`, then the global `editor_toolUtilities_siteMarks`
 ---@class editor_toolUtilities_siteMarks
 editor_toolUtilities_siteMarks = {}
 
---- Peint tout un plan d'un coup. Renvoie les objets créés, pour que le demandeur puisse les remettre au niveau ou les retirer. Liste vide si plan ou folder manque.
----Source : lua/ge/extensions/editor/toolUtilities/siteMarks.lua:54
----@param plan table|nil Liste d'enregistrements de marques.
----@param folder userdata|nil Groupe de scène parent.
----@param terrainZ function terrainZ(x, y) renvoie la hauteur du terrain.
----@return table  Liste des DecalRoad créés.
+--- Paints a whole plan at once. Returns the objects created, so that the requester can put them back into the level or remove them. Empty list if plan or folder is missing.
+---Source: lua/ge/extensions/editor/toolUtilities/siteMarks.lua:54
+---@param plan table|nil List of mark records.
+---@param folder userdata|nil Parent scene group.
+---@param terrainZ function terrainZ(x, y) returns the terrain height.
+---@return table  List of created DecalRoads.
 function editor_toolUtilities_siteMarks.build(plan, folder, terrainZ) end
 
---- Remet les marques au niveau. Peintes par l'outil, elles n'appartenaient à rien et n'étaient pas écrites ; à partir de là elles sont celles du niveau et l'outil ne doit plus les supprimer.
----Source : lua/ge/extensions/editor/toolUtilities/siteMarks.lua:66
----@param objs table|nil DecalRoad renvoyés par build.
+--- Puts the marks back into the level. Painted by the tool, they belonged to nothing and were not written; from then on they are the level's and the tool must no longer delete them.
+---Source: lua/ge/extensions/editor/toolUtilities/siteMarks.lua:66
+---@param objs table|nil DecalRoads returned by build.
 function editor_toolUtilities_siteMarks.commit(objs) end
 
---- Crée un DecalRoad depuis son enregistrement et l'ajoute à folder. Chaque nœud est à la hauteur du terrain (ou de rec.z pour une marque sur dalle) plus lift ; si closed, le premier point est rajouté à la fin. Renvoie nil s'il y a moins de 2 points ou si la création échoue.
----Source : lua/ge/extensions/editor/toolUtilities/siteMarks.lua:20
----@param folder userdata Groupe de scène parent.
----@param rec table Enregistrement de marque.
----@param terrainZ function terrainZ(x, y) renvoie la hauteur du terrain.
----@return userdata|nil  Objet DecalRoad.
+--- Creates a DecalRoad from its record and adds it to folder. Each node is at terrain height (or rec.z for a mark on a slab) plus lift; if closed, the first point is added again at the end. Returns nil if there are fewer than 2 points or if creation fails.
+---Source: lua/ge/extensions/editor/toolUtilities/siteMarks.lua:20
+---@param folder userdata Parent scene group.
+---@param rec table Mark record.
+---@param terrainZ function terrainZ(x, y) returns the terrain height.
+---@return userdata|nil  DecalRoad object.
 function editor_toolUtilities_siteMarks.emit(folder, rec, terrainZ) end
 
---- Le plan tel qu'un manifeste le porte, local à l'origine de cuisson. Renvoie { styles, runs } ou nil si rien. Chaque run : { s = indice de style, pts = plat, closed, fade, w (largeurs par nœud) }.
----Source : lua/ge/extensions/editor/toolUtilities/siteMarks.lua:82
----@param plan table|nil Liste d'enregistrements de marques.
----@param ox number x de l'origine.
----@param oy number y de l'origine.
----@param oz number|nil z de l'origine (pour les marques sur dalle).
+--- The plan as a manifest carries it, local to the bake origin. Returns { styles, runs } or nil if nothing. Each run: { s = style index, pts = flat, closed, fade, w (per-node widths) }.
+---Source: lua/ge/extensions/editor/toolUtilities/siteMarks.lua:82
+---@param plan table|nil List of mark records.
+---@param ox number x of the origin.
+---@param oy number y of the origin.
+---@param oz number|nil z of the origin (for marks on a slab).
 ---@return table|nil  { styles = {...}, runs = {...} }.
 function editor_toolUtilities_siteMarks.localise(plan, ox, oy, oz) end
 
---- L'inverse : les marques du manifeste comme plan, posées là où se trouve un placement et tournées sur son cap. (ox, oy) est le point du repère du site autour duquel le placement tourne (le milieu de son empreinte, pas l'origine de cuisson dans un coin). pz est la hauteur du placement, utile seulement aux marques posées sur l'une de ses propres dalles.
----Source : lua/ge/extensions/editor/toolUtilities/siteMarks.lua:129
----@param rec table|nil Enregistrement du manifeste { styles, runs }.
----@param px number x du placement.
----@param py number y du placement.
----@param yaw number|nil Cap en radians (défaut 0).
----@param ox number|nil x du pivot (défaut 0).
----@param oy number|nil y du pivot (défaut 0).
----@param pz number|nil Hauteur du placement (défaut 0).
----@return table|nil  Plan de marques en coordonnées monde, nil s'il est vide.
+--- The inverse: the manifest's marks as a plan, placed where a placement is and rotated to its heading. (ox, oy) is the point of the site's frame around which the placement rotates (the middle of its footprint, not the bake origin in a corner). pz is the placement height, useful only for marks placed on one of its own slabs.
+---Source: lua/ge/extensions/editor/toolUtilities/siteMarks.lua:129
+---@param rec table|nil Manifest record { styles, runs }.
+---@param px number x of the placement.
+---@param py number y of the placement.
+---@param yaw number|nil Heading in radians (default 0).
+---@param ox number|nil x of the pivot (default 0).
+---@param oy number|nil y of the pivot (default 0).
+---@param pz number|nil Placement height (default 0).
+---@return table|nil  Mark plan in world coordinates, nil if empty.
 function editor_toolUtilities_siteMarks.place(rec, px, py, yaw, ox, oy, pz) end
 

@@ -1,20 +1,52 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/activity/requestAbandon.lua",
-  "module": "Nœud flowgraph « Request Abandon » (catégorie logic, tag input). Laisse passer le flux, une seule fois, quand le joueur demande d'abandonner la mission. Pins : entrée flow ; sorties flow (impulsion) et value (bool caché, vrai tant que l'abandon est demandé). Si ce nœud existe, le graphe doit être arrêté manuellement à la fin. data.blocksOnResetGameplay = true.",
-  "notes": ["L'appui est consommé : le drapeau est remis à faux après le travail et après le déclenchement (_afterTrigger). L'évènement est consigné dans le journal du graphe (logEvent « Player pressed 'Abandon' »)."],
+  "module": "Flowgraph node \"Request Abandon\" (category logic, tag input). Lets the flow through, only once, when the player requests to abandon the mission. Pins: flow input; outputs flow (impulse) and value (hidden bool, true as long as the abandon is requested). If this node exists, the graph must be stopped manually at the end. data.blocksOnResetGameplay = true.",
+  "notes": [
+    "The press is consumed: the flag is set back to false after the work and after the trigger (_afterTrigger). The event is recorded in the graph's log (logEvent \"Player pressed 'Abandon'\")."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Met reset à faux et data.blocksOnResetGameplay à true.", "internal": true},
-        "_executionStopped": {"desc": "Remet reset à faux à l'arrêt du graphe.", "internal": true},
-        "_executionStarted": {"desc": "Remet reset à faux au démarrage du graphe.", "internal": true},
-        "onRequestAbandon": {"desc": "Hook appelé quand le joueur demande l'abandon ; mémorise la demande.", "internal": true},
-        "_afterTrigger": {"desc": "Remet reset à faux après le déclenchement.", "internal": true},
-        "drawMiddle": {"desc": "Éditeur : dessine la zone centrale du nœud.", "params": {"builder": {"type": "table", "desc": "constructeur de nœud de l'éditeur"}, "style": {"type": "table", "desc": "style de l'éditeur"}}, "internal": true},
-        "work": {"desc": "Si une demande d'abandon est en attente, active flow et value (et journalise), sinon les met à faux."}
+        "init": {
+          "desc": "Sets reset to false and data.blocksOnResetGameplay to true.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Sets reset back to false when the graph stops.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Sets reset back to false when the graph starts.",
+          "internal": true
+        },
+        "onRequestAbandon": {
+          "desc": "Hook called when the player requests to abandon; stores the request.",
+          "internal": true
+        },
+        "_afterTrigger": {
+          "desc": "Sets reset back to false after the trigger.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Editor: draws the central area of the node.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "editor node builder"
+            },
+            "style": {
+              "type": "table",
+              "desc": "editor style"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "If an abandon request is pending, enables flow and value (and logs), otherwise sets them to false."
+        }
       }
     }
   }

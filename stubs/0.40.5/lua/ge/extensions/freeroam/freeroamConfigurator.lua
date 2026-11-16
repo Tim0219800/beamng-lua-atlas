@@ -2,264 +2,264 @@
 -- tim19Atlas stub generated from lua/ge/extensions/freeroam/freeroamConfigurator.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Configurateur de la partie freeroam (assistant « Wizard » de l'UI) : mémorise le niveau, le point de départ, le véhicule (modèle, config, peintures) et les options de partie (heure, date, trafic…) ; les persiste dans `settings/freeroamConfigurator.json` ; fournit à l'UI les tuiles de sélection (point de départ, véhicule), les boutons de démarrage et les données des routes du wizard (recherche/filtres par étape, instantanés de sélecteur, chargements asynchrones) ; puis lance la partie via freeroam_freeroam.startFreeroamByName. Les options viennent d'autres extensions via le hook onFreeroamConfiguratorGetOptions : toutes les extensions `lua/ge/extensions/freeroam/configuratorOptions/*.lua` (nom `freeroam_configuratorOptions_<fichier>`) sont ajoutées aux dépendances. Global : freeroam_freeroamConfigurator.
---- Accès : extension `freeroam_freeroamConfigurator` : `extensions.load("freeroam_freeroamConfigurator")`, puis la globale `freeroam_freeroamConfigurator`
+--- Freeroam game configurator (the UI "Wizard" assistant): stores the level, spawn point, vehicle (model, config, paints) and game options (time, date, traffic...); persists them in `settings/freeroamConfigurator.json`; provides the UI with the selection tiles (spawn point, vehicle), the start buttons and the wizard route data (per-step search/filters, selector snapshots, asynchronous loads); then launches the game via freeroam_freeroam.startFreeroamByName. The options come from other extensions via the onFreeroamConfiguratorGetOptions hook: all the `lua/ge/extensions/freeroam/configuratorOptions/*.lua` extensions (name `freeroam_configuratorOptions_<file>`) are added to the dependencies. Global: freeroam_freeroamConfigurator.
+--- Access: extension `freeroam_freeroamConfigurator`: `extensions.load("freeroam_freeroamConfigurator")`, then the global `freeroam_freeroamConfigurator`
 ---@class freeroam_freeroamConfigurator
----@field dependencies string[] Noms d'extensions freeroam_configuratorOptions_* découverts dynamiquement dans lua/ge/extensions/freeroam/configuratorOptions/.
+---@field dependencies string[] freeroam_configuratorOptions_* extension names discovered dynamically in lua/ge/extensions/freeroam/configuratorOptions/.
 freeroam_freeroamConfigurator = {}
 
---- Hook appelé quand le chargeur asynchrone des niveaux a fini : émet l'instantané FreeroamSelectorDataLoaded('level') si la route en attente est toujours courante.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1572
+--- Hook called when the asynchronous level loader has finished: emits the FreeroamSelectorDataLoaded('level') snapshot if the pending route is still current.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1572
 function freeroam_freeroamConfigurator.asyncLevelLoadComplete() end
 
---- Idem pour les véhicules (appelé depuis util_asyncBulkLoader.loadVehicles via extensions.hook).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1592
+--- Same for vehicles (called from util_asyncBulkLoader.loadVehicles via extensions.hook).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1592
 function freeroam_freeroamConfigurator.asyncVehicleLoadComplete() end
 
---- Efface les filtres d'une étape.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:796
----@param step string Étape.
----@return boolean  Succès.
+--- Clears a step's filters.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:796
+---@param step string Step.
+---@return boolean  Success.
 function freeroam_freeroamConfigurator.clearWizardFiltersForStep(step) end
 
---- Vide la recherche de l'étape.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:766
----@param step string Étape.
----@return boolean  Succès.
+--- Clears the step's search.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:766
+---@param step string Step.
+---@return boolean  Success.
 function freeroam_freeroamConfigurator.clearWizardSearchForStep(step) end
 
---- Gestionnaire de double-clic : fait seulement dump(item).
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:735
----@param item any Élément cliqué.
+--- Double-click handler: only does dump(item).
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:735
+---@param item any Clicked item.
 function freeroam_freeroamConfigurator.doubleClickOverride(item) end
 
---- Construit le bouton de démarrage (« Start freeroam », priorité 1), laisse les extensions le surcharger (onFreeroamConfiguratorOverrideStartButton) et renvoie celui de plus haute priorité.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:703
----@return table|nil  Infos du bouton.
+--- Builds the start button ("Start freeroam", priority 1), lets the extensions override it (onFreeroamConfiguratorOverrideStartButton) and returns the highest-priority one.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:703
+---@return table|nil  Button info.
 function freeroam_freeroamConfigurator.getButtons() end
 
---- Renvoie à l'UI la configuration : options (groupes collectés par le hook onFreeroamConfiguratorGetOptions, triés par `order`, valeurs remplies depuis la configuration courante ou leur valeur par défaut), currentSpawnPoint (tuile) et currentVehicle (tuile). Charge le fichier de configuration au premier appel.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:659
+--- Returns the configuration to the UI: options (groups collected by the onFreeroamConfiguratorGetOptions hook, sorted by `order`, values filled from the current configuration or their default value), currentSpawnPoint (tile) and currentVehicle (tile). Loads the configuration file on the first call.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:659
 ---@return table  {options, currentSpawnPoint, currentVehicle}
 function freeroam_freeroamConfigurator.getConfiguration() end
 
---- Tuile « récent » de la sélection courante pour l'étape donnée.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:579
----@param step string 'level' ou 'vehicle'.
----@return table|nil  Tuile.
+--- "Recent" tile of the current selection for the given step.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:579
+---@param step string 'level' or 'vehicle'.
+---@return table|nil  Tile.
 function freeroam_freeroamConfigurator.getCurrentSelectionRecentTile(step) end
 
---- Tuile du point de départ courant. Si ses fichiers n'existent plus ou si la tuile manque, recharge ou retombe sur le niveau/point par défaut.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1763
----@return table|nil  Tuile.
+--- Tile of the current spawn point. If its files no longer exist or the tile is missing, reloads or falls back to the default level/point.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1763
+---@return table|nil  Tile.
 function freeroam_freeroamConfigurator.getCurrentSpawnPointTile() end
 
---- Véhicule courant de la configuration.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1893
+--- Current vehicle of the configuration.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1893
 ---@return table  {model, config, additionalData}
 function freeroam_freeroamConfigurator.getCurrentVehicle() end
 
---- Tuile du véhicule courant, avec repli sur le véhicule par défaut si invalide.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1820
----@return table|nil  Tuile.
+--- Tile of the current vehicle, with fallback to the default vehicle if invalid.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1820
+---@return table|nil  Tile.
 function freeroam_freeroamConfigurator.getCurrentVehicleTile() end
 
---- Renvoie une copie des filtres mémorisés d'une étape.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:787
----@param step string Étape.
----@return table|nil  Filtres.
+--- Returns a copy of a step's stored filters.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:787
+---@param step string Step.
+---@return table|nil  Filters.
 function freeroam_freeroamConfigurator.getWizardFiltersForStep(step) end
 
---- Lit le texte de recherche mémorisé.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:757
----@param step string Étape.
----@return string|nil  Texte, nil si étape non supportée.
+--- Reads the stored search text.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:757
+---@param step string Step.
+---@return string|nil  Text, nil if the step is not supported.
 function freeroam_freeroamConfigurator.getWizardSearchForStep(step) end
 
---- Indique si les détails correspondent à la sélection courante (level : levelName + spawnPointObjectName ; vehicle : model + config).
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:585
----@param step string 'level' ou 'vehicle'.
----@param details table Détails de la tuile.
----@return boolean  Vrai si identique.
+--- Tells whether the details match the current selection (level: levelName + spawnPointObjectName; vehicle: model + config).
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:585
+---@param step string 'level' or 'vehicle'.
+---@param details table Tile details.
+---@return boolean  True if identical.
 function freeroam_freeroamConfigurator.isCurrentSelection(step, details) end
 
---- Après rechargement Lua : restaure la configuration.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1927
----@param data table Table renvoyée par onSerialize.
+--- After Lua reload: restores the configuration.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1927
+---@param data table Table returned by onSerialize.
 function freeroam_freeroamConfigurator.onDeserialized(data) end
 
---- Hook de changement de langue : efface les tuiles en cache (elles contiennent des textes traduits).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1913
+--- Language change hook: clears the cached tiles (they contain translated text).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1913
 function freeroam_freeroamConfigurator.onLanguageChanged() end
 
---- Hook de fin de fondu de l'écran de chargement : si un démarrage a été lancé, navigue une seule fois vers l'écran « play ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1966
+--- Loading screen fade-out end hook: if a start was launched, navigates once to the "play" screen.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1966
 function freeroam_freeroamConfigurator.onLoadingScreenFadeout() end
 
---- Avant rechargement Lua : sauvegarde la configuration si modifiée et la renvoie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1920
----@return table  La configuration courante.
+--- Before Lua reload: saves the configuration if modified and returns it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1920
+---@return table  The current configuration.
 function freeroam_freeroamConfigurator.onSerialize() end
 
---- Clic sur la tuile de point de départ : ouvre le sélecteur de freeroam ; au choix, appelle setSpawnPoint et revient à menu.freeroamconfigurator.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1898
+--- Click on the spawn point tile: opens the freeroam selector; on choice, calls setSpawnPoint and returns to menu.freeroamconfigurator.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1898
 function freeroam_freeroamConfigurator.onSpawnPointTileClick() end
 
---- Clic sur la tuile de véhicule : ouvre le sélecteur de véhicule ; au choix, appelle setVehicle et revient à menu.freeroamconfigurator.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1906
+--- Click on the vehicle tile: opens the vehicle selector; on choice, calls setVehicle and returns to menu.freeroamconfigurator.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1906
 function freeroam_freeroamConfigurator.onVehicleTileClick() end
 
---- Idem pour la route de détail d'un niveau (points de départ du niveau).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1103
----@param context any Contexte.
----@param toRoute table Route cible.
----@param fromRoute table Route d'origine.
----@param data table Données.
+--- Same for a level's detail route (the level's spawn points).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1103
+---@param context any Context.
+---@param toRoute table Target route.
+---@param fromRoute table Origin route.
+---@param data table Data.
 function freeroam_freeroamConfigurator.onWizardLevelDetailRouteEnter(context, toRoute, fromRoute, data) end
 
---- Idem pour le détail d'un niveau.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1685
----@param context any Contexte.
----@param toRoute table Route.
----@param fromRoute table Route d'origine.
----@param data table Données.
+--- Same for a level's detail.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1685
+---@param context any Context.
+---@param toRoute table Road.
+---@param fromRoute table Origin route.
+---@param data table Data.
 function freeroam_freeroamConfigurator.onWizardLevelDetailRouteMount(context, toRoute, fromRoute, data) end
 
---- Hook d'entrée sur la route des niveaux du wizard : prépare les données de route (chemin de niveau par défaut).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1091
----@param context any Contexte du routeur.
----@param toRoute table Route cible.
----@param fromRoute table Route d'origine.
----@param data table Données de route à compléter.
+--- Entry hook on the wizard's levels route: prepares the route data (default level path).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1091
+---@param context any Router context.
+---@param toRoute table Target route.
+---@param fromRoute table Origin route.
+---@param data table Route data to complete.
 function freeroam_freeroamConfigurator.onWizardLevelsRouteEnter(context, toRoute, fromRoute, data) end
 
---- Hook de montage de la route des niveaux : prépare les données et attache ou diffère l'instantané du sélecteur (chargement asynchrone si la liste n'est pas chargée).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1677
----@param context any Contexte.
----@param toRoute table Route.
----@param fromRoute table Route d'origine.
----@param data table Données.
+--- Mount hook of the levels route: prepares the data and attaches or defers the selector snapshot (asynchronous load if the list is not loaded).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1677
+---@param context any Context.
+---@param toRoute table Road.
+---@param fromRoute table Origin route.
+---@param data table Data.
 function freeroam_freeroamConfigurator.onWizardLevelsRouteMount(context, toRoute, fromRoute, data) end
 
---- Hook générique d'entrée sur une route du wizard.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1119
----@param context any Contexte.
----@param toRoute table Route cible.
----@param fromRoute table Route d'origine.
----@param data table Données.
+--- Generic entry hook on a wizard route.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1119
+---@param context any Context.
+---@param toRoute table Target route.
+---@param fromRoute table Origin route.
+---@param data table Data.
 function freeroam_freeroamConfigurator.onWizardRouteEnter(context, toRoute, fromRoute, data) end
 
---- Idem pour la route de détail d'un véhicule (configs d'un modèle).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1109
----@param context any Contexte.
----@param toRoute table Route cible.
----@param fromRoute table Route d'origine.
----@param data table Données.
+--- Same for a vehicle's detail route (a model's configs).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1109
+---@param context any Context.
+---@param toRoute table Target route.
+---@param fromRoute table Origin route.
+---@param data table Data.
 function freeroam_freeroamConfigurator.onWizardVehicleDetailRouteEnter(context, toRoute, fromRoute, data) end
 
---- Idem pour le détail d'un véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1701
----@param context any Contexte.
----@param toRoute table Route.
----@param fromRoute table Route d'origine.
----@param data table Données.
+--- Same for a vehicle's detail.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1701
+---@param context any Context.
+---@param toRoute table Road.
+---@param fromRoute table Origin route.
+---@param data table Data.
 function freeroam_freeroamConfigurator.onWizardVehicleDetailRouteMount(context, toRoute, fromRoute, data) end
 
---- Idem pour la route des véhicules.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1097
----@param context any Contexte.
----@param toRoute table Route cible.
----@param fromRoute table Route d'origine.
----@param data table Données.
+--- Same for the vehicles route.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1097
+---@param context any Context.
+---@param toRoute table Target route.
+---@param fromRoute table Origin route.
+---@param data table Data.
 function freeroam_freeroamConfigurator.onWizardVehiclesRouteEnter(context, toRoute, fromRoute, data) end
 
---- Idem pour la liste des véhicules.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1693
----@param context any Contexte.
----@param toRoute table Route.
----@param fromRoute table Route d'origine.
----@param data table Données.
+--- Same for the vehicle list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1693
+---@param context any Context.
+---@param toRoute table Road.
+---@param fromRoute table Origin route.
+---@param data table Data.
 function freeroam_freeroamConfigurator.onWizardVehiclesRouteMount(context, toRoute, fromRoute, data) end
 
---- Titre du fil d'Ariane pour le niveau : d'abord le niveau de la route de détail (spawnPointsForLevel), sinon le niveau choisi (tuile ou nom).
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1171
----@param params table Paramètres de la route (params.path.keys).
----@return string|nil  Titre.
+--- Breadcrumb title for the level: first the level of the detail route (spawnPointsForLevel), otherwise the chosen level (tile or name).
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1171
+---@param params table Route parameters (params.path.keys).
+---@return string|nil  Title.
 function freeroam_freeroamConfigurator.resolveSelectedLevelTitle(params) end
 
---- Titre du fil d'Ariane pour le véhicule : modèle de la route (configsForModel / configsForBrandSubModelOrModel), sinon la tuile véhicule, sinon le nom dérivé du modèle choisi.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1191
----@param params table Paramètres de la route.
----@return string|nil  Titre.
+--- Breadcrumb title for the vehicle: the route's model (configsForModel / configsForBrandSubModelOrModel), otherwise the vehicle tile, otherwise the name derived from the chosen model.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1191
+---@param params table Route parameters.
+---@return string|nil  Title.
 function freeroam_freeroamConfigurator.resolveSelectedVehicleTitle(params) end
 
---- Choisit le niveau et le point de départ : résout un point de repli si besoin (resolveSpawnPointNameForLevel), met à jour la date d'environnement par défaut du niveau si elle n'avait pas été modifiée, charge et met en cache la tuile, marque la configuration modifiée et navigue vers routeName si fourni.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1715
----@param levelName string Nom du niveau.
----@param spawnPointName string|nil Nom de l'objet de départ ('undefined' ou nil = point par défaut).
----@param key string|nil Clé de tuile (non utilisée dans le corps).
----@param routeName string|nil Route UI vers laquelle naviguer.
+--- Chooses the level and the spawn point: resolves a fallback point if needed (resolveSpawnPointNameForLevel), updates the level's default environment date if it had not been modified, loads and caches the tile, marks the configuration as modified and navigates to routeName if provided.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1715
+---@param levelName string Level name.
+---@param spawnPointName string|nil Spawn object name ('undefined' or nil = default point).
+---@param key string|nil Tile key (not used in the body).
+---@param routeName string|nil UI route to navigate to.
 function freeroam_freeroamConfigurator.setSpawnPoint(levelName, spawnPointName, key, routeName) end
 
---- Choisit le véhicule : résout la config (repli sur une config existante du modèle), garde les additionalData existantes si c'est le même véhicule sans données, met en cache la tuile.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1868
----@param model string Clé du modèle.
----@param config string Clé de la config.
----@param additionalData table|nil Données (paint, paint2, paint3 : noms de peintures).
----@param key string|nil Non utilisé dans le corps.
+--- Chooses the vehicle: resolves the config (fallback to an existing config of the model), keeps the existing additionalData if it is the same vehicle with no data, caches the tile.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1868
+---@param model string Model key.
+---@param config string Config key.
+---@param additionalData table|nil Data (paint, paint2, paint3: paint names).
+---@param key string|nil Not used in the body.
 function freeroam_freeroamConfigurator.setVehicle(model, config, additionalData, key) end
 
---- Mémorise les filtres d'une étape (charge normalisée).
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:776
----@param step string Étape.
----@param filtersPayload table Filtres.
----@return boolean  Succès.
+--- Stores a step's filters (normalized payload).
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:776
+---@param step string Step.
+---@param filtersPayload table Filters.
+---@return boolean  Success.
 function freeroam_freeroamConfigurator.setWizardFiltersForStep(step, filtersPayload) end
 
---- Mémorise le texte de recherche d'une étape (normalisé).
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:746
----@param step string 'level' ou 'vehicle'.
----@param searchText string Texte.
----@return boolean  false si étape non supportée.
+--- Stores a step's search text (normalized).
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:746
+---@param step string 'level' or 'vehicle'.
+---@param searchText string Text.
+---@return boolean  false if the step is not supported.
 function freeroam_freeroamConfigurator.setWizardSearchForStep(step, searchText) end
 
---- Démarre la partie : résout les peintures du véhicule, appelle freeroam_freeroam.startFreeroamByName(niveau, point de départ, nil, {modèle, options}), enregistre les récents (point de départ et véhicule) et vide les filtres du wizard.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1933
----@param configuration table Configuration complète {levelName, spawnPointName, vehicle={model, config, additionalData}, spawnPointTile…}.
+--- Starts the game: resolves the vehicle's paints, calls freeroam_freeroam.startFreeroamByName(level, spawn point, nil, {model, options}), records the recents (spawn point and vehicle) and clears the wizard's filters.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1933
+---@param configuration table Full configuration {levelName, spawnPointName, vehicle={model, config, additionalData}, spawnPointTile...}.
 function freeroam_freeroamConfigurator.startFreeroam(configuration) end
 
---- Exécute un bouton : sauvegarde la configuration si modifiée, notifie onFreeroamConfiguratorApplyOptions puis déclenche le bouton.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:725
----@param buttonId any Id du bouton (déduit du code : buttonModule.executeButton).
----@param ... any Arguments supplémentaires (non utilisés ici).
+--- Runs a button: saves the configuration if modified, notifies onFreeroamConfiguratorApplyOptions then triggers the button.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:725
+---@param buttonId any Button id (inferred from code: buttonModule.executeButton).
+---@param ... any Extra arguments (not used here).
 function freeroam_freeroamConfigurator.triggerButton(buttonId, ...) end
 
---- Enregistre la valeur d'une option de partie et marque la configuration comme modifiée.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:741
----@param key string Clé de l'option (ex. traffic_trafficMode).
----@param value any Valeur.
+--- Stores a game option's value and marks the configuration as modified.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:741
+---@param key string Option key (e.g. traffic_trafficMode).
+---@param value any Value.
 function freeroam_freeroamConfigurator.updateOption(key, value) end
 
---- Vérifie que des fichiers (motif nom.ext) ou dossiers existent (FS:fileExists / FS:directoryExists) ; vrai si la liste est nil.
----Source : lua/ge/extensions/freeroam/freeroamConfigurator.lua:1743
----@param validationFiles string[]|nil Chemins à valider.
----@return boolean  Vrai si tous existent.
+--- Checks that files (name.ext pattern) or folders exist (FS:fileExists / FS:directoryExists); true if the list is nil.
+---Source: lua/ge/extensions/freeroam/freeroamConfigurator.lua:1743
+---@param validationFiles string[]|nil Paths to validate.
+---@return boolean  True if all exist.
 function freeroam_freeroamConfigurator.validateFiles(validationFiles) end
 

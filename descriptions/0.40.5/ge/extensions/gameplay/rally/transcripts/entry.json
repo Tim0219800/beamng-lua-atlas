@@ -1,95 +1,175 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/transcripts/entry.lua",
-  "module": "Une transcription individuelle de la reconnaissance de rallye : le texte reconnu de la voix du copilote, sa source, son horodatage et les données du véhicule au moment de la phrase (position, orientation, et captures de braquage). Sert surtout à l'éditeur de rallye pour afficher en debug une voiture 3D, colorer la trajectoire selon l'angle de braquage (appel de virage) et lancer un parcours caméra. Le module renvoie un constructeur : `require(...)(path, name, forceId)` ; l'objet est un élément de `sortedList` (id, name, sortOrder).",
+  "module": "An individual rally recce transcription: the recognized text of the co-driver's voice, its source, its timestamp and the vehicle data at the time of the phrase (position, orientation, and steering captures). Mainly used by the rally editor to display a 3D car in debug, color the trajectory according to the steering angle (corner call) and start a camera path. The module returns a constructor: `require(...)(path, name, forceId)`; the object is an element of `sortedList` (id, name, sortOrder).",
   "notes": [
-    "Le champ vehicle_data est un conteneur : vehicle_data.vehicle_data contient {pos, quat} du véhicule et vehicle_data.capture_data contient {captures, cornerAnglesStyle} ; plusieurs méthodes (vehiclePos, vehicleQuat, capture_data) plantent si vehicle_data vaut nil (avant onDeserialized).",
-    "get_grouped_captures met le résultat en cache dans grouped_captures et exige editor_rallyEditor (fenêtre de transcriptions) pour obtenir les angles de virage ; sans l'éditeur, sortedAngles reste nil et rallyUtil.determineCornerCall n'a pas de liste à parcourir.",
-    "rallyUtil.determineCornerCall renvoie nil si le braquage ne tombe dans aucune plage ; le code accède ensuite à cap.calc.angle_data.color sans test.",
-    "debugDrawText concatène sans test : si text vaut nil et is_hovered, erreur.",
-    "Dimensions de la voiture de debug : hauteur 1,6 m, largeur 1,8 m, longueur 4,4 m ; pos est supposée au centre de la voiture. Couleur teal, blanche au survol, teal clair à la sélection."
+    "The vehicle_data field is a container: vehicle_data.vehicle_data contains {pos, quat} of the vehicle and vehicle_data.capture_data contains {captures, cornerAnglesStyle}; several methods (vehiclePos, vehicleQuat, capture_data) crash if vehicle_data is nil (before onDeserialized).",
+    "get_grouped_captures caches the result in grouped_captures and requires editor_rallyEditor (transcriptions window) to get the corner angles; without the editor, sortedAngles stays nil and rallyUtil.determineCornerCall has no list to iterate over.",
+    "rallyUtil.determineCornerCall returns nil if the steering falls in no range; the code then accesses cap.calc.angle_data.color without a test.",
+    "debugDrawText concatenates without a test: if text is nil and is_hovered, error.",
+    "Dimensions of the debug car: height 1.6 m, width 1.8 m, length 4.4 m; pos is assumed to be at the center of the car. Teal color, white on hover, light teal when selected."
   ],
   "classes": {
     "C": {
-      "desc": "Transcription. Champs : path, id, name, sortOrder (999999), show (true), text, success, src, file, beamng_file, timestamp, vehicle_data, grouped_captures.",
+      "desc": "Transcription. Fields: path, id, name, sortOrder (999999), show (true), text, success, src, file, beamng_file, timestamp, vehicle_data, grouped_captures.",
       "functions": {
         "init": {
-          "desc": "Constructeur : id imposé ou fourni par path:getNextUniqueIdentifier(), nom par défaut `t_<id>`, affichage actif.",
+          "desc": "Constructor: forced id or one provided by path:getNextUniqueIdentifier(), default name `t_<id>`, display enabled.",
           "params": {
-            "path": {"type": "table", "desc": "Chemin de transcriptions parent."},
-            "name": {"type": "string|nil", "desc": "Nom ; défaut `t_<id>`."},
-            "forceId": {"type": "integer|nil", "desc": "Id imposé."}
+            "path": {
+              "type": "table",
+              "desc": "Parent transcriptions path."
+            },
+            "name": {
+              "type": "string|nil",
+              "desc": "Name; default `t_<id>`."
+            },
+            "forceId": {
+              "type": "integer|nil",
+              "desc": "Forced id."
+            }
           },
           "internal": true
         },
-        "toggleShow": {"desc": "Inverse l'indicateur d'affichage show."},
+        "toggleShow": {
+          "desc": "Toggles the show display flag."
+        },
         "setShow": {
-          "desc": "Fixe l'indicateur d'affichage.",
-          "params": {"val": {"type": "boolean", "desc": "true pour afficher."}}
+          "desc": "Sets the display flag.",
+          "params": {
+            "val": {
+              "type": "boolean",
+              "desc": "true to show."
+            }
+          }
         },
         "isUsable": {
-          "desc": "Vrai si la transcription a des données véhicule et est affichée.",
-          "returns": [{"type": "boolean|nil", "desc": "Valeur truthy si utilisable."}]
+          "desc": "True if the transcription has vehicle data and is displayed.",
+          "returns": [
+            {
+              "type": "boolean|nil",
+              "desc": "Truthy value if usable."
+            }
+          ]
         },
         "debugDrawText": {
-          "desc": "Texte affiché au-dessus de la voiture de debug : text, suivi de « (click to copy) » au survol.",
-          "params": {"hovered": {"type": "boolean", "desc": "true si la souris survole l'entrée."}},
-          "returns": [{"type": "string", "desc": "Texte à dessiner."}]
+          "desc": "Text displayed above the debug car: text, followed by \"(click to copy)\" on hover.",
+          "params": {
+            "hovered": {
+              "type": "boolean",
+              "desc": "true if the mouse hovers the entry."
+            }
+          },
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Text to draw."
+            }
+          ]
         },
         "vehiclePos": {
-          "desc": "Position du véhicule lors de la transcription.",
-          "returns": [{"type": "vec3|nil", "desc": "Position monde, ou nil si absente."}]
+          "desc": "Vehicle position at the time of the transcription.",
+          "returns": [
+            {
+              "type": "vec3|nil",
+              "desc": "World position, or nil if absent."
+            }
+          ]
         },
         "vehicleQuat": {
-          "desc": "Orientation du véhicule lors de la transcription.",
-          "returns": [{"type": "quat|nil", "desc": "Quaternion, ou nil si absent."}]
+          "desc": "Vehicle orientation at the time of the transcription.",
+          "returns": [
+            {
+              "type": "quat|nil",
+              "desc": "Quaternion, or nil if absent."
+            }
+          ]
         },
         "capture_data": {
-          "desc": "Données de captures de braquage associées (vehicle_data.capture_data).",
-          "returns": [{"type": "table|nil", "desc": "{captures, cornerAnglesStyle} ou nil."}]
+          "desc": "Associated steering capture data (vehicle_data.capture_data).",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "{captures, cornerAnglesStyle} or nil."
+            }
+          ]
         },
         "get_grouped_captures": {
-          "desc": "Regroupe les captures consécutives qui ont le même appel de virage (ex. « 3L », « C »). Trie les angles du style choisi, leur attribue un dégradé rouge-jaune-vert (blanc pour le centre), calcule pour chaque capture un champ calc {angle_pct, angle_data, cornerCallStr}, et fixe un point d'étiquette au milieu de chaque groupe. Résultat mis en cache.",
-          "returns": [{"type": "table[]|nil", "desc": "Liste de groupes {captures, label_point, calc} ; nil sans capture_data."}]
+          "desc": "Groups consecutive captures that have the same corner call (e.g. \"3L\", \"C\"). Sorts the angles of the chosen style, assigns them a red-yellow-green gradient (white for the center), computes for each capture a calc field {angle_pct, angle_data, cornerCallStr}, and sets a label point at the middle of each group. Result cached.",
+          "returns": [
+            {
+              "type": "table[]|nil",
+              "desc": "List of groups {captures, label_point, calc}; nil without capture_data."
+            }
+          ]
         },
         "onSerialize": {
-          "desc": "Renvoie {oldId, name, show, text, success, src, file, beamng_file, timestamp, vehicle_data}.",
-          "returns": [{"type": "table", "desc": "Données sérialisables."}],
+          "desc": "Returns {oldId, name, show, text, success, src, file, beamng_file, timestamp, vehicle_data}.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Serializable data."
+            }
+          ],
           "internal": true
         },
         "onDeserialized": {
-          "desc": "Restaure les champs avec des valeurs par défaut (chaînes vides, 0.0, table vide). show est forcé à false si la position du véhicule est absente.",
+          "desc": "Restores the fields with default values (empty strings, 0.0, empty table). show is forced to false if the vehicle position is absent.",
           "params": {
-            "data": {"type": "table", "desc": "Données sauvegardées."},
-            "oldIdMap": {"type": "table", "desc": "Correspondance des anciens ids (non utilisée)."}
+            "data": {
+              "type": "table",
+              "desc": "Saved data."
+            },
+            "oldIdMap": {
+              "type": "table",
+              "desc": "Mapping of the old ids (unused)."
+            }
           },
           "internal": true
         },
         "drawDebug": {
-          "desc": "Dessine la voiture de debug puis, si survolée ou sélectionnée, les captures de braquage.",
+          "desc": "Draws the debug car then, if hovered or selected, the steering captures.",
           "params": {
-            "is_hovered": {"type": "boolean", "desc": "Survolée."},
-            "is_selected": {"type": "boolean", "desc": "Sélectionnée."}
+            "is_hovered": {
+              "type": "boolean",
+              "desc": "Hovered."
+            },
+            "is_selected": {
+              "type": "boolean",
+              "desc": "Selected."
+            }
           }
         },
         "drawDebugVehicleData": {
-          "desc": "Dessine une voiture stylisée (prisme carré + 4 sphères de roues) à la position/orientation enregistrées, avec le texte de la transcription.",
+          "desc": "Draws a stylized car (square prism + 4 wheel spheres) at the recorded position/orientation, with the transcription text.",
           "params": {
-            "is_hovered": {"type": "boolean", "desc": "Survolée."},
-            "is_selected": {"type": "boolean", "desc": "Sélectionnée."}
+            "is_hovered": {
+              "type": "boolean",
+              "desc": "Hovered."
+            },
+            "is_selected": {
+              "type": "boolean",
+              "desc": "Selected."
+            }
           }
         },
         "drawDebugCaptureData": {
-          "desc": "Pour une entrée survolée ou sélectionnée : sphère de rayon 0,5 colorée par angle pour chaque capture et étiquette de l'appel de virage par groupe.",
+          "desc": "For a hovered or selected entry: sphere of radius 0.5 colored by angle for each capture and corner call label per group.",
           "params": {
-            "is_hovered": {"type": "boolean", "desc": "Survolée."},
-            "is_selected": {"type": "boolean", "desc": "Sélectionnée."}
+            "is_hovered": {
+              "type": "boolean",
+              "desc": "Hovered."
+            },
+            "is_selected": {
+              "type": "boolean",
+              "desc": "Selected."
+            }
           }
         },
         "playCameraPath": {
-          "desc": "Construit un parcours caméra (1 m au-dessus de chaque capture, FOV 60, temps relatif au premier ts, corrige le signe des quaternions) et le joue via core_paths.playPath."
+          "desc": "Builds a camera path (1 m above each capture, FOV 60, time relative to the first ts, fixes the sign of the quaternions) and plays it via core_paths.playPath."
         },
         "lookAtMe": {
-          "desc": "Centre la caméra de l'éditeur sur la position du véhicule (rallyUtil.setCameraTarget)."
+          "desc": "Centers the editor camera on the vehicle position (rallyUtil.setCameraTarget)."
         }
       }
     }

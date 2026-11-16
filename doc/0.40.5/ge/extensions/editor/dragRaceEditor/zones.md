@@ -1,74 +1,74 @@
 # `editor_dragRaceEditor_zones`
 
-*Fichier : `lua/ge/extensions/editor/dragRaceEditor/zones.lua` · VM : Game Engine (GE) · 342 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dragRaceEditor/zones.lua` · VM: Game Engine (GE) · 342 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dragRaceEditor_zones` : `extensions.load("editor_dragRaceEditor_zones")`, puis la globale `editor_dragRaceEditor_zones`
+**Access:** extension `editor_dragRaceEditor_zones`: `extensions.load("editor_dragRaceEditor_zones")`, then the global `editor_dragRaceEditor_zones`
 
-Éditeur de zones du drag race (zone d'un strip ou zone d'une voie), sur le même principe que les frontières du crawl editor. Il s'appuie sur la classe gameplay/sites/zone : sélection de sommets à la souris, ajout/insertion de sommets, déplacement et rotation avec le gizmo d'axes de l'éditeur, accrochage optionnel au terrain, undo/redo via editor.history. init() renvoie une instance d'éditeur ; zoneFromData/zoneToData convertissent entre table sérialisée et objet Zone.
+Drag race zone editor (strip zone or lane zone), following the same principle as the crawl editor boundaries. It relies on the gameplay/sites/zone class: mouse vertex selection, adding/inserting vertices, moving and rotating with the editor's axis gizmo, optional terrain snapping, undo/redo via editor.history. init() returns an editor instance; zoneFromData/zoneToData convert between a serialized table and a Zone object.
 
-## Exemple
+## Example
 
 ```lua
 local zones = require('/lua/ge/extensions/editor/dragRaceEditor/zones')
 local ed = zones.init()
 ed:setZone(zones.zoneFromData(strip.stripZone), {type='stripZone', strip=strip})
--- chaque frame : ed:draw(mouseInfo)
+-- every frame: ed:draw(mouseInfo)
 ed:syncBack()
 ```
 
-## Remarques
+## Notes
 
-- Raccourcis : Maj+clic ajoute un sommet (le premier clic ajoute un sommet si la zone est vide), Alt+clic insère au milieu d'une arête, Ctrl+clic ajoute un sommet à la sélection.
-- La cible (target) est {type='stripZone', strip=…} ou {type='laneZone', strip=…, lane=…} ; syncBack écrit la zone sérialisée dans strip.stripZone ou lane.zone et marque le strip _dirty.
-- Dans dragging(), le décalage du gizmo est divisé par 2 (posOffset = delta/2) : comportement tel quel dans le code, à vérifier si les sommets semblent suivre le gizmo à moitié vitesse.
-- snapToTerrain est actif par défaut (hauteur via core_terrain.getTerrainHeight).
+- Shortcuts: Shift+click adds a vertex (the first click adds a vertex if the zone is empty), Alt+click inserts at the middle of an edge, Ctrl+click adds a vertex to the selection.
+- The target is {type='stripZone', strip=...} or {type='laneZone', strip=..., lane=...}; syncBack writes the serialized zone to strip.stripZone or lane.zone and marks the strip _dirty.
+- In dragging(), the gizmo offset is divided by 2 (posOffset = delta/2): behavior as-is in the code, to re-check if the vertices seem to follow the gizmo at half speed.
+- snapToTerrain is enabled by default (height via core_terrain.getTerrainHeight).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dragRaceEditor_zones.init()` | Crée et renvoie une instance d'éditeur de zone (classe C) initialisée. | 334 |
+| `editor_dragRaceEditor_zones.init()` | Creates and returns an initialized zone editor instance (class C). | 334 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dragRaceEditor_zones.init()`
 
-Crée et renvoie une instance d'éditeur de zone (classe C) initialisée.
+Creates and returns an initialized zone editor instance (class C).
 
-- **renvoie** : table instance avec les méthodes setZone, clearZone, syncBack, draw…
+- **returns**: table instance with the methods setZone, clearZone, syncBack, draw...
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `zoneFromData` | function | Alias de C.zoneFromData. |
-| `zoneToData` | function | Alias de C.zoneToData. |
+| `zoneFromData` | function | Alias of C.zoneFromData. |
+| `zoneToData` | function | Alias of C.zoneToData. |
 
-## Classe `C`
+## Class `C`
 
-Éditeur de zone renvoyé par init(). Champs : zone, target, currentVertices (sommets sélectionnés), currentPlane, snapToTerrain.
+Zone editor returned by init(). Fields: zone, target, currentVertices (selected vertices), currentPlane, snapToTerrain.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:beginDrag()` | Début de déplacement du gizmo : mémorise les positions de départ. | 226 |
-| `C:clearZone()` | Oublie la zone et la cible courantes. | 75 |
-| `C:dragging()` | Pendant le déplacement du gizmo : translate (avec accrochage terrain) ou fait pivoter les sommets sélectionnés autour de leur centroïde. | 237 |
-| `C:draw(mouseInfo)` | À appeler chaque frame en mode édition de zone : met à jour/affiche le gizmo, traite la saisie et dessine la zone en debug. | 318 |
-| `C:dropToTerrain(pos)` | Projette une position sur la hauteur du terrain (core_terrain.getTerrainHeight). | 129 |
-| `C:endDragging()` | Fin du déplacement : recale au terrain si activé et enregistre l'action d'historique « Manipulate Zone Vertices ». | 295 |
-| `C:findVert(mouseInfo, objects)` | Cherche parmi des objets {pos, index} celui touché par le rayon souris (rayon de sélection = distance caméra/40) le plus proche de la caméra ; dessine aussi les sphères (orange si déjà sélectionné). | 99 |
-| `C:init()` | Initialise les champs (aucune zone, snapToTerrain=true). | 57 |
-| `C:input(mouseInfo)` | Gère la saisie souris : ajout de sommet (Maj ou zone vide), insertion (Alt), sinon sélection simple ou multiple (Ctrl) de sommets. | 157 |
-| `C:setZone(zoneInstance, target)` | Définit la zone éditée et sa cible ; réinitialise la sélection de sommets. | 68 |
-| `C:syncBack()` | Réécrit la zone dans strip.stripZone ou lane.zone, marque le strip _dirty et signale des modifications non sauvées. Sans effet si pas de zone ou de cible. | 83 |
-| `C:tryInsert(mouseInfo)` | Cherche le milieu d'arête survolé ; au clic, insère un sommet à cet endroit (action d'historique « Insert Zone Vertex »). Demande au moins 2 sommets. | 138 |
-| `C:updateTransform()` | Place le gizmo d'axes au centroïde des sommets sélectionnés (ou au point du plan courant). | 201 |
-| `C.zoneFromData(data)` | Fonction statique : construit une Zone depuis une table sérialisée (copie profonde ; vertices et customFields par défaut vides, donc zone vide autorisée). | 41 |
-| `C.zoneToData(zone)` | Fonction statique : sérialise une Zone via zone:onSerialize(). | 52 |
+| `C:beginDrag()` | Start of gizmo move: stores the starting positions. | 226 |
+| `C:clearZone()` | Forgets the current zone and target. | 75 |
+| `C:dragging()` | During gizmo move: translates (with terrain snapping) or rotates the selected vertices around their centroid. | 237 |
+| `C:draw(mouseInfo)` | To be called every frame in zone edit mode: updates/displays the gizmo, handles input and draws the zone as debug. | 318 |
+| `C:dropToTerrain(pos)` | Projects a position onto the terrain height (core_terrain.getTerrainHeight). | 129 |
+| `C:endDragging()` | End of move: re-snaps to terrain if enabled and records the history action "Manipulate Zone Vertices". | 295 |
+| `C:findVert(mouseInfo, objects)` | Among objects {pos, index}, finds the one hit by the mouse ray (selection radius = camera distance/40) that is closest to the camera; also draws the spheres (orange if already selected). | 99 |
+| `C:init()` | Initializes the fields (no zone, snapToTerrain=true). | 57 |
+| `C:input(mouseInfo)` | Handles mouse input: vertex addition (Shift or empty zone), insertion (Alt), otherwise single or multiple (Ctrl) vertex selection. | 157 |
+| `C:setZone(zoneInstance, target)` | Sets the edited zone and its target; resets the vertex selection. | 68 |
+| `C:syncBack()` | Writes the zone back to strip.stripZone or lane.zone, marks the strip _dirty and flags unsaved changes. No effect if there is no zone or target. | 83 |
+| `C:tryInsert(mouseInfo)` | Finds the hovered edge midpoint; on click, inserts a vertex there (history action "Insert Zone Vertex"). Requires at least 2 vertices. | 138 |
+| `C:updateTransform()` | Places the axis gizmo at the centroid of the selected vertices (or at the point of the current plane). | 201 |
+| `C.zoneFromData(data)` | Static function: builds a Zone from a serialized table (deep copy; vertices and customFields default to empty, so an empty zone is allowed). | 41 |
+| `C.zoneToData(zone)` | Static function: serializes a Zone via zone:onSerialize(). | 52 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dragRaceEditor/zones.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dragRaceEditor/zones.lua`.*

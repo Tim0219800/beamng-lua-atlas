@@ -1,30 +1,30 @@
 # `career_modules_milestones_generalMilestones_insurance`
 
-*Fichier : `lua/ge/extensions/career/modules/milestones/generalMilestones/insurance.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/milestones/generalMilestones/insurance.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_milestones_generalMilestones_insurance` : `extensions.load("career_modules_milestones_generalMilestones_insurance")`, puis la globale `career_modules_milestones_generalMilestones_insurance`
+**Access:** extension `career_modules_milestones_generalMilestones_insurance`: `extensions.load("career_modules_milestones_generalMilestones_insurance")`, then the global `career_modules_milestones_generalMilestones_insurance`
 
-Jalon sur le nombre de réclamations d'assurance pour réparation (id insurance_repair_claims). Paliers : 1, 5, 10, 20, 50 réclamations (career_modules_insurance_history.getInsuranceClaimsCount), récompense minorLinear.
+Milestone on the number of insurance repair claims (id insurance_repair_claims). Tiers: 1, 5, 10, 20, 50 claims (career_modules_insurance_history.getInsuranceClaimsCount), minorLinear reward.
 
-## Remarques
+## Notes
 
-- onInsuranceRepairClaim n'appelle pas de setNotificationTarget : il compare directement le compteur à la cible du palier suivant (notificationStep + 1).
-- Le hook peut être appelé avant onGeneralMilestonesCollect ; dans ce cas currMilestone est vide et getTarget n'existe pas (non protégé).
+- onInsuranceRepairClaim does not call setNotificationTarget: it directly compares the counter with the next tier's target (notificationStep + 1).
+- The hook may be called before onGeneralMilestonesCollect; in that case currMilestone is empty and getTarget does not exist (unguarded).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_milestones_generalMilestones_insurance.onGeneralMilestonesCollect(milestonesList)` | Hook : crée la configuration du jalon, la sauvegarde si absente et l'ajoute à milestonesList. *(interne)* *(hook)* | 10 |
-| `career_modules_milestones_generalMilestones_insurance.onInsuranceRepairClaim()` | Hook appelé à chaque réclamation d'assurance pour réparation : si le compteur atteint la cible du palier suivant, notifie le jalon et avance notificationStep. *(interne)* *(hook)* | 32 |
+| `career_modules_milestones_generalMilestones_insurance.onGeneralMilestonesCollect(milestonesList)` | Hook: creates the milestone configuration, its save data if absent, and adds it to milestonesList. *(internal)* *(hook)* | 10 |
+| `career_modules_milestones_generalMilestones_insurance.onInsuranceRepairClaim()` | Hook called on each insurance repair claim: if the counter reaches the next tier's target, notifies the milestone and advances notificationStep. *(internal)* *(hook)* | 32 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_milestones_generalMilestones_insurance.onGeneralMilestonesCollect(milestonesList)`
 
-Hook : crée la configuration du jalon, la sauvegarde si absente et l'ajoute à milestonesList.
+Hook: creates the milestone configuration, its save data if absent, and adds it to milestonesList.
 
-- `milestonesList` (*table[]*) : Liste à compléter.
+- `milestonesList` (*table[]*) : List to fill.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/milestones/generalMilestones/insurance.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/milestones/generalMilestones/insurance.lua`.*

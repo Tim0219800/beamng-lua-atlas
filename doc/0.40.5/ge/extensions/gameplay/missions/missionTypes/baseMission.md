@@ -1,38 +1,38 @@
 # `gameplay_missions_missionTypes_baseMission`
 
-*Fichier : `lua/ge/extensions/gameplay/missions/missionTypes/baseMission.lua` · VM : Game Engine (GE) · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/missions/missionTypes/baseMission.lua` · VM: Game Engine (GE) · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/missions/missionTypes/baseMission")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/missions/missionTypes/baseMission")` (file under extensions/ but not a regular extension)
 
-Classe de base des types de mission (non-flowgraph). Le module renvoie une fabrique `function(derivedClass, ...)` : elle crée un objet à partir de la table d'options, lui donne la métatable C, appelle init(), copie dans l'objet toutes les clés de la classe dérivée (qui écrasent donc les méthodes de base), puis rappelle init(). Fournit des méthodes vides onStart / onUpdate / onStop que les types de mission surchargent, et la traduction des clés de progression.
+Base class of mission types (non-flowgraph). The module returns a factory `function(derivedClass, ...)`: it creates an object from the options table, gives it the metatable C, calls init(), copies into the object all keys of the derived class (which therefore overwrite the base methods), then calls init() again. Provides empty onStart / onUpdate / onStop methods that mission types override, and the translation of progress keys.
 
-## Exemple
+## Example
 
 ```lua
--- dans un type de mission : local C = {}
--- ... définir C:init(), C:onStart() ...
+-- in a mission type: local C = {}
+-- ... define C:init(), C:onStart() ...
 -- return require('/lua/ge/extensions/gameplay/missions/missionTypes/baseMission')(C, ...)
 ```
 
-## Remarques
+## Notes
 
-- init() est appelé DEUX fois par la fabrique : une fois avec la version de base (avant la copie des clés dérivées), une fois après (version dérivée si elle existe). Une init dérivée doit donc supporter d'être exécutée sur un objet déjà initialisé ; seule la valeur de retour du second appel est renvoyée (2e valeur de retour de la fabrique).
-- Les clés de la classe dérivée sont copiées dans l'objet lui-même (o[k] = v), pas dans une métatable : elles masquent les méthodes de C.
-- C.__index = C est réassigné à chaque création d'objet (inoffensif).
+- init() is called TWICE by the factory: once with the base version (before the derived keys are copied), once after (derived version if it exists). A derived init must therefore tolerate being run on an already initialized object; only the return value of the second call is returned (2nd return value of the factory).
+- The derived class's keys are copied into the object itself (o[k] = v), not into a metatable: they mask the methods of C.
+- C.__index = C is reassigned on every object creation (harmless).
 
-## Classe `C`
+## Class `C`
 
-Classe de base d'une mission. L'objet porte les données de la mission (missionType, etc.) fournies via la table d'options.
+Base class of a mission. The object carries the mission data (missionType, etc.) provided via the options table.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_missions_missionTypes_baseMission")(options)`.
+The module returns a constructor: `local obj = require("gameplay_missions_missionTypes_baseMission")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:getProgressKeyTranslation(progressKey)` | Renvoie la clé de traduction d'une clé de progression (« default », « custom ») ; si elle est inconnue, renvoie la clé telle quelle. | 13 |
-| `C:init()` | Appelé à la création d'une mission de ce type. Définit self.missionTypeLabel = "bigMap.missionLabels."..self.missionType et self.progressKeyTranslations = {default, custom} (clés de traduction missions.progressKeyLabels.*). | 8 |
-| `C:onStart()` | Appelé au démarrage de la mission. Vide dans la base, à surcharger. | 23 |
-| `C:onStop(data)` | Appelé à l'arrêt de la mission. `data` (la tentative) peut être nil. Vide dans la base. | 27 |
-| `C:onUpdate(dtReal, dtSim, dtRaw)` | Appelé à chaque frame pendant la mission. Vide dans la base, à surcharger. | 25 |
+| `C:getProgressKeyTranslation(progressKey)` | Returns the translation key of a progress key ("default", "custom"); if unknown, returns the key as is. | 13 |
+| `C:init()` | Called when a mission of this type is created. Sets self.missionTypeLabel = "bigMap.missionLabels."..self.missionType and self.progressKeyTranslations = {default, custom} (translation keys missions.progressKeyLabels.*). | 8 |
+| `C:onStart()` | Called when the mission starts. Empty in the base, to be overridden. | 23 |
+| `C:onStop(data)` | Called when the mission stops. `data` (the attempt) can be nil. Empty in the base. | 27 |
+| `C:onUpdate(dtReal, dtSim, dtRaw)` | Called every frame during the mission. Empty in the base, to be overridden. | 25 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/missions/missionTypes/baseMission.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/missions/missionTypes/baseMission.lua`.*

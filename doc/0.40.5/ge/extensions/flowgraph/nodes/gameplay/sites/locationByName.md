@@ -1,26 +1,26 @@
 # `flowgraph_nodes_gameplay_sites_locationByName`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/sites/locationByName.lua` · VM : Game Engine (GE) · 72 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/sites/locationByName.lua` · VM: Game Engine (GE) · 72 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/sites/locationByName")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/sites/locationByName")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Location by Name ». Cherche une location par nom dans sitesData.locations.byName. Entrées : flow, sitesData, locationName ; sorties : flow (vrai si trouvée), exists (caché), location (locationData). L'éditeur permet de coder en dur le nom de la location sélectionnée dans le Sites Editor.
+Flowgraph node "Location by Name". Looks up a location by name in sitesData.locations.byName. Inputs: flow, sitesData, locationName; outputs: flow (true if found), exists (hidden), location (locationData). The editor allows hardcoding the name of the location selected in the Sites Editor.
 
-## Remarques
+## Notes
 
-- Si le nom n'existe pas, self._location vaut nil et `self._location.missing` provoque une erreur Lua (pas de test de nil).
+- If the name does not exist, self._location is nil and `self._location.missing` raises a Lua error (no nil check).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud. | 45 |
-| `C:drawCustomProperties()` | Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui). | 27 |
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui). | 66 |
-| `C:init(mgr, ...)` | Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph). | 23 |
-| `C:work(args)` | Quand le flux est actif et que le nom change, retrouve la location et active la sortie flow si elle existe (non missing). | 49 |
+| `C:_executionStarted()` | Called when the flowgraph project execution starts; resets the node's internal state. | 45 |
+| `C:drawCustomProperties()` | Draws the node's custom properties in the flowgraph editor panel (ImGui). | 27 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the flowgraph editor (ImGui). | 66 |
+| `C:init(mgr, ...)` | Initializes the node's internal state at creation (called by the flowgraph engine). | 23 |
+| `C:work(args)` | When the flow is active and the name changes, looks up the location and activates the flow output if it exists (not missing). | 49 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/sites/locationByName.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/sites/locationByName.lua`.*

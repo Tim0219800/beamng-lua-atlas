@@ -1,68 +1,68 @@
 # `scenario_speedGoal`
 
-*Fichier : `lua/ge/extensions/scenario/speedGoal.lua` · VM : Game Engine (GE) · 151 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/speedGoal.lua` · VM: Game Engine (GE) · 151 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_speedGoal` : `extensions.load("scenario_speedGoal")`, puis la globale `scenario_speedGoal`
+**Access:** extension `scenario_speedGoal`: `extensions.load("scenario_speedGoal")`, then the global `scenario_speedGoal`
 
-But de scénario « speed » : surveille la vitesse d'un véhicule et gagne ou échoue quand elle reste hors de la plage [minSpeed, maxSpeed] plus de maxTimeout secondes. Chargé par scenario_raceGoals qui appelle init, processState et updateFinalStatus ; un scénario le déclare dans goals.vehicles avec id 'speed'.
+"speed" scenario goal: monitors a vehicle's speed and wins or fails when it stays outside the range [minSpeed, maxSpeed] for more than maxTimeout seconds. Loaded by scenario_raceGoals which calls init, processState and updateFinalStatus; a scenario declares it in goals.vehicles with id 'speed'.
 
-## Exemple
+## Example
 
 ```lua
--- dans le JSON d'un scénario, goals.vehicles :
+-- in a scenario's JSON, goals.vehicles:
 -- {"id":"speed", "vehicle":"scenario_player0", "value":{"minSpeed":10, "maxTimeout":3, "purpose":"fail", "msg":"Trop lent"}}
 ```
 
-## Remarques
+## Notes
 
-- Champs de instance.value lus : minSpeed et maxSpeed (m/s, nombres), maxTimeout (s, 0 par défaut), delay (s : ignore le contrôle tant que scenario.timer <= delay), wayPointNum (tableau d'indices de waypoint : le contrôle ne s'applique que quand vehWpData.cur en fait partie), purpose ('fail' par défaut ou 'win'), msg (message).
-- Le contrôle se fait à chaque 'onRaceTick' (toutes les 0,25 s de temps simulé) : tant que la vitesse est hors plage, instance.Timeout augmente de 0,25 ; il est remis à 0 sinon. Un message de compte à rebours est affiché chaque seconde entière. Quand Timeout > maxTimeout, showMsg termine le scénario via scenario_scenarios.finish : en échec si purpose='fail' (result.failed = msg ou clé par défaut), en victoire si purpose='win' (result.msg avec le temps).
-- Le suivi de la vitesse utilise map.objects (suivi de véhicule) ; si absent, la fonction demande côté véhicule mapmgr.enableTracking(nom) et attend la frame suivante.
-- Bug/incohérence : dans showMsg, « {txt = instance.value.msg, ...} or {...} » ne retombe jamais sur le message par défaut (une table est toujours vraie) ; si value.msg est nil, le message de victoire n'a pas de texte.
-- Bug/incohérence : processState ignore l'instance si maxSpeed == 0 mais pas si maxSpeed est nil ; si le véhicule est introuvable (vehicle nil) et fobjData nil, playerSpeed peut recevoir fobjData nil et lever une erreur.
-- Bug/incohérence : le test « instance.Timeout % 1 == 0 » compare des flottants (0,25 cumulés) ; ça fonctionne car 0,25 est exactement représentable.
-- Bug/incohérence : updateFinalStatus ignore son argument instance et redéclare la variable de boucle du même nom.
+- instance.value fields read: minSpeed and maxSpeed (m/s, numbers), maxTimeout (s, 0 by default), delay (s: skips the check while scenario.timer <= delay), wayPointNum (array of waypoint indices: the check only applies when vehWpData.cur is one of them), purpose ('fail' by default or 'win'), msg (message).
+- The check runs on every 'onRaceTick' (every 0.25 s of simulated time): while the speed is outside the range, instance.Timeout increases by 0.25; it is reset to 0 otherwise. A countdown message is displayed every whole second. When Timeout > maxTimeout, showMsg ends the scenario via scenario_scenarios.finish: as a failure if purpose='fail' (result.failed = msg or default key), as a win if purpose='win' (result.msg with the time).
+- Speed tracking uses map.objects (vehicle tracking); if absent, the function asks the vehicle side for mapmgr.enableTracking(name) and waits for the next frame.
+- BUG/inconsistency: in showMsg, "{txt = instance.value.msg, ...} or {...}" never falls back to the default message (a table is always truthy); if value.msg is nil, the win message has no text.
+- BUG/inconsistency: processState skips the instance if maxSpeed == 0 but not if maxSpeed is nil; if the vehicle is not found (vehicle nil) and fobjData is nil, playerSpeed may receive a nil fobjData and raise an error.
+- BUG/inconsistency: the test "instance.Timeout % 1 == 0" compares floats (accumulated 0.25); it works because 0.25 is exactly representable.
+- BUG/inconsistency: updateFinalStatus ignores its instance argument and redeclares the loop variable of the same name.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_speedGoal.init(scenario)` | Appelée par scenario_raceGoals au démarrage : reconstruit M.instances à partir de scenario.goals.vehicles (entrées id == 'speed'), valide les types (minSpeed, maxSpeed, delay nombres ; wayPointNum tableau ; purpose chaîne), met maxTimeout à 0 et purpose à 'fail' par défaut, et Timeout à 0. *(interne)* | 98 |
-| `scenario_speedGoal.processState(scenario, state, stateData)` | Appelée par scenario_raceGoals à chaque évènement de course ; n'agit que pour state == 'onRaceTick' : vérifie la vitesse des véhicules concernés (voir notes). *(interne)* | 58 |
-| `scenario_speedGoal.updateFinalStatus(scenario, instance)` | Appelée en fin de scénario : publie dans statistics_statistics le statut (passed/failed) de chaque instance. *(interne)* | 140 |
+| `scenario_speedGoal.init(scenario)` | Called by scenario_raceGoals at startup: rebuilds M.instances from scenario.goals.vehicles (entries id == 'speed'), validates the types (minSpeed, maxSpeed, delay numbers; wayPointNum array; purpose string), sets maxTimeout to 0 and purpose to 'fail' by default, and Timeout to 0. *(internal)* | 98 |
+| `scenario_speedGoal.processState(scenario, state, stateData)` | Called by scenario_raceGoals on every race event; only acts for state == 'onRaceTick': checks the speed of the relevant vehicles (see notes). *(internal)* | 58 |
+| `scenario_speedGoal.updateFinalStatus(scenario, instance)` | Called at the end of the scenario: publishes to statistics_statistics the status (passed/failed) of each instance. *(internal)* | 140 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_speedGoal.init(scenario)`
 
-Appelée par scenario_raceGoals au démarrage : reconstruit M.instances à partir de scenario.goals.vehicles (entrées id == 'speed'), valide les types (minSpeed, maxSpeed, delay nombres ; wayPointNum tableau ; purpose chaîne), met maxTimeout à 0 et purpose à 'fail' par défaut, et Timeout à 0.
+Called by scenario_raceGoals at startup: rebuilds M.instances from scenario.goals.vehicles (entries id == 'speed'), validates the types (minSpeed, maxSpeed, delay numbers; wayPointNum array; purpose string), sets maxTimeout to 0 and purpose to 'fail' by default, and Timeout to 0.
 
-- `scenario` (*table*) : scénario courant
+- `scenario` (*table*) : current scenario
 
 #### `scenario_speedGoal.processState(scenario, state, stateData)`
 
-Appelée par scenario_raceGoals à chaque évènement de course ; n'agit que pour state == 'onRaceTick' : vérifie la vitesse des véhicules concernés (voir notes).
+Called by scenario_raceGoals on every race event; only acts for state == 'onRaceTick': checks the speed of the relevant vehicles (see notes).
 
-- `scenario` (*table*) : scénario courant
-- `state` (*string*) : nom du hook : 'onRaceStart','onRaceInit','onRaceWaypointReached','onRaceTick','onRaceResult','onCountdownEnded'
-- `stateData` (*table|nil*) : données du hook (non utilisées ici)
+- `scenario` (*table*) : current scenario
+- `state` (*string*) : hook name: 'onRaceStart','onRaceInit','onRaceWaypointReached','onRaceTick','onRaceResult','onCountdownEnded'
+- `stateData` (*table|nil*) : hook data (unused here)
 
 #### `scenario_speedGoal.updateFinalStatus(scenario, instance)`
 
-Appelée en fin de scénario : publie dans statistics_statistics le statut (passed/failed) de chaque instance.
+Called at the end of the scenario: publishes to statistics_statistics the status (passed/failed) of each instance.
 
-- `scenario` (*table*) : scénario courant
-- `instance` (*table*) : non utilisé (déduit du code)
+- `scenario` (*table*) : current scenario
+- `instance` (*table*) : unused (inferred from code)
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `instances` | table<integer, table> | Instances du but 'speed' actives pour le scénario courant, remplies par init. |
+| `instances` | table<integer, table> | 'speed' goal instances active for the current scenario, filled by init. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/speedGoal.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/speedGoal.lua`.*

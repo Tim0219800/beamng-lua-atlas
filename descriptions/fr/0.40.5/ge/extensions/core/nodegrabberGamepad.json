@@ -1,0 +1,148 @@
+{
+  "path": "lua/ge/extensions/core/nodegrabberGamepad.lua",
+  "module": "Extension GE `core_nodegrabberGamepad` : pilote le 'nodegrabber' (attraper et tirer un nœud du véhicule avec la souris ou la manette) pour les entrées manette et souris. Elle active l'action map 'Nodegrabber', bascule temporairement la caméra du joueur vers la caméra 'relative' placée comme la caméra actuelle, règle la force de traction (0 à 100) et affiche la légende des touches. Les appels sont normalement déclenchés par les actions d'entrée (nodegrabberPadMode, nodegrabberGrab, nodegrabberStrength...), pas par du code de mod.",
+  "usage": "-- exemple de liaison d'action (côté input) : core_nodegrabberGamepad.toggleActive() active/désactive le mode manette\ncore_nodegrabberGamepad.addStrength(5)",
+  "notes": [
+    "M.state est exporté et mutable : { active (mode manette), actionMapActive, mouseActive, grabbing, previousCameraName, previousRelativeData, vehId, strength = 30 }.",
+    "Le mode manette (active) place la caméra en 'relative' avec la même position/rotation/FOV que la caméra courante (relative à un repère du véhicule construit sur les nœuds ref/left/back de la caméra relative, ou 0/1/2 par défaut), et restaure la caméra précédente à la désactivation. Il ne démarre pas si une caméra globale est active.",
+    "La force (state.strength) est bornée à [0, 100] et se règle par boutons (pas de 5) ou axe analogique (50 unités par seconde, via onUpdate). Un message UI 'ui.nodegrabber.strength' avec le pourcentage entier est affiché quand la valeur arrondie change.",
+    "grab(value, deviceName) : pour un périphérique dont le nom commence par 'mouse', le bouton souris du nodegrabber est simulé ; sinon setGrab applique la force proportionnelle à value (0..1) × strength.",
+    "Toute interaction est annulée (resetInteraction) quand : l'extension est déchargée, le niveau finit, l'interface CEF devient visible, un menu s'ouvre, le véhicule suivi est reset/remplacé/rechargé, les actions nodegrabberRender/nodegrabberGrab deviennent bloquées, ou la caméra change (sauf vers 'relative'). onSerialize réinitialise aussi l'interaction, mais il n'y a pas d'onDeserialized : l'état renvoyé n'est pas restauré.",
+    "Dépendance : ui_bindingsLegend (légende des touches : priorité 8.2 pour la manette, 10.2 pour la souris)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{ 'ui_bindingsLegend' }."},
+    "state": {"type": "table", "desc": "État du nodegrabber (voir notes)."}
+  },
+  "functions": {
+    "toggleActive": {
+      "desc": "Active ou désactive le mode manette du nodegrabber (caméra relative, mode contrôleur, action map et légende).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setMouseActive": {
+      "desc": "Active ou désactive le mode souris. Activer le mode souris désactive d'abord le mode manette.",
+      "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}},
+      "returns": [],
+      "internal": false
+    },
+    "onNodegrab": {
+      "desc": "Appelé par le nodegrabber natif quand un nœud est attrapé ou relâché : met à jour state.grabbing, la légende souris et l'affichage des nœuds.",
+      "params": {"grabbed": {"type": "boolean", "desc": "true si un nœud est actuellement attrapé."}},
+      "returns": [],
+      "internal": true
+    },
+    "grab": {
+      "desc": "Action d'entrée 'grab' : attrape ou relâche selon le périphérique (souris = clic simulé ; autre = setGrab).",
+      "params": {
+        "value": {"type": "number", "desc": "Valeur de l'axe ou du bouton (0 = relâché)."},
+        "deviceName": {"type": "string", "desc": "Nom du périphérique d'entrée (commençant par 'mouse' pour une souris)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setGrab": {
+      "desc": "Attrape (value > 0, avec la force value × strength) ou relâche (restaure la force normale) le nœud ciblé.",
+      "params": {"value": {"type": "number", "desc": "Intensité 0..1 (> 0 = attraper)."}},
+      "returns": [],
+      "internal": false
+    },
+    "fixCurrentNode": {
+      "desc": "Restaure la force normale et fixe (épingle) le nœud actuellement ciblé via be.nodeGrabber:fixCurrentNode.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "addStrength": {
+      "desc": "Ajoute `value` à la force de traction (bornée à 0..100), l'applique au nodegrabber et affiche le message UI si la valeur arrondie a changé.",
+      "params": {"value": {"type": "number", "desc": "Variation de force."}},
+      "returns": [],
+      "internal": false
+    },
+    "changeStrength": {
+      "desc": "Action d'entrée de réglage de la force : bouton binaire (filterType 0) = addStrength(value × 5) ; axe analogique = mémorise la valeur et onUpdate l'applique en continu.",
+      "params": {
+        "value": {"type": "number", "desc": "Valeur de l'entrée."},
+        "filterType": {"type": "integer", "desc": "0 pour un bouton, autre pour un axe."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "onUpdate": {
+      "desc": "Hook par frame : en mode manette actif et si l'axe de force est non nul, ajoute strengthAxis × 50 × dtReal à la force.",
+      "params": {"dtReal": {"type": "number", "desc": "Temps réel écoulé (s)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Avant un rechargement Lua : annule toute interaction et renvoie M.state.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "M.state."}],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Au déchargement : annule toute interaction.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "À la fin du niveau : annule toute interaction.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onCefVisibilityChanged": {
+      "desc": "Quand l'interface CEF change de visibilité : annule l'interaction si elle devient invisible.",
+      "params": {"cefVisible": {"type": "boolean", "desc": "Interface visible."}},
+      "returns": [],
+      "internal": true
+    },
+    "onMenuActionMapEnabled": {
+      "desc": "Quand l'action map de menu s'active : annule l'interaction.",
+      "params": {"enabled": {"type": "boolean", "desc": "Action map de menu active."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Quand un véhicule est remis à zéro : annule l'interaction si c'est le véhicule suivi ou le véhicule joueur.",
+      "params": {"vehicleId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [],
+      "internal": true
+    },
+    "onBeforeVehicleReplaced": {
+      "desc": "Avant le remplacement d'un véhicule : annule l'interaction si concerné.",
+      "params": {"vehicleId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDespawnObject": {
+      "desc": "Quand un objet est supprimé : annule l'interaction seulement s'il s'agit d'un rechargement (isReloading).",
+      "params": {
+        "vehicleId": {"type": "integer", "desc": "Id de l'objet."},
+        "isReloading": {"type": "boolean", "desc": "true si c'est un rechargement du véhicule."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onActionFilterUpdated": {
+      "desc": "Quand les filtres d'actions changent : annule l'interaction si nodegrabberRender ou nodegrabberGrab est bloquée.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onCameraModeChanged": {
+      "desc": "Quand le mode de caméra change : désactive le mode manette (hors grab et souris) si la nouvelle caméra n'est pas 'relative'.",
+      "params": {"cameraName": {"type": "string", "desc": "Nom du nouveau mode de caméra."}},
+      "returns": [],
+      "internal": true
+    },
+    "onGlobalCameraSet": {
+      "desc": "Quand une caméra globale est activée : désactive le mode manette (hors grab et souris).",
+      "params": {"cameraName": {"type": "string|nil", "desc": "Nom de la caméra globale."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

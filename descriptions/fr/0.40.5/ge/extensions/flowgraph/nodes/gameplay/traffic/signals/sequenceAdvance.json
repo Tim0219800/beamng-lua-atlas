@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceAdvance.lua",
+  "module": "Nœud flowgraph « Advance Sequence » (once_instant). Fait avancer une séquence de feux à l'étape suivante (sequence:advance()).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "workOnce": {
+          "desc": "Appelle advance() sur la séquence d'entrée si elle existe.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

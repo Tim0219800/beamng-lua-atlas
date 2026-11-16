@@ -1,10 +1,10 @@
 {
   "path": "lua/console/json-performance.lua",
-  "module": "Script de benchmark de la console (hors jeu) : il compare la vitesse de décodage JSON, d'encodage/décodage lpack (texte et binaire) et de string.buffer sur tous les fichiers *.jbeam du dossier /vehicles. Il s'exécute dès qu'on le charge, sans exporter de fonction. Utile seulement pour mesurer des performances, pas pour un mod.",
+  "module": "Console benchmark script (outside the game): it compares the speed of JSON decoding, lpack encoding/decoding (text and binary) and string.buffer on all *.jbeam files in the /vehicles folder. It runs as soon as it is loaded, without exporting any function. Only useful to measure performance, not for a mod.",
   "notes": [
-    "Le script s'exécute entièrement au chargement (require) et affiche les temps et débits en MB/s avec print.",
-    "Il lit les fichiers avec FS:findFiles('/vehicles', '*.jbeam', -1, false, false) puis readFile ; chaque test est répété 6 fois (variable locale reruns).",
-    "Le débit affiché pour le décodage lpack est calculé sur la taille empaquetée (totalPackSize), pas sur la taille JSON d'origine."
+    "The script runs entirely on load (require) and prints the times and throughputs in MB/s with print.",
+    "It reads the files with FS:findFiles('/vehicles', '*.jbeam', -1, false, false) then readFile; each test is repeated 6 times (local variable reruns).",
+    "The throughput displayed for lpack decoding is computed on the packed size (totalPackSize), not on the original JSON size."
   ],
   "fields": {},
   "functions": {}

@@ -1,12 +1,12 @@
 # `editor_api_object`
 
-*Fichier : `lua/ge/extensions/editor/api/object.lua` · VM : Game Engine (GE) · 1495 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/object.lua` · VM: Game Engine (GE) · 1495 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_object` : `extensions.load("editor_api_object")`, puis la globale `editor_api_object`
+**Access:** extension `editor_api_object`: `extensions.load("editor_api_object")`, then the global `editor_api_object`
 
-API de l'éditeur pour manipuler les objets de la scène : sélection (par id, référence, type, masque de nom, rectangle écran), lecture/écriture des champs (statiques et dynamiques, copier/coller), verrouiller/cacher, aligner, translater/tourner/mettre à l'échelle la sélection, centroïde et boîte englobante, Focus-Lock sur un groupe, prefabs (créer, exploser, convertir en v2, dépaqueter) et mementos de SimObject. `initialize` installe tout sur `editor` et définit les constantes `editor.SelectMode_*` ; `initializeFocusLock` ajoute les fonctions de Focus-Lock. La sélection vit dans `editor.selection.object` (liste d'ids). Les fonctions de ce fichier n'enregistrent PAS d'historique d'annulation : voir objectHistoryActions pour les versions `...WithUndo`.
+Editor API for manipulating scene objects: selection (by id, reference, type, name mask, screen rectangle), reading/writing fields (static and dynamic, copy/paste), lock/hide, align, translate/rotate/scale the selection, centroid and bounding box, Focus-Lock on a group, prefabs (create, explode, convert to v2, unpack) and SimObject mementos. `initialize` installs everything on `editor` and defines the `editor.SelectMode_*` constants; `initializeFocusLock` adds the Focus-Lock functions. The selection lives in `editor.selection.object` (list of ids). The functions in this file do NOT record undo history: see objectHistoryActions for the `...WithUndo` versions.
 
-## Exemple
+## Example
 
 ```lua
 editor.selectObjectById(objId)
@@ -14,112 +14,112 @@ local sel = editor.getObjectSelection()
 editor.setFieldValue(sel[1], "position", "0 0 10")
 ```
 
-## Remarques
+## Notes
 
-- Constantes : editor.SelectMode_New = 1, _Add = 2, _Remove = 3, _Toggle = 4.
-- Les valeurs de champs sont des chaînes (ex. position "x y z", rotation "0 0 0 0", scale "1 1 1").
-- Hooks émis : onEditorObjectSelectionChanged, onEditorFocusLockChanged, onEditorPrefabExploded(groups). L'en-tête du fichier liste d'autres hooks (onEditorObjectCreated, ...Delete, ...SelectionLocked/Unlocked/Shown/Hidden/TransformChanged, onEditorPrefabCreated) qui ne sont pas émis depuis ce fichier.
-- `initialize` est volontairement scindé de `initializeFocusLock` pour rester sous la limite de 60 upvalues de Lua.
-- Bug : dans calculateObjectsCenter et calculateBoundingBoxCenter, `table.insert(stack, childId)` utilise une variable non définie (le code lit `childObjId`) : les sous-groupes ne sont jamais parcourus.
-- Bug probable : alignObjectSelectionByBounds démarre la recherche de l'objet de référence à l'indice 2, le premier objet n'est donc jamais candidat.
-- debugObjectSelection est défini mais non exporté.
+- Constants: editor.SelectMode_New = 1, _Add = 2, _Remove = 3, _Toggle = 4.
+- Field values are strings (e.g. position "x y z", rotation "0 0 0 0", scale "1 1 1").
+- Emitted hooks: onEditorObjectSelectionChanged, onEditorFocusLockChanged, onEditorPrefabExploded(groups). The file header lists other hooks (onEditorObjectCreated, ...Delete, ...SelectionLocked/Unlocked/Shown/Hidden/TransformChanged, onEditorPrefabCreated) that are not emitted from this file.
+- `initialize` is deliberately split from `initializeFocusLock` to stay under Lua's 60-upvalue limit.
+- Bug: in calculateObjectsCenter and calculateBoundingBoxCenter, `table.insert(stack, childId)` uses an undefined variable (the code reads `childObjId`): subgroups are never traversed.
+- Probable bug: alignObjectSelectionByBounds starts looking for the reference object at index 2, so the first object is never a candidate.
+- debugObjectSelection is defined but not exported.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_object.initialize(editorInstance)` | Mémorise l'éditeur, définit editor.SelectMode_* et editor.objectSelectionBBox, et installe les fonctions de sélection, champs, alignement, transformation et prefabs sur `editor`. *(interne)* | 1408 |
-| `editor_api_object.initializeFocusLock()` | Installe séparément les fonctions de Focus-Lock (getFocusLockedGroup, isFocusLockActive, setFocusLockedGroup, clearFocusLock, isObjectInFocusLockedGroup, resolveAddGroup) pour contourner la limite de 60 upvalues de initialize. *(interne)* | 1482 |
+| `editor_api_object.initialize(editorInstance)` | Remembers the editor, defines editor.SelectMode_* and editor.objectSelectionBBox, and installs the selection, fields, alignment, transform and prefab functions on `editor`. *(internal)* | 1408 |
+| `editor_api_object.initializeFocusLock()` | Separately installs the Focus-Lock functions (getFocusLockedGroup, isFocusLockActive, setFocusLockedGroup, clearFocusLock, isObjectInFocusLockedGroup, resolveAddGroup) to work around initialize's 60-upvalue limit. *(internal)* | 1482 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_object.initialize(editorInstance)`
 
-Mémorise l'éditeur, définit editor.SelectMode_* et editor.objectSelectionBBox, et installe les fonctions de sélection, champs, alignement, transformation et prefabs sur `editor`.
+Remembers the editor, defines editor.SelectMode_* and editor.objectSelectionBBox, and installs the selection, fields, alignment, transform and prefab functions on `editor`.
 
-- `editorInstance` (*table*) : objet `editor`
+- `editorInstance` (*table*) : `editor` object
 
-## Classe `editor`
+## Class `editor`
 
-Fonctions ajoutées à `editor` par initialize et initializeFocusLock.
+Functions added to `editor` by initialize and initializeFocusLock.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.alignObjectSelectionByBounds(boundsAxis)` | Aligne les objets sur la boîte englobante extrême selon l'axe. Valeurs de boundsAxis : 0-2 (editor.AxisX/Y/Z) = alignement sur le bord max de cet axe ; 3-5 = bord min de l'axe (valeur - 3). Ne fait rien (renvoie true) s'il y a moins de 2 objets. | 685 |
-| `editor.alignObjectSelectionByCenter(axis)` | Aligne tous les objets manipulables sur la coordonnée du premier objet sélectionné pour l'axe donné. | 755 |
-| `editor.calculateBoundingBoxCenter(objects)` | Calcule le centre de la boîte englobante des enfants non-groupe des SimGroup donnés (mêmes limites que calculateObjectsCenter pour les sous-groupes). | 1050 |
-| `editor.calculateObjectsCenter(objects)` | Calcule le centre (moyenne des positions) des enfants des SimGroup donnés. Les objets non-groupe de la liste sont ignorés ; les sous-groupes ne sont pas parcourus (bug : `childId` est une variable non définie, donc rien n'est empilé). Divise par zéro (NaN) si aucun enfant. | 1005 |
-| `editor.canManipulateObject(object)` | Vrai si l'objet existe, n'est ni un SimSet ni un SimGroup et n'est pas verrouillé. | 45 |
-| `editor.clearFocusLock()` | Désactive le Focus-Lock et émet onEditorFocusLockChanged. | 79 |
-| `editor.clearObjectSelection()` | Désélectionne tout (côté C++ aussi), met la sélection à nil, recalcule la bbox et émet onEditorObjectSelectionChanged. | 475 |
-| `editor.computeSelectionBBox(updateGizmo)` | Recalcule editor.objectSelectionBBox et editor.objectSelectionRadius à partir des boîtes monde de la sélection (bornes infinies ignorées, repli sur la boîte objet), met à jour le centroïde et, par défaut, le gizmo (editor.updateObjectSelectionAxisGizmo). | 189 |
-| `editor.convertSelectedPrefabsToV2()` | Convertit les prefabs sélectionnés au format v2 et les remplace par des instances (replaceGroupWithPrefabInstance) au centre de leur boîte. | 1253 |
-| `editor.copyFields(objectID)` | Copie les valeurs de champs d'un objet (hors groupe Transform, name, persistentId, parentGroup), y compris éléments de tableaux et champs dynamiques. | 354 |
-| `editor.createPrefabFromObjectSelection(newPrefabFilename, objName, loadmode, pathNative)` | Crée un Prefab depuis la sélection : regroupe les objets valides dans un SimGroup relatif au centroïde, enregistre le Prefab dans le groupe du plus haut objet, le sauvegarde, supprime les anciens groupes, sélectionne le prefab et marque le niveau modifié. Pas d'annulation (TODO). | 1095 |
-| `editor.deleteSelectedObjects()` | Supprime (editor.deleteObject) tous les objets sélectionnés et vide la sélection. Pas d'historique : pour l'annulation utiliser deleteSelectedObjectsWithUndo. | 467 |
-| `editor.deselectObjectSelection()` | Vide la sélection (table vide, côté C++ aussi) et émet onEditorObjectSelectionChanged. | 648 |
-| `editor.enableEditorOnObjects(enable)` | Appelle onEditorEnable ou onEditorDisable sur tous les objets de la scène qui ont ces méthodes. Utilisé en interne au basculement du mode éditeur ; ne fait rien si le niveau n'est pas chargé. | 267 |
-| `editor.explodeSelectedPrefab()` | Explose les prefabs sélectionnés en groupes d'objets (nom <prefab>_unpacked), supprime les prefabs, sélectionne les groupes et émet onEditorPrefabExploded(groups). | 1211 |
-| `editor.findFirstSelectedByType(classname)` | Renvoie le premier objet sélectionné dont le nom de classe est classname. | 1355 |
-| `editor.getDynamicFields(objectId)` | Renvoie la liste des noms de champs dynamiques de l'objet. | 346 |
-| `editor.getFieldInfo(objectId, fieldName)` | Renvoie le type et les flags d'un champ ; table vide si l'objet n'existe pas. | 326 |
-| `editor.getFieldValue(objectId, fieldName, arrayIndex)` | Lit un champ d'objet sous forme de chaîne. Renvoie "" si l'objet n'existe pas. | 238 |
-| `editor.getFields(objectId)` | Renvoie les champs de l'objet destinés à l'éditeur (getFieldsForEditor), indexés par nom (id, groupName, type, elementCount, fields pour les tableaux...). | 338 |
-| `editor.getFocusLockedGroup()` | Renvoie le groupe sur lequel le Focus-Lock est actif (l'arbre de scène ne montre que lui, seuls ses objets sont sélectionnables dans la vue, les nouveaux objets y sont créés). Efface le verrou s'il pointe vers un groupe supprimé. | 59 |
-| `editor.getHighestObject(objects)` | Renvoie, parmi les ids donnés, l'objet le moins profond dans la hiérarchie des groupes. | 991 |
-| `editor.getObjectSelection()` | Renvoie la liste des ids sélectionnés (table vide si aucune). | 1367 |
-| `editor.getObjectsByRectangle(rect, forestData, objectFlags)` | Renvoie les objets (ou items de forêt si forestData fourni) dont le volume intersecte un rectangle écran, via un frustum dérivé du frustum caméra. | 574 |
-| `editor.getSelectionCentroid()` | Renvoie le centre de la sélection : moyenne des positions, ou centre de la boîte englobante si la préférence gizmos.general.useObjectBoxCenter est vraie (sauf si un objet a des bornes globales). vec3(0,0,0) si vide. | 173 |
-| `editor.hideObjectSelection()` | Cache les objets sélectionnés (hidden = "true"). | 668 |
-| `editor.isFocusLockActive()` | Vrai si un Focus-Lock valide est actif. | 70 |
-| `editor.isObjectInFocusLockedGroup(object)` | Vrai si aucun Focus-Lock n'est actif, ou si l'objet est le groupe verrouillé ou l'un de ses descendants. | 84 |
-| `editor.isObjectSelectable(object)` | Vrai si l'objet est dans le groupe Focus-Lock et, pour un SceneObject, si sa sélection est activée. | 102 |
-| `editor.isObjectSelected(objectId)` | Vrai si l'id fait partie de la sélection d'objets. | 117 |
-| `editor.isObjectSelectionEmpty()` | Vrai si la sélection d'objets est vide. | 113 |
-| `editor.lockObjectSelection()` | Verrouille les objets sélectionnés (champ locked = "true"). Le commentaire d'origine (« Select all the objects ») est erroné. Pas annulable (voir lockObjectSelectionWithUndo). | 656 |
-| `editor.matrixToTable(mtx)` | Convertit une MatrixF en table sérialisable {c0, c1, c2, c3} (colonnes). | 28 |
-| `editor.pasteFields(fields, targetObjectID)` | Applique une copie de copyFields sur un objet par id (via setFieldValue/setDynamicFieldValue), recharge les templates de route si useTemplate == "true" et marque le niveau modifié. | 417 |
-| `editor.pasteFieldsToObject(fields, targetObject)` | Comme pasteFields mais sur un objet déjà résolu (appelle setField directement, sans preApply/postApply). | 442 |
-| `editor.removeInvalidObjects(objectIds)` | Renvoie une copie de la liste sans les ids qui ne correspondent plus à un objet existant. | 1371 |
-| `editor.removeInvalidSelectedObjects()` | Retire de la sélection les ids d'objets disparus. | 1382 |
-| `editor.replaceGroupWithPrefabInstance(prefab, parentGroup, instanceName, position)` | Fait apparaître une instance du prefab v2 (spawn, échelle 1, rotation nulle) à la position donnée, l'ajoute au groupe parent et demande la reconstruction des collisions. | 1329 |
-| `editor.resetObjectSelectionRotation()` | Remet la rotation à "0 0 0 0" des objets manipulables sélectionnés. | 799 |
-| `editor.resetObjectSelectionScale()` | Remet l'échelle à "1 1 1" des objets manipulables sélectionnés. | 809 |
-| `editor.resetObjectSelectionTransform()` | Remet rotation à zéro et échelle à 1,1,1 pour la sélection. | 793 |
-| `editor.resolveAddGroup(defaultGroup)` | Renvoie le groupe de Focus-Lock s'il existe, sinon defaultGroup (groupe où ajouter les nouveaux objets). | 98 |
-| `editor.restoreSimObjectMemento(jsonString)` | Recrée un objet depuis un memento : retire persistentId, désérialise et donne un nom unique (Sim.getUniqueName) dérivé du nom d'origine. | 1394 |
-| `editor.rotateObjectSelection(gizmoTransform, centerPoint, initialTransformations, initialGizmoTransform)` | Applique aux objets sélectionnés la rotation du gizmo depuis l'état initial, autour de centerPoint (positions et orientations). Ne fait rien sans initialTransformations. | 842 |
-| `editor.saveSimObjectMemento(obj)` | Sérialise un objet en texte JSON (memento), "" si nil. | 1386 |
-| `editor.scaleObjectSelection(deltaScale, centerPoint)` | Met à l'échelle les objets sélectionnés d'un delta, autour de centerPoint (centre de la bbox par défaut), avec bornes 0.01 à 1000 et exclusion des axes à delta nul ; les positions sont mises à l'échelle dans le repère du gizmo. | 885 |
-| `editor.selectObjectById(id, selectMode)` | Sélectionne un objet par id selon le mode. | 642 |
-| `editor.selectObjects(idArray, selectMode)` | Modifie la sélection d'objets selon le mode, met à jour l'état côté C++, recalcule la bbox et émet onEditorObjectSelectionChanged si elle a changé. Ne passe pas par l'historique. | 548 |
-| `editor.selectObjectsByNameMask(nameMask, selectMode)` | Sélectionne les objets dont le nom contient le motif Lua (string.find). | 598 |
-| `editor.selectObjectsByRef(objects, selectMode)` | Comme selectObjects mais avec des objets plutôt que des ids. | 560 |
-| `editor.selectObjectsByType(typeName, selectMode)` | Sélectionne les objets dont `className` vaut typeName. | 619 |
-| `editor.setDynamicFieldValue(objectId, fieldName, value, arrayIndex)` | Fixe un champ dynamique d'un objet (index 0 par défaut). Pour un champ statique utiliser setFieldValue. | 312 |
-| `editor.setFieldValue(objectId, fieldName, value, arrayIndex)` | Fixe un champ statique d'un objet (preApply, setField, marque editor-dirty, postApply). Ne passe pas par l'historique : pour l'annulation utiliser editor.changeObjectFieldWithUndo. | 297 |
-| `editor.setFocusLockedGroup(id)` | Active le Focus-Lock sur le groupe d'id donné et émet onEditorFocusLockChanged. | 74 |
-| `editor.setObjectSelectedBool(objectIds, selected)` | Marque/démarque chaque objet comme sélectionné côté C++ (setSelected) puis reconstruit les données d'instances de shapes. | 247 |
-| `editor.setObjectSelectedBoolSingle(objectId, selected)` | Idem pour un seul objet. | 257 |
-| `editor.setObjectSelectionTransformFromCamera()` | Place chaque objet manipulable sélectionné à la transformation de la caméra de l'éditeur en conservant son échelle (sans annulation, TODO dans le code). | 779 |
-| `editor.showObjectSelection()` | Affiche les objets sélectionnés (hidden = "false"). | 674 |
-| `editor.tableToMatrix(tbl)` | Reconstruit une MatrixF depuis une table {c0, c1, c2, c3}. | 36 |
-| `editor.translateObjectSelection(deltaTranslate)` | Translate les objets manipulables sélectionnés d'un delta (via setFieldValue "position"). | 820 |
-| `editor.unlockObjectSelection()` | Déverrouille les objets sélectionnés (locked = "false"). | 662 |
-| `editor.unpackageSelectedPrefabInstance()` | Dépaquette les instances de prefab sélectionnées (unpackage) en groupes et supprime les instances. | 1294 |
-| `editor.validateObjectName(name, newName)` | Valide un nom d'objet (isValidObjectName) ; refuse un nom vide quand newName est vrai. | 282 |
+| `editor.alignObjectSelectionByBounds(boundsAxis)` | Aligns the objects to the extreme bounding box along the axis. boundsAxis values: 0-2 (editor.AxisX/Y/Z) = alignment on the max edge of that axis; 3-5 = min edge of the axis (value - 3). Does nothing (returns true) if there are fewer than 2 objects. | 685 |
+| `editor.alignObjectSelectionByCenter(axis)` | Aligns all manipulable objects to the coordinate of the first selected object for the given axis. | 755 |
+| `editor.calculateBoundingBoxCenter(objects)` | Computes the center of the bounding box of the non-group children of the given SimGroups (same limits as calculateObjectsCenter for subgroups). | 1050 |
+| `editor.calculateObjectsCenter(objects)` | Computes the center (average of positions) of the children of the given SimGroups. Non-group objects in the list are ignored; subgroups are not traversed (bug: `childId` is an undefined variable, so nothing is pushed). Divides by zero (NaN) if there are no children. | 1005 |
+| `editor.canManipulateObject(object)` | True if the object exists, is neither a SimSet nor a SimGroup, and is not locked. | 45 |
+| `editor.clearFocusLock()` | Disables Focus-Lock and emits onEditorFocusLockChanged. | 79 |
+| `editor.clearObjectSelection()` | Deselects everything (on the C++ side too), sets the selection to nil, recomputes the bbox and emits onEditorObjectSelectionChanged. | 475 |
+| `editor.computeSelectionBBox(updateGizmo)` | Recomputes editor.objectSelectionBBox and editor.objectSelectionRadius from the selection's world boxes (infinite bounds ignored, falls back to the object box), updates the centroid and, by default, the gizmo (editor.updateObjectSelectionAxisGizmo). | 189 |
+| `editor.convertSelectedPrefabsToV2()` | Converts the selected prefabs to v2 format and replaces them with instances (replaceGroupWithPrefabInstance) at the center of their box. | 1253 |
+| `editor.copyFields(objectID)` | Copies an object's field values (excluding the Transform group, name, persistentId, parentGroup), including array elements and dynamic fields. | 354 |
+| `editor.createPrefabFromObjectSelection(newPrefabFilename, objName, loadmode, pathNative)` | Creates a Prefab from the selection: groups the valid objects into a SimGroup relative to the centroid, registers the Prefab in the group of the topmost object, saves it, deletes the old groups, selects the prefab and marks the level as modified. No undo (TODO). | 1095 |
+| `editor.deleteSelectedObjects()` | Deletes (editor.deleteObject) all the selected objects and clears the selection. No history: for undo use deleteSelectedObjectsWithUndo. | 467 |
+| `editor.deselectObjectSelection()` | Clears the selection (empty table, on the C++ side too) and emits onEditorObjectSelectionChanged. | 648 |
+| `editor.enableEditorOnObjects(enable)` | Calls onEditorEnable or onEditorDisable on all scene objects that have these methods. Used internally when toggling editor mode; does nothing if the level is not loaded. | 267 |
+| `editor.explodeSelectedPrefab()` | Explodes the selected prefabs into object groups (name <prefab>_unpacked), deletes the prefabs, selects the groups and emits onEditorPrefabExploded(groups). | 1211 |
+| `editor.findFirstSelectedByType(classname)` | Returns the first selected object whose class name is classname. | 1355 |
+| `editor.getDynamicFields(objectId)` | Returns the list of the object's dynamic field names. | 346 |
+| `editor.getFieldInfo(objectId, fieldName)` | Returns the type and flags of a field; empty table if the object does not exist. | 326 |
+| `editor.getFieldValue(objectId, fieldName, arrayIndex)` | Reads an object field as a string. Returns "" if the object does not exist. | 238 |
+| `editor.getFields(objectId)` | Returns the object's fields intended for the editor (getFieldsForEditor), keyed by name (id, groupName, type, elementCount, fields for arrays...). | 338 |
+| `editor.getFocusLockedGroup()` | Returns the group on which Focus-Lock is active (the scene tree shows only it, only its objects are selectable in the view, new objects are created in it). Clears the lock if it points to a deleted group. | 59 |
+| `editor.getHighestObject(objects)` | Returns, among the given ids, the object that is shallowest in the group hierarchy. | 991 |
+| `editor.getObjectSelection()` | Returns the list of selected ids (empty table if none). | 1367 |
+| `editor.getObjectsByRectangle(rect, forestData, objectFlags)` | Returns the objects (or forest items if forestData is provided) whose volume intersects a screen rectangle, via a frustum derived from the camera frustum. | 574 |
+| `editor.getSelectionCentroid()` | Returns the selection center: average of the positions, or the center of the bounding box if the gizmos.general.useObjectBoxCenter preference is true (unless an object has global bounds). vec3(0,0,0) if empty. | 173 |
+| `editor.hideObjectSelection()` | Hides the selected objects (hidden = "true"). | 668 |
+| `editor.isFocusLockActive()` | True if a valid Focus-Lock is active. | 70 |
+| `editor.isObjectInFocusLockedGroup(object)` | True if no Focus-Lock is active, or if the object is the locked group or one of its descendants. | 84 |
+| `editor.isObjectSelectable(object)` | True if the object is in the Focus-Lock group and, for a SceneObject, if its selection is enabled. | 102 |
+| `editor.isObjectSelected(objectId)` | True if the id is part of the object selection. | 117 |
+| `editor.isObjectSelectionEmpty()` | True if the object selection is empty. | 113 |
+| `editor.lockObjectSelection()` | Locks the selected objects (locked = "true" field). The original comment ("Select all the objects") is wrong. Not undoable (see lockObjectSelectionWithUndo). | 656 |
+| `editor.matrixToTable(mtx)` | Converts a MatrixF into a serializable table {c0, c1, c2, c3} (columns). | 28 |
+| `editor.pasteFields(fields, targetObjectID)` | Applies a copy of copyFields onto an object by id (via setFieldValue/setDynamicFieldValue), reloads the road templates if useTemplate == "true" and marks the level as modified. | 417 |
+| `editor.pasteFieldsToObject(fields, targetObject)` | Like pasteFields but on an already resolved object (calls setField directly, without preApply/postApply). | 442 |
+| `editor.removeInvalidObjects(objectIds)` | Returns a copy of the list without the ids that no longer match an existing object. | 1371 |
+| `editor.removeInvalidSelectedObjects()` | Removes from the selection the ids of objects that no longer exist. | 1382 |
+| `editor.replaceGroupWithPrefabInstance(prefab, parentGroup, instanceName, position)` | Spawns an instance of the v2 prefab (spawn, scale 1, zero rotation) at the given position, adds it to the parent group and requests a collision rebuild. | 1329 |
+| `editor.resetObjectSelectionRotation()` | Resets the rotation to "0 0 0 0" of the selected manipulable objects. | 799 |
+| `editor.resetObjectSelectionScale()` | Resets the scale to "1 1 1" of the selected manipulable objects. | 809 |
+| `editor.resetObjectSelectionTransform()` | Resets rotation to zero and scale to 1,1,1 for the selection. | 793 |
+| `editor.resolveAddGroup(defaultGroup)` | Returns the Focus-Lock group if it exists, otherwise defaultGroup (group where new objects are added). | 98 |
+| `editor.restoreSimObjectMemento(jsonString)` | Recreates an object from a memento: removes persistentId, deserializes and gives a unique name (Sim.getUniqueName) derived from the original name. | 1394 |
+| `editor.rotateObjectSelection(gizmoTransform, centerPoint, initialTransformations, initialGizmoTransform)` | Applies the gizmo rotation to the selected objects from the initial state, around centerPoint (positions and orientations). Does nothing without initialTransformations. | 842 |
+| `editor.saveSimObjectMemento(obj)` | Serializes an object to JSON text (memento), "" if nil. | 1386 |
+| `editor.scaleObjectSelection(deltaScale, centerPoint)` | Scales the selected objects by a delta, around centerPoint (bbox center by default), with bounds 0.01 to 1000 and excluding axes with a zero delta; positions are scaled in the gizmo's frame. | 885 |
+| `editor.selectObjectById(id, selectMode)` | Selects an object by id according to the mode. | 642 |
+| `editor.selectObjects(idArray, selectMode)` | Modifies the object selection according to the mode, updates the C++ side state, recomputes the bbox and emits onEditorObjectSelectionChanged if it changed. Does not go through the history. | 548 |
+| `editor.selectObjectsByNameMask(nameMask, selectMode)` | Selects the objects whose name contains the Lua pattern (string.find). | 598 |
+| `editor.selectObjectsByRef(objects, selectMode)` | Like selectObjects but with objects rather than ids. | 560 |
+| `editor.selectObjectsByType(typeName, selectMode)` | Selects the objects whose `className` equals typeName. | 619 |
+| `editor.setDynamicFieldValue(objectId, fieldName, value, arrayIndex)` | Sets a dynamic field of an object (index 0 by default). For a static field use setFieldValue. | 312 |
+| `editor.setFieldValue(objectId, fieldName, value, arrayIndex)` | Sets a static field of an object (preApply, setField, marks editor-dirty, postApply). Does not go through the history: for undo use editor.changeObjectFieldWithUndo. | 297 |
+| `editor.setFocusLockedGroup(id)` | Enables Focus-Lock on the group with the given id and emits onEditorFocusLockChanged. | 74 |
+| `editor.setObjectSelectedBool(objectIds, selected)` | Marks/unmarks each object as selected on the C++ side (setSelected) then rebuilds the shape instance data. | 247 |
+| `editor.setObjectSelectedBoolSingle(objectId, selected)` | Same for a single object. | 257 |
+| `editor.setObjectSelectionTransformFromCamera()` | Places each selected manipulable object at the editor camera's transform while keeping its scale (no undo, TODO in the code). | 779 |
+| `editor.showObjectSelection()` | Shows the selected objects (hidden = "false"). | 674 |
+| `editor.tableToMatrix(tbl)` | Rebuilds a MatrixF from a table {c0, c1, c2, c3}. | 36 |
+| `editor.translateObjectSelection(deltaTranslate)` | Translates the selected manipulable objects by a delta (via setFieldValue "position"). | 820 |
+| `editor.unlockObjectSelection()` | Unlocks the selected objects (locked = "false"). | 662 |
+| `editor.unpackageSelectedPrefabInstance()` | Unpackages the selected prefab instances (unpackage) into groups and deletes the instances. | 1294 |
+| `editor.validateObjectName(name, newName)` | Validates an object name (isValidObjectName); rejects an empty name when newName is true. | 282 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onEditorFocusLockChanged` — écouté par 1 module(s)
-- `onEditorObjectSelectionChanged` — écouté par 8 module(s)
-- `onEditorPrefabExploded` — écouté par 2 module(s)
+- `onEditorFocusLockChanged` — listened to by 1 module(s)
+- `onEditorObjectSelectionChanged` — listened to by 8 module(s)
+- `onEditorPrefabExploded` — listened to by 2 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `sceneGetCameraFrustum`, `setNeedCollisionRebuild`
 - `FS:` `native2Virtual`
@@ -129,4 +129,4 @@ Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes 
 - `worldEditorCppApi.` `rebuildShapeManagerInstanceData`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/object.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/object.lua`.*

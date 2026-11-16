@@ -1,38 +1,38 @@
 # `ui_router_routeHandlers_missionExitHandlers`
 
-*Fichier : `lua/ge/extensions/ui/router/routeHandlers/missionExitHandlers.lua` · VM : Game Engine (GE) · 47 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/routeHandlers/missionExitHandlers.lua` · VM: Game Engine (GE) · 47 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_routeHandlers_missionExitHandlers` : `extensions.load("ui_router_routeHandlers_missionExitHandlers")`, puis la globale `ui_router_routeHandlers_missionExitHandlers`
+**Access:** extension `ui_router_routeHandlers_missionExitHandlers`: `extensions.load("ui_router_routeHandlers_missionExitHandlers")`, then the global `ui_router_routeHandlers_missionExitHandlers`
 
-Gestionnaires de sortie/retour des écrans de mission et de pause. Quand un écran de début/fin de mission est actif, ils renvoient vers la route « mission.control » avec le mode correspondant ; sinon vers la route de gameplay (ui_menuManager.getGameplayRoute(), « play » par défaut).
+Exit/back handlers of the mission and pause screens. When a mission start/end screen is active, they send back to the "mission.control" route with the matching mode; otherwise to the gameplay route (ui_menuManager.getGameplayRoute(), "play" by default).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_routeHandlers_missionExitHandlers.missionDetailsExitHandler()` | Quitte les détails de mission : si une mission est active et qu'un écran de début/fin est affiché, navigue vers mission.control avec {mode = mode de l'écran} ; sinon vers la route de gameplay. | 11 |
-| `ui_router_routeHandlers_missionExitHandlers.missionVehicleSelectorBackHandler()` | Retour du sélecteur de véhicule de mission : même logique que pauseExitHandler. | 35 |
-| `ui_router_routeHandlers_missionExitHandlers.pauseExitHandler()` | Quitte la pause : navigue vers mission.control {mode} si un écran de début/fin de mission est actif, sinon vers la route de gameplay. | 24 |
+| `ui_router_routeHandlers_missionExitHandlers.missionDetailsExitHandler()` | Leaves the mission details: if a mission is active and a start/end screen is displayed, navigates to mission.control with {mode = screen mode}; otherwise to the gameplay route. | 11 |
+| `ui_router_routeHandlers_missionExitHandlers.missionVehicleSelectorBackHandler()` | Back from the mission vehicle selector: same logic as pauseExitHandler. | 35 |
+| `ui_router_routeHandlers_missionExitHandlers.pauseExitHandler()` | Leaves the pause: navigates to mission.control {mode} if a mission start/end screen is active, otherwise to the gameplay route. | 24 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_routeHandlers_missionExitHandlers.missionDetailsExitHandler()`
 
-Quitte les détails de mission : si une mission est active et qu'un écran de début/fin est affiché, navigue vers mission.control avec {mode = mode de l'écran} ; sinon vers la route de gameplay.
+Leaves the mission details: if a mission is active and a start/end screen is displayed, navigates to mission.control with {mode = screen mode}; otherwise to the gameplay route.
 
-- **renvoie** : table|nil Résultat de navigate dans le cas mission.control ; nil sinon (la navigation est lancée sans retourner son résultat).
+- **returns**: table|nil Result of navigate in the mission.control case; nil otherwise (navigation is started without returning its result).
 
 #### `ui_router_routeHandlers_missionExitHandlers.missionVehicleSelectorBackHandler()`
 
-Retour du sélecteur de véhicule de mission : même logique que pauseExitHandler.
+Back from the mission vehicle selector: same logic as pauseExitHandler.
 
-- **renvoie** : table Résultat de ui_router.navigate.
+- **returns**: table Result of ui_router.navigate.
 
 #### `ui_router_routeHandlers_missionExitHandlers.pauseExitHandler()`
 
-Quitte la pause : navigue vers mission.control {mode} si un écran de début/fin de mission est actif, sinon vers la route de gameplay.
+Leaves the pause: navigates to mission.control {mode} if a mission start/end screen is active, otherwise to the gameplay route.
 
-- **renvoie** : table Résultat de ui_router.navigate.
+- **returns**: table Result of ui_router.navigate.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/routeHandlers/missionExitHandlers.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/routeHandlers/missionExitHandlers.lua`.*

@@ -1,20 +1,20 @@
 # `flowgraph_nodes_gameplay_race_racePacenoteReached`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/race/racePacenoteReached.lua` · VM : Game Engine (GE) · 51 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/race/racePacenoteReached.lua` · VM: Game Engine (GE) · 51 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/race/racePacenoteReached")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/race/racePacenoteReached")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Race Pacenote Reached » (catégorie logic, tag scenario). Laisse passer une impulsion quand un véhicule atteint une pacenote de la course (events.pacenoteReached). Sorties : flow (impulsion) et note (texte de la pacenote, race.path.pacenotes.objects[id].note).
+Flowgraph node "Race Pacenote Reached" (category logic, tag scenario). Lets a pulse through when a vehicle reaches a pacenote of the race (events.pacenoteReached). Outputs: flow (pulse) and note (pacenote text, race.path.pacenotes.objects[id].note).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Vide. | 29 |
-| `C:init(mgr, ...)` | Initialise data.detailed = false (non utilisé). | 25 |
-| `C:work(args)` | Met flow et note selon les events du véhicule. | 33 |
+| `C:drawMiddle(builder, style)` | Empty. | 29 |
+| `C:init(mgr, ...)` | Initializes data.detailed = false (unused). | 25 |
+| `C:work(args)` | Sets flow and note according to the vehicle's events. | 33 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/race/racePacenoteReached.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/race/racePacenoteReached.lua`.*

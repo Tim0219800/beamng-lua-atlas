@@ -1,35 +1,35 @@
 # `flowgraph_nodes_activity_activityFlow`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua` · VM : Game Engine (GE) · 113 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua` · VM: Game Engine (GE) · 113 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/activity/activityFlow")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/activity/activityFlow")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Activity Flow » (catégorie logic, tag activity). Point d'entrée d'un graphe de mission : sort du flux une fois au démarrage (pin « started »), à chaque frame tant que l'activité est en cours (« update »), puis une fois à l'arrêt (« stopped »). Pins cachés de sortie : dtReal, dtSim, dtRaw (delta times). Sans activité associée (graphe autonome), il fonctionne sur onUpdate ; avec une activité, il est piloté par le gestionnaire de missions.
+Flowgraph node "Activity Flow" (category logic, tag activity). Entry point of a mission graph: outputs flow once at start (pin "started"), every frame while the activity is running ("update"), then once at stop ("stopped"). Hidden output pins: dtReal, dtSim, dtRaw (delta times). Without an associated activity (standalone graph), it runs on onUpdate; with an activity, it is driven by the mission manager.
 
-## Remarques
+## Notes
 
-- legacyPins renomme les anciens pins de sortie start -> started et stop -> stopped.
-- Le code écrit encore dans self.pinOut.start/stop (anciens noms) ; cela passe grâce au renommage des legacyPins.
-- Écrit aussi les delta times dans self.mgr.dtReal, dtSim et dtRaw.
-- Au changement d'état 'stopped' avec activité : déclenche stopped puis appelle gameplay_missions_missionManager.stop.
+- legacyPins renames the old output pins start -> started and stop -> stopped.
+- The code still writes to self.pinOut.start/stop (old names); this works thanks to the legacyPins renaming.
+- Also writes the delta times into self.mgr.dtReal, dtSim and dtRaw.
+- On the 'stopped' state change with an activity: triggers stopped then calls gameplay_missions_missionManager.stop.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:changedRunningState(newState)` | Hook : quand le graphe passe à 'stopped', déclenche stop() et arrête la mission (si activité en cours). | 82 |
-| `C:drawMiddle()` | Éditeur : affiche si une activité est associée et la fin de son id. | 102 |
-| `C:drawTooltip()` | Éditeur : infobulle indiquant l'id de l'activité ou le mode de compatibilité limitée. | 106 |
-| `C:onExecutionStarted()` | Hook : au démarrage du graphe, si une activité existe et n'est pas en cours, la démarre via gameplay_missions_missionManager.start ; sans activité, appelle start(). | 39 |
-| `C:onStartActivity()` | Hook appelé au démarrage de l'activité ; appelle start(). | 48 |
-| `C:onStopActivity()` | Hook appelé à l'arrêt de l'activité ; appelle stop(). | 95 |
-| `C:onUpdate(...)` | Hook par frame ; n'appelle update que si le graphe n'a pas d'activité. | 65 |
-| `C:onUpdateActivity(...)` | Hook par frame envoyé par l'activité ; appelle update. | 70 |
-| `C:start()` | Met le flux de « started » à vrai (update et stopped à faux) et déclenche le nœud. | 33 |
-| `C:stop()` | Active le flux « stopped » et déclenche le nœud. | 75 |
-| `C:update(dtReal, dtSim, dtRaw)` | Met à jour dtReal/dtSim/dtRaw (pins et gestionnaire), active « update » et déclenche le nœud. | 53 |
+| `C:changedRunningState(newState)` | Hook: when the graph becomes 'stopped', triggers stop() and stops the mission (if an activity is running). | 82 |
+| `C:drawMiddle()` | Editor: shows whether an activity is associated and the end of its id. | 102 |
+| `C:drawTooltip()` | Editor: tooltip showing the activity id or the limited compatibility mode. | 106 |
+| `C:onExecutionStarted()` | Hook: when the graph starts, if an activity exists and is not running, starts it via gameplay_missions_missionManager.start; without an activity, calls start(). | 39 |
+| `C:onStartActivity()` | Hook called when the activity starts; calls start(). | 48 |
+| `C:onStopActivity()` | Hook called when the activity stops; calls stop(). | 95 |
+| `C:onUpdate(...)` | Per-frame hook; calls update only if the graph has no activity. | 65 |
+| `C:onUpdateActivity(...)` | Per-frame hook sent by the activity; calls update. | 70 |
+| `C:start()` | Sets the "started" flow to true (update and stopped to false) and triggers the node. | 33 |
+| `C:stop()` | Enables the "stopped" flow and triggers the node. | 75 |
+| `C:update(dtReal, dtSim, dtRaw)` | Updates dtReal/dtSim/dtRaw (pins and manager), enables "update" and triggers the node. | 53 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua`.*

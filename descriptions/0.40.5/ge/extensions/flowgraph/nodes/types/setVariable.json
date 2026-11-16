@@ -1,112 +1,112 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/types/setVariable.lua",
-  "module": "Noeud « Set Variable » (repeat_instant, caché des menus). Écrit une variable du graphe ou du projet à partir d'un pin d'entrée portant son nom et son type. Gère renommage et changement de type en conservant les liens compatibles ; recopie flow en sortie.",
+  "module": "Node \"Set Variable\" (repeat_instant, hidden from the menus). Writes a graph or project variable from an input pin bearing its name and type. Handles renaming and type changes while keeping compatible links; copies flow to the output.",
   "notes": [
-    "globalColor = im.ImVec4(1,0.6,0,8,0.75) : 5 arguments (« 0,8 » au lieu de « 0.8 »).",
-    "Le champ global est nil tant que setGlobal n'est pas appelé."
+    "globalColor = im.ImVec4(1,0.6,0,8,0.75): 5 arguments (\"0,8\" instead of \"0.8\").",
+    "The global field is nil until setGlobal is called."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "varName = nil, target = variables du graphe, useSuffix = false.",
+          "desc": "varName = nil, target = graph variables, useSuffix = false.",
           "internal": true
         },
         "setGlobal": {
-          "desc": "Change la portée (projet/graphe), la couleur et retire le pin courant.",
+          "desc": "Changes the scope (project/graph), the color and removes the current pin.",
           "params": {
             "global": {
               "type": "any",
-              "desc": "boolean : variables du projet"
+              "desc": "boolean: project variables"
             }
           },
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Case de portée, liste des variables et éditeur de variable.",
+          "desc": "Scope checkbox, variable list and variable editor.",
           "internal": true
         },
         "setVar": {
-          "desc": "Choisit la variable : recrée le pin d'entrée et refait les liens.",
+          "desc": "Chooses the variable: recreates the input pin and redoes the links.",
           "params": {
             "name": {
               "type": "any",
-              "desc": "nom de la variable"
+              "desc": "variable name"
             }
           },
           "internal": true
         },
         "renameVariable": {
-          "desc": "Hook : met à jour noeud et pin si la variable est renommée.",
+          "desc": "Hook: updates node and pin if the variable is renamed.",
           "params": {
             "source": {
               "type": "any",
-              "desc": "table de variables concernée"
+              "desc": "variables table concerned"
             },
             "name": {
               "type": "any",
-              "desc": "ancien nom"
+              "desc": "old name"
             },
             "newName": {
               "type": "any",
-              "desc": "nouveau nom"
+              "desc": "new name"
             }
           },
           "internal": true
         },
         "work": {
-          "desc": "Appelle target:change(varName, valeur du pin) et recopie flow.",
+          "desc": "Calls target:change(varName, pin value) and copies flow.",
           "internal": false
         },
         "typeUpdated": {
-          "desc": "Hook : recrée le pin quand le type de la variable change.",
+          "desc": "Hook: recreates the pin when the variable's type changes.",
           "params": {
             "source": {
               "type": "any",
-              "desc": "table de variables concernée"
+              "desc": "variables table concerned"
             },
             "name": {
               "type": "any",
-              "desc": "nom"
+              "desc": "name"
             },
             "newType": {
               "type": "any",
-              "desc": "nouveau type"
+              "desc": "new type"
             }
           },
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "desc": "Draws the central content of the node in the editor.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde l'état du noeud dans la table donnée.",
+          "desc": "Saves the node's state in the given table.",
           "params": {
             "res": {
               "type": "any",
-              "desc": "table de sauvegarde"
+              "desc": "save table"
             }
           },
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure portée et variable.",
+          "desc": "Restores scope and variable.",
           "params": {
             "nodeData": {
               "type": "any",
-              "desc": "données sauvegardées"
+              "desc": "saved data"
             }
           },
           "internal": true

@@ -1,12 +1,18 @@
 {
   "path": "lua/ge/extensions/ui/router/routes.lua",
-  "module": "Registre racine des routes du routeur UI : l'unique point d'entrée explicite pour enregistrer les familles de routes de premier niveau. Chaque entrée `{ include = \"nom\" }` monte le module de routes/nom.lua (Root + Children). Il n'y a pas de découverte automatique par le système de fichiers : un module n'est enregistré que s'il est listé ici (ou ajouté à l'exécution via routeManager.addVueRoutes / registerModRoutes). Lu par routeManager.",
+  "module": "Root registry of the UI router routes: the single explicit entry point for registering top-level route families. Each `{ include = \"name\" }` entry mounts the routes/name.lua module (Root + Children). There is no automatic filesystem discovery: a module is registered only if it is listed here (or added at runtime via routeManager.addVueRoutes / registerModRoutes). Read by routeManager.",
   "notes": [
-    "Global.include désigne le module des routes globales à un seul segment (play, /mainmenu…), ici « global ».",
-    "La liste contient « livery » alors qu'aucun fichier routes/livery.lua n'est présent dans 0.40.5 ; seul « liveries » existe. Cette entrée est ignorée avec un avertissement."
+    "Global.include designates the module of single-segment global routes (play, /mainmenu...), here \"global\".",
+    "The list contains \"livery\" although no routes/livery.lua file is present in 0.40.5; only \"liveries\" exists. This entry is ignored with a warning."
   ],
   "fields": {
-    "Children": {"type": "table[]", "desc": "Liste d'entrées `{ include = \"module\" }` : bigmap, campaign, career, debug, default, firstDrive, freeroamLevels, freeroamWizard, garage, legal, livery, liveries, menu, mission, mods, multiseat, multiplayer, options, pause, radial, scenario, taxi, trackBuilder."},
-    "Global": {"type": "table", "desc": "`{ include = \"global\" }` : module des routes globales plates (play, /mainmenu, etc.)."}
+    "Children": {
+      "type": "table[]",
+      "desc": "List of `{ include = \"module\" }` entries: bigmap, campaign, career, debug, default, firstDrive, freeroamLevels, freeroamWizard, garage, legal, livery, liveries, menu, mission, mods, multiseat, multiplayer, options, pause, radial, scenario, taxi, trackBuilder."
+    },
+    "Global": {
+      "type": "table",
+      "desc": "`{ include = \"global\" }`: module of flat global routes (play, /mainmenu, etc.)."
+    }
   }
 }

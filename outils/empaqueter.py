@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Crée les zips de release : dist/stubs-<v>.zip et dist/donnees-<v>.zip.
+"""Crée les zips de release : dist/stubs-<v>.zip (anglais), dist/stubs-<v>-fr.zip (français) et dist/donnees-<v>.zip.
 Usage : python -I outils/empaqueter.py <version>"""
 import os, sys, zipfile
 
@@ -23,4 +23,6 @@ def zipper(out, items):
 
 
 zipper(f"dist/stubs-{ver}.zip", [f"stubs/{ver}", "LICENSE", "README.md"])
+if os.path.isdir(f"stubs/fr/{ver}"):  # python -I outils/generer.py <v> --lang fr
+    zipper(f"dist/stubs-{ver}-fr.zip", [f"stubs/fr/{ver}", "LICENSE", "README.fr.md"])
 zipper(f"dist/donnees-{ver}.zip", [f"donnees/{ver}", "LICENSE"])

@@ -1,66 +1,66 @@
 # `flowgraph_utils`
 
-*Fichier : `lua/ge/extensions/flowgraph/utils.lua` · VM : Game Engine (GE) · 286 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/utils.lua` · VM: Game Engine (GE) · 286 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `flowgraph_utils` : `extensions.load("flowgraph_utils")`, puis la globale `flowgraph_utils`
+**Access:** extension `flowgraph_utils`: `extensions.load("flowgraph_utils")`, then the global `flowgraph_utils`
 
-Utilitaires du flowgraph : détection de type d'une valeur, test de compatibilité avec un type de pin, valeur par défaut par type, étiquette ImGui, et fonctions de fusion (merge) utilisées par les variables du `variableStorage` quand plusieurs nœuds écrivent la même variable dans la même frame. Il est chargé comme extension `flowgraph_utils` mais aussi par `require` depuis pin et variableStorage.
+Flowgraph utilities: detection of a value's type, compatibility test with a pin type, default value per type, ImGui label, and merge functions used by `variableStorage` variables when several nodes write the same variable in the same frame. It is loaded as the `flowgraph_utils` extension but also via `require` from pin and variableStorage.
 
-## Remarques
+## Notes
 
-- `getVariableType` ne reconnaît une table que par sa taille : 3 éléments = vec3, 4 = quat ; une couleur (4 composantes) est donc vue comme `quat`.
-- `isVariableCompatible` accepte un vecteur de 3 pour 'vec3' ou 'table', et 4 éléments pour 'quat', 'color' ou 'table'. Un `nil` ou autre type est incompatible.
-- Stratégies de fusion : `all` (first, last, readOnly), `number` (min, max, average, sum), `bool` (or_, and_), `vec3` (average, sum), `string` (concat, concatComma, concatSpace, concatNewline), `any` (toutes, préfixées num_, bool_, vec_, any_).
-- Chaque stratégie a `init(variable)`, `merge(variable, newValue)` et `finalize(variable)`, appelées par `variableStorage`.
-- Pour les stratégies `vec3`, `merge` garde la table de la première valeur et l'additionne en place : cela modifie la table passée par le premier appelant.
-- `any_concat*` sont rangées sous la clé `any_` mais s'appliquent aux chaînes.
+- `getVariableType` recognizes a table only by its size: 3 elements = vec3, 4 = quat; a color (4 components) is therefore seen as `quat`.
+- `isVariableCompatible` accepts a 3-vector for 'vec3' or 'table', and 4 elements for 'quat', 'color' or 'table'. A `nil` or other type is incompatible.
+- Merge strategies: `all` (first, last, readOnly), `number` (min, max, average, sum), `bool` (or_, and_), `vec3` (average, sum), `string` (concat, concatComma, concatSpace, concatNewline), `any` (all of them, prefixed num_, bool_, vec_, any_).
+- Each strategy has `init(variable)`, `merge(variable, newValue)` and `finalize(variable)`, called by `variableStorage`.
+- For `vec3` strategies, `merge` keeps the first value's table and adds to it in place: this modifies the table passed by the first caller.
+- `any_concat*` are stored under the `any_` key but apply to strings.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `flowgraph_utils.getDefaultValueForType(typeName)` | Valeur par défaut d'un type : 0 (number/any), '' (string), true (bool), {0,0,0} (vec3), {0,0,0,0} (quat), {1,1,1,1} (color), {} (table). Si `typeName` est une liste, utilise le premier élément. Autre type : nil. | 31 |
-| `flowgraph_utils.getVariableType(value)` | Donne le type flowgraph d'une valeur Lua : bool, string, number, vec3 (table de 3), quat (table de 4), sinon nil. | 10 |
-| `flowgraph_utils.isVariableCompatible(value, compType)` | Dit si une valeur peut être stockée dans un pin/variable du type `compType`. | 21 |
-| `flowgraph_utils.showLabel(label, color)` | Dessine en ImGui une petite étiquette (fond rouge translucide par défaut) juste au-dessus de la ligne courante. | 53 |
+| `flowgraph_utils.getDefaultValueForType(typeName)` | Default value of a type: 0 (number/any), '' (string), true (bool), {0,0,0} (vec3), {0,0,0,0} (quat), {1,1,1,1} (color), {} (table). If `typeName` is a list, uses the first element. Other type: nil. | 31 |
+| `flowgraph_utils.getVariableType(value)` | Gives the flowgraph type of a Lua value: bool, string, number, vec3 (table of 3), quat (table of 4), otherwise nil. | 10 |
+| `flowgraph_utils.isVariableCompatible(value, compType)` | Tells whether a value can be stored in a pin/variable of type `compType`. | 21 |
+| `flowgraph_utils.showLabel(label, color)` | Draws a small ImGui label (translucent red background by default) just above the current line. | 53 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `flowgraph_utils.getDefaultValueForType(typeName)`
 
-Valeur par défaut d'un type : 0 (number/any), '' (string), true (bool), {0,0,0} (vec3), {0,0,0,0} (quat), {1,1,1,1} (color), {} (table). Si `typeName` est une liste, utilise le premier élément. Autre type : nil.
+Default value of a type: 0 (number/any), '' (string), true (bool), {0,0,0} (vec3), {0,0,0,0} (quat), {1,1,1,1} (color), {} (table). If `typeName` is a list, uses the first element. Other type: nil.
 
-- `typeName` (*string|table*) : Type ou liste de types.
-- **renvoie** : any Valeur par défaut ou nil.
+- `typeName` (*string|table*) : Type or list of types.
+- **returns**: any Default value or nil.
 
 #### `flowgraph_utils.getVariableType(value)`
 
-Donne le type flowgraph d'une valeur Lua : bool, string, number, vec3 (table de 3), quat (table de 4), sinon nil.
+Gives the flowgraph type of a Lua value: bool, string, number, vec3 (table of 3), quat (table of 4), otherwise nil.
 
-- `value` (*any*) : Valeur à tester.
-- **renvoie** : string|nil Nom du type ou nil.
+- `value` (*any*) : Value to test.
+- **returns**: string|nil Type name or nil.
 
 #### `flowgraph_utils.isVariableCompatible(value, compType)`
 
-Dit si une valeur peut être stockée dans un pin/variable du type `compType`.
+Tells whether a value can be stored in a pin/variable of type `compType`.
 
-- `value` (*any*) : Valeur.
-- `compType` (*string*) : Type visé (bool, string, number, vec3, quat, color, table).
-- **renvoie** : boolean true si compatible.
+- `value` (*any*) : Value.
+- `compType` (*string*) : Target type (bool, string, number, vec3, quat, color, table).
+- **returns**: boolean true if compatible.
 
 #### `flowgraph_utils.showLabel(label, color)`
 
-Dessine en ImGui une petite étiquette (fond rouge translucide par défaut) juste au-dessus de la ligne courante.
+Draws a small ImGui label (translucent red background by default) just above the current line.
 
-- `label` (*string*) : Texte.
-- `color` (*any*) : ImVec4 de fond (défaut rouge 0,4 alpha).
+- `label` (*string*) : Text.
+- `color` (*any*) : Background ImVec4 (default red, 0.4 alpha).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `mergeFuns` | table<string, table> | Fonctions de fusion par catégorie : all, number, bool, vec3, string, any. Chaque entrée : {num, description, init, merge, finalize}. |
-| `sortedMergeFuns` | table<string, table[]> | Listes triées {name, desc, num} par catégorie (any, all, number, string, bool, vec3), pour l'affichage dans l'éditeur. |
+| `mergeFuns` | table<string, table> | Merge functions by category: all, number, bool, vec3, string, any. Each entry: {num, description, init, merge, finalize}. |
+| `sortedMergeFuns` | table<string, table[]> | Sorted lists {name, desc, num} by category (any, all, number, string, bool, vec3), for display in the editor. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/utils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/utils.lua`.*

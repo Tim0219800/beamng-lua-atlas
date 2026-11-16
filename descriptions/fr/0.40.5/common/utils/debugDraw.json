@@ -1,0 +1,83 @@
+{
+  "path": "lua/common/utils/debugDraw.lua",
+  "module": "Enveloppe rapide (FFI) autour du dessin de debug du moteur (BNG_DBG_DRAW_*). Dans le GE les appels se font dans onPreRender(), côté véhicule dans onDebugDraw(). Se charge avec require('utils/debugDraw'). Les couleurs sont des entiers 'packed' (voir la globale color() de utils.lua) et non des ColorF/ColorI. Les champs M.Sphere, M.Line, etc. sont les fonctions FFI brutes (coordonnées séparées x,y,z) ; les M.drawXxx acceptent des vec3.",
+  "usage": "local dd = require('utils/debugDraw')\ndd.drawSphere(vec3(0,0,1), 0.5, color(255,0,0,255))\ndd.drawTextAdvanced(vec3(0,0,2), 'hello')",
+  "notes": [
+    "Si ffi est absent, un log E est émis et tous les champs valent nop (fonction vide).",
+    "Bug : drawTextAdvanced utilise la variable `defaultTextColBg` (jamais définie ; la constante locale s'appelle DEFAULTTEXTCOLBG) : bgColorPacked vaut donc nil par défaut au lieu du gris translucide prévu.",
+    "L'outil de génération signale les champs M.Cylinder, M.Line, etc. comme 'ffifound non définie' : c'est un faux positif de l'analyse, ffifound est bien défini localement (pcall(require,'ffi')).",
+    "Les champs Cylinder, Line, Text, LineInstance_MinArgBatch et TriSolidBatch n'ont pas d'enveloppe vec3 ; il faut les appeler avec des coordonnées séparées (signature C du moteur, non visible dans ce fichier)."
+  ],
+  "fields": {
+    "Sphere": {"type": "function", "desc": "BNG_DBG_DRAW_Sphere(x, y, z, r, packedCol, useZ), FFI brut."},
+    "Cylinder": {"type": "function", "desc": "BNG_DBG_DRAW_Cylinder, FFI brut (signature non visible ici)."},
+    "Line": {"type": "function", "desc": "BNG_DBG_DRAW_Line, FFI brut (signature non visible ici)."},
+    "Text": {"type": "function", "desc": "BNG_DBG_DRAW_Text, FFI brut (signature non visible ici)."},
+    "LineInstance_MinArg": {"type": "function", "desc": "BNG_DBG_DRAW_LineInstance_MinArg(ax,ay,az,bx,by,bz,w,packedCol), FFI brut."},
+    "SquarePrism": {"type": "function", "desc": "BNG_DBG_DRAW_SquarePrism(...), FFI brut."},
+    "TextAdvanced": {"type": "function", "desc": "BNG_DBG_DRAW_TextAdvanced(x,y,z,txt,packedCol,useAdvancedText,twod,bgColorPacked,shadow,useZ), FFI brut."},
+    "TriSolid": {"type": "function", "desc": "BNG_DBG_DRAW_TriSolid(...), FFI brut."},
+    "LineInstance_MinArgBatch": {"type": "function", "desc": "Version par lots de LineInstance_MinArg (FFI brut)."},
+    "TriSolidBatch": {"type": "function", "desc": "Version par lots de TriSolid (FFI brut)."}
+  },
+  "functions": {
+    "drawSphere": {
+      "desc": "Dessine une sphère de debug. Seule différence avec debugDrawer : la couleur est un entier packed.",
+      "params": {
+        "pos": {"type": "vec3", "desc": "Centre (m)"},
+        "r": {"type": "number", "desc": "Rayon (m)"},
+        "packedCol": {"type": "integer", "desc": "Couleur RGBA packed (color())"},
+        "useZ": {"type": "boolean|nil", "desc": "Test de profondeur, true par défaut"}
+      },
+      "returns": []
+    },
+    "drawLineInstance_MinArg": {
+      "desc": "Dessine une ligne (version instanciée, arguments minimaux).",
+      "params": {
+        "posA": {"type": "vec3", "desc": "Début"},
+        "posB": {"type": "vec3", "desc": "Fin"},
+        "w": {"type": "number", "desc": "Épaisseur"},
+        "packedCol": {"type": "integer", "desc": "Couleur RGBA packed"}
+      },
+      "returns": []
+    },
+    "drawSquarePrism": {
+      "desc": "Dessine un prisme à base carrée/rectangulaire entre deux points.",
+      "params": {
+        "base": {"type": "vec3", "desc": "Centre de la base"},
+        "tip": {"type": "vec3", "desc": "Centre de l'extrémité"},
+        "baseSize": {"type": "vec3", "desc": "Dimensions (x,y) de la base"},
+        "tipSize": {"type": "vec3", "desc": "Dimensions (x,y) de l'extrémité"},
+        "packedCol": {"type": "integer", "desc": "Couleur RGBA packed"},
+        "useZ": {"type": "boolean|nil", "desc": "Test de profondeur, true par défaut"}
+      },
+      "returns": []
+    },
+    "drawTextAdvanced": {
+      "desc": "Dessine un texte à une position 3D ou 2D. Valeurs par défaut : texte blanc, useAdvancedText=false, twod=false, shadow=false, useZ=true.",
+      "params": {
+        "pos": {"type": "vec3", "desc": "Position"},
+        "txt": {"type": "string", "desc": "Texte"},
+        "packedCol": {"type": "integer|nil", "desc": "Couleur du texte (blanc par défaut)"},
+        "useAdvancedText": {"type": "boolean|nil", "desc": "Texte avancé, false par défaut"},
+        "twod": {"type": "boolean|nil", "desc": "Position 2D écran, false par défaut"},
+        "bgColorPacked": {"type": "integer|nil", "desc": "Couleur de fond (voir notes : bug, nil par défaut)"},
+        "shadow": {"type": "boolean|nil", "desc": "Ombre, false par défaut"},
+        "useZ": {"type": "boolean|nil", "desc": "Test de profondeur, true par défaut"}
+      },
+      "returns": []
+    },
+    "drawTriSolid": {
+      "desc": "Dessine un triangle plein.",
+      "params": {
+        "posA": {"type": "vec3", "desc": "Sommet A"},
+        "posB": {"type": "vec3", "desc": "Sommet B"},
+        "posC": {"type": "vec3", "desc": "Sommet C"},
+        "packedCol": {"type": "integer", "desc": "Couleur RGBA packed"},
+        "useZ": {"type": "boolean|nil", "desc": "Test de profondeur, true par défaut"}
+      },
+      "returns": []
+    }
+  },
+  "classes": {}
+}

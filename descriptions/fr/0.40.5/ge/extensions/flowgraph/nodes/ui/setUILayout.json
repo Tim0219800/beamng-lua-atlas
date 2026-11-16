@@ -1,0 +1,67 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/setUILayout.lua",
+  "module": "Nœud flowgraph « Set UI Layout » (catégorie once_instant) : change la disposition des apps de l'UI via self.mgr.modules.ui:setGameState. Entrées : flow, « reset » (permet de redéclencher), « layout » (nom ou table layoutData), « menu », « keepLayout » (garde la disposition après l'arrêt du graphe), « gameStateName » (caché), « appContainerContext » (app du conteneur topCenter à afficher, caché). Sortie : flow.",
+  "notes": [
+    "Si le réglage 'restrictScenarios' est désactivé, le menu 'freeroam' est forcé (message d'avertissement).",
+    "Les listes de modèles layout/menu sont vides (appel à ui_apps.getLayouts commenté).",
+    "afterTrigger est écrit sans underscore, donc jamais appelé par le moteur : active (utilisé par onUiChangedState) ne devient jamais vrai.",
+    "Dans onClientPostStartMission, 'menuState' n'est pas défini dans cette fonction (variable globale nil)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "afterTrigger": {
+          "desc": "Met active selon le flux d'entrée (nom sans underscore : probablement jamais appelé).",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Zone centrale vide.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale)."
+            },
+            "style": {
+              "type": "any",
+              "desc": "Style d'affichage du nœud fourni par l'éditeur."
+            }
+          },
+          "internal": true
+        },
+        "init": {
+          "desc": "useFreeroamMenuWhenUnrestricted = true.",
+          "internal": true
+        },
+        "onClientPostStartMission": {
+          "desc": "Hook : réapplique le layout après le démarrage du niveau.",
+          "internal": true
+        },
+        "onUiChangedState": {
+          "desc": "Hook : changement d'état UI (cur, prev) ; en mode 'quickraceScenario' dans le menu, déclenche setQuickRaceMode et HotlappingResetApp.",
+          "params": {
+            "cur": {
+              "type": "string",
+              "desc": "État UI courant."
+            },
+            "prev": {
+              "type": "string",
+              "desc": "État UI précédent."
+            }
+          },
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Remplit les modèles layout, menu et appContainerContext.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Applique l'état de jeu (layout/menu) et affiche l'app de conteneur demandée.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

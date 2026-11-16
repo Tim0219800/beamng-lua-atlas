@@ -1,35 +1,35 @@
 # `editor_util_zoneSelectorUtil`
 
-*Fichier : `lua/ge/extensions/editor/util/zoneSelectorUtil.lua` · VM : Game Engine (GE) · 304 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/util/zoneSelectorUtil.lua` · VM: Game Engine (GE) · 304 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/util/zoneSelectorUtil")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/util/zoneSelectorUtil")` (file under extensions/ but not a regular extension)
 
-Élément d'interface de l'éditeur de missions (via editorElementHelper) pour choisir des zones de garage : « Initial Zones » (où le joueur peut apparaître) et « Destination Zones » (où il peut obtenir des destinations). Les noms de zones sont lus dans `<globalInfoFolder>/garages.sites.json` via gameplay_sites_sitesManager.loadSites. Le module renvoie un constructeur : `require('editor/util/zoneSelectorUtil')(element)`.
+Mission editor UI element (via editorElementHelper) to choose garage zones: "Initial Zones" (where the player can spawn) and "Destination Zones" (where they can get destinations). The zone names are read from `<globalInfoFolder>/garages.sites.json` via gameplay_sites_sitesManager.loadSites. The module returns a constructor: `require('editor/util/zoneSelectorUtil')(element)`.
 
-## Remarques
+## Notes
 
-- L'`element` est une table de configuration partagée (champs lus : fieldName, globalInfoFolderFieldName, _id ; champs écrits : initialZones, destinationZones, loadedZones, sitesFile, zonesLoaded, caches).
-- Les listes choisies sont écrites dans le conteneur de données ctd sous les clés `<fieldName>_initialZones` et `<fieldName>_destinationZones`.
-- Si le dossier est vide, le fichier garages.sites.json absent ou sitesManager indisponible, la liste de zones reste vide et un message jaune s'affiche.
-- Le fichier de sites est toujours nommé garages.sites.json ; les zones sont triées alphabétiquement.
-- Les ensembles de recherche rapide sont mis en cache et reconstruits seulement quand la taille du tableau change.
+- The `element` is a shared configuration table (fields read: fieldName, globalInfoFolderFieldName, _id; fields written: initialZones, destinationZones, loadedZones, sitesFile, zonesLoaded, caches).
+- The chosen lists are written into the data container ctd under the keys `<fieldName>_initialZones` and `<fieldName>_destinationZones`.
+- If the folder is empty, the garages.sites.json file is missing or sitesManager is unavailable, the zone list stays empty and a yellow message is displayed.
+- The sites file is always named garages.sites.json; the zones are sorted alphabetically.
+- The quick-lookup sets are cached and rebuilt only when the array size changes.
 
-## Classe `C`
+## Class `C`
 
-Instance liée à un `element` d'éditeur.
+Instance bound to an editor `element`.
 
-Le module renvoie un constructeur : `local obj = require("editor_util_zoneSelectorUtil")(options)`.
+The module returns a constructor: `local obj = require("editor_util_zoneSelectorUtil")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:draw(ctd, container, labelFn)` | Dessine l'interface : combos d'ajout, boutons Select All / Remove All, listes avec bouton Remove, résumé. Écrit les listes dans ctd. | 93 |
-| `C:init(element)` | Constructeur : mémorise l'élément. | 11 |
-| `C:loadZonesFromSitesFile(ctd)` | Charge les noms de zones depuis `<dossier global>/garages.sites.json` (une seule fois par fichier) dans element.loadedZones. | 15 |
-| `C:setContainer(ctd)` | Lit initialZones/destinationZones depuis ctd et réinitialise l'état de chargement pour forcer un rechargement. | 82 |
+| `C:draw(ctd, container, labelFn)` | Draws the interface: add combos, Select All / Remove All buttons, lists with Remove button, summary. Writes the lists into ctd. | 93 |
+| `C:init(element)` | Constructor: remembers the element. | 11 |
+| `C:loadZonesFromSitesFile(ctd)` | Loads the zone names from `<global folder>/garages.sites.json` (only once per file) into element.loadedZones. | 15 |
+| `C:setContainer(ctd)` | Reads initialZones/destinationZones from ctd and resets the loading state to force a reload. | 82 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/util/zoneSelectorUtil.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/util/zoneSelectorUtil.lua`.*

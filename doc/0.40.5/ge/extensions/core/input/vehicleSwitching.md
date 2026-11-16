@@ -1,69 +1,69 @@
 # `core_input_vehicleSwitching`
 
-*Fichier : `lua/ge/extensions/core/input/vehicleSwitching.lua` · VM : Game Engine (GE) · 103 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/input/vehicleSwitching.lua` · VM: Game Engine (GE) · 103 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_input_vehicleSwitching` : `extensions.load("core_input_vehicleSwitching")`, puis la globale `core_input_vehicleSwitching`
+**Access:** extension `core_input_vehicleSwitching`: `extensions.load("core_input_vehicleSwitching")`, then the global `core_input_vehicleSwitching`
 
-Extension GE `core_input_vehicleSwitching` : implémente le passage au véhicule suivant/précédent (touches de changement de véhicule). Il peut suivre un ordre personnalisé (liste d'ids définie par setVehicleOrder) ou parcourir tous les véhicules actifs utilisables, en ignorant le 'unicycle', les véhicules playerUsable == false et ceux que gameplay_seatOccupants refuse. En multijoueur, la demande est déléguée à multiplayer_vehicleSync.
+GE extension `core_input_vehicleSwitching`: implements switching to the next/previous vehicle (vehicle switch keys). It can follow a custom order (list of ids defined by setVehicleOrder) or iterate over all usable active vehicles, ignoring the 'unicycle', vehicles with playerUsable == false and those that gameplay_seatOccupants refuses. In multiplayer, the request is delegated to multiplayer_vehicleSync.
 
-## Exemple
+## Example
 
 ```lua
--- passer au véhicule suivant pour le joueur 0
+-- switch to the next vehicle for player 0
 core_input_vehicleSwitching.switchCycleVehicle(0, 1)
--- imposer un ordre
+-- force an order
 core_input_vehicleSwitching.setVehicleOrder({idA, idB, idC})
 ```
 
-## Remarques
+## Notes
 
-- dir : +1 = suivant, -1 = précédent (le calcul utilise dir * step avec modulo).
-- Si un ordre personnalisé est défini mais que le joueur n'est pas dans la liste (et aucun lastIndex), ou qu'aucune cible valide n'existe, l'ordre est supprimé (vehicleOrder = nil) et on retombe sur le comportement par défaut. L'ordre n'est donc valable qu'une fois.
-- Hooks émis lors d'un changement : trackNewVeh, onVehicleSwitchPerformendByUser (faute de frappe 'Performend' dans le nom du hook, à utiliser tel quel), onVehicleCycleSwitchPerformedByUser(dir, player, vehId).
-- Incohérences : lastIndex vaut toujours -1 et n'est jamais modifié ; dans applySwitchCycleVehicle, be est utilisé (be:getPlayerVehicleID) avant le test `if be`.
+- dir: +1 = next, -1 = previous (the computation uses dir * step with modulo).
+- If a custom order is defined but the player is not in the list (and no lastIndex), or no valid target exists, the order is deleted (vehicleOrder = nil) and the default behavior applies. The order is therefore only valid once.
+- Hooks emitted on a switch: trackNewVeh, onVehicleSwitchPerformendByUser (typo 'Performend' in the hook name, to be used as is), onVehicleCycleSwitchPerformedByUser(dir, player, vehId).
+- Inconsistencies: lastIndex is always -1 and is never modified; in applySwitchCycleVehicle, be is used (be:getPlayerVehicleID) before the `if be` test.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_input_vehicleSwitching.applySwitchCycleVehicle(player, dir)` | Effectue réellement le changement : cherche la cible (ordre personnalisé puis ordre par défaut), appelle be:enterVehicle et émet les hooks. | 50 |
-| `core_input_vehicleSwitching.setVehicleOrder(order)` | Définit l'ordre personnalisé de parcours des véhicules (liste d'ids). nil pour revenir à l'ordre par défaut. | 8 |
-| `core_input_vehicleSwitching.switchCycleVehicle(player, dir)` | Point d'entrée : change de véhicule pour le joueur. En multijoueur (multiplayer_vehicleSync présent), envoie requestSwitchCycleVehicle ; sinon appelle applySwitchCycleVehicle. | 89 |
+| `core_input_vehicleSwitching.applySwitchCycleVehicle(player, dir)` | Actually performs the switch: looks for the target (custom order then default order), calls be:enterVehicle and emits the hooks. | 50 |
+| `core_input_vehicleSwitching.setVehicleOrder(order)` | Defines the custom vehicle traversal order (list of ids). nil to go back to the default order. | 8 |
+| `core_input_vehicleSwitching.switchCycleVehicle(player, dir)` | Entry point: switches vehicle for the player. In multiplayer (multiplayer_vehicleSync present), sends requestSwitchCycleVehicle; otherwise calls applySwitchCycleVehicle. | 89 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_input_vehicleSwitching.applySwitchCycleVehicle(player, dir)`
 
-Effectue réellement le changement : cherche la cible (ordre personnalisé puis ordre par défaut), appelle be:enterVehicle et émet les hooks.
+Actually performs the switch: looks for the target (custom order then default order), calls be:enterVehicle and emits the hooks.
 
-- `player` (*integer|nil*) : Indice du joueur, défaut 0 ; -1 = ignoré.
-- `dir` (*integer*) : +1 suivant, -1 précédent.
+- `player` (*integer|nil*) : Player index, default 0; -1 = ignored.
+- `dir` (*integer*) : +1 next, -1 previous.
 
 #### `core_input_vehicleSwitching.setVehicleOrder(order)`
 
-Définit l'ordre personnalisé de parcours des véhicules (liste d'ids). nil pour revenir à l'ordre par défaut.
+Defines the custom vehicle traversal order (list of ids). nil to go back to the default order.
 
-- `order` (*integer[]|nil*) : Ids de véhicules.
+- `order` (*integer[]|nil*) : Vehicle ids.
 
 #### `core_input_vehicleSwitching.switchCycleVehicle(player, dir)`
 
-Point d'entrée : change de véhicule pour le joueur. En multijoueur (multiplayer_vehicleSync présent), envoie requestSwitchCycleVehicle ; sinon appelle applySwitchCycleVehicle.
+Entry point: switches vehicle for the player. In multiplayer (multiplayer_vehicleSync present), sends requestSwitchCycleVehicle; otherwise calls applySwitchCycleVehicle.
 
-- `player` (*integer|nil*) : Indice du joueur, défaut 0 ; -1 = ignoré.
-- `dir` (*integer*) : +1 suivant, -1 précédent.
+- `player` (*integer|nil*) : Player index, default 0; -1 = ignored.
+- `dir` (*integer*) : +1 next, -1 previous.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onVehicleCycleSwitchPerformedByUser`
-- `onVehicleSwitchPerformendByUser` — écouté par 1 module(s)
+- `onVehicleSwitchPerformendByUser` — listened to by 1 module(s)
 - `trackNewVeh`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `enterVehicle`, `getObject`, `getObjectCount`, `getPlayerVehicleID`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/input/vehicleSwitching.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/input/vehicleSwitching.lua`.*

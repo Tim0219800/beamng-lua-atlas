@@ -1,49 +1,49 @@
 # `editor_drivePathEditor_record`
 
-*Fichier : `lua/ge/extensions/editor/drivePathEditor/record.lua` · VM : Game Engine (GE) · 151 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/drivePathEditor/record.lua` · VM: Game Engine (GE) · 151 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_drivePathEditor_record` : `extensions.load("editor_drivePathEditor_record")`, puis la globale `editor_drivePathEditor_record`
+**Access:** extension `editor_drivePathEditor_record`: `extensions.load("editor_drivePathEditor_record")`, then the global `editor_drivePathEditor_record`
 
-Enregistrement d'un trajet pour le Drive Path Editor : pendant que le joueur conduit un véhicule, le module échantillonne sa position et sa vitesse chaque seconde, puis à l'arrêt crée une nouvelle spline « Recorded_<nom> » liée à ce véhicule, simplifiée par l'algorithme RDP.
+Path recording for the Drive Path Editor: while the player drives a vehicle, the module samples its position and speed every second, then on stop creates a new "Recorded_<name>" spline linked to that vehicle, simplified by the RDP algorithm.
 
-## Remarques
+## Notes
 
-- Constantes : fréquence d'échantillonnage 1 s, tolérance RDP 3.0, largeur par défaut 10 m, limite de vitesse par défaut 100, vitesse minimale enregistrée 3 m/s, les nœuds distants de moins de ~2 m (distance² <= 4.1) sont fusionnés.
-- La spline créée a routeSpeedMode = 'off' et speedProfileMode = 1 (vitesses par nœud) ; widths = 10, nmls = (0,0,1), velLimits = 100 pour tous les nœuds.
-- stopRecord suppose qu'un enregistrement a été démarré : sans véhicule enregistré (recordingVehicle nil) la fonction provoquerait une erreur.
+- Constants: sampling rate 1 s, RDP tolerance 3.0, default width 10 m, default speed limit 100, minimum recorded speed 3 m/s, nodes closer than ~2 m (distance² <= 4.1) are merged.
+- The created spline has routeSpeedMode = 'off' and speedProfileMode = 1 (per-node speeds); widths = 10, nmls = (0,0,1), velLimits = 100 for all nodes.
+- stopRecord assumes a recording has been started: without a recorded vehicle (recordingVehicle nil) the function would raise an error.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_drivePathEditor_record.getRecordingTime()` | Temps écoulé depuis le début de l'enregistrement. | 36 |
-| `editor_drivePathEditor_record.handleRecord()` | À appeler chaque frame : fait avancer le chrono et ajoute un point (position, vitesse >= 3 m/s) toutes les secondes. Sans effet si aucun véhicule n'est enregistré. *(interne)* | 39 |
-| `editor_drivePathEditor_record.startRecord(vehicle)` | Démarre l'enregistrement : mémorise le véhicule, y fait entrer le joueur (be:enterVehicle(0, …)), vide les données et enregistre le premier point. | 64 |
-| `editor_drivePathEditor_record.stopRecord(sceneVehicles)` | Termine l'enregistrement : ajoute une spline de chemin liée au véhicule, copie positions et vitesses, retire les doublons proches, simplifie via rdp.simplifyNodesVels et remet l'état à zéro. | 86 |
+| `editor_drivePathEditor_record.getRecordingTime()` | Time elapsed since the start of recording. | 36 |
+| `editor_drivePathEditor_record.handleRecord()` | To be called every frame: advances the timer and adds a point (position, speed >= 3 m/s) every second. No effect if no vehicle is being recorded. *(internal)* | 39 |
+| `editor_drivePathEditor_record.startRecord(vehicle)` | Starts recording: stores the vehicle, makes the player enter it (be:enterVehicle(0, ...)), clears the data and records the first point. | 64 |
+| `editor_drivePathEditor_record.stopRecord(sceneVehicles)` | Ends recording: adds a path spline linked to the vehicle, copies positions and speeds, removes nearby duplicates, simplifies via rdp.simplifyNodesVels and resets the state. | 86 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_drivePathEditor_record.getRecordingTime()`
 
-Temps écoulé depuis le début de l'enregistrement.
+Time elapsed since the start of recording.
 
-- **renvoie** : number secondes
+- **returns**: number seconds
 
 #### `editor_drivePathEditor_record.startRecord(vehicle)`
 
-Démarre l'enregistrement : mémorise le véhicule, y fait entrer le joueur (be:enterVehicle(0, …)), vide les données et enregistre le premier point.
+Starts recording: stores the vehicle, makes the player enter it (be:enterVehicle(0, ...)), clears the data and records the first point.
 
-- `vehicle` (*table|nil*) : entrée de véhicule de l'éditeur avec .veh (objet véhicule) et .name
+- `vehicle` (*table|nil*) : editor vehicle entry with .veh (vehicle object) and .name
 
 #### `editor_drivePathEditor_record.stopRecord(sceneVehicles)`
 
-Termine l'enregistrement : ajoute une spline de chemin liée au véhicule, copie positions et vitesses, retire les doublons proches, simplifie via rdp.simplifyNodesVels et remet l'état à zéro.
+Ends recording: adds a path spline linked to the vehicle, copies positions and speeds, removes nearby duplicates, simplifies via rdp.simplifyNodesVels and resets the state.
 
-- `sceneVehicles` (*table*) : véhicules de la scène ; l'entrée correspondante reçoit isLink = true et linkSplineId
+- `sceneVehicles` (*table*) : scene vehicles; the matching entry receives isLink = true and linkSplineId
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `enterVehicle`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/drivePathEditor/record.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/drivePathEditor/record.lua`.*

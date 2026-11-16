@@ -2,35 +2,35 @@
 -- tim19Atlas stub generated from lua/common/particles.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Charge au démarrage lua/common/particles.json (matériaux physiques et règles de particules entre deux matériaux) et prépare des tables de recherche : une liste de matériaux et une table indexée par paire de matériaux avec, pour chaque règle, une fonction de comparaison compilée (sur perpendicularVel et slipVel). Sert à choisir les particules d'impact/glissement selon les deux matériaux en contact.
---- Accès : globale `_`, `particles`
+--- Loads lua/common/particles.json at startup (physical materials and particle rules between two materials) and prepares lookup tables: a list of materials and a table keyed by material pair with, for each rule, a compiled comparison function _anon(on perpendicularVel and slipVel). Used to choose the impact/slip particles according to the two materials in contact.
+--- Access: global `_`, `particles`
 ---@class _
 _ = {}
 
---- Renvoie le matériau d'indice i dans mats, ou nil si i est nil.
----Source : lua/common/particles.lua:11
----@param mats table liste de matériaux (premier retour de getMaterialsParticlesTable)
----@param i integer|nil identifiant de matériau
----@return table|nil  matériau {name, colorR, colorG, colorB, …}
+--- Returns the material at index i in mats, or nil if i is nil.
+---Source: lua/common/particles.lua:11
+---@param mats table list of materials (first return value of getMaterialsParticlesTable)
+---@param i integer|nil material identifier
+---@return table|nil  material {name, colorR, colorG, colorB, ...}
 function _.getMaterialByID(mats, i) end
 
---- Cherche l'identifiant du matériau nommé s ; renvoie min(3, #mats) s'il est inconnu (pas d'ajout).
----Source : lua/common/particles.lua:30
----@param mats table liste de matériaux
----@param s string nom du matériau
----@return integer  identifiant de matériau
+--- Looks up the identifier of the material named s; returns min(3, #mats) if it is unknown (no addition).
+---Source: lua/common/particles.lua:30
+---@param mats table list of materials
+---@param s string material name
+---@return integer  material identifier
 function _.getMaterialIDByName(mats, s) end
 
---- Renvoie la liste des matériaux et la table des règles de particules par paire de matériaux (clé id1*10000+id2).
----Source : lua/common/particles.lua:122
----@return table  matériaux
----@return table<integer, table[]>  règles par paire de matériaux
+--- Returns the list of materials and the table of particle rules per material pair (key id1*10000+id2).
+---Source: lua/common/particles.lua:122
+---@return table  materials
+---@return table<integer, table[]>  rules per material pair
 function _.getMaterialsParticlesTable() end
 
---- Cherche l'identifiant du matériau de nom s ; s'il n'existe pas, crée une définition temporaire (blanche, dynamic = true) ajoutée à mats et renvoie son nouvel identifiant.
----Source : lua/common/particles.lua:16
----@param mats table liste de matériaux (modifiée)
----@param s string nom du matériau
----@return integer  identifiant de matériau
+--- Looks up the identifier of the material named s; if it does not exist, creates a temporary definition (white, dynamic = true) added to mats and returns its new identifier.
+---Source: lua/common/particles.lua:16
+---@param mats table list of materials (modified)
+---@param s string material name
+---@return integer  material identifier
 function _.getOrAddMaterialIDByName(mats, s) end
 

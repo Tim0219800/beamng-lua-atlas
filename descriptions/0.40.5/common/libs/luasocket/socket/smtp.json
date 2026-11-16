@@ -1,35 +1,77 @@
 {
   "path": "lua/common/libs/luasocket/socket/smtp.lua",
-  "module": "Bibliothèque tierce LuaSocket (auteur Diego Nehab) : client SMTP pour envoyer des e-mails. Elle s'attache à la table `socket` sous `socket.smtp`. Elle fournit l'API de haut niveau `send` (connexion, EHLO, authentification LOGIN/PLAIN, envoi, QUIT) et l'API de bas niveau `open` (objet à méthodes greet/mail/rcpt/data/quit/login/plain/auth/send/close), ainsi que `message` pour construire une source de message MIME (simple ou multipart). Elle n'est pas utilisée par le gameplay : c'est du code embarqué avec LuaSocket.",
+  "module": "Third-party LuaSocket library (author Diego Nehab): SMTP client for sending e-mails. It attaches to the `socket` table as `socket.smtp`. It provides the high-level API `send` (connection, EHLO, LOGIN/PLAIN authentication, sending, QUIT) and the low-level API `open` (object with methods greet/mail/rcpt/data/quit/login/plain/auth/send/close), as well as `message` to build a MIME message source (simple or multipart). It is not used by gameplay: it is code bundled with LuaSocket.",
   "usage": "local smtp = require('socket.smtp')\nlocal ok, err = smtp.send{ from = '<a@b.c>', rcpt = {'<d@e.f>'}, source = smtp.message{ headers = {subject = 'Hello'}, body = 'texte' }, server = 'localhost', port = 25 }",
   "notes": [
-    "Le fichier fait `require('socket.socket')`, `require('socket.tp')`, `require('ltn12')`, `require('socket.headers')` et `require('mime')` : ces modules doivent être résolvables (le chemin atlas `libs/luasocket/socket/smtp` est celui du fichier, pas le nom de require interne).",
-    "TIMEOUT = 60 s, SERVER = 'localhost', PORT = 25, ZONE = '-0000' par défaut ; DOMAIN vaut la variable d'environnement SERVER_NAME ou 'localhost'.",
-    "`send` est enveloppée par `socket.protect` : les erreurs sont renvoyées sous la forme `nil, message` au lieu d'être levées.",
-    "Les corps de message sans content-type reçoivent 'text/plain; charset=\"iso-8859-1\"'. L'en-tête mime-version est toujours forcé à '1.0'."
+    "The file does `require('socket.socket')`, `require('socket.tp')`, `require('ltn12')`, `require('socket.headers')` and `require('mime')`: these modules must be resolvable (the atlas path `libs/luasocket/socket/smtp` is that of the file, not the internal require name).",
+    "TIMEOUT = 60 s, SERVER = 'localhost', PORT = 25, ZONE = '-0000' by default; DOMAIN equals the environment variable SERVER_NAME or 'localhost'.",
+    "`send` is wrapped by `socket.protect`: errors are returned as `nil, message` instead of being raised.",
+    "Message bodies without a content-type get 'text/plain; charset=\"iso-8859-1\"'. The mime-version header is always forced to '1.0'."
   ],
   "fields": {
-    "TIMEOUT": {"type": "number", "desc": "Délai de connexion en secondes (60)."},
-    "SERVER": {"type": "string", "desc": "Serveur SMTP par défaut (\"localhost\")."},
-    "PORT": {"type": "number", "desc": "Port SMTP par défaut (25)."},
-    "DOMAIN": {"type": "string", "desc": "Domaine utilisé dans la commande EHLO ; variable d'environnement SERVER_NAME ou \"localhost\"."},
-    "ZONE": {"type": "string", "desc": "Fuseau horaire par défaut de l'en-tête Date (\"-0000\" = inconnu)."},
-    "send": {"type": "function", "desc": "API de haut niveau : prend une table {server, port, domain, user, password, from, rcpt, source, step, create}, ouvre la connexion, fait greet, auth, send, quit puis close. Renvoie 1 en cas de succès, sinon nil et un message d'erreur."}
+    "TIMEOUT": {
+      "type": "number",
+      "desc": "Connection timeout in seconds (60)."
+    },
+    "SERVER": {
+      "type": "string",
+      "desc": "Default SMTP server (\"localhost\")."
+    },
+    "PORT": {
+      "type": "number",
+      "desc": "Default SMTP port (25)."
+    },
+    "DOMAIN": {
+      "type": "string",
+      "desc": "Domain used in the EHLO command; environment variable SERVER_NAME or \"localhost\"."
+    },
+    "ZONE": {
+      "type": "string",
+      "desc": "Default time zone of the Date header (\"-0000\" = unknown)."
+    },
+    "send": {
+      "type": "function",
+      "desc": "High-level API: takes a table {server, port, domain, user, password, from, rcpt, source, step, create}, opens the connection, does greet, auth, send, quit then close. Returns 1 on success, otherwise nil and an error message."
+    }
   },
   "functions": {
     "open": {
-      "desc": "Ouvre une connexion SMTP et renvoie un objet de bas niveau (méthodes greet, mail, rcpt, data, quit, close, login, plain, auth, send). Lève une erreur (via socket.try) si la connexion échoue.",
+      "desc": "Opens an SMTP connection and returns a low-level object (methods greet, mail, rcpt, data, quit, close, login, plain, auth, send). Raises an error (via socket.try) if the connection fails.",
       "params": {
-        "server": {"type": "string|nil", "desc": "Hôte du serveur ; défaut SERVER."},
-        "port": {"type": "integer|nil", "desc": "Port ; défaut PORT."},
-        "create": {"type": "function|nil", "desc": "Fabrique de socket TCP ; défaut socket.tcp."}
+        "server": {
+          "type": "string|nil",
+          "desc": "Server host; default SERVER."
+        },
+        "port": {
+          "type": "integer|nil",
+          "desc": "Port; default PORT."
+        },
+        "create": {
+          "type": "function|nil",
+          "desc": "TCP socket factory; default socket.tcp."
+        }
       },
-      "returns": [{"type": "table", "desc": "Objet SMTP dont les méthodes lèvent une erreur en cas de réponse inattendue du serveur."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "SMTP object whose methods raise an error on an unexpected server response."
+        }
+      ]
     },
     "message": {
-      "desc": "Construit une source (fonction itératrice de chunks, compatible LTN12) pour un message. mesgt = {headers, body} ; body peut être une chaîne, une fonction source ou une table (multipart, avec preamble/epilogue). Ajoute les en-têtes date, x-mailer et mime-version.",
-      "params": {"mesgt": {"type": "table", "desc": "Description du message ; sa clé `headers` est remplacée par la version normalisée (modifiée en place)."}},
-      "returns": [{"type": "function", "desc": "Source : chaque appel renvoie le chunk suivant, ou nil puis une erreur."}]
+      "desc": "Builds a source (chunk iterator function, LTN12-compatible) for a message. mesgt = {headers, body}; body can be a string, a source function or a table (multipart, with preamble/epilogue). Adds the date, x-mailer and mime-version headers.",
+      "params": {
+        "mesgt": {
+          "type": "table",
+          "desc": "Message description; its `headers` key is replaced by the normalized version (modified in place)."
+        }
+      },
+      "returns": [
+        {
+          "type": "function",
+          "desc": "Source: each call returns the next chunk, or nil then an error."
+        }
+      ]
     }
   }
 }

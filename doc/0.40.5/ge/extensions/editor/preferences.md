@@ -1,76 +1,76 @@
 # `editor_preferences`
 
-*Fichier : `lua/ge/extensions/editor/preferences.lua` · VM : Game Engine (GE) · 461 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/preferences.lua` · VM: Game Engine (GE) · 461 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_preferences` : `extensions.load("editor_preferences")`, puis la globale `editor_preferences`
+**Access:** extension `editor_preferences`: `extensions.load("editor_preferences")`, then the global `editor_preferences`
 
-Fenêtre « Preferences » de l'éditeur de monde. Elle affiche à gauche la liste des pages (catégories du registre editor.preferencesRegistry) et à droite les préférences de la page choisie via un valueInspector, avec un filtre de recherche et un bouton « Reset All To Defaults ». Le module enregistre aussi les catégories general, camera et ui avec leurs préférences par défaut (échelle UI, vitesse de la caméra libre, etc.) et réagit aux changements de valeur. Un moddeur d'outil d'éditeur peut ouvrir la fenêtre avec editor.showPreferences(categorie).
+"Preferences" window of the world editor. It displays on the left the list of pages (categories of the editor.preferencesRegistry registry) and on the right the preferences of the chosen page via a valueInspector, with a search filter and a "Reset All To Defaults" button. The module also registers the general, camera and ui categories with their default preferences (UI scale, free camera speed, etc.) and reacts to value changes. An editor tool modder can open the window with editor.showPreferences(category).
 
-## Exemple
+## Example
 
 ```lua
-editor.showPreferences('camera')  -- ouvre la fenêtre sur la page Camera
+editor.showPreferences('camera')  -- opens the window on the Camera page
 local v = editor.getPreference('ui.general.scale')
 ```
 
-## Remarques
+## Notes
 
-- Préférences déclarées : general.internal (cleanExit, lastLevel, cachées), ui.general (floatDigitCount, hexColorInput, scale 0.92 par défaut [0.4 à 3], dpiAware, iconButtonSize 28, singleLineToolbar, enableVehicleControls, sceneMetric, useSlidersInInspector, showCompleteSceneTree, showInternalName, playSoundOnNotifications, muteGameAudioOnEditorActivate, lockedObjectTextColor, inspectorFieldNameHoverCopyPaste, forceExpandWindowOnFirstShow, recentWindowMenuCount), camera.general (freeCameraMoveSmoothness 0.3, freeCameraRotateSmoothness 0.3, freeCameraMoveSpeed 30, smoothCameraMove, smoothCameraRotate, setVehicleCameraWhenExitingEditor).
-- Les modifications de préférence passent par editor.setPreference sans support d'annulation (commentaire TODO dans le code).
-- Le « Reset All To Defaults » est irréversible (confirmation modale).
+- Declared preferences: general.internal (cleanExit, lastLevel, hidden), ui.general (floatDigitCount, hexColorInput, scale 0.92 by default [0.4 to 3], dpiAware, iconButtonSize 28, singleLineToolbar, enableVehicleControls, sceneMetric, useSlidersInInspector, showCompleteSceneTree, showInternalName, playSoundOnNotifications, muteGameAudioOnEditorActivate, lockedObjectTextColor, inspectorFieldNameHoverCopyPaste, forceExpandWindowOnFirstShow, recentWindowMenuCount), camera.general (freeCameraMoveSmoothness 0.3, freeCameraRotateSmoothness 0.3, freeCameraMoveSpeed 30, smoothCameraMove, smoothCameraRotate, setVehicleCameraWhenExitingEditor).
+- Preference changes go through editor.setPreference without undo support (TODO comment in the code).
+- "Reset All To Defaults" is irreversible (modal confirmation).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_preferences.onDeserialized(state)` | Appelé au rechargement de l'extension (après un rechargement Lua) avec l'état sauvegardé ; restaure la page de préférences courante (currentCategoryName). *(interne)* *(hook)* | 435 |
-| `editor_preferences.onEditorActivated()` | Appelé à l'ouverture de l'éditeur ; applique l'échelle UI de la préférence ui.general.scale. *(interne)* *(hook)* | 447 |
-| `editor_preferences.onEditorDeactivated()` | Appelé à la fermeture de l'éditeur ; remet l'échelle UI à 1 et, si la préférence camera.general.setVehicleCameraWhenExitingEditor est vraie (et que ce n'est pas la caméra libre du jeu ni editor.skipCameraOnExit), repasse sur la caméra de jeu. *(interne)* *(hook)* | 439 |
-| `editor_preferences.onEditorGui()` | Appelé à chaque frame par l'éditeur. Dessine la fenêtre Preferences : liste des pages, recherche, contenu de la page (ou de toutes les pages si « All ») et bouton de réinitialisation. *(interne)* *(hook)* | 237 |
-| `editor_preferences.onEditorInitialized()` | Enregistre la fenêtre (800x600), configure le valueInspector (nom « preferencesInspector », classe « Preferences », callback d'écriture via editor.setPreference), construit les pages et installe editor.showPreferences et editor.updatePreferencePages. *(interne)* *(hook)* | 408 |
-| `editor_preferences.onEditorPreferenceValueChanged(path, value)` | Appelé quand une préférence change. Répercute immédiatement certaines valeurs : ui.general.scale / dpiAware (échelle UI), iconButtonSize, showCompleteSceneTree (rafraîchit l'arbre de scène), et les réglages de la caméra libre (vitesse, lissage de déplacement et de rotation). *(interne)* *(hook)* | 321 |
-| `editor_preferences.onEditorRegisterPreferences(prefsRegistry)` | Appelé lors de l'enregistrement des préférences : déclare les catégories general, camera, ui (« User Interface ») et leurs sous-catégories avec valeurs par défaut, descriptions et bornes. *(interne)* *(hook)* | 341 |
-| `editor_preferences.onExtensionLoaded()` | Appelé au chargement de l'extension ; ne fait rien. *(interne)* *(hook)* | 309 |
-| `editor_preferences.onSerialize(state)` | Appelé avant un rechargement Lua ; renvoie {currentCategoryName = ...} pour conserver la page affichée. *(interne)* *(hook)* | 431 |
+| `editor_preferences.onDeserialized(state)` | Called when the extension is reloaded (after a Lua reload) with the saved state; restores the current preferences page (currentCategoryName). *(internal)* *(hook)* | 435 |
+| `editor_preferences.onEditorActivated()` | Called when the editor opens; applies the UI scale from the ui.general.scale preference. *(internal)* *(hook)* | 447 |
+| `editor_preferences.onEditorDeactivated()` | Called when the editor closes; sets the UI scale back to 1 and, if the camera.general.setVehicleCameraWhenExitingEditor preference is true (and it is not the game's free camera nor editor.skipCameraOnExit), switches back to the game camera. *(internal)* *(hook)* | 439 |
+| `editor_preferences.onEditorGui()` | Called every frame by the editor. Draws the Preferences window: list of pages, search, page content (or all pages if "All") and the reset button. *(internal)* *(hook)* | 237 |
+| `editor_preferences.onEditorInitialized()` | Registers the window (800x600), configures the valueInspector (name "preferencesInspector", class "Preferences", write callback via editor.setPreference), builds the pages and installs editor.showPreferences and editor.updatePreferencePages. *(internal)* *(hook)* | 408 |
+| `editor_preferences.onEditorPreferenceValueChanged(path, value)` | Called when a preference changes. Immediately applies some values: ui.general.scale / dpiAware (UI scale), iconButtonSize, showCompleteSceneTree (refreshes the scene tree), and the free camera settings (speed, movement and rotation smoothing). *(internal)* *(hook)* | 321 |
+| `editor_preferences.onEditorRegisterPreferences(prefsRegistry)` | Called when preferences are registered: declares the categories general, camera, ui ("User Interface") and their subcategories with default values, descriptions and bounds. *(internal)* *(hook)* | 341 |
+| `editor_preferences.onExtensionLoaded()` | Called when the extension loads; does nothing. *(internal)* *(hook)* | 309 |
+| `editor_preferences.onSerialize(state)` | Called before a Lua reload; returns {currentCategoryName = ...} to keep the displayed page. *(internal)* *(hook)* | 431 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_preferences.onDeserialized(state)`
 
-Appelé au rechargement de l'extension (après un rechargement Lua) avec l'état sauvegardé ; restaure la page de préférences courante (currentCategoryName).
+Called when the extension is reloaded (after a Lua reload) with the saved state; restores the current preferences page (currentCategoryName).
 
-- `state` (*table*) : Table renvoyée par onSerialize ({currentCategoryName}).
+- `state` (*table*) : Table returned by onSerialize ({currentCategoryName}).
 
 #### `editor_preferences.onEditorPreferenceValueChanged(path, value)`
 
-Appelé quand une préférence change. Répercute immédiatement certaines valeurs : ui.general.scale / dpiAware (échelle UI), iconButtonSize, showCompleteSceneTree (rafraîchit l'arbre de scène), et les réglages de la caméra libre (vitesse, lissage de déplacement et de rotation).
+Called when a preference changes. Immediately applies some values: ui.general.scale / dpiAware (UI scale), iconButtonSize, showCompleteSceneTree (refreshes the scene tree), and the free camera settings (speed, movement and rotation smoothing).
 
-- `path` (*string*) : Chemin de la préférence, ex. « camera.general.freeCameraMoveSpeed ».
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path, e.g. "camera.general.freeCameraMoveSpeed".
+- `value` (*any*) : New value.
 
 #### `editor_preferences.onEditorRegisterPreferences(prefsRegistry)`
 
-Appelé lors de l'enregistrement des préférences : déclare les catégories general, camera, ui (« User Interface ») et leurs sous-catégories avec valeurs par défaut, descriptions et bornes.
+Called when preferences are registered: declares the categories general, camera, ui ("User Interface") and their subcategories with default values, descriptions and bounds.
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur (registerCategory, registerSubCategory).
+- `prefsRegistry` (*table*) : Editor preferences registry (registerCategory, registerSubCategory).
 
 #### `editor_preferences.onSerialize(state)`
 
-Appelé avant un rechargement Lua ; renvoie {currentCategoryName = ...} pour conserver la page affichée.
+Called before a Lua reload; returns {currentCategoryName = ...} to keep the displayed page.
 
-- `state` (*table*) : Non utilisé.
-- **renvoie** : table État à sauvegarder.
+- `state` (*table*) : Not used.
+- **returns**: table State to save.
 
-## Classe `editor`
+## Class `editor`
 
-La table globale editor (pas créée ici) : le module y installe deux fonctions pendant onEditorInitialized.
+The global editor table (not created here): the module installs two functions in it during onEditorInitialized.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.showPreferences(categoryName)` | Ouvre la fenêtre Preferences. Si categoryName est donné, sélectionne cette page. | 304 |
-| `editor.updatePreferencePages()` | Reconstruit la liste des pages à partir du registre : enregistre la catégorie « general », ne garde que les catégories ayant au moins un élément non caché, et ajoute la page « All ». | 386 |
+| `editor.showPreferences(categoryName)` | Opens the Preferences window. If categoryName is given, selects that page. | 304 |
+| `editor.updatePreferencePages()` | Rebuilds the page list from the registry: registers the "general" category, keeps only categories with at least one non-hidden item, and adds the "All" page. | 386 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/preferences.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/preferences.lua`.*

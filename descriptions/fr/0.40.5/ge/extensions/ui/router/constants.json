@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/ui/router/constants.lua",
+  "module": "Tables de constantes partagées du routeur d'interface : états de transition, types d'action de navigation, résultats de garde, actions de framework, filtre de types d'UI, valeurs par défaut de la barre d'infos / barre du haut / apps UI, configuration de route par défaut, et noms des hooks émis (évènements GUI « ui_router_<nom> » et hooks d'extension « on<Evenement> »). Module de données pur.",
+  "notes": [
+    "RouterHooks donne les suffixes des évènements GUI (ui_router_routeChange, ui_router_afterRouteChange, ui_router_routeChangeCancelled…). RouterExtensionHooks donne les noms des hooks Lua appelés par extensions.hook : onAfterRouteChange et onRouteTiming (durée d'une navigation, voir router.lua).",
+    "UiTypesFilter décrit quels frameworks doivent terminer pour qu'un changement de route réussisse : only (uniquement les types listés), except (tous sauf ceux listés), all (tous les types enregistrés), any (au moins un des types listés). Le routeur considère une route « à handoff » si le filtre est only et que uiTypes contient \"vue\".",
+    "RouteConfigDefaults.ui = {uiTypes = {\"angular\", \"vue\"}, uiTypesFilter = any, infoBar, uiApps, topBar}.",
+    "Plusieurs valeurs (par exemple GuardResult, FrameworkAction, NavigationAction, ou les hooks ROUTE_CHANGE_SUCCESS et TRANSITION_TIMEOUT) ne sont pas utilisées dans router.lua ; elles servent de vocabulaire partagé avec les autres modules."
+  ],
+  "fields": {
+    "TransitionStatus": {"type": "table<string, string>", "desc": "États de la machine à états du routeur : IDLE=\"idle\", TRANSITIONING=\"transitioning\", CANCELLED=\"cancelled\"."},
+    "NavigationAction": {"type": "table<string, string>", "desc": "Types d'action de navigation : PUSH, REPLACE, BACK, FORWARD."},
+    "GuardResult": {"type": "table<string, string>", "desc": "Types de résultat de garde : ALLOW=\"allow\", REJECT=\"reject\", REDIRECT=\"redirect\"."},
+    "FrameworkAction": {"type": "table<string, string>", "desc": "Ce qu'un framework doit faire pour une route : RENDER, BLANK, HIDE, PASSTHROUGH."},
+    "UiTypesFilter": {"type": "table<string, string>", "desc": "Filtre des frameworks devant terminer : only, except, all, any."},
+    "InfoBarDefaults": {"type": "table", "desc": "Barre d'infos visible : {visible=true, showSysInfo=true}."},
+    "TopBarDefaults": {"type": "table", "desc": "Barre du haut visible : {visible=true}."},
+    "InfoBarDefaultsHidden": {"type": "table", "desc": "Barre d'infos masquée : {visible=false, showSysInfo=false}."},
+    "TopBarDefaultsHidden": {"type": "table", "desc": "Barre du haut masquée : {visible=false}."},
+    "UiAppsDefaults": {"type": "table", "desc": "Apps UI masquées par défaut : {shown=false}."},
+    "RouteConfigDefaults": {"type": "table", "desc": "Configuration de route par défaut : {ui = {uiTypes, uiTypesFilter, infoBar, uiApps, topBar}}."},
+    "RouterHooks": {"type": "table<string, string>", "desc": "Noms de hooks : beforeRouteChange, routeChange, routeChangeSuccess, afterRouteChange, routeChangeError, routeChangeCancelled, transitionTimeout, navigationStateResponse."},
+    "RouterExtensionHooks": {"type": "table<string, string>", "desc": "Hooks d'extension Lua : AFTER_ROUTE_CHANGE=\"onAfterRouteChange\", ROUTE_TIMING=\"onRouteTiming\"."}
+  }
+}

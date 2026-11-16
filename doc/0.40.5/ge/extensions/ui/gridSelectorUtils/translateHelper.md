@@ -1,32 +1,32 @@
 # `ui_gridSelectorUtils_translateHelper`
 
-*Fichier : `lua/ge/extensions/ui/gridSelectorUtils/translateHelper.lua` · VM : Game Engine (GE) · 105 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/gridSelectorUtils/translateHelper.lua` · VM: Game Engine (GE) · 105 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_gridSelectorUtils_translateHelper` : `extensions.load("ui_gridSelectorUtils_translateHelper")`, puis la globale `ui_gridSelectorUtils_translateHelper`
+**Access:** extension `ui_gridSelectorUtils_translateHelper`: `extensions.load("ui_gridSelectorUtils_translateHelper")`, then the global `ui_gridSelectorUtils_translateHelper`
 
-Aide de traduction côté Lua pour les sélecteurs en grille. Traduit une clé avec `_tr`, résout les expressions imbriquées de style Angular (`{{ 'clé' | translate }}`, `{{ clé | translate }}`, `{{clé}}`) jusqu'à 10 passes, et met le résultat en cache par clé.
+Lua-side translation helper for the grid selectors. Translates a key with `_tr`, resolves nested Angular-style expressions (`{{ 'key' | translate }}`, `{{ key | translate }}`, `{{key}}`) up to 10 passes, and caches the result per key.
 
-## Remarques
+## Notes
 
-- Le cache (translateCache) n'est jamais vidé : un changement de langue en cours de session n'est pas pris en compte pour les clés déjà traduites.
-- Le cache ne tient compte que de la clé, pas du `fallback` : le premier fallback utilisé reste.
-- Le drapeau interne debugTranslations (false par défaut) randomiserait la première lettre de chaque mot ; il n'est pas modifiable depuis l'extérieur.
+- The cache (translateCache) is never cleared: a language change during the session is not taken into account for keys already translated.
+- The cache only considers the key, not the `fallback`: the first fallback used stays.
+- The internal flag debugTranslations (false by default) would randomize the first letter of each word; it cannot be changed from outside.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_gridSelectorUtils_translateHelper.translate(key, fallback)` | Renvoie la traduction de la clé (via _tr, avec la clé comme repli par défaut), après résolution des traductions imbriquées. Si la clé n'est pas une chaîne, la renvoie telle quelle ou "Missing Translation Key!" si nil. | 85 |
+| `ui_gridSelectorUtils_translateHelper.translate(key, fallback)` | Returns the translation of the key (via _tr, with the key as the default fallback), after resolving nested translations. If the key is not a string, returns it as is, or "Missing Translation Key!" if nil. | 85 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_gridSelectorUtils_translateHelper.translate(key, fallback)`
 
-Renvoie la traduction de la clé (via _tr, avec la clé comme repli par défaut), après résolution des traductions imbriquées. Si la clé n'est pas une chaîne, la renvoie telle quelle ou "Missing Translation Key!" si nil.
+Returns the translation of the key (via _tr, with the key as the default fallback), after resolving nested translations. If the key is not a string, returns it as is, or "Missing Translation Key!" if nil.
 
-- `key` (*string*) : Clé de traduction.
-- `fallback` (*string|nil*) : Texte de repli passé à _tr (défaut : la clé).
-- **renvoie** : string Texte traduit.
+- `key` (*string*) : Translation key.
+- `fallback` (*string|nil*) : Fallback text passed to _tr (default: the key).
+- **returns**: string Translated text.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/gridSelectorUtils/translateHelper.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/gridSelectorUtils/translateHelper.lua`.*

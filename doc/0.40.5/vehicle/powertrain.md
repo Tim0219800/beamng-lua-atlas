@@ -1,316 +1,316 @@
 # `powertrain`
 
-*Fichier : `lua/vehicle/powertrain.lua` · VM : Véhicule · 1261 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain.lua` · VM: Vehicle · 1261 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `powertrain`
+**Access:** global `powertrain`
 
-Gestionnaire du groupe motopropulseur (powertrain) du véhicule : à l'init il lit la section `powertrain` du jbeam (v.data.powertrain), crée chaque dispositif (device) via la fabrique correspondant à son `type` (fichiers lua/vehicle/powertrain/*.lua du jeu ou lua/powertrain/*.lua du véhicule), les relie en arbre grâce à `inputName`/`inputIndex`, vérifie, calcule les inerties cumulées, et les stocke par nom. À chaque pas de physique il met à jour les vitesses (des roues vers le moteur) puis les couples (du moteur vers les roues). Un moddeur s'en sert surtout pour retrouver un dispositif (getDevice, getDevicesByType, getDevicesByCategory) et lire/écrire ses champs (régime, couple, température…).
+Manager of the vehicle's powertrain: at init it reads the `powertrain` section of the jbeam (v.data.powertrain), creates each device via the factory matching its `type` (game files lua/vehicle/powertrain/*.lua or the vehicle's lua/powertrain/*.lua), links them into a tree thanks to `inputName`/`inputIndex`, validates, computes cumulative inertias, and stores them by name. At each physics step it updates the speeds (from the wheels to the engine) then the torques (from the engine to the wheels). A modder mostly uses it to find a device (getDevice, getDevicesByType, getDevicesByCategory) and read/write its fields (RPM, torque, temperature…).
 
-## Exemple
+## Example
 
 ```lua
 local engine = powertrain.getDevice('mainEngine')
-if engine then print(engine.outputAV1 * 30 / math.pi) end -- régime en tr/min
+if engine then print(engine.outputAV1 * 30 / math.pi) end -- RPM
 for _, e in ipairs(powertrain.getDevicesByType('combustionEngine')) do print(e.name, e.engineLoad) end
 powertrain.setDeviceMode('differential_F', 'locked')
 local wheelsDrivenBy = powertrain.getChildWheels(engine)
 ```
 
-## Remarques
+## Notes
 
-- Structure d'un device (champs communs posés par powertrain.init) : name, type, inputName (nom du parent), inputIndex (port de sortie du parent utilisé), parent (table du device parent, ou un faux parent {isFake=true, outputTorque0..2, deviceCategories} pour la racine), children (liste), gearRatio, cumulativeGearRatio (produit des rapports du parent à ce device), cumulativeInertia, isPhysicallyDisconnected, isPropulsed (descend du parent), connectedWheel, outputPorts (table index -> true), deviceCategories (table catégorie -> true, ex. engine, gearbox), uiName, uiSimpleModeControl, visualPosition, deformGroups / deformGroupDamages, mode / availableModes, isBroken, breakTriggerBeam. Les sorties sont lues dans device.outputAV1/outputTorque1 (port 1), outputAV2/outputTorque2 (port 2)… Les noms de champs parentOutputAVName/parentOutputTorqueName sont déduits de inputIndex.
-- Méthodes appelées par le gestionnaire sur chaque device (si présentes) : velocityUpdate(dt) et torqueUpdate(dt) (obligatoires, physique), calculateInertia(), validate(), reset(jbeamData), initSounds(jbeamData), resetSounds(jbeamData), updateGFX(dt), updateSounds(dt), updateGFXLastStage(dt), applyDeformGroupDamage(dommage, groupType), onBreak(), beamBroke(id), setMode(mode), onCouplerFound/Attached/Detached, sendTorqueData(), updateSimpleControlButtons(), getState()/setState(data), getPartCondition(sousSysteme)/setPartCondition(...). Si un device n'a pas de reset(), reset() du powertrain refait un init complet.
-- Ordre de parcours : orderedDevices est ordonné de la racine (moteur) vers les feuilles (roues). update(dt) fait velocityUpdate des feuilles vers la racine (index décroissant) puis torqueUpdate de la racine vers les feuilles (index croissant). Appelé par main.lua : update dans onPhysicsStep (après wheels.updateWheelVelocities), updateGFX et updateGFXLastStage dans onGraphicsStep.
-- Types de device connus = noms des fichiers de lua/vehicle/powertrain (shaft, differential, combustionEngine, electricMotor, automaticGearbox, manualGearbox, etc.) + ceux du dossier lua/powertrain du véhicule ; sont exclus de la liste (compagnons créés par un moteur) : combustionEngineThermals, supercharger, turbocharger, nitrousOxideInjection, hydraulicCylinder. combustionEngineMF est ajouté en dur (le code note un TODO/hack). Un type inconnu avorte l'init avec un log d'erreur (« Powertrain will not work! »).
-- Les clés jbeam d'un device sont fusionnées avec la section jbeam du même nom (tableMergeRecursive(jbeamData, v.data[jbeamData.name])). Clés lues ici : name, type, inputName, inputIndex, gearRatio (défaut 1), uiName, uiSimpleModeControl (défaut true), visualPositionRelativeParent {x,y,z}, visualPositionRelativeChildren, breakTriggerBeam (nom ou liste de noms de poutres), deformGroups / deformGroups_<type> (liste de groupes de déformation ; séparateur « _ » ou « : »), visualShaftAVName (défaut inputAV), electricsName / visualShaftAngle (angle visible publié dans electrics.values[electricsName] en degrés).
-- Un device est marqué cassé via breakDevice : appelle device:onBreak(), casse les poutres de breakTriggerBeam, affiche un message UI et signale damageTracker. Il est déclenché automatiquement quand une poutre de breakTriggerBeam casse (beamBroke).
-- Champs d'environnement mis à jour à chaque updateGFX : currentGravity (m/s², obj:getGravity), currentEnvTemperature (K), currentEnvTemperatureCelsius (°C), currentEnvPressure (Pa), et leurs inverses invCurrent* (gardés contre la division par zéro avec guardZero).
-- Si le véhicule n'a pas de section powertrain (remorques, vieux mods), hasPowertrain reste faux : update reste nop, isPhysicsStepUsed() renvoie false, reset/initSounds ne font rien.
-- Notes sur les champs signalés par l'extraction : `update` vaut nop par défaut (nop est une fonction globale définie hors du fichier, ce n'est pas nil) et est remplacé par la vraie fonction update après un init réussi ; la globale `i` signalée est un faux positif (variable de boucle locale).
-- onCouplerAttached transmet aux devices les arguments dans l'ordre (nodeId, obj2id, obj2nodeId, attachEnergy, attachSpeed), inversé par rapport au hook de main.lua (attachSpeed, attachEnergy), par compatibilité arrière.
+- Structure of a device (common fields set by powertrain.init): name, type, inputName (name of the parent), inputIndex (output port of the parent used), parent (table of the parent device, or a fake parent {isFake=true, outputTorque0..2, deviceCategories} for the root), children (list), gearRatio, cumulativeGearRatio (product of the ratios from the parent to this device), cumulativeInertia, isPhysicallyDisconnected, isPropulsed (inherited from the parent), connectedWheel, outputPorts (table index -> true), deviceCategories (table category -> true, e.g. engine, gearbox), uiName, uiSimpleModeControl, visualPosition, deformGroups / deformGroupDamages, mode / availableModes, isBroken, breakTriggerBeam. Outputs are read in device.outputAV1/outputTorque1 (port 1), outputAV2/outputTorque2 (port 2)… The field names parentOutputAVName/parentOutputTorqueName are inferred from inputIndex.
+- Methods called by the manager on each device (if present): velocityUpdate(dt) and torqueUpdate(dt) (mandatory, physics), calculateInertia(), validate(), reset(jbeamData), initSounds(jbeamData), resetSounds(jbeamData), updateGFX(dt), updateSounds(dt), updateGFXLastStage(dt), applyDeformGroupDamage(damage, groupType), onBreak(), beamBroke(id), setMode(mode), onCouplerFound/Attached/Detached, sendTorqueData(), updateSimpleControlButtons(), getState()/setState(data), getPartCondition(subsystem)/setPartCondition(...). If a device has no reset(), the powertrain's reset() does a full init again.
+- Traversal order: orderedDevices is ordered from the root (engine) to the leaves (wheels). update(dt) does velocityUpdate from the leaves to the root (decreasing index) then torqueUpdate from the root to the leaves (increasing index). Called by main.lua: update in onPhysicsStep (after wheels.updateWheelVelocities), updateGFX and updateGFXLastStage in onGraphicsStep.
+- Known device types = names of the files in lua/vehicle/powertrain (shaft, differential, combustionEngine, electricMotor, automaticGearbox, manualGearbox, etc.) + those of the vehicle's lua/powertrain folder; excluded from the list (companions created by an engine): combustionEngineThermals, supercharger, turbocharger, nitrousOxideInjection, hydraulicCylinder. combustionEngineMF is hard-coded (the code notes a TODO/hack). An unknown type aborts init with an error log ("Powertrain will not work!").
+- A device's jbeam keys are merged with the jbeam section of the same name (tableMergeRecursive(jbeamData, v.data[jbeamData.name])). Keys read here: name, type, inputName, inputIndex, gearRatio (default 1), uiName, uiSimpleModeControl (default true), visualPositionRelativeParent {x,y,z}, visualPositionRelativeChildren, breakTriggerBeam (name or list of beam names), deformGroups / deformGroups_<type> (list of deformation groups; separator "_" or ":"), visualShaftAVName (default inputAV), electricsName / visualShaftAngle (visible angle published in electrics.values[electricsName] in degrees).
+- A device is marked broken via breakDevice: calls device:onBreak(), breaks the breakTriggerBeam beams, shows a UI message and notifies damageTracker. It is triggered automatically when a breakTriggerBeam beam breaks (beamBroke).
+- Environment fields updated at each updateGFX: currentGravity (m/s², obj:getGravity), currentEnvTemperature (K), currentEnvTemperatureCelsius (°C), currentEnvPressure (Pa), and their inverses invCurrent* (guarded against division by zero with guardZero).
+- If the vehicle has no powertrain section (trailers, old mods), hasPowertrain stays false: update stays nop, isPhysicsStepUsed() returns false, reset/initSounds do nothing.
+- Notes on the fields flagged by the extraction: `update` is nop by default (nop is a global function defined outside the file, it is not nil) and is replaced by the real update function after a successful init; the flagged global `i` is a false positive (local loop variable).
+- onCouplerAttached passes the arguments to the devices in the order (nodeId, obj2id, obj2nodeId, attachEnergy, attachSpeed), inverted compared to the main.lua hook (attachSpeed, attachEnergy), for backward compatibility.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain.beamBroke(id)` | Appelée par main.lua quand une poutre casse : prévient les devices qui ont une méthode beamBroke, puis casse les devices dont la breakTriggerBeam correspond (breakDevice). *(interne)* | 812 |
-| `powertrain.breakDevice(device)` | Marque un device comme cassé : device:onBreak(), casse ses poutres de déclenchement (obj:breakBeam), affiche le message UI vehicle.powertrain.deviceBroken et signale le dégât au damageTracker. Sans effet si déjà cassé. | 798 |
-| `powertrain.calculateTreeInertia()` | Recalcule l'inertie cumulée en parcourant les devices des feuilles vers la racine (device:calculateInertia()). À rappeler après avoir changé des inerties ou la structure. | 326 |
-| `powertrain.dumpsDeviceData(device)` | Renvoie une chaîne lisible (dumps) d'une copie profonde du device, avec parent et enfants remplacés par leur nom, utile au debug. | 132 |
-| `powertrain.getAllWheelPropulsionDevices()` | Renvoie la liste (sans doublons) des devices moteurs qui entraînent au moins une roue. | 968 |
-| `powertrain.getChildWheels(parentDevice, outputID)` | Parcourt récursivement les enfants d'un device et renvoie les roues entraînées (device.wheel des shafts de roue). Si outputID est donné, ne suit que l'enfant branché sur ce port. | 933 |
-| `powertrain.getDevice(name)` | Renvoie le device portant ce nom. | 909 |
-| `powertrain.getDevices()` | Renvoie la table de tous les devices indexée par nom. | 901 |
-| `powertrain.getDevicesByCategory(category)` | Renvoie la liste des devices dont deviceCategories contient la catégorie. | 923 |
-| `powertrain.getDevicesByType(deviceType)` | Renvoie la liste des devices dont `type` égale la valeur donnée (ordre non garanti : parcours de pairs). | 913 |
-| `powertrain.getEngineSoundID()` | Renvoie un identifiant de son moteur unique et croissant (0, 1, 2…), remis à -1 à chaque init. | 1041 |
-| `powertrain.getGearRatioBetweenDevices(topDevice, bottomDevice)` | Multiplie les gearRatio en remontant du device du bas jusqu'au device du haut. Renvoie nil si les devices ne sont pas connectés (ou si un argument est nil). | 1014 |
-| `powertrain.getHydraulicConsumer(consumerName)` | Cherche parmi les sources hydrauliques (catégorie hydraulicPowerSource) un consommateur nommé. | 985 |
-| `powertrain.getOrderedDevices()` | Renvoie le tableau (indexé 1..N) des devices ordonné de la racine vers les feuilles. | 905 |
-| `powertrain.getPartCondition(partTypeData)` | Agrège l'état d'usure/intégrité des devices concernés par les clés de partie de la forme « powertrainDevice:<nom>:<sousSystème> ». | 1075 |
-| `powertrain.getPoweredWheelNames()` | Renvoie, pour chaque roue du véhicule entraînée par un moteur, le nom de ce moteur. | 957 |
-| `powertrain.getPropulsionDeviceForDevice(device)` | Remonte les parents d'un device jusqu'à trouver un device de catégorie engine. | 1000 |
-| `powertrain.getPropulsionDeviceForWheel(wheelName)` | Renvoie le device de catégorie engine qui entraîne la roue (table calculée à l'init). | 953 |
-| `powertrain.getState()` | Fusionne les états renvoyés par device:getState() de tous les devices (sauvegarde d'état). | 1101 |
-| `powertrain.init()` | Construit le powertrain à partir de v.data.powertrain : découvre les fabriques de devices (FS:findFiles sur lua/vehicle/powertrain et <véhicule>/lua/powertrain), instancie chaque device (factory.new(jbeamData)), les relie en arbre, calcule positions visuelles, validation, inerties, poutres de rupture, torsion reactors, restaure les modes précédents et envoie l'arbre à l'UI. Appelée par main.lua (initSystems) et par reset() si un device ne supporte pas reset. *(interne)* | 426 |
-| `powertrain.initSounds()` | Appelle device:initSounds(jbeamData) sur chaque device qui en a un. Appelée par main.lua après l'init audio. *(interne)* | 725 |
-| `powertrain.isPhysicsStepUsed()` | Indique si le powertrain a besoin du pas de physique (true quand un powertrain a été construit). Utilisé par main.lua:updateCorePhysicsStepEnabled. *(interne)* | 1097 |
-| `powertrain.onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy)` | Hook relayé par main.lua aux devices (arguments attachEnergy et attachSpeed inversés par compatibilité). *(interne)* *(hook)* | 838 |
-| `powertrain.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook relayé par main.lua aux devices lors du détachement d'un coupleur. *(interne)* *(hook)* | 847 |
-| `powertrain.onCouplerFound(nodeId, obj2id, obj2nodeId, nodeDist)` | Hook relayé par main.lua : transmet à device:onCouplerFound les devices qui l'implémentent. *(interne)* *(hook)* | 829 |
-| `powertrain.reset()` | Réinitialise les dégâts de groupes de déformation et appelle device:reset(jbeamData) sur chaque device, recalcule les inerties, renvoie l'arbre à l'UI et remet à zéro les coefficients de réaction de couple. Si un device n'a pas de reset(), retombe sur init(). Appelée par main.lua au reset du véhicule. *(interne)* | 737 |
-| `powertrain.resetSounds()` | Appelle device:resetSounds(jbeamData) sur les devices (ou initSounds si reset complet nécessaire). *(interne)* | 780 |
-| `powertrain.sendDeviceTree()` | Envoie à l'UI l'évènement PowertrainDeviceTreeChanged {devices, maxPower, maxTorque} (type, modes, position visuelle, enfants, mode courant de chaque device). Sans effet si le premier joueur n'est pas assis. *(interne)* | 272 |
-| `powertrain.sendTorqueData()` | Demande à chaque device d'envoyer ses courbes de couple (device:sendTorqueData()) ; sans effet si le premier joueur n'est pas assis. *(interne)* | 308 |
-| `powertrain.serializeDevicesInfo()` | Ancien code lié à un outil imgui, utilisé côté GE : sérialise un sous-ensemble de champs de tous les devices (name, type, engineLoad, outputAV1/2, outputTorque1/2, mode, isBroken, rapports, embrayages…). *(interne)* | 78 |
-| `powertrain.setDeviceMode(name, mode)` | Fixe le mode d'un device (device:setMode), mémorise ce choix pour le restaurer après un init et affiche un message UI « <nom> Mode: <mode> ». | 856 |
-| `powertrain.setPartCondition(partTypeData, odometer, integrity, visual)` | Applique une condition de pièce (odomètre, intégrité, visuel) aux devices désignés par partTypeData via device:setPartCondition. | 1059 |
-| `powertrain.setState(data)` | Passe `data` à device:setState(data) de chaque device qui l'implémente. | 1120 |
-| `powertrain.setVehiclePath(path)` | Enregistre le dossier du véhicule, utilisé pour chercher les fabriques de devices spécifiques. Appelée par main.lua avant init. *(interne)* | 1037 |
-| `powertrain.toggleDefaultDiffs()` | Fait passer au mode suivant tous les différentiels (type 'differential') qui ont defaultToggle vrai. | 893 |
-| `powertrain.toggleDeviceMode(name)` | Passe le device nommé au mode suivant de sa liste availableModes (cyclique) via setDeviceMode. | 867 |
-| `powertrain.updateGFX(dt)` | Appelée à chaque frame graphique par main.lua. Met à jour les champs d'environnement, applique aux devices les nouveaux dégâts de groupes de déformation (applyDeformGroupDamage), appelle device:updateGFX et updateSounds, intègre l'angle visuel d'arbre (electrics.values[electricsName]) puis envoie les données du flux UI 'powertrainDeviceData' si demandé. *(interne)* | 176 |
-| `powertrain.updateGFXLastStage(dt)` | Dernière étape de la frame graphique (fin de onGraphicsStep) : appelle device:updateGFXLastStage(dt) sur les devices qui l'implémentent. *(interne)* | 229 |
-| `powertrain.updateSimpleControlButtons()` | Demande à chaque device de republier ses boutons de contrôle simplifié (device:updateSimpleControlButtons()). | 318 |
+| `powertrain.beamBroke(id)` | Called by main.lua when a beam breaks: notifies the devices that have a beamBroke method, then breaks the devices whose breakTriggerBeam matches (breakDevice). *(internal)* | 812 |
+| `powertrain.breakDevice(device)` | Marks a device as broken: device:onBreak(), breaks its trigger beams (obj:breakBeam), shows the UI message vehicle.powertrain.deviceBroken and reports the damage to damageTracker. No effect if already broken. | 798 |
+| `powertrain.calculateTreeInertia()` | Recomputes the cumulative inertia by traversing the devices from the leaves to the root (device:calculateInertia()). To be called again after changing inertias or the structure. | 326 |
+| `powertrain.dumpsDeviceData(device)` | Returns a readable string (dumps) of a deep copy of the device, with parent and children replaced by their name, useful for debugging. | 132 |
+| `powertrain.getAllWheelPropulsionDevices()` | Returns the list (without duplicates) of the engine devices that drive at least one wheel. | 968 |
+| `powertrain.getChildWheels(parentDevice, outputID)` | Recursively traverses a device's children and returns the driven wheels (device.wheel of the wheel shafts). If outputID is given, only follows the child connected to that port. | 933 |
+| `powertrain.getDevice(name)` | Returns the device with this name. | 909 |
+| `powertrain.getDevices()` | Returns the table of all devices keyed by name. | 901 |
+| `powertrain.getDevicesByCategory(category)` | Returns the list of devices whose deviceCategories contains the category. | 923 |
+| `powertrain.getDevicesByType(deviceType)` | Returns the list of devices whose `type` equals the given value (order not guaranteed: pairs traversal). | 913 |
+| `powertrain.getEngineSoundID()` | Returns a unique, increasing engine identifier (0, 1, 2…), reset to -1 at each init. | 1041 |
+| `powertrain.getGearRatioBetweenDevices(topDevice, bottomDevice)` | Multiplies the gearRatios going up from the bottom device to the top device. Returns nil if the devices are not connected (or if an argument is nil). | 1014 |
+| `powertrain.getHydraulicConsumer(consumerName)` | Searches among the hydraulic sources (category hydraulicPowerSource) for a named consumer. | 985 |
+| `powertrain.getOrderedDevices()` | Returns the array (indexed 1..N) of the devices ordered from the root to the leaves. | 905 |
+| `powertrain.getPartCondition(partTypeData)` | Aggregates the wear/integrity state of the devices concerned by part keys of the form "powertrainDevice:<name>:<subSystem>". | 1075 |
+| `powertrain.getPoweredWheelNames()` | Returns, for each vehicle wheel driven by an engine, the name of that engine. | 957 |
+| `powertrain.getPropulsionDeviceForDevice(device)` | Walks up a device's parents until it finds a device of category engine. | 1000 |
+| `powertrain.getPropulsionDeviceForWheel(wheelName)` | Returns the engine-category device that drives the wheel (table computed at init). | 953 |
+| `powertrain.getState()` | Merges the states returned by device:getState() of all devices (state saving). | 1101 |
+| `powertrain.init()` | Builds the powertrain from v.data.powertrain: discovers the device factories (FS:findFiles on lua/vehicle/powertrain and <vehicle>/lua/powertrain), instantiates each device (factory.new(jbeamData)), links them into a tree, computes visual positions, validation, inertias, break beams, torsion reactors, restores the previous modes and sends the tree to the UI. Called by main.lua (initSystems) and by reset() if a device does not support reset. *(internal)* | 426 |
+| `powertrain.initSounds()` | Calls device:initSounds(jbeamData) on each device that has one. Called by main.lua after audio init. *(internal)* | 725 |
+| `powertrain.isPhysicsStepUsed()` | Indicates whether the powertrain needs the physics step (true when a powertrain has been built). Used by main.lua:updateCorePhysicsStepEnabled. *(internal)* | 1097 |
+| `powertrain.onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy)` | Hook relayed by main.lua to the devices (attachEnergy and attachSpeed arguments inverted for compatibility). *(internal)* *(hook)* | 838 |
+| `powertrain.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook relayed by main.lua to the devices when a coupler detaches. *(internal)* *(hook)* | 847 |
+| `powertrain.onCouplerFound(nodeId, obj2id, obj2nodeId, nodeDist)` | Hook relayed by main.lua: passes to device:onCouplerFound the devices that implement it. *(internal)* *(hook)* | 829 |
+| `powertrain.reset()` | Resets the deformation group damages and calls device:reset(jbeamData) on each device, recomputes inertias, sends the tree back to the UI and resets the torque reaction coefficients. If a device has no reset(), falls back to init(). Called by main.lua on vehicle reset. *(internal)* | 737 |
+| `powertrain.resetSounds()` | Calls device:resetSounds(jbeamData) on the devices (or initSounds if a full reset is needed). *(internal)* | 780 |
+| `powertrain.sendDeviceTree()` | Sends the UI the event PowertrainDeviceTreeChanged {devices, maxPower, maxTorque} (type, modes, visual position, children, current mode of each device). No effect if the first player is not seated. *(internal)* | 272 |
+| `powertrain.sendTorqueData()` | Asks each device to send its torque curves (device:sendTorqueData()); no effect if the first player is not seated. *(internal)* | 308 |
+| `powertrain.serializeDevicesInfo()` | Old code tied to an imgui tool, used on the GE side: serializes a subset of fields of all devices (name, type, engineLoad, outputAV1/2, outputTorque1/2, mode, isBroken, ratios, clutches…). *(internal)* | 78 |
+| `powertrain.setDeviceMode(name, mode)` | Sets a device's mode (device:setMode), stores this choice to restore it after an init and shows a UI message "<name> Mode: <mode>". | 856 |
+| `powertrain.setPartCondition(partTypeData, odometer, integrity, visual)` | Applies a part condition (odometer, integrity, visual) to the devices designated by partTypeData via device:setPartCondition. | 1059 |
+| `powertrain.setState(data)` | Passes `data` to device:setState(data) of each device that implements it. | 1120 |
+| `powertrain.setVehiclePath(path)` | Records the vehicle folder, used to look for device-specific factories. Called by main.lua before init. *(internal)* | 1037 |
+| `powertrain.toggleDefaultDiffs()` | Switches all differentials (type 'differential') that have defaultToggle true to the next mode. | 893 |
+| `powertrain.toggleDeviceMode(name)` | Switches the named device to the next mode of its availableModes list (cyclic) via setDeviceMode. | 867 |
+| `powertrain.updateGFX(dt)` | Called every graphics frame by main.lua. Updates the environment fields, applies the new deformation group damages to the devices (applyDeformGroupDamage), calls device:updateGFX and updateSounds, integrates the visual shaft angle (electrics.values[electricsName]) then sends the data of the UI stream 'powertrainDeviceData' if requested. *(internal)* | 176 |
+| `powertrain.updateGFXLastStage(dt)` | Last step of the graphics frame (end of onGraphicsStep): calls device:updateGFXLastStage(dt) on the devices that implement it. *(internal)* | 229 |
+| `powertrain.updateSimpleControlButtons()` | Asks each device to republish its simplified control buttons (device:updateSimpleControlButtons()). | 318 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain.beamBroke(id)`
 
-Appelée par main.lua quand une poutre casse : prévient les devices qui ont une méthode beamBroke, puis casse les devices dont la breakTriggerBeam correspond (breakDevice).
+Called by main.lua when a beam breaks: notifies the devices that have a beamBroke method, then breaks the devices whose breakTriggerBeam matches (breakDevice).
 
-- `id` (*integer*) : Identifiant (cid) de la poutre cassée.
+- `id` (*integer*) : Identifier (cid) of the broken beam.
 
 #### `powertrain.breakDevice(device)`
 
-Marque un device comme cassé : device:onBreak(), casse ses poutres de déclenchement (obj:breakBeam), affiche le message UI vehicle.powertrain.deviceBroken et signale le dégât au damageTracker. Sans effet si déjà cassé.
+Marks a device as broken: device:onBreak(), breaks its trigger beams (obj:breakBeam), shows the UI message vehicle.powertrain.deviceBroken and reports the damage to damageTracker. No effect if already broken.
 
-- `device` (*table*) : Device du powertrain.
+- `device` (*table*) : Powertrain device.
 
 #### `powertrain.dumpsDeviceData(device)`
 
-Renvoie une chaîne lisible (dumps) d'une copie profonde du device, avec parent et enfants remplacés par leur nom, utile au debug.
+Returns a readable string (dumps) of a deep copy of the device, with parent and children replaced by their name, useful for debugging.
 
-- `device` (*table|nil*) : Device à décrire.
-- **renvoie** : string Texte du dump, ou "nil".
+- `device` (*table|nil*) : Device to describe.
+- **returns**: string Dump text, or "nil".
 
 #### `powertrain.getAllWheelPropulsionDevices()`
 
-Renvoie la liste (sans doublons) des devices moteurs qui entraînent au moins une roue.
+Returns the list (without duplicates) of the engine devices that drive at least one wheel.
 
-- **renvoie** : table[] Devices moteurs.
+- **returns**: table[] Engine devices.
 
 #### `powertrain.getChildWheels(parentDevice, outputID)`
 
-Parcourt récursivement les enfants d'un device et renvoie les roues entraînées (device.wheel des shafts de roue). Si outputID est donné, ne suit que l'enfant branché sur ce port.
+Recursively traverses a device's children and returns the driven wheels (device.wheel of the wheel shafts). If outputID is given, only follows the child connected to that port.
 
-- `parentDevice` (*table*) : Device de départ.
-- `outputID` (*integer|nil*) : Port de sortie à suivre ; -1 ou nil = tous.
-- **renvoie** : table[] Liste de roues (tables de roue).
+- `parentDevice` (*table*) : Starting device.
+- `outputID` (*integer|nil*) : Output port to follow; -1 or nil = all.
+- **returns**: table[] List of wheels (wheel tables).
 
 #### `powertrain.getDevice(name)`
 
-Renvoie le device portant ce nom.
+Returns the device with this name.
 
-- `name` (*string|nil*) : Nom du device.
-- **renvoie** : table|nil Le device, ou nil (aussi si name est nil).
+- `name` (*string|nil*) : Device name.
+- **returns**: table|nil The device, or nil (also if name is nil).
 
 #### `powertrain.getDevices()`
 
-Renvoie la table de tous les devices indexée par nom.
+Returns the table of all devices keyed by name.
 
-- **renvoie** : table<string, table> Devices par nom (vide si pas de powertrain).
+- **returns**: table<string, table> Devices by name (empty if no powertrain).
 
 #### `powertrain.getDevicesByCategory(category)`
 
-Renvoie la liste des devices dont deviceCategories contient la catégorie.
+Returns the list of devices whose deviceCategories contains the category.
 
-- `category` (*string*) : Catégorie (ex. 'engine', 'gearbox', 'hydraulicPowerSource').
-- **renvoie** : table[] Tableau de devices.
+- `category` (*string*) : Category (e.g. 'engine', 'gearbox', 'hydraulicPowerSource').
+- **returns**: table[] Array of devices.
 
 #### `powertrain.getDevicesByType(deviceType)`
 
-Renvoie la liste des devices dont `type` égale la valeur donnée (ordre non garanti : parcours de pairs).
+Returns the list of devices whose `type` equals the given value (order not guaranteed: pairs traversal).
 
-- `deviceType` (*string*) : Type jbeam (ex. 'combustionEngine', 'differential', 'shaft').
-- **renvoie** : table[] Tableau de devices (vide si aucun).
+- `deviceType` (*string*) : jbeam type (e.g. 'combustionEngine', 'differential', 'shaft').
+- **returns**: table[] Array of devices (empty if none).
 
 #### `powertrain.getEngineSoundID()`
 
-Renvoie un identifiant de son moteur unique et croissant (0, 1, 2…), remis à -1 à chaque init.
+Returns a unique, increasing engine identifier (0, 1, 2…), reset to -1 at each init.
 
-- **renvoie** : integer Identifiant de son moteur.
+- **returns**: integer Engine identifier.
 
 #### `powertrain.getGearRatioBetweenDevices(topDevice, bottomDevice)`
 
-Multiplie les gearRatio en remontant du device du bas jusqu'au device du haut. Renvoie nil si les devices ne sont pas connectés (ou si un argument est nil).
+Multiplies the gearRatios going up from the bottom device to the top device. Returns nil if the devices are not connected (or if an argument is nil).
 
-- `topDevice` (*table*) : Device amont (plus proche du moteur).
-- `bottomDevice` (*table*) : Device aval (descendant de topDevice).
-- **renvoie** : number|nil Rapport cumulé entre les deux.
+- `topDevice` (*table*) : Upstream device (closest to the engine).
+- `bottomDevice` (*table*) : Downstream device (descendant of topDevice).
+- **returns**: number|nil Cumulative ratio between the two.
 
 #### `powertrain.getHydraulicConsumer(consumerName)`
 
-Cherche parmi les sources hydrauliques (catégorie hydraulicPowerSource) un consommateur nommé.
+Searches among the hydraulic sources (category hydraulicPowerSource) for a named consumer.
 
-- `consumerName` (*string*) : Nom du consommateur.
-- **renvoie** : table|nil Consommateur trouvé ou nil.
+- `consumerName` (*string*) : Consumer name.
+- **returns**: table|nil Consumer found or nil.
 
 #### `powertrain.getOrderedDevices()`
 
-Renvoie le tableau (indexé 1..N) des devices ordonné de la racine vers les feuilles.
+Returns the array (indexed 1..N) of the devices ordered from the root to the leaves.
 
-- **renvoie** : table Liste ordonnée des devices (ne pas modifier).
+- **returns**: table Ordered list of devices (do not modify).
 
 #### `powertrain.getPartCondition(partTypeData)`
 
-Agrège l'état d'usure/intégrité des devices concernés par les clés de partie de la forme « powertrainDevice:<nom>:<sousSystème> ».
+Aggregates the wear/integrity state of the devices concerned by part keys of the form "powertrainDevice:<name>:<subSystem>".
 
-- `partTypeData` (*string[]|nil*) : Liste de clés de type de pièce.
-- **renvoie** : table {integrityValue (min des devices, défaut 1), integrityState, visualValue=1, visualState}.
-- **renvoie** : boolean true si au moins un device a fourni une intégrité.
-- **renvoie** : boolean Toujours false (condition visuelle non fournie).
+- `partTypeData` (*string[]|nil*) : List of part type keys.
+- **returns**: table {integrityValue (min of the devices, default 1), integrityState, visualValue=1, visualState}.
+- **returns**: boolean true if at least one device has provided an integrity.
+- **returns**: boolean Always false (visual condition not provided).
 
 #### `powertrain.getPoweredWheelNames()`
 
-Renvoie, pour chaque roue du véhicule entraînée par un moteur, le nom de ce moteur.
+Returns, for each vehicle wheel driven by an engine, the name of that engine.
 
-- **renvoie** : table<string, string> nomRoue -> nom du device moteur.
+- **returns**: table<string, string> wheelName -> engine device name.
 
 #### `powertrain.getPropulsionDeviceForDevice(device)`
 
-Remonte les parents d'un device jusqu'à trouver un device de catégorie engine.
+Walks up a device's parents until it finds a device of category engine.
 
-- `device` (*table*) : Device de départ.
-- **renvoie** : table|nil Le moteur ancêtre (ou le device lui-même), nil si aucun.
+- `device` (*table*) : Starting device.
+- **returns**: table|nil The ancestor engine (or the device itself), nil if none.
 
 #### `powertrain.getPropulsionDeviceForWheel(wheelName)`
 
-Renvoie le device de catégorie engine qui entraîne la roue (table calculée à l'init).
+Returns the engine-category device that drives the wheel (table computed at init).
 
-- `wheelName` (*string*) : Nom de la roue.
-- **renvoie** : table|nil Device moteur ou nil.
+- `wheelName` (*string*) : Wheel name.
+- **returns**: table|nil Engine device or nil.
 
 #### `powertrain.getState()`
 
-Fusionne les états renvoyés par device:getState() de tous les devices (sauvegarde d'état).
+Merges the states returned by device:getState() of all devices (state saving).
 
-- **renvoie** : table|nil Table fusionnée réutilisée à chaque appel, nil si aucun device n'a de données.
+- **returns**: table|nil Merged table reused at each call, nil if no device has data.
 
 #### `powertrain.isPhysicsStepUsed()`
 
-Indique si le powertrain a besoin du pas de physique (true quand un powertrain a été construit). Utilisé par main.lua:updateCorePhysicsStepEnabled.
+Indicates whether the powertrain needs the physics step (true when a powertrain has been built). Used by main.lua:updateCorePhysicsStepEnabled.
 
-- **renvoie** : boolean hasPowertrain.
+- **returns**: boolean hasPowertrain.
 
 #### `powertrain.onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy)`
 
-Hook relayé par main.lua aux devices (arguments attachEnergy et attachSpeed inversés par compatibilité).
+Hook relayed by main.lua to the devices (attachEnergy and attachSpeed arguments inverted for compatibility).
 
-- `nodeId` (*integer*) : Noeud coupleur local.
-- `obj2id` (*integer*) : Id de l'autre véhicule.
-- `obj2nodeId` (*integer*) : Noeud de l'autre véhicule.
-- `attachSpeed` (*number*) : Vitesse à l'attache.
-- `attachEnergy` (*number*) : Énergie à l'attache.
+- `nodeId` (*integer*) : Local coupler node.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : Node of the other vehicle.
+- `attachSpeed` (*number*) : Speed at attachment.
+- `attachEnergy` (*number*) : Energy at attachment.
 
 #### `powertrain.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)`
 
-Hook relayé par main.lua aux devices lors du détachement d'un coupleur.
+Hook relayed by main.lua to the devices when a coupler detaches.
 
-- `nodeId` (*integer*) : Noeud coupleur local.
-- `obj2id` (*integer*) : Id de l'autre véhicule.
-- `obj2nodeId` (*integer*) : Noeud de l'autre véhicule.
-- `breakForce` (*number*) : Force de détachement.
+- `nodeId` (*integer*) : Local coupler node.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : Node of the other vehicle.
+- `breakForce` (*number*) : Detachment force.
 
 #### `powertrain.onCouplerFound(nodeId, obj2id, obj2nodeId, nodeDist)`
 
-Hook relayé par main.lua : transmet à device:onCouplerFound les devices qui l'implémentent.
+Hook relayed by main.lua: passes to device:onCouplerFound the devices that implement it.
 
-- `nodeId` (*integer*) : Noeud coupleur local.
-- `obj2id` (*integer*) : Id de l'autre véhicule.
-- `obj2nodeId` (*integer*) : Noeud de l'autre véhicule.
-- `nodeDist` (*number*) : Distance entre les noeuds.
+- `nodeId` (*integer*) : Local coupler node.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : Node of the other vehicle.
+- `nodeDist` (*number*) : Distance between the nodes.
 
 #### `powertrain.serializeDevicesInfo()`
 
-Ancien code lié à un outil imgui, utilisé côté GE : sérialise un sous-ensemble de champs de tous les devices (name, type, engineLoad, outputAV1/2, outputTorque1/2, mode, isBroken, rapports, embrayages…).
+Old code tied to an imgui tool, used on the GE side: serializes a subset of fields of all devices (name, type, engineLoad, outputAV1/2, outputTorque1/2, mode, isBroken, ratios, clutches…).
 
-- **renvoie** : string Table sérialisée (serialize).
+- **returns**: string Serialized table (serialize).
 
 #### `powertrain.setDeviceMode(name, mode)`
 
-Fixe le mode d'un device (device:setMode), mémorise ce choix pour le restaurer après un init et affiche un message UI « <nom> Mode: <mode> ».
+Sets a device's mode (device:setMode), stores this choice to restore it after an init and shows a UI message "<name> Mode: <mode>".
 
-- `name` (*string*) : Nom du device.
-- `mode` (*string*) : Mode à appliquer (doit exister dans les modes du device).
+- `name` (*string*) : Device name.
+- `mode` (*string*) : Mode to apply (must exist in the device's modes).
 
 #### `powertrain.setPartCondition(partTypeData, odometer, integrity, visual)`
 
-Applique une condition de pièce (odomètre, intégrité, visuel) aux devices désignés par partTypeData via device:setPartCondition.
+Applies a part condition (odometer, integrity, visual) to the devices designated by partTypeData via device:setPartCondition.
 
-- `partTypeData` (*string[]|nil*) : Clés « powertrainDevice:<nom>:<sousSystème> ».
-- `odometer` (*number*) : Distance/usure cumulée à appliquer (déduit du code).
-- `integrity` (*number|table*) : Intégrité ; si table, la valeur est integrity.powertrain[nomDevice].
-- `visual` (*any*) : Condition visuelle transmise au device.
+- `partTypeData` (*string[]|nil*) : Keys "powertrainDevice:<name>:<subSystem>".
+- `odometer` (*number*) : Cumulative distance/wear to apply (inferred from code).
+- `integrity` (*number|table*) : Integrity; if a table, the value is integrity.powertrain[deviceName].
+- `visual` (*any*) : Visual condition passed to the device.
 
 #### `powertrain.setState(data)`
 
-Passe `data` à device:setState(data) de chaque device qui l'implémente.
+Passes `data` to device:setState(data) of each device that implements it.
 
-- `data` (*table|nil*) : État produit par getState ; ignoré si nil.
+- `data` (*table|nil*) : State produced by getState; ignored if nil.
 
 #### `powertrain.setVehiclePath(path)`
 
-Enregistre le dossier du véhicule, utilisé pour chercher les fabriques de devices spécifiques. Appelée par main.lua avant init.
+Records the vehicle folder, used to look for device-specific factories. Called by main.lua before init.
 
-- `path` (*string*) : Dossier du véhicule.
+- `path` (*string*) : Vehicle folder.
 
 #### `powertrain.toggleDeviceMode(name)`
 
-Passe le device nommé au mode suivant de sa liste availableModes (cyclique) via setDeviceMode.
+Switches the named device to the next mode of its availableModes list (cyclic) via setDeviceMode.
 
-- `name` (*string*) : Nom du device.
-- **renvoie** : string|nil Nouveau mode, nil si le device n'existe pas.
+- `name` (*string*) : Device name.
+- **returns**: string|nil New mode, nil if the device does not exist.
 
 #### `powertrain.updateGFX(dt)`
 
-Appelée à chaque frame graphique par main.lua. Met à jour les champs d'environnement, applique aux devices les nouveaux dégâts de groupes de déformation (applyDeformGroupDamage), appelle device:updateGFX et updateSounds, intègre l'angle visuel d'arbre (electrics.values[electricsName]) puis envoie les données du flux UI 'powertrainDeviceData' si demandé.
+Called every graphics frame by main.lua. Updates the environment fields, applies the new deformation group damages to the devices (applyDeformGroupDamage), calls device:updateGFX and updateSounds, integrates the visual shaft angle (electrics.values[electricsName]) then sends the data of the UI stream 'powertrainDeviceData' if requested.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
 #### `powertrain.updateGFXLastStage(dt)`
 
-Dernière étape de la frame graphique (fin de onGraphicsStep) : appelle device:updateGFXLastStage(dt) sur les devices qui l'implémentent.
+Last step of the graphics frame (end of onGraphicsStep): calls device:updateGFXLastStage(dt) on the devices that implement it.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `cumulativeGearRatio` | number | Plus grand rapport cumulé (cumulativeGearRatio) trouvé parmi tous les devices à la construction de l'arbre. |
-| `currentEnvPressure` | number | Pression extérieure (obj:getEnvPressure, Pa). |
-| `currentEnvTemperature` | number | Température extérieure en kelvin. |
-| `currentEnvTemperatureCelsius` | number | Température extérieure en °C. |
-| `currentGravity` | number | Gravité courante en m/s². |
-| `engineData` | table | Table vide remise à zéro à l'init ; réservée aux données moteur (remplie ailleurs, non utilisée dans ce fichier). |
+| `cumulativeGearRatio` | number | Largest cumulative ratio (cumulativeGearRatio) found among all devices when building the tree. |
+| `currentEnvPressure` | number | Outside pressure (obj:getEnvPressure, Pa). |
+| `currentEnvTemperature` | number | Outside temperature in kelvin. |
+| `currentEnvTemperatureCelsius` | number | Outside temperature in °C. |
+| `currentGravity` | number | Current gravity in m/s². |
+| `engineData` | table | Empty table reset at init; reserved for engine data (filled elsewhere, not used in this file). |
 | `invCurrentEnvPressure` | number | 1 / currentEnvPressure. |
 | `invCurrentEnvTemperature` | number | 1 / currentEnvTemperature. |
-| `invCurrentEnvTemperatureCelsius` | number | 1 / currentEnvTemperatureCelsius (peut être très grand près de 0 °C). |
+| `invCurrentEnvTemperatureCelsius` | number | 1 / currentEnvTemperatureCelsius (can be very large near 0 °C). |
 | `invCurrentGravity` | number | 1 / currentGravity. |
-| `stabilityCoef` | number | Coefficient de stabilité, valeur initiale 250 (utilisé par les devices, non modifié dans ce fichier). |
-| `torqueReactionCoefs` | table<integer, number> | Coefficients de réaction de couple par torsion reactor (indice = torsionReactorIdx des rotateurs). Double tampon permuté à chaque update. Vaut {0} si le powertrain n'est pas initialisé afin que l'indice 1 (reactor par défaut) existe. |
-| `update` | function | nop tant que l'init n'a pas réussi, puis la fonction update(dt) (pas de physique) ; appelée par main.lua dans onPhysicsStep. |
-| `wheels` | table<string, table> | Roues/rotateurs du véhicule par nom (wheels.wheelRotators). Les entrées reçoivent isPropulsed = true si un device propulsé les entraîne. |
+| `stabilityCoef` | number | Stability coefficient, initial value 250 (used by the devices, not modified in this file). |
+| `torqueReactionCoefs` | table<integer, number> | Torque reaction coefficients per torsion reactor (index = torsionReactorIdx of the rotators). Double buffer swapped at each update. Is {0} if the powertrain is not initialized so that index 1 (default reactor) exists. |
+| `update` | function | nop until init has succeeded, then the function update(dt) (physics step); called by main.lua in onPhysicsStep. |
+| `wheels` | table<string, table> | Vehicle wheels/rotators by name (wheels.wheelRotators). Entries receive isPropulsed = true if a propulsed device drives them. |
 
-**Globales affectées :** `i`
+**Globals assigned:** `i`
 
-**Évènements UI (guihooks.trigger) :** `PowertrainDeviceTreeChanged`
+**UI events (guihooks.trigger):** `PowertrainDeviceTreeChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `obj:` `breakBeam`, `getEnvPressure`, `getEnvTemperature`, `getGravity`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain.lua`.*

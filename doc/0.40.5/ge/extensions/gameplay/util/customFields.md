@@ -1,12 +1,12 @@
 # `gameplay_util_customFields`
 
-*Fichier : `lua/ge/extensions/gameplay/util/customFields.lua` · VM : Game Engine (GE) · 174 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/util/customFields.lua` · VM: Game Engine (GE) · 174 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/util/customFields")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/util/customFields")` (file under extensions/ but not a regular extension)
 
-Petit conteneur de « champs personnalisés » typés (string, number, boolean, vec3, quat) et d'étiquettes (tags) triées, avec sérialisation. Le module renvoie un constructeur : chaque appel crée un objet indépendant. Utile pour attacher des données libres à un objet de gameplay tout en les sauvegardant en JSON.
+Small container of typed "custom fields" (string, number, boolean, vec3, quat) and sorted tags, with serialization. The module returns a constructor: each call creates an independent object. Useful for attaching free-form data to a gameplay object while saving it as JSON.
 
-## Exemple
+## Example
 
 ```lua
 local cf = require("gameplay/util/customFields")()
@@ -15,35 +15,35 @@ cf:addTag("ville")
 local valeur, type, existe = cf:get("difficulte")
 ```
 
-## Remarques
+## Notes
 
-- Types gérés à la désérialisation : string, number, boolean, vec3, quat ; un champ d'un autre type est ignoré.
-- validate() convertit les chaînes : '', '0', 0 et 'false' donnent false pour un booléen ; vec3 et quat acceptent 'x,y,z' / 'x,y,z,w' (séparés par des virgules), sinon une valeur nulle.
-- add(), set(), remove() et has() testent `self.values[name]` : un champ booléen valant false est donc considéré comme inexistant (set() refuse de le modifier, add() accepte de le ré-ajouter et duplique alors son nom dans names).
-- Un champ spécial nommé « tags » déclenche updateTags() à l'ajout ou à la modification.
-- get() renvoie (valeur, type, true) ou (nil, nil, false).
-- addTag() renvoie false si le tag existe déjà mais ne renvoie rien (nil) en cas de succès.
+- Types handled on deserialization: string, number, boolean, vec3, quat; a field of any other type is ignored.
+- validate() converts strings: '', '0', 0 and 'false' give false for a boolean; vec3 and quat accept 'x,y,z' / 'x,y,z,w' (comma-separated), otherwise a null value.
+- add(), set(), remove() and has() test `self.values[name]`: a boolean field equal to false is therefore considered nonexistent (set() refuses to modify it, add() accepts re-adding it and then duplicates its name in names).
+- A special field named "tags" triggers updateTags() on add or modification.
+- get() returns (value, type, true) or (nil, nil, false).
+- addTag() returns false if the tag already exists but returns nothing (nil) on success.
 
-## Classe `C`
+## Class `C`
 
-Objet renvoyé par le constructeur du module. Champs : names (ordre des champs), types, values, tags (ensemble) et sortedTags (liste triée).
+Object returned by the module constructor. Fields: names (field order), types, values, tags (set) and sortedTags (sorted list).
 
-Le module renvoie un constructeur : `local obj = require("gameplay_util_customFields")(options)`.
+The module returns a constructor: `local obj = require("gameplay_util_customFields")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:add(name, datatype, value)` | Ajoute un champ typé ; la valeur est validée selon le type. | 137 |
-| `C:addTag(tag)` | Ajoute un tag et retrie la liste. | 103 |
-| `C:get(name)` | Lit un champ. | 152 |
-| `C:has(name)` | Teste l'existence d'un champ. | 151 |
-| `C:init()` | Initialise les tables names, types, values, tags et sortedTags. | 10 |
-| `C:onDeserialized(data)` | Recrée tous les champs et tags depuis les données sérialisées (efface l'état existant). | 37 |
-| `C:onSerialize()` | Renvoie {names, types, values, tags} ; vec3 et quat sont convertis en tables. | 18 |
-| `C:remove(name)` | Supprime un champ. | 125 |
-| `C:removeTag(tag)` | Retire un tag, désigné par son nom ou son indice dans sortedTags. | 112 |
-| `C:set(name, value)` | Change la valeur d'un champ existant (sans validation de type). | 91 |
-| `C:updateTags()` | Reconstruit sortedTags (tags triés alphabétiquement) à partir de tags. | 160 |
-| `C:validate(value, datatype)` | Convertit une valeur vers le type demandé (string, number, boolean, vec3, quat). | 62 |
+| `C:add(name, datatype, value)` | Adds a typed field; the value is validated according to the type. | 137 |
+| `C:addTag(tag)` | Adds a tag and re-sorts the list. | 103 |
+| `C:get(name)` | Reads a field. | 152 |
+| `C:has(name)` | Tests whether a field exists. | 151 |
+| `C:init()` | Initializes the names, types, values, tags and sortedTags tables. | 10 |
+| `C:onDeserialized(data)` | Recreates all fields and tags from the serialized data (clears the existing state). | 37 |
+| `C:onSerialize()` | Returns {names, types, values, tags}; vec3 and quat are converted to tables. | 18 |
+| `C:remove(name)` | Deletes a field. | 125 |
+| `C:removeTag(tag)` | Removes a tag, designated by its name or its index in sortedTags. | 112 |
+| `C:set(name, value)` | Changes the value of an existing field (without type validation). | 91 |
+| `C:updateTags()` | Rebuilds sortedTags (tags sorted alphabetically) from tags. | 160 |
+| `C:validate(value, datatype)` | Converts a value to the requested type (string, number, boolean, vec3, quat). | 62 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/util/customFields.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/util/customFields.lua`.*

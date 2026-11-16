@@ -1,37 +1,71 @@
 {
   "path": "lua/ge/extensions/gameplay/missions/unlocks/conditions/missionConditions.lua",
-  "module": "Types de condition de déblocage fondés sur la progression d'autres missions : missionPassed (réussie) et missionCompleted (complétée). Elles lisent mission.saveData.progress[clé].aggregate. La clé de progression peut être 'default' (ou vide), 'any' (n'importe laquelle) ou une clé précise.",
+  "module": "Mission unlock condition types based on the progress of other missions: missionPassed (passed) and missionCompleted (completed). They read mission.saveData.progress[key].aggregate. The progress key can be 'default' (or empty), 'any' (any of them) or a specific key.",
   "notes": [
-    "Si la mission référencée n'existe pas, un log d'erreur est émis et la condition vaut false.",
-    "La fonction locale F n'est pas exportée : checkAggregateWithKey et getTargetLabel ne sont pas accessibles depuis l'extérieur.",
-    "Le bloc missionFunction est commenté dans le code (inactif)."
+    "If the referenced mission does not exist, an error log is emitted and the condition is false.",
+    "The local function F is not exported: checkAggregateWithKey and getTargetLabel are not accessible from outside.",
+    "The missionFunction block is commented out in the code (inactive)."
   ],
   "fields": {
-    "missionPassed": {"type": "table", "desc": "Condition {type='missionPassed', missionId, progressKey} : vraie si aggregate.passed est vrai. editorFunction 'displayMissionCondition'."},
-    "missionCompleted": {"type": "table", "desc": "Condition {type='missionCompleted', missionId, progressKey} : vraie si aggregate.completed est vrai. editorFunction 'displayMissionConditionWithProgressKey'."}
+    "missionPassed": {
+      "type": "table",
+      "desc": "Condition {type='missionPassed', missionId, progressKey}: true if aggregate.passed is true. editorFunction 'displayMissionCondition'."
+    },
+    "missionCompleted": {
+      "type": "table",
+      "desc": "Condition {type='missionCompleted', missionId, progressKey}: true if aggregate.completed is true. editorFunction 'displayMissionConditionWithProgressKey'."
+    }
   },
   "classes": {
     "F": {
-      "desc": "Table locale d'aides (non exportée) utilisée par missionPassed et missionCompleted.",
+      "desc": "Local helper table (not exported) used by missionPassed and missionCompleted.",
       "functions": {
         "checkAggregateWithKey": {
-          "desc": "Vérifie si, pour la mission donnée, au moins une des clés de progression a le champ aggregate[field] vrai.",
+          "desc": "Checks whether, for the given mission, at least one of the progress keys has the aggregate[field] field true.",
           "params": {
-            "id": {"type": "string", "desc": "Id de la mission."},
-            "progressKey": {"type": "string|nil", "desc": "'default'/nil/'' = defaultProgressKey, 'any' = toutes les clés, sinon une clé précise."},
-            "field": {"type": "string", "desc": "Champ de aggregate à tester (passed, completed…)."}
+            "id": {
+              "type": "string",
+              "desc": "Mission id."
+            },
+            "progressKey": {
+              "type": "string|nil",
+              "desc": "'default'/nil/'' = defaultProgressKey, 'any' = all keys, otherwise a specific key."
+            },
+            "field": {
+              "type": "string",
+              "desc": "Field of aggregate to test (passed, completed...)."
+            }
           },
-          "returns": [{"type": "boolean", "desc": "true si une clé satisfait le champ."}],
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if a key satisfies the field."
+            }
+          ],
           "internal": true
         },
         "getTargetLabel": {
-          "desc": "Construit le label traduisible de la condition (clés missions.missions.unlock.<verb>.default|any|custom).",
+          "desc": "Builds the condition's translatable label (keys missions.missions.unlock.<verb>.default|any|custom).",
           "params": {
-            "id": {"type": "string", "desc": "Id de la mission."},
-            "progressKey": {"type": "string|nil", "desc": "Clé de progression."},
-            "verb": {"type": "string", "desc": "'pass' ou 'complete'."}
+            "id": {
+              "type": "string",
+              "desc": "Mission id."
+            },
+            "progressKey": {
+              "type": "string|nil",
+              "desc": "Progress key."
+            },
+            "verb": {
+              "type": "string",
+              "desc": "'pass' or 'complete'."
+            }
           },
-          "returns": [{"type": "table|string", "desc": "{txt, context} ou texte d'erreur 'Missing Mission: …'."}],
+          "returns": [
+            {
+              "type": "table|string",
+              "desc": "{txt, context} or error text 'Missing Mission: ...'."
+            }
+          ],
           "internal": true
         }
       }

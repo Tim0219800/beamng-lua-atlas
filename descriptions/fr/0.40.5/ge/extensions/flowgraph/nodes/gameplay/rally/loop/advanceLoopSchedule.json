@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/advanceLoopSchedule.lua",
+  "module": "Nœud flowgraph « Rally Advance Loop Schedule » (catégorie once_instant, tag rally, sans pin). Demande au gestionnaire de la boucle rally (gameplay_rallyLoop.getManager()) de passer à la mission suivante du planning via rm:getNextMissionId(), et logge le résultat (D si une mission suivante existe, W sinon, E si le gestionnaire est introuvable ou l'extension non chargée).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "workOnce": {"desc": "Appelle rm:getNextMissionId() (qui avance le planning) et logge l'id obtenu.", "internal": true}
+      }
+    }
+  }
+}

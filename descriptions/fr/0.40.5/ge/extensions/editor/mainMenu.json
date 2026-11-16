@@ -1,0 +1,77 @@
+{
+  "path": "lua/ge/extensions/editor/mainMenu.lua",
+  "module": "Barre de menu principale du World Editor : menus File, Edit, Camera, Object, View, Window, Help, plus titre du niveau, mode d'édition courant, notifications, barre d'état, métriques de scène (mémoire GPU/CPU), et boîtes de dialogue (À propos, mode sans échec, retour du niveau à l'original, sauvegarde/suppression/réinitialisation de layouts). Il fournit aux autres outils l'API editor.addWindowMenuItem (entrée dans le menu Window), editor.showNotification, editor.setStatusBar/hideStatusBar et editor.rebuildCollision.",
+  "usage": "editor.addWindowMenuItem(\"Mon outil\", function() editor.showWindow(\"monOutil\") end, {groupMenuName = 'Debug'})\neditor.showNotification(\"Sauvegardé\")",
+  "notes": [
+    "Dans addWindowMenuItem, si `info` est fourni mais sans groupMenuName (par ex. seulement experimental ou gameplay), l'élément n'est ajouté à aucune liste : il n'apparaît donc pas dans le menu (bug probable du jeu). Sans `info`, l'entrée est ajoutée normalement.",
+    "Le menu Window mémorise les outils récemment ouverts (préférence ui.general.recentWindowMenuCount, 5 par défaut), sauvegardés dans l'état de l'éditeur (windowMenuRecentTools).",
+    "Le menu File n'a pas « Save Level As » (commenté dans le code).",
+    "Le bouton « revert to original » n'apparaît que pour un niveau officiel ou issu d'un mod déballé dans /mods/unpacked ; il supprime le dossier du niveau puis rouvre le niveau (perte des modifications).",
+    "En mode headless, seul le hook onEditorHeadlessMainMenuBar est émis, sans barre de menu."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "{\"editor_layoutManager\"}."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : vide les listes de menus, crée la file de notifications (maxNotificationCount 100) et installe editor.addWindowMenuItem, showNotification, setStatusBar, hideStatusBar, rebuildCollision.", "params": {}, "internal": true},
+    "onEditorActivated": {"desc": "Appelé à l'activation de l'éditeur : applique aux gizmos les préférences gizmos.general.drawGizmoPlane et highlightSelectedMeshes.", "params": {}, "internal": true},
+    "onEditorInitialized": {"desc": "Enregistre les fenêtres de dialogue, ouvre la fenêtre de mode sans échec si besoin et détermine si le bouton « revert level to original » doit être proposé.", "params": {}, "internal": true},
+    "onEditorGuiMainMenu": {"desc": "Dessine la barre de menu principale et les dialogues à chaque frame. Émet onEditorMainMenuBar (ou onEditorHeadlessMainMenuBar en headless).", "params": {}, "internal": true},
+    "onEditorPreferenceValueChanged": {
+      "desc": "Réagit aux préférences ui.general.sceneMetric, gizmos.visualization.visTypes et ui.general.recentWindowMenuCount.",
+      "params": {
+        "path": {"type": "string", "desc": "Chemin de la préférence."},
+        "value": {"type": "any", "desc": "Nouvelle valeur."}
+      },
+      "internal": true
+    },
+    "onEditorSaveState": {
+      "desc": "Ajoute la liste des outils récents à l'état sauvegardé (state.windowMenuRecentTools).",
+      "params": {"state": {"type": "table", "desc": "État de l'éditeur à compléter."}},
+      "internal": true
+    },
+    "onEditorLoadState": {
+      "desc": "Restaure la liste des outils récents depuis l'état (chaînes non vides uniquement).",
+      "params": {"state": {"type": "table|nil", "desc": "État de l'éditeur."}},
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Fonctions ajoutées à la table globale `editor` par ce module.",
+      "functions": {
+        "addWindowMenuItem": {
+          "desc": "Ajoute une entrée dans le menu Window de l'éditeur. Les entrées defaultToolWindow (Inspector, Scene Tree…) sont en tête du menu, séparées des autres ; les entrées sont triées par texte. Appelle le hook onEditorToolWindowOpened(itemText, \"windowMenu\") au clic.",
+          "params": {
+            "itemText": {"type": "string", "desc": "Texte de l'entrée."},
+            "actionFunc": {"type": "function", "desc": "Callback appelé au clic."},
+            "info": {"type": "table|nil", "desc": "Options : groupMenuName (sous-menu), experimental, gameplay (visible dans le menu Window de l'éditeur réduit)."},
+            "defaultToolWindow": {"type": "boolean|nil", "desc": "true pour une fenêtre ouverte par défaut, placée en haut du menu."}
+          }
+        },
+        "showNotification": {
+          "desc": "Ajoute une notification à la file ; elle remplace celle du même groupe si elle existe.",
+          "params": {
+            "text": {"type": "string", "desc": "Texte."},
+            "icon": {"type": "any", "desc": "Icône (editor.icons.*) ; editor.icons.info par défaut."},
+            "group": {"type": "string|nil", "desc": "Nom du groupe."},
+            "duration": {"type": "number|nil", "desc": "Durée d'affichage en secondes (valeur par défaut sinon)."},
+            "doBeep": {"type": "boolean|nil", "desc": "Émet un bip."}
+          }
+        },
+        "setStatusBar": {
+          "desc": "Définit le texte de la barre d'état et un callback ImGui optionnel (la barre n'est visible que si le texte est non vide).",
+          "params": {
+            "text": {"type": "string", "desc": "Texte affiché."},
+            "uiCallback": {"type": "function|nil", "desc": "Dessine des éléments ImGui supplémentaires ; utiliser SameLine entre eux."}
+          }
+        },
+        "hideStatusBar": {"desc": "Masque la barre d'état. À appeler quand l'opération est terminée.", "params": {}},
+        "rebuildCollision": {
+          "desc": "Reconstruit la collision statique (be:reloadCollision, puis efface le drapeau) si nécessaire ou forcé, et affiche une notification.",
+          "params": {"force": {"type": "boolean|nil", "desc": "true pour reconstruire même si Engine.getNeedCollisionRebuild() est faux."}}
+        }
+      }
+    }
+  }
+}

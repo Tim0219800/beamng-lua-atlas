@@ -2,69 +2,69 @@
 -- tim19Atlas stub generated from lua/common/libs/inspect/inspect.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- inspect.lua 3.1.0 : bibliothèque tierce (Enrique García Cota, licence MIT) qui transforme n'importe quelle valeur Lua en chaîne lisible : tables triées, indentation, références circulaires repérées par <id>, métatables affichées. Le module est appelable : inspect(t, options). Pratique pour déboguer.
---- Accès : `require("libs/inspect/inspect")`
+--- inspect.lua 3.1.0: third-party library (Enrique García Cota, MIT license) that turns any Lua value into a readable string: sorted tables, indentation, circular references marked by <id>, metatables displayed. The module is callable: inspect(t, options). Handy for debugging.
+--- Access: `require("libs/inspect/inspect")`
 ---@class libs_inspect_inspect
----@field KEY any Marqueur de clé utilisé dans le chemin passé à options.process.
----@field METATABLE any Marqueur de métatable utilisé dans le chemin passé à options.process.
+---@field KEY any Key marker used in the path passed to options.process.
+---@field METATABLE any Metatable marker used in the path passed to options.process.
 local libs_inspect_inspect = {}
 
---- Renvoie une représentation textuelle de root. Peut aussi s'appeler directement : inspect(root, options).
----Source : lua/common/libs/inspect/inspect.lua:298
----@param root any Valeur à afficher
+--- Returns a textual representation of root. Can also be called directly: inspect(root, options).
+---Source: lua/common/libs/inspect/inspect.lua:298
+---@param root any Value to display
 ---@param options table|nil {depth, newline, indent, process}
----@return string  Texte formaté
+---@return string  Formatted text
 function libs_inspect_inspect.inspect(root, options) end
 
---- Objet interne qui accumule le texte dans un tampon pendant le parcours de la valeur.
+--- Internal object that accumulates text in a buffer while walking the value.
 ---@class libs_inspect_inspect_Inspector
 local libs_inspect_inspect_Inspector = {}
 
---- Indique si la valeur a déjà un identifiant (table déjà rencontrée).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/inspect/inspect.lua:208
----@param v any Valeur
+--- Tells whether the value already has an identifier (table already encountered).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/inspect/inspect.lua:208
+---@param v any Value
 function libs_inspect_inspect_Inspector:alreadyVisited(v) end
 
---- Exécute f un niveau plus profond (incrémente puis décrémente le niveau).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/inspect/inspect.lua:198
----@param f function Fonction à exécuter
+--- Runs f one level deeper (increments then decrements the level).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/inspect/inspect.lua:198
+---@param f function Function to run
 function libs_inspect_inspect_Inspector:down(f) end
 
---- Renvoie l'identifiant numérique de la valeur, selon son type, en le créant au besoin.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/inspect/inspect.lua:212
----@param v any Valeur
+--- Returns the numeric identifier of the value, according to its type, creating it if needed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/inspect/inspect.lua:212
+---@param v any Value
 function libs_inspect_inspect_Inspector:getId(v) end
 
---- Écrit une clé de table : identifiant brut ou [clé] entre crochets.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/inspect/inspect.lua:223
----@param k any Clé
+--- Writes a table key: raw identifier or [key] in brackets.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/inspect/inspect.lua:223
+---@param k any Key
 function libs_inspect_inspect_Inspector:putKey(k) end
 
---- Écrit une table : parties séquentielle et non séquentielle, métatable, limite de profondeur, références répétées.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/inspect/inspect.lua:230
+--- Writes a table: sequential and non-sequential parts, metatable, depth limit, repeated references.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/inspect/inspect.lua:230
 ---@param t table Table
 function libs_inspect_inspect_Inspector:putTable(t) end
 
---- Écrit une valeur selon son type (chaîne échappée, nombre, booléen, table, ou <type id>).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/inspect/inspect.lua:281
----@param v any Valeur
+--- Writes a value according to its type (escaped string, number, boolean, table, or <type id>).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/inspect/inspect.lua:281
+---@param v any Value
 function libs_inspect_inspect_Inspector:putValue(v) end
 
---- Ajoute des morceaux de texte au tampon.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/inspect/inspect.lua:188
+--- Appends pieces of text to the buffer.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/inspect/inspect.lua:188
 ---@param ... any
 function libs_inspect_inspect_Inspector:puts(...) end
 
---- Ajoute un saut de ligne suivi de l'indentation du niveau courant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/inspect/inspect.lua:204
+--- Appends a line break followed by the indentation of the current level.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/inspect/inspect.lua:204
 function libs_inspect_inspect_Inspector:tabify() end
 
 ---@type number

@@ -1,22 +1,22 @@
 # `libs_LuaJIT_vmdef`
 
-*Fichier : `lua/common/libs/LuaJIT/vmdef.lua` · VM : Commun (GE + véhicule) · 365 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/LuaJIT/vmdef.lua` · VM: Common (GE + vehicle) · 365 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/LuaJIT/vmdef")`
+**Access:** `require("libs/LuaJIT/vmdef")`
 
-Fichier généré de LuaJIT (jit.vmdef, « DO NOT EDIT ») : tables de noms utilisées par les outils jit.* (dump, bc, v, profileur) pour afficher les bytecodes, instructions IR, fonctions rapides, appels C de l'IR et raisons d'échec de trace. Il renvoie une table de données ; utile seulement pour déboguer ou analyser le JIT.
+Generated LuaJIT file (jit.vmdef, "DO NOT EDIT"): tables of names used by the jit.* tools (dump, bc, v, profiler) to display bytecodes, IR instructions, fast functions, IR C calls and trace failure reasons. It returns a data table; only useful for debugging or analyzing the JIT.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `bcnames` | string | Noms des opcodes de bytecode LuaJIT concaténés, 6 caractères par opcode (complétés d'espaces). |
-| `ffnames` | table<integer, string> | Noms des fonctions rapides (fast functions) de LuaJIT, indexés à partir de 0 ("Lua", "C", "assert"…). |
-| `ircall` | table<integer, string> | Noms des fonctions C appelées par l'IR (lj_str_cmp, lj_tab_new1, sqrt…), indexés à partir de 0. |
-| `irfield` | table<integer, string> | Noms des champs d'objets accessibles par l'IR (str.len, func.env, tab.meta, tab.array…), indexés à partir de 0. |
-| `irfpm` | table<integer, string> | Noms des fonctions mathématiques FPMATH de l'IR (floor, ceil, trunc, sqrt, exp, exp2, log, log2, log10, sin, cos, tan, other), indexées à partir de 0. |
-| `irnames` | string | Noms des opérations IR du compilateur de traces, concaténés par blocs de 6 caractères. |
-| `traceerr` | table<integer, string> | Messages d'erreur d'enregistrement de trace (ex. "trace too short", "trace too long"), indexés à partir de 0. |
+| `bcnames` | string | Names of the LuaJIT bytecode opcodes concatenated, 6 characters per opcode (padded with spaces). |
+| `ffnames` | table<integer, string> | Names of LuaJIT's fast functions, 0-based ("Lua", "C", "assert"...). |
+| `ircall` | table<integer, string> | Names of the C functions called by the IR (lj_str_cmp, lj_tab_new1, sqrt...), 0-based. |
+| `irfield` | table<integer, string> | Names of the object fields accessible by the IR (str.len, func.env, tab.meta, tab.array...), 0-based. |
+| `irfpm` | table<integer, string> | Names of the IR's FPMATH math functions (floor, ceil, trunc, sqrt, exp, exp2, log, log2, log10, sin, cos, tan, other), 0-based. |
+| `irnames` | string | Names of the trace compiler's IR operations, concatenated in blocks of 6 characters. |
+| `traceerr` | table<integer, string> | Trace recording error messages (e.g. "trace too short", "trace too long"), 0-based. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/LuaJIT/vmdef.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/LuaJIT/vmdef.lua`.*

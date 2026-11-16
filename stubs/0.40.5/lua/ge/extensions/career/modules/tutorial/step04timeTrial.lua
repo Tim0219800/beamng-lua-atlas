@@ -2,80 +2,80 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Étape 4 du tutoriel de carrière (« timeTrial ») : une popup d'intro lance la mission contre-la-montre west_coast_usa/timeTrial/tutorialSimple, avec guidage au sol (core_groundMarkers) construit à partir des prochains pathnodes de la course. À la fin, une popup propose un défi optionnel (tutorialAdvanced) ou le passage à la suite ; l'étape avance à la fin de la mission avancée ou si le joueur choisit autre chose. Phases : waitIntro, simpleMission, waitChoicePopup, waitPostSimplePopupClose, waitChoiceSelection, advancedMission. Active la zone de limites timeTrialBounds.
---- Accès : extension `career_modules_tutorial_step04timeTrial` : `extensions.load("career_modules_tutorial_step04timeTrial")`, puis la globale `career_modules_tutorial_step04timeTrial`
+--- Career tutorial step 4 ("timeTrial"): an intro popup launches the time trial mission west_coast_usa/timeTrial/tutorialSimple, with ground guidance (core_groundMarkers) built from the course's next pathnodes. At the end, a popup offers an optional challenge (tutorialAdvanced) or moving on; the step advances at the end of the advanced mission or if the player chooses something else. Phases: waitIntro, simpleMission, waitChoicePopup, waitPostSimplePopupClose, waitChoiceSelection, advancedMission. Activates the timeTrialBounds bounds zone.
+--- Access: extension `career_modules_tutorial_step04timeTrial`: `extensions.load("career_modules_tutorial_step04timeTrial")`, then the global `career_modules_tutorial_step04timeTrial`
 ---@class career_modules_tutorial_step04timeTrial
 career_modules_tutorial_step04timeTrial = {}
 
---- Appelé à la fin de l'étape : retire le reset de zone, efface le guidage et arrête la mission du tutoriel si elle est au premier plan.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:280
+--- Called at the end of the step: removes the zone reset, clears the guidance and stops the tutorial mission if it is in the foreground.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:280
 function career_modules_tutorial_step04timeTrial.cleanup() end
 
---- Hook émis par le gestionnaire de missions. Sur « started » de la mission simple, mémorise la course ; sur « stopped », passe à la popup de bilan (mission simple) ou avance d'étape (mission avancée).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:185
----@param state string État de la mission ("started", "stopped"…).
----@param mission table Mission concernée (id, race).
+--- Hook emitted by the mission manager. On "started" of the simple mission, remembers the race; on "stopped", moves to the assessment popup (simple mission) or advances the step (advanced mission).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:185
+---@param state string Mission state ("started", "stopped"...).
+---@param mission table Mission concerned (id, race).
 function career_modules_tutorial_step04timeTrial.onAnyMissionChanged(state, mission) end
 
---- Appelé depuis OptionalChallengeSelect.vue quand le joueur choisit : « advancedTimeTrial » lance la mission avancée, tout autre choix désactive le véhicule et passe à l'étape suivante.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:257
----@param choice string Choix du joueur ("advancedTimeTrial" ou autre).
+--- Called from OptionalChallengeSelect.vue when the player chooses: "advancedTimeTrial" starts the advanced mission, any other choice deactivates the vehicle and moves to the next step.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:257
+---@param choice string Player's choice ("advancedTimeTrial" or other).
 function career_modules_tutorial_step04timeTrial.onCareerTutorialAdvancedOrDragSelection(choice) end
 
---- Hook de sortie de zone : lance le reset de sortie de zone de l'étape.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:276
+--- Out-of-bounds hook: starts the step's out-of-bounds reset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:276
 function career_modules_tutorial_step04timeTrial.onCareerTutorialLeftBounds() end
 
---- Hook émis quand le joueur est resté trop longtemps hors zone : affiche un avertissement et relance la mission en cours.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:211
+--- Hook emitted when the player has stayed out of the zone too long: displays a warning and restarts the current mission.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:211
 function career_modules_tutorial_step04timeTrial.onCareerTutorialOutOfBoundsTimedOut() end
 
---- Bouton « Skip Step 4 » : arrête la mission, désactive le véhicule et avance.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:298
----@param im table Table ui_imgui.
+--- "Skip Step 4" button: stops the mission, deactivates the vehicle and advances.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:298
+---@param im table ui_imgui table.
 function career_modules_tutorial_step04timeTrial.onDebugMenu(im) end
 
---- Hook de fermeture de popup. v2/simpleTimeTrial : démarre la mission simple et, après 0,5 s, bascule les préfabriqués de piste (tutorialTrackOpen). v2/timeTrialAssessmentComplete : ouvre la popup de choix de défi optionnel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:146
----@param id string Id de la popup.
+--- Popup close hook. v2/simpleTimeTrial: starts the simple mission and, after 0.5 s, switches the track prefabs (tutorialTrackOpen). v2/timeTrialAssessmentComplete: opens the optional challenge choice popup.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:146
+---@param id string Popup id.
 function career_modules_tutorial_step04timeTrial.onIntroPopupCareerClosed(id) end
 
---- Hook émis à chaque pathnode atteint : met à jour le guidage pour la course simple du tutoriel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:234
----@param data table Table avec le champ race.
+--- Hook emitted at each pathnode reached: updates the guidance for the simple tutorial race.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:234
+---@param data table Table with the race field.
 function career_modules_tutorial_step04timeTrial.onRacePathnodeReached(data) end
 
---- Hook de départ de course : si c'est la course du tutoriel simple, la mémorise et trace le guidage.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:224
----@param data table Table avec le champ race.
+--- Race start hook: if it is the simple tutorial race, remembers it and draws the guidance.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:224
+---@param data table Table with the race field.
 function career_modules_tutorial_step04timeTrial.onRaceStarted(data) end
 
---- Hook de fondu d'écran : quand l'état vaut 3 pendant waitChoicePopup, remet l'état de jeu « career » et ouvre la popup de bilan ou de choix.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:242
----@param state integer État du fondu (3 = traité ici).
+--- Screen fade hook: when the state is 3 during waitChoicePopup, restores the "career" game state and opens the assessment or choice popup.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:242
+---@param state integer Fade state (3 = handled here).
 function career_modules_tutorial_step04timeTrial.onScreenFadeState(state) end
 
---- Appelé chaque frame : pendant la mission simple, met à jour le tracé de guidage vers les prochains pathnodes (ou vers l'arrivée).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:171
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta simulation (s).
----@param dtRaw number Delta brut (s).
+--- Called every frame: during the simple mission, updates the guidance path toward the next pathnodes (or toward the finish).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:171
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulation delta (s).
+---@param dtRaw number Raw delta (s).
 function career_modules_tutorial_step04timeTrial.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Appelé à l'activation : active la zone timeTrialBounds, réinitialise les états, retrouve la place simpleTimeTrialFinish, remet le joueur dans le véhicule du tutoriel et ouvre la popup v2/simpleTimeTrial.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:124
----@param stepData any Données de l'étape (non utilisées).
+--- Called on activation: activates the timeTrialBounds zone, resets the states, finds the simpleTimeTrialFinish spot, puts the player back in the tutorial vehicle and opens the v2/simpleTimeTrial popup.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua:124
+---@param stepData any Step data (unused).
 function career_modules_tutorial_step04timeTrial.setup(stepData) end
 

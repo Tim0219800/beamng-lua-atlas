@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/tostring.lua",
+  "module": "Nœud « To String » (catégorie simple). Convertit l'entrée en chaîne avec tostring. Entrée : value (any). Sortie : value (string).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "work": {
+          "desc": "Écrit tostring(entrée) dans la sortie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua",
+  "module": "Nœud flowgraph « On Vehicle Shopping Event » (catégorie repeat_instant, couleur/icône ui). Détecte les évènements d'achat de véhicule en carrière. Sorties en impulsion : openedMenu, closedMenu (aussi levé au retour en jeu), vehicleSpawned (véhicule généré pour inspection), openedDetail (menu d'achat détaillé), vehicleBought ; plus vehId (number, id du véhicule acheté) et testDriveActive (bool, career_modules_testDrive.isActive).",
+  "notes": ["Utilise career_modules_testDrive et career_modules_inventory : nécessite la carrière.", "Les descriptions de vehicleBought et vehId contiennent des fautes de frappe dans le jeu (« buyign »).", "vehId garde sa dernière valeur après l'impulsion."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
+        "work": {"desc": "Chaque frame : remet à faux cinq sorties flow, applique et efface les drapeaux, met à jour testDriveActive.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
+        "onVehicleShoppingMenuOpened": {"desc": "Hook : lève openedMenu.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
+        "onVehicleShoppingVehicleShown": {"desc": "Hook : lève vehicleSpawned.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
+        "onVehicleShoppingPurchaseMenuOpened": {"desc": "Hook : lève openedDetail.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
+        "onVehicleAddedToInventory": {"desc": "Hook : lève vehicleBought et convertit data.inventoryId en id de véhicule (vehId).", "params": {"data": {"type": "table", "desc": "contient inventoryId"}}, "internal": true},
+        "onVehicleShoppingMenuClosed": {"desc": "Hook : lève closedMenu.", "internal": true},
+        "onUIPlayStateChanged": {"desc": "Hook : lève closedMenu quand le joueur revient en jeu.", "params": {"enteredPlay": {"type": "boolean", "desc": "vrai si on entre dans l'état de jeu"}}, "internal": true}
+      }
+    }
+  }
+}

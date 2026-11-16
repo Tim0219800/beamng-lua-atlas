@@ -2,80 +2,80 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/assetBrowser.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre « Asset Browser » de l'éditeur de monde : explore l'arborescence des assets du niveau courant (dossier du niveau), de art/ commun et de vehicles/, affiche miniatures, matériaux, meshes et jeux de textures, et permet de les glisser dans la scène. L'objet sélectionné est stocké dans editor.selection["asset"] et affiché par l'inspecteur (type « asset »). Un moddeur s'en sert surtout via selectFileByPath / getAssetByPath pour localiser un fichier depuis un autre outil (ex. menu « Locate in Asset Browser » de l'arbre de scène pour les TSStatic).
---- Accès : extension `editor_assetBrowser` : `extensions.load("editor_assetBrowser")`, puis la globale `editor_assetBrowser`
+--- "Asset Browser" window of the world editor: browses the asset tree of the current level (level folder), the shared art/ and vehicles/, displays thumbnails, materials, meshes and texture sets, and lets you drag them into the scene. The selected object is stored in editor.selection["asset"] and displayed by the inspector (type "asset"). A modder mostly uses it through selectFileByPath / getAssetByPath to locate a file from another tool (e.g. the scene tree "Locate in Asset Browser" menu for TSStatics).
+--- Access: extension `editor_assetBrowser`: `extensions.load("editor_assetBrowser")`, then the global `editor_assetBrowser`
 ---@class editor_assetBrowser
 editor_assetBrowser = {}
 
---- Désélectionne l'asset courant : remet selectedInABView (et selected si l'asset a un type) à false, vide editor.selection["asset"] et oublie l'entrée d'historique de sélection correspondante.
----Source : lua/ge/extensions/editor/assetBrowser.lua:813
+--- Deselects the current asset: sets selectedInABView (and selected if the asset has a type) back to false, clears editor.selection["asset"] and forgets the corresponding selection history entry.
+---Source: lua/ge/extensions/editor/assetBrowser.lua:813
 function editor_assetBrowser.clearSelectedAsset() end
 
---- Retrouve l'asset de l'arborescence chargée correspondant à un chemin virtuel (ex. 'levels/<niveau>/art/shapes/x.dae'). Détermine la racine (dossier du niveau ou dossier racine du même nom que le premier segment), descend jusqu'au dossier puis cherche le fichier.
----Source : lua/ge/extensions/editor/assetBrowser.lua:1736
----@param path string Chemin virtuel complet du fichier
----@return table|nil  Entrée d'asset de l'Asset Browser, ou nil si la racine est introuvable (suite de la recherche : déduit du code)
+--- Finds the asset of the loaded tree matching a virtual path (e.g. 'levels/<level>/art/shapes/x.dae'). Determines the root (level folder or root folder with the same name as the first segment), descends to the folder then looks for the file.
+---Source: lua/ge/extensions/editor/assetBrowser.lua:1736
+---@param path string Full virtual path of the file
+---@return table|nil  Asset Browser asset entry, or nil if the root is not found (rest of the search: inferred from code)
 function editor_assetBrowser.getAssetByPath(path) end
 
---- Renvoie l'asset actuellement sélectionné dans l'Asset Browser (editor.selection["asset"]).
----Source : lua/ge/extensions/editor/assetBrowser.lua:809
----@return table|nil  Asset sélectionné ou nil
+--- Returns the asset currently selected in the Asset Browser (editor.selection["asset"]).
+---Source: lua/ge/extensions/editor/assetBrowser.lua:809
+---@return table|nil  Selected asset or nil
 function editor_assetBrowser.getSelectedAsset() end
 
---- Déplace l'index de sélection dans la liste affichée d'un cran vers le haut ou le bas (borné entre 1 et var.maxListIndexVal) ; sert à la navigation au clavier (action map AssetBrowser). Sans effet si aucun index courant.
----Source : lua/ge/extensions/editor/assetBrowser.lua:5819
----@param up boolean true pour monter (index - 1), false/nil pour descendre (index + 1)
+--- Moves the selection index in the displayed list one step up or down (clamped between 1 and var.maxListIndexVal); used for keyboard navigation (AssetBrowser action map). No effect if there is no current index.
+---Source: lua/ge/extensions/editor/assetBrowser.lua:5819
+---@param up boolean true to go up (index - 1), false/nil to go down (index + 1)
 function editor_assetBrowser.moveSelectionIndex(up) end
 
---- Hook appelé à l'activation de l'éditeur. Si l'asset sélectionné est un mesh ou un matériau, rafraîchit l'aperçu (meshPreview / matPreview).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/assetBrowser.lua:5255
+--- Hook called when the editor is activated. If the selected asset is a mesh or a material, refreshes the preview (meshPreview / matPreview).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/assetBrowser.lua:5255
 function editor_assetBrowser.onEditorActivated() end
 
---- Hook appelé à chaque frame d'interface de l'éditeur : dessine la fenêtre Asset Browser, la fenêtre d'inspection d'image et les dialogues modaux de collections.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/assetBrowser.lua:5407
+--- Hook called every editor UI frame: draws the Asset Browser window, the image inspection window and the collection modal dialogs.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/assetBrowser.lua:5407
 function editor_assetBrowser.onEditorGui() end
 
---- Hook appelé à l'initialisation de l'éditeur : enregistre le gestionnaire d'inspecteur 'asset', les fenêtres (assetBrowser, image inspector, dialogues de collections), le mode d'édition assetBrowserEditMode, le menu Window > Asset Browser et l'entrée « Locate in Asset Browser » de l'arbre de scène (valide pour les TSStatic).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/assetBrowser.lua:5213
+--- Hook called at editor initialization: registers the 'asset' inspector handler, the windows (assetBrowser, image inspector, collection dialogs), the assetBrowserEditMode edit mode, the Window > Asset Browser menu and the "Locate in Asset Browser" scene tree entry (valid for TSStatics).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/assetBrowser.lua:5213
 function editor_assetBrowser.onEditorInitialized() end
 
---- Hook appelé quand une préférence de l'éditeur change ; recopie les valeurs 'assetBrowser.general.*' (taille des miniatures, filtres, tri, regroupement, vitesse de défilement, etc.) dans les options internes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/assetBrowser.lua:5595
----@param path string Chemin de la préférence, ex. 'assetBrowser.general.thumbnailSize'
----@param value any Nouvelle valeur
+--- Hook called when an editor preference changes; copies the 'assetBrowser.general.*' values (thumbnail size, filters, sorting, grouping, scroll speed, etc.) into the internal options.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/assetBrowser.lua:5595
+---@param path string Preference path, e.g. 'assetBrowser.general.thumbnailSize'
+---@param value any New value
 function editor_assetBrowser.onEditorPreferenceValueChanged(path, value) end
 
---- Hook appelé pour déclarer les préférences de l'Asset Browser (catégorie 'assetBrowser', sous-catégorie 'general') : skipMainFolder, skipImposters, fullPathSearch, thumbnailSize, scrollSpeed, etc.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/assetBrowser.lua:5651
----@param prefsRegistry table Registre de préférences de l'éditeur
+--- Hook called to declare the Asset Browser preferences (category 'assetBrowser', subcategory 'general'): skipMainFolder, skipImposters, fullPathSearch, thumbnailSize, scrollSpeed, etc.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/assetBrowser.lua:5651
+---@param prefsRegistry table Editor preferences registry
 function editor_assetBrowser.onEditorRegisterPreferences(prefsRegistry) end
 
---- Hook appelé quand une fenêtre d'outil prend le focus ; si c'est l'Asset Browser, empile l'action map 'AssetBrowser'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/assetBrowser.lua:5624
----@param windowName string Nom de la fenêtre
+--- Hook called when a tool window gets focus; if it is the Asset Browser, pushes the 'AssetBrowser' action map.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/assetBrowser.lua:5624
+---@param windowName string Window name
 function editor_assetBrowser.onEditorToolWindowGotFocus(windowName) end
 
---- Hook appelé quand une fenêtre d'outil perd le focus ; si c'est l'Asset Browser, retire l'action map 'AssetBrowser'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/assetBrowser.lua:5630
----@param windowName string Nom de la fenêtre
+--- Hook called when a tool window loses focus; if it is the Asset Browser, removes the 'AssetBrowser' action map.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/assetBrowser.lua:5630
+---@param windowName string Window name
 function editor_assetBrowser.onEditorToolWindowLostFocus(windowName) end
 
---- Hook appelé quand un fichier change sur disque. Une fois l'arborescence chargée, met à jour le dossier concerné pour les fichiers sous /levels/<niveau courant>/ ou /art/ : 'modified' ajoute/rafraîchit l'asset (imposters, .cdae et .dae.png ignorés), 'deleted' le retire.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/assetBrowser.lua:5313
----@param path string Chemin virtuel du fichier
----@param type string 'modified' ou 'deleted' (seules valeurs traitées)
+--- Hook called when a file changes on disk. Once the tree is loaded, updates the relevant folder for files under /levels/<current level>/ or /art/: 'modified' adds/refreshes the asset (imposters, .cdae and .dae.png ignored), 'deleted' removes it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/assetBrowser.lua:5313
+---@param path string Virtual path of the file
+---@param type string 'modified' or 'deleted' (the only values handled)
 function editor_assetBrowser.onFileChanged(path, type) end
 
---- Interface publique : ouvre le dossier du fichier dans l'Asset Browser, sélectionne le fichier et fait défiler jusqu'à lui. Ouvre la fenêtre si elle n'est pas visible.
----Source : lua/ge/extensions/editor/assetBrowser.lua:1673
----@param path string Chemin virtuel du fichier, ex. 'levels/<niveau>/art/shapes/x.dae'
+--- Public interface: opens the file's folder in the Asset Browser, selects the file and scrolls to it. Opens the window if it is not visible.
+---Source: lua/ge/extensions/editor/assetBrowser.lua:1673
+---@param path string Virtual path of the file, e.g. 'levels/<level>/art/shapes/x.dae'
 function editor_assetBrowser.selectFileByPath(path) end
 

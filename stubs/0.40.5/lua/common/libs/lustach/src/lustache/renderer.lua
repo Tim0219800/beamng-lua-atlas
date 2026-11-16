@@ -2,86 +2,86 @@
 -- tim19Atlas stub generated from lua/common/libs/lustach/src/lustache/renderer.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Bibliothèque tierce lustache : cœur du moteur Mustache. Le renderer analyse un gabarit (`parse`) en arbre de jetons (texte, variables, sections `#`, sections inversées `^`, partiels `>`, accolades triples `{`/`&`, changement de délimiteurs `=`), le compile en fonction (`compile`) et le rend avec une vue (`render`). Les gabarits compilés sont mis en cache. Les valeurs `{{x}}` sont échappées en HTML ; `{{{x}}}` et `{{&x}}` ne le sont pas.
---- Accès : globale `renderer`
+--- Third-party library lustache: core of the Mustache engine. The renderer parses a template (`parse`) into a token tree (text, variables, `#` sections, `^` inverted sections, `>` partials, triple braces `{`/`&`, delimiter change `=`), compiles it into a function _anon(`compile`) and renders it with a view (`render`). Compiled templates are cached. `{{x}}` values are HTML-escaped; `{{{x}}}` and `{{&x}}` are not.
+--- Access: global `renderer`
 ---@class renderer
 renderer = {}
 
---- Rend une section inversée `{{^nom}}` seulement si la valeur est nil, false ou un tableau vide. Interne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lustach/src/lustache/renderer.lua:238
+--- Renders an inverted section `{{^name}}` only if the value is nil, false or an empty array. Internal.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lustach/src/lustache/renderer.lua:238
 ---@param self any
----@param name string Nom testé.
----@param context table Contexte courant.
----@param callback function Rendu du contenu.
----@return string  Texte rendu ou "".
+---@param name string Name tested.
+---@param context table Current context.
+---@param callback function Rendering of the content.
+---@return string  Rendered text or "".
 function renderer._inverted(self, name, context, callback) end
 
---- Rend une variable : résout le nom (appelle la valeur si c'est une fonction, avec la vue), convertit en chaîne (nil devient "") et échappe le HTML si `escape` est vrai. Interne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lustach/src/lustache/renderer.lua:270
+--- Renders a variable: resolves the name (calls the value if it is a function, with the view), converts to string (nil becomes "") and HTML-escapes if `escape` is true. Internal.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lustach/src/lustache/renderer.lua:270
 ---@param self any
----@param name string Nom de la variable.
----@param context table Contexte courant.
----@param escape boolean true pour {{x}}, false pour {{{x}}} et {{&x}}.
----@return string  Texte (avec, quand escape est vrai, un second retour : le nombre de remplacements de gsub).
+---@param name string Variable name.
+---@param context table Current context.
+---@param escape boolean true for {{x}}, false for {{{x}}} and {{&x}}.
+---@return string  Text (with, when escape is true, a second return value: the number of gsub replacements).
 function renderer._name(self, name, context, escape) end
 
---- Rend le partiel `{{>nom}}` à partir de self.partials (compilé puis mis en cache) ; "" si le partiel est absent. Interne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lustach/src/lustache/renderer.lua:252
+--- Renders the partial `{{>name}}` from self.partials (compiled then cached); "" if the partial is absent. Internal.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lustach/src/lustache/renderer.lua:252
 ---@param self any
----@param name string Nom du partiel.
----@param context table Contexte courant.
----@param originalTemplate string Gabarit d'origine.
----@return string  Texte rendu.
+---@param name string Partial name.
+---@param context table Current context.
+---@param originalTemplate string Original template.
+---@return string  Rendered text.
 function renderer._partial(self, name, context, originalTemplate) end
 
---- Rend une section `{{#nom}}...{{/nom}}` selon la valeur du nom (tableau : itération ; table : sous-contexte ; fonction : appel avec le texte brut ; sinon valeur truthy). Interne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lustach/src/lustache/renderer.lua:206
+--- Renders a section `{{#name}}...{{/name}}` according to the value of the name (array: iteration; table: sub-context; function: call with the raw text; otherwise truthy value). Internal.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lustach/src/lustache/renderer.lua:206
 ---@param self any
----@param token table Jeton de section.
----@param context table Contexte courant.
----@param callback function Rendu du contenu de la section.
----@param originalTemplate string Gabarit d'origine.
----@return string  Texte rendu.
+---@param token table Section token.
+---@param context table Current context.
+---@param callback function Rendering of the section content.
+---@param originalTemplate string Original template.
+---@return string  Rendered text.
 function renderer._section(self, token, context, callback, originalTemplate) end
 
---- Vide le cache des gabarits compilés et celui des partiels.
----Source : lua/common/libs/lustach/src/lustache/renderer.lua:163
+--- Clears the cache of compiled templates and that of partials.
+---Source: lua/common/libs/lustach/src/lustache/renderer.lua:163
 ---@param self any
 function renderer.clear_cache(self) end
 
---- Compile un gabarit (chaîne) ou une liste de jetons en fonction `function(view) -> string`.
----Source : lua/common/libs/lustach/src/lustache/renderer.lua:168
+--- Compiles a template (string) or a list of tokens into a function `function(view) -> string`.
+---Source: lua/common/libs/lustach/src/lustache/renderer.lua:168
 ---@param self any
----@param tokens string|table Gabarit brut (analysé par parse) ou arbre de jetons.
----@param tags string[]|nil Délimiteurs {ouvrant, fermant} ; défaut self.tags.
----@param originalTemplate string|nil Texte d'origine, nécessaire pour extraire le texte brut des sections-fonctions.
----@return function  Fonction de rendu prenant la vue.
+---@param tokens string|table Raw template (parsed by parse) or token tree.
+---@param tags string[]|nil Delimiters {opening, closing}; default self.tags.
+---@param originalTemplate string|nil Original text, needed to extract the raw text of function sections.
+---@return function  Render function taking the view.
 function renderer.compile(self, tokens, tags, originalTemplate) end
 
---- Crée une instance de renderer (caches vides, délimiteurs {{ }}).
----Source : lua/common/libs/lustach/src/lustache/renderer.lua:379
----@param self table Classe renderer (appel avec les deux-points).
+--- Creates a renderer instance (empty caches, {{ }} delimiters).
+---Source: lua/common/libs/lustach/src/lustache/renderer.lua:379
+---@param self table Renderer class (call with a colon).
 ---@return table  Instance.
 function renderer.new(self) end
 
---- Découpe le gabarit en arbre de jetons. `tags` est un tableau de deux chaînes (délimiteur ouvrant et fermant, par défaut mustaches). Lève une erreur « Unclosed tag at <pos> », « Unopened section » ou « Unclosed section ».
----Source : lua/common/libs/lustach/src/lustache/renderer.lua:291
+--- Splits the template into a token tree. `tags` is an array of two strings (opening and closing delimiter, mustaches by default). Raises an error "Unclosed tag at <pos>", "Unopened section" or "Unclosed section".
+---Source: lua/common/libs/lustach/src/lustache/renderer.lua:291
 ---@param self any
----@param template string Texte du gabarit.
----@param tags string[]|nil Délimiteurs personnalisés.
----@return table  Arbre de jetons {type, value, startIndex, endIndex, tokens?}.
+---@param template string Template text.
+---@param tags string[]|nil Custom delimiters.
+---@return table  Token tree {type, value, startIndex, endIndex, tokens?}.
 function renderer.parse(self, template, tags) end
 
---- Rend le gabarit `template` avec `view`. Compile et met en cache le gabarit au premier appel. Si `partials` est fourni, il est mémorisé comme table de partiels. Renvoie "" si `template` est nil. Erreur si appelé avec un point (`self` est une chaîne).
----Source : lua/common/libs/lustach/src/lustache/renderer.lua:181
+--- Renders the template `template` with `view`. Compiles and caches the template on the first call. If `partials` is provided, it is stored as the partials table. Returns "" if `template` is nil. Error if called with a dot (`self` is a string).
+---Source: lua/common/libs/lustach/src/lustache/renderer.lua:181
 ---@param self any
----@param template string|nil Texte du gabarit.
----@param view table|Context|nil Données ; une table est enveloppée dans un Context.
----@param partials table<string, string>|nil Partiels : nom -> texte du gabarit.
----@return string  Texte rendu.
+---@param template string|nil Template text.
+---@param view table|Context|nil Data; a table is wrapped in a Context.
+---@param partials table<string, string>|nil Partials: name -> template text.
+---@return string  Rendered text.
 function renderer.render(self, template, view, partials) end
 

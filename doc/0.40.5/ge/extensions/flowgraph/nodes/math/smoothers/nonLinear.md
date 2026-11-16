@@ -1,26 +1,26 @@
 # `flowgraph_nodes_math_smoothers_nonLinear`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/math/smoothers/nonLinear.lua` · VM : Game Engine (GE) · 67 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/math/smoothers/nonLinear.lua` · VM: Game Engine (GE) · 67 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/math/smoothers/nonLinear")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/math/smoothers/nonLinear")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Nonlinear Smoother' (categorie simple). Lissage non lineaire avec newTemporalSmoothingNonLinear : taux upRate/downRate selon le sens, pas de temps 'dt', 'set' pour forcer l'etat. Sortie 'value'. Descriptions de pins 'TODO' dans le code.
+Flowgraph node 'Nonlinear Smoother' (simple category). Nonlinear smoothing with newTemporalSmoothingNonLinear: upRate/downRate depending on direction, time step 'dt', 'set' to force the state. Output 'value'. Pin descriptions are 'TODO' in the code.
 
-## Remarques
+## Notes
 
-- init ecrit C.oldSet (classe) au lieu de self.oldSet.
-- Le lisseur est cree dans init, donc il n'est pas remis a zero au redemarrage du graphe (contrairement au Linear Smoother).
+- init writes C.oldSet (class) instead of self.oldSet.
+- The smoother is created in init, so it is not reset when the graph restarts (unlike the Linear Smoother).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:checkSetValue()` | Si 'set' a change, force l'etat du lisseur. | 32 |
-| `C:drawMiddle(builder, style)` | Affiche l'etat du lisseur. | 59 |
-| `C:init()` | Met C.oldSet=0 (classe) et cree le lisseur non lineaire. | 26 |
-| `C:work()` | Sans entree, sort l'etat ; sinon sort smoother:getWithRate(sample, dt, rate) avec rate = upRate/downRate (defaut 1). | 40 |
+| `C:checkSetValue()` | If 'set' changed, forces the smoother state. | 32 |
+| `C:drawMiddle(builder, style)` | Displays the smoother state. | 59 |
+| `C:init()` | Sets C.oldSet=0 (class) and creates the nonlinear smoother. | 26 |
+| `C:work()` | With no input, outputs the state; otherwise outputs smoother:getWithRate(sample, dt, rate) with rate = upRate/downRate (default 1). | 40 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/math/smoothers/nonLinear.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/math/smoothers/nonLinear.lua`.*

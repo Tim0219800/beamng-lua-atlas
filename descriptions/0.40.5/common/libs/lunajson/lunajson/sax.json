@@ -1,28 +1,50 @@
 {
   "path": "lua/common/libs/lunajson/lunajson/sax.lua",
-  "module": "Bibliothèque tierce lunajson : analyseur JSON de type SAX (événementiel). On lui fournit une table de callbacks ; il les appelle au fil de la lecture sans construire l'arbre complet, ce qui permet de traiter de gros fichiers ou des flux découpés en morceaux.",
+  "module": "Third-party library lunajson: SAX-type (event-driven) JSON parser. You give it a table of callbacks; it calls them as it reads without building the full tree, which allows processing large files or streams split into chunks.",
   "usage": "local sax = require('libs/lunajson/lunajson.sax')\nlocal p = sax.newparser('{\"a\":[1,2]}', {\n  startobject = function() print('{') end,\n  key = function(k) print('key', k) end,\n  number = function(n) print('num', n) end,\n  endobject = function() print('}') end,\n})\np.run()",
   "notes": [
-    "Callbacks reconnus dans `saxtbl` (tous facultatifs) : startobject, key, endobject, startarray, endarray, string, number, boolean, null.",
-    "L'objet renvoyé par newparser contient run() (lance l'analyse), tryc() (lit un caractère non blanc suivant), read(n) (lit n octets bruts, n >= 0) et tellpos() (position absolue dans le flux).",
-    "`src` peut être une chaîne ou une fonction sans argument qui renvoie successivement des morceaux de texte (nil à la fin)."
+    "Callbacks recognized in `saxtbl` (all optional): startobject, key, endobject, startarray, endarray, string, number, boolean, null.",
+    "The object returned by newparser contains run() (starts parsing), tryc() (reads the next non-blank character), read(n) (reads n raw bytes, n >= 0) and tellpos() (absolute position in the stream).",
+    "`src` can be a string or a no-argument function that successively returns pieces of text (nil at the end)."
   ],
   "functions": {
     "newparser": {
-      "desc": "Crée un analyseur SAX sur une chaîne JSON ou sur une fonction source qui fournit le texte par morceaux.",
+      "desc": "Creates a SAX parser on a JSON string or on a source function that supplies the text in pieces.",
       "params": {
-        "src": {"type": "string|function", "desc": "Texte JSON, ou fonction renvoyant le morceau suivant (nil quand terminé)."},
-        "saxtbl": {"type": "table", "desc": "Table de callbacks : startobject, key, endobject, startarray, endarray, string, number, boolean, null."}
+        "src": {
+          "type": "string|function",
+          "desc": "JSON text, or function returning the next piece (nil when done)."
+        },
+        "saxtbl": {
+          "type": "table",
+          "desc": "Callback table: startobject, key, endobject, startarray, endarray, string, number, boolean, null."
+        }
       },
-      "returns": [{"type": "table", "desc": "Objet {run, tryc, read, tellpos}."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Object {run, tryc, read, tellpos}."
+        }
+      ]
     },
     "newfileparser": {
-      "desc": "Comme newparser, mais lit le fichier `fn` par blocs de 8192 octets (le fichier est ouvert avec io.open puis refermé en fin de lecture).",
+      "desc": "Like newparser, but reads the file `fn` in 8192-byte blocks (the file is opened with io.open then closed at the end of reading).",
       "params": {
-        "fn": {"type": "string", "desc": "Chemin du fichier JSON (io.open, chemin disque réel)."},
-        "saxtbl": {"type": "table", "desc": "Table de callbacks (voir newparser)."}
+        "fn": {
+          "type": "string",
+          "desc": "Path of the JSON file (io.open, real disk path)."
+        },
+        "saxtbl": {
+          "type": "table",
+          "desc": "Callback table (see newparser)."
+        }
       },
-      "returns": [{"type": "table", "desc": "Objet {run, tryc, read, tellpos}."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Object {run, tryc, read, tellpos}."
+        }
+      ]
     }
   }
 }

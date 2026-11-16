@@ -1,19 +1,31 @@
 {
   "path": "lua/ge/extensions/editor/waterObjectHelper.lua",
-  "module": "Petite extension de l'éditeur de monde : quand on modifie dans l'inspecteur un champ de texture d'un objet d'eau, elle recharge les textures de l'objet. Elle ne réagit qu'aux champs rippleTex, foamTex, depthGradientTex et cubemap, et uniquement pour les objets de classe WaterObject.",
+  "module": "Small world editor extension: when a texture field of a water object is modified in the inspector, it reloads the object's textures. It reacts only to the fields rippleTex, foamTex, depthGradientTex and cubemap, and only for objects of class WaterObject.",
   "functions": {
     "onEditorInspectorFieldChanged": {
-      "desc": "Hook de l'éditeur appelé quand un champ de l'inspecteur change. Pour chaque id sélectionné, si le champ est rippleTex, foamTex, depthGradientTex ou cubemap et que l'objet est un WaterObject, appelle object:reloadTextures().",
+      "desc": "Editor hook called when an inspector field changes. For each selected id, if the field is rippleTex, foamTex, depthGradientTex or cubemap and the object is a WaterObject, calls object:reloadTextures().",
       "params": {
-        "selectedIds": {"type": "table<integer, integer>", "desc": "ids des objets sélectionnés"},
-        "fieldName": {"type": "string", "desc": "nom du champ modifié"},
-        "fieldValue": {"type": "any", "desc": "nouvelle valeur (non utilisée)"},
-        "arrayIndex": {"type": "integer|nil", "desc": "indice dans le tableau pour un champ tableau (non utilisé)"}
+        "selectedIds": {
+          "type": "table<integer, integer>",
+          "desc": "ids of the selected objects"
+        },
+        "fieldName": {
+          "type": "string",
+          "desc": "name of the modified field"
+        },
+        "fieldValue": {
+          "type": "any",
+          "desc": "new value (unused)"
+        },
+        "arrayIndex": {
+          "type": "integer|nil",
+          "desc": "array index for an array field (unused)"
+        }
       },
       "internal": true
     }
   },
   "notes": [
-    "Le code ne vérifie pas que scenetree.findObjectById renvoie un objet non nil avant d'appeler object:isSubClassOf : un id invalide provoquerait une erreur."
+    "The code does not check that scenetree.findObjectById returns a non-nil object before calling object:isSubClassOf: an invalid id would cause an error."
   ]
 }

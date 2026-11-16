@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/compositors/styles/english/enthusiast.lua",
+  "module": "Style de notes de rallye 'English enthusiast' : copilote anglais complet, avec numérotation 1 à 6 (one_to_six), appels de distance activés (english/distance), longueurs de virage, formes (opens, tightens, over crest, etc.), descripteurs (flat, square, hairpin, open/tight hairpin, bare), cautions et tous les modificateurs du fichier english/modifiers. Assemble les modules du dossier english ; M.composite et M.enumerate pointent vers compositorUtil.",
+  "notes": [
+    "AVERTISSEMENT du fichier : toute modification d'une chaîne utilisée pour une note impose de régénérer les fichiers audio.",
+    "Le descripteur 'bare' a un texte vide : il sert à dire un virage sans mot d'intensité (label 'bare').",
+    "Formes : opens, tightens, opensOverCrest, opensAndTightens, overCrest (variant '2'), tightensDown, tightensOverCrest, tightensAndOpens ; certaines n'ont pas de visuel.",
+    "Les champs sont documentés tels que lus par textCompositor et styleValidator ; une validation est faite au chargement."
+  ],
+  "fields": {
+    "composite": {"type": "function", "desc": "compositorUtil.compositeFromPhrases."},
+    "enumerate": {"type": "function", "desc": "compositorUtil.enumerateConcise."},
+    "distance": {"type": "table", "desc": "Config de distance (english/distance), appels de distance activés."},
+    "visualGeneral": {"type": "table", "desc": "Couleurs générales des notes visuelles (english/visual)."},
+    "componentTypes": {"type": "table", "desc": "corner (numérotation one_to_six, direction left/right, shapes, descriptors), caution (english/caution) et modifiers (english/modifiers)."},
+    "system": {"type": "table", "desc": "Notes système localisées (english/systemPacenotes)."}
+  }
+}

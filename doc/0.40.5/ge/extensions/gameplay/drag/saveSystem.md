@@ -1,206 +1,206 @@
 # `gameplay_drag_saveSystem`
 
-*Fichier : `lua/ge/extensions/gameplay/drag/saveSystem.lua` · VM : Game Engine (GE) · 951 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drag/saveSystem.lua` · VM: Game Engine (GE) · 951 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drag_saveSystem` : `extensions.load("gameplay_drag_saveSystem")`, puis la globale `gameplay_drag_saveSystem`
+**Access:** extension `gameplay_drag_saveSystem`: `extensions.load("gameplay_drag_saveSystem")`, then the global `gameplay_drag_saveSystem`
 
-Chargement et sauvegarde des données de drag. Lit les pistes (fichiers *.strip.json et *.dragSettings.json, ou ancien format converti), reconstruit couloirs, waypoints, zones et timers, synchronise les waypoints avec les objets BeamNGWaypoint de la scène, précalcule le point d'arrêt IA, et fait apparaître/supprime les prefabs (arbre, panneaux, décorations, chemins). Gère aussi les fichiers du joueur : meilleurs temps par véhicule (carnet de dial) et historique des tickets, dans le dossier settings/ de l'utilisateur.
+Loading and saving of drag data. Reads the tracks (*.strip.json and *.dragSettings.json files, or old format converted), rebuilds lanes, waypoints, zones and timers, synchronizes the waypoints with the BeamNGWaypoint objects of the scene, precomputes the AI stop point, and spawns/removes the prefabs (tree, signs, decorations, paths). Also manages the player's files: best times per vehicle (dial book) and slip history, in the user's settings/ folder.
 
-## Remarques
+## Notes
 
-- Fichiers écrits : settings/dragDialBest.json (meilleurs temps par hash de config), settings/dragDialHistory.jsonl (une ligne JSON par course, ajoutée en fin de fichier) et settings/dragDialTimes.json (ancien fichier, relu et migré une fois). Copie de sauvegarde carrière : <dossier de save>/dragDialTimes.json.
-- Les clés du carnet sont des hash du fichier de config du véhicule (FS:hashFile sur pc_file) ou 'vehicle_<id>' si indisponible ; time_1_4 sert de valeur de repli (10 s par défaut).
-- DEFAULT_TIMERS : reactionTime (0.178 m), time_60 (60 pi), time_330, time_1_8, time_1000, time_1_4 (important), velAt_1_8, velAt_1_4 ; distances en mètres (402.336 m = 1/4 de mile).
-- Les waypoints de couloir sont nommés <stripId>_wp_<type>_<couloir> dans la scène ; ceux de la piste <stripId>_<type>. Ils doivent exister dans le niveau (prefab) : le module ne les crée pas, il les renomme si besoin et relit leur transform.
-- Phases par défaut d'une piste : stage (dependency), countdown (dependency), race, stop. Valeurs par défaut : dragType 'headsUpRace', context 'freeroam', arbre '.500'.
-- normalizeTimersConfig ne conserve pas shortLabel : les timers fournis par un fichier dragSettings perdent ce champ (utilisé par le ticket), contrairement à DEFAULT_TIMERS.
-- Le point d'arrêt automatique de l'IA (autoStopName) est cherché dans le graphe de navigation à plus de 350 m de la ligne d'arrivée, sauf si la piste définit un waypoint drag_stop.
-- onCareerActive ne fait rien.
+- Files written: settings/dragDialBest.json (best times per config hash), settings/dragDialHistory.jsonl (one JSON line per race, appended at the end of the file) and settings/dragDialTimes.json (old file, re-read and migrated once). Career backup copy: <save folder>/dragDialTimes.json.
+- The book keys are hashes of the vehicle's config file (FS:hashFile on pc_file) or 'vehicle_<id>' if unavailable; time_1_4 serves as the fallback value (10 s by default).
+- DEFAULT_TIMERS: reactionTime (0.178 m), time_60 (60 ft), time_330, time_1_8, time_1000, time_1_4 (important), velAt_1_8, velAt_1_4; distances in meters (402.336 m = 1/4 mile).
+- The lane waypoints are named <stripId>_wp_<type>_<lane> in the scene; those of the track <stripId>_<type>. They must exist in the level (prefab): the module does not create them, it renames them if needed and re-reads their transform.
+- Default phases of a track: stage (dependency), countdown (dependency), race, stop. Default values: dragType 'headsUpRace', context 'freeroam', tree '.500'.
+- normalizeTimersConfig does not keep shortLabel: the timers supplied by a dragSettings file lose this field (used by the slip), unlike DEFAULT_TIMERS.
+- The AI's automatic stop point (autoStopName) is searched in the navigation graph more than 350 m from the finish line, unless the track defines a drag_stop waypoint.
+- onCareerActive does nothing.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drag_saveSystem.convertLegacyData(legacyData)` | Convertit l'ancien format de piste (stripInfo, strip.lanes) en structure actuelle (strip, lanes, waypoints), ajoute les timers par défaut et synchronise les waypoints avec la scène. | 415 |
-| `gameplay_drag_saveSystem.ensureDialCache()` | Charge une seule fois par session le carnet de dial (settings/dragDialTimes.json, historique .jsonl, overlay des meilleurs temps) et migre l'ancien historique hors du JSON principal. | 614 |
-| `gameplay_drag_saveSystem.generateHashFromFile(vehicleId)` | Hash stable de la config du véhicule (hash du fichier .pc) servant de clé pour dial et historique ; mis en cache. Retourne 'vehicle_<id>' si les détails ou le fichier sont indisponibles. | 723 |
-| `gameplay_drag_saveSystem.getAllLanes()` | Tous les couloirs de toutes les pistes (*.strip.json) du niveau courant, avec _stripId et _stripName ajoutés. | 887 |
-| `gameplay_drag_saveSystem.getAllStrips()` | Données brutes de toutes les pistes *.strip.json du dossier dragstrips du niveau courant (avec _filePath). | 870 |
-| `gameplay_drag_saveSystem.getCurrentLevelDragPath()` | Chemin /levels/<niveau>/dragstrips/ du niveau courant. | 261 |
-| `gameplay_drag_saveSystem.getCurrentSavePath()` | Chemin de sauvegarde carrière courant. | 752 |
-| `gameplay_drag_saveSystem.getDialTimes()` | Meilleurs temps par hash de config, sans l'historique ; time_1_4 vaut au moins 10 par défaut. | 706 |
-| `gameplay_drag_saveSystem.getHistory(id)` | Historique des tickets enregistrés. Avec id, filtre sur la piste correspondante du niveau courant (par id de dragSettings, nom de fichier ou id de strip). | 770 |
-| `gameplay_drag_saveSystem.getRecentHistory(count)` | Les count derniers tickets toutes pistes confondues, du plus récent au plus ancien (stripInfo.timestamp). | 851 |
-| `gameplay_drag_saveSystem.laneWaypointSceneName(stripId, wpType, laneIndex)` | Nom canonique dans la scène d'un waypoint de couloir : <stripId>_wp_<type>_<couloir> (le « _wp_ » évite la collision avec les feux d'arbre). | 118 |
-| `gameplay_drag_saveSystem.loadCompleteDragRaceData(stripId)` | Charge une piste complète depuis un fichier .strip.json : couloirs (waypoints, boundary, zone, stageToEndNormalized), waypoints de piste, zone de piste, phases/prefabs/timers par défaut ; puis synchronise avec la scène. | 267 |
-| `gameplay_drag_saveSystem.loadDragStripData(filepath)` | Charge un fichier de réglages de piste : format modulaire (champ stripId pointant vers un .strip.json, plus dragType, context, phases, prefabs, timers) ou ancien format converti par convertLegacyData. | 375 |
-| `gameplay_drag_saveSystem.loadPrefabs(data)` | Fait apparaître dans la scène les prefabs utilisés de data.prefabs (christmasTree, displaySign, decorations, paths) à l'origine et stocke leur prefabId. | 919 |
-| `gameplay_drag_saveSystem.onCareerActive()` | Hook de carrière activée ; ne fait rien. *(interne)* *(hook)* | 867 |
-| `gameplay_drag_saveSystem.onSaveCurrentProfile(currentSavePath)` | Hook : à la sauvegarde du profil, copie le carnet de dial dans le dossier de sauvegarde (saveDialFile). *(interne)* *(hook)* | 863 |
-| `gameplay_drag_saveSystem.resolveAutoStopWaypoints(dragData)` | Précalcule pour chaque couloir le nom du nœud de navigation où l'IA doit s'arrêter (lane.autoStopName), à plus de 350 m de la ligne d'arrivée. Ne fait rien si la piste a un waypoint drag_stop ou si le graphe n'existe pas. | 239 |
-| `gameplay_drag_saveSystem.saveDialFile(dir)` | Écrit le carnet de dial dans <dir>/dragDialTimes.json. | 758 |
-| `gameplay_drag_saveSystem.saveDialTimes(dragData, timeslip)` | Pour chaque racer jouable, met à jour son meilleur temps (timer important) si battu, et ajoute le ticket à l'historique (mémoire et fichier .jsonl, avec configHash par pilote). Écrit settings/dragDialBest.json si un record change. | 650 |
-| `gameplay_drag_saveSystem.saveLane(lane, filePath)` | Écrit un couloir en JSON (mise en forme lisible). | 915 |
-| `gameplay_drag_saveSystem.saveStrip(strip, filePath)` | Écrit une piste en JSON après avoir renommé les waypoints de chaque couloir selon laneWaypointSceneName. | 901 |
-| `gameplay_drag_saveSystem.syncDragStripWaypointsWithSceneTree(dragData)` | Pour chaque waypoint de couloir et de piste, retrouve le BeamNGWaypoint de la scène à son nom canonique, le renomme si besoin, relit sa position/rotation/échelle, et calcule lane.stageToEndNormalized. Rebuild le graphe de navigation (map.reset) si un renommage a eu lieu. | 158 |
-| `gameplay_drag_saveSystem.unloadPrefabs(data)` | Supprime de la scène les prefabs utilisés (par prefabId) et efface prefabId. | 938 |
+| `gameplay_drag_saveSystem.convertLegacyData(legacyData)` | Converts the old track format (stripInfo, strip.lanes) into the current structure (strip, lanes, waypoints), adds the default timers and synchronizes the waypoints with the scene. | 415 |
+| `gameplay_drag_saveSystem.ensureDialCache()` | Loads the dial book once per session (settings/dragDialTimes.json, .jsonl history, best times overlay) and migrates the old history out of the main JSON. | 614 |
+| `gameplay_drag_saveSystem.generateHashFromFile(vehicleId)` | Stable hash of the vehicle's config (hash of the .pc file) serving as the key for dial and history; cached. Returns 'vehicle_<id>' if the details or the file are unavailable. | 723 |
+| `gameplay_drag_saveSystem.getAllLanes()` | All the lanes of all the tracks (*.strip.json) of the current level, with _stripId and _stripName added. | 887 |
+| `gameplay_drag_saveSystem.getAllStrips()` | Raw data of all the *.strip.json tracks of the current level's dragstrips folder (with _filePath). | 870 |
+| `gameplay_drag_saveSystem.getCurrentLevelDragPath()` | Path /levels/<level>/dragstrips/ of the current level. | 261 |
+| `gameplay_drag_saveSystem.getCurrentSavePath()` | Current career save path. | 752 |
+| `gameplay_drag_saveSystem.getDialTimes()` | Best times per config hash, without the history; time_1_4 is at least 10 by default. | 706 |
+| `gameplay_drag_saveSystem.getHistory(id)` | History of the recorded slips. With id, filters on the matching track of the current level (by dragSettings id, file name or strip id). | 770 |
+| `gameplay_drag_saveSystem.getRecentHistory(count)` | The last count slips across all tracks, from most recent to oldest (stripInfo.timestamp). | 851 |
+| `gameplay_drag_saveSystem.laneWaypointSceneName(stripId, wpType, laneIndex)` | Canonical name in the scene of a lane waypoint: <stripId>_wp_<type>_<lane> (the "_wp_" avoids collision with the tree lights). | 118 |
+| `gameplay_drag_saveSystem.loadCompleteDragRaceData(stripId)` | Loads a full track from a .strip.json file: lanes (waypoints, boundary, zone, stageToEndNormalized), track waypoints, track zone, default phases/prefabs/timers; then synchronizes with the scene. | 267 |
+| `gameplay_drag_saveSystem.loadDragStripData(filepath)` | Loads a track settings file: modular format (stripId field pointing to a .strip.json, plus dragType, context, phases, prefabs, timers) or old format converted by convertLegacyData. | 375 |
+| `gameplay_drag_saveSystem.loadPrefabs(data)` | Spawns in the scene the prefabs in use from data.prefabs (christmasTree, displaySign, decorations, paths) at the origin and stores their prefabId. | 919 |
+| `gameplay_drag_saveSystem.onCareerActive()` | Career activated hook; does nothing. *(internal)* *(hook)* | 867 |
+| `gameplay_drag_saveSystem.onSaveCurrentProfile(currentSavePath)` | Hook: when the profile is saved, copies the dial book into the save folder (saveDialFile). *(internal)* *(hook)* | 863 |
+| `gameplay_drag_saveSystem.resolveAutoStopWaypoints(dragData)` | Precomputes for each lane the name of the navigation node where the AI must stop (lane.autoStopName), more than 350 m from the finish line. Does nothing if the track has a drag_stop waypoint or if the graph does not exist. | 239 |
+| `gameplay_drag_saveSystem.saveDialFile(dir)` | Writes the dial book to <dir>/dragDialTimes.json. | 758 |
+| `gameplay_drag_saveSystem.saveDialTimes(dragData, timeslip)` | For each playable racer, updates its best time (important timer) if beaten, and adds the slip to the history (memory and .jsonl file, with configHash per driver). Writes settings/dragDialBest.json if a record changes. | 650 |
+| `gameplay_drag_saveSystem.saveLane(lane, filePath)` | Writes a lane as JSON (human-readable formatting). | 915 |
+| `gameplay_drag_saveSystem.saveStrip(strip, filePath)` | Writes a track as JSON after renaming each lane's waypoints according to laneWaypointSceneName. | 901 |
+| `gameplay_drag_saveSystem.syncDragStripWaypointsWithSceneTree(dragData)` | For each lane and track waypoint, finds the scene's BeamNGWaypoint by its canonical name, renames it if needed, re-reads its position/rotation/scale, and computes lane.stageToEndNormalized. Rebuilds the navigation graph (map.reset) if a rename took place. | 158 |
+| `gameplay_drag_saveSystem.unloadPrefabs(data)` | Removes the prefabs in use from the scene (by prefabId) and clears prefabId. | 938 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drag_saveSystem.convertLegacyData(legacyData)`
 
-Convertit l'ancien format de piste (stripInfo, strip.lanes) en structure actuelle (strip, lanes, waypoints), ajoute les timers par défaut et synchronise les waypoints avec la scène.
+Converts the old track format (stripInfo, strip.lanes) into the current structure (strip, lanes, waypoints), adds the default timers and synchronizes the waypoints with the scene.
 
-- `legacyData` (*table*) : Données dans l'ancien format.
-- **renvoie** : table|nil Données converties, nil si legacyData est nil.
+- `legacyData` (*table*) : Data in the old format.
+- **returns**: table|nil Converted data, nil if legacyData is nil.
 
 #### `gameplay_drag_saveSystem.ensureDialCache()`
 
-Charge une seule fois par session le carnet de dial (settings/dragDialTimes.json, historique .jsonl, overlay des meilleurs temps) et migre l'ancien historique hors du JSON principal.
+Loads the dial book once per session (settings/dragDialTimes.json, .jsonl history, best times overlay) and migrates the old history out of the main JSON.
 
-- **renvoie** : table Cache indexé par hash de config véhicule ({time_1_4, ..., history}).
+- **returns**: table Cache keyed by vehicle config hash ({time_1_4, ..., history}).
 
 #### `gameplay_drag_saveSystem.generateHashFromFile(vehicleId)`
 
-Hash stable de la config du véhicule (hash du fichier .pc) servant de clé pour dial et historique ; mis en cache. Retourne 'vehicle_<id>' si les détails ou le fichier sont indisponibles.
+Stable hash of the vehicle's config (hash of the .pc file) serving as the key for dial and history; cached. Returns 'vehicle_<id>' if the details or the file are unavailable.
 
-- `vehicleId` (*integer|nil*) : ID du véhicule (défaut : véhicule du joueur 0).
-- **renvoie** : string Hash ou clé de repli.
+- `vehicleId` (*integer|nil*) : Vehicle ID (default: player 0's vehicle).
+- **returns**: string Hash or fallback key.
 
 #### `gameplay_drag_saveSystem.getAllLanes()`
 
-Tous les couloirs de toutes les pistes (*.strip.json) du niveau courant, avec _stripId et _stripName ajoutés.
+All the lanes of all the tracks (*.strip.json) of the current level, with _stripId and _stripName added.
 
-- **renvoie** : table[] Couloirs.
+- **returns**: table[] Lanes.
 
 #### `gameplay_drag_saveSystem.getAllStrips()`
 
-Données brutes de toutes les pistes *.strip.json du dossier dragstrips du niveau courant (avec _filePath).
+Raw data of all the *.strip.json tracks of the current level's dragstrips folder (with _filePath).
 
-- **renvoie** : table[] Pistes.
+- **returns**: table[] Tracks.
 
 #### `gameplay_drag_saveSystem.getCurrentLevelDragPath()`
 
-Chemin /levels/<niveau>/dragstrips/ du niveau courant.
+Path /levels/<level>/dragstrips/ of the current level.
 
-- **renvoie** : string|nil Chemin, nil (log E) si le niveau est inconnu.
+- **returns**: string|nil Path, nil (E log) if the level is unknown.
 
 #### `gameplay_drag_saveSystem.getCurrentSavePath()`
 
-Chemin de sauvegarde carrière courant.
+Current career save path.
 
-- **renvoie** : string Chemin, chaîne vide hors carrière.
+- **returns**: string Path, empty string outside career.
 
 #### `gameplay_drag_saveSystem.getDialTimes()`
 
-Meilleurs temps par hash de config, sans l'historique ; time_1_4 vaut au moins 10 par défaut.
+Best times per config hash, without the history; time_1_4 is at least 10 by default.
 
-- **renvoie** : table<string, table> Table hash vers {time_1_4, autres timers}.
+- **returns**: table<string, table> Table hash to {time_1_4, other timers}.
 
 #### `gameplay_drag_saveSystem.getHistory(id)`
 
-Historique des tickets enregistrés. Avec id, filtre sur la piste correspondante du niveau courant (par id de dragSettings, nom de fichier ou id de strip).
+History of the recorded slips. With id, filters on the matching track of the current level (by dragSettings id, file name or strip id).
 
-- `id` (*string|nil*) : Identifiant de piste/installation ; nil = tout l'historique.
-- **renvoie** : table {history = tickets[]}.
+- `id` (*string|nil*) : Track/facility identifier; nil = whole history.
+- **returns**: table {history = tickets[]}.
 
 #### `gameplay_drag_saveSystem.getRecentHistory(count)`
 
-Les count derniers tickets toutes pistes confondues, du plus récent au plus ancien (stripInfo.timestamp).
+The last count slips across all tracks, from most recent to oldest (stripInfo.timestamp).
 
-- `count` (*integer*) : Nombre maximum de tickets.
-- **renvoie** : table[] Tickets.
+- `count` (*integer*) : Maximum number of slips.
+- **returns**: table[] Slips.
 
 #### `gameplay_drag_saveSystem.laneWaypointSceneName(stripId, wpType, laneIndex)`
 
-Nom canonique dans la scène d'un waypoint de couloir : <stripId>_wp_<type>_<couloir> (le « _wp_ » évite la collision avec les feux d'arbre).
+Canonical name in the scene of a lane waypoint: <stripId>_wp_<type>_<lane> (the "_wp_" avoids collision with the tree lights).
 
-- `stripId` (*string*) : Identifiant de piste.
-- `wpType` (*string*) : Type de waypoint (stage, endLine...).
-- `laneIndex` (*integer*) : Indice du couloir.
-- **renvoie** : string Nom d'objet.
+- `stripId` (*string*) : Track identifier.
+- `wpType` (*string*) : Waypoint type (stage, endLine...).
+- `laneIndex` (*integer*) : Lane index.
+- **returns**: string Object name.
 
 #### `gameplay_drag_saveSystem.loadCompleteDragRaceData(stripId)`
 
-Charge une piste complète depuis un fichier .strip.json : couloirs (waypoints, boundary, zone, stageToEndNormalized), waypoints de piste, zone de piste, phases/prefabs/timers par défaut ; puis synchronise avec la scène.
+Loads a full track from a .strip.json file: lanes (waypoints, boundary, zone, stageToEndNormalized), track waypoints, track zone, default phases/prefabs/timers; then synchronizes with the scene.
 
-- `stripId` (*string*) : Chemin du fichier strip JSON.
-- **renvoie** : table|nil Données complètes, nil (log E) en cas d'échec de lecture.
+- `stripId` (*string*) : Path of the strip JSON file.
+- **returns**: table|nil Full data, nil (E log) on read failure.
 
 #### `gameplay_drag_saveSystem.loadDragStripData(filepath)`
 
-Charge un fichier de réglages de piste : format modulaire (champ stripId pointant vers un .strip.json, plus dragType, context, phases, prefabs, timers) ou ancien format converti par convertLegacyData.
+Loads a track settings file: modular format (stripId field pointing to a .strip.json, plus dragType, context, phases, prefabs, timers) or old format converted by convertLegacyData.
 
-- `filepath` (*string*) : Chemin du fichier JSON (.dragSettings.json).
-- **renvoie** : table|nil Données de piste ou nil.
+- `filepath` (*string*) : Path of the JSON file (.dragSettings.json).
+- **returns**: table|nil Track data or nil.
 
 #### `gameplay_drag_saveSystem.loadPrefabs(data)`
 
-Fait apparaître dans la scène les prefabs utilisés de data.prefabs (christmasTree, displaySign, decorations, paths) à l'origine et stocke leur prefabId.
+Spawns in the scene the prefabs in use from data.prefabs (christmasTree, displaySign, decorations, paths) at the origin and stores their prefabId.
 
-- `data` (*table*) : Données de piste avec prefabs[clé] = {isUsed, path, treeType}.
+- `data` (*table*) : Track data with prefabs[key] = {isUsed, path, treeType}.
 
 #### `gameplay_drag_saveSystem.onSaveCurrentProfile(currentSavePath)`
 
-Hook : à la sauvegarde du profil, copie le carnet de dial dans le dossier de sauvegarde (saveDialFile).
+Hook: when the profile is saved, copies the dial book into the save folder (saveDialFile).
 
-- `currentSavePath` (*string|nil*) : Dossier de sauvegarde courant.
+- `currentSavePath` (*string|nil*) : Current save folder.
 
 #### `gameplay_drag_saveSystem.resolveAutoStopWaypoints(dragData)`
 
-Précalcule pour chaque couloir le nom du nœud de navigation où l'IA doit s'arrêter (lane.autoStopName), à plus de 350 m de la ligne d'arrivée. Ne fait rien si la piste a un waypoint drag_stop ou si le graphe n'existe pas.
+Precomputes for each lane the name of the navigation node where the AI must stop (lane.autoStopName), more than 350 m from the finish line. Does nothing if the track has a drag_stop waypoint or if the graph does not exist.
 
-- `dragData` (*table*) : Données de piste.
+- `dragData` (*table*) : Track data.
 
 #### `gameplay_drag_saveSystem.saveDialFile(dir)`
 
-Écrit le carnet de dial dans <dir>/dragDialTimes.json.
+Writes the dial book to <dir>/dragDialTimes.json.
 
-- `dir` (*string*) : Dossier cible.
-- **renvoie** : boolean Succès de l'écriture.
+- `dir` (*string*) : Target folder.
+- **returns**: boolean Write success.
 
 #### `gameplay_drag_saveSystem.saveDialTimes(dragData, timeslip)`
 
-Pour chaque racer jouable, met à jour son meilleur temps (timer important) si battu, et ajoute le ticket à l'historique (mémoire et fichier .jsonl, avec configHash par pilote). Écrit settings/dragDialBest.json si un record change.
+For each playable racer, updates its best time (important timer) if beaten, and adds the slip to the history (memory and .jsonl file, with configHash per driver). Writes settings/dragDialBest.json if a record changes.
 
-- `dragData` (*table*) : Données de course courantes.
-- `timeslip` (*table|nil*) : Ticket à enregistrer dans l'historique.
+- `dragData` (*table*) : Current race data.
+- `timeslip` (*table|nil*) : Slip to record in the history.
 
 #### `gameplay_drag_saveSystem.saveLane(lane, filePath)`
 
-Écrit un couloir en JSON (mise en forme lisible).
+Writes a lane as JSON (human-readable formatting).
 
-- `lane` (*table*) : Couloir.
-- `filePath` (*string*) : Fichier cible.
-- **renvoie** : boolean Succès.
+- `lane` (*table*) : Lane.
+- `filePath` (*string*) : Target file.
+- **returns**: boolean Success.
 
 #### `gameplay_drag_saveSystem.saveStrip(strip, filePath)`
 
-Écrit une piste en JSON après avoir renommé les waypoints de chaque couloir selon laneWaypointSceneName.
+Writes a track as JSON after renaming each lane's waypoints according to laneWaypointSceneName.
 
-- `strip` (*table*) : Piste (id, lanes avec waypoints[] ayant un type).
-- `filePath` (*string*) : Fichier cible.
-- **renvoie** : boolean Succès.
+- `strip` (*table*) : Track (id, lanes with waypoints[] having a type).
+- `filePath` (*string*) : Target file.
+- **returns**: boolean Success.
 
 #### `gameplay_drag_saveSystem.syncDragStripWaypointsWithSceneTree(dragData)`
 
-Pour chaque waypoint de couloir et de piste, retrouve le BeamNGWaypoint de la scène à son nom canonique, le renomme si besoin, relit sa position/rotation/échelle, et calcule lane.stageToEndNormalized. Rebuild le graphe de navigation (map.reset) si un renommage a eu lieu.
+For each lane and track waypoint, finds the scene's BeamNGWaypoint by its canonical name, renames it if needed, re-reads its position/rotation/scale, and computes lane.stageToEndNormalized. Rebuilds the navigation graph (map.reset) if a rename took place.
 
-- `dragData` (*table*) : Données de piste (strip.id requis).
+- `dragData` (*table*) : Track data (strip.id required).
 
 #### `gameplay_drag_saveSystem.unloadPrefabs(data)`
 
-Supprime de la scène les prefabs utilisés (par prefabId) et efface prefabId.
+Removes the prefabs in use from the scene (by prefabId) and clears prefabId.
 
-- `data` (*table*) : Données de piste avec prefabs.
+- `data` (*table*) : Track data with prefabs.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `DEFAULT_TIMERS` | table[] | Timers par défaut d'une piste : {id, label, labelKey, shortLabel, type = 'distanceTimer'\|'velocity', distance (m), important}. |
+| `DEFAULT_TIMERS` | table[] | Default timers of a track: {id, label, labelKey, shortLabel, type = 'distanceTimer'\|'velocity', distance (m), important}. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`, `hashFile`, `removeFile`, `renameFile`
 - `be:` `getPlayerVehicleID`
@@ -208,4 +208,4 @@ Supprime de la scène les prefabs utilisés (par prefabId) et efface prefabId.
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drag/saveSystem.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drag/saveSystem.lua`.*

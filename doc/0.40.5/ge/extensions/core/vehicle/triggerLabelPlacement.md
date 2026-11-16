@@ -1,52 +1,52 @@
 # `core_vehicle_triggerLabelPlacement`
 
-*Fichier : `lua/ge/extensions/core/vehicle/triggerLabelPlacement.lua` · VM : Game Engine (GE) · 359 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/vehicle/triggerLabelPlacement.lua` · VM: Game Engine (GE) · 359 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_vehicle_triggerLabelPlacement` : `extensions.load("core_vehicle_triggerLabelPlacement")`, puis la globale `core_vehicle_triggerLabelPlacement`
+**Access:** extension `core_vehicle_triggerLabelPlacement`: `extensions.load("core_vehicle_triggerLabelPlacement")`, then the global `core_vehicle_triggerLabelPlacement`
 
-Extension GE `core_vehicle_triggerLabelPlacement` : calcule où placer l'étiquette d'UI d'un trigger de véhicule (zones d'interaction jbeam) autour de sa boîte projetée à l'écran. Reconstruit la base (axes) du trigger à partir des noeuds idRef/idX/idY et de ses rotations (en reproduisant la séquence du code C++), en déduit les demi-dimensions, projette les 8 coins à l'écran et choisit le côté (droite, gauche, haut, bas) avec le plus de place. Fonctions utilitaires sans état persistant, utilisées par les outils d'UI/debug des triggers et par core_vehicle_vehicleTriggerHighlight.
+GE extension `core_vehicle_triggerLabelPlacement`: computes where to place the UI label of a vehicle trigger (jbeam interaction zones) around its box projected on screen. Rebuilds the trigger's basis (axes) from the idRef/idX/idY nodes and its rotations (reproducing the C++ code's sequence), derives the half-dimensions, projects the 8 corners onto the screen and picks the side (right, left, top, bottom) with the most room. Utility functions with no persistent state, used by the trigger UI/debug tools and by core_vehicle_vehicleTriggerHighlight.
 
-## Remarques
+## Notes
 
-- Les coordonnées d'écran sont des fractions 0..1 (worldToScreenPercent01 doit renvoyer une table {x, y} dans cet intervalle). Les tables renvoyées par computeForTrigger sont réutilisées d'un appel à l'autre (pas de copie) : l'appelant doit consommer ou copier le résultat tout de suite.
-- Le côté est 'bottom' si la boîte projetée tient entièrement dans la zone centrale 15 %-85 % de l'écran ; sinon c'est le côté qui offre le plus d'espace libre.
-- Taille du trigger : un nombre donne une sphère de demi-dimension |size| ; une table/vecteur est lue comme dimensions complètes (converties en demi-dimensions, défaut 0.2). Les angles dont la valeur dépasse 2π sont considérés comme des degrés.
-- Si idRef/idX/idY sont absents ou dégénérés, la base retombe sur les axes monde (1,0,0), (0,1,0), (0,0,1).
+- Screen coordinates are fractions 0..1 (worldToScreenPercent01 must return a {x, y} table in this range). The tables returned by computeForTrigger are reused from one call to the next (no copy): the caller must consume or copy the result right away.
+- The side is 'bottom' if the projected box fits entirely in the central 15%-85% zone of the screen; otherwise it is the side that offers the most free space.
+- Trigger size: a number gives a sphere of half-dimension |size|; a table/vector is read as full dimensions (converted to half-dimensions, default 0.2). Angles whose value exceeds 2π are considered to be degrees.
+- If idRef/idX/idY are missing or degenerate, the basis falls back to the world axes (1,0,0), (0,1,0), (0,0,1).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_vehicle_triggerLabelPlacement.computeForTrigger(vehicleObj, triggerObj, triggerData, worldToScreenPercent01, p, centerWorld, centerScreen)` | Calcule le placement de l'étiquette d'un trigger : projette la boîte du trigger à l'écran et choisit le côté de l'étiquette avec sa position (labelX, labelY en fraction d'écran) et décalages CSS (labelTx, labelTy, avec 0.6em de marge). | 282 |
-| `core_vehicle_triggerLabelPlacement.computeTriggerBasisAndHalfExtents(vehicleObj, triggerData)` | Renvoie la base orthonormée du trigger et ses demi-dimensions, partagées avec les dessins debug/surbrillance pour rester cohérentes avec le placement. | 352 |
+| `core_vehicle_triggerLabelPlacement.computeForTrigger(vehicleObj, triggerObj, triggerData, worldToScreenPercent01, p, centerWorld, centerScreen)` | Computes the placement of a trigger's label: projects the trigger's box on screen and chooses the label side with its position (labelX, labelY as screen fraction) and CSS offsets (labelTx, labelTy, with 0.6em margin). | 282 |
+| `core_vehicle_triggerLabelPlacement.computeTriggerBasisAndHalfExtents(vehicleObj, triggerData)` | Returns the trigger's orthonormal basis and its half-dimensions, shared with the debug/highlight drawings to stay consistent with the placement. | 352 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_vehicle_triggerLabelPlacement.computeForTrigger(vehicleObj, triggerObj, triggerData, worldToScreenPercent01, p, centerWorld, centerScreen)`
 
-Calcule le placement de l'étiquette d'un trigger : projette la boîte du trigger à l'écran et choisit le côté de l'étiquette avec sa position (labelX, labelY en fraction d'écran) et décalages CSS (labelTx, labelTy, avec 0.6em de marge).
+Computes the placement of a trigger's label: projects the trigger's box on screen and chooses the label side with its position (labelX, labelY as screen fraction) and CSS offsets (labelTx, labelTy, with 0.6em margin).
 
-- `vehicleObj` (*userdata*) : véhicule portant le trigger
-- `triggerObj` (*userdata|nil*) : objet trigger (méthode getCenter) ; inutile si centerWorld est fourni
-- `triggerData` (*table*) : données jbeam du trigger (idRef, idX, idY, size, baseRotation, rotation…)
-- `worldToScreenPercent01` (*function|nil*) : fonction(posMonde, sortie) -> {x, y} en fractions d'écran
-- `p` (*table|nil*) : profileur optionnel (méthode add) pour mesurer les étapes
-- `centerWorld` (*vec3|nil*) : centre du trigger en repère monde (sinon triggerObj:getCenter())
-- `centerScreen` (*table|nil*) : centre à l'écran, déjà calculé (sinon calculé via worldToScreenPercent01)
-- **renvoie** : table|nil {labelX, labelY, labelTx, labelTy, labelSide ('right'|'left'|'top'|'bottom'), bounds = {minX, maxX, minY, maxY, centerX, centerY}} ; nil si la projection est impossible
+- `vehicleObj` (*userdata*) : vehicle carrying the trigger
+- `triggerObj` (*userdata|nil*) : trigger object (getCenter method); unnecessary if centerWorld is provided
+- `triggerData` (*table*) : trigger jbeam data (idRef, idX, idY, size, baseRotation, rotation...)
+- `worldToScreenPercent01` (*function|nil*) : function(worldPos, output) -> {x, y} in screen fractions
+- `p` (*table|nil*) : optional profiler (add method) to measure the steps
+- `centerWorld` (*vec3|nil*) : trigger center in world space (otherwise triggerObj:getCenter())
+- `centerScreen` (*table|nil*) : center on screen, already computed (otherwise computed via worldToScreenPercent01)
+- **returns**: table|nil {labelX, labelY, labelTx, labelTy, labelSide ('right'|'left'|'top'|'bottom'), bounds = {minX, maxX, minY, maxY, centerX, centerY}}; nil if projection is impossible
 
 #### `core_vehicle_triggerLabelPlacement.computeTriggerBasisAndHalfExtents(vehicleObj, triggerData)`
 
-Renvoie la base orthonormée du trigger et ses demi-dimensions, partagées avec les dessins debug/surbrillance pour rester cohérentes avec le placement.
+Returns the trigger's orthonormal basis and its half-dimensions, shared with the debug/highlight drawings to stay consistent with the placement.
 
-- `vehicleObj` (*userdata*) : véhicule portant le trigger
-- `triggerData` (*table*) : données du trigger
-- **renvoie** : vec3 axe X
-- **renvoie** : vec3 axe Y
-- **renvoie** : vec3 axe Z
-- **renvoie** : number demi-dimension X
-- **renvoie** : number demi-dimension Y
-- **renvoie** : number demi-dimension Z
+- `vehicleObj` (*userdata*) : vehicle carrying the trigger
+- `triggerData` (*table*) : trigger data
+- **returns**: vec3 X axis
+- **returns**: vec3 Y axis
+- **returns**: vec3 Z axis
+- **returns**: number X half-dimension
+- **returns**: number Y half-dimension
+- **returns**: number Z half-dimension
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/vehicle/triggerLabelPlacement.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/vehicle/triggerLabelPlacement.lua`.*

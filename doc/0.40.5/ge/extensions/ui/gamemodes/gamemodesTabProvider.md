@@ -1,69 +1,69 @@
 # `ui_gamemodes_gamemodesTabProvider`
 
-*Fichier : `lua/ge/extensions/ui/gamemodes/gamemodesTabProvider.lua` · VM : Game Engine (GE) · 113 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/gamemodes/gamemodesTabProvider.lua` · VM: Game Engine (GE) · 113 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_gamemodes_gamemodesTabProvider` : `extensions.load("ui_gamemodes_gamemodesTabProvider")`, puis la globale `ui_gamemodes_gamemodesTabProvider`
+**Access:** extension `ui_gamemodes_gamemodesTabProvider`: `extensions.load("ui_gamemodes_gamemodesTabProvider")`, then the global `ui_gamemodes_gamemodesTabProvider`
 
-Façade utilisée par l'onglet « modes de jeu » de l'UI. Selon qu'une session multijoueur existe (multiplayer_sessionManager.getCurrentSession() non nil), les appels sont redirigés vers multiplayer_uiBackend_multiplayerUIManager, sinon vers gameplay_multiseat_gamemodeManager (écran partagé). Chaque fonction vérifie que le module cible est chargé et ne fait rien sinon.
+Facade used by the UI's "game modes" tab. Depending on whether a multiplayer session exists (multiplayer_sessionManager.getCurrentSession() non-nil), calls are redirected to multiplayer_uiBackend_multiplayerUIManager, otherwise to gameplay_multiseat_gamemodeManager (split screen). Each function checks that the target module is loaded and does nothing otherwise.
 
-## Remarques
+## Notes
 
-- restartGamemode ne fait rien en session réseau ; selectGamemode, deselectGamemode, startReadyUp, stopReadyUp, setOwnerPreReadyRole et requestSetOwnGamemodeRole ne font rien hors session réseau.
+- restartGamemode does nothing in a network session; selectGamemode, deselectGamemode, startReadyUp, stopReadyUp, setOwnerPreReadyRole and requestSetOwnGamemodeRole do nothing outside a network session.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_gamemodes_gamemodesTabProvider.deselectGamemode()` | Réseau uniquement : l'hôte désélectionne le mode (deselectGamemodeForOwner). | 61 |
-| `ui_gamemodes_gamemodesTabProvider.requestGamemodeData()` | Demande à envoyer à l'UI les données des modes de jeu (requestMultiplayerTabData en réseau, requestGamemodeData en écran partagé). | 8 |
-| `ui_gamemodes_gamemodesTabProvider.requestSetOwnGamemodeRole(role)` | Réseau uniquement : demande à changer son propre rôle dans le mode de jeu. | 93 |
-| `ui_gamemodes_gamemodesTabProvider.restartGamemode(name, settings)` | Redémarre un mode de jeu en écran partagé (gamemodeManager.restart). Sans effet en session réseau. | 44 |
-| `ui_gamemodes_gamemodesTabProvider.selectGamemode(name)` | Réseau uniquement : l'hôte sélectionne un mode (selectGamemodeForOwner). | 53 |
-| `ui_gamemodes_gamemodesTabProvider.setOwnerPreReadyRole(role)` | Réseau uniquement : définit le rôle de l'hôte avant la phase « prêt ». | 85 |
-| `ui_gamemodes_gamemodesTabProvider.startGamemode(name, settings)` | Démarre un mode de jeu (multiplayerUIManager.startGamemode ou gamemodeManager.start). | 20 |
-| `ui_gamemodes_gamemodesTabProvider.startReadyUp(gamemodeInfo)` | Réseau uniquement : lance la phase « prêt » des joueurs pour un mode. | 69 |
-| `ui_gamemodes_gamemodesTabProvider.stopGamemode()` | Arrête le mode de jeu en cours (stopGamemode en réseau, stop en écran partagé). | 32 |
-| `ui_gamemodes_gamemodesTabProvider.stopReadyUp()` | Réseau uniquement : arrête la phase « prêt ». | 77 |
+| `ui_gamemodes_gamemodesTabProvider.deselectGamemode()` | Network only: the host deselects the mode (deselectGamemodeForOwner). | 61 |
+| `ui_gamemodes_gamemodesTabProvider.requestGamemodeData()` | Requests that the game mode data be sent to the UI (requestMultiplayerTabData on network, requestGamemodeData in split screen). | 8 |
+| `ui_gamemodes_gamemodesTabProvider.requestSetOwnGamemodeRole(role)` | Network only: requests to change one's own role in the game mode. | 93 |
+| `ui_gamemodes_gamemodesTabProvider.restartGamemode(name, settings)` | Restarts a game mode in split screen (gamemodeManager.restart). No effect in a network session. | 44 |
+| `ui_gamemodes_gamemodesTabProvider.selectGamemode(name)` | Network only: the host selects a mode (selectGamemodeForOwner). | 53 |
+| `ui_gamemodes_gamemodesTabProvider.setOwnerPreReadyRole(role)` | Network only: sets the host's role before the "ready" phase. | 85 |
+| `ui_gamemodes_gamemodesTabProvider.startGamemode(name, settings)` | Starts a game mode (multiplayerUIManager.startGamemode or gamemodeManager.start). | 20 |
+| `ui_gamemodes_gamemodesTabProvider.startReadyUp(gamemodeInfo)` | Network only: starts the players' "ready" phase for a mode. | 69 |
+| `ui_gamemodes_gamemodesTabProvider.stopGamemode()` | Stops the current game mode (stopGamemode on network, stop in split screen). | 32 |
+| `ui_gamemodes_gamemodesTabProvider.stopReadyUp()` | Network only: stops the "ready" phase. | 77 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_gamemodes_gamemodesTabProvider.requestSetOwnGamemodeRole(role)`
 
-Réseau uniquement : demande à changer son propre rôle dans le mode de jeu.
+Network only: requests to change one's own role in the game mode.
 
-- `role` (*any*) : Rôle souhaité (déduit du code : transmis tel quel).
+- `role` (*any*) : Requested role (inferred from code: passed as is).
 
 #### `ui_gamemodes_gamemodesTabProvider.restartGamemode(name, settings)`
 
-Redémarre un mode de jeu en écran partagé (gamemodeManager.restart). Sans effet en session réseau.
+Restarts a game mode in split screen (gamemodeManager.restart). No effect in a network session.
 
-- `name` (*string*) : Nom du mode de jeu.
-- `settings` (*table|nil*) : Réglages du mode.
+- `name` (*string*) : Game mode name.
+- `settings` (*table|nil*) : Mode settings.
 
 #### `ui_gamemodes_gamemodesTabProvider.selectGamemode(name)`
 
-Réseau uniquement : l'hôte sélectionne un mode (selectGamemodeForOwner).
+Network only: the host selects a mode (selectGamemodeForOwner).
 
-- `name` (*string*) : Nom du mode de jeu.
+- `name` (*string*) : Game mode name.
 
 #### `ui_gamemodes_gamemodesTabProvider.setOwnerPreReadyRole(role)`
 
-Réseau uniquement : définit le rôle de l'hôte avant la phase « prêt ».
+Network only: sets the host's role before the "ready" phase.
 
-- `role` (*any*) : Rôle (déduit du code : transmis tel quel).
+- `role` (*any*) : Role (inferred from code: passed as is).
 
 #### `ui_gamemodes_gamemodesTabProvider.startGamemode(name, settings)`
 
-Démarre un mode de jeu (multiplayerUIManager.startGamemode ou gamemodeManager.start).
+Starts a game mode (multiplayerUIManager.startGamemode or gamemodeManager.start).
 
-- `name` (*string*) : Nom du mode de jeu.
-- `settings` (*table|nil*) : Réglages du mode (déduit du code : transmis tels quels).
+- `name` (*string*) : Game mode name.
+- `settings` (*table|nil*) : Mode settings (inferred from code: passed as is).
 
 #### `ui_gamemodes_gamemodesTabProvider.startReadyUp(gamemodeInfo)`
 
-Réseau uniquement : lance la phase « prêt » des joueurs pour un mode.
+Network only: starts the players' "ready" phase for a mode.
 
-- `gamemodeInfo` (*table*) : Informations du mode (déduit du code : transmises telles quelles).
+- `gamemodeInfo` (*table*) : Mode information (inferred from code: passed as is).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/gamemodes/gamemodesTabProvider.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/gamemodes/gamemodesTabProvider.lua`.*

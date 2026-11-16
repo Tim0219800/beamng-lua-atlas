@@ -1,0 +1,17 @@
+{
+  "path": "lua/vehicle/controller/trailerFeet.lua",
+  "module": "Contrôleur auxiliaire pour les béquilles de remorque : écrit un electric (« feet » par défaut) à une valeur « attachée » quand un coupleur de ce véhicule s'accroche à un AUTRE véhicule et à une valeur « détachée » quand il s'en détache. L'electric sert à animer/rétracter les béquilles.",
+  "notes": [
+    "Clés jbeam lues : electricsName (\"feet\"), attachedValue (1), detachedValue (0), startValue (0, valeur initiale).",
+    "Les coupleurs accrochés au même véhicule (obj2id == obj:getId()) sont ignorés.",
+    "Piège : l'expression `jbeamData.attachedValue or 1` donne 1 si la valeur jbeam est false, mais 0 est une valeur valide en Lua donc OK ; attention seulement aux valeurs nil."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Lit la configuration et initialise l'electric à startValue.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "onCouplerAttached": {"desc": "Hook appelé par le moteur quand un coupleur s'accroche ; si l'autre objet est un autre véhicule, passe l'electric à attachedValue.", "params": {"nodeId": {"type": "integer", "desc": "Nœud coupleur de ce véhicule."}, "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."}, "obj2nodeId": {"type": "integer", "desc": "Nœud de l'autre véhicule."}}, "internal": true},
+    "onCouplerDetached": {"desc": "Hook appelé quand un coupleur se détache ; si l'autre objet est un autre véhicule, passe l'electric à detachedValue.", "params": {"nodeId": {"type": "integer", "desc": "Nœud coupleur de ce véhicule."}, "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."}, "obj2nodeId": {"type": "integer", "desc": "Nœud de l'autre véhicule."}, "breakForce": {"type": "number", "desc": "Force de rupture (non utilisée)."}}, "internal": true}
+  }
+}

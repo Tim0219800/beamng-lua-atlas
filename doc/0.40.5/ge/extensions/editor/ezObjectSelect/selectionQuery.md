@@ -1,59 +1,59 @@
 # `editor_ezObjectSelect_selectionQuery`
 
-*Fichier : `lua/ge/extensions/editor/ezObjectSelect/selectionQuery.lua` · VM : Game Engine (GE) · 624 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ezObjectSelect/selectionQuery.lua` · VM: Game Engine (GE) · 624 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ezObjectSelect_selectionQuery` : `extensions.load("editor_ezObjectSelect_selectionQuery")`, puis la globale `editor_ezObjectSelect_selectionQuery`
+**Access:** extension `editor_ezObjectSelect_selectionQuery`: `extensions.load("editor_ezObjectSelect_selectionQuery")`, then the global `editor_ezObjectSelect_selectionQuery`
 
-Requête de sélection de l'outil Easy Object Select. À partir de la position de la souris et de la caméra, il collecte les objets de la scène (StaticShape, StaticObject, véhicules) sous ou près du curseur, les résout vers leur prefab propriétaire, applique les filtres (classe, caché, verrouillé, bornes, motifs de nom, volume et distance max) et construit des « proxies » (géométrie écran) classés en relation « over » (curseur dessus) ou « discovery » (dans le rayon de découverte). Utilise le cache de selectionCache quand il est disponible, sinon un mode « broad » (rectangle écran + boîte autour de la caméra).
+Selection query of the Easy Object Select tool. From the mouse position and the camera, it collects the scene objects (StaticShape, StaticObject, vehicles) under or near the cursor, resolves them to their owning prefab, applies the filters (class, hidden, locked, bounds, name patterns, max volume and distance) and builds "proxies" (screen geometry) classified as "over" (cursor on top) or "discovery" (within the discovery radius) relation. Uses the selectionCache cache when available, otherwise a "broad" mode (screen rectangle + box around the camera).
 
-## Remarques
+## Notes
 
-- Classes exclues d'office : TerrainBlock, WaterPlane, Forest ; l'objet nommé gameCamera est ignoré.
-- Les motifs namePattern / ignorePattern sont des listes de motifs Lua (string.find) séparés par des virgules, testés sur le nom, le nom interne, le champ shapeName et le fichier modèle. Un motif invalide fait rejeter tous les objets (rejected.invalidPattern / invalidIgnorePattern).
-- Rayon de requête large : max(discoveryPixels + 8, 128 * uiscale) ; distance proche par défaut 40 m (nearQueryDistance) ; discoveryPixels par défaut 48.
-- Les raisons de rejet sont comptées dans la table rejected (unsupported, excludedClass, cameraObject, hidden, classDisabled, locked, selectionDisabled, invalidBounds, patternFilter, ignorePattern, outsideVolume, outsideRange, outsideDiscovery…).
-- Fonction locale passesPatterns définie mais non utilisée dans ce fichier.
+- Classes excluded outright: TerrainBlock, WaterPlane, Forest; the object named gameCamera is ignored.
+- The namePattern / ignorePattern patterns are comma-separated lists of Lua patterns (string.find), tested against the name, the internal name, the shapeName field and the model file. An invalid pattern causes all objects to be rejected (rejected.invalidPattern / invalidIgnorePattern).
+- Broad query radius: max(discoveryPixels + 8, 128 * uiscale); default near distance 40 m (nearQueryDistance); default discoveryPixels 48.
+- Rejection reasons are counted in the rejected table (unsupported, excludedClass, cameraObject, hidden, classDisabled, locked, selectionDisabled, invalidBounds, patternFilter, ignorePattern, outsideVolume, outsideRange, outsideDiscovery...).
+- Local function passesPatterns defined but not used in this file.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ezObjectSelect_selectionQuery.activate()` | Active le cache de sélection (selectionCache.activate). Appelé à l'ouverture de l'outil. | 606 |
-| `editor_ezObjectSelect_selectionQuery.gather(options)` | Collecte les candidats de sélection pour la frame courante. Renvoie nil si le contexte caméra est indisponible. Remplit proxies (relation over), discoveryProxies (relation discovery), filteredLarge (gros objets filtrés si options.collectFilteredLarge), queryStats, rejected et sourceCount. | 396 |
-| `editor_ezObjectSelect_selectionQuery.getCacheStatus()` | Renvoie l'état du cache de sélection (selectionCache.getStatus), utile pour l'affichage de debug. | 614 |
-| `editor_ezObjectSelect_selectionQuery.invalidateCache(reason)` | Invalide le cache de sélection. | 610 |
-| `editor_ezObjectSelect_selectionQuery.validatePatternList(value)` | Vérifie qu'une liste de motifs Lua séparés par des virgules est valide (chaque entrée est testée avec pcall(string.find)). | 618 |
+| `editor_ezObjectSelect_selectionQuery.activate()` | Enables the selection cache (selectionCache.activate). Called when the tool opens. | 606 |
+| `editor_ezObjectSelect_selectionQuery.gather(options)` | Collects the selection candidates for the current frame. Returns nil if the camera context is unavailable. Fills proxies (over relation), discoveryProxies (discovery relation), filteredLarge (large filtered objects if options.collectFilteredLarge), queryStats, rejected and sourceCount. | 396 |
+| `editor_ezObjectSelect_selectionQuery.getCacheStatus()` | Returns the state of the selection cache (selectionCache.getStatus), useful for the debug display. | 614 |
+| `editor_ezObjectSelect_selectionQuery.invalidateCache(reason)` | Invalidates the selection cache. | 610 |
+| `editor_ezObjectSelect_selectionQuery.validatePatternList(value)` | Checks that a comma-separated list of Lua patterns is valid (each entry is tested with pcall(string.find)). | 618 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_ezObjectSelect_selectionQuery.gather(options)`
 
-Collecte les candidats de sélection pour la frame courante. Renvoie nil si le contexte caméra est indisponible. Remplit proxies (relation over), discoveryProxies (relation discovery), filteredLarge (gros objets filtrés si options.collectFilteredLarge), queryStats, rejected et sourceCount.
+Collects the selection candidates for the current frame. Returns nil if the camera context is unavailable. Fills proxies (over relation), discoveryProxies (discovery relation), filteredLarge (large filtered objects if options.collectFilteredLarge), queryStats, rejected and sourceCount.
 
-- `options` (*table|nil*) : discoveryPixels (px, défaut 48), nearQueryDistance (m, défaut 40), maxDistance (m), maxVolume (m^3), namePattern, ignorePattern (listes de motifs Lua séparés par des virgules), collectFilteredLarge (boolean).
-- **renvoie** : table|nil Table {camera, mouse, queryRadius, discoveryRadius, nearQueryDistance, proxies, discoveryProxies, filteredLarge, queryStats, rejected, sourceCount}.
+- `options` (*table|nil*) : discoveryPixels (px, default 48), nearQueryDistance (m, default 40), maxDistance (m), maxVolume (m^3), namePattern, ignorePattern (comma-separated lists of Lua patterns), collectFilteredLarge (boolean).
+- **returns**: table|nil Table {camera, mouse, queryRadius, discoveryRadius, nearQueryDistance, proxies, discoveryProxies, filteredLarge, queryStats, rejected, sourceCount}.
 
 #### `editor_ezObjectSelect_selectionQuery.getCacheStatus()`
 
-Renvoie l'état du cache de sélection (selectionCache.getStatus), utile pour l'affichage de debug.
+Returns the state of the selection cache (selectionCache.getStatus), useful for the debug display.
 
-- **renvoie** : table État du cache.
+- **returns**: table Cache state.
 
 #### `editor_ezObjectSelect_selectionQuery.invalidateCache(reason)`
 
-Invalide le cache de sélection.
+Invalidates the selection cache.
 
-- `reason` (*string|nil*) : Raison de l'invalidation (diagnostic).
+- `reason` (*string|nil*) : Reason for the invalidation (diagnostic).
 
 #### `editor_ezObjectSelect_selectionQuery.validatePatternList(value)`
 
-Vérifie qu'une liste de motifs Lua séparés par des virgules est valide (chaque entrée est testée avec pcall(string.find)).
+Checks that a comma-separated list of Lua patterns is valid (each entry is tested with pcall(string.find)).
 
-- `value` (*string|nil*) : Liste de motifs, séparés par des virgules.
-- **renvoie** : boolean true si tous les motifs sont valides.
-- **renvoie** : string|nil Message d'erreur « entry N: … » si invalide.
+- `value` (*string|nil*) : List of patterns, comma-separated.
+- **returns**: boolean true if all patterns are valid.
+- **returns**: string|nil Error message "entry N: ..." if invalid.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `upcast`
 - `obj:` `getClassName`, `getField`, `getID`, `getInternalName`, `getModelFile`, `getName`, `getObjBox`, `getWorldBox`, `isHidden`, `isLocked`
@@ -61,4 +61,4 @@ Vérifie qu'une liste de motifs Lua séparés par des virgules est valide (chaqu
 - `ui_imgui.` `GetMousePos`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ezObjectSelect/selectionQuery.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ezObjectSelect/selectionQuery.lua`.*

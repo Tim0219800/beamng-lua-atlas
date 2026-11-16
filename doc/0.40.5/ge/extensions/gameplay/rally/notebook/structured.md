@@ -1,12 +1,12 @@
 # `gameplay_rally_notebook_structured`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/notebook/structured.lua` · VM : Game Engine (GE) · 378 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/notebook/structured.lua` · VM: Game Engine (GE) · 378 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/notebook/structured")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/notebook/structured")` (file under extensions/ but not a regular extension)
 
-Stockage « structuré » d'une pacenote de rallye en six emplacements fixes (clés de chaîne "1" à "6", qui sont aussi l'ordre de lecture) : 1 = prudence (caution), 2 et 3 = modificateurs avant le virage, 4 = virage (corner), 5 et 6 = modificateurs après. Un emplacement vide vaut {}. Chaque élément est une table typée { type = ..., ... } ; le style actif fournit les libellés. Le module migre aussi les anciens schémas v1 (liste) et v2 (4 emplacements) à la désérialisation. Le module renvoie un constructeur d'objet (classe C) et expose des helpers M.* qui acceptent un objet ou une table brute.
+"Structured" storage of a rally pacenote in six fixed slots (string keys "1" to "6", which are also the reading order): 1 = caution, 2 and 3 = modifiers before the corner, 4 = corner, 5 and 6 = modifiers after. An empty slot is {}. Each item is a typed table { type = ..., ... }; the active style provides the labels. The module also migrates the old v1 (list) and v2 (4 slots) schemas on deserialization. The module returns an object constructor (class C) and exposes M.* helpers that accept an object or a raw table.
 
-## Exemple
+## Example
 
 ```lua
 local Structured = require('extensions/gameplay/rally/notebook/structured')
@@ -15,75 +15,75 @@ s:setOrderedItems({ {type='caution', level=2}, {type='corner', descriptor='hairp
 print(s:slotItem(4).descriptor) -- 'hairpin'
 ```
 
-## Remarques
+## Notes
 
-- Schéma courant : 3 (six emplacements). Éléments au-delà des six emplacements : ignorés avec un log 'W' (tag rallyStructured).
-- Corner canonique : descriptor, shape, measurementType (omis si 'single' ; seuls single/split2/split3 sont valides), riskIntensity (-1, 1 ou nil), lengthMode ('shorter'|'longer'|'skip'|nil). Les anciens champs lengthFeel, radiusChange, intensityVariation sont migrés (intensityVariation -1 -> shape 'opens', 1 -> 'tightens').
-- setOrderedItems répartit : caution -> slot 1, corner -> slot 4, modificateurs -> 2/3 avant le corner, 5/6 après.
-- Les types d'élément autres que caution/corner sont des modificateurs atomiques copiés tels quels (deepcopy).
+- Current schema: 3 (six slots). Items beyond the six slots: ignored with a 'W' log (tag rallyStructured).
+- Canonical corner: descriptor, shape, measurementType (omitted if 'single'; only single/split2/split3 are valid), riskIntensity (-1, 1 or nil), lengthMode ('shorter'|'longer'|'skip'|nil). The old fields lengthFeel, radiusChange, intensityVariation are migrated (intensityVariation -1 -> shape 'opens', 1 -> 'tightens').
+- setOrderedItems distributes: caution -> slot 1, corner -> slot 4, modifiers -> 2/3 before the corner, 5/6 after.
+- Item types other than caution/corner are atomic modifiers copied as is (deepcopy).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_notebook_structured.orderedItems(structured)` | Version utilitaire : renvoie la liste ordonnée des éléments non vides d'un objet structuré ou d'une table brute (gère aussi les anciens schémas v2). (assignée dynamiquement) | dyn |
-| `gameplay_rally_notebook_structured.setOrderedItems(structured, items)` | Version utilitaire : remplace le contenu par une liste ordonnée d'éléments, répartis dans les emplacements. Appelle la méthode d'instance si elle existe, sinon écrit items et schemaVersion dans la table. (assignée dynamiquement) | dyn |
-| `gameplay_rally_notebook_structured.slotItem(structured, index)` | Version utilitaire : renvoie l'élément d'un emplacement, ou nil s'il est vide. (assignée dynamiquement) | dyn |
-| `gameplay_rally_notebook_structured.slotItems(structured)` | Version utilitaire : renvoie la table des six emplacements (clés "1".."6") normalisée, en migrant les schémas v1/v2 si besoin. (assignée dynamiquement) | dyn |
+| `gameplay_rally_notebook_structured.orderedItems(structured)` | Utility version: returns the ordered list of non-empty items of a structured object or a raw table (also handles the old v2 schemas). (dynamically assigned) | dyn |
+| `gameplay_rally_notebook_structured.setOrderedItems(structured, items)` | Utility version: replaces the content with an ordered list of items, distributed into the slots. Calls the instance method if it exists, otherwise writes items and schemaVersion into the table. (dynamically assigned) | dyn |
+| `gameplay_rally_notebook_structured.slotItem(structured, index)` | Utility version: returns the item of a slot, or nil if it is empty. (dynamically assigned) | dyn |
+| `gameplay_rally_notebook_structured.slotItems(structured)` | Utility version: returns the normalized table of the six slots (keys "1".."6"), migrating v1/v2 schemas if needed. (dynamically assigned) | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_notebook_structured.orderedItems(structured)`
 
-Version utilitaire : renvoie la liste ordonnée des éléments non vides d'un objet structuré ou d'une table brute (gère aussi les anciens schémas v2). (assignée dynamiquement)
+Utility version: returns the ordered list of non-empty items of a structured object or a raw table (also handles the old v2 schemas). (dynamically assigned)
 
-- `structured` (*table*) : Objet structuré ou table brute (avec ou sans champ items).
-- **renvoie** : table[] Éléments dans l'ordre des emplacements ; {} si l'argument n'est pas une table.
+- `structured` (*table*) : Structured object or raw table (with or without an items field).
+- **returns**: table[] Items in slot order; {} if the argument is not a table.
 
 #### `gameplay_rally_notebook_structured.setOrderedItems(structured, items)`
 
-Version utilitaire : remplace le contenu par une liste ordonnée d'éléments, répartis dans les emplacements. Appelle la méthode d'instance si elle existe, sinon écrit items et schemaVersion dans la table. (assignée dynamiquement)
+Utility version: replaces the content with an ordered list of items, distributed into the slots. Calls the instance method if it exists, otherwise writes items and schemaVersion into the table. (dynamically assigned)
 
-- `structured` (*table*) : Objet structuré ou table brute (modifié en place).
-- `items` (*table[]*) : Éléments typés.
+- `structured` (*table*) : Structured object or raw table (modified in place).
+- `items` (*table[]*) : Typed items.
 
 #### `gameplay_rally_notebook_structured.slotItem(structured, index)`
 
-Version utilitaire : renvoie l'élément d'un emplacement, ou nil s'il est vide. (assignée dynamiquement)
+Utility version: returns the item of a slot, or nil if it is empty. (dynamically assigned)
 
-- `structured` (*table*) : Objet structuré ou table brute.
-- `index` (*integer*) : Numéro d'emplacement de 1 à 6.
-- **renvoie** : table|nil Élément { type = ... } ou nil.
+- `structured` (*table*) : Structured object or raw table.
+- `index` (*integer*) : Slot number from 1 to 6.
+- **returns**: table|nil Item { type = ... } or nil.
 
 #### `gameplay_rally_notebook_structured.slotItems(structured)`
 
-Version utilitaire : renvoie la table des six emplacements (clés "1".."6") normalisée, en migrant les schémas v1/v2 si besoin. (assignée dynamiquement)
+Utility version: returns the normalized table of the six slots (keys "1".."6"), migrating v1/v2 schemas if needed. (dynamically assigned)
 
-- `structured` (*table*) : Objet structuré ou table brute.
-- **renvoie** : table<string, table> Carte d'emplacements ; emplacements vides = {}.
+- `structured` (*table*) : Structured object or raw table.
+- **returns**: table<string, table> Slot map; empty slots = {}.
 
-## Classe `C`
+## Class `C`
 
-Objet renvoyé par Structured() : champs schemaVersion et items (carte des six emplacements).
+Object returned by Structured(): fields schemaVersion and items (map of the six slots).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:hasItems()` | true si au moins un emplacement est rempli. | 311 |
-| `C:init()` | Constructeur : schéma courant, six emplacements vides. | 248 |
-| `C:itemCount()` | Nombre d'éléments non vides. | 307 |
-| `C:onDeserialized(data)` | Recharge depuis des données sauvegardées (data.items, data.schemaVersion) en migrant les schémas v1 (liste ordonnée) et v2 (quatre emplacements) vers le schéma v3. | 253 |
-| `C:onSerialize()` | Renvoie { schemaVersion, items } où items est la carte normalisée des six emplacements. | 274 |
-| `C:orderedItems()` | Liste des éléments non vides dans l'ordre des emplacements 1 à 6. | 281 |
-| `C:setOrderedItems(items)` | Remplace le contenu à partir d'une liste ordonnée (caution -> 1, corner -> 4, modificateurs -> 2/3 avant ou 5/6 après le corner). Les surplus sont ignorés avec un avertissement. | 297 |
-| `C:setSlotItems(items)` | Remplace le contenu à partir d'une carte d'emplacements (clés "1".."6" ou entiers). | 302 |
-| `C:slotItem(index)` | Élément d'un emplacement, ou nil s'il est vide. | 289 |
-| `C:slotItems()` | Copie normalisée de la carte des six emplacements. | 285 |
+| `C:hasItems()` | true if at least one slot is filled. | 311 |
+| `C:init()` | Constructor: current schema, six empty slots. | 248 |
+| `C:itemCount()` | Number of non-empty items. | 307 |
+| `C:onDeserialized(data)` | Reloads from saved data (data.items, data.schemaVersion), migrating the v1 (ordered list) and v2 (four slots) schemas to schema v3. | 253 |
+| `C:onSerialize()` | Returns { schemaVersion, items } where items is the normalized map of the six slots. | 274 |
+| `C:orderedItems()` | List of non-empty items in the order of slots 1 to 6. | 281 |
+| `C:setOrderedItems(items)` | Replaces the content from an ordered list (caution -> 1, corner -> 4, modifiers -> 2/3 before or 5/6 after the corner). Surplus items are ignored with a warning. | 297 |
+| `C:setSlotItems(items)` | Replaces the content from a slot map (keys "1".."6" or integers). | 302 |
+| `C:slotItem(index)` | Item of a slot, or nil if it is empty. | 289 |
+| `C:slotItems()` | Normalized copy of the map of the six slots. | 285 |
 
-## Classe `M`
+## Class `M`
 
-Table du module : helpers orderedItems, slotItems, slotItem, setOrderedItems (voir functions). Appeler le module comme une fonction crée une instance de C.
+Module table: helpers orderedItems, slotItems, slotItem, setOrderedItems (see functions). Calling the module as a function creates an instance of C.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `M.orderedItems(structured)` |  | 315 |
 | `M.setOrderedItems(structured, items)` |  | 359 |
@@ -91,4 +91,4 @@ Table du module : helpers orderedItems, slotItems, slotItem, setOrderedItems (vo
 | `M.slotItems(structured)` |  | 327 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/notebook/structured.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/notebook/structured.lua`.*

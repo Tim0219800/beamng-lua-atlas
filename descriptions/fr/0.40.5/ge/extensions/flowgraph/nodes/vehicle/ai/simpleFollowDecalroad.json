@@ -1,0 +1,68 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/simpleFollowDecalroad.lua",
+  "module": "Nœud « Follow Decalroad » (couleur ai, comportement duration). Fait suivre simplement une DecalRoad à un véhicule : construit un chemin à partir des nœuds de la route (temps = distance / data.speed) et lance ai.startFollowing. Entrées : flow, start, stop, roadName, vehId, loopCount (caché). Sorties : flow, active, finished, progress (0 à 1). Données : renderDebug, speed (5 m/s), loopMode (« startReset »).",
+  "notes": [
+    "Bug : dans onVehicleSubmitInfo, self.pinOut.active et self.pinOut.finished sont remplacés par des booléens (au lieu de .value), ce qui écrase les objets pin.",
+    "Bug : quand info == nil, la fonction continue et lit info.scriptTime (erreur), il manque un return.",
+    "Le dernier nœud de la route n'est pas ajouté au chemin (la boucle va de 0 à getNodeCount()-2), et la fin n'est jamais détectée par flow."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Initialise les données (speed=5, loopMode=startReset, renderDebug=false) et demande à tous les véhicules d'émettre le hook onVehicleSubmitInfo avec leur ai.scriptState().",
+          "internal": true
+        },
+        "onVehicleSubmitInfo": {
+          "desc": "Hook appelé avec l'état du script IA d'un véhicule ; met à jour progress = scriptTime / endScriptTime et receivedInfo si l'id correspond à vehId.",
+          "params": {
+            "id": {
+              "type": "string|number",
+              "desc": "Id du véhicule."
+            },
+            "info": {
+              "type": "table|nil",
+              "desc": "État du script IA (scriptTime, endScriptTime) ou nil."
+            }
+          },
+          "internal": false
+        },
+        "getVeh": {
+          "desc": "Renvoie le véhicule dont l'id est donné en entrée, ou le véhicule du joueur (getPlayerVehicle(0)) sans entrée.",
+          "internal": false
+        },
+        "play": {
+          "desc": "Charge la route, envoie ai.startFollowing(path, nil, loopCount ou -1, loopMode) et initialise les pins finished, active et progress.",
+          "internal": false
+        },
+        "stop": {
+          "desc": "Envoie ai.stopFollowing() et met finished/active à false.",
+          "internal": false
+        },
+        "loadRecording": {
+          "desc": "Construit self.path depuis la DecalRoad (scenetree.findObject(roadName)) : un point par nœud avec le temps cumulé et la direction/haut du premier point.",
+          "internal": false
+        },
+        "work": {
+          "desc": "Appelle play sur start, ou stop sur stop.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche bouton Load, état, nombre de nœuds, distance et tracé de debug si renderDebug.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Constructeur de nœud."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style du nœud."
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

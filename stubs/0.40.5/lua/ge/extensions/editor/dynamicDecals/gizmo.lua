@@ -2,75 +2,75 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/dynamicDecals/gizmo.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère le gizmo d'axes (déplacement / rotation / échelle) de l'outil Dynamic Decals. Les autres modules (decal, path, group…) choisissent le mode avec setTransformMode, installent leur callback translateFn / rotateFn / scaleFn, et mettent à jour M.transform. À chaque frame d'édition, editModeUpdate affiche le gizmo, la boîte englobante du decal sélectionné et une sphère de debug.
---- Accès : extension `editor_dynamicDecals_gizmo` : `extensions.load("editor_dynamicDecals_gizmo")`, puis la globale `editor_dynamicDecals_gizmo`
+--- Manages the axis gizmo (move / rotate / scale) of the Dynamic Decals tool. Other modules (decal, path, group...) choose the mode with setTransformMode, install their translateFn / rotateFn / scaleFn callback, and update M.transform. On each edit frame, editModeUpdate displays the gizmo, the bounding box of the selected decal and a debug sphere.
+--- Access: extension `editor_dynamicDecals_gizmo`: `extensions.load("editor_dynamicDecals_gizmo")`, then the global `editor_dynamicDecals_gizmo`
 ---@class editor_dynamicDecals_gizmo
----@field data table Informations sur l'objet en cours de manipulation (uid, type, objectType, dataPointIndex, objectDataCopy), remplies par les modules appelants.
----@field rotateFn function|nil Callback de rotation.
----@field scaleFn function|nil Callback d'échelle.
----@field transform MatrixF Matrice du gizmo (MatrixF(true) au départ).
+---@field data table Information about the object being manipulated (uid, type, objectType, dataPointIndex, objectDataCopy), filled by the calling modules.
+---@field rotateFn function|nil Rotation callback.
+---@field scaleFn function|nil Scale callback.
+---@field transform MatrixF Gizmo matrix (MatrixF(true) initially).
 ---@field transformModes table<string, integer> none = 0, translate = 1, rotate = 2, scale = 3.
----@field translateFn function|nil Callback de translation, reçoit la matrice du gizmo.
+---@field translateFn function|nil Translation callback, receives the gizmo matrix.
 editor_dynamicDecals_gizmo = {}
 
---- Appelé à chaque frame par le mode d'édition de l'éditeur : met à jour et dessine le gizmo si un mode est actif, dessine la boîte englobante du decal sélectionné, puis la sphère de debug des points de contrôle.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/gizmo.lua:116
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulation (s).
----@param dtRaw number Delta temps brut (s).
+--- Called every frame by the editor's edit mode: updates and draws the gizmo if a mode is active, draws the bounding box of the selected decal, then the debug sphere of the control points.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/gizmo.lua:116
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulation time delta (s).
+---@param dtRaw number Raw time delta (s).
 function editor_dynamicDecals_gizmo.editModeUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook appelé quand une préférence change. Ne fait rien ici.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/gizmo.lua:112
----@param path string Chemin de la préférence.
----@param value any Nouvelle valeur.
+--- Hook called when a preference changes. Does nothing here.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/gizmo.lua:112
+---@param path string Preference path.
+---@param value any New value.
 function editor_dynamicDecals_gizmo.editorPreferenceValueChanged(path, value) end
 
---- Nombre de mises à jour de drag depuis le début du drag courant.
----Source : lua/ge/extensions/editor/dynamicDecals/gizmo.lua:54
----@return integer  Compteur.
+--- Number of drag updates since the start of the current drag.
+---Source: lua/ge/extensions/editor/dynamicDecals/gizmo.lua:54
+---@return integer  Counter.
 function editor_dynamicDecals_gizmo.getDragCount() end
 
---- Renvoie le mode de transformation actuel.
----Source : lua/ge/extensions/editor/dynamicDecals/gizmo.lua:40
----@return integer  Valeur de transformModes.
+--- Returns the current transform mode.
+---Source: lua/ge/extensions/editor/dynamicDecals/gizmo.lua:40
+---@return integer  Value of transformModes.
 function editor_dynamicDecals_gizmo.getTransformMode() end
 
---- Callback passé à editor.updateAxisGizmo : appelé quand le drag du gizmo commence. Remet le compteur à 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/gizmo.lua:59
+--- Callback passed to editor.updateAxisGizmo: called when the gizmo drag starts. Resets the counter to 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/gizmo.lua:59
 function editor_dynamicDecals_gizmo.gizmoBeginDrag() end
 
---- Callback appelé à chaque mise à jour du drag : incrémente le compteur puis, selon le mode, appelle translateFn / rotateFn / scaleFn avec editor.getAxisGizmoTransform().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/gizmo.lua:72
+--- Callback called on every drag update: increments the counter then, depending on the mode, calls translateFn / rotateFn / scaleFn with editor.getAxisGizmoTransform().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/gizmo.lua:72
 function editor_dynamicDecals_gizmo.gizmoDragging() end
 
---- Callback appelé à la fin du drag. Remet le compteur à 0 (aucune action d'annulation n'est ajoutée ici).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/gizmo.lua:66
+--- Callback called at the end of the drag. Resets the counter to 0 (no undo action is added here).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/gizmo.lua:66
 function editor_dynamicDecals_gizmo.gizmoEndDrag() end
 
---- Enregistre `dynamicDecalsTool.gizmo` : displayBoundingBox (bool, vrai), boundingBoxColor (RGBA {1,0,0,0.75}, avec sélecteur de couleur) et displayDebugObjWhileMovingControlPoints (bool, vrai).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/gizmo.lua:100
----@param prefsRegistry table Registre de préférences de l'éditeur.
+--- Registers `dynamicDecalsTool.gizmo`: displayBoundingBox (bool, true), boundingBoxColor (RGBA {1,0,0,0.75}, with color picker) and displayDebugObjWhileMovingControlPoints (bool, true).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/gizmo.lua:100
+---@param prefsRegistry table Editor preferences registry.
 function editor_dynamicDecals_gizmo.registerEditorPreferences(prefsRegistry) end
 
---- Remet à nil translateFn, rotateFn et scaleFn.
----Source : lua/ge/extensions/editor/dynamicDecals/gizmo.lua:48
+--- Resets translateFn, rotateFn and scaleFn to nil.
+---Source: lua/ge/extensions/editor/dynamicDecals/gizmo.lua:48
 function editor_dynamicDecals_gizmo.resetTransformFn() end
 
---- Définit le mode de transformation ; avec none, le gizmo n'est plus affiché.
----Source : lua/ge/extensions/editor/dynamicDecals/gizmo.lua:44
----@param value integer Une valeur de transformModes.
+--- Sets the transform mode; with none, the gizmo is no longer displayed.
+---Source: lua/ge/extensions/editor/dynamicDecals/gizmo.lua:44
+---@param value integer A value of transformModes.
 function editor_dynamicDecals_gizmo.setTransformMode(value) end
 
---- Appelé par l'outil : mémorise l'outil et l'API editor_api_dynamicDecals.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/gizmo.lua:142
----@param tool_in table Référence à l'outil editor_dynamicDecalsTool.
+--- Called by the tool: stores the tool and the editor_api_dynamicDecals API.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/gizmo.lua:142
+---@param tool_in table Reference to the editor_dynamicDecalsTool tool.
 function editor_dynamicDecals_gizmo.setup(tool_in) end
 

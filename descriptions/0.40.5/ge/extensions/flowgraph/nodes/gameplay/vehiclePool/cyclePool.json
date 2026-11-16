@@ -1,15 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/cyclePool.lua",
-  "module": "Nœud flowgraph « Cycle Pool » (once_instant). Bascule un véhicule actif et un véhicule inactif du pool pour garder le même nombre de véhicules en marche (pool:cycle). Pins d'entrée : vehPool, vehId1 (actif, optionnel), vehId2 (inactif, optionnel) ; sorties : inactiveId, activeId. Nécessite le module core_vehicleActivePooling ; l'objet pool vient du nœud Create Vehicle Pool.",
+  "module": "Flowgraph node \"Cycle Pool\" (once_instant). Swaps an active vehicle and an inactive vehicle of the pool to keep the same number of running vehicles (pool:cycle). Input pins: vehPool, vehId1 (active, optional), vehId2 (inactive, optional); outputs: inactiveId, activeId. Requires the core_vehicleActivePooling module; the pool object comes from the Create Vehicle Pool node.",
   "notes": [
-    "Bug : workOnce lit self.pinIn.activeId et self.pinIn.inactiveId, qui n'existent pas (les pins d'entrée s'appellent vehId1 et vehId2 ; activeId/inactiveId sont des sorties) : l'appel provoque une erreur Lua et les sorties ne sont jamais écrites."
+    "Bug: workOnce reads self.pinIn.activeId and self.pinIn.inactiveId, which do not exist (the input pins are named vehId1 and vehId2; activeId/inactiveId are outputs): the call raises a Lua error and the outputs are never written."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "workOnce": {
-          "desc": "Prévu pour appeler pool:cycle(activeId, inactiveId) ; voir la note sur les noms de pins incorrects.",
+          "desc": "Meant to call pool:cycle(activeId, inactiveId); see the note about the incorrect pin names.",
           "internal": true
         }
       }

@@ -1,5 +1,7 @@
 # Consignes de rédaction des descriptions (tim19Atlas)
 
+*[English version: DESCRIPTION_GUIDELINES.md](DESCRIPTION_GUIDELINES.md)*
+
 But : documenter en détail l'API Lua de BeamNG.drive 0.40.5 à partir du **code du jeu uniquement**.
 Code source (lecture seule, ne JAMAIS modifier) : `<BeamNG.drive>/lua/` (dossier d'installation du jeu).
 Liste des fonctions déjà extraites automatiquement : `<atlas-lua>/doc/0.40.5/<chemin>.md`
@@ -7,9 +9,12 @@ Liste des fonctions déjà extraites automatiquement : `<atlas-lua>/doc/0.40.5/<
 
 ## Ce qu'on écrit
 
-Un fichier JSON par fichier source :
-`<atlas-lua>/descriptions/0.40.5/<chemin relatif à lua/>.json`
-(ex. `lua/vehicle/electrics.lua` -> `descriptions/0.40.5/vehicle/electrics.json`). Utiliser l'outil Write (pas de heredoc).
+Un fichier JSON par fichier source, dans chaque langue :
+- anglais (langue principale) : `<atlas-lua>/descriptions/0.40.5/<chemin relatif à lua/>.json`
+- français : `<atlas-lua>/descriptions/fr/0.40.5/<chemin relatif à lua/>.json`
+
+(ex. `lua/vehicle/electrics.lua` -> `descriptions/0.40.5/vehicle/electrics.json` et `descriptions/fr/0.40.5/vehicle/electrics.json`).
+Les deux fichiers ont exactement la même structure (mêmes clés, mêmes types) ; seuls les textes changent. Utiliser l'outil Write (pas de heredoc).
 
 ```json
 {
@@ -39,7 +44,7 @@ Un fichier JSON par fichier source :
 
 ## Règles
 
-1. **Français**, phrases courtes et concrètes. Les noms de code restent tels quels.
+1. **Anglais** dans `descriptions/<v>/`, **français** dans `descriptions/fr/<v>/` ; phrases courtes et concrètes. Les noms de code restent tels quels.
 2. **Rien d'inventé** : chaque affirmation vient du code lu. Si le sens d'un paramètre est incertain, mettre `"type": "any"` et dire « (déduit du code) » ou ne rien dire.
 3. Types au format LuaLS : `number`, `integer`, `string`, `boolean`, `table`, `table<string, number>`, `vec3`, `quat`, `function`, `nil`, unions `number|nil`, `any`.
 4. Documenter **toutes** les fonctions exportées et toutes les méthodes des classes/instances listées dans la page .md, dans la limite du raisonnable : pour un fichier énorme, priorité aux fonctions utiles à un moddeur ; les autres peuvent n'avoir que `desc`.
@@ -47,7 +52,7 @@ Un fichier JSON par fichier source :
 6. Les hooks (`onXxx`) : dire quand ils sont appelés et avec quels arguments.
 7. Si tu vois un bug ou une incohérence dans le code du jeu (champ exporté qui vaut nil, etc.), l'écrire dans `notes`.
 8. JSON valide (UTF-8, guillemets doubles, pas de virgule finale). Vérifier chaque fichier avec `python -I -c "import json,sys;json.load(open(sys.argv[1],encoding='utf-8'))" <fichier>`.
-9. Ne rien écrire ailleurs que dans `descriptions/0.40.5/`.
+9. Ne rien écrire ailleurs que dans `descriptions/`.
 
 ## Rapport final (court, ≤ 150 mots)
 

@@ -1,59 +1,59 @@
 {
   "path": "lua/ge/extensions/telemetry/hardwareChanges.lua",
-  "module": "Module utilitaire de la télémétrie matérielle (chargé par require) : compare deux instantanés de manettes pour produire des événements de connexion/déconnexion, et dit quelles transitions d'affichage (fenêtre/plein écran) sont suivies. S'appuie sur telemetry/hardwareInput.",
+  "module": "Hardware telemetry utility module (loaded by require): compares two controller snapshots to produce connection/disconnection events, and says which display transitions (window/fullscreen) are tracked. Relies on telemetry/hardwareInput.",
   "functions": {
     "controllerSnapshot": {
-      "desc": "Construit un instantané indexé par nom de périphérique, limité aux types gamepad, joystick, wheel et xinput (clavier, souris, openxr, vinput ignorés). Chaque entrée contient device, deviceType, productName, vidpid et forceFeedback ; pour un volant, le nom anglais officiel est cherché via hardwareInput.officialEnglishName.",
+      "desc": "Builds a snapshot keyed by device name, limited to the gamepad, joystick, wheel and xinput types (keyboard, mouse, openxr, vinput ignored). Each entry contains device, deviceType, productName, vidpid and forceFeedback; for a wheel, the official English name is looked up via hardwareInput.officialEnglishName.",
       "params": {
         "controllerInfo": {
           "type": "table[]|nil",
-          "desc": "Liste des contrôleurs (name, type, productName, vidpid, ffbAxes…)."
+          "desc": "List of controllers (name, type, productName, vidpid, ffbAxes...)."
         }
       },
       "returns": [
         {
           "type": "table<string, table>",
-          "desc": "Instantané par nom de périphérique."
+          "desc": "Snapshot per device name."
         }
       ],
       "internal": false
     },
     "connectionChanges": {
-      "desc": "Compare deux instantanés et renvoie la liste des événements {…champs du périphérique, connected = true|false}. Les connexions viennent d'abord, triées par nom, puis les déconnexions. Si un même nom change de vidpid ou de productName, il produit une connexion (nouvel appareil) et une déconnexion (ancien).",
+      "desc": "Compares two snapshots and returns the list of events {...device fields, connected = true|false}. Connections come first, sorted by name, then disconnections. If the same name changes vidpid or productName, it produces a connection (new device) and a disconnection (old one).",
       "params": {
         "previous": {
           "type": "table<string, table>",
-          "desc": "Instantané précédent."
+          "desc": "Previous snapshot."
         },
         "current": {
           "type": "table<string, table>",
-          "desc": "Instantané actuel."
+          "desc": "Current snapshot."
         }
       },
       "returns": [
         {
           "type": "table[]",
-          "desc": "Événements de changement."
+          "desc": "Change events."
         }
       ],
       "internal": false
     },
     "isTrackedDisplayTransition": {
-      "desc": "Vrai seulement pour les passages directs 'Window' vers 'Fullscreen' et 'Fullscreen' vers 'Window'.",
+      "desc": "True only for the direct transitions 'Window' to 'Fullscreen' and 'Fullscreen' to 'Window'.",
       "params": {
         "from": {
           "type": "string",
-          "desc": "Ancien mode d'affichage."
+          "desc": "Old display mode."
         },
         "to": {
           "type": "string",
-          "desc": "Nouveau mode d'affichage."
+          "desc": "New display mode."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "true si la transition est suivie."
+          "desc": "true if the transition is tracked."
         }
       ],
       "internal": false

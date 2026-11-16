@@ -1,0 +1,71 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/sites/location.lua",
+  "module": "Nœud flowgraph « Location » (catégorie repeat_instant, tags scenario/sites). Décompose une donnée location (table locationData) : sorties name, pos, hasNavPos, navPos (projection sur la route la plus proche), roadSide (2 m du bord), roadDir (quat) et navRadius (5 si aucune route). Des pins de sortie supplémentaires (options, par défaut « key ») exposent les champs personnalisés (customFields.values) de la location.",
+  "notes": [
+    "Sans route proche : hasNavPos=false, navPos=roadSide=pos, navRadius=5, roadDir={0,0,0,0}.",
+    "Le bouton « Copy over Fields » de l'éditeur ne fait rien (bloc vide)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure les réglages propres au nœud à partir des données sauvegardées.",
+          "internal": true,
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "données sauvegardées du nœud"
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.",
+          "internal": true,
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "table de sérialisation à remplir"
+            }
+          }
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "internal": true
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true,
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "gestionnaire flowgraph"
+            }
+          }
+        },
+        "postInit": {
+          "desc": "Appelé après la création des pins du nœud ; sert à ajuster les pins (modèles de valeurs, filtres de fichiers, clés dynamiques).",
+          "internal": true
+        },
+        "updateKeys": {
+          "desc": "Reconstruit les pins de sortie dynamiques à partir de la liste d'options du nœud.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Quand la location d'entrée change, remplit les sorties (nom, position, infos de route via findClosestRoadInfo, champs personnalisés).",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

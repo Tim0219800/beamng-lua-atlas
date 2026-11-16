@@ -1,33 +1,60 @@
 {
   "path": "lua/ge/extensions/gameplay/drift/stuntZones/donut.lua",
-  "module": "Type de zone de cascade « donut » : le joueur doit faire un tour complet (360° cumulés d'angle de direction de vitesse) en drift à l'intérieur d'un cercle de rayon scl autour de pos. Le module renvoie un constructeur appelé par gameplay_drift_stuntZones.setStuntZones ; ce n'est pas une extension. En cas de réussite, émet onAnyStuntZoneAccomplished avec le sous-hook onDonutDriftAccomplished (points de base donut).",
+  "module": "\"donut\" stunt zone type: the player must complete a full turn (360° accumulated velocity direction angle) while drifting inside a circle of radius scl around pos. The module returns a constructor called by gameplay_drift_stuntZones.setStuntZones; it is not an extension. On success, emits onAnyStuntZoneAccomplished with the sub-hook onDonutDriftAccomplished (donut base points).",
   "notes": [
-    "Sortir du cercle remet le compteur d'angle à 0 (isPlayerInside).",
-    "Après réussite, la zone est indisponible pendant zoneData.cooldown secondes ; le cercle est dessiné avec des segments colorés (bleu = tour effectué, rouge/blanc = cooldown).",
-    "Le nombre de segments du cercle est drawData.decalCount = scl * 10."
+    "Leaving the circle resets the angle counter to 0 (isPlayerInside).",
+    "After success, the zone is unavailable for zoneData.cooldown seconds; the circle is drawn with colored segments (blue = turn completed, red/white = cooldown).",
+    "The number of circle segments is drawData.decalCount = scl * 10."
   ],
   "classes": {
     "C": {
-      "desc": "Zone donut. Champs : data = {id, zoneData = {pos, scl (rayon), cooldown}, drawData}, activeData = {isActive, currCooldown, totalDriftAngle, completedPerc}.",
+      "desc": "Donut zone. Fields: data = {id, zoneData = {pos, scl (radius), cooldown}, drawData}, activeData = {isActive, currCooldown, totalDriftAngle, completedPerc}.",
       "functions": {
-        "reset": {"desc": "Réinitialise activeData (cooldown à 0, angle cumulé à 0)."},
+        "reset": {
+          "desc": "Resets activeData (cooldown to 0, accumulated angle to 0)."
+        },
         "init": {
-          "desc": "Constructeur interne : mémorise les données de la zone et appelle reset().",
-          "params": {"data": {"type": "table", "desc": "{id, zoneData, drawData, nearDist}."}},
+          "desc": "Internal constructor: stores the zone data and calls reset().",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "{id, zoneData, drawData, nearDist}."
+            }
+          },
           "internal": true
         },
-        "accomplish": {"desc": "Réussite : remet l'angle cumulé à 0, démarre le cooldown et émet onAnyStuntZoneAccomplished (sous-hook onDonutDriftAccomplished, points = base donut)."},
-        "detectStunt": {"desc": "Ajoute à l'angle cumulé la variation d'angle de drift de la frame (gameplay_drift_drift.getAngleDiff) ; à 360° ou plus, appelle accomplish."},
+        "accomplish": {
+          "desc": "Success: resets the accumulated angle to 0, starts the cooldown and emits onAnyStuntZoneAccomplished (sub-hook onDonutDriftAccomplished, points = donut base)."
+        },
+        "detectStunt": {
+          "desc": "Adds the frame's drift angle variation (gameplay_drift_drift.getAngleDiff) to the accumulated angle; at 360° or more, calls accomplish."
+        },
         "isAvailable": {
-          "desc": "Indique si le cooldown est écoulé.",
-          "returns": [{"type": "boolean", "desc": "true si la zone peut être validée."}]
+          "desc": "Returns whether the cooldown has elapsed.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if the zone can be validated."
+            }
+          ]
         },
         "isPlayerInside": {
-          "desc": "Teste si le véhicule est à moins de scl de pos ; sinon remet l'angle cumulé à 0.",
-          "returns": [{"type": "boolean", "desc": "true si le joueur est dans le cercle."}]
+          "desc": "Tests whether the vehicle is within scl of pos; otherwise resets the accumulated angle to 0.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if the player is inside the circle."
+            }
+          ]
         },
-        "onUpdate": {"desc": "Appelé à chaque frame par le gestionnaire : dessine le cercle.", "internal": true},
-        "sendDecals": {"desc": "Dessine le cercle avec debugDrawer:drawLineInstance, coloré selon l'avancement et le cooldown (si le tracé est activé).", "internal": true}
+        "onUpdate": {
+          "desc": "Called every frame by the manager: draws the circle.",
+          "internal": true
+        },
+        "sendDecals": {
+          "desc": "Draws the circle with debugDrawer:drawLineInstance, colored according to progress and cooldown (if drawing is enabled).",
+          "internal": true
+        }
       }
     }
   }

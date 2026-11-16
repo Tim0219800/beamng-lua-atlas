@@ -1,0 +1,37 @@
+{
+  "path": "lua/common/libs/slaxml/slaxml.lua",
+  "module": "Bibliothèque tierce SLAXML v0.8 (Gavin Kistner, licence MIT) : analyseur XML pur Lua de type SAX avec gestion des espaces de noms. On lui passe des callbacks (pi, comment, startElement, attribute, text, closeElement) ; il les appelle pendant la lecture. Le jeu s'en sert pour lire des XML (par ex. xlsxlib, écriture JUnit).",
+  "usage": "local SLAXML = require('libs/slaxml/slaxml')\nlocal p = SLAXML:parser{ startElement = function(name) print('<'..name..'>') end }\np:parse('<a><b/></a>', {stripWhitespace = true})",
+  "notes": [
+    "Sans callbacks personnalisés, `SLAXML:parser()` utilise des callbacks par défaut qui impriment (print/io.write) chaque événement.",
+    "`parse` lève une erreur si aucun élément n'est trouvé (« Parsing did not discover any elements »), si des éléments restent ouverts, si un préfixe d'espace de noms est inconnu, ou si le contenu d'une balise ne se lit pas.",
+    "Option `options.stripWhitespace` : retire les blancs de début/fin du texte (défaut false).",
+    "`SLAXML:dom` est défini ici (version simple) et redéfini par libs/slaxml/slaxdom (qui ajoute nsPrefix et la sérialisation `xml`) : charger slaxdom remplace cette version."
+  ],
+  "fields": {
+    "VERSION": {"type": "string", "desc": "\"0.8\"."}
+  },
+  "functions": {
+    "parser": {
+      "desc": "Crée un objet analyseur {_call, parse} utilisant les callbacks donnés (ou ceux par défaut qui impriment).",
+      "params": {"callbacks": {"type": "table|nil", "desc": "Table de callbacks : pi(target, content), comment(content), startElement(name, nsURI, nsPrefix), attribute(name, value, nsURI, nsPrefix), text(text, cdata), closeElement(name, nsURI, nsPrefix)."}},
+      "returns": [{"type": "table", "desc": "Analyseur avec méthode parse."}]
+    },
+    "parse": {
+      "desc": "Analyse le texte XML en appelant les callbacks de l'analyseur (ou de SLAXML si appelé directement). Gère les entités standard (&lt; &gt; &amp; &quot; &apos;) et les références numériques.",
+      "params": {
+        "xml": {"type": "string", "desc": "Texte XML."},
+        "options": {"type": "table|nil", "desc": "{stripWhitespace = boolean}."}
+      },
+      "returns": []
+    },
+    "dom": {
+      "desc": "Analyse le XML et renvoie un DOM à plat : document {type='document', name='#doc', kids, root}, éléments {type='element', name, kids, el, attr, nsURI, parent}, attributs, textes, commentaires, instructions de traitement. Avec opts.simple, les liens parent et `el` ne sont pas créés. Lève une erreur s'il y a plusieurs racines ou un fermant inattendu.",
+      "params": {
+        "xml": {"type": "string", "desc": "Texte XML."},
+        "opts": {"type": "table|nil", "desc": "{simple = boolean, stripWhitespace = boolean}."}
+      },
+      "returns": [{"type": "table", "desc": "Document DOM."}]
+    }
+  }
+}

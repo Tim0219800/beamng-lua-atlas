@@ -1,247 +1,506 @@
 {
   "path": "lua/ge/extensions/campaign/campaigns.lua",
-  "module": "Moteur d'exécution d'une campagne en cours. Il tient la campagne active (variable locale campaign = {meta, state}), enchaîne les scénarios d'après la clé « nextScenario » ou les événements onSucceed/onFail, tient le statut de chaque lieu (state ready/failed/completed, medal, attempts), vérifie les prérequis (scénarios terminés, véhicule imposé), traite les récompenses, les bandes dessinées, les succès (OnlineServiceProvider.unlockAchievement), l'écran de fin (boutons retry/next/cancel/menu/freeroam/finish) et la sérialisation. Les lieux sont dans meta.subsections[s].locations[l] ; la clé d'un lieu dans state.locationStatus est « sous-section.lieu ».",
+  "module": "Execution engine of a running campaign. It holds the active campaign (local variable campaign = {meta, state}), chains scenarios based on the \"nextScenario\" key or the onSucceed/onFail events, holds the status of each location (state ready/failed/completed, medal, attempts), checks prerequisites (completed scenarios, required vehicle), handles rewards, comics, achievements (OnlineServiceProvider.unlockAchievement), the end screen (retry/next/cancel/menu/freeroam/finish buttons) and serialization. Locations are in meta.subsections[s].locations[l]; a location's key in state.locationStatus is \"subsection.location\".",
   "notes": [
-    "Types de lieu (info.type / info.subtype) : « site » avec subtype transitionPoint, playerHQ ou missionGiver ; « race » avec subtype timeTrial. isScenarioLocation = type différent de « site » et subtype différent de « timeTrial ».",
-    "Les fins de campagne : isCampaignOver est vrai si la clé du scénario suivant est « END » ou absente ; processNextScenario affiche alors le résumé (ui_router « scenario.chapter.end ») et arrête la campagne.",
-    "Dans scenarioFinished, le statut d'un lieu n'est mis à jour que si le sous-type n'est pas « timeTrial » et si le lieu est « ready » ou si la nouvelle médaille est meilleure (statistics_statistics.getMedalRanking).",
-    "Bug : M.onDeserialized = onDeserialized exporte une variable non définie dans le fichier (nil).",
-    "Bug : uiEventRetry est définie mais vide et n'est pas exportée ; le bouton Retry appelle scenario_scenarios.uiEventRetry().",
-    "isOverallResultFail retourne toujours false ; displayCampaignSummary affiche aussi des valeurs en dur (community = 20, player = 78, achievements « Not Implemented »).",
-    "rewardSelectionCallback lit campaign.state.scenarioRewards.choices.vehicles : seuls les choix de la clé « vehicles » sont donc gérés.",
-    "scenarioStarted et scenarioFinished ignorent les scénarios dont le nom diffère de campaign.meta.scenarioName.",
-    "Un véhicule requis (dataType « vehicles ») est comparé avec model et config du véhicule actuel du joueur (extractVehicleData)."
+    "Location types (info.type / info.subtype): \"site\" with subtype transitionPoint, playerHQ or missionGiver; \"race\" with subtype timeTrial. isScenarioLocation = type different from \"site\" and subtype different from \"timeTrial\".",
+    "Campaign ends: isCampaignOver is true if the next scenario key is \"END\" or absent; processNextScenario then shows the summary (ui_router \"scenario.chapter.end\") and stops the campaign.",
+    "In scenarioFinished, a location's status is only updated if the subtype is not \"timeTrial\" and if the location is \"ready\" or if the new medal is better (statistics_statistics.getMedalRanking).",
+    "Bug: M.onDeserialized = onDeserialized exports a variable not defined in the file (nil).",
+    "Bug: uiEventRetry is defined but empty and is not exported; the Retry button calls scenario_scenarios.uiEventRetry().",
+    "isOverallResultFail always returns false; displayCampaignSummary also shows hardcoded values (community = 20, player = 78, achievements \"Not Implemented\").",
+    "rewardSelectionCallback reads campaign.state.scenarioRewards.choices.vehicles: only the choices under the \"vehicles\" key are therefore handled.",
+    "scenarioStarted and scenarioFinished ignore scenarios whose name differs from campaign.meta.scenarioName.",
+    "A required vehicle (dataType \"vehicles\") is compared with the model and config of the player's current vehicle (extractVehicleData)."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "{'scenario_scenarios'}"},
-    "onDeserialized": {"type": "nil", "desc": "Toujours nil : référence à une variable non définie dans le fichier."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{'scenario_scenarios'}"
+    },
+    "onDeserialized": {
+      "type": "nil",
+      "desc": "Always nil: reference to a variable not defined in the file."
+    }
   },
   "functions": {
     "getOwningSubsection": {
-      "desc": "Retourne la sous-section de la campagne qui contient le lieu donné.",
-      "params": {"locationKey": {"type": "string", "desc": "Clé du lieu."}},
-      "returns": [{"type": "table|nil", "desc": "La sous-section ou nil."}],
+      "desc": "Returns the campaign subsection that contains the given location.",
+      "params": {
+        "locationKey": {
+          "type": "string",
+          "desc": "Location key."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "The subsection or nil."
+        }
+      ],
       "internal": false
     },
     "isCampaignOver": {
-      "desc": "Vrai si le scénario n'a pas de scénario suivant (clé « END » ou absente) ; faux tant qu'il n'a pas de résultat.",
-      "params": {"scenario": {"type": "table", "desc": "Scénario avec scenarioKey et result."}},
-      "returns": [{"type": "boolean", "desc": "Fin de campagne ou non."}],
+      "desc": "True if the scenario has no next scenario (key \"END\" or absent); false as long as it has no result.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Scenario with scenarioKey and result."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Campaign over or not."
+        }
+      ],
       "internal": false
     },
     "getCampaignTitle": {
-      "desc": "Titre de la campagne active (meta.title).",
+      "desc": "Title of the active campaign (meta.title).",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "Titre."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Title."
+        }
+      ],
       "internal": false
     },
     "startScenarioFromKey": {
-      "desc": "Charge (si non fourni) et lance le scénario d'un lieu : met à jour currentLocation, scenarioKey, activeSubsection, sauvegarde la campagne puis appelle scenario_scenarios.executeScenario. Journalise une erreur si le lieu est inconnu.",
+      "desc": "Loads (if not provided) and launches a location's scenario: updates currentLocation, scenarioKey, activeSubsection, saves the campaign then calls scenario_scenarios.executeScenario. Logs an error if the location is unknown.",
       "params": {
-        "key": {"type": "string", "desc": "Clé du lieu/scénario."},
-        "processedScenario": {"type": "table|nil", "desc": "Scénario déjà chargé ; sinon chargé via scenario_scenariosLoader.loadScenario(location.path)."}
+        "key": {
+          "type": "string",
+          "desc": "Location/scenario key."
+        },
+        "processedScenario": {
+          "type": "table|nil",
+          "desc": "Scenario already loaded; otherwise loaded via scenario_scenariosLoader.loadScenario(location.path)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "stop": {
-      "desc": "Oublie la campagne en cours (variable locale mise à nil).",
+      "desc": "Forgets the current campaign (local variable set to nil).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "canStartScenario": {
-      "desc": "Vérifie les prérequis (champ requires) d'un lieu : tous les scénarios listés « completed » dans la même sous-section, et/ou véhicule du joueur dans la liste imposée.",
-      "params": {"scenarioKey": {"type": "string", "desc": "Clé du lieu."}},
-      "returns": [{"type": "boolean", "desc": "true si le scénario peut démarrer."}],
+      "desc": "Checks a location's prerequisites (requires field): all the listed scenarios \"completed\" in the same subsection, and/or the player's vehicle in the required list.",
+      "params": {
+        "scenarioKey": {
+          "type": "string",
+          "desc": "Location key."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the scenario can start."
+        }
+      ],
       "internal": false
     },
     "isLocationCompleted": {
-      "desc": "Vrai si le lieu a l'état « completed ».",
-      "params": {"locationKey": {"type": "string", "desc": "Clé du lieu."}},
-      "returns": [{"type": "boolean|nil", "desc": "Résultat, ou nil/false si inconnu."}],
+      "desc": "True if the location has the \"completed\" state.",
+      "params": {
+        "locationKey": {
+          "type": "string",
+          "desc": "Location key."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "Result, or nil/false if unknown."
+        }
+      ],
       "internal": false
     },
     "canImproveResult": {
-      "desc": "Vrai si la médaille obtenue pour ce lieu n'est pas déjà « gold ».",
-      "params": {"locationKey": {"type": "string", "desc": "Clé du lieu."}},
-      "returns": [{"type": "boolean|nil", "desc": "Résultat."}],
+      "desc": "True if the medal obtained for this location is not already \"gold\".",
+      "params": {
+        "locationKey": {
+          "type": "string",
+          "desc": "Location key."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "Result."
+        }
+      ],
       "internal": false
     },
     "execEndCallback": {
-      "desc": "Appelle une seule fois le callback de fin de campagne (meta.endCampaignCallback) s'il existe.",
+      "desc": "Calls the end-of-campaign callback (meta.endCampaignCallback) only once, if it exists.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "markCompleted": {
-      "desc": "Marque un lieu comme « completed » dans locationStatus.",
+      "desc": "Marks a location as \"completed\" in locationStatus.",
       "params": {
-        "subsection": {"type": "table", "desc": "Sous-section (clé key utilisée)."},
-        "locationKey": {"type": "string", "desc": "Clé du lieu."}
+        "subsection": {
+          "type": "table",
+          "desc": "Subsection (key key used)."
+        },
+        "locationKey": {
+          "type": "string",
+          "desc": "Location key."
+        }
       },
       "returns": [],
       "internal": false
     },
     "scenarioStarted": {
-      "desc": "Appelé par le système de scénarios au démarrage : à l'état « pre-start » joue l'événement onIntro du lieu (comic, inventaire) et incrémente le compteur attempts du lieu.",
-      "params": {"scenario": {"type": "table", "desc": "Scénario qui démarre."}},
+      "desc": "Called by the scenario system at startup: in the \"pre-start\" state plays the location's onIntro event (comic, inventory) and increments the location's attempts counter.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Scenario that is starting."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "scenarioFinished": {
-      "desc": "Appelé à la fin d'un scénario (état « post ») : met à jour statut et médaille du lieu, calcule les récompenses (campaign_rewards.processRewards), construit les boutons de l'écran de fin, débloque les succès et joue les événements onSucceed/onFail.",
-      "params": {"scenario": {"type": "table", "desc": "Scénario terminé avec result et stats."}},
+      "desc": "Called at the end of a scenario (\"post\" state): updates the location's status and medal, computes the rewards (campaign_rewards.processRewards), builds the end screen buttons, unlocks achievements and plays the onSucceed/onFail events.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Finished scenario with result and stats."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "rewardSelectionCallback": {
-      "desc": "Callback appelé par l'UI quand le joueur choisit une récompense de véhicule ; mémorise l'index dans state.selectedRewardIndex.",
-      "params": {"itemIndex": {"type": "integer", "desc": "Index (à partir de 1) du véhicule choisi."}},
+      "desc": "Callback called by the UI when the player chooses a vehicle reward; stores the index in state.selectedRewardIndex.",
+      "params": {
+        "itemIndex": {
+          "type": "integer",
+          "desc": "Index (1-based) of the chosen vehicle."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "uiEventCancel": {
-      "desc": "Bouton Annuler de l'écran de fin : masque le menu (guihooks MenuHide), navigue vers « menu » et arrête le scénario.",
+      "desc": "Cancel button of the end screen: hides the menu (guihooks MenuHide), navigates to \"menu\" and stops the scenario.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "uiEventNext": {
-      "desc": "Bouton Suivant de l'écran de fin : applique le choix de récompense, arrête le scénario courant et lance le suivant ; affiche le résumé et arrête la campagne s'il n'y en a plus. Ignoré (avertissement) si aucune campagne n'est active.",
+      "desc": "Next button of the end screen: applies the reward choice, stops the current scenario and launches the next one; shows the summary and stops the campaign if there are no more. Ignored (warning) if no campaign is active.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getCampaignActive": {
-      "desc": "Indique si une campagne est active (state.campaignActive).",
+      "desc": "Indicates whether a campaign is active (state.campaignActive).",
       "params": {},
-      "returns": [{"type": "boolean|nil", "desc": "Vrai si active."}],
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "True if active."
+        }
+      ],
       "internal": false
     },
     "getCampaign": {
-      "desc": "Retourne la campagne en cours ({meta, state}).",
+      "desc": "Returns the current campaign ({meta, state}).",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Campagne."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Campaign."
+        }
+      ],
       "internal": false
     },
     "getSubsection": {
-      "desc": "Retourne une sous-section par clé (nil si aucune campagne active).",
-      "params": {"subsectionKey": {"type": "string", "desc": "Clé de la sous-section."}},
-      "returns": [{"type": "table|nil", "desc": "Sous-section."}],
+      "desc": "Returns a subsection by key (nil if no campaign is active).",
+      "params": {
+        "subsectionKey": {
+          "type": "string",
+          "desc": "Subsection key."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Subsection."
+        }
+      ],
       "internal": false
     },
     "getActiveSubsection": {
-      "desc": "Retourne la sous-section active (state.activeSubsection).",
+      "desc": "Returns the active subsection (state.activeSubsection).",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Sous-section active."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Active subsection."
+        }
+      ],
       "internal": false
     },
     "getLocationData": {
-      "desc": "Retourne les données d'un lieu dans une sous-section.",
+      "desc": "Returns a location's data in a subsection.",
       "params": {
-        "subsectionKey": {"type": "string", "desc": "Clé de la sous-section."},
-        "locationKey": {"type": "string", "desc": "Clé du lieu."}
+        "subsectionKey": {
+          "type": "string",
+          "desc": "Subsection key."
+        },
+        "locationKey": {
+          "type": "string",
+          "desc": "Location key."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Données du lieu."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Location data."
+        }
+      ],
       "internal": false
     },
     "getActiveSubsectionLocationData": {
-      "desc": "Comme getLocationData mais dans la sous-section active.",
-      "params": {"locationKey": {"type": "string", "desc": "Clé du lieu."}},
-      "returns": [{"type": "table|nil", "desc": "Données du lieu."}],
+      "desc": "Like getLocationData but in the active subsection.",
+      "params": {
+        "locationKey": {
+          "type": "string",
+          "desc": "Location key."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Location data."
+        }
+      ],
       "internal": false
     },
     "getCurrentLocation": {
-      "desc": "Retourne state.currentLocation (format « sous-section.lieu ») si une campagne est active.",
+      "desc": "Returns state.currentLocation (format \"subsection.location\") if a campaign is active.",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "Lieu courant."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Current location."
+        }
+      ],
       "internal": false
     },
     "isTransitionPoint": {
-      "desc": "Vrai si le lieu est un site de sous-type transitionPoint.",
-      "params": {"subsectionKey": {"type": "string", "desc": "Sous-section."}, "locationKey": {"type": "string", "desc": "Lieu."}},
-      "returns": [{"type": "boolean|nil", "desc": "Résultat."}],
+      "desc": "True if the location is a site of subtype transitionPoint.",
+      "params": {
+        "subsectionKey": {
+          "type": "string",
+          "desc": "Subsection."
+        },
+        "locationKey": {
+          "type": "string",
+          "desc": "Location."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "Result."
+        }
+      ],
       "internal": false
     },
     "isPlayerHQ": {
-      "desc": "Vrai si le lieu est un site de sous-type playerHQ.",
-      "params": {"subsectionKey": {"type": "string", "desc": "Sous-section."}, "locationKey": {"type": "string", "desc": "Lieu."}},
-      "returns": [{"type": "boolean|nil", "desc": "Résultat."}],
+      "desc": "True if the location is a site of subtype playerHQ.",
+      "params": {
+        "subsectionKey": {
+          "type": "string",
+          "desc": "Subsection."
+        },
+        "locationKey": {
+          "type": "string",
+          "desc": "Location."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "Result."
+        }
+      ],
       "internal": false
     },
     "isMissionGiver": {
-      "desc": "Vrai si le lieu est un site de sous-type missionGiver.",
-      "params": {"subsectionKey": {"type": "string", "desc": "Sous-section."}, "locationKey": {"type": "string", "desc": "Lieu."}},
-      "returns": [{"type": "boolean|nil", "desc": "Résultat."}],
+      "desc": "True if the location is a site of subtype missionGiver.",
+      "params": {
+        "subsectionKey": {
+          "type": "string",
+          "desc": "Subsection."
+        },
+        "locationKey": {
+          "type": "string",
+          "desc": "Location."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "Result."
+        }
+      ],
       "internal": false
     },
     "isSiteLocation": {
-      "desc": "Vrai si le lieu est de type « site ».",
-      "params": {"subsectionKey": {"type": "string", "desc": "Sous-section."}, "locationKey": {"type": "string", "desc": "Lieu."}},
-      "returns": [{"type": "boolean|nil", "desc": "Résultat."}],
+      "desc": "True if the location is of type \"site\".",
+      "params": {
+        "subsectionKey": {
+          "type": "string",
+          "desc": "Subsection."
+        },
+        "locationKey": {
+          "type": "string",
+          "desc": "Location."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "Result."
+        }
+      ],
       "internal": false
     },
     "isScenarioLocation": {
-      "desc": "Vrai si le lieu n'est ni un « site » ni un contre-la-montre (subtype timeTrial).",
-      "params": {"subsectionKey": {"type": "string", "desc": "Sous-section."}, "locationKey": {"type": "string", "desc": "Lieu."}},
-      "returns": [{"type": "boolean|nil", "desc": "Résultat."}],
+      "desc": "True if the location is neither a \"site\" nor a time trial (subtype timeTrial).",
+      "params": {
+        "subsectionKey": {
+          "type": "string",
+          "desc": "Subsection."
+        },
+        "locationKey": {
+          "type": "string",
+          "desc": "Location."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "Result."
+        }
+      ],
       "internal": false
     },
     "isSubsectionMarker": {
-      "desc": "Vrai si un lieu de la sous-section a entryMarker ou exitLocation égal au nom de marqueur donné.",
-      "params": {"subsectionKey": {"type": "string", "desc": "Sous-section."}, "markerName": {"type": "string", "desc": "Nom du marqueur."}},
-      "returns": [{"type": "boolean", "desc": "Résultat."}],
+      "desc": "True if a location in the subsection has entryMarker or exitLocation equal to the given marker name.",
+      "params": {
+        "subsectionKey": {
+          "type": "string",
+          "desc": "Subsection."
+        },
+        "markerName": {
+          "type": "string",
+          "desc": "Marker name."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Result."
+        }
+      ],
       "internal": false
     },
     "startCampaign": {
-      "desc": "Active la campagne préparée (state.campaignActive = true), fixe currentLocation à meta.startingLocation, joue onStart puis démarre l'exécution (premier scénario). Ne fait rien sans meta.startingLocation.",
-      "params": {"newCampaign": {"type": "table", "desc": "Campagne traitée {meta, state}."}},
+      "desc": "Activates the prepared campaign (state.campaignActive = true), sets currentLocation to meta.startingLocation, plays onStart then starts execution (first scenario). Does nothing without meta.startingLocation.",
+      "params": {
+        "newCampaign": {
+          "type": "table",
+          "desc": "Processed campaign {meta, state}."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "resumeCampaign": {
-      "desc": "Reprend une campagne sauvegardée : remplace campaign.state par data et relance l'exécution au lieu courant.",
+      "desc": "Resumes a saved campaign: replaces campaign.state with data and restarts execution at the current location.",
       "params": {
-        "campaignInProgress": {"type": "table", "desc": "Campagne traitée."},
-        "data": {"type": "table", "desc": "State sauvegardé."}
+        "campaignInProgress": {
+          "type": "table",
+          "desc": "Processed campaign."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Saved state."
+        }
       },
       "returns": [],
       "internal": false
     },
     "getLocationStatusTable": {
-      "desc": "Retourne state.locationStatus (« sous-section.lieu » vers {attempts, state, medal}).",
+      "desc": "Returns state.locationStatus (\"subsection.location\" to {attempts, state, medal}).",
       "params": {},
-      "returns": [{"type": "table", "desc": "Table des statuts."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Status table."
+        }
+      ],
       "internal": false
     },
     "onSerialize": {
-      "desc": "Hook de sérialisation : retourne campaign.state avec sourceFile, ou {} si aucune campagne n'est active.",
+      "desc": "Serialization hook: returns campaign.state with sourceFile, or {} if no campaign is active.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Données."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Data."
+        }
+      ],
       "internal": true
     },
     "onSaveCampaign": {
-      "desc": "Hook de sauvegarde : appelle saveCallback(M.__globalAlias__, campaign.state + sourceFile).",
-      "params": {"saveCallback": {"type": "function", "desc": "Fournie par campaign_campaignsLoader."}},
+      "desc": "Save hook: calls saveCallback(M.__globalAlias__, campaign.state + sourceFile).",
+      "params": {
+        "saveCallback": {
+          "type": "function",
+          "desc": "Provided by campaign_campaignsLoader."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook appelé au déchargement de l'extension : arrête la campagne.",
+      "desc": "Hook called when the extension is unloaded: stops the campaign.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onScenarioChange": {
-      "desc": "Hook de changement de scénario : décharge cette extension si aucune campagne n'est active.",
-      "params": {"scenario": {"type": "table|nil", "desc": "Scénario courant (non utilisé)."}},
+      "desc": "Scenario change hook: unloads this extension if no campaign is active.",
+      "params": {
+        "scenario": {
+          "type": "table|nil",
+          "desc": "Current scenario (not used)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onResetGameplay": {
-      "desc": "Hook de remise à zéro du gameplay ; ne fait rien dans cette version.",
-      "params": {"playerID": {"type": "integer", "desc": "Joueur concerné."}},
+      "desc": "Gameplay reset hook; does nothing in this version.",
+      "params": {
+        "playerID": {
+          "type": "integer",
+          "desc": "Player concerned."
+        }
+      },
       "returns": [],
       "internal": true
     }

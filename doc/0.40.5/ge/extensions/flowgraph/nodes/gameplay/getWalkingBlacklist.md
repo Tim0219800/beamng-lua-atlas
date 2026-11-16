@@ -1,24 +1,24 @@
 # `flowgraph_nodes_gameplay_getWalkingBlacklist`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/getWalkingBlacklist.lua` · VM : Game Engine (GE) · 37 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/getWalkingBlacklist.lua` · VM: Game Engine (GE) · 37 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/getWalkingBlacklist")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/getWalkingBlacklist")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Is Walking Blacklisted » (catégorie repeat_instant, dépend de gameplay_walk). Indique si un véhicule (pin vehId) est autorisé ou interdit à l'entrée depuis le mode marche. Sorties : allowed, denied (flux) et value (bool caché).
+Flowgraph node "Is Walking Blacklisted" (category repeat_instant, depends on gameplay_walk). Indicates whether a vehicle (vehId pin) is allowed or forbidden for entry from walking mode. Outputs: allowed, denied (flow) and value (hidden bool).
 
-## Remarques
+## Notes
 
-- Bug : work écrit self.pinOut.bool.value, mais aucun pin « bool » n'existe (le pin s'appelle value) : l'accès plante dès que vehId est renseigné.
+- Bug: work writes self.pinOut.bool.value, but no "bool" pin exists (the pin is called value): the access crashes as soon as vehId is set.
 
-**Dépendances (chargées avant) :** `gameplay_walk`
+**Dependencies (loaded first):** `gameplay_walk`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work(args)` | Appelle gameplay_walk.isVehicleBlacklisted(vehId) pour remplir allowed/denied ; met les sorties à nil si vehId est absent. | 23 |
+| `C:work(args)` | Calls gameplay_walk.isVehicleBlacklisted(vehId) to fill allowed/denied; sets the outputs to nil if vehId is absent. | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/getWalkingBlacklist.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/getWalkingBlacklist.lua`.*

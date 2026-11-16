@@ -1,48 +1,95 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/cornerHandles.lua",
-  "module": "Poignées dans le viewport pour les virages de la géométrie « engineered » des outils de route de l'éditeur : un bouton de rayon (à l'extérieur du virage, ancré à l'apex) et une poignée de déplacement sur la courbe quand le nœud PI est très éloigné de son virage. Gère le survol, le clic, le glisser et l'enregistrement d'une action d'historique annulable via le contexte fourni par l'outil.",
+  "module": "Viewport handles for the turns of the 'engineered' geometry of the editor's road tools: a radius button (on the outside of the turn, anchored at the apex) and a move handle on the curve when the PI node is far from its turn. Handles hover, click, drag and the recording of an undoable history action via the context provided by the tool.",
   "notes": [
-    "Le groupe g doit avoir g.nodes (>= 3 points {x,y,z}), g.corners, et facultativement g.discMap, g.divPoints, g.cornerR, g.engRadiusM.",
-    "Rayon par défaut 40 m, plafond 300 m ; MAJ (shift) divise la sensibilité par 10.",
-    "La poignée de déplacement n'apparaît que si le PI est à plus de 25 m de l'apex.",
-    "Les nœuds ont priorité : si le curseur est sur un nœud, les poignées ne prennent pas la souris."
+    "The group g must have g.nodes (>= 3 points {x,y,z}), g.corners, and optionally g.discMap, g.divPoints, g.cornerR, g.engRadiusM.",
+    "Default radius 40 m, cap 300 m; SHIFT divides the sensitivity by 10.",
+    "The move handle only appears if the PI is more than 25 m from the apex.",
+    "Nodes take priority: if the cursor is on a node, the handles do not take the mouse."
   ],
   "functions": {
     "update": {
-      "desc": "Dessine les poignées de virage intérieur (bouton de rayon + poignée de déplacement) et gère leur clic/glisser. Renvoie (consumed, hovering) : consumed = elle possède la souris cette frame ; hovering = simple survol (l'appelant doit couper l'ajout de nœud mais continuer sa passe d'événements).",
+      "desc": "Draws the inner turn handles (radius button + move handle) and handles their click/drag. Returns (consumed, hovering): consumed = it owns the mouse this frame; hovering = mere hover (the caller must disable node addition but continue its event pass).",
       "params": {
-        "g": {"type": "table", "desc": "Groupe/route (nodes, corners, discMap, divPoints…)."},
-        "ctx": {"type": "table", "desc": "{ selGroupIdx, selNodeIdx, setSelNode(i), minRadius(g)->number, deepCopy(g)->snapshot, undo, redo, ensureOverride(g,i)->ov }"}
+        "g": {
+          "type": "table",
+          "desc": "Group/road (nodes, corners, discMap, divPoints...)."
+        },
+        "ctx": {
+          "type": "table",
+          "desc": "{ selGroupIdx, selNodeIdx, setSelNode(i), minRadius(g)->number, deepCopy(g)->snapshot, undo, redo, ensureOverride(g,i)->ov }"
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "consumed"},
-        {"type": "boolean|nil", "desc": "hovering (absent quand rien n'est survolé)."}
+        {
+          "type": "boolean",
+          "desc": "consumed"
+        },
+        {
+          "type": "boolean|nil",
+          "desc": "hovering (absent when nothing is hovered)."
+        }
       ]
     },
     "apex": {
-      "desc": "Apex du virage intérieur i sur la route réelle : l'échantillon au milieu de l'arc ancré à discMap[i]. Reste près de la route même si le PI est très loin (épingle ~180°). Retombe sur le nœud avant construction.",
+      "desc": "Apex of inner turn i on the actual road: the sample at the middle of the arc anchored at discMap[i]. Stays close to the road even if the PI is very far (~180 degree hairpin). Falls back to the node before construction.",
       "params": {
-        "g": {"type": "table", "desc": "Groupe (discMap, divPoints, nodes)."},
-        "i": {"type": "integer", "desc": "Indice du nœud intérieur."}
+        "g": {
+          "type": "table",
+          "desc": "Group (discMap, divPoints, nodes)."
+        },
+        "i": {
+          "type": "integer",
+          "desc": "Index of the inner node."
+        }
       },
-      "returns": [{"type": "table", "desc": "Point {x,y,z} de l'apex (ou le nœud i)."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Point {x,y,z} of the apex (or node i)."
+        }
+      ]
     },
     "moveHandle": {
-      "desc": "Poignée de déplacement sur la courbe pour le virage i (comme la poignée de milieu de Civil3D) : n'existe que lorsque le PI est à plus de 25 m de son virage ; sinon le nœud est sur la route et se déplace directement.",
+      "desc": "Move handle on the curve for turn i (like Civil3D's midpoint handle): exists only when the PI is more than 25 m from its turn; otherwise the node is on the road and is moved directly.",
       "params": {
-        "g": {"type": "table", "desc": "Groupe."},
-        "i": {"type": "integer", "desc": "Indice du nœud intérieur."},
-        "ap": {"type": "table|nil", "desc": "Apex déjà calculé (évite une recherche)."}
+        "g": {
+          "type": "table",
+          "desc": "Group."
+        },
+        "i": {
+          "type": "integer",
+          "desc": "Index of the inner node."
+        },
+        "ap": {
+          "type": "table|nil",
+          "desc": "Already computed apex (avoids a search)."
+        }
       },
-      "returns": [{"type": "vec3|nil", "desc": "Position de la poignée (apex, z+0.15) ou nil."}]
+      "returns": [
+        {
+          "type": "vec3|nil",
+          "desc": "Handle position (apex, z+0.15) or nil."
+        }
+      ]
     },
     "isDragging": {
-      "desc": "true tant qu'un glissé de poignée de virage est en cours (l'outil s'en sert pour masquer la route et différer la reconstruction).",
-      "returns": [{"type": "boolean", "desc": ""}]
+      "desc": "true while a turn handle drag is in progress (the tool uses it to hide the road and defer the rebuild).",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": ""
+        }
+      ]
     },
     "draggingGroupIdx": {
-      "desc": "Indice du groupe qui possède le glissé en cours (pour savoir quelle route masquer), ou nil.",
-      "returns": [{"type": "integer|nil", "desc": ""}]
+      "desc": "Index of the group that owns the current drag (to know which road to hide), or nil.",
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": ""
+        }
+      ]
     }
   }
 }

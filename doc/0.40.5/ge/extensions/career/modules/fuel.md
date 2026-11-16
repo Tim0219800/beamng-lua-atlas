@@ -1,156 +1,156 @@
 # `career_modules_fuel`
 
-*Fichier : `lua/ge/extensions/career/modules/fuel.lua` · VM : Game Engine (GE) · 665 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/fuel.lua` · VM: Game Engine (GE) · 665 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_fuel` : `extensions.load("career_modules_fuel")`, puis la globale `career_modules_fuel`
+**Access:** extension `career_modules_fuel`: `extensions.load("career_modules_fuel")`, then the global `career_modules_fuel`
 
-Transaction de ravitaillement du mode carrière à une station-service. startTransaction ouvre l'écran career.refueling, lit les réservoirs du véhicule du joueur (energyStorage), puis onUpdate fait monter l'énergie des réservoirs actifs au débit choisi, calcule le prix (prix de la station par unité, remise d'assurance éventuelle) et envoie les données à l'UI (initialFuelingData, updateFuelData). payPrice débite l'argent (ou rien pour un véhicule de travail, payé par l'entreprise), uiCancelTransaction restaure les niveaux de départ.
+Career mode refueling transaction at a gas station. startTransaction opens the career.refueling screen, reads the player vehicle's tanks (energyStorage), then onUpdate raises the energy of the active tanks at the chosen flow rate, computes the price (station price per unit, possible insurance discount) and sends the data to the UI (initialFuelingData, updateFuelData). payPrice debits the money (or nothing for a work vehicle, paid by the company), uiCancelTransaction restores the starting levels.
 
-## Remarques
+## Notes
 
-- Unités internes en joules ; l'UI reçoit des litres (gasoline, diesel, kerosine), des kg (n2o) ou des kWh (electricEnergy) via les facteurs MJ par unité : gasoline 31.125, diesel 36.112, kerosine 34.4, n2o 8.3, electricEnergy 3.6.
-- Débit maximal 50 000 000 J/s (maxFuelFlowRate) multiplié par le facteur de onChangeFlowRate ; l'électrique charge à un tiers de ce débit.
-- Seuls les réservoirs dont le type est connu et proposé par la station (freeroam_facilities_fuelPrice.getFuelPrice non nil) sont affichés, sauf si debugIgnoreStationFuelTypeRestriction est vrai.
-- Le ravitaillement ne démarre que si le véhicule roule à moins de 1 m/s ; si la vitesse dépasse 2 m/s pendant la transaction, onUpdate annule la transaction.
-- Un véhicule d'inventaire avec loanType == 'work' ne paie pas (message « paidByCompany »).
-- minimumRefuelingCheck : électrique = recharge complète ; liquide <= 1 % = remis à 5 % ; message d'urgence affiché. Utile après une panne sèche.
-- Hooks émis : onRefuelingStartTransaction, onRefuelingStopFueling(tank), onRefuelingEndTransaction, onPaidRefuelling(price).
-- payPrice débloque le succès VEHICLE_REFUELLED deux fois (avant et après endTransaction) ; sans conséquence, mais redondant. Dans payPrice, le hook onPaidRefuelling reçoit overallPrice déjà remis à 0 par endTransaction.
-- En build non shipping, onUpdate affiche une fenêtre ImGui de debug « Fueling » avec boutons Start/Stop/Pay.
+- Internal units in joules; the UI receives liters (gasoline, diesel, kerosine), kg (n2o) or kWh (electricEnergy) via the MJ-per-unit factors: gasoline 31.125, diesel 36.112, kerosine 34.4, n2o 8.3, electricEnergy 3.6.
+- Maximum flow rate 50,000,000 J/s (maxFuelFlowRate) multiplied by the onChangeFlowRate factor; electric charges at a third of this rate.
+- Only the tanks whose type is known and offered by the station (freeroam_facilities_fuelPrice.getFuelPrice non-nil) are displayed, unless debugIgnoreStationFuelTypeRestriction is true.
+- Refueling only starts if the vehicle is moving at less than 1 m/s; if the speed exceeds 2 m/s during the transaction, onUpdate cancels the transaction.
+- An inventory vehicle with loanType == 'work' does not pay (message "paidByCompany").
+- minimumRefuelingCheck: electric = full recharge; liquid <= 1% = set back to 5%; emergency message displayed. Useful after running out of fuel.
+- Emitted hooks: onRefuelingStartTransaction, onRefuelingStopFueling(tank), onRefuelingEndTransaction, onPaidRefuelling(price).
+- payPrice unlocks the VEHICLE_REFUELLED achievement twice (before and after endTransaction); harmless, but redundant. In payPrice, the onPaidRefuelling hook receives overallPrice already reset to 0 by endTransaction.
+- In non-shipping builds, onUpdate displays a "Fueling" ImGui debug window with Start/Stop/Pay buttons.
 
-**Dépendances (chargées avant) :** `career_career`
+**Dependencies (loaded first):** `career_career`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_fuel.getFuelData()` | Renvoie la liste des réservoirs retenus pour la transaction (energyType, name, currentEnergy, maxEnergy en joules). | 211 |
-| `career_modules_fuel.getFuelingData()` | Renvoie, par réservoir, l'énergie ajoutée (fueledEnergy, joules) et le prix (price) de la transaction en cours. | 372 |
-| `career_modules_fuel.isCurrentlyFueling()` | Indique si au moins un réservoir est en train d'être rempli. | 473 |
-| `career_modules_fuel.minimumRefuelingCheck(vehId)` | Évite la panne sèche totale : pour chaque réservoir du véhicule, recharge à fond l'électrique, ou remet un réservoir quasi vide (<= 1 %) à 5 %, avec un message d'urgence. | 617 |
-| `career_modules_fuel.onCareerActive(active)` | Hook appelé quand la carrière devient active ou inactive : crée les sources audio (essence et électrique) si actif. *(interne)* *(hook)* | 632 |
-| `career_modules_fuel.onChangeFlowRate(factor, tankIndex)` | Hook/action d'entrée (gâchette de la pompe) : règle le débit en fraction 0 à 1 du maximum et démarre le remplissage du réservoir ; un facteur 0 l'arrête et remet le débit au maximum. *(hook)* | 349 |
-| `career_modules_fuel.onClientEndMission(levelPath)` | Hook de fin de niveau : oublie les identifiants des sons de ravitaillement. *(interne)* *(hook)* | 637 |
-| `career_modules_fuel.onUpdate(dtReal, dtSim)` | Hook par image : annule la transaction si le véhicule bouge à plus de 2 m/s, fait avancer les réservoirs actifs (énergie, prix arrondi au centime), arrête un réservoir plein, envoie les données à l'UI toutes les 0,1 s, ajuste le son de pompe, et affiche la fenêtre ImGui de debug hors build shipping. *(interne)* *(hook)* | 496 |
-| `career_modules_fuel.payPrice()` | Paye le total (ne fait rien si le prix est nul ou si le joueur n'a pas assez d'argent), arrête le remplissage, enregistre la dépense (career_modules_playerAttributes, statistique career/fuel/paidPrice.money), termine la transaction et émet onPaidRefuelling. | 402 |
-| `career_modules_fuel.requestRefuelingTransactionData()` | Demande au véhicule du joueur ses réservoirs (energyStorage) ; à la réponse, filtre les réservoirs, prépare les données et envoie initialFuelingData à l'UI. | 198 |
-| `career_modules_fuel.sendUpdateDataToUI()` | Envoie à l'UI (guihook 'updateFuelData') énergie actuelle, énergie ajoutée, prix, état actif par réservoir, prix total, possibilité de payer (canPay) et débit relatif. | 147 |
-| `career_modules_fuel.startTransaction(_gasStation)` | Démarre une transaction pour le véhicule actuel de l'inventaire à la station donnée : active l'action map 'Refueling', coupe le contact (setIgnitionLevel 0), ouvre l'écran career.refueling et émet onRefuelingStartTransaction. Ne fait rien sans véhicule actuel d'inventaire. | 202 |
-| `career_modules_fuel.uiButtonStartFueling(energyType)` | Appelé par l'UI : commence à remplir tous les réservoirs d'un type d'énergie. | 437 |
-| `career_modules_fuel.uiButtonStartFuelingTank(index)` | Appelé par l'UI : sélectionne puis commence à remplir un réservoir précis. | 445 |
-| `career_modules_fuel.uiButtonStopFueling(energyType)` | Appelé par l'UI : arrête le remplissage des réservoirs d'un type (tous si nil) et applique les niveaux au véhicule. | 441 |
-| `career_modules_fuel.uiButtonStopFuelingTank(index)` | Appelé par l'UI : arrête le remplissage d'un réservoir précis. | 455 |
-| `career_modules_fuel.uiCancelTransaction()` | Annule la transaction : restaure les niveaux d'énergie de départ sur le véhicule, sans payer, et termine la transaction (retour à l'écran 'play', sauvegarde auto ou mise à jour des conditions de pièces). | 464 |
-| `career_modules_fuel.uiSetSelectedTankIndex(index)` | Appelé par l'UI : change le réservoir sélectionné (ignoré pendant un remplissage ou si l'indice est invalide). | 429 |
+| `career_modules_fuel.getFuelData()` | Returns the list of tanks kept for the transaction (energyType, name, currentEnergy, maxEnergy in joules). | 211 |
+| `career_modules_fuel.getFuelingData()` | Returns, per tank, the energy added (fueledEnergy, joules) and the price (price) of the current transaction. | 372 |
+| `career_modules_fuel.isCurrentlyFueling()` | Indicates whether at least one tank is being filled. | 473 |
+| `career_modules_fuel.minimumRefuelingCheck(vehId)` | Avoids a total fuel outage: for each tank of the vehicle, fully recharges electric, or sets a nearly empty tank (<= 1%) back to 5%, with an emergency message. | 617 |
+| `career_modules_fuel.onCareerActive(active)` | Hook called when career becomes active or inactive: creates the audio sources (gasoline and electric) if active. *(internal)* *(hook)* | 632 |
+| `career_modules_fuel.onChangeFlowRate(factor, tankIndex)` | Hook/input action (pump trigger): sets the flow rate as a fraction 0 to 1 of the maximum and starts filling the tank; a factor of 0 stops it and resets the flow rate to the maximum. *(hook)* | 349 |
+| `career_modules_fuel.onClientEndMission(levelPath)` | Level end hook: forgets the refueling sound identifiers. *(internal)* *(hook)* | 637 |
+| `career_modules_fuel.onUpdate(dtReal, dtSim)` | Per-frame hook: cancels the transaction if the vehicle moves faster than 2 m/s, advances the active tanks (energy, price rounded to the cent), stops a full tank, sends the data to the UI every 0.1 s, adjusts the pump sound, and displays the ImGui debug window outside shipping builds. *(internal)* *(hook)* | 496 |
+| `career_modules_fuel.payPrice()` | Pays the total (does nothing if the price is zero or the player does not have enough money), stops filling, records the expense (career_modules_playerAttributes, statistic career/fuel/paidPrice.money), ends the transaction and emits onPaidRefuelling. | 402 |
+| `career_modules_fuel.requestRefuelingTransactionData()` | Asks the player vehicle for its tanks (energyStorage); on reply, filters the tanks, prepares the data and sends initialFuelingData to the UI. | 198 |
+| `career_modules_fuel.sendUpdateDataToUI()` | Sends to the UI (guihook 'updateFuelData') current energy, added energy, price, active state per tank, total price, ability to pay (canPay) and relative flow rate. | 147 |
+| `career_modules_fuel.startTransaction(_gasStation)` | Starts a transaction for the current inventory vehicle at the given station: enables the 'Refueling' action map, turns the ignition off (setIgnitionLevel 0), opens the career.refueling screen and emits onRefuelingStartTransaction. Does nothing without a current inventory vehicle. | 202 |
+| `career_modules_fuel.uiButtonStartFueling(energyType)` | Called by the UI: starts filling all the tanks of an energy type. | 437 |
+| `career_modules_fuel.uiButtonStartFuelingTank(index)` | Called by the UI: selects then starts filling a specific tank. | 445 |
+| `career_modules_fuel.uiButtonStopFueling(energyType)` | Called by the UI: stops filling the tanks of a type (all if nil) and applies the levels to the vehicle. | 441 |
+| `career_modules_fuel.uiButtonStopFuelingTank(index)` | Called by the UI: stops filling a specific tank. | 455 |
+| `career_modules_fuel.uiCancelTransaction()` | Cancels the transaction: restores the starting energy levels on the vehicle, without paying, and ends the transaction (back to the 'play' screen, autosave or part conditions update). | 464 |
+| `career_modules_fuel.uiSetSelectedTankIndex(index)` | Called by the UI: changes the selected tank (ignored during a fill or if the index is invalid). | 429 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_fuel.getFuelData()`
 
-Renvoie la liste des réservoirs retenus pour la transaction (energyType, name, currentEnergy, maxEnergy en joules).
+Returns the list of tanks kept for the transaction (energyType, name, currentEnergy, maxEnergy in joules).
 
-- **renvoie** : table|nil Liste de réservoirs, nil hors transaction.
+- **returns**: table|nil List of tanks, nil outside a transaction.
 
 #### `career_modules_fuel.getFuelingData()`
 
-Renvoie, par réservoir, l'énergie ajoutée (fueledEnergy, joules) et le prix (price) de la transaction en cours.
+Returns, per tank, the energy added (fueledEnergy, joules) and the price (price) of the current transaction.
 
-- **renvoie** : table Liste de {price, fueledEnergy}.
+- **returns**: table List of {price, fueledEnergy}.
 
 #### `career_modules_fuel.isCurrentlyFueling()`
 
-Indique si au moins un réservoir est en train d'être rempli.
+Indicates whether at least one tank is being filled.
 
-- **renvoie** : boolean true si un remplissage est actif.
+- **returns**: boolean true if a fill is active.
 
 #### `career_modules_fuel.minimumRefuelingCheck(vehId)`
 
-Évite la panne sèche totale : pour chaque réservoir du véhicule, recharge à fond l'électrique, ou remet un réservoir quasi vide (<= 1 %) à 5 %, avec un message d'urgence.
+Avoids a total fuel outage: for each tank of the vehicle, fully recharges electric, or sets a nearly empty tank (<= 1%) back to 5%, with an emergency message.
 
-- `vehId` (*integer|nil*) : Véhicule ; par défaut le véhicule actuel de l'inventaire.
+- `vehId` (*integer|nil*) : Vehicle; by default the current inventory vehicle.
 
 #### `career_modules_fuel.onCareerActive(active)`
 
-Hook appelé quand la carrière devient active ou inactive : crée les sources audio (essence et électrique) si actif.
+Hook called when career becomes active or inactive: creates the audio sources (gasoline and electric) if active.
 
-- `active` (*boolean*) : true à l'activation.
+- `active` (*boolean*) : true on activation.
 
 #### `career_modules_fuel.onChangeFlowRate(factor, tankIndex)`
 
-Hook/action d'entrée (gâchette de la pompe) : règle le débit en fraction 0 à 1 du maximum et démarre le remplissage du réservoir ; un facteur 0 l'arrête et remet le débit au maximum.
+Hook/input action (pump trigger): sets the flow rate as a fraction 0 to 1 of the maximum and starts filling the tank; a factor of 0 stops it and resets the flow rate to the maximum.
 
-- `factor` (*number*) : Fraction du débit maximal, bornée à [0, 1].
-- `tankIndex` (*integer|nil*) : Réservoir visé ; par défaut le réservoir sélectionné.
+- `factor` (*number*) : Fraction of the maximum flow rate, clamped to [0, 1].
+- `tankIndex` (*integer|nil*) : Target tank; by default the selected tank.
 
 #### `career_modules_fuel.onClientEndMission(levelPath)`
 
-Hook de fin de niveau : oublie les identifiants des sons de ravitaillement.
+Level end hook: forgets the refueling sound identifiers.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `career_modules_fuel.onUpdate(dtReal, dtSim)`
 
-Hook par image : annule la transaction si le véhicule bouge à plus de 2 m/s, fait avancer les réservoirs actifs (énergie, prix arrondi au centime), arrête un réservoir plein, envoie les données à l'UI toutes les 0,1 s, ajuste le son de pompe, et affiche la fenêtre ImGui de debug hors build shipping.
+Per-frame hook: cancels the transaction if the vehicle moves faster than 2 m/s, advances the active tanks (energy, price rounded to the cent), stops a full tank, sends the data to the UI every 0.1 s, adjusts the pump sound, and displays the ImGui debug window outside shipping builds.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps de simulation (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s).
 
 #### `career_modules_fuel.startTransaction(_gasStation)`
 
-Démarre une transaction pour le véhicule actuel de l'inventaire à la station donnée : active l'action map 'Refueling', coupe le contact (setIgnitionLevel 0), ouvre l'écran career.refueling et émet onRefuelingStartTransaction. Ne fait rien sans véhicule actuel d'inventaire.
+Starts a transaction for the current inventory vehicle at the given station: enables the 'Refueling' action map, turns the ignition off (setIgnitionLevel 0), opens the career.refueling screen and emits onRefuelingStartTransaction. Does nothing without a current inventory vehicle.
 
-- `_gasStation` (*table*) : Station-service ; doit contenir facility (id, name).
+- `_gasStation` (*table*) : Gas station; must contain facility (id, name).
 
 #### `career_modules_fuel.uiButtonStartFueling(energyType)`
 
-Appelé par l'UI : commence à remplir tous les réservoirs d'un type d'énergie.
+Called by the UI: starts filling all the tanks of an energy type.
 
-- `energyType` (*string*) : gasoline, diesel, kerosine, n2o ou electricEnergy.
+- `energyType` (*string*) : gasoline, diesel, kerosine, n2o or electricEnergy.
 
 #### `career_modules_fuel.uiButtonStartFuelingTank(index)`
 
-Appelé par l'UI : sélectionne puis commence à remplir un réservoir précis.
+Called by the UI: selects then starts filling a specific tank.
 
-- `index` (*integer*) : Indice (à partir de 1) dans la liste des réservoirs.
+- `index` (*integer*) : Index (starting at 1) in the tank list.
 
 #### `career_modules_fuel.uiButtonStopFueling(energyType)`
 
-Appelé par l'UI : arrête le remplissage des réservoirs d'un type (tous si nil) et applique les niveaux au véhicule.
+Called by the UI: stops filling the tanks of a type (all if nil) and applies the levels to the vehicle.
 
-- `energyType` (*string|nil*) : Type d'énergie.
+- `energyType` (*string|nil*) : Energy type.
 
 #### `career_modules_fuel.uiButtonStopFuelingTank(index)`
 
-Appelé par l'UI : arrête le remplissage d'un réservoir précis.
+Called by the UI: stops filling a specific tank.
 
-- `index` (*integer*) : Indice du réservoir.
+- `index` (*integer*) : Tank index.
 
 #### `career_modules_fuel.uiSetSelectedTankIndex(index)`
 
-Appelé par l'UI : change le réservoir sélectionné (ignoré pendant un remplissage ou si l'indice est invalide).
+Called by the UI: changes the selected tank (ignored during a fill or if the index is invalid).
 
-- `index` (*integer*) : Indice du réservoir.
+- `index` (*integer*) : Tank index.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_career. |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_career. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onPaidRefuelling`
 - `onRefuelingEndTransaction`
 - `onRefuelingStartTransaction`
 - `onRefuelingStopFueling`
 
-**Évènements UI (guihooks.trigger) :** `initialFuelingData`, `updateFuelData`
+**UI events (guihooks.trigger):** `initialFuelingData`, `updateFuelData`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/fuel.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/fuel.lua`.*

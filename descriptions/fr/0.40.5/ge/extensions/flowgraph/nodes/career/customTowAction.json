@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/customTowAction.lua",
+  "module": "Nœud flowgraph « On Custom Tow » (catégorie repeat_instant, couleur/icône career). Détecte quand le joueur utilise une action de remorquage personnalisée dans le tutoriel de carrière. Sortie : tow (flow, impulsion) à vrai une frame après le hook onCareerCustomTowHook. Le flowgraph doit refaire un fondu depuis le noir après l'action.",
+  "notes": ["Schéma d'évènement commun : le hook pose un drapeau, work() le transforme en impulsion d'une frame puis efface les drapeaux."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
+        "work": {"desc": "Chaque frame : met tow à faux, applique les drapeaux reçus puis les efface.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
+        "onCareerCustomTowHook": {"desc": "Hook de carrière : lève le drapeau tow.", "params": {"poiId": {"type": "any", "desc": "id du point d'intérêt (non utilisé)"}}, "internal": true}
+      }
+    }
+  }
+}

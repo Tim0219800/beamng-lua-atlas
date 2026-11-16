@@ -1,0 +1,99 @@
+{
+  "path": "lua/vehicle/controller/drivingDynamics/actuators/electronicSplitShaftLock.lua",
+  "module": "Actionneur de la Driving Dynamics Suite : verrouillage électronique d'un arbre de répartition (split shaft, embrayage de transfert type Haldex). À chaque étape physique intermédiaire, il compare la vitesse d'entrée à celle de la sortie secondaire (`secondaryOutputAVName`) ; un PID règle le rapport d'embrayage `clutchRatio` (0..1) de l'arbre pour réduire l'écart. Le verrouillage est coupé au freinage ou sans accélérateur (sauf freinage du pied gauche), figé pendant un changement de rapport, avec un minimum possible, et nul au frein de stationnement. Ordre d'appel : `defaultOrder = 80`.",
+  "notes": [
+    "Clés jbeam lues par init : `avDiffThreshold` (4 rad/s), `avThreshold` (1 rad/s), `minimumLock` (0), `clutchPIDkP` (0.1), `clutchPIDkI` (1), `clutchPIDkD` (0), `applyMinimumLockOnlyWithThrottle` (true), `name`. Lue par initSecondStage : `splitShaftName`.",
+    "Seuils internes : frein considéré actif au-dessus de 0.1 ; accélérateur considéré relâché à 0 ou moins.",
+    "Le rapport final est clamp(clutchRatio, overrideMin, overrideMax) ; le commentaire du code précise que selon la disposition du groupe motopropulseur c'est le min ou le max de l'override qui compte.",
+    "Sans CMU enregistré, initSecondStage appelle shutdown ; si l'arbre est introuvable le système reste inactif. `electrics.values.brake`, `throttle`, `parkingbrake` sont lus sans valeur par défaut.",
+    "`shutdown` retire updateGFX et updateWheelsIntermediate (nil)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "80."},
+    "isActive": {"type": "boolean", "desc": "true si l'arbre de répartition a été trouvé."},
+    "isActing": {"type": "boolean", "desc": "true si le rapport d'embrayage dépasse 0.01."},
+    "overrideMin": {"type": "number", "desc": "Borne basse du rapport d'embrayage (0 par défaut)."},
+    "overrideMax": {"type": "number", "desc": "Borne haute du rapport d'embrayage (1 par défaut)."}
+  },
+  "functions": {
+    "resetOverride": {
+      "desc": "Remet les bornes d'override à 0 et 1.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "updateWheelsIntermediate": {
+      "desc": "Étape physique intermédiaire : calcule le rapport d'embrayage (PID, conditions de conduite, override) et l'écrit dans `clutchRatio` de l'arbre de répartition.",
+      "params": {"dt": {"type": "number", "desc": "Pas en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Chaque frame : rien d'utile. Variante debug : envoie les valeurs au CMU.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "shutdown": {
+      "desc": "Arrête l'actionneur.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet isActing et les bornes d'override à leur valeur initiale.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Lit les paramètres jbeam et crée le PID d'embrayage.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "initSecondStage": {
+      "desc": "Retrouve l'arbre de répartition (`splitShaftName`) et active le système.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "registerCMU": {
+      "desc": "Appelée par le CMU pour donner une référence vers lui.",
+      "params": {"cmu": {"type": "table", "desc": "Module CMU."}},
+      "returns": [],
+      "internal": true
+    },
+    "setDebugMode": {
+      "desc": "Active ou désactive l'envoi de paquets de debug.",
+      "params": {"debugEnabled": {"type": "boolean", "desc": "true pour envoyer."}},
+      "returns": [],
+      "internal": true
+    },
+    "setParameters": {
+      "desc": "Modifie à chaud avDiffThreshold, avThreshold, minimumLock, isEnabled et clutchPIDkP/kI/kD (via CMU.applyParameter).",
+      "params": {"parameters": {"type": "table", "desc": "Table des paramètres à changer."}},
+      "returns": [],
+      "internal": false
+    },
+    "setConfig": {
+      "desc": "Remplace toute la table de paramètres.",
+      "params": {"configTable": {"type": "table", "desc": "Nouveaux paramètres."}},
+      "returns": [],
+      "internal": true
+    },
+    "getConfig": {
+      "desc": "Renvoie une copie des paramètres.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Copie profonde."}],
+      "internal": false
+    },
+    "sendConfigData": {
+      "desc": "Envoie les paramètres au CMU dans un paquet de debug config.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

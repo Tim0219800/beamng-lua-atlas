@@ -1,28 +1,85 @@
 {
   "path": "lua/ge/extensions/gameplay/markers/invisibleMarker.lua",
-  "module": "Marqueur « nul » : implémente toute l'interface d'un marqueur de mode jeu (init, setup, update, show, hide, clearObjects, interactInPlayMode...) avec des méthodes vides, sauf setup qui mémorise le cluster. Sert de marqueur par défaut pour des POI qui n'ont aucune représentation visible ni interaction. Le module renvoie directement un constructeur : require(...)(options) renvoie l'instance.",
+  "module": "\"Null\" marker: implements the entire play mode marker interface (init, setup, update, show, hide, clearObjects, interactInPlayMode...) with empty methods, except setup which stores the cluster. Serves as the default marker for POIs that have no visible representation or interaction. The module directly returns a constructor: require(...)(options) returns the instance.",
   "notes": [
-    "Ce module ne fournit pas de fonction cluster : il ne regroupe aucun POI.",
-    "Toutes les méthodes sont des coquilles vides, hormis setup (self.cluster = cluster)."
+    "This module does not provide a cluster function: it groups no POIs.",
+    "All methods are empty shells, except setup (self.cluster = cluster)."
   ],
   "classes": {
     "C": {
-      "desc": "Marqueur sans effet, instance renvoyée par le constructeur du module.",
+      "desc": "No-op marker, instance returned by the module's constructor.",
       "functions": {
-        "init": {"desc": "Ne fait rien.", "internal": true},
-        "update": {"desc": "Ne fait rien (appelée chaque frame par le gestionnaire de marqueurs).", "params": {"data": {"type": "table", "desc": "Données de frame (ignorées)."}}, "internal": true},
-        "setup": {"desc": "Mémorise le cluster dans self.cluster.", "params": {"cluster": {"type": "table", "desc": "Cluster associé."}}, "internal": true},
-        "createObjects": {"desc": "Ne fait rien.", "internal": true},
-        "setHidden": {"desc": "Ne fait rien.", "params": {"value": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
-        "hide": {"desc": "Ne fait rien.", "internal": false},
-        "show": {"desc": "Ne fait rien.", "internal": false},
-        "clearObjects": {"desc": "Ne fait rien.", "internal": false},
-        "instantFade": {"desc": "Ne fait rien.", "params": {"visible": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
-        "interactInPlayMode": {
-          "desc": "Ne fait rien : n'ajoute aucun élément interactif.",
+        "init": {
+          "desc": "Does nothing.",
+          "internal": true
+        },
+        "update": {
+          "desc": "Does nothing (called every frame by the marker manager).",
           "params": {
-            "interactData": {"type": "table", "desc": "Ignoré."},
-            "interactableElements": {"type": "table[]", "desc": "Ignoré."}
+            "data": {
+              "type": "table",
+              "desc": "Frame data (ignored)."
+            }
+          },
+          "internal": true
+        },
+        "setup": {
+          "desc": "Stores the cluster in self.cluster.",
+          "params": {
+            "cluster": {
+              "type": "table",
+              "desc": "Associated cluster."
+            }
+          },
+          "internal": true
+        },
+        "createObjects": {
+          "desc": "Does nothing.",
+          "internal": true
+        },
+        "setHidden": {
+          "desc": "Does nothing.",
+          "params": {
+            "value": {
+              "type": "boolean",
+              "desc": "Ignored."
+            }
+          },
+          "internal": false
+        },
+        "hide": {
+          "desc": "Does nothing.",
+          "internal": false
+        },
+        "show": {
+          "desc": "Does nothing.",
+          "internal": false
+        },
+        "clearObjects": {
+          "desc": "Does nothing.",
+          "internal": false
+        },
+        "instantFade": {
+          "desc": "Does nothing.",
+          "params": {
+            "visible": {
+              "type": "boolean",
+              "desc": "Ignored."
+            }
+          },
+          "internal": false
+        },
+        "interactInPlayMode": {
+          "desc": "Does nothing: adds no interactive element.",
+          "params": {
+            "interactData": {
+              "type": "table",
+              "desc": "Ignored."
+            },
+            "interactableElements": {
+              "type": "table[]",
+              "desc": "Ignored."
+            }
           },
           "internal": false
         }

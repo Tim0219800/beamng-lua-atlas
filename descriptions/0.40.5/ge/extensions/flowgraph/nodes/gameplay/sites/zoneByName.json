@@ -1,49 +1,49 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/sites/zoneByName.lua",
-  "module": "Nœud flowgraph « Zone by Name ». Cherche une zone dans sitesData.zones.byName. Entrées : flow, sitesData, zoneName ; sorties : flow, exists (caché), zone (zoneData).",
+  "module": "Flowgraph node \"Zone by Name\". Looks up a zone in sitesData.zones.byName. Inputs: flow, sitesData, zoneName; outputs: flow, exists (hidden), zone (zoneData).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStarted": {
-          "desc": "Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud.",
+          "desc": "Called when the flowgraph project execution starts; resets the node's internal state.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "desc": "Draws the node's custom properties in the flowgraph editor panel (ImGui).",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui).",
+          "desc": "Draws the central content of the node in the flowgraph editor (ImGui).",
           "internal": true,
           "params": {
             "builder": {
               "type": "table",
-              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+              "desc": "editor node constructor (builder:Middle())"
             },
             "style": {
               "type": "table",
-              "desc": "style de dessin du nœud"
+              "desc": "node drawing style"
             }
           }
         },
         "init": {
-          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "desc": "Initializes the node's internal state at creation (called by the flowgraph engine).",
           "internal": true,
           "params": {
             "mgr": {
               "type": "table",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           }
         },
         "work": {
-          "desc": "Retrouve la zone par nom, publie zone et active flow/exists si elle existe et n'est pas missing.",
+          "desc": "Looks up the zone by name, publishes zone and activates flow/exists if it exists and is not missing.",
           "internal": true,
           "params": {
             "args": {
               "type": "table",
-              "desc": "arguments transmis par le moteur (non utilisés)"
+              "desc": "arguments passed by the engine (unused)"
             }
           }
         }

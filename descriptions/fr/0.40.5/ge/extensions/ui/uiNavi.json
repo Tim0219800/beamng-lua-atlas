@@ -1,0 +1,106 @@
+{
+  "path": "lua/ge/extensions/ui/uiNavi.lua",
+  "module": "Back-end Lua de la carte de navigation de l'interface (minimap, GPS). Il envoie à l'UI les positions des véhicules suivis, les points d'intérêt, les missions et les nœuds routiers de la carte, et gère un itinéraire simple (marqueurs au sol via core_groundMarkers). Il sert aussi à alimenter la texture JS d'un tableau de bord de véhicule avec la carte.",
+  "notes": [
+    "onGuiUpdate envoie 'NavigationMapUpdate' à chaque frame GUI (le code note « TODO: convert into stream »). Quand aucun véhicule suivi n'est contrôlé (ou en caméra libre), la position de la caméra est utilisée à la place.",
+    "Les tables d'objets de la carte sont réutilisées d'une frame à l'autre (pool) : ne pas conserver les données reçues.",
+    "Bug : getSpawnpoints assigne la variable globale `info` (pas de `local`).",
+    "Bug : getPointsOfInterest ne renvoie rien (nil) quand l'ensemble PointOfInterestSet n'existe pas ; requestPoi enverra alors nil à l'UI, et requestUIDashboardMap ignore le résultat dans ce cas.",
+    "Bug : requestVehicleDashboardMap lit une variable globale `minimapImage` (nil dans ce fichier), donc le champ est toujours absent de la table envoyée.",
+    "Fonctions locales non exportées : route_update (exportée sous le nom route_requestStatus), getNodesMinified (inutilisée)."
+  ],
+  "functions": {
+    "findClosestRoad": {
+      "desc": "Renvoie le résultat de map.findClosestRoad pour le point (x, y, z) : les informations sur le segment de route le plus proche.",
+      "params": {
+        "x": {"type": "number", "desc": "Coordonnée X monde."},
+        "y": {"type": "number", "desc": "Coordonnée Y monde."},
+        "z": {"type": "number", "desc": "Coordonnée Z monde."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de map.findClosestRoad (déduit du code)."}]
+    },
+    "getSpawnpoints": {
+      "desc": "Liste les objets SpawnSphere de la scène avec leur position ({x,y,z} en table). Si le fichier de mission du niveau existe et contient `spawnPoints`, les informations additionnelles (indexées par objectname) sont fusionnées dans chaque entrée.",
+      "returns": [{"type": "table[]", "desc": "Liste d'entrées contenant au moins `pos`."}]
+    },
+    "getPointsOfInterest": {
+      "desc": "Renvoie les objets du PointOfInterestSet de la scène sous forme de liste {name, pos, desc, title, type}.",
+      "returns": [{"type": "table[]|nil", "desc": "nil si l'ensemble PointOfInterestSet n'existe pas."}]
+    },
+    "requestPoi": {
+      "desc": "Envoie les points d'intérêt à l'UI par l'évènement 'MapPointsOfInterest'."
+    },
+    "getMissions": {
+      "desc": "Renvoie la table des missions actuellement stockée (vide au départ ; les exemples sont commentés dans le code).",
+      "returns": [{"type": "table", "desc": "Liste de missions (pos, desc, title, state, new, objectives, type)."}]
+    },
+    "setMissions": {
+      "desc": "Remplace la liste des missions et l'envoie aussitôt à l'UI via 'MapMissions'.",
+      "params": {"m": {"type": "table", "desc": "Nouvelle liste de missions."}}
+    },
+    "requestMissions": {
+      "desc": "Envoie la liste des missions courante à l'UI par l'évènement 'MapMissions'."
+    },
+    "route_start": {
+      "desc": "Démarre un itinéraire : appelle core_groundMarkers.setPath(wp) et mémorise la destination et sa position. Le code note que le multi-sièges ne rend le chemin que pour le dernier joueur.",
+      "params": {
+        "wp": {"type": "any", "desc": "Destination (nom de waypoint de la carte), transmise à core_groundMarkers.setPath et à map.getPath."},
+        "pos": {"type": "number[]", "desc": "Position {x, y, z} de la destination."}
+      }
+    },
+    "route_end": {
+      "desc": "Termine l'itinéraire : efface la destination, supprime le chemin au sol et envoie 'RouteUpdate' (table vide) puis 'RouteEnded' à l'UI."
+    },
+    "route_requestStatus": {
+      "desc": "Met à jour l'itinéraire en cours (fonction locale route_update). Sans itinéraire, ne fait rien. Si la position a bougé de plus de 0,1 m, recalcule le chemin, envoie 'RouteUpdate' ; à moins de 50 m de la destination, envoie 'RouteReachedDestination' et termine l'itinéraire.",
+      "params": {
+        "oldPos": {"type": "vec3", "desc": "Position précédente du joueur."},
+        "newPos": {"type": "vec3", "desc": "Position actuelle du joueur."}
+      }
+    },
+    "planRoute": {
+      "desc": "Outil de développement : calcule le chemin entre deux positions via map.getPath et l'envoie à l'UI par 'RoutePlanned'.",
+      "params": {
+        "posX": {"type": "number[]", "desc": "Point de départ {x, y, z}."},
+        "posY": {"type": "number[]", "desc": "Point d'arrivée {x, y, z}."}
+      }
+    },
+    "getBusStops": {
+      "desc": "Liste les arrêts de bus (BeamNGTrigger de type 'busstop'). Les arrêts distants de moins de 70 m (de part et d'autre de la route) sont fusionnés en un point au milieu.",
+      "returns": [{"type": "table[]", "desc": "Liste de {pos = {x,y,z}}."}]
+    },
+    "requestUIDashboardMap": {
+      "desc": "Construit les données de la carte (tuiles de terrain du niveau courant, points d'intérêt, nœuds routiers) et les envoie à l'UI par 'NavigationMap'. Si le niveau n'a pas de minimap, elle est générée depuis le TerrainBlock. Remplit aussi les anciens champs (terrainSize, minimapImage, squareSize, terrainOffset) pour les mods d'ancien format.",
+      "returns": [{"type": "table", "desc": "Les données envoyées (terrainTiles, poi, nodes, ...)."}]
+    },
+    "requestVehicleDashboardMap": {
+      "desc": "Envoie la carte à la texture JS d'un tableau de bord de véhicule (queueJSUITexture) en appelant la fonction JS `initmap` avec les données en JSON (nœuds, heure HH:MM, tuiles de terrain). Ne fait rien en mode headless, sans niveau chargé ou sans `dashboard`.",
+      "params": {
+        "dashboard": {"type": "string", "desc": "Nom de la texture JS cible."},
+        "initmap": {"type": "string|nil", "desc": "Fonction JS à appeler, par défaut 'map.setData'."},
+        "vehId": {"type": "integer|nil", "desc": "Id du véhicule cible, sinon le véhicule du joueur 0."}
+      }
+    },
+    "onGuiUpdate": {
+      "desc": "Hook appelé à chaque frame GUI. Rassemble les objets suivis par la carte (uiState ~= 0) avec position, cap en degrés, vitesse et état, puis envoie 'NavigationMapUpdate' ({controlID, objects}) à l'UI.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Durée réelle de la frame (s)."},
+        "dtSim": {"type": "number", "desc": "Durée simulée de la frame (s)."},
+        "dtRaw": {"type": "number", "desc": "Durée brute de la frame (s)."}
+      },
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé au changement de véhicule contrôlé. Le corps est entièrement commenté : ne fait rien.",
+      "params": {
+        "oid": {"type": "integer", "desc": "Ancien id de véhicule."},
+        "nid": {"type": "integer", "desc": "Nouvel id de véhicule."}
+      },
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement de l'extension : envoie un 'RouteUpdate' vide à l'UI.",
+      "internal": true
+    }
+  }
+}

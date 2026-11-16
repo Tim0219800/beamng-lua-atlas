@@ -1,15 +1,50 @@
 {
   "path": "lua/ge/extensions/editor/flowgraph/history.lua",
-  "module": "Fenêtre « History » (fg_history) de l'éditeur Flowgraph : boutons Undo/Redo et liste des actions (mgr.history) de la plus récente à la plus ancienne. L'entrée courante (mgr.currentHistoryIndex) est marquée « > », les entrées annulées sont grisées ; cliquer sur une entrée appelle mgr:goToHistory(index).",
+  "module": "\"History\" window (fg_history) of the Flowgraph editor: Undo/Redo buttons and list of actions (mgr.history) from most recent to oldest. The current entry (mgr.currentHistoryIndex) is marked \"> \", undone entries are grayed out; clicking an entry calls mgr:goToHistory(index).",
   "classes": {
     "C": {
-      "desc": "Classe de la fenêtre History (windowName = 'fg_history').",
+      "desc": "History window class (windowName = 'fg_history').",
       "functions": {
-        "attach": {"desc": "Associe le manager flowgraph.", "params": {"mgr": {"type": "table", "desc": "Manager."}}, "internal": false},
-        "init": {"desc": "Enregistre la fenêtre éditeur.", "params": {}, "internal": true},
-        "draw": {"desc": "Dessine la fenêtre si visible : Undo, Redo et tableau Idx/Action cliquable.", "params": {}, "internal": false},
-        "_onSerialize": {"desc": "Sérialisation (vide).", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true},
-        "_onDeserialized": {"desc": "Désérialisation (vide).", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true}
+        "attach": {
+          "desc": "Associates the flowgraph manager.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Manager."
+            }
+          },
+          "internal": false
+        },
+        "init": {
+          "desc": "Registers the editor window.",
+          "params": {},
+          "internal": true
+        },
+        "draw": {
+          "desc": "Draws the window if visible: Undo, Redo and clickable Idx/Action table.",
+          "params": {},
+          "internal": false
+        },
+        "_onSerialize": {
+          "desc": "Serialization (empty).",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Data."
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Deserialization (empty).",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Data."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

@@ -1,191 +1,191 @@
 # `editor_main`
 
-*Fichier : `lua/ge/extensions/editor/main.lua` · VM : Game Engine (GE) · 794 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/main.lua` · VM: Game Engine (GE) · 794 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_main` : `extensions.load("editor_main")`, puis la globale `editor_main`
+**Access:** extension `editor_main`: `extensions.load("editor_main")`, then the global `editor_main`
 
-Cœur du World Editor : définit la globale `editor` (editor = M). Il charge toutes les extensions de lua/ge/extensions/editor/ (celles qui contiennent « M.onEditor » ou « M.onExtension », sauf editor_main), initialise les modules editor/api/*, gère les préférences (settings/editor/preferences.json), l'état (settings/editor/currentState.json) et l'activation/désactivation de l'éditeur (caméra libre, action maps, CEF masqué, layout, audio). Les autres extensions d'éditeur ajoutent leurs fonctions à la table `editor`.
+Core of the World Editor: defines the global `editor` (editor = M). It loads all the extensions in lua/ge/extensions/editor/ (those containing "M.onEditor" or "M.onExtension", except editor_main), initializes the editor/api/* modules, manages the preferences (settings/editor/preferences.json), the state (settings/editor/currentState.json) and the activation/deactivation of the editor (free camera, action maps, hidden CEF, layout, audio). The other editor extensions add their functions to the `editor` table.
 
-## Exemple
+## Example
 
 ```lua
-editor_main.toggleActive()          -- ouvre/ferme l'éditeur
+editor_main.toggleActive()          -- opens/closes the editor
 editor.logInfo("message")
 local v = editor.getPreference("camera.general.freeCameraMoveSpeed")
 ```
 
-## Remarques
+## Notes
 
-- setEditorActive ne bascule pas immédiatement : il pose une requête traitée dans onUpdate après 3 frames d'écran de chargement (splash).
-- La fermeture de l'éditeur est refusée (retour silencieux) si editor.anyToolDirty() est vrai.
-- Mode sans échec (safeMode) : seules les extensions de la liste safeModeExtensionNames sont chargées.
-- Une extension peut être désactivée via settings/editor/extensions.json (clé = nom court, champ disabled).
-- editor.setPreference et editor.getPreference ne sont définis qu'après le premier loadPreferences().
-- Le même script gère aussi le lancement automatique avec l'argument -worldEditor (onFirstUpdate) et la réactivation après un rechargement Lua (onSerialize/onDeserialized).
+- setEditorActive does not toggle immediately: it sets a request processed in onUpdate after 3 frames of loading screen (splash).
+- Closing the editor is refused (silent return) if editor.anyToolDirty() is true.
+- Safe mode (safeMode): only the extensions in the safeModeExtensionNames list are loaded.
+- An extension can be disabled via settings/editor/extensions.json (key = short name, field disabled).
+- editor.setPreference and editor.getPreference are only defined after the first loadPreferences().
+- The same script also handles the automatic launch with the -worldEditor argument (onFirstUpdate) and the reactivation after a Lua reload (onSerialize/onDeserialized).
 
-**Dépendances (chargées avant) :** `core_camera`
+**Dependencies (loaded first):** `core_camera`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_main.initializeModules()` | Charge et initialise les modules editor/api/* (gui, core, assets, camera, dataBlock, decal, gizmo, material, navigation, object, roadRiver, sketch, terrain, forest, proceduralContentGenerator), puis émet onEditorModulesInitialized. Sans effet si déjà fait. *(interne)* | 294 |
-| `editor_main.isEditorActive()` | Indique si l'éditeur est actif. | 594 |
-| `editor_main.loadEditorExtension(name)` | Charge une extension d'éditeur à chaud : enregistre ses préférences, puis appelle ses onEditorRegisterApi, onEditorInitialized et onEditorActivated. | 140 |
-| `editor_main.loadEditorExtensions(names)` | Charge plusieurs extensions d'éditeur d'un coup (préférences enregistrées avant, puis hooks RegisterApi/Initialized/Activated pour chacune). | 171 |
-| `editor_main.loadExtensionsSettings()` | Lit settings/editor/extensions.json dans editor.extensionsSettings (table vide si absent). | 85 |
-| `editor_main.loadPreferences()` | Recharge les préférences depuis settings/editor/preferences.json, définit editor.setPreference/getPreference et migre les anciennes préférences. | 74 |
-| `editor_main.loadState(filePath)` | Lit le fichier d'état de l'éditeur (avertit si la version du format diffère). | 368 |
-| `editor_main.log(msg)` | Écrit un message de niveau Info dans le log, tag « editor ». | 50 |
-| `editor_main.logDebug(msg)` | Message de niveau Debug, tag « editor ». | 54 |
-| `editor_main.logError(msg)` | Message de niveau Error, tag « editor ». | 58 |
-| `editor_main.logInfo(msg)` | Alias de log (niveau Info, tag « editor »). | 50 |
-| `editor_main.logWarn(msg)` | Message de niveau Warning, tag « editor ». | 62 |
-| `editor_main.onClientEndMission()` | Appelé à la fin d'un niveau : sauvegarde l'état, réaffiche les apps (ShowApps), propose de sauvegarder si modifié, puis shutdown(). *(interne)* *(hook)* | 623 |
-| `editor_main.onClientStartMission()` | Appelé au démarrage d'un niveau : remet initialized et modulesInitialized à false et réapplique l'état actif courant. *(interne)* *(hook)* | 608 |
-| `editor_main.onDeserialized(data)` | Appelé après un rechargement Lua : restaure active/dirty/headless/mode d'édition et expose les données dans editor_main.serializedData. *(interne)* *(hook)* | 733 |
-| `editor_main.onExit()` | Appelé à la sortie du jeu : met editor.active à false et sauvegarde l'état. *(interne)* *(hook)* | 678 |
-| `editor_main.onExtensionLoaded()` | Hook de chargement. Corps vide. *(interne)* *(hook)* | 683 |
-| `editor_main.onExtensionUnloaded()` | Appelé au déchargement : editor.shutdown(). *(interne)* *(hook)* | 686 |
-| `editor_main.onFirstUpdate()` | Appelé à la première mise à jour : réactive l'éditeur s'il l'était avant le rechargement, et l'ouvre automatiquement si le jeu a été lancé avec -worldEditor. *(interne)* *(hook)* | 747 |
-| `editor_main.onPreExit()` | Appelé avant la sortie du jeu. Corps vide. *(interne)* *(hook)* | 620 |
-| `editor_main.onPreWindowClose()` | Appelé avant la fermeture de la fenêtre du jeu : editor.checkDirtyAndSave() si disponible. *(interne)* *(hook)* | 614 |
-| `editor_main.onSerialize()` | Appelé avant un rechargement Lua : sauvegarde caméra, état actif, dirty, headless, mode d'édition, positions des fenêtres et préférence cleanExit ; désactive l'éditeur. *(interne)* *(hook)* | 690 |
-| `editor_main.onUpdate()` | Appelé chaque frame : traite la requête d'activation/désactivation (affiche l'image de chargement editorSplash.png pendant 3 frames, puis applique). *(interne)* *(hook)* | 634 |
-| `editor_main.saveExtensionsSettings()` | Écrit editor.extensionsSettings dans settings/editor/extensions.json. | 89 |
-| `editor_main.savePreferences()` | Écrit les préférences dans settings/editor/preferences.json. | 81 |
-| `editor_main.saveState(filePath)` | Sauvegarde l'état de l'éditeur : émet onEditorSaveState(state) puis écrit le JSON. Sans effet si l'éditeur n'a pas été initialisé dans cette session. | 356 |
-| `editor_main.setEditorActive(activate, safeMode)` | Demande l'activation ou la désactivation de l'éditeur ; appliquée dans onUpdate après quelques frames de splash. | 587 |
-| `editor_main.shutdown()` | Ferme l'éditeur, émet onEditorShutdown, décharge toutes les extensions d'éditeur et remet initialized/active à false. | 598 |
-| `editor_main.toggleActive(safeMode)` | Inverse l'état actif de l'éditeur (via setEditorActive). | 674 |
-| `editor_main.unloadEditorExtension(extName)` | Décharge une extension d'éditeur chargée : appelle son onEditorDeactivated puis onEditorShutdown, puis extensions.unload. | 213 |
+| `editor_main.initializeModules()` | Loads and initializes the editor/api/* modules (gui, core, assets, camera, dataBlock, decal, gizmo, material, navigation, object, roadRiver, sketch, terrain, forest, proceduralContentGenerator), then emits onEditorModulesInitialized. No effect if already done. *(internal)* | 294 |
+| `editor_main.isEditorActive()` | Returns whether the editor is active. | 594 |
+| `editor_main.loadEditorExtension(name)` | Hot-loads an editor extension: registers its preferences, then calls its onEditorRegisterApi, onEditorInitialized and onEditorActivated. | 140 |
+| `editor_main.loadEditorExtensions(names)` | Loads several editor extensions at once (preferences registered first, then RegisterApi/Initialized/Activated hooks for each). | 171 |
+| `editor_main.loadExtensionsSettings()` | Reads settings/editor/extensions.json into editor.extensionsSettings (empty table if absent). | 85 |
+| `editor_main.loadPreferences()` | Reloads the preferences from settings/editor/preferences.json, defines editor.setPreference/getPreference and migrates the old preferences. | 74 |
+| `editor_main.loadState(filePath)` | Reads the editor state file (warns if the format version differs). | 368 |
+| `editor_main.log(msg)` | Writes an Info-level message to the log, tag "editor". | 50 |
+| `editor_main.logDebug(msg)` | Debug-level message, tag "editor". | 54 |
+| `editor_main.logError(msg)` | Error-level message, tag "editor". | 58 |
+| `editor_main.logInfo(msg)` | Log alias (Info level, tag "editor"). | 50 |
+| `editor_main.logWarn(msg)` | Warning-level message, tag "editor". | 62 |
+| `editor_main.onClientEndMission()` | Called at the end of a level: saves the state, shows the apps again (ShowApps), offers to save if modified, then shutdown(). *(internal)* *(hook)* | 623 |
+| `editor_main.onClientStartMission()` | Called when a level starts: sets initialized and modulesInitialized back to false and reapplies the current active state. *(internal)* *(hook)* | 608 |
+| `editor_main.onDeserialized(data)` | Called after a Lua reload: restores active/dirty/headless/edit mode and exposes the data in editor_main.serializedData. *(internal)* *(hook)* | 733 |
+| `editor_main.onExit()` | Called when the game exits: sets editor.active to false and saves the state. *(internal)* *(hook)* | 678 |
+| `editor_main.onExtensionLoaded()` | Load hook. Empty body. *(internal)* *(hook)* | 683 |
+| `editor_main.onExtensionUnloaded()` | Called on unload: editor.shutdown(). *(internal)* *(hook)* | 686 |
+| `editor_main.onFirstUpdate()` | Called on the first update: reactivates the editor if it was active before the reload, and opens it automatically if the game was launched with -worldEditor. *(internal)* *(hook)* | 747 |
+| `editor_main.onPreExit()` | Called before the game exits. Empty body. *(internal)* *(hook)* | 620 |
+| `editor_main.onPreWindowClose()` | Called before the game window closes: editor.checkDirtyAndSave() if available. *(internal)* *(hook)* | 614 |
+| `editor_main.onSerialize()` | Called before a Lua reload: saves the camera, active state, dirty, headless, edit mode, window positions and the cleanExit preference; deactivates the editor. *(internal)* *(hook)* | 690 |
+| `editor_main.onUpdate()` | Called every frame: processes the activation/deactivation request (shows the editorSplash.png loading image for 3 frames, then applies). *(internal)* *(hook)* | 634 |
+| `editor_main.saveExtensionsSettings()` | Writes editor.extensionsSettings to settings/editor/extensions.json. | 89 |
+| `editor_main.savePreferences()` | Writes the preferences to settings/editor/preferences.json. | 81 |
+| `editor_main.saveState(filePath)` | Saves the editor state: emits onEditorSaveState(state) then writes the JSON. No effect if the editor was not initialized in this session. | 356 |
+| `editor_main.setEditorActive(activate, safeMode)` | Requests the activation or deactivation of the editor; applied in onUpdate after a few splash frames. | 587 |
+| `editor_main.shutdown()` | Closes the editor, emits onEditorShutdown, unloads all the editor extensions and sets initialized/active back to false. | 598 |
+| `editor_main.toggleActive(safeMode)` | Toggles the editor's active state (via setEditorActive). | 674 |
+| `editor_main.unloadEditorExtension(extName)` | Unloads a loaded editor extension: calls its onEditorDeactivated then onEditorShutdown, then extensions.unload. | 213 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_main.isEditorActive()`
 
-Indique si l'éditeur est actif.
+Returns whether the editor is active.
 
-- **renvoie** : boolean editor.active.
+- **returns**: boolean editor.active.
 
 #### `editor_main.loadEditorExtension(name)`
 
-Charge une extension d'éditeur à chaud : enregistre ses préférences, puis appelle ses onEditorRegisterApi, onEditorInitialized et onEditorActivated.
+Hot-loads an editor extension: registers its preferences, then calls its onEditorRegisterApi, onEditorInitialized and onEditorActivated.
 
-- `name` (*string*) : Nom de l'extension, par ex. « editor_monOutil ».
-- **renvoie** : table|nil La table de l'extension, ou nil si le chargement a échoué.
+- `name` (*string*) : Extension name, e.g. "editor_myTool".
+- **returns**: table|nil The extension table, or nil if loading failed.
 
 #### `editor_main.loadEditorExtensions(names)`
 
-Charge plusieurs extensions d'éditeur d'un coup (préférences enregistrées avant, puis hooks RegisterApi/Initialized/Activated pour chacune).
+Loads several editor extensions at once (preferences registered first, then RegisterApi/Initialized/Activated hooks for each).
 
-- `names` (*table<integer, string>*) : Noms des extensions.
+- `names` (*table<integer, string>*) : Extension names.
 
 #### `editor_main.loadState(filePath)`
 
-Lit le fichier d'état de l'éditeur (avertit si la version du format diffère).
+Reads the editor state file (warns if the format version differs).
 
-- `filePath` (*string|nil*) : Fichier source ; settings/editor/currentState.json par défaut.
-- **renvoie** : table L'état lu, ou une table vide.
+- `filePath` (*string|nil*) : Source file; settings/editor/currentState.json by default.
+- **returns**: table The state read, or an empty table.
 
 #### `editor_main.log(msg)`
 
-Écrit un message de niveau Info dans le log, tag « editor ».
+Writes an Info-level message to the log, tag "editor".
 
 - `msg` (*string*) : Message.
 
 #### `editor_main.logDebug(msg)`
 
-Message de niveau Debug, tag « editor ».
+Debug-level message, tag "editor".
 
 - `msg` (*string*) : Message.
 
 #### `editor_main.logError(msg)`
 
-Message de niveau Error, tag « editor ».
+Error-level message, tag "editor".
 
 - `msg` (*string*) : Message.
 
 #### `editor_main.logInfo(msg)`
 
-Alias de log (niveau Info, tag « editor »).
+Log alias (Info level, tag "editor").
 
 - `msg` (*string*) : Message.
 
 #### `editor_main.logWarn(msg)`
 
-Message de niveau Warning, tag « editor ».
+Warning-level message, tag "editor".
 
 - `msg` (*string*) : Message.
 
 #### `editor_main.onDeserialized(data)`
 
-Appelé après un rechargement Lua : restaure active/dirty/headless/mode d'édition et expose les données dans editor_main.serializedData.
+Called after a Lua reload: restores active/dirty/headless/edit mode and exposes the data in editor_main.serializedData.
 
-- `data` (*table*) : Table renvoyée par onSerialize.
+- `data` (*table*) : Table returned by onSerialize.
 
 #### `editor_main.onSerialize()`
 
-Appelé avant un rechargement Lua : sauvegarde caméra, état actif, dirty, headless, mode d'édition, positions des fenêtres et préférence cleanExit ; désactive l'éditeur.
+Called before a Lua reload: saves the camera, active state, dirty, headless, edit mode, window positions and the cleanExit preference; deactivates the editor.
 
-- **renvoie** : table Données restituées à onDeserialized.
+- **returns**: table Data handed back to onDeserialized.
 
 #### `editor_main.saveState(filePath)`
 
-Sauvegarde l'état de l'éditeur : émet onEditorSaveState(state) puis écrit le JSON. Sans effet si l'éditeur n'a pas été initialisé dans cette session.
+Saves the editor state: emits onEditorSaveState(state) then writes the JSON. No effect if the editor was not initialized in this session.
 
-- `filePath` (*string|nil*) : Fichier cible ; settings/editor/currentState.json par défaut.
+- `filePath` (*string|nil*) : Target file; settings/editor/currentState.json by default.
 
 #### `editor_main.setEditorActive(activate, safeMode)`
 
-Demande l'activation ou la désactivation de l'éditeur ; appliquée dans onUpdate après quelques frames de splash.
+Requests the activation or deactivation of the editor; applied in onUpdate after a few splash frames.
 
-- `activate` (*boolean*) : true pour ouvrir, false pour fermer.
-- `safeMode` (*boolean|nil*) : true pour démarrer en mode sans échec.
+- `activate` (*boolean*) : true to open, false to close.
+- `safeMode` (*boolean|nil*) : true to start in safe mode.
 
 #### `editor_main.toggleActive(safeMode)`
 
-Inverse l'état actif de l'éditeur (via setEditorActive).
+Toggles the editor's active state (via setEditorActive).
 
-- `safeMode` (*boolean|nil*) : Mode sans échec à l'ouverture.
+- `safeMode` (*boolean|nil*) : Safe mode on opening.
 
 #### `editor_main.unloadEditorExtension(extName)`
 
-Décharge une extension d'éditeur chargée : appelle son onEditorDeactivated puis onEditorShutdown, puis extensions.unload.
+Unloads a loaded editor extension: calls its onEditorDeactivated then onEditorShutdown, then extensions.unload.
 
-- `extName` (*string*) : Nom de l'extension chargée.
+- `extName` (*string*) : Name of the loaded extension.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `active` | boolean | Vrai quand l'éditeur est actif (ouvert). |
-| `additionalActionMaps` | table | Action maps supplémentaires empilées à l'activation et dépilées à la désactivation de l'éditeur. |
-| `allExtensionNames` | table<integer, string> | Noms courts de toutes les extensions d'éditeur trouvées sur disque. |
+| `active` | boolean | True when the editor is active (open). |
+| `additionalActionMaps` | table | Additional action maps pushed when the editor is activated and popped when it is deactivated. |
+| `allExtensionNames` | table<integer, string> | Short names of all the editor extensions found on disk. |
 | `dependencies` | table<integer, string> | {"core_camera"}. |
-| `extensionNames` | table<integer, string> | Noms (editor_xxx) des extensions d'éditeur actuellement chargées. |
-| `initialized` | boolean | Vrai quand les extensions d'éditeur sont chargées et initialisées. |
-| `preferencesRegistry` | any | Registre des préférences (editor/api/preferencesRegistry). |
-| `safeMode` | boolean|nil | Vrai si l'éditeur a été lancé en mode sans échec. |
+| `extensionNames` | table<integer, string> | Names (editor_xxx) of the editor extensions currently loaded. |
+| `initialized` | boolean | True when the editor extensions are loaded and initialized. |
+| `preferencesRegistry` | any | Preferences registry (editor/api/preferencesRegistry). |
+| `safeMode` | boolean|nil | True if the editor was launched in safe mode. |
 
-**Globales affectées :** `editor`
+**Globals assigned:** `editor`
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onEditorActivated` — écouté par 29 module(s)
-- `onEditorDeactivated` — écouté par 26 module(s)
-- `onEditorInitialized` — écouté par 121 module(s)
-- `onEditorLoadState` — écouté par 2 module(s)
+- `onEditorActivated` — listened to by 29 module(s)
+- `onEditorDeactivated` — listened to by 26 module(s)
+- `onEditorInitialized` — listened to by 121 module(s)
+- `onEditorLoadState` — listened to by 2 module(s)
 - `onEditorModulesInitialized`
-- `onEditorRegisterApi` — écouté par 1 module(s)
-- `onEditorSaveState` — écouté par 2 module(s)
-- `onEditorShutdown` — écouté par 1 module(s)
+- `onEditorRegisterApi` — listened to by 1 module(s)
+- `onEditorSaveState` — listened to by 2 module(s)
+- `onEditorShutdown` — listened to by 1 module(s)
 
-**Évènements UI (guihooks.trigger) :** `ShowApps`
+**UI events (guihooks.trigger):** `ShowApps`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `getNeedCollisionRebuild`
 - `FS:` `findFiles`
@@ -194,4 +194,4 @@ Décharge une extension d'éditeur chargée : appelle son onEditorDeactivated pu
 - `worldEditorCppApi.` `enableEditor`, `enableSimSetAndSimObjectSignals`, `hideIconForObject`, `mustOpenEditorOnStart`, `setHoveredObjectId`, `setOpenEditorOnStart`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/main.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/main.lua`.*

@@ -1,20 +1,20 @@
 # `flowgraph_nodes_util_hsvColor`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/hsvColor.lua` · VM : Game Engine (GE) · 38 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/hsvColor.lua` · VM: Game Engine (GE) · 38 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/hsvColor")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/hsvColor")` (file under extensions/ but not a regular extension)
 
-Nœud « Color HSV » (catégorie simple). Crée une couleur à partir de teinte, saturation, valeur (0 à 1) et alpha. Sortie : color = table {r, g, b, a}. Valeurs par défaut si l'entrée est vide : h=0, s=1, v=1, a=1.
+Node "Color HSV" (simple category). Creates a color from hue, saturation, value (0 to 1) and alpha. Output: color = table {r, g, b, a}. Default values if the input is empty: h=0, s=1, v=1, a=1.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:HSVtoRGB(h, s, v)` | Convertit HSV en table {r, g, b} via la fonction globale HSVtoRGB ; la teinte est ramenée dans [0,1[ et s, v sont bornés à [0,1]. | 27 |
-| `C:init()` | Ne fait rien. | 23 |
-| `C:work()` | Calcule la couleur et écrit {r, g, b, alpha} dans color. | 32 |
+| `C:HSVtoRGB(h, s, v)` | Converts HSV to a {r, g, b} table via the global function HSVtoRGB; the hue is brought into [0,1[ and s, v are clamped to [0,1]. | 27 |
+| `C:init()` | Does nothing. | 23 |
+| `C:work()` | Computes the color and writes {r, g, b, alpha} to color. | 32 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/hsvColor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/hsvColor.lua`.*

@@ -1,12 +1,23 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crawl/stopCrawl.lua",
-  "module": "Nœud flowgraph « Stop Crawl » (catégorie once_instant, crawl). Arrête le crawl actif. Sorties : success, failed (aucun crawl actif) et isActive (toujours faux).",
+  "module": "Flowgraph node \"Stop Crawl\" (category once_instant, crawl). Stops the active crawl. Outputs: success, failed (no active crawl) and isActive (always false).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Charge le bridge du crawl.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "work": {"desc": "Appelle bridge.stopCrawl() et renseigne success/failed ; isActive = false."}
+        "init": {
+          "desc": "Loads the crawl bridge.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Calls bridge.stopCrawl() and fills success/failed; isActive = false."
+        }
       }
     }
   }

@@ -1,44 +1,44 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/onBigmapStateChange.lua",
-  "module": "Nœud flowgraph « On Bigmap State Change » (catégorie repeat_instant) : détecte l'ouverture et la fermeture de la grande carte. Sorties impulsions : « enteredStart », « enteredEnd », « exitedStart », « exitedEnd » (début/fin de transition).",
+  "module": "Flowgraph node \"On Bigmap State Change\" (category repeat_instant): detects the opening and closing of the big map. Pulse outputs: \"enteredStart\", \"enteredEnd\", \"exitedStart\", \"exitedEnd\" (start/end of transition).",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "init": {
-          "desc": "Initialise les drapeaux.",
+          "desc": "Initializes the flags.",
           "internal": true
         },
         "onActivateBigMapCallback": {
-          "desc": "Hook : fin de l'ouverture de la carte.",
+          "desc": "Hook: end of the map opening.",
           "internal": true
         },
         "onBigmapStartTransition": {
-          "desc": "Hook : début de transition ; activate vrai = entrée, faux = sortie.",
+          "desc": "Hook: start of transition; activate true = enter, false = exit.",
           "params": {
             "activate": {
               "type": "boolean",
-              "desc": "true si la grande carte s'ouvre, false si elle se ferme."
+              "desc": "true if the big map opens, false if it closes."
             },
             "esc": {
               "type": "boolean",
-              "desc": "Fermeture par la touche Échap (déduit du code, non utilisé)."
+              "desc": "Closing via the Escape key (inferred from code, unused)."
             }
           },
           "internal": true
         },
         "onDeactivateBigMapCallback": {
-          "desc": "Hook : fin de la fermeture de la carte.",
+          "desc": "Hook: end of the map closing.",
           "internal": true
         },
         "work": {
-          "desc": "Remet les impulsions à false et applique les drapeaux reçus.",
+          "desc": "Resets the pulses to false and applies the received flags.",
           "params": {
             "args": {
               "type": "any",
-              "desc": "Argument éventuel (non utilisé)."
+              "desc": "Optional argument (unused)."
             }
           },
           "internal": true

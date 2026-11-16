@@ -1,29 +1,29 @@
 # `flowgraph_nodes_gameplay_rally_trackRecovery`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackRecovery.lua` · VM : Game Engine (GE) · 47 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackRecovery.lua` · VM: Game Engine (GE) · 47 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/trackRecovery")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/trackRecovery")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Mode Track Recovery » (catégorie repeat_instant, tag rally). Suit les retournements et recoveries : à chaque frame, calcule recoveryType parmi 'flip', 'recovery', 'restart' (la dernière pin active l'emporte) et appelle extensions.hook('onRallyVehicleRecovery', recoveryType). Entrées flow : flip, recovery, restart.
+Flowgraph node "Rally Mode Track Recovery" (category repeat_instant, tag rally). Tracks flips and recoveries: every frame, computes recoveryType among 'flip', 'recovery', 'restart' (the last active pin wins) and calls extensions.hook('onRallyVehicleRecovery', recoveryType). Flow inputs: flip, recovery, restart.
 
-## Remarques
+## Notes
 
-- Le hook est appelé à chaque frame, y compris avec recoveryType = nil quand aucune pin n'est active.
-- La description de la pin restart est « A recovery » (copier-coller).
+- The hook is called every frame, including with recoveryType = nil when no pin is active.
+- The description of the restart pin is "A recovery" (copy-paste).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Détermine le type de recovery et émet le hook onRallyVehicleRecovery. | 22 |
+| `C:work()` | Determines the recovery type and emits the onRallyVehicleRecovery hook. | 22 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onRallyVehicleRecovery` — écouté par 2 module(s)
+- `onRallyVehicleRecovery` — listened to by 2 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackRecovery.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackRecovery.lua`.*

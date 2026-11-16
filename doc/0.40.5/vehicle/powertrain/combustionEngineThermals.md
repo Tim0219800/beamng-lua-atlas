@@ -1,175 +1,175 @@
 # `powertrain_combustionEngineThermals`
 
-*Fichier : `lua/vehicle/powertrain/combustionEngineThermals.lua` · VM : Véhicule · 1968 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/combustionEngineThermals.lua` · VM: Vehicle · 1968 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `combustionEngineThermals` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `combustionEngineThermals` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Sous-module thermique et d'usure d'un moteur à combustion. Ce n'est PAS un composant powertrain indépendant : il n'exporte pas `new` et n'est pas listé dans le jbeam. Il est chargé par powertrain/combustionEngine.lua avec rerequire (donc une instance par moteur ; le nom du fichier peut être remplacé par la clé jbeam `thermalsLuaFileName`) et rangé dans `device.thermals`. Il simule les températures du bloc, des parois de cylindre, de l'huile, du liquide de refroidissement et de l'échappement, le radiateur et ses ventilateurs, les fuites de liquide et d'huile, le manque d'huile, les dégâts (joint de culasse, segments, bielles, fusion), l'arbre d'échappement (nœuds et poutres isExhaust), les retours de flamme (afterfire), la fumée, la vapeur, les sons de refroidissement.
+Thermal and wear submodule of a combustion engine. It is NOT an independent powertrain component: it does not export `new` and is not listed in the jbeam. It is loaded by powertrain/combustionEngine.lua with rerequire (so one instance per engine; the file name can be overridden by the jbeam key `thermalsLuaFileName`) and stored in `device.thermals`. It simulates the temperatures of the block, cylinder walls, oil, coolant and exhaust, the radiator and its fans, coolant and oil leaks, oil starvation, damage (head gasket, rings, connecting rods, melting), the exhaust tree (isExhaust nodes and beams), backfires (afterfire), smoke, steam, cooling sounds.
 
-## Exemple
+## Example
 
 ```lua
 local engine = powertrain.getDevice("mainEngine")
 local t = engine.thermals
-print(t.coolantTemperature, t.oilTemperature, t.engineBlockTemperature, t.headGasketBlown) -- °C, booléen
+print(t.coolantTemperature, t.oilTemperature, t.engineBlockTemperature, t.headGasketBlown) -- °C, boolean
 ```
 
-## Remarques
+## Notes
 
-- Température en °C partout (l'environnement vient de obj:getEnvTemperature() converti de K en °C). Les énergies sont en J par pas de temps, les masses en kg, les débits de fuite en kg/s.
-- L'ensemble est désactivé sauf si le jbeam du moteur contient thermalsEnabled = true. Sans cela, init sort tôt, les fonctions de mise à jour restent nop et seules les températures initiales sont posées (reset les met à 80 °C ou à la température ambiante). Une erreur (matériau inconnu, pas de groupe de nœuds engineBlock, arbre d'échappement impossible à construire) désactive aussi les thermiques avec un message dans le log.
-- Clés jbeam du moteur lues (initThermals) : thermalsEnabled, headGasketBlownOverride, pistonRingsDamagedOverride, connectingRodBearingsDamagedOverride, particulates, idleParticulates, coolantVolume (kg, minimum 1.5), oilVolume (L, défaut 5, converti x0.87), oilMinimumSafeVolume, oilMaximumSafeVolume, oilpanNodes_nodes ({bas, haut}), oilpanMaximumSafeG (1.2), engineBlockMaterial ('iron' ou 'aluminium'/'aluminum'), engineBlockAirCoolingEfficiency (50), engineBlockAirflowCoef (1), blockFanMaxAirSpeed (0), radiatorFanType ('electric' ou 'mechanical'), electricRadiatorFanOverrideIgnitionLevel (-1), radiatorArea, radiatorEffectiveness, radiatorFanMaxAirSpeed, mechanicalFanRPMCoef (0.5), radiatorFanTemperature (110), thermostatTemperature (90), airRegulatorClosedCoef (0.1), oilThermostatTemperature (110), oilRadiatorArea, oilRadiatorEffectiveness, isAirCooledOnly, cylinderWallTemperatureDamageThreshold (160), engineBlockTemperatureDamageThreshold (140), headGasketDamageThreshold / pistonRingDamageThreshold / connectingRodDamageThreshold (2000000), radiatorDeformThreshold (0.015), radiatorDamageDeformGroup ('radiator_damage'), hasOilStarvingDamage (true), groupes de nœuds engineBlock._engineGroup_nodes et radiator._engineGroup_nodes (requis si radiateur).
-- Clés jbeam sons/effets lues dans initSounds/initThermals : radiatorHissLoopEvent, radiatorFanLoopEvent, radiatorFanVolume (0.5), engineTick* et exhaustTick* (PeriodGain, MinRate, MaxRate, MinTemperature, Pitch, SizeBias, Volume, StartDelay, EventName) pour les craquements de refroidissement, instant/sustained/shiftAfterFireSound, ...AfterFireVolumeCoef, afterFireAudibleThreshold*, afterFireVisualThreshold*.
-- Champs publics du module : engineBlockTemperature, cylinderWallTemperature, coolantTemperature, oilTemperature, exhaustTemperature (°C), radiatorFanSpin (degrés, 0..360), additionalCoolantEnergyPerStep (J ajoutés au liquide au pas suivant, remis à 0 ensuite, utilisable par d'autres composants ex. turbo/intercooler), exhaustEndNodes (liste des sorties d'échappement {start, finish, ...}), engineBlockOverheatDamage, oilOverheatDamage, cylinderWallOverheatDamage (accumulateurs de dégâts en J, plafonnés par les seuils), headGasketBlown, pistonRingsDamaged, connectingRodBearingsDamaged, engineBlockMelted, cylinderWallsMelted (booléens), debugData.engineThermalData (table envoyée au flux GUI 'engineThermalData').
-- Conséquences des dégâts : joint de culasse et segments = scaleOutputTorque(0.8) et fuites ; fusion du bloc ou des parois = scaleFriction(10000) (moteur quasi bloqué) ; huile > 150 °C = friction augmentée ; manque d'huile = scaleFrictionInitial croissant ; bielles = son de cognement. Le moteur parent doit donc fournir scaleOutputTorque, scaleFriction, scaleFrictionInitial, exhaustEndNodesChanged, engineWorkPerUpdate, pumpingLossPerUpdate, frictionLossPerUpdate, engineLoad, invBurnEfficiencyTable, etc.
-- Refroidissement par eau (par défaut) : le liquide est borné à 130 °C ; au-dessus de 120 °C une fuite de 0.01 kg/s (surpression) commence. Refroidissement par air (isAirCooledOnly) : updateAirCoolingGFX met M.coolantTemperature = nil à chaque pas ; ne pas lire coolantTemperature sur un moteur refroidi par air (engineThermalData.coolantTemperature reprend alors l'huile).
-- Flux GUI 'engineThermalData' envoyé seulement si streams.willSend('engineThermalData'). Événement UI 'ExhaustTreeDataChanged' envoyé par requestExhaustTreeData.
-- Incohérences : setPartConditionExhaust ne fait rien et getPartConditionExhaust renvoie toujours 1. updateGFX appelle updateHeatTicksGFX même si les thermiques sont désactivés (la fonction se retrouve alors à utiliser des listes de nœuds vides mais la condition de température la protège).
+- Temperature in °C everywhere (the environment comes from obj:getEnvTemperature() converted from K to °C). Energies are in J per time step, masses in kg, leak rates in kg/s.
+- Everything is disabled unless the engine jbeam contains thermalsEnabled = true. Without it, init exits early, the update functions stay nop and only the initial temperatures are set (reset sets them to 80 °C or to the ambient temperature). An error (unknown material, no engineBlock node group, exhaust tree that cannot be built) also disables the thermals with a message in the log.
+- Engine jbeam keys read (initThermals): thermalsEnabled, headGasketBlownOverride, pistonRingsDamagedOverride, connectingRodBearingsDamagedOverride, particulates, idleParticulates, coolantVolume (kg, minimum 1.5), oilVolume (L, default 5, converted x0.87), oilMinimumSafeVolume, oilMaximumSafeVolume, oilpanNodes_nodes ({bottom, top}), oilpanMaximumSafeG (1.2), engineBlockMaterial ('iron' or 'aluminium'/'aluminum'), engineBlockAirCoolingEfficiency (50), engineBlockAirflowCoef (1), blockFanMaxAirSpeed (0), radiatorFanType ('electric' or 'mechanical'), electricRadiatorFanOverrideIgnitionLevel (-1), radiatorArea, radiatorEffectiveness, radiatorFanMaxAirSpeed, mechanicalFanRPMCoef (0.5), radiatorFanTemperature (110), thermostatTemperature (90), airRegulatorClosedCoef (0.1), oilThermostatTemperature (110), oilRadiatorArea, oilRadiatorEffectiveness, isAirCooledOnly, cylinderWallTemperatureDamageThreshold (160), engineBlockTemperatureDamageThreshold (140), headGasketDamageThreshold / pistonRingDamageThreshold / connectingRodDamageThreshold (2000000), radiatorDeformThreshold (0.015), radiatorDamageDeformGroup ('radiator_damage'), hasOilStarvingDamage (true), node groups engineBlock._engineGroup_nodes and radiator._engineGroup_nodes (required if radiator).
+- Sound/effect jbeam keys read in initSounds/initThermals: radiatorHissLoopEvent, radiatorFanLoopEvent, radiatorFanVolume (0.5), engineTick* and exhaustTick* (PeriodGain, MinRate, MaxRate, MinTemperature, Pitch, SizeBias, Volume, StartDelay, EventName) for the cooling ticks, instant/sustained/shiftAfterFireSound, ...AfterFireVolumeCoef, afterFireAudibleThreshold*, afterFireVisualThreshold*.
+- Public fields of the module: engineBlockTemperature, cylinderWallTemperature, coolantTemperature, oilTemperature, exhaustTemperature (°C), radiatorFanSpin (degrees, 0..360), additionalCoolantEnergyPerStep (J added to the coolant at the next step, then reset to 0, usable by other components e.g. turbo/intercooler), exhaustEndNodes (list of exhaust outlets {start, finish, ...}), engineBlockOverheatDamage, oilOverheatDamage, cylinderWallOverheatDamage (damage accumulators in J, capped by the thresholds), headGasketBlown, pistonRingsDamaged, connectingRodBearingsDamaged, engineBlockMelted, cylinderWallsMelted (booleans), debugData.engineThermalData (table sent to the GUI stream 'engineThermalData').
+- Damage consequences: head gasket and rings = scaleOutputTorque(0.8) and leaks; block or wall melting = scaleFriction(10000) (engine nearly locked); oil > 150 °C = increased friction; oil starvation = increasing scaleFrictionInitial; rods = knocking sound. The parent engine must therefore provide scaleOutputTorque, scaleFriction, scaleFrictionInitial, exhaustEndNodesChanged, engineWorkPerUpdate, pumpingLossPerUpdate, frictionLossPerUpdate, engineLoad, invBurnEfficiencyTable, etc.
+- Water cooling (default): the coolant is clamped to 130 °C; above 120 °C a leak of 0.01 kg/s (overpressure) starts. Air cooling (isAirCooledOnly): updateAirCoolingGFX sets M.coolantTemperature = nil at each step; do not read coolantTemperature on an air-cooled engine (engineThermalData.coolantTemperature then takes the oil value).
+- GUI stream 'engineThermalData' sent only if streams.willSend('engineThermalData'). UI event 'ExhaustTreeDataChanged' sent by requestExhaustTreeData.
+- Inconsistencies: setPartConditionExhaust does nothing and getPartConditionExhaust always returns 1. updateGFX calls updateHeatTicksGFX even if the thermals are disabled (the function then ends up using empty node lists but the temperature condition protects it).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_combustionEngineThermals.applyDeformGroupDamageOilRadiator(damageAmount)` | Augmente la fuite d'huile du radiateur d'huile (damageAmount * 0.1 kg/s, plafonnée à 0.1) et signale 'oilRadiatorLeak'. Appelée pour le groupe 'oilRadiator'. *(interne)* | 286 |
-| `powertrain_combustionEngineThermals.applyDeformGroupDamageOilpan(damageAmount)` | Augmente la fuite d'huile du carter (damageAmount * 10 kg/s, plafonnée à 1) et signale 'oilpanLeak' dans le damageTracker. Appelée pour le groupe 'oilPan'. *(interne)* | 281 |
-| `powertrain_combustionEngineThermals.applyDeformGroupDamageRadiator(damageAmount)` | Ajoute des dégâts au radiateur (radiatorDamage), qui produisent une fuite de liquide au-delà du seuil radiatorDeformThreshold. Appelée par le moteur pour le groupe de déformation 'radiator'. *(interne)* | 277 |
-| `powertrain_combustionEngineThermals.beamBroke(id)` | Appelée quand une poutre casse. Si c'est une poutre d'échappement (isExhaust), coupe la branche de l'arbre d'échappement, recalcule les sorties, prévient le moteur (exhaustEndNodesChanged), met à jour l'interface et affiche un message 'exhaustDamaged'. *(interne)* | 1452 |
-| `powertrain_combustionEngineThermals.getPartConditionExhaust()` | Renvoie toujours une intégrité de 1 et une table vide (pas de modélisation de l'état de l'échappement). *(interne)* | 389 |
-| `powertrain_combustionEngineThermals.getPartConditionRadiator()` | Renvoie l'intégrité du radiateur 0..1 (minimum entre l'état du radiateur et la masse de liquide restante) et la table {radiatorDamage, coolantMass}. *(interne)* | 376 |
-| `powertrain_combustionEngineThermals.getPartConditionThermals()` | Renvoie l'intégrité 0..1 (minimum : joint 0.3, segments 0.2, bielles 0.1, fusion 0) et la table {headGasketBlown, pistonRingsDamaged, connectingRodBearingsDamaged, engineBlockMelted, cylinderWallsMelted}. *(interne)* | 396 |
-| `powertrain_combustionEngineThermals.init(engine, engineJbeamData)` | Initialise le module pour un moteur : mémorise le moteur parent puis lit la configuration thermique du jbeam (initThermals). Appelée par combustionEngine.new avec device.thermals.init(device, jbeamData). *(interne)* | 1944 |
-| `powertrain_combustionEngineThermals.initSounds(jbeamData)` | Crée les sources sonores (sifflement du radiateur, ventilateur) et lit les paramètres des craquements de refroidissement du bloc et de l'échappement. Appelée par combustionEngine.initSounds. *(interne)* | 1888 |
-| `powertrain_combustionEngineThermals.requestExhaustTreeData()` | Construit un graphe de l'échappement (racines, nœuds, arêtes, poutres cassées) et l'envoie à l'interface via guihooks.trigger('ExhaustTreeDataChanged', data). | 1321 |
-| `powertrain_combustionEngineThermals.reset(jbeamData)` | Remet les températures à la température préchauffée (thermostat - 10 °C) ou ambiante selon le réglage startThermalsPreHeated, efface les dégâts, les fuites, les masses de fluides, les minuteurs, répare l'arbre d'échappement et réinitialise les entrées damageTracker. Ne fait que poser les températures si les thermiques sont désactivés. *(interne)* | 1514 |
-| `powertrain_combustionEngineThermals.resetSounds()` | Arrête les sons du radiateur ; relance le ventilateur mécanique. Appelée par combustionEngine.resetSounds. *(interne)* | 1925 |
-| `powertrain_combustionEngineThermals.setPartConditionExhaust(odometer, integrity, visual)` | Ne fait rien : l'état de l'échappement n'est pas restauré (corps vide en dehors de la création d'une table locale). *(interne)* | 337 |
-| `powertrain_combustionEngineThermals.setPartConditionRadiator(odometer, integrity, visual)` | Restaure l'état du radiateur (dégâts, masse de liquide) depuis une intégrité nombre 0..1 ou une table {radiatorDamage, coolantMass}. *(interne)* | 324 |
-| `powertrain_combustionEngineThermals.setPartConditionThermals(odometer, integrity, visual)` | Restaure les dégâts du moteur : à partir d'un nombre 0..1 (joint < 0.3, segments < 0.2, bielles < 0.1) ou d'une table {headGasketBlown, pistonRingsDamaged, connectingRodBearingsDamaged, engineBlockMelted, cylinderWallsMelted}. Applique les conséquences (couple réduit, friction, fuites). *(interne)* | 345 |
-| `powertrain_combustionEngineThermals.updateGFX(dt)` | Mise à jour par image : refroidissement (eau ou air) et intégration des températures, dégâts, fumée et retours de flamme de l'échappement, mécanique d'huile et manque d'huile, craquements de refroidissement. Appelée par combustionEngine.updateGFX. *(interne)* | 1937 |
+| `powertrain_combustionEngineThermals.applyDeformGroupDamageOilRadiator(damageAmount)` | Increases the oil leak of the oil radiator (damageAmount * 0.1 kg/s, capped at 0.1) and signals 'oilRadiatorLeak'. Called for the 'oilRadiator' group. *(internal)* | 286 |
+| `powertrain_combustionEngineThermals.applyDeformGroupDamageOilpan(damageAmount)` | Increases the oil leak of the oil pan (damageAmount * 10 kg/s, capped at 1) and signals 'oilpanLeak' in the damageTracker. Called for the 'oilPan' group. *(internal)* | 281 |
+| `powertrain_combustionEngineThermals.applyDeformGroupDamageRadiator(damageAmount)` | Adds damage to the radiator (radiatorDamage), which produces a coolant leak beyond the radiatorDeformThreshold threshold. Called by the engine for the 'radiator' deformation group. *(internal)* | 277 |
+| `powertrain_combustionEngineThermals.beamBroke(id)` | Called when a beam breaks. If it is an exhaust beam (isExhaust), cuts the branch of the exhaust tree, recomputes the outlets, notifies the engine (exhaustEndNodesChanged), updates the interface and shows an 'exhaustDamaged' message. *(internal)* | 1452 |
+| `powertrain_combustionEngineThermals.getPartConditionExhaust()` | Always returns an integrity of 1 and an empty table (the exhaust state is not modeled). *(internal)* | 389 |
+| `powertrain_combustionEngineThermals.getPartConditionRadiator()` | Returns the radiator integrity 0..1 (minimum of the radiator state and the remaining coolant mass) and the table {radiatorDamage, coolantMass}. *(internal)* | 376 |
+| `powertrain_combustionEngineThermals.getPartConditionThermals()` | Returns the integrity 0..1 (minimum: gasket 0.3, rings 0.2, rods 0.1, melting 0) and the table {headGasketBlown, pistonRingsDamaged, connectingRodBearingsDamaged, engineBlockMelted, cylinderWallsMelted}. *(internal)* | 396 |
+| `powertrain_combustionEngineThermals.init(engine, engineJbeamData)` | Initializes the module for an engine: stores the parent engine then reads the thermal configuration from the jbeam (initThermals). Called by combustionEngine.new with device.thermals.init(device, jbeamData). *(internal)* | 1944 |
+| `powertrain_combustionEngineThermals.initSounds(jbeamData)` | Creates the sound sources (radiator hiss, fan) and reads the parameters of the block and exhaust cooling ticks. Called by combustionEngine.initSounds. *(internal)* | 1888 |
+| `powertrain_combustionEngineThermals.requestExhaustTreeData()` | Builds a graph of the exhaust (roots, nodes, edges, broken beams) and sends it to the interface via guihooks.trigger('ExhaustTreeDataChanged', data). | 1321 |
+| `powertrain_combustionEngineThermals.reset(jbeamData)` | Resets the temperatures to the preheated temperature (thermostat - 10 °C) or ambient depending on the startThermalsPreHeated setting, clears the damage, leaks, fluid masses, timers, repairs the exhaust tree and resets the damageTracker entries. Only sets the temperatures if the thermals are disabled. *(internal)* | 1514 |
+| `powertrain_combustionEngineThermals.resetSounds()` | Stops the radiator sounds; restarts the mechanical fan. Called by combustionEngine.resetSounds. *(internal)* | 1925 |
+| `powertrain_combustionEngineThermals.setPartConditionExhaust(odometer, integrity, visual)` | Does nothing: the exhaust state is not restored (empty body apart from the creation of a local table). *(internal)* | 337 |
+| `powertrain_combustionEngineThermals.setPartConditionRadiator(odometer, integrity, visual)` | Restores the radiator state (damage, coolant mass) from an integrity number 0..1 or a table {radiatorDamage, coolantMass}. *(internal)* | 324 |
+| `powertrain_combustionEngineThermals.setPartConditionThermals(odometer, integrity, visual)` | Restores the engine damage: from a number 0..1 (gasket < 0.3, rings < 0.2, rods < 0.1) or a table {headGasketBlown, pistonRingsDamaged, connectingRodBearingsDamaged, engineBlockMelted, cylinderWallsMelted}. Applies the consequences (reduced torque, friction, leaks). *(internal)* | 345 |
+| `powertrain_combustionEngineThermals.updateGFX(dt)` | Per-frame update: cooling (water or air) and integration of the temperatures, damage, exhaust smoke and backfires, oil mechanics and oil starvation, cooling ticks. Called by combustionEngine.updateGFX. *(internal)* | 1937 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_combustionEngineThermals.applyDeformGroupDamageOilRadiator(damageAmount)`
 
-Augmente la fuite d'huile du radiateur d'huile (damageAmount * 0.1 kg/s, plafonnée à 0.1) et signale 'oilRadiatorLeak'. Appelée pour le groupe 'oilRadiator'.
+Increases the oil leak of the oil radiator (damageAmount * 0.1 kg/s, capped at 0.1) and signals 'oilRadiatorLeak'. Called for the 'oilRadiator' group.
 
-- `damageAmount` (*number*) : Quantité de dégâts du groupe de déformation.
+- `damageAmount` (*number*) : Amount of damage of the deformation group.
 
 #### `powertrain_combustionEngineThermals.applyDeformGroupDamageOilpan(damageAmount)`
 
-Augmente la fuite d'huile du carter (damageAmount * 10 kg/s, plafonnée à 1) et signale 'oilpanLeak' dans le damageTracker. Appelée pour le groupe 'oilPan'.
+Increases the oil leak of the oil pan (damageAmount * 10 kg/s, capped at 1) and signals 'oilpanLeak' in the damageTracker. Called for the 'oilPan' group.
 
-- `damageAmount` (*number*) : Quantité de dégâts du groupe de déformation.
+- `damageAmount` (*number*) : Amount of damage of the deformation group.
 
 #### `powertrain_combustionEngineThermals.applyDeformGroupDamageRadiator(damageAmount)`
 
-Ajoute des dégâts au radiateur (radiatorDamage), qui produisent une fuite de liquide au-delà du seuil radiatorDeformThreshold. Appelée par le moteur pour le groupe de déformation 'radiator'.
+Adds damage to the radiator (radiatorDamage), which produces a coolant leak beyond the radiatorDeformThreshold threshold. Called by the engine for the 'radiator' deformation group.
 
-- `damageAmount` (*number*) : Quantité de dégâts du groupe de déformation.
+- `damageAmount` (*number*) : Amount of damage of the deformation group.
 
 #### `powertrain_combustionEngineThermals.beamBroke(id)`
 
-Appelée quand une poutre casse. Si c'est une poutre d'échappement (isExhaust), coupe la branche de l'arbre d'échappement, recalcule les sorties, prévient le moteur (exhaustEndNodesChanged), met à jour l'interface et affiche un message 'exhaustDamaged'.
+Called when a beam breaks. If it is an exhaust beam (isExhaust), cuts the branch of the exhaust tree, recomputes the outlets, notifies the engine (exhaustEndNodesChanged), updates the interface and shows an 'exhaustDamaged' message.
 
-- `id` (*integer*) : cid de la poutre cassée.
+- `id` (*integer*) : cid of the broken beam.
 
 #### `powertrain_combustionEngineThermals.getPartConditionExhaust()`
 
-Renvoie toujours une intégrité de 1 et une table vide (pas de modélisation de l'état de l'échappement).
+Always returns an integrity of 1 and an empty table (the exhaust state is not modeled).
 
-- **renvoie** : number Toujours 1.
-- **renvoie** : table Table vide.
+- **returns**: number Always 1.
+- **returns**: table Empty table.
 
 #### `powertrain_combustionEngineThermals.getPartConditionRadiator()`
 
-Renvoie l'intégrité du radiateur 0..1 (minimum entre l'état du radiateur et la masse de liquide restante) et la table {radiatorDamage, coolantMass}.
+Returns the radiator integrity 0..1 (minimum of the radiator state and the remaining coolant mass) and the table {radiatorDamage, coolantMass}.
 
-- **renvoie** : number Intégrité 0..1.
-- **renvoie** : table {radiatorDamage, coolantMass}.
+- **returns**: number Integrity 0..1.
+- **returns**: table {radiatorDamage, coolantMass}.
 
 #### `powertrain_combustionEngineThermals.getPartConditionThermals()`
 
-Renvoie l'intégrité 0..1 (minimum : joint 0.3, segments 0.2, bielles 0.1, fusion 0) et la table {headGasketBlown, pistonRingsDamaged, connectingRodBearingsDamaged, engineBlockMelted, cylinderWallsMelted}.
+Returns the integrity 0..1 (minimum: gasket 0.3, rings 0.2, rods 0.1, melting 0) and the table {headGasketBlown, pistonRingsDamaged, connectingRodBearingsDamaged, engineBlockMelted, cylinderWallsMelted}.
 
-- **renvoie** : number Intégrité 0..1.
-- **renvoie** : table Table d'état des dégâts.
+- **returns**: number Integrity 0..1.
+- **returns**: table Damage state table.
 
 #### `powertrain_combustionEngineThermals.init(engine, engineJbeamData)`
 
-Initialise le module pour un moteur : mémorise le moteur parent puis lit la configuration thermique du jbeam (initThermals). Appelée par combustionEngine.new avec device.thermals.init(device, jbeamData).
+Initializes the module for an engine: stores the parent engine then reads the thermal configuration from the jbeam (initThermals). Called by combustionEngine.new with device.thermals.init(device, jbeamData).
 
-- `engine` (*table*) : Device moteur parent (combustionEngine), utilisé pour le régime, la charge, les travaux, etc.
-- `engineJbeamData` (*table*) : Données jbeam du moteur (clés thermiques listées dans notes).
+- `engine` (*table*) : Parent engine device (combustionEngine), used for RPM, load, work, etc.
+- `engineJbeamData` (*table*) : Engine jbeam data (thermal keys listed in the notes).
 
 #### `powertrain_combustionEngineThermals.initSounds(jbeamData)`
 
-Crée les sources sonores (sifflement du radiateur, ventilateur) et lit les paramètres des craquements de refroidissement du bloc et de l'échappement. Appelée par combustionEngine.initSounds.
+Creates the sound sources (radiator hiss, fan) and reads the parameters of the block and exhaust cooling ticks. Called by combustionEngine.initSounds.
 
-- `jbeamData` (*table*) : Données jbeam du moteur.
+- `jbeamData` (*table*) : jbeam data of the engine.
 
 #### `powertrain_combustionEngineThermals.reset(jbeamData)`
 
-Remet les températures à la température préchauffée (thermostat - 10 °C) ou ambiante selon le réglage startThermalsPreHeated, efface les dégâts, les fuites, les masses de fluides, les minuteurs, répare l'arbre d'échappement et réinitialise les entrées damageTracker. Ne fait que poser les températures si les thermiques sont désactivés.
+Resets the temperatures to the preheated temperature (thermostat - 10 °C) or ambient depending on the startThermalsPreHeated setting, clears the damage, leaks, fluid masses, timers, repairs the exhaust tree and resets the damageTracker entries. Only sets the temperatures if the thermals are disabled.
 
-- `jbeamData` (*table*) : Données jbeam du moteur (lit les overrides headGasketBlownOverride, pistonRingsDamagedOverride, connectingRodBearingsDamagedOverride).
+- `jbeamData` (*table*) : Engine jbeam data (reads the overrides headGasketBlownOverride, pistonRingsDamagedOverride, connectingRodBearingsDamagedOverride).
 
 #### `powertrain_combustionEngineThermals.setPartConditionExhaust(odometer, integrity, visual)`
 
-Ne fait rien : l'état de l'échappement n'est pas restauré (corps vide en dehors de la création d'une table locale).
+Does nothing: the exhaust state is not restored (empty body apart from the creation of a local table).
 
-- `odometer` (*number*) : Non utilisé.
-- `integrity` (*number|table*) : Non utilisé.
-- `visual` (*any*) : Non utilisé.
+- `odometer` (*number*) : Not used.
+- `integrity` (*number|table*) : Not used.
+- `visual` (*any*) : Not used.
 
 #### `powertrain_combustionEngineThermals.setPartConditionRadiator(odometer, integrity, visual)`
 
-Restaure l'état du radiateur (dégâts, masse de liquide) depuis une intégrité nombre 0..1 ou une table {radiatorDamage, coolantMass}.
+Restores the radiator state (damage, coolant mass) from an integrity number 0..1 or a table {radiatorDamage, coolantMass}.
 
-- `odometer` (*number*) : Distance parcourue en mètres (non utilisée).
-- `integrity` (*number|table*) : Nombre 0..1 ou table {radiatorDamage, coolantMass}.
-- `visual` (*any*) : Non utilisé.
+- `odometer` (*number*) : Distance traveled in meters (unused).
+- `integrity` (*number|table*) : Number 0..1 or table {radiatorDamage, coolantMass}.
+- `visual` (*any*) : Not used.
 
 #### `powertrain_combustionEngineThermals.setPartConditionThermals(odometer, integrity, visual)`
 
-Restaure les dégâts du moteur : à partir d'un nombre 0..1 (joint < 0.3, segments < 0.2, bielles < 0.1) ou d'une table {headGasketBlown, pistonRingsDamaged, connectingRodBearingsDamaged, engineBlockMelted, cylinderWallsMelted}. Applique les conséquences (couple réduit, friction, fuites).
+Restores the engine damage: from a number 0..1 (gasket < 0.3, rings < 0.2, rods < 0.1) or a table {headGasketBlown, pistonRingsDamaged, connectingRodBearingsDamaged, engineBlockMelted, cylinderWallsMelted}. Applies the consequences (reduced torque, friction, leaks).
 
-- `odometer` (*number*) : Distance parcourue en mètres (non utilisée).
-- `integrity` (*number|table*) : Nombre 0..1 ou table d'état.
-- `visual` (*any*) : Non utilisé.
+- `odometer` (*number*) : Distance traveled in meters (unused).
+- `integrity` (*number|table*) : Number 0..1 or state table.
+- `visual` (*any*) : Not used.
 
 #### `powertrain_combustionEngineThermals.updateGFX(dt)`
 
-Mise à jour par image : refroidissement (eau ou air) et intégration des températures, dégâts, fumée et retours de flamme de l'échappement, mécanique d'huile et manque d'huile, craquements de refroidissement. Appelée par combustionEngine.updateGFX.
+Per-frame update: cooling (water or air) and integration of the temperatures, damage, exhaust smoke and backfires, oil mechanics and oil starvation, cooling ticks. Called by combustionEngine.updateGFX.
 
-- `dt` (*number*) : Durée de l'image en secondes.
+- `dt` (*number*) : Frame duration in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `additionalCoolantEnergyPerStep` | number | Énergie supplémentaire (J) ajoutée au liquide de refroidissement au prochain pas physique, remise à 0 ensuite. |
-| `connectingRodBearingsDamaged` | boolean | Coussinets de bielle endommagés (bruit de cognement). |
-| `coolantTemperature` | number|nil | Température du liquide de refroidissement en °C. nil sur un moteur refroidi par air actif. |
-| `cylinderWallOverheatDamage` | number | Dégâts cumulés de surchauffe des parois ; au seuil pistonRingDamageThreshold les segments sont endommagés. |
-| `cylinderWallTemperature` | number | Température des parois de cylindre en °C. |
-| `cylinderWallsMelted` | boolean | Parois de cylindre fondues (moteur bloqué). |
-| `debugData` | table | {engineThermalData = table} : mêmes valeurs que le flux GUI 'engineThermalData' (températures, énergies échangées, masses, débits de fuite, dégâts). |
-| `engineBlockMelted` | boolean | Bloc fondu (moteur bloqué). |
-| `engineBlockOverheatDamage` | number | Dégâts cumulés de surchauffe du bloc ; atteindre le seuil headGasketDamageThreshold fait claquer le joint de culasse. |
-| `engineBlockTemperature` | number | Température du bloc moteur en °C. |
-| `exhaustEndNodes` | table | Liste des sorties d'échappement actuelles (éléments {start, finish, afterFireAudioCoef, afterFireVisualCoef, afterFireVolumeCoef, afterFireMufflingCoef…}). Mise à jour quand une poutre d'échappement casse ou au reset. |
-| `exhaustTemperature` | number | Température de l'échappement en °C. |
-| `headGasketBlown` | boolean | Joint de culasse claqué. |
-| `oilOverheatDamage` | number | Dégâts cumulés de surchauffe d'huile ; au seuil connectingRodDamageThreshold les coussinets de bielle sont endommagés. |
-| `oilTemperature` | number | Température d'huile en °C (sert aussi au cadran de température sur les moteurs refroidis par air). |
-| `pistonRingsDamaged` | boolean | Segments endommagés. |
-| `radiatorFanSpin` | number | Angle de rotation du ventilateur de radiateur en degrés (0..360), pour l'animation. |
+| `additionalCoolantEnergyPerStep` | number | Extra energy (J) added to the coolant at the next physics step, then reset to 0. |
+| `connectingRodBearingsDamaged` | boolean | Connecting rod bearings damaged (knocking noise). |
+| `coolantTemperature` | number|nil | Coolant temperature in °C. nil on an active air-cooled engine. |
+| `cylinderWallOverheatDamage` | number | Accumulated wall overheat damage; at the pistonRingDamageThreshold threshold the rings are damaged. |
+| `cylinderWallTemperature` | number | Cylinder wall temperature in °C. |
+| `cylinderWallsMelted` | boolean | Cylinder walls melted (engine locked). |
+| `debugData` | table | {engineThermalData = table}: same values as the GUI stream 'engineThermalData' (temperatures, exchanged energies, masses, leak rates, damage). |
+| `engineBlockMelted` | boolean | Block melted (engine locked). |
+| `engineBlockOverheatDamage` | number | Accumulated block overheat damage; reaching the headGasketDamageThreshold threshold blows the head gasket. |
+| `engineBlockTemperature` | number | Engine block temperature in °C. |
+| `exhaustEndNodes` | table | List of current exhaust outlets (elements {start, finish, afterFireAudioCoef, afterFireVisualCoef, afterFireVolumeCoef, afterFireMufflingCoef…}). Updated when an exhaust beam breaks or on reset. |
+| `exhaustTemperature` | number | Exhaust temperature in °C. |
+| `headGasketBlown` | boolean | Head gasket blown. |
+| `oilOverheatDamage` | number | Accumulated oil overheat damage; at the connectingRodDamageThreshold threshold the connecting rod bearings are damaged. |
+| `oilTemperature` | number | Oil temperature in °C (also used for the temperature gauge on air-cooled engines). |
+| `pistonRingsDamaged` | boolean | Rings damaged. |
+| `radiatorFanSpin` | number | Rotation angle of the radiator fan in degrees (0..360), for the animation. |
 
-**Évènements UI (guihooks.trigger) :** `ExhaustTreeDataChanged`
+**UI events (guihooks.trigger):** `ExhaustTreeDataChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `addParticleByNodesRelative`, `createSFXSource2`, `getEnvTemperature`, `getFrontAirflowSpeed`, `getNodeForceNonInertial`, `inWater`, `playSFX`, `playSFXOnceCT`, `setVolumePitch`, `stopSFX`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/combustionEngineThermals.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/combustionEngineThermals.lua`.*

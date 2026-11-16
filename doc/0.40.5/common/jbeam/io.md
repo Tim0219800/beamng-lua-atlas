@@ -1,12 +1,12 @@
 # `jbeam_io`
 
-*Fichier : `lua/common/jbeam/io.lua` · VM : Commun (GE + véhicule) · 503 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/io.lua` · VM: Common (GE + vehicle) · 503 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/io")`
+**Access:** `require("jbeam/io")`
 
-Lecture et mise en cache des fichiers .jbeam des véhicules. Pour chaque dossier demandé, parse chaque *.jbeam (JSON), normalise les sections slots/slots2 vers le format slots2 (name, allowTypes, denyTypes, default, description), stocke chaque pièce encodée dans un cache et construit des index (pièce -> fichier, slotType -> pièces, pièce -> description). Permet ensuite de récupérer une pièce (getPart), de lister les pièces disponibles et celles compatibles avec un emplacement. Un moddeur s'en sert pour interroger les pièces/slots d'un véhicule depuis une extension GE.
+Reading and caching of vehicles' .jbeam files. For each requested folder, parses each *.jbeam (JSON), normalizes the slots/slots2 sections to the slots2 format (name, allowTypes, denyTypes, default, description), stores each encoded part in a cache and builds indexes (part -> file, slotType -> parts, part -> description). It then allows retrieving a part (getPart), listing the available parts and those compatible with a slot. A modder uses it to query a vehicle's parts/slots from a GE extension.
 
-## Exemple
+## Example
 
 ```lua
 local io = require('jbeam/io')
@@ -15,107 +15,107 @@ local mainName = io.getMainPartName(ioCtx)
 local part, filename = io.getPart(ioCtx, mainName)
 ```
 
-## Remarques
+## Notes
 
-- ioCtx est le contexte renvoyé par startLoading : {preloadedDirs = liste de dossiers}. Les dossiers sont de la forme '/vehicles/<nom>/' (avec slash final, sans slash initial dans le motif interne).
-- Le cache est global au module : chaque fichier n'est parsé qu'une fois. onFileChanged l'invalide pour un .jbeam modifié et force un nouveau scan des dossiers au prochain startLoading ; les index restent périmés jusqu'à ce rechargement (voulu d'après le commentaire).
-- Les pièces sont stockées encodées (stringBufferEncode) : getPart renvoie à chaque appel une copie décodée neuve, qu'on peut modifier sans effet sur le cache.
-- Une pièce sans slotType (string ou table) est ignorée avec une erreur de journal. Une pièce de même nom présente deux fois dans un même slotType déclenche l'erreur 'Duplicate part found'.
-- Le format slots (v1) est converti en slots2 (name = type, allowTypes = {type}, denyTypes = {}); le tableau d'en-tête manquant est ajouté avec avertissement. À la sortie, part.slots vaut nil et part.slots2 existe.
-- getAvailableSlotNameMap est marqué DEPRECATED dans le code (incompatible slots2) ; utiliser getCompatiblePartNamesForSlot.
-- La fonction locale updateAllVehiclesCompatibleParts n'est pas exportée.
-- Le fichier est marqué « do not change this file without speaking to tdev » dans le code.
-- Les modules core_modmanager (onExtensionLoaded) et FS ne sont disponibles que côté GE.
+- ioCtx is the context returned by startLoading: {preloadedDirs = list of folders}. Folders have the form '/vehicles/<name>/' (with trailing slash, without leading slash in the internal pattern).
+- The cache is global to the module: each file is parsed only once. onFileChanged invalidates it for a modified .jbeam and forces a new scan of the folders at the next startLoading; the indexes stay stale until that reload (intended according to the comment).
+- Parts are stored encoded (stringBufferEncode): getPart returns a fresh decoded copy on each call, which can be modified without affecting the cache.
+- A part without slotType (string or table) is ignored with a log error. A part with the same name present twice in the same slotType triggers the error 'Duplicate part found'.
+- The slots (v1) format is converted to slots2 (name = type, allowTypes = {type}, denyTypes = {}); the missing header array is added with a warning. On output, part.slots is nil and part.slots2 exists.
+- getAvailableSlotNameMap is marked DEPRECATED in the code (incompatible with slots2); use getCompatiblePartNamesForSlot.
+- The local function updateAllVehiclesCompatibleParts is not exported.
+- The file is marked "do not change this file without speaking to tdev" in the code.
+- The modules core_modmanager (onExtensionLoaded) and FS are only available on the GE side.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_io.finishLoading()` | Ne fait rien (le corps est commenté) ; existe pour symétrie avec startLoading. | 297 |
-| `jbeam_io.getAvailablePartNamesForSlot(ioCtx, slotType)` | Liste les noms de pièces dont le slotType est slotType (ne gère pas slots2). | 351 |
-| `jbeam_io.getAvailableParts(ioCtx)` | Liste toutes les pièces des dossiers du contexte avec leur description (description, authors, isAuxiliary, slotInfoUi, modName éventuel). Recharge si les index manquent ; journalise une erreur en cas de noms en double. | 301 |
-| `jbeam_io.getAvailableSlotNameMap(ioCtx)` | Obsolète. Renvoie pour chaque slotType la liste des pièces qui s'y adaptent (selon le slotType de la pièce). | 324 |
-| `jbeam_io.getCompatiblePartNamesForSlot(ioCtx, slotDef, slotMap)` | Pièces compatibles avec un emplacement. Pour un slot v1 (champ type) renvoie les pièces du type. Pour un slot v2, garde les pièces dont un slotType est dans allowTypes sans qu'aucun de leurs types ne soit dans denyTypes ; les autres sont renvoyées avec la raison 'Part type is in deny list'. | 361 |
-| `jbeam_io.getLastStartLoadingStats()` | Statistiques du dernier startLoading : nombre total de fichiers et nombre servis par le cache. | 480 |
-| `jbeam_io.getMainPartName(ioCtx)` | Nom de la première pièce déclarée avec le slotType 'main' dans les dossiers du contexte. | 288 |
-| `jbeam_io.getPart(ioCtx, partName)` | Renvoie la définition complète d'une pièce (table jbeam décodée, avec partName) et le fichier d'origine. | 267 |
-| `jbeam_io.onExtensionLoaded()` | Hook appelé au chargement de l'extension : récupère extensions.core_modmanager pour associer les pièces à leur mod. *(interne)* *(hook)* | 484 |
-| `jbeam_io.onFileChanged(filename, type)` | Hook appelé quand un fichier change sur le disque : pour un .jbeam, supprime son cache et force un nouveau scan des dossiers. *(interne)* *(hook)* | 466 |
-| `jbeam_io.startLoading(directories)` | Parse (ou récupère du cache) tous les *.jbeam des dossiers donnés, reconstruit les index globaux si un fichier a changé et mémorise des statistiques (total/cachedHits). | 230 |
+| `jbeam_io.finishLoading()` | Does nothing (the body is commented out); exists for symmetry with startLoading. | 297 |
+| `jbeam_io.getAvailablePartNamesForSlot(ioCtx, slotType)` | Lists the part names whose slotType is slotType (does not handle slots2). | 351 |
+| `jbeam_io.getAvailableParts(ioCtx)` | Lists all the parts of the context's folders with their description (description, authors, isAuxiliary, slotInfoUi, modName if any). Reloads if the indexes are missing; logs an error in case of duplicate names. | 301 |
+| `jbeam_io.getAvailableSlotNameMap(ioCtx)` | Obsolete. Returns for each slotType the list of parts that fit it (according to the part's slotType). | 324 |
+| `jbeam_io.getCompatiblePartNamesForSlot(ioCtx, slotDef, slotMap)` | Parts compatible with a slot. For a v1 slot (field type) returns the parts of that type. For a v2 slot, keeps the parts with a slotType in allowTypes and none of whose types is in denyTypes; the others are returned with the reason 'Part type is in deny list'. | 361 |
+| `jbeam_io.getLastStartLoadingStats()` | Statistics of the last startLoading: total number of files and number served by the cache. | 480 |
+| `jbeam_io.getMainPartName(ioCtx)` | Name of the first part declared with the slotType 'main' in the context's folders. | 288 |
+| `jbeam_io.getPart(ioCtx, partName)` | Returns the full definition of a part (decoded jbeam table, with partName) and the source file. | 267 |
+| `jbeam_io.onExtensionLoaded()` | Hook called when the extension loads: gets extensions.core_modmanager to associate parts with their mod. *(internal)* *(hook)* | 484 |
+| `jbeam_io.onFileChanged(filename, type)` | Hook called when a file changes on disk: for a .jbeam, deletes its cache and forces a new scan of the folders. *(internal)* *(hook)* | 466 |
+| `jbeam_io.startLoading(directories)` | Parses (or fetches from cache) all the *.jbeam of the given folders, rebuilds the global indexes if a file changed and records statistics (total/cachedHits). | 230 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_io.getAvailablePartNamesForSlot(ioCtx, slotType)`
 
-Liste les noms de pièces dont le slotType est slotType (ne gère pas slots2).
+Lists the part names whose slotType is slotType (does not handle slots2).
 
-- `ioCtx` (*table*) : Contexte renvoyé par startLoading.
-- `slotType` (*string*) : Type d'emplacement.
-- **renvoie** : string[] Noms de pièces ({} si aucune).
+- `ioCtx` (*table*) : Context returned by startLoading.
+- `slotType` (*string*) : Slot type.
+- **returns**: string[] Part names ({} if none).
 
 #### `jbeam_io.getAvailableParts(ioCtx)`
 
-Liste toutes les pièces des dossiers du contexte avec leur description (description, authors, isAuxiliary, slotInfoUi, modName éventuel). Recharge si les index manquent ; journalise une erreur en cas de noms en double.
+Lists all the parts of the context's folders with their description (description, authors, isAuxiliary, slotInfoUi, modName if any). Reloads if the indexes are missing; logs an error in case of duplicate names.
 
-- `ioCtx` (*table*) : Contexte renvoyé par startLoading.
-- **renvoie** : table<string, table>|nil Table nomDePièce -> description ; nil si le contexte est invalide.
+- `ioCtx` (*table*) : Context returned by startLoading.
+- **returns**: table<string, table>|nil Table partName -> description; nil if the context is invalid.
 
 #### `jbeam_io.getAvailableSlotNameMap(ioCtx)`
 
-Obsolète. Renvoie pour chaque slotType la liste des pièces qui s'y adaptent (selon le slotType de la pièce).
+Obsolete. Returns for each slotType the list of parts that fit it (according to the part's slotType).
 
-- `ioCtx` (*table*) : Contexte renvoyé par startLoading.
-- **renvoie** : table<string, string[]>|nil slotType -> noms de pièces ; nil si contexte invalide.
+- `ioCtx` (*table*) : Context returned by startLoading.
+- **returns**: table<string, string[]>|nil slotType -> part names; nil if invalid context.
 
 #### `jbeam_io.getCompatiblePartNamesForSlot(ioCtx, slotDef, slotMap)`
 
-Pièces compatibles avec un emplacement. Pour un slot v1 (champ type) renvoie les pièces du type. Pour un slot v2, garde les pièces dont un slotType est dans allowTypes sans qu'aucun de leurs types ne soit dans denyTypes ; les autres sont renvoyées avec la raison 'Part type is in deny list'.
+Parts compatible with a slot. For a v1 slot (field type) returns the parts of that type. For a v2 slot, keeps the parts with a slotType in allowTypes and none of whose types is in denyTypes; the others are returned with the reason 'Part type is in deny list'.
 
-- `ioCtx` (*table*) : Contexte renvoyé par startLoading.
-- `slotDef` (*table*) : Définition de slot (élément de part.slots2 ou part.slots).
-- `slotMap` (*table|nil*) : Résultat de getAvailableSlotNameMap, à fournir si on appelle plusieurs fois (optimisation).
-- **renvoie** : string[] Noms de pièces compatibles.
-- **renvoie** : table[] Pièces refusées : {partName, reason}.
+- `ioCtx` (*table*) : Context returned by startLoading.
+- `slotDef` (*table*) : Slot definition (element of part.slots2 or part.slots).
+- `slotMap` (*table|nil*) : Result of getAvailableSlotNameMap, to provide if calling several times (optimization).
+- **returns**: string[] Compatible part names.
+- **returns**: table[] Rejected parts: {partName, reason}.
 
 #### `jbeam_io.getLastStartLoadingStats()`
 
-Statistiques du dernier startLoading : nombre total de fichiers et nombre servis par le cache.
+Statistics of the last startLoading: total number of files and number served by the cache.
 
-- **renvoie** : table {total = integer, cachedHits = integer}.
+- **returns**: table {total = integer, cachedHits = integer}.
 
 #### `jbeam_io.getMainPartName(ioCtx)`
 
-Nom de la première pièce déclarée avec le slotType 'main' dans les dossiers du contexte.
+Name of the first part declared with the slotType 'main' in the context's folders.
 
-- `ioCtx` (*table*) : Contexte renvoyé par startLoading.
-- **renvoie** : string|nil Nom de la pièce principale.
+- `ioCtx` (*table*) : Context returned by startLoading.
+- **returns**: string|nil Name of the main part.
 
 #### `jbeam_io.getPart(ioCtx, partName)`
 
-Renvoie la définition complète d'une pièce (table jbeam décodée, avec partName) et le fichier d'origine.
+Returns the full definition of a part (decoded jbeam table, with partName) and the source file.
 
-- `ioCtx` (*table*) : Contexte renvoyé par startLoading.
-- `partName` (*string|nil*) : Nom de la pièce.
-- **renvoie** : table|nil Pièce décodée ; nil si introuvable ou nom nil.
-- **renvoie** : string|nil Nom du fichier .jbeam.
+- `ioCtx` (*table*) : Context returned by startLoading.
+- `partName` (*string|nil*) : Part name.
+- **returns**: table|nil Decoded part; nil if not found or name is nil.
+- **returns**: string|nil .jbeam file name.
 
 #### `jbeam_io.onFileChanged(filename, type)`
 
-Hook appelé quand un fichier change sur le disque : pour un .jbeam, supprime son cache et force un nouveau scan des dossiers.
+Hook called when a file changes on disk: for a .jbeam, deletes its cache and forces a new scan of the folders.
 
-- `filename` (*string*) : Fichier modifié.
-- `type` (*string*) : Type de changement (utilisé dans le journal).
+- `filename` (*string*) : Modified file.
+- `type` (*string*) : Change type (used in the log).
 
 #### `jbeam_io.startLoading(directories)`
 
-Parse (ou récupère du cache) tous les *.jbeam des dossiers donnés, reconstruit les index globaux si un fichier a changé et mémorise des statistiques (total/cachedHits).
+Parses (or fetches from cache) all the *.jbeam of the given folders, rebuilds the global indexes if a file changed and records statistics (total/cachedHits).
 
-- `directories` (*string[]*) : Liste de dossiers jbeam (ex. '/vehicles/pickup/').
-- **renvoie** : table Contexte ioCtx {preloadedDirs = directories}.
+- `directories` (*string[]*) : List of jbeam folders (e.g. '/vehicles/pickup/').
+- **returns**: table Context ioCtx {preloadedDirs = directories}.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/io.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/io.lua`.*

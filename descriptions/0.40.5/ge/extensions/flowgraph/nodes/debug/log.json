@@ -1,18 +1,41 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/debug/log.lua",
-  "module": "Nœud flowgraph « Log » (catégorie dynamic_instant, tags util/print). Écrit la valeur reçue dans la console du jeu (log) et dans le journal d'évènements du graphe (mgr:logEvent). Entrées : value (any ; les tables sont converties par dumps), logTag (string, défaut « Node #<id> »), logType (I Info, D Debug, W Warning, E Error ; défaut I). En mode dynamique 'repeat', le message est écrit à chaque frame.",
-  "usage": "-- le nœud équivaut à : log('I', 'Node #12', msg)",
+  "module": "Flowgraph node \"Log\" (category dynamic_instant, tags util/print). Writes the received value to the game console (log) and to the graph event log (mgr:logEvent). Inputs: value (any; tables are converted by dumps), logTag (string, default \"Node #<id>\"), logType (I Info, D Debug, W Warning, E Error; default I). In 'repeat' dynamic mode, the message is written every frame.",
+  "usage": "-- the node is equivalent to: log('I', 'Node #12', msg)",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "postInit": {"desc": "Prépare les modèles du pin logType, masque logType et logTag, et fixe le tag par défaut « Node #id ».", "internal": true},
-        "workOnce": {"desc": "Écrit une entrée de log."},
-        "work": {"desc": "Si dynamicMode vaut 'repeat', écrit une entrée de log."},
-        "createLogEntry": {"desc": "Convertit la valeur en texte (dumps pour une table), appelle log(type, tag, msg) et mgr:logEvent.", "internal": true},
-        "drawMiddle": {"desc": "Éditeur : affiche ('type','tag',...).", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true}
+        "postInit": {
+          "desc": "Prepares the templates of the logType pin, hides logType and logTag, and sets the default tag \"Node #id\".",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Writes a log entry."
+        },
+        "work": {
+          "desc": "If dynamicMode is 'repeat', writes a log entry."
+        },
+        "createLogEntry": {
+          "desc": "Converts the value to text (dumps for a table), calls log(type, tag, msg) and mgr:logEvent.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Editor: displays ('type','tag',...).",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "node constructor"
+            },
+            "style": {
+              "type": "table",
+              "desc": "style"
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

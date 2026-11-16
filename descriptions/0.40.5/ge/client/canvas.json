@@ -1,35 +1,53 @@
 {
   "path": "lua/ge/client/canvas.lua",
-  "module": "Gère le GuiCanvas (la fenêtre de rendu) côté client : création unique de l'objet « Canvas » et affichage/masquage du curseur de la souris. Appelé au démarrage du jeu (initializeCanvas) ; un moddeur peut utiliser showCursor/hideCursor pour libérer ou verrouiller la souris.",
+  "module": "Manages the GuiCanvas (the render window) on the client side: one-time creation of the \"Canvas\" object and showing/hiding the mouse cursor. Called at game startup (initializeCanvas); a modder can use showCursor/hideCursor to release or lock the mouse.",
   "notes": [
-    "createCanvas réutilise l'objet « Canvas » s'il existe déjà dans le scenetree ; sinon il le crée avec displayWindow = false.",
-    "Si la variable $forceFullscreen est vraie, $pref::Video::displayOutputDevice est vidée ; si $pref::Video::autoDetect est vraie, core_settings_graphic.autoDetectApplyGraphicsQuality() est appelée.",
-    "showCursor et hideCursor appellent aussi lockMouse (false / true) en plus de changer la visibilité du curseur du canvas."
+    "createCanvas reuses the \"Canvas\" object if it already exists in the scenetree; otherwise it creates it with displayWindow = false.",
+    "If the variable $forceFullscreen is true, $pref::Video::displayOutputDevice is cleared; if $pref::Video::autoDetect is true, core_settings_graphic.autoDetectApplyGraphicsQuality() is called.",
+    "showCursor and hideCursor also call lockMouse (false / true) in addition to changing the canvas cursor's visibility."
   ],
   "fields": {
-    "canvasCreated": {"type": "boolean", "desc": "Vrai une fois le canvas créé par initializeCanvas ; empêche une seconde création."}
+    "canvasCreated": {
+      "type": "boolean",
+      "desc": "True once the canvas has been created by initializeCanvas; prevents a second creation."
+    }
   },
   "functions": {
     "createCanvas": {
-      "desc": "Retourne l'objet GuiCanvas « Canvas », en le créant et l'enregistrant s'il n'existe pas. Applique les préférences de plein écran et d'auto-détection graphique.",
-      "params": {"windowPlacement": {"type": "any", "desc": "Placement de fenêtre ; non utilisé dans le corps de la fonction (déduit du code)."}},
-      "returns": [{"type": "userdata", "desc": "L'objet Canvas."}],
+      "desc": "Returns the GuiCanvas object \"Canvas\", creating and registering it if it does not exist. Applies the fullscreen and graphics auto-detection preferences.",
+      "params": {
+        "windowPlacement": {
+          "type": "any",
+          "desc": "Window placement; not used in the function body (inferred from code)."
+        }
+      },
+      "returns": [
+        {
+          "type": "userdata",
+          "desc": "The Canvas object."
+        }
+      ],
       "internal": true
     },
     "initializeCanvas": {
-      "desc": "Crée le canvas une seule fois (journalise une erreur si déjà créé), lit WindowPlacement dans les options graphiques, et appelle quit() si la création échoue.",
+      "desc": "Creates the canvas only once (logs an error if already created), reads WindowPlacement from the graphics options, and calls quit() if creation fails.",
       "params": {},
-      "returns": [{"type": "userdata|nil", "desc": "Le canvas, ou nil si déjà créé."}],
+      "returns": [
+        {
+          "type": "userdata|nil",
+          "desc": "The canvas, or nil if already created."
+        }
+      ],
       "internal": true
     },
     "showCursor": {
-      "desc": "Déverrouille la souris (lockMouse(false)) et rend le curseur du canvas visible.",
+      "desc": "Unlocks the mouse (lockMouse(false)) and makes the canvas cursor visible.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "hideCursor": {
-      "desc": "Verrouille la souris (lockMouse(true)) et cache le curseur du canvas.",
+      "desc": "Locks the mouse (lockMouse(true)) and hides the canvas cursor.",
       "params": {},
       "returns": [],
       "internal": false

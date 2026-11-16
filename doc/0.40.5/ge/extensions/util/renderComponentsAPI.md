@@ -1,34 +1,34 @@
 # `util_renderComponentsAPI`
 
-*Fichier : `lua/ge/extensions/util/renderComponentsAPI.lua` · VM : Game Engine (GE) · 16 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/renderComponentsAPI.lua` · VM: Game Engine (GE) · 16 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_renderComponentsAPI` : `extensions.load("util_renderComponentsAPI")`, puis la globale `util_renderComponentsAPI`
+**Access:** extension `util_renderComponentsAPI`: `extensions.load("util_renderComponentsAPI")`, then the global `util_renderComponentsAPI`
 
-Petit module d'aide pour l'interface des composants de rendu : liste les fichiers PNG de correction colorimétrique (LUT) présents dans art/postfx, utilisables pour le post-traitement.
+Small helper module for the render components UI: lists the color correction (LUT) PNG files present in art/postfx, usable for post-processing.
 
-## Exemple
+## Example
 
 ```lua
 dump(extensions.util_renderComponentsAPI.getColorCorrections())
 ```
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_renderComponentsAPI.getColorCorrections()` | Liste les fichiers *.png du dossier art/postfx (non récursif). | 7 |
+| `util_renderComponentsAPI.getColorCorrections()` | Lists the *.png files in the art/postfx folder (non-recursive). | 7 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_renderComponentsAPI.getColorCorrections()`
 
-Liste les fichiers *.png du dossier art/postfx (non récursif).
+Lists the *.png files in the art/postfx folder (non-recursive).
 
-- **renvoie** : table[] Liste de tables {filename = chemin du PNG}
+- **returns**: table[] List of tables {filename = PNG path}
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/renderComponentsAPI.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/renderComponentsAPI.lua`.*

@@ -1,77 +1,77 @@
 # `jbeam_partpacks`
 
-*Fichier : `lua/common/jbeam/partpacks.lua` · VM : Commun (GE + véhicule) · 432 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/partpacks.lua` · VM: Common (GE + vehicle) · 432 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/partpacks")`
+**Access:** `require("jbeam/partpacks")`
 
-Gestion des « part packs » : ensembles de pièces prédéfinis décrits dans des fichiers *.partpacks.json des dossiers du véhicule (tableau d'objets {path, filters, ...}). Le module les collecte (avec cache par liste de dossiers), relève ce qui est installé dans l'arbre de pièces (slots, slots vides, noms de pièces, chemins) et ne garde que les packs dont les filtres correspondent au véhicule courant. Sert à l'interface de personnalisation pour proposer uniquement les packs pertinents.
+Management of "part packs": predefined sets of parts described in *.partpacks.json files in the vehicle folders (array of objects {path, filters, ...}). The module collects them (cached by folder list), gathers what is installed in the parts tree (slots, empty slots, part names, paths) and keeps only the packs whose filters match the current vehicle. Used by the customization UI to offer only the relevant packs.
 
-## Exemple
+## Example
 
 ```lua
 local pp = require('jbeam/partpacks')
 local visible = pp.process({'/vehicles/wl40/', '/vehicles/common/'}, config.partsTree, 'wl40')
--- visible[path] = définition du pack (sans le champ path)
+-- visible[path] = pack definition (without the path field)
 ```
 
-## Remarques
+## Notes
 
-- Format d'un fichier .partpacks.json : tableau d'objets, chacun avec path (chaîne obligatoire, clé du catalogue) et éventuellement filters. Le champ path est retiré de l'objet une fois utilisé comme clé ; un path en double produit un avertissement et écrase l'entrée précédente.
-- Filtres (tous facultatifs, tables) : slotWhitelist/slotBlacklist (table nomDeSlot -> true|'present'|'empty'|'nonempty'), vehicleWhitelist/vehicleBlacklist (liste de noms de véhicule), partNameWhitelist/partNameBlacklist (noms de pièces choisies), pathWhitelist/pathBlacklist (valeurs de part.path). Le joker '*' est permis dans les clés/entrées (converti en motif Lua).
-- Règles : whitelist = toutes les entrées doivent correspondre ; blacklist = une seule correspondance cache le pack. Un format de filtre invalide masque le pack (compté comme invalid) et est consigné.
-- États de slot : 'present' (ou true) = le slot existe dans l'arbre ; 'empty' = existe sans pièce choisie ; 'nonempty' = existe avec une pièce.
-- Le catalogue est mis en cache par concaténation des dossiers ; invalidateCollectCache() est nécessaire si les fichiers changent.
-- process journalise les temps (collect, collectInstalled, filter) et les compteurs en niveau 'I'.
-- Utilise FS:findFiles et jsonReadFile : disponible côté GE.
+- Format of a .partpacks.json file: array of objects, each with path (mandatory string, catalog key) and optionally filters. The path field is removed from the object once used as a key; a duplicate path produces a warning and overwrites the previous entry.
+- Filters (all optional, tables): slotWhitelist/slotBlacklist (table slotName -> true|'present'|'empty'|'nonempty'), vehicleWhitelist/vehicleBlacklist (list of vehicle names), partNameWhitelist/partNameBlacklist (chosen part names), pathWhitelist/pathBlacklist (part.path values). The wildcard '*' is allowed in keys/entries (converted to a Lua pattern).
+- Rules: whitelist = all entries must match; blacklist = a single match hides the pack. An invalid filter format hides the pack (counted as invalid) and is logged.
+- Slot states: 'present' (or true) = the slot exists in the tree; 'empty' = exists with no part chosen; 'nonempty' = exists with a part.
+- The catalog is cached by concatenation of the folders; invalidateCollectCache() is necessary if the files change.
+- process logs the timings (collect, collectInstalled, filter) and the counters at level 'I'.
+- Uses FS:findFiles and jsonReadFile: available on the GE side.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_partpacks.collectAllPartPacks(vehicleDirectories)` | Lit tous les *.partpacks.json (recherche récursive) des dossiers donnés et renvoie le catalogue path -> définition. Résultat mis en cache par liste de dossiers. | 48 |
-| `jbeam_partpacks.collectInstalled(partsTree)` | Parcourt récursivement l'arbre de pièces (id, chosenPartName, path, children) et relève ce qui est installé. | 146 |
-| `jbeam_partpacks.filter(partPacksCatalog, installedData, vehicleModel)` | Applique les filtres de chaque pack du catalogue aux données installées et au modèle de véhicule. | 324 |
-| `jbeam_partpacks.invalidateCollectCache()` | Vide le cache du catalogue de packs. | 44 |
-| `jbeam_partpacks.process(vehicleDirectories, partsTree, vehicleModel)` | Enchaîne collectAllPartPacks, collectInstalled et filter, avec journalisation des temps. | 410 |
+| `jbeam_partpacks.collectAllPartPacks(vehicleDirectories)` | Reads all the *.partpacks.json files (recursive search) of the given folders and returns the catalog path -> definition. Result cached by folder list. | 48 |
+| `jbeam_partpacks.collectInstalled(partsTree)` | Recursively walks the parts tree (id, chosenPartName, path, children) and gathers what is installed. | 146 |
+| `jbeam_partpacks.filter(partPacksCatalog, installedData, vehicleModel)` | Applies the filters of each pack of the catalog to the installed data and to the vehicle model. | 324 |
+| `jbeam_partpacks.invalidateCollectCache()` | Empties the pack catalog cache. | 44 |
+| `jbeam_partpacks.process(vehicleDirectories, partsTree, vehicleModel)` | Chains collectAllPartPacks, collectInstalled and filter, with timing logs. | 410 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_partpacks.collectAllPartPacks(vehicleDirectories)`
 
-Lit tous les *.partpacks.json (recherche récursive) des dossiers donnés et renvoie le catalogue path -> définition. Résultat mis en cache par liste de dossiers.
+Reads all the *.partpacks.json files (recursive search) of the given folders and returns the catalog path -> definition. Result cached by folder list.
 
-- `vehicleDirectories` (*string[]|nil*) : Dossiers du véhicule (ex. {'/vehicles/pickup/', '/vehicles/common/'}).
-- **renvoie** : table<string, table> Catalogue des packs par path.
+- `vehicleDirectories` (*string[]|nil*) : Vehicle folders (e.g. {'/vehicles/pickup/', '/vehicles/common/'}).
+- **returns**: table<string, table> Catalog of packs by path.
 
 #### `jbeam_partpacks.collectInstalled(partsTree)`
 
-Parcourt récursivement l'arbre de pièces (id, chosenPartName, path, children) et relève ce qui est installé.
+Recursively walks the parts tree (id, chosenPartName, path, children) and gathers what is installed.
 
-- `partsTree` (*table*) : Arbre de pièces du config du véhicule (config.partsTree).
-- **renvoie** : table {slots, emptySlots, partNames, partNamesList, paths, pathsList} : ensembles (nom=true) et listes ordonnées.
+- `partsTree` (*table*) : Parts tree of the vehicle config (config.partsTree).
+- **returns**: table {slots, emptySlots, partNames, partNamesList, paths, pathsList}: sets (name=true) and ordered lists.
 
 #### `jbeam_partpacks.filter(partPacksCatalog, installedData, vehicleModel)`
 
-Applique les filtres de chaque pack du catalogue aux données installées et au modèle de véhicule.
+Applies the filters of each pack of the catalog to the installed data and to the vehicle model.
 
-- `partPacksCatalog` (*table<string, table>*) : Catalogue renvoyé par collectAllPartPacks.
-- `installedData` (*table*) : Données renvoyées par collectInstalled.
-- `vehicleModel` (*string|nil*) : Nom du modèle de véhicule (pour vehicleWhitelist/Blacklist).
-- **renvoie** : table<string, table> Packs visibles.
-- **renvoie** : table Statistiques {total, shown, hidden, invalid}.
+- `partPacksCatalog` (*table<string, table>*) : Catalog returned by collectAllPartPacks.
+- `installedData` (*table*) : Data returned by collectInstalled.
+- `vehicleModel` (*string|nil*) : Vehicle model name (for vehicleWhitelist/Blacklist).
+- **returns**: table<string, table> Visible packs.
+- **returns**: table Statistics {total, shown, hidden, invalid}.
 
 #### `jbeam_partpacks.process(vehicleDirectories, partsTree, vehicleModel)`
 
-Enchaîne collectAllPartPacks, collectInstalled et filter, avec journalisation des temps.
+Chains collectAllPartPacks, collectInstalled and filter, with timing logs.
 
-- `vehicleDirectories` (*string[]*) : Dossiers du véhicule.
-- `partsTree` (*table*) : Arbre de pièces installé.
-- `vehicleModel` (*string|nil*) : Nom du modèle.
-- **renvoie** : table<string, table> Packs visibles.
+- `vehicleDirectories` (*string[]*) : Vehicle folders.
+- `partsTree` (*table*) : Installed parts tree.
+- `vehicleModel` (*string|nil*) : Model name.
+- **returns**: table<string, table> Visible packs.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/partpacks.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/partpacks.lua`.*

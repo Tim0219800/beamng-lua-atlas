@@ -1,0 +1,4 @@
+{
+  "path": "lua/ge/client/lighting/shadowMaps/init.lua",
+  "module": "Déclare le ShaderData « BlurDepthShader » (boxFilterV.hlsl / boxFilterP.hlsl) utilisé pour flouter les shadow maps, s'il n'existe pas déjà. Aucune fonction exportée."
+}

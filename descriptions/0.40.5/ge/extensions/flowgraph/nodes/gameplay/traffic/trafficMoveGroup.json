@@ -1,41 +1,41 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficMoveGroup.lua",
-  "module": "Nœud flowgraph « Move Vehicle Group » (catégorie par défaut). Téléporte tous les véhicules d'un groupe (vehicleIds) vers une nouvelle position, rotation et formation avec core_multiSpawn.placeGroup. Pins : shuffle, spawnMode (roadAhead, roadBehind, traffic, lineAhead, lineBehind, lineLeft, lineRight, lineAbove, raceGrid, raceGridAlt ; défaut road), spawnGap (15), startPos, startRot ; option data.instantTeleport. Sorties : flow (après déplacement) et impulsion moved.",
+  "module": "Flowgraph node \"Move Vehicle Group\" (default category). Teleports all vehicles of a group (vehicleIds) to a new position, rotation and formation with core_multiSpawn.placeGroup. Pins: shuffle, spawnMode (roadAhead, roadBehind, traffic, lineAhead, lineBehind, lineLeft, lineRight, lineAbove, raceGrid, raceGridAlt; default road), spawnGap (15), startPos, startRot; option data.instantTeleport. Outputs: flow (after the move) and moved pulse.",
   "notes": [
-    "Le défaut de spawnMode est 'road', qui ne figure pas dans la liste des modes proposés (déduit du code)."
+    "The default of spawnMode is 'road', which is not in the list of offered modes (inferred from code)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStopped": {
-          "desc": "Appelle onNodeReset().",
+          "desc": "Calls onNodeReset().",
           "internal": true
         },
         "init": {
-          "desc": "Appelle onNodeReset() et définit data.instantTeleport=false.",
+          "desc": "Calls onNodeReset() and sets data.instantTeleport=false.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Remet l'état à 0 et oublie les ids.",
+          "desc": "Resets the state to 0 and forgets the ids.",
           "internal": true
         },
         "onVehicleGroupRespawned": {
-          "desc": "Hook appelé quand un groupe a été replacé ; passe à l'état 2 si le premier id correspond.",
+          "desc": "Hook called when a group has been replaced; goes to state 2 if the first id matches.",
           "internal": false,
           "params": {
             "vehIds": {
               "type": "any",
-              "desc": "table des ids du groupe replacé"
+              "desc": "table of the replaced group's ids"
             }
           }
         },
         "postInit": {
-          "desc": "Définit les valeurs prédéfinies du pin spawnMode.",
+          "desc": "Defines the preset values of the spawnMode pin.",
           "internal": true
         },
         "work": {
-          "desc": "Machine à états : 0 lance placeGroup, 1 attend onVehicleGroupRespawned, 2 émet moved, 3 laisse passer le flux.",
+          "desc": "State machine: 0 launches placeGroup, 1 waits for onVehicleGroupRespawned, 2 emits moved, 3 lets the flow through.",
           "internal": true
         }
       }

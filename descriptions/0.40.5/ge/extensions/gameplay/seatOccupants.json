@@ -1,283 +1,665 @@
 {
   "path": "lua/ge/extensions/gameplay/seatOccupants.lua",
-  "module": "Système de sièges et d'occupants des véhicules. Il enregistre quel joueur (ou quel occupant factice) occupe quel siège de chaque véhicule (occupancy[vehId][seatId]) et la « présence » de chaque joueur (véhicule, siège éventuel, mode de permission). Il applique le poids des occupants au véhicule, affiche ou masque les maillages d'occupants (selon la caméra et le réglage enableSeatOccupants), gère la caméra de siège, le blocage des commandes de conduite pour un passager (masque d'action maps) et la sortie du véhicule. Les véhicules sans configuration de sièges (occupantSystem / occupantSlotsById dans les données JBeam) ne passent pas par ce système. Utile aux moddeurs pour faire monter un joueur dans un siège précis, ajouter des passagers factices lestés ou connaître qui conduit.",
-  "usage": "-- installer le joueur 0 en passager sur le siège « RR »\ngameplay_seatOccupants.requestEnterSeat(vehId, 'RR', 0)\n-- ajouter un passager factice de 80 kg\ngameplay_seatOccupants.setDummyOccupant(vehId, 'FR', 80)\nprint(dumps(gameplay_seatOccupants.getSeats(vehId)))",
+  "module": "Vehicle seat and occupant system. It records which player (or dummy occupant) occupies which seat of each vehicle (occupancy[vehId][seatId]) and the \"presence\" of each player (vehicle, optional seat, permission mode). It applies the occupants' weight to the vehicle, shows or hides occupant meshes (depending on the camera and the enableSeatOccupants setting), handles the seat camera, the blocking of driving controls for a passenger (action maps mask) and exiting the vehicle. Vehicles without a seat configuration (occupantSystem / occupantSlotsById in the JBeam data) do not go through this system. Useful to modders for putting a player in a specific seat, adding weighted dummy passengers or finding out who is driving.",
+  "usage": "-- seat player 0 as a passenger in seat \"RR\"\ngameplay_seatOccupants.requestEnterSeat(vehId, 'RR', 0)\n-- add an 80 kg dummy passenger\ngameplay_seatOccupants.setDummyOccupant(vehId, 'FR', 80)\nprint(dumps(gameplay_seatOccupants.getSeats(vehId)))",
   "notes": [
-    "Modes de permission (gameplay/vehiclePresencePolicy) : 'driver' (commandes de conduite), 'passenger' (aucune commande), 'unrestricted' (toutes). Sans siège, le mode par défaut est 'unrestricted' en freeroam hors multi-siège, sinon 'passenger'.",
-    "Poids par défaut d'un occupant : 89 (kg). cheeseburger / salad ajoutent / retirent 10 kg à tous les occupants du véhicule, borné entre 49 et 119.",
-    "Les identifiants de siège (seatId) viennent des groupes cargo « <seatId>Occupant » du véhicule (par exemple FL, FR). Le siège conducteur est celui dont defaultPermissionMode vaut 'driver', sinon FR (conduite à droite) ou FL.",
-    "Unicycle (marche à pied) exclu du système de sièges.",
-    "Champs de debug : debugDisableOccupantSystem remet le comportement ancien (tout le monde 'unrestricted', sans sièges) ; debugDisableOccupantWeight ; enablePresenceDebugMessages affiche les changements de présence ; enableSeatEjection (false par défaut) permet à enterSeat d'éjecter l'occupant actuel d'un siège occupé et de prendre sa place.",
-    "Sérialisation : version 2 ({version, playerPresence, seatClaims, occupancy}) ; la restauration accepte aussi l'ancien format « occupancy » seul."
+    "Permission modes (gameplay/vehiclePresencePolicy): 'driver' (driving controls), 'passenger' (no controls), 'unrestricted' (all). Without a seat, the default mode is 'unrestricted' in freeroam outside multiseat, otherwise 'passenger'.",
+    "Default occupant weight: 89 (kg). cheeseburger / salad add / remove 10 kg to all occupants of the vehicle, clamped between 49 and 119.",
+    "Seat identifiers (seatId) come from the vehicle's \"<seatId>Occupant\" cargo groups (for example FL, FR). The driver seat is the one whose defaultPermissionMode is 'driver', otherwise FR (right-hand drive) or FL.",
+    "Unicycle (walking) is excluded from the seat system.",
+    "Debug fields: debugDisableOccupantSystem restores the old behavior (everyone 'unrestricted', no seats); debugDisableOccupantWeight; enablePresenceDebugMessages displays presence changes; enableSeatEjection (false by default) lets enterSeat eject the current occupant of an occupied seat and take their place.",
+    "Serialization: version 2 ({version, playerPresence, seatClaims, occupancy}); restoration also accepts the old \"occupancy\"-only format."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant (core_camera, core_vehicle_manager, core_input_actionFilter, core_gamestate, core_multiseat, ui_vehicleSelector_vehicleSpecifications)."},
-    "enableSeatEjection": {"type": "boolean", "desc": "Si true, enterSeat éjecte (mode marche) le joueur déjà assis sur ce siège (false par défaut)."},
-    "enablePresenceDebugMessages": {"type": "boolean", "desc": "Affiche un message à chaque changement de présence (false par défaut)."},
-    "debugDisableOccupantWeight": {"type": "boolean", "desc": "Debug : désactive l'ajout du poids des occupants (false par défaut)."},
-    "debugDisableOccupantSystem": {"type": "boolean", "desc": "Debug : désactive tout le système de sièges et revient au comportement ancien (false par défaut)."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extensions loaded beforehand (core_camera, core_vehicle_manager, core_input_actionFilter, core_gamestate, core_multiseat, ui_vehicleSelector_vehicleSpecifications)."
+    },
+    "enableSeatEjection": {
+      "type": "boolean",
+      "desc": "If true, enterSeat ejects (walking mode) the player already seated in this seat (false by default)."
+    },
+    "enablePresenceDebugMessages": {
+      "type": "boolean",
+      "desc": "Displays a message on each presence change (false by default)."
+    },
+    "debugDisableOccupantWeight": {
+      "type": "boolean",
+      "desc": "Debug: disables adding the occupants' weight (false by default)."
+    },
+    "debugDisableOccupantSystem": {
+      "type": "boolean",
+      "desc": "Debug: disables the whole seat system and reverts to the old behavior (false by default)."
+    }
   },
   "functions": {
     "usesSeatSystem": {
-      "desc": "Indique si le véhicule utilise le système de sièges (occupantSystem.enabled, sinon présence d'emplacements d'occupants dans les données du véhicule). Toujours false si debugDisableOccupantSystem.",
-      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
-      "returns": [{"type": "boolean", "desc": "true si le véhicule a des sièges gérés."}]
-    },
-    "getOccupantSystemVersion": {
-      "desc": "Version déclarée du système d'occupants dans les données du véhicule.",
-      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
-      "returns": [{"type": "any|nil", "desc": "Version, ou nil si absente."}]
-    },
-    "canEnterVehicle": {
-      "desc": "Indique si le joueur peut entrer dans le véhicule (changement de véhicule ou marche autorisés).",
+      "desc": "Indicates whether the vehicle uses the seat system (occupantSystem.enabled, otherwise presence of occupant slots in the vehicle data). Always false if debugDisableOccupantSystem.",
       "params": {
-        "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
-        "player": {"type": "integer|nil", "desc": "Indice du joueur (0 par défaut)."}
-      },
-      "returns": [{"type": "boolean", "desc": "true si l'entrée est possible."}]
-    },
-    "showVehicleFullMessage": {
-      "desc": "Affiche le message UI « véhicule plein » au joueur.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur."}}
-    },
-    "getPlayerPresence": {
-      "desc": "Copie de la présence d'un joueur dans un véhicule.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur (0 par défaut)."}},
-      "returns": [{"type": "table|nil", "desc": "{vehicleId, seatId?, permissionMode, permissionOverride?} ou nil."}]
-    },
-    "setPlayerPermissionMode": {
-      "desc": "Change le mode de permission d'un joueur déjà présent dans un véhicule.",
-      "params": {
-        "player": {"type": "integer|nil", "desc": "Indice du joueur (0 par défaut)."},
-        "permissionMode": {"type": "string", "desc": "'driver', 'passenger' ou 'unrestricted'."}
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "true si appliqué."},
-        {"type": "string|nil", "desc": "Cause d'échec : 'invalidPermissionMode' ou 'noPresence'."}
+        {
+          "type": "boolean",
+          "desc": "true if the vehicle has managed seats."
+        }
+      ]
+    },
+    "getOccupantSystemVersion": {
+      "desc": "Declared version of the occupant system in the vehicle data.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "any|nil",
+          "desc": "Version, or nil if absent."
+        }
+      ]
+    },
+    "canEnterVehicle": {
+      "desc": "Indicates whether the player can enter the vehicle (vehicle switching or walking allowed).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index (0 by default)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if entering is possible."
+        }
+      ]
+    },
+    "showVehicleFullMessage": {
+      "desc": "Shows the \"vehicle full\" UI message to the player.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      }
+    },
+    "getPlayerPresence": {
+      "desc": "Copy of a player's presence in a vehicle.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index (0 by default)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{vehicleId, seatId?, permissionMode, permissionOverride?} or nil."
+        }
+      ]
+    },
+    "setPlayerPermissionMode": {
+      "desc": "Changes the permission mode of a player already present in a vehicle.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index (0 by default)."
+        },
+        "permissionMode": {
+          "type": "string",
+          "desc": "'driver', 'passenger' or 'unrestricted'."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if applied."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Failure cause: 'invalidPermissionMode' or 'noPresence'."
+        }
       ]
     },
     "setOccupied": {
-      "desc": "Place un joueur sur un siège (sans animation ni changement de véhicule). Libère ses autres sièges, enregistre la présence, applique le poids, met à jour les commandes et la caméra.",
+      "desc": "Places a player in a seat (no animation or vehicle change). Frees their other seats, records the presence, applies the weight, updates the controls and the camera.",
       "params": {
-        "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
-        "seatId": {"type": "string|nil", "desc": "Siège ; défaut le siège conducteur."},
-        "player": {"type": "integer|nil", "desc": "Joueur (0 par défaut)."},
-        "weight": {"type": "number|nil", "desc": "Poids de l'occupant (défaut 89)."},
-        "permissionOverride": {"type": "string|nil", "desc": "Mode de permission imposé."}
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        },
+        "seatId": {
+          "type": "string|nil",
+          "desc": "Seat; default the driver seat."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player (0 by default)."
+        },
+        "weight": {
+          "type": "number|nil",
+          "desc": "Occupant weight (default 89)."
+        },
+        "permissionOverride": {
+          "type": "string|nil",
+          "desc": "Forced permission mode."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si véhicule invalide, siège invalide ou indisponible."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if invalid vehicle, invalid seat or unavailable seat."
+        }
+      ]
     },
     "clearOccupied": {
-      "desc": "Libère des sièges. Sans second argument : tous les occupants du véhicule. Avec un nombre : retire ce joueur de tous les véhicules.",
+      "desc": "Frees seats. Without a second argument: all occupants of the vehicle. With a number: removes that player from all vehicles.",
       "params": {
-        "vehId": {"type": "integer|nil", "desc": "Identifiant du véhicule."},
-        "seatIdOrPlayer": {"type": "string|integer|nil", "desc": "Nil pour tout le véhicule, un nombre pour un joueur ; un nom de siège est géré par le reste de la fonction (déduit du code)."}
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle identifier."
+        },
+        "seatIdOrPlayer": {
+          "type": "string|integer|nil",
+          "desc": "Nil for the whole vehicle, a number for a player; a seat name is handled by the rest of the function (inferred from code)."
+        }
       }
     },
     "enterSeat": {
-      "desc": "Point d'entrée du déclencheur « enterSeat » d'un siège : retrouve le siège à partir du trigger puis appelle requestEnterSeat. En mode debug, entre en 'unrestricted' sans siège.",
+      "desc": "Entry point of a seat's \"enterSeat\" trigger: finds the seat from the trigger then calls requestEnterSeat. In debug mode, enters 'unrestricted' without a seat.",
       "params": {
-        "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
-        "triggerId": {"type": "any", "desc": "Identifiant du trigger de siège."},
-        "player": {"type": "integer|nil", "desc": "Joueur (0 par défaut)."}
-      },
-      "returns": [{"type": "boolean|nil", "desc": "true si assis."}]
-    },
-    "requestEnterSeat": {
-      "desc": "Demande à un joueur de s'asseoir sur un siège donné, en entrant dans le véhicule si nécessaire (à pied ou en changeant de véhicule). Si le joueur est déjà sur ce siège, il sort (bascule en mode marche). Affiche un message si le siège est pris, si on ne peut pas quitter son siège, ou si le véhicule n'est pas accessible.",
-      "params": {
-        "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
-        "seatId": {"type": "string", "desc": "Siège visé."},
-        "player": {"type": "integer|nil", "desc": "Joueur (0 par défaut)."},
-        "permissionOverride": {"type": "string|nil", "desc": "Mode de permission imposé."}
-      },
-      "returns": [{"type": "boolean|nil", "desc": "true si le joueur est au final sur ce siège (ou sort) ; nil si vehId ou seatId manquent."}]
-    },
-    "requestEnterBestSeat": {
-      "desc": "Choisit un siège libre (en tenant compte de la position de marche éventuelle) et y installe le joueur. Sans siège libre, repasse en présence sans siège si le mode par défaut est 'unrestricted', sinon affiche « véhicule plein ».",
-      "params": {
-        "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
-        "player": {"type": "integer|nil", "desc": "Joueur."},
-        "walkingPos": {"type": "vec3|nil", "desc": "Position du joueur à pied pour choisir le siège le plus proche."}
-      },
-      "returns": [{"type": "boolean|nil", "desc": "nil si le véhicule n'utilise pas le système de sièges."}]
-    },
-    "requestUnseatedPresence": {
-      "desc": "Place un joueur dans le véhicule sans siège (présence « non assise »), avec un mode de permission optionnel.",
-      "params": {
-        "player": {"type": "integer|nil", "desc": "Joueur."},
-        "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
-        "permissionMode": {"type": "string|nil", "desc": "'driver', 'passenger' ou 'unrestricted'."}
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        },
+        "triggerId": {
+          "type": "any",
+          "desc": "Seat trigger identifier."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player (0 by default)."
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "true si la présence sans siège est établie."},
-        {"type": "string|nil", "desc": "'invalidVehicle' ou 'invalidPermissionMode' en cas d'échec."}
+        {
+          "type": "boolean|nil",
+          "desc": "true if seated."
+        }
+      ]
+    },
+    "requestEnterSeat": {
+      "desc": "Asks a player to sit in a given seat, entering the vehicle if needed (on foot or by switching vehicle). If the player is already in this seat, they exit (switch to walking mode). Shows a message if the seat is taken, if the player cannot leave their seat, or if the vehicle is not accessible.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        },
+        "seatId": {
+          "type": "string",
+          "desc": "Targeted seat."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player (0 by default)."
+        },
+        "permissionOverride": {
+          "type": "string|nil",
+          "desc": "Forced permission mode."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true if the player ends up in this seat (or exits); nil if vehId or seatId is missing."
+        }
+      ]
+    },
+    "requestEnterBestSeat": {
+      "desc": "Picks a free seat (taking the walking position into account if any) and seats the player there. With no free seat, falls back to unseated presence if the default mode is 'unrestricted', otherwise shows \"vehicle full\".",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player."
+        },
+        "walkingPos": {
+          "type": "vec3|nil",
+          "desc": "Position of the player on foot, used to pick the nearest seat."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "nil if the vehicle does not use the seat system."
+        }
+      ]
+    },
+    "requestUnseatedPresence": {
+      "desc": "Places a player in the vehicle without a seat (\"unseated\" presence), with an optional permission mode.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player."
+        },
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        },
+        "permissionMode": {
+          "type": "string|nil",
+          "desc": "'driver', 'passenger' or 'unrestricted'."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the unseated presence is established."
+        },
+        {
+          "type": "string|nil",
+          "desc": "'invalidVehicle' or 'invalidPermissionMode' on failure."
+        }
       ]
     },
     "switchSeat": {
-      "desc": "Passe au siège libre suivant (direction > 0) ou précédent (direction < 0) du véhicule actuel, le conducteur étant en tête de liste.",
+      "desc": "Moves to the next free seat (direction > 0) or the previous one (direction < 0) of the current vehicle, with the driver at the head of the list.",
       "params": {
-        "player": {"type": "integer|nil", "desc": "Joueur."},
-        "direction": {"type": "integer|nil", "desc": "Sens ; 1 par défaut."}
-      },
-      "returns": [{"type": "boolean", "desc": "true si un siège a été pris."}]
-    },
-    "toggleUnseated": {
-      "desc": "Bascule entre « assis » et « sans siège » dans le véhicule actuel.",
-      "params": {"player": {"type": "integer|nil", "desc": "Joueur."}},
-      "returns": [{"type": "boolean", "desc": "Succès."}]
-    },
-    "getSeats": {
-      "desc": "Liste les sièges d'un véhicule avec leur état.",
-      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
-      "returns": [{"type": "table[]", "desc": "Éléments {seatId, isDriver, occupied, occupantType ('player'|'dummy'), player, weight, color, permissionMode, displayName, defaultPermissionMode, cameraName, actionMaps, seatExitNode, seatExitSide, partPath, seatPartPath}."}]
-    },
-    "getVehiclePresences": {
-      "desc": "Liste des présences des joueurs dans un véhicule, triée par joueur.",
-      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
-      "returns": [{"type": "table[]", "desc": "Éléments {player, seatId, permissionMode, unseated}."}]
-    },
-    "getDriverPlayer": {
-      "desc": "Plus petit indice de joueur autorisé à conduire le véhicule (mode 'driver' ou 'unrestricted').",
-      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
-      "returns": [{"type": "integer|nil", "desc": "Indice du conducteur, nil s'il n'y a que des passagers."}]
-    },
-    "setDummyOccupant": {
-      "desc": "Place un occupant factice (maillage coloré aléatoire) avec un poids sur un siège libre.",
-      "params": {
-        "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
-        "seatId": {"type": "string", "desc": "Siège."},
-        "weight": {"type": "number|nil", "desc": "Poids ; défaut 89, minimum 0."}
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player."
+        },
+        "direction": {
+          "type": "integer|nil",
+          "desc": "Direction; 1 by default."
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "true si placé."},
-        {"type": "string|nil", "desc": "'invalidVehicle', 'invalidSeat', 'occupied' ou 'reserved'."}
+        {
+          "type": "boolean",
+          "desc": "true if a seat was taken."
+        }
+      ]
+    },
+    "toggleUnseated": {
+      "desc": "Toggles between \"seated\" and \"unseated\" in the current vehicle.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Success."
+        }
+      ]
+    },
+    "getSeats": {
+      "desc": "Lists the seats of a vehicle with their state.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Items {seatId, isDriver, occupied, occupantType ('player'|'dummy'), player, weight, color, permissionMode, displayName, defaultPermissionMode, cameraName, actionMaps, seatExitNode, seatExitSide, partPath, seatPartPath}."
+        }
+      ]
+    },
+    "getVehiclePresences": {
+      "desc": "List of player presences in a vehicle, sorted by player.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Items {player, seatId, permissionMode, unseated}."
+        }
+      ]
+    },
+    "getDriverPlayer": {
+      "desc": "Lowest player index allowed to drive the vehicle ('driver' or 'unrestricted' mode).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Driver index, nil if there are only passengers."
+        }
+      ]
+    },
+    "setDummyOccupant": {
+      "desc": "Places a dummy occupant (randomly colored mesh) with a weight in a free seat.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        },
+        "seatId": {
+          "type": "string",
+          "desc": "Seat."
+        },
+        "weight": {
+          "type": "number|nil",
+          "desc": "Weight; default 89, minimum 0."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if placed."
+        },
+        {
+          "type": "string|nil",
+          "desc": "'invalidVehicle', 'invalidSeat', 'occupied' or 'reserved'."
+        }
       ]
     },
     "clearDummyOccupant": {
-      "desc": "Retire l'occupant factice d'un siège.",
+      "desc": "Removes the dummy occupant from a seat.",
       "params": {
-        "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
-        "seatId": {"type": "string", "desc": "Siège."}
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        },
+        "seatId": {
+          "type": "string",
+          "desc": "Seat."
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "true si retiré."},
-        {"type": "string|nil", "desc": "'notDummy' si rien à retirer."}
+        {
+          "type": "boolean",
+          "desc": "true if removed."
+        },
+        {
+          "type": "string|nil",
+          "desc": "'notDummy' if there is nothing to remove."
+        }
       ]
     },
     "clearDummyOccupants": {
-      "desc": "Retire tous les occupants factices d'un véhicule, ou de tous les véhicules si vehId est nil.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Véhicule ciblé."}},
-      "returns": [{"type": "integer", "desc": "Nombre d'occupants retirés."}]
-    },
-    "cheeseburger": {
-      "desc": "Ajoute 10 kg à chaque occupant (borné à 119) et affiche un message avec le poids.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Véhicule ; défaut véhicule du joueur 0."}},
-      "returns": [{"type": "number|nil", "desc": "Poids affiché, nil si aucun occupant."}]
-    },
-    "salad": {
-      "desc": "Retire 10 kg à chaque occupant (borné à 49) et affiche un message avec le poids.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Véhicule ; défaut véhicule du joueur 0."}},
-      "returns": [{"type": "number|nil", "desc": "Poids affiché, nil si aucun occupant."}]
-    },
-    "setVehicleOccupantsEnabledOverride": {
-      "desc": "Force l'affichage (true) ou le masquage (false) des occupants d'un véhicule, indépendamment du réglage global ; nil retire le forçage.",
+      "desc": "Removes all dummy occupants from a vehicle, or from all vehicles if vehId is nil.",
       "params": {
-        "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
-        "enabled": {"type": "boolean|nil", "desc": "Forçage."}
-      },
-      "returns": [{"type": "boolean", "desc": "false si le véhicule n'existe pas."}]
-    },
-    "refreshOccupantMeshes": {
-      "desc": "Réaffirme la visibilité des maillages d'occupants après une modification faite sans passer par les hooks de synchronisation (utilisé par gameplay_traffic).",
-      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}}
-    },
-    "getSeatExitData": {
-      "desc": "Calcule où le joueur sort du véhicule : point à côté de la carrosserie, du côté du siège (exitNode/exitSide de l'emplacement, sinon côté déduit de la position), décalé de 0,7 m au-delà de la carrosserie.",
-      "params": {
-        "player": {"type": "integer|nil", "desc": "Joueur (0 par défaut)."},
-        "vehId": {"type": "integer|nil", "desc": "Véhicule ; défaut véhicule du joueur."}
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Targeted vehicle."
+        }
       },
       "returns": [
-        {"type": "vec3|nil", "desc": "Position de sortie."},
-        {"type": "vec3|nil", "desc": "Position du siège."}
+        {
+          "type": "integer",
+          "desc": "Number of occupants removed."
+        }
+      ]
+    },
+    "cheeseburger": {
+      "desc": "Adds 10 kg to each occupant (clamped to 119) and displays a message with the weight.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle; default the player 0 vehicle."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Displayed weight, nil if no occupant."
+        }
+      ]
+    },
+    "salad": {
+      "desc": "Removes 10 kg from each occupant (clamped to 49) and displays a message with the weight.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle; default the player 0 vehicle."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Displayed weight, nil if no occupant."
+        }
+      ]
+    },
+    "setVehicleOccupantsEnabledOverride": {
+      "desc": "Forces the display (true) or hiding (false) of a vehicle's occupants, regardless of the global setting; nil removes the override.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        },
+        "enabled": {
+          "type": "boolean|nil",
+          "desc": "Override."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the vehicle does not exist."
+        }
+      ]
+    },
+    "refreshOccupantMeshes": {
+      "desc": "Reasserts the visibility of occupant meshes after a change made without going through the sync hooks (used by gameplay_traffic).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      }
+    },
+    "getSeatExitData": {
+      "desc": "Computes where the player exits the vehicle: a point beside the body, on the seat side (exitNode/exitSide of the slot, otherwise side inferred from the position), offset 0.7 m beyond the body.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player (0 by default)."
+        },
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle; default the player's vehicle."
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3|nil",
+          "desc": "Exit position."
+        },
+        {
+          "type": "vec3|nil",
+          "desc": "Seat position."
+        }
       ]
     },
     "onVehicleSwitched": {
-      "desc": "Hook : le joueur change de véhicule ; met à jour son occupation.",
+      "desc": "Hook: the player changes vehicle; updates their occupancy.",
       "params": {
-        "oldId": {"type": "integer", "desc": "Ancien véhicule."},
-        "newId": {"type": "integer", "desc": "Nouveau véhicule."},
-        "player": {"type": "integer|nil", "desc": "Indice du joueur."}
+        "oldId": {
+          "type": "integer",
+          "desc": "Old vehicle."
+        },
+        "newId": {
+          "type": "integer",
+          "desc": "New vehicle."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
       },
       "internal": true
     },
     "onCameraChanged": {
-      "desc": "Hook : la caméra d'un joueur change ; met à jour la visibilité des occupants (par ex. cacher la tête en vue à la première personne).",
+      "desc": "Hook: a player's camera changes; updates occupant visibility (e.g. hide the head in first-person view).",
       "params": {
-        "player": {"type": "integer|nil", "desc": "Indice du joueur."},
-        "camName": {"type": "string", "desc": "Nom de la caméra."},
-        "vid": {"type": "integer|nil", "desc": "Véhicule de la caméra."}
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        },
+        "camName": {
+          "type": "string",
+          "desc": "Camera name."
+        },
+        "vid": {
+          "type": "integer|nil",
+          "desc": "Camera vehicle."
+        }
       },
       "internal": true
     },
-    "onSettingsChanged": {"desc": "Hook : réapplique les visuels des occupants (réglage enableSeatOccupants).", "internal": true},
-    "onSplitScreenChanged": {"desc": "Hook : recalcule présences et visuels après changement d'écran partagé.", "internal": true},
-    "onLocalParticipantsChanged": {"desc": "Hook : recalcule présences et visuels quand les participants locaux changent.", "internal": true},
+    "onSettingsChanged": {
+      "desc": "Hook: reapplies the occupant visuals (enableSeatOccupants setting).",
+      "internal": true
+    },
+    "onSplitScreenChanged": {
+      "desc": "Hook: recalculates presences and visuals after a split-screen change.",
+      "internal": true
+    },
+    "onLocalParticipantsChanged": {
+      "desc": "Hook: recalculates presences and visuals when the local participants change.",
+      "internal": true
+    },
     "onVehicleSpawned": {
-      "desc": "Hook : réapplique poids et visuels pour un véhicule qui vient d'apparaître.",
-      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "desc": "Hook: reapplies weight and visuals for a vehicle that has just appeared.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
       "internal": true
     },
     "onBeforeVehicleReplaced": {
-      "desc": "Hook avant le remplacement d'un véhicule : mémorise s'il n'avait pas de système de sièges.",
-      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "desc": "Hook before a vehicle is replaced: remembers whether it had no seat system.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
       "internal": true
     },
     "onVehicleReplaced": {
-      "desc": "Hook après remplacement : réapplique l'état et réassigne les joueurs sans siège.",
-      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "desc": "Hook after replacement: reapplies the state and reassigns unseated players.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
       "internal": true
     },
     "onVehicleResetted": {
-      "desc": "Hook : réapplique poids et visuels après un reset.",
-      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "desc": "Hook: reapplies weight and visuals after a reset.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook : libère toutes les données d'occupation et de présence du véhicule détruit.",
-      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "desc": "Hook: frees all occupancy and presence data of the destroyed vehicle.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
       "internal": true
     },
-    "onClientStartMission": {"desc": "Hook : efface les forçages d'occupants et occupe le véhicule actuel du joueur 0.", "internal": true},
+    "onClientStartMission": {
+      "desc": "Hook: clears occupant overrides and occupies player 0's current vehicle.",
+      "internal": true
+    },
     "onBeforeWalkingModeToggled": {
-      "desc": "Hook avant la bascule du mode marche : si le joueur passe à pied, lève le blocage de conduite.",
+      "desc": "Hook before the walking mode toggle: if the player switches to walking, lifts the driving block.",
       "params": {
-        "enabled": {"type": "boolean", "desc": "true si on passe à pied."},
-        "_": {"type": "any", "desc": "Non utilisé."},
-        "player": {"type": "integer|nil", "desc": "Indice du joueur."}
+        "enabled": {
+          "type": "boolean",
+          "desc": "true if switching to walking."
+        },
+        "_": {
+          "type": "any",
+          "desc": "Not used."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
       },
       "internal": true
     },
     "onVehicleTriggerActionLabel": {
-      "desc": "Hook pour personnaliser le libellé et l'icône de l'action « enterSeat » d'un trigger de siège (« S'asseoir ici », siège conducteur ou passager).",
-      "params": {"data": {"type": "table", "desc": "Table modifiée (actionName, vehicleId, player, title, icon)."}},
+      "desc": "Hook to customize the label and icon of the \"enterSeat\" action of a seat trigger (\"Sit here\", driver or passenger seat).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Modified table (actionName, vehicleId, player, title, icon)."
+        }
+      },
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook : restaure l'état sérialisé s'il existe, sinon occupe les joueurs existants.",
-      "params": {"data": {"type": "table|nil", "desc": "Données sérialisées."}},
+      "desc": "Hook: restores the serialized state if it exists, otherwise occupies the existing players.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Serialized data."
+        }
+      },
       "internal": true
     },
-    "onExtensionUnloaded": {"desc": "Hook : retire les forçages, restaure les caméras et libère le masque d'action maps.", "internal": true},
+    "onExtensionUnloaded": {
+      "desc": "Hook: removes the overrides, restores the cameras and frees the action maps mask.",
+      "internal": true
+    },
     "onSerialize": {
-      "desc": "Hook : sérialise présences et sièges occupés avant un rechargement Lua.",
-      "returns": [{"type": "table", "desc": "{version, playerPresence, seatClaims, occupancy}."}],
+      "desc": "Hook: serializes presences and occupied seats before a Lua reload.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{version, playerPresence, seatClaims, occupancy}."
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook : restaure l'état après rechargement Lua.",
-      "params": {"data": {"type": "table", "desc": "Données de onSerialize."}},
+      "desc": "Hook: restores the state after a Lua reload.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Data from onSerialize."
+        }
+      },
       "internal": true
     }
   }

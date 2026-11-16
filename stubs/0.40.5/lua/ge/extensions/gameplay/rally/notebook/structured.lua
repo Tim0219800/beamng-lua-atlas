@@ -2,112 +2,112 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/notebook/structured.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Stockage « structuré » d'une pacenote de rallye en six emplacements fixes (clés de chaîne "1" à "6", qui sont aussi l'ordre de lecture) : 1 = prudence (caution), 2 et 3 = modificateurs avant le virage, 4 = virage (corner), 5 et 6 = modificateurs après. Un emplacement vide vaut {}. Chaque élément est une table typée { type = ..., ... } ; le style actif fournit les libellés. Le module migre aussi les anciens schémas v1 (liste) et v2 (4 emplacements) à la désérialisation. Le module renvoie un constructeur d'objet (classe C) et expose des helpers M.* qui acceptent un objet ou une table brute.
---- Accès : `require("extensions/gameplay/rally/notebook/structured")` (fichier sous extensions/ mais pas une extension classique)
+--- "Structured" storage of a rally pacenote in six fixed slots (string keys "1" to "6", which are also the reading order): 1 = caution, 2 and 3 = modifiers before the corner, 4 = corner, 5 and 6 = modifiers after. An empty slot is {}. Each item is a typed table { type = ..., ... }; the active style provides the labels. The module also migrates the old v1 (list) and v2 (4 slots) schemas on deserialization. The module returns an object constructor (class C) and exposes M.* helpers that accept an object or a raw table.
+--- Access: `require("extensions/gameplay/rally/notebook/structured")` (file under extensions/ but not a regular extension)
 ---@class gameplay_rally_notebook_structured
 gameplay_rally_notebook_structured = {}
 
---- Version utilitaire : renvoie la liste ordonnée des éléments non vides d'un objet structuré ou d'une table brute (gère aussi les anciens schémas v2). (assignée dynamiquement)
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:dyn
----@param structured table Objet structuré ou table brute (avec ou sans champ items).
----@return table[]  Éléments dans l'ordre des emplacements ; {} si l'argument n'est pas une table.
+--- Utility version: returns the ordered list of non-empty items of a structured object or a raw table (also handles the old v2 schemas). (dynamically assigned)
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:dyn
+---@param structured table Structured object or raw table (with or without an items field).
+---@return table[]  Items in slot order; {} if the argument is not a table.
 function gameplay_rally_notebook_structured.orderedItems(structured) end
 
---- Version utilitaire : remplace le contenu par une liste ordonnée d'éléments, répartis dans les emplacements. Appelle la méthode d'instance si elle existe, sinon écrit items et schemaVersion dans la table. (assignée dynamiquement)
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:dyn
----@param structured table Objet structuré ou table brute (modifié en place).
----@param items table[] Éléments typés.
+--- Utility version: replaces the content with an ordered list of items, distributed into the slots. Calls the instance method if it exists, otherwise writes items and schemaVersion into the table. (dynamically assigned)
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:dyn
+---@param structured table Structured object or raw table (modified in place).
+---@param items table[] Typed items.
 function gameplay_rally_notebook_structured.setOrderedItems(structured, items) end
 
---- Version utilitaire : renvoie l'élément d'un emplacement, ou nil s'il est vide. (assignée dynamiquement)
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:dyn
----@param structured table Objet structuré ou table brute.
----@param index integer Numéro d'emplacement de 1 à 6.
----@return table|nil  Élément { type = ... } ou nil.
+--- Utility version: returns the item of a slot, or nil if it is empty. (dynamically assigned)
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:dyn
+---@param structured table Structured object or raw table.
+---@param index integer Slot number from 1 to 6.
+---@return table|nil  Item { type = ... } or nil.
 function gameplay_rally_notebook_structured.slotItem(structured, index) end
 
---- Version utilitaire : renvoie la table des six emplacements (clés "1".."6") normalisée, en migrant les schémas v1/v2 si besoin. (assignée dynamiquement)
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:dyn
----@param structured table Objet structuré ou table brute.
----@return table<string, table>  Carte d'emplacements ; emplacements vides = {}.
+--- Utility version: returns the normalized table of the six slots (keys "1".."6"), migrating v1/v2 schemas if needed. (dynamically assigned)
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:dyn
+---@param structured table Structured object or raw table.
+---@return table<string, table>  Slot map; empty slots = {}.
 function gameplay_rally_notebook_structured.slotItems(structured) end
 
---- Objet renvoyé par Structured() : champs schemaVersion et items (carte des six emplacements).
+--- Object returned by Structured(): fields schemaVersion and items (map of the six slots).
 ---@class gameplay_rally_notebook_structured_C
 local gameplay_rally_notebook_structured_C = {}
 
---- true si au moins un emplacement est rempli.
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:311
----@return boolean  Résultat.
+--- true if at least one slot is filled.
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:311
+---@return boolean  Result.
 function gameplay_rally_notebook_structured_C:hasItems() end
 
---- Constructeur : schéma courant, six emplacements vides.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:248
+--- Constructor: current schema, six empty slots.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:248
 function gameplay_rally_notebook_structured_C:init() end
 
---- Nombre d'éléments non vides.
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:307
----@return integer  Compte.
+--- Number of non-empty items.
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:307
+---@return integer  Count.
 function gameplay_rally_notebook_structured_C:itemCount() end
 
---- Recharge depuis des données sauvegardées (data.items, data.schemaVersion) en migrant les schémas v1 (liste ordonnée) et v2 (quatre emplacements) vers le schéma v3.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:253
----@param data table|nil Données sérialisées ; nil laisse l'objet vide.
+--- Reloads from saved data (data.items, data.schemaVersion), migrating the v1 (ordered list) and v2 (four slots) schemas to schema v3.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:253
+---@param data table|nil Serialized data; nil leaves the object empty.
 function gameplay_rally_notebook_structured_C:onDeserialized(data) end
 
---- Renvoie { schemaVersion, items } où items est la carte normalisée des six emplacements.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:274
----@return table  Données à écrire en JSON.
+--- Returns { schemaVersion, items } where items is the normalized map of the six slots.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:274
+---@return table  Data to write as JSON.
 function gameplay_rally_notebook_structured_C:onSerialize() end
 
---- Liste des éléments non vides dans l'ordre des emplacements 1 à 6.
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:281
----@return table[]  Éléments.
+--- List of non-empty items in the order of slots 1 to 6.
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:281
+---@return table[]  Items.
 function gameplay_rally_notebook_structured_C:orderedItems() end
 
---- Remplace le contenu à partir d'une liste ordonnée (caution -> 1, corner -> 4, modificateurs -> 2/3 avant ou 5/6 après le corner). Les surplus sont ignorés avec un avertissement.
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:297
----@param items table[] Éléments typés.
+--- Replaces the content from an ordered list (caution -> 1, corner -> 4, modifiers -> 2/3 before or 5/6 after the corner). Surplus items are ignored with a warning.
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:297
+---@param items table[] Typed items.
 function gameplay_rally_notebook_structured_C:setOrderedItems(items) end
 
---- Remplace le contenu à partir d'une carte d'emplacements (clés "1".."6" ou entiers).
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:302
----@param items table Carte d'emplacements.
+--- Replaces the content from a slot map (keys "1".."6" or integers).
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:302
+---@param items table Slot map.
 function gameplay_rally_notebook_structured_C:setSlotItems(items) end
 
---- Élément d'un emplacement, ou nil s'il est vide.
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:289
----@param index integer Emplacement de 1 à 6.
----@return table|nil  Élément ou nil.
+--- Item of a slot, or nil if it is empty.
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:289
+---@param index integer Slot from 1 to 6.
+---@return table|nil  Element or nil.
 function gameplay_rally_notebook_structured_C:slotItem(index) end
 
---- Copie normalisée de la carte des six emplacements.
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:285
----@return table<string, table>  Emplacements "1".."6".
+--- Normalized copy of the map of the six slots.
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:285
+---@return table<string, table>  Slots "1".."6".
 function gameplay_rally_notebook_structured_C:slotItems() end
 
---- Table du module : helpers orderedItems, slotItems, slotItem, setOrderedItems (voir functions). Appeler le module comme une fonction crée une instance de C.
+--- Module table: helpers orderedItems, slotItems, slotItem, setOrderedItems (see functions). Calling the module as a function creates an instance of C.
 ---@class gameplay_rally_notebook_structured_M
 local gameplay_rally_notebook_structured_M = {}
 
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:315
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:315
 ---@param structured any
 function gameplay_rally_notebook_structured_M.orderedItems(structured) end
 
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:359
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:359
 ---@param structured any
 ---@param items any
 function gameplay_rally_notebook_structured_M.setOrderedItems(structured, items) end
 
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:342
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:342
 ---@param structured any
 ---@param index any
 function gameplay_rally_notebook_structured_M.slotItem(structured, index) end
 
----Source : lua/ge/extensions/gameplay/rally/notebook/structured.lua:327
+---Source: lua/ge/extensions/gameplay/rally/notebook/structured.lua:327
 ---@param structured any
 function gameplay_rally_notebook_structured_M.slotItems(structured) end
 

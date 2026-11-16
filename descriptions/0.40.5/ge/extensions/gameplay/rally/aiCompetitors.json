@@ -1,74 +1,151 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/aiCompetitors.lua",
-  "module": "Simule des concurrents IA pour le classement (leaderboard) d'une spéciale ou d'une boucle de rallye. Les paramètres des concurrents (skill, consistency, risk, name) et les coefficients du modèle sont lus dans gameplay/rally/aiCompetitorsConfig.json au chargement du module. Pour chaque concurrent, un résultat (safe, push, minor_incident, major_incident, dnf) est tiré au hasard, puis un temps est échantillonné selon une loi normale ancrée sur un temps de référence (par défaut la médaille 'silverTime'). Le module formate aussi les temps et construit les lignes du tableau affiché à l'UI.",
+  "module": "Simulates AI competitors for the leaderboard of a rally special stage or loop. The competitors' parameters (skill, consistency, risk, name) and the model coefficients are read from gameplay/rally/aiCompetitorsConfig.json when the module loads. For each competitor, a result (safe, push, minor_incident, major_incident, dnf) is drawn at random, then a time is sampled from a normal distribution anchored on a reference time (by default the 'silverTime' medal). The module also formats the times and builds the rows of the table shown in the UI.",
   "usage": "local lb = gameplay_rally_aiCompetitors.computeLeaderboard(playerTime, silverTime, 'Moi')\n-- lb.rows[i] = {position, name, time, delta, deltaVsLeader, deltaVsAhead, dnf}\ngameplay_rally_aiCompetitors.applyOfficialPlayerTotalSeconds(lb, 312.4)",
   "notes": [
-    "Les temps sont en secondes ; les textes sont formatés 'h:mm:ss.d' / 'm:ss.d' / 's.d' (un seul chiffre de dixième, arrondi à 0,1 s).",
-    "Les résultats sont aléatoires (math.random) : chaque appel à computeLeaderboard donne un classement différent pour les IA.",
-    "Chaque incident (minor : 1 à 2, major : 2 à 5) ajoute 5 s au temps d'un concurrent ; un DNF donne un temps nil.",
-    "En multi-spéciales, un DNF sur une spéciale force le DNF sur toutes les suivantes ; le tri place d'abord ceux qui ont le moins de colonnes DNF.",
-    "Si aiCompetitorsConfig.json est introuvable, PARAMS vaut nil : la liste de concurrents est vide mais les fonctions de densité/poids (qui utilisent PARAMS) provoqueraient une erreur si paramTable n'est pas fourni.",
-    "Le sous-objet 'general' du JSON de config est aplati dans la table des paramètres ; la liste des concurrents est lue dans 'competitors' (ou 'drivers')."
+    "Times are in seconds; the texts are formatted 'h:mm:ss.d' / 'm:ss.d' / 's.d' (a single tenth digit, rounded to 0.1 s).",
+    "The results are random (math.random): each call to computeLeaderboard gives a different ranking for the AIs.",
+    "Each incident (minor: 1 to 2, major: 2 to 5) adds 5 s to a competitor's time; a DNF gives a nil time.",
+    "In multi-stage, a DNF on one special stage forces the DNF on all following ones; the sort first places those with the fewest DNF columns.",
+    "If aiCompetitorsConfig.json is not found, PARAMS is nil: the competitor list is empty but the density/weight functions (which use PARAMS) would raise an error if paramTable is not provided.",
+    "The 'general' sub-object of the config JSON is flattened into the parameter table; the competitor list is read from 'competitors' (or 'drivers')."
   ],
   "fields": {
     "referenceStarKey": {
       "type": "string",
-      "desc": "Clé du temps de médaille utilisée comme référence de rythme des concurrents simulés. Vaut 'silverTime' par défaut ; getReferenceTime la lit dans missionTypeData."
+      "desc": "Key of the medal time used as the pace reference for the simulated competitors. Is 'silverTime' by default; getReferenceTime reads it from missionTypeData."
     }
   },
   "functions": {
     "getReferenceTime": {
-      "desc": "Renvoie le temps de référence (médaille désignée par referenceStarKey) d'une mission, ou nil s'il est absent ou non strictement positif.",
+      "desc": "Returns the reference time (medal designated by referenceStarKey) of a mission, or nil if it is absent or not strictly positive.",
       "params": {
-        "missionTypeData": {"type": "table|nil", "desc": "Données de type de mission contenant par exemple silverTime."}
+        "missionTypeData": {
+          "type": "table|nil",
+          "desc": "Mission type data containing for example silverTime."
+        }
       },
-      "returns": [{"type": "number|nil", "desc": "Temps de référence en secondes."}],
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Reference time in seconds."
+        }
+      ],
       "internal": false
     },
     "computeMixtureWeights": {
-      "desc": "Calcule les poids normalisés des 5 résultats possibles (safe, push, minor_incident, major_incident, dnf) pour un niveau de compétence et de risque donnés. Utilise une consistance fixe de 0,5 (sans effet sur les poids).",
+      "desc": "Computes the normalized weights of the 5 possible results (safe, push, minor_incident, major_incident, dnf) for a given skill and risk level. Uses a fixed consistency of 0.5 (with no effect on the weights).",
       "params": {
-        "paramTable": {"type": "table|nil", "desc": "Coefficients du modèle (safe_weight_base, push_weight_floor, etc.) ; nil = ceux du fichier de config."},
-        "skill": {"type": "number", "desc": "Compétence du concurrent (0 à 1 attendu, déduit du code)."},
-        "risk": {"type": "number", "desc": "Propension au risque (0 à 1 attendu, déduit du code)."}
+        "paramTable": {
+          "type": "table|nil",
+          "desc": "Model coefficients (safe_weight_base, push_weight_floor, etc.); nil = those of the config file."
+        },
+        "skill": {
+          "type": "number",
+          "desc": "Competitor skill (0 to 1 expected, inferred from code)."
+        },
+        "risk": {
+          "type": "number",
+          "desc": "Risk propensity (0 to 1 expected, inferred from code)."
+        }
       },
-      "returns": [{"type": "number[]", "desc": "5 poids dont la somme vaut 1, dans l'ordre safe, push, minor_incident, major_incident, dnf."}],
+      "returns": [
+        {
+          "type": "number[]",
+          "desc": "5 weights summing to 1, in the order safe, push, minor_incident, major_incident, dnf."
+        }
+      ],
       "internal": false
     },
     "mixtureDensityTimes": {
-      "desc": "Calcule la densité du mélange de gaussiennes des temps d'arrivée (aperçu pour l'éditeur). Utilise les mêmes poids et moyennes/écarts-types que l'échantillonnage ; le DNF n'a pas de densité.",
+      "desc": "Computes the density of the Gaussian mixture of finish times (preview for the editor). Uses the same weights and means/standard deviations as the sampling; the DNF has no density.",
       "params": {
-        "paramTable": {"type": "table|nil", "desc": "Coefficients du modèle ; nil = config du fichier."},
-        "referenceSec": {"type": "number", "desc": "Temps de référence en secondes."},
-        "skill": {"type": "number", "desc": "Compétence."},
-        "consistency": {"type": "number", "desc": "Régularité (1 = très régulier : écart-type réduit)."},
-        "risk": {"type": "number", "desc": "Propension au risque."},
-        "timeLo": {"type": "number", "desc": "Borne basse de l'axe des temps."},
-        "timeHi": {"type": "number", "desc": "Borne haute de l'axe des temps."},
-        "sampleCount": {"type": "integer|nil", "desc": "Nombre de points (minimum 2, 500 par défaut)."},
-        "precomputedWeights": {"type": "number[]|nil", "desc": "Poids déjà calculés, pour éviter de les recalculer."}
+        "paramTable": {
+          "type": "table|nil",
+          "desc": "Model coefficients; nil = file config."
+        },
+        "referenceSec": {
+          "type": "number",
+          "desc": "Reference time in seconds."
+        },
+        "skill": {
+          "type": "number",
+          "desc": "Skill."
+        },
+        "consistency": {
+          "type": "number",
+          "desc": "Consistency (1 = very consistent: reduced standard deviation)."
+        },
+        "risk": {
+          "type": "number",
+          "desc": "Risk propensity."
+        },
+        "timeLo": {
+          "type": "number",
+          "desc": "Lower bound of the time axis."
+        },
+        "timeHi": {
+          "type": "number",
+          "desc": "Upper bound of the time axis."
+        },
+        "sampleCount": {
+          "type": "integer|nil",
+          "desc": "Number of points (minimum 2, 500 by default)."
+        },
+        "precomputedWeights": {
+          "type": "number[]|nil",
+          "desc": "Weights already computed, to avoid recomputing them."
+        }
       },
-      "returns": [{"type": "table", "desc": "{times, mixture, weights, components (5 tableaux de densités par résultat), sampleCount}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{times, mixture, weights, components (5 density arrays per result), sampleCount}."
+        }
+      ],
       "internal": false
     },
     "applyOfficialPlayerTotalSeconds": {
-      "desc": "Écrase le temps total de la ligne du joueur avec le total officiel du journal d'évènements du rallye (temps de toutes les spéciales + pénalités). En multi-spéciales met à jour finalTime/finalDnf, en spéciale seule time/dnf ; les écarts (deltas) ne sont pas recalculés.",
+      "desc": "Overwrites the player row's total time with the official total from the rally event log (time of all special stages + penalties). In multi-stage updates finalTime/finalDnf, in single stage time/dnf; the deltas are not recomputed.",
       "params": {
-        "leaderboard": {"type": "table", "desc": "Résultat de computeLeaderboard (doit avoir rows et playerRowIndex)."},
-        "totalSecs": {"type": "number", "desc": "Total officiel en secondes (> 0)."}
+        "leaderboard": {
+          "type": "table",
+          "desc": "Result of computeLeaderboard (must have rows and playerRowIndex)."
+        },
+        "totalSecs": {
+          "type": "number",
+          "desc": "Official total in seconds (> 0)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "computeLeaderboard": {
-      "desc": "Construit le classement joueur + concurrents IA. Avec deux nombres : une spéciale seule. Avec deux tableaux de même longueur (>= 1) : plusieurs spéciales (boucle). Renvoie {rows = {}} si les entrées sont invalides.",
+      "desc": "Builds the player + AI competitors ranking. With two numbers: a single special stage. With two arrays of the same length (>= 1): several special stages (loop). Returns {rows = {}} if the inputs are invalid.",
       "params": {
-        "playerTimeOrTimes": {"type": "number|number[]", "desc": "Temps du joueur (ou liste de temps par spéciale)."},
-        "silverTimeOrTimes": {"type": "number|number[]", "desc": "Temps de référence (silver) de la spéciale, ou liste par spéciale ; doivent être > 0."},
-        "playerName": {"type": "string|nil", "desc": "Nom affiché ; nil = 'Player' avec clé de traduction missions.aiCompetitorsLeaderboard.player."},
-        "playerFinalSortSecs": {"type": "number|nil", "desc": "Total officiel (spéciales + pénalités) utilisé pour classer le joueur."}
+        "playerTimeOrTimes": {
+          "type": "number|number[]",
+          "desc": "Player time (or list of times per special stage)."
+        },
+        "silverTimeOrTimes": {
+          "type": "number|number[]",
+          "desc": "Reference (silver) time of the special stage, or list per special stage; must be > 0."
+        },
+        "playerName": {
+          "type": "string|nil",
+          "desc": "Display name; nil = 'Player' with translation key missions.aiCompetitorsLeaderboard.player."
+        },
+        "playerFinalSortSecs": {
+          "type": "number|nil",
+          "desc": "Official total (special stages + penalties) used to rank the player."
+        }
       },
-      "returns": [{"type": "table", "desc": "{rows, playerRowIndex} ; en multi : aussi multiStage=true et stageCount, lignes avec stageCells/finalTime/finalDnf ; en simple : lignes avec time/delta/deltaVsLeader/deltaVsAhead/dnf."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{rows, playerRowIndex}; in multi: also multiStage=true and stageCount, rows with stageCells/finalTime/finalDnf; in single: rows with time/delta/deltaVsLeader/deltaVsAhead/dnf."
+        }
+      ],
       "internal": false
     }
   }

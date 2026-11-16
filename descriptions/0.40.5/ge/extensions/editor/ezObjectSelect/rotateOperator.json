@@ -1,48 +1,98 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/rotateOperator.lua",
-  "module": "Opérateur modal « Rotate » (touche R) de l'outil Easy Select. Ouvre une session de transformation (historique « EasySelectRotate ») et fait tourner la sélection autour du pivot : sans contrainte l'axe est la direction de vue de la caméra, avec contrainte X/Y/Z c'est l'axe choisi (monde ou local). L'angle vient de l'angle écran souris-pivot ou d'une saisie numérique en degrés, avec magnétisme optionnel. Clic gauche/Entrée valide, clic droit/Échap annule.",
+  "module": "\"Rotate\" modal operator (R key) of the Easy Select tool. Opens a transform session (history \"EasySelectRotate\") and rotates the selection around the pivot: without constraint the axis is the camera view direction, with an X/Y/Z constraint it is the chosen axis (world or local). The angle comes from the mouse-pivot screen angle or from a numeric input in degrees, with optional snapping. Left click/Enter confirms, right click/Esc cancels.",
   "notes": [
-    "Le magnétisme n'est appliqué qu'à l'angle souris (pas à la saisie numérique) et si options.rotateSnapEnabled est vrai et rotateSnapSize > 0 (en degrés).",
-    "Changer d'axe ou d'espace réinitialise la référence souris et l'angle à 0."
+    "Snapping is only applied to the mouse angle (not to numeric input) and if options.rotateSnapEnabled is true and rotateSnapSize > 0 (in degrees).",
+    "Changing axis or space resets the mouse reference and the angle to 0."
   ],
   "functions": {
     "wantsBegin": {
-      "desc": "True si la touche R vient d'être pressée.",
+      "desc": "True if the R key has just been pressed.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": ""}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": ""
+        }
+      ]
     },
     "begin": {
-      "desc": "Démarre la rotation. Renvoie false si déjà actif, session impossible ou pivot non projetable.",
-      "params": {"options": {"type": "table|nil", "desc": "{defaultLocal = boolean}"}},
-      "returns": [{"type": "boolean", "desc": "true si démarré"}]
+      "desc": "Starts the rotation. Returns false if already active, session impossible or pivot not projectable.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "{defaultLocal = boolean}"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if started"
+        }
+      ]
     },
     "update": {
-      "desc": "Chaque frame : gère fin, contrainte, saisie, calcule l'angle (rad), applique transformSession.updateRotation et dessine le gizmo.",
-      "params": {"options": {"type": "table|nil", "desc": "{rotateSnapEnabled = boolean, rotateSnapSize = degrés}"}},
-      "returns": [{"type": "string|nil", "desc": "\"active\" pendant l'opération, résultat de finish à la fin, nil si inactif"}]
+      "desc": "Every frame: handles end, constraint, input, computes the angle (rad), applies transformSession.updateRotation and draws the gizmo.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "{rotateSnapEnabled = boolean, rotateSnapSize = degrees}"
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "\"active\" during the operation, result of finish at the end, nil if inactive"
+        }
+      ]
     },
     "cancel": {
-      "desc": "Annule la rotation en cours.",
+      "desc": "Cancels the current rotation.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si un opérateur était actif"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if an operator was active"
+        }
+      ]
     },
     "setLocalSpace": {
-      "desc": "Bascule espace local/monde et réinitialise la référence souris.",
-      "params": {"localSpace": {"type": "boolean", "desc": "true pour local"}},
-      "returns": [{"type": "boolean", "desc": "false si le changement n'a pas eu lieu"}]
+      "desc": "Toggles local/world space and resets the mouse reference.",
+      "params": {
+        "localSpace": {
+          "type": "boolean",
+          "desc": "true for local"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the change did not happen"
+        }
+      ]
     },
     "isActive": {
-      "desc": "Indique si l'opérateur est en cours.",
+      "desc": "Indicates whether the operator is in progress.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": ""}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": ""
+        }
+      ]
     },
     "getObjectIds": {
-      "desc": "Ids des objets de la session ({} si inactif).",
+      "desc": "Ids of the session objects ({} if inactive).",
       "params": {},
-      "returns": [{"type": "table", "desc": ""}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": ""
+        }
+      ]
     },
     "drawScreen": {
-      "desc": "Dessine l'indicateur et le HUD (contrainte VIEW/axe, espace, angle en degrés ou texte saisi).",
+      "desc": "Draws the indicator and the HUD (VIEW/axis constraint, space, angle in degrees or typed text).",
       "params": {}
     }
   }

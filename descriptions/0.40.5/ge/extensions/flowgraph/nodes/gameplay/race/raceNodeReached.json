@@ -1,14 +1,48 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/raceNodeReached.lua",
-  "module": "Nœud flowgraph « Race Pathnode Reached » (catégorie logic, tag scenario). Laisse passer le flux quand un véhicule atteint un pathnode de la course (events.pathnodeReached). Sorties fixes : flow et nodeName (nom du pathnode atteint). Le moddeur peut ajouter des pins de sortie string ou number : leur valeur est lue dans les customFields du pathnode (même nom et même type).",
-  "notes": ["Quand aucun pathnode n'est atteint, flow vaut false et nodeName et les pins personnalisées valent nil.", "work() indexe race.states[vehId] sans test : un véhicule absent de la course provoque une erreur."],
+  "module": "Flowgraph node \"Race Pathnode Reached\" (category logic, tag scenario). Lets flow through when a vehicle reaches a pathnode of the race (events.pathnodeReached). Fixed outputs: flow and nodeName (name of the reached pathnode). The modder can add string or number output pins: their value is read from the pathnode's customFields (same name and same type).",
+  "notes": [
+    "When no pathnode is reached, flow is false and nodeName and the custom pins are nil.",
+    "work() indexes race.states[vehId] without a check: a vehicle absent from the race causes an error."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Active allowCustomOutPins et savePins, data.detailed = false.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
-        "drawMiddle": {"desc": "Vide.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud."}, "style": {"type": "table", "desc": "Style."}}, "internal": true},
-        "work": {"desc": "Lit les events du véhicule et remplit flow, nodeName et les pins personnalisées.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+        "init": {
+          "desc": "Enables allowCustomOutPins and savePins, data.detailed = false.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager."
+            }
+          },
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Empty.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Node constructor."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style."
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Reads the vehicle's events and fills flow, nodeName and the custom pins.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph engine arguments (unused)."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

@@ -1,33 +1,33 @@
 # `ui_pause_providers_missionObjectives`
 
-*Fichier : `lua/ge/extensions/ui/pause/providers/missionObjectives.lua` · VM : Game Engine (GE) · 16 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/pause/providers/missionObjectives.lua` · VM: Game Engine (GE) · 16 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_pause_providers_missionObjectives` : `extensions.load("ui_pause_providers_missionObjectives")`, puis la globale `ui_pause_providers_missionObjectives`
+**Access:** extension `ui_pause_providers_missionObjectives`: `extensions.load("ui_pause_providers_missionObjectives")`, then the global `ui_pause_providers_missionObjectives`
 
-Fournisseur de données du menu pause pour les objectifs de la mission en cours. Il se contente de renvoyer le résultat de gameplay_missions_missionScreen.getPauseMissionObjectivesData().
+Pause menu data provider for the current mission's objectives. It simply returns the result of gameplay_missions_missionScreen.getPauseMissionObjectivesData().
 
-**Dépendances (chargées avant) :** `gameplay_missions_missionScreen`
+**Dependencies (loaded first):** `gameplay_missions_missionScreen`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_pause_providers_missionObjectives.getData(context)` | Renvoie les données d'objectifs de mission pour le menu pause (fournies par gameplay_missions_missionScreen). Le contexte est ignoré. | 11 |
+| `ui_pause_providers_missionObjectives.getData(context)` | Returns the mission objectives data for the pause menu (provided by gameplay_missions_missionScreen). The context is ignored. | 11 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_pause_providers_missionObjectives.getData(context)`
 
-Renvoie les données d'objectifs de mission pour le menu pause (fournies par gameplay_missions_missionScreen). Le contexte est ignoré.
+Returns the mission objectives data for the pause menu (provided by gameplay_missions_missionScreen). The context is ignored.
 
-- `context` (*table*) : Contexte du menu pause (non utilisé).
-- **renvoie** : any Données renvoyées par getPauseMissionObjectivesData.
+- `context` (*table*) : Pause menu context (unused).
+- **returns**: any Data returned by getPauseMissionObjectivesData.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {"gameplay_missions_missionScreen"} |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/pause/providers/missionObjectives.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/pause/providers/missionObjectives.lua`.*

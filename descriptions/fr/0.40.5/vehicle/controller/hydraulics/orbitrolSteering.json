@@ -1,0 +1,49 @@
+{
+  "path": "lua/vehicle/controller/hydraulics/orbitrolSteering.lua",
+  "module": "Régulateur de direction hydraulique de type orbitrol (type \"auxiliary\"). Un PID compare la position moyenne des vérins de direction (normalisée -1..1) à l'entrée de direction (electrics.values.steering_input par défaut) et écrit la commande de vanne dans electrics.values.",
+  "notes": [
+    "Clés jbeam (défaut) : steeringPositionCylinders (liste de noms de vérins), inputElectricsName (\"steering_input\"), steeringValveElectricsName (\"steerCylinder\"), steeringPositionMin (0), steeringPositionMax (1), steeringPIDKp (0.5), steeringPIDKi (0.3), steeringPIDKd (0.01).",
+    "La position de chaque vérin est multipliée par cylinder.direction avant la moyenne."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Crée le PID et retrouve les vérins.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet la vanne et le PID à zéro.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateFixedStep": {
+      "desc": "Calcule et écrit la commande de vanne de direction.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

@@ -1,35 +1,35 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptLimit.lua",
-  "module": "Nœud flowgraph « Set Recovery Prompt Limits » (catégorie once_instant). Limite le nombre d'utilisations de chaque bouton du recovery prompt (-1 = illimité) ; sans utilisation restante le bouton n'est plus sélectionnable. Pins d'entrée number : flipMission (5), recoverMission (5), submitMission (-1), restartMission (-1) ; des pins number personnalisés sont autorisés et sauvegardés. Dépend de gameplay_walk.",
+  "module": "Flowgraph node \"Set Recovery Prompt Limits\" (category once_instant). Limits the number of uses of each recovery prompt button (-1 = unlimited); with no use remaining the button is no longer selectable. Number input pins: flipMission (5), recoverMission (5), submitMission (-1), restartMission (-1); custom number pins are allowed and saved. Depends on gameplay_walk.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "drawMiddle": {
-          "desc": "Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui).",
+          "desc": "Draws the central content of the node in the flowgraph editor (ImGui).",
           "internal": true,
           "params": {
             "builder": {
               "type": "table",
-              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+              "desc": "editor node constructor (builder:Middle())"
             },
             "style": {
               "type": "table",
-              "desc": "style de dessin du nœud"
+              "desc": "node drawing style"
             }
           }
         },
         "init": {
-          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "desc": "Initializes the node's internal state at creation (called by the flowgraph engine).",
           "internal": true
         },
         "workOnce": {
-          "desc": "Construit la table des limites à partir des pins number non nil, appelle core_recoveryPrompt.setButtonLimits(limits) puis resetButtonLimitCounters(counts) pour remettre les compteurs à zéro.",
+          "desc": "Builds the limits table from the non-nil number pins, calls core_recoveryPrompt.setButtonLimits(limits) then resetButtonLimitCounters(counts) to reset the counters to zero.",
           "internal": true,
           "params": {
             "args": {
               "type": "table",
-              "desc": "arguments transmis par le moteur (non utilisés)"
+              "desc": "arguments passed by the engine (unused)"
             }
           }
         }

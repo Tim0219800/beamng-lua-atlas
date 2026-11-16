@@ -1,12 +1,12 @@
 # `gameplay_crawl_flowgraphBridge`
 
-*Fichier : `lua/ge/extensions/gameplay/crawl/flowgraphBridge.lua` · VM : Game Engine (GE) · 326 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/crawl/flowgraphBridge.lua` · VM: Game Engine (GE) · 326 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_crawl_flowgraphBridge` : `extensions.load("gameplay_crawl_flowgraphBridge")`, puis la globale `gameplay_crawl_flowgraphBridge`
+**Access:** extension `gameplay_crawl_flowgraphBridge`: `extensions.load("gameplay_crawl_flowgraphBridge")`, then the global `gameplay_crawl_flowgraphBridge`
 
-Pont entre le mode crawl (franchissement lent de parcours) et les nœuds flowgraph des missions. Il charge un parcours depuis gameplay_crawl_saveSystem, le prépare (setupCrawl, avec téléportation au départ), démarre/arrête/réinitialise le crawl via gameplay_crawl_general et gameplay_crawl_utils, et expose l'état du crawl (temps, points, noeud courant, disqualification, récupérations), les informations du parcours et la gestion des pénalités et points de récupération. Contrairement à crawlFlowgraphBridge.lua, il ne garde pas d'état propre : il lit gameplay_crawl_general.activeTrail et cherche le crawler actif dans gameplay_crawl_utils.getAllCrawlStates().
+Bridge between crawl mode (slow traversal of courses) and the missions' flowgraph nodes. It loads a trail from gameplay_crawl_saveSystem, prepares it (setupCrawl, with teleportation to the start), starts/stops/resets the crawl via gameplay_crawl_general and gameplay_crawl_utils, and exposes the crawl state (time, points, current node, disqualification, recoveries), the trail information and the management of penalties and recovery points. Unlike crawlFlowgraphBridge.lua, it keeps no state of its own: it reads gameplay_crawl_general.activeTrail and looks for the active crawler in gameplay_crawl_utils.getAllCrawlStates().
 
-## Exemple
+## Example
 
 ```lua
 local b = gameplay_crawl_flowgraphBridge
@@ -16,195 +16,195 @@ if trail and b.setupCrawl(nil, trail) then
 end
 ```
 
-## Remarques
+## Notes
 
-- Ordre d'appel attendu : loadCrawlTrail -> setupCrawl -> startCrawl. startCrawl échoue si setupCrawl n'a pas été appelé.
-- setupCrawl téléporte le véhicule au départ (isFromMission = true).
-- startCrawl : si un crawl actif n'a pas encore démarré (crawlStarted faux), reprend simplement son chronomètre (resumeCrawlTimer) au lieu de redémarrer.
-- Si vehicleId est nil, startCrawl essaie le premier crawler de gameplay_crawl_general.crawlersData, puis le véhicule du joueur 0 ; setupCrawl utilise be:getPlayerVehicle(0).
-- stopCrawl et resetCrawl passent force = true aux fonctions de utils.
-- resetCrawl ne stoppe pas le crawl : il remet les données à zéro et téléporte au départ.
-- Types de pénalité : boundaryViolation, drivingBackwards, gateTouch, vehicleReset, wrongDirection, skippedCheckpoint, vehicleFlippedUpright, dnf.
-- Les hooks onCrawlStarted, onCrawlResultsShown et onCrawlPathnodeReached sont vides ici (ils existent pour que les nœuds flowgraph s'y abonnent via extensions.hook).
+- Expected call order: loadCrawlTrail -> setupCrawl -> startCrawl. startCrawl fails if setupCrawl has not been called.
+- setupCrawl teleports the vehicle to the start (isFromMission = true).
+- startCrawl: if an active crawl has not started yet (crawlStarted false), simply resumes its timer (resumeCrawlTimer) instead of restarting.
+- If vehicleId is nil, startCrawl tries the first crawler of gameplay_crawl_general.crawlersData, then player 0's vehicle; setupCrawl uses be:getPlayerVehicle(0).
+- stopCrawl and resetCrawl pass force = true to the utils functions.
+- resetCrawl does not stop the crawl: it resets the data and teleports to the start.
+- Penalty types: boundaryViolation, drivingBackwards, gateTouch, vehicleReset, wrongDirection, skippedCheckpoint, vehicleFlippedUpright, dnf.
+- The hooks onCrawlStarted, onCrawlResultsShown and onCrawlPathnodeReached are empty here (they exist so that flowgraph nodes can subscribe to them via extensions.hook).
 
-**Dépendances (chargées avant) :** `gameplay_crawl_saveSystem`, `gameplay_crawl_general`, `gameplay_crawl_utils`, `gameplay_crawl_boundary`, `gameplay_crawl_display`
+**Dependencies (loaded first):** `gameplay_crawl_saveSystem`, `gameplay_crawl_general`, `gameplay_crawl_utils`, `gameplay_crawl_boundary`, `gameplay_crawl_display`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_crawl_flowgraphBridge.applyPenalty(penaltyType)` | Applique une pénalité au crawler actif avec les points de gameplay_crawl_utils.infractionPoints[penaltyType]. Sans effet si aucun crawler actif ou si le type est inconnu. | 250 |
-| `gameplay_crawl_flowgraphBridge.cleanup()` | Arrête le crawl actif s'il y en a un. | 319 |
-| `gameplay_crawl_flowgraphBridge.getActiveCrawlerId()` | Retourne l'id du premier crawler dont l'état est actif. | 230 |
-| `gameplay_crawl_flowgraphBridge.getAllStartingPositions()` | Liste toutes les positions de départ (saveSystem). | 238 |
-| `gameplay_crawl_flowgraphBridge.getAllTrails()` | Liste tous les parcours (saveSystem). | 234 |
-| `gameplay_crawl_flowgraphBridge.getCrawlEndData()` | Résumé du crawl du crawler actif. | 155 |
-| `gameplay_crawl_flowgraphBridge.getCrawlRuntimeData()` | État en cours du crawl actif. | 177 |
-| `gameplay_crawl_flowgraphBridge.getDynamicObjectsFromPrefab(prefabId, dynamicName)` | Délègue à gameplay_crawl_utils.getDynamicObjectsFromPrefab. | 246 |
-| `gameplay_crawl_flowgraphBridge.getLastRecoveryCheckpoint()` | Dernier point de récupération du crawler actif. | 279 |
-| `gameplay_crawl_flowgraphBridge.getLastRecoveryCheckpointIndex()` | Indice du dernier point de récupération du crawler actif. | 288 |
-| `gameplay_crawl_flowgraphBridge.getPenaltyTypes()` | Liste des types de pénalité. | 275 |
-| `gameplay_crawl_flowgraphBridge.getPlayerTrailStats(trailId)` | Statistiques du joueur sur un parcours (saveSystem). | 242 |
-| `gameplay_crawl_flowgraphBridge.getTrailInfo(trailId)` | Métadonnées d'un parcours (celui indiqué, sinon le parcours actif). | 200 |
-| `gameplay_crawl_flowgraphBridge.isCrawlActive()` | Indique si un parcours est actif dans gameplay_crawl_general. | 226 |
-| `gameplay_crawl_flowgraphBridge.loadCrawlTrail(trailId)` | Récupère un parcours par id depuis saveSystem. | 21 |
-| `gameplay_crawl_flowgraphBridge.onCrawlPathnodeReached(eventData)` | Hook appelé quand un noeud du chemin est atteint : corps vide. *(interne)* *(hook)* | 312 |
-| `gameplay_crawl_flowgraphBridge.onCrawlResultsShown(eventData)` | Hook appelé quand les résultats sont affichés : corps vide. *(interne)* *(hook)* | 309 |
-| `gameplay_crawl_flowgraphBridge.onCrawlStarted()` | Hook appelé au démarrage d'un crawl : corps vide. *(interne)* *(hook)* | 306 |
-| `gameplay_crawl_flowgraphBridge.resetCrawl()` | Réinitialise les données du crawler actif et téléporte son véhicule à la position de départ du parcours (spawn.safeTeleport). | 121 |
-| `gameplay_crawl_flowgraphBridge.setRecoveryCheckpoint(checkpoint)` | Définit le point de récupération du crawler actif. | 297 |
-| `gameplay_crawl_flowgraphBridge.setupCrawl(vehicleId, trail)` | Prépare un crawl : arrête l'éventuel crawl en cours, puis appelle gameplay_crawl_general.setupCrawl(trail, veh, true) (zone, chemin, départ, prefabs, téléportation au départ). | 36 |
-| `gameplay_crawl_flowgraphBridge.startCrawl(vehicleId, trail)` | Démarre le crawl préparé (gameplay_crawl_general.startCrawlFlowgraph) ou reprend le chronomètre d'un crawl déjà prêt. | 66 |
-| `gameplay_crawl_flowgraphBridge.stopCrawl()` | Arrête le crawl actif (gameplay_crawl_utils.stopCrawl(true)). | 112 |
+| `gameplay_crawl_flowgraphBridge.applyPenalty(penaltyType)` | Applies a penalty to the active crawler with the points from gameplay_crawl_utils.infractionPoints[penaltyType]. No effect if there is no active crawler or if the type is unknown. | 250 |
+| `gameplay_crawl_flowgraphBridge.cleanup()` | Stops the active crawl if there is one. | 319 |
+| `gameplay_crawl_flowgraphBridge.getActiveCrawlerId()` | Returns the id of the first crawler whose state is active. | 230 |
+| `gameplay_crawl_flowgraphBridge.getAllStartingPositions()` | Lists all starting positions (saveSystem). | 238 |
+| `gameplay_crawl_flowgraphBridge.getAllTrails()` | Lists all trails (saveSystem). | 234 |
+| `gameplay_crawl_flowgraphBridge.getCrawlEndData()` | Summary of the active crawler's crawl. | 155 |
+| `gameplay_crawl_flowgraphBridge.getCrawlRuntimeData()` | Current state of the active crawl. | 177 |
+| `gameplay_crawl_flowgraphBridge.getDynamicObjectsFromPrefab(prefabId, dynamicName)` | Delegates to gameplay_crawl_utils.getDynamicObjectsFromPrefab. | 246 |
+| `gameplay_crawl_flowgraphBridge.getLastRecoveryCheckpoint()` | Last recovery point of the active crawler. | 279 |
+| `gameplay_crawl_flowgraphBridge.getLastRecoveryCheckpointIndex()` | Index of the last recovery point of the active crawler. | 288 |
+| `gameplay_crawl_flowgraphBridge.getPenaltyTypes()` | List of penalty types. | 275 |
+| `gameplay_crawl_flowgraphBridge.getPlayerTrailStats(trailId)` | Player statistics on a trail (saveSystem). | 242 |
+| `gameplay_crawl_flowgraphBridge.getTrailInfo(trailId)` | Metadata of a trail (the one given, otherwise the active trail). | 200 |
+| `gameplay_crawl_flowgraphBridge.isCrawlActive()` | Indicates whether a trail is active in gameplay_crawl_general. | 226 |
+| `gameplay_crawl_flowgraphBridge.loadCrawlTrail(trailId)` | Gets a trail by id from saveSystem. | 21 |
+| `gameplay_crawl_flowgraphBridge.onCrawlPathnodeReached(eventData)` | Hook called when a path node is reached: empty body. *(internal)* *(hook)* | 312 |
+| `gameplay_crawl_flowgraphBridge.onCrawlResultsShown(eventData)` | Hook called when the results are shown: empty body. *(internal)* *(hook)* | 309 |
+| `gameplay_crawl_flowgraphBridge.onCrawlStarted()` | Hook called when a crawl starts: empty body. *(internal)* *(hook)* | 306 |
+| `gameplay_crawl_flowgraphBridge.resetCrawl()` | Resets the active crawler's data and teleports its vehicle to the trail's starting position (spawn.safeTeleport). | 121 |
+| `gameplay_crawl_flowgraphBridge.setRecoveryCheckpoint(checkpoint)` | Sets the active crawler's recovery point. | 297 |
+| `gameplay_crawl_flowgraphBridge.setupCrawl(vehicleId, trail)` | Prepares a crawl: stops any crawl in progress, then calls gameplay_crawl_general.setupCrawl(trail, veh, true) (zone, path, start, prefabs, teleport to the start). | 36 |
+| `gameplay_crawl_flowgraphBridge.startCrawl(vehicleId, trail)` | Starts the prepared crawl (gameplay_crawl_general.startCrawlFlowgraph) or resumes the timer of a crawl that is already ready. | 66 |
+| `gameplay_crawl_flowgraphBridge.stopCrawl()` | Stops the active crawl (gameplay_crawl_utils.stopCrawl(true)). | 112 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_crawl_flowgraphBridge.applyPenalty(penaltyType)`
 
-Applique une pénalité au crawler actif avec les points de gameplay_crawl_utils.infractionPoints[penaltyType]. Sans effet si aucun crawler actif ou si le type est inconnu.
+Applies a penalty to the active crawler with the points from gameplay_crawl_utils.infractionPoints[penaltyType]. No effect if there is no active crawler or if the type is unknown.
 
-- `penaltyType` (*string*) : Un des types de getPenaltyTypes().
+- `penaltyType` (*string*) : One of the types from getPenaltyTypes().
 
 #### `gameplay_crawl_flowgraphBridge.getActiveCrawlerId()`
 
-Retourne l'id du premier crawler dont l'état est actif.
+Returns the id of the first crawler whose state is active.
 
-- **renvoie** : integer|nil Id du véhicule.
+- **returns**: integer|nil Vehicle id.
 
 #### `gameplay_crawl_flowgraphBridge.getAllStartingPositions()`
 
-Liste toutes les positions de départ (saveSystem).
+Lists all starting positions (saveSystem).
 
-- **renvoie** : table Positions de départ.
+- **returns**: table Start positions.
 
 #### `gameplay_crawl_flowgraphBridge.getAllTrails()`
 
-Liste tous les parcours (saveSystem).
+Lists all trails (saveSystem).
 
-- **renvoie** : table Parcours.
+- **returns**: table Trails.
 
 #### `gameplay_crawl_flowgraphBridge.getCrawlEndData()`
 
-Résumé du crawl du crawler actif.
+Summary of the active crawler's crawl.
 
-- **renvoie** : table|nil {time, points, completed, pathnodesCompleted, pathnodeTimings, disqualified, recoveries} ; nil si aucun crawl actif.
+- **returns**: table|nil {time, points, completed, pathnodesCompleted, pathnodeTimings, disqualified, recoveries}; nil if no active crawl.
 
 #### `gameplay_crawl_flowgraphBridge.getCrawlRuntimeData()`
 
-État en cours du crawl actif.
+Current state of the active crawl.
 
-- **renvoie** : table|nil {currentTime, currentPathnodeIndex, points, isCompleted, disqualified, crawlerPosition, crawlerDirection, vehicleId} ; nil si aucun crawl actif.
+- **returns**: table|nil {currentTime, currentPathnodeIndex, points, isCompleted, disqualified, crawlerPosition, crawlerDirection, vehicleId}; nil if no active crawl.
 
 #### `gameplay_crawl_flowgraphBridge.getDynamicObjectsFromPrefab(prefabId, dynamicName)`
 
-Délègue à gameplay_crawl_utils.getDynamicObjectsFromPrefab.
+Delegates to gameplay_crawl_utils.getDynamicObjectsFromPrefab.
 
-- `prefabId` (*any*) : Id du prefab.
-- `dynamicName` (*string*) : Nom dynamique recherché.
-- **renvoie** : table Objets trouvés (déduit du code).
+- `prefabId` (*any*) : Prefab id.
+- `dynamicName` (*string*) : Dynamic name searched.
+- **returns**: table Objects found (inferred from code).
 
 #### `gameplay_crawl_flowgraphBridge.getLastRecoveryCheckpoint()`
 
-Dernier point de récupération du crawler actif.
+Last recovery point of the active crawler.
 
-- **renvoie** : table|nil Point de récupération (déduit du code) ; nil si aucun crawler actif.
+- **returns**: table|nil Recovery point (inferred from code); nil if no active crawler.
 
 #### `gameplay_crawl_flowgraphBridge.getLastRecoveryCheckpointIndex()`
 
-Indice du dernier point de récupération du crawler actif.
+Index of the last recovery point of the active crawler.
 
-- **renvoie** : integer Indice, 0 si aucun crawler actif.
+- **returns**: integer Index, 0 if no active crawler.
 
 #### `gameplay_crawl_flowgraphBridge.getPenaltyTypes()`
 
-Liste des types de pénalité.
+List of penalty types.
 
-- **renvoie** : string[] Noms des pénalités.
+- **returns**: string[] Penalty names.
 
 #### `gameplay_crawl_flowgraphBridge.getPlayerTrailStats(trailId)`
 
-Statistiques du joueur sur un parcours (saveSystem).
+Player statistics on a trail (saveSystem).
 
-- `trailId` (*string*) : Id du parcours.
-- **renvoie** : table|nil Statistiques.
+- `trailId` (*string*) : Trail id.
+- **returns**: table|nil Statistics.
 
 #### `gameplay_crawl_flowgraphBridge.getTrailInfo(trailId)`
 
-Métadonnées d'un parcours (celui indiqué, sinon le parcours actif).
+Metadata of a trail (the one given, otherwise the active trail).
 
-- `trailId` (*string|nil*) : Id du parcours.
-- **renvoie** : table|nil {name, description, pathId, boundaryId, startingPositionId, pathReversed, rules, prefabs, metadata}.
+- `trailId` (*string|nil*) : Trail id.
+- **returns**: table|nil {name, description, pathId, boundaryId, startingPositionId, pathReversed, rules, prefabs, metadata}.
 
 #### `gameplay_crawl_flowgraphBridge.isCrawlActive()`
 
-Indique si un parcours est actif dans gameplay_crawl_general.
+Indicates whether a trail is active in gameplay_crawl_general.
 
-- **renvoie** : boolean true si activeTrail existe.
+- **returns**: boolean true if activeTrail exists.
 
 #### `gameplay_crawl_flowgraphBridge.loadCrawlTrail(trailId)`
 
-Récupère un parcours par id depuis saveSystem.
+Gets a trail by id from saveSystem.
 
-- `trailId` (*string*) : Id (chemin de fichier) du parcours.
-- **renvoie** : table|nil Le parcours, ou nil si absent.
+- `trailId` (*string*) : Id (file path) of the trail.
+- **returns**: table|nil The trail, or nil if absent.
 
 #### `gameplay_crawl_flowgraphBridge.onCrawlPathnodeReached(eventData)`
 
-Hook appelé quand un noeud du chemin est atteint : corps vide.
+Hook called when a path node is reached: empty body.
 
-- `eventData` (*table*) : Données de l'évènement.
+- `eventData` (*table*) : Event data.
 
 #### `gameplay_crawl_flowgraphBridge.onCrawlResultsShown(eventData)`
 
-Hook appelé quand les résultats sont affichés : corps vide.
+Hook called when the results are shown: empty body.
 
-- `eventData` (*table*) : Données de l'évènement.
+- `eventData` (*table*) : Event data.
 
 #### `gameplay_crawl_flowgraphBridge.resetCrawl()`
 
-Réinitialise les données du crawler actif et téléporte son véhicule à la position de départ du parcours (spawn.safeTeleport).
+Resets the active crawler's data and teleports its vehicle to the trail's starting position (spawn.safeTeleport).
 
-- **renvoie** : boolean true si réinitialisé et téléporté.
+- **returns**: boolean true if reset and teleported.
 
 #### `gameplay_crawl_flowgraphBridge.setRecoveryCheckpoint(checkpoint)`
 
-Définit le point de récupération du crawler actif.
+Sets the active crawler's recovery point.
 
-- `checkpoint` (*any*) : Point de passage (déduit du code).
-- **renvoie** : boolean false si aucun crawler actif, sinon le résultat de utils.setRecoveryCheckpoint.
+- `checkpoint` (*any*) : Waypoint (inferred from code).
+- **returns**: boolean false if no active crawler, otherwise the result of utils.setRecoveryCheckpoint.
 
 #### `gameplay_crawl_flowgraphBridge.setupCrawl(vehicleId, trail)`
 
-Prépare un crawl : arrête l'éventuel crawl en cours, puis appelle gameplay_crawl_general.setupCrawl(trail, veh, true) (zone, chemin, départ, prefabs, téléportation au départ).
+Prepares a crawl: stops any crawl in progress, then calls gameplay_crawl_general.setupCrawl(trail, veh, true) (zone, path, start, prefabs, teleport to the start).
 
-- `vehicleId` (*integer|nil*) : Id du véhicule ; véhicule du joueur 0 si nil.
-- `trail` (*table*) : Parcours à préparer.
-- **renvoie** : boolean true si la préparation a réussi.
+- `vehicleId` (*integer|nil*) : Vehicle id; player 0's vehicle if nil.
+- `trail` (*table*) : Trail to prepare.
+- **returns**: boolean true if the preparation succeeded.
 
 #### `gameplay_crawl_flowgraphBridge.startCrawl(vehicleId, trail)`
 
-Démarre le crawl préparé (gameplay_crawl_general.startCrawlFlowgraph) ou reprend le chronomètre d'un crawl déjà prêt.
+Starts the prepared crawl (gameplay_crawl_general.startCrawlFlowgraph) or resumes the timer of a crawl that is already ready.
 
-- `vehicleId` (*integer|nil*) : Id du véhicule.
-- `trail` (*table|nil*) : Parcours ; sinon le parcours actif de general.
-- **renvoie** : boolean true si le crawl est démarré.
+- `vehicleId` (*integer|nil*) : Vehicle id.
+- `trail` (*table|nil*) : Trail; otherwise the active trail of general.
+- **returns**: boolean true if the crawl is started.
 
 #### `gameplay_crawl_flowgraphBridge.stopCrawl()`
 
-Arrête le crawl actif (gameplay_crawl_utils.stopCrawl(true)).
+Stops the active crawl (gameplay_crawl_utils.stopCrawl(true)).
 
-- **renvoie** : boolean false s'il n'y avait pas de parcours actif.
+- **returns**: boolean false if there was no active trail.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : gameplay_crawl_saveSystem, general, utils, boundary, display. |
+| `dependencies` | table<integer, string> | Extensions loaded before: gameplay_crawl_saveSystem, general, utils, boundary, display. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicle`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/crawl/flowgraphBridge.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/crawl/flowgraphBridge.lua`.*

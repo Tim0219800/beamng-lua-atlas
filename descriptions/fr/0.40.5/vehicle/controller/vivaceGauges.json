@@ -1,0 +1,21 @@
+{
+  "path": "lua/vehicle/controller/vivaceGauges.lua",
+  "module": "Contrôleur auxiliaire OBSOLÈTE (remplacé par le contrôleur 'genericGauges') qui alimente l'écran numérique du tableau de bord de la Vivace : il crée une texture HTML (1024x256) et lui envoie périodiquement des valeurs d'electrics (clignotants, voyants, régime, vitesse, ESC/TCS, puissance moyenne des moteurs électriques). Chargé via le jbeam ; ne pas utiliser pour de nouveaux véhicules.",
+  "usage": "-- jbeam : controller \"vivaceGauges\" avec materialName et htmlPath ; setParameters({modeName=\"ECO\", modeColor=\"#00ff00\"}) change le mode affiché",
+  "notes": [
+    "Champs jbeam lus : materialName (nom du matériau de l'écran, obligatoire), htmlPath (page HTML, obligatoire) ; tout le jbeamData est fusionné avec {unit = réglage uiUnitLength ou 'metric'} puis envoyé à la page par l'appel JS 'setup'.",
+    "init écrit toujours une erreur de log disant que le contrôleur est obsolète. Sans materialName ou htmlPath, M.updateGFX est remplacé par nop.",
+    "Données envoyées (appel JS 'updateData') : temp (température ambiante en °C), electrics.{signal_L, signal_R, lights, highbeam, fog (toujours 0), lowpressure, lowfuel, parkingbrake, checkengine, hazard, oil, cruiseControlActive, gear, rpmTacho, fuel, watertemp, engineRunning, wheelspeed, esc, escActive, tcs, tcsActive, pwr}. pwr = moyenne des (throttle - regenThrottle) des périphériques electricMotor, forcée à 0 si wheelspeed <= 0,5 m/s.",
+    "Mise à jour seulement si un joueur est assis et si obj:getUpdateUIflag() est vrai ; la fréquence de rafraîchissement de la texture est de 15 FPS.",
+    "Anomalie : updateTimer est incrémenté et remis à 0 mais n'est jamais testé pour limiter la fréquence."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "'auxiliary' : type de contrôleur dans le système de contrôleurs."}
+  },
+  "functions": {
+    "init": {"desc": "Appelé à l'initialisation du contrôleur : crée la texture HTML, récupère les moteurs électriques du powertrain et envoie la configuration à la page ('setup').", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur (materialName, htmlPath, ...)."}}, "returns": [], "internal": true},
+    "reset": {"desc": "Appelé au reset du véhicule ; ne fait rien.", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Appelé chaque frame : envoie les valeurs du tableau de bord à la texture HTML quand l'UI doit être mise à jour. Vaut nop si la configuration est invalide.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true},
+    "setParameters": {"desc": "Change le mode affiché (appel JS 'updateMode' avec {txt, col}) si modeName et modeColor sont présents.", "params": {"parameters": {"type": "table", "desc": "Table avec modeName (texte) et modeColor (couleur, format utilisé par la page HTML)."}}, "returns": [], "internal": false}
+  }
+}

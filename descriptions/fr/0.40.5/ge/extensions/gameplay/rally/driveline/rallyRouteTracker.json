@@ -1,0 +1,131 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua",
+  "module": "Suivi de la position d'un véhicule le long d'une route statique de rallye. À chaque update, la position est projetée sur les segments de la route (fenêtre locale autour du segment précédent, puis recherche complète si la progression est incohérente), ce qui donne le segment, la distance restante jusqu'à l'arrivée (distToTarget) et l'écart latéral. Un corridor latéral détermine l'état 'onRoute' / 'offRoute' (avec hystérésis en ticks) ; hors route, le point de départ est mémorisé pour calculer une position de récupération (recovery) proche du point de sortie. Le module renvoie un constructeur : require(...)(path, options).",
+  "usage": "local tracker = require('/lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker')(route.path)\ntracker:update(vehPos)\nlocal st = tracker:getState()  -- st.state, st.distToTarget, st.lateralDist",
+  "notes": [
+    "path est une liste de points {pos, distToTarget} ordonnés du départ vers l'arrivée ; distToTarget décroît le long de la route.",
+    "Options par défaut : searchBehind 4, searchAhead 8 (segments), offRouteDistance 8 m (demi-largeur du corridor), onRouteDistance 7,9 m, transitionTicks 2, recoveryBackoffDistanceMeters 3 m, maxForwardJump 80 m, maxBackwardJump 20 m. L'option recoveryBackoffDistance est acceptée comme alias de recoveryBackoffDistanceMeters.",
+    "Une projection locale est refusée si la progression dépasse maxForwardJump/maxBackwardJump ; on essaie alors la projection complète, et si elle est refusée aussi la projection précédente est conservée ('held').",
+    "États : 'unknown' (initial), 'onRoute', 'offRoute'. Le passage d'un état à l'autre demande transitionTicks mises à jour consécutives ; l'écart doit être >= offRouteDistance pour quitter, <= onRouteDistance pour revenir.",
+    "setCorridorWidth borne la largeur à [0,1 ; 15] m.",
+    "Les champs debug* (debugLocalCandidate, debugFullCandidate, debugWindow) n'influencent pas le comportement."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Suiveur renvoyé par le constructeur du module.",
+      "functions": {
+        "init": {
+          "desc": "Mémorise la route, fusionne les options avec les valeurs par défaut et réinitialise l'état.",
+          "params": {
+            "path": {"type": "table[]", "desc": "Points de la route statique."},
+            "options": {"type": "table|nil", "desc": "Options remplaçant les défauts."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "reset": {
+          "desc": "Remet à zéro l'état de suivi. Si une position est donnée, fait immédiatement un update avec recherche complète et saut autorisé.",
+          "params": {"pos": {"type": "vec3|nil", "desc": "Position initiale."}},
+          "returns": [],
+          "internal": false
+        },
+        "setDebugCapture": {
+          "desc": "Active la capture de diagnostic (calcul d'une projection complète supplémentaire à chaque update).",
+          "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}},
+          "returns": [],
+          "internal": false
+        },
+        "setPath": {
+          "desc": "Remplace la route suivie et réinitialise l'état.",
+          "params": {"path": {"type": "table[]", "desc": "Nouveaux points."}},
+          "returns": [],
+          "internal": false
+        },
+        "setCorridorWidth": {
+          "desc": "Règle la demi-largeur du corridor (offRouteDistance, bornée à [0,1 ; 15] m) et le seuil de retour (onRouteDistance = offRouteDistance - 0,1).",
+          "params": {"width": {"type": "number", "desc": "Demi-largeur en mètres."}},
+          "returns": [],
+          "internal": false
+        },
+        "getCorridorWidth": {
+          "desc": "Demi-largeur actuelle du corridor.",
+          "params": {},
+          "returns": [{"type": "number", "desc": "Mètres."}],
+          "internal": false
+        },
+        "getOptions": {
+          "desc": "Table d'options en cours (partagée, pas une copie).",
+          "params": {},
+          "returns": [{"type": "table", "desc": "Options."}],
+          "internal": false
+        },
+        "project": {
+          "desc": "Projette une position sur la route sans modifier l'état : recherche complète si options.forceFullSearch, sinon locale autour du segment courant.",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position."},
+            "options": {"type": "table|nil", "desc": "{forceFullSearch = boolean}."}
+          },
+          "returns": [{"type": "table|nil", "desc": "{segmentIdx, xnorm, distSq, lateralDist, distToTarget, routePos}."}],
+          "internal": false
+        },
+        "_acceptProjection": {
+          "desc": "Accepte ou refuse une projection selon les sauts maximaux vers l'avant/arrière par rapport à la distance courante (toujours acceptée si allowJump ou premier calcul).",
+          "params": {
+            "projection": {"type": "table|nil", "desc": "Projection candidate."},
+            "allowJump": {"type": "boolean|nil", "desc": "true pour ignorer les limites."}
+          },
+          "returns": [{"type": "boolean", "desc": "true si acceptée."}],
+          "internal": true
+        },
+        "_updateRecoveryCandidate": {
+          "desc": "Mémorise le dernier point récupérable (distToTarget et position sur la route) et calcule recoveryDistToTarget = distToTarget + recul, plafonné au début de la route.",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position du véhicule."},
+            "projection": {"type": "table", "desc": "Projection courante."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "_snapshotDeparture": {
+          "desc": "Enregistre le point de sortie de route (distToTarget, routePos, vehiclePos, lateralDist, segmentIdx) au passage en 'offRoute' et fixe la distance de récupération.",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position du véhicule."},
+            "projection": {"type": "table", "desc": "Projection courante."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "_computeDebugWindow": {
+          "desc": "Diagnostic : renvoie la fenêtre de segments examinée par la projection locale ({firstIdx, lastIdx}) ou {fullSearch=true}.",
+          "params": {
+            "segmentIdx": {"type": "integer|nil", "desc": "Segment précédent."},
+            "forceFullSearch": {"type": "boolean|nil", "desc": "Recherche complète."}
+          },
+          "returns": [{"type": "table", "desc": "Fenêtre."}],
+          "internal": true
+        },
+        "update": {
+          "desc": "Met à jour le suivi avec la position du véhicule : projection (locale puis complète si besoin), mise à jour de segmentIdx, xnorm, distToTarget, distFromStart, routePos, lateralDist, puis de l'état onRoute/offRoute avec hystérésis. Renvoie la projection retenue (ou la dernière si la nouvelle est refusée).",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position du véhicule."},
+            "updateOptions": {"type": "table|nil", "desc": "{allowJump, forceFullSearch}."}
+          },
+          "returns": [{"type": "table|nil", "desc": "Projection, nil si pos est nil ou projection impossible."}],
+          "internal": false
+        },
+        "getRecoveryDistToTarget": {
+          "desc": "Distance restante jusqu'à l'arrivée où replacer le véhicule : point de départ de la sortie de route (si hors route) ou dernier point récupérable, plus un recul, plafonné au début de la route.",
+          "params": {"backoffDistance": {"type": "number|nil", "desc": "Recul en mètres (3 m par défaut)."}},
+          "returns": [{"type": "number|nil", "desc": "distToTarget de récupération."}],
+          "internal": false
+        },
+        "getState": {
+          "desc": "Instantané de l'état du suiveur : state, segmentIdx, xnorm, distToTarget, distFromStart, routePos, lateralDist, offRouteDistance, onRouteDistance, lastRecoverable*, recoveryDistToTarget, departure, projectionSource ('local', 'full', 'held'), localCandidate, fullCandidate, window, searchBehind, searchAhead.",
+          "params": {},
+          "returns": [{"type": "table", "desc": "État."}],
+          "internal": false
+        }
+      }
+    }
+  }
+}

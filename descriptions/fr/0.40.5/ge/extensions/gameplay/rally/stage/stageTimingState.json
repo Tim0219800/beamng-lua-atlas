@@ -1,0 +1,63 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/stage/stageTimingState.lua",
+  "module": "Machine d'état du chronomètre d'une spéciale de rallye : temps écoulé, activation, fin, pas de temps de la frame et temps intermédiaires (splits). Utilisé par rallyManager (getStageTimingState). Le module renvoie un constructeur.",
+  "notes": [
+    "Statuts possibles : 'idle', 'active', 'complete'.",
+    "Une fois complete, setActive ne réactive plus le chrono ; seul reset le remet à zéro.",
+    "addTime ignore les valeurs <= 0 et renvoie false si le chrono n'est pas actif."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet d'état de chronométrage.",
+      "functions": {
+        "init": {"desc": "Appelle reset.", "internal": true},
+        "reset": {"desc": "Remet tout à zéro : statut idle, inactif, non terminé, temps 0, aucun split."},
+        "setActive": {
+          "desc": "Active ou met en pause le chrono (statut 'active' / 'idle'). Sans effet si le chrono est terminé (il reste inactif).",
+          "params": {"active": {"type": "boolean", "desc": "true pour démarrer/reprendre (seule la valeur true stricte compte)"}}
+        },
+        "advance": {
+          "desc": "Fait avancer le chrono de dt s'il est actif et non terminé, en mémorisant le début et la durée de la frame ; sinon frameDt vaut 0.",
+          "params": {"dt": {"type": "number|nil", "desc": "Pas de temps en secondes (0 si nil)"}}
+        },
+        "addTime": {
+          "desc": "Ajoute des secondes au temps écoulé (pénalité, par exemple de récupération).",
+          "params": {"seconds": {"type": "number", "desc": "Secondes à ajouter, > 0"}},
+          "returns": [{"type": "boolean", "desc": "true si le temps a été ajouté"}]
+        },
+        "completeAt": {
+          "desc": "Termine le chrono : statut 'complete', fige finishTime et elapsedTime.",
+          "params": {"time": {"type": "number|nil", "desc": "Temps de fin ; temps écoulé actuel si nil"}}
+        },
+        "recordSplit": {
+          "desc": "Enregistre un temps intermédiaire pour un point de chemin, si splitData.isSplitTiming. Complète splitData.time et splitData.source si absents.",
+          "params": {
+            "splitData": {"type": "table", "desc": "{isSplitTiming, pathnodeId, pathnodeName, pathnodeType, splitLabel}"},
+            "time": {"type": "number|nil", "desc": "Temps du split (temps courant si nil)"},
+            "source": {"type": "string|nil", "desc": "Origine du temps ('tracker' par défaut)"}
+          },
+          "returns": [{"type": "table|nil", "desc": "Entrée enregistrée, nil si splitData invalide"}]
+        },
+        "markSplitMissing": {
+          "desc": "Marque un split comme manquant (sans temps) avec une raison ; l'entrée remplace une éventuelle entrée existante.",
+          "params": {
+            "splitData": {"type": "table", "desc": "Même structure que recordSplit"},
+            "reason": {"type": "string|nil", "desc": "Raison (par défaut splitData.missingReason ou 'missing')"}
+          },
+          "returns": [{"type": "table|nil", "desc": "Entrée enregistrée"}]
+        },
+        "getSplitTimes": {"desc": "Table des splits indexée par pathnodeId.", "returns": [{"type": "table", "desc": "splitTimes"}]},
+        "getSplitOrder": {"desc": "Liste des pathnodeId dans l'ordre d'enregistrement.", "returns": [{"type": "table", "desc": "splitOrder"}]},
+        "isActive": {"desc": "Vrai si le chrono tourne (actif et non terminé).", "returns": [{"type": "boolean", "desc": ""}]},
+        "isComplete": {"desc": "Vrai si le chrono est terminé.", "returns": [{"type": "boolean", "desc": ""}]},
+        "getTime": {"desc": "Temps de fin s'il existe, sinon temps écoulé (secondes).", "returns": [{"type": "number", "desc": "secondes"}]},
+        "getFrameStartTime": {"desc": "Temps au début de la dernière frame traitée par advance.", "returns": [{"type": "number", "desc": "secondes"}]},
+        "getFrameDt": {"desc": "Durée de la dernière frame traitée par advance (0 si inactif).", "returns": [{"type": "number", "desc": "secondes"}]},
+        "getState": {
+          "desc": "Instantané de l'état : status, active, complete, elapsedTime, finishTime, frameStartTime, frameDt, splitTimes, splitOrder (les tables de splits sont partagées, pas copiées).",
+          "returns": [{"type": "table", "desc": "État"}]
+        }
+      }
+    }
+  }
+}

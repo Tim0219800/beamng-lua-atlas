@@ -2,52 +2,52 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/axleLift.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur auxiliaire qui lève ou abaisse des essieux (typiquement les essieux relevables d'un camion) pour gagner de la garde au sol. Il écrit une position cible dans deux valeurs `electrics.values` (avant et arrière) que lit le jbeam. Trois modes : auto (lève sauf si vitesse trop haute, vitesse trop basse, frein à main serré ou accélération latérale trop forte), manual (toujours levé) et off (toujours abaissé).
---- Accès : contrôleur `axleLift` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Auxiliary controller that raises or lowers axles (typically a truck's liftable axles) to gain ground clearance. It writes a target position into two `electrics.values` (front and rear) that the jbeam reads. Three modes: auto (raises unless speed is too high, speed is too low, the parking brake is applied or lateral acceleration is too strong), manual (always raised) and off (always lowered).
+--- Access: controller `axleLift` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_axleLift
 ---@field type string "auxiliary".
 local controller_axleLift = {}
 
---- Renvoie le mode courant sous la clé `<nom>Mode`.
----Source : lua/vehicle/controller/axleLift.lua:148
----@return table<string, string>  Table d'état.
+--- Returns the current mode under the key `<name>Mode`.
+---Source: lua/vehicle/controller/axleLift.lua:148
+---@return table<string, string>  State table.
 function controller_axleLift.getState() end
 
---- Lit les paramètres jbeam, met les electrics à 0, passe en mode auto et ajoute l'entrée du menu radial.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/axleLift.lua:90
----@param jbeamData table Données jbeam du contrôleur.
+--- Reads the jbeam parameters, sets the electrics to 0, switches to auto mode and adds the radial menu entry.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/axleLift.lua:90
+---@param jbeamData table Controller jbeam data.
 function controller_axleLift.init(jbeamData) end
 
---- Remet les deux valeurs electrics d'essieu à 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/axleLift.lua:85
+--- Resets the two axle electrics values to 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/axleLift.lua:85
 function controller_axleLift.reset() end
 
---- Change le mode ("auto", "manual" ou "off"). Un mode inconnu est ignoré. Affiche un message UI sauf si silent.
----Source : lua/vehicle/controller/axleLift.lua:60
----@param mode string "auto", "manual" ou "off".
----@param silent boolean|nil true pour ne pas afficher de message.
+--- Changes the mode ("auto", "manual" or "off"). An unknown mode is ignored. Displays a UI message unless silent.
+---Source: lua/vehicle/controller/axleLift.lua:60
+---@param mode string "auto", "manual" or "off".
+---@param silent boolean|nil true to not display a message.
 function controller_axleLift.setMode(mode, silent) end
 
---- Modifie à chaud les seuils et le mode ; seuls les champs présents sont appliqués.
----Source : lua/vehicle/controller/axleLift.lua:133
----@param parameters table Champs facultatifs : mode, accelerationThreshold, velocityThresholdDisable, velocityThresholdEnable.
+--- Modifies the thresholds and the mode on the fly; only the fields present are applied.
+---Source: lua/vehicle/controller/axleLift.lua:133
+---@param parameters table Optional fields: mode, accelerationThreshold, velocityThresholdDisable, velocityThresholdEnable.
 function controller_axleLift.setParameters(parameters) end
 
---- Restaure le mode depuis une table d'état (silencieusement) si la valeur est valide.
----Source : lua/vehicle/controller/axleLift.lua:153
----@param data table|nil Table contenant la clé `<nom>Mode`.
+--- Restores the mode from a state table (silently) if the value is valid.
+---Source: lua/vehicle/controller/axleLift.lua:153
+---@param data table|nil Table containing the key `<name>Mode`.
 function controller_axleLift.setState(data) end
 
---- Passe au mode suivant dans l'ordre auto, manual, off, auto.
----Source : lua/vehicle/controller/axleLift.lua:81
+--- Switches to the next mode in the order auto, manual, off, auto.
+---Source: lua/vehicle/controller/axleLift.lua:81
 function controller_axleLift.toggleMode() end
 
---- Chaque frame : choisit la position levée ou abaissée selon le mode (en auto : vitesse lissée, vitesse de roue, frein à main, accélération latérale) et l'écrit dans les deux electrics d'essieu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/axleLift.lua:34
----@param dt number Pas de temps en secondes.
+--- Every frame: chooses the raised or lowered position depending on the mode (in auto: smoothed speed, wheel speed, parking brake, lateral acceleration) and writes it to the two axle electrics.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/axleLift.lua:34
+---@param dt number Time step in seconds.
 function controller_axleLift.updateGFX(dt) end
 
 return controller_axleLift

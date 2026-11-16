@@ -1,388 +1,875 @@
 {
   "path": "lua/ge/extensions/core/vehicle/partmgmt.lua",
-  "module": "Extension GE `core_vehicle_partmgmt` : gestion des pièces et de la configuration d'un véhicule en cours de jeu (menu de configuration, tuning). Lit/modifie la config de `core_vehicle_manager.getVehicleData(id).config` (partsTree, vars, paints) et réapparaît le véhicule (`respawn`) pour appliquer les changements, sauvegarde/charge/supprime des configs .pc locales (format 2, avec fichier info_<nom>.json et miniature .jpg), enregistre des collections de véhicules (format 4), envoie les données du configurateur à l'UI (VehicleConfigChange) et gère la mise en surbrillance des pièces (rendu « rayons X » avec fondu). Le véhicule visé est celui de core_vehicle_configTarget (sinon le véhicule du joueur 0) ; la plupart des fonctions acceptent un id explicite.",
-  "usage": "-- Changer des variables de tuning du véhicule du joueur sans respawn complet\ncore_vehicle_partmgmt.setConfigVars({['$camber_F'] = 0.1}, true)\n-- Sauvegarder une config locale\nlocal res = core_vehicle_partmgmt.saveNewLocalConfig('Ma config', {generateThumbnail = true, savePaints = true}, nil)\nprint(res.success, res.fileName)\n-- Lire la config d'un véhicule\nlocal cfg = core_vehicle_partmgmt.getConfigOfVehicle(be:getPlayerVehicleID(0))\ndump(cfg.partsTree.chosenPartName)",
+  "module": "GE extension `core_vehicle_partmgmt`: management of parts and configuration of a vehicle during gameplay (configuration menu, tuning). Reads/modifies the config of `core_vehicle_manager.getVehicleData(id).config` (partsTree, vars, paints) and respawns the vehicle (`respawn`) to apply changes, saves/loads/deletes local .pc configs (format 2, with an info_<name>.json file and a .jpg thumbnail), saves vehicle collections (format 4), sends the configurator data to the UI (VehicleConfigChange) and handles part highlighting (\"X-ray\" rendering with fade). The targeted vehicle is that of core_vehicle_configTarget (otherwise player 0's vehicle); most functions accept an explicit id.",
+  "usage": "-- Change the player vehicle's tuning variables without a full respawn\ncore_vehicle_partmgmt.setConfigVars({['$camber_F'] = 0.1}, true)\n-- Save a local config\nlocal res = core_vehicle_partmgmt.saveNewLocalConfig('My config', {generateThumbnail = true, savePaints = true}, nil)\nprint(res.success, res.fileName)\n-- Read a vehicle's config\nlocal cfg = core_vehicle_partmgmt.getConfigOfVehicle(be:getPlayerVehicleID(0))\ndump(cfg.partsTree.chosenPartName)",
   "notes": [
-    "Réglages de sauvegarde (saveSettings, table) : generateThumbnail (défaut true), saveLicenseplate (false), savePaints (true), overridePaints (false : écrit les peintures comme peintures explicites dans le fichier info), useThumbnailFile + thumbnailFile (miniature fournie), thumbnailCaptureId (id d'une capture temporaire de core_vehicle_thumbnail). Un booléen à la place de la table est accepté (ancien argument withThumbnail). Les métadonnées (saveMetadata) sont validées par ge/extensions/vehicles/saveConfigUtils.",
-    "Les fonctions saveNewLocalConfig / saveExistingLocalConfig renvoient une table {success, reason?, fileName?, displayName?, configSaved?, thumbnailCopied?, metadataError?}. Raisons : walking, noVehicle, invalidFilename, invalidMetadata, saveFailed, thumbnailCopyFailed, configNotFound, notPlayerConfig.",
-    "Les chemins de config sont relatifs au dossier du modèle (vehicleDirectory, ex. 'vehicles/pickup/'). Après sauvegarde, core_vehicles.clearCache() et ui_vehicleSelector_general.clearCache() sont appelés.",
-    "setConfig / setConfigOfVehicle fusionnent (tableMerge) les données dans la config du véhicule. Avec respawn (true par défaut quand nil), le véhicule est recréé via veh:respawn(serialize(config)) ; avec respawn=false, seules les peintures sont mises à jour en direct (liveUpdateVehicleColors) et le champ partConfig est réécrit. La première modification déclenche le succès VEHICLE_MODIFIED hors carrière.",
-    "setPartsConfig est obsolète : il se contente de logger une erreur et de demander d'utiliser setPartsTreeConfig. resetPartsToLoadedConfig l'appelle pourtant encore, donc ce bouton « Reset » ne change rien (incohérence du jeu).",
-    "BUG probable : dans buildConfigFromString, la fonction interne preprocessPartConfig ne renvoie rien à la fin du cas format 4 (elle n'a de return que pour l'échec d'un fichier lié et pour le cas non format 4) ; une config de format 4 passée directement retombe donc sur la config par défaut du modèle.",
-    "saveVehicle (collections) lit une variable `partsCondition` jamais définie dans sa portée : data.partsCondition vaut toujours nil.",
-    "M.savePartConfigFileStage2 pointe sur savePartConfigFileStage2_Format2 (signature partsCondition, filename, saveSettings, saveMetadata) et non sur la fonction du même nom (format 4) définie plus haut, qui n'est pas exportée.",
-    "Pas de fonction publique pour appeler isOfficialConfig/isPlayerConfig (locales) : ces valeurs sont retournées par getConfigList (champs official, player).",
-    "Fonctions de surbrillance : si inVehID est nil, c'est le véhicule visé par core_vehicle_configTarget (ou le joueur 0) qui est utilisé. 'highlight' = œil cliqué dans l'UI (partsHighlighted), 'select' = survol temporaire d'une pièce."
+    "Save settings (saveSettings, table): generateThumbnail (default true), saveLicenseplate (false), savePaints (true), overridePaints (false: writes the paints as explicit paints in the info file), useThumbnailFile + thumbnailFile (provided thumbnail), thumbnailCaptureId (id of a temporary core_vehicle_thumbnail capture). A boolean in place of the table is accepted (legacy withThumbnail argument). The metadata (saveMetadata) is validated by ge/extensions/vehicles/saveConfigUtils.",
+    "The functions saveNewLocalConfig / saveExistingLocalConfig return a table {success, reason?, fileName?, displayName?, configSaved?, thumbnailCopied?, metadataError?}. Reasons: walking, noVehicle, invalidFilename, invalidMetadata, saveFailed, thumbnailCopyFailed, configNotFound, notPlayerConfig.",
+    "Config paths are relative to the model folder (vehicleDirectory, e.g. 'vehicles/pickup/'). After saving, core_vehicles.clearCache() and ui_vehicleSelector_general.clearCache() are called.",
+    "setConfig / setConfigOfVehicle merge (tableMerge) the data into the vehicle's config. With respawn (true by default when nil), the vehicle is recreated via veh:respawn(serialize(config)); with respawn=false, only the paints are updated live (liveUpdateVehicleColors) and the partConfig field is rewritten. The first modification triggers the VEHICLE_MODIFIED achievement outside career.",
+    "setPartsConfig is obsolete: it just logs an error and asks to use setPartsTreeConfig. resetPartsToLoadedConfig still calls it, however, so this \"Reset\" button does nothing (game inconsistency).",
+    "Probable BUG: in buildConfigFromString, the inner function preprocessPartConfig returns nothing at the end of the format 4 case (it only has a return for a linked file failure and for the non-format 4 case); a format 4 config passed directly therefore falls back to the model's default config.",
+    "saveVehicle (collections) reads a variable `partsCondition` that is never defined in its scope: data.partsCondition is always nil.",
+    "M.savePartConfigFileStage2 points to savePartConfigFileStage2_Format2 (signature partsCondition, filename, saveSettings, saveMetadata) and not to the function of the same name (format 4) defined earlier, which is not exported.",
+    "No public function to call isOfficialConfig/isPlayerConfig (local): these values are returned by getConfigList (fields official, player).",
+    "Highlight functions: if inVehID is nil, the vehicle targeted by core_vehicle_configTarget (or player 0) is used. 'highlight' = eye clicked in the UI (partsHighlighted), 'select' = temporary hover of a part."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "core_locales, core_vehicle_configTarget, core_vehicle_thumbnail, core_vehicle_partFocusCamera, gameplay_achievement."},
-    "xrayFadeRate": {"type": "number", "desc": "Vitesse du fondu des meshes pour la surbrillance rayons X, en alpha par seconde (5 par défaut). Modifiable depuis la console : core_vehicle_partmgmt.xrayFadeRate = 5."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "core_locales, core_vehicle_configTarget, core_vehicle_thumbnail, core_vehicle_partFocusCamera, gameplay_achievement."
+    },
+    "xrayFadeRate": {
+      "type": "number",
+      "desc": "Mesh fade speed for the X-ray highlight, in alpha per second (5 by default). Editable from the console: core_vehicle_partmgmt.xrayFadeRate = 5."
+    }
   },
   "functions": {
     "getConfigVehicleId": {
-      "desc": "Résout l'id du véhicule à configurer (alias de core_vehicle_configTarget.resolveVehicleId).",
-      "params": {"explicitVehicleId": {"type": "integer|nil", "desc": "id demandé ; nil = cible de configuration, sinon joueur 0"}},
-      "returns": [{"type": "integer|nil", "desc": "id valide, nil sinon"}]
-    },
-    "getTranslation": {
-      "desc": "Traduit un nom d'UI : texte avec préfixe de traduction par défaut, ou table {txt, ctx} traduite avec contexte. Une autre table donne nil.",
+      "desc": "Resolves the id of the vehicle to configure (alias of core_vehicle_configTarget.resolveVehicleId).",
       "params": {
-        "name": {"type": "string|table", "desc": "clé de traduction ou {txt, ctx}"},
-        "prefix": {"type": "string|nil", "desc": "préfixe de repli, défaut 'ui.vehicleconfig.title.'"}
-      },
-      "returns": [{"type": "string|nil", "desc": "texte traduit"}]
-    },
-    "translateTuningData": {
-      "desc": "Copie les variables de tuning en traduisant title, description, category et subCategory.",
-      "params": {"tuningData": {"type": "table|nil", "desc": "vdata.variables"}},
-      "returns": [{"type": "table", "desc": "copie traduite"}]
-    },
-    "buildConfigFromString": {
-      "desc": "Construit la table de config d'un véhicule à partir d'une donnée de config : table de config, chaîne sérialisée commençant par '{', ou chemin de fichier .pc. Sans config valide, retombe sur default_pc du fichier info du modèle. Les fichiers de format 2 sont fusionnés dans le résultat, sinon le contenu devient `parts`. Appelée par core_vehicle_manager au spawn.",
-      "params": {
-        "vehicleDir": {"type": "string", "desc": "dossier du modèle (ex. 'vehicles/pickup/')"},
-        "configData": {"type": "table|string|nil", "desc": "config, chaîne sérialisée ou chemin .pc"},
-        "onlyReturnChosenConfig": {"type": "boolean|nil", "desc": "si true, renvoie (nil, false) plutôt que de se rabattre sur la config par défaut"}
+        "explicitVehicleId": {
+          "type": "integer|nil",
+          "desc": "requested id; nil = configuration target, otherwise player 0"
+        }
       },
       "returns": [
-        {"type": "table|nil", "desc": "config {partConfigFilename, parts|…, vars, paints…}"},
-        {"type": "boolean", "desc": "true si la config demandée a bien été utilisée (pas le repli par défaut)"}
+        {
+          "type": "integer|nil",
+          "desc": "valid id, nil otherwise"
+        }
+      ]
+    },
+    "getTranslation": {
+      "desc": "Translates a UI name: text with a default translation prefix, or a table {txt, ctx} translated with context. Any other table gives nil.",
+      "params": {
+        "name": {
+          "type": "string|table",
+          "desc": "translation key or {txt, ctx}"
+        },
+        "prefix": {
+          "type": "string|nil",
+          "desc": "fallback prefix, default 'ui.vehicleconfig.title.'"
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "translated text"
+        }
+      ]
+    },
+    "translateTuningData": {
+      "desc": "Copies the tuning variables while translating title, description, category and subCategory.",
+      "params": {
+        "tuningData": {
+          "type": "table|nil",
+          "desc": "vdata.variables"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "translated copy"
+        }
+      ]
+    },
+    "buildConfigFromString": {
+      "desc": "Builds a vehicle's config table from config data: config table, serialized string starting with '{', or .pc file path. Without a valid config, falls back to default_pc from the model's info file. Format 2 files are merged into the result, otherwise the content becomes `parts`. Called by core_vehicle_manager on spawn.",
+      "params": {
+        "vehicleDir": {
+          "type": "string",
+          "desc": "model folder (e.g. 'vehicles/pickup/')"
+        },
+        "configData": {
+          "type": "table|string|nil",
+          "desc": "config, serialized string or .pc path"
+        },
+        "onlyReturnChosenConfig": {
+          "type": "boolean|nil",
+          "desc": "if true, returns (nil, false) instead of falling back to the default config"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "config {partConfigFilename, parts|..., vars, paints...}"
+        },
+        {
+          "type": "boolean",
+          "desc": "true if the requested config was actually used (not the default fallback)"
+        }
       ]
     },
     "partsTreeToPartsMap": {
-      "desc": "Aplatit un arbre de pièces résolu en dictionnaire slotId -> nom de pièce choisie (format `parts` des .pc). Les slots de même id à des chemins différents sont enregistrés sous leur chemin complet.",
-      "params": {"partsTree": {"type": "table", "desc": "config.partsTree"}},
-      "returns": [{"type": "table<string, string>", "desc": "[slotId ou chemin] = chosenPartName"}]
+      "desc": "Flattens a resolved parts tree into a slotId -> chosen part name dictionary (`parts` format of .pc files). Slots with the same id at different paths are recorded under their full path.",
+      "params": {
+        "partsTree": {
+          "type": "table",
+          "desc": "config.partsTree"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, string>",
+          "desc": "[slotId or path] = chosenPartName"
+        }
+      ]
     },
     "compileVehicleCollection": {
-      "desc": "Transforme un arbre de véhicules attelés (core_vehicles.generateAttachedVehiclesTree) en liste de configs de véhicules : calcule les décalages relatifs ('default' : x,y,z,rx,ry,rz ; 'coupledNodes' : rotations seulement), numérote les parents et sauvegarde la config de chaque véhicule (ou un linkedPCFile si issu d'un .pc).",
-      "params": {"collectionTree": {"type": "table", "desc": "arbre de véhicules {vehId, offsetData, children}"}},
-      "returns": [{"type": "table[]", "desc": "liste de configs de véhicules (format 4)"}]
+      "desc": "Turns a tree of coupled vehicles (core_vehicles.generateAttachedVehiclesTree) into a list of vehicle configs: computes the relative offsets ('default': x,y,z,rx,ry,rz; 'coupledNodes': rotations only), numbers the parents and saves each vehicle's config (or a linkedPCFile if it comes from a .pc).",
+      "params": {
+        "collectionTree": {
+          "type": "table",
+          "desc": "vehicle tree {vehId, offsetData, children}"
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "list of vehicle configs (format 4)"
+        }
+      ]
     },
     "saveVehicleCollection": {
-      "desc": "Écrit une collection de véhicules au format 4 dans un fichier JSON et prévient l'UI (VehicleconfigSaved, message).",
+      "desc": "Writes a vehicle collection in format 4 to a JSON file and notifies the UI (VehicleconfigSaved, message).",
       "params": {
-        "collectionTree": {"type": "table", "desc": "arbre de véhicules"},
-        "filename": {"type": "string", "desc": "fichier .pc de sortie"}
+        "collectionTree": {
+          "type": "table",
+          "desc": "vehicle tree"
+        },
+        "filename": {
+          "type": "string",
+          "desc": "output .pc file"
+        }
       },
       "returns": []
     },
     "savePartConfigFileStage2": {
-      "desc": "Sauvegarde la config du véhicule visé au format 2 dans `filename` (+ fichier info_<nom>.json + peintures selon saveSettings), prévient l'UI et vide les caches de sélecteur. Voir les notes sur l'alias.",
+      "desc": "Saves the targeted vehicle's config in format 2 to `filename` (+ info_<name>.json file + paints according to saveSettings), notifies the UI and empties the selector caches. See the notes on the alias.",
       "params": {
-        "partsCondition": {"type": "any", "desc": "conditions de pièces (nil dans les appels actuels)"},
-        "filename": {"type": "string", "desc": "chemin du .pc (ex. 'vehicles/pickup/ma_config.pc')"},
-        "saveSettings": {"type": "table|boolean|nil", "desc": "voir notes"},
-        "saveMetadata": {"type": "table|nil", "desc": "métadonnées à écrire dans le fichier info"}
+        "partsCondition": {
+          "type": "any",
+          "desc": "parts conditions (nil in current calls)"
+        },
+        "filename": {
+          "type": "string",
+          "desc": ".pc path (e.g. 'vehicles/pickup/my_config.pc')"
+        },
+        "saveSettings": {
+          "type": "table|boolean|nil",
+          "desc": "see notes"
+        },
+        "saveMetadata": {
+          "type": "table|nil",
+          "desc": "metadata to write in the info file"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si le .pc a été écrit"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the .pc was written"
+        }
+      ]
     },
     "save": {
-      "desc": "Sauvegarde la config du véhicule visé sous un chemin complet (alias de savePartConfigFile → format 2).",
+      "desc": "Saves the targeted vehicle's config under a full path (alias of savePartConfigFile -> format 2).",
       "params": {
-        "filename": {"type": "string", "desc": "chemin du .pc"},
-        "saveSettings": {"type": "table|boolean|nil", "desc": "voir notes"},
-        "saveMetadata": {"type": "table|nil", "desc": "métadonnées pour le fichier info"}
+        "filename": {
+          "type": "string",
+          "desc": ".pc path"
+        },
+        "saveSettings": {
+          "type": "table|boolean|nil",
+          "desc": "see notes"
+        },
+        "saveMetadata": {
+          "type": "table|nil",
+          "desc": "metadata for the info file"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si sauvegardé"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if saved"
+        }
+      ]
     },
     "saveLocal": {
-      "desc": "Sauvegarde la config sous <dossier du modèle>/<fn>.",
+      "desc": "Saves the config under <model folder>/<fn>.",
       "params": {
-        "fn": {"type": "string", "desc": "nom de fichier relatif, avec extension .pc"},
-        "saveSettings": {"type": "table|boolean|nil", "desc": "voir notes"},
-        "saveMetadata": {"type": "table|nil", "desc": "métadonnées"}
+        "fn": {
+          "type": "string",
+          "desc": "relative file name, with the .pc extension"
+        },
+        "saveSettings": {
+          "type": "table|boolean|nil",
+          "desc": "see notes"
+        },
+        "saveMetadata": {
+          "type": "table|nil",
+          "desc": "metadata"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si sauvegardé ; false sans véhicule"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if saved; false without a vehicle"
+        }
+      ]
     },
     "saveNewLocalConfig": {
-      "desc": "Sauvegarde la config sous un nouveau nom de fichier dérivé de configurationName (en minuscules, suffixe numérique si déjà pris), génère la miniature et débloque le succès VEHICLE_CONFIG_SAVED.",
+      "desc": "Saves the config under a new file name derived from configurationName (lowercase, numeric suffix if already taken), generates the thumbnail and unlocks the VEHICLE_CONFIG_SAVED achievement.",
       "params": {
-        "configurationName": {"type": "string", "desc": "nom affiché de la configuration"},
-        "saveSettings": {"type": "table|boolean|nil", "desc": "voir notes"},
-        "saveMetadata": {"type": "table|nil", "desc": "métadonnées"}
+        "configurationName": {
+          "type": "string",
+          "desc": "display name of the configuration"
+        },
+        "saveSettings": {
+          "type": "table|boolean|nil",
+          "desc": "see notes"
+        },
+        "saveMetadata": {
+          "type": "table|nil",
+          "desc": "metadata"
+        }
       },
-      "returns": [{"type": "table", "desc": "{success, reason?, fileName?, displayName?, configSaved?, thumbnailCopied?}"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, reason?, fileName?, displayName?, configSaved?, thumbnailCopied?}"
+        }
+      ]
     },
     "saveExistingLocalConfig": {
-      "desc": "Écrase une config existante du joueur (pas une config officielle).",
+      "desc": "Overwrites an existing player config (not an official config).",
       "params": {
-        "fileName": {"type": "string", "desc": "nom de fichier (avec ou sans .pc)"},
-        "configurationName": {"type": "string|nil", "desc": "nom affiché ; vide = nom existant"},
-        "saveSettings": {"type": "table|boolean|nil", "desc": "voir notes"},
-        "saveMetadata": {"type": "table|nil", "desc": "métadonnées"}
+        "fileName": {
+          "type": "string",
+          "desc": "file name (with or without .pc)"
+        },
+        "configurationName": {
+          "type": "string|nil",
+          "desc": "display name; empty = existing name"
+        },
+        "saveSettings": {
+          "type": "table|boolean|nil",
+          "desc": "see notes"
+        },
+        "saveMetadata": {
+          "type": "table|nil",
+          "desc": "metadata"
+        }
       },
-      "returns": [{"type": "table", "desc": "{success, reason?, …} (reasons possibles : configNotFound, notPlayerConfig, …)"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, reason?, ...} (possible reasons: configNotFound, notPlayerConfig, ...)"
+        }
+      ]
     },
     "getSaveAvailability": {
-      "desc": "Indique si une sauvegarde est possible (pas en marche à pied, véhicule présent).",
+      "desc": "Indicates whether saving is possible (not on foot, vehicle present).",
       "params": {},
-      "returns": [{"type": "table", "desc": "{canSave = boolean, reason = 'walking'|'noVehicle'|nil}"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{canSave = boolean, reason = 'walking'|'noVehicle'|nil}"
+        }
+      ]
     },
     "getSaveMetadataFields": {
-      "desc": "Champs de métadonnées éditables pour la sauvegarde (d'après saveConfigUtils) pour le modèle du véhicule visé.",
-      "params": {"targetConfigName": {"type": "string|nil", "desc": "config cible (basename)"}},
-      "returns": [{"type": "table", "desc": "champs ; {} si pas de véhicule"}]
+      "desc": "Editable metadata fields for saving (from saveConfigUtils) for the targeted vehicle's model.",
+      "params": {
+        "targetConfigName": {
+          "type": "string|nil",
+          "desc": "target config (basename)"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "fields; {} if no vehicle"
+        }
+      ]
     },
     "setCurrentConfigurationName": {
-      "desc": "Fixe le nom affiché (Configuration) dans la config du véhicule visé (sans sauvegarder).",
-      "params": {"configurationName": {"type": "string", "desc": "nom"}},
-      "returns": [{"type": "boolean", "desc": "false sans véhicule"}]
+      "desc": "Sets the display name (Configuration) in the targeted vehicle's config (without saving).",
+      "params": {
+        "configurationName": {
+          "type": "string",
+          "desc": "name"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false without a vehicle"
+        }
+      ]
     },
     "getCurrentLocalConfigName": {
-      "desc": "Nom de base (sans dossier ni .pc) de la config chargée dans le véhicule visé.",
+      "desc": "Base name (without folder or .pc) of the config loaded in the targeted vehicle.",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "nom de base"}]
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "base name"
+        }
+      ]
     },
     "getConfigList": {
-      "desc": "Liste les fichiers .pc du dossier du modèle du véhicule visé.",
+      "desc": "Lists the .pc files of the targeted vehicle's model folder.",
       "params": {},
-      "returns": [{"type": "table[]|nil", "desc": "entrées {fileName, name, displayName?, official, player, thumbnailPath?} ; nil sans véhicule"}]
+      "returns": [
+        {
+          "type": "table[]|nil",
+          "desc": "entries {fileName, name, displayName?, official, player, thumbnailPath?}; nil without a vehicle"
+        }
+      ]
     },
     "loadLocal": {
-      "desc": "Remplace le véhicule visé par la config donnée (core_vehicles.replaceVehicle avec {config = filename}).",
+      "desc": "Replaces the targeted vehicle with the given config (core_vehicles.replaceVehicle with {config = filename}).",
       "params": {
-        "filename": {"type": "string", "desc": "chemin ou nom de config .pc"},
-        "respawn": {"type": "boolean|nil", "desc": "non utilisé dans le code"}
+        "filename": {
+          "type": "string",
+          "desc": ".pc config path or name"
+        },
+        "respawn": {
+          "type": "boolean|nil",
+          "desc": "not used in the code"
+        }
       },
       "returns": []
     },
     "removeLocal": {
-      "desc": "Supprime <dossier>/<filename>.pc et sa miniature .jpg puis prévient l'UI (VehicleconfigRemoved).",
-      "params": {"filename": {"type": "string", "desc": "nom de config sans extension"}},
+      "desc": "Deletes <folder>/<filename>.pc and its .jpg thumbnail then notifies the UI (VehicleconfigRemoved).",
+      "params": {
+        "filename": {
+          "type": "string",
+          "desc": "config name without extension"
+        }
+      },
       "returns": []
     },
     "savedefault": {
-      "desc": "Sauvegarde la config du véhicule visé comme véhicule par défaut (settings/default.pc) et affiche un message.",
+      "desc": "Saves the targeted vehicle's config as the default vehicle (settings/default.pc) and displays a message.",
       "params": {},
       "returns": []
     },
     "saveLocalScreenshot": {
-      "desc": "Étape 1 d'une capture de miniature : passe en caméra libre, FOV 35, déclenche saveLocalScreenshot_stage1 côté UI.",
-      "params": {"fn": {"type": "string", "desc": "nom de fichier (non utilisé à cette étape)"}},
+      "desc": "Step 1 of a thumbnail capture: switches to free camera, FOV 35, triggers saveLocalScreenshot_stage1 on the UI side.",
+      "params": {
+        "fn": {
+          "type": "string",
+          "desc": "file name (not used at this step)"
+        }
+      },
       "returns": []
     },
     "saveLocalScreenshot_stage2": {
-      "desc": "Étape 2 : prend la capture jpg dans le dossier du modèle puis déclenche saveLocalScreenshot_stage3.",
-      "params": {"fn": {"type": "string", "desc": "nom de fichier de la capture"}},
-      "returns": [{"type": "boolean|nil", "desc": "false sans véhicule"}]
+      "desc": "Step 2: takes the jpg capture in the model folder then triggers saveLocalScreenshot_stage3.",
+      "params": {
+        "fn": {
+          "type": "string",
+          "desc": "capture file name"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "false without a vehicle"
+        }
+      ]
     },
     "sendDataToUI": {
-      "desc": "Envoie à l'UI (guihook brut VehicleConfigChange) toutes les données du configurateur : id, modèle, arbre de pièces choisi, variables de tuning traduites, valeurs par défaut du .pc, catalogue de partpacks, pièces en surbrillance, infos enrichies des pièces.",
-      "params": {"explicitVehicleId": {"type": "integer|nil", "desc": "véhicule ; nil = cible"}},
+      "desc": "Sends to the UI (raw guihook VehicleConfigChange) all the configurator data: id, model, chosen parts tree, translated tuning variables, .pc default values, partpacks catalog, highlighted parts, enriched part info.",
+      "params": {
+        "explicitVehicleId": {
+          "type": "integer|nil",
+          "desc": "vehicle; nil = target"
+        }
+      },
       "returns": []
     },
     "reset": {
-      "desc": "Réenvoie les données à l'UI (sendDataToUI).",
+      "desc": "Resends the data to the UI (sendDataToUI).",
       "params": {},
       "returns": []
     },
     "hasAvailablePart": {
-      "desc": "Indique si une pièce existe dans le contexte jbeam du véhicule visé.",
-      "params": {"partName": {"type": "string", "desc": "nom de pièce"}},
-      "returns": [{"type": "boolean|nil", "desc": "nil si partName est vide"}]
+      "desc": "Indicates whether a part exists in the targeted vehicle's jbeam context.",
+      "params": {
+        "partName": {
+          "type": "string",
+          "desc": "part name"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "nil if partName is empty"
+        }
+      ]
     },
     "setSkin": {
-      "desc": "Applique un skin : choisit la pièce '<modèle>_skin_<skin>' dans le slot 'paint_design' puis remplace le véhicule. skin vide retire le skin.",
-      "params": {"skin": {"type": "string|nil", "desc": "nom du skin"}},
+      "desc": "Applies a skin: chooses the part '<model>_skin_<skin>' in the 'paint_design' slot then replaces the vehicle. An empty skin removes the skin.",
+      "params": {
+        "skin": {
+          "type": "string|nil",
+          "desc": "skin name"
+        }
+      },
       "returns": []
     },
     "setConfigOfVehicle": {
-      "desc": "Fusionne `inData` dans la config du véhicule donné (voir notes sur respawn).",
+      "desc": "Merges `inData` into the given vehicle's config (see notes on respawn).",
       "params": {
-        "veh": {"type": "userdata", "desc": "objet véhicule"},
-        "inData": {"type": "table", "desc": "ex. {paints = …}, {vars = …}, {partsTree = …}, {parts = …}"},
-        "respawn": {"type": "boolean|nil", "desc": "true (défaut) : recrée le véhicule ; false : mise à jour en direct des peintures"}
+        "veh": {
+          "type": "userdata",
+          "desc": "vehicle object"
+        },
+        "inData": {
+          "type": "table",
+          "desc": "e.g. {paints = ...}, {vars = ...}, {partsTree = ...}, {parts = ...}"
+        },
+        "respawn": {
+          "type": "boolean|nil",
+          "desc": "true (default): recreates the vehicle; false: live paint update"
+        }
       },
       "returns": []
     },
     "setConfig": {
-      "desc": "Comme setConfigOfVehicle pour le véhicule visé (ou explicitVehicleId).",
+      "desc": "Like setConfigOfVehicle for the targeted vehicle (or explicitVehicleId).",
       "params": {
-        "inData": {"type": "table", "desc": "données à fusionner"},
-        "respawn": {"type": "boolean|nil", "desc": "voir setConfigOfVehicle"},
-        "explicitVehicleId": {"type": "integer|nil", "desc": "véhicule ; nil = cible"}
+        "inData": {
+          "type": "table",
+          "desc": "data to merge"
+        },
+        "respawn": {
+          "type": "boolean|nil",
+          "desc": "see setConfigOfVehicle"
+        },
+        "explicitVehicleId": {
+          "type": "integer|nil",
+          "desc": "vehicle; nil = target"
+        }
       },
       "returns": []
     },
     "setConfigPaints": {
-      "desc": "Fusionne une liste de peintures dans la config ({paints = data}).",
+      "desc": "Merges a list of paints into the config ({paints = data}).",
       "params": {
-        "data": {"type": "table[]", "desc": "peintures (1..3)"},
-        "respawn": {"type": "boolean|nil", "desc": "true = recréer le véhicule"},
-        "explicitVehicleId": {"type": "integer|nil", "desc": "véhicule ; nil = cible"}
+        "data": {
+          "type": "table[]",
+          "desc": "paints (1..3)"
+        },
+        "respawn": {
+          "type": "boolean|nil",
+          "desc": "true = recreate the vehicle"
+        },
+        "explicitVehicleId": {
+          "type": "integer|nil",
+          "desc": "vehicle; nil = target"
+        }
       },
       "returns": []
     },
     "setConfigVars": {
-      "desc": "Fusionne des variables de tuning ({vars = data}) dans la config du véhicule visé.",
+      "desc": "Merges tuning variables ({vars = data}) into the targeted vehicle's config.",
       "params": {
-        "data": {"type": "table<string, number>", "desc": "[nom de variable] = valeur"},
-        "respawn": {"type": "boolean|nil", "desc": "true = recréer le véhicule"}
+        "data": {
+          "type": "table<string, number>",
+          "desc": "[variable name] = value"
+        },
+        "respawn": {
+          "type": "boolean|nil",
+          "desc": "true = recreate the vehicle"
+        }
       },
       "returns": []
     },
     "setPartsConfig": {
-      "desc": "Obsolète : logue une erreur demandant d'utiliser setPartsTreeConfig. N'applique rien.",
+      "desc": "Obsolete: logs an error asking to use setPartsTreeConfig. Applies nothing.",
       "params": {
-        "data": {"type": "table", "desc": "ignoré"},
-        "respawn": {"type": "boolean|nil", "desc": "ignoré"}
+        "data": {
+          "type": "table",
+          "desc": "ignored"
+        },
+        "respawn": {
+          "type": "boolean|nil",
+          "desc": "ignored"
+        }
       },
       "returns": []
     },
     "setPartsTreeConfig": {
-      "desc": "Applique un nouvel arbre de pièces au véhicule visé (fusion de {partsTree = dataTree}) et émet le hook onPartsTreeConfigChanged(dataTree, respawn, part) avant.",
+      "desc": "Applies a new parts tree to the targeted vehicle (merge of {partsTree = dataTree}) and emits the onPartsTreeConfigChanged(dataTree, respawn, part) hook beforehand.",
       "params": {
-        "dataTree": {"type": "table", "desc": "arbre de pièces (chosenPartName, children…)"},
-        "respawn": {"type": "boolean|nil", "desc": "true = recréer le véhicule"},
-        "part": {"type": "any", "desc": "pièce à l'origine du changement (transmise au hook seulement)"}
+        "dataTree": {
+          "type": "table",
+          "desc": "parts tree (chosenPartName, children...)"
+        },
+        "respawn": {
+          "type": "boolean|nil",
+          "desc": "true = recreate the vehicle"
+        },
+        "part": {
+          "type": "any",
+          "desc": "part that caused the change (passed to the hook only)"
+        }
       },
       "returns": []
     },
     "getConfigOfVehicle": {
-      "desc": "Config courante d'un véhicule (vehicleData.config).",
-      "params": {"vehicleId": {"type": "integer", "desc": "id du véhicule"}},
-      "returns": [{"type": "table|nil", "desc": "config (pas une copie) ; nil si inconnu"}]
+      "desc": "Current config of a vehicle (vehicleData.config).",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "vehicle id"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "config (not a copy); nil if unknown"
+        }
+      ]
     },
     "getConfig": {
-      "desc": "Config courante du véhicule visé.",
+      "desc": "Current config of the targeted vehicle.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "config ; nil sans véhicule"}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "config; nil without a vehicle"
+        }
+      ]
     },
     "resetConfig": {
-      "desc": "Vide parts et vars de la config du véhicule visé et recrée le véhicule.",
+      "desc": "Clears parts and vars of the targeted vehicle's config and recreates the vehicle.",
       "params": {},
       "returns": []
     },
     "resetAllToLoadedConfig": {
-      "desc": "Recharge la config d'origine (partConfigFilename) du véhicule visé.",
+      "desc": "Reloads the original config (partConfigFilename) of the targeted vehicle.",
       "params": {},
       "returns": []
     },
     "resetPartsToLoadedConfig": {
-      "desc": "Bouton Reset des pièces : relit les parts du .pc d'origine et appelle setPartsConfig (obsolète, voir notes).",
+      "desc": "Parts Reset button: re-reads the parts of the original .pc and calls setPartsConfig (obsolete, see notes).",
       "params": {},
       "returns": []
     },
     "resetVarsToLoadedConfig": {
-      "desc": "Remet les variables de tuning à celles du .pc d'origine (vide si aucun) et recrée le véhicule.",
+      "desc": "Resets the tuning variables to those of the original .pc (empty if none) and recreates the vehicle.",
       "params": {},
       "returns": []
     },
     "validatePaints": {
-      "desc": "Compare les peintures actuelles du véhicule visé avec celles du modèle/de la bibliothèque (core_vehiclePaints.validatePcPaints) et ajoute les réglages de sauvegarde par défaut.",
+      "desc": "Compares the targeted vehicle's current paints with those of the model/library (core_vehiclePaints.validatePcPaints) and adds the default save settings.",
       "params": {},
-      "returns": [{"type": "table", "desc": "résultat de validatePcPaints + defaults ; {} sans véhicule"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "result of validatePcPaints + defaults; {} without a vehicle"
+        }
+      ]
     },
     "getCurrentLicensePlate": {
-      "desc": "Texte de plaque du véhicule visé.",
+      "desc": "License plate text of the targeted vehicle.",
       "params": {},
-      "returns": [{"type": "string", "desc": "texte ou ''"}]
+      "returns": [
+        {
+          "type": "string",
+          "desc": "text or ''"
+        }
+      ]
     },
     "setCurrentLicensePlate": {
-      "desc": "Applique un texte de plaque au véhicule visé (core_vehicles.setPlateText).",
-      "params": {"text": {"type": "string", "desc": "texte de plaque"}},
-      "returns": [{"type": "boolean", "desc": "false sans véhicule"}]
+      "desc": "Applies a license plate text to the targeted vehicle (core_vehicles.setPlateText).",
+      "params": {
+        "text": {
+          "type": "string",
+          "desc": "license plate text"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false without a vehicle"
+        }
+      ]
     },
     "regenerateCurrentLicensePlate": {
-      "desc": "Génère et applique un nouveau texte de plaque aléatoire.",
+      "desc": "Generates and applies a new random license plate text.",
       "params": {},
-      "returns": [{"type": "string", "desc": "texte généré"}]
+      "returns": [
+        {
+          "type": "string",
+          "desc": "generated text"
+        }
+      ]
     },
     "openConfigFolderInExplorer": {
-      "desc": "Ouvre dans l'explorateur de fichiers le dossier des configs du modèle (le crée s'il n'existe pas).",
+      "desc": "Opens the model's configs folder in the file explorer (creates it if it does not exist).",
       "params": {},
       "returns": []
     },
     "highlightParts": {
-      "desc": "Définit les pièces mises en surbrillance (clic sur l'œil de l'UI) et applique la transparence correspondante.",
+      "desc": "Sets the highlighted parts (click on the UI eye) and applies the corresponding transparency.",
       "params": {
-        "parts": {"type": "table<string, boolean>", "desc": "[chemin de pièce] = true pour les pièces visibles"},
-        "inVehID": {"type": "integer|nil", "desc": "véhicule ; nil = joueur"}
+        "parts": {
+          "type": "table<string, boolean>",
+          "desc": "[part path] = true for the visible parts"
+        },
+        "inVehID": {
+          "type": "integer|nil",
+          "desc": "vehicle; nil = player"
+        }
       },
       "returns": []
     },
     "selectParts": {
-      "desc": "Sélection temporaire (survol d'une pièce dans l'UI) : met ces pièces à pleine visibilité et recadre la caméra de pièces.",
+      "desc": "Temporary selection (hover of a part in the UI): sets these parts to full visibility and reframes the part camera.",
       "params": {
-        "parts": {"type": "table<string, boolean>", "desc": "pièces survolées"},
-        "inVehID": {"type": "integer|nil", "desc": "véhicule"},
-        "cameraParts": {"type": "table|nil", "desc": "pièces à cadrer ; défaut = parts"},
-        "cameraOptions": {"type": "table|nil", "desc": "options de partFocusCamera.focusOnParts (ex. immediate)"}
+        "parts": {
+          "type": "table<string, boolean>",
+          "desc": "hovered parts"
+        },
+        "inVehID": {
+          "type": "integer|nil",
+          "desc": "vehicle"
+        },
+        "cameraParts": {
+          "type": "table|nil",
+          "desc": "parts to frame; default = parts"
+        },
+        "cameraOptions": {
+          "type": "table|nil",
+          "desc": "partFocusCamera.focusOnParts options (e.g. immediate)"
+        }
       },
       "returns": []
     },
     "showHighlightedParts": {
-      "desc": "Revient à l'affichage des pièces en surbrillance (après un survol).",
+      "desc": "Goes back to displaying the highlighted parts (after a hover).",
       "params": {
-        "inVehID": {"type": "integer|nil", "desc": "véhicule"},
-        "cameraParts": {"type": "table|nil", "desc": "pièces que la caméra garde cadrées"},
-        "cameraOptions": {"type": "table|nil", "desc": "options caméra"}
+        "inVehID": {
+          "type": "integer|nil",
+          "desc": "vehicle"
+        },
+        "cameraParts": {
+          "type": "table|nil",
+          "desc": "parts the camera keeps framed"
+        },
+        "cameraOptions": {
+          "type": "table|nil",
+          "desc": "camera options"
+        }
       },
       "returns": []
     },
     "setHighlightedPartsVisiblity": {
-      "desc": "Fixe la transparence des pièces en surbrillance.",
+      "desc": "Sets the transparency of the highlighted parts.",
       "params": {
-        "alpha": {"type": "number", "desc": "0 (invisible) à 1 (opaque)"},
-        "inVehID": {"type": "integer|nil", "desc": "véhicule"}
+        "alpha": {
+          "type": "number",
+          "desc": "0 (invisible) to 1 (opaque)"
+        },
+        "inVehID": {
+          "type": "integer|nil",
+          "desc": "vehicle"
+        }
       },
       "returns": []
     },
     "changeHighlightedPartsVisiblity": {
-      "desc": "Modifie la transparence des pièces en surbrillance d'un delta (résultat borné 0..1).",
+      "desc": "Changes the transparency of the highlighted parts by a delta (result clamped 0..1).",
       "params": {
-        "deltaAlpha": {"type": "number", "desc": "variation"},
-        "inVehID": {"type": "integer|nil", "desc": "véhicule"}
+        "deltaAlpha": {
+          "type": "number",
+          "desc": "change"
+        },
+        "inVehID": {
+          "type": "integer|nil",
+          "desc": "vehicle"
+        }
       },
       "returns": []
     },
     "setNewParts": {
-      "desc": "Met à jour les données de surbrillance après un changement de pièces : les pièces existantes gardent leur état, les nouvelles prennent celui de leur parent.",
+      "desc": "Updates the highlight data after a parts change: existing parts keep their state, new ones take that of their parent.",
       "params": {
-        "inVehID": {"type": "integer|nil", "desc": "véhicule"},
-        "silent": {"type": "boolean|nil", "desc": "true : ne pas notifier l'UI"}
+        "inVehID": {
+          "type": "integer|nil",
+          "desc": "vehicle"
+        },
+        "silent": {
+          "type": "boolean|nil",
+          "desc": "true: do not notify the UI"
+        }
       },
       "returns": []
     },
     "resetVehicleHighlights": {
-      "desc": "Efface les surbrillances (pièces, transparence, caméra) en refondant vers le véhicule opaque.",
+      "desc": "Clears the highlights (parts, transparency, camera) by fading back to the opaque vehicle.",
       "params": {
-        "onlyIfVehChanged": {"type": "boolean|nil", "desc": "true : n'efface que si le modèle du véhicule a changé"},
-        "inVehID": {"type": "integer|nil", "desc": "véhicule"}
+        "onlyIfVehChanged": {
+          "type": "boolean|nil",
+          "desc": "true: only clears if the vehicle's model changed"
+        },
+        "inVehID": {
+          "type": "integer|nil",
+          "desc": "vehicle"
+        }
       },
       "returns": []
     },
     "clearVehicleHighlights": {
-      "desc": "Supprime immédiatement l'état rayons X (rétablit l'alpha) pour le véhicule donné ou tout.",
-      "params": {"inVehID": {"type": "integer|nil", "desc": "véhicule ; nil = tous"}},
+      "desc": "Immediately removes the X-ray state (restores the alpha) for the given vehicle or all.",
+      "params": {
+        "inVehID": {
+          "type": "integer|nil",
+          "desc": "vehicle; nil = all"
+        }
+      },
       "returns": []
     },
     "releasePartFocusCamera": {
-      "desc": "Rend la caméra au joueur (core_vehicle_partFocusCamera.clear).",
+      "desc": "Gives the camera back to the player (core_vehicle_partFocusCamera.clear).",
       "params": {},
       "returns": []
     },
     "partsSelectorChanged": {
-      "desc": "Appelée par l'UI quand la sélection du sélecteur de pièces change ; retarde de 0,1 s l'application (debounce) via highlightParts.",
-      "params": {"state": {"type": "table", "desc": "{vehID, partsSorted, partsHighlightedIdxs}"}},
+      "desc": "Called by the UI when the parts selector's selection changes; delays the application by 0.1 s (debounce) via highlightParts.",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "{vehID, partsSorted, partsHighlightedIdxs}"
+        }
+      },
       "returns": []
     },
     "sendPartsSelectorStateToUI": {
-      "desc": "Envoie à l'UI (guihook PartsSelectorUpdate) la liste triée des pièces et les indices en surbrillance.",
+      "desc": "Sends to the UI (guihook PartsSelectorUpdate) the sorted list of parts and the highlighted indexes.",
       "params": {},
       "returns": []
     },
-    "onVehicleSpawned": {"desc": "Hook : un véhicule apparaît ; réinitialise l'état rayons X concerné et le cache d'informations de pièces.", "params": {"vehID": {"type": "integer", "desc": "véhicule"}}, "returns": [], "internal": true},
-    "onVehicleSwitched": {"desc": "Hook : le joueur cible change de véhicule ; efface l'état rayons X.", "params": {"oldID": {"type": "integer", "desc": "ancien véhicule"}, "newID": {"type": "integer", "desc": "nouveau véhicule"}, "player": {"type": "integer", "desc": "joueur"}}, "returns": [], "internal": true},
-    "onVehicleDestroyed": {"desc": "Hook : un véhicule est détruit ; libère ses données de surbrillance.", "params": {"vehID": {"type": "integer", "desc": "véhicule"}}, "returns": [], "internal": true},
-    "onVehicleConfigTargetChanged": {"desc": "Hook (core_vehicle_configTarget) : la cible de configuration change ; efface les rayons X et envoie les données du nouveau véhicule à l'UI.", "params": {"current": {"type": "table|nil", "desc": "nouvelle cible {vehId, playerId, returnRoute}"}}, "returns": [], "internal": true},
-    "onExtensionUnloaded": {"desc": "Hook : l'extension est déchargée ; rétablit l'alpha des meshes.", "params": {}, "returns": [], "internal": true},
-    "onLanguageChanged": {"desc": "Hook : la langue change ; vide les caches de traduction.", "params": {}, "returns": [], "internal": true},
-    "onReloadLocales": {"desc": "Hook : les traductions sont rechargées ; vide les caches.", "params": {}, "returns": [], "internal": true},
-    "onUpdate": {"desc": "Hook par frame : applique le debounce du sélecteur de pièces et anime le fondu rayons X.", "params": {"dt": {"type": "number", "desc": "temps écoulé (s)"}}, "returns": [], "internal": true},
-    "onFilesChanged": {"desc": "Hook : des fichiers ont changé ; vide le cache saveConfigUtils et invalide le cache des partpacks si un .partpacks.json a changé.", "params": {"files": {"type": "table[]", "desc": "liste {filename, …}"}}, "returns": [], "internal": true},
-    "onSerialize": {"desc": "Hook : sauvegarde les données de surbrillance avant rechargement Lua.", "params": {}, "returns": [{"type": "table", "desc": "{vehsPartsData, vehsRichPartInfo}"}], "internal": true},
-    "onDeserialized": {"desc": "Hook : restaure les données de onSerialize.", "params": {"data": {"type": "table", "desc": "données"}}, "returns": [], "internal": true}
+    "onVehicleSpawned": {
+      "desc": "Hook: a vehicle spawns; resets the relevant X-ray state and the part info cache.",
+      "params": {
+        "vehID": {
+          "type": "integer",
+          "desc": "vehicle"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook: the target player changes vehicle; clears the X-ray state.",
+      "params": {
+        "oldID": {
+          "type": "integer",
+          "desc": "old vehicle"
+        },
+        "newID": {
+          "type": "integer",
+          "desc": "new vehicle"
+        },
+        "player": {
+          "type": "integer",
+          "desc": "player"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook: a vehicle is destroyed; frees its highlight data.",
+      "params": {
+        "vehID": {
+          "type": "integer",
+          "desc": "vehicle"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleConfigTargetChanged": {
+      "desc": "Hook (core_vehicle_configTarget): the configuration target changes; clears the X-ray and sends the new vehicle's data to the UI.",
+      "params": {
+        "current": {
+          "type": "table|nil",
+          "desc": "new target {vehId, playerId, returnRoute}"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook: the extension is unloaded; restores the meshes' alpha.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onLanguageChanged": {
+      "desc": "Hook: the language changes; empties the translation caches.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onReloadLocales": {
+      "desc": "Hook: translations are reloaded; empties the caches.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Per-frame hook: applies the parts selector debounce and animates the X-ray fade.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "elapsed time (s)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onFilesChanged": {
+      "desc": "Hook: files changed; empties the saveConfigUtils cache and invalidates the partpacks cache if a .partpacks.json changed.",
+      "params": {
+        "files": {
+          "type": "table[]",
+          "desc": "list {filename, ...}"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook: saves the highlight data before a Lua reload.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{vehsPartsData, vehsRichPartInfo}"
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook: restores the data from onSerialize.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "data"
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

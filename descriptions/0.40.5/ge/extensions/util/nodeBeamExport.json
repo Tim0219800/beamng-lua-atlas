@@ -1,23 +1,38 @@
 {
   "path": "lua/ge/extensions/util/nodeBeamExport.lua",
-  "module": "Exporteur minimal du véhicule du joueur : écrit dans un fichier JSON (.nbexport.json) la liste des nœuds (position et nom éventuel) et des poutres (identifiants de nœuds) du véhicule actif, sous forme d'un graphe point/arête. Utile pour visualiser ou analyser la structure physique d'un véhicule dans un outil externe. Les noms de fichier sont numérotés automatiquement (export_<N>.nbexport.json) dans le dossier du véhicule.",
+  "module": "Minimal export of the player's vehicle: writes to a JSON file (.nbexport.json) the list of nodes (position and optional name) and beams (node ids) of the active vehicle, as a point/edge graph. Useful to visualize or analyze a vehicle's physical structure in an external tool. File names are numbered automatically (export_<N>.nbexport.json) in the vehicle folder.",
   "usage": "extensions.util_nodeBeamExport.exportFile()",
   "notes": [
-    "Les positions viennent de veh:getNodePosition(id) (coordonnées relatives au nœud de référence du véhicule) et sont converties en {x, z, -y} avant écriture (commentaire du code : « Z-up »).",
-    "Les poutres sont lues depuis vdata.vdata.beams (champs id1, id2, cid) ; l'id vaut -1 si cid est absent.",
-    "Le fichier contient aussi vehicle = {id, jbeam, name} ; exportFile renvoie false si aucun véhicule joueur ou aucune donnée n'est disponible."
+    "Positions come from veh:getNodePosition(id) (coordinates relative to the vehicle's reference node) and are converted to {x, z, -y} before writing (code comment: \"Z-up\").",
+    "Beams are read from vdata.vdata.beams (fields id1, id2, cid); the id is -1 if cid is missing.",
+    "The file also contains vehicle = {id, jbeam, name}; exportFile returns false if there is no player vehicle or no data available."
   ],
   "functions": {
     "exportFile": {
-      "desc": "Construit le graphe du véhicule actif et l'écrit en JSON. Sans nom de fichier, utilise suggestFilename(). Crée le dossier de destination si nécessaire et logue le résultat.",
-      "params": {"filename": {"type": "string|nil", "desc": "Chemin du fichier de sortie (défaut : export_<N>.nbexport.json dans le dossier du véhicule)"}},
-      "returns": [{"type": "boolean", "desc": "true si l'écriture a réussi, false sinon"}],
+      "desc": "Builds the graph of the active vehicle and writes it as JSON. Without a file name, uses suggestFilename(). Creates the destination folder if needed and logs the result.",
+      "params": {
+        "filename": {
+          "type": "string|nil",
+          "desc": "Output file path (default: export_<N>.nbexport.json in the vehicle folder)"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the write succeeded, false otherwise"
+        }
+      ],
       "internal": false
     },
     "suggestFilename": {
-      "desc": "Propose le prochain nom libre export_<N>.nbexport.json dans le dossier du véhicule actif (cherche les fichiers existants pour incrémenter N) ; crée le dossier au besoin.",
+      "desc": "Suggests the next free name export_<N>.nbexport.json in the active vehicle's folder (looks up existing files to increment N); creates the folder if needed.",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "Chemin proposé, ou nil (erreur loguée) si aucun dossier de véhicule n'est disponible"}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Suggested path, or nil (error logged) if no vehicle folder is available"
+        }
+      ],
       "internal": false
     }
   }

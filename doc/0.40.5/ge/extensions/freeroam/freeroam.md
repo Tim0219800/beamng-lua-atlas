@@ -1,170 +1,170 @@
 # `freeroam_freeroam`
 
-*Fichier : `lua/ge/extensions/freeroam/freeroam.lua` · VM : Game Engine (GE) · 419 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/freeroam/freeroam.lua` · VM: Game Engine (GE) · 419 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `freeroam_freeroam` : `extensions.load("freeroam_freeroam")`, puis la globale `freeroam_freeroam`
+**Access:** extension `freeroam_freeroam`: `extensions.load("freeroam_freeroam")`, then the global `freeroam_freeroam`
 
-Mode de jeu « freeroam » (balade libre) : démarre un niveau en freeroam, applique les options de spawn (trafic, véhicules garés, heure du jour, date, écoulement du temps), lance les flowgraphs associés au niveau, gère la remise à zéro du joueur et les messages de radars. Un moddeur l'utilise pour lancer un niveau (startFreeroam / startFreeroamByName) ou pour préconfigurer le trafic et l'heure via spawningOptionsHelper avant le lancement. Global : freeroam_freeroam.
+"Freeroam" game mode (free roam): starts a level in freeroam, applies the spawn options (traffic, parked vehicles, time of day, date, time flow), launches the flowgraphs associated with the level, handles the player's reset and radar messages. A modder uses it to launch a level (startFreeroam / startFreeroamByName) or to preconfigure traffic and time via spawningOptionsHelper before launch. Global: freeroam_freeroam.
 
-## Exemple
+## Example
 
 ```lua
 freeroam_freeroam.spawningOptionsHelper.trafficMode = 'enabled'
 freeroam_freeroam.spawningOptionsHelper.trafficAmount = 10
-freeroam_freeroam.spawningOptionsHelper.timeOfDay = 0.5 -- midi
+freeroam_freeroam.spawningOptionsHelper.timeOfDay = 0.5 -- noon
 freeroam_freeroam.startFreeroamByName('gridmap_v2')
 ```
 
-## Remarques
+## Notes
 
-- M.state.freeroamActive est mis à true au démarrage et remis à false dans onClientEndMission.
-- Les options environnement (timeOfDay, date, timePlay) sont remises par défaut après application dans onClientPostStartMission. Le reste n'est remis à zéro que si resetSpawningOptions est appelée (champ resetOptionsAfterStartingFreeroam non lu dans ce fichier).
-- Si un niveau est déjà chargé (scenetree.MissionGroup existe), le démarrage est différé : le jeu termine d'abord le mode actif (endActiveGameMode) puis relance startFreeroam.
-- Le hook onFreeroamLoaded(levelPath) est émis dans onClientStartMission quand le freeroam est actif.
-- Dans onClientPostStartMission, le flowgraph associé n'est lancé que s'il n'y a pas de scénario actif.
-- Dans onPlayerCameraReady, trafficMode 'fromSetting' (valeur par défaut) est traité comme « désactivé » (seul 'enabled' charge le trafic), et le champ resetOptionsAfterStartingFreeroam n'est pas utilisé dans ce fichier.
+- M.state.freeroamActive is set to true on start and set back to false in onClientEndMission.
+- The environment options (timeOfDay, date, timePlay) are reset to default after being applied in onClientPostStartMission. The rest is only reset if resetSpawningOptions is called (field resetOptionsAfterStartingFreeroam not read in this file).
+- If a level is already loaded (scenetree.MissionGroup exists), the start is deferred: the game first ends the active game mode (endActiveGameMode) then calls startFreeroam again.
+- The onFreeroamLoaded(levelPath) hook is emitted in onClientStartMission when freeroam is active.
+- In onClientPostStartMission, the associated flowgraph is only launched if there is no active scenario.
+- In onPlayerCameraReady, trafficMode 'fromSetting' (default value) is treated as "disabled" (only 'enabled' loads traffic), and the resetOptionsAfterStartingFreeroam field is not used in this file.
 
-**Dépendances (chargées avant) :** `core_environment`
+**Dependencies (loaded first):** `core_environment`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `freeroam_freeroam.onClientEndMission(levelPath)` | Hook de fin de niveau : désactive freeroamActive, retire l'action map ExplorationCheckpointsActionMap et décharge mainLevel si chargé. *(interne)* *(hook)* | 301 |
-| `freeroam_freeroam.onClientPostStartMission(levelPath)` | Hook après le démarrage : applique date, heure du jour et écoulement du temps demandés dans spawningOptionsHelper, les remet par défaut, puis lance les flowgraphs associés au niveau (sauf scénario actif). *(interne)* *(hook)* | 224 |
-| `freeroam_freeroam.onClientPreStartMission(levelPath)` | Hook avant le démarrage du niveau : charge à la racine le fichier `mainLevel.lua` du dossier du niveau s'il existe et appelle son onClientPreStartMission. *(interne)* *(hook)* | 187 |
-| `freeroam_freeroam.onClientStartMission(levelPath)` | Hook au démarrage du niveau : si freeroam actif, émet onFreeroamLoaded(levelPath) et pousse l'action map ExplorationCheckpointsActionMap si elle existe. *(interne)* *(hook)* | 197 |
-| `freeroam_freeroam.onPlayerCameraReady()` | Hook appelé quand la caméra joueur est prête : si le freeroam est actif, décide du trafic et des véhicules garés d'après spawningOptionsHelper et du réglage trafficParkedVehicles, puis appelle gameplay_traffic.setupTrafficHelper. Ne fait rien si le niveau ne supporte pas le trafic. *(interne)* *(hook)* | 118 |
-| `freeroam_freeroam.onRedLightCamTriggered(speedTrapData, playerSpeed)` | Hook de radar de feu rouge : en freeroam pour le véhicule joueur, affiche un message avec la plaque. *(interne)* *(hook)* | 393 |
-| `freeroam_freeroam.onResetGameplay(playerID)` | Hook de remise à zéro du joueur : ignoré en scénario, campagne, invite de récupération, flowgraph bloquant ou session multijoueur ; sinon spawn.safeReset si le réglage enableSmartRecovery est actif, sinon be:resetVehicle. *(interne)* *(hook)* | 324 |
-| `freeroam_freeroam.onSpeedTrapTriggered(speedTrapData, playerSpeed, overSpeed)` | Hook de radar : en freeroam, si le sujet est le véhicule joueur, enregistre le record dans gameplay_speedTrapLeaderboards et affiche les messages de vitesse et de record (ui_message). *(interne)* *(hook)* | 370 |
-| `freeroam_freeroam.onTrafficOrParkingReady()` | Hook appelé quand trafic/véhicules garés sont prêts : retire l'écran de chargement « traffic ». *(interne)* *(hook)* | 181 |
-| `freeroam_freeroam.onUpdate(dtReal, dtSim, dtRaw)` | Hook par frame : tant que worldReadyState vaut 0, initialise la caméra (commands.initCamera) et passe en caméra libre s'il n'y a pas de véhicule joueur. *(interne)* *(hook)* | 354 |
-| `freeroam_freeroam.onVehicleSpawned(vehID)` | Hook d'apparition de véhicule : réinitialise les surbrillances de parts et appelle core_vehicle_partmgmt.setNewParts. *(interne)* *(hook)* | 319 |
-| `freeroam_freeroam.onVehicleSwitched(oldId, newId, player)` | Hook de changement de véhicule : efface les surbrillances de parts de l'ancien véhicule (core_vehicle_partmgmt.clearVehicleHighlights). *(interne)* *(hook)* | 315 |
-| `freeroam_freeroam.resetSpawningOptions()` | Remet spawningOptionsHelper à ses valeurs par défaut (copie profonde de l'état initial). | 31 |
-| `freeroam_freeroam.startFreeroam(level, startPointName, wasDelayed, spawnVehicle, customLoadingFunction)` | Démarre le freeroam sur un niveau : affiche l'écran de chargement, décharge les extensions automatiques, charge les extensions de preset, vide le filtre d'actions, puis core_levels.startLevel. Si un niveau est déjà chargé, attend sa fin. | 83 |
-| `freeroam_freeroam.startFreeroamByName(levelName, startPointName, wasDelayed, spawnVehicle, customLoadingFunction)` | Retrouve le niveau par nom (core_levels.getLevelByName) et appelle startFreeroam. | 109 |
-| `freeroam_freeroam.startTrackBuilder(levelName, forceLoad)` | Charge l'extension trackbuilder_trackBuilder et appelle son enter(levelName, forceLoad). | 343 |
+| `freeroam_freeroam.onClientEndMission(levelPath)` | End-of-level hook: disables freeroamActive, removes the ExplorationCheckpointsActionMap action map and unloads mainLevel if loaded. *(internal)* *(hook)* | 301 |
+| `freeroam_freeroam.onClientPostStartMission(levelPath)` | Hook after start: applies the date, time of day and time flow requested in spawningOptionsHelper, resets them to default, then launches the flowgraphs associated with the level (unless a scenario is active). *(internal)* *(hook)* | 224 |
+| `freeroam_freeroam.onClientPreStartMission(levelPath)` | Hook before the level starts: loads the `mainLevel.lua` file from the level folder at the root if it exists and calls its onClientPreStartMission. *(internal)* *(hook)* | 187 |
+| `freeroam_freeroam.onClientStartMission(levelPath)` | Hook when the level starts: if freeroam is active, emits onFreeroamLoaded(levelPath) and pushes the ExplorationCheckpointsActionMap action map if it exists. *(internal)* *(hook)* | 197 |
+| `freeroam_freeroam.onPlayerCameraReady()` | Hook called when the player camera is ready: if freeroam is active, decides on traffic and parked vehicles based on spawningOptionsHelper and the trafficParkedVehicles setting, then calls gameplay_traffic.setupTrafficHelper. Does nothing if the level does not support traffic. *(internal)* *(hook)* | 118 |
+| `freeroam_freeroam.onRedLightCamTriggered(speedTrapData, playerSpeed)` | Red light camera hook: in freeroam for the player vehicle, displays a message with the license plate. *(internal)* *(hook)* | 393 |
+| `freeroam_freeroam.onResetGameplay(playerID)` | Player reset hook: ignored in scenario, campaign, recovery prompt, blocking flowgraph or multiplayer session; otherwise spawn.safeReset if the enableSmartRecovery setting is active, else be:resetVehicle. *(internal)* *(hook)* | 324 |
+| `freeroam_freeroam.onSpeedTrapTriggered(speedTrapData, playerSpeed, overSpeed)` | Speed trap hook: in freeroam, if the subject is the player vehicle, records the record in gameplay_speedTrapLeaderboards and displays the speed and record messages (ui_message). *(internal)* *(hook)* | 370 |
+| `freeroam_freeroam.onTrafficOrParkingReady()` | Hook called when traffic/parked vehicles are ready: removes the "traffic" loading screen. *(internal)* *(hook)* | 181 |
+| `freeroam_freeroam.onUpdate(dtReal, dtSim, dtRaw)` | Per-frame hook: while worldReadyState is 0, initializes the camera (commands.initCamera) and switches to the free camera if there is no player vehicle. *(internal)* *(hook)* | 354 |
+| `freeroam_freeroam.onVehicleSpawned(vehID)` | Vehicle spawn hook: resets the part highlights and calls core_vehicle_partmgmt.setNewParts. *(internal)* *(hook)* | 319 |
+| `freeroam_freeroam.onVehicleSwitched(oldId, newId, player)` | Vehicle change hook: clears the part highlights of the old vehicle (core_vehicle_partmgmt.clearVehicleHighlights). *(internal)* *(hook)* | 315 |
+| `freeroam_freeroam.resetSpawningOptions()` | Resets spawningOptionsHelper to its default values (deep copy of the initial state). | 31 |
+| `freeroam_freeroam.startFreeroam(level, startPointName, wasDelayed, spawnVehicle, customLoadingFunction)` | Starts freeroam on a level: shows the loading screen, unloads the automatic extensions, loads the preset extensions, empties the action filter, then core_levels.startLevel. If a level is already loaded, waits for it to finish. | 83 |
+| `freeroam_freeroam.startFreeroamByName(levelName, startPointName, wasDelayed, spawnVehicle, customLoadingFunction)` | Finds the level by name (core_levels.getLevelByName) and calls startFreeroam. | 109 |
+| `freeroam_freeroam.startTrackBuilder(levelName, forceLoad)` | Loads the trackbuilder_trackBuilder extension and calls its enter(levelName, forceLoad). | 343 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `freeroam_freeroam.onClientEndMission(levelPath)`
 
-Hook de fin de niveau : désactive freeroamActive, retire l'action map ExplorationCheckpointsActionMap et décharge mainLevel si chargé.
+End-of-level hook: disables freeroamActive, removes the ExplorationCheckpointsActionMap action map and unloads mainLevel if loaded.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `freeroam_freeroam.onClientPostStartMission(levelPath)`
 
-Hook après le démarrage : applique date, heure du jour et écoulement du temps demandés dans spawningOptionsHelper, les remet par défaut, puis lance les flowgraphs associés au niveau (sauf scénario actif).
+Hook after start: applies the date, time of day and time flow requested in spawningOptionsHelper, resets them to default, then launches the flowgraphs associated with the level (unless a scenario is active).
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `freeroam_freeroam.onClientPreStartMission(levelPath)`
 
-Hook avant le démarrage du niveau : charge à la racine le fichier `mainLevel.lua` du dossier du niveau s'il existe et appelle son onClientPreStartMission.
+Hook before the level starts: loads the `mainLevel.lua` file from the level folder at the root if it exists and calls its onClientPreStartMission.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `freeroam_freeroam.onClientStartMission(levelPath)`
 
-Hook au démarrage du niveau : si freeroam actif, émet onFreeroamLoaded(levelPath) et pousse l'action map ExplorationCheckpointsActionMap si elle existe.
+Hook when the level starts: if freeroam is active, emits onFreeroamLoaded(levelPath) and pushes the ExplorationCheckpointsActionMap action map if it exists.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `freeroam_freeroam.onRedLightCamTriggered(speedTrapData, playerSpeed)`
 
-Hook de radar de feu rouge : en freeroam pour le véhicule joueur, affiche un message avec la plaque.
+Red light camera hook: in freeroam for the player vehicle, displays a message with the license plate.
 
-- `speedTrapData` (*table*) : Données du radar.
-- `playerSpeed` (*number*) : Vitesse (non utilisée).
+- `speedTrapData` (*table*) : Speed trap data.
+- `playerSpeed` (*number*) : Speed (unused).
 
 #### `freeroam_freeroam.onResetGameplay(playerID)`
 
-Hook de remise à zéro du joueur : ignoré en scénario, campagne, invite de récupération, flowgraph bloquant ou session multijoueur ; sinon spawn.safeReset si le réglage enableSmartRecovery est actif, sinon be:resetVehicle.
+Player reset hook: ignored in scenario, campaign, recovery prompt, blocking flowgraph or multiplayer session; otherwise spawn.safeReset if the enableSmartRecovery setting is active, else be:resetVehicle.
 
-- `playerID` (*integer*) : Joueur (-1 = aucun véhicule).
+- `playerID` (*integer*) : Player (-1 = no vehicle).
 
 #### `freeroam_freeroam.onSpeedTrapTriggered(speedTrapData, playerSpeed, overSpeed)`
 
-Hook de radar : en freeroam, si le sujet est le véhicule joueur, enregistre le record dans gameplay_speedTrapLeaderboards et affiche les messages de vitesse et de record (ui_message).
+Speed trap hook: in freeroam, if the subject is the player vehicle, records the record in gameplay_speedTrapLeaderboards and displays the speed and record messages (ui_message).
 
-- `speedTrapData` (*table*) : Données du radar (speedLimit, subjectID…).
-- `playerSpeed` (*number*) : Vitesse enregistrée (m/s, déduit du code).
-- `overSpeed` (*number|boolean*) : Dépassement (déduit du code).
+- `speedTrapData` (*table*) : Speed trap data (speedLimit, subjectID...).
+- `playerSpeed` (*number*) : Recorded speed (m/s, inferred from code).
+- `overSpeed` (*number|boolean*) : Overspeed (inferred from code).
 
 #### `freeroam_freeroam.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook par frame : tant que worldReadyState vaut 0, initialise la caméra (commands.initCamera) et passe en caméra libre s'il n'y a pas de véhicule joueur.
+Per-frame hook: while worldReadyState is 0, initializes the camera (commands.initCamera) and switches to the free camera if there is no player vehicle.
 
-- `dtReal` (*number*) : Durée réelle (s).
-- `dtSim` (*number*) : Durée simulée (s).
-- `dtRaw` (*number*) : Durée brute (s).
+- `dtReal` (*number*) : Real duration (s).
+- `dtSim` (*number*) : Simulated duration (s).
+- `dtRaw` (*number*) : Raw duration (s).
 
 #### `freeroam_freeroam.onVehicleSpawned(vehID)`
 
-Hook d'apparition de véhicule : réinitialise les surbrillances de parts et appelle core_vehicle_partmgmt.setNewParts.
+Vehicle spawn hook: resets the part highlights and calls core_vehicle_partmgmt.setNewParts.
 
-- `vehID` (*integer*) : Id du véhicule.
+- `vehID` (*integer*) : Vehicle id.
 
 #### `freeroam_freeroam.onVehicleSwitched(oldId, newId, player)`
 
-Hook de changement de véhicule : efface les surbrillances de parts de l'ancien véhicule (core_vehicle_partmgmt.clearVehicleHighlights).
+Vehicle change hook: clears the part highlights of the old vehicle (core_vehicle_partmgmt.clearVehicleHighlights).
 
-- `oldId` (*integer*) : Ancien véhicule.
-- `newId` (*integer*) : Nouveau véhicule.
-- `player` (*integer*) : Joueur (non utilisé).
+- `oldId` (*integer*) : Old vehicle.
+- `newId` (*integer*) : New vehicle.
+- `player` (*integer*) : Player (unused).
 
 #### `freeroam_freeroam.startFreeroam(level, startPointName, wasDelayed, spawnVehicle, customLoadingFunction)`
 
-Démarre le freeroam sur un niveau : affiche l'écran de chargement, décharge les extensions automatiques, charge les extensions de preset, vide le filtre d'actions, puis core_levels.startLevel. Si un niveau est déjà chargé, attend sa fin.
+Starts freeroam on a level: shows the loading screen, unloads the automatic extensions, loads the preset extensions, empties the action filter, then core_levels.startLevel. If a level is already loaded, waits for it to finish.
 
-- `level` (*table|string*) : Table niveau (levelName, misFilePath) ou chemin du fichier du niveau.
-- `startPointName` (*string|nil*) : Nom du point de départ (utilisé seulement si level est une table, via setSpawnpoint.setDefaultSP).
-- `wasDelayed` (*boolean|nil*) : Vrai quand l'appel vient d'un démarrage différé (non utilisé dans le corps actif).
-- `spawnVehicle` (*boolean|nil*) : false = ne pas faire apparaître de véhicule (efface les variables $beamngVehicle*).
-- `customLoadingFunction` (*function|nil*) : Fonction de chargement personnalisée transmise à core_levels.startLevel.
+- `level` (*table|string*) : Level table (levelName, misFilePath) or level file path.
+- `startPointName` (*string|nil*) : Spawn point name (only used if level is a table, via setSpawnpoint.setDefaultSP).
+- `wasDelayed` (*boolean|nil*) : True when the call comes from a deferred start (not used in the active body).
+- `spawnVehicle` (*boolean|nil*) : false = do not spawn a vehicle (clears the $beamngVehicle* variables).
+- `customLoadingFunction` (*function|nil*) : Custom loading function passed to core_levels.startLevel.
 
 #### `freeroam_freeroam.startFreeroamByName(levelName, startPointName, wasDelayed, spawnVehicle, customLoadingFunction)`
 
-Retrouve le niveau par nom (core_levels.getLevelByName) et appelle startFreeroam.
+Finds the level by name (core_levels.getLevelByName) and calls startFreeroam.
 
-- `levelName` (*string*) : Nom du niveau.
-- `startPointName` (*string|nil*) : Point de départ.
-- `wasDelayed` (*boolean|nil*) : Voir startFreeroam.
-- `spawnVehicle` (*boolean|nil*) : Voir startFreeroam.
-- `customLoadingFunction` (*function|nil*) : Voir startFreeroam.
-- **renvoie** : boolean true si le niveau existe.
+- `levelName` (*string*) : Level name.
+- `startPointName` (*string|nil*) : Start point.
+- `wasDelayed` (*boolean|nil*) : See startFreeroam.
+- `spawnVehicle` (*boolean|nil*) : See startFreeroam.
+- `customLoadingFunction` (*function|nil*) : See startFreeroam.
+- **returns**: boolean true if the level exists.
 
 #### `freeroam_freeroam.startTrackBuilder(levelName, forceLoad)`
 
-Charge l'extension trackbuilder_trackBuilder et appelle son enter(levelName, forceLoad).
+Loads the trackbuilder_trackBuilder extension and calls its enter(levelName, forceLoad).
 
-- `levelName` (*string*) : Niveau.
-- `forceLoad` (*boolean|nil*) : Forcer le chargement.
+- `levelName` (*string*) : Level.
+- `forceLoad` (*boolean|nil*) : Force the load.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {'core_environment'} |
-| `spawningOptionsHelper` | table | Options de lancement : trafficMode ('fromSetting'\|'disabled'\|'enabled'), trafficAmount (-1 auto, 0 aucun, N), trafficPolice ('disabled'\|'enabled'), trafficParked ('disabled'\|'enabled'), trafficParkedAmount (-1 auto), timeOfDay ('default'\|'current'\|'currentUtc'\|clé du niveau\|nombre 0..1), date (secondes epoch Unix), timePlay ('disabled'\|'level'\|'fast'\|'normal'\|'slow'\|'realtime'), resetOptionsAfterStartingFreeroam (boolean). |
+| `spawningOptionsHelper` | table | Launch options: trafficMode ('fromSetting'\|'disabled'\|'enabled'), trafficAmount (-1 auto, 0 none, N), trafficPolice ('disabled'\|'enabled'), trafficParked ('disabled'\|'enabled'), trafficParkedAmount (-1 auto), timeOfDay ('default'\|'current'\|'currentUtc'\|level key\|number 0..1), date (Unix epoch seconds), timePlay ('disabled'\|'level'\|'fast'\|'normal'\|'slow'\|'realtime'), resetOptionsAfterStartingFreeroam (boolean). |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onFreeroamLoaded`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 - `be:` `getPlayerVehicleID`, `resetVehicle`
 - `core_environment.` `getAuthoredDayLength`, `getDayCycleSeconds`, `getTimeOfDay`, `getTimeOfDayOptions`, `setTimeOfDay`, `syncTimeToRealClock`, `syncTimeToRealClockUtc`
 - `scenetree.` `findObject`
 
-**Charge les extensions :** `trackbuilder_trackBuilder`
+**Loads extensions:** `trackbuilder_trackBuilder`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/freeroam/freeroam.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/freeroam/freeroam.lua`.*

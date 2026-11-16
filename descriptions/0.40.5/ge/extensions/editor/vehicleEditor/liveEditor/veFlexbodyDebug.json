@@ -1,48 +1,103 @@
 {
   "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua",
-  "module": "Fenêtre 'Flexbody Debug' du Vehicle Editor live, pour diagnostiquer les flexbodies (meshes déformables) du véhicule. Onglet 'Single Flexmesh' : choisir un flexbody (combo trié, favoris), régler la visibilité du mesh, afficher le flexbody choisi, picker un nœud ou un sommet (vertex) à la souris dans un rayon 'Max Dist from Cursor' (0 à 10 m) et visualiser leurs relations. Onglet 'All Flexmeshes' : trouver les sommets sans nœud proche et (mode expert) les sommets aux coordonnées hors limites. Dépend de editor_veMain.",
+  "module": "'Flexbody Debug' window of the live Vehicle Editor, to diagnose the vehicle's flexbodies (deformable meshes). 'Single Flexmesh' tab: choose a flexbody (sorted combo, favorites), set the mesh visibility, display the chosen flexbody, pick a node or a vertex with the mouse within a 'Max Dist from Cursor' radius (0 to 10 m) and visualize their relationships. 'All Flexmeshes' tab: find vertices without a nearby node and (expert mode) vertices with out-of-range coordinates. Depends on editor_veMain.",
   "notes": [
-    "Les réglages par véhicule (favoris) sont sauvegardés dans /settings/editor/flexbodyDebug_settings.json, indexés par nom de fichier JBeam.",
-    "L'état est conservé par ID de véhicule (copie profonde de vehData) ; onVehicleSpawned supprime l'état du véhicule réapparu pour qu'il soit reconstruit.",
-    "Modes internes : défaut, picking nœud, nœud pickés, picking vertex, vertex pickés, affichage des sommets sans nœuds proches.",
-    "La recherche des sommets sans nœuds proches active vehicle:setFlexmeshDebugMode(true) et parcourt tous les flexbodies : peut être lente sur un gros véhicule.",
-    "Le dessin utilise debugDrawer (drawLine, drawSphere, drawTextAdvanced) dans le hook onVehicleEditorRenderJBeams."
+    "The per-vehicle settings (favorites) are saved in /settings/editor/flexbodyDebug_settings.json, keyed by JBeam file name.",
+    "The state is kept per vehicle ID (deep copy of vehData); onVehicleSpawned deletes the state of the respawned vehicle so that it is rebuilt.",
+    "Internal modes: default, node picking, nodes picked, vertex picking, vertices picked, display of vertices without nearby nodes.",
+    "The search for vertices without nearby nodes enables vehicle:setFlexmeshDebugMode(true) and walks through all flexbodies: can be slow on a large vehicle.",
+    "Drawing uses debugDrawer (drawLine, drawSphere, drawTextAdvanced) in the onVehicleEditorRenderJBeams hook."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "{'editor_veMain'}."},
-    "menuEntry": {"type": "string", "desc": "'Flexbody Debug'."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "{'editor_veMain'}."
+    },
+    "menuEntry": {
+      "type": "string",
+      "desc": "'Flexbody Debug'."
+    }
   },
   "functions": {
     "onVehicleEditorRenderJBeams": {
-      "desc": "Hook de rendu émis par editor_veMain : dessine le flexbody sélectionné et exécute le picking de nœud/sommet selon le mode courant.",
+      "desc": "Render hook emitted by editor_veMain: draws the selected flexbody and runs the node/vertex picking according to the current mode.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
-        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (s)."
+        }
       },
       "internal": true
     },
     "onUpdate": {
-      "desc": "Appelé chaque frame : initialise l'état du véhicule, dessine la fenêtre à onglets et les fenêtres annexes (sommets hors limites, sommets sans nœuds).",
-      "params": {"dt": {"type": "number", "desc": "Delta temps."}},
+      "desc": "Called every frame: initializes the vehicle state, draws the tabbed window and the side windows (out-of-range vertices, vertices without nodes).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time delta."
+        }
+      },
       "internal": true
     },
     "onVehicleSwitched": {
-      "desc": "Au changement de véhicule, bascule vers l'état (ou crée l'état) du nouveau véhicule.",
+      "desc": "On vehicle change, switches to the state of the new vehicle (or creates it).",
       "params": {
-        "oldVehicle": {"type": "integer", "desc": "ID de l'ancien véhicule."},
-        "newVehicle": {"type": "integer", "desc": "ID du nouveau véhicule."},
-        "player": {"type": "integer", "desc": "Index du joueur."}
+        "oldVehicle": {
+          "type": "integer",
+          "desc": "ID of the old vehicle."
+        },
+        "newVehicle": {
+          "type": "integer",
+          "desc": "ID of the new vehicle."
+        },
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        }
       },
       "internal": true
     },
     "onVehicleSpawned": {
-      "desc": "Quand un véhicule apparaît, oublie ses données mémorisées.",
-      "params": {"id": {"type": "integer", "desc": "ID du véhicule."}},
+      "desc": "When a vehicle spawns, forgets its remembered data.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Vehicle ID."
+        }
+      },
       "internal": true
     },
-    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
-    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
-    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+    "open": {
+      "desc": "Opens the window.",
+      "internal": false
+    },
+    "onSerialize": {
+      "desc": "Returns {windowOpen}.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{windowOpen = boolean}"
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Restores the open state.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "onSerialize table."
+        }
+      },
+      "internal": true
+    }
   }
 }

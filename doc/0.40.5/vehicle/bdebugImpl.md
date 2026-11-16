@@ -1,180 +1,180 @@
 # `bdebugImpl`
 
-*Fichier : `lua/vehicle/bdebugImpl.lua` · VM : Véhicule · 2898 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/bdebugImpl.lua` · VM: Vehicle · 2898 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `bdebugImpl`
+**Access:** global `bdebugImpl`
 
-Implémentation complète de l'outil de debug visuel du véhicule (chargée paresseusement par bdebug.lua). Dessine nœuds, poutres, barres de torsion, triangles de collision, rails/slidenodes, centre de gravité, aérodynamique, thermique des roues, point de contact des pneus et géométrie de direction via debugDrawer, selon M.state.vehicle (modes numérotés à partir de 1 ; 1 = 'off'). Il envoie l'état au GE (guihooks BdebugUpdate et extensions.hook onBDebugUpdate). Les moddeurs passent en général par bdebug.*, pas directement par bdebugImpl.
+Full implementation of the vehicle's visual debug tool (lazily loaded by bdebug.lua). Draws nodes, beams, torsion bars, collision triangles, rails/slidenodes, center of gravity, aerodynamics, wheel thermals, tire contact point and steering geometry via debugDrawer, according to M.state.vehicle (modes numbered from 1; 1 = 'off'). It sends the state to the GE (guihooks BdebugUpdate and extensions.hook onBDebugUpdate). Modders generally go through bdebug.*, not directly through bdebugImpl.
 
-## Remarques
+## Notes
 
-- M.state.vehicle contient pour chaque famille un index (nodeTextMode, nodeVisMode, beamTextMode, beamVisMode, collisionTriangleVisMode, torsionBarVisMode, railsSlideNodesVisMode, cogMode, nodeDebugTextMode…) et la liste des modes correspondants (…Modes) ; mode 1 = 'off'. Le dessin n'est activé que si vehicleDebugVisible est true et qu'au moins un champ non-table diffère de initState.vehicle.
-- Types de poutres (valeurs C, ne pas changer) : 0 NORMALTYPE, 1 BEAM_ANISOTROPIC, 2 BEAM_BOUNDED, 3 BEAM_PRESSURED, 4 BEAM_LBEAM, 5 BEAM_BROKEN, 6 BEAM_HYDRO, 7 BEAM_SUPPORT.
-- Les nodes/poutres affichés ne sont envoyés au GE (requestDrawnNodesGE/BeamsGE) qu'une fois : la liste de callbacks est vidée après l'envoi. Les callbacks sont appelés sous la forme geFuncName(liste, échelle).
-- M.nodeCollision reste nop jusqu'à ce que le mode de visualisation concerné l'active en interne ; M.beamBroke n'est actif que pour les modes de poutres 'type+broken' (5) et 'brokenOnly' (6) quand l'outil est visible.
-- Chaque debugDraw demande au GE la taille de viewport (debug_vehicleDebug.bdebugRequestViewportSize) ; le GE répond par receiveViewportSize.
-- Incohérence : dans setNodeDebugText, la garde `if not M.state then return log(...) end` fait un `return log(...)` ; elle fonctionne mais le retour est la valeur de log. Par ailleurs updateUIs envoie volontairement l'état au GE via queueGameEngineLua (contournement d'un bug, d'après le commentaire).
-- Le premier appel à init copie le savedState (ou initState) et reprend de newPartialState uniquement les champs nodeDebugTextTypeToID, nodeDebugTextMode et nodeDebugTextModes (et partsSelected).
+- M.state.vehicle contains for each family an index (nodeTextMode, nodeVisMode, beamTextMode, beamVisMode, collisionTriangleVisMode, torsionBarVisMode, railsSlideNodesVisMode, cogMode, nodeDebugTextMode...) and the list of corresponding modes (...Modes); mode 1 = 'off'. Drawing is enabled only if vehicleDebugVisible is true and at least one non-table field differs from initState.vehicle.
+- Beam types (C values, do not change): 0 NORMALTYPE, 1 BEAM_ANISOTROPIC, 2 BEAM_BOUNDED, 3 BEAM_PRESSURED, 4 BEAM_LBEAM, 5 BEAM_BROKEN, 6 BEAM_HYDRO, 7 BEAM_SUPPORT.
+- The displayed nodes/beams are sent to the GE (requestDrawnNodesGE/BeamsGE) only once: the callback list is emptied after sending. The callbacks are called as geFuncName(list, scale).
+- M.nodeCollision stays nop until the relevant visualization mode enables it internally; M.beamBroke is active only for the beam modes 'type+broken' (5) and 'brokenOnly' (6) when the tool is visible.
+- Each debugDraw asks the GE for the viewport size (debug_vehicleDebug.bdebugRequestViewportSize); the GE answers with receiveViewportSize.
+- Inconsistency: in setNodeDebugText, the guard `if not M.state then return log(...) end` does a `return log(...)`; it works but the return value is that of log. Also, updateUIs deliberately sends the state to the GE via queueGameEngineLua (workaround for a bug, according to the comment).
+- The first call to init copies the savedState (or initState) and takes from newPartialState only the fields nodeDebugTextTypeToID, nodeDebugTextMode and nodeDebugTextModes (and partsSelected).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `bdebugImpl.clearAllNodeDebugText()` | Supprime tous les groupes de textes debug de nœuds (ne reste que 'off'). | 2765 |
-| `bdebugImpl.clearNodeDebugText(type, nodeCID)` | Supprime les textes d'un nœud dans un groupe. | 2734 |
-| `bdebugImpl.clearTypeNodeDebugText(type)` | Supprime un groupe de textes entier et recale les index des groupes suivants ainsi que le mode sélectionné. | 2744 |
-| `bdebugImpl.cogChange(change)` | Décale le mode d'affichage du centre de gravité (cyclique) avec message UI. *(interne)* | 2825 |
-| `bdebugImpl.colTrisModeChange(change)` | Décale le mode des triangles de collision (cyclique) avec message UI. *(interne)* | 2818 |
-| `bdebugImpl.init(savedState, newPartialState)` | Initialise l'outil : compte nœuds, poutres, triangles, barres de torsion, rails et slidenodes de v.data, copie l'état sauvegardé, récupère les textes de debug et les pièces sélectionnées de bdebug.lua et envoie l'état à l'UI. Appelée par bdebug.lua au chargement paresseux. *(interne)* | 2838 |
-| `bdebugImpl.isEnabled()` | Indique si le debug visuel est affiché. | 2772 |
-| `bdebugImpl.nodedebugtextModeChange(change)` | Décale le groupe de textes debug de nœuds affiché (cyclique) avec message UI. *(interne)* | 2804 |
-| `bdebugImpl.nodetextModeChange(change)` | Décale le mode de texte de nœuds (cyclique) et affiche un message UI avec le nom du mode. *(interne)* | 2790 |
-| `bdebugImpl.nodevisModeChange(change)` | Décale le mode de visualisation des nœuds (cyclique) avec message UI. *(interne)* | 2797 |
-| `bdebugImpl.onPlayersChanged(m)` | Hook appelé quand le joueur change de véhicule (m = true si ce véhicule est concerné) : met à jour le dessin et renvoie l'état à l'UI. *(interne)* *(hook)* | 2648 |
-| `bdebugImpl.receiveViewportSize(sizeX, sizeY)` | Mémorise la taille du viewport (utile au placement des textes/légendes). Appelée par le GE en réponse à bdebugRequestViewportSize. *(interne)* | 2568 |
-| `bdebugImpl.requestDrawnBeamsGE(geFuncName)` | Enregistre une fonction GE à appeler au prochain dessin avec la liste des poutres dessinées : geFuncName(beamsDrawn, beamScale). | 2643 |
-| `bdebugImpl.requestDrawnNodesGE(geFuncName)` | Enregistre une fonction GE à appeler au prochain dessin avec la liste des nœuds dessinés : geFuncName(nodesDrawn, nodeScale). | 2637 |
-| `bdebugImpl.requestState()` | Envoie l'état courant (state et stateNoReset) au GE (guihooks BdebugUpdate et hook onBDebugUpdate). | 2560 |
-| `bdebugImpl.reset()` | Au reset du véhicule : vide les mémoires des poutres cassées/déformées et groupes déclenchés pour que les messages se répètent. *(interne)* | 2861 |
-| `bdebugImpl.resetModes()` | Remet l'état à une copie de initState (tous modes sur 'off'), affiche le message vehicle.bdebug.clear et met à jour l'UI. | 2832 |
-| `bdebugImpl.setEnabled(enabled)` | Affiche ou masque le debug visuel, met à jour le dessin et l'UI. | 2776 |
-| `bdebugImpl.setNodeDebugText(type, nodeCID, text)` | Ajoute un texte sur un nœud dans le groupe donné (créé si absent), puis met à jour le dessin et l'UI. | 2701 |
-| `bdebugImpl.setPartsSelected(parts)` | Définit les pièces sélectionnées (M.partsState.partsSelected) utilisées pour mettre en valeur nœuds, poutres, etc. | 2693 |
-| `bdebugImpl.setState(state, stateNoReset, notSendBack)` | Remplace l'état par celui reçu de l'UI (ignoré si state.objectId diffère de l'objet courant), recalcule vehicleDebugVisible et le dessin, puis renvoie l'état à l'UI sauf si notSendBack. | 2654 |
-| `bdebugImpl.skeletonModeChange(change)` | Décale le mode de visualisation des poutres (beamVisMode, cyclique) avec message UI. *(interne)* | 2811 |
-| `bdebugImpl.toggleEnabled()` | Inverse l'affichage du debug. Réservée au système d'input, pas à l'UI. *(interne)* | 2785 |
+| `bdebugImpl.clearAllNodeDebugText()` | Removes all node debug text groups (only 'off' remains). | 2765 |
+| `bdebugImpl.clearNodeDebugText(type, nodeCID)` | Removes the texts of a node in a group. | 2734 |
+| `bdebugImpl.clearTypeNodeDebugText(type)` | Removes an entire text group and realigns the indices of the following groups as well as the selected mode. | 2744 |
+| `bdebugImpl.cogChange(change)` | Shifts the center of gravity display mode (cyclic) with a UI message. *(internal)* | 2825 |
+| `bdebugImpl.colTrisModeChange(change)` | Shifts the collision triangle mode (cyclic) with a UI message. *(internal)* | 2818 |
+| `bdebugImpl.init(savedState, newPartialState)` | Initializes the tool: counts nodes, beams, triangles, torsion bars, rails and slidenodes of v.data, copies the saved state, retrieves the debug texts and selected parts from bdebug.lua and sends the state to the UI. Called by bdebug.lua on lazy loading. *(internal)* | 2838 |
+| `bdebugImpl.isEnabled()` | Indicates whether the visual debug is displayed. | 2772 |
+| `bdebugImpl.nodedebugtextModeChange(change)` | Shifts the displayed node debug text group (cyclic) with a UI message. *(internal)* | 2804 |
+| `bdebugImpl.nodetextModeChange(change)` | Shifts the node text mode (cyclic) and displays a UI message with the mode name. *(internal)* | 2790 |
+| `bdebugImpl.nodevisModeChange(change)` | Shifts the node visualization mode (cyclic) with a UI message. *(internal)* | 2797 |
+| `bdebugImpl.onPlayersChanged(m)` | Hook called when the player changes vehicle (m = true if this vehicle is concerned): updates the drawing and sends the state back to the UI. *(internal)* *(hook)* | 2648 |
+| `bdebugImpl.receiveViewportSize(sizeX, sizeY)` | Stores the viewport size (useful for placing texts/legends). Called by the GE in response to bdebugRequestViewportSize. *(internal)* | 2568 |
+| `bdebugImpl.requestDrawnBeamsGE(geFuncName)` | Registers a GE function to call at the next draw with the list of drawn beams: geFuncName(beamsDrawn, beamScale). | 2643 |
+| `bdebugImpl.requestDrawnNodesGE(geFuncName)` | Registers a GE function to call at the next draw with the list of drawn nodes: geFuncName(nodesDrawn, nodeScale). | 2637 |
+| `bdebugImpl.requestState()` | Sends the current state (state and stateNoReset) to the GE (guihooks BdebugUpdate and hook onBDebugUpdate). | 2560 |
+| `bdebugImpl.reset()` | On vehicle reset: empties the memories of broken/deformed beams and triggered groups so that the messages repeat. *(internal)* | 2861 |
+| `bdebugImpl.resetModes()` | Resets the state to a copy of initState (all modes 'off'), displays the message vehicle.bdebug.clear and updates the UI. | 2832 |
+| `bdebugImpl.setEnabled(enabled)` | Shows or hides the visual debug, updates the drawing and the UI. | 2776 |
+| `bdebugImpl.setNodeDebugText(type, nodeCID, text)` | Adds a text on a node in the given group (created if absent), then updates the drawing and the UI. | 2701 |
+| `bdebugImpl.setPartsSelected(parts)` | Defines the selected parts (M.partsState.partsSelected) used to highlight nodes, beams, etc. | 2693 |
+| `bdebugImpl.setState(state, stateNoReset, notSendBack)` | Replaces the state with the one received from the UI (ignored if state.objectId differs from the current object), recomputes vehicleDebugVisible and the drawing, then sends the state back to the UI unless notSendBack. | 2654 |
+| `bdebugImpl.skeletonModeChange(change)` | Shifts the beam visualization mode (beamVisMode, cyclic) with a UI message. *(internal)* | 2811 |
+| `bdebugImpl.toggleEnabled()` | Toggles the debug display. Reserved for the input system, not for the UI. *(internal)* | 2785 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `bdebugImpl.clearNodeDebugText(type, nodeCID)`
 
-Supprime les textes d'un nœud dans un groupe.
+Removes the texts of a node in a group.
 
-- `type` (*string*) : Nom du groupe.
-- `nodeCID` (*integer*) : ID du nœud à l'exécution.
+- `type` (*string*) : Group name.
+- `nodeCID` (*integer*) : Runtime node ID.
 
 #### `bdebugImpl.clearTypeNodeDebugText(type)`
 
-Supprime un groupe de textes entier et recale les index des groupes suivants ainsi que le mode sélectionné.
+Removes an entire text group and realigns the indices of the following groups as well as the selected mode.
 
-- `type` (*string*) : Nom du groupe.
+- `type` (*string*) : Group name.
 
 #### `bdebugImpl.cogChange(change)`
 
-Décale le mode d'affichage du centre de gravité (cyclique) avec message UI.
+Shifts the center of gravity display mode (cyclic) with a UI message.
 
 - `change` (*integer*) : +1 / -1.
 
 #### `bdebugImpl.colTrisModeChange(change)`
 
-Décale le mode des triangles de collision (cyclique) avec message UI.
+Shifts the collision triangle mode (cyclic) with a UI message.
 
 - `change` (*integer*) : +1 / -1.
 
 #### `bdebugImpl.init(savedState, newPartialState)`
 
-Initialise l'outil : compte nœuds, poutres, triangles, barres de torsion, rails et slidenodes de v.data, copie l'état sauvegardé, récupère les textes de debug et les pièces sélectionnées de bdebug.lua et envoie l'état à l'UI. Appelée par bdebug.lua au chargement paresseux.
+Initializes the tool: counts nodes, beams, triangles, torsion bars, rails and slidenodes of v.data, copies the saved state, retrieves the debug texts and selected parts from bdebug.lua and sends the state to the UI. Called by bdebug.lua on lazy loading.
 
-- `savedState` (*table|nil*) : État sauvegardé avant rechargement ; nil pour partir de initState.
-- `newPartialState` (*table*) : État partiel accumulé par bdebug avant l'init (vehicle.nodeDebugText*, partsSelected).
+- `savedState` (*table|nil*) : State saved before reload; nil to start from initState.
+- `newPartialState` (*table*) : Partial state accumulated by bdebug before init (vehicle.nodeDebugText*, partsSelected).
 
 #### `bdebugImpl.isEnabled()`
 
-Indique si le debug visuel est affiché.
+Indicates whether the visual debug is displayed.
 
-- **renvoie** : boolean M.state.vehicleDebugVisible.
+- **returns**: boolean M.state.vehicleDebugVisible.
 
 #### `bdebugImpl.nodedebugtextModeChange(change)`
 
-Décale le groupe de textes debug de nœuds affiché (cyclique) avec message UI.
+Shifts the displayed node debug text group (cyclic) with a UI message.
 
 - `change` (*integer*) : +1 / -1.
 
 #### `bdebugImpl.nodetextModeChange(change)`
 
-Décale le mode de texte de nœuds (cyclique) et affiche un message UI avec le nom du mode.
+Shifts the node text mode (cyclic) and displays a UI message with the mode name.
 
-- `change` (*integer*) : +1 suivant, -1 précédent.
+- `change` (*integer*) : +1 next, -1 previous.
 
 #### `bdebugImpl.nodevisModeChange(change)`
 
-Décale le mode de visualisation des nœuds (cyclique) avec message UI.
+Shifts the node visualization mode (cyclic) with a UI message.
 
 - `change` (*integer*) : +1 / -1.
 
 #### `bdebugImpl.onPlayersChanged(m)`
 
-Hook appelé quand le joueur change de véhicule (m = true si ce véhicule est concerné) : met à jour le dessin et renvoie l'état à l'UI.
+Hook called when the player changes vehicle (m = true if this vehicle is concerned): updates the drawing and sends the state back to the UI.
 
-- `m` (*boolean*) : Vrai si ce véhicule est (devient) le véhicule joueur (déduit du code).
+- `m` (*boolean*) : True if this vehicle is (becomes) the player vehicle (inferred from code).
 
 #### `bdebugImpl.receiveViewportSize(sizeX, sizeY)`
 
-Mémorise la taille du viewport (utile au placement des textes/légendes). Appelée par le GE en réponse à bdebugRequestViewportSize.
+Stores the viewport size (useful for placing texts/legends). Called by the GE in response to bdebugRequestViewportSize.
 
-- `sizeX` (*number*) : Largeur en pixels.
-- `sizeY` (*number*) : Hauteur en pixels.
+- `sizeX` (*number*) : Width in pixels.
+- `sizeY` (*number*) : Height in pixels.
 
 #### `bdebugImpl.requestDrawnBeamsGE(geFuncName)`
 
-Enregistre une fonction GE à appeler au prochain dessin avec la liste des poutres dessinées : geFuncName(beamsDrawn, beamScale).
+Registers a GE function to call at the next draw with the list of drawn beams: geFuncName(beamsDrawn, beamScale).
 
-- `geFuncName` (*string*) : Nom de la fonction GE.
+- `geFuncName` (*string*) : Name of the GE function.
 
 #### `bdebugImpl.requestDrawnNodesGE(geFuncName)`
 
-Enregistre une fonction GE à appeler au prochain dessin avec la liste des nœuds dessinés : geFuncName(nodesDrawn, nodeScale).
+Registers a GE function to call at the next draw with the list of drawn nodes: geFuncName(nodesDrawn, nodeScale).
 
-- `geFuncName` (*string*) : Nom de la fonction GE.
+- `geFuncName` (*string*) : Name of the GE function.
 
 #### `bdebugImpl.setEnabled(enabled)`
 
-Affiche ou masque le debug visuel, met à jour le dessin et l'UI.
+Shows or hides the visual debug, updates the drawing and the UI.
 
-- `enabled` (*boolean*) : true pour afficher.
+- `enabled` (*boolean*) : true to show.
 
 #### `bdebugImpl.setNodeDebugText(type, nodeCID, text)`
 
-Ajoute un texte sur un nœud dans le groupe donné (créé si absent), puis met à jour le dessin et l'UI.
+Adds a text on a node in the given group (created if absent), then updates the drawing and the UI.
 
-- `type` (*string*) : Nom du groupe de textes.
-- `nodeCID` (*integer*) : ID du nœud à l'exécution.
-- `text` (*string*) : Texte à afficher.
+- `type` (*string*) : Name of the text group.
+- `nodeCID` (*integer*) : Runtime node ID.
+- `text` (*string*) : Text to display.
 
 #### `bdebugImpl.setPartsSelected(parts)`
 
-Définit les pièces sélectionnées (M.partsState.partsSelected) utilisées pour mettre en valeur nœuds, poutres, etc.
+Defines the selected parts (M.partsState.partsSelected) used to highlight nodes, beams, etc.
 
-- `parts` (*table*) : Sélection de pièces.
+- `parts` (*table*) : Part selection.
 
 #### `bdebugImpl.setState(state, stateNoReset, notSendBack)`
 
-Remplace l'état par celui reçu de l'UI (ignoré si state.objectId diffère de l'objet courant), recalcule vehicleDebugVisible et le dessin, puis renvoie l'état à l'UI sauf si notSendBack.
+Replaces the state with the one received from the UI (ignored if state.objectId differs from the current object), recomputes vehicleDebugVisible and the drawing, then sends the state back to the UI unless notSendBack.
 
-- `state` (*table*) : Nouvel état (avec objectId et vehicle).
-- `stateNoReset` (*table*) : Nouvel état non remis à zéro.
-- `notSendBack` (*boolean|nil*) : true pour ne pas renvoyer l'état à l'UI.
+- `state` (*table*) : New state (with objectId and vehicle).
+- `stateNoReset` (*table*) : New non-reset state.
+- `notSendBack` (*boolean|nil*) : true to not send the state back to the UI.
 
 #### `bdebugImpl.skeletonModeChange(change)`
 
-Décale le mode de visualisation des poutres (beamVisMode, cyclique) avec message UI.
+Shifts the beam visualization mode (beamVisMode, cyclic) with a UI message.
 
 - `change` (*integer*) : +1 / -1.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `beamBroke` | function | Hook beamBroke(id, energy) appelé quand une poutre casse ; nop sauf mode poutres cassées. |
-| `debugDraw` | function | Dessin debug debugDraw(focusPos) appelé à chaque frame par la boucle principale ; nop si aucun mode actif. |
-| `initState` | table | État par défaut : vehicleDebugVisible=false, objectId, et vehicle = tous les modes (nodeTextModes, nodeVisModes, beamTextModes, beamVisModes, collisionTriangleVisModes, torsionBarVisModes, railsSlideNodesVisModes, cogModes, aérodynamique…), échelles (aerodynamicsScale 0.1, nodeTextMaxDist 10), tireContactPoint, steeringGeometry (steeringGeometryLineLength 20), wheelThermals. |
-| `nodeCollision` | function | Hook nodeCollision(p) appelé par le moteur sur collision de nœud ; nop par défaut, activé par le mode de visualisation correspondant. |
-| `partsState` | table | {partsSelected = table} : pièces sélectionnées à mettre en valeur. |
-| `stateNoReset` | table | État conservé aux resets de modes (reçu avec setState). |
+| `beamBroke` | function | Hook beamBroke(id, energy) called when a beam breaks; nop except in broken beams mode. |
+| `debugDraw` | function | Debug drawing debugDraw(focusPos) called every frame by the main loop; nop if no mode is active. |
+| `initState` | table | Default state: vehicleDebugVisible=false, objectId, and vehicle = all the modes (nodeTextModes, nodeVisModes, beamTextModes, beamVisModes, collisionTriangleVisModes, torsionBarVisModes, railsSlideNodesVisModes, cogModes, aerodynamics...), scales (aerodynamicsScale 0.1, nodeTextMaxDist 10), tireContactPoint, steeringGeometry (steeringGeometryLineLength 20), wheelThermals. |
+| `nodeCollision` | function | Hook nodeCollision(p) called by the engine on node collision; nop by default, enabled by the relevant visualization mode. |
+| `partsState` | table | {partsSelected = table}: selected parts to highlight. |
+| `stateNoReset` | table | State kept across mode resets (received with setState). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `beamIsBroken`, `calcCenterOfGravity`, `getAbsNodePosition`, `getBeamDebugDeformation`, `getBeamFrequencyAmplitude`, `getBeamLength`, `getBeamRefLength`, `getBeamStress`, `getBeamStressDamp`, `getCameraPosition`, `getDirectionVector`, `getDirectionVectorUp`, `getDistanceFromTerrainPoint`, `getEnvTemperature`, `getGroupPressure`, `getNodeCluster`, `getNodeForceVector`, `getNodeForceVectorXYZ`, `getNodeMass`, `getNodePosition`, `getNodePositionRelative`, `getNodePositionRelativeXYZ`, `getNodeTemperature`, `getNodeVelocityVector`, `getOriginalNodePositionRelative`, `getPosition`, `getPositionXYZ`, `getTorsionbarAngle`, `getTorsionbarDeformation`, `getVelocity`, `getWheelAvgTemperature`, `getWheelCoreTemperature`, `inWater`, `isTriangleBroken`, `queueGameEngineLua`, `torsionbarIsBroken`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/bdebugImpl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/bdebugImpl.lua`.*

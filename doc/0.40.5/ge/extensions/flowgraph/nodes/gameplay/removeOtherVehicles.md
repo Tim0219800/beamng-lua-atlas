@@ -1,33 +1,33 @@
 # `flowgraph_nodes_gameplay_removeOtherVehicles`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua` · VM : Game Engine (GE) · 141 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua` · VM: Game Engine (GE) · 141 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/removeOtherVehicles")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/removeOtherVehicles")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Remove Other Vehicles » (catégorie once_instant). Supprime tous les véhicules sauf ceux dont l'id est donné sur les pins idToIgnore_1..N (le nombre N se règle dans les propriétés). Options : onlyDrivableVehs (n'utilise que getAllVehiclesByType) et onlyFlowgraphVehs (limite aux véhicules créés par le module vehicle du flowgraph). Appelle editor.onRemoveSceneTreeObjects si l'éditeur est présent, puis obj:delete().
+Flowgraph node "Remove Other Vehicles" (category once_instant). Deletes all vehicles except those whose id is given on the idToIgnore_1..N pins (the number N is set in the properties). Options: onlyDrivableVehs (only uses getAllVehiclesByType) and onlyFlowgraphVehs (limits to vehicles created by the flowgraph vehicle module). Calls editor.onRemoveSceneTreeObjects if the editor is present, then obj:delete().
 
-## Remarques
+## Notes
 
-- Les trois réglages (count, onlyDrivableVehs, onlyFlowgraphVehs) sont sauvegardés avec le graphe.
-- Lorsque le nombre de pins diminue, les liens vers les pins retirés sont supprimés.
+- The three settings (count, onlyDrivableVehs, onlyFlowgraphVehs) are saved with the graph.
+- When the number of pins decreases, the links to the removed pins are deleted.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(data)` | Restaure les réglages propres au nœud à partir des données sauvegardées. | 133 |
-| `C:_onSerialize(res)` | Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe. | 127 |
-| `C:drawCustomProperties()` | Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui). | 27 |
-| `C:init()` | Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph). | 21 |
-| `C:updatePins(old, new)` | Ajoute ou retire des pins d'entrée idToIgnore_i pour passer de old à new ; supprime les liens des pins retirés. | 62 |
-| `C:workOnce()` | Exécuté une seule fois (catégorie once_*) lorsque le nœud est déclenché : lit les pins d'entrée et applique l'effet. | 81 |
+| `C:_onDeserialized(data)` | Restores the node's own settings from the saved data. | 133 |
+| `C:_onSerialize(res)` | Adds the node's own settings to the `res` table when saving the graph. | 127 |
+| `C:drawCustomProperties()` | Draws the node's custom properties in the flowgraph editor panel (ImGui). | 27 |
+| `C:init()` | Initializes the node's internal state at creation (called by the flowgraph engine). | 21 |
+| `C:updatePins(old, new)` | Adds or removes idToIgnore_i input pins to go from old to new; deletes the links of removed pins. | 62 |
+| `C:workOnce()` | Executed only once (once_* category) when the node is triggered: reads the input pins and applies the effect. | 81 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `delete`, `getId`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua`.*

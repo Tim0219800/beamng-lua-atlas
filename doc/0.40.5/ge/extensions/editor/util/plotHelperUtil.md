@@ -1,64 +1,64 @@
 # `editor_util_plotHelperUtil`
 
-*Fichier : `lua/ge/extensions/editor/util/plotHelperUtil.lua` · VM : Game Engine (GE) · 615 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/util/plotHelperUtil.lua` · VM: Game Engine (GE) · 615 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/util/plotHelperUtil")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/util/plotHelperUtil")` (file under extensions/ but not a regular extension)
 
-Aide d'éditeur : graphique 2D imgui (grille, axes, points, courbe Catmull-Rom optionnelle, réticule, annotations verticales) avec déplacement à la souris (glisser bouton gauche) et zoom à la molette. Le module renvoie un constructeur : require('/lua/ge/extensions/editor/util/plotHelperUtil')(params). Utile pour tracer des courbes (ex. tables JBeam) dans une fenêtre d'éditeur. Chaque instance reçoit un id unique (compteur local) pour ses identifiants imgui.
+Editor helper: imgui 2D graph (grid, axes, points, optional Catmull-Rom curve, crosshair, vertical annotations) with mouse panning (left-button drag) and wheel zoom. The module returns a constructor: require('/lua/ge/extensions/editor/util/plotHelperUtil')(params). Useful to plot curves (e.g. JBeam tables) in an editor window. Each instance gets a unique id (local counter) for its imgui identifiers.
 
-## Exemple
+## Example
 
 ```lua
 local plot = require('/lua/ge/extensions/editor/util/plotHelperUtil')({autoScale = true, showCatmullRomCurve = true})
 plot:setData({{0, 0, 1}, {1, 2, 3}, {2, 4, 5}}) -- {x, y1, y2...}
 plot:setSeriesNames({'A', 'B'})
--- dans onEditorGui, dans une fenêtre imgui :
+-- in onEditorGui, in an imgui window:
 plot:draw(400, 300, dt)
 ```
 
-## Remarques
+## Notes
 
-- Format des données de setData : {{x0, y0, y1, ...}, ...} ; setDataMulti attend déjà des séries : data[serie][i] = {x, y}.
-- Marge de 50 px (borderSize) autour de la zone de tracé ; le point hors des bornes donne nil dans graphPtToImSS / graphPtToImWS (sauf clampVal).
-- init : sans paramètres, échelle -5..5, showCatmullRomCurve = true, catmullDataPoints = 10 (champ jamais relu : le code utilise catmullromCurveLines, 10 par défaut). allowZoom vaut vrai par défaut (params.allowZoom or true, remis à faux seulement si params.allowZoom == false).
-- Formats d'étiquette par défaut : '%0.3f' (formatX, formatY) ; taille de point 4, épaisseur 2.
-- Incohérence dans le code : setScale calcule centerPos comme la demi-étendue ((max-min)/2) et non le centre ; les commentaires de setSeriesColors et setSeriesFormat disent « names » par copier-coller.
-- draw retourne tôt, sans EndChild, si self.data est nil (BeginChild1 déjà appelé).
+- Format of the setData data: {{x0, y0, y1, ...}, ...}; setDataMulti already expects series: data[series][i] = {x, y}.
+- 50 px margin (borderSize) around the plot area; a point out of bounds gives nil in graphPtToImSS / graphPtToImWS (except clampVal).
+- init: without parameters, scale -5..5, showCatmullRomCurve = true, catmullDataPoints = 10 (field never read again: the code uses catmullromCurveLines, 10 by default). allowZoom is true by default (params.allowZoom or true, set to false only if params.allowZoom == false).
+- Default label formats: '%0.3f' (formatX, formatY); point size 4, thickness 2.
+- Inconsistency in the code: setScale computes centerPos as the half-extent ((max-min)/2) and not the center; the comments of setSeriesColors and setSeriesFormat say "names" through copy-paste.
+- draw returns early, without EndChild, if self.data is nil (BeginChild1 already called).
 
-## Classe `C`
+## Class `C`
 
-Instance de graphique.
+Graph instance.
 
-Le module renvoie un constructeur : `local obj = require("editor_util_plotHelperUtil")(options)`.
+The module returns a constructor: `local obj = require("editor_util_plotHelperUtil")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:draw(width, height, dt)` | Méthode principale à appeler à chaque mise à jour graphique, dans une fenêtre imgui : gère la souris, crée un child imgui et dessine grille, données, courbe Catmull-Rom, réticule et annotations. | 230 |
-| `C:drawCatmullSpline()` | Dessine la courbe Catmull-Rom calculée. | 368 |
-| `C:drawData()` | Dessine les points de chaque série (couleur de série ou rainbowColor). | 500 |
-| `C:drawGridAndAxesLabels()` | Dessine la grille et les étiquettes des axes. | 402 |
-| `C:generateCatmullSplinePoints()` | Génère les points de la courbe Catmull-Rom pour chaque série (adapté de lua/vehicle/ve_utils.lua, modifié pour plusieurs y) ; séries de moins de 2 points ignorées, séries de 2 points copiées telles quelles. | 324 |
-| `C:getOptimalTickIncrement(ticks, range)` | Calcule l'incrément de graduation (1, 2 ou 5 selon l'ordre de grandeur) le plus proche du nombre de graduations voulu. | 485 |
-| `C:getOrderOfMagnitude(num)` | Renvoie l'exposant x de num écrit a * 10^x. | 599 |
-| `C:graphPtToImSS(x, y, clampVal)` | Coordonnées imgui (espace écran) d'un point du graphe ; nil si le point est hors bornes, sauf avec clampVal (valeurs bornées à 0..1). | 555 |
-| `C:graphPtToImWS(x, y)` | Coordonnées imgui (espace fenêtre) d'un point du graphe ; nil si hors bornes. | 580 |
-| `C:init(params)` | Initialise le graphique. params.scale = {xMin, xMax, yMin, yMax}, params.initData, params.autoScale, params.showCatmullRomCurve, params.catmullromCurveLines (> 200 conseillé), params.allowZoom, pointSize, pointThickness, formatX, formatY. | 34 |
-| `C:moveGraph(dt)` | Déplace le graphe quand on glisse avec le bouton gauche (le clic initial doit être dans le graphe). | 181 |
-| `C:normToImSS(x, y)` | Coordonnées imgui (espace écran) depuis des coordonnées normalisées : (0,0) bas gauche, (1,1) haut droite. | 550 |
-| `C:normToImWS(x, y)` | Comme normToImSS mais en espace fenêtre. | 575 |
-| `C:overlayTextLines(lines)` | Affiche des lignes de texte en surimpression en haut à gauche du graphe. | 311 |
-| `C:roundToDigits(num, dec)` | Arrondit num à dec décimales. | 592 |
-| `C:scaleToFitData()` | Ajuste le domaine et la plage pour contenir tous les points, avec 10 % de marge de chaque côté. Sans effet sans données. | 136 |
-| `C:scaleX(x)` | Convertit une fraction normalisée x (0..1) en valeur x du graphe selon l'échelle courante. | 603 |
-| `C:scaleY(y)` | Convertit une fraction normalisée y (0..1) en valeur y du graphe selon l'échelle courante. | 604 |
-| `C:setAnnotationX(annotation)` | Définit les annotations verticales : liste de paires {x, libellé}, tracées comme ligne et texte dans le graphe. | 131 |
-| `C:setData(data)` | Définit les données au format {{x0, y0, y1, ...}, ...} (plusieurs valeurs y par x), converti en séries puis passé à setDataMulti. | 80 |
-| `C:setDataMulti(data)` | Définit les données par série : data[serie] = liste de {x, y}. Recalcule l'échelle si autoScale, et les points Catmull-Rom si showCatmullRomCurve. | 94 |
-| `C:setScale(xMin, xMax, yMin, yMax)` | Définit les bornes du graphique ; chaque paramètre est facultatif (nil = inchangé). | 164 |
-| `C:setSeriesColors(colors)` | Définit les couleurs des séries au format {r, g, b, a} avec des valeurs de 0 à 1 (convertit en U32). Sans couleur, la série utilise rainbowColor. | 116 |
-| `C:setSeriesFormat(format)` | Remplace directement la table de format des séries (name, color, uColor par série). | 127 |
-| `C:setSeriesNames(names)` | Définit les noms des séries (liste) ; nom par défaut tostring(i). | 106 |
-| `C:zoomGraph(dt)` | Zoom à la molette selon la position de la souris ; sans effet si allowZoom est faux ou si la souris est hors du graphe. | 212 |
+| `C:draw(width, height, dt)` | Main method to call on every graph update, in an imgui window: handles the mouse, creates an imgui child and draws the grid, data, Catmull-Rom curve, crosshair and annotations. | 230 |
+| `C:drawCatmullSpline()` | Draws the computed Catmull-Rom curve. | 368 |
+| `C:drawData()` | Draws the points of each series (series color or rainbowColor). | 500 |
+| `C:drawGridAndAxesLabels()` | Draws the grid and the axis labels. | 402 |
+| `C:generateCatmullSplinePoints()` | Generates the Catmull-Rom curve points for each series (adapted from lua/vehicle/ve_utils.lua, modified for several y); series with fewer than 2 points ignored, series with 2 points copied as is. | 324 |
+| `C:getOptimalTickIncrement(ticks, range)` | Computes the tick increment (1, 2 or 5 depending on the order of magnitude) closest to the desired number of ticks. | 485 |
+| `C:getOrderOfMagnitude(num)` | Returns the exponent x of num written as a * 10^x. | 599 |
+| `C:graphPtToImSS(x, y, clampVal)` | Imgui coordinates (screen space) of a graph point; nil if the point is out of bounds, except with clampVal (values clamped to 0..1). | 555 |
+| `C:graphPtToImWS(x, y)` | Imgui coordinates (window space) of a graph point; nil if out of bounds. | 580 |
+| `C:init(params)` | Initializes the graph. params.scale = {xMin, xMax, yMin, yMax}, params.initData, params.autoScale, params.showCatmullRomCurve, params.catmullromCurveLines (> 200 recommended), params.allowZoom, pointSize, pointThickness, formatX, formatY. | 34 |
+| `C:moveGraph(dt)` | Pans the graph when dragging with the left button (the initial click must be inside the graph). | 181 |
+| `C:normToImSS(x, y)` | Imgui coordinates (screen space) from normalized coordinates: (0,0) bottom left, (1,1) top right. | 550 |
+| `C:normToImWS(x, y)` | Like normToImSS but in window space. | 575 |
+| `C:overlayTextLines(lines)` | Displays lines of text overlaid at the top left of the graph. | 311 |
+| `C:roundToDigits(num, dec)` | Rounds num to dec decimals. | 592 |
+| `C:scaleToFitData()` | Adjusts the domain and range to contain all points, with a 10% margin on each side. No effect without data. | 136 |
+| `C:scaleX(x)` | Converts a normalized fraction x (0..1) to a graph x value according to the current scale. | 603 |
+| `C:scaleY(y)` | Converts a normalized fraction y (0..1) to a graph y value according to the current scale. | 604 |
+| `C:setAnnotationX(annotation)` | Sets the vertical annotations: list of {x, label} pairs, drawn as a line and text in the graph. | 131 |
+| `C:setData(data)` | Sets the data in the format {{x0, y0, y1, ...}, ...} (several y values per x), converted to series then passed to setDataMulti. | 80 |
+| `C:setDataMulti(data)` | Sets the data per series: data[series] = list of {x, y}. Recomputes the scale if autoScale, and the Catmull-Rom points if showCatmullRomCurve. | 94 |
+| `C:setScale(xMin, xMax, yMin, yMax)` | Sets the graph bounds; each parameter is optional (nil = unchanged). | 164 |
+| `C:setSeriesColors(colors)` | Sets the series colors in the format {r, g, b, a} with values from 0 to 1 (converts to U32). Without a color, the series uses rainbowColor. | 116 |
+| `C:setSeriesFormat(format)` | Directly replaces the series format table (name, color, uColor per series). | 127 |
+| `C:setSeriesNames(names)` | Sets the series names (list); default name tostring(i). | 106 |
+| `C:zoomGraph(dt)` | Wheel zoom according to the mouse position; no effect if allowZoom is false or if the mouse is outside the graph. | 212 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/util/plotHelperUtil.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/util/plotHelperUtil.lua`.*

@@ -1,0 +1,46 @@
+{
+  "path": "lua/vehicle/controller/couplings/kingpin.lua",
+  "module": "Contrôleur auxiliaire du pivot d'attelage (kingpin) d'une semi-remorque. Il ne fait que répondre au contrôleur `couplings/fifthwheel` d'un tracteur : si la clé de la sellette correspond à la sienne, il renvoie son cid de noeud et sa position monde. Il peut aussi afficher son noeud en debug quand la sellette demande l'affichage de l'indicateur.",
+  "notes": [
+    "Clés jbeam lues par init : `kingpinNode` (nom du noeud, résolu via `beamstate.nodeNameMap`) et `kingpinKey` (\"fifthwheel_v2\" par défaut, doit être identique à `fifthwheelKey` de la sellette).",
+    "Aucun update : tout se fait par appels à distance (`obj:queueObjectLuaCommand` du tracteur).",
+    "`M.debugDraw` est nil par défaut ; setKingpinVisibility l'active ou le retire puis appelle `controller.cacheAllControllerFunctions()`."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "debugDraw": {"type": "function|nil", "desc": "nil par défaut ; fonction de dessin du noeud de pivot quand l'indicateur est visible."}
+  },
+  "functions": {
+    "sendDataToVehicle": {
+      "desc": "Appelée à distance par une sellette : si `couplerTag` est égal à la clé de ce pivot, renvoie {nodeId, nodePosition} à `kingpinDataCallback` du contrôleur de sellette du véhicule demandeur.",
+      "params": {
+        "objId": {"type": "integer", "desc": "Id du véhicule demandeur (tracteur)."},
+        "controllerName": {"type": "string", "desc": "Nom du contrôleur de sellette à rappeler."},
+        "couplerTag": {"type": "string", "desc": "Clé de sellette demandée."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setKingpinVisibility": {
+      "desc": "Active ou retire l'affichage de debug du noeud de pivot si la clé correspond.",
+      "params": {
+        "key": {"type": "string", "desc": "Clé de sellette concernée."},
+        "visible": {"type": "boolean", "desc": "true pour afficher."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Vide.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Retrouve le noeud de pivot par nom et lit la clé.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

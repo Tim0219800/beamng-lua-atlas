@@ -1,29 +1,29 @@
 # `flowgraph_nodes_career_garageComputerUtil`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/career/garageComputerUtil.lua` · VM : Game Engine (GE) · 71 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/career/garageComputerUtil.lua` · VM: Game Engine (GE) · 71 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/career/garageComputerUtil")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/career/garageComputerUtil")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Garage Computer Util » (catégorie repeat_instant, couleur/icône ui), aide pour le tutoriel du garage. Impulsions de sortie d'une frame : computerOpened (menu de l'ordinateur ouvert), tuningStarted, tuningApplied, shoppingStarted (achat de pièces ouvert), partInstalled, transactionComplete.
+Flowgraph node "Garage Computer Util" (category repeat_instant, ui color/icon), helper for the garage tutorial. One-frame output impulses: computerOpened (computer menu opened), tuningStarted, tuningApplied, shoppingStarted (parts shopping opened), partInstalled, transactionComplete.
 
-## Remarques
+## Notes
 
-- Les descriptions des pins partInstalled et transactionComplete disent « part shopping opened » (copier-coller dans le jeu).
+- The descriptions of the partInstalled and transactionComplete pins say "part shopping opened" (copy-paste in the game).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Crée la table de drapeaux. | 28 |
-| `C:onCareerTuningApplied()` | Hook : tuning appliqué. | 55 |
-| `C:onCareerTuningStarted()` | Hook : tuning commencé. | 51 |
-| `C:onComputerMenuOpened()` | Hook : menu de l'ordinateur du garage ouvert. | 47 |
-| `C:onPartShoppingPartInstalled(data)` | Hook : pièce installée. | 63 |
-| `C:onPartShoppingStarted()` | Hook : achat de pièces ouvert. | 59 |
-| `C:onPartShoppingTransactionComplete()` | Hook : transaction d'achat terminée. | 67 |
-| `C:work(args)` | Chaque frame : met toutes les sorties à faux, applique les drapeaux reçus puis les efface. | 33 |
+| `C:init()` | Creates the flag table. | 28 |
+| `C:onCareerTuningApplied()` | Hook: tuning applied. | 55 |
+| `C:onCareerTuningStarted()` | Hook: tuning started. | 51 |
+| `C:onComputerMenuOpened()` | Hook: garage computer menu opened. | 47 |
+| `C:onPartShoppingPartInstalled(data)` | Hook: part installed. | 63 |
+| `C:onPartShoppingStarted()` | Hook: parts shopping opened. | 59 |
+| `C:onPartShoppingTransactionComplete()` | Hook: purchase transaction completed. | 67 |
+| `C:work(args)` | Every frame: sets all outputs to false, applies the received flags then clears them. | 33 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/career/garageComputerUtil.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/career/garageComputerUtil.lua`.*

@@ -1,19 +1,95 @@
 {
   "path": "lua/ge/extensions/core/cameraModes/topDown.lua",
-  "module": "Caméra vue de dessus (désactivée par défaut), présentée dans le code comme « un exemple de mode de caméra personnalisé ». Suit le véhicule d'en haut avec une anticipation vers la direction réelle de déplacement (jusqu'à 10 m), lisse la position et le cap. Options : alignToCar (le haut de l'écran suit le cap du véhicule au lieu du nord +Y), tilt (0 à 80 degrés par rapport à la verticale ; 45 + ortho = isométrique), ortho (projection orthographique, data.res.ortho). Distance de la caméra = 50 + 0.9 * vitesse lissée. FOV par défaut 20. Renvoie un constructeur.",
-  "notes": ["Un mode minimal à copier pour créer sa caméra : update doit remplir data.res.pos (vec3), data.res.rot (quat), data.res.fov, et peut remplir targetPos ; renvoyer true.", "init appelle `C:onVehicleCameraConfigChanged()` (avec la classe C, pas self) : le FOV par défaut est donc écrit dans la classe C et pas sur l'instance, ce qui fonctionne seulement parce que self.fov retombe sur C.fov par métatable (déduit du code)."],
+  "module": "Top-down camera (disabled by default), presented in the code as \"an example of a custom camera mode\". Follows the vehicle from above with look-ahead toward the actual direction of travel (up to 10 m), smooths position and heading. Options: alignToCar (the top of the screen follows the vehicle's heading instead of north +Y), tilt (0 to 80 degrees from vertical; 45 + ortho = isometric), ortho (orthographic projection, data.res.ortho). Camera distance = 50 + 0.9 * smoothed speed. Default FOV 20. Returns a constructor.",
+  "notes": [
+    "A minimal mode to copy to create your own camera: update must fill data.res.pos (vec3), data.res.rot (quat), data.res.fov, and may fill targetPos; return true.",
+    "init calls `C:onVehicleCameraConfigChanged()` (with the class C, not self): the default FOV is therefore written to the class C and not to the instance, which only works because self.fov falls back to C.fov through the metatable (inferred from code)."
+  ],
   "classes": {
     "C": {
-      "desc": "Mode vue de dessus. Champs : alignToCar, tilt, ortho, fov, refNodes.",
+      "desc": "Top-down mode. Fields: alignToCar, tilt, ortho, fov, refNodes.",
       "functions": {
-        "init": {"desc": "Crée les lisseurs et valeurs par défaut.", "internal": true},
-        "onVehicleCameraConfigChanged": {"desc": "Hook : FOV par défaut à 20.", "internal": true},
-        "update": {"desc": "Calcule la pose d'après la vitesse et le cap, écrit data.res (pos, rot, fov, targetPos, ortho).", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "true"}], "internal": true},
-        "setRefNodes": {"desc": "Définit les nœuds de référence du véhicule (utilisés pour alignToCar).", "params": {"centerNodeID": {"type": "integer", "desc": "nœud centre"}, "leftNodeID": {"type": "integer", "desc": "nœud gauche"}, "backNodeID": {"type": "integer", "desc": "nœud arrière"}}},
-        "serialize": {"desc": "État pour les vues flux vidéo : alignToCar, fov, tilt, ortho.", "returns": [{"type": "table", "desc": "état"}]},
-        "deserialize": {"desc": "Restaure l'état de serialize.", "params": {"s": {"type": "table", "desc": "table de serialize"}}},
-        "listParams": {"desc": "Réglages UI : align, tilt (0-80), ortho, fov (10-140).", "returns": [{"type": "table[]", "desc": "descripteurs"}]},
-        "setParam": {"desc": "Modifie align, tilt, ortho ou fov.", "params": {"key": {"type": "string", "desc": "align, tilt, ortho, fov"}, "value": {"type": "any", "desc": "nouvelle valeur"}}}
+        "init": {
+          "desc": "Creates the smoothers and default values.",
+          "internal": true
+        },
+        "onVehicleCameraConfigChanged": {
+          "desc": "Hook: default FOV to 20.",
+          "internal": true
+        },
+        "update": {
+          "desc": "Computes the pose from speed and heading, writes data.res (pos, rot, fov, targetPos, ortho).",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "camData"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true"
+            }
+          ],
+          "internal": true
+        },
+        "setRefNodes": {
+          "desc": "Sets the vehicle's reference nodes (used for alignToCar).",
+          "params": {
+            "centerNodeID": {
+              "type": "integer",
+              "desc": "center node"
+            },
+            "leftNodeID": {
+              "type": "integer",
+              "desc": "left node"
+            },
+            "backNodeID": {
+              "type": "integer",
+              "desc": "rear node"
+            }
+          }
+        },
+        "serialize": {
+          "desc": "State for video stream views: alignToCar, fov, tilt, ortho.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "state"
+            }
+          ]
+        },
+        "deserialize": {
+          "desc": "Restores the state from serialize.",
+          "params": {
+            "s": {
+              "type": "table",
+              "desc": "serialize table"
+            }
+          }
+        },
+        "listParams": {
+          "desc": "UI settings: align, tilt (0-80), ortho, fov (10-140).",
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "descriptors"
+            }
+          ]
+        },
+        "setParam": {
+          "desc": "Changes align, tilt, ortho or fov.",
+          "params": {
+            "key": {
+              "type": "string",
+              "desc": "align, tilt, ortho, fov"
+            },
+            "value": {
+              "type": "any",
+              "desc": "new value"
+            }
+          }
+        }
       }
     }
   }

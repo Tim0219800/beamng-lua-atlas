@@ -1,24 +1,48 @@
 {
   "path": "lua/ge/extensions/ui/pause/providers/nearbyActivities.lua",
-  "module": "Fournisseur du menu pause pour la section « activités à proximité ». Il lit les points d'intérêt de la grande carte (freeroam_vueBigMap.getPoiData) et les POI bruts du niveau (gameplay_rawPois), calcule la distance au joueur (position caméra, rayon du marqueur déduit), puis retient jusqu'à 6 éléments : 2 plus proches, 2 de distance moyenne et le reste au hasard, triés par distance. Chaque élément porte deux boutons : voir sur la carte et définir un itinéraire.",
+  "module": "Pause menu provider for the \"nearby activities\" section. It reads the big map points of interest (freeroam_vueBigMap.getPoiData) and the level's raw POIs (gameplay_rawPois), computes the distance to the player (camera position, marker radius inferred), then keeps up to 6 items: 2 closest, 2 of medium distance and the rest at random, sorted by distance. Each item carries two buttons: view on the map and set a route.",
   "notes": [
-    "Les POI de type spawnPoint et playerVehicle sont exclus ; un POI sans marqueur bigmap ou sans position est ignoré.",
-    "Le bouton « view » ouvre la grande carte (freeroam_bigMapMode.enterBigMap, instant, routeTarget pause.bigmap) avec autoSelectPoiId et un zoom de 0,75 ; il est désactivé si context.isBigMapAllowed est faux.",
-    "Le bouton « route » appelle freeroam_bigMapMode.navigateToMission(poiId) ; il est désactivé pendant un test drive de carrière (career_modules_testDrive.isActive()).",
-    "Si aucune activité n'est trouvée, getData renvoie un élément factice d'id nearby.none.",
-    "La sélection utilise math.random : le contenu change à chaque appel."
+    "POIs of type spawnPoint and playerVehicle are excluded; a POI without a bigmap marker or without a position is ignored.",
+    "The \"view\" button opens the big map (freeroam_bigMapMode.enterBigMap, instant, routeTarget pause.bigmap) with autoSelectPoiId and a zoom of 0.75; it is disabled if context.isBigMapAllowed is false.",
+    "The \"route\" button calls freeroam_bigMapMode.navigateToMission(poiId); it is disabled during a career test drive (career_modules_testDrive.isActive()).",
+    "If no activity is found, getData returns a dummy item with id nearby.none.",
+    "The selection uses math.random: the content changes on every call."
   ],
   "functions": {
     "executeNearbyActivityAction": {
-      "desc": "Exécute le bouton (voir/itinéraire) identifié par buttonId. Renvoie false si buttonId est nil.",
-      "params": {"buttonId": {"type": "any", "desc": "buttonId présent dans items[].actions.view / .route."}, "payload": {"type": "any", "desc": "Données transmises au callback du bouton."}},
-      "returns": [{"type": "any", "desc": "Résultat du bouton (true/false)."}],
+      "desc": "Executes the button (view/route) identified by buttonId. Returns false if buttonId is nil.",
+      "params": {
+        "buttonId": {
+          "type": "any",
+          "desc": "buttonId present in items[].actions.view / .route."
+        },
+        "payload": {
+          "type": "any",
+          "desc": "Data passed to the button's callback."
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Button result (true/false)."
+        }
+      ],
       "internal": false
     },
     "getData": {
-      "desc": "Construit les données de la section : {mode, sections = {{id = \"nearbyActivities\", title, items}}}. Chaque item contient id, title, icon, description (type de POI traduit), actionLabel, poiType, distanceM (m, arrondi) et actions {view, route}.",
-      "params": {"context": {"type": "table|nil", "desc": "Champs lus : mode (défaut \"freeroam\") et isBigMapAllowed."}},
-      "returns": [{"type": "table", "desc": "Données de section pour l'UI pause."}],
+      "desc": "Builds the section data: {mode, sections = {{id = \"nearbyActivities\", title, items}}}. Each item contains id, title, icon, description (translated POI type), actionLabel, poiType, distanceM (m, rounded) and actions {view, route}.",
+      "params": {
+        "context": {
+          "type": "table|nil",
+          "desc": "Fields read: mode (default \"freeroam\") and isBigMapAllowed."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Section data for the pause UI."
+        }
+      ],
       "internal": false
     }
   }

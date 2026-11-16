@@ -1,153 +1,358 @@
 {
   "path": "lua/common/extensions/ui/flowgraph/editor.lua",
-  "module": "Aide d'interface pour l'éditeur de flowgraph (ui_flowgraph_editor). Elle intègre l'API du moteur de nœuds (editor_api_luaintf), définit les couleurs/icônes des catégories de nœuds et des types de pins, les styles des types de graphes (state, graph, macro, instance), des utilitaires d'affichage de valeurs, un éditeur de variables, un sélecteur de véhicule et des tests sur les catégories de comportement des nœuds. Utile à un moddeur qui écrit un nœud ou un outil ImGui flowgraph personnalisé.",
+  "module": "UI helper for the flowgraph editor (ui_flowgraph_editor). It integrates the node engine API (editor_api_luaintf), defines the colors/icons of node categories and pin types, the styles of graph types (state, graph, macro, instance), value display utilities, a variable editor, a vehicle selector and tests on node behavior categories. Useful to a modder writing a custom flowgraph node or ImGui tool.",
   "notes": [
-    "types[type].icon est rempli avec typeIcons[type] or M.IconType_Circle ; M.IconType_Circle vient de fge.enum, mais l'accès getTypeIcon() renvoie un nom d'icône (string) ou M.detaultIconType (« fg_type_circle »), pas la valeur de l'enum : les deux sources ne sont donc pas homogènes.",
-    "fullValueString ne gère pas le type 'boolean' (seulement 'bool'), contrairement à shortValueString : une valeur typée 'boolean' renvoie « ??? » dans la version complète.",
-    "Le champ detaultIconType est écrit avec cette faute (detault) dans le code.",
-    "tooltip() n'affiche rien si editor_flowgraphEditor.allowTooltip est faux.",
-    "Le commentaire du champ flowgraphVersion de la page auto vient d'un print commenté ; la valeur est 0.2 (0.1 : jusqu'à la sortie d'avril 2021 ; 0.2 : listes plates pour les graphes).",
-    "Catégories de nœuds reconnues : repeat_/once_/dynamic_ combinées avec instant, p_duration, f_duration, plus 'simple' et 'provider'."
+    "types[type].icon is filled with typeIcons[type] or M.IconType_Circle; M.IconType_Circle comes from fge.enum, but the getTypeIcon() accessor returns an icon name (string) or M.detaultIconType (\"fg_type_circle\"), not the enum value: the two sources are therefore not consistent.",
+    "fullValueString does not handle the 'boolean' type (only 'bool'), unlike shortValueString: a value typed 'boolean' returns \"???\" in the full version.",
+    "The field detaultIconType is written with this typo (detault) in the code.",
+    "tooltip() displays nothing if editor_flowgraphEditor.allowTooltip is false.",
+    "The comment of the flowgraphVersion field in the auto page comes from a commented-out print; the value is 0.2 (0.1: until the April 2021 release; 0.2: flat lists for graphs).",
+    "Recognized node categories: repeat_/once_/dynamic_ combined with instant, p_duration, f_duration, plus 'simple' and 'provider'."
   ],
   "fields": {
-    "flowgraphVersion": {"type": "number", "desc": "Version du format flowgraph (0.2 : listes plates pour les graphes)."},
-    "nodeColors": {"type": "table<string, ImVec4>", "desc": "Couleur par catégorie de nœud (crash, ai, debug, vehicle, event, ui, camera, scene, default, career, traffic…)."},
-    "nodeIcons": {"type": "table<string, string>", "desc": "Nom d'icône par catégorie de nœud (vehicle, ai, camera, ui, event, scene, state, thread, logic, traffic, debug, button, timer, file, career, tech…)."},
-    "defaultTypeIconSize": {"type": "number", "desc": "Taille par défaut des icônes de type de pin : 18."},
-    "detaultIconType": {"type": "string", "desc": "Icône de type par défaut : « fg_type_circle »."}
+    "flowgraphVersion": {
+      "type": "number",
+      "desc": "Flowgraph format version (0.2: flat lists for graphs)."
+    },
+    "nodeColors": {
+      "type": "table<string, ImVec4>",
+      "desc": "Color per node category (crash, ai, debug, vehicle, event, ui, camera, scene, default, career, traffic...)."
+    },
+    "nodeIcons": {
+      "type": "table<string, string>",
+      "desc": "Icon name per node category (vehicle, ai, camera, ui, event, scene, state, thread, logic, traffic, debug, button, timer, file, career, tech...)."
+    },
+    "defaultTypeIconSize": {
+      "type": "number",
+      "desc": "Default size of pin type icons: 18."
+    },
+    "detaultIconType": {
+      "type": "string",
+      "desc": "Default type icon: \"fg_type_circle\"."
+    }
   },
   "functions": {
     "getSimpleTypes": {
-      "desc": "Renvoie la liste des types simples : number, bool, string, vec3, quat, color.",
+      "desc": "Returns the list of simple types: number, bool, string, vec3, quat, color.",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Noms des types simples."}]
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Names of the simple types."
+        }
+      ]
     },
     "getTypes": {
-      "desc": "Renvoie la table des types de pins avec leur couleur et icône.",
+      "desc": "Returns the table of pin types with their color and icon.",
       "params": {},
-      "returns": [{"type": "table<string, table>", "desc": "Par nom de type : {color, icon}."}]
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "By type name: {color, icon}."
+        }
+      ]
     },
     "getTypeColor": {
-      "desc": "Couleur ImGui d'un type de pin ; brun (0.45, 0.35, 0.1, 1) si le type est inconnu.",
-      "params": {"dataType": {"type": "string", "desc": "Type de pin (flow, chainFlow, impulse, string, number, bool, any, table, vec3, quat, color, state)."}},
-      "returns": [{"type": "ImVec4", "desc": "Couleur."}]
+      "desc": "ImGui color of a pin type; brown (0.45, 0.35, 0.1, 1) if the type is unknown.",
+      "params": {
+        "dataType": {
+          "type": "string",
+          "desc": "Pin type (flow, chainFlow, impulse, string, number, bool, any, table, vec3, quat, color, state)."
+        }
+      },
+      "returns": [
+        {
+          "type": "ImVec4",
+          "desc": "Color."
+        }
+      ]
     },
     "getTypeIcon": {
-      "desc": "Nom de l'icône d'un type de pin, ou « fg_type_circle » par défaut.",
-      "params": {"dataType": {"type": "string", "desc": "Type de pin."}},
-      "returns": [{"type": "string", "desc": "Nom d'icône."}]
+      "desc": "Icon name of a pin type, or \"fg_type_circle\" by default.",
+      "params": {
+        "dataType": {
+          "type": "string",
+          "desc": "Pin type."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Icon name."
+        }
+      ]
     },
     "getGraphTypes": {
-      "desc": "Renvoie les styles des types de graphe (state, graph, macro, instance) : name, color, couleurs d'onglet, gridColor, abbreviation.",
+      "desc": "Returns the styles of the graph types (state, graph, macro, instance): name, color, tab colors, gridColor, abbreviation.",
       "params": {},
-      "returns": [{"type": "table<string, table>", "desc": "Styles par type de graphe."}]
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Styles per graph type."
+        }
+      ]
     },
     "tooltip": {
-      "desc": "Affiche une infobulle ImGui pour l'élément survolé, uniquement si editor_flowgraphEditor.allowTooltip est vrai.",
-      "params": {"message": {"type": "string", "desc": "Texte de l'infobulle."}},
+      "desc": "Displays an ImGui tooltip for the hovered item, only if editor_flowgraphEditor.allowTooltip is true.",
+      "params": {
+        "message": {
+          "type": "string",
+          "desc": "Tooltip text."
+        }
+      },
       "returns": []
     },
     "shortValueString": {
-      "desc": "Représentation courte d'une valeur selon son type : chaînes tronquées à 10 caractères + « ... », nombres à 2 décimales, vec3/quat/color avec 1 décimale ; « (nil) » si nil, « Flowing / Not Flowing » pour flow, « ??? » si le type n'est pas géré. Si le type est absent/any/table, il est deviné.",
+      "desc": "Short representation of a value according to its type: strings truncated to 10 characters + \"...\", numbers to 2 decimals, vec3/quat/color with 1 decimal; \"(nil)\" if nil, \"Flowing / Not Flowing\" for flow, \"???\" if the type is not handled. If the type is absent/any/table, it is guessed.",
       "params": {
-        "value": {"type": "any", "desc": "Valeur à formater."},
-        "tpe": {"type": "string|table|nil", "desc": "Type du pin ; deviné si nil, any ou table."}
+        "value": {
+          "type": "any",
+          "desc": "Value to format."
+        },
+        "tpe": {
+          "type": "string|table|nil",
+          "desc": "Pin type; guessed if nil, any or table."
+        }
       },
-      "returns": [{"type": "string", "desc": "Texte formaté."}]
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Formatted text."
+        }
+      ]
     },
     "shortDisplay": {
-      "desc": "Affiche shortValueString dans ImGui (im.Text) ; pour un type color, dessine d'abord un petit carré coloré. Affiche « nil » si la valeur est nil.",
+      "desc": "Displays shortValueString in ImGui (im.Text); for a color type, first draws a small colored square. Displays \"nil\" if the value is nil.",
       "params": {
-        "value": {"type": "any", "desc": "Valeur à afficher."},
-        "tpe": {"type": "string|nil", "desc": "Type du pin."}
+        "value": {
+          "type": "any",
+          "desc": "Value to display."
+        },
+        "tpe": {
+          "type": "string|nil",
+          "desc": "Pin type."
+        }
       },
       "returns": []
     },
     "fullValueString": {
-      "desc": "Comme shortValueString mais sans troncature : nombres au format %f, vec3/quat/color avec %f. Renvoie « nil » si nil.",
+      "desc": "Like shortValueString but without truncation: numbers in %f format, vec3/quat/color with %f. Returns \"nil\" if nil.",
       "params": {
-        "value": {"type": "any", "desc": "Valeur à formater."},
-        "tpe": {"type": "string|table|nil", "desc": "Type du pin ; deviné si nil, any ou table."}
+        "value": {
+          "type": "any",
+          "desc": "Value to format."
+        },
+        "tpe": {
+          "type": "string|table|nil",
+          "desc": "Pin type; guessed if nil, any or table."
+        }
       },
-      "returns": [{"type": "string", "desc": "Texte formaté."}]
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Formatted text."
+        }
+      ]
     },
     "fullDisplay": {
-      "desc": "Affiche fullValueString dans ImGui ; pour un type color, dessine d'abord un carré coloré.",
+      "desc": "Displays fullValueString in ImGui; for a color type, first draws a colored square.",
       "params": {
-        "value": {"type": "any", "desc": "Valeur à afficher."},
-        "tpe": {"type": "string|nil", "desc": "Type du pin."}
+        "value": {
+          "type": "any",
+          "desc": "Value to display."
+        },
+        "tpe": {
+          "type": "string|nil",
+          "desc": "Pin type."
+        }
       },
       "returns": []
     },
     "variableEditor": {
-      "desc": "Dessine un widget ImGui pour modifier une variable flowgraph (string, number, etc. selon variable.type) à partir de source:getFull(name) ; propose aussi renommer/supprimer via menu contextuel. Affiche « Variable X not found! » si absente. En mode édition, modifie la valeur de base (changeBase) et ajoute une entrée d'historique ; sinon modifie la valeur courante (changeInstant).",
+      "desc": "Draws an ImGui widget to edit a flowgraph variable (string, number, etc. according to variable.type) from source:getFull(name); also offers rename/delete via a context menu. Displays \"Variable X not found!\" if absent. In edit mode, changes the base value (changeBase) and adds a history entry; otherwise changes the current value (changeInstant).",
       "params": {
-        "source": {"type": "table", "desc": "Objet porteur des variables (graphe ou gestionnaire) avec getFull, changeBase, changeInstant, renameVariable, mgr."},
-        "name": {"type": "string", "desc": "Nom de la variable."},
-        "displayOptions": {"type": "table|nil", "desc": "Options : global, allowEditing (par défaut source.mgr.allowEditing), onlyValue."}
+        "source": {
+          "type": "table",
+          "desc": "Object holding the variables (graph or manager) with getFull, changeBase, changeInstant, renameVariable, mgr."
+        },
+        "name": {
+          "type": "string",
+          "desc": "Variable name."
+        },
+        "displayOptions": {
+          "type": "table|nil",
+          "desc": "Options: global, allowEditing (default source.mgr.allowEditing), onlyValue."
+        }
       },
       "returns": []
     },
     "vehicleSelectorRefresh": {
-      "desc": "Met à jour self.modelName et self.configName (et self.configs trié par nom) à partir de self.model / self.config / self.models.",
+      "desc": "Updates self.modelName and self.configName (and self.configs sorted by name) from self.model / self.config / self.models.",
       "params": {
-        "self": {"type": "table", "desc": "Objet de sélection (champs model, config, models, configs)."},
-        "onlyModel": {"type": "boolean|nil", "desc": "Non utilisé dans le corps de la fonction."}
+        "self": {
+          "type": "table",
+          "desc": "Selection object (fields model, config, models, configs)."
+        },
+        "onlyModel": {
+          "type": "boolean|nil",
+          "desc": "Not used in the function body."
+        }
       },
       "returns": []
     },
     "vehicleSelector": {
-      "desc": "Dessine un sélecteur de véhicule ImGui : bouton « Load Models and Configs » (charge core_vehicles.getModelList), recherche textuelle et choix du modèle puis de la config. Met à jour self.model, self.config, self.vehType, self.modelName, self.configName. Retourne une raison de changement (reason) ou nil.",
+      "desc": "Draws an ImGui vehicle selector: \"Load Models and Configs\" button (loads core_vehicles.getModelList), text search and choice of model then config. Updates self.model, self.config, self.vehType, self.modelName, self.configName. Returns a change reason (reason) or nil.",
       "params": {
-        "self": {"type": "table", "desc": "Objet d'état du sélecteur."},
-        "onlyModel": {"type": "boolean|nil", "desc": "Si vrai, ne choisit que le modèle, pas la configuration."}
+        "self": {
+          "type": "table",
+          "desc": "Selector state object."
+        },
+        "onlyModel": {
+          "type": "boolean|nil",
+          "desc": "If true, only picks the model, not the configuration."
+        }
       },
-      "returns": [{"type": "string|nil", "desc": "Raison de la modification (non vérifié en détail)."}]
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Reason for the change (not checked in detail)."
+        }
+      ]
     },
     "isFunctionalNode": {
-      "desc": "Vrai pour les catégories repeat/once/dynamic × instant/p_duration/f_duration ainsi que 'simple' et 'provider'.",
-      "params": {"category": {"type": "string", "desc": "Catégorie du nœud."}},
-      "returns": [{"type": "boolean", "desc": "Résultat."}]
+      "desc": "True for the categories repeat/once/dynamic × instant/p_duration/f_duration as well as 'simple' and 'provider'.",
+      "params": {
+        "category": {
+          "type": "string",
+          "desc": "Node category."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Result."
+        }
+      ]
     },
     "isSimpleNode": {
-      "desc": "Vrai pour 'simple' et 'provider' (nœuds qui ne nécessitent pas de flux).",
-      "params": {"category": {"type": "string", "desc": "Catégorie du nœud."}},
-      "returns": [{"type": "boolean", "desc": "Résultat."}]
+      "desc": "True for 'simple' and 'provider' (nodes that do not need flow).",
+      "params": {
+        "category": {
+          "type": "string",
+          "desc": "Node category."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Result."
+        }
+      ]
     },
     "isDurationNode": {
-      "desc": "Vrai pour les catégories *_p_duration et *_f_duration (repeat, once, dynamic).",
-      "params": {"category": {"type": "string", "desc": "Catégorie du nœud."}},
-      "returns": [{"type": "boolean", "desc": "Résultat."}]
+      "desc": "True for the categories *_p_duration and *_f_duration (repeat, once, dynamic).",
+      "params": {
+        "category": {
+          "type": "string",
+          "desc": "Node category."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Result."
+        }
+      ]
     },
     "isF_DurationNode": {
-      "desc": "Vrai pour les catégories *_f_duration (repeat, once, dynamic).",
-      "params": {"category": {"type": "string", "desc": "Catégorie du nœud."}},
-      "returns": [{"type": "boolean", "desc": "Résultat."}]
+      "desc": "True for the categories *_f_duration (repeat, once, dynamic).",
+      "params": {
+        "category": {
+          "type": "string",
+          "desc": "Node category."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Result."
+        }
+      ]
     },
     "isOnceNode": {
-      "desc": "Vrai pour once_instant, once_p_duration, once_f_duration.",
-      "params": {"category": {"type": "string", "desc": "Catégorie du nœud."}},
-      "returns": [{"type": "boolean", "desc": "Résultat."}]
+      "desc": "True for once_instant, once_p_duration, once_f_duration.",
+      "params": {
+        "category": {
+          "type": "string",
+          "desc": "Node category."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Result."
+        }
+      ]
     },
     "isDynamicNode": {
-      "desc": "Vrai pour dynamic_instant, dynamic_p_duration, dynamic_f_duration.",
-      "params": {"category": {"type": "string", "desc": "Catégorie du nœud."}},
-      "returns": [{"type": "boolean", "desc": "Résultat."}]
+      "desc": "True for dynamic_instant, dynamic_p_duration, dynamic_f_duration.",
+      "params": {
+        "category": {
+          "type": "string",
+          "desc": "Node category."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Result."
+        }
+      ]
     },
     "getBehaviourIcon": {
-      "desc": "Icône d'un comportement de nœud : once, duration, simple, singleActive, obsolete ; nil sinon.",
-      "params": {"behaviour": {"type": "string", "desc": "Nom du comportement."}},
-      "returns": [{"type": "string|nil", "desc": "Nom d'icône."}]
+      "desc": "Icon of a node behavior: once, duration, simple, singleActive, obsolete; nil otherwise.",
+      "params": {
+        "behaviour": {
+          "type": "string",
+          "desc": "Behavior name."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Icon name."
+        }
+      ]
     },
     "getBehaviourDescription": {
-      "desc": "Texte anglais décrivant un comportement de nœud (once, duration, simple, singleActive, obsolete) ; nil sinon.",
-      "params": {"behaviour": {"type": "string", "desc": "Nom du comportement."}},
-      "returns": [{"type": "string|nil", "desc": "Description."}]
+      "desc": "English text describing a node behavior (once, duration, simple, singleActive, obsolete); nil otherwise.",
+      "params": {
+        "behaviour": {
+          "type": "string",
+          "desc": "Behavior name."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Description."
+        }
+      ]
     },
     "getAutoTypeFromName": {
-      "desc": "Devine le type de pin d'après le nom (minuscules) : pos/scl/vec/position/scale/vector -> vec3 ; rot/quat/rotation/orientation -> quat ; clr/color -> color ; num/id/number/amount/score/count/time/duration/length/dist/points/threshold/velocity -> number ; bool/enabled/disabled/contains/has…/uses…/with… -> bool ; sinon string.",
-      "params": {"name": {"type": "string", "desc": "Nom du pin ou du champ."}},
-      "returns": [{"type": "string", "desc": "Type deviné."}]
+      "desc": "Guesses the pin type from the (lowercase) name: pos/scl/vec/position/scale/vector -> vec3; rot/quat/rotation/orientation -> quat; clr/color -> color; num/id/number/amount/score/count/time/duration/length/dist/points/threshold/velocity -> number; bool/enabled/disabled/contains/has.../uses.../with... -> bool; otherwise string.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Pin or field name."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Guessed type."
+        }
+      ]
     }
   }
 }

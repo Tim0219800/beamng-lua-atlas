@@ -1,56 +1,56 @@
 # `editor_roadArchitect_roadMesh`
 
-*Fichier : `lua/ge/extensions/editor/roadArchitect/roadMesh.lua` · VM : Game Engine (GE) · 899 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadArchitect/roadMesh.lua` · VM: Game Engine (GE) · 899 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadArchitect_roadMesh` : `extensions.load("editor_roadArchitect_roadMesh")`, puis la globale `editor_roadArchitect_roadMesh`
+**Access:** extension `editor_roadArchitect_roadMesh`: `extensions.load("editor_roadArchitect_roadMesh")`, then the global `editor_roadArchitect_roadMesh`
 
-Crée les maillages procéduraux (objets de scène ProceduralMesh) du Road Architect : trottoirs avec bordures (kerbs) à gauche ou à droite de la route, et ponts. Il garde en interne les tables des maillages par nom de route et par nom de pont, pour pouvoir les supprimer plus tard. Il est appelé par le module roads lors de finalise/unfinalise et de updateRoads.
+Creates the procedural meshes (ProceduralMesh scene objects) of Road Architect: sidewalks with curbs (kerbs) on the left or right of the road, and bridges. It keeps internally the mesh tables by road name and by bridge name, so they can be deleted later. It is called by the roads module during finalise/unfinalise and updateRoads.
 
-## Remarques
+## Notes
 
-- createRoad lit r.renderData et r.laneKeys : la route doit avoir été calculée (geometry.computeRoadRenderData) avant.
-- createRoad ne génère des maillages que pour les sections latérales de type 'sidewalk' (une voie par section) ; les autres types de voies sont rendus par les décalcomanies, pas par ce module.
-- Les maillages sont ajoutés au dossier de scène fourni, avec canSave = true.
-- Les ponts sont nommés 'Bridge_<nom de route>' ; un pont existant est supprimé puis recréé à chaque updateBridge.
+- createRoad reads r.renderData and r.laneKeys: the road must have been computed (geometry.computeRoadRenderData) beforehand.
+- createRoad only generates meshes for lateral sections of type 'sidewalk' (one lane per section); the other lane types are rendered by the decals, not by this module.
+- The meshes are added to the supplied scene folder, with canSave = true.
+- Bridges are named 'Bridge_<road name>'; an existing bridge is deleted then recreated on each updateBridge.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadArchitect_roadMesh.clearBridges()` | Remplace la table des ponts par une table vide sans supprimer les objets de scène. | 888 |
-| `editor_roadArchitect_roadMesh.createRoad(r, roadMeshIdx, folder)` | Découpe la route en sections latérales et crée un maillage de trottoir + bordure pour chaque voie 'sidewalk' (côté gauche ou droit selon isLeftSide). Mémorise les maillages sous le nom de la route. | 669 |
-| `editor_roadArchitect_roadMesh.tryRemove(roadName)` | Supprime de la scène les maillages créés pour la route (s'il y en a) et oublie l'entrée. | 686 |
-| `editor_roadArchitect_roadMesh.tryRemoveBridge(name)` | Supprime l'objet maillage du pont et l'oublie. | 879 |
-| `editor_roadArchitect_roadMesh.updateBridge(r, folder)` | (Re)crée le maillage procédural d'un pont : supprime l'ancien, calcule les anneaux de sommets à partir du renderData (voies -1 à 1), génère surface et capuchons, et l'ajoute au dossier. | 697 |
+| `editor_roadArchitect_roadMesh.clearBridges()` | Replaces the bridges table with an empty table without deleting the scene objects. | 888 |
+| `editor_roadArchitect_roadMesh.createRoad(r, roadMeshIdx, folder)` | Splits the road into lateral sections and creates a sidewalk + curb mesh for each 'sidewalk' lane (left or right side depending on isLeftSide). Stores the meshes under the road name. | 669 |
+| `editor_roadArchitect_roadMesh.tryRemove(roadName)` | Removes from the scene the meshes created for the road (if any) and forgets the entry. | 686 |
+| `editor_roadArchitect_roadMesh.tryRemoveBridge(name)` | Deletes the bridge mesh object and forgets it. | 879 |
+| `editor_roadArchitect_roadMesh.updateBridge(r, folder)` | (Re)creates the procedural mesh of a bridge: deletes the old one, computes the vertex rings from the renderData (lanes -1 to 1), generates surface and caps, and adds it to the folder. | 697 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadArchitect_roadMesh.createRoad(r, roadMeshIdx, folder)`
 
-Découpe la route en sections latérales et crée un maillage de trottoir + bordure pour chaque voie 'sidewalk' (côté gauche ou droit selon isLeftSide). Mémorise les maillages sous le nom de la route.
+Splits the road into lateral sections and creates a sidewalk + curb mesh for each 'sidewalk' lane (left or right side depending on isLeftSide). Stores the meshes under the road name.
 
-- `r` (*table*) : Route avec renderData.
-- `roadMeshIdx` (*integer*) : Indice de la route, utilisé pour nommer les objets créés.
-- `folder` (*userdata*) : SimGroup de scène qui reçoit les maillages.
+- `r` (*table*) : Road with renderData.
+- `roadMeshIdx` (*integer*) : Index of the road, used to name the created objects.
+- `folder` (*userdata*) : Scene SimGroup that receives the meshes.
 
 #### `editor_roadArchitect_roadMesh.tryRemove(roadName)`
 
-Supprime de la scène les maillages créés pour la route (s'il y en a) et oublie l'entrée.
+Removes from the scene the meshes created for the road (if any) and forgets the entry.
 
-- `roadName` (*string*) : Nom de la route.
+- `roadName` (*string*) : Name of the road.
 
 #### `editor_roadArchitect_roadMesh.tryRemoveBridge(name)`
 
-Supprime l'objet maillage du pont et l'oublie.
+Deletes the bridge mesh object and forgets it.
 
-- `name` (*string*) : Nom (identifiant) de la route de type pont.
+- `name` (*string*) : Name (identifier) of the bridge type road.
 
 #### `editor_roadArchitect_roadMesh.updateBridge(r, folder)`
 
-(Re)crée le maillage procédural d'un pont : supprime l'ancien, calcule les anneaux de sommets à partir du renderData (voies -1 à 1), génère surface et capuchons, et l'ajoute au dossier.
+(Re)creates the procedural mesh of a bridge: deletes the old one, computes the vertex rings from the renderData (lanes -1 to 1), generates surface and caps, and adds it to the folder.
 
-- `r` (*table*) : Route de type pont, avec renderData.
-- `folder` (*userdata*) : SimGroup « Road Architect - Bridge <nom> ».
+- `r` (*table*) : Bridge type road, with renderData.
+- `folder` (*userdata*) : SimGroup "Road Architect - Bridge <name>".
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadArchitect/roadMesh.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadArchitect/roadMesh.lua`.*

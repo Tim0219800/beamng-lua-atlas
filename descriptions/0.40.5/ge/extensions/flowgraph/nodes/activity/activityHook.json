@@ -1,15 +1,22 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/activity/activityHook.lua",
-  "module": "Nœud flowgraph « Activity Hook Trigger » (catégorie once_instant, tag activity). Déclenche un hook de mission nommé par data.eventName (« start » par défaut) en passant en argument tous les pins d'entrée personnalisés (sauf flow et reset) via mgr.modules.mission:missionHook. Marqué « généralement inutilisé » (C.todo). Pas de pins fixes ; tous types sauf flow autorisés comme pins personnalisés.",
-  "notes": ["C.todo du jeu : « This node is generally unused. »"],
+  "module": "Flowgraph node \"Activity Hook Trigger\" (category once_instant, tag activity). Triggers a mission hook named by data.eventName (\"start\" by default), passing all custom input pins (except flow and reset) as arguments via mgr.modules.mission:missionHook. Marked \"generally unused\" (C.todo). No fixed pins; all types except flow are allowed as custom pins.",
+  "notes": [
+    "Game C.todo: \"This node is generally unused.\""
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Fixe data.eventName = 'start' et active allowCustomInPins et savePins.", "internal": true},
-        "workOnce": {"desc": "Construit une table {nomPin = valeur} avec les pins d'entrée (sauf flow, reset) et appelle mgr.modules.mission:missionHook(eventName, données)."}
+        "init": {
+          "desc": "Sets data.eventName = 'start' and enables allowCustomInPins and savePins.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Builds a table {pinName = value} from the input pins (except flow, reset) and calls mgr.modules.mission:missionHook(eventName, data)."
+        }
       }
     }
   }

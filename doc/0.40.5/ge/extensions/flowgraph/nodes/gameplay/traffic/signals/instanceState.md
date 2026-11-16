@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_traffic_signals_instanceState`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceState.lua` · VM : Game Engine (GE) · 33 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceState.lua` · VM: Game Engine (GE) · 33 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/instanceState")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/instanceState")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Predict Signal State » (once_instant). Prédit l'état futur d'une instance de feu après `seconds` secondes (positives uniquement) via instance:getStateAfterTime. Sorties : stateName, stateAction.
+Flowgraph node "Predict Signal State" (once_instant). Predicts the future state of a traffic light instance after `seconds` seconds (positive only) via instance:getStateAfterTime. Outputs: stateName, stateAction.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Calcule l'état prédit et écrit stateName / stateAction. | 24 |
+| `C:workOnce()` | Computes the predicted state and writes stateName / stateAction. | 24 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceState.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceState.lua`.*

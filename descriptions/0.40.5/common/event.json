@@ -1,46 +1,74 @@
 {
   "path": "lua/common/event.lua",
-  "module": "Petite classe d'événements (délégués) exposée comme global Event. On crée un objet avec Event.new(), on y abonne des fonctions avec add, et on les déclenche avec call ou en appelant l'objet directement.",
-  "usage": "local ev = Event.new()\nlocal function cb(x) print('reçu', x) end\nev:add(cb)\nev(42)      -- ou ev:call(42)\nev:remove(cb)",
+  "module": "Small event class (delegates) exposed as the global Event. Create an object with Event.new(), subscribe functions with add, and trigger them with call or by calling the object directly.",
+  "usage": "local ev = Event.new()\nlocal function cb(x) print('received', x) end\nev:add(cb)\nev(42)      -- or ev:call(42)\nev:remove(cb)",
   "notes": [
-    "Les abonnés sont stockés comme clés d'une table : l'ordre d'appel n'est pas garanti et ajouter deux fois la même fonction ne la compte qu'une fois.",
-    "add et remove lèvent error('Wrong parameter type: must be a function') si l'argument n'est pas une fonction.",
-    "Les fonctions sont des champs de la table globale Event (appel conseillé en notation ':')."
+    "Subscribers are stored as table keys: call order is not guaranteed and adding the same function twice counts it only once.",
+    "add and remove raise error('Wrong parameter type: must be a function') if the argument is not a function.",
+    "The functions are fields of the global Event table (':' notation recommended for calls)."
   ],
   "fields": {},
   "functions": {
     "Event.new": {
-      "desc": "Crée un nouvel événement vide.",
+      "desc": "Creates a new empty event.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Objet Event avec une table __subscribers vide."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Event object with an empty __subscribers table."
+        }
+      ],
       "internal": false
     },
     "Event.add": {
-      "desc": "Abonne une fonction à l'événement.",
+      "desc": "Subscribes a function to the event.",
       "params": {
-        "self": {"type": "table", "desc": "Objet Event."},
-        "fun": {"type": "function", "desc": "Fonction à appeler à chaque déclenchement."}
+        "self": {
+          "type": "table",
+          "desc": "Event object."
+        },
+        "fun": {
+          "type": "function",
+          "desc": "Function to call on each trigger."
+        }
       },
       "internal": false
     },
     "Event.remove": {
-      "desc": "Désabonne une fonction précédemment ajoutée.",
+      "desc": "Unsubscribes a previously added function.",
       "params": {
-        "self": {"type": "table", "desc": "Objet Event."},
-        "fun": {"type": "function", "desc": "Fonction à retirer."}
+        "self": {
+          "type": "table",
+          "desc": "Event object."
+        },
+        "fun": {
+          "type": "function",
+          "desc": "Function to remove."
+        }
       },
       "internal": false
     },
     "Event.clear": {
-      "desc": "Supprime tous les abonnés.",
-      "params": {"self": {"type": "table", "desc": "Objet Event."}},
+      "desc": "Removes all subscribers.",
+      "params": {
+        "self": {
+          "type": "table",
+          "desc": "Event object."
+        }
+      },
       "internal": false
     },
     "Event.call": {
-      "desc": "Appelle chaque fonction abonnée avec les arguments fournis. Aussi accessible via __call : ev(...).",
+      "desc": "Calls each subscribed function with the provided arguments. Also reachable via __call: ev(...).",
       "params": {
-        "self": {"type": "table", "desc": "Objet Event."},
-        "...": {"type": "any", "desc": "Arguments transmis à chaque abonné."}
+        "self": {
+          "type": "table",
+          "desc": "Event object."
+        },
+        "...": {
+          "type": "any",
+          "desc": "Arguments passed to each subscriber."
+        }
       },
       "internal": false
     }

@@ -1,41 +1,41 @@
 # `util_screenshotCreator_shippedConfigs`
 
-*Fichier : `lua/ge/extensions/util/screenshotCreator/shippedConfigs.lua` · VM : Game Engine (GE) · 93 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/screenshotCreator/shippedConfigs.lua` · VM: Game Engine (GE) · 93 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_screenshotCreator_shippedConfigs` : `extensions.load("util_screenshotCreator_shippedConfigs")`, puis la globale `util_screenshotCreator_shippedConfigs`
+**Access:** extension `util_screenshotCreator_shippedConfigs`: `extensions.load("util_screenshotCreator_shippedConfigs")`, then the global `util_screenshotCreator_shippedConfigs`
 
-Détermine si un modèle de véhicule ou une configuration (.pc) est « livré » avec le jeu, c'est-à-dire non exclu par le fichier de filtres de déploiement /DevTools/deployfilters/shared_prepack.txt. Le fichier est lu une fois (règles en minuscules, lignes vides et commentaires # ignorés), les règles de type glob (*, **, ?) sont converties en motifs Lua et les résultats sont mis en cache. Utilisé par le créateur de vignettes (modelSelection, job) pour ne photographier que les véhicules livrés.
+Determines whether a vehicle model or configuration (.pc) is "shipped" with the game, i.e. not excluded by the deployment filter file /DevTools/deployfilters/shared_prepack.txt. The file is read once (lowercase rules, empty lines and # comments ignored), glob-style rules (*, **, ?) are converted to Lua patterns and results are cached. Used by the thumbnail creator (modelSelection, job) to photograph only shipped vehicles.
 
-## Remarques
+## Notes
 
-- Un chemin est considéré comme livré par défaut ; il cesse de l'être dès qu'une règle du fichier le reconnaît (préfixe exact ou motif glob).
-- Si le fichier /DevTools/deployfilters/shared_prepack.txt n'existe pas (cas d'une installation normale du jeu, ce dossier DevTools étant un outil interne), aucune règle n'est chargée et tout est considéré comme livré.
-- Les chemins testés sont /vehicles/<modèle>/ et /vehicles/<modèle>/<config>.pc (en minuscules).
+- A path is considered shipped by default; it stops being so as soon as a rule in the file matches it (exact prefix or glob pattern).
+- If the file /DevTools/deployfilters/shared_prepack.txt does not exist (the case for a normal game installation, this DevTools folder being an internal tool), no rule is loaded and everything is considered shipped.
+- The tested paths are /vehicles/<model>/ and /vehicles/<model>/<config>.pc (lowercase).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_screenshotCreator_shippedConfigs.clearCache()` | Oublie les règles chargées et le cache de résultats ; le fichier de filtres sera relu au prochain appel. | 87 |
-| `util_screenshotCreator_shippedConfigs.isConfigShipped(modelName, configName)` | Indique si le modèle ET le fichier /vehicles/<modèle>/<config>.pc sont livrés. | 82 |
-| `util_screenshotCreator_shippedConfigs.isModelShipped(modelName)` | Indique si le dossier /vehicles/<modèle>/ n'est pas exclu par les filtres de déploiement. | 78 |
+| `util_screenshotCreator_shippedConfigs.clearCache()` | Forgets the loaded rules and the result cache; the filter file will be reread on the next call. | 87 |
+| `util_screenshotCreator_shippedConfigs.isConfigShipped(modelName, configName)` | Indicates whether the model AND the file /vehicles/<model>/<config>.pc are shipped. | 82 |
+| `util_screenshotCreator_shippedConfigs.isModelShipped(modelName)` | Indicates whether the /vehicles/<model>/ folder is not excluded by the deployment filters. | 78 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_screenshotCreator_shippedConfigs.isConfigShipped(modelName, configName)`
 
-Indique si le modèle ET le fichier /vehicles/<modèle>/<config>.pc sont livrés.
+Indicates whether the model AND the file /vehicles/<model>/<config>.pc are shipped.
 
-- `modelName` (*string*) : Nom du modèle.
-- `configName` (*string*) : Nom de la configuration, sans extension .pc.
-- **renvoie** : boolean true si la config est livrée.
+- `modelName` (*string*) : Model name.
+- `configName` (*string*) : Configuration name, without the .pc extension.
+- **returns**: boolean true if the config is shipped.
 
 #### `util_screenshotCreator_shippedConfigs.isModelShipped(modelName)`
 
-Indique si le dossier /vehicles/<modèle>/ n'est pas exclu par les filtres de déploiement.
+Indicates whether the /vehicles/<model>/ folder is not excluded by the deployment filters.
 
-- `modelName` (*string*) : Nom du modèle (dossier de véhicule).
-- **renvoie** : boolean true si le modèle est livré.
+- `modelName` (*string*) : Model name (vehicle folder).
+- **returns**: boolean true if the model is shipped.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/screenshotCreator/shippedConfigs.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/screenshotCreator/shippedConfigs.lua`.*

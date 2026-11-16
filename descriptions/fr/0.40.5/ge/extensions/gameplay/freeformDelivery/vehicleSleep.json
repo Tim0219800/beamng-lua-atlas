@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/gameplay/freeformDelivery/vehicleSleep.lua",
+  "module": "Sous-module de la livraison libre qui endort (setActive(0)) les véhicules de livraison éloignés de la caméra et du véhicule du joueur, et les réveille à l'approche, pour économiser du temps de simulation. Seuls les véhicules ayant un sleepDistance valide dans leur définition sont gérés.",
+  "notes": [
+    "sleepDistance doit être un nombre > 0, sinon il est ignoré avec une erreur de log.",
+    "wakeDistance par défaut = max(sleepDistance - 50, sleepDistance * 0.8) ; s'il est absent, invalide ou supérieur à sleepDistance, la valeur par défaut est utilisée (hystérésis).",
+    "Un véhicule s'endort quand caméra ET véhicule joueur sont plus loin que sleepDistance ; il se réveille dès que l'un des deux est plus proche que wakeDistance.",
+    "cleanup réveille tous les véhicules suivis."
+  ],
+  "functions": {
+    "setup": {
+      "desc": "Normalise sleepDistance/wakeDistance dans delivery.vehicles et enregistre les véhicules concernés (actifs au départ, setActive(1)).",
+      "params": {"delivery": {"type": "table", "desc": "Données de livraison avec le tableau vehicles."}},
+      "internal": true
+    },
+    "update": {
+      "desc": "Appelée chaque frame : mesure les distances caméra/joueur de chaque véhicule suivi et bascule son état actif/endormi.",
+      "internal": true
+    },
+    "getDebugData": {
+      "desc": "Renvoie un tableau trié par id avec, pour chaque véhicule suivi, l'état de sommeil et les distances (utile pour l'affichage de debug).",
+      "returns": [{"type": "table[]", "desc": "Entrées {id, sleeping, sleepDistance, wakeDistance, cameraDistance, playerVehicleDistance}."}],
+      "internal": false
+    },
+    "cleanup": {
+      "desc": "Réactive tous les véhicules suivis et vide le suivi.",
+      "internal": true
+    }
+  }
+}

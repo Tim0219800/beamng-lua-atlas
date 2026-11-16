@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/randomVector.lua",
+  "module": "Nœud « Random Vector » (repeat_instant, icône casino). Fournit un vecteur aléatoire non normalisé. Entrées : xMin/xMax, yMin/yMax, zMin/zMax (par défaut -1 et 1). Sortie : vector ({x, y, z}).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "work": {
+          "desc": "Tire chaque composante uniformément entre son min et son max et écrit {x, y, z}.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

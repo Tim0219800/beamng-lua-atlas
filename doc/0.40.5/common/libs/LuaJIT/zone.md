@@ -1,12 +1,12 @@
 # `zone`
 
-*Fichier : `lua/common/libs/LuaJIT/zone.lua` · VM : Commun (GE + véhicule) · 45 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/LuaJIT/zone.lua` · VM: Common (GE + vehicle) · 45 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `zone`
+**Access:** global `zone`
 
-Module jit.zone de LuaJIT (Mike Pall, licence MIT) : pile hiérarchique de « zones » nommées, utilisée par le profileur LuaJIT pour étiqueter les portions de code. Le module renvoie une table appelable : zone("nom") empile une zone, zone() en dépile une et la renvoie. Un moddeur n'en a normalement pas besoin.
+LuaJIT's jit.zone module (Mike Pall, MIT license): hierarchical stack of named "zones", used by the LuaJIT profiler to label portions of code. The module returns a callable table: zone("name") pushes a zone, zone() pops one and returns it. A modder normally does not need it.
 
-## Exemple
+## Example
 
 ```lua
 local zone = require("jit.zone")
@@ -15,31 +15,31 @@ zone("AI")
 zone()
 ```
 
-## Remarques
+## Notes
 
-- zone() sans argument dépile ; sur une pile vide, assert échoue avec "empty zone stack".
+- zone() with no argument pops; on an empty stack, assert fails with "empty zone stack".
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `zone.flush(t)` | Vide la pile de zones (méthode : zone:flush()). (assignée dynamiquement) | dyn |
-| `zone.get(t)` | Renvoie la zone courante, c'est-à-dire le sommet de la pile (zone:get()), ou nil si vide. (assignée dynamiquement) | dyn |
+| `zone.flush(t)` | Empties the zone stack (method: zone:flush()). (dynamically assigned) | dyn |
+| `zone.get(t)` | Returns the current zone, i.e. the top of the stack (zone:get()), or nil if empty. (dynamically assigned) | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `zone.flush(t)`
 
-Vide la pile de zones (méthode : zone:flush()). (assignée dynamiquement)
+Empties the zone stack (method: zone:flush()). (dynamically assigned)
 
-- `t` (*table*) : La table zone (self)
+- `t` (*table*) : The zone table (self)
 
 #### `zone.get(t)`
 
-Renvoie la zone courante, c'est-à-dire le sommet de la pile (zone:get()), ou nil si vide. (assignée dynamiquement)
+Returns the current zone, i.e. the top of the stack (zone:get()), or nil if empty. (dynamically assigned)
 
-- `t` (*table*) : La table zone (self)
-- **renvoie** : string|nil Nom de la zone courante
+- `t` (*table*) : The zone table (self)
+- **returns**: string|nil Name of the current zone
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/LuaJIT/zone.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/LuaJIT/zone.lua`.*

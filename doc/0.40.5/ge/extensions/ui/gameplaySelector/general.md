@@ -1,381 +1,381 @@
 # `ui_gameplaySelector_general`
 
-*Fichier : `lua/ge/extensions/ui/gameplaySelector/general.lua` · VM : Game Engine (GE) · 1189 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/gameplaySelector/general.lua` · VM: Game Engine (GE) · 1189 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_gameplaySelector_general` : `extensions.load("ui_gameplaySelector_general")`, puis la globale `ui_gameplaySelector_general`
+**Access:** extension `ui_gameplaySelector_general`: `extensions.load("ui_gameplaySelector_general")`, then the global `ui_gameplaySelector_general`
 
-Backend « gameplaySelector » du sélecteur en grille : l'écran qui liste missions, scénarios, campagnes, expériences de démarrage rapide et sélecteurs de rallye. Il collecte les tuiles par le hook onGameplaySelectorGetTiles (validBackends doit contenir gameplaySelector), gère filtres, recherche, favoris, récents et options d'affichage (sauvegardées dans /settings/gameplaySelectorData.json), construit les détails via onGameplaySelectorGetDetails et envoie à l'interface des instantanés (GameplaySelectorDataLoaded, gameplaySelectorDisplayDataSnapshot, gameplaySelectorDetails). Il applique aussi des préréglages selon la route (menu.gameplay, menu.rallySelector, menu.experiencesSelector) et gère la navigation vers les « clusters ».
+"gameplaySelector" backend of the grid selector: the screen that lists missions, scenarios, campaigns, quick-start experiences and rally selectors. It collects the tiles through the hook onGameplaySelectorGetTiles (validBackends must contain gameplaySelector), handles filters, search, favorites, recents and display options (saved in /settings/gameplaySelectorData.json), builds the details via onGameplaySelectorGetDetails and sends snapshots to the interface (GameplaySelectorDataLoaded, gameplaySelectorDisplayDataSnapshot, gameplaySelectorDetails). It also applies presets according to the route (menu.gameplay, menu.rallySelector, menu.experiencesSelector) and handles navigation to "clusters".
 
-## Exemple
+## Example
 
 ```lua
--- ouvrir le sélecteur de rallye (applique les filtres rallyStage et rallyLoop)
+-- open the rally selector (applies the rallyStage and rallyLoop filters)
 ui_gameplaySelector_general.openRallySelector()
 ```
 
-## Remarques
+## Notes
 
-- Routes gérées : menu.gameplay (et menu.gameplay.type pour un cluster), menu.rallySelector, menu.experiencesSelector (et menu.experiencesSelector.type). Pour le rallye, groupMode et clusterMode viennent de groupModeRally (défaut « type ») et clusterModeRally (défaut « none ») ; pour les expériences, groupMode vaut « system » et clusterMode « automatic ».
-- Les préréglages de route (GAMEPLAY_ROUTE_PRESETS) effacent filtres et recherche puis activent le système quickStartExperiences (expériences) ou les types bigMap.missionLabels.rallyStage et rallyLoop (rallye).
-- Au montage d'une route, le chargement lourd passe par util_asyncBulkLoader.loadGameplaySelector ; l'instantané n'est émis qu'à la fin (hook asyncGameplaySelectorLoadComplete) et seulement si la route courante est toujours celle demandée. Sans asyncBulkLoader, ou s'il répond « alreadyLoaded », l'instantané est émis tout de suite.
-- Les données sont recalculées au prochain accès après onModActivated, onModDeactivated, onModManagerReady, onModManagerStateChanged ou onSettingsChanged. Contrairement au backend freeroam, onLanguageChanged n'est pas écouté ici.
-- Plusieurs fonctions acceptent un requestId optionnel : s'il est fourni, un instantané est émis pour que l'interface ignore les réponses périmées. clearAllFilters n'a pas ce paramètre.
-- Options d'affichage : groupMode, clusterMode, groupModeRally, clusterModeRally, displaySize, showAuxContent, showCareerContent (faux par défaut), sorting, showRecentMode, showFavouritesMode, defaultFreeroamAction. La version des données est 12.
-- Le filtre « system » propose des valeurs rapides : quickStartExperiences, challenges, scenarios, scenariosMultiplayer et, hors menu simplifié, campaigns.
-- Débogage laissé dans le code : navigateToCluster et onClusterRouteMount appellent dump(), et les étapes du montage asynchrone écrivent avec print().
-- Incohérences dans le filtrage de plage : le test « not type(propVal) == 'number' » est toujours faux à cause de la priorité de not (il faudrait type(propVal) ~= 'number'), et une affectation propVal = item[propKey] est répétée sans effet dans la création des filtres.
-- exploreFolder, goToMod, closedFromUI, exitCallback et profilerFinish sont des coquilles (journal ou TODO) ; getManagementDetails renvoie toujours { buttons = {} }.
-- Le champ M.displayDataInstance est exposé après la première initialisation.
+- Routes handled: menu.gameplay (and menu.gameplay.type for a cluster), menu.rallySelector, menu.experiencesSelector (and menu.experiencesSelector.type). For rally, groupMode and clusterMode come from groupModeRally (default "type") and clusterModeRally (default "none"); for experiences, groupMode is "system" and clusterMode "automatic".
+- The route presets (GAMEPLAY_ROUTE_PRESETS) clear filters and search then enable the quickStartExperiences system (experiences) or the types bigMap.missionLabels.rallyStage and rallyLoop (rally).
+- When a route is mounted, the heavy loading goes through util_asyncBulkLoader.loadGameplaySelector; the snapshot is only emitted at the end (hook asyncGameplaySelectorLoadComplete) and only if the current route is still the requested one. Without asyncBulkLoader, or if it answers "alreadyLoaded", the snapshot is emitted right away.
+- The data is recomputed on next access after onModActivated, onModDeactivated, onModManagerReady, onModManagerStateChanged or onSettingsChanged. Unlike the freeroam backend, onLanguageChanged is not listened to here.
+- Several functions accept an optional requestId: if provided, a snapshot is emitted so that the interface ignores stale responses. clearAllFilters does not have this parameter.
+- Display options: groupMode, clusterMode, groupModeRally, clusterModeRally, displaySize, showAuxContent, showCareerContent (false by default), sorting, showRecentMode, showFavouritesMode, defaultFreeroamAction. The data version is 12.
+- The "system" filter offers quick values: quickStartExperiences, challenges, scenarios, scenariosMultiplayer and, outside the simplified menu, campaigns.
+- Debug left in the code: navigateToCluster and onClusterRouteMount call dump(), and the steps of the asynchronous mount write with print().
+- Inconsistencies in range filtering: the test "not type(propVal) == 'number'" is always false because of the precedence of not (it should be type(propVal) ~= 'number'), and an assignment propVal = item[propKey] is repeated with no effect in the filter creation.
+- exploreFolder, goToMod, closedFromUI, exitCallback and profilerFinish are shells (log or TODO); getManagementDetails always returns { buttons = {} }.
+- The field M.displayDataInstance is exposed after the first initialization.
 
-**Dépendances (chargées avant) :** `ui_gameplaySelector_tiles`, `core_locales`
+**Dependencies (loaded first):** `ui_gameplaySelector_tiles`, `core_locales`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_gameplaySelector_general.asyncGameplaySelectorLoadComplete()` | Hook de fin du chargement asynchrone (util_asyncBulkLoader). Émet l'instantané GameplaySelectorDataLoaded de la route en attente, sauf si l'utilisateur a changé de route entre-temps. *(interne)* | 1070 |
-| `ui_gameplaySelector_general.clearAllFilters()` | Efface tous les filtres. | 641 |
-| `ui_gameplaySelector_general.closedFromUI()` | Appelé quand l'interface ferme le sélecteur. Ne fait rien pour l'instant (TODO). *(interne)* | 821 |
-| `ui_gameplaySelector_general.emitDisplayDataSnapshot(requestId)` | Reconstruit l'instantané de la vue courante (groupes, filtres, options d'affichage, détails de gestion, texte de recherche, en-tête) et l'envoie par l'évènement gameplaySelectorDisplayDataSnapshot avec le requestId. Renvoie false et journalise une erreur en cas d'échec. | 1107 |
-| `ui_gameplaySelector_general.executeButton(buttonId, additionalData)` | Exécute le bouton de détails d'identifiant donné via le buttonModule. | 837 |
-| `ui_gameplaySelector_general.executeDoubleClick(item)` | Exécute le bouton marqué isDoubleClickAction des détails d'une tuile (ou l'unique bouton s'il n'y en a qu'un). | 850 |
-| `ui_gameplaySelector_general.exitCallback()` | Ne fait rien (TODO). *(interne)* | 846 |
-| `ui_gameplaySelector_general.exploreFolder(path)` | Journalise seulement le chemin (non implémenté). | 862 |
-| `ui_gameplaySelector_general.getActiveFilters()` | Renvoie les filtres actifs. | 676 |
-| `ui_gameplaySelector_general.getDetails(item)` | Construit les détails d'une tuile en émettant le hook onGameplaySelectorGetDetails et renvoie le premier bloc. | 827 |
-| `ui_gameplaySelector_general.getDisplayData(routeName)` | Renvoie les options d'affichage effectives, adaptées à la route (rallye ou expériences). | 626 |
-| `ui_gameplaySelector_general.getDisplayDataOptions(routeName)` | Renvoie la définition des options d'affichage adaptée à la route : masque groupMode et clusterMode en mode rallye ou expériences, et masque groupModeRally et clusterModeRally ailleurs. | 725 |
-| `ui_gameplaySelector_general.getFilters()` | Renvoie la définition des filtres après avoir chargé les données. | 671 |
-| `ui_gameplaySelector_general.getGameplayData()` | Renvoie les données du sélecteur (tuiles dont validBackends contient gameplaySelector, filtres, options d'affichage), les recalcule si les mods ou les réglages ont changé, et les crée à la première demande. | 487 |
-| `ui_gameplaySelector_general.getManagementDetails()` | Renvoie toujours { buttons = {} } (TODO dans le code). | 841 |
-| `ui_gameplaySelector_general.getScreenHeaderTitleAndPath(path)` | Construit le titre de l'écran et le fil d'Ariane (menu, sélecteur de gameplay, segment de filtres ou recherche, cluster ou page découverte). Ajoute « (filtré) » au titre si des filtres ou une recherche sont actifs. | 746 |
-| `ui_gameplaySelector_general.getSearchText()` | Renvoie le texte de recherche courant. | 712 |
-| `ui_gameplaySelector_general.getTiles(path, routeName)` | Renvoie les groupes de tuiles pour un chemin, via ui_gameplaySelector_tiles.getTiles. | 510 |
-| `ui_gameplaySelector_general.getUiData(routeName)` | Renvoie les données du sélecteur : items, displayData (adaptées à la route : rallye ou expériences), filterList, activeFilters, lockedFiltersByProp et backendName. Charge les tuiles si nécessaire. | 440 |
-| `ui_gameplaySelector_general.goToMod(modId)` | Journalise seulement l'id du mod (non implémenté). | 867 |
-| `ui_gameplaySelector_general.isFavourite(itemKey)` | Indique si une tuile est en favori. | 647 |
-| `ui_gameplaySelector_general.isGameplayDataLoaded()` | Indique si les données ont déjà été construites et sont à jour. | 498 |
-| `ui_gameplaySelector_general.isRecent(itemKey)` | Indique si une tuile fait partie des éléments récents. | 659 |
-| `ui_gameplaySelector_general.navigateToCluster(input)` | Prépare puis ouvre l'écran d'un cluster de tuiles. Calcule les clés du chemin (gotoPath, keys ou la table elle-même) et un titre, mémorise la sélection en attente et navigue vers menu.gameplay.type (ou menu.experiencesSelector.type depuis le sélecteur d'expériences). | 582 |
-| `ui_gameplaySelector_general.onClusterRouteEnter(context, toRoute, fromRoute, data)` | Hook de route appelé à l'entrée dans une route de cluster. Promeut la sélection préparée par navigateToCluster, sinon retombe sur le cluster par défaut. *(interne)* *(hook)* | 1130 |
-| `ui_gameplaySelector_general.onClusterRouteMount(context, toRoute, fromRoute, data)` | Hook de route appelé au montage d'une route de cluster. Démarre le chargement asynchrone avec les clés et le titre du cluster actif. *(interne)* *(hook)* | 1142 |
-| `ui_gameplaySelector_general.onModActivated()` | Hook appelé quand un mod est activé : marque les données comme à recalculer. *(interne)* *(hook)* | 504 |
-| `ui_gameplaySelector_general.onModDeactivated()` | Hook appelé quand un mod est désactivé : marque les données comme à recalculer. *(interne)* *(hook)* | 503 |
-| `ui_gameplaySelector_general.onModManagerReady()` | Hook appelé quand le gestionnaire de mods est prêt : marque les données comme à recalculer. *(interne)* *(hook)* | 505 |
-| `ui_gameplaySelector_general.onModManagerStateChanged()` | Hook appelé quand l'état du gestionnaire de mods change : marque les données comme à recalculer. *(interne)* *(hook)* | 506 |
-| `ui_gameplaySelector_general.onRouteMount(context, toRoute, fromRoute, data)` | Hook de route appelé au montage d'une route racine du sélecteur. Réinitialise la sélection de cluster, mémorise la route active et démarre le chargement asynchrone avec le chemin allGameplay. *(interne)* *(hook)* | 1122 |
-| `ui_gameplaySelector_general.onSettingsChanged()` | Hook appelé quand les réglages changent : marque les données comme à recalculer. *(interne)* *(hook)* | 507 |
-| `ui_gameplaySelector_general.openExperiencesSelector()` | Ouvre menu.experiencesSelector avec le filtre système quickStartExperiences. | 1184 |
-| `ui_gameplaySelector_general.openGameplaySelector()` | Applique le préréglage de la route menu.gameplay (efface filtres et recherche) puis y navigue. | 1176 |
-| `ui_gameplaySelector_general.openRallySelector()` | Ouvre menu.rallySelector avec les filtres de type rallyStage et rallyLoop. | 1180 |
-| `ui_gameplaySelector_general.passesFilters(item)` | Indique si une tuile passe les filtres et la recherche ; une tuile isCareerOnly est refusée tant que displayData.showCareerContent est faux. | 610 |
-| `ui_gameplaySelector_general.profilerFinish()` | Ne fait rien (TODO dans le code). *(interne)* | 817 |
-| `ui_gameplaySelector_general.requestDetails(item, requestId)` | Construit les détails d'une tuile et les envoie à l'interface par l'évènement gameplaySelectorDetails avec backendName, requestId, item et details. | 596 |
-| `ui_gameplaySelector_general.resetDisplayDataToDefaults(requestId)` | Remet les options d'affichage à leurs valeurs par défaut. Émet un instantané si requestId est fourni. | 737 |
-| `ui_gameplaySelector_general.resetRangeFilter(filterKey, requestId)` | Réinitialise un filtre de plage. Émet un instantané si requestId est fourni. | 696 |
-| `ui_gameplaySelector_general.resetSetFilter(filterKey, requestId)` | Réinitialise un filtre à choix multiples. Émet un instantané si requestId est fourni. | 704 |
-| `ui_gameplaySelector_general.resolveClusterTitle(clusterTitle)` | Renvoie le titre du cluster actif, sinon clusterTitle s'il est une chaîne non vide, sinon nil. | 1158 |
-| `ui_gameplaySelector_general.resolveCurrentSelectorPath()` | Renvoie le chemin de la vue courante : celui du cluster actif, sinon le chemin racine { keys = {"allGameplay"} }. | 1092 |
-| `ui_gameplaySelector_general.setDisplayDataOption(key, value, requestId)` | Définit une option d'affichage et renvoie les données d'affichage à jour. Émet un instantané si requestId est fourni. | 729 |
-| `ui_gameplaySelector_general.setSearchText(text, requestId)` | Définit le texte de recherche. Émet un instantané si requestId est fourni. | 716 |
-| `ui_gameplaySelector_general.toggleFavourite(itemDetails)` | Bascule le statut de favori d'une tuile et renvoie le nouvel état. | 652 |
-| `ui_gameplaySelector_general.toggleFilter(filterKey, value, requestId)` | Active ou désactive une valeur de filtre. Émet un instantané si requestId est fourni. | 680 |
-| `ui_gameplaySelector_general.trackRecent(itemKey)` | Enregistre une tuile comme récemment utilisée. | 664 |
-| `ui_gameplaySelector_general.updateDisplayData(key, value)` | Modifie une option d'affichage (displayDataInstance.setDisplayDataOption). | 631 |
-| `ui_gameplaySelector_general.updateFilterData(key, value)` | Met à jour une donnée interne du module de filtres (filterInstance.updateData). | 636 |
-| `ui_gameplaySelector_general.updateRangeFilter(filterKey, min, max, requestId)` | Fixe les bornes d'un filtre de plage. Émet un instantané si requestId est fourni. | 688 |
+| `ui_gameplaySelector_general.asyncGameplaySelectorLoadComplete()` | End hook of the asynchronous loading (util_asyncBulkLoader). Emits the GameplaySelectorDataLoaded snapshot of the pending route, unless the user changed route in the meantime. *(internal)* | 1070 |
+| `ui_gameplaySelector_general.clearAllFilters()` | Clears all filters. | 641 |
+| `ui_gameplaySelector_general.closedFromUI()` | Called when the interface closes the selector. Does nothing for now (TODO). *(internal)* | 821 |
+| `ui_gameplaySelector_general.emitDisplayDataSnapshot(requestId)` | Rebuilds the current view's snapshot (groups, filters, display options, management details, search text, header) and sends it via the event gameplaySelectorDisplayDataSnapshot with the requestId. Returns false and logs an error on failure. | 1107 |
+| `ui_gameplaySelector_general.executeButton(buttonId, additionalData)` | Runs the details button with the given identifier via the buttonModule. | 837 |
+| `ui_gameplaySelector_general.executeDoubleClick(item)` | Runs the button marked isDoubleClickAction in a tile's details (or the only button if there is just one). | 850 |
+| `ui_gameplaySelector_general.exitCallback()` | Does nothing (TODO). *(internal)* | 846 |
+| `ui_gameplaySelector_general.exploreFolder(path)` | Only logs the path (not implemented). | 862 |
+| `ui_gameplaySelector_general.getActiveFilters()` | Returns the active filters. | 676 |
+| `ui_gameplaySelector_general.getDetails(item)` | Builds a tile's details by emitting the hook onGameplaySelectorGetDetails and returns the first block. | 827 |
+| `ui_gameplaySelector_general.getDisplayData(routeName)` | Returns the effective display options, adapted to the route (rally or experiences). | 626 |
+| `ui_gameplaySelector_general.getDisplayDataOptions(routeName)` | Returns the display options definition adapted to the route: hides groupMode and clusterMode in rally or experiences mode, and hides groupModeRally and clusterModeRally elsewhere. | 725 |
+| `ui_gameplaySelector_general.getFilters()` | Returns the filter definition after loading the data. | 671 |
+| `ui_gameplaySelector_general.getGameplayData()` | Returns the selector data (tiles whose validBackends contains gameplaySelector, filters, display options), recomputes them if the mods or settings have changed, and creates them on first request. | 487 |
+| `ui_gameplaySelector_general.getManagementDetails()` | Always returns { buttons = {} } (TODO in the code). | 841 |
+| `ui_gameplaySelector_general.getScreenHeaderTitleAndPath(path)` | Builds the screen title and the breadcrumb (menu, gameplay selector, filters or search segment, cluster or discover page). Adds "(filtered)" to the title if filters or a search are active. | 746 |
+| `ui_gameplaySelector_general.getSearchText()` | Returns the current search text. | 712 |
+| `ui_gameplaySelector_general.getTiles(path, routeName)` | Returns the tile groups for a path, via ui_gameplaySelector_tiles.getTiles. | 510 |
+| `ui_gameplaySelector_general.getUiData(routeName)` | Returns the selector data: items, displayData (adapted to the route: rally or experiences), filterList, activeFilters, lockedFiltersByProp and backendName. Loads the tiles if needed. | 440 |
+| `ui_gameplaySelector_general.goToMod(modId)` | Only logs the mod id (not implemented). | 867 |
+| `ui_gameplaySelector_general.isFavourite(itemKey)` | Indicates whether a tile is a favorite. | 647 |
+| `ui_gameplaySelector_general.isGameplayDataLoaded()` | Indicates whether the data has already been built and is up to date. | 498 |
+| `ui_gameplaySelector_general.isRecent(itemKey)` | Indicates whether a tile is among the recent items. | 659 |
+| `ui_gameplaySelector_general.navigateToCluster(input)` | Prepares then opens a tile cluster's screen. Computes the path keys (gotoPath, keys or the table itself) and a title, stores the pending selection and navigates to menu.gameplay.type (or menu.experiencesSelector.type from the experiences selector). | 582 |
+| `ui_gameplaySelector_general.onClusterRouteEnter(context, toRoute, fromRoute, data)` | Route hook called on entering a cluster route. Promotes the selection prepared by navigateToCluster, otherwise falls back to the default cluster. *(internal)* *(hook)* | 1130 |
+| `ui_gameplaySelector_general.onClusterRouteMount(context, toRoute, fromRoute, data)` | Route hook called when a cluster route is mounted. Starts the asynchronous loading with the active cluster's keys and title. *(internal)* *(hook)* | 1142 |
+| `ui_gameplaySelector_general.onModActivated()` | Hook called when a mod is activated: marks the data as needing recomputation. *(internal)* *(hook)* | 504 |
+| `ui_gameplaySelector_general.onModDeactivated()` | Hook called when a mod is deactivated: marks the data as needing recomputation. *(internal)* *(hook)* | 503 |
+| `ui_gameplaySelector_general.onModManagerReady()` | Hook called when the mod manager is ready: marks the data as needing recomputation. *(internal)* *(hook)* | 505 |
+| `ui_gameplaySelector_general.onModManagerStateChanged()` | Hook called when the mod manager state changes: marks the data as needing recomputation. *(internal)* *(hook)* | 506 |
+| `ui_gameplaySelector_general.onRouteMount(context, toRoute, fromRoute, data)` | Route hook called when a root route of the selector is mounted. Resets the cluster selection, stores the active route and starts the asynchronous loading with the allGameplay path. *(internal)* *(hook)* | 1122 |
+| `ui_gameplaySelector_general.onSettingsChanged()` | Hook called when the settings change: marks the data as needing recomputation. *(internal)* *(hook)* | 507 |
+| `ui_gameplaySelector_general.openExperiencesSelector()` | Opens menu.experiencesSelector with the system filter quickStartExperiences. | 1184 |
+| `ui_gameplaySelector_general.openGameplaySelector()` | Applies the preset of the menu.gameplay route (clears filters and search) then navigates to it. | 1176 |
+| `ui_gameplaySelector_general.openRallySelector()` | Opens menu.rallySelector with the type filters rallyStage and rallyLoop. | 1180 |
+| `ui_gameplaySelector_general.passesFilters(item)` | Indicates whether a tile passes the filters and the search; an isCareerOnly tile is refused as long as displayData.showCareerContent is false. | 610 |
+| `ui_gameplaySelector_general.profilerFinish()` | Does nothing (TODO in the code). *(internal)* | 817 |
+| `ui_gameplaySelector_general.requestDetails(item, requestId)` | Builds a tile's details and sends them to the interface via the event gameplaySelectorDetails with backendName, requestId, item and details. | 596 |
+| `ui_gameplaySelector_general.resetDisplayDataToDefaults(requestId)` | Resets the display options to their default values. Emits a snapshot if requestId is provided. | 737 |
+| `ui_gameplaySelector_general.resetRangeFilter(filterKey, requestId)` | Resets a range filter. Emits a snapshot if requestId is provided. | 696 |
+| `ui_gameplaySelector_general.resetSetFilter(filterKey, requestId)` | Resets a multiple-choice filter. Emits a snapshot if requestId is provided. | 704 |
+| `ui_gameplaySelector_general.resolveClusterTitle(clusterTitle)` | Returns the active cluster's title, otherwise clusterTitle if it is a non-empty string, otherwise nil. | 1158 |
+| `ui_gameplaySelector_general.resolveCurrentSelectorPath()` | Returns the current view's path: that of the active cluster, otherwise the root path { keys = {"allGameplay"} }. | 1092 |
+| `ui_gameplaySelector_general.setDisplayDataOption(key, value, requestId)` | Sets a display option and returns the updated display data. Emits a snapshot if requestId is provided. | 729 |
+| `ui_gameplaySelector_general.setSearchText(text, requestId)` | Sets the search text. Emits a snapshot if requestId is provided. | 716 |
+| `ui_gameplaySelector_general.toggleFavourite(itemDetails)` | Toggles a tile's favorite status and returns the new state. | 652 |
+| `ui_gameplaySelector_general.toggleFilter(filterKey, value, requestId)` | Enables or disables a filter value. Emits a snapshot if requestId is provided. | 680 |
+| `ui_gameplaySelector_general.trackRecent(itemKey)` | Records a tile as recently used. | 664 |
+| `ui_gameplaySelector_general.updateDisplayData(key, value)` | Changes a display option (displayDataInstance.setDisplayDataOption). | 631 |
+| `ui_gameplaySelector_general.updateFilterData(key, value)` | Updates an internal datum of the filters module (filterInstance.updateData). | 636 |
+| `ui_gameplaySelector_general.updateRangeFilter(filterKey, min, max, requestId)` | Sets the bounds of a range filter. Emits a snapshot if requestId is provided. | 688 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_gameplaySelector_general.emitDisplayDataSnapshot(requestId)`
 
-Reconstruit l'instantané de la vue courante (groupes, filtres, options d'affichage, détails de gestion, texte de recherche, en-tête) et l'envoie par l'évènement gameplaySelectorDisplayDataSnapshot avec le requestId. Renvoie false et journalise une erreur en cas d'échec.
+Rebuilds the current view's snapshot (groups, filters, display options, management details, search text, header) and sends it via the event gameplaySelectorDisplayDataSnapshot with the requestId. Returns false and logs an error on failure.
 
-- `requestId` (*any*) : Identifiant de requête de l'interface.
-- **renvoie** : boolean true si l'évènement a été envoyé.
+- `requestId` (*any*) : Interface request identifier.
+- **returns**: boolean true if the event was sent.
 
 #### `ui_gameplaySelector_general.executeButton(buttonId, additionalData)`
 
-Exécute le bouton de détails d'identifiant donné via le buttonModule.
+Runs the details button with the given identifier via the buttonModule.
 
-- `buttonId` (*any*) : Identifiant du bouton.
-- `additionalData` (*any*) : Données supplémentaires passées au callback.
-- **renvoie** : any Résultat de buttonInstance.executeButton.
+- `buttonId` (*any*) : Button identifier.
+- `additionalData` (*any*) : Extra data passed to the callback.
+- **returns**: any Result of buttonInstance.executeButton.
 
 #### `ui_gameplaySelector_general.executeDoubleClick(item)`
 
-Exécute le bouton marqué isDoubleClickAction des détails d'une tuile (ou l'unique bouton s'il n'y en a qu'un).
+Runs the button marked isDoubleClickAction in a tile's details (or the only button if there is just one).
 
-- `item` (*table*) : Données showDetails de la tuile.
+- `item` (*table*) : The tile's showDetails data.
 
 #### `ui_gameplaySelector_general.exploreFolder(path)`
 
-Journalise seulement le chemin (non implémenté).
+Only logs the path (not implemented).
 
-- `path` (*string*) : Chemin de dossier.
+- `path` (*string*) : Folder path.
 
 #### `ui_gameplaySelector_general.getActiveFilters()`
 
-Renvoie les filtres actifs.
+Returns the active filters.
 
-- **renvoie** : table Filtres actifs.
+- **returns**: table Active filters.
 
 #### `ui_gameplaySelector_general.getDetails(item)`
 
-Construit les détails d'une tuile en émettant le hook onGameplaySelectorGetDetails et renvoie le premier bloc.
+Builds a tile's details by emitting the hook onGameplaySelectorGetDetails and returns the first block.
 
-- `item` (*table*) : Données showDetails de la tuile.
-- **renvoie** : table|nil Bloc de détails, nil si aucun générateur n'a répondu.
+- `item` (*table*) : The tile's showDetails data.
+- **returns**: table|nil Details block, nil if no generator responded.
 
 #### `ui_gameplaySelector_general.getDisplayData(routeName)`
 
-Renvoie les options d'affichage effectives, adaptées à la route (rallye ou expériences).
+Returns the effective display options, adapted to the route (rally or experiences).
 
-- `routeName` (*string|nil*) : Nom de la route.
-- **renvoie** : table Valeurs d'options par clé.
+- `routeName` (*string|nil*) : Name of the road.
+- **returns**: table Option values by key.
 
 #### `ui_gameplaySelector_general.getDisplayDataOptions(routeName)`
 
-Renvoie la définition des options d'affichage adaptée à la route : masque groupMode et clusterMode en mode rallye ou expériences, et masque groupModeRally et clusterModeRally ailleurs.
+Returns the display options definition adapted to the route: hides groupMode and clusterMode in rally or experiences mode, and hides groupModeRally and clusterModeRally elsewhere.
 
-- `routeName` (*string|nil*) : Nom de la route (par défaut la route active).
-- **renvoie** : table[] Options visibles.
+- `routeName` (*string|nil*) : Route name (the active route by default).
+- **returns**: table[] Visible options.
 
 #### `ui_gameplaySelector_general.getFilters()`
 
-Renvoie la définition des filtres après avoir chargé les données.
+Returns the filter definition after loading the data.
 
-- **renvoie** : table Résultat de filterInstance.getFilters().
+- **returns**: table Result of filterInstance.getFilters().
 
 #### `ui_gameplaySelector_general.getGameplayData()`
 
-Renvoie les données du sélecteur (tuiles dont validBackends contient gameplaySelector, filtres, options d'affichage), les recalcule si les mods ou les réglages ont changé, et les crée à la première demande.
+Returns the selector data (tiles whose validBackends contains gameplaySelector, filters, display options), recomputes them if the mods or settings have changed, and creates them on first request.
 
-- **renvoie** : table Table items, filterList, activeFilters, lockedFiltersByProp, displayData.
+- **returns**: table Table items, filterList, activeFilters, lockedFiltersByProp, displayData.
 
 #### `ui_gameplaySelector_general.getManagementDetails()`
 
-Renvoie toujours { buttons = {} } (TODO dans le code).
+Always returns { buttons = {} } (TODO in the code).
 
-- **renvoie** : table Table avec buttons vide.
+- **returns**: table Table with empty buttons.
 
 #### `ui_gameplaySelector_general.getScreenHeaderTitleAndPath(path)`
 
-Construit le titre de l'écran et le fil d'Ariane (menu, sélecteur de gameplay, segment de filtres ou recherche, cluster ou page découverte). Ajoute « (filtré) » au titre si des filtres ou une recherche sont actifs.
+Builds the screen title and the breadcrumb (menu, gameplay selector, filters or search segment, cluster or discover page). Adds "(filtered)" to the title if filters or a search are active.
 
-- `path` (*table*) : Chemin courant { keys = {...} }.
-- **renvoie** : table Table title, isFiltered, pathSegments.
+- `path` (*table*) : Current path { keys = {...} }.
+- **returns**: table Table title, isFiltered, pathSegments.
 
 #### `ui_gameplaySelector_general.getSearchText()`
 
-Renvoie le texte de recherche courant.
+Returns the current search text.
 
-- **renvoie** : string|nil Texte saisi.
+- **returns**: string|nil Entered text.
 
 #### `ui_gameplaySelector_general.getTiles(path, routeName)`
 
-Renvoie les groupes de tuiles pour un chemin, via ui_gameplaySelector_tiles.getTiles.
+Returns the tile groups for a path, via ui_gameplaySelector_tiles.getTiles.
 
-- `path` (*table*) : Chemin de navigation { keys = {...} }.
-- `routeName` (*string|nil*) : Nom de la route.
-- **renvoie** : table[] Groupes de tuiles.
+- `path` (*table*) : Navigation path { keys = {...} }.
+- `routeName` (*string|nil*) : Name of the road.
+- **returns**: table[] Tile groups.
 
 #### `ui_gameplaySelector_general.getUiData(routeName)`
 
-Renvoie les données du sélecteur : items, displayData (adaptées à la route : rallye ou expériences), filterList, activeFilters, lockedFiltersByProp et backendName. Charge les tuiles si nécessaire.
+Returns the selector data: items, displayData (adapted to the route: rally or experiences), filterList, activeFilters, lockedFiltersByProp and backendName. Loads the tiles if needed.
 
-- `routeName` (*string|nil*) : Nom de la route, pour adapter groupMode et clusterMode.
-- **renvoie** : table Table de données d'interface.
+- `routeName` (*string|nil*) : Route name, to adapt groupMode and clusterMode.
+- **returns**: table Interface data table.
 
 #### `ui_gameplaySelector_general.goToMod(modId)`
 
-Journalise seulement l'id du mod (non implémenté).
+Only logs the mod id (not implemented).
 
-- `modId` (*string*) : Identifiant du mod.
+- `modId` (*string*) : Mod identifier.
 
 #### `ui_gameplaySelector_general.isFavourite(itemKey)`
 
-Indique si une tuile est en favori.
+Indicates whether a tile is a favorite.
 
-- `itemKey` (*string*) : Clé de la tuile.
-- **renvoie** : boolean true si favori.
+- `itemKey` (*string*) : Tile key.
+- **returns**: boolean true if favorite.
 
 #### `ui_gameplaySelector_general.isGameplayDataLoaded()`
 
-Indique si les données ont déjà été construites et sont à jour.
+Indicates whether the data has already been built and is up to date.
 
-- **renvoie** : boolean|nil Vrai si chargées et non invalidées (nil ou false sinon).
+- **returns**: boolean|nil True if loaded and not invalidated (nil or false otherwise).
 
 #### `ui_gameplaySelector_general.isRecent(itemKey)`
 
-Indique si une tuile fait partie des éléments récents.
+Indicates whether a tile is among the recent items.
 
-- `itemKey` (*string*) : Clé de la tuile.
-- **renvoie** : boolean true si récente.
+- `itemKey` (*string*) : Tile key.
+- **returns**: boolean true if recent.
 
 #### `ui_gameplaySelector_general.navigateToCluster(input)`
 
-Prépare puis ouvre l'écran d'un cluster de tuiles. Calcule les clés du chemin (gotoPath, keys ou la table elle-même) et un titre, mémorise la sélection en attente et navigue vers menu.gameplay.type (ou menu.experiencesSelector.type depuis le sélecteur d'expériences).
+Prepares then opens a tile cluster's screen. Computes the path keys (gotoPath, keys or the table itself) and a title, stores the pending selection and navigates to menu.gameplay.type (or menu.experiencesSelector.type from the experiences selector).
 
-- `input` (*table*) : Table de tuile ou de chemin : gotoPath, keys, ou liste de clés ; name, label ou title pour le titre.
-- **renvoie** : any Résultat de ui_router.navigate.
+- `input` (*table*) : Tile or path table: gotoPath, keys, or list of keys; name, label or title for the title.
+- **returns**: any Result of ui_router.navigate.
 
 #### `ui_gameplaySelector_general.onClusterRouteEnter(context, toRoute, fromRoute, data)`
 
-Hook de route appelé à l'entrée dans une route de cluster. Promeut la sélection préparée par navigateToCluster, sinon retombe sur le cluster par défaut.
+Route hook called on entering a cluster route. Promotes the selection prepared by navigateToCluster, otherwise falls back to the default cluster.
 
-- `context` (*any*) : Contexte du routeur.
-- `toRoute` (*table*) : Route d'arrivée.
-- `fromRoute` (*table|nil*) : Route de départ.
-- `data` (*table*) : Données de route.
+- `context` (*any*) : Router context.
+- `toRoute` (*table*) : Destination route.
+- `fromRoute` (*table|nil*) : Origin route.
+- `data` (*table*) : Route data.
 
 #### `ui_gameplaySelector_general.onClusterRouteMount(context, toRoute, fromRoute, data)`
 
-Hook de route appelé au montage d'une route de cluster. Démarre le chargement asynchrone avec les clés et le titre du cluster actif.
+Route hook called when a cluster route is mounted. Starts the asynchronous loading with the active cluster's keys and title.
 
-- `context` (*any*) : Contexte du routeur.
-- `toRoute` (*table*) : Route d'arrivée (name utilisé).
-- `fromRoute` (*table|nil*) : Route de départ.
-- `data` (*table*) : Données de route.
+- `context` (*any*) : Router context.
+- `toRoute` (*table*) : Destination route (name used).
+- `fromRoute` (*table|nil*) : Origin route.
+- `data` (*table*) : Route data.
 
 #### `ui_gameplaySelector_general.onRouteMount(context, toRoute, fromRoute, data)`
 
-Hook de route appelé au montage d'une route racine du sélecteur. Réinitialise la sélection de cluster, mémorise la route active et démarre le chargement asynchrone avec le chemin allGameplay.
+Route hook called when a root route of the selector is mounted. Resets the cluster selection, stores the active route and starts the asynchronous loading with the allGameplay path.
 
-- `context` (*any*) : Contexte du routeur.
-- `toRoute` (*table*) : Route d'arrivée (name utilisé).
-- `fromRoute` (*table|nil*) : Route de départ.
-- `data` (*table*) : Données de route (non utilisées).
+- `context` (*any*) : Router context.
+- `toRoute` (*table*) : Destination route (name used).
+- `fromRoute` (*table|nil*) : Origin route.
+- `data` (*table*) : Route data (not used).
 
 #### `ui_gameplaySelector_general.passesFilters(item)`
 
-Indique si une tuile passe les filtres et la recherche ; une tuile isCareerOnly est refusée tant que displayData.showCareerContent est faux.
+Indicates whether a tile passes the filters and the search; an isCareerOnly tile is refused as long as displayData.showCareerContent is false.
 
-- `item` (*table*) : Tuile testée.
-- **renvoie** : boolean true si la tuile est affichée.
+- `item` (*table*) : Tile tested.
+- **returns**: boolean true if the tile is displayed.
 
 #### `ui_gameplaySelector_general.requestDetails(item, requestId)`
 
-Construit les détails d'une tuile et les envoie à l'interface par l'évènement gameplaySelectorDetails avec backendName, requestId, item et details.
+Builds a tile's details and sends them to the interface via the event gameplaySelectorDetails with backendName, requestId, item and details.
 
-- `item` (*table*) : Données showDetails de la tuile.
-- `requestId` (*any*) : Identifiant de requête de l'interface.
-- **renvoie** : table Le payload envoyé.
+- `item` (*table*) : The tile's showDetails data.
+- `requestId` (*any*) : Interface request identifier.
+- **returns**: table The payload sent.
 
 #### `ui_gameplaySelector_general.resetDisplayDataToDefaults(requestId)`
 
-Remet les options d'affichage à leurs valeurs par défaut. Émet un instantané si requestId est fourni.
+Resets the display options to their default values. Emits a snapshot if requestId is provided.
 
-- `requestId` (*any|nil*) : Identifiant de requête.
-- **renvoie** : table Données d'affichage.
+- `requestId` (*any|nil*) : Request identifier.
+- **returns**: table Display data.
 
 #### `ui_gameplaySelector_general.resetRangeFilter(filterKey, requestId)`
 
-Réinitialise un filtre de plage. Émet un instantané si requestId est fourni.
+Resets a range filter. Emits a snapshot if requestId is provided.
 
-- `filterKey` (*string*) : Nom du filtre.
-- `requestId` (*any|nil*) : Identifiant de requête.
-- **renvoie** : any Résultat de filterInstance.resetRangeFilter.
+- `filterKey` (*string*) : Filter name.
+- `requestId` (*any|nil*) : Request identifier.
+- **returns**: any Result of filterInstance.resetRangeFilter.
 
 #### `ui_gameplaySelector_general.resetSetFilter(filterKey, requestId)`
 
-Réinitialise un filtre à choix multiples. Émet un instantané si requestId est fourni.
+Resets a multiple-choice filter. Emits a snapshot if requestId is provided.
 
-- `filterKey` (*string*) : Nom du filtre.
-- `requestId` (*any|nil*) : Identifiant de requête.
-- **renvoie** : any Résultat de filterInstance.resetSetFilter.
+- `filterKey` (*string*) : Filter name.
+- `requestId` (*any|nil*) : Request identifier.
+- **returns**: any Result of filterInstance.resetSetFilter.
 
 #### `ui_gameplaySelector_general.resolveClusterTitle(clusterTitle)`
 
-Renvoie le titre du cluster actif, sinon clusterTitle s'il est une chaîne non vide, sinon nil.
+Returns the active cluster's title, otherwise clusterTitle if it is a non-empty string, otherwise nil.
 
-- `clusterTitle` (*string|nil*) : Titre de repli.
-- **renvoie** : string|nil Titre résolu.
+- `clusterTitle` (*string|nil*) : Fallback title.
+- **returns**: string|nil Resolved title.
 
 #### `ui_gameplaySelector_general.resolveCurrentSelectorPath()`
 
-Renvoie le chemin de la vue courante : celui du cluster actif, sinon le chemin racine { keys = {"allGameplay"} }.
+Returns the current view's path: that of the active cluster, otherwise the root path { keys = {"allGameplay"} }.
 
-- **renvoie** : table Chemin { keys = {...} }.
+- **returns**: table Path { keys = {...} }.
 
 #### `ui_gameplaySelector_general.setDisplayDataOption(key, value, requestId)`
 
-Définit une option d'affichage et renvoie les données d'affichage à jour. Émet un instantané si requestId est fourni.
+Sets a display option and returns the updated display data. Emits a snapshot if requestId is provided.
 
-- `key` (*string*) : Clé de l'option.
-- `value` (*any*) : Valeur.
-- `requestId` (*any|nil*) : Identifiant de requête.
-- **renvoie** : table Données d'affichage.
+- `key` (*string*) : Option key.
+- `value` (*any*) : Value.
+- `requestId` (*any|nil*) : Request identifier.
+- **returns**: table Display data.
 
 #### `ui_gameplaySelector_general.setSearchText(text, requestId)`
 
-Définit le texte de recherche. Émet un instantané si requestId est fourni.
+Sets the search text. Emits a snapshot if requestId is provided.
 
-- `text` (*string*) : Texte de recherche.
-- `requestId` (*any|nil*) : Identifiant de requête.
-- **renvoie** : any Résultat de filterInstance.setSearchText.
+- `text` (*string*) : Search text.
+- `requestId` (*any|nil*) : Request identifier.
+- **returns**: any Result of filterInstance.setSearchText.
 
 #### `ui_gameplaySelector_general.toggleFavourite(itemDetails)`
 
-Bascule le statut de favori d'une tuile et renvoie le nouvel état.
+Toggles a tile's favorite status and returns the new state.
 
-- `itemDetails` (*table*) : Table avec le champ key.
-- **renvoie** : boolean Nouvel état de favori.
+- `itemDetails` (*table*) : Table with the field key.
+- **returns**: boolean New favorite state.
 
 #### `ui_gameplaySelector_general.toggleFilter(filterKey, value, requestId)`
 
-Active ou désactive une valeur de filtre. Émet un instantané si requestId est fourni.
+Enables or disables a filter value. Emits a snapshot if requestId is provided.
 
-- `filterKey` (*string*) : Nom du filtre.
-- `value` (*any*) : Valeur de l'option.
-- `requestId` (*any|nil*) : Identifiant de requête.
-- **renvoie** : any Résultat de filterInstance.toggleFilter.
+- `filterKey` (*string*) : Filter name.
+- `value` (*any*) : Option value.
+- `requestId` (*any|nil*) : Request identifier.
+- **returns**: any Result of filterInstance.toggleFilter.
 
 #### `ui_gameplaySelector_general.trackRecent(itemKey)`
 
-Enregistre une tuile comme récemment utilisée.
+Records a tile as recently used.
 
-- `itemKey` (*string*) : Clé de la tuile.
+- `itemKey` (*string*) : Tile key.
 
 #### `ui_gameplaySelector_general.updateDisplayData(key, value)`
 
-Modifie une option d'affichage (displayDataInstance.setDisplayDataOption).
+Changes a display option (displayDataInstance.setDisplayDataOption).
 
-- `key` (*string*) : Clé de l'option.
-- `value` (*any*) : Nouvelle valeur.
+- `key` (*string*) : Option key.
+- `value` (*any*) : New value.
 
 #### `ui_gameplaySelector_general.updateFilterData(key, value)`
 
-Met à jour une donnée interne du module de filtres (filterInstance.updateData).
+Updates an internal datum of the filters module (filterInstance.updateData).
 
-- `key` (*string*) : Clé de donnée.
-- `value` (*any*) : Valeur.
+- `key` (*string*) : Data key.
+- `value` (*any*) : Value.
 
 #### `ui_gameplaySelector_general.updateRangeFilter(filterKey, min, max, requestId)`
 
-Fixe les bornes d'un filtre de plage. Émet un instantané si requestId est fourni.
+Sets the bounds of a range filter. Emits a snapshot if requestId is provided.
 
-- `filterKey` (*string*) : Nom du filtre.
-- `min` (*number*) : Borne basse.
-- `max` (*number*) : Borne haute.
-- `requestId` (*any|nil*) : Identifiant de requête.
-- **renvoie** : any Résultat de filterInstance.updateRangeFilter.
+- `filterKey` (*string*) : Filter name.
+- `min` (*number*) : Bottom bound.
+- `max` (*number*) : Top bound.
+- `requestId` (*any|nil*) : Request identifier.
+- **returns**: any Result of filterInstance.updateRangeFilter.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `backendName` | string | Nom du backend : « gameplaySelector ». |
-| `dependencies` | string[] | Extensions chargées avant celle-ci : ui_gameplaySelector_tiles et core_locales. |
+| `backendName` | string | Backend name: "gameplaySelector". |
+| `dependencies` | string[] | Extensions loaded before this one: ui_gameplaySelector_tiles and core_locales. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onGameplaySelectorGetDetails` — écouté par 5 module(s)
-- `onGameplaySelectorGetTiles` — écouté par 5 module(s)
+- `onGameplaySelectorGetDetails` — listened to by 5 module(s)
+- `onGameplaySelectorGetTiles` — listened to by 5 module(s)
 
-**Évènements UI (guihooks.trigger) :** `GameplaySelectorDataLoaded`, `gameplaySelectorDetails`, `gameplaySelectorDisplayDataSnapshot`
+**UI events (guihooks.trigger):** `GameplaySelectorDataLoaded`, `gameplaySelectorDetails`, `gameplaySelectorDisplayDataSnapshot`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/gameplaySelector/general.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/gameplaySelector/general.lua`.*

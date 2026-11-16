@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/racePacenoteReached.lua",
+  "module": "Nœud flowgraph « Race Pacenote Reached » (catégorie logic, tag scenario). Laisse passer une impulsion quand un véhicule atteint une pacenote de la course (events.pacenoteReached). Sorties : flow (impulsion) et note (texte de la pacenote, race.path.pacenotes.objects[id].note).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise data.detailed = false (non utilisé).", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
+        "drawMiddle": {"desc": "Vide.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud."}, "style": {"type": "table", "desc": "Style."}}, "internal": true},
+        "work": {"desc": "Met flow et note selon les events du véhicule.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

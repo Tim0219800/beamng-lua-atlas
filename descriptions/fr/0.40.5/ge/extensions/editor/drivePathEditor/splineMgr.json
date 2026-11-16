@@ -1,0 +1,56 @@
+{
+  "path": "lua/ge/extensions/editor/drivePathEditor/splineMgr.lua",
+  "module": "Gestionnaire des splines du Drive Path Editor (préfixe « Drive Path Spline », mode d'édition drivePathSplineEditMode). Une spline de chemin décrit un trajet pour une IA : nœuds, largeurs, normales, vitesses (vels) et limites de vitesse (velLimits) en mode libre, ou liste de nœuds du navgraph (graphNodes/graphPath) en mode graphe. Le module tient la liste des splines et la table id vers index, gère création, suppression, coupe, jonction, inversion, undo/redo, sérialisation, liens spline-véhicule (qui replacent le véhicule au départ) et le cache du navgraph de la carte (map.getGraphpath()).",
+  "notes": ["Paramètres par défaut d'une spline : isFreeMode true, delayTime 0 s, aggression 0.3, numLaps 1, routeSpeed 31.3 (m/s), routeSpeedMode 'off', isAvoidCars true, isDriveInLane true, isLoop false, startingNode 1, speedProfileMode 0 (0 aucun, 1 vitesses cibles, 2 limites de vitesse, script libre seulement).", "Constantes : subdivisions minimales 10 ; écart à la coupe 1.0 m ; taille minimale d'import 10 m ; décalage vertical des véhicules 0.3 m (vehShiftZ) ; points de ruban relevés par raycast avec zExtra 3.0 et zFloat 0.15.", "Un véhicule de scène est une table {vid, veh, name, isLink, linkSplineId} ; une spline liée a isVehicleLink et linkVehId. linkSpline replace immédiatement le véhicule au départ et mémorise sa pose d'origine ; unlinkSpline la restaure.", "Les splines sont recalculées par updateDirtyDrivePathSplines quand isDirty est vrai. En mode graphe, une spline reste dirty tant que le navgraph n'est pas disponible.", "getNavGraph renvoie nil tant que map.getGraphpath() n'existe pas ; sinon il met en cache {graph, nodes (positions), widths (radius), lines} pour toutes les arêtes (une fois par arête).", "convertPathsToDrivePathSplines crée une spline par chemin même trop petit (elle reste vide) et son log compte #paths - #drivePathSplines (inexact s'il existait déjà des splines)."],
+  "functions": {
+    "getToolPrefixStr": {"desc": "Renvoie le préfixe de l'outil (« Drive Path Spline »).", "params": {}, "returns": [{"type": "string", "desc": "préfixe"}]},
+    "getEditModeKey": {"desc": "Renvoie la clé du mode d'édition (« drivePathSplineEditMode »).", "params": {}, "returns": [{"type": "string", "desc": "clé"}]},
+    "getDrivePathSplines": {"desc": "Renvoie la table des splines (référence).", "params": {}, "returns": [{"type": "table", "desc": "tableau de splines"}]},
+    "getSplineMap": {"desc": "Renvoie la table id de spline vers index.", "params": {}, "returns": [{"type": "table<string, integer>", "desc": "id vers index"}]},
+    "setDrivePathSpline": {"desc": "Place une spline à un index et la marque isDirty.", "params": {"spline": {"type": "table", "desc": "spline"}, "idx": {"type": "integer", "desc": "index (base 1)"}}},
+    "setDrivePathSplines": {"desc": "Place toutes les splines d'un tableau (chacune marquée isDirty).", "params": {"splines": {"type": "table", "desc": "tableau de splines"}}},
+    "computeActiveVehicles": {"desc": "Reconstruit la liste des véhicules actifs de la scène (activeVehiclesIterator) avec vid, veh, name et liens remis à zéro.", "params": {}},
+    "getActiveVehicles": {
+      "desc": "Renvoie la liste des véhicules actifs ; la recalcule si elle est vide ou si isForce est vrai.",
+      "params": {"isForce": {"type": "boolean|nil", "desc": "forcer le recalcul"}},
+      "returns": [{"type": "table", "desc": "tableau de {vid, veh, name, isLink, linkSplineId}"}]
+    },
+    "getVehicleById": {
+      "desc": "Cherche un véhicule dans la liste déjà calculée (sans la recalculer).",
+      "params": {"vid": {"type": "integer", "desc": "id du véhicule"}},
+      "returns": [{"type": "table|nil", "desc": "entrée de véhicule"}]
+    },
+    "getNavGraph": {"desc": "Renvoie les données du navgraph de la carte (cache), les calcule au premier appel si possible.", "params": {}, "returns": [{"type": "table|nil", "desc": "{graph, nodes, widths, lines} ou nil si le graphe n'est pas encore disponible"}]},
+    "getDefaultSliderParams": {"desc": "Renvoie les valeurs par défaut des paramètres de spline.", "params": {}, "returns": [{"type": "table", "desc": "paramètres par défaut"}]},
+    "resetGeometry": {"desc": "Vide toute la géométrie d'une spline (nodes, widths, nmls, vels, velLimits, graphNodes, graphPath) et la marque isDirty.", "params": {"spline": {"type": "table|nil", "desc": "spline"}}},
+    "addNewDrivePathSpline": {"desc": "Ajoute à la fin une nouvelle spline vide avec un nom unique, un UUID Engine.generateUUID() et les paramètres par défaut.", "params": {}},
+    "removeDrivePathSpline": {"desc": "Supprime la spline d'index donné et met à jour la table d'index.", "params": {"idx": {"type": "integer", "desc": "index (base 1)"}}},
+    "removeAllDrivePathSplines": {
+      "desc": "Supprime les splines. Avec isIncludeDisabled vrai, toutes ; sinon seulement celles activées.",
+      "params": {"isIncludeDisabled": {"type": "boolean", "desc": "inclure les splines désactivées"}}
+    },
+    "deepCopyDrivePathSpline": {"desc": "Copie profonde d'une spline (pour l'historique).", "params": {"spline": {"type": "table", "desc": "spline"}}, "returns": [{"type": "table", "desc": "copie"}]},
+    "deepCopyDrivePathSplineState": {"desc": "Copie profonde de toutes les splines.", "params": {}, "returns": [{"type": "table", "desc": "tableau de copies"}]},
+    "splitDrivePathSpline": {"desc": "Coupe une spline en deux au nœud donné (écart de 1.0 m entre les deux parties).", "params": {"selectedSplineIdx": {"type": "integer", "desc": "index de la spline"}, "selectedNodeIdx": {"type": "integer", "desc": "index du nœud de coupe"}}},
+    "joinDrivePathSplines": {
+      "desc": "Joint deux splines non bouclées : la première reçoit la géométrie concaténée, la seconde est supprimée.",
+      "params": {"splineIdx1": {"type": "integer", "desc": "spline conservée"}, "nodeIdx1": {"type": "integer", "desc": "nœud d'extrémité de la première"}, "splineIdx2": {"type": "integer", "desc": "spline supprimée"}, "nodeIdx2": {"type": "integer", "desc": "nœud d'extrémité de la seconde"}}
+    },
+    "flipSpline": {"desc": "Inverse le sens d'une spline : nœuds, largeurs, normales, vitesses et limites de vitesse sont renversés.", "params": {"spline": {"type": "table", "desc": "spline"}}},
+    "resetVehiclePose": {
+      "desc": "Place le véhicule au nœud de départ (startingNode) de la spline, orienté selon les nœuds voisins, avec 0.3 m de décalage vertical. Mémorise une seule fois sa pose d'origine. En mode graphe, utilise les nœuds du navgraph (nécessite le cache).",
+      "params": {"spline": {"type": "table", "desc": "spline"}, "vehicle": {"type": "table", "desc": "entrée de véhicule {vid, veh…}"}}
+    },
+    "linkSpline": {"desc": "Lie une spline à un véhicule (isVehicleLink, linkVehId, linkSplineId) et replace le véhicule au départ.", "params": {"spline": {"type": "table", "desc": "spline"}, "vehicle": {"type": "table", "desc": "entrée de véhicule"}}},
+    "unlinkSpline": {"desc": "Supprime le lien spline-véhicule et rend au véhicule sa pose d'origine mémorisée.", "params": {"spline": {"type": "table", "desc": "spline"}, "vehicle": {"type": "table", "desc": "entrée de véhicule"}}},
+    "relinkAllVehiclesToSplines": {"desc": "Relie toutes les splines à leur véhicule (via linkVehId) en cherchant dans la liste des véhicules calculée.", "params": {}},
+    "singleSplineEditUndo": {"desc": "Annule une édition de spline unique à partir de drivePathSplineData.old, puis relie à nouveau les véhicules.", "params": {"drivePathSplineData": {"type": "table", "desc": "{old, new}"}}, "internal": true},
+    "singleSplineEditRedo": {"desc": "Rétablit une édition de spline unique à partir de drivePathSplineData.new.", "params": {"drivePathSplineData": {"type": "table", "desc": "{old, new}"}}, "internal": true},
+    "transSplineEditUndo": {"desc": "Annule une édition globale (toutes les splines) avec data.old.", "params": {"data": {"type": "table", "desc": "{old, new}"}}, "internal": true},
+    "transSplineEditRedo": {"desc": "Rétablit une édition globale avec data.new.", "params": {"data": {"type": "table", "desc": "{old, new}"}}, "internal": true},
+    "serializeDrivePathSpline": {"desc": "Sérialise une spline en table.", "params": {"spline": {"type": "table", "desc": "spline"}}, "returns": [{"type": "table", "desc": "données sérialisées"}]},
+    "deserializeDrivePathSpline": {"desc": "Reconstruit une spline depuis une table sérialisée.", "params": {"data": {"type": "table", "desc": "table issue de serializeDrivePathSpline"}}, "returns": [{"type": "table", "desc": "spline"}]},
+    "updateDirtyDrivePathSplines": {"desc": "Recalcule la géométrie des splines isDirty (raycasts terrain, barres de vitesse, ruban en mode libre ; chemin de graphe en mode navgraph). Appelée chaque frame par onEditorGui.", "params": {}, "internal": true},
+    "convertPathsToDrivePathSplines": {"desc": "Convertit des tracés issus d'une image en splines (voir notes pour les cas des tracés trop petits).", "params": {"paths": {"type": "table", "desc": "tableau de {points, widths}"}}}
+  }
+}

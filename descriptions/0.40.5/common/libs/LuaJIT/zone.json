@@ -1,19 +1,34 @@
 {
   "path": "lua/common/libs/LuaJIT/zone.lua",
-  "module": "Module jit.zone de LuaJIT (Mike Pall, licence MIT) : pile hiérarchique de « zones » nommées, utilisée par le profileur LuaJIT pour étiqueter les portions de code. Le module renvoie une table appelable : zone(\"nom\") empile une zone, zone() en dépile une et la renvoie. Un moddeur n'en a normalement pas besoin.",
+  "module": "LuaJIT's jit.zone module (Mike Pall, MIT license): hierarchical stack of named \"zones\", used by the LuaJIT profiler to label portions of code. The module returns a callable table: zone(\"name\") pushes a zone, zone() pops one and returns it. A modder normally does not need it.",
   "usage": "local zone = require(\"jit.zone\")\nzone(\"AI\")\n  print(zone:get()) --> \"AI\"\nzone()",
   "notes": [
-    "zone() sans argument dépile ; sur une pile vide, assert échoue avec \"empty zone stack\"."
+    "zone() with no argument pops; on an empty stack, assert fails with \"empty zone stack\"."
   ],
   "functions": {
     "flush": {
-      "desc": "Vide la pile de zones (méthode : zone:flush()).",
-      "params": {"t": {"type": "table", "desc": "La table zone (self)"}}
+      "desc": "Empties the zone stack (method: zone:flush()).",
+      "params": {
+        "t": {
+          "type": "table",
+          "desc": "The zone table (self)"
+        }
+      }
     },
     "get": {
-      "desc": "Renvoie la zone courante, c'est-à-dire le sommet de la pile (zone:get()), ou nil si vide.",
-      "params": {"t": {"type": "table", "desc": "La table zone (self)"}},
-      "returns": [{"type": "string|nil", "desc": "Nom de la zone courante"}]
+      "desc": "Returns the current zone, i.e. the top of the stack (zone:get()), or nil if empty.",
+      "params": {
+        "t": {
+          "type": "table",
+          "desc": "The zone table (self)"
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Name of the current zone"
+        }
+      ]
     }
   }
 }

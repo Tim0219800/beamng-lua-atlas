@@ -1,44 +1,58 @@
 {
   "path": "lua/ge/extensions/gameplay/traffic/roles/suspect.lua",
-  "module": "Rôle de trafic « suspect » : un véhicule recherché par la police. Il définit les actions watchPolice (devenir recherché), fleePolice (fuir), arrest (immobiliser) et clear (remettre à zéro). Tant que son état est 'wanted' et que la police l'a assez vu, il déclenche une poursuite via gameplay_police.",
+  "module": "\"Suspect\" traffic role: a vehicle wanted by the police. It defines the actions watchPolice (become wanted), fleePolice (flee), arrest (immobilize) and clear (reset). As long as its state is 'wanted' and the police have seen it enough, it triggers a pursuit via gameplay_police.",
   "notes": [
-    "États utilisés dans self.state : 'wanted', 'flee', 'stop', 'none'.",
-    "Drapeaux manipulés dans self.flags : flee, busy, freeze, driveCheck (lu), pursuit/reset (lus sur les véhicules de police).",
-    "pursuitMode vaut 2 par défaut.",
-    "fleePolice rend le véhicule quasi impossible à respawn en appelant veh:modifyRespawnValues(800, 40).",
-    "onUpdate est une fonction vide."
+    "States used in self.state: 'wanted', 'flee', 'stop', 'none'.",
+    "Flags manipulated in self.flags: flee, busy, freeze, driveCheck (read), pursuit/reset (read on police vehicles).",
+    "pursuitMode is 2 by default.",
+    "fleePolice makes the vehicle almost impossible to respawn by calling veh:modifyRespawnValues(800, 40).",
+    "onUpdate is an empty function."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du rôle suspect, complétée par baseRole (self.veh = véhicule de trafic, self.flags, self.state, self.actions).",
+      "desc": "Suspect role class, completed by baseRole (self.veh = traffic vehicle, self.flags, self.state, self.actions).",
       "functions": {
         "init": {
-          "desc": "Initialise le rôle : ajoute +0,2 d'offset à l'agressivité (personalityModifiers), définit les actions watchPolice / fleePolice / arrest / clear et fixe pursuitMode = 2.",
+          "desc": "Initializes the role: adds a +0.2 offset to aggression (personalityModifiers), defines the actions watchPolice / fleePolice / arrest / clear and sets pursuitMode = 2.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "onRoleEnded": {
-          "desc": "Appelé quand le rôle prend fin. Si le suspect fuyait, appelle gameplay_police.evadeVehicle(vehId, gameplay_traffic.showMessages) et retire le drapeau flee.",
+          "desc": "Called when the role ends. If the suspect was fleeing, calls gameplay_police.evadeVehicle(vehId, gameplay_traffic.showMessages) and removes the flee flag.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "onActiveDone": {
-          "desc": "Appelé quand le véhicule n'est plus actif dans le trafic. Même traitement que onRoleEnded : si le drapeau flee est posé, le suspect est déclaré ayant échappé à la police.",
+          "desc": "Called when the vehicle is no longer active in traffic. Same handling as onRoleEnded: if the flee flag is set, the suspect is declared to have escaped the police.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "onTrafficTick": {
-          "desc": "Appelé à chaque tick du gestionnaire de trafic. Si l'état est 'wanted', que la valeur de visibilité (pursuit.sightValue) atteint le seuil (0,25 pour une IA, 1 pour un joueur) et que la vitesse atteint le seuil (1 m/s si driveCheck, sinon 0), il cherche les policiers disponibles (ni en poursuite ni en reset), lance gameplay_police.setPursuitMode(pursuitMode, vehId, policeIds) et cible le policier le plus proche.",
-          "params": {"tickTime": {"type": "number", "desc": "Durée du tick de trafic en secondes (non utilisé dans le corps)."}},
+          "desc": "Called on each traffic manager tick. If the state is 'wanted', the visibility value (pursuit.sightValue) reaches the threshold (0.25 for an AI, 1 for a player) and the speed reaches the threshold (1 m/s if driveCheck, otherwise 0), it looks for available police officers (neither in pursuit nor in reset), starts gameplay_police.setPursuitMode(pursuitMode, vehId, policeIds) and targets the closest police officer.",
+          "params": {
+            "tickTime": {
+              "type": "number",
+              "desc": "Traffic tick duration in seconds (not used in the body)."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "onUpdate": {
-          "desc": "Appelé à chaque frame ; corps vide.",
-          "params": {"dt": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps de simulation (s)."}},
+          "desc": "Called every frame; empty body.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Real time delta (s)."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Simulation time delta (s)."
+            }
+          },
           "returns": [],
           "internal": true
         }

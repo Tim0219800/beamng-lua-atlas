@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/util/screenshotCreator/framing/configured.lua",
+  "module": "Mode de cadrage « Configured camera » de screenshotCreator : utilise une caméra personnalisée enregistrée dans la configuration de vignette du véhicule (par config, sinon par modèle) et la convertit en position/rotation monde à partir des décalages stockés (rewindCameraOffsets). Si aucune caméra configurée n'est utilisable, retombe sur le cadrage procédural. Il s'enregistre dans la liste des modes via le hook onScreenshotCreatorCollectFramingModes (id « configured », ordre 200).",
+  "notes": [
+    "Priorité : caméra de la config (configCamEnabled), puis caméra du modèle (modelCamEnabled), puis cadrage procédural.",
+    "resolveOverride renvoie nil sans erreur quand aucune caméra configurée ne s'applique, et (nil, message) si context.vehicle est absent.",
+    "frame est un alias de resolve."
+  ],
+  "functions": {
+    "resolve": {
+      "desc": "Résout la caméra pour le contexte : essaie la caméra configurée, sinon délègue à util_screenshotCreator_framing_procedural.resolve.",
+      "params": {"context": {"type": "table", "desc": "Contexte de cadrage : vehicle (obligatoire), configName, et les champs lus par le cadrage procédural"}},
+      "returns": [
+        {"type": "table|nil", "desc": "{pos, rot, name, debugData} ou nil en cas d'erreur"},
+        {"type": "string|nil", "desc": "Message d'erreur"}
+      ],
+      "internal": false
+    },
+    "resolveOverride": {
+      "desc": "Résout uniquement la caméra configurée par l'utilisateur (config puis modèle) sans repli procédural.",
+      "params": {"context": {"type": "table", "desc": "Contexte de cadrage avec vehicle et configName"}},
+      "returns": [
+        {"type": "table|nil", "desc": "{pos, rot, name = 'config camera' ou 'model camera', debugData} ou nil si aucune caméra configurée"},
+        {"type": "string|nil", "desc": "Message d'erreur si le contexte est invalide"}
+      ],
+      "internal": false
+    },
+    "frame": {
+      "desc": "Alias de resolve.",
+      "params": {"context": {"type": "table", "desc": "Voir resolve"}},
+      "returns": [{"type": "table|nil", "desc": "Voir resolve"}, {"type": "string|nil", "desc": "Message d'erreur"}],
+      "internal": false
+    },
+    "onScreenshotCreatorCollectFramingModes": {
+      "desc": "Hook de collecte des modes de cadrage : ajoute à la liste le mode {id = 'configured', label = 'Configured camera', order = 200, resolve}.",
+      "params": {"modes": {"type": "table[]", "desc": "Liste de modes à compléter"}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

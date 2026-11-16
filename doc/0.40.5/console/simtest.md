@@ -1,26 +1,26 @@
 # `simtest`
 
-*Fichier : `lua/console/simtest.lua` · VM : Console · 22 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/console/simtest.lua` · VM: Console · 22 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("simtest")`
+**Access:** `require("simtest")`
 
-Script de benchmark de la console : il crée un véhicule pickup avec newVehicle():spawn en (0, 0, 0.1), active BeamEngine.enabled puis mesure, avec HighPerfTimer, le temps de 101 pas de simulation. S'exécute au chargement (test(100)).
+Console benchmark script: it creates a pickup vehicle with newVehicle():spawn at (0, 0, 0.1), enables BeamEngine.enabled then measures, with HighPerfTimer, the time of 101 simulation steps. Runs on load (test(100)).
 
-## Remarques
+## Notes
 
-- Définit les globales v (le véhicule) et hp (le chronomètre, global car sans local).
+- Defines the globals v (the vehicle) and hp (the timer, global because there is no local).
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `test(n)` | Exécute n+1 fois BeamEngine:update(1/2000, 1/2000) (pas de 0,5 ms) et affiche la durée de chaque pas en ms. | 11 |
+| `test(n)` | Runs BeamEngine:update(1/2000, 1/2000) n+1 times (0.5 ms step) and prints the duration of each step in ms. | 11 |
 
-**Globales affectées :** `v`
+**Globals assigned:** `v`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `BeamEngine:` `update`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/console/simtest.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/console/simtest.lua`.*

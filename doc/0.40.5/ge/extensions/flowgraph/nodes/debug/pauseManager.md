@@ -1,18 +1,18 @@
 # `flowgraph_nodes_debug_pauseManager`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/debug/pauseManager.lua` · VM : Game Engine (GE) · 25 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/debug/pauseManager.lua` · VM: Game Engine (GE) · 25 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/debug/pauseManager")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/debug/pauseManager")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Pause Execution » (catégorie logic). Met en pause l'exécution du projet flowgraph (graph.mgr:setPaused(true)) tant qu'il reçoit du flux sur son entrée flow. Ne met pas le jeu en pause.
+Flowgraph node "Pause Execution" (category logic). Pauses the execution of the flowgraph project (graph.mgr:setPaused(true)) as long as it receives flow on its flow input. Does not pause the game.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Appelle graph.mgr:setPaused(true). | 20 |
+| `C:work()` | Calls graph.mgr:setPaused(true). | 20 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/debug/pauseManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/debug/pauseManager.lua`.*

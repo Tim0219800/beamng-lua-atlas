@@ -1,46 +1,167 @@
 {
   "path": "lua/common/libs/luasocket/socket/ftp.lua",
-  "module": "Client FTP de LuaSocket (Diego Nehab), bâti sur socket.tp et LTN12. Offre une API haut niveau (get, put, command) acceptant une URL ftp:// ou une table de paramètres, et une API bas niveau (open puis greet, login, pasv, send, receive…). Le module s'enregistre aussi dans socket.ftp.",
+  "module": "LuaSocket FTP client (Diego Nehab), built on socket.tp and LTN12. Offers a high-level API (get, put, command) accepting an ftp:// URL or a parameters table, and a low-level API (open then greet, login, pasv, send, receive...). The module also registers itself in socket.ftp.",
   "usage": "local ftp = require('libs/luasocket/socket/ftp')\nlocal contenu, err = ftp.get('ftp://anonymous:mdp@serveur/chemin/fichier.txt;type=i')\nftp.put('ftp://user:mdp@serveur/dest.txt', 'données')",
   "notes": [
-    "Les fonctions high-level sont enveloppées par socket.protect : en cas d'erreur elles renvoient nil, message au lieu de lever une exception.",
-    "Bug : metat.__index:port utilise math.mod, absent de LuaJIT/Lua 5.1 standard (remplacé par math.fmod) : le mode actif (PORT) échouera ; le mode passif (pasv, utilisé par get/put) n'est pas concerné.",
-    "Bug : dans send, readyt[tp] indexe avec le module tp au lieu de la socket de contrôle (le test de statut pendant le transfert n'est donc jamais vrai).",
-    "Le fichier requiert 'socket.socket', 'socket.url', 'socket.tp' et 'ltn12' par nom court : ces noms doivent être résolubles par le chemin de recherche des modules du jeu.",
-    "Dans une table de requête, les champs reconnus : host, port, user, password, type ('a' ou 'i'), path, command, argument, source, sink, step, url, create. Un champ explicite écrase celui de l'URL."
+    "The high-level functions are wrapped by socket.protect: on error they return nil, message instead of raising an exception.",
+    "Bug: metat.__index:port uses math.mod, absent from LuaJIT/standard Lua 5.1 (replaced by math.fmod): the active mode (PORT) will fail; the passive mode (pasv, used by get/put) is not affected.",
+    "Bug: in send, readyt[tp] indexes with the tp module instead of the control socket (so the status check during the transfer is never true).",
+    "The file requires 'socket.socket', 'socket.url', 'socket.tp' and 'ltn12' by short name: these names must be resolvable by the game's module search path.",
+    "In a request table, the recognized fields: host, port, user, password, type ('a' or 'i'), path, command, argument, source, sink, step, url, create. An explicit field overrides the one from the URL."
   ],
   "fields": {
-    "TIMEOUT": {"type": "number", "desc": "Délai en secondes avant d'abandonner une connexion : 60."},
-    "PORT": {"type": "integer", "desc": "Port FTP par défaut : 21."},
-    "USER": {"type": "string", "desc": "Utilisateur anonyme par défaut : 'ftp'."},
-    "PASSWORD": {"type": "string", "desc": "Mot de passe anonyme par défaut : 'anonymous@anonymous.org' (à remplacer par une adresse e-mail)."},
-    "command": {"type": "function", "desc": "ftp.command(cmdt) : envoie une commande FTP (champs host, command, argument, check, user, password…) et ferme la connexion. Renvoie 1 ou nil, erreur."},
-    "get": {"type": "function", "desc": "ftp.get(url|table) : télécharge un fichier. Avec une URL, renvoie le contenu (chaîne) ; avec une table, utilise le sink fourni."},
-    "put": {"type": "function", "desc": "ftp.put(url, corps) ou ftp.put(table) : envoie un fichier ; renvoie le nombre d'octets envoyés."}
+    "TIMEOUT": {
+      "type": "number",
+      "desc": "Timeout in seconds before giving up on a connection: 60."
+    },
+    "PORT": {
+      "type": "integer",
+      "desc": "Default FTP port: 21."
+    },
+    "USER": {
+      "type": "string",
+      "desc": "Default anonymous user: 'ftp'."
+    },
+    "PASSWORD": {
+      "type": "string",
+      "desc": "Default anonymous password: 'anonymous@anonymous.org' (to be replaced by an e-mail address)."
+    },
+    "command": {
+      "type": "function",
+      "desc": "ftp.command(cmdt): sends an FTP command (fields host, command, argument, check, user, password...) and closes the connection. Returns 1 or nil, error."
+    },
+    "get": {
+      "type": "function",
+      "desc": "ftp.get(url|table): downloads a file. With a URL, returns the content (string); with a table, uses the provided sink."
+    },
+    "put": {
+      "type": "function",
+      "desc": "ftp.put(url, body) or ftp.put(table): uploads a file; returns the number of bytes sent."
+    }
   },
   "functions": {
     "open": {
-      "desc": "Ouvre une connexion de contrôle vers un serveur FTP et renvoie un objet bas niveau avec les méthodes greet, login, pasv, port, send, receive, cwd, type, quit, close. Lève une erreur (socket.try) en cas d'échec.",
-      "params": {"server": {"type": "string", "desc": "Hôte."}, "port": {"type": "integer|nil", "desc": "Port (défaut 21)."}, "create": {"type": "function|nil", "desc": "Fabrique de socket alternative (défaut socket.tcp)."}},
-      "returns": [{"type": "table", "desc": "Objet de connexion FTP."}]
+      "desc": "Opens a control connection to an FTP server and returns a low-level object with the methods greet, login, pasv, port, send, receive, cwd, type, quit, close. Raises an error (socket.try) on failure.",
+      "params": {
+        "server": {
+          "type": "string",
+          "desc": "Host."
+        },
+        "port": {
+          "type": "integer|nil",
+          "desc": "Port (default 21)."
+        },
+        "create": {
+          "type": "function|nil",
+          "desc": "Alternative socket factory (default socket.tcp)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "FTP connection object."
+        }
+      ]
     }
   },
   "classes": {
     "connection": {
-      "desc": "Objet renvoyé par open (champs tp = canal de contrôle, data, server, pasvt, try).",
+      "desc": "Object returned by open (fields tp = control channel, data, server, pasvt, try).",
       "functions": {
-        "greet": {"desc": "Lit le message d'accueil du serveur."},
-        "login": {"desc": "Authentifie avec USER/PASS (valeurs anonymes par défaut).", "params": {"user": {"type": "string|nil", "desc": "Utilisateur."}, "password": {"type": "string|nil", "desc": "Mot de passe."}}},
-        "type": {"desc": "Choisit le mode de transfert ('a' texte, 'i' binaire).", "params": {"type": {"type": "string", "desc": "'a' ou 'i'."}}},
-        "cwd": {"desc": "Change de répertoire distant.", "params": {"dir": {"type": "string", "desc": "Répertoire."}}},
-        "pasv": {"desc": "Passe en mode passif et mémorise l'IP et le port de données ; renvoie ip, port."},
-        "port": {"desc": "Passe en mode actif : annonce un port local au serveur (ouvre un socket serveur si ip est nil). Utilise math.mod (voir notes).", "params": {"ip": {"type": "string|nil", "desc": "IP à annoncer."}, "port": {"type": "integer|nil", "desc": "Port."}}},
-        "pasvconnect": {"desc": "Ouvre la connexion de données en mode passif.", "internal": true},
-        "portconnect": {"desc": "Accepte la connexion de données en mode actif.", "internal": true},
-        "send": {"desc": "Envoie des données (commande STOR par défaut) ; nécessite pasv ou port avant. Renvoie le nombre d'octets envoyés.", "params": {"sendt": {"type": "table", "desc": "source, path ou argument, command, step."}}, "returns": [{"type": "integer", "desc": "Octets envoyés."}]},
-        "receive": {"desc": "Reçoit des données (commande RETR par défaut) dans le sink fourni ; nécessite pasv ou port avant.", "params": {"recvt": {"type": "table", "desc": "sink, path ou argument, command, step."}}, "returns": [{"type": "integer", "desc": "1."}]},
-        "quit": {"desc": "Envoie QUIT."},
-        "close": {"desc": "Ferme les connexions de données, serveur et contrôle."}
+        "greet": {
+          "desc": "Reads the server's welcome message."
+        },
+        "login": {
+          "desc": "Authenticates with USER/PASS (anonymous values by default).",
+          "params": {
+            "user": {
+              "type": "string|nil",
+              "desc": "User."
+            },
+            "password": {
+              "type": "string|nil",
+              "desc": "Password."
+            }
+          }
+        },
+        "type": {
+          "desc": "Selects the transfer mode ('a' text, 'i' binary).",
+          "params": {
+            "type": {
+              "type": "string",
+              "desc": "'a' or 'i'."
+            }
+          }
+        },
+        "cwd": {
+          "desc": "Changes the remote directory.",
+          "params": {
+            "dir": {
+              "type": "string",
+              "desc": "Directory."
+            }
+          }
+        },
+        "pasv": {
+          "desc": "Switches to passive mode and stores the data IP and port; returns ip, port."
+        },
+        "port": {
+          "desc": "Switches to active mode: announces a local port to the server (opens a server socket if ip is nil). Uses math.mod (see notes).",
+          "params": {
+            "ip": {
+              "type": "string|nil",
+              "desc": "IP to announce."
+            },
+            "port": {
+              "type": "integer|nil",
+              "desc": "Port."
+            }
+          }
+        },
+        "pasvconnect": {
+          "desc": "Opens the data connection in passive mode.",
+          "internal": true
+        },
+        "portconnect": {
+          "desc": "Accepts the data connection in active mode.",
+          "internal": true
+        },
+        "send": {
+          "desc": "Sends data (STOR command by default); requires pasv or port beforehand. Returns the number of bytes sent.",
+          "params": {
+            "sendt": {
+              "type": "table",
+              "desc": "source, path or argument, command, step."
+            }
+          },
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "Bytes sent."
+            }
+          ]
+        },
+        "receive": {
+          "desc": "Receives data (RETR command by default) into the provided sink; requires pasv or port beforehand.",
+          "params": {
+            "recvt": {
+              "type": "table",
+              "desc": "sink, path or argument, command, step."
+            }
+          },
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "1."
+            }
+          ]
+        },
+        "quit": {
+          "desc": "Sends QUIT."
+        },
+        "close": {
+          "desc": "Closes the data, server and control connections."
+        }
       }
     }
   }

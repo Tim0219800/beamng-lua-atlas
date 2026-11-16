@@ -1,106 +1,214 @@
 {
   "path": "lua/ge/extensions/gameplay/tutorial/markers.lua",
-  "module": "Gère les marqueurs visuels du tutoriel de carrière : marqueurs d'attention au-dessus d'un véhicule ou à une position, marqueurs de direction sur une place de parking, et décalques au sol des places de parking dont la couleur indique si le véhicule est bien garé (blanc : non garé, jaune : garé mais mal orienté, vert : garé et bien orienté). Fournit aussi les tests de stationnement utilisés pour valider un objectif de parking.",
-  "usage": "local id = gameplay_tutorial_markers.createMarkerAboveVehicle(getPlayerVehicle(0))\n-- plus tard\ngameplay_tutorial_markers.removeMarker(id)",
+  "module": "Manages the career tutorial's visual markers: attention markers above a vehicle or at a position, direction markers on a parking spot, and ground decals of parking spots whose color indicates whether the vehicle is properly parked (white: not parked, yellow: parked but badly oriented, green: parked and well oriented). Also provides the parking tests used to validate a parking objective.",
+  "usage": "local id = gameplay_tutorial_markers.createMarkerAboveVehicle(getPlayerVehicle(0))\n-- later\ngameplay_tutorial_markers.removeMarker(id)",
   "notes": [
-    "Tolérance de parking 0,8 ; vitesse « à l'arrêt » < 0,1 m/s ; orientation correcte si produit scalaire avec l'avant de la place >= 0,7.",
-    "Les marqueurs grossissent avec la distance à la caméra : facteur 1 jusqu'à 30 m, jusqu'à 3,5 à 250 m.",
-    "Les décalques de parking ne sont dessinés que dans un rayon de 300 m (fondu entre 250 et 300 m) et utilisent la texture art/shapes/interface/parkDecalStripes.png.",
-    "Les marqueurs sont identifiés par un entier croissant renvoyé à la création.",
-    "update doit être appelé chaque frame par le code appelant (le fichier ne définit pas de hook onUpdate)."
+    "Parking tolerance 0.8; \"stationary\" speed < 0.1 m/s; orientation correct if dot product with the spot's front >= 0.7.",
+    "Markers grow with distance from the camera: factor 1 up to 30 m, up to 3.5 at 250 m.",
+    "Parking decals are only drawn within a 300 m radius (fade between 250 and 300 m) and use the texture art/shapes/interface/parkDecalStripes.png.",
+    "Markers are identified by an increasing integer returned on creation.",
+    "update must be called every frame by the calling code (the file does not define an onUpdate hook)."
   ],
   "functions": {
     "setDefaultParkingSpotVehicleGetter": {
-      "desc": "Définit la fonction qui fournit le véhicule à tester pour la couleur des décalques de parking, quand aucun véhicule n'est associé à la place.",
-      "params": {"getter": {"type": "function|nil", "desc": "Fonction sans argument renvoyant un véhicule (objet) ou nil."}},
+      "desc": "Sets the function that provides the vehicle to test for the parking decals' color, when no vehicle is associated with the spot.",
+      "params": {
+        "getter": {
+          "type": "function|nil",
+          "desc": "Function with no argument returning a vehicle (object) or nil."
+        }
+      },
       "returns": []
     },
     "createMarker": {
-      "desc": "Crée un marqueur d'attention (scenario/raceMarkers/attention) à une position, 1,75 m au-dessus pour la partie visible, et l'affiche.",
+      "desc": "Creates an attention marker (scenario/raceMarkers/attention) at a position, 1.75 m above for the visible part, and displays it.",
       "params": {
-        "pos": {"type": "vec3", "desc": "Position du marqueur."},
-        "rot": {"type": "quat|nil", "desc": "Rotation facultative."},
-        "scale": {"type": "vec3|nil", "desc": "Échelle (1,1,1 par défaut)."}
+        "pos": {
+          "type": "vec3",
+          "desc": "Marker position."
+        },
+        "rot": {
+          "type": "quat|nil",
+          "desc": "Optional rotation."
+        },
+        "scale": {
+          "type": "vec3|nil",
+          "desc": "Scale (1,1,1 by default)."
+        }
       },
-      "returns": [{"type": "integer|nil", "desc": "Id du marqueur, ou nil en cas d'échec."}]
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Marker id, or nil on failure."
+        }
+      ]
     },
     "createMarkerAboveVehicle": {
-      "desc": "Crée un marqueur d'attention 2 m au-dessus d'un véhicule (échelle 1,5 par défaut).",
+      "desc": "Creates an attention marker 2 m above a vehicle (scale 1.5 by default).",
       "params": {
-        "vehicle": {"type": "table", "desc": "Objet véhicule (getPosition)."},
-        "scale": {"type": "vec3|nil", "desc": "Échelle du marqueur."}
+        "vehicle": {
+          "type": "table",
+          "desc": "Vehicle object (getPosition)."
+        },
+        "scale": {
+          "type": "vec3|nil",
+          "desc": "Marker scale."
+        }
       },
-      "returns": [{"type": "integer|nil", "desc": "Id du marqueur, ou nil."}]
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Marker id, or nil."
+        }
+      ]
     },
     "createDirectionMarkerFromParkingSpot": {
-      "desc": "Crée un marqueur de direction posé 1,75 m au-dessus d'une place de parking, orienté selon la rotation de la place.",
+      "desc": "Creates a direction marker placed 1.75 m above a parking spot, oriented according to the spot's rotation.",
       "params": {
-        "parkingSpot": {"type": "table", "desc": "Place de parking avec pos, rot (et name)."},
-        "scale": {"type": "vec3|nil", "desc": "Échelle ; x sert de rayon (2 par défaut)."}
+        "parkingSpot": {
+          "type": "table",
+          "desc": "Parking spot with pos, rot (and name)."
+        },
+        "scale": {
+          "type": "vec3|nil",
+          "desc": "Scale; x is used as the radius (2 by default)."
+        }
       },
-      "returns": [{"type": "integer|nil", "desc": "Id du marqueur, ou nil si la place est invalide ou le chargement échoue."}]
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Marker id, or nil if the spot is invalid or loading fails."
+        }
+      ]
     },
     "removeMarker": {
-      "desc": "Supprime un marqueur par son id.",
-      "params": {"markerId": {"type": "integer", "desc": "Id renvoyé à la création."}},
-      "returns": [{"type": "boolean", "desc": "true si supprimé, false s'il est introuvable."}]
+      "desc": "Removes a marker by its id.",
+      "params": {
+        "markerId": {
+          "type": "integer",
+          "desc": "Id returned on creation."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if removed, false if not found."
+        }
+      ]
     },
     "clearAllMarkers": {
-      "desc": "Supprime tous les marqueurs.",
+      "desc": "Removes all markers.",
       "params": {},
       "returns": []
     },
     "addParkingSpotDecal": {
-      "desc": "Enregistre un décalque au sol pour une place de parking (affiché par update).",
-      "params": {"parkingSpot": {"type": "table", "desc": "Place avec name, pos, rot, scl."}},
+      "desc": "Registers a ground decal for a parking spot (displayed by update).",
+      "params": {
+        "parkingSpot": {
+          "type": "table",
+          "desc": "Spot with name, pos, rot, scl."
+        }
+      },
       "returns": []
     },
     "removeParkingSpotDecal": {
-      "desc": "Retire le décalque d'une place et le véhicule qui lui était associé.",
-      "params": {"parkingSpotName": {"type": "string", "desc": "Nom de la place."}},
+      "desc": "Removes a spot's decal and the vehicle that was associated with it.",
+      "params": {
+        "parkingSpotName": {
+          "type": "string",
+          "desc": "Spot name."
+        }
+      },
       "returns": []
     },
     "setParkingSpotVehicle": {
-      "desc": "Associe un véhicule à une place pour déterminer la couleur de son décalque.",
+      "desc": "Associates a vehicle with a spot to determine its decal's color.",
       "params": {
-        "parkingSpotName": {"type": "string", "desc": "Nom de la place."},
-        "vehicle": {"type": "table|nil", "desc": "Objet véhicule."}
+        "parkingSpotName": {
+          "type": "string",
+          "desc": "Spot name."
+        },
+        "vehicle": {
+          "type": "table|nil",
+          "desc": "Vehicle object."
+        }
       },
       "returns": []
     },
     "checkVehicleInParkingSpot": {
-      "desc": "Teste si un véhicule est garé dans une place, bien orienté et à l'arrêt.",
+      "desc": "Tests whether a vehicle is parked in a spot, properly oriented and stationary.",
       "params": {
-        "vehicle": {"type": "table", "desc": "Objet véhicule."},
-        "parkingSpot": {"type": "table", "desc": "Place de parking (méthode checkParking, rot)."}
+        "vehicle": {
+          "type": "table",
+          "desc": "Vehicle object."
+        },
+        "parkingSpot": {
+          "type": "table",
+          "desc": "Parking spot (checkParking method, rot)."
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "isParked : garé dans la place (tolérance 0,8)."},
-        {"type": "boolean", "desc": "isFacingCorrect : orientation compatible (produit scalaire >= 0,7)."},
-        {"type": "boolean", "desc": "isStationary : vitesse < 0,1 m/s."}
+        {
+          "type": "boolean",
+          "desc": "isParked: parked in the spot (tolerance 0.8)."
+        },
+        {
+          "type": "boolean",
+          "desc": "isFacingCorrect: compatible orientation (dot product >= 0.7)."
+        },
+        {
+          "type": "boolean",
+          "desc": "isStationary: speed < 0.1 m/s."
+        }
       ]
     },
     "checkParkGoalWithStationaryTime": {
-      "desc": "Valide un objectif de parking : garé, bien orienté et immobile pendant la durée demandée. L'état du chronomètre est conservé dans la table state.",
+      "desc": "Validates a parking objective: parked, properly oriented and motionless for the requested duration. The timer state is kept in the state table.",
       "params": {
-        "vehicle": {"type": "table", "desc": "Objet véhicule."},
-        "parkingSpot": {"type": "table", "desc": "Place de parking."},
-        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
-        "requiredSeconds": {"type": "number|nil", "desc": "Durée d'immobilité requise (1 s par défaut)."},
-        "state": {"type": "table|nil", "desc": "Table d'état {stationaryTimer, wasStationary}, à réutiliser d'un appel à l'autre."}
+        "vehicle": {
+          "type": "table",
+          "desc": "Vehicle object."
+        },
+        "parkingSpot": {
+          "type": "table",
+          "desc": "Parking spot."
+        },
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "requiredSeconds": {
+          "type": "number|nil",
+          "desc": "Required stationary duration (1 s by default)."
+        },
+        "state": {
+          "type": "table|nil",
+          "desc": "State table {stationaryTimer, wasStationary}, to reuse from one call to the next."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true quand l'objectif est atteint."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true when the objective is reached."
+        }
+      ]
     },
     "update": {
-      "desc": "Met à jour les marqueurs (échelle selon la distance à la caméra, update de chaque marqueur) puis calcule et envoie les décalques de parking proches à Engine.Render.DynamicDecalMgr.",
+      "desc": "Updates the markers (scale according to camera distance, update of each marker) then computes and sends the nearby parking decals to Engine.Render.DynamicDecalMgr.",
       "params": {
-        "dt": {"type": "number", "desc": "Delta temps réel."},
-        "dtSim": {"type": "number", "desc": "Delta temps de simulation."}
+        "dt": {
+          "type": "number",
+          "desc": "Real-time delta."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta."
+        }
       },
       "returns": []
     },
     "cleanup": {
-      "desc": "Supprime tous les marqueurs et vide décalques et véhicules associés.",
+      "desc": "Removes all markers and clears the decals and associated vehicles.",
       "params": {},
       "returns": []
     }

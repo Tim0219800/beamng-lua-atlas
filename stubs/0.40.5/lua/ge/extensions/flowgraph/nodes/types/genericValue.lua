@@ -2,43 +2,43 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/types/genericValue.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+--- Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 ---@class flowgraph_nodes_types_genericValue_C
 local flowgraph_nodes_types_genericValue_C = {}
 
---- Restaure getter/global et recrée les pins.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:57
----@param nodeData any données sauvegardées
+--- Restores getter/global and recreates the pins.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:57
+---@param nodeData any saved data
 function flowgraph_nodes_types_genericValue_C:_onDeserialized(nodeData) end
 
---- Sauvegarde l'état du noeud dans la table donnée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:52
----@param res any table de sauvegarde
+--- Saves the node's state in the given table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:52
+---@param res any save table
 function flowgraph_nodes_types_genericValue_C:_onSerialize(res) end
 
---- Cases « Use Project as Source » et « Is Getter ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:82
+--- "Use Project as Source" and "Is Getter" checkboxes.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:82
 function flowgraph_nodes_types_genericValue_C:drawCustomProperties() end
 
---- getter = true, global = true et pins getter.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:24
+--- getter = true, global = true and getter pins.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:24
 function flowgraph_nodes_types_genericValue_C:init() end
 
---- Passe en mode « Generic Getter » : pin de sortie val.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:67
+--- Switches to "Generic Getter" mode: output pin val.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:67
 function flowgraph_nodes_types_genericValue_C:setupGetPins() end
 
---- Passe en mode « Generic Setter » : pin d'entrée val.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:74
+--- Switches to "Generic Setter" mode: input pin val.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:74
 function flowgraph_nodes_types_genericValue_C:setupSetPins() end
 
---- Choisit la table de variables, construit le nom, puis lit (target:get) ou écrit (target:change) la variable.
----Source : lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:30
+--- Chooses the variables table, builds the name, then reads (target:get) or writes (target:change) the variable.
+---Source: lua/ge/extensions/flowgraph/nodes/types/genericValue.lua:30
 function flowgraph_nodes_types_genericValue_C:work() end
 

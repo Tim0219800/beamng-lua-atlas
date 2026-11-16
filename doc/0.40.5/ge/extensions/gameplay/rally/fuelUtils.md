@@ -1,58 +1,58 @@
 # `gameplay_rally_fuelUtils`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/fuelUtils.lua` · VM : Game Engine (GE) · 139 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/fuelUtils.lua` · VM: Game Engine (GE) · 139 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_fuelUtils` : `extensions.load("gameplay_rally_fuelUtils")`, puis la globale `gameplay_rally_fuelUtils`
+**Access:** extension `gameplay_rally_fuelUtils`: `extensions.load("gameplay_rally_fuelUtils")`, then the global `gameplay_rally_fuelUtils`
 
-Outils pour sauvegarder et restaurer le carburant d'un véhicule de rallye (par exemple après un reset ou une réparation). createFuelSnapshot analyse les données energyStorage : avec un seul réservoir essence/diesel valide, il mémorise le niveau courant (mode 'remembered') ; sinon il prévoit un plein (mode 'full') avec la raison du repli. applyFuelSnapshot réapplique l'instantané via core_vehicleBridge.
+Tools to save and restore a rally vehicle's fuel (for example after a reset or a repair). createFuelSnapshot analyzes the energyStorage data: with a single valid gasoline/diesel tank, it stores the current level ('remembered' mode); otherwise it plans a full tank ('full' mode) with the reason for the fallback. applyFuelSnapshot reapplies the snapshot via core_vehicleBridge.
 
-## Exemple
+## Example
 
 ```lua
 gameplay_rally_fuelUtils.requestFuelSnapshot(veh, function(snap)
-  -- plus tard :
-  gameplay_rally_fuelUtils.applyFuelSnapshot(veh, snap, 'MonTag', 'reset')
+  -- later:
+  gameplay_rally_fuelUtils.applyFuelSnapshot(veh, snap, 'MyTag', 'reset')
 end)
 ```
 
-## Remarques
+## Notes
 
-- Seuls les carburants 'gasoline' et 'diesel' sont mémorisés ; batterie électrique, réservoir multiple, autre type de stockage (hors n2oTank) forcent le mode 'full'.
-- Les énergies sont celles d'energyStorage (unité du jeu, déduit du code).
-- Snapshot : {mode='full'|'remembered', tanks={...}, reason=string|nil}. En mode 'full', tanks contient {name, maxEnergy} ; en 'remembered', {name, currentEnergy}.
+- Only 'gasoline' and 'diesel' fuels are remembered; an electric battery, multiple tanks, or another storage type (other than n2oTank) force the 'full' mode.
+- The energies are those of energyStorage (game unit, inferred from code).
+- Snapshot: {mode='full'|'remembered', tanks={...}, reason=string|nil}. In 'full' mode, tanks contains {name, maxEnergy}; in 'remembered', {name, currentEnergy}.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_fuelUtils.applyFuelSnapshot(veh, snapshot, logTag, reason)` | Applique l'instantané : en mode 'remembered' remet currentEnergy dans chaque réservoir ; sinon remplit chaque réservoir à maxEnergy (avec un avertissement dans le log si une raison est fournie). Utilise l'action véhicule setEnergyStorageEnergy. Ne fait rien sans véhicule, sans instantané ou sans réservoir. | 112 |
-| `gameplay_rally_fuelUtils.createFuelSnapshot(energyStorageData)` | Construit un instantané de carburant à partir des données energyStorage d'un véhicule. | 31 |
-| `gameplay_rally_fuelUtils.requestFuelSnapshot(veh, callback)` | Demande asynchrone la valeur 'energyStorage' au véhicule (core_vehicleBridge.requestValue) puis appelle callback avec l'instantané. Sans véhicule, appelle callback immédiatement avec un instantané 'full' vide. | 101 |
+| `gameplay_rally_fuelUtils.applyFuelSnapshot(veh, snapshot, logTag, reason)` | Applies the snapshot: in 'remembered' mode puts currentEnergy back in each tank; otherwise fills each tank to maxEnergy (with a warning in the log if a reason is provided). Uses the vehicle action setEnergyStorageEnergy. Does nothing without a vehicle, without a snapshot or without a tank. | 112 |
+| `gameplay_rally_fuelUtils.createFuelSnapshot(energyStorageData)` | Builds a fuel snapshot from a vehicle's energyStorage data. | 31 |
+| `gameplay_rally_fuelUtils.requestFuelSnapshot(veh, callback)` | Asynchronously requests the 'energyStorage' value from the vehicle (core_vehicleBridge.requestValue) then calls callback with the snapshot. Without a vehicle, calls callback immediately with an empty 'full' snapshot. | 101 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_fuelUtils.applyFuelSnapshot(veh, snapshot, logTag, reason)`
 
-Applique l'instantané : en mode 'remembered' remet currentEnergy dans chaque réservoir ; sinon remplit chaque réservoir à maxEnergy (avec un avertissement dans le log si une raison est fournie). Utilise l'action véhicule setEnergyStorageEnergy. Ne fait rien sans véhicule, sans instantané ou sans réservoir.
+Applies the snapshot: in 'remembered' mode puts currentEnergy back in each tank; otherwise fills each tank to maxEnergy (with a warning in the log if a reason is provided). Uses the vehicle action setEnergyStorageEnergy. Does nothing without a vehicle, without a snapshot or without a tank.
 
-- `veh` (*table*) : Objet véhicule.
-- `snapshot` (*table*) : Instantané issu de createFuelSnapshot.
-- `logTag` (*string|nil*) : Tag de log.
-- `reason` (*string|nil*) : Contexte pour le message de log ('recovery' par défaut).
+- `veh` (*table*) : Vehicle object.
+- `snapshot` (*table*) : Snapshot from createFuelSnapshot.
+- `logTag` (*string|nil*) : Log tag.
+- `reason` (*string|nil*) : Context for the log message ('recovery' by default).
 
 #### `gameplay_rally_fuelUtils.createFuelSnapshot(energyStorageData)`
 
-Construit un instantané de carburant à partir des données energyStorage d'un véhicule.
+Builds a fuel snapshot from a vehicle's energyStorage data.
 
-- `energyStorageData` (*table|nil*) : Liste des stockages d'énergie (storageType, energyType, name, currentEnergy, maxEnergy).
-- **renvoie** : table {mode, tanks, reason} ; reason explique pourquoi on retombe sur un plein.
+- `energyStorageData` (*table|nil*) : List of energy storages (storageType, energyType, name, currentEnergy, maxEnergy).
+- **returns**: table {mode, tanks, reason}; reason explains why it falls back to a full tank.
 
 #### `gameplay_rally_fuelUtils.requestFuelSnapshot(veh, callback)`
 
-Demande asynchrone la valeur 'energyStorage' au véhicule (core_vehicleBridge.requestValue) puis appelle callback avec l'instantané. Sans véhicule, appelle callback immédiatement avec un instantané 'full' vide.
+Asynchronously requests the 'energyStorage' value from the vehicle (core_vehicleBridge.requestValue) then calls callback with the snapshot. Without a vehicle, calls callback immediately with an empty 'full' snapshot.
 
-- `veh` (*table|nil*) : Objet véhicule.
+- `veh` (*table|nil*) : Vehicle object.
 - `callback` (*function*) : function(snapshot).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/fuelUtils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/fuelUtils.lua`.*

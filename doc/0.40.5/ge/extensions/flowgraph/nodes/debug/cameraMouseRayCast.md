@@ -1,23 +1,23 @@
 # `flowgraph_nodes_debug_cameraMouseRayCast`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/debug/cameraMouseRayCast.lua` · VM : Game Engine (GE) · 53 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/debug/cameraMouseRayCast.lua` · VM: Game Engine (GE) · 53 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/debug/cameraMouseRayCast")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/debug/cameraMouseRayCast")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Camera Mouse Raycast » (catégorie repeat_instant, tags util/click). Tire un rayon depuis la caméra vers la position de la souris (cameraMouseRayCast) et sort le résultat. Sorties : clicking (impulsion au clic gauche), hold (maintenu), objID, objName, et pins cachés distance, pos (vec3), normal (vec3), face. Les clics sont ignorés si l'interface ImGui capture la souris. Le jeu note qu'il n'est peut-être plus nécessaire (nœud « mouse tool »).
+Flowgraph node "Camera Mouse Raycast" (category repeat_instant, tags util/click). Casts a ray from the camera toward the mouse position (cameraMouseRayCast) and outputs the result. Outputs: clicking (pulse on left click), hold (held), objID, objName, and hidden pins distance, pos (vec3), normal (vec3), face. Clicks are ignored if the ImGui interface captures the mouse. The game notes it may no longer be needed ("mouse tool" node).
 
-## Remarques
+## Notes
 
-- C.todo du jeu : « Might not be needed anymore, since we have mouse tool node. »
-- Sans impact, toutes les sorties sont mises à nil/faux.
+- Game C.todo: "Might not be needed anymore, since we have mouse tool node."
+- No effect, all outputs are set to nil/false.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Chaque frame : lance le rayon et remplit les pins (position, normale en tables {x,y,z}, objet touché) ; remet tout à nil/faux s'il n'y a pas de collision. | 29 |
+| `C:work()` | Every frame: casts the ray and fills the pins (position, normal as {x,y,z} tables, hit object); resets everything to nil/false if there is no collision. | 29 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/debug/cameraMouseRayCast.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/debug/cameraMouseRayCast.lua`.*

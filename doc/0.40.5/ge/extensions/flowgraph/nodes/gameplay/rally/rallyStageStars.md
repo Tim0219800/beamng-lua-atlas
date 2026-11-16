@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_rally_rallyStageStars`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageStars.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageStars.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/rallyStageStars")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/rallyStageStars")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Stage Stars » (catégorie once_instant, tags rally, mission, stars). Attribue les médailles bronze/argent/or d'une tentative en comparant son temps (attempt.data.time) aux seuils de la mission (missionTypeData.goldTime, silverTime, bronzeTime) : attempt.unlockedStars.<seuil> = temps <= seuil. Rien n'est évalué si la tentative est abandonnée (dnf) ou sans temps positif. Entrée et sortie : attempt (table 'attemptData').
+Flowgraph node "Rally Stage Stars" (category once_instant, tags rally, mission, stars). Awards the bronze/silver/gold medals of an attempt by comparing its time (attempt.data.time) to the mission thresholds (missionTypeData.goldTime, silverTime, bronzeTime): attempt.unlockedStars.<threshold> = time <= threshold. Nothing is evaluated if the attempt is abandoned (dnf) or has no positive time. Input and output: attempt ('attemptData' table).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Si le flux est actif, met à jour unlockedStars de la tentative et la renvoie dans la pin de sortie attempt. | 20 |
+| `C:workOnce()` | If the flow is active, updates the attempt's unlockedStars and returns it in the attempt output pin. | 20 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageStars.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageStars.lua`.*

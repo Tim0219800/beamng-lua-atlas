@@ -2,52 +2,52 @@
 -- tim19Atlas stub generated from lua/common/libs/lua-websockets/websocket/client_ev.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Backend client WebSocket asynchrone de lua-websockets pour la boucle d'événements lua-ev (module 'ev', non fourni par le jeu). Le module renvoie une fonction constructeur ; l'objet fonctionne par callbacks (on_open, on_message, on_error, on_close) et gère connexion non bloquante, poignée de main et fermeture avec délai.
---- Accès : `require("libs/lua-websockets/websocket/client_ev")`
+--- Asynchronous WebSocket client backend of lua-websockets for the lua-ev event loop ('ev' module, not provided by the game). The module returns a constructor function; the object works through callbacks (on_open, on_message, on_error, on_close) and handles non-blocking connection, handshake and close with a timeout.
+--- Access: `require("libs/lua-websockets/websocket/client_ev")`
 ---@class libs_lua_websockets_websocket_client_ev
 local libs_lua_websockets_websocket_client_ev = {}
 
---- Objet renvoyé par le constructeur new(ws). ws est une table d'options facultative (loop : boucle ev, défaut ev.Loop.default). L'état self.state vaut 'CLOSED', 'CONNECTING', 'OPEN' ou 'CLOSING'.
+--- Object returned by the constructor new(ws). ws is an optional options table (loop: ev loop, default ev.Loop.default). self.state is 'CLOSED', 'CONNECTING', 'OPEN' or 'CLOSING'.
 ---@class libs_lua_websockets_websocket_client_ev_client
 local libs_lua_websockets_websocket_client_ev_client = {}
 
---- Ferme la connexion : annule la connexion en cours ou envoie une trame CLOSE puis attend l'écho jusqu'au délai (3 s par défaut), sinon ferme avec le code 1006 'timeout'.
----Source : lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
----@param code integer Code (défaut 1000).
----@param reason string Raison.
----@param timeout number Délai en secondes.
+--- Closes the connection: cancels the connection in progress or sends a CLOSE frame then waits for the echo until the timeout (3 s by default), otherwise closes with code 1006 'timeout'.
+---Source: lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
+---@param code integer Code (default 1000).
+---@param reason string Reason.
+---@param timeout number Timeout in seconds.
 function libs_lua_websockets_websocket_client_ev_client:close(code, reason, timeout) end
 
---- Lance une connexion asynchrone, puis la poignée de main WebSocket.
----Source : lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
----@param url string URL ws:// ou wss://.
----@param ws_protocol string|string[] Sous-protocole(s) demandé(s).
----@param options table Options (ex. extra_http_headers, ssl_params) — déduit du code.
+--- Starts an asynchronous connection, then the WebSocket handshake.
+---Source: lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
+---@param url string ws:// or wss:// URL.
+---@param ws_protocol string|string[] Requested subprotocol(s).
+---@param options table Options (e.g. extra_http_headers, ssl_params) — inferred from code.
 function libs_lua_websockets_websocket_client_ev_client:connect(url, ws_protocol, options) end
 
---- Définit le callback de fermeture.
----Source : lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
+--- Sets the close callback.
+---Source: lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
 ---@param f function Callback.
 function libs_lua_websockets_websocket_client_ev_client:on_close(f) end
 
---- Définit le callback d'erreur.
----Source : lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
+--- Sets the error callback.
+---Source: lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
 ---@param f function Callback.
 function libs_lua_websockets_websocket_client_ev_client:on_error(f) end
 
---- Définit le callback de réception.
----Source : lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
----@param f function fonction(client, message, opcode).
+--- Sets the receive callback.
+---Source: lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
+---@param f function function(client, message, opcode).
 function libs_lua_websockets_websocket_client_ev_client:on_message(f) end
 
---- Définit le callback appelé quand la connexion est ouverte.
----Source : lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
+--- Sets the callback called when the connection is open.
+---Source: lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
 ---@param f function Callback.
 function libs_lua_websockets_websocket_client_ev_client:on_open(f) end
 
---- Envoie un message (trame masquée côté client).
----Source : lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
----@param message string Données.
----@param opcode integer Opcode (TEXT par défaut).
+--- Sends a message (frame masked on the client side).
+---Source: lua/common/libs/lua-websockets/websocket/client_ev.lua:dyn
+---@param message string Data.
+---@param opcode integer Opcode (TEXT by default).
 function libs_lua_websockets_websocket_client_ev_client:send(message, opcode) end
 

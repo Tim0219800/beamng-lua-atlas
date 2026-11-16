@@ -1,46 +1,46 @@
 # `utils_wsUtils`
 
-*Fichier : `lua/common/utils/wsUtils.lua` · VM : Commun (GE + véhicule) · 108 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/utils/wsUtils.lua` · VM: Common (GE + vehicle) · 108 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("utils/wsUtils")`
+**Access:** `require("utils/wsUtils")`
 
-Outils pour les WebSockets du moteur (BNGWebWSServer / BNGWSClient). Fournit createOrGetWS qui crée (ou récupère) un serveur WebSocket et choisit l'adresse IP à donner aux clients, en testant par un aller-retour réel quelles cartes réseau sont joignables. Se charge avec require('utils/wsUtils'). Utilisé par les extensions qui exposent des données à des outils externes.
+Tools for the engine's WebSockets (BNGWebWSServer / BNGWSClient). Provides createOrGetWS, which creates (or retrieves) a WebSocket server and chooses the IP address to give to clients, by testing with a real round trip which network cards are reachable. Loaded with require('utils/wsUtils'). Used by extensions that expose data to external tools.
 
-## Exemple
+## Example
 
 ```lua
 local ws = require('utils/wsUtils')
-local server, address = ws.createOrGetWS('0.0.0.0', 8081, '/', 'monProtocole', nil, true)
+local server, address = ws.createOrGetWS('0.0.0.0', 8081, '/', 'myProtocol', nil, true)
 ```
 
-## Remarques
+## Notes
 
-- Si listenAddr n'est ni '0.0.0.0' ni 'any', l'adresse renvoyée est toujours 'localhost'.
-- Si le bac à sable réseau (Engine.Sandbox.Network) est actif, l'adresse renvoyée est 'localhost' sans test.
-- Sinon, chaque carte réseau IPv4 (hors descriptions contenant virtualbox/vmware) est testée par testWSConnection (envoi d'une chaîne aléatoire, écho, 20 tentatives dans chaque sens) ; la première qui répond est retenue, sinon la première IPv4 réelle, sinon 'localhost'.
-- Le serveur est géré par son propre thread côté moteur : le test ne pompe que le client et lit la file d'évènements du serveur, jamais server:update().
+- If listenAddr is neither '0.0.0.0' nor 'any', the returned address is always 'localhost'.
+- If the network sandbox (Engine.Sandbox.Network) is active, the returned address is 'localhost' without testing.
+- Otherwise, each IPv4 network card (excluding descriptions containing virtualbox/vmware) is tested by testWSConnection (sending a random string, echo, 20 attempts in each direction); the first one that responds is kept, otherwise the first real IPv4, otherwise 'localhost'.
+- The server is managed by its own thread on the engine side: the test only pumps the client and reads the server's event queue, never server:update().
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `utils_wsUtils.createOrGetWS(listenAddr, port, path, protocolName, redirPage, enableDataStreams, useTLS)` | Crée ou récupère un serveur WebSocket (BNGWebWSServer.getOrCreate), détermine l'adresse que les clients doivent utiliser, et active éventuellement les flux de données (server:enableDataStreams). | 92 |
+| `utils_wsUtils.createOrGetWS(listenAddr, port, path, protocolName, redirPage, enableDataStreams, useTLS)` | Creates or retrieves a WebSocket server (BNGWebWSServer.getOrCreate), determines the address clients must use, and optionally enables data streams (server:enableDataStreams). | 92 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `utils_wsUtils.createOrGetWS(listenAddr, port, path, protocolName, redirPage, enableDataStreams, useTLS)`
 
-Crée ou récupère un serveur WebSocket (BNGWebWSServer.getOrCreate), détermine l'adresse que les clients doivent utiliser, et active éventuellement les flux de données (server:enableDataStreams).
+Creates or retrieves a WebSocket server (BNGWebWSServer.getOrCreate), determines the address clients must use, and optionally enables data streams (server:enableDataStreams).
 
-- `listenAddr` (*string*) : Adresse d'écoute : '0.0.0.0'/'any' (réseau local) ou 'localhost'/127.0.0.1
-- `port` (*integer*) : Port du serveur
-- `path` (*string*) : Chemin WebSocket
-- `protocolName` (*string*) : Nom du protocole WebSocket
-- `redirPage` (*string|nil*) : Page vers laquelle rediriger les requêtes HTTP simples (transmis au moteur)
-- `enableDataStreams` (*boolean|nil*) : true par défaut (nil) : active enableDataStreams sur le serveur
-- `useTLS` (*boolean|nil*) : Seul true active TLS
-- **renvoie** : userdata Serveur BNGWebWSServer
-- **renvoie** : string Adresse recommandée pour les clients
+- `listenAddr` (*string*) : Listen address: '0.0.0.0'/'any' (local network) or 'localhost'/127.0.0.1
+- `port` (*integer*) : Server port
+- `path` (*string*) : WebSocket path
+- `protocolName` (*string*) : WebSocket protocol name
+- `redirPage` (*string|nil*) : Page to redirect plain HTTP requests to (passed to the engine)
+- `enableDataStreams` (*boolean|nil*) : true by default (nil): enables enableDataStreams on the server
+- `useTLS` (*boolean|nil*) : Only true enables TLS
+- **returns**: userdata BNGWebWSServer server
+- **returns**: string Recommended address for clients
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/utils/wsUtils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/utils/wsUtils.lua`.*

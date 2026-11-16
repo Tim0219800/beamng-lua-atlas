@@ -1,0 +1,59 @@
+{
+  "path": "lua/common/extensions/networking/editorToolchain.lua",
+  "module": "Serveur TCP (port 7000, toutes interfaces) qui permet à un outil externe (éditeur JBeam, etc.) de dialoguer avec le jeu. Les clients envoient des commandes JSON (ping, init, getPlayerVehicleInfo, selectNodes, subscribe) et reçoivent des réponses (pong, siminfo, playerVehicleInfo, data). Il peut aussi surligner des nœuds du véhicule joueur dans le monde 3D et diffuser en continu positions de nœuds et vitesse. Non chargé par défaut (ligne commentée extensions.load('networking_editorToolchain')) ; une fois chargé, il reste en mémoire (unload mode 'manual').",
+  "usage": "extensions.load('networking_editorToolchain')\n-- le client se connecte sur le port 7000 et envoie {\"cmd\":\"ping\"}",
+  "notes": [
+    "Écoute sur '*' port 7000 : accessible depuis le réseau tant que l'extension est chargée.",
+    "Commandes reconnues : ping (-> pong), init (-> siminfo : versions, buildtype, chemins du jeu et utilisateur), getPlayerVehicleInfo (-> playerVehicleInfo ou noPlayerVehicle), selectNodes (liste de noms de nœuds à surligner), subscribe. Toute autre commande renvoie {cmd='error'}.",
+    "Types d'abonnement gérés : 'nodePositions' (uniquement avec what == '*') et 'velocity' ; envoyés à chaque onPreRender.",
+    "Le surlignage dessine une sphère rouge de rayon 0.1 m et le nom du nœud via debugDrawer.",
+    "Un message 'disconnect' supprime les abonnements du client et remet selectedNodes à nil (efface le surlignage pour tous les clients).",
+    "Le serveur est détruit dans onExtensionUnloaded ; onInit passe l'extension en setExtensionUnloadMode(M, 'manual')."
+  ],
+  "functions": {
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement de l'extension : crée le serveur TCPServer sur '*':7000.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement : détruit le serveur s'il existe.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onInit": {
+      "desc": "Hook d'initialisation : règle le mode de déchargement de l'extension sur 'manual'.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Appelé chaque frame avant le rendu : lit les messages reçus et les traite, renvoie le contexte véhicule aux clients si le véhicule joueur a changé, dessine les nœuds sélectionnés puis envoie les données des abonnements (positions de nœuds, vitesse).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s), non utilisé."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s), non utilisé."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s), non utilisé."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Hook appelé à l'apparition d'un véhicule : si c'est le véhicule joueur 0, marque le contexte véhicule comme à renvoyer aux clients.",
+      "params": {"vehID": {"type": "integer", "desc": "Id du véhicule créé."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé quand le joueur change de véhicule : si le joueur est nil ou 0, marque le contexte véhicule à renvoyer aux clients.",
+      "params": {
+        "_": {"type": "any", "desc": "Premier argument ignoré."},
+        "__": {"type": "any", "desc": "Deuxième argument ignoré."},
+        "player": {"type": "integer|nil", "desc": "Index du joueur concerné."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

@@ -1,22 +1,27 @@
 {
   "path": "lua/ge/extensions/telemetry/userIdentity.lua",
-  "module": "Gère l'identifiant anonyme de l'utilisateur utilisé par la télémétrie. Un « sel » aléatoire est créé une fois et stocké dans `/telemetry/salt.txt` ; l'identifiant est le hash SHA-256 de ce fichier. Un ancien fichier `/gameTelemetries/.salt` est migré automatiquement pour conserver le même identifiant.",
+  "module": "Manages the user's anonymous ID used by telemetry. A random \"salt\" is created once and stored in `/telemetry/salt.txt`; the ID is the SHA-256 hash of that file. An old `/gameTelemetries/.salt` file is migrated automatically to keep the same ID.",
   "usage": "local id = telemetry_userIdentity.getAnonymousUserID()",
   "notes": [
-    "Le fichier de sel contient une bannière explicative (lien vers la politique de confidentialité) suivie de 6 lignes de 80 caractères hexadécimaux aléatoires (`SecureComm.getRandomBytesHexSlow(40)`).",
-    "Le hash porte sur tout le contenu du fichier lu, bannière comprise ; lors d'une migration, l'ancien contenu est recopié tel quel, sans bannière, pour ne pas changer l'identifiant.",
-    "Chaque appel de getAnonymousUserID relit le fichier et recalcule le hash (pas de cache).",
-    "L'extension se met en déchargement manuel au chargement."
+    "The salt file contains an explanatory banner (link to the privacy policy) followed by 6 lines of 80 random hexadecimal characters (`SecureComm.getRandomBytesHexSlow(40)`).",
+    "The hash covers the whole content of the file read, banner included; during a migration, the old content is copied as is, without a banner, so as not to change the ID.",
+    "Each call of getAnonymousUserID rereads the file and recomputes the hash (no cache).",
+    "The extension sets itself to manual unload on load."
   ],
   "functions": {
     "getAnonymousUserID": {
-      "desc": "Renvoie l'identifiant anonyme : le hash SHA-256 (`hashStringSHA256`) du sel. Crée ou migre le fichier de sel si nécessaire (dossier `telemetry` créé au besoin).",
+      "desc": "Returns the anonymous ID: the SHA-256 hash (`hashStringSHA256`) of the salt. Creates or migrates the salt file if needed (`telemetry` folder created as needed).",
       "params": {},
-      "returns": [{"type": "string", "desc": "Hash SHA-256 du contenu du fichier de sel."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "SHA-256 hash of the salt file's contents."
+        }
+      ],
       "internal": false
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement de l'extension. Passe l'extension en déchargement manuel pour éviter son déchargement automatique.",
+      "desc": "Hook called when the extension loads. Sets the extension to manual unload to avoid its automatic unload.",
       "params": {},
       "internal": true
     }

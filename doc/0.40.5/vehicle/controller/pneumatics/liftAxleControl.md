@@ -1,104 +1,104 @@
 # `controller_pneumatics_liftAxleControl`
 
-*Fichier : `lua/vehicle/controller/pneumatics/liftAxleControl.lua` · VM : Véhicule · 163 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/pneumatics/liftAxleControl.lua` · VM: Vehicle · 163 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `pneumatics/liftAxleControl` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `pneumatics/liftAxleControl` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de relevage d'essieu pneumatique (remorques/camions). Deux modes : « lift » (essieu relevé : airbags de levage gonflés, airbags principaux vidés) et « drop » (essieu posé : l'inverse), pilotés via deux contrôleurs d'actuateurs (airbags). En mode drop, la pression d'alimentation maximale des airbags principaux peut être changée dynamiquement (charge portée par l'essieu). Publie les pressions moyennes relatives et le mode dans electrics.values.
+Auxiliary pneumatic axle lift controller (trailers/trucks). Two modes: "lift" (axle raised: lift airbags inflated, main airbags emptied) and "drop" (axle lowered: the opposite), driven via two actuator controllers (airbags). In drop mode, the maximum supply pressure of the main airbags can be changed dynamically (load carried by the axle). Publishes the relative average pressures and the mode in electrics.values.
 
-## Exemple
+## Example
 
 ```lua
 local lac = controller.getController("liftAxleControl")
 lac.toggleMode()
-lac.setMaximumSupplyPressure(500000) -- Pa absolus
+lac.setMaximumSupplyPressure(500000) -- absolute Pa
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : defaultMaximumSupplyPressure (0), liftAirbagsGroupName, mainAirbagsGroupName, minimumSupplyPressure (0), maximumSupplyPressure (1000000), maximumSupplyPressureChangeRate (1000 Pa/s), mainAirbagsPressureEletricsName, liftAirbagsPressureEletricsName, liftAxleControlModeEletricsName (noms par défaut dérivés de M.name : _main_airbags_pressure_avg, _lift_airbags_pressure_avg, _lift_axle_mode), actuatorsControllerNameLift et actuatorsControllerNameMain (lus dans initLastStage).
-- Le mode initial est « lift » (setMode appelé en initLastStage). electrics ...lift_axle_mode vaut 1 en mode drop, 0 en lift.
-- La pression d'alimentation maximale évolue chaque frame de maximumSupplyPressureChangeRate*dt, bornée entre max(pression ambiante, minimumSupplyPressure) et maximumSupplyPressure (jbeam).
-- Si un des contrôleurs d'actuateurs est introuvable, log E et updateGFX devient nop.
-- reset met maximumSupplyPressureChangeRate à 0 (et non à la valeur jbeam) : après un reset la pression ne bouge plus tant qu'on n'appelle pas setMaximumSupplyPressureChangeRate. Incohérence probable avec init (valeur 1000 par défaut).
-- Note de source : M.initSecondStage n'existe pas ici malgré un commentaire dans le code ; la fonction réellement exportée est initLastStage.
+- jbeam keys read: defaultMaximumSupplyPressure (0), liftAirbagsGroupName, mainAirbagsGroupName, minimumSupplyPressure (0), maximumSupplyPressure (1000000), maximumSupplyPressureChangeRate (1000 Pa/s), mainAirbagsPressureEletricsName, liftAirbagsPressureEletricsName, liftAxleControlModeEletricsName (default names derived from M.name: _main_airbags_pressure_avg, _lift_airbags_pressure_avg, _lift_axle_mode), actuatorsControllerNameLift and actuatorsControllerNameMain (read in initLastStage).
+- The initial mode is "lift" (setMode called in initLastStage). electrics ...lift_axle_mode is 1 in drop mode, 0 in lift.
+- The maximum supply pressure changes every frame by maximumSupplyPressureChangeRate*dt, bounded between max(ambient pressure, minimumSupplyPressure) and maximumSupplyPressure (jbeam).
+- If one of the actuator controllers is not found, log E and updateGFX becomes nop.
+- reset sets maximumSupplyPressureChangeRate to 0 (and not to the jbeam value): after a reset the pressure no longer moves until setMaximumSupplyPressureChangeRate is called. Probable inconsistency with init (default value 1000).
+- Source note: M.initSecondStage does not exist here despite a comment in the code; the function actually exported is initLastStage.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_pneumatics_liftAxleControl.getState()` | État sauvegardable : mode, pression maximale d'alimentation, taux de variation (clés préfixées par le nom du contrôleur). | 115 |
-| `controller_pneumatics_liftAxleControl.init(jbeamData)` | Lit les clés jbeam, noms de groupes d'airbags et noms d'electrics. *(interne)* | 77 |
-| `controller_pneumatics_liftAxleControl.initLastStage(jbeamData)` | Récupère les deux contrôleurs d'actuateurs puis passe en mode « lift ». *(interne)* | 95 |
-| `controller_pneumatics_liftAxleControl.reset(jbeamData)` | Met le taux de variation de pression d'alimentation à 0. *(interne)* | 73 |
-| `controller_pneumatics_liftAxleControl.setMaximumSupplyPressure(maxSupplyPressure)` | Fixe la pression maximale d'alimentation des airbags principaux (Pa absolus), appliquée en mode drop. | 65 |
-| `controller_pneumatics_liftAxleControl.setMaximumSupplyPressureChangeRate(maxSupplyPressureChangeRate)` | Fixe la vitesse de variation de cette pression maximale (Pa/s, signée). | 69 |
-| `controller_pneumatics_liftAxleControl.setMode(mode)` | Choisit le mode « lift » ou « drop » et ouvre/ferme les vannes des deux groupes d'airbags en conséquence. | 46 |
-| `controller_pneumatics_liftAxleControl.setState(data)` | Restaure pression, taux et mode (valeurs NaN ignorées). | 122 |
-| `controller_pneumatics_liftAxleControl.toggleMode()` | Bascule entre drop et lift. | 57 |
-| `controller_pneumatics_liftAxleControl.updateGFX(dt)` | Chaque frame : applique la pression d'alimentation maximale en mode drop, la fait évoluer et met à jour les electrics de pressions et de mode. *(interne)* | 32 |
+| `controller_pneumatics_liftAxleControl.getState()` | Saveable state: mode, maximum supply pressure, rate of change (keys prefixed by the controller name). | 115 |
+| `controller_pneumatics_liftAxleControl.init(jbeamData)` | Reads the jbeam keys, airbag group names and electrics names. *(internal)* | 77 |
+| `controller_pneumatics_liftAxleControl.initLastStage(jbeamData)` | Gets the two actuator controllers then switches to "lift" mode. *(internal)* | 95 |
+| `controller_pneumatics_liftAxleControl.reset(jbeamData)` | Sets the supply pressure change rate to 0. *(internal)* | 73 |
+| `controller_pneumatics_liftAxleControl.setMaximumSupplyPressure(maxSupplyPressure)` | Sets the maximum supply pressure of the main airbags (absolute Pa), applied in drop mode. | 65 |
+| `controller_pneumatics_liftAxleControl.setMaximumSupplyPressureChangeRate(maxSupplyPressureChangeRate)` | Sets the rate of change of this maximum pressure (Pa/s, signed). | 69 |
+| `controller_pneumatics_liftAxleControl.setMode(mode)` | Chooses the "lift" or "drop" mode and opens/closes the valves of the two airbag groups accordingly. | 46 |
+| `controller_pneumatics_liftAxleControl.setState(data)` | Restores pressure, rate and mode (NaN values ignored). | 122 |
+| `controller_pneumatics_liftAxleControl.toggleMode()` | Toggles between drop and lift. | 57 |
+| `controller_pneumatics_liftAxleControl.updateGFX(dt)` | Every frame: applies the maximum supply pressure in drop mode, makes it evolve and updates the pressure and mode electrics. *(internal)* | 32 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_pneumatics_liftAxleControl.getState()`
 
-État sauvegardable : mode, pression maximale d'alimentation, taux de variation (clés préfixées par le nom du contrôleur).
+Saveable state: mode, maximum supply pressure, rate of change (keys prefixed by the controller name).
 
-- **renvoie** : table Table d'état.
+- **returns**: table State table.
 
 #### `controller_pneumatics_liftAxleControl.init(jbeamData)`
 
-Lit les clés jbeam, noms de groupes d'airbags et noms d'electrics.
+Reads the jbeam keys, airbag group names and electrics names.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_pneumatics_liftAxleControl.initLastStage(jbeamData)`
 
-Récupère les deux contrôleurs d'actuateurs puis passe en mode « lift ».
+Gets the two actuator controllers then switches to "lift" mode.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_pneumatics_liftAxleControl.reset(jbeamData)`
 
-Met le taux de variation de pression d'alimentation à 0.
+Sets the supply pressure change rate to 0.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_pneumatics_liftAxleControl.setMaximumSupplyPressure(maxSupplyPressure)`
 
-Fixe la pression maximale d'alimentation des airbags principaux (Pa absolus), appliquée en mode drop.
+Sets the maximum supply pressure of the main airbags (absolute Pa), applied in drop mode.
 
-- `maxSupplyPressure` (*number*) : Pression en Pa.
+- `maxSupplyPressure` (*number*) : Pressure in Pa.
 
 #### `controller_pneumatics_liftAxleControl.setMaximumSupplyPressureChangeRate(maxSupplyPressureChangeRate)`
 
-Fixe la vitesse de variation de cette pression maximale (Pa/s, signée).
+Sets the rate of change of this maximum pressure (Pa/s, signed).
 
-- `maxSupplyPressureChangeRate` (*number*) : Variation en Pa/s.
+- `maxSupplyPressureChangeRate` (*number*) : Change in Pa/s.
 
 #### `controller_pneumatics_liftAxleControl.setMode(mode)`
 
-Choisit le mode « lift » ou « drop » et ouvre/ferme les vannes des deux groupes d'airbags en conséquence.
+Chooses the "lift" or "drop" mode and opens/closes the valves of the two airbag groups accordingly.
 
-- `mode` (*string*) : "lift" ou "drop".
+- `mode` (*string*) : "lift" or "drop".
 
 #### `controller_pneumatics_liftAxleControl.setState(data)`
 
-Restaure pression, taux et mode (valeurs NaN ignorées).
+Restores pressure, rate and mode (NaN values ignored).
 
-- `data` (*table|nil*) : Table produite par getState.
+- `data` (*table|nil*) : Table produced by getState.
 
 #### `controller_pneumatics_liftAxleControl.updateGFX(dt)`
 
-Chaque frame : applique la pression d'alimentation maximale en mode drop, la fait évoluer et met à jour les electrics de pressions et de mode.
+Every frame: applies the maximum supply pressure in drop mode, makes it evolve and updates the pressure and mode electrics.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/pneumatics/liftAxleControl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/pneumatics/liftAxleControl.lua`.*

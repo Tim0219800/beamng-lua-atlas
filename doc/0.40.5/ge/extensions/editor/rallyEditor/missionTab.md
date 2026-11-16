@@ -1,40 +1,40 @@
 # `editor_rallyEditor_missionTab`
 
-*Fichier : `lua/ge/extensions/editor/rallyEditor/missionTab.lua` · VM : Game Engine (GE) · 116 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/rallyEditor/missionTab.lua` · VM: Game Engine (GE) · 116 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/rallyEditor/missionTab")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/rallyEditor/missionTab")` (file under extensions/ but not a regular extension)
 
-Onglet « Mission » de l'éditeur de rallye. Il affiche en lecture seule le nom, l'identifiant et le dossier de la mission courante (avec un bouton qui ouvre le dossier dans l'explorateur), puis liste les voicepacks locaux à la mission trouvés dans <missionDir>/rally/voicepacks/<nom>/ : dossier, nombre de fichiers pacenote_*.ogg et carnets associés. Le voicepack actuellement choisi est marqué d'une étoile verte. Le module renvoie un constructeur (classe C).
+"Mission" tab of the rally editor. It displays read-only the current mission's name, identifier and folder (with a button that opens the folder in the file explorer), then lists the mission-local voicepacks found in <missionDir>/rally/voicepacks/<name>/: folder, number of pacenote_*.ogg files and associated notebooks. The currently chosen voicepack is marked with a green star. The module returns a constructor (class C).
 
-## Remarques
+## Notes
 
-- Ne modifie aucune donnée : onglet purement informatif.
-- Si l'entrée info.json n'existe pas, le bouton ouvre le dossier rally/ puis à défaut le dossier de la mission.
-- Sans mission chargée, affiche un message invitant à ouvrir l'éditeur depuis le Mission Editor.
+- Does not modify any data: purely informational tab.
+- If the info.json entry does not exist, the button opens the rally/ folder, otherwise the mission folder.
+- With no mission loaded, displays a message inviting you to open the editor from the Mission Editor.
 
-## Classe `C`
+## Class `C`
 
-Objet onglet renvoyé par le constructeur (new(rallyEditor)). Champs : rallyEditor, path, windowDescription = 'Mission'.
+Tab object returned by the constructor (new(rallyEditor)). Fields: rallyEditor, path, windowDescription = 'Mission'.
 
-Le module renvoie un constructeur : `local obj = require("editor_rallyEditor_missionTab")(options)`.
+The module returns a constructor: `local obj = require("editor_rallyEditor_missionTab")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:draw(mouseInfo)` | Dessine l'interface imgui de l'onglet (infos mission, liste des voicepacks locaux). | 45 |
-| `C:init(rallyEditor)` | Constructeur interne : mémorise l'éditeur. | 14 |
-| `C:selected()` | Appelée quand l'onglet est sélectionné : émet le hook onEditorEditModeChanged(nil, nil) pour quitter tout mode d'édition. | 22 |
-| `C:setPath(path)` | Mémorise le carnet courant (appelé par l'éditeur). | 18 |
-| `C:unselect()` | Appelée quand l'onglet est quitté : émet le hook onEditorEditModeChanged(nil, nil). | 26 |
+| `C:draw(mouseInfo)` | Draws the tab's imgui interface (mission info, list of local voicepacks). | 45 |
+| `C:init(rallyEditor)` | Internal constructor: stores the editor. | 14 |
+| `C:selected()` | Called when the tab is selected: emits the hook onEditorEditModeChanged(nil, nil) to leave any edit mode. | 22 |
+| `C:setPath(path)` | Stores the current notebook (called by the editor). | 18 |
+| `C:unselect()` | Called when the tab is left: emits the hook onEditorEditModeChanged(nil, nil). | 26 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onEditorEditModeChanged` — écouté par 1 module(s)
+- `onEditorEditModeChanged` — listened to by 1 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryExists`, `fileExists`, `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/rallyEditor/missionTab.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/rallyEditor/missionTab.lua`.*

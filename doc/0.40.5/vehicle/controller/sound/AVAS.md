@@ -1,55 +1,55 @@
 # `controller_sound_AVAS`
 
-*Fichier : `lua/vehicle/controller/sound/AVAS.lua` · VM : Véhicule · 83 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/sound/AVAS.lua` · VM: Vehicle · 83 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `sound/AVAS` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `sound/AVAS` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de système d'alerte sonore pour piétons (AVAS) des véhicules électriques. Joue une boucle « avant » en modes D/S, une boucle « arrière » en R, et rien sinon ou au-dessus de la vitesse maximale (+1 m/s) ; le paramètre de pitch/volume dépend de la vitesse.
+Auxiliary controller for the pedestrian acoustic vehicle alerting system (AVAS) of electric vehicles. Plays a "forward" loop in D/S modes, a "reverse" loop in R, and nothing otherwise or above the maximum speed (+1 m/s); the pitch/volume parameter depends on speed.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues dans initSounds : forwardSoundEvent ("event:>Engine>Pedestrian Warning>Forward_01"), reverseSoundEvent ("..._Reverse_01"), forwardSoundNode_nodes et reverseSoundNode_nodes (premier élément = nœud, 0 sinon), warningMaxSpeed (50/3.6 m/s), warningVolume (0.5).
-- Lit electrics.values.gear (nom du rapport) et wheelspeed. Le paramètre CT (ControlTrigger) de vitesse est linéaire de 0 à warningMaxSpeed.
-- reset appelle obj:stopSFX sur des sources qui ne sont créées que dans initSounds (nil possible si reset est appelé avant).
+- jbeam keys read in initSounds: forwardSoundEvent ("event:>Engine>Pedestrian Warning>Forward_01"), reverseSoundEvent ("..._Reverse_01"), forwardSoundNode_nodes and reverseSoundNode_nodes (first element = node, 0 otherwise), warningMaxSpeed (50/3.6 m/s), warningVolume (0.5).
+- Reads electrics.values.gear (gear name) and wheelspeed. The speed CT (ControlTrigger) parameter is linear from 0 to warningMaxSpeed.
+- reset calls obj:stopSFX on sources that are only created in initSounds (possibly nil if reset is called before).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_sound_AVAS.init(jbeamData)` | Ne fait rien (la configuration est lue dans initSounds). *(interne)* | 62 |
-| `controller_sound_AVAS.initSounds(jbeamData)` | Crée les deux sources sonores en boucle et lit vitesse maximale et volume. Appelé par le moteur à l'initialisation des sons. *(interne)* | 65 |
-| `controller_sound_AVAS.reset()` | Arrête les deux sons et remet l'état à « stopped ». *(interne)* | 56 |
-| `controller_sound_AVAS.updateGFX(dt)` | Chaque frame : choisit l'état (avant/arrière/arrêté) selon le rapport et la vitesse, joue/arrête les sons et ajuste le paramètre de vitesse. *(interne)* | 22 |
+| `controller_sound_AVAS.init(jbeamData)` | Does nothing (the configuration is read in initSounds). *(internal)* | 62 |
+| `controller_sound_AVAS.initSounds(jbeamData)` | Creates the two looping sound sources and reads the maximum speed and volume. Called by the engine at sound initialization. *(internal)* | 65 |
+| `controller_sound_AVAS.reset()` | Stops both sounds and resets the state to "stopped". *(internal)* | 56 |
+| `controller_sound_AVAS.updateGFX(dt)` | Every frame: chooses the state (forward/reverse/stopped) depending on the gear and speed, plays/stops the sounds and adjusts the speed parameter. *(internal)* | 22 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_sound_AVAS.init(jbeamData)`
 
-Ne fait rien (la configuration est lue dans initSounds).
+Does nothing (the configuration is read in initSounds).
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_sound_AVAS.initSounds(jbeamData)`
 
-Crée les deux sources sonores en boucle et lit vitesse maximale et volume. Appelé par le moteur à l'initialisation des sons.
+Creates the two looping sound sources and reads the maximum speed and volume. Called by the engine at sound initialization.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_sound_AVAS.updateGFX(dt)`
 
-Chaque frame : choisit l'état (avant/arrière/arrêté) selon le rapport et la vitesse, joue/arrête les sons et ajuste le paramètre de vitesse.
+Every frame: chooses the state (forward/reverse/stopped) depending on the gear and speed, plays/stops the sounds and adjusts the speed parameter.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `createSFXSource2`, `playSFX`, `setVolumePitchCT`, `stopSFX`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/sound/AVAS.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/sound/AVAS.lua`.*

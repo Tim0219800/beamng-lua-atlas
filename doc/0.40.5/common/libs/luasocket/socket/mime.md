@@ -1,58 +1,58 @@
 # `libs_luasocket_socket_mime`
 
-*Fichier : `lua/common/libs/luasocket/socket/mime.lua` · VM : Commun (GE + véhicule) · 90 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/luasocket/socket/mime.lua` · VM: Common (GE + vehicle) · 90 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/luasocket/socket/mime")`
+**Access:** `require("libs/luasocket/socket/mime")`
 
-Couche Lua du module MIME de LuaSocket (Diego Nehab, RFC 2045-2049) : encodage et décodage base64 et quoted-printable, découpe de lignes, normalisation de fins de ligne, protection des points (dot-stuffing SMTP). Construit des filtres LTN12 par-dessus les fonctions natives du module 'mime.core' (b64, unb64, qp, unqp, wrp, qpwrp, eol, dot).
+Lua layer of the LuaSocket MIME module (Diego Nehab, RFC 2045-2049): base64 and quoted-printable encoding and decoding, line wrapping, line-ending normalization, dot-stuffing (SMTP). Builds LTN12 filters on top of the native functions of the 'mime.core' module (b64, unb64, qp, unqp, wrp, qpwrp, eol, dot).
 
-## Exemple
+## Example
 
 ```lua
 local mime = require('mime')
-local b64 = mime.b64('texte')           -- natif (mime.core)
-local f = mime.encode('base64')         -- filtre ltn12
+local b64 = mime.b64('texte')           -- native (mime.core)
+local f = mime.encode('base64')         -- ltn12 filter
 local out = f('texte') .. (f(nil) or '')
 ```
 
-## Remarques
+## Notes
 
-- Le module fait require('mime.core') (partie native) et require('ltn12') (nom nu) : le fichier en dépend. La table renvoyée est celle de mime.core, enrichie par ce fichier, donc elle contient aussi les fonctions natives (b64, unb64, qp, unqp…).
-- encode, decode et wrap acceptent soit un nom d'algorithme, soit directement leurs options : si le premier argument n'est pas une chaîne, le nom 'default' est utilisé. Un nom inconnu lève l'erreur 'unknown key (...)'.
-- Algorithmes : encodet = base64, quoted-printable ; decodet = base64, quoted-printable ; wrapt = text, base64, default (longueur 76 par défaut), quoted-printable.
+- The module does require('mime.core') (native part) and require('ltn12') (bare name): the file depends on them. The returned table is that of mime.core, extended by this file, so it also contains the native functions (b64, unb64, qp, unqp...).
+- encode, decode and wrap accept either an algorithm name or directly their options: if the first argument is not a string, the name 'default' is used. An unknown name raises the error 'unknown key (...)'.
+- Algorithms: encodet = base64, quoted-printable; decodet = base64, quoted-printable; wrapt = text, base64, default (length 76 by default), quoted-printable.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_luasocket_socket_mime.normalize(marker)` | Crée un filtre qui normalise les fins de ligne vers le marqueur donné (via mime.eol). | 81 |
-| `libs_luasocket_socket_mime.stuff()` | Crée un filtre de 'dot-stuffing' (double les points en début de ligne, pour SMTP) via mime.dot. | 86 |
+| `libs_luasocket_socket_mime.normalize(marker)` | Creates a filter that normalizes line endings to the given marker (via mime.eol). | 81 |
+| `libs_luasocket_socket_mime.stuff()` | Creates a 'dot-stuffing' filter (doubles the dots at the start of a line, for SMTP) via mime.dot. | 86 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_luasocket_socket_mime.normalize(marker)`
 
-Crée un filtre qui normalise les fins de ligne vers le marqueur donné (via mime.eol).
+Creates a filter that normalizes line endings to the given marker (via mime.eol).
 
-- `marker` (*string|nil*) : Fin de ligne souhaitée (par ex. '\r\n').
-- **renvoie** : function Filtre LTN12.
+- `marker` (*string|nil*) : Desired line ending (e.g. '\r\n').
+- **returns**: function LTN12 filter.
 
 #### `libs_luasocket_socket_mime.stuff()`
 
-Crée un filtre de 'dot-stuffing' (double les points en début de ligne, pour SMTP) via mime.dot.
+Creates a 'dot-stuffing' filter (doubles the dots at the start of a line, for SMTP) via mime.dot.
 
-- **renvoie** : function Filtre LTN12.
+- **returns**: function LTN12 filter.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `decode` | function | decode(nom, opt1, opt2) -> filtre ltn12 de décodage choisi dans decodet. |
-| `decodet` | table<string, function> | Fabriques de filtres de décodage ('base64', 'quoted-printable'). |
-| `encode` | function | encode(nom, opt1, opt2) -> filtre ltn12 d'encodage choisi dans encodet. |
-| `encodet` | table<string, function> | Fabriques de filtres d'encodage ('base64', 'quoted-printable' ; en mode 'binary' le qp utilise =0D=0A). |
-| `wrap` | function | wrap(nom, longueur) -> filtre ltn12 de découpe de lignes choisi dans wrapt. |
-| `wrapt` | table<string, function> | Fabriques de filtres de découpe de lignes ('text', 'base64', 'default', 'quoted-printable'). |
+| `decode` | function | decode(name, opt1, opt2) -> ltn12 decoding filter chosen from decodet. |
+| `decodet` | table<string, function> | Decoding filter factories ('base64', 'quoted-printable'). |
+| `encode` | function | encode(name, opt1, opt2) -> ltn12 encoding filter chosen from encodet. |
+| `encodet` | table<string, function> | Encoding filter factories ('base64', 'quoted-printable'; in 'binary' mode qp uses =0D=0A). |
+| `wrap` | function | wrap(name, length) -> ltn12 line-wrapping filter chosen from wrapt. |
+| `wrapt` | table<string, function> | Line-wrapping filter factories ('text', 'base64', 'default', 'quoted-printable'). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luasocket/socket/mime.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/luasocket/socket/mime.lua`.*

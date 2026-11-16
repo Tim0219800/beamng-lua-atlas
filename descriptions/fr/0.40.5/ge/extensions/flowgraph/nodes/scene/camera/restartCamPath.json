@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/restartCamPath.lua",
+  "module": "Noeud flowgraph 'Restart Cam Path' (categorie once_instant, behaviour once). Redemarre la trajectoire de camera active (ou celle d'id 'id', pin cache) via camera:restartActivePath.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "workOnce": {
+          "desc": "Appelle self.mgr.modules.camera:restartActivePath(id).",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le milieu du noeud (vide).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

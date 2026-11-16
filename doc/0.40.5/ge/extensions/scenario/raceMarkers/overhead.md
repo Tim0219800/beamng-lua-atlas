@@ -1,41 +1,41 @@
 # `scenario_raceMarkers_overhead`
 
-*Fichier : `lua/ge/extensions/scenario/raceMarkers/overhead.lua` · VM : Game Engine (GE) · 206 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/raceMarkers/overhead.lua` · VM: Game Engine (GE) · 206 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/scenario/raceMarkers/overhead")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/scenario/raceMarkers/overhead")` (file under extensions/ but not a regular extension)
 
-Marqueur de checkpoint « flèche en hauteur » : une flèche (s_mm_arrow_ribbon_down.dae) tournée vers la caméra, qui oscille verticalement au-dessus du point, colorée selon le mode et dont la transparence augmente de près (fondu entre fadeNear et fadeFar). Le module renvoie un constructeur : require('scenario/raceMarkers/overhead')(id) donne un objet de la classe C.
+"Overhead arrow" checkpoint marker: an arrow (s_mm_arrow_ribbon_down.dae) turned toward the camera, oscillating vertically above the point, colored according to the mode and whose transparency increases up close (fade between fadeNear and fadeFar). The module returns a constructor: require('scenario/raceMarkers/overhead')(id) gives an object of class C.
 
-## Remarques
+## Notes
 
-- Couleurs par mode : default orange (1, 0.333, 0), next noir, start et lap vert, final bleu, branch (1, 0.6, 0.07), hidden noir.
-- setToCheckpoint(wp) lit wp.pos, wp.radius, wp.fadeNear et wp.fadeFar (défauts 5 et 25 m).
-- Dans update, le facteur de mélange de couleur t est fixé à 1 : le changement de mode est immédiat, sans fondu.
-- Le commentaire de setToCheckpoint cite des modes (finish, etc.) : les noms réels sont ceux de modeInfos (final, lap...).
+- Colors per mode: default orange (1, 0.333, 0), next black, start and lap green, final blue, branch (1, 0.6, 0.07), hidden black.
+- setToCheckpoint(wp) reads wp.pos, wp.radius, wp.fadeNear and wp.fadeFar (defaults 5 and 25 m).
+- In update, the color blend factor t is fixed at 1: the mode change is immediate, with no fade.
+- The setToCheckpoint comment mentions modes (finish, etc.): the actual names are those of modeInfos (final, lap...).
 
-## Classe `C`
+## Class `C`
 
-Marqueur flèche au-dessus du checkpoint.
+Arrow marker above the checkpoint.
 
-Le module renvoie un constructeur : `local obj = require("scenario_raceMarkers_overhead")(options)`.
+The module returns a constructor: `local obj = require("scenario_raceMarkers_overhead")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearMarkers()` | Supprime l'objet créé. | 189 |
-| `C:createMarkers()` | Supprime les anciens objets puis crée la flèche. | 179 |
-| `C:createObject(shapeName, objectName)` | Crée un TSStatic caché enregistré sous objectName et ajouté à ScenarioObjectsGroup. | 157 |
-| `C:hide()` | Appelle setVisibility(false). | 153 |
-| `C:init(id)` | Constructeur : initialise l'état. | 49 |
-| `C:setMode(mode)` | 'hidden' masque, autre mode affiche ; mémorise l'ancien et le nouveau mode. | 129 |
-| `C:setToCheckpoint(wp)` | Place le marqueur sur un checkpoint. | 116 |
-| `C:setVisibility(v)` | Affiche ou cache la flèche. | 144 |
-| `C:show()` | Appelle setVisibility(true). | 154 |
-| `C:update(dt, dtSim)` | Appel par image : oriente la flèche vers la caméra, l'anime (0.4 + 0.4*sin) et ajuste couleur et alpha selon la distance. | 74 |
+| `C:clearMarkers()` | Removes the created object. | 189 |
+| `C:createMarkers()` | Removes the old objects then creates the arrow. | 179 |
+| `C:createObject(shapeName, objectName)` | Creates a hidden TSStatic registered under objectName and added to ScenarioObjectsGroup. | 157 |
+| `C:hide()` | Calls setVisibility(false). | 153 |
+| `C:init(id)` | Constructor: initializes the state. | 49 |
+| `C:setMode(mode)` | 'hidden' hides, other mode shows; remembers the old and new mode. | 129 |
+| `C:setToCheckpoint(wp)` | Places the marker on a checkpoint. | 116 |
+| `C:setVisibility(v)` | Shows or hides the arrow. | 144 |
+| `C:show()` | Calls setVisibility(true). | 154 |
+| `C:update(dt, dtSim)` | Per-frame call: turns the arrow toward the camera, animates it (0.4 + 0.4*sin) and adjusts color and alpha according to distance. | 74 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `delete`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/raceMarkers/overhead.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/raceMarkers/overhead.lua`.*

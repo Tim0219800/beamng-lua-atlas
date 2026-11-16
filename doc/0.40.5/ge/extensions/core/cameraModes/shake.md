@@ -1,21 +1,21 @@
 # `core_cameraModes_shake`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/shake.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/shake.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/shake")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/shake")` (file under extensions/ but not a regular extension)
 
-Filtre de tremblement lent : ajoute à la position (amplitudes 0.08/0.05/0.03 m) et à la rotation (10 degrés par mètre de décalage) des oscillations sinusoïdales de fréquences 0.05/0.04/0.03 Hz avec décalages de phase aléatoires. Masqué. Renvoie un constructeur.
+Slow shake filter: adds to the position (amplitudes 0.08/0.05/0.03 m) and to the rotation (10 degrees per meter of offset) sinusoidal oscillations of frequencies 0.05/0.04/0.03 Hz with random phase offsets. Hidden. Returns a constructor.
 
-## Classe `C`
+## Class `C`
 
-Filtre de tremblement. Champs : amp (vec3), freq (vec3), timeOffset (vec3), time.
+Shake filter. Fields: amp (vec3), freq (vec3), timeOffset (vec3), time.
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_shake")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_shake")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Initialise amplitudes, fréquences et phases aléatoires. | 8 |
-| `C:update(data)` | Applique le décalage de position et la rotation à data.res. | 17 |
+| `C:init()` | Initializes amplitudes, frequencies and random phases. | 8 |
+| `C:update(data)` | Applies the position offset and rotation to data.res. | 17 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/shake.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/shake.lua`.*

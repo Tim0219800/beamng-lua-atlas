@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/export.lua",
+  "module": "Section « Export » de l'outil Dynamic Decals. Deux blocs : « Export Skin » (nom du véhicule du joueur + nom de skin, appelle api.exportSkin pour générer textures, matériau et JBeam) et « Export Textures » (nom, dossier, par défaut /art/dynamicDecals/export/textures, puis api.exportTextures en PNG). Affiche les chemins de sortie et avertit si un fichier existe déjà.",
+  "notes": [
+    "Les fichiers exportés pour les textures sont <dossier>/<nom>_color, _metallic, _roughness, _colorPalette en .png ; _normal est désactivé.",
+    "Le format DDS est désactivé : exportTextures force « png » quel que soit le format passé.",
+    "Les espaces du nom de skin / d'export sont remplacés par « _ ».",
+    "Le nom de véhicule est lu depuis getPlayerVehicle(0).jbeam et le champ est en lecture seule ; si aucun véhicule n'existe, la dernière valeur (vide au départ) est conservée.",
+    "La valeur par défaut skinExport_Vehicle (« vivace ») n'est pas utilisée."
+  ],
+  "functions": {
+    "registerEditorPreferences": {
+      "desc": "Ne déclare aucune préférence (corps commenté).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : récupère l'API et docs, prépare la liste des formats (dds, png) pour ImGui, calcule les chemins d'export, enregistre la section « Export » (ordre 25) et sa page de documentation.",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "path": "lua/vehicle/controller/propAnimation/googlyEyes.lua",
+  "module": "Contrôleur auxiliaire humoristique d'« yeux » de véhicule : agrandit ou rétrécit des poutres taguées (poutres d'yeux, limiteurs, attaches) selon l'accélération verticale (sensors.gz) pour faire gonfler les yeux ; ils sont à taille maximale à l'ignition 3 (démarreur).",
+  "notes": [
+    "Clés jbeam lues : eyeBeamTag (\"eyeBeam\"), eyeLimiterBeamTag (\"eyeLimiterBeam\"), eyeAttachmentBeamTag (\"eyeAttachmentBeam\") ; maxSizeCoef (1), minSizeCoef (1), minSizeBoundCoef (1), maxSizeBoundCoef (1), attachmentMinSizeCoef (1), attachmentMaxSizeCoef (1), sizeSmoothingShrink (5), sizeSmoothingGrow (5), gravityMaxSizeCoef (1).",
+    "Les poutres sont retrouvées via beamstate.tagBeamMap[tag] ; leur longueur est modifiée par obj:setBeamLength et la borne longue des poutres limiteuses par obj:setBoundedBeamLongBound.",
+    "Piège : sizeSmoothingShrink est passé comme premier argument (taux « in ») du lisseur et sizeSmoothingGrow comme second (« out ») : leurs rôles dépendent de la convention de newTemporalSmoothingNonLinear.",
+    "Tous les coefficients valent 1 par défaut : sans configuration le contrôleur ne change rien."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Retrouve les poutres par tag, mémorise leurs longueurs de repos et lit les coefficients jbeam.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "reset": {"desc": "Remet le lisseur de taille à 1.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "updateGFX": {"desc": "Chaque frame : calcule le coefficient de taille selon sensors.gz et ajuste longueurs et bornes des poutres.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+  }
+}

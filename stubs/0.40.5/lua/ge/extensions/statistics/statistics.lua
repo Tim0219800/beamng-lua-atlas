@@ -2,152 +2,152 @@
 -- tim19Atlas stub generated from lua/ge/extensions/statistics/statistics.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE qui suit les statistiques d'un scénario (distance parcourue, altitude, vitesse max, dégâts, temps, objectifs) pour chaque véhicule, calcule les points obtenus et attribue la médaille finale (wood/bronze/silver/gold). Les paramètres viennent de scenario.statistics (maxValue, maxPoints, best/worst, target, source, required, alias, overall avec goldCutoff/silverCutoff/bronzeCutoff). Un moddeur s'en sert pour lire les résultats d'un scénario (getVehicleStat, getScenarioOverallStat) ou pour y ajouter ses propres statistiques (initialiseArbitraryStat, setStatProgress).
---- Accès : extension `statistics_statistics` : `extensions.load("statistics_statistics")`, puis la globale `statistics_statistics`
+--- GE extension that tracks a scenario's statistics (distance traveled, altitude, max speed, damage, time, goals) for each vehicle, computes the points earned and awards the final medal (wood/bronze/silver/gold). The parameters come from scenario.statistics (maxValue, maxPoints, best/worst, target, source, required, alias, overall with goldCutoff/silverCutoff/bronzeCutoff). A modder uses it to read a scenario's results (getVehicleStat, getScenarioOverallStat) or to add their own statistics (initialiseArbitraryStat, setStatProgress).
+--- Access: extension `statistics_statistics`: `extensions.load("statistics_statistics")`, then the global `statistics_statistics`
 ---@class statistics_statistics
 statistics_statistics = {}
 
---- Fonction de debug : force le score du joueur à un pourcentage juste au-dessus du seuil de la médaille demandée et remplit le résumé du scénario courant.
----Source : lua/ge/extensions/statistics/statistics.lua:884
----@param medalString string 'bronze', 'silver' ou 'gold'.
+--- Debug function: forces the player's score to a percentage just above the requested medal's threshold and fills the current scenario's summary.
+---Source: lua/ge/extensions/statistics/statistics.lua:884
+---@param medalString string 'bronze', 'silver' or 'gold'.
 function statistics_statistics.DEBUG_generateScoreForMedal(medalString) end
 
---- Désactive le suivi d'une statistique pour un véhicule (enabled = false). Les valeurs déjà mesurées sont conservées.
----Source : lua/ge/extensions/statistics/statistics.lua:65
----@param vehicleID integer Id du véhicule.
----@param statisticName string Nom de la stat sans préfixe.
+--- Disables tracking of a statistic for a vehicle (enabled = false). Values already measured are kept.
+---Source: lua/ge/extensions/statistics/statistics.lua:65
+---@param vehicleID integer Vehicle id.
+---@param statisticName string Stat name without prefix.
 function statistics_statistics.disableStatisticTracking(vehicleID, statisticName) end
 
---- Active le suivi d'une statistique pour un véhicule (enabled = true) et mémorise la position de départ pour 'altitude' (initialZPos) ou 'distance' (initialPos). Ne fait rien si la statistique n'existe pas pour ce véhicule.
----Source : lua/ge/extensions/statistics/statistics.lua:33
----@param vehicleID integer Id du véhicule.
----@param statisticName string Nom de la stat sans préfixe : 'distance', 'altitude', 'speed', 'damage', 'time'…
+--- Enables tracking of a statistic for a vehicle (enabled = true) and stores the starting position for 'altitude' (initialZPos) or 'distance' (initialPos). Does nothing if the statistic does not exist for this vehicle.
+---Source: lua/ge/extensions/statistics/statistics.lua:33
+---@param vehicleID integer Vehicle id.
+---@param statisticName string Stat name without prefix: 'distance', 'altitude', 'speed', 'damage', 'time'...
 function statistics_statistics.enableStatisticTracking(vehicleID, statisticName) end
 
---- Convertit un nom de médaille en rang : wood 0, bronze 1, silver 2, gold 3 ; -1 si inconnu.
----Source : lua/ge/extensions/statistics/statistics.lua:590
----@param medalString string 'wood', 'bronze', 'silver' ou 'gold'.
----@return integer  Rang de 0 à 3, ou -1.
+--- Converts a medal name to a rank: wood 0, bronze 1, silver 2, gold 3; -1 if unknown.
+---Source: lua/ge/extensions/statistics/statistics.lua:590
+---@param medalString string 'wood', 'bronze', 'silver' or 'gold'.
+---@return integer  Rank from 0 to 3, or -1.
 function statistics_statistics.getMedalRanking(medalString) end
 
---- Renvoie le résumé global d'un scénario (label, points, maxPoints, failed, medal…), ou une table vide s'il n'y en a pas.
----Source : lua/ge/extensions/statistics/statistics.lua:105
----@param scenario table Table du scénario (seul scenario.name est utilisé).
----@return table  Entrée de scenarioStats[scenario.name] ou {}.
+--- Returns the overall summary of a scenario (label, points, maxPoints, failed, medal...), or an empty table if there is none.
+---Source: lua/ge/extensions/statistics/statistics.lua:105
+---@param scenario table Scenario table (only scenario.name is used).
+---@return table  Entry of scenarioStats[scenario.name] or {}.
 function statistics_statistics.getScenarioOverallStat(scenario) end
 
---- Renvoie, dans l'ordre donné, les résumés de plusieurs scénarios (avec relativePoints en %) ainsi que le total des points obtenus et le total des points max. Utilisé pour un récapitulatif de campagne.
----Source : lua/ge/extensions/statistics/statistics.lua:191
----@param statsOrder string[] Noms de scénarios (clés de scenarioStats).
----@return table[]  Résumés par scénario.
----@return number  Somme des points du joueur.
----@return number  Somme des points max.
+--- Returns, in the given order, the summaries of several scenarios (with relativePoints in %) as well as the total points earned and the total max points. Used for a campaign recap.
+---Source: lua/ge/extensions/statistics/statistics.lua:191
+---@param statsOrder string[] Scenario names (keys of scenarioStats).
+---@return table[]  Summaries per scenario.
+---@return number  Sum of the player's points.
+---@return number  Sum of the max points.
 function statistics_statistics.getSummaryStats(statsOrder) end
 
---- Construit la liste des statistiques d'un véhicule pour l'interface de fin de scénario : une entrée par stat/objectif avec label, decimals, unit, predefinedUnit, required, failed, value, points, maxPoints et relativePoints (en %). Agrège les instances (somme des valeurs et des points). Pour une unité '%', la valeur est ramenée à value/maxValue*100.
----Source : lua/ge/extensions/statistics/statistics.lua:114
----@param vehicleID integer Id du véhicule.
----@return table[]|nil  Liste d'entrées, ou nil si le véhicule n'a pas de stats.
+--- Builds the list of a vehicle's statistics for the end-of-scenario interface: one entry per stat/goal with label, decimals, unit, predefinedUnit, required, failed, value, points, maxPoints and relativePoints (in %). Aggregates the instances (sum of values and points). For a '%' unit, the value is brought back to value/maxValue*100.
+---Source: lua/ge/extensions/statistics/statistics.lua:114
+---@param vehicleID integer Vehicle id.
+---@return table[]|nil  List of entries, or nil if the vehicle has no stats.
 function statistics_statistics.getVehicleStat(vehicleID) end
 
---- Ajoute une statistique personnalisée (value = 0, decimals = 2, enabled) à un véhicule ; la source est vehicleName.
----Source : lua/ge/extensions/statistics/statistics.lua:400
----@param statName string Nom de la stat.
----@param statLabel string Libellé (clé de traduction ou texte).
----@param vehicle userdata Objet véhicule (getID() est appelé).
----@param vehicleName string Nom du véhicule, utilisé comme source et id d'instance.
----@param maxPoints number|nil Points maximum de la stat.
----@param maxValue number|nil Valeur donnant les points max.
+--- Adds a custom statistic (value = 0, decimals = 2, enabled) to a vehicle; the source is vehicleName.
+---Source: lua/ge/extensions/statistics/statistics.lua:400
+---@param statName string Stat name.
+---@param statLabel string Label (translation key or text).
+---@param vehicle userdata Vehicle object (getID() is called).
+---@param vehicleName string Vehicle name, used as source and instance id.
+---@param maxPoints number|nil Max points of the stat.
+---@param maxValue number|nil Value giving the max points.
 function statistics_statistics.initialiseArbitraryStat(statName, statLabel, vehicle, vehicleName, maxPoints, maxValue) end
 
---- Hook de rechargement : restaure statsTable (noms reconvertis en ids) et scenarioStats.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/statistics/statistics.lua:862
----@param data table Données produites par onSerialize.
+--- Reload hook: restores statsTable (names converted back to ids) and scenarioStats.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/statistics/statistics.lua:862
+---@param data table Data produced by onSerialize.
 function statistics_statistics.onDeserialized(data) end
 
---- Hook : appelé quand les objectifs de course sont initialisés. Recrée les tables de stats (initialiseTables). Le nom contient la faute 'Initilised'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/statistics/statistics.lua:692
----@param scenario table Scénario courant.
+--- Hook: called when the race goals are initialized. Recreates the stats tables (initialiseTables). The name contains the typo 'Initilised'.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/statistics/statistics.lua:692
+---@param scenario table Current scenario.
 function statistics_statistics.onRaceGoalsInitilised(scenario) end
 
---- Hook : appelé à l'initialisation de la course ; relève la position de départ (initialPos, initialZPos) des stats distance et altitude.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/statistics/statistics.lua:797
+--- Hook: called when the race is initialized; records the starting position (initialPos, initialZPos) of the distance and altitude stats.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/statistics/statistics.lua:797
 function statistics_statistics.onRaceInit() end
 
---- Hook : appelé à la fin de la course ; enregistre status.finalTime dans la stat 'time'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/statistics/statistics.lua:848
----@param status table Résultat de course (finalTime).
+--- Hook: called at the end of the race; records status.finalTime in the 'time' stat.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/statistics/statistics.lua:848
+---@param status table Race result (finalTime).
 function statistics_statistics.onRaceResult(status) end
 
---- Hook : appelé à chaque tick de course ; enregistre le chrono courant dans la stat 'time'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/statistics/statistics.lua:844
----@param raceTickTime number Non utilisé.
----@param timer number Temps de course en secondes.
+--- Hook: called on each race tick; records the current timer in the 'time' stat.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/statistics/statistics.lua:844
+---@param raceTickTime number Not used.
+---@param timer number Race time in seconds.
 function statistics_statistics.onRaceTick(raceTickTime, timer) end
 
---- Hook de reprise de campagne : restaure statsTable et scenarioStats depuis data.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/statistics/statistics.lua:878
----@param campaignInProgress any Non utilisé.
----@param data table Données sauvegardées par onSaveCampaign.
+--- Campaign resume hook: restores statsTable and scenarioStats from data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/statistics/statistics.lua:878
+---@param campaignInProgress any Not used.
+---@param data table Data saved by onSaveCampaign.
 function statistics_statistics.onResumeCampaign(campaignInProgress, data) end
 
---- Hook de sauvegarde de campagne : passe les mêmes données que onSerialize à saveCallback.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/statistics/statistics.lua:871
----@param saveCallback function Appelée avec (alias global du module, données).
+--- Campaign save hook: passes the same data as onSerialize to saveCallback.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/statistics/statistics.lua:871
+---@param saveCallback function Called with (module global alias, data).
 function statistics_statistics.onSaveCampaign(saveCallback) end
 
---- Hook : appelé à chaque changement d'état du scénario. À l'état 'post', capture les dégâts finaux de chaque véhicule (map.objects[id].damage).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/statistics/statistics.lua:714
----@param scenario table|nil Scénario courant.
+--- Hook: called on each scenario state change. In the 'post' state, captures the final damage of each vehicle (map.objects[id].damage).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/statistics/statistics.lua:714
+---@param scenario table|nil Current scenario.
 function statistics_statistics.onScenarioChange(scenario) end
 
---- Hook : appelé au redémarrage du scénario ; recrée les tables de stats.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/statistics/statistics.lua:687
----@param scenario table Scénario courant.
+--- Hook: called when the scenario restarts; recreates the stats tables.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/statistics/statistics.lua:687
+---@param scenario table Current scenario.
 function statistics_statistics.onScenarioRestarted(scenario) end
 
---- Hook de sauvegarde de l'extension : renvoie statsTable (clés id converties en noms de véhicule) et scenarioStats.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/statistics/statistics.lua:852
+--- Extension save hook: returns statsTable (id keys converted to vehicle names) and scenarioStats.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/statistics/statistics.lua:852
 ---@return table  {statsTable, scenarioStats}
 function statistics_statistics.onSerialize() end
 
---- Hook appelé à chaque frame. Tant que scenario.raceState == 'racing' (et état ≠ 'post'), met à jour distance (norme du déplacement depuis initialPos), altitude (écart absolu en Z) et vitesse maximale pour chaque véhicule suivi.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/statistics/statistics.lua:732
+--- Hook called every frame. While scenario.raceState == 'racing' (and state ≠ 'post'), updates distance (norm of the displacement since initialPos), altitude (absolute Z difference) and max speed for each tracked vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/statistics/statistics.lua:732
 function statistics_statistics.onUpdate() end
 
---- Vide scenarioStats (résumés par scénario). Ne touche pas à statsTable.
----Source : lua/ge/extensions/statistics/statistics.lua:15
+--- Clears scenarioStats (per-scenario summaries). Does not touch statsTable.
+---Source: lua/ge/extensions/statistics/statistics.lua:15
 function statistics_statistics.reset() end
 
---- Crée ou met à jour la progression d'un objectif (clé 'goal_<nom>', required = true) pour un véhicule : enregistre points et maxPoints de l'instance et failed si goalData.status == 'failed'. Ne fait rien si le véhicule n'a pas encore de table de stats.
----Source : lua/ge/extensions/statistics/statistics.lua:210
----@param vehicleID integer Id du véhicule.
----@param goalName string Identifiant de l'objectif (nomove, timeLimit, speed…).
----@param instanceId any Identifiant de l'instance (souvent l'id du véhicule cible de l'objectif).
----@param goalData table Champs points, maxPoints, status ('init', 'failed'…).
+--- Creates or updates the progress of a goal (key 'goal_<name>', required = true) for a vehicle: records the instance's points and maxPoints and failed if goalData.status == 'failed'. Does nothing if the vehicle does not yet have a stats table.
+---Source: lua/ge/extensions/statistics/statistics.lua:210
+---@param vehicleID integer Vehicle id.
+---@param goalName string Goal identifier (nomove, timeLimit, speed...).
+---@param instanceId any Instance identifier (often the id of the goal's target vehicle).
+---@param goalData table Fields points, maxPoints, status ('init', 'failed'...).
 function statistics_statistics.setGoalProgress(vehicleID, goalName, instanceId, goalData) end
 
---- Crée ou met à jour une statistique pour un véhicule. Les champs decimals, enabled, label, predefinedUnit, unit et isGoal sont stockés au niveau de la stat ; tous les autres champs de statData (value, maxValue, maxPoints, source…) sont copiés dans l'instance instanceId. Ignoré si instanceId ou statData manque ou n'est pas une table.
----Source : lua/ge/extensions/statistics/statistics.lua:238
----@param vehicleID integer Id du véhicule.
----@param statName string Nom de la stat (clé interne 'stat_<nom>').
----@param instanceId any Identifiant de l'instance (souvent le nom de la source).
----@param statData table Données de la stat.
+--- Creates or updates a statistic for a vehicle. The fields decimals, enabled, label, predefinedUnit, unit and isGoal are stored at the stat level; all other statData fields (value, maxValue, maxPoints, source...) are copied into the instance instanceId. Ignored if instanceId or statData is missing or not a table.
+---Source: lua/ge/extensions/statistics/statistics.lua:238
+---@param vehicleID integer Vehicle id.
+---@param statName string Stat name (internal key 'stat_<name>').
+---@param instanceId any Instance identifier (often the source name).
+---@param statData table Stat data.
 function statistics_statistics.setStatProgress(vehicleID, statName, instanceId, statData) end
 
---- Fin de collecte : choisit l'unité de distance/altitude (m si < 1609.34 m, sinon unité 'distance'), calcule les points du véhicule joueur et remplit le résumé du scénario (points, maxPoints, failed, medal).
----Source : lua/ge/extensions/statistics/statistics.lua:648
----@param scenario table Scénario terminé (scenario.name, scenario.result.failed).
+--- End of collection: chooses the distance/altitude unit (m if < 1609.34 m, otherwise 'distance' unit), computes the player vehicle's points and fills the scenario summary (points, maxPoints, failed, medal).
+---Source: lua/ge/extensions/statistics/statistics.lua:648
+---@param scenario table Finished scenario (scenario.name, scenario.result.failed).
 function statistics_statistics.stopStatsGathering(scenario) end
 

@@ -1,0 +1,60 @@
+{
+  "path": "lua/ge/extensions/career/modules/tutorial/step09spmSignup.lua",
+  "module": "Étape 9 et dernière du tutoriel de carrière (« spmSignup ») : le joueur accède à l'ordinateur du garage, signe le contrat d'embauche (popup de contrat, prime de départ de 10 000), ouvre la boutique de véhicules, choisit un vendeur, ouvre l'écran d'achat et achète son premier véhicule. À l'ajout au inventaire, la popup v2/careerUnlocked s'affiche, puis career_modules_tutorial.endTutorial() est appelé. Le véhicule du tutoriel est supprimé à l'ouverture de l'écran d'achat.",
+  "notes": [
+    "Phases (chaînes) : waitComputer, waitApmPopup, waitMarketplaceOpen, waitSellerSelect, waitPurchaseMenu, waitVehicleAdded, waitCareerUnlocked.",
+    "La prime STARTING_BONUS_MONEY = 10000 est créditée une seule fois (tags tutorial/startingBonus), avec un son d'argent ; elle est déclenchée à la fermeture de la popup contractSign ou par onCareerTutorialRedeemedContractVoucher.",
+    "Succès débloqués : WELCOME_TO_APM (signature), FIRST_ROLLOUT (fin), EXTRA_CREDIT si career_modules_tutorial.playedAdvancedTimeTrial est vrai (champ posé dynamiquement par l'étape 4).",
+    "Les hooks onVehicleShopping* et onVehicleAddedToInventory sont émis par le module career_modules_vehicleShopping et l'inventaire."
+  ],
+  "functions": {
+    "setup": {
+      "desc": "Appelé à l'activation : remet les objectifs à zéro, active la zone garageBounds, récupère les places garageInteriorWalkStart et garageEntranceMarker, affiche l'objectif « accéder à l'ordinateur » et le marqueur d'entrée.",
+      "params": {"stepData": {"type": "any", "desc": "Données de l'étape (non utilisées)."}},
+      "internal": true
+    },
+    "onComputerMenuOpened": {"desc": "Hook émis à l'ouverture du menu de l'ordinateur : valide l'objectif et ouvre la popup de signature du contrat (utilisateur = profil courant).", "internal": true},
+    "onUpdate": {
+      "desc": "Appelé chaque frame (phase waitComputer) : masque le marqueur d'entrée à moins de 3 m et efface le tracé de guidage à moins de 1 m du point de départ de marche.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "internal": true
+    },
+    "onCareerTutorialRedeemedContractVoucher": {"desc": "Hook émis quand le bon de contrat est utilisé : crédite la prime de départ.", "internal": true},
+    "onIntroPopupCareerClosed": {
+      "desc": "Hook de fermeture de popup : contractSign (prime + succès), v2/apmOnboarding (objectif d'ouverture du marché) et v2/careerUnlocked (succès puis fin du tutoriel).",
+      "params": {"id": {"type": "string", "desc": "Id de la popup."}},
+      "internal": true
+    },
+    "onVehicleShoppingMenuOpened": {
+      "desc": "Hook émis à l'ouverture de la boutique de véhicules : valide l'objectif et demande de choisir un vendeur.",
+      "params": {"data": {"type": "any", "desc": "Données du menu (non utilisées)."}},
+      "internal": true
+    },
+    "onVehicleShoppingSelectedSellerIdChanged": {
+      "desc": "Hook émis quand le vendeur sélectionné change : valide l'objectif et demande d'ouvrir l'achat.",
+      "params": {"payload": {"type": "any", "desc": "Données du changement (non utilisées)."}},
+      "internal": true
+    },
+    "onVehicleShoppingPurchaseMenuOpened": {
+      "desc": "Hook émis à l'ouverture de l'écran d'achat : supprime le véhicule du tutoriel et affiche la popup v2/vehiclePurchaseAndInsurance.",
+      "params": {"data": {"type": "any", "desc": "Données du menu (non utilisées)."}},
+      "internal": true
+    },
+    "onVehicleAddedToInventory": {
+      "desc": "Hook émis quand un véhicule est ajouté à l'inventaire : désactive zones et reset, valide l'objectif final et affiche la popup v2/careerUnlocked.",
+      "params": {"data": {"type": "any", "desc": "Données du véhicule ajouté (non utilisées)."}},
+      "internal": true
+    },
+    "onGetRawPoiListForTutorial": {
+      "desc": "Ajoute à la liste de POI l'ordinateur du garage (facilité servicestationGarageComputer) pendant l'étape 09spmSignup.",
+      "params": {"elements": {"type": "table", "desc": "Liste de POI à compléter."}},
+      "internal": true
+    },
+    "cleanup": {"desc": "Supprime marqueur et son d'argent, vide zones, reset et liste de tâches.", "internal": true},
+    "onDebugMenu": {
+      "desc": "Affiche la phase et un bouton « Skip Step 9 » (valide tous les objectifs et ouvre la popup careerUnlocked).",
+      "params": {"im": {"type": "table", "desc": "Table ui_imgui."}},
+      "internal": true
+    }
+  }
+}

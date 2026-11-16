@@ -1,72 +1,72 @@
 # `editor_driftDataEditor`
 
-*Fichier : `lua/ge/extensions/editor/driftDataEditor.lua` · VM : Game Engine (GE) · 864 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/driftDataEditor.lua` · VM: Game Engine (GE) · 864 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_driftDataEditor` : `extensions.load("editor_driftDataEditor")`, puis la globale `editor_driftDataEditor`
+**Access:** extension `editor_driftDataEditor`: `extensions.load("editor_driftDataEditor")`, then the global `editor_driftDataEditor`
 
-Drift Data Editor (menu Gameplay > Drift Data Editor) : fenêtre à deux onglets pour les données du mode drift. « Drift stunt zones editor » crée, déplace et réordonne des zones de figures (donut, driftThrough, hitPole, nearPole) avec leur score, et les enregistre en JSON (par défaut dans /gameplay/temp/). « Drift spots editor » édite les spots de drift du niveau courant (lignes avec position, rotation, échelle, direction d'entrée, point de téléportation de la grande carte, infos d'objectifs) chargés via gameplay_drift_saveLoad. Exige un niveau chargé.
+Drift Data Editor (Gameplay > Drift Data Editor menu): two-tab window for drift mode data. "Drift stunt zones editor" creates, moves and reorders stunt zones (donut, driftThrough, hitPole, nearPole) with their score, and saves them as JSON (by default in /gameplay/temp/). "Drift spots editor" edits the drift spots of the current level (lines with position, rotation, scale, entry direction, big map teleport point, objective info) loaded via gameplay_drift_saveLoad. Requires a loaded level.
 
-## Remarques
+## Notes
 
-- Types de zones et paliers de score proposés : driftThrough 1000/1500/2000 (points max), donut 250/500/750 (points fixes), hitPole et nearPole 500/1000/1500 (points max). Le score par défaut vient de gameplay_drift_scoring.getScoreOptions().defaultPoints.
-- Les positions, rotations et échelles lues dans un JSON sont converties en vec3/quat au chargement.
-- Seuls donut, driftThrough et hitPole ont un gizmo de transformation dans selectStuntZone ; nearPole n'en a pas.
-- Bug probable : la variable logTag utilisée dans loadDriftData n'est pas déclarée dans ce fichier (nil) : le message d'erreur de fichier introuvable est journalisé sans tag.
-- onSerialize/onDeserialized conservent le fichier courant, les zones et l'index sélectionné lors d'un rechargement ; la sélection est restaurée plus tard via autoSelectElement.
-- M.drawAxisBox est un doublon des utilitaires de dessin de boîte des autres éditeurs.
+- Proposed zone types and score tiers: driftThrough 1000/1500/2000 (max points), donut 250/500/750 (fixed points), hitPole and nearPole 500/1000/1500 (max points). The default score comes from gameplay_drift_scoring.getScoreOptions().defaultPoints.
+- Positions, rotations and scales read from a JSON are converted to vec3/quat on load.
+- Only donut, driftThrough and hitPole have a transform gizmo in selectStuntZone; nearPole has none.
+- Probable bug: the variable logTag used in loadDriftData is not declared in this file (nil): the file-not-found error message is logged without a tag.
+- onSerialize/onDeserialized keep the current file, the zones and the selected index across a reload; the selection is restored later via autoSelectElement.
+- M.drawAxisBox is a duplicate of the box drawing utilities of the other editors.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_driftDataEditor.clearStuntZonesEditor()` | Réinitialise l'onglet des zones de figures : fichier courant remis à /gameplay/temp/ sans nom, données vides ({stuntZones = {}}). Appelée aussi quand l'onglet Drift spots est affiché. *(interne)* | 171 |
-| `editor_driftDataEditor.drawAxisBox(corner, x, y, z, clr)` | Dessine en debug une boîte pleine (triangles recto/verso et arêtes noires) à partir d'un coin et de trois vecteurs d'arête. | 795 |
-| `editor_driftDataEditor.drawElementDetail(elem)` | Dessine l'édition de la zone sélectionnée : met à jour pos/rot/scl depuis le gizmo (transformUtil), le délai cooldown si présent, et le score par une liste de paliers selon le type. | 58 |
-| `editor_driftDataEditor.onDeserialized(data)` | Hook après rechargement : restaure le fichier, les données et l'index à resélectionner. *(interne)* *(hook)* | 749 |
-| `editor_driftDataEditor.onEditorGui()` | Hook chaque frame : dessine les onglets si un niveau est chargé, sinon un message demandant de charger un niveau. *(interne)* *(hook)* | 699 |
-| `editor_driftDataEditor.onEditorInitialized()` | Hook : enregistre la fenêtre (1500x700), l'entrée de menu Gameplay et crée des données vides si besoin. *(interne)* *(hook)* | 731 |
-| `editor_driftDataEditor.onSerialize()` | Hook avant rechargement : renvoie selectedStuntZoneIndex, currentFileDir, currentFileName et driftData. *(interne)* *(hook)* | 739 |
-| `editor_driftDataEditor.selectStuntZone(index)` | Sélectionne une zone de figure et crée le gizmo adapté à son type (donut : position et échelle uniforme ; driftThrough : position, rotation, échelle ; hitPole : position). *(interne)* | 113 |
-| `editor_driftDataEditor.show()` | Vide la sélection d'objets et affiche la fenêtre driftDataEditor. | 726 |
-| `editor_driftDataEditor.updateMouseInfo()` | Met à jour la table souris locale (rayon caméra, raycast, clic/maintien/relâchement et positions associées) utilisée par les gizmos. | 759 |
+| `editor_driftDataEditor.clearStuntZonesEditor()` | Resets the stunt zones tab: current file reset to /gameplay/temp/ with no name, empty data ({stuntZones = {}}). Also called when the Drift spots tab is displayed. *(internal)* | 171 |
+| `editor_driftDataEditor.drawAxisBox(corner, x, y, z, clr)` | Draws a solid box as debug (front/back face triangles and black edges) from a corner and three edge vectors. | 795 |
+| `editor_driftDataEditor.drawElementDetail(elem)` | Draws the editing UI of the selected zone: updates pos/rot/scl from the gizmo (transformUtil), the cooldown delay if present, and the score via a tier list depending on the type. | 58 |
+| `editor_driftDataEditor.onDeserialized(data)` | Post-reload hook: restores the file, the data and the index to reselect. *(internal)* *(hook)* | 749 |
+| `editor_driftDataEditor.onEditorGui()` | Per-frame hook: draws the tabs if a level is loaded, otherwise a message asking to load a level. *(internal)* *(hook)* | 699 |
+| `editor_driftDataEditor.onEditorInitialized()` | Hook: registers the window (1500x700), the Gameplay menu entry and creates empty data if needed. *(internal)* *(hook)* | 731 |
+| `editor_driftDataEditor.onSerialize()` | Pre-reload hook: returns selectedStuntZoneIndex, currentFileDir, currentFileName and driftData. *(internal)* *(hook)* | 739 |
+| `editor_driftDataEditor.selectStuntZone(index)` | Selects a stunt zone and creates the gizmo suited to its type (donut: position and uniform scale; driftThrough: position, rotation, scale; hitPole: position). *(internal)* | 113 |
+| `editor_driftDataEditor.show()` | Clears the object selection and shows the driftDataEditor window. | 726 |
+| `editor_driftDataEditor.updateMouseInfo()` | Updates the local mouse table (camera ray, raycast, click/hold/release and associated positions) used by the gizmos. | 759 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_driftDataEditor.drawAxisBox(corner, x, y, z, clr)`
 
-Dessine en debug une boîte pleine (triangles recto/verso et arêtes noires) à partir d'un coin et de trois vecteurs d'arête.
+Draws a solid box as debug (front/back face triangles and black edges) from a corner and three edge vectors.
 
-- `corner` (*vec3*) : coin
-- `x` (*vec3*) : arête X
-- `y` (*vec3*) : arête Y
-- `z` (*vec3*) : arête Z
-- `clr` (*ColorF*) : couleur
+- `corner` (*vec3*) : corner
+- `x` (*vec3*) : X edge
+- `y` (*vec3*) : Y edge
+- `z` (*vec3*) : Z edge
+- `clr` (*ColorF*) : color
 
 #### `editor_driftDataEditor.drawElementDetail(elem)`
 
-Dessine l'édition de la zone sélectionnée : met à jour pos/rot/scl depuis le gizmo (transformUtil), le délai cooldown si présent, et le score par une liste de paliers selon le type.
+Draws the editing UI of the selected zone: updates pos/rot/scl from the gizmo (transformUtil), the cooldown delay if present, and the score via a tier list depending on the type.
 
-- `elem` (*table|nil*) : zone de figure (type, pos, rot, scl, score, cooldown)
+- `elem` (*table|nil*) : stunt zone (type, pos, rot, scl, score, cooldown)
 
 #### `editor_driftDataEditor.onDeserialized(data)`
 
-Hook après rechargement : restaure le fichier, les données et l'index à resélectionner.
+Post-reload hook: restores the file, the data and the index to reselect.
 
-- `data` (*table*) : table produite par onSerialize
+- `data` (*table*) : table produced by onSerialize
 
 #### `editor_driftDataEditor.onSerialize()`
 
-Hook avant rechargement : renvoie selectedStuntZoneIndex, currentFileDir, currentFileName et driftData.
+Pre-reload hook: returns selectedStuntZoneIndex, currentFileDir, currentFileName and driftData.
 
-- **renvoie** : table état à conserver
+- **returns**: table state to keep
 
 #### `editor_driftDataEditor.selectStuntZone(index)`
 
-Sélectionne une zone de figure et crée le gizmo adapté à son type (donut : position et échelle uniforme ; driftThrough : position, rotation, échelle ; hitPole : position).
+Selects a stunt zone and creates the gizmo suited to its type (donut: position and uniform scale; driftThrough: position, rotation, scale; hitPole: position).
 
-- `index` (*integer*) : index (base 1) dans driftData.stuntZones
+- `index` (*integer*) : index (1-based) in driftData.stuntZones
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `remove`
 - `be:` `getPlayerVehicleID`
@@ -75,4 +75,4 @@ Sélectionne une zone de figure et crée le gizmo adapté à son type (donut : p
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/driftDataEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/driftDataEditor.lua`.*

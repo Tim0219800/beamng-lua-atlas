@@ -1,49 +1,49 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/buttons/setMultipleButtonsProperty.lua",
-  "module": "Nœud flowgraph « Set Multiple Buttons Property » (catégorie repeat_instant) : même chose que Set Button Property pour plusieurs boutons. Pour chaque i : entrées « buttonId_i », « label_i », « active_i », « order_i », « style_i ». Seules les propriétés non nil sont appliquées.",
+  "module": "Flowgraph node \"Set Multiple Buttons Property\" (category repeat_instant): same as Set Button Property for several buttons. For each i: inputs \"buttonId_i\", \"label_i\", \"active_i\", \"order_i\", \"style_i\". Only non-nil properties are applied.",
   "notes": [
-    "La valeur par défaut de label_i est « Button » : le libellé est donc réécrit à chaque frame tant que le pin garde cette valeur."
+    "The default value of label_i is \"Button\": the label is therefore rewritten every frame as long as the pin keeps this value."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_onDeserialized": {
-          "desc": "Restaure l'état du nœud depuis les données sauvegardées.",
+          "desc": "Restores the node's state from the saved data.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Écrit l'état du nœud dans la table de sauvegarde.",
+          "desc": "Writes the node's state to the save table.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Dessine le panneau de propriétés personnalisé de l'éditeur ; renvoie une chaîne décrivant la modification (pour l'historique d'annulation) ou nil.",
+          "desc": "Draws the editor's custom properties panel; returns a string describing the change (for the undo history) or nil.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine la zone centrale du nœud dans l'éditeur flowgraph.",
+          "desc": "Draws the central area of the node in the flowgraph editor.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale)."
+              "desc": "Editor node builder (builder:Middle() opens the central area)."
             },
             "style": {
               "type": "any",
-              "desc": "Style d'affichage du nœud fourni par l'éditeur."
+              "desc": "Node display style provided by the editor."
             }
           },
           "internal": true
@@ -53,21 +53,21 @@
           "internal": true
         },
         "updatePins": {
-          "desc": "Ajuste le nombre de groupes de 5 pins d'entrée (buttonId, label, active, order, style).",
+          "desc": "Adjusts the number of groups of 5 input pins (buttonId, label, active, order, style).",
           "params": {
             "old": {
               "type": "integer",
-              "desc": "Ancien nombre d'éléments."
+              "desc": "Old number of elements."
             },
             "new": {
               "type": "integer",
-              "desc": "Nouveau nombre d'éléments."
+              "desc": "New number of elements."
             }
           },
           "internal": true
         },
         "work": {
-          "desc": "Pour chaque i dont le bouton existe, applique les propriétés non nil.",
+          "desc": "For each i whose button exists, applies the non-nil properties.",
           "internal": true
         }
       }

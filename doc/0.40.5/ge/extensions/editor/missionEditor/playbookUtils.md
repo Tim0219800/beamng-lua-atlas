@@ -1,28 +1,28 @@
 # `editor_missionEditor_playbookUtils`
 
-*Fichier : `lua/ge/extensions/editor/missionEditor/playbookUtils.lua` · VM : Game Engine (GE) · 117 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/missionEditor/playbookUtils.lua` · VM: Game Engine (GE) · 117 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/missionEditor/playbookUtils")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/missionEditor/playbookUtils")` (file under extensions/ but not a regular extension)
 
-Onglet « Playbook Utils » de l'éditeur de missions. Il propose des boutons qui ajoutent à editor_missionPlaybook.book.instructions des instructions de type missionAttempt pour la mission courante, avec différentes combinaisons d'étoiles (toutes, par défaut, bonus, aléatoires, une par une). Le module renvoie un constructeur : require(...)(missionEditor).
+"Playbook Utils" tab of the mission editor. It offers buttons that add missionAttempt instructions for the current mission to editor_missionPlaybook.book.instructions, with different star combinations (all, default, bonus, random, one by one). The module returns a constructor: require(...)(missionEditor).
 
-## Remarques
+## Notes
 
-- Chaque instruction a la forme {type = 'missionAttempt', missionId = id, stars = {clé = true}}.
-- Utilise careerSetup._activeStarCache (sortedStars, defaultStarKeysSorted, bonusStarKeysSorted) de l'instance de mission.
-- « Add Random Single Star » n'ajoute une étoile que s'il y a plus d'une étoile ; sinon l'instruction est ajoutée avec stars vide.
+- Each instruction has the form {type = 'missionAttempt', missionId = id, stars = {key = true}}.
+- Uses the mission instance's careerSetup._activeStarCache (sortedStars, defaultStarKeysSorted, bonusStarKeysSorted).
+- "Add Random Single Star" only adds a star if there is more than one star; otherwise the instruction is added with empty stars.
 
-## Classe `C`
+## Class `C`
 
-Instance de l'onglet. Champs : missionEditor, tabName = 'Playbook Utils', mission, missionInstance.
+Instance of the tab. Fields: missionEditor, tabName = 'Playbook Utils', mission, missionInstance.
 
-Le module renvoie un constructeur : `local obj = require("editor_missionEditor_playbookUtils")(options)`.
+The module returns a constructor: `local obj = require("editor_missionEditor_playbookUtils")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:draw()` | Dessine les boutons d'ajout d'instructions au playbook (vide, toutes les étoiles, étoiles par défaut, bonus, une étoile aléatoire, étoiles aléatoires, ajout individuel progressif, bonus dans un ordre aléatoire). | 24 |
-| `C:init(missionEditor)` | Constructeur : mémorise missionEditor et le nom d'onglet. | 9 |
-| `C:setMission(mission)` | Définit la mission courante et son instance de jeu. | 16 |
+| `C:draw()` | Draws the buttons for adding instructions to the playbook (empty, all stars, default stars, bonus, one random star, random stars, progressive individual addition, bonus in random order). | 24 |
+| `C:init(missionEditor)` | Constructor: remembers missionEditor and the tab name. | 9 |
+| `C:setMission(mission)` | Sets the current mission and its game instance. | 16 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionEditor/playbookUtils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/missionEditor/playbookUtils.lua`.*

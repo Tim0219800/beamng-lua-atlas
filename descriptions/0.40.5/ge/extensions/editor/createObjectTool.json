@@ -1,38 +1,195 @@
 {
   "path": "lua/ge/extensions/editor/createObjectTool.lua",
-  "module": "Outil « Create Object(s) » du World Editor : barre d'outils de création d'objets de niveau (SimObjects). Il définit les groupes de boutons (Environment, Level, BeamNG, Other Classes), le mode d'édition editor.editModes.createObject (placement au clic dans la vue 3D, prévisualisation par raycast, rotation autour de l'axe vertical avec Ctrl+molette, magnétisme à la grille), un sélecteur de toutes les classes SimObject avec filtre et fréquence d'usage, et l'historique d'annulation de chaque création. Un moddeur d'éditeur s'en sert pour ajouter ses propres groupes de création ou créer un objet par script via les fonctions injectées dans editor.",
-  "usage": "local items = {\n  editor.makeCreateObjectItem(editor.icons.add_circle, \"BeamNGTrigger\", \"Mon trigger\", function(obj) obj:setField(\"triggerType\", 0, \"Box\") end)\n}\neditor.addObjectCreateGroup(\"Mon groupe\", editor.icons.folder, items)",
+  "module": "World Editor \"Create Object(s)\" tool: toolbar for creating level objects (SimObjects). It defines the button groups (Environment, Level, BeamNG, Other Classes), the editor.editModes.createObject edit mode (placement on click in the 3D view, preview by raycast, rotation around the vertical axis with Ctrl+wheel, grid snapping), a selector of all SimObject classes with filter and usage frequency, and the undo history of each creation. An editor modder uses it to add their own creation groups or create an object by script via the functions injected into editor.",
+  "usage": "local items = {\n  editor.makeCreateObjectItem(editor.icons.add_circle, \"BeamNGTrigger\", \"My trigger\", function(obj) obj:setField(\"triggerType\", 0, \"Box\") end)\n}\neditor.addObjectCreateGroup(\"My group\", editor.icons.folder, items)",
   "notes": [
-    "Les fonctions editor.addObjectCreateGroup, getObjectCreateGroup, getAllObjectCreateGroups, makeCreateObjectItem, getObjectCreateItem, createObjectInstance, getCurrentSelectedParent et createCustomClassObject ne sont attachées à editor qu'après un appel à initGroups() (fait par onEditorInitialized).",
-    "initGroups() réinitialise la table des groupes : les groupes ajoutés auparavant par addObjectCreateGroup sont perdus.",
-    "Les classes MeshRoad, DecalRoad et River sont masquées du sélecteur « Other Classes » (elles ont leur éditeur dédié).",
-    "Le parent de création par défaut est le groupe verrouillé en focus, sinon le SimSet ou le groupe de l'objet sélectionné (sauf MissionCleanup), sinon scenetree.MissionGroup.",
-    "Les noms d'objets créés sont <Classe>_<n> avec le plus petit n libre.",
-    "Un TSStatic créé sans mesh reçoit la forme de substitution /core/art/shapes/no_mesh.dae pour éviter l'erreur « No shape set » à l'enregistrement.",
-    "La création d'un BeamNGVehicle est commentée dans le code (« crashes »).",
-    "Préférences enregistrées dans la catégorie createObjectTool.general : infiniteCreateByClick (true), verticalToolbar (false), classFrecency (cachée)."
+    "The functions editor.addObjectCreateGroup, getObjectCreateGroup, getAllObjectCreateGroups, makeCreateObjectItem, getObjectCreateItem, createObjectInstance, getCurrentSelectedParent and createCustomClassObject are only attached to editor after a call to initGroups() (done by onEditorInitialized).",
+    "initGroups() resets the groups table: groups previously added by addObjectCreateGroup are lost.",
+    "The MeshRoad, DecalRoad and River classes are hidden from the \"Other Classes\" selector (they have their own dedicated editor).",
+    "The default creation parent is the group locked in focus, otherwise the SimSet or group of the selected object (except MissionCleanup), otherwise scenetree.MissionGroup.",
+    "Created object names are <Class>_<n> with the smallest free n.",
+    "A TSStatic created without a mesh receives the placeholder shape /core/art/shapes/no_mesh.dae to avoid the \"No shape set\" error on save.",
+    "The creation of a BeamNGVehicle is commented out in the code (\"crashes\").",
+    "Preferences registered in the createObjectTool.general category: infiniteCreateByClick (true), verticalToolbar (false), classFrecency (hidden)."
   ],
   "functions": {
-    "initGroups": {"desc": "Recrée les quatre groupes standard (Environment, Level, BeamNG, Other Classes) avec leurs boutons et attache à editor les fonctions de création (addObjectCreateGroup, makeCreateObjectItem, createObjectInstance…). Peut être appelée même si l'éditeur n'est pas actif.", "returns": []},
-    "navigateList": {"desc": "Déplace la sélection dans la liste de recherche de classes (vers le haut si up est vrai, sinon vers le bas), bornée à la liste.", "params": {"up": {"type": "boolean", "desc": "true pour monter, false pour descendre"}}},
-    "selectClass": {"desc": "Valide la classe actuellement surlignée dans le sélecteur de classes (équivalent à Entrée, déclenché par l'action map)."},
-    "onEditorDeactivated": {"desc": "Hook appelé quand le World Editor se ferme ; retire l'action map « CreateObjectTool ».", "internal": true},
-    "onEditorGui": {"desc": "Hook appelé à chaque frame de l'éditeur ; retire l'action map « CreateObjectTool » tant qu'aucun popup de sélection de classe n'est ouvert.", "internal": true},
-    "onEditorInitialized": {"desc": "Hook appelé à l'initialisation de l'éditeur : déclare le mode d'édition « Create Object(s) », les raccourcis auxiliaires (Ctrl+molette pour tourner, Alt pour le magnétisme), editor.stopCreatingObjects, editor.togglePlaceNewObjectAtCamera, appelle initGroups() et charge la liste des classes SimObject (Sim.getSimObjectDerivedClassNames).", "internal": true},
-    "onEditorRegisterPreferences": {"desc": "Hook appelé pour enregistrer les préférences de la catégorie createObjectTool.", "params": {"prefsRegistry": {"type": "table", "desc": "registre de préférences de l'éditeur"}}, "internal": true}
+    "initGroups": {
+      "desc": "Recreates the four standard groups (Environment, Level, BeamNG, Other Classes) with their buttons and attaches the creation functions to editor (addObjectCreateGroup, makeCreateObjectItem, createObjectInstance...). Can be called even if the editor is not active.",
+      "returns": []
+    },
+    "navigateList": {
+      "desc": "Moves the selection in the class search list (up if up is true, otherwise down), clamped to the list.",
+      "params": {
+        "up": {
+          "type": "boolean",
+          "desc": "true to go up, false to go down"
+        }
+      }
+    },
+    "selectClass": {
+      "desc": "Validates the class currently highlighted in the class selector (equivalent to Enter, triggered by the action map)."
+    },
+    "onEditorDeactivated": {
+      "desc": "Hook called when the World Editor closes; removes the \"CreateObjectTool\" action map.",
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Hook called every editor frame; removes the \"CreateObjectTool\" action map as long as no class selection popup is open.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook called at editor initialization: declares the \"Create Object(s)\" edit mode, the auxiliary shortcuts (Ctrl+wheel to rotate, Alt for snapping), editor.stopCreatingObjects, editor.togglePlaceNewObjectAtCamera, calls initGroups() and loads the list of SimObject classes (Sim.getSimObjectDerivedClassNames).",
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Hook called to register the preferences of the createObjectTool category.",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "editor preferences registry"
+        }
+      },
+      "internal": true
+    }
   },
   "classes": {
     "editor": {
-      "desc": "Fonctions ajoutées à la table globale editor par initGroups().",
+      "desc": "Functions added to the global editor table by initGroups().",
       "functions": {
-        "addObjectCreateGroup": {"desc": "Ajoute un bouton de groupe de création à la barre d'outils.", "params": {"name": {"type": "string", "desc": "nom du groupe"}, "icon": {"type": "any", "desc": "icône (editor.icons.xxx)"}, "objectClasses": {"type": "table[]", "desc": "éléments créés avec editor.makeCreateObjectItem"}}},
-        "createCustomClassObject": {"desc": "Crée un objet de la classe donnée sous un nœud de l'arbre de scène. Émet le hook onEditorCustomClassBuildFunc(obj) avant l'enregistrement, donne un shapeName de substitution aux TSStatic sans forme, enregistre l'objet avec un nom numéroté et l'ajoute au parent.", "params": {"clsName": {"type": "string", "desc": "nom de la classe C++"}, "parentNode": {"type": "userdata|nil", "desc": "parent (par défaut : sélection courante)"}}, "returns": [{"type": "userdata|nil", "desc": "objet créé"}]},
-        "createObjectInstance": {"desc": "Crée une instance via worldEditorCppApi.createObject, la nomme (<Classe>_<n>), exécute le buildFunc de l'item, puis l'enregistre (déclenche onAdd). Ne l'ajoute pas à un groupe.", "params": {"classname": {"type": "string", "desc": "classe C++"}, "createObjectItem": {"type": "table|nil", "desc": "item de création (par défaut : recherché par classname)"}}, "returns": [{"type": "userdata|nil", "desc": "instance"}]},
-        "getAllObjectCreateGroups": {"desc": "Renvoie la table complète des groupes de création.", "returns": [{"type": "table[]", "desc": "groupes {name, icon, objectClasses}"}]},
-        "getCurrentSelectedParent": {"desc": "Renvoie le parent par défaut pour les nouveaux objets (groupe en focus, groupe de la sélection, ou MissionGroup).", "returns": [{"type": "userdata", "desc": "SimSet/SimGroup"}]},
-        "getObjectCreateGroup": {"desc": "Renvoie un groupe de création par son nom.", "params": {"name": {"type": "string", "desc": "nom du groupe"}}, "returns": [{"type": "table|nil", "desc": "groupe"}]},
-        "getObjectCreateItem": {"desc": "Cherche dans tous les groupes l'item dont le classname correspond (le premier trouvé).", "params": {"classname": {"type": "string", "desc": "classe C++"}}, "returns": [{"type": "table|nil", "desc": "item de création"}]},
-        "makeCreateObjectItem": {"desc": "Construit un item de création {icon, classname, title, buildFunc, singleInstance}. title vaut classname par défaut.", "params": {"icon": {"type": "any", "desc": "icône du bouton"}, "classname": {"type": "string", "desc": "classe C++ à instancier"}, "title": {"type": "string|nil", "desc": "nom affiché"}, "buildFunc": {"type": "function|nil", "desc": "appelée avec l'instance juste avant son enregistrement"}, "singleInstance": {"type": "boolean|nil", "desc": "true : une seule instance créée au clic sur le bouton ; sinon création par clics dans la vue 3D jusqu'à Échap"}}, "returns": [{"type": "table", "desc": "item"}]}
+        "addObjectCreateGroup": {
+          "desc": "Adds a creation group button to the toolbar.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "group name"
+            },
+            "icon": {
+              "type": "any",
+              "desc": "icon (editor.icons.xxx)"
+            },
+            "objectClasses": {
+              "type": "table[]",
+              "desc": "items created with editor.makeCreateObjectItem"
+            }
+          }
+        },
+        "createCustomClassObject": {
+          "desc": "Creates an object of the given class under a scene tree node. Emits the hook onEditorCustomClassBuildFunc(obj) before registration, gives a placeholder shapeName to TSStatics without a shape, registers the object with a numbered name and adds it to the parent.",
+          "params": {
+            "clsName": {
+              "type": "string",
+              "desc": "C++ class name"
+            },
+            "parentNode": {
+              "type": "userdata|nil",
+              "desc": "parent (default: current selection)"
+            }
+          },
+          "returns": [
+            {
+              "type": "userdata|nil",
+              "desc": "created object"
+            }
+          ]
+        },
+        "createObjectInstance": {
+          "desc": "Creates an instance via worldEditorCppApi.createObject, names it (<Class>_<n>), runs the item's buildFunc, then registers it (triggers onAdd). Does not add it to a group.",
+          "params": {
+            "classname": {
+              "type": "string",
+              "desc": "C++ class"
+            },
+            "createObjectItem": {
+              "type": "table|nil",
+              "desc": "creation item (default: looked up by classname)"
+            }
+          },
+          "returns": [
+            {
+              "type": "userdata|nil",
+              "desc": "instance"
+            }
+          ]
+        },
+        "getAllObjectCreateGroups": {
+          "desc": "Returns the complete table of creation groups.",
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "groups {name, icon, objectClasses}"
+            }
+          ]
+        },
+        "getCurrentSelectedParent": {
+          "desc": "Returns the default parent for new objects (focused group, selection's group, or MissionGroup).",
+          "returns": [
+            {
+              "type": "userdata",
+              "desc": "SimSet/SimGroup"
+            }
+          ]
+        },
+        "getObjectCreateGroup": {
+          "desc": "Returns a creation group by its name.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "group name"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "group"
+            }
+          ]
+        },
+        "getObjectCreateItem": {
+          "desc": "Searches all groups for the item whose classname matches (the first found).",
+          "params": {
+            "classname": {
+              "type": "string",
+              "desc": "C++ class"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "creation item"
+            }
+          ]
+        },
+        "makeCreateObjectItem": {
+          "desc": "Builds a creation item {icon, classname, title, buildFunc, singleInstance}. title defaults to classname.",
+          "params": {
+            "icon": {
+              "type": "any",
+              "desc": "button icon"
+            },
+            "classname": {
+              "type": "string",
+              "desc": "C++ class to instantiate"
+            },
+            "title": {
+              "type": "string|nil",
+              "desc": "displayed name"
+            },
+            "buildFunc": {
+              "type": "function|nil",
+              "desc": "called with the instance just before its registration"
+            },
+            "singleInstance": {
+              "type": "boolean|nil",
+              "desc": "true: a single instance created on button click; otherwise creation by clicks in the 3D view until Esc"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "item"
+            }
+          ]
+        }
       }
     }
   }

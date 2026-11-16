@@ -1,19 +1,19 @@
 # `flowgraph_nodes_debug_display`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/debug/display.lua` · VM : Game Engine (GE) · 35 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/debug/display.lua` · VM: Game Engine (GE) · 35 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/debug/display")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/debug/display")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Display Value » (type simple, catégorie repeat_instant, tag util). Affiche dans le corps du nœud la valeur reçue sur le pin d'entrée « value » (any) ; si c'est une table, un bouton « Dump » l'envoie dans la console (dump). Aucune sortie.
+Flowgraph node "Display Value" (simple type, category repeat_instant, tag util). Displays in the node body the value received on the input pin "value" (any); if it is a table, a "Dump" button sends it to the console (dump). No output.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Éditeur : affiche la valeur (dumpsz, profondeur 2) et le bouton Dump pour les tables. | 23 |
-| `C:work()` | Mémorise la dernière valeur reçue. | 19 |
+| `C:drawMiddle(builder, style)` | Editor: displays the value (dumpsz, depth 2) and the Dump button for tables. | 23 |
+| `C:work()` | Stores the last received value. | 19 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/debug/display.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/debug/display.lua`.*

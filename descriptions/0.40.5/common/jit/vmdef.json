@@ -1,17 +1,38 @@
 {
   "path": "lua/common/jit/vmdef.lua",
-  "module": "Fichier généré (« DO NOT EDIT ») de LuaJIT : tables de noms internes utilisées par les modules jit.dump, jit.bc, jit.v et le profileur pour afficher bytecodes, instructions IR, fonctions rapides (fast functions) et causes d'abandon de trace. Le fichier vérifie au chargement que jit.version == « LuaJIT 2.1.1788767029 », sinon l'assertion échoue (« LuaJIT core/library version mismatch »). Un moddeur n'a normalement aucune raison de l'utiliser.",
+  "module": "Generated file (\"DO NOT EDIT\") of LuaJIT: tables of internal names used by the jit.dump, jit.bc, jit.v modules and the profiler to display bytecodes, IR instructions, fast functions and trace abort causes. The file checks at load time that jit.version == \"LuaJIT 2.1.1788767029\", otherwise the assertion fails (\"LuaJIT core/library version mismatch\"). A modder normally has no reason to use it.",
   "notes": [
-    "L'assertion de version lie ce fichier au LuaJIT embarqué ; ne pas le remplacer par une autre version.",
-    "bcnames et irnames sont de longues chaînes de noms à largeur fixe (6 caractères) et non des tables."
+    "The version assertion ties this file to the embedded LuaJIT; do not replace it with another version.",
+    "bcnames and irnames are long strings of fixed-width names (6 characters) and not tables."
   ],
   "fields": {
-    "bcnames": {"type": "string", "desc": "Noms des opcodes de bytecode LuaJIT concaténés (6 caractères chacun)."},
-    "irnames": {"type": "string", "desc": "Noms des opcodes de la représentation intermédiaire (IR) concaténés."},
-    "irfpm": {"type": "table", "desc": "Noms des fonctions math pour FPMATH."},
-    "irfield": {"type": "table", "desc": "Noms des champs de structures pour l'IR (FLOAD/XLOAD)."},
-    "ircall": {"type": "table", "desc": "Noms des fonctions C appelées depuis l'IR."},
-    "traceerr": {"type": "table", "desc": "Messages d'erreur des traces abandonnées."},
-    "ffnames": {"type": "table", "desc": "Noms des fonctions rapides (fast functions) de LuaJIT."}
+    "bcnames": {
+      "type": "string",
+      "desc": "Names of the LuaJIT bytecode opcodes concatenated (6 characters each)."
+    },
+    "irnames": {
+      "type": "string",
+      "desc": "Names of the intermediate representation (IR) opcodes concatenated."
+    },
+    "irfpm": {
+      "type": "table",
+      "desc": "Names of the math functions for FPMATH."
+    },
+    "irfield": {
+      "type": "table",
+      "desc": "Names of the structure fields for the IR (FLOAD/XLOAD)."
+    },
+    "ircall": {
+      "type": "table",
+      "desc": "Names of the C functions called from the IR."
+    },
+    "traceerr": {
+      "type": "table",
+      "desc": "Error messages of aborted traces."
+    },
+    "ffnames": {
+      "type": "table",
+      "desc": "Names of LuaJIT's fast functions."
+    }
   }
 }

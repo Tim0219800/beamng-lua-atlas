@@ -2,79 +2,79 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/console.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Console de développement « consoleNG » en ImGui (fenêtre « beamng.consoleNG »). Elle affiche le journal du jeu (lu à chaque image via Engine.getFrameLog) avec filtres par niveau (E, W, I, D, A), filtre par origine en motif Lua, pause (touche Arrêt défil), statistiques de journal et défilement automatique. Elle permet aussi d'exécuter des commandes dans quatre contextes : Lua du moteur de jeu (GE), TorqueScript, JavaScript de l'interface (CEF) ou Lua d'un véhicule précis. Un moddeur l'ouvre avec ui_console.toggle() pour déboguer.
---- Accès : extension `ui_console` : `extensions.load("ui_console")`, puis la globale `ui_console`
+--- "consoleNG" development console in ImGui ("beamng.consoleNG" window). It displays the game log (read every frame via Engine.getFrameLog) with filters by level (E, W, I, D, A), filter by origin as a Lua pattern, pause (Pause key), log statistics and auto-scroll. It also lets you run commands in four contexts: game engine Lua (GE), TorqueScript, interface JavaScript (CEF) or the Lua of a specific vehicle. A modder opens it with ui_console.toggle() to debug.
+--- Access: extension `ui_console`: `extensions.load("ui_console")`, then the global `ui_console`
 ---@class ui_console
----@field dependencies string[] Extensions chargées avant celle-ci : ui_imgui.
----@field inputCallback nil Toujours nil : assigné depuis une variable locale inexistante (bug).
----@field onExtensionUnloaded nil Toujours nil : assigné depuis une variable locale inexistante (bug), donc aucun hook de déchargement.
+---@field dependencies string[] Extensions loaded before this one: ui_imgui.
+---@field inputCallback nil Always nil: assigned from a nonexistent local variable (bug).
+---@field onExtensionUnloaded nil Always nil: assigned from a nonexistent local variable (bug), so there is no unload hook.
 ui_console = {}
 
---- Ferme la fenêtre de la console.
----Source : lua/ge/extensions/ui/console.lua:172
+--- Closes the console window.
+---Source: lua/ge/extensions/ui/console.lua:172
 function ui_console.hide() end
 
---- Hook appelé après un rechargement de Lua : restaure l'état sauvegardé par onSerialize.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/console.lua:1215
----@param data table Table renvoyée par onSerialize.
+--- Hook called after a Lua reload: restores the state saved by onSerialize.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/console.lua:1215
+---@param data table Table returned by onSerialize.
 function ui_console.onDeserialized(data) end
 
---- Hook appelé au chargement de l'extension : charge les réglages et l'historique, initialise le thème ImGui de l'éditeur et construit la liste des contextes d'exécution.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/console.lua:1230
+--- Hook called when the extension loads: loads the settings and history, initializes the editor's ImGui theme and builds the list of execution contexts.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/console.lua:1230
 function ui_console.onExtensionLoaded() end
 
---- Hook appelé quand un fichier surveillé change. Recharge l'historique si le fichier est /consoleHistory.json.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/console.lua:1239
----@param filename string Chemin du fichier modifié.
----@param type string Type de changement (non utilisé).
+--- Hook called when a watched file changes. Reloads the history if the file is /consoleHistory.json.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/console.lua:1239
+---@param filename string Path of the modified file.
+---@param type string Change type (not used).
 function ui_console.onFileChanged(filename, type) end
 
---- Hook appelé avant un rechargement de Lua : sauvegarde l'état de la fenêtre (ouverte, filtre d'origine, saisie en cours, filtre de niveaux, plein écran, position, défilement).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/console.lua:1199
----@return table  Données à restituer à onDeserialized.
+--- Hook called before a Lua reload: saves the window state (open, origin filter, input in progress, level filter, fullscreen, position, scroll).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/console.lua:1199
+---@return table  Data to hand back to onDeserialized.
 function ui_console.onSerialize() end
 
---- Hook appelé à chaque image. Si la fenêtre est ouverte, lit les nouvelles lignes du journal (sauf en pause), dessine la console ImGui et traite les commandes saisies ; à la fermeture, rend le contrôle du véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/console.lua:556
----@param dtReal number Durée réelle de l'image en secondes (non utilisée).
----@param dtSim number Durée simulée de l'image en secondes (non utilisée).
----@param dtRaw number Durée brute de l'image en secondes (non utilisée).
+--- Hook called every frame. If the window is open, reads the new log lines (except when paused), draws the ImGui console and processes the commands entered; on close, gives vehicle control back.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/console.lua:556
+---@param dtReal number Real frame duration in seconds (not used).
+---@param dtSim number Simulated frame duration in seconds (not used).
+---@param dtRaw number Raw frame duration in seconds (not used).
 function ui_console.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook appelé quand un véhicule devient actif ou inactif : reconstruit la liste des contextes d'exécution (refreshCombo).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/console.lua:1178
+--- Hook called when a vehicle becomes active or inactive: rebuilds the list of execution contexts (refreshCombo).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/console.lua:1178
 function ui_console.onVehicleActiveChanged() end
 
---- Hook appelé quand un véhicule est détruit : reconstruit la liste des contextes d'exécution.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/console.lua:1178
+--- Hook called when a vehicle is destroyed: rebuilds the list of execution contexts.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/console.lua:1178
 function ui_console.onVehicleDestroyed() end
 
---- Hook appelé quand un véhicule apparaît : reconstruit la liste des contextes d'exécution.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/console.lua:1178
+--- Hook called when a vehicle is spawned: rebuilds the list of execution contexts.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/console.lua:1178
 function ui_console.onVehicleSpawned() end
 
---- Hook appelé quand le véhicule du joueur change : reconstruit la liste des contextes d'exécution.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/console.lua:1178
+--- Hook called when the player's vehicle changes: rebuilds the list of execution contexts.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/console.lua:1178
 function ui_console.onVehicleSwitched() end
 
---- Ouvre la fenêtre de la console.
----Source : lua/ge/extensions/ui/console.lua:168
+--- Opens the console window.
+---Source: lua/ge/extensions/ui/console.lua:168
 function ui_console.show() end
 
---- Ouvre la fenêtre si elle est fermée, la ferme si elle est ouverte.
----Source : lua/ge/extensions/ui/console.lua:176
+--- Opens the window if it is closed, closes it if it is open.
+---Source: lua/ge/extensions/ui/console.lua:176
 function ui_console.toggle() end
 
----Source : lua/ge/extensions/ui/console.lua:429
+---Source: lua/ge/extensions/ui/console.lua:429
 ---@param data any
 function ConsoleInputCallback(data) end
 

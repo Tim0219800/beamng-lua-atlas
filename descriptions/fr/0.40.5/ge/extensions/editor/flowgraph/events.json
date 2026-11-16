@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/editor/flowgraph/events.lua",
+  "module": "Fenêtre « Event Log » (fg_events) de l'éditeur Flowgraph : journal des évènements du projet (niveaux Debug, Info, Warning, Error, States) avec couleurs, options « Hide Duplicates », format d'heure (Project Time, Global Time, Frame) et défilement automatique (préférences flowgraph.general.*). Un double-clic sur une entrée liée à un nœud ou un graphe y navigue. Retourne _flowgraph_createMgrWindow(C).",
+  "notes": [
+    "Dans handleMeta, la branche meta.type == 'graph' lit e.meta.node.graph alors que seule e.meta.graph est testé : si meta.node est nil, ce chemin provoquerait une erreur (incohérence du code du jeu).",
+    "Utilisé via require, pas comme extension classique."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe de la fenêtre Event Log (windowName = 'fg_events').",
+      "functions": {
+        "attach": {"desc": "Associe le manager flowgraph.", "params": {"mgr": {"type": "table", "desc": "Manager flowgraph."}}, "internal": false},
+        "init": {"desc": "Enregistre la fenêtre éditeur (150x300).", "params": {}, "internal": true},
+        "drawContent": {"desc": "Dessine les contrôles (Hide Duplicates, Time Format, Auto Scroll) et la liste à colonnes des évènements.", "params": {}, "internal": false},
+        "draw": {"desc": "Dessine la fenêtre « Event Log » si elle est visible.", "params": {}, "internal": false},
+        "handleMeta": {
+          "desc": "Gère l'infobulle et le double-clic d'une entrée ayant des métadonnées (nœud ou graphe) : sélectionne le graphe et centre la vue.",
+          "params": {"e": {"type": "table", "desc": "Évènement avec e.meta {type = 'node'|'graph', node/graph}."}},
+          "internal": false
+        },
+        "_onSerialize": {"desc": "Sérialisation (vide).", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true},
+        "_onDeserialized": {"desc": "Désérialisation (vide).", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true}
+      }
+    }
+  }
+}

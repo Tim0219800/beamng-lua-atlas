@@ -1,22 +1,22 @@
 # `flowgraph_nodes_logic_xor`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/logic/xor.lua` · VM : Game Engine (GE) · 27 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/logic/xor.lua` · VM: Game Engine (GE) · 27 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/logic/xor")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/logic/xor")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Xor' (categorie logic). Le flux sort si exactement une des deux entrees a et b a du flux.
+Flowgraph node 'Xor' (logic category). The flow goes out if exactly one of the two inputs a and b has flow.
 
-## Remarques
+## Notes
 
-- Compare les valeurs par ~= : si une entree vaut nil et l'autre false, le resultat est true (nil ~= false).
+- Compares the values with ~=: if one input is nil and the other false, the result is true (nil ~= false).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:work()` | pinOut.flow = (a ~= b). | 22 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/logic/xor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/logic/xor.lua`.*

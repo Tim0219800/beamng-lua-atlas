@@ -1,44 +1,44 @@
 # `editor_barriersEditor`
 
-*Fichier : `lua/ge/extensions/editor/barriersEditor.lua` · VM : Game Engine (GE) · 316 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/barriersEditor.lua` · VM: Game Engine (GE) · 316 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_barriersEditor` : `extensions.load("editor_barriersEditor")`, puis la globale `editor_barriersEditor`
+**Access:** extension `editor_barriersEditor`: `extensions.load("editor_barriersEditor")`, then the global `editor_barriersEditor`
 
-Fenêtre « Barriers Selector » (menu Gameplay > Barriers Editor) pour choisir les prefabs de barrières d'un niveau. Elle cherche dans /levels/<niveau>/ les fichiers .prefab correspondant à un motif (défaut *barrier*), les instancie temporairement pour relever la position des TSStatic, puis les affiche en deux listes (non sélectionnés / sélectionnés) avec des sphères de debug dans la vue. Un mode d'édition « Barriers Selection » permet de cliquer dans la vue (clic = bascule, Maj = ajouter seulement, Alt = retirer seulement). Des entrées de menu synchronisent la sélection avec l'éditeur de courses (editor_raceEditor, champ path.prefabs).
+"Barriers Selector" window (Gameplay > Barriers Editor menu) to choose the barrier prefabs of a level. It searches /levels/<level>/ for .prefab files matching a pattern (default *barrier*), temporarily instantiates them to read the TSStatic positions, then displays them in two lists (unselected / selected) with debug spheres in the view. A "Barriers Selection" edit mode lets you click in the view (click = toggle, Shift = add only, Alt = remove only). Menu entries synchronize the selection with the race editor (editor_raceEditor, field path.prefabs).
 
-## Remarques
+## Notes
 
-- Bug : dans le menu Prefabs > « Load Selected Prefabs », les variables filename et f ne sont pas définies dans cette portée (globales nil), donc spawnPrefab reçoit des arguments nil et l'entrée ne fonctionne pas correctement.
-- Bug : M.onExtensionLoaded = onExtensionLoaded référence une variable non définie (vaut nil) : le champ exporté est donc nil.
-- Dans « Add Selection to Race Editor » et « Set Selection exactly », path.prefabs est lu avant le test if path (erreur si getCurrentPath renvoie nil).
-- onSerialize et onDeserialized sont des fonctions vides.
-- Les prefabs sont indexés par chemin de fichier (prefabsIndex) : un fichier déjà chargé n'est pas rechargé tant que « Clear results » n'a pas été utilisé.
+- Bug: in the Prefabs > "Load Selected Prefabs" menu, the variables filename and f are not defined in that scope (nil globals), so spawnPrefab receives nil arguments and the entry does not work properly.
+- Bug: M.onExtensionLoaded = onExtensionLoaded references an undefined variable (nil): the exported field is therefore nil.
+- In "Add Selection to Race Editor" and "Set Selection exactly", path.prefabs is read before the `if path` test (error if getCurrentPath returns nil).
+- onSerialize and onDeserialized are empty functions.
+- Prefabs are keyed by file path (prefabsIndex): a file that is already loaded is not reloaded until "Clear results" has been used.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_barriersEditor.onDeserialized(data)` | Fonction vide. *(interne)* *(hook)* | 303 |
-| `editor_barriersEditor.onEditorGui()` | Appelé chaque frame de l'éditeur : dessine la fenêtre (menus Load / Race Editor, deux listes de prefabs, boutons > et <) et les sphères de debug de chaque prefab. *(interne)* *(hook)* | 77 |
-| `editor_barriersEditor.onEditorInitialized()` | Enregistre la fenêtre (1500x700), l'entrée de menu « Barriers Editor » (groupe Gameplay) et le mode d'édition « Barriers Selection » avec ses raccourcis souris. *(interne)* *(hook)* | 286 |
-| `editor_barriersEditor.onSerialize()` | Fonction vide (ne renvoie rien). *(interne)* *(hook)* | 300 |
-| `editor_barriersEditor.show()` | Désélectionne les objets de l'éditeur et affiche la fenêtre « Barriers Selector ». | 281 |
+| `editor_barriersEditor.onDeserialized(data)` | Empty function. *(internal)* *(hook)* | 303 |
+| `editor_barriersEditor.onEditorGui()` | Called every editor frame: draws the window (Load / Race Editor menus, two prefab lists, > and < buttons) and the debug spheres of each prefab. *(internal)* *(hook)* | 77 |
+| `editor_barriersEditor.onEditorInitialized()` | Registers the window (1500x700), the "Barriers Editor" menu entry (Gameplay group) and the "Barriers Selection" edit mode with its mouse shortcuts. *(internal)* *(hook)* | 286 |
+| `editor_barriersEditor.onSerialize()` | Empty function (returns nothing). *(internal)* *(hook)* | 300 |
+| `editor_barriersEditor.show()` | Deselects the editor objects and shows the "Barriers Selector" window. | 281 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_barriersEditor.onDeserialized(data)`
 
-Fonction vide.
+Empty function.
 
-- `data` (*any*) : Non utilisé.
+- `data` (*any*) : Not used.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `onExtensionLoaded` | nil | Vaut nil : référence à une variable locale jamais définie. ⚠ référence `onExtensionLoaded` non définie dans le fichier (vaut probablement nil) |
+| `onExtensionLoaded` | nil | Is nil: reference to a local variable that is never defined. ⚠ reference `onExtensionLoaded` not defined in the file (probably nil) |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `Sim.` `upcast`
@@ -46,4 +46,4 @@ Fonction vide.
 - `obj:` `getClassName`, `getPosition`, `getRotation`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/barriersEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/barriersEditor.lua`.*

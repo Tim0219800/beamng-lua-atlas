@@ -1,0 +1,42 @@
+{
+  "path": "lua/vehicle/energyStorage/pressureTank.lua",
+  "module": "Type de stockage d'énergie 'pressureTank' : réservoir de gaz sous pression (air comprimé des camions, remorques, suspensions pneumatiques). L'énergie vaut P·V (loi des gaz parfaits, tient compte de la pression et température ambiantes du powertrain), le réservoir peut fuir (rupture de poutre ou déformation) et peut alimenter ou être alimenté par un autre véhicule via un coupleur (pneumatic PTO, synchronisation par electrics). Instancié par energyStorage.lua pour `type = \"pressureTank\"`.",
+  "usage": "local tank = energyStorage.getStorage(\"airTank\")\nlocal relativePressurePa = electrics.values[tank.pressureElectricName]  -- \"airTank_pressureRelative\"\ntank:toggleConsumerPressureCoef()  -- coupe/rétablit l'alimentation de la remorque",
+  "notes": [
+    "Champs jbeam lus : name, type, energyType (défaut 'air'), gasMolarMass (g/mol, défaut 28,9647), capacity (volume en m³), maxPressure (Pa, défaut 1 000 000), startingPressure (Pa relatif, ajoute la pression ambiante), isPrimarySupply, breakTriggerBeam, tankDamageDeformGroup, showDebugGraph, nodes._engineGroup_nodes, pneumaticPTOPressureBaseSyncName, pneumaticPTOFlowBaseSyncName, pneumaticPTOSupplyCouplerNodeNames, pneumaticPTOConsumerCouplerNodeNames, consumerPressureDiffFlowRateCoef (défaut 1e-6).",
+    "Électricité publiée : <nom>_pressureRelative (pression - pression ambiante, Pa), <nom>_pressureConsumer (pression envoyée aux consommateurs), <nom>_pressureConsumerCoef, et les clés de synchronisation <base>_<objectId> (pneumaticPTOPressure_<id>, pneumaticPTOFlow_<id>).",
+    "Rôles : une citerne avec isPrimarySupply est source (supplyPressure = pression propre). Au couplage sur un nœud de pneumaticPTOSupplyCouplerNodeNames elle devient consommatrice d'un autre véhicule, sur un nœud de pneumaticPTOConsumerCouplerNodeNames elle devient fournisseur. Un seul consommateur par fournisseur est supporté (TODO dans le code).",
+    "Unités : storedEnergy et energyCapacity en J (= Pa·m³), capacity en m³, pression en Pa, remainingMass en kg, maxLeakRate = capacity / 3 (m³/s, le commentaire du code dit 5 secondes).",
+    "Les fuites sont signalées dans damageTracker : groupe 'pressureTank', noms 'breakLeak' et 'deformationLeak'.",
+    "Anomalie : setConsumerPressureCoef utilise `coef > 0` (valeur non bornée) pour le message d'activation alors que la valeur stockée est bornée entre 0 et 1.",
+    "Anomalie : onCouplerAttached déclare le dernier paramètre `attachForce`, mais energyStorage.lua lui transmet attachEnergy."
+  ],
+  "fields": {},
+  "functions": {
+    "new": {"desc": "Crée l'instance de réservoir sous pression, calcule énergie, masse et noms d'electrics, et initialise les valeurs electrics et dommages.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam fusionnées du stockage."}}, "returns": [{"type": "table", "desc": "Instance de stockage (classe 'storage')."}], "internal": true}
+  },
+  "classes": {
+    "storage": {
+      "desc": "Instance renvoyée par new(jbeamData). Champs notables : name, type, energyType, capacity (m³), storedEnergy (J), energyCapacity (J), initialStoredEnergy, remainingMass (kg), remainingRatio, currentPressure (Pa absolu), supplyPressure, maxWorkingPressure, currentLeakRate, maxLeakRate, consumerPressureCoef (0 à 1), pressureElectricName, pressureConsumerElectricName, pressureConsumerCoefElectricName.",
+      "functions": {
+        "updateGFX": {"desc": "Appelé chaque frame : calcule la pression, synchronise avec les fournisseurs/consommateurs, applique la fuite (rupture ou déformation), met à jour énergie et masse des nœuds et publie la pression relative dans electrics.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}},
+        "updateTankSync": {"desc": "Côté consommateur : équilibre l'énergie avec la pression d'alimentation du fournisseur et publie le débit ; côté fournisseur : publie la pression envoyée au consommateur et retire l'énergie correspondant au débit reçu.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}},
+        "updateEnergy": {"desc": "Recalcule storedEnergy, remainingMass et remainingRatio à la température ambiante courante. Sans argument, déduit la quantité de gaz de l'énergie actuelle et de l'ancienne température.", "params": {"molarQuantity": {"type": "number|nil", "desc": "Quantité de gaz en mol ; nil pour la déduire de storedEnergy."}}},
+        "onCouplerAttached": {"desc": "Hook de couplage : si le nœud est un nœud d'alimentation, crée les noms electrics de synchronisation avec le véhicule fournisseur et demande l'export de la pression ; si c'est un nœud consommateur, initialise pression et débit et demande l'export du débit.", "params": {"nodeId": {"type": "integer", "desc": "Nœud du coupleur de ce véhicule."}, "obj2id": {"type": "integer", "desc": "Identifiant de l'autre véhicule."}, "obj2nodeId": {"type": "integer", "desc": "Nœud de l'autre véhicule."}, "attachForce": {"type": "number", "desc": "Reçoit attachEnergy (voir notes), non utilisé."}}},
+        "onCouplerDetached": {"desc": "Hook de détachement : supprime les electrics de synchronisation côté consommateur (supplyPressure remis à 0) ou le débit côté fournisseur.", "params": {"nodeId": {"type": "integer", "desc": "Nœud du coupleur."}, "obj2id": {"type": "integer", "desc": "Autre véhicule."}, "obj2nodeId": {"type": "integer", "desc": "Nœud de l'autre véhicule."}, "breakForce": {"type": "number", "desc": "Force de rupture (inutilisé)."}}},
+        "getRemainingMass": {"desc": "Renvoie la masse de gaz restante.", "params": {}, "returns": [{"type": "number", "desc": "Masse en kg."}]},
+        "setRemainingMass": {"desc": "Fixe la masse de gaz (convertie en moles puis en énergie).", "params": {"mass": {"type": "number", "desc": "Masse en kg."}}},
+        "setRemainingRatio": {"desc": "Fixe le taux de remplissage par rapport à la pression maximale.", "params": {"ratio": {"type": "number", "desc": "0 à 1 (borné)."}}},
+        "setConsumerPressureCoef": {"desc": "Fixe le coefficient de pression envoyée aux consommateurs (borné 0 à 1) et affiche un message UI (trailerAir enabled/disabled).", "params": {"coef": {"type": "number", "desc": "0 coupe l'alimentation, 1 pleine."}}},
+        "toggleConsumerPressureCoef": {"desc": "Bascule entre 0 et 1 pour consumerPressureCoef.", "params": {}},
+        "onBreak": {"desc": "Appelé à la rupture d'une poutre déclencheuse : fuite maximale et dommage 'breakLeak'.", "params": {}},
+        "registerDevice": {"desc": "Enregistre un périphérique dans assignedDevices.", "params": {"device": {"type": "table", "desc": "Périphérique avec un champ name."}}},
+        "setPartCondition": {"desc": "Restaure storedEnergy depuis la condition de pièce (nombre = fraction de energyCapacity, ou table {storedEnergy}).", "params": {"odometer": {"type": "number", "desc": "Inutilisé."}, "integrity": {"type": "number|table", "desc": "Fraction 0 à 1 ou table d'état."}, "visual": {"type": "any", "desc": "Inutilisé."}}},
+        "getPartCondition": {"desc": "Renvoie l'intégrité (toujours 1) et {storedEnergy}.", "params": {}, "returns": [{"type": "number", "desc": "integrityValue."}, {"type": "table", "desc": "État."}]},
+        "reset": {"desc": "Remet le réservoir à sa pression de départ, supprime fuites et synchronisations, réinitialise les electrics et les dommages.", "params": {}},
+        "serialize": {"desc": "Renvoie {remainingMass}.", "params": {}, "returns": [{"type": "table", "desc": "{remainingMass = kg}."}]},
+        "deserialize": {"desc": "Restaure remainingMass si présent.", "params": {"data": {"type": "table", "desc": "Table contenant remainingMass."}}}
+      }
+    }
+  }
+}

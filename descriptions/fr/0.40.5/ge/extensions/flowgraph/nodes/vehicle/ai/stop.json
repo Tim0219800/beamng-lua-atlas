@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/stop.lua",
+  "module": "Nœud « AI Stop » (couleur ai, once_p_duration). Demande à l'IA d'arrêter le véhicule (ai.setState mode « stop ») et active la sortie stopped quand sa vitesse passe sous checkVelocity (0,01 m/s). Entrées : aiVehId (sans valeur = joueur), checkVelocity (caché). Sortie : stopped (flow).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Initialise complete=false.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Remet complete à false.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Appelle onNodeReset.",
+          "internal": true
+        },
+        "getVeh": {
+          "desc": "Renvoie le véhicule dont l'id est donné en entrée, ou le véhicule du joueur (getPlayerVehicle(0)) sans entrée.",
+          "internal": false
+        },
+        "workOnce": {
+          "desc": "Envoie au véhicule ai.setState({mode = \"stop\"}).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Si l'arrêt est constaté, active stopped ; sinon compare la vitesse (map.objects[vehId].vel) au seuil et mémorise complete.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

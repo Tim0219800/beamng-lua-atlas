@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/editor/assemblySpline/import.lua",
+  "module": "Import pour l'outil Assembly Spline : convertit des objets TSStatic déjà posés dans le niveau (compatibles avec le kit d'assemblage, c'est-à-dire ayant des ancres nommées 'nail.*') en une assembly spline. Il reconstruit le kit d'assemblage et la molécule à partir des meshes, ajuste une polyligne sur les composants racine (fitPoly), crée la spline, supprime les TSStatic d'origine (et les groupes vides) et enregistre l'action dans l'historique d'annulation (undo/redo restaure les TSStatic sauvegardés). Utilisé par le menu clic droit de l'arbre de scène et par le polygone de sélection de l'outil.",
+  "notes": [
+    "Un TSStatic est compatible s'il a au moins une ancre dont le nom commence par « nail. ».",
+    "Il faut au moins 2 TSStatic compatibles, et au moins 2 composants racine ajustables en polyligne, sinon un avertissement est journalisé (logtag assemblySpline.import) et rien n'est converti.",
+    "Les variations sont reconnues par le nom de fichier contenant « var » et de forme <base>_var...; le nom de base est reconstruit avec l'extension .dae.",
+    "Après l'import la spline est marquée sale 2 frames plus tard (handleDelayedSplineUpdates) car il faut attendre la mise à jour du mesh de collision."
+  ],
+  "functions": {
+    "handleDelayedSplineUpdates": {"desc": "Mise à jour différée après un import : au bout de 2 appels, marque la dernière assembly spline comme sale pour la reconstruire une fois la collision mise à jour. Appelée à chaque frame par onEditorGui de assemblySpline.", "params": {}, "returns": [], "internal": true},
+    "validateToolCompatibleTSStatic": {"desc": "Indique si l'objet est un TSStatic ayant au moins une ancre dont le nom commence par « nail. ».", "params": {"obj": {"type": "table|nil", "desc": "Objet scène."}}, "returns": [{"type": "boolean", "desc": "true si compatible."}]},
+    "convertTSStatics2AssemblySpline": {"desc": "Convertit une sélection de TSStatic en assembly spline : filtre les compatibles, reconstruit le kit et la molécule, ajuste la polyligne, crée la spline, supprime les objets d'origine, recharge la collision (be:reloadCollision) et enregistre l'action « Convert TSStatics to Assembly Spline » dans editor.history.", "params": {"collection": {"type": "integer[]|nil", "desc": "Ids des objets TSStatic sélectionnés."}}, "returns": []},
+    "importFromPolygon": {"desc": "Cherche tous les TSStatic du niveau dont la position est dans le polygone et les convertit via convertTSStatics2AssemblySpline.", "params": {"polygon": {"type": "table", "desc": "Polygone de sélection (liste de points)."}}, "returns": []}
+  }
+}

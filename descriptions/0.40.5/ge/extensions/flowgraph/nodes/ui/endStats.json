@@ -1,55 +1,55 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/endStats.lua",
-  "module": "Nœud flowgraph « End Stats » (catégorie repeat_instant) : rassemble les statistiques à afficher dans l'écran de fin. Pour chaque statistique i : entrées « label_i » (string ou table translationObject), « points_i », « maxPoints_i ». Entrée cachée « statData » (liste précédente) et sortie « statData » (table endStats) à brancher sur End Screen, éventuellement en chaînant plusieurs nœuds.",
+  "module": "Flowgraph node \"End Stats\" (category repeat_instant): gathers the statistics to display on the end screen. For each statistic i: inputs \"label_i\" (string or translationObject table), \"points_i\", \"maxPoints_i\". Hidden input \"statData\" (previous list) and output \"statData\" (endStats table) to connect to End Screen, optionally chaining several nodes.",
   "notes": [
-    "Chaque statistique ajoute aussi relativePoints = points*100/maxPoints quand points et maxPoints existent (division par zéro si maxPoints = 0).",
-    "Le compteur minimum dans l'éditeur est 1 (ptr < 1 -> 1), alors que count vaut 0 à l'initialisation.",
-    "work() ajoute des éléments à la table d'entrée statData (modifiée en place) à chaque frame."
+    "Each statistic also adds relativePoints = points*100/maxPoints when points and maxPoints exist (division by zero if maxPoints = 0).",
+    "The minimum counter in the editor is 1 (ptr < 1 -> 1), whereas count is 0 at initialization.",
+    "work() adds elements to the input table statData (modified in place) every frame."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStarted": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure count.",
+          "desc": "Restores count.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde count.",
+          "desc": "Saves count.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Champ « Count » pour le nombre de statistiques.",
+          "desc": "\"Count\" field for the number of statistics.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Zone centrale vide.",
+          "desc": "Empty central area.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale)."
+              "desc": "Editor node builder (builder:Middle() opens the central area)."
             },
             "style": {
               "type": "any",
-              "desc": "Style d'affichage du nœud fourni par l'éditeur."
+              "desc": "Node display style provided by the editor."
             }
           },
           "internal": true
@@ -59,21 +59,21 @@
           "internal": true
         },
         "updatePins": {
-          "desc": "Ajuste le nombre de groupes de 3 pins d'entrée (label, points, maxPoints).",
+          "desc": "Adjusts the number of groups of 3 input pins (label, points, maxPoints).",
           "params": {
             "old": {
               "type": "integer",
-              "desc": "Ancien nombre d'éléments."
+              "desc": "Old number of elements."
             },
             "new": {
               "type": "integer",
-              "desc": "Nouveau nombre d'éléments."
+              "desc": "New number of elements."
             }
           },
           "internal": true
         },
         "work": {
-          "desc": "Reprend la liste en entrée, ajoute une entrée {label, points, maxPoints, relativePoints} par statistique et l'écrit sur « statData ».",
+          "desc": "Takes the input list, adds an entry {label, points, maxPoints, relativePoints} per statistic and writes it to \"statData\".",
           "internal": true
         }
       }

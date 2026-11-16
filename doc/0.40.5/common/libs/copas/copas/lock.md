@@ -1,66 +1,66 @@
 # `libs_copas_copas_lock`
 
-*Fichier : `lua/common/libs/copas/copas/lock.lua` · VM : Commun (GE + véhicule) · 194 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/copas/copas/lock.lua` · VM: Common (GE + vehicle) · 194 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/copas/copas/lock")`
+**Access:** `require("libs/copas/copas/lock")`
 
-Sous-module de la bibliothèque tierce Copas : verrou (mutex) entre coroutines Copas. Une coroutine qui demande un verrou déjà pris cède la main jusqu'à ce qu'il soit libéré ou que le délai expire. Par défaut le verrou est ré-entrant et le délai de 10 s. Le module renvoie la table lock.
+Submodule of the third-party Copas library: lock (mutex) between Copas coroutines. A coroutine that requests an already-held lock yields until it is released or the timeout expires. By default the lock is re-entrant and the timeout is 10 s. The module returns the table lock.
 
-## Exemple
+## Example
 
 ```lua
 local lock = require("libs/copas/copas/lock").new(5)
 local ok, err = lock:get()
--- section critique
+-- critical section
 lock:release()
 ```
 
-## Remarques
+## Notes
 
-- get renvoie le temps d'attente en cas de succès, ou nil, erreur, temps d'attente avec l'erreur parmi "timeout", "destroyed", "lock is not re-entrant".
-- release renvoie nil + « cannot release a lock not owned » si la coroutine courante n'est pas propriétaire.
+- get returns the wait time on success, or nil, error, wait time with the error among "timeout", "destroyed", "lock is not re-entrant".
+- release returns nil + "cannot release a lock not owned" if the current coroutine is not the owner.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_copas_copas_lock.get(self, timeout)` | Acquiert le verrou ; cède la main tant qu'une autre coroutine le possède. Avec timeout = 0, retourne immédiatement sans céder. | 99 |
-| `libs_copas_copas_lock.new(seconds, not_reentrant)` | Crée un verrou. | 19 |
-| `libs_copas_copas_lock.release(self)` | Libère le verrou détenu par la coroutine courante. | 153 |
+| `libs_copas_copas_lock.get(self, timeout)` | Acquires the lock; yields while another coroutine holds it. With timeout = 0, returns immediately without yielding. | 99 |
+| `libs_copas_copas_lock.new(seconds, not_reentrant)` | Creates a lock. | 19 |
+| `libs_copas_copas_lock.release(self)` | Releases the lock held by the current coroutine. | 153 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_copas_copas_lock.get(self, timeout)`
 
-Acquiert le verrou ; cède la main tant qu'une autre coroutine le possède. Avec timeout = 0, retourne immédiatement sans céder.
+Acquires the lock; yields while another coroutine holds it. With timeout = 0, returns immediately without yielding.
 
-- `self` (*table*) : Le verrou (appel lock:get)
-- `timeout` (*number|nil*) : Délai en secondes, prioritaire sur celui de new
-- **renvoie** : number|nil Temps d'attente en cas de succès, sinon nil
-- **renvoie** : string|nil Erreur : timeout, destroyed ou lock is not re-entrant
-- **renvoie** : number|nil Temps d'attente en cas d'échec
+- `self` (*table*) : The lock (call lock:get)
+- `timeout` (*number|nil*) : Timeout in seconds, takes precedence over the one from new
+- **returns**: number|nil Wait time on success, otherwise nil
+- **returns**: string|nil Error: timeout, destroyed or lock is not re-entrant
+- **returns**: number|nil Wait time on failure
 
 #### `libs_copas_copas_lock.new(seconds, not_reentrant)`
 
-Crée un verrou.
+Creates a lock.
 
-- `seconds` (*number|nil*) : Délai par défaut d'acquisition en secondes (défaut 10)
-- `not_reentrant` (*boolean|nil*) : Si vrai, une coroutine ne peut pas reprendre un verrou qu'elle possède déjà
-- **renvoie** : table Le verrou
+- `seconds` (*number|nil*) : Default acquisition timeout in seconds (default 10)
+- `not_reentrant` (*boolean|nil*) : If true, a coroutine cannot re-acquire a lock it already holds
+- **returns**: table The lock
 
 #### `libs_copas_copas_lock.release(self)`
 
-Libère le verrou détenu par la coroutine courante.
+Releases the lock held by the current coroutine.
 
-- `self` (*table*) : Le verrou (appel lock:release)
-- **renvoie** : boolean|nil true si libéré
-- **renvoie** : string|nil Message d'erreur
+- `self` (*table*) : The lock (call lock:release)
+- **returns**: boolean|nil true if released
+- **returns**: string|nil Error message
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `__index` | table | Métatable des objets verrou (lock lui-même). |
+| `__index` | table | Metatable of the lock objects (lock itself). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/copas/copas/lock.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/copas/copas/lock.lua`.*

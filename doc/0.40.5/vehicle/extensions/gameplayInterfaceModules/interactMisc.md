@@ -1,46 +1,46 @@
 # `gameplayInterfaceModules_interactMisc`
 
-*Fichier : `lua/vehicle/extensions/gameplayInterfaceModules/interactMisc.lua` · VM : Véhicule · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/gameplayInterfaceModules/interactMisc.lua` · VM: Vehicle · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplayInterfaceModules_interactMisc` : `extensions.load (VM véhicule)("gameplayInterfaceModules_interactMisc")`, puis la globale `gameplayInterfaceModules_interactMisc`
+**Access:** extension `gameplayInterfaceModules_interactMisc`: `extensions.load (vehicle VM)("gameplayInterfaceModules_interactMisc")`, then the global `gameplayInterfaceModules_interactMisc`
 
-Module de gameplayInterface fourre-tout : test de connexion (ping) et ouverture/fermeture des verrous des contrôleurs de coupleurs avancés (advancedCouplerControl).
+Catch-all gameplayInterface module: connection test (ping) and opening/closing of the latches of advanced coupler controllers (advancedCouplerControl).
 
-## Exemple
+## Example
 
 ```lua
-gameplayInterface.getSystemData(0, 14, 'ping')   -- renvoie {ping = true}
+gameplayInterface.getSystemData(0, 14, 'ping')   -- returns {ping = true}
 gameplayInterface.executeAction(0, 15, 'latchesOpen')
 ```
 
-## Remarques
+## Notes
 
-- Lookup 'ping'() : renvoie {ping = true}.
-- Action 'latchesOpen'() : appelle detachGroup() sur chaque contrôleur de type advancedCouplerControl.
-- Action 'latchesClose'() : appelle tryAttachGroupImpulse() sur chaque contrôleur de type advancedCouplerControl.
-- latchesOpen/latchesClose ne vérifient pas les paramètres.
+- Lookup 'ping'(): returns {ping = true}.
+- Action 'latchesOpen'(): calls detachGroup() on each controller of type advancedCouplerControl.
+- Action 'latchesClose'(): calls tryAttachGroupImpulse() on each controller of type advancedCouplerControl.
+- latchesOpen/latchesClose do not check their parameters.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplayInterfaceModules_interactMisc.onExtensionLoaded()` | Appelé au chargement : remplit moduleActions et moduleLookups. *(interne)* *(hook)* | 34 |
-| `gameplayInterfaceModules_interactMisc.requestRegistration(gi)` | Enregistre les actions et lookups auprès de gameplayInterface. *(interne)* | 30 |
+| `gameplayInterfaceModules_interactMisc.onExtensionLoaded()` | Called at load: fills moduleActions and moduleLookups. *(internal)* *(hook)* | 34 |
+| `gameplayInterfaceModules_interactMisc.requestRegistration(gi)` | Registers the actions and lookups with gameplayInterface. *(internal)* | 30 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplayInterfaceModules_interactMisc.requestRegistration(gi)`
 
-Enregistre les actions et lookups auprès de gameplayInterface.
+Registers the actions and lookups with gameplayInterface.
 
-- `gi` (*table*) : Le module gameplayInterface.
+- `gi` (*table*) : The gameplayInterface module.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `moduleActions` | table<string, function> | Actions : latchesOpen, latchesClose. |
-| `moduleLookups` | table<string, function> | Lookups : ping. |
+| `moduleActions` | table<string, function> | Actions: latchesOpen, latchesClose. |
+| `moduleLookups` | table<string, function> | Lookups: ping. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/gameplayInterfaceModules/interactMisc.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/gameplayInterfaceModules/interactMisc.lua`.*

@@ -1,15 +1,30 @@
 {
   "path": "lua/vehicle/extensions/gameplayStatisticModules/watchBurnout.lua",
-  "module": "Module de gameplayStatistic qui détecte les burnouts : une roue motrice intacte patine (vitesse de roue > 2 et > 1,5 x vitesse sol, glissement pondéré par la charge > 4) tout en touchant le sol. À la fin, si la durée dépasse 0,1 s, ajoute la métrique 'vehicle/burnout.time' (agrégée).",
+  "module": "gameplayStatistic module that detects burnouts: an intact driven wheel spins (wheel speed > 2 and > 1.5 x ground speed, load-weighted slip > 4) while touching the ground. At the end, if the duration exceeds 0.1 s, adds the metric 'vehicle/burnout.time' (aggregated).",
   "notes": [
-    "Se décharge si le contrôleur principal n'est pas 'vehicleController/vehicleController', s'il n'y a aucune roue ou aucune roue motrice (wd.isPropulsed).",
-    "Ignoré si le nombre de roues a changé depuis le chargement.",
-    "Condition par roue : not isBroken, wheelSpeed > 2, wheelSpeed > groundSpeed * 1.5, lastSlip * min(downForce * 0.1, 1) > 4, contact au sol.",
-    "Le workload n'est pas enregistré ici (l'appel addSchedule est commenté) ; c'est gameplayStatistic qui l'ajoute au planificateur."
+    "Unloads itself if the main controller is not 'vehicleController/vehicleController', or if there are no wheels or no driven wheel (wd.isPropulsed).",
+    "Ignored if the wheel count has changed since load.",
+    "Per-wheel condition: not isBroken, wheelSpeed > 2, wheelSpeed > groundSpeed * 1.5, lastSlip * min(downForce * 0.1, 1) > 4, ground contact.",
+    "The workload is not registered here (the addSchedule call is commented out); it is gameplayStatistic that adds it to the scheduler."
   ],
   "fields": {},
   "functions": {
-    "onExtensionLoaded": {"desc": "Appelé au chargement : liste les roues motrices ; renvoie false pour se décharger si le véhicule ne convient pas.", "params": {}, "returns": [{"type": "boolean|nil", "desc": "false pour demander le déchargement."}], "internal": true},
-    "workload": {"desc": "Fonction de surveillance exécutée à tour de rôle par gameplayStatistic : détecte début/fin de burnout et envoie la métrique.", "params": {}, "returns": [], "internal": true}
+    "onExtensionLoaded": {
+      "desc": "Called on load: lists the driven wheels; returns false to unload if the vehicle is not suitable.",
+      "params": {},
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "false to request unloading."
+        }
+      ],
+      "internal": true
+    },
+    "workload": {
+      "desc": "Watch function run in turn by gameplayStatistic: detects burnout start/end and sends the metric.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
   }
 }

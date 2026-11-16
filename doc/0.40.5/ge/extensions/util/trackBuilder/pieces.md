@@ -1,193 +1,193 @@
 # `util_trackBuilder_pieces`
 
-*Fichier : `lua/ge/extensions/util/trackBuilder/pieces.lua` · VM : Game Engine (GE) · 564 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/trackBuilder/pieces.lua` · VM: Game Engine (GE) · 564 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_trackBuilder_pieces` : `extensions.load("util_trackBuilder_pieces")`, puis la globale `util_trackBuilder_pieces`
+**Access:** extension `util_trackBuilder_pieces`: `extensions.load("util_trackBuilder_pieces")`, then the global `util_trackBuilder_pieces`
 
-Catalogue géométrique des « pièces » du Track Builder (hex, square, free). Chaque fonction reçoit les paramètres d'une pièce et renvoie, à partir de la pièce précédente (la 'tipPiece' mémorisée par toSegment), une table décrivant la nouvelle extrémité : position, origin, hdg (cap en radians), polyMult (densité de points) et pointsType ('bezier', 'arc' ou 'custom'), avec points de contrôle (controlPointA/B), rayon/angle ou points personnalisés. toSegment est le point d'entrée : il choisit la fonction selon piece.piece (init, hexForward, hexCurve, freeBezier, hexLoop, etc.).
+Geometric catalog of the Track Builder "pieces" (hex, square, free). Each function receives a piece's parameters and returns, from the previous piece (the 'tipPiece' stored by toSegment), a table describing the new end: position, origin, hdg (heading in radians), polyMult (point density) and pointsType ('bezier', 'arc' or 'custom'), with control points (controlPointA/B), radius/angle or custom points. toSegment is the entry point: it chooses the function according to piece.piece (init, hexForward, hexCurve, freeBezier, hexLoop, etc.).
 
-## Exemple
+## Example
 
 ```lua
 local seg = util_trackBuilder_pieces.toSegment({piece = 'hexCurve', length = 4, direction = 1, hardness = 0}, tip)
 ```
 
-## Remarques
+## Notes
 
-- Le cap hdg est en radians ; getHdgVector(hdg) = (sin hdg, cos hdg, 0) : le cap 0 pointe vers +Y.
-- Échelle hex : décalage latéral multiplié par sqrt(3)/2 ; les courbes hex utilisent radiusMult = sqrt(3), square 1. Les angles hex sont des pas de pi/3, square de pi/2, free en degrés (convertis).
-- toSegment mémorise tip dans une variable locale (tipPiece) utilisée par toutes les autres fonctions : elles ne sont utilisables qu'après un appel de toSegment (sauf si la tipPiece a été définie par un appel précédent).
-- Bug probable : customBezier appelle toujours M.splineTrack.getTrackPosition(), même sans absolute, mais M.splineTrack est nil dans ce fichier (le champ doit être renseigné de l'extérieur par splineTrack) ; emptyOffset avec absolute l'utilise aussi.
-- Bug : freeSpiral laisse forwardCPLength et backwardCPLength à nil si angle > 75° (pi*75/180), ce qui provoque une erreur arithmétique.
-- fresnelSC référence une variable globale 'subs' non définie (nil, sans effet).
-- emptyOffset avec absolute modifie tipPiece.position et tipPiece.hdg (effet de bord).
+- The heading hdg is in radians; getHdgVector(hdg) = (sin hdg, cos hdg, 0): heading 0 points toward +Y.
+- Hex scale: lateral offset multiplied by sqrt(3)/2; hex curves use radiusMult = sqrt(3), square 1. Hex angles are steps of pi/3, square pi/2, free in degrees (converted).
+- toSegment stores tip in a local variable (tipPiece) used by all the other functions: they are usable only after a call to toSegment (unless tipPiece was set by a previous call).
+- Probable bug: customBezier always calls M.splineTrack.getTrackPosition(), even without absolute, but M.splineTrack is nil in this file (the field must be set from outside by splineTrack); emptyOffset with absolute uses it too.
+- Bug: freeSpiral leaves forwardCPLength and backwardCPLength as nil if angle > 75° (pi*75/180), which causes an arithmetic error.
+- fresnelSC references an undefined global variable 'subs' (nil, no effect).
+- emptyOffset with absolute modifies tipPiece.position and tipPiece.hdg (side effect).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_trackBuilder_pieces.bezierCurve(radius, angle, direction, hardness, radiusMult)` | Courbe de Bézier approchant un arc (constante 0,5523) ; hardness change la longueur des tangentes (négatif : réduit, positif : augmente). | 118 |
-| `util_trackBuilder_pieces.curve(radius, angle, direction, hardness, radiusMult)` | Virage de rayon et d'angle donnés. Si hardness est non nul, passe par bezierCurve ; sinon renvoie un arc ('arc') avec radius, angle et direction. | 142 |
-| `util_trackBuilder_pieces.customBezier(xOff, yOff, dirOff, forwardLen, backwardLen, isHex, absolute, empty)` | Bézier libre : décalage (xOff, yOff), changement de cap dirOff et longueurs des tangentes avant/arrière. En mode absolute, le décalage est calculé depuis la position courante du curseur de piste (splineTrack.getTrackPosition()). Renvoie aussi des positions/caps locaux et globaux. | 193 |
-| `util_trackBuilder_pieces.emptyOffset(xOff, yOff, zOff, dirOff, absolute, isHex)` | Déplace le curseur de piste sans générer de géométrie (noPoints). Peut aussi changer le cap (dirOff en pas de pi/3 en hex, pi/2 sinon) et la hauteur (zOff). | 510 |
-| `util_trackBuilder_pieces.forward(length)` | Ligne droite de la longueur donnée dans la direction de la tipPiece (points de contrôle à 25 % de la longueur). | 101 |
-| `util_trackBuilder_pieces.freeSpiral(size, inside, dir, angle)` | Spirale à angle libre ; les longueurs de tangentes sont choisies par tranches de 15° jusqu'à 75°. | 314 |
-| `util_trackBuilder_pieces.fresnelSC(d)` | Fonction auxiliaire pour les loopings : intègre numériquement la spirale d'Euler (clothoïde, intégrales de Fresnel cos/sin(t²·pi/2)) de 0 à d. | 375 |
-| `util_trackBuilder_pieces.getHdgVector(hdg)` | Renvoie le vecteur unitaire horizontal du cap : (sin hdg, cos hdg, 0). | 87 |
-| `util_trackBuilder_pieces.hexSpiral(size, inside, dir)` | Spirale hexagonale (virage de 60°) vers l'intérieur ou l'extérieur, décrite par une Bézier. | 249 |
-| `util_trackBuilder_pieces.initialTrackPiece(p)` | Pièce initiale : position (0,0,0) et cap 0 par défaut, sans points. | 91 |
-| `util_trackBuilder_pieces.loop(xOffset, radius, isHex)` | Looping vertical construit avec une clothoïde, avec décalage latéral xOffset réparti en pente douce ; renvoie jusqu'à 300 points personnalisés (position, rot). | 403 |
-| `util_trackBuilder_pieces.offsetCurve(length, xOffset, hardness, isHex)` | Courbe en S de longueur donnée décalée latéralement de xOffset ; en hex, ajoute 0,5 à la longueur si xOffset est impair pour rester sur la grille triangulaire. | 165 |
-| `util_trackBuilder_pieces.rotateVectorByQuat(v, q)` | Fonction auxiliaire : renvoie q * v. | 539 |
-| `util_trackBuilder_pieces.squareSpiral(size, inside, dir)` | Spirale carrée (virage de 90°), même principe que hexSpiral. | 282 |
-| `util_trackBuilder_pieces.toSegment(piece, tip)` | Convertit la description d'une pièce en table de segment. Mémorise tip comme pièce précédente puis délègue à initialTrackPiece, forward, curve, offsetCurve, customBezier, hexSpiral, squareSpiral, freeSpiral, loop ou emptyOffset selon piece.piece. Renvoie nil si le type est inconnu. | 12 |
+| `util_trackBuilder_pieces.bezierCurve(radius, angle, direction, hardness, radiusMult)` | Bézier curve approximating an arc (constant 0.5523); hardness changes the length of the tangents (negative: reduces, positive: increases). | 118 |
+| `util_trackBuilder_pieces.curve(radius, angle, direction, hardness, radiusMult)` | Turn of given radius and angle. If hardness is non-zero, goes through bezierCurve; otherwise returns an arc ('arc') with radius, angle and direction. | 142 |
+| `util_trackBuilder_pieces.customBezier(xOff, yOff, dirOff, forwardLen, backwardLen, isHex, absolute, empty)` | Free Bézier: offset (xOff, yOff), heading change dirOff and forward/backward tangent lengths. In absolute mode, the offset is computed from the current position of the track cursor (splineTrack.getTrackPosition()). Also returns local and global positions/headings. | 193 |
+| `util_trackBuilder_pieces.emptyOffset(xOff, yOff, zOff, dirOff, absolute, isHex)` | Moves the track cursor without generating geometry (noPoints). Can also change the heading (dirOff in steps of pi/3 in hex, pi/2 otherwise) and the height (zOff). | 510 |
+| `util_trackBuilder_pieces.forward(length)` | Straight line of the given length in the direction of the tipPiece (control points at 25% of the length). | 101 |
+| `util_trackBuilder_pieces.freeSpiral(size, inside, dir, angle)` | Free-angle spiral; the tangent lengths are chosen in 15° increments up to 75°. | 314 |
+| `util_trackBuilder_pieces.fresnelSC(d)` | Helper function for loops: numerically integrates the Euler spiral (clothoid, Fresnel integrals cos/sin(t²·pi/2)) from 0 to d. | 375 |
+| `util_trackBuilder_pieces.getHdgVector(hdg)` | Returns the horizontal unit vector of the heading: (sin hdg, cos hdg, 0). | 87 |
+| `util_trackBuilder_pieces.hexSpiral(size, inside, dir)` | Hexagonal spiral (60° turn) inward or outward, described by a Bézier. | 249 |
+| `util_trackBuilder_pieces.initialTrackPiece(p)` | Initial piece: position (0,0,0) and heading 0 by default, with no points. | 91 |
+| `util_trackBuilder_pieces.loop(xOffset, radius, isHex)` | Vertical loop built with a clothoid, with lateral offset xOffset spread out as a gentle slope; returns up to 300 custom points (position, rot). | 403 |
+| `util_trackBuilder_pieces.offsetCurve(length, xOffset, hardness, isHex)` | S-curve of given length offset laterally by xOffset; in hex, adds 0.5 to the length if xOffset is odd to stay on the triangular grid. | 165 |
+| `util_trackBuilder_pieces.rotateVectorByQuat(v, q)` | Helper function: returns q * v. | 539 |
+| `util_trackBuilder_pieces.squareSpiral(size, inside, dir)` | Square spiral (90° turn), same principle as hexSpiral. | 282 |
+| `util_trackBuilder_pieces.toSegment(piece, tip)` | Converts the piece description into a segment table. Stores tip as the previous piece then delegates to initialTrackPiece, forward, curve, offsetCurve, customBezier, hexSpiral, squareSpiral, freeSpiral, loop or emptyOffset according to piece.piece. Returns nil if the type is unknown. | 12 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_trackBuilder_pieces.bezierCurve(radius, angle, direction, hardness, radiusMult)`
 
-Courbe de Bézier approchant un arc (constante 0,5523) ; hardness change la longueur des tangentes (négatif : réduit, positif : augmente).
+Bézier curve approximating an arc (constant 0.5523); hardness changes the length of the tangents (negative: reduces, positive: increases).
 
-- `radius` (*number*) : Rayon de base.
-- `angle` (*number*) : Angle de virage (rad).
-- `direction` (*number*) : Sens du virage : 1 ou -1.
-- `hardness` (*number*) : Dureté de la courbe.
-- `radiusMult` (*number*) : Multiplicateur du rayon (sqrt(3) en hex, 1 sinon).
-- **renvoie** : table Pièce de type 'bezier'.
+- `radius` (*number*) : Base radius.
+- `angle` (*number*) : Turn angle (rad).
+- `direction` (*number*) : Turn direction: 1 or -1.
+- `hardness` (*number*) : Curve hardness.
+- `radiusMult` (*number*) : Radius multiplier (sqrt(3) in hex, 1 otherwise).
+- **returns**: table Piece of type 'bezier'.
 
 #### `util_trackBuilder_pieces.curve(radius, angle, direction, hardness, radiusMult)`
 
-Virage de rayon et d'angle donnés. Si hardness est non nul, passe par bezierCurve ; sinon renvoie un arc ('arc') avec radius, angle et direction.
+Turn of given radius and angle. If hardness is non-zero, goes through bezierCurve; otherwise returns an arc ('arc') with radius, angle and direction.
 
-- `radius` (*number*) : Rayon.
+- `radius` (*number*) : Radius.
 - `angle` (*number*) : Angle (rad).
-- `direction` (*number*) : 1 ou -1 (gauche/droite).
-- `hardness` (*number|nil*) : Dureté ; 0 ou nil pour un arc pur.
-- `radiusMult` (*number*) : Multiplicateur du rayon.
-- **renvoie** : table Pièce de type 'arc' ou 'bezier'.
+- `direction` (*number*) : 1 or -1 (left/right).
+- `hardness` (*number|nil*) : Hardness; 0 or nil for a pure arc.
+- `radiusMult` (*number*) : Radius multiplier.
+- **returns**: table Piece of type 'arc' or 'bezier'.
 
 #### `util_trackBuilder_pieces.customBezier(xOff, yOff, dirOff, forwardLen, backwardLen, isHex, absolute, empty)`
 
-Bézier libre : décalage (xOff, yOff), changement de cap dirOff et longueurs des tangentes avant/arrière. En mode absolute, le décalage est calculé depuis la position courante du curseur de piste (splineTrack.getTrackPosition()). Renvoie aussi des positions/caps locaux et globaux.
+Free Bézier: offset (xOff, yOff), heading change dirOff and forward/backward tangent lengths. In absolute mode, the offset is computed from the current position of the track cursor (splineTrack.getTrackPosition()). Also returns local and global positions/headings.
 
-- `xOff` (*number*) : Décalage latéral.
-- `yOff` (*number*) : Décalage vers l'avant.
-- `dirOff` (*number*) : Changement de cap (rad).
-- `forwardLen` (*number*) : Longueur de la tangente de départ.
-- `backwardLen` (*number*) : Longueur de la tangente d'arrivée.
-- `isHex` (*boolean*) : Grille hexagonale.
-- `absolute` (*boolean|nil*) : Position relative au curseur de piste plutôt qu'à la dernière pièce.
-- `empty` (*boolean|nil*) : Si vrai, aucune géométrie générée (noPoints).
-- **renvoie** : table Pièce de type 'bezier' (avec globalPosition, localPosition, globalHdg, localHdg).
+- `xOff` (*number*) : Lateral offset.
+- `yOff` (*number*) : Forward offset.
+- `dirOff` (*number*) : Heading change (rad).
+- `forwardLen` (*number*) : Length of the start tangent.
+- `backwardLen` (*number*) : Length of the end tangent.
+- `isHex` (*boolean*) : Hexagonal grid.
+- `absolute` (*boolean|nil*) : Position relative to the track cursor rather than to the last piece.
+- `empty` (*boolean|nil*) : If true, no geometry is generated (noPoints).
+- **returns**: table Piece of type 'bezier' (with globalPosition, localPosition, globalHdg, localHdg).
 
 #### `util_trackBuilder_pieces.emptyOffset(xOff, yOff, zOff, dirOff, absolute, isHex)`
 
-Déplace le curseur de piste sans générer de géométrie (noPoints). Peut aussi changer le cap (dirOff en pas de pi/3 en hex, pi/2 sinon) et la hauteur (zOff).
+Moves the track cursor without generating geometry (noPoints). Can also change the heading (dirOff in steps of pi/3 in hex, pi/2 otherwise) and the height (zOff).
 
-- `xOff` (*number*) : Décalage latéral.
-- `yOff` (*number*) : Décalage vers l'avant.
-- `zOff` (*number*) : Décalage vertical.
-- `dirOff` (*number*) : Nombre de pas de rotation.
-- `absolute` (*boolean|nil*) : Part de la position du curseur de piste.
-- `isHex` (*boolean*) : Grille hexagonale.
-- **renvoie** : table Pièce vide.
+- `xOff` (*number*) : Lateral offset.
+- `yOff` (*number*) : Forward offset.
+- `zOff` (*number*) : Vertical offset.
+- `dirOff` (*number*) : Number of rotation steps.
+- `absolute` (*boolean|nil*) : Starts from the position of the track cursor.
+- `isHex` (*boolean*) : Hexagonal grid.
+- **returns**: table Empty piece.
 
 #### `util_trackBuilder_pieces.forward(length)`
 
-Ligne droite de la longueur donnée dans la direction de la tipPiece (points de contrôle à 25 % de la longueur).
+Straight line of the given length in the direction of the tipPiece (control points at 25% of the length).
 
-- `length` (*number*) : Longueur en mètres.
-- **renvoie** : table Pièce de type 'bezier'.
+- `length` (*number*) : Length in meters.
+- **returns**: table Piece of type 'bezier'.
 
 #### `util_trackBuilder_pieces.freeSpiral(size, inside, dir, angle)`
 
-Spirale à angle libre ; les longueurs de tangentes sont choisies par tranches de 15° jusqu'à 75°.
+Free-angle spiral; the tangent lengths are chosen in 15° increments up to 75°.
 
-- `size` (*number*) : Taille.
-- `inside` (*boolean*) : Spirale vers l'intérieur.
-- `dir` (*number*) : Sens : 1 ou -1.
-- `angle` (*number*) : Angle en radians (au plus 75° = 1,309 rad, sinon erreur).
-- **renvoie** : table Pièce de type 'bezier'.
+- `size` (*number*) : Size.
+- `inside` (*boolean*) : Inward spiral.
+- `dir` (*number*) : Direction: 1 or -1.
+- `angle` (*number*) : Angle in radians (at most 75° = 1.309 rad, otherwise error).
+- **returns**: table Piece of type 'bezier'.
 
 #### `util_trackBuilder_pieces.fresnelSC(d)`
 
-Fonction auxiliaire pour les loopings : intègre numériquement la spirale d'Euler (clothoïde, intégrales de Fresnel cos/sin(t²·pi/2)) de 0 à d.
+Helper function for loops: numerically integrates the Euler spiral (clothoid, Fresnel integrals cos/sin(t²·pi/2)) from 0 to d.
 
-- `d` (*number*) : Borne supérieure d'intégration.
-- **renvoie** : table {x, y} du point de la clothoïde.
+- `d` (*number*) : Upper integration bound.
+- **returns**: table {x, y} of the clothoid point.
 
 #### `util_trackBuilder_pieces.getHdgVector(hdg)`
 
-Renvoie le vecteur unitaire horizontal du cap : (sin hdg, cos hdg, 0).
+Returns the horizontal unit vector of the heading: (sin hdg, cos hdg, 0).
 
-- `hdg` (*number*) : Cap en radians.
-- **renvoie** : vec3 Direction.
+- `hdg` (*number*) : Heading in radians.
+- **returns**: vec3 Direction.
 
 #### `util_trackBuilder_pieces.hexSpiral(size, inside, dir)`
 
-Spirale hexagonale (virage de 60°) vers l'intérieur ou l'extérieur, décrite par une Bézier.
+Hexagonal spiral (60° turn) inward or outward, described by a Bézier.
 
-- `size` (*number*) : Taille de la spirale.
-- `inside` (*boolean*) : Spirale vers l'intérieur.
-- `dir` (*number*) : Sens : 1 ou -1.
-- **renvoie** : table Pièce de type 'bezier'.
+- `size` (*number*) : Spiral size.
+- `inside` (*boolean*) : Inward spiral.
+- `dir` (*number*) : Direction: 1 or -1.
+- **returns**: table Piece of type 'bezier'.
 
 #### `util_trackBuilder_pieces.initialTrackPiece(p)`
 
-Pièce initiale : position (0,0,0) et cap 0 par défaut, sans points.
+Initial piece: position (0,0,0) and heading 0 by default, with no points.
 
-- `p` (*table|nil*) : Table facultative avec position (vec3) et hdg (rad).
-- **renvoie** : table Pièce avec noPoints = true.
+- `p` (*table|nil*) : Optional table with position (vec3) and hdg (rad).
+- **returns**: table Piece with noPoints = true.
 
 #### `util_trackBuilder_pieces.loop(xOffset, radius, isHex)`
 
-Looping vertical construit avec une clothoïde, avec décalage latéral xOffset réparti en pente douce ; renvoie jusqu'à 300 points personnalisés (position, rot).
+Vertical loop built with a clothoid, with lateral offset xOffset spread out as a gentle slope; returns up to 300 custom points (position, rot).
 
-- `xOffset` (*number*) : Décalage latéral entre l'entrée et la sortie.
-- `radius` (*number*) : Rayon (minimum 1).
-- `isHex` (*boolean*) : Grille hexagonale (décalage × sqrt(3)).
-- **renvoie** : table Pièce de type 'custom' avec customPoints.
+- `xOffset` (*number*) : Lateral offset between entry and exit.
+- `radius` (*number*) : Radius (minimum 1).
+- `isHex` (*boolean*) : Hexagonal grid (offset × sqrt(3)).
+- **returns**: table Piece of type 'custom' with customPoints.
 
 #### `util_trackBuilder_pieces.offsetCurve(length, xOffset, hardness, isHex)`
 
-Courbe en S de longueur donnée décalée latéralement de xOffset ; en hex, ajoute 0,5 à la longueur si xOffset est impair pour rester sur la grille triangulaire.
+S-curve of given length offset laterally by xOffset; in hex, adds 0.5 to the length if xOffset is odd to stay on the triangular grid.
 
-- `length` (*number*) : Longueur vers l'avant.
-- `xOffset` (*number*) : Décalage latéral (positif vers la droite du cap).
-- `hardness` (*number|nil*) : Dureté (0 par défaut).
-- `isHex` (*boolean*) : Grille hexagonale.
-- **renvoie** : table Pièce de type 'bezier'.
+- `length` (*number*) : Forward length.
+- `xOffset` (*number*) : Lateral offset (positive toward the right of the heading).
+- `hardness` (*number|nil*) : Hardness (0 by default).
+- `isHex` (*boolean*) : Hexagonal grid.
+- **returns**: table Piece of type 'bezier'.
 
 #### `util_trackBuilder_pieces.rotateVectorByQuat(v, q)`
 
-Fonction auxiliaire : renvoie q * v.
+Helper function: returns q * v.
 
-- `v` (*vec3*) : Vecteur.
+- `v` (*vec3*) : Vector.
 - `q` (*quat*) : Rotation.
-- **renvoie** : vec3 Vecteur tourné.
+- **returns**: vec3 Rotated vector.
 
 #### `util_trackBuilder_pieces.squareSpiral(size, inside, dir)`
 
-Spirale carrée (virage de 90°), même principe que hexSpiral.
+Square spiral (90° turn), same principle as hexSpiral.
 
-- `size` (*number*) : Taille.
-- `inside` (*boolean*) : Spirale vers l'intérieur.
-- `dir` (*number*) : Sens : 1 ou -1.
-- **renvoie** : table Pièce de type 'bezier'.
+- `size` (*number*) : Size.
+- `inside` (*boolean*) : Inward spiral.
+- `dir` (*number*) : Direction: 1 or -1.
+- **returns**: table Piece of type 'bezier'.
 
 #### `util_trackBuilder_pieces.toSegment(piece, tip)`
 
-Convertit la description d'une pièce en table de segment. Mémorise tip comme pièce précédente puis délègue à initialTrackPiece, forward, curve, offsetCurve, customBezier, hexSpiral, squareSpiral, freeSpiral, loop ou emptyOffset selon piece.piece. Renvoie nil si le type est inconnu.
+Converts the piece description into a segment table. Stores tip as the previous piece then delegates to initialTrackPiece, forward, curve, offsetCurve, customBezier, hexSpiral, squareSpiral, freeSpiral, loop or emptyOffset according to piece.piece. Returns nil if the type is unknown.
 
-- `piece` (*table*) : Description de la pièce (champ piece = nom du type, plus length, direction, hardness, radius, xOffset, xOff, yOff, zOff, dirOff, size, inside, angle, absolute, empty… selon le type).
-- `tip` (*table*) : Pièce précédente (position, hdg).
-- **renvoie** : table|nil Table de segment.
+- `piece` (*table*) : Piece description (field piece = type name, plus length, direction, hardness, radius, xOffset, xOff, yOff, zOff, dirOff, size, inside, angle, absolute, empty… depending on the type).
+- `tip` (*table*) : Previous piece (position, hdg).
+- **returns**: table|nil Segment table.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `splineTrack` | table|nil | Référence vers le module splineTrack, nil dans ce fichier ; doit fournir getTrackPosition() pour les pièces à positionnement absolu. |
+| `splineTrack` | table|nil | Reference to the splineTrack module, nil in this file; must provide getTrackPosition() for absolute-positioned pieces. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/trackBuilder/pieces.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/trackBuilder/pieces.lua`.*

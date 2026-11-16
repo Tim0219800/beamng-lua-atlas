@@ -1,246 +1,246 @@
 {
   "path": "lua/ge/extensions/ui/router/runtimeRouteRegistry.test.lua",
-  "module": "Tests unitaires du registre de routes d'exécution (analyse des routes Vue brutes, validation transactionnelle, précédence des sources, diffs ajouté/retiré/modifié, isolation des instances). Lancement : extensions.testFramework_TestManager:runTestFiles(\"runtimeRouteRegistry\"). Utile comme exemples du format de routes accepté par registerModRoutes.",
+  "module": "Unit tests of the runtime route registry (parsing of raw Vue routes, transactional validation, source precedence, added/removed/changed diffs, instance isolation). Run with: extensions.testFramework_TestManager:runTestFiles(\"runtimeRouteRegistry\"). Useful as examples of the route format accepted by registerModRoutes.",
   "notes": [
-    "Les fonctions testXxx(ctx) sont exécutées par testFramework_TestManager ; le jeu ne les appelle pas en usage normal."
+    "The testXxx(ctx) functions are run by testFramework_TestManager; the game does not call them in normal use."
   ],
   "functions": {
     "testParsesSingleNamedRouteWithVueDefaults": {
-      "desc": "Une route nommée reçoit les valeurs par défaut Vue (runtime, ui.uiTypes = vue, filtre only).",
+      "desc": "A named route gets the Vue defaults (runtime, ui.uiTypes = vue, filter only).",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testUnnamedGroupEmitsChildrenButNotItself": {
-      "desc": "Un nœud sans nom ne produit pas de route mais ses enfants oui.",
+      "desc": "A node without a name produces no route but its children do.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testParsesDeeplyNestedChildren": {
-      "desc": "Les enfants imbriqués sur plusieurs niveaux sont tous analysés.",
+      "desc": "Children nested over several levels are all parsed.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testArrayRouteNamesShareDefinition": {
-      "desc": "Un `name` en tableau crée plusieurs routes partageant la même définition.",
+      "desc": "An array `name` creates several routes sharing the same definition.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testMapsUiFieldsFromMeta": {
-      "desc": "Les champs meta (uiTypes, infoBar, topBar, uiApps, triggerPause, uiNav…) sont reportés dans `ui`.",
+      "desc": "The meta fields (uiTypes, infoBar, topBar, uiApps, triggerPause, uiNav...) are carried over into `ui`.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testAppliesAllowlistedLuaRouteOverrides": {
-      "desc": "meta.luaRoute applique uniquement les clés autorisées.",
+      "desc": "meta.luaRoute applies only the allowed keys.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testRejectsInvalidLifecycleHook": {
-      "desc": "Un hook de cycle de vie qui n'est pas « module.func » est rejeté.",
+      "desc": "A lifecycle hook that is not \"module.func\" is rejected.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testRejectsFunctionLifecycleHook": {
-      "desc": "Un hook donné comme fonction (et non chaîne) est rejeté.",
+      "desc": "A hook given as a function (not a string) is rejected.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testRejectsBackTargetAndFallbackTargetTogether": {
-      "desc": "backTarget et fallbackTarget simultanés sont rejetés.",
+      "desc": "Simultaneous backTarget and fallbackTarget are rejected.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testRejectsDuplicateRouteNameWithinSource": {
-      "desc": "Un nom de route en double dans une source est rejeté.",
+      "desc": "A duplicate route name within a source is rejected.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testRejectsInvalidNameShape": {
-      "desc": "Un `name` de type invalide (ni chaîne ni tableau de chaînes) est rejeté.",
+      "desc": "A `name` of invalid type (neither string nor array of strings) is rejected.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testFailedReRegistrationKeepsPreviousSnapshot": {
-      "desc": "Une ré-inscription invalide laisse l'instantané précédent intact (transactionnel).",
+      "desc": "An invalid re-registration leaves the previous snapshot intact (transactional).",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testNewestSourceWinsWithoutComposition": {
-      "desc": "La source la plus récente gagne pour un même nom, sans fusion.",
+      "desc": "The most recent source wins for the same name, with no merging.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testReRegistrationRetainsOriginalPrecedence": {
-      "desc": "Ré-enregistrer une source conserve son rang de priorité.",
+      "desc": "Re-registering a source keeps its priority rank.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testUnregisterThenRegisterCreatesNewPrecedence": {
-      "desc": "Retirer puis ré-enregistrer une source lui donne le rang le plus récent.",
+      "desc": "Unregistering then re-registering a source gives it the most recent rank.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testUnregisterRestoresPreviousWinner": {
-      "desc": "Retirer la source gagnante restaure la définition de la source précédente.",
+      "desc": "Unregistering the winning source restores the definition of the previous source.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testSourceOrderTracksFirstRegistration": {
-      "desc": "getSourceOrder suit l'ordre de première inscription.",
+      "desc": "getSourceOrder follows the order of first registration.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testReRegistrationRemovesStaleNames": {
-      "desc": "Ré-enregistrer une source retire les noms qui ne figurent plus dans la nouvelle liste.",
+      "desc": "Re-registering a source removes the names that are no longer in the new list.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testRegisterReportsAddedAndChangedDiffs": {
-      "desc": "register renvoie les listes added et changed correctes.",
+      "desc": "register returns the correct added and changed lists.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testUnregisterReportsRemovedDiff": {
-      "desc": "unregister renvoie la liste removed correcte.",
+      "desc": "unregister returns the correct removed list.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testUnregisterMissingSourceIsNoop": {
-      "desc": "Retirer une source inconnue réussit sans effet (existed = false).",
+      "desc": "Unregistering an unknown source succeeds with no effect (existed = false).",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testEffectiveRoutesAreDeepCopied": {
-      "desc": "getEffectiveRoutes renvoie des copies profondes : les modifier n'affecte pas le registre.",
+      "desc": "getEffectiveRoutes returns deep copies: modifying them does not affect the registry.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testSeparateRegistriesDoNotShareState": {
-      "desc": "Deux instances de registre sont indépendantes.",
+      "desc": "Two registry instances are independent.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testInvalidSourceIdRejected": {
-      "desc": "Un sourceId vide ou non-chaîne est rejeté.",
+      "desc": "An empty or non-string sourceId is rejected.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true

@@ -1,19 +1,37 @@
 {
   "path": "lua/common/jsonDebug.lua",
-  "module": "Variante de ljson (parseur SJSON en Lua pur) qui, en plus de décoder, renvoie une liste d'avertissements, notamment les clés dupliquées avec numéro de ligne. Sert à valider des fichiers de données (jbeam, config) pendant le développement ; une extension peut passer un nom de contexte pour étiqueter ces avertissements.",
-  "usage": "local data, warnings = require('jsonDebug').decode(text, 'monFichier.jbeam')\nfor _, w in ipairs(warnings) do log('W', 'x', w) end",
+  "module": "Variant of ljson (pure-Lua SJSON parser) that, in addition to decoding, returns a list of warnings, notably duplicate keys with line number. Used to validate data files (jbeam, config) during development; an extension can pass a context name to label these warnings.",
+  "usage": "local data, warnings = require('jsonDebug').decode(text, 'myFile.jbeam')\nfor _, w in ipairs(warnings) do log('W', 'x', w) end",
   "notes": [
-    "Même syntaxe acceptée que ljson (SJSON : commentaires, virgules facultatives, clés sans guillemets, ':' ou '=', dictionnaire racine sans accolades, Infinity) ; voir ljson.json.",
-    "Les avertissements sont de la forme \"<context>: Duplicate key found: 'clé' near line N, '<ligne>'\". La clé dupliquée écrase la valeur précédente.",
-    "decode(nil) renvoie nil et la liste d'avertissements (vide). Une erreur de syntaxe lève error() comme dans ljson.",
-    "Le module remplace table.clear par une fonction qui ne vide pas la table si l'extension LuaJIT est absente (cas qui ne se produit pas en jeu normal)."
+    "Same accepted syntax as ljson (SJSON: comments, optional commas, unquoted keys, ':' or '=', root dictionary without braces, Infinity); see ljson.json.",
+    "Warnings have the form \"<context>: Duplicate key found: 'key' near line N, '<line>'\". The duplicate key overwrites the previous value.",
+    "decode(nil) returns nil and the (empty) warnings list. A syntax error raises error() as in ljson.",
+    "The module replaces table.clear with a function that does not empty the table if the LuaJIT extension is absent (a case that does not occur in normal gameplay)."
   ],
   "fields": {},
   "functions": {
     "decode": {
-      "desc": "Décode du SJSON et renvoie la valeur avec la liste des avertissements (clés dupliquées).",
-      "params": {"si": {"type": "string|nil", "desc": "texte SJSON"}, "context": {"type": "string|nil", "desc": "étiquette (par ex. nom de fichier) préfixée aux avertissements"}},
-      "returns": [{"type": "table|nil", "desc": "valeur décodée"}, {"type": "string[]", "desc": "avertissements"}],
+      "desc": "Decodes SJSON and returns the value with the list of warnings (duplicate keys).",
+      "params": {
+        "si": {
+          "type": "string|nil",
+          "desc": "SJSON text"
+        },
+        "context": {
+          "type": "string|nil",
+          "desc": "label (e.g. file name) prefixed to the warnings"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "decoded value"
+        },
+        {
+          "type": "string[]",
+          "desc": "warnings"
+        }
+      ],
       "internal": false
     }
   }

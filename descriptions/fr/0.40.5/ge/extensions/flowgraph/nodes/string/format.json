@@ -1,0 +1,79 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/string/format.lua",
+  "module": "Noeud « Format String » (repeat_instant). Applique string.format(data.pattern, valeurs...) avec jusqu'à 16 valeurs (pins d'entrée dynamiques value_1..value_N, N réglé par « Count » dans l'éditeur). Sortie : value (string). Pattern par défaut « %d ».",
+  "notes": [
+    "Maximum 16 valeurs : au-delà de 16, work ne produit rien.",
+    "Une valeur nil ou d'un type incompatible avec le format (ex. %d avec une chaîne) fait échouer string.format."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "data.pattern = '%d' et count = 1.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Crée les pins value_i initiaux.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Champ « Count » (min 1) qui ajoute/retire des pins.",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Crée ou supprime les pins value_i (et les liens associés) pour passer de old à new valeurs.",
+          "params": {
+            "old": {
+              "type": "any",
+              "desc": "nombre actuel"
+            },
+            "new": {
+              "type": "any",
+              "desc": "nouveau nombre"
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde l'état du noeud dans la table donnée.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure count et recrée les pins.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "données sauvegardées"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Formate le pattern avec les valeurs value_1..value_count.",
+          "internal": false
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

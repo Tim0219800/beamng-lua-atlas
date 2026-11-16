@@ -1,44 +1,44 @@
 # `util_rectangleGen`
 
-*Fichier : `lua/ge/extensions/util/rectangleGen.lua` · VM : Game Engine (GE) · 204 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/rectangleGen.lua` · VM: Game Engine (GE) · 204 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_rectangleGen` : `extensions.load("util_rectangleGen")`, puis la globale `util_rectangleGen`
+**Access:** extension `util_rectangleGen`: `extensions.load("util_rectangleGen")`, then the global `util_rectangleGen`
 
-Générateur de graphe par découpage de rectangles, utilisé pour la génération procédurale de circuits (voir procTrack). À partir de rectangles de départ, il coupe successivement le plus grand rectangle découpable (verticalement ou horizontalement) jusqu'à obtenir le nombre de zones voulu, puis calcule les voisinages entre rectangles adjacents. Chaque rectangle devient un nœud (son centre arrondi) du graphe retourné.
+Graph generator by rectangle splitting, used for procedural circuit generation (see procTrack). From starting rectangles, it successively cuts the largest splittable rectangle (vertically or horizontally) until the desired number of zones is reached, then computes the neighborhoods between adjacent rectangles. Each rectangle becomes a node (its rounded center) of the returned graph.
 
-## Remarques
+## Notes
 
-- Les paramètres lus : params.startingRects (x, y, width, height, force, noSplit, start, finish), params.rectModeParams (numNodes, minXDist, minYDist, vertSplitFunction(width, height), cutValueFunction()) et params.path.closed.
-- Les rectangles marqués noSplit ne sont jamais découpés et sont ajoutés après la phase de découpe ; start et finish ne sont conservés que pour eux (graph.start / graph.finish).
-- La découpe s'arrête quand plus aucun rectangle ne peut être coupé : le nombre de nœuds peut alors être inférieur à numNodes.
-- Les coordonnées des nœuds sont arrondies à l'entier inférieur (x - x%1).
-- Le test « un rectangle sans voisin » est présent mais son action (return graph) est commentée : aucun contrôle de validité n'est effectué.
+- Parameters read: params.startingRects (x, y, width, height, force, noSplit, start, finish), params.rectModeParams (numNodes, minXDist, minYDist, vertSplitFunction(width, height), cutValueFunction()) and params.path.closed.
+- Rectangles marked noSplit are never split and are added after the splitting phase; start and finish are kept only for them (graph.start / graph.finish).
+- Splitting stops when no rectangle can be cut any more: the number of nodes can then be lower than numNodes.
+- Node coordinates are rounded down to the integer (x - x%1).
+- The "rectangle with no neighbor" test is present but its action (return graph) is commented out: no validity check is performed.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_rectangleGen.dist(a, b, x, y)` | Distance euclidienne 2D entre les points (a, b) et (x, y). | 196 |
-| `util_rectangleGen.getGraph(params)` | Découpe récursivement les rectangles de départ, calcule les voisins (rectangles adjacents partageant un bord) et construit le graphe de nœuds. | 8 |
+| `util_rectangleGen.dist(a, b, x, y)` | 2D Euclidean distance between points (a, b) and (x, y). | 196 |
+| `util_rectangleGen.getGraph(params)` | Recursively splits the starting rectangles, computes the neighbors (adjacent rectangles sharing an edge) and builds the node graph. | 8 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_rectangleGen.dist(a, b, x, y)`
 
-Distance euclidienne 2D entre les points (a, b) et (x, y).
+2D Euclidean distance between points (a, b) and (x, y).
 
-- `a` (*number*) : X du premier point
-- `b` (*number*) : Y du premier point
-- `x` (*number*) : X du second point
-- `y` (*number*) : Y du second point
-- **renvoie** : number Distance
+- `a` (*number*) : X of the first point
+- `b` (*number*) : Y of the first point
+- `x` (*number*) : X of the second point
+- `y` (*number*) : Y of the second point
+- **returns**: number Distance
 
 #### `util_rectangleGen.getGraph(params)`
 
-Découpe récursivement les rectangles de départ, calcule les voisins (rectangles adjacents partageant un bord) et construit le graphe de nœuds.
+Recursively splits the starting rectangles, computes the neighbors (adjacent rectangles sharing an edge) and builds the node graph.
 
-- `params` (*table*) : Paramètres : startingRects, rectModeParams, path (voir notes)
-- **renvoie** : table {nodes = liste de {x, y, neighbours = liste de {index, dist}, name = 'rect_<i>', force, closestNeighbourDist}, start = nœud ou nil, finish = nœud ou nil}
+- `params` (*table*) : Parameters: startingRects, rectModeParams, path (see notes)
+- **returns**: table {nodes = list of {x, y, neighbours = list of {index, dist}, name = 'rect_<i>', force, closestNeighbourDist}, start = node or nil, finish = node or nil}
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/rectangleGen.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/rectangleGen.lua`.*

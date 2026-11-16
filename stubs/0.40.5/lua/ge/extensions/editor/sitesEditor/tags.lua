@@ -2,40 +2,40 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/sitesEditor/tags.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Objet renvoyé par le constructeur. Champs : sitesEditor, key, sites, tag, tags, sortedTags, hasTag, noTag.
+--- Object returned by the constructor. Fields: sitesEditor, key, sites, tag, tags, sortedTags, hasTag, noTag.
 ---@class editor_sitesEditor_tags
 local editor_sitesEditor_tags = {}
 
---- Dessine l'onglet (appelle drawGeneralInfo). Appelée avec mouseInfo par sitesEditor mais la méthode l'ignore.
----Source : lua/ge/extensions/editor/sitesEditor/tags.lua:35
+--- Draws the tab (calls drawGeneralInfo). Called with mouseInfo by sitesEditor but the method ignores it.
+---Source: lua/ge/extensions/editor/sitesEditor/tags.lua:35
 function editor_sitesEditor_tags:draw() end
 
---- Dessine la liste des tags et les deux colonnes de gestion du tag choisi.
----Source : lua/ge/extensions/editor/sitesEditor/tags.lua:52
+--- Draws the tag list and the two management columns of the chosen tag.
+---Source: lua/ge/extensions/editor/sitesEditor/tags.lua:52
 function editor_sitesEditor_tags:drawGeneralInfo() end
 
---- Constructeur (appelé par le module).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/sitesEditor/tags.lua:9
----@param sitesEditor table Module editor_sitesEditor.
----@param key string 'locations', 'zones' ou 'parkingSpots'.
+--- Constructor (called by the module).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/sitesEditor/tags.lua:9
+---@param sitesEditor table editor_sitesEditor module.
+---@param key string 'locations', 'zones' or 'parkingSpots'.
 function editor_sitesEditor_tags:init(sitesEditor, key) end
 
---- Choisit un tag et répartit les éléments en hasTag et noTag.
----Source : lua/ge/extensions/editor/sitesEditor/tags.lua:39
----@param tag string Nom du tag.
+--- Chooses a tag and splits the elements into hasTag and noTag.
+---Source: lua/ge/extensions/editor/sitesEditor/tags.lua:39
+---@param tag string Tag name.
 function editor_sitesEditor_tags:selectTag(tag) end
 
---- Appelé quand l'onglet devient actif : relit et trie tous les tags des éléments.
----Source : lua/ge/extensions/editor/sitesEditor/tags.lua:18
+--- Called when the tab becomes active: rereads and sorts all the tags of the elements.
+---Source: lua/ge/extensions/editor/sitesEditor/tags.lua:18
 function editor_sitesEditor_tags:selected() end
 
---- Définit les sites édités.
----Source : lua/ge/extensions/editor/sitesEditor/tags.lua:14
----@param sites table Objet sites.
+--- Sets the edited sites.
+---Source: lua/ge/extensions/editor/sitesEditor/tags.lua:14
+---@param sites table Sites object.
 function editor_sitesEditor_tags:setSites(sites) end
 
---- Appelé quand l'onglet est quitté ; ne fait rien.
----Source : lua/ge/extensions/editor/sitesEditor/tags.lua:33
+--- Called when the tab is left; does nothing.
+---Source: lua/ge/extensions/editor/sitesEditor/tags.lua:33
 function editor_sitesEditor_tags:unselect() end
 

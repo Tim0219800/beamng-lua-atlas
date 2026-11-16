@@ -1,82 +1,82 @@
 # `ui_visibility`
 
-*Fichier : `lua/ge/extensions/ui/visibility.lua` · VM : Game Engine (GE) · 66 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/visibility.lua` · VM: Game Engine (GE) · 66 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_visibility` : `extensions.load("ui_visibility")`, puis la globale `ui_visibility`
+**Access:** extension `ui_visibility`: `extensions.load("ui_visibility")`, then the global `ui_visibility`
 
-Affiche ou masque l'interface du jeu : l'UI web (CEF) et les fenêtres imgui. Utile pour les captures d'écran, les vidéos ou les outils. Il mémorise l'état dans M.state (cefVisible, imguiVisible) et diffuse le changement de visibilité CEF.
+Shows or hides the game interface: the web UI (CEF) and the imgui windows. Useful for screenshots, videos or tools. It stores the state in M.state (cefVisible, imguiVisible) and broadcasts the CEF visibility change.
 
-## Exemple
+## Example
 
 ```lua
-ui_visibility.set(false)  -- masque tout
-ui_visibility.setCef(true)  -- réaffiche seulement l'UI web
+ui_visibility.set(false)  -- hides everything
+ui_visibility.setCef(true)  -- shows only the web UI again
 ```
 
-## Remarques
+## Notes
 
-- L'état initial est cefVisible = true et imguiVisible = état actuel de Engine.imgui.
-- Le changement de visibilité CEF émet l'évènement UI 'onCefVisibilityChanged' (guihooks) et le hook du même nom (extensions.hook), avec un booléen, uniquement si la valeur change.
-- get() ne renvoie que l'état CEF, pas l'état imgui.
+- The initial state is cefVisible = true and imguiVisible = current state of Engine.imgui.
+- The CEF visibility change emits the UI event 'onCefVisibilityChanged' (guihooks) and the hook of the same name (extensions.hook), with a boolean, only if the value changes.
+- get() returns only the CEF state, not the imgui state.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_visibility.get()` | Renvoie l'état de visibilité général, qui est celui de l'UI web (CEF). | 46 |
-| `ui_visibility.getCef()` | Indique si l'UI web (CEF) est visible. | 10 |
-| `ui_visibility.getImgui()` | Indique si imgui est activé. | 35 |
-| `ui_visibility.set(visible)` | Affiche ou masque en même temps l'UI web et imgui. | 40 |
-| `ui_visibility.setCef(visible)` | Affiche ou masque l'UI web ; émet 'onCefVisibilityChanged' (UI et extensions) seulement si l'état change. | 13 |
-| `ui_visibility.setImgui(visible)` | Active ou désactive imgui (Engine.imgui.setEnabled) si l'état change. | 27 |
-| `ui_visibility.toggle()` | Inverse la visibilité générale (selon get(), donc l'état CEF) et l'applique à CEF et imgui. | 50 |
-| `ui_visibility.toggleCef()` | Inverse la visibilité de l'UI web. | 22 |
+| `ui_visibility.get()` | Returns the general visibility state, which is that of the web UI (CEF). | 46 |
+| `ui_visibility.getCef()` | Returns whether the web UI (CEF) is visible. | 10 |
+| `ui_visibility.getImgui()` | Returns whether imgui is enabled. | 35 |
+| `ui_visibility.set(visible)` | Shows or hides the web UI and imgui at the same time. | 40 |
+| `ui_visibility.setCef(visible)` | Shows or hides the web UI; emits 'onCefVisibilityChanged' (UI and extensions) only if the state changes. | 13 |
+| `ui_visibility.setImgui(visible)` | Enables or disables imgui (Engine.imgui.setEnabled) if the state changes. | 27 |
+| `ui_visibility.toggle()` | Toggles the general visibility (according to get(), so the CEF state) and applies it to CEF and imgui. | 50 |
+| `ui_visibility.toggleCef()` | Toggles the web UI visibility. | 22 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_visibility.get()`
 
-Renvoie l'état de visibilité général, qui est celui de l'UI web (CEF).
+Returns the general visibility state, which is that of the web UI (CEF).
 
-- **renvoie** : boolean true si visible.
+- **returns**: boolean true if visible.
 
 #### `ui_visibility.getCef()`
 
-Indique si l'UI web (CEF) est visible.
+Returns whether the web UI (CEF) is visible.
 
-- **renvoie** : boolean true si visible.
+- **returns**: boolean true if visible.
 
 #### `ui_visibility.getImgui()`
 
-Indique si imgui est activé.
+Returns whether imgui is enabled.
 
-- **renvoie** : boolean true si visible.
+- **returns**: boolean true if visible.
 
 #### `ui_visibility.set(visible)`
 
-Affiche ou masque en même temps l'UI web et imgui.
+Shows or hides the web UI and imgui at the same time.
 
-- `visible` (*boolean*) : true pour afficher.
+- `visible` (*boolean*) : true to show.
 
 #### `ui_visibility.setCef(visible)`
 
-Affiche ou masque l'UI web ; émet 'onCefVisibilityChanged' (UI et extensions) seulement si l'état change.
+Shows or hides the web UI; emits 'onCefVisibilityChanged' (UI and extensions) only if the state changes.
 
-- `visible` (*boolean*) : true pour afficher.
+- `visible` (*boolean*) : true to show.
 
 #### `ui_visibility.setImgui(visible)`
 
-Active ou désactive imgui (Engine.imgui.setEnabled) si l'état change.
+Enables or disables imgui (Engine.imgui.setEnabled) if the state changes.
 
-- `visible` (*boolean*) : true pour activer.
+- `visible` (*boolean*) : true to enable.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onCefVisibilityChanged` — écouté par 2 module(s)
+- `onCefVisibilityChanged` — listened to by 2 module(s)
 
-**Évènements UI (guihooks.trigger) :** `onCefVisibilityChanged`
+**UI events (guihooks.trigger):** `onCefVisibilityChanged`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/visibility.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/visibility.lua`.*

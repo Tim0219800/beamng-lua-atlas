@@ -1,53 +1,53 @@
 # `career_modules_playbookWriter`
 
-*Fichier : `lua/ge/extensions/career/modules/playbookWriter.lua` · VM : Game Engine (GE) · 52 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/playbookWriter.lua` · VM: Game Engine (GE) · 52 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_playbookWriter` : `extensions.load("career_modules_playbookWriter")`, puis la globale `career_modules_playbookWriter`
+**Access:** extension `career_modules_playbookWriter`: `extensions.load("career_modules_playbookWriter")`, then the global `career_modules_playbookWriter`
 
-Enregistre l'historique des missions jouées (missionId et étoiles) dans playbook.json du dossier career de la sauvegarde. Chargé seulement quand la carrière est active.
+Records the history of played missions (missionId and stars) in playbook.json in the save's career folder. Loaded only when the career is active.
 
-## Remarques
+## Notes
 
-- Le fichier est ignoré (liste vide) si info.json de la sauvegarde a une version < moduleVersion (42).
-- La liste n'est jamais lue par ce module : il ne fait qu'ajouter et sauvegarder.
+- The file is ignored (empty list) if the save's info.json has a version < moduleVersion (42).
+- The list is never read by this module: it only appends and saves.
 
-**Dépendances (chargées avant) :** `career_career`
+**Dependencies (loaded first):** `career_career`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_playbookWriter.addMissionPlayedEntry(missionId, stars)` | Ajoute {missionId, stars} à la fin du playbook en mémoire. | 14 |
-| `career_modules_playbookWriter.onCareerActive(active)` | Hook : recharge le playbook quand la carrière devient active. *(interne)* *(hook)* | 37 |
-| `career_modules_playbookWriter.onExtensionLoaded()` | Hook au chargement de l'extension : charge le playbook si la carrière est active (renvoie false sinon). *(interne)* *(hook)* | 32 |
-| `career_modules_playbookWriter.onSaveCurrentProfile(currentSavePath)` | Hook de sauvegarde : écrit le playbook dans <save>/career/playbook.json. *(interne)* *(hook)* | 43 |
+| `career_modules_playbookWriter.addMissionPlayedEntry(missionId, stars)` | Appends {missionId, stars} to the end of the in-memory playbook. | 14 |
+| `career_modules_playbookWriter.onCareerActive(active)` | Hook: reloads the playbook when the career becomes active. *(internal)* *(hook)* | 37 |
+| `career_modules_playbookWriter.onExtensionLoaded()` | Hook on extension load: loads the playbook if the career is active (returns false otherwise). *(internal)* *(hook)* | 32 |
+| `career_modules_playbookWriter.onSaveCurrentProfile(currentSavePath)` | Save hook: writes the playbook to <save>/career/playbook.json. *(internal)* *(hook)* | 43 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_playbookWriter.addMissionPlayedEntry(missionId, stars)`
 
-Ajoute {missionId, stars} à la fin du playbook en mémoire.
+Appends {missionId, stars} to the end of the in-memory playbook.
 
-- `missionId` (*string*) : Identifiant de la mission.
-- `stars` (*any*) : Résultat en étoiles (déduit du code).
+- `missionId` (*string*) : Mission identifier.
+- `stars` (*any*) : Result in stars (inferred from code).
 
 #### `career_modules_playbookWriter.onCareerActive(active)`
 
-Hook : recharge le playbook quand la carrière devient active.
+Hook: reloads the playbook when the career becomes active.
 
-- `active` (*boolean*) : Rien si false.
+- `active` (*boolean*) : Nothing if false.
 
 #### `career_modules_playbookWriter.onSaveCurrentProfile(currentSavePath)`
 
-Hook de sauvegarde : écrit le playbook dans <save>/career/playbook.json.
+Save hook: writes the playbook to <save>/career/playbook.json.
 
-- `currentSavePath` (*string*) : Dossier de sauvegarde.
+- `currentSavePath` (*string*) : Save folder.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_career. |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_career. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/playbookWriter.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/playbookWriter.lua`.*

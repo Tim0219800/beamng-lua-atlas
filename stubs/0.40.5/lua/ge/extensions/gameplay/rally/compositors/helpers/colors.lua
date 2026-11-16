@@ -2,56 +2,56 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/compositors/helpers/colors.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Palette de couleurs partagée par les styles de notes de rallye visuelles. Les valeurs sont soit des références CSS (var(--bng-...)) consommées par l'application d'UI des notes visuelles, soit des codes hexadécimaux. Aucune fonction : uniquement des chaînes de couleur, regroupées par usage (général, carte de chaleur de l'intensité des virages, spectre néon à fort contraste, badges de coupe, avertissements, modificateurs).
---- Accès : extension `gameplay_rally_compositors_helpers_colors` : `extensions.load("gameplay_rally_compositors_helpers_colors")`, puis la globale `gameplay_rally_compositors_helpers_colors`
+--- Color palette shared by the visual rally note styles. Values are either CSS references (var(--bng-...)) consumed by the visual notes UI app, or hexadecimal codes. No functions: only color strings, grouped by usage (general, corner intensity heatmap, high-contrast neon spectrum, cut badges, cautions, modifiers).
+--- Access: extension `gameplay_rally_compositors_helpers_colors`: `extensions.load("gameplay_rally_compositors_helpers_colors")`, then the global `gameplay_rally_compositors_helpers_colors`
 ---@class gameplay_rally_compositors_helpers_colors
 ---@field black string '#000000'.
----@field blue500 string Bleu 500.
----@field blue600 string Bleu 600.
----@field careBg string Fond de la note 'care' (= offBlack).
----@field careIcon string Icône de la note 'care' (= careStroke).
----@field careStroke string Contour de la note 'care' ('#ffff00').
----@field cautionBg string Fond de la note 'caution' (= offBlack).
----@field cautionIcon string Icône 'caution' (= cautionStroke).
----@field cautionStroke string Contour de la note 'caution' ('#ff0000').
----@field cutBg string Fond du badge 'coupe' autorisée (= neonGreen).
----@field cutStroke string Contour du badge 'coupe' (= deepGreen).
+---@field blue500 string Blue 500.
+---@field blue600 string Blue 600.
+---@field careBg string Background of the 'care' note (= offBlack).
+---@field careIcon string Icon of the 'care' note (= careStroke).
+---@field careStroke string Outline of the 'care' note ('#ffff00').
+---@field cautionBg string Background of the 'caution' note (= offBlack).
+---@field cautionIcon string 'caution' icon (= cautionStroke).
+---@field cautionStroke string Outline of the 'caution' note ('#ff0000').
+---@field cutBg string Background of the allowed 'cut' badge (= neonGreen).
+---@field cutStroke string Outline of the 'cut' badge (= deepGreen).
 ---@field deepBlue string '#005ecb'.
 ---@field deepCrimson string '#c4002f'.
 ---@field deepCyan string '#008fb3'.
 ---@field deepGold string '#c7a500'.
 ---@field deepGreen string '#00a152'.
 ---@field deepOrange string '#c96500'.
----@field dontCutBg string Fond du badge 'ne pas couper' (= neonCrimson).
----@field dontCutStroke string Contour du badge 'ne pas couper' (= deepCrimson).
----@field doubleCautionBg string Fond de la note 'double caution' (= offBlack).
----@field doubleCautionIcon string Icône 'double caution' (= doubleCautionStroke).
----@field doubleCautionStroke string Contour de 'double caution' ('#ff0000').
----@field green500 string Vert 500.
----@field green600 string Vert 600.
----@field iconAndTextDefault string Couleur par défaut des icônes et textes (= offWhite).
----@field indigoblue650 string Bleu indigo 650.
----@field indigoblue750 string Bleu indigo 750.
----@field mainPaletteFg string Couleur de premier plan de la palette principale (= offBlack).
----@field modifierBg string Fond des modificateurs ('#a855f7').
----@field modifierStroke string Contour des modificateurs ('#7e22ce').
+---@field dontCutBg string Background of the 'don't cut' badge (= neonCrimson).
+---@field dontCutStroke string Outline of the 'don't cut' badge (= deepCrimson).
+---@field doubleCautionBg string Background of the 'double caution' note (= offBlack).
+---@field doubleCautionIcon string 'double caution' icon (= doubleCautionStroke).
+---@field doubleCautionStroke string Outline of 'double caution' ('#ff0000').
+---@field green500 string Green 500.
+---@field green600 string Green 600.
+---@field iconAndTextDefault string Default color for icons and text (= offWhite).
+---@field indigoblue650 string Indigo blue 650.
+---@field indigoblue750 string Indigo blue 750.
+---@field mainPaletteFg string Foreground color of the main palette (= offBlack).
+---@field modifierBg string Background of modifiers ('#a855f7').
+---@field modifierStroke string Outline of modifiers ('#7e22ce').
 ---@field neonBlue string '#33a6ff'.
 ---@field neonCrimson string '#ff1744'.
 ---@field neonCyan string '#00d5ff'.
 ---@field neonGold string '#ffd600'.
 ---@field neonGreen string '#00e676'.
 ---@field neonOrange string '#ff8a00'.
----@field offBlack string var(--bng-off-black), noir adouci.
----@field offWhite string var(--bng-off-white), blanc adouci.
----@field orange string Orange de la charte BeamNG.
+---@field offBlack string var(--bng-off-black), softened black.
+---@field offWhite string var(--bng-off-white), softened white.
+---@field orange string BeamNG brand orange.
 ---@field orange500 string Orange 500.
----@field peach300 string Pêche 300.
----@field peach400 string Pêche 400.
----@field red550 string Rouge 550 (carte de chaleur des virages).
----@field red650 string Rouge 650.
----@field red750 string Rouge 750.
+---@field peach300 string Peach 300.
+---@field peach400 string Peach 400.
+---@field red550 string Red 550 (corner heatmap).
+---@field red650 string Red 650.
+---@field red750 string Red 750.
 ---@field white string '#ffffff'.
----@field yellow400 string Jaune 400 (tertiaire).
----@field yellow500 string Jaune 500.
+---@field yellow400 string Yellow 400 (tertiary).
+---@field yellow500 string Yellow 500.
 gameplay_rally_compositors_helpers_colors = {}
 

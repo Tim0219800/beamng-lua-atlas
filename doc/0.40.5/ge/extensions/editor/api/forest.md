@@ -1,47 +1,47 @@
 # `editor_api_forest`
 
-*Fichier : `lua/ge/extensions/editor/api/forest.lua` · VM : Game Engine (GE) · 118 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/forest.lua` · VM: Game Engine (GE) · 118 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_forest` : `extensions.load("editor_api_forest")`, puis la globale `editor_api_forest`
+**Access:** extension `editor_api_forest`: `extensions.load("editor_api_forest")`, then the global `editor_api_forest`
 
-API de l'éditeur pour manipuler les éléments de forêt (arbres, rochers… instanciés via ForestData). initialize(editor) ajoute sur editor des fonctions pour ajouter, retirer, mettre à jour, tourner et sélectionner des ForestItem. Les fonctions qui modifient la forêt mettent editor.forestDirty = true et appellent editor.setDirty().
+Editor API for manipulating forest items (trees, rocks, etc. instanced via ForestData). initialize(editor) adds functions to editor to add, remove, update, rotate and select ForestItems. Functions that modify the forest set editor.forestDirty = true and call editor.setDirty().
 
-## Remarques
+## Notes
 
-- updateForestItem et rotateForestSelection remplacent l'item : il faut utiliser l'objet renvoyé (updateItem renvoie un nouvel item).
-- rotateForestSelection n'agit que sur editor.selection.forestItem ; une seule sélection tourne autour de son axe (ou du monde selon editor.getAxisGizmoAlignment()), plusieurs tournent autour de centerPoint.
-- rotateForestSelection ne marque pas forestDirty lui-même.
-- Le commentaire de createForestItem dit « from where to remove the item » pour forestData (copié-collé), il s'agit en fait de la forêt où l'item est créé.
+- updateForestItem and rotateForestSelection replace the item: the returned object must be used (updateItem returns a new item).
+- rotateForestSelection only acts on editor.selection.forestItem; a single selection rotates around its own axis (or the world's depending on editor.getAxisGizmoAlignment()), several rotate around centerPoint.
+- rotateForestSelection does not mark forestDirty itself.
+- The comment of createForestItem says "from where to remove the item" for forestData (copy-paste); it is actually the forest where the item is created.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_forest.initialize(editorInstance)` | Installe les fonctions de ce module sur l'objet editor. *(interne)* | 104 |
+| `editor_api_forest.initialize(editorInstance)` | Installs this module's functions on the editor object. *(internal)* | 104 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_forest.initialize(editorInstance)`
 
-Installe les fonctions de ce module sur l'objet editor.
+Installs this module's functions on the editor object.
 
-- `editorInstance` (*table*) : Objet editor
+- `editorInstance` (*table*) : editor object
 
-## Classe `editor`
+## Class `editor`
 
-Fonctions ajoutées à l'objet editor par initialize.
+Functions added to the editor object by initialize.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.addForestItem(forestData, item)` | Ajoute un ForestItem existant à la forêt. | 47 |
-| `editor.createForestItem(forestData, itemData, transform, scale)` | Crée un nouvel item en prenant un item existant comme modèle, avec une transformation et une échelle. | 68 |
-| `editor.removeForestItem(forestData, item)` | Retire un ForestItem de la forêt. | 56 |
-| `editor.rotateForestSelection(forestData, deltaEulerRotation, centerPoint, originalTransforms)` | Applique une rotation delta aux items de forêt sélectionnés à partir de leurs transformations d'origine. | 16 |
-| `editor.setForestItemCustomData(forestData, key, customData)` | Définit la donnée personnalisée opaque d'un item. | 94 |
-| `editor.setForestItemSelected(forestData, key, selected)` | Marque un item comme sélectionné ou non (ne marque pas la forêt modifiée). | 100 |
-| `editor.updateForestItem(forestData, key, keyPos, newData, newTrans, newScale, newUid)` | Met à jour les informations d'une instance (données, transformation, échelle, uid). | 83 |
+| `editor.addForestItem(forestData, item)` | Adds an existing ForestItem to the forest. | 47 |
+| `editor.createForestItem(forestData, itemData, transform, scale)` | Creates a new item using an existing item as a template, with a transform and a scale. | 68 |
+| `editor.removeForestItem(forestData, item)` | Removes a ForestItem from the forest. | 56 |
+| `editor.rotateForestSelection(forestData, deltaEulerRotation, centerPoint, originalTransforms)` | Applies a delta rotation to the selected forest items from their original transforms. | 16 |
+| `editor.setForestItemCustomData(forestData, key, customData)` | Sets an item's opaque custom data. | 94 |
+| `editor.setForestItemSelected(forestData, key, selected)` | Marks an item as selected or not (does not mark the forest as modified). | 100 |
+| `editor.updateForestItem(forestData, key, keyPos, newData, newTrans, newScale, newUid)` | Updates an instance's information (data, transform, scale, uid). | 83 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/forest.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/forest.lua`.*

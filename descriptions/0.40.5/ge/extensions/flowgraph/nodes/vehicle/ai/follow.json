@@ -1,12 +1,12 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/follow.lua",
-  "module": "Nœud « AI Follow » (couleur ai, once_p_duration). Met un véhicule en mode IA « follow » pour suivre un autre véhicule, sans contact intentionnel. Entrées : aiVehId (sans valeur = véhicule du joueur), targetId (par défaut le véhicule du joueur).",
+  "module": "Node \"AI Follow\" (color ai, once_p_duration). Puts a vehicle in \"follow\" AI mode to follow another vehicle, without intentional contact. Inputs: aiVehId (no value = player vehicle), targetId (defaults to the player vehicle).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "workOnce": {
-          "desc": "Envoie au véhicule ai.setMode(\"follow\") puis ai.setTargetObjectID(targetId).",
+          "desc": "Sends ai.setMode(\"follow\") then ai.setTargetObjectID(targetId) to the vehicle.",
           "internal": true
         }
       }

@@ -1,138 +1,288 @@
 {
   "path": "lua/ge/extensions/freeroam/vueBigMap.lua",
-  "module": "Backend Lua de la grande carte (big map) en interface Vue : prépare pour l'UI la liste des points d'intérêt (POI : missions, garages, stations, concessions, dragstrips, points de départ, véhicule du joueur…), les filtres et les groupes de la liste latérale, l'état de jeu, et relaie les actions de l'UI (sélection, survol, navigation, panoramique, exécution d'actions de POI) vers freeroam_bigMapMode. Les données sont mises en cache à l'ouverture (enterBigMap) et libérées à la fermeture (exitBigMap). Les appels côté UI se font par bngApi.engineLua (voir le commentaire d'en-tête du fichier) ; Lua -> Vue passe par guihooks.trigger('showPoiDetails', {poiIds, ignoreReduction}). Dépend de gameplay_missions_missions, freeroam_bigMapMode, gameplay_rawPois, gameplay_missions_missionScreen. Global : freeroam_vueBigMap.",
+  "module": "Lua backend of the big map in the Vue UI: prepares for the UI the list of points of interest (POIs: missions, garages, stations, dealerships, dragstrips, spawn points, the player's vehicle...), the filters and groups of the side list, the game state, and relays the UI's actions (selection, hover, navigation, panning, execution of POI actions) to freeroam_bigMapMode. The data is cached on opening (enterBigMap) and freed on closing (exitBigMap). UI-side calls go through bngApi.engineLua (see the file's header comment); Lua -> Vue goes through guihooks.trigger('showPoiDetails', {poiIds, ignoreReduction}). Depends on gameplay_missions_missions, freeroam_bigMapMode, gameplay_rawPois, gameplay_missions_missionScreen. Global: freeroam_vueBigMap.",
   "usage": "freeroam_vueBigMap.enterBigMap({isMenuBigmap = true})\nlocal groups = freeroam_vueBigMap.getGroups()\nfreeroam_vueBigMap.toggleFilterSectionById('everything')\nfreeroam_vueBigMap.exitBigMap()",
   "notes": [
-    "Structure des filtres : sections {key, icon, label, groups = {{key, label, icon, elementCount, visible}}}. Les groupes (getGroups) ne contiennent que les groupes visibles et non vides, avec elementIds (ids de POI) et label traduit.",
-    "Icônes par type de POI : spawnPoint=fastTravel, garage=garage01, gasStation=fuelPump, dealership=carDealer, logisticsParking/logisticsOffice=boxTruckFast, computer=screen, driftSpot=drift01, dragstrip=drag02, crawl=rockCrawling02, playerVehicle=carStarred, other=info.",
-    "Les actions de POI sont enregistrées avec addAction(callback, meta) (renvoie meta.actionId) et exécutées par executeAction(actionId) / executePoiAction ; clearActionFunctions les vide à la sortie de la carte (exitBigMap).",
-    "setPoiListDisplayMode accepte 'hidden', 'tree' ou 'simple' (réglage poiListDisplayMode), sinon renvoie 'invalid_mode'.",
-    "selectPoiFromList/navigateToPoi/panToPoi traitent les chaînes « undefined » et « null » (envoyées par l'UI) comme nil.",
-    "Dans onPoiSelectedFromBigmap, ignoreNextReductionFlag est remis à false avant d'être passé dans `ignoreReduction` du hook showPoiDetails, qui reçoit donc toujours false.",
-    "Le champ gameStateInfoCache.gameMode vaut 'mission' quand une mission est au premier plan (gameplay_missions_missionManager.getForegroundMissionId())."
+    "Filter structure: sections {key, icon, label, groups = {{key, label, icon, elementCount, visible}}}. The groups (getGroups) only contain visible, non-empty groups, with elementIds (POI ids) and a translated label.",
+    "Icons by POI type: spawnPoint=fastTravel, garage=garage01, gasStation=fuelPump, dealership=carDealer, logisticsParking/logisticsOffice=boxTruckFast, computer=screen, driftSpot=drift01, dragstrip=drag02, crawl=rockCrawling02, playerVehicle=carStarred, other=info.",
+    "POI actions are registered with addAction(callback, meta) (returns meta.actionId) and run by executeAction(actionId) / executePoiAction; clearActionFunctions empties them on leaving the map (exitBigMap).",
+    "setPoiListDisplayMode accepts 'hidden', 'tree' or 'simple' (poiListDisplayMode setting), otherwise returns 'invalid_mode'.",
+    "selectPoiFromList/navigateToPoi/panToPoi treat the strings \"undefined\" and \"null\" (sent by the UI) as nil.",
+    "In onPoiSelectedFromBigmap, ignoreNextReductionFlag is set back to false before being passed in `ignoreReduction` of the showPoiDetails hook, which therefore always receives false.",
+    "The gameStateInfoCache.gameMode field is 'mission' when a mission is in the foreground (gameplay_missions_missionManager.getForegroundMissionId())."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant."},
-    "actionIdCounter": {"type": "integer", "desc": "Compteur d'identifiants d'actions de POI."},
-    "actionFunctions": {"type": "table<integer, function>", "desc": "Callbacks des actions de POI, par identifiant."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extensions loaded before."
+    },
+    "actionIdCounter": {
+      "type": "integer",
+      "desc": "POI action id counter."
+    },
+    "actionFunctions": {
+      "type": "table<integer, function>",
+      "desc": "POI action callbacks, by id."
+    }
   },
   "functions": {
     "enterBigMap": {
-      "desc": "Ouvre la grande carte : délègue à freeroam_bigMapMode.enterBigMap (instant), génère les caches POI/filtres/groupes et applique la visibilité des POI.",
-      "params": {"options": {"type": "table|nil", "desc": "{controllerUsed?: boolean, isMenuBigmap?: boolean, ignoreUiStateChange?: boolean} ; ignoreUiStateChange vaut isMenuBigmap par défaut ; les action maps sont ignorées si controllerUsed et isMenuBigmap."}},
+      "desc": "Opens the big map: delegates to freeroam_bigMapMode.enterBigMap (instant), generates the POI/filter/group caches and applies the POIs' visibility.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "{controllerUsed?: boolean, isMenuBigmap?: boolean, ignoreUiStateChange?: boolean}; ignoreUiStateChange defaults to isMenuBigmap; the action maps are ignored if controllerUsed and isMenuBigmap."
+        }
+      },
       "internal": false
     },
     "exitBigMap": {
-      "desc": "Ferme la grande carte (freeroam_bigMapMode.exitBigMap(true)), vide les caches et les actions.",
+      "desc": "Closes the big map (freeroam_bigMapMode.exitBigMap(true)), empties the caches and the actions.",
       "params": {},
       "internal": false
     },
     "getPoiData": {
-      "desc": "Données complètes des POI par id (nom, aperçu, agrégats, actions disponibles), générées si le cache est invalide.",
+      "desc": "Full POI data by id (name, preview, aggregates, available actions), generated if the cache is invalid.",
       "params": {},
-      "returns": [{"type": "table", "desc": "POI par id."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "POIs by id."
+        }
+      ],
       "internal": false
     },
     "getFilters": {
-      "desc": "Sections de filtres, chaque groupe avec son état `visible` courant.",
+      "desc": "Filter sections, each group with its current `visible` state.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Sections de filtres."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Filter sections."
+        }
+      ],
       "internal": false
     },
     "getGroups": {
-      "desc": "Groupes pour la liste de POI : sections et groupes visibles non vides.",
+      "desc": "Groups for the POI list: visible, non-empty sections and groups.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Sections {key, icon, title, groups[{key, label, icon, elementIds, visible, openByDefault}]}."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Sections {key, icon, title, groups[{key, label, icon, elementIds, visible, openByDefault}]}."
+        }
+      ],
       "internal": false
     },
     "toggleFiltersByIds": {
-      "desc": "Rend visibles uniquement les groupes dont les clés sont données (tous les autres sont masqués) et met à jour la visibilité sur la carte.",
-      "params": {"filterIds": {"type": "string[]", "desc": "Clés de groupes."}},
+      "desc": "Makes visible only the groups whose keys are given (all the others are hidden) and updates the visibility on the map.",
+      "params": {
+        "filterIds": {
+          "type": "string[]",
+          "desc": "Group keys."
+        }
+      },
       "internal": false
     },
     "toggleFilterSectionById": {
-      "desc": "Affiche tous les groupes (sectionId 'everything') ou uniquement ceux de la section donnée.",
-      "params": {"sectionId": {"type": "string", "desc": "Clé de section ou 'everything'."}},
+      "desc": "Shows all groups (sectionId 'everything') or only those of the given section.",
+      "params": {
+        "sectionId": {
+          "type": "string",
+          "desc": "Section key or 'everything'."
+        }
+      },
       "internal": false
     },
     "getGameStateInfo": {
-      "desc": "Informations d'état de jeu pour la liste de POI, avec poiListDisplayMode (réglage, 'tree' par défaut).",
+      "desc": "Game state information for the POI list, with poiListDisplayMode (setting, 'tree' by default).",
       "params": {},
-      "returns": [{"type": "table", "desc": "État."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "State."
+        }
+      ],
       "internal": false
     },
     "setVisibleIds": {
-      "desc": "Calcule les ids de POI des groupes visibles et appelle freeroam_bigMapMode.setOnlyIdsVisible.",
+      "desc": "Computes the POI ids of the visible groups and calls freeroam_bigMapMode.setOnlyIdsVisible.",
       "params": {},
       "internal": false
     },
     "selectPoiFromList": {
-      "desc": "Sélectionne un POI depuis la liste (freeroam_bigMapMode.selectPoi) ou désélectionne si id nul.",
-      "params": {"poiId": {"type": "string|nil", "desc": "Id du POI ('undefined'/'null' = aucun)."}, "isCollapsedMode": {"type": "boolean|nil", "desc": "Si faux, la prochaine réduction de groupe est ignorée."}},
-      "returns": [{"type": "string", "desc": "'success'"}],
+      "desc": "Selects a POI from the list (freeroam_bigMapMode.selectPoi) or deselects if the id is null.",
+      "params": {
+        "poiId": {
+          "type": "string|nil",
+          "desc": "POI id ('undefined'/'null' = none)."
+        },
+        "isCollapsedMode": {
+          "type": "boolean|nil",
+          "desc": "If false, the next group reduction is ignored."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "'success'"
+        }
+      ],
       "internal": false
     },
     "getAndClearPendingAutoSelectPoiId": {
-      "desc": "Récupère puis vide l'id de POI à sélectionner automatiquement demandé à l'ouverture de la carte, depuis freeroam_bigMapMode.",
+      "desc": "Retrieves then clears the POI id to auto-select requested when the map opened, from freeroam_bigMapMode.",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "Id de POI."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "POI id."
+        }
+      ],
       "internal": false
     },
     "navigateToPoi": {
-      "desc": "Calcule un itinéraire vers le POI (freeroam_bigMapMode.navigateToMission).",
-      "params": {"poiId": {"type": "string|nil", "desc": "Id du POI."}},
-      "returns": [{"type": "string", "desc": "'success'"}],
+      "desc": "Computes a route to the POI (freeroam_bigMapMode.navigateToMission).",
+      "params": {
+        "poiId": {
+          "type": "string|nil",
+          "desc": "POI id."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "'success'"
+        }
+      ],
       "internal": false
     },
     "panToPoi": {
-      "desc": "Centre la vue de la carte sur le POI.",
-      "params": {"poiId": {"type": "string|nil", "desc": "Id du POI."}},
-      "returns": [{"type": "string", "desc": "'success'"}],
+      "desc": "Centers the map view on the POI.",
+      "params": {
+        "poiId": {
+          "type": "string|nil",
+          "desc": "POI id."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "'success'"
+        }
+      ],
       "internal": false
     },
     "onPoiSelectedFromBigmap": {
-      "desc": "Appelé par la carte quand un POI y est sélectionné : envoie à l'UI showPoiDetails avec les ids de POI regroupés sous la souris (freeroam_bigMapMarkers.getIdsFromHoveredPoiId) ou liste vide.",
-      "params": {"poiId": {"type": "string|nil", "desc": "Id du POI sélectionné."}},
+      "desc": "Called by the map when a POI is selected on it: sends showPoiDetails to the UI with the POI ids grouped under the mouse (freeroam_bigMapMarkers.getIdsFromHoveredPoiId) or an empty list.",
+      "params": {
+        "poiId": {
+          "type": "string|nil",
+          "desc": "Id of the selected POI."
+        }
+      },
       "internal": true
     },
     "hoverPoiFromList": {
-      "desc": "Met en surbrillance le marqueur du POI survolé dans la liste.",
-      "params": {"poiId": {"type": "string", "desc": "Id du POI."}, "active": {"type": "boolean", "desc": "Survol actif."}},
-      "returns": [{"type": "string", "desc": "'success'"}, {"type": "boolean", "desc": "active"}],
+      "desc": "Highlights the marker of the POI hovered in the list.",
+      "params": {
+        "poiId": {
+          "type": "string",
+          "desc": "POI id."
+        },
+        "active": {
+          "type": "boolean",
+          "desc": "Active hover."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "'success'"
+        },
+        {
+          "type": "boolean",
+          "desc": "active"
+        }
+      ],
       "internal": false
     },
     "executePoiAction": {
-      "desc": "Exécute une action de POI enregistrée (voir executeAction).",
-      "params": {"actionId": {"type": "integer", "desc": "Identifiant d'action."}},
+      "desc": "Runs a registered POI action (see executeAction).",
+      "params": {
+        "actionId": {
+          "type": "integer",
+          "desc": "Action identifier."
+        }
+      },
       "internal": false
     },
     "setPoiListDisplayMode": {
-      "desc": "Règle le mode d'affichage de la liste ('hidden', 'tree', 'simple') dans les réglages.",
-      "params": {"mode": {"type": "string", "desc": "Mode."}},
-      "returns": [{"type": "string", "desc": "'success' ou 'invalid_mode'."}],
+      "desc": "Sets the list display mode ('hidden', 'tree', 'simple') in the settings.",
+      "params": {
+        "mode": {
+          "type": "string",
+          "desc": "Mode."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "'success' or 'invalid_mode'."
+        }
+      ],
       "internal": false
     },
     "getFreeActionId": {
-      "desc": "Incrémente et renvoie un nouvel identifiant d'action.",
+      "desc": "Increments and returns a new action identifier.",
       "params": {},
-      "returns": [{"type": "integer", "desc": "Identifiant."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Identifier."
+        }
+      ],
       "internal": false
     },
     "clearActionFunctions": {
-      "desc": "Vide la table des actions.",
+      "desc": "Empties the actions table.",
       "params": {},
       "internal": false
     },
     "addAction": {
-      "desc": "Enregistre un callback d'action et renvoie la table meta enrichie de actionId.",
-      "params": {"callback": {"type": "function", "desc": "Fonction à appeler."}, "meta": {"type": "table|nil", "desc": "Métadonnées (label, etc.)."}},
-      "returns": [{"type": "table", "desc": "meta avec actionId."}],
+      "desc": "Registers an action callback and returns the meta table enriched with actionId.",
+      "params": {
+        "callback": {
+          "type": "function",
+          "desc": "Function to call."
+        },
+        "meta": {
+          "type": "table|nil",
+          "desc": "Metadata (label, etc.)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "meta with actionId."
+        }
+      ],
       "internal": false
     },
     "executeAction": {
-      "desc": "Exécute le callback d'une action ; log d'erreur si inconnue.",
-      "params": {"actionId": {"type": "integer", "desc": "Identifiant."}},
-      "returns": [{"type": "string", "desc": "'success' ou 'error'."}],
+      "desc": "Runs an action's callback; error log if unknown.",
+      "params": {
+        "actionId": {
+          "type": "integer",
+          "desc": "Identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "'success' or 'error'."
+        }
+      ],
       "internal": false
     }
   }

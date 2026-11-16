@@ -1,38 +1,71 @@
 {
   "path": "lua/ge/extensions/ui/liveries/fill.lua",
-  "module": "Gère la couche de remplissage de base (« fill layer ») d'une livrée dans l'éditeur de livrées. Il s'appuie sur editor_api_dynamicDecals pour créer ou retrouver la couche tout en bas de la pile, et sur ui_liveries_paint pour lire et modifier sa couleur. L'écran de peinture de l'interface l'utilise pour afficher et changer la couleur de fond du véhicule.",
+  "module": "Manages the base fill layer (\"fill layer\") of a livery in the livery editor. It relies on editor_api_dynamicDecals to create or find the bottom layer of the stack, and on ui_liveries_paint to read and change its color. The UI's paint screen uses it to display and change the vehicle's background color.",
   "notes": [
-    "baseFillLayerUid est un état local au module : il vaut nil tant que setup ou bindLoadedLayer n'a pas réussi, et après teardown.",
-    "La couche créée par setup utilise la palette EDITABLE_COLOR_PALETTE_MAP_ID (0), donc elle affiche sa propre couleur."
+    "baseFillLayerUid is module-local state: it is nil until setup or bindLoadedLayer has succeeded, and after teardown.",
+    "The layer created by setup uses the palette EDITABLE_COLOR_PALETTE_MAP_ID (0), so it displays its own color."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant celle-ci : editor_api_dynamicDecals et ui_liveries_paint."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extensions loaded before this one: editor_api_dynamicDecals and ui_liveries_paint."
+    }
   },
   "functions": {
     "setup": {
-      "desc": "Crée la couche de remplissage de base d'une nouvelle livrée : règle l'id de palette et la couleur par défaut des couches fill, puis ajoute la couche et mémorise son uid. Renvoie false si l'API de décalques n'est pas chargée ou si vehicleColor est absent.",
-      "params": {"vehicleColor": {"type": "Point4F|table", "desc": "Couleur du véhicule passée à setFillLayerColor (type déduit du code)."}},
-      "returns": [{"type": "boolean", "desc": "true si une couche a été créée et son uid mémorisé."}],
+      "desc": "Creates the base fill layer of a new livery: sets the palette id and the default color of fill layers, then adds the layer and stores its uid. Returns false if the decals API is not loaded or vehicleColor is missing.",
+      "params": {
+        "vehicleColor": {
+          "type": "Point4F|table",
+          "desc": "Vehicle color passed to setFillLayerColor (type inferred from code)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a layer was created and its uid stored."
+        }
+      ],
       "internal": false
     },
     "bindLoadedLayer": {
-      "desc": "Après chargement d'une livrée existante, cherche dans la pile de couches la première couche de type fill et mémorise son uid. Journalise un avertissement et renvoie false si aucune n'existe (l'écran de peinture reste alors inactif).",
-      "returns": [{"type": "boolean", "desc": "true si une couche fill a été trouvée."}],
+      "desc": "After loading an existing livery, looks in the layer stack for the first layer of type fill and stores its uid. Logs a warning and returns false if none exists (the paint screen then stays inactive).",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a fill layer was found."
+        }
+      ],
       "internal": false
     },
     "teardown": {
-      "desc": "Oublie l'uid de la couche de base. Ne supprime pas la couche elle-même.",
+      "desc": "Forgets the base layer's uid. Does not delete the layer itself.",
       "internal": false
     },
     "getPaint": {
-      "desc": "Renvoie la peinture de la couche de base (via ui_liveries_paint.getLayerPaint) complétée par paint.vehicleColor = {r, g, b, a} lue sur la couleur du véhicule du joueur 0. Renvoie nil, avec un avertissement, si aucune couche de base n'est liée.",
-      "returns": [{"type": "table|nil", "desc": "Table layerUid, color, metallic, roughness, presets et vehicleColor."}],
+      "desc": "Returns the base layer's paint (via ui_liveries_paint.getLayerPaint) completed with paint.vehicleColor = {r, g, b, a} read from player 0's vehicle color. Returns nil, with a warning, if no base layer is bound.",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Table layerUid, color, metallic, roughness, presets and vehicleColor."
+        }
+      ],
       "internal": false
     },
     "setPaint": {
-      "desc": "Applique une peinture à la couche de base en déléguant à ui_liveries_paint.setLayerPaint. Renvoie false, avec un avertissement, si aucune couche de base n'est liée.",
-      "params": {"paint": {"type": "table", "desc": "Table avec color {r, g, b, a} normalisée entre 0 et 1 (metallic et roughness sont ignorés pour une couche fill)."}},
-      "returns": [{"type": "boolean", "desc": "true si la couche a été mise à jour."}],
+      "desc": "Applies a paint to the base layer by delegating to ui_liveries_paint.setLayerPaint. Returns false, with a warning, if no base layer is bound.",
+      "params": {
+        "paint": {
+          "type": "table",
+          "desc": "Table with color {r, g, b, a} normalized between 0 and 1 (metallic and roughness are ignored for a fill layer)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the layer was updated."
+        }
+      ],
       "internal": false
     }
   }

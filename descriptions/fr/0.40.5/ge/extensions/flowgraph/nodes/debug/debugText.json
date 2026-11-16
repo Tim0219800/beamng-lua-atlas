@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/debugText.lua",
+  "module": "Nœud flowgraph « Debug Text » (catégorie repeat_instant, tags util/draw). Dessine chaque frame un texte en 3D à une position (debugDrawer:drawTextAdvanced). Entrées : pos (vec3), text (any, converti par tostring), colorText (caché, blanc par défaut), colorBG (caché, noir semi-transparent {0,0,0,0.75} par défaut).",
+  "notes": ["Pas de test sur pos : vec3(nil) est construit si le pin est vide.", "Les couleurs sont lues avec 4 composantes sans valeur par défaut pour l'alpha."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Vide.", "internal": true},
+        "work": {"desc": "Construit les couleurs (ColorF texte, ColorI fond *255) et dessine le texte."}
+      }
+    }
+  }
+}

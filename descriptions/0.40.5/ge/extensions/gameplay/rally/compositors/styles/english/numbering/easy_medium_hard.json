@@ -1,13 +1,19 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/compositors/styles/english/numbering/easy_medium_hard.lua",
-  "module": "Numérotation anglaise partagée des virages en trois niveaux : hard, medium, easy. Chaque niveau donne le texte parlé, la plage de diamètre physique mesuré (m) et le visuel (icône de virage, couleurs). Utilisé par le style english/casual.",
+  "module": "Shared English corner numbering in three levels: hard, medium, easy. Each level gives the spoken text, the measured physical diameter range (m) and the visual (corner icon, colors). Used by the english/casual style.",
   "notes": [
-    "Plages de diamètre : hard [0, 65[, medium [65, 190[, easy [190, +inf[ ; correspondent aux icônes turn1, turn3 et turn6.",
-    "Pas de lengthsByIntensity : ce système ne définit pas de longueurs.",
-    "Le module renvoie directement la table {id, intensity} ; les plages peuvent être recalibrées par mission via calibrationOverrides."
+    "Diameter ranges: hard [0, 65[, medium [65, 190[, easy [190, +inf[; they correspond to the turn1, turn3 and turn6 icons.",
+    "No lengthsByIntensity: this system defines no lengths.",
+    "The module returns the table {id, intensity} directly; ranges can be recalibrated per mission via calibrationOverrides."
   ],
   "fields": {
-    "id": {"type": "string", "desc": "Identifiant du système : 'easy_medium_hard' (copié dans corner.numberingSystem)."},
-    "intensity": {"type": "table[]", "desc": "Trois entrées {id, text, diameter={min,max}, visual={icon, text, colorBg, colorStroke, ...}}, de la plus serrée (hard, rouge) à la plus ouverte (easy, vert)."}
+    "id": {
+      "type": "string",
+      "desc": "System identifier: 'easy_medium_hard' (copied into corner.numberingSystem)."
+    },
+    "intensity": {
+      "type": "table[]",
+      "desc": "Three entries {id, text, diameter={min,max}, visual={icon, text, colorBg, colorStroke, ...}}, from the tightest (hard, red) to the most open (easy, green)."
+    }
   }
 }

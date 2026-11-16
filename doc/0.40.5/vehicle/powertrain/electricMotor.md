@@ -1,93 +1,93 @@
 # `powertrain_electricMotor`
 
-*Fichier : `lua/vehicle/powertrain/electricMotor.lua` · VM : Véhicule · 724 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/electricMotor.lua` · VM: Vehicle · 724 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `electricMotor` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `electricMotor` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Composant powertrain `electricMotor` : moteur électrique de catégorie `engine`. Il produit un couple selon une courbe couple/régime (clé jbeam `torque`), le papillon (`electrics.values.throttle`) et la régénération (`regenThrottle`). Il consomme l'énergie de batteries `electricBattery` enregistrées (registerStorage), applique l'efficacité électrique, gère un limiteur de régime temporaire, l'allumage, des sons moteur et la réaction de couple sur la carrosserie. Avec un embrayage enfant (catégorie clutchlike) il intègre sa propre vitesse ; sans embrayage il impose directement le couple de sortie à l'enfant.
+Powertrain component `electricMotor`: electric motor of category `engine`. It produces a torque from a torque/RPM curve (jbeam key `torque`), the throttle (`electrics.values.throttle`) and regeneration (`regenThrottle`). It consumes energy from registered `electricBattery` batteries (registerStorage), applies electrical efficiency, handles a temporary rev limiter, ignition, engine sounds and the torque reaction on the body. With a child clutch (category clutchlike) it integrates its own speed; without a clutch it directly imposes the output torque on the child.
 
-## Exemple
+## Example
 
 ```lua
 local m = powertrain.getDevice("mainMotor")
-print(m.outputAV1 * 9.5493, m.engineLoad, m.maxPower, m.maxTorque) -- tr/min, 0..1, kW, N·m
-m:setTempRevLimiter(5000 * 0.10472) -- limite à 5000 tr/min
+print(m.outputAV1 * 9.5493, m.engineLoad, m.maxPower, m.maxTorque) -- RPM, 0..1, kW, N·m
+m:setTempRevLimiter(5000 * 0.10472) -- limit at 5000 RPM
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : name, type, inputName, inputIndex, gearRatio, cumulativeGearRatio, friction (N·m), dynamicFriction (N·m par rad/s), inertia (kg·m², défaut 0.1), electricsThrottleName ('throttle'), electricsRegenThrottleName ('regenThrottle'), electricsThrottleFactorName ('throttleFactor'), isAffectedByIgnitionLevel (true), defaultMotorDirection (1), torqueReactionNodes_nodes (3 nœuds), torque (table en-tête rpm/torque, obligatoire), regenTorqueCurve (table rpm/torque), regenFadeRPM (1000), maxRegenPower (kW, = maxPower), maxRegenTorque (= maxTorque), minimumWantedRegenTorque (0), maximumWantedRegenTorque (= maxRegenTorque), electricalEfficiency (nombre ou table {charge 0..1, rendement}), energyStorage, breakTriggerBeam, soundConfig (nom d'une table jbeam de configuration sonore).
-- Champs principaux : outputAV1 (rad/s, vitesse du rotor ; avec embrayage elle est intégrée par le moteur, sans embrayage elle est imposée par l'enfant), outputRPM (tr/min, mis à jour dans updateGFX), outputTorque1 (N·m vers l'enfant ; avec embrayage = torqueDiff de l'embrayage), inputAV (toujours 0), torqueCurve (table indexée par tr/min entier, N·m), regenCurve (idem pour la régénération), maxRPM (tr/min), maxAV (rad/s), maxTorque (N·m), maxPower (ch/PS selon torqueToPower, = valeur de getTorqueData), maxRegenTorque, throttle (0..1 après lissage), engineLoad et instantEngineLoad (-1..1 sans embrayage, 0..1 avec), torqueCoef (0..1, réduit le couple disponible depuis l'extérieur), maxTorqueLimit (N·m, math.huge par défaut), outputTorqueState (0 ou 1), isDisabled, hasEnergy, spentEnergy (J accumulés avant prélèvement dans les batteries), grossWorkPerUpdate, frictionLossPerUpdate, motorDirection (+1 ou -1), isBroken, torqueReactionNodes ({-1,-1,-1} si absent), engineNodeID.
-- velocityUpdate vaut nop : un moteur ne reçoit pas de vitesse de son parent. Sa vitesse vient de l'embrayage (updateTorqueWithClutch intègre outputAV1) ou de la roue/transmission en aval (sans embrayage).
-- Sans embrayage, le moteur applique aussi le couple inertiel de réaction (inertia * dOutputAV/dt) via obj:applyTorqueAxisCouple sur torqueReactionNodes ; il faut donc 3 nœuds valides.
-- La régénération n'a lieu que si throttle vaut 0 (actualTorque = throttle > 0 and torque or regenTorque) et n'existe que dans la version sans embrayage. Un couple négatif de régénération recharge les batteries car spentEnergy devient négatif.
-- Coupure : disable() et lockUp() mettent outputTorqueState à 0 ; lockUp met aussi outputAVState à 0 (rotor bloqué, utilisé par onBreak). enable() est automatiquement appelée quand une batterie reprend de l'énergie.
-- Plafond de puissance : le couple est limité à maxPowerThrottleMap = maxPower * 735.499 W / (régime) uniquement dans la version avec embrayage.
-- Les champs sont lus depuis `v.data`, donc validate/new doivent s'exécuter dans la VM véhicule après le chargement des données jbeam. M.requiredExternalInertiaOutputs n'est pas défini dans ce module (shallowcopy de nil).
-- Bug mineur : reset ne relit pas electricsRegenThrottleName, torque/torqueCurve ni les sons ; resetSounds ne fait que réinitialiser les lisseurs quand soundConfig existe.
+- Jbeam keys read: name, type, inputName, inputIndex, gearRatio, cumulativeGearRatio, friction (N·m), dynamicFriction (N·m per rad/s), inertia (kg·m², default 0.1), electricsThrottleName ('throttle'), electricsRegenThrottleName ('regenThrottle'), electricsThrottleFactorName ('throttleFactor'), isAffectedByIgnitionLevel (true), defaultMotorDirection (1), torqueReactionNodes_nodes (3 nodes), torque (table with rpm/torque header, required), regenTorqueCurve (rpm/torque table), regenFadeRPM (1000), maxRegenPower (kW, = maxPower), maxRegenTorque (= maxTorque), minimumWantedRegenTorque (0), maximumWantedRegenTorque (= maxRegenTorque), electricalEfficiency (number or table {load 0..1, efficiency}), energyStorage, breakTriggerBeam, soundConfig (name of a jbeam sound configuration table).
+- Main fields: outputAV1 (rad/s, rotor speed; with a clutch it is integrated by the motor, without a clutch it is imposed by the child), outputRPM (RPM, updated in updateGFX), outputTorque1 (N·m to the child; with a clutch = torqueDiff of the clutch), inputAV (always 0), torqueCurve (table keyed by integer RPM, N·m), regenCurve (same for regeneration), maxRPM (RPM), maxAV (rad/s), maxTorque (N·m), maxPower (hp/PS according to torqueToPower, = value from getTorqueData), maxRegenTorque, throttle (0..1 after smoothing), engineLoad and instantEngineLoad (-1..1 without clutch, 0..1 with), torqueCoef (0..1, reduces the available torque from outside), maxTorqueLimit (N·m, math.huge by default), outputTorqueState (0 or 1), isDisabled, hasEnergy, spentEnergy (J accumulated before being drawn from the batteries), grossWorkPerUpdate, frictionLossPerUpdate, motorDirection (+1 or -1), isBroken, torqueReactionNodes ({-1,-1,-1} if absent), engineNodeID.
+- velocityUpdate is nop: a motor does not receive a speed from its parent. Its speed comes from the clutch (updateTorqueWithClutch integrates outputAV1) or from the wheel/transmission downstream (without a clutch).
+- Without a clutch, the motor also applies the inertial reaction torque (inertia * dOutputAV/dt) via obj:applyTorqueAxisCouple on torqueReactionNodes; 3 valid nodes are therefore needed.
+- Regeneration only happens if throttle is 0 (actualTorque = throttle > 0 and torque or regenTorque) and exists only in the version without a clutch. A negative regeneration torque recharges the batteries because spentEnergy becomes negative.
+- Cut-off: disable() and lockUp() set outputTorqueState to 0; lockUp also sets outputAVState to 0 (locked rotor, used by onBreak). enable() is automatically called when a battery regains energy.
+- Power cap: the torque is limited to maxPowerThrottleMap = maxPower * 735.499 W / (speed) only in the version with a clutch.
+- The fields are read from `v.data`, so validate/new must run in the vehicle VM after the jbeam data is loaded. M.requiredExternalInertiaOutputs is not defined in this module (shallowcopy of nil).
+- Minor bug: reset does not reread electricsRegenThrottleName, torque/torqueCurve or the sounds; resetSounds only resets the smoothers when soundConfig exists.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_electricMotor.new(jbeamData)` | Construit le moteur électrique : lit la courbe de couple (obligatoire), la courbe de régénération (fournie ou calculée à partir de maxRegenPower/maxRegenTorque/regenFadeRPM), le rendement électrique, les nœuds de réaction de couple, et prépare les données de courbe (getTorqueData). *(interne)* | 505 |
+| `powertrain_electricMotor.new(jbeamData)` | Builds the electric motor: reads the torque curve (required), the regeneration curve (provided or computed from maxRegenPower/maxRegenTorque/regenFadeRPM), the electrical efficiency, the torque reaction nodes, and prepares the curve data (getTorqueData). *(internal)* | 505 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_electricMotor.new(jbeamData)`
 
-Construit le moteur électrique : lit la courbe de couple (obligatoire), la courbe de régénération (fournie ou calculée à partir de maxRegenPower/maxRegenTorque/regenFadeRPM), le rendement électrique, les nœuds de réaction de couple, et prépare les données de courbe (getTorqueData).
+Builds the electric motor: reads the torque curve (required), the regeneration curve (provided or computed from maxRegenPower/maxRegenTorque/regenFadeRPM), the electrical efficiency, the torque reaction nodes, and prepares the curve data (getTorqueData).
 
-- `jbeamData` (*table*) : Données jbeam du composant.
-- **renvoie** : table Le device (classe `device`).
+- `jbeamData` (*table*) : jbeam data of the component.
+- **returns**: table The device (class `device`).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `deviceCategories` | table<string, boolean> | {engine=true} : permet aux embrayages et boîtes de reconnaître le moteur comme parent valide. |
-| `outputPorts` | table<integer, boolean> | {[1]=true} : un port de sortie. |
+| `deviceCategories` | table<string, boolean> | {engine=true}: lets clutches and gearboxes recognize the motor as a valid parent. |
+| `outputPorts` | table<integer, boolean> | {[1]=true}: one output port. |
 
-## Classe `device`
+## Class `device`
 
-Objet renvoyé par new(jbeamData). torqueUpdate est updateTorqueWithClutch ou updateTorqueWithoutClutch selon la présence d'un embrayage enfant.
+Object returned by new(jbeamData). torqueUpdate is updateTorqueWithClutch or updateTorqueWithoutClutch depending on the presence of a child clutch.
 
-Objet `device` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `device` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `device:calculateInertia()` | Prend l'inertie et le rapport cumulés du premier enfant comme cumulativeInertia et cumulativeGearRatio. | 323 |
-| `device:disable()` | Coupe le moteur : outputTorqueState = 0, isDisabled = true. | 88 |
-| `device:enable()` | Réactive le moteur : outputTorqueState = 1, isDisabled = false. | 93 |
-| `device:getSoundConfiguration()` | Renvoie la table soundConfiguration (paramètres des sons moteur déjà initialisés, par référence). | 337 |
-| `device:getTorqueData()` | Calcule les courbes de couple et de puissance nettes du frottement et renvoie {maxRPM, curves, maxTorque, maxPower, maxTorqueRPM, maxPowerRPM, finalCurveName, deviceName, vehicleID}. Utilisé par l'interface et par les embrayages/boîtes (maxTorque). | 22 |
-| `device:initEngineSound(soundID, samplePath, engineNodeIDs, offLoadGain, onLoadGain, reference)` | Mémorise la configuration d'un échantillon sonore et demande au moteur de jeu (GE Lua) de l'initialiser : core_sounds.initEngineSound. | 417 |
-| `device:initSounds(jbeamData)` | Crée la configuration sonore depuis la table jbeam désignée par soundConfig (lisseurs, gains, EQ, échantillon) et active updateSounds. Journalise une erreur si la configuration est introuvable. | 432 |
-| `device:lockUp()` | Bloque le moteur : couple 0, vitesse de sortie forcée à 0 (outputAVState = 0) et isDisabled = true. Appelée par onBreak. | 98 |
-| `device:onBreak()` | Appelée quand la poutre de rupture casse : appelle lockUp. | 292 |
-| `device:registerStorage(storageName)` | Enregistre une batterie (stockage de type electricBattery avec capacité > 0) comme source d'énergie du moteur et recalcule les ratios. | 311 |
-| `device:reset(jbeamData)` | Réinitialise l'état (vitesses, couple, papillon, charge, énergie, limiteur, coefficients), relit friction, dynamicFriction, inertia, defaultMotorDirection du jbeam et recalcule les données de courbe. | 341 |
-| `device:resetSounds(jbeamData)` | Remet à zéro les lisseurs de son si la configuration sonore existe ; coupe les anciens sons moteur. Journalise une erreur si soundConfig est introuvable. | 398 |
-| `device:resetTempRevLimiter()` | Désactive le limiteur de régime temporaire (valeur de coupure très haute, isTempRevLimiterActive = false). | 303 |
-| `device:scaleFriction(friction)` | Multiplie le frottement du moteur (friction) par le facteur donné. | 80 |
-| `device:scaleOutputTorque(state)` | Multiplie outputTorqueState (0..1) par state. Sert à réduire le couple disponible ; attention, l'effet est cumulatif. | 84 |
-| `device:sendTorqueData(data)` | Envoie l'événement GUI 'TorqueCurveChanged' avec les données de courbe (calculées si non fournies). | 73 |
-| `device:setEngineSoundParameterList(soundID, params, reference)` | Mémorise et envoie (core_sounds.setEngineSoundParameterList) une liste de paramètres sonores pour un son moteur. | 425 |
-| `device:setIgnition(value)` | Règle le coefficient d'allumage : 1 si value > 0, sinon 0. N'a d'effet que si isAffectedByIgnitionLevel est vrai (défaut). | 288 |
-| `device:setTempRevLimiter(revLimiterAV, maxOvershootAV)` | Active un limiteur de régime temporaire : le papillon est réduit entre revLimiterAV et revLimiterAV + maxOvershootAV. | 296 |
-| `device:torqueUpdate(dt)` | Appelée à chaque pas physique. Calcule le papillon lissé (avec limiteur de régime temporaire et allumage), le couple depuis la courbe, la charge, le travail brut, l'énergie dépensée et le couple de frottement. Avec embrayage : intègre outputAV1 et prend outputTorque1 = clutch.torqueDiff. Sans embrayage : inclut la régénération et applique le couple inertiel de réaction à la carrosserie. | dyn |
-| `device:updateEnergyStorageRatios()` | Recalcule la part d'énergie prélevée (ou rendue en régénération) par chaque batterie enregistrée selon le nombre de batteries avec énergie. | 104 |
-| `device:updateEnergyUsage()` | Retire spentEnergy des batteries enregistrées (ou y ajoute en régénération), met à jour les compteurs de batteries non vides et appelle disable/enable selon qu'il reste de l'énergie. Ne fait rien sans device.energyStorage. | 116 |
-| `device:updateGFX(dt)` | Mise à jour par image : appelle updateEnergyUsage, calcule outputRPM et remet à zéro les compteurs de travail et de perte par friction. | 154 |
-| `device:updateSounds(dt)` | Définie seulement si une soundConfig valide est présente (sinon nop). Lisse le régime et la charge et appelle obj:setEngineSound avec la fréquence fondamentale. | 163 |
-| `device:validate()` | Détecte l'embrayage enfant (un seul enfant de catégorie clutchlike), pose clutchChild et l'inertie effective, enregistre le moteur dans powertrain.engineData et sélectionne la version de torqueUpdate. Sans enfant : clutchChild = {torqueDiff = 0}. | 273 |
-| `device:velocityUpdate()` | Toujours nop pour un moteur : la vitesse de sortie est calculée dans torqueUpdate ou imposée par l'aval. | dyn |
+| `device:calculateInertia()` | Takes the cumulative inertia and ratio of the first child as cumulativeInertia and cumulativeGearRatio. | 323 |
+| `device:disable()` | Cuts the motor: outputTorqueState = 0, isDisabled = true. | 88 |
+| `device:enable()` | Re-enables the motor: outputTorqueState = 1, isDisabled = false. | 93 |
+| `device:getSoundConfiguration()` | Returns the soundConfiguration table (parameters of the already initialized engine sounds, by reference). | 337 |
+| `device:getTorqueData()` | Computes the torque and power curves net of friction and returns {maxRPM, curves, maxTorque, maxPower, maxTorqueRPM, maxPowerRPM, finalCurveName, deviceName, vehicleID}. Used by the interface and by the clutches/gearboxes (maxTorque). | 22 |
+| `device:initEngineSound(soundID, samplePath, engineNodeIDs, offLoadGain, onLoadGain, reference)` | Stores the configuration of a sound sample and asks the game engine (GE Lua) to initialize it: core_sounds.initEngineSound. | 417 |
+| `device:initSounds(jbeamData)` | Creates the sound configuration from the jbeam table designated by soundConfig (smoothers, gains, EQ, sample) and enables updateSounds. Logs an error if the configuration cannot be found. | 432 |
+| `device:lockUp()` | Locks the motor: torque 0, output speed forced to 0 (outputAVState = 0) and isDisabled = true. Called by onBreak. | 98 |
+| `device:onBreak()` | Called when the break beam breaks: calls lockUp. | 292 |
+| `device:registerStorage(storageName)` | Registers a battery (storage of type electricBattery with capacity > 0) as the motor's energy source and recomputes the ratios. | 311 |
+| `device:reset(jbeamData)` | Resets the state (speeds, torque, throttle, load, energy, limiter, coefficients), rereads friction, dynamicFriction, inertia, defaultMotorDirection from the jbeam and recomputes the curve data. | 341 |
+| `device:resetSounds(jbeamData)` | Resets the sound smoothers if the sound configuration exists; stops the old engine sounds. Logs an error if soundConfig cannot be found. | 398 |
+| `device:resetTempRevLimiter()` | Disables the temporary rev limiter (very high cut-off value, isTempRevLimiterActive = false). | 303 |
+| `device:scaleFriction(friction)` | Multiplies the motor friction (friction) by the given factor. | 80 |
+| `device:scaleOutputTorque(state)` | Multiplies outputTorqueState (0..1) by state. Used to reduce the available torque; note that the effect is cumulative. | 84 |
+| `device:sendTorqueData(data)` | Sends the GUI event 'TorqueCurveChanged' with the curve data (computed if not provided). | 73 |
+| `device:setEngineSoundParameterList(soundID, params, reference)` | Stores and sends (core_sounds.setEngineSoundParameterList) a list of sound parameters for an engine sound. | 425 |
+| `device:setIgnition(value)` | Sets the ignition coefficient: 1 if value > 0, otherwise 0. Only has an effect if isAffectedByIgnitionLevel is true (default). | 288 |
+| `device:setTempRevLimiter(revLimiterAV, maxOvershootAV)` | Enables a temporary rev limiter: the throttle is reduced between revLimiterAV and revLimiterAV + maxOvershootAV. | 296 |
+| `device:torqueUpdate(dt)` | Called at each physics step. Computes the smoothed throttle (with temporary rev limiter and ignition), the torque from the curve, the load, the gross work, the spent energy and the friction torque. With a clutch: integrates outputAV1 and takes outputTorque1 = clutch.torqueDiff. Without a clutch: includes regeneration and applies the inertial reaction torque to the body. | dyn |
+| `device:updateEnergyStorageRatios()` | Recomputes the share of energy drawn (or returned during regeneration) by each registered battery according to the number of batteries with energy. | 104 |
+| `device:updateEnergyUsage()` | Removes spentEnergy from the registered batteries (or adds to them during regeneration), updates the counters of non-empty batteries and calls disable/enable depending on whether energy remains. Does nothing without device.energyStorage. | 116 |
+| `device:updateGFX(dt)` | Per-frame update: calls updateEnergyUsage, computes outputRPM and resets the work and friction loss counters. | 154 |
+| `device:updateSounds(dt)` | Defined only if a valid soundConfig is present (otherwise nop). Smooths RPM and load and calls obj:setEngineSound with the fundamental frequency. | 163 |
+| `device:validate()` | Detects the child clutch (a single child of category clutchlike), sets clutchChild and the effective inertia, registers the motor in powertrain.engineData and selects the torqueUpdate version. Without a child: clutchChild = {torqueDiff = 0}. | 273 |
+| `device:velocityUpdate()` | Always nop for a motor: the output speed is computed in torqueUpdate or imposed from downstream. | dyn |
 
-**Évènements UI (guihooks.trigger) :** `TorqueCurveChanged`
+**UI events (guihooks.trigger):** `TorqueCurveChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `applyTorqueAxisCouple`, `getId`, `queueGameEngineLua`, `setEngineSound`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/electricMotor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/electricMotor.lua`.*

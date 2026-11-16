@@ -1,36 +1,217 @@
 {
   "path": "lua/common/kdtreepoint3d.lua",
-  "module": "Arbre k-d pour points 3D. Offre deux types de requêtes : les points dans une boîte (query / queryNotNested, itérateurs) et le point le plus proche d'un point donné (findNearest). Typique pour retrouver le noeud de route ou l'objet le plus proche d'une position. Flux : new -> preLoad -> build -> requêtes.",
+  "module": "K-d tree for 3D points. Offers two kinds of queries: the points in a box (query / queryNotNested, iterators) and the nearest point to a given point (findNearest). Typical for finding the road node or object nearest to a position. Flow: new -> preLoad -> build -> queries.",
   "usage": "local kdTreeP3d = require('kdtreepoint3d')\nlocal kdT = kdTreeP3d.new(itemCount)\nfor id, p in pairs(points) do kdT:preLoad(id, p.x, p.y, p.z) end\nkdT:build()\nlocal nearestId, dist = kdT:findNearest(x, y, z)\nfor id in kdT:queryNotNested(xmin, ymin, zmin, xmax, ymax, zmax) do ... end",
   "notes": [
-    "Chaque point occupe 4 valeurs dans self.items (x, y, z, id) ; avant build() itemCount compte des valeurs, après build() c'est le nombre de points.",
-    "Le commentaire d'usage écrit `kdT:preload` mais la méthode réelle est preLoad (L majuscule).",
-    "findNearest renvoie l'id et la DISTANCE (racine carrée, pas le carré). Il utilise self.qPoint et self.stack : pas réentrant, et il ne marche pas avant build. Il utilise la globale square (mathlib).",
-    "queryNotNested n'est pas imbricable (état réutilisé) ; query l'est. Bornes de requête clampées à ±1.7e308.",
-    "Pas de méthode clear() dans cette version (contrairement à kdtreebox2d)."
+    "Each point occupies 4 values in self.items (x, y, z, id); before build() itemCount counts values, after build() it is the number of points.",
+    "The usage comment writes `kdT:preload` but the actual method is preLoad (capital L).",
+    "findNearest returns the id and the DISTANCE (square root, not the squared value). It uses self.qPoint and self.stack: not reentrant, and it does not work before build. It uses the global square (mathlib).",
+    "queryNotNested cannot be nested (state reused); query can. Query bounds clamped to ±1.7e308.",
+    "No clear() method in this version (unlike kdtreebox2d)."
   ],
   "fields": {},
   "functions": {
     "new": {
-      "desc": "Crée un arbre k-d de points 3D vide.",
-      "params": {"itemCount": {"type": "integer|nil", "desc": "nombre de points prévus (préallocation, facultatif)"}},
-      "returns": [{"type": "kdTree", "desc": "arbre vide"}],
+      "desc": "Creates an empty 3D point k-d tree.",
+      "params": {
+        "itemCount": {
+          "type": "integer|nil",
+          "desc": "expected number of points (preallocation, optional)"
+        }
+      },
+      "returns": [
+        {
+          "type": "kdTree",
+          "desc": "empty tree"
+        }
+      ],
       "internal": false
     }
   },
   "classes": {
     "kdTree": {
-      "desc": "Objet renvoyé par new().",
+      "desc": "Object returned by new().",
       "functions": {
-        "preLoad": {"desc": "Ajoute un point (avant build).", "params": {"id": {"type": "any", "desc": "identifiant renvoyé par les requêtes"}, "x": {"type": "number", "desc": "x"}, "y": {"type": "number", "desc": "y"}, "z": {"type": "number", "desc": "z"}}, "returns": []},
-        "build": {"desc": "Construit l'arbre à partir des points chargés.", "params": {}, "returns": []},
-        "_build": {"desc": "Interne : construction récursive d'un noeud.", "params": {"axis": {"type": "integer", "desc": "axe courant"}, "left": {"type": "integer", "desc": "début dans items"}, "right": {"type": "integer", "desc": "fin dans items"}, "treeIdx": {"type": "integer", "desc": "indice du noeud"}}, "returns": [], "internal": true},
-        "query": {"desc": "Itérateur sur les ids des points situés dans la boîte de requête ; imbrication possible.", "params": {"query_xmin": {"type": "number", "desc": "xmin"}, "query_ymin": {"type": "number", "desc": "ymin"}, "query_zmin": {"type": "number", "desc": "zmin"}, "query_xmax": {"type": "number", "desc": "xmax"}, "query_ymax": {"type": "number", "desc": "ymax"}, "query_zmax": {"type": "number", "desc": "zmax"}}, "returns": [{"type": "function", "desc": "itérateur renvoyant les ids"}, {"type": "table", "desc": "état d'itération"}]},
-        "queryNotNested": {"desc": "Comme query sans allocation ; ne pas imbriquer.", "params": {"query_xmin": {"type": "number", "desc": "xmin"}, "query_ymin": {"type": "number", "desc": "ymin"}, "query_zmin": {"type": "number", "desc": "zmin"}, "query_xmax": {"type": "number", "desc": "xmax"}, "query_ymax": {"type": "number", "desc": "ymax"}, "query_zmax": {"type": "number", "desc": "zmax"}}, "returns": [{"type": "function", "desc": "itérateur renvoyant les ids"}, {"type": "table", "desc": "état d'itération (l'arbre)"}]},
-        "findNearest": {"desc": "Trouve le point le plus proche de (x, y, z) et renvoie son id et la distance euclidienne.", "params": {"x": {"type": "number", "desc": "x"}, "y": {"type": "number", "desc": "y"}, "z": {"type": "number", "desc": "z"}}, "returns": [{"type": "any", "desc": "id du point le plus proche"}, {"type": "number", "desc": "distance"}]},
-        "export": {"desc": "Renvoie les données de l'arbre (références) pour réutilisation.", "params": {}, "returns": [{"type": "table", "desc": "données exportées"}]},
-        "import": {"desc": "Charge des données produites par export().", "params": {"kdTreeData": {"type": "table", "desc": "table d'export"}}, "returns": []},
-        "analytics": {"desc": "Affiche (print) des statistiques de l'arbre.", "params": {}, "returns": []}
+        "preLoad": {
+          "desc": "Adds a point (before build).",
+          "params": {
+            "id": {
+              "type": "any",
+              "desc": "id returned by the queries"
+            },
+            "x": {
+              "type": "number",
+              "desc": "x"
+            },
+            "y": {
+              "type": "number",
+              "desc": "y"
+            },
+            "z": {
+              "type": "number",
+              "desc": "z"
+            }
+          },
+          "returns": []
+        },
+        "build": {
+          "desc": "Builds the tree from the loaded points.",
+          "params": {},
+          "returns": []
+        },
+        "_build": {
+          "desc": "Internal: recursive construction of a node.",
+          "params": {
+            "axis": {
+              "type": "integer",
+              "desc": "current axis"
+            },
+            "left": {
+              "type": "integer",
+              "desc": "start in items"
+            },
+            "right": {
+              "type": "integer",
+              "desc": "end in items"
+            },
+            "treeIdx": {
+              "type": "integer",
+              "desc": "node index"
+            }
+          },
+          "returns": [],
+          "internal": true
+        },
+        "query": {
+          "desc": "Iterator over the ids of the points located in the query box; nesting possible.",
+          "params": {
+            "query_xmin": {
+              "type": "number",
+              "desc": "xmin"
+            },
+            "query_ymin": {
+              "type": "number",
+              "desc": "ymin"
+            },
+            "query_zmin": {
+              "type": "number",
+              "desc": "zmin"
+            },
+            "query_xmax": {
+              "type": "number",
+              "desc": "xmax"
+            },
+            "query_ymax": {
+              "type": "number",
+              "desc": "ymax"
+            },
+            "query_zmax": {
+              "type": "number",
+              "desc": "zmax"
+            }
+          },
+          "returns": [
+            {
+              "type": "function",
+              "desc": "iterator returning the ids"
+            },
+            {
+              "type": "table",
+              "desc": "iteration state"
+            }
+          ]
+        },
+        "queryNotNested": {
+          "desc": "Like query without allocation; do not nest.",
+          "params": {
+            "query_xmin": {
+              "type": "number",
+              "desc": "xmin"
+            },
+            "query_ymin": {
+              "type": "number",
+              "desc": "ymin"
+            },
+            "query_zmin": {
+              "type": "number",
+              "desc": "zmin"
+            },
+            "query_xmax": {
+              "type": "number",
+              "desc": "xmax"
+            },
+            "query_ymax": {
+              "type": "number",
+              "desc": "ymax"
+            },
+            "query_zmax": {
+              "type": "number",
+              "desc": "zmax"
+            }
+          },
+          "returns": [
+            {
+              "type": "function",
+              "desc": "iterator returning the ids"
+            },
+            {
+              "type": "table",
+              "desc": "iteration state (the tree)"
+            }
+          ]
+        },
+        "findNearest": {
+          "desc": "Finds the point nearest to (x, y, z) and returns its id and the Euclidean distance.",
+          "params": {
+            "x": {
+              "type": "number",
+              "desc": "x"
+            },
+            "y": {
+              "type": "number",
+              "desc": "y"
+            },
+            "z": {
+              "type": "number",
+              "desc": "z"
+            }
+          },
+          "returns": [
+            {
+              "type": "any",
+              "desc": "id of the nearest point"
+            },
+            {
+              "type": "number",
+              "desc": "distance"
+            }
+          ]
+        },
+        "export": {
+          "desc": "Returns the tree data (references) for reuse.",
+          "params": {},
+          "returns": [
+            {
+              "type": "table",
+              "desc": "exported data"
+            }
+          ]
+        },
+        "import": {
+          "desc": "Loads data produced by export().",
+          "params": {
+            "kdTreeData": {
+              "type": "table",
+              "desc": "export table"
+            }
+          },
+          "returns": []
+        },
+        "analytics": {
+          "desc": "Prints (print) tree statistics.",
+          "params": {},
+          "returns": []
+        }
       }
     }
   }

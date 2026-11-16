@@ -1,60 +1,60 @@
 # `editor_drivePathEditor`
 
-*Fichier : `lua/ge/extensions/editor/drivePathEditor.lua` · VM : Game Engine (GE) · 1248 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/drivePathEditor.lua` · VM: Game Engine (GE) · 1248 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_drivePathEditor` : `extensions.load("editor_drivePathEditor")`, puis la globale `editor_drivePathEditor`
+**Access:** extension `editor_drivePathEditor`: `extensions.load("editor_drivePathEditor")`, then the global `editor_drivePathEditor`
 
-Drive Path Editor de l'éditeur de monde : outil pour dessiner des trajets (splines) que des véhicules IA suivent, en mode libre (nœuds posés à la main, avec largeurs et profil de vitesse) ou en mode graphe de navigation (choix de nœuds du navgraph de la carte). Il permet aussi d'enregistrer un trajet en conduisant et de lancer la lecture (ai.driveUsingPath). Ce fichier est l'interface principale : fenêtre, entrées souris/clavier et rendu ; la logique des splines est dans drivePathEditor/splineMgr, la lecture dans playback et l'enregistrement dans record.
+Drive Path Editor of the world editor: tool for drawing paths (splines) that AI vehicles follow, in free mode (hand-placed nodes, with widths and speed profile) or in navigation graph mode (choosing nodes of the map's navgraph). It also lets you record a path by driving and start playback (ai.driveUsingPath). This file is the main interface: window, mouse/keyboard input and rendering; the spline logic is in drivePathEditor/splineMgr, playback in playback and recording in record.
 
-## Remarques
+## Notes
 
-- Mode d'édition déclaré : editor.editModes.drivePathSplineEditMode (« Drive Path Spline »). À l'activation, l'IA de tous les véhicules est arrêtée (ai.setState mode stop).
-- Bornes de l'interface : délai de départ 0 à 60 s, vitesse de route 0 à 100 m/s, agressivité 0.3 à 1.0, tours 1 à 10 ; unités de vitesse affichées : m/s, mph ou kph (kph par défaut).
-- onEditorGui met toujours à jour les splines « dirty », même outil inactif, et dessine seulement leurs coques ; si l'outil est actif, la fenêtre est dessinée, puis lecture/enregistrement, sinon l'éditeur de spline.
-- onSerialize sérialise toutes les splines puis les supprime de la scène ; onDeserialized les recrée et relie les véhicules.
-- Le fichier du module n'exporte que la sélection croisée (setSelectedSplineIdx/NodeIdx) et les hooks ; tout le reste est local.
+- Declared edit mode: editor.editModes.drivePathSplineEditMode ("Drive Path Spline"). On activation, the AI of all vehicles is stopped (ai.setState mode stop).
+- UI bounds: start delay 0 to 60 s, road speed 0 to 100 m/s, aggression 0.3 to 1.0, laps 1 to 10; displayed speed units: m/s, mph or kph (kph by default).
+- onEditorGui always updates "dirty" splines, even when the tool is inactive, and only draws their hulls; if the tool is active, the window is drawn, then playback/recording, otherwise the spline editor.
+- onSerialize serializes all splines then removes them from the scene; onDeserialized recreates them and relinks the vehicles.
+- The module file only exports the cross-selection (setSelectedSplineIdx/NodeIdx) and the hooks; everything else is local.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_drivePathEditor.onClientEndMission()` | Hook appelé à la sortie de la carte : supprime toutes les splines de chemin, même désactivées, pour éviter des pointeurs TSStatic invalides au chargement suivant. *(interne)* *(hook)* | 1231 |
-| `editor_drivePathEditor.onDeserialized(data)` | Hook de restauration : recrée les splines depuis les données, recalcule la table id vers index et relie de nouveau les véhicules. Ne fait rien si data est vide. *(interne)* *(hook)* | 99 |
-| `editor_drivePathEditor.onEditorGui()` | Hook de l'éditeur appelé chaque frame : met à jour les splines, dessine la fenêtre, gère la lecture, l'enregistrement, les entrées et le rendu du mode libre ou du mode navgraph. *(interne)* *(hook)* | 1087 |
-| `editor_drivePathEditor.onEditorInitialized()` | Hook : déclare le mode d'édition « Drive Path Spline » (icône cône de signalisation) et enregistre la fenêtre (300x700). *(interne)* *(hook)* | 1217 |
-| `editor_drivePathEditor.onSerialize()` | Hook de sauvegarde avant rechargement des extensions : renvoie la liste des splines sérialisées et supprime les splines de la scène. *(interne)* *(hook)* | 86 |
-| `editor_drivePathEditor.setSelectedNodeIdx(idx)` | Définit le nœud sélectionné (pour la sélection partagée entre outils). | 83 |
-| `editor_drivePathEditor.setSelectedSplineIdx(idx)` | Définit la spline sélectionnée (pour la sélection partagée entre outils). | 80 |
+| `editor_drivePathEditor.onClientEndMission()` | Hook called on map exit: removes all path splines, even disabled ones, to avoid invalid TSStatic pointers on the next load. *(internal)* *(hook)* | 1231 |
+| `editor_drivePathEditor.onDeserialized(data)` | Restore hook: recreates the splines from the data, recomputes the id-to-index table and relinks the vehicles. Does nothing if data is empty. *(internal)* *(hook)* | 99 |
+| `editor_drivePathEditor.onEditorGui()` | Editor hook called every frame: updates the splines, draws the window, handles playback, recording, input and rendering of free mode or navgraph mode. *(internal)* *(hook)* | 1087 |
+| `editor_drivePathEditor.onEditorInitialized()` | Hook: declares the "Drive Path Spline" edit mode (traffic cone icon) and registers the window (300x700). *(internal)* *(hook)* | 1217 |
+| `editor_drivePathEditor.onSerialize()` | Save hook before extensions reload: returns the list of serialized splines and removes the splines from the scene. *(internal)* *(hook)* | 86 |
+| `editor_drivePathEditor.setSelectedNodeIdx(idx)` | Sets the selected node (for the selection shared between tools). | 83 |
+| `editor_drivePathEditor.setSelectedSplineIdx(idx)` | Sets the selected spline (for the selection shared between tools). | 80 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_drivePathEditor.onDeserialized(data)`
 
-Hook de restauration : recrée les splines depuis les données, recalcule la table id vers index et relie de nouveau les véhicules. Ne fait rien si data est vide.
+Restore hook: recreates the splines from the data, recomputes the id-to-index table and relinks the vehicles. Does nothing if data is empty.
 
-- `data` (*table|nil*) : tableau renvoyé par onSerialize
+- `data` (*table|nil*) : array returned by onSerialize
 
 #### `editor_drivePathEditor.onSerialize()`
 
-Hook de sauvegarde avant rechargement des extensions : renvoie la liste des splines sérialisées et supprime les splines de la scène.
+Save hook before extensions reload: returns the list of serialized splines and removes the splines from the scene.
 
-- **renvoie** : table tableau de splines sérialisées
+- **returns**: table array of serialized splines
 
 #### `editor_drivePathEditor.setSelectedNodeIdx(idx)`
 
-Définit le nœud sélectionné (pour la sélection partagée entre outils).
+Sets the selected node (for the selection shared between tools).
 
-- `idx` (*integer*) : index de nœud (base 1)
+- `idx` (*integer*) : node index (1-based)
 
 #### `editor_drivePathEditor.setSelectedSplineIdx(idx)`
 
-Définit la spline sélectionnée (pour la sélection partagée entre outils).
+Sets the selected spline (for the selection shared between tools).
 
-- `idx` (*integer*) : index de spline (base 1)
+- `idx` (*integer*) : spline index (1-based)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `enterVehicle`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/drivePathEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/drivePathEditor.lua`.*

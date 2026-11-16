@@ -1,58 +1,58 @@
 # `libs_lustach_src_lustache_context`
 
-*Fichier : `lua/common/libs/lustach/src/lustache/context.lua` · VM : Commun (GE + véhicule) · 67 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lustach/src/lustache/context.lua` · VM: Common (GE + vehicle) · 67 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/lustach/src/lustache/context")`
+**Access:** `require("libs/lustach/src/lustache/context")`
 
-Bibliothèque tierce lustache : contexte de rendu Mustache. Un contexte enveloppe la vue (table de données) courante, garde un lien vers le contexte parent (pile d'imbrication des sections) et un cache de résolution de noms. Le renderer s'en sert pour résoudre `{{nom}}`, `{{a.b.c}}` et `{{.}}`.
+Third-party library lustache: Mustache rendering context. A context wraps the current view (data table), keeps a link to the parent context (section nesting stack) and a name-resolution cache. The renderer uses it to resolve `{{name}}`, `{{a.b.c}}` and `{{.}}`.
 
-## Remarques
+## Notes
 
-- Les méthodes s'appellent avec les deux-points sur une instance créée par `Context:new(view, parent)` ; `new` renvoie une table dont la métatable est `context` elle-même.
-- Bug mineur : `lookup` teste `string_find(name, ".") > 0` ; le motif "." désigne n'importe quel caractère, donc la condition est toujours vraie pour un nom non vide et le chemin découpé par points est toujours emprunté (le résultat reste correct).
-- Les valeurs `false` ou nil ne sont pas mises en cache efficacement (le test `if not value` relance la recherche) et la recherche remonte alors aux contextes parents.
+- The methods are called with a colon on an instance created by `Context:new(view, parent)`; `new` returns a table whose metatable is `context` itself.
+- Minor bug: `lookup` tests `string_find(name, ".") > 0`; the pattern "." matches any character, so the condition is always true for a non-empty name and the dot-split path is always taken (the result remains correct).
+- `false` or nil values are not cached effectively (the `if not value` test restarts the lookup) and the lookup then goes up to the parent contexts.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_lustach_src_lustache_context.clear_cache(self)` | Vide le cache de résolution de ce contexte. | 7 |
-| `libs_lustach_src_lustache_context.lookup(self, name)` | Résout un nom dans la vue courante puis, à défaut, dans les contextes parents. Gère les chemins à points (`a.b.c`) et le nom `.` (la vue elle-même). Le résultat est mis en cache. | 15 |
-| `libs_lustach_src_lustache_context.new(self, view, parent)` | Crée un contexte pour `view` avec un parent optionnel et un cache vide. | 57 |
-| `libs_lustach_src_lustache_context.push(self, view)` | Crée un contexte enfant pour `view` dont le parent est le contexte courant (entrée dans une section). | 11 |
+| `libs_lustach_src_lustache_context.clear_cache(self)` | Clears the resolution cache of this context. | 7 |
+| `libs_lustach_src_lustache_context.lookup(self, name)` | Resolves a name in the current view, then, failing that, in the parent contexts. Handles dotted paths (`a.b.c`) and the name `.` (the view itself). The result is cached. | 15 |
+| `libs_lustach_src_lustache_context.new(self, view, parent)` | Creates a context for `view` with an optional parent and an empty cache. | 57 |
+| `libs_lustach_src_lustache_context.push(self, view)` | Creates a child context for `view` whose parent is the current context (entering a section). | 11 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_lustach_src_lustache_context.lookup(self, name)`
 
-Résout un nom dans la vue courante puis, à défaut, dans les contextes parents. Gère les chemins à points (`a.b.c`) et le nom `.` (la vue elle-même). Le résultat est mis en cache.
+Resolves a name in the current view, then, failing that, in the parent contexts. Handles dotted paths (`a.b.c`) and the name `.` (the view itself). The result is cached.
 
 - `self` (*any*) : 
-- `name` (*string*) : Nom ou chemin à résoudre.
-- **renvoie** : any Valeur trouvée, ou nil.
+- `name` (*string*) : Name or path to resolve.
+- **returns**: any Value found, or nil.
 
 #### `libs_lustach_src_lustache_context.new(self, view, parent)`
 
-Crée un contexte pour `view` avec un parent optionnel et un cache vide.
+Creates a context for `view` with an optional parent and an empty cache.
 
-- `self` (*table*) : Classe context (appel avec les deux-points).
-- `view` (*any*) : Données du contexte (table, nombre ou autre valeur).
-- `parent` (*table|nil*) : Contexte parent.
-- **renvoie** : table Nouveau contexte {view, parent, cache}.
+- `self` (*table*) : Context class (call with a colon).
+- `view` (*any*) : Context data (table, number or other value).
+- `parent` (*table|nil*) : Parent context.
+- **returns**: table New context {view, parent, cache}.
 
 #### `libs_lustach_src_lustache_context.push(self, view)`
 
-Crée un contexte enfant pour `view` dont le parent est le contexte courant (entrée dans une section).
+Creates a child context for `view` whose parent is the current context (entering a section).
 
 - `self` (*any*) : 
-- `view` (*any*) : Données de la section.
-- **renvoie** : table Contexte enfant.
+- `view` (*any*) : Section data.
+- **returns**: table Child context.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `__index` | table | Auto-référence de la classe (la table `context` sert de métatable). |
+| `__index` | table | Self-reference of the class (the `context` table serves as metatable). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lustach/src/lustache/context.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lustach/src/lustache/context.lua`.*

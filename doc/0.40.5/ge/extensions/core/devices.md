@@ -1,58 +1,58 @@
 # `core_devices`
 
-*Fichier : `lua/ge/extensions/core/devices.lua` · VM : Game Engine (GE) · 104 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/devices.lua` · VM: Game Engine (GE) · 104 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_devices` : `extensions.load("core_devices")`, puis la globale `core_devices`
+**Access:** extension `core_devices`: `extensions.load("core_devices")`, then the global `core_devices`
 
-Pilote l'éclairage RGB des périphériques de jeu (volants, manettes) via l'objet C++ Device. Chaque périphérique assigné à un joueur prend la couleur de ce joueur (orange BeamNG 255,102,0 par défaut), sauf si le retour de force du volant demande le mode d'éclairage « default » et que les LED de changement de rapport du véhicule sont en service : dans ce cas la couleur est réinitialisée (Device.resetRGB).
+Drives the RGB lighting of gaming peripherals (wheels, gamepads) via the C++ Device object. Each device assigned to a player takes that player's color (BeamNG orange 255,102,0 by default), unless the wheel's force feedback requests the "default" lighting mode and the vehicle's shift LEDs are in use: in that case the color is reset (Device.resetRGB).
 
-## Remarques
+## Notes
 
-- Utilise core_input_bindings.assignedPlayers pour savoir quel périphérique appartient à quel joueur, sauf si setPlayerColors a reçu une table d'assignations.
-- Les périphériques qui perdent leur joueur repassent à l'orange.
-- Ne fait rien si l'objet global Device n'existe pas.
+- Uses core_input_bindings.assignedPlayers to determine which device belongs to which player, unless setPlayerColors received an assignment table.
+- Devices that lose their player go back to orange.
+- Does nothing if the global Device object does not exist.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_devices.onBeforeVehicleReplaced(vehicleId)` | Hook : oublie l'état des LED du véhicule sur le point d'être remplacé. *(interne)* *(hook)* | 74 |
-| `core_devices.onFFBConfigChanged()` | Hook : la configuration du retour de force a changé, recalcule l'éclairage des périphériques. *(interne)* *(hook)* | 86 |
-| `core_devices.onVehicleDestroyed(vehicleId)` | Hook : oublie l'état des LED du véhicule détruit. *(interne)* *(hook)* | 70 |
-| `core_devices.onVehicleRPMledStateChanged(vehicleId, shiftLEDsInUse)` | Hook : un véhicule active ou désactive ses LED de changement de rapport ; si c'est un véhicule de joueur, l'éclairage est recalculé. *(interne)* *(hook)* | 78 |
-| `core_devices.setPlayerColors(colors, assignments)` | Définit la couleur par numéro de joueur et rafraîchit immédiatement l'éclairage de tous les périphériques. | 91 |
+| `core_devices.onBeforeVehicleReplaced(vehicleId)` | Hook: forgets the LED state of the vehicle about to be replaced. *(internal)* *(hook)* | 74 |
+| `core_devices.onFFBConfigChanged()` | Hook: the force feedback configuration changed, recomputes the devices' lighting. *(internal)* *(hook)* | 86 |
+| `core_devices.onVehicleDestroyed(vehicleId)` | Hook: forgets the LED state of the destroyed vehicle. *(internal)* *(hook)* | 70 |
+| `core_devices.onVehicleRPMledStateChanged(vehicleId, shiftLEDsInUse)` | Hook: a vehicle enables or disables its shift LEDs; if it is a player vehicle, the lighting is recomputed. *(internal)* *(hook)* | 78 |
+| `core_devices.setPlayerColors(colors, assignments)` | Sets the color per player number and immediately refreshes the lighting of all devices. | 91 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_devices.onBeforeVehicleReplaced(vehicleId)`
 
-Hook : oublie l'état des LED du véhicule sur le point d'être remplacé.
+Hook: forgets the LED state of the vehicle about to be replaced.
 
-- `vehicleId` (*integer*) : id du véhicule
+- `vehicleId` (*integer*) : vehicle id
 
 #### `core_devices.onVehicleDestroyed(vehicleId)`
 
-Hook : oublie l'état des LED du véhicule détruit.
+Hook: forgets the LED state of the destroyed vehicle.
 
-- `vehicleId` (*integer*) : id du véhicule
+- `vehicleId` (*integer*) : vehicle id
 
 #### `core_devices.onVehicleRPMledStateChanged(vehicleId, shiftLEDsInUse)`
 
-Hook : un véhicule active ou désactive ses LED de changement de rapport ; si c'est un véhicule de joueur, l'éclairage est recalculé.
+Hook: a vehicle enables or disables its shift LEDs; if it is a player vehicle, the lighting is recomputed.
 
-- `vehicleId` (*integer*) : id du véhicule
-- `shiftLEDsInUse` (*boolean*) : vrai si les LED de rapport sont utilisées
+- `vehicleId` (*integer*) : vehicle id
+- `shiftLEDsInUse` (*boolean*) : true if the shift LEDs are used
 
 #### `core_devices.setPlayerColors(colors, assignments)`
 
-Définit la couleur par numéro de joueur et rafraîchit immédiatement l'éclairage de tous les périphériques.
+Sets the color per player number and immediately refreshes the lighting of all devices.
 
-- `colors` (*table<integer, vec3>|nil*) : Couleur RGB (composantes 0-255 dans x,y,z) indexée par numéro de joueur ; nil vide la table.
-- `assignments` (*table<string, integer>|nil*) : Remplace temporairement l'assignation nom de périphérique -> numéro de joueur (par exemple pour montrer des assignations pas encore appliquées) ; nil utilise core_input_bindings.assignedPlayers.
+- `colors` (*table<integer, vec3>|nil*) : RGB color (components 0-255 in x,y,z) keyed by player number; nil clears the table.
+- `assignments` (*table<string, integer>|nil*) : Temporarily overrides the device name -> player number assignment (for example to show assignments not yet applied); nil uses core_input_bindings.assignedPlayers.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/devices.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/devices.lua`.*

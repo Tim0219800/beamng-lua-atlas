@@ -1,29 +1,29 @@
 # `libs_resty_template_microbenchmark`
 
-*Fichier : `lua/common/libs/resty/template/microbenchmark.lua` · VM : Commun (GE + véhicule) · 148 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/resty/template/microbenchmark.lua` · VM: Common (GE + vehicle) · 148 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/resty/template/microbenchmark")`
+**Access:** `require("libs/resty/template/microbenchmark")`
 
-Bibliothèque tierce lua-resty-template : micro-benchmark du moteur (temps d'analyse, de compilation et d'exécution d'un petit gabarit en boucle). Outil de développement de la bibliothèque, sans usage pour un moddeur.
+Third-party library lua-resty-template: engine micro-benchmark (parse, compile and execution time of a small template in a loop). Development tool of the library, of no use to a modder.
 
-## Remarques
+## Notes
 
-- Bug : la dernière boucle de `run` référence les tables `views` et `contexts` qui ne sont déclarées nulle part dans le fichier (variables globales nil) ; l'appel plante à la mesure « Execution Time ».
-- Affiche via print (ou ngx.say) ; vide `template.cache` pendant la mesure de compilation.
+- Bug: the last loop of `run` references the tables `views` and `contexts`, which are declared nowhere in the file (nil globals); the call crashes at the "Execution Time" measurement.
+- Prints via print (or ngx.say); clears `template.cache` during the compilation measurement.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_resty_template_microbenchmark.run(iterations)` | Exécute le benchmark : mesure `parse`, `compile` et l'exécution de gabarits sur `iterations` boucles et affiche les temps (os.clock). | 8 |
+| `libs_resty_template_microbenchmark.run(iterations)` | Runs the benchmark: measures `parse`, `compile` and template execution over `iterations` loops and prints the times (os.clock). | 8 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_resty_template_microbenchmark.run(iterations)`
 
-Exécute le benchmark : mesure `parse`, `compile` et l'exécution de gabarits sur `iterations` boucles et affiche les temps (os.clock).
+Runs the benchmark: measures `parse`, `compile` and template execution over `iterations` loops and prints the times (os.clock).
 
-- `iterations` (*integer|nil*) : Nombre d'itérations (défaut 1000).
+- `iterations` (*integer|nil*) : Number of iterations (default 1000).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/resty/template/microbenchmark.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/resty/template/microbenchmark.lua`.*

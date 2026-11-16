@@ -1,22 +1,22 @@
 # `flowgraph_nodes_mission_prepareVehicle`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/mission/prepareVehicle.lua` · VM : Game Engine (GE) · 28 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/mission/prepareVehicle.lua` · VM: Game Engine (GE) · 28 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/mission/prepareVehicle")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/mission/prepareVehicle")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Prepare Vehicle' (categorie once_instant). Prepare un ou plusieurs vehicules pour le gameplay (electrique et valeurs) via self.mgr.modules.mission:prepareVehicle. Pins optionnels : vehId (defaut vehicule joueur) et vehicleIds (table d'ids supplementaires).
+Flowgraph node 'Prepare Vehicle' (once_instant category). Prepares one or more vehicles for gameplay (electric and values) via self.mgr.modules.mission:prepareVehicle. Optional pins: vehId (default player vehicle) and vehicleIds (table of additional ids).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Prepare vehId (ou le vehicule joueur) avec le second argument false, puis chaque id de vehicleIds avec le second argument true sauf s'il s'agit du vehicule principal ou du joueur. | 19 |
+| `C:workOnce()` | Prepares vehId (or the player vehicle) with the second argument false, then each id of vehicleIds with the second argument true unless it is the main vehicle or the player. | 19 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/mission/prepareVehicle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/mission/prepareVehicle.lua`.*

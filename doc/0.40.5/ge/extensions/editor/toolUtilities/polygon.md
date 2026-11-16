@@ -1,98 +1,98 @@
 # `editor_toolUtilities_polygon`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/polygon.lua` · VM : Game Engine (GE) · 488 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/polygon.lua` · VM: Game Engine (GE) · 488 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_polygon` : `extensions.load("editor_toolUtilities_polygon")`, puis la globale `editor_toolUtilities_polygon`
+**Access:** extension `editor_toolUtilities_polygon`: `extensions.load("editor_toolUtilities_polygon")`, then the global `editor_toolUtilities_polygon`
 
-Utilitaire de l'éditeur pour dessiner et modifier à la souris un polygone défini par l'utilisateur sur la carte (posé sur le terrain). Un seul polygone est géré par le module. L'outil hôte appelle handleUserPolygon chaque frame : clic pour ajouter un nœud, glissement pour déplacer, double-clic (plus de 2 nœuds) pour terminer, touche Suppr pour retirer le nœud sélectionné, Alt pour afficher/masquer le gizmo de translation. render, isDragging et isMouseOverEditable permettent à un outil qui pilote sa propre interaction de rester cohérent.
+Editor utility to draw and edit with the mouse a user-defined polygon on the map (laid on the terrain). Only one polygon is managed by the module. The host tool calls handleUserPolygon every frame: click to add a node, drag to move, double-click (more than 2 nodes) to finish, Delete key to remove the selected node, Alt to show/hide the translation gizmo. render, isDragging and isMouseOverEditable let a tool that drives its own interaction stay consistent.
 
-## Exemple
+## Example
 
 ```lua
 local poly = extensions.editor_toolUtilities_polygon
--- chaque frame :
-poly.handleUserPolygon(function(nodes) print('polygone fini', #nodes) end, {clearOnComplete = false, snap = {ox = 0, oy = 0, step = 1}})
+-- every frame:
+poly.handleUserPolygon(function(nodes) print('polygon finished', #nodes) end, {clearOnComplete = false, snap = {ox = 0, oy = 0, step = 1}})
 if poly.consumeDirty() then local p = poly.getPolygon() end
 ```
 
-## Remarques
+## Notes
 
-- Les nœuds sont des vec3 ; la hauteur z est ré-échantillonnée sur le terrain (core_terrain.getTerrainHeight).
-- handleUserPolygon accepte aussi opts.ground (booléen) et opts.open (booléen : polyligne ouverte sans arête de fermeture), non documentés dans le commentaire d'en-tête ; render accepte opts.open, opts.foreground, opts.segmentLabels et opts.hover.
-- Les bords sont tracés relevés de 0.1 m au-dessus du terrain ; une marque d'angle droit est affichée quand un coin est à environ 1 degré de l'équerre.
-- Le callback de double-clic reçoit une copie profonde du polygone ; si clearOnComplete vaut true (défaut) le polygone est ensuite vidé.
+- The nodes are vec3; the z height is resampled on the terrain (core_terrain.getTerrainHeight).
+- handleUserPolygon also accepts opts.ground (boolean) and opts.open (boolean: open polyline without a closing edge), not documented in the header comment; render accepts opts.open, opts.foreground, opts.segmentLabels and opts.hover.
+- The edges are drawn raised 0.1 m above the terrain; a right-angle mark is displayed when a corner is within about 1 degree of square.
+- The double-click callback receives a deep copy of the polygon; if clearOnComplete is true (default) the polygon is then cleared.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_polygon.beginDragNode(nodeIdx)` | Commence immédiatement le glissement du nœud donné pendant l'appui souris courant, sans nouveau clic. Sans effet si l'indice est invalide. | 455 |
-| `editor_toolUtilities_polygon.clearPolygon()` | Vide le polygone (lève dirty s'il contenait des nœuds). | 124 |
-| `editor_toolUtilities_polygon.consumeDirty()` | Renvoie le drapeau dirty (polygone modifié depuis le dernier appel) puis le remet à false. | 132 |
-| `editor_toolUtilities_polygon.getPolygon()` | Renvoie la table interne du polygone (liste de vec3, pas une copie). | 90 |
-| `editor_toolUtilities_polygon.handleUserPolygon(doubleClickCallback, opts)` | Gère tout le cycle de vie du polygone utilisateur : rendu, curseur, ajout, insertion sur une arête, glissement de nœuds, gizmo (Alt), suppression (Suppr), fin par double-clic. À appeler chaque frame tant que l'outil est actif. | 238 |
-| `editor_toolUtilities_polygon.isDragging()` | Vrai tant qu'un nœud est en cours de glissement ; permet à l'outil hôte de suspendre ses propres interactions de scène. | 451 |
-| `editor_toolUtilities_polygon.isMouseOverEditable()` | Vrai si la souris est sur un nœud ou une arête du polygone (une cible d'édition), pour donner priorité au polygone sur la sélection inter-outils. | 467 |
-| `editor_toolUtilities_polygon.isPolygonValid()` | Vrai si le polygone a plus de 2 nœuds. | 121 |
-| `editor_toolUtilities_polygon.render(opts)` | Passe de dessin seule, sans entrée : affiche nœuds, arêtes et éventuellement les longueurs de segments. Utile quand l'outil hôte gère sa propre interaction (déplacement rigide par exemple). opts.hover fait aussi pulser le nœud sous le curseur. | 436 |
-| `editor_toolUtilities_polygon.setPolygon(nodes)` | Remplace le polygone par une copie des nœuds donnés (nil ou vide = effacer). Réinitialise le glissement et le gizmo, et lève le drapeau dirty. | 94 |
+| `editor_toolUtilities_polygon.beginDragNode(nodeIdx)` | Immediately starts dragging the given node during the current mouse press, without a new click. No effect if the index is invalid. | 455 |
+| `editor_toolUtilities_polygon.clearPolygon()` | Clears the polygon (raises dirty if it contained nodes). | 124 |
+| `editor_toolUtilities_polygon.consumeDirty()` | Returns the dirty flag (polygon modified since the last call) then resets it to false. | 132 |
+| `editor_toolUtilities_polygon.getPolygon()` | Returns the polygon's internal table (list of vec3, not a copy). | 90 |
+| `editor_toolUtilities_polygon.handleUserPolygon(doubleClickCallback, opts)` | Handles the whole lifecycle of the user polygon: rendering, cursor, adding, inserting on an edge, dragging nodes, gizmo (Alt), deletion (Delete), finishing by double-click. To be called every frame while the tool is active. | 238 |
+| `editor_toolUtilities_polygon.isDragging()` | True while a node is being dragged; lets the host tool suspend its own scene interactions. | 451 |
+| `editor_toolUtilities_polygon.isMouseOverEditable()` | True if the mouse is over a node or an edge of the polygon (an edit target), to give the polygon priority over cross-tool selection. | 467 |
+| `editor_toolUtilities_polygon.isPolygonValid()` | True if the polygon has more than 2 nodes. | 121 |
+| `editor_toolUtilities_polygon.render(opts)` | Drawing pass only, no input: displays nodes, edges and optionally segment lengths. Useful when the host tool handles its own interaction (rigid movement for example). opts.hover also makes the node under the cursor pulse. | 436 |
+| `editor_toolUtilities_polygon.setPolygon(nodes)` | Replaces the polygon with a copy of the given nodes (nil or empty = clear). Resets dragging and the gizmo, and raises the dirty flag. | 94 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_polygon.beginDragNode(nodeIdx)`
 
-Commence immédiatement le glissement du nœud donné pendant l'appui souris courant, sans nouveau clic. Sans effet si l'indice est invalide.
+Immediately starts dragging the given node during the current mouse press, without a new click. No effect if the index is invalid.
 
-- `nodeIdx` (*integer*) : Indice (à partir de 1) du nœud.
+- `nodeIdx` (*integer*) : Index (1-based) of the node.
 
 #### `editor_toolUtilities_polygon.consumeDirty()`
 
-Renvoie le drapeau dirty (polygone modifié depuis le dernier appel) puis le remet à false.
+Returns the dirty flag (polygon modified since the last call) then resets it to false.
 
-- **renvoie** : boolean true si le polygone a changé.
+- **returns**: boolean true if the polygon has changed.
 
 #### `editor_toolUtilities_polygon.getPolygon()`
 
-Renvoie la table interne du polygone (liste de vec3, pas une copie).
+Returns the polygon's internal table (list of vec3, not a copy).
 
-- **renvoie** : table Liste de vec3.
+- **returns**: table List of vec3.
 
 #### `editor_toolUtilities_polygon.handleUserPolygon(doubleClickCallback, opts)`
 
-Gère tout le cycle de vie du polygone utilisateur : rendu, curseur, ajout, insertion sur une arête, glissement de nœuds, gizmo (Alt), suppression (Suppr), fin par double-clic. À appeler chaque frame tant que l'outil est actif.
+Handles the whole lifecycle of the user polygon: rendering, cursor, adding, inserting on an edge, dragging nodes, gizmo (Alt), deletion (Delete), finishing by double-click. To be called every frame while the tool is active.
 
-- `doubleClickCallback` (*function|nil*) : Appelé avec une copie du polygone au double-clic quand il a plus de 2 nœuds.
-- `opts` (*table|nil*) : clearOnComplete (défaut true), doRender (défaut true), foreground (défaut false : dessin à travers la géométrie), snap = {ox, oy, step} (accrochage à une grille), segmentLabels (longueur de chaque segment), rigid (glisser un nœud déplace tout le polygone), ground, open.
+- `doubleClickCallback` (*function|nil*) : Called with a copy of the polygon on double-click when it has more than 2 nodes.
+- `opts` (*table|nil*) : clearOnComplete (default true), doRender (default true), foreground (default false: drawn through geometry), snap = {ox, oy, step} (grid snapping), segmentLabels (length of each segment), rigid (dragging a node moves the whole polygon), ground, open.
 
 #### `editor_toolUtilities_polygon.isDragging()`
 
-Vrai tant qu'un nœud est en cours de glissement ; permet à l'outil hôte de suspendre ses propres interactions de scène.
+True while a node is being dragged; lets the host tool suspend its own scene interactions.
 
-- **renvoie** : boolean true pendant un glissement.
+- **returns**: boolean true during a drag.
 
 #### `editor_toolUtilities_polygon.isMouseOverEditable()`
 
-Vrai si la souris est sur un nœud ou une arête du polygone (une cible d'édition), pour donner priorité au polygone sur la sélection inter-outils.
+True if the mouse is over a node or an edge of the polygon (an edit target), to give the polygon priority over cross-tool selection.
 
-- **renvoie** : boolean true si survol d'un élément éditable.
+- **returns**: boolean true if hovering an editable element.
 
 #### `editor_toolUtilities_polygon.isPolygonValid()`
 
-Vrai si le polygone a plus de 2 nœuds.
+True if the polygon has more than 2 nodes.
 
-- **renvoie** : boolean true si valide.
+- **returns**: boolean true if valid.
 
 #### `editor_toolUtilities_polygon.render(opts)`
 
-Passe de dessin seule, sans entrée : affiche nœuds, arêtes et éventuellement les longueurs de segments. Utile quand l'outil hôte gère sa propre interaction (déplacement rigide par exemple). opts.hover fait aussi pulser le nœud sous le curseur.
+Drawing pass only, no input: displays nodes, edges and optionally segment lengths. Useful when the host tool handles its own interaction (rigid movement for example). opts.hover also makes the node under the cursor pulse.
 
 - `opts` (*table|nil*) : { open, foreground, segmentLabels, hover }
 
 #### `editor_toolUtilities_polygon.setPolygon(nodes)`
 
-Remplace le polygone par une copie des nœuds donnés (nil ou vide = effacer). Réinitialise le glissement et le gizmo, et lève le drapeau dirty.
+Replaces the polygon with a copy of the given nodes (nil or empty = clear). Resets dragging and the gizmo, and raises the dirty flag.
 
-- `nodes` (*table|nil*) : Liste de points {x,y,z} (vec3 ou équivalent).
+- `nodes` (*table|nil*) : List of {x,y,z} points (vec3 or equivalent).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/polygon.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/polygon.lua`.*

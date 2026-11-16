@@ -1,141 +1,383 @@
 {
   "path": "lua/ge/extensions/core/flowgraphManager.lua",
-  "module": "Extension GE `core_flowgraphManager` : gestionnaire des projets Flowgraph (scripts visuels à base de nœuds) en cours d'exécution. Il crée, charge, démarre, supprime et sérialise les `manager` (un par projet .flow.json), fournit les catalogues de nœuds et de templates d'état disponibles pour l'éditeur, et expose des helpers `_flowgraph_createNode / _flowgraph_createStateNode / _flowgraph_createModule` que les fichiers de nœuds utilisent pour se déclarer. Un moddeur l'utilise pour lancer un projet flowgraph par script ou retrouver un nœud/module d'un projet actif.",
-  "usage": "local mgr, ok = core_flowgraphManager.loadManager('/flowgraphEditor/monProjet.flow.json')\nif ok then mgr:setRunning(true) end\n-- projet unique partagé (flowgraphEditor/<nom>.flow.json), démarré automatiquement\nlocal s = core_flowgraphManager.getSingleton('monProjet')",
+  "module": "GE extension `core_flowgraphManager`: manager of the running Flowgraph projects (node-based visual scripts). It creates, loads, starts, deletes and serializes `manager` objects (one per .flow.json project), provides the catalogs of available nodes and state templates for the editor, and exposes helpers `_flowgraph_createNode / _flowgraph_createStateNode / _flowgraph_createModule` that node files use to declare themselves. A modder uses it to launch a flowgraph project by script or to find a node/module of an active project.",
+  "usage": "local mgr, ok = core_flowgraphManager.loadManager('/flowgraphEditor/monProjet.flow.json')\nif ok then mgr:setRunning(true) end\n-- single shared project (flowgraphEditor/<name>.flow.json), started automatically\nlocal s = core_flowgraphManager.getSingleton('monProjet')",
   "notes": [
-    "Un 'manager' est un objet créé par require('/lua/ge/extensions/flowgraph/manager')(M) : champs vus ici : id, graphs[graphId].nodes[nodeId], modules[nom], hidden, transient, savedDir, savedFilename, stopRunningOnClientEndMission ; méthodes vues : setRunning, destroy, historySnapshot, broadcastCall, resolveHooksAndReset, _onSerialize/_onDeserialized. Leur détail est dans le dossier flowgraph/.",
-    "Les managers à démarrage différé (startNextFrame) sont lancés au prochain onUpdate ; ceux de startOnLoadingScreenFadeout le sont quand le hook onLoadingScreenFadeout est reçu et sont marqués stopRunningOnClientEndMission.",
-    "onSerialize/onDeserialized sont utilisés lors du rechargement des extensions et aussi par reInitOnFileChange : modifier un fichier de nœud (flowgraph/nodes ou un *Node.lua du dossier customNodes d'un projet) recharge tous les managers.",
-    "Les managers 'transient' ne sont pas sérialisés ; les 'singletons' (getSingleton) sont retrouvés par nom après rechargement et relancés.",
-    "Incohérences : le commentaire de getNextUniqueIdentifier dit 'do not use ever' ; getAvailableStateTemplates utilise stateData.name qui n'est jamais défini (le dernier élément de splitPath n'est donc pas ajouté) et construit sourcePath avec l'extension .lua alors que ce sont des .flow.json ; mgrRunningChanged est un local vide non exporté ; les hooks onFlowgraphSceneObjectAdd/Remove/Changed ne font que dump() dans la console.",
-    "Champs : M.dependencies n'est pas défini à la création, mais par refreshDependencies() (clés de runningProxies)."
+    "A 'manager' is an object created by require('/lua/ge/extensions/flowgraph/manager')(M): fields seen here: id, graphs[graphId].nodes[nodeId], modules[name], hidden, transient, savedDir, savedFilename, stopRunningOnClientEndMission; methods seen: setRunning, destroy, historySnapshot, broadcastCall, resolveHooksAndReset, _onSerialize/_onDeserialized. Their details are in the flowgraph/ folder.",
+    "Managers with deferred start (startNextFrame) are launched at the next onUpdate; those in startOnLoadingScreenFadeout are launched when the onLoadingScreenFadeout hook is received and are marked stopRunningOnClientEndMission.",
+    "onSerialize/onDeserialized are used when extensions are reloaded and also by reInitOnFileChange: modifying a node file (flowgraph/nodes or a *Node.lua of a project's customNodes folder) reloads all managers.",
+    "'transient' managers are not serialized; 'singletons' (getSingleton) are found again by name after a reload and restarted.",
+    "Inconsistencies: the comment of getNextUniqueIdentifier says 'do not use ever'; getAvailableStateTemplates uses stateData.name which is never defined (so the last element of splitPath is not added) and builds sourcePath with the .lua extension whereas they are .flow.json files; mgrRunningChanged is an empty, non-exported local; the onFlowgraphSceneObjectAdd/Remove/Changed hooks only dump() to the console.",
+    "Fields: M.dependencies is not defined at creation, but by refreshDependencies() (keys of runningProxies)."
   ],
   "fields": {
-    "runningProxies": {"type": "table<string, any>", "desc": "Extensions proxy en cours ; leurs clés servent à recalculer M.dependencies (refreshDependencies)."},
-    "enableUsageTracking": {"type": "boolean", "desc": "Drapeau de suivi d'usage (false par défaut) ; lu par d'autres modules flowgraph."},
-    "skipCountdowns": {"type": "boolean", "desc": "Drapeau pour ignorer les compte à rebours (false par défaut) ; lu par d'autres modules flowgraph."},
-    "nodePath": {"type": "string", "desc": "'/lua/ge/extensions/flowgraph/nodes/' : dossier des nœuds de base."}
+    "runningProxies": {
+      "type": "table<string, any>",
+      "desc": "Running proxy extensions; their keys are used to recompute M.dependencies (refreshDependencies)."
+    },
+    "enableUsageTracking": {
+      "type": "boolean",
+      "desc": "Usage tracking flag (false by default); read by other flowgraph modules."
+    },
+    "skipCountdowns": {
+      "type": "boolean",
+      "desc": "Flag to ignore countdowns (false by default); read by other flowgraph modules."
+    },
+    "nodePath": {
+      "type": "string",
+      "desc": "'/lua/ge/extensions/flowgraph/nodes/': folder of the base nodes."
+    }
   },
   "functions": {
     "refreshDependencies": {
-      "desc": "Recalcule M.dependencies à partir des clés de M.runningProxies.",
+      "desc": "Recomputes M.dependencies from the keys of M.runningProxies.",
       "params": {},
       "returns": []
     },
     "getNextUniqueIdentifier": {
-      "desc": "Compteur d'identifiants uniques incrémenté à chaque appel. Le code indique « do not use ever » : réservé à l'implémentation de flowgraph.",
+      "desc": "Unique identifier counter incremented on every call. The code says \"do not use ever\": reserved for the flowgraph implementation.",
       "params": {},
-      "returns": [{"type": "integer", "desc": "Identifiant."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Identifier."
+        }
+      ],
       "internal": true
     },
     "getAllManagers": {
-      "desc": "Liste de tous les managers actifs (référence directe à la table interne).",
+      "desc": "List of all active managers (direct reference to the internal table).",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Managers."}]
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Managers."
+        }
+      ]
     },
     "getManagerByID": {
-      "desc": "Cherche un manager par son id.",
-      "params": {"id": {"type": "integer", "desc": "Id du manager."}},
-      "returns": [{"type": "table|nil", "desc": "Manager ou nil."}]
-    },
-    "getManagerGraphNode": {
-      "desc": "Récupère en sécurité un nœud d'un graphe d'un manager actif ; nil si un des ids est invalide (à préférer à l'accès direct getManagerByID(m).graphs[g].nodes[n]).",
+      "desc": "Looks up a manager by its id.",
       "params": {
-        "mgrId": {"type": "integer", "desc": "Id du manager."},
-        "graphId": {"type": "integer", "desc": "Id du graphe."},
-        "nodeId": {"type": "integer", "desc": "Id du nœud."}
-      },
-      "returns": [{"type": "table|nil", "desc": "Nœud."}]
-    },
-    "getManagerModule": {
-      "desc": "Récupère un module d'un manager actif par son nom ; nil si absent.",
-      "params": {
-        "mgrId": {"type": "integer", "desc": "Id du manager."},
-        "moduleName": {"type": "string", "desc": "Nom du module."}
-      },
-      "returns": [{"type": "table|nil", "desc": "Module."}]
-    },
-    "loadManager": {
-      "desc": "Crée un manager et y charge un projet .flow.json. Le manager est ajouté à la liste même si le fichier est introuvable (erreur loguée, manager vide).",
-      "params": {
-        "filepath": {"type": "string", "desc": "Chemin du fichier .flow.json."},
-        "hidden": {"type": "boolean|nil", "desc": "Marque le manager comme caché (mgr.hidden)."},
-        "keepSavedDirs": {"type": "boolean|nil", "desc": "true = garde savedDir/savedFilename du fichier au lieu de ceux de filepath."}
+        "id": {
+          "type": "integer",
+          "desc": "Manager id."
+        }
       },
       "returns": [
-        {"type": "table", "desc": "Manager."},
-        {"type": "boolean", "desc": "true si le fichier a été lu."}
+        {
+          "type": "table|nil",
+          "desc": "Manager or nil."
+        }
+      ]
+    },
+    "getManagerGraphNode": {
+      "desc": "Safely retrieves a node of a graph of an active manager; nil if one of the ids is invalid (preferable to direct access getManagerByID(m).graphs[g].nodes[n]).",
+      "params": {
+        "mgrId": {
+          "type": "integer",
+          "desc": "Manager id."
+        },
+        "graphId": {
+          "type": "integer",
+          "desc": "Graph id."
+        },
+        "nodeId": {
+          "type": "integer",
+          "desc": "Node id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Node."
+        }
+      ]
+    },
+    "getManagerModule": {
+      "desc": "Retrieves a module of an active manager by its name; nil if absent.",
+      "params": {
+        "mgrId": {
+          "type": "integer",
+          "desc": "Manager id."
+        },
+        "moduleName": {
+          "type": "string",
+          "desc": "Module name."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Module."
+        }
+      ]
+    },
+    "loadManager": {
+      "desc": "Creates a manager and loads a .flow.json project into it. The manager is added to the list even if the file is not found (error logged, empty manager).",
+      "params": {
+        "filepath": {
+          "type": "string",
+          "desc": "Path of the .flow.json file."
+        },
+        "hidden": {
+          "type": "boolean|nil",
+          "desc": "Marks the manager as hidden (mgr.hidden)."
+        },
+        "keepSavedDirs": {
+          "type": "boolean|nil",
+          "desc": "true = keeps the file's savedDir/savedFilename instead of those of filepath."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Manager."
+        },
+        {
+          "type": "boolean",
+          "desc": "true if the file was read."
+        }
       ]
     },
     "addManager": {
-      "desc": "Crée un manager, éventuellement à partir de données déjà décodées, et l'ajoute à la liste. Ne le démarre pas.",
-      "params": {"data": {"type": "table|nil", "desc": "Données de projet sérialisées."}},
-      "returns": [{"type": "table", "desc": "Manager."}]
+      "desc": "Creates a manager, optionally from already decoded data, and adds it to the list. Does not start it.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Serialized project data."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Manager."
+        }
+      ]
     },
     "removeManager": {
-      "desc": "Détruit un manager et le retire de la liste ainsi que des singletons. Sans effet si le manager n'est pas trouvé (comparaison par id).",
-      "params": {"mgr": {"type": "table", "desc": "Manager."}},
+      "desc": "Destroys a manager and removes it from the list and from the singletons. No effect if the manager is not found (compared by id).",
+      "params": {
+        "mgr": {
+          "type": "table",
+          "desc": "Manager."
+        }
+      },
       "returns": []
     },
     "clearAllManagers": {
-      "desc": "Détruit tous les managers et vide la liste.",
+      "desc": "Destroys all managers and clears the list.",
       "params": {},
       "returns": []
     },
     "startNextFrame": {
-      "desc": "Planifie setRunning(true) d'un manager au prochain onUpdate.",
-      "params": {"mgr": {"type": "table", "desc": "Manager."}},
+      "desc": "Schedules setRunning(true) of a manager at the next onUpdate.",
+      "params": {
+        "mgr": {
+          "type": "table",
+          "desc": "Manager."
+        }
+      },
       "returns": []
     },
     "removeNextFrame": {
-      "desc": "Planifie la suppression d'un manager au prochain onUpdate (évite de détruire un manager pendant son exécution).",
-      "params": {"mgr": {"type": "table", "desc": "Manager."}},
+      "desc": "Schedules the deletion of a manager at the next onUpdate (avoids destroying a manager while it is running).",
+      "params": {
+        "mgr": {
+          "type": "table",
+          "desc": "Manager."
+        }
+      },
       "returns": []
     },
     "startOnLoadingScreenFadeout": {
-      "desc": "Met un manager en file pour démarrer à la fin de l'écran de chargement (hook onLoadingScreenFadeout), utilisé par les projets lancés automatiquement avec un niveau.",
-      "params": {"fg": {"type": "table", "desc": "Manager."}},
+      "desc": "Queues a manager to start at the end of the loading screen (onLoadingScreenFadeout hook), used by projects launched automatically with a level.",
+      "params": {
+        "fg": {
+          "type": "table",
+          "desc": "Manager."
+        }
+      },
       "returns": []
     },
     "getSingleton": {
-      "desc": "Renvoie le manager unique de ce nom ; le charge depuis 'flowgraphEditor/<name>.flow.json', le démarre et le mémorise s'il n'existe pas encore.",
-      "params": {"name": {"type": "string", "desc": "Nom de projet sans extension."}},
-      "returns": [{"type": "table|nil", "desc": "Manager ; nil si le fichier est introuvable."}]
+      "desc": "Returns the single manager of this name; if it does not exist yet, loads it from 'flowgraphEditor/<name>.flow.json', starts it and stores it.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Project name without extension."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Manager; nil if the file is not found."
+        }
+      ]
     },
     "getAvailableNodeTemplates": {
-      "desc": "Scanne récursivement '/lua/ge/extensions/flowgraph/nodes/' (*.lua), les charge avec require (les erreurs sont loguées et le nœud ignoré) et construit un arbre de catégories et une table à plat. Résultat mis en cache jusqu'à la modification d'un fichier de nœud.",
+      "desc": "Recursively scans '/lua/ge/extensions/flowgraph/nodes/' (*.lua), loads them with require (errors are logged and the node is skipped) and builds a category tree and a flat table. Result cached until a node file is modified.",
       "params": {},
       "returns": [
-        {"type": "table", "desc": "Arbre : sous-dossier -> {nodes = {nom -> template}, ...sous-dossiers}."},
-        {"type": "table<string, table>", "desc": "Table à plat chemin -> template (champs ajoutés : path, sourcePath, splitPath, availablePinTypes)."}
+        {
+          "type": "table",
+          "desc": "Tree: subfolder -> {nodes = {name -> template}, ...subfolders}."
+        },
+        {
+          "type": "table<string, table>",
+          "desc": "Flat table path -> template (added fields: path, sourcePath, splitPath, availablePinTypes)."
+        }
       ]
     },
     "getAvailablePinTypes": {
-      "desc": "Types de pins entrants/sortants d'un nœud d'après son pinSchema ; ajoute 'flow' en entrée et sortie pour les nœuds fonctionnels non simples (via ui_flowgraph_editor).",
-      "params": {"node": {"type": "table", "desc": "Définition de nœud (champs pinSchema, category)."}},
-      "returns": [{"type": "table", "desc": "{_in = {type = true}, _out = {type = true}}."}]
+      "desc": "Input/output pin types of a node according to its pinSchema; adds 'flow' as input and output for non-simple functional nodes (via ui_flowgraph_editor).",
+      "params": {
+        "node": {
+          "type": "table",
+          "desc": "Node definition (fields pinSchema, category)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{_in = {type = true}, _out = {type = true}}."
+        }
+      ]
     },
     "getAvailableStateTemplates": {
-      "desc": "Scanne '/flowgraphEditor/states/' (*state.flow.json), lit chaque fichier et construit un arbre et une table à plat de templates d'état. Les fichiers directement à la racine du dossier sont ignorés.",
+      "desc": "Scans '/flowgraphEditor/states/' (*state.flow.json), reads each file and builds a tree and a flat table of state templates. Files directly at the root of the folder are ignored.",
       "params": {},
       "returns": [
-        {"type": "table", "desc": "Arbre par sous-dossier : {states = {…}}."},
-        {"type": "table<string, table>", "desc": "Table à plat chemin -> {data, path, sourcePath, splitPath}."}
+        {
+          "type": "table",
+          "desc": "Tree by subfolder: {states = {…}}."
+        },
+        {
+          "type": "table<string, table>",
+          "desc": "Flat table path -> {data, path, sourcePath, splitPath}."
+        }
       ]
     },
     "controls": {
-      "desc": "Diffuse à tous les managers l'évènement de contrôle 'onControlsReset' (name = 'reset') ou 'onControlsAction' (name = 'action').",
-      "params": {"name": {"type": "string", "desc": "'reset' ou 'action' ; autres valeurs ignorées."}},
+      "desc": "Broadcasts to all managers the control event 'onControlsReset' (name = 'reset') or 'onControlsAction' (name = 'action').",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "'reset' or 'action'; other values are ignored."
+        }
+      },
       "returns": []
     },
-    "onExtensionLoaded": {"desc": "Hook au chargement : définit les fonctions globales _flowgraph_createNode, _flowgraph_createStateNode et _flowgraph_createModule (rawset dans _G) utilisées par les fichiers de nœuds/modules.", "params": {}, "returns": [], "internal": true},
-    "onUpdate": {"desc": "Hook par image : résout les hooks en attente et réinitialise chaque manager, démarre/supprime ceux planifiés puis diffuse 'onFlowgraphManagerPreUpdate' à chacun.", "params": {}, "returns": [], "internal": true},
-    "onLoadingScreenFadeout": {"desc": "Hook en fin d'écran de chargement : démarre les managers de la liste startOnLoadingScreenFadeout.", "params": {}, "returns": [], "internal": true},
-    "onFileChanged": {"desc": "Hook de modification de fichier : si un nœud de base ou un '*Node.lua' du dossier customNodes d'un projet actif change, recharge (sérialise/désérialise) tous les managers.", "params": {"filename": {"type": "string", "desc": "Chemin du fichier."}, "type": {"type": "any", "desc": "Non utilisé."}}, "returns": [], "internal": true},
-    "onSerialize": {"desc": "Hook de sauvegarde avant rechargement des extensions : sérialise les managers non transitoires et l'index des singletons.", "params": {}, "returns": [{"type": "table", "desc": "{mgrs, uniques}."}], "internal": true},
-    "onDeserialized": {"desc": "Hook de restauration : détruit les managers, les recrée depuis les données, relance les singletons.", "params": {"data": {"type": "table", "desc": "Données de onSerialize."}}, "returns": [], "internal": true},
-    "onFlowgraphSceneObjectAdd": {"desc": "Hook appelé à l'ajout d'un objet de scène flowgraph : affiche seulement un dump de debug.", "params": {"id": {"type": "integer", "desc": "Id de l'objet."}, "name": {"type": "string", "desc": "Nom."}, "fgPath": {"type": "string", "desc": "Chemin du flowgraph."}}, "returns": [], "internal": true},
-    "onFlowgraphSceneObjectRemove": {"desc": "Hook de suppression d'un objet de scène flowgraph : dump de debug uniquement.", "params": {"id": {"type": "integer", "desc": "Id de l'objet."}, "name": {"type": "string", "desc": "Nom."}, "fgPath": {"type": "string", "desc": "Chemin du flowgraph."}}, "returns": [], "internal": true},
-    "onFlowgraphSceneObjectChanged": {"desc": "Hook de modification d'un objet de scène flowgraph : dump de debug uniquement.", "params": {"id": {"type": "integer", "desc": "Id de l'objet."}, "name": {"type": "string", "desc": "Nom."}, "fgPath": {"type": "string", "desc": "Chemin du flowgraph."}}, "returns": [], "internal": true}
+    "onExtensionLoaded": {
+      "desc": "Hook on load: defines the global functions _flowgraph_createNode, _flowgraph_createStateNode and _flowgraph_createModule (rawset in _G) used by the node/module files.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Per-frame hook: resolves pending hooks and resets each manager, starts/deletes the scheduled ones then broadcasts 'onFlowgraphManagerPreUpdate' to each.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onLoadingScreenFadeout": {
+      "desc": "Hook at the end of the loading screen: starts the managers of the startOnLoadingScreenFadeout list.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onFileChanged": {
+      "desc": "File modification hook: if a base node or a '*Node.lua' of an active project's customNodes folder changes, reloads (serializes/deserializes) all managers.",
+      "params": {
+        "filename": {
+          "type": "string",
+          "desc": "File path."
+        },
+        "type": {
+          "type": "any",
+          "desc": "Not used."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Save hook before extensions reload: serializes the non-transient managers and the singletons index.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{mgrs, uniques}."
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Restore hook: destroys the managers, recreates them from the data, restarts the singletons.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Data from onSerialize."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onFlowgraphSceneObjectAdd": {
+      "desc": "Hook called when a flowgraph scene object is added: only displays a debug dump.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Object id."
+        },
+        "name": {
+          "type": "string",
+          "desc": "Name."
+        },
+        "fgPath": {
+          "type": "string",
+          "desc": "Flowgraph path."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onFlowgraphSceneObjectRemove": {
+      "desc": "Hook for removal of a flowgraph scene object: debug dump only.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Object id."
+        },
+        "name": {
+          "type": "string",
+          "desc": "Name."
+        },
+        "fgPath": {
+          "type": "string",
+          "desc": "Flowgraph path."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onFlowgraphSceneObjectChanged": {
+      "desc": "Hook for modification of a flowgraph scene object: debug dump only.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Object id."
+        },
+        "name": {
+          "type": "string",
+          "desc": "Name."
+        },
+        "fgPath": {
+          "type": "string",
+          "desc": "Flowgraph path."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

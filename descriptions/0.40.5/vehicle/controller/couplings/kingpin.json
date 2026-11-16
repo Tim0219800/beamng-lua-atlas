@@ -1,44 +1,75 @@
 {
   "path": "lua/vehicle/controller/couplings/kingpin.lua",
-  "module": "Contrôleur auxiliaire du pivot d'attelage (kingpin) d'une semi-remorque. Il ne fait que répondre au contrôleur `couplings/fifthwheel` d'un tracteur : si la clé de la sellette correspond à la sienne, il renvoie son cid de noeud et sa position monde. Il peut aussi afficher son noeud en debug quand la sellette demande l'affichage de l'indicateur.",
+  "module": "Auxiliary kingpin controller of a semi-trailer. It only answers the tractor's `couplings/fifthwheel` controller: if the fifth wheel's key matches its own, it returns its node cid and its world position. It can also display its node in debug when the fifth wheel requests the indicator display.",
   "notes": [
-    "Clés jbeam lues par init : `kingpinNode` (nom du noeud, résolu via `beamstate.nodeNameMap`) et `kingpinKey` (\"fifthwheel_v2\" par défaut, doit être identique à `fifthwheelKey` de la sellette).",
-    "Aucun update : tout se fait par appels à distance (`obj:queueObjectLuaCommand` du tracteur).",
-    "`M.debugDraw` est nil par défaut ; setKingpinVisibility l'active ou le retire puis appelle `controller.cacheAllControllerFunctions()`."
+    "Jbeam keys read by init: `kingpinNode` (node name, resolved via `beamstate.nodeNameMap`) and `kingpinKey` (\"fifthwheel_v2\" by default, must be identical to the fifth wheel's `fifthwheelKey`).",
+    "No update: everything is done through remote calls (`obj:queueObjectLuaCommand` from the tractor).",
+    "`M.debugDraw` is nil by default; setKingpinVisibility sets or removes it then calls `controller.cacheAllControllerFunctions()`."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "debugDraw": {"type": "function|nil", "desc": "nil par défaut ; fonction de dessin du noeud de pivot quand l'indicateur est visible."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "debugDraw": {
+      "type": "function|nil",
+      "desc": "nil by default; drawing function of the kingpin node when the indicator is visible."
+    }
   },
   "functions": {
     "sendDataToVehicle": {
-      "desc": "Appelée à distance par une sellette : si `couplerTag` est égal à la clé de ce pivot, renvoie {nodeId, nodePosition} à `kingpinDataCallback` du contrôleur de sellette du véhicule demandeur.",
+      "desc": "Called remotely by a fifth wheel: if `couplerTag` equals this kingpin's key, returns {nodeId, nodePosition} to `kingpinDataCallback` of the requesting vehicle's fifth wheel controller.",
       "params": {
-        "objId": {"type": "integer", "desc": "Id du véhicule demandeur (tracteur)."},
-        "controllerName": {"type": "string", "desc": "Nom du contrôleur de sellette à rappeler."},
-        "couplerTag": {"type": "string", "desc": "Clé de sellette demandée."}
+        "objId": {
+          "type": "integer",
+          "desc": "Id of the requesting vehicle (tractor)."
+        },
+        "controllerName": {
+          "type": "string",
+          "desc": "Name of the fifth wheel controller to call back."
+        },
+        "couplerTag": {
+          "type": "string",
+          "desc": "Requested fifth wheel key."
+        }
       },
       "returns": [],
       "internal": true
     },
     "setKingpinVisibility": {
-      "desc": "Active ou retire l'affichage de debug du noeud de pivot si la clé correspond.",
+      "desc": "Enables or removes the kingpin node debug display if the key matches.",
       "params": {
-        "key": {"type": "string", "desc": "Clé de sellette concernée."},
-        "visible": {"type": "boolean", "desc": "true pour afficher."}
+        "key": {
+          "type": "string",
+          "desc": "Fifth wheel key concerned."
+        },
+        "visible": {
+          "type": "boolean",
+          "desc": "true to show."
+        }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Vide.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "desc": "Empty.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "init": {
-      "desc": "Retrouve le noeud de pivot par nom et lit la clé.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "desc": "Finds the kingpin node by name and reads the key.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     }

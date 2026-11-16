@@ -1,36 +1,36 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/startCamPath.lua",
-  "module": "Noeud flowgraph « Start Cam Path » (once_instant). Fait suivre a la camera le chemin d'un objet CameraPath (fichier .camPath.json). Entrees : pathName (string), loop (bool). Sorties : activated (flow impulsion, une seule frame) et id (number) du chemin. Utilise le module flowgraph camera (self.mgr.modules.camera).",
+  "module": "Flowgraph node \"Start Cam Path\" (once_instant). Makes the camera follow the path of a CameraPath object (.camPath.json file). Inputs: pathName (string), loop (bool). Outputs: activated (flow impulse, a single frame) and id (number) of the path. Uses the flowgraph camera module (self.mgr.modules.camera).",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Rien a initialiser.",
+          "desc": "Nothing to initialize.",
           "internal": true
         },
         "postInit": {
-          "desc": "Restreint le pin pathName au selecteur de fichiers « Camera Path Files » (.camPath.json).",
+          "desc": "Restricts the pathName pin to the \"Camera Path Files\" file selector (.camPath.json).",
           "internal": true
         },
         "workOnce": {
-          "desc": "Trouve le chemin (modules.camera:findPath), le demarre (startPath avec loop), ecrit id et leve l'impulsion activated.",
+          "desc": "Finds the path (modules.camera:findPath), starts it (startPath with loop), writes id and raises the activated impulse.",
           "internal": false
         },
         "work": {
-          "desc": "Retombe activated a false a la frame suivant l'activation (flag activatedFlag).",
+          "desc": "Drops activated back to false on the frame following the activation (flag activatedFlag).",
           "internal": false
         },
         "drawMiddle": {
-          "desc": "Zone centrale du noeud (rien d'affiche).",
+          "desc": "Central area of the node (nothing displayed).",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true

@@ -1,56 +1,56 @@
 # `test_csvMetrics`
 
-*Fichier : `lua/vehicle/extensions/test/csvMetrics.lua` · VM : Véhicule · 103 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/test/csvMetrics.lua` · VM: Vehicle · 103 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `test_csvMetrics` : `extensions.load (VM véhicule)("test_csvMetrics")`, puis la globale `test_csvMetrics`
+**Access:** extension `test_csvMetrics`: `extensions.load (vehicle VM)("test_csvMetrics")`, then the global `test_csvMetrics`
 
-Outil de test : enregistre périodiquement des métriques du véhicule (temps, position, rotation quaternion, et en mode étendu températures, régime, carburant, vitesses, thermique des freins et des moteurs) dans un rapport CSV écrit avec csvlib à l'appel de disable(). Lit electrics.values et powertrain.getDevicesByType('combustionEngine').
+Test tool: periodically records vehicle metrics (time, position, quaternion rotation, and in extended mode temperatures, RPM, fuel, speeds, brake and engine thermals) into a CSV report written with csvlib when disable() is called. Reads electrics.values and powertrain.getDevicesByType('combustionEngine').
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('test_csvMetrics')
 test_csvMetrics.enable('metrics.csv', 64, nil)
 -- ...
-test_csvMetrics.disable() -- écrit le fichier
+test_csvMetrics.disable() -- writes the file
 ```
 
-## Remarques
+## Notes
 
-- Bug : `logExtendedMetrics = extended == nil and true or false` donne true seulement si extended est nil ; passer extended=true donne false (mode simple) et extended=false donne aussi false. Le mode étendu s'obtient donc en passant nil.
-- Une ligne est écrite toutes les `rate` frames (frame % rate == 0), pas à intervalle de temps fixe ; la valeur par défaut est 64 frames. Le compteur de frames démarre à 1 et n'est remis à 1 que par disable().
-- Le temps (colonne Time) est la somme des dt reçus, en secondes ; la température ambiante est convertie de K en °C (obj:getEnvTemperature() - 273.15) ; la rotation est le quaternion (x,y,z,w).
-- En-tête : les colonnes thermiques moteur ne sont ajoutées que si device.thermals ~= nil, mais writeRow ajoute toujours 4 valeurs par moteur et indexe v.thermals sans test : erreur si un moteur n'a pas de thermals, et colonnes désalignées.
-- Colonnes de roue : 3 colonnes par entrée de electrics.values.wheelThermals (BrakeCoreTemp, BrakeSurfaceTemp, BrakeThermalEfficiency) ; electrics.values.wheelThermals doit exister.
-- csvFile n'est pas écrit tant que disable() n'est pas appelé ; disable() sans enable() préalable planterait (csvFile nil).
+- Bug: `logExtendedMetrics = extended == nil and true or false` gives true only if extended is nil; passing extended=true gives false (simple mode) and extended=false also gives false. Extended mode is therefore obtained by passing nil.
+- A row is written every `rate` frames (frame % rate == 0), not at a fixed time interval; the default is 64 frames. The frame counter starts at 1 and is only reset to 1 by disable().
+- The time (Time column) is the sum of the dt received, in seconds; the ambient temperature is converted from K to °C (obj:getEnvTemperature() - 273.15); the rotation is the quaternion (x,y,z,w).
+- Header: the engine thermal columns are only added if device.thermals ~= nil, but writeRow always adds 4 values per engine and indexes v.thermals without a test: error if an engine has no thermals, and misaligned columns.
+- Wheel columns: 3 columns per entry of electrics.values.wheelThermals (BrakeCoreTemp, BrakeSurfaceTemp, BrakeThermalEfficiency); electrics.values.wheelThermals must exist.
+- csvFile is not written until disable() is called; disable() without a prior enable() would crash (csvFile nil).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `test_csvMetrics.disable()` | Écrit le CSV accumulé sur disque (csvData:write(path)), désactive l'enregistrement et remet le compteur de frames à 1. | 95 |
-| `test_csvMetrics.enable(path, writeRate, extended)` | Démarre l'enregistrement : mémorise le chemin de sortie, la cadence, construit l'en-tête du CSV (simple ou étendu) et active updateGFX. | 16 |
-| `test_csvMetrics.updateGFX(dt)` | Appelé à chaque frame graphique (extensions.hook('updateGFX')). Si activé, cumule le temps et écrit une ligne toutes les `rate` frames. *(interne)* | 82 |
+| `test_csvMetrics.disable()` | Writes the accumulated CSV to disk (csvData:write(path)), disables recording and resets the frame counter to 1. | 95 |
+| `test_csvMetrics.enable(path, writeRate, extended)` | Starts recording: stores the output path and the rate, builds the CSV header (simple or extended) and enables updateGFX. | 16 |
+| `test_csvMetrics.updateGFX(dt)` | Called every graphics frame (extensions.hook('updateGFX')). If enabled, accumulates time and writes a row every `rate` frames. *(internal)* | 82 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `test_csvMetrics.enable(path, writeRate, extended)`
 
-Démarre l'enregistrement : mémorise le chemin de sortie, la cadence, construit l'en-tête du CSV (simple ou étendu) et active updateGFX.
+Starts recording: stores the output path and the rate, builds the CSV header (simple or extended) and enables updateGFX.
 
-- `path` (*string*) : Chemin du fichier CSV écrit par disable().
-- `writeRate` (*integer|nil*) : Une ligne toutes les N frames ; 64 si nil.
-- `extended` (*boolean|nil*) : nil = métriques étendues ; toute autre valeur = métriques simples (voir notes, comportement inversé).
+- `path` (*string*) : Path of the CSV file written by disable().
+- `writeRate` (*integer|nil*) : One row every N frames; 64 if nil.
+- `extended` (*boolean|nil*) : nil = extended metrics; any other value = simple metrics (see notes, inverted behavior).
 
 #### `test_csvMetrics.updateGFX(dt)`
 
-Appelé à chaque frame graphique (extensions.hook('updateGFX')). Si activé, cumule le temps et écrit une ligne toutes les `rate` frames.
+Called every graphics frame (extensions.hook('updateGFX')). If enabled, accumulates time and writes a row every `rate` frames.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getEnvTemperature`, `getPosition`, `getRotation`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/test/csvMetrics.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/test/csvMetrics.lua`.*

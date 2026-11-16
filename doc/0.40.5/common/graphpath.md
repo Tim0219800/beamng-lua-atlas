@@ -1,12 +1,12 @@
 # `graphpath`
 
-*Fichier : `lua/common/graphpath.lua` · VM : Commun (GE + véhicule) · 1684 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/graphpath.lua` · VM: Common (GE + vehicle) · 1684 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("graphpath")`
+**Access:** `require("graphpath")`
 
-Graphe de routes pondéré et algorithmes de recherche de chemin utilisés par l'IA et le navigateur. newGraphpath() crée un graphe (nœuds nommés, arêtes bidirectionnelles avec longueur, drivabilité, voies, sens unique, positions et rayons) ; les méthodes calculent plus court chemin (Dijkstra avec tas minimal), chemins par arêtes avec pénalité de virage, chemin point-à-point, chemins aléatoires/fuite/poursuite, composantes fortement connexes et graphe minorant. Un moddeur l'utilise pour requêter le réseau routier (map.getGraphpath()) ou construire son propre graphe.
+Weighted road graph and pathfinding algorithms used by the AI and the navigator. newGraphpath() creates a graph (named nodes, bidirectional edges with length, drivability, lanes, one-way, positions and radii); the methods compute shortest path (Dijkstra with a min-heap), edge-based paths with turn penalty, point-to-point path, random/flee/chase paths, strongly connected components and minor graph. A modder uses it to query the road network (map.getGraphpath()) or build their own graph.
 
-## Exemple
+## Example
 
 ```lua
 local gp = newGraphpath()
@@ -15,98 +15,98 @@ gp:edge('b', 'c', 3)
 print(table.concat(gp:getPath('a', 'c'), '->'))  -- a->b->c
 ```
 
-## Remarques
+## Notes
 
-- Le module est retourné par require('graphpath') avec deux fonctions : newGraphpath et newMinheap. Il n'y a pas de global newGraphpath sauf si un autre fichier le définit (l'exemple en en-tête l'utilise comme global).
-- Deux familles d'arêtes : edge(sp, ep, dist) crée des arêtes simples (len seulement) ; uniEdge/bidiEdge créent des données riches partagées par les deux sens dans graph[a][b] et graph[b][a] (mêmes tables). Seul bidiEdge attribue eId (identifiant d'arête, deux identifiants consécutifs par arête, un par sens).
-- Les algorithmes avancés (getPointNodePath, getFilteredPath, getEdgePath, getPathT...) supposent des arêtes riches : drivability, inNode, oneWay, gated, lanes, plus positions et rayons des nœuds. Ils échoueront (nil arithmétique) sur un graphe créé avec edge() seul.
-- Les chemins sont des tableaux de noms de nœuds ordonnés de la source vers le but ; les fonctions de recherche renvoient {} si un nœud est inconnu ou inaccessible (sauf mention contraire).
-- dirMult : multiplicateur de coût pour parcourir une arête sens unique à contresens (valeur typique 1e3-1e4 ; nil ou 1 = pas de pénalité).
-- cutOffDrivability / penaltyAboveCutoff / penaltyBelowCutoff : les routes dont la drivabilité est <= cutOffDrivability ont leur coût multiplié par penaltyBelowCutoff (défaut 10000), les autres par penaltyAboveCutoff (défaut 1).
-- Les champs d'arête : len (longueur m), drivability (0..1), speedLimit, lanes (chaîne de '+' et '-' par voie, '+' dans le sens inNode vers outNode), oneWay, gated, inNode/outNode, inPos/outPos, inRadius/outRadius, eId.
-- Le tas minimal (minheap) est partagé au niveau du module (variable locale 'que') par la plupart des recherches : ces recherches ne sont pas réentrantes, sauf getPointToPointPathJob qui crée son propre tas.
-- Bug mineur : newGraphpath ignore son paramètre edgeCount.
-- Bug probable : dans getFleePath et getRandomPathG, visited est initialisé avec {startNode = 0.2}, c'est-à-dire avec la clé littérale 'startNode' et non la valeur de la variable startNode ; le nœud de départ n'est donc pas pénalisé.
-- Aucun appel vers le moteur C++ : module Lua pur. Utilise des globales d'autres fichiers : vec3, square, clamp, sign2, tableSize, tableKeys, profilerPushEvent/PopEvent.
+- The module is returned by require('graphpath') with two functions: newGraphpath and newMinheap. There is no global newGraphpath unless another file defines it (the example in the header uses it as a global).
+- Two families of edges: edge(sp, ep, dist) creates simple edges (len only); uniEdge/bidiEdge create rich data shared by both directions in graph[a][b] and graph[b][a] (same tables). Only bidiEdge assigns eId (edge identifier, two consecutive identifiers per edge, one per direction).
+- The advanced algorithms (getPointNodePath, getFilteredPath, getEdgePath, getPathT...) assume rich edges: drivability, inNode, oneWay, gated, lanes, plus node positions and radii. They will fail (arithmetic on nil) on a graph created with edge() alone.
+- Paths are arrays of node names ordered from the source to the goal; search functions return {} if a node is unknown or unreachable (unless stated otherwise).
+- dirMult: cost multiplier for traversing a one-way edge against its direction (typical value 1e3-1e4; nil or 1 = no penalty).
+- cutOffDrivability / penaltyAboveCutoff / penaltyBelowCutoff: roads whose drivability is <= cutOffDrivability have their cost multiplied by penaltyBelowCutoff (default 10000), the others by penaltyAboveCutoff (default 1).
+- Edge fields: len (length m), drivability (0..1), speedLimit, lanes (string of '+' and '-' per lane, '+' in the direction inNode to outNode), oneWay, gated, inNode/outNode, inPos/outPos, inRadius/outRadius, eId.
+- The min-heap (minheap) is shared at module level (local variable 'que') by most searches: these searches are not reentrant, except getPointToPointPathJob which creates its own heap.
+- Minor bug: newGraphpath ignores its edgeCount parameter.
+- Probable bug: in getFleePath and getRandomPathG, visited is initialized with {startNode = 0.2}, i.e. with the literal key 'startNode' and not the value of the variable startNode; the start node is therefore not penalized.
+- No call to the C++ engine: pure Lua module. Uses globals from other files: vec3, square, clamp, sign2, tableSize, tableKeys, profilerPushEvent/PopEvent.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `graphpath.newGraphpath(nodeCount, edgeCount)` | Crée un graphe vide. Les paramètres ne servent qu'à pré-allouer les tables. | 123 |
-| `graphpath.newMinheap()` | Crée un tas minimal (file de priorité) avec les clés dans la table elle-même et les valeurs dans vals. | 47 |
+| `graphpath.newGraphpath(nodeCount, edgeCount)` | Creates an empty graph. The parameters are only used to pre-allocate the tables. | 123 |
+| `graphpath.newMinheap()` | Creates a min-heap (priority queue) with the keys in the table itself and the values in vals. | 47 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `graphpath.newGraphpath(nodeCount, edgeCount)`
 
-Crée un graphe vide. Les paramètres ne servent qu'à pré-allouer les tables.
+Creates an empty graph. The parameters are only used to pre-allocate the tables.
 
-- `nodeCount` (*integer|nil*) : Nombre de nœuds prévu (pré-allocation).
-- `edgeCount` (*integer|nil*) : Ignoré par le code.
-- **renvoie** : table Objet Graphpath (champs graph, positions, radius, edgeListCount).
+- `nodeCount` (*integer|nil*) : Expected number of nodes (pre-allocation).
+- `edgeCount` (*integer|nil*) : Ignored by the code.
+- **returns**: table Graphpath object (fields graph, positions, radius, edgeListCount).
 
 #### `graphpath.newMinheap()`
 
-Crée un tas minimal (file de priorité) avec les clés dans la table elle-même et les valeurs dans vals.
+Creates a min-heap (priority queue) with the keys in the table itself and the values in vals.
 
-- **renvoie** : table Objet minheap.
+- **returns**: table minheap object.
 
-## Classe `Graphpath`
+## Class `Graphpath`
 
-Graphe non orienté de nœuds identifiés par des clés (chaînes), avec tables graph[n1][n2] = données d'arête, positions[n] (vec3), radius[n] (largeur/demi-largeur de route).
+Undirected graph of nodes identified by keys (strings), with tables graph[n1][n2] = edge data, positions[n] (vec3), radius[n] (road width/half-width).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `Graphpath:_getPointToPointPathImpl(sourcePos, iter, targetPos, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ, yieldFn)` | Implémentation de la recherche point à point : plusieurs nœuds/arêtes d'accès possibles à la source (fournis par l'itérateur iter) et sortie vers targetPos par projection sur les arêtes ; yieldFn optionnel appelé à chaque itération. | 704 |
-| `Graphpath:bidiEdge(inNode, outNode, dist, drivability, speedLimit, lanes, oneWay, gated, inPos, inRad, outPos, outRad)` | Comme uniEdge mais attribue aussi un identifiant d'arête eId (deux identifiants consécutifs par arête, un par sens) ; nécessaire pour getEdgePath et l'index d'arêtes. | 218 |
-| `Graphpath:clear()` | Remplace la table graph par une table vide (positions et rayons conservés). | 173 |
-| `Graphpath:edge(sp, ep, dist)` | Ajoute une arête simple de sp vers ep (len = dist) et crée ep si absent. Une seule direction est stockée (graph[sp][ep]). | 177 |
-| `Graphpath:edgeLanesInDirection(fromNode, toNode)` | Nombre de voies de l'arête allant de fromNode vers toNode (compte les '+' ou '-' de la chaîne lanes selon le sens). | 515 |
-| `Graphpath:export(edgeCount)` | Exporte le graphe sous forme compacte (une entrée par arête, sans doublon) pour sauvegarde ou envoi à une autre VM. | 133 |
-| `Graphpath:generateEdgeIndex()` | Construit la table edgeList (eId vers nœud) à partir des arêtes créées par bidiEdge. | 250 |
-| `Graphpath:getBranchNodesAround(start, maxRadius)` | Parcours en profondeur dans un rayon autour de start ; renvoie les carrefours (nœuds avec au moins 2 nouveaux voisins) et leurs liens. | 1416 |
-| `Graphpath:getChasePath(nodeBehind, nodeAhead, targetNodeBehind, targetNodeAhead, mePos, meVel, targetPos, targetVel, dirMult)` | Chemin pour poursuivre une cible : choisit le nœud devant selon la position/vitesse de la cible et calcule un chemin vers le nœud de la cible. | 1456 |
-| `Graphpath:getEdgeIdFromNodes(fromNode, toNode)` | Identifiant d'arête orientée de fromNode vers toNode (eId pour le sens inNode->outNode, eId+1 pour l'inverse). | 263 |
-| `Graphpath:getEdgePath(bNode, fNode, goal, dirMult)` | Plus court chemin sur des arêtes (états = arêtes orientées) avec pénalités de virage (gauche/droite plus forte aux carrefours, demi-tour très pénalisé selon la largeur de route). Part de l'arête bNode vers fNode ; le résultat est une liste de nœuds. | 523 |
-| `Graphpath:getEdgePositions(n1id, n2id)` | Positions des extrémités d'une arête : position spécifique à l'arête (inPos/outPos) si elle existe, sinon position du nœud. | 271 |
-| `Graphpath:getEdgeRadii(n1id, n2id)` | Rayons aux extrémités d'une arête (rayon propre à l'arête sinon celui du nœud). | 277 |
-| `Graphpath:getFilteredPath(start, goal, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff)` | Plus court chemin entre deux nœuds avec pénalités de drivabilité (seuil) et de contresens. | 1266 |
-| `Graphpath:getFleePath(startNode, initialDir, chasePos, pathLenLimit, rndDirCoef, rndDistCoef)` | Construit gloutonnement un chemin de fuite loin de chasePos, avec une randomisation de direction, jusqu'à dépasser pathLenLimit. | 1480 |
-| `Graphpath:getFlows(inNode, outNode)` | Flux (capacité) avant et arrière d'une arête orientée, déduits du rayon du nœud de sortie réparti sur les voies. | 1035 |
-| `Graphpath:getMaxNodeAround(start, radius, dir)` | Parcourt le graphe dans un rayon radius autour de start et renvoie le nœud le plus éloigné, ou le plus avancé selon la direction dir. | 1375 |
-| `Graphpath:getNodesFromEdgeId(eId)` | Inverse de getEdgeIdFromNodes : renvoie les deux nœuds de l'arête orientée (départ, arrivée). | 267 |
-| `Graphpath:getPath(start, goal, dirMult)` | Plus court chemin (Dijkstra) entre deux nœuds en minimisant la somme des len ; les arêtes sens unique parcourues à contresens sont multipliées par dirMult. | 468 |
-| `Graphpath:getPathAwayFrom(start, goal, mePos, stayAwayPos, dirMult)` | Chemin vers goal qui évite stayAwayPos : le coût des arêtes est pondéré par (distance à mePos / distance à stayAwayPos). | 1339 |
-| `Graphpath:getPathT(start, mePos, pathLenLim, illegalDirPenalty, initDir)` | Choisit un chemin aléatoire pondéré pour un trafic IA à partir de start, en privilégiant routes drivables, continuité de direction et capacité (flux de voies) ; s'arrête à pathLenLim mètres de mePos, jusqu'à 10 candidats tirés au hasard. | 927 |
-| `Graphpath:getPathTWithState(start, mePos, pathLenLim, state)` | Variante de getPathT qui réutilise le chemin précédent comme état pour continuer de façon cohérente (le dernier nœud du chemin précédent doit être start). | 1045 |
-| `Graphpath:getPointNodePath(start, target, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ)` | Plus court chemin entre un point (vec3) et un nœud, dans un sens ou l'autre (si start est un cdata/vec3, le chemin est calculé depuis le nœud target et inversé). Pénalise la distance entre le point et la route et peut finir sur le milieu d'une arête (premier élément du tableau = nœud de l'arête qui contient la projection du point). | 603 |
-| `Graphpath:getPointToPointPath(sourcePos, iter, targetPos, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ)` | Chemin entre deux positions via le réseau routier (version synchrone de _getPointToPointPathImpl). | 882 |
-| `Graphpath:getPointToPointPathJob(job, sourcePos, iter, targetPos, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ)` | Comme getPointToPointPath mais cède la main (job.yield) toutes les 350 itérations (ou global_yieldInterval) pour ne pas bloquer le jeu ; à appeler depuis un job du jobsystem. | 888 |
-| `Graphpath:getRandomPath(nodeAhead, nodeBehind, dirMult)` | Chemin aléatoire (jusqu'à 5 candidats à plus de 300 m, tirage pondéré) avec un biais vers la colinéarité des arêtes ; empêche de faire demi-tour vers nodeBehind. | 1616 |
-| `Graphpath:getRandomPathG(startNode, initialDir, pathLenLimit, rndDirCoef, rndDistCoef, oneway)` | Construit gloutonnement un chemin aléatoire qui privilégie la continuité de direction, jusqu'à dépasser pathLenLimit. | 1545 |
-| `Graphpath:graphMinor()` | Contracte les nœuds de degré 2 : le résultat ne contient que les impasses et carrefours. minor[a][b] est le tableau ordonné des nœuds d'origine reliant a et b (extrémités incluses), symétrique en minor[b][a]. | 373 |
-| `Graphpath:import(graphData)` | Reconstruit le graphe depuis le format produit par export (utilise inNode/outNode/eId des arêtes) et l'index des arêtes. | 147 |
-| `Graphpath:numOfEdgeLanes(inNode, outNode)` | Nombre total de voies d'une arête et nombre de voies dans le sens inNode->outNode donné ; si lanes est absent, les déduit des rayons (3,45 m par voie). | 904 |
-| `Graphpath:scc(v)` | Composantes fortement connexes (Tarjan) en ne suivant que les arêtes de drivabilité exactement 1. Si v est donné, ne calcule que depuis v. | dyn |
-| `Graphpath:setNodeRadius(node, radius)` | Définit le rayon d'un nœud. | 292 |
-| `Graphpath:setPointPosition(p, pos)` | Définit la position d'un nœud. | 283 |
-| `Graphpath:setPointPositionRadius(p, pos, radius)` | Définit position et rayon d'un nœud. | 287 |
-| `Graphpath:spanMap(source, nodeBehind, target, edgeDict, dirMult)` | Plus court chemin où le coût de chaque arête est multiplié par edgeDict['a\0b'] (défaut 1e20 si absente), avec forte pénalité (x300) pour repartir vers nodeBehind depuis la source ; sert à couvrir un ensemble d'arêtes. | 1305 |
-| `Graphpath:uniEdge(inNode, outNode, dist, drivability, speedLimit, lanes, oneWay, gated, inPos, inRad, outPos, outRad)` | Ajoute une arête riche partagée par les deux sens, sans identifiant d'arête (pas de eId). | 189 |
+| `Graphpath:_getPointToPointPathImpl(sourcePos, iter, targetPos, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ, yieldFn)` | Implementation of the point-to-point search: several possible access nodes/edges at the source (provided by the iterator iter) and exit toward targetPos by projection onto the edges; optional yieldFn called at each iteration. | 704 |
+| `Graphpath:bidiEdge(inNode, outNode, dist, drivability, speedLimit, lanes, oneWay, gated, inPos, inRad, outPos, outRad)` | Like uniEdge but also assigns an edge identifier eId (two consecutive identifiers per edge, one per direction); required for getEdgePath and the edge index. | 218 |
+| `Graphpath:clear()` | Replaces the graph table with an empty table (positions and radii kept). | 173 |
+| `Graphpath:edge(sp, ep, dist)` | Adds a simple edge from sp to ep (len = dist) and creates ep if absent. Only one direction is stored (graph[sp][ep]). | 177 |
+| `Graphpath:edgeLanesInDirection(fromNode, toNode)` | Number of lanes of the edge going from fromNode to toNode (counts the '+' or '-' of the lanes string depending on the direction). | 515 |
+| `Graphpath:export(edgeCount)` | Exports the graph in compact form (one entry per edge, no duplicates) for saving or sending to another VM. | 133 |
+| `Graphpath:generateEdgeIndex()` | Builds the edgeList table (eId to node) from the edges created by bidiEdge. | 250 |
+| `Graphpath:getBranchNodesAround(start, maxRadius)` | Depth-first traversal within a radius around start; returns the intersections (nodes with at least 2 new neighbors) and their links. | 1416 |
+| `Graphpath:getChasePath(nodeBehind, nodeAhead, targetNodeBehind, targetNodeAhead, mePos, meVel, targetPos, targetVel, dirMult)` | Path to chase a target: picks the node ahead according to the target's position/velocity and computes a path to the target's node. | 1456 |
+| `Graphpath:getEdgeIdFromNodes(fromNode, toNode)` | Identifier of the directed edge from fromNode to toNode (eId for the direction inNode->outNode, eId+1 for the reverse). | 263 |
+| `Graphpath:getEdgePath(bNode, fNode, goal, dirMult)` | Shortest path over edges (states = directed edges) with turn penalties (left/right stronger at intersections, U-turn heavily penalized depending on road width). Starts from the edge bNode to fNode; the result is a list of nodes. | 523 |
+| `Graphpath:getEdgePositions(n1id, n2id)` | Positions of the ends of an edge: the edge-specific position (inPos/outPos) if it exists, otherwise the node position. | 271 |
+| `Graphpath:getEdgeRadii(n1id, n2id)` | Radii at the ends of an edge (the edge's own radius, otherwise the node's). | 277 |
+| `Graphpath:getFilteredPath(start, goal, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff)` | Shortest path between two nodes with drivability (threshold) and wrong-way penalties. | 1266 |
+| `Graphpath:getFleePath(startNode, initialDir, chasePos, pathLenLimit, rndDirCoef, rndDistCoef)` | Greedily builds a flee path away from chasePos, with direction randomization, until exceeding pathLenLimit. | 1480 |
+| `Graphpath:getFlows(inNode, outNode)` | Forward and backward flow (capacity) of a directed edge, inferred from the exit node's radius distributed over the lanes. | 1035 |
+| `Graphpath:getMaxNodeAround(start, radius, dir)` | Walks the graph within a radius radius around start and returns the farthest node, or the most advanced one according to the direction dir. | 1375 |
+| `Graphpath:getNodesFromEdgeId(eId)` | Inverse of getEdgeIdFromNodes: returns the two nodes of the directed edge (start, end). | 267 |
+| `Graphpath:getPath(start, goal, dirMult)` | Shortest path (Dijkstra) between two nodes minimizing the sum of len; one-way edges traversed against their direction are multiplied by dirMult. | 468 |
+| `Graphpath:getPathAwayFrom(start, goal, mePos, stayAwayPos, dirMult)` | Path to goal that avoids stayAwayPos: the edge cost is weighted by (distance to mePos / distance to stayAwayPos). | 1339 |
+| `Graphpath:getPathT(start, mePos, pathLenLim, illegalDirPenalty, initDir)` | Picks a weighted random path for AI traffic from start, favoring drivable roads, direction continuity and capacity (lane flow); stops at pathLenLim meters from mePos, up to 10 randomly drawn candidates. | 927 |
+| `Graphpath:getPathTWithState(start, mePos, pathLenLim, state)` | Variant of getPathT that reuses the previous path as state to continue consistently (the last node of the previous path must be start). | 1045 |
+| `Graphpath:getPointNodePath(start, target, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ)` | Shortest path between a point (vec3) and a node, in either direction (if start is a cdata/vec3, the path is computed from the target node and reversed). Penalizes the distance between the point and the road and can end in the middle of an edge (first element of the array = node of the edge that contains the projection of the point). | 603 |
+| `Graphpath:getPointToPointPath(sourcePos, iter, targetPos, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ)` | Path between two positions via the road network (synchronous version of _getPointToPointPathImpl). | 882 |
+| `Graphpath:getPointToPointPathJob(job, sourcePos, iter, targetPos, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ)` | Like getPointToPointPath but yields (job.yield) every 350 iterations (or global_yieldInterval) so as not to block the game; to be called from a jobsystem job. | 888 |
+| `Graphpath:getRandomPath(nodeAhead, nodeBehind, dirMult)` | Random path (up to 5 candidates over 300 m, weighted draw) with a bias toward edge collinearity; prevents making a U-turn toward nodeBehind. | 1616 |
+| `Graphpath:getRandomPathG(startNode, initialDir, pathLenLimit, rndDirCoef, rndDistCoef, oneway)` | Greedily builds a random path that favors direction continuity, until exceeding pathLenLimit. | 1545 |
+| `Graphpath:graphMinor()` | Contracts degree-2 nodes: the result contains only dead ends and intersections. minor[a][b] is the ordered array of original nodes linking a and b (ends included), symmetric in minor[b][a]. | 373 |
+| `Graphpath:import(graphData)` | Rebuilds the graph from the format produced by export (uses inNode/outNode/eId of the edges) and the edge index. | 147 |
+| `Graphpath:numOfEdgeLanes(inNode, outNode)` | Total number of lanes of an edge and number of lanes in the given inNode->outNode direction; if lanes is absent, infers them from the radii (3.45 m per lane). | 904 |
+| `Graphpath:scc(v)` | Strongly connected components (Tarjan) following only edges with drivability exactly 1. If v is given, computes only from v. | dyn |
+| `Graphpath:setNodeRadius(node, radius)` | Sets the radius of a node. | 292 |
+| `Graphpath:setPointPosition(p, pos)` | Sets the position of a node. | 283 |
+| `Graphpath:setPointPositionRadius(p, pos, radius)` | Sets the position and radius of a node. | 287 |
+| `Graphpath:spanMap(source, nodeBehind, target, edgeDict, dirMult)` | Shortest path where the cost of each edge is multiplied by edgeDict['a\0b'] (default 1e20 if absent), with a strong penalty (x300) for heading back to nodeBehind from the source; used to cover a set of edges. | 1305 |
+| `Graphpath:uniEdge(inNode, outNode, dist, drivability, speedLimit, lanes, oneWay, gated, inPos, inRad, outPos, outRad)` | Adds a rich edge shared by both directions, without an edge identifier (no eId). | 189 |
 
-## Classe `minheap`
+## Class `minheap`
 
-File de priorité à clé numérique minimale en tête. Champs : length, vals ; les clés sont stockées aux indices 1..length de la table.
+Priority queue with the minimum numeric key at the head. Fields: length, vals; the keys are stored at indices 1..length of the table.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `minheap:clear()` | Vide le tas (conserve la table). | 63 |
-| `minheap:empty()` | Indique si le tas est vide. | 59 |
-| `minheap:insert(k, v)` | Insère la valeur v avec la clé k. | 68 |
-| `minheap:peekKey()` | Clé minimale sans retirer (nil si vide). | 51 |
-| `minheap:peekVal()` | Valeur de clé minimale sans retirer. | 55 |
-| `minheap:pop()` | Retire et renvoie l'élément de clé minimale. | 88 |
+| `minheap:clear()` | Empties the heap (keeps the table). | 63 |
+| `minheap:empty()` | Tells whether the heap is empty. | 59 |
+| `minheap:insert(k, v)` | Inserts the value v with the key k. | 68 |
+| `minheap:peekKey()` | Minimum key without removing (nil if empty). | 51 |
+| `minheap:peekVal()` | Value of the minimum key without removing. | 55 |
+| `minheap:pop()` | Removes and returns the element with the minimum key. | 88 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/graphpath.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/graphpath.lua`.*

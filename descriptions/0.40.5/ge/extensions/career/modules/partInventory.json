@@ -1,154 +1,256 @@
 {
   "path": "lua/ge/extensions/career/modules/partInventory.lua",
-  "module": "Inventaire des pièces de la carrière. Chaque pièce (installée sur un véhicule de l'inventaire ou en stockage, location = 0) est une entrée de la table partInventory indexée par un partId entier. Le module génère les pièces d'un véhicule depuis son arbre de pièces (partsTree), les réconcilie avec le véhicule réel après modification, vend les pièces stockées, alimente l'écran « Mes pièces » de l'ordinateur de garage et sauvegarde le tout dans career/partInventory.json (sérialisé).",
+  "module": "Career parts inventory. Each part (installed on an inventory vehicle or in storage, location = 0) is an entry of the partInventory table keyed by an integer partId. The module generates a vehicle's parts from its parts tree (partsTree), reconciles them with the actual vehicle after modification, sells stored parts, feeds the \"My parts\" screen of the garage computer and saves everything to career/partInventory.json (serialized).",
   "usage": "local inv = career_modules_partInventory.getInventory()\nlocal id = career_modules_partInventory.getPartPathToPartIdMap()[inventoryId][\"/main/\"..\"partName\"]\nlocal part = inv[id]",
   "notes": [
-    "Champs d'une pièce : name, value (100 par défaut), description (infos JBeam, non sauvegardé), partCondition, tags, vehicleModel, location (0 = stockage, sinon inventoryId du véhicule), containingSlot (chemin du slot), partPath (= containingSlot .. name), mainPart (slot \"/\"), et selon le cas year, repairCount, primered.",
-    "slotToPartIdMap : location -> containingSlot -> partId. partPathToPartIdMap : inventoryId -> partPath -> partId (seulement pour location > 0). Ces tables sont reconstruites par updateVehicleMaps (de façon asynchrone dans onUpdate après un changement de véhicule).",
-    "À l'ajout d'un véhicule (onVehicleAdded), ses pièces sont ajoutées dans onUpdate dès que le véhicule est présent et que partConditions existe ; le hook onAddedVehiclePartsToInventory(inventoryId, newParts) est alors émis.",
-    "Une pièce auxiliaire (description.isAuxiliary) de valeur 0 est masquée de l'UI et supprimée du stockage.",
-    "Si la version de sauvegarde est inférieure à celle du système de sauvegarde, toutes les pièces en stockage sont vendues au chargement. Si la sauvegarde est plus ancienne que la version 42, l'inventaire est vide.",
-    "sellParts abandonne en silence (sans rien vendre) si l'un des ids est inconnu ou n'est pas en stockage ; la vente rapporte la somme de career_modules_valueCalculator.getPartValue, avec tags partsSold et selling.",
-    "debugMenu (fenêtre ImGui) est défini mais son appel est commenté."
+    "Part fields: name, value (100 by default), description (JBeam info, not saved), partCondition, tags, vehicleModel, location (0 = storage, otherwise the vehicle's inventoryId), containingSlot (slot path), partPath (= containingSlot .. name), mainPart (slot \"/\"), and depending on the case year, repairCount, primered.",
+    "slotToPartIdMap: location -> containingSlot -> partId. partPathToPartIdMap: inventoryId -> partPath -> partId (only for location > 0). These tables are rebuilt by updateVehicleMaps (asynchronously in onUpdate after a vehicle change).",
+    "When a vehicle is added (onVehicleAdded), its parts are added in onUpdate as soon as the vehicle is present and partConditions exists; the onAddedVehiclePartsToInventory(inventoryId, newParts) hook is then emitted.",
+    "An auxiliary part (description.isAuxiliary) with value 0 is hidden from the UI and removed from storage.",
+    "If the save version is lower than that of the save system, all parts in storage are sold on load. If the save is older than version 42, the inventory is empty.",
+    "sellParts silently gives up (selling nothing) if one of the ids is unknown or not in storage; the sale yields the sum of career_modules_valueCalculator.getPartValue, with tags partsSold and selling.",
+    "debugMenu (ImGui window) is defined but its call is commented out."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: career_career."
+    }
   },
   "functions": {
     "getInventory": {
-      "desc": "Renvoie la table de toutes les pièces (partId -> pièce), par référence.",
+      "desc": "Returns the table of all parts (partId -> part), by reference.",
       "params": {},
-      "returns": [{"type": "table<integer, table>", "desc": "Inventaire des pièces."}],
+      "returns": [
+        {
+          "type": "table<integer, table>",
+          "desc": "Parts inventory."
+        }
+      ],
       "internal": false
     },
     "getPart": {
-      "desc": "Cherche la pièce installée dans un slot d'un véhicule.",
+      "desc": "Looks up the part installed in a slot of a vehicle.",
       "params": {
-        "inventoryId": {"type": "integer", "desc": "Id d'inventaire du véhicule (location)."},
-        "path": {"type": "string", "desc": "Chemin du slot (containingSlot)."}
+        "inventoryId": {
+          "type": "integer",
+          "desc": "Vehicle inventory id (location)."
+        },
+        "path": {
+          "type": "string",
+          "desc": "Slot path (containingSlot)."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "La pièce."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "The part."
+        }
+      ],
       "internal": false
     },
     "getSlotToPartIdMap": {
-      "desc": "Renvoie la table location -> containingSlot -> partId.",
+      "desc": "Returns the table location -> containingSlot -> partId.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Table des slots."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Slot table."
+        }
+      ],
       "internal": false
     },
     "getPartPathToPartIdMap": {
-      "desc": "Renvoie la table inventoryId -> partPath -> partId (véhicules seulement).",
+      "desc": "Returns the table inventoryId -> partPath -> partId (vehicles only).",
       "params": {},
-      "returns": [{"type": "table", "desc": "Table des chemins de pièces."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Part path table."
+        }
+      ],
       "internal": false
     },
     "addPartToInventory": {
-      "desc": "Ajoute une pièce sous le plus petit partId libre (à partir de 1).",
-      "params": {"part": {"type": "table", "desc": "Pièce à ajouter."}},
+      "desc": "Adds a part under the smallest free partId (starting from 1).",
+      "params": {
+        "part": {
+          "type": "table",
+          "desc": "Part to add."
+        }
+      },
       "internal": false
     },
     "isHiddenInUI": {
-      "desc": "Indique si la pièce doit être cachée dans l'UI : auxiliaire (description.isAuxiliary) et de valeur nulle.",
-      "params": {"part": {"type": "table", "desc": "Pièce."}},
-      "returns": [{"type": "boolean|nil", "desc": "true si masquée."}],
+      "desc": "Indicates whether the part must be hidden in the UI: auxiliary (description.isAuxiliary) and of zero value.",
+      "params": {
+        "part": {
+          "type": "table",
+          "desc": "Part."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true if hidden."
+        }
+      ],
       "internal": false
     },
     "sellParts": {
-      "desc": "Vend des pièces en stockage : crédite la somme de leurs valeurs, joue le son d'achat, les supprime et rafraîchit l'UI si le menu est ouvert.",
-      "params": {"partIds": {"type": "integer[]", "desc": "Ids des pièces à vendre (location 0 obligatoire)."}},
+      "desc": "Sells parts in storage: credits the sum of their values, plays the purchase sound, deletes them and refreshes the UI if the menu is open.",
+      "params": {
+        "partIds": {
+          "type": "integer[]",
+          "desc": "Ids of the parts to sell (location 0 required)."
+        }
+      },
       "internal": false
     },
     "updatePartConditionsInInventory": {
-      "desc": "Recopie dans chaque pièce la condition (partCondition) connue du véhicule qui la contient.",
+      "desc": "Copies into each part the condition (partCondition) known by the vehicle containing it.",
       "params": {},
       "internal": false
     },
     "updatePartsToMatchSpawnedVehicle": {
-      "desc": "Relit les pièces du véhicule actuellement présent et les réconcilie avec l'inventaire : met à jour vehicle.config, conserve condition, tags, année, repairCount et primered des pièces existantes (même slot), ajoute les nouvelles (condition par défaut intégrité 1, odomètre 0, visuel 1) et supprime celles disparues. Marque le véhicule comme modifié.",
-      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire du véhicule."}},
-      "returns": [{"type": "{added: table[], removed: table[], changed: {old: table, new: table}[]}", "desc": "Différences détectées."}],
+      "desc": "Re-reads the parts of the currently present vehicle and reconciles them with the inventory: updates vehicle.config, keeps condition, tags, year, repairCount and primered of existing parts (same slot), adds new ones (default condition integrity 1, odometer 0, visual 1) and removes those that disappeared. Marks the vehicle as modified.",
+      "params": {
+        "inventoryId": {
+          "type": "integer",
+          "desc": "Inventory id of the vehicle."
+        }
+      },
+      "returns": [
+        {
+          "type": "{added: table[], removed: table[], changed: {old: table, new: table}[]}",
+          "desc": "Detected differences."
+        }
+      ],
       "internal": false
     },
     "sendUIData": {
-      "desc": "Envoie à l'UI (guihooks partInventoryData) la liste des pièces visibles (hors pièces principales), leur valeur finale, leur accessibilité (non installées sur un véhicule) et les données des véhicules.",
+      "desc": "Sends to the UI (guihooks partInventoryData) the list of visible parts (excluding main parts), their final value, their accessibility (not installed on a vehicle) and the vehicle data.",
       "params": {},
       "internal": false
     },
     "openMenu": {
-      "desc": "Ouvre l'écran des pièces : choisit le véhicule courant ou celui du garage le plus proche, met à jour ses conditions de pièces puis navigue vers career.computer.partInventory.",
-      "params": {"_originComputerId": {"type": "string|nil", "desc": "Id de l'ordinateur d'origine."}},
+      "desc": "Opens the parts screen: picks the current vehicle or the nearest garage one, updates its part conditions then navigates to career.computer.partInventory.",
+      "params": {
+        "_originComputerId": {
+          "type": "string|nil",
+          "desc": "Originating computer id."
+        }
+      },
       "internal": false
     },
     "closeMenu": {
-      "desc": "Ferme l'écran : si l'autosauvegarde est active et des véhicules sont modifiés, les sauvegarde d'abord (la fermeture se fait dans onSaveFinished), sinon retourne directement à l'ordinateur ou ferme les menus.",
+      "desc": "Closes the screen: if autosave is active and vehicles are modified, saves them first (closing happens in onSaveFinished), otherwise returns directly to the computer or closes the menus.",
       "params": {},
       "internal": false
     },
     "requestExit": {
-      "desc": "Point d'entrée du bouton retour du routeur UI : appelle closeMenu pour conserver le comportement d'autosauvegarde.",
+      "desc": "Entry point of the UI router back button: calls closeMenu to keep the autosave behavior.",
       "params": {},
       "internal": false
     },
     "partInventoryClosed": {
-      "desc": "Notifie que l'UI de l'inventaire est fermée (partInventoryOpen = false).",
+      "desc": "Notifies that the inventory UI is closed (partInventoryOpen = false).",
       "params": {},
       "internal": false
     },
     "onRouteMount": {
-      "desc": "Cycle de vie du routeur UI : renvoie les données de l'inventaire une fois la vue montée si le menu est ouvert.",
+      "desc": "UI router lifecycle: sends the inventory data once the view is mounted if the menu is open.",
       "params": {
-        "context": {"type": "any", "desc": "Contexte du routeur."},
-        "toRoute": {"type": "any", "desc": "Route cible."},
-        "fromRoute": {"type": "any", "desc": "Route précédente."},
-        "data": {"type": "table", "desc": "routeData."}
+        "context": {
+          "type": "any",
+          "desc": "Router context."
+        },
+        "toRoute": {
+          "type": "any",
+          "desc": "Target route."
+        },
+        "fromRoute": {
+          "type": "any",
+          "desc": "Previous route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "routeData."
+        }
       },
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook : charge partInventory.json (désérialisé), vend les pièces en stockage si la sauvegarde est d'une version plus ancienne, recharge les descriptions JBeam, supprime les pièces cachées en stockage et reconstruit les tables d'index.",
+      "desc": "Hook: loads partInventory.json (deserialized), sells parts in storage if the save is of an older version, reloads the JBeam descriptions, removes hidden parts in storage and rebuilds the index tables.",
       "params": {},
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook de frame : ajoute les pièces d'un véhicule nouvellement ajouté et met à jour les tables d'index après un changement de véhicule, dès que partConditions est disponible.",
+      "desc": "Frame hook: adds the parts of a newly added vehicle and updates the index tables after a vehicle change, as soon as partConditions is available.",
       "params": {},
       "internal": true
     },
     "onVehicleSaveFinished": {
-      "desc": "Hook de sauvegarde : écrit partInventory.json dans <save>/career/ (sans le champ description, via serialize).",
-      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde."}},
+      "desc": "Save hook: writes partInventory.json to <save>/career/ (without the description field, via serialize).",
+      "params": {
+        "currentSavePath": {
+          "type": "string",
+          "desc": "Save folder."
+        }
+      },
       "internal": true
     },
     "onSaveFinished": {
-      "desc": "Hook de fin de sauvegarde : ferme le menu si closeMenu l'attendait.",
+      "desc": "End-of-save hook: closes the menu if closeMenu was waiting for it.",
       "params": {},
       "internal": true
     },
     "onEnterVehicleFinished": {
-      "desc": "Hook : planifie la mise à jour des tables d'index lors de l'entrée dans un véhicule.",
-      "params": {"currentVehicle": {"type": "integer|nil", "desc": "Id d'inventaire du véhicule courant."}},
+      "desc": "Hook: schedules the update of the index tables when entering a vehicle.",
+      "params": {
+        "currentVehicle": {
+          "type": "integer|nil",
+          "desc": "Inventory id of the current vehicle."
+        }
+      },
       "internal": true
     },
     "onPartShoppingTransactionComplete": {
-      "desc": "Hook : après un achat de pièces, supprime les pièces cachées en stockage et reconstruit les index.",
+      "desc": "Hook: after a parts purchase, removes hidden parts in storage and rebuilds the indexes.",
       "params": {},
       "internal": true
     },
     "onVehicleAdded": {
-      "desc": "Hook : mémorise le véhicule dont il faudra ajouter les pièces dans onUpdate.",
-      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire."}},
+      "desc": "Hook: remembers the vehicle whose parts must be added in onUpdate.",
+      "params": {
+        "inventoryId": {
+          "type": "integer",
+          "desc": "Inventory id."
+        }
+      },
       "internal": true
     },
     "onVehicleRemoved": {
-      "desc": "Hook : supprime toutes les pièces localisées sur le véhicule retiré.",
-      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire."}},
+      "desc": "Hook: removes all parts located on the removed vehicle.",
+      "params": {
+        "inventoryId": {
+          "type": "integer",
+          "desc": "Inventory id."
+        }
+      },
       "internal": true
     },
     "onComputerAddFunctions": {
-      "desc": "Hook de l'ordinateur : ajoute la fonction « Mes pièces » (ordre 5), désactivée tant que le véhicule de départ n'est pas acheté.",
+      "desc": "Computer hook: adds the \"My parts\" function (order 5), disabled while the starter vehicle is not bought.",
       "params": {
-        "menuData": {"type": "table", "desc": "Données du menu."},
-        "computerFunctions": {"type": "table", "desc": "Fonctions à compléter (general)."}
+        "menuData": {
+          "type": "table",
+          "desc": "Menu data."
+        },
+        "computerFunctions": {
+          "type": "table",
+          "desc": "Functions to complete (general)."
+        }
       },
       "internal": true
     }

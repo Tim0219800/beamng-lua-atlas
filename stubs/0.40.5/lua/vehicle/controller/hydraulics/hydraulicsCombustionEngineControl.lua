@@ -2,47 +2,47 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur auxiliaire qui relève le ralenti d'un moteur thermique et connecte la pompe hydraulique quand une fonction hydraulique est commandée (mode "electricsRaiseAndConnect"). Il surveille des valeurs electrics, impose idleAVOverwrite/maxIdleThrottleOverwrite au moteur, connecte la pompe (setConnected) une fois le régime assez haut et écrit une valeur electrics d'état. Un relèvement de ralenti manuel est aussi possible.
---- Accès : contrôleur `hydraulics/hydraulicsCombustionEngineControl` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Auxiliary controller that raises the idle of a combustion engine and connects the hydraulic pump when a hydraulic function is commanded ("electricsRaiseAndConnect" mode). It watches electrics values, imposes idleAVOverwrite/maxIdleThrottleOverwrite on the engine, connects the pump (setConnected) once the RPM is high enough and writes a state electrics value. A manual idle raise is also possible.
+--- Access: controller `hydraulics/hydraulicsCombustionEngineControl` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_hydraulics_hydraulicsCombustionEngineControl
 ---@field type string "auxiliary".
 local controller_hydraulics_hydraulicsCombustionEngineControl = {}
 
---- Renvoie l'état (relèvement manuel).
----Source : lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:113
----@return table  Table d'état.
+--- Returns the state (manual raise).
+---Source: lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:113
+---@return table  State table.
 function controller_hydraulics_hydraulicsCombustionEngineControl.getState() end
 
---- Lit la configuration, retrouve le moteur et la pompe et active la boucle de contrôle.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:72
----@param jbeamData table Données jbeam du contrôleur.
+--- Reads the configuration, finds the engine and the pump and enables the control loop.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:72
+---@param jbeamData table Controller jbeam data.
 function controller_hydraulics_hydraulicsCombustionEngineControl.init(jbeamData) end
 
---- Désactive le relèvement manuel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:68
----@param jbeamData table Données jbeam.
+--- Disables the manual raise.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:68
+---@param jbeamData table Jbeam data.
 function controller_hydraulics_hydraulicsCombustionEngineControl.reset(jbeamData) end
 
---- Active/désactive le relèvement manuel du ralenti.
----Source : lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:60
----@param enabled boolean Vrai pour relever.
+--- Enables/disables the manual idle raise.
+---Source: lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:60
+---@param enabled boolean True to raise.
 function controller_hydraulics_hydraulicsCombustionEngineControl.setIdleRaise(enabled) end
 
---- Restaure l'état renvoyé par getState.
----Source : lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:118
----@param data table|nil Table d'état.
+--- Restores the state returned by getState.
+---Source: lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:118
+---@param data table|nil State table.
 function controller_hydraulics_hydraulicsCombustionEngineControl.setState(data) end
 
---- Inverse le relèvement manuel du ralenti.
----Source : lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:64
+--- Toggles the manual idle raise.
+---Source: lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:64
 function controller_hydraulics_hydraulicsCombustionEngineControl.toggleIdleRaise() end
 
---- Applique le relèvement de ralenti et la connexion de pompe (défini dynamiquement à l'init). (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:dyn
----@param dt number Pas de temps (s).
+--- Applies the idle raise and the pump connection (dynamically defined at init). (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua:dyn
+---@param dt number Time step (s).
 function controller_hydraulics_hydraulicsCombustionEngineControl.updateGFX(dt) end
 
 return controller_hydraulics_hydraulicsCombustionEngineControl

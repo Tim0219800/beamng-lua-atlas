@@ -1,0 +1,115 @@
+{
+  "path": "lua/objectpool/main.lua",
+  "module": "Point d'entrée de la machine virtuelle Lua « objectpool » (vmType = 'objectpool'), qui stocke des objets de véhicule sérialisés (lpack) dans une table `objPool` indexée par identifiant d'objet. Elle sert à déplacer des données de véhicule entre VM : le moteur appelle getObject, setObject, moveObject, deleteObject. Elle charge luaCore, utils, devUtils, ve_utils et mathlib, redéfinit `print` vers le journal et installe des métatables sur _G pour que les variables globales d'un objet soient stockées dans sa fiche (objData).",
+  "notes": [
+    "Ce n'est pas une extension : fichier main.lua d'une VM séparée, chargé par le moteur ; package.path est redéfini et package.cpath vidé.",
+    "Après _setObj(objId, obj), toute lecture ou écriture d'une globale inconnue passe par __indexHandler / __newIndexHandler et va dans objPool[objId] (rawget/rawset sur objData).",
+    "float3 est un alias de vec3. Les hooks onNodeCollision, onVehicleReset, onBeamBroke et onBeamDeformed sont vides.",
+    "getObject et moveObject encodent avec lpack.encode ; moveObject retire en plus l'objet du pool. setObject et moveObject journalisent via dump."
+  ],
+  "functions": {
+    "print": {
+      "desc": "Remplace print : écrit dans le journal avec le niveau 'A' et le tag 'print'. Seul le premier argument est converti (tostring(...)).",
+      "internal": true
+    },
+    "getObject": {
+      "desc": "Retourne l'objet du pool encodé en chaîne lpack, sans le retirer.",
+      "params": {"objId": {"type": "integer", "desc": "identifiant de l'objet"}},
+      "returns": [{"type": "string", "desc": "données encodées"}]
+    },
+    "moveObject": {
+      "desc": "Retourne l'objet encodé et le retire du pool (transfert vers une autre VM).",
+      "params": {"objId": {"type": "integer", "desc": "identifiant de l'objet"}},
+      "returns": [{"type": "string", "desc": "données encodées"}]
+    },
+    "setObject": {
+      "desc": "Décode une chaîne lpack et la range dans le pool sous objId.",
+      "params": {
+        "objId": {"type": "integer", "desc": "identifiant de l'objet"},
+        "objDataStr": {"type": "string", "desc": "données encodées par lpack"}
+      }
+    },
+    "deleteObject": {
+      "desc": "Supprime l'objet du pool.",
+      "params": {"objId": {"type": "integer", "desc": "identifiant de l'objet"}}
+    },
+    "initPool": {
+      "desc": "Initialisation de la VM « thread » du pool ; ne fait rien.",
+      "internal": true
+    },
+    "init": {
+      "desc": "Appelée dans la VM Lua de l'objet : décode initData (lpack), charge le véhicule avec jbeam/stage2 (loadVehicleStage2) et le range dans objPool[obj:getId()] = {v = objet}. Journalise une erreur et retourne false (décharge la Lua) si les données sont invalides.",
+      "params": {
+        "path": {"type": "string", "desc": "chemin de l'objet (non utilisé)"},
+        "initData": {"type": "string", "desc": "données de spawn encodées par lpack, avec un champ vdata"}
+      },
+      "returns": [{"type": "boolean", "desc": "vrai si l'objet est chargé, faux sinon"}],
+      "internal": true
+    },
+    "onNodeCollision": {
+      "desc": "Hook de collision de nœud appelé par le moteur ; corps vide dans cette VM.",
+      "params": {
+        "id1": {"type": "integer", "desc": "identifiant du nœud"},
+        "pos": {"type": "any", "desc": "position du contact (déduit du code)"},
+        "normal": {"type": "any", "desc": "normale du contact"},
+        "nodeVel": {"type": "any", "desc": "vitesse du nœud"},
+        "perpendicularVel": {"type": "any", "desc": "vitesse perpendiculaire"},
+        "slipVec": {"type": "any", "desc": "vecteur de glissement"},
+        "slipVel": {"type": "number", "desc": "vitesse de glissement"},
+        "slipForce": {"type": "number", "desc": "force de glissement"},
+        "normalForce": {"type": "number", "desc": "force normale"},
+        "depth": {"type": "number", "desc": "profondeur de pénétration"},
+        "materialId1": {"type": "integer", "desc": "matériau du nœud"},
+        "materialId2": {"type": "integer", "desc": "matériau de l'autre surface"}
+      },
+      "internal": true
+    },
+    "onVehicleReset": {
+      "desc": "Hook appelé par le moteur lors d'un reset ; corps vide.",
+      "params": {"retainDebug": {"type": "boolean", "desc": "indicateur de conservation du debug (non utilisé)"}},
+      "internal": true
+    },
+    "onBeamBroke": {
+      "desc": "Hook appelé par le moteur quand une poutre casse ; corps vide.",
+      "params": {
+        "id": {"type": "integer", "desc": "identifiant de la poutre"},
+        "energy": {"type": "number", "desc": "énergie de la rupture"}
+      },
+      "internal": true
+    },
+    "onBeamDeformed": {
+      "desc": "Hook appelé par le moteur quand une poutre se déforme ; corps vide.",
+      "params": {
+        "id": {"type": "integer", "desc": "identifiant de la poutre"},
+        "ratio": {"type": "number", "desc": "taux de déformation"}
+      },
+      "internal": true
+    },
+    "_setObj": {
+      "desc": "Sélectionne l'objet courant : pose les globales obj, objectId et objData (= objPool[objId]) avec rawset.",
+      "params": {
+        "objId": {"type": "integer", "desc": "identifiant de l'objet"},
+        "_obj": {"type": "any", "desc": "handle moteur de l'objet"}
+      },
+      "internal": true
+    },
+    "__newIndexHandler": {
+      "desc": "Métatable de _G : une affectation de globale est stockée dans objData au lieu de _G.",
+      "params": {
+        "t": {"type": "table", "desc": "_G"},
+        "key": {"type": "any", "desc": "nom de la globale"},
+        "val": {"type": "any", "desc": "valeur"}
+      },
+      "internal": true
+    },
+    "__indexHandler": {
+      "desc": "Métatable de _G : la lecture d'une globale absente est cherchée dans objData.",
+      "params": {
+        "t": {"type": "table", "desc": "_G"},
+        "key": {"type": "any", "desc": "nom de la globale"}
+      },
+      "returns": [{"type": "any", "desc": "valeur trouvée dans objData, ou nil"}],
+      "internal": true
+    }
+  }
+}

@@ -1,122 +1,122 @@
 # `flowgraph_modules_cameraModule`
 
-*Fichier : `lua/ge/extensions/flowgraph/modules/cameraModule.lua` · VM : Game Engine (GE) · 141 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/modules/cameraModule.lua` · VM: Game Engine (GE) · 141 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/modules/cameraModule")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/modules/cameraModule")` (file under extensions/ but not a regular extension)
 
-Module flowgraph (moduleOrder -500, donc l'un des premiers) qui gère les trajectoires de caméra (camPath) pendant un projet. Il charge un fichier <nom>/<nom>.camPath.json relatif au projet via core_paths.loadPath, ou stocke un chemin fourni en mémoire, puis le joue avec core_paths.playPath. Il suit le chemin actif, le nombre de fins de parcours (completions) et le mode boucle.
+Flowgraph module (moduleOrder -500, so one of the first) that manages camera paths (camPath) during a project. It loads a <name>/<name>.camPath.json file relative to the project via core_paths.loadPath, or stores a path provided in memory, then plays it with core_paths.playPath. It tracks the active path, the number of path completions and the loop mode.
 
-## Remarques
+## Notes
 
-- Les chemins sont identifiés par un id entier local au module (getFreeId) et indexés par nom dans pathIds.
-- Bug (copier-coller) : getCmd renvoie une commande qui appelle le module 'button' (buttonClicked) ; inutilisable pour la caméra.
-- afterTrigger contient un bloc scheduleAction vide.
-- isPathComplete provoque une erreur si activePathId == id mais completions est nil (ne devrait pas arriver après startPath).
-- getPathDuration lit le temps du dernier marqueur ; erreur si le chemin n'a aucun marqueur.
+- Paths are identified by an integer id local to the module (getFreeId) and indexed by name in pathIds.
+- Bug (copy-paste): getCmd returns a command that calls the 'button' module (buttonClicked); unusable for the camera.
+- afterTrigger contains an empty scheduleAction block.
+- isPathComplete raises an error if activePathId == id but completions is nil (should not happen after startPath).
+- getPathDuration reads the time of the last marker; error if the path has no marker.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `flowgraph_modules_cameraModule.addCustomPath(name, path, force)` | Enregistre un chemin déjà construit sous un nom. Sans force, renvoie l'id existant si le nom est déjà connu. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_cameraModule.afterTrigger()` | Appelé après le tick du graphe : finalise les variables. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_cameraModule.cancelPathCam()` | Arrête le chemin de caméra en cours (core_paths.stopCurrentPath). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_cameraModule.clear()` | Réinitialise le chemin actif, les complétions et les tables de chemins stockés. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_cameraModule.endActivePath(id)` | Arrête le chemin actif (si id est nil ou égal à l'actif) et efface l'état. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_cameraModule.executionStopped()` | Appelé à l'arrêt du projet : arrête la caméra de chemin si active puis appelle clear(). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_cameraModule.findPath(name)` | Renvoie l'id du chemin de ce nom, en le chargeant si besoin depuis <nom>/<nom>.camPath.json (résolu par mgr:getRelativeAbsolutePath). Journalise une erreur si le fichier est introuvable. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_cameraModule.finishedPath()` | Callback appelé par core_paths en fin de parcours : sans boucle, arrête la caméra ; dans tous les cas incrémente completions. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_cameraModule.getCmd(id)` | Construit une commande Lua pour le module 'button' (voir notes : copier-coller probable). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_cameraModule.getFreeId()` | Incrémente et renvoie un id. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_cameraModule.getPath(id)` | Renvoie la table du chemin stocké. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_cameraModule.getPathDuration(id)` | Durée du chemin = temps du dernier marqueur, 0 si le chemin est inconnu. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_cameraModule.getUniqueName(prefix)` | Renvoie prefix..'-'..id unique. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_cameraModule.init()` | Crée le variableStorage et appelle clear(). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_cameraModule.isPathComplete(id)` | Vrai si ce chemin est le chemin actif et a été terminé au moins une fois. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_cameraModule.restartActivePath(id)` | Relance le chemin actif avec le même réglage de boucle (si id est nil ou égal à l'actif). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_cameraModule.startPath(id, loop)` | Passe en caméra de jeu si la caméra libre est active, puis joue le chemin avec core_paths.playPath (useDtReal = true) et mémorise l'id, la boucle et complétions = 0. Ne fait rien si l'id est inconnu. (assignée dynamiquement) | dyn |
+| `flowgraph_modules_cameraModule.addCustomPath(name, path, force)` | Registers an already built path under a name. Without force, returns the existing id if the name is already known. (dynamically assigned) | dyn |
+| `flowgraph_modules_cameraModule.afterTrigger()` | Called after the graph tick: finalizes the variables. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_cameraModule.cancelPathCam()` | Stops the current camera path (core_paths.stopCurrentPath). (dynamically assigned) | dyn |
+| `flowgraph_modules_cameraModule.clear()` | Resets the active path, the completions and the stored path tables. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_cameraModule.endActivePath(id)` | Stops the active path (if id is nil or equal to the active one) and clears the state. (dynamically assigned) | dyn |
+| `flowgraph_modules_cameraModule.executionStopped()` | Called when the project stops: stops the path camera if active then calls clear(). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_cameraModule.findPath(name)` | Returns the id of the path with this name, loading it if needed from <name>/<name>.camPath.json (resolved by mgr:getRelativeAbsolutePath). Logs an error if the file is not found. (dynamically assigned) | dyn |
+| `flowgraph_modules_cameraModule.finishedPath()` | Callback called by core_paths at the end of a path: without loop, stops the camera; in all cases increments completions. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_cameraModule.getCmd(id)` | Builds a Lua command for the 'button' module (see notes: probable copy-paste). (dynamically assigned) | dyn |
+| `flowgraph_modules_cameraModule.getFreeId()` | Increments and returns an id. (dynamically assigned) | dyn |
+| `flowgraph_modules_cameraModule.getPath(id)` | Returns the stored path's table. (dynamically assigned) | dyn |
+| `flowgraph_modules_cameraModule.getPathDuration(id)` | Path duration = time of the last marker, 0 if the path is unknown. (dynamically assigned) | dyn |
+| `flowgraph_modules_cameraModule.getUniqueName(prefix)` | Returns a unique prefix..'-'..id. (dynamically assigned) | dyn |
+| `flowgraph_modules_cameraModule.init()` | Creates the variableStorage and calls clear(). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_cameraModule.isPathComplete(id)` | True if this path is the active path and has been completed at least once. (dynamically assigned) | dyn |
+| `flowgraph_modules_cameraModule.restartActivePath(id)` | Restarts the active path with the same loop setting (if id is nil or equal to the active one). (dynamically assigned) | dyn |
+| `flowgraph_modules_cameraModule.startPath(id, loop)` | Switches to the game camera if the free camera is active, then plays the path with core_paths.playPath (useDtReal = true) and stores the id, the loop and completions = 0. Does nothing if the id is unknown. (dynamically assigned) | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `flowgraph_modules_cameraModule.addCustomPath(name, path, force)`
 
-Enregistre un chemin déjà construit sous un nom. Sans force, renvoie l'id existant si le nom est déjà connu. (assignée dynamiquement)
+Registers an already built path under a name. Without force, returns the existing id if the name is already known. (dynamically assigned)
 
-- `name` (*string*) : nom
-- `path` (*table*) : chemin de caméra (avec markers)
-- `force` (*boolean|nil*) : remplacer le nom existant
-- **renvoie** : integer id du chemin
+- `name` (*string*) : name
+- `path` (*table*) : camera path (with markers)
+- `force` (*boolean|nil*) : replace the existing name
+- **returns**: integer path id
 
 #### `flowgraph_modules_cameraModule.endActivePath(id)`
 
-Arrête le chemin actif (si id est nil ou égal à l'actif) et efface l'état. (assignée dynamiquement)
+Stops the active path (if id is nil or equal to the active one) and clears the state. (dynamically assigned)
 
-- `id` (*integer|nil*) : id attendu
+- `id` (*integer|nil*) : expected id
 
 #### `flowgraph_modules_cameraModule.findPath(name)`
 
-Renvoie l'id du chemin de ce nom, en le chargeant si besoin depuis <nom>/<nom>.camPath.json (résolu par mgr:getRelativeAbsolutePath). Journalise une erreur si le fichier est introuvable. (assignée dynamiquement)
+Returns the id of the path with this name, loading it if needed from <name>/<name>.camPath.json (resolved by mgr:getRelativeAbsolutePath). Logs an error if the file is not found. (dynamically assigned)
 
-- `name` (*string*) : nom du chemin / dossier
-- **renvoie** : integer id du chemin
+- `name` (*string*) : path / folder name
+- **returns**: integer path id
 
 #### `flowgraph_modules_cameraModule.getCmd(id)`
 
-Construit une commande Lua pour le module 'button' (voir notes : copier-coller probable). (assignée dynamiquement)
+Builds a Lua command for the 'button' module (see notes: probable copy-paste). (dynamically assigned)
 
 - `id` (*integer*) : id
-- **renvoie** : string code Lua
+- **returns**: string Lua code
 
 #### `flowgraph_modules_cameraModule.getFreeId()`
 
-Incrémente et renvoie un id. (assignée dynamiquement)
+Increments and returns an id. (dynamically assigned)
 
-- **renvoie** : integer id
+- **returns**: integer id
 
 #### `flowgraph_modules_cameraModule.getPath(id)`
 
-Renvoie la table du chemin stocké. (assignée dynamiquement)
+Returns the stored path's table. (dynamically assigned)
 
-- `id` (*integer*) : id du chemin
-- **renvoie** : table|nil chemin
+- `id` (*integer*) : path id
+- **returns**: table|nil path
 
 #### `flowgraph_modules_cameraModule.getPathDuration(id)`
 
-Durée du chemin = temps du dernier marqueur, 0 si le chemin est inconnu. (assignée dynamiquement)
+Path duration = time of the last marker, 0 if the path is unknown. (dynamically assigned)
 
-- `id` (*integer*) : id du chemin
-- **renvoie** : number durée (s)
+- `id` (*integer*) : path id
+- **returns**: number duration (s)
 
 #### `flowgraph_modules_cameraModule.getUniqueName(prefix)`
 
-Renvoie prefix..'-'..id unique. (assignée dynamiquement)
+Returns a unique prefix..'-'..id. (dynamically assigned)
 
-- `prefix` (*string*) : préfixe
-- **renvoie** : string nom unique
+- `prefix` (*string*) : prefix
+- **returns**: string unique name
 
 #### `flowgraph_modules_cameraModule.isPathComplete(id)`
 
-Vrai si ce chemin est le chemin actif et a été terminé au moins une fois. (assignée dynamiquement)
+True if this path is the active path and has been completed at least once. (dynamically assigned)
 
-- `id` (*integer*) : id du chemin
-- **renvoie** : boolean terminé
+- `id` (*integer*) : path id
+- **returns**: boolean completed
 
 #### `flowgraph_modules_cameraModule.restartActivePath(id)`
 
-Relance le chemin actif avec le même réglage de boucle (si id est nil ou égal à l'actif). (assignée dynamiquement)
+Restarts the active path with the same loop setting (if id is nil or equal to the active one). (dynamically assigned)
 
-- `id` (*integer|nil*) : id attendu
+- `id` (*integer|nil*) : expected id
 
 #### `flowgraph_modules_cameraModule.startPath(id, loop)`
 
-Passe en caméra de jeu si la caméra libre est active, puis joue le chemin avec core_paths.playPath (useDtReal = true) et mémorise l'id, la boucle et complétions = 0. Ne fait rien si l'id est inconnu. (assignée dynamiquement)
+Switches to the game camera if the free camera is active, then plays the path with core_paths.playPath (useDtReal = true) and stores the id, the loop and completions = 0. Does nothing if the id is unknown. (dynamically assigned)
 
-- `id` (*integer*) : id du chemin
-- `loop` (*boolean|nil*) : rejouer en boucle
+- `id` (*integer*) : path id
+- `loop` (*boolean|nil*) : replay in a loop
 
-## Classe `C`
+## Class `C`
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:addCustomPath(name, path, force)` |  | 48 |
 | `C:afterTrigger()` |  | 127 |
@@ -137,4 +137,4 @@ Passe en caméra de jeu si la caméra libre est active, puis joue le chemin avec
 | `C:startPath(id, loop)` |  | 69 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/modules/cameraModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/modules/cameraModule.lua`.*

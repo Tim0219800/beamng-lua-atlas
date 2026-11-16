@@ -1,13 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/debug/pauseManager.lua",
-  "module": "Nœud flowgraph « Pause Execution » (catégorie logic). Met en pause l'exécution du projet flowgraph (graph.mgr:setPaused(true)) tant qu'il reçoit du flux sur son entrée flow. Ne met pas le jeu en pause.",
+  "module": "Flowgraph node \"Pause Execution\" (category logic). Pauses the execution of the flowgraph project (graph.mgr:setPaused(true)) as long as it receives flow on its flow input. Does not pause the game.",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Appelle graph.mgr:setPaused(true)."}
+        "work": {
+          "desc": "Calls graph.mgr:setPaused(true)."
+        }
       }
     }
   }

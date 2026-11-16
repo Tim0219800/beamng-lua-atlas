@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleBridgeTest.lua",
+  "module": "Petite fenêtre de test de `core_vehicleBridge` dans l'éditeur (menu Window > Vehicles > 'Vehicle Bridge Test'). On choisit un véhicule (ID ou liste des BeamNGVehicle), on saisit une clé (par défaut 'ignition') et le bouton 'Get Value!' appelle core_vehicleBridge.requestValue ; la réponse asynchrone s'affiche avec dumps().",
+  "usage": "extensions.load(\"editor_vehicleBridgeTest\")",
+  "notes": [
+    "La réponse n'est pas immédiate : le texte 'Waiting for Reply...' reste jusqu'à ce que le callback M.callback reçoive les arguments.",
+    "Le callback est appelé via editor_vehicleBridgeTest.callback(...) (globale), donc l'extension doit être chargée sous ce nom."
+  ],
+  "functions": {
+    "onEditorGui": {
+      "desc": "Hook de rendu GUI de l'éditeur : dessine la fenêtre (saisie ID véhicule, combo de véhicules, clé, bouton Get Value!, résultat).",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Enregistre la fenêtre 'Vehicle Bridge Test' (400x600), ajoute son entrée de menu (groupe Vehicles) et charge l'extension core_vehicleBridge.",
+      "internal": true
+    },
+    "callback": {
+      "desc": "Reçoit la réponse de core_vehicleBridge.requestValue et stocke tous ses arguments dans une table affichée dans la fenêtre.",
+      "params": {"...": {"type": "any", "desc": "Valeurs renvoyées par le bridge pour la clé demandée."}},
+      "internal": false
+    }
+  }
+}

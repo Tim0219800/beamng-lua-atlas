@@ -1,109 +1,109 @@
 # `gameplay_freeformDelivery_setup`
 
-*Fichier : `lua/ge/extensions/gameplay/freeformDelivery/setup.lua` · VM : Game Engine (GE) · 689 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/freeformDelivery/setup.lua` · VM: Game Engine (GE) · 689 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_freeformDelivery_setup` : `extensions.load("gameplay_freeformDelivery_setup")`, puis la globale `gameplay_freeformDelivery_setup`
+**Access:** extension `gameplay_freeformDelivery_setup`: `extensions.load("gameplay_freeformDelivery_setup")`, then the global `gameplay_freeformDelivery_setup`
 
-Mise en place et démontage d'une livraison libre. Associe les véhicules déjà spawnés par le chargeur (delivery._vehicleIndex, par internalName) aux ID de la livraison, applique leur état de départ (mode de boîte, rapport, moteur, niveau d'allumage), enregistre des aperçus, planifie les attelages (couplings) via util_stepHandler, place le joueur (dans un véhicule, à pied ou sur une place de parking) et mémorise les positions initiales pour un reset.
+Setup and teardown of a freeform delivery. Associates the vehicles already spawned by the loader (delivery._vehicleIndex, by internalName) with the delivery's IDs, applies their starting state (gearbox mode, gear, engine, ignition level), registers previews, schedules couplings (couplings) via util_stepHandler, places the player (in a vehicle, on foot or on a parking spot) and stores the initial positions for a reset.
 
-## Remarques
+## Notes
 
-- Les véhicules ne sont pas spawnés ici : setup() les retrouve via delivery._vehicleIndex[internalName] ; une entrée manquante est loguée en erreur et ignorée.
-- startupCode accepte driveMode (setGearboxMode), gear (setGear sur le dispositif transmission), engineOn (startEngine/stopEngine) ; setIgnitionLevel passe par core_vehicleBridge.executeAction.
-- playerStart.type : "vehicle" (vehicleId), "walking" (position {x,y,z}, rotation {x,y,z,w} facultative) ou "parkingSpot" (targetAreaId d'une zone de type parkingSpot).
-- Attelages : attente que les véhicules soient prêts (8 s max), activation via beamstate.activateAutoCoupling(nodeTag), puis vérification dans core_trailerRespawn (8 s max). Les temporisations sont des garde-fous : au timeout la séquence continue sans bloquer.
-- Vérifier isSetupComplete() avant de démarrer : il reste false tant qu'un véhicule n'est pas prêt ou qu'un attelage est en attente.
-- Un véhicule avec enterable == false est ajouté à la liste noire de gameplay_walk.
+- Vehicles are not spawned here: setup() finds them via delivery._vehicleIndex[internalName]; a missing entry is logged as an error and ignored.
+- startupCode accepts driveMode (setGearboxMode), gear (setGear on the transmission device), engineOn (startEngine/stopEngine); setIgnitionLevel goes through core_vehicleBridge.executeAction.
+- playerStart.type: "vehicle" (vehicleId), "walking" (position {x,y,z}, optional rotation {x,y,z,w}) or "parkingSpot" (targetAreaId of a parkingSpot-type zone).
+- Couplings: wait for vehicles to be ready (8 s max), activation via beamstate.activateAutoCoupling(nodeTag), then verification in core_trailerRespawn (8 s max). The timeouts are safeguards: on timeout the sequence continues without blocking.
+- Check isSetupComplete() before starting: it stays false as long as a vehicle is not ready or a coupling is pending.
+- A vehicle with enterable == false is added to the gameplay_walk blacklist.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_freeformDelivery_setup.cleanup(delivery, keepVehicles)` | Démonte la livraison : si keepVehicles, extrait les véhicules des préfabs (explosion du préfab) et les remet dans MissionGroup ; supprime les préfabs créés (et recharge la collision si besoin) ; sinon supprime les véhicules. Vide ensuite tout l'état. *(interne)* | 568 |
-| `gameplay_freeformDelivery_setup.freezeAllVehicles(freeze)` | Gèle ou dégèle tous les véhicules de la livraison (action setFreeze via core_vehicleBridge). | 557 |
-| `gameplay_freeformDelivery_setup.getAllCouplingSetup()` | Renvoie la liste des attelages collectés lors du dernier setup. | 549 |
-| `gameplay_freeformDelivery_setup.getPendingCouplings()` | Liste des ID de véhicules dont un attelage est en attente. | 541 |
-| `gameplay_freeformDelivery_setup.getSpawnedVehicles()` | Renvoie les véhicules indexés par ID d'objet. | 553 |
-| `gameplay_freeformDelivery_setup.getVehicleId(deliveryVehicleId)` | Convertit un ID de véhicule de livraison en ID d'objet du jeu. | 529 |
-| `gameplay_freeformDelivery_setup.isSetupComplete()` | Indique si la mise en place asynchrone est terminée (tous les véhicules prêts et aucun attelage en attente). Quand c'est le cas, remet setupInProgress à false. | 466 |
-| `gameplay_freeformDelivery_setup.isSetupInProgress()` | Renvoie le drapeau interne de mise en place en cours. | 533 |
-| `gameplay_freeformDelivery_setup.restoreVehicleTransforms()` | Remet chaque véhicule à sa position/rotation initiale (reset physique, flexmesh réparé), réapplique l'état de départ puis relance la séquence d'attelages. | 490 |
-| `gameplay_freeformDelivery_setup.setup(delivery)` | Prépare la livraison : résout les images des zones cibles, indexe les véhicules spawnés, applique l'état de départ, blacklist les véhicules non enterables, collecte et lance les attelages, place le joueur et stocke les transformations initiales. *(interne)* | 394 |
-| `gameplay_freeformDelivery_setup.setupPlayer(delivery)` | Place le joueur selon delivery.playerStart (véhicule, marche à une position, ou marche sur une place de parking). | 537 |
+| `gameplay_freeformDelivery_setup.cleanup(delivery, keepVehicles)` | Tears down the delivery: if keepVehicles, extracts the vehicles from the prefabs (exploding the prefab) and puts them back in MissionGroup; removes the created prefabs (and reloads collision if needed); otherwise removes the vehicles. Then clears all state. *(internal)* | 568 |
+| `gameplay_freeformDelivery_setup.freezeAllVehicles(freeze)` | Freezes or unfreezes all vehicles of the delivery (setFreeze action via core_vehicleBridge). | 557 |
+| `gameplay_freeformDelivery_setup.getAllCouplingSetup()` | Returns the list of couplings collected during the last setup. | 549 |
+| `gameplay_freeformDelivery_setup.getPendingCouplings()` | List of vehicle IDs with a pending coupling. | 541 |
+| `gameplay_freeformDelivery_setup.getSpawnedVehicles()` | Returns the vehicles keyed by object ID. | 553 |
+| `gameplay_freeformDelivery_setup.getVehicleId(deliveryVehicleId)` | Converts a delivery vehicle ID into a game object ID. | 529 |
+| `gameplay_freeformDelivery_setup.isSetupComplete()` | Returns whether the asynchronous setup is finished (all vehicles ready and no coupling pending). When so, sets setupInProgress back to false. | 466 |
+| `gameplay_freeformDelivery_setup.isSetupInProgress()` | Returns the internal setup-in-progress flag. | 533 |
+| `gameplay_freeformDelivery_setup.restoreVehicleTransforms()` | Puts each vehicle back at its initial position/rotation (physics reset, flexmesh repaired), reapplies the starting state then restarts the coupling sequence. | 490 |
+| `gameplay_freeformDelivery_setup.setup(delivery)` | Prepares the delivery: resolves the target area images, indexes the spawned vehicles, applies the starting state, blacklists non-enterable vehicles, collects and launches the couplings, places the player and stores the initial transforms. *(internal)* | 394 |
+| `gameplay_freeformDelivery_setup.setupPlayer(delivery)` | Places the player according to delivery.playerStart (vehicle, walking at a position, or walking on a parking spot). | 537 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_freeformDelivery_setup.cleanup(delivery, keepVehicles)`
 
-Démonte la livraison : si keepVehicles, extrait les véhicules des préfabs (explosion du préfab) et les remet dans MissionGroup ; supprime les préfabs créés (et recharge la collision si besoin) ; sinon supprime les véhicules. Vide ensuite tout l'état.
+Tears down the delivery: if keepVehicles, extracts the vehicles from the prefabs (exploding the prefab) and puts them back in MissionGroup; removes the created prefabs (and reloads collision if needed); otherwise removes the vehicles. Then clears all state.
 
-- `delivery` (*table|nil*) : Données de livraison (_prefabIds, _hasColliders).
-- `keepVehicles` (*boolean|nil*) : true pour conserver les véhicules (faux par défaut).
+- `delivery` (*table|nil*) : Delivery data (_prefabIds, _hasColliders).
+- `keepVehicles` (*boolean|nil*) : true to keep the vehicles (false by default).
 
 #### `gameplay_freeformDelivery_setup.freezeAllVehicles(freeze)`
 
-Gèle ou dégèle tous les véhicules de la livraison (action setFreeze via core_vehicleBridge).
+Freezes or unfreezes all vehicles of the delivery (setFreeze action via core_vehicleBridge).
 
-- `freeze` (*boolean|nil*) : true par défaut ; false pour dégeler.
+- `freeze` (*boolean|nil*) : true by default; false to unfreeze.
 
 #### `gameplay_freeformDelivery_setup.getAllCouplingSetup()`
 
-Renvoie la liste des attelages collectés lors du dernier setup.
+Returns the list of couplings collected during the last setup.
 
-- **renvoie** : table[] Entrées {vehId, nodeTag, targetVehId}.
+- **returns**: table[] Entries {vehId, nodeTag, targetVehId}.
 
 #### `gameplay_freeformDelivery_setup.getPendingCouplings()`
 
-Liste des ID de véhicules dont un attelage est en attente.
+List of vehicle IDs with a pending coupling.
 
-- **renvoie** : integer[] ID d'objets.
+- **returns**: integer[] Object IDs.
 
 #### `gameplay_freeformDelivery_setup.getSpawnedVehicles()`
 
-Renvoie les véhicules indexés par ID d'objet.
+Returns the vehicles keyed by object ID.
 
-- **renvoie** : table<integer, table> Entrées {vehicleId, vehicle, deliveryVehicle}.
+- **returns**: table<integer, table> Entries {vehicleId, vehicle, deliveryVehicle}.
 
 #### `gameplay_freeformDelivery_setup.getVehicleId(deliveryVehicleId)`
 
-Convertit un ID de véhicule de livraison en ID d'objet du jeu.
+Converts a delivery vehicle ID into a game object ID.
 
-- `deliveryVehicleId` (*string*) : ID du véhicule dans la définition de livraison.
-- **renvoie** : integer|nil ID d'objet ou nil.
+- `deliveryVehicleId` (*string*) : Vehicle ID in the delivery definition.
+- **returns**: integer|nil Object ID or nil.
 
 #### `gameplay_freeformDelivery_setup.isSetupComplete()`
 
-Indique si la mise en place asynchrone est terminée (tous les véhicules prêts et aucun attelage en attente). Quand c'est le cas, remet setupInProgress à false.
+Returns whether the asynchronous setup is finished (all vehicles ready and no coupling pending). When so, sets setupInProgress back to false.
 
-- **renvoie** : boolean true si terminée ou non démarrée.
+- **returns**: boolean true if finished or not started.
 
 #### `gameplay_freeformDelivery_setup.isSetupInProgress()`
 
-Renvoie le drapeau interne de mise en place en cours.
+Returns the internal setup-in-progress flag.
 
-- **renvoie** : boolean true tant que setup/reset n'est pas terminé.
+- **returns**: boolean true as long as setup/reset is not finished.
 
 #### `gameplay_freeformDelivery_setup.setup(delivery)`
 
-Prépare la livraison : résout les images des zones cibles, indexe les véhicules spawnés, applique l'état de départ, blacklist les véhicules non enterables, collecte et lance les attelages, place le joueur et stocke les transformations initiales.
+Prepares the delivery: resolves the target area images, indexes the spawned vehicles, applies the starting state, blacklists non-enterable vehicles, collects and launches the couplings, places the player and stores the initial transforms.
 
-- `delivery` (*table*) : Données de livraison (vehicles, targetAreas, playerStart, _vehicleIndex, _basePath...).
-- **renvoie** : boolean false si delivery est nil, sinon true (les opérations asynchrones continuent ensuite).
+- `delivery` (*table*) : Delivery data (vehicles, targetAreas, playerStart, _vehicleIndex, _basePath...).
+- **returns**: boolean false if delivery is nil, otherwise true (asynchronous operations continue afterwards).
 
 #### `gameplay_freeformDelivery_setup.setupPlayer(delivery)`
 
-Place le joueur selon delivery.playerStart (véhicule, marche à une position, ou marche sur une place de parking).
+Places the player according to delivery.playerStart (vehicle, walking at a position, or walking on a parking spot).
 
-- `delivery` (*table*) : Données de livraison contenant playerStart.
+- `delivery` (*table*) : Delivery data containing playerStart.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 - `Sim.` `upcast`
 - `be:` `exitVehicle`, `reloadCollision`
 - `scenetree.` `findObjectById`
 
-**Charge les extensions :** `util_stepHandler`
+**Loads extensions:** `util_stepHandler`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/freeformDelivery/setup.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/freeformDelivery/setup.lua`.*

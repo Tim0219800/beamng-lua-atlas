@@ -1,29 +1,29 @@
 # `flowgraph_nodes_logic_select`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/logic/select.lua` · VM : Game Engine (GE) · 135 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/logic/select.lua` · VM: Game Engine (GE) · 135 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/logic/select")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/logic/select")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Select' (categorie logic). Choisit une valeur parmi N entrees value_i selon les pins flow select_i actifs, et combine les valeurs selectionnees avec une fonction de fusion (fg_utils.mergeFuns.any : mode 'first' par defaut). Si le pin flow d'entree n'est pas connecte, la valeur n'est pas conservee. Le nombre de choix se regle dans les proprietes.
+Flowgraph node 'Select' (logic category). Chooses a value among N inputs value_i according to the active select_i flow pins, and combines the selected values with a merge function (fg_utils.mergeFuns.any: 'first' mode by default). If the input flow pin is not connected, the value is not kept. The number of choices is set in the properties.
 
-## Remarques
+## Notes
 
-- updatePins teste lnk.sourcePin alors que select_i/value_i sont des pins d'entree (targetPin) : les liens vers les pins retires ne sont donc pas supprimes.
+- updatePins tests lnk.sourcePin whereas select_i/value_i are input pins (targetPin): the links to the removed pins are therefore not deleted.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Vide. | 38 |
-| `C:_onDeserialized(res)` | Relit mode ('first' par defaut) et count, recree les pins. | 128 |
-| `C:_onSerialize(res)` | Sauvegarde mode et count. | 123 |
-| `C:drawCustomProperties()` | Panneau : nombre de choix (Count) et liste deroulante des fonctions de fusion (hors 'readOnly') avec infobulle. | 42 |
-| `C:drawMiddle(builder, style)` | Affiche le mode de fusion. | 32 |
+| `C:_executionStarted()` | Empty. | 38 |
+| `C:_onDeserialized(res)` | Reads back mode ('first' by default) and count, recreates the pins. | 128 |
+| `C:_onSerialize(res)` | Saves mode and count. | 123 |
+| `C:drawCustomProperties()` | Panel: number of choices (Count) and dropdown of merge functions (excluding 'readOnly') with tooltip. | 42 |
+| `C:drawMiddle(builder, style)` | Displays the merge mode. | 32 |
 | `C:init()` | count=1, mode='first'. | 27 |
-| `C:updatePins(old, new)` | Cree ou supprime les paires de pins select_i / value_i et les liens associes. | 74 |
-| `C:work()` | Initialise la fusion, merge les value_i dont select_i est actif (si flow), finalise. Si au moins un choix : flow=true et value=resultat ; sinon flow suit l'entree et value=nil. | 100 |
+| `C:updatePins(old, new)` | Creates or deletes the select_i / value_i pin pairs and the associated links. | 74 |
+| `C:work()` | Initializes the merge, merges the value_i whose select_i is active (if flow), finalizes. If at least one choice: flow=true and value=result; otherwise flow follows the input and value=nil. | 100 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/logic/select.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/logic/select.lua`.*

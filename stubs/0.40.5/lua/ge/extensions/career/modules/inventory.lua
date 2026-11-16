@@ -2,376 +2,376 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/inventory.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Inventaire de véhicules de la carrière : la table vehicles (inventoryId -> infos : model, config, niceName, owned, partConditions, timeToAccess, loanType, owningOrganization...), la correspondance inventoryId <-> id d'objet véhicule dans le monde, le véhicule courant, le dernier et le favori. Il gère l'ajout et la suppression de véhicules, leur apparition/entrée (spawnVehicle, enterVehicle), la sauvegarde (un fichier JSON et une miniature par véhicule dans career/vehicles/ plus career/inventory.json), le menu « Mes véhicules » de l'ordinateur, la vente, les plaques, les permissions et les POI de la grande carte.
---- Accès : extension `career_modules_inventory` : `extensions.load("career_modules_inventory")`, puis la globale `career_modules_inventory`
+--- Career vehicle inventory: the vehicles table (inventoryId -> info: model, config, niceName, owned, partConditions, timeToAccess, loanType, owningOrganization...), the mapping inventoryId <-> vehicle object id in the world, the current, last and favorite vehicle. It handles adding and removing vehicles, their spawning/entering (spawnVehicle, enterVehicle), saving (one JSON file and one thumbnail per vehicle in career/vehicles/ plus career/inventory.json), the garage computer's "My vehicles" menu, selling, license plates, permissions and big map POIs.
+--- Access: extension `career_modules_inventory`: `extensions.load("career_modules_inventory")`, then the global `career_modules_inventory`
 ---@class career_modules_inventory
----@field dependencies table<integer, string> Extensions chargées avant : career_career, career_modules_log, gameplay_tutorial_setup.
+---@field dependencies table<integer, string> Extensions loaded before: career_career, career_modules_log, gameplay_tutorial_setup.
 career_modules_inventory = {}
 
---- Ajoute un véhicule du monde à l'inventaire : enregistre modèle, config, nom, plaque, valeur de base (configBaseValue), initialise les conditions de pièces, attribue un inventoryId libre si absent, définit le favori s'il est le premier et débloque GARAGE_STARTER à 3 véhicules possédés.
----Source : lua/ge/extensions/career/modules/inventory.lua:299
----@param vehId integer Id d'objet du véhicule.
----@param inventoryId integer|nil Id d'inventaire imposé, sinon le premier libre.
----@param options {owned: boolean|nil, finalPrice: number|nil}|nil owned vaut true par défaut ; finalPrice sert au succès FLIP_PROFIT.
----@return integer|nil  inventoryId, nil si l'objet ou ses données sont introuvables.
+--- Adds a world vehicle to the inventory: records model, config, name, plate, base value (configBaseValue), initializes the part conditions, assigns a free inventoryId if absent, sets the favorite if it is the first and unlocks GARAGE_STARTER at 3 owned vehicles.
+---Source: lua/ge/extensions/career/modules/inventory.lua:299
+---@param vehId integer Vehicle object id.
+---@param inventoryId integer|nil Imposed inventory id, otherwise the first free one.
+---@param options {owned: boolean|nil, finalPrice: number|nil}|nil owned is true by default; finalPrice is used for the FLIP_PROFIT achievement.
+---@return integer|nil  inventoryId, nil if the object or its data cannot be found.
 function career_modules_inventory.addVehicle(vehId, inventoryId, options) end
 
---- Réapplique au véhicule en jeu les conditions de pièces sauvegardées (initPartConditions).
----Source : lua/ge/extensions/career/modules/inventory.lua:428
----@param inventoryId integer Id d'inventaire.
----@param vehId integer|nil Id d'objet ; sinon déduit de l'inventaire.
+--- Reapplies the saved part conditions to the in-game vehicle (initPartConditions).
+---Source: lua/ge/extensions/career/modules/inventory.lua:428
+---@param inventoryId integer Inventory id.
+---@param vehId integer|nil Object id; otherwise deduced from the inventory.
 function career_modules_inventory.applyPartConditions(inventoryId, vehId) end
 
---- Exécute le callback du bouton de choix d'indice buttonIndex pour le véhicule donné.
----Source : lua/ge/extensions/career/modules/inventory.lua:1111
----@param inventoryId integer Id d'inventaire choisi.
----@param buttonIndex integer Indice du bouton (à partir de 1).
----@param repairPrevVeh any Transmis au callback.
+--- Runs the callback of the choice button with index buttonIndex for the given vehicle.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1111
+---@param inventoryId integer Chosen inventory id.
+---@param buttonIndex integer Button index (starting at 1).
+---@param repairPrevVeh any Passed to the callback.
 function career_modules_inventory.chooseVehicleFromMenu(inventoryId, buttonIndex, repairPrevVeh) end
 
---- Ferme tous les menus de la carrière.
----Source : lua/ge/extensions/career/modules/inventory.lua:1032
+--- Closes all career menus.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1032
 function career_modules_inventory.closeMenu() end
 
---- Debug : met à jour les conditions de pièces du véhicule courant puis le refait apparaître (replaceOption 2).
----Source : lua/ge/extensions/career/modules/inventory.lua:1370
+--- Debug: updates the current vehicle's part conditions then respawns it (replaceOption 2).
+---Source: lua/ge/extensions/career/modules/inventory.lua:1370
 function career_modules_inventory.debugRespawnCurrentVehicle() end
 
---- Rend un véhicule inaccessible pendant `delay` secondes (timeToAccess) avec une raison (bought, repair). Ignoré si delay <= 0.
----Source : lua/ge/extensions/career/modules/inventory.lua:1193
----@param inventoryId integer Id d'inventaire.
----@param delay number Durée en secondes.
----@param reason string Raison ("bought" ou "repair" produisent un message à la fin).
+--- Makes a vehicle inaccessible for `delay` seconds (timeToAccess) with a reason (bought, repair). Ignored if delay <= 0.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1193
+---@param inventoryId integer Inventory id.
+---@param delay number Duration in seconds.
+---@param reason string Reason ("bought" or "repair" produce a message at the end).
 function career_modules_inventory.delayVehicleAccess(inventoryId, delay, reason) end
 
---- Fait entrer le joueur dans un véhicule de l'inventaire (nil = passer à pied). Sans effet si le véhicule est inaccessible (timeToAccess). Met d'abord à jour les conditions de pièces des véhicules apparus, sauf loadOption 1.
----Source : lua/ge/extensions/career/modules/inventory.lua:538
----@param newInventoryId integer|nil Id d'inventaire.
----@param loadOption integer|nil 1 : ne pas recharger le véhicule ; 2 : forcer le rechargement ; nil : entrer dans l'objet existant ou le faire apparaître.
----@param callback function|nil Appelée après l'entrée.
+--- Makes the player enter an inventory vehicle (nil = go on foot). No effect if the vehicle is inaccessible (timeToAccess). First updates the part conditions of the spawned vehicles, except loadOption 1.
+---Source: lua/ge/extensions/career/modules/inventory.lua:538
+---@param newInventoryId integer|nil Inventory id.
+---@param loadOption integer|nil 1: do not reload the vehicle; 2: force reload; nil: enter the existing object or spawn it.
+---@param callback function|nil Called after entering.
 function career_modules_inventory.enterVehicle(newInventoryId, loadOption, callback) end
 
---- Accélère une réparation d'assurance payante (insurance.expediteRepair), sauvegarde et rafraîchit l'UI.
----Source : lua/ge/extensions/career/modules/inventory.lua:1187
----@param inventoryId integer Id d'inventaire.
----@param price number Prix de l'accélération.
+--- Speeds up a paid insurance repair (insurance.expediteRepair), saves and refreshes the UI.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1187
+---@param inventoryId integer Inventory id.
+---@param price number Price of the speed-up.
 function career_modules_inventory.expediteRepairFromInventory(inventoryId, price) end
 
---- Renvoie le garage dont la première zone est la plus proche de pos (position du joueur par défaut) dans le niveau courant.
----Source : lua/ge/extensions/career/modules/inventory.lua:36
----@param pos vec3|nil Position de référence.
----@return table|nil  Installation garage.
+--- Returns the garage whose first zone is nearest to pos (player position by default) in the current level.
+---Source: lua/ge/extensions/career/modules/inventory.lua:36
+---@param pos vec3|nil Reference position.
+---@return table|nil  Garage facility.
 function career_modules_inventory.getClosestGarage(pos) end
 
---- Id d'inventaire du véhicule que le joueur conduit (nil à pied). Listé dans les fonctions « Debug » du fichier.
----Source : lua/ge/extensions/career/modules/inventory.lua:674
----@return integer|nil  inventoryId courant.
+--- Inventory id of the vehicle the player is driving (nil on foot). Listed in the "Debug" functions of the file.
+---Source: lua/ge/extensions/career/modules/inventory.lua:674
+---@return integer|nil  Current inventoryId.
 function career_modules_inventory.getCurrentVehicle() end
 
---- Id d'objet (monde) du véhicule courant de l'inventaire.
----Source : lua/ge/extensions/career/modules/inventory.lua:698
----@return integer|nil  Id d'objet véhicule.
+--- Object id (world) of the current inventory vehicle.
+---Source: lua/ge/extensions/career/modules/inventory.lua:698
+---@return integer|nil  Vehicle object id.
 function career_modules_inventory.getCurrentVehicleId() end
 
---- Renvoie l'ensemble des inventoryId modifiés depuis la dernière sauvegarde.
----Source : lua/ge/extensions/career/modules/inventory.lua:1343
----@return table<integer, boolean>  Ensemble des ids.
+--- Returns the set of inventoryIds modified since the last save.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1343
+---@return table<integer, boolean>  Set of ids.
 function career_modules_inventory.getDirtiedVehicles() end
 
---- Renvoie l'id d'inventaire du véhicule favori.
----Source : lua/ge/extensions/career/modules/inventory.lua:1214
----@return integer|nil  inventoryId favori.
+--- Returns the inventory id of the favorite vehicle.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1214
+---@return integer|nil  Favorite inventoryId.
 function career_modules_inventory.getFavoriteVehicle() end
 
---- Convertit un id d'objet du monde en id d'inventaire (nil si le véhicule n'est pas dans l'inventaire).
----Source : lua/ge/extensions/career/modules/inventory.lua:688
----@param vehId integer|nil Id d'objet véhicule.
----@return integer|nil  Id d'inventaire.
+--- Converts a world object id to an inventory id (nil if the vehicle is not in the inventory).
+---Source: lua/ge/extensions/career/modules/inventory.lua:688
+---@param vehId integer|nil Vehicle object id.
+---@return integer|nil  Inventory id.
 function career_modules_inventory.getInventoryIdFromVehicleId(vehId) end
 
---- Liste les véhicules de l'inventaire présents dans le garage le plus proche (zone intersectée), triés par distance au joueur. Avec onlyFirst, renvoie un seul id (le premier trouvé par next, voir notes).
----Source : lua/ge/extensions/career/modules/inventory.lua:973
----@param onlyFirst boolean|nil Ne renvoyer qu'un id.
----@return integer[]|integer|nil  Liste d'ids, ou un id si onlyFirst.
+--- Lists the inventory vehicles present in the nearest garage (intersected zone), sorted by distance to the player. With onlyFirst, returns a single id (the first found by next, see notes).
+---Source: lua/ge/extensions/career/modules/inventory.lua:973
+---@param onlyFirst boolean|nil Return only one id.
+---@return integer[]|integer|nil  List of ids, or one id if onlyFirst.
 function career_modules_inventory.getInventoryIdsInClosestGarage(onlyFirst) end
 
---- Id d'inventaire du dernier véhicule dans lequel le joueur est entré.
----Source : lua/ge/extensions/career/modules/inventory.lua:678
+--- Inventory id of the last vehicle the player entered.
+---Source: lua/ge/extensions/career/modules/inventory.lua:678
 ---@return integer|nil  inventoryId.
 function career_modules_inventory.getLastVehicle() end
 
---- Renvoie la table inventoryId -> id d'objet pour les véhicules présents dans le monde (par référence).
----Source : lua/ge/extensions/career/modules/inventory.lua:694
----@return table<integer, integer>  Correspondance.
+--- Returns the table inventoryId -> object id for the vehicles present in the world (by reference).
+---Source: lua/ge/extensions/career/modules/inventory.lua:694
+---@return table<integer, integer>  Mapping.
 function career_modules_inventory.getMapInventoryIdToVehId() end
 
---- Nombre d'emplacements libres (20 moins les véhicules owned qui occupent de la place).
----Source : lua/ge/extensions/career/modules/inventory.lua:286
----@return integer  Emplacements libres.
+--- Number of free slots (20 minus the owned vehicles that take up space).
+---Source: lua/ge/extensions/career/modules/inventory.lua:286
+---@return integer  Free slots.
 function career_modules_inventory.getNumberOfFreeSlots() end
 
---- Enregistre les conditions de pièces reçues du véhicule (ignorées avec un avertissement si ce n'est pas une table), finalise un ajout en attente (hook onVehicleAdded) et synchronise l'inventaire de pièces.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:395
----@param partConditions table|boolean Conditions, ou false si non initialisées.
----@param inventoryId integer Id d'inventaire.
+--- Records the part conditions received from the vehicle (ignored with a warning if it is not a table), finalizes a pending add (onVehicleAdded hook) and synchronizes the parts inventory.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:395
+---@param partConditions table|boolean Conditions, or false if not initialized.
+---@param inventoryId integer Inventory id.
 function career_modules_inventory.getPartConditionsCallback(partConditions, inventoryId) end
 
---- Renvoie les infos d'un véhicule de l'inventaire.
----Source : lua/ge/extensions/career/modules/inventory.lua:1152
----@param inventoryId integer Id d'inventaire.
----@return table|nil  Infos du véhicule.
+--- Returns the info of an inventory vehicle.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1152
+---@param inventoryId integer Inventory id.
+---@return table|nil  Vehicle info.
 function career_modules_inventory.getVehicle(inventoryId) end
 
---- Convertit un id d'inventaire en id d'objet du monde (nil si non apparu).
----Source : lua/ge/extensions/career/modules/inventory.lua:682
----@param inventoryId integer|nil Id d'inventaire.
----@return integer|nil  Id d'objet.
+--- Converts an inventory id to a world object id (nil if not spawned).
+---Source: lua/ge/extensions/career/modules/inventory.lua:682
+---@param inventoryId integer|nil Inventory id.
+---@return integer|nil  Object id.
 function career_modules_inventory.getVehicleIdFromInventoryId(inventoryId) end
 
---- Nom d'affichage traduit du véhicule.
----Source : lua/ge/extensions/career/modules/inventory.lua:833
----@param inventoryId integer Id d'inventaire.
----@return string|nil  Nom.
+--- Translated display name of the vehicle.
+---Source: lua/ge/extensions/career/modules/inventory.lua:833
+---@param inventoryId integer Inventory id.
+---@return string|nil  Name.
 function career_modules_inventory.getVehicleNiceNameTranslated(inventoryId) end
 
---- Chemin de la miniature du véhicule : fichier de la sauvegarde si une capture existe, sinon aperçu par défaut de sa configuration.
----Source : lua/ge/extensions/career/modules/inventory.lua:760
----@param inventoryId integer|nil Id d'inventaire.
----@return string|nil  Chemin d'image.
+--- Path of the vehicle thumbnail: save file if a capture exists, otherwise the default preview of its configuration.
+---Source: lua/ge/extensions/career/modules/inventory.lua:760
+---@param inventoryId integer|nil Inventory id.
+---@return string|nil  Image path.
 function career_modules_inventory.getVehicleThumbnail(inventoryId) end
 
---- Prépare les données d'un véhicule pour l'UI : valeur (et valeur réparée), prix de réparation express, distance, présence au garage/stockage, besoin de réparation, favori, assurance, permissions (réparation, vente, favori, stockage, plaque, retour de prêt), mise en vente et données de performance.
----Source : lua/ge/extensions/career/modules/inventory.lua:839
----@param inventoryId integer Id d'inventaire.
----@param inventoryIdsInGarage table<integer, boolean>|nil Véhicules du garage le plus proche (calculé si nil).
----@return table|nil  Données pour l'UI.
+--- Prepares a vehicle's data for the UI: value (and repaired value), express repair price, distance, presence in garage/storage, need for repair, favorite, insurance, permissions (repair, sale, favorite, storage, plate, loan return), listing for sale and performance data.
+---Source: lua/ge/extensions/career/modules/inventory.lua:839
+---@param inventoryId integer Inventory id.
+---@param inventoryIdsInGarage table<integer, boolean>|nil Vehicles of the nearest garage (computed if nil).
+---@return table|nil  Data for the UI.
 function career_modules_inventory.getVehicleUiData(inventoryId, inventoryIdsInGarage) end
 
---- Renvoie la table complète des véhicules de l'inventaire (par référence).
----Source : lua/ge/extensions/career/modules/inventory.lua:1148
----@return table<integer, table>  inventoryId -> infos du véhicule.
+--- Returns the complete inventory vehicles table (by reference).
+---Source: lua/ge/extensions/career/modules/inventory.lua:1148
+---@return table<integer, table>  inventoryId -> vehicle info.
 function career_modules_inventory.getVehicles() end
 
---- Indique s'il reste au moins un emplacement libre.
----Source : lua/ge/extensions/career/modules/inventory.lua:294
----@return boolean  true si oui.
+--- Indicates whether at least one slot is free.
+---Source: lua/ge/extensions/career/modules/inventory.lua:294
+---@return boolean  true if so.
 function career_modules_inventory.hasFreeSlot() end
 
---- Indique si l'inventaire ne contient aucun véhicule.
----Source : lua/ge/extensions/career/modules/inventory.lua:1347
----@return boolean  true si vide.
+--- Indicates whether the inventory contains no vehicle.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1347
+---@return boolean  true if empty.
 function career_modules_inventory.isEmpty() end
 
---- Valide un texte de plaque via core_vehicles.isLicensePlateValid.
----Source : lua/ge/extensions/career/modules/inventory.lua:1351
----@param text string Texte.
----@return boolean  Validité.
+--- Validates a plate text via core_vehicles.isLicensePlateValid.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1351
+---@param text string Text.
+---@return boolean  Validity.
 function career_modules_inventory.isLicensePlateValid(text) end
 
---- Indique si le joueur est dans un véhicule de l'inventaire (currentVehicle défini), possédé ou non.
----Source : lua/ge/extensions/career/modules/inventory.lua:702
----@return boolean  true si assis dans un véhicule de l'inventaire.
+--- Indicates whether the player is in an inventory vehicle (currentVehicle set), owned or not.
+---Source: lua/ge/extensions/career/modules/inventory.lua:702
+---@return boolean  true if seated in an inventory vehicle.
 function career_modules_inventory.isSeatedInsideOwnedVehicle() end
 
---- Valide un nom de véhicule : non vide et sans guillemet, antislash ni caractère de contrôle (\b \f \n \r \t).
----Source : lua/ge/extensions/career/modules/inventory.lua:1355
----@param text string|nil Nom.
----@return boolean  Validité.
+--- Validates a vehicle name: non-empty and without quote, backslash or control character (\b \f \n \r \t).
+---Source: lua/ge/extensions/career/modules/inventory.lua:1355
+---@param text string|nil Name.
+---@return boolean  Validity.
 function career_modules_inventory.isVehicleNameValid(text) end
 
---- Hook : met à jour les conditions de pièces du véhicule courant et envoie à l'UI s'il a besoin de réparation (gameContextPlayerVehicleDamageInfo).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:1200
+--- Hook: updates the current vehicle's part conditions and sends to the UI whether it needs repair (gameContextPlayerVehicleDamageInfo).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:1200
 function career_modules_inventory.onAvailableMissionsSentToUi() end
 
---- Hook : sortir du véhicule (mode marche) fait entrer dans « aucun véhicule » ; monter dans un véhicule de l'inventaire l'enregistre comme courant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:964
----@param enabled boolean true si on passe en mode marche.
----@param vehicleInFrontVehId integer|nil Id du véhicule devant le joueur.
+--- Hook: leaving the vehicle (walking mode) enters "no vehicle"; getting into an inventory vehicle records it as current.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:964
+---@param enabled boolean true if switching to walking mode.
+---@param vehicleInFrontVehId integer|nil Id of the vehicle in front of the player.
 function career_modules_inventory.onBeforeWalkingModeToggled(enabled, vehicleInFrontVehId) end
 
---- Hook : à l'ouverture de la grande carte, crée un instantané de conditions de pièces « beforeReset » pour le véhicule courant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:662
+--- Hook: when the big map opens, creates a 'beforeReset' part conditions snapshot for the current vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:662
 function career_modules_inventory.onBigMapActivated() end
 
---- Hook : vend les véhicules si la sauvegarde est trop ancienne, puis prépare l'inventaire (réapparition des véhicules, entrée dans le véhicule courant, équipement de départ pour une nouvelle carrière).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:636
----@param active boolean Rien si false.
+--- Hook: sells the vehicles if the save is too old, then prepares the inventory (vehicles respawning, entering the current vehicle, starting equipment for a new career).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:636
+---@param active boolean Nothing if false.
 function career_modules_inventory.onCareerActive(active) end
 
---- Hook de permissions : pour les véhicules non possédés, interdit vente, réparation, mission, peinture, achat de pièces, plaque, tuning, stockage, échange de pièces, remorquage au garage et favori ; interdit aussi réparer/vendre un véhicule inaccessible, mettre en favori le favori ou un fichier manquant, stocker un véhicule absent du monde.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:1270
----@param tags string[] Tags demandés.
----@param permissions table[] Liste à compléter ({permission}).
----@param additionalData {inventoryId: integer}|nil Contexte (inventoryId).
+--- Permissions hook: for non-owned vehicles, forbids sale, repair, mission, painting, parts purchase, plate, tuning, storage, parts swap, towing to garage and favorite; also forbids repairing/selling an inaccessible vehicle, favoriting the favorite or a missing file, storing a vehicle absent from the world.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:1270
+---@param tags string[] Tags requested.
+---@param permissions table[] List to complete ({permission}).
+---@param additionalData {inventoryId: integer}|nil Context (inventoryId).
 function career_modules_inventory.onCheckPermission(tags, permissions, additionalData) end
 
---- Hook de l'ordinateur : ajoute la fonction « Mes véhicules » (ordre 1), désactivée tant que le véhicule de départ n'est pas acheté.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:1218
----@param menuData table Données du menu.
----@param computerFunctions table Fonctions à compléter (general).
+--- Computer hook: adds the "My vehicles" function _anon(order 1), disabled until the starter vehicle is bought.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:1218
+---@param menuData table Menu data.
+---@param computerFunctions table Functions to complete (general).
 function career_modules_inventory.onComputerAddFunctions(menuData, computerFunctions) end
 
---- Hook : mémorise le véhicule dans lequel on est entré comme dernier véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:1142
----@param inventoryId integer|nil Id d'inventaire.
+--- Hook: stores the vehicle entered as the last vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:1142
+---@param inventoryId integer|nil Inventory id.
 function career_modules_inventory.onEnterVehicleFinished(inventoryId) end
 
---- Hook : l'écran d'inventaire est fermé.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:1137
+--- Hook: the inventory screen is closed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:1137
 function career_modules_inventory.onExitVehicleInventory() end
 
---- Hook : si la carrière est active, charge les fichiers de career/vehicles/ et inventory.json (véhicule courant, dernier, favori, positions, position à pied) ; décrémente timeToAccess du temps écoulé depuis la sauvegarde.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:54
+--- Hook: if career is active, loads the files of career/vehicles/ and inventory.json (current vehicle, last, favorite, positions, on-foot position); decrements timeToAccess by the time elapsed since the save.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:54
 function career_modules_inventory.onExtensionLoaded() end
 
---- Hook de la liste de POI : ajoute un marqueur de grande carte pour chaque véhicule de l'inventaire présent dans le monde (autre que celui du joueur), avec description (distance, plaque, odomètre) et miniature.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:1299
----@param levelIdentifier string Niveau (non utilisé).
----@param elements table[] Liste de POI à compléter.
+--- POI list hook: adds a big map marker for each inventory vehicle present in the world (other than the player's), with description (distance, plate, odometer) and thumbnail.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:1299
+---@param levelIdentifier string Level (unused).
+---@param elements table[] POI list to complete.
 function career_modules_inventory.onGetRawPoiListForLevel(levelIdentifier, elements) end
 
---- Hook de sauvegarde : écrit inventory.json, met à jour les conditions de pièces, puis écrit chaque véhicule (JSON + miniature si demandée) et supprime les fichiers de véhicules disparus ; à la fin, émet onVehicleSaveFinished.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:247
----@param currentSavePath string Dossier de sauvegarde.
----@param vehiclesThumbnailUpdate integer[]|nil Ids des véhicules dont la miniature doit être refaite.
+--- Save hook: writes inventory.json, updates the part conditions, then writes each vehicle (JSON + thumbnail if requested) and deletes the files of vehicles that no longer exist; at the end, emits onVehicleSaveFinished.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:247
+---@param currentSavePath string Save folder.
+---@param vehiclesThumbnailUpdate integer[]|nil Ids of the vehicles whose thumbnail must be redone.
 function career_modules_inventory.onSaveCurrentProfile(currentSavePath, vehiclesThumbnailUpdate) end
 
---- Hook : enregistre l'inventaire comme extension de sauvegarde asynchrone (career_saveSystem.registerAsyncSaveExtension).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:177
+--- Hook: registers the inventory as an asynchronous save extension (career_saveSystem.registerAsyncSaveExtension).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:177
 function career_modules_inventory.onSaveCurrentProfileAsyncStart() end
 
---- Hook : quand le fondu d'écran est complet (state 1), supprime les véhicules marqués puis exécute l'action différée (apparition d'un véhicule).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:1001
----@param state integer État du fondu.
+--- Hook: when the screen fade is complete (state 1), removes the marked vehicles then runs the deferred action (vehicle spawn).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:1001
+---@param state integer Fade state.
 function career_modules_inventory.onScreenFadeState(state) end
 
---- Hook de frame : sauvegarde initiale d'une nouvelle carrière (après 10 frames), toasts de véhicule mis en stockage ou prêt rendu, décompte de timeToAccess avec messages de livraison/réparation.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inventory.lua:923
----@param dtReal number Temps réel (s).
----@param dtSim number Temps simulé (s).
----@param dtRaw number Temps brut (s).
+--- Frame hook: initial save of a new career (after 10 frames), toasts for a vehicle put into storage or a loan returned, timeToAccess countdown with delivery/repair messages.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inventory.lua:923
+---@param dtReal number Real time (s).
+---@param dtSim number Simulated time (s).
+---@param dtRaw number Raw time (s).
 function career_modules_inventory.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Ouvre l'inventaire pour choisir un véhicule à mettre en vente (action addListing côté UI), toutes les autres actions désactivées.
----Source : lua/ge/extensions/career/modules/inventory.lua:1115
+--- Opens the inventory to choose a vehicle to put up for sale (addListing action on the UI side), all other actions disabled.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1115
 function career_modules_inventory.openInventoryMenuForChoosingListing() end
 
---- Ouvre l'écran d'inventaire (career.computer.vehicleInventory) avec des boutons de choix configurables et met à jour les conditions de pièces des véhicules apparus.
----Source : lua/ge/extensions/career/modules/inventory.lua:1009
----@param _chooseButtonsData table[]|nil Boutons {callback, buttonText, repairRequired, insuranceRequired, ownedRequired...}.
----@param header string|nil Titre du menu.
----@param _buttonsActive table|nil repairEnabled, sellEnabled, favoriteEnabled, storingEnabled, returnLoanerEnabled (true par défaut).
----@param _backTarget string|nil Route de retour.
+--- Opens the inventory screen (career.computer.vehicleInventory) with configurable choice buttons and updates the part conditions of the spawned vehicles.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1009
+---@param _chooseButtonsData table[]|nil Buttons {callback, buttonText, repairRequired, insuranceRequired, ownedRequired...}.
+---@param header string|nil Menu title.
+---@param _buttonsActive table|nil repairEnabled, sellEnabled, favoriteEnabled, storingEnabled, returnLoanerEnabled (true by default).
+---@param _backTarget string|nil Return route.
 function career_modules_inventory.openMenu(_chooseButtonsData, header, _buttonsActive, _backTarget) end
 
---- Ouvre l'inventaire depuis l'ordinateur du garage avec trois boutons : récupérer au garage, remplacer le véhicule actuel, ouvrir l'indice de performance.
----Source : lua/ge/extensions/career/modules/inventory.lua:1082
----@param _originComputerId string Id de l'ordinateur d'origine.
+--- Opens the inventory from the garage computer with three buttons: retrieve at the garage, replace the current vehicle, open the performance index.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1082
+---@param _originComputerId string Originating computer id.
 function career_modules_inventory.openMenuFromComputer(_originComputerId) end
 
---- Achète un changement de plaque : paie, applique le texte, débloque NOW_ITS_MINE, joue le son et marque le véhicule modifié. Ne fait rien si le joueur ne peut pas payer.
----Source : lua/ge/extensions/career/modules/inventory.lua:1243
----@param inventoryId integer Id d'inventaire.
----@param text string Texte de plaque.
----@param money number Prix.
+--- Buys a plate change: pays, applies the text, unlocks NOW_ITS_MINE, plays the sound and marks the vehicle as modified. Does nothing if the player cannot pay.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1243
+---@param inventoryId integer Inventory id.
+---@param text string Plate text.
+---@param money number Price.
 function career_modules_inventory.purchaseLicensePlateText(inventoryId, text, money) end
 
---- Supprime le véhicule de l'inventaire et du monde, émet onVehicleRemoved et réassigne le favori si besoin.
----Source : lua/ge/extensions/career/modules/inventory.lua:378
----@param inventoryId integer Id d'inventaire.
+--- Removes the vehicle from the inventory and the world, emits onVehicleRemoved and reassigns the favorite if needed.
+---Source: lua/ge/extensions/career/modules/inventory.lua:378
+---@param inventoryId integer Inventory id.
 function career_modules_inventory.removeVehicle(inventoryId) end
 
---- Supprime seulement l'objet véhicule du monde (le véhicule reste dans l'inventaire, en stockage) ; passe le joueur en mode marche s'il le conduisait. Émet onInventoryPreRemoveVehicleObject.
----Source : lua/ge/extensions/career/modules/inventory.lua:360
----@param inventoryId integer Id d'inventaire.
----@param skipPartConditions boolean|nil Non utilisé dans le corps (reste un TODO).
+--- Removes only the vehicle object from the world (the vehicle stays in the inventory, in storage); puts the player in walking mode if they were driving it. Emits onInventoryPreRemoveVehicleObject.
+---Source: lua/ge/extensions/career/modules/inventory.lua:360
+---@param inventoryId integer Inventory id.
+---@param skipPartConditions boolean|nil Not used in the body (remains a TODO).
 function career_modules_inventory.removeVehicleObject(inventoryId, skipPartConditions) end
 
---- Renomme le véhicule (niceName) s'il est valide et le marque modifié.
----Source : lua/ge/extensions/career/modules/inventory.lua:1360
----@param inventoryId integer Id d'inventaire.
----@param name string Nouveau nom.
----@return boolean  false si le nom est invalide.
+--- Renames the vehicle (niceName) if valid and marks it as modified.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1360
+---@param inventoryId integer Inventory id.
+---@param name string New name.
+---@return boolean  false if the name is invalid.
 function career_modules_inventory.renameVehicle(inventoryId, name) end
 
---- Quitte le sélecteur : navigue vers la route de retour (career.computer par défaut).
----Source : lua/ge/extensions/career/modules/inventory.lua:1036
----@return any  Résultat de ui_router.navigate.
+--- Leaves the selector: navigates to the return route (career.computer by default).
+---Source: lua/ge/extensions/career/modules/inventory.lua:1036
+---@return any  Result of ui_router.navigate.
 function career_modules_inventory.requestPickerExit() end
 
---- Rend un véhicule prêté (career_modules_loanerVehicles.returnVehicle) puis sauvegarde et rafraîchit l'UI.
----Source : lua/ge/extensions/career/modules/inventory.lua:1180
----@param inventoryId integer Id d'inventaire.
+--- Returns a loaned vehicle (career_modules_loanerVehicles.returnVehicle) then saves and refreshes the UI.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1180
+---@param inventoryId integer Inventory id.
 function career_modules_inventory.returnLoanedVehicleFromInventory(inventoryId) end
 
---- Vend un véhicule : émet onBeforeVehicleSell, crédite le prix (ou la valeur calculée par valueCalculator), supprime le véhicule, joue le son d'achat, débloque FLIP_PROFIT si revendu au-dessus du prix d'achat final, et journalise.
----Source : lua/ge/extensions/career/modules/inventory.lua:1156
----@param inventoryId integer Id d'inventaire.
----@param price number|nil Prix imposé (sinon valeur calculée).
----@return boolean|nil  true si vendu, nil si le véhicule n'existe pas.
+--- Sells a vehicle: emits onBeforeVehicleSell, credits the price (or the value computed by valueCalculator), removes the vehicle, plays the purchase sound, unlocks FLIP_PROFIT if resold above the final purchase price, and logs.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1156
+---@param inventoryId integer Inventory id.
+---@param price number|nil Imposed price (otherwise computed value).
+---@return boolean|nil  true if sold, nil if the vehicle does not exist.
 function career_modules_inventory.sellVehicle(inventoryId, price) end
 
---- Vend depuis l'écran d'inventaire : vend, sauvegarde la carrière et renvoie les données à l'UI.
----Source : lua/ge/extensions/career/modules/inventory.lua:1173
----@param inventoryId integer Id d'inventaire.
+--- Sells from the inventory screen: sells, saves the career and sends the data back to the UI.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1173
+---@param inventoryId integer Inventory id.
 function career_modules_inventory.sellVehicleFromInventory(inventoryId) end
 
---- Envoie à l'UI (guihooks vehicleInventoryData) tous les véhicules, les boutons de choix, l'en-tête, le nombre d'emplacements libres et l'argent du joueur.
----Source : lua/ge/extensions/career/modules/inventory.lua:903
+--- Sends to the UI (guihooks vehicleInventoryData) all the vehicles, the choice buttons, the header, the number of free slots and the player's money.
+---Source: lua/ge/extensions/career/modules/inventory.lua:903
 function career_modules_inventory.sendDataToUi() end
 
---- Définit le véhicule favori (ignoré si l'id est inconnu).
----Source : lua/ge/extensions/career/modules/inventory.lua:1208
----@param inventoryId integer Id d'inventaire.
+--- Sets the favorite vehicle (ignored if the id is unknown).
+---Source: lua/ge/extensions/career/modules/inventory.lua:1208
+---@param inventoryId integer Inventory id.
 function career_modules_inventory.setFavoriteVehicle(inventoryId) end
 
---- Change le texte de plaque du véhicule dans le monde et dans sa config.
----Source : lua/ge/extensions/career/modules/inventory.lua:1235
----@param inventoryId integer Id d'inventaire.
----@param text string Texte de plaque.
+--- Changes the vehicle's plate text in the world and in its config.
+---Source: lua/ge/extensions/career/modules/inventory.lua:1235
+---@param inventoryId integer Inventory id.
+---@param text string Plate text.
 function career_modules_inventory.setLicensePlateText(inventoryId, text) end
 
---- Marque un véhicule comme modifié : il sera réécrit (avec nouvelle dirtyDate) à la prochaine sauvegarde.
----Source : lua/ge/extensions/career/modules/inventory.lua:146
----@param inventoryId integer Id d'inventaire.
+--- Marks a vehicle as modified: it will be rewritten (with a new dirtyDate) at the next save.
+---Source: lua/ge/extensions/career/modules/inventory.lua:146
+---@param inventoryId integer Inventory id.
 function career_modules_inventory.setVehicleDirty(inventoryId) end
 
---- Fait apparaître un véhicule de l'inventaire depuis sa config (liste de pièces aplatie), restaure ses conditions de pièces et réconcilie l'inventaire de pièces. Retourne nil si le modèle ou le fichier de config n'existe plus.
----Source : lua/ge/extensions/career/modules/inventory.lua:436
----@param inventoryId integer Id d'inventaire.
----@param replaceOption integer|nil 1 : remplace le véhicule courant du joueur ; 2 : remplace l'objet ayant le même inventoryId ; autre : nouveau véhicule sans y entrer.
----@param callback function|nil Appelée quand les conditions de pièces sont synchronisées.
----@return userdata|nil  Objet véhicule créé.
+--- Spawns an inventory vehicle from its config (flattened parts list), restores its part conditions and reconciles the parts inventory. Returns nil if the model or the config file no longer exists.
+---Source: lua/ge/extensions/career/modules/inventory.lua:436
+---@param inventoryId integer Inventory id.
+---@param replaceOption integer|nil 1: replaces the player's current vehicle; 2: replaces the object with the same inventoryId; other: new vehicle without entering it.
+---@param callback function|nil Called when the part conditions are synchronized.
+---@return userdata|nil  Vehicle object created.
 function career_modules_inventory.spawnVehicle(inventoryId, replaceOption, callback) end
 
---- Appelé après une téléportation depuis la grande carte : sauvegarde la carrière si le joueur est dans un véhicule de l'inventaire et si l'autosauvegarde est active.
----Source : lua/ge/extensions/career/modules/inventory.lua:668
+--- Called after a teleport from the big map: saves the career if the player is in an inventory vehicle and if autosave is active.
+---Source: lua/ge/extensions/career/modules/inventory.lua:668
 function career_modules_inventory.teleportedFromBigmap() end
 
---- Demande au véhicule ses conditions de pièces (getPartConditions) et les stocke dans l'inventaire puis dans l'inventaire de pièces.
----Source : lua/ge/extensions/career/modules/inventory.lua:406
----@param vehId integer|nil Id d'objet ; sinon déduit de inventoryId.
----@param inventoryId integer Id d'inventaire.
----@param callback function|nil Appelée une fois la valeur reçue.
+--- Asks the vehicle for its part conditions (getPartConditions) and stores them in the inventory then in the parts inventory.
+---Source: lua/ge/extensions/career/modules/inventory.lua:406
+---@param vehId integer|nil Object id; otherwise deduced from inventoryId.
+---@param inventoryId integer Inventory id.
+---@param callback function|nil Called once the value is received.
 function career_modules_inventory.updatePartConditions(vehId, inventoryId, callback) end
 
---- Marque tous les véhicules apparus comme modifiés et met à jour leurs conditions de pièces ; callback est appelé quand tous sont traités (ou tout de suite s'il n'y en a aucun).
----Source : lua/ge/extensions/career/modules/inventory.lua:150
----@param callback function|nil Appelée à la fin.
+--- Marks all spawned vehicles as modified and updates their part conditions; callback is called when all are processed (or immediately if there are none).
+---Source: lua/ge/extensions/career/modules/inventory.lua:150
+---@param callback function|nil Called at the end.
 function career_modules_inventory.updatePartConditionsOfSpawnedVehicles(callback) end
 

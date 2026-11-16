@@ -1,60 +1,60 @@
 # `license`
 
-*Fichier : `lua/ge/extensions/license.lua` · VM : Game Engine (GE) · 53 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/license.lua` · VM: Game Engine (GE) · 53 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `license` : `extensions.load("license")`, puis la globale `license`
+**Access:** extension `license`: `extensions.load("license")`, then the global `license`
 
-Interroge l'état des licences BeamNG.tech (recherche) et commerciale via les objets C++ ResearchVerifier et CommercialVerifier, avec un cache par session. Sert à filtrer les fichiers d'input maps et d'actions réservés à BeamNG.tech (chemins contenant « _beamng.tech ») quand la licence n'est pas valide. Pour un moddeur, c'est surtout utile pour savoir si le jeu tourne en licence tech/commerciale.
+Queries the state of the BeamNG.tech (research) and commercial licenses through the C++ objects ResearchVerifier and CommercialVerifier, with a per-session cache. Used to filter BeamNG.tech-only input map and action files (paths containing "_beamng.tech") when the license is not valid. For a modder, it is mostly useful to know whether the game is running with a tech/commercial license.
 
-## Remarques
+## Notes
 
-- Les résultats sont mis en cache dans stateCache à la première lecture et jamais rafraîchis : un changement de licence en cours de session n'est pas vu.
-- Si ResearchVerifier (ou CommercialVerifier) n'existe pas, isValid (resp. isCommercial) renvoie false sans mettre en cache.
-- Le filtre de chemins est une simple recherche de la sous-chaîne « _beamng.tech » dans le chemin.
+- Results are cached in stateCache on first read and never refreshed: a license change during the session is not seen.
+- If ResearchVerifier (or CommercialVerifier) does not exist, isValid (resp. isCommercial) returns false without caching.
+- The path filter is a simple search for the substring "_beamng.tech" in the path.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `license.isAllowedActionsPath(path)` | Même règle pour les fichiers d'actions. | 40 |
-| `license.isAllowedInputmapPath(path)` | Dit s'il est pertinent de charger cette input map : toujours vrai avec une licence tech valide, sinon faux si le chemin contient « _beamng.tech ». | 34 |
-| `license.isCommercial()` | Indique si la licence est commerciale (CommercialVerifier.isCommercialLicense). | 19 |
-| `license.isValid()` | Indique si la licence BeamNG.tech est vérifiée (ResearchVerifier.isTechLicenseVerified). | 9 |
-| `license.requestState()` | Envoie l'état de licence tech à l'interface via guihooks (TechLicenseState). | 29 |
+| `license.isAllowedActionsPath(path)` | Same rule for action files. | 40 |
+| `license.isAllowedInputmapPath(path)` | Tells whether it is relevant to load this input map: always true with a valid tech license, otherwise false if the path contains "_beamng.tech". | 34 |
+| `license.isCommercial()` | Returns whether the license is commercial (CommercialVerifier.isCommercialLicense). | 19 |
+| `license.isValid()` | Returns whether the BeamNG.tech license is verified (ResearchVerifier.isTechLicenseVerified). | 9 |
+| `license.requestState()` | Sends the tech license state to the UI via guihooks (TechLicenseState). | 29 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `license.isAllowedActionsPath(path)`
 
-Même règle pour les fichiers d'actions.
+Same rule for action files.
 
-- `path` (*string*) : Chemin du fichier d'actions.
-- **renvoie** : boolean 
+- `path` (*string*) : Action file path.
+- **returns**: boolean 
 
 #### `license.isAllowedInputmapPath(path)`
 
-Dit s'il est pertinent de charger cette input map : toujours vrai avec une licence tech valide, sinon faux si le chemin contient « _beamng.tech ».
+Tells whether it is relevant to load this input map: always true with a valid tech license, otherwise false if the path contains "_beamng.tech".
 
-- `path` (*string*) : Chemin du fichier d'input map.
-- **renvoie** : boolean 
+- `path` (*string*) : Input map file path.
+- **returns**: boolean 
 
 #### `license.isCommercial()`
 
-Indique si la licence est commerciale (CommercialVerifier.isCommercialLicense).
+Returns whether the license is commercial (CommercialVerifier.isCommercialLicense).
 
-- **renvoie** : boolean false sans vérificateur ou sans licence.
+- **returns**: boolean false without a verifier or without a license.
 
 #### `license.isValid()`
 
-Indique si la licence BeamNG.tech est vérifiée (ResearchVerifier.isTechLicenseVerified).
+Returns whether the BeamNG.tech license is verified (ResearchVerifier.isTechLicenseVerified).
 
-- **renvoie** : boolean false sans vérificateur ou sans licence.
+- **returns**: boolean false without a verifier or without a license.
 
-**Évènements UI (guihooks.trigger) :** `TechLicenseState`
+**UI events (guihooks.trigger):** `TechLicenseState`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `ResearchVerifier.` `isTechLicenseVerified`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/license.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/license.lua`.*

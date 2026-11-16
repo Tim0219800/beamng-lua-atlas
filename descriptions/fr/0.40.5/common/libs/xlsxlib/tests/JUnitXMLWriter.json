@@ -1,0 +1,18 @@
+{
+  "path": "lua/common/libs/xlsxlib/tests/JUnitXMLWriter.lua",
+  "module": "Écrivain de résultats de tests au format XML JUnit pour les tests de xlsxlib. Construit un DOM (testsuites > testsuite > testcase, avec un élément failure pour chaque test en échec) puis le sérialise et l'écrit avec writeFile. Utilisé par libs/xlsxlib/tests/TestManager.",
+  "notes": [
+    "Le fichier requiert `libs/slaxml/slaxml` (pas slaxdom) mais appelle `SLAXML:xml`, qui n'est défini que par slaxdom ; cela fonctionne seulement si slaxdom a déjà été chargé quelque part (il l'est via xlsxlib). Isolé, l'appel échouerait.",
+    "Le nom de la suite est fixé à \"LuaUnitTests\". Les tests en échec ont type \"ExpectedFailure\" si le test devait échouer, sinon \"Failure\"."
+  ],
+  "functions": {
+    "write": {
+      "desc": "Écrit les résultats dans un fichier XML JUnit (indentation 2) et logue le chemin.",
+      "params": {
+        "results": {"type": "table", "desc": "{testResults = {{name, duration, passed, expectedToFail, errorMessage}}, testFailCount, totalDuration}."},
+        "outputFile": {"type": "string", "desc": "Chemin du fichier XML à écrire (writeFile)."}
+      },
+      "returns": []
+    }
+  }
+}

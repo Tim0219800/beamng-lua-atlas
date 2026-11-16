@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_drift_setDriftChallengeMode`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftChallengeMode.lua` · VM : Game Engine (GE) · 25 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftChallengeMode.lua` · VM: Game Engine (GE) · 25 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/drift/setDriftChallengeMode")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/drift/setDriftChallengeMode")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Set Drift Challenge Mode » (catégorie repeat_instant). Règle le mode de défi de drift via gameplay_drift_general.setChallengeMode. Pin d'entrée : driftChallengeMode (string ; l'aide du pin cite « A to B », « A to B with stunt zone », « Gymkhana »).
+Flowgraph node "Set Drift Challenge Mode" (category repeat_instant). Sets the drift challenge mode via gameplay_drift_general.setChallengeMode. Input pin: driftChallengeMode (string; the pin help cites "A to B", "A to B with stunt zone", "Gymkhana").
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Appelle gameplay_drift_general.setChallengeMode(driftChallengeMode). | 21 |
+| `C:work()` | Calls gameplay_drift_general.setChallengeMode(driftChallengeMode). | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftChallengeMode.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftChallengeMode.lua`.*

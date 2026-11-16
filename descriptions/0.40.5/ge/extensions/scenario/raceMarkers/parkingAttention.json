@@ -1,26 +1,84 @@
 {
   "path": "lua/ge/extensions/scenario/raceMarkers/parkingAttention.lua",
-  "module": "Marqueur d'attention pour une place de parking : dessine en debug (debugDrawer:drawTriSolid) les quatre parois bleues translucides (alpha 25 %) d'un parallélépipède autour de la place, hauteur 1.33 m, double face. Aucun objet de scène n'est créé. Le module renvoie un constructeur : require('scenario/raceMarkers/parkingAttention')(id) donne un objet de la classe C.",
+  "module": "Attention marker for a parking spot: draws in debug (debugDrawer:drawTriSolid) the four translucent blue walls (alpha 25%) of a box around the spot, height 1.33 m, double-sided. No scene object is created. The module returns a constructor: require('scenario/raceMarkers/parkingAttention')(id) gives an object of class C.",
   "notes": [
-    "setToCheckpoint(wp) accepte soit wp = {pos, rot, scl} (centre, quaternion, taille complète de la place), soit wp.parkingSpot avec ces trois champs ; sinon seul wp.pos et wp.radius sont mémorisés et rien n'est dessiné.",
-    "La couleur est fixe (0, 0.4, 1) quel que soit le mode.",
-    "La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim)."
+    "setToCheckpoint(wp) accepts either wp = {pos, rot, scl} (center, quaternion, full size of the spot), or wp.parkingSpot with these three fields; otherwise only wp.pos and wp.radius are stored and nothing is drawn.",
+    "The color is fixed (0, 0.4, 1) regardless of the mode.",
+    "The extracted page shows update(dtSim); the actual signature is update(dt, dtSim)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Parois de debug autour d'une place de parking.",
+      "desc": "Debug walls around a parking spot.",
       "functions": {
-        "init": {"desc": "Constructeur : initialise l'état.", "params": {"id": {"type": "integer", "desc": "Identifiant unique."}}, "internal": true},
-        "update": {"desc": "Appel par image : avance le minuteur de mode, masque après le fondu en 'hidden' et dessine les quatre parois si une place est définie.", "params": {"dt": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}}, "internal": true},
-        "setToCheckpoint": {"desc": "Mémorise la place de parking à entourer.", "params": {"wp": {"type": "table", "desc": "{pos, rot, scl} ou {parkingSpot = {pos, rot, scl}}."}}},
-        "setMode": {"desc": "'hidden' masque, autre mode affiche.", "params": {"mode": {"type": "string", "desc": "Nom du mode."}}},
-        "setVisibility": {"desc": "Active ou désactive le dessin.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
-        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
-        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
-        "createMarkers": {"desc": "Conservé pour la compatibilité d'API avec les autres marqueurs : ne crée aucun objet.", "params": {}},
-        "clearMarkers": {"desc": "Efface la table d'identifiants.", "params": {}}
+        "init": {
+          "desc": "Constructor: initializes the state.",
+          "params": {
+            "id": {
+              "type": "integer",
+              "desc": "Unique identifier."
+            }
+          },
+          "internal": true
+        },
+        "update": {
+          "desc": "Per-frame call: advances the mode timer, hides after the fade in 'hidden', and draws the four walls if a spot is defined.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Real duration (s)."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Simulated duration (s)."
+            }
+          },
+          "internal": true
+        },
+        "setToCheckpoint": {
+          "desc": "Stores the parking spot to surround.",
+          "params": {
+            "wp": {
+              "type": "table",
+              "desc": "{pos, rot, scl} or {parkingSpot = {pos, rot, scl}}."
+            }
+          }
+        },
+        "setMode": {
+          "desc": "'hidden' hides, other mode shows.",
+          "params": {
+            "mode": {
+              "type": "string",
+              "desc": "Mode name."
+            }
+          }
+        },
+        "setVisibility": {
+          "desc": "Enables or disables drawing.",
+          "params": {
+            "v": {
+              "type": "boolean",
+              "desc": "Visibility."
+            }
+          }
+        },
+        "hide": {
+          "desc": "Calls setVisibility(false).",
+          "params": {}
+        },
+        "show": {
+          "desc": "Calls setVisibility(true).",
+          "params": {}
+        },
+        "createMarkers": {
+          "desc": "Kept for API compatibility with the other markers: creates no object.",
+          "params": {}
+        },
+        "clearMarkers": {
+          "desc": "Clears the identifier table.",
+          "params": {}
+        }
       }
     }
   }

@@ -1,49 +1,49 @@
 # `gameplay_traffic_roles_standard`
 
-*Fichier : `lua/ge/extensions/gameplay/traffic/roles/standard.lua` · VM : Game Engine (GE) · 319 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/traffic/roles/standard.lua` · VM: Game Engine (GE) · 319 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/traffic/roles/standard")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/traffic/roles/standard")` (file under extensions/ but not a regular extension)
 
-Rôle de trafic « standard » : le conducteur civil par défaut. Il réagit aux collisions, accidents et événements vus (quasi-accident, collision d'un tiers) selon sa personnalité (bravoure, patience) : se ranger, suivre ou fuir l'autre véhicule, klaxonner, ou échanger les assurances. Il désactive aussi le véhicule trop endommagé.
+"Standard" traffic role: the default civilian driver. It reacts to collisions, accidents and witnessed events (near miss, collision by a third party) according to its personality (bravery, patience): pulling over, following or fleeing the other vehicle, honking, or exchanging insurance. It also disables a vehicle that is too damaged.
 
-## Remarques
+## Notes
 
-- Types d'événements dans driver.eventType : 'none', 'selfCrash', 'otherCrash', 'selfCollision', 'otherCollision', 'nearMiss' (ou autre type reçu par onOtherEvent).
-- damageAction est choisi dans onRefresh : bravoure >= 0,56 -> 'followPostCrash', <= 0,44 -> 'fleePostCrash', sinon 'stop' (uniquement pour les IA).
-- collisionThreshold = ceil(random()^2 * 6) : nombre minimal de collisions qui déclenche l'action post-crash.
-- minActionTime vaut 5 s ; les durées d'action dépendent de la bravoure ou de la patience.
-- Dans askInsurance, le drapeau askInsurance est remis à nil et l'IA passe en mode 'stop' ; un message UI 'ui.traffic.interactions.insuranceExchanged' est affiché hors carrière si le joueur est la cible.
-- Une vitesse >= 1,2 fois la limite lors d'une collision attribue la faute au véhicule lui-même (veh.collisions[otherId].fault = true).
-- L'action 'pullOver' utilisée ici est fournie par baseRole (non définie dans ce fichier).
+- Event types in driver.eventType: 'none', 'selfCrash', 'otherCrash', 'selfCollision', 'otherCollision', 'nearMiss' (or another type received by onOtherEvent).
+- damageAction is chosen in onRefresh: bravery >= 0.56 -> 'followPostCrash', <= 0.44 -> 'fleePostCrash', otherwise 'stop' (AI only).
+- collisionThreshold = ceil(random()^2 * 6): minimum number of collisions that triggers the post-crash action.
+- minActionTime is 5 s; action durations depend on bravery or patience.
+- In askInsurance, the askInsurance flag is reset to nil and the AI switches to 'stop' mode; a UI message 'ui.traffic.interactions.insuranceExchanged' is displayed outside career if the player is the target.
+- A speed >= 1.2 times the limit during a collision assigns the fault to the vehicle itself (veh.collisions[otherId].fault = true).
+- The 'pullOver' action used here is provided by baseRole (not defined in this file).
 
-## Classe `C`
+## Class `C`
 
-Classe du rôle standard, complétée par baseRole (self.veh, self.driver, self.flags, self.state, setAction, resetAction, setTarget, checkTargetVisible…).
+Standard role class, completed by baseRole (self.veh, self.driver, self.flags, self.state, setAction, resetAction, setTarget, checkTargetVisible...).
 
-Le module renvoie un constructeur : `local obj = require("gameplay_traffic_roles_standard")(options)`.
+The module returns a constructor: `local obj = require("gameplay_traffic_roles_standard")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Définit les actions fleePostCrash (fuite IA, agressivité aléatoire >= 0,5), followPostCrash (suivi ou poursuite 'road rage' du responsable), askInsurance (arrêt de l'IA) et disabled (arrêt, état 'disabled'), puis fusionne les baseActions. | 15 |
-| `C:onCollision(otherId, data)` | Appelé quand ce véhicule est en collision avec un autre. Impute la faute si la vitesse dépasse 1,2 fois la limite, marque 'selfCollision', cible l'autre véhicule, émet onTrafficAction(vehId, 'collision', …), prévoit un coup de klaxon (selon bravoure et nombre de coups) et mémorise selfHitCount. | 109 |
-| `C:onCrashDamage(data)` | Appelé quand le véhicule subit un dégât de crash. Si aucune collision n'est en cours, marque l'événement 'selfCrash' et, pour une IA, émet le hook onTrafficAction(vehId, 'crashDamage', {targetId}). | 86 |
-| `C:onOtherCollision(id1, id2, data)` | Appelé quand deux autres véhicules de trafic se percutent. Cible le plus lent des deux s'il est visible, proche et devant ; enregistre otherHitCount. | 130 |
-| `C:onOtherCrashDamage(otherId, data)` | Appelé quand un autre véhicule subit un crash. Si ce véhicule est proche (< 60 m d'après la distance interactive), devant et visible, marque l'événement 'otherCrash' et le cible. | 97 |
-| `C:onOtherEvent(eventType, otherId, data)` | Appelé pour un événement signalé par un autre véhicule (ex. quasi-accident). Ignoré si un crash est déjà actif ; sinon, si le véhicule est visible, enregistre le type d'événement et le cible. | 149 |
-| `C:onRefresh()` | Réinitialise cible, timers et état du conducteur (driver.eventType, damageAction, collisionThreshold, compteurs de collisions). Pour une IA, choisit damageAction selon la bravoure et tire le seuil de collisions. | 60 |
-| `C:onTrafficTick(tickTime)` | Appelé à chaque tick du trafic. Désactive le véhicule IA trop endommagé, évalue visibilité et proximité de la cible, puis choisit une réaction (klaxon, rangement 'pullOver', suivi, fuite, passage en poursuite) selon l'événement et la personnalité. Gère aussi le klaxon différé et le gel des feux si une rampe lumineuse est allumée. | 158 |
-| `C:onUpdate(dt, dtSim)` | Appelé chaque frame. Fait décroître actionTimer et termine les actions : échange d'assurance quand les deux véhicules sont arrêtés à moins de 20 m, fin du suivi/de la fuite, fin du rangement ; réinitialise l'action si la cible a disparu du trafic. | 274 |
+| `C:init()` | Defines the actions fleePostCrash (AI flees, random aggression >= 0.5), followPostCrash (follow or 'road rage' pursuit of the culprit), askInsurance (AI stop) and disabled (stop, 'disabled' state), then merges the baseActions. | 15 |
+| `C:onCollision(otherId, data)` | Called when this vehicle collides with another. Assigns the fault if the speed exceeds 1.2 times the limit, marks 'selfCollision', targets the other vehicle, emits onTrafficAction(vehId, 'collision', ...), schedules a honk (depending on bravery and number of hits) and stores selfHitCount. | 109 |
+| `C:onCrashDamage(data)` | Called when the vehicle takes crash damage. If no collision is ongoing, marks the event 'selfCrash' and, for an AI, emits the hook onTrafficAction(vehId, 'crashDamage', {targetId}). | 86 |
+| `C:onOtherCollision(id1, id2, data)` | Called when two other traffic vehicles collide. Targets the slower of the two if it is visible, close and ahead; records otherHitCount. | 130 |
+| `C:onOtherCrashDamage(otherId, data)` | Called when another vehicle crashes. If this vehicle is close (< 60 m by interactive distance), ahead and visible, marks the event 'otherCrash' and targets it. | 97 |
+| `C:onOtherEvent(eventType, otherId, data)` | Called for an event reported by another vehicle (e.g. near miss). Ignored if a crash is already active; otherwise, if the vehicle is visible, records the event type and targets it. | 149 |
+| `C:onRefresh()` | Resets target, timers and driver state (driver.eventType, damageAction, collisionThreshold, collision counters). For an AI, chooses damageAction according to bravery and draws the collision threshold. | 60 |
+| `C:onTrafficTick(tickTime)` | Called on each traffic tick. Disables the AI vehicle that is too damaged, evaluates the target's visibility and proximity, then chooses a reaction (honk, 'pullOver', follow, flee, switch to pursuit) according to the event and personality. Also handles the delayed honk and the freezing of lights if a light bar is on. | 158 |
+| `C:onUpdate(dt, dtSim)` | Called every frame. Decrements actionTimer and ends actions: insurance exchange when both vehicles are stopped within 20 m, end of following/fleeing, end of pulling over; resets the action if the target has disappeared from traffic. | 274 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onTrafficAction` — écouté par 2 module(s)
+- `onTrafficAction` — listened to by 2 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `obj:` `queueLuaCommand`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/traffic/roles/standard.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/traffic/roles/standard.lua`.*

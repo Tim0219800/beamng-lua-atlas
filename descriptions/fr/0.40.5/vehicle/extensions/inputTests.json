@@ -1,0 +1,21 @@
+{
+  "path": "lua/vehicle/extensions/inputTests.lua",
+  "module": "Banc de test de latence et de précision du retour de force (FFB) des volants : mesure la latence matérielle USB, la résolution et la fréquence de mise à jour du volant, la latence du moteur de simulation et celle du véhicule, ainsi que les oscillations de la direction. Les tests tournent dans une coroutine appelée par hydros via hydros.testHook ; les résultats (statistiques, histogrammes en 30 classes) sont envoyés au GE par le hook onInputTestStats, et la fin par onInputTestStatus.",
+  "usage": "extensions.inputTests.start('systemTest')\n-- tests : systemTest, simulationTest, vehicleTest, vehicleOscillationTest",
+  "notes": [
+    "Tests disponibles (30 mesures chacun) : 'systemTest' (résultats systemFrequencyTest, systemResolutionTest, systemLatencyTest : mesures directes du volant via hydros.getAngleFunction / getForceFeedbackFunction), 'simulationTest' (engineLatencyTest : impulsion FFB jusqu'au mouvement du volant simulé, calcul FFB désactivé), 'vehicleTest' (vehicleLatencyTest : impulsion de torsion des nœuds de bande de roulement des roues dont le nom commence par 'F'), 'vehicleOscillationTest' (oscillationTest et vehicleFrequencyTest, avec force FFB réduite à 10 %).",
+    "start(testId) exige un identifiant FFB valide (hydros.getFFBID() >= 0), sinon envoie des statistiques vides avec un message d'erreur.",
+    "Les statistiques envoyées contiennent : testId, sampleCount, unit, value (mode par demi-échantillon, ou maximum pour systemResolutionTest), modeError / modeErrorLow / modeErrorHigh, buckets (count, min, max), bucketPeakCount et éventuellement message. Les latences sont converties en ms.",
+    "Les chronométrages utilisent l'horloge murale (os.clockhp), pas le temps de simulation.",
+    "Constantes : timeout de latence 0,5 s, volant considéré arrêté après 0,15 s (timeout 7 s), force de torsion de bande de roulement 5000 sur les 5 nœuds les plus bas.",
+    "Une erreur interne de la coroutine est journalisée, désactive hydros.testHook et envoie un message d'échec au GE."
+  ],
+  "fields": {
+    "running": {"type": "string|nil", "desc": "Identifiant du test en cours, nil si aucun."}
+  },
+  "functions": {
+    "start": {"desc": "Démarre un test : récupère l'identifiant FFB, crée la coroutine et installe M.update dans hydros.testHook.", "params": {"testId": {"type": "string", "desc": "'systemTest', 'simulationTest', 'vehicleTest' ou 'vehicleOscillationTest'."}}, "returns": [], "internal": false},
+    "update": {"desc": "Appelé par hydros à chaque pas FFB via testHook : reprend la coroutine du test avec le dt réel (horloge murale) et les positions de volant simulé et matériel. Renvoie si le calcul FFB normal doit être exécuté et la position matérielle suivante.", "params": {"dtSim": {"type": "number", "desc": "Pas de temps de simulation (utilisé seulement au premier appel)."}, "simWheelPos": {"type": "number", "desc": "Position du volant simulé (normalisée, -1 à 1 déduit du code)."}, "hydroPos": {"type": "number", "desc": "Position cible du volant matériel."}}, "returns": [{"type": "boolean", "desc": "true pour exécuter le calcul FFB du véhicule ce pas."}, {"type": "number", "desc": "Position matérielle à appliquer ensuite."}], "internal": true},
+    "onExtensionUnloaded": {"desc": "Appelé au déchargement : retire hydros.testHook.", "params": {}, "returns": [], "internal": true}
+  }
+}

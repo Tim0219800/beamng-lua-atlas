@@ -1,28 +1,58 @@
 {
   "path": "lua/ge/extensions/gameplay/drag/mpDragHandlers.lua",
-  "module": "Table de dispatch des messages réseau du mode drag multijoueur. Le gamemode MP (multiplayer/gamemodes/drag) appelle handle(msgName, ...) à chaque message de session reçu ; selon le nom, le module met à jour l'état de course dans gameplay_drag_core (setRaceState, clearRaceState, setDragRaceData) et émet des hooks extensions.hook (onDragRaceStarted, onDragRaceTimerUpdated, onDragRaceTreeLights...). Certains messages ne sont traités que par l'hôte de session (finishTime, timerUpdateRequest, treeLightUpdate, stateRequest), les autres par tous les clients.",
+  "module": "Network message dispatch table of the multiplayer drag mode. The MP gamemode (multiplayer/gamemodes/drag) calls handle(msgName, ...) on every session message received; depending on the name, the module updates the race state in gameplay_drag_core (setRaceState, clearRaceState, setDragRaceData) and emits extensions.hook hooks (onDragRaceStarted, onDragRaceTimerUpdated, onDragRaceTreeLights...). Some messages are only handled by the session host (finishTime, timerUpdateRequest, treeLightUpdate, stateRequest), the others by all clients.",
   "notes": [
-    "Messages gérés : dragSessionStarted, dragRaceStarted, dragRaceCountdownStart, dragRaceStart, dragRacePlayerJoined, dragRaceTreeLights, dragRaceWinningLights, dragRaceTreeLightUpdate (hôte), dragRaceFinishTime (hôte), dragRaceTimerUpdate, dragRaceTimerUpdateRequest (hôte), dragRaceFinishTimeBroadcast, dragRaceReset, dragRaceCancelled, dragRaceRulesUpdate, dragRaceStateRequest (hôte).",
-    "Le temps de fin d'un client est converti sur l'horloge de l'hôte via multiplayer_synclib.mapOtherClock ; si la synchro n'est pas calibrée ou l'extension absente, le temps brut est utilisé (warning dans le log). Temps écoulé = fin (horloge hôte) - syncRaceStart.",
-    "Le paramètre bridge est l'interface du gamemode (isSessionHost, getRaceState, getTimerRecipientMPClientIds, sendToMPClientIds, getLocalMPPlayerId...) ; state contient dragRaces et localClientActiveRace.",
-    "dragRaceRulesUpdate sauvegarde localement les règles via multiplayer.gamemodes.drag.util.presetManager (pcall) et met à jour dragType, treeType et importantTimerId de dragData.",
-    "Les paramètres senderId, recpIds, packetClock, recvClock, msgNumber de handle ne sont pas utilisés."
+    "Handled messages: dragSessionStarted, dragRaceStarted, dragRaceCountdownStart, dragRaceStart, dragRacePlayerJoined, dragRaceTreeLights, dragRaceWinningLights, dragRaceTreeLightUpdate (host), dragRaceFinishTime (host), dragRaceTimerUpdate, dragRaceTimerUpdateRequest (host), dragRaceFinishTimeBroadcast, dragRaceReset, dragRaceCancelled, dragRaceRulesUpdate, dragRaceStateRequest (host).",
+    "A client's finish time is converted to the host's clock via multiplayer_synclib.mapOtherClock; if the sync is not calibrated or the extension is absent, the raw time is used (warning in the log). Elapsed time = finish (host clock) - syncRaceStart.",
+    "The bridge parameter is the gamemode interface (isSessionHost, getRaceState, getTimerRecipientMPClientIds, sendToMPClientIds, getLocalMPPlayerId...); state contains dragRaces and localClientActiveRace.",
+    "dragRaceRulesUpdate saves the rules locally via multiplayer.gamemodes.drag.util.presetManager (pcall) and updates dragType, treeType and importantTimerId of dragData.",
+    "The parameters senderId, recpIds, packetClock, recvClock, msgNumber of handle are not used."
   ],
   "fields": {},
   "functions": {
     "handle": {
-      "desc": "Point d'entrée : cherche le handler du message msgName et l'appelle avec (state, bridge, client, senderId, recpIds, data). Les messages inconnus sont ignorés sans erreur.",
+      "desc": "Entry point: looks up the handler for the message msgName and calls it with (state, bridge, client, senderId, recpIds, data). Unknown messages are ignored without error.",
       "params": {
-        "msgName": {"type": "string", "desc": "Nom du message (par ex. 'dragRaceStarted', 'dragRaceTimerUpdate')."},
-        "state": {"type": "table", "desc": "État du gamemode MP (dragRaces, localClientActiveRace)."},
-        "bridge": {"type": "table", "desc": "Interface du gamemode MP (session, réseau, état de course)."},
-        "client": {"type": "table|nil", "desc": "Client émetteur (champ id)."},
-        "senderId": {"type": "any", "desc": "Non utilisé."},
-        "recpIds": {"type": "any", "desc": "Non utilisé."},
-        "data": {"type": "table", "desc": "Charge utile du message (type, raceId, lane, lightState, timerName, timerValue...)."},
-        "packetClock": {"type": "number|nil", "desc": "Non utilisé."},
-        "recvClock": {"type": "number|nil", "desc": "Non utilisé."},
-        "msgNumber": {"type": "integer|nil", "desc": "Non utilisé."}
+        "msgName": {
+          "type": "string",
+          "desc": "Message name (e.g. 'dragRaceStarted', 'dragRaceTimerUpdate')."
+        },
+        "state": {
+          "type": "table",
+          "desc": "MP gamemode state (dragRaces, localClientActiveRace)."
+        },
+        "bridge": {
+          "type": "table",
+          "desc": "MP gamemode interface (session, network, race state)."
+        },
+        "client": {
+          "type": "table|nil",
+          "desc": "Sending client (id field)."
+        },
+        "senderId": {
+          "type": "any",
+          "desc": "Not used."
+        },
+        "recpIds": {
+          "type": "any",
+          "desc": "Not used."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Message payload (type, raceId, lane, lightState, timerName, timerValue...)."
+        },
+        "packetClock": {
+          "type": "number|nil",
+          "desc": "Not used."
+        },
+        "recvClock": {
+          "type": "number|nil",
+          "desc": "Not used."
+        },
+        "msgNumber": {
+          "type": "integer|nil",
+          "desc": "Not used."
+        }
       },
       "returns": []
     }

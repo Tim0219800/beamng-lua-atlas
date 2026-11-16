@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/editor/cameraTransform.lua",
+  "module": "Petite fenêtre d'éditeur « Camera Transform » (menu Camera). Elle lit la position/rotation de la caméra en JSON (commands.getCameraTransformJson), permet de l'éditer ou de la copier dans le presse-papiers, et de téléporter la caméra libre vers un JSON saisi (commands.setFreeCameraTransformJson).",
+  "notes": [
+    "Le tampon de texte fait 512 caractères (im.ArrayChar(512)) : un JSON plus long serait tronqué.",
+    "Le module n'exporte que des hooks ; onEditorActivated et onEditorDeactivated sont vides."
+  ],
+  "functions": {
+    "onEditorGui": {
+      "desc": "Dessine la fenêtre : boutons « Get Camera Transform », « GoTo » et « Copy », et un champ de texte contenant le JSON de la transformation. Appelé à chaque frame par l'éditeur.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Ajoute l'entrée de menu « Camera Transform » (groupe Camera) et enregistre la fenêtre 600x200.",
+      "internal": true
+    },
+    "onEditorActivated": {
+      "desc": "Appelé à l'activation de l'éditeur ; ne fait rien.",
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Appelé à la désactivation de l'éditeur ; ne fait rien.",
+      "internal": true
+    }
+  }
+}

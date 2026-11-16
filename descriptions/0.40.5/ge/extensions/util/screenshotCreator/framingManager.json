@@ -1,56 +1,185 @@
 {
   "path": "lua/ge/extensions/util/screenshotCreator/framingManager.lua",
-  "module": "Registre des modes de cadrage du créateur de captures. Il collecte les modes en diffusant le hook onScreenshotCreatorCollectFramingModes (chaque mode est une table {id, label, order, resolve, ...}), garde le mode choisi (par défaut « procedural ») et délègue le calcul de caméra à mode.resolve(context). Il sérialise le mode choisi pour survivre au rechargement des extensions.",
+  "module": "Registry of the screenshot creator's framing modes. It collects the modes by broadcasting the onScreenshotCreatorCollectFramingModes hook (each mode is a table {id, label, order, resolve, ...}), keeps the chosen mode (default \"procedural\") and delegates the camera computation to mode.resolve(context). It serializes the chosen mode to survive extension reloads.",
   "notes": [
-    "Un mode n'est retenu que si c'est une table avec un id string non vide, une fonction resolve et un id unique ; les modes sont triés par order (absent = en dernier) puis par id.",
-    "Les modes sont recollectés (hook diffusé) à chaque appel de list, getSelected, set ou resolve : pas de cache.",
-    "Si le mode choisi n'existe plus, getSelected revient à « procedural ».",
-    "list/get/set/getSelected/setSelected/listModes/getSelectedModeId/setSelectedModeId sont des alias des mêmes fonctions ; migrateLegacyState est un alias de deserialize.",
-    "deserialize accepte un ancien format : skipCustomCameras == false donne « configured », sinon « procedural »."
+    "A mode is kept only if it is a table with a non-empty string id, a resolve function and a unique id; modes are sorted by order (missing = last) then by id.",
+    "Modes are recollected (hook broadcast) on every call to list, getSelected, set or resolve: no cache.",
+    "If the chosen mode no longer exists, getSelected falls back to \"procedural\".",
+    "list/get/set/getSelected/setSelected/listModes/getSelectedModeId/setSelectedModeId are aliases of the same functions; migrateLegacyState is an alias of deserialize.",
+    "deserialize accepts an old format: skipCustomCameras == false gives \"configured\", otherwise \"procedural\"."
   ],
   "functions": {
     "list": {
-      "desc": "Renvoie la liste triée des modes de cadrage valides collectés par le hook. Alias : listModes.",
-      "returns": [{"type": "table[]", "desc": "Modes {id, label, order, resolve, ...}."}]
-    },
-    "listModes": {"desc": "Alias de list.", "returns": [{"type": "table[]", "desc": "Modes de cadrage."}]},
-    "getSelected": {
-      "desc": "Renvoie l'id du mode sélectionné (« procedural » si le mode mémorisé n'existe plus). Alias : get, getSelectedModeId.",
-      "returns": [{"type": "string", "desc": "Id du mode."}]
-    },
-    "get": {"desc": "Alias de getSelected.", "returns": [{"type": "string", "desc": "Id du mode."}]},
-    "getSelectedModeId": {"desc": "Alias de getSelected.", "returns": [{"type": "string", "desc": "Id du mode."}]},
-    "setSelected": {
-      "desc": "Sélectionne le mode de cadrage par son id. Alias : set, setSelectedModeId.",
-      "params": {"modeId": {"type": "string", "desc": "Id d'un mode enregistré."}},
+      "desc": "Returns the sorted list of valid framing modes collected by the hook. Alias: listModes.",
       "returns": [
-        {"type": "boolean", "desc": "true si le mode a été sélectionné."},
-        {"type": "string|nil", "desc": "« Unknown framing mode: … » en cas d'échec."}
+        {
+          "type": "table[]",
+          "desc": "Modes {id, label, order, resolve, ...}."
+        }
       ]
     },
-    "set": {"desc": "Alias de setSelected.", "params": {"modeId": {"type": "string", "desc": "Id du mode."}}, "returns": [{"type": "boolean", "desc": "Succès."}, {"type": "string|nil", "desc": "Erreur."}]},
-    "setSelectedModeId": {"desc": "Alias de setSelected.", "params": {"modeId": {"type": "string", "desc": "Id du mode."}}, "returns": [{"type": "boolean", "desc": "Succès."}, {"type": "string|nil", "desc": "Erreur."}]},
-    "resolve": {
-      "desc": "Calcule la caméra de cadrage avec le mode donné (ou le mode sélectionné). On peut appeler resolve(context) en omettant modeId : si le premier argument est une table et le second nil, il est pris comme contexte.",
+    "listModes": {
+      "desc": "Alias of list.",
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Framing modes."
+        }
+      ]
+    },
+    "getSelected": {
+      "desc": "Returns the id of the selected mode (\"procedural\" if the stored mode no longer exists). Aliases: get, getSelectedModeId.",
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Mode id."
+        }
+      ]
+    },
+    "get": {
+      "desc": "Alias of getSelected.",
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Mode id."
+        }
+      ]
+    },
+    "getSelectedModeId": {
+      "desc": "Alias of getSelected.",
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Mode id."
+        }
+      ]
+    },
+    "setSelected": {
+      "desc": "Selects the framing mode by its id. Aliases: set, setSelectedModeId.",
       "params": {
-        "modeId": {"type": "string|table|nil", "desc": "Id du mode, ou directement le contexte."},
-        "context": {"type": "table", "desc": "Contexte de cadrage transmis à mode.resolve (vehicle, resolution, fov…)."}
+        "modeId": {
+          "type": "string",
+          "desc": "Id of a registered mode."
+        }
       },
       "returns": [
-        {"type": "table|nil", "desc": "Résultat du mode (pos, rot, ...)."},
-        {"type": "string|nil", "desc": "Erreur : mode inconnu ou contexte qui n'est pas une table."}
+        {
+          "type": "boolean",
+          "desc": "true if the mode was selected."
+        },
+        {
+          "type": "string|nil",
+          "desc": "\"Unknown framing mode: …\" on failure."
+        }
+      ]
+    },
+    "set": {
+      "desc": "Alias of setSelected.",
+      "params": {
+        "modeId": {
+          "type": "string",
+          "desc": "Mode id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Success."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error."
+        }
+      ]
+    },
+    "setSelectedModeId": {
+      "desc": "Alias of setSelected.",
+      "params": {
+        "modeId": {
+          "type": "string",
+          "desc": "Mode id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Success."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error."
+        }
+      ]
+    },
+    "resolve": {
+      "desc": "Computes the framing camera with the given mode (or the selected mode). resolve(context) can be called with modeId omitted: if the first argument is a table and the second is nil, it is taken as the context.",
+      "params": {
+        "modeId": {
+          "type": "string|table|nil",
+          "desc": "Mode id, or the context directly."
+        },
+        "context": {
+          "type": "table",
+          "desc": "Framing context passed to mode.resolve (vehicle, resolution, fov…)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Mode result (pos, rot, ...)."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error: unknown mode or context that is not a table."
+        }
       ]
     },
     "serialize": {
-      "desc": "Renvoie l'état à sauvegarder : {selectedModeId = ...}. Alias de onSerialize.",
-      "returns": [{"type": "table", "desc": "{selectedModeId = string}."}]
+      "desc": "Returns the state to save: {selectedModeId = ...}. Alias of onSerialize.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{selectedModeId = string}."
+        }
+      ]
     },
     "deserialize": {
-      "desc": "Restaure le mode sélectionné depuis un état sauvegardé (clés selectedModeId, framingModeId ou ancien skipCustomCameras) ; retombe sur « procedural » si invalide. Alias : migrateLegacyState, onDeserialized.",
-      "params": {"data": {"type": "table|nil", "desc": "État sauvegardé."}}
+      "desc": "Restores the selected mode from a saved state (keys selectedModeId, framingModeId or old skipCustomCameras); falls back to \"procedural\" if invalid. Aliases: migrateLegacyState, onDeserialized.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Saved state."
+        }
+      }
     },
-    "migrateLegacyState": {"desc": "Alias de deserialize (migration d'anciens états).", "params": {"data": {"type": "table|nil", "desc": "État sauvegardé."}}},
-    "onSerialize": {"desc": "Hook de sérialisation avant rechargement des extensions ; identique à serialize.", "returns": [{"type": "table", "desc": "{selectedModeId}."}], "internal": true},
-    "onDeserialized": {"desc": "Hook appelé après rechargement avec l'état sérialisé ; identique à deserialize.", "params": {"data": {"type": "table|nil", "desc": "État sauvegardé."}}, "internal": true}
+    "migrateLegacyState": {
+      "desc": "Alias of deserialize (migration of old states).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Saved state."
+        }
+      }
+    },
+    "onSerialize": {
+      "desc": "Serialization hook before extension reload; identical to serialize.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{selectedModeId}."
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook called after reload with the serialized state; identical to deserialize.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Saved state."
+        }
+      },
+      "internal": true
+    }
   }
 }

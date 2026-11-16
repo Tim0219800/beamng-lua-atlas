@@ -1,212 +1,212 @@
 # `ui_flowgraph_editor`
 
-*Fichier : `lua/common/extensions/ui/flowgraph/editor.lua` · VM : Commun (GE + véhicule) · 966 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/extensions/ui/flowgraph/editor.lua` · VM: Common (GE + vehicle) · 966 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_flowgraph_editor` : `extensions.load("ui_flowgraph_editor")`, puis la globale `ui_flowgraph_editor`
+**Access:** extension `ui_flowgraph_editor`: `extensions.load("ui_flowgraph_editor")`, then the global `ui_flowgraph_editor`
 
-Aide d'interface pour l'éditeur de flowgraph (ui_flowgraph_editor). Elle intègre l'API du moteur de nœuds (editor_api_luaintf), définit les couleurs/icônes des catégories de nœuds et des types de pins, les styles des types de graphes (state, graph, macro, instance), des utilitaires d'affichage de valeurs, un éditeur de variables, un sélecteur de véhicule et des tests sur les catégories de comportement des nœuds. Utile à un moddeur qui écrit un nœud ou un outil ImGui flowgraph personnalisé.
+UI helper for the flowgraph editor (ui_flowgraph_editor). It integrates the node engine API (editor_api_luaintf), defines the colors/icons of node categories and pin types, the styles of graph types (state, graph, macro, instance), value display utilities, a variable editor, a vehicle selector and tests on node behavior categories. Useful to a modder writing a custom flowgraph node or ImGui tool.
 
-## Remarques
+## Notes
 
-- types[type].icon est rempli avec typeIcons[type] or M.IconType_Circle ; M.IconType_Circle vient de fge.enum, mais l'accès getTypeIcon() renvoie un nom d'icône (string) ou M.detaultIconType (« fg_type_circle »), pas la valeur de l'enum : les deux sources ne sont donc pas homogènes.
-- fullValueString ne gère pas le type 'boolean' (seulement 'bool'), contrairement à shortValueString : une valeur typée 'boolean' renvoie « ??? » dans la version complète.
-- Le champ detaultIconType est écrit avec cette faute (detault) dans le code.
-- tooltip() n'affiche rien si editor_flowgraphEditor.allowTooltip est faux.
-- Le commentaire du champ flowgraphVersion de la page auto vient d'un print commenté ; la valeur est 0.2 (0.1 : jusqu'à la sortie d'avril 2021 ; 0.2 : listes plates pour les graphes).
-- Catégories de nœuds reconnues : repeat_/once_/dynamic_ combinées avec instant, p_duration, f_duration, plus 'simple' et 'provider'.
+- types[type].icon is filled with typeIcons[type] or M.IconType_Circle; M.IconType_Circle comes from fge.enum, but the getTypeIcon() accessor returns an icon name (string) or M.detaultIconType ("fg_type_circle"), not the enum value: the two sources are therefore not consistent.
+- fullValueString does not handle the 'boolean' type (only 'bool'), unlike shortValueString: a value typed 'boolean' returns "???" in the full version.
+- The field detaultIconType is written with this typo (detault) in the code.
+- tooltip() displays nothing if editor_flowgraphEditor.allowTooltip is false.
+- The comment of the flowgraphVersion field in the auto page comes from a commented-out print; the value is 0.2 (0.1: until the April 2021 release; 0.2: flat lists for graphs).
+- Recognized node categories: repeat_/once_/dynamic_ combined with instant, p_duration, f_duration, plus 'simple' and 'provider'.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_flowgraph_editor.fullDisplay(value, tpe)` | Affiche fullValueString dans ImGui ; pour un type color, dessine d'abord un carré coloré. | 273 |
-| `ui_flowgraph_editor.fullValueString(value, tpe)` | Comme shortValueString mais sans troncature : nombres au format %f, vec3/quat/color avec %f. Renvoie « nil » si nil. | 238 |
-| `ui_flowgraph_editor.getAutoTypeFromName(name)` | Devine le type de pin d'après le nom (minuscules) : pos/scl/vec/position/scale/vector -> vec3 ; rot/quat/rotation/orientation -> quat ; clr/color -> color ; num/id/number/amount/score/count/time/duration/length/dist/points/threshold/velocity -> number ; bool/enabled/disabled/contains/has…/uses…/with… -> bool ; sinon string. | 875 |
-| `ui_flowgraph_editor.getBehaviourDescription(behaviour)` | Texte anglais décrivant un comportement de nœud (once, duration, simple, singleActive, obsolete) ; nil sinon. | 871 |
-| `ui_flowgraph_editor.getBehaviourIcon(behaviour)` | Icône d'un comportement de nœud : once, duration, simple, singleActive, obsolete ; nil sinon. | 867 |
-| `ui_flowgraph_editor.getGraphTypes()` | Renvoie les styles des types de graphe (state, graph, macro, instance) : name, color, couleurs d'onglet, gridColor, abbreviation. | 186 |
-| `ui_flowgraph_editor.getSimpleTypes()` | Renvoie la liste des types simples : number, bool, string, vec3, quat, color. | 160 |
-| `ui_flowgraph_editor.getTypeColor(dataType)` | Couleur ImGui d'un type de pin ; brun (0.45, 0.35, 0.1, 1) si le type est inconnu. | 178 |
-| `ui_flowgraph_editor.getTypeIcon(dataType)` | Nom de l'icône d'un type de pin, ou « fg_type_circle » par défaut. | 182 |
-| `ui_flowgraph_editor.getTypes()` | Renvoie la table des types de pins avec leur couleur et icône. | 164 |
-| `ui_flowgraph_editor.isDurationNode(category)` | Vrai pour les catégories *_p_duration et *_f_duration (repeat, once, dynamic). | 833 |
-| `ui_flowgraph_editor.isDynamicNode(category)` | Vrai pour dynamic_instant, dynamic_p_duration, dynamic_f_duration. | 854 |
-| `ui_flowgraph_editor.isF_DurationNode(category)` | Vrai pour les catégories *_f_duration (repeat, once, dynamic). | 842 |
-| `ui_flowgraph_editor.isFunctionalNode(category)` | Vrai pour les catégories repeat/once/dynamic × instant/p_duration/f_duration ainsi que 'simple' et 'provider'. | 814 |
-| `ui_flowgraph_editor.isOnceNode(category)` | Vrai pour once_instant, once_p_duration, once_f_duration. | 848 |
-| `ui_flowgraph_editor.isSimpleNode(category)` | Vrai pour 'simple' et 'provider' (nœuds qui ne nécessitent pas de flux). | 828 |
-| `ui_flowgraph_editor.shortDisplay(value, tpe)` | Affiche shortValueString dans ImGui (im.Text) ; pour un type color, dessine d'abord un petit carré coloré. Affiche « nil » si la valeur est nil. | 225 |
-| `ui_flowgraph_editor.shortValueString(value, tpe)` | Représentation courte d'une valeur selon son type : chaînes tronquées à 10 caractères + « ... », nombres à 2 décimales, vec3/quat/color avec 1 décimale ; « (nil) » si nil, « Flowing / Not Flowing » pour flow, « ??? » si le type n'est pas géré. Si le type est absent/any/table, il est deviné. | 190 |
-| `ui_flowgraph_editor.tooltip(message)` | Affiche une infobulle ImGui pour l'élément survolé, uniquement si editor_flowgraphEditor.allowTooltip est vrai. | 168 |
-| `ui_flowgraph_editor.variableEditor(source, name, displayOptions)` | Dessine un widget ImGui pour modifier une variable flowgraph (string, number, etc. selon variable.type) à partir de source:getFull(name) ; propose aussi renommer/supprimer via menu contextuel. Affiche « Variable X not found! » si absente. En mode édition, modifie la valeur de base (changeBase) et ajoute une entrée d'historique ; sinon modifie la valeur courante (changeInstant). | 286 |
-| `ui_flowgraph_editor.vehicleSelector(self, onlyModel)` | Dessine un sélecteur de véhicule ImGui : bouton « Load Models and Configs » (charge core_vehicles.getModelList), recherche textuelle et choix du modèle puis de la config. Met à jour self.model, self.config, self.vehType, self.modelName, self.configName. Retourne une raison de changement (reason) ou nil. | 567 |
-| `ui_flowgraph_editor.vehicleSelectorRefresh(self, onlyModel)` | Met à jour self.modelName et self.configName (et self.configs trié par nom) à partir de self.model / self.config / self.models. | 522 |
+| `ui_flowgraph_editor.fullDisplay(value, tpe)` | Displays fullValueString in ImGui; for a color type, first draws a colored square. | 273 |
+| `ui_flowgraph_editor.fullValueString(value, tpe)` | Like shortValueString but without truncation: numbers in %f format, vec3/quat/color with %f. Returns "nil" if nil. | 238 |
+| `ui_flowgraph_editor.getAutoTypeFromName(name)` | Guesses the pin type from the (lowercase) name: pos/scl/vec/position/scale/vector -> vec3; rot/quat/rotation/orientation -> quat; clr/color -> color; num/id/number/amount/score/count/time/duration/length/dist/points/threshold/velocity -> number; bool/enabled/disabled/contains/has.../uses.../with... -> bool; otherwise string. | 875 |
+| `ui_flowgraph_editor.getBehaviourDescription(behaviour)` | English text describing a node behavior (once, duration, simple, singleActive, obsolete); nil otherwise. | 871 |
+| `ui_flowgraph_editor.getBehaviourIcon(behaviour)` | Icon of a node behavior: once, duration, simple, singleActive, obsolete; nil otherwise. | 867 |
+| `ui_flowgraph_editor.getGraphTypes()` | Returns the styles of the graph types (state, graph, macro, instance): name, color, tab colors, gridColor, abbreviation. | 186 |
+| `ui_flowgraph_editor.getSimpleTypes()` | Returns the list of simple types: number, bool, string, vec3, quat, color. | 160 |
+| `ui_flowgraph_editor.getTypeColor(dataType)` | ImGui color of a pin type; brown (0.45, 0.35, 0.1, 1) if the type is unknown. | 178 |
+| `ui_flowgraph_editor.getTypeIcon(dataType)` | Icon name of a pin type, or "fg_type_circle" by default. | 182 |
+| `ui_flowgraph_editor.getTypes()` | Returns the table of pin types with their color and icon. | 164 |
+| `ui_flowgraph_editor.isDurationNode(category)` | True for the categories *_p_duration and *_f_duration (repeat, once, dynamic). | 833 |
+| `ui_flowgraph_editor.isDynamicNode(category)` | True for dynamic_instant, dynamic_p_duration, dynamic_f_duration. | 854 |
+| `ui_flowgraph_editor.isF_DurationNode(category)` | True for the categories *_f_duration (repeat, once, dynamic). | 842 |
+| `ui_flowgraph_editor.isFunctionalNode(category)` | True for the categories repeat/once/dynamic × instant/p_duration/f_duration as well as 'simple' and 'provider'. | 814 |
+| `ui_flowgraph_editor.isOnceNode(category)` | True for once_instant, once_p_duration, once_f_duration. | 848 |
+| `ui_flowgraph_editor.isSimpleNode(category)` | True for 'simple' and 'provider' (nodes that do not need flow). | 828 |
+| `ui_flowgraph_editor.shortDisplay(value, tpe)` | Displays shortValueString in ImGui (im.Text); for a color type, first draws a small colored square. Displays "nil" if the value is nil. | 225 |
+| `ui_flowgraph_editor.shortValueString(value, tpe)` | Short representation of a value according to its type: strings truncated to 10 characters + "...", numbers to 2 decimals, vec3/quat/color with 1 decimal; "(nil)" if nil, "Flowing / Not Flowing" for flow, "???" if the type is not handled. If the type is absent/any/table, it is guessed. | 190 |
+| `ui_flowgraph_editor.tooltip(message)` | Displays an ImGui tooltip for the hovered item, only if editor_flowgraphEditor.allowTooltip is true. | 168 |
+| `ui_flowgraph_editor.variableEditor(source, name, displayOptions)` | Draws an ImGui widget to edit a flowgraph variable (string, number, etc. according to variable.type) from source:getFull(name); also offers rename/delete via a context menu. Displays "Variable X not found!" if absent. In edit mode, changes the base value (changeBase) and adds a history entry; otherwise changes the current value (changeInstant). | 286 |
+| `ui_flowgraph_editor.vehicleSelector(self, onlyModel)` | Draws an ImGui vehicle selector: "Load Models and Configs" button (loads core_vehicles.getModelList), text search and choice of model then config. Updates self.model, self.config, self.vehType, self.modelName, self.configName. Returns a change reason (reason) or nil. | 567 |
+| `ui_flowgraph_editor.vehicleSelectorRefresh(self, onlyModel)` | Updates self.modelName and self.configName (and self.configs sorted by name) from self.model / self.config / self.models. | 522 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_flowgraph_editor.fullDisplay(value, tpe)`
 
-Affiche fullValueString dans ImGui ; pour un type color, dessine d'abord un carré coloré.
+Displays fullValueString in ImGui; for a color type, first draws a colored square.
 
-- `value` (*any*) : Valeur à afficher.
-- `tpe` (*string|nil*) : Type du pin.
+- `value` (*any*) : Value to display.
+- `tpe` (*string|nil*) : Pin type.
 
 #### `ui_flowgraph_editor.fullValueString(value, tpe)`
 
-Comme shortValueString mais sans troncature : nombres au format %f, vec3/quat/color avec %f. Renvoie « nil » si nil.
+Like shortValueString but without truncation: numbers in %f format, vec3/quat/color with %f. Returns "nil" if nil.
 
-- `value` (*any*) : Valeur à formater.
-- `tpe` (*string|table|nil*) : Type du pin ; deviné si nil, any ou table.
-- **renvoie** : string Texte formaté.
+- `value` (*any*) : Value to format.
+- `tpe` (*string|table|nil*) : Pin type; guessed if nil, any or table.
+- **returns**: string Formatted text.
 
 #### `ui_flowgraph_editor.getAutoTypeFromName(name)`
 
-Devine le type de pin d'après le nom (minuscules) : pos/scl/vec/position/scale/vector -> vec3 ; rot/quat/rotation/orientation -> quat ; clr/color -> color ; num/id/number/amount/score/count/time/duration/length/dist/points/threshold/velocity -> number ; bool/enabled/disabled/contains/has…/uses…/with… -> bool ; sinon string.
+Guesses the pin type from the (lowercase) name: pos/scl/vec/position/scale/vector -> vec3; rot/quat/rotation/orientation -> quat; clr/color -> color; num/id/number/amount/score/count/time/duration/length/dist/points/threshold/velocity -> number; bool/enabled/disabled/contains/has.../uses.../with... -> bool; otherwise string.
 
-- `name` (*string*) : Nom du pin ou du champ.
-- **renvoie** : string Type deviné.
+- `name` (*string*) : Pin or field name.
+- **returns**: string Guessed type.
 
 #### `ui_flowgraph_editor.getBehaviourDescription(behaviour)`
 
-Texte anglais décrivant un comportement de nœud (once, duration, simple, singleActive, obsolete) ; nil sinon.
+English text describing a node behavior (once, duration, simple, singleActive, obsolete); nil otherwise.
 
-- `behaviour` (*string*) : Nom du comportement.
-- **renvoie** : string|nil Description.
+- `behaviour` (*string*) : Behavior name.
+- **returns**: string|nil Description.
 
 #### `ui_flowgraph_editor.getBehaviourIcon(behaviour)`
 
-Icône d'un comportement de nœud : once, duration, simple, singleActive, obsolete ; nil sinon.
+Icon of a node behavior: once, duration, simple, singleActive, obsolete; nil otherwise.
 
-- `behaviour` (*string*) : Nom du comportement.
-- **renvoie** : string|nil Nom d'icône.
+- `behaviour` (*string*) : Behavior name.
+- **returns**: string|nil Icon name.
 
 #### `ui_flowgraph_editor.getGraphTypes()`
 
-Renvoie les styles des types de graphe (state, graph, macro, instance) : name, color, couleurs d'onglet, gridColor, abbreviation.
+Returns the styles of the graph types (state, graph, macro, instance): name, color, tab colors, gridColor, abbreviation.
 
-- **renvoie** : table<string, table> Styles par type de graphe.
+- **returns**: table<string, table> Styles per graph type.
 
 #### `ui_flowgraph_editor.getSimpleTypes()`
 
-Renvoie la liste des types simples : number, bool, string, vec3, quat, color.
+Returns the list of simple types: number, bool, string, vec3, quat, color.
 
-- **renvoie** : string[] Noms des types simples.
+- **returns**: string[] Names of the simple types.
 
 #### `ui_flowgraph_editor.getTypeColor(dataType)`
 
-Couleur ImGui d'un type de pin ; brun (0.45, 0.35, 0.1, 1) si le type est inconnu.
+ImGui color of a pin type; brown (0.45, 0.35, 0.1, 1) if the type is unknown.
 
-- `dataType` (*string*) : Type de pin (flow, chainFlow, impulse, string, number, bool, any, table, vec3, quat, color, state).
-- **renvoie** : ImVec4 Couleur.
+- `dataType` (*string*) : Pin type (flow, chainFlow, impulse, string, number, bool, any, table, vec3, quat, color, state).
+- **returns**: ImVec4 Color.
 
 #### `ui_flowgraph_editor.getTypeIcon(dataType)`
 
-Nom de l'icône d'un type de pin, ou « fg_type_circle » par défaut.
+Icon name of a pin type, or "fg_type_circle" by default.
 
-- `dataType` (*string*) : Type de pin.
-- **renvoie** : string Nom d'icône.
+- `dataType` (*string*) : Pin type.
+- **returns**: string Icon name.
 
 #### `ui_flowgraph_editor.getTypes()`
 
-Renvoie la table des types de pins avec leur couleur et icône.
+Returns the table of pin types with their color and icon.
 
-- **renvoie** : table<string, table> Par nom de type : {color, icon}.
+- **returns**: table<string, table> By type name: {color, icon}.
 
 #### `ui_flowgraph_editor.isDurationNode(category)`
 
-Vrai pour les catégories *_p_duration et *_f_duration (repeat, once, dynamic).
+True for the categories *_p_duration and *_f_duration (repeat, once, dynamic).
 
-- `category` (*string*) : Catégorie du nœud.
-- **renvoie** : boolean Résultat.
+- `category` (*string*) : Node category.
+- **returns**: boolean Result.
 
 #### `ui_flowgraph_editor.isDynamicNode(category)`
 
-Vrai pour dynamic_instant, dynamic_p_duration, dynamic_f_duration.
+True for dynamic_instant, dynamic_p_duration, dynamic_f_duration.
 
-- `category` (*string*) : Catégorie du nœud.
-- **renvoie** : boolean Résultat.
+- `category` (*string*) : Node category.
+- **returns**: boolean Result.
 
 #### `ui_flowgraph_editor.isF_DurationNode(category)`
 
-Vrai pour les catégories *_f_duration (repeat, once, dynamic).
+True for the categories *_f_duration (repeat, once, dynamic).
 
-- `category` (*string*) : Catégorie du nœud.
-- **renvoie** : boolean Résultat.
+- `category` (*string*) : Node category.
+- **returns**: boolean Result.
 
 #### `ui_flowgraph_editor.isFunctionalNode(category)`
 
-Vrai pour les catégories repeat/once/dynamic × instant/p_duration/f_duration ainsi que 'simple' et 'provider'.
+True for the categories repeat/once/dynamic × instant/p_duration/f_duration as well as 'simple' and 'provider'.
 
-- `category` (*string*) : Catégorie du nœud.
-- **renvoie** : boolean Résultat.
+- `category` (*string*) : Node category.
+- **returns**: boolean Result.
 
 #### `ui_flowgraph_editor.isOnceNode(category)`
 
-Vrai pour once_instant, once_p_duration, once_f_duration.
+True for once_instant, once_p_duration, once_f_duration.
 
-- `category` (*string*) : Catégorie du nœud.
-- **renvoie** : boolean Résultat.
+- `category` (*string*) : Node category.
+- **returns**: boolean Result.
 
 #### `ui_flowgraph_editor.isSimpleNode(category)`
 
-Vrai pour 'simple' et 'provider' (nœuds qui ne nécessitent pas de flux).
+True for 'simple' and 'provider' (nodes that do not need flow).
 
-- `category` (*string*) : Catégorie du nœud.
-- **renvoie** : boolean Résultat.
+- `category` (*string*) : Node category.
+- **returns**: boolean Result.
 
 #### `ui_flowgraph_editor.shortDisplay(value, tpe)`
 
-Affiche shortValueString dans ImGui (im.Text) ; pour un type color, dessine d'abord un petit carré coloré. Affiche « nil » si la valeur est nil.
+Displays shortValueString in ImGui (im.Text); for a color type, first draws a small colored square. Displays "nil" if the value is nil.
 
-- `value` (*any*) : Valeur à afficher.
-- `tpe` (*string|nil*) : Type du pin.
+- `value` (*any*) : Value to display.
+- `tpe` (*string|nil*) : Pin type.
 
 #### `ui_flowgraph_editor.shortValueString(value, tpe)`
 
-Représentation courte d'une valeur selon son type : chaînes tronquées à 10 caractères + « ... », nombres à 2 décimales, vec3/quat/color avec 1 décimale ; « (nil) » si nil, « Flowing / Not Flowing » pour flow, « ??? » si le type n'est pas géré. Si le type est absent/any/table, il est deviné.
+Short representation of a value according to its type: strings truncated to 10 characters + "...", numbers to 2 decimals, vec3/quat/color with 1 decimal; "(nil)" if nil, "Flowing / Not Flowing" for flow, "???" if the type is not handled. If the type is absent/any/table, it is guessed.
 
-- `value` (*any*) : Valeur à formater.
-- `tpe` (*string|table|nil*) : Type du pin ; deviné si nil, any ou table.
-- **renvoie** : string Texte formaté.
+- `value` (*any*) : Value to format.
+- `tpe` (*string|table|nil*) : Pin type; guessed if nil, any or table.
+- **returns**: string Formatted text.
 
 #### `ui_flowgraph_editor.tooltip(message)`
 
-Affiche une infobulle ImGui pour l'élément survolé, uniquement si editor_flowgraphEditor.allowTooltip est vrai.
+Displays an ImGui tooltip for the hovered item, only if editor_flowgraphEditor.allowTooltip is true.
 
-- `message` (*string*) : Texte de l'infobulle.
+- `message` (*string*) : Tooltip text.
 
 #### `ui_flowgraph_editor.variableEditor(source, name, displayOptions)`
 
-Dessine un widget ImGui pour modifier une variable flowgraph (string, number, etc. selon variable.type) à partir de source:getFull(name) ; propose aussi renommer/supprimer via menu contextuel. Affiche « Variable X not found! » si absente. En mode édition, modifie la valeur de base (changeBase) et ajoute une entrée d'historique ; sinon modifie la valeur courante (changeInstant).
+Draws an ImGui widget to edit a flowgraph variable (string, number, etc. according to variable.type) from source:getFull(name); also offers rename/delete via a context menu. Displays "Variable X not found!" if absent. In edit mode, changes the base value (changeBase) and adds a history entry; otherwise changes the current value (changeInstant).
 
-- `source` (*table*) : Objet porteur des variables (graphe ou gestionnaire) avec getFull, changeBase, changeInstant, renameVariable, mgr.
-- `name` (*string*) : Nom de la variable.
-- `displayOptions` (*table|nil*) : Options : global, allowEditing (par défaut source.mgr.allowEditing), onlyValue.
+- `source` (*table*) : Object holding the variables (graph or manager) with getFull, changeBase, changeInstant, renameVariable, mgr.
+- `name` (*string*) : Variable name.
+- `displayOptions` (*table|nil*) : Options: global, allowEditing (default source.mgr.allowEditing), onlyValue.
 
 #### `ui_flowgraph_editor.vehicleSelector(self, onlyModel)`
 
-Dessine un sélecteur de véhicule ImGui : bouton « Load Models and Configs » (charge core_vehicles.getModelList), recherche textuelle et choix du modèle puis de la config. Met à jour self.model, self.config, self.vehType, self.modelName, self.configName. Retourne une raison de changement (reason) ou nil.
+Draws an ImGui vehicle selector: "Load Models and Configs" button (loads core_vehicles.getModelList), text search and choice of model then config. Updates self.model, self.config, self.vehType, self.modelName, self.configName. Returns a change reason (reason) or nil.
 
-- `self` (*table*) : Objet d'état du sélecteur.
-- `onlyModel` (*boolean|nil*) : Si vrai, ne choisit que le modèle, pas la configuration.
-- **renvoie** : string|nil Raison de la modification (non vérifié en détail).
+- `self` (*table*) : Selector state object.
+- `onlyModel` (*boolean|nil*) : If true, only picks the model, not the configuration.
+- **returns**: string|nil Reason for the change (not checked in detail).
 
 #### `ui_flowgraph_editor.vehicleSelectorRefresh(self, onlyModel)`
 
-Met à jour self.modelName et self.configName (et self.configs trié par nom) à partir de self.model / self.config / self.models.
+Updates self.modelName and self.configName (and self.configs sorted by name) from self.model / self.config / self.models.
 
-- `self` (*table*) : Objet de sélection (champs model, config, models, configs).
-- `onlyModel` (*boolean|nil*) : Non utilisé dans le corps de la fonction.
+- `self` (*table*) : Selection object (fields model, config, models, configs).
+- `onlyModel` (*boolean|nil*) : Not used in the function body.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `defaultTypeIconSize` | number | Taille par défaut des icônes de type de pin : 18. |
-| `detaultIconType` | string | Icône de type par défaut : « fg_type_circle ». |
-| `flowgraphVersion` | number | Version du format flowgraph (0.2 : listes plates pour les graphes). |
-| `nodeColors` | table<string, ImVec4> | Couleur par catégorie de nœud (crash, ai, debug, vehicle, event, ui, camera, scene, default, career, traffic…). |
-| `nodeIcons` | table<string, string> | Nom d'icône par catégorie de nœud (vehicle, ai, camera, ui, event, scene, state, thread, logic, traffic, debug, button, timer, file, career, tech…). |
+| `defaultTypeIconSize` | number | Default size of pin type icons: 18. |
+| `detaultIconType` | string | Default type icon: "fg_type_circle". |
+| `flowgraphVersion` | number | Flowgraph format version (0.2: flat lists for graphs). |
+| `nodeColors` | table<string, ImVec4> | Color per node category (crash, ai, debug, vehicle, event, ui, camera, scene, default, career, traffic...). |
+| `nodeIcons` | table<string, string> | Icon name per node category (vehicle, ai, camera, ui, event, scene, state, thread, logic, traffic, debug, button, timer, file, career, tech...). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/extensions/ui/flowgraph/editor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/extensions/ui/flowgraph/editor.lua`.*

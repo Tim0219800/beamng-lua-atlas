@@ -1,26 +1,26 @@
 # `flowgraph_nodes_environment_setGravity`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/environment/setGravity.lua` · VM : Game Engine (GE) · 46 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/environment/setGravity.lua` · VM: Game Engine (GE) · 46 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/environment/setGravity")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/environment/setGravity")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Set Gravity » (catégorie dynamic_instant). Règle la gravité globale (pin value, en m/s², 0 par défaut) via core_environment.setGravity. La gravité d'origine est mémorisée au démarrage du graphe et restaurée à l'arrêt (data.restoreGravity).
+Flowgraph node "Set Gravity" (category dynamic_instant). Sets the global gravity (value pin, in m/s², 0 by default) via core_environment.setGravity. The original gravity is stored when the graph starts and restored on stop (data.restoreGravity).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Mémorise la gravité actuelle. | 23 |
-| `C:_executionStopped()` | Restaure la gravité mémorisée si data.restoreGravity est vrai. | 26 |
-| `C:init(mgr)` | Définit data.restoreGravity = true. | 19 |
-| `C:work()` | En mode repeat, réapplique la gravité à chaque frame seulement si le pin value est utilisé (branché). | 37 |
-| `C:workOnce()` | Applique la gravité du pin value une fois. | 33 |
+| `C:_executionStarted()` | Stores the current gravity. | 23 |
+| `C:_executionStopped()` | Restores the stored gravity if data.restoreGravity is true. | 26 |
+| `C:init(mgr)` | Sets data.restoreGravity = true. | 19 |
+| `C:work()` | In repeat mode, reapplies the gravity every frame only if the value pin is used (connected). | 37 |
+| `C:workOnce()` | Applies the gravity of the value pin once. | 33 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `core_environment.` `getGravity`, `setGravity`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/environment/setGravity.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/environment/setGravity.lua`.*

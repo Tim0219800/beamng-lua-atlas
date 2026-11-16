@@ -1,24 +1,24 @@
 # `flowgraph_nodes_environment_randomTimeOfDay`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/environment/randomTimeOfDay.lua` · VM : Game Engine (GE) · 110 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/environment/randomTimeOfDay.lua` · VM: Game Engine (GE) · 110 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/environment/randomTimeOfDay")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/environment/randomTimeOfDay")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Random Time of Day » (catégorie repeat_instant, tags environment/tod/random). Tire une heure aléatoire entre deux heures (0-23) et la sort au format du jeu et en texte. Entrées : fromHour (défaut 9), toHour (défaut 17), use24Hour (défaut false : format 12 h AM/PM). Sorties : time (0 à 1, où 0.5 = minuit, 0 = midi) et timeString (« HH:MM » ou « H:MM AM/PM »). Gère l'intervalle qui passe minuit (ex. 22 à 2).
+Flowgraph node "Random Time of Day" (category repeat_instant, tags environment/tod/random). Picks a random time between two hours (0-23) and outputs it in the game format and as text. Inputs: fromHour (default 9), toHour (default 17), use24Hour (default false: 12 h AM/PM format). Outputs: time (0 to 1, where 0.5 = midnight, 0 = midday) and timeString ("HH:MM" or "H:MM AM/PM"). Handles the interval that crosses midnight (e.g. 22 to 2).
 
-## Remarques
+## Notes
 
-- Un nouveau tirage est fait à chaque frame où le nœud reçoit du flux (catégorie repeat_instant) ; pour une valeur stable, le déclencher une seule fois.
-- Conversion : time = (heure/24 + 0.5) mod 1.
+- A new random pick is made every frame the node receives flow (category repeat_instant); for a stable value, trigger it only once.
+- Conversion: time = (hour/24 + 0.5) mod 1.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:postInit()` | Configure les curseurs entiers 0-23 de fromHour et toHour dans l'éditeur. | 50 |
-| `C:work()` | Borne les heures, tire un temps aléatoire (en gérant le passage de minuit), calcule heure/minute et écrit time et timeString. | 66 |
+| `C:postInit()` | Configures the integer 0-23 sliders of fromHour and toHour in the editor. | 50 |
+| `C:work()` | Clamps the hours, picks a random time (handling the midnight crossing), computes hour/minute and writes time and timeString. | 66 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/environment/randomTimeOfDay.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/environment/randomTimeOfDay.lua`.*

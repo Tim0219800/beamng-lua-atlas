@@ -1,27 +1,27 @@
 # `editor_flowgraph_stateView`
 
-*Fichier : `lua/ge/extensions/editor/flowgraph/stateView.lua` · VM : Game Engine (GE) · 80 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/flowgraph/stateView.lua` · VM: Game Engine (GE) · 80 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/flowgraph/stateView")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/flowgraph/stateView")` (file under extensions/ but not a regular extension)
 
-Fenêtre « State View » (fg_stateView) de l'éditeur Flowgraph. Elle liste, graphe par graphe (récursivement à partir de mgr.stateGraph), les états (nœuds 'states/stateNode' dont le graphe cible n'est pas un stategraph) avec une icône lecture/pause selon qu'ils tournent. Pur affichage : rien n'est modifié dans le projet. Créée via _flowgraph_createMgrWindow, donc instanciée par flowgraphEditor pour chaque manager.
+"State View" window (fg_stateView) of the Flowgraph editor. It lists, graph by graph (recursively from mgr.stateGraph), the states ('states/stateNode' nodes whose target graph is not a stategraph) with a play/pause icon depending on whether they are running. Pure display: nothing is modified in the project. Created via _flowgraph_createMgrWindow, so instantiated by flowgraphEditor for each manager.
 
-## Remarques
+## Notes
 
-- Un état est affiché comme « en cours » seulement si mgr.runningState == 'running' et mgr.states:isRunning(state.id) renvoie vrai.
-- Le tri des états et des graphes enfants se fait par id croissant.
+- A state is displayed as "running" only if mgr.runningState == 'running' and mgr.states:isRunning(state.id) returns true.
+- States and child graphs are sorted by increasing id.
 
-## Classe `C`
+## Class `C`
 
-Classe de la fenêtre (windowName 'fg_stateView', windowDescription 'State View'). Les méthodes sont celles appelées par flowgraphEditor via basewindow.
+Window class (windowName 'fg_stateView', windowDescription 'State View'). The methods are those called by flowgraphEditor via basewindow.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:attach(mgr)` | Mémorise le manager flowgraph courant dans self.mgr. Appelé à chaque changement de manager. | 18 |
-| `C:draw()` | Dessine la fenêtre « States View » si elle est visible, à partir de self.mgr.stateGraph. Appelée à chaque frame par drawEditor. | 63 |
-| `C:drawStategraphRecursive(graph, depth)` | Dessine sur deux colonnes le nom du graphe (entre crochets, précédé de ' - ' par niveau de profondeur) puis ses états avec l'icône play_circle_filled (en cours) ou pause_circle_outline (à l'arrêt), puis descend dans les graphes enfants. | 22 |
-| `C:init()` | Crée le filtre texte ImGui et enregistre la fenêtre dans l'éditeur (taille 150x300, masquée par défaut). | 13 |
-| `C:selectNode(node, append)` | Sélectionne un nœud dans l'éditeur de graphes (fge.SelectNode). | 75 |
+| `C:attach(mgr)` | Stores the current flowgraph manager in self.mgr. Called on each manager change. | 18 |
+| `C:draw()` | Draws the "States View" window if it is visible, from self.mgr.stateGraph. Called every frame by drawEditor. | 63 |
+| `C:drawStategraphRecursive(graph, depth)` | Draws in two columns the graph name (in brackets, preceded by ' - ' per depth level) then its states with the play_circle_filled icon (running) or pause_circle_outline (stopped), then descends into the child graphs. | 22 |
+| `C:init()` | Creates the ImGui text filter and registers the window in the editor (size 150x300, hidden by default). | 13 |
+| `C:selectNode(node, append)` | Selects a node in the graph editor (fge.SelectNode). | 75 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/flowgraph/stateView.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/flowgraph/stateView.lua`.*

@@ -1,77 +1,77 @@
 # `editor_toolUtilities_meshAuditionMgr`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/meshAuditionMgr.lua` · VM : Game Engine (GE) · 305 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/meshAuditionMgr.lua` · VM: Game Engine (GE) · 305 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_meshAuditionMgr` : `extensions.load("editor_toolUtilities_meshAuditionMgr")`, puis la globale `editor_toolUtilities_meshAuditionMgr`
+**Access:** extension `editor_toolUtilities_meshAuditionMgr`: `extensions.load("editor_toolUtilities_meshAuditionMgr")`, then the global `editor_toolUtilities_meshAuditionMgr`
 
-Utilitaire d'« audition » de meshes statiques et fenêtre imgui de sélection, partagé entre outils de l'éditeur. Il liste les fichiers .dae (par défaut art/shapes/objects et art/shapes/garage_and_dealership/Clutter, ou un dossier choisi), crée un TSStatic temporaire 'Temp Audition Mesh' à 1000 m d'altitude, fait tourner la caméra autour et appelle un callback avec le mesh choisi. À la fermeture, la caméra revient à son ancienne pose et le mesh temporaire est supprimé.
+Static mesh "audition" utility and imgui selection window, shared between editor tools. It lists .dae files (by default art/shapes/objects and art/shapes/garage_and_dealership/Clutter, or a chosen folder), creates a temporary TSStatic 'Temp Audition Mesh' at 1000 m altitude, rotates the camera around it and calls a callback with the chosen mesh. On close, the camera returns to its former pose and the temporary mesh is deleted.
 
-## Exemple
+## Example
 
 ```lua
 local mam = require('editor/toolUtilities/meshAuditionMgr')
 mam.registerWindow()
-mam.addMeshToAudition(1, function(obj, path) ... end) -- ouvre la fenêtre
--- à chaque frame imgui :
+mam.addMeshToAudition(1, function(obj, path) ... end) -- opens the window
+-- every imgui frame:
 mam.handleMeshAuditionAndSelection('lampadaire', function(obj, path) ... end)
 ```
 
-## Remarques
+## Notes
 
-- La fenêtre 'meshSelect' (300x300) n'est ouverte que par addMeshToAudition : handleMeshAuditionAndSelection ne fait rien tant que cette fenêtre n'a pas été ouverte.
-- Le mesh temporaire est créé avec canSave = false, donc n'est pas sauvegardé avec le niveau.
-- La caméra passe en caméra libre (commands.setFreeCamera) et tourne de pi/500 rad toutes les 0.05 s ; la distance se règle sur 1.2 fois la longueur de la boîte du mesh.
-- La liste de fichiers est calculée une seule fois (au premier addMeshToAudition), triée par nom de fichier ; populateAvailableStaticMeshes la recalcule à la demande.
+- The 'meshSelect' window (300x300) is opened only by addMeshToAudition: handleMeshAuditionAndSelection does nothing until this window has been opened.
+- The temporary mesh is created with canSave = false, so it is not saved with the level.
+- The camera switches to the free camera (commands.setFreeCamera) and rotates by pi/500 rad every 0.05 s; the distance is set to 1.2 times the length of the mesh's box.
+- The file list is computed only once (on the first addMeshToAudition), sorted by file name; populateAvailableStaticMeshes recomputes it on demand.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_meshAuditionMgr.addMeshToAudition(selectedMeshIdx, callback)` | Ajoute ou remplace le mesh en audition par celui d'indice donné : supprime l'ancien, ouvre la fenêtre si besoin, crée le TSStatic temporaire (position 0, 0, 1000), ajuste la caméra si la vue d'audition est active, puis appelle le callback. | 97 |
-| `editor_toolUtilities_meshAuditionMgr.getAvailableStaticMeshes()` | Renvoie la liste (non copiée) des meshes statiques disponibles : { path, filename }. | 53 |
-| `editor_toolUtilities_meshAuditionMgr.goToMeshView(timer, time)` | Déplace la caméra à la pose d'audition (mémorise l'ancienne pose, remet le chrono à zéro). Sans effet si on y est déjà. Renvoie le temps remis à zéro (0.0) à la première entrée, sinon le temps passé. | 143 |
-| `editor_toolUtilities_meshAuditionMgr.goToOldView()` | Ramène la caméra à la pose mémorisée avant l'audition et sort de la vue d'audition. | 163 |
-| `editor_toolUtilities_meshAuditionMgr.handleMeshAuditionAndSelection(meshTarget, onMeshSelectedFunct)` | À appeler à chaque frame imgui : fait tourner la caméra et dessine la fenêtre 'Static Mesh Selector' (recherche, choix de dossier, remise aux dossiers par défaut, liste filtrable, bouton Close). Un clic sur un nom met le mesh en audition et appelle le callback. | 184 |
-| `editor_toolUtilities_meshAuditionMgr.leaveAuditionView()` | Quitte l'audition : supprime le mesh temporaire, restaure la caméra et masque la fenêtre. Sans effet si la fenêtre n'est pas ouverte. | 174 |
-| `editor_toolUtilities_meshAuditionMgr.manageRotateCam()` | Fait avancer la caméra d'un pas autour du centre d'audition (angle modulo 2 pi). | 154 |
-| `editor_toolUtilities_meshAuditionMgr.populateAvailableStaticMeshes()` | Reconstruit la liste des fichiers *.dae (recherche récursive dans les dossiers courants via FS:findFiles) et la trie par nom de fichier. | 56 |
-| `editor_toolUtilities_meshAuditionMgr.registerWindow()` | Enregistre la fenêtre de sélection 'meshSelect' dans l'éditeur. | 171 |
-| `editor_toolUtilities_meshAuditionMgr.removeAuditionMesh()` | Supprime le mesh en audition s'il existe. | 78 |
-| `editor_toolUtilities_meshAuditionMgr.updateCameraPose()` | Place la caméra libre face au centre d'audition selon le rayon du mesh courant (distance 1.6 fois le rayon, élévation 0.8 fois). | 89 |
+| `editor_toolUtilities_meshAuditionMgr.addMeshToAudition(selectedMeshIdx, callback)` | Adds or replaces the mesh under audition with the one at the given index: deletes the old one, opens the window if needed, creates the temporary TSStatic (position 0, 0, 1000), adjusts the camera if the audition view is active, then calls the callback. | 97 |
+| `editor_toolUtilities_meshAuditionMgr.getAvailableStaticMeshes()` | Returns the (uncopied) list of available static meshes: { path, filename }. | 53 |
+| `editor_toolUtilities_meshAuditionMgr.goToMeshView(timer, time)` | Moves the camera to the audition pose (remembers the old pose, resets the timer to zero). No effect if already there. Returns the reset time (0.0) on first entry, otherwise the elapsed time. | 143 |
+| `editor_toolUtilities_meshAuditionMgr.goToOldView()` | Brings the camera back to the pose saved before the audition and leaves the audition view. | 163 |
+| `editor_toolUtilities_meshAuditionMgr.handleMeshAuditionAndSelection(meshTarget, onMeshSelectedFunct)` | To be called every imgui frame: rotates the camera and draws the 'Static Mesh Selector' window (search, folder choice, reset to default folders, filterable list, Close button). Clicking a name puts the mesh under audition and calls the callback. | 184 |
+| `editor_toolUtilities_meshAuditionMgr.leaveAuditionView()` | Exits the audition: deletes the temporary mesh, restores the camera and hides the window. No effect if the window is not open. | 174 |
+| `editor_toolUtilities_meshAuditionMgr.manageRotateCam()` | Advances the camera one step around the audition center (angle modulo 2 pi). | 154 |
+| `editor_toolUtilities_meshAuditionMgr.populateAvailableStaticMeshes()` | Rebuilds the list of *.dae files (recursive search in the current folders via FS:findFiles) and sorts it by file name. | 56 |
+| `editor_toolUtilities_meshAuditionMgr.registerWindow()` | Registers the 'meshSelect' selection window in the editor. | 171 |
+| `editor_toolUtilities_meshAuditionMgr.removeAuditionMesh()` | Deletes the mesh under audition if it exists. | 78 |
+| `editor_toolUtilities_meshAuditionMgr.updateCameraPose()` | Places the free camera facing the audition center according to the current mesh's radius (distance 1.6 times the radius, elevation 0.8 times). | 89 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_meshAuditionMgr.addMeshToAudition(selectedMeshIdx, callback)`
 
-Ajoute ou remplace le mesh en audition par celui d'indice donné : supprime l'ancien, ouvre la fenêtre si besoin, crée le TSStatic temporaire (position 0, 0, 1000), ajuste la caméra si la vue d'audition est active, puis appelle le callback.
+Adds or replaces the mesh under audition with the one at the given index: deletes the old one, opens the window if needed, creates the temporary TSStatic (position 0, 0, 1000), adjusts the camera if the audition view is active, then calls the callback.
 
-- `selectedMeshIdx` (*integer*) : Indice dans la liste des meshes disponibles (1-based).
-- `callback` (*function|nil*) : callback(auditionMesh, path) appelé après la création.
+- `selectedMeshIdx` (*integer*) : Index in the list of available meshes (1-based).
+- `callback` (*function|nil*) : callback(auditionMesh, path) called after creation.
 
 #### `editor_toolUtilities_meshAuditionMgr.getAvailableStaticMeshes()`
 
-Renvoie la liste (non copiée) des meshes statiques disponibles : { path, filename }.
+Returns the (uncopied) list of available static meshes: { path, filename }.
 
-- **renvoie** : table[] Éléments { path = chemin complet, filename = nom du fichier }.
+- **returns**: table[] Items { path = full path, filename = file name }.
 
 #### `editor_toolUtilities_meshAuditionMgr.goToMeshView(timer, time)`
 
-Déplace la caméra à la pose d'audition (mémorise l'ancienne pose, remet le chrono à zéro). Sans effet si on y est déjà. Renvoie le temps remis à zéro (0.0) à la première entrée, sinon le temps passé.
+Moves the camera to the audition pose (remembers the old pose, resets the timer to zero). No effect if already there. Returns the reset time (0.0) on first entry, otherwise the elapsed time.
 
-- `timer` (*hptimer*) : Chrono à remettre à zéro.
-- `time` (*number*) : Temps accumulé courant (s).
-- **renvoie** : number Nouveau temps accumulé.
+- `timer` (*hptimer*) : Timer to reset.
+- `time` (*number*) : Current accumulated time (s).
+- **returns**: number New accumulated time.
 
 #### `editor_toolUtilities_meshAuditionMgr.handleMeshAuditionAndSelection(meshTarget, onMeshSelectedFunct)`
 
-À appeler à chaque frame imgui : fait tourner la caméra et dessine la fenêtre 'Static Mesh Selector' (recherche, choix de dossier, remise aux dossiers par défaut, liste filtrable, bouton Close). Un clic sur un nom met le mesh en audition et appelle le callback.
+To be called every imgui frame: rotates the camera and draws the 'Static Mesh Selector' window (search, folder choice, reset to default folders, filterable list, Close button). Clicking a name puts the mesh under audition and calls the callback.
 
-- `meshTarget` (*string*) : Nom du composant pour lequel on choisit un mesh (affiché dans l'en-tête).
-- `onMeshSelectedFunct` (*function|nil*) : callback(auditionMesh, path) à chaque sélection.
+- `meshTarget` (*string*) : Name of the component for which a mesh is being chosen (shown in the header).
+- `onMeshSelectedFunct` (*function|nil*) : callback(auditionMesh, path) on each selection.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/meshAuditionMgr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/meshAuditionMgr.lua`.*

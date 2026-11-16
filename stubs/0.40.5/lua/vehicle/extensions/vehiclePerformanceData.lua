@@ -2,37 +2,37 @@
 -- tim19Atlas stub generated from lua/vehicle/extensions/vehiclePerformanceData.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Collecte des données de performance du véhicule, surtout utilisée par l'UI/le jeu pour les fiches techniques et certifications. Deux volets : des données statiques (poids, répartition des roues motrices, type de boîte, carburants, type d'admission) via getStaticData, et des enregistrements dynamiques (pic de puissance, de couple, d'accélération longitudinale et latérale) démarrés par startRecording et lus par getRecordingData. L'extension n'active son updateGFX que pendant un enregistrement.
---- Accès : extension `vehiclePerformanceData` : `extensions.load (VM véhicule)("vehiclePerformanceData")`, puis la globale `vehiclePerformanceData`
+--- Collection of vehicle performance data, mostly used by the UI/the game for spec sheets and certifications. Two parts: static data (weight, driven wheel distribution, gearbox type, fuels, induction type) via getStaticData, and dynamic recordings (peak power, torque, longitudinal and lateral acceleration) started by startRecording and read by getRecordingData. The extension only enables its updateGFX during a recording.
+--- Access: extension `vehiclePerformanceData`: `extensions.load (vehicle VM)("vehiclePerformanceData")`, then the global `vehiclePerformanceData`
 ---@class vehiclePerformanceData
----@field recordingTypes table<string, string> Types d'enregistrement dynamique : power, torque, speed, longitudinalAcceleration, lateralAcceleration.
----@field staticTypes table<string, string> Noms des données statiques : weight, powertrainLayout, transmissionStyle, propulsionType, fuelType, inductionType.
----@field updateGFX function|nil nil au repos ; défini par startRecording tant qu'un enregistrement est actif.
+---@field recordingTypes table<string, string> Dynamic recording types: power, torque, speed, longitudinalAcceleration, lateralAcceleration.
+---@field staticTypes table<string, string> Static data names: weight, powertrainLayout, transmissionStyle, propulsionType, fuelType, inductionType.
+---@field updateGFX function|nil nil at rest; set by startRecording while a recording is active.
 vehiclePerformanceData = {}
 
---- Renvoie les données collectées pour les types demandés.
----Source : lua/vehicle/extensions/vehiclePerformanceData.lua:262
----@param recordingTypes string[] Liste de valeurs de recordingTypes.
----@return table<string, table>  Table type -> données (nil pour un type jamais démarré).
+--- Returns the data collected for the requested types.
+---Source: lua/vehicle/extensions/vehiclePerformanceData.lua:262
+---@param recordingTypes string[] List of recordingTypes values.
+---@return table<string, table>  Table type -> data (nil for a type never started).
 function vehiclePerformanceData.getRecordingData(recordingTypes) end
 
---- Calcule et renvoie les données statiques du véhicule (poids, layout, boîte, carburants, admission).
----Source : lua/vehicle/extensions/vehiclePerformanceData.lua:270
----@return table  Table avec les clés de staticTypes.
+--- Computes and returns the vehicle's static data (weight, layout, gearbox, fuels, induction).
+---Source: lua/vehicle/extensions/vehiclePerformanceData.lua:270
+---@return table  Table with the keys of staticTypes.
 function vehiclePerformanceData.getStaticData() end
 
---- Hook de chargement : initialise les tables d'enregistrement et associe chaque type à ses routines start/stop/update.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/vehiclePerformanceData.lua:281
+--- Load hook: initializes the recording tables and associates each type with its start/stop/update routines.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/vehiclePerformanceData.lua:281
 function vehiclePerformanceData.onExtensionLoaded() end
 
---- Démarre les enregistrements demandés (initialise leurs données, appelle leur routine de démarrage) et active le hook updateGFX si nécessaire.
----Source : lua/vehicle/extensions/vehiclePerformanceData.lua:233
----@param recordingTypes string[] Liste de valeurs de recordingTypes.
+--- Starts the requested recordings (initializes their data, calls their start routine) and enables the updateGFX hook if needed.
+---Source: lua/vehicle/extensions/vehiclePerformanceData.lua:233
+---@param recordingTypes string[] List of recordingTypes values.
 function vehiclePerformanceData.startRecording(recordingTypes) end
 
---- Arrête les enregistrements demandés ; désactive updateGFX si plus aucun n'est actif. Les données restent lisibles.
----Source : lua/vehicle/extensions/vehiclePerformanceData.lua:248
----@param recordingTypes string[] Liste de valeurs de recordingTypes.
+--- Stops the requested recordings; disables updateGFX if none is active anymore. The data stays readable.
+---Source: lua/vehicle/extensions/vehiclePerformanceData.lua:248
+---@param recordingTypes string[] List of recordingTypes values.
 function vehiclePerformanceData.stopRecording(recordingTypes) end
 

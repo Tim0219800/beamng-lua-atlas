@@ -1,16 +1,50 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/groundmarkers.lua",
-  "module": "Nœud flowgraph « Groundmarkers » (catégorie repeat_instant, dépend de core_groundMarkers). Crée des marqueurs au sol qui montrent le chemin vers une cible. Pins d'entrée : clear (impulsion de reset), target (nom de waypoint, position vec3 ou liste), color (déprécié), cutOffDrivability, penaltyAboveCutoff, penaltyBelowCutoff, threshold (seuil de changement de cible, 0.1). Appelle core_groundMarkers.setPath quand la cible change ; resetAll à l'arrêt.",
-  "notes": ["data.fadeStart = 100 et data.fadeEnd = 150 sont définis mais non utilisés dans ce fichier.", "Anciens pins pos, waypoint -> target et reset -> clear (legacyPins)."],
+  "module": "Flowgraph node \"Groundmarkers\" (category repeat_instant, depends on core_groundMarkers). Creates ground markers that show the path to a target. Input pins: clear (reset pulse), target (waypoint name, vec3 position or list), color (deprecated), cutOffDrivability, penaltyAboveCutoff, penaltyBelowCutoff, threshold (target change threshold, 0.1). Calls core_groundMarkers.setPath when the target changes; resetAll on stop.",
+  "notes": [
+    "data.fadeStart = 100 and data.fadeEnd = 150 are defined but unused in this file.",
+    "Old pins pos, waypoint -> target and reset -> clear (legacyPins)."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Définit data.fadeStart et data.fadeEnd.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "hasNewTarget": {"desc": "Compare la cible du pin à la précédente (types, longueur, valeurs numériques avec le seuil threshold, chaînes).", "returns": [{"type": "boolean", "desc": "vrai si la cible a changé"}]},
-        "work": {"desc": "Gère clear (resetAll) puis, si flow et target sont présents et la cible a changé, appelle core_groundMarkers.setPath(target, options).", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}},
-        "_executionStarted": {"desc": "Oublie la dernière cible.", "internal": true},
-        "_executionStopped": {"desc": "Appelle core_groundMarkers.resetAll().", "internal": true}
+        "init": {
+          "desc": "Sets data.fadeStart and data.fadeEnd.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "hasNewTarget": {
+          "desc": "Compares the pin target to the previous one (types, length, numeric values with the threshold threshold, strings).",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if the target has changed"
+            }
+          ]
+        },
+        "work": {
+          "desc": "Handles clear (resetAll) then, if flow and target are present and the target has changed, calls core_groundMarkers.setPath(target, options).",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph arguments"
+            }
+          }
+        },
+        "_executionStarted": {
+          "desc": "Forgets the last target.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Calls core_groundMarkers.resetAll().",
+          "internal": true
+        }
       }
     }
   }

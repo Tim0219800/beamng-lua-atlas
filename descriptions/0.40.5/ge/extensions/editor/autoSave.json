@@ -1,37 +1,57 @@
 {
   "path": "lua/ge/extensions/editor/autoSave.lua",
-  "module": "Sauvegarde automatique de l'éditeur de niveaux. Un minuteur (preference files.autoSave.interval, 120 s par défaut) appelle editor.autoSaveLevel() quand files.autoSave.active est vrai, avec un compte à rebours dans la barre d'état pendant files.autoSave.noticeInterval secondes. Une fenêtre modale « AutoSave Restore » permet de restaurer l'arbre de scène depuis /temp/level_autosaves/<niveau>/ ; elle s'ouvre seule si l'éditeur ne s'est pas fermé proprement sur ce niveau, ou via le menu des fenêtres.",
+  "module": "Autosave of the level editor. A timer (preference files.autoSave.interval, 120 s by default) calls editor.autoSaveLevel() when files.autoSave.active is true, with a countdown in the status bar during files.autoSave.noticeInterval seconds. An \"AutoSave Restore\" modal window lets you restore the scene tree from /temp/level_autosaves/<level>/; it opens by itself if the editor did not close cleanly on that level, or via the windows menu.",
   "notes": [
-    "La restauration copie le dossier d'autosave sur le niveau (editor.copyDirectory) puis rouvre le niveau : irréversible (le dialogue de confirmation le précise).",
-    "Les descriptions des préférences parlent de /settings/editor/autosaves alors que le code lit /temp/level_autosaves/ : incohérence apparente entre texte d'aide et chemin utilisé.",
-    "Préférences enregistrées (catégorie files > autoSave) : active (bool, false), saveBackupCopy (bool, false), interval (int, 120), noticeInterval (int, 10), maxAutoSaveCountPerSession (int, 3), counter (int, 1, masquée).",
-    "Si interval est abaissé sous noticeInterval, noticeInterval est ramené à interval ; l'inverse est corrigé aussi."
+    "The restore copies the autosave folder over the level (editor.copyDirectory) then reopens the level: irreversible (the confirmation dialog says so).",
+    "The preference descriptions mention /settings/editor/autosaves while the code reads /temp/level_autosaves/: apparent inconsistency between help text and the path used.",
+    "Registered preferences (category files > autoSave): active (bool, false), saveBackupCopy (bool, false), interval (int, 120), noticeInterval (int, 10), maxAutoSaveCountPerSession (int, 3), counter (int, 1, hidden).",
+    "If interval is lowered below noticeInterval, noticeInterval is brought down to interval; the reverse is also corrected."
   ],
   "functions": {
     "onEditorGui": {
-      "desc": "Appelé chaque frame de l'éditeur : affiche la fenêtre de restauration si nécessaire, décrémente le minuteur, affiche l'avertissement et déclenche editor.autoSaveLevel() quand il atteint 0.",
+      "desc": "Called every editor frame: shows the restore window if needed, decrements the timer, displays the warning and triggers editor.autoSaveLevel() when it reaches 0.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Durée réelle de la frame (s), utilisée pour le minuteur."},
-        "dtSim": {"type": "number", "desc": "Durée simulée (non utilisée)."},
-        "dtRaw": {"type": "number", "desc": "Durée brute (non utilisée)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real frame time (s), used for the timer."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time (unused)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw duration (unused)."
+        }
       },
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Initialise le minuteur avec files.autoSave.interval et ajoute l'entrée « AutoSave Restore » au menu des fenêtres.",
+      "desc": "Initializes the timer with files.autoSave.interval and adds the \"AutoSave Restore\" entry to the windows menu.",
       "internal": true
     },
     "onEditorPreferenceValueChanged": {
-      "desc": "Hook appelé quand une préférence change : remet le minuteur à jour pour files.autoSave.interval et garde noticeInterval <= interval.",
+      "desc": "Hook called when a preference changes: resets the timer for files.autoSave.interval and keeps noticeInterval <= interval.",
       "params": {
-        "path": {"type": "string", "desc": "Chemin de la préférence, ex. \"files.autoSave.interval\"."},
-        "value": {"type": "any", "desc": "Nouvelle valeur."}
+        "path": {
+          "type": "string",
+          "desc": "Preference path, e.g. \"files.autoSave.interval\"."
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value."
+        }
       },
       "internal": true
     },
     "onEditorRegisterPreferences": {
-      "desc": "Hook d'enregistrement des préférences de l'éditeur : déclare la catégorie « files » et la sous-catégorie « autoSave ».",
-      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur (registerCategory / registerSubCategory)."}},
+      "desc": "Editor preferences registration hook: declares the \"files\" category and the \"autoSave\" subcategory.",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Editor preferences registry (registerCategory / registerSubCategory)."
+        }
+      },
       "internal": true
     }
   }

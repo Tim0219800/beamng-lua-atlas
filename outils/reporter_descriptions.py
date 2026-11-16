@@ -4,7 +4,8 @@
 Usage : python -I outils/reporter_descriptions.py <ancienne> <nouvelle>
 Prérequis : donnees/<nouvelle>/diff-<ancienne>.json (outils/comparer.py).
 
-- copie descriptions/<ancienne>/ vers descriptions/<nouvelle>/ (sans écraser un fichier déjà présent) ;
+- copie descriptions/<ancienne>/ vers descriptions/<nouvelle>/ (anglais) et descriptions/fr/<ancienne>/ vers
+  descriptions/fr/<nouvelle>/ (français), sans écraser un fichier déjà présent ;
 - suit les modules déplacés (nouveau chemin, champ "path" mis à jour) ;
 - ne copie pas les modules retirés ;
 - supprime les fonctions et champs retirés ;
@@ -26,60 +27,61 @@ def main():
         sys.exit(__doc__)
     va, vb = sys.argv[1], sys.argv[2]
     diff = load(os.path.join(BASE, "donnees", vb, f"diff-{va}.json"))
-    src_root = os.path.join(BASE, "descriptions", va)
-    dst_root = os.path.join(BASE, "descriptions", vb)
     moved = diff["modulesMoved"]
     removed = set(diff["modulesRemoved"])
     changes = diff["modules"]
     stats = {"copiés": 0, "déjà présents": 0, "retirés": 0, "déplacés": 0, "fonctions supprimées": 0, "à revérifier": 0}
     a_redecrire = set(diff["modulesAdded"])
 
-    for dp, _, fn in os.walk(src_root):
-        for f in fn:
-            if not f.endswith(".json"):
-                continue
-            d = load(os.path.join(dp, f))
-            rel = d["path"].removeprefix("lua/")
-            if rel in removed:
-                stats["retirés"] += 1
-                continue
-            if rel in moved:
-                rel = moved[rel]
-                d["path"] = "lua/" + rel
-                stats["déplacés"] += 1
-            dst = os.path.join(dst_root, rel[:-4] + ".json")
-            if os.path.exists(dst):
-                stats["déjà présents"] += 1
-                continue
-            ch = changes.get(rel)
-            if ch:
-                funcs = d.get("functions") or {}
-                classes = d.get("classes") or {}
-                for k in ch["removed"]:
-                    if k.startswith("champ "):
-                        if (d.get("fields") or {}).pop(k[6:], None) is not None:
+    roots = [("en", os.path.join(BASE, "descriptions", va), os.path.join(BASE, "descriptions", vb)),
+             ("fr", os.path.join(BASE, "descriptions", "fr", va), os.path.join(BASE, "descriptions", "fr", vb))]
+    for lang, src_root, dst_root in roots:
+        for dp, _, fn in os.walk(src_root):
+            for f in fn:
+                if not f.endswith(".json"):
+                    continue
+                d = load(os.path.join(dp, f))
+                rel = d["path"].removeprefix("lua/")
+                if rel in removed:
+                    stats["retirés"] += 1
+                    continue
+                if rel in moved:
+                    rel = moved[rel]
+                    d["path"] = "lua/" + rel
+                    stats["déplacés"] += 1
+                dst = os.path.join(dst_root, rel[:-4] + ".json")
+                if os.path.exists(dst):
+                    stats["déjà présents"] += 1
+                    continue
+                ch = changes.get(rel)
+                if ch:
+                    funcs = d.get("functions") or {}
+                    classes = d.get("classes") or {}
+                    for k in ch["removed"]:
+                        if k.startswith("champ "):
+                            if (d.get("fields") or {}).pop(k[6:], None) is not None:
+                                stats["fonctions supprimées"] += 1
+                        elif ":" in k:
+                            cls, meth = k.split(":", 1)
+                            if ((classes.get(cls) or {}).get("functions") or {}).pop(meth, None) is not None:
+                                stats["fonctions supprimées"] += 1
+                        elif funcs.pop(k, None) is not None:
                             stats["fonctions supprimées"] += 1
-                    elif ":" in k:
-                        cls, meth = k.split(":", 1)
-                        if ((classes.get(cls) or {}).get("functions") or {}).pop(meth, None) is not None:
-                            stats["fonctions supprimées"] += 1
-                    elif funcs.pop(k, None) is not None:
-                        stats["fonctions supprimées"] += 1
-                for k, c in ch["changed"].items():
-                    if ":" in k:
-                        cls, meth = k.split(":", 1)
-                        fd = ((classes.get(cls) or {}).get("functions") or {}).get(meth)
-                    else:
-                        fd = funcs.get(k)
-                    if isinstance(fd, dict):
-                        fd["aVerifier"] = f"paramètres modifiés en {vb} : ({', '.join(c['old'])}) → ({', '.join(c['new'])})"
-                        stats["à revérifier"] += 1
-                if ch["added"] or ch["changed"]:
-                    a_redecrire.add(rel)
-            os.makedirs(os.path.dirname(dst), exist_ok=True)
-            with open(dst, "w", encoding="utf-8") as fh:
-                json.dump(d, fh, ensure_ascii=False, indent=2)
-            stats["copiés"] += 1
+                    for k, c in ch["changed"].items():
+                        if ":" in k:
+                            cls, meth = k.split(":", 1)
+                            fd = ((classes.get(cls) or {}).get("functions") or {}).get(meth)
+                        else:
+                            fd = funcs.get(k)
+                        if isinstance(fd, dict):
+                            fd["aVerifier"] = (f"parameters changed in {vb}: " if lang == "en" else f"paramètres modifiés en {vb} : ") + f"({', '.join(c['old'])}) → ({', '.join(c['new'])})"
+                            stats["à revérifier"] += 1
+                    if ch["added"] or ch["changed"]:
+                        a_redecrire.add(rel)
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
+                with open(dst, "w", encoding="utf-8") as fh:
+                    json.dump(d, fh, ensure_ascii=False, indent=2)
+                stats["copiés"] += 1
 
     lots, cur = [], []
     for p in sorted(a_redecrire):

@@ -1,32 +1,32 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/setGearbox.lua",
-  "module": "Nœud « Set Gearbox Mode » (catégorie `once_f_duration`). Change le mode de boîte (`arcade` ou `realistic`) via `core_vehicleBridge.executeAction(veh,'setGearboxMode', mode)`, puis envoie un `ping` pour savoir quand c'est reçu. Pins d'entrée : `vehId`, `mode` (string).",
+  "module": "Node \"Set Gearbox Mode\" (category `once_f_duration`). Changes the gearbox mode (`arcade` or `realistic`) via `core_vehicleBridge.executeAction(veh,'setGearboxMode', mode)`, then sends a `ping` to know when it is received. Input pins: `vehId`, `mode` (string).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_executionStarted": {
-          "desc": "Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.",
+          "desc": "Called by the manager when the flowgraph project execution starts; resets the internal state to zero.",
           "internal": true
         },
         "init": {
-          "desc": "Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne.",
+          "desc": "Node constructor, called at its creation by the flowgraph editor/manager; initializes the internal state.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Efface la réponse et passe en durée `inactive`.",
+          "desc": "Clears the response and goes to `inactive` duration.",
           "internal": true
         },
         "postInit": {
-          "desc": "Définit les valeurs proposées pour `mode` : arcade, realistic.",
+          "desc": "Defines the values offered for `mode`: arcade, realistic.",
           "internal": true
         },
         "work": {
-          "desc": "Quand le ping revient, passe en `finished`.",
+          "desc": "When the ping returns, goes to `finished`.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Envoie l'action et un ping au véhicule, passe en `started`.",
+          "desc": "Sends the action and a ping to the vehicle, goes to `started`.",
           "internal": true
         }
       }

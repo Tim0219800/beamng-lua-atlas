@@ -1,40 +1,70 @@
 {
   "path": "lua/ge/extensions/telemetry/clientFacts.test.lua",
-  "module": "Tests unitaires de telemetry/clientFacts, exécutés avec extensions.testFramework_TestManager:runTestFiles(\"clientFacts\"). Chaque fonction testXxx(ctx) reçoit un contexte de test (ctx:assert, ctx:assertEqual). Aucun intérêt direct pour un moddeur, sinon comme exemple d'usage de clientFacts.",
+  "module": "Unit tests of telemetry/clientFacts, run with extensions.testFramework_TestManager:runTestFiles(\"clientFacts\"). Each testXxx(ctx) function receives a test context (ctx:assert, ctx:assertEqual). Of no direct interest to a modder, except as an example of clientFacts usage.",
   "functions": {
     "testCiProviderDetection": {
-      "desc": "Vérifie que chaque variable d'environnement CI connue (JENKINS_URL, GITLAB_CI, GITHUB_ACTIONS, TF_BUILD, TEAMCITY_VERSION, BUILDKITE, CIRCLECI, TRAVIS, APPVEYOR, CI) donne le bon fournisseur.",
-      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "desc": "Checks that each known CI environment variable (JENKINS_URL, GITLAB_CI, GITHUB_ACTIONS, TF_BUILD, TEAMCITY_VERSION, BUILDKITE, CIRCLECI, TRAVIS, APPVEYOR, CI) gives the right provider.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test framework context."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "testCiProviderPriority": {
-      "desc": "Vérifie que jenkins l'emporte quand plusieurs variables CI sont définies.",
-      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "desc": "Checks that jenkins wins when several CI variables are defined.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test framework context."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "testFalseCiFlags": {
-      "desc": "Vérifie que les valeurs '0', 'false', 'FALSE' et '' ne déclenchent pas la détection CI.",
-      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "desc": "Checks that the values '0', 'false', 'FALSE' and '' do not trigger CI detection.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test framework context."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "testCollectedContextContract": {
-      "desc": "Simule Engine, os.getenv et les globales beamng_*, appelle clientFacts.collect('30') puis vérifie les champs obtenus (plateforme 'pc', fournisseur gitlab, osVersion, deviceType 'desktop', mémoire, GPU, booléens false conservés, VR). Restaure ensuite les globales.",
-      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "desc": "Mocks Engine, os.getenv and the beamng_* globals, calls clientFacts.collect('30') then checks the resulting fields (platform 'pc', provider gitlab, osVersion, deviceType 'desktop', memory, GPU, false booleans kept, VR). Then restores the globals.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test framework context."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "testDesktopPlatformNormalization": {
-      "desc": "Vérifie normalizePlatform : '' donne 'pc', 'steamdeck' est conservé, nil reste nil.",
-      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "desc": "Checks normalizePlatform: '' gives 'pc', 'steamdeck' is kept, nil stays nil.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test framework context."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "testPreferredGpuSelection": {
-      "desc": "Vérifie selectPreferredGPU : premier adaptateur dédié préféré, repli sur le premier, nil pour une liste vide.",
-      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "desc": "Checks selectPreferredGPU: first dedicated adapter preferred, fallback to the first, nil for an empty list.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test framework context."
+        }
+      },
       "returns": [],
       "internal": true
     }

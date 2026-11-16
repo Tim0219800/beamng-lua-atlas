@@ -1,36 +1,36 @@
 # `flowgraph_link`
 
-*Fichier : `lua/ge/extensions/flowgraph/link.lua` · VM : Game Engine (GE) · 292 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/link.lua` · VM: Game Engine (GE) · 292 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/link")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/link")` (file under extensions/ but not a regular extension)
 
-Classe 'link' du flowgraph : un lien entre une pin de sortie (sourcePin) et une pin d'entrée (targetPin) de deux nœuds d'un graphe. À la création, il s'enregistre dans graph.links, écrit la pin source dans targetNode.pinIn, tient à jour la liste de flux multiples (_mInFlow) pour les pins de type flow, prévient pins et nœuds (_onLink) et choisit sa couleur d'après le type de pin. Il dessine aussi le lien dans l'éditeur (imgui / ui_flowgraph_editor). Le module renvoie un constructeur : require('/lua/ge/extensions/flowgraph/link')(graph, sourcePin, targetPin).
+Flowgraph 'link' class: a link between an output pin (sourcePin) and an input pin (targetPin) of two nodes of a graph. On creation, it registers itself in graph.links, writes the source pin into targetNode.pinIn, maintains the multiple-flow list (_mInFlow) for flow pins, notifies pins and nodes (_onLink) and picks its color from the pin type. It also draws the link in the editor (imgui / ui_flowgraph_editor). The module returns a constructor: require('/lua/ge/extensions/flowgraph/link')(graph, sourcePin, targetPin).
 
-## Remarques
+## Notes
 
-- Un lien a deux ids : id et hiddenId (utilisé pour le surlignage), tous deux demandés à mgr:getNextFreePinLinkId().
-- Sérialisation compacte : {id nœud source, nom pin source, id nœud cible, nom pin cible, hidden}.
-- Un lien 'state' → 'state' est dessiné entre les pins de transition (N/S/E/W) selon la position relative des nœuds, avec une étiquette au nom de la pin source.
-- convertToQuickAccess remplace les liens issus d'une même pin source par un accès rapide (quickAccess + accessName unique, suffixe numérique si le nom existe) puis supprime la sélection.
+- A link has two ids: id and hiddenId (used for highlighting), both requested from mgr:getNextFreePinLinkId().
+- Compact serialization: {source node id, source pin name, target node id, target pin name, hidden}.
+- A 'state' → 'state' link is drawn between the transition pins (N/S/E/W) according to the relative position of the nodes, with a label showing the source pin name.
+- convertToQuickAccess replaces the links from the same source pin with a quick access (quickAccess + unique accessName, numeric suffix if the name exists) then deletes the selection.
 
-## Classe `C`
+## Class `C`
 
-Objet lien renvoyé par le constructeur.
+Link object returned by the constructor.
 
-Le module renvoie un constructeur : `local obj = require("flowgraph_link")(options)`.
+The module returns a constructor: `local obj = require("flowgraph_link")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:__onDeserialized(data)` | Restaure l'état masqué depuis data[5]. | 280 |
-| `C:__onSerialize()` | Renvoie {sourceNode.id, sourcePin.name, targetNode.id, targetPin.name, hidden}. | 270 |
-| `C:convertToQuickAccess()` | Transforme les liens partant de la pin source en accès rapide nommé (voir notes) puis supprime la sélection. | 233 |
-| `C:doFlow()` | Demande une animation de flux à la prochaine frame de dessin. | 182 |
-| `C:draw()` | Dessine le lien dans l'éditeur avec animation de flux quand la pin source est active à la frame courante (jamais si le manager est arrêté, vitesse nulle en pause). | 111 |
-| `C:drawLabel(sPin, tPin)` | Dessine l'étiquette (nom de la pin source) au milieu d'un lien d'état. | 186 |
-| `C:drawLinkTooltip()` | Affiche l'infobulle du lien survolé : icône et type de la pin source et sa valeur courante. | 68 |
-| `C:getDirPins()` | Pour les liens d'états : renvoie la paire de directions ('E','W' / 'W','E' / 'S','N' / 'N','S') selon la position des nœuds, ou nil,nil sans positions. | 92 |
-| `C:init(graph, sourcePin, targetPin)` | Crée le lien, l'enregistre dans le graphe et notifie pins et nœuds. | 9 |
-| `C:showContextMenu(menuPos)` | Menu contextuel du lien : masquer / afficher, supprimer (si l'édition est autorisée) et, si la préférence flowgraph.debug.displayIds est active, ids. | 214 |
+| `C:__onDeserialized(data)` | Restores the hidden state from data[5]. | 280 |
+| `C:__onSerialize()` | Returns {sourceNode.id, sourcePin.name, targetNode.id, targetPin.name, hidden}. | 270 |
+| `C:convertToQuickAccess()` | Turns the links leaving the source pin into a named quick access (see notes) then deletes the selection. | 233 |
+| `C:doFlow()` | Requests a flow animation on the next draw frame. | 182 |
+| `C:draw()` | Draws the link in the editor with a flow animation when the source pin is active in the current frame (never if the manager is stopped, zero speed when paused). | 111 |
+| `C:drawLabel(sPin, tPin)` | Draws the label (source pin name) in the middle of a state link. | 186 |
+| `C:drawLinkTooltip()` | Shows the tooltip of the hovered link: icon and type of the source pin and its current value. | 68 |
+| `C:getDirPins()` | For state links: returns the pair of directions ('E','W' / 'W','E' / 'S','N' / 'N','S') according to the position of the nodes, or nil,nil without positions. | 92 |
+| `C:init(graph, sourcePin, targetPin)` | Creates the link, registers it in the graph and notifies pins and nodes. | 9 |
+| `C:showContextMenu(menuPos)` | Context menu of the link: hide / show, delete (if editing is allowed) and, if the preference flowgraph.debug.displayIds is active, ids. | 214 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/link.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/link.lua`.*

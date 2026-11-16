@@ -1,75 +1,154 @@
 {
   "path": "lua/ge/extensions/editor/heroRoadEditor/mesh.lua",
-  "module": "Génération du maillage de conduite procédural d'un groupe du Hero Road Editor. Balaye les coupes de profile.lua le long de la ligne centrale 3D (divPoints) : chaussée, accotements, chanfreins périphériques, nids-de-poule creusés, et groupes de surface (groundmodels) répartis par matériau. Produit des ProceduralMesh avec collision pour l'édition (nommés 'HeroRoad_<id>_<n>', découpés en chunks) et, pour le bake, les chunks avec niveaux de détail et maillage de collision. Il remplit aussi les champs dérivés que d'autres modules lisent (meshEdgeL/R, meshEdgeDirL/R, meshEdgeUp, meshGrid, meshVArc, meshStationCount, triCount).",
+  "module": "Generation of a group's procedural driving mesh in the Hero Road Editor. Sweeps the profile.lua cross-sections along the 3D centerline (divPoints): roadway, shoulders, peripheral chamfers, carved potholes, and surface groups (groundmodels) distributed by material. Produces ProceduralMeshes with collision for editing (named 'HeroRoad_<id>_<n>', split into chunks) and, for the bake, the chunks with levels of detail and collision mesh. It also fills the derived fields that other modules read (meshEdgeL/R, meshEdgeDirL/R, meshEdgeUp, meshGrid, meshVArc, meshStationCount, triCount).",
   "notes": [
-    "La surface éditable EST le LOD0 : le maillage vivant est construit avec la même tolérance que le niveau proche du bake ; les LOD plus grossiers ne sont produits qu'au bake (buildChunkLODs).",
-    "Découpage en chunks : longueur chunkLenM (défaut 120, min 20 m) ; pas de coupure si la route fait au plus 1.5 chunk. Les coupures sont partagées par tous les LOD et la collision pour éviter les fissures.",
-    "Échelle des LOD (taille px / qualité cm / longueur max de triangle m) : LOD0 400 / 1.0 / 20, LOD1 150 / 3.0 / 30, LOD2 40 / 8.0 / 45 (champs group.lodSize0..2, lodQualityCm0..2, lodMaxSegM0..2). Si group.lodFarNull ~= false (défaut), le dernier niveau devient un niveau 'nulldetail' (rien n'est dessiné en dessous de sa taille) et nullSize est renvoyé. Le LOD visible le plus grossier supprime le chanfrein. Un LOD n'est gardé que s'il économise plus de 2 % de triangles par rapport au précédent.",
-      "Collision : surface de chaussée détaillée sans chanfrein, tolérance group.collisionTolCm (défaut 1.0 cm), longueur max group.lodMaxSegM0 (20 m). Les nids-de-poule ne sont creusés que dans LOD0 et la collision.",
-    "Constantes : matériau par défaut 'm_asphalt_new_01' (chaussée et accotement), texture 4 m x 4 m, chanfrein 0.6 m de large pour 0.1 m de chute (angle max 70 degrés), extension coplanaire de 1.0 m au-delà de chaque extrémité (pour que les décalques se drapent entièrement).",
-    "Les ProceduralMesh vivants ont canSave=false : ils sont reconstruits depuis la spline au chargement.",
-    "Le défaut de group.latRes est 4 dans profile.lua mais 16 dans la signature de cache de lodPreview et à la création d'un groupe (groupMgr) ; seul le défaut du groupe neuf (16) joue en pratique."
+    "The editable surface IS LOD0: the live mesh is built with the same tolerance as the near level of the bake; the coarser LODs are only produced at bake time (buildChunkLODs).",
+    "Chunk splitting: length chunkLenM (default 120, min 20 m); no cut if the road is at most 1.5 chunks long. The cuts are shared by all LODs and the collision to avoid cracks.",
+    "LOD scale (size px / quality cm / max triangle length m): LOD0 400 / 1.0 / 20, LOD1 150 / 3.0 / 30, LOD2 40 / 8.0 / 45 (fields group.lodSize0..2, lodQualityCm0..2, lodMaxSegM0..2). If group.lodFarNull ~= false (default), the last level becomes a 'nulldetail' level (nothing is drawn below its size) and nullSize is returned. The coarsest visible LOD removes the chamfer. A LOD is only kept if it saves more than 2 % of triangles compared to the previous one.",
+    "Collision: detailed roadway surface without chamfer, tolerance group.collisionTolCm (default 1.0 cm), max length group.lodMaxSegM0 (20 m). Potholes are only carved in LOD0 and the collision.",
+    "Constants: default material 'm_asphalt_new_01' (roadway and shoulder), 4 m x 4 m texture, chamfer 0.6 m wide for 0.1 m drop (max angle 70 degrees), coplanar extension of 1.0 m beyond each end (so that decals drape entirely).",
+    "The live ProceduralMeshes have canSave=false: they are rebuilt from the spline at load.",
+    "The default of group.latRes is 4 in profile.lua but 16 in the lodPreview cache signature and at group creation (groupMgr); only the default of the new group (16) matters in practice."
   ],
   "functions": {
     "removeMesh": {
-      "desc": "Supprime les ProceduralMesh du groupe : celui hérité sans suffixe ('HeroRoad_<id>') et chaque chunk 'HeroRoad_<id>_<n>' jusqu'au premier trou.",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Deletes the group's ProceduralMeshes: the legacy one without suffix ('HeroRoad_<id>') and each chunk 'HeroRoad_<id>_<n>' up to the first gap.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
     "updateMesh": {
-      "desc": "Reconstruit le maillage LOD0 (niveau proche) vivant du groupe : supprime l'ancien, assemble la géométrie, la découpe en chunks, crée un ProceduralMesh avec collision par chunk dans le dossier de scène du groupe et remplit group.meshIds / group.meshId. Appelé par le pipeline de reconstruction à chaque modification ; ne fait rien sans dossier de scène (sceneTreeFolderId).",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Rebuilds the group's live LOD0 (near level) mesh: deletes the old one, assembles the geometry, splits it into chunks, creates a ProceduralMesh with collision per chunk in the group's scene folder and fills group.meshIds / group.meshId. Called by the rebuild pipeline on every modification; does nothing without a scene folder (sceneTreeFolderId).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
     "buildExportParts": {
-      "desc": "Assemble la géométrie de conduite en une liste de parts de matériau (meshPart) ; c'est la fonction interne assemble exportée sous ce nom. Écrase les champs dérivés du groupe (bords, grille, vArc, triCount...). Avec jLo/jHi, ne construit que les stations de ce chunk.",
+      "desc": "Assembles the driving geometry into a list of material parts (meshPart); this is the internal assemble function exported under this name. Overwrites the group's derived fields (edges, grid, vArc, triCount...). With jLo/jHi, only builds the stations of that chunk.",
       "params": {
-        "group": {"type": "table", "desc": "Groupe Hero Road (divPoints, tangents, matériaux, paramètres de profil)."},
-        "opts": {"type": "table|nil", "desc": "Options : tol (tolérance de décimation en m, nil = pleine résolution), maxSeg (longueur max de segment en m), emitChamfer (false pour omettre les chanfreins), potholes (true pour creuser les nids-de-poule)."},
-        "jLo": {"type": "integer|nil", "desc": "Première station du chunk."},
-        "jHi": {"type": "integer|nil", "desc": "Dernière station du chunk."},
-        "isFirst": {"type": "boolean|nil", "desc": "Chunk de début de route (déduit du code)."},
-        "isLast": {"type": "boolean|nil", "desc": "Chunk de fin de route (déduit du code)."},
-        "cutArcs": {"type": "number[]|nil", "desc": "Positions d'arc (m) des coupures de chunk."}
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group (divPoints, tangents, materials, profile parameters)."
+        },
+        "opts": {
+          "type": "table|nil",
+          "desc": "Options: tol (decimation tolerance in m, nil = full resolution), maxSeg (max segment length in m), emitChamfer (false to omit the chamfers), potholes (true to carve the potholes)."
+        },
+        "jLo": {
+          "type": "integer|nil",
+          "desc": "First station of the chunk."
+        },
+        "jHi": {
+          "type": "integer|nil",
+          "desc": "Last station of the chunk."
+        },
+        "isFirst": {
+          "type": "boolean|nil",
+          "desc": "Start-of-road chunk (inferred from code)."
+        },
+        "isLast": {
+          "type": "boolean|nil",
+          "desc": "End-of-road chunk (inferred from code)."
+        },
+        "cutArcs": {
+          "type": "number[]|nil",
+          "desc": "Arc positions (m) of the chunk cuts."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Liste de parts (matériau, sommets, faces), ou nil si la géométrie est insuffisante."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "List of parts (material, vertices, faces), or nil if the geometry is insufficient."
+        }
+      ],
       "internal": false
     },
     "chunkCount": {
-      "desc": "Nombre de chunks DAE qu'un bake produira pour une longueur d'arc totale et une longueur de chunk données (reflète le baker). L'interface doit passer la même longueur d'arc que le bake (group.meshVArc[fin]).",
+      "desc": "Number of DAE chunks a bake will produce for a given total arc length and chunk length (mirrors the baker). The interface must pass the same arc length as the bake (group.meshVArc[end]).",
       "params": {
-        "total": {"type": "number", "desc": "Longueur d'arc totale en mètres."},
-        "chunkLenM": {"type": "number|nil", "desc": "Longueur de chunk en mètres (min 20, défaut 120)."}
+        "total": {
+          "type": "number",
+          "desc": "Total arc length in meters."
+        },
+        "chunkLenM": {
+          "type": "number|nil",
+          "desc": "Chunk length in meters (min 20, default 120)."
+        }
       },
-      "returns": [{"type": "integer", "desc": "Nombre de chunks (au moins 1)."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of chunks (at least 1)."
+        }
+      ],
       "internal": false
     },
     "buildChunkLODs": {
-      "desc": "Construit toute la charge utile du bake : pour chaque chunk d'environ chunkLenM, son jeu de LOD visibles et un maillage de collision de chaussée seule. Les coupures sont calculées une fois à partir de la longueur d'arc pleine résolution et partagées par tous les niveaux. Les LOD de nombre de triangles quasi égal sont abandonnés.",
+      "desc": "Builds the entire bake payload: for each chunk of about chunkLenM, its set of visible LODs and a roadway-only collision mesh. The cuts are computed once from the full-resolution arc length and shared by all levels. LODs with a nearly equal triangle count are dropped.",
       "params": {
-        "group": {"type": "table", "desc": "Groupe Hero Road."},
-        "chunkLenM": {"type": "number|nil", "desc": "Longueur de chunk en mètres (min 20, défaut 120)."}
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        },
+        "chunkLenM": {
+          "type": "number|nil",
+          "desc": "Chunk length in meters (min 20, default 120)."
+        }
       },
       "returns": [
-        {"type": "table|nil", "desc": "Liste de chunks { lods = { {size, parts}, ... }, col = { part, ... } }, ou nil s'il n'y a rien à construire."},
-        {"type": "number|nil", "desc": "nullSize : taille en px du niveau 'nulldetail' lointain, ou nil si le dernier niveau est un LOD visible."}
+        {
+          "type": "table|nil",
+          "desc": "List of chunks { lods = { {size, parts}, ... }, col = { part, ... } }, or nil if there is nothing to build."
+        },
+        {
+          "type": "number|nil",
+          "desc": "nullSize: size in px of the far 'nulldetail' level, or nil if the last level is a visible LOD."
+        }
       ],
       "internal": false
     },
     "lodPreview": {
-      "desc": "Calcule, pour le panneau Export, le nombre de triangles de la route entière pour chaque LOD visible. Le résultat est mis en cache par groupe (signature des paramètres de LOD, de résolution, de géométrie et des nids-de-poule) et les champs dérivés du groupe écrasés par l'assemblage sont restaurés ensuite. Écrit aussi group.lodMaxEdgeM.",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
-      "returns": [{"type": "table", "desc": "{ lods = { {size, tris, kept}, ... }, nullSize = number|nil } ; kept indique si le niveau est conservé au bake."}],
+      "desc": "Computes, for the Export panel, the triangle count of the whole road for each visible LOD. The result is cached per group (signature of the LOD, resolution, geometry and pothole parameters) and the group's derived fields overwritten by the assembly are restored afterwards. Also writes group.lodMaxEdgeM.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ lods = { {size, tris, kept}, ... }, nullSize = number|nil }; kept indicates whether the level is kept at bake."
+        }
+      ],
       "internal": false
     },
     "buildRibbonEdges": {
-      "desc": "Reconstruction LÉGÈRE des seuls bords supérieurs extérieurs (group.meshEdgeL/R) pendant un glissement, quand grille, collision et décalques sont démontés. Réutilise profile.build et worldStation sur les deux points extrêmes de la coupe, avec la même extension de fin : le ruban suit exactement le bord que le maillage complet aura. Met aussi à jour group.divBankR (axe droit incliné, pour la carte de chaleur). Efface les bords si la géométrie est insuffisante.",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "LIGHT rebuild of only the outer top edges (group.meshEdgeL/R) during a drag, when grid, collision and decals are torn down. Reuses profile.build and worldStation on the two extreme points of the cross-section, with the same end extension: the ribbon follows exactly the edge the full mesh will have. Also updates group.divBankR (banked right axis, for the heat map). Clears the edges if the geometry is insufficient.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
     "buildTerrainEdges": {
-      "desc": "Construit des repères de bord PLATS (relevés à l'horizontale) pour une route en mode terrain : group.meshEdgeL/R décalés de leftExtM/rightExtM (défaut 4.0 m) le long du binormal, meshEdgeDirL/R, meshEdgeUp = (0,0,1), et met meshGrid à nil (pas de grille de chaussée en mode terrain).",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road (divPoints, binormals)."}},
+      "desc": "Builds FLAT edge references (leveled horizontally) for a road in terrain mode: group.meshEdgeL/R offset by leftExtM/rightExtM (default 4.0 m) along the binormal, meshEdgeDirL/R, meshEdgeUp = (0,0,1), and sets meshGrid to nil (no roadway grid in terrain mode).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group (divPoints, binormals)."
+        }
+      },
       "internal": false
     }
   }

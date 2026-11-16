@@ -1,22 +1,22 @@
 # `flowgraph_nodes_ui_updatedUI_startScreenMainHeader`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenMainHeader.lua` · VM : Game Engine (GE) · 29 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenMainHeader.lua` · VM: Game Engine (GE) · 29 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/updatedUI/startScreenMainHeader")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/updatedUI/startScreenMainHeader")` (file under extensions/ but not a regular extension)
 
-Nœud « Screen Main Header » (repeat_instant, couleur ui). Ajoute un grand en-tête à l'écran (en général le nom de la mission). Entrées : flow, header (string), preHeader (string, par ex. le type de mission). Sortie : flow (chainFlow).
+Node "Screen Main Header" (repeat_instant, color ui). Adds a large header to the screen (usually the mission name). Inputs: flow, header (string), preHeader (string, e.g. the mission type). Output: flow (chainFlow).
 
-## Remarques
+## Notes
 
-- Le pin preHeader a « Header » comme valeur par défaut (même que header).
+- The preHeader pin has "Header" as its default value (same as header).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Recopie flow puis appelle modules.ui:addHeader({header=..., preHeader=...}). | 23 |
+| `C:work()` | Copies flow then calls modules.ui:addHeader({header=..., preHeader=...}). | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenMainHeader.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenMainHeader.lua`.*

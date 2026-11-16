@@ -1,0 +1,62 @@
+{
+  "path": "lua/ge/extensions/gameplay/crawl/debug.lua",
+  "module": "Fenêtre de debug ImGui « Crawl Debug Window » du mode crawl, réservée aux développeurs (désactivée par défaut). Une fois activée, elle affiche pour le premier crawler actif : infos du parcours, position et vitesse du véhicule, statut dans la zone, points de pénalité (seuil DNF à 50), cooldowns d'infractions, point de récupération, point de sortie de zone (DNF à 10 m), liste des noeuds avec temps, journal des 20 derniers évènements et statut du parcours. Les données viennent de gameplay_crawl_utils.getCrawlState.",
+  "usage": "gameplay_crawl_debug.setEnableDebugWindow(true)",
+  "notes": [
+    "La fenêtre s'ouvre à onCrawlStarted seulement si enableDebugWindow est vrai.",
+    "Dans drawDebugWindow, im.Begin reçoit une nouvelle im.BoolPtr(debugWindowOpen) à chaque image : le bouton de fermeture de la fenêtre ne modifie donc pas debugWindowOpen (la fermeture n'est détectée que par la valeur de retour).",
+    "getBoundaryStatus lit gameplay_crawl_general.activeTrail.boundary et appelle boundary:containsPoint2D.",
+    "Seul le premier crawler actif trouvé est affiché."
+  ],
+  "functions": {
+    "setEnableDebugWindow": {
+      "desc": "Active ou désactive la fenêtre de debug ; la désactivation la ferme et vide les données.",
+      "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}},
+      "internal": false
+    },
+    "getEnableDebugWindow": {
+      "desc": "Indique si la fenêtre de debug est activée.",
+      "returns": [{"type": "boolean", "desc": "État."}],
+      "internal": false
+    },
+    "clearDebugData": {
+      "desc": "Vide les données affichées.",
+      "internal": false
+    },
+    "onCrawlStarted": {
+      "desc": "Hook appelé au début d'un crawl : ouvre la fenêtre si le debug est activé.",
+      "params": {"eventData": {"type": "table", "desc": "Données de l'évènement (non utilisées)."}},
+      "internal": true
+    },
+    "onCrawlComplete": {
+      "desc": "Hook appelé à la fin d'un crawl : marque les données comme terminées (isFinished).",
+      "params": {"eventData": {"type": "table", "desc": "Données de l'évènement (non utilisées)."}},
+      "internal": true
+    },
+    "onCrawlDisqualified": {
+      "desc": "Hook appelé en cas de disqualification : marque les données comme terminées et disqualifiées.",
+      "params": {"eventData": {"type": "table", "desc": "Données de l'évènement (non utilisées)."}},
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement de l'extension : réinitialise l'état de la fenêtre.",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement de l'extension : réinitialise l'état de la fenêtre.",
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Hook appelé avant le rendu : met à jour les données depuis le premier crawler actif et dessine la fenêtre.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    }
+  },
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : {'ui_imgui'}."}
+  }
+}

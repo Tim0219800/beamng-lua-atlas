@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/ui/appContainers/topLeft.lua",
+  "module": "Déclare le conteneur d'apps « topLeft » (coin haut-gauche de l'interface) auprès de ui_appContainers. Le trigger UI est setTopLeftAppVisibility. Apps déclarées : messages et tasks (visibles par défaut), scoreboard, driftScores, dragInfo et dragDialControl (cachées par défaut).",
+  "notes": ["Remplace l'ancien identifiant utilityApps (voir ui_appContainers.resolveContainerId)."],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "{ \"ui_appContainers\" } : chargé avant ce module."}
+  },
+  "functions": {
+    "onExtensionLoaded": {
+      "desc": "Appelé au chargement de l'extension : enregistre le conteneur topLeft via ui_appContainers.registerContainer.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

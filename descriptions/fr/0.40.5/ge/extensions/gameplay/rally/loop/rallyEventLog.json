@@ -1,0 +1,52 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/loop/rallyEventLog.lua",
+  "module": "Journal des évènements d'une boucle de rallye. Chaque entrée (item) porte un timestamp, un eventId, un eventGroup, un type ('penalty', etc.) et une table data. À chaque ajout, les agrégats sont recalculés : pénalité totale, temps de spéciale total, temps total (spéciales + pénalités) et résumé des pénalités par groupe et par type. Utilisé par rallyLoopManager et rallyAttempts.",
+  "usage": "local log = require('gameplay_rally_loop_rallyEventLog')()\nlog:addItem({eventId='ss1', eventGroup='SS1'}, 12.3, 'penalty', {penaltyType='speeding', amount=10})\nprint(log:getTotalPenalty())",
+  "notes": [
+    "Le module renvoie une fonction constructeur ; les options passées sont transmises à C:init (qui n'en utilise aucune).",
+    "Seuls les items dont data.stageTimeSecs existe comptent comme temps de spéciale ; seuls les items de type 'penalty' avec data.amount comptent dans la pénalité.",
+    "Un item sans data provoquerait une erreur dans getStageTimes/_calcTotalStageTime (accès à item.data.stageTimeSecs sans garde).",
+    "C:clear() vide items et itemsByEventGroup mais ne remet pas aggregatedItems à zéro : les totaux restent ceux d'avant jusqu'au prochain addItem."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Journal d'évènements. Champs d'instance : items (liste ordonnée), itemsByEventGroup (table eventGroup -> liste), aggregatedItems (totalPenalty, totalStageTime, totalTime, penaltySummary).",
+      "functions": {
+        "init": {"desc": "Initialise les listes vides. Appelé par le constructeur.", "internal": true},
+        "addItem": {
+          "desc": "Ajoute une entrée au journal et au groupe de l'évènement, puis recalcule les agrégats. eventId et eventGroup valent 'unknown' s'ils sont absents.",
+          "params": {
+            "event": {"type": "table", "desc": "Évènement source avec eventId et eventGroup."},
+            "timestamp": {"type": "number", "desc": "Horodatage de l'entrée."},
+            "type": {"type": "string", "desc": "Type d'entrée, par exemple 'penalty'."},
+            "data": {"type": "table", "desc": "Données libres (amount, penaltyType, stageTimeSecs…)."}
+          }
+        },
+        "recalculateAggregatedItems": {"desc": "Recalcule totalPenalty, totalStageTime, totalTime et penaltySummary. Appelé par addItem."},
+        "getItemsByEventGroup": {
+          "desc": "Renvoie les items d'un groupe d'évènements (table vide si aucun).",
+          "params": {"eventGroup": {"type": "string", "desc": "Nom du groupe."}},
+          "returns": [{"type": "table", "desc": "Liste d'items."}]
+        },
+        "getAllItems": {"desc": "Renvoie tous les items dans l'ordre d'ajout.", "returns": [{"type": "table", "desc": "Liste d'items."}]},
+        "getItemsByType": {
+          "desc": "Renvoie les items dont le type correspond.",
+          "params": {"type": {"type": "string", "desc": "Type recherché."}},
+          "returns": [{"type": "table", "desc": "Liste d'items."}]
+        },
+        "getStageTimes": {"desc": "Renvoie les items qui portent data.stageTimeSecs (un par spéciale terminée).", "returns": [{"type": "table", "desc": "Liste d'items."}]},
+        "getTotalPenalty": {"desc": "Pénalité totale en secondes (0 si rien).", "returns": [{"type": "number", "desc": "Secondes."}]},
+        "getTotalStageTime": {"desc": "Somme des temps de spéciales en secondes.", "returns": [{"type": "number", "desc": "Secondes."}]},
+        "getTotalTime": {"desc": "Temps de spéciales plus pénalités, en secondes.", "returns": [{"type": "number", "desc": "Secondes."}]},
+        "getPenaltySummary": {
+          "desc": "Résumé des pénalités : {totalPenalty, groups = {{eventGroup, totalPenalty, penalties = {{type, count, amount}}}}}. Les groupes suivent l'ordre de première apparition, les pénalités sont triées par type.",
+          "returns": [{"type": "table", "desc": "Résumé (par défaut {totalPenalty=0, groups={}})."}]
+        },
+        "_calcTotalPenalty": {"desc": "Somme data.amount des items de type 'penalty'.", "internal": true},
+        "_calcTotalStageTime": {"desc": "Somme data.stageTimeSecs de tous les items.", "internal": true},
+        "_calcPenaltySummary": {"desc": "Construit le résumé des pénalités par groupe puis par penaltyType.", "internal": true},
+        "clear": {"desc": "Vide le journal (items et groupes) et log un message de debug. Les agrégats ne sont pas recalculés."}
+      }
+    }
+  }
+}

@@ -1,52 +1,52 @@
 # `escCalibration`
 
-*Fichier : `lua/vehicle/extensions/escCalibration.lua` · VM : Véhicule · 229 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/escCalibration.lua` · VM: Vehicle · 229 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `escCalibration` : `extensions.load (VM véhicule)("escCalibration")`, puis la globale `escCalibration`
+**Access:** extension `escCalibration`: `extensions.load (vehicle VM)("escCalibration")`, then the global `escCalibration`
 
-Outil interne de calibration de l'ESC : automatise un test de 'rigidité de dérive' (skew stiffness) en balayant 13 vitesses (40 à 100 km/h) et 14 angles de braquage (0,5° à 7°), avec le régulateur de vitesse et le contrôleur 'esc'. Le résultat est écrit dans skewStiffnessPivot.csv et la progression est envoyée à l'UI via le hook 'ESCSkewStiffnessChange'.
+Internal ESC calibration tool: automates a 'skew stiffness' test by sweeping 13 speeds (40 to 100 km/h) and 14 steering angles (0.5° to 7°), with the cruise control and the 'esc' controller. The result is written to skewStiffnessPivot.csv and progress is sent to the UI via the 'ESCSkewStiffnessChange' hook.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('escCalibration')
-extensions.escCalibration.startSkewStiffnessTest()  -- nécessite un contrôleur 'esc'
+extensions.escCalibration.startSkewStiffnessTest()  -- requires an 'esc' controller
 ```
 
-## Remarques
+## Notes
 
-- États : Idling, Initialization (mesure l'angle de roue maximal en braquant à fond 2 x 2 s), Starting, Settling (attend la vitesse cible via cruiseControl.hasReachedTargetSpeed puis esc.calibrationSettled), Measuring (attend esc.calibrationMeasurementReady), Increasing Angle / Increasing Speed, Finished (écrit le CSV, coupe le cruise control, remet la vitesse physique normale).
-- Dépend du contrôleur 'esc' (champs wheelAngleFront, pauseESCAction, doSettle, calibrationSettled, doMeasure, calibrationMeasurementReady, stiffnessFront, stiffnessRear, fonctions startESCCalibration/stopESCCalibration) et charge l'extension cruiseControl.
-- Pendant le test, be:setPhysicsSpeedFactor(1) est demandé au GE (vitesse maximale de la physique) ; il est remis à 0 à la fin ou à l'arrêt.
-- Colonnes du CSV : Speed,Angle,Front,Rear,Ratio,gForce, Float Angle, Test. Les deux dernières colonnes (floatAngle, test) ne sont jamais renseignées dans testResults et valent donc nil. Le fichier est écrit dans le répertoire de travail du jeu (chemin relatif).
-- gForce = sensors.gx2 / |gravité| (gravité bornée à 0,1 minimum). La progression en % = étapes terminées / (13 x 14).
-- La direction est commandée par input.event('steering', -angleCible/angleMax, 1).
+- States: Idling, Initialization (measures the maximum wheel angle by steering fully 2 x 2 s), Starting, Settling (waits for the target speed via cruiseControl.hasReachedTargetSpeed then esc.calibrationSettled), Measuring (waits for esc.calibrationMeasurementReady), Increasing Angle / Increasing Speed, Finished (writes the CSV, cuts the cruise control, restores normal physics speed).
+- Depends on the 'esc' controller (fields wheelAngleFront, pauseESCAction, doSettle, calibrationSettled, doMeasure, calibrationMeasurementReady, stiffnessFront, stiffnessRear, functions startESCCalibration/stopESCCalibration) and loads the cruiseControl extension.
+- During the test, be:setPhysicsSpeedFactor(1) is requested from the GE (maximum physics speed); it is reset to 0 at the end or on stop.
+- CSV columns: Speed,Angle,Front,Rear,Ratio,gForce, Float Angle, Test. The last two columns (floatAngle, test) are never filled in testResults and are therefore nil. The file is written to the game's working directory (relative path).
+- gForce = sensors.gx2 / |gravity| (gravity clamped to a minimum of 0.1). Progress in % = completed steps / (13 x 14).
+- Steering is commanded by input.event('steering', -targetAngle/maxAngle, 1).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `escCalibration.onInit()` | Hook d'initialisation : remet tous les compteurs et résultats à zéro, la vitesse physique à normale et l'état à Idling. *(interne)* *(hook)* | 165 |
-| `escCalibration.onReset()` | Même fonction que onInit. *(interne)* *(hook)* | 165 |
-| `escCalibration.startSkewStiffnessTest()` | Démarre le test : récupère le contrôleur 'esc' (abandonne avec une erreur de log s'il n'existe pas), charge cruiseControl, lance la calibration ESC et passe en état Initialization. | 191 |
-| `escCalibration.stopSkewStiffnessTest()` | Arrête le test : coupe le régulateur, arrête la calibration ESC, remet la vitesse physique normale et passe en état Finished (le CSV sera alors écrit à la prochaine frame). | 209 |
-| `escCalibration.updateGFX(dt)` | Appelé chaque frame : fait avancer la machine à états du test et pilote la direction. *(interne)* | 57 |
+| `escCalibration.onInit()` | Initialization hook: resets all counters and results to zero, physics speed to normal and the state to Idling. *(internal)* *(hook)* | 165 |
+| `escCalibration.onReset()` | Same function as onInit. *(internal)* *(hook)* | 165 |
+| `escCalibration.startSkewStiffnessTest()` | Starts the test: gets the 'esc' controller (aborts with a log error if it does not exist), loads cruiseControl, starts the ESC calibration and switches to the Initialization state. | 191 |
+| `escCalibration.stopSkewStiffnessTest()` | Stops the test: cuts the cruise control, stops the ESC calibration, restores normal physics speed and switches to the Finished state (the CSV will then be written on the next frame). | 209 |
+| `escCalibration.updateGFX(dt)` | Called every frame: advances the test state machine and drives the steering. *(internal)* | 57 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `escCalibration.updateGFX(dt)`
 
-Appelé chaque frame : fait avancer la machine à états du test et pilote la direction.
+Called every frame: advances the test state machine and drives the steering.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-**Évènements UI (guihooks.trigger) :** `ESCSkewStiffnessChange`
+**UI events (guihooks.trigger):** `ESCSkewStiffnessChange`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getGravity`, `queueGameEngineLua`
 
-**Charge les extensions :** `cruiseControl`
+**Loads extensions:** `cruiseControl`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/escCalibration.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/escCalibration.lua`.*

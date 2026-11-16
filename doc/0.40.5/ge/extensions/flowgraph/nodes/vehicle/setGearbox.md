@@ -1,27 +1,27 @@
 # `flowgraph_nodes_vehicle_setGearbox`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/setGearbox.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/setGearbox.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/setGearbox")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/setGearbox")` (file under extensions/ but not a regular extension)
 
-Nœud « Set Gearbox Mode » (catégorie `once_f_duration`). Change le mode de boîte (`arcade` ou `realistic`) via `core_vehicleBridge.executeAction(veh,'setGearboxMode', mode)`, puis envoie un `ping` pour savoir quand c'est reçu. Pins d'entrée : `vehId`, `mode` (string).
+Node "Set Gearbox Mode" (category `once_f_duration`). Changes the gearbox mode (`arcade` or `realistic`) via `core_vehicleBridge.executeAction(veh,'setGearboxMode', mode)`, then sends a `ping` to know when it is received. Input pins: `vehId`, `mode` (string).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro. | 31 |
-| `C:init()` | Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne. | 24 |
-| `C:onNodeReset()` | Efface la réponse et passe en durée `inactive`. | 35 |
-| `C:postInit()` | Définit les valeurs proposées pour `mode` : arcade, realistic. | 27 |
-| `C:work()` | Quand le ping revient, passe en `finished`. | 55 |
-| `C:workOnce()` | Envoie l'action et un ping au véhicule, passe en `started`. | 40 |
+| `C:_executionStarted()` | Called by the manager when the flowgraph project execution starts; resets the internal state to zero. | 31 |
+| `C:init()` | Node constructor, called at its creation by the flowgraph editor/manager; initializes the internal state. | 24 |
+| `C:onNodeReset()` | Clears the response and goes to `inactive` duration. | 35 |
+| `C:postInit()` | Defines the values offered for `mode`: arcade, realistic. | 27 |
+| `C:work()` | When the ping returns, goes to `finished`. | 55 |
+| `C:workOnce()` | Sends the action and a ping to the vehicle, goes to `started`. | 40 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/setGearbox.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/setGearbox.lua`.*

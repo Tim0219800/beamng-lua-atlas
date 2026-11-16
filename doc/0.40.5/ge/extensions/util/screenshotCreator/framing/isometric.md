@@ -1,57 +1,57 @@
 # `util_screenshotCreator_framing_isometric`
 
-*Fichier : `lua/ge/extensions/util/screenshotCreator/framing/isometric.lua` · VM : Game Engine (GE) · 147 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/screenshotCreator/framing/isometric.lua` · VM: Game Engine (GE) · 147 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_screenshotCreator_framing_isometric` : `extensions.load("util_screenshotCreator_framing_isometric")`, puis la globale `util_screenshotCreator_framing_isometric`
+**Access:** extension `util_screenshotCreator_framing_isometric`: `extensions.load("util_screenshotCreator_framing_isometric")`, then the global `util_screenshotCreator_framing_isometric`
 
-Mode de cadrage « Fixed isometric » de screenshotCreator : place la caméra à distance fixe (15 m) du centre du véhicule, dans la direction locale (-1, -1, 0.75) normalisée selon les axes de référence du véhicule, regardant le centre. La position est ensuite recentrée de façon orthogonale (jusqu'à 8 itérations) pour que le projeté des points de cadrage soit centré dans la zone utile de l'image, en tenant compte des marges éventuelles. Il s'enregistre via onScreenshotCreatorCollectFramingModes (id « fixedIsometric », ordre 150).
+"Fixed isometric" framing mode of screenshotCreator: places the camera at a fixed distance (15 m) from the vehicle's center, in the local direction (-1, -1, 0.75) normalized along the vehicle's reference axes, looking at the center. The position is then recentered orthogonally (up to 8 iterations) so that the projection of the framing points is centered in the usable area of the image, taking any margins into account. It registers via onScreenshotCreatorCollectFramingModes (id "fixedIsometric", order 150).
 
-## Remarques
+## Notes
 
-- Résolution par défaut 500x281 et champ de vision par défaut 20 degrés quand le contexte n'en fournit pas.
-- Les marges ne sont utilisées que si useFramingMargins (ou useMargins) est vrai.
-- Le résultat contient framingData.boundBy = 'fixed distance' et framingData.fit (distance, décalages, position, rotation). frame est un alias de resolve.
-- Le mode déclare supportsFixedRotation = false et fixedDistance = 15.
+- Default resolution 500x281 and default field of view 20 degrees when the context provides none.
+- Margins are used only if useFramingMargins (or useMargins) is true.
+- The result contains framingData.boundBy = 'fixed distance' and framingData.fit (distance, offsets, position, rotation). frame is an alias of resolve.
+- The mode declares supportsFixedRotation = false and fixedDistance = 15.
 
-**Dépendances (chargées avant) :** `util_screenshotCreator_thumbnailConfig`, `util_screenshotCreator_framing_procedural`
+**Dependencies (loaded first):** `util_screenshotCreator_thumbnailConfig`, `util_screenshotCreator_framing_procedural`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_screenshotCreator_framing_isometric.frame(context)` | Alias de resolve. | 81 |
-| `util_screenshotCreator_framing_isometric.onScreenshotCreatorCollectFramingModes(modes)` | Hook de collecte des modes de cadrage : ajoute à la liste le mode {id = 'fixedIsometric', label = 'Fixed isometric', order = 150, fixedDistance, supportsFixedRotation = false, resolve}. *(interne)* *(hook)* | 131 |
-| `util_screenshotCreator_framing_isometric.resolve(context)` | Calcule la caméra isométrique fixe pour le véhicule du contexte. | 81 |
+| `util_screenshotCreator_framing_isometric.frame(context)` | Alias of resolve. | 81 |
+| `util_screenshotCreator_framing_isometric.onScreenshotCreatorCollectFramingModes(modes)` | Framing mode collection hook: adds the mode {id = 'fixedIsometric', label = 'Fixed isometric', order = 150, fixedDistance, supportsFixedRotation = false, resolve} to the list. *(internal)* *(hook)* | 131 |
+| `util_screenshotCreator_framing_isometric.resolve(context)` | Computes the fixed isometric camera for the context's vehicle. | 81 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_screenshotCreator_framing_isometric.frame(context)`
 
-Alias de resolve.
+Alias of resolve.
 
-- `context` (*table*) : Voir resolve
-- **renvoie** : table|nil Voir resolve
-- **renvoie** : string|nil Message d'erreur
+- `context` (*table*) : See resolve
+- **returns**: table|nil See resolve
+- **returns**: string|nil Error message
 
 #### `util_screenshotCreator_framing_isometric.onScreenshotCreatorCollectFramingModes(modes)`
 
-Hook de collecte des modes de cadrage : ajoute à la liste le mode {id = 'fixedIsometric', label = 'Fixed isometric', order = 150, fixedDistance, supportsFixedRotation = false, resolve}.
+Framing mode collection hook: adds the mode {id = 'fixedIsometric', label = 'Fixed isometric', order = 150, fixedDistance, supportsFixedRotation = false, resolve} to the list.
 
-- `modes` (*table[]*) : Liste de modes à compléter
+- `modes` (*table[]*) : List of modes to complete
 
 #### `util_screenshotCreator_framing_isometric.resolve(context)`
 
-Calcule la caméra isométrique fixe pour le véhicule du contexte.
+Computes the fixed isometric camera for the context's vehicle.
 
-- `context` (*table*) : Contexte : vehicle (obligatoire), configName, resolution, fov/fieldOfView, margin, useFramingMargins
-- **renvoie** : table|nil {pos, rot, name = 'fixed isometric camera', debugData, framingData} ou nil en cas d'erreur
-- **renvoie** : string|nil Message d'erreur si context.vehicle est absent
+- `context` (*table*) : Context: vehicle (required), configName, resolution, fov/fieldOfView, margin, useFramingMargins
+- **returns**: table|nil {pos, rot, name = 'fixed isometric camera', debugData, framingData} or nil on error
+- **returns**: string|nil Error message if context.vehicle is missing
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | table |  |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/screenshotCreator/framing/isometric.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/screenshotCreator/framing/isometric.lua`.*

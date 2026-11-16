@@ -1,64 +1,64 @@
 # `libs_luamqtt_mqtt_ngxsocket`
 
-*Fichier : `lua/common/libs/luamqtt/mqtt/ngxsocket.lua` · VM : Commun (GE + véhicule) · 56 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/luamqtt/mqtt/ngxsocket.lua` · VM: Common (GE + vehicle) · 56 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/luamqtt/mqtt/ngxsocket")`
+**Access:** `require("libs/luamqtt/mqtt/ngxsocket")`
 
-Connecteur réseau luamqtt pour OpenResty/nginx (ngx.socket.tcp). Inutilisable dans BeamNG : le fichier lit la globale ngx à son chargement, qui n'existe pas dans le jeu. Même interface que les autres connecteurs.
+luamqtt network connector for OpenResty/nginx (ngx.socket.tcp). Unusable in BeamNG: the file reads the global ngx at load time, which does not exist in the game. Same interface as the other connectors.
 
-## Remarques
+## Notes
 
-- Le chargement du module lève une erreur hors OpenResty (ngx est nil : ngx.socket.tcp).
-- settimeout convertit les secondes en millisecondes ; sans délai, il utilise 0x7FFFFFFF.
+- Loading the module raises an error outside OpenResty (ngx is nil: ngx.socket.tcp).
+- settimeout converts seconds to milliseconds; without a timeout, it uses 0x7FFFFFFF.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_luamqtt_mqtt_ngxsocket.connect(conn)` | Ouvre un socket ngx, se connecte à conn.host:conn.port (timeout très long), fait sslhandshake si conn.secure, stocke dans conn.sock. | 12 |
-| `libs_luamqtt_mqtt_ngxsocket.receive(conn, size)` | Reçoit size octets. | 41 |
-| `libs_luamqtt_mqtt_ngxsocket.send(conn, data, i, j)` | Envoie les données (sous-chaîne i..j si i est donné). | 32 |
-| `libs_luamqtt_mqtt_ngxsocket.settimeout(conn, timeout)` | Règle le délai du socket. | 46 |
-| `libs_luamqtt_mqtt_ngxsocket.shutdown(conn)` | Ferme le socket. | 27 |
+| `libs_luamqtt_mqtt_ngxsocket.connect(conn)` | Opens an ngx socket, connects to conn.host:conn.port (very long timeout), performs sslhandshake if conn.secure, stores it in conn.sock. | 12 |
+| `libs_luamqtt_mqtt_ngxsocket.receive(conn, size)` | Receives size bytes. | 41 |
+| `libs_luamqtt_mqtt_ngxsocket.send(conn, data, i, j)` | Sends the data (substring i..j if i is given). | 32 |
+| `libs_luamqtt_mqtt_ngxsocket.settimeout(conn, timeout)` | Sets the socket timeout. | 46 |
+| `libs_luamqtt_mqtt_ngxsocket.shutdown(conn)` | Closes the socket. | 27 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_luamqtt_mqtt_ngxsocket.connect(conn)`
 
-Ouvre un socket ngx, se connecte à conn.host:conn.port (timeout très long), fait sslhandshake si conn.secure, stocke dans conn.sock.
+Opens an ngx socket, connects to conn.host:conn.port (very long timeout), performs sslhandshake if conn.secure, stores it in conn.sock.
 
 - `conn` (*table*) : host, port, secure.
-- **renvoie** : boolean Succès.
-- **renvoie** : string|nil Erreur.
+- **returns**: boolean Success.
+- **returns**: string|nil Error.
 
 #### `libs_luamqtt_mqtt_ngxsocket.receive(conn, size)`
 
-Reçoit size octets.
+Receives size bytes.
 
-- `conn` (*table*) : Connexion.
-- `size` (*integer*) : Octets.
+- `conn` (*table*) : Connection.
+- `size` (*integer*) : Bytes.
 
 #### `libs_luamqtt_mqtt_ngxsocket.send(conn, data, i, j)`
 
-Envoie les données (sous-chaîne i..j si i est donné).
+Sends the data (substring i..j if i is given).
 
-- `conn` (*table*) : Connexion.
-- `data` (*string*) : Données.
-- `i` (*integer|nil*) : Début.
-- `j` (*integer|nil*) : Fin.
+- `conn` (*table*) : Connection.
+- `data` (*string*) : Data.
+- `i` (*integer|nil*) : Start.
+- `j` (*integer|nil*) : End.
 
 #### `libs_luamqtt_mqtt_ngxsocket.settimeout(conn, timeout)`
 
-Règle le délai du socket.
+Sets the socket timeout.
 
-- `conn` (*table*) : Connexion.
-- `timeout` (*number|nil*) : Secondes.
+- `conn` (*table*) : Connection.
+- `timeout` (*number|nil*) : Seconds.
 
 #### `libs_luamqtt_mqtt_ngxsocket.shutdown(conn)`
 
-Ferme le socket.
+Closes the socket.
 
-- `conn` (*table*) : Connexion.
+- `conn` (*table*) : Connection.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luamqtt/mqtt/ngxsocket.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/luamqtt/mqtt/ngxsocket.lua`.*

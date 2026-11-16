@@ -1,29 +1,62 @@
 {
   "path": "lua/ge/extensions/core/commandhandler.lua",
-  "module": "Exécute les commandes asynchrones envoyées au jeu par le schéma de protocole « beamng:v1/<commande>/<données> » (lien navigateur, argument de ligne de commande -command, canal pipe). Les commandes reçues avant que l'interface soit prête sont mises en file puis rejouées à onUiReady. Au premier update, lit les arguments de démarrage (-command beamng:...).",
-  "usage": "-- équivalent d'un lien beamng:v1/core_input_actions/triggerDownUp/toggleCamera\ncore_commandhandler.onSchemeCommand('v1/core_input_actions/triggerDownUp/toggleCamera', false)",
+  "module": "Executes the asynchronous commands sent to the game by the \"beamng:v1/<command>/<data>\" protocol scheme (browser link, -command command-line argument, pipe channel). Commands received before the interface is ready are queued then replayed on onUiReady. On the first update, reads the startup arguments (-command beamng:...).",
+  "usage": "-- equivalent to a link beamng:v1/core_input_actions/triggerDownUp/toggleCamera\ncore_commandhandler.onSchemeCommand('v1/core_input_actions/triggerDownUp/toggleCamera', false)",
   "notes": [
-    "Le texte est décodé (%XX) puis découpé sur '/' en au plus 3 morceaux : version, commande, données (les '/' des données sont conservés).",
-    "Commandes v1 gérées : showMod, subscriptionMod, downloadMod (core_repository), updateZipMod (core_modmanager), openMap (core_loadMapCmd), loadSnapshot (core_snapshot), tech_utils/<fonction> (appelle extensions.tech_utils[fonction]()), core_input_actions/<fonction>/<args...> (appelle extensions.core_input_actions[fonction](args)), openWorkbench et runRepro (avec garde core_reproGuard.isCommandAllowed, exécution via executeShell, absente des builds shipping).",
-    "Commandes sans test de version : startToolchainServer (charge networking_editorToolchain), startWorkbenchServer, startDebugServer, stopDebugServer, attachDebugger, detachDebugger.",
-    "Quand isStartingArg est vrai (instance lancée uniquement pour traiter la commande), openWorkbench et runRepro quittent le jeu (shutdown(0)) après usage ou en cas d'échec.",
-    "tech_utils et core_input_actions permettent d'appeler une fonction d'extension par son nom depuis un lien : à garder en tête côté sécurité.",
-    "Point à noter : M.onExtensionLoaded vaut `nop` (champ marqué « non défini » par l'extraction, vraisemblablement une fonction globale vide du moteur ; déduit du code)."
+    "The text is decoded (%XX) then split on '/' into at most 3 parts: version, command, data (the '/' in the data are kept).",
+    "v1 commands handled: showMod, subscriptionMod, downloadMod (core_repository), updateZipMod (core_modmanager), openMap (core_loadMapCmd), loadSnapshot (core_snapshot), tech_utils/<function> (calls extensions.tech_utils[function]()), core_input_actions/<function>/<args...> (calls extensions.core_input_actions[function](args)), openWorkbench and runRepro (guarded by core_reproGuard.isCommandAllowed, executed via executeShell, absent from shipping builds).",
+    "Commands without a version test: startToolchainServer (loads networking_editorToolchain), startWorkbenchServer, startDebugServer, stopDebugServer, attachDebugger, detachDebugger.",
+    "When isStartingArg is true (instance launched only to process the command), openWorkbench and runRepro quit the game (shutdown(0)) after use or on failure.",
+    "tech_utils and core_input_actions allow calling an extension function by name from a link: keep this in mind for security.",
+    "Point to note: M.onExtensionLoaded is `nop` (field marked \"undefined\" by the extraction, presumably an empty global engine function; inferred from code)."
   ],
   "fields": {
-    "onExtensionLoaded": {"type": "function", "desc": "Fonction vide (nop) : l'extension ne fait rien au chargement."}
+    "onExtensionLoaded": {
+      "type": "function",
+      "desc": "Empty function (nop): the extension does nothing on load."
+    }
   },
   "functions": {
     "onSchemeCommand": {
-      "desc": "Traite une commande de schéma « version/commande/données » (sans le préfixe « beamng: »). Met en file si l'UI n'est pas prête. Les commandes inconnues ou mal formées sont journalisées en erreur.",
+      "desc": "Processes a \"version/command/data\" scheme command (without the \"beamng:\" prefix). Queues if the UI is not ready. Unknown or malformed commands are logged as errors.",
       "params": {
-        "scheme": {"type": "string", "desc": "ex. « v1/openMap/{...json...} », encodé en pourcentage"},
-        "isStartingArg": {"type": "boolean", "desc": "vrai si la commande vient des arguments de démarrage du jeu"}
+        "scheme": {
+          "type": "string",
+          "desc": "e.g. \"v1/openMap/{...json...}\", percent-encoded"
+        },
+        "isStartingArg": {
+          "type": "boolean",
+          "desc": "true if the command comes from the game's startup arguments"
+        }
       }
     },
-    "onUiReady": {"desc": "Hook : l'interface est prête ; exécute les commandes mises en file.", "internal": true},
-    "onFirstUpdate": {"desc": "Hook : au premier update, cherche « -command beamng:... » dans Engine.getStartingArgs() et l'exécute (ignoré si l'extension a été rechargée).", "internal": true},
-    "onSerialize": {"desc": "Hook : renvoie {ignoreStartupCmd = true} pour que le rechargement du GE ne rejoue pas la commande de démarrage.", "returns": [{"type": "table", "desc": "données à sérialiser"}], "internal": true},
-    "onDeserialized": {"desc": "Hook : restaure ignoreStartupCmd.", "params": {"d": {"type": "table", "desc": "table renvoyée par onSerialize"}}, "internal": true}
+    "onUiReady": {
+      "desc": "Hook: the interface is ready; runs the queued commands.",
+      "internal": true
+    },
+    "onFirstUpdate": {
+      "desc": "Hook: on the first update, looks for \"-command beamng:...\" in Engine.getStartingArgs() and executes it (ignored if the extension was reloaded).",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook: returns {ignoreStartupCmd = true} so that the GE reload does not replay the startup command.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "data to serialize"
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook: restores ignoreStartupCmd.",
+      "params": {
+        "d": {
+          "type": "table",
+          "desc": "table returned by onSerialize"
+        }
+      },
+      "internal": true
+    }
   }
 }

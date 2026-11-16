@@ -1,0 +1,78 @@
+{
+  "path": "lua/vehicle/controller/4wd.lua",
+  "module": "Contrôleur auxiliaire qui donne au conducteur la commande du 4x4 sélectionnable : arbre 4WD (connecté/déconnecté), boîte de gamme (haute/basse) et différentiels. Il agit soit via des contrôleurs `driveModes` (si leurs noms sont listés dans le jbeam), soit directement via l'API `powertrain` pour les anciens véhicules. Il écrit `electrics.values.mode4WD` et `modeRangeBox` (1 ou 0) et ajoute des entrées au menu radial.",
+  "usage": "controller.getControllerSafe(\"4wd\").toggle4WD()\ncontroller.getControllerSafe(\"4wd\").setRangeMode(\"low\")",
+  "notes": [
+    "Clés jbeam lues par init : `shaftName` (arbre du transfert, périphérique powertrain dont `mode` vaut \"connected\" ou \"disconnected\"), `rangeBoxName` (boîte de gamme, mode \"low\" ou \"high\"). Lues par initLastStage : `driveModesRangeNames`, `driveModesTransfercaseNames`, `driveModesDifferentialNames` (tables de noms de contrôleurs driveModes).",
+    "`M.relevantDevice = \"transfercase\"` : sert à trier ce contrôleur par rapport au périphérique powertrain du même nom.",
+    "L'action d'entrée appelle toggleDiffs/toggle4WD/toggleRange si un contrôleur 4wd existe ; sinon elle appelle directement l'API powertrain (code de compatibilité cité dans le fichier).",
+    "La construction du menu radial est faite une seule fois (flag hasBuiltPie) ; elle capture l'objet `shaft`/`rangeBox` du premier init.",
+    "Il n'y a pas de fonction `reset` : controller.reset rappelle donc init à chaque reset."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "relevantDevice": {"type": "string", "desc": "\"transfercase\" : nom du périphérique powertrain utilisé pour l'ordre d'appel."}
+  },
+  "functions": {
+    "updateGFX": {
+      "desc": "Chaque frame : écrit electrics.values.modeRangeBox (1 si gamme basse) et mode4WD (1 si arbre connecté).",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "toggleDiffs": {
+      "desc": "Passe au mode suivant de chaque contrôleur driveModes de différentiels ; sinon appelle powertrain.toggleDefaultDiffs().",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "toggleRange": {
+      "desc": "Passe au mode suivant des contrôleurs driveModes de gamme ; sinon bascule le mode de la boîte de gamme via powertrain.toggleDeviceMode.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setRangeMode": {
+      "desc": "Impose le mode de la boîte de gamme (powertrain.setDeviceMode). Sans effet s'il n'y a pas de boîte de gamme.",
+      "params": {"mode": {"type": "string", "desc": "\"low\" ou \"high\" (valeurs vues dans le code)."}},
+      "returns": [],
+      "internal": false
+    },
+    "toggle4WD": {
+      "desc": "Passe au mode suivant des contrôleurs driveModes de transfert ; sinon bascule l'arbre 4WD, sauf s'il est physiquement déconnecté (`isPhysicallyDisconnected`).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "set4WDMode": {
+      "desc": "Impose le mode de l'arbre 4WD, sauf s'il est physiquement déconnecté.",
+      "params": {"mode": {"type": "string", "desc": "\"connected\" ou \"disconnected\"."}},
+      "returns": [],
+      "internal": false
+    },
+    "serialize": {
+      "desc": "Renvoie l'état sauvegardé : {mode4WD, modeRange}.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{mode4WD = string|nil, modeRange = string|nil}."}],
+      "internal": true
+    },
+    "deserialize": {
+      "desc": "Restaure les modes 4WD et gamme depuis les données de serialize.",
+      "params": {"data": {"type": "table|nil", "desc": "Données retournées par serialize."}},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Retrouve les périphériques powertrain (`shaftName`, `rangeBoxName`), initialise les valeurs electrics et ajoute les entrées du menu radial (une seule fois).",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    },
+    "initLastStage": {
+      "desc": "Retrouve les contrôleurs driveModes nommés dans `driveModesRangeNames`, `driveModesTransfercaseNames` et `driveModesDifferentialNames` (ceux qui existent).",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

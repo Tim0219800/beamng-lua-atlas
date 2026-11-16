@@ -1,4 +1,4 @@
 {
   "path": "lua/ge/client/postFx/screenSpaceShadows.lua",
-  "module": "Crée, s'il n'existe pas, l'objet natif « ScreenSpaceShadowsPostFx » (type PostFxScreenSpaceShadows) pour les ombres en espace écran. Aucune fonction exportée ; toute la logique est côté C++."
+  "module": "Creates, if it does not exist, the native object \"ScreenSpaceShadowsPostFx\" (type PostFxScreenSpaceShadows) for screen-space shadows. No exported function; all the logic is on the C++ side."
 }

@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/raceData.lua",
+  "module": "Nœud flowgraph « Race Data » (catégorie repeat_instant, tag scenario). Expose des données de course pour un véhicule (raceData.states[vehId]) : formattedTime (temps formaté via race:raceTime, calculé seulement si la pin est utilisée), recoveriesUsed, placement et isOnRoad (vrai tant que le véhicule est dans les limites du chemin IA ; un seul tick à faux est masqué).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Chaque frame : lit l'état du véhicule dans la course et remplit les quatre pins de sortie.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/vehicleColorPalette.lua",
+  "module": "Section « Vehicle Color Palette » de l'outil Dynamic Decals : permet de changer les couleurs du véhicule joueur (color, colorPalette0, colorPalette1) et ses données de peinture métallique (metallicPaintData : Metallic, Roughness, Clear Coat, Clear Coat Roughness, via getField/setField) pour voir l'effet sur un design. Enregistre aussi une préférence « palettes » avec 19 palettes de 3 couleurs prédéfinies (BeamNG, Camouflage, Chocolate, Dunes, Fast Car, France, Icy, Italy, Lilac, Midnight, Moss, Neptune, Pastelle, Retro Handheld Console, Sunset, Tape Deck, The 80's, Vintage, Watermelon). Les couleurs du véhicule sont sérialisées avec l'état de l'outil et restaurées après 5 frames.",
+  "notes": [
+    "Les couleurs sont des triplets RGB 0..1 ; Point4F pour les couleurs du véhicule (le 4e composant garde la valeur existante ou stockée).",
+    "L'interface de gestion des palettes dans les préférences est entièrement commentée dans le code : seule la liste par défaut est enregistrée.",
+    "Si aucun véhicule n'existe, la section affiche « No vehicle ».",
+    "Restauration des couleurs : si le véhicule est absent quand le compteur tombe à 0, un avertissement est loggé et la restauration est retentée à chaque frame."
+  ],
+  "functions": {
+    "setup": {
+      "desc": "Initialise le module avec l'outil parent : enregistre la section (ordre 120, fermée par défaut, bouton d'aide), la fonction de mise à jour de restauration des couleurs et la page de documentation.",
+      "params": {"tool_in": {"type": "table", "desc": "Module editor_dynamicDecalsTool"}},
+      "internal": true
+    },
+    "onGui": {
+      "desc": "Dessine le contenu de la section (couleurs et réglages métalliques du véhicule joueur). Appelé par l'outil dans la section et dans sa fenêtre dédiée.",
+      "params": {"guiId": {"type": "string", "desc": "Suffixe d'identifiant imgui pour éviter les collisions entre section et fenêtre"}},
+      "internal": true
+    },
+    "registerEditorPreferences": {
+      "desc": "Enregistre dans la sous-catégorie dynamicDecalsTool.vehicleColorPalette la préférence palettes (table de {name, values = 3 triplets RGB}).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences"}},
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook de préférence vide.",
+      "params": {"path": {"type": "string", "desc": "Chemin de préférence"}, "value": {"type": "any", "desc": "Nouvelle valeur"}},
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation : renvoie {colors = {{color}, {colorPalette0}, {colorPalette1}}} (4 composantes chacune) du véhicule joueur, ou colors = nil sans véhicule.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{colors = table|nil}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook de désérialisation : programme la restauration des couleurs sauvegardées dans 5 frames.",
+      "params": {"data": {"type": "table", "desc": "Données renvoyées par onSerialize"}},
+      "internal": true
+    }
+  }
+}

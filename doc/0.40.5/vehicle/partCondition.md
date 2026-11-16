@@ -1,133 +1,133 @@
 # `partCondition`
 
-*Fichier : `lua/vehicle/partCondition.lua` · VM : Véhicule · 607 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/partCondition.lua` · VM: Vehicle · 607 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `partCondition`
+**Access:** global `partCondition`
 
-Système d'usure et d'état des pièces du véhicule (kilométrage, intégrité/dommages, état visuel dont la peinture vieillie). Il découvre quelles pièces (parts) contiennent quoi (devices de powertrain, réservoirs, flexbodies, poutres cassables/déformables), appelle powertrain, energyStorage et beamstate pour appliquer ou lire leur condition, et gère des instantanés (snapshots) pour pouvoir remettre le véhicule dans son état de spawn au reset. Le Lua du jeu l'utilise pour sauvegarder et recharger l'état d'un véhicule (garage, carrière) : initConditions à l'apparition, getConditions pour sauvegarder.
+Vehicle part wear and condition system (mileage, integrity/damage, visual state including aged paint). It discovers which parts contain what (powertrain devices, tanks, flexbodies, breakable/deformable beams), calls powertrain, energyStorage and beamstate to apply or read their condition, and manages snapshots to be able to put the vehicle back into its spawn state on reset. The game Lua uses it to save and reload a vehicle's state (garage, career): initConditions at spawn, getConditions to save.
 
-## Exemple
+## Example
 
 ```lua
--- sauvegarder l'état
-local conditions = partCondition.getConditions()  -- table partId -> {odometer, integrityValue, visualValue, integrityState, visualState} ou false
--- recharger
+-- save the state
+local conditions = partCondition.getConditions()  -- table partId -> {odometer, integrityValue, visualValue, integrityState, visualState} or false
+-- reload
 partCondition.initConditions(conditions, 0, 1, 1)
 ```
 
-## Remarques
+## Notes
 
-- Dépend de l'extension `odometer` (extensions.odometer.getRelativeRecording / startRecording) : le kilométrage d'une pièce = valeur de base absolue + distance parcourue depuis la pose de la condition. Les unités d'odomètre sont celles de l'extension odometer (le seuil de vieillissement de peinture 5 000 000 -> 800 000 000 laisse penser à des mètres cumulés, déduit).
-- Types de pièces (partTypeData[partId]) déduits au premier appel : "powertrainDevice:<nom>" (+ ":radiator", ":exhaust", ":turbocharger" pour les sous-systèmes), "energyStorage:<nom>", "jbeam:flexbody:<mesh>", "jbeam:breakGroup:<groupe>", "jbeam:beamDamage:<cid>" (poutres cassables/déformables hors poutres support de type 7).
-- Le vieillissement de peinture (getAgedPaint) augmente la rugosité (du clearcoat s'il y en a), diminue la saturation (jusqu'à 0.95) et éclaircit la couleur entre 5e6 et 8e8 d'odomètre. Pour le canal bleu l'éclaircissement utilise la constante du vert (maxColorBrightnessIncreaseG) au lieu de celle du bleu (incohérence apparente dans le code).
-- Un snapshot nommé "reset" est créé à chaque initConditions et devient le snapshot de reset : partCondition.reset() (appelé par main.lua:onVehicleReset) efface les valeurs et ré-applique ce snapshot.
-- initCondition journalise une erreur si on applique deux fois la condition d'une pièce (hasSetPartCondition) sans passer par reset ou un snapshot.
-- Bugs mineurs : dans createConditionSnapshot le message d'erreur concatène snapshotKey même quand il est nil (ce qui lèverait une erreur) ; le message d'erreur de applyConditionSnapshot parle de « créer » un snapshot.
-- getConditions renvoie false (pas une table) si aucune condition n'a encore été posée. Les erreurs par pièce sont capturées (xpcall) et loguées, la pièce est alors absente du résultat.
-- testInit / testLoad / testSave servent au debug : écrivent ou lisent partConditionTest.json dans le répertoire courant.
+- Depends on the `odometer` extension (extensions.odometer.getRelativeRecording / startRecording): a part's mileage = absolute base value + distance traveled since the condition was applied. The odometer units are those of the odometer extension (the paint aging threshold 5 000 000 -> 800 000 000 suggests cumulative meters, inferred).
+- Part types (partTypeData[partId]) inferred on the first call: "powertrainDevice:<name>" (+ ":radiator", ":exhaust", ":turbocharger" for subsystems), "energyStorage:<name>", "jbeam:flexbody:<mesh>", "jbeam:breakGroup:<group>", "jbeam:beamDamage:<cid>" (breakable/deformable beams excluding support beams of type 7).
+- Paint aging (getAgedPaint) increases roughness (of the clearcoat if there is one), decreases saturation (down to 0.95) and lightens the color between 5e6 and 8e8 of odometer. For the blue channel the lightening uses the green constant (maxColorBrightnessIncreaseG) instead of the blue one (apparent inconsistency in the code).
+- A snapshot named "reset" is created at each initConditions and becomes the reset snapshot: partCondition.reset() (called by main.lua:onVehicleReset) clears the values and reapplies this snapshot.
+- initCondition logs an error if a part's condition is applied twice (hasSetPartCondition) without going through reset or a snapshot.
+- Minor bugs: in createConditionSnapshot the error message concatenates snapshotKey even when it is nil (which would raise an error); the error message of applyConditionSnapshot talks about "creating" a snapshot.
+- getConditions returns false (not a table) if no condition has been applied yet. Per-part errors are caught (xpcall) and logged, the part is then absent from the result.
+- testInit / testLoad / testSave are for debugging: write or read partConditionTest.json in the current directory.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `partCondition.applyConditionSnapshot(snapshotKey)` | Ré-applique un snapshot mémorisé (réinitialise l'état de pose puis initConditions). Erreur loguée si la clé est absente. | 50 |
-| `partCondition.createConditionSnapshot(snapshotKey)` | Mémorise l'état courant (getConditions) sous une clé. | 40 |
-| `partCondition.deleteConditionSnapshots()` | Supprime tous les snapshots et la clé de reset. | 65 |
-| `partCondition.ensureConditionsInit(fallbackOdometer, fallbackIntegrityValue, fallbackVisualValue)` | Appel « à l'aveugle » : initialise un état neuf si aucune condition n'a encore été posée (sinon ne fait rien). | 558 |
-| `partCondition.getConditions()` | Lit l'état courant de toutes les pièces : kilométrage, intégrité (min des sous-systèmes), état visuel (dont peinture) et états détaillés par sous-système, prêts pour être sauvegardés ou repassés à initConditions. | 489 |
-| `partCondition.getRootPartOdometerValue()` | Renvoie l'odomètre total de la pièce racine (slotType 'main') : valeur de base + distance depuis la pose. | 262 |
-| `partCondition.getRootPartTripValue()` | Renvoie la distance parcourue depuis la pose de la condition de la pièce racine (trajet). | 268 |
-| `partCondition.initConditions(partsCondition, fallbackOdometer, fallbackIntegrityValue, fallbackVisualValue, defaultPaints)` | Applique l'état de chaque pièce du véhicule à partir d'une table sauvegardée (ou un état neuf si nil), via powertrain, energyStorage, beamstate et la peinture, puis crée le snapshot « reset ». | 515 |
-| `partCondition.reset()` | Efface les conditions mémorisées et, si un snapshot de reset existe, le ré-applique. Appelée par main.lua au reset du véhicule. *(interne)* | 474 |
-| `partCondition.setAllPartPaints(paints, paintOdometer)` | Applique le même jeu de peintures vieillies à toutes les pièces actives. | 356 |
-| `partCondition.setPartMeshPaints(partId, paints)` | Applique les 3 peintures (couleur de base, rugosité, métal, vernis) aux flexbodies d'une pièce en envoyant des commandes setMeshColor / setMeshPaintData au GE. | 273 |
-| `partCondition.setPartPaints(partId, paints, paintOdometer)` | Mémorise les peintures d'une pièce (les entrées 2 et 3 copient la 1 si absentes), les vieillit selon l'odomètre de peinture et les applique aux meshes. | 348 |
-| `partCondition.setResetSnapshotKey(snapshotKey)` | Choisit le snapshot appliqué par reset(). | 70 |
-| `partCondition.testInit()` | Debug : initialise un état de test (odomètre 812812000, intégrité 1, visuel 1). *(interne)* | 564 |
-| `partCondition.testLoad()` | Debug : charge partConditionTest.json et l'applique avec initConditions. *(interne)* | 569 |
-| `partCondition.testSave()` | Debug : initialise si nécessaire puis écrit getConditions() dans partConditionTest.json. *(interne)* | 575 |
+| `partCondition.applyConditionSnapshot(snapshotKey)` | Reapplies a stored snapshot (resets the applied state then initConditions). Error logged if the key is absent. | 50 |
+| `partCondition.createConditionSnapshot(snapshotKey)` | Stores the current state (getConditions) under a key. | 40 |
+| `partCondition.deleteConditionSnapshots()` | Deletes all snapshots and the reset key. | 65 |
+| `partCondition.ensureConditionsInit(fallbackOdometer, fallbackIntegrityValue, fallbackVisualValue)` | "Blind" call: initializes a new state if no condition has been applied yet (otherwise does nothing). | 558 |
+| `partCondition.getConditions()` | Reads the current state of all parts: mileage, integrity (min of the subsystems), visual state (including paint) and detailed states per subsystem, ready to be saved or passed back to initConditions. | 489 |
+| `partCondition.getRootPartOdometerValue()` | Returns the total odometer of the root part (slotType 'main'): base value + distance since the condition was applied. | 262 |
+| `partCondition.getRootPartTripValue()` | Returns the distance traveled since the root part's condition was applied (trip). | 268 |
+| `partCondition.initConditions(partsCondition, fallbackOdometer, fallbackIntegrityValue, fallbackVisualValue, defaultPaints)` | Applies the state of each vehicle part from a saved table (or a new state if nil), via powertrain, energyStorage, beamstate and paint, then creates the "reset" snapshot. | 515 |
+| `partCondition.reset()` | Clears the stored conditions and, if a reset snapshot exists, reapplies it. Called by main.lua on vehicle reset. *(internal)* | 474 |
+| `partCondition.setAllPartPaints(paints, paintOdometer)` | Applies the same set of aged paints to all active parts. | 356 |
+| `partCondition.setPartMeshPaints(partId, paints)` | Applies the 3 paints (base color, roughness, metallic, clearcoat) to a part's flexbodies by sending setMeshColor / setMeshPaintData commands to the GE. | 273 |
+| `partCondition.setPartPaints(partId, paints, paintOdometer)` | Stores a part's paints (entries 2 and 3 copy the 1st if absent), ages them according to the paint odometer and applies them to the meshes. | 348 |
+| `partCondition.setResetSnapshotKey(snapshotKey)` | Chooses the snapshot applied by reset(). | 70 |
+| `partCondition.testInit()` | Debug: initializes a test state (odometer 812812000, integrity 1, visual 1). *(internal)* | 564 |
+| `partCondition.testLoad()` | Debug: loads partConditionTest.json and applies it with initConditions. *(internal)* | 569 |
+| `partCondition.testSave()` | Debug: initializes if needed then writes getConditions() to partConditionTest.json. *(internal)* | 575 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `partCondition.applyConditionSnapshot(snapshotKey)`
 
-Ré-applique un snapshot mémorisé (réinitialise l'état de pose puis initConditions). Erreur loguée si la clé est absente.
+Reapplies a stored snapshot (resets the applied state then initConditions). Error logged if the key is absent.
 
-- `snapshotKey` (*string*) : Nom du snapshot.
+- `snapshotKey` (*string*) : Snapshot name.
 
 #### `partCondition.createConditionSnapshot(snapshotKey)`
 
-Mémorise l'état courant (getConditions) sous une clé.
+Stores the current state (getConditions) under a key.
 
-- `snapshotKey` (*string*) : Nom du snapshot.
+- `snapshotKey` (*string*) : Snapshot name.
 
 #### `partCondition.ensureConditionsInit(fallbackOdometer, fallbackIntegrityValue, fallbackVisualValue)`
 
-Appel « à l'aveugle » : initialise un état neuf si aucune condition n'a encore été posée (sinon ne fait rien).
+"Blind" call: initializes a new state if no condition has been applied yet (otherwise does nothing).
 
-- `fallbackOdometer` (*number|nil*) : Odomètre de repli.
-- `fallbackIntegrityValue` (*number|nil*) : Intégrité de repli.
-- `fallbackVisualValue` (*number|nil*) : État visuel de repli.
+- `fallbackOdometer` (*number|nil*) : Fallback odometer.
+- `fallbackIntegrityValue` (*number|nil*) : Fallback integrity.
+- `fallbackVisualValue` (*number|nil*) : Fallback visual state.
 
 #### `partCondition.getConditions()`
 
-Lit l'état courant de toutes les pièces : kilométrage, intégrité (min des sous-systèmes), état visuel (dont peinture) et états détaillés par sous-système, prêts pour être sauvegardés ou repassés à initConditions.
+Reads the current state of all parts: mileage, integrity (min of the subsystems), visual state (including paint) and detailed states per subsystem, ready to be saved or passed back to initConditions.
 
-- **renvoie** : table|boolean Table partId -> condition, ou false si rien n'a encore été initialisé.
+- **returns**: table|boolean Table partId -> condition, or false if nothing has been initialized yet.
 
 #### `partCondition.getRootPartOdometerValue()`
 
-Renvoie l'odomètre total de la pièce racine (slotType 'main') : valeur de base + distance depuis la pose.
+Returns the total odometer of the root part (slotType 'main'): base value + distance since the condition was applied.
 
-- **renvoie** : number Odomètre de la pièce principale.
+- **returns**: number Odometer of the main part.
 
 #### `partCondition.getRootPartTripValue()`
 
-Renvoie la distance parcourue depuis la pose de la condition de la pièce racine (trajet).
+Returns the distance traveled since the root part's condition was applied (trip).
 
-- **renvoie** : number Distance du trajet.
+- **returns**: number Trip distance.
 
 #### `partCondition.initConditions(partsCondition, fallbackOdometer, fallbackIntegrityValue, fallbackVisualValue, defaultPaints)`
 
-Applique l'état de chaque pièce du véhicule à partir d'une table sauvegardée (ou un état neuf si nil), via powertrain, energyStorage, beamstate et la peinture, puis crée le snapshot « reset ».
+Applies the state of each vehicle part from a saved table (or a new state if nil), via powertrain, energyStorage, beamstate and paint, then creates the "reset" snapshot.
 
-- `partsCondition` (*table|nil*) : Table partId -> {odometer, integrityValue, visualValue, integrityState, visualState} ; nil = véhicule neuf.
-- `fallbackOdometer` (*number|nil*) : Odomètre pour les pièces sans donnée (0 par défaut).
-- `fallbackIntegrityValue` (*number|nil*) : Intégrité 0..1 par défaut (1).
-- `fallbackVisualValue` (*number|nil*) : État visuel 0..1 par défaut (1).
-- `defaultPaints` (*table|nil*) : Peintures par défaut (3 entrées) remplaçant celles du jbeam pour une valeur visuelle numérique.
+- `partsCondition` (*table|nil*) : Table partId -> {odometer, integrityValue, visualValue, integrityState, visualState}; nil = new vehicle.
+- `fallbackOdometer` (*number|nil*) : Odometer for parts without data (0 by default).
+- `fallbackIntegrityValue` (*number|nil*) : Integrity 0..1 by default (1).
+- `fallbackVisualValue` (*number|nil*) : Visual state 0..1 by default (1).
+- `defaultPaints` (*table|nil*) : Default paints (3 entries) replacing those from the jbeam for a numeric visual value.
 
 #### `partCondition.setAllPartPaints(paints, paintOdometer)`
 
-Applique le même jeu de peintures vieillies à toutes les pièces actives.
+Applies the same set of aged paints to all active parts.
 
-- `paints` (*table*) : Tableau de 1 à 3 peintures.
-- `paintOdometer` (*number*) : Usure de la peinture.
+- `paints` (*table*) : Array of 1 to 3 paints.
+- `paintOdometer` (*number*) : Paint wear.
 
 #### `partCondition.setPartMeshPaints(partId, paints)`
 
-Applique les 3 peintures (couleur de base, rugosité, métal, vernis) aux flexbodies d'une pièce en envoyant des commandes setMeshColor / setMeshPaintData au GE.
+Applies the 3 paints (base color, roughness, metallic, clearcoat) to a part's flexbodies by sending setMeshColor / setMeshPaintData commands to the GE.
 
-- `partId` (*string*) : Identifiant (chemin) de la pièce.
-- `paints` (*table*) : Tableau de 3 peintures {baseColor = {r,g,b,a (0..1)}, roughness, metallic, clearcoat, clearcoatRoughness}.
+- `partId` (*string*) : Identifier (path) of the part.
+- `paints` (*table*) : Array of 3 paints {baseColor = {r,g,b,a (0..1)}, roughness, metallic, clearcoat, clearcoatRoughness}.
 
 #### `partCondition.setPartPaints(partId, paints, paintOdometer)`
 
-Mémorise les peintures d'une pièce (les entrées 2 et 3 copient la 1 si absentes), les vieillit selon l'odomètre de peinture et les applique aux meshes.
+Stores a part's paints (entries 2 and 3 copy the 1st if absent), ages them according to the paint odometer and applies them to the meshes.
 
-- `partId` (*string*) : Identifiant de la pièce.
-- `paints` (*table*) : Tableau de 1 à 3 peintures.
-- `paintOdometer` (*number*) : Usure de la peinture (0 = neuve).
+- `partId` (*string*) : Identifier of the part.
+- `paints` (*table*) : Array of 1 to 3 paints.
+- `paintOdometer` (*number*) : Paint wear (0 = new).
 
 #### `partCondition.setResetSnapshotKey(snapshotKey)`
 
-Choisit le snapshot appliqué par reset().
+Chooses the snapshot applied by reset().
 
-- `snapshotKey` (*string|nil*) : Clé du snapshot de reset ; nil pour ne rien restaurer.
+- `snapshotKey` (*string|nil*) : Reset snapshot key; nil to restore nothing.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `queueGameEngineLua`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/partCondition.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/partCondition.lua`.*

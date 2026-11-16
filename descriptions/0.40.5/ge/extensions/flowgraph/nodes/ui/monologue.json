@@ -1,43 +1,43 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/monologue.lua",
-  "module": "Nœud flowgraph « Monologue » (catégorie once_f_duration, durée) : affiche une suite de messages l'un après l'autre avec ui_message. Entrées : « category » (flowgraph), « icon » (error), puis pour chaque message i : « message_i » (any) et « duration_i » (5 s). La sortie de durée passe à 'finished' à la fin de la somme des durées.",
+  "module": "Flowgraph node \"Monologue\" (category once_f_duration, duration): displays a series of messages one after another with ui_message. Inputs: \"category\" (flowgraph), \"icon\" (error), then for each message i: \"message_i\" (any) and \"duration_i\" (5 s). The duration output goes to 'finished' at the end of the sum of the durations.",
   "notes": [
-    "Utilise dtSim (temps de simulation), donc le défilement s'arrête en pause.",
-    "Les pins message_i/duration_i sont supprimés selon lnk.sourcePin (au lieu de targetPin), donc les liens ne sont pas bien supprimés.",
-    "Si une duration_i vaut nil, la somme provoque une erreur."
+    "Uses dtSim (simulation time), so the progression stops when paused.",
+    "The message_i/duration_i pins are removed according to lnk.sourcePin (instead of targetPin), so the links are not removed properly.",
+    "If a duration_i is nil, the sum causes an error."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStarted": {
-          "desc": "Réinitialise index, temps et message courant.",
+          "desc": "Resets index, time and current message.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure count et mode.",
+          "desc": "Restores count and mode.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde count et mode.",
+          "desc": "Saves count and mode.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Champ « Count ».",
+          "desc": "\"Count\" field.",
           "internal": true
         },
         "init": {
@@ -45,29 +45,29 @@
           "internal": true
         },
         "onNodeReset": {
-          "desc": "État de durée 'inactive'.",
+          "desc": "Duration state 'inactive'.",
           "internal": true
         },
         "updatePins": {
-          "desc": "Ajuste le nombre de paires de pins.",
+          "desc": "Adjusts the number of pin pairs.",
           "params": {
             "old": {
               "type": "integer",
-              "desc": "Ancien nombre d'éléments."
+              "desc": "Old number of elements."
             },
             "new": {
               "type": "integer",
-              "desc": "Nouveau nombre d'éléments."
+              "desc": "New number of elements."
             }
           },
           "internal": true
         },
         "work": {
-          "desc": "Fait avancer le temps de simulation et affiche chaque message à son tour ; termine après la dernière durée.",
+          "desc": "Advances the simulation time and displays each message in turn; finishes after the last duration.",
           "internal": true
         },
         "workOnce": {
-          "desc": "temps = 0, état 'started'.",
+          "desc": "time = 0, state 'started'.",
           "internal": true
         }
       }

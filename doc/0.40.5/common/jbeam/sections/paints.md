@@ -1,31 +1,31 @@
 # `jbeam_sections_paints`
 
-*Fichier : `lua/common/jbeam/sections/paints.lua` · VM : Commun (GE + véhicule) · 41 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/sections/paints.lua` · VM: Common (GE + vehicle) · 41 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/sections/paints")`
+**Access:** `require("jbeam/sections/paints")`
 
-Applique les peintures du véhicule : vehicleConfig.paints (ou, à défaut, vehicleConfig.colors converti par convertVehicleColorsToPaints) donne jusqu'à trois peintures. Pour chacune, validateVehiclePaint la vérifie puis baseColor devient la couleur de l'objet (paints[1] -> color, paints[2] -> colorPalette0, paints[3] -> colorPalette1). Toute la liste est ensuite envoyée au moteur via setMetallicPaintData pour les paramètres métalliques/clearcoat.
+Applies the vehicle paints: vehicleConfig.paints (or, failing that, vehicleConfig.colors converted by convertVehicleColorsToPaints) provides up to three paints. For each one, validateVehiclePaint checks it, then baseColor becomes the object's color (paints[1] -> color, paints[2] -> colorPalette0, paints[3] -> colorPalette1). The whole list is then sent to the engine via setMetallicPaintData for the metallic/clearcoat parameters.
 
-## Remarques
+## Notes
 
-- baseColor est un tableau {r, v, b, a}.
-- convertVehicleColorsToPaints et validateVehiclePaint sont des fonctions globales définies ailleurs.
+- baseColor is an array {r, g, b, a}.
+- convertVehicleColorsToPaints and validateVehiclePaint are global functions defined elsewhere.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_sections_paints.process(vehicleObj, vehicleConfig, vehicle)` | Applique les peintures du config à l'objet véhicule et transmet les données de peinture métallique. *(interne)* | 10 |
+| `jbeam_sections_paints.process(vehicleObj, vehicleConfig, vehicle)` | Applies the config's paints to the vehicle object and passes on the metallic paint data. *(internal)* | 10 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_sections_paints.process(vehicleObj, vehicleConfig, vehicle)`
 
-Applique les peintures du config à l'objet véhicule et transmet les données de peinture métallique.
+Applies the config's paints to the vehicle object and passes on the metallic paint data.
 
-- `vehicleObj` (*userdata*) : Objet véhicule moteur.
-- `vehicleConfig` (*table*) : Configuration (paints ou colors).
-- `vehicle` (*table*) : Données jbeam (non utilisé).
+- `vehicleObj` (*userdata*) : Engine vehicle object.
+- `vehicleConfig` (*table*) : Configuration (paints or colors).
+- `vehicle` (*table*) : Jbeam data (unused).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/sections/paints.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/sections/paints.lua`.*

@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/client/lighting/advanced/lightViz.lua",
+  "module": "Modes de visualisation de débogage de l'éclairage avancé. Il crée des PostEffect (priorité 9999, cible $backBuffer) : AL_DepthVisualize, AL_NormalsVisualize, AL_LightColorVisualize, AL_LightSpecularVisualize, AL_VelocityVisualize et AnnotationVisualize, avec leurs shaders et state blocks. Il définit des globales de bascule (toggleDepthViz, toggleNormalsViz, toggleLightColorViz, toggleLightSpecularViz, toggleVelocityViz, toggleAnnotationVisualize, toggleLightVisualizer) et des tables de callbacks onEnabled/onDisabled. Un seul mode est actif à la fois : activer un mode désactive le précédent.",
+  "usage": "toggleDepthViz()        -- bascule la visualisation de la profondeur\ntoggleNormalsViz(true)  -- force l'activation\ntoggleNormalsViz(false) -- force la désactivation",
+  "notes": [
+    "Argument des fonctions toggleXxxViz(enable) : nil ou \"\" bascule (et met à jour la variable $AL_xxxVisualizeVar), true active, false désactive.",
+    "Les callbacks onEnabled retournent true. Celui d'AnnotationVisualize active Engine.Annotation.enable(true) s'il existe, et onDisabled le désactive.",
+    "Incohérence : la table des callbacks des normales est publiée sous la globale « AL_NormalsVisualize » (même nom que l'objet PostEffect) au lieu de « AL_NormalsVisualizeCallbacks » comme pour les autres modes.",
+    "Les tables de callbacks sont locales avec rawset sur _G : AL_DepthVisualizeCallbacks, AL_LightColorVisualizeCallbacks, AL_LightSpecularVisualizeCallbacks, AL_VelocityVisualizeCallbacks, AnnotationVisualizeCallbacks."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "al_DepthVisualizeCallbacks": {"desc": "Callbacks de AL_DepthVisualize (globale AL_DepthVisualizeCallbacks).", "functions": {"onEnabled": {"desc": "Désactive le mode de visualisation précédent, mémorise AL_DepthVisualize comme mode courant, retourne true.", "params": {}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true}}},
+    "aL_NormalsVisualizeCallbacks": {"desc": "Callbacks de AL_NormalsVisualize (publiés sous la globale AL_NormalsVisualize).", "functions": {"onEnabled": {"desc": "Même logique pour AL_NormalsVisualize.", "params": {}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true}}},
+    "aL_LightColorVisualizeCallbacks": {"desc": "Callbacks de AL_LightColorVisualize.", "functions": {"onEnabled": {"desc": "Même logique pour AL_LightColorVisualize.", "params": {}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true}}},
+    "aL_LightSpecularVisualizeCallbacks": {"desc": "Callbacks de AL_LightSpecularVisualize.", "functions": {"onEnabled": {"desc": "Même logique pour AL_LightSpecularVisualize.", "params": {}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true}}},
+    "al_VelocityVisualizeCallbacks": {"desc": "Callbacks de AL_VelocityVisualize (texture #VelocityBuffer).", "functions": {"onEnabled": {"desc": "Même logique pour AL_VelocityVisualize.", "params": {}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true}}},
+    "annotationVisualizeCallbacks": {
+      "desc": "Callbacks de AnnotationVisualize (buffer d'annotations).",
+      "functions": {
+        "onEnabled": {"desc": "Si Engine.Annotation existe : sélectionne le mode AnnotationVisualize et active Engine.Annotation.", "params": {}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true},
+        "onDisabled": {"desc": "Désactive Engine.Annotation si disponible.", "params": {}, "returns": [], "internal": true}
+      }
+    }
+  }
+}

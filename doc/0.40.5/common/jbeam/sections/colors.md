@@ -1,31 +1,31 @@
 # `jbeam_sections_colors`
 
-*Fichier : `lua/common/jbeam/sections/colors.lua` · VM : Commun (GE + véhicule) · 32 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/sections/colors.lua` · VM: Common (GE + vehicle) · 32 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/sections/colors")`
+**Access:** `require("jbeam/sections/colors")`
 
-Applique la couleur de carrosserie héritée de la configuration du véhicule (vehicleConfig.colors, ancien format) à l'objet véhicule : colors[1] -> vehicleObj.color, colors[2] -> colorPalette0, colors[3] -> colorPalette1. Chaque entrée est un tableau {r, v, b, a} converti en couleur linéaire. Remplacé par jbeam/sections/paints pour le format actuel (paints).
+Applies the legacy body color from the vehicle configuration (vehicleConfig.colors, old format) to the vehicle object: colors[1] -> vehicleObj.color, colors[2] -> colorPalette0, colors[3] -> colorPalette1. Each entry is an array {r, g, b, a} converted to a linear color. Replaced by jbeam/sections/paints for the current format (paints).
 
-## Remarques
+## Notes
 
-- Aucune validation : une entrée de moins de 4 composantes donnera des nil dans ColorF.
-- Appelé dans loadBundle côté GE avant paints.process, qui peut écraser les mêmes propriétés.
+- No validation: an entry with fewer than 4 components will give nils in ColorF.
+- Called in loadBundle on the GE side before paints.process, which can overwrite the same properties.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_sections_colors.process(vehicleObj, vehicleConfig, vehicle)` | Définit color, colorPalette0 et colorPalette1 de l'objet véhicule à partir de vehicleConfig.colors s'il existe. *(interne)* | 10 |
+| `jbeam_sections_colors.process(vehicleObj, vehicleConfig, vehicle)` | Sets color, colorPalette0 and colorPalette1 of the vehicle object from vehicleConfig.colors if it exists. *(internal)* | 10 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_sections_colors.process(vehicleObj, vehicleConfig, vehicle)`
 
-Définit color, colorPalette0 et colorPalette1 de l'objet véhicule à partir de vehicleConfig.colors s'il existe.
+Sets color, colorPalette0 and colorPalette1 of the vehicle object from vehicleConfig.colors if it exists.
 
-- `vehicleObj` (*userdata*) : Objet véhicule moteur.
-- `vehicleConfig` (*table*) : Configuration du véhicule (champ colors).
-- `vehicle` (*table*) : Données jbeam (non utilisé).
+- `vehicleObj` (*userdata*) : Engine vehicle object.
+- `vehicleConfig` (*table*) : Vehicle configuration (colors field).
+- `vehicle` (*table*) : Jbeam data (unused).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/sections/colors.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/sections/colors.lua`.*

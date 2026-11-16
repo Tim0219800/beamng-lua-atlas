@@ -1,15 +1,28 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/environment/setWind.lua",
-  "module": "Nœud flowgraph « Set Wind » (catégorie once_p_duration). Applique un vent à un véhicule ou à tous. Pins d'entrée : vehId (vide = tous les véhicules), windSpeed (m/s) et windDir (vec3, {1,0,0} par défaut). À chaque frame, envoie obj:setWind(x,y,z) (direction multipliée par la vitesse) à la VM véhicule. Remet le vent à zéro au reset et à l'arrêt.",
-  "notes": ["Le vecteur windDir est mis à l'échelle sans être normalisé : une direction non unitaire change la vitesse réelle."],
+  "module": "Flowgraph node \"Set Wind\" (category once_p_duration). Applies wind to one vehicle or to all. Input pins: vehId (empty = all vehicles), windSpeed (m/s) and windDir (vec3, {1,0,0} by default). Every frame, sends obj:setWind(x,y,z) (direction multiplied by speed) to the vehicle VM. Resets the wind to zero on reset and on stop.",
+  "notes": [
+    "The windDir vector is scaled without being normalized: a non-unit direction changes the actual speed."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Appelle onNodeReset (vent nul pour tous).", "internal": true},
-        "onNodeReset": {"desc": "Envoie obj:setWind(0, 0, 0) à tous les véhicules.", "internal": true},
-        "_executionStopped": {"desc": "Appelle onNodeReset.", "internal": true},
-        "work": {"desc": "Calcule windDir * windSpeed et l'envoie par queueLuaCommand à chaque véhicule concerné."}
+        "init": {
+          "desc": "Calls onNodeReset (zero wind for all).",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Sends obj:setWind(0, 0, 0) to all vehicles.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Calls onNodeReset.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Computes windDir * windSpeed and sends it via queueLuaCommand to each affected vehicle."
+        }
       }
     }
   }

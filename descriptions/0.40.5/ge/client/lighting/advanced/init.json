@@ -1,9 +1,9 @@
 {
   "path": "lua/ge/client/lighting/advanced/init.lua",
-  "module": "Light manager « Advanced Lighting ». Charge les sous-modules shaders, lightViz et shadowViz, puis, si le gestionnaire existe (LightManager.findByName), publie la table globale ADVLMCallbacks avec onActivate/onDeactivate. À l'activation, il active l'objet AL_FormatToken (cible hors écran nécessaire à MSAA et HDR) ; à la désactivation, il le désactive.",
+  "module": "\"Advanced Lighting\" light manager. Loads the submodules shaders, lightViz and shadowViz, then, if the manager exists (LightManager.findByName), publishes the global table ADVLMCallbacks with onActivate/onDeactivate. On activation, it enables the AL_FormatToken object (off-screen target needed for MSAA and HDR); on deactivation, it disables it.",
   "notes": [
-    "Sur macOS (variable $platform == « macos »), onActivate ne fait rien.",
-    "Le bloc de préférences $pref::LightManager::* du début est entièrement commenté."
+    "On macOS (variable $platform == \"macos\"), onActivate does nothing.",
+    "The $pref::LightManager::* preferences block at the start is entirely commented out."
   ],
   "fields": {},
   "functions": {}

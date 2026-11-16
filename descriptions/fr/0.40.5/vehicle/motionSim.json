@@ -1,0 +1,9 @@
+{
+  "path": "lua/vehicle/motionSim.lua",
+  "module": "Fichier obsolète conservé pour compatibilité : le require('motionSim') ne fait que loguer une erreur (renvoie vers https://go.beamng.com/protocols, le système de protocoles de télémétrie/simulateur de mouvement), affiche une trace de la pile (debug.tracesimple) pour retrouver le code fautif, et renvoie une table vide.",
+  "notes": [
+    "Aucune fonction ni champ : tout accès à une fonction de ce module donnera nil. Utiliser le système de protocoles (module `protocols`) à la place."
+  ],
+  "fields": {},
+  "functions": {}
+}

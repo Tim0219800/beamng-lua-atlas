@@ -1,27 +1,27 @@
 # `flowgraph_nodes_vehicle_recoverInPlace`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/recoverInPlace.lua` · VM : Game Engine (GE) · 47 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/recoverInPlace.lua` · VM: Game Engine (GE) · 47 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/recoverInPlace")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/recoverInPlace")` (file under extensions/ but not a regular extension)
 
-Nœud « Recover In Place » (catégorie `once_instant`). Récupère un véhicule sur place : `veh:resetBrokenFlexMesh()` puis `spawn.safeTeleport` à la position actuelle avec la direction/haut actuels, pour qu'il ne soit pas dans un obstacle (il peut être un peu déplacé). Pin d'entrée : `vehId` (défaut : joueur).
+Node "Recover In Place" (category `once_instant`). Recovers a vehicle in place: `veh:resetBrokenFlexMesh()` then `spawn.safeTeleport` at the current position with the current direction/up, so it is not inside an obstacle (it may be moved slightly). Input pin: `vehId` (default: player).
 
-## Remarques
+## Notes
 
-- La description du pin `vehId` dit « to freeze » (copier-coller).
+- The description of the `vehId` pin says "to freeze" (copy-paste).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Constructeur vide. | 27 |
-| `C:workOnce()` | Remet à zéro les flexmeshes cassés puis téléporte le véhicule en sécurité sur place. | 31 |
+| `C:init()` | Empty constructor. | 27 |
+| `C:workOnce()` | Resets the broken flexmeshes to zero then safely teleports the vehicle in place. | 31 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/recoverInPlace.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/recoverInPlace.lua`.*

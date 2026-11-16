@@ -1,10 +1,10 @@
 {
   "path": "lua/common/cdefDebugDraw.lua",
-  "module": "Déclarations FFI (ffi.cdef) des fonctions C++ de dessin de debug (BNG_DBG_DRAW_*) : sphère, cylindre, ligne, texte, prisme carré, triangle plein et versions par lots (batch). Ne s'exécute que si ffi est disponible. Un moddeur n'appelle normalement pas ces symboles directement : on passe par l'API debugDrawer.",
+  "module": "FFI declarations (ffi.cdef) of the C++ debug drawing functions (BNG_DBG_DRAW_*): sphere, cylinder, line, text, square prism, filled triangle and batch versions. Only runs if ffi is available. A modder does not normally call these symbols directly: use the debugDrawer API instead.",
   "notes": [
-    "Le fichier ne définit aucune fonction Lua ni aucun champ : uniquement un ffi.cdef.",
-    "Les couleurs sont passées en entier non signé packé (packedCol).",
-    "Déclare aussi le typedef Vector3 {float x, y, z}."
+    "The file defines no Lua function or field: only an ffi.cdef.",
+    "Colors are passed as a packed unsigned integer (packedCol).",
+    "Also declares the typedef Vector3 {float x, y, z}."
   ],
   "fields": {},
   "functions": {}

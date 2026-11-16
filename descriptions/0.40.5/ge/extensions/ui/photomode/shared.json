@@ -1,180 +1,327 @@
 {
   "path": "lua/ge/extensions/ui/photomode/shared.lua",
-  "module": "Bibliothèque d'outils et état partagé de tous les modules du mode photo (ui_photomode_*). Elle contient la table d'état de session S, le journal de debug, des fonctions de normalisation (nombres, booléens, chemins), des accès protégés (pcall) à VariableRegistry, aux réglages (settings) et à l'API de capture « screenshot », ainsi que le calcul de la disponibilité des actions média (téléversement, Steam, ouverture d'URL de partage).",
+  "module": "Tool library and shared state of all photo mode modules (ui_photomode_*). It contains the session state table S, the debug log, normalization functions (numbers, booleans, paths), protected (pcall) accesses to VariableRegistry, to the settings and to the \"screenshot\" capture API, as well as the computation of media action availability (upload, Steam, share URL opening).",
   "notes": [
-    "Le journal utilise l'étiquette \"ui_pause_photomode\" (reste d'un ancien nom) et le debug est activé par défaut (isDebugEnabled = true).",
-    "S.routePayloadContractVersion = 8 et S.photomodeMetadataStateVersion = 2 (versions des formats de charge utile de route et de métadonnées d'état).",
-    "S contient notamment : sessionActive, activeProfile (\"pause\" par défaut), photoModeOpen, les états de restauration de session (caméra, scène, effets, rendu avancé, node grabber), les bookmarks sauvegardés, pendingPreviewPlayback, pendingMotionCapture, captureInProgressFramesRemaining, exitConfirmationBypass, pendingExitNavigation, persistentSessionState et panelSurfaceMode (\"hidden\" par défaut).",
-    "Actions média : le téléversement exige un backend screenshot.publish, onlineFeatures == \"enable\", OnlineServiceProvider.isWorking et un compte connecté ; l'action Steam exige les mêmes conditions sauf le compte ; l'ouverture d'URL exige openWebBrowser. Raisons possibles : backend_unavailable, online_features_disabled, online_service_unavailable, online_account_required, browser_unavailable.",
-    "La table de libellés interne contient aussi shipping_build_required, mais buildMediaActions ne produit jamais cette raison."
+    "The log uses the tag \"ui_pause_photomode\" (leftover from an old name) and debug is enabled by default (isDebugEnabled = true).",
+    "S.routePayloadContractVersion = 8 and S.photomodeMetadataStateVersion = 2 (versions of the route payload and state metadata formats).",
+    "S notably contains: sessionActive, activeProfile (\"pause\" by default), photoModeOpen, the session restore states (camera, scene, effects, advanced render, node grabber), the saved bookmarks, pendingPreviewPlayback, pendingMotionCapture, captureInProgressFramesRemaining, exitConfirmationBypass, pendingExitNavigation, persistentSessionState and panelSurfaceMode (\"hidden\" by default).",
+    "Media actions: upload requires a screenshot.publish backend, onlineFeatures == \"enable\", OnlineServiceProvider.isWorking and a logged-in account; the Steam action requires the same conditions except the account; URL opening requires openWebBrowser. Possible reasons: backend_unavailable, online_features_disabled, online_service_unavailable, online_account_required, browser_unavailable.",
+    "The internal label table also contains shipping_build_required, but buildMediaActions never produces this reason."
   ],
   "fields": {
     "S": {
       "type": "table",
-      "desc": "Table d'état mutable partagée par tous les modules du mode photo (session active, états de restauration, lecture d'aperçu en attente, etc.). Les autres modules la lisent et l'écrivent directement via ui_photomode_shared.S."
+      "desc": "Mutable state table shared by all photo mode modules (active session, restore states, pending preview playback, etc.). The other modules read and write it directly via ui_photomode_shared.S."
     }
   },
   "functions": {
     "isDebugEnabled": {
-      "desc": "Indique si le journal de debug du mode photo est activé.",
+      "desc": "Indicates whether the photo mode debug log is enabled.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si le debug est activé."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if debug is enabled."
+        }
+      ],
       "internal": false
     },
     "setDebugEnabled": {
-      "desc": "Active ou désactive le debug du mode photo et propage le réglage à l'API screenshot (setDebugTracingEnabled) si elle est disponible.",
+      "desc": "Enables or disables photo mode debug and propagates the setting to the screenshot API (setDebugTracingEnabled) if available.",
       "params": {
-        "value": {"type": "any", "desc": "Activé uniquement si value == true."}
+        "value": {
+          "type": "any",
+          "desc": "Enabled only if value == true."
+        }
       },
       "returns": [],
       "internal": false
     },
     "logDebug": {
-      "desc": "Écrit un message de niveau Info préfixé par « [Photomode] » si le debug est activé.",
+      "desc": "Writes an Info-level message prefixed with \"[Photomode]\" if debug is enabled.",
       "params": {
-        "message": {"type": "any", "desc": "Message (converti avec tostring)."}
+        "message": {
+          "type": "any",
+          "desc": "Message (converted with tostring)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "stringifyDebugPayload": {
-      "desc": "Convertit une charge utile en texte pour le journal : chaîne vide pour nil, chaîne inchangée, sinon JSON (jsonEncode) ou tostring en cas d'échec.",
+      "desc": "Converts a payload to text for the log: empty string for nil, string unchanged, otherwise JSON (jsonEncode) or tostring on failure.",
       "params": {
-        "payload": {"type": "any", "desc": "Valeur à convertir."}
+        "payload": {
+          "type": "any",
+          "desc": "Value to convert."
+        }
       },
-      "returns": [{"type": "string", "desc": "Texte à journaliser."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Text to log."
+        }
+      ],
       "internal": false
     },
     "playPhotoCaptureSound": {
-      "desc": "Joue le son de capture photo (événement FMOD \"event:>UI>Main>Photo\" sur AudioGui).",
+      "desc": "Plays the photo capture sound (FMOD event \"event:>UI>Main>Photo\" on AudioGui).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "clampNumber": {
-      "desc": "Convertit en nombre et borne entre minValue et maxValue ; renvoie fallback si la valeur n'est pas numérique.",
+      "desc": "Converts to a number and clamps between minValue and maxValue; returns fallback if the value is not numeric.",
       "params": {
-        "value": {"type": "any", "desc": "Valeur à convertir avec tonumber."},
-        "minValue": {"type": "number", "desc": "Borne basse."},
-        "maxValue": {"type": "number", "desc": "Borne haute."},
-        "fallback": {"type": "any", "desc": "Valeur renvoyée si la conversion échoue (non bornée)."}
+        "value": {
+          "type": "any",
+          "desc": "Value to convert with tonumber."
+        },
+        "minValue": {
+          "type": "number",
+          "desc": "Bottom bound."
+        },
+        "maxValue": {
+          "type": "number",
+          "desc": "Top bound."
+        },
+        "fallback": {
+          "type": "any",
+          "desc": "Value returned if the conversion fails (not clamped)."
+        }
       },
-      "returns": [{"type": "number|any", "desc": "Nombre borné ou fallback."}],
+      "returns": [
+        {
+          "type": "number|any",
+          "desc": "Clamped number or fallback."
+        }
+      ],
       "internal": false
     },
     "normalizeBoolean": {
-      "desc": "Convertit une valeur en booléen : booléen inchangé, nombre (~= 0), chaînes \"true\"/\"1\" et \"false\"/\"0\" (insensible à la casse) ; sinon fallback == true. nil donne fallback == true.",
+      "desc": "Converts a value to a boolean: boolean unchanged, number (~= 0), strings \"true\"/\"1\" and \"false\"/\"0\" (case-insensitive); otherwise fallback == true. nil gives fallback == true.",
       "params": {
-        "value": {"type": "any", "desc": "Valeur à normaliser."},
-        "fallback": {"type": "any", "desc": "Valeur par défaut (seul fallback == true compte)."}
+        "value": {
+          "type": "any",
+          "desc": "Value to normalize."
+        },
+        "fallback": {
+          "type": "any",
+          "desc": "Default value (only fallback == true counts)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "Booléen normalisé."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Normalized boolean."
+        }
+      ],
       "internal": false
     },
     "hasAnyDescribedField": {
-      "desc": "Indique si la table state contient au moins un des champs décrits par fieldDescriptors (clé field.key non nil).",
+      "desc": "Indicates whether the state table contains at least one of the fields described by fieldDescriptors (key field.key non-nil).",
       "params": {
-        "state": {"type": "table", "desc": "Table à tester ; un non-table donne false."},
-        "fieldDescriptors": {"type": "table[]", "desc": "Liste de descripteurs {key, outputKey?, normalize?}."}
+        "state": {
+          "type": "table",
+          "desc": "Table to test; a non-table gives false."
+        },
+        "fieldDescriptors": {
+          "type": "table[]",
+          "desc": "List of descriptors {key, outputKey?, normalize?}."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si un champ est présent."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a field is present."
+        }
+      ],
       "internal": false
     },
     "buildDescribedState": {
-      "desc": "Construit une table de sortie à partir de source en ne copiant que les champs décrits et non nil, en appliquant field.normalize si présent et en renommant la clé en field.outputKey si défini.",
+      "desc": "Builds an output table from source by copying only the described, non-nil fields, applying field.normalize if present and renaming the key to field.outputKey if defined.",
       "params": {
-        "source": {"type": "table", "desc": "Table source ; un non-table donne {}."},
-        "fieldDescriptors": {"type": "table[]", "desc": "Liste de descripteurs {key, outputKey?, normalize?}."}
+        "source": {
+          "type": "table",
+          "desc": "Source table; a non-table gives {}."
+        },
+        "fieldDescriptors": {
+          "type": "table[]",
+          "desc": "List of descriptors {key, outputKey?, normalize?}."
+        }
       },
-      "returns": [{"type": "table", "desc": "État construit."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Built state."
+        }
+      ],
       "internal": false
     },
     "getCoreCameraFunction": {
-      "desc": "Renvoie la fonction core_camera[name] si elle existe, sinon nil.",
+      "desc": "Returns the function core_camera[name] if it exists, otherwise nil.",
       "params": {
-        "name": {"type": "string", "desc": "Nom de la fonction de core_camera (par exemple setPosRot, setFOV)."}
+        "name": {
+          "type": "string",
+          "desc": "Name of the core_camera function (for example setPosRot, setFOV)."
+        }
       },
-      "returns": [{"type": "function|nil", "desc": "La fonction, ou nil."}],
+      "returns": [
+        {
+          "type": "function|nil",
+          "desc": "The function, or nil."
+        }
+      ],
       "internal": false
     },
     "normalizePathForCompare": {
-      "desc": "Normalise un chemin pour comparaison : antislashs convertis en /, slashs initiaux et espaces finaux retirés, passage en minuscules.",
+      "desc": "Normalizes a path for comparison: backslashes converted to /, leading slashes and trailing spaces removed, converted to lowercase.",
       "params": {
-        "value": {"type": "any", "desc": "Chemin (nil donne chaîne vide)."}
+        "value": {
+          "type": "any",
+          "desc": "Path (nil gives empty string)."
+        }
       },
-      "returns": [{"type": "string", "desc": "Chemin normalisé."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Normalized path."
+        }
+      ],
       "internal": false
     },
     "normalizePreviewNumberArray": {
-      "desc": "Vérifie qu'une table contient au moins expectedLength nombres convertibles et renvoie une copie des expectedLength premiers ; nil si l'un manque.",
+      "desc": "Checks that a table contains at least expectedLength convertible numbers and returns a copy of the first expectedLength; nil if one is missing.",
       "params": {
-        "values": {"type": "table", "desc": "Tableau d'entrée."},
-        "expectedLength": {"type": "integer", "desc": "Nombre d'éléments attendus (3 pour une position, 4 pour un quaternion)."}
+        "values": {
+          "type": "table",
+          "desc": "Input array."
+        },
+        "expectedLength": {
+          "type": "integer",
+          "desc": "Number of expected elements (3 for a position, 4 for a quaternion)."
+        }
       },
-      "returns": [{"type": "number[]|nil", "desc": "Tableau normalisé ou nil."}],
+      "returns": [
+        {
+          "type": "number[]|nil",
+          "desc": "Normalized array or nil."
+        }
+      ],
       "internal": false
     },
     "readVariableRegistryValue": {
-      "desc": "Lit une variable de VariableRegistry (protégé par pcall). Renvoie nil si le registre est indisponible ou en cas d'erreur.",
+      "desc": "Reads a VariableRegistry variable (protected by pcall). Returns nil if the registry is unavailable or on error.",
       "params": {
-        "variableName": {"type": "string", "desc": "Nom de la variable."}
+        "variableName": {
+          "type": "string",
+          "desc": "Variable name."
+        }
       },
-      "returns": [{"type": "any", "desc": "Valeur ou nil."}],
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Value or nil."
+        }
+      ],
       "internal": false
     },
     "writeVariableRegistryValue": {
-      "desc": "Écrit une variable de VariableRegistry (protégé par pcall, erreur journalisée).",
+      "desc": "Writes a VariableRegistry variable (protected by pcall, error logged).",
       "params": {
-        "variableName": {"type": "string", "desc": "Nom de la variable."},
-        "value": {"type": "any", "desc": "Valeur à écrire."}
+        "variableName": {
+          "type": "string",
+          "desc": "Variable name."
+        },
+        "value": {
+          "type": "any",
+          "desc": "Value to write."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si l'écriture a réussi."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the write succeeded."
+        }
+      ],
       "internal": false
     },
     "readSettingValue": {
-      "desc": "Lit un réglage via settings.getValue (protégé par pcall) ; nil en cas d'indisponibilité ou d'erreur.",
+      "desc": "Reads a setting via settings.getValue (protected by pcall); nil if unavailable or on error.",
       "params": {
-        "settingName": {"type": "string", "desc": "Nom du réglage."}
+        "settingName": {
+          "type": "string",
+          "desc": "Setting name."
+        }
       },
-      "returns": [{"type": "any", "desc": "Valeur du réglage ou nil."}],
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Setting value or nil."
+        }
+      ],
       "internal": false
     },
     "writeSettingValue": {
-      "desc": "Écrit un réglage via settings.setValue (protégé par pcall, erreur journalisée).",
+      "desc": "Writes a setting via settings.setValue (protected by pcall, error logged).",
       "params": {
-        "settingName": {"type": "string", "desc": "Nom du réglage."},
-        "value": {"type": "any", "desc": "Nouvelle valeur."}
+        "settingName": {
+          "type": "string",
+          "desc": "Setting name."
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si l'écriture a réussi."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the write succeeded."
+        }
+      ],
       "internal": false
     },
     "writeSettingsState": {
-      "desc": "Applique plusieurs réglages d'un coup via settings.setState (protégé par pcall).",
+      "desc": "Applies several settings at once via settings.setState (protected by pcall).",
       "params": {
-        "partialState": {"type": "table<string, any>", "desc": "Réglages à modifier."}
+        "partialState": {
+          "type": "table<string, any>",
+          "desc": "Settings to change."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si l'appel a réussi."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the call succeeded."
+        }
+      ],
       "internal": false
     },
     "notifySettingsUi": {
-      "desc": "Demande à l'interface de se rafraîchir en appelant settings.notifyUI (protégé par pcall).",
+      "desc": "Asks the UI to refresh by calling settings.notifyUI (protected by pcall).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getScreenshotApi": {
-      "desc": "Charge le module « screenshot » avec pcall(require) et le renvoie, ou nil s'il est indisponible.",
+      "desc": "Loads the \"screenshot\" module with pcall(require) and returns it, or nil if unavailable.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Module screenshot."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Screenshot module."
+        }
+      ],
       "internal": false
     },
     "buildMediaActions": {
-      "desc": "Calcule la disponibilité des actions média du mode photo à partir du contexte d'exécution (build shipping, fonctionnalités en ligne, service en ligne, compte connecté, backends screenshot, navigateur).",
+      "desc": "Computes the availability of photo mode media actions from the runtime context (shipping build, online features, online service, logged-in account, screenshot backends, browser).",
       "params": {},
       "returns": [
         {
           "type": "table",
-          "desc": "{runtime={shippingBuild, uiDevMode, onlineFeaturesEnabled, onlineServiceWorking, onlineAccountLoggedIn}, capture={upload, steam}, preview={openShareUrl}} ; chaque action vaut {visible, enabled, reason, reasonLabel}."
+          "desc": "{runtime={shippingBuild, uiDevMode, onlineFeaturesEnabled, onlineServiceWorking, onlineAccountLoggedIn}, capture={upload, steam}, preview={openShareUrl}}; each action is {visible, enabled, reason, reasonLabel}."
         }
       ],
       "internal": false

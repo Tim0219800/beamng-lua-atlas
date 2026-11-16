@@ -1,12 +1,12 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/randomQuaternion.lua",
-  "module": "Nœud « Random Quaternion » (repeat_instant, icône casino). Fournit un quaternion aléatoire à chaque frame. Entrées (degrés, cachées/fixes) : xMin/xMaxAngle (0, 0), yMin/yMaxAngle (0, 0), zMin/zMaxAngle (0, 360). Sortie : quaternion (table {x,y,z,w}). Par défaut : rotation aléatoire autour de l'axe Z seulement.",
+  "module": "Node \"Random Quaternion\" (repeat_instant, casino icon). Provides a random quaternion every frame. Inputs (degrees, hidden/fixed): xMin/xMaxAngle (0, 0), yMin/yMaxAngle (0, 0), zMin/zMaxAngle (0, 360). Output: quaternion (table {x,y,z,w}). By default: random rotation around the Z axis only.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "work": {
-          "desc": "Tire un angle aléatoire par axe entre min et max (converti en radians), compose les rotations X puis Y puis Z via quatFromEuler et écrit le quaternion.",
+          "desc": "Draws a random angle per axis between min and max (converted to radians), composes the X then Y then Z rotations via quatFromEuler and writes the quaternion.",
           "internal": true
         }
       }

@@ -1,60 +1,60 @@
 # `career_modules_milestones_generalMilestones_branches`
 
-*Fichier : `lua/ge/extensions/career/modules/milestones/generalMilestones/branches.lua` · VM : Game Engine (GE) · 97 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/milestones/generalMilestones/branches.lua` · VM: Game Engine (GE) · 97 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_milestones_generalMilestones_branches` : `extensions.load("career_modules_milestones_generalMilestones_branches")`, puis la globale `career_modules_milestones_generalMilestones_branches`
+**Access:** extension `career_modules_milestones_generalMilestones_branches`: `extensions.load("career_modules_milestones_generalMilestones_branches")`, then the global `career_modules_milestones_generalMilestones_branches`
 
-Jalons de niveaux de branches et de compétences de la carrière. Pour chaque branche non « isInDevelopment » de career_branches.getSortedBranches(), crée un jalon branch_<id> dont les paliers sont les niveaux (requiredValue). Les branches donnent une récompense majorLinear et apparaissent aussi dans le filtre general ; les compétences (isSkill) une récompense minorLinear. Notifie le joueur quand le seuil du niveau suivant est atteint.
+Career branch level and skill milestones. For each non-"isInDevelopment" branch of career_branches.getSortedBranches(), creates a branch_<id> milestone whose tiers are the levels (requiredValue). Branches give a majorLinear reward and also appear in the general filter; skills (isSkill) give a minorLinear reward. Notifies the player when the next level's threshold is reached.
 
-## Remarques
+## Notes
 
-- Dans onPlayerAttributesChanged, `return` est utilisé quand l'attribut modifié n'a pas de jalon : les attributs suivants de la table change ne sont alors pas traités (probablement `goto continue` voulu).
-- Déclenche le hook onBranchTierReached(branchKey, step+1) à l'atteinte d'un palier.
-- Icônes par branche parente : motorsport raceFlag, labourer deliveryTruckArrows, specialized carChase01, adventurer jump.
-- Si la branche n'a pas de color, elle prend celle de sa branche parente.
+- In onPlayerAttributesChanged, `return` is used when the changed attribute has no milestone: the following attributes of the change table are then not processed (probably `goto continue` was intended).
+- Triggers the onBranchTierReached(branchKey, step+1) hook when a tier is reached.
+- Icons per parent branch: motorsport raceFlag, labourer deliveryTruckArrows, specialized carChase01, adventurer jump.
+- If the branch has no color, it takes that of its parent branch.
 
-**Dépendances (chargées avant) :** `career_branches`
+**Dependencies (loaded first):** `career_branches`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_milestones_generalMilestones_branches.onGeneralMilestonesCollect(milestonesList)` | Hook : ajoute à milestonesList un jalon par branche/compétence et crée sa sauvegarde si absente. *(interne)* *(hook)* | 16 |
-| `career_modules_milestones_generalMilestones_branches.onGeneralMilestonesSetupCallbacks()` | Hook : fixe la prochaine cible de notification de chaque jalon de branche. *(interne)* *(hook)* | 57 |
-| `career_modules_milestones_generalMilestones_branches.onPlayerAttributesChanged(change)` | Hook : quand un attribut de branche augmente et dépasse la cible, déclenche onBranchTierReached, affiche le toast de jalon, avance notificationStep et recalcule la cible. *(interne)* *(hook)* | 76 |
-| `career_modules_milestones_generalMilestones_branches.setNotificationTarget(attKey)` | Calcule la cible du palier suivant à notifier (notificationStep + 1) et la stocke dans milestoneConfig._target ; ne fait rien si tous les paliers sont notifiés. | 65 |
+| `career_modules_milestones_generalMilestones_branches.onGeneralMilestonesCollect(milestonesList)` | Hook: adds to milestonesList one milestone per branch/skill and creates its save data if absent. *(internal)* *(hook)* | 16 |
+| `career_modules_milestones_generalMilestones_branches.onGeneralMilestonesSetupCallbacks()` | Hook: sets the next notification target of each branch milestone. *(internal)* *(hook)* | 57 |
+| `career_modules_milestones_generalMilestones_branches.onPlayerAttributesChanged(change)` | Hook: when a branch attribute increases and exceeds the target, triggers onBranchTierReached, shows the milestone toast, advances notificationStep and recomputes the target. *(internal)* *(hook)* | 76 |
+| `career_modules_milestones_generalMilestones_branches.setNotificationTarget(attKey)` | Computes the target of the next tier to notify (notificationStep + 1) and stores it in milestoneConfig._target; does nothing if all tiers are notified. | 65 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_milestones_generalMilestones_branches.onGeneralMilestonesCollect(milestonesList)`
 
-Hook : ajoute à milestonesList un jalon par branche/compétence et crée sa sauvegarde si absente.
+Hook: adds to milestonesList one milestone per branch/skill and creates its save data if absent.
 
-- `milestonesList` (*table[]*) : Liste à compléter.
+- `milestonesList` (*table[]*) : List to fill.
 
 #### `career_modules_milestones_generalMilestones_branches.onPlayerAttributesChanged(change)`
 
-Hook : quand un attribut de branche augmente et dépasse la cible, déclenche onBranchTierReached, affiche le toast de jalon, avance notificationStep et recalcule la cible.
+Hook: when a branch attribute increases and exceeds the target, triggers onBranchTierReached, shows the milestone toast, advances notificationStep and recomputes the target.
 
-- `change` (*table<string, number>*) : Variation par attribut.
+- `change` (*table<string, number>*) : Change per attribute.
 
 #### `career_modules_milestones_generalMilestones_branches.setNotificationTarget(attKey)`
 
-Calcule la cible du palier suivant à notifier (notificationStep + 1) et la stocke dans milestoneConfig._target ; ne fait rien si tous les paliers sont notifiés.
+Computes the target of the next tier to notify (notificationStep + 1) and stores it in milestoneConfig._target; does nothing if all tiers are notified.
 
-- `attKey` (*string*) : Clé d'attribut de la branche.
+- `attKey` (*string*) : Branch attribute key.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_branches. |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_branches. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onBranchTierReached` — écouté par 1 module(s)
+- `onBranchTierReached` — listened to by 1 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/milestones/generalMilestones/branches.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/milestones/generalMilestones/branches.lua`.*

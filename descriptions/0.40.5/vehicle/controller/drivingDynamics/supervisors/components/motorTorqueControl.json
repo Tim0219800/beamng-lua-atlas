@@ -1,59 +1,238 @@
 {
   "path": "lua/vehicle/controller/drivingDynamics/supervisors/components/motorTorqueControl.lua",
-  "module": "Composant du système drivingDynamics qui réduit le couple moteur via device.throttleFactor, pour l'antipatinage (ordre 40) et le contrôle de lacet (ordre 40). Pour chaque moteur concerné, le facteur final est min(facteur antipatinage, facteur lacet), recalculé à chaque pas fixe. L'antipatinage utilise un PID sur le glissement maximal du groupe de roues du moteur ; le lacet utilise trois PID (écart de lacet, dérive de caisse, dérive avant). N'est pas utilisable pour l'ABS.",
+  "module": "Component of the drivingDynamics system that reduces engine torque via device.throttleFactor, for traction control (order 40) and yaw control (order 40). For each motor concerned, the final factor is min(traction control factor, yaw factor), recomputed at every fixed step. Traction control uses a PID on the maximum slip of the motor's wheel group; yaw uses three PIDs (yaw error, body slip, front slip). Cannot be used for ABS.",
   "notes": [
-    "Clés jbeam : useForTractionControl, useForYawControl (vrai par défaut) ; tractionControl.wheelGroupSettings (table d'en-tête : motorName, kP, kI, kD (0), integralInCoef (20), integralOutCoef (2), slipThreshold (0.2), minimumThrottleLimit (0)) ; yawControl.PIDSettings (table d'en-tête : type yawAV | slipAngle | frontAxleSlipAngle, kP, kI, kD, integralInCoef, integralOutCoef ; défaut yawAV {2,0.5,0,100,10} et slipAngle {2,1,0,10,1}), yawControl.yawAVThreshold (0.4), yawControl.slipAngleThreshold (0.1), yawControl.frontAxleSlipAngleThreshold (0.1), yawControl.minimumThrottleLimit (0), yawControlledMotors (liste de noms de moteurs).",
-    "Les rôles ne sont actifs que si le superviseur correspondant existe ET si la table jbeam correspondante (tractionControl / yawControl) est présente.",
-    "Le facteur d'antipatinage est lissé (temporalSmoothing 5/5) et borné par minimumThrottleLimit ; le facteur de lacet est borné par yawControl.minimumThrottleLimit. M.isActingAsTC / isActingAsYC sont vrais quand le facteur est < 1.",
-    "setParameters traite : tractionControl.isEnabled, tractionControl.wheelGroupSettings.<moteur>.(kP|kI|kD|integralInCoef|integralOutCoef|slipThreshold|minimumThrottleLimit), yawControl.isEnabled, yawControl.yawAvThreshold, yawControl.slipAngleThreshold. Les PID de lacet ne sont pas reconfigurés par setParameters/applyControlParameters (seul l'antipatinage l'est) ; yawControl.frontAxleSlipAngleThreshold n'est pas modifiable.",
-    "Incohérence : si le rôle yawControl est actif mais pas tractionControl (ou inversement), controlParameters.yawControl/tractionControl peut être nil, et actAsTractionControl/actAsYawControl lisent controlParameters.<rôle>.isEnabled sans garde ; ces fonctions ne sont toutefois appelées que si le composant s'est enregistré pour ce rôle.",
-    "Le throttleFactor du moteur peut être aussi modifié par d'autres contrôleurs (esc.lua passe par electrics, pas par ce champ) ; ici il est écrasé à chaque pas."
+    "jbeam keys: useForTractionControl, useForYawControl (true by default); tractionControl.wheelGroupSettings (header table: motorName, kP, kI, kD (0), integralInCoef (20), integralOutCoef (2), slipThreshold (0.2), minimumThrottleLimit (0)); yawControl.PIDSettings (header table: type yawAV | slipAngle | frontAxleSlipAngle, kP, kI, kD, integralInCoef, integralOutCoef; default yawAV {2,0.5,0,100,10} and slipAngle {2,1,0,10,1}), yawControl.yawAVThreshold (0.4), yawControl.slipAngleThreshold (0.1), yawControl.frontAxleSlipAngleThreshold (0.1), yawControl.minimumThrottleLimit (0), yawControlledMotors (list of motor names).",
+    "The roles are only active if the corresponding supervisor exists AND the corresponding jbeam table (tractionControl / yawControl) is present.",
+    "The traction control factor is smoothed (temporalSmoothing 5/5) and bounded by minimumThrottleLimit; the yaw factor is bounded by yawControl.minimumThrottleLimit. M.isActingAsTC / isActingAsYC are true when the factor is < 1.",
+    "setParameters handles: tractionControl.isEnabled, tractionControl.wheelGroupSettings.<motor>.(kP|kI|kD|integralInCoef|integralOutCoef|slipThreshold|minimumThrottleLimit), yawControl.isEnabled, yawControl.yawAvThreshold, yawControl.slipAngleThreshold. The yaw PIDs are not reconfigured by setParameters/applyControlParameters (only traction control is); yawControl.frontAxleSlipAngleThreshold is not modifiable.",
+    "Inconsistency: if the yawControl role is active but not tractionControl (or vice versa), controlParameters.yawControl/tractionControl may be nil, and actAsTractionControl/actAsYawControl read controlParameters.<role>.isEnabled without a guard; these functions are however only called if the component registered for that role.",
+    "The motor's throttleFactor can also be modified by other controllers (esc.lua goes through electrics, not through this field); here it is overwritten at every step."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution par défaut (70)."},
-    "componentOrderTractionControl": {"type": "number", "desc": "40."},
-    "componentOrderYawControl": {"type": "number", "desc": "40."},
-    "componentOrderABSControl": {"type": "number", "desc": "1000 : inutilisé."},
-    "isActive": {"type": "boolean", "desc": "Vrai après init."},
-    "isActingAsTC": {"type": "boolean", "desc": "Vrai quand le couple est réduit pour l'antipatinage."},
-    "isActingAsYC": {"type": "boolean", "desc": "Vrai quand le couple est réduit par le contrôle de lacet."},
-    "isActingAsABS": {"type": "boolean", "desc": "Toujours false."},
-    "actAsABSControl": {"type": "function", "desc": "nop."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "Default execution order (70)."
+    },
+    "componentOrderTractionControl": {
+      "type": "number",
+      "desc": "40."
+    },
+    "componentOrderYawControl": {
+      "type": "number",
+      "desc": "40."
+    },
+    "componentOrderABSControl": {
+      "type": "number",
+      "desc": "1000: unused."
+    },
+    "isActive": {
+      "type": "boolean",
+      "desc": "True after init."
+    },
+    "isActingAsTC": {
+      "type": "boolean",
+      "desc": "True when the torque is reduced for traction control."
+    },
+    "isActingAsYC": {
+      "type": "boolean",
+      "desc": "True when the torque is reduced by the yaw control."
+    },
+    "isActingAsABS": {
+      "type": "boolean",
+      "desc": "Always false."
+    },
+    "actAsABSControl": {
+      "type": "function",
+      "desc": "nop."
+    }
   },
   "functions": {
-    "init": {"desc": "Passe isActive à true et remet à false les indicateurs.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "initSecondStage": {"desc": "Lit la configuration, crée les PID, liste les moteurs contrôlés et s'enregistre auprès des superviseurs.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (voir notes)."}}, "returns": [], "internal": true},
-    "initLastStage": {"desc": "Ne fait rien.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "reset": {"desc": "Remet à zéro les indicateurs et les PID.", "params": {}, "returns": [], "internal": true},
-    "updateFixedStep": {"desc": "Applique à chaque moteur contrôlé throttleFactor = min(facteur TC, facteur YC).", "params": {"dt": {"type": "number", "desc": "Pas de temps (s)."}}, "returns": [], "internal": true},
-    "updateGFX": {"desc": "Vide (version debug : envoie un paquet détaillé).", "params": {"dt": {"type": "number", "desc": "Pas de temps graphique (s)."}}, "returns": [], "internal": true},
+    "init": {
+      "desc": "Sets isActive to true and resets the flags to false.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initSecondStage": {
+      "desc": "Reads the configuration, creates the PIDs, lists the controlled motors and registers with the supervisors.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "jbeam data (see notes)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initLastStage": {
+      "desc": "Does nothing.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Resets the flags and the PIDs to zero.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateFixedStep": {
+      "desc": "Applies throttleFactor = min(TC factor, YC factor) to each controlled motor.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Empty (debug version: sends a detailed packet).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Graphics time step (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
     "actAsTractionControl": {
-      "desc": "Appelé par tractionControl : calcule le facteur de couple du moteur d'un groupe de roues d'après le glissement maximal du groupe.",
-      "params": {"wheelGroup": {"type": "table", "desc": "Groupe de roues {motor, maxSlip…}."}, "dt": {"type": "number", "desc": "Pas de temps (s)."}},
-      "returns": [{"type": "boolean", "desc": "Vrai si le couple est réduit."}],
+      "desc": "Called by tractionControl: computes the torque factor of a wheel group's motor from the group's maximum slip.",
+      "params": {
+        "wheelGroup": {
+          "type": "table",
+          "desc": "Wheel group {motor, maxSlip...}."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if the torque is reduced."
+        }
+      ],
       "internal": true
     },
     "actAsYawControl": {
-      "desc": "Appelé par yawControl : calcule un facteur de couple commun à tous les moteurs contrôlés d'après l'écart de lacet, l'angle de dérive de caisse (survirage seulement) et la dérive avant.",
+      "desc": "Called by yawControl: computes a torque factor common to all controlled motors from the yaw error, the body slip angle (oversteer only) and the front slip.",
       "params": {
-        "measuredYaw": {"type": "number", "desc": "Lacet mesuré (rad/s)."},
-        "expectedYaw": {"type": "number", "desc": "Non utilisé."},
-        "yawDifference": {"type": "number", "desc": "Écart de lacet."},
-        "bodySlipAngle": {"type": "number", "desc": "Angle de dérive de caisse ajusté (rad)."},
-        "frontSlipAngle": {"type": "number", "desc": "Angle de dérive avant (rad)."},
-        "rearSlipAngle": {"type": "number", "desc": "Non utilisé."},
-        "dt": {"type": "number", "desc": "Pas de temps (s)."}
+        "measuredYaw": {
+          "type": "number",
+          "desc": "Measured yaw (rad/s)."
+        },
+        "expectedYaw": {
+          "type": "number",
+          "desc": "Not used."
+        },
+        "yawDifference": {
+          "type": "number",
+          "desc": "Yaw error."
+        },
+        "bodySlipAngle": {
+          "type": "number",
+          "desc": "Adjusted body slip angle (rad)."
+        },
+        "frontSlipAngle": {
+          "type": "number",
+          "desc": "Front slip angle (rad)."
+        },
+        "rearSlipAngle": {
+          "type": "number",
+          "desc": "Not used."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "Vrai si le couple est réduit."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if the torque is reduced."
+        }
+      ],
       "internal": true
     },
-    "setDebugMode": {"desc": "Active/désactive les paquets de debug.", "params": {"debugEnabled": {"type": "boolean", "desc": "Vrai pour activer."}}, "returns": []},
-    "registerCMU": {"desc": "Mémorise la référence au CMU.", "params": {"cmu": {"type": "table", "desc": "Contrôleur CMU."}}, "returns": [], "internal": true},
-    "shutdown": {"desc": "Désactive le composant.", "params": {}, "returns": []},
-    "setParameters": {"desc": "Applique des paramètres (voir notes) puis reconfigure les PID d'antipatinage.", "params": {"parameters": {"type": "table<string, any>", "desc": "Paramètres à appliquer."}}, "returns": []},
-    "setConfig": {"desc": "Remplace la configuration complète.", "params": {"configTable": {"type": "table", "desc": "Table {tractionControl, yawControl}."}}, "returns": []},
-    "getConfig": {"desc": "Renvoie une copie de la configuration.", "params": {}, "returns": [{"type": "table", "desc": "Copie de la configuration."}]},
-    "sendConfigData": {"desc": "Envoie la configuration au CMU.", "params": {}, "returns": []}
+    "setDebugMode": {
+      "desc": "Enables/disables debug packets.",
+      "params": {
+        "debugEnabled": {
+          "type": "boolean",
+          "desc": "True to enable."
+        }
+      },
+      "returns": []
+    },
+    "registerCMU": {
+      "desc": "Stores the reference to the CMU.",
+      "params": {
+        "cmu": {
+          "type": "table",
+          "desc": "CMU controller."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "shutdown": {
+      "desc": "Disables the component.",
+      "params": {},
+      "returns": []
+    },
+    "setParameters": {
+      "desc": "Applies parameters (see notes) then reconfigures the traction control PIDs.",
+      "params": {
+        "parameters": {
+          "type": "table<string, any>",
+          "desc": "Parameters to apply."
+        }
+      },
+      "returns": []
+    },
+    "setConfig": {
+      "desc": "Replaces the entire configuration.",
+      "params": {
+        "configTable": {
+          "type": "table",
+          "desc": "Table {tractionControl, yawControl}."
+        }
+      },
+      "returns": []
+    },
+    "getConfig": {
+      "desc": "Returns a copy of the configuration.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy of the configuration."
+        }
+      ]
+    },
+    "sendConfigData": {
+      "desc": "Sends the configuration to the CMU.",
+      "params": {},
+      "returns": []
+    }
   }
 }

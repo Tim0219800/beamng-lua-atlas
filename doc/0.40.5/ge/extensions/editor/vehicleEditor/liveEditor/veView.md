@@ -1,41 +1,41 @@
 # `editor_vehicleEditor_liveEditor_veView`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua` · VM : Game Engine (GE) · 521 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua` · VM: Game Engine (GE) · 521 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_liveEditor_veView` : `extensions.load("editor_vehicleEditor_liveEditor_veView")`, puis la globale `editor_vehicleEditor_liveEditor_veView`
+**Access:** extension `editor_vehicleEditor_liveEditor_veView`: `extensions.load("editor_vehicleEditor_liveEditor_veView")`, then the global `editor_vehicleEditor_liveEditor_veView`
 
-Vues de scène multiples de l'éditeur de véhicule en mode Live. Chaque « Scene View N » est une fenêtre ImGui qui affiche une caméra de rendu séparée (ImguiRenderViewControl) centrée sur le véhicule du joueur, avec les modes 3d, left, right, front, back, top, bottom (les vues orthographiques dessinent une grille au debugDrawer). Les réglages (mode, near/far clip, fov, ortho, décalage) sont sauvegardés dans la préférence de l'éditeur vehicleEditor.veView.sceneViews. Un clic droit ouvre un menu de contrôle (mode, Ortho, Render Main, Attach to Object, Show Icons, clips, FOV, ajout/suppression de vue).
+Multiple scene views of the vehicle editor in Live mode. Each "Scene View N" is an ImGui window that displays a separate render camera (ImguiRenderViewControl) centered on the player's vehicle, with the modes 3d, left, right, front, back, top, bottom (the orthographic views draw a grid with debugDrawer). The settings (mode, near/far clip, fov, ortho, offset) are saved in the editor preference vehicleEditor.veView.sceneViews. A right click opens a control menu (mode, Ortho, Render Main, Attach to Object, Show Icons, clips, FOV, add/remove view).
 
-## Remarques
+## Notes
 
-- Zoom à la molette : en mode ortho, modifie le fov (borné 0,1 à 170) ; sinon déplace la caméra le long de l'axe z de la vue. Glisser avec le bouton gauche déplace le dragOffset.
-- Passer en Ortho règle nearClip 0,6, farClip 100, fov 150 et masque les icônes d'éditeur ; repasser en perspective remet 0,01 / 2000 / 70 et affiche les icônes.
-- Bug : dans createViewFromData, attachToObject = im.BoolPtr(data.attachToObject or true) vaut toujours true, car « false or true » donne true ; la valeur sauvegardée à false n'est jamais restaurée. Même chose pour la valeur donnée dans les autres champs avec « or » seulement quand la valeur est false (editorIconsVisible et ortho utilisent « or false », donc ces deux-là sont corrects).
-- Le code des vues est qualifié « buggy and rushed » dans un commentaire du fichier.
-- Le menu 'Render Main' appelle setRenderWorldMain(bool) pour activer ou non le rendu de la vue principale.
-- createNewSceneView est exporté en commentaire seulement (M.createNewSceneView est commenté) ; seule addSceneView est publique. Le flag createNewViewNextFrame n'est jamais mis à true dans le fichier.
+- Wheel zoom: in ortho mode, changes the fov (clamped 0.1 to 170); otherwise moves the camera along the view's z axis. Dragging with the left button moves the dragOffset.
+- Switching to Ortho sets nearClip 0.6, farClip 100, fov 150 and hides the editor icons; switching back to perspective restores 0.01 / 2000 / 70 and shows the icons.
+- Bug: in createViewFromData, attachToObject = im.BoolPtr(data.attachToObject or true) is always true, because "false or true" gives true; the value saved as false is never restored. Same for the value given in the other fields with "or" only when the value is false (editorIconsVisible and ortho use "or false", so those two are correct).
+- The views code is described as "buggy and rushed" in a comment in the file.
+- The 'Render Main' menu calls setRenderWorldMain(bool) to enable or not the rendering of the main view.
+- createNewSceneView is exported only in a comment (M.createNewSceneView is commented out); only addSceneView is public. The createNewViewNextFrame flag is never set to true in the file.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_liveEditor_veView.addSceneView()` | Ajoute une vue de scène : réutilise la première vue supprimée ou masquée, sinon prend l'identifiant suivant, puis crée/enregistre la fenêtre « Scene View N » (400x600, outil vehicleEditor) et l'affiche. Appelée par le menu View > Add View de veToolbar en mode Live. | 106 |
-| `editor_vehicleEditor_liveEditor_veView.onEditorGui()` | Hook de l'éditeur appelé à chaque frame : pour chaque vue enregistrée, ouvre la fenêtre, crée le contrôle de rendu et dessine son contenu (caméra, grille, menu clic droit) ; détruit le contrôle quand la fenêtre est fermée. *(interne)* *(hook)* | 462 |
-| `editor_vehicleEditor_liveEditor_veView.onEditorHeadlessChange(enabled, toolName)` | Hook de l'éditeur appelé quand un outil passe en mode headless ou en sort. Pour l'outil 'vehicleEditor' : recharge les vues sauvegardées (enabled = true) ou les décharge et détruit les contrôles de rendu (enabled = false). *(interne)* *(hook)* | 497 |
-| `editor_vehicleEditor_liveEditor_veView.onEditorInitialized()` | Hook de l'éditeur appelé à l'initialisation : charge les vues sauvegardées dans les préférences (une seule fois). *(interne)* *(hook)* | 507 |
+| `editor_vehicleEditor_liveEditor_veView.addSceneView()` | Adds a scene view: reuses the first deleted or hidden view, otherwise takes the next identifier, then creates/registers the "Scene View N" window (400x600, vehicleEditor tool) and displays it. Called by the View > Add View menu of veToolbar in Live mode. | 106 |
+| `editor_vehicleEditor_liveEditor_veView.onEditorGui()` | Editor hook called every frame: for each registered view, opens the window, creates the render control and draws its content (camera, grid, right-click menu); destroys the control when the window is closed. *(internal)* *(hook)* | 462 |
+| `editor_vehicleEditor_liveEditor_veView.onEditorHeadlessChange(enabled, toolName)` | Editor hook called when a tool enters or leaves headless mode. For the 'vehicleEditor' tool: reloads the saved views (enabled = true) or unloads them and destroys the render controls (enabled = false). *(internal)* *(hook)* | 497 |
+| `editor_vehicleEditor_liveEditor_veView.onEditorInitialized()` | Editor hook called at initialization: loads the views saved in the preferences (only once). *(internal)* *(hook)* | 507 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_liveEditor_veView.onEditorHeadlessChange(enabled, toolName)`
 
-Hook de l'éditeur appelé quand un outil passe en mode headless ou en sort. Pour l'outil 'vehicleEditor' : recharge les vues sauvegardées (enabled = true) ou les décharge et détruit les contrôles de rendu (enabled = false).
+Editor hook called when a tool enters or leaves headless mode. For the 'vehicleEditor' tool: reloads the saved views (enabled = true) or unloads them and destroys the render controls (enabled = false).
 
-- `enabled` (*boolean*) : true à l'activation de l'outil
-- `toolName` (*string*) : nom de l'outil, seul 'vehicleEditor' est traité
+- `enabled` (*boolean*) : true when the tool is activated
+- `toolName` (*string*) : tool name, only 'vehicleEditor' is handled
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua`.*

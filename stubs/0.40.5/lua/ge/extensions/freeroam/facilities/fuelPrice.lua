@@ -2,43 +2,43 @@
 -- tim19Atlas stub generated from lua/ge/extensions/freeroam/facilities/fuelPrice.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Génère les prix du carburant des stations-service du niveau et les affiche sur les panneaux à afficheurs 7 segments de la scène. Au démarrage du niveau, pour chaque station ayant `prices`, calcule un prix (base + aléa) et remplace les objets d'affichage par des copies TSStatic des chiffres (`art/shapes/quarter_mile_display/display_<c>.dae`). Se décharge tout seul si aucune donnée de prix. Global : freeroam_facilities_fuelPrice.
---- Accès : extension `freeroam_facilities_fuelPrice` : `extensions.load("freeroam_facilities_fuelPrice")`, puis la globale `freeroam_facilities_fuelPrice`
+--- Generates the fuel prices of the level's gas stations and displays them on the scene's 7-segment display signs. When the level starts, for each station that has `prices`, computes a price (base + randomness) and replaces the display objects with TSStatic copies of the digits (`art/shapes/quarter_mile_display/display_<c>.dae`). Unloads itself if there is no price data. Global: freeroam_facilities_fuelPrice.
+--- Access: extension `freeroam_facilities_fuelPrice`: `extensions.load("freeroam_facilities_fuelPrice")`, then the global `freeroam_facilities_fuelPrice`
 ---@class freeroam_facilities_fuelPrice
 freeroam_facilities_fuelPrice = {}
 
---- Prix courant (unité métrique) d'un carburant dans une station.
----Source : lua/ge/extensions/freeroam/facilities/fuelPrice.lua:99
----@param stationId string Id de la station.
----@param fuelType string Type d'énergie (ex. gasoline, diesel).
----@return number|nil  Prix ou nil.
+--- Current price (metric unit) of a fuel at a station.
+---Source: lua/ge/extensions/freeroam/facilities/fuelPrice.lua:99
+---@param stationId string Station id.
+---@param fuelType string Energy type (e.g. gasoline, diesel).
+---@return number|nil  Price or nil.
 function freeroam_facilities_fuelPrice.getFuelPrice(stationId, fuelType) end
 
---- Hook au démarrage du niveau : appelle setDisplayPrices ; s'il n'y a pas de données de prix, décharge l'extension.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/facilities/fuelPrice.lua:108
----@param levelPath string Chemin du niveau (non utilisé).
+--- Hook at level start: calls setDisplayPrices; if there is no price data, unloads the extension.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/facilities/fuelPrice.lua:108
+---@param levelPath string Level path (unused).
 function freeroam_facilities_fuelPrice.onClientStartMission(levelPath) end
 
---- Appelé après rechargement Lua : restaure les prix si on est dans le même niveau, sinon régénère les prix (onClientStartMission).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/facilities/fuelPrice.lua:130
----@param data table Table renvoyée par onSerialize.
+--- Called after a Lua reload: restores the prices if in the same level, otherwise regenerates the prices (onClientStartMission).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/facilities/fuelPrice.lua:130
+---@param data table Table returned by onSerialize.
 function freeroam_facilities_fuelPrice.onDeserialized(data) end
 
---- Appelé avant un rechargement Lua : sauvegarde cachedPriceData, le niveau courant et l'unité locale.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/facilities/fuelPrice.lua:122
+--- Called before a Lua reload: saves cachedPriceData, the current level and the local unit.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/facilities/fuelPrice.lua:122
 ---@return table  {cachedPriceData, currentLevel, levelUnit}
 function freeroam_facilities_fuelPrice.onSerialize() end
 
---- Supprime les copies de chiffres et restaure les panneaux d'origine (afficheur 8), éventuellement cachés. Utile avant de déplacer un panneau dans l'éditeur.
----Source : lua/ge/extensions/freeroam/facilities/fuelPrice.lua:141
----@param hide boolean|nil true = cacher les panneaux d'origine.
+--- Deletes the digit copies and restores the original signs (display 8), optionally hidden. Useful before moving a sign in the editor.
+---Source: lua/ge/extensions/freeroam/facilities/fuelPrice.lua:141
+---@param hide boolean|nil true = hide the original signs.
 function freeroam_facilities_fuelPrice.restoreSign(hide) end
 
---- Calcule les prix de toutes les stations du niveau courant et met à jour les afficheurs.
----Source : lua/ge/extensions/freeroam/facilities/fuelPrice.lua:29
----@return boolean  true si au moins un prix a été généré.
+--- Computes the prices of all the stations of the current level and updates the displays.
+---Source: lua/ge/extensions/freeroam/facilities/fuelPrice.lua:29
+---@return boolean  true if at least one price was generated.
 function freeroam_facilities_fuelPrice.setDisplayPrices() end
 

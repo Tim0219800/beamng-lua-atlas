@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/recording/startAutoReplay.lua",
+  "module": "Noeud flowgraph 'Start Auto Replay'. Sur l'impulsion 'startNewRec', arrete l'enregistrement courant et en demarre un nouveau via le module missionReplay du gestionnaire ; si le module aiRecording existe, demarre aussi l'enregistrement et la relecture IA.",
+  "notes": [
+    "Pas de C.category defini.",
+    "work s'execute a chaque frame, sans tester l'impulsion d'entree 'startNewRec'."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "work": {
+          "desc": "Appelle missionReplay:startNewRec() puis, si aiRecording existe, startAiRecording() et startAiReplay().",
+          "internal": true
+        }
+      }
+    }
+  }
+}

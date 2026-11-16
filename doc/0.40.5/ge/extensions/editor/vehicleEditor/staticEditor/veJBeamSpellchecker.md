@@ -1,58 +1,58 @@
 # `editor_vehicleEditor_staticEditor_veJBeamSpellchecker`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/staticEditor/veJBeamSpellchecker.lua` · VM : Game Engine (GE) · 484 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/staticEditor/veJBeamSpellchecker.lua` · VM: Game Engine (GE) · 484 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_staticEditor_veJBeamSpellchecker` : `extensions.load("editor_vehicleEditor_staticEditor_veJBeamSpellchecker")`, puis la globale `editor_vehicleEditor_staticEditor_veJBeamSpellchecker`
+**Access:** extension `editor_vehicleEditor_staticEditor_veJBeamSpellchecker`: `extensions.load("editor_vehicleEditor_staticEditor_veJBeamSpellchecker")`, then the global `editor_vehicleEditor_staticEditor_veJBeamSpellchecker`
 
-Application « JBeam Spellchecker » du Static Editor. Le bouton « Start Analysis » parcourt tous les fichiers *.jbeam du dossier vehicles et vérifie que les modificateurs (options en ligne ou lignes d'options en dictionnaire) utilisés dans les sections flexbodies, props, nodes, beams, triangles, hydros, torsionbars, torsionHydros et variables font partie d'une liste blanche codée en dur dans le fichier. Tout modificateur inconnu est signalé par un log d'erreur « Section: X Modifier: 'Y' not valid! » avec le chemin du fichier.
+"JBeam Spellchecker" app of the Static Editor. The "Start Analysis" button walks through all the *.jbeam files of the vehicles folder and checks that the modifiers (inline options or dictionary option lines) used in the flexbodies, props, nodes, beams, triangles, hydros, torsionbars, torsionHydros and variables sections are part of a whitelist hard-coded in the file. Any unknown modifier is reported by an error log "Section: X Modifier: 'Y' not valid!" with the file path.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('editor_vehicleEditor_staticEditor_veJBeamSpellchecker')
 editor_vehicleEditor_staticEditor_veJBeamSpellchecker.open()
 ```
 
-## Remarques
+## Notes
 
-- Les résultats ne sont écrits que dans la console/le log. Les sections absentes de la liste blanche (information, slots, powertrain, etc.) sont ignorées : leur liste est vide ou en commentaire.
-- Les fichiers sont lus avec json.decode (JSON strict) ; un fichier non décodable est ignoré avec un log d'erreur, mais parseFile renvoie alors nil et analyzeJBeamFile(nil) provoquerait une erreur (pairs(nil)).
-- Si l'en-tête d'une section n'est pas une liste, analyzeJBeamFile affiche un avertissement et renvoie -1 : le reste du fichier n'est alors plus analysé.
-- L'analyse retire l'en-tête (table.remove(sectionData, 1)) des données décodées en mémoire ; sans effet sur le disque.
-- Le code contient un label ::continue:: inutilisé avant im.End().
+- The results are only written to the console/log. Sections absent from the whitelist (information, slots, powertrain, etc.) are ignored: their list is empty or commented out.
+- The files are read with json.decode (strict JSON); an undecodable file is ignored with an error log, but parseFile then returns nil and analyzeJBeamFile(nil) would cause an error (pairs(nil)).
+- If a section header is not a list, analyzeJBeamFile displays a warning and returns -1: the rest of the file is then no longer analyzed.
+- The analysis removes the header (table.remove(sectionData, 1)) from the decoded data in memory; no effect on disk.
+- The code contains an unused ::continue:: label before im.End().
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_staticEditor_veJBeamSpellchecker.onDeserialized(data)` | Hook appelé après un rechargement Lua : restaure l'état de la fenêtre. *(interne)* *(hook)* | 473 |
-| `editor_vehicleEditor_staticEditor_veJBeamSpellchecker.onSerialize()` | Hook appelé avant un rechargement Lua : sauvegarde l'état de la fenêtre. *(interne)* *(hook)* | 467 |
-| `editor_vehicleEditor_staticEditor_veJBeamSpellchecker.onUpdate()` | Hook d'extension appelé à chaque frame : dessine la fenêtre avec le bouton « Start Analysis » quand elle est ouverte. *(interne)* *(hook)* | 450 |
-| `editor_vehicleEditor_staticEditor_veJBeamSpellchecker.open()` | Ouvre la fenêtre de l'application (windowOpen[0] = true). | 463 |
+| `editor_vehicleEditor_staticEditor_veJBeamSpellchecker.onDeserialized(data)` | Hook called after a Lua reload: restores the window state. *(internal)* *(hook)* | 473 |
+| `editor_vehicleEditor_staticEditor_veJBeamSpellchecker.onSerialize()` | Hook called before a Lua reload: saves the window state. *(internal)* *(hook)* | 467 |
+| `editor_vehicleEditor_staticEditor_veJBeamSpellchecker.onUpdate()` | Extension hook called every frame: draws the window with the "Start Analysis" button when it is open. *(internal)* *(hook)* | 450 |
+| `editor_vehicleEditor_staticEditor_veJBeamSpellchecker.open()` | Opens the app window (windowOpen[0] = true). | 463 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_staticEditor_veJBeamSpellchecker.onDeserialized(data)`
 
-Hook appelé après un rechargement Lua : restaure l'état de la fenêtre.
+Hook called after a Lua reload: restores the window state.
 
-- `data` (*table*) : table produite par onSerialize
+- `data` (*table*) : table produced by onSerialize
 
 #### `editor_vehicleEditor_staticEditor_veJBeamSpellchecker.onSerialize()`
 
-Hook appelé avant un rechargement Lua : sauvegarde l'état de la fenêtre.
+Hook called before a Lua reload: saves the window state.
 
-- **renvoie** : table {windowOpen = boolean}
+- **returns**: table {windowOpen = boolean}
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `menuEntry` | string | Texte de l'entrée du menu Apps : « JBeam Spellchecker ». |
+| `menuEntry` | string | Text of the Apps menu entry: "JBeam Spellchecker". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/staticEditor/veJBeamSpellchecker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/staticEditor/veJBeamSpellchecker.lua`.*

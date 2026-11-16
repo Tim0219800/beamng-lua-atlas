@@ -1,0 +1,131 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/siteBake.lua",
+  "module": "Transforme ce qu'un éditeur vient de construire dans le monde en ce que porte un manifeste de site. Un site est conçu à un endroit de la carte et placé ailleurs : toutes les cuissons soustraient donc leur origine (ox, oy, oz) à tout avant d'écrire (géométrie, transformations du kit, lampes, plantations, plan du sol). L'origine choisie importe peu au placeur (il se recale sur les bornes lues) mais doit être la MÊME pour toutes les listes d'un manifeste. Les coordonnées de plan sont arrondies au millimètre.",
+  "notes": [
+    "Un « plan » de sol est composé de polygones ou de polylignes {x,y} ; une « feature » de terraform est soit un QUAD gradué (4 coins avec leurs hauteurs), soit des RINGS à hauteur commune ; mode par défaut 'carve'.",
+    "Les anneaux de feature sortent plats (un seul z par feature) ; le lecteur doit les refaire en vec3.",
+    "groupInstances regroupe par forme + couleur (glow) + indicateur street (pièce posée sur le trottoir) + stand (poteau sur la ligne de sol, hauteur étirée par le placeur). Chaque instance occupe 12 nombres dans xf : position (3), axe avant (3), axe haut (3), échelle (3).",
+    "Les lampes sortent { x, y, z, r (rayon), b (luminosité), col, street } et, pour un projecteur, dir et cone.",
+    "localPaint exige que extensions.editor_terrainEditor.getTerrainBlock() existe, et nomme les couches de peinture par nom (un indice n'est valable que pour un seul terrain).",
+    "Les plantes voyagent en ancres (items déjà dispersés, ou points + espèces + graine déjà calculée) car la forêt appartient au niveau et non au site."
+  ],
+  "functions": {
+    "localRing": {
+      "desc": "Un polygone de plan, local à l'origine de cuisson, arrondi au millimètre. Renvoie nil si moins de 3 points, pour qu'un appelant puisse collecter le retour directement dans une liste.",
+      "params": {
+        "ring": {"type": "table|nil", "desc": "Liste de points {x,y}."},
+        "ox": {"type": "number", "desc": "x de l'origine."},
+        "oy": {"type": "number", "desc": "y de l'origine."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Anneau local."}],
+      "internal": false
+    },
+    "localPts": {
+      "desc": "Une polyligne de la même façon (sans minimum de points). Sert aussi pour des normales unitaires avec une origine nulle.",
+      "params": {
+        "pts": {"type": "table|nil", "desc": "Liste de points {x,y}."},
+        "ox": {"type": "number", "desc": "x de l'origine."},
+        "oy": {"type": "number", "desc": "y de l'origine."}
+      },
+      "returns": [{"type": "table", "desc": "Polyligne locale."}],
+      "internal": false
+    },
+    "localRings": {
+      "desc": "Une liste d'anneaux locaux ; nil si aucun n'était un polygone (une clé absente du manifeste signifie « ce site n'en a pas »).",
+      "params": {
+        "rings": {"type": "table|nil", "desc": "Liste d'anneaux."},
+        "ox": {"type": "number", "desc": "x de l'origine."},
+        "oy": {"type": "number", "desc": "y de l'origine."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Liste d'anneaux locaux."}],
+      "internal": false
+    },
+    "localFeatures": {
+      "desc": "Les formes auxquelles le site demande que le sol soit taillé, dans son repère. Chaque feature devient { quad = 4 coins {x,y,z locaux}, mode, band } ou { rings, z, mode, band }. Ignore tout ce à quoi sert la feature (palier, rampe, mur de soutènement).",
+      "params": {
+        "features": {"type": "table|nil", "desc": "Liste de features { quad } ou { rings, z }, avec mode ('carve' par défaut) et band."},
+        "ox": {"type": "number", "desc": "x de l'origine."},
+        "oy": {"type": "number", "desc": "y de l'origine."},
+        "oz": {"type": "number", "desc": "z de l'origine."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Liste de features locales, nil s'il n'y en a pas."}],
+      "internal": false
+    },
+    "localPaint": {
+      "desc": "La peinture de terrain qu'un site pose, dans son repère. Chaque couche { m, ring } ou { m, xs, ys } (cellule par cellule) sort nommée par couche de matériau du terrain.",
+      "params": {
+        "coats": {"type": "table|nil", "desc": "Liste de couches : m = indice de matériau, ring ou xs/ys."},
+        "ox": {"type": "number", "desc": "x de l'origine."},
+        "oy": {"type": "number", "desc": "y de l'origine."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Liste { layer, ring } ou { layer, cells = {x1,y1,x2,y2,...} } ; nil si aucun bloc de terrain ou rien à peindre."}],
+      "internal": false
+    },
+    "groupInstances": {
+      "desc": "Regroupe les placements du kit par forme. Un groupe par maillage distinct devient un seul dessin instancié à l'arrivée : une place avec deux cents bornes identiques coûte une forme et deux cents transformations.",
+      "params": {
+        "instances": {"type": "table|nil", "desc": "Liste d'instances { shape, px, py, pz, ax, ay, az, ux, uy, uz, scl, glow, street, stand }."},
+        "ox": {"type": "number", "desc": "x de l'origine."},
+        "oy": {"type": "number", "desc": "y de l'origine."},
+        "oz": {"type": "number", "desc": "z de l'origine."}
+      },
+      "returns": [{"type": "table", "desc": "Liste de groupes { shape, xf (12 nombres par instance), glow, street, stand }."}],
+      "internal": false
+    },
+    "harvestKit": {
+      "desc": "Relit les repères de pièces du kit déjà posées dans la scène et les ajoute à out comme des enregistrements d'instance acceptés par groupInstances. Accepte indifféremment des entrées de kit (champ obj) ou les objets eux-mêmes ; les objets disparus ou sans shapeName sont ignorés ; la lueur nocturne (nightEmissive) est relue.",
+      "params": {
+        "list": {"type": "table|nil", "desc": "Liste d'entrées { obj } ou d'objets de scène."},
+        "out": {"type": "table|nil", "desc": "Liste à compléter (créée si nil)."}
+      },
+      "returns": [{"type": "table", "desc": "Enregistrements { shape, glow, px, py, pz, ax.., ux.., scl = {x,y,z} }."}],
+      "internal": false
+    },
+    "instanceCount": {
+      "desc": "Nombre de pièces que dresse une liste de groupes (taille de xf divisée par 12), pour un affichage avant écriture.",
+      "params": {"groups": {"type": "table|nil", "desc": "Groupes renvoyés par groupInstances."}},
+      "returns": [{"type": "number", "desc": "Nombre de pièces."}],
+      "internal": false
+    },
+    "localLamps": {
+      "desc": "Les lampes qui accompagnent les pièces, dans le repère du site. La couleur vient de glow ou de col (blanc par défaut). Un projecteur (dx présent) sort avec dir et cone ; une ampoule non.",
+      "params": {
+        "lights": {"type": "table|nil", "desc": "Liste d'enregistrements de lumière { px, py, pz, radius, brightness, glow|col, street, dx, dy, dz, cone }."},
+        "ox": {"type": "number", "desc": "x de l'origine."},
+        "oy": {"type": "number", "desc": "y de l'origine."},
+        "oz": {"type": "number", "desc": "z de l'origine."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Liste de lampes locales, nil si vide."}],
+      "internal": false
+    },
+    "localPlants": {
+      "desc": "Plantation sous forme d'ancres : { items } pour des plantes déjà dispersées (x, y, sp, s, a), ou { points, species, speciesWeights, size, vary, seed, drape, street } pour une dispersion à refaire (la graine est déjà calculée, pour obtenir les mêmes plantes aux mêmes endroits).",
+      "params": {
+        "anchors": {"type": "table|nil", "desc": "Ancres de l'éditeur."},
+        "ox": {"type": "number", "desc": "x de l'origine."},
+        "oy": {"type": "number", "desc": "y de l'origine."},
+        "oz": {"type": "number", "desc": "z de l'origine."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Liste d'ancres locales, nil si vide."}],
+      "internal": false
+    },
+    "plantCount": {
+      "desc": "Nombre de plantes qu'une cuisson porterait, sur toutes les ancres (items ou points). Uniquement pour un affichage.",
+      "params": {"anchors": {"type": "table|nil", "desc": "Ancres de plantation."}},
+      "returns": [{"type": "integer", "desc": "Nombre de plantes."}],
+      "internal": false
+    },
+    "bounds": {
+      "desc": "L'étendue de tout ce que la cuisson place (sommets des parts et positions des instances, relatifs à l'origine), pour que le placeur cadre un site, le choisisse sous le curseur et sache la place qu'il lui faut avant de charger un maillage. Renvoie deux coins nuls si rien.",
+      "params": {
+        "parts": {"type": "table|nil", "desc": "Parts de maillage avec verts."},
+        "instances": {"type": "table|nil", "desc": "Instances avec px, py, pz."},
+        "ox": {"type": "number", "desc": "x de l'origine."},
+        "oy": {"type": "number", "desc": "y de l'origine."},
+        "oz": {"type": "number", "desc": "z de l'origine."}
+      },
+      "returns": [{"type": "table", "desc": "Coin minimal {x,y,z}."}, {"type": "table", "desc": "Coin maximal {x,y,z}."}],
+      "internal": false
+    }
+  }
+}

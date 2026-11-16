@@ -1,186 +1,186 @@
 # `career_modules_marketplace`
 
-*Fichier : `lua/ge/extensions/career/modules/marketplace.lua` · VM : Game Engine (GE) · 1183 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/marketplace.lua` · VM: Game Engine (GE) · 1183 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_marketplace` : `extensions.load("career_modules_marketplace")`, puis la globale `career_modules_marketplace`
+**Access:** extension `career_modules_marketplace`: `extensions.load("career_modules_marketplace")`, then the global `career_modules_marketplace`
 
-Place de marché de véhicules de la carrière, dans deux sens. (1) Le joueur met en vente des véhicules de son inventaire (listVehicles) ; des acheteurs virtuels génèrent des offres au fil du temps (offre de base = valeur de marché, avec bruit et plafonds selon le rapport prix demandé / valeur de marché), qui expirent après environ 500 s. Le joueur accepte, refuse ou négocie. (2) Le joueur négocie le prix d'un véhicule en vente chez un vendeur (concession ou particulier). Le moteur de négociation simule la patience, les contre-offres et les insultes d'une personnalité (fichier levels/west_coast_usa/facilities/negotiationPersonalities.json) et informe l'UI via guihooks negotiationData. Sauvegarde dans career/marketplace.json.
+Career vehicle marketplace, working in two directions. (1) The player lists vehicles from their inventory for sale (listVehicles); virtual buyers generate offers over time (base offer = market value, with noise and caps depending on the asking price / market value ratio), which expire after about 500 s. The player accepts, refuses or negotiates. (2) The player negotiates the price of a vehicle for sale at a seller (dealership or private seller). The negotiation engine simulates the patience, counteroffers and insults of a personality (file levels/west_coast_usa/facilities/negotiationPersonalities.json) and informs the UI via guihooks negotiationData. Saves to career/marketplace.json.
 
-## Exemple
+## Example
 
 ```lua
 career_modules_marketplace.listVehicles({{inventoryId = 3}})
 local listings = career_modules_marketplace.getListings()
 ```
 
-## Remarques
+## Notes
 
-- Nommage trompeur : startNegotiateBuyingOffer = le joueur VEND (offre d'un acheteur, amISelling = true) ; startNegotiateSellingOffer = le joueur ACHÈTE chez un vendeur (amISelling = false).
-- Constantes : intervalle moyen entre offres 95 s (multiplié par offerTimeMultiplier selon le prix demandé : 1 entre 0,98 et 1,1 de la valeur de marché, jusqu'à 0,4 si moins cher, jusqu'à 4 si plus cher), durée de vie d'une offre 500 s ± 50 %, maximum de 10 offres expirées conservées par annonce.
-- Une annonce est désactivée dans getListings si la valeur actuelle du véhicule tombe sous 95 % de sa valeur de marché à la mise en vente (valueLossLimit).
-- Les offres sont arrondies au multiple de 50 le plus proche, minimum 50.
-- Générer des offres s'exécute toutes les 10 s de temps de simulation dans onUpdate, sauf si la liste est vide ou si le menu d'offres est ouvert (les offres expirées sont alors purgées à l'ouverture/fermeture, via menuOpened).
-- Dans la négociation, le statut passe par initial, thinking, typing puis accepted, refused, counterOffer, counterOfferLastChance ou failed. Un prix proposé n'est valide que s'il améliore la position de l'adversaire sans dépasser l'offre précédente du joueur (isOfferAllowed).
-- Le champ negotiationState.opponentName appelle _tr(opponentPersonality.name) : plante si getNegotiationState est appelé sans négociation préalable (opponentPersonality nil).
-- generatePersonality lit un fichier propre au niveau west_coast_usa ; renvoie nil si le fichier est absent. generateOffer(inventoryId) sans id choisit une annonce au hasard.
-- Une fenêtre de debug ImGui (Negotiation Buying) est affichée hors build shipping pendant une négociation ; ses boutons ne font que couper negotiationActive.
+- Misleading naming: startNegotiateBuyingOffer = the player SELLS (buyer's offer, amISelling = true); startNegotiateSellingOffer = the player BUYS from a seller (amISelling = false).
+- Constants: average interval between offers 95 s (multiplied by offerTimeMultiplier depending on the asking price: 1 between 0.98 and 1.1 of market value, down to 0.4 if cheaper, up to 4 if more expensive), offer lifetime 500 s ± 50%, maximum of 10 expired offers kept per listing.
+- A listing is disabled in getListings if the vehicle's current value falls below 95% of its market value at the time it was listed (valueLossLimit).
+- Offers are rounded to the nearest multiple of 50, minimum 50.
+- Offer generation runs every 10 s of simulation time in onUpdate, unless the list is empty or the offers menu is open (expired offers are then purged on open/close, via menuOpened).
+- In the negotiation, the status goes through initial, thinking, typing, then accepted, refused, counterOffer, counterOfferLastChance or failed. A proposed price is valid only if it improves the opponent's position without exceeding the player's previous offer (isOfferAllowed).
+- The field negotiationState.opponentName calls _tr(opponentPersonality.name): crashes if getNegotiationState is called without a prior negotiation (opponentPersonality nil).
+- generatePersonality reads a file specific to the west_coast_usa level; returns nil if the file is missing. generateOffer(inventoryId) without an id picks a random listing.
+- An ImGui debug window (Negotiation Buying) is displayed outside shipping builds during a negotiation; its buttons only toggle negotiationActive off.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_marketplace.acceptOffer(inventoryId, offerId)` | Accepte une offre : la retire de l'annonce et vend le véhicule à la valeur de l'offre (career_modules_inventory.sellVehicle). | 214 |
-| `career_modules_marketplace.cancelNegotiation()` | Annule la négociation (statut failed) ; si le joueur avait déjà fait une offre, empêche de renégocier cette offre ou ce véhicule. | 506 |
-| `career_modules_marketplace.declineOffer(inventoryId, offerId)` | Refuse (supprime) une offre de l'annonce. | 225 |
-| `career_modules_marketplace.finalizeNegotiationExit()` | À la sortie de l'écran : prend l'offre si le statut est accepted et non prise, sinon annule la négociation. | 871 |
-| `career_modules_marketplace.findVehicleListing(inventoryId)` | Cherche l'annonce d'un véhicule de l'inventaire. | 20 |
-| `career_modules_marketplace.generateOffer(inventoryId)` | Crée une offre d'un acheteur aléatoire pour une annonce (celle donnée ou une annonce au hasard) : valeur = valeur de marché * multiplicateur * bruit, plafonnée selon le rapport de prix, arrondie à 50. | 171 |
-| `career_modules_marketplace.generatePersonality(buyer, _archetypes)` | Tire au hasard un archétype de négociation (acheteur ou vendeur) dans negotiationPersonalities.json et construit la personnalité : nom, patience, seuils d'acceptation/insulte, multiplicateur de prix (1 - m pour un acheteur, 1 + m pour un vendeur), délais, citations. | 77 |
-| `career_modules_marketplace.getListings()` | Renvoie une copie des annonces pour l'UI : nom traduit, annonce désactivée si la valeur a trop baissé, offres expirées marquées disabled, offres triées (actives d'abord, les plus récentes en premier). | 935 |
-| `career_modules_marketplace.getNegotiationState()` | Renvoie l'état de la négociation pour l'UI : active, sens (amISelling), prix de départ, patience, offres (myOffer/theirOffer), statut, nom et citation de l'adversaire, véhicule (nom, miniature, kilométrage, valeur réelle) et historique d'offres. | 320 |
-| `career_modules_marketplace.listVehicles(vehicles)` | Met en vente des véhicules (ignore les véhicules inconnus ou déjà en vente). Prix = entry.value ou valeur calculée ; fixe marketRatio et offerTimeMultiplier. | 28 |
-| `career_modules_marketplace.makeNegotiationOffer(price)` | Propose un prix (converti avec tonumber) : s'il est valide, lance en tâche de fond la réponse de l'adversaire (réflexion puis saisie simulées, baisse de patience, acceptation, contre-offre, refus ou échec) et envoie les états à l'UI. | 849 |
-| `career_modules_marketplace.menuOpened(open)` | Signale l'ouverture/fermeture du menu d'offres (la négociation compte comme menu ouvert) et met à jour les annonces : purge des offres expirées si ouvert, génération de nouvelles offres sinon. | 1007 |
-| `career_modules_marketplace.onExtensionLoaded()` | Hook : charge marketplace.json si la carrière est active (renvoie false sinon). *(interne)* *(hook)* | 1024 |
-| `career_modules_marketplace.onSaveCurrentProfile(currentSavePath, vehiclesThumbnailUpdate)` | Hook de sauvegarde : écrit listedVehicles dans <save>/career/marketplace.json. *(interne)* *(hook)* | 1018 |
-| `career_modules_marketplace.onUpdate(dtReal, dtSim, dtRaw)` | Hook de frame : affiche la fenêtre de debug en négociation (hors shipping) et, toutes les 10 s de simulation, génère de nouvelles offres et fait expirer les anciennes. *(interne)* *(hook)* | 881 |
-| `career_modules_marketplace.onVehicleRemoved(inventoryId)` | Hook : retire l'annonce d'un véhicule supprimé de l'inventaire. *(interne)* *(hook)* | 931 |
-| `career_modules_marketplace.openMenu(computerId)` | Ouvre la boutique de véhicules en mode « marketplace » depuis l'ordinateur donné. | 1014 |
-| `career_modules_marketplace.removeVehicleListing(inventoryId)` | Retire l'annonce du véhicule. | 69 |
-| `career_modules_marketplace.startNegotiateBuyingOffer(inventoryId, offerId)` | Démarre une négociation où le joueur vend : initialise la personnalité de l'acheteur, la citation, les prix (le joueur demande listing.value, l'acheteur offre offer.value), l'historique, et navigue vers career.computer.vehicleShopping.negotiation. | 387 |
-| `career_modules_marketplace.startNegotiateSellingOffer(_shopId)` | Démarre une négociation où le joueur achète un véhicule de la boutique. Refusée (toast d'avertissement) si le véhicule est en promotion ou non négociable. Initialise patience, prix de départ (remisé si discountPercentage) et navigue vers l'écran d'achat. | 439 |
-| `career_modules_marketplace.takeTheirOffer()` | Accepte l'offre de l'adversaire. En vente : fixe la valeur de l'offre et vend le véhicule. En achat : fixe le prix du véhicule de la boutique (originalSellValue si baisse) et bloque d'autres négociations. | 853 |
+| `career_modules_marketplace.acceptOffer(inventoryId, offerId)` | Accepts an offer: removes it from the listing and sells the vehicle at the offer value (career_modules_inventory.sellVehicle). | 214 |
+| `career_modules_marketplace.cancelNegotiation()` | Cancels the negotiation (status failed); if the player had already made an offer, prevents renegotiating that offer or vehicle. | 506 |
+| `career_modules_marketplace.declineOffer(inventoryId, offerId)` | Refuses (deletes) an offer from the listing. | 225 |
+| `career_modules_marketplace.finalizeNegotiationExit()` | On leaving the screen: takes the offer if the status is accepted and not yet taken, otherwise cancels the negotiation. | 871 |
+| `career_modules_marketplace.findVehicleListing(inventoryId)` | Looks up the listing of an inventory vehicle. | 20 |
+| `career_modules_marketplace.generateOffer(inventoryId)` | Creates an offer from a random buyer for a listing (the given one or a random listing): value = market value * multiplier * noise, capped according to the price ratio, rounded to 50. | 171 |
+| `career_modules_marketplace.generatePersonality(buyer, _archetypes)` | Randomly picks a negotiation archetype (buyer or seller) from negotiationPersonalities.json and builds the personality: name, patience, acceptance/insult thresholds, price multiplier (1 - m for a buyer, 1 + m for a seller), delays, quotes. | 77 |
+| `career_modules_marketplace.getListings()` | Returns a copy of the listings for the UI: translated name, listing disabled if the value dropped too much, expired offers marked disabled, offers sorted (active first, most recent first). | 935 |
+| `career_modules_marketplace.getNegotiationState()` | Returns the negotiation state for the UI: active, direction (amISelling), starting price, patience, offers (myOffer/theirOffer), status, opponent name and quote, vehicle (name, thumbnail, mileage, actual value) and offer history. | 320 |
+| `career_modules_marketplace.listVehicles(vehicles)` | Lists vehicles for sale (ignores unknown vehicles or those already for sale). Price = entry.value or computed value; sets marketRatio and offerTimeMultiplier. | 28 |
+| `career_modules_marketplace.makeNegotiationOffer(price)` | Proposes a price (converted with tonumber): if valid, starts the opponent's response as a background task (simulated thinking then typing, patience decrease, acceptance, counteroffer, refusal or failure) and sends the states to the UI. | 849 |
+| `career_modules_marketplace.menuOpened(open)` | Signals the offers menu opening/closing (the negotiation counts as an open menu) and updates the listings: purges expired offers if opened, generates new offers otherwise. | 1007 |
+| `career_modules_marketplace.onExtensionLoaded()` | Hook: loads marketplace.json if the career is active (returns false otherwise). *(internal)* *(hook)* | 1024 |
+| `career_modules_marketplace.onSaveCurrentProfile(currentSavePath, vehiclesThumbnailUpdate)` | Save hook: writes listedVehicles to <save>/career/marketplace.json. *(internal)* *(hook)* | 1018 |
+| `career_modules_marketplace.onUpdate(dtReal, dtSim, dtRaw)` | Frame hook: displays the debug window during negotiation (outside shipping) and, every 10 s of simulation, generates new offers and expires old ones. *(internal)* *(hook)* | 881 |
+| `career_modules_marketplace.onVehicleRemoved(inventoryId)` | Hook: removes the listing of a vehicle deleted from the inventory. *(internal)* *(hook)* | 931 |
+| `career_modules_marketplace.openMenu(computerId)` | Opens the vehicle shop in "marketplace" mode from the given computer. | 1014 |
+| `career_modules_marketplace.removeVehicleListing(inventoryId)` | Removes the vehicle's listing. | 69 |
+| `career_modules_marketplace.startNegotiateBuyingOffer(inventoryId, offerId)` | Starts a negotiation where the player sells: initializes the buyer's personality, the quote, the prices (the player asks listing.value, the buyer offers offer.value), the history, and navigates to career.computer.vehicleShopping.negotiation. | 387 |
+| `career_modules_marketplace.startNegotiateSellingOffer(_shopId)` | Starts a negotiation where the player buys a vehicle from the shop. Refused (warning toast) if the vehicle is on promotion or non-negotiable. Initializes patience, starting price (discounted if discountPercentage) and navigates to the purchase screen. | 439 |
+| `career_modules_marketplace.takeTheirOffer()` | Accepts the opponent's offer. When selling: sets the offer value and sells the vehicle. When buying: sets the shop vehicle's price (originalSellValue if lowered) and blocks further negotiations. | 853 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_marketplace.acceptOffer(inventoryId, offerId)`
 
-Accepte une offre : la retire de l'annonce et vend le véhicule à la valeur de l'offre (career_modules_inventory.sellVehicle).
+Accepts an offer: removes it from the listing and sells the vehicle at the offer value (career_modules_inventory.sellVehicle).
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `offerId` (*integer*) : Id de l'offre.
+- `inventoryId` (*integer*) : Inventory id.
+- `offerId` (*integer*) : Offer id.
 
 #### `career_modules_marketplace.declineOffer(inventoryId, offerId)`
 
-Refuse (supprime) une offre de l'annonce.
+Refuses (deletes) an offer from the listing.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `offerId` (*integer*) : Id de l'offre.
+- `inventoryId` (*integer*) : Inventory id.
+- `offerId` (*integer*) : Offer id.
 
 #### `career_modules_marketplace.findVehicleListing(inventoryId)`
 
-Cherche l'annonce d'un véhicule de l'inventaire.
+Looks up the listing of an inventory vehicle.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- **renvoie** : table|nil Annonce (id, value, marketValue, offers...).
+- `inventoryId` (*integer*) : Inventory id.
+- **returns**: table|nil Listing (id, value, marketValue, offers...).
 
 #### `career_modules_marketplace.generateOffer(inventoryId)`
 
-Crée une offre d'un acheteur aléatoire pour une annonce (celle donnée ou une annonce au hasard) : valeur = valeur de marché * multiplicateur * bruit, plafonnée selon le rapport de prix, arrondie à 50.
+Creates an offer from a random buyer for a listing (the given one or a random listing): value = market value * multiplier * noise, capped according to the price ratio, rounded to 50.
 
-- `inventoryId` (*integer|nil*) : Id d'inventaire de l'annonce.
-- **renvoie** : table Offre {id, timestamp, value, ttl, negotiationPossible, buyerPersonality}.
+- `inventoryId` (*integer|nil*) : Inventory id of the listing.
+- **returns**: table Offer {id, timestamp, value, ttl, negotiationPossible, buyerPersonality}.
 
 #### `career_modules_marketplace.generatePersonality(buyer, _archetypes)`
 
-Tire au hasard un archétype de négociation (acheteur ou vendeur) dans negotiationPersonalities.json et construit la personnalité : nom, patience, seuils d'acceptation/insulte, multiplicateur de prix (1 - m pour un acheteur, 1 + m pour un vendeur), délais, citations.
+Randomly picks a negotiation archetype (buyer or seller) from negotiationPersonalities.json and builds the personality: name, patience, acceptance/insult thresholds, price multiplier (1 - m for a buyer, 1 + m for a seller), delays, quotes.
 
-- `buyer` (*boolean|nil*) : true pour un acheteur.
-- `_archetypes` (*string[]|nil*) : Liste d'archétypes imposée (sinon randomBuyerArchetypes / randomSellerArchetypes).
-- **renvoie** : table|nil Personnalité, nil si fichier absent ou liste vide.
+- `buyer` (*boolean|nil*) : true for a buyer.
+- `_archetypes` (*string[]|nil*) : Forced list of archetypes (otherwise randomBuyerArchetypes / randomSellerArchetypes).
+- **returns**: table|nil Personality, nil if the file is missing or the list is empty.
 
 #### `career_modules_marketplace.getListings()`
 
-Renvoie une copie des annonces pour l'UI : nom traduit, annonce désactivée si la valeur a trop baissé, offres expirées marquées disabled, offres triées (actives d'abord, les plus récentes en premier).
+Returns a copy of the listings for the UI: translated name, listing disabled if the value dropped too much, expired offers marked disabled, offers sorted (active first, most recent first).
 
-- **renvoie** : table[] Annonces.
+- **returns**: table[] Listings.
 
 #### `career_modules_marketplace.getNegotiationState()`
 
-Renvoie l'état de la négociation pour l'UI : active, sens (amISelling), prix de départ, patience, offres (myOffer/theirOffer), statut, nom et citation de l'adversaire, véhicule (nom, miniature, kilométrage, valeur réelle) et historique d'offres.
+Returns the negotiation state for the UI: active, direction (amISelling), starting price, patience, offers (myOffer/theirOffer), status, opponent name and quote, vehicle (name, thumbnail, mileage, actual value) and offer history.
 
-- **renvoie** : table État de négociation.
+- **returns**: table Negotiation state.
 
 #### `career_modules_marketplace.listVehicles(vehicles)`
 
-Met en vente des véhicules (ignore les véhicules inconnus ou déjà en vente). Prix = entry.value ou valeur calculée ; fixe marketRatio et offerTimeMultiplier.
+Lists vehicles for sale (ignores unknown vehicles or those already for sale). Price = entry.value or computed value; sets marketRatio and offerTimeMultiplier.
 
-- `vehicles` (*{inventoryId: integer, value: number|nil}[]*) : Véhicules à lister, avec prix demandé facultatif.
+- `vehicles` (*{inventoryId: integer, value: number|nil}[]*) : Vehicles to list, with optional asking price.
 
 #### `career_modules_marketplace.makeNegotiationOffer(price)`
 
-Propose un prix (converti avec tonumber) : s'il est valide, lance en tâche de fond la réponse de l'adversaire (réflexion puis saisie simulées, baisse de patience, acceptation, contre-offre, refus ou échec) et envoie les états à l'UI.
+Proposes a price (converted with tonumber): if valid, starts the opponent's response as a background task (simulated thinking then typing, patience decrease, acceptance, counteroffer, refusal or failure) and sends the states to the UI.
 
-- `price` (*number|string*) : Prix proposé.
-- **renvoie** : boolean false si le prix n'est pas autorisé.
+- `price` (*number|string*) : Proposed price.
+- **returns**: boolean false if the price is not allowed.
 
 #### `career_modules_marketplace.menuOpened(open)`
 
-Signale l'ouverture/fermeture du menu d'offres (la négociation compte comme menu ouvert) et met à jour les annonces : purge des offres expirées si ouvert, génération de nouvelles offres sinon.
+Signals the offers menu opening/closing (the negotiation counts as an open menu) and updates the listings: purges expired offers if opened, generates new offers otherwise.
 
-- `open` (*boolean*) : Menu ouvert ou non.
+- `open` (*boolean*) : Whether the menu is open.
 
 #### `career_modules_marketplace.onSaveCurrentProfile(currentSavePath, vehiclesThumbnailUpdate)`
 
-Hook de sauvegarde : écrit listedVehicles dans <save>/career/marketplace.json.
+Save hook: writes listedVehicles to <save>/career/marketplace.json.
 
-- `currentSavePath` (*string*) : Dossier de sauvegarde.
-- `vehiclesThumbnailUpdate` (*integer[]|nil*) : Non utilisé.
+- `currentSavePath` (*string*) : Save folder.
+- `vehiclesThumbnailUpdate` (*integer[]|nil*) : Not used.
 
 #### `career_modules_marketplace.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook de frame : affiche la fenêtre de debug en négociation (hors shipping) et, toutes les 10 s de simulation, génère de nouvelles offres et fait expirer les anciennes.
+Frame hook: displays the debug window during negotiation (outside shipping) and, every 10 s of simulation, generates new offers and expires old ones.
 
-- `dtReal` (*number*) : Temps réel (s).
-- `dtSim` (*number*) : Temps simulé (s).
-- `dtRaw` (*number*) : Temps brut (s).
+- `dtReal` (*number*) : Real time (s).
+- `dtSim` (*number*) : Simulated time (s).
+- `dtRaw` (*number*) : Raw time (s).
 
 #### `career_modules_marketplace.onVehicleRemoved(inventoryId)`
 
-Hook : retire l'annonce d'un véhicule supprimé de l'inventaire.
+Hook: removes the listing of a vehicle deleted from the inventory.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
+- `inventoryId` (*integer*) : Inventory id.
 
 #### `career_modules_marketplace.openMenu(computerId)`
 
-Ouvre la boutique de véhicules en mode « marketplace » depuis l'ordinateur donné.
+Opens the vehicle shop in "marketplace" mode from the given computer.
 
-- `computerId` (*string*) : Id de l'ordinateur.
+- `computerId` (*string*) : Computer id.
 
 #### `career_modules_marketplace.removeVehicleListing(inventoryId)`
 
-Retire l'annonce du véhicule.
+Removes the vehicle's listing.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
+- `inventoryId` (*integer*) : Inventory id.
 
 #### `career_modules_marketplace.startNegotiateBuyingOffer(inventoryId, offerId)`
 
-Démarre une négociation où le joueur vend : initialise la personnalité de l'acheteur, la citation, les prix (le joueur demande listing.value, l'acheteur offre offer.value), l'historique, et navigue vers career.computer.vehicleShopping.negotiation.
+Starts a negotiation where the player sells: initializes the buyer's personality, the quote, the prices (the player asks listing.value, the buyer offers offer.value), the history, and navigates to career.computer.vehicleShopping.negotiation.
 
-- `inventoryId` (*integer*) : Id d'inventaire du véhicule en vente.
-- `offerId` (*integer*) : Id de l'offre de départ.
-- **renvoie** : any Résultat de ui_router.navigate.
+- `inventoryId` (*integer*) : Inventory id of the vehicle for sale.
+- `offerId` (*integer*) : Id of the starting offer.
+- **returns**: any Result of ui_router.navigate.
 
 #### `career_modules_marketplace.startNegotiateSellingOffer(_shopId)`
 
-Démarre une négociation où le joueur achète un véhicule de la boutique. Refusée (toast d'avertissement) si le véhicule est en promotion ou non négociable. Initialise patience, prix de départ (remisé si discountPercentage) et navigue vers l'écran d'achat.
+Starts a negotiation where the player buys a vehicle from the shop. Refused (warning toast) if the vehicle is on promotion or non-negotiable. Initializes patience, starting price (discounted if discountPercentage) and navigates to the purchase screen.
 
-- `_shopId` (*string|integer*) : Id du véhicule dans la boutique (career_modules_vehicleShopping).
-- **renvoie** : any Résultat de ui_router.navigate, ou nil si refusée.
+- `_shopId` (*string|integer*) : Vehicle id in the shop (career_modules_vehicleShopping).
+- **returns**: any Result of ui_router.navigate, or nil if refused.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dealershipBuyerQuotes` | string[] | 25 clés de traduction de phrases d'acheteurs de concession (ui.career.negotiation.dealershipBuyerQuotes.01..25). |
-| `firstNameCount` | integer | Nombre de prénoms (#firstNames). |
-| `firstNames` | string[] | Liste de prénoms pour générer les noms d'acheteurs/vendeurs particuliers. |
-| `initialCount` | integer | Nombre d'entrées de initials. |
-| `initialProbabilities` | table<string, number> | Fréquence relative de chaque initiale (A-Z) pour les noms de famille. |
-| `initials` | string[] | Liste d'initiales pondérée par initialProbabilities (math.ceil(p*100) copies chacune). |
-| `privateSellerQuotes` | string[] | 50 clés de traduction de phrases de vendeurs particuliers (ui.career.negotiation.privateSellerQuotes.01..50). |
+| `dealershipBuyerQuotes` | string[] | 25 translation keys for dealership buyer phrases (ui.career.negotiation.dealershipBuyerQuotes.01..25). |
+| `firstNameCount` | integer | Number of first names (#firstNames). |
+| `firstNames` | string[] | List of first names used to generate private buyer/seller names. |
+| `initialCount` | integer | Number of entries in initials. |
+| `initialProbabilities` | table<string, number> | Relative frequency of each initial (A-Z) for last names. |
+| `initials` | string[] | List of initials weighted by initialProbabilities (math.ceil(p*100) copies each). |
+| `privateSellerQuotes` | string[] | 50 translation keys for private seller phrases (ui.career.negotiation.privateSellerQuotes.01..50). |
 
-**Évènements UI (guihooks.trigger) :** `negotiationData`, `toastrMsg`
+**UI events (guihooks.trigger):** `negotiationData`, `toastrMsg`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/marketplace.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/marketplace.lua`.*

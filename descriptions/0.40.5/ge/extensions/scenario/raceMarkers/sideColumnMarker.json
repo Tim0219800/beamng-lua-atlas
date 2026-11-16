@@ -1,33 +1,128 @@
 {
   "path": "lua/ge/extensions/scenario/raceMarkers/sideColumnMarker.lua",
-  "module": "Marqueur de checkpoint par défaut de scenario_race_marker : deux colonnes (modèle single_faded_column.dae) de part et d'autre du passage, plus une base au sol (checkpoint_curve_base.dae). Les colonnes grandissent avec la distance pour rester visibles de loin. Prend en charge l'écran partagé : chaque marqueur peut n'être visible que pour un joueur (setRenderViewPlayer). Le module renvoie un constructeur : require('scenario/raceMarkers/sideColumnMarker')(id) donne un objet de la classe C.",
+  "module": "Default checkpoint marker of scenario_race_marker: two columns (model single_faded_column.dae) on either side of the passage, plus a ground base (checkpoint_curve_base.dae). The columns grow with distance to stay visible from afar. Supports split screen: each marker can be visible to only one player (setRenderViewPlayer). The module returns a constructor: require('scenario/raceMarkers/sideColumnMarker')(id) gives an object of class C.",
   "notes": [
-    "Couleurs par mode : default rouge (1, 0.07, 0), next noir, start et lap vert (0.4, 1, 0.2), recovery jaune (1, 0.85, 0), final bleu (0.1, 0.3, 1), branch orange (1, 0.6, 0), hidden noir. Fondu de couleur de 0.3 s.",
-    "setToCheckpoint(wp) lit wp.pos, wp.radius (demi-écart entre les colonnes), wp.normal (direction de passage, facultative), wp.fadeNear (1 par défaut), wp.fadeFar (50), wp.minAlpha (0.25).",
-    "Les colonnes sont placées à pos +/- side*radius avec un décalage vertical de -10 m, et leur hauteur croît avec la distance (jusqu'à environ 20 unités entre 60 et 180 m, puis encore à grande distance).",
-    "La caméra de référence pour la distance est celle du contexte du joueur renderViewPlayer (core_camera.getContextIdForPlayer), sinon la caméra principale.",
-    "Les objets sont mémorisés par identifiants (baseId, leftId, rightId) et recherchés à chaque image avec scenetree.findObjectById.",
-    "La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim)."
+    "Colors per mode: default red (1, 0.07, 0), next black, start and lap green (0.4, 1, 0.2), recovery yellow (1, 0.85, 0), final blue (0.1, 0.3, 1), branch orange (1, 0.6, 0), hidden black. 0.3 s color fade.",
+    "setToCheckpoint(wp) reads wp.pos, wp.radius (half the gap between the columns), wp.normal (passage direction, optional), wp.fadeNear (1 by default), wp.fadeFar (50), wp.minAlpha (0.25).",
+    "The columns are placed at pos +/- side*radius with a vertical offset of -10 m, and their height grows with distance (up to about 20 units between 60 and 180 m, then more at long distances).",
+    "The reference camera for the distance is the one of the renderViewPlayer player's context (core_camera.getContextIdForPlayer), otherwise the main camera.",
+    "The objects are stored by identifiers (baseId, leftId, rightId) and looked up every frame with scenetree.findObjectById.",
+    "The extracted page shows update(dtSim); the actual signature is update(dt, dtSim)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Marqueur à deux colonnes latérales.",
+      "desc": "Marker with two side columns.",
       "functions": {
-        "init": {"desc": "Constructeur : initialise l'état et appelle clearMarkers.", "params": {"id": {"type": "integer", "desc": "Identifiant unique."}}, "internal": true},
-        "update": {"desc": "Appel par image : calcule couleur, alpha, taille de la base et des colonnes d'après la distance à la caméra.", "params": {"dt": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}}, "internal": true},
-        "setToCheckpoint": {"desc": "Place base et colonnes sur un checkpoint.", "params": {"wp": {"type": "table", "desc": "{pos, radius, normal?, fadeNear?, fadeFar?, minAlpha?}."}}},
-        "setMode": {"desc": "Change de mode : affiche (sauf 'hidden') et lance le fondu de couleur.", "params": {"mode": {"type": "string", "desc": "default, next, start, lap, recovery, final, branch ou hidden."}}},
-        "setVisibility": {"desc": "Affiche ou cache base et colonnes.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
-        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
-        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
-        "applyRenderViewMask": {"desc": "Efface les masques de rendu des objets puis les cache dans les vues d'écran partagé des autres joueurs que renderViewPlayer (render_splitScreen.getPlayers).", "params": {}},
-        "setRenderViewPlayer": {"desc": "Réserve ce marqueur à la vue d'un joueur (nil pour tous) et applique le masque.", "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur."}}},
-        "createObject": {"desc": "Crée un TSStatic caché enregistré sous objectName et ajouté à ScenarioObjectsGroup.", "params": {"shapeName": {"type": "string", "desc": "Chemin du modèle."}, "objectName": {"type": "string", "desc": "Nom d'enregistrement."}}, "returns": [{"type": "table", "desc": "L'objet créé."}]},
-        "createMarkers": {"desc": "Supprime les anciens objets puis crée la base et les deux colonnes, et applique le masque de vues.", "params": {}},
-        "clearMarker": {"desc": "Supprime un objet à partir de son identifiant (masque de rendu effacé avant la suppression).", "params": {"id": {"type": "integer|nil", "desc": "Identifiant d'objet."}}},
-        "clearMarkers": {"desc": "Supprime base et colonnes.", "params": {}}
+        "init": {
+          "desc": "Constructor: initializes the state and calls clearMarkers.",
+          "params": {
+            "id": {
+              "type": "integer",
+              "desc": "Unique identifier."
+            }
+          },
+          "internal": true
+        },
+        "update": {
+          "desc": "Per-frame call: computes color, alpha, size of the base and columns from the distance to the camera.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Real duration (s)."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Simulated duration (s)."
+            }
+          },
+          "internal": true
+        },
+        "setToCheckpoint": {
+          "desc": "Places base and columns on a checkpoint.",
+          "params": {
+            "wp": {
+              "type": "table",
+              "desc": "{pos, radius, normal?, fadeNear?, fadeFar?, minAlpha?}."
+            }
+          }
+        },
+        "setMode": {
+          "desc": "Changes mode: shows (except 'hidden') and starts the color fade.",
+          "params": {
+            "mode": {
+              "type": "string",
+              "desc": "default, next, start, lap, recovery, final, branch or hidden."
+            }
+          }
+        },
+        "setVisibility": {
+          "desc": "Shows or hides base and columns.",
+          "params": {
+            "v": {
+              "type": "boolean",
+              "desc": "Visibility."
+            }
+          }
+        },
+        "hide": {
+          "desc": "Calls setVisibility(false).",
+          "params": {}
+        },
+        "show": {
+          "desc": "Calls setVisibility(true).",
+          "params": {}
+        },
+        "applyRenderViewMask": {
+          "desc": "Clears the objects' render masks then hides them in the split-screen views of players other than renderViewPlayer (render_splitScreen.getPlayers).",
+          "params": {}
+        },
+        "setRenderViewPlayer": {
+          "desc": "Reserves this marker for one player's view (nil for all) and applies the mask.",
+          "params": {
+            "player": {
+              "type": "integer|nil",
+              "desc": "Player index."
+            }
+          }
+        },
+        "createObject": {
+          "desc": "Creates a hidden TSStatic registered under objectName and added to ScenarioObjectsGroup.",
+          "params": {
+            "shapeName": {
+              "type": "string",
+              "desc": "Model path."
+            },
+            "objectName": {
+              "type": "string",
+              "desc": "Registration name."
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "The created object."
+            }
+          ]
+        },
+        "createMarkers": {
+          "desc": "Removes the old objects then creates the base and the two columns, and applies the view mask.",
+          "params": {}
+        },
+        "clearMarker": {
+          "desc": "Removes an object from its identifier (render mask cleared before removal).",
+          "params": {
+            "id": {
+              "type": "integer|nil",
+              "desc": "Object identifier."
+            }
+          }
+        },
+        "clearMarkers": {
+          "desc": "Removes base and columns.",
+          "params": {}
+        }
       }
     }
   }

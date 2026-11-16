@@ -1,41 +1,41 @@
 # `editor_api_sketch`
 
-*Fichier : `lua/ge/extensions/editor/api/sketch.lua` · VM : Game Engine (GE) · 36 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/sketch.lua` · VM: Game Engine (GE) · 36 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_sketch` : `extensions.load("editor_api_sketch")`, puis la globale `editor_api_sketch`
+**Access:** extension `editor_api_sketch`: `extensions.load("editor_api_sketch")`, then the global `editor_api_sketch`
 
-Module d'API de l'éditeur pour les « sketches » (croquis dans le monde). Dans cette version il n'est qu'une coquille : initialize(editor) ajoute à l'objet editor trois fonctions (createSketch, deleteSketch, getSketches) dont le corps est vide (commentaire TODO). Les hooks prévus sont listés en commentaire : onEditorSketchCreated, onEditorSketchDelete, onEditorSketchChanged.
+Editor API module for "sketches" (drawings in the world). In this version it is only a shell: initialize(editor) adds three functions (createSketch, deleteSketch, getSketches) to the editor object whose body is empty (TODO comment). The planned hooks are listed in a comment: onEditorSketchCreated, onEditorSketchDelete, onEditorSketchChanged.
 
-## Remarques
+## Notes
 
-- Les trois fonctions ne font rien et renvoient nil : elles sont encore à implémenter (TODO dans le code).
-- Les hooks onEditorSketchCreated/Delete/Changed sont seulement cités en commentaire, rien ne les déclenche dans ce fichier.
+- The three functions do nothing and return nil: they are still to be implemented (TODO in the code).
+- The onEditorSketchCreated/Delete/Changed hooks are only mentioned in a comment, nothing triggers them in this file.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_sketch.initialize(editorInstance)` | Enregistre createSketch, deleteSketch et getSketches sur l'objet editor passé en argument. Appelé par le chargeur de l'API de l'éditeur. *(interne)* | 26 |
+| `editor_api_sketch.initialize(editorInstance)` | Registers createSketch, deleteSketch and getSketches on the editor object passed as an argument. Called by the editor API loader. *(internal)* | 26 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_sketch.initialize(editorInstance)`
 
-Enregistre createSketch, deleteSketch et getSketches sur l'objet editor passé en argument. Appelé par le chargeur de l'API de l'éditeur.
+Registers createSketch, deleteSketch and getSketches on the editor object passed as an argument. Called by the editor API loader.
 
-- `editorInstance` (*table*) : Objet editor global de l'éditeur sur lequel les fonctions sont ajoutées.
+- `editorInstance` (*table*) : Global editor object of the editor on which the functions are added.
 
-## Classe `editor`
+## Class `editor`
 
-Objet editor de l'éditeur, enrichi par initialize. Toutes ces méthodes sont des stubs vides.
+Editor object of the editor, enriched by initialize. All these methods are empty stubs.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.createSketch(position, size)` | Prévu pour créer un croquis. Corps vide (TODO). | 14 |
-| `editor.deleteSketch(sketchObjectId)` | Prévu pour supprimer un croquis. Corps vide (TODO). | 18 |
-| `editor.getSketches()` | Prévu pour lister les croquis. Corps vide (TODO), renvoie nil. | 22 |
+| `editor.createSketch(position, size)` | Planned to create a sketch. Empty body (TODO). | 14 |
+| `editor.deleteSketch(sketchObjectId)` | Planned to delete a sketch. Empty body (TODO). | 18 |
+| `editor.getSketches()` | Planned to list the sketches. Empty body (TODO), returns nil. | 22 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/sketch.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/sketch.lua`.*

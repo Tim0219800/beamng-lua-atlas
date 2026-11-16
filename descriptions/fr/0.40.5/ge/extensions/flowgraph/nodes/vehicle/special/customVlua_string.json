@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/special/customVlua_string.lua",
+  "module": "Nœud « Custom vlua - deprecated » (catégorie `repeat_p_duration`). Ancienne version de « Custom Vehicle Lua » : envoie la chaîne du pin `customLUA` au véhicule `vehId` avec `queueLuaCommand`. Obsolète : remplacé par « Custom vlua ».",
+  "notes": [
+    "Le pin `customLUA` est décrit « The message that will be displayed. Bug: can not start directly with a number. »",
+    "`init` lit `self.pinIn.customLUAString` qui n'existe pas (le pin s'appelle `customLUA`) : erreur potentielle.",
+    "Pas de repli sur le véhicule joueur."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "drawMiddle": {
+          "desc": "Affichage central vide.",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+            },
+            "style": {
+              "type": "any",
+              "desc": "Style ImGui de l'éditeur."
+            }
+          }
+        },
+        "init": {
+          "desc": "Constructeur ; tente de copier `pinIn.customLUAString.value` dans `data.func` (pin inexistant).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Envoie `customLUA` au véhicule.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

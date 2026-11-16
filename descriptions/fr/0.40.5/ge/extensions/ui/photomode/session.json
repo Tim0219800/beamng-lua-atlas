@@ -1,0 +1,174 @@
+{
+  "path": "lua/ge/extensions/ui/photomode/session.lua",
+  "module": "Orchestrateur de la session du mode photo. Il ouvre et ferme la session : pause de la simulation (demande de pause « ui_pause_photomode »), vue solo en écran partagé, capture puis restauration des états caméra / scène / effets / rendu avancé / node grabber, caméra libre de session, drapeau global photoModeOpen. Il gère aussi les profils de route (pause, garage), la session persistante (réglage photomodePersistentSession), le mode de surface du panneau, la confirmation de sortie et la charge utile (route payload) envoyée à l'interface Vue.",
+  "usage": "ui_photomode_session.beginPhotomodeSession({profile = \"garage\"})\n-- ... réglages via ui_photomode_scene / _camera / _effects ...\nui_photomode_session.endPhotomodeSession()",
+  "notes": [
+    "Profils : \"pause\" (par défaut, aucun contrôle masqué) et \"garage\" (masque timeOfDay et cloudCover de la scène, motionBlur des effets, terrainLodScale/grassDensity/cloudQuality du rendu avancé, et désactive la feature motionBlurCapture). Un profil inconnu retombe sur \"pause\". Ce n'est qu'une politique de visibilité de l'interface : les appels Lua directs ne sont pas bloqués.",
+    "Ordre de beginPhotomodeSession : profil, pause, vue solo, rafraîchissement des défauts de capture, captureRestoreState (caméra, scène, effets, rendu avancé), captureNodeGrabberRestoreState, presets par défaut, caméra libre, suppressions (photoModeOpen = true), sessionActive = true, puis restauration de l'état persistant si activé. endPhotomodeSession fait l'inverse et remet le profil à \"pause\".",
+    "L'application de qualité « Prioritize Resolution » (applyPlatformPhotomodeQualityMode) est commentée dans begin/end : elle n'est pas utilisée dans cette version.",
+    "La confirmation de sortie affiche un dialogue via guihooks.trigger(\"showConfirmationDialog\", ...) avec les rappels Lua ui_photomode_session.cancelExitConfirmation() et confirmExit() ; confirmExit navigue ensuite vers la route demandée via extensions.ui_router.navigate avec un contournement unique de la confirmation.",
+    "Bug du jeu : isDebugEnabled et setDebugEnabled de ce module lisent/écrivent une variable globale isDebugEnabled, non déclarée dans ce fichier, et non l'état de ui_photomode_shared ; isDebugEnabled() renvoie donc nil tant qu'aucun appel à setDebugEnabled n'a eu lieu, et logDebug de ui_photomode_shared n'est pas affecté.",
+    "setHiddenCameraInputEnabled empile/dépile l'action map \"PhotoModeCamera\" (joueur 0)."
+  ],
+  "fields": {
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions chargées avant : ui_photomode_shared, _camera, _scene, _flash, _effects, _advancedRender, _capture, _presets, core_settings_graphic."
+    }
+  },
+  "functions": {
+    "beginPhotomodeSession": {
+      "desc": "Démarre la session du mode photo (pause, caméra libre, états de restauration, suppressions du monde). Ignorée si une session est déjà active.",
+      "params": {
+        "options": {"type": "table|nil", "desc": "options.profile : \"pause\" (défaut) ou \"garage\"."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si la session a démarré, false si elle était déjà active."}],
+      "internal": false
+    },
+    "endPhotomodeSession": {
+      "desc": "Termine la session : termine la capture en cours, sauvegarde l'état persistant si activé, restaure scène, effets, rendu avancé, caméra, node grabber, vue solo, suppressions et pause, puis réinitialise les presets temporaires. Ne fait rien si tout est déjà inactif.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si une fermeture a été faite, false si la session était déjà inactive."}],
+      "internal": false
+    },
+    "isPhotomodeSessionActive": {
+      "desc": "Indique si une session de mode photo est active.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "Valeur de S.sessionActive."}],
+      "internal": false
+    },
+    "isCaptureInProgress": {
+      "desc": "Indique si une capture est en cours (délègue à ui_photomode_capture).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si une capture est en cours."}],
+      "internal": false
+    },
+    "isPersistentSessionEnabled": {
+      "desc": "Lit le réglage photomodePersistentSession (si activé, les réglages de la session sont mémorisés à la fermeture et réappliqués à la prochaine ouverture).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si la session persistante est activée."}],
+      "internal": false
+    },
+    "setPersistentSessionEnabled": {
+      "desc": "Écrit le réglage de session persistante ; à la désactivation, efface l'état persistant mémorisé, puis notifie l'interface des réglages.",
+      "params": {
+        "value": {"type": "boolean|any", "desc": "Nouvelle valeur (normalisée en booléen)."}
+      },
+      "returns": [{"type": "table", "desc": "{ok=boolean, enabled=boolean}."}],
+      "internal": false
+    },
+    "getPanelSurfaceMode": {
+      "desc": "Renvoie le mode de surface du panneau, \"hidden\" ou \"settings\" (\"hidden\" si la valeur stockée est invalide).",
+      "params": {},
+      "returns": [{"type": "string", "desc": "\"hidden\" ou \"settings\"."}],
+      "internal": false
+    },
+    "setPanelSurfaceMode": {
+      "desc": "Change le mode de surface du panneau ; refuse les valeurs autres que \"hidden\" et \"settings\".",
+      "params": {
+        "mode": {"type": "string", "desc": "\"hidden\" ou \"settings\"."}
+      },
+      "returns": [{"type": "table", "desc": "{ok=boolean, mode=string}."}],
+      "internal": false
+    },
+    "getRoutePayload": {
+      "desc": "Construit la charge utile envoyée à l'interface : contractVersion, sessionActive, capabilities, capture, persistentSession, panelSurfaceMode, mediaActions, resolutionPresets, suppressions.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Charge utile de route du mode photo."}],
+      "internal": false
+    },
+    "buildCapabilities": {
+      "desc": "Calcule les capacités affichées par l'interface : profil actif, contrôles masqués, sections, features (upload, steam, openShareUrl, overlays, resolutionPresets, motionBlurCapture, advancedRenderTuning, developerTools…), build (shipping/developer) et état du rendu avancé. Les features du profil actif prévalent.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Table de capacités."}],
+      "internal": false
+    },
+    "requestExitConfirmation": {
+      "desc": "Mémorise la navigation de sortie demandée et affiche un dialogue de confirmation (texte différent si la session persistante est activée). Ne fait rien de plus si une confirmation est déjà en attente.",
+      "params": {
+        "route": {"type": "table|any", "desc": "Route visée (utilise route.name si context.routeName est absent)."},
+        "params": {"type": "any", "desc": "Paramètres de la route à mémoriser."},
+        "context": {"type": "table|nil", "desc": "{routeName?, options?} ."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si aucun nom de route valide, sinon true."}],
+      "internal": false
+    },
+    "cancelExitConfirmation": {
+      "desc": "Annule la sortie en attente (bouton « retour » du dialogue) et réactive l'entrée caméra cachée si elle l'était.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "confirmExit": {
+      "desc": "Confirme la sortie : active le contournement de confirmation puis navigue vers la route mémorisée avec extensions.ui_router.navigate.",
+      "params": {},
+      "returns": [{"type": "boolean|any", "desc": "false si aucune navigation en attente, sinon le résultat de ui_router.navigate."}],
+      "internal": false
+    },
+    "consumeExitConfirmationBypass": {
+      "desc": "Lit et consomme le drapeau de contournement de la confirmation de sortie (utilisé par la garde de route du mode photo).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si le contournement était armé (il est alors désarmé)."}],
+      "internal": false
+    },
+    "isDebugEnabled": {
+      "desc": "Renvoie la variable globale isDebugEnabled (voir bug dans les notes).",
+      "params": {},
+      "returns": [{"type": "boolean|nil", "desc": "Valeur de la globale isDebugEnabled."}],
+      "internal": false
+    },
+    "setDebugEnabled": {
+      "desc": "Définit la globale isDebugEnabled, propage le réglage à l'API screenshot (setDebugTracingEnabled) et journalise.",
+      "params": {
+        "value": {"type": "any", "desc": "Activé uniquement si value == true."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "traceCaptureDebug": {
+      "desc": "Journalise un message de debug de capture : « scope » suivi du payload sérialisé (JSON).",
+      "params": {
+        "scope": {"type": "string|nil", "desc": "Libellé (\"capture\" par défaut)."},
+        "payload": {"type": "any", "desc": "Données à ajouter."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setHiddenCameraInputEnabled": {
+      "desc": "Active ou désactive les entrées de la caméra photo cachée en empilant/dépilant l'action map \"PhotoModeCamera\". Sans effet si l'état ne change pas.",
+      "params": {
+        "enabled": {"type": "boolean", "desc": "Activé uniquement si enabled == true."}
+      },
+      "returns": [{"type": "boolean", "desc": "Toujours true."}],
+      "internal": false
+    },
+    "onPhotomodeRouteEnter": {
+      "desc": "Hook appelé à l'entrée dans une route du mode photo (routeName en argument) ; journalise seulement.",
+      "params": {
+        "routeName": {"type": "string", "desc": "Nom de la route."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onPhotomodeRouteLeave": {
+      "desc": "Hook appelé à la sortie d'une route du mode photo ; journalise seulement.",
+      "params": {
+        "routeName": {"type": "string", "desc": "Nom de la route."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "handleExtensionLoaded": {
+      "desc": "Appelée au chargement de l'extension : efface les bookmarks (caméra, caméra relative, environnement, rendu avancé) et réinitialise l'état local de session.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "handleExtensionUnloaded": {
+      "desc": "Appelée au déchargement de l'extension : termine la session, efface les bookmarks et réinitialise l'état local.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

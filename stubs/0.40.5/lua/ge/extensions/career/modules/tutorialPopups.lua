@@ -2,75 +2,75 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/tutorialPopups.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère les popups d'introduction (tutoriel et aides contextuelles) de la carrière : mémorise lesquelles ont déjà été vues (drapeaux sauvegardés dans <profil>/career/tutorialData.json), les ouvre via ui_popup depuis /gameplay/tutorials/pages/, et met en file d'attente celles qui arriveraient pendant une popup « véhicule endommagé » du tutoriel. Expose aussi des fonctions nommées (showWelcomeSplashscreen, onCareerTuningStarted, onEnterCargoOverviewScreen…) qui servent de hooks ou d'appels directs pour afficher la popup associée une seule fois.
---- Accès : extension `career_modules_tutorialPopups` : `extensions.load("career_modules_tutorialPopups")`, puis la globale `career_modules_tutorialPopups`
+--- Manages the career's introduction popups (tutorial and contextual help): remembers which ones have already been seen (flags saved in <profile>/career/tutorialData.json), opens them via ui_popup from /gameplay/tutorials/pages/, and queues those that would arrive during a tutorial "damaged vehicle" popup. Also exposes named functions (showWelcomeSplashscreen, onCareerTuningStarted, onEnterCargoOverviewScreen...) that serve as hooks or direct calls to display the associated popup only once.
+--- Access: extension `career_modules_tutorialPopups`: `extensions.load("career_modules_tutorialPopups")`, then the global `career_modules_tutorialPopups`
 ---@class career_modules_tutorialPopups
----@field allTutorialFlags string[] Liste des ids de popups connus (welcome, driving, crashRecover, bigmap, refueling, missions, tuning, insurance, leagues, etc.).
+---@field allTutorialFlags string[] List of known popup ids (welcome, driving, crashRecover, bigmap, refueling, missions, tuning, insurance, leagues, etc.).
 ---@field dependencies string[] {'ui_popup', 'gameplay_tutorial_damageTracker'}.
 career_modules_tutorialPopups = {}
 
---- Dessine le menu imgui de debug « Intro Popups » : tout revoir, tout marquer non vu, cases à cocher par popup, bouton d'édition du contenu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorialPopups.lua:236
+--- Draws the "Intro Popups" debug imgui menu: review all, mark all unseen, per-popup checkboxes, content edit button.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorialPopups.lua:236
 function career_modules_tutorialPopups.drawDebugFunctions() end
 
---- Lit le drapeau d'une popup (true si vue).
----Source : lua/ge/extensions/career/modules/tutorialPopups.lua:24
----@param key string Id de la popup.
----@return boolean|nil  Valeur du drapeau.
+--- Reads a popup's flag (true if seen).
+---Source: lua/ge/extensions/career/modules/tutorialPopups.lua:24
+---@param key string Popup id.
+---@return boolean|nil  Flag value.
 function career_modules_tutorialPopups.getTutorialFlag(key) end
 
---- Ouvre une popup d'intro. Sans force, ne fait rien si elle a déjà été vue. Peut être mise en attente après une popup de dégâts du tutoriel.
----Source : lua/ge/extensions/career/modules/tutorialPopups.lua:83
----@param id string Id de la page (ex. "v2/basicControls").
----@param force boolean|nil Si vrai, ignore le drapeau « déjà vue ».
+--- Opens an intro popup. Without force, does nothing if it has already been seen. May be queued after a tutorial damage popup.
+---Source: lua/ge/extensions/career/modules/tutorialPopups.lua:83
+---@param id string Page id (e.g. "v2/basicControls").
+---@param force boolean|nil If true, ignores the "already seen" flag.
 function career_modules_tutorialPopups.introPopup(id, force) end
 
---- Ouvre plusieurs popups à la suite (ui_popup.openPopupsByIds) et marque tous les ids comme vus.
----Source : lua/ge/extensions/career/modules/tutorialPopups.lua:105
----@param ids string[] Ids de pages.
----@param force boolean|nil Si faux ou nil, ne marque que les pages non encore vues ; la séquence est ouverte dans tous les cas.
+--- Opens several popups in sequence (ui_popup.openPopupsByIds) and marks all ids as seen.
+---Source: lua/ge/extensions/career/modules/tutorialPopups.lua:105
+---@param ids string[] Page ids.
+---@param force boolean|nil If false or nil, only marks the pages not yet seen; the sequence is opened in all cases.
 function career_modules_tutorialPopups.introPopupSequence(ids, force) end
 
---- Hook de chargement : lit les drapeaux depuis tutorialData.json du profil courant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorialPopups.lua:41
+--- Load hook: reads the flags from tutorialData.json of the current profile.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorialPopups.lua:41
 function career_modules_tutorialPopups.onExtensionLoaded() end
 
---- Hook émis à la fermeture d'une popup : si c'est une popup de dégâts, marque la fermeture, puis rouvre la première popup en attente.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorialPopups.lua:71
----@param id string Id de la popup fermée.
+--- Hook emitted when a popup closes: if it is a damage popup, marks the closing, then reopens the first queued popup.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorialPopups.lua:71
+---@param id string Id of the closed popup.
 function career_modules_tutorialPopups.onIntroPopupCareerClosed(id) end
 
---- Hook de sauvegarde du profil : écrit les drapeaux dans tutorialData.json.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorialPopups.lua:47
----@param currentSavePath string Dossier de sauvegarde du profil.
+--- Profile save hook: writes the flags to tutorialData.json.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorialPopups.lua:47
+---@param currentSavePath string Profile save folder.
 function career_modules_tutorialPopups.onSaveCurrentProfile(currentSavePath) end
 
---- Remplace la table complète des drapeaux « popup vue ».
----Source : lua/ge/extensions/career/modules/tutorialPopups.lua:20
----@param flagsTable table<string, boolean>|nil Nouvelle table ; nil donne une table vide.
+--- Replaces the whole "popup seen" flags table.
+---Source: lua/ge/extensions/career/modules/tutorialPopups.lua:20
+---@param flagsTable table<string, boolean>|nil New table; nil gives an empty table.
 function career_modules_tutorialPopups.setFlagsTable(flagsTable) end
 
---- Met à jour le drapeau d'une popup.
----Source : lua/ge/extensions/career/modules/tutorialPopups.lua:28
----@param key string Id de la popup.
----@param value boolean Vue ou non.
+--- Updates a popup's flag.
+---Source: lua/ge/extensions/career/modules/tutorialPopups.lua:28
+---@param key string Popup id.
+---@param value boolean Seen or not.
 function career_modules_tutorialPopups.setTutorialFlag(key, value) end
 
---- Remet tous les drapeaux à false puis ré-affiche toutes les popups d'accueil et toutes les popups de la table interne (utile pour revoir les aides).
----Source : lua/ge/extensions/career/modules/tutorialPopups.lua:186
+--- Resets all flags to false then redisplays all the welcome popups and all the popups of the internal table (useful to review the help).
+---Source: lua/ge/extensions/career/modules/tutorialPopups.lua:186
 function career_modules_tutorialPopups.showAllSplashscreensAndLogbookEntries() end
 
---- Affiche (forcées) les popups d'accueil sans tutoriel : welcomeNoTutorial, leagues, performanceIndex, logbook.
----Source : lua/ge/extensions/career/modules/tutorialPopups.lua:171
+--- Displays (forced) the welcome popups without tutorial: welcomeNoTutorial, leagues, performanceIndex, logbook.
+---Source: lua/ge/extensions/career/modules/tutorialPopups.lua:171
 function career_modules_tutorialPopups.showNonTutorialWelcomeSplashscreen() end
 
---- Indique si toutes les popups listées ont déjà été vues.
----Source : lua/ge/extensions/career/modules/tutorialPopups.lua:32
----@param pages string[]|nil Ids de popups.
----@return boolean  true si toutes ont leur drapeau (true aussi pour une liste vide).
+--- Indicates whether all the listed popups have already been seen.
+---Source: lua/ge/extensions/career/modules/tutorialPopups.lua:32
+---@param pages string[]|nil Popup ids.
+---@return boolean  true if all have their flag (also true for an empty list).
 function career_modules_tutorialPopups.wasIntroPopupsSeen(pages) end
 

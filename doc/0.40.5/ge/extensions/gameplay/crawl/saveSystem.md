@@ -1,266 +1,266 @@
 # `gameplay_crawl_saveSystem`
 
-*Fichier : `lua/ge/extensions/gameplay/crawl/saveSystem.lua` · VM : Game Engine (GE) · 861 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/crawl/saveSystem.lua` · VM: Game Engine (GE) · 861 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_crawl_saveSystem` : `extensions.load("gameplay_crawl_saveSystem")`, puis la globale `gameplay_crawl_saveSystem`
+**Access:** extension `gameplay_crawl_saveSystem`: `extensions.load("gameplay_crawl_saveSystem")`, then the global `gameplay_crawl_saveSystem`
 
-Système de fichiers du mode crawl. Il lit et écrit les quatre types de fichiers JSON d'un niveau, dans /levels/<niveau>/crawls/ : *.trail.json (parcours), *.boundary.json (zone limite, objet gameplay/sites/zone), *.path.json (noeuds du chemin) et *.startingPosition.json (position de départ). Chaque objet est chargé à la demande puis mis en cache, avec _filePath, _fileName, _dir et _ext ajoutés ; l'id d'un objet est son chemin de fichier. Il gère aussi les scores du joueur par parcours (meilleur temps, meilleurs points de pénalité, tentatives), stockés dans settings/cloud/crawlTrails/ en freeroam ou dans le profil de carrière (/career/crawlTrails/).
+File system of the crawl mode. It reads and writes the four types of JSON files of a level, in /levels/<level>/crawls/: *.trail.json (trail), *.boundary.json (boundary zone, gameplay/sites/zone object), *.path.json (path nodes) and *.startingPosition.json (starting position). Each object is loaded on demand then cached, with _filePath, _fileName, _dir and _ext added; an object's id is its file path. It also manages the player's scores per trail (best time, best penalty points, attempts), stored in settings/cloud/crawlTrails/ in freeroam or in the career profile (/career/crawlTrails/).
 
-## Exemple
+## Example
 
 ```lua
 local trails = gameplay_crawl_saveSystem.getAllTrails()
 local stats = gameplay_crawl_saveSystem.getPlayerTrailStats(trails[1]._filePath)
 ```
 
-## Remarques
+## Notes
 
-- Un id de trail/boundary/path/startingPosition est le chemin complet du fichier ; son extension doit être .trail.json, .boundary.json, .path.json ou .startingPosition.json, sinon loadFromFile refuse.
-- Dans un chemin, les positions sont des tableaux {x,y,z} dans le JSON (champ position) et des vec3 en mémoire (champ pos) ; les rotations sont des quaternions {x,y,z,w}.
-- Plus petit = meilleur : bestPenaltyPoints et bestTime valent math.huge tant qu'aucun score n'est enregistré (à tester avec < math.huge).
-- Les fonctions getAllBoundaries, getAllPaths et getAllStartingPositions ne prennent pas de levelPath et listent toujours le niveau courant ; getAllTrails accepte un levelPath.
-- getStartingPositionById(id, trail) retourne nil si trail.isFromMission est vrai ou si l'id est vide.
-- En carrière, les scores sont sauvegardés par onSaveCurrentProfile (si marqués _dirty) ; hors carrière ils sont écrits immédiatement.
-- Incohérence : saveCrawlData n'enregistre que les trails ayant un champ id, alors que les parcours chargés utilisent _filePath comme identifiant (le champ id n'est pas posé par deserializeTrail).
-- Le cache n'est jamais invalidé automatiquement par un changement de fichier ; utiliser clearCache.
-- Les constantes savePathFreeroam/savePathCareer en tête de fichier sont commentées (réservées à un usage futur).
+- A trail/boundary/path/startingPosition id is the full file path; its extension must be .trail.json, .boundary.json, .path.json or .startingPosition.json, otherwise loadFromFile refuses.
+- In a path, positions are {x,y,z} arrays in the JSON (position field) and vec3 in memory (pos field); rotations are {x,y,z,w} quaternions.
+- Smaller = better: bestPenaltyPoints and bestTime equal math.huge as long as no score is recorded (test with < math.huge).
+- The functions getAllBoundaries, getAllPaths and getAllStartingPositions take no levelPath and always list the current level; getAllTrails accepts a levelPath.
+- getStartingPositionById(id, trail) returns nil if trail.isFromMission is true or if the id is empty.
+- In career, scores are saved by onSaveCurrentProfile (if marked _dirty); outside career they are written immediately.
+- Inconsistency: saveCrawlData only saves trails that have an id field, whereas loaded trails use _filePath as their identifier (the id field is not set by deserializeTrail).
+- The cache is never automatically invalidated by a file change; use clearCache.
+- The constants savePathFreeroam/savePathCareer at the top of the file are commented out (reserved for future use).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_crawl_saveSystem.addNewPlayerScore(trailId, time, penaltyPoints)` | Enregistre une tentative : met à jour le meilleur temps (si > 0 et meilleur), les meilleurs points de pénalité (si >= 0 et plus bas) et incrémente le nombre de tentatives, puis sauvegarde. | 774 |
-| `gameplay_crawl_saveSystem.cleanup()` | Vide tous les caches. | 840 |
-| `gameplay_crawl_saveSystem.clearCache(type)` | Vide le cache d'un type ('trails', 'boundaries', 'paths' ou 'startingPositions') ou de tous. | 67 |
-| `gameplay_crawl_saveSystem.ensurePlayerSaveDirectories()` | Crée le dossier de sauvegarde freeroam settings/cloud/crawlTrails/ s'il n'existe pas. | 687 |
-| `gameplay_crawl_saveSystem.getAllBoundaries()` | Charge toutes les zones limites du niveau courant. | 646 |
-| `gameplay_crawl_saveSystem.getAllBoundaryFiles(levelPath)` | Liste les fichiers *.boundary.json. | 621 |
-| `gameplay_crawl_saveSystem.getAllPathFiles(levelPath)` | Liste les fichiers *.path.json. | 625 |
-| `gameplay_crawl_saveSystem.getAllPaths()` | Charge tous les chemins du niveau courant. | 658 |
-| `gameplay_crawl_saveSystem.getAllStartingPositionFiles(levelPath)` | Liste les fichiers *.startingPosition.json. | 629 |
-| `gameplay_crawl_saveSystem.getAllStartingPositions()` | Charge toutes les positions de départ du niveau courant. | 670 |
-| `gameplay_crawl_saveSystem.getAllTrailFiles(levelPath)` | Liste les chemins des fichiers *.trail.json d'un dossier (non récursif). | 617 |
-| `gameplay_crawl_saveSystem.getAllTrails(levelPath)` | Charge tous les parcours d'un dossier. | 634 |
-| `gameplay_crawl_saveSystem.getBoundaryById(boundaryId)` | Charge (avec cache) une zone limite, créée comme objet zone puis désérialisée. | 569 |
-| `gameplay_crawl_saveSystem.getCurrentLevelCrawlPath()` | Retourne le dossier des fichiers crawl du niveau courant. | 20 |
-| `gameplay_crawl_saveSystem.getPathById(pathId)` | Charge (avec cache) un chemin ; les noeuds ont pos (vec3), rotation (quat), radius, flags, name. | 578 |
-| `gameplay_crawl_saveSystem.getPlayerCrawlTrailById(trailId)` | Retourne les données de score d'un parcours. | 723 |
-| `gameplay_crawl_saveSystem.getPlayerCrawlTrailsById()` | Charge (une fois) les scores du joueur pour tous les parcours du niveau courant, depuis le dossier freeroam ou le profil de carrière. | 727 |
-| `gameplay_crawl_saveSystem.getPlayerTrailStats(trailId)` | Retourne les statistiques du joueur sur un parcours. | 827 |
-| `gameplay_crawl_saveSystem.getStartingPositionById(startingPositionId, trail)` | Charge (avec cache) une position de départ. Retourne nil pour un parcours issu d'une mission ou un id vide. | 587 |
-| `gameplay_crawl_saveSystem.getTrailById(trailId)` | Charge (avec cache) un parcours à partir de son chemin de fichier. | 560 |
-| `gameplay_crawl_saveSystem.isTrailFromMission(trail)` | Indique si un parcours est issu d'une mission (isFromMission). | 857 |
-| `gameplay_crawl_saveSystem.loadCrawlData(filename)` | Charge un fichier de données crawl (name, description, icon, metadata, liste d'ids de trails) et résout chaque trail via getTrailById. | 428 |
-| `gameplay_crawl_saveSystem.onCareerActive()` | Hook appelé quand la carrière change d'état : oublie les scores chargés pour les relire depuis le bon dossier. *(interne)* *(hook)* | 695 |
-| `gameplay_crawl_saveSystem.onSaveCurrentProfile(currentSavePath)` | Hook appelé lors de la sauvegarde du profil de carrière : écrit les scores de parcours modifiés (_dirty). *(interne)* *(hook)* | 705 |
-| `gameplay_crawl_saveSystem.resetPlayerTrailScores(trailId)` | Remet à zéro (math.huge, dates 0, tentatives 0) les scores d'un parcours et les sauvegarde. | 815 |
-| `gameplay_crawl_saveSystem.saveBoundary(boundary, filePath)` | Écrit une zone limite en JSON (via boundary:onSerialize()) et la met en cache. | 322 |
-| `gameplay_crawl_saveSystem.saveCrawlData(saveData, filepath)` | Écrit un fichier de données crawl : métadonnées et ids des trails (voir notes sur le champ id). | 469 |
-| `gameplay_crawl_saveSystem.savePath(path, filePath)` | Écrit un chemin (liste de noeuds : name, position, rotation, radius 4.0 par défaut, flags) en JSON et le met en cache. | 357 |
-| `gameplay_crawl_saveSystem.savePlayerCrawlTrailScoresForTrailById(trailId)` | Marque les scores du parcours comme modifiés ; hors carrière, les écrit tout de suite dans settings/cloud/crawlTrails/. | 713 |
-| `gameplay_crawl_saveSystem.saveStartingPosition(startingPosition, filePath)` | Écrit une position de départ (transform position/rotation/radius 10.0 par défaut, iconPosition, metadata) en JSON et la met en cache. | 392 |
-| `gameplay_crawl_saveSystem.saveTrail(trail, filePath)` | Sérialise un parcours et l'écrit en JSON (création du dossier si besoin), puis le met en cache. | 287 |
+| `gameplay_crawl_saveSystem.addNewPlayerScore(trailId, time, penaltyPoints)` | Records an attempt: updates the best time (if > 0 and better), the best penalty points (if >= 0 and lower) and increments the attempt count, then saves. | 774 |
+| `gameplay_crawl_saveSystem.cleanup()` | Empties all caches. | 840 |
+| `gameplay_crawl_saveSystem.clearCache(type)` | Empties the cache of one type ('trails', 'boundaries', 'paths' or 'startingPositions') or of all. | 67 |
+| `gameplay_crawl_saveSystem.ensurePlayerSaveDirectories()` | Creates the freeroam save folder settings/cloud/crawlTrails/ if it does not exist. | 687 |
+| `gameplay_crawl_saveSystem.getAllBoundaries()` | Loads all the boundary zones of the current level. | 646 |
+| `gameplay_crawl_saveSystem.getAllBoundaryFiles(levelPath)` | Lists the *.boundary.json files. | 621 |
+| `gameplay_crawl_saveSystem.getAllPathFiles(levelPath)` | Lists the *.path.json files. | 625 |
+| `gameplay_crawl_saveSystem.getAllPaths()` | Loads all the paths of the current level. | 658 |
+| `gameplay_crawl_saveSystem.getAllStartingPositionFiles(levelPath)` | Lists the *.startingPosition.json files. | 629 |
+| `gameplay_crawl_saveSystem.getAllStartingPositions()` | Loads all the starting positions of the current level. | 670 |
+| `gameplay_crawl_saveSystem.getAllTrailFiles(levelPath)` | Lists the paths of the *.trail.json files in a folder (non-recursive). | 617 |
+| `gameplay_crawl_saveSystem.getAllTrails(levelPath)` | Loads all the trails of a folder. | 634 |
+| `gameplay_crawl_saveSystem.getBoundaryById(boundaryId)` | Loads (with cache) a boundary zone, created as a zone object then deserialized. | 569 |
+| `gameplay_crawl_saveSystem.getCurrentLevelCrawlPath()` | Returns the folder of the crawl files of the current level. | 20 |
+| `gameplay_crawl_saveSystem.getPathById(pathId)` | Loads (with cache) a path; the nodes have pos (vec3), rotation (quat), radius, flags, name. | 578 |
+| `gameplay_crawl_saveSystem.getPlayerCrawlTrailById(trailId)` | Returns the score data of a trail. | 723 |
+| `gameplay_crawl_saveSystem.getPlayerCrawlTrailsById()` | Loads (once) the player's scores for all trails of the current level, from the freeroam folder or the career profile. | 727 |
+| `gameplay_crawl_saveSystem.getPlayerTrailStats(trailId)` | Returns the player's statistics on a trail. | 827 |
+| `gameplay_crawl_saveSystem.getStartingPositionById(startingPositionId, trail)` | Loads (with cache) a starting position. Returns nil for a trail from a mission or an empty id. | 587 |
+| `gameplay_crawl_saveSystem.getTrailById(trailId)` | Loads (with cache) a trail from its file path. | 560 |
+| `gameplay_crawl_saveSystem.isTrailFromMission(trail)` | Indicates whether a trail comes from a mission (isFromMission). | 857 |
+| `gameplay_crawl_saveSystem.loadCrawlData(filename)` | Loads a crawl data file (name, description, icon, metadata, list of trail ids) and resolves each trail via getTrailById. | 428 |
+| `gameplay_crawl_saveSystem.onCareerActive()` | Hook called when career changes state: forgets the loaded scores so they are re-read from the right folder. *(internal)* *(hook)* | 695 |
+| `gameplay_crawl_saveSystem.onSaveCurrentProfile(currentSavePath)` | Hook called when saving the career profile: writes the modified trail scores (_dirty). *(internal)* *(hook)* | 705 |
+| `gameplay_crawl_saveSystem.resetPlayerTrailScores(trailId)` | Resets (math.huge, dates 0, attempts 0) a trail's scores and saves them. | 815 |
+| `gameplay_crawl_saveSystem.saveBoundary(boundary, filePath)` | Writes a boundary zone as JSON (via boundary:onSerialize()) and caches it. | 322 |
+| `gameplay_crawl_saveSystem.saveCrawlData(saveData, filepath)` | Writes a crawl data file: metadata and trail ids (see notes on the id field). | 469 |
+| `gameplay_crawl_saveSystem.savePath(path, filePath)` | Writes a path (list of nodes: name, position, rotation, radius 4.0 by default, flags) as JSON and caches it. | 357 |
+| `gameplay_crawl_saveSystem.savePlayerCrawlTrailScoresForTrailById(trailId)` | Marks the trail's scores as modified; outside career, writes them immediately to settings/cloud/crawlTrails/. | 713 |
+| `gameplay_crawl_saveSystem.saveStartingPosition(startingPosition, filePath)` | Writes a starting position (transform position/rotation/radius 10.0 by default, iconPosition, metadata) as JSON and caches it. | 392 |
+| `gameplay_crawl_saveSystem.saveTrail(trail, filePath)` | Serializes a trail and writes it as JSON (creating the folder if needed), then caches it. | 287 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_crawl_saveSystem.addNewPlayerScore(trailId, time, penaltyPoints)`
 
-Enregistre une tentative : met à jour le meilleur temps (si > 0 et meilleur), les meilleurs points de pénalité (si >= 0 et plus bas) et incrémente le nombre de tentatives, puis sauvegarde.
+Records an attempt: updates the best time (if > 0 and better), the best penalty points (if >= 0 and lower) and increments the attempt count, then saves.
 
-- `trailId` (*string*) : Id du parcours.
-- `time` (*number|nil*) : Temps en secondes.
-- `penaltyPoints` (*number|nil*) : Points de pénalité.
-- **renvoie** : table|nil {isNewBestTime, isNewBestPenaltyPoints, bestTime, bestPenaltyPoints} ; nil si le parcours est inconnu (parcours de mission).
+- `trailId` (*string*) : Trail id.
+- `time` (*number|nil*) : Time in seconds.
+- `penaltyPoints` (*number|nil*) : Penalty points.
+- **returns**: table|nil {isNewBestTime, isNewBestPenaltyPoints, bestTime, bestPenaltyPoints}; nil if the trail is unknown (mission trail).
 
 #### `gameplay_crawl_saveSystem.clearCache(type)`
 
-Vide le cache d'un type ('trails', 'boundaries', 'paths' ou 'startingPositions') ou de tous.
+Empties the cache of one type ('trails', 'boundaries', 'paths' or 'startingPositions') or of all.
 
-- `type` (*string|nil*) : Clé du cache ; tous les caches si nil.
+- `type` (*string|nil*) : Cache key; all caches if nil.
 
 #### `gameplay_crawl_saveSystem.getAllBoundaries()`
 
-Charge toutes les zones limites du niveau courant.
+Loads all the boundary zones of the current level.
 
-- **renvoie** : table[] Zones.
+- **returns**: table[] Zones.
 
 #### `gameplay_crawl_saveSystem.getAllBoundaryFiles(levelPath)`
 
-Liste les fichiers *.boundary.json.
+Lists the *.boundary.json files.
 
-- `levelPath` (*string|nil*) : Dossier ; niveau courant si nil.
-- **renvoie** : string[] Chemins de fichiers.
+- `levelPath` (*string|nil*) : Folder; current level if nil.
+- **returns**: string[] File paths.
 
 #### `gameplay_crawl_saveSystem.getAllPathFiles(levelPath)`
 
-Liste les fichiers *.path.json.
+Lists the *.path.json files.
 
-- `levelPath` (*string|nil*) : Dossier ; niveau courant si nil.
-- **renvoie** : string[] Chemins de fichiers.
+- `levelPath` (*string|nil*) : Folder; current level if nil.
+- **returns**: string[] File paths.
 
 #### `gameplay_crawl_saveSystem.getAllPaths()`
 
-Charge tous les chemins du niveau courant.
+Loads all the paths of the current level.
 
-- **renvoie** : table[] Chemins.
+- **returns**: table[] Paths.
 
 #### `gameplay_crawl_saveSystem.getAllStartingPositionFiles(levelPath)`
 
-Liste les fichiers *.startingPosition.json.
+Lists the *.startingPosition.json files.
 
-- `levelPath` (*string|nil*) : Dossier ; niveau courant si nil.
-- **renvoie** : string[] Chemins de fichiers.
+- `levelPath` (*string|nil*) : Folder; current level if nil.
+- **returns**: string[] File paths.
 
 #### `gameplay_crawl_saveSystem.getAllStartingPositions()`
 
-Charge toutes les positions de départ du niveau courant.
+Loads all the starting positions of the current level.
 
-- **renvoie** : table[] Positions de départ.
+- **returns**: table[] Start positions.
 
 #### `gameplay_crawl_saveSystem.getAllTrailFiles(levelPath)`
 
-Liste les chemins des fichiers *.trail.json d'un dossier (non récursif).
+Lists the paths of the *.trail.json files in a folder (non-recursive).
 
-- `levelPath` (*string|nil*) : Dossier ; dossier crawl du niveau courant si nil.
-- **renvoie** : string[] Chemins de fichiers.
+- `levelPath` (*string|nil*) : Folder; crawl folder of the current level if nil.
+- **returns**: string[] File paths.
 
 #### `gameplay_crawl_saveSystem.getAllTrails(levelPath)`
 
-Charge tous les parcours d'un dossier.
+Loads all the trails of a folder.
 
-- `levelPath` (*string|nil*) : Dossier ; niveau courant si nil.
-- **renvoie** : table[] Parcours.
+- `levelPath` (*string|nil*) : Folder; current level if nil.
+- **returns**: table[] Trails.
 
 #### `gameplay_crawl_saveSystem.getBoundaryById(boundaryId)`
 
-Charge (avec cache) une zone limite, créée comme objet zone puis désérialisée.
+Loads (with cache) a boundary zone, created as a zone object then deserialized.
 
-- `boundaryId` (*string*) : Chemin du fichier .boundary.json.
-- **renvoie** : table|nil Zone.
+- `boundaryId` (*string*) : Path of the .boundary.json file.
+- **returns**: table|nil Zone.
 
 #### `gameplay_crawl_saveSystem.getCurrentLevelCrawlPath()`
 
-Retourne le dossier des fichiers crawl du niveau courant.
+Returns the folder of the crawl files of the current level.
 
-- **renvoie** : string|nil '/levels/<niveau>/crawls/', ou nil si aucun niveau n'est chargé.
+- **returns**: string|nil '/levels/<level>/crawls/', or nil if no level is loaded.
 
 #### `gameplay_crawl_saveSystem.getPathById(pathId)`
 
-Charge (avec cache) un chemin ; les noeuds ont pos (vec3), rotation (quat), radius, flags, name.
+Loads (with cache) a path; the nodes have pos (vec3), rotation (quat), radius, flags, name.
 
-- `pathId` (*string*) : Chemin du fichier .path.json.
-- **renvoie** : table|nil Chemin {name, description, nodes, id}.
+- `pathId` (*string*) : Path of the .path.json file.
+- **returns**: table|nil Path {name, description, nodes, id}.
 
 #### `gameplay_crawl_saveSystem.getPlayerCrawlTrailById(trailId)`
 
-Retourne les données de score d'un parcours.
+Returns the score data of a trail.
 
-- `trailId` (*string*) : Id (chemin de fichier) du parcours.
-- **renvoie** : table|nil {id, trail, saveData}.
+- `trailId` (*string*) : Id (file path) of the trail.
+- **returns**: table|nil {id, trail, saveData}.
 
 #### `gameplay_crawl_saveSystem.getPlayerCrawlTrailsById()`
 
-Charge (une fois) les scores du joueur pour tous les parcours du niveau courant, depuis le dossier freeroam ou le profil de carrière.
+Loads (once) the player's scores for all trails of the current level, from the freeroam folder or the career profile.
 
-- **renvoie** : table<string, table> Dictionnaire id -> {id, trail, saveData{bestTime, bestPenaltyPoints, bestTimeDate, bestPenaltyPointsDate, attempts}}.
+- **returns**: table<string, table> Dictionary id -> {id, trail, saveData{bestTime, bestPenaltyPoints, bestTimeDate, bestPenaltyPointsDate, attempts}}.
 
 #### `gameplay_crawl_saveSystem.getPlayerTrailStats(trailId)`
 
-Retourne les statistiques du joueur sur un parcours.
+Returns the player's statistics on a trail.
 
-- `trailId` (*string*) : Id du parcours.
-- **renvoie** : table|nil {bestTime, bestPenaltyPoints, attempts} ; nil si inconnu.
+- `trailId` (*string*) : Trail id.
+- **returns**: table|nil {bestTime, bestPenaltyPoints, attempts}; nil if unknown.
 
 #### `gameplay_crawl_saveSystem.getStartingPositionById(startingPositionId, trail)`
 
-Charge (avec cache) une position de départ. Retourne nil pour un parcours issu d'une mission ou un id vide.
+Loads (with cache) a starting position. Returns nil for a trail from a mission or an empty id.
 
-- `startingPositionId` (*string|nil*) : Chemin du fichier .startingPosition.json.
-- `trail` (*table|nil*) : Parcours ; ignoré si isFromMission.
-- **renvoie** : table|nil Position de départ {transform, iconPosition, …}.
+- `startingPositionId` (*string|nil*) : Path of the .startingPosition.json file.
+- `trail` (*table|nil*) : Trail; ignored if isFromMission.
+- **returns**: table|nil Starting position {transform, iconPosition, ...}.
 
 #### `gameplay_crawl_saveSystem.getTrailById(trailId)`
 
-Charge (avec cache) un parcours à partir de son chemin de fichier.
+Loads (with cache) a trail from its file path.
 
-- `trailId` (*string*) : Chemin du fichier .trail.json.
-- **renvoie** : table|nil Parcours, avec _filePath, _fileName, _dir, _ext.
+- `trailId` (*string*) : Path of the .trail.json file.
+- **returns**: table|nil Trail, with _filePath, _fileName, _dir, _ext.
 
 #### `gameplay_crawl_saveSystem.isTrailFromMission(trail)`
 
-Indique si un parcours est issu d'une mission (isFromMission).
+Indicates whether a trail comes from a mission (isFromMission).
 
-- `trail` (*table|nil*) : Parcours.
-- **renvoie** : boolean true si isFromMission est vrai.
+- `trail` (*table|nil*) : Trails.
+- **returns**: boolean true if isFromMission is true.
 
 #### `gameplay_crawl_saveSystem.loadCrawlData(filename)`
 
-Charge un fichier de données crawl (name, description, icon, metadata, liste d'ids de trails) et résout chaque trail via getTrailById.
+Loads a crawl data file (name, description, icon, metadata, list of trail ids) and resolves each trail via getTrailById.
 
-- `filename` (*string*) : Fichier JSON à lire.
-- **renvoie** : table|nil {name, description, icon ('rockCrawling01' par défaut), metadata, trails}.
+- `filename` (*string*) : JSON file to read.
+- **returns**: table|nil {name, description, icon ('rockCrawling01' by default), metadata, trails}.
 
 #### `gameplay_crawl_saveSystem.onSaveCurrentProfile(currentSavePath)`
 
-Hook appelé lors de la sauvegarde du profil de carrière : écrit les scores de parcours modifiés (_dirty).
+Hook called when saving the career profile: writes the modified trail scores (_dirty).
 
-- `currentSavePath` (*string*) : Dossier du profil courant.
+- `currentSavePath` (*string*) : Current profile folder.
 
 #### `gameplay_crawl_saveSystem.resetPlayerTrailScores(trailId)`
 
-Remet à zéro (math.huge, dates 0, tentatives 0) les scores d'un parcours et les sauvegarde.
+Resets (math.huge, dates 0, attempts 0) a trail's scores and saves them.
 
-- `trailId` (*string*) : Id du parcours.
+- `trailId` (*string*) : Trail id.
 
 #### `gameplay_crawl_saveSystem.saveBoundary(boundary, filePath)`
 
-Écrit une zone limite en JSON (via boundary:onSerialize()) et la met en cache.
+Writes a boundary zone as JSON (via boundary:onSerialize()) and caches it.
 
-- `boundary` (*table*) : Zone (objet gameplay/sites/zone).
-- `filePath` (*string*) : Chemin du fichier .boundary.json.
-- **renvoie** : boolean true si écrit.
+- `boundary` (*table*) : Zone (gameplay/sites/zone object).
+- `filePath` (*string*) : Path of the .boundary.json file.
+- **returns**: boolean true if written.
 
 #### `gameplay_crawl_saveSystem.saveCrawlData(saveData, filepath)`
 
-Écrit un fichier de données crawl : métadonnées et ids des trails (voir notes sur le champ id).
+Writes a crawl data file: metadata and trail ids (see notes on the id field).
 
 - `saveData` (*table*) : {name, description, icon, metadata, trails}.
-- `filepath` (*string*) : Fichier de sortie.
-- **renvoie** : boolean true si écrit.
+- `filepath` (*string*) : Output file.
+- **returns**: boolean true if written.
 
 #### `gameplay_crawl_saveSystem.savePath(path, filePath)`
 
-Écrit un chemin (liste de noeuds : name, position, rotation, radius 4.0 par défaut, flags) en JSON et le met en cache.
+Writes a path (list of nodes: name, position, rotation, radius 4.0 by default, flags) as JSON and caches it.
 
-- `path` (*table*) : Chemin {name, description, nodes}.
-- `filePath` (*string*) : Chemin du fichier .path.json.
-- **renvoie** : boolean true si écrit.
+- `path` (*table*) : Path {name, description, nodes}.
+- `filePath` (*string*) : Path of the .path.json file.
+- **returns**: boolean true if written.
 
 #### `gameplay_crawl_saveSystem.savePlayerCrawlTrailScoresForTrailById(trailId)`
 
-Marque les scores du parcours comme modifiés ; hors carrière, les écrit tout de suite dans settings/cloud/crawlTrails/.
+Marks the trail's scores as modified; outside career, writes them immediately to settings/cloud/crawlTrails/.
 
-- `trailId` (*string*) : Id du parcours.
+- `trailId` (*string*) : Trail id.
 
 #### `gameplay_crawl_saveSystem.saveStartingPosition(startingPosition, filePath)`
 
-Écrit une position de départ (transform position/rotation/radius 10.0 par défaut, iconPosition, metadata) en JSON et la met en cache.
+Writes a starting position (transform position/rotation/radius 10.0 by default, iconPosition, metadata) as JSON and caches it.
 
-- `startingPosition` (*table*) : Position de départ.
-- `filePath` (*string*) : Chemin du fichier .startingPosition.json.
-- **renvoie** : boolean true si écrit.
+- `startingPosition` (*table*) : Start position.
+- `filePath` (*string*) : Path of the .startingPosition.json file.
+- **returns**: boolean true if written.
 
 #### `gameplay_crawl_saveSystem.saveTrail(trail, filePath)`
 
-Sérialise un parcours et l'écrit en JSON (création du dossier si besoin), puis le met en cache.
+Serializes a trail and writes it as JSON (creating the folder if needed), then caches it.
 
-- `trail` (*table*) : Parcours (name, description, pathId, boundaryId, startingPositionId, rules, prefabs…).
-- `filePath` (*string*) : Chemin du fichier .trail.json.
-- **renvoie** : boolean true si écrit.
+- `trail` (*table*) : Trail (name, description, pathId, boundaryId, startingPositionId, rules, prefabs...).
+- `filePath` (*string*) : Path of the .trail.json file.
+- **returns**: boolean true if written.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`, `directoryExists`, `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/crawl/saveSystem.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/crawl/saveSystem.lua`.*

@@ -1,47 +1,47 @@
 # `gameplay_drift_stuntZones_hitPole`
 
-*Fichier : `lua/ge/extensions/gameplay/drift/stuntZones/hitPole.lua` · VM : Game Engine (GE) · 140 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drift/stuntZones/hitPole.lua` · VM: Game Engine (GE) · 140 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/drift/stuntZones/hitPole")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/drift/stuntZones/hitPole")` (file under extensions/ but not a regular extension)
 
-Type de zone de cascade « hitPole » : un poteau (véhicule delineator, config vehicles/delineator/pole.pc) est spawné à pos, avec un marqueur de course au-dessus ; le joueur marque des points en le percutant pendant qu'il drifte. Le module renvoie un constructeur appelé par gameplay_drift_stuntZones.setStuntZones ; ce n'est pas une extension. Émet onAnyStuntZoneAccomplished avec le sous-hook onHitPoleAccomplished (angle, vitesse, points de base hitPole).
+"hitPole" stunt zone type: a pole (delineator vehicle, config vehicles/delineator/pole.pc) is spawned at pos, with a race marker above it; the player scores points by hitting it while drifting. The module returns a constructor called by gameplay_drift_stuntZones.setStuntZones; it is not an extension. Emits onAnyStuntZoneAccomplished with the sub-hook onHitPoleAccomplished (angle, speed, hitPole base points).
 
-## Remarques
+## Notes
 
-- La collision est lue dans map.objects[vehId].objectCollisions du véhicule du drift ; le point est donné à la frame où la collision apparaît (hitPole vrai et lastFrameHitPole faux) et seulement si le joueur drifte (detectStunt est appelé par le gestionnaire).
-- Une fois réussi, le poteau n'est plus disponible (available = false) jusqu'à reset() ; le reset remet physiquement le poteau en place (requestReset, resetBrokenFlexMesh) et recrée le marqueur après 0.1 s.
-- Si le poteau est détruit, la zone se retire elle-même via gameplay_drift_stuntZones.clearStuntZone.
-- Valeurs de secours pour les tests UI : angle 50°, vitesse 30.
+- The collision is read from map.objects[vehId].objectCollisions of the drift vehicle; the point is awarded on the frame the collision appears (hitPole true and lastFrameHitPole false) and only if the player is drifting (detectStunt is called by the manager).
+- Once accomplished, the pole is no longer available (available = false) until reset(); the reset physically puts the pole back in place (requestReset, resetBrokenFlexMesh) and recreates the marker after 0.1 s.
+- If the pole is destroyed, the zone removes itself via gameplay_drift_stuntZones.clearStuntZone.
+- Fallback values for UI tests: angle 50°, speed 30.
 
-## Classe `C`
+## Class `C`
 
-Zone hitPole. Champs : data = {id, zoneData = {pos}}, marker (marqueur de course), activeData = {veh (poteau), hitPole, lastFrameHitPole, available, resetFlag}.
+hitPole zone. Fields: data = {id, zoneData = {pos}}, marker (race marker), activeData = {veh (pole), hitPole, lastFrameHitPole, available, resetFlag}.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_drift_stuntZones_hitPole")(options)`.
+The module returns a constructor: `local obj = require("gameplay_drift_stuntZones_hitPole")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:accomplish()` | Réussite : supprime le marqueur, rend la zone indisponible et émet onAnyStuntZoneAccomplished (sous-hook onHitPoleAccomplished). | 77 |
-| `C:clear()` | Supprime le véhicule poteau et son marqueur. | 6 |
-| `C:clearMarker()` | Supprime le marqueur de course s'il existe. | 13 |
-| `C:createMarker()` | Crée un marqueur de course « overhead » (rayon 5) 2.5 m au-dessus du poteau. | 20 |
-| `C:detectStunt()` | Appelé quand le joueur drifte : appelle accomplish si le poteau vient d'être touché. | 96 |
-| `C:init(data)` | Constructeur interne : mémorise les données, spawne le poteau delineator (pole.pc) à zoneData.pos sans y faire entrer le joueur, crée le marqueur. | 62 |
-| `C:isAvailable()` | Indique si le poteau peut encore rapporter des points. | 129 |
-| `C:onUpdate(dtReal, dtSim)` | Appelé à chaque frame : met à jour le marqueur, mémorise l'état de collision précédent et détecte une collision entre le véhicule du drift et le poteau. | 102 |
-| `C:onVehicleDestroyed(vehId)` | Si le véhicule détruit est le poteau, oublie le poteau et retire la zone du gestionnaire. | 122 |
-| `C:reset()` | Remet le poteau en place (reset physique et mesh), réinitialise les données puis recrée le marqueur après 0.1 s via un job. | 41 |
-| `C:resetData()` | Remet à zéro activeData (available = true, pas de collision), en perdant la référence au poteau. | 31 |
+| `C:accomplish()` | Success: removes the marker, makes the zone unavailable and emits onAnyStuntZoneAccomplished (sub-hook onHitPoleAccomplished). | 77 |
+| `C:clear()` | Removes the pole vehicle and its marker. | 6 |
+| `C:clearMarker()` | Removes the race marker if it exists. | 13 |
+| `C:createMarker()` | Creates an "overhead" race marker (radius 5) 2.5 m above the pole. | 20 |
+| `C:detectStunt()` | Called when the player drifts: calls accomplish if the pole was just hit. | 96 |
+| `C:init(data)` | Internal constructor: stores the data, spawns the delineator pole (pole.pc) at zoneData.pos without making the player enter it, creates the marker. | 62 |
+| `C:isAvailable()` | Returns whether the pole can still earn points. | 129 |
+| `C:onUpdate(dtReal, dtSim)` | Called every frame: updates the marker, stores the previous collision state and detects a collision between the drift vehicle and the pole. | 102 |
+| `C:onVehicleDestroyed(vehId)` | If the destroyed vehicle is the pole, forgets the pole and removes the zone from the manager. | 122 |
+| `C:reset()` | Puts the pole back in place (physics and mesh reset), reinitializes the data, then recreates the marker after 0.1 s via a job. | 41 |
+| `C:resetData()` | Resets activeData (available = true, no collision), losing the reference to the pole. | 31 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onAnyStuntZoneAccomplished` — écouté par 3 module(s)
+- `onAnyStuntZoneAccomplished` — listened to by 3 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drift/stuntZones/hitPole.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drift/stuntZones/hitPole.lua`.*

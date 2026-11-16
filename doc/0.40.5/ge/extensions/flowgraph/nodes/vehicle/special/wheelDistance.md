@@ -1,31 +1,31 @@
 # `flowgraph_nodes_vehicle_special_wheelDistance`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/special/wheelDistance.lua` · VM : Game Engine (GE) · 140 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/special/wheelDistance.lua` · VM: Game Engine (GE) · 140 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/special/wheelDistance")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/special/wheelDistance")` (file under extensions/ but not a regular extension)
 
-Nœud « Wheel Distance » (catégorie `repeat_p_duration`). Donne la distance, projetée sur la direction du véhicule, entre un point `position` (vec3) et le milieu des deux roues les plus proches (par défaut seulement les roues avant, `data.onlyUseFrontWheels = true`). Pins d'entrée : `vehId`, `position`. Sortie : `distance` (number, signe : positif quand le point est devant les roues). `data.debug` active le tracé.
+Node "Wheel Distance" (category `repeat_p_duration`). Gives the distance, projected onto the vehicle's direction, between a `position` point (vec3) and the middle of the two closest wheels (by default only the front wheels, `data.onlyUseFrontWheels = true`). Input pins: `vehId`, `position`. Output: `distance` (number, sign: positive when the point is in front of the wheels). `data.debug` enables drawing.
 
-## Remarques
+## Notes
 
-- Laisse des `print` de debug : `print(tostring(distanceFromStart))` à chaque frame et `print("ERROR1")` si le véhicule ou la position manque.
-- Le tableau `wheels` est partagé : `wheelNodePos` est un vec3 unique réutilisé pour chaque roue, donc toutes les entrées pointent vers la même valeur (dernière roue) — la moyenne des deux roues les plus proches est faussée.
+- Leaves debug `print`s: `print(tostring(distanceFromStart))` every frame and `print("ERROR1")` if the vehicle or the position is missing.
+- The `wheels` array is shared: `wheelNodePos` is a single vec3 reused for each wheel, so all entries point to the same value (last wheel) — the average of the two closest wheels is wrong.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:calculateDistanceFromStart(vehicle, target)` | Calcule la distance signée entre `target` et les roues les plus proches du véhicule `vehicle`. | 64 |
-| `C:drawMiddle(builder, style)` | Affichage central vide. | 135 |
-| `C:init()` | Constructeur ; `data.debug = false`, `data.onlyUseFrontWheels = true`. | 32 |
-| `C:work()` | Lit le véhicule et la position puis écrit `distance`. | 122 |
+| `C:calculateDistanceFromStart(vehicle, target)` | Computes the signed distance between `target` and the closest wheels of the vehicle `vehicle`. | 64 |
+| `C:drawMiddle(builder, style)` | Empty central display. | 135 |
+| `C:init()` | Constructor; `data.debug = false`, `data.onlyUseFrontWheels = true`. | 32 |
+| `C:work()` | Reads the vehicle and the position then writes `distance`. | 122 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawSphere`, `drawTextAdvanced`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/special/wheelDistance.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/special/wheelDistance.lua`.*

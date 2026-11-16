@@ -1,79 +1,180 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/snaproad/geoPacenotes.lua",
-  "module": "Mesure géométrique des virages des pacenotes à partir de la route (snaproad). À partir des points d'une partition, il ajuste un ou plusieurs cercles (méthode 2D à trois points) pour obtenir rayon, diamètre, longueur d'arc, angle et qualité d'ajustement, en trois variantes : 'single' (un cercle), 'split2' (deux parties), 'split3' (trois parties). Il en déduit l'intensité du virage (selon le compositeur de texte du notebook), le sens, les candidats d'épingle à cheveux et l'évolution du diamètre. Il dessine aussi la mesure en debug. Appelé par Snaproad:measurePartition dans l'éditeur de rallye.",
+  "module": "Geometric measurement of the pacenotes' corners from the road (snaproad). From the points of a partition, it fits one or more circles (2D three-point method) to obtain radius, diameter, arc length, angle and fit quality, in three variants: 'single' (one circle), 'split2' (two parts), 'split3' (three parts). From this it derives the corner intensity (according to the notebook's text compositor), the direction, the hairpin candidates and the diameter change. It also draws the measurement in debug. Called by Snaproad:measurePartition in the rally editor.",
   "notes": [
-    "measurePartition écrit dans pn.measurements : variants (single/split2/split3), diagnostics, corner1 (alias de variants.single), corner2 (nil), selectedType, selected, hairpinCandidate, diameterChange {change, changePercent, isOpening, isTightening}. Les alias corner1/corner2 sont gardés pour la compatibilité des exports et outils de debug.",
-    "Il faut au moins 3 points focus et un halfpoint (halfpointPos ou halfpoint) sur le pacenote, sinon la mesure est abandonnée sans erreur.",
-    "Qualité d'ajustement du cercle : RMSE normalisé par le rayon ; < 0,05 excellent, 0,05 à 0,15 bon, > 0,15 mauvais ou virage composé (commentaire du code).",
-    "Le paramètre skipAuto de measurePartition n'est pas utilisé.",
-    "Le module dépend de editor/roadArchitect/utilities (circle2DFrom3Points) : il n'est utilisable que dans un contexte où l'éditeur est disponible."
+    "measurePartition writes into pn.measurements: variants (single/split2/split3), diagnostics, corner1 (alias of variants.single), corner2 (nil), selectedType, selected, hairpinCandidate, diameterChange {change, changePercent, isOpening, isTightening}. The corner1/corner2 aliases are kept for compatibility with exports and debug tools.",
+    "At least 3 focus points and a halfpoint (halfpointPos or halfpoint) on the pacenote are required, otherwise the measurement is abandoned without error.",
+    "Circle fit quality: RMSE normalized by the radius; < 0.05 excellent, 0.05 to 0.15 good, > 0.15 poor or compound corner (code comment).",
+    "The skipAuto parameter of measurePartition is not used.",
+    "The module depends on editor/roadArchitect/utilities (circle2DFrom3Points): it is only usable in a context where the editor is available."
   ],
   "fields": {
-    "defaultMeasurementType": {"type": "string", "desc": "Type de mesure par défaut : 'single'."},
-    "measurementTypeOrder": {"type": "string[]", "desc": "Ordre des types : 'single', 'split2', 'split3'."},
-    "measurementTypes": {"type": "table<string, table>", "desc": "Description de chaque type : {id, label ('Single fit', 'Two-part fit', 'Three-part fit'), segmentCount (1, 2, 3)}."}
+    "defaultMeasurementType": {
+      "type": "string",
+      "desc": "Default measurement type: 'single'."
+    },
+    "measurementTypeOrder": {
+      "type": "string[]",
+      "desc": "Order of the types: 'single', 'split2', 'split3'."
+    },
+    "measurementTypes": {
+      "type": "table<string, table>",
+      "desc": "Description of each type: {id, label ('Single fit', 'Two-part fit', 'Three-part fit'), segmentCount (1, 2, 3)}."
+    }
   },
   "functions": {
     "normalizeMeasurementType": {
-      "desc": "Renvoie le type s'il existe, sinon le type par défaut ('single').",
-      "params": {"measurementType": {"type": "string|nil", "desc": "Type de mesure"}},
-      "returns": [{"type": "string", "desc": "Type valide"}],
+      "desc": "Returns the type if it exists, otherwise the default type ('single').",
+      "params": {
+        "measurementType": {
+          "type": "string|nil",
+          "desc": "Measurement type"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Valid type"
+        }
+      ],
       "internal": false
     },
     "measurementTypeOptions": {
-      "desc": "Liste ordonnée des définitions de types de mesure (pour une liste déroulante).",
+      "desc": "Ordered list of the measurement type definitions (for a dropdown).",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Éléments {id, label, segmentCount}"}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Items {id, label, segmentCount}"
+        }
+      ],
       "internal": false
     },
     "calculateCircleFromPoints2": {
-      "desc": "Calcule le cercle passant par trois points avec la méthode 2D (XY) : centre (Z moyen des trois points), rayon (distance 2D du centre à p1) et longueur d'arc de p1 à p3 par p2 (sens déterminé par le produit vectoriel).",
+      "desc": "Computes the circle through three points with the 2D (XY) method: center (average Z of the three points), radius (2D distance from the center to p1) and arc length from p1 to p3 through p2 (direction determined by the cross product).",
       "params": {
-        "p1": {"type": "vec3", "desc": "Premier point"},
-        "p2": {"type": "vec3", "desc": "Point intermédiaire"},
-        "p3": {"type": "vec3", "desc": "Dernier point"}
+        "p1": {
+          "type": "vec3",
+          "desc": "First point"
+        },
+        "p2": {
+          "type": "vec3",
+          "desc": "Intermediate point"
+        },
+        "p3": {
+          "type": "vec3",
+          "desc": "Last point"
+        }
       },
       "returns": [
-        {"type": "vec3|nil", "desc": "Centre ; nil si les points sont alignés"},
-        {"type": "number", "desc": "Rayon en mètres (0 si échec)"},
-        {"type": "number", "desc": "Longueur d'arc en mètres (0 si échec)"}
+        {
+          "type": "vec3|nil",
+          "desc": "Center; nil if the points are collinear"
+        },
+        {
+          "type": "number",
+          "desc": "Radius in meters (0 on failure)"
+        },
+        {
+          "type": "number",
+          "desc": "Arc length in meters (0 on failure)"
+        }
       ],
       "internal": false
     },
     "calculateMiddlePoint": {
-      "desc": "Point milieu d'un virage : halfpointPos ou halfpoint du pacenote s'il existe, sinon le point focus de la partition le plus proche du milieu géométrique entre début et fin.",
+      "desc": "Midpoint of a corner: the pacenote's halfpointPos or halfpoint if it exists, otherwise the partition's focus point closest to the geometric middle between start and end.",
       "params": {
-        "pn": {"type": "table", "desc": "Pacenote"},
-        "startPos": {"type": "vec3", "desc": "Début du virage"},
-        "endPos": {"type": "vec3", "desc": "Fin du virage"},
-        "partition": {"type": "table", "desc": "Partition avec focus_points"}
+        "pn": {
+          "type": "table",
+          "desc": "Pacenote"
+        },
+        "startPos": {
+          "type": "vec3",
+          "desc": "Start of the corner"
+        },
+        "endPos": {
+          "type": "vec3",
+          "desc": "End of the corner"
+        },
+        "partition": {
+          "type": "table",
+          "desc": "Partition with focus_points"
+        }
       },
-      "returns": [{"type": "vec3", "desc": "Position du milieu"}],
+      "returns": [
+        {
+          "type": "vec3",
+          "desc": "Position of the middle"
+        }
+      ],
       "internal": false
     },
     "drawPacenoteMeasurement": {
-      "desc": "Dessine une mesure avec debugDrawer : arc de cercle en prismes, rayons, et texte d'arc (longueur, diamètre, qualité d'ajustement, angle). Ne dessine rien si le centre est nil ou le rayon <= 0.",
+      "desc": "Draws a measurement with debugDrawer: circle arc as prisms, radii, and arc text (length, diameter, fit quality, angle). Draws nothing if the center is nil or the radius <= 0.",
       "params": {
-        "center": {"type": "vec3|nil", "desc": "Centre du cercle"},
-        "radius": {"type": "number", "desc": "Rayon (m)"},
-        "arcDistance": {"type": "number", "desc": "Longueur d'arc (m)"},
-        "p1": {"type": "vec3", "desc": "Début de l'arc"},
-        "p2": {"type": "vec3", "desc": "Point intermédiaire"},
-        "p3": {"type": "vec3", "desc": "Fin de l'arc"},
-        "clr": {"type": "table|nil", "desc": "Couleur (violet par défaut)"},
-        "alpha": {"type": "number|nil", "desc": "Opacité (0,7 par défaut)"},
-        "prefix": {"type": "string|nil", "desc": "Préfixe du texte"},
-        "fitQuality": {"type": "number|nil", "desc": "Qualité d'ajustement (RMSE normalisé)"},
-        "arcDegrees": {"type": "number|nil", "desc": "Angle de l'arc en degrés"}
+        "center": {
+          "type": "vec3|nil",
+          "desc": "Circle center"
+        },
+        "radius": {
+          "type": "number",
+          "desc": "Radius (m)"
+        },
+        "arcDistance": {
+          "type": "number",
+          "desc": "Arc length (m)"
+        },
+        "p1": {
+          "type": "vec3",
+          "desc": "Start of the arc"
+        },
+        "p2": {
+          "type": "vec3",
+          "desc": "Intermediate point"
+        },
+        "p3": {
+          "type": "vec3",
+          "desc": "End of the arc"
+        },
+        "clr": {
+          "type": "table|nil",
+          "desc": "Color (purple by default)"
+        },
+        "alpha": {
+          "type": "number|nil",
+          "desc": "Opacity (0.7 by default)"
+        },
+        "prefix": {
+          "type": "string|nil",
+          "desc": "Text prefix"
+        },
+        "fitQuality": {
+          "type": "number|nil",
+          "desc": "Fit quality (normalized RMSE)"
+        },
+        "arcDegrees": {
+          "type": "number|nil",
+          "desc": "Arc angle in degrees"
+        }
       },
       "internal": false
     },
     "measurePartition": {
-      "desc": "Mesure le virage d'un pacenote à partir des points focus de la partition : construit le chemin, ajuste les cercles des trois variantes, annote intensité, sens et épingle à cheveux, et renseigne pn.measurements (voir notes).",
+      "desc": "Measures a pacenote's corner from the partition's focus points: builds the path, fits the circles of the three variants, annotates intensity, direction and hairpin, and fills in pn.measurements (see notes).",
       "params": {
-        "pn": {"type": "table", "desc": "Pacenote avec waypoints de début et de fin"},
-        "focusPoints": {"type": "table[]", "desc": "Points focus de la partition (au moins 3)"},
-        "skipAuto": {"type": "boolean|nil", "desc": "Non utilisé"}
+        "pn": {
+          "type": "table",
+          "desc": "Pacenote with start and end waypoints"
+        },
+        "focusPoints": {
+          "type": "table[]",
+          "desc": "Partition's focus points (at least 3)"
+        },
+        "skipAuto": {
+          "type": "boolean|nil",
+          "desc": "Unused"
+        }
       },
       "internal": false
     }

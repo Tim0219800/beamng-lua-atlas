@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/selectionCache.lua",
+  "module": "Cache de sélection de l'outil Easy Select. Il ne reconstruit les données de sélection (liste de « proxies » projetés) qu'une fois la caméra immobile depuis 0,12 s, ou après une invalidation ou un changement de configuration. États possibles : waiting, moving, building, ready.",
+  "notes": [
+    "La caméra est comparée à la précédente (position, rangeOrigin, forward, up, halfTan, largeur/hauteur) ; le moindre changement remet l'état à « moving » et supprime les données.",
+    "Les temps sont mesurés avec hptimer ; buildTime est la valeur retournée par timer:stopAndReset() (secondes ou ms selon hptimer, non précisé ici)."
+  ],
+  "functions": {
+    "activate": {
+      "desc": "Réinitialise complètement l'état du cache (statut waiting).",
+      "params": {}
+    },
+    "invalidate": {
+      "desc": "Supprime les données en cache et relance le délai de stabilisation.",
+      "params": {"reason": {"type": "string|nil", "desc": "Raison, stockée pour le debug (défaut « invalidated »)"}}
+    },
+    "update": {
+      "desc": "À appeler à chaque frame. Renvoie nil tant que la caméra bouge, que la configuration vient de changer ou que le délai de 0,12 s n'est pas écoulé ; ensuite appelle build() une seule fois et renvoie ses données, puis les renvoie telles quelles.",
+      "params": {
+        "camera": {"type": "table", "desc": "Contexte caméra (pos, rangeOrigin, forward, up, halfTan, width, height)"},
+        "configKey": {"type": "any", "desc": "Clé de configuration ; si elle change, le cache est invalidé (raison « settings »)"},
+        "build": {"type": "function", "desc": "Fonction sans argument qui construit les données (attend une table pouvant contenir proxies)"}
+      },
+      "returns": [{"type": "table|nil", "desc": "Données construites ou nil si non prêtes"}]
+    },
+    "setClassificationTime": {
+      "desc": "Enregistre la durée de classification pour l'affichage de debug.",
+      "params": {"milliseconds": {"type": "number|nil", "desc": "Durée en ms (0 si nil)"}}
+    },
+    "getStatus": {
+      "desc": "Renvoie un instantané de l'état du cache pour le debug.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{status, reason, targetCount (nombre de proxies), buildTime, classificationTime}"}]
+    }
+  }
+}

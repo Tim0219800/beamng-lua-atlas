@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gameplay_crawl_getDynamicObjects`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getDynamicObjects.lua` · VM : Game Engine (GE) · 37 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getDynamicObjects.lua` · VM: Game Engine (GE) · 37 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/crawl/getDynamicObjects")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/crawl/getDynamicObjects")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Dynamic Objects » (catégorie repeat_instant, crawl). Récupère les objets d'un prefab ayant un champ dynamique donné. Pins d'entrée : prefabId (0 = rien) et dynamicName ('crawlDynamic' par défaut). Sortie : dynamicObjects (table d'ids) via bridge.getDynamicObjectsFromPrefab.
+Flowgraph node "Get Dynamic Objects" (category repeat_instant, crawl). Gets the objects of a prefab that have a given dynamic field. Input pins: prefabId (0 = nothing) and dynamicName ('crawlDynamic' by default). Output: dynamicObjects (table of ids) via bridge.getDynamicObjectsFromPrefab.
 
-**Dépendances (chargées avant) :** `gameplay_crawl_flowgraphBridge`
+**Dependencies (loaded first):** `gameplay_crawl_flowgraphBridge`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr)` | Charge le bridge du crawl. | 19 |
-| `C:work()` | Renvoie {} si prefabId est nil ou 0, sinon la liste fournie par le bridge. | 23 |
+| `C:init(mgr)` | Loads the crawl bridge. | 19 |
+| `C:work()` | Returns {} if prefabId is nil or 0, otherwise the list provided by the bridge. | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getDynamicObjects.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getDynamicObjects.lua`.*

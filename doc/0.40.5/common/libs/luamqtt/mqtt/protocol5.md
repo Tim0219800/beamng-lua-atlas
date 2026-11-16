@@ -1,33 +1,33 @@
 # `libs_luamqtt_mqtt_protocol5`
 
-*Fichier : `lua/common/libs/luamqtt/mqtt/protocol5.lua` · VM : Commun (GE + véhicule) · 1040 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/luamqtt/mqtt/protocol5.lua` · VM: Common (GE + vehicle) · 1040 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/luamqtt/mqtt/protocol5")`
+**Access:** `require("libs/luamqtt/mqtt/protocol5")`
 
-Implémentation du protocole MQTT 5.0 de luamqtt : construction (make_packet) et analyse (parse_packet) des paquets, avec propriétés et propriétés utilisateur, codes de raison et paquet AUTH. Chargé par client.lua quand la version 5 est demandée.
+luamqtt implementation of the MQTT 5.0 protocol: packet construction (make_packet) and parsing (parse_packet), with properties and user properties, reason codes and the AUTH packet. Loaded by client.lua when version 5 is requested.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_luamqtt_mqtt_protocol5.make_packet(args)` | Construit un paquet MQTT 5 à partir d'une table d'arguments dont le champ type est un packet_type ; gère properties et user_properties. | 687 |
-| `libs_luamqtt_mqtt_protocol5.parse_packet(read_func)` | Analyse un paquet MQTT 5 reçu à l'aide de read_func. | 806 |
+| `libs_luamqtt_mqtt_protocol5.make_packet(args)` | Builds an MQTT 5 packet from an arguments table whose type field is a packet_type; handles properties and user_properties. | 687 |
+| `libs_luamqtt_mqtt_protocol5.parse_packet(read_func)` | Parses a received MQTT 5 packet using read_func. | 806 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_luamqtt_mqtt_protocol5.make_packet(args)`
 
-Construit un paquet MQTT 5 à partir d'une table d'arguments dont le champ type est un packet_type ; gère properties et user_properties.
+Builds an MQTT 5 packet from an arguments table whose type field is a packet_type; handles properties and user_properties.
 
-- `args` (*table*) : type et champs propres au paquet.
-- **renvoie** : table|boolean Paquet combiné prêt à envoyer, ou false et un message d'erreur.
+- `args` (*table*) : type and packet-specific fields.
+- **returns**: table|boolean Combined packet ready to send, or false and an error message.
 
 #### `libs_luamqtt_mqtt_protocol5.parse_packet(read_func)`
 
-Analyse un paquet MQTT 5 reçu à l'aide de read_func.
+Parses a received MQTT 5 packet using read_func.
 
-- `read_func` (*function*) : Fonction de lecture de n octets.
-- **renvoie** : table|boolean Paquet analysé, ou false et un message d'erreur.
+- `read_func` (*function*) : Function that reads n bytes.
+- **returns**: table|boolean Parsed packet, or false and an error message.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luamqtt/mqtt/protocol5.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/luamqtt/mqtt/protocol5.lua`.*

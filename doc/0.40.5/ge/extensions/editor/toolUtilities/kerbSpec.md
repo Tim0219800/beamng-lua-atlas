@@ -1,38 +1,38 @@
 # `editor_toolUtilities_kerbSpec`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/kerbSpec.lua` · VM : Game Engine (GE) · 46 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/kerbSpec.lua` · VM: Game Engine (GE) · 46 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_kerbSpec` : `extensions.load("editor_toolUtilities_kerbSpec")`, puis la globale `editor_toolUtilities_kerbSpec`
+**Access:** extension `editor_toolUtilities_kerbSpec`: `extensions.load("editor_toolUtilities_kerbSpec")`, then the global `editor_toolUtilities_kerbSpec`
 
-Section unique de bordure (kerb) et de trottoir (footway) à laquelle tous les outils de l'éditeur construisent, et pierre dont elles sont taillées. Les dimensions vivent ici pour qu'une voiture ressente le même ressaut sur une rue, un parking, un pont ou une place. Donne aussi les lignes de texture d'une variante de bordure.
+Single kerb and footway section that all the editor tools build to, and the stone they are cut from. The dimensions live here so that a car feels the same step on a street, a car park, a bridge or a plaza. Also gives the texture rows of a kerb variant.
 
-## Remarques
+## Notes
 
-- Spec : slabW 1.65 m (une dalle de large), slabThick 0.12, kerbW 0.15, kerbH 0.12 (12 cm hors de la route), buryM 0.30 (profondeur à partir de laquelle un bord est dit enterré), matériaux slabs_large et m_sidewalk_curb_trim_01.
-- La feuille de texture de bordure empile 5 variantes en V (un cinquième chacune) ; l'arête vive doit rester sur la rangée centrale car la normal map y porte un arrondi.
+- Spec: slabW 1.65 m (one slab wide), slabThick 0.12, kerbW 0.15, kerbH 0.12 (12 cm above the road), buryM 0.30 (depth from which an edge is said to be buried), materials slabs_large and m_sidewalk_curb_trim_01.
+- The kerb texture sheet stacks 5 variants in V (a fifth each); the sharp edge must stay on the central row because the normal map carries a rounding there.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_kerbSpec.kerbRows(variant)` | Renvoie les trois lignes V de la texture occupées par une variante de bordure : le dos de la marche, l'arête et le pied de la face. La variante est tronquée à l'entier et bornée à 0..4 ; une valeur non numérique donne 0. | 35 |
+| `editor_toolUtilities_kerbSpec.kerbRows(variant)` | Returns the three V rows of the texture occupied by a kerb variant: the back of the step, the edge and the foot of the face. The variant is truncated to an integer and clamped to 0..4; a non-numeric value gives 0. | 35 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_kerbSpec.kerbRows(variant)`
 
-Renvoie les trois lignes V de la texture occupées par une variante de bordure : le dos de la marche, l'arête et le pied de la face. La variante est tronquée à l'entier et bornée à 0..4 ; une valeur non numérique donne 0.
+Returns the three V rows of the texture occupied by a kerb variant: the back of the step, the edge and the foot of the face. The variant is truncated to an integer and clamped to 0..4; a non-numeric value gives 0.
 
-- `variant` (*integer|nil*) : Indice de variante, 0 à 4.
-- **renvoie** : number Rangée du dos de la marche (variante * 0.2).
-- **renvoie** : number Rangée de l'arête (+0.1).
-- **renvoie** : number Rangée du pied de la face (+0.2 moins un petit écart de 0.00332).
+- `variant` (*integer|nil*) : Variant index, 0 to 4.
+- **returns**: number Row of the back of the step (variant * 0.2).
+- **returns**: number Row of the edge (+0.1).
+- **returns**: number Row of the foot of the face (+0.2 minus a small gap of 0.00332).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `spec` | table | Dimensions et matériaux : slabW, slabThick, kerbW, kerbH, buryM, slabMaterial, kerbMaterial. |
+| `spec` | table | Dimensions and materials: slabW, slabThick, kerbW, kerbH, buryM, slabMaterial, kerbMaterial. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/kerbSpec.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/kerbSpec.lua`.*

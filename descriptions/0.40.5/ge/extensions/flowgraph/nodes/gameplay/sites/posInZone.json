@@ -1,35 +1,35 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/sites/posInZone.lua",
-  "module": "Nœud flowgraph « Position in Zone » (catégorie repeat_instant). Teste en 2D (zone:containsPoint2D) si une position est dans une zone Sites. Sorties : inside, outside, et impulsions enter/exit lors du changement entre deux frames.",
+  "module": "Flowgraph node \"Position in Zone\" (category repeat_instant). Tests in 2D (zone:containsPoint2D) whether a position is inside a Sites zone. Outputs: inside, outside, and enter/exit pulses when the state changes between two frames.",
   "notes": [
-    "Affiche dump(\"No zone data!\") à chaque frame si la zone ou la position manque.",
-    "enter et exit ne sont écrites qu'à partir de la 2e frame (self._lastInside non nil)."
+    "Prints dump(\"No zone data!\") every frame if the zone or the position is missing.",
+    "enter and exit are only written from the 2nd frame onward (self._lastInside not nil)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStarted": {
-          "desc": "Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud.",
+          "desc": "Called when the flowgraph project execution starts; resets the node's internal state.",
           "internal": true
         },
         "init": {
-          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "desc": "Initializes the node's internal state at creation (called by the flowgraph engine).",
           "internal": true,
           "params": {
             "mgr": {
               "type": "table",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           }
         },
         "work": {
-          "desc": "Calcule inside/outside et détecte l'entrée ou la sortie en comparant à l'état de la frame précédente.",
+          "desc": "Computes inside/outside and detects entering or leaving by comparing with the previous frame's state.",
           "internal": true,
           "params": {
             "args": {
               "type": "table",
-              "desc": "arguments transmis par le moteur (non utilisés)"
+              "desc": "arguments passed by the engine (unused)"
             }
           }
         }

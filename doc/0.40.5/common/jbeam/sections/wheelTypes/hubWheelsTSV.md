@@ -1,40 +1,40 @@
 # `jbeam_sections_wheelTypes_hubWheelsTSV`
 
-*Fichier : `lua/common/jbeam/sections/wheelTypes/hubWheelsTSV.lua` · VM : Commun (GE + véhicule) · 219 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/sections/wheelTypes/hubWheelsTSV.lua` · VM: Common (GE + vehicle) · 219 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/sections/wheelTypes/hubWheelsTSV")`
+**Access:** `require("jbeam/sections/wheelTypes/hubWheelsTSV")`
 
-Gestionnaire du type de roue 'hubWheelsTSV' : roue à moyeu séparé SANS pression d'air simulée : le pneu est relié au moyeu par des poutres anisotropes de côté et de renfort (au lieu de poutres pressurisées). Appelé par jbeam/sections/wheels.lua pendant le chargement du véhicule.
+Handler for the 'hubWheelsTSV' wheel type: a wheel with a separate hub WITHOUT simulated air pressure: the tire is linked to the hub by anisotropic side and reinforcement beams (instead of pressurized beams). Called by jbeam/sections/wheels.lua during vehicle loading.
 
-## Exemple
+## Example
 
 ```lua
--- appelé par le répartiteur : process(vehicle, wheelKey, wheel)
+-- called by the dispatcher: process(vehicle, wheelKey, wheel)
 ```
 
-## Remarques
+## Notes
 
-- Par rayon, le code crée : bande de roulement (BEAM_ANISOTROPIC), périphérie (NORMALTYPE), poutres de moyeu (bande, périphérie, axe vers node1/node2), 2 renforts anisotropes hub-pneu (wheelReinforcementBeam*), 4 poutres de côté anisotropes (wheelSideBeam*), et des poutres de soutien BEAM_SUPPORT (7) si enableTireSideSupportBeams.
-- L'ordre de création des nœuds est inversé par rapport à hubWheelsTSI (intérieur puis extérieur pour le moyeu) : les nœuds 'outhub' et 'inhub' sont échangés dans les indices.
-- Résultat : wheel.nodes (nœuds du moyeu), wheel.reinforcementBeams, wheel.sideBeams, wheel.treadBeams. Valeurs par défaut : radius 0.5, hubRadius 0.65*radius, numRays 10. wheel.collision est forcé à true.
-- Dans ce gestionnaire, hubWidth/tireWidth ne sont pas écrits dans la roue (contrairement à TSI).
-- Constantes C : NORMALTYPE 0, BEAM_ANISOTROPIC 1, BEAM_SUPPORT 7 ; pas de BEAM_PRESSURED.
+- Per ray, the code creates: tread (BEAM_ANISOTROPIC), periphery (NORMALTYPE), hub beams (tread, periphery, axle toward node1/node2), 2 anisotropic hub-tire reinforcements (wheelReinforcementBeam*), 4 anisotropic side beams (wheelSideBeam*), and BEAM_SUPPORT (7) support beams if enableTireSideSupportBeams.
+- The node creation order is reversed compared to hubWheelsTSI (inner then outer for the hub): the 'outhub' and 'inhub' nodes are swapped in the indices.
+- Result: wheel.nodes (hub nodes), wheel.reinforcementBeams, wheel.sideBeams, wheel.treadBeams. Default values: radius 0.5, hubRadius 0.65*radius, numRays 10. wheel.collision is forced to true.
+- In this handler, hubWidth/tireWidth are not written to the wheel (unlike TSI).
+- C constants: NORMALTYPE 0, BEAM_ANISOTROPIC 1, BEAM_SUPPORT 7; no BEAM_PRESSURED.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_sections_wheelTypes_hubWheelsTSV.process(vehicle, wheelKey, wheel)` | Crée nœuds et poutres d'une roue hubWheelsTSV (alias de addHubWheelTSV). Avertissement 'invalid hubWheel' et sortie si node1 ou node2 manque. *(interne)* | 19 |
+| `jbeam_sections_wheelTypes_hubWheelsTSV.process(vehicle, wheelKey, wheel)` | Creates nodes and beams of a hubWheelsTSV wheel (alias of addHubWheelTSV). Warning 'invalid hubWheel' and exits if node1 or node2 is missing. *(internal)* | 19 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_sections_wheelTypes_hubWheelsTSV.process(vehicle, wheelKey, wheel)`
 
-Crée nœuds et poutres d'une roue hubWheelsTSV (alias de addHubWheelTSV). Avertissement 'invalid hubWheel' et sortie si node1 ou node2 manque.
+Creates nodes and beams of a hubWheelsTSV wheel (alias of addHubWheelTSV). Warning 'invalid hubWheel' and exits if node1 or node2 is missing.
 
-- `vehicle` (*table*) : véhicule en construction
-- `wheelKey` (*integer*) : indice de la roue dans sa section
-- `wheel` (*table*) : définition jbeam de la roue (modifiée : collision, radius, hubRadius, numRays, nodes, reinforcementBeams, sideBeams, treadBeams)
+- `vehicle` (*table*) : vehicle under construction
+- `wheelKey` (*integer*) : index of the wheel in its section
+- `wheel` (*table*) : jbeam definition of the wheel (modified: collision, radius, hubRadius, numRays, nodes, reinforcementBeams, sideBeams, treadBeams)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/sections/wheelTypes/hubWheelsTSV.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/sections/wheelTypes/hubWheelsTSV.lua`.*

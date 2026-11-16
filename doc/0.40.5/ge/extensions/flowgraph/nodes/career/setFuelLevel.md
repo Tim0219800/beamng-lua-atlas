@@ -1,32 +1,32 @@
 # `flowgraph_nodes_career_setFuelLevel`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/career/setFuelLevel.lua` · VM : Game Engine (GE) · 72 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/career/setFuelLevel.lua` · VM: Game Engine (GE) · 72 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/career/setFuelLevel")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/career/setFuelLevel")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Set Fuel Level » (catégorie once_f_duration, couleur/icône career). Règle le niveau de carburant d'un véhicule au même pourcentage dans tous ses réservoirs. Entrées : vehId (number, sinon véhicule du joueur 0), mult (number 0-1, fraction du maximum). Demande d'abord l'énergie des réservoirs (core_vehicleBridge 'energyStorage'), puis exécute l'action setEnergyStorageEnergy avec maxEnergy * mult pour chaque réservoir ; l'état passe à finished.
+Flowgraph node "Set Fuel Level" (category once_f_duration, career color/icon). Sets a vehicle's fuel level to the same percentage in all its tanks. Inputs: vehId (number, otherwise player vehicle 0), mult (number 0-1, fraction of the maximum). First requests the tanks' energy (core_vehicleBridge 'energyStorage'), then runs the setEnergyStorageEnergy action with maxEnergy * mult for each tank; the state becomes finished.
 
-## Remarques
+## Notes
 
-- _executionStarted est défini deux fois (identiques).
-- La variable locale allowedTypes (gasoline, diesel, electricEnergy) et fuelType ne sont pas utilisées : tous les réservoirs sont réglés.
-- Le code ne vérifie pas que mult est non nil.
+- _executionStarted is defined twice (identically).
+- The local variable allowedTypes (gasoline, diesel, electricEnergy) and fuelType are unused: all tanks are set.
+- The code does not check that mult is non-nil.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Appelle onNodeReset au démarrage du graphe. | 27 |
-| `C:init()` | Appelle onNodeReset. | 24 |
-| `C:onNodeReset()` | Réinitialise les données reçues, le drapeau d'envoi et l'état de durée ('inactive'). | 36 |
-| `C:work()` | Quand les données sont arrivées, règle chaque réservoir à maxEnergy*mult et passe à 'finished'. | 55 |
-| `C:workOnce()` | Trouve le véhicule, demande les données d'énergie et passe à l'état 'started'. | 44 |
+| `C:_executionStarted()` | Calls onNodeReset when the graph starts. | 27 |
+| `C:init()` | Calls onNodeReset. | 24 |
+| `C:onNodeReset()` | Resets the received data, the send flag and the duration state ('inactive'). | 36 |
+| `C:work()` | Once the data has arrived, sets each tank to maxEnergy*mult and switches to 'finished'. | 55 |
+| `C:workOnce()` | Finds the vehicle, requests the energy data and switches to the 'started' state. | 44 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/career/setFuelLevel.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/career/setFuelLevel.lua`.*

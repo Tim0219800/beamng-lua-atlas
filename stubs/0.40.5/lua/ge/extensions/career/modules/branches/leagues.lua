@@ -2,104 +2,104 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/branches/leagues.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère les « ligues » de la carrière : groupes de missions (et de spots de drift) rattachés à une compétence, chargés depuis les fichiers /gameplay/**/*.leagues.json à l'activation de la carrière. Calcule si une ligue est débloquée (conditions leagueStars, branchLevel, skillStars, branchStars, inDevelopment), les étoiles obtenues/disponibles, l'ordre d'affichage, et vérifie la cohérence des missions (une seule ligue, skill, showInCareer).
---- Accès : extension `career_modules_branches_leagues` : `extensions.load("career_modules_branches_leagues")`, puis la globale `career_modules_branches_leagues`
+--- Manages the career "leagues": groups of missions (and drift spots) attached to a skill, loaded from the /gameplay/**/*.leagues.json files on career activation. Computes whether a league is unlocked (conditions leagueStars, branchLevel, skillStars, branchStars, inDevelopment), the stars obtained/available, the display order, and checks the consistency of the missions (a single league, skill, showInCareer).
+--- Access: extension `career_modules_branches_leagues`: `extensions.load("career_modules_branches_leagues")`, then the global `career_modules_branches_leagues`
 ---@class career_modules_branches_leagues
 career_modules_branches_leagues = {}
 
---- Calcule league._order : groupe par compétence, tri par étoiles requises puis ordre de fichier, ligues 'highlightIfUnlocked' débloquées en tête, puis ordre des compétences (career_branches.getOrder).
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:223
+--- Computes league._order: grouped by skill, sorted by required stars then file order, unlocked 'highlightIfUnlocked' leagues first, then skill order (career_branches.getOrder).
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:223
 function career_modules_branches_leagues.addLeagueSortOrder() end
 
---- Vérifie la configuration d'une mission par rapport aux ligues (startCondition cohérente avec la ligue, careerSetup.skill égal à la compétence de la ligue, showInCareer vrai) et logue des erreurs 'E'.
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:455
----@param mission table Mission à vérifier.
+--- Checks a mission's configuration against the leagues (startCondition consistent with the league, careerSetup.skill equal to the league's skill, showInCareer true) and logs 'E' errors.
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:455
+---@param mission table Mission to check.
 function career_modules_branches_leagues.checkMission(mission) end
 
---- Efface le cache de déblocage de chaque ligue et le cache d'étoiles par compétence.
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:15
+--- Clears each league's unlock cache and the per-skill star cache.
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:15
 function career_modules_branches_leagues.clearLeagueUnlockCache() end
 
---- Copie profonde d'une ligue enrichie pour l'UI : totalStarsAvailable, totalStarsObtained (missions et objectifs de drift), icon et accentColor de la compétence ('badgeRoundStar' si certification).
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:129
----@param l table Ligue brute.
----@return table  Ligue formatée.
+--- Deep copy of a league enriched for the UI: totalStarsAvailable, totalStarsObtained (missions and drift objectives), icon and accentColor of the skill ('badgeRoundStar' if certification).
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:129
+---@param l table Raw league.
+---@return table  Formatted league.
 function career_modules_branches_leagues.formatLeague(l) end
 
---- Renvoie la ligue d'id donné (table brute, non formatée).
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:9
----@param id string Id de la ligue.
----@return table|nil  Ligue ou nil.
+--- Returns the league with the given id (raw table, not formatted).
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:9
+---@param id string League id.
+---@return table|nil  League or nil.
 function career_modules_branches_leagues.getLeagueById(id) end
 
---- Renvoie la ligue qui contient la mission donnée.
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:10
----@param mId string Id de la mission.
----@return table|nil  Ligue ou nil.
+--- Returns the league that contains the given mission.
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:10
+---@param mId string Mission id.
+---@return table|nil  League or nil.
 function career_modules_branches_leagues.getLeagueOfMission(mId) end
 
---- Liste les ligues formatées (triées) qui contiennent la mission donnée.
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:206
----@param missionId string Id de la mission.
----@return table[]  Ligues formatées.
+--- Lists the formatted (sorted) leagues that contain the given mission.
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:206
+---@param missionId string Mission id.
+---@return table[]  Formatted leagues.
 function career_modules_branches_leagues.getLeaguesForMission(missionId) end
 
---- Liste les ligues formatées d'une branche (et de ses sous-compétences sauf si ignoreSubSkills), triées par _order. Sans branchId, toutes les ligues.
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:167
----@param branchId string|nil Id de la branche ou compétence.
----@param ignoreSubSkills boolean|nil Si vrai, ne retient que les ligues de la compétence elle-même.
----@return table[]  Ligues formatées triées.
+--- Lists the formatted leagues of a branch (and of its sub-skills unless ignoreSubSkills), sorted by _order. Without branchId, all leagues.
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:167
+---@param branchId string|nil Branch or skill id.
+---@param ignoreSubSkills boolean|nil If true, only keeps the leagues of the skill itself.
+---@return table[]  Sorted formatted leagues.
 function career_modules_branches_leagues.getLeaguesForProgressBranchPage(branchId, ignoreSubSkills) end
 
---- Compare deux statuts de déblocage et renvoie les ligues nouvellement débloquées (formatées, triées) ; débloque le succès NEW_TERRITORY s'il y en a.
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:183
----@param before table<string, boolean> Statut avant.
----@param after table<string, boolean> Statut après.
----@return table[]  Ligues nouvellement débloquées.
+--- Compares two unlock statuses and returns the newly unlocked leagues (formatted, sorted); unlocks the NEW_TERRITORY achievement if there are any.
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:183
+---@param before table<string, boolean> Status before.
+---@param after table<string, boolean> Status after.
+---@return table[]  Newly unlocked leagues.
 function career_modules_branches_leagues.getLeaguesForUnlockChange(before, after) end
 
---- Obsolète : logue l'erreur 'Deprecated' et ne fait rien.
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:200
----@param skill any Non utilisé.
----@param missions any Non utilisé.
----@param driftSpots any Non utilisé.
+--- Obsolete: logs the error 'Deprecated' and does nothing.
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:200
+---@param skill any Not used.
+---@param missions any Not used.
+---@param driftSpots any Not used.
 function career_modules_branches_leagues.getNoLeague(skill, missions, driftSpots) end
 
---- Vide le cache puis renvoie une table id de ligue -> débloquée (booléen) pour toutes les ligues.
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:19
----@return table<string, boolean>  Statut de déblocage par ligue.
+--- Clears the cache then returns a table league id -> unlocked (boolean) for all leagues.
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:19
+---@return table<string, boolean>  Unlock status per league.
 function career_modules_branches_leagues.getSimpleUnlockedStatus() end
 
---- Raccourci de getStarsForSkills pour une seule compétence.
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:389
----@param skillId string Id de la compétence.
----@return integer  Total d'étoiles par défaut.
----@return integer  Étoiles débloquées.
+--- Shortcut for getStarsForSkills for a single skill.
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:389
+---@param skillId string Skill id.
+---@return integer  Total default stars.
+---@return integer  Unlocked stars.
 function career_modules_branches_leagues.getStarsForSkill(skillId) end
 
---- Somme des étoiles par défaut disponibles et débloquées pour toutes les missions dont careerSetup.skill est dans la table donnée.
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:376
----@param skillIds table<string, boolean> Ensemble d'ids de compétences.
----@return integer  Total d'étoiles par défaut.
----@return integer  Étoiles par défaut débloquées.
+--- Sum of the default stars available and unlocked for all missions whose careerSetup.skill is in the given table.
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:376
+---@param skillIds table<string, boolean> Set of skill ids.
+---@return integer  Total default stars.
+---@return integer  Default stars unlocked.
 function career_modules_branches_leagues.getStarsForSkills(skillIds) end
 
---- Remplit map[leagueId] = true pour chaque condition de type 'league' trouvée dans une startCondition (récursif sur cond.nested).
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:391
----@param cond table Condition de démarrage d'une mission.
----@param map table<string, boolean> Table de sortie.
+--- Fills map[leagueId] = true for each 'league' condition found in a startCondition (recursive on cond.nested).
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:391
+---@param cond table Mission start condition.
+---@param map table<string, boolean> Output table.
 function career_modules_branches_leagues.getStartConditionLeagueId(cond, map) end
 
---- Évalue (avec cache) les conditions de déblocage d'une ligue ; sans condition elle est débloquée.
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:28
----@param id string Id de la ligue.
----@return boolean  true si toutes les conditions sont remplies (false si la ligue n'existe pas).
----@return table[]|nil  Libellés des conditions (unlockLabels).
+--- Evaluates (with cache) a league's unlock conditions; without conditions it is unlocked.
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:28
+---@param id string League id.
+---@return boolean  true if all conditions are met (false if the league does not exist).
+---@return table[]|nil  Condition labels (unlockLabels).
 function career_modules_branches_leagues.isLeagueUnlocked(id) end
 
---- Hook : quand la carrière devient active, charge les ligues depuis les fichiers *.leagues.json de /gameplay/.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/branches/leagues.lua:367
----@param active boolean true à l'activation.
+--- Hook: when the career becomes active, loads the leagues from the *.leagues.json files in /gameplay/.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/branches/leagues.lua:367
+---@param active boolean true on activation.
 function career_modules_branches_leagues.onCareerActive(active) end
 

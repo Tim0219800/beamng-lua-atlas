@@ -1,91 +1,91 @@
 # `controller_4wd`
 
-*Fichier : `lua/vehicle/controller/4wd.lua` · VM : Véhicule · 216 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/4wd.lua` · VM: Vehicle · 216 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `4wd` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `4wd` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire qui donne au conducteur la commande du 4x4 sélectionnable : arbre 4WD (connecté/déconnecté), boîte de gamme (haute/basse) et différentiels. Il agit soit via des contrôleurs `driveModes` (si leurs noms sont listés dans le jbeam), soit directement via l'API `powertrain` pour les anciens véhicules. Il écrit `electrics.values.mode4WD` et `modeRangeBox` (1 ou 0) et ajoute des entrées au menu radial.
+Auxiliary controller that gives the driver control of the selectable 4WD: 4WD shaft (connected/disconnected), range box (high/low) and differentials. It acts either via `driveModes` controllers (if their names are listed in the jbeam), or directly via the `powertrain` API for old vehicles. It writes `electrics.values.mode4WD` and `modeRangeBox` (1 or 0) and adds entries to the radial menu.
 
-## Exemple
+## Example
 
 ```lua
 controller.getControllerSafe("4wd").toggle4WD()
 controller.getControllerSafe("4wd").setRangeMode("low")
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues par init : `shaftName` (arbre du transfert, périphérique powertrain dont `mode` vaut "connected" ou "disconnected"), `rangeBoxName` (boîte de gamme, mode "low" ou "high"). Lues par initLastStage : `driveModesRangeNames`, `driveModesTransfercaseNames`, `driveModesDifferentialNames` (tables de noms de contrôleurs driveModes).
-- `M.relevantDevice = "transfercase"` : sert à trier ce contrôleur par rapport au périphérique powertrain du même nom.
-- L'action d'entrée appelle toggleDiffs/toggle4WD/toggleRange si un contrôleur 4wd existe ; sinon elle appelle directement l'API powertrain (code de compatibilité cité dans le fichier).
-- La construction du menu radial est faite une seule fois (flag hasBuiltPie) ; elle capture l'objet `shaft`/`rangeBox` du premier init.
-- Il n'y a pas de fonction `reset` : controller.reset rappelle donc init à chaque reset.
+- Jbeam keys read by init: `shaftName` (transfer shaft, powertrain device whose `mode` is "connected" or "disconnected"), `rangeBoxName` (range box, mode "low" or "high"). Read by initLastStage: `driveModesRangeNames`, `driveModesTransfercaseNames`, `driveModesDifferentialNames` (tables of driveModes controller names).
+- `M.relevantDevice = "transfercase"`: used to sort this controller relative to the powertrain device of the same name.
+- The input action calls toggleDiffs/toggle4WD/toggleRange if a 4wd controller exists; otherwise it calls the powertrain API directly (compatibility code cited in the file).
+- The radial menu is built only once (hasBuiltPie flag); it captures the `shaft`/`rangeBox` object from the first init.
+- There is no `reset` function: controller.reset therefore calls init again on every reset.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_4wd.deserialize(data)` | Restaure les modes 4WD et gamme depuis les données de serialize. *(interne)* | 81 |
-| `controller_4wd.init(jbeamData)` | Retrouve les périphériques powertrain (`shaftName`, `rangeBoxName`), initialise les valeurs electrics et ajoute les entrées du menu radial (une seule fois). *(interne)* | 92 |
-| `controller_4wd.initLastStage(jbeamData)` | Retrouve les contrôleurs driveModes nommés dans `driveModesRangeNames`, `driveModesTransfercaseNames` et `driveModesDifferentialNames` (ceux qui existent). *(interne)* | 171 |
-| `controller_4wd.serialize()` | Renvoie l'état sauvegardé : {mode4WD, modeRange}. *(interne)* | 74 |
-| `controller_4wd.set4WDMode(mode)` | Impose le mode de l'arbre 4WD, sauf s'il est physiquement déconnecté. | 68 |
-| `controller_4wd.setRangeMode(mode)` | Impose le mode de la boîte de gamme (powertrain.setDeviceMode). Sans effet s'il n'y a pas de boîte de gamme. | 49 |
-| `controller_4wd.toggle4WD()` | Passe au mode suivant des contrôleurs driveModes de transfert ; sinon bascule l'arbre 4WD, sauf s'il est physiquement déconnecté (`isPhysicallyDisconnected`). | 55 |
-| `controller_4wd.toggleDiffs()` | Passe au mode suivant de chaque contrôleur driveModes de différentiels ; sinon appelle powertrain.toggleDefaultDiffs(). | 24 |
-| `controller_4wd.toggleRange()` | Passe au mode suivant des contrôleurs driveModes de gamme ; sinon bascule le mode de la boîte de gamme via powertrain.toggleDeviceMode. | 36 |
-| `controller_4wd.updateGFX(dt)` | Chaque frame : écrit electrics.values.modeRangeBox (1 si gamme basse) et mode4WD (1 si arbre connecté). *(interne)* | 19 |
+| `controller_4wd.deserialize(data)` | Restores the 4WD and range modes from the serialize data. *(internal)* | 81 |
+| `controller_4wd.init(jbeamData)` | Finds the powertrain devices (`shaftName`, `rangeBoxName`), initializes the electrics values and adds the radial menu entries (only once). *(internal)* | 92 |
+| `controller_4wd.initLastStage(jbeamData)` | Finds the driveModes controllers named in `driveModesRangeNames`, `driveModesTransfercaseNames` and `driveModesDifferentialNames` (those that exist). *(internal)* | 171 |
+| `controller_4wd.serialize()` | Returns the saved state: {mode4WD, modeRange}. *(internal)* | 74 |
+| `controller_4wd.set4WDMode(mode)` | Forces the 4WD shaft mode, unless it is physically disconnected. | 68 |
+| `controller_4wd.setRangeMode(mode)` | Forces the range box mode (powertrain.setDeviceMode). No effect if there is no range box. | 49 |
+| `controller_4wd.toggle4WD()` | Switches to the next mode of the transfer driveModes controllers; otherwise toggles the 4WD shaft, unless it is physically disconnected (`isPhysicallyDisconnected`). | 55 |
+| `controller_4wd.toggleDiffs()` | Switches to the next mode of each differential driveModes controller; otherwise calls powertrain.toggleDefaultDiffs(). | 24 |
+| `controller_4wd.toggleRange()` | Switches to the next mode of the range driveModes controllers; otherwise toggles the range box mode via powertrain.toggleDeviceMode. | 36 |
+| `controller_4wd.updateGFX(dt)` | Every frame: writes electrics.values.modeRangeBox (1 if low range) and mode4WD (1 if shaft connected). *(internal)* | 19 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_4wd.deserialize(data)`
 
-Restaure les modes 4WD et gamme depuis les données de serialize.
+Restores the 4WD and range modes from the serialize data.
 
-- `data` (*table|nil*) : Données retournées par serialize.
+- `data` (*table|nil*) : Data returned by serialize.
 
 #### `controller_4wd.init(jbeamData)`
 
-Retrouve les périphériques powertrain (`shaftName`, `rangeBoxName`), initialise les valeurs electrics et ajoute les entrées du menu radial (une seule fois).
+Finds the powertrain devices (`shaftName`, `rangeBoxName`), initializes the electrics values and adds the radial menu entries (only once).
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_4wd.initLastStage(jbeamData)`
 
-Retrouve les contrôleurs driveModes nommés dans `driveModesRangeNames`, `driveModesTransfercaseNames` et `driveModesDifferentialNames` (ceux qui existent).
+Finds the driveModes controllers named in `driveModesRangeNames`, `driveModesTransfercaseNames` and `driveModesDifferentialNames` (those that exist).
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_4wd.serialize()`
 
-Renvoie l'état sauvegardé : {mode4WD, modeRange}.
+Returns the saved state: {mode4WD, modeRange}.
 
-- **renvoie** : table {mode4WD = string|nil, modeRange = string|nil}.
+- **returns**: table {mode4WD = string|nil, modeRange = string|nil}.
 
 #### `controller_4wd.set4WDMode(mode)`
 
-Impose le mode de l'arbre 4WD, sauf s'il est physiquement déconnecté.
+Forces the 4WD shaft mode, unless it is physically disconnected.
 
-- `mode` (*string*) : "connected" ou "disconnected".
+- `mode` (*string*) : "connected" or "disconnected".
 
 #### `controller_4wd.setRangeMode(mode)`
 
-Impose le mode de la boîte de gamme (powertrain.setDeviceMode). Sans effet s'il n'y a pas de boîte de gamme.
+Forces the range box mode (powertrain.setDeviceMode). No effect if there is no range box.
 
-- `mode` (*string*) : "low" ou "high" (valeurs vues dans le code).
+- `mode` (*string*) : "low" or "high" (values seen in the code).
 
 #### `controller_4wd.updateGFX(dt)`
 
-Chaque frame : écrit electrics.values.modeRangeBox (1 si gamme basse) et mode4WD (1 si arbre connecté).
+Every frame: writes electrics.values.modeRangeBox (1 if low range) and mode4WD (1 if shaft connected).
 
-- `dt` (*number*) : Pas de temps en secondes (non utilisé).
+- `dt` (*number*) : Time step in seconds (unused).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `relevantDevice` | string | "transfercase" : nom du périphérique powertrain utilisé pour l'ordre d'appel. |
+| `relevantDevice` | string | "transfercase": name of the powertrain device used for the call order. |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/4wd.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/4wd.lua`.*

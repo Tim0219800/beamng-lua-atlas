@@ -1,91 +1,91 @@
 # `ui_router_transitionRecovery.test`
 
-*Fichier : `lua/ge/extensions/ui/router/transitionRecovery.test.lua` · VM : Game Engine (GE) · 200 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/transitionRecovery.test.lua` · VM: Game Engine (GE) · 200 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_transitionRecovery.test` : `extensions.load("ui_router_transitionRecovery.test")`, puis la globale `ui_router_transitionRecovery.test`
+**Access:** extension `ui_router_transitionRecovery.test`: `extensions.load("ui_router_transitionRecovery.test")`, then the global `ui_router_transitionRecovery.test`
 
-Tests ciblés du contrat de reprise au démarrage de Vue pour le routeur : renvoi de la transition toutes les secondes sans limite (phase startup), accusés de réception qui ne servent que de télémétrie (routeChangeReceived), arrêt des renvois par routeNavigationStarted, rejet des accusés à identifiant de transition périmé, conservation de l'identifiant à l'annulation et nettoyage de l'entrée en attente. Utilise Config, TransitionManager et NavigationState. Lancement : extensions.testFramework_TestManager:runTestFiles("transitionRecovery").
+Targeted tests of the Vue startup recovery contract for the router: transition resent every second without limit (startup phase), acknowledgments that serve only as telemetry (routeChangeReceived), resends stopped by routeNavigationStarted, rejection of acknowledgments with a stale transition identifier, identifier kept on cancellation and cleanup of the pending entry. Uses Config, TransitionManager and NavigationState. Run with: extensions.testFramework_TestManager:runTestFiles("transitionRecovery").
 
-## Remarques
+## Notes
 
-- Les fonctions testXxx(ctx) sont exécutées par testFramework_TestManager ; le jeu ne les appelle pas en usage normal.
+- The testXxx(ctx) functions are run by testFramework_TestManager; the game does not call them in normal use.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_transitionRecovery.test.testCancelReturnsStartedTransitionId(ctx)` | L'annulation renvoie l'identifiant de la transition démarrée (utilisé dans la charge utile d'annulation). *(interne)* | 161 |
-| `ui_router_transitionRecovery.test.testCancelWhenIdleReturnsNilId(ctx)` | Annuler sans transition en cours renvoie un identifiant nil. *(interne)* | 175 |
-| `ui_router_transitionRecovery.test.testClearPendingEntryRemovesUncommittedEntry(ctx)` | NavigationState efface l'entrée en attente non validée. *(interne)* | 185 |
-| `ui_router_transitionRecovery.test.testNavigationStartedStopsResends(ctx)` | routeNavigationStarted arrête les renvois. *(interne)* | 87 |
-| `ui_router_transitionRecovery.test.testPostStartTimersResetAfterLongStartup(ctx)` | Après un long démarrage, les minuteurs de fin de transition repartent à zéro une fois la navigation démarrée. *(interne)* | 101 |
-| `ui_router_transitionRecovery.test.testReceivedDoesNotStopStartupResends(ctx)` | routeChangeReceived est de la télémétrie : il n'arrête pas les renvois. *(interne)* | 71 |
-| `ui_router_transitionRecovery.test.testStaleTransitionIdIsRejectedOnComplete(ctx)` | Un accusé de fin avec un identifiant périmé est rejeté. *(interne)* | 146 |
-| `ui_router_transitionRecovery.test.testStaleTransitionIdIsRejectedOnProgress(ctx)` | Un accusé de progression avec un identifiant de transition périmé est rejeté. *(interne)* | 129 |
-| `ui_router_transitionRecovery.test.testStartupResendIntervalIsOneSecond(ctx)` | L'intervalle de renvoi au démarrage dans Config vaut une seconde. *(interne)* | 47 |
-| `ui_router_transitionRecovery.test.testStartupResendsEverySecondIndefinitely(ctx)` | En phase startup, la transition est renvoyée chaque seconde, indéfiniment. *(interne)* | 54 |
+| `ui_router_transitionRecovery.test.testCancelReturnsStartedTransitionId(ctx)` | Cancellation returns the identifier of the started transition (used in the cancellation payload). *(internal)* | 161 |
+| `ui_router_transitionRecovery.test.testCancelWhenIdleReturnsNilId(ctx)` | Cancelling with no transition in progress returns a nil identifier. *(internal)* | 175 |
+| `ui_router_transitionRecovery.test.testClearPendingEntryRemovesUncommittedEntry(ctx)` | NavigationState clears the uncommitted pending entry. *(internal)* | 185 |
+| `ui_router_transitionRecovery.test.testNavigationStartedStopsResends(ctx)` | routeNavigationStarted stops the resends. *(internal)* | 87 |
+| `ui_router_transitionRecovery.test.testPostStartTimersResetAfterLongStartup(ctx)` | After a long startup, the end-of-transition timers restart from zero once navigation has started. *(internal)* | 101 |
+| `ui_router_transitionRecovery.test.testReceivedDoesNotStopStartupResends(ctx)` | routeChangeReceived is telemetry: it does not stop the resends. *(internal)* | 71 |
+| `ui_router_transitionRecovery.test.testStaleTransitionIdIsRejectedOnComplete(ctx)` | A completion acknowledgment with a stale identifier is rejected. *(internal)* | 146 |
+| `ui_router_transitionRecovery.test.testStaleTransitionIdIsRejectedOnProgress(ctx)` | A progress acknowledgment with a stale transition identifier is rejected. *(internal)* | 129 |
+| `ui_router_transitionRecovery.test.testStartupResendIntervalIsOneSecond(ctx)` | The startup resend interval in Config is one second. *(internal)* | 47 |
+| `ui_router_transitionRecovery.test.testStartupResendsEverySecondIndefinitely(ctx)` | In the startup phase, the transition is resent every second, indefinitely. *(internal)* | 54 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_transitionRecovery.test.testCancelReturnsStartedTransitionId(ctx)`
 
-L'annulation renvoie l'identifiant de la transition démarrée (utilisé dans la charge utile d'annulation).
+Cancellation returns the identifier of the started transition (used in the cancellation payload).
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_transitionRecovery.test.testCancelWhenIdleReturnsNilId(ctx)`
 
-Annuler sans transition en cours renvoie un identifiant nil.
+Cancelling with no transition in progress returns a nil identifier.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_transitionRecovery.test.testClearPendingEntryRemovesUncommittedEntry(ctx)`
 
-NavigationState efface l'entrée en attente non validée.
+NavigationState clears the uncommitted pending entry.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_transitionRecovery.test.testNavigationStartedStopsResends(ctx)`
 
-routeNavigationStarted arrête les renvois.
+routeNavigationStarted stops the resends.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_transitionRecovery.test.testPostStartTimersResetAfterLongStartup(ctx)`
 
-Après un long démarrage, les minuteurs de fin de transition repartent à zéro une fois la navigation démarrée.
+After a long startup, the end-of-transition timers restart from zero once navigation has started.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_transitionRecovery.test.testReceivedDoesNotStopStartupResends(ctx)`
 
-routeChangeReceived est de la télémétrie : il n'arrête pas les renvois.
+routeChangeReceived is telemetry: it does not stop the resends.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_transitionRecovery.test.testStaleTransitionIdIsRejectedOnComplete(ctx)`
 
-Un accusé de fin avec un identifiant périmé est rejeté.
+A completion acknowledgment with a stale identifier is rejected.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_transitionRecovery.test.testStaleTransitionIdIsRejectedOnProgress(ctx)`
 
-Un accusé de progression avec un identifiant de transition périmé est rejeté.
+A progress acknowledgment with a stale transition identifier is rejected.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_transitionRecovery.test.testStartupResendIntervalIsOneSecond(ctx)`
 
-L'intervalle de renvoi au démarrage dans Config vaut une seconde.
+The startup resend interval in Config is one second.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_transitionRecovery.test.testStartupResendsEverySecondIndefinitely(ctx)`
 
-En phase startup, la transition est renvoyée chaque seconde, indéfiniment.
+In the startup phase, the transition is resent every second, indefinitely.
 
-- `ctx` (*table*) : Contexte de test du testFramework (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/transitionRecovery.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/transitionRecovery.test.lua`.*

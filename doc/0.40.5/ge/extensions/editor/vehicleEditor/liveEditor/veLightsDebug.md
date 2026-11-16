@@ -1,58 +1,58 @@
 # `editor_vehicleEditor_liveEditor_veLightsDebug`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veLightsDebug.lua` · VM : Game Engine (GE) · 159 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veLightsDebug.lua` · VM: Game Engine (GE) · 159 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_liveEditor_veLightsDebug` : `extensions.load("editor_vehicleEditor_liveEditor_veLightsDebug")`, puis la globale `editor_vehicleEditor_liveEditor_veLightsDebug`
+**Access:** extension `editor_vehicleEditor_liveEditor_veLightsDebug`: `extensions.load("editor_vehicleEditor_liveEditor_veLightsDebug")`, then the global `editor_vehicleEditor_liveEditor_veLightsDebug`
 
-Fenêtre 'Lights Debug' du Vehicle Editor live. Dessine avec debugDrawer les props lumineux du véhicule (vdata.props dont mesh vaut SPOTLIGHT ou POINTLIGHT) : pour un spot, une sphère, une ligne de direction de longueur lightRange et une pointe de flèche ; pour un point de lumière, une sphère et une sphère translucide de rayon lightRange. Options : spots, points, X-Ray (sans test de profondeur), noms, vecteurs unitaires (longueur 1).
+'Lights Debug' window of the live Vehicle Editor. Draws with debugDrawer the vehicle's light props (vdata.props whose mesh is SPOTLIGHT or POINTLIGHT): for a spot, a sphere, a direction line of length lightRange and an arrow head; for a point light, a sphere and a translucent sphere of radius lightRange. Options: spots, points, X-Ray (no depth test), names, unit vectors (length 1).
 
-## Remarques
+## Notes
 
-- Le dessin se fait dans le hook onVehicleEditorRenderJBeams émis par editor_veMain ; la position vient de prop:getLiveTransformWorld() + vEditor.vehiclePos.
-- Un drawLine nul est dessiné avant chaque prop comme contournement d'un bug du debugDrawer (indiqué dans le code).
-- setSolidTriCulling(false) est appelé à chaque frame mais jamais rétabli (ligne commentée).
+- Drawing is done in the onVehicleEditorRenderJBeams hook emitted by editor_veMain; the position comes from prop:getLiveTransformWorld() + vEditor.vehiclePos.
+- A null drawLine is drawn before each prop as a workaround for a debugDrawer bug (noted in the code).
+- setSolidTriCulling(false) is called every frame but never restored (commented-out line).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_liveEditor_veLightsDebug.onDeserialized(data)` | Restaure l'état d'ouverture. *(interne)* *(hook)* | 147 |
-| `editor_vehicleEditor_liveEditor_veLightsDebug.onSerialize()` | Renvoie {windowOpen}. *(interne)* *(hook)* | 141 |
-| `editor_vehicleEditor_liveEditor_veLightsDebug.onUpdate()` | Appelé chaque frame : dessine la fenêtre avec les cases à cocher. *(interne)* *(hook)* | 123 |
-| `editor_vehicleEditor_liveEditor_veLightsDebug.onVehicleEditorRenderJBeams(dtReal, dtSim, dtRaw)` | Hook émis par editor_veMain à chaque frame de rendu : dessine les spots et points lumineux des props du véhicule si la fenêtre est ouverte. *(interne)* *(hook)* | 32 |
-| `editor_vehicleEditor_liveEditor_veLightsDebug.open()` | Ouvre la fenêtre. | 137 |
+| `editor_vehicleEditor_liveEditor_veLightsDebug.onDeserialized(data)` | Restores the open state. *(internal)* *(hook)* | 147 |
+| `editor_vehicleEditor_liveEditor_veLightsDebug.onSerialize()` | Returns {windowOpen}. *(internal)* *(hook)* | 141 |
+| `editor_vehicleEditor_liveEditor_veLightsDebug.onUpdate()` | Called every frame: draws the window with the checkboxes. *(internal)* *(hook)* | 123 |
+| `editor_vehicleEditor_liveEditor_veLightsDebug.onVehicleEditorRenderJBeams(dtReal, dtSim, dtRaw)` | Hook emitted by editor_veMain every render frame: draws the spots and point lights of the vehicle's props if the window is open. *(internal)* *(hook)* | 32 |
+| `editor_vehicleEditor_liveEditor_veLightsDebug.open()` | Opens the window. | 137 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_liveEditor_veLightsDebug.onDeserialized(data)`
 
-Restaure l'état d'ouverture.
+Restores the open state.
 
-- `data` (*table*) : Table de onSerialize.
+- `data` (*table*) : onSerialize table.
 
 #### `editor_vehicleEditor_liveEditor_veLightsDebug.onSerialize()`
 
-Renvoie {windowOpen}.
+Returns {windowOpen}.
 
-- **renvoie** : table {windowOpen = boolean}
+- **returns**: table {windowOpen = boolean}
 
 #### `editor_vehicleEditor_liveEditor_veLightsDebug.onVehicleEditorRenderJBeams(dtReal, dtSim, dtRaw)`
 
-Hook émis par editor_veMain à chaque frame de rendu : dessine les spots et points lumineux des props du véhicule si la fenêtre est ouverte.
+Hook emitted by editor_veMain every render frame: draws the spots and point lights of the vehicle's props if the window is open.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulation (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `menuEntry` | string | 'Lights Debug'. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawSphere`, `drawTextAdvanced`, `drawTriSolid`, `setSolidTriCulling`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veLightsDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veLightsDebug.lua`.*

@@ -1,0 +1,83 @@
+{
+  "path": "lua/ge/extensions/gameplay/util/crashDetection.lua",
+  "module": "Détecteur de collisions (« crashes ») pour des véhicules suivis. Il compare à chaque image les dégâts du véhicule (map.objects[id].damage et somme des dégâts de sections) à un seuil qui baisse quand la secousse (jerk d'accélération avant/arrière) augmente, regroupe les impacts proches en un crash, puis émet des hooks. Un moddeur ajoute un véhicule avec addTrackedVehicleById() et écoute onVehicleCrashStarted / onVehicleCrashEnded (utilisé notamment par les missions et le gameplay de dégâts). Dépend de gameplay_util_damageAssessment pour décrire les zones endommagées.",
+  "usage": "gameplay_util_crashDetection.addTrackedVehicleById(be:getPlayerVehicleID(0), {minDamage = 150, enableImpactLocationData = true}, \"monMod\")\nlocal function onVehicleCrashEnded(data) dump(data.totalDamage, data.vehId) end",
+  "notes": [
+    "Hooks émis : onVehicleCrashStarted({vehId, vehImpactPos, vehImpactSpeed}) au premier impact d'un crash ; onNewImpactStarted({newImpactData}) pour les impacts suivants du même crash ; onVehicleCrashEnded({impacts, sanitizedData = {touchedVehIds, initialImpactPos, initialImpactSpeed}, totalDamage, vehId}).",
+    "Constantes internes : seuil de dégâts par image 40, fin de crash après 1,8 s sans nouvel impact (ou vitesse < minVelocity), durée maximale d'un impact 0,3 s.",
+    "Valeurs par défaut de crashSettings : minAccel 0, maxAccel 100, minDamage 150, maxDamage 5000, verticallyUnweighted false, minVelocity 1, groupImpactsDist 1 (minimum 0,1), enableImpactLocationData false. La table passée en argument est modifiée sur place.",
+    "addTrackedVehicleById ne fait rien (sans log) si l'id est nil/négatif ou si le véhicule est absent de map.objects ou de l'arbre de scène ; il ne vérifie pas si le véhicule est déjà suivi et réinitialise alors ses données.",
+    "Le véhicule est retiré automatiquement de la liste s'il disparaît de map.objects ou sur onVehicleDestroyed.",
+    "Le mode debug (setDebug(true)) dessine des sphères/textes et ouvre une fenêtre ImGui de graphiques.",
+    "onSerialize/onDeserialized sérialisent toute la table trackedVehIds, y compris des pointeurs ImGui de debug."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{\"gameplay_util_damageAssessment\"}"}
+  },
+  "functions": {
+    "addTrackedVehicleById": {
+      "desc": "Commence à suivre un véhicule pour détecter ses crashes, avec des réglages de sensibilité optionnels.",
+      "params": {
+        "vehId_": {"type": "integer", "desc": "Id du véhicule."},
+        "crashSettings": {"type": "table|nil", "desc": "minAccel, maxAccel, minDamage, maxDamage, verticallyUnweighted, minVelocity (m/s), groupImpactsDist (m), enableImpactLocationData."},
+        "owner": {"type": "string|nil", "desc": "Nom de l'appelant, pour le debug (« unknown » par défaut)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "removeTrackedVehicleById": {
+      "desc": "Arrête de suivre un véhicule.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [],
+      "internal": false
+    },
+    "isVehCrashing": {
+      "desc": "Indique si un véhicule suivi est actuellement en crash.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [{"type": "boolean", "desc": "false si non suivi."}],
+      "internal": false
+    },
+    "isVehTracked": {
+      "desc": "Indique si le véhicule est dans la liste de suivi.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [{"type": "boolean", "desc": ""}],
+      "internal": false
+    },
+    "resetCrashData": {
+      "desc": "Réinitialise les données de crash, d'impact en cours et de pré-impact d'un véhicule suivi (sans le retirer).",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [],
+      "internal": false
+    },
+    "setDebug": {
+      "desc": "Active ou désactive le dessin de debug et la fenêtre ImGui.",
+      "params": {"_debug": {"type": "boolean", "desc": "true pour activer."}},
+      "returns": [],
+      "internal": false
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image : met à jour accélérations, détection d'impacts, fin de pré-impact/impact/crash pour chaque véhicule suivi ; supprime ceux qui n'existent plus.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s), inutilisé."}, "_dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé lors du rechargement des extensions Lua : renvoie l'état (véhicules suivis, debug).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{trackedVehIds, debug, debugDamageAssessmentUIPtr}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après rechargement : restaure l'état sérialisé.",
+      "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook appelé à la destruction d'un véhicule : le retire du suivi.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule détruit."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

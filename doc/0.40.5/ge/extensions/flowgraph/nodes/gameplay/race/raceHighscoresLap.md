@@ -1,29 +1,29 @@
 # `flowgraph_nodes_gameplay_race_raceHighscoresLap`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceHighscoresLap.lua` · VM : Game Engine (GE) · 111 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceHighscoresLap.lua` · VM: Game Engine (GE) · 111 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/race/raceHighscoresLap")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/race/raceHighscoresLap")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Race Highscores » (catégorie repeat_instant, tag scenario), variante « tour ». Identique à raceHighscoresComplete mais enregistre sous l'identifiant missionTypeData.trackName (sans préfixe « mission- »). Écrit le temps du dernier passage du véhicule dans core_highscores.setScenarioHighscoresCustom puis stocke {place, scores} dans state.raceComepleteHighscores. Entrées : flow, raceData, vehId ; sortie : flow.
+Flowgraph node "Race Highscores" (category repeat_instant, tag scenario), "lap" variant. Identical to raceHighscoresComplete but records under the identifier missionTypeData.trackName (without the "mission-" prefix). Writes the time of the vehicle's last pass in core_highscores.setScenarioHighscoresCustom then stores {place, scores} in state.raceComepleteHighscores. Inputs: flow, raceData, vehId; output: flow.
 
-## Remarques
+## Notes
 
-- S'exécute à chaque frame tant que flow est actif (print « Writing Highscores... » et écriture répétée) : ne lui donner du flux qu'une fois.
-- Nécessite self.mgr.activity.missionTypeData.trackName.
-- L'ancienne pin 'clear' est redirigée vers 'reset' (legacyPins), mais aucune pin reset n'est déclarée dans le pinSchema de ce fichier.
+- Runs every frame as long as flow is active (print "Writing Highscores..." and repeated writing): give it flow only once.
+- Requires self.mgr.activity.missionTypeData.trackName.
+- The old pin 'clear' is redirected to 'reset' (legacyPins), but no reset pin is declared in the pinSchema of this file.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Initialise self.markers à nil (non utilisé ensuite). | 29 |
-| `C:work()` | Recopie flow et enregistre le highscore du véhicule, puis stocke le résultat dans son état. | 49 |
+| `C:init()` | Initializes self.markers to nil (not used afterwards). | 29 |
+| `C:work()` | Copies flow and records the vehicle's highscore, then stores the result in its state. | 49 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceHighscoresLap.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceHighscoresLap.lua`.*

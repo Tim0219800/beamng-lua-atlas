@@ -1,41 +1,67 @@
 {
   "path": "lua/ge/extensions/gameplay/drag/dragTypes/headsUpRace.lua",
-  "module": "Type de course « heads-up » : départ simultané sans handicap, le meilleur temps du timer important gagne. Chargée par gameplay_drag_core quand dragType vaut 'headsUpRace'. Chaque frame, onUpdate fait avancer chaque racer local (updateRacer puis la fonction de phase de phaseHandlers : stage, countdown, race, stop, emergencyStop) et déclenche les changements de phase de groupe selon le mode (solo, hôte MP, client MP). startActivity met tous les dials à 0.",
+  "module": "\"Heads-up\" race type: simultaneous start with no handicap, the best time of the important timer wins. Loaded by gameplay_drag_core when dragType is 'headsUpRace'. Every frame, onUpdate advances each local racer (updateRacer then the phaseHandlers phase function: stage, countdown, race, stop, emergencyStop) and triggers the group phase changes according to the mode (solo, MP host, MP client). startActivity sets all dials to 0.",
   "notes": [
-    "Classement (generateWinData) : tri par temps croissant du timer important (getImportantTimerValueForWin) ; les disqualifiés sont derniers (joueurs d'abord, puis couloir, puis vehId).",
-    "Contrairement à bracketRace, startActivity force dial = 0 pour tous : pas de décalage de départ.",
-    "Les racers distants en MP (isLocalRacer == false) ne sont pas simulés localement ; en MP le passage staging vers décompte est géré par l'hôte (checkTimerDrift) via le réseau.",
-    "Une phase dont le nom ne correspond à aucune fonction de phaseHandlers produit une erreur de log et est ignorée.",
-    "L'activité se termine (dragData.isCompleted = true) quand tous les racers locaux sont finis."
+    "Ranking (generateWinData): sorted by ascending time of the important timer (getImportantTimerValueForWin); the disqualified come last (players first, then lane, then vehId).",
+    "Unlike bracketRace, startActivity forces dial = 0 for everyone: no start offset.",
+    "Remote racers in MP (isLocalRacer == false) are not simulated locally; in MP the transition from staging to countdown is handled by the host (checkTimerDrift) via the network.",
+    "A phase whose name matches no phaseHandlers function produces a log error and is ignored.",
+    "The activity ends (dragData.isCompleted = true) when all local racers are finished."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "gameplay_drag_core, gameplay_drag_phaseHandlers."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "gameplay_drag_core, gameplay_drag_phaseHandlers."
+    }
   },
   "functions": {
     "generateWinData": {
-      "desc": "Construit la liste classée des résultats : chaque entrée contient vehId, lane, time, isPlayable, disqualified. Le plus petit temps gagne, les disqualifiés sont derniers.",
-      "params": {"dragData": {"type": "table", "desc": "Données de course avec racers."}},
-      "returns": [{"type": "table[]", "desc": "Liste des résultats, {} si pas de racers."}]
+      "desc": "Builds the ranked list of results: each entry contains vehId, lane, time, isPlayable, disqualified. The smallest time wins, the disqualified come last.",
+      "params": {
+        "dragData": {
+          "type": "table",
+          "desc": "Race data with racers."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "List of results, {} if no racers."
+        }
+      ]
     },
     "onExtensionLoaded": {
-      "desc": "Hook de chargement : récupère les références vers core et phaseHandlers et remet l'activité à zéro.",
+      "desc": "Load hook: retrieves the references to core and phaseHandlers and resets the activity.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook par frame, actif uniquement quand l'activité est démarrée : simule les racers locaux, appelle la fonction de leur phase, change de phase quand elle est complétée (sans dépendance), marque la course terminée et gère l'avancement groupé des phases selon solo/hôte/client.",
-      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "desc": "Per-frame hook, active only when the activity is started: simulates the local racers, calls the function of their phase, changes phase when it is completed (without dependency), marks the race as finished and handles the grouped phase advancement according to solo/host/client.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw delta (s)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "resetDragRace": {
-      "desc": "Arrête l'activité (hasActivityStarted = false).",
+      "desc": "Stops the activity (hasActivityStarted = false).",
       "params": {},
       "returns": []
     },
     "startActivity": {
-      "desc": "Démarre l'activité : dragData.isStarted = true et fixe un délai de dial de 0 pour chaque racer (phaseHandlers.setDialsData). Appelée par core.startDragRaceActivity.",
+      "desc": "Starts the activity: dragData.isStarted = true and sets a dial delay of 0 for each racer (phaseHandlers.setDialsData). Called by core.startDragRaceActivity.",
       "params": {},
       "returns": []
     }

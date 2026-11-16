@@ -2,99 +2,99 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Suiveur renvoyé par le constructeur du module.
+--- Tracker returned by the module constructor.
 ---@class gameplay_rally_driveline_rallyRouteTracker
 local gameplay_rally_driveline_rallyRouteTracker = {}
 
---- Accepte ou refuse une projection selon les sauts maximaux vers l'avant/arrière par rapport à la distance courante (toujours acceptée si allowJump ou premier calcul).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:202
----@param projection table|nil Projection candidate.
----@param allowJump boolean|nil true pour ignorer les limites.
----@return boolean  true si acceptée.
+--- Accepts or rejects a projection according to the maximum forward/backward jumps relative to the current distance (always accepted if allowJump or first computation).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:202
+---@param projection table|nil Candidate projection.
+---@param allowJump boolean|nil true to ignore the limits.
+---@return boolean  true if accepted.
 function gameplay_rally_driveline_rallyRouteTracker:_acceptProjection(projection, allowJump) end
 
---- Diagnostic : renvoie la fenêtre de segments examinée par la projection locale ({firstIdx, lastIdx}) ou {fullSearch=true}.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:238
----@param segmentIdx integer|nil Segment précédent.
----@param forceFullSearch boolean|nil Recherche complète.
----@return table  Fenêtre.
+--- Diagnostic: returns the segment window examined by the local projection ({firstIdx, lastIdx}) or {fullSearch=true}.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:238
+---@param segmentIdx integer|nil Previous segment.
+---@param forceFullSearch boolean|nil Full search.
+---@return table  Window.
 function gameplay_rally_driveline_rallyRouteTracker:_computeDebugWindow(segmentIdx, forceFullSearch) end
 
---- Enregistre le point de sortie de route (distToTarget, routePos, vehiclePos, lateralDist, segmentIdx) au passage en 'offRoute' et fixe la distance de récupération.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:220
----@param pos vec3 Position du véhicule.
----@param projection table Projection courante.
+--- Records the route exit point (distToTarget, routePos, vehiclePos, lateralDist, segmentIdx) on switching to 'offRoute' and sets the recovery distance.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:220
+---@param pos vec3 Vehicle position.
+---@param projection table Current projection.
 function gameplay_rally_driveline_rallyRouteTracker:_snapshotDeparture(pos, projection) end
 
---- Mémorise le dernier point récupérable (distToTarget et position sur la route) et calcule recoveryDistToTarget = distToTarget + recul, plafonné au début de la route.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:212
----@param pos vec3 Position du véhicule.
----@param projection table Projection courante.
+--- Stores the last recoverable point (distToTarget and position on the route) and computes recoveryDistToTarget = distToTarget + backoff, capped at the start of the route.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:212
+---@param pos vec3 Vehicle position.
+---@param projection table Current projection.
 function gameplay_rally_driveline_rallyRouteTracker:_updateRecoveryCandidate(pos, projection) end
 
---- Demi-largeur actuelle du corridor.
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:186
----@return number  Mètres.
+--- Current half-width of the corridor.
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:186
+---@return number  Meters.
 function gameplay_rally_driveline_rallyRouteTracker:getCorridorWidth() end
 
---- Table d'options en cours (partagée, pas une copie).
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:190
+--- Current options table (shared, not a copy).
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:190
 ---@return table  Options.
 function gameplay_rally_driveline_rallyRouteTracker:getOptions() end
 
---- Distance restante jusqu'à l'arrivée où replacer le véhicule : point de départ de la sortie de route (si hors route) ou dernier point récupérable, plus un recul, plafonné au début de la route.
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:334
----@param backoffDistance number|nil Recul en mètres (3 m par défaut).
----@return number|nil  distToTarget de récupération.
+--- Remaining distance to the finish at which to reposition the vehicle: starting point of the route exit (if off the route) or last recoverable point, plus a backoff, capped at the start of the route.
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:334
+---@param backoffDistance number|nil Backoff in meters (3 m by default).
+---@return number|nil  Recovery distToTarget.
 function gameplay_rally_driveline_rallyRouteTracker:getRecoveryDistToTarget(backoffDistance) end
 
---- Instantané de l'état du suiveur : state, segmentIdx, xnorm, distToTarget, distFromStart, routePos, lateralDist, offRouteDistance, onRouteDistance, lastRecoverable*, recoveryDistToTarget, departure, projectionSource ('local', 'full', 'held'), localCandidate, fullCandidate, window, searchBehind, searchAhead.
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:347
----@return table  État.
+--- Snapshot of the tracker state: state, segmentIdx, xnorm, distToTarget, distFromStart, routePos, lateralDist, offRouteDistance, onRouteDistance, lastRecoverable*, recoveryDistToTarget, departure, projectionSource ('local', 'full', 'held'), localCandidate, fullCandidate, window, searchBehind, searchAhead.
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:347
+---@return table  State.
 function gameplay_rally_driveline_rallyRouteTracker:getState() end
 
---- Mémorise la route, fusionne les options avec les valeurs par défaut et réinitialise l'état.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:134
----@param path table[] Points de la route statique.
----@param options table|nil Options remplaçant les défauts.
+--- Stores the route, merges the options with the default values and resets the state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:134
+---@param path table[] Points of the static route.
+---@param options table|nil Options overriding the defaults.
 function gameplay_rally_driveline_rallyRouteTracker:init(path, options) end
 
---- Projette une position sur la route sans modifier l'état : recherche complète si options.forceFullSearch, sinon locale autour du segment courant.
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:194
+--- Projects a position onto the route without changing state: full search if options.forceFullSearch, otherwise local around the current segment.
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:194
 ---@param pos vec3 Position.
 ---@param options table|nil {forceFullSearch = boolean}.
 ---@return table|nil  {segmentIdx, xnorm, distSq, lateralDist, distToTarget, routePos}.
 function gameplay_rally_driveline_rallyRouteTracker:project(pos, options) end
 
---- Remet à zéro l'état de suivi. Si une position est donnée, fait immédiatement un update avec recherche complète et saut autorisé.
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:142
----@param pos vec3|nil Position initiale.
+--- Resets the tracking state. If a position is given, immediately performs an update with full search and jump allowed.
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:142
+---@param pos vec3|nil Initial position.
 function gameplay_rally_driveline_rallyRouteTracker:reset(pos) end
 
---- Règle la demi-largeur du corridor (offRouteDistance, bornée à [0,1 ; 15] m) et le seuil de retour (onRouteDistance = offRouteDistance - 0,1).
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:178
----@param width number Demi-largeur en mètres.
+--- Sets the corridor half-width (offRouteDistance, clamped to [0.1; 15] m) and the return threshold (onRouteDistance = offRouteDistance - 0.1).
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:178
+---@param width number Half-width in meters.
 function gameplay_rally_driveline_rallyRouteTracker:setCorridorWidth(width) end
 
---- Active la capture de diagnostic (calcul d'une projection complète supplémentaire à chaque update).
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:169
----@param enabled boolean true pour activer.
+--- Enables diagnostic capture (computes an additional full projection on each update).
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:169
+---@param enabled boolean true to enable.
 function gameplay_rally_driveline_rallyRouteTracker:setDebugCapture(enabled) end
 
---- Remplace la route suivie et réinitialise l'état.
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:173
----@param path table[] Nouveaux points.
+--- Replaces the tracked route and resets the state.
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:173
+---@param path table[] New points.
 function gameplay_rally_driveline_rallyRouteTracker:setPath(path) end
 
---- Met à jour le suivi avec la position du véhicule : projection (locale puis complète si besoin), mise à jour de segmentIdx, xnorm, distToTarget, distFromStart, routePos, lateralDist, puis de l'état onRoute/offRoute avec hystérésis. Renvoie la projection retenue (ou la dernière si la nouvelle est refusée).
----Source : lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:249
----@param pos vec3 Position du véhicule.
+--- Updates tracking with the vehicle position: projection (local then full if needed), update of segmentIdx, xnorm, distToTarget, distFromStart, routePos, lateralDist, then of the onRoute/offRoute state with hysteresis. Returns the retained projection (or the last one if the new one is rejected).
+---Source: lua/ge/extensions/gameplay/rally/driveline/rallyRouteTracker.lua:249
+---@param pos vec3 Vehicle position.
 ---@param updateOptions table|nil {allowJump, forceFullSearch}.
----@return table|nil  Projection, nil si pos est nil ou projection impossible.
+---@return table|nil  Projection, nil if pos is nil or projection impossible.
 function gameplay_rally_driveline_rallyRouteTracker:update(pos, updateOptions) end
 

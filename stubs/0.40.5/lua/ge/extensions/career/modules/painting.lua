@@ -2,80 +2,80 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/painting.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Atelier de peinture de la carrière, accessible depuis l'ordinateur du garage. Il prépare la scène (entre dans le véhicule, le fige, caméra orbitale, blocage des actions walkingMode et bigMap), envoie à l'UI les couleurs d'origine, les prix et les classes de peinture, applique en direct les peintures choisies (setPaints), puis facture et enregistre (apply) ou annule (close/cleanup). Les données restent dans l'inventaire du véhicule (config.paints et partConditions).
---- Accès : extension `career_modules_painting` : `extensions.load("career_modules_painting")`, puis la globale `career_modules_painting`
+--- Career paint shop, accessible from the garage computer. It prepares the scene (enters the vehicle, freezes it, orbital camera, blocks the walkingMode and bigMap actions), sends the original colors, prices and paint classes to the UI, applies the chosen paints live (setPaints), then charges and saves (apply) or cancels (close/cleanup). Data stays in the vehicle's inventory entry (config.paints and partConditions).
+--- Access: extension `career_modules_painting`: `extensions.load("career_modules_painting")`, then the global `career_modules_painting`
 ---@class career_modules_painting
----@field dependencies table<integer, string> Extensions chargées avant : career_career, gameplay_achievement.
+---@field dependencies table<integer, string> Extensions loaded before: career_career, gameplay_achievement.
 career_modules_painting = {}
 
---- Valide la sélection : vérifie et paie le prix total (tags vehiclePainting, buying), joue le son d'achat, enregistre les peintures dans le véhicule d'inventaire, débloque VEHICLE_MODIFIED, ferme le mode et lance la sauvegarde du véhicule. Ne fait rien si le joueur ne peut pas payer.
----Source : lua/ge/extensions/career/modules/painting.lua:186
+--- Confirms the selection: checks and pays the total price (tags vehiclePainting, buying), plays the purchase sound, saves the paints into the inventory vehicle, unlocks VEHICLE_MODIFIED, closes the mode and starts the vehicle save. Does nothing if the player cannot pay.
+---Source: lua/ge/extensions/career/modules/painting.lua:186
 function career_modules_painting.apply() end
 
---- Restaure l'état du véhicule (réapparition depuis l'inventaire), de la caméra, du mode marche et des entrées. Ne navigue pas (le routeur UI s'en charge) ; sans effet si la peinture n'est pas active.
----Source : lua/ge/extensions/career/modules/painting.lua:128
+--- Restores the state of the vehicle (respawn from the inventory), camera, walking mode and inputs. Does not navigate (the UI router handles it); no effect if painting is not active.
+---Source: lua/ge/extensions/career/modules/painting.lua:128
 function career_modules_painting.cleanup() end
 
---- Quitte le mode peinture (cleanup) puis rouvre le menu de l'ordinateur ou ferme les menus ; si autosauvegarde active et _closeMenuAfterSaving vrai, la fermeture du menu attend onVehicleSaveFinished.
----Source : lua/ge/extensions/career/modules/painting.lua:153
----@param _closeMenuAfterSaving boolean|nil Attendre la fin de la sauvegarde avant de fermer le menu.
+--- Leaves paint mode (cleanup) then reopens the computer menu or closes the menus; if autosave is active and _closeMenuAfterSaving is true, closing the menu waits for onVehicleSaveFinished.
+---Source: lua/ge/extensions/career/modules/painting.lua:153
+---@param _closeMenuAfterSaving boolean|nil Wait for the save to finish before closing the menu.
 function career_modules_painting.close(_closeMenuAfterSaving) end
 
---- Renvoie les peintures d'usine du modèle du véhicule en cours de peinture.
----Source : lua/ge/extensions/career/modules/painting.lua:282
----@return table  Peintures du modèle ({} si aucune).
+--- Returns the factory paints of the model of the vehicle being painted.
+---Source: lua/ge/extensions/career/modules/painting.lua:282
+---@return table  Model paints ({} if none).
 function career_modules_painting.getFactoryPaint() end
 
---- Renvoie les données envoyées à l'UI : colors (peintures d'origine de la pièce « body » ou de la première pièce peinte), prices et colorClassData.
----Source : lua/ge/extensions/career/modules/painting.lua:75
----@return {colors: table|nil, prices: table, colorClassData: table}  Données de peinture.
+--- Returns the data sent to the UI: colors (original paints of the "body" part or of the first painted part), prices and colorClassData.
+---Source: lua/ge/extensions/career/modules/painting.lua:75
+---@return {colors: table|nil, prices: table, colorClassData: table}  Paint data.
 function career_modules_painting.getPaintData() end
 
---- Renvoie la peinture d'apprêt grise (baseColor {0.58, 0.58, 0.585}, roughness 0.475, clearcoat 0).
----Source : lua/ge/extensions/career/modules/painting.lua:45
----@return table  Table de peinture.
+--- Returns the gray primer paint (baseColor {0.58, 0.58, 0.585}, roughness 0.475, clearcoat 0).
+---Source: lua/ge/extensions/career/modules/painting.lua:45
+---@return table  Paint table.
 function career_modules_painting.getPrimerColor() end
 
---- Hook de l'ordinateur : ajoute la fonction « peinture » (ordre 15) pour chaque véhicule présent dans le garage, avec les raisons de désactivation éventuelles.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/painting.lua:215
----@param menuData table Données du menu (computerFacility, vehiclesInGarage, hasBoughtStarterVehicle).
----@param computerFunctions table Fonctions de l'ordinateur à compléter (vehicleSpecific[inventoryId]).
+--- Computer hook: adds the "painting" function _anon(order 15) for each vehicle present in the garage, with any disabling reasons.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/painting.lua:215
+---@param menuData table Menu data (computerFacility, vehiclesInGarage, hasBoughtStarterVehicle).
+---@param computerFunctions table Computer functions to fill (vehicleSpecific[inventoryId]).
 function career_modules_painting.onComputerAddFunctions(menuData, computerFunctions) end
 
---- Cycle de vie du routeur UI : renvoie les données de peinture une fois la vue montée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/painting.lua:296
----@param context any Contexte du routeur.
----@param toRoute any Route cible.
----@param fromRoute any Route précédente.
+--- UI router lifecycle: sends the paint data once the view is mounted.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/painting.lua:296
+---@param context any Router context.
+---@param toRoute any Target route.
+---@param fromRoute any Previous route.
 ---@param data table routeData.
 function career_modules_painting.onRouteMount(context, toRoute, fromRoute, data) end
 
---- Hook appelé à l'ouverture de l'UI : entre dans le véhicule (avec un délai d'une frame), le fige, règle la caméra orbitale (rotation 145, -15) et décale le cadrage ; émet onVehiclePaintingUiOpened.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/painting.lua:300
+--- Hook called when the UI opens: enters the vehicle (with a one-frame delay), freezes it, sets the orbital camera (rotation 145, -15) and offsets the framing; emits onVehiclePaintingUiOpened.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/painting.lua:300
 function career_modules_painting.onUIOpened() end
 
---- Hook appelé quand la sauvegarde du véhicule est terminée : ferme le menu si close() l'avait demandé.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/painting.lua:165
+--- Hook called when the vehicle save is finished: closes the menu if close() requested it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/painting.lua:165
 function career_modules_painting.onVehicleSaveFinished() end
 
---- Envoie à l'UI les données de peinture et la peinture d'usine (guihooks paintingData) si la peinture est active.
----Source : lua/ge/extensions/career/modules/painting.lua:288
+--- Sends the paint data and the factory paint to the UI (guihooks paintingData) if painting is active.
+---Source: lua/ge/extensions/career/modules/painting.lua:288
 function career_modules_painting.sendPaintingDataToUI() end
 
---- Enregistre le choix du joueur, envoie le prix du panier à l'UI (sendPaintingShoppingCartData) et applique les peintures au véhicule (toutes les pièces, ou seulement partName).
----Source : lua/ge/extensions/career/modules/painting.lua:258
----@param paints table[] Jusqu'à 3 peintures.
----@param paintOptions table[] Options par peinture (paintClass, clearCoat, clearCoatPolish) servant au calcul du prix.
----@param partName string|nil Pièce visée ; toutes les pièces si nil.
+--- Records the player's choice, sends the cart price to the UI (sendPaintingShoppingCartData) and applies the paints to the vehicle (all parts, or only partName).
+---Source: lua/ge/extensions/career/modules/painting.lua:258
+---@param paints table[] Up to 3 paints.
+---@param paintOptions table[] Per-paint options (paintClass, clearCoat, clearCoatPolish) used for the price calculation.
+---@param partName string|nil Target part; all parts if nil.
 function career_modules_painting.setPaints(paints, paintOptions, partName) end
 
---- Ouvre le mode peinture pour un véhicule de l'inventaire (celui du garage le plus proche si inventoryId est nil). Ne fait rien si le véhicule n'est pas apparu dans le monde. Passe d'abord par une réparation d'assurance si nécessaire.
----Source : lua/ge/extensions/career/modules/painting.lua:105
----@param _inventoryId integer|nil Id d'inventaire du véhicule.
----@param _originComputerId string|nil Id de l'ordinateur d'origine ; si fourni, navigue vers career.computer.painting.
+--- Opens paint mode for an inventory vehicle (the nearest garage one if inventoryId is nil). Does nothing if the vehicle has not spawned in the world. Goes through an insurance repair first if needed.
+---Source: lua/ge/extensions/career/modules/painting.lua:105
+---@param _inventoryId integer|nil Inventory id of the vehicle.
+---@param _originComputerId string|nil Id of the originating computer; if provided, navigates to career.computer.painting.
 function career_modules_painting.start(_inventoryId, _originComputerId) end
 

@@ -1,164 +1,164 @@
 # `career_modules_vehiclePerformance`
 
-*Fichier : `lua/ge/extensions/career/modules/vehiclePerformance.lua` · VM : Game Engine (GE) · 654 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/vehiclePerformance.lua` · VM: Game Engine (GE) · 654 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_vehiclePerformance` : `extensions.load("career_modules_vehiclePerformance")`, puis la globale `career_modules_vehiclePerformance`
+**Access:** extension `career_modules_vehiclePerformance`: `extensions.load("career_modules_vehiclePerformance")`, then the global `career_modules_vehiclePerformance`
 
-Certification de performance (« indice de performance ») des véhicules de la carrière, depuis l'ordinateur du garage. startDragTest enchaîne, avec util_stepHandler, un test de drag sur la piste alderStrip (west_coast_usa) enregistré (puissance, temps 0-60, 60 ft, 330 ft, 1/8, 1000 ft, 1/4 de mile, vitesses, freinage), puis un test de skidpad de 10 tours piloté par l'IA (accélération latérale). Les données sont stockées dans vehicle.certificationData, l'historique (10 entrées max) dans performanceHistory, puis converties en scores et classe par gameplay_vehiclePerformance. Gère aussi les caméras de test, le blocage d'actions pendant le test et l'annulation (utilisateur, véhicule bloqué, moteur cassé).
+Performance certification ("performance index") of career vehicles, from the garage computer. startDragTest chains, with util_stepHandler, a recorded drag test on the alderStrip track (west_coast_usa) (power, 0-60 time, 60 ft, 330 ft, 1/8, 1000 ft, 1/4 mile, speeds, braking), then an AI-driven 10-lap skidpad test (lateral acceleration). The data is stored in vehicle.certificationData, the history (10 entries max) in performanceHistory, then converted to scores and class by gameplay_vehiclePerformance. Also handles the test cameras, action blocking during the test and cancellation (user, stuck vehicle, broken engine).
 
-## Remarques
+## Notes
 
-- Pendant le test, les autres véhicules d'inventaire sont désactivés et le trafic dispersé ; le véhicule est rempli de carburant ; un groupe d'actions bloquées certificationBlockedActions est activé (menu radial, grande carte, marche, reset physique, nodegrabber, déclencheurs, mode de boîte).
-- Le test est annulé si le véhicule bouge de moins de 0,1 m pendant 7 s (considéré bloqué) ou si le moteur subit un sur-couple catastrophique / se bloque (annulation après 3 s).
-- cancelTest(delay, userAborted) : delay = secondes d'attente (temps réel) avant de passer à la dernière étape ; userAborted ~= false et test en cours émet le hook onGameplayActivityAborted.
-- invalidateCertification déplace l'ancienne certification dans l'historique et la supprime ; l'achat de tuning l'appelle.
-- Le temps 0-60 mph est calculé en observant la vitesse (26,8224 m/s) pendant la course, en retranchant le temps de réaction.
-- addScoresToPerformanceData débloque les succès PERFOMANCE_INDEX (orthographe du code) et, pour la classe X, HIGH_END_PERFORMANCE ; le test complet débloque PERFORMANCE_INDEXED.
-- Le hook onVehicleDamaged est appelé par un callback d'injection Lua côté véhicule (damageTracker.registerDamageUpdateCallback) qui sérialise les données.
-- Dans getAggregateScoresFromVehId et getVehicleClass, le retour est nil si le véhicule n'a pas de certificationData.
+- During the test, the other inventory vehicles are deactivated and traffic dispersed; the vehicle is filled with fuel; a group of blocked actions certificationBlockedActions is activated (radial menu, big map, walking, physics reset, nodegrabber, triggers, gearbox mode).
+- The test is cancelled if the vehicle moves less than 0.1 m for 7 s (considered stuck) or if the engine suffers catastrophic overtorque / locks up (cancellation after 3 s).
+- cancelTest(delay, userAborted): delay = seconds to wait (real time) before going to the last step; userAborted ~= false and a test in progress emits the onGameplayActivityAborted hook.
+- invalidateCertification moves the old certification into the history and deletes it; the tuning purchase calls it.
+- The 0-60 mph time is computed by observing the speed (26.8224 m/s) during the run, subtracting the reaction time.
+- addScoresToPerformanceData unlocks the PERFOMANCE_INDEX achievements (spelling from the code) and, for class X, HIGH_END_PERFORMANCE; the full test unlocks PERFORMANCE_INDEXED.
+- The onVehicleDamaged hook is called by a Lua injection callback on the vehicle side (damageTracker.registerDamageUpdateCallback) that serializes the data.
+- In getAggregateScoresFromVehId and getVehicleClass, the return is nil if the vehicle has no certificationData.
 
-**Dépendances (chargées avant) :** `ui_vehicleSelector_vehicleSpecifications`
+**Dependencies (loaded first):** `ui_vehicleSelector_vehicleSpecifications`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_vehiclePerformance.addScoresToPerformanceData(performanceData)` | Ajoute à un bloc de données les champs performanceAggregateScores et vehicleClass et débloque les succès associés. | 537 |
-| `career_modules_vehiclePerformance.cancelTest(delay, userAborted)` | Demande l'annulation du test en cours et arrête le zoom caméra et le test de skidpad. | 546 |
-| `career_modules_vehiclePerformance.getActiveVehicleUiData()` | Données UI du véhicule actif (career_modules_inventory.getVehicleUiData). | 616 |
-| `career_modules_vehiclePerformance.getAggregateScoresFromVehId(inventoryId)` | Retourne les scores agrégés (gameplay_vehiclePerformance.getAggregateScores) d'après la certification d'un véhicule. | 509 |
-| `career_modules_vehiclePerformance.getVehicleClass(inventoryId)` | Retourne la classe de performance d'un véhicule (gameplay_vehiclePerformance.getClassFromData). | 516 |
-| `career_modules_vehiclePerformance.invalidateCertification(inventoryId)` | Archive la certification actuelle d'un véhicule dans son historique puis la supprime (appelée après un changement de pièces ou de tuning). | 56 |
-| `career_modules_vehiclePerformance.isTestInProgress()` | Indique si un test de certification est en cours. | 637 |
-| `career_modules_vehiclePerformance.onBeamNGTrigger(data)` | Hook de triggers : change la trajectoire de caméra (drag_pi_2 à 5) à l'entrée des triggers dragStageTrigger, drag60ftTrigger, dragTestTrigger2/3, et passe à la caméra externe à la sortie de dragEndCamTrigger. Ne traite que le véhicule du test. *(interne)* *(hook)* | 555 |
-| `career_modules_vehiclePerformance.onComputerAddFunctions(menuData, computerFunctions)` | Hook de l'ordinateur du garage : ajoute le bouton « indice de performance » pour chaque véhicule du garage (désactivé tant que le véhicule de départ n'est pas acheté). *(interne)* *(hook)* | 588 |
-| `career_modules_vehiclePerformance.onDragCountdownStarted(vehId, dial)` | Hook de drag : 1 s après le début du compte à rebours, passe à la caméra de départ (derrière le véhicule). *(interne)* *(hook)* | 580 |
-| `career_modules_vehiclePerformance.onRouteMount(context, toRoute, fromRoute, data)` | Hook du routeur d'UI : attache les données du véhicule actif à data.vehicleData lors du montage de la route. *(interne)* *(hook)* | 623 |
-| `career_modules_vehiclePerformance.onUpdate(dtReal)` | Hook de mise à jour : met à jour le zoom de la caméra de freinage. *(interne)* *(hook)* | 75 |
-| `career_modules_vehiclePerformance.onVehicleDamaged(damageData, damageDataDelta)` | Appelé depuis le véhicule via un callback de damageTracker : annule le test après 3 s en cas de sur-couple catastrophique ou de moteur bloqué. *(interne)* *(hook)* | 627 |
-| `career_modules_vehiclePerformance.openMenu(options)` | Définit le véhicule actif et navigue vers l'écran career.computer.vehiclePerformance. | 611 |
-| `career_modules_vehiclePerformance.startDragTest()` | Lance le test de certification complet sur le véhicule actif (activeInventoryId) : fondu au noir, apparition du véhicule, test de drag enregistré, puis skidpad (10 tours), sauvegarde des résultats, remise en garage et retour à l'écran de performance. Si la sauvegarde automatique est active, sauvegarde la carrière à la fin. | 116 |
-| `career_modules_vehiclePerformance.translatePerformanceDataForUi(performanceData)` | Traduit en place les champs drivetrain, fuelType, inductionType d'un bloc de données de performance pour l'affichage. | 523 |
+| `career_modules_vehiclePerformance.addScoresToPerformanceData(performanceData)` | Adds the performanceAggregateScores and vehicleClass fields to a data block and unlocks the associated achievements. | 537 |
+| `career_modules_vehiclePerformance.cancelTest(delay, userAborted)` | Requests cancellation of the current test and stops the camera zoom and the skidpad test. | 546 |
+| `career_modules_vehiclePerformance.getActiveVehicleUiData()` | UI data of the active vehicle (career_modules_inventory.getVehicleUiData). | 616 |
+| `career_modules_vehiclePerformance.getAggregateScoresFromVehId(inventoryId)` | Returns the aggregate scores (gameplay_vehiclePerformance.getAggregateScores) from a vehicle's certification. | 509 |
+| `career_modules_vehiclePerformance.getVehicleClass(inventoryId)` | Returns a vehicle's performance class (gameplay_vehiclePerformance.getClassFromData). | 516 |
+| `career_modules_vehiclePerformance.invalidateCertification(inventoryId)` | Archives a vehicle's current certification into its history then deletes it (called after a parts or tuning change). | 56 |
+| `career_modules_vehiclePerformance.isTestInProgress()` | Indicates whether a certification test is in progress. | 637 |
+| `career_modules_vehiclePerformance.onBeamNGTrigger(data)` | Triggers hook: changes the camera path (drag_pi_2 to 5) on entering the dragStageTrigger, drag60ftTrigger, dragTestTrigger2/3 triggers, and switches to the external camera on exiting dragEndCamTrigger. Only handles the test vehicle. *(internal)* *(hook)* | 555 |
+| `career_modules_vehiclePerformance.onComputerAddFunctions(menuData, computerFunctions)` | Garage computer hook: adds the "performance index" button for each garage vehicle (disabled until the starter vehicle is bought). *(internal)* *(hook)* | 588 |
+| `career_modules_vehiclePerformance.onDragCountdownStarted(vehId, dial)` | Drag hook: 1 s after the countdown starts, switches to the start camera (behind the vehicle). *(internal)* *(hook)* | 580 |
+| `career_modules_vehiclePerformance.onRouteMount(context, toRoute, fromRoute, data)` | UI router hook: attaches the active vehicle's data to data.vehicleData when the route is mounted. *(internal)* *(hook)* | 623 |
+| `career_modules_vehiclePerformance.onUpdate(dtReal)` | Update hook: updates the braking camera zoom. *(internal)* *(hook)* | 75 |
+| `career_modules_vehiclePerformance.onVehicleDamaged(damageData, damageDataDelta)` | Called from the vehicle via a damageTracker callback: cancels the test after 3 s in case of catastrophic overtorque or a locked engine. *(internal)* *(hook)* | 627 |
+| `career_modules_vehiclePerformance.openMenu(options)` | Sets the active vehicle and navigates to the career.computer.vehiclePerformance screen. | 611 |
+| `career_modules_vehiclePerformance.startDragTest()` | Starts the full certification test on the active vehicle (activeInventoryId): fade to black, vehicle spawn, recorded drag test, then skidpad (10 laps), saving of the results, return to the garage and return to the performance screen. If autosave is active, saves the career at the end. | 116 |
+| `career_modules_vehiclePerformance.translatePerformanceDataForUi(performanceData)` | Translates in place the drivetrain, fuelType, inductionType fields of a performance data block for display. | 523 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_vehiclePerformance.addScoresToPerformanceData(performanceData)`
 
-Ajoute à un bloc de données les champs performanceAggregateScores et vehicleClass et débloque les succès associés.
+Adds the performanceAggregateScores and vehicleClass fields to a data block and unlocks the associated achievements.
 
-- `performanceData` (*table*) : Données de performance (modifiées en place).
+- `performanceData` (*table*) : Performance data (modified in place).
 
 #### `career_modules_vehiclePerformance.cancelTest(delay, userAborted)`
 
-Demande l'annulation du test en cours et arrête le zoom caméra et le test de skidpad.
+Requests cancellation of the current test and stops the camera zoom and the skidpad test.
 
-- `delay` (*number|nil*) : Délai en secondes avant l'arrêt effectif, 0 par défaut.
-- `userAborted` (*boolean|nil*) : false si l'annulation est automatique (pas de hook onGameplayActivityAborted).
+- `delay` (*number|nil*) : Delay in seconds before the actual stop, 0 by default.
+- `userAborted` (*boolean|nil*) : false if the cancellation is automatic (no onGameplayActivityAborted hook).
 
 #### `career_modules_vehiclePerformance.getActiveVehicleUiData()`
 
-Données UI du véhicule actif (career_modules_inventory.getVehicleUiData).
+UI data of the active vehicle (career_modules_inventory.getVehicleUiData).
 
-- **renvoie** : table|nil Données UI, nil si aucun véhicule actif.
+- **returns**: table|nil UI data, nil if no active vehicle.
 
 #### `career_modules_vehiclePerformance.getAggregateScoresFromVehId(inventoryId)`
 
-Retourne les scores agrégés (gameplay_vehiclePerformance.getAggregateScores) d'après la certification d'un véhicule.
+Returns the aggregate scores (gameplay_vehiclePerformance.getAggregateScores) from a vehicle's certification.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- **renvoie** : table|nil Scores, ou nil sans certification.
+- `inventoryId` (*integer*) : Inventory id.
+- **returns**: table|nil Scores, or nil without certification.
 
 #### `career_modules_vehiclePerformance.getVehicleClass(inventoryId)`
 
-Retourne la classe de performance d'un véhicule (gameplay_vehiclePerformance.getClassFromData).
+Returns a vehicle's performance class (gameplay_vehiclePerformance.getClassFromData).
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- **renvoie** : table|nil Classe, ou nil sans certification.
+- `inventoryId` (*integer*) : Inventory id.
+- **returns**: table|nil Class, or nil without certification.
 
 #### `career_modules_vehiclePerformance.invalidateCertification(inventoryId)`
 
-Archive la certification actuelle d'un véhicule dans son historique puis la supprime (appelée après un changement de pièces ou de tuning).
+Archives a vehicle's current certification into its history then deletes it (called after a parts or tuning change).
 
-- `inventoryId` (*integer*) : Id d'inventaire.
+- `inventoryId` (*integer*) : Inventory id.
 
 #### `career_modules_vehiclePerformance.isTestInProgress()`
 
-Indique si un test de certification est en cours.
+Indicates whether a certification test is in progress.
 
-- **renvoie** : boolean|nil true pendant le test, nil sinon.
+- **returns**: boolean|nil true during the test, nil otherwise.
 
 #### `career_modules_vehiclePerformance.onBeamNGTrigger(data)`
 
-Hook de triggers : change la trajectoire de caméra (drag_pi_2 à 5) à l'entrée des triggers dragStageTrigger, drag60ftTrigger, dragTestTrigger2/3, et passe à la caméra externe à la sortie de dragEndCamTrigger. Ne traite que le véhicule du test.
+Triggers hook: changes the camera path (drag_pi_2 to 5) on entering the dragStageTrigger, drag60ftTrigger, dragTestTrigger2/3 triggers, and switches to the external camera on exiting dragEndCamTrigger. Only handles the test vehicle.
 
 - `data` (*table*) : {triggerName, event ("enter"|"exit"), subjectID}.
 
 #### `career_modules_vehiclePerformance.onComputerAddFunctions(menuData, computerFunctions)`
 
-Hook de l'ordinateur du garage : ajoute le bouton « indice de performance » pour chaque véhicule du garage (désactivé tant que le véhicule de départ n'est pas acheté).
+Garage computer hook: adds the "performance index" button for each garage vehicle (disabled until the starter vehicle is bought).
 
-- `menuData` (*table*) : Données du menu.
-- `computerFunctions` (*table*) : Table à remplir.
+- `menuData` (*table*) : Menu data.
+- `computerFunctions` (*table*) : Table to fill.
 
 #### `career_modules_vehiclePerformance.onDragCountdownStarted(vehId, dial)`
 
-Hook de drag : 1 s après le début du compte à rebours, passe à la caméra de départ (derrière le véhicule).
+Drag hook: 1 s after the countdown starts, switches to the start camera (behind the vehicle).
 
-- `vehId` (*integer*) : Id du véhicule.
-- `dial` (*any*) : Valeur de dial (non utilisée).
+- `vehId` (*integer*) : Vehicle id.
+- `dial` (*any*) : Dial value (unused).
 
 #### `career_modules_vehiclePerformance.onRouteMount(context, toRoute, fromRoute, data)`
 
-Hook du routeur d'UI : attache les données du véhicule actif à data.vehicleData lors du montage de la route.
+UI router hook: attaches the active vehicle's data to data.vehicleData when the route is mounted.
 
-- `context` (*any*) : Contexte du routeur.
-- `toRoute` (*any*) : Route cible.
-- `fromRoute` (*any*) : Route d'origine.
-- `data` (*table*) : Table de données de la route (reçoit vehicleData).
+- `context` (*any*) : Router context.
+- `toRoute` (*any*) : Target route.
+- `fromRoute` (*any*) : Origin route.
+- `data` (*table*) : Route data table (receives vehicleData).
 
 #### `career_modules_vehiclePerformance.onUpdate(dtReal)`
 
-Hook de mise à jour : met à jour le zoom de la caméra de freinage.
+Update hook: updates the braking camera zoom.
 
-- `dtReal` (*number*) : Delta temps réel (s).
+- `dtReal` (*number*) : Real time delta (s).
 
 #### `career_modules_vehiclePerformance.onVehicleDamaged(damageData, damageDataDelta)`
 
-Appelé depuis le véhicule via un callback de damageTracker : annule le test après 3 s en cas de sur-couple catastrophique ou de moteur bloqué.
+Called from the vehicle via a damageTracker callback: cancels the test after 3 s in case of catastrophic overtorque or a locked engine.
 
-- `damageData` (*table*) : Données de dégâts.
-- `damageDataDelta` (*table*) : Variation des dégâts (champ engine).
+- `damageData` (*table*) : Damage data.
+- `damageDataDelta` (*table*) : Damage change (engine field).
 
 #### `career_modules_vehiclePerformance.openMenu(options)`
 
-Définit le véhicule actif et navigue vers l'écran career.computer.vehiclePerformance.
+Sets the active vehicle and navigates to the career.computer.vehiclePerformance screen.
 
 - `options` (*table*) : {inventoryId = integer}.
 
 #### `career_modules_vehiclePerformance.translatePerformanceDataForUi(performanceData)`
 
-Traduit en place les champs drivetrain, fuelType, inductionType d'un bloc de données de performance pour l'affichage.
+Translates in place the drivetrain, fuelType, inductionType fields of a performance data block for display.
 
-- `performanceData` (*table|nil*) : Données de performance (modifiées en place).
+- `performanceData` (*table|nil*) : Performance data (modified in place).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {"ui_vehicleSelector_vehicleSpecifications"}. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onGameplayActivityAborted`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectOOBBHalfAxisXYZ`
 - `scenetree.` `findObject`
 
-**Charge les extensions :** `gameplay_drag_dragTypes_headsUpRace`, `util_stepHandler`
+**Loads extensions:** `gameplay_drag_dragTypes_headsUpRace`, `util_stepHandler`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/vehiclePerformance.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/vehiclePerformance.lua`.*

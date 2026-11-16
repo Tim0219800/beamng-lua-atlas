@@ -1,35 +1,76 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/skeleton.lua",
-  "module": "Suite d'utilitaires pour squelettiser et vectoriser des masques binaires. La fonction principale getPathsFromPng convertit un PNG en masque, le squelettise (algorithme Guo-Hall), détecte extrémités et jonctions, extrait les chemins, estime les largeurs, puis simplifie par RDP (tolérance 6.0). Sert aux outils de splines pour transformer une image de routes en polylignes.",
+  "module": "Suite of utilities to skeletonize and vectorize binary masks. The main function getPathsFromPng converts a PNG into a mask, skeletonizes it (Guo-Hall algorithm), detects endpoints and junctions, extracts the paths, estimates widths, then simplifies by RDP (tolerance 6.0). Used by spline tools to turn an image of roads into polylines.",
   "usage": "local sk = extensions.editor_toolUtilities_skeleton\nlocal paths = sk.getPathsFromPng('/levels/x/roads.png')\nfor _, p in ipairs(paths or {}) do print(#p.points, #p.widths) end",
   "notes": [
-    "Le seuil par défaut de conversion bitmap -> masque est 0.5 ; la RDP utilise 6.0 de tolérance (constantes en tête du fichier).",
-    "Pipeline de getPathsFromPng : retournement vertical du bitmap, dilatation du masque (rayon 3), squelettisation, chemins de moins de 20 points écartés, fragments proches (40) rejoints, largeurs estimées sur le masque non dilaté, puis effilement, lissage et plafond de largeur aux extrémités (15.0).",
-    "Les points sont des vec3 en coordonnées pixel du masque (2D, déduit du code)."
+    "The default bitmap -> mask conversion threshold is 0.5; the RDP uses a tolerance of 6.0 (constants at the top of the file).",
+    "Pipeline of getPathsFromPng: vertical flip of the bitmap, mask dilation (radius 3), skeletonization, paths of fewer than 20 points discarded, nearby fragments (40) joined, widths estimated on the undilated mask, then tapering, smoothing and width cap at the ends (15.0).",
+    "The points are vec3 in mask pixel coordinates (2D, inferred from the code)."
   ],
   "functions": {
     "skeletonise": {
-      "desc": "Squelettise un masque avec l'algorithme Guo-Hall, en alternant deux passes jusqu'à stabilité. Le masque est modifié en place puis renvoyé.",
-      "params": {"mask": {"type": "table", "desc": "Masque 2D (lignes de 0 ou 1)."}},
-      "returns": [{"type": "table", "desc": "Le même masque, squelettisé."}]
+      "desc": "Skeletonizes a mask with the Guo-Hall algorithm, alternating two passes until stable. The mask is modified in place then returned.",
+      "params": {
+        "mask": {
+          "type": "table",
+          "desc": "2D mask (rows of 0 or 1)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The same mask, skeletonized."
+        }
+      ]
     },
     "extractPaths": {
-      "desc": "Extrait tous les chemins d'un masque déjà squelettisé.",
-      "params": {"mask": {"type": "table", "desc": "Masque squelettisé."}},
-      "returns": [{"type": "table", "desc": "Liste de chemins (déduit du code)."}]
+      "desc": "Extracts all paths from an already skeletonized mask.",
+      "params": {
+        "mask": {
+          "type": "table",
+          "desc": "Skeletonized mask."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of paths (inferred from the code)."
+        }
+      ]
     },
     "estimateWidths": {
-      "desc": "Estime la largeur le long de chaque chemin à partir du masque issu du PNG d'origine (utilise les tangentes locales).",
+      "desc": "Estimates the width along each path from the mask derived from the original PNG (uses local tangents).",
       "params": {
-        "paths": {"type": "table", "desc": "Chemins extraits."},
-        "mask": {"type": "table", "desc": "Masque d'origine, non squelettisé."}
+        "paths": {
+          "type": "table",
+          "desc": "Extracted paths."
+        },
+        "mask": {
+          "type": "table",
+          "desc": "Original mask, not skeletonized."
+        }
       },
-      "returns": [{"type": "table", "desc": "Largeurs, une liste par chemin (déduit du code)."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Widths, one list per path (inferred from code)."
+        }
+      ]
     },
     "getPathsFromPng": {
-      "desc": "Convertit un PNG en masque squelettisé et le vectorise en polylignes. Renvoie nil (avec une erreur loggée) si le fichier ne se charge pas ou si la conversion échoue.",
-      "params": {"filepath": {"type": "string", "desc": "Chemin d'un PNG d'un format supporté."}},
-      "returns": [{"type": "table<integer, {points: vec3[], widths: number[]}>|nil", "desc": "Un élément par chemin : points (2D en vec3) et widths correspondantes."}]
+      "desc": "Converts a PNG into a skeletonized mask and vectorizes it into polylines. Returns nil (with a logged error) if the file fails to load or the conversion fails.",
+      "params": {
+        "filepath": {
+          "type": "string",
+          "desc": "Path of a PNG in a supported format."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, {points: vec3[], widths: number[]}>|nil",
+          "desc": "One element per path: points (2D as vec3) and matching widths."
+        }
+      ]
     }
   }
 }

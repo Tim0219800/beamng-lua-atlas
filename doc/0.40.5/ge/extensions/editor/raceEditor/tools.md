@@ -1,47 +1,47 @@
 # `editor_raceEditor_tools`
 
-*Fichier : `lua/ge/extensions/editor/raceEditor/tools.lua` · VM : Game Engine (GE) · 346 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/raceEditor/tools.lua` · VM: Game Engine (GE) · 346 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/raceEditor/tools")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/raceEditor/tools")` (file under extensions/ but not a regular extension)
 
-Sous-fenêtre « Tools » de l'éditeur de course (raceEditor). Section « Side Decorators » : génère des décorations (TSStatic .dae ou prefab) de part et d'autre des pathnodes, avec décalages de position/rotation/échelle et mode d'alignement (terrain, pathnode, absolute), aperçu en lignes colorées et boutons Create / Replace / Remove (groupe SimGroup « <nom>_decoration » dans MissionGroup). Section « Pathnode Tools » : poser tous les nœuds au sol, aligner les normales sur le terrain, fixer tous les rayons, supprimer les BeamNGWaypoint redondants, aligner sur la grille, supprimer tous les segments. Section « Debug Tools » : ouvrir la fenêtre de test et dumps de chemin/autoConfig. Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/tools')(raceEditor).
+"Tools" sub-window of the race editor (raceEditor). "Side Decorators" section: generates decorations (TSStatic .dae or prefab) on both sides of the pathnodes, with position/rotation/scale offsets and alignment mode (terrain, pathnode, absolute), colored line preview and Create / Replace / Remove buttons ("<name>_decoration" SimGroup in MissionGroup). "Pathnode Tools" section: drop all nodes to the ground, align normals to the terrain, set all radii, remove redundant BeamNGWaypoints, align to grid, delete all segments. "Debug Tools" section: open the test window and path/autoConfig dumps. The module returns a constructor: require('/lua/ge/extensions/editor/raceEditor/tools')(raceEditor).
 
-## Remarques
+## Notes
 
-- Valeurs initiales : décalage de position (0, 0, 0.2), rotation (0, 15, 0) en degrés (convertis en radians), échelle (1, 1, 1), mode d'alignement « terrain ».
-- Forme par défaut gauche et droite : art/shapes/race/sign_checkpoint.dae.
-- Bug probable : « Drop All Pathnodes to Terrain Height » écrit via changeFieldMulti('pos', ...) un nombre (hauteur du terrain) dans le champ pos des nœuds, qui est un vec3 ; seul z devrait changer.
-- Bug : setFieldsUndo parcourt oldDataMap avec ipairs alors que les clés sont des IDs de nœuds (table creuse) ; l'annulation ne restaure alors que les IDs consécutifs à partir de 1.
-- Bug : C:selector utilise la variable « value » (non définie) et appelle self:changeField qui n'existe pas dans ce fichier ; la méthode n'est pas appelée par le module.
-- « Align All Pathnodes to Grid », « Remove Redundant BeamNGWaypoints » et « Remove All Segments » modifient directement sans passer par l'historique (non annulables).
-- Le mode de la forme gauche vaut « unknown » et celui de droite « none » si l'extension n'est ni dae ni prefab ; dans ce cas aucune décoration n'est créée pour ce côté (createDecoration ne gère que 'dae' et 'prefab').
+- Initial values: position offset (0, 0, 0.2), rotation (0, 15, 0) in degrees (converted to radians), scale (1, 1, 1), alignment mode "terrain".
+- Default shape for left and right: art/shapes/race/sign_checkpoint.dae.
+- Probable bug: "Drop All Pathnodes to Terrain Height" writes via changeFieldMulti('pos', ...) a number (terrain height) into the nodes' pos field, which is a vec3; only z should change.
+- Bug: setFieldsUndo iterates oldDataMap with ipairs while the keys are node IDs (sparse table); undo therefore only restores consecutive IDs starting from 1.
+- Bug: C:selector uses the variable "value" (undefined) and calls self:changeField which does not exist in this file; the method is not called by the module.
+- "Align All Pathnodes to Grid", "Remove Redundant BeamNGWaypoints" and "Remove All Segments" modify directly without going through the history (not undoable).
+- The left shape's mode is "unknown" and the right one's is "none" if the extension is neither dae nor prefab; in that case no decoration is created for that side (createDecoration only handles 'dae' and 'prefab').
 
-## Classe `C`
+## Class `C`
 
-Fenêtre Tools (windowDescription = 'Tools'). Instanciée avec init(raceEditor).
+Tools window (windowDescription = 'Tools'). Instantiated with init(raceEditor).
 
-Le module renvoie un constructeur : `local obj = require("editor_raceEditor_tools")(options)`.
+The module returns a constructor: `local obj = require("editor_raceEditor_tools")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:changeFieldMulti(field, newDataMap)` | Modifie le même champ de plusieurs pathnodes en une seule action d'historique (valeurs anciennes mémorisées pour l'annulation). | 113 |
-| `C:createDecoration(transforms)` | Crée un SimGroup « <nom du chemin>_decoration » (suffixe numérique si le nom existe déjà) dans MissionGroup et y place un objet par transformée : TSStatic pour un .dae, prefab (spawnPrefab) pour un .prefab / .prefab.json, selon le côté (l/r). Mémorise le groupe comme dernier groupe créé. | 42 |
-| `C:displayClassification(classification, name, field, tt)` | Affiche une ligne « nom » avec icône coche ou croix selon classification[field]. | 298 |
-| `C:draw()` | Appelé à chaque frame : dessine l'interface des outils. | 38 |
-| `C:drawGeneralInfo()` | Dessine tout le contenu : décorations latérales, outils sur les pathnodes et outils de debug. | 129 |
-| `C:existsIcon(f)` | Affiche une icône coche si le fichier existe (FS:fileExists), sinon une icône d'erreur, avec infobulle du chemin. | 92 |
-| `C:getSideTransformParameters()` | Renvoie les paramètres de décoration latérale saisis dans la fenêtre, à passer à pathnode:getSideTransforms. | 123 |
-| `C:init(raceEditor)` | Mémorise raceEditor et initialise les décalages de position, rotation et échelle des décorations. | 19 |
-| `C:selected()` | Appelé quand l'onglet devient actif ; ne fait rien. | 35 |
-| `C:selector(name, objects, fieldName, clrI, tt)` | Liste déroulante de sélection d'un objet du chemin pour un champ (voir notes : non fonctionnelle et inutilisée ici). | 311 |
-| `C:setPath(path)` | Définit le chemin de course édité. | 32 |
-| `C:unselect()` | Appelé quand l'onglet est quitté ; ne fait rien. | 36 |
+| `C:changeFieldMulti(field, newDataMap)` | Modifies the same field of several pathnodes in a single history action (old values stored for undo). | 113 |
+| `C:createDecoration(transforms)` | Creates a "<path name>_decoration" SimGroup (numeric suffix if the name already exists) in MissionGroup and places one object per transform in it: TSStatic for a .dae, prefab (spawnPrefab) for a .prefab / .prefab.json, depending on the side (l/r). Remembers the group as the last created group. | 42 |
+| `C:displayClassification(classification, name, field, tt)` | Displays a "name" line with a check or cross icon depending on classification[field]. | 298 |
+| `C:draw()` | Called every frame: draws the tools UI. | 38 |
+| `C:drawGeneralInfo()` | Draws all the content: side decorations, pathnode tools and debug tools. | 129 |
+| `C:existsIcon(f)` | Displays a check icon if the file exists (FS:fileExists), otherwise an error icon, with a path tooltip. | 92 |
+| `C:getSideTransformParameters()` | Returns the side decoration parameters entered in the window, to pass to pathnode:getSideTransforms. | 123 |
+| `C:init(raceEditor)` | Stores raceEditor and initializes the decoration position, rotation and scale offsets. | 19 |
+| `C:selected()` | Called when the tab becomes active; does nothing. | 35 |
+| `C:selector(name, objects, fieldName, clrI, tt)` | Dropdown to select a path object for a field (see notes: non-functional and unused here). | 311 |
+| `C:setPath(path)` | Sets the race path being edited. | 32 |
+| `C:unselect()` | Called when the tab is left; does nothing. | 36 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 - `debugDrawer:` `drawLine`, `drawTextAdvanced`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/raceEditor/tools.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/raceEditor/tools.lua`.*

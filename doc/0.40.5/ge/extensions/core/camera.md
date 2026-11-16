@@ -1,806 +1,806 @@
 # `core_camera`
 
-*Fichier : `lua/ge/extensions/core/camera.lua` · VM : Game Engine (GE) · 2220 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/camera.lua` · VM: Game Engine (GE) · 2220 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_camera` : `extensions.load("core_camera")`, puis la globale `core_camera`
+**Access:** extension `core_camera`: `extensions.load("core_camera")`, then the global `core_camera`
 
-Extension GE (core_camera, dépend de core_vehicle_manager et core_environment) : gestionnaire central de toutes les caméras du jeu. Elle charge les modes de caméra du dossier lua/ge/extensions/core/cameraModes (un fichier par mode), crée pour chaque véhicule une instance de chaque mode (configurée par la section jbeam 'camera') et gère des instances 'globales' (free, observer, path, bigMap...) qui existent une seule fois sans véhicule. Elle décide quelle caméra est active (par joueur), gère la configuration utilisateur (ordre et activation des caméras, menu Options > Caméras, sauvegardée dans les réglages cameraConfig et freeCameraConfig), le cycle des caméras (touches), les transitions, et expose la position/orientation/FOV finaux. Le calcul par frame est dans core/cameraUpdate.lua, les entrées dans core/cameraInput.lua (ré-exposées ici). Un moddeur s'en sert pour lire la position de la caméra, changer de caméra par nom, piloter la caméra libre ou créer des vues supplémentaires (contextes).
+GE extension (core_camera, depends on core_vehicle_manager and core_environment): central manager of all the game's cameras. It loads the camera modes from the lua/ge/extensions/core/cameraModes folder (one file per mode), creates for each vehicle an instance of each mode (configured by the jbeam 'camera' section) and manages 'global' instances (free, observer, path, bigMap...) that exist once without a vehicle. It decides which camera is active (per player), handles the user configuration (camera order and activation, Options > Cameras menu, saved in the cameraConfig and freeCameraConfig settings), camera cycling (keys), transitions, and exposes the final position/orientation/FOV. The per-frame computation is in core/cameraUpdate.lua, the inputs in core/cameraInput.lua (re-exposed here). A modder uses it to read the camera position, change camera by name, drive the free camera or create extra views (contexts).
 
-## Exemple
+## Example
 
 ```lua
 local pos = core_camera.getPosition()
 local fwd = core_camera.getForward()
-core_camera.setByName(0, 'orbit', true)          -- caméra de véhicule du joueur 0
-core_camera.setByName('free')                    -- caméra globale
-core_camera.setPosition(0, vec3(0,0,100))        -- seulement en caméra libre
+core_camera.setByName(0, 'orbit', true)          -- vehicle camera of player 0
+core_camera.setByName('free')                    -- global camera
+core_camera.setPosition(0, vec3(0,0,100))        -- only in free camera
 ```
 
-## Remarques
+## Notes
 
-- Choix de la caméra active : si ctx.activeGlobalCameraName est défini (caméra globale, ex. 'free', 'observer', 'bigMap'), c'est elle qui est utilisée ; sinon c'est la caméra 'focusedCamName' du véhicule du joueur (parmi vdata.cameras, ordre de la liste 'configuration').
-- Contextes : une vue = un contexte. 'main' est la vue du joueur (RenderView 'main') ; createContext ajoute des vues supplémentaires (écran partagé, flux vidéo). Presque toutes les fonctions get*(ctxId) prennent un identifiant de contexte (nil = main).
-- Les fonctions adressées par véhicule (setRotation, setFOV, setOffset, setRef, setRefNodes, setTargetMode, setDistance, setMaxDistance, setDefaultDistance, setDefaultRotation, setSkipFovModifier, resetCameraByID, setup) agissent toujours sur la vue principale et appellent la méthode du même nom sur la caméra globale active ou la caméra focalisée du véhicule ; si cette caméra n'a pas la méthode, rien ne se passe.
-- Les fonctions adressées par joueur (setPosition, clearMotion, clearAngularMotion, setSmoothedCam, setNewtonRotation, setNewtonTranslation, resetCamera, hotkey) agissent sur la vue du joueur (pid) ; setPosition ne positionne la caméra que si la caméra globale 'free' est active.
-- Configuration des caméras : liste par défaut {orbit, driver, onboard.hood, external, relative, chase, droneChase}, remplacée par le réglage utilisateur cameraConfig si sa version >= 2 ; les autres caméras du véhicule sont ajoutées à la suite (triées par le champ order), les caméras 'occupant.*' sont insérées avant 'onboard.hood'. Un mode peut avoir disabledByDefault = true.
-- Les types de mode 'onboard' et 'occupant' sont 'multicam' : le jbeam peut définir plusieurs entrées, nommées '<mode>.<nom>' (ex. 'onboard.driver', 'occupant.xxx'). Le mode 'driver' hérité est un alias du constructeur 'occupant' (constructorsCache.driver).
-- Les modes marqués isFilter (autopoint, autozoom, bobbing...) ne deviennent jamais des caméras sélectionnables : ils sont créés mais ignorés par initCam ; d'autres modes les instancient pour traiter leur propre résultat.
-- Cache : l'ajout ou la suppression d'un fichier dans cameraModes (onFileChanged) invalide les constructeurs et les caches de tous les contextes (rechargement à chaud).
-- Incohérence : M.objectTeleported est affecté depuis la globale objectTeleported définie dans utils.lua (marqué obsolète dans le code : utiliser directement objectTeleported). L'index automatique signale à tort cette référence comme non définie.
-- Incohérence : setVehicleCameraByNameWithId utilise la variable `player` (inexistante dans la fonction, donc nil) dans son message d'erreur.
-- Incohérence : getCameraUnicycleZoom est local et non exporté (seuls setCameraUnicycleZoom et unicycleZoomToggle le sont), contrairement à getCameraDriverZoom.
-- L'extension remplace la globale MoveManager par sa propre table d'entrées (newMove) et la repointe vers la vue en cours de mise à jour à chaque frame.
+- Choice of the active camera: if ctx.activeGlobalCameraName is set (global camera, e.g. 'free', 'observer', 'bigMap'), it is used; otherwise it is the player's vehicle camera 'focusedCamName' (among vdata.cameras, in the order of the 'configuration' list).
+- Contexts: one view = one context. 'main' is the player's view (RenderView 'main'); createContext adds extra views (split screen, video streams). Almost all get*(ctxId) functions take a context identifier (nil = main).
+- Per-vehicle functions (setRotation, setFOV, setOffset, setRef, setRefNodes, setTargetMode, setDistance, setMaxDistance, setDefaultDistance, setDefaultRotation, setSkipFovModifier, resetCameraByID, setup) always act on the main view and call the method of the same name on the active global camera or the vehicle's focused camera; if that camera lacks the method, nothing happens.
+- Per-player functions (setPosition, clearMotion, clearAngularMotion, setSmoothedCam, setNewtonRotation, setNewtonTranslation, resetCamera, hotkey) act on the player's view (pid); setPosition only positions the camera if the 'free' global camera is active.
+- Camera configuration: default list {orbit, driver, onboard.hood, external, relative, chase, droneChase}, replaced by the user setting cameraConfig if its version >= 2; the vehicle's other cameras are appended (sorted by the order field), 'occupant.*' cameras are inserted before 'onboard.hood'. A mode can have disabledByDefault = true.
+- The 'onboard' and 'occupant' mode types are 'multicam': the jbeam can define several entries, named '<mode>.<name>' (e.g. 'onboard.driver', 'occupant.xxx'). The legacy 'driver' mode is an alias of the 'occupant' constructor (constructorsCache.driver).
+- Modes marked isFilter (autopoint, autozoom, bobbing...) never become selectable cameras: they are created but ignored by initCam; other modes instantiate them to process their own result.
+- Cache: adding or removing a file in cameraModes (onFileChanged) invalidates the constructors and the caches of all contexts (hot reload).
+- Inconsistency: M.objectTeleported is assigned from the global objectTeleported defined in utils.lua (marked deprecated in the code: use objectTeleported directly). The automatic index wrongly reports this reference as undefined.
+- Inconsistency: setVehicleCameraByNameWithId uses the variable `player` (nonexistent in the function, so nil) in its error message.
+- Inconsistency: getCameraUnicycleZoom is local and not exported (only setCameraUnicycleZoom and unicycleZoomToggle are), unlike getCameraDriverZoom.
+- The extension replaces the global MoveManager with its own input table (newMove) and re-points it to the view being updated every frame.
 
-**Dépendances (chargées avant) :** `core_vehicle_manager`, `core_environment`
+**Dependencies (loaded first):** `core_vehicle_manager`, `core_environment`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_camera.changeFreeCameraOrder(camId, offset)` | Déplace une caméra libre dans la configuration des caméras 'world' et sauvegarde (réglage freeCameraConfig). | 622 |
-| `core_camera.changeOrder(camId, offset)` | Déplace la caméra d'indice camId de offset positions dans la liste de configuration (en sautant les caméras cachées), puis sauvegarde. | 586 |
-| `core_camera.changeSpeed(val)` | Multiplie ou divise la vitesse de la caméra de la vue principale par (1 + 0.2*\|val\|) selon le signe, bornée entre 2 et 100, et affiche un message. Ignorée si le zoom caméra est désactivé dans l'éditeur. | 1879 |
-| `core_camera.clearAngularMotion(pid)` | Annule le mouvement angulaire de la caméra du joueur. | 1447 |
-| `core_camera.clearInputs(mm)` | Remet à zéro les entrées de rotation et de zoom (roulis, tangage, lacet, zoom) d'une structure MoveManager. Utilisé par d'autres scripts GE. | 574 |
-| `core_camera.clearMotion(pid)` | Annule le mouvement (vitesse) de la caméra du joueur (cam:clearMotion). | 1443 |
-| `core_camera.createContext(id, renderView, player, vehiclePlayer)` | Crée (ou met à jour) un contexte de caméra supplémentaire = une sortie caméra avec sa propre RenderView, réutilisant tous les modes de caméra. L'identifiant 'main' (ou nil) renvoie le contexte principal. Le rendu cible (résolution, texture) est géré par l'appelant. vehiclePlayer permet à la vue d'afficher le véhicule d'un autre siège alors que player ne fait que fournir l'entrée. | 1908 |
-| `core_camera.cycleCameraGroup(player)` | Passe au groupe de caméras suivant (caméras de jeu, puis caméras libres 'world', puis retour), entre dans la première caméra du groupe, émet onCameraToggled et affiche le nom. | 693 |
-| `core_camera.destroyContext(id)` | Détruit un contexte supplémentaire (jamais le principal) et vide le cache des caméras du contexte principal. | 1923 |
-| `core_camera.displayCameraNameUI(player)` | Envoie à l'UI (app Messages) le nom de la caméra courante avec le nombre d'options et l'indice courant. Ne fait rien pour une unicycle (marche à pied). | 412 |
-| `core_camera.driverZoomToggle(player)` | Bascule le zoom de la caméra conducteur entre 0 et 1. | 1803 |
-| `core_camera.exitCinematicCamera()` | Compatibilité : quitte la caméra globale (setGlobalCameraByName(nil)). | 2096 |
-| `core_camera.getActiveCamName(player)` | Nom de la caméra active du joueur : caméra globale si active, sinon caméra de véhicule (ou celle demandée en attente). nil si le joueur n'a pas de véhicule. | 939 |
-| `core_camera.getActiveCamNameByVehId(vehId)` | Nom de la caméra focalisée d'un véhicule (vue principale). | 958 |
-| `core_camera.getActiveGlobalCameraName(player)` | Nom de la caméra globale active pour le joueur, nil si c'est une caméra de véhicule. | 1893 |
-| `core_camera.getCameraDataById(vid, ctxId)` | Renvoie les instances de caméras d'un véhicule. | 899 |
-| `core_camera.getCameraDriverZoom(player)` | Zoom actuel de la caméra conducteur. | 1799 |
-| `core_camera.getCameraGroups(ctx)` | Liste triée des noms de groupes de caméras ayant au moins une caméra utilisable. | 304 |
-| `core_camera.getConfigurationReadOnly()` | Copie profonde de la liste de configuration des caméras de véhicule ({name, enabled}). | 382 |
-| `core_camera.getContextCameraParams(id)` | Réglages ajustables de la caméra active d'un contexte, pour l'UI de contrôle de caméra / flux vidéo. Chaque mode fournit sa liste via listParams ; descripteurs {key, title, kind ('range'\|'bool'\|'choice'\|'slots'), type ('float'\|'int'\|'bool'\|'enum'), value, icon, default, min, max, step, unit, options}. | 2023 |
-| `core_camera.getContextCameraState(id)` | Instantané léger et sérialisable (JSON) de la caméra d'un contexte : nom, pose monde (pos, rot, fov) et état propre du mode (data, via cam:serialize) pour pouvoir la restaurer. | 1983 |
-| `core_camera.getContextIdForPlayer(player)` | Identifiant de la vue par laquelle regarde ce joueur, utilisable avec les getters get*(ctxId). nil = vue principale. | 1942 |
-| `core_camera.getContextIds()` | Liste des identifiants de contextes ('main' en premier). | 1935 |
-| `core_camera.getDriverCameraNameById(vehId, ctxId)` | Nom de la caméra conducteur : 'driver' (si 'onboard.driver' existe) ou le nom d'une caméra 'occupant.*' en mode permission 'driver'. | 923 |
-| `core_camera.getDriverData(veh, ctxId)` | Comme getDriverDataById à partir d'un objet véhicule. | 935 |
-| `core_camera.getDriverDataById(vehId, ctxId)` | Données de la caméra conducteur d'un véhicule. | 927 |
-| `core_camera.getForward(ctxId)` | Vecteur 'avant' de la caméra (axe y tourné par l'orientation). | 1833 |
-| `core_camera.getForwardXYZ(ctxId)` | Vecteur avant en composantes séparées (utilise un vec3 interne réutilisé). | 1840 |
-| `core_camera.getFovDeg(ctxId)` | Champ de vision final en degrés. | 1871 |
-| `core_camera.getFovRad(ctxId)` | Champ de vision final en radians. | 1875 |
-| `core_camera.getFreeCameraConfigurationReadOnly()` | Copie profonde de la configuration (ordre, activation) des caméras libres du groupe 'world'. | 386 |
-| `core_camera.getGlobalCameras(ctx)` | Renvoie la table nom -> instance des caméras globales (une fois par contexte, créées à la demande à partir des constructeurs où cam.isGlobal est vrai). | 199 |
-| `core_camera.getGroupCams(ctx, groupName, includeDisabled)` | Liste des noms de caméras d'un groupe (ex. 'world'), dans l'ordre configuré. Les caméras 'world' désactivées sont omises sauf si includeDisabled est vrai (elles restent visibles dans les options mais sont sautées lors du cycle). | 277 |
-| `core_camera.getLookBack()` | Etat 'regard vers l'arrière' de la vue principale. | 1783 |
-| `core_camera.getPosition(ctxId)` | Position finale de la caméra (copie). | 1812 |
-| `core_camera.getPositionXYZ(ctxId)` | Position finale en composantes séparées (évite l'allocation). | 1816 |
-| `core_camera.getQuat(ctxId)` | Orientation finale de la caméra (copie). | 1846 |
-| `core_camera.getQuatXYZW(ctxId)` | Orientation en composantes séparées. | 1866 |
-| `core_camera.getRight(ctxId)` | Vecteur 'droite' de la caméra (axe x tourné par l'orientation). | 1827 |
-| `core_camera.getSpeed(ctxId)` | Vitesse de déplacement de la caméra libre d'un contexte (30 par défaut). | 1774 |
-| `core_camera.getUp(ctxId)` | Vecteur 'haut' de la caméra (axe z tourné par l'orientation). | 1821 |
-| `core_camera.getYawPitchRoll()` | Lacet, tangage et roulis de la caméra principale en une seule fois. | 1851 |
-| `core_camera.globalCameraFunction(globalCameraName, functionName, ...)` | Appelle la méthode functionName d'une caméra globale nommée. Loggue une erreur si la caméra ou la méthode n'existe pas. | 1463 |
-| `core_camera.hotkey(player, hotkeyid, modifier)` | Transmet une touche de raccourci à la caméra active (méthode hotkey du mode). | 1546 |
-| `core_camera.isCameraInside(player, camPos)` | Teste si une position de caméra est à l'intérieur du véhicule du joueur (dans sa boîte orientée et à moins de 0,6 m d'un point de vue 'inside' d'une caméra). | 881 |
-| `core_camera.isWorldCamera(player)` | Teste si la caméra active du joueur appartient au groupe 'world' (caméras libres). | 1973 |
-| `core_camera.nextCameraGroup(groups, active)` | Calcule le groupe suivant dans l'anneau de cycle : caméras de jeu (active = nil) vers le premier groupe, entre groupes, puis du dernier groupe vers les caméras de jeu (nil). active = false (caméra système) renvoie nil. | 324 |
-| `core_camera.notifyUI(vdata, forcedCamName)` | Prévient l'UI et les extensions du changement de caméra : guihooks 'onCameraNameChanged', hook onCameraModeChanged, puis mise à jour du menu d'options. | 557 |
-| `core_camera.onCameraToggled(data)` | Hook (émis par cycleCameraGroup, setCameraByNameFromOptions) : réaffiche le nom de la caméra du joueur 0. *(interne)* *(hook)* | 488 |
-| `core_camera.onClientEndMission()` | Hook appelé à la fin du niveau : détache la caméra de la RenderView 'main' pour éviter une référence morte. *(interne)* *(hook)* | 1749 |
-| `core_camera.onClientPostStartMission()` | Hook appelé après le démarrage du niveau : délégué à core/cameraUpdate.lua. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `core_camera.onDeserialized(data)` | Hook de restauration après rechargement Lua (fusionne l'état sérialisé dans les caméras existantes). *(interne)* *(hook)* | 1694 |
-| `core_camera.onDespawnObject(vid, isReloading)` | Hook appelé à la suppression d'un objet : retire ses données caméra si ce n'est pas un rechargement. *(interne)* *(hook)* | 1582 |
-| `core_camera.onFileChanged(filePath, changeType)` | Hook appelé quand un fichier change : l'ajout/suppression d'un fichier de cameraModes invalide les caches (rechargement à chaud). *(interne)* *(hook)* | 1743 |
-| `core_camera.onMouseLocked(locked)` | Hook appelé quand la souris est verrouillée/déverrouillée : transmis à la caméra active (mouseLocked), sauf en caméra libre. *(interne)* *(hook)* | 1576 |
-| `core_camera.onPreRender(...)` | Hook appelé juste avant le rendu : met à jour la caméra (cameraUpdate.onPreRender), puis affiche le nom de caméra en attente après un changement de véhicule. *(interne)* *(hook)* | 1655 |
-| `core_camera.onReplayStateChanged(newState)` | Hook appelé quand l'état du replay change : à la sortie d'une lecture ('playback' vers 'inactive'), vide le cache des caméras de véhicules (les véhicules supprimés par le replay seraient sinon perdus). *(interne)* *(hook)* | 2203 |
-| `core_camera.onScenarioChange(...)` | Hook appelé quand l'état du scénario change : propagé aux caméras ; si un trigger était en attente et que le scénario passe à 'running', il est rejoué. *(interne)* *(hook)* | 1632 |
-| `core_camera.onScenarioRestarted(...)` | Hook appelé au redémarrage d'un scénario : propagé à toutes les caméras. *(interne)* *(hook)* | 1628 |
-| `core_camera.onSerialize()` | Hook de sérialisation avant rechargement Lua : sérialise les caméras globales et de véhicules, la caméra globale active, le dernier véhicule, le trigger en attente et les demandes de caméra. *(interne)* *(hook)* | 1663 |
-| `core_camera.onSettingsChanged(...)` | Hook appelé quand les réglages changent : applique le lissage de la caméra libre et propage onSettingsChanged à toutes les caméras. *(interne)* *(hook)* | 1610 |
-| `core_camera.onTrigger(trigger)` | Hook appelé par les triggers BeamNG : si le sujet est le véhicule du joueur (ou le triggerOverride), 'enter' avec cameraOnEnter bascule sur la caméra globale 'observer' pointant cet objet caméra, et 'exit' avec cameraOnLeave la quitte. Pendant le démarrage d'un scénario, la demande est mise en attente jusqu'à l'état 'running'. *(interne)* *(hook)* | 1481 |
-| `core_camera.onVehicleDestroyed(vid)` | Hook appelé quand un véhicule est détruit : retire ses données caméra de tous les contextes. *(interne)* *(hook)* | 177 |
-| `core_camera.onVehicleReplaced(vid)` | Hook appelé quand un véhicule est remplacé (nouvelle config) : recrée ses caméras. *(interne)* *(hook)* | 169 |
-| `core_camera.onVehicleResetted(vid, ...)` | Hook appelé quand un véhicule est réinitialisé : propage aux caméras du véhicule et réinitialise la caméra focalisée sauf si resetCameraOnVehicleReset vaut false ou si une caméra globale est active. *(interne)* *(hook)* | 1563 |
-| `core_camera.onVehicleSpawned(vid)` | Hook appelé à la création d'un véhicule : crée ses données caméra dans chaque contexte. *(interne)* *(hook)* | 161 |
-| `core_camera.onVehicleSwitched(oldId, newId, player)` | Hook appelé quand le joueur change de véhicule : lance une transition (hors caméra globale), propage aux caméras et programme l'affichage du nom. Ignore les joueurs autres que 0. *(interne)* *(hook)* | 1644 |
-| `core_camera.processVehicleCameraConfigChanged(vid, vdata, focusedCamNamePrevious, ctx)` | (Re)crée les instances de caméras d'un véhicule d'après ses données jbeam (cameraData), met à jour la configuration partagée (ordre, activation, sauvegardée par le contexte principal), puis choisit la caméra : demande en attente, sinon caméra précédente, sinon première caméra activée et visible, sinon première existante. Renvoie false si les données du véhicule ne sont pas encore disponibles. | 1021 |
-| `core_camera.proxy_Player(fct, ...)` | Appelle la méthode fct sur la caméra active du joueur 0 (globale ou focalisée). | 1476 |
-| `core_camera.requestConfig(forcedCamName)` | Demande l'envoi de la configuration actuelle au menu Options > Caméras (guihooks CameraConfigChanged). | 568 |
-| `core_camera.resetCamera(player)` | Remet à zéro les entrées de la vue du joueur, émet le hook onCameraReset et appelle reset() sur la caméra active. | 1540 |
-| `core_camera.resetCameraByID(vid, ...)` | Appelle reset() sur la caméra (globale active ou focalisée du véhicule) de la vue principale. | 1359 |
-| `core_camera.resetConfiguration()` | Efface les réglages cameraConfig et freeCameraConfig et recalcule la configuration pour tous les véhicules. | 1617 |
-| `core_camera.setByName(...)` | Sélectionne une caméra par nom. Signature souple : setByName(player, camName, withTransition, customData) si le premier argument est un nombre, sinon setByName(camName, withTransition, customData). Un nom de caméra globale (ou nil) agit sur la vue globale ; sinon c'est la caméra de véhicule du joueur. | 838 |
-| `core_camera.setBySlotId(player, slotId)` | Sélectionne la caméra associée à un numéro de raccourci (touches 1 à 9, slotId calculé sur les caméras visibles). | 977 |
-| `core_camera.setCameraByNameFromOptions(player, camName)` | Sélection depuis le menu Options : une caméra du groupe 'world' passe par enterGroupCam (et le hook onCameraToggled FreeCam), sinon c'est une caméra de véhicule. Affiche le nom si la sélection réussit. | 851 |
-| `core_camera.setCameraDriverZoom(value, player)` | Définit le zoom de la caméra conducteur. | 1795 |
-| `core_camera.setCameraUnicycleZoom(value, player)` | Définit le zoom de la caméra en marche à pied (unicycle). | 1787 |
-| `core_camera.setContextCamera(id, camName, withTransition, customData)` | Sélectionne une caméra sur un contexte sans toucher au joueur. camName nil ou nom de caméra globale : caméra globale (initialisée avec la pose actuelle de la vue) ; sinon caméra de véhicule du joueur du contexte. | 1949 |
-| `core_camera.setContextCameraParam(id, key, value)` | Applique un réglage à la caméra active d'un contexte en déléguant à cam:setParam(key, value, id). | 2032 |
-| `core_camera.setContextCameraState(id, state)` | Restaure la caméra d'un contexte depuis un instantané de getContextCameraState. Un mode avec deserialize restaure son état ; une caméra libre/globale sans deserialize est replacée à la pose sauvegardée. | 2002 |
-| `core_camera.setDefaultDistance(vid, ...)` | Délègue cam:setDefaultDistance(...) à la caméra. | 1407 |
-| `core_camera.setDefaultRotation(vid, ...)` | Délègue cam:setDefaultRotation(...) à la caméra. | 1419 |
-| `core_camera.setDistance(vid, ...)` | Délègue cam:setDistance(...) à la caméra. | 1411 |
-| `core_camera.setFOV(vid, ...)` | Fixe le champ de vision (degrés). Si 'free' est active, l'applique aussi au moteur ; puis cam:setFOV(...). | 1375 |
-| `core_camera.setFastSpeedModifier(enabled)` | Active le modificateur de vitesse rapide (touche) de la vue principale. | 1757 |
-| `core_camera.setFreeCameraYawPitchRollDeg(yawDeg, pitchDownDeg, rollDeg)` | Oriente la caméra libre (active seulement si la caméra globale 'free' est active) à partir de lacet, tangage (positif = regarder vers le bas) et roulis en degrés ; annule la vitesse angulaire. | 1233 |
-| `core_camera.setGlobalCameraByName(name, withTransition, customData, ctx)` | Active une caméra globale par son nom, ou repasse à la caméra du véhicule avec nil. Appelle onCameraChanged(false) sur l'ancienne et setCustomData + onCameraChanged(true) sur la nouvelle ; dans la vue principale, émet le hook onGlobalCameraSet. Sans effet si le nom est inconnu ou s'il n'y a pas de véhicule pour revenir à la caméra de véhicule. | 639 |
-| `core_camera.setInputTargetPlayer(player)` | Force toutes les entrées caméra à cibler le joueur donné (nil pour désactiver cette redirection). | 105 |
-| `core_camera.setLookBack(player, enabled)` | Active/désactive le regard vers l'arrière pour le joueur. | 1779 |
-| `core_camera.setMaxDistance(vid, ...)` | Délègue cam:setMaxDistance(...) à la caméra. | 1415 |
-| `core_camera.setNewtonRotation(pid, ...)` | Active/désactive le mode 'Newton' (inertie) en rotation de la caméra libre. | 1455 |
-| `core_camera.setNewtonTranslation(pid, ...)` | Active/désactive le mode 'Newton' (inertie) en translation de la caméra libre. | 1459 |
-| `core_camera.setOffset(vid, ...)` | Délègue cam:setOffset(...) à la caméra de la vue principale. | 1387 |
-| `core_camera.setPosRot(pid, px, py, pz, rx, ry, rz, rw)` | Place la caméra libre à une position (et orientation quaternion facultative). Sans effet si la caméra libre n'est pas active. | 1761 |
-| `core_camera.setPosition(pid, ...)` | Fixe la position de la caméra (vec3 en premier argument supplémentaire). Si la caméra globale 'free' est active dans la vue principale, la position est aussi appliquée directement au moteur ; puis cam:setPosition(...) est appelé. | 1430 |
-| `core_camera.setRef(vid, ...)` | Délègue cam:setRef(...) à la caméra. | 1399 |
-| `core_camera.setRefNodes(vid, ...)` | Délègue cam:setRefNodes(...) (noeuds de référence centre, gauche, arrière). | 1395 |
-| `core_camera.setRotation(vid, ...)` | Fixe l'orientation de la caméra. Si la caméra globale 'free' est active, applique aussi directement la rotation (quat) au moteur ; puis appelle cam:setRotation(...). | 1363 |
-| `core_camera.setSkipFovModifier(vid, ...)` | Délègue cam:setSkipFovModifier(...) à la caméra. | 1423 |
-| `core_camera.setSmoothedCam(pid, ...)` | Active/désactive le lissage de la caméra libre (cam:setSmoothedCam). | 1451 |
-| `core_camera.setSpeed(speed, ctxId)` | Fixe la vitesse de déplacement de la caméra libre. | 1769 |
-| `core_camera.setTargetMode(vid, ...)` | Délègue cam:setTargetMode(...) à la caméra. | 1403 |
-| `core_camera.setVehicleCameraByIndexOffset(player, offset)` | Passe à la caméra suivante (offset = 1) ou précédente (-1) en sautant les cachées/désactivées. En caméra globale d'un groupe, cycle dans ce groupe. Utilisé par les actions d'entrée. | 1275 |
-| `core_camera.setVehicleCameraByNameWithId(vehId, name, withTransition, customData, ctx)` | Sélectionne une caméra de véhicule pour le véhicule d'identifiant vehId. Si les données du véhicule ne sont pas encore prêtes, la demande est mémorisée et appliquée plus tard. | 800 |
-| `core_camera.startCameraTransition(duration, player)` | Fond le point de vue actuel vers celui de la caméra de cette frame. À appeler juste après un changement de caméra. duration remplace la durée configurée. | 669 |
-| `core_camera.toggleEnabledById(camId)` | Active ou désactive la caméra de véhicule d'indice camId dans le cycle (compatibilité) puis sauvegarde la configuration. | 613 |
-| `core_camera.toggleFreeCameraEnabledById(camId)` | Active/désactive une caméra libre du groupe 'world' dans le cycle et sauvegarde. | 631 |
-| `core_camera.unicycleZoomToggle(player)` | Bascule le zoom de la caméra en marche à pied entre 0 et 1. | 1807 |
-| `core_camera.vehicleCamerasFunction(vid, functionName, ...)` | Exécute une méthode sur toutes les caméras d'un véhicule, dans tous les contextes. | 1551 |
+| `core_camera.changeFreeCameraOrder(camId, offset)` | Moves a free camera in the 'world' cameras configuration and saves (freeCameraConfig setting). | 622 |
+| `core_camera.changeOrder(camId, offset)` | Moves the camera at index camId by offset positions in the configuration list (skipping hidden cameras), then saves. | 586 |
+| `core_camera.changeSpeed(val)` | Multiplies or divides the main view's camera speed by (1 + 0.2*\|val\|) depending on the sign, clamped between 2 and 100, and displays a message. Ignored if camera zoom is disabled in the editor. | 1879 |
+| `core_camera.clearAngularMotion(pid)` | Cancels the angular movement of the player's camera. | 1447 |
+| `core_camera.clearInputs(mm)` | Resets the rotation and zoom inputs (roll, pitch, yaw, zoom) of a MoveManager structure. Used by other GE scripts. | 574 |
+| `core_camera.clearMotion(pid)` | Cancels the movement (velocity) of the player's camera (cam:clearMotion). | 1443 |
+| `core_camera.createContext(id, renderView, player, vehiclePlayer)` | Creates (or updates) an extra camera context = a camera output with its own RenderView, reusing all camera modes. The identifier 'main' (or nil) returns the main context. The render target (resolution, texture) is managed by the caller. vehiclePlayer lets the view show another seat's vehicle while player only provides the input. | 1908 |
+| `core_camera.cycleCameraGroup(player)` | Switches to the next camera group (game cameras, then 'world' free cameras, then back), enters the first camera of the group, emits onCameraToggled and displays the name. | 693 |
+| `core_camera.destroyContext(id)` | Destroys an extra context (never the main one) and empties the main context's camera cache. | 1923 |
+| `core_camera.displayCameraNameUI(player)` | Sends the current camera name to the UI (Messages app) with the number of options and the current index. Does nothing for a unicycle (walking). | 412 |
+| `core_camera.driverZoomToggle(player)` | Toggles the driver camera zoom between 0 and 1. | 1803 |
+| `core_camera.exitCinematicCamera()` | Compatibility: leaves the global camera (setGlobalCameraByName(nil)). | 2096 |
+| `core_camera.getActiveCamName(player)` | Name of the player's active camera: global camera if active, otherwise vehicle camera (or the pending requested one). nil if the player has no vehicle. | 939 |
+| `core_camera.getActiveCamNameByVehId(vehId)` | Name of a vehicle's focused camera (main view). | 958 |
+| `core_camera.getActiveGlobalCameraName(player)` | Name of the global camera active for the player, nil if it is a vehicle camera. | 1893 |
+| `core_camera.getCameraDataById(vid, ctxId)` | Returns the camera instances of a vehicle. | 899 |
+| `core_camera.getCameraDriverZoom(player)` | Current driver camera zoom. | 1799 |
+| `core_camera.getCameraGroups(ctx)` | Sorted list of camera group names that have at least one usable camera. | 304 |
+| `core_camera.getConfigurationReadOnly()` | Deep copy of the vehicle camera configuration list ({name, enabled}). | 382 |
+| `core_camera.getContextCameraParams(id)` | Adjustable settings of a context's active camera, for the camera control UI / video stream. Each mode provides its list via listParams; descriptors {key, title, kind ('range'\|'bool'\|'choice'\|'slots'), type ('float'\|'int'\|'bool'\|'enum'), value, icon, default, min, max, step, unit, options}. | 2023 |
+| `core_camera.getContextCameraState(id)` | Lightweight serializable (JSON) snapshot of a context's camera: name, world pose (pos, rot, fov) and the mode's own state (data, via cam:serialize) so it can be restored. | 1983 |
+| `core_camera.getContextIdForPlayer(player)` | Identifier of the view through which this player looks, usable with the get*(ctxId) getters. nil = main view. | 1942 |
+| `core_camera.getContextIds()` | List of context identifiers ('main' first). | 1935 |
+| `core_camera.getDriverCameraNameById(vehId, ctxId)` | Name of the driver camera: 'driver' (if 'onboard.driver' exists) or the name of an 'occupant.*' camera in 'driver' permission mode. | 923 |
+| `core_camera.getDriverData(veh, ctxId)` | Like getDriverDataById from a vehicle object. | 935 |
+| `core_camera.getDriverDataById(vehId, ctxId)` | Driver camera data of a vehicle. | 927 |
+| `core_camera.getForward(ctxId)` | Camera 'forward' vector (y axis rotated by the orientation). | 1833 |
+| `core_camera.getForwardXYZ(ctxId)` | Forward vector as separate components (uses a reused internal vec3). | 1840 |
+| `core_camera.getFovDeg(ctxId)` | Final field of view in degrees. | 1871 |
+| `core_camera.getFovRad(ctxId)` | Final field of view in radians. | 1875 |
+| `core_camera.getFreeCameraConfigurationReadOnly()` | Deep copy of the configuration (order, activation) of the free cameras of the 'world' group. | 386 |
+| `core_camera.getGlobalCameras(ctx)` | Returns the name -> instance table of the global cameras (once per context, created on demand from the constructors where cam.isGlobal is true). | 199 |
+| `core_camera.getGroupCams(ctx, groupName, includeDisabled)` | List of camera names of a group (e.g. 'world'), in the configured order. Disabled 'world' cameras are omitted unless includeDisabled is true (they remain visible in the options but are skipped when cycling). | 277 |
+| `core_camera.getLookBack()` | 'Look backward' state of the main view. | 1783 |
+| `core_camera.getPosition(ctxId)` | Final camera position (copy). | 1812 |
+| `core_camera.getPositionXYZ(ctxId)` | Final position as separate components (avoids allocation). | 1816 |
+| `core_camera.getQuat(ctxId)` | Final camera orientation (copy). | 1846 |
+| `core_camera.getQuatXYZW(ctxId)` | Orientation as separate components. | 1866 |
+| `core_camera.getRight(ctxId)` | Camera 'right' vector (x axis rotated by the orientation). | 1827 |
+| `core_camera.getSpeed(ctxId)` | Movement speed of a context's free camera (30 by default). | 1774 |
+| `core_camera.getUp(ctxId)` | Camera 'up' vector (z axis rotated by the orientation). | 1821 |
+| `core_camera.getYawPitchRoll()` | Yaw, pitch and roll of the main camera in one call. | 1851 |
+| `core_camera.globalCameraFunction(globalCameraName, functionName, ...)` | Calls the method functionName of a named global camera. Logs an error if the camera or the method does not exist. | 1463 |
+| `core_camera.hotkey(player, hotkeyid, modifier)` | Forwards a shortcut key to the active camera (the mode's hotkey method). | 1546 |
+| `core_camera.isCameraInside(player, camPos)` | Tests whether a camera position is inside the player's vehicle (within its oriented box and within 0.6 m of an 'inside' viewpoint of a camera). | 881 |
+| `core_camera.isWorldCamera(player)` | Tests whether the player's active camera belongs to the 'world' group (free cameras). | 1973 |
+| `core_camera.nextCameraGroup(groups, active)` | Computes the next group in the cycle ring: game cameras (active = nil) to the first group, between groups, then from the last group to the game cameras (nil). active = false (system camera) returns nil. | 324 |
+| `core_camera.notifyUI(vdata, forcedCamName)` | Notifies the UI and extensions of the camera change: guihooks 'onCameraNameChanged', hook onCameraModeChanged, then updates the options menu. | 557 |
+| `core_camera.onCameraToggled(data)` | Hook (emitted by cycleCameraGroup, setCameraByNameFromOptions): redisplays player 0's camera name. *(internal)* *(hook)* | 488 |
+| `core_camera.onClientEndMission()` | Hook called at the end of the level: detaches the camera from the 'main' RenderView to avoid a dead reference. *(internal)* *(hook)* | 1749 |
+| `core_camera.onClientPostStartMission()` | Hook called after the level starts: delegated to core/cameraUpdate.lua. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `core_camera.onDeserialized(data)` | Restore hook after Lua reload (merges the serialized state into the existing cameras). *(internal)* *(hook)* | 1694 |
+| `core_camera.onDespawnObject(vid, isReloading)` | Hook called when an object is deleted: removes its camera data if it is not a reload. *(internal)* *(hook)* | 1582 |
+| `core_camera.onFileChanged(filePath, changeType)` | Hook called when a file changes: adding/removing a cameraModes file invalidates the caches (hot reload). *(internal)* *(hook)* | 1743 |
+| `core_camera.onMouseLocked(locked)` | Hook called when the mouse is locked/unlocked: forwarded to the active camera (mouseLocked), except in free camera. *(internal)* *(hook)* | 1576 |
+| `core_camera.onPreRender(...)` | Hook called just before rendering: updates the camera (cameraUpdate.onPreRender), then displays the pending camera name after a vehicle change. *(internal)* *(hook)* | 1655 |
+| `core_camera.onReplayStateChanged(newState)` | Hook called when the replay state changes: on leaving playback ('playback' to 'inactive'), empties the vehicle camera cache (vehicles deleted by the replay would otherwise be lost). *(internal)* *(hook)* | 2203 |
+| `core_camera.onScenarioChange(...)` | Hook called when the scenario state changes: propagated to the cameras; if a trigger was pending and the scenario goes to 'running', it is replayed. *(internal)* *(hook)* | 1632 |
+| `core_camera.onScenarioRestarted(...)` | Hook called when a scenario restarts: propagated to all cameras. *(internal)* *(hook)* | 1628 |
+| `core_camera.onSerialize()` | Serialization hook before Lua reload: serializes the global and vehicle cameras, the active global camera, the last vehicle, the pending trigger and the camera requests. *(internal)* *(hook)* | 1663 |
+| `core_camera.onSettingsChanged(...)` | Hook called when settings change: applies free camera smoothing and propagates onSettingsChanged to all cameras. *(internal)* *(hook)* | 1610 |
+| `core_camera.onTrigger(trigger)` | Hook called by BeamNG triggers: if the subject is the player's vehicle (or the triggerOverride), 'enter' with cameraOnEnter switches to the 'observer' global camera pointing at this camera object, and 'exit' with cameraOnLeave leaves it. While a scenario is starting, the request is held until the 'running' state. *(internal)* *(hook)* | 1481 |
+| `core_camera.onVehicleDestroyed(vid)` | Hook called when a vehicle is destroyed: removes its camera data from all contexts. *(internal)* *(hook)* | 177 |
+| `core_camera.onVehicleReplaced(vid)` | Hook called when a vehicle is replaced (new config): recreates its cameras. *(internal)* *(hook)* | 169 |
+| `core_camera.onVehicleResetted(vid, ...)` | Hook called when a vehicle is reset: propagates to the vehicle's cameras and resets the focused camera unless resetCameraOnVehicleReset is false or a global camera is active. *(internal)* *(hook)* | 1563 |
+| `core_camera.onVehicleSpawned(vid)` | Hook called when a vehicle is created: creates its camera data in each context. *(internal)* *(hook)* | 161 |
+| `core_camera.onVehicleSwitched(oldId, newId, player)` | Hook called when the player switches vehicle: starts a transition (except for a global camera), propagates to the cameras and schedules the name display. Ignores players other than 0. *(internal)* *(hook)* | 1644 |
+| `core_camera.processVehicleCameraConfigChanged(vid, vdata, focusedCamNamePrevious, ctx)` | (Re)creates the camera instances of a vehicle from its jbeam data (cameraData), updates the shared configuration (order, activation, saved by the main context), then chooses the camera: pending request, otherwise previous camera, otherwise first enabled and visible camera, otherwise first existing one. Returns false if the vehicle data is not available yet. | 1021 |
+| `core_camera.proxy_Player(fct, ...)` | Calls the method fct on player 0's active camera (global or focused). | 1476 |
+| `core_camera.requestConfig(forcedCamName)` | Requests sending the current configuration to the Options > Cameras menu (guihooks CameraConfigChanged). | 568 |
+| `core_camera.resetCamera(player)` | Resets the player view's inputs, emits the onCameraReset hook and calls reset() on the active camera. | 1540 |
+| `core_camera.resetCameraByID(vid, ...)` | Calls reset() on the camera (active global or the vehicle's focused one) of the main view. | 1359 |
+| `core_camera.resetConfiguration()` | Clears the cameraConfig and freeCameraConfig settings and recomputes the configuration for all vehicles. | 1617 |
+| `core_camera.setByName(...)` | Selects a camera by name. Flexible signature: setByName(player, camName, withTransition, customData) if the first argument is a number, otherwise setByName(camName, withTransition, customData). A global camera name (or nil) acts on the global view; otherwise it is the player's vehicle camera. | 838 |
+| `core_camera.setBySlotId(player, slotId)` | Selects the camera associated with a shortcut number (keys 1 to 9, slotId computed over the visible cameras). | 977 |
+| `core_camera.setCameraByNameFromOptions(player, camName)` | Selection from the Options menu: a 'world' group camera goes through enterGroupCam (and the onCameraToggled FreeCam hook), otherwise it is a vehicle camera. Displays the name if the selection succeeds. | 851 |
+| `core_camera.setCameraDriverZoom(value, player)` | Sets the driver camera zoom. | 1795 |
+| `core_camera.setCameraUnicycleZoom(value, player)` | Sets the zoom of the walking camera (unicycle). | 1787 |
+| `core_camera.setContextCamera(id, camName, withTransition, customData)` | Selects a camera on a context without touching the player. camName nil or global camera name: global camera (initialized with the view's current pose); otherwise the vehicle camera of the context's player. | 1949 |
+| `core_camera.setContextCameraParam(id, key, value)` | Applies a setting to a context's active camera by delegating to cam:setParam(key, value, id). | 2032 |
+| `core_camera.setContextCameraState(id, state)` | Restores a context's camera from a getContextCameraState snapshot. A mode with deserialize restores its state; a free/global camera without deserialize is put back at the saved pose. | 2002 |
+| `core_camera.setDefaultDistance(vid, ...)` | Delegates cam:setDefaultDistance(...) to the camera. | 1407 |
+| `core_camera.setDefaultRotation(vid, ...)` | Delegates cam:setDefaultRotation(...) to the camera. | 1419 |
+| `core_camera.setDistance(vid, ...)` | Delegates cam:setDistance(...) to the camera. | 1411 |
+| `core_camera.setFOV(vid, ...)` | Sets the field of view (degrees). If 'free' is active, also applies it to the engine; then cam:setFOV(...). | 1375 |
+| `core_camera.setFastSpeedModifier(enabled)` | Enables the fast speed modifier (key) of the main view. | 1757 |
+| `core_camera.setFreeCameraYawPitchRollDeg(yawDeg, pitchDownDeg, rollDeg)` | Orients the free camera (only active if the 'free' global camera is active) from yaw, pitch (positive = looking down) and roll in degrees; cancels the angular velocity. | 1233 |
+| `core_camera.setGlobalCameraByName(name, withTransition, customData, ctx)` | Activates a global camera by name, or switches back to the vehicle camera with nil. Calls onCameraChanged(false) on the old one and setCustomData + onCameraChanged(true) on the new one; in the main view, emits the onGlobalCameraSet hook. No effect if the name is unknown or if there is no vehicle to return to the vehicle camera. | 639 |
+| `core_camera.setInputTargetPlayer(player)` | Forces all camera inputs to target the given player (nil to disable this redirection). | 105 |
+| `core_camera.setLookBack(player, enabled)` | Enables/disables looking backward for the player. | 1779 |
+| `core_camera.setMaxDistance(vid, ...)` | Delegates cam:setMaxDistance(...) to the camera. | 1415 |
+| `core_camera.setNewtonRotation(pid, ...)` | Enables/disables the 'Newton' (inertia) mode for free camera rotation. | 1455 |
+| `core_camera.setNewtonTranslation(pid, ...)` | Enables/disables the 'Newton' (inertia) mode for free camera translation. | 1459 |
+| `core_camera.setOffset(vid, ...)` | Delegates cam:setOffset(...) to the main view's camera. | 1387 |
+| `core_camera.setPosRot(pid, px, py, pz, rx, ry, rz, rw)` | Places the free camera at a position (and optional quaternion orientation). No effect if the free camera is not active. | 1761 |
+| `core_camera.setPosition(pid, ...)` | Sets the camera position (vec3 as the first extra argument). If the 'free' global camera is active in the main view, the position is also applied directly to the engine; then cam:setPosition(...) is called. | 1430 |
+| `core_camera.setRef(vid, ...)` | Delegates cam:setRef(...) to the camera. | 1399 |
+| `core_camera.setRefNodes(vid, ...)` | Delegates cam:setRefNodes(...) (center, left, rear reference nodes). | 1395 |
+| `core_camera.setRotation(vid, ...)` | Sets the camera orientation. If the 'free' global camera is active, also applies the rotation (quat) directly to the engine; then calls cam:setRotation(...). | 1363 |
+| `core_camera.setSkipFovModifier(vid, ...)` | Delegates cam:setSkipFovModifier(...) to the camera. | 1423 |
+| `core_camera.setSmoothedCam(pid, ...)` | Enables/disables free camera smoothing (cam:setSmoothedCam). | 1451 |
+| `core_camera.setSpeed(speed, ctxId)` | Sets the movement speed of the free camera. | 1769 |
+| `core_camera.setTargetMode(vid, ...)` | Delegates cam:setTargetMode(...) to the camera. | 1403 |
+| `core_camera.setVehicleCameraByIndexOffset(player, offset)` | Switches to the next (offset = 1) or previous (-1) camera, skipping hidden/disabled ones. In a group's global camera, cycles within that group. Used by input actions. | 1275 |
+| `core_camera.setVehicleCameraByNameWithId(vehId, name, withTransition, customData, ctx)` | Selects a vehicle camera for the vehicle with id vehId. If the vehicle data is not ready yet, the request is stored and applied later. | 800 |
+| `core_camera.startCameraTransition(duration, player)` | Blends the current point of view into the camera's view for this frame. To call right after a camera change. duration overrides the configured duration. | 669 |
+| `core_camera.toggleEnabledById(camId)` | Enables or disables the vehicle camera at index camId in the cycle (compatibility) then saves the configuration. | 613 |
+| `core_camera.toggleFreeCameraEnabledById(camId)` | Enables/disables a free camera of the 'world' group in the cycle and saves. | 631 |
+| `core_camera.unicycleZoomToggle(player)` | Toggles the walking camera zoom between 0 and 1. | 1807 |
+| `core_camera.vehicleCamerasFunction(vid, functionName, ...)` | Runs a method on all cameras of a vehicle, in all contexts. | 1551 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_camera.changeFreeCameraOrder(camId, offset)`
 
-Déplace une caméra libre dans la configuration des caméras 'world' et sauvegarde (réglage freeCameraConfig).
+Moves a free camera in the 'world' cameras configuration and saves (freeCameraConfig setting).
 
-- `camId` (*integer*) : Indice dans la configuration libre
-- `offset` (*integer*) : Décalage
+- `camId` (*integer*) : Index in the free configuration
+- `offset` (*integer*) : Offset
 
 #### `core_camera.changeOrder(camId, offset)`
 
-Déplace la caméra d'indice camId de offset positions dans la liste de configuration (en sautant les caméras cachées), puis sauvegarde.
+Moves the camera at index camId by offset positions in the configuration list (skipping hidden cameras), then saves.
 
-- `camId` (*integer*) : Indice dans la configuration (base 1)
-- `offset` (*integer*) : Décalage, ex. -1 ou +1
+- `camId` (*integer*) : Index in the configuration (1-based)
+- `offset` (*integer*) : Offset, e.g. -1 or +1
 
 #### `core_camera.changeSpeed(val)`
 
-Multiplie ou divise la vitesse de la caméra de la vue principale par (1 + 0.2*|val|) selon le signe, bornée entre 2 et 100, et affiche un message. Ignorée si le zoom caméra est désactivé dans l'éditeur.
+Multiplies or divides the main view's camera speed by (1 + 0.2*|val|) depending on the sign, clamped between 2 and 100, and displays a message. Ignored if camera zoom is disabled in the editor.
 
-- `val` (*number*) : Variation signée (molette)
+- `val` (*number*) : Signed change (wheel)
 
 #### `core_camera.clearAngularMotion(pid)`
 
-Annule le mouvement angulaire de la caméra du joueur.
+Cancels the angular movement of the player's camera.
 
-- `pid` (*integer|nil*) : Joueur/vue
+- `pid` (*integer|nil*) : Player/view
 
 #### `core_camera.clearInputs(mm)`
 
-Remet à zéro les entrées de rotation et de zoom (roulis, tangage, lacet, zoom) d'une structure MoveManager. Utilisé par d'autres scripts GE.
+Resets the rotation and zoom inputs (roll, pitch, yaw, zoom) of a MoveManager structure. Used by other GE scripts.
 
-- `mm` (*table|nil*) : Structure d'entrées, MoveManager par défaut
+- `mm` (*table|nil*) : Input structure, default MoveManager
 
 #### `core_camera.clearMotion(pid)`
 
-Annule le mouvement (vitesse) de la caméra du joueur (cam:clearMotion).
+Cancels the movement (velocity) of the player's camera (cam:clearMotion).
 
-- `pid` (*integer|nil*) : Joueur/vue
+- `pid` (*integer|nil*) : Player/view
 
 #### `core_camera.createContext(id, renderView, player, vehiclePlayer)`
 
-Crée (ou met à jour) un contexte de caméra supplémentaire = une sortie caméra avec sa propre RenderView, réutilisant tous les modes de caméra. L'identifiant 'main' (ou nil) renvoie le contexte principal. Le rendu cible (résolution, texture) est géré par l'appelant. vehiclePlayer permet à la vue d'afficher le véhicule d'un autre siège alors que player ne fait que fournir l'entrée.
+Creates (or updates) an extra camera context = a camera output with its own RenderView, reusing all camera modes. The identifier 'main' (or nil) returns the main context. The render target (resolution, texture) is managed by the caller. vehiclePlayer lets the view show another seat's vehicle while player only provides the input.
 
-- `id` (*string*) : Identifiant du contexte
-- `renderView` (*string|nil*) : Nom de la RenderView (par défaut id)
-- `player` (*integer|nil*) : Joueur/siège dont la vue suit les entrées (0 par défaut)
-- `vehiclePlayer` (*integer|nil*) : Siège dont on prend le véhicule (facultatif)
-- **renvoie** : table Contexte (table interne)
+- `id` (*string*) : Context identifier
+- `renderView` (*string|nil*) : RenderView name (id by default)
+- `player` (*integer|nil*) : Player/seat whose view follows the inputs (0 by default)
+- `vehiclePlayer` (*integer|nil*) : Seat whose vehicle is taken (optional)
+- **returns**: table Context (internal table)
 
 #### `core_camera.cycleCameraGroup(player)`
 
-Passe au groupe de caméras suivant (caméras de jeu, puis caméras libres 'world', puis retour), entre dans la première caméra du groupe, émet onCameraToggled et affiche le nom.
+Switches to the next camera group (game cameras, then 'world' free cameras, then back), enters the first camera of the group, emits onCameraToggled and displays the name.
 
-- `player` (*integer|nil*) : Indice du joueur
+- `player` (*integer|nil*) : Player index
 
 #### `core_camera.destroyContext(id)`
 
-Détruit un contexte supplémentaire (jamais le principal) et vide le cache des caméras du contexte principal.
+Destroys an extra context (never the main one) and empties the main context's camera cache.
 
-- `id` (*string*) : Identifiant du contexte
+- `id` (*string*) : Context identifier
 
 #### `core_camera.displayCameraNameUI(player)`
 
-Envoie à l'UI (app Messages) le nom de la caméra courante avec le nombre d'options et l'indice courant. Ne fait rien pour une unicycle (marche à pied).
+Sends the current camera name to the UI (Messages app) with the number of options and the current index. Does nothing for a unicycle (walking).
 
-- `player` (*integer|nil*) : Indice du joueur
+- `player` (*integer|nil*) : Player index
 
 #### `core_camera.driverZoomToggle(player)`
 
-Bascule le zoom de la caméra conducteur entre 0 et 1.
+Toggles the driver camera zoom between 0 and 1.
 
-- `player` (*integer|nil*) : Indice du joueur
+- `player` (*integer|nil*) : Player index
 
 #### `core_camera.getActiveCamName(player)`
 
-Nom de la caméra active du joueur : caméra globale si active, sinon caméra de véhicule (ou celle demandée en attente). nil si le joueur n'a pas de véhicule.
+Name of the player's active camera: global camera if active, otherwise vehicle camera (or the pending requested one). nil if the player has no vehicle.
 
-- `player` (*integer|nil*) : Indice du joueur
-- **renvoie** : string|nil Nom de la caméra
+- `player` (*integer|nil*) : Player index
+- **returns**: string|nil Camera name
 
 #### `core_camera.getActiveCamNameByVehId(vehId)`
 
-Nom de la caméra focalisée d'un véhicule (vue principale).
+Name of a vehicle's focused camera (main view).
 
-- `vehId` (*integer*) : Identifiant du véhicule
-- **renvoie** : string|nil Nom de la caméra
+- `vehId` (*integer*) : Vehicle id
+- **returns**: string|nil Camera name
 
 #### `core_camera.getActiveGlobalCameraName(player)`
 
-Nom de la caméra globale active pour le joueur, nil si c'est une caméra de véhicule.
+Name of the global camera active for the player, nil if it is a vehicle camera.
 
-- `player` (*integer|nil*) : Indice du joueur
-- **renvoie** : string|nil Nom de caméra globale
+- `player` (*integer|nil*) : Player index
+- **returns**: string|nil Global camera name
 
 #### `core_camera.getCameraDataById(vid, ctxId)`
 
-Renvoie les instances de caméras d'un véhicule.
+Returns the camera instances of a vehicle.
 
-- `vid` (*integer*) : Identifiant du véhicule
-- `ctxId` (*string|nil*) : Identifiant de contexte (nil = main)
-- **renvoie** : table<string, table>|nil Caméras par nom, nil si le véhicule est inconnu
+- `vid` (*integer*) : Vehicle id
+- `ctxId` (*string|nil*) : Context identifier (nil = main)
+- **returns**: table<string, table>|nil Cameras by name, nil if the vehicle is unknown
 
 #### `core_camera.getCameraDriverZoom(player)`
 
-Zoom actuel de la caméra conducteur.
+Current driver camera zoom.
 
-- `player` (*integer|nil*) : Indice du joueur
-- **renvoie** : number|nil Zoom
+- `player` (*integer|nil*) : Player index
+- **returns**: number|nil Zoom
 
 #### `core_camera.getCameraGroups(ctx)`
 
-Liste triée des noms de groupes de caméras ayant au moins une caméra utilisable.
+Sorted list of camera group names that have at least one usable camera.
 
-- `ctx` (*table|nil*) : Contexte interne (nil = main)
-- **renvoie** : table<integer, string> Noms de groupes
+- `ctx` (*table|nil*) : Internal context (nil = main)
+- **returns**: table<integer, string> Group names
 
 #### `core_camera.getConfigurationReadOnly()`
 
-Copie profonde de la liste de configuration des caméras de véhicule ({name, enabled}).
+Deep copy of the vehicle camera configuration list ({name, enabled}).
 
-- **renvoie** : table Liste de {name, enabled}
+- **returns**: table List of {name, enabled}
 
 #### `core_camera.getContextCameraParams(id)`
 
-Réglages ajustables de la caméra active d'un contexte, pour l'UI de contrôle de caméra / flux vidéo. Chaque mode fournit sa liste via listParams ; descripteurs {key, title, kind ('range'|'bool'|'choice'|'slots'), type ('float'|'int'|'bool'|'enum'), value, icon, default, min, max, step, unit, options}.
+Adjustable settings of a context's active camera, for the camera control UI / video stream. Each mode provides its list via listParams; descriptors {key, title, kind ('range'|'bool'|'choice'|'slots'), type ('float'|'int'|'bool'|'enum'), value, icon, default, min, max, step, unit, options}.
 
-- `id` (*string|nil*) : Identifiant de contexte
-- **renvoie** : table Liste de descripteurs (vide si aucun)
+- `id` (*string|nil*) : Context identifier
+- **returns**: table List of descriptors (empty if none)
 
 #### `core_camera.getContextCameraState(id)`
 
-Instantané léger et sérialisable (JSON) de la caméra d'un contexte : nom, pose monde (pos, rot, fov) et état propre du mode (data, via cam:serialize) pour pouvoir la restaurer.
+Lightweight serializable (JSON) snapshot of a context's camera: name, world pose (pos, rot, fov) and the mode's own state (data, via cam:serialize) so it can be restored.
 
-- `id` (*string|nil*) : Identifiant de contexte (nil = main)
-- **renvoie** : table|nil {cam, pos={x,y,z}, rot={x,y,z,w}, fov, data}
+- `id` (*string|nil*) : Context identifier (nil = main)
+- **returns**: table|nil {cam, pos={x,y,z}, rot={x,y,z,w}, fov, data}
 
 #### `core_camera.getContextIdForPlayer(player)`
 
-Identifiant de la vue par laquelle regarde ce joueur, utilisable avec les getters get*(ctxId). nil = vue principale.
+Identifier of the view through which this player looks, usable with the get*(ctxId) getters. nil = main view.
 
-- `player` (*integer|nil*) : Indice du joueur
-- **renvoie** : string|nil Identifiant de contexte ou nil
+- `player` (*integer|nil*) : Player index
+- **returns**: string|nil Context identifier or nil
 
 #### `core_camera.getContextIds()`
 
-Liste des identifiants de contextes ('main' en premier).
+List of context identifiers ('main' first).
 
-- **renvoie** : table<integer, string> Identifiants
+- **returns**: table<integer, string> Identifiers
 
 #### `core_camera.getDriverCameraNameById(vehId, ctxId)`
 
-Nom de la caméra conducteur : 'driver' (si 'onboard.driver' existe) ou le nom d'une caméra 'occupant.*' en mode permission 'driver'.
+Name of the driver camera: 'driver' (if 'onboard.driver' exists) or the name of an 'occupant.*' camera in 'driver' permission mode.
 
-- `vehId` (*integer*) : Identifiant du véhicule
-- `ctxId` (*string|nil*) : Contexte
-- **renvoie** : string|nil Nom de caméra conducteur
+- `vehId` (*integer*) : Vehicle id
+- `ctxId` (*string|nil*) : Context
+- **returns**: string|nil Driver camera name
 
 #### `core_camera.getDriverData(veh, ctxId)`
 
-Comme getDriverDataById à partir d'un objet véhicule.
+Like getDriverDataById from a vehicle object.
 
-- `veh` (*userdata|nil*) : Véhicule
-- `ctxId` (*string|nil*) : Contexte
-- **renvoie** : integer|nil camNodeID
-- **renvoie** : boolean rightHandCamera
-- **renvoie** : boolean rightHandDoor
+- `veh` (*userdata|nil*) : Vehicle
+- `ctxId` (*string|nil*) : Context
+- **returns**: integer|nil camNodeID
+- **returns**: boolean rightHandCamera
+- **returns**: boolean rightHandDoor
 
 #### `core_camera.getDriverDataById(vehId, ctxId)`
 
-Données de la caméra conducteur d'un véhicule.
+Driver camera data of a vehicle.
 
-- `vehId` (*integer*) : Identifiant du véhicule
-- `ctxId` (*string|nil*) : Contexte
-- **renvoie** : integer|nil camNodeID (noeud du point de vue conducteur)
-- **renvoie** : boolean rightHandCamera
-- **renvoie** : boolean rightHandDoor
+- `vehId` (*integer*) : Vehicle id
+- `ctxId` (*string|nil*) : Context
+- **returns**: integer|nil camNodeID (node of the driver viewpoint)
+- **returns**: boolean rightHandCamera
+- **returns**: boolean rightHandDoor
 
 #### `core_camera.getForward(ctxId)`
 
-Vecteur 'avant' de la caméra (axe y tourné par l'orientation).
+Camera 'forward' vector (y axis rotated by the orientation).
 
-- `ctxId` (*string|nil*) : Contexte
-- **renvoie** : vec3 Vecteur avant
+- `ctxId` (*string|nil*) : Context
+- **returns**: vec3 Forward vector
 
 #### `core_camera.getForwardXYZ(ctxId)`
 
-Vecteur avant en composantes séparées (utilise un vec3 interne réutilisé).
+Forward vector as separate components (uses a reused internal vec3).
 
-- `ctxId` (*string|nil*) : Contexte
-- **renvoie** : number x
-- **renvoie** : number y
-- **renvoie** : number z
+- `ctxId` (*string|nil*) : Context
+- **returns**: number x
+- **returns**: number y
+- **returns**: number z
 
 #### `core_camera.getFovDeg(ctxId)`
 
-Champ de vision final en degrés.
+Final field of view in degrees.
 
-- `ctxId` (*string|nil*) : Contexte
-- **renvoie** : number FOV (deg)
+- `ctxId` (*string|nil*) : Context
+- **returns**: number FOV (deg)
 
 #### `core_camera.getFovRad(ctxId)`
 
-Champ de vision final en radians.
+Final field of view in radians.
 
-- `ctxId` (*string|nil*) : Contexte
-- **renvoie** : number FOV (rad)
+- `ctxId` (*string|nil*) : Context
+- **returns**: number FOV (rad)
 
 #### `core_camera.getFreeCameraConfigurationReadOnly()`
 
-Copie profonde de la configuration (ordre, activation) des caméras libres du groupe 'world'.
+Deep copy of the configuration (order, activation) of the free cameras of the 'world' group.
 
-- **renvoie** : table Liste de {name, enabled}
+- **returns**: table List of {name, enabled}
 
 #### `core_camera.getGlobalCameras(ctx)`
 
-Renvoie la table nom -> instance des caméras globales (une fois par contexte, créées à la demande à partir des constructeurs où cam.isGlobal est vrai).
+Returns the name -> instance table of the global cameras (once per context, created on demand from the constructors where cam.isGlobal is true).
 
-- `ctx` (*table|nil*) : Contexte interne (nil = main) ; les appels externes omettent généralement l'argument
-- **renvoie** : table<string, table> Caméras globales par nom
+- `ctx` (*table|nil*) : Internal context (nil = main); external calls usually omit the argument
+- **returns**: table<string, table> Global cameras by name
 
 #### `core_camera.getGroupCams(ctx, groupName, includeDisabled)`
 
-Liste des noms de caméras d'un groupe (ex. 'world'), dans l'ordre configuré. Les caméras 'world' désactivées sont omises sauf si includeDisabled est vrai (elles restent visibles dans les options mais sont sautées lors du cycle).
+List of camera names of a group (e.g. 'world'), in the configured order. Disabled 'world' cameras are omitted unless includeDisabled is true (they remain visible in the options but are skipped when cycling).
 
-- `ctx` (*table|nil*) : Contexte interne (nil = main)
-- `groupName` (*string*) : Nom du groupe, ex. 'world'
-- `includeDisabled` (*boolean|nil*) : Inclure les caméras désactivées
-- **renvoie** : table<integer, string> Noms de caméras
+- `ctx` (*table|nil*) : Internal context (nil = main)
+- `groupName` (*string*) : Group name, e.g. 'world'
+- `includeDisabled` (*boolean|nil*) : Include disabled cameras
+- **returns**: table<integer, string> Camera names
 
 #### `core_camera.getLookBack()`
 
-Etat 'regard vers l'arrière' de la vue principale.
+'Look backward' state of the main view.
 
-- **renvoie** : boolean|nil Etat
+- **returns**: boolean|nil State
 
 #### `core_camera.getPosition(ctxId)`
 
-Position finale de la caméra (copie).
+Final camera position (copy).
 
-- `ctxId` (*string|nil*) : Contexte (nil = vue du joueur)
-- **renvoie** : vec3 Position monde (m)
+- `ctxId` (*string|nil*) : Context (nil = player view)
+- **returns**: vec3 World position (m)
 
 #### `core_camera.getPositionXYZ(ctxId)`
 
-Position finale en composantes séparées (évite l'allocation).
+Final position as separate components (avoids allocation).
 
-- `ctxId` (*string|nil*) : Contexte
-- **renvoie** : number x
-- **renvoie** : number y
-- **renvoie** : number z
+- `ctxId` (*string|nil*) : Context
+- **returns**: number x
+- **returns**: number y
+- **returns**: number z
 
 #### `core_camera.getQuat(ctxId)`
 
-Orientation finale de la caméra (copie).
+Final camera orientation (copy).
 
-- `ctxId` (*string|nil*) : Contexte
-- **renvoie** : quat Orientation
+- `ctxId` (*string|nil*) : Context
+- **returns**: quat Orientation
 
 #### `core_camera.getQuatXYZW(ctxId)`
 
-Orientation en composantes séparées.
+Orientation as separate components.
 
-- `ctxId` (*string|nil*) : Contexte
-- **renvoie** : number x
-- **renvoie** : number y
-- **renvoie** : number z
-- **renvoie** : number w
+- `ctxId` (*string|nil*) : Context
+- **returns**: number x
+- **returns**: number y
+- **returns**: number z
+- **returns**: number w
 
 #### `core_camera.getRight(ctxId)`
 
-Vecteur 'droite' de la caméra (axe x tourné par l'orientation).
+Camera 'right' vector (x axis rotated by the orientation).
 
-- `ctxId` (*string|nil*) : Contexte
-- **renvoie** : vec3 Vecteur droite
+- `ctxId` (*string|nil*) : Context
+- **returns**: vec3 Right vector
 
 #### `core_camera.getSpeed(ctxId)`
 
-Vitesse de déplacement de la caméra libre d'un contexte (30 par défaut).
+Movement speed of a context's free camera (30 by default).
 
-- `ctxId` (*string|nil*) : Contexte
-- **renvoie** : number|nil Vitesse
+- `ctxId` (*string|nil*) : Context
+- **returns**: number|nil Speed
 
 #### `core_camera.getUp(ctxId)`
 
-Vecteur 'haut' de la caméra (axe z tourné par l'orientation).
+Camera 'up' vector (z axis rotated by the orientation).
 
-- `ctxId` (*string|nil*) : Contexte
-- **renvoie** : vec3 Vecteur haut
+- `ctxId` (*string|nil*) : Context
+- **returns**: vec3 Up vector
 
 #### `core_camera.getYawPitchRoll()`
 
-Lacet, tangage et roulis de la caméra principale en une seule fois.
+Yaw, pitch and roll of the main camera in one call.
 
-- **renvoie** : table {yawDeg, pitchDown (positif = vers le bas), rollDeg}
+- **returns**: table {yawDeg, pitchDown (positive = downward), rollDeg}
 
 #### `core_camera.globalCameraFunction(globalCameraName, functionName, ...)`
 
-Appelle la méthode functionName d'une caméra globale nommée. Loggue une erreur si la caméra ou la méthode n'existe pas.
+Calls the method functionName of a named global camera. Logs an error if the camera or the method does not exist.
 
-- `globalCameraName` (*string*) : Nom de caméra globale
-- `functionName` (*string*) : Nom de méthode
+- `globalCameraName` (*string*) : Global camera name
+- `functionName` (*string*) : Method name
 - `...` (*any*) : Arguments
-- **renvoie** : any Retour de la méthode
+- **returns**: any Return of the method
 
 #### `core_camera.hotkey(player, hotkeyid, modifier)`
 
-Transmet une touche de raccourci à la caméra active (méthode hotkey du mode).
+Forwards a shortcut key to the active camera (the mode's hotkey method).
 
-- `player` (*integer|nil*) : Indice du joueur
-- `hotkeyid` (*any*) : Identifiant de raccourci
-- `modifier` (*any*) : Modificateur
-- **renvoie** : any Retour de la caméra
+- `player` (*integer|nil*) : Player index
+- `hotkeyid` (*any*) : Shortcut identifier
+- `modifier` (*any*) : Modifier
+- **returns**: any Return of the camera
 
 #### `core_camera.isCameraInside(player, camPos)`
 
-Teste si une position de caméra est à l'intérieur du véhicule du joueur (dans sa boîte orientée et à moins de 0,6 m d'un point de vue 'inside' d'une caméra).
+Tests whether a camera position is inside the player's vehicle (within its oriented box and within 0.6 m of an 'inside' viewpoint of a camera).
 
-- `player` (*integer|nil*) : Indice du joueur
-- `camPos` (*vec3*) : Position à tester (m)
-- **renvoie** : integer 1 si à l'intérieur, 0 sinon (0 aussi sans véhicule ou en unicycle)
+- `player` (*integer|nil*) : Player index
+- `camPos` (*vec3*) : Position to test (m)
+- **returns**: integer 1 if inside, 0 otherwise (also 0 without a vehicle or on a unicycle)
 
 #### `core_camera.isWorldCamera(player)`
 
-Teste si la caméra active du joueur appartient au groupe 'world' (caméras libres).
+Tests whether the player's active camera belongs to the 'world' group (free cameras).
 
-- `player` (*integer|nil*) : Indice du joueur
-- **renvoie** : boolean true si caméra 'world'
+- `player` (*integer|nil*) : Player index
+- **returns**: boolean true if 'world' camera
 
 #### `core_camera.nextCameraGroup(groups, active)`
 
-Calcule le groupe suivant dans l'anneau de cycle : caméras de jeu (active = nil) vers le premier groupe, entre groupes, puis du dernier groupe vers les caméras de jeu (nil). active = false (caméra système) renvoie nil.
+Computes the next group in the cycle ring: game cameras (active = nil) to the first group, between groups, then from the last group to the game cameras (nil). active = false (system camera) returns nil.
 
-- `groups` (*table<integer, string>*) : Noms de groupes
-- `active` (*string|boolean|nil*) : Groupe actif : nil = caméra de jeu, false = caméra sans groupe
-- **renvoie** : string|nil Groupe suivant ou nil (retour aux caméras de jeu)
+- `groups` (*table<integer, string>*) : Group names
+- `active` (*string|boolean|nil*) : Active group: nil = game camera, false = camera without group
+- **returns**: string|nil Next group or nil (back to game cameras)
 
 #### `core_camera.notifyUI(vdata, forcedCamName)`
 
-Prévient l'UI et les extensions du changement de caméra : guihooks 'onCameraNameChanged', hook onCameraModeChanged, puis mise à jour du menu d'options.
+Notifies the UI and extensions of the camera change: guihooks 'onCameraNameChanged', hook onCameraModeChanged, then updates the options menu.
 
-- `vdata` (*table|nil*) : Données caméra du véhicule (joueur 0 par défaut)
-- `forcedCamName` (*string|nil*) : Nom à annoncer au lieu de la caméra focalisée
+- `vdata` (*table|nil*) : Vehicle camera data (player 0 by default)
+- `forcedCamName` (*string|nil*) : Name to announce instead of the focused camera
 
 #### `core_camera.onCameraToggled(data)`
 
-Hook (émis par cycleCameraGroup, setCameraByNameFromOptions) : réaffiche le nom de la caméra du joueur 0.
+Hook (emitted by cycleCameraGroup, setCameraByNameFromOptions): redisplays player 0's camera name.
 
 - `data` (*table*) : {cameraType = 'FreeCam'|'GameCam'}
 
 #### `core_camera.onDeserialized(data)`
 
-Hook de restauration après rechargement Lua (fusionne l'état sérialisé dans les caméras existantes).
+Restore hook after Lua reload (merges the serialized state into the existing cameras).
 
-- `data` (*table*) : Données de onSerialize
+- `data` (*table*) : Data from onSerialize
 
 #### `core_camera.onDespawnObject(vid, isReloading)`
 
-Hook appelé à la suppression d'un objet : retire ses données caméra si ce n'est pas un rechargement.
+Hook called when an object is deleted: removes its camera data if it is not a reload.
 
-- `vid` (*integer*) : Identifiant
-- `isReloading` (*boolean*) : true lors d'un rechargement
+- `vid` (*integer*) : Identifier
+- `isReloading` (*boolean*) : true on a reload
 
 #### `core_camera.onFileChanged(filePath, changeType)`
 
-Hook appelé quand un fichier change : l'ajout/suppression d'un fichier de cameraModes invalide les caches (rechargement à chaud).
+Hook called when a file changes: adding/removing a cameraModes file invalidates the caches (hot reload).
 
-- `filePath` (*string*) : Chemin du fichier
+- `filePath` (*string*) : File path
 - `changeType` (*string*) : 'added', 'deleted', 'modified'...
 
 #### `core_camera.onMouseLocked(locked)`
 
-Hook appelé quand la souris est verrouillée/déverrouillée : transmis à la caméra active (mouseLocked), sauf en caméra libre.
+Hook called when the mouse is locked/unlocked: forwarded to the active camera (mouseLocked), except in free camera.
 
-- `locked` (*boolean*) : true si verrouillée
+- `locked` (*boolean*) : true if locked
 
 #### `core_camera.onPreRender(...)`
 
-Hook appelé juste avant le rendu : met à jour la caméra (cameraUpdate.onPreRender), puis affiche le nom de caméra en attente après un changement de véhicule.
+Hook called just before rendering: updates the camera (cameraUpdate.onPreRender), then displays the pending camera name after a vehicle change.
 
-- `...` (*any*) : dtReal, dtSim, dtRaw (déduit de cameraUpdate)
+- `...` (*any*) : dtReal, dtSim, dtRaw (inferred from cameraUpdate)
 
 #### `core_camera.onReplayStateChanged(newState)`
 
-Hook appelé quand l'état du replay change : à la sortie d'une lecture ('playback' vers 'inactive'), vide le cache des caméras de véhicules (les véhicules supprimés par le replay seraient sinon perdus).
+Hook called when the replay state changes: on leaving playback ('playback' to 'inactive'), empties the vehicle camera cache (vehicles deleted by the replay would otherwise be lost).
 
-- `newState` (*table*) : Table avec le champ state
+- `newState` (*table*) : Table with the state field
 
 #### `core_camera.onScenarioChange(...)`
 
-Hook appelé quand l'état du scénario change : propagé aux caméras ; si un trigger était en attente et que le scénario passe à 'running', il est rejoué.
+Hook called when the scenario state changes: propagated to the cameras; if a trigger was pending and the scenario goes to 'running', it is replayed.
 
 - `...` (*any*) : 
 
 #### `core_camera.onScenarioRestarted(...)`
 
-Hook appelé au redémarrage d'un scénario : propagé à toutes les caméras.
+Hook called when a scenario restarts: propagated to all cameras.
 
-- `...` (*any*) : Arguments du hook
+- `...` (*any*) : Hook arguments
 
 #### `core_camera.onSerialize()`
 
-Hook de sérialisation avant rechargement Lua : sérialise les caméras globales et de véhicules, la caméra globale active, le dernier véhicule, le trigger en attente et les demandes de caméra.
+Serialization hook before Lua reload: serializes the global and vehicle cameras, the active global camera, the last vehicle, the pending trigger and the camera requests.
 
-- **renvoie** : table Données à restaurer
+- **returns**: table Data to restore
 
 #### `core_camera.onSettingsChanged(...)`
 
-Hook appelé quand les réglages changent : applique le lissage de la caméra libre et propage onSettingsChanged à toutes les caméras.
+Hook called when settings change: applies free camera smoothing and propagates onSettingsChanged to all cameras.
 
-- `...` (*any*) : Arguments du hook
+- `...` (*any*) : Hook arguments
 
 #### `core_camera.onTrigger(trigger)`
 
-Hook appelé par les triggers BeamNG : si le sujet est le véhicule du joueur (ou le triggerOverride), 'enter' avec cameraOnEnter bascule sur la caméra globale 'observer' pointant cet objet caméra, et 'exit' avec cameraOnLeave la quitte. Pendant le démarrage d'un scénario, la demande est mise en attente jusqu'à l'état 'running'.
+Hook called by BeamNG triggers: if the subject is the player's vehicle (or the triggerOverride), 'enter' with cameraOnEnter switches to the 'observer' global camera pointing at this camera object, and 'exit' with cameraOnLeave leaves it. While a scenario is starting, the request is held until the 'running' state.
 
 - `trigger` (*table*) : {subjectID, event, cameraOnEnter, cameraOnLeave, triggerOverride...}
 
 #### `core_camera.onVehicleDestroyed(vid)`
 
-Hook appelé quand un véhicule est détruit : retire ses données caméra de tous les contextes.
+Hook called when a vehicle is destroyed: removes its camera data from all contexts.
 
-- `vid` (*integer*) : Identifiant
+- `vid` (*integer*) : Identifier
 
 #### `core_camera.onVehicleReplaced(vid)`
 
-Hook appelé quand un véhicule est remplacé (nouvelle config) : recrée ses caméras.
+Hook called when a vehicle is replaced (new config): recreates its cameras.
 
-- `vid` (*integer*) : Identifiant du véhicule
+- `vid` (*integer*) : Vehicle id
 
 #### `core_camera.onVehicleResetted(vid, ...)`
 
-Hook appelé quand un véhicule est réinitialisé : propage aux caméras du véhicule et réinitialise la caméra focalisée sauf si resetCameraOnVehicleReset vaut false ou si une caméra globale est active.
+Hook called when a vehicle is reset: propagates to the vehicle's cameras and resets the focused camera unless resetCameraOnVehicleReset is false or a global camera is active.
 
-- `vid` (*integer*) : Identifiant du véhicule
+- `vid` (*integer*) : Vehicle id
 - `...` (*any*) : Arguments
 
 #### `core_camera.onVehicleSpawned(vid)`
 
-Hook appelé à la création d'un véhicule : crée ses données caméra dans chaque contexte.
+Hook called when a vehicle is created: creates its camera data in each context.
 
-- `vid` (*integer*) : Identifiant du véhicule
+- `vid` (*integer*) : Vehicle id
 
 #### `core_camera.onVehicleSwitched(oldId, newId, player)`
 
-Hook appelé quand le joueur change de véhicule : lance une transition (hors caméra globale), propage aux caméras et programme l'affichage du nom. Ignore les joueurs autres que 0.
+Hook called when the player switches vehicle: starts a transition (except for a global camera), propagates to the cameras and schedules the name display. Ignores players other than 0.
 
-- `oldId` (*integer*) : Ancien véhicule
-- `newId` (*integer*) : Nouveau véhicule
-- `player` (*integer*) : Joueur
+- `oldId` (*integer*) : Old vehicle
+- `newId` (*integer*) : New vehicle
+- `player` (*integer*) : Player
 
 #### `core_camera.processVehicleCameraConfigChanged(vid, vdata, focusedCamNamePrevious, ctx)`
 
-(Re)crée les instances de caméras d'un véhicule d'après ses données jbeam (cameraData), met à jour la configuration partagée (ordre, activation, sauvegardée par le contexte principal), puis choisit la caméra : demande en attente, sinon caméra précédente, sinon première caméra activée et visible, sinon première existante. Renvoie false si les données du véhicule ne sont pas encore disponibles.
+(Re)creates the camera instances of a vehicle from its jbeam data (cameraData), updates the shared configuration (order, activation, saved by the main context), then chooses the camera: pending request, otherwise previous camera, otherwise first enabled and visible camera, otherwise first existing one. Returns false if the vehicle data is not available yet.
 
-- `vid` (*integer*) : Identifiant du véhicule
-- `vdata` (*table*) : Table de données caméra du véhicule (modifiée)
-- `focusedCamNamePrevious` (*string|nil*) : Nom de la caméra précédemment focalisée
-- `ctx` (*table|nil*) : Contexte interne (nil = main)
-- **renvoie** : boolean true si traité
+- `vid` (*integer*) : Vehicle id
+- `vdata` (*table*) : Vehicle camera data table (modified)
+- `focusedCamNamePrevious` (*string|nil*) : Name of the previously focused camera
+- `ctx` (*table|nil*) : Internal context (nil = main)
+- **returns**: boolean true if handled
 
 #### `core_camera.proxy_Player(fct, ...)`
 
-Appelle la méthode fct sur la caméra active du joueur 0 (globale ou focalisée).
+Calls the method fct on player 0's active camera (global or focused).
 
-- `fct` (*string*) : Nom de méthode
+- `fct` (*string*) : Method name
 - `...` (*any*) : Arguments
-- **renvoie** : any Retour de la méthode
+- **returns**: any Return of the method
 
 #### `core_camera.requestConfig(forcedCamName)`
 
-Demande l'envoi de la configuration actuelle au menu Options > Caméras (guihooks CameraConfigChanged).
+Requests sending the current configuration to the Options > Cameras menu (guihooks CameraConfigChanged).
 
-- `forcedCamName` (*string|nil*) : Nom de caméra à marquer comme active
+- `forcedCamName` (*string|nil*) : Camera name to mark as active
 
 #### `core_camera.resetCamera(player)`
 
-Remet à zéro les entrées de la vue du joueur, émet le hook onCameraReset et appelle reset() sur la caméra active.
+Resets the player view's inputs, emits the onCameraReset hook and calls reset() on the active camera.
 
-- `player` (*integer|nil*) : Indice du joueur
-- **renvoie** : any Retour de reset
+- `player` (*integer|nil*) : Player index
+- **returns**: any Return of reset
 
 #### `core_camera.resetCameraByID(vid, ...)`
 
-Appelle reset() sur la caméra (globale active ou focalisée du véhicule) de la vue principale.
+Calls reset() on the camera (active global or the vehicle's focused one) of the main view.
 
-- `vid` (*integer|table*) : Id de véhicule, ou table {vehId, camName}
-- `...` (*any*) : Arguments passés à reset
-- **renvoie** : any Retour de la méthode de la caméra
+- `vid` (*integer|table*) : Vehicle id, or table {vehId, camName}
+- `...` (*any*) : Arguments passed to reset
+- **returns**: any Return of the camera method
 
 #### `core_camera.setByName(...)`
 
-Sélectionne une caméra par nom. Signature souple : setByName(player, camName, withTransition, customData) si le premier argument est un nombre, sinon setByName(camName, withTransition, customData). Un nom de caméra globale (ou nil) agit sur la vue globale ; sinon c'est la caméra de véhicule du joueur.
+Selects a camera by name. Flexible signature: setByName(player, camName, withTransition, customData) if the first argument is a number, otherwise setByName(camName, withTransition, customData). A global camera name (or nil) acts on the global view; otherwise it is the player's vehicle camera.
 
 - `...` (*any*) : [player,] camName, withTransition, customData
 
 #### `core_camera.setBySlotId(player, slotId)`
 
-Sélectionne la caméra associée à un numéro de raccourci (touches 1 à 9, slotId calculé sur les caméras visibles).
+Selects the camera associated with a shortcut number (keys 1 to 9, slotId computed over the visible cameras).
 
-- `player` (*integer|nil*) : Indice du joueur
-- `slotId` (*integer*) : Numéro de slot
+- `player` (*integer|nil*) : Player index
+- `slotId` (*integer*) : Slot number
 
 #### `core_camera.setCameraByNameFromOptions(player, camName)`
 
-Sélection depuis le menu Options : une caméra du groupe 'world' passe par enterGroupCam (et le hook onCameraToggled FreeCam), sinon c'est une caméra de véhicule. Affiche le nom si la sélection réussit.
+Selection from the Options menu: a 'world' group camera goes through enterGroupCam (and the onCameraToggled FreeCam hook), otherwise it is a vehicle camera. Displays the name if the selection succeeds.
 
-- `player` (*integer|nil*) : Indice du joueur
-- `camName` (*string*) : Nom de caméra
-- **renvoie** : boolean true si sélectionnée
+- `player` (*integer|nil*) : Player index
+- `camName` (*string*) : Camera name
+- **returns**: boolean true if selected
 
 #### `core_camera.setCameraDriverZoom(value, player)`
 
-Définit le zoom de la caméra conducteur.
+Sets the driver camera zoom.
 
-- `value` (*number*) : 0 ou 1 (seuil 0.5)
-- `player` (*integer|nil*) : Indice du joueur
+- `value` (*number*) : 0 or 1 (threshold 0.5)
+- `player` (*integer|nil*) : Player index
 
 #### `core_camera.setCameraUnicycleZoom(value, player)`
 
-Définit le zoom de la caméra en marche à pied (unicycle).
+Sets the zoom of the walking camera (unicycle).
 
-- `value` (*number*) : 0 ou 1 (déduit du code : seuil à 0.5)
-- `player` (*integer|nil*) : Indice du joueur
+- `value` (*number*) : 0 or 1 (inferred from code: threshold at 0.5)
+- `player` (*integer|nil*) : Player index
 
 #### `core_camera.setContextCamera(id, camName, withTransition, customData)`
 
-Sélectionne une caméra sur un contexte sans toucher au joueur. camName nil ou nom de caméra globale : caméra globale (initialisée avec la pose actuelle de la vue) ; sinon caméra de véhicule du joueur du contexte.
+Selects a camera on a context without touching the player. camName nil or global camera name: global camera (initialized with the view's current pose); otherwise the vehicle camera of the context's player.
 
-- `id` (*string|nil*) : Identifiant de contexte (nil = main)
-- `camName` (*string|nil*) : Nom de caméra
+- `id` (*string|nil*) : Context identifier (nil = main)
+- `camName` (*string|nil*) : Camera name
 - `withTransition` (*boolean|nil*) : Transition
-- `customData` (*any*) : Données passées à setCustomData
-- **renvoie** : any Aucun retour utile (la fonction interne ne renvoie rien)
+- `customData` (*any*) : Data passed to setCustomData
+- **returns**: any No useful return (the internal function returns nothing)
 
 #### `core_camera.setContextCameraParam(id, key, value)`
 
-Applique un réglage à la caméra active d'un contexte en déléguant à cam:setParam(key, value, id).
+Applies a setting to a context's active camera by delegating to cam:setParam(key, value, id).
 
-- `id` (*string|nil*) : Identifiant de contexte
-- `key` (*string*) : Clé de réglage (ex. 'fov')
-- `value` (*any*) : Nouvelle valeur
+- `id` (*string|nil*) : Context identifier
+- `key` (*string*) : Setting key (e.g. 'fov')
+- `value` (*any*) : New value
 
 #### `core_camera.setContextCameraState(id, state)`
 
-Restaure la caméra d'un contexte depuis un instantané de getContextCameraState. Un mode avec deserialize restaure son état ; une caméra libre/globale sans deserialize est replacée à la pose sauvegardée.
+Restores a context's camera from a getContextCameraState snapshot. A mode with deserialize restores its state; a free/global camera without deserialize is put back at the saved pose.
 
-- `id` (*string|nil*) : Identifiant de contexte
-- `state` (*table*) : Instantané
+- `id` (*string|nil*) : Context identifier
+- `state` (*table*) : Snapshot
 
 #### `core_camera.setDefaultDistance(vid, ...)`
 
-Délègue cam:setDefaultDistance(...) à la caméra.
+Delegates cam:setDefaultDistance(...) to the camera.
 
-- `vid` (*integer|table*) : Id de véhicule ou {vehId, camName}
-- `...` (*number*) : Distance par défaut (m)
-- **renvoie** : any Retour de la caméra
+- `vid` (*integer|table*) : Vehicle id or {vehId, camName}
+- `...` (*number*) : Default distance (m)
+- **returns**: any Return of the camera
 
 #### `core_camera.setDefaultRotation(vid, ...)`
 
-Délègue cam:setDefaultRotation(...) à la caméra.
+Delegates cam:setDefaultRotation(...) to the camera.
 
-- `vid` (*integer|table*) : Id de véhicule ou {vehId, camName}
-- `...` (*any*) : Rotation par défaut
-- **renvoie** : any Retour de la caméra
+- `vid` (*integer|table*) : Vehicle id or {vehId, camName}
+- `...` (*any*) : Default rotation
+- **returns**: any Return of the camera
 
 #### `core_camera.setDistance(vid, ...)`
 
-Délègue cam:setDistance(...) à la caméra.
+Delegates cam:setDistance(...) to the camera.
 
-- `vid` (*integer|table*) : Id de véhicule ou {vehId, camName}
+- `vid` (*integer|table*) : Vehicle id or {vehId, camName}
 - `...` (*number*) : Distance (m)
-- **renvoie** : any Retour de la caméra
+- **returns**: any Return of the camera
 
 #### `core_camera.setFOV(vid, ...)`
 
-Fixe le champ de vision (degrés). Si 'free' est active, l'applique aussi au moteur ; puis cam:setFOV(...).
+Sets the field of view (degrees). If 'free' is active, also applies it to the engine; then cam:setFOV(...).
 
-- `vid` (*integer|table*) : Id de véhicule ou {vehId, camName}
-- `...` (*number*) : FOV en degrés
-- **renvoie** : any Retour de la caméra
+- `vid` (*integer|table*) : Vehicle id or {vehId, camName}
+- `...` (*number*) : FOV in degrees
+- **returns**: any Return of the camera
 
 #### `core_camera.setFastSpeedModifier(enabled)`
 
-Active le modificateur de vitesse rapide (touche) de la vue principale.
+Enables the fast speed modifier (key) of the main view.
 
-- `enabled` (*boolean*) : true pour aller plus vite
+- `enabled` (*boolean*) : true to go faster
 
 #### `core_camera.setFreeCameraYawPitchRollDeg(yawDeg, pitchDownDeg, rollDeg)`
 
-Oriente la caméra libre (active seulement si la caméra globale 'free' est active) à partir de lacet, tangage (positif = regarder vers le bas) et roulis en degrés ; annule la vitesse angulaire.
+Orients the free camera (only active if the 'free' global camera is active) from yaw, pitch (positive = looking down) and roll in degrees; cancels the angular velocity.
 
-- `yawDeg` (*number*) : Lacet (0 = axe +Y)
-- `pitchDownDeg` (*number*) : Tangage vers le bas (deg)
-- `rollDeg` (*number*) : Roulis (deg)
+- `yawDeg` (*number*) : Yaw (0 = +Y axis)
+- `pitchDownDeg` (*number*) : Pitch downward (deg)
+- `rollDeg` (*number*) : Roll (deg)
 
 #### `core_camera.setGlobalCameraByName(name, withTransition, customData, ctx)`
 
-Active une caméra globale par son nom, ou repasse à la caméra du véhicule avec nil. Appelle onCameraChanged(false) sur l'ancienne et setCustomData + onCameraChanged(true) sur la nouvelle ; dans la vue principale, émet le hook onGlobalCameraSet. Sans effet si le nom est inconnu ou s'il n'y a pas de véhicule pour revenir à la caméra de véhicule.
+Activates a global camera by name, or switches back to the vehicle camera with nil. Calls onCameraChanged(false) on the old one and setCustomData + onCameraChanged(true) on the new one; in the main view, emits the onGlobalCameraSet hook. No effect if the name is unknown or if there is no vehicle to return to the vehicle camera.
 
-- `name` (*string|nil*) : Nom de caméra globale, nil pour quitter
-- `withTransition` (*boolean|nil*) : Non utilisé dans le code (déduit du code)
-- `customData` (*table|nil*) : Données passées à cam:setCustomData
-- `ctx` (*table|nil*) : Contexte interne (nil = main)
+- `name` (*string|nil*) : Global camera name, nil to leave
+- `withTransition` (*boolean|nil*) : Not used in the code (inferred from code)
+- `customData` (*table|nil*) : Data passed to cam:setCustomData
+- `ctx` (*table|nil*) : Internal context (nil = main)
 
 #### `core_camera.setInputTargetPlayer(player)`
 
-Force toutes les entrées caméra à cibler le joueur donné (nil pour désactiver cette redirection).
+Forces all camera inputs to target the given player (nil to disable this redirection).
 
-- `player` (*integer|nil*) : Indice du joueur ciblé
+- `player` (*integer|nil*) : Index of the targeted player
 
 #### `core_camera.setLookBack(player, enabled)`
 
-Active/désactive le regard vers l'arrière pour le joueur.
+Enables/disables looking backward for the player.
 
-- `player` (*integer|nil*) : Indice du joueur
-- `enabled` (*boolean*) : true pour regarder derrière
+- `player` (*integer|nil*) : Player index
+- `enabled` (*boolean*) : true to look behind
 
 #### `core_camera.setMaxDistance(vid, ...)`
 
-Délègue cam:setMaxDistance(...) à la caméra.
+Delegates cam:setMaxDistance(...) to the camera.
 
-- `vid` (*integer|table*) : Id de véhicule ou {vehId, camName}
-- `...` (*number*) : Distance maximale (m)
-- **renvoie** : any Retour de la caméra
+- `vid` (*integer|table*) : Vehicle id or {vehId, camName}
+- `...` (*number*) : Maximum distance (m)
+- **returns**: any Return of the camera
 
 #### `core_camera.setNewtonRotation(pid, ...)`
 
-Active/désactive le mode 'Newton' (inertie) en rotation de la caméra libre.
+Enables/disables the 'Newton' (inertia) mode for free camera rotation.
 
-- `pid` (*integer|nil*) : Joueur/vue
-- `...` (*any*) : Argument du mode
+- `pid` (*integer|nil*) : Player/view
+- `...` (*any*) : Mode argument
 
 #### `core_camera.setNewtonTranslation(pid, ...)`
 
-Active/désactive le mode 'Newton' (inertie) en translation de la caméra libre.
+Enables/disables the 'Newton' (inertia) mode for free camera translation.
 
-- `pid` (*integer|nil*) : Joueur/vue
-- `...` (*any*) : Argument du mode
+- `pid` (*integer|nil*) : Player/view
+- `...` (*any*) : Mode argument
 
 #### `core_camera.setOffset(vid, ...)`
 
-Délègue cam:setOffset(...) à la caméra de la vue principale.
+Delegates cam:setOffset(...) to the main view's camera.
 
-- `vid` (*integer|table*) : Id de véhicule ou {vehId, camName}
-- `...` (*any*) : Arguments du mode de caméra
-- **renvoie** : any Retour de la caméra
+- `vid` (*integer|table*) : Vehicle id or {vehId, camName}
+- `...` (*any*) : Camera mode arguments
+- **returns**: any Return of the camera
 
 #### `core_camera.setPosRot(pid, px, py, pz, rx, ry, rz, rw)`
 
-Place la caméra libre à une position (et orientation quaternion facultative). Sans effet si la caméra libre n'est pas active.
+Places the free camera at a position (and optional quaternion orientation). No effect if the free camera is not active.
 
-- `pid` (*integer*) : Joueur
+- `pid` (*integer*) : Player
 - `px` (*number*) : x (m)
 - `py` (*number*) : y (m)
 - `pz` (*number*) : z (m)
@@ -811,123 +811,123 @@ Place la caméra libre à une position (et orientation quaternion facultative). 
 
 #### `core_camera.setPosition(pid, ...)`
 
-Fixe la position de la caméra (vec3 en premier argument supplémentaire). Si la caméra globale 'free' est active dans la vue principale, la position est aussi appliquée directement au moteur ; puis cam:setPosition(...) est appelé.
+Sets the camera position (vec3 as the first extra argument). If the 'free' global camera is active in the main view, the position is also applied directly to the engine; then cam:setPosition(...) is called.
 
-- `pid` (*integer|nil*) : Joueur/vue
-- `...` (*vec3*) : Position monde (m)
-- **renvoie** : any Retour de la caméra
+- `pid` (*integer|nil*) : Player/view
+- `...` (*vec3*) : World position (m)
+- **returns**: any Return of the camera
 
 #### `core_camera.setRef(vid, ...)`
 
-Délègue cam:setRef(...) à la caméra.
+Delegates cam:setRef(...) to the camera.
 
-- `vid` (*integer|table*) : Id de véhicule ou {vehId, camName}
+- `vid` (*integer|table*) : Vehicle id or {vehId, camName}
 - `...` (*any*) : Arguments
-- **renvoie** : any Retour de la caméra
+- **returns**: any Return of the camera
 
 #### `core_camera.setRefNodes(vid, ...)`
 
-Délègue cam:setRefNodes(...) (noeuds de référence centre, gauche, arrière).
+Delegates cam:setRefNodes(...) (center, left, rear reference nodes).
 
-- `vid` (*integer|table*) : Id de véhicule ou {vehId, camName}
-- `...` (*any*) : Noeuds de référence
-- **renvoie** : any Retour de la caméra
+- `vid` (*integer|table*) : Vehicle id or {vehId, camName}
+- `...` (*any*) : Reference nodes
+- **returns**: any Return of the camera
 
 #### `core_camera.setRotation(vid, ...)`
 
-Fixe l'orientation de la caméra. Si la caméra globale 'free' est active, applique aussi directement la rotation (quat) au moteur ; puis appelle cam:setRotation(...).
+Sets the camera orientation. If the 'free' global camera is active, also applies the rotation (quat) directly to the engine; then calls cam:setRotation(...).
 
-- `vid` (*integer|table*) : Id de véhicule ou {vehId, camName}
-- `...` (*any*) : Rotation (quat) et autres arguments
-- **renvoie** : any Retour de la caméra
+- `vid` (*integer|table*) : Vehicle id or {vehId, camName}
+- `...` (*any*) : Rotation (quat) and other arguments
+- **returns**: any Return of the camera
 
 #### `core_camera.setSkipFovModifier(vid, ...)`
 
-Délègue cam:setSkipFovModifier(...) à la caméra.
+Delegates cam:setSkipFovModifier(...) to the camera.
 
-- `vid` (*integer|table*) : Id de véhicule ou {vehId, camName}
-- `...` (*boolean*) : Ignorer le modificateur de FOV
-- **renvoie** : any Retour de la caméra
+- `vid` (*integer|table*) : Vehicle id or {vehId, camName}
+- `...` (*boolean*) : Skip the FOV modifier
+- **returns**: any Return of the camera
 
 #### `core_camera.setSmoothedCam(pid, ...)`
 
-Active/désactive le lissage de la caméra libre (cam:setSmoothedCam).
+Enables/disables free camera smoothing (cam:setSmoothedCam).
 
-- `pid` (*integer|nil*) : Joueur/vue
-- `...` (*boolean*) : Activer le lissage
+- `pid` (*integer|nil*) : Player/view
+- `...` (*boolean*) : Enable smoothing
 
 #### `core_camera.setSpeed(speed, ctxId)`
 
-Fixe la vitesse de déplacement de la caméra libre.
+Sets the movement speed of the free camera.
 
-- `speed` (*number*) : Vitesse (m/s)
-- `ctxId` (*string|nil*) : Contexte
+- `speed` (*number*) : Speed (m/s)
+- `ctxId` (*string|nil*) : Context
 
 #### `core_camera.setTargetMode(vid, ...)`
 
-Délègue cam:setTargetMode(...) à la caméra.
+Delegates cam:setTargetMode(...) to the camera.
 
-- `vid` (*integer|table*) : Id de véhicule ou {vehId, camName}
+- `vid` (*integer|table*) : Vehicle id or {vehId, camName}
 - `...` (*any*) : Arguments
-- **renvoie** : any Retour de la caméra
+- **returns**: any Return of the camera
 
 #### `core_camera.setVehicleCameraByIndexOffset(player, offset)`
 
-Passe à la caméra suivante (offset = 1) ou précédente (-1) en sautant les cachées/désactivées. En caméra globale d'un groupe, cycle dans ce groupe. Utilisé par les actions d'entrée.
+Switches to the next (offset = 1) or previous (-1) camera, skipping hidden/disabled ones. In a group's global camera, cycles within that group. Used by input actions.
 
-- `player` (*integer|nil*) : Indice du joueur
-- `offset` (*integer*) : +1 ou -1
+- `player` (*integer|nil*) : Player index
+- `offset` (*integer*) : +1 or -1
 
 #### `core_camera.setVehicleCameraByNameWithId(vehId, name, withTransition, customData, ctx)`
 
-Sélectionne une caméra de véhicule pour le véhicule d'identifiant vehId. Si les données du véhicule ne sont pas encore prêtes, la demande est mémorisée et appliquée plus tard.
+Selects a vehicle camera for the vehicle with id vehId. If the vehicle data is not ready yet, the request is stored and applied later.
 
-- `vehId` (*integer*) : Identifiant du véhicule
-- `name` (*string*) : Nom de caméra
-- `withTransition` (*boolean|nil*) : Lance une transition
-- `customData` (*any*) : Passé à cam:setCustomData si présent
-- `ctx` (*table|nil*) : Contexte interne (nil = main)
-- **renvoie** : boolean|nil true si changée, false sinon
+- `vehId` (*integer*) : Vehicle id
+- `name` (*string*) : Camera name
+- `withTransition` (*boolean|nil*) : Starts a transition
+- `customData` (*any*) : Passed to cam:setCustomData if present
+- `ctx` (*table|nil*) : Internal context (nil = main)
+- **returns**: boolean|nil true if changed, false otherwise
 
 #### `core_camera.startCameraTransition(duration, player)`
 
-Fond le point de vue actuel vers celui de la caméra de cette frame. À appeler juste après un changement de caméra. duration remplace la durée configurée.
+Blends the current point of view into the camera's view for this frame. To call right after a camera change. duration overrides the configured duration.
 
-- `duration` (*number|nil*) : Durée du fondu en secondes
-- `player` (*integer|nil*) : Joueur/vue (nil = main)
+- `duration` (*number|nil*) : Blend duration in seconds
+- `player` (*integer|nil*) : Player/view (nil = main)
 
 #### `core_camera.toggleEnabledById(camId)`
 
-Active ou désactive la caméra de véhicule d'indice camId dans le cycle (compatibilité) puis sauvegarde la configuration.
+Enables or disables the vehicle camera at index camId in the cycle (compatibility) then saves the configuration.
 
-- `camId` (*integer*) : Indice dans la configuration
+- `camId` (*integer*) : Index in the configuration
 
 #### `core_camera.toggleFreeCameraEnabledById(camId)`
 
-Active/désactive une caméra libre du groupe 'world' dans le cycle et sauvegarde.
+Enables/disables a free camera of the 'world' group in the cycle and saves.
 
-- `camId` (*integer*) : Indice dans la configuration libre
+- `camId` (*integer*) : Index in the free configuration
 
 #### `core_camera.unicycleZoomToggle(player)`
 
-Bascule le zoom de la caméra en marche à pied entre 0 et 1.
+Toggles the walking camera zoom between 0 and 1.
 
-- `player` (*integer|nil*) : Indice du joueur
+- `player` (*integer|nil*) : Player index
 
 #### `core_camera.vehicleCamerasFunction(vid, functionName, ...)`
 
-Exécute une méthode sur toutes les caméras d'un véhicule, dans tous les contextes.
+Runs a method on all cameras of a vehicle, in all contexts.
 
-- `vid` (*integer*) : Identifiant du véhicule
-- `functionName` (*string*) : Nom de méthode
+- `vid` (*integer*) : Vehicle id
+- `functionName` (*string*) : Method name
 - `...` (*any*) : Arguments
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `cameraZoom` | any |  |
-| `dependencies` | table<integer, string> | Extensions chargées avant : core_vehicle_manager, core_environment. |
+| `dependencies` | table<integer, string> | Extensions loaded before: core_vehicle_manager, core_environment. |
 | `getLastCameraMovementType` | any |  |
 | `getLastFilter` | any |  |
 | `moveForwardBackward` | any |  |
@@ -938,7 +938,7 @@ Exécute une méthode sur toutes les caméras d'un véhicule, dans tous les cont
 | `moveleft` | any |  |
 | `moveright` | any |  |
 | `moveup` | any |  |
-| `objectTeleported` | function | Alias obsolète de la globale objectTeleported (utils.lua). |
+| `objectTeleported` | function | Deprecated alias of the global objectTeleported (utils.lua). |
 | `pitchAbs` | any |  |
 | `rollAbs` | any |  |
 | `rotate_pitch` | any |  |
@@ -951,7 +951,7 @@ Exécute une méthode sur toutes les caméras d'un véhicule, dans tous les cont
 | `rotate_yaw_left` | any |  |
 | `rotate_yaw_relative` | any |  |
 | `rotate_yaw_right` | any |  |
-| `speedFactor` | number | Facteur de vitesse (1 par défaut) utilisé pour corriger un mouvement de caméra trop lent/lissé lors de la création de vignettes. |
+| `speedFactor` | number | Speed factor (1 by default) used to correct a camera movement that is too slow/smoothed when creating thumbnails. |
 | `timeSinceLastRotation` | any |  |
 | `xAxisAbs` | any |  |
 | `yAxisAbs` | any |  |
@@ -959,24 +959,24 @@ Exécute une méthode sur toutes les caméras d'un véhicule, dans tous les cont
 | `yawAbs` | any |  |
 | `zAxisAbs` | any |  |
 
-**Globales affectées :** `MoveManager`
+**Globals assigned:** `MoveManager`
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onCameraModeChanged` — écouté par 3 module(s)
+- `onCameraModeChanged` — listened to by 3 module(s)
 - `onCameraReset`
-- `onCameraToggled` — écouté par 1 module(s)
-- `onGlobalCameraSet` — écouté par 2 module(s)
+- `onCameraToggled` — listened to by 1 module(s)
+- `onGlobalCameraSet` — listened to by 2 module(s)
 
-**Évènements UI (guihooks.trigger) :** `CameraConfigChanged`, `Message`, `appContainer:loadLayoutByType`, `onCameraNameChanged`
+**UI events (guihooks.trigger):** `CameraConfigChanged`, `Message`, `appContainer:loadLayoutByType`, `onCameraNameChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `be:` `getObject`, `getObjectCount`, `getObjectOOBBCenterXYZ`, `getObjectOOBBHalfAxisXYZ`, `getPlayerVehicleID`
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/camera.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/camera.lua`.*

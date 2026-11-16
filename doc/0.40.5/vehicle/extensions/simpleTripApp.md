@@ -1,53 +1,53 @@
 # `simpleTripApp`
 
-*Fichier : `lua/vehicle/extensions/simpleTripApp.lua` · VM : Véhicule · 87 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/simpleTripApp.lua` · VM: Vehicle · 87 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `simpleTripApp` : `extensions.load (VM véhicule)("simpleTripApp")`, puis la globale `simpleTripApp`
+**Access:** extension `simpleTripApp`: `extensions.load (vehicle VM)("simpleTripApp")`, then the global `simpleTripApp`
 
-Alimente l'appli UI « trip » : cumule distance et temps de simulation, estime la consommation de carburant et l'autonomie, et envoie le résultat à l'UI environ chaque seconde réelle via guihooks.trigger('tripData', data). Lit electrics.values.fuelVolume, wheelspeed et airspeed.
+Feeds the "trip" UI app: accumulates distance and simulation time, estimates fuel consumption and range, and sends the result to the UI about every real second via guihooks.trigger('tripData', data). Reads electrics.values.fuelVolume, wheelspeed and airspeed.
 
-## Remarques
+## Notes
 
-- L'événement tripData contient : totalDistance (m), avgSpeed (m/s), avgFuelConsumptionRate (volume de carburant par mètre, sur tout le trajet), fuelConsumptionRate (volume par mètre sur la dernière seconde), range (distance restante, math.huge si aucune consommation et vitesse > 0.1, 0 à l'arrêt).
-- La vitesse utilisée est electrics.values.wheelspeed si le véhicule a des roues (wheels.wheels non vide), sinon airspeed.
-- Le timer d'envoi est décompté en temps réel (obj:getRealdt), les cumuls en temps de simulation (dtSim).
-- onExtensionLoaded renvoie false (ce qui décharge l'extension) si le véhicule n'a ni roues ni dispositif de powertrain ; onPlayersChanged la décharge si plus aucun joueur n'est assis ou si le véhicule est inadapté.
-- Division par zéro possible dans fuelConsumptionRate/avgFuelConsumptionRate quand speed ou totalDistance valent 0 (résultat inf/nan envoyé à l'UI).
+- The tripData event contains: totalDistance (m), avgSpeed (m/s), avgFuelConsumptionRate (fuel volume per meter, over the whole trip), fuelConsumptionRate (volume per meter over the last second), range (remaining distance, math.huge if no consumption and speed > 0.1, 0 at standstill).
+- The speed used is electrics.values.wheelspeed if the vehicle has wheels (wheels.wheels not empty), otherwise airspeed.
+- The send timer is counted down in real time (obj:getRealdt), the accumulations in simulation time (dtSim).
+- onExtensionLoaded returns false (which unloads the extension) if the vehicle has neither wheels nor a powertrain device; onPlayersChanged unloads it if no player is seated anymore or if the vehicle is unsuitable.
+- Possible division by zero in fuelConsumptionRate/avgFuelConsumptionRate when speed or totalDistance is 0 (inf/nan result sent to the UI).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `simpleTripApp.onExtensionLoaded()` | Hook de chargement : renvoie false (déchargement) si le véhicule n'a ni roue ni dispositif powertrain, sinon appelle reset(). *(interne)* *(hook)* | 66 |
-| `simpleTripApp.onPlayersChanged(anyPlayerSeated)` | Hook appelé par main.lua quand les joueurs assis changent ; décharge l'extension (extensions.unload) s'il n'y a plus de joueur ou si le véhicule est inadapté. *(interne)* *(hook)* | 73 |
-| `simpleTripApp.reset()` | Remet à zéro distance, temps, timer d'envoi (1 s), carburant précédent et carburant de départ. Appelé au chargement ; utilisable pour redémarrer un trajet. | 14 |
-| `simpleTripApp.updateGFX(dtSim)` | Appelé à chaque frame graphique via extensions.hook('updateGFX'). Intègre distance et temps, puis toutes les ~1 s réelle calcule les statistiques et appelle guihooks.trigger('tripData', data). *(interne)* | 22 |
+| `simpleTripApp.onExtensionLoaded()` | Load hook: returns false (unload) if the vehicle has neither wheels nor a powertrain device, otherwise calls reset(). *(internal)* *(hook)* | 66 |
+| `simpleTripApp.onPlayersChanged(anyPlayerSeated)` | Hook called by main.lua when the seated players change; unloads the extension (extensions.unload) if there is no player left or if the vehicle is unsuitable. *(internal)* *(hook)* | 73 |
+| `simpleTripApp.reset()` | Resets distance, time, send timer (1 s), previous fuel and starting fuel. Called on load; can be used to restart a trip. | 14 |
+| `simpleTripApp.updateGFX(dtSim)` | Called every graphics frame via extensions.hook('updateGFX'). Integrates distance and time, then about every real second computes the statistics and calls guihooks.trigger('tripData', data). *(internal)* | 22 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `simpleTripApp.onExtensionLoaded()`
 
-Hook de chargement : renvoie false (déchargement) si le véhicule n'a ni roue ni dispositif powertrain, sinon appelle reset().
+Load hook: returns false (unload) if the vehicle has neither wheels nor a powertrain device, otherwise calls reset().
 
-- **renvoie** : boolean|nil false pour demander le déchargement, nil sinon.
+- **returns**: boolean|nil false to request unloading, nil otherwise.
 
 #### `simpleTripApp.onPlayersChanged(anyPlayerSeated)`
 
-Hook appelé par main.lua quand les joueurs assis changent ; décharge l'extension (extensions.unload) s'il n'y a plus de joueur ou si le véhicule est inadapté.
+Hook called by main.lua when the seated players change; unloads the extension (extensions.unload) if there is no player left or if the vehicle is unsuitable.
 
-- `anyPlayerSeated` (*boolean*) : true si au moins un joueur est assis dans ce véhicule.
+- `anyPlayerSeated` (*boolean*) : true if at least one player is seated in this vehicle.
 
 #### `simpleTripApp.updateGFX(dtSim)`
 
-Appelé à chaque frame graphique via extensions.hook('updateGFX'). Intègre distance et temps, puis toutes les ~1 s réelle calcule les statistiques et appelle guihooks.trigger('tripData', data).
+Called every graphics frame via extensions.hook('updateGFX'). Integrates distance and time, then about every real second computes the statistics and calls guihooks.trigger('tripData', data).
 
-- `dtSim` (*number*) : Pas de temps de simulation en secondes.
+- `dtSim` (*number*) : Simulation time step in seconds.
 
-**Évènements UI (guihooks.trigger) :** `tripData`
+**UI events (guihooks.trigger):** `tripData`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getRealdt`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/simpleTripApp.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/simpleTripApp.lua`.*

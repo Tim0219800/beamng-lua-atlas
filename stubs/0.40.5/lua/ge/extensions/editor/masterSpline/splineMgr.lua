@@ -2,211 +2,211 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/masterSpline/splineMgr.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gestionnaire de données de l'outil Master Spline de l'éditeur. Il stocke la liste des Master Splines (nodes, widths, nmls, layers, mode de géométrie « engineered » à clothoïdes ou « spline » Catmull-Rom, homologation), reconstruit la géométrie des splines « dirty », pilote les couches liées (via layerMgr) et fournit copies profondes, sérialisation, séparation/jonction, callbacks undo/redo et sauvegarde/chargement de session groupée (masters + enfants mesh/assembly/decal/road/tree).
---- Accès : extension `editor_masterSpline_splineMgr` : `extensions.load("editor_masterSpline_splineMgr")`, puis la globale `editor_masterSpline_splineMgr`
+--- Data manager of the editor's Master Spline tool. It stores the list of Master Splines (nodes, widths, nmls, layers, geometry mode "engineered" with clothoids or "spline" Catmull-Rom, homologation), rebuilds the geometry of "dirty" splines, drives the linked layers (via layerMgr) and provides deep copies, serialization, split/join, undo/redo callbacks and grouped session save/load (masters + mesh/assembly/decal/road/tree children).
+--- Access: extension `editor_masterSpline_splineMgr`: `extensions.load("editor_masterSpline_splineMgr")`, then the global `editor_masterSpline_splineMgr`
 ---@class editor_masterSpline_splineMgr
 editor_masterSpline_splineMgr = {}
 
---- Crée une Master Spline vide (mode engineered, nom unique, UUID) et l'ajoute à la liste, puis recalcule la table id vers indice.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:84
----@param name string|nil Nom de base ; par défaut « Master Spline N ».
----@return table  La nouvelle Master Spline.
+--- Creates an empty Master Spline (engineered mode, unique name, UUID) and adds it to the list, then recomputes the id-to-index table.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:84
+---@param name string|nil Base name; "Master Spline N" by default.
+---@return table  The new Master Spline.
 function editor_masterSpline_splineMgr.addNewMasterSpline(name) end
 
---- Ajoute une Master Spline à la liste sans recalculer la table id vers indice.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:152
----@param spline table Master Spline à ajouter.
+--- Adds a Master Spline to the list without recomputing the id-to-index table.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:152
+---@param spline table Master Spline to add.
 function editor_masterSpline_splineMgr.addToMasterSplineArray(spline) end
 
---- Copie profonde de toutes les splines enfants liées par les couches de toutes les Master Splines, regroupées par outil.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:261
----@return table  Table avec les listes meshSpline, assemblySpline, decalSpline, roadSpline, treeSpline.
+--- Deep copy of all the child splines linked by the layers of all the Master Splines, grouped by tool.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:261
+---@return table  Table with the lists meshSpline, assemblySpline, decalSpline, roadSpline, treeSpline.
 function editor_masterSpline_splineMgr.captureLinkedSplinesState() end
 
---- Capture l'état complet pour undo/redo multi-splines : Master Splines et splines liées.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:345
+--- Captures the full state for multi-spline undo/redo: Master Splines and linked splines.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:345
 ---@return table  Table { masterSplines, linkedSplines }.
 function editor_masterSpline_splineMgr.captureTransTierState() end
 
---- Convertit des tracés issus d'une bitmap en Master Splines : points grille convertis en monde via le terrain editor, normales du terrain ; importe seulement si la plus petite dimension de l'AABB dépasse 10 m. Écrit un log.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:1259
----@param paths table Liste de tracés { points (x, y grille), widths }.
+--- Converts paths coming from a bitmap into Master Splines: grid points converted to world via the terrain editor, terrain normals; imports only if the smallest AABB dimension exceeds 10 m. Writes a log.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:1259
+---@param paths table List of paths { points (x, y grid), widths }.
 function editor_masterSpline_splineMgr.convertPathsToMasterSplines(paths) end
 
---- Copie profonde de toute la liste des Master Splines.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:255
----@return table  Copie.
+--- Deep copy of the whole list of Master Splines.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:255
+---@return table  Copy.
 function editor_masterSpline_splineMgr.deepCopyAllMasterSplines() end
 
---- Copie profonde d'une Master Spline (string.buffer).
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:252
----@param spline table Spline à copier.
----@return table  Copie.
+--- Deep copy of a Master Spline (string.buffer).
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:252
+---@param spline table Spline to copy.
+---@return table  Copy.
 function editor_masterSpline_splineMgr.deepCopyMasterSpline(spline) end
 
---- Reconstruit une Master Spline (vec3, couches, géométrie secondaire vide à régénérer) depuis des données sérialisées.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:614
----@param data table Table produite par serializeMasterSpline.
+--- Rebuilds a Master Spline (vec3, layers, empty secondary geometry to be regenerated) from serialized data.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:614
+---@param data table Table produced by serializeMasterSpline.
 ---@return table  Master Spline.
 function editor_masterSpline_splineMgr.deserializeMasterSpline(data) end
 
---- Renvoie la clé de mode d'édition « masterSpline ».
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:66
----@return string  Clé.
+--- Returns the edit mode key "masterSpline".
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:66
+---@return string  Key.
 function editor_masterSpline_splineMgr.getEditModeKey() end
 
---- Renvoie la table id vers indice des Master Splines.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:72
----@return table<string, integer>  Table id vers indice.
+--- Returns the id-to-index table of the Master Splines.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:72
+---@return table<string, integer>  Id-to-index table.
 function editor_masterSpline_splineMgr.getIdToIdxMap() end
 
---- Renvoie le tableau (vivant, non copié) des Master Splines.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:69
----@return table  Tableau de Master Splines.
+--- Returns the array (live, not copied) of the Master Splines.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:69
+---@return table  Array of Master Splines.
 function editor_masterSpline_splineMgr.getMasterSplines() end
 
---- Renvoie le préfixe d'outil « Master Spline ».
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:63
----@return string  Préfixe.
+--- Returns the tool prefix "Master Spline".
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:63
+---@return string  Prefix.
 function editor_masterSpline_splineMgr.getToolPrefixStr() end
 
---- Joint deux Master Splines ouvertes : la première reçoit la géométrie concaténée et la seconde est supprimée. Ne fait rien si les indices sont invalides.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:539
----@param splineIdx1 integer Indice de la première spline (conservée).
----@param nodeIdx1 integer Nœud de jonction de la première.
----@param splineIdx2 integer Indice de la seconde spline (supprimée).
----@param nodeIdx2 integer Nœud de jonction de la seconde.
+--- Joins two open Master Splines: the first receives the concatenated geometry and the second is deleted. Does nothing if the indices are invalid.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:539
+---@param splineIdx1 integer Index of the first spline (kept).
+---@param nodeIdx1 integer Junction node of the first.
+---@param splineIdx2 integer Index of the second spline (deleted).
+---@param nodeIdx2 integer Junction node of the second.
 function editor_masterSpline_splineMgr.joinMasterSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2) end
 
---- Redo des modifications légères : applique data.new.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:765
+--- Redo of light modifications: applies data.new.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:765
 ---@param data table Action { old, new }.
 function editor_masterSpline_splineMgr.lightSplineRedo(data) end
 
---- Undo des modifications légères d'une Master Spline : applique data.old.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:762
+--- Undo of light modifications to a Master Spline: applies data.old.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:762
 ---@param data table Action { old, new }.
 function editor_masterSpline_splineMgr.lightSplineUndo(data) end
 
---- Charge un état de session : nouveaux UUID pour masters, enfants et couches, insertion des enfants dans leurs outils, relinkage et marquage dirty. Retourne 0 si state n'est pas une table.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:1030
----@param state table État produit par serializeSessionState.
----@param replace boolean Si vrai, supprime d'abord tout le graphe de masters courant (et leurs enfants).
----@return integer  Nombre de Master Splines chargées.
+--- Loads a session state: new UUIDs for masters, children and layers, insertion of the children into their tools, relinking and dirty marking. Returns 0 if state is not a table.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:1030
+---@param state table State produced by serializeSessionState.
+---@param replace boolean If true, first deletes the whole current graph of masters (and their children).
+---@return integer  Number of Master Splines loaded.
 function editor_masterSpline_splineMgr.loadSessionState(state, replace) end
 
---- Si la spline sélectionnée a isOptimising vrai et plus de 2 divPoints, lance homologation.optimiseSpline avec le nombre d'itérations par image.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:243
----@param selectedSplineIdx integer Indice de la spline sélectionnée.
+--- If the selected spline has isOptimising true and more than 2 divPoints, runs homologation.optimiseSpline with the number of iterations per frame.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:243
+---@param selectedSplineIdx integer Index of the selected spline.
 function editor_masterSpline_splineMgr.manageLiveOptimise(selectedSplineIdx) end
 
---- Recalcule la table id vers indice (appelé par l'assistant de session après un chargement).
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:258
+--- Recomputes the id-to-index table (called by the session wizard after a load).
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:258
 function editor_masterSpline_splineMgr.recomputeIdMap() end
 
---- Redo de la création : recrée une Master Spline avec l'id data.masterSplineId.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:1241
+--- Redo of the creation: recreates a Master Spline with the id data.masterSplineId.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:1241
 ---@param data table Action { masterSplineId }.
 function editor_masterSpline_splineMgr.redoAddNewMasterSpline(data) end
 
---- Redo de l'ajout d'une couche.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:1117
----@param data table Données de l'action.
+--- Redo of a layer addition.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:1117
+---@param data table Action data.
 function editor_masterSpline_splineMgr.redoLayerAdd(data) end
 
---- Redo de la suppression d'une couche.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:1206
----@param data table Données de l'action.
+--- Redo of a layer deletion.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:1206
+---@param data table Action data.
 function editor_masterSpline_splineMgr.redoLayerRemove(data) end
 
---- Supprime toutes les Master Splines de la session, avec leurs couches et enfants liés.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:165
+--- Deletes all the Master Splines of the session, with their layers and linked children.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:165
 function editor_masterSpline_splineMgr.removeAllMasterSplines() end
 
---- Supprime la Master Spline d'indice idx, toutes ses couches et leurs splines liées, puis recalcule la table id vers indice.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:155
----@param idx integer Indice (à partir de 1).
+--- Deletes the Master Spline at index idx, all its layers and their linked splines, then recomputes the id-to-index table.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:155
+---@param idx integer Index (1-based).
 function editor_masterSpline_splineMgr.removeMasterSpline(idx) end
 
---- Sérialise une Master Spline en table sûre pour JSON (nœuds et normales en {x,y,z}, couches, paramètres).
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:570
+--- Serializes a Master Spline into a JSON-safe table (nodes and normals as {x,y,z}, layers, parameters).
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:570
 ---@param spline table Spline.
----@return table  Données sérialisées.
+---@return table  Serialized data.
 function editor_masterSpline_splineMgr.serializeMasterSpline(spline) end
 
---- État pour l'assistant de session partagé : toutes les Master Splines plus chaque enfant lié (dédupliqué par id), en tables JSON.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:1005
+--- State for the shared session wizard: all the Master Splines plus each linked child (deduplicated by id), as JSON tables.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:1005
 ---@return table  { masterSplines = {...}, children = { [linkType] = {...} } }.
 function editor_masterSpline_splineMgr.serializeSessionState() end
 
---- Redo d'une édition d'une seule Master Spline (data.new) ; recrée par défaut les splines enfants supprimées pendant l'action, nomme et relie les nouvelles.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:940
+--- Redo of an edit of a single Master Spline (data.new); by default recreates the child splines deleted during the action, names and links the new ones.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:940
 ---@param data table Action { old, new }.
 function editor_masterSpline_splineMgr.singleMasterSplineEditRedo(data) end
 
---- Undo d'une édition d'une seule Master Spline (applique data.old).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:831
+--- Undo of an edit of a single Master Spline (applies data.old).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:831
 ---@param data table Action { old, new }.
 function editor_masterSpline_splineMgr.singleMasterSplineEditUndo(data) end
 
---- Coupe la Master Spline au nœud choisi. Une boucle devient une spline ouverte re-démarrée au point de coupure ; sinon deux copies « nom (1) » et « nom (2) » sont créées avec leurs overrides de virage, et les couches sont gérées pour chaque moitié.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:353
----@param spline table Master Spline à couper.
----@param splineIdx integer Indice de la spline dans la liste.
----@param selectedNodeIdx integer Indice du nœud de coupure.
+--- Cuts the Master Spline at the chosen node. A loop becomes an open spline restarted at the cut point; otherwise two copies "name (1)" and "name (2)" are created with their turn overrides, and the layers are handled for each half.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:353
+---@param spline table Master Spline to cut.
+---@param splineIdx integer Index of the spline in the list.
+---@param selectedNodeIdx integer Index of the cut node.
 function editor_masterSpline_splineMgr.splitMasterSpline(spline, splineIdx, selectedNodeIdx) end
 
---- Redo d'une édition multi-splines.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:966
+--- Redo of a multi-spline edit.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:966
 ---@param splinesData table Action { old, new }.
 function editor_masterSpline_splineMgr.transMasterSplineEditRedo(splinesData) end
 
---- Undo d'une édition multi-splines (état complet, masters et enfants).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:935
----@param splinesData table Action { old, new } issue de captureTransTierState.
+--- Undo of a multi-spline edit (full state, masters and children).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:935
+---@param splinesData table Action { old, new } from captureTransTierState.
 function editor_masterSpline_splineMgr.transMasterSplineEditUndo(splinesData) end
 
---- Undo de la création d'une Master Spline : la supprime par data.masterSplineId.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:1232
+--- Undo of a Master Spline creation: deletes it by data.masterSplineId.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:1232
 ---@param data table Action { masterSplineId }.
 function editor_masterSpline_splineMgr.undoAddNewMasterSpline(data) end
 
---- Undo de l'ajout d'une couche : retire la couche de la Master Spline (data.masterSplineId).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:1095
----@param data table Données de l'action.
+--- Undo of a layer addition: removes the layer from the Master Spline (data.masterSplineId).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:1095
+---@param data table Action data.
 function editor_masterSpline_splineMgr.undoLayerAdd(data) end
 
---- Undo de la suppression d'une couche : la restaure.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:1162
----@param data table Données de l'action.
+--- Undo of a layer deletion: restores it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:1162
+---@param data table Action data.
 function editor_masterSpline_splineMgr.undoLayerRemove(data) end
 
---- Délie toutes les splines liées de la Master Spline (isLink = false, linkId = nil), sans passer par undo/redo.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:1248
+--- Unlinks all the linked splines of the Master Spline (isLink = false, linkId = nil), without going through undo/redo.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:1248
 ---@param masterSpline table Master Spline.
 function editor_masterSpline_splineMgr.unlinkAllSplines(masterSpline) end
 
---- Reconstruit la géométrie des splines isDirty (terrain, engineered ou Catmull-Rom, élargissement des virages, rib points, homologation si activée), met à jour les couches liées et roadLength. Les splines non dirty ne mettent à jour que leurs couches dirty. Signale la modification à la session si quelque chose a été reconstruit.
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:173
----@param isSplineAnalysisEnabled boolean Si vrai, lance homologation.analyseSpline sur les splines de plus de 2 points discrétisés.
+--- Rebuilds the geometry of isDirty splines (terrain, engineered or Catmull-Rom, turn widening, rib points, homologation if enabled), updates the linked layers and roadLength. Non-dirty splines only update their dirty layers. Signals the modification to the session if anything was rebuilt.
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:173
+---@param isSplineAnalysisEnabled boolean If true, runs homologation.analyseSpline on splines with more than 2 discretized points.
 function editor_masterSpline_splineMgr.updateDirtyMasterSplines(isSplineAnalysisEnabled) end
 
---- Renomme la spline liée pour qu'elle suive le nom de la couche (via setNameJumpTable).
----Source : lua/ge/extensions/editor/masterSpline/splineMgr.lua:1229
----@param splineId string Id de la spline liée.
----@param linkType string Type de lien (préfixe d'outil de la spline liée).
----@param newName string Nouveau nom.
+--- Renames the linked spline so that it follows the layer's name (via setNameJumpTable).
+---Source: lua/ge/extensions/editor/masterSpline/splineMgr.lua:1229
+---@param splineId string Id of the linked spline.
+---@param linkType string Link type (tool prefix of the linked spline).
+---@param newName string New name.
 function editor_masterSpline_splineMgr.updateLinkedSplineName(splineId, linkType, newName) end
 

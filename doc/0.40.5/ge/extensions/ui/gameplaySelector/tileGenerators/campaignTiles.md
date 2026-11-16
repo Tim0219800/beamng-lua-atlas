@@ -1,41 +1,41 @@
 # `ui_gameplaySelector_tileGenerators_campaignTiles`
 
-*Fichier : `lua/ge/extensions/ui/gameplaySelector/tileGenerators/campaignTiles.lua` · VM : Game Engine (GE) · 177 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/gameplaySelector/tileGenerators/campaignTiles.lua` · VM: Game Engine (GE) · 177 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_gameplaySelector_tileGenerators_campaignTiles` : `extensions.load("ui_gameplaySelector_tileGenerators_campaignTiles")`, puis la globale `ui_gameplaySelector_tileGenerators_campaignTiles`
+**Access:** extension `ui_gameplaySelector_tileGenerators_campaignTiles`: `extensions.load("ui_gameplaySelector_tileGenerators_campaignTiles")`, then the global `ui_gameplaySelector_tileGenerators_campaignTiles`
 
-Générateur de tuiles du sélecteur de gameplay pour les campagnes (système hérité). Il ajoute une tuile par campagne renvoyée par campaign_campaignsLoader.getList() et construit le panneau de détails avec un bouton « Start Campaign ». Il est appelé via les hooks onGameplaySelectorGetTiles et onGameplaySelectorGetDetails.
+Tile generator of the gameplay selector for campaigns (legacy system). It adds one tile per campaign returned by campaign_campaignsLoader.getList() and builds the details panel with a "Start Campaign" button. It is called via the hooks onGameplaySelectorGetTiles and onGameplaySelectorGetDetails.
 
-## Remarques
+## Notes
 
-- Les tuiles de campagne ne sont ajoutées que pour le backend gameplaySelector ; la tuile « More Campaigns... » est ajoutée pour tous les backends (validBackends vide).
-- Les détails affichent toujours la mention « Campaign system is outdated. » : le système est marqué comme hérité (isLegacy).
-- Bug probable : order = -tonumber(campaign.date) or 0 s'évalue comme (-tonumber(date)) or 0, donc le « or 0 » ne protège pas d'une date nil (erreur arithmétique sur nil).
+- Campaign tiles are only added for the gameplaySelector backend; the "More Campaigns..." tile is added for all backends (validBackends empty).
+- The details always show the note "Campaign system is outdated.": the system is marked as legacy (isLegacy).
+- Probable bug: order = -tonumber(campaign.date) or 0 evaluates as (-tonumber(date)) or 0, so the "or 0" does not protect against a nil date (arithmetic error on nil).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_gameplaySelector_tileGenerators_campaignTiles.onGameplaySelectorGetDetails(itemDetails, details, buttonInstance, backend)` | Hook appelé quand l'utilisateur ouvre les détails d'une tuile. Si itemDetails.campaignSourceFile existe, charge la campagne et ajoute dans details un bloc avec titre, description, aperçu, favori, spécifications (difficulté, auteurs, date, joueurs, nombre de scénarios), étiquettes (officiel, auxiliaire, mod) et un bouton « Start Campaign ». Ce bouton enregistre l'élément comme récent, navigue vers « play » et lance campaign_campaignsLoader.start. *(interne)* *(hook)* | 122 |
-| `ui_gameplaySelector_tileGenerators_campaignTiles.onGameplaySelectorGetTiles(items, backend)` | Hook appelé quand le sélecteur collecte ses tuiles. Pour le backend gameplaySelector, ajoute une tuile par campagne (nom traduit, aperçu, niveau, icônes beamNG ou bug, clé campaign_<sourceFile>). Ajoute dans tous les cas une tuile « More Campaigns... ». *(interne)* *(hook)* | 7 |
+| `ui_gameplaySelector_tileGenerators_campaignTiles.onGameplaySelectorGetDetails(itemDetails, details, buttonInstance, backend)` | Hook called when the user opens a tile's details. If itemDetails.campaignSourceFile exists, loads the campaign and adds to details a block with title, description, preview, favorite, specifications (difficulty, authors, date, players, number of scenarios), labels (official, auxiliary, mod) and a "Start Campaign" button. This button records the item as recent, navigates to "play" and launches campaign_campaignsLoader.start. *(internal)* *(hook)* | 122 |
+| `ui_gameplaySelector_tileGenerators_campaignTiles.onGameplaySelectorGetTiles(items, backend)` | Hook called when the selector collects its tiles. For the gameplaySelector backend, adds one tile per campaign (translated name, preview, level, beamNG or bug icons, key campaign_<sourceFile>). In all cases adds a "More Campaigns..." tile. *(internal)* *(hook)* | 7 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_gameplaySelector_tileGenerators_campaignTiles.onGameplaySelectorGetDetails(itemDetails, details, buttonInstance, backend)`
 
-Hook appelé quand l'utilisateur ouvre les détails d'une tuile. Si itemDetails.campaignSourceFile existe, charge la campagne et ajoute dans details un bloc avec titre, description, aperçu, favori, spécifications (difficulté, auteurs, date, joueurs, nombre de scénarios), étiquettes (officiel, auxiliaire, mod) et un bouton « Start Campaign ». Ce bouton enregistre l'élément comme récent, navigue vers « play » et lance campaign_campaignsLoader.start.
+Hook called when the user opens a tile's details. If itemDetails.campaignSourceFile exists, loads the campaign and adds to details a block with title, description, preview, favorite, specifications (difficulty, authors, date, players, number of scenarios), labels (official, auxiliary, mod) and a "Start Campaign" button. This button records the item as recent, navigates to "play" and launches campaign_campaignsLoader.start.
 
-- `itemDetails` (*table*) : Données showDetails de la tuile (campaignSourceFile, key).
-- `details` (*table*) : Liste de blocs de détails à compléter.
-- `buttonInstance` (*table*) : Objet fournissant addButton pour créer les boutons.
-- `backend` (*table*) : Backend offrant isFavourite et trackRecent.
+- `itemDetails` (*table*) : Tile showDetails data (campaignSourceFile, key).
+- `details` (*table*) : List of details blocks to complete.
+- `buttonInstance` (*table*) : Object providing addButton to create the buttons.
+- `backend` (*table*) : Backend offering isFavourite and trackRecent.
 
 #### `ui_gameplaySelector_tileGenerators_campaignTiles.onGameplaySelectorGetTiles(items, backend)`
 
-Hook appelé quand le sélecteur collecte ses tuiles. Pour le backend gameplaySelector, ajoute une tuile par campagne (nom traduit, aperçu, niveau, icônes beamNG ou bug, clé campaign_<sourceFile>). Ajoute dans tous les cas une tuile « More Campaigns... ».
+Hook called when the selector collects its tiles. For the gameplaySelector backend, adds one tile per campaign (translated name, preview, level, beamNG or bug icons, key campaign_<sourceFile>). In all cases adds a "More Campaigns..." tile.
 
-- `items` (*table*) : Liste de tuiles à compléter (modifiée en place).
-- `backend` (*table*) : Backend appelant ; backendName doit valoir « gameplaySelector » pour les tuiles de campagne.
+- `items` (*table*) : List of tiles to complete (modified in place).
+- `backend` (*table*) : Calling backend; backendName must be "gameplaySelector" for the campaign tiles.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/gameplaySelector/tileGenerators/campaignTiles.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/gameplaySelector/tileGenerators/campaignTiles.lua`.*

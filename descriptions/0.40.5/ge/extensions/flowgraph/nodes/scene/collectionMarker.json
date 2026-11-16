@@ -1,43 +1,43 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/collectionMarker.lua",
-  "module": "Noeud flowgraph « Collection Marker » (repeat_instant, auteur BeamNG). Affiche un jeton colorable aux couleurs BeamNG (TSStatic art/shapes/collectible/s_collect_BNG.dae) avec une PointLight, qui flotte et tourne a la position du pin pos. Entrees : flow, reset (impulsion qui supprime le marqueur), pos (vec3), color (number 0-1 de orange a vert, ou couleur). Sortie : flow.",
+  "module": "Flowgraph node \"Collection Marker\" (repeat_instant, author BeamNG). Displays a colorable token in BeamNG colors (TSStatic art/shapes/collectible/s_collect_BNG.dae) with a PointLight, which floats and rotates at the position of the pos pin. Inputs: flow, reset (impulse that deletes the marker), pos (vec3), color (number 0-1 from orange to green, or color). Output: flow.",
   "notes": [
-    "Bug : le pin reset appelle self:clearMarkers(), methode qui n'existe pas dans ce fichier (seule hideMarker existe) : declencher reset provoque une erreur Lua.",
-    "Les noms d'objets enregistres sont self.id..'marker' et self.id..'lighgt' (faute de frappe dans le nom de la lumiere, sans consequence).",
-    "Le pin de sortie flow n'est jamais ecrit par ce noeud."
+    "Bug: the reset pin calls self:clearMarkers(), a method that does not exist in this file (only hideMarker exists): triggering reset raises a Lua error.",
+    "The registered object names are self.id..'marker' and self.id..'lighgt' (typo in the light's name, harmless).",
+    "The output pin flow is never written by this node."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Rien a initialiser.",
+          "desc": "Nothing to initialize.",
           "params": {
             "mgr": {
               "type": "any",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           },
           "internal": true
         },
         "hideMarker": {
-          "desc": "Supprime l'objet marqueur et la lumiere et remet les references a nil.",
+          "desc": "Deletes the marker object and the light and sets the references back to nil.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Appele a l'arret du graphe : supprime le marqueur.",
+          "desc": "Called when the graph stops: deletes the marker.",
           "internal": true
         },
         "work": {
-          "desc": "Sur reset, appelle self:clearMarkers(). Sur flow, cree si besoin le TSStatic et la PointLight, puis met a jour position (avec oscillation verticale sinusoidale), rotation, couleur d'instance et lumiere (rayon 3).",
+          "desc": "On reset, calls self:clearMarkers(). On flow, creates the TSStatic and the PointLight if needed, then updates position (with sinusoidal vertical oscillation), rotation, instance color and light (radius 3).",
           "internal": false
         },
         "onClientEndMission": {
-          "desc": "Hook de fin de mission : supprime le marqueur.",
+          "desc": "End-of-mission hook: deletes the marker.",
           "internal": true
         },
         "destroy": {
-          "desc": "Appele a la destruction du noeud : supprime le marqueur.",
+          "desc": "Called when the node is destroyed: deletes the marker.",
           "internal": true
         }
       }

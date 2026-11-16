@@ -1,14 +1,14 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imCheckbox.lua",
-  "module": "Nœud flowgraph « im Checkbox » (catégorie repeat_instant, tag imgui) : case à cocher imgui. Entrées : « text », « enabled » (vrai), impulsions « setOn » / « setOff ». Sorties : « on », « off », « checked » (bool), « changed » (impulsion). L'état de départ vient de data.startState (false).",
+  "module": "Flowgraph node \"im Checkbox\" (category repeat_instant, tag imgui): imgui checkbox. Inputs: \"text\", \"enabled\" (true), pulses \"setOn\" / \"setOff\". Outputs: \"on\", \"off\", \"checked\" (bool), \"changed\" (pulse). The initial state comes from data.startState (false).",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStarted": {
-          "desc": "Applique startState et remet les sorties à jour.",
+          "desc": "Applies startState and updates the outputs again.",
           "internal": true
         },
         "init": {
@@ -16,7 +16,7 @@
           "internal": true
         },
         "work": {
-          "desc": "Applique setOn/setOff, dessine la case (désactivée si enabled est faux) et met à jour on/off/checked/changed.",
+          "desc": "Applies setOn/setOff, draws the checkbox (disabled if enabled is false) and updates on/off/checked/changed.",
           "internal": true
         }
       }

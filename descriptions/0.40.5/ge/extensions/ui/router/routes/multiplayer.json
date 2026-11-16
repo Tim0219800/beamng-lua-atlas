@@ -1,23 +1,23 @@
 {
   "path": "lua/ge/extensions/ui/router/routes/multiplayer.lua",
-  "module": "Routes multijoueur : host-options, settings et playerList (écrans de pause avec hooks ui_pause_routeLifecycleCallbacks) et spectator (Vue, hooks multiplayer_gamemodes_utils_spectator.onSpectatorViewEnter/Leave). Inclus par menu.lua et pause.lua.",
+  "module": "Multiplayer routes: host-options, settings and playerList (pause screens with ui_pause_routeLifecycleCallbacks hooks) and spectator (Vue, hooks multiplayer_gamemodes_utils_spectator.onSpectatorViewEnter/Leave). Included by menu.lua and pause.lua.",
   "notes": [
-    "Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = \"<nom>\" }`.",
-    "Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.",
-    "`ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change."
+    "Route configuration module: it exports no function. routeManager reads it (via the ui_router_routes_<name> extension) when routes.lua includes it with `{ include = \"<name>\" }`.",
+    "The keys of `Children` form the segments of the dotted name: \"<module>.<child>\". `children` (lowercase) in a node designates its sub-routes; `include` mounts another module there.",
+    "`ui` is inherited by child routes (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause): a child redefines it only for what changes."
   ],
   "fields": {
     "Root": {
       "type": "table",
-      "desc": "{} (racine vide)"
+      "desc": "{} (empty root)"
     },
     "Children": {
       "type": "table<string, table>",
-      "desc": "host-options (screenId multiplayer.host-options), settings (screenId pause.multiplayer.settings), playerList (pause.multiplayer.playerList), spectator (uiApps visibles, barres masquées)."
+      "desc": "host-options (screenId multiplayer.host-options), settings (screenId pause.multiplayer.settings), playerList (pause.multiplayer.playerList), spectator (uiApps visible, bars hidden)."
     },
     "ModuleName": {
       "type": "string",
-      "desc": "Nom du module de routes (premier segment du nom pointé)."
+      "desc": "Name of the routes module (first segment of the dotted name)."
     }
   }
 }

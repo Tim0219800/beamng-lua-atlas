@@ -1,16 +1,26 @@
 {
   "path": "lua/ge/extensions/util/trackBuilder/ceilingMesh.lua",
-  "module": "Générateur du plafond d'un segment de piste du Track Builder (utile pour les tunnels). Il définit un profil de section en U inversé (largeur 2, hauteur 1) puis l'extrude le long des points du segment, avec caps de début et de fin selon segment.meshInfo.",
+  "module": "Generator for the ceiling of a Track Builder track segment (useful for tunnels). It defines an inverted-U section profile (width 2, height 1) then extrudes it along the segment's points, with start and end caps according to segment.meshInfo.",
   "notes": [
-    "getMeshes renvoie une liste vide si segment.quality == 4 ou si segment.meshInfo.ceilingMesh.active est faux.",
-    "Matériau : segment.materialInfo.ceilingMesh, sinon 'track_editor_A_center'. Tag : 'ceiling'.",
-    "Effet de bord : incrémente segment.submeshCount et enregistre l'indice dans segment.submeshIndexes.ceilingMesh."
+    "getMeshes returns an empty list if segment.quality == 4 or if segment.meshInfo.ceilingMesh.active is false.",
+    "Material: segment.materialInfo.ceilingMesh, otherwise 'track_editor_A_center'. Tag: 'ceiling'.",
+    "Side effect: increments segment.submeshCount and records the index in segment.submeshIndexes.ceilingMesh."
   ],
   "functions": {
     "getMeshes": {
-      "desc": "Renvoie {mesh} pour le plafond du segment, ou {} si le plafond est désactivé ou en basse qualité.",
-      "params": {"segment": {"type": "table", "desc": "Segment du Track Builder (points, quality, meshInfo.ceilingMesh, materialInfo, submeshCount, submeshIndexes)."}},
-      "returns": [{"type": "table[]", "desc": "Liste d'au plus une table de mesh {verts, uvs, normals, faces, material, tag}."}],
+      "desc": "Returns {mesh} for the segment's ceiling, or {} if the ceiling is disabled or quality is low.",
+      "params": {
+        "segment": {
+          "type": "table",
+          "desc": "Track Builder segment (points, quality, meshInfo.ceilingMesh, materialInfo, submeshCount, submeshIndexes)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "List of at most one mesh table {verts, uvs, normals, faces, material, tag}."
+        }
+      ],
       "internal": false
     }
   }

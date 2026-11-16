@@ -1,16 +1,35 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/sessionStart.lua",
-  "module": "Nœud flowgraph « Rally Mode Session Start » (catégorie once_instant, tag rally). Charge ce qu'il faut pour le mode rally : extensions gameplay_rally, pont de boucle rally (extRallyLoop) et gameplay_rallyStartClock ; détermine la mission (via le gestionnaire de boucle rally si chargé, sinon RallyUtil.detectMissionIdHelper) ; appelle gameplay_rally.loadMission(missionId, missionDir, nil, voicepackPick, {owner = 'mission'}) ; si disableOnStart, désactive le traitement des pacenotes ; en mode boucle, appelle gameplay_rallyLoop.setupForNewMission() et sort le chemin du préfab de boucle (loopPrefab, rm:getLoopPrefabPath()). Si fireEvents, déclenche le hook onRallySessionStart. Entrées : fireEvents (défaut true), disableOnStart (défaut false). Sortie : loopPrefab (string).",
-  "notes": ["À l'arrêt du graphe, décharge gameplay_rallyStartClock et gameplay_rally (et le pont de boucle s'il a été chargé par ce nœud et qu'aucun gestionnaire de boucle n'existe) puis déclenche onRallySessionEnd si fireEvents.", "Si la mission n'est pas détectée, un encadré d'erreur est loggé et rien n'est chargé.", "La pin loopPrefab est déclarée type string avec default = false (incohérent)."],
+  "module": "Flowgraph node \"Rally Mode Session Start\" (category once_instant, tag rally). Loads what rally mode needs: extensions gameplay_rally, rally loop bridge (extRallyLoop) and gameplay_rallyStartClock; determines the mission (via the rally loop manager if loaded, otherwise RallyUtil.detectMissionIdHelper); calls gameplay_rally.loadMission(missionId, missionDir, nil, voicepackPick, {owner = 'mission'}); if disableOnStart, disables pacenote processing; in loop mode, calls gameplay_rallyLoop.setupForNewMission() and outputs the loop prefab path (loopPrefab, rm:getLoopPrefabPath()). If fireEvents, triggers the onRallySessionStart hook. Inputs: fireEvents (default true), disableOnStart (default false). Output: loopPrefab (string).",
+  "notes": [
+    "When the graph stops, unloads gameplay_rallyStartClock and gameplay_rally (and the loop bridge if it was loaded by this node and no loop manager exists) then triggers onRallySessionEnd if fireEvents.",
+    "If the mission is not detected, an error box is logged and nothing is loaded.",
+    "The loopPrefab pin is declared with type string and default = false (inconsistent)."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "_executionStopped": {"desc": "Décharge les extensions rally et émet onRallySessionEnd si fireEvents.", "internal": true},
-        "unloadExt": {"desc": "Décharge gameplay_rallyStartClock, gameplay_rally et, sous conditions, le pont de boucle rally.", "internal": true},
-        "loadExt": {"desc": "Charge l'extension gameplay_rally si besoin.", "internal": true},
-        "loadRallyLoopBridge": {"desc": "Charge le pont de boucle rally s'il n'est pas chargé et mémorise si c'est ce nœud qui l'a chargé.", "internal": true},
-        "workOnce": {"desc": "Exécute la séquence de démarrage de session décrite dans la description du module.", "internal": true}
+        "_executionStopped": {
+          "desc": "Unloads the rally extensions and emits onRallySessionEnd if fireEvents.",
+          "internal": true
+        },
+        "unloadExt": {
+          "desc": "Unloads gameplay_rallyStartClock, gameplay_rally and, under conditions, the rally loop bridge.",
+          "internal": true
+        },
+        "loadExt": {
+          "desc": "Loads the gameplay_rally extension if needed.",
+          "internal": true
+        },
+        "loadRallyLoopBridge": {
+          "desc": "Loads the rally loop bridge if it is not loaded and remembers whether this node loaded it.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Executes the session start sequence described in the module description.",
+          "internal": true
+        }
       }
     }
   }

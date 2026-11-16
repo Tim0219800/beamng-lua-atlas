@@ -1,23 +1,33 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/roadDesignStandards.lua",
-  "module": "Normes de conception routière partagées par plusieurs outils de l'éditeur. Définit six préréglages ordonnés, du plus rigoureux au plus rustique, chacun avec quatre contraintes : pente longitudinale maximale (ratio), rayon de courbure minimal (m), dévers maximal (degrés) et gradient de largeur maximal.",
+  "module": "Road design standards shared by several editor tools. Defines six ordered presets, from the most rigorous to the most rustic, each with four constraints: maximum longitudinal slope (ratio), minimum curvature radius (m), maximum banking (degrees) and maximum width gradient.",
   "usage": "local rds = extensions.editor_toolUtilities_roadDesignStandards\nfor _, name in ipairs(rds.getPresetStrings()) do\n  local p = rds.getPresetsMap()[name]\n  print(name, p.maxSlope, p.minRadius, p.maxBanking, p.maxWidthGradient)\nend",
   "notes": [
-    "Préréglages (maxSlope / minRadius / maxBanking / maxWidthGradient) : Freeway / Autobahn 0.04 / 500 / 5 / 0.02 ; Major Rural Road 0.06 / 200 / 7 / 0.03 ; Secondary Road 0.08 / 100 / 9 / 0.05 ; Mountain Pass 0.12 / 40 / 12 / 0.07 ; Unpaved Trail 0.18 / 20 / 14 / 0.10 ; Off-Road / F-Road 0.24 / 12 / 18 / 0.12.",
-    "Unités : maxSlope en ratio montée/distance, minRadius en mètres, maxBanking en degrés.",
-    "Les fonctions renvoient les tables internes (pas des copies) : ne pas les modifier."
+    "Presets (maxSlope / minRadius / maxBanking / maxWidthGradient): Freeway / Autobahn 0.04 / 500 / 5 / 0.02; Major Rural Road 0.06 / 200 / 7 / 0.03; Secondary Road 0.08 / 100 / 9 / 0.05; Mountain Pass 0.12 / 40 / 12 / 0.07; Unpaved Trail 0.18 / 20 / 14 / 0.10; Off-Road / F-Road 0.24 / 12 / 18 / 0.12.",
+    "Units: maxSlope as a rise/distance ratio, minRadius in meters, maxBanking in degrees.",
+    "The functions return the internal tables (not copies): do not modify them."
   ],
   "functions": {
     "getPresetStrings": {
-      "desc": "Renvoie le tableau ordonné des noms de préréglages.",
+      "desc": "Returns the ordered array of preset names.",
       "params": {},
-      "returns": [{"type": "string[]", "desc": "Noms des six préréglages."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Names of the six presets."
+        }
+      ],
       "internal": false
     },
     "getPresetsMap": {
-      "desc": "Renvoie la table nom de préréglage -> paramètres {maxSlope, minRadius, maxBanking, maxWidthGradient}.",
+      "desc": "Returns the table preset name -> parameters {maxSlope, minRadius, maxBanking, maxWidthGradient}.",
       "params": {},
-      "returns": [{"type": "table<string, table>", "desc": "Paramètres de chaque préréglage."}],
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Parameters of each preset."
+        }
+      ],
       "internal": false
     }
   }

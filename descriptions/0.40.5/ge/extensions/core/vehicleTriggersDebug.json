@@ -1,34 +1,56 @@
 {
   "path": "lua/ge/extensions/core/vehicleTriggersDebug.lua",
-  "module": "Fenêtre imgui « Vehicle event debug » pour inspecter les triggers de véhicule : affiche l'état de core_vehicleTriggers (caméra, trigger tenu, position survolée, libellés), liste les véhicules avec leurs triggers, leurs liens d'action et les événements JBeam, et permet de les déclencher à la souris. Chargée par core_vehicleTriggers.enableDebugUI() et déchargée par disableDebugUI(). Un moddeur de véhicule s'en sert pour vérifier ses sections triggers et triggerEventLinks.",
-  "usage": "core_vehicleTriggers.enableDebugUI()  -- ouvre la fenêtre\ncore_vehicleTriggers.disableDebugUI() -- la ferme",
+  "module": "\"Vehicle event debug\" ImGui window to inspect vehicle triggers: shows the state of core_vehicleTriggers (camera, held trigger, hovered position, labels), lists vehicles with their triggers, action links and JBeam events, and lets you fire them with the mouse. Loaded by core_vehicleTriggers.enableDebugUI() and unloaded by disableDebugUI(). A vehicle modder uses it to check their triggers and triggerEventLinks sections.",
+  "usage": "core_vehicleTriggers.enableDebugUI()  -- opens the window\ncore_vehicleTriggers.disableDebugUI() -- closes it",
   "notes": [
-    "Ne s'utilise pas directement : elle dépend de core_vehicleTriggers et core_vehicle_vehicleTriggerHighlight et lit core_vehicleTriggers.state.",
-    "Les boutons « trigger » exécutent les chaînes Lua onDown/onUp des événements dans le véhicule (queueLuaCommand) ; les liens passent par une copie locale de executeLink qui force le joueur 0 (différence avec la fonction locale executeLink de vehicleTriggers.lua, qui transmet le joueur).",
-    "La copie locale de executeLink ne déclenche pas le hook onVehicleTriggersExecuteLink."
+    "Not to be used directly: it depends on core_vehicleTriggers and core_vehicle_vehicleTriggerHighlight and reads core_vehicleTriggers.state.",
+    "The \"trigger\" buttons execute the Lua onDown/onUp strings of the events in the vehicle (queueLuaCommand); links go through a local copy of executeLink that forces player 0 (a difference from the local executeLink function of vehicleTriggers.lua, which passes the player).",
+    "The local copy of executeLink does not fire the onVehicleTriggersExecuteLink hook."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "core_vehicleTriggers et core_vehicle_vehicleTriggerHighlight."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "core_vehicleTriggers and core_vehicle_vehicleTriggerHighlight."
+    }
   },
   "functions": {
     "onDeserialized": {
-      "desc": "Hook appelé après un rechargement des extensions : restaure les triggers surlignés via core_vehicle_vehicleTriggerHighlight.setSerializedHighlightedTriggerData.",
-      "params": {"data": {"type": "table|nil", "desc": "Données de onSerialize ({highLightedTriggerData})."}},
+      "desc": "Hook called after an extensions reload: restores the highlighted triggers through core_vehicle_vehicleTriggerHighlight.setSerializedHighlightedTriggerData.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Data from onSerialize ({highLightedTriggerData})."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook appelé avant un rechargement des extensions : sauvegarde les triggers surlignés.",
+      "desc": "Hook called before an extensions reload: saves the highlighted triggers.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{highLightedTriggerData = données de surbrillance ou nil}"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{highLightedTriggerData = highlight data or nil}"
+        }
+      ],
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook appelé à chaque image : dessine la fenêtre imgui de debug.",
+      "desc": "Hook called every frame: draws the debug ImGui window.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Temps réel écoulé (s)."},
-        "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s)."},
-        "dtRaw": {"type": "number", "desc": "Temps brut écoulé (s)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Elapsed real time (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation elapsed time (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw elapsed time (s)."
+        }
       },
       "returns": [],
       "internal": true

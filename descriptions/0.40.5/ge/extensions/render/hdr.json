@@ -1,26 +1,36 @@
 {
   "path": "lua/ge/extensions/render/hdr.lua",
-  "module": "Crée au premier frame la chaîne d'effets de post-traitement HDR (exposition automatique/locale) : PostEffectBrightPass (rendu AfterPostFX à échelle 0.5) avec ses enfants PostEffectDownScale, PostEffectLuminance et PostEffectCombinePass, plus PostEffectLocalExposure (échelle 0.25) dont le biais d'exposition en EV vient du réglage GraphicEVCompensation. Aucun usage direct par un moddeur ; global : render_hdr.",
+  "module": "Creates, on the first frame, the HDR post-processing effect chain (auto/local exposure): PostEffectBrightPass (AfterPostFX rendering at 0.5 scale) with its children PostEffectDownScale, PostEffectLuminance and PostEffectCombinePass, plus PostEffectLocalExposure (0.25 scale) whose exposure bias in EV comes from the GraphicEVCompensation setting. Not used directly by a modder; global: render_hdr.",
   "notes": [
-    "Ne fait rien si l'unique adaptateur graphique est « GFX Null Device » (serveur sans GPU) : log d'erreur « Null graphics device detected ».",
-    "Chaque objet n'est créé que s'il n'existe pas déjà dans le scenetree (recherche par nom PostEffect…Object) ; seul exposureBiasEV de PostEffectLocalExposureObject est mis à jour à chaque appel.",
-    "La variable `initialized` n'est jamais mise à true dans onFirstUpdate (seulement par onDeserialized) : le garde-fou n'agit donc qu'après un rechargement Lua ; la création reste idempotente grâce aux recherches par nom."
+    "Does nothing if the only graphics adapter is \"GFX Null Device\" (server without GPU): error log \"Null graphics device detected\".",
+    "Each object is only created if it does not already exist in the scenetree (lookup by name PostEffect…Object); only exposureBiasEV of PostEffectLocalExposureObject is updated on each call.",
+    "The variable `initialized` is never set to true in onFirstUpdate (only by onDeserialized): the guard therefore only acts after a Lua reload; creation remains idempotent thanks to the lookups by name."
   ],
   "functions": {
     "onFirstUpdate": {
-      "desc": "Hook du premier update du jeu : crée (si absents) les objets de post-traitement HDR décrits ci-dessus et applique le biais d'exposition GraphicEVCompensation (réglage, en EV, 0 par défaut).",
+      "desc": "Hook of the game's first update: creates (if absent) the HDR post-processing objects described above and applies the GraphicEVCompensation exposure bias (setting, in EV, 0 by default).",
       "params": {},
       "internal": true
     },
     "onSerialize": {
-      "desc": "Avant rechargement Lua.",
+      "desc": "Before Lua reload.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{initialized = true}"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{initialized = true}"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Après rechargement Lua : restaure le drapeau initialized.",
-      "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "desc": "After Lua reload: restores the initialized flag.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Table returned by onSerialize."
+        }
+      },
       "internal": true
     }
   }

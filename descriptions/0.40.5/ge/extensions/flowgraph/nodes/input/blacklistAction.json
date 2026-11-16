@@ -1,72 +1,72 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/input/blacklistAction.lua",
-  "module": "Nœud flowgraph « Set Input Actions » (once_instant, dépend de core_input_actionFilter). Bloque ou autorise une liste d'actions d'entrée, comme le fait un scénario. La liste (self.list) se choisit dans les propriétés (préréglages Empty/Scenario, recherche, catégories). Pins : block (défaut true : bloque, sinon autorise), ignoreUnrestriced (ignore le nœud si « restrictScenarios » est désactivé dans les réglages), id d'entrée (réutiliser une liste existante) et id de sortie (identifiant de la liste, pour l'annuler plus tard).",
+  "module": "Flowgraph node \"Set Input Actions\" (once_instant, depends on core_input_actionFilter). Blocks or allows a list of input actions, as a scenario does. The list (self.list) is chosen in the properties (Empty/Scenario presets, search, categories). Pins: block (default true: blocks, otherwise allows), ignoreUnrestriced (ignores the node if \"restrictScenarios\" is disabled in the settings), input id (reuse an existing list) and output id (identifier of the list, to cancel it later).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_onDeserialized": {
-          "desc": "Restaure les réglages propres au nœud à partir des données sauvegardées.",
+          "desc": "Restores the node's own settings from the saved data.",
           "internal": true,
           "params": {
             "data": {
               "type": "table",
-              "desc": "données sauvegardées du nœud"
+              "desc": "saved node data"
             }
           }
         },
         "_onSerialize": {
-          "desc": "Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.",
+          "desc": "Adds the node's own settings to the `res` table when saving the graph.",
           "internal": true,
           "params": {
             "res": {
               "type": "table",
-              "desc": "table de sérialisation à remplir"
+              "desc": "serialization table to fill"
             }
           }
         },
         "drawCustomProperties": {
-          "desc": "Dessine l'éditeur de liste d'actions (préréglages, ajout par recherche ou catégorie, liste courante).",
+          "desc": "Draws the action list editor (presets, add by search or category, current list).",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche le nombre d'actions et renomme le nœud en Block/Allow Input Actions si block est codé en dur.",
+          "desc": "Displays the number of actions and renames the node to Block/Allow Input Actions if block is hard-coded.",
           "internal": true,
           "params": {
             "builder": {
               "type": "table",
-              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+              "desc": "editor node constructor (builder:Middle())"
             },
             "style": {
               "type": "table",
-              "desc": "style de dessin du nœud"
+              "desc": "node drawing style"
             }
           }
         },
         "drawSearchInput": {
-          "desc": "Dessine le champ de recherche d'actions et met à jour les résultats.",
+          "desc": "Draws the action search field and updates the results.",
           "internal": false
         },
         "highlightText": {
-          "desc": "Dessine `label` en surlignant les occurrences de `highlightText`.",
+          "desc": "Draws `label`, highlighting the occurrences of `highlightText`.",
           "internal": false,
           "params": {
             "label": {
               "type": "any",
-              "desc": "texte à afficher"
+              "desc": "text to display"
             },
             "highlightText": {
               "type": "any",
-              "desc": "texte à surligner"
+              "desc": "text to highlight"
             }
           }
         },
         "init": {
-          "desc": "Initialise la liste avec le préréglage Scénario et le moteur de recherche.",
+          "desc": "Initializes the list with the Scenario preset and the search engine.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Enregistre la liste dans le module action du flowgraph (registerList) si pas déjà fait, puis appelle blockActions(id) ou allowActions(id).",
+          "desc": "Registers the list in the flowgraph action module (registerList) if not already done, then calls blockActions(id) or allowActions(id).",
           "internal": true
         }
       }

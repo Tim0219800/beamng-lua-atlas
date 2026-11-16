@@ -1,34 +1,34 @@
 # `flowgraph_nodes_vehicle_getElectricsValue`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua` · VM : Game Engine (GE) · 92 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua` · VM: Game Engine (GE) · 92 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/getElectricsValue")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/getElectricsValue")` (file under extensions/ but not a regular extension)
 
-Nœud « Get Electrics Value » (catégorie `once_f_duration`). Lit une valeur d'`electrics` du véhicule : s'abonne avec `core_vehicleBridge.registerValueChangeNotification(veh, key)` puis lit le cache `getCachedVehicleData`. Pins : entrées `vehId`, `key` (string, avec modèles prédéfinis : throttle, throttle_input, rpm, brake, brake_input, parkingbrake, parkingbrake_input, gear, clutch…) ; sortie `value` (any). Utilise l'état de durée (inactive, started, finished).
+Node "Get Electrics Value" (category `once_f_duration`). Reads an `electrics` value of the vehicle: subscribes with `core_vehicleBridge.registerValueChangeNotification(veh, key)` then reads the cache `getCachedVehicleData`. Pins: inputs `vehId`, `key` (string, with predefined templates: throttle, throttle_input, rpm, brake, brake_input, parkingbrake, parkingbrake_input, gear, clutch...); output `value` (any). Uses the duration state (inactive, started, finished).
 
-## Remarques
+## Notes
 
-- La liste de modèles de `key` est dans `postInit` (extrait ici, plus longue dans le code).
-- Le nœud passe à `finished` dès qu'une valeur non nil est reçue ; la notification est retirée au reset/arrêt.
+- The `key` template list is in `postInit` (excerpt here, longer in the code).
+- The node goes to `finished` as soon as a non-nil value is received; the notification is removed on reset/stop.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro. | 41 |
-| `C:_executionStopped()` | Appelé par le gestionnaire quand l'exécution du projet s'arrête ; nettoie l'état interne. | 44 |
-| `C:clearNotification()` | Se désabonne de la notification de changement de valeur (`unregisterValueChangeNotification`) et vide `_setupData`. | 48 |
-| `C:init()` | Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne. | 25 |
-| `C:onNodeReset()` | Passe en durée `inactive` et supprime la notification. | 59 |
-| `C:postInit()` | Définit `hardTemplates` du pin `key` : liste de clés electrics courantes proposées dans l'éditeur. | 28 |
-| `C:work()` | Lit la valeur en cache ; si elle existe, l'écrit dans `value` et passe en `finished`. | 78 |
-| `C:workOnce()` | S'abonne à la valeur `key` du véhicule et passe en durée `started`. | 64 |
+| `C:_executionStarted()` | Called by the manager when the flowgraph project execution starts; resets the internal state to zero. | 41 |
+| `C:_executionStopped()` | Called by the manager when the project execution stops; cleans up the internal state. | 44 |
+| `C:clearNotification()` | Unsubscribes from the value change notification (`unregisterValueChangeNotification`) and clears `_setupData`. | 48 |
+| `C:init()` | Node constructor, called at its creation by the flowgraph editor/manager; initializes the internal state. | 25 |
+| `C:onNodeReset()` | Goes to `inactive` duration and removes the notification. | 59 |
+| `C:postInit()` | Defines `hardTemplates` of the `key` pin: list of common electrics keys offered in the editor. | 28 |
+| `C:work()` | Reads the cached value; if it exists, writes it to `value` and goes to `finished`. | 78 |
+| `C:workOnce()` | Subscribes to the vehicle's `key` value and goes to `started` duration. | 64 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua`.*

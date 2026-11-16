@@ -1,114 +1,197 @@
 {
   "path": "lua/vehicle/powertrain/hydraulicCylinder.lua",
-  "module": "Vérin hydraulique : ce n'est PAS un composant powertrain autonome. C'est un « consommateur » hydraulique créé par hydraulicPump.new pour chaque entrée de `v.data.powertrainHydros` dont `connectedPump` est le nom de la pompe et dont `type` vaut 'hydraulicCylinder'. Le vérin pousse ou tire des poutres (repérées par `beamTags`) via obj:actuateBeam selon la position de la vanne (valeur electrics `directionElectricsName`, -1 à 1) et la pression fournie par la pompe, renvoie à la pompe le débit consommé, supporte plusieurs types de distributeur (float, closed, tandem, drop, bypass), des étages télescopiques et un mode de commande en position (PID).",
-  "usage": "-- jbeam (section powertrainHydros) : un vérin lié à la pompe \"hydraulicPump\"\n-- {\"name\":\"liftCyl\", \"type\":\"hydraulicCylinder\", \"connectedPump\":\"hydraulicPump\", \"beamTags\":[\"lift\"], \"directionElectricsName\":\"liftInput\", \"pistonDiameter\":0.1, \"shaftDiameter\":0.06, \"minExtend\":1, \"maxExtend\":2, \"maxSpeed\":0.5}\nelectrics.values.liftInput = 1 -- commande -1..1",
+  "module": "Hydraulic cylinder: this is NOT a standalone powertrain component. It is a hydraulic \"consumer\" created by hydraulicPump.new for each entry of `v.data.powertrainHydros` whose `connectedPump` is the name of the pump and whose `type` is 'hydraulicCylinder'. The cylinder pushes or pulls beams (identified by `beamTags`) via obj:actuateBeam according to the valve position (electrics value `directionElectricsName`, -1 to 1) and the pressure supplied by the pump, returns the consumed flow to the pump, supports several valve types (float, closed, tandem, drop, bypass), telescopic stages and a position control mode (PID).",
+  "usage": "-- jbeam (powertrainHydros section): a cylinder linked to the pump \"hydraulicPump\"\n-- {\"name\":\"liftCyl\", \"type\":\"hydraulicCylinder\", \"connectedPump\":\"hydraulicPump\", \"beamTags\":[\"lift\"], \"directionElectricsName\":\"liftInput\", \"pistonDiameter\":0.1, \"shaftDiameter\":0.06, \"minExtend\":1, \"maxExtend\":2, \"maxSpeed\":0.5}\nelectrics.values.liftInput = 1 -- command -1..1",
   "notes": [
-    "Clés lues (cylinderData = fusion de l'entrée powertrainHydros et de v.data[nom]) : name, direction (signe : -1 inverse le sens), valveType ('closed' par défaut, 'float', 'tandem', 'drop', 'bypass'), hasRegen (false), regenDirection (1), dropInputThreshold (-0.8), tandemCenterFlowCoef (0.1), cylinderReliefPressure (Pa, 50000000), cylinderReliefSlipSpeedLimit (m/s, 0.1), minimumDragCoef (10000000), maximumDragCoef (100000000), frictionCoef (N, 1), stageTransitionZoneWidth (m, 0.03), maxSpeed (m/s, obligatoire), minExtend et maxExtend (m, obligatoires), virtualMassOut (-1), virtualMass (= virtualMassOut), directionElectricsName, currentExtendElectricsName, currentExtendPercentElectricsName, cylinderForceSmoothing (100), cylinderVelocitySmoothing (20), maxBypassSpeed (= cylinderReliefSlipSpeedLimit), pistonDiameter (m, min 0.001), shaftDiameter (m, min 0.0001), stages (liste de {stageExtendStart, stageExtendEnd, pistonDiameter, shaftDiameter}), beamTags, et pour les sons : movementLoopEvent, movementLoopNode, movementLoopVelocitySmoothing(In|Out)Rate, ...StartAccel, ...StopAccel, movementLoopVolumeMin/Max, movementLoopVolumeMinVelocity/MaxVelocity, showDebugGraphSound.",
-    "Champs publics du vérin : name, connectedPump (device pompe), valveType, valveMode ('direct' ou 'position'), valvePosition (-1..1 après courbe racine quatrième), valveSign (-1, 0 ou 1), currentExtend (m, moyenne des longueurs de poutre), currentExtendPercent (0..1), velocity (m/s), cylinderFlow (m³/s, débit consommé), targetPosition (0..1, utilisée en mode position), minExtend, maxExtend, maxSpeed, beamCids, beamCount, stages, currentStageId.",
-    "Valeur de retour de update(inputPressure, dt) : deux nombres (débit consommé en m³/s, débit renvoyé au réservoir en m³/s). Le premier est toujours >= 0. Seul le distributeur 'tandem' renvoie un débit de réservoir non nul.",
-    "Types de distributeurs : float = A et B vers le réservoir, pas de force de maintien, pression * |position vanne| ; closed = A, B, P, T bloqués (force de maintien élevée) ; tandem = comme closed mais P relié au réservoir au centre (débit de fuite) ; drop = au-delà du seuil dropInputThreshold, A et B sont reliés au réservoir (le vérin chute, utile pour un godet de chargeuse) ; bypass = le fluide peut entrer sans résistance quand la charge est dans le sens de l'actionnement. Un type inconnu journalise une erreur et installe la fonction update qui ne fait rien.",
-    "Mode position : setState avec une position cible hors de la zone morte (0.005) active valveMode = 'position' ; un PID (1, 0.4, 0) calcule alors la position de vanne ; le vérin repasse en mode 'direct' dès que l'erreur passe sous la zone morte.",
-    "Étages télescopiques : si stages contient plusieurs éléments, des étages de transition de largeur stageTransitionZoneWidth sont insérés et leurs surfaces sont interpolées linéairement selon l'extension.",
-    "Bug mineur : dans updateGFX, valvePosition * cylinder.direction or 1 n'applique jamais le « or 1 » (cylinder.direction n'est jamais nil). getValvePosition renvoie nil si valveMode n'est ni 'direct' ni 'position'. Sans poutre trouvée (beamTags inconnus), le vérin installe updateDummy et écrit une erreur dans le log.",
-    "Le module n'expose que `new` ; M.deviceCategories et M.outputPorts n'existent pas."
+    "Keys read (cylinderData = merge of the powertrainHydros entry and v.data[name]): name, direction (sign: -1 reverses the direction), valveType ('closed' by default, 'float', 'tandem', 'drop', 'bypass'), hasRegen (false), regenDirection (1), dropInputThreshold (-0.8), tandemCenterFlowCoef (0.1), cylinderReliefPressure (Pa, 50000000), cylinderReliefSlipSpeedLimit (m/s, 0.1), minimumDragCoef (10000000), maximumDragCoef (100000000), frictionCoef (N, 1), stageTransitionZoneWidth (m, 0.03), maxSpeed (m/s, required), minExtend and maxExtend (m, required), virtualMassOut (-1), virtualMass (= virtualMassOut), directionElectricsName, currentExtendElectricsName, currentExtendPercentElectricsName, cylinderForceSmoothing (100), cylinderVelocitySmoothing (20), maxBypassSpeed (= cylinderReliefSlipSpeedLimit), pistonDiameter (m, min 0.001), shaftDiameter (m, min 0.0001), stages (list of {stageExtendStart, stageExtendEnd, pistonDiameter, shaftDiameter}), beamTags, and for the sounds: movementLoopEvent, movementLoopNode, movementLoopVelocitySmoothing(In|Out)Rate, ...StartAccel, ...StopAccel, movementLoopVolumeMin/Max, movementLoopVolumeMinVelocity/MaxVelocity, showDebugGraphSound.",
+    "Public fields of the cylinder: name, connectedPump (pump device), valveType, valveMode ('direct' or 'position'), valvePosition (-1..1 after fourth-root curve), valveSign (-1, 0 or 1), currentExtend (m, average of the beam lengths), currentExtendPercent (0..1), velocity (m/s), cylinderFlow (m³/s, consumed flow), targetPosition (0..1, used in position mode), minExtend, maxExtend, maxSpeed, beamCids, beamCount, stages, currentStageId.",
+    "Return value of update(inputPressure, dt): two numbers (consumed flow in m³/s, flow returned to the reservoir in m³/s). The first is always >= 0. Only the 'tandem' valve returns a non-zero reservoir flow.",
+    "Valve types: float = A and B to the reservoir, no holding force, pressure * |valve position|; closed = A, B, P, T blocked (high holding force); tandem = like closed but P connected to the reservoir at center (leak flow); drop = beyond the dropInputThreshold threshold, A and B are connected to the reservoir (the cylinder drops, useful for a loader bucket); bypass = the fluid can enter without resistance when the load is in the direction of actuation. An unknown type logs an error and installs the update function that does nothing.",
+    "Position mode: setState with a target position outside the dead zone (0.005) enables valveMode = 'position'; a PID (1, 0.4, 0) then computes the valve position; the cylinder goes back to 'direct' mode as soon as the error falls below the dead zone.",
+    "Telescopic stages: if stages contains several elements, transition stages of width stageTransitionZoneWidth are inserted and their areas are linearly interpolated according to the extension.",
+    "Minor bug: in updateGFX, valvePosition * cylinder.direction or 1 never applies the \"or 1\" (cylinder.direction is never nil). getValvePosition returns nil if valveMode is neither 'direct' nor 'position'. Without a beam found (unknown beamTags), the cylinder installs updateDummy and writes an error in the log.",
+    "The module only exposes `new`; M.deviceCategories and M.outputPorts do not exist."
   ],
   "fields": {},
   "functions": {
     "new": {
-      "desc": "Construit un vérin hydraulique : surfaces de piston et de tige (ou étages télescopiques), poutres à actionner depuis les tags beamTags, distributeur, lisseurs, PID de position. Appelée par hydraulicPump.new pour chaque consommateur déclaré.",
+      "desc": "Builds a hydraulic cylinder: piston and rod areas (or telescopic stages), beams to actuate from the beamTags tags, valve, smoothers, position PID. Called by hydraulicPump.new for each declared consumer.",
       "params": {
-        "cylinderData": {"type": "table", "desc": "Données du vérin (entrée powertrainHydros fusionnée avec v.data[nom])."},
-        "pumpDevice": {"type": "table", "desc": "Device hydraulicPump auquel le vérin est connecté (son nom sert à nommer les clés d'état)."}
+        "cylinderData": {
+          "type": "table",
+          "desc": "Cylinder data (powertrainHydros entry merged with v.data[name])."
+        },
+        "pumpDevice": {
+          "type": "table",
+          "desc": "hydraulicPump device to which the cylinder is connected (its name is used to name the state keys)."
+        }
       },
-      "returns": [{"type": "table", "desc": "Le vérin (classe `cylinder`)."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The cylinder (class `cylinder`)."
+        }
+      ],
       "internal": true
     }
   },
   "classes": {
     "cylinder": {
-      "desc": "Objet renvoyé par new(cylinderData, pumpDevice). La méthode update change selon le type de distributeur (setValveType).",
+      "desc": "Object returned by new(cylinderData, pumpDevice). The update method changes according to the valve type (setValveType).",
       "functions": {
         "getCylinderStage": {
-          "desc": "Renvoie l'étage actif du vérin pour l'extension courante. Version conventionnelle : toujours le premier étage. Version télescopique : étage brut, avec surfaces interpolées si c'est une transition.",
+          "desc": "Returns the active stage of the cylinder for the current extension. Conventional version: always the first stage. Telescopic version: raw stage, with interpolated areas if it is a transition.",
           "params": {},
-          "returns": [{"type": "table", "desc": "Étage {stageExtendStart, stageExtendEnd, cylinderExtendArea, shaftArea, cylinderContractArea, regenAreaRatio, invRegenAreaRatio, cylinderActiveArea}."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Stage {stageExtendStart, stageExtendEnd, cylinderExtendArea, shaftArea, cylinderContractArea, regenAreaRatio, invRegenAreaRatio, cylinderActiveArea}."
+            }
+          ],
           "internal": true
         },
         "getRawCylinderStage": {
-          "desc": "Cherche dans la liste des étages celui qui contient l'extension courante, en partant de l'étage courant (recherche locale). Mémorise currentStageId.",
+          "desc": "Searches the list of stages for the one that contains the current extension, starting from the current stage (local search). Stores currentStageId.",
           "params": {},
-          "returns": [{"type": "table", "desc": "Étage trouvé (le premier par défaut avec un avertissement)."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Stage found (the first one by default, with a warning)."
+            }
+          ],
           "internal": true
         },
         "updateBlendedStage": {
-          "desc": "Pour un étage de transition : interpole les surfaces entre les deux étages voisins selon l'extension (facteur 0 à 1).",
-          "params": {"stage": {"type": "table", "desc": "Étage de transition à mettre à jour."}},
+          "desc": "For a transition stage: interpolates the areas between the two neighboring stages according to the extension (factor 0 to 1).",
+          "params": {
+            "stage": {
+              "type": "table",
+              "desc": "Transition stage to update."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "updateStageActiveArea": {
-          "desc": "Choisit la surface active de l'étage : surface d'extension si valveSign >= 0, surface de rétraction sinon.",
-          "params": {"stage": {"type": "table", "desc": "Étage à mettre à jour."}},
+          "desc": "Chooses the active area of the stage: extension area if valveSign >= 0, retraction area otherwise.",
+          "params": {
+            "stage": {
+              "type": "table",
+              "desc": "Stage to update."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "update": {
-          "desc": "Appelée par la pompe à chaque pas physique (consumer:update). Calcule la force du vérin depuis la pression d'entrée et la surface active, actionne chaque poutre (obj:actuateBeam) avec limite de vitesse, force de glissement (pression de décharge) et traînée, met à jour extension, vitesse et débit consommé. Sa version dépend du distributeur : updateFloat, updateClosed, updateTandem, updateDrop, updateBypass ou updateDummy.",
+          "desc": "Called by the pump at each physics step (consumer:update). Computes the cylinder force from the input pressure and the active area, actuates each beam (obj:actuateBeam) with speed limit, slip force (relief pressure) and drag, updates extension, velocity and consumed flow. Its version depends on the valve: updateFloat, updateClosed, updateTandem, updateDrop, updateBypass or updateDummy.",
           "params": {
-            "inputPressure": {"type": "number", "desc": "Pression d'accumulateur de la pompe en Pa."},
-            "dt": {"type": "number", "desc": "Pas de temps en secondes."}
+            "inputPressure": {
+              "type": "number",
+              "desc": "Accumulator pressure of the pump in Pa."
+            },
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds."
+            }
           },
           "returns": [
-            {"type": "number", "desc": "Débit consommé par le vérin en m³/s (>= 0)."},
-            {"type": "number", "desc": "Débit renvoyé au réservoir en m³/s (non nul seulement pour tandem)."}
+            {
+              "type": "number",
+              "desc": "Flow consumed by the cylinder in m³/s (>= 0)."
+            },
+            {
+              "type": "number",
+              "desc": "Flow returned to the reservoir in m³/s (non-zero only for tandem)."
+            }
           ],
           "internal": true
         },
         "setValveType": {
-          "desc": "Choisit le type de distributeur : 'float', 'closed', 'tandem', 'drop' ou 'bypass'. Un type invalide journalise une erreur et installe une fonction update vide.",
-          "params": {"valveType": {"type": "string", "desc": "Type de distributeur."}},
+          "desc": "Chooses the valve type: 'float', 'closed', 'tandem', 'drop' or 'bypass'. An invalid type logs an error and installs an empty update function.",
+          "params": {
+            "valveType": {
+              "type": "string",
+              "desc": "Valve type."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "updateGFX": {
-          "desc": "Appelée à chaque image par la pompe : lit la valeur electrics de direction (ou la position PID en mode position), calcule valvePosition, valveSign, les surfaces actives et le coefficient de traînée, puis publie l'extension et le pourcentage d'extension dans les electrics demandées.",
-          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+          "desc": "Called every frame by the pump: reads the direction electrics value (or the PID position in position mode), computes valvePosition, valveSign, the active areas and the drag coefficient, then publishes the extension and the extension percentage in the requested electrics.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Frame duration in seconds."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "updateSounds": {
-          "desc": "Règle le volume de la boucle sonore de mouvement selon la vitesse du vérin (lissée).",
-          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+          "desc": "Sets the volume of the movement sound loop according to the (smoothed) cylinder speed.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Frame duration in seconds."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "initSounds": {
-          "desc": "Crée la boucle sonore de mouvement (si movementLoopEvent est défini) et les lisseurs de vitesse et de volume.",
-          "params": {"cylinderData": {"type": "table", "desc": "Données du vérin (clés movementLoop*)."}},
+          "desc": "Creates the movement sound loop (if movementLoopEvent is defined) and the speed and volume smoothers.",
+          "params": {
+            "cylinderData": {
+              "type": "table",
+              "desc": "Cylinder data (movementLoop* keys)."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "resetSounds": {
-          "desc": "Remet à zéro le lisseur de vitesse du son de mouvement.",
-          "params": {"cylinderData": {"type": "table", "desc": "Données du vérin (non utilisées)."}},
+          "desc": "Resets the movement sound speed smoother.",
+          "params": {
+            "cylinderData": {
+              "type": "table",
+              "desc": "Cylinder data (unused)."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "reset": {
-          "desc": "Remet à zéro vitesse, lisseurs, position de vanne, mode (direct), position cible (position courante), PID, étage courant et réinitialise les valeurs electrics d'extension.",
-          "params": {"jbeamData": {"type": "table", "desc": "Données du vérin (non utilisées ici)."}},
+          "desc": "Resets speed, smoothers, valve position, mode (direct), target position (current position), PID, current stage and reinitializes the extension electrics values.",
+          "params": {
+            "jbeamData": {
+              "type": "table",
+              "desc": "Cylinder data (unused here)."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "getState": {
-          "desc": "Renvoie l'état sauvegardable : clé '<pompe>_<vérin>_target_position' = extension courante en pourcentage (0..1).",
+          "desc": "Returns the saveable state: key '<pump>_<cylinder>_target_position' = current extension as a percentage (0..1).",
           "params": {},
-          "returns": [{"type": "table", "desc": "Table stateData."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "stateData table."
+            }
+          ],
           "internal": false
         },
         "setState": {
-          "desc": "Restaure la position cible (nombre fini, borné à 0..1) depuis data['<pompe>_<vérin>_target_position'] et passe en mode 'position' si l'écart dépasse la zone morte, sinon en mode 'direct'.",
-          "params": {"data": {"type": "table|nil", "desc": "Table d'état produite par getState."}},
+          "desc": "Restores the target position (finite number, clamped to 0..1) from data['<pump>_<cylinder>_target_position'] and switches to 'position' mode if the gap exceeds the dead zone, otherwise to 'direct' mode.",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "State table produced by getState."
+            }
+          },
           "returns": [],
           "internal": false
         }

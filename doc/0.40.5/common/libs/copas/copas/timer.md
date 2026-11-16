@@ -1,51 +1,51 @@
 # `libs_copas_copas_timer`
 
-*Fichier : `lua/common/libs/copas/copas/timer.lua` · VM : Commun (GE + véhicule) · 87 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/copas/copas/timer.lua` · VM: Common (GE + vehicle) · 87 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/copas/copas/timer")`
+**Access:** `require("libs/copas/copas/timer")`
 
-Sous-module de la bibliothèque tierce Copas : minuteries (ponctuelles ou récurrentes) exécutées dans le répartiteur Copas. timer.new arme immédiatement un timer qui appellera callback(timer_obj, params) après le délai. Le module renvoie la table timer.
+Submodule of the third-party Copas library: timers (one-shot or recurring) run in the Copas dispatcher. timer.new immediately arms a timer that will call callback(timer_obj, params) after the delay. The module returns the table timer.
 
-## Exemple
+## Example
 
 ```lua
 local timer = require("libs/copas/copas/timer")
-local t = timer.new({delay = 2, recurring = true, callback = function(self, p) print("tic") end})
+local t = timer.new({delay = 2, recurring = true, callback = function(self, p) print("tick") end})
 t:cancel()
 ```
 
-## Remarques
+## Notes
 
-- new lève une erreur (assert) si delay < 0 ou si callback n'est pas une fonction.
+- new raises an error (assert) if delay < 0 or if callback is not a function.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_copas_copas_timer.cancel(self)` | Annule un timer actif (retire sa coroutine du répartiteur). | 49 |
-| `libs_copas_copas_timer.new(opts)` | Crée et arme un timer. | 72 |
+| `libs_copas_copas_timer.cancel(self)` | Cancels an active timer (removes its coroutine from the dispatcher). | 49 |
+| `libs_copas_copas_timer.new(opts)` | Creates and arms a timer. | 72 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_copas_copas_timer.cancel(self)`
 
-Annule un timer actif (retire sa coroutine du répartiteur).
+Cancels an active timer (removes its coroutine from the dispatcher).
 
-- `self` (*table*) : Le timer (timer:cancel())
-- **renvoie** : table|nil Le timer, ou nil + erreur si déjà annulé
+- `self` (*table*) : The timer (timer:cancel())
+- **returns**: table|nil The timer, or nil + error if already cancelled
 
 #### `libs_copas_copas_timer.new(opts)`
 
-Crée et arme un timer.
+Creates and arms a timer.
 
-- `opts` (*table*) : {delay (s), callback, recurring?, params?, initial_delay? (défaut delay)}
-- **renvoie** : table Objet timer
+- `opts` (*table*) : {delay (s), callback, recurring?, params?, initial_delay? (default delay)}
+- **returns**: table Timer object
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `__index` | table | Métatable des objets timer. |
+| `__index` | table | Metatable of the timer objects. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/copas/copas/timer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/copas/copas/timer.lua`.*

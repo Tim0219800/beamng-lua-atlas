@@ -2,117 +2,117 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/inspector.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre Inspector du World Editor : affiche et modifie les champs (statiques, dynamiques, tableaux) de l'objet ou des objets sélectionnés, avec éditeurs spécialisés (peinture métallique de véhicule, UV de billboards GroundCover, couleur/intensité/cookie des lumières, labels de DecalData) et undo/redo via editor.history. Plusieurs instances peuvent coexister, dont des instances verrouillées sur une sélection. Un moddeur s'en sert pour enregistrer des gestionnaires par type de sélection ou des modificateurs de champs.
---- Accès : extension `editor_inspector` : `extensions.load("editor_inspector")`, puis la globale `editor_inspector`
+--- World Editor Inspector window: displays and edits the fields (static, dynamic, arrays) of the selected object or objects, with specialized editors (vehicle metallic paint, GroundCover billboard UVs, light color/intensity/cookie, DecalData labels) and undo/redo via editor.history. Several instances can coexist, including instances locked to a selection. A modder uses it to register handlers per selection type or field modifiers.
+--- Access: extension `editor_inspector`: `extensions.load("editor_inspector")`, then the global `editor_inspector`
 ---@class editor_inspector
 editor_inspector = {}
 
---- Appelé à l'activation de l'éditeur : réinitialise les tables du valueInspector et le contexte partagé, puis rafraîchit la sélection.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/inspector.lua:1590
+--- Called when the editor is activated: resets the valueInspector tables and the shared context, then refreshes the selection.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/inspector.lua:1590
 function editor_inspector.onEditorActivated() end
 
---- Appelé après l'ouverture d'un niveau : recharge les listes de datablocks des menus déroulants.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/inspector.lua:2292
+--- Called after a level is opened: reloads the datablock lists of the dropdown menus.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/inspector.lua:2292
 function editor_inspector.onEditorAfterOpenLevel() end
 
---- Appelé à la désactivation de l'éditeur. Corps vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/inspector.lua:1596
+--- Called when the editor is deactivated. Empty body.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/inspector.lua:1596
 function editor_inspector.onEditorDeactivated() end
 
---- Dessine chaque fenêtre d'inspecteur à chaque frame (ferme les instances dont la fenêtre n'est plus visible) et traite le rafraîchissement d'éclairage nocturne en attente.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/inspector.lua:1484
+--- Draws each inspector window every frame (closes the instances whose window is no longer visible) and handles the pending night lighting refresh.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/inspector.lua:1484
 function editor_inspector.onEditorGui() end
 
---- Initialise le valueInspector, enregistre le gestionnaire « object », l'entrée de menu Window > Inspector et les éditeurs/labels de champs personnalisés (BeamNGVehicle.metallicPaintData, GroundCover.billboardUVs, DecalData.texRows/texCols, PointLight/SpotLight color, intensity, cookie).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/inspector.lua:2234
+--- Initializes the valueInspector, registers the "object" handler, the Window > Inspector menu entry and the custom field editors/labels (BeamNGVehicle.metallicPaintData, GroundCover.billboardUVs, DecalData.texRows/texCols, PointLight/SpotLight color, intensity, cookie).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/inspector.lua:2234
 function editor_inspector.onEditorInitialized() end
 
---- Restaure les instances d'inspecteur depuis l'état sauvegardé de l'éditeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/inspector.lua:1599
----@param state table État de l'éditeur.
+--- Restores the inspector instances from the editor's saved state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/inspector.lua:1599
+---@param state table Editor state.
 function editor_inspector.onEditorLoadGuiInstancerState(state) end
 
---- Appelé quand la sélection change : termine un éventuel « pickingLinkTo » ou reconstruit la liste des champs communs aux objets sélectionnés (avec compteur d'usage).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/inspector.lua:2262
+--- Called when the selection changes: ends a possible "pickingLinkTo" or rebuilds the list of fields common to the selected objects (with usage counter).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/inspector.lua:2262
 function editor_inspector.onEditorObjectSelectionChanged() end
 
---- Définit editor.checkEditorDirtyFlag et editor.requestInspectorScrollToTopOnceForSelection(selectionId).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/inspector.lua:2227
+--- Defines editor.checkEditorDirtyFlag and editor.requestInspectorScrollToTopOnceForSelection(selectionId).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/inspector.lua:2227
 function editor_inspector.onEditorRegisterApi() end
 
---- Écrit les instances d'inspecteur dans l'état de l'éditeur (clé « inspectorInstances »).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/inspector.lua:1607
----@param state table État à compléter.
+--- Writes the inspector instances into the editor state (key "inspectorInstances").
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/inspector.lua:1607
+---@param state table State to complete.
 function editor_inspector.onEditorSaveGuiInstancerState(state) end
 
---- Appelé au chargement : initialise les groupes repliables et installe l'API editor.* (addInspectorInstance, registerInspectorTypeHandler…).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/inspector.lua:1007
+--- Called at load: initializes the collapsible groups and installs the editor.* API (addInspectorInstance, registerInspectorTypeHandler...).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/inspector.lua:1007
 function editor_inspector.onExtensionLoaded() end
 
---- Méthodes ajoutées à la table globale `editor` par ce module.
+--- Methods added to the global `editor` table by this module.
 ---@class editor_inspector_editor
 local editor_inspector_editor = {}
 
---- Crée une nouvelle fenêtre d'inspecteur. Avec une sélection, l'instance est verrouillée dessus (contexte propre) ; sans, elle suit la sélection courante.
----Source : lua/ge/extensions/editor/inspector.lua:132
----@param selection table|nil Sélection à verrouiller (copiée en profondeur).
----@return string  Index (clé chaîne) de l'instance.
+--- Creates a new inspector window. With a selection, the instance is locked to it (own context); without, it follows the current selection.
+---Source: lua/ge/extensions/editor/inspector.lua:132
+---@param selection table|nil Selection to lock to (deep copied).
+---@return string  Index (string key) of the instance.
 function editor_inspector_editor.addInspectorInstance(selection) end
 
---- Pour chaque objet sélectionné, appelle inspectUpdate() ; si l'objet est modifié (ou isEditorDirty), marque l'éditeur comme modifié (editor.setDirty). Ne fait rien si déjà dirty.
----Source : lua/ge/extensions/editor/inspector.lua:100
+--- For each selected object, calls inspectUpdate(); if the object is modified (or isEditorDirty), marks the editor as modified (editor.setDirty). Does nothing if already dirty.
+---Source: lua/ge/extensions/editor/inspector.lua:100
 function editor_inspector_editor.checkEditorDirtyFlag() end
 
---- Ferme une instance d'inspecteur et désenregistre sa fenêtre.
----Source : lua/ge/extensions/editor/inspector.lua:157
----@param idx string Index renvoyé par addInspectorInstance.
+--- Closes an inspector instance and unregisters its window.
+---Source: lua/ge/extensions/editor/inspector.lua:157
+---@param idx string Index returned by addInspectorInstance.
 function editor_inspector_editor.closeInspectorInstance(idx) end
 
---- Renvoie les instances d'inspecteur ouvertes.
----Source : lua/ge/extensions/editor/inspector.lua:163
----@return table  Table index -> infos d'instance.
+--- Returns the open inspector instances.
+---Source: lua/ge/extensions/editor/inspector.lua:163
+---@return table  Table index -> instance info.
 function editor_inspector_editor.getInspectorInstances() end
 
---- Renvoie les gestionnaires enregistrés par type de sélection.
----Source : lua/ge/extensions/editor/inspector.lua:167
+--- Returns the handlers registered per selection type.
+---Source: lua/ge/extensions/editor/inspector.lua:167
 ---@return table<string, table>  typeName -> {typeName, guiCallback}.
 function editor_inspector_editor.getInspectorTypeHandlers() end
 
---- Indique si l'inspecteur partagé affiche actuellement un champ de ce nom.
----Source : lua/ge/extensions/editor/inspector.lua:986
----@param fieldName string Nom du champ.
----@return boolean  true si le champ est présent.
+--- Indicates whether the shared inspector currently displays a field of this name.
+---Source: lua/ge/extensions/editor/inspector.lua:986
+---@param fieldName string Field name.
+---@return boolean  true if the field is present.
 function editor_inspector_editor.inspectorHasField(fieldName) end
 
---- Enregistre un callback de modification de champs, identifié par un nom unique.
----Source : lua/ge/extensions/editor/inspector.lua:182
----@param uniqueName string Identifiant unique.
----@param callback function Fonction de modification (signature non détaillée ici).
+--- Registers a field modification callback, identified by a unique name.
+---Source: lua/ge/extensions/editor/inspector.lua:182
+---@param uniqueName string Unique identifier.
+---@param callback function Modification function _anon(signature not detailed here).
 function editor_inspector_editor.registerInspectorFieldModifier(uniqueName, callback) end
 
---- Enregistre le rendu d'inspecteur d'un type de sélection (clé de editor.selection).
----Source : lua/ge/extensions/editor/inspector.lua:171
----@param typeName string Nom du type, par ex. « object ».
----@param guiCallback function Fonction de dessin ImGui appelée avec l'instance d'inspecteur (déduit du code d'appel de levelSettings).
+--- Registers the inspector rendering of a selection type (key of editor.selection).
+---Source: lua/ge/extensions/editor/inspector.lua:171
+---@param typeName string Type name, e.g. "object".
+---@param guiCallback function ImGui drawing function called with the inspector instance (inferred from the calling code of levelSettings).
 function editor_inspector_editor.registerInspectorTypeHandler(typeName, guiCallback) end
 
---- Retire un modificateur de champs.
----Source : lua/ge/extensions/editor/inspector.lua:188
----@param uniqueName string Identifiant utilisé à l'enregistrement.
+--- Removes a field modifier.
+---Source: lua/ge/extensions/editor/inspector.lua:188
+---@param uniqueName string Identifier used at registration.
 function editor_inspector_editor.unregisterInspectorFieldModifier(uniqueName) end
 
---- Retire un gestionnaire de type.
----Source : lua/ge/extensions/editor/inspector.lua:178
----@param typeName string Nom du type.
+--- Removes a type handler.
+---Source: lua/ge/extensions/editor/inspector.lua:178
+---@param typeName string Type name.
 function editor_inspector_editor.unregisterInspectorTypeHandler(typeName) end
 

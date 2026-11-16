@@ -2,21 +2,21 @@
 -- tim19Atlas stub generated from lua/vehicle/extensions/skeleton.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Modèle minimal d'extension véhicule, et extension réellement utilisée : main.lua la charge toujours (extensions.load("skeleton")) à la fin de l'initialisation du véhicule. Cycle de vie : le gestionnaire d'extensions la charge, appelle onExtensionLoaded(), et si celle-ci renvoie false l'extension est déchargée immédiatement (ses hooks ne seront jamais appelés) ; sinon elle reste active et reçoit les hooks globaux (ici onDebugDraw, appelé à chaque frame de debug par main.lua). Convention : une extension expose ses hooks dans la table M (onExtensionLoaded, onInit, onReset, updateGFX, onDebugDraw, onExtensionUnloaded…) et renvoie M.
---- Celle-ci dessine les poutres et nœuds du véhicule pour aider à démarrer en jbeam quand il n'y a aucun flexbody.
---- Accès : extension `skeleton` : `extensions.load (VM véhicule)("skeleton")`, puis la globale `skeleton`
+--- Minimal vehicle extension template, and an extension actually used: main.lua always loads it (extensions.load("skeleton")) at the end of vehicle initialization. Lifecycle: the extension manager loads it, calls onExtensionLoaded(), and if that returns false the extension is unloaded immediately (its hooks will never be called); otherwise it stays active and receives the global hooks (here onDebugDraw, called every debug frame by main.lua). Convention: an extension exposes its hooks in the table M (onExtensionLoaded, onInit, onReset, updateGFX, onDebugDraw, onExtensionUnloaded…) and returns M.
+--- This one draws the vehicle's beams and nodes to help get started in jbeam when there is no flexbody.
+--- Access: extension `skeleton`: `extensions.load (vehicle VM)("skeleton")`, then the global `skeleton`
 ---@class skeleton
 skeleton = {}
 
---- Hook appelé à chaque frame par main.lua (extensions.hook('onDebugDraw', focusPos)). Dessine toutes les poutres (drawBeam3d), tous les nœuds (drawNodeSphere) et les triangles de collision, sauf si le debug beam (bdebug) est actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/skeleton.lua:24
----@param focusPos vec3 Position du focus caméra (non utilisée).
+--- Hook called every frame by main.lua (extensions.hook('onDebugDraw', focusPos)). Draws all beams (drawBeam3d), all nodes (drawNodeSphere) and the collision triangles, unless beam debug (bdebug) is active.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/skeleton.lua:24
+---@param focusPos vec3 Camera focus position (unused).
 function skeleton.onDebugDraw(focusPos) end
 
---- Hook appelé juste après le chargement de l'extension. Renvoie false pour se décharger (pas de beams/nodes, showSkeleton faux, ou flexbodies présents), true sinon.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/skeleton.lua:11
----@return boolean  false = décharger l'extension, true = la garder.
+--- Hook called right after the extension loads. Returns false to unload itself (no beams/nodes, showSkeleton false, or flexbodies present), true otherwise.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/skeleton.lua:11
+---@return boolean  false = unload the extension, true = keep it.
 function skeleton.onExtensionLoaded() end
 

@@ -1,35 +1,35 @@
 # `flowgraph_groupHelper`
 
-*Fichier : `lua/ge/extensions/flowgraph/groupHelper.lua` · VM : Game Engine (GE) · 500 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/groupHelper.lua` · VM: Game Engine (GE) · 500 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/groupHelper")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/groupHelper")` (file under extensions/ but not a regular extension)
 
-Aide de l'éditeur flowgraph pour grouper et dégrouper des nœuds sélectionnés. Pour un graphe de flux, le groupe devient un sous-graphe (ou sous-macro) représenté par un nœud macro/integrated ; pour un graphe d'états, il devient un état de groupe. Le fichier contient aussi des fonctions de centrage des nœuds à partir de leur position dans l'éditeur. Le module renvoie un constructeur : require('/lua/ge/extensions/flowgraph/groupHelper')(mgr).
+Flowgraph editor helper for grouping and ungrouping selected nodes. For a flow graph, the group becomes a subgraph (or sub-macro) represented by a macro/integrated node; for a state graph, it becomes a group state. The file also contains functions to center nodes based on their position in the editor. The module returns a constructor: require('/lua/ge/extensions/flowgraph/groupHelper')(mgr).
 
-## Remarques
+## Notes
 
-- Usage éditeur uniquement : s'appuie sur mgr.selectedNodes et ui_flowgraph_editor (GetNodeSize, GetNodePosition).
-- Un nœud de taille 0x0 est traité comme 200 x 100.
-- Bug : ungroupSelection appelle self:ungroupFlowNode(), qui n'est définie nulle part dans le fichier ; dégrouper un nœud de flux provoque donc une erreur Lua.
-- groupFlowNodes renvoie le nœud integrated créé.
+- Editor use only: relies on mgr.selectedNodes and ui_flowgraph_editor (GetNodeSize, GetNodePosition).
+- A node of size 0x0 is treated as 200 x 100.
+- Bug: ungroupSelection calls self:ungroupFlowNode(), which is defined nowhere in the file; ungrouping a flow node therefore raises a Lua error.
+- groupFlowNodes returns the integrated node created.
 
-## Classe `C`
+## Class `C`
 
-Objet renvoyé par le constructeur ; garde le manager dans self.mgr.
+Object returned by the constructor; keeps the manager in self.mgr.
 
-Le module renvoie un constructeur : `local obj = require("flowgraph_groupHelper")(options)`.
+The module returns a constructor: `local obj = require("flowgraph_groupHelper")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:centerMultiNodes(fixNodes, moveNodes)` | Centre moveNodes sur le centre du rectangle englobant fixNodes. | 59 |
-| `C:centerNodes(nodes, pos)` | Replace un ensemble de nœuds autour d'une position en conservant leurs positions relatives (alignement sur la grille). | 39 |
-| `C:createGroupingFromSelection()` | Groupe la sélection : groupStateNodes dans un graphe d'états, sinon groupFlowNodes. | 93 |
-| `C:getRectCenter(nodes)` | Calcule le rectangle englobant des nœuds et son centre. | 13 |
-| `C:groupFlowNodes()` | Clone la sélection dans un nouveau sous-graphe ou sous-macro, copie les variables du graphe, recrée les liens internes et remplace la sélection par un nœud macro/integrated relié aux liens entrants et sortants. | 172 |
-| `C:groupStateNodes()` | Déplace les nœuds d'état sélectionnés (sauf entrée et sortie) dans un nouveau graphe d'état 'new group' et reconnecte les liens entrants et sortants via le nœud de groupe. | 101 |
-| `C:init(mgr)` | Mémorise le manager. | 9 |
-| `C:ungroupSelection()` | Dégroupe la sélection : ungroupStateNode dans un graphe d'états, sinon ungroupFlowNode (inexistante, voir notes). | 415 |
-| `C:ungroupStateNode()` | Remonte les nœuds internes (hors entrée/sortie) d'un état de groupe sélectionné dans le graphe courant et rétablit les liens. | 423 |
+| `C:centerMultiNodes(fixNodes, moveNodes)` | Centers moveNodes on the center of the bounding rectangle of fixNodes. | 59 |
+| `C:centerNodes(nodes, pos)` | Repositions a set of nodes around a position while keeping their relative positions (grid alignment). | 39 |
+| `C:createGroupingFromSelection()` | Groups the selection: groupStateNodes in a state graph, otherwise groupFlowNodes. | 93 |
+| `C:getRectCenter(nodes)` | Computes the bounding rectangle of the nodes and its center. | 13 |
+| `C:groupFlowNodes()` | Clones the selection into a new subgraph or sub-macro, copies the graph's variables, recreates the internal links and replaces the selection with a macro/integrated node connected to the incoming and outgoing links. | 172 |
+| `C:groupStateNodes()` | Moves the selected state nodes (except entry and exit) into a new 'new group' state graph and reconnects the incoming and outgoing links via the group node. | 101 |
+| `C:init(mgr)` | Stores the manager. | 9 |
+| `C:ungroupSelection()` | Ungroups the selection: ungroupStateNode in a state graph, otherwise ungroupFlowNode (nonexistent, see notes). | 415 |
+| `C:ungroupStateNode()` | Moves the internal nodes (except entry/exit) of a selected group state up into the current graph and restores the links. | 423 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/groupHelper.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/groupHelper.lua`.*

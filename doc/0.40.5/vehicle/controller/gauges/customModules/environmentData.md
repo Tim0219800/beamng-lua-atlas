@@ -1,61 +1,61 @@
 # `controller_gauges_customModules_environmentData`
 
-*Fichier : `lua/vehicle/controller/gauges/customModules/environmentData.lua` · VM : Véhicule · 35 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/gauges/customModules/environmentData.lua` · VM: Vehicle · 35 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `gauges/customModules/environmentData` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `gauges/customModules/environmentData` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Module de données pour genericGauges : fournit la température extérieure et l'heure système.
+Data module for genericGauges: provides the outside temperature and the system time.
 
-## Remarques
+## Notes
 
-- temperatureEnv en °C (obj:getEnvTemperature() - 273.15) ; time = chaîne "HH:MM" de l'heure locale réelle de l'ordinateur (os.date), pas l'heure du jeu.
+- temperatureEnv in °C (obj:getEnvTemperature() - 273.15); time = "HH:MM" string of the computer's real local time (os.date), not the game time.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_gauges_customModules_environmentData.init(jbeamData)` | Ne fait rien. *(interne)* | 24 |
-| `controller_gauges_customModules_environmentData.reset()` | Réinitialise l'état interne du module. *(interne)* | 21 |
-| `controller_gauges_customModules_environmentData.setupGaugeData(properties)` | Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : aucune propriété n'est lue ; produit toujours temperatureEnv et time. *(interne)* | 18 |
-| `controller_gauges_customModules_environmentData.updateGFX(dt)` | Ne fait rien (la mise à jour se fait par updateGaugeData). *(interne)* | 10 |
-| `controller_gauges_customModules_environmentData.updateGaugeData(moduleData, dt)` | Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées. *(interne)* | 13 |
+| `controller_gauges_customModules_environmentData.init(jbeamData)` | Does nothing. *(internal)* | 24 |
+| `controller_gauges_customModules_environmentData.reset()` | Resets the module's internal state. *(internal)* | 21 |
+| `controller_gauges_customModules_environmentData.setupGaugeData(properties)` | Called by genericGauges with the properties requested in displayData.customModules: no property is read; always produces temperatureEnv and time. *(internal)* | 18 |
+| `controller_gauges_customModules_environmentData.updateGFX(dt)` | Does nothing (the update is done by updateGaugeData). *(internal)* | 10 |
+| `controller_gauges_customModules_environmentData.updateGaugeData(moduleData, dt)` | Called by genericGauges before each send: fills moduleData with the requested values. *(internal)* | 13 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_gauges_customModules_environmentData.init(jbeamData)`
 
-Ne fait rien.
+Does nothing.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_gauges_customModules_environmentData.setupGaugeData(properties)`
 
-Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : aucune propriété n'est lue ; produit toujours temperatureEnv et time.
+Called by genericGauges with the properties requested in displayData.customModules: no property is read; always produces temperatureEnv and time.
 
-- `properties` (*table<string, boolean>*) : Ensemble des propriétés demandées (clé = nom, valeur = true).
+- `properties` (*table<string, boolean>*) : Set of requested properties (key = name, value = true).
 
 #### `controller_gauges_customModules_environmentData.updateGFX(dt)`
 
-Ne fait rien (la mise à jour se fait par updateGaugeData).
+Does nothing (the update is done by updateGaugeData).
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_gauges_customModules_environmentData.updateGaugeData(moduleData, dt)`
 
-Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées.
+Called by genericGauges before each send: fills moduleData with the requested values.
 
-- `moduleData` (*table*) : Table de données du module, envoyée ensuite à la page HTML.
-- `dt` (*number*) : Temps écoulé depuis le dernier envoi (s).
+- `moduleData` (*table*) : Module data table, then sent to the HTML page.
+- `dt` (*number*) : Time elapsed since the last send (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getEnvTemperature`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/gauges/customModules/environmentData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/gauges/customModules/environmentData.lua`.*

@@ -1,35 +1,35 @@
 # `gameplayStatisticModules_watchAirtime`
 
-*Fichier : `lua/vehicle/extensions/gameplayStatisticModules/watchAirtime.lua` · VM : Véhicule · 53 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/gameplayStatisticModules/watchAirtime.lua` · VM: Vehicle · 53 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplayStatisticModules_watchAirtime` : `extensions.load (VM véhicule)("gameplayStatisticModules_watchAirtime")`, puis la globale `gameplayStatisticModules_watchAirtime`
+**Access:** extension `gameplayStatisticModules_watchAirtime`: `extensions.load (vehicle VM)("gameplayStatisticModules_watchAirtime")`, then the global `gameplayStatisticModules_watchAirtime`
 
-Module de gameplayStatistic qui mesure le temps où le véhicule est entièrement en l'air : vitesse sol > 6 m/s, aucune roue en contact (contactMaterialID1 et 2 = -1) et axe haut du véhicule à moins de 45° de la verticale (z > 0,707). Au retour au sol, si la durée dépasse 0,1 s, ajoute la métrique 'vehicle/airtime.time' (agrégée).
+gameplayStatistic module that measures the time the vehicle is fully airborne: ground speed > 6 m/s, no wheel in contact (contactMaterialID1 and 2 = -1) and vehicle up axis within 45° of vertical (z > 0.707). On landing, if the duration exceeds 0.1 s, adds the metric 'vehicle/airtime.time' (aggregated).
 
-## Remarques
+## Notes
 
-- Se décharge (onExtensionLoaded renvoie false) si le contrôleur principal n'est pas 'vehicleController/vehicleController' ou si le véhicule n'a pas de roues.
-- Ignoré si le nombre de roues a changé depuis le chargement (roue perdue).
-- Le temps est mesuré avec obj:getSimTime(). Le code contient un commentaire 'todo redo this' sur le test d'inclinaison.
+- Unloads itself (onExtensionLoaded returns false) if the main controller is not 'vehicleController/vehicleController' or if the vehicle has no wheels.
+- Ignored if the wheel count has changed since load (lost wheel).
+- Time is measured with obj:getSimTime(). The code contains a 'todo redo this' comment on the tilt test.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplayStatisticModules_watchAirtime.onExtensionLoaded()` | Appelé au chargement : mémorise le nombre de roues ; renvoie false pour se décharger si le véhicule ne convient pas. *(interne)* *(hook)* | 39 |
-| `gameplayStatisticModules_watchAirtime.workload()` | Fonction de surveillance exécutée à tour de rôle par gameplayStatistic : met à jour l'état 'en l'air' et envoie la métrique à l'atterrissage. *(interne)* | 11 |
+| `gameplayStatisticModules_watchAirtime.onExtensionLoaded()` | Called on load: stores the wheel count; returns false to unload if the vehicle is not suitable. *(internal)* *(hook)* | 39 |
+| `gameplayStatisticModules_watchAirtime.workload()` | Watch function run in turn by gameplayStatistic: updates the 'airborne' state and sends the metric on landing. *(internal)* | 11 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplayStatisticModules_watchAirtime.onExtensionLoaded()`
 
-Appelé au chargement : mémorise le nombre de roues ; renvoie false pour se décharger si le véhicule ne convient pas.
+Called on load: stores the wheel count; returns false to unload if the vehicle is not suitable.
 
-- **renvoie** : boolean|nil false pour demander le déchargement.
+- **returns**: boolean|nil false to request unloading.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getDirectionVectorUpXYZ`, `getGroundSpeed`, `getSimTime`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/gameplayStatisticModules/watchAirtime.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/gameplayStatisticModules/watchAirtime.lua`.*

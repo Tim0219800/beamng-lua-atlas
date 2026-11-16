@@ -1,68 +1,68 @@
 # `performanceLogger`
 
-*Fichier : `lua/vehicle/extensions/performanceLogger.lua` · VM : Véhicule · 63 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/performanceLogger.lua` · VM: Vehicle · 63 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `performanceLogger` : `extensions.load (VM véhicule)("performanceLogger")`, puis la globale `performanceLogger`
+**Access:** extension `performanceLogger`: `extensions.load (vehicle VM)("performanceLogger")`, then the global `performanceLogger`
 
-Petit outil de profilage : mesure des durées en millisecondes avec HighPerfTimer, soit une mesure unique (startMeasurement / stopMeasurement), soit une moyenne sur N mesures écrite dans le log (measureAverage).
+Small profiling tool: measures durations in milliseconds with HighPerfTimer, either a single measurement (startMeasurement / stopMeasurement) or an average over N measurements written to the log (measureAverage).
 
-## Exemple
+## Example
 
 ```lua
 local pl = extensions.performanceLogger
 pl.startMeasurement('monCode')
--- ... code à mesurer ...
-pl.measureAverage('monCode', 100)  -- log après 100 mesures
+-- ... code to measure ...
+pl.measureAverage('monCode', 100)  -- log after 100 measurements
 ```
 
-## Remarques
+## Notes
 
-- measureAverage arrête le chronomètre nommé, accumule, puis après stopCount mesures écrit un log 'name: x ms (avg over N measurements)' et réinitialise l'accumulation. Il faut rappeler startMeasurement avant chaque mesure (il remet le chronomètre à zéro).
-- showMin = true affiche le minimum des moyennes déjà observées au lieu de la moyenne courante.
-- Anomalie : le résultat est mis en forme avec '%.5f' à partir d'une chaîne (tostring) ; fonctionne grâce à la conversion de chaîne numérique de LuaJIT.
-- Les noms mal orthographiés sont tels quels dans le code : stopAvergage (sans 'a' avant 'g').
-- measureAverage/stopMeasurement lèvent une erreur Lua si startMeasurement n'a pas été appelé avec ce nom.
+- measureAverage stops the named timer, accumulates, then after stopCount measurements writes a log 'name: x ms (avg over N measurements)' and resets the accumulation. startMeasurement must be called again before each measurement (it resets the timer).
+- showMin = true displays the minimum of the averages already observed instead of the current average.
+- Anomaly: the result is formatted with '%.5f' from a string (tostring); works thanks to LuaJIT's numeric string conversion.
+- Misspelled names are kept as is in the code: stopAvergage (without the 'a' before 'g').
+- measureAverage/stopMeasurement raise a Lua error if startMeasurement has not been called with that name.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `performanceLogger.measureAverage(name, stopCount, showMin)` | Arrête le chronomètre, ajoute la mesure à la moyenne et, après stopCount mesures, écrit la moyenne dans le log. | 28 |
-| `performanceLogger.onInit()` | Hook d'initialisation : efface chronomètres et mesures. *(interne)* *(hook)* | 48 |
-| `performanceLogger.onReset()` | Même fonction que onInit. *(interne)* *(hook)* | 48 |
-| `performanceLogger.startMeasurement(name)` | Crée (ou remet à zéro) le chronomètre nommé. | 12 |
-| `performanceLogger.stopAvergage(name)` | Termine la moyenne nommée et renvoie la moyenne accumulée (supprime le chronomètre). | 22 |
-| `performanceLogger.stopMeasurement(name)` | Arrête le chronomètre et renvoie la durée mesurée. | 41 |
+| `performanceLogger.measureAverage(name, stopCount, showMin)` | Stops the timer, adds the measurement to the average and, after stopCount measurements, writes the average to the log. | 28 |
+| `performanceLogger.onInit()` | Initialization hook: clears timers and measurements. *(internal)* *(hook)* | 48 |
+| `performanceLogger.onReset()` | Same function as onInit. *(internal)* *(hook)* | 48 |
+| `performanceLogger.startMeasurement(name)` | Creates (or resets) the named timer. | 12 |
+| `performanceLogger.stopAvergage(name)` | Ends the named average and returns the accumulated average (removes the timer). | 22 |
+| `performanceLogger.stopMeasurement(name)` | Stops the timer and returns the measured duration. | 41 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `performanceLogger.measureAverage(name, stopCount, showMin)`
 
-Arrête le chronomètre, ajoute la mesure à la moyenne et, après stopCount mesures, écrit la moyenne dans le log.
+Stops the timer, adds the measurement to the average and, after stopCount measurements, writes the average to the log.
 
-- `name` (*string*) : Nom de la mesure.
-- `stopCount` (*integer*) : Nombre de mesures avant affichage.
-- `showMin` (*boolean|nil*) : Afficher le minimum des moyennes.
+- `name` (*string*) : Name of the measurement.
+- `stopCount` (*integer*) : Number of measurements before display.
+- `showMin` (*boolean|nil*) : Display the minimum of the averages.
 
 #### `performanceLogger.startMeasurement(name)`
 
-Crée (ou remet à zéro) le chronomètre nommé.
+Creates (or resets) the named timer.
 
-- `name` (*string*) : Nom de la mesure.
+- `name` (*string*) : Name of the measurement.
 
 #### `performanceLogger.stopAvergage(name)`
 
-Termine la moyenne nommée et renvoie la moyenne accumulée (supprime le chronomètre).
+Ends the named average and returns the accumulated average (removes the timer).
 
-- `name` (*string*) : Nom de la mesure.
-- **renvoie** : number Moyenne en millisecondes.
+- `name` (*string*) : Name of the measurement.
+- **returns**: number Average in milliseconds.
 
 #### `performanceLogger.stopMeasurement(name)`
 
-Arrête le chronomètre et renvoie la durée mesurée.
+Stops the timer and returns the measured duration.
 
-- `name` (*string*) : Nom de la mesure.
-- **renvoie** : number Durée en millisecondes.
+- `name` (*string*) : Name of the measurement.
+- **returns**: number Duration in milliseconds.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/performanceLogger.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/performanceLogger.lua`.*

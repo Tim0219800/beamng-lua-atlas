@@ -1,12 +1,12 @@
 # `career_modules_inventory`
 
-*Fichier : `lua/ge/extensions/career/modules/inventory.lua` · VM : Game Engine (GE) · 1448 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/inventory.lua` · VM: Game Engine (GE) · 1448 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_inventory` : `extensions.load("career_modules_inventory")`, puis la globale `career_modules_inventory`
+**Access:** extension `career_modules_inventory`: `extensions.load("career_modules_inventory")`, then the global `career_modules_inventory`
 
-Inventaire de véhicules de la carrière : la table vehicles (inventoryId -> infos : model, config, niceName, owned, partConditions, timeToAccess, loanType, owningOrganization...), la correspondance inventoryId <-> id d'objet véhicule dans le monde, le véhicule courant, le dernier et le favori. Il gère l'ajout et la suppression de véhicules, leur apparition/entrée (spawnVehicle, enterVehicle), la sauvegarde (un fichier JSON et une miniature par véhicule dans career/vehicles/ plus career/inventory.json), le menu « Mes véhicules » de l'ordinateur, la vente, les plaques, les permissions et les POI de la grande carte.
+Career vehicle inventory: the vehicles table (inventoryId -> info: model, config, niceName, owned, partConditions, timeToAccess, loanType, owningOrganization...), the mapping inventoryId <-> vehicle object id in the world, the current, last and favorite vehicle. It handles adding and removing vehicles, their spawning/entering (spawnVehicle, enterVehicle), saving (one JSON file and one thumbnail per vehicle in career/vehicles/ plus career/inventory.json), the garage computer's "My vehicles" menu, selling, license plates, permissions and big map POIs.
 
-## Exemple
+## Example
 
 ```lua
 local invId = career_modules_inventory.getCurrentVehicle()
@@ -14,477 +14,477 @@ local info = career_modules_inventory.getVehicle(invId)
 print(info.niceName, info.owned)
 ```
 
-## Remarques
+## Notes
 
-- L'inventaire compte 20 emplacements (slotAmount) ; seuls les véhicules owned sans takesNoInventorySpace occupent un emplacement.
-- inventoryId = plus petit entier libre à partir de 1. Un véhicule ajouté reçoit les champs configBaseValue, finalBuyingPrice, defaultThumbnail et plaque (config.licenseName).
-- Le premier véhicule ajouté devient le favori. Posséder 3 véhicules débloque le succès GARAGE_STARTER.
-- À l'ajout, les conditions de pièces sont initialisées côté véhicule puis lues ; le hook onVehicleAdded(inventoryId) est émis quand elles sont à jour (attention : onVehicleAdded n'est donc pas immédiat).
-- Hooks émis : onInventoryPreRemoveVehicleObject(inventoryId, vehId), onVehicleRemoved(inventoryId), onEnterVehicleFinished(inventoryId), onBeforeVehicleSell({inventoryId, price}), onVehicleSaveFinished(savePath).
-- Le chargement (onExtensionLoaded) ignore les sauvegardes de version < 42 ; si la version est < 64, tous les véhicules sont vendus (ou loaners rendus, ou supprimés) à l'activation de la carrière.
-- timeToAccess (s) retarde l'accès à un véhicule (achat, réparation) ; il décroît en temps réel dans onUpdate, y compris pendant que le jeu est fermé (réduit de la durée écoulée depuis la sauvegarde).
-- Un véhicule non possédé (owned = false) est interdit à la vente, réparation, peinture, tuning, achat de pièces, plaque, stockage, favori, remorquage au garage ; returnLoanedVehicle est autorisé seulement pour ces véhicules (caché pour les possédés).
-- getInventoryIdsInClosestGarage(true) renvoie next(...) de l'ensemble des véhicules du garage, donc un véhicule quelconque et non nécessairement le plus proche (le tri par distance n'est appliqué qu'à la liste complète).
-- setLicensePlateText teste `if inventoryId` au lieu de `if vehId` : si le véhicule n'est pas dans le monde (vehId nil), core_vehicles.setPlateText est appelé avec nil.
-- saveAnyVehiclePosDEBUG vaut true : les positions de tous les véhicules sont toujours restaurées telles que sauvegardées.
+- The inventory has 20 slots (slotAmount); only owned vehicles without takesNoInventorySpace take up a slot.
+- inventoryId = smallest free integer starting from 1. An added vehicle gets the fields configBaseValue, finalBuyingPrice, defaultThumbnail and plate (config.licenseName).
+- The first vehicle added becomes the favorite. Owning 3 vehicles unlocks the GARAGE_STARTER achievement.
+- On adding, the part conditions are initialized on the vehicle side then read; the onVehicleAdded(inventoryId) hook is emitted when they are up to date (note: onVehicleAdded is therefore not immediate).
+- Emitted hooks: onInventoryPreRemoveVehicleObject(inventoryId, vehId), onVehicleRemoved(inventoryId), onEnterVehicleFinished(inventoryId), onBeforeVehicleSell({inventoryId, price}), onVehicleSaveFinished(savePath).
+- Loading (onExtensionLoaded) ignores saves of version < 42; if the version is < 64, all vehicles are sold (or loaners returned, or deleted) on career activation.
+- timeToAccess (s) delays access to a vehicle (purchase, repair); it decreases in real time in onUpdate, including while the game is closed (reduced by the time elapsed since the save).
+- A non-owned vehicle (owned = false) is forbidden from sale, repair, painting, tuning, parts purchase, plate, storage, favorite, towing to garage; returnLoanedVehicle is allowed only for these vehicles (hidden for owned ones).
+- getInventoryIdsInClosestGarage(true) returns next(...) of the set of garage vehicles, so any vehicle and not necessarily the nearest (the distance sort is only applied to the full list).
+- setLicensePlateText tests `if inventoryId` instead of `if vehId`: if the vehicle is not in the world (vehId nil), core_vehicles.setPlateText is called with nil.
+- saveAnyVehiclePosDEBUG is true: the positions of all vehicles are always restored as saved.
 
-**Dépendances (chargées avant) :** `career_career`, `career_modules_log`, `gameplay_tutorial_setup`
+**Dependencies (loaded first):** `career_career`, `career_modules_log`, `gameplay_tutorial_setup`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_inventory.addVehicle(vehId, inventoryId, options)` | Ajoute un véhicule du monde à l'inventaire : enregistre modèle, config, nom, plaque, valeur de base (configBaseValue), initialise les conditions de pièces, attribue un inventoryId libre si absent, définit le favori s'il est le premier et débloque GARAGE_STARTER à 3 véhicules possédés. | 299 |
-| `career_modules_inventory.applyPartConditions(inventoryId, vehId)` | Réapplique au véhicule en jeu les conditions de pièces sauvegardées (initPartConditions). | 428 |
-| `career_modules_inventory.chooseVehicleFromMenu(inventoryId, buttonIndex, repairPrevVeh)` | Exécute le callback du bouton de choix d'indice buttonIndex pour le véhicule donné. | 1111 |
-| `career_modules_inventory.closeMenu()` | Ferme tous les menus de la carrière. | 1032 |
-| `career_modules_inventory.debugRespawnCurrentVehicle()` | Debug : met à jour les conditions de pièces du véhicule courant puis le refait apparaître (replaceOption 2). | 1370 |
-| `career_modules_inventory.delayVehicleAccess(inventoryId, delay, reason)` | Rend un véhicule inaccessible pendant `delay` secondes (timeToAccess) avec une raison (bought, repair). Ignoré si delay <= 0. | 1193 |
-| `career_modules_inventory.enterVehicle(newInventoryId, loadOption, callback)` | Fait entrer le joueur dans un véhicule de l'inventaire (nil = passer à pied). Sans effet si le véhicule est inaccessible (timeToAccess). Met d'abord à jour les conditions de pièces des véhicules apparus, sauf loadOption 1. | 538 |
-| `career_modules_inventory.expediteRepairFromInventory(inventoryId, price)` | Accélère une réparation d'assurance payante (insurance.expediteRepair), sauvegarde et rafraîchit l'UI. | 1187 |
-| `career_modules_inventory.getClosestGarage(pos)` | Renvoie le garage dont la première zone est la plus proche de pos (position du joueur par défaut) dans le niveau courant. | 36 |
-| `career_modules_inventory.getCurrentVehicle()` | Id d'inventaire du véhicule que le joueur conduit (nil à pied). Listé dans les fonctions « Debug » du fichier. | 674 |
-| `career_modules_inventory.getCurrentVehicleId()` | Id d'objet (monde) du véhicule courant de l'inventaire. | 698 |
-| `career_modules_inventory.getDirtiedVehicles()` | Renvoie l'ensemble des inventoryId modifiés depuis la dernière sauvegarde. | 1343 |
-| `career_modules_inventory.getFavoriteVehicle()` | Renvoie l'id d'inventaire du véhicule favori. | 1214 |
-| `career_modules_inventory.getInventoryIdFromVehicleId(vehId)` | Convertit un id d'objet du monde en id d'inventaire (nil si le véhicule n'est pas dans l'inventaire). | 688 |
-| `career_modules_inventory.getInventoryIdsInClosestGarage(onlyFirst)` | Liste les véhicules de l'inventaire présents dans le garage le plus proche (zone intersectée), triés par distance au joueur. Avec onlyFirst, renvoie un seul id (le premier trouvé par next, voir notes). | 973 |
-| `career_modules_inventory.getLastVehicle()` | Id d'inventaire du dernier véhicule dans lequel le joueur est entré. | 678 |
-| `career_modules_inventory.getMapInventoryIdToVehId()` | Renvoie la table inventoryId -> id d'objet pour les véhicules présents dans le monde (par référence). | 694 |
-| `career_modules_inventory.getNumberOfFreeSlots()` | Nombre d'emplacements libres (20 moins les véhicules owned qui occupent de la place). | 286 |
-| `career_modules_inventory.getPartConditionsCallback(partConditions, inventoryId)` | Enregistre les conditions de pièces reçues du véhicule (ignorées avec un avertissement si ce n'est pas une table), finalise un ajout en attente (hook onVehicleAdded) et synchronise l'inventaire de pièces. *(interne)* | 395 |
-| `career_modules_inventory.getVehicle(inventoryId)` | Renvoie les infos d'un véhicule de l'inventaire. | 1152 |
-| `career_modules_inventory.getVehicleIdFromInventoryId(inventoryId)` | Convertit un id d'inventaire en id d'objet du monde (nil si non apparu). | 682 |
-| `career_modules_inventory.getVehicleNiceNameTranslated(inventoryId)` | Nom d'affichage traduit du véhicule. | 833 |
-| `career_modules_inventory.getVehicleThumbnail(inventoryId)` | Chemin de la miniature du véhicule : fichier de la sauvegarde si une capture existe, sinon aperçu par défaut de sa configuration. | 760 |
-| `career_modules_inventory.getVehicleUiData(inventoryId, inventoryIdsInGarage)` | Prépare les données d'un véhicule pour l'UI : valeur (et valeur réparée), prix de réparation express, distance, présence au garage/stockage, besoin de réparation, favori, assurance, permissions (réparation, vente, favori, stockage, plaque, retour de prêt), mise en vente et données de performance. | 839 |
-| `career_modules_inventory.getVehicles()` | Renvoie la table complète des véhicules de l'inventaire (par référence). | 1148 |
-| `career_modules_inventory.hasFreeSlot()` | Indique s'il reste au moins un emplacement libre. | 294 |
-| `career_modules_inventory.isEmpty()` | Indique si l'inventaire ne contient aucun véhicule. | 1347 |
-| `career_modules_inventory.isLicensePlateValid(text)` | Valide un texte de plaque via core_vehicles.isLicensePlateValid. | 1351 |
-| `career_modules_inventory.isSeatedInsideOwnedVehicle()` | Indique si le joueur est dans un véhicule de l'inventaire (currentVehicle défini), possédé ou non. | 702 |
-| `career_modules_inventory.isVehicleNameValid(text)` | Valide un nom de véhicule : non vide et sans guillemet, antislash ni caractère de contrôle (\b \f \n \r \t). | 1355 |
-| `career_modules_inventory.onAvailableMissionsSentToUi()` | Hook : met à jour les conditions de pièces du véhicule courant et envoie à l'UI s'il a besoin de réparation (gameContextPlayerVehicleDamageInfo). *(interne)* *(hook)* | 1200 |
-| `career_modules_inventory.onBeforeWalkingModeToggled(enabled, vehicleInFrontVehId)` | Hook : sortir du véhicule (mode marche) fait entrer dans « aucun véhicule » ; monter dans un véhicule de l'inventaire l'enregistre comme courant. *(interne)* *(hook)* | 964 |
-| `career_modules_inventory.onBigMapActivated()` | Hook : à l'ouverture de la grande carte, crée un instantané de conditions de pièces « beforeReset » pour le véhicule courant. *(interne)* *(hook)* | 662 |
-| `career_modules_inventory.onCareerActive(active)` | Hook : vend les véhicules si la sauvegarde est trop ancienne, puis prépare l'inventaire (réapparition des véhicules, entrée dans le véhicule courant, équipement de départ pour une nouvelle carrière). *(interne)* *(hook)* | 636 |
-| `career_modules_inventory.onCheckPermission(tags, permissions, additionalData)` | Hook de permissions : pour les véhicules non possédés, interdit vente, réparation, mission, peinture, achat de pièces, plaque, tuning, stockage, échange de pièces, remorquage au garage et favori ; interdit aussi réparer/vendre un véhicule inaccessible, mettre en favori le favori ou un fichier manquant, stocker un véhicule absent du monde. *(interne)* *(hook)* | 1270 |
-| `career_modules_inventory.onComputerAddFunctions(menuData, computerFunctions)` | Hook de l'ordinateur : ajoute la fonction « Mes véhicules » (ordre 1), désactivée tant que le véhicule de départ n'est pas acheté. *(interne)* *(hook)* | 1218 |
-| `career_modules_inventory.onEnterVehicleFinished(inventoryId)` | Hook : mémorise le véhicule dans lequel on est entré comme dernier véhicule. *(interne)* *(hook)* | 1142 |
-| `career_modules_inventory.onExitVehicleInventory()` | Hook : l'écran d'inventaire est fermé. *(interne)* *(hook)* | 1137 |
-| `career_modules_inventory.onExtensionLoaded()` | Hook : si la carrière est active, charge les fichiers de career/vehicles/ et inventory.json (véhicule courant, dernier, favori, positions, position à pied) ; décrémente timeToAccess du temps écoulé depuis la sauvegarde. *(interne)* *(hook)* | 54 |
-| `career_modules_inventory.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook de la liste de POI : ajoute un marqueur de grande carte pour chaque véhicule de l'inventaire présent dans le monde (autre que celui du joueur), avec description (distance, plaque, odomètre) et miniature. *(interne)* *(hook)* | 1299 |
-| `career_modules_inventory.onSaveCurrentProfile(currentSavePath, vehiclesThumbnailUpdate)` | Hook de sauvegarde : écrit inventory.json, met à jour les conditions de pièces, puis écrit chaque véhicule (JSON + miniature si demandée) et supprime les fichiers de véhicules disparus ; à la fin, émet onVehicleSaveFinished. *(interne)* *(hook)* | 247 |
-| `career_modules_inventory.onSaveCurrentProfileAsyncStart()` | Hook : enregistre l'inventaire comme extension de sauvegarde asynchrone (career_saveSystem.registerAsyncSaveExtension). *(interne)* *(hook)* | 177 |
-| `career_modules_inventory.onScreenFadeState(state)` | Hook : quand le fondu d'écran est complet (state 1), supprime les véhicules marqués puis exécute l'action différée (apparition d'un véhicule). *(interne)* *(hook)* | 1001 |
-| `career_modules_inventory.onUpdate(dtReal, dtSim, dtRaw)` | Hook de frame : sauvegarde initiale d'une nouvelle carrière (après 10 frames), toasts de véhicule mis en stockage ou prêt rendu, décompte de timeToAccess avec messages de livraison/réparation. *(interne)* *(hook)* | 923 |
-| `career_modules_inventory.openInventoryMenuForChoosingListing()` | Ouvre l'inventaire pour choisir un véhicule à mettre en vente (action addListing côté UI), toutes les autres actions désactivées. | 1115 |
-| `career_modules_inventory.openMenu(_chooseButtonsData, header, _buttonsActive, _backTarget)` | Ouvre l'écran d'inventaire (career.computer.vehicleInventory) avec des boutons de choix configurables et met à jour les conditions de pièces des véhicules apparus. | 1009 |
-| `career_modules_inventory.openMenuFromComputer(_originComputerId)` | Ouvre l'inventaire depuis l'ordinateur du garage avec trois boutons : récupérer au garage, remplacer le véhicule actuel, ouvrir l'indice de performance. | 1082 |
-| `career_modules_inventory.purchaseLicensePlateText(inventoryId, text, money)` | Achète un changement de plaque : paie, applique le texte, débloque NOW_ITS_MINE, joue le son et marque le véhicule modifié. Ne fait rien si le joueur ne peut pas payer. | 1243 |
-| `career_modules_inventory.removeVehicle(inventoryId)` | Supprime le véhicule de l'inventaire et du monde, émet onVehicleRemoved et réassigne le favori si besoin. | 378 |
-| `career_modules_inventory.removeVehicleObject(inventoryId, skipPartConditions)` | Supprime seulement l'objet véhicule du monde (le véhicule reste dans l'inventaire, en stockage) ; passe le joueur en mode marche s'il le conduisait. Émet onInventoryPreRemoveVehicleObject. | 360 |
-| `career_modules_inventory.renameVehicle(inventoryId, name)` | Renomme le véhicule (niceName) s'il est valide et le marque modifié. | 1360 |
-| `career_modules_inventory.requestPickerExit()` | Quitte le sélecteur : navigue vers la route de retour (career.computer par défaut). | 1036 |
-| `career_modules_inventory.returnLoanedVehicleFromInventory(inventoryId)` | Rend un véhicule prêté (career_modules_loanerVehicles.returnVehicle) puis sauvegarde et rafraîchit l'UI. | 1180 |
-| `career_modules_inventory.sellVehicle(inventoryId, price)` | Vend un véhicule : émet onBeforeVehicleSell, crédite le prix (ou la valeur calculée par valueCalculator), supprime le véhicule, joue le son d'achat, débloque FLIP_PROFIT si revendu au-dessus du prix d'achat final, et journalise. | 1156 |
-| `career_modules_inventory.sellVehicleFromInventory(inventoryId)` | Vend depuis l'écran d'inventaire : vend, sauvegarde la carrière et renvoie les données à l'UI. | 1173 |
-| `career_modules_inventory.sendDataToUi()` | Envoie à l'UI (guihooks vehicleInventoryData) tous les véhicules, les boutons de choix, l'en-tête, le nombre d'emplacements libres et l'argent du joueur. | 903 |
-| `career_modules_inventory.setFavoriteVehicle(inventoryId)` | Définit le véhicule favori (ignoré si l'id est inconnu). | 1208 |
-| `career_modules_inventory.setLicensePlateText(inventoryId, text)` | Change le texte de plaque du véhicule dans le monde et dans sa config. | 1235 |
-| `career_modules_inventory.setVehicleDirty(inventoryId)` | Marque un véhicule comme modifié : il sera réécrit (avec nouvelle dirtyDate) à la prochaine sauvegarde. | 146 |
-| `career_modules_inventory.spawnVehicle(inventoryId, replaceOption, callback)` | Fait apparaître un véhicule de l'inventaire depuis sa config (liste de pièces aplatie), restaure ses conditions de pièces et réconcilie l'inventaire de pièces. Retourne nil si le modèle ou le fichier de config n'existe plus. | 436 |
-| `career_modules_inventory.teleportedFromBigmap()` | Appelé après une téléportation depuis la grande carte : sauvegarde la carrière si le joueur est dans un véhicule de l'inventaire et si l'autosauvegarde est active. | 668 |
-| `career_modules_inventory.updatePartConditions(vehId, inventoryId, callback)` | Demande au véhicule ses conditions de pièces (getPartConditions) et les stocke dans l'inventaire puis dans l'inventaire de pièces. | 406 |
-| `career_modules_inventory.updatePartConditionsOfSpawnedVehicles(callback)` | Marque tous les véhicules apparus comme modifiés et met à jour leurs conditions de pièces ; callback est appelé quand tous sont traités (ou tout de suite s'il n'y en a aucun). | 150 |
+| `career_modules_inventory.addVehicle(vehId, inventoryId, options)` | Adds a world vehicle to the inventory: records model, config, name, plate, base value (configBaseValue), initializes the part conditions, assigns a free inventoryId if absent, sets the favorite if it is the first and unlocks GARAGE_STARTER at 3 owned vehicles. | 299 |
+| `career_modules_inventory.applyPartConditions(inventoryId, vehId)` | Reapplies the saved part conditions to the in-game vehicle (initPartConditions). | 428 |
+| `career_modules_inventory.chooseVehicleFromMenu(inventoryId, buttonIndex, repairPrevVeh)` | Runs the callback of the choice button with index buttonIndex for the given vehicle. | 1111 |
+| `career_modules_inventory.closeMenu()` | Closes all career menus. | 1032 |
+| `career_modules_inventory.debugRespawnCurrentVehicle()` | Debug: updates the current vehicle's part conditions then respawns it (replaceOption 2). | 1370 |
+| `career_modules_inventory.delayVehicleAccess(inventoryId, delay, reason)` | Makes a vehicle inaccessible for `delay` seconds (timeToAccess) with a reason (bought, repair). Ignored if delay <= 0. | 1193 |
+| `career_modules_inventory.enterVehicle(newInventoryId, loadOption, callback)` | Makes the player enter an inventory vehicle (nil = go on foot). No effect if the vehicle is inaccessible (timeToAccess). First updates the part conditions of the spawned vehicles, except loadOption 1. | 538 |
+| `career_modules_inventory.expediteRepairFromInventory(inventoryId, price)` | Speeds up a paid insurance repair (insurance.expediteRepair), saves and refreshes the UI. | 1187 |
+| `career_modules_inventory.getClosestGarage(pos)` | Returns the garage whose first zone is nearest to pos (player position by default) in the current level. | 36 |
+| `career_modules_inventory.getCurrentVehicle()` | Inventory id of the vehicle the player is driving (nil on foot). Listed in the "Debug" functions of the file. | 674 |
+| `career_modules_inventory.getCurrentVehicleId()` | Object id (world) of the current inventory vehicle. | 698 |
+| `career_modules_inventory.getDirtiedVehicles()` | Returns the set of inventoryIds modified since the last save. | 1343 |
+| `career_modules_inventory.getFavoriteVehicle()` | Returns the inventory id of the favorite vehicle. | 1214 |
+| `career_modules_inventory.getInventoryIdFromVehicleId(vehId)` | Converts a world object id to an inventory id (nil if the vehicle is not in the inventory). | 688 |
+| `career_modules_inventory.getInventoryIdsInClosestGarage(onlyFirst)` | Lists the inventory vehicles present in the nearest garage (intersected zone), sorted by distance to the player. With onlyFirst, returns a single id (the first found by next, see notes). | 973 |
+| `career_modules_inventory.getLastVehicle()` | Inventory id of the last vehicle the player entered. | 678 |
+| `career_modules_inventory.getMapInventoryIdToVehId()` | Returns the table inventoryId -> object id for the vehicles present in the world (by reference). | 694 |
+| `career_modules_inventory.getNumberOfFreeSlots()` | Number of free slots (20 minus the owned vehicles that take up space). | 286 |
+| `career_modules_inventory.getPartConditionsCallback(partConditions, inventoryId)` | Records the part conditions received from the vehicle (ignored with a warning if it is not a table), finalizes a pending add (onVehicleAdded hook) and synchronizes the parts inventory. *(internal)* | 395 |
+| `career_modules_inventory.getVehicle(inventoryId)` | Returns the info of an inventory vehicle. | 1152 |
+| `career_modules_inventory.getVehicleIdFromInventoryId(inventoryId)` | Converts an inventory id to a world object id (nil if not spawned). | 682 |
+| `career_modules_inventory.getVehicleNiceNameTranslated(inventoryId)` | Translated display name of the vehicle. | 833 |
+| `career_modules_inventory.getVehicleThumbnail(inventoryId)` | Path of the vehicle thumbnail: save file if a capture exists, otherwise the default preview of its configuration. | 760 |
+| `career_modules_inventory.getVehicleUiData(inventoryId, inventoryIdsInGarage)` | Prepares a vehicle's data for the UI: value (and repaired value), express repair price, distance, presence in garage/storage, need for repair, favorite, insurance, permissions (repair, sale, favorite, storage, plate, loan return), listing for sale and performance data. | 839 |
+| `career_modules_inventory.getVehicles()` | Returns the complete inventory vehicles table (by reference). | 1148 |
+| `career_modules_inventory.hasFreeSlot()` | Indicates whether at least one slot is free. | 294 |
+| `career_modules_inventory.isEmpty()` | Indicates whether the inventory contains no vehicle. | 1347 |
+| `career_modules_inventory.isLicensePlateValid(text)` | Validates a plate text via core_vehicles.isLicensePlateValid. | 1351 |
+| `career_modules_inventory.isSeatedInsideOwnedVehicle()` | Indicates whether the player is in an inventory vehicle (currentVehicle set), owned or not. | 702 |
+| `career_modules_inventory.isVehicleNameValid(text)` | Validates a vehicle name: non-empty and without quote, backslash or control character (\b \f \n \r \t). | 1355 |
+| `career_modules_inventory.onAvailableMissionsSentToUi()` | Hook: updates the current vehicle's part conditions and sends to the UI whether it needs repair (gameContextPlayerVehicleDamageInfo). *(internal)* *(hook)* | 1200 |
+| `career_modules_inventory.onBeforeWalkingModeToggled(enabled, vehicleInFrontVehId)` | Hook: leaving the vehicle (walking mode) enters "no vehicle"; getting into an inventory vehicle records it as current. *(internal)* *(hook)* | 964 |
+| `career_modules_inventory.onBigMapActivated()` | Hook: when the big map opens, creates a 'beforeReset' part conditions snapshot for the current vehicle. *(internal)* *(hook)* | 662 |
+| `career_modules_inventory.onCareerActive(active)` | Hook: sells the vehicles if the save is too old, then prepares the inventory (vehicles respawning, entering the current vehicle, starting equipment for a new career). *(internal)* *(hook)* | 636 |
+| `career_modules_inventory.onCheckPermission(tags, permissions, additionalData)` | Permissions hook: for non-owned vehicles, forbids sale, repair, mission, painting, parts purchase, plate, tuning, storage, parts swap, towing to garage and favorite; also forbids repairing/selling an inaccessible vehicle, favoriting the favorite or a missing file, storing a vehicle absent from the world. *(internal)* *(hook)* | 1270 |
+| `career_modules_inventory.onComputerAddFunctions(menuData, computerFunctions)` | Computer hook: adds the "My vehicles" function (order 1), disabled until the starter vehicle is bought. *(internal)* *(hook)* | 1218 |
+| `career_modules_inventory.onEnterVehicleFinished(inventoryId)` | Hook: stores the vehicle entered as the last vehicle. *(internal)* *(hook)* | 1142 |
+| `career_modules_inventory.onExitVehicleInventory()` | Hook: the inventory screen is closed. *(internal)* *(hook)* | 1137 |
+| `career_modules_inventory.onExtensionLoaded()` | Hook: if career is active, loads the files of career/vehicles/ and inventory.json (current vehicle, last, favorite, positions, on-foot position); decrements timeToAccess by the time elapsed since the save. *(internal)* *(hook)* | 54 |
+| `career_modules_inventory.onGetRawPoiListForLevel(levelIdentifier, elements)` | POI list hook: adds a big map marker for each inventory vehicle present in the world (other than the player's), with description (distance, plate, odometer) and thumbnail. *(internal)* *(hook)* | 1299 |
+| `career_modules_inventory.onSaveCurrentProfile(currentSavePath, vehiclesThumbnailUpdate)` | Save hook: writes inventory.json, updates the part conditions, then writes each vehicle (JSON + thumbnail if requested) and deletes the files of vehicles that no longer exist; at the end, emits onVehicleSaveFinished. *(internal)* *(hook)* | 247 |
+| `career_modules_inventory.onSaveCurrentProfileAsyncStart()` | Hook: registers the inventory as an asynchronous save extension (career_saveSystem.registerAsyncSaveExtension). *(internal)* *(hook)* | 177 |
+| `career_modules_inventory.onScreenFadeState(state)` | Hook: when the screen fade is complete (state 1), removes the marked vehicles then runs the deferred action (vehicle spawn). *(internal)* *(hook)* | 1001 |
+| `career_modules_inventory.onUpdate(dtReal, dtSim, dtRaw)` | Frame hook: initial save of a new career (after 10 frames), toasts for a vehicle put into storage or a loan returned, timeToAccess countdown with delivery/repair messages. *(internal)* *(hook)* | 923 |
+| `career_modules_inventory.openInventoryMenuForChoosingListing()` | Opens the inventory to choose a vehicle to put up for sale (addListing action on the UI side), all other actions disabled. | 1115 |
+| `career_modules_inventory.openMenu(_chooseButtonsData, header, _buttonsActive, _backTarget)` | Opens the inventory screen (career.computer.vehicleInventory) with configurable choice buttons and updates the part conditions of the spawned vehicles. | 1009 |
+| `career_modules_inventory.openMenuFromComputer(_originComputerId)` | Opens the inventory from the garage computer with three buttons: retrieve at the garage, replace the current vehicle, open the performance index. | 1082 |
+| `career_modules_inventory.purchaseLicensePlateText(inventoryId, text, money)` | Buys a plate change: pays, applies the text, unlocks NOW_ITS_MINE, plays the sound and marks the vehicle as modified. Does nothing if the player cannot pay. | 1243 |
+| `career_modules_inventory.removeVehicle(inventoryId)` | Removes the vehicle from the inventory and the world, emits onVehicleRemoved and reassigns the favorite if needed. | 378 |
+| `career_modules_inventory.removeVehicleObject(inventoryId, skipPartConditions)` | Removes only the vehicle object from the world (the vehicle stays in the inventory, in storage); puts the player in walking mode if they were driving it. Emits onInventoryPreRemoveVehicleObject. | 360 |
+| `career_modules_inventory.renameVehicle(inventoryId, name)` | Renames the vehicle (niceName) if valid and marks it as modified. | 1360 |
+| `career_modules_inventory.requestPickerExit()` | Leaves the selector: navigates to the return route (career.computer by default). | 1036 |
+| `career_modules_inventory.returnLoanedVehicleFromInventory(inventoryId)` | Returns a loaned vehicle (career_modules_loanerVehicles.returnVehicle) then saves and refreshes the UI. | 1180 |
+| `career_modules_inventory.sellVehicle(inventoryId, price)` | Sells a vehicle: emits onBeforeVehicleSell, credits the price (or the value computed by valueCalculator), removes the vehicle, plays the purchase sound, unlocks FLIP_PROFIT if resold above the final purchase price, and logs. | 1156 |
+| `career_modules_inventory.sellVehicleFromInventory(inventoryId)` | Sells from the inventory screen: sells, saves the career and sends the data back to the UI. | 1173 |
+| `career_modules_inventory.sendDataToUi()` | Sends to the UI (guihooks vehicleInventoryData) all the vehicles, the choice buttons, the header, the number of free slots and the player's money. | 903 |
+| `career_modules_inventory.setFavoriteVehicle(inventoryId)` | Sets the favorite vehicle (ignored if the id is unknown). | 1208 |
+| `career_modules_inventory.setLicensePlateText(inventoryId, text)` | Changes the vehicle's plate text in the world and in its config. | 1235 |
+| `career_modules_inventory.setVehicleDirty(inventoryId)` | Marks a vehicle as modified: it will be rewritten (with a new dirtyDate) at the next save. | 146 |
+| `career_modules_inventory.spawnVehicle(inventoryId, replaceOption, callback)` | Spawns an inventory vehicle from its config (flattened parts list), restores its part conditions and reconciles the parts inventory. Returns nil if the model or the config file no longer exists. | 436 |
+| `career_modules_inventory.teleportedFromBigmap()` | Called after a teleport from the big map: saves the career if the player is in an inventory vehicle and if autosave is active. | 668 |
+| `career_modules_inventory.updatePartConditions(vehId, inventoryId, callback)` | Asks the vehicle for its part conditions (getPartConditions) and stores them in the inventory then in the parts inventory. | 406 |
+| `career_modules_inventory.updatePartConditionsOfSpawnedVehicles(callback)` | Marks all spawned vehicles as modified and updates their part conditions; callback is called when all are processed (or immediately if there are none). | 150 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_inventory.addVehicle(vehId, inventoryId, options)`
 
-Ajoute un véhicule du monde à l'inventaire : enregistre modèle, config, nom, plaque, valeur de base (configBaseValue), initialise les conditions de pièces, attribue un inventoryId libre si absent, définit le favori s'il est le premier et débloque GARAGE_STARTER à 3 véhicules possédés.
+Adds a world vehicle to the inventory: records model, config, name, plate, base value (configBaseValue), initializes the part conditions, assigns a free inventoryId if absent, sets the favorite if it is the first and unlocks GARAGE_STARTER at 3 owned vehicles.
 
-- `vehId` (*integer*) : Id d'objet du véhicule.
-- `inventoryId` (*integer|nil*) : Id d'inventaire imposé, sinon le premier libre.
-- `options` (*{owned: boolean|nil, finalPrice: number|nil}|nil*) : owned vaut true par défaut ; finalPrice sert au succès FLIP_PROFIT.
-- **renvoie** : integer|nil inventoryId, nil si l'objet ou ses données sont introuvables.
+- `vehId` (*integer*) : Vehicle object id.
+- `inventoryId` (*integer|nil*) : Imposed inventory id, otherwise the first free one.
+- `options` (*{owned: boolean|nil, finalPrice: number|nil}|nil*) : owned is true by default; finalPrice is used for the FLIP_PROFIT achievement.
+- **returns**: integer|nil inventoryId, nil if the object or its data cannot be found.
 
 #### `career_modules_inventory.applyPartConditions(inventoryId, vehId)`
 
-Réapplique au véhicule en jeu les conditions de pièces sauvegardées (initPartConditions).
+Reapplies the saved part conditions to the in-game vehicle (initPartConditions).
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `vehId` (*integer|nil*) : Id d'objet ; sinon déduit de l'inventaire.
+- `inventoryId` (*integer*) : Inventory id.
+- `vehId` (*integer|nil*) : Object id; otherwise deduced from the inventory.
 
 #### `career_modules_inventory.chooseVehicleFromMenu(inventoryId, buttonIndex, repairPrevVeh)`
 
-Exécute le callback du bouton de choix d'indice buttonIndex pour le véhicule donné.
+Runs the callback of the choice button with index buttonIndex for the given vehicle.
 
-- `inventoryId` (*integer*) : Id d'inventaire choisi.
-- `buttonIndex` (*integer*) : Indice du bouton (à partir de 1).
-- `repairPrevVeh` (*any*) : Transmis au callback.
+- `inventoryId` (*integer*) : Chosen inventory id.
+- `buttonIndex` (*integer*) : Button index (starting at 1).
+- `repairPrevVeh` (*any*) : Passed to the callback.
 
 #### `career_modules_inventory.delayVehicleAccess(inventoryId, delay, reason)`
 
-Rend un véhicule inaccessible pendant `delay` secondes (timeToAccess) avec une raison (bought, repair). Ignoré si delay <= 0.
+Makes a vehicle inaccessible for `delay` seconds (timeToAccess) with a reason (bought, repair). Ignored if delay <= 0.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `delay` (*number*) : Durée en secondes.
-- `reason` (*string*) : Raison ("bought" ou "repair" produisent un message à la fin).
+- `inventoryId` (*integer*) : Inventory id.
+- `delay` (*number*) : Duration in seconds.
+- `reason` (*string*) : Reason ("bought" or "repair" produce a message at the end).
 
 #### `career_modules_inventory.enterVehicle(newInventoryId, loadOption, callback)`
 
-Fait entrer le joueur dans un véhicule de l'inventaire (nil = passer à pied). Sans effet si le véhicule est inaccessible (timeToAccess). Met d'abord à jour les conditions de pièces des véhicules apparus, sauf loadOption 1.
+Makes the player enter an inventory vehicle (nil = go on foot). No effect if the vehicle is inaccessible (timeToAccess). First updates the part conditions of the spawned vehicles, except loadOption 1.
 
-- `newInventoryId` (*integer|nil*) : Id d'inventaire.
-- `loadOption` (*integer|nil*) : 1 : ne pas recharger le véhicule ; 2 : forcer le rechargement ; nil : entrer dans l'objet existant ou le faire apparaître.
-- `callback` (*function|nil*) : Appelée après l'entrée.
+- `newInventoryId` (*integer|nil*) : Inventory id.
+- `loadOption` (*integer|nil*) : 1: do not reload the vehicle; 2: force reload; nil: enter the existing object or spawn it.
+- `callback` (*function|nil*) : Called after entering.
 
 #### `career_modules_inventory.expediteRepairFromInventory(inventoryId, price)`
 
-Accélère une réparation d'assurance payante (insurance.expediteRepair), sauvegarde et rafraîchit l'UI.
+Speeds up a paid insurance repair (insurance.expediteRepair), saves and refreshes the UI.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `price` (*number*) : Prix de l'accélération.
+- `inventoryId` (*integer*) : Inventory id.
+- `price` (*number*) : Price of the speed-up.
 
 #### `career_modules_inventory.getClosestGarage(pos)`
 
-Renvoie le garage dont la première zone est la plus proche de pos (position du joueur par défaut) dans le niveau courant.
+Returns the garage whose first zone is nearest to pos (player position by default) in the current level.
 
-- `pos` (*vec3|nil*) : Position de référence.
-- **renvoie** : table|nil Installation garage.
+- `pos` (*vec3|nil*) : Reference position.
+- **returns**: table|nil Garage facility.
 
 #### `career_modules_inventory.getCurrentVehicle()`
 
-Id d'inventaire du véhicule que le joueur conduit (nil à pied). Listé dans les fonctions « Debug » du fichier.
+Inventory id of the vehicle the player is driving (nil on foot). Listed in the "Debug" functions of the file.
 
-- **renvoie** : integer|nil inventoryId courant.
+- **returns**: integer|nil Current inventoryId.
 
 #### `career_modules_inventory.getCurrentVehicleId()`
 
-Id d'objet (monde) du véhicule courant de l'inventaire.
+Object id (world) of the current inventory vehicle.
 
-- **renvoie** : integer|nil Id d'objet véhicule.
+- **returns**: integer|nil Vehicle object id.
 
 #### `career_modules_inventory.getDirtiedVehicles()`
 
-Renvoie l'ensemble des inventoryId modifiés depuis la dernière sauvegarde.
+Returns the set of inventoryIds modified since the last save.
 
-- **renvoie** : table<integer, boolean> Ensemble des ids.
+- **returns**: table<integer, boolean> Set of ids.
 
 #### `career_modules_inventory.getFavoriteVehicle()`
 
-Renvoie l'id d'inventaire du véhicule favori.
+Returns the inventory id of the favorite vehicle.
 
-- **renvoie** : integer|nil inventoryId favori.
+- **returns**: integer|nil Favorite inventoryId.
 
 #### `career_modules_inventory.getInventoryIdFromVehicleId(vehId)`
 
-Convertit un id d'objet du monde en id d'inventaire (nil si le véhicule n'est pas dans l'inventaire).
+Converts a world object id to an inventory id (nil if the vehicle is not in the inventory).
 
-- `vehId` (*integer|nil*) : Id d'objet véhicule.
-- **renvoie** : integer|nil Id d'inventaire.
+- `vehId` (*integer|nil*) : Vehicle object id.
+- **returns**: integer|nil Inventory id.
 
 #### `career_modules_inventory.getInventoryIdsInClosestGarage(onlyFirst)`
 
-Liste les véhicules de l'inventaire présents dans le garage le plus proche (zone intersectée), triés par distance au joueur. Avec onlyFirst, renvoie un seul id (le premier trouvé par next, voir notes).
+Lists the inventory vehicles present in the nearest garage (intersected zone), sorted by distance to the player. With onlyFirst, returns a single id (the first found by next, see notes).
 
-- `onlyFirst` (*boolean|nil*) : Ne renvoyer qu'un id.
-- **renvoie** : integer[]|integer|nil Liste d'ids, ou un id si onlyFirst.
+- `onlyFirst` (*boolean|nil*) : Return only one id.
+- **returns**: integer[]|integer|nil List of ids, or one id if onlyFirst.
 
 #### `career_modules_inventory.getLastVehicle()`
 
-Id d'inventaire du dernier véhicule dans lequel le joueur est entré.
+Inventory id of the last vehicle the player entered.
 
-- **renvoie** : integer|nil inventoryId.
+- **returns**: integer|nil inventoryId.
 
 #### `career_modules_inventory.getMapInventoryIdToVehId()`
 
-Renvoie la table inventoryId -> id d'objet pour les véhicules présents dans le monde (par référence).
+Returns the table inventoryId -> object id for the vehicles present in the world (by reference).
 
-- **renvoie** : table<integer, integer> Correspondance.
+- **returns**: table<integer, integer> Mapping.
 
 #### `career_modules_inventory.getNumberOfFreeSlots()`
 
-Nombre d'emplacements libres (20 moins les véhicules owned qui occupent de la place).
+Number of free slots (20 minus the owned vehicles that take up space).
 
-- **renvoie** : integer Emplacements libres.
+- **returns**: integer Free slots.
 
 #### `career_modules_inventory.getPartConditionsCallback(partConditions, inventoryId)`
 
-Enregistre les conditions de pièces reçues du véhicule (ignorées avec un avertissement si ce n'est pas une table), finalise un ajout en attente (hook onVehicleAdded) et synchronise l'inventaire de pièces.
+Records the part conditions received from the vehicle (ignored with a warning if it is not a table), finalizes a pending add (onVehicleAdded hook) and synchronizes the parts inventory.
 
-- `partConditions` (*table|boolean*) : Conditions, ou false si non initialisées.
-- `inventoryId` (*integer*) : Id d'inventaire.
+- `partConditions` (*table|boolean*) : Conditions, or false if not initialized.
+- `inventoryId` (*integer*) : Inventory id.
 
 #### `career_modules_inventory.getVehicle(inventoryId)`
 
-Renvoie les infos d'un véhicule de l'inventaire.
+Returns the info of an inventory vehicle.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- **renvoie** : table|nil Infos du véhicule.
+- `inventoryId` (*integer*) : Inventory id.
+- **returns**: table|nil Vehicle info.
 
 #### `career_modules_inventory.getVehicleIdFromInventoryId(inventoryId)`
 
-Convertit un id d'inventaire en id d'objet du monde (nil si non apparu).
+Converts an inventory id to a world object id (nil if not spawned).
 
-- `inventoryId` (*integer|nil*) : Id d'inventaire.
-- **renvoie** : integer|nil Id d'objet.
+- `inventoryId` (*integer|nil*) : Inventory id.
+- **returns**: integer|nil Object id.
 
 #### `career_modules_inventory.getVehicleNiceNameTranslated(inventoryId)`
 
-Nom d'affichage traduit du véhicule.
+Translated display name of the vehicle.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- **renvoie** : string|nil Nom.
+- `inventoryId` (*integer*) : Inventory id.
+- **returns**: string|nil Name.
 
 #### `career_modules_inventory.getVehicleThumbnail(inventoryId)`
 
-Chemin de la miniature du véhicule : fichier de la sauvegarde si une capture existe, sinon aperçu par défaut de sa configuration.
+Path of the vehicle thumbnail: save file if a capture exists, otherwise the default preview of its configuration.
 
-- `inventoryId` (*integer|nil*) : Id d'inventaire.
-- **renvoie** : string|nil Chemin d'image.
+- `inventoryId` (*integer|nil*) : Inventory id.
+- **returns**: string|nil Image path.
 
 #### `career_modules_inventory.getVehicleUiData(inventoryId, inventoryIdsInGarage)`
 
-Prépare les données d'un véhicule pour l'UI : valeur (et valeur réparée), prix de réparation express, distance, présence au garage/stockage, besoin de réparation, favori, assurance, permissions (réparation, vente, favori, stockage, plaque, retour de prêt), mise en vente et données de performance.
+Prepares a vehicle's data for the UI: value (and repaired value), express repair price, distance, presence in garage/storage, need for repair, favorite, insurance, permissions (repair, sale, favorite, storage, plate, loan return), listing for sale and performance data.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `inventoryIdsInGarage` (*table<integer, boolean>|nil*) : Véhicules du garage le plus proche (calculé si nil).
-- **renvoie** : table|nil Données pour l'UI.
+- `inventoryId` (*integer*) : Inventory id.
+- `inventoryIdsInGarage` (*table<integer, boolean>|nil*) : Vehicles of the nearest garage (computed if nil).
+- **returns**: table|nil Data for the UI.
 
 #### `career_modules_inventory.getVehicles()`
 
-Renvoie la table complète des véhicules de l'inventaire (par référence).
+Returns the complete inventory vehicles table (by reference).
 
-- **renvoie** : table<integer, table> inventoryId -> infos du véhicule.
+- **returns**: table<integer, table> inventoryId -> vehicle info.
 
 #### `career_modules_inventory.hasFreeSlot()`
 
-Indique s'il reste au moins un emplacement libre.
+Indicates whether at least one slot is free.
 
-- **renvoie** : boolean true si oui.
+- **returns**: boolean true if so.
 
 #### `career_modules_inventory.isEmpty()`
 
-Indique si l'inventaire ne contient aucun véhicule.
+Indicates whether the inventory contains no vehicle.
 
-- **renvoie** : boolean true si vide.
+- **returns**: boolean true if empty.
 
 #### `career_modules_inventory.isLicensePlateValid(text)`
 
-Valide un texte de plaque via core_vehicles.isLicensePlateValid.
+Validates a plate text via core_vehicles.isLicensePlateValid.
 
-- `text` (*string*) : Texte.
-- **renvoie** : boolean Validité.
+- `text` (*string*) : Text.
+- **returns**: boolean Validity.
 
 #### `career_modules_inventory.isSeatedInsideOwnedVehicle()`
 
-Indique si le joueur est dans un véhicule de l'inventaire (currentVehicle défini), possédé ou non.
+Indicates whether the player is in an inventory vehicle (currentVehicle set), owned or not.
 
-- **renvoie** : boolean true si assis dans un véhicule de l'inventaire.
+- **returns**: boolean true if seated in an inventory vehicle.
 
 #### `career_modules_inventory.isVehicleNameValid(text)`
 
-Valide un nom de véhicule : non vide et sans guillemet, antislash ni caractère de contrôle (\b \f \n \r \t).
+Validates a vehicle name: non-empty and without quote, backslash or control character (\b \f \n \r \t).
 
-- `text` (*string|nil*) : Nom.
-- **renvoie** : boolean Validité.
+- `text` (*string|nil*) : Name.
+- **returns**: boolean Validity.
 
 #### `career_modules_inventory.onBeforeWalkingModeToggled(enabled, vehicleInFrontVehId)`
 
-Hook : sortir du véhicule (mode marche) fait entrer dans « aucun véhicule » ; monter dans un véhicule de l'inventaire l'enregistre comme courant.
+Hook: leaving the vehicle (walking mode) enters "no vehicle"; getting into an inventory vehicle records it as current.
 
-- `enabled` (*boolean*) : true si on passe en mode marche.
-- `vehicleInFrontVehId` (*integer|nil*) : Id du véhicule devant le joueur.
+- `enabled` (*boolean*) : true if switching to walking mode.
+- `vehicleInFrontVehId` (*integer|nil*) : Id of the vehicle in front of the player.
 
 #### `career_modules_inventory.onCareerActive(active)`
 
-Hook : vend les véhicules si la sauvegarde est trop ancienne, puis prépare l'inventaire (réapparition des véhicules, entrée dans le véhicule courant, équipement de départ pour une nouvelle carrière).
+Hook: sells the vehicles if the save is too old, then prepares the inventory (vehicles respawning, entering the current vehicle, starting equipment for a new career).
 
-- `active` (*boolean*) : Rien si false.
+- `active` (*boolean*) : Nothing if false.
 
 #### `career_modules_inventory.onCheckPermission(tags, permissions, additionalData)`
 
-Hook de permissions : pour les véhicules non possédés, interdit vente, réparation, mission, peinture, achat de pièces, plaque, tuning, stockage, échange de pièces, remorquage au garage et favori ; interdit aussi réparer/vendre un véhicule inaccessible, mettre en favori le favori ou un fichier manquant, stocker un véhicule absent du monde.
+Permissions hook: for non-owned vehicles, forbids sale, repair, mission, painting, parts purchase, plate, tuning, storage, parts swap, towing to garage and favorite; also forbids repairing/selling an inaccessible vehicle, favoriting the favorite or a missing file, storing a vehicle absent from the world.
 
-- `tags` (*string[]*) : Tags demandés.
-- `permissions` (*table[]*) : Liste à compléter ({permission}).
-- `additionalData` (*{inventoryId: integer}|nil*) : Contexte (inventoryId).
+- `tags` (*string[]*) : Tags requested.
+- `permissions` (*table[]*) : List to complete ({permission}).
+- `additionalData` (*{inventoryId: integer}|nil*) : Context (inventoryId).
 
 #### `career_modules_inventory.onComputerAddFunctions(menuData, computerFunctions)`
 
-Hook de l'ordinateur : ajoute la fonction « Mes véhicules » (ordre 1), désactivée tant que le véhicule de départ n'est pas acheté.
+Computer hook: adds the "My vehicles" function (order 1), disabled until the starter vehicle is bought.
 
-- `menuData` (*table*) : Données du menu.
-- `computerFunctions` (*table*) : Fonctions à compléter (general).
+- `menuData` (*table*) : Menu data.
+- `computerFunctions` (*table*) : Functions to complete (general).
 
 #### `career_modules_inventory.onEnterVehicleFinished(inventoryId)`
 
-Hook : mémorise le véhicule dans lequel on est entré comme dernier véhicule.
+Hook: stores the vehicle entered as the last vehicle.
 
-- `inventoryId` (*integer|nil*) : Id d'inventaire.
+- `inventoryId` (*integer|nil*) : Inventory id.
 
 #### `career_modules_inventory.onGetRawPoiListForLevel(levelIdentifier, elements)`
 
-Hook de la liste de POI : ajoute un marqueur de grande carte pour chaque véhicule de l'inventaire présent dans le monde (autre que celui du joueur), avec description (distance, plaque, odomètre) et miniature.
+POI list hook: adds a big map marker for each inventory vehicle present in the world (other than the player's), with description (distance, plate, odometer) and thumbnail.
 
-- `levelIdentifier` (*string*) : Niveau (non utilisé).
-- `elements` (*table[]*) : Liste de POI à compléter.
+- `levelIdentifier` (*string*) : Level (unused).
+- `elements` (*table[]*) : POI list to complete.
 
 #### `career_modules_inventory.onSaveCurrentProfile(currentSavePath, vehiclesThumbnailUpdate)`
 
-Hook de sauvegarde : écrit inventory.json, met à jour les conditions de pièces, puis écrit chaque véhicule (JSON + miniature si demandée) et supprime les fichiers de véhicules disparus ; à la fin, émet onVehicleSaveFinished.
+Save hook: writes inventory.json, updates the part conditions, then writes each vehicle (JSON + thumbnail if requested) and deletes the files of vehicles that no longer exist; at the end, emits onVehicleSaveFinished.
 
-- `currentSavePath` (*string*) : Dossier de sauvegarde.
-- `vehiclesThumbnailUpdate` (*integer[]|nil*) : Ids des véhicules dont la miniature doit être refaite.
+- `currentSavePath` (*string*) : Save folder.
+- `vehiclesThumbnailUpdate` (*integer[]|nil*) : Ids of the vehicles whose thumbnail must be redone.
 
 #### `career_modules_inventory.onScreenFadeState(state)`
 
-Hook : quand le fondu d'écran est complet (state 1), supprime les véhicules marqués puis exécute l'action différée (apparition d'un véhicule).
+Hook: when the screen fade is complete (state 1), removes the marked vehicles then runs the deferred action (vehicle spawn).
 
-- `state` (*integer*) : État du fondu.
+- `state` (*integer*) : Fade state.
 
 #### `career_modules_inventory.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook de frame : sauvegarde initiale d'une nouvelle carrière (après 10 frames), toasts de véhicule mis en stockage ou prêt rendu, décompte de timeToAccess avec messages de livraison/réparation.
+Frame hook: initial save of a new career (after 10 frames), toasts for a vehicle put into storage or a loan returned, timeToAccess countdown with delivery/repair messages.
 
-- `dtReal` (*number*) : Temps réel (s).
-- `dtSim` (*number*) : Temps simulé (s).
-- `dtRaw` (*number*) : Temps brut (s).
+- `dtReal` (*number*) : Real time (s).
+- `dtSim` (*number*) : Simulated time (s).
+- `dtRaw` (*number*) : Raw time (s).
 
 #### `career_modules_inventory.openMenu(_chooseButtonsData, header, _buttonsActive, _backTarget)`
 
-Ouvre l'écran d'inventaire (career.computer.vehicleInventory) avec des boutons de choix configurables et met à jour les conditions de pièces des véhicules apparus.
+Opens the inventory screen (career.computer.vehicleInventory) with configurable choice buttons and updates the part conditions of the spawned vehicles.
 
-- `_chooseButtonsData` (*table[]|nil*) : Boutons {callback, buttonText, repairRequired, insuranceRequired, ownedRequired...}.
-- `header` (*string|nil*) : Titre du menu.
-- `_buttonsActive` (*table|nil*) : repairEnabled, sellEnabled, favoriteEnabled, storingEnabled, returnLoanerEnabled (true par défaut).
-- `_backTarget` (*string|nil*) : Route de retour.
+- `_chooseButtonsData` (*table[]|nil*) : Buttons {callback, buttonText, repairRequired, insuranceRequired, ownedRequired...}.
+- `header` (*string|nil*) : Menu title.
+- `_buttonsActive` (*table|nil*) : repairEnabled, sellEnabled, favoriteEnabled, storingEnabled, returnLoanerEnabled (true by default).
+- `_backTarget` (*string|nil*) : Return route.
 
 #### `career_modules_inventory.openMenuFromComputer(_originComputerId)`
 
-Ouvre l'inventaire depuis l'ordinateur du garage avec trois boutons : récupérer au garage, remplacer le véhicule actuel, ouvrir l'indice de performance.
+Opens the inventory from the garage computer with three buttons: retrieve at the garage, replace the current vehicle, open the performance index.
 
-- `_originComputerId` (*string*) : Id de l'ordinateur d'origine.
+- `_originComputerId` (*string*) : Originating computer id.
 
 #### `career_modules_inventory.purchaseLicensePlateText(inventoryId, text, money)`
 
-Achète un changement de plaque : paie, applique le texte, débloque NOW_ITS_MINE, joue le son et marque le véhicule modifié. Ne fait rien si le joueur ne peut pas payer.
+Buys a plate change: pays, applies the text, unlocks NOW_ITS_MINE, plays the sound and marks the vehicle as modified. Does nothing if the player cannot pay.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `text` (*string*) : Texte de plaque.
-- `money` (*number*) : Prix.
+- `inventoryId` (*integer*) : Inventory id.
+- `text` (*string*) : Plate text.
+- `money` (*number*) : Price.
 
 #### `career_modules_inventory.removeVehicle(inventoryId)`
 
-Supprime le véhicule de l'inventaire et du monde, émet onVehicleRemoved et réassigne le favori si besoin.
+Removes the vehicle from the inventory and the world, emits onVehicleRemoved and reassigns the favorite if needed.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
+- `inventoryId` (*integer*) : Inventory id.
 
 #### `career_modules_inventory.removeVehicleObject(inventoryId, skipPartConditions)`
 
-Supprime seulement l'objet véhicule du monde (le véhicule reste dans l'inventaire, en stockage) ; passe le joueur en mode marche s'il le conduisait. Émet onInventoryPreRemoveVehicleObject.
+Removes only the vehicle object from the world (the vehicle stays in the inventory, in storage); puts the player in walking mode if they were driving it. Emits onInventoryPreRemoveVehicleObject.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `skipPartConditions` (*boolean|nil*) : Non utilisé dans le corps (reste un TODO).
+- `inventoryId` (*integer*) : Inventory id.
+- `skipPartConditions` (*boolean|nil*) : Not used in the body (remains a TODO).
 
 #### `career_modules_inventory.renameVehicle(inventoryId, name)`
 
-Renomme le véhicule (niceName) s'il est valide et le marque modifié.
+Renames the vehicle (niceName) if valid and marks it as modified.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `name` (*string*) : Nouveau nom.
-- **renvoie** : boolean false si le nom est invalide.
+- `inventoryId` (*integer*) : Inventory id.
+- `name` (*string*) : New name.
+- **returns**: boolean false if the name is invalid.
 
 #### `career_modules_inventory.requestPickerExit()`
 
-Quitte le sélecteur : navigue vers la route de retour (career.computer par défaut).
+Leaves the selector: navigates to the return route (career.computer by default).
 
-- **renvoie** : any Résultat de ui_router.navigate.
+- **returns**: any Result of ui_router.navigate.
 
 #### `career_modules_inventory.returnLoanedVehicleFromInventory(inventoryId)`
 
-Rend un véhicule prêté (career_modules_loanerVehicles.returnVehicle) puis sauvegarde et rafraîchit l'UI.
+Returns a loaned vehicle (career_modules_loanerVehicles.returnVehicle) then saves and refreshes the UI.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
+- `inventoryId` (*integer*) : Inventory id.
 
 #### `career_modules_inventory.sellVehicle(inventoryId, price)`
 
-Vend un véhicule : émet onBeforeVehicleSell, crédite le prix (ou la valeur calculée par valueCalculator), supprime le véhicule, joue le son d'achat, débloque FLIP_PROFIT si revendu au-dessus du prix d'achat final, et journalise.
+Sells a vehicle: emits onBeforeVehicleSell, credits the price (or the value computed by valueCalculator), removes the vehicle, plays the purchase sound, unlocks FLIP_PROFIT if resold above the final purchase price, and logs.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `price` (*number|nil*) : Prix imposé (sinon valeur calculée).
-- **renvoie** : boolean|nil true si vendu, nil si le véhicule n'existe pas.
+- `inventoryId` (*integer*) : Inventory id.
+- `price` (*number|nil*) : Imposed price (otherwise computed value).
+- **returns**: boolean|nil true if sold, nil if the vehicle does not exist.
 
 #### `career_modules_inventory.sellVehicleFromInventory(inventoryId)`
 
-Vend depuis l'écran d'inventaire : vend, sauvegarde la carrière et renvoie les données à l'UI.
+Sells from the inventory screen: sells, saves the career and sends the data back to the UI.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
+- `inventoryId` (*integer*) : Inventory id.
 
 #### `career_modules_inventory.setFavoriteVehicle(inventoryId)`
 
-Définit le véhicule favori (ignoré si l'id est inconnu).
+Sets the favorite vehicle (ignored if the id is unknown).
 
-- `inventoryId` (*integer*) : Id d'inventaire.
+- `inventoryId` (*integer*) : Inventory id.
 
 #### `career_modules_inventory.setLicensePlateText(inventoryId, text)`
 
-Change le texte de plaque du véhicule dans le monde et dans sa config.
+Changes the vehicle's plate text in the world and in its config.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `text` (*string*) : Texte de plaque.
+- `inventoryId` (*integer*) : Inventory id.
+- `text` (*string*) : Plate text.
 
 #### `career_modules_inventory.setVehicleDirty(inventoryId)`
 
-Marque un véhicule comme modifié : il sera réécrit (avec nouvelle dirtyDate) à la prochaine sauvegarde.
+Marks a vehicle as modified: it will be rewritten (with a new dirtyDate) at the next save.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
+- `inventoryId` (*integer*) : Inventory id.
 
 #### `career_modules_inventory.spawnVehicle(inventoryId, replaceOption, callback)`
 
-Fait apparaître un véhicule de l'inventaire depuis sa config (liste de pièces aplatie), restaure ses conditions de pièces et réconcilie l'inventaire de pièces. Retourne nil si le modèle ou le fichier de config n'existe plus.
+Spawns an inventory vehicle from its config (flattened parts list), restores its part conditions and reconciles the parts inventory. Returns nil if the model or the config file no longer exists.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `replaceOption` (*integer|nil*) : 1 : remplace le véhicule courant du joueur ; 2 : remplace l'objet ayant le même inventoryId ; autre : nouveau véhicule sans y entrer.
-- `callback` (*function|nil*) : Appelée quand les conditions de pièces sont synchronisées.
-- **renvoie** : userdata|nil Objet véhicule créé.
+- `inventoryId` (*integer*) : Inventory id.
+- `replaceOption` (*integer|nil*) : 1: replaces the player's current vehicle; 2: replaces the object with the same inventoryId; other: new vehicle without entering it.
+- `callback` (*function|nil*) : Called when the part conditions are synchronized.
+- **returns**: userdata|nil Vehicle object created.
 
 #### `career_modules_inventory.updatePartConditions(vehId, inventoryId, callback)`
 
-Demande au véhicule ses conditions de pièces (getPartConditions) et les stocke dans l'inventaire puis dans l'inventaire de pièces.
+Asks the vehicle for its part conditions (getPartConditions) and stores them in the inventory then in the parts inventory.
 
-- `vehId` (*integer|nil*) : Id d'objet ; sinon déduit de inventoryId.
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `callback` (*function|nil*) : Appelée une fois la valeur reçue.
+- `vehId` (*integer|nil*) : Object id; otherwise deduced from inventoryId.
+- `inventoryId` (*integer*) : Inventory id.
+- `callback` (*function|nil*) : Called once the value is received.
 
 #### `career_modules_inventory.updatePartConditionsOfSpawnedVehicles(callback)`
 
-Marque tous les véhicules apparus comme modifiés et met à jour leurs conditions de pièces ; callback est appelé quand tous sont traités (ou tout de suite s'il n'y en a aucun).
+Marks all spawned vehicles as modified and updates their part conditions; callback is called when all are processed (or immediately if there are none).
 
-- `callback` (*function|nil*) : Appelée à la fin.
+- `callback` (*function|nil*) : Called at the end.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_career, career_modules_log, gameplay_tutorial_setup. |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_career, career_modules_log, gameplay_tutorial_setup. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onBeforeVehicleSell` — écouté par 1 module(s)
-- `onEnterVehicleFinished` — écouté par 4 module(s)
-- `onInventoryPreRemoveVehicleObject` — écouté par 1 module(s)
-- `onVehicleAdded` — écouté par 2 module(s)
-- `onVehicleRemoved` — écouté par 3 module(s)
-- `onVehicleSaveFinished` — écouté par 8 module(s)
+- `onBeforeVehicleSell` — listened to by 1 module(s)
+- `onEnterVehicleFinished` — listened to by 4 module(s)
+- `onInventoryPreRemoveVehicleObject` — listened to by 1 module(s)
+- `onVehicleAdded` — listened to by 2 module(s)
+- `onVehicleRemoved` — listened to by 3 module(s)
+- `onVehicleSaveFinished` — listened to by 8 module(s)
 
-**Évènements UI (guihooks.trigger) :** `addListing`, `gameContextPlayerVehicleDamageInfo`, `saveFinished`, `toastrMsg`, `vehicleInventoryData`
+**UI events (guihooks.trigger):** `addListing`, `gameContextPlayerVehicleDamageInfo`, `saveFinished`, `toastrMsg`, `vehicleInventoryData`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `copyFile`, `fileExists`, `findFiles`, `removeFile`
 - `be:` `enterVehicle`, `getPlayerVehicleID`
@@ -492,4 +492,4 @@ Marque tous les véhicules apparus comme modifiés et met à jour leurs conditio
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/inventory.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/inventory.lua`.*

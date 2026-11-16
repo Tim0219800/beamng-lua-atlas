@@ -1,34 +1,70 @@
 {
   "path": "lua/common/extensions/jbeam/jbeamMod.lua",
-  "module": "Extension d'exemple (commentaire du fichier : « an example of how you could add things into jbeam loading ») qui montre comment se brancher sur les deux phases de chargement JBeam. Les deux hooks se contentent d'écrire une ligne de log niveau I (« onJbeamLoadingPhase1/2 called :) »). Elle n'est pas chargée par défaut : il faut un extensions.load('jbeam_jbeamMod') (ligne commentée dans le fichier).",
-  "usage": "extensions.load('jbeam_jbeamMod')\n-- puis copier le module et remplacer les log() par votre propre traitement des données JBeam",
+  "module": "Example extension (file comment: \"an example of how you could add things into jbeam loading\") showing how to hook into the two JBeam loading phases. Both hooks just write a level I log line (\"onJbeamLoadingPhase1/2 called :)\"). It is not loaded by default: an extensions.load('jbeam_jbeamMod') is needed (commented-out line in the file).",
+  "usage": "extensions.load('jbeam_jbeamMod')\n-- then copy the module and replace the log() calls with your own JBeam data processing",
   "notes": [
-    "Aucun des arguments des hooks n'est utilisé dans le code ; leur sens exact vient du code appelant (non lu ici).",
-    "Les noms de logs utilisent le tag 'extensions.jbeam.jbeamMod'."
+    "None of the hook arguments are used in the code; their exact meaning comes from the calling code (not read here).",
+    "The log names use the tag 'extensions.jbeam.jbeamMod'."
   ],
   "functions": {
     "onJbeamLoadingPhase1": {
-      "desc": "Hook appelé pendant la phase 1 du chargement JBeam d'un véhicule. Ici : écrit seulement un log « onJbeamLoadingPhase1 called :) ».",
+      "desc": "Hook called during phase 1 of a vehicle's JBeam loading. Here: only writes a log \"onJbeamLoadingPhase1 called :)\".",
       "params": {
-        "loadingProgress": {"type": "any", "desc": "Non utilisé dans ce fichier."},
-        "objID": {"type": "integer", "desc": "Non utilisé (déduit du nom : id de l'objet véhicule)."},
-        "vehicle": {"type": "any", "desc": "Non utilisé."},
-        "unifyJournal": {"type": "any", "desc": "Non utilisé."},
-        "vehicleConfig": {"type": "table", "desc": "Non utilisé (déduit du nom : configuration du véhicule)."},
-        "vars": {"type": "any", "desc": "Non utilisé."}
+        "loadingProgress": {
+          "type": "any",
+          "desc": "Not used in this file."
+        },
+        "objID": {
+          "type": "integer",
+          "desc": "Not used (inferred from the name: vehicle object id)."
+        },
+        "vehicle": {
+          "type": "any",
+          "desc": "Not used."
+        },
+        "unifyJournal": {
+          "type": "any",
+          "desc": "Not used."
+        },
+        "vehicleConfig": {
+          "type": "table",
+          "desc": "Not used (inferred from the name: vehicle configuration)."
+        },
+        "vars": {
+          "type": "any",
+          "desc": "Not used."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onJbeamLoadingPhase2": {
-      "desc": "Hook appelé pendant la phase 2 du chargement JBeam d'un véhicule. Ici : écrit seulement un log « onJbeamLoadingPhase2 called :) ».",
+      "desc": "Hook called during phase 2 of a vehicle's JBeam loading. Here: only writes a log \"onJbeamLoadingPhase2 called :)\".",
       "params": {
-        "loadingProgress": {"type": "any", "desc": "Non utilisé dans ce fichier."},
-        "objID": {"type": "integer", "desc": "Non utilisé (déduit du nom : id de l'objet véhicule)."},
-        "vehicle": {"type": "any", "desc": "Non utilisé."},
-        "unifyJournal": {"type": "any", "desc": "Non utilisé."},
-        "vehicleConfig": {"type": "table", "desc": "Non utilisé (déduit du nom : configuration du véhicule)."},
-        "vars": {"type": "any", "desc": "Non utilisé."}
+        "loadingProgress": {
+          "type": "any",
+          "desc": "Not used in this file."
+        },
+        "objID": {
+          "type": "integer",
+          "desc": "Not used (inferred from the name: vehicle object id)."
+        },
+        "vehicle": {
+          "type": "any",
+          "desc": "Not used."
+        },
+        "unifyJournal": {
+          "type": "any",
+          "desc": "Not used."
+        },
+        "vehicleConfig": {
+          "type": "table",
+          "desc": "Not used (inferred from the name: vehicle configuration)."
+        },
+        "vars": {
+          "type": "any",
+          "desc": "Not used."
+        }
       },
       "returns": [],
       "internal": true

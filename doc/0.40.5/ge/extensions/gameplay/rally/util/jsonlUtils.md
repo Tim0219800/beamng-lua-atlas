@@ -1,76 +1,76 @@
 # `gameplay_rally_util_jsonlUtils`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/util/jsonlUtils.lua` · VM : Game Engine (GE) · 87 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/util/jsonlUtils.lua` · VM: Game Engine (GE) · 87 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_util_jsonlUtils` : `extensions.load("gameplay_rally_util_jsonlUtils")`, puis la globale `gameplay_rally_util_jsonlUtils`
+**Access:** extension `gameplay_rally_util_jsonlUtils`: `extensions.load("gameplay_rally_util_jsonlUtils")`, then the global `gameplay_rally_util_jsonlUtils`
 
-Utilitaires de lecture de fichiers JSONL (un objet JSON par ligne), utilisés pour charger les enregistrements de reconnaissance du rallye (driveline, cuts, transcriptions). Les lignes vides et celles commençant par `//` sont ignorées par parseJsonlFile.
+Utilities for reading JSONL files (one JSON object per line), used to load the rally recce recordings (driveline, cuts, transcriptions). Empty lines and those starting with `//` are ignored by parseJsonlFile.
 
-## Exemple
+## Example
 
 ```lua
 local objs, err = gameplay_rally_util_jsonlUtils.parseJsonlFile(fname, function(o) return o end, rallyUtil)
 ```
 
-## Remarques
+## Notes
 
-- parseJsonlFile appelle rallyUtil.trimString : l'appelant doit passer le module gameplay/rally/util.
-- readJsonlLines ne saute ni les lignes vides ni les commentaires `//` ; jsonDecode sera appelé sur chaque ligne telle quelle.
+- parseJsonlFile calls rallyUtil.trimString: the caller must pass the gameplay/rally/util module.
+- readJsonlLines skips neither empty lines nor `//` comments; jsonDecode will be called on each line as is.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_util_jsonlUtils.parseJsonlFile(fname, processLine, rallyUtil)` | Lit un fichier JSONL, décode chaque ligne non vide et non commentée, applique éventuellement processLine à l'objet et accumule les résultats non nil. | 39 |
-| `gameplay_rally_util_jsonlUtils.readFileToMemory(fname)` | Lit tout un fichier en mémoire avec io.open. | 17 |
-| `gameplay_rally_util_jsonlUtils.readJsonlLines(fname, callback)` | Lecteur simple basé sur io.lines (compatibilité). Appelle callback(obj) pour chaque ligne décodée. | 70 |
-| `gameplay_rally_util_jsonlUtils.splitIntoLines(content)` | Découpe un texte en lignes sur \r et \n ; les lignes vides disparaissent. | 27 |
-| `gameplay_rally_util_jsonlUtils.startsWithDoubleSlash(line)` | Teste si la ligne commence par `//` (marqueur de commentaire). | 11 |
+| `gameplay_rally_util_jsonlUtils.parseJsonlFile(fname, processLine, rallyUtil)` | Reads a JSONL file, decodes each non-empty, non-comment line, optionally applies processLine to the object and accumulates the non-nil results. | 39 |
+| `gameplay_rally_util_jsonlUtils.readFileToMemory(fname)` | Reads a whole file into memory with io.open. | 17 |
+| `gameplay_rally_util_jsonlUtils.readJsonlLines(fname, callback)` | Simple reader based on io.lines (compatibility). Calls callback(obj) for each decoded line. | 70 |
+| `gameplay_rally_util_jsonlUtils.splitIntoLines(content)` | Splits a text into lines on \r and \n; empty lines disappear. | 27 |
+| `gameplay_rally_util_jsonlUtils.startsWithDoubleSlash(line)` | Tests whether the line starts with `//` (comment marker). | 11 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_util_jsonlUtils.parseJsonlFile(fname, processLine, rallyUtil)`
 
-Lit un fichier JSONL, décode chaque ligne non vide et non commentée, applique éventuellement processLine à l'objet et accumule les résultats non nil.
+Reads a JSONL file, decodes each non-empty, non-comment line, optionally applies processLine to the object and accumulates the non-nil results.
 
-- `fname` (*string*) : Chemin du fichier.
-- `processLine` (*function|nil*) : Reçoit l'objet décodé, renvoie l'objet à garder ou nil pour l'ignorer.
-- `rallyUtil` (*table*) : Module rally util (fournit trimString).
-- **renvoie** : table|nil Liste des objets, ou nil en cas d'erreur.
-- **renvoie** : string|nil Message d'erreur : "file not found" ou "failed to read file".
+- `fname` (*string*) : File path.
+- `processLine` (*function|nil*) : Receives the decoded object, returns the object to keep or nil to ignore it.
+- `rallyUtil` (*table*) : Rally util module (provides trimString).
+- **returns**: table|nil List of objects, or nil on error.
+- **returns**: string|nil Error message: "file not found" or "failed to read file".
 
 #### `gameplay_rally_util_jsonlUtils.readFileToMemory(fname)`
 
-Lit tout un fichier en mémoire avec io.open.
+Reads a whole file into memory with io.open.
 
-- `fname` (*string*) : Chemin du fichier.
-- **renvoie** : string|nil Contenu, ou nil si l'ouverture échoue.
+- `fname` (*string*) : File path.
+- **returns**: string|nil Content, or nil if opening fails.
 
 #### `gameplay_rally_util_jsonlUtils.readJsonlLines(fname, callback)`
 
-Lecteur simple basé sur io.lines (compatibilité). Appelle callback(obj) pour chaque ligne décodée.
+Simple reader based on io.lines (compatibility). Calls callback(obj) for each decoded line.
 
-- `fname` (*string*) : Chemin du fichier.
-- `callback` (*function|nil*) : Appelée avec l'objet décodé de chaque ligne.
-- **renvoie** : boolean false si le fichier n'existe pas, sinon true.
+- `fname` (*string*) : File path.
+- `callback` (*function|nil*) : Called with the decoded object of each line.
+- **returns**: boolean false if the file does not exist, otherwise true.
 
 #### `gameplay_rally_util_jsonlUtils.splitIntoLines(content)`
 
-Découpe un texte en lignes sur \r et \n ; les lignes vides disparaissent.
+Splits a text into lines on \r and \n; empty lines disappear.
 
-- `content` (*string*) : Texte à découper.
-- **renvoie** : string[] Liste des lignes non vides.
+- `content` (*string*) : Text to split.
+- **returns**: string[] List of non-empty lines.
 
 #### `gameplay_rally_util_jsonlUtils.startsWithDoubleSlash(line)`
 
-Teste si la ligne commence par `//` (marqueur de commentaire).
+Tests whether the line starts with `//` (comment marker).
 
-- `line` (*string*) : Ligne à tester.
-- **renvoie** : boolean true si la ligne commence par //.
+- `line` (*string*) : Line to test.
+- **returns**: boolean true if the line starts with //.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/util/jsonlUtils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/util/jsonlUtils.lua`.*

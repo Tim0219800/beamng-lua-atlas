@@ -1,45 +1,45 @@
 # `editor_raceEditor_segments`
 
-*Fichier : `lua/ge/extensions/editor/raceEditor/segments.lua` · VM : Game Engine (GE) · 443 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/raceEditor/segments.lua` · VM: Game Engine (GE) · 443 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/raceEditor/segments")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/raceEditor/segments")` (file under extensions/ but not a regular extension)
 
-Sous-fenêtre « Segments » de l'éditeur de course (raceEditor). Un segment relie deux pathnodes (From/To) et a un mode : waypoint, capsules ou navpath (si getBeNavpath()). En mode capsules, on édite une liste de points-capsules (position, rayon) au gizmo ou au clavier. Alt + clic sur un nœud définit la source, Shift + clic la cible, Ctrl affiche des sphères au milieu des capsules pour en insérer une. Les modifications passent par editor.history. Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/segments')(raceEditor).
+"Segments" sub-window of the race editor (raceEditor). A segment links two pathnodes (From/To) and has a mode: waypoint, capsules or navpath (if getBeNavpath()). In capsules mode, you edit a list of capsule points (position, radius) with the gizmo or keyboard. Alt + click on a node sets the source, Shift + click the target, Ctrl shows spheres in the middle of capsules to insert one. Changes go through editor.history. The module returns a constructor: require('/lua/ge/extensions/editor/raceEditor/segments')(raceEditor).
 
-## Remarques
+## Notes
 
-- Bug : C:endDragging référence serializedUndo et serializedRedo, mais ces fonctions locales sont déclarées après lui dans le fichier ; elles sont donc nil (globales) au moment de la compilation et l'action d'historique du gizmo est passée sans undo/redo valides. Les autres actions (addHistory) fonctionnent car elles sont définies après les locales.
-- Le bouton « Remove » d'une capsule nomme son action d'historique « Added Capsule » (copier-coller).
-- Les pacenotes du segment sélectionné sont affichées, les autres masquées.
+- Bug: C:endDragging references serializedUndo and serializedRedo, but these local functions are declared after it in the file; they are therefore nil (globals) at compile time and the gizmo history action is passed without valid undo/redo. The other actions (addHistory) work because they are defined after the locals.
+- A capsule's "Remove" button names its history action "Added Capsule" (copy-paste).
+- The selected segment's pacenotes are shown, the others hidden.
 
-## Classe `C`
+## Class `C`
 
-Fenêtre Segments (windowDescription = 'Segments'). Instanciée avec init(raceEditor).
+Segments window (windowDescription = 'Segments'). Instantiated with init(raceEditor).
 
-Le module renvoie un constructeur : `local obj = require("editor_raceEditor_segments")(options)`.
+The module returns a constructor: `local obj = require("editor_raceEditor_segments")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:addHistory(name, old)` | Valide une action d'historique pour le segment courant à partir de l'état sérialisé précédent et de l'état actuel ; undo/redo restaurent le segment et la capsule sélectionnés. | 135 |
-| `C:beginDrag()` | Début de manipulation au gizmo : mémorise le rayon de la capsule et l'état sérialisé du segment. | 81 |
-| `C:dragging()` | Pendant la manipulation : applique translation (pos) ou échelle (radius, jamais négatif) à la capsule. | 88 |
-| `C:draw(mouseInfo)` | Appelé à chaque frame : mémorise mouseInfo, gère gizmo et entrées si autorisé, puis dessine la liste des segments et le panneau. | 142 |
-| `C:drawSegmentList()` | Dessine la liste des segments (« (!) » si un nœud est manquant), le bouton Create et le panneau du segment : suppression, déplacement, nom, From/To, mode, et les capsules (liste, position, rayon, Add Before/After, Remove). | 239 |
-| `C:endDragging()` | Fin de manipulation : tente de valider l'action d'historique « Manipulated Capsule Node via Gizmo » (voir notes : fonctions undo/redo nil). | 112 |
-| `C:init(raceEditor)` | Mémorise raceEditor ; index de segment et de capsule à nil. | 12 |
-| `C:input()` | Gère la souris pour le segment sélectionné : Alt/Shift + clic sur un nœud pour changer source/cible ; en mode capsules, clic pour sélectionner une capsule et Ctrl + clic au milieu de deux capsules pour en ajouter une. | 151 |
-| `C:mouseDistanceTo(point, mouseInfo)` | Distance caméra-point si le rayon souris traverse la sphère du point, sinon -1. | 222 |
-| `C:selectCapsule(index)` | Sélectionne un point-capsule du segment courant et place le gizmo dessus. | 63 |
-| `C:selectSegment(index)` | Sélectionne le segment d'ID index (nil pour aucun) : met en surbrillance, charge le nom, définit les raccourcis Shift « Set Target » / Alt « Set Source » et n'affiche que les pacenotes de ce segment. | 39 |
-| `C:selected()` | Appelé quand l'onglet devient actif : désélectionne et dessine les segments en « normal ». | 22 |
-| `C:setPath(path)` | Définit le chemin de course édité. | 18 |
-| `C:unselect()` | Appelé quand l'onglet est quitté : segments en « faded », retire les raccourcis Shift et Alt. | 30 |
-| `C:updateTransform()` | Place le gizmo sur la capsule sélectionnée (sans effet si le gizmo est interdit ou si aucune capsule n'est choisie). | 68 |
+| `C:addHistory(name, old)` | Commits a history action for the current segment from the previous serialized state and the current state; undo/redo restore the segment and the selected capsule. | 135 |
+| `C:beginDrag()` | Start of gizmo manipulation: stores the capsule radius and the segment's serialized state. | 81 |
+| `C:dragging()` | During manipulation: applies translation (pos) or scaling (radius, never negative) to the capsule. | 88 |
+| `C:draw(mouseInfo)` | Called every frame: stores mouseInfo, handles gizmo and inputs if allowed, then draws the segment list and the panel. | 142 |
+| `C:drawSegmentList()` | Draws the segment list ("(!)" if a node is missing), the Create button and the segment panel: delete, move, name, From/To, mode, and the capsules (list, position, radius, Add Before/After, Remove). | 239 |
+| `C:endDragging()` | End of manipulation: tries to commit the "Manipulated Capsule Node via Gizmo" history action (see notes: nil undo/redo functions). | 112 |
+| `C:init(raceEditor)` | Stores raceEditor; segment and capsule indices set to nil. | 12 |
+| `C:input()` | Handles the mouse for the selected segment: Alt/Shift + click on a node to change source/target; in capsules mode, click to select a capsule and Ctrl + click between two capsules to add one. | 151 |
+| `C:mouseDistanceTo(point, mouseInfo)` | Camera-to-point distance if the mouse ray crosses the point's sphere, otherwise -1. | 222 |
+| `C:selectCapsule(index)` | Selects a capsule point of the current segment and places the gizmo on it. | 63 |
+| `C:selectSegment(index)` | Selects the segment with ID index (nil for none): highlights, loads the name, sets the Shift "Set Target" / Alt "Set Source" shortcuts and shows only this segment's pacenotes. | 39 |
+| `C:selected()` | Called when the tab becomes active: deselects and draws segments in "normal". | 22 |
+| `C:setPath(path)` | Sets the race path being edited. | 18 |
+| `C:unselect()` | Called when the tab is left: segments in "faded", removes the Shift and Alt shortcuts. | 30 |
+| `C:updateTransform()` | Places the gizmo on the selected capsule (no effect if the gizmo is forbidden or no capsule is chosen). | 68 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawTextAdvanced`
 - `worldEditorCppApi.` `getAxisGizmoScale`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/raceEditor/segments.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/raceEditor/segments.lua`.*

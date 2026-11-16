@@ -2,25 +2,25 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/gameplay/isWalking.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud, instanciée par _flowgraph_createNode(C).
+--- Node class, instantiated by _flowgraph_createNode(C).
 ---@class flowgraph_nodes_gameplay_isWalking_C
 local flowgraph_nodes_gameplay_isWalking_C = {}
 
---- Appelé au démarrage du graphe ; enregistre l'état de marche actuel dans self.prevWalk.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/isWalking.lua:23
+--- Called when the graph starts; stores the current walking state in self.prevWalk.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/isWalking.lua:23
 function flowgraph_nodes_gameplay_isWalking_C:_executionStarted() end
 
---- Dessine dans l'éditeur une icône de marcheur, verte si le joueur marche, grisée sinon.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/isWalking.lua:35
----@param builder table Constructeur de nœud imgui de l'éditeur.
----@param style table Style du nœud.
+--- Draws a walker icon in the editor, green if the player is walking, grayed out otherwise.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/isWalking.lua:35
+---@param builder table Editor imgui node constructor.
+---@param style table Node style.
 function flowgraph_nodes_gameplay_isWalking_C:drawMiddle(builder, style) end
 
---- Chaque frame : lit gameplay_walk.isWalking() et renseigne les pins walking, nonWalking, enteredWalking, exitedWalking.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/isWalking.lua:27
----@param args table Arguments du moteur flowgraph (non utilisés).
+--- Every frame: reads gameplay_walk.isWalking() and fills the pins walking, nonWalking, enteredWalking, exitedWalking.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/isWalking.lua:27
+---@param args table Flowgraph engine arguments (unused).
 function flowgraph_nodes_gameplay_isWalking_C:work(args) end
 

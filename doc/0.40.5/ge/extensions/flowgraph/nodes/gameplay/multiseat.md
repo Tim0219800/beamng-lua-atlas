@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gameplay_multiseat`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/multiseat.lua` · VM : Game Engine (GE) · 39 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/multiseat.lua` · VM: Game Engine (GE) · 39 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/multiseat")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/multiseat")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Multiseat » (catégorie once_instant, sans pin). Active le réglage 'multiseat' une fois (workOnce) en sauvegardant la valeur précédente, puis la restaure à l'arrêt de l'exécution du graphe.
+Flowgraph node "Multiseat" (category once_instant, no pin). Enables the 'multiseat' setting once (workOnce) while saving the previous value, then restores it when graph execution stops.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet self.activated à false au démarrage du graphe. | 20 |
-| `C:_executionStopped()` | Si le nœud avait activé le multiseat, restaure la valeur d'origine du réglage. | 30 |
-| `C:init(mgr, ...)` | Initialise self.activated à false. | 16 |
-| `C:workOnce()` | Lit le réglage 'multiseat' (défaut false), le mémorise dans self.previous puis met 'multiseat' à true via settings.setValue. | 24 |
+| `C:_executionStarted()` | Resets self.activated to false when the graph starts. | 20 |
+| `C:_executionStopped()` | If the node had enabled multiseat, restores the original value of the setting. | 30 |
+| `C:init(mgr, ...)` | Initializes self.activated to false. | 16 |
+| `C:workOnce()` | Reads the 'multiseat' setting (default false), stores it in self.previous then sets 'multiseat' to true via settings.setValue. | 24 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/multiseat.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/multiseat.lua`.*

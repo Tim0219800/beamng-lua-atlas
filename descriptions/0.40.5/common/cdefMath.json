@@ -1,7 +1,9 @@
 {
   "path": "lua/common/cdefMath.lua",
-  "module": "Déclaration FFI des structures C __luaVec3_t {double x, y, z} et __luaQuat_t {double x, y, z, w}, qui servent de représentation mémoire aux types vec3 et quat de Lua (en double précision).",
-  "notes": ["Aucune fonction Lua : un seul ffi.cdef, exécuté si ffi existe."],
+  "module": "FFI declaration of the C structures __luaVec3_t {double x, y, z} and __luaQuat_t {double x, y, z, w}, which serve as the memory representation of the Lua vec3 and quat types (in double precision).",
+  "notes": [
+    "No Lua function: a single ffi.cdef, executed if ffi exists."
+  ],
   "fields": {},
   "functions": {}
 }

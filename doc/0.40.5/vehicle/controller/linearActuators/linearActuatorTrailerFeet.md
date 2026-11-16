@@ -1,87 +1,87 @@
 # `controller_linearActuators_linearActuatorTrailerFeet`
 
-*Fichier : `lua/vehicle/controller/linearActuators/linearActuatorTrailerFeet.lua` · VM : Véhicule · 154 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/linearActuators/linearActuatorTrailerFeet.lua` · VM: Vehicle · 154 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `linearActuators/linearActuatorTrailerFeet` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `linearActuators/linearActuatorTrailerFeet` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire pour les béquilles d'une remorque à actionneur linéaire électrique (type "auxiliary"). Même logique que hydraulics/hydraulicTrailerFeet : il mémorise les positions du vérin à l'état attelé et détaché et ramène les béquilles automatiquement à l'attelage ou au dételage, en écrivant la commande du moteur dans electrics. La différence : l'actionneur est un dispositif powertrain et on peut filtrer sur un nœud de coupleur précis.
+Auxiliary controller for the landing legs of a trailer with an electric linear actuator (type "auxiliary"). Same logic as hydraulics/hydraulicTrailerFeet: it stores the cylinder positions in the attached and detached states and automatically brings the legs back on coupling or uncoupling, by writing the motor command into electrics. The difference: the actuator is a powertrain device and one can filter on a specific coupler node.
 
-## Remarques
+## Notes
 
-- Clés jbeam (défaut) : linearActuatorName (nom du dispositif, obligatoire), motorThrottleElectricsName (nom de la valeur electrics de commande ; sinon déduit de motorName ou du dispositif de propulsion de l'actionneur via motor.electricsThrottleName), motorName, attachedDefaultPosition (0), detachedDefaultPosition (1), couplerNodeName (nom du nœud de coupleur à écouter ; sans lui, aucun hook de coupleur ne déclenche car nodeId == nil échoue), startValue (0).
-- Positions en ratio d'extension 0..1 (actuator.currentExtendPercent). La commande est -1/0/1.
-- Les hooks onCouplerAttached/onCouplerDetached ne réagissent que si l'autre objet est un autre véhicule ET si nodeId correspond au couplerNodeName.
+- jbeam keys (default): linearActuatorName (device name, required), motorThrottleElectricsName (name of the command electrics value; otherwise inferred from motorName or from the actuator's propulsion device via motor.electricsThrottleName), motorName, attachedDefaultPosition (0), detachedDefaultPosition (1), couplerNodeName (name of the coupler node to listen to; without it, no coupler hook triggers because nodeId == nil fails), startValue (0).
+- Positions as an extension ratio 0..1 (actuator.currentExtendPercent). The command is -1/0/1.
+- The onCouplerAttached/onCouplerDetached hooks only react if the other object is another vehicle AND if nodeId matches couplerNodeName.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_linearActuators_linearActuatorTrailerFeet.getState()` | Renvoie l'état (positions, entrée manuelle, état d'attelage). | 110 |
-| `controller_linearActuators_linearActuatorTrailerFeet.init(jbeamData)` | Retrouve l'actionneur et le nom electrics de commande, initialise positions et états. *(interne)* | 74 |
-| `controller_linearActuators_linearActuatorTrailerFeet.moveFeet(input)` | Commande manuelle des béquilles, -1 à 1 ; interrompt un mouvement automatique. | 28 |
-| `controller_linearActuators_linearActuatorTrailerFeet.onCouplerAttached(nodeId, obj2id, obj2nodeId)` | Hook appelé par le moteur à l'attelage ; lance le mouvement vers la position « attaché ». *(interne)* *(hook)* | 62 |
-| `controller_linearActuators_linearActuatorTrailerFeet.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook appelé au dételage ; lance le mouvement vers la position « détaché ». *(interne)* *(hook)* | 68 |
-| `controller_linearActuators_linearActuatorTrailerFeet.setState(data)` | Restaure l'état renvoyé par getState. | 118 |
-| `controller_linearActuators_linearActuatorTrailerFeet.updateGFX(dt)` | Écrit la commande moteur (manuelle ou automatique vers la position mémorisée). *(interne)* | 37 |
+| `controller_linearActuators_linearActuatorTrailerFeet.getState()` | Returns the state (positions, manual input, coupling state). | 110 |
+| `controller_linearActuators_linearActuatorTrailerFeet.init(jbeamData)` | Finds the actuator and the command electrics name, initializes positions and states. *(internal)* | 74 |
+| `controller_linearActuators_linearActuatorTrailerFeet.moveFeet(input)` | Manual command of the legs, -1 to 1; interrupts an automatic movement. | 28 |
+| `controller_linearActuators_linearActuatorTrailerFeet.onCouplerAttached(nodeId, obj2id, obj2nodeId)` | Hook called by the engine on coupling; starts the movement toward the "attached" position. *(internal)* *(hook)* | 62 |
+| `controller_linearActuators_linearActuatorTrailerFeet.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook called on uncoupling; starts the movement toward the "detached" position. *(internal)* *(hook)* | 68 |
+| `controller_linearActuators_linearActuatorTrailerFeet.setState(data)` | Restores the state returned by getState. | 118 |
+| `controller_linearActuators_linearActuatorTrailerFeet.updateGFX(dt)` | Writes the motor command (manual or automatic toward the stored position). *(internal)* | 37 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_linearActuators_linearActuatorTrailerFeet.getState()`
 
-Renvoie l'état (positions, entrée manuelle, état d'attelage).
+Returns the state (positions, manual input, coupling state).
 
-- **renvoie** : table Table d'état (réutilisée).
+- **returns**: table State table (reused).
 
 #### `controller_linearActuators_linearActuatorTrailerFeet.init(jbeamData)`
 
-Retrouve l'actionneur et le nom electrics de commande, initialise positions et états.
+Finds the actuator and the command electrics name, initializes positions and states.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_linearActuators_linearActuatorTrailerFeet.moveFeet(input)`
 
-Commande manuelle des béquilles, -1 à 1 ; interrompt un mouvement automatique.
+Manual command of the legs, -1 to 1; interrupts an automatic movement.
 
-- `input` (*number*) : Entrée de direction -1..1.
+- `input` (*number*) : Direction input -1..1.
 
 #### `controller_linearActuators_linearActuatorTrailerFeet.onCouplerAttached(nodeId, obj2id, obj2nodeId)`
 
-Hook appelé par le moteur à l'attelage ; lance le mouvement vers la position « attaché ».
+Hook called by the engine on coupling; starts the movement toward the "attached" position.
 
-- `nodeId` (*integer*) : Nœud de ce véhicule.
-- `obj2id` (*integer*) : Id du véhicule partenaire.
-- `obj2nodeId` (*integer*) : Nœud du partenaire.
+- `nodeId` (*integer*) : This vehicle's node.
+- `obj2id` (*integer*) : Partner vehicle id.
+- `obj2nodeId` (*integer*) : Partner's node.
 
 #### `controller_linearActuators_linearActuatorTrailerFeet.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)`
 
-Hook appelé au dételage ; lance le mouvement vers la position « détaché ».
+Hook called on uncoupling; starts the movement toward the "detached" position.
 
-- `nodeId` (*integer*) : Nœud de ce véhicule.
-- `obj2id` (*integer*) : Id du véhicule partenaire.
-- `obj2nodeId` (*integer*) : Nœud du partenaire.
-- `breakForce` (*number*) : Force de rupture (non utilisée).
+- `nodeId` (*integer*) : This vehicle's node.
+- `obj2id` (*integer*) : Partner vehicle id.
+- `obj2nodeId` (*integer*) : Partner's node.
+- `breakForce` (*number*) : Breaking force (unused).
 
 #### `controller_linearActuators_linearActuatorTrailerFeet.setState(data)`
 
-Restaure l'état renvoyé par getState.
+Restores the state returned by getState.
 
-- `data` (*table|nil*) : Table d'état.
+- `data` (*table|nil*) : State table.
 
 #### `controller_linearActuators_linearActuatorTrailerFeet.updateGFX(dt)`
 
-Écrit la commande moteur (manuelle ou automatique vers la position mémorisée).
+Writes the motor command (manual or automatic toward the stored position).
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getId`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/linearActuators/linearActuatorTrailerFeet.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/linearActuators/linearActuatorTrailerFeet.lua`.*

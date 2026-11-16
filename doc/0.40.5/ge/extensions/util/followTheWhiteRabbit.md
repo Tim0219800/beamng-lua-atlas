@@ -1,36 +1,36 @@
 # `util_followTheWhiteRabbit`
 
-*Fichier : `lua/ge/extensions/util/followTheWhiteRabbit.lua` · VM : Game Engine (GE) · 31 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/followTheWhiteRabbit.lua` · VM: Game Engine (GE) · 31 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_followTheWhiteRabbit` : `extensions.load("util_followTheWhiteRabbit")`, puis la globale `util_followTheWhiteRabbit`
+**Access:** extension `util_followTheWhiteRabbit`: `extensions.load("util_followTheWhiteRabbit")`, then the global `util_followTheWhiteRabbit`
 
-Petit easter egg (référence à Matrix) : une fois chargée, l'extension crée un contexte de console « neo », l'active et affiche un mini jeu d'aventure textuel. Dans ce contexte, la commande « throttle » répond « You crash. Game over. » ; les autres commandes sont ignorées.
+Small easter egg (Matrix reference): once loaded, the extension creates a "neo" console context, activates it and displays a mini text adventure. In this context, the "throttle" command answers "You crash. Game over."; other commands are ignored.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('util_followTheWhiteRabbit')
 ```
 
-## Remarques
+## Notes
 
-- Le contexte de console reste sur 'neo' après le chargement ; il n'y a pas de code de sortie dans ce fichier.
+- The console context stays on 'neo' after loading; there is no exit code in this file.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_followTheWhiteRabbit.onConsoleExecuteCommand(context, cmd)` | Hook appelé quand une commande est exécutée dans la console. Ignore tout contexte autre que 'neo' ; pour la commande 'throttle', affiche « You crash. Game over. ». *(interne)* *(hook)* | 18 |
-| `util_followTheWhiteRabbit.onExtensionLoaded()` | Appelé au chargement de l'extension : désactive l'horodatage des logs de la console, ajoute et active le contexte 'neo' puis affiche le texte d'introduction. *(interne)* *(hook)* | 9 |
+| `util_followTheWhiteRabbit.onConsoleExecuteCommand(context, cmd)` | Hook called when a command is run in the console. Ignores any context other than 'neo'; for the 'throttle' command, prints "You crash. Game over.". *(internal)* *(hook)* | 18 |
+| `util_followTheWhiteRabbit.onExtensionLoaded()` | Called when the extension loads: disables console log timestamps, adds and activates the 'neo' context then displays the intro text. *(internal)* *(hook)* | 9 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_followTheWhiteRabbit.onConsoleExecuteCommand(context, cmd)`
 
-Hook appelé quand une commande est exécutée dans la console. Ignore tout contexte autre que 'neo' ; pour la commande 'throttle', affiche « You crash. Game over. ».
+Hook called when a command is run in the console. Ignores any context other than 'neo'; for the 'throttle' command, prints "You crash. Game over.".
 
-- `context` (*string*) : Contexte de console actif
-- `cmd` (*string*) : Commande saisie
+- `context` (*string*) : Active console context
+- `cmd` (*string*) : Command entered
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/followTheWhiteRabbit.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/followTheWhiteRabbit.lua`.*

@@ -1,0 +1,199 @@
+{
+  "path": "lua/ge/extensions/ui/router/routeManager.test.lua",
+  "module": "Tests unitaires du routeManager (résolution des noms de routes relatifs, cibles de retour relatives, valeur par défaut de `uiNav`). Fichier de test du jeu, sans intérêt direct pour un moddeur sauf comme exemples d'usage de resolveRouteName et getRoute. Lancement : extensions.testFramework_TestManager:runTestFiles(\"routeManager\"). Le fichier contient aussi, en commentaire, un test manuel de navigation relative (ui_router.navigate(\"./options:options-search\") depuis « pause » doit donner name = « pause.options »).",
+  "notes": [
+    "Chaque fonction testXxx(ctx) est une fonction de test exécutée par testFramework_TestManager ; elles ne sont pas appelées par le jeu en dehors des tests."
+  ],
+  "functions": {
+    "testAbsoluteReferenceUnchanged": {
+      "desc": "Une référence absolue pointée (« pause.options ») passe sans changement.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testAbsoluteGlobalReferencesUnchanged": {
+      "desc": "Les références globales à un segment (« play ») et préfixées par '/' (« /mainmenu ») restent absolues, même sans route de base.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRelativeChild": {
+      "desc": "« ./options » depuis « pause » donne « pause.options ».",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRelativeDeeperChild": {
+      "desc": "« ./category » depuis « pause.options » donne « pause.options.category ».",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRelativeSibling": {
+      "desc": "« ../options » depuis « pause.system » donne « pause.options ».",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRelativeParent": {
+      "desc": "« .. » depuis « pause.options » donne « pause ».",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRelativeSelf": {
+      "desc": "« . » depuis « pause.options » donne « pause.options » (la route de base elle-même).",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRelativeMultiParent": {
+      "desc": "« ../../system » depuis « pause.options.category » donne « pause.system ».",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRelativeIdempotentAfterResolution": {
+      "desc": "Un nom canonique déjà résolu (« pause.options ») reste identique si on le résout à nouveau (stabilité au rechargement).",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRelativeWithoutBaseFails": {
+      "desc": "Une référence relative sans route de base (nil ou chaîne vide) échoue avec « relative_route_without_base ».",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRelativeAboveRootFails": {
+      "desc": "Remonter au-dessus de la racine échoue (« ../../options » ou « .. » depuis « pause » donnent « invalid_relative_route »).",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testInvalidReferenceFails": {
+      "desc": "Une référence vide ou nil échoue avec « invalid_relative_route ».",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRelativeBackTargetResolvesToParent": {
+      "desc": "Avec des routes temporaires (registerModRoutes puis unregisterModRoutes), un `backTarget` relatif « .. » est résolu par rapport à la route qui le déclare.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRelativeFallbackTargetResolves": {
+      "desc": "Un `fallbackTarget` relatif est résolu de la même façon.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testUiNavDefaultsToTrueWhenOmitted": {
+      "desc": "`ui.uiNav` vaut true quand la route ne le définit pas.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testUiNavExplicitFalseSurvivesInheritance": {
+      "desc": "`ui.uiNav = false` explicite n'est pas écrasé par l'héritage des valeurs par défaut.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testUiNavStaticPlayOptOut": {
+      "desc": "La route statique « play » a uiNav = false (désactivation de la navigation UI).",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testUiNavStaticMultiseatOptOut": {
+      "desc": "La route statique « multiseat » a uiNav = false.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testAbstractParentRelativeBackTargetUsesParentBase": {
+      "desc": "Le `backTarget` relatif d'un parent abstrait est résolu par rapport à ce parent.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    }
+  }
+}

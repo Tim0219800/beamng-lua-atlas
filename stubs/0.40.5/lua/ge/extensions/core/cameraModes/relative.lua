@@ -2,118 +2,118 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/cameraModes/relative.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Mode relatif. Champs : pos (vec3 repère véhicule), rot (vec3 degrés), slots, lightIntensity, nearClip (nil = niveau), manualzoom, camMaxDist.
+--- Relative mode. Fields: pos (vec3 vehicle frame), rot (vec3 degrees), slots, lightIntensity, nearClip (nil = level), manualzoom, camMaxDist.
 ---@class core_cameraModes_relative
 local core_cameraModes_relative = {}
 
---- Applique une intensité (>= 0) à la lumière de la caméra, la crée si besoin.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/relative.lua:48
----@param intensity number|nil lumens ; nil = garde la valeur actuelle
+--- Applies an intensity (>= 0) to the camera light, creating it if needed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:48
+---@param intensity number|nil lumens; nil = keeps the current value
 function core_cameraModes_relative:_updateLight(intensity) end
 
---- Restaure l'état de serialize.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:202
----@param s table table de serialize
+--- Restores the state from serialize.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:202
+---@param s table serialize table
 function core_cameraModes_relative:deserialize(s) end
 
---- Raccourci clavier d'emplacement ; ignoré sans focus.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:236
----@param hotkey integer numéro d'emplacement
----@param modifier integer 0 = charger, 1 = enregistrer
+--- Slot keyboard shortcut; ignored without focus.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:236
+---@param hotkey integer slot number
+---@param modifier integer 0 = load, 1 = save
 function core_cameraModes_relative:hotkey(hotkey, modifier) end
 
---- Valeurs par défaut (resetCameraOnVehicleReset = false, disabledByDefault, canUseVehicleTriggerCrosshair) puis onVehicleCameraConfigChanged et reset.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/relative.lua:23
+--- Default values (resetCameraOnVehicleReset = false, disabledByDefault, canUseVehicleTriggerCrosshair) then onVehicleCameraConfigChanged and reset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:23
 function core_cameraModes_relative:init() end
 
---- Réglages UI : light, nearClip, slots, fov.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:214
----@return table[]  descripteurs
+--- UI settings: light, nearClip, slots, fov.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:214
+---@return table[]  descriptors
 function core_cameraModes_relative:listParams() end
 
---- Charge un emplacement ; message UI si vide.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:159
----@param slot integer|string numéro ou nom d'emplacement
----@return boolean  true si chargé
+--- Loads a slot; UI message if empty.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:159
+---@param slot integer|string slot number or name
+---@return boolean  true if loaded
 function core_cameraModes_relative:loadSlot(slot) end
 
---- Hook : au gain de focus, ajoute les menus et rallume la lumière ; à la perte, éteint la lumière.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/relative.lua:250
----@param focused boolean vrai si le mode prend le focus
+--- Hook: on focus gain, adds the menus and turns the light back on; on loss, turns the light off.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:250
+---@param focused boolean true if the mode takes focus
 function core_cameraModes_relative:onCameraChanged(focused) end
 
---- Hook : garantit refNodes (défaut 0,1,2) et planifie le recalcul de caméra.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/relative.lua:39
+--- Hook: guarantees refNodes (default 0,1,2) and schedules the camera recomputation.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:39
 function core_cameraModes_relative:onVehicleCameraConfigChanged() end
 
---- Revient à la position et rotation initiales et recrée les lisseurs.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:259
+--- Returns to the initial position and rotation and recreates the smoothers.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:259
 function core_cameraModes_relative:reset() end
 
---- Remet la lumière mémorisée par storeLightInfo.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:143
+--- Restores the light stored by storeLightInfo.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:143
 function core_cameraModes_relative:restoreLightInfo() end
 
---- Enregistre position, rotation et FOV dans l'emplacement indiqué.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:150
----@param slot integer numéro d'emplacement (1 à 10)
+--- Saves position, rotation and FOV in the given slot.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:150
+---@param slot integer slot number (1 to 10)
 function core_cameraModes_relative:saveSlot(slot) end
 
---- Ajoute les entrées du menu radial quickAccess (lumière, nearClip, emplacements) tant que la caméra a le focus.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/relative.lua:64
+--- Adds the quickAccess radial menu entries (light, nearClip, slots) while the camera has focus.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:64
 function core_cameraModes_relative:sendMenus() end
 
---- État pour les vues flux vidéo : pos, rot, fov, light, nearClip.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:192
----@return table  état
+--- State for video stream views: pos, rot, fov, light, nearClip.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:192
+---@return table  state
 function core_cameraModes_relative:serialize() end
 
---- Fixe le FOV du zoom manuel.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:178
----@param fov number degrés
+--- Sets the manual zoom FOV.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:178
+---@param fov number degrees
 function core_cameraModes_relative:setFOV(fov) end
 
---- Limite l'éloignement par rapport au nœud ref.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:269
----@param d number|nil mètres, nil = illimité
+--- Limits the distance from the ref node.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:269
+---@param d number|nil meters, nil = unlimited
 function core_cameraModes_relative:setMaxDistance(d) end
 
---- Fixe la position de la caméra dans le repère du véhicule.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:186
----@param pos vec3 position relative
+--- Sets the camera position in the vehicle frame.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:186
+---@param pos vec3 relative position
 function core_cameraModes_relative:setOffset(pos) end
 
---- Modifie light, nearClip, fov ou slots (enregistre ou charge l'emplacement donné).
----Source : lua/ge/extensions/core/cameraModes/relative.lua:226
+--- Changes light, nearClip, fov or slots (saves or loads the given slot).
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:226
 ---@param key string light, nearClip, fov, slots
----@param value any nouvelle valeur
+---@param value any new value
 function core_cameraModes_relative:setParam(key, value) end
 
---- Définit les nœuds de référence du véhicule.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:389
----@param centerNodeID integer nœud centre
----@param leftNodeID integer nœud gauche
----@param backNodeID integer nœud arrière
+--- Sets the vehicle's reference nodes.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:389
+---@param centerNodeID integer center node
+---@param leftNodeID integer left node
+---@param backNodeID integer rear node
 function core_cameraModes_relative:setRefNodes(centerNodeID, leftNodeID, backNodeID) end
 
---- Fixe la rotation de la caméra.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:182
----@param rot vec3 x lacet, y tangage, z roulis en degrés
+--- Sets the camera rotation.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:182
+---@param rot vec3 x yaw, y pitch, z roll in degrees
 function core_cameraModes_relative:setRotation(rot) end
 
---- Mémorise l'intensité et éteint la lumière.
----Source : lua/ge/extensions/core/cameraModes/relative.lua:245
+--- Stores the intensity and turns the light off.
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:245
 function core_cameraModes_relative:storeLightInfo() end
 
---- Intègre les entrées, déplace la caméra dans le repère du véhicule et écrit data.res (pos, rot, nearClip) ; positionne la lumière.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/relative.lua:273
+--- Integrates the inputs, moves the camera in the vehicle frame and writes data.res (pos, rot, nearClip); positions the light.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/relative.lua:273
 ---@param data table camData
----@return boolean  false si les nœuds sont dégénérés, sinon true
+---@return boolean  false if the nodes are degenerate, otherwise true
 function core_cameraModes_relative:update(data) end
 

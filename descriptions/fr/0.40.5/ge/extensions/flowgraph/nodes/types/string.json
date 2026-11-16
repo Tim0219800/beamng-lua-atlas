@@ -1,0 +1,64 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/types/string.lua",
+  "module": "Noeud « String » (provider). Fournit une chaîne (« Hello World » par défaut) sur le pin value. Édition simple ou multi-lignes dans l'éditeur ; les retours à la ligne sont échappés (\\n) à la sauvegarde.",
+  "notes": [
+    "Le tampon imgui est limité à 2048 caractères."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "string = 'Hello World', multiLine = false.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Écrit la chaîne sur la sortie.",
+          "internal": false
+        },
+        "drawCustomProperties": {
+          "desc": "Case « Multi Line » et champ de saisie (tampon de 2048 caractères).",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        },
+        "drawProperties": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde l'état du noeud dans la table donnée.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure la chaîne (supporte l'ancien format data.value) et multiLine.",
+          "params": {
+            "nodeData": {
+              "type": "any",
+              "desc": "données sauvegardées"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

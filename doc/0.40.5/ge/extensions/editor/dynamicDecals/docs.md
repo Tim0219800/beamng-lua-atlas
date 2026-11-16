@@ -1,12 +1,12 @@
 # `editor_dynamicDecals_docs`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/docs.lua` · VM : Game Engine (GE) · 423 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/docs.lua` · VM: Game Engine (GE) · 423 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_docs` : `extensions.load("editor_dynamicDecals_docs")`, puis la globale `editor_dynamicDecals_docs`
+**Access:** extension `editor_dynamicDecals_docs`: `extensions.load("editor_dynamicDecals_docs")`, then the global `editor_dynamicDecals_docs`
 
-Fenêtre de documentation intégrée à l'outil Dynamic Decals (table des matières + contenu). Chaque module de l'outil y enregistre une page avec register({section = {...}, guiFn = fn}) ; ce module fournit aussi les pages Introduction, Getting Started et Controls (les contrôles sont lus dans les actions d'entrée de l'action map « dynamicDecals », clavier et souris). selectSection ouvre la fenêtre sur une page donnée.
+Documentation window built into the Dynamic Decals tool (table of contents + content). Each module of the tool registers a page there with register({section = {...}, guiFn = fn}); this module also provides the Introduction, Getting Started and Controls pages (controls are read from the input actions of the "dynamicDecals" action map, keyboard and mouse). selectSection opens the window on a given page.
 
-## Exemple
+## Example
 
 ```lua
 local docs = extensions.editor_dynamicDecals_docs
@@ -14,83 +14,83 @@ docs.register({section = {"Ma section"}, guiFn = function(sec) ui_imgui.TextUnfo
 docs.selectSection("Ma section")
 ```
 
-## Remarques
+## Notes
 
-- register : `data.section` doit être une table (liste de noms du parent au enfant), sinon un avertissement est loggé et rien n'est enregistré. Les sections intermédiaires manquantes sont créées avec data.order.
-- selectSection accepte soit un nom (recherche dans tout l'arbre, efface le filtre de recherche et repart de l'arbre de base), soit une table de noms (chemin complet).
-- Bug : introductionGui affiche la version avec tool.version[2] deux fois (minor, minor) au lieu de (major, minor, patch).
-- showWindow trie les enfants de chaque section (sortFn) avant d'ouvrir et sauvegarde une copie de l'arbre.
+- register: `data.section` must be a table (list of names from parent to child), otherwise a warning is logged and nothing is registered. Missing intermediate sections are created with data.order.
+- selectSection accepts either a name (searched in the whole tree, clears the search filter and restarts from the base tree), or a table of names (full path).
+- Bug: introductionGui displays the version with tool.version[2] twice (minor, minor) instead of (major, minor, patch).
+- showWindow sorts the children of each section (sortFn) before opening and saves a copy of the tree.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_docs.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 314 |
-| `editor_dynamicDecals_docs.hideWindow()` | Masque la fenêtre de documentation. | 408 |
-| `editor_dynamicDecals_docs.image(path, overrideWidth, title, subtitle)` | Affiche une image dans la page de doc (à la largeur donnée en conservant le ratio), avec info-bulle optionnelle et légende grise. | 173 |
-| `editor_dynamicDecals_docs.introductionGui(docsSection)` | Dessine la page « Introduction » (message de bienvenue et version de l'outil). *(interne)* | 197 |
-| `editor_dynamicDecals_docs.isWindowVisible()` | Indique si la fenêtre de documentation est visible. | 412 |
-| `editor_dynamicDecals_docs.register(data)` | Enregistre (ou met à jour) une page de documentation dans l'arbre des sections. | 328 |
-| `editor_dynamicDecals_docs.registerEditorPreferences(prefsRegistry)` | Enregistre `dynamicDecalsTool.docs` : indentSpacing (int, défaut 8, de 0 à 64) pour la table des matières et verticalSpacing (int, défaut 16, de 0 à 64). *(interne)* | 307 |
-| `editor_dynamicDecals_docs.selectSection(section, doNotOpenWindow)` | Sélectionne une page de la documentation et, sauf si doNotOpenWindow, ouvre la fenêtre. | 386 |
-| `editor_dynamicDecals_docs.setup(tool_in)` | Appelé par l'outil : déclare la fenêtre (640x640), enregistre les callbacks d'interface et d'update, les pages Introduction (ordre 0), Getting Started (10) et Controls (20), et construit la liste des contrôles clavier/souris de l'action map dynamicDecals. *(interne)* | 278 |
-| `editor_dynamicDecals_docs.showWindow()` | Trie les sections puis affiche la fenêtre de documentation. | 401 |
-| `editor_dynamicDecals_docs.verticalSpacing()` | Insère un espace vertical de hauteur `dynamicDecalsTool.docs.verticalSpacing` (défaut 16). | 193 |
+| `editor_dynamicDecals_docs.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 314 |
+| `editor_dynamicDecals_docs.hideWindow()` | Hides the documentation window. | 408 |
+| `editor_dynamicDecals_docs.image(path, overrideWidth, title, subtitle)` | Displays an image in the doc page (at the given width, keeping the ratio), with optional tooltip and gray caption. | 173 |
+| `editor_dynamicDecals_docs.introductionGui(docsSection)` | Draws the "Introduction" page (welcome message and tool version). *(internal)* | 197 |
+| `editor_dynamicDecals_docs.isWindowVisible()` | Indicates whether the documentation window is visible. | 412 |
+| `editor_dynamicDecals_docs.register(data)` | Registers (or updates) a documentation page in the section tree. | 328 |
+| `editor_dynamicDecals_docs.registerEditorPreferences(prefsRegistry)` | Registers `dynamicDecalsTool.docs`: indentSpacing (int, default 8, from 0 to 64) for the table of contents and verticalSpacing (int, default 16, from 0 to 64). *(internal)* | 307 |
+| `editor_dynamicDecals_docs.selectSection(section, doNotOpenWindow)` | Selects a documentation page and, unless doNotOpenWindow, opens the window. | 386 |
+| `editor_dynamicDecals_docs.setup(tool_in)` | Called by the tool: declares the window (640x640), registers the UI and update callbacks, the Introduction (order 0), Getting Started (10) and Controls (20) pages, and builds the list of keyboard/mouse controls of the dynamicDecals action map. *(internal)* | 278 |
+| `editor_dynamicDecals_docs.showWindow()` | Sorts the sections then displays the documentation window. | 401 |
+| `editor_dynamicDecals_docs.verticalSpacing()` | Inserts a vertical space of height `dynamicDecalsTool.docs.verticalSpacing` (default 16). | 193 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_docs.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_docs.image(path, overrideWidth, title, subtitle)`
 
-Affiche une image dans la page de doc (à la largeur donnée en conservant le ratio), avec info-bulle optionnelle et légende grise.
+Displays an image in the doc page (at the given width, keeping the ratio), with optional tooltip and gray caption.
 
-- `path` (*string*) : Chemin de la texture.
-- `overrideWidth` (*number|nil*) : Largeur en pixels ; défaut toute la largeur disponible.
-- `title` (*string|nil*) : Texte d'info-bulle.
-- `subtitle` (*string|nil*) : Légende sous l'image.
+- `path` (*string*) : Texture path.
+- `overrideWidth` (*number|nil*) : Width in pixels; default is the full available width.
+- `title` (*string|nil*) : Tooltip text.
+- `subtitle` (*string|nil*) : Caption below the image.
 
 #### `editor_dynamicDecals_docs.introductionGui(docsSection)`
 
-Dessine la page « Introduction » (message de bienvenue et version de l'outil).
+Draws the "Introduction" page (welcome message and tool version).
 
-- `docsSection` (*table*) : Section de documentation courante.
+- `docsSection` (*table*) : Current documentation section.
 
 #### `editor_dynamicDecals_docs.isWindowVisible()`
 
-Indique si la fenêtre de documentation est visible.
+Indicates whether the documentation window is visible.
 
-- **renvoie** : boolean true si visible.
+- **returns**: boolean true if visible.
 
 #### `editor_dynamicDecals_docs.register(data)`
 
-Enregistre (ou met à jour) une page de documentation dans l'arbre des sections.
+Registers (or updates) a documentation page in the section tree.
 
 - `data` (*table*) : {section = string[], guiFn = function(docsSection), order = number|nil}.
 
 #### `editor_dynamicDecals_docs.registerEditorPreferences(prefsRegistry)`
 
-Enregistre `dynamicDecalsTool.docs` : indentSpacing (int, défaut 8, de 0 à 64) pour la table des matières et verticalSpacing (int, défaut 16, de 0 à 64).
+Registers `dynamicDecalsTool.docs`: indentSpacing (int, default 8, from 0 to 64) for the table of contents and verticalSpacing (int, default 16, from 0 to 64).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_docs.selectSection(section, doNotOpenWindow)`
 
-Sélectionne une page de la documentation et, sauf si doNotOpenWindow, ouvre la fenêtre.
+Selects a documentation page and, unless doNotOpenWindow, opens the window.
 
-- `section` (*string|string[]*) : Nom de la page, ou chemin sous forme de liste de noms.
-- `doNotOpenWindow` (*boolean|nil*) : Si vrai, ne montre pas la fenêtre.
+- `section` (*string|string[]*) : Page name, or path as a list of names.
+- `doNotOpenWindow` (*boolean|nil*) : If true, does not show the window.
 
 #### `editor_dynamicDecals_docs.setup(tool_in)`
 
-Appelé par l'outil : déclare la fenêtre (640x640), enregistre les callbacks d'interface et d'update, les pages Introduction (ordre 0), Getting Started (10) et Controls (20), et construit la liste des contrôles clavier/souris de l'action map dynamicDecals.
+Called by the tool: declares the window (640x640), registers the UI and update callbacks, the Introduction (order 0), Getting Started (10) and Controls (20) pages, and builds the list of keyboard/mouse controls of the dynamicDecals action map.
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/docs.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/docs.lua`.*

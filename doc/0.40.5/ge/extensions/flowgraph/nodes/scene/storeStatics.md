@@ -1,38 +1,38 @@
 # `flowgraph_nodes_scene_storeStatics`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/storeStatics.lua` · VM : Game Engine (GE) · 329 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/storeStatics.lua` · VM: Game Engine (GE) · 329 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/storeStatics")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/storeStatics")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Store Statics » (auteur BeamNG). Mémorise la position, rotation, échelle et shape des TSStatic sélectionnés dans l'éditeur (stockage dans le noeud, sauvegardé avec le graphe) puis les fait apparaître au flow. Dans l'éditeur, le panneau permet de stocker la sélection, tout faire apparaître/disparaître, sélectionner ou vider. Entrées : flow, reset ; sortie : flow.
+Flowgraph node "Store Statics" (author BeamNG). Remembers the position, rotation, scale and shape of the TSStatics selected in the editor (stored in the node, saved with the graph) then spawns them on flow. In the editor, the panel allows storing the selection, spawning/despawning everything, selecting or clearing. Inputs: flow, reset; output: flow.
 
-## Remarques
+## Notes
 
-- La description du noeud (« Creates and manages spawning TSStatic objects ») est copiée de Spawn TSStatic.
+- The node's description ("Creates and manages spawning TSStatic objects") is copied from Spawn TSStatic.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Détecte si des objets stockés existent déjà dans la scène. | 224 |
-| `C:_executionStopped()` | Supprime les objets sauf s'ils existaient avant le démarrage. | 233 |
-| `C:_onDeserialized(nodeData)` | Restaure storedObjects et oublie les ids courants. | 321 |
-| `C:_onSerialize(res)` | Sauvegarde storedObjects. | 317 |
-| `C:clearObjects()` | Supprime tous les objets créés et oublie leurs ids. | 239 |
-| `C:createObject(pos, rot, scl, shape)` | Crée un TSStatic depuis les données stockées et renvoie son id. | 194 |
-| `C:destroy()` | Supprime les objets sauf s'ils existaient avant le démarrage. | 309 |
-| `C:drawCustomProperties()` | Panneau de l'éditeur : liste des objets stockés, boutons Store Selected, Spawn All, Despawn All, Select All, Clear Storage. | 33 |
-| `C:init(mgr, ...)` | Initialise objets et storedObjects. | 28 |
-| `C:onClientEndMission()` | Hook de fin de mission : nettoie les objets créés par le noeud. | 305 |
-| `C:spawnObjects(force)` | Crée tous les objets stockés (si aucun n'existe ou si force). | 265 |
-| `C:updateStoredObjects(ids)` | Remplace le stockage par les TSStatic donnés (relève leur transformation), supprime les originaux puis les recrée. | 145 |
-| `C:work()` | Sur reset, supprime ; sur flow, fait apparaître les objets stockés et active flow en sortie. | 292 |
+| `C:_executionStarted()` | Detects whether stored objects already exist in the scene. | 224 |
+| `C:_executionStopped()` | Deletes the objects unless they existed before start. | 233 |
+| `C:_onDeserialized(nodeData)` | Restores storedObjects and forgets the current ids. | 321 |
+| `C:_onSerialize(res)` | Saves storedObjects. | 317 |
+| `C:clearObjects()` | Deletes all created objects and forgets their ids. | 239 |
+| `C:createObject(pos, rot, scl, shape)` | Creates a TSStatic from the stored data and returns its id. | 194 |
+| `C:destroy()` | Deletes the objects unless they existed before start. | 309 |
+| `C:drawCustomProperties()` | Editor panel: list of stored objects, buttons Store Selected, Spawn All, Despawn All, Select All, Clear Storage. | 33 |
+| `C:init(mgr, ...)` | Initializes objects and storedObjects. | 28 |
+| `C:onClientEndMission()` | End-of-mission hook: cleans up the objects created by the node. | 305 |
+| `C:spawnObjects(force)` | Creates all stored objects (if none exists or if force). | 265 |
+| `C:updateStoredObjects(ids)` | Replaces the storage with the given TSStatics (captures their transform), deletes the originals then recreates them. | 145 |
+| `C:work()` | On reset, deletes; on flow, spawns the stored objects and activates flow on output. | 292 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `delete`, `getId`, `getPosition`, `getRotation`, `getScale`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/storeStatics.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/storeStatics.lua`.*

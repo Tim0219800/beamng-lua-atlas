@@ -1,50 +1,50 @@
 # `career_modules_milestones_generalMilestones_speedTraps`
 
-*Fichier : `lua/ge/extensions/career/modules/milestones/generalMilestones/speedTraps.lua` · VM : Game Engine (GE) · 189 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/milestones/generalMilestones/speedTraps.lua` · VM: Game Engine (GE) · 189 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_milestones_generalMilestones_speedTraps` : `extensions.load("career_modules_milestones_generalMilestones_speedTraps")`, puis la globale `career_modules_milestones_generalMilestones_speedTraps`
+**Access:** extension `career_modules_milestones_generalMilestones_speedTraps`: `extensions.load("career_modules_milestones_generalMilestones_speedTraps")`, then the global `career_modules_milestones_generalMilestones_speedTraps`
 
-Jalons liés aux radars (gameplay_speedTraps) en carrière : record de vitesse atteinte devant un radar (velocitySpeedTrapMilestone, paliers 70, 90, 120, 150, 180 et 220 km/h stockés en m/s) et nombre total de déclenchements de radar par le joueur (speedTrapTriggerCounterMilestone, 10 paliers de 15 déclenchements). Les jalons par radar individuel et « tous les radars » sont désactivés (code commenté).
+Milestones related to speed traps (gameplay_speedTraps) in career: speed record reached in front of a speed trap (velocitySpeedTrapMilestone, tiers 70, 90, 120, 150, 180 and 220 km/h stored in m/s) and total number of speed trap triggers by the player (speedTrapTriggerCounterMilestone, 10 tiers of 15 triggers). The per-individual-speed-trap and "all speed traps" milestones are disabled (commented-out code).
 
-## Remarques
+## Notes
 
-- Bug : `M.onGeneralMilestoneClaimed = registerStastisticCallback` référence une variable qui n'existe pas dans ce fichier (copier-coller de statistic.lua) : elle vaut nil, le champ exporté est donc nil.
-- Le compteur de déclenchements ne s'arrête pas à maxStep (10) : getTarget(step) = step*15 n'est jamais nil, donc triggerCount continue d'augmenter et notificationStep aussi.
-- onSpeedTrapTriggered ignore les radars sans speedLimit et ceux déclenchés par un autre véhicule que le véhicule joueur 0.
-- Les vitesses sont en m/s (km/h / 3.6).
+- Bug: `M.onGeneralMilestoneClaimed = registerStastisticCallback` references a variable that does not exist in this file (copy-paste from statistic.lua): it is nil, so the exported field is nil.
+- The trigger counter does not stop at maxStep (10): getTarget(step) = step*15 is never nil, so triggerCount keeps increasing and so does notificationStep.
+- onSpeedTrapTriggered ignores speed traps without a speedLimit and those triggered by a vehicle other than player vehicle 0.
+- Speeds are in m/s (km/h / 3.6).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_milestones_generalMilestones_speedTraps.onGeneralMilestonesCollect(milestonesList)` | Hook : crée les deux jalons actifs (record de vitesse et compteur) avec leur sauvegarde (maxVelocityReachedByPlayer, triggerCount) et les ajoute à milestonesList. *(interne)* *(hook)* | 10 |
-| `career_modules_milestones_generalMilestones_speedTraps.onSpeedTrapTriggered(speedTrapData, playerSpeed, overSpeed)` | Hook appelé quand un radar se déclenche : met à jour le record de vitesse du joueur, notifie tous les paliers de vitesse franchis, et incrémente le compteur de déclenchements. *(interne)* *(hook)* | 123 |
+| `career_modules_milestones_generalMilestones_speedTraps.onGeneralMilestonesCollect(milestonesList)` | Hook: creates the two active milestones (speed record and counter) with their save data (maxVelocityReachedByPlayer, triggerCount) and adds them to milestonesList. *(internal)* *(hook)* | 10 |
+| `career_modules_milestones_generalMilestones_speedTraps.onSpeedTrapTriggered(speedTrapData, playerSpeed, overSpeed)` | Hook called when a speed trap triggers: updates the player's speed record, notifies all speed tiers passed, and increments the trigger counter. *(internal)* *(hook)* | 123 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_milestones_generalMilestones_speedTraps.onGeneralMilestonesCollect(milestonesList)`
 
-Hook : crée les deux jalons actifs (record de vitesse et compteur) avec leur sauvegarde (maxVelocityReachedByPlayer, triggerCount) et les ajoute à milestonesList.
+Hook: creates the two active milestones (speed record and counter) with their save data (maxVelocityReachedByPlayer, triggerCount) and adds them to milestonesList.
 
-- `milestonesList` (*table[]*) : Liste à compléter.
+- `milestonesList` (*table[]*) : List to fill.
 
 #### `career_modules_milestones_generalMilestones_speedTraps.onSpeedTrapTriggered(speedTrapData, playerSpeed, overSpeed)`
 
-Hook appelé quand un radar se déclenche : met à jour le record de vitesse du joueur, notifie tous les paliers de vitesse franchis, et incrémente le compteur de déclenchements.
+Hook called when a speed trap triggers: updates the player's speed record, notifies all speed tiers passed, and increments the trigger counter.
 
-- `speedTrapData` (*table*) : Données du radar (speedLimit, subjectID...).
-- `playerSpeed` (*number*) : Vitesse mesurée en m/s.
-- `overSpeed` (*number*) : Excès de vitesse (non utilisé ici).
+- `speedTrapData` (*table*) : Speed trap data (speedLimit, subjectID...).
+- `playerSpeed` (*number*) : Measured speed in m/s.
+- `overSpeed` (*number*) : Speed excess (not used here).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `onGeneralMilestoneClaimed` | any | after a milestone is claimed, also re-register the watch ⚠ référence `registerStastisticCallback` non définie dans le fichier (vaut probablement nil) |
+| `onGeneralMilestoneClaimed` | any | after a milestone is claimed, also re-register the watch ⚠ reference `registerStastisticCallback` not defined in the file (probably nil) |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/milestones/generalMilestones/speedTraps.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/milestones/generalMilestones/speedTraps.lua`.*

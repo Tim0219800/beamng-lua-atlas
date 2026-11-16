@@ -1,12 +1,12 @@
 # `core_skiaTemplate`
 
-*Fichier : `lua/ge/extensions/core/skiaTemplate.lua` · VM : Game Engine (GE) · 273 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/skiaTemplate.lua` · VM: Game Engine (GE) · 273 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_skiaTemplate` : `extensions.load("core_skiaTemplate")`, puis la globale `core_skiaTemplate`
+**Access:** extension `core_skiaTemplate`: `extensions.load("core_skiaTemplate")`, then the global `core_skiaTemplate`
 
-Pilote Lua des plaques d'immatriculation dessinées avec Skia. Il génère le texte de plaque à partir des motifs de design.vars (texte littéral et jetons {token}), construit la table de variables ({plate}, {line1}/{line2}, {seg1}…, variables prédéfinies ou générées), substitue chaque {clé} dans une copie de l'arbre de mise en page du format choisi, puis envoie le résultat résolu au moteur C++ (veh:renderLicensePlateSkia), qui lie les textures aux tags de matériau @licenseplate-*. Le C++ ne fait que le rendu. Utile pour les mods de plaques (fichiers *.sktemplate.json).
+Lua driver for license plates drawn with Skia. It generates the plate text from the patterns of design.vars (literal text and {token} tokens), builds the variable table ({plate}, {line1}/{line2}, {seg1}..., predefined or generated variables), substitutes each {key} in a copy of the layout tree of the chosen format, then sends the resolved result to the C++ engine (veh:renderLicensePlateSkia), which binds the textures to the @licenseplate-* material tags. The C++ only does the rendering. Useful for plate mods (*.sktemplate.json files).
 
-## Exemple
+## Example
 
 ```lua
 local design = jsonReadFile('vehicles/common/licenseplates/default/licensePlate-default.sktemplate.json')
@@ -14,72 +14,72 @@ local text = core_skiaTemplate.generateText(design, veh)
 core_skiaTemplate.renderToVehicle(veh, design, 'default', text)
 ```
 
-## Remarques
+## Notes
 
-- Un design est une table : type ('licenseplate' par défaut), format (table nom -> {size, background, normal, emboss, finish, maps, segments, limit, limit2, root}), vars (définitions de variables : default, formats, charsets, preset), logic (nom d'un module Lua facultatif avec resolve(text, format, design) pouvant renvoyer {vars, nodes, background, normal}).
-- Cartes rendues : pour le type licenseplate, diffuse, normal, specular, metallic ; pour les autres types, diffuse seulement. Une liste maps explicite dans le format ou le design prend le dessus.
-- Les variables prédéfinies (preset) et générées sont déterministes pour un texte de plaque donné (hash djb2 du texte) afin que tous les clients multijoueur obtiennent le même résultat.
-- Les valeurs vides sont remplacées par un espace ; un jeton inconnu reste tel quel ({clé}).
-- limit et limit2 comptent des points de code UTF-8, pas des octets.
-- Jetons spéciaux de generateText : {vid} (id du véhicule), {vname} (nom du fichier jbeam), et les jeux de caractères de vars.plate.charsets. Les formats de plaque choisis viennent du champ dynamique licenseFormats du véhicule (défaut {"30-15"}).
+- A design is a table: type ('licenseplate' by default), format (table name -> {size, background, normal, emboss, finish, maps, segments, limit, limit2, root}), vars (variable definitions: default, formats, charsets, preset), logic (name of an optional Lua module with resolve(text, format, design) that may return {vars, nodes, background, normal}).
+- Rendered maps: for type licenseplate, diffuse, normal, specular, metallic; for other types, diffuse only. An explicit maps list in the format or the design takes precedence.
+- Predefined (preset) and generated variables are deterministic for a given plate text (djb2 hash of the text) so that all multiplayer clients get the same result.
+- Empty values are replaced by a space; an unknown token stays as is ({key}).
+- limit and limit2 count UTF-8 code points, not bytes.
+- Special tokens of generateText: {vid} (vehicle id), {vname} (jbeam file name), and the character sets of vars.plate.charsets. The chosen plate formats come from the vehicle's dynamic field licenseFormats (default {"30-15"}).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_skiaTemplate.benchmark(design, format, text, iterations)` | Outil de développement : compare le rendu CPU et GPU des cartes de plaque. Rend de façon synchrone sur le thread appelant, donc à lancer quand aucune plaque n'est en cours de création. | 247 |
-| `core_skiaTemplate.generateText(design, veh)` | Génère un texte de plaque depuis design.vars.plate (texte littéral et jetons {token}). Sans variable exploitable, repli sur un style 'AAA-0000'. | 89 |
-| `core_skiaTemplate.renderToVehicle(veh, design, format, text)` | Résout le format puis le soumet au thread de rendu Skia du moteur (veh:renderLicensePlateSkia avec le JSON résolu), qui lie le résultat aux tags de matériau @licenseplate-* du véhicule. | 236 |
-| `core_skiaTemplate.resolveFormat(design, format, text, veh)` | Résout un format du design en gabarit plat compris par le moteur : {size, background, normal, emboss, finish, maps, root} avec toutes les {clé} substituées. finish contient les valeurs PBR par défaut (0 à 1) : roughness et metallic pour le fond, fgRoughness et fgMetallic pour le texte et les logos ; un noeud peut surcharger avec ses propres metallic/roughness. Applique aussi la découpe en segments, en lignes (limit/limit2) et la logique de design éventuelle. | 162 |
-| `core_skiaTemplate.resolveTemplate(design, vars)` | Résout un gabarit générique (non plaque) plat {size, background?, root} : copie profonde et substitution des {clé} du texte depuis vars. maps vaut diffuse seulement sauf indication contraire. | 226 |
+| `core_skiaTemplate.benchmark(design, format, text, iterations)` | Development tool: compares CPU and GPU rendering of the plate maps. Renders synchronously on the calling thread, so run it when no plate is being created. | 247 |
+| `core_skiaTemplate.generateText(design, veh)` | Generates a plate text from design.vars.plate (literal text and {token} tokens). Without a usable variable, falls back to an 'AAA-0000' style. | 89 |
+| `core_skiaTemplate.renderToVehicle(veh, design, format, text)` | Resolves the format then submits it to the engine's Skia rendering thread (veh:renderLicensePlateSkia with the resolved JSON), which binds the result to the vehicle's @licenseplate-* material tags. | 236 |
+| `core_skiaTemplate.resolveFormat(design, format, text, veh)` | Resolves a design format into a flat template understood by the engine: {size, background, normal, emboss, finish, maps, root} with all {key} substituted. finish contains the default PBR values (0 to 1): roughness and metallic for the background, fgRoughness and fgMetallic for the text and logos; a node can override with its own metallic/roughness. Also applies the splitting into segments, into lines (limit/limit2) and the design logic if any. | 162 |
+| `core_skiaTemplate.resolveTemplate(design, vars)` | Resolves a generic (non-plate) flat template {size, background?, root}: deep copy and substitution of the {key} of the text from vars. maps is diffuse only unless otherwise specified. | 226 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_skiaTemplate.benchmark(design, format, text, iterations)`
 
-Outil de développement : compare le rendu CPU et GPU des cartes de plaque. Rend de façon synchrone sur le thread appelant, donc à lancer quand aucune plaque n'est en cours de création.
+Development tool: compares CPU and GPU rendering of the plate maps. Renders synchronously on the calling thread, so run it when no plate is being created.
 
-- `design` (*table|string|nil*) : Design, ou chemin VFS d'un *.sktemplate.json (défaut : plaque standard vehicles/common/licenseplates/default/licensePlate-default.sktemplate.json).
-- `format` (*string|nil*) : Format ; par défaut le premier du design.
-- `text` (*string|nil*) : Texte ; défaut 'ABC-1234'.
-- `iterations` (*integer|nil*) : Nombre d'itérations, 20 par défaut.
-- **renvoie** : string Résumé des temps renvoyé par le moteur, ou un message d'erreur (skiaBenchmark indisponible hors build de dev avec Skia, design introuvable, format non rendable).
+- `design` (*table|string|nil*) : Design, or VFS path of a *.sktemplate.json (default: standard plate vehicles/common/licenseplates/default/licensePlate-default.sktemplate.json).
+- `format` (*string|nil*) : Format; by default the first of the design.
+- `text` (*string|nil*) : Text; default 'ABC-1234'.
+- `iterations` (*integer|nil*) : Number of iterations, 20 by default.
+- **returns**: string Timing summary returned by the engine, or an error message (skiaBenchmark unavailable outside a dev build with Skia, design not found, format not renderable).
 
 #### `core_skiaTemplate.generateText(design, veh)`
 
-Génère un texte de plaque depuis design.vars.plate (texte littéral et jetons {token}). Sans variable exploitable, repli sur un style 'AAA-0000'.
+Generates a plate text from design.vars.plate (literal text and {token} tokens). Without a usable variable, falls back to an 'AAA-0000' style.
 
-- `design` (*table|nil*) : Design de plaque.
-- `veh` (*userdata|nil*) : Objet véhicule (pour {vid}, {vname} et licenseFormats).
-- **renvoie** : string Texte de la plaque.
+- `design` (*table|nil*) : Plate design.
+- `veh` (*userdata|nil*) : Vehicle object (for {vid}, {vname} and licenseFormats).
+- **returns**: string Plate text.
 
 #### `core_skiaTemplate.renderToVehicle(veh, design, format, text)`
 
-Résout le format puis le soumet au thread de rendu Skia du moteur (veh:renderLicensePlateSkia avec le JSON résolu), qui lie le résultat aux tags de matériau @licenseplate-* du véhicule.
+Resolves the format then submits it to the engine's Skia rendering thread (veh:renderLicensePlateSkia with the resolved JSON), which binds the result to the vehicle's @licenseplate-* material tags.
 
-- `veh` (*userdata*) : Véhicule ayant la méthode renderLicensePlateSkia.
-- `design` (*table*) : Design de plaque.
-- `format` (*string*) : Nom du format.
-- `text` (*string*) : Texte de la plaque.
-- **renvoie** : boolean false si le véhicule ne sait pas rendre ou si le format est introuvable ; sinon le retour du moteur (true si accepté).
+- `veh` (*userdata*) : Vehicle with the renderLicensePlateSkia method.
+- `design` (*table*) : Plate design.
+- `format` (*string*) : Format name.
+- `text` (*string*) : Plate text.
+- **returns**: boolean false if the vehicle cannot render or the format is not found; otherwise the engine's return (true if accepted).
 
 #### `core_skiaTemplate.resolveFormat(design, format, text, veh)`
 
-Résout un format du design en gabarit plat compris par le moteur : {size, background, normal, emboss, finish, maps, root} avec toutes les {clé} substituées. finish contient les valeurs PBR par défaut (0 à 1) : roughness et metallic pour le fond, fgRoughness et fgMetallic pour le texte et les logos ; un noeud peut surcharger avec ses propres metallic/roughness. Applique aussi la découpe en segments, en lignes (limit/limit2) et la logique de design éventuelle.
+Resolves a design format into a flat template understood by the engine: {size, background, normal, emboss, finish, maps, root} with all {key} substituted. finish contains the default PBR values (0 to 1): roughness and metallic for the background, fgRoughness and fgMetallic for the text and logos; a node can override with its own metallic/roughness. Also applies the splitting into segments, into lines (limit/limit2) and the design logic if any.
 
-- `design` (*table*) : Design de plaque.
-- `format` (*string*) : Nom du format dans design.format.
-- `text` (*string|nil*) : Texte de la plaque (vide remplacé par un espace).
-- `veh` (*userdata|nil*) : Véhicule, utilisé pour les variables générées.
-- **renvoie** : table|nil Gabarit résolu ; nil si le format ou son root manque.
+- `design` (*table*) : Plate design.
+- `format` (*string*) : Format name in design.format.
+- `text` (*string|nil*) : Plate text (empty replaced by a space).
+- `veh` (*userdata|nil*) : Vehicle, used for generated variables.
+- **returns**: table|nil Resolved template; nil if the format or its root is missing.
 
 #### `core_skiaTemplate.resolveTemplate(design, vars)`
 
-Résout un gabarit générique (non plaque) plat {size, background?, root} : copie profonde et substitution des {clé} du texte depuis vars. maps vaut diffuse seulement sauf indication contraire.
+Resolves a generic (non-plate) flat template {size, background?, root}: deep copy and substitution of the {key} of the text from vars. maps is diffuse only unless otherwise specified.
 
-- `design` (*table*) : Gabarit avec un champ root.
-- `vars` (*table<string, string>|nil*) : Valeurs de substitution.
-- **renvoie** : table|nil Gabarit résolu ; nil s'il n'y a pas de root.
+- `design` (*table*) : Template with a root field.
+- `vars` (*table<string, string>|nil*) : Substitution values.
+- **returns**: table|nil Resolved template; nil if there is no root.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/skiaTemplate.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/skiaTemplate.lua`.*

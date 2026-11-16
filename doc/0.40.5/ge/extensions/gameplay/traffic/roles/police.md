@@ -1,37 +1,37 @@
 # `gameplay_traffic_roles_police`
 
-*Fichier : `lua/ge/extensions/gameplay/traffic/roles/police.lua` · VM : Game Engine (GE) · 312 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/traffic/roles/police.lua` · VM: Game Engine (GE) · 312 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/traffic/roles/police")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/traffic/roles/police")` (file under extensions/ but not a regular extension)
 
-Rôle de trafic « police » (classe 'emergency'). Il définit les actions de poursuite (pursuitStart, pursuitEnd, chaseTarget, avoidTarget, roadblock) et gère la sirène, le choix de la cible (le véhicule non policier au meilleur score de poursuite), l'évitement de collision frontale, le délai de repos après poursuite et le gel optionnel des feux de circulation quand la rampe lumineuse est allumée.
+"Police" traffic role ('emergency' class). It defines the pursuit actions (pursuitStart, pursuitEnd, chaseTarget, avoidTarget, roadblock) and handles the siren, target selection (the non-police vehicle with the best pursuit score), head-on collision avoidance, the rest delay after a pursuit and the optional freezing of traffic lights when the light bar is on.
 
-## Remarques
+## Notes
 
-- États de self.state : 'chase', 'follow', 'flee', 'stop', 'pullOver', 'disabled', 'none'. L'action 'pullOver' est utilisée par onUpdate mais n'est pas définie dans ce fichier (elle doit venir de baseRole).
-- Après pursuitEnd, le véhicule est 'disabled' pendant cooldownTimer = max(10, arrestTime + 5) secondes, puis onRefresh est rappelé.
-- avoidSpeed est tiré au hasard entre 18 et 24 multiplié par le mode de poursuite ; l'évitement se déclenche si la somme des vitesses dépasse ce seuil et que les véhicules se font face (produit scalaire <= -0,707).
-- Un véhicule trop endommagé (damage > baseValues.highDamage) passe à l'action 'disabled' ; si la cible est à moins de 20 m, policeWrecks de la cible augmente.
-- enableTrafficSignalsChange et freezeTrafficSignals ne sont pas définis ici (hérités de baseRole).
+- self.state states: 'chase', 'follow', 'flee', 'stop', 'pullOver', 'disabled', 'none'. The 'pullOver' action is used by onUpdate but is not defined in this file (it must come from baseRole).
+- After pursuitEnd, the vehicle is 'disabled' for cooldownTimer = max(10, arrestTime + 5) seconds, then onRefresh is called again.
+- avoidSpeed is drawn at random between 18 and 24 multiplied by the pursuit mode; avoidance triggers if the sum of the speeds exceeds this threshold and the vehicles face each other (dot product <= -0.707).
+- A vehicle that is too damaged (damage > baseValues.highDamage) switches to the 'disabled' action; if the target is within 20 m, the target's policeWrecks increases.
+- enableTrafficSignalsChange and freezeTrafficSignals are not defined here (inherited from baseRole).
 
-## Classe `C`
+## Class `C`
 
-Classe du rôle police, complétée par baseRole (self.veh, self.flags, self.state, self.targetId, setAction, setTarget, resetAction…).
+Police role class, completed by baseRole (self.veh, self.flags, self.state, self.targetId, setAction, setTarget, resetAction...).
 
-Le module renvoie un constructeur : `local obj = require("gameplay_traffic_roles_police")(options)`.
+The module returns a constructor: `local obj = require("gameplay_traffic_roles_police")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:checkTarget()` | Compare les scores de poursuite des véhicules de trafic non policiers dont le mode de poursuite est >= 1 et renvoie l'id de celui qui a le meilleur score. | 107 |
-| `C:init()` | Configure le rôle : classe 'emergency', agressivité +0,1, drivability 0,5, et définit les actions pursuitStart (démarre une poursuite : mode 1 = suivi passif avec sirène par à-coups, mode > 1 = poursuite agressive avec rampe allumée), pursuitEnd (arrêt IA, rampe en mode 1, cooldown), chaseTarget, avoidTarget (mode 'flee' temporaire) et roadblock (arrêt, rampe allumée). Fusionne ensuite les baseActions. | 7 |
-| `C:onRefresh()` | Appelé lors du rafraîchissement du rôle. Sort de l'état 'disabled', remet les timers à zéro, réinitialise l'action si besoin, puis cherche une cible : s'il y en a une, lance pursuitStart ; sinon annule la poursuite en cours. Avertit dans le log si le joueur est ciblé sans que sa poursuite ait été correctement déclenchée. | 124 |
-| `C:onTrafficTick(dt)` | Appelé à chaque tick du trafic. Met à jour les cibles potentielles (distance, visibilité), compte les policiers qui voient la cible, déclenche l'évitement d'une collision frontale, désactive le policier trop endommagé, et gère le gel des feux de circulation selon la rampe lumineuse (vitesse >= 6 m/s). | 153 |
-| `C:onUpdate(dt, dtSim)` | Appelé chaque frame. Gère les impulsions de sirène, le décompte du cooldown (qui rappelle onRefresh à la fin), l'arrêt de la poursuite si la cible ne fuit plus, la sortie des barrages routiers, le rangement sur le côté ('pullOver') près d'une cible quasi arrêtée, et les délais des actions temporaires. | 225 |
+| `C:checkTarget()` | Compares the pursuit scores of non-police traffic vehicles whose pursuit mode is >= 1 and returns the id of the one with the best score. | 107 |
+| `C:init()` | Configures the role: 'emergency' class, aggression +0.1, drivability 0.5, and defines the actions pursuitStart (starts a pursuit: mode 1 = passive following with intermittent siren, mode > 1 = aggressive pursuit with light bar on), pursuitEnd (AI stop, light bar in mode 1, cooldown), chaseTarget, avoidTarget (temporary 'flee' mode) and roadblock (stop, light bar on). Then merges the baseActions. | 7 |
+| `C:onRefresh()` | Called when the role is refreshed. Leaves the 'disabled' state, resets the timers, resets the action if needed, then looks for a target: if there is one, starts pursuitStart; otherwise cancels the ongoing pursuit. Warns in the log if the player is targeted without their pursuit having been correctly triggered. | 124 |
+| `C:onTrafficTick(dt)` | Called on each traffic tick. Updates the potential targets (distance, visibility), counts the police officers who see the target, triggers head-on collision avoidance, disables the police vehicle that is too damaged, and handles the freezing of traffic lights according to the light bar (speed >= 6 m/s). | 153 |
+| `C:onUpdate(dt, dtSim)` | Called every frame. Handles siren pulses, the cooldown countdown (which calls onRefresh again at the end), stopping the pursuit if the target is no longer fleeing, leaving roadblocks, pulling over ('pullOver') near an almost stopped target, and the delays of temporary actions. | 225 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `obj:` `queueLuaCommand`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/traffic/roles/police.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/traffic/roles/police.lua`.*

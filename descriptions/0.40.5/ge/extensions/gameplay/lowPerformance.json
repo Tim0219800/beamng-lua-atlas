@@ -1,59 +1,93 @@
 {
   "path": "lua/ge/extensions/gameplay/lowPerformance.lua",
-  "module": "Détecteur de faible fréquence d'images en freeroam et en écran partagé (modes freeroam et multiseatGamemode uniquement ; missions, scénarios, carrière et tutoriels ne sont jamais contrôlés). Quand la moyenne lissée de FPS reste sous 25 pendant 5 s, il passe en état « low performance », affiche un toast d'avertissement et peut demander confirmation avant l'apparition d'un nouveau véhicule (confirmSpawn). Un moddeur qui spawne des véhicules peut passer par confirmSpawn pour respecter cet avertissement.",
+  "module": "Low frame rate detector in freeroam and split screen (only freeroam and multiseatGamemode modes; missions, scenarios, career and tutorials are never monitored). When the smoothed FPS average stays below 25 for 5 s, it switches to a \"low performance\" state, displays a warning toast and can ask for confirmation before a new vehicle spawns (confirmSpawn). A modder who spawns vehicles can go through confirmSpawn to respect this warning.",
   "notes": [
-    "Constantes : seuil 25 FPS, lissage 5 s, entrée après 5 s sous le seuil, sortie après 10 s au-dessus, période de grâce de 5 s, images de plus de 0.25 s ignorées (considérées comme des blocages de chargement).",
-    "La détection est désactivée (gate) si aucun niveau n'est chargé, mode non contrôlé, premier trajet (isFirstDriveActive), session OpenXR active, ou limite de FPS activée à une valeur <= 25.",
-    "Un échantillonnage n'a lieu que si l'écran n'est pas en fondu, le jeu n'est pas en pause, la fenêtre a le focus, l'éditeur est inactif et la route UI courante est « play » ; sinon la période de grâce redémarre.",
-    "Le réglage notifyLowPerformance (false) coupe toasts, avertissement de spawn et pause-notice, mais la détection continue ; en menu simple (Engine.UI.isSimpleMenu) les notifications restent toujours actives.",
-    "La fenêtre ImGui de debug (onDrawDebug) existe dans le fichier mais son affectation est commentée : elle est désactivée.",
-    "Les callbacks du dialogue de confirmation sont référencés par chaîne Lua (luaCallback), ce qui rend ces quatre fonctions appelables depuis l'UI."
+    "Constants: threshold 25 FPS, smoothing 5 s, enter after 5 s below the threshold, exit after 10 s above, grace period of 5 s, frames longer than 0.25 s ignored (considered loading stalls).",
+    "Detection is disabled (gate) if no level is loaded, mode not monitored, first drive (isFirstDriveActive), active OpenXR session, or FPS limit enabled at a value <= 25.",
+    "Sampling only happens if the screen is not fading, the game is not paused, the window has focus, the editor is inactive and the current UI route is \"play\"; otherwise the grace period restarts.",
+    "The notifyLowPerformance setting (false) turns off toasts, spawn warning and pause notice, but detection continues; in simple menu (Engine.UI.isSimpleMenu) notifications always stay active.",
+    "The ImGui debug window (onDrawDebug) exists in the file but its assignment is commented out: it is disabled.",
+    "The confirmation dialog's callbacks are referenced by Lua string (luaCallback), which makes these four functions callable from the UI."
   ],
   "functions": {
     "isLowPerformance": {
-      "desc": "Indique si le jeu est actuellement considéré en faible performance, et si la détection est encore applicable (gate actif).",
-      "returns": [{"type": "boolean", "desc": "true si faible performance."}],
+      "desc": "Returns whether the game is currently considered in low performance, and whether detection is still applicable (gate active).",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if low performance."
+        }
+      ],
       "internal": false
     },
     "confirmSpawn": {
-      "desc": "Exécute spawnFn directement, sauf si l'état de faible performance est actif, l'avertissement pas encore montré pour cet épisode et les notifications activées : dans ce cas affiche un dialogue de confirmation (Annuler / Ne plus afficher / Continuer) et diffère spawnFn.",
-      "params": {"spawnFn": {"type": "function", "desc": "Fonction qui effectue le spawn."}},
-      "returns": [{"type": "any", "desc": "Résultat de spawnFn si exécutée immédiatement (nil si elle ne renvoie rien), ou false tant que le joueur doit décider."}],
+      "desc": "Executes spawnFn directly, unless the low performance state is active, the warning has not yet been shown for this episode and notifications are enabled: in that case displays a confirmation dialog (Cancel / Don't show again / Continue) and defers spawnFn.",
+      "params": {
+        "spawnFn": {
+          "type": "function",
+          "desc": "Function that performs the spawn."
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of spawnFn if executed immediately (nil if it returns nothing), or false while the player has to decide."
+        }
+      ],
       "internal": false
     },
     "confirmPendingSpawn": {
-      "desc": "Exécute la fonction de spawn en attente, si elle existe (bouton Continuer).",
+      "desc": "Executes the pending spawn function, if any (Continue button).",
       "internal": false
     },
     "cancelPendingSpawn": {
-      "desc": "Abandonne la fonction de spawn en attente (bouton Annuler).",
+      "desc": "Abandons the pending spawn function (Cancel button).",
       "internal": false
     },
     "muteAndConfirmPendingSpawn": {
-      "desc": "Désactive les notifications (réglage notifyLowPerformance = false), affiche un toast d'information puis exécute le spawn en attente.",
+      "desc": "Disables notifications (notifyLowPerformance setting = false), displays an info toast then executes the pending spawn.",
       "internal": false
     },
     "getPauseNotice": {
-      "desc": "Renvoie les textes traduits à afficher dans le menu pause quand la faible performance est active et les notifications autorisées.",
-      "returns": [{"type": "table|nil", "desc": "{notice, hint, infoTitle, infoMessage} ou nil."}],
+      "desc": "Returns the translated texts to display in the pause menu when low performance is active and notifications are allowed.",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{notice, hint, infoTitle, infoMessage} or nil."
+        }
+      ],
       "internal": false
     },
     "onUpdate": {
-      "desc": "Hook de mise à jour chaque frame : vérifie périodiquement (1 s) le gate, gère la période de grâce, lisse les FPS et bascule l'état de faible performance.",
+      "desc": "Per-frame update hook: periodically (1 s) checks the gate, manages the grace period, smooths the FPS and toggles the low performance state.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (non utilisé)."},
-        "dtSim": {"type": "number", "desc": "Delta temps de simulation (non utilisé)."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut en secondes, utilisé pour le chronométrage et les FPS."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real-time delta (unused)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation delta time (unused)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw delta time in seconds, used for timing and FPS."
+        }
       },
       "internal": true
     },
     "onVehicleSpawned": {
-      "desc": "Hook d'apparition d'un véhicule : redémarre la période de grâce (le spawn fait chuter temporairement les FPS).",
+      "desc": "Vehicle spawn hook: restarts the grace period (spawning temporarily drops the FPS).",
       "internal": true
     },
     "onScreenFadeState": {
-      "desc": "Hook d'état du fondu d'écran : l'échantillonnage est suspendu tant que l'état n'est pas 3 (fondu terminé).",
-      "params": {"state": {"type": "integer", "desc": "État du fondu ; 3 = terminé."}},
+      "desc": "Screen fade state hook: sampling is suspended as long as the state is not 3 (fade finished).",
+      "params": {
+        "state": {
+          "type": "integer",
+          "desc": "Fade state; 3 = finished."
+        }
+      },
       "internal": true
     }
   }

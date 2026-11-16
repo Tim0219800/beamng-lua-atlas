@@ -1,0 +1,19 @@
+{
+  "path": "lua/common/introspection.lua",
+  "module": "Outil de debug qui parcourt _G et les modules standard (table, math, string, coroutine, os, io, debug, package) pour lister les fonctions des classes exposées par le moteur (tables ayant un champ ___type de la forme class<...> ou static_class<...>). S'utilise à la console : require('introspection').gather_methods().",
+  "usage": "local m = require('introspection').gather_methods()\nfor _, e in ipairs(m) do print(e.class_name, e.method_name, e.is_static) end",
+  "notes": [
+    "La globale 'extensions' est ignorée explicitement.",
+    "Les clés commençant par '__' sont ignorées.",
+    "signature vaut \"nom (what)\" où what vient de debug.getinfo(f, 'S') (Lua, C, main)."
+  ],
+  "fields": {},
+  "functions": {
+    "gather_methods": {
+      "desc": "Construit et renvoie la liste des méthodes de toutes les classes C++/Lua exposées (et des modules standard), avec nom de classe, nom de méthode, signature et indicateur statique.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Tableau d'entrées {class_name=string, method_name=string, signature=string, is_static=boolean}."}],
+      "internal": false
+    }
+  }
+}

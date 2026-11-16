@@ -1,0 +1,116 @@
+{
+  "path": "lua/ge/extensions/scenario/quickRaceLoader.lua",
+  "module": "Chargeur des courses rapides (quickrace). Il parcourt les niveaux (levels/<niveau>/quickrace/*.json, fichiers .race.json compris) et les pistes du Track Editor (dossier trackEditor/ des documents utilisateur), fabrique la liste des niveaux et pistes affichée par l'écran de sélection, puis transforme un choix (piste, véhicule, type de course) en scénario via scenario_scenariosLoader.processScenarioData et le lance. Un moddeur de piste de quickrace s'en sert indirectement : ses fichiers sont lus par getTracks.",
+  "usage": "-- lister les niveaux ayant des quickraces et leurs pistes\nlocal levels = scenario_quickRaceLoader.getQuickraceList()\nfor _, lvl in ipairs(levels) do\n  for _, t in ipairs(lvl.tracks) do log('I', 'x', lvl.levelName .. ' / ' .. t.name) end\nend",
+  "notes": [
+    "Un fichier de piste est un JSON lu par getTracks. Champs utilisés : name, difficulty, closed (sinon lapCount forcé à 1), lapCount, defaultLaps (avec raceFile), reversible, allowRollingStart, tod (indice 0 à 9 vers une heure du jour, défaut 3), lapConfig, startLineCheckpoint, finishLineCheckpoint, spawnSpheres {standing, standingReverse, rolling, rollingReverse} (défaut <trackName>_standing_spawn etc.), prefabs / reversePrefabs / forwardPrefabs, luaFile (relatif à levels/<niveau>/quickrace/), startHTML (défaut quickrace/<trackName>.html), introType (défaut 'htmlOnly', 'none' sans HTML), procedural, flowgraph, classification {closed, allowRollingStart, reversible}.",
+    "Un fichier dont l'extension est 'race.json' est traité comme piste basée sur un chemin de course (raceFile = ce fichier).",
+    "Les prefabs <trackName>.prefab[.json], <trackName>_reverse.prefab[.json] et <trackName>_forward.prefab[.json] du dossier quickrace/ sont ajoutés automatiquement s'ils existent.",
+    "Les images de prévisualisation sont <trackName>.jpg et <trackName>_reverse.jpg dans le dossier de la piste.",
+    "Le niveau 'driver_training' ne liste que les pistes procédurales, tous les autres niveaux que les pistes non procédurales. Le niveau 'smallgrid' est renommé « Track Editor Tracks ».",
+    "Les pistes Track Editor : un fichier trackEditor/<nom>.json doit avoir un champ version, sinon il est ignoré avec un message (ancien format). Elles sont rattachées au niveau trackData.level (défaut 'smallgrid').",
+    "loadQuickrace : inverse lapConfig si trackFile.reverse (et échange les checkpoints de départ et d'arrivée si la piste n'est pas fermée), ajoute finishLineCheckpoint en fin de lapConfig, fixe isQuickRace = true et l'heure du jour d'après le tableau tod, sauf si levelInfo.disableQuickraceTimeOfDay.",
+    "loadQuickrace modifie les tables passées (scenarioFile, trackFile) en place.",
+    "Code mort : mimicProcTracks et getCustomTracks ne sont pas exportées. Dans loadQuickrace, scenarioFile.isReverse = false est écrit deux fois.",
+    "getLevel recalcule toute la liste des niveaux à chaque appel (coûteux), et getLevelTrack en dépend."
+  ],
+  "fields": {
+    "quickRaceModules": {"type": "string[]", "desc": "Extensions chargées au démarrage d'une quickrace : scenario_scenarios, statistics_statistics, scenario_waypoints, scenario_quickRace, core_hotlapping."}
+  },
+  "functions": {
+    "getLevelList": {
+      "desc": "Renvoie la liste des noms de niveaux (dossiers de levels/ contenant info.json).",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Noms de niveaux ; liste vide si le dossier levels/ n'existe pas."}],
+      "internal": false
+    },
+    "getQuickraceList": {
+      "desc": "Construit la liste des niveaux qui contiennent des quickraces (fichiers JSON de levels/<niveau>/quickrace/ ou pistes Track Editor). Chaque entrée décrit un pseudo-scénario pour l'UI : levelName, levelInfo, name, previews, tracks, trackCount, vehicles (scenario_player0 joueur), playersCountRange, etc.",
+      "params": {"levelList": {"type": "string[]|nil", "desc": "Niveaux à examiner ; défaut getLevelList()."}},
+      "returns": [{"type": "table[]", "desc": "Liste d'entrées de niveau avec au moins une piste."}],
+      "internal": false
+    },
+    "getLevel": {
+      "desc": "Retrouve un niveau de la liste des quickraces par son nom de dossier ou son titre.",
+      "params": {"levelName": {"type": "string", "desc": "Nom de dossier ou titre (levelInfo.title)."}},
+      "returns": [{"type": "table|nil", "desc": "Entrée de niveau, ou nil."}],
+      "internal": false
+    },
+    "getLevelTrack": {
+      "desc": "Retrouve une piste d'un niveau par son nom.",
+      "params": {
+        "levelName": {"type": "string", "desc": "Nom ou titre du niveau."},
+        "trackName": {"type": "string", "desc": "Champ name de la piste."}
+      },
+      "returns": [{"type": "table|nil", "desc": "La piste, ou nil."}],
+      "internal": false
+    },
+    "customPreviewLoader": {
+      "desc": "Détermine les images d'aperçu d'un niveau : levelInfo.previews préfixés par le dossier du niveau, sinon les fichiers <niveau>_preview*.png puis .jpg à la racine du niveau. Écrit levelInfo.directory et levelInfo.previews.",
+      "params": {
+        "levelInfo": {"type": "table", "desc": "Entrée de niveau en cours de construction (doit avoir levelInfo.levelInfo)."},
+        "levelName": {"type": "string", "desc": "Nom de dossier du niveau."}
+      },
+      "returns": [{"type": "string[]", "desc": "Liste de chemins d'images (avertissement dans le log si vide)."}],
+      "internal": false
+    },
+    "getTrackEditorTracks": {
+      "desc": "Lit les fichiers trackEditor/*.json de l'utilisateur et crée une piste quickrace pour chacun (nom, auteur, difficulté 37 par défaut, lapCount selon connected/defaultLaps, aperçu jpg/png, spawnSpheres '_standing_spawn' etc., luaFile util/trackBuilder/quickraceSetup).",
+      "params": {},
+      "returns": [{"type": "table<string, table[]>", "desc": "Pistes regroupées par nom de niveau."}],
+      "internal": false
+    },
+    "loadTrackBuilderJSON": {
+      "desc": "Lit le JSON d'une piste du Track Editor : trackEditor/<nom>.json.",
+      "params": {"originalFilename": {"type": "string", "desc": "Nom de la piste sans dossier ni extension."}},
+      "returns": [{"type": "table|nil", "desc": "Contenu du JSON, ou nil (fichier absent ou illisible, message d'info dans le log)."}],
+      "internal": false
+    },
+    "getTracks": {
+      "desc": "Analyse les fichiers quickrace d'un niveau et renvoie la liste des pistes complétées avec les valeurs par défaut (voir notes), triée par nom.",
+      "params": {
+        "quickraceFiles": {"type": "string[]", "desc": "Chemins des fichiers JSON de quickrace."},
+        "levelName": {"type": "string", "desc": "Nom du dossier du niveau."},
+        "lvlName": {"type": "string", "desc": "Nom du niveau, utilisé pour détecter 'driver_training' (pistes procédurales)."}
+      },
+      "returns": [{"type": "table[]", "desc": "Pistes, avec trackName, directory, previews, spawnSpheres, official, etc."}],
+      "internal": false
+    },
+    "loadQuickrace": {
+      "desc": "Transforme une piste et un véhicule choisis en scénario complet : renseigne scenarioFile (track, vehicle, name, lapCount, lapConfig, prefabs, startHTML, introType, isReverse, rollingStart, levelObjects.tod, isQuickRace, quickraceType) puis appelle scenario_scenariosLoader.processScenarioData.",
+      "params": {
+        "scenarioKey": {"type": "string|nil", "desc": "Clé du scénario (nil depuis startQuickrace)."},
+        "scenarioFile": {"type": "table", "desc": "Entrée de niveau de getQuickraceList, modifiée en place."},
+        "trackFile": {"type": "table", "desc": "Piste choisie ; track.reverse, track.rollingStart et track.tod sont lus."},
+        "vehicleFile": {"type": "table", "desc": "Véhicule choisi (model, config, file...)."},
+        "raceType": {"type": "string", "desc": "Type de course, stocké dans quickraceType (déduit du code)."}
+      },
+      "returns": [{"type": "table", "desc": "Scénario traité."}],
+      "internal": false
+    },
+    "startQuickrace": {
+      "desc": "Démarre une quickrace. Si un niveau est déjà chargé, décale le démarrage jusqu'à son déchargement. Sinon charge les extensions de quickRaceModules, le luaFile de la piste (et util/trackBuilder/splineTrack pour une piste Track Editor), construit le scénario avec loadQuickrace et appelle scenario_scenarios.executeScenario.",
+      "params": {
+        "scenarioFile": {"type": "table", "desc": "Entrée de niveau."},
+        "trackFile": {"type": "table", "desc": "Piste choisie."},
+        "vehicleFile": {"type": "table", "desc": "Véhicule choisi."},
+        "raceType": {"type": "string", "desc": "Type de course."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "uiEventStartHotlapping": {
+      "desc": "Appelé par l'UI (application hotlapping) : charge core_hotlapping à la demande si aucun scénario n'est en cours puis appelle core_hotlapping.startHotlapping().",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "uiHotlappingAppDestroyed": {
+      "desc": "Appelé par l'UI quand l'application hotlapping est détruite : décharge core_hotlapping si aucun scénario n'est en cours.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

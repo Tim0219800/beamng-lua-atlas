@@ -1,0 +1,315 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/snaproad.lua",
+  "module": "Snaproad de rallye : « route magnétique » construite sur les points d'une driveline (PointList). Elle permet de projeter une position sur la route (closestSnapResult, avec distance cumulée le long de la route), d'avancer ou reculer d'une distance donnée, de calculer des normales, de partitionner la route autour des pacenotes (partition, partition_all, filtre) et de reprojeter les waypoints des pacenotes quand la route change. Elle contient aussi les fonctions de dessin debugDrawer utilisées par l'éditeur de rallye et la recce app. Le module renvoie un constructeur : Snaproad(driveline).",
+  "usage": "local Snaproad = require('/lua/ge/extensions/gameplay/rally/snaproad')\nlocal sr = Snaproad(pointList)\nlocal loc = sr:closestSnapResult(veh:getPosition())\nprint(loc.distanceAlongRoute, sr:totalRouteLength())",
+  "notes": [
+    "Un « résultat de snap » (route location) est une table {pos, point, nearestPoint, fromPoint, toPoint, segmentIndex, xnorm, distanceAlongRoute (m), distSq (m²)}.",
+    "Les points sont des tables avec pos (vec3), id (index séquentiel) et liens prev / next ; l'index spatial est un kd-tree reconstruit si la table de points change.",
+    "L'argument useAllPoints ignore le filtre actif (filter) et travaille sur tous les points de la driveline ; sinon, si un filtre est actif, seules ses bornes servent à borner le résultat.",
+    "minAdjacentWaypointDistance vaut 2,0 m : les waypoints de début et de fin d'un pacenote sont repoussés pour respecter cet écart (_repairPacenoteProjectionEntries).",
+    "Incohérence possible : rallyManager passe une PointList au constructeur, alors que recce:createPacenotesData appelle Snaproad(self) avec l'objet Recce ; Snaproad lit driveline().points, donc avec un Recce le champ points n'existe pas (la driveline y est dans recce.driveline).",
+    "groupPointsByCornerCall dépend de self.styleData qui n'est jamais défini dans ce fichier : la fonction renvoie une table vide sauf si un code externe assigne styleData.",
+    "Plusieurs fonctions mettent point.partition sur les points : cet état est stocké directement dans les points de la driveline."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet Snaproad renvoyé par le constructeur.",
+      "functions": {
+        "init": {
+          "desc": "Mémorise la driveline, crée le lecteur de chemin caméra, initialise filtre, partition, partition_all, opacité globale et l'index des points.",
+          "params": {"driveline": {"type": "table", "desc": "PointList (champ points)"}},
+          "internal": true
+        },
+        "setGlobalOpacity": {
+          "desc": "Définit l'opacité globale des dessins debug.",
+          "params": {"globalOpacity": {"type": "number", "desc": "0 à 1"}}
+        },
+        "driveline": {"desc": "Renvoie la driveline passée au constructeur.", "returns": [{"type": "table|nil", "desc": ""}]},
+        "_allPoints": {"desc": "Tous les points de la driveline (table vide s'il n'y a pas de driveline).", "returns": [{"type": "table", "desc": ""}], "internal": true},
+        "_operativePoints": {"desc": "Points du filtre si actif, sinon tous les points.", "returns": [{"type": "table", "desc": ""}], "internal": true},
+        "_rebuildAllPointIndex": {"desc": "Reconstruit l'index (kd-tree, distances cumulées) de tous les points.", "internal": true},
+        "_invalidateFilterPointIndex": {"desc": "Oublie l'index des points filtrés.", "internal": true},
+        "_indexForPoints": {
+          "desc": "Renvoie l'index des points (tous ou filtrés), reconstruit si la table de points a changé.",
+          "params": {"useAllPoints": {"type": "boolean", "desc": "true pour ignorer le filtre"}},
+          "returns": [{"type": "table", "desc": "{points, kdTree, stableIdIndex, prefixDistances, totalLength}"}],
+          "internal": true
+        },
+        "minAdjacentWaypointDistance": {"desc": "Écart minimal entre waypoints adjacents : 2,0 m.", "returns": [{"type": "number", "desc": "mètres"}]},
+        "totalRouteLength": {"desc": "Longueur totale de la route (tous les points).", "returns": [{"type": "number", "desc": "mètres"}]},
+        "routeLocationForPoint": {
+          "desc": "Construit le résultat de snap correspondant exactement à un point de la driveline.",
+          "params": {"point": {"type": "table|nil", "desc": "Point avec id et pos"}},
+          "returns": [{"type": "table|nil", "desc": "Résultat de snap ; nil si le point est inconnu"}]
+        },
+        "compareRouteLocations": {
+          "desc": "Compare deux positions sur la route selon leur distanceAlongRoute.",
+          "params": {"a": {"type": "table", "desc": "Résultat de snap"}, "b": {"type": "table", "desc": "Résultat de snap"}},
+          "returns": [{"type": "integer|nil", "desc": "-1 si a avant b, 0 si égaux (écart < 0,0001 m), 1 si a après b ; nil si donnée manquante"}]
+        },
+        "distanceBetweenRouteLocations": {
+          "desc": "Distance absolue entre deux résultats de snap, le long de la route.",
+          "params": {"a": {"type": "table", "desc": "Résultat de snap"}, "b": {"type": "table", "desc": "Résultat de snap"}},
+          "returns": [{"type": "number|nil", "desc": "mètres"}]
+        },
+        "normalForSnapResult": {
+          "desc": "Normale vers l'avant d'un résultat de snap (calculée sur le segment fromPoint/toPoint, ou via le point le plus proche si le segment est dégénéré).",
+          "params": {"result": {"type": "table|nil", "desc": "Résultat de snap"}},
+          "returns": [{"type": "vec3|nil", "desc": "Normale"}]
+        },
+        "positionAtDistanceAlongRoute": {
+          "desc": "Position sur la route à une distance cumulée donnée (bornée entre 0 et la longueur totale), interpolée sur le segment concerné.",
+          "params": {
+            "distanceAlongRoute": {"type": "number", "desc": "Distance depuis le début de la route, en mètres"},
+            "useAllPoints": {"type": "boolean|nil", "desc": "true pour ignorer le filtre"}
+          },
+          "returns": [{"type": "table|nil", "desc": "Résultat de snap ; nil s'il n'y a aucun point"}]
+        },
+        "advanceAlongRoute": {
+          "desc": "Projette pos sur la route puis avance (fwd = true) ou recule de meters le long de la route, sans dépasser les points limites.",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position de départ"},
+            "meters": {"type": "number", "desc": "Distance en mètres"},
+            "fwd": {"type": "boolean", "desc": "true vers l'avant, false vers l'arrière"},
+            "limitPoints": {"type": "table[]|nil", "desc": "Points que le résultat ne doit pas dépasser"},
+            "useAllPoints": {"type": "boolean|nil", "desc": "true pour ignorer le filtre"}
+          },
+          "returns": [{"type": "table|nil", "desc": "Résultat de snap"}]
+        },
+        "distanceBetweenPositions": {
+          "desc": "Distance le long de la route entre les projections de deux positions.",
+          "params": {
+            "posA": {"type": "vec3", "desc": "Première position"},
+            "posB": {"type": "vec3", "desc": "Seconde position"},
+            "useAllPoints": {"type": "boolean|nil", "desc": "true pour ignorer le filtre"}
+          },
+          "returns": [{"type": "number|nil", "desc": "mètres"}]
+        },
+        "_snapshotWaypoint": {
+          "desc": "Lit dans un snapshot la position, la normale et la location d'un waypoint (cs ou ce), avec repli sur le waypoint courant.",
+          "params": {
+            "snapshotPn": {"type": "table|nil", "desc": "Entrée de snapshot du pacenote"},
+            "key": {"type": "string", "desc": "'cs' ou 'ce'"},
+            "fallbackWp": {"type": "table", "desc": "Waypoint de repli"}
+          },
+          "returns": [{"type": "table", "desc": "{pos, normal, location}"}],
+          "internal": true
+        },
+        "_applySnapLocationToWaypoint": {
+          "desc": "Applique position et normale d'un résultat de snap à un waypoint.",
+          "params": {"wp": {"type": "table", "desc": "Waypoint"}, "loc": {"type": "table", "desc": "Résultat de snap"}},
+          "internal": true
+        },
+        "_repairPacenoteProjectionEntries": {
+          "desc": "Corrige la liste ordonnée des projections de pacenotes pour que chaque fin soit au moins 2 m après son début et que les pacenotes ne se chevauchent pas, en décalant les distances et en restant dans la longueur de la route.",
+          "params": {"entries": {"type": "table[]", "desc": "Entrées {csLoc, ceLoc, ...} modifiées en place"}},
+          "internal": true
+        },
+        "reprojectPacenoteWaypointsFromSnapshot": {
+          "desc": "Reprojette sur la route actuelle les waypoints cs/ce de tous les pacenotes non manquants, à partir d'un snapshot, répare les chevauchements, met à jour les halfpoints et recalcule les appels de distance (autofillDistanceCalls).",
+          "params": {
+            "notebook": {"type": "table", "desc": "Notebook"},
+            "snapshot": {"type": "table", "desc": "{pacenotes = {[pnId] = {cs={pos, normal, location}, ce=...}}}"}
+          }
+        },
+        "reprojectPacenoteWaypoints": {
+          "desc": "Reprojette les waypoints des pacenotes. Sans snapshot, en construit un à partir des positions actuelles (et de l'ancien snaproad s'il est fourni).",
+          "params": {
+            "notebook": {"type": "table", "desc": "Notebook"},
+            "previousSnaproad": {"type": "table|nil", "desc": "Ancien Snaproad"},
+            "snapshot": {"type": "table|nil", "desc": "Snapshot de positions"}
+          }
+        },
+        "closestSnapResult": {
+          "desc": "Projette une position sur la route : trouve le point le plus proche (kd-tree) puis le meilleur segment dans une fenêtre de 6 segments autour. Si un filtre avec bornes est actif, borne le résultat entre ces bornes.",
+          "params": {
+            "source_pos": {"type": "vec3", "desc": "Position à projeter"},
+            "useAllPoints": {"type": "boolean|nil", "desc": "true pour ignorer le filtre"}
+          },
+          "returns": [{"type": "table|nil", "desc": "Résultat de snap ; nil si pas de points"}]
+        },
+        "closestSnapPoint": {
+          "desc": "Point de la route le plus proche d'une position.",
+          "params": {"source_pos": {"type": "vec3", "desc": "Position"}, "useAllPoints": {"type": "boolean|nil", "desc": "true pour ignorer le filtre"}},
+          "returns": [{"type": "table|nil", "desc": "Point"}]
+        },
+        "closestSnapPos": {
+          "desc": "Position projetée sur la route ; renvoie source_pos telle quelle si la projection échoue.",
+          "params": {"source_pos": {"type": "vec3", "desc": "Position"}},
+          "returns": [{"type": "vec3", "desc": "Position"}]
+        },
+        "normalAlignPoints": {
+          "desc": "Renvoie (précédent, courant, suivant) d'un point (délégué à snaproad/normals).",
+          "params": {"point": {"type": "table", "desc": "Point"}},
+          "returns": [{"type": "table|nil", "desc": "prev"}, {"type": "table|nil", "desc": "courant"}, {"type": "table|nil", "desc": "next"}]
+        },
+        "forwardNormalVec": {
+          "desc": "Normale vers l'avant d'un point (délégué à snaproad/normals).",
+          "params": {"point": {"type": "table", "desc": "Point"}},
+          "returns": [{"type": "vec3|nil", "desc": "Normale"}]
+        },
+        "pointsBackwards": {
+          "desc": "Recule d'un nombre de points donné, en s'arrêtant avant un point limite.",
+          "params": {"fromPoint": {"type": "table", "desc": "Point de départ"}, "steps": {"type": "integer", "desc": "Nombre de points"}, "limitPoints": {"type": "table[]|nil", "desc": "Points à ne pas atteindre"}},
+          "returns": [{"type": "table", "desc": "Point atteint"}]
+        },
+        "pointsForwards": {
+          "desc": "Avance d'un nombre de points donné, en s'arrêtant avant un point limite.",
+          "params": {"fromPoint": {"type": "table", "desc": "Point de départ"}, "steps": {"type": "integer", "desc": "Nombre de points"}, "limitPoints": {"type": "table[]|nil", "desc": "Points à ne pas atteindre"}},
+          "returns": [{"type": "table", "desc": "Point atteint"}]
+        },
+        "distanceBackwards": {
+          "desc": "Recule de point en point jusqu'à dépasser une distance en mètres, ou avant un point limite.",
+          "params": {"fromPoint": {"type": "table", "desc": "Point de départ"}, "meters": {"type": "number", "desc": "Distance"}, "limitPoints": {"type": "table[]|nil", "desc": "Points limites"}},
+          "returns": [{"type": "table", "desc": "Point atteint"}]
+        },
+        "distanceBackwardsResult": {
+          "desc": "Comme advanceAlongRoute vers l'arrière, à partir d'une position.",
+          "params": {"fromPos": {"type": "vec3", "desc": "Position"}, "meters": {"type": "number", "desc": "Distance"}, "limitPoints": {"type": "table[]|nil", "desc": "Points limites"}},
+          "returns": [{"type": "table|nil", "desc": "Résultat de snap"}]
+        },
+        "distanceForwards": {
+          "desc": "Avance de point en point jusqu'à dépasser une distance en mètres, ou avant un point limite.",
+          "params": {"fromPoint": {"type": "table", "desc": "Point de départ"}, "meters": {"type": "number", "desc": "Distance"}, "limitPoints": {"type": "table[]|nil", "desc": "Points limites"}},
+          "returns": [{"type": "table", "desc": "Point atteint"}]
+        },
+        "distanceForwardsResult": {
+          "desc": "Comme advanceAlongRoute vers l'avant, à partir d'une position.",
+          "params": {"fromPos": {"type": "vec3", "desc": "Position"}, "meters": {"type": "number", "desc": "Distance"}, "limitPoints": {"type": "table[]|nil", "desc": "Points limites"}},
+          "returns": [{"type": "table|nil", "desc": "Résultat de snap"}]
+        },
+        "firstSnapPoint": {"desc": "Premier point de la driveline.", "returns": [{"type": "table|nil", "desc": "Point"}]},
+        "prevSnapPoint": {
+          "desc": "Point précédant le point le plus proche de srcPos (le point lui-même au début).",
+          "params": {"srcPos": {"type": "vec3", "desc": "Position"}},
+          "returns": [{"type": "table|nil", "desc": "Point"}]
+        },
+        "prevSnapPos": {
+          "desc": "Position du point renvoyé par prevSnapPoint (erreur si nil).",
+          "params": {"srcPos": {"type": "vec3", "desc": "Position"}},
+          "returns": [{"type": "vec3", "desc": "Position"}]
+        },
+        "nextSnapPoint": {
+          "desc": "Point suivant le point le plus proche de srcPos (le point lui-même à la fin).",
+          "params": {"srcPos": {"type": "vec3", "desc": "Position"}},
+          "returns": [{"type": "table|nil", "desc": "Point"}]
+        },
+        "nextSnapPos": {
+          "desc": "Position du point renvoyé par nextSnapPoint (erreur si nil).",
+          "params": {"srcPos": {"type": "vec3", "desc": "Position"}},
+          "returns": [{"type": "vec3", "desc": "Position"}]
+        },
+        "updateHalfpoint": {
+          "desc": "Calcule le point milieu (en distance sur la route) entre le début et la fin du pacenote et le stocke dans pn.halfpoint, halfpointLocation, halfpointPos.",
+          "params": {"pn": {"type": "table", "desc": "Pacenote"}}
+        },
+        "setPartitionToPacenote": {
+          "desc": "Définit la partition « focus » sur la portion de route allant du début à la fin du pacenote.",
+          "params": {"pn": {"type": "table", "desc": "Pacenote"}}
+        },
+        "clearPartition": {"desc": "Désactive et vide la partition courante."},
+        "_partitionPoints": {
+          "desc": "Découpe la route en points avant, focus (de fromPoint à toPoint) et après, et marque les points focus avec partition.",
+          "params": {
+            "fromPoint": {"type": "table", "desc": "Premier point du focus"},
+            "toPoint": {"type": "table", "desc": "Dernier point du focus"},
+            "fromLoc": {"type": "table|nil", "desc": "Résultat de snap de départ"},
+            "toLoc": {"type": "table|nil", "desc": "Résultat de snap de fin"}
+          },
+          "internal": true
+        },
+        "clearAll": {"desc": "Désactive la partition de tous les pacenotes, efface le filtre et les partitions mises en cache sur les points."},
+        "_clearPointCachedPartitions": {"desc": "Met point.partition à nil sur tous les points.", "internal": true},
+        "partitionAllPacenotes": {
+          "desc": "Découpe toute la route entre les pacenotes : une partition par intervalle avant chaque pacenote et une par pacenote. Renseigne aussi _driveline_location et _driveline_point sur les waypoints.",
+          "params": {"notebook": {"type": "table", "desc": "Notebook"}}
+        },
+        "clearFilter": {"desc": "Désactive le filtre de points."},
+        "setFilterToAllPartitions": {"desc": "Active un filtre contenant tous les points des partitions (nécessite partitionAllPacenotes d'abord)."},
+        "setFilterPartitionPoint": {
+          "desc": "Active un filtre limité à la partition contenant le point donné.",
+          "params": {"point": {"type": "table", "desc": "Point avec champ partition"}}
+        },
+        "setFilter": {
+          "desc": "Active un filtre qui limite les points déplaçables d'un waypoint de pacenote entre les pacenotes voisins (avec une marge de 2 m).",
+          "params": {"wp": {"type": "table", "desc": "Waypoint de début ou de fin de virage"}}
+        },
+        "setPartitionToFilter": {"desc": "Définit la partition « focus » sur la portion de route couverte par le filtre actif."},
+        "measurePartition": {"desc": "Mesure la géométrie du virage de la partition courante (geoPacenotes.measurePartition) sur ses points focus."},
+        "pointsForCameraPath": {
+          "desc": "Liste des points de la route autour de la partition courante pour un chemin caméra (40 m avant et 20 m après par défaut).",
+          "params": {
+            "bufferBeforeMeters": {"type": "number|nil", "desc": "Marge avant, 40 par défaut"},
+            "bufferAfterMeters": {"type": "number|nil", "desc": "Marge après, 20 par défaut"}
+          },
+          "returns": [{"type": "table[]|nil", "desc": "Points ; nil sans partition active"}]
+        },
+        "playCameraPath": {"desc": "Lance la lecture du chemin caméra (cameraPathPlayer)."},
+        "stopCameraPath": {"desc": "Arrête la lecture du chemin caméra."},
+        "partitionAllEnabled": {"desc": "Indique si la partition de tous les pacenotes est active.", "returns": [{"type": "boolean", "desc": ""}]},
+        "toggleCornerCalls": {"desc": "Bascule l'affichage des annonces de virage et recalcule la partition du pacenote courant."},
+        "groupPointsByCornerCall": {
+          "desc": "Regroupe des points par annonce de virage selon styleData (voir notes : renvoie {} si styleData n'est pas défini).",
+          "params": {"points": {"type": "table[]", "desc": "Points"}}
+        },
+        "_drawDebugPointPrisms": {
+          "desc": "Dessine des prismes (debugDrawer:drawSquarePrism) entre points consécutifs, avec couleur, hauteur et opacité.",
+          "params": {
+            "points": {"type": "table[]", "desc": "Points"},
+            "clr": {"type": "table|nil", "desc": "Couleur"},
+            "alpha": {"type": "number|nil", "desc": "Alpha"},
+            "adjustH": {"type": "boolean|nil", "desc": "Ajustement de hauteur"},
+            "globalOpacity": {"type": "number|nil", "desc": "Opacité globale"},
+            "prismWidth": {"type": "number|nil", "desc": "Largeur du prisme (1,945 par défaut)"},
+            "fromLocation": {"type": "table|nil", "desc": "Début limité par un résultat de snap"},
+            "toLocation": {"type": "table|nil", "desc": "Fin limitée par un résultat de snap"},
+            "drawOnTop": {"type": "boolean|nil", "desc": "Dessiner par-dessus la scène"}
+          },
+          "internal": true
+        },
+        "_drawDebugPartitionAllPrisms": {
+          "desc": "Dessine les prismes d'une partition.",
+          "params": {"partition": {"type": "table", "desc": "Partition"}, "clr": {"type": "table", "desc": "Couleur"}, "prismWidth": {"type": "number|nil", "desc": "Largeur"}, "drawOnTop": {"type": "boolean|nil", "desc": ""}},
+          "internal": true
+        },
+        "_drawDebugPoints": {
+          "desc": "Dessine des sphères aux points donnés.",
+          "params": {"points": {"type": "table[]", "desc": "Points"}, "clr": {"type": "table|nil", "desc": "Couleur"}, "alpha": {"type": "number|nil", "desc": ""}, "radius": {"type": "number|nil", "desc": "Rayon"}, "adjustH": {"type": "boolean|nil", "desc": ""}, "globalOpacity": {"type": "number|nil", "desc": ""}},
+          "internal": true
+        },
+        "_drawDebugPointsCyl": {
+          "desc": "Dessine des cylindres aux points donnés.",
+          "params": {"points": {"type": "table[]", "desc": "Points"}, "clr": {"type": "table|nil", "desc": ""}, "alpha": {"type": "number|nil", "desc": ""}, "radius": {"type": "number|nil", "desc": ""}, "adjustH": {"type": "boolean|nil", "desc": ""}, "globalOpacity": {"type": "number|nil", "desc": ""}, "h": {"type": "number|nil", "desc": "Hauteur"}},
+          "internal": true
+        },
+        "_drawDebugPartitionsAll": {
+          "desc": "Dessine toutes les partitions (utilisé pour Ctrl+clic de création d'un nouveau pacenote, selon le commentaire du code).",
+          "params": {"prismWidth": {"type": "number|nil", "desc": ""}, "drawOnTop": {"type": "boolean|nil", "desc": ""}},
+          "internal": true
+        },
+        "drawDebugPartitionsAllWindow": {
+          "desc": "Dessine seulement les partitions qui recoupent une fenêtre de distance.",
+          "params": {"window": {"type": "table", "desc": "Fenêtre (déduit du code)"}, "prismWidth": {"type": "number|nil", "desc": ""}, "drawOnTop": {"type": "boolean|nil", "desc": ""}}
+        },
+        "_clrSnaproad": {"desc": "Couleur du snaproad (cc.snaproads_clr_recce).", "internal": true},
+        "_drawDebugPartition": {
+          "desc": "Dessine la partition courante : avant, focus, après.",
+          "params": {"adjustH": {"type": "boolean|nil", "desc": ""}, "prismWidth": {"type": "number|nil", "desc": ""}, "drawOnTop": {"type": "boolean|nil", "desc": ""}},
+          "internal": true
+        },
+        "_drawDebugDefault": {
+          "desc": "Dessine tous les points du snaproad.",
+          "params": {"adjustH": {"type": "boolean|nil", "desc": ""}, "clrOverride": {"type": "table|nil", "desc": "Couleur imposée"}, "prismWidth": {"type": "number|nil", "desc": ""}, "drawOnTop": {"type": "boolean|nil", "desc": ""}},
+          "internal": true
+        },
+        "drawDebugSnaproad": {
+          "desc": "Dessin principal : la partition si active, sinon la partition de tous les pacenotes, sinon tous les points.",
+          "params": {"clrOverride": {"type": "table|nil", "desc": "Couleur imposée"}, "prismWidth": {"type": "number|nil", "desc": ""}, "drawOnTop": {"type": "boolean|nil", "desc": ""}}
+        },
+        "drawDebugRecceApp": {"desc": "Dessin pour la recce app : la partition si active, sinon tous les points (avec ajustement de hauteur)."},
+        "drawDebugCameraPlaying": {"desc": "Dessin pendant la lecture du chemin caméra (pacenote de la partition courante)."},
+        "_drawDebugCornerCalls": {"desc": "Dessine les annonces de virage de la partition.", "internal": true}
+      }
+    }
+  }
+}

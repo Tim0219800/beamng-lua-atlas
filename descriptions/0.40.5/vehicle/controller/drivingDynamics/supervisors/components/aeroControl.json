@@ -1,52 +1,226 @@
 {
   "path": "lua/vehicle/controller/drivingDynamics/supervisors/components/aeroControl.lua",
-  "module": "Composant de contrôle de lacet (type \"auxiliary\", defaultOrder 70) pour l'aérodynamique active. Il s'enregistre auprès du superviseur yawControl (ordre 30) ; quand le véhicule survire (angle de dérive de caisse de signe opposé au lacet et supérieur à un seuil), il écrit electrics.values.yawControlRequestReduceOversteer (1 ou 0) que les éléments aéro (ailerons, volets) du véhicule peuvent lire pour réduire le survirage. Ne sert pas à l'antipatinage ni à l'ABS.",
+  "module": "Yaw control component (type \"auxiliary\", defaultOrder 70) for active aerodynamics. It registers with the yawControl supervisor (order 30); when the vehicle oversteers (body slip angle of opposite sign to the yaw and above a threshold), it writes electrics.values.yawControlRequestReduceOversteer (1 or 0), which the vehicle's aero elements (wings, flaps) can read to reduce oversteer. Not used for traction control or ABS.",
   "notes": [
-    "Clé jbeam : slipAngleThreshold (défaut 0.2 rad) = seuil de dérive de caisse au-delà duquel l'aéro est demandée.",
-    "Paramètres modifiables (setParameters) : yawControl, yawControl.isEnabled, yawControl.slipAngleThreshold.",
-    "L'indicateur electrics.values.yawControlRequestReduceOversteer est lissé (temporalSmoothing 1 / 1000, montée lente de 1 s, retombée quasi immédiate) puis ramené à son signe (0 ou 1) : il reste à 1 pendant la montée du lisseur même après la fin de la demande.",
-    "actAsTractionControl est remplacée par nop à initSecondStage ; actAsABSControl est nop. componentOrderTractionControl et componentOrderABSControl valent 1000 (inutilisés).",
-    "Le composant ne s'enregistre auprès de yawControl que si ce superviseur existe (CMU.getSupervisor(\"yawControl\"))."
+    "jbeam key: slipAngleThreshold (default 0.2 rad) = body slip threshold beyond which aero is requested.",
+    "Modifiable parameters (setParameters): yawControl, yawControl.isEnabled, yawControl.slipAngleThreshold.",
+    "The electrics.values.yawControlRequestReduceOversteer flag is smoothed (temporalSmoothing 1 / 1000, slow 1 s rise, almost immediate fall) then reduced to its sign (0 or 1): it stays at 1 during the smoother's rise even after the request ends.",
+    "actAsTractionControl is replaced by nop at initSecondStage; actAsABSControl is nop. componentOrderTractionControl and componentOrderABSControl are 1000 (unused).",
+    "The component only registers with yawControl if that supervisor exists (CMU.getSupervisor(\"yawControl\"))."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution par défaut (70)."},
-    "componentOrderTractionControl": {"type": "number", "desc": "1000 : jamais utilisé comme antipatinage."},
-    "componentOrderYawControl": {"type": "number", "desc": "30 : ordre d'appel par yawControl."},
-    "componentOrderABSControl": {"type": "number", "desc": "1000 : jamais utilisé comme ABS."},
-    "isActive": {"type": "boolean", "desc": "Vrai après initSecondStage."},
-    "isActingAsTC": {"type": "boolean", "desc": "Toujours false."},
-    "isActingAsYC": {"type": "boolean", "desc": "Vrai quand la réduction de survirage est demandée."},
-    "isActingAsABS": {"type": "boolean", "desc": "Toujours false."},
-    "actAsABSControl": {"type": "function", "desc": "nop."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "Default execution order (70)."
+    },
+    "componentOrderTractionControl": {
+      "type": "number",
+      "desc": "1000: never used as traction control."
+    },
+    "componentOrderYawControl": {
+      "type": "number",
+      "desc": "30: call order by yawControl."
+    },
+    "componentOrderABSControl": {
+      "type": "number",
+      "desc": "1000: never used as ABS."
+    },
+    "isActive": {
+      "type": "boolean",
+      "desc": "True after initSecondStage."
+    },
+    "isActingAsTC": {
+      "type": "boolean",
+      "desc": "Always false."
+    },
+    "isActingAsYC": {
+      "type": "boolean",
+      "desc": "True when oversteer reduction is requested."
+    },
+    "isActingAsABS": {
+      "type": "boolean",
+      "desc": "Always false."
+    },
+    "actAsABSControl": {
+      "type": "function",
+      "desc": "nop."
+    }
   },
   "functions": {
-    "init": {"desc": "Remet à false les indicateurs d'action.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "initSecondStage": {"desc": "S'enregistre auprès de yawControl, lit slipAngleThreshold et passe isActive à true.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "initLastStage": {"desc": "Ne fait rien.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "reset": {"desc": "Remet à zéro les indicateurs et le lisseur.", "params": {}, "returns": [], "internal": true},
-    "updateGFX": {"desc": "Vide (version debug : envoie un paquet d'état au CMU).", "params": {"dt": {"type": "number", "desc": "Pas de temps graphique (s)."}}, "returns": [], "internal": true},
-    "actAsTractionControl": {"desc": "Appelé par tractionControl ; ne fait rien (renvoie false, remplacée par nop à l'init).", "params": {"wheelGroup": {"type": "table", "desc": "Groupe de roues."}, "dt": {"type": "number", "desc": "Pas de temps (s)."}}, "returns": [{"type": "boolean", "desc": "false."}], "internal": true},
-    "actAsYawControl": {
-      "desc": "Appelé par yawControl à chaque pas fixe : détecte le survirage via l'angle de dérive de caisse et met à jour electrics.values.yawControlRequestReduceOversteer.",
+    "init": {
+      "desc": "Resets the action flags to false.",
       "params": {
-        "measuredYaw": {"type": "number", "desc": "Lacet mesuré (rad/s)."},
-        "expectedYaw": {"type": "number", "desc": "Lacet attendu (rad/s), non utilisé."},
-        "yawDifference": {"type": "number", "desc": "Écart de lacet, non utilisé."},
-        "bodySlipAngle": {"type": "number", "desc": "Angle de dérive de caisse ajusté (rad)."},
-        "frontSlipAngle": {"type": "number", "desc": "Angle de dérive avant (rad), non utilisé."},
-        "rearSlipAngle": {"type": "number", "desc": "Angle de dérive arrière (rad), non utilisé."},
-        "dt": {"type": "number", "desc": "Pas de temps (s)."}
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "Vrai si la réduction de survirage est demandée."}],
+      "returns": [],
       "internal": true
     },
-    "setDebugMode": {"desc": "Active/désactive les paquets de debug.", "params": {"debugEnabled": {"type": "boolean", "desc": "Vrai pour activer."}}, "returns": []},
-    "registerCMU": {"desc": "Mémorise la référence au CMU.", "params": {"cmu": {"type": "table", "desc": "Contrôleur CMU."}}, "returns": [], "internal": true},
-    "shutdown": {"desc": "Désactive le composant.", "params": {}, "returns": []},
-    "setParameters": {"desc": "Applique des paramètres (voir notes) via CMU.applyParameter.", "params": {"parameters": {"type": "table<string, any>", "desc": "Ex. {[\"yawControl.slipAngleThreshold\"] = 0.3}."}}, "returns": []},
-    "setConfig": {"desc": "Remplace la configuration complète.", "params": {"configTable": {"type": "table", "desc": "Table {yawControl = {isEnabled, slipAngleThreshold}}."}}, "returns": []},
-    "getConfig": {"desc": "Renvoie une copie de la configuration.", "params": {}, "returns": [{"type": "table", "desc": "Copie de la configuration."}]},
-    "sendConfigData": {"desc": "Envoie la configuration au CMU (paquet de debug).", "params": {}, "returns": []}
+    "initSecondStage": {
+      "desc": "Registers with yawControl, reads slipAngleThreshold and sets isActive to true.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initLastStage": {
+      "desc": "Does nothing.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Resets the flags and the smoother.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Empty (debug version: sends a state packet to the CMU).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Graphics time step (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "actAsTractionControl": {
+      "desc": "Called by tractionControl; does nothing (returns false, replaced by nop at init).",
+      "params": {
+        "wheelGroup": {
+          "type": "table",
+          "desc": "Wheel group."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false."
+        }
+      ],
+      "internal": true
+    },
+    "actAsYawControl": {
+      "desc": "Called by yawControl at every fixed step: detects oversteer via the body slip angle and updates electrics.values.yawControlRequestReduceOversteer.",
+      "params": {
+        "measuredYaw": {
+          "type": "number",
+          "desc": "Measured yaw (rad/s)."
+        },
+        "expectedYaw": {
+          "type": "number",
+          "desc": "Expected yaw (rad/s), unused."
+        },
+        "yawDifference": {
+          "type": "number",
+          "desc": "Yaw error, unused."
+        },
+        "bodySlipAngle": {
+          "type": "number",
+          "desc": "Adjusted body slip angle (rad)."
+        },
+        "frontSlipAngle": {
+          "type": "number",
+          "desc": "Front slip angle (rad), unused."
+        },
+        "rearSlipAngle": {
+          "type": "number",
+          "desc": "Rear slip angle (rad), unused."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if oversteer reduction is requested."
+        }
+      ],
+      "internal": true
+    },
+    "setDebugMode": {
+      "desc": "Enables/disables debug packets.",
+      "params": {
+        "debugEnabled": {
+          "type": "boolean",
+          "desc": "True to enable."
+        }
+      },
+      "returns": []
+    },
+    "registerCMU": {
+      "desc": "Stores the reference to the CMU.",
+      "params": {
+        "cmu": {
+          "type": "table",
+          "desc": "CMU controller."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "shutdown": {
+      "desc": "Disables the component.",
+      "params": {},
+      "returns": []
+    },
+    "setParameters": {
+      "desc": "Applies parameters (see notes) via CMU.applyParameter.",
+      "params": {
+        "parameters": {
+          "type": "table<string, any>",
+          "desc": "E.g. {[\"yawControl.slipAngleThreshold\"] = 0.3}."
+        }
+      },
+      "returns": []
+    },
+    "setConfig": {
+      "desc": "Replaces the entire configuration.",
+      "params": {
+        "configTable": {
+          "type": "table",
+          "desc": "Table {yawControl = {isEnabled, slipAngleThreshold}}."
+        }
+      },
+      "returns": []
+    },
+    "getConfig": {
+      "desc": "Returns a copy of the configuration.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy of the configuration."
+        }
+      ]
+    },
+    "sendConfigData": {
+      "desc": "Sends the configuration to the CMU (debug packet).",
+      "params": {},
+      "returns": []
+    }
   }
 }

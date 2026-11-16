@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/compositors/styles/spanish/numbering/one_to_six.lua",
+  "module": "Numérotation espagnole partagée des virages de 1 à 6 : textes parlés (uno, dos, tres, cuatro, cinco, seis), plages de diamètre physique (m), visuels avec palette CSS BeamNG (red550, orange, yellow400, peach300, blue500, green500) et tranches de longueur d'arc (corta, standard sans texte, media larga, larga, extra larga). Utilisé par spanish/enthusiast.",
+  "notes": [
+    "Diamètres identiques à la version anglaise : [0,35[, [35,65[, [65,116[, [116,190[, [190,260[, [260,+inf[ m.",
+    "Les seuils de longueur diffèrent légèrement de l'anglais (ex. four standard 35 à 80, five standard 42 à 90, bornes à .5 pour one et three).",
+    "'standard' n'a pas de texte : rien n'est dit pour une longueur standard.",
+    "Le module renvoie directement la table {id, intensity, lengthsByIntensity}."
+  ],
+  "fields": {
+    "id": {"type": "string", "desc": "'one_to_six'."},
+    "intensity": {"type": "table[]", "desc": "Six entrées {id, text, diameter, visual} ordonnées de one à six."},
+    "lengthsByIntensity": {"type": "table<string, table[]>", "desc": "Pour chaque intensité, cinq tranches {id, text, arcMeters={min,max}} (short, standard, halfLong, long, extraLong)."}
+  }
+}

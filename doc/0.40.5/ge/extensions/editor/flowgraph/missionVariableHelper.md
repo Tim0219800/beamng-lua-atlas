@@ -1,51 +1,51 @@
 # `editor_flowgraph_missionVariableHelper`
 
-*Fichier : `lua/ge/extensions/editor/flowgraph/missionVariableHelper.lua` · VM : Game Engine (GE) · 171 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/flowgraph/missionVariableHelper.lua` · VM: Game Engine (GE) · 171 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_flowgraph_missionVariableHelper` : `extensions.load("editor_flowgraph_missionVariableHelper")`, puis la globale `editor_flowgraph_missionVariableHelper`
+**Access:** extension `editor_flowgraph_missionVariableHelper`: `extensions.load("editor_flowgraph_missionVariableHelper")`, then the global `editor_flowgraph_missionVariableHelper`
 
-Utilitaire partagé qui applique à un projet flowgraph les variables de la mission sélectionnée dans le Mission Editor (missionTypeData), et vérifie si un projet correspond à la mission. Utilisé par la fenêtre Task Manager et l'éditeur principal avant de lancer un projet.
+Shared utility that applies to a flowgraph project the variables of the mission selected in the Mission Editor (missionTypeData), and checks whether a project matches the mission. Used by the Task Manager window and the main editor before launching a project.
 
-## Exemple
+## Example
 
 ```lua
 local helper = require('/lua/ge/extensions/editor/flowgraph/missionVariableHelper')
-local ok = helper.applyMissionVariablesToManager(mgr, 'monOutil')
+local ok = helper.applyMissionVariablesToManager(mgr, 'myTool')
 ```
 
-## Remarques
+## Notes
 
-- Nécessite editor_missionEditor chargé et une mission sélectionnée (editor_missionEditor.getSelectedMissionId() est traité comme un objet mission avec id, missionType, missionTypeData, fgPath).
-- Seules les variables qui existent déjà dans le projet (mgr.variables:variableExists) sont modifiées, via changeBase.
-- Les variables playerID, playerId, vehID et vehId reçoivent l'ID du véhicule joueur (getPlayerVehicle(0):getID()) ; ce code n'a pas de garde si aucun véhicule joueur n'existe (erreur possible).
-- Si la mission n'a pas de missionTypeData, la fonction renvoie false avant l'injection des IDs de véhicule.
+- Requires editor_missionEditor to be loaded and a mission selected (editor_missionEditor.getSelectedMissionId() is treated as a mission object with id, missionType, missionTypeData, fgPath).
+- Only variables that already exist in the project (mgr.variables:variableExists) are modified, via changeBase.
+- The variables playerID, playerId, vehID and vehId receive the player vehicle ID (getPlayerVehicle(0):getID()); this code has no guard if no player vehicle exists (possible error).
+- If the mission has no missionTypeData, the function returns false before the vehicle ID injection.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_flowgraph_missionVariableHelper.applyMissionVariablesToManager(mgr, logTag)` | Copie les variables de missionTypeData de la mission sélectionnée vers le projet, puis injecte l'ID du véhicule joueur dans les variables de nom connu. Journalise le type de correspondance (avertissement si le projet n'appartient pas à la mission, mais applique quand même). | 77 |
-| `editor_flowgraph_missionVariableHelper.checkMissionMatch(mgr, selectedMission)` | Compare le chemin du fichier du projet (savedDir + savedFilename, .flow.json ajouté si absent) au chemin flowgraph de la mission (fgPath, ou celui de l'instance de mission), après normalisation (/, sans / initial, minuscules). | 17 |
+| `editor_flowgraph_missionVariableHelper.applyMissionVariablesToManager(mgr, logTag)` | Copies the missionTypeData variables of the selected mission to the project, then injects the player vehicle ID into the variables with known names. Logs the match type (warning if the project does not belong to the mission, but applies anyway). | 77 |
+| `editor_flowgraph_missionVariableHelper.checkMissionMatch(mgr, selectedMission)` | Compares the project's file path (savedDir + savedFilename, .flow.json appended if missing) to the mission's flowgraph path (fgPath, or that of the mission instance), after normalization (/, no leading /, lowercase). | 17 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_flowgraph_missionVariableHelper.applyMissionVariablesToManager(mgr, logTag)`
 
-Copie les variables de missionTypeData de la mission sélectionnée vers le projet, puis injecte l'ID du véhicule joueur dans les variables de nom connu. Journalise le type de correspondance (avertissement si le projet n'appartient pas à la mission, mais applique quand même).
+Copies the missionTypeData variables of the selected mission to the project, then injects the player vehicle ID into the variables with known names. Logs the match type (warning if the project does not belong to the mission, but applies anyway).
 
-- `mgr` (*table*) : Manager flowgraph cible.
-- `logTag` (*string|nil*) : Étiquette de log (défaut "missionVariableHelper").
-- **renvoie** : boolean true si au moins une variable a été appliquée ou injectée ; false sinon (éditeur de missions absent, aucune mission, aucune variable).
+- `mgr` (*table*) : Target flowgraph manager.
+- `logTag` (*string|nil*) : Log label (default "missionVariableHelper").
+- **returns**: boolean true if at least one variable was applied or injected; false otherwise (mission editor absent, no mission, no variable).
 
 #### `editor_flowgraph_missionVariableHelper.checkMissionMatch(mgr, selectedMission)`
 
-Compare le chemin du fichier du projet (savedDir + savedFilename, .flow.json ajouté si absent) au chemin flowgraph de la mission (fgPath, ou celui de l'instance de mission), après normalisation (/, sans / initial, minuscules).
+Compares the project's file path (savedDir + savedFilename, .flow.json appended if missing) to the mission's flowgraph path (fgPath, or that of the mission instance), after normalization (/, no leading /, lowercase).
 
-- `mgr` (*table|nil*) : Manager flowgraph.
-- `selectedMission` (*table|nil*) : Mission sélectionnée (id, fgPath, missionType).
-- **renvoie** : string "exact", "missionTypeMain" (flowgraph principal gameplay/missiontypes/<type>/<type>.flow.json), "sameMissionType", "differentMissionType" ou "noMission".
-- **renvoie** : string Chemin normalisé du projet.
-- **renvoie** : string Chemin normalisé de la mission.
+- `mgr` (*table|nil*) : Flowgraph manager.
+- `selectedMission` (*table|nil*) : Selected mission (id, fgPath, missionType).
+- **returns**: string "exact", "missionTypeMain" (main gameplay flowgraph gameplay/missiontypes/<type>/<type>.flow.json), "sameMissionType", "differentMissionType" or "noMission".
+- **returns**: string Normalized project path.
+- **returns**: string Normalized mission path.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/flowgraph/missionVariableHelper.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/flowgraph/missionVariableHelper.lua`.*

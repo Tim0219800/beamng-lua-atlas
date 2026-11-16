@@ -1,0 +1,108 @@
+{
+  "path": "lua/ge/extensions/gameplay/tutorial/markers.lua",
+  "module": "Gère les marqueurs visuels du tutoriel de carrière : marqueurs d'attention au-dessus d'un véhicule ou à une position, marqueurs de direction sur une place de parking, et décalques au sol des places de parking dont la couleur indique si le véhicule est bien garé (blanc : non garé, jaune : garé mais mal orienté, vert : garé et bien orienté). Fournit aussi les tests de stationnement utilisés pour valider un objectif de parking.",
+  "usage": "local id = gameplay_tutorial_markers.createMarkerAboveVehicle(getPlayerVehicle(0))\n-- plus tard\ngameplay_tutorial_markers.removeMarker(id)",
+  "notes": [
+    "Tolérance de parking 0,8 ; vitesse « à l'arrêt » < 0,1 m/s ; orientation correcte si produit scalaire avec l'avant de la place >= 0,7.",
+    "Les marqueurs grossissent avec la distance à la caméra : facteur 1 jusqu'à 30 m, jusqu'à 3,5 à 250 m.",
+    "Les décalques de parking ne sont dessinés que dans un rayon de 300 m (fondu entre 250 et 300 m) et utilisent la texture art/shapes/interface/parkDecalStripes.png.",
+    "Les marqueurs sont identifiés par un entier croissant renvoyé à la création.",
+    "update doit être appelé chaque frame par le code appelant (le fichier ne définit pas de hook onUpdate)."
+  ],
+  "functions": {
+    "setDefaultParkingSpotVehicleGetter": {
+      "desc": "Définit la fonction qui fournit le véhicule à tester pour la couleur des décalques de parking, quand aucun véhicule n'est associé à la place.",
+      "params": {"getter": {"type": "function|nil", "desc": "Fonction sans argument renvoyant un véhicule (objet) ou nil."}},
+      "returns": []
+    },
+    "createMarker": {
+      "desc": "Crée un marqueur d'attention (scenario/raceMarkers/attention) à une position, 1,75 m au-dessus pour la partie visible, et l'affiche.",
+      "params": {
+        "pos": {"type": "vec3", "desc": "Position du marqueur."},
+        "rot": {"type": "quat|nil", "desc": "Rotation facultative."},
+        "scale": {"type": "vec3|nil", "desc": "Échelle (1,1,1 par défaut)."}
+      },
+      "returns": [{"type": "integer|nil", "desc": "Id du marqueur, ou nil en cas d'échec."}]
+    },
+    "createMarkerAboveVehicle": {
+      "desc": "Crée un marqueur d'attention 2 m au-dessus d'un véhicule (échelle 1,5 par défaut).",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Objet véhicule (getPosition)."},
+        "scale": {"type": "vec3|nil", "desc": "Échelle du marqueur."}
+      },
+      "returns": [{"type": "integer|nil", "desc": "Id du marqueur, ou nil."}]
+    },
+    "createDirectionMarkerFromParkingSpot": {
+      "desc": "Crée un marqueur de direction posé 1,75 m au-dessus d'une place de parking, orienté selon la rotation de la place.",
+      "params": {
+        "parkingSpot": {"type": "table", "desc": "Place de parking avec pos, rot (et name)."},
+        "scale": {"type": "vec3|nil", "desc": "Échelle ; x sert de rayon (2 par défaut)."}
+      },
+      "returns": [{"type": "integer|nil", "desc": "Id du marqueur, ou nil si la place est invalide ou le chargement échoue."}]
+    },
+    "removeMarker": {
+      "desc": "Supprime un marqueur par son id.",
+      "params": {"markerId": {"type": "integer", "desc": "Id renvoyé à la création."}},
+      "returns": [{"type": "boolean", "desc": "true si supprimé, false s'il est introuvable."}]
+    },
+    "clearAllMarkers": {
+      "desc": "Supprime tous les marqueurs.",
+      "params": {},
+      "returns": []
+    },
+    "addParkingSpotDecal": {
+      "desc": "Enregistre un décalque au sol pour une place de parking (affiché par update).",
+      "params": {"parkingSpot": {"type": "table", "desc": "Place avec name, pos, rot, scl."}},
+      "returns": []
+    },
+    "removeParkingSpotDecal": {
+      "desc": "Retire le décalque d'une place et le véhicule qui lui était associé.",
+      "params": {"parkingSpotName": {"type": "string", "desc": "Nom de la place."}},
+      "returns": []
+    },
+    "setParkingSpotVehicle": {
+      "desc": "Associe un véhicule à une place pour déterminer la couleur de son décalque.",
+      "params": {
+        "parkingSpotName": {"type": "string", "desc": "Nom de la place."},
+        "vehicle": {"type": "table|nil", "desc": "Objet véhicule."}
+      },
+      "returns": []
+    },
+    "checkVehicleInParkingSpot": {
+      "desc": "Teste si un véhicule est garé dans une place, bien orienté et à l'arrêt.",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Objet véhicule."},
+        "parkingSpot": {"type": "table", "desc": "Place de parking (méthode checkParking, rot)."}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "isParked : garé dans la place (tolérance 0,8)."},
+        {"type": "boolean", "desc": "isFacingCorrect : orientation compatible (produit scalaire >= 0,7)."},
+        {"type": "boolean", "desc": "isStationary : vitesse < 0,1 m/s."}
+      ]
+    },
+    "checkParkGoalWithStationaryTime": {
+      "desc": "Valide un objectif de parking : garé, bien orienté et immobile pendant la durée demandée. L'état du chronomètre est conservé dans la table state.",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Objet véhicule."},
+        "parkingSpot": {"type": "table", "desc": "Place de parking."},
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "requiredSeconds": {"type": "number|nil", "desc": "Durée d'immobilité requise (1 s par défaut)."},
+        "state": {"type": "table|nil", "desc": "Table d'état {stationaryTimer, wasStationary}, à réutiliser d'un appel à l'autre."}
+      },
+      "returns": [{"type": "boolean", "desc": "true quand l'objectif est atteint."}]
+    },
+    "update": {
+      "desc": "Met à jour les marqueurs (échelle selon la distance à la caméra, update de chaque marqueur) puis calcule et envoie les décalques de parking proches à Engine.Render.DynamicDecalMgr.",
+      "params": {
+        "dt": {"type": "number", "desc": "Delta temps réel."},
+        "dtSim": {"type": "number", "desc": "Delta temps de simulation."}
+      },
+      "returns": []
+    },
+    "cleanup": {
+      "desc": "Supprime tous les marqueurs et vide décalques et véhicules associés.",
+      "params": {},
+      "returns": []
+    }
+  }
+}

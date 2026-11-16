@@ -2,44 +2,44 @@
 -- tim19Atlas stub generated from lua/common/libs/luamqtt/mqtt/luasocket.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Connecteur réseau par défaut de luamqtt, basé sur luasocket. Il manipule une table de connexion 'conn' (host, port, sock, timeout) créée par le client MQTT. Chaque fonction prend conn en premier argument ; les erreurs sont renvoyées sous la forme false, 'texte'.
---- Accès : globale `connector`
+--- Default luamqtt network connector, based on luasocket. It manipulates a connection table 'conn' (host, port, sock, timeout) created by the MQTT client. Each function takes conn as its first argument; errors are returned as false, 'text'.
+--- Access: global `connector`
 ---@class connector
 connector = {}
 
---- Ouvre une connexion TCP vers conn.host:conn.port via socket.connect et stocke le socket dans conn.sock.
----Source : lua/common/libs/luamqtt/mqtt/luasocket.lua:11
----@param conn table Table de connexion (host, port).
----@return boolean  true si connecté, false sinon.
----@return string|nil  Message d'erreur.
+--- Opens a TCP connection to conn.host:conn.port via socket.connect and stores the socket in conn.sock.
+---Source: lua/common/libs/luamqtt/mqtt/luasocket.lua:11
+---@param conn table Connection table (host, port).
+---@return boolean  true if connected, false otherwise.
+---@return string|nil  Error message.
 function connector.connect(conn) end
 
---- Reçoit exactement size octets (conn.sock:receive).
----Source : lua/common/libs/luamqtt/mqtt/luasocket.lua:33
----@param conn table Connexion.
----@param size integer Octets à lire.
----@return string|nil  Données.
----@return string|nil  Erreur, ex. 'timeout' ou 'closed'.
+--- Receives exactly size bytes (conn.sock:receive).
+---Source: lua/common/libs/luamqtt/mqtt/luasocket.lua:33
+---@param conn table Connection.
+---@param size integer Bytes to read.
+---@return string|nil  Data.
+---@return string|nil  Error, e.g. 'timeout' or 'closed'.
 function connector.receive(conn, size) end
 
---- Envoie des données (conn.sock:send).
----Source : lua/common/libs/luamqtt/mqtt/luasocket.lua:26
----@param conn table Connexion.
----@param data string Données.
----@param i integer|nil Début de sous-chaîne.
----@param j integer|nil Fin de sous-chaîne.
----@return integer|nil  Index du dernier octet envoyé.
----@return string|nil  Erreur.
+--- Sends data (conn.sock:send).
+---Source: lua/common/libs/luamqtt/mqtt/luasocket.lua:26
+---@param conn table Connection.
+---@param data string Data.
+---@param i integer|nil Substring start.
+---@param j integer|nil Substring end.
+---@return integer|nil  Index of the last byte sent.
+---@return string|nil  Error.
 function connector.send(conn, data, i, j) end
 
---- Mémorise conn.timeout et règle le délai total du socket (mode 't').
----Source : lua/common/libs/luamqtt/mqtt/luasocket.lua:44
----@param conn table Connexion.
----@param timeout number|nil Secondes.
+--- Stores conn.timeout and sets the socket's total timeout (mode 't').
+---Source: lua/common/libs/luamqtt/mqtt/luasocket.lua:44
+---@param conn table Connection.
+---@param timeout number|nil Seconds.
 function connector.settimeout(conn, timeout) end
 
---- Ferme la connexion par conn.sock:shutdown().
----Source : lua/common/libs/luamqtt/mqtt/luasocket.lua:21
----@param conn table Connexion.
+--- Closes the connection with conn.sock:shutdown().
+---Source: lua/common/libs/luamqtt/mqtt/luasocket.lua:21
+---@param conn table Connection.
 function connector.shutdown(conn) end
 

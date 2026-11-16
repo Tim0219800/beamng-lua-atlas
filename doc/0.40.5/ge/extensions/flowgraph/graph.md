@@ -1,72 +1,72 @@
 # `flowgraph_graph`
 
-*Fichier : `lua/ge/extensions/flowgraph/graph.lua` · VM : Game Engine (GE) · 1527 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/graph.lua` · VM: Game Engine (GE) · 1527 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/graph")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/graph")` (file under extensions/ but not a regular extension)
 
-Classe 'graph' du flowgraph : un graphe de nœuds et de liens appartenant à un manager (self.mgr). Un graphe a un type ('graph', 'macro' ou 'instance'), des nœuds, des liens, des pins, un variableStorage local et un parent éventuel (parentId). Il sait créer et supprimer nœuds et liens, vérifier la compatibilité des pins, sérialiser et désérialiser ses données et, pour un graphe racine, planifier l'ordre d'exécution des nœuds (plan). Le module renvoie un constructeur : require('/lua/ge/extensions/flowgraph/graph')(mgr, name, forceId).
+Flowgraph 'graph' class: a graph of nodes and links belonging to a manager (self.mgr). A graph has a type ('graph', 'macro' or 'instance'), nodes, links, pins, a local variableStorage and an optional parent (parentId). It can create and delete nodes and links, check pin compatibility, serialize and deserialize its data and, for a root graph, plan the node execution order (plan). The module returns a constructor: require('/lua/ge/extensions/flowgraph/graph')(mgr, name, forceId).
 
-## Remarques
+## Notes
 
-- Les graphes sont stockés à plat dans mgr.graphs ; la hiérarchie vient de parentId (getChildren parcourt mgr.graphs et trie par id).
-- plan() ne fait rien pour un macro ni pour un graphe qui a un parent : seule la racine planifie, en agrégeant les nœuds et liens de ses enfants (gatherNodesAndLinks) et en résolvant les nœuds macro/integrated et macro/io (liens virtuels).
-- plan() détermine les nœuds racines (triggerable, ou sans pin d'entrée local avec une sortie flow), propage les 'couleurs de flux' et génère le code d'exécution ordonné (appels _workDynamicRepeat / _workDynamicOnce).
-- createNode crée aussi un lien caché depuis la pin enterState du nœud events/onUpdate vers la pin reset des nœuds 'once' si la préférence flowgraph.general.autoConnectResetPins est active.
-- deleteLink et deleteNode ne retirent pas tout de suite l'objet de l'éditeur : ils notent l'id dans mgr.linksToRemove / mgr.nodesToRemove, traités par le manager.
-- Bug probable : getDeepChild utilise current.children, champ commenté dans init (self.children n'existe pas), donc getMacro avec des indices non vides échoue.
-- getSiblings contient un print(parent.name) de débogage.
-- pinsCompatible peut renvoyer nil (au lieu de false) quand aucun type ne correspond.
+- Graphs are stored flat in mgr.graphs; the hierarchy comes from parentId (getChildren iterates over mgr.graphs and sorts by id).
+- plan() does nothing for a macro or for a graph that has a parent: only the root plans, aggregating the nodes and links of its children (gatherNodesAndLinks) and resolving the macro/integrated and macro/io nodes (virtual links).
+- plan() determines the root nodes (triggerable, or with no local input pin and a flow output), propagates the "flow colors" and generates the ordered execution code (_workDynamicRepeat / _workDynamicOnce calls).
+- createNode also creates a hidden link from the enterState pin of the events/onUpdate node to the reset pin of 'once' nodes if the preference flowgraph.general.autoConnectResetPins is active.
+- deleteLink and deleteNode do not immediately remove the object from the editor: they record the id in mgr.linksToRemove / mgr.nodesToRemove, processed by the manager.
+- Probable bug: getDeepChild uses current.children, a field commented out in init (self.children does not exist), so getMacro with non-empty indices fails.
+- getSiblings contains a debug print(parent.name).
+- pinsCompatible can return nil (instead of false) when no type matches.
 
-## Classe `C`
+## Class `C`
 
-Objet graphe renvoyé par le constructeur.
+Graph object returned by the constructor.
 
-Le module renvoie un constructeur : `local obj = require("flowgraph_graph")(options)`.
+The module returns a constructor: `local obj = require("flowgraph_graph")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Appelé au démarrage du projet : notifie chaque nœud. | 1266 |
-| `C:_executionStopped()` | Appelé à l'arrêt du projet : notifie les nœuds et le variableStorage. | 1281 |
-| `C:_onClear()` | Notifie les nœuds et le variableStorage d'un clear. | 1274 |
-| `C:_onDeserialized(data)` | Reconstruit le graphe (nœuds triés par id, liens, variables) depuis les données sérialisées. | 1031 |
-| `C:_onSerialize()` | Sérialise le graphe (nom, nœuds, liens ordonnés, type, variables, vue, parentId…). Renvoie la table et le plus petit id utilisé. | 952 |
-| `C:_printStructure(depth)` | Affiche récursivement l'arbre des graphes avec indentation. | 1378 |
-| `C:canCreateLink(a, b, newLinkInfo)` | Vrai si un lien peut être créé entre a et b (directions opposées, nœuds différents, types compatibles, lien inexistant, noms égaux si matchName). | 1229 |
-| `C:clear()` | Supprime les graphes enfants, détruit les nœuds et vide nodes, links, pins. | 789 |
-| `C:clearVariableChangesChildren()` | Vide les changements de variables en attente de ce graphe et de ses descendants. | 77 |
-| `C:createLink(startPin, endPin, ...)` | Crée un lien entre une pin de sortie et une pin d'entrée (après avoir retiré la valeur codée en dur de la pin cible). | 913 |
-| `C:createNode(nodeType, forceId, ...)` | Crée un nœud d'un type donné (ex. 'events/onUpdate') à partir des modèles du manager. Journalise une erreur et renvoie nil si le type est inconnu. Marque les nœuds obsolètes dans leur nom. | 818 |
-| `C:deleteLink(link)` | Supprime un lien : met à jour pinIn / _mInFlow de la cible, notifie pins et nœuds, planifie la suppression côté éditeur. | 919 |
-| `C:deleteNode(node, ignoreIntegratedNodes)` | Supprime un nœud et ses liens (sauf nœuds undeleteable hors mode debug ; un nœud qui représente un graphe supprime ce graphe, sauf ignoreIntegratedNodes). | 874 |
-| `C:findNodeInChildren(id)` | Alias de findNodeRecursive. | 1347 |
-| `C:findNodeRecursive(id)` | Cherche un nœud par id dans ce graphe puis dans ses enfants. | 1350 |
-| `C:findPin(pinId)` | Renvoie la pin d'id donné. | 1249 |
-| `C:forceRecursiveNodeUpdatePosition()` | Force la mise à jour de la position éditeur de tous les nœuds (récursif). | 1365 |
-| `C:gatherNodesAndLinks(rNodes, rLinks, interInfo)` | Ajoute à rNodes et rLinks les nœuds et liens de ce graphe et de ses enfants, et renseigne interInfo pour les nœuds macro/integrated. | 127 |
-| `C:getChildPosition()` | Renvoie la suite d'indices de ce graphe parmi les enfants depuis la racine de l'instance. | 1315 |
-| `C:getChildren()` | Renvoie les graphes enfants (parentId == id), triés par id. | 65 |
-| `C:getChildrenWithStates()` | Enfants du graphe, plus (pour un graphe d'états) les graphes non-états représentés par ses nœuds. | 1427 |
-| `C:getDeepChild(indexes)` | Descend dans les enfants selon des indices (voir notes : utilise un champ children inexistant). | 1326 |
-| `C:getDirtyChildren(dirtyChildren)` | Collecte les ids de macros 'dirty' utilisés par des instances enfants. | 92 |
-| `C:getInstanceRoot()` | Renvoie la racine de l'instance (premier ancêtre avec macroID). | 1304 |
-| `C:getLocation(withIds)` | Renvoie le chemin du graphe depuis la racine (noms, ou ids si withIds), états parents compris. | 1472 |
-| `C:getMacro()` | Pour un graphe de type 'instance', renvoie le graphe macro d'origine correspondant. | 1290 |
-| `C:getParent()` | Renvoie le graphe parent. | 58 |
-| `C:getParentWithStates()` | Comme getParent, mais si le graphe n'a pas de parent, renvoie le graphe d'états dont un nœud représente ce graphe. | 1405 |
-| `C:getRecursiveHooksAndDependencies(hooks, deps)` | Collecte récursivement les nœuds (pour leurs hooks) et les dépendances d'extensions déclarées par les nœuds. | 1334 |
-| `C:getRootGraph()` | Remonte jusqu'au graphe racine. | 84 |
-| `C:getSiblings()` | Renvoie les graphes frères (même parent, états compris) ; imprime le nom du parent (voir notes). | 1441 |
-| `C:hasLink(pin)` | Vrai si une pin d'entrée de type autre que flow/state est déjà liée. | 1171 |
-| `C:init(mgr, name, forceId)` | Initialise le graphe : id, nom, type 'graph', tables vides, variableStorage, position et zoom de vue. | 18 |
-| `C:linkExists(startPin, endPin)` | Vrai s'il existe déjà un lien entre ces deux pins. | 1162 |
-| `C:moveNodeToGraph(node, newGraph)` | Déplace un nœud vers un autre graphe en supprimant ses liens. | 863 |
-| `C:pinsCompatible(sourcePin, targetPin)` | Teste la compatibilité des types de deux pins : 'any' accepte tout, les pins 'state' ne se lient qu'entre elles, les types table doivent avoir le même tableType ou 'generic'. | 1180 |
-| `C:plan()` | Planifie l'exécution (graphe racine non-macro) : dépendances, racines de flux, propagation des couleurs, ordre des nœuds, génération du code d'exécution. Appelé par le manager avant de lancer ou après modification. | 266 |
-| `C:printStructure()` | Affiche l'arbre des graphes (seulement depuis une racine). | 1390 |
-| `C:resolveInterHops(rLinks, interInfo)` | Suit les liens à travers les nœuds macro/integrated et macro/io pour créer des liens virtuels (virtualLink) entre le vrai émetteur et les vraies cibles. | 192 |
-| `C:setDirty(dirty, startFromRoot)` | Marque le graphe (et ses enfants de même type) comme modifié ; par défaut en partant de la racine. | 109 |
-| `C:toString()` | Texte 'nom (id / type)'. | 1374 |
-| `C:updateChildrenTypes(t, ignoreType)` | Applique un type à ce graphe et à ses descendants (s'arrête sur ignoreType). | 1256 |
+| `C:_executionStarted()` | Called when the project starts: notifies each node. | 1266 |
+| `C:_executionStopped()` | Called when the project stops: notifies the nodes and the variableStorage. | 1281 |
+| `C:_onClear()` | Notifies the nodes and the variableStorage of a clear. | 1274 |
+| `C:_onDeserialized(data)` | Rebuilds the graph (nodes sorted by id, links, variables) from the serialized data. | 1031 |
+| `C:_onSerialize()` | Serializes the graph (name, nodes, ordered links, type, variables, view, parentId...). Returns the table and the smallest id used. | 952 |
+| `C:_printStructure(depth)` | Recursively prints the tree of graphs with indentation. | 1378 |
+| `C:canCreateLink(a, b, newLinkInfo)` | True if a link can be created between a and b (opposite directions, different nodes, compatible types, no existing link, equal names if matchName). | 1229 |
+| `C:clear()` | Deletes the child graphs, destroys the nodes and clears nodes, links, pins. | 789 |
+| `C:clearVariableChangesChildren()` | Clears the pending variable changes of this graph and its descendants. | 77 |
+| `C:createLink(startPin, endPin, ...)` | Creates a link between an output pin and an input pin (after removing the hardcoded value from the target pin). | 913 |
+| `C:createNode(nodeType, forceId, ...)` | Creates a node of a given type (e.g. 'events/onUpdate') from the manager's templates. Logs an error and returns nil if the type is unknown. Marks obsolete nodes in their name. | 818 |
+| `C:deleteLink(link)` | Deletes a link: updates pinIn / _mInFlow of the target, notifies pins and nodes, schedules the deletion on the editor side. | 919 |
+| `C:deleteNode(node, ignoreIntegratedNodes)` | Deletes a node and its links (except undeleteable nodes outside debug mode; a node that represents a graph deletes that graph, unless ignoreIntegratedNodes). | 874 |
+| `C:findNodeInChildren(id)` | Alias of findNodeRecursive. | 1347 |
+| `C:findNodeRecursive(id)` | Looks for a node by id in this graph then in its children. | 1350 |
+| `C:findPin(pinId)` | Returns the pin with the given id. | 1249 |
+| `C:forceRecursiveNodeUpdatePosition()` | Forces the update of the editor position of all nodes (recursive). | 1365 |
+| `C:gatherNodesAndLinks(rNodes, rLinks, interInfo)` | Adds to rNodes and rLinks the nodes and links of this graph and its children, and fills interInfo for macro/integrated nodes. | 127 |
+| `C:getChildPosition()` | Returns the sequence of indices of this graph among the children from the root of the instance. | 1315 |
+| `C:getChildren()` | Returns the child graphs (parentId == id), sorted by id. | 65 |
+| `C:getChildrenWithStates()` | Children of the graph, plus (for a state graph) the non-state graphs represented by its nodes. | 1427 |
+| `C:getDeepChild(indexes)` | Descends into the children according to indices (see notes: uses a nonexistent children field). | 1326 |
+| `C:getDirtyChildren(dirtyChildren)` | Collects the ids of 'dirty' macros used by child instances. | 92 |
+| `C:getInstanceRoot()` | Returns the root of the instance (first ancestor with macroID). | 1304 |
+| `C:getLocation(withIds)` | Returns the path of the graph from the root (names, or ids if withIds), parent states included. | 1472 |
+| `C:getMacro()` | For a graph of type 'instance', returns the corresponding original macro graph. | 1290 |
+| `C:getParent()` | Returns the parent graph. | 58 |
+| `C:getParentWithStates()` | Like getParent, but if the graph has no parent, returns the state graph in which a node represents this graph. | 1405 |
+| `C:getRecursiveHooksAndDependencies(hooks, deps)` | Recursively collects the nodes (for their hooks) and the extension dependencies declared by the nodes. | 1334 |
+| `C:getRootGraph()` | Goes up to the root graph. | 84 |
+| `C:getSiblings()` | Returns the sibling graphs (same parent, states included); prints the parent's name (see notes). | 1441 |
+| `C:hasLink(pin)` | True if an input pin of a type other than flow/state is already linked. | 1171 |
+| `C:init(mgr, name, forceId)` | Initializes the graph: id, name, type 'graph', empty tables, variableStorage, view position and zoom. | 18 |
+| `C:linkExists(startPin, endPin)` | True if a link already exists between these two pins. | 1162 |
+| `C:moveNodeToGraph(node, newGraph)` | Moves a node to another graph, deleting its links. | 863 |
+| `C:pinsCompatible(sourcePin, targetPin)` | Tests the type compatibility of two pins: 'any' accepts everything, 'state' pins link only to each other, table types must have the same tableType or 'generic'. | 1180 |
+| `C:plan()` | Plans the execution (non-macro root graph): dependencies, flow roots, color propagation, node order, execution code generation. Called by the manager before starting or after a modification. | 266 |
+| `C:printStructure()` | Prints the tree of graphs (only from a root). | 1390 |
+| `C:resolveInterHops(rLinks, interInfo)` | Follows links through macro/integrated and macro/io nodes to create virtual links (virtualLink) between the real source and the real targets. | 192 |
+| `C:setDirty(dirty, startFromRoot)` | Marks the graph (and its children of the same type) as modified; by default starting from the root. | 109 |
+| `C:toString()` | Text 'name (id / type)'. | 1374 |
+| `C:updateChildrenTypes(t, ignoreType)` | Applies a type to this graph and its descendants (stops at ignoreType). | 1256 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/graph.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/graph.lua`.*

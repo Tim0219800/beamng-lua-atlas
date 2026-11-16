@@ -1,27 +1,27 @@
 # `flowgraph_nodes_vehicle_vehicleOOBB`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleOOBB.lua` · VM : Game Engine (GE) · 55 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleOOBB.lua` · VM: Game Engine (GE) · 55 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/vehicleOOBB")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/vehicleOOBB")` (file under extensions/ but not a regular extension)
 
-Nœud « Get Vehicle Bounds » (catégorie `repeat_instant`, tags telemetry/bounds/corner). Donne les coins de la boîte englobante orientée du véhicule (`getSpawnWorldOOBB`) : sorties `corner_FR`, `corner_FL`, `corner_BR`, `corner_BL`, `center` (vec3). Pin d'entrée : `vehId` (défaut 0, sinon joueur).
+"Get Vehicle Bounds" node (category `repeat_instant`, tags telemetry/bounds/corner). Gives the corners of the vehicle's oriented bounding box (`getSpawnWorldOOBB`): outputs `corner_FR`, `corner_FL`, `corner_BR`, `corner_BL`, `center` (vec3). Input pin: `vehId` (default 0, otherwise player).
 
-## Remarques
+## Notes
 
-- `center` est la moyenne des coins d'indices 0, 3, 4, 7 de l'OOBB.
+- `center` is the average of the OOBB corners at indices 0, 3, 4, 7.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr, ...)` | Constructeur vide. | 28 |
-| `C:work(args)` | Écrit les quatre coins et le centre sur les sorties. | 31 |
+| `C:init(mgr, ...)` | Empty constructor. | 28 |
+| `C:work(args)` | Writes the four corners and the center to the outputs. | 31 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleOOBB.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleOOBB.lua`.*

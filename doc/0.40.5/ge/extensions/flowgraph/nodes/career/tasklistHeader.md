@@ -1,20 +1,20 @@
 # `flowgraph_nodes_career_tasklistHeader`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/career/tasklistHeader.lua` · VM : Game Engine (GE) · 33 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/career/tasklistHeader.lua` · VM: Game Engine (GE) · 33 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/career/tasklistHeader")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/career/tasklistHeader")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Tasklist Header » (catégorie once_instant, tags goal/goals, couleur/icône ui). Définit l'en-tête et le sous-texte de la liste de tâches (app Tasklist) du tutoriel de carrière, via le guihook SetTasklistHeader. Entrées : label et sub (any, texte ou objet de traduction). Recopie le flux d'entrée sur la sortie.
+Flowgraph node "Tasklist Header" (category once_instant, tags goal/goals, ui color/icon). Sets the header and subtext of the task list (Tasklist app) of the career tutorial, via the SetTasklistHeader guihook. Inputs: label and sub (any, text or translation object). Copies the input flow to the output.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Envoie guihooks.trigger('SetTasklistHeader', {label, subtext}) puis copie flow vers la sortie. | 23 |
+| `C:workOnce()` | Sends guihooks.trigger('SetTasklistHeader', {label, subtext}) then copies flow to the output. | 23 |
 
-**Évènements UI (guihooks.trigger) :** `SetTasklistHeader`
+**UI events (guihooks.trigger):** `SetTasklistHeader`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/career/tasklistHeader.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/career/tasklistHeader.lua`.*

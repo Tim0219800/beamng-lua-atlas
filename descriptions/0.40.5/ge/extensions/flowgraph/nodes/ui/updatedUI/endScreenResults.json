@@ -1,19 +1,19 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenResults.lua",
-  "module": "Nœud « EndScreen Results » (repeat_instant, couleur ui). Ajoute à l'écran de fin le panneau de résultats de la mission : texte formaté de la tentative (change.formattedAttempt), sous-texte optionnel, puis éventuellement objectifs et notes. Entrées : flow, text (string ou table), change (table de l'agrégat de tentative), includeObjectives, includeRatings (bool). Sortie : flow (chainFlow).",
+  "module": "Node \"EndScreen Results\" (repeat_instant, color ui). Adds the mission results panel to the end screen: formatted text of the attempt (change.formattedAttempt), optional subtext, then optionally objectives and ratings. Inputs: flow, text (string or table), change (attempt aggregate table), includeObjectives, includeRatings (bool). Output: flow (chainFlow).",
   "notes": [
-    "Si includeObjectives ou includeRatings est vrai alors que change est nil, addObjectives/addRatings reçoivent nil."
+    "If includeObjectives or includeRatings is true while change is nil, addObjectives/addRatings receive nil."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Ne fait rien.",
+          "desc": "Does nothing.",
           "internal": true
         },
         "work": {
-          "desc": "Recopie flow. Ajoute un textPanel (en-tête « ui.missions.results.title » une seule fois) pour change.formattedAttempt et/ou pour text, puis appelle modules.ui:addObjectives / addRatings avec change si les options sont cochées.",
+          "desc": "Copies flow. Adds a textPanel (header \"ui.missions.results.title\" only once) for change.formattedAttempt and/or for text, then calls modules.ui:addObjectives / addRatings with change if the options are checked.",
           "internal": true
         }
       }

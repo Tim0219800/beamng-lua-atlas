@@ -1,52 +1,52 @@
 # `core_vehicle_inplaceEdit`
 
-*Fichier : `lua/ge/extensions/core/vehicle/inplaceEdit.lua` · VM : Game Engine (GE) · 424 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/vehicle/inplaceEdit.lua` · VM: Game Engine (GE) · 424 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_vehicle_inplaceEdit` : `extensions.load("core_vehicle_inplaceEdit")`, puis la globale `core_vehicle_inplaceEdit`
+**Access:** extension `core_vehicle_inplaceEdit`: `extensions.load("core_vehicle_inplaceEdit")`, then the global `core_vehicle_inplaceEdit`
 
-Extension GE `core_vehicle_inplaceEdit` : éditeur de pièces « en jeu » rudimentaire (« ingame vehicle editor ») : masque l'interface CEF, affiche en texte debug (debugDrawer:drawTextAdvanced) l'arbre de slots/pièces du véhicule du joueur 0 et permet de naviguer au clavier (haut/bas/gauche/droite), de choisir une pièce pour un slot et de respawn le véhicule avec la nouvelle config. Ouvert par core_vehicle_manager.toggleModifyKey. C'est un outil de développement, pas une API de gameplay.
+GE extension `core_vehicle_inplaceEdit`: rudimentary "in-game" parts editor ("ingame vehicle editor"): hides the CEF interface, displays as debug text (debugDrawer:drawTextAdvanced) the slot/part tree of player 0's vehicle and allows keyboard navigation (up/down/left/right), choosing a part for a slot and respawning the vehicle with the new config. Opened by core_vehicle_manager.toggleModifyKey. It is a development tool, not a gameplay API.
 
-## Remarques
+## Notes
 
-- Les touches arrivent par onInput(type, value) avec type parmi 'up', 'down', 'left', 'right', 'select' (e), 'back' (r) ; seules les valeurs égales à 1 (appui) sont traitées. La sortie se fait avec la touche g (via les actions d'entrée du mode).
-- Le code contient de nombreux dump{...} de debug et un commentaire « the crude UI » : l'outil est visiblement brut. L'aide affichée à l'écran est en anglais.
-- La fenêtre n'est active que si le véhicule du joueur 0 existe (onUpdate retourne sinon) ; une courte animation (0,1 s) précède et suit l'activation, et l'interface CEF est masquée pendant l'édition puis rétablie.
+- Keys arrive through onInput(type, value) with type among 'up', 'down', 'left', 'right', 'select' (e), 'back' (r); only values equal to 1 (press) are handled. Exit is done with the g key (through the mode's input actions).
+- The code contains many debug dump{...} calls and a comment "the crude UI": the tool is visibly rough. The help displayed on screen is in English.
+- The window is only active if player 0's vehicle exists (onUpdate returns otherwise); a short animation (0.1 s) precedes and follows activation, and the CEF interface is hidden during editing then restored.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_vehicle_inplaceEdit.onInput(type, value)` | Hook d'entrée : reçoit les touches de navigation de l'éditeur ('up', 'down', 'left', 'right', 'select', 'back') et déplace la sélection, descend/remonte dans les pièces ou applique le choix d'une pièce pour un slot (respawn du véhicule avec la config modifiée). *(interne)* *(hook)* | 361 |
-| `core_vehicle_inplaceEdit.onUpdate(dtReal, dtSim, dtRaw)` | Hook par frame : charge les données du véhicule au besoin, anime l'activation et, si l'éditeur est actif, dessine à l'écran les infos et la liste des slots/pièces. *(interne)* *(hook)* | 210 |
-| `core_vehicle_inplaceEdit.setShowWindow(val)` | Active ou désactive l'éditeur (change de mode : masque/affiche l'interface CEF). | 345 |
-| `core_vehicle_inplaceEdit.toggleShowWindow()` | Inverse l'état de l'éditeur et bascule le mode d'édition (toggleEditMode) du véhicule du joueur 0. | 350 |
+| `core_vehicle_inplaceEdit.onInput(type, value)` | Input hook: receives the editor's navigation keys ('up', 'down', 'left', 'right', 'select', 'back') and moves the selection, descends/ascends in the parts or applies the choice of a part for a slot (vehicle respawn with the modified config). *(internal)* *(hook)* | 361 |
+| `core_vehicle_inplaceEdit.onUpdate(dtReal, dtSim, dtRaw)` | Per-frame hook: loads the vehicle data if needed, animates activation and, if the editor is active, draws the info and the slot/part list on screen. *(internal)* *(hook)* | 210 |
+| `core_vehicle_inplaceEdit.setShowWindow(val)` | Enables or disables the editor (changes mode: hides/shows the CEF interface). | 345 |
+| `core_vehicle_inplaceEdit.toggleShowWindow()` | Toggles the editor state and switches the edit mode (toggleEditMode) of player 0's vehicle. | 350 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_vehicle_inplaceEdit.onInput(type, value)`
 
-Hook d'entrée : reçoit les touches de navigation de l'éditeur ('up', 'down', 'left', 'right', 'select', 'back') et déplace la sélection, descend/remonte dans les pièces ou applique le choix d'une pièce pour un slot (respawn du véhicule avec la config modifiée).
+Input hook: receives the editor's navigation keys ('up', 'down', 'left', 'right', 'select', 'back') and moves the selection, descends/ascends in the parts or applies the choice of a part for a slot (vehicle respawn with the modified config).
 
-- `type` (*string*) : nom de l'action
-- `value` (*number*) : 1 = appui ; les autres valeurs sont ignorées
+- `type` (*string*) : action name
+- `value` (*number*) : 1 = press; other values are ignored
 
 #### `core_vehicle_inplaceEdit.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook par frame : charge les données du véhicule au besoin, anime l'activation et, si l'éditeur est actif, dessine à l'écran les infos et la liste des slots/pièces.
+Per-frame hook: loads the vehicle data if needed, animates activation and, if the editor is active, draws the info and the slot/part list on screen.
 
-- `dtReal` (*number*) : temps réel (s)
-- `dtSim` (*number*) : temps de simulation (s)
-- `dtRaw` (*number*) : temps brut (s)
+- `dtReal` (*number*) : real time (s)
+- `dtSim` (*number*) : simulation time (s)
+- `dtRaw` (*number*) : raw time (s)
 
 #### `core_vehicle_inplaceEdit.setShowWindow(val)`
 
-Active ou désactive l'éditeur (change de mode : masque/affiche l'interface CEF).
+Enables or disables the editor (changes mode: hides/shows the CEF interface).
 
-- `val` (*boolean*) : true pour afficher
+- `val` (*boolean*) : true to show
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/vehicle/inplaceEdit.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/vehicle/inplaceEdit.lua`.*

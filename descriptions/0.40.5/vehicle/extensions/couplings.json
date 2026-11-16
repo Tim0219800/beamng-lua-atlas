@@ -1,21 +1,97 @@
 {
   "path": "lua/vehicle/extensions/couplings.lua",
-  "module": "Extension de gestion des attelages de type sellette (fifth wheel). Elle réagit aux événements de beamstate (activation/désactivation de l'attelage automatique, détachement) en relayant aux contrôleurs 'couplings/fifthwheel' et répond aux questions de beamstate sur l'état d'attelage.",
-  "usage": "-- appelé par beamstate, pas par le moddeur directement\nextensions.couplings.isCouplerAttached()",
+  "module": "Extension managing fifth wheel type hitches. It reacts to beamstate events (enabling/disabling of automatic coupling, detaching) by relaying them to the 'couplings/fifthwheel' controllers and answers beamstate's questions about the coupling state.",
+  "usage": "-- called by beamstate, not by the modder directly\nextensions.couplings.isCouplerAttached()",
   "notes": [
-    "isAutoCouplingActive renvoie toujours false ; isCouplerAttached renvoie true si au moins une sellette est attachée, sinon nil (pas false).",
-    "couplingAttached appelle obj:stopLatching() puis beamstate.disableAutoCoupling() : l'attelage automatique est coupé dès qu'un attelage est réalisé.",
-    "couplingDetached et onReset sont vides."
+    "isAutoCouplingActive always returns false; isCouplerAttached returns true if at least one fifth wheel is attached, otherwise nil (not false).",
+    "couplingAttached calls obj:stopLatching() then beamstate.disableAutoCoupling(): automatic coupling is cut as soon as a coupling is made.",
+    "couplingDetached and onReset are empty."
   ],
   "fields": {},
   "functions": {
-    "onReset": {"desc": "Hook de reset du véhicule ; vide.", "params": {}, "returns": [], "internal": true},
-    "couplingAttached": {"desc": "Appelé par le moteur/beamstate quand un coupleur s'attache : arrête le verrouillage automatique et désactive l'attelage auto.", "params": {"nodeId": {"type": "integer", "desc": "Nœud du coupleur."}, "obj2id": {"type": "integer", "desc": "Identifiant de l'autre véhicule."}, "obj2nodeId": {"type": "integer", "desc": "Nœud du coupleur de l'autre véhicule."}}, "returns": [], "internal": true},
-    "couplingDetached": {"desc": "Appelé quand un coupleur se détache ; ne fait rien.", "params": {"nodeId": {"type": "integer", "desc": "Nœud du coupleur."}, "obj2id": {"type": "integer", "desc": "Autre véhicule."}, "obj2nodeId": {"type": "integer", "desc": "Nœud de l'autre véhicule."}}, "returns": [], "internal": true},
-    "onBeamstateActivateAutoCoupling": {"desc": "Appelé par beamstate à l'activation de l'attelage automatique : affiche l'indicateur de chaque sellette.", "params": {}, "returns": [], "internal": true},
-    "onBeamstateDisableAutoLatching": {"desc": "Appelé par beamstate à la désactivation de l'attelage automatique : masque l'indicateur de chaque sellette.", "params": {}, "returns": [], "internal": true},
-    "onBeamstateDetachCouplers": {"desc": "Appelé par beamstate pour détacher les coupleurs : détache chaque sellette.", "params": {}, "returns": [], "internal": true},
-    "isAutoCouplingActive": {"desc": "Indique si l'attelage automatique est actif pour cette extension (toujours false).", "params": {}, "returns": [{"type": "boolean", "desc": "false."}], "internal": true},
-    "isCouplerAttached": {"desc": "Indique si au moins une sellette est attachée.", "params": {}, "returns": [{"type": "boolean|nil", "desc": "true si attachée, sinon nil."}], "internal": true}
+    "onReset": {
+      "desc": "Vehicle reset hook; empty.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "couplingAttached": {
+      "desc": "Called by the engine/beamstate when a coupler attaches: stops the automatic latching and disables auto coupling.",
+      "params": {
+        "nodeId": {
+          "type": "integer",
+          "desc": "Coupler node."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Identifier of the other vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "Coupler node of the other vehicle."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "couplingDetached": {
+      "desc": "Called when a coupler detaches; does nothing.",
+      "params": {
+        "nodeId": {
+          "type": "integer",
+          "desc": "Coupler node."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Other vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "Node of the other vehicle."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onBeamstateActivateAutoCoupling": {
+      "desc": "Called by beamstate on activation of automatic coupling: displays the indicator of each fifth wheel.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onBeamstateDisableAutoLatching": {
+      "desc": "Called by beamstate on deactivation of automatic coupling: hides the indicator of each fifth wheel.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onBeamstateDetachCouplers": {
+      "desc": "Called by beamstate to detach the couplers: detaches each fifth wheel.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "isAutoCouplingActive": {
+      "desc": "Indicates whether automatic coupling is active for this extension (always false).",
+      "params": {},
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false."
+        }
+      ],
+      "internal": true
+    },
+    "isCouplerAttached": {
+      "desc": "Indicates whether at least one fifth wheel is attached.",
+      "params": {},
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true if attached, otherwise nil."
+        }
+      ],
+      "internal": true
+    }
   }
 }

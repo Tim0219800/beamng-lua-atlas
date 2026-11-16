@@ -2,479 +2,479 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/api/gui.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Coeur de l'interface ImGui de l'éditeur de niveau : gestion des fenêtres d'outils (enregistrement, affichage/masquage, groupes, modales, sauvegarde/chargement de l'état du layout), boucle de présentation (`presentGui` : dockspace principal puis hooks onEditorGui*), atlas d'icônes (`editor.icons`) et un grand nombre d'enveloppes `editor.ui*` autour des widgets ImGui (drag, input, slider, couleur) qui renseignent en plus un BoolPtr `editEnded` quand l'édition se termine. Un moddeur d'outil d'éditeur s'en sert pour déclarer ses fenêtres (`editor.registerWindow`, `editor.beginWindow`/`endWindow`) et dessiner ses widgets. `initialize` installe tout sur l'objet `editor`.
---- Accès : extension `editor_api_gui` : `extensions.load("editor_api_gui")`, puis la globale `editor_api_gui`
+--- Core of the level editor's ImGui interface: management of tool windows (registration, show/hide, groups, modals, saving/loading the layout state), the presentation loop (`presentGui`: main dockspace then onEditorGui* hooks), the icon atlas (`editor.icons`) and a large number of `editor.ui*` wrappers around ImGui widgets (drag, input, slider, color) that additionally fill an `editEnded` BoolPtr when editing ends. An editor tool modder uses it to declare their windows (`editor.registerWindow`, `editor.beginWindow`/`endWindow`) and draw their widgets. `initialize` installs everything on the `editor` object.
+--- Access: extension `editor_api_gui`: `extensions.load("editor_api_gui")`, then the global `editor_api_gui`
 ---@class editor_api_gui
 editor_api_gui = {}
 
---- Mémorise l'éditeur, initialise l'état et installe toutes les fonctions ci-dessous sur `editor`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/gui.lua:2206
----@param editorInstance table objet `editor`
+--- Remembers the editor, initializes the state and installs all the functions below on `editor`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/gui.lua:2206
+---@param editorInstance table `editor` object
 function editor_api_gui.initialize(editorInstance) end
 
---- Présente toute l'interface de l'éditeur : resynchronise editor.keyModifiers depuis ImGui, crée le dockspace principal, puis émet onEditorGuiMainMenu, onEditorGuiToolBar, onEditorGui(dtReal, dtSim, dtRaw), onEditorGuiStatusBar et vérifie le redimensionnement. Appelé chaque frame par l'éditeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/gui.lua:466
----@param dtReal number delta temps réel (s)
----@param dtSim number delta temps simulation (s)
----@param dtRaw number delta temps brut (s)
+--- Presents the whole editor interface: resyncs editor.keyModifiers from ImGui, creates the main dockspace, then emits onEditorGuiMainMenu, onEditorGuiToolBar, onEditorGui(dtReal, dtSim, dtRaw), onEditorGuiStatusBar and checks for resizing. Called every frame by the editor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/gui.lua:466
+---@param dtReal number real time delta (s)
+---@param dtSim number simulation time delta (s)
+---@param dtRaw number raw time delta (s)
 function editor_api_gui.presentGui(dtReal, dtSim, dtRaw) end
 
---- Fonctions ajoutées à `editor` par initialize.
+--- Functions added to `editor` by initialize.
 ---@class editor_api_gui_editor
 local editor_api_gui_editor = {}
 
---- Vrai si le dernier item est survolé et que le bouton vient d'être cliqué.
----Source : lua/ge/extensions/editor/api/gui.lua:985
----@param int_mouse_button integer|nil bouton (0 par défaut)
----@return boolean  résultat
+--- True if the last item is hovered and the button was just clicked.
+---Source: lua/ge/extensions/editor/api/gui.lua:985
+---@param int_mouse_button integer|nil button (0 by default)
+---@return boolean  result
 function editor_api_gui_editor.IsItemClicked(int_mouse_button) end
 
---- Vrai si le dernier item est survolé et double-cliqué.
----Source : lua/ge/extensions/editor/api/gui.lua:980
----@param int_mouse_button integer|nil bouton (0 par défaut)
----@return boolean  résultat
+--- True if the last item is hovered and double-clicked.
+---Source: lua/ge/extensions/editor/api/gui.lua:980
+---@param int_mouse_button integer|nil button (0 by default)
+---@return boolean  result
 function editor_api_gui_editor.IsItemDoubleClicked(int_mouse_button) end
 
---- Comme beginWindow pour une fenêtre modale : ouvre le popup si la fenêtre est marquée visible.
----Source : lua/ge/extensions/editor/api/gui.lua:1243
----@param windowName string nom enregistré
----@param title string titre
+--- Like beginWindow for a modal window: opens the popup if the window is marked visible.
+---Source: lua/ge/extensions/editor/api/gui.lua:1243
+---@param windowName string registered name
+---@param title string title
 ---@param flags integer|nil flags
----@param noClose boolean|nil sans croix
----@return boolean  true si le contenu doit être dessiné
+---@param noClose boolean|nil no cross
+---@return boolean  true if the content must be drawn
 function editor_api_gui_editor.beginModalWindow(windowName, title, flags, noClose) end
 
---- Équivalent de imgui.Begin pour une fenêtre enregistrée (titre##nom). Renvoie false si non enregistrée (avertissement) ou invisible. Toujours à associer à editor.endWindow().
----Source : lua/ge/extensions/editor/api/gui.lua:1195
----@param windowName string nom enregistré
----@param title string titre affiché
----@param flags integer|nil flags de fenêtre ImGui
----@param noClose boolean|nil true = pas de bouton de fermeture
----@return boolean  true si le contenu doit être dessiné
+--- Equivalent of imgui.Begin for a registered window (title##name). Returns false if not registered (warning) or invisible. Always to be paired with editor.endWindow().
+---Source: lua/ge/extensions/editor/api/gui.lua:1195
+---@param windowName string registered name
+---@param title string displayed title
+---@param flags integer|nil ImGui window flags
+---@param noClose boolean|nil true = no close button
+---@return boolean  true if the content must be drawn
 function editor_api_gui_editor.beginWindow(windowName, title, flags, noClose) end
 
---- Émet onEditorToolWindowShow pour chaque fenêtre visible.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/gui.lua:1376
+--- Emits onEditorToolWindowShow for each visible window.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/gui.lua:1376
 function editor_api_gui_editor.callShowWindowHookForVisibleWindows() end
 
---- Détecte le gain/la perte de focus de la fenêtre ImGui courante et émet onEditorToolWindowGotFocus / onEditorToolWindowLostFocus.
----Source : lua/ge/extensions/editor/api/gui.lua:1178
----@param windowName string nom
+--- Detects the gain/loss of focus of the current ImGui window and emits onEditorToolWindowGotFocus / onEditorToolWindowLostFocus.
+---Source: lua/ge/extensions/editor/api/gui.lua:1178
+---@param windowName string name
 function editor_api_gui_editor.checkWindowFocus(windowName) end
 
---- Détecte un changement de taille de la fenêtre principale et émet le hook onWindowResized(ImVec2 DisplaySize).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/gui.lua:426
+--- Detects a change in the main window size and emits the onWindowResized(ImVec2 DisplaySize) hook.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/gui.lua:426
 function editor_api_gui_editor.checkWindowResize() end
 
---- Ferme le dialogue modal générique et désenregistre sa fenêtre.
----Source : lua/ge/extensions/editor/api/gui.lua:1408
+--- Closes the generic modal dialog and unregisters its window.
+---Source: lua/ge/extensions/editor/api/gui.lua:1408
 function editor_api_gui_editor.closeModalDialog() end
 
---- Cache la fenêtre modale et ferme le popup ImGui courant.
----Source : lua/ge/extensions/editor/api/gui.lua:1274
----@param windowName string nom
+--- Hides the modal window and closes the current ImGui popup.
+---Source: lua/ge/extensions/editor/api/gui.lua:1274
+---@param windowName string name
 function editor_api_gui_editor.closeModalWindow(windowName) end
 
---- Charge l'atlas d'icônes de l'éditeur (JSON + image) et remplit editor.icons, editor.atlasWidth, editor.atlasHeight. Logue les icônes en double.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/gui.lua:70
+--- Loads the editor icon atlas (JSON + image) and fills editor.icons, editor.atlasWidth, editor.atlasHeight. Logs duplicate icons.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/gui.lua:70
 function editor_api_gui_editor.createIconAtlas() end
 
---- Retire le focus aux fenêtres marquées focalisées (émet onEditorToolWindowLostFocus).
----Source : lua/ge/extensions/editor/api/gui.lua:1384
+--- Removes focus from the windows marked as focused (emits onEditorToolWindowLostFocus).
+---Source: lua/ge/extensions/editor/api/gui.lua:1384
 function editor_api_gui_editor.defocusFocusedWindow() end
 
---- Dessine un pinceau (type 'ellipse' ou boîte) au sol autour de pos, collé au terrain (terrainBlock) ou à la géométrie statique par raycast.
----Source : lua/ge/extensions/editor/api/gui.lua:299
----@param brushType string 'ellipse' ou autre (boîte)
----@param pos vec3 centre (rien n'est fait si nil)
----@param radius number rayon (rien si nil)
+--- Draws a brush ('ellipse' type or box) on the ground around pos, stuck to the terrain (terrainBlock) or to static geometry by raycast.
+---Source: lua/ge/extensions/editor/api/gui.lua:299
+---@param brushType string 'ellipse' or other (box)
+---@param pos vec3 center (nothing is done if nil)
+---@param radius number radius (nothing if nil)
 ---@param numberOfSegments integer|nil segments (128)
----@param color ColorF|nil couleur (blanc)
----@param terrainBlock userdata|nil TerrainBlock pour la hauteur
----@param brushRatio number|nil rapport d'aspect (1)
----@param brushRotation number|nil rotation en degrés (0)
----@param onlyTerrain boolean|nil suivre uniquement le terrain
+---@param color ColorF|nil color (white)
+---@param terrainBlock userdata|nil TerrainBlock for the height
+---@param brushRatio number|nil aspect ratio (1)
+---@param brushRotation number|nil rotation in degrees (0)
+---@param onlyTerrain boolean|nil follow only the terrain
 function editor_api_gui_editor.drawBrush(brushType, pos, radius, numberOfSegments, color, terrainBlock, brushRatio, brushRotation, onlyTerrain) end
 
---- Ferme une fenêtre modale (imgui.EndPopup si elle était affichée).
----Source : lua/ge/extensions/editor/api/gui.lua:1262
+--- Closes a modal window (imgui.EndPopup if it was displayed).
+---Source: lua/ge/extensions/editor/api/gui.lua:1262
 function editor_api_gui_editor.endModalWindow() end
 
---- Ferme la fenêtre ouverte par beginWindow (appelle imgui.End si Begin a été appelé). À appeler même si beginWindow a renvoyé false.
----Source : lua/ge/extensions/editor/api/gui.lua:1252
+--- Closes the window opened by beginWindow (calls imgui.End if Begin was called). To be called even if beginWindow returned false.
+---Source: lua/ge/extensions/editor/api/gui.lua:1252
 function editor_api_gui_editor.endWindow() end
 
---- Renvoie la taille par défaut des boutons d'icône.
----Source : lua/ge/extensions/editor/api/gui.lua:61
----@return ImVec2  taille
+--- Returns the default size of icon buttons.
+---Source: lua/ge/extensions/editor/api/gui.lua:61
+---@return ImVec2  size
 function editor_api_gui_editor.getDefaultIconButtonSize() end
 
---- Liste les polices ImGui disponibles.
----Source : lua/ge/extensions/editor/api/gui.lua:991
----@return table[]  liste de {name}
+--- Lists the available ImGui fonts.
+---Source: lua/ge/extensions/editor/api/gui.lua:991
+---@return table[]  list of {name}
 function editor_api_gui_editor.getFontList() end
 
---- Renvoie la coordonnée X du bord droit de la vue 3D à la hauteur écran donnée, en tenant compte des fenêtres ancrées à droite.
----Source : lua/ge/extensions/editor/api/gui.lua:446
----@param screenY number ordonnée écran
----@return number  abscisse du bord droit
+--- Returns the X coordinate of the right edge of the 3D view at the given screen height, taking right-docked windows into account.
+---Source: lua/ge/extensions/editor/api/gui.lua:446
+---@param screenY number screen y coordinate
+---@return number  x coordinate of the right edge
 function editor_api_gui_editor.getSceneViewportRightEdge(screenY) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : bool -> pointeur bool ; nil -> bool lu.
----Source : lua/ge/extensions/editor/api/gui.lua:1795
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: bool -> bool pointer; nil -> bool read.
+---Source: lua/ge/extensions/editor/api/gui.lua:1795
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempBool_BoolBool(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string/bool -> pointeur bool ("1" = true) ; nil -> "1" ou "0".
----Source : lua/ge/extensions/editor/api/gui.lua:1811
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string/bool -> bool pointer ("1" = true); nil -> "1" or "0".
+---Source: lua/ge/extensions/editor/api/gui.lua:1811
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempBool_StringString(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur char ; nil -> string.
----Source : lua/ge/extensions/editor/api/gui.lua:2071
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> char pointer; nil -> string.
+---Source: lua/ge/extensions/editor/api/gui.lua:2071
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempCharPtr(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur/tableau de float[2] ; nil -> string.
----Source : lua/ge/extensions/editor/api/gui.lua:1912
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> float[2] pointer/array; nil -> string.
+---Source: lua/ge/extensions/editor/api/gui.lua:1912
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempFloatArray2_StringString(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> pointeur/tableau de float[2] ; nil -> table.
----Source : lua/ge/extensions/editor/api/gui.lua:1933
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> float[2] pointer/array; nil -> table.
+---Source: lua/ge/extensions/editor/api/gui.lua:1933
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempFloatArray2_TableTable(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> pointeur/tableau de float[3] ; nil -> table.
----Source : lua/ge/extensions/editor/api/gui.lua:1951
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> float[3] pointer/array; nil -> table.
+---Source: lua/ge/extensions/editor/api/gui.lua:1951
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempFloatArray3_TableTable(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : vec3 -> pointeur/tableau de float[3] ; nil -> vec3.
----Source : lua/ge/extensions/editor/api/gui.lua:1969
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: vec3 -> float[3] pointer/array; nil -> vec3.
+---Source: lua/ge/extensions/editor/api/gui.lua:1969
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempFloatArray3_Vec3Vec3(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur/tableau de float[4] ; nil -> string.
----Source : lua/ge/extensions/editor/api/gui.lua:2007
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> float[4] pointer/array; nil -> string.
+---Source: lua/ge/extensions/editor/api/gui.lua:2007
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempFloatArray4_StringString(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> pointeur/tableau de float[4] ; nil -> table.
----Source : lua/ge/extensions/editor/api/gui.lua:1985
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> float[4] pointer/array; nil -> table.
+---Source: lua/ge/extensions/editor/api/gui.lua:1985
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempFloatArray4_TableTable(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : number -> pointeur float ; nil -> number.
----Source : lua/ge/extensions/editor/api/gui.lua:1884
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: number -> float pointer; nil -> number.
+---Source: lua/ge/extensions/editor/api/gui.lua:1884
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempFloat_NumberNumber(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur float ; nil -> number.
----Source : lua/ge/extensions/editor/api/gui.lua:1895
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> float pointer; nil -> number.
+---Source: lua/ge/extensions/editor/api/gui.lua:1895
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempFloat_StringString(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> ImVec4 ; nil -> ImVec4.
----Source : lua/ge/extensions/editor/api/gui.lua:2093
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> ImVec4; nil -> ImVec4.
+---Source: lua/ge/extensions/editor/api/gui.lua:2093
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempImVec4_TableImVec4(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> pointeur/tableau de float (ImVec4) ; nil -> table.
----Source : lua/ge/extensions/editor/api/gui.lua:2049
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> float pointer/array (ImVec4); nil -> table.
+---Source: lua/ge/extensions/editor/api/gui.lua:2049
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempImVec4_TableTable(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur/tableau d'int[2] ; nil -> string.
----Source : lua/ge/extensions/editor/api/gui.lua:1863
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> int[2] pointer/array; nil -> string.
+---Source: lua/ge/extensions/editor/api/gui.lua:1863
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempIntArray2_StringString(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : number -> pointeur int ; nil -> number.
----Source : lua/ge/extensions/editor/api/gui.lua:1835
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: number -> int pointer; nil -> number.
+---Source: lua/ge/extensions/editor/api/gui.lua:1835
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempInt_NumberNumber(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur int ; nil -> number.
----Source : lua/ge/extensions/editor/api/gui.lua:1846
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> int pointer; nil -> number.
+---Source: lua/ge/extensions/editor/api/gui.lua:1846
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempInt_StringString(value) end
 
---- Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : chemin string -> objet texture ; nil -> objet texture courant.
----Source : lua/ge/extensions/editor/api/gui.lua:2082
----@param value any valeur à convertir, ou nil pour relire la valeur du tampon
+--- Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string path -> texture object; nil -> current texture object.
+---Source: lua/ge/extensions/editor/api/gui.lua:2082
+---@param value any value to convert, or nil to reread the buffer's value
 function editor_api_gui_editor.getTempTextureObj(value) end
 
---- Renvoie le imgui.BoolPtr de visibilité de la fenêtre (utilisé par imgui.Begin), ou nil.
----Source : lua/ge/extensions/editor/api/gui.lua:1084
----@param windowName string nom
----@return imgui.BoolPtr|nil  pointeur
+--- Returns the window's visibility imgui.BoolPtr (used by imgui.Begin), or nil.
+---Source: lua/ge/extensions/editor/api/gui.lua:1084
+---@param windowName string name
+---@return imgui.BoolPtr|nil  pointer
 function editor_api_gui_editor.getWindowVisibleBoolPtr(windowName) end
 
---- Cache toutes les fenêtres enregistrées visibles (émet les hooks).
----Source : lua/ge/extensions/editor/api/gui.lua:1107
+--- Hides all visible registered windows (emits the hooks).
+---Source: lua/ge/extensions/editor/api/gui.lua:1107
 function editor_api_gui_editor.hideAllWindows() end
 
---- Cache la fenêtre et émet onEditorToolWindowLostFocus puis onEditorToolWindowHide.
----Source : lua/ge/extensions/editor/api/gui.lua:1095
----@param windowName string nom
+--- Hides the window and emits onEditorToolWindowLostFocus then onEditorToolWindowHide.
+---Source: lua/ge/extensions/editor/api/gui.lua:1095
+---@param windowName string name
 function editor_api_gui_editor.hideWindow(windowName) end
 
---- Vrai si aucun item ImGui n'est actif.
----Source : lua/ge/extensions/editor/api/gui.lua:442
----@return boolean  résultat
+--- True if no ImGui item is active.
+---Source: lua/ge/extensions/editor/api/gui.lua:442
+---@return boolean  result
 function editor_api_gui_editor.isViewportFocused() end
 
---- Vrai si la souris est sur la vue 3D du jeu uniquement (aucun item ni fenêtre ImGui survolé).
----Source : lua/ge/extensions/editor/api/gui.lua:438
----@return boolean  résultat
+--- True if the mouse is over the game's 3D view only (no ImGui item or window hovered).
+---Source: lua/ge/extensions/editor/api/gui.lua:438
+---@return boolean  result
 function editor_api_gui_editor.isViewportHovered() end
 
---- Vrai si la fenêtre est enregistrée.
----Source : lua/ge/extensions/editor/api/gui.lua:1029
----@param windowName string nom
----@return boolean  résultat
+--- True if the window is registered.
+---Source: lua/ge/extensions/editor/api/gui.lua:1029
+---@param windowName string name
+---@return boolean  result
 function editor_api_gui_editor.isWindowRegistered(windowName) end
 
---- Vrai si la fenêtre est enregistrée et visible ; déclenche aussi les hooks Show/Hide si la visibilité a changé (ex. fermeture par la croix).
----Source : lua/ge/extensions/editor/api/gui.lua:1072
----@param windowName string nom
+--- True if the window is registered and visible; also triggers the Show/Hide hooks if the visibility changed (e.g. closed with the cross).
+---Source: lua/ge/extensions/editor/api/gui.lua:1072
+---@param windowName string name
 ---@return boolean  visible
 function editor_api_gui_editor.isWindowVisible(windowName) end
 
---- Recharge l'état des fenêtres (retombe sur settings/<outil>/layouts/Default/windowsState.json si le fichier manque ou a une version différente), masque d'abord toutes les fenêtres, puis émet onEditorLoadWindowsState et onEditorLoadGuiInstancerState.
----Source : lua/ge/extensions/editor/api/gui.lua:1312
----@param customFilename string|nil fichier
----@param toolName string|nil outil à charger seulement
+--- Reloads the windows state (falls back to settings/<tool>/layouts/Default/windowsState.json if the file is missing or has a different version), first hides all windows, then emits onEditorLoadWindowsState and onEditorLoadGuiInstancerState.
+---Source: lua/ge/extensions/editor/api/gui.lua:1312
+---@param customFilename string|nil file
+---@param toolName string|nil tool to load only
 function editor_api_gui_editor.loadWindowsState(customFilename, toolName) end
 
---- Dessine le dialogue modal générique ; appelé par l'éditeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/gui.lua:1415
+--- Draws the generic modal dialog; called by the editor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/gui.lua:1415
 function editor_api_gui_editor.modalDialogWindowUi() end
 
---- Ouvre un dialogue modal générique (fenêtre editorModalDialog) dont le contenu est dessiné par uiFunction.
----Source : lua/ge/extensions/editor/api/gui.lua:1401
----@param title string titre
----@param windowSize ImVec2 taille
----@param uiFunction function function() appelée à chaque frame pour dessiner le contenu
+--- Opens a generic modal dialog (editorModalDialog window) whose content is drawn by uiFunction.
+---Source: lua/ge/extensions/editor/api/gui.lua:1401
+---@param title string title
+---@param windowSize ImVec2 size
+---@param uiFunction function function() called every frame to draw the content
 function editor_api_gui_editor.openModalDialog(title, windowSize, uiFunction) end
 
---- Ouvre la fenêtre modale (showWindow).
----Source : lua/ge/extensions/editor/api/gui.lua:1270
----@param windowName string nom
+--- Opens the modal window (showWindow).
+---Source: lua/ge/extensions/editor/api/gui.lua:1270
+---@param windowName string name
 function editor_api_gui_editor.openModalWindow(windowName) end
 
---- Enregistre une fenêtre modale (raccourci de registerWindow avec modal = true).
----Source : lua/ge/extensions/editor/api/gui.lua:1041
----@param windowName string nom
----@param defaultSize ImVec2|nil taille
+--- Registers a modal window (shortcut for registerWindow with modal = true).
+---Source: lua/ge/extensions/editor/api/gui.lua:1041
+---@param windowName string name
+---@param defaultSize ImVec2|nil size
 ---@param defaultPos ImVec2|nil position
----@param centered boolean|nil centrée
----@param toolName string|nil outil
+---@param centered boolean|nil centered
+---@param toolName string|nil tool
 function editor_api_gui_editor.registerModalWindow(windowName, defaultSize, defaultPos, centered, toolName) end
 
---- Enregistre une fenêtre d'outil (à appeler dans onEditorInitialized). Conserve la visibilité précédente si elle existe déjà.
----Source : lua/ge/extensions/editor/api/gui.lua:1013
----@param windowName string nom unique
----@param defaultSize ImVec2|nil taille initiale
----@param defaultPos ImVec2|nil position initiale
----@param defaultVisibleBoolean boolean|nil visibilité initiale
----@param modal boolean|nil fenêtre modale
----@param centered boolean|nil centrée
----@param groupName string|nil groupe (ouvrir/fermer en bloc)
----@param toolName string|nil outil propriétaire
+--- Registers a tool window (to be called in onEditorInitialized). Keeps the previous visibility if it already exists.
+---Source: lua/ge/extensions/editor/api/gui.lua:1013
+---@param windowName string unique name
+---@param defaultSize ImVec2|nil initial size
+---@param defaultPos ImVec2|nil initial position
+---@param defaultVisibleBoolean boolean|nil initial visibility
+---@param modal boolean|nil modal window
+---@param centered boolean|nil centered
+---@param groupName string|nil group (open/close as a block)
+---@param toolName string|nil owning tool
 function editor_api_gui_editor.registerWindow(windowName, defaultSize, defaultPos, defaultVisibleBoolean, modal, centered, groupName, toolName) end
 
---- Sauvegarde l'état des fenêtres (visibilité, taille, position, instances GUI) en JSON ; les modales sont sauvegardées invisibles. Émet onEditorSaveGuiInstancerState et onEditorSaveWindowsState.
----Source : lua/ge/extensions/editor/api/gui.lua:1279
----@param customFilename string|nil fichier (défaut : fichier d'état de l'éditeur)
----@param toolName string|nil ne sauver que les fenêtres de cet outil
+--- Saves the windows state (visibility, size, position, GUI instances) as JSON; modals are saved as invisible. Emits onEditorSaveGuiInstancerState and onEditorSaveWindowsState.
+---Source: lua/ge/extensions/editor/api/gui.lua:1279
+---@param customFilename string|nil file (default: the editor state file)
+---@param toolName string|nil only save the windows of this tool
 function editor_api_gui_editor.saveWindowsState(customFilename, toolName) end
 
---- Convertit un point écran en point client via le Canvas (identité si les viewports ImGui sont désactivés).
----Source : lua/ge/extensions/editor/api/gui.lua:511
----@param pt2i Point2I point écran
----@return Point2I  point client
+--- Converts a screen point to a client point via the Canvas (identity if ImGui viewports are disabled).
+---Source: lua/ge/extensions/editor/api/gui.lua:511
+---@param pt2i Point2I screen point
+---@return Point2I  client point
 function editor_api_gui_editor.screenToClient(pt2i) end
 
---- Définit la taille (carrée) par défaut des boutons d'icône.
----Source : lua/ge/extensions/editor/api/gui.lua:65
----@param size number côté en pixels
+--- Sets the default (square) size of icon buttons.
+---Source: lua/ge/extensions/editor/api/gui.lua:65
+---@param size number side in pixels
 function editor_api_gui_editor.setDefaultIconButtonSize(size) end
 
---- Enregistre l'état d'une touche modificatrice dans editor.keyModifiers (appelé par l'action map de l'éditeur). Note : presentGui resynchronise ctrl/shift/alt chaque frame depuis ImGui.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/gui.lua:2133
----@param mod string modificateur (ex. ctrl, shift, alt)
----@param pressed boolean appuyée ou non
+--- Records the state of a modifier key in editor.keyModifiers (called by the editor's action map). Note: presentGui resyncs ctrl/shift/alt every frame from ImGui.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/gui.lua:2133
+---@param mod string modifier (e.g. ctrl, shift, alt)
+---@param pressed boolean pressed or not
 function editor_api_gui_editor.setKeyModifier(mod, pressed) end
 
---- Change le groupe d'une fenêtre enregistrée.
----Source : lua/ge/extensions/editor/api/gui.lua:1393
----@param windowName string nom
----@param groupName string groupe
+--- Changes the group of a registered window.
+---Source: lua/ge/extensions/editor/api/gui.lua:1393
+---@param windowName string name
+---@param groupName string group
 function editor_api_gui_editor.setWindowGroup(windowName, groupName) end
 
---- Affiche ou masque toutes les fenêtres d'un groupe.
----Source : lua/ge/extensions/editor/api/gui.lua:1142
----@param groupName string groupe
----@param visible boolean visibilité
+--- Shows or hides all the windows of a group.
+---Source: lua/ge/extensions/editor/api/gui.lua:1142
+---@param groupName string group
+---@param visible boolean visibility
 function editor_api_gui_editor.setWindowGroupVisibility(groupName, visible) end
 
---- Alias de showWindow(windowName, visible).
----Source : lua/ge/extensions/editor/api/gui.lua:1138
----@param windowName string nom
----@param visible boolean visibilité
+--- Alias of showWindow(windowName, visible).
+---Source: lua/ge/extensions/editor/api/gui.lua:1138
+---@param windowName string name
+---@param visible boolean visibility
 function editor_api_gui_editor.setWindowVisibility(windowName, visible) end
 
---- Applique taille et position par défaut (Cond_FirstUseEver, ou centrage) ; à appeler avant imgui.Begin. Peut forcer le dépliage selon la préférence ui.general.forceExpandWindowOnFirstShow.
----Source : lua/ge/extensions/editor/api/gui.lua:1152
----@param windowName string nom
+--- Applies default size and position (Cond_FirstUseEver, or centering); to be called before imgui.Begin. Can force expansion according to the ui.general.forceExpandWindowOnFirstShow preference.
+---Source: lua/ge/extensions/editor/api/gui.lua:1152
+---@param windowName string name
 function editor_api_gui_editor.setupWindow(windowName) end
 
---- Ouvre la fenêtre d'aide à la visibilité (editor_vizHelper) si l'extension est chargée.
----Source : lua/ge/extensions/editor/api/gui.lua:257
+--- Opens the visibility help window (editor_vizHelper) if the extension is loaded.
+---Source: lua/ge/extensions/editor/api/gui.lua:257
 function editor_api_gui_editor.showVizHelperWindow() end
 
---- Affiche (ou masque si show == false) la fenêtre et émet onEditorToolWindowShow / onEditorToolWindowHide.
----Source : lua/ge/extensions/editor/api/gui.lua:1119
----@param windowName string nom
----@param show boolean|nil false pour masquer ; nil = afficher
+--- Shows (or hides if show == false) the window and emits onEditorToolWindowShow / onEditorToolWindowHide.
+---Source: lua/ge/extensions/editor/api/gui.lua:1119
+---@param windowName string name
+---@param show boolean|nil false to hide; nil = show
 function editor_api_gui_editor.showWindow(windowName, show) end
 
---- Charge une texture et renvoie ses informations ; nil si le chargement échoue.
----Source : lua/ge/extensions/editor/api/gui.lua:40
----@param path string chemin de l'image
----@return table|nil  {file, path, tex, texId (hérité, à ne pas utiliser), size, format}
+--- Loads a texture and returns its information; nil if loading fails.
+---Source: lua/ge/extensions/editor/api/gui.lua:40
+---@param path string image path
+---@return table|nil  {file, path, tex, texId (legacy, do not use), size, format}
 function editor_api_gui_editor.texObj(path) end
 
---- Bouton aligné à droite de la zone disponible.
----Source : lua/ge/extensions/editor/api/gui.lua:116
----@param string_label string libellé
----@param ImVec2_size ImVec2|nil taille
----@param bool_sameLine boolean|nil même ligne
----@param id string|nil suffixe d'id ImGui
----@param offset number|nil décalage
----@return boolean|nil  true si cliqué
+--- Right-aligned button in the available area.
+---Source: lua/ge/extensions/editor/api/gui.lua:116
+---@param string_label string label
+---@param ImVec2_size ImVec2|nil size
+---@param bool_sameLine boolean|nil same line
+---@param id string|nil ImGui id suffix
+---@param offset number|nil offset
+---@return boolean|nil  true if clicked
 function editor_api_gui_editor.uiButtonRightAlign(string_label, ImVec2_size, bool_sameLine, id, offset) end
 
---- Enveloppe de imgui.ColorButton (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:957
+--- Wrapper of imgui.ColorButton (color) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:957
 ---@param desc_id any
 ---@param col any
 ---@param flags any
 ---@param size any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié / cliqué
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified / clicked
 function editor_api_gui_editor.uiColorButton(desc_id, col, flags, size, editEnded) end
 
---- Enveloppe de imgui.ColorEdit3 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:902
+--- Wrapper of imgui.ColorEdit3 (color) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:902
 ---@param label any
 ---@param col any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié / cliqué
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified / clicked
 function editor_api_gui_editor.uiColorEdit3(label, col, flags, editEnded) end
 
---- Enveloppe de imgui.ColorEdit4 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:909
+--- Wrapper of imgui.ColorEdit4 (color) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:909
 ---@param label any
 ---@param col any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié / cliqué
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified / clicked
 function editor_api_gui_editor.uiColorEdit4(label, col, flags, editEnded) end
 
---- Enveloppe de imgui.ColorEdit8 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:917
+--- Wrapper of imgui.ColorEdit8 (color) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:917
 ---@param label any
 ---@param col any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié / cliqué
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified / clicked
 function editor_api_gui_editor.uiColorEdit8(label, col, flags, editEnded) end
 
---- Enveloppe de imgui.ColorPicker3 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:943
+--- Wrapper of imgui.ColorPicker3 (color) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:943
 ---@param label any
 ---@param col any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié / cliqué
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified / clicked
 function editor_api_gui_editor.uiColorPicker3(label, col, flags, editEnded) end
 
---- Enveloppe de imgui.ColorPicker4 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:950
+--- Wrapper of imgui.ColorPicker4 (color) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:950
 ---@param label any
 ---@param col any
 ---@param flags any
 ---@param ref_col any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié / cliqué
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified / clicked
 function editor_api_gui_editor.uiColorPicker4(label, col, flags, ref_col, editEnded) end
 
---- Enveloppe de imgui.DragFloat (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:521
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.DragFloat (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:521
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_speed any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiDragFloat(label, v, v_speed, v_min, v_max, format, flags, editEnded) end
 
---- Enveloppe de imgui.DragFloat2 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:528
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.DragFloat2 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:528
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_speed any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiDragFloat2(label, v, v_speed, v_min, v_max, format, flags, editEnded) end
 
---- Enveloppe de imgui.DragFloat3 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:535
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.DragFloat3 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:535
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_speed any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiDragFloat3(label, v, v_speed, v_min, v_max, format, flags, editEnded) end
 
---- Enveloppe de imgui.DragFloat4 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:542
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.DragFloat4 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:542
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_speed any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiDragFloat4(label, v, v_speed, v_min, v_max, format, flags, editEnded) end
 
---- Enveloppe de imgui.DragFloatRange2 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:549
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.DragFloatRange2 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:549
+---@param label string widget label / ImGui id
 ---@param v_current_min any
 ---@param v_current_max any
 ---@param v_speed any
@@ -483,65 +483,65 @@ function editor_api_gui_editor.uiDragFloat4(label, v, v_speed, v_min, v_max, for
 ---@param format any
 ---@param format_max any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiDragFloatRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags, editEnded) end
 
---- Enveloppe de imgui.DragInt (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:556
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.DragInt (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:556
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_speed any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiDragInt(label, v, v_speed, v_min, v_max, format, flags, editEnded) end
 
---- Enveloppe de imgui.DragInt2 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:563
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.DragInt2 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:563
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_speed any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiDragInt2(label, v, v_speed, v_min, v_max, format, flags, editEnded) end
 
---- Enveloppe de imgui.DragInt3 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:570
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.DragInt3 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:570
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_speed any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiDragInt3(label, v, v_speed, v_min, v_max, format, flags, editEnded) end
 
---- Enveloppe de imgui.DragInt4 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:577
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.DragInt4 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:577
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_speed any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiDragInt4(label, v, v_speed, v_min, v_max, format, flags, editEnded) end
 
---- Enveloppe de imgui.DragIntRange2 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:584
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.DragIntRange2 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:584
+---@param label string widget label / ImGui id
 ---@param v_current_min any
 ---@param v_current_max any
 ---@param v_speed any
@@ -550,13 +550,13 @@ function editor_api_gui_editor.uiDragInt4(label, v, v_speed, v_min, v_max, forma
 ---@param format any
 ---@param format_max any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiDragIntRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags, editEnded) end
 
---- Enveloppe de imgui.DragScalar (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:591
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.DragScalar (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:591
+---@param label string widget label / ImGui id
 ---@param data_type any
 ---@param v any
 ---@param v_speed any
@@ -564,13 +564,13 @@ function editor_api_gui_editor.uiDragIntRange2(label, v_current_min, v_current_m
 ---@param v_max any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiDragScalar(label, data_type, v, v_speed, v_min, v_max, format, flags, editEnded) end
 
---- Enveloppe de imgui.DragScalarN (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:598
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.DragScalarN (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:598
+---@param label string widget label / ImGui id
 ---@param data_type any
 ---@param v any
 ---@param components any
@@ -579,217 +579,217 @@ function editor_api_gui_editor.uiDragScalar(label, data_type, v, v_speed, v_min,
 ---@param v_max any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiDragScalarN(label, data_type, v, components, v_speed, v_min, v_max, format, flags, editEnded) end
 
---- Bouton d'aide : ouvre https://documentation.beamng.com/<relativeUrl> dans le navigateur (index par défaut).
----Source : lua/ge/extensions/editor/api/gui.lua:249
----@param topicName string sujet (id du bouton et info-bulle)
----@param relativeUrl string|nil chemin relatif
----@param size ImVec2|nil taille
+--- Help button: opens https://documentation.beamng.com/<relativeUrl> in the browser (index by default).
+---Source: lua/ge/extensions/editor/api/gui.lua:249
+---@param topicName string topic (button id and tooltip)
+---@param relativeUrl string|nil relative path
+---@param size ImVec2|nil size
 function editor_api_gui_editor.uiHelpButton(topicName, relativeUrl, size) end
 
---- Affiche un texte en surlignant en jaune plusieurs occurrences (insensible à la casse, une dizaine au plus) de highlightText.
----Source : lua/ge/extensions/editor/api/gui.lua:158
----@param text string texte
----@param highlightText string|nil sous-chaîne
----@param textColor ImVec4|nil couleur
+--- Displays text, highlighting in yellow several occurrences (case-insensitive, about ten at most) of highlightText.
+---Source: lua/ge/extensions/editor/api/gui.lua:158
+---@param text string text
+---@param highlightText string|nil substring
+---@param textColor ImVec4|nil color
 function editor_api_gui_editor.uiHighlightedText(text, highlightText, textColor) end
 
---- Dessine une icône de l'atlas de l'éditeur (taille 32x32 par défaut, multipliée par imgui.uiscale).
----Source : lua/ge/extensions/editor/api/gui.lua:130
----@param icon table entrée de editor.icons
----@param size ImVec2|nil taille
----@param col ImVec4|nil teinte
----@param borderCol ImVec4|nil bordure
----@param label string|nil texte à droite
----@return boolean|nil  true si l'image a renvoyé un clic
+--- Draws an icon from the editor atlas (32x32 size by default, multiplied by imgui.uiscale).
+---Source: lua/ge/extensions/editor/api/gui.lua:130
+---@param icon table entry of editor.icons
+---@param size ImVec2|nil size
+---@param col ImVec4|nil tint
+---@param borderCol ImVec4|nil border
+---@param label string|nil text on the right
+---@return boolean|nil  true if the image returned a click
 function editor_api_gui_editor.uiIconImage(icon, size, col, borderCol, label) end
 
---- Bouton à icône (avec ou sans libellé). Sans id fourni, un id automatique par frame est généré. onRelease = clic détecté au relâchement.
----Source : lua/ge/extensions/editor/api/gui.lua:191
----@param icon table entrée de editor.icons
----@param size ImVec2|nil taille (défaut editor.getDefaultIconButtonSize)
----@param col ImVec4|nil teinte
----@param label string|nil texte
----@param backgroundCol ImVec4|nil fond
----@param id string|nil id ImGui
----@param textColor ImVec4|nil couleur du texte
----@param textBG ImU32|nil fond du texte
----@param onRelease boolean|nil cliquer au relâchement
----@param highlightText string|nil sous-chaîne à surligner
----@return boolean  true si cliqué
+--- Icon button (with or without a label). Without a provided id, an automatic per-frame id is generated. onRelease = click detected on release.
+---Source: lua/ge/extensions/editor/api/gui.lua:191
+---@param icon table entry of editor.icons
+---@param size ImVec2|nil size (default editor.getDefaultIconButtonSize)
+---@param col ImVec4|nil tint
+---@param label string|nil text
+---@param backgroundCol ImVec4|nil background
+---@param id string|nil ImGui id
+---@param textColor ImVec4|nil text color
+---@param textBG ImU32|nil text background
+---@param onRelease boolean|nil click on release
+---@param highlightText string|nil substring to highlight
+---@return boolean  true if clicked
 function editor_api_gui_editor.uiIconImageButton(icon, size, col, label, backgroundCol, id, textColor, textBG, onRelease, highlightText) end
 
---- Enveloppe de imgui.InputDouble (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:694
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputDouble (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:694
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param step any
 ---@param step_fast any
 ---@param format any
 ---@param extra_flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputDouble(label, v, step, step_fast, format, extra_flags, editEnded) end
 
---- Champ de chemin de fichier avec bouton '...' ouvrant editor_fileDialog.openFile ; écrit le chemin choisi dans buf.
----Source : lua/ge/extensions/editor/api/gui.lua:757
----@param label string libellé (aussi clé du contexte du dialogue)
----@param buf cdata buffer ArrayChar du chemin
----@param width number|nil largeur du champ
----@param dir string|nil dossier initial (défaut : dossier du chemin actuel)
----@param extFilter table|string|nil filtre d'extensions du dialogue
----@param flags integer|nil flags InputText
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si le texte ou le fichier a changé
+--- File path field with a '...' button opening editor_fileDialog.openFile; writes the chosen path into buf.
+---Source: lua/ge/extensions/editor/api/gui.lua:757
+---@param label string label (also the dialog context key)
+---@param buf cdata ArrayChar buffer of the path
+---@param width number|nil field width
+---@param dir string|nil initial folder (default: folder of the current path)
+---@param extFilter table|string|nil dialog extension filter
+---@param flags integer|nil InputText flags
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if the text or file changed
 function editor_api_gui_editor.uiInputFile(label, buf, width, dir, extFilter, flags, editEnded) end
 
---- Enveloppe de imgui.InputFloat (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:628
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputFloat (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:628
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param step any
 ---@param step_fast any
 ---@param format any
 ---@param extra_flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputFloat(label, v, step, step_fast, format, extra_flags, editEnded) end
 
---- Enveloppe de imgui.InputFloat2 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:640
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputFloat2 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:640
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param format any
 ---@param extra_flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputFloat2(label, v, format, extra_flags, editEnded) end
 
---- Variante de uiInputFloat2 avec step/step_fast gérés par l'éditeur ; renseigne editEnded.
----Source : lua/ge/extensions/editor/api/gui.lua:1639
----@param label string libellé / id ImGui du widget
+--- Variant of uiInputFloat2 with step/step_fast handled by the editor; fills editEnded.
+---Source: lua/ge/extensions/editor/api/gui.lua:1639
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param step any
 ---@param step_fast any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputFloat2Ex(label, v, step, step_fast, format, flags, editEnded) end
 
---- Enveloppe de imgui.InputFloat3 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:647
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputFloat3 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:647
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param format any
 ---@param extra_flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputFloat3(label, v, format, extra_flags, editEnded) end
 
---- Variante de uiInputFloat3 avec step/step_fast gérés par l'éditeur ; renseigne editEnded.
----Source : lua/ge/extensions/editor/api/gui.lua:1676
----@param label string libellé / id ImGui du widget
+--- Variant of uiInputFloat3 with step/step_fast handled by the editor; fills editEnded.
+---Source: lua/ge/extensions/editor/api/gui.lua:1676
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param step any
 ---@param step_fast any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputFloat3Ex(label, v, step, step_fast, format, flags, editEnded) end
 
---- Enveloppe de imgui.InputFloat4 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:654
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputFloat4 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:654
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param format any
 ---@param extra_flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputFloat4(label, v, format, extra_flags, editEnded) end
 
---- Variante de uiInputFloat4 avec step/step_fast gérés par l'éditeur ; renseigne editEnded.
----Source : lua/ge/extensions/editor/api/gui.lua:1718
----@param label string libellé / id ImGui du widget
+--- Variant of uiInputFloat4 with step/step_fast handled by the editor; fills editEnded.
+---Source: lua/ge/extensions/editor/api/gui.lua:1718
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param step any
 ---@param step_fast any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputFloat4Ex(label, v, step, step_fast, format, flags, editEnded) end
 
---- Variante de uiInputFloat avec step/step_fast gérés par l'éditeur ; renseigne editEnded.
----Source : lua/ge/extensions/editor/api/gui.lua:1610
----@param label string libellé / id ImGui du widget
+--- Variant of uiInputFloat with step/step_fast handled by the editor; fills editEnded.
+---Source: lua/ge/extensions/editor/api/gui.lua:1610
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param step any
 ---@param step_fast any
 ---@param format any
 ---@param flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputFloatEx(label, v, step, step_fast, format, flags, editEnded) end
 
---- Enveloppe de imgui.InputInt (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:661
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputInt (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:661
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param step any
 ---@param step_fast any
 ---@param extra_flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputInt(label, v, step, step_fast, extra_flags, editEnded) end
 
---- Enveloppe de imgui.InputInt2 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:673
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputInt2 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:673
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param extra_flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputInt2(label, v, extra_flags, editEnded) end
 
---- Enveloppe de imgui.InputInt3 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:680
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputInt3 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:680
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param extra_flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputInt3(label, v, extra_flags, editEnded) end
 
---- Enveloppe de imgui.InputInt4 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:687
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputInt4 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:687
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param extra_flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputInt4(label, v, extra_flags, editEnded) end
 
---- Enveloppe de imgui.InputScalar (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:701
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputScalar (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:701
+---@param label string widget label / ImGui id
 ---@param data_type any
 ---@param v any
 ---@param step any
 ---@param step_fast any
 ---@param format any
 ---@param extra_flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputScalar(label, data_type, v, step, step_fast, format, extra_flags, editEnded) end
 
---- Enveloppe de imgui.InputScalarN (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:708
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputScalarN (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:708
+---@param label string widget label / ImGui id
 ---@param data_type any
 ---@param v any
 ---@param components any
@@ -797,206 +797,206 @@ function editor_api_gui_editor.uiInputScalar(label, data_type, v, step, step_fas
 ---@param step_fast any
 ---@param format any
 ---@param extra_flags any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputScalarN(label, data_type, v, components, step, step_fast, format, extra_flags, editEnded) end
 
---- Champ de recherche (icône loupe + texte + bouton d'effacement) de largeur fixe. Renvoie true si le texte a changé ou a été effacé.
----Source : lua/ge/extensions/editor/api/gui.lua:715
----@param label string|nil info-bulle
----@param text cdata buffer ImGui ArrayChar
----@param width number largeur en pixels
----@param extra_flags integer|nil flags InputText
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+--- Search field (magnifier icon + text + clear button) of fixed width. Returns true if the text changed or was cleared.
+---Source: lua/ge/extensions/editor/api/gui.lua:715
+---@param label string|nil tooltip
+---@param text cdata ImGui ArrayChar buffer
+---@param width number width in pixels
+---@param extra_flags integer|nil InputText flags
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputSearch(label, text, width, extra_flags, editEnded) end
 
---- Comme uiInputSearch mais édite un ImGuiTextFilter et le reconstruit (ImGuiTextFilter_Build) à chaque changement.
----Source : lua/ge/extensions/editor/api/gui.lua:747
----@param label string|nil info-bulle
+--- Like uiInputSearch but edits an ImGuiTextFilter and rebuilds it (ImGuiTextFilter_Build) on each change.
+---Source: lua/ge/extensions/editor/api/gui.lua:747
+---@param label string|nil tooltip
 ---@param txtfilter cdata ImGuiTextFilter
----@param width number largeur
+---@param width number width
 ---@param extra_flags integer|nil flags
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputSearchTextFilter(label, txtfilter, width, extra_flags, editEnded) end
 
---- Enveloppe de imgui.InputText (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:607
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputText (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:607
+---@param label string widget label / ImGui id
 ---@param buf any
 ---@param buf_size any
 ---@param flags any
 ---@param callback any
 ---@param user_data any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputText(label, buf, buf_size, flags, callback, user_data, editEnded) end
 
---- Enveloppe de imgui.InputTextMultiline (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:614
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputTextMultiline (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:614
+---@param label string widget label / ImGui id
 ---@param buf any
 ---@param buf_size any
 ---@param size any
 ---@param flags any
 ---@param callback any
 ---@param user_data any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputTextMultiline(label, buf, buf_size, size, flags, callback, user_data, editEnded) end
 
---- Enveloppe de imgui.InputTextMultilineReadOnly (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.
----Source : lua/ge/extensions/editor/api/gui.lua:621
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.InputTextMultilineReadOnly (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.
+---Source: lua/ge/extensions/editor/api/gui.lua:621
+---@param label string widget label / ImGui id
 ---@param buf any
 ---@param size any
 ---@param flags any
 ---@param callback any
 ---@param user_data any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiInputTextMultilineReadOnly(label, buf, size, flags, callback, user_data, editEnded) end
 
---- Enveloppe de imgui.PlotLines1 : courbe de floats ; valeurs par défaut offset 0, échelle FLT_MAX, stride sizeof(float) ; auto_resize adapte la taille à la fenêtre.
----Source : lua/ge/extensions/editor/api/gui.lua:965
----@param string_label string libellé
----@param float_values cdata tableau de floats
----@param int_values_count integer nombre de valeurs
+--- Wrapper of imgui.PlotLines1: float curve; default values offset 0, scale FLT_MAX, stride sizeof(float); auto_resize fits the size to the window.
+---Source: lua/ge/extensions/editor/api/gui.lua:965
+---@param string_label string label
+---@param float_values cdata array of floats
+---@param int_values_count integer number of values
 ---@param int_values_offset any
 ---@param string_overlay_text any
 ---@param float_scale_min any
 ---@param float_scale_max any
 ---@param ImVec2_graph_size any
 ---@param int_stride any
----@param auto_resize boolean|nil remplir la fenêtre si graph_size est nil
+---@param auto_resize boolean|nil fill the window if graph_size is nil
 function editor_api_gui_editor.uiPlotLines1(string_label, float_values, int_values_count, int_values_offset, string_overlay_text, float_scale_min, float_scale_max, ImVec2_graph_size, int_stride, auto_resize) end
 
---- Dessine des lignes de fond de couleurs alternées dans la fenêtre/l'enfant courant (technique de ocornut/imgui#2668). Doit être entouré de Begin/BeginChild ... End/EndChild.
----Source : lua/ge/extensions/editor/api/gui.lua:2148
----@param lineHeight number hauteur d'une ligne
----@param mOddColor ImVec4|nil couleur des lignes impaires
----@param mEvenColor ImVec4|nil couleur des lignes paires
+--- Draws alternating-color background rows in the current window/child (technique from ocornut/imgui#2668). Must be wrapped in Begin/BeginChild ... End/EndChild.
+---Source: lua/ge/extensions/editor/api/gui.lua:2148
+---@param lineHeight number row height
+---@param mOddColor ImVec4|nil color of odd rows
+---@param mEvenColor ImVec4|nil color of even rows
 function editor_api_gui_editor.uiRenderAlternateRows(lineHeight, mOddColor, mEvenColor) end
 
---- Enveloppe de imgui.SliderAngle (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:830
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.SliderAngle (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:830
+---@param label string widget label / ImGui id
 ---@param v_rad any
 ---@param v_degrees_min any
 ---@param v_degrees_max any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiSliderAngle(label, v_rad, v_degrees_min, v_degrees_max, editEnded) end
 
---- Enveloppe de imgui.SliderFloat (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:802
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.SliderFloat (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:802
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param power any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiSliderFloat(label, v, v_min, v_max, format, power, editEnded) end
 
---- Enveloppe de imgui.SliderFloat2 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:809
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.SliderFloat2 (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:809
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param power any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiSliderFloat2(label, v, v_min, v_max, format, power, editEnded) end
 
---- Enveloppe de imgui.SliderFloat3 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:816
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.SliderFloat3 (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:816
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param power any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiSliderFloat3(label, v, v_min, v_max, format, power, editEnded) end
 
---- Enveloppe de imgui.SliderFloat4 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:823
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.SliderFloat4 (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:823
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param power any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiSliderFloat4(label, v, v_min, v_max, format, power, editEnded) end
 
---- Enveloppe de imgui.SliderInt (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:837
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.SliderInt (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:837
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiSliderInt(label, v, v_min, v_max, format, editEnded) end
 
---- Enveloppe de imgui.SliderInt2 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:844
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.SliderInt2 (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:844
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiSliderInt2(label, v, v_min, v_max, format, editEnded) end
 
---- Enveloppe de imgui.SliderInt3 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:851
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.SliderInt3 (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:851
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiSliderInt3(label, v, v_min, v_max, format, editEnded) end
 
---- Enveloppe de imgui.SliderInt4 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:858
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.SliderInt4 (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:858
+---@param label string widget label / ImGui id
 ---@param v any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiSliderInt4(label, v, v_min, v_max, format, editEnded) end
 
---- Enveloppe de imgui.SliderScalar (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:865
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.SliderScalar (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:865
+---@param label string widget label / ImGui id
 ---@param data_type any
 ---@param v any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param power any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiSliderScalar(label, data_type, v, v_min, v_max, format, power, editEnded) end
 
---- Enveloppe de imgui.SliderScalarN (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:872
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.SliderScalarN (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:872
+---@param label string widget label / ImGui id
 ---@param data_type any
 ---@param v any
 ---@param components any
@@ -1004,52 +1004,52 @@ function editor_api_gui_editor.uiSliderScalar(label, data_type, v, v_min, v_max,
 ---@param v_max any
 ---@param format any
 ---@param power any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiSliderScalarN(label, data_type, v, components, v_min, v_max, format, power, editEnded) end
 
---- Affiche un texte (coloré si color non nil) avec une police ImGui nommée.
----Source : lua/ge/extensions/editor/api/gui.lua:106
----@param color ImVec4|nil couleur
----@param text string texte
----@param fontName string nom de police (voir getFontList)
+--- Displays text (colored if color is not nil) with a named ImGui font.
+---Source: lua/ge/extensions/editor/api/gui.lua:106
+---@param color ImVec4|nil color
+---@param text string text
+---@param fontName string font name (see getFontList)
 function editor_api_gui_editor.uiTextColoredWithFont(color, text, fontName) end
 
---- Affiche un texte aligné à droite de la zone disponible.
----Source : lua/ge/extensions/editor/api/gui.lua:97
----@param string_label string texte
----@param bool_sameLine boolean|nil true = sur la même ligne
----@param offset number|nil décalage en pixels
+--- Displays text right-aligned in the available area.
+---Source: lua/ge/extensions/editor/api/gui.lua:97
+---@param string_label string text
+---@param bool_sameLine boolean|nil true = on the same line
+---@param offset number|nil offset in pixels
 function editor_api_gui_editor.uiTextUnformattedRightAlign(string_label, bool_sameLine, offset) end
 
---- Enveloppe de imgui.VSliderFloat (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:879
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.VSliderFloat (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:879
+---@param label string widget label / ImGui id
 ---@param size any
 ---@param v any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
 ---@param power any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiVSliderFloat(label, size, v, v_min, v_max, format, power, editEnded) end
 
---- Enveloppe de imgui.VSliderInt (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:886
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.VSliderInt (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:886
+---@param label string widget label / ImGui id
 ---@param size any
 ---@param v any
 ---@param v_min any
 ---@param v_max any
 ---@param format any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiVSliderInt(label, size, v, v_min, v_max, format, editEnded) end
 
---- Enveloppe de imgui.VSliderScalar (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.
----Source : lua/ge/extensions/editor/api/gui.lua:893
----@param label string libellé / id ImGui du widget
+--- Wrapper of imgui.VSliderScalar (slider) that additionally fills editEnded. Same parameters as ImGui.
+---Source: lua/ge/extensions/editor/api/gui.lua:893
+---@param label string widget label / ImGui id
 ---@param size any
 ---@param data_type any
 ---@param v any
@@ -1057,19 +1057,19 @@ function editor_api_gui_editor.uiVSliderInt(label, size, v, v_min, v_max, format
 ---@param v_max any
 ---@param format any
 ---@param power any
----@param editEnded imgui.BoolPtr|nil si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)
----@return boolean  true si modifié ce frame
+---@param editEnded imgui.BoolPtr|nil if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)
+---@return boolean  true if modified this frame
 function editor_api_gui_editor.uiVSliderScalar(label, size, data_type, v, v_min, v_max, format, power, editEnded) end
 
---- Dessine un séparateur vertical sur la ligne courante.
----Source : lua/ge/extensions/editor/api/gui.lua:263
----@param float_height number|nil hauteur (taille de police par défaut)
----@param vec2_offset ImVec2|nil décalage
----@param width number|nil épaisseur (1)
+--- Draws a vertical separator on the current line.
+---Source: lua/ge/extensions/editor/api/gui.lua:263
+---@param float_height number|nil height (font size by default)
+---@param vec2_offset ImVec2|nil offset
+---@param width number|nil thickness (1)
 function editor_api_gui_editor.uiVertSeparator(float_height, vec2_offset, width) end
 
---- Désenregistre une fenêtre pour qu'elle ne soit plus dans l'état sauvegardé. À appeler juste après imgui.Begin si la fenêtre n'est plus visible ; pour simplement la cacher, utiliser hideWindow.
----Source : lua/ge/extensions/editor/api/gui.lua:1068
----@param windowName string nom
+--- Unregisters a window so that it is no longer in the saved state. To be called right after imgui.Begin if the window is no longer visible; to simply hide it, use hideWindow.
+---Source: lua/ge/extensions/editor/api/gui.lua:1068
+---@param windowName string name
 function editor_api_gui_editor.unregisterWindow(windowName) end
 

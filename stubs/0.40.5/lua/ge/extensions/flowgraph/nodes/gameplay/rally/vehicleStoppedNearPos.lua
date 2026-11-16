@@ -2,64 +2,64 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos_C
 local flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos_C = {}
 
---- Remet à zéro chrono, état et cache.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:40
+--- Resets timer, state and cache to zero.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:40
 function flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos_C:_executionStarted() end
 
---- Dessine la sphère de la zone d'arrêt si le drapeau de debug stopZones est actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:130
+--- Draws the stop zone sphere if the stopZones debug flag is active.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:130
 function flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos_C:drawDebugStopZone() end
 
---- Dessine le point directeur du véhicule (couleur selon dedans/dehors) si stopZones est actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:136
----@param inside boolean Véhicule dans la zone.
+--- Draws the vehicle's guide point (color depending on inside/outside) if stopZones is active.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:136
+---@param inside boolean Vehicle in the zone.
 function flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos_C:drawDebugVehiclePoint(inside) end
 
---- Affiche une barre de progression du chrono.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:56
----@param builder table Constructeur de nœud.
+--- Displays a progress bar of the timer.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:56
+---@param builder table Node constructor.
 ---@param style table Style.
 function flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos_C:drawMiddle(builder, style) end
 
---- Initialise chrono, cible et intervalle de hook (0,1 s, non utilisé ensuite).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:31
----@param mgr table Gestionnaire flowgraph.
+--- Initializes timer, target and hook interval (0.1 s, unused afterwards).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:31
+---@param mgr table Flowgraph manager.
 ---@param ... any
 function flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos_C:init(mgr, ...) end
 
---- Teste si le centre avant du véhicule est dans le rayon de la position cible.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:111
----@return boolean  Dans la zone.
----@return number|nil  Distance en m.
+--- Tests whether the vehicle's front center is within the radius of the target position.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:111
+---@return boolean  In the zone.
+---@return number|nil  Distance in m.
 function flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos_C:isNearPosition() end
 
---- Vrai si la vitesse du véhicule est inférieure à 0,1 m/s.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:103
----@return boolean  Véhicule à l'arrêt.
+--- True if the vehicle speed is below 0.1 m/s.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:103
+---@return boolean  Vehicle stopped.
 function flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos_C:isStopped() end
 
---- Avance le chrono (dtReal) ; à la durée atteinte, arrête le chrono et émet l'impulsion.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:47
+--- Advances the timer (dtReal); when the duration is reached, stops the timer and emits the pulse.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:47
 function flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos_C:updateTimer() end
 
---- Met à jour position avant et vitesse du véhicule suivi depuis map.objects.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:84
+--- Updates the front position and speed of the tracked vehicle from map.objects.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:84
 function flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos_C:updateVehicleData2() end
 
---- Gère reset et chrono, diffuse la proximité à l'UI et met à jour flow/impulse.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:144
----@param args table Arguments du moteur flowgraph (non utilisés).
+--- Handles reset and timer, broadcasts the proximity to the UI and updates flow/impulse.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua:144
+---@param args table Flowgraph engine arguments (unused).
 function flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos_C:work(args) end
 

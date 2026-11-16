@@ -1,0 +1,68 @@
+{
+  "path": "lua/ge/extensions/ui/liveries/saves.lua",
+  "module": "Gère les sauvegardes de livrées (éditeur de décalcomanies dynamiques) dans settings/dynamicDecals/*.dynDecals.json. Permet de lister, créer, renommer, supprimer, enregistrer et recharger une pile de calques, et mémorise le nom de la sauvegarde courante de la session d'édition. S'appuie sur l'extension editor_api_dynamicDecals pour la sérialisation réelle.",
+  "notes": [
+    "Les noms de fichier doivent correspondre à ^[a-zA-Z0-9_-]+$ (lettres, chiffres, _ et -) ; sinon save/create/load/rename renvoient false avec un avertissement dans le log.",
+    "Les fichiers sont stockés dans settings/dynamicDecals/ avec l'extension .dynDecals.json.",
+    "exists et delete n'appellent pas la validation du nom : ils testent directement le chemin construit.",
+    "create et save renvoient le chemin du fichier (string) en cas de succès, et false en cas d'échec ; load, rename et delete renvoient un booléen."
+  ],
+  "functions": {
+    "exists": {
+      "desc": "Indique si une sauvegarde portant ce nom existe dans settings/dynamicDecals/.",
+      "params": {"filename": {"type": "string", "desc": "Nom sans extension."}},
+      "returns": [{"type": "boolean", "desc": "true si le fichier existe."}]
+    },
+    "getAll": {
+      "desc": "Liste toutes les sauvegardes présentes. Chaque entrée contient name, location (chemin), created, modified et fileSize.",
+      "returns": [{"type": "table[]", "desc": "Tableau d'entrées {name, location, created, modified, fileSize}."}]
+    },
+    "create": {
+      "desc": "Écrit la pile de calques actuelle dans un nouveau fichier via editor_api_dynamicDecals.saveLayerStackToFile. Ne vérifie pas si le fichier existe déjà et ne change pas la sauvegarde courante.",
+      "params": {"filename": {"type": "string", "desc": "Nom sans extension (validé)."}},
+      "returns": [{"type": "string|boolean", "desc": "Chemin du fichier écrit, ou false si le nom est invalide."}]
+    },
+    "rename": {
+      "desc": "Renomme une sauvegarde. Échoue si le nouveau nom est invalide, si l'ancien fichier n'existe pas, si le nouveau nom est déjà pris ou si le renommage échoue. Met à jour le nom de la sauvegarde courante s'il s'agissait de ce fichier.",
+      "params": {
+        "filename": {"type": "string", "desc": "Nom actuel."},
+        "newFilename": {"type": "string", "desc": "Nouveau nom (validé)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si le renommage a réussi."}]
+    },
+    "delete": {
+      "desc": "Supprime le fichier de sauvegarde. Si c'était la sauvegarde courante, réinitialise l'état de session via clearCurrentSave (la skin préparée n'est plus appliquée).",
+      "params": {"filename": {"type": "string", "desc": "Nom sans extension."}},
+      "returns": [{"type": "boolean", "desc": "true si le fichier existait et a été supprimé."}]
+    },
+    "getFilename": {
+      "desc": "Extrait le nom de sauvegarde (sans dossier ni extension .dynDecals.json) d'un chemin de fichier.",
+      "params": {"file": {"type": "string", "desc": "Chemin complet d'un fichier de sauvegarde."}},
+      "returns": [{"type": "string", "desc": "Nom sans extension."}]
+    },
+    "getCurrentSaveName": {
+      "desc": "Renvoie le nom de la sauvegarde chargée ou enregistrée en dernier dans cette session d'édition.",
+      "returns": [{"type": "string|nil", "desc": "nil pour une nouvelle livrée non enregistrée."}]
+    },
+    "clearCurrentSave": {
+      "desc": "Oublie la sauvegarde courante et la skin préparée (stagedApplySkinName)."
+    },
+    "consumeStagedApplySkin": {
+      "desc": "Renvoie le nom de la skin préparée par un save avec applySkin et l'efface (lecture unique, prévue à la sortie de l'éditeur).",
+      "returns": [{"type": "string|nil", "desc": "Nom de la skin à appliquer, ou nil."}]
+    },
+    "save": {
+      "desc": "Enregistre la livrée : refuse un nom invalide ou déjà pris par une autre sauvegarde que la courante, exige un véhicule joueur, écrit la pile de calques puis exporte la skin (exportSkin) sous le même nom. Définit ensuite la sauvegarde courante et, si applySkin est vrai, prépare la skin pour la sortie de l'éditeur.",
+      "params": {
+        "filename": {"type": "string", "desc": "Nom sans extension (validé)."},
+        "applySkin": {"type": "boolean|nil", "desc": "Si vrai, la skin exportée sera appliquée à la sortie de l'éditeur (voir consumeStagedApplySkin)."}
+      },
+      "returns": [{"type": "string|boolean", "desc": "Chemin du fichier écrit, ou false en cas d'échec (nom invalide, doublon, pas de véhicule)."}]
+    },
+    "load": {
+      "desc": "Charge une sauvegarde dans l'éditeur via editor_api_dynamicDecals.loadLayerStackFromFile (appelée sous pcall). Définit la sauvegarde courante et efface la skin préparée.",
+      "params": {"filename": {"type": "string", "desc": "Nom sans extension (validé)."}},
+      "returns": [{"type": "boolean", "desc": "true si le chargement a réussi."}]
+    }
+  }
+}

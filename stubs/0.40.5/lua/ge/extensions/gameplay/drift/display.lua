@@ -2,167 +2,167 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/drift/display.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Couche d'affichage (UI) du drift. Chaque frame, publie sur le stream UI "drift" l'état de chaque véhicule suivi (score permanent, score potentiel, score en cache, combo, temps de combo restant, creep, angle, vitesse, facteur de performance, phase de présentation du score confirmé). Réagit aux hooks de score, crash, spinout, zones de cascade, spots et paliers par des messages flash (TopCenterAppsFlashMessage) et des évènements guihooks, et affiche/masque les apps UI de drift (scoreboard, tasks, driftScores, flashMessage) selon le contexte de gameplay_drift_general. Chargé par general dans les contextes inChallenge, inFreeroamChallenge, inFreeroamCruising et inSplitscreen.
---- Accès : extension `gameplay_drift_display` : `extensions.load("gameplay_drift_display")`, puis la globale `gameplay_drift_display`
+--- Display (UI) layer of drift. Every frame, publishes on the "drift" UI stream the state of each tracked vehicle (permanent score, potential score, cached score, combo, remaining combo time, creep, angle, speed, performance factor, confirmed score presentation phase). Reacts to the score, crash, spinout, cascade zone, spot and tier hooks with flash messages (TopCenterAppsFlashMessage) and guihooks events, and shows/hides the drift UI apps (scoreboard, tasks, driftScores, flashMessage) depending on the gameplay_drift_general context. Loaded by general in the contexts inChallenge, inFreeroamChallenge, inFreeroamCruising and inSplitscreen.
+--- Access: extension `gameplay_drift_display`: `extensions.load("gameplay_drift_display")`, then the global `gameplay_drift_display`
 ---@class gameplay_drift_display
 ---@field dependencies string[] gameplay_drift_general, gameplay_drift_drift, gameplay_drift_scoring, ui_apps_genericMissionData, ui_appContainers.
 gameplay_drift_display = {}
 
---- Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift.
----Source : lua/ge/extensions/gameplay/drift/display.lua:494
+--- Returns {default=false, canBeChanged=true} for the drift debug window.
+---Source: lua/ge/extensions/gameplay/drift/display.lua:494
 ---@return table  {default = false, canBeChanged = true}
 function gameplay_drift_display.getDriftDebugInfo() end
 
---- Indique si l'animation du score confirmé est en cours pour ce véhicule.
----Source : lua/ge/extensions/gameplay/drift/display.lua:70
----@param vehId integer Id du véhicule.
----@return boolean  true si la phase n'est pas idle.
+--- Indicates whether the confirmed score animation is in progress for this vehicle.
+---Source: lua/ge/extensions/gameplay/drift/display.lua:70
+---@param vehId integer Vehicle id.
+---@return boolean  true if the phase is not idle.
 function gameplay_drift_display.getIsScorePresentationActive(vehId) end
 
---- Renvoie la durée totale de la présentation du score confirmé (hold + dwindle + linger). Utilisée par driftSpots pour attendre la fin de l'animation.
----Source : lua/ge/extensions/gameplay/drift/display.lua:56
----@return number  Durée en secondes (2.0).
+--- Returns the total duration of the confirmed score presentation (hold + dwindle + linger). Used by driftSpots to wait for the end of the animation.
+---Source: lua/ge/extensions/gameplay/drift/display.lua:56
+---@return number  Duration in seconds (2.0).
 function gameplay_drift_display.getScorePresentationDuration() end
 
---- Hook : restaure driftDebugUILayout.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:453
----@param data table Table de onSerialize.
+--- Hook: restores driftDebugUILayout.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:453
+---@param data table onSerialize table.
 function gameplay_drift_display.onDeserialized(data) end
 
---- Hook : message flash et évènement stuntZoneScored (type donut).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:171
----@param score number Points gagnés.
+--- Hook: flash message and stuntZoneScored event (donut type).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:171
+---@param score number Points earned.
 function gameplay_drift_display.onDonutDriftScored(score) end
 
---- Hook : le score en cache a été réinitialisé ; efface le message temps réel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:407
----@param vehId integer Véhicule concerné.
+--- Hook: the cached score was reset; clears the real-time message.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:407
+---@param vehId integer Vehicle concerned.
 function gameplay_drift_display.onDriftCachedScoreReset(vehId) end
 
---- Hook : lance la présentation du score confirmé, affiche « +points » et notifie l'UI (setDriftPersistentDriftScored).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:143
+--- Hook: starts the confirmed score presentation, displays "+points" and notifies the UI (setDriftPersistentDriftScored).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:143
 ---@param data table {vehId, addedScore, combo}.
 function gameplay_drift_display.onDriftCompletedScored(data) end
 
---- Hook : montre ou masque les apps UI de drift selon le nouveau contexte.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:463
----@param context string Nouveau contexte de gameplay_drift_general.
+--- Hook: shows or hides the drift UI apps according to the new context.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:463
+---@param context string New context of gameplay_drift_general.
 function gameplay_drift_display.onDriftContextChanged(context) end
 
---- Hook : affiche l'échec « crashed » dans l'UI et remet le lisseur à zéro.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:163
----@param vehId integer Véhicule concerné.
+--- Hook: shows the "crashed" failure in the UI and sets the smoother back to zero.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:163
+---@param vehId integer Vehicle concerned.
 function gameplay_drift_display.onDriftCrash(vehId) end
 
---- Hook : à la désactivation du debug, masque l'interface de drift.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:457
----@param value boolean Nouvel état du debug.
+--- Hook: when debug is disabled, hides the drift interface.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:457
+---@param value boolean New debug state.
 function gameplay_drift_display.onDriftDebugChanged(value) end
 
---- Hook : véhicule du joueur remis en place ; remet à zéro lisseur, présentation du score et message temps réel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:401
----@param vehId integer Véhicule concerné.
+--- Hook: player's vehicle put back in place; resets the smoother, the score presentation and the real-time message.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:401
+---@param vehId integer Vehicle concerned.
 function gameplay_drift_display.onDriftPlVehReset(vehId) end
 
---- Hook : envoie un quick message à l'UI (displayDriftScoreModifier).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:396
+--- Hook: sends a quick message to the UI (displayDriftScoreModifier).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:396
 ---@param data table {msg, displayTime, vehId?}.
 function gameplay_drift_display.onDriftQuickMessageDisplay(data) end
 
---- Hook : le score en cours est validé de force (fin de spot) ; lance la présentation et affiche les points bonus.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:436
----@param score number Score validé.
----@param vehId integer Véhicule concerné.
+--- Hook: the current score is force-validated (end of spot); starts the presentation and shows the bonus points.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:436
+---@param score number Validated score.
+---@param vehId integer Vehicle concerned.
 function gameplay_drift_display.onDriftScoreWrappedUp(score, vehId) end
 
---- Hook : affiche l'échec « spinout » dans l'UI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:167
----@param vehId integer Véhicule concerné.
+--- Hook: shows the "spinout" failure in the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:167
+---@param vehId integer Vehicle concerned.
 function gameplay_drift_display.onDriftSpinout(vehId) end
 
---- Hook : message flash de fin de spot (nouveau record ou zone terminée) avec le score.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:392
+--- Hook: end-of-spot flash message (new record or zone completed) with the score.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:392
 ---@param data table {newRecord, score, duration}.
 function gameplay_drift_display.onDriftSpotCompleted(data) end
 
---- Hook : message flash de 2 s avec le texte de la raison d'échec.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:432
----@param data table {reason = {msg = clé de traduction}, ...}.
+--- Hook: 2 s flash message with the failure reason text.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:432
+---@param data table {reason = {msg = translation key}, ...}.
 function gameplay_drift_display.onDriftSpotFailed(data) end
 
---- Hook : applique tout de suite l'UI correspondant au contexte drift déjà actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:480
+--- Hook: immediately applies the UI matching the already active drift context.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:480
 function gameplay_drift_display.onExtensionLoaded() end
 
---- Hook : masque l'UI, vide les données et publie un stream vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:411
+--- Hook: hides the UI, empties the data and publishes an empty stream.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:411
 function gameplay_drift_display.onExtensionUnloaded() end
 
---- Hook : message flash « nouveau meilleur score ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:428
+--- Hook: "new best score" flash message.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:428
 function gameplay_drift_display.onFreeroamDriftZoneNewHighscore() end
 
---- Hook : message flash et évènement stuntZoneScored (type hitPole).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:186
----@param score number Points gagnés.
+--- Hook: flash message and stuntZoneScored event (hitPole type).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:186
+---@param score number Points earned.
 function gameplay_drift_display.onHitPoleScored(score) end
 
---- Hook : message flash et évènement stuntZoneScored (type nearPole).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:176
----@param score number Points gagnés.
+--- Hook: flash message and stuntZoneScored event (nearPole type).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:176
+---@param score number Points earned.
 function gameplay_drift_display.onNearPoleScored(score) end
 
---- Hook : affiche le nom du nouveau palier en message flash.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:442
----@param tierData table Données du palier (name utilisé).
+--- Hook: shows the name of the new tier as a flash message.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:442
+---@param tierData table Tier data (name used).
 function gameplay_drift_display.onNewDriftTierReached(tierData) end
 
---- Hook : sauvegarde driftDebugUILayout avant rechargement Lua.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:447
+--- Hook: saves driftDebugUILayout before Lua reload.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:447
 ---@return table  {driftDebugUILayout}
 function gameplay_drift_display.onSerialize() end
 
---- Hook : message flash et évènement stuntZoneScored (type tightDrift).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:181
----@param score number Points gagnés.
+--- Hook: flash message and stuntZoneScored event (tightDrift type).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:181
+---@param score number Points earned.
 function gameplay_drift_display.onTightDriftScored(score) end
 
---- Appelé à chaque frame (sauf après déchargement) : fenêtre de debug, publication du stream drift, messages de contresens, de sortie de limites et de distance restante.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:381
----@param dtReal number Delta temps réel en secondes, utilisé pour les animations.
----@param dtSim number Delta temps simulé (inutilisé).
----@param dtRaw number Delta temps brut (inutilisé).
+--- Called every frame (except after unloading): debug window, drift stream publishing, wrong-way, out-of-bounds and remaining distance messages.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:381
+---@param dtReal number Real time delta in seconds, used for the animations.
+---@param dtSim number Simulated time delta (unused).
+---@param dtRaw number Raw time delta (unused).
 function gameplay_drift_display.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook : supprime lisseur et présentation du véhicule détruit.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/display.lua:423
----@param vehId integer Véhicule détruit.
+--- Hook: removes the smoother and presentation of the destroyed vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/display.lua:423
+---@param vehId integer Destroyed vehicle.
 function gameplay_drift_display.onVehicleDestroyed(vehId) end
 
---- Vide les lisseurs de creep, les présentations de score, le pool de données joueur et les données de gameplay_ui genericMissionData.
----Source : lua/ge/extensions/gameplay/drift/display.lua:487
+--- Empties the creep smoothers, the score presentations, the player data pool and the gameplay_ui genericMissionData data.
+---Source: lua/ge/extensions/gameplay/drift/display.lua:487
 function gameplay_drift_display.reset() end
 

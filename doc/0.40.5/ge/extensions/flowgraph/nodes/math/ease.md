@@ -1,27 +1,27 @@
 # `flowgraph_nodes_math_ease`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/math/ease.lua` · VM : Game Engine (GE) · 111 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/math/ease.lua` · VM: Game Engine (GE) · 111 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/math/ease")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/math/ease")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Ease' (categorie simple). Applique une fonction d'easing a la valeur d'entree (normalement entre 0 et 1) : linear, in/out/inOut pour Quad, Cubic, Quart, Quint, Sin, Exp et Circ. La fonction se choisit dans les proprietes du noeud.
+Flowgraph node 'Ease' (simple category). Applies an easing function to the input value (normally between 0 and 1): linear, in/out/inOut for Quad, Cubic, Quart, Quint, Sin, Exp and Circ. The function is chosen in the node properties.
 
-## Remarques
+## Notes
 
-- La liste de l'UI (easeFuncNameList) n'inclut pas inCubic, outCubic, inOutCubic, bien que definies dans easeFunctions.
+- The UI list (easeFuncNameList) does not include inCubic, outCubic, inOutCubic, although they are defined in easeFunctions.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(nodeData)` | Relit easeFuncName et la fonction associee. | 88 |
-| `C:_onSerialize(res)` | Sauvegarde easeFuncName. | 84 |
-| `C:drawCustomProperties()` | Liste deroulante des fonctions d'easing. | 69 |
-| `C:drawMiddle(builder, style)` | Affiche le nom de la fonction. | 102 |
-| `C:init()` | Fonction par defaut : linear. | 63 |
-| `C:work()` | Si l'entree n'est pas nil/false, ecrit easeFunc(value) sur la sortie. | 96 |
+| `C:_onDeserialized(nodeData)` | Reads back easeFuncName and the associated function. | 88 |
+| `C:_onSerialize(res)` | Saves easeFuncName. | 84 |
+| `C:drawCustomProperties()` | Dropdown of easing functions. | 69 |
+| `C:drawMiddle(builder, style)` | Displays the function name. | 102 |
+| `C:init()` | Default function: linear. | 63 |
+| `C:work()` | If the input is not nil/false, writes easeFunc(value) to the output. | 96 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/math/ease.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/math/ease.lua`.*

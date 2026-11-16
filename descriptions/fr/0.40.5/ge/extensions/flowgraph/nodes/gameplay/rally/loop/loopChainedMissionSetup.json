@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/loopChainedMissionSetup.lua",
+  "module": "Nœud flowgraph « Rally Loop Chained Mission Setup » (catégorie once_instant, tag rally, sans pin). Prépare la mission suivante de la boucle rally après un transfert d'exécution : met le drapeau de transfert à false (gameplay_rallyLoop.setMissionExecutionTransferFlag(false)) puis appelle gameplay_rallyLoop.setupForNewMission(). À l'arrêt du graphe, décharge l'extension de boucle rally sauf si un transfert d'exécution est en cours.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "_executionStopped": {"desc": "Décharge l'extension rally loop si elle est chargée et qu'aucun transfert d'exécution de mission n'est signalé.", "internal": true},
+        "workOnce": {"desc": "Réinitialise le drapeau de transfert et appelle setupForNewMission si gameplay_rallyLoop existe.", "internal": true}
+      }
+    }
+  }
+}

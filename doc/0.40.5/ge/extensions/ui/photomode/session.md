@@ -1,188 +1,188 @@
 # `ui_photomode_session`
 
-*Fichier : `lua/ge/extensions/ui/photomode/session.lua` · VM : Game Engine (GE) · 648 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/photomode/session.lua` · VM: Game Engine (GE) · 648 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_photomode_session` : `extensions.load("ui_photomode_session")`, puis la globale `ui_photomode_session`
+**Access:** extension `ui_photomode_session`: `extensions.load("ui_photomode_session")`, then the global `ui_photomode_session`
 
-Orchestrateur de la session du mode photo. Il ouvre et ferme la session : pause de la simulation (demande de pause « ui_pause_photomode »), vue solo en écran partagé, capture puis restauration des états caméra / scène / effets / rendu avancé / node grabber, caméra libre de session, drapeau global photoModeOpen. Il gère aussi les profils de route (pause, garage), la session persistante (réglage photomodePersistentSession), le mode de surface du panneau, la confirmation de sortie et la charge utile (route payload) envoyée à l'interface Vue.
+Photo mode session orchestrator. It opens and closes the session: simulation pause (pause request "ui_pause_photomode"), solo split-screen view, capture then restoration of camera / scene / effects / advanced render / node grabber states, session free camera, global flag photoModeOpen. It also handles route profiles (pause, garage), the persistent session (setting photomodePersistentSession), the panel surface mode, exit confirmation and the payload (route payload) sent to the Vue UI.
 
-## Exemple
+## Example
 
 ```lua
 ui_photomode_session.beginPhotomodeSession({profile = "garage"})
--- ... réglages via ui_photomode_scene / _camera / _effects ...
+-- ... settings via ui_photomode_scene / _camera / _effects ...
 ui_photomode_session.endPhotomodeSession()
 ```
 
-## Remarques
+## Notes
 
-- Profils : "pause" (par défaut, aucun contrôle masqué) et "garage" (masque timeOfDay et cloudCover de la scène, motionBlur des effets, terrainLodScale/grassDensity/cloudQuality du rendu avancé, et désactive la feature motionBlurCapture). Un profil inconnu retombe sur "pause". Ce n'est qu'une politique de visibilité de l'interface : les appels Lua directs ne sont pas bloqués.
-- Ordre de beginPhotomodeSession : profil, pause, vue solo, rafraîchissement des défauts de capture, captureRestoreState (caméra, scène, effets, rendu avancé), captureNodeGrabberRestoreState, presets par défaut, caméra libre, suppressions (photoModeOpen = true), sessionActive = true, puis restauration de l'état persistant si activé. endPhotomodeSession fait l'inverse et remet le profil à "pause".
-- L'application de qualité « Prioritize Resolution » (applyPlatformPhotomodeQualityMode) est commentée dans begin/end : elle n'est pas utilisée dans cette version.
-- La confirmation de sortie affiche un dialogue via guihooks.trigger("showConfirmationDialog", ...) avec les rappels Lua ui_photomode_session.cancelExitConfirmation() et confirmExit() ; confirmExit navigue ensuite vers la route demandée via extensions.ui_router.navigate avec un contournement unique de la confirmation.
-- Bug du jeu : isDebugEnabled et setDebugEnabled de ce module lisent/écrivent une variable globale isDebugEnabled, non déclarée dans ce fichier, et non l'état de ui_photomode_shared ; isDebugEnabled() renvoie donc nil tant qu'aucun appel à setDebugEnabled n'a eu lieu, et logDebug de ui_photomode_shared n'est pas affecté.
-- setHiddenCameraInputEnabled empile/dépile l'action map "PhotoModeCamera" (joueur 0).
+- Profiles: "pause" (default, no control hidden) and "garage" (hides timeOfDay and cloudCover of the scene, motionBlur of the effects, terrainLodScale/grassDensity/cloudQuality of advanced render, and disables the motionBlurCapture feature). An unknown profile falls back to "pause". This is only a UI visibility policy: direct Lua calls are not blocked.
+- Order of beginPhotomodeSession: profile, pause, solo view, refresh of capture defaults, captureRestoreState (camera, scene, effects, advanced render), captureNodeGrabberRestoreState, default presets, free camera, suppressions (photoModeOpen = true), sessionActive = true, then restoration of the persistent state if enabled. endPhotomodeSession does the reverse and puts the profile back to "pause".
+- The "Prioritize Resolution" quality application (applyPlatformPhotomodeQualityMode) is commented out in begin/end: it is not used in this version.
+- The exit confirmation shows a dialog via guihooks.trigger("showConfirmationDialog", ...) with the Lua callbacks ui_photomode_session.cancelExitConfirmation() and confirmExit(); confirmExit then navigates to the requested route via extensions.ui_router.navigate with a one-time bypass of the confirmation.
+- Game bug: isDebugEnabled and setDebugEnabled of this module read/write a global variable isDebugEnabled, not declared in this file, and not the state of ui_photomode_shared; isDebugEnabled() therefore returns nil until setDebugEnabled has been called, and logDebug of ui_photomode_shared is not affected.
+- setHiddenCameraInputEnabled pushes/pops the "PhotoModeCamera" action map (player 0).
 
-**Dépendances (chargées avant) :** `ui_photomode_shared`, `ui_photomode_camera`, `ui_photomode_scene`, `ui_photomode_flash`, `ui_photomode_effects`, `ui_photomode_advancedRender`, `ui_photomode_capture`, `ui_photomode_presets`, `core_settings_graphic`
+**Dependencies (loaded first):** `ui_photomode_shared`, `ui_photomode_camera`, `ui_photomode_scene`, `ui_photomode_flash`, `ui_photomode_effects`, `ui_photomode_advancedRender`, `ui_photomode_capture`, `ui_photomode_presets`, `core_settings_graphic`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_photomode_session.beginPhotomodeSession(options)` | Démarre la session du mode photo (pause, caméra libre, états de restauration, suppressions du monde). Ignorée si une session est déjà active. | 540 |
-| `ui_photomode_session.buildCapabilities()` | Calcule les capacités affichées par l'interface : profil actif, contrôles masqués, sections, features (upload, steam, openShareUrl, overlays, resolutionPresets, motionBlurCapture, advancedRenderTuning, developerTools…), build (shipping/developer) et état du rendu avancé. Les features du profil actif prévalent. | 271 |
-| `ui_photomode_session.cancelExitConfirmation()` | Annule la sortie en attente (bouton « retour » du dialogue) et réactive l'entrée caméra cachée si elle l'était. | 484 |
-| `ui_photomode_session.confirmExit()` | Confirme la sortie : active le contournement de confirmation puis navigue vers la route mémorisée avec extensions.ui_router.navigate. | 495 |
-| `ui_photomode_session.consumeExitConfirmationBypass()` | Lit et consomme le drapeau de contournement de la confirmation de sortie (utilisé par la garde de route du mode photo). | 434 |
-| `ui_photomode_session.endPhotomodeSession()` | Termine la session : termine la capture en cours, sauvegarde l'état persistant si activé, restaure scène, effets, rendu avancé, caméra, node grabber, vue solo, suppressions et pause, puis réinitialise les presets temporaires. Ne fait rien si tout est déjà inactif. | 578 |
-| `ui_photomode_session.getPanelSurfaceMode()` | Renvoie le mode de surface du panneau, "hidden" ou "settings" ("hidden" si la valeur stockée est invalide). | 415 |
-| `ui_photomode_session.getRoutePayload()` | Construit la charge utile envoyée à l'interface : contractVersion, sessionActive, capabilities, capture, persistentSession, panelSurfaceMode, mediaActions, resolutionPresets, suppressions. | 362 |
-| `ui_photomode_session.handleExtensionLoaded()` | Appelée au chargement de l'extension : efface les bookmarks (caméra, caméra relative, environnement, rendu avancé) et réinitialise l'état local de session. *(interne)* | 625 |
-| `ui_photomode_session.handleExtensionUnloaded()` | Appelée au déchargement de l'extension : termine la session, efface les bookmarks et réinitialise l'état local. *(interne)* | 633 |
-| `ui_photomode_session.isCaptureInProgress()` | Indique si une capture est en cours (délègue à ui_photomode_capture). | 385 |
-| `ui_photomode_session.isDebugEnabled()` | Renvoie la variable globale isDebugEnabled (voir bug dans les notes). | 510 |
-| `ui_photomode_session.isPersistentSessionEnabled()` | Lit le réglage photomodePersistentSession (si activé, les réglages de la session sont mémorisés à la fermeture et réappliqués à la prochaine ouverture). | 389 |
-| `ui_photomode_session.isPhotomodeSessionActive()` | Indique si une session de mode photo est active. | 381 |
-| `ui_photomode_session.onPhotomodeRouteEnter(routeName)` | Hook appelé à l'entrée dans une route du mode photo (routeName en argument) ; journalise seulement. *(interne)* *(hook)* | 532 |
-| `ui_photomode_session.onPhotomodeRouteLeave(routeName)` | Hook appelé à la sortie d'une route du mode photo ; journalise seulement. *(interne)* *(hook)* | 536 |
-| `ui_photomode_session.requestExitConfirmation(route, params, context)` | Mémorise la navigation de sortie demandée et affiche un dialogue de confirmation (texte différent si la session persistante est activée). Ne fait rien de plus si une confirmation est déjà en attente. | 442 |
-| `ui_photomode_session.setDebugEnabled(value)` | Définit la globale isDebugEnabled, propage le réglage à l'API screenshot (setDebugTracingEnabled) et journalise. | 514 |
-| `ui_photomode_session.setHiddenCameraInputEnabled(enabled)` | Active ou désactive les entrées de la caméra photo cachée en empilant/dépilant l'action map "PhotoModeCamera". Sans effet si l'état ne change pas. | 97 |
-| `ui_photomode_session.setPanelSurfaceMode(mode)` | Change le mode de surface du panneau ; refuse les valeurs autres que "hidden" et "settings". | 420 |
-| `ui_photomode_session.setPersistentSessionEnabled(value)` | Écrit le réglage de session persistante ; à la désactivation, efface l'état persistant mémorisé, puis notifie l'interface des réglages. | 396 |
-| `ui_photomode_session.traceCaptureDebug(scope, payload)` | Journalise un message de debug de capture : « scope » suivi du payload sérialisé (JSON). | 523 |
+| `ui_photomode_session.beginPhotomodeSession(options)` | Starts the photo mode session (pause, free camera, restore states, world suppressions). Ignored if a session is already active. | 540 |
+| `ui_photomode_session.buildCapabilities()` | Computes the capabilities displayed by the UI: active profile, hidden controls, sections, features (upload, steam, openShareUrl, overlays, resolutionPresets, motionBlurCapture, advancedRenderTuning, developerTools...), build (shipping/developer) and advanced render state. The active profile's features take precedence. | 271 |
+| `ui_photomode_session.cancelExitConfirmation()` | Cancels the pending exit (the dialog's "back" button) and re-enables the hidden camera input if it was. | 484 |
+| `ui_photomode_session.confirmExit()` | Confirms the exit: enables the confirmation bypass then navigates to the stored route with extensions.ui_router.navigate. | 495 |
+| `ui_photomode_session.consumeExitConfirmationBypass()` | Reads and consumes the exit confirmation bypass flag (used by the photo mode route guard). | 434 |
+| `ui_photomode_session.endPhotomodeSession()` | Ends the session: ends the capture in progress, saves the persistent state if enabled, restores scene, effects, advanced render, camera, node grabber, solo view, suppressions and pause, then resets the temporary presets. Does nothing if everything is already inactive. | 578 |
+| `ui_photomode_session.getPanelSurfaceMode()` | Returns the panel surface mode, "hidden" or "settings" ("hidden" if the stored value is invalid). | 415 |
+| `ui_photomode_session.getRoutePayload()` | Builds the payload sent to the UI: contractVersion, sessionActive, capabilities, capture, persistentSession, panelSurfaceMode, mediaActions, resolutionPresets, suppressions. | 362 |
+| `ui_photomode_session.handleExtensionLoaded()` | Called when the extension is loaded: clears the bookmarks (camera, relative camera, environment, advanced render) and resets the local session state. *(internal)* | 625 |
+| `ui_photomode_session.handleExtensionUnloaded()` | Called when the extension is unloaded: ends the session, clears the bookmarks and resets the local state. *(internal)* | 633 |
+| `ui_photomode_session.isCaptureInProgress()` | Indicates whether a capture is in progress (delegates to ui_photomode_capture). | 385 |
+| `ui_photomode_session.isDebugEnabled()` | Returns the global variable isDebugEnabled (see the bug in the notes). | 510 |
+| `ui_photomode_session.isPersistentSessionEnabled()` | Reads the photomodePersistentSession setting (if enabled, the session settings are stored on close and reapplied at the next opening). | 389 |
+| `ui_photomode_session.isPhotomodeSessionActive()` | Indicates whether a photo mode session is active. | 381 |
+| `ui_photomode_session.onPhotomodeRouteEnter(routeName)` | Hook called on entering a photo mode route (routeName as argument); only logs. *(internal)* *(hook)* | 532 |
+| `ui_photomode_session.onPhotomodeRouteLeave(routeName)` | Hook called on leaving a photo mode route; only logs. *(internal)* *(hook)* | 536 |
+| `ui_photomode_session.requestExitConfirmation(route, params, context)` | Stores the requested exit navigation and shows a confirmation dialog (different text if the persistent session is enabled). Does nothing more if a confirmation is already pending. | 442 |
+| `ui_photomode_session.setDebugEnabled(value)` | Sets the global isDebugEnabled, propagates the setting to the screenshot API (setDebugTracingEnabled) and logs. | 514 |
+| `ui_photomode_session.setHiddenCameraInputEnabled(enabled)` | Enables or disables the hidden photo camera inputs by pushing/popping the "PhotoModeCamera" action map. No effect if the state does not change. | 97 |
+| `ui_photomode_session.setPanelSurfaceMode(mode)` | Changes the panel surface mode; refuses values other than "hidden" and "settings". | 420 |
+| `ui_photomode_session.setPersistentSessionEnabled(value)` | Writes the persistent session setting; on disabling, clears the stored persistent state, then notifies the UI of the settings. | 396 |
+| `ui_photomode_session.traceCaptureDebug(scope, payload)` | Logs a capture debug message: "scope" followed by the serialized payload (JSON). | 523 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_photomode_session.beginPhotomodeSession(options)`
 
-Démarre la session du mode photo (pause, caméra libre, états de restauration, suppressions du monde). Ignorée si une session est déjà active.
+Starts the photo mode session (pause, free camera, restore states, world suppressions). Ignored if a session is already active.
 
-- `options` (*table|nil*) : options.profile : "pause" (défaut) ou "garage".
-- **renvoie** : boolean true si la session a démarré, false si elle était déjà active.
+- `options` (*table|nil*) : options.profile: "pause" (default) or "garage".
+- **returns**: boolean true if the session started, false if it was already active.
 
 #### `ui_photomode_session.buildCapabilities()`
 
-Calcule les capacités affichées par l'interface : profil actif, contrôles masqués, sections, features (upload, steam, openShareUrl, overlays, resolutionPresets, motionBlurCapture, advancedRenderTuning, developerTools…), build (shipping/developer) et état du rendu avancé. Les features du profil actif prévalent.
+Computes the capabilities displayed by the UI: active profile, hidden controls, sections, features (upload, steam, openShareUrl, overlays, resolutionPresets, motionBlurCapture, advancedRenderTuning, developerTools...), build (shipping/developer) and advanced render state. The active profile's features take precedence.
 
-- **renvoie** : table Table de capacités.
+- **returns**: table Capabilities table.
 
 #### `ui_photomode_session.confirmExit()`
 
-Confirme la sortie : active le contournement de confirmation puis navigue vers la route mémorisée avec extensions.ui_router.navigate.
+Confirms the exit: enables the confirmation bypass then navigates to the stored route with extensions.ui_router.navigate.
 
-- **renvoie** : boolean|any false si aucune navigation en attente, sinon le résultat de ui_router.navigate.
+- **returns**: boolean|any false if no navigation is pending, otherwise the result of ui_router.navigate.
 
 #### `ui_photomode_session.consumeExitConfirmationBypass()`
 
-Lit et consomme le drapeau de contournement de la confirmation de sortie (utilisé par la garde de route du mode photo).
+Reads and consumes the exit confirmation bypass flag (used by the photo mode route guard).
 
-- **renvoie** : boolean true si le contournement était armé (il est alors désarmé).
+- **returns**: boolean true if the bypass was armed (it is then disarmed).
 
 #### `ui_photomode_session.endPhotomodeSession()`
 
-Termine la session : termine la capture en cours, sauvegarde l'état persistant si activé, restaure scène, effets, rendu avancé, caméra, node grabber, vue solo, suppressions et pause, puis réinitialise les presets temporaires. Ne fait rien si tout est déjà inactif.
+Ends the session: ends the capture in progress, saves the persistent state if enabled, restores scene, effects, advanced render, camera, node grabber, solo view, suppressions and pause, then resets the temporary presets. Does nothing if everything is already inactive.
 
-- **renvoie** : boolean true si une fermeture a été faite, false si la session était déjà inactive.
+- **returns**: boolean true if a closing was done, false if the session was already inactive.
 
 #### `ui_photomode_session.getPanelSurfaceMode()`
 
-Renvoie le mode de surface du panneau, "hidden" ou "settings" ("hidden" si la valeur stockée est invalide).
+Returns the panel surface mode, "hidden" or "settings" ("hidden" if the stored value is invalid).
 
-- **renvoie** : string "hidden" ou "settings".
+- **returns**: string "hidden" or "settings".
 
 #### `ui_photomode_session.getRoutePayload()`
 
-Construit la charge utile envoyée à l'interface : contractVersion, sessionActive, capabilities, capture, persistentSession, panelSurfaceMode, mediaActions, resolutionPresets, suppressions.
+Builds the payload sent to the UI: contractVersion, sessionActive, capabilities, capture, persistentSession, panelSurfaceMode, mediaActions, resolutionPresets, suppressions.
 
-- **renvoie** : table Charge utile de route du mode photo.
+- **returns**: table Photo mode route payload.
 
 #### `ui_photomode_session.isCaptureInProgress()`
 
-Indique si une capture est en cours (délègue à ui_photomode_capture).
+Indicates whether a capture is in progress (delegates to ui_photomode_capture).
 
-- **renvoie** : boolean true si une capture est en cours.
+- **returns**: boolean true if a capture is in progress.
 
 #### `ui_photomode_session.isDebugEnabled()`
 
-Renvoie la variable globale isDebugEnabled (voir bug dans les notes).
+Returns the global variable isDebugEnabled (see the bug in the notes).
 
-- **renvoie** : boolean|nil Valeur de la globale isDebugEnabled.
+- **returns**: boolean|nil Value of the global isDebugEnabled.
 
 #### `ui_photomode_session.isPersistentSessionEnabled()`
 
-Lit le réglage photomodePersistentSession (si activé, les réglages de la session sont mémorisés à la fermeture et réappliqués à la prochaine ouverture).
+Reads the photomodePersistentSession setting (if enabled, the session settings are stored on close and reapplied at the next opening).
 
-- **renvoie** : boolean true si la session persistante est activée.
+- **returns**: boolean true if the persistent session is enabled.
 
 #### `ui_photomode_session.isPhotomodeSessionActive()`
 
-Indique si une session de mode photo est active.
+Indicates whether a photo mode session is active.
 
-- **renvoie** : boolean Valeur de S.sessionActive.
+- **returns**: boolean Value of S.sessionActive.
 
 #### `ui_photomode_session.onPhotomodeRouteEnter(routeName)`
 
-Hook appelé à l'entrée dans une route du mode photo (routeName en argument) ; journalise seulement.
+Hook called on entering a photo mode route (routeName as argument); only logs.
 
-- `routeName` (*string*) : Nom de la route.
+- `routeName` (*string*) : Name of the road.
 
 #### `ui_photomode_session.onPhotomodeRouteLeave(routeName)`
 
-Hook appelé à la sortie d'une route du mode photo ; journalise seulement.
+Hook called on leaving a photo mode route; only logs.
 
-- `routeName` (*string*) : Nom de la route.
+- `routeName` (*string*) : Name of the road.
 
 #### `ui_photomode_session.requestExitConfirmation(route, params, context)`
 
-Mémorise la navigation de sortie demandée et affiche un dialogue de confirmation (texte différent si la session persistante est activée). Ne fait rien de plus si une confirmation est déjà en attente.
+Stores the requested exit navigation and shows a confirmation dialog (different text if the persistent session is enabled). Does nothing more if a confirmation is already pending.
 
-- `route` (*table|any*) : Route visée (utilise route.name si context.routeName est absent).
-- `params` (*any*) : Paramètres de la route à mémoriser.
+- `route` (*table|any*) : Target route (uses route.name if context.routeName is absent).
+- `params` (*any*) : Route parameters to store.
 - `context` (*table|nil*) : {routeName?, options?} .
-- **renvoie** : boolean false si aucun nom de route valide, sinon true.
+- **returns**: boolean false if no valid route name, otherwise true.
 
 #### `ui_photomode_session.setDebugEnabled(value)`
 
-Définit la globale isDebugEnabled, propage le réglage à l'API screenshot (setDebugTracingEnabled) et journalise.
+Sets the global isDebugEnabled, propagates the setting to the screenshot API (setDebugTracingEnabled) and logs.
 
-- `value` (*any*) : Activé uniquement si value == true.
+- `value` (*any*) : Enabled only if value == true.
 
 #### `ui_photomode_session.setHiddenCameraInputEnabled(enabled)`
 
-Active ou désactive les entrées de la caméra photo cachée en empilant/dépilant l'action map "PhotoModeCamera". Sans effet si l'état ne change pas.
+Enables or disables the hidden photo camera inputs by pushing/popping the "PhotoModeCamera" action map. No effect if the state does not change.
 
-- `enabled` (*boolean*) : Activé uniquement si enabled == true.
-- **renvoie** : boolean Toujours true.
+- `enabled` (*boolean*) : Enabled only if enabled == true.
+- **returns**: boolean Always true.
 
 #### `ui_photomode_session.setPanelSurfaceMode(mode)`
 
-Change le mode de surface du panneau ; refuse les valeurs autres que "hidden" et "settings".
+Changes the panel surface mode; refuses values other than "hidden" and "settings".
 
-- `mode` (*string*) : "hidden" ou "settings".
-- **renvoie** : table {ok=boolean, mode=string}.
+- `mode` (*string*) : "hidden" or "settings".
+- **returns**: table {ok=boolean, mode=string}.
 
 #### `ui_photomode_session.setPersistentSessionEnabled(value)`
 
-Écrit le réglage de session persistante ; à la désactivation, efface l'état persistant mémorisé, puis notifie l'interface des réglages.
+Writes the persistent session setting; on disabling, clears the stored persistent state, then notifies the UI of the settings.
 
-- `value` (*boolean|any*) : Nouvelle valeur (normalisée en booléen).
-- **renvoie** : table {ok=boolean, enabled=boolean}.
+- `value` (*boolean|any*) : New value (normalized to a boolean).
+- **returns**: table {ok=boolean, enabled=boolean}.
 
 #### `ui_photomode_session.traceCaptureDebug(scope, payload)`
 
-Journalise un message de debug de capture : « scope » suivi du payload sérialisé (JSON).
+Logs a capture debug message: "scope" followed by the serialized payload (JSON).
 
-- `scope` (*string|nil*) : Libellé ("capture" par défaut).
-- `payload` (*any*) : Données à ajouter.
+- `scope` (*string|nil*) : Label ("capture" by default).
+- `payload` (*any*) : Data to append.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : ui_photomode_shared, _camera, _scene, _flash, _effects, _advancedRender, _capture, _presets, core_settings_graphic. |
+| `dependencies` | table<integer, string> | Extensions loaded before: ui_photomode_shared, _camera, _scene, _flash, _effects, _advancedRender, _capture, _presets, core_settings_graphic. |
 
-**Évènements UI (guihooks.trigger) :** `showConfirmationDialog`
+**UI events (guihooks.trigger):** `showConfirmationDialog`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/photomode/session.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/photomode/session.lua`.*

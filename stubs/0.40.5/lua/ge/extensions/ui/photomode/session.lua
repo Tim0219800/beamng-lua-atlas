@@ -2,128 +2,128 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/photomode/session.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Orchestrateur de la session du mode photo. Il ouvre et ferme la session : pause de la simulation (demande de pause « ui_pause_photomode »), vue solo en écran partagé, capture puis restauration des états caméra / scène / effets / rendu avancé / node grabber, caméra libre de session, drapeau global photoModeOpen. Il gère aussi les profils de route (pause, garage), la session persistante (réglage photomodePersistentSession), le mode de surface du panneau, la confirmation de sortie et la charge utile (route payload) envoyée à l'interface Vue.
---- Accès : extension `ui_photomode_session` : `extensions.load("ui_photomode_session")`, puis la globale `ui_photomode_session`
+--- Photo mode session orchestrator. It opens and closes the session: simulation pause (pause request "ui_pause_photomode"), solo split-screen view, capture then restoration of camera / scene / effects / advanced render / node grabber states, session free camera, global flag photoModeOpen. It also handles route profiles (pause, garage), the persistent session (setting photomodePersistentSession), the panel surface mode, exit confirmation and the payload (route payload) sent to the Vue UI.
+--- Access: extension `ui_photomode_session`: `extensions.load("ui_photomode_session")`, then the global `ui_photomode_session`
 ---@class ui_photomode_session
----@field dependencies table<integer, string> Extensions chargées avant : ui_photomode_shared, _camera, _scene, _flash, _effects, _advancedRender, _capture, _presets, core_settings_graphic.
+---@field dependencies table<integer, string> Extensions loaded before: ui_photomode_shared, _camera, _scene, _flash, _effects, _advancedRender, _capture, _presets, core_settings_graphic.
 ui_photomode_session = {}
 
---- Démarre la session du mode photo (pause, caméra libre, états de restauration, suppressions du monde). Ignorée si une session est déjà active.
----Source : lua/ge/extensions/ui/photomode/session.lua:540
----@param options table|nil options.profile : "pause" (défaut) ou "garage".
----@return boolean  true si la session a démarré, false si elle était déjà active.
+--- Starts the photo mode session (pause, free camera, restore states, world suppressions). Ignored if a session is already active.
+---Source: lua/ge/extensions/ui/photomode/session.lua:540
+---@param options table|nil options.profile: "pause" (default) or "garage".
+---@return boolean  true if the session started, false if it was already active.
 function ui_photomode_session.beginPhotomodeSession(options) end
 
---- Calcule les capacités affichées par l'interface : profil actif, contrôles masqués, sections, features (upload, steam, openShareUrl, overlays, resolutionPresets, motionBlurCapture, advancedRenderTuning, developerTools…), build (shipping/developer) et état du rendu avancé. Les features du profil actif prévalent.
----Source : lua/ge/extensions/ui/photomode/session.lua:271
----@return table  Table de capacités.
+--- Computes the capabilities displayed by the UI: active profile, hidden controls, sections, features (upload, steam, openShareUrl, overlays, resolutionPresets, motionBlurCapture, advancedRenderTuning, developerTools...), build (shipping/developer) and advanced render state. The active profile's features take precedence.
+---Source: lua/ge/extensions/ui/photomode/session.lua:271
+---@return table  Capabilities table.
 function ui_photomode_session.buildCapabilities() end
 
---- Annule la sortie en attente (bouton « retour » du dialogue) et réactive l'entrée caméra cachée si elle l'était.
----Source : lua/ge/extensions/ui/photomode/session.lua:484
+--- Cancels the pending exit (the dialog's "back" button) and re-enables the hidden camera input if it was.
+---Source: lua/ge/extensions/ui/photomode/session.lua:484
 function ui_photomode_session.cancelExitConfirmation() end
 
---- Confirme la sortie : active le contournement de confirmation puis navigue vers la route mémorisée avec extensions.ui_router.navigate.
----Source : lua/ge/extensions/ui/photomode/session.lua:495
----@return boolean|any  false si aucune navigation en attente, sinon le résultat de ui_router.navigate.
+--- Confirms the exit: enables the confirmation bypass then navigates to the stored route with extensions.ui_router.navigate.
+---Source: lua/ge/extensions/ui/photomode/session.lua:495
+---@return boolean|any  false if no navigation is pending, otherwise the result of ui_router.navigate.
 function ui_photomode_session.confirmExit() end
 
---- Lit et consomme le drapeau de contournement de la confirmation de sortie (utilisé par la garde de route du mode photo).
----Source : lua/ge/extensions/ui/photomode/session.lua:434
----@return boolean  true si le contournement était armé (il est alors désarmé).
+--- Reads and consumes the exit confirmation bypass flag (used by the photo mode route guard).
+---Source: lua/ge/extensions/ui/photomode/session.lua:434
+---@return boolean  true if the bypass was armed (it is then disarmed).
 function ui_photomode_session.consumeExitConfirmationBypass() end
 
---- Termine la session : termine la capture en cours, sauvegarde l'état persistant si activé, restaure scène, effets, rendu avancé, caméra, node grabber, vue solo, suppressions et pause, puis réinitialise les presets temporaires. Ne fait rien si tout est déjà inactif.
----Source : lua/ge/extensions/ui/photomode/session.lua:578
----@return boolean  true si une fermeture a été faite, false si la session était déjà inactive.
+--- Ends the session: ends the capture in progress, saves the persistent state if enabled, restores scene, effects, advanced render, camera, node grabber, solo view, suppressions and pause, then resets the temporary presets. Does nothing if everything is already inactive.
+---Source: lua/ge/extensions/ui/photomode/session.lua:578
+---@return boolean  true if a closing was done, false if the session was already inactive.
 function ui_photomode_session.endPhotomodeSession() end
 
---- Renvoie le mode de surface du panneau, "hidden" ou "settings" ("hidden" si la valeur stockée est invalide).
----Source : lua/ge/extensions/ui/photomode/session.lua:415
----@return string  "hidden" ou "settings".
+--- Returns the panel surface mode, "hidden" or "settings" ("hidden" if the stored value is invalid).
+---Source: lua/ge/extensions/ui/photomode/session.lua:415
+---@return string  "hidden" or "settings".
 function ui_photomode_session.getPanelSurfaceMode() end
 
---- Construit la charge utile envoyée à l'interface : contractVersion, sessionActive, capabilities, capture, persistentSession, panelSurfaceMode, mediaActions, resolutionPresets, suppressions.
----Source : lua/ge/extensions/ui/photomode/session.lua:362
----@return table  Charge utile de route du mode photo.
+--- Builds the payload sent to the UI: contractVersion, sessionActive, capabilities, capture, persistentSession, panelSurfaceMode, mediaActions, resolutionPresets, suppressions.
+---Source: lua/ge/extensions/ui/photomode/session.lua:362
+---@return table  Photo mode route payload.
 function ui_photomode_session.getRoutePayload() end
 
---- Appelée au chargement de l'extension : efface les bookmarks (caméra, caméra relative, environnement, rendu avancé) et réinitialise l'état local de session.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/session.lua:625
+--- Called when the extension is loaded: clears the bookmarks (camera, relative camera, environment, advanced render) and resets the local session state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/session.lua:625
 function ui_photomode_session.handleExtensionLoaded() end
 
---- Appelée au déchargement de l'extension : termine la session, efface les bookmarks et réinitialise l'état local.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/session.lua:633
+--- Called when the extension is unloaded: ends the session, clears the bookmarks and resets the local state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/session.lua:633
 function ui_photomode_session.handleExtensionUnloaded() end
 
---- Indique si une capture est en cours (délègue à ui_photomode_capture).
----Source : lua/ge/extensions/ui/photomode/session.lua:385
----@return boolean  true si une capture est en cours.
+--- Indicates whether a capture is in progress (delegates to ui_photomode_capture).
+---Source: lua/ge/extensions/ui/photomode/session.lua:385
+---@return boolean  true if a capture is in progress.
 function ui_photomode_session.isCaptureInProgress() end
 
---- Renvoie la variable globale isDebugEnabled (voir bug dans les notes).
----Source : lua/ge/extensions/ui/photomode/session.lua:510
----@return boolean|nil  Valeur de la globale isDebugEnabled.
+--- Returns the global variable isDebugEnabled (see the bug in the notes).
+---Source: lua/ge/extensions/ui/photomode/session.lua:510
+---@return boolean|nil  Value of the global isDebugEnabled.
 function ui_photomode_session.isDebugEnabled() end
 
---- Lit le réglage photomodePersistentSession (si activé, les réglages de la session sont mémorisés à la fermeture et réappliqués à la prochaine ouverture).
----Source : lua/ge/extensions/ui/photomode/session.lua:389
----@return boolean  true si la session persistante est activée.
+--- Reads the photomodePersistentSession setting (if enabled, the session settings are stored on close and reapplied at the next opening).
+---Source: lua/ge/extensions/ui/photomode/session.lua:389
+---@return boolean  true if the persistent session is enabled.
 function ui_photomode_session.isPersistentSessionEnabled() end
 
---- Indique si une session de mode photo est active.
----Source : lua/ge/extensions/ui/photomode/session.lua:381
----@return boolean  Valeur de S.sessionActive.
+--- Indicates whether a photo mode session is active.
+---Source: lua/ge/extensions/ui/photomode/session.lua:381
+---@return boolean  Value of S.sessionActive.
 function ui_photomode_session.isPhotomodeSessionActive() end
 
---- Hook appelé à l'entrée dans une route du mode photo (routeName en argument) ; journalise seulement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/session.lua:532
----@param routeName string Nom de la route.
+--- Hook called on entering a photo mode route (routeName as argument); only logs.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/session.lua:532
+---@param routeName string Name of the road.
 function ui_photomode_session.onPhotomodeRouteEnter(routeName) end
 
---- Hook appelé à la sortie d'une route du mode photo ; journalise seulement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/session.lua:536
----@param routeName string Nom de la route.
+--- Hook called on leaving a photo mode route; only logs.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/session.lua:536
+---@param routeName string Name of the road.
 function ui_photomode_session.onPhotomodeRouteLeave(routeName) end
 
---- Mémorise la navigation de sortie demandée et affiche un dialogue de confirmation (texte différent si la session persistante est activée). Ne fait rien de plus si une confirmation est déjà en attente.
----Source : lua/ge/extensions/ui/photomode/session.lua:442
----@param route table|any Route visée (utilise route.name si context.routeName est absent).
----@param params any Paramètres de la route à mémoriser.
+--- Stores the requested exit navigation and shows a confirmation dialog (different text if the persistent session is enabled). Does nothing more if a confirmation is already pending.
+---Source: lua/ge/extensions/ui/photomode/session.lua:442
+---@param route table|any Target route (uses route.name if context.routeName is absent).
+---@param params any Route parameters to store.
 ---@param context table|nil {routeName?, options?} .
----@return boolean  false si aucun nom de route valide, sinon true.
+---@return boolean  false if no valid route name, otherwise true.
 function ui_photomode_session.requestExitConfirmation(route, params, context) end
 
---- Définit la globale isDebugEnabled, propage le réglage à l'API screenshot (setDebugTracingEnabled) et journalise.
----Source : lua/ge/extensions/ui/photomode/session.lua:514
----@param value any Activé uniquement si value == true.
+--- Sets the global isDebugEnabled, propagates the setting to the screenshot API (setDebugTracingEnabled) and logs.
+---Source: lua/ge/extensions/ui/photomode/session.lua:514
+---@param value any Enabled only if value == true.
 function ui_photomode_session.setDebugEnabled(value) end
 
---- Active ou désactive les entrées de la caméra photo cachée en empilant/dépilant l'action map "PhotoModeCamera". Sans effet si l'état ne change pas.
----Source : lua/ge/extensions/ui/photomode/session.lua:97
----@param enabled boolean Activé uniquement si enabled == true.
----@return boolean  Toujours true.
+--- Enables or disables the hidden photo camera inputs by pushing/popping the "PhotoModeCamera" action map. No effect if the state does not change.
+---Source: lua/ge/extensions/ui/photomode/session.lua:97
+---@param enabled boolean Enabled only if enabled == true.
+---@return boolean  Always true.
 function ui_photomode_session.setHiddenCameraInputEnabled(enabled) end
 
---- Change le mode de surface du panneau ; refuse les valeurs autres que "hidden" et "settings".
----Source : lua/ge/extensions/ui/photomode/session.lua:420
----@param mode string "hidden" ou "settings".
+--- Changes the panel surface mode; refuses values other than "hidden" and "settings".
+---Source: lua/ge/extensions/ui/photomode/session.lua:420
+---@param mode string "hidden" or "settings".
 ---@return table  {ok=boolean, mode=string}.
 function ui_photomode_session.setPanelSurfaceMode(mode) end
 
---- Écrit le réglage de session persistante ; à la désactivation, efface l'état persistant mémorisé, puis notifie l'interface des réglages.
----Source : lua/ge/extensions/ui/photomode/session.lua:396
----@param value boolean|any Nouvelle valeur (normalisée en booléen).
+--- Writes the persistent session setting; on disabling, clears the stored persistent state, then notifies the UI of the settings.
+---Source: lua/ge/extensions/ui/photomode/session.lua:396
+---@param value boolean|any New value (normalized to a boolean).
 ---@return table  {ok=boolean, enabled=boolean}.
 function ui_photomode_session.setPersistentSessionEnabled(value) end
 
---- Journalise un message de debug de capture : « scope » suivi du payload sérialisé (JSON).
----Source : lua/ge/extensions/ui/photomode/session.lua:523
----@param scope string|nil Libellé ("capture" par défaut).
----@param payload any Données à ajouter.
+--- Logs a capture debug message: "scope" followed by the serialized payload (JSON).
+---Source: lua/ge/extensions/ui/photomode/session.lua:523
+---@param scope string|nil Label ("capture" by default).
+---@param payload any Data to append.
 function ui_photomode_session.traceCaptureDebug(scope, payload) end
 

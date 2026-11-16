@@ -2,216 +2,216 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/gridSelector.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Façade unique entre l'interface (UI Vue) et les sélecteurs en grille (véhicules, gameplay, apps, freeroam, course rapide, light runner, lignes de bus). Chaque appel reçoit le nom du backend en premier argument et est redirigé (dispatch) vers l'extension `ui_<nom>_general` correspondante. Le module normalise les chemins, les groupes de tuiles, les filtres, les données d'affichage, l'en-tête et les détails de gestion avant de les renvoyer à l'UI, et fournit des valeurs de repli pour les méthodes optionnelles absentes d'un backend.
---- Accès : extension `ui_gridSelector` : `extensions.load("ui_gridSelector")`, puis la globale `ui_gridSelector`
+--- Single facade between the UI (Vue) and the grid selectors (vehicles, gameplay, apps, freeroam, quick race, light runner, bus routes). Each call receives the backend name as its first argument and is dispatched to the matching `ui_<name>_general` extension. The module normalizes paths, tile groups, filters, display data, header and management details before returning them to the UI, and provides fallback values for optional methods missing from a backend.
+--- Access: extension `ui_gridSelector`: `extensions.load("ui_gridSelector")`, then the global `ui_gridSelector`
 ---@class ui_gridSelector
----@field BackendContract table Décrit le contrat attendu des backends : `requiredMethods` (liste de noms) et `optionalMethods` (liste de noms).
----@field dependencies table<integer, string> Extensions backend chargées avant ce module (les sept `ui_*Selector_general`).
+---@field BackendContract table Describes the expected backend contract: `requiredMethods` (list of names) and `optionalMethods` (list of names).
+---@field dependencies table<integer, string> Backend extensions loaded before this module (the seven `ui_*Selector_general`).
 ui_gridSelector = {}
 
---- Efface tous les filtres (optionnel, repli : false).
----Source : lua/ge/extensions/ui/gridSelector.lua:415
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
----@return boolean|any  false si non implémenté.
+--- Clears all filters (optional, fallback: false).
+---Source: lua/ge/extensions/ui/gridSelector.lua:415
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
+---@return boolean|any  false if not implemented.
 function ui_gridSelector.clearAllFilters(backendName, ...) end
 
---- Notifie le backend que l'écran a été fermé depuis l'UI (optionnel, repli : nil).
----Source : lua/ge/extensions/ui/gridSelector.lua:428
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
+--- Notifies the backend that the screen was closed from the UI (optional, fallback: nil).
+---Source: lua/ge/extensions/ui/gridSelector.lua:428
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
 function ui_gridSelector.closedFromUI(backendName, ...) end
 
---- Exécute un bouton d'action du panneau de détails (optionnel, repli : nil).
----Source : lua/ge/extensions/ui/gridSelector.lua:432
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
+--- Executes an action button of the details panel (optional, fallback: nil).
+---Source: lua/ge/extensions/ui/gridSelector.lua:432
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
 function ui_gridSelector.executeButton(backendName, ...) end
 
---- Exécute l'action de double-clic sur une tuile (optionnel, repli : nil).
----Source : lua/ge/extensions/ui/gridSelector.lua:435
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
+--- Executes the double-click action on a tile (optional, fallback: nil).
+---Source: lua/ge/extensions/ui/gridSelector.lua:435
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
 function ui_gridSelector.executeDoubleClick(backendName, ...) end
 
---- Appelle exitCallback du backend (sans repli).
----Source : lua/ge/extensions/ui/gridSelector.lua:434
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
+--- Calls the backend's exitCallback (no fallback).
+---Source: lua/ge/extensions/ui/gridSelector.lua:434
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
 function ui_gridSelector.exitCallback(backendName, ...) end
 
---- Ouvre un dossier dans l'explorateur de fichiers du système (Engine.Platform.exploreFolder).
----Source : lua/ge/extensions/ui/gridSelector.lua:495
----@param _backendName string Ignoré.
----@param path string Chemin du dossier.
+--- Opens a folder in the system file explorer (Engine.Platform.exploreFolder).
+---Source: lua/ge/extensions/ui/gridSelector.lua:495
+---@param _backendName string Ignored.
+---@param path string Folder path.
 function ui_gridSelector.exploreFolder(_backendName, path) end
 
---- Renvoie les filtres actifs du backend (sans repli).
----Source : lua/ge/extensions/ui/gridSelector.lua:410
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
----@return any  Filtres actifs.
+--- Returns the backend's active filters (no fallback).
+---Source: lua/ge/extensions/ui/gridSelector.lua:410
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
+---@return any  Active filters.
 function ui_gridSelector.getActiveFilters(backendName, ...) end
 
---- Renvoie la table de l'extension backend associée au nom donné, ou nil si le nom est inconnu.
----Source : lua/ge/extensions/ui/gridSelector.lua:64
----@param backendName string vehicleSelector, gameplaySelector, appSelector, freeroamSelector, quickraceSelector, lightRunnerSelector ou busRouteSelector
----@return table|nil  Le module backend (ex. ui_vehicleSelector_general).
+--- Returns the backend extension table associated with the given name, or nil if the name is unknown.
+---Source: lua/ge/extensions/ui/gridSelector.lua:64
+---@param backendName string vehicleSelector, gameplaySelector, appSelector, freeroamSelector, quickraceSelector, lightRunnerSelector or busRouteSelector
+---@return table|nil  The backend module (e.g. ui_vehicleSelector_general).
 function ui_gridSelector.getBackendByName(backendName) end
 
---- Renvoie les détails de l'élément sélectionné (requis).
----Source : lua/ge/extensions/ui/gridSelector.lua:430
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
----@return any  Détails fournis par le backend.
+--- Returns the details of the selected item (required).
+---Source: lua/ge/extensions/ui/gridSelector.lua:430
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
+---@return any  Details provided by the backend.
 function ui_gridSelector.getDetails(backendName, ...) end
 
---- Renvoie les options d'affichage (tri, regroupement, etc.) du backend (requis).
----Source : lua/ge/extensions/ui/gridSelector.lua:419
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
----@return table  Options d'affichage.
+--- Returns the backend's display options (sorting, grouping, etc.) (required).
+---Source: lua/ge/extensions/ui/gridSelector.lua:419
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
+---@return table  Display options.
 function ui_gridSelector.getDisplayDataOptions(backendName, ...) end
 
---- Renvoie les filtres du backend (requis).
----Source : lua/ge/extensions/ui/gridSelector.lua:409
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
----@return table  Données de filtres du backend.
+--- Returns the backend's filters (required).
+---Source: lua/ge/extensions/ui/gridSelector.lua:409
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
+---@return table  Backend filter data.
 function ui_gridSelector.getFilters(backendName, ...) end
 
---- Alias de getSelectorSnapshot.
----Source : lua/ge/extensions/ui/gridSelector.lua:481
----@param backendName string Nom du backend.
----@param path table|nil Chemin.
----@return table  Instantané complet.
+--- Alias of getSelectorSnapshot.
+---Source: lua/ge/extensions/ui/gridSelector.lua:481
+---@param backendName string Backend name.
+---@param path table|nil Path.
+---@return table  Full snapshot.
 function ui_gridSelector.getInitialData(backendName, path) end
 
---- Renvoie les boutons/détails de gestion (optionnel, repli : { buttons = {} }).
----Source : lua/ge/extensions/ui/gridSelector.lua:433
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
+--- Returns the management buttons/details (optional, fallback: { buttons = {} }).
+---Source: lua/ge/extensions/ui/gridSelector.lua:433
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
 ---@return table  { buttons = {...}, ... }.
 function ui_gridSelector.getManagementDetails(backendName, ...) end
 
---- Renvoie le titre et les segments de chemin de l'en-tête d'écran pour le chemin donné (requis).
----Source : lua/ge/extensions/ui/gridSelector.lua:423
----@param backendName string Nom du backend.
----@param path table|nil Chemin à normaliser.
----@param ... any Arguments transmis.
+--- Returns the screen header title and path segments for the given path (required).
+---Source: lua/ge/extensions/ui/gridSelector.lua:423
+---@param backendName string Backend name.
+---@param path table|nil Path to normalize.
+---@param ... any Arguments passed on.
 ---@return table  { title, pathSegments }.
 function ui_gridSelector.getScreenHeaderTitleAndPath(backendName, path, ...) end
 
---- Renvoie le texte de recherche courant du backend (requis).
----Source : lua/ge/extensions/ui/gridSelector.lua:416
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
----@return string  Texte de recherche.
+--- Returns the backend's current search text (required).
+---Source: lua/ge/extensions/ui/gridSelector.lua:416
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
+---@return string  Search text.
 function ui_gridSelector.getSearchText(backendName, ...) end
 
---- Alias de getSelectorSnapshotSlices.
----Source : lua/ge/extensions/ui/gridSelector.lua:440
----@param backendName string Nom du backend.
----@param path table|nil Chemin.
----@param options table|nil Tranches.
----@return table  Voir getSelectorSnapshotSlices.
+--- Alias of getSelectorSnapshotSlices.
+---Source: lua/ge/extensions/ui/gridSelector.lua:440
+---@param backendName string Backend name.
+---@param path table|nil Path.
+---@param options table|nil Slices.
+---@return table  See getSelectorSnapshotSlices.
 function ui_gridSelector.getSelectorRefresh(backendName, path, options) end
 
---- Renvoie un instantané complet (toutes les tranches) du sélecteur pour un chemin.
----Source : lua/ge/extensions/ui/gridSelector.lua:481
----@param backendName string Nom du backend.
----@param path table|nil Chemin.
----@return table  Voir getSelectorSnapshotSlices. La tuile par défaut (forceAutoFocus ou isDefaultSelected) donne defaultFocusKey.
+--- Returns a full snapshot (all slices) of the selector for a path.
+---Source: lua/ge/extensions/ui/gridSelector.lua:481
+---@param backendName string Backend name.
+---@param path table|nil Path.
+---@return table  See getSelectorSnapshotSlices. The default tile (forceAutoFocus or isDefaultSelected) gives defaultFocusKey.
 function ui_gridSelector.getSelectorSnapshot(backendName, path) end
 
---- Construit une charge utile contenant seulement les tranches demandées : tiles (groups + defaultFocusKey), filters, displayData, searchText, managementDetails, header. Si aucune tranche n'est activée, toutes le sont.
----Source : lua/ge/extensions/ui/gridSelector.lua:440
----@param backendName string Nom du backend.
----@param path table|nil Chemin à normaliser.
----@param options table<string, boolean>|nil Tranches à inclure (clé = true).
+--- Builds a payload containing only the requested slices: tiles (groups + defaultFocusKey), filters, displayData, searchText, managementDetails, header. If no slice is enabled, all of them are.
+---Source: lua/ge/extensions/ui/gridSelector.lua:440
+---@param backendName string Backend name.
+---@param path table|nil Path to normalize.
+---@param options table<string, boolean>|nil Slices to include (key = true).
 ---@return table  { backendName, path, groups?, defaultFocusKey?, filters?, displayData?, searchText?, managementDetails?, header? }.
 function ui_gridSelector.getSelectorSnapshotSlices(backendName, path, options) end
 
---- Demande les tuiles au backend pour un chemin et renvoie un tableau de groupes normalisé (groupes et tuiles non-tables ignorés, copie superficielle, clé générée si manquante).
----Source : lua/ge/extensions/ui/gridSelector.lua:399
----@param backendName string Nom du backend.
----@param path table|nil Chemin { keys = {...} } ou tableau de segments.
----@param ... any Arguments supplémentaires transmis au backend.
----@return table[]  Liste de groupes { tiles = {...}, ... }.
+--- Requests the tiles from the backend for a path and returns a normalized array of groups (non-table groups and tiles ignored, shallow copy, key generated if missing).
+---Source: lua/ge/extensions/ui/gridSelector.lua:399
+---@param backendName string Backend name.
+---@param path table|nil Path { keys = {...} } or array of segments.
+---@param ... any Extra arguments passed to the backend.
+---@return table[]  List of groups { tiles = {...}, ... }.
 function ui_gridSelector.getTiles(backendName, path, ...) end
 
---- Navigue l'UI vers la page de détails d'un mod (route menu.mods.details).
----Source : lua/ge/extensions/ui/gridSelector.lua:499
----@param _backendName string Ignoré.
----@param modId string Identifiant du mod.
+--- Navigates the UI to a mod's details page (route menu.mods.details).
+---Source: lua/ge/extensions/ui/gridSelector.lua:499
+---@param _backendName string Ignored.
+---@param modId string Mod identifier.
 function ui_gridSelector.goToMod(_backendName, modId) end
 
---- Notifie le backend de la fin d'un profilage (optionnel, repli : nil).
----Source : lua/ge/extensions/ui/gridSelector.lua:427
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
+--- Notifies the backend that profiling has finished (optional, fallback: nil).
+---Source: lua/ge/extensions/ui/gridSelector.lua:427
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
 function ui_gridSelector.profilerFinish(backendName, ...) end
 
---- Demande au backend les tuiles d'un cluster (méthode optionnelle, repli : nil).
----Source : lua/ge/extensions/ui/gridSelector.lua:404
----@param backendName string Nom du backend.
----@param path table|nil Chemin à normaliser.
----@param ... any Arguments transmis.
----@return any  Résultat du backend.
+--- Requests the tiles of a cluster from the backend (optional method, fallback: nil).
+---Source: lua/ge/extensions/ui/gridSelector.lua:404
+---@param backendName string Backend name.
+---@param path table|nil Path to normalize.
+---@param ... any Arguments passed on.
+---@return any  Backend result.
 function ui_gridSelector.requestClusterTiles(backendName, path, ...) end
 
---- Demande au backend de préparer les détails d'un élément (optionnel, repli : nil).
----Source : lua/ge/extensions/ui/gridSelector.lua:431
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
+--- Asks the backend to prepare an item's details (optional, fallback: nil).
+---Source: lua/ge/extensions/ui/gridSelector.lua:431
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
 function ui_gridSelector.requestDetails(backendName, ...) end
 
---- Remet les options d'affichage aux valeurs par défaut (requis).
----Source : lua/ge/extensions/ui/gridSelector.lua:421
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
+--- Resets the display options to their default values (required).
+---Source: lua/ge/extensions/ui/gridSelector.lua:421
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
 function ui_gridSelector.resetDisplayDataToDefaults(backendName, ...) end
 
---- Réinitialise un filtre de plage côté backend (sans repli).
----Source : lua/ge/extensions/ui/gridSelector.lua:413
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
+--- Resets a range filter on the backend side (no fallback).
+---Source: lua/ge/extensions/ui/gridSelector.lua:413
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
 function ui_gridSelector.resetRangeFilter(backendName, ...) end
 
---- Réinitialise un filtre à ensemble de valeurs côté backend (sans repli).
----Source : lua/ge/extensions/ui/gridSelector.lua:414
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
+--- Resets a set-of-values filter on the backend side (no fallback).
+---Source: lua/ge/extensions/ui/gridSelector.lua:414
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
 function ui_gridSelector.resetSetFilter(backendName, ...) end
 
---- Modifie une option d'affichage du backend (requis).
----Source : lua/ge/extensions/ui/gridSelector.lua:420
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
+--- Changes a backend display option (required).
+---Source: lua/ge/extensions/ui/gridSelector.lua:420
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
 function ui_gridSelector.setDisplayDataOption(backendName, ...) end
 
---- Définit le texte de recherche du backend (requis).
----Source : lua/ge/extensions/ui/gridSelector.lua:417
----@param backendName string Nom du backend.
----@param ... any Arguments transmis (texte).
+--- Sets the backend's search text (required).
+---Source: lua/ge/extensions/ui/gridSelector.lua:417
+---@param backendName string Backend name.
+---@param ... any Forwarded arguments (text).
 function ui_gridSelector.setSearchText(backendName, ...) end
 
---- Bascule l'état favori d'un élément (optionnel, repli : false).
----Source : lua/ge/extensions/ui/gridSelector.lua:438
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
----@return boolean|any  false si non implémenté.
+--- Toggles an item's favorite state (optional, fallback: false).
+---Source: lua/ge/extensions/ui/gridSelector.lua:438
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
+---@return boolean|any  false if not implemented.
 function ui_gridSelector.toggleFavourite(backendName, ...) end
 
---- Active ou désactive un filtre côté backend (sans repli).
----Source : lua/ge/extensions/ui/gridSelector.lua:411
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
+--- Enables or disables a filter on the backend side (no fallback).
+---Source: lua/ge/extensions/ui/gridSelector.lua:411
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
 function ui_gridSelector.toggleFilter(backendName, ...) end
 
---- Met à jour un filtre de plage côté backend (sans repli).
----Source : lua/ge/extensions/ui/gridSelector.lua:412
----@param backendName string Nom du backend.
----@param ... any Arguments transmis.
+--- Updates a range filter on the backend side (no fallback).
+---Source: lua/ge/extensions/ui/gridSelector.lua:412
+---@param backendName string Backend name.
+---@param ... any Arguments passed on.
 function ui_gridSelector.updateRangeFilter(backendName, ...) end
 

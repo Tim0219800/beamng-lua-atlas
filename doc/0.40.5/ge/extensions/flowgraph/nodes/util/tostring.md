@@ -1,18 +1,18 @@
 # `flowgraph_nodes_util_tostring`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/tostring.lua` · VM : Game Engine (GE) · 25 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/tostring.lua` · VM: Game Engine (GE) · 25 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/tostring")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/tostring")` (file under extensions/ but not a regular extension)
 
-Nœud « To String » (catégorie simple). Convertit l'entrée en chaîne avec tostring. Entrée : value (any). Sortie : value (string).
+Node "To String" (simple category). Converts the input to a string with tostring. Input: value (any). Output: value (string).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Écrit tostring(entrée) dans la sortie. | 20 |
+| `C:work()` | Writes tostring(input) to the output. | 20 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/tostring.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/tostring.lua`.*

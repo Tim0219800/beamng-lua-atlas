@@ -1,74 +1,74 @@
 # `editor_roadArchitect_overlays`
 
-*Fichier : `lua/ge/extensions/editor/roadArchitect/overlays.lua` · VM : Game Engine (GE) · 524 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadArchitect/overlays.lua` · VM: Game Engine (GE) · 524 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadArchitect_overlays` : `extensions.load("editor_roadArchitect_overlays")`, puis la globale `editor_roadArchitect_overlays`
+**Access:** extension `editor_roadArchitect_overlays`: `extensions.load("editor_roadArchitect_overlays")`, then the global `editor_roadArchitect_overlays`
 
-Génération des routes de superposition (overlays) des jonctions de Road Architect : lignes de trajectoire fictives qui traversent la jonction, d'une voie d'entrée à une voie de sortie. Chaque fonction ajoute au tableau des routes une route marquée isOverlay, isJctRoad et non drivable (isDrivable = false), avec un profil créé par profileMgr.createOverlayProfile, et ajoute son nom à jct.roads. Les voies et sorties sont tirées au hasard avec math.randomseed(jct.seed[0]), donc le résultat est reproductible pour une même graine. Le nombre de superpositions est jct.numCrossings[0]. Appelé par le gestionnaire de jonctions de Road Architect lors de la finalisation d'une jonction.
+Generation of the overlay roads of Road Architect junctions: fictitious trajectory lines crossing the junction, from an entry lane to an exit lane. Each function adds to the roads array a road marked isOverlay, isJctRoad and not drivable (isDrivable = false), with a profile created by profileMgr.createOverlayProfile, and adds its name to jct.roads. Lanes and exits are drawn at random with math.randomseed(jct.seed[0]), so the result is reproducible for the same seed. The number of overlays is jct.numCrossings[0]. Called by the Road Architect junction manager when finalizing a junction.
 
-## Remarques
+## Notes
 
-- Le paramètre jct est la table de jonction de Road Architect ; les champs utilisés sont des pointeurs ImGui (accès avec [0]) : seed, numCrossings, laneWidthX, numLanesX (autoroutes), numRBLanes (rond-point), isYOneWay, isY1Outwards, isY2Outwards (jonction Y), plus jct.roads (noms des routes de la jonction, indices fixes selon le type).
-- Les points sont lus dans renderData[i][voie][7] des routes de la jonction (centre de la voie), donc les données de rendu des routes doivent déjà être calculées.
-- Carrefour, T, Y et rond-point choisissent au hasard une sortie de départ et d'arrivée dans une boucle while ; elle ne s'arrête que si la route de départ a au moins une voie droite et la route d'arrivée au moins une voie gauche. Si aucune combinaison ne satisfait cette condition, la boucle peut tourner indéfiniment.
-- Chaque fonction se termine par roadMgr.recomputeMap() pour reconstruire la table nom -> indice des routes.
+- The jct parameter is the Road Architect junction table; the fields used are ImGui pointers (access with [0]): seed, numCrossings, laneWidthX, numLanesX (highways), numRBLanes (roundabout), isYOneWay, isY1Outwards, isY2Outwards (Y junction), plus jct.roads (names of the junction's roads, fixed indices depending on the type).
+- The points are read from renderData[i][lane][7] of the junction's roads (lane center), so the roads' render data must already be computed.
+- Crossroads, T, Y and roundabout randomly pick a start and end exit in a while loop; it only stops if the start road has at least one right lane and the end road at least one left lane. If no combination satisfies this condition, the loop may run forever.
+- Each function ends with roadMgr.recomputeMap() to rebuild the name -> index table of the roads.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadArchitect_overlays.addCrossroadsOverlays(jct)` | Ajoute jct.numCrossings[0] routes de superposition à un carrefour à 4 branches (routes jct.roads[5..8]) : une trajectoire entre une voie de sortie d'une branche et une voie d'entrée d'une autre, lissée par des points Catmull-Rom chordaux. | 17 |
-| `editor_roadArchitect_overlays.addHighwayMergeOverlays(jct)` | Ajoute des routes de superposition à une jonction de fusion d'autoroute (routes jct.roads[1..3]) : une trajectoire par traversée qui part d'une voie de la route 1, passe sur la route 2 (avec un éventuel changement de voie aléatoire d'une voie) puis sur la route 3. | 367 |
-| `editor_roadArchitect_overlays.addHighwaySlipOverlays(jct)` | Ajoute des routes de superposition à une jonction d'autoroute avec bretelles (routes principales jct.roads[1..4] et bretelles d'entrée/sortie jct.roads[5] et [6]). | 457 |
-| `editor_roadArchitect_overlays.addHighwayTransOverlays(jct)` | Ajoute des routes de superposition à une jonction de transition autoroute-urbain (routes jct.roads[1..3]), sur le même principe que la fusion d'autoroute. | 412 |
-| `editor_roadArchitect_overlays.addRoundaboutOverlays(jct, cen)` | Ajoute des routes de superposition à un rond-point (branches jct.roads[5..8], anneau jct.roads[9]) : chaque trajectoire passe par un arc de l'anneau, construit en faisant tourner le vecteur rayon autour de l'axe vertical par pas de 45 degrés (17 points) pour chacune des jct.numRBLanes[0] voies de l'anneau. | 265 |
-| `editor_roadArchitect_overlays.addTJunctionOverlays(jct)` | Ajoute jct.numCrossings[0] routes de superposition à une jonction en T (routes jct.roads[4..6]), avec la même méthode de tirage de voies et de lissage que pour un carrefour. | 121 |
-| `editor_roadArchitect_overlays.addYJunctionOverlays(jct)` | Ajoute des routes de superposition à une jonction en Y. Gère les branches à sens unique (jct.isYOneWay[0]) et leur orientation (isY1Outwards, isY2Outwards) pour inverser le sens des points si besoin. | 205 |
+| `editor_roadArchitect_overlays.addCrossroadsOverlays(jct)` | Adds jct.numCrossings[0] overlay roads to a 4-branch crossroads (roads jct.roads[5..8]): a trajectory between an exit lane of one branch and an entry lane of another, smoothed by chordal Catmull-Rom points. | 17 |
+| `editor_roadArchitect_overlays.addHighwayMergeOverlays(jct)` | Adds overlay roads to a highway merge junction (roads jct.roads[1..3]): one trajectory per crossing that starts from a lane of road 1, passes onto road 2 (with a possible random one-lane change) then onto road 3. | 367 |
+| `editor_roadArchitect_overlays.addHighwaySlipOverlays(jct)` | Adds overlay roads to a highway junction with slip roads (main roads jct.roads[1..4] and entry/exit slip roads jct.roads[5] and [6]). | 457 |
+| `editor_roadArchitect_overlays.addHighwayTransOverlays(jct)` | Adds overlay roads to a highway-urban transition junction (roads jct.roads[1..3]), on the same principle as the highway merge. | 412 |
+| `editor_roadArchitect_overlays.addRoundaboutOverlays(jct, cen)` | Adds overlay roads to a roundabout (branches jct.roads[5..8], ring jct.roads[9]): each trajectory goes through an arc of the ring, built by rotating the radius vector around the vertical axis in 45-degree steps (17 points) for each of the ring's jct.numRBLanes[0] lanes. | 265 |
+| `editor_roadArchitect_overlays.addTJunctionOverlays(jct)` | Adds jct.numCrossings[0] overlay roads to a T junction (roads jct.roads[4..6]), with the same lane drawing and smoothing method as for a crossroads. | 121 |
+| `editor_roadArchitect_overlays.addYJunctionOverlays(jct)` | Adds overlay roads to a Y junction. Handles one-way branches (jct.isYOneWay[0]) and their orientation (isY1Outwards, isY2Outwards) to reverse the point direction if needed. | 205 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadArchitect_overlays.addCrossroadsOverlays(jct)`
 
-Ajoute jct.numCrossings[0] routes de superposition à un carrefour à 4 branches (routes jct.roads[5..8]) : une trajectoire entre une voie de sortie d'une branche et une voie d'entrée d'une autre, lissée par des points Catmull-Rom chordaux.
+Adds jct.numCrossings[0] overlay roads to a 4-branch crossroads (roads jct.roads[5..8]): a trajectory between an exit lane of one branch and an entry lane of another, smoothed by chordal Catmull-Rom points.
 
-- `jct` (*table*) : Table de la jonction (roads, seed, numCrossings, laneWidthX…).
+- `jct` (*table*) : Junction table (roads, seed, numCrossings, laneWidthX...).
 
 #### `editor_roadArchitect_overlays.addHighwayMergeOverlays(jct)`
 
-Ajoute des routes de superposition à une jonction de fusion d'autoroute (routes jct.roads[1..3]) : une trajectoire par traversée qui part d'une voie de la route 1, passe sur la route 2 (avec un éventuel changement de voie aléatoire d'une voie) puis sur la route 3.
+Adds overlay roads to a highway merge junction (roads jct.roads[1..3]): one trajectory per crossing that starts from a lane of road 1, passes onto road 2 (with a possible random one-lane change) then onto road 3.
 
-- `jct` (*table*) : Table de la jonction (numLanesX, laneWidthX, numCrossings, seed, roads).
+- `jct` (*table*) : Junction table (numLanesX, laneWidthX, numCrossings, seed, roads).
 
 #### `editor_roadArchitect_overlays.addHighwaySlipOverlays(jct)`
 
-Ajoute des routes de superposition à une jonction d'autoroute avec bretelles (routes principales jct.roads[1..4] et bretelles d'entrée/sortie jct.roads[5] et [6]).
+Adds overlay roads to a highway junction with slip roads (main roads jct.roads[1..4] and entry/exit slip roads jct.roads[5] and [6]).
 
-- `jct` (*table*) : Table de la jonction à bretelles.
+- `jct` (*table*) : Slip road junction table.
 
 #### `editor_roadArchitect_overlays.addHighwayTransOverlays(jct)`
 
-Ajoute des routes de superposition à une jonction de transition autoroute-urbain (routes jct.roads[1..3]), sur le même principe que la fusion d'autoroute.
+Adds overlay roads to a highway-urban transition junction (roads jct.roads[1..3]), on the same principle as the highway merge.
 
-- `jct` (*table*) : Table de la jonction de transition.
+- `jct` (*table*) : Transition junction table.
 
 #### `editor_roadArchitect_overlays.addRoundaboutOverlays(jct, cen)`
 
-Ajoute des routes de superposition à un rond-point (branches jct.roads[5..8], anneau jct.roads[9]) : chaque trajectoire passe par un arc de l'anneau, construit en faisant tourner le vecteur rayon autour de l'axe vertical par pas de 45 degrés (17 points) pour chacune des jct.numRBLanes[0] voies de l'anneau.
+Adds overlay roads to a roundabout (branches jct.roads[5..8], ring jct.roads[9]): each trajectory goes through an arc of the ring, built by rotating the radius vector around the vertical axis in 45-degree steps (17 points) for each of the ring's jct.numRBLanes[0] lanes.
 
-- `jct` (*table*) : Table de la jonction de rond-point.
-- `cen` (*vec3*) : Centre du rond-point.
+- `jct` (*table*) : Roundabout junction table.
+- `cen` (*vec3*) : Center of the roundabout.
 
 #### `editor_roadArchitect_overlays.addTJunctionOverlays(jct)`
 
-Ajoute jct.numCrossings[0] routes de superposition à une jonction en T (routes jct.roads[4..6]), avec la même méthode de tirage de voies et de lissage que pour un carrefour.
+Adds jct.numCrossings[0] overlay roads to a T junction (roads jct.roads[4..6]), with the same lane drawing and smoothing method as for a crossroads.
 
-- `jct` (*table*) : Table de la jonction en T.
+- `jct` (*table*) : T junction table.
 
 #### `editor_roadArchitect_overlays.addYJunctionOverlays(jct)`
 
-Ajoute des routes de superposition à une jonction en Y. Gère les branches à sens unique (jct.isYOneWay[0]) et leur orientation (isY1Outwards, isY2Outwards) pour inverser le sens des points si besoin.
+Adds overlay roads to a Y junction. Handles one-way branches (jct.isYOneWay[0]) and their orientation (isY1Outwards, isY2Outwards) to reverse the point direction if needed.
 
-- `jct` (*table*) : Table de la jonction en Y.
+- `jct` (*table*) : Y junction table.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadArchitect/overlays.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadArchitect/overlays.lua`.*

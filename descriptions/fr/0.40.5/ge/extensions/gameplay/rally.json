@@ -1,0 +1,262 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally.lua",
+  "module": "Point d'entrée du mode rallye (extension gameplay_rally). Il possède le gestionnaire de rallye (RallyManager) chargé pour une mission, relaye les mises à jour vers l'application de reconnaissance (RecceApp) et vers le gestionnaire, fournit la boîte à outils de debug (ImGui), place un copilote fictif dans le siège miroir du conducteur, transmet les actions d'entrée (reconnaissance, calage du copilote) et gère la couleur de thème des flux d'interface. Un moddeur de rallye l'utilise pour charger/décharger un rallye, lire son état ou régler le calage du copilote.",
+  "usage": "local ok, err = gameplay_rally.loadMission(missionId, missionDir, nil, nil, {owner = 'mission'})\nif gameplay_rally.isReady() then local rm = gameplay_rally.getRallyManager() end\ngameplay_rally.setUiColor('#ff0000')",
+  "notes": [
+    "Propriétaire du gestionnaire (options.owner) : 'mission', 'recce' ou 'external' (défaut). Un propriétaire 'mission' est toujours autorisé ; 'recce' seulement en freeroam ; les autres sont refusés si une mission est au premier plan ou si le gestionnaire appartient à une mission.",
+    "loadMission et unloadMission renvoient false et une raison quand l'opération est refusée ou échoue ; getErrorMsgForUser conserve le message destiné à l'utilisateur.",
+    "Le copilote fictif n'est placé que si le propriétaire est 'mission' : siège miroir du conducteur (L<->R) via gameplay_seatOccupants, replacé aux hooks onSeatOccupantEnter/Exit.",
+    "onUpdate ne met pas à jour le gestionnaire pendant l'enregistrement de la reconnaissance (RecceApp.isRecording).",
+    "Le mode d'autorité du runtime d'étape vaut 'shadow' par défaut quand aucun gestionnaire n'est chargé.",
+    "Les réglages Booléens de mission (rallyRepairVehicleOnRecovery) sont lus dans mission.lastUserSettings, puis dans les réglages du jeu, puis la valeur par défaut true.",
+    "Le fichier contient beaucoup de hooks commentés (onRaceStarted, onRallyStageStart…) : seuls ceux listés ici sont actifs.",
+    "Le calage du copilote se règle par pas de 0,1 s (CodriverTiming.nudge) et affiche un message UI (catégorie 'rally')."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'gameplay_seatOccupants'}, extension chargée avant."},
+    "recceApp": {"type": "table", "desc": "Module RecceApp (application de reconnaissance de rallye) exposé tel quel."}
+  },
+  "functions": {
+    "canManageMission": {
+      "desc": "Indique si le propriétaire donné a le droit de gérer le gestionnaire de rallye.",
+      "params": {"owner": {"type": "string|nil", "desc": "'mission', 'recce' ou 'external' (défaut)."}},
+      "returns": [
+        {"type": "boolean", "desc": "true si autorisé."},
+        {"type": "string|nil", "desc": "Raison du refus."}
+      ],
+      "internal": false
+    },
+    "loadMission": {
+      "desc": "Crée un RallyManager pour le dossier de mission, règle le voicepack, reconstruit les assets et, en cas de succès, le met en place et place le copilote. Ne remplace pas l'ancien gestionnaire en cas d'échec.",
+      "params": {
+        "missionId": {"type": "string", "desc": "Id de la mission."},
+        "missionDir": {"type": "string", "desc": "Dossier de la mission de rallye."},
+        "drivelineMode": {"type": "any", "desc": "Non utilisé (code commenté)."},
+        "voicepackPick": {"type": "any", "desc": "Voicepack ; nil = choix lu dans les réglages utilisateur de la mission (rallyVoicepackPick)."},
+        "options": {"type": "table|nil", "desc": "owner : 'mission', 'recce' ou 'external'."}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "true si chargé."},
+        {"type": "string|nil", "desc": "Message d'erreur en cas d'échec."}
+      ],
+      "internal": false
+    },
+    "unloadMission": {
+      "desc": "Décharge le gestionnaire de rallye si le propriétaire correspond.",
+      "params": {"options": {"type": "table|nil", "desc": "owner (défaut 'external')."}},
+      "returns": [
+        {"type": "boolean", "desc": "true si déchargé."},
+        {"type": "string|nil", "desc": "Raison du refus."}
+      ],
+      "internal": false
+    },
+    "isReady": {
+      "desc": "Indique si un gestionnaire de rallye est chargé.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si chargé."}],
+      "internal": false
+    },
+    "enableRecceApp": {
+      "desc": "Active ou désactive l'application de reconnaissance (RecceApp.setEnabled).",
+      "params": {"val": {"type": "boolean", "desc": "true pour activer."}},
+      "returns": [],
+      "internal": false
+    },
+    "getRallyManager": {
+      "desc": "Gestionnaire de rallye courant.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "RallyManager ou nil."}],
+      "internal": false
+    },
+    "getRallyManagerOwner": {
+      "desc": "Propriétaire du gestionnaire courant.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "'mission', 'recce', 'external' ou nil."}],
+      "internal": false
+    },
+    "getErrorMsgForUser": {
+      "desc": "Dernier message d'erreur destiné à l'utilisateur (échec de chargement).",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Message."}],
+      "internal": false
+    },
+    "getRecoveryRepairVehicle": {
+      "desc": "Indique si le véhicule doit être réparé lors d'une récupération : demande au gestionnaire de boucle (gameplay_rallyLoop) s'il existe, sinon lit rallyRepairVehicleOnRecovery (réglage de mission, puis réglage du jeu, défaut true).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si réparation."}],
+      "internal": false
+    },
+    "setStageRuntimeAuthorityMode": {
+      "desc": "Transmet au gestionnaire le mode d'autorité du runtime d'étape.",
+      "params": {"mode": {"type": "string", "desc": "Mode (valeur par défaut 'shadow' ; autres valeurs définies par le gestionnaire)."}},
+      "returns": [],
+      "internal": false
+    },
+    "getStageRuntimeAuthorityMode": {
+      "desc": "Mode d'autorité du runtime d'étape du gestionnaire, ou 'shadow' sans gestionnaire.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Mode."}],
+      "internal": false
+    },
+    "getStageObserverState": {
+      "desc": "État de l'observateur d'étape du gestionnaire.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "État, nil sans gestionnaire."}],
+      "internal": false
+    },
+    "getDebugLogging": {
+      "desc": "Indique si les logs de debug du rallye sont actifs.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si actifs."}],
+      "internal": false
+    },
+    "setDebugLogging": {
+      "desc": "Active ou désactive les logs de debug du rallye.",
+      "params": {"val": {"type": "boolean", "desc": "Nouvel état."}},
+      "returns": [],
+      "internal": false
+    },
+    "setUiColor": {
+      "desc": "Surcharge la couleur du thème des flux Stage Timing / Progress. nil ou chaîne vide efface la surcharge.",
+      "params": {"hex": {"type": "string|nil", "desc": "Couleur hexadécimale, ex. '#ff0000'."}},
+      "returns": [],
+      "internal": false
+    },
+    "getUiColor": {
+      "desc": "Couleur de thème actuelle : surcharge si définie, sinon couleur du gestionnaire de boucle (gameplay_rallyLoop), sinon du flux autonome, sinon '#009a1a'.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Couleur hexadécimale."}],
+      "internal": false
+    },
+    "getUiColorOverride": {
+      "desc": "Surcharge de couleur définie par setUiColor.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Couleur ou nil."}],
+      "internal": false
+    },
+    "toggleDebug": {
+      "desc": "Affiche ou masque la fenêtre ImGui « Rally Toolbox » (créée au premier appel).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getRallyToolbox": {
+      "desc": "Objet de la boîte à outils de debug (nil tant que toggleDebug n'a pas été appelé).",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "RallyToolbox."}],
+      "internal": false
+    },
+    "isRallyToolboxVisible": {
+      "desc": "Indique si la fenêtre Rally Toolbox est ouverte.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si visible."}],
+      "internal": false
+    },
+    "getRace": {
+      "desc": "Données de course enregistrées par le hook onRallyRegisterRace.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "raceData."}],
+      "internal": false
+    },
+    "actionToggleMouseLikeVehicle": {
+      "desc": "Action d'entrée : bascule la souris comme un véhicule dans la reconnaissance (si RecceApp est activée).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "actionTranscribeRecordingCut": {
+      "desc": "Action d'entrée : envoie à l'UI rallyInputActionCutRecording (coupe l'enregistrement de transcription).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "actionRecceMoveVehicleForward": {
+      "desc": "Action d'entrée : si la reconnaissance est active, envoie rallyInputActionRecceMoveVehicleForward à l'UI.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "actionRecceMoveVehicleBackward": {
+      "desc": "Action d'entrée : si la reconnaissance est active, envoie rallyInputActionRecceMoveVehicleBackward à l'UI.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "actionCodriverCallsEarlier": {
+      "desc": "Action d'entrée : avance les annonces du copilote de 0,1 s (décale la plage de délai) et affiche un message.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "actionCodriverCallsLater": {
+      "desc": "Action d'entrée : retarde les annonces du copilote de 0,1 s et affiche un message.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook de chargement : charge ExtHelper et envoie rally.onExtensionLoaded à l'UI.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook de déchargement : retire le copilote fictif et décharge ExtHelper.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque image : met à jour RecceApp et le gestionnaire de rallye (sauf pendant l'enregistrement de reconnaissance) et dessine la Rally Toolbox si visible.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook : quand le véhicule du joueur 0 est réinitialisé, prévient le gestionnaire de rallye.",
+      "params": {"vehicleID": {"type": "integer", "desc": "Véhicule réinitialisé."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSeatOccupantEnter": {
+      "desc": "Hook de siège : replace le copilote fictif (alias de la fonction interne seatCodriver).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSeatOccupantExit": {
+      "desc": "Hook de siège : replace le copilote fictif après un départ d'occupant (le système de sièges supprime les occupants fictifs lors des respawns de configuration).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSettingsChanged": {
+      "desc": "Hook de changement de réglages : prévient le gestionnaire de rallye.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onRacePathnodeReached": {
+      "desc": "Hook de course : enregistre un temps intermédiaire (recordSplit) pour le pathnode atteint ; logue un avertissement si event.pathnode manque.",
+      "params": {"event": {"type": "table", "desc": "{pathnode, time, race}"}},
+      "returns": [],
+      "internal": true
+    },
+    "onRallyRegisterRace": {
+      "desc": "Hook : mémorise les données de course et les transmet au gestionnaire (setRaceData).",
+      "params": {"raceData": {"type": "table", "desc": "Données de la course."}},
+      "returns": [],
+      "internal": true
+    },
+    "onRallyVehicleRecovery": {
+      "desc": "Hook : ajoute le temps de récupération au gestionnaire (addRecoveryRaceTime).",
+      "params": {"recoveryType": {"type": "string", "desc": "Type de récupération."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

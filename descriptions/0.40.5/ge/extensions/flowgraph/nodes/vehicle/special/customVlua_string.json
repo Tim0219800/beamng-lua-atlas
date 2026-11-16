@@ -1,35 +1,35 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/special/customVlua_string.lua",
-  "module": "Nœud « Custom vlua - deprecated » (catégorie `repeat_p_duration`). Ancienne version de « Custom Vehicle Lua » : envoie la chaîne du pin `customLUA` au véhicule `vehId` avec `queueLuaCommand`. Obsolète : remplacé par « Custom vlua ».",
+  "module": "Node \"Custom vlua - deprecated\" (category `repeat_p_duration`). Old version of \"Custom Vehicle Lua\": sends the string of the `customLUA` pin to the vehicle `vehId` with `queueLuaCommand`. Obsolete: replaced by \"Custom vlua\".",
   "notes": [
-    "Le pin `customLUA` est décrit « The message that will be displayed. Bug: can not start directly with a number. »",
-    "`init` lit `self.pinIn.customLUAString` qui n'existe pas (le pin s'appelle `customLUA`) : erreur potentielle.",
-    "Pas de repli sur le véhicule joueur."
+    "The `customLUA` pin is described as \"The message that will be displayed. Bug: can not start directly with a number.\"",
+    "`init` reads `self.pinIn.customLUAString` which does not exist (the pin is named `customLUA`): potential error.",
+    "No fallback to the player vehicle."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "drawMiddle": {
-          "desc": "Affichage central vide.",
+          "desc": "Empty central display.",
           "internal": true,
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+              "desc": "Editor node builder (builder:Middle())."
             },
             "style": {
               "type": "any",
-              "desc": "Style ImGui de l'éditeur."
+              "desc": "Editor ImGui style."
             }
           }
         },
         "init": {
-          "desc": "Constructeur ; tente de copier `pinIn.customLUAString.value` dans `data.func` (pin inexistant).",
+          "desc": "Constructor; tries to copy `pinIn.customLUAString.value` into `data.func` (nonexistent pin).",
           "internal": true
         },
         "work": {
-          "desc": "Envoie `customLUA` au véhicule.",
+          "desc": "Sends `customLUA` to the vehicle.",
           "internal": true
         }
       }

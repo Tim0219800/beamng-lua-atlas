@@ -2,48 +2,48 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/arrowGPS.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Affiche une flèche GPS 3D (TSStatic art/shapes/interface/s_mm_arrow_floating.dae) flottant devant la caméra, à l'emplacement de l'app d'interface arrowGPS, et orientée vers une cible du monde. Plusieurs sources peuvent enregistrer une cible avec une priorité (setTarget) ; la plus prioritaire (nombre le plus petit) est suivie. La flèche est créée à la demande, cachée si aucune cible ou aucun véhicule joueur, et supprimée au déchargement.
---- Accès : extension `ui_arrowGPS` : `extensions.load("ui_arrowGPS")`, puis la globale `ui_arrowGPS`
+--- Displays a 3D GPS arrow (TSStatic art/shapes/interface/s_mm_arrow_floating.dae) floating in front of the camera, at the location of the arrowGPS interface app, and oriented toward a world target. Several sources can register a target with a priority (setTarget); the highest-priority one (smallest number) is followed. The arrow is created on demand, hidden if there is no target or no player vehicle, and deleted on unload.
+--- Access: extension `ui_arrowGPS`: `extensions.load("ui_arrowGPS")`, then the global `ui_arrowGPS`
 ---@class ui_arrowGPS
----@field dependencies table<integer, string> { "core_camera" } : chargé avant ce module.
+---@field dependencies table<integer, string> { "core_camera" }: loaded before this module.
 ui_arrowGPS = {}
 
---- Hook de déchargement : supprime l'objet flèche et vide toutes les inscriptions.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/arrowGPS.lua:179
+--- Unload hook: deletes the arrow object and empties all registrations.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/arrowGPS.lua:179
 function ui_arrowGPS.onExtensionUnloaded() end
 
---- Hook appelé avant chaque rendu : crée la flèche si besoin, calcule sa position écran-vers-monde, l'oriente vers la cible active (quatFromDir) et l'affiche ; la cache si aucune cible ou aucun véhicule joueur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/arrowGPS.lua:144
----@param dt number Temps écoulé (non utilisé).
+--- Hook called before each render: creates the arrow if needed, computes its screen-to-world position, orients it toward the active target (quatFromDir) and shows it; hides it if there is no target or no player vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/arrowGPS.lua:144
+---@param dt number Elapsed time (not used).
 function ui_arrowGPS.onPreRender(dt) end
 
---- Retire la cible d'une source et recalcule la cible active (la flèche se cache s'il n'en reste aucune).
----Source : lua/ge/extensions/ui/arrowGPS.lua:68
----@param key string Identifiant de la source.
+--- Removes a source's target and recomputes the active target (the arrow hides if none remains).
+---Source: lua/ge/extensions/ui/arrowGPS.lua:68
+---@param key string Source identifier.
 function ui_arrowGPS.removeTarget(key) end
 
---- Fixe la position écran de l'app (fractions de 0 à 1) où la flèche est dessinée ; appelé côté interface.
----Source : lua/ge/extensions/ui/arrowGPS.lua:128
----@param sx number Position horizontale, 0 gauche, 1 droite.
----@param sy number Position verticale, 0 haut, 1 bas.
+--- Sets the app's screen position (fractions from 0 to 1) where the arrow is drawn; called from the interface side.
+---Source: lua/ge/extensions/ui/arrowGPS.lua:128
+---@param sx number Horizontal position, 0 left, 1 right.
+---@param sy number Vertical position, 0 top, 1 bottom.
 function ui_arrowGPS.setAppScreenPos(sx, sy) end
 
---- Change la distance devant la caméra à laquelle la flèche est placée (0.15 par défaut).
----Source : lua/ge/extensions/ui/arrowGPS.lua:140
----@param depth number Distance en mètres.
+--- Changes the distance in front of the camera at which the arrow is placed (0.15 by default).
+---Source: lua/ge/extensions/ui/arrowGPS.lua:140
+---@param depth number Distance in meters.
 function ui_arrowGPS.setDepth(depth) end
 
---- Change l'échelle de la flèche (0.04 par défaut).
----Source : lua/ge/extensions/ui/arrowGPS.lua:133
----@param scale number Facteur d'échelle uniforme.
+--- Changes the arrow's scale (0.04 by default).
+---Source: lua/ge/extensions/ui/arrowGPS.lua:133
+---@param scale number Uniform scale factor.
 function ui_arrowGPS.setScale(scale) end
 
---- Enregistre ou remplace la cible d'une source (clé) avec sa priorité, puis recalcule la cible active et la couleur de la flèche.
----Source : lua/ge/extensions/ui/arrowGPS.lua:54
----@param key string Identifiant de la source.
----@param priority number Priorité ; la plus petite valeur l'emporte.
+--- Registers or replaces a source's target (key) with its priority, then recomputes the active target and the arrow's color.
+---Source: lua/ge/extensions/ui/arrowGPS.lua:54
+---@param key string Source identifier.
+---@param priority number Priority; the smallest value wins.
 ---@param data table|nil {pos=vec3|{x,y,z}, color={r,g,b}|nil}.
 function ui_arrowGPS.setTarget(key, priority, data) end
 

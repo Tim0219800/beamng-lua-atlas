@@ -1,50 +1,50 @@
 # `controller_shiftLights`
 
-*Fichier : `lua/vehicle/controller/shiftLights.lua` · VM : Véhicule · 110 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/shiftLights.lua` · VM: Vehicle · 110 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `shiftLights` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `shiftLights` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de LEDs de changement de rapport (shift lights). Découpe la plage de régime [minRPM, maxRPM] en paliers (un par electric listé dans outputElectrics) et met chaque electric à 1 quand le régime atteint son palier ; au-dessus de maxRPM (ou moteur calé si hasStallWarning), les LEDs « flashing » clignotent et electrics.values.shouldShift passe à vrai.
+Auxiliary shift light LED controller. Splits the RPM range [minRPM, maxRPM] into steps (one per electric listed in outputElectrics) and sets each electric to 1 when the RPM reaches its step; above maxRPM (or engine stalled if hasStallWarning), the "flashing" LEDs blink and electrics.values.shouldShift becomes true.
 
-## Exemple
+## Example
 
 ```lua
--- jbeam : "outputElectrics":["shiftLight1","shiftLight2","shiftLight3"], "maxRPM":6800, "rpmRange":1500
+-- jbeam: "outputElectrics":["shiftLight1","shiftLight2","shiftLight3"], "maxRPM":6800, "rpmRange":1500
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : rpmRange (3000), engineName et maxEngineRPMOffset (maxRPM = engine.maxRPM - offset), hasStallWarning (false), maxRPM (7000 par défaut sans moteur), minRPM (maxRPM - rpmRange), inputElectricsName ("rpm"), keepLEDsActive (true : les LEDs inférieures restent allumées), flashDuration (0.1 s), outputElectrics (liste ordonnée des electrics des paliers), flashingOutputElectrics et flashingAlternateOutputElectrics (électrics qui clignotent en phase / en opposition).
-- Chaque pas écrit electrics.values[nom] = 0 ou 1 (nombres, pas booléens) ; shouldShift est un booléen.
-- L'alerte de calage n'existe que si engineName ET maxEngineRPMOffset sont définis et hasStallWarning vrai.
-- Si outputElectrics est vide, stepCount = 0 et le calcul rpmStep divise par zéro (inf), sans effet ensuite car aucun palier n'est créé.
+- jbeam keys read: rpmRange (3000), engineName and maxEngineRPMOffset (maxRPM = engine.maxRPM - offset), hasStallWarning (false), maxRPM (7000 by default without an engine), minRPM (maxRPM - rpmRange), inputElectricsName ("rpm"), keepLEDsActive (true: the lower LEDs stay lit), flashDuration (0.1 s), outputElectrics (ordered list of the step electrics), flashingOutputElectrics and flashingAlternateOutputElectrics (electrics that blink in phase / in opposition).
+- Each step writes electrics.values[name] = 0 or 1 (numbers, not booleans); shouldShift is a boolean.
+- The stall warning exists only if engineName AND maxEngineRPMOffset are defined and hasStallWarning is true.
+- If outputElectrics is empty, stepCount = 0 and the rpmStep computation divides by zero (inf), with no effect afterwards since no step is created.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_shiftLights.init(jbeamData)` | Lit les clés jbeam et construit les paliers de régime et les listes de LEDs clignotantes. *(interne)* | 59 |
-| `controller_shiftLights.updateGFX(dt)` | Chaque frame : met à jour les electrics des paliers, shouldShift et le clignotement. *(interne)* | 25 |
+| `controller_shiftLights.init(jbeamData)` | Reads the jbeam keys and builds the RPM steps and the flashing LED lists. *(internal)* | 59 |
+| `controller_shiftLights.updateGFX(dt)` | Every frame: updates the step electrics, shouldShift and the blinking. *(internal)* | 25 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_shiftLights.init(jbeamData)`
 
-Lit les clés jbeam et construit les paliers de régime et les listes de LEDs clignotantes.
+Reads the jbeam keys and builds the RPM steps and the flashing LED lists.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_shiftLights.updateGFX(dt)`
 
-Chaque frame : met à jour les electrics des paliers, shouldShift et le clignotement.
+Every frame: updates the step electrics, shouldShift and the blinking.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/shiftLights.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/shiftLights.lua`.*

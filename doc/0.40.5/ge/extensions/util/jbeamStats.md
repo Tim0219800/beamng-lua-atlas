@@ -1,41 +1,41 @@
 # `util_jbeamStats`
 
-*Fichier : `lua/ge/extensions/util/jbeamStats.lua` · VM : Game Engine (GE) · 84 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/jbeamStats.lua` · VM: Game Engine (GE) · 84 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_jbeamStats` : `extensions.load("util_jbeamStats")`, puis la globale `util_jbeamStats`
+**Access:** extension `util_jbeamStats`: `extensions.load("util_jbeamStats")`, then the global `util_jbeamStats`
 
-Calcule des statistiques sur l'ensemble des fichiers .jbeam accessibles au jeu (y compris mods montés) : nombre de fichiers, de parts, de lignes, de parts racines (slotType « main »), nombre d'occurrences de chaque section et de lignes de données par section. Sert aux développeurs pour la documentation (voir docCreator) et à un moddeur curieux de l'ampleur des données JBeam.
+Computes statistics over all .jbeam files accessible to the game (including mounted mods): number of files, parts, lines, root parts (slotType "main"), number of occurrences of each section and of data rows per section. Used by developers for documentation (see docCreator) and by curious modders interested in the scale of JBeam data.
 
-## Exemple
+## Example
 
 ```lua
 dump(extensions.util_jbeamStats.getStats())
 jsonWriteFile('jbeam_stats.json', extensions.util_jbeamStats.getStats(), true)
 ```
 
-## Remarques
+## Notes
 
-- L'analyse relit et décode tous les fichiers .jbeam : l'appel est lent et bloque le thread GE.
-- Bug mineur : le comptage de lignes (content:gsub) est fait avant le test content ~= nil ; un fichier illisible provoquerait une erreur.
-- Un fichier dont le décodage JSON échoue (pcall) est ignoré pour les statistiques de parts, mais ses lignes sont déjà comptées.
+- The analysis rereads and decodes all .jbeam files: the call is slow and blocks the GE thread.
+- Minor bug: the line count (content:gsub) is done before the content ~= nil test; an unreadable file would cause an error.
+- A file whose JSON decoding fails (pcall) is ignored for part statistics, but its lines are already counted.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_jbeamStats.getStats()` | Parcourt tous les .jbeam et renvoie une table de statistiques. | 13 |
+| `util_jbeamStats.getStats()` | Walks all .jbeam files and returns a statistics table. | 13 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_jbeamStats.getStats()`
 
-Parcourt tous les .jbeam et renvoie une table de statistiques.
+Walks all .jbeam files and returns a statistics table.
 
-- **renvoie** : table Champs : totalJbeamFiles, partCount, sectionCount (nom -> nombre), sectionCountOrdered (liste de paires {section, nombre} triée décroissante), sectionRowCount (nom -> lignes hors en-tête), totalLineCount, totalRootParts, totalModifiersCount
+- **returns**: table Fields: totalJbeamFiles, partCount, sectionCount (name -> count), sectionCountOrdered (list of {section, count} pairs sorted in descending order), sectionRowCount (name -> rows excluding header), totalLineCount, totalRootParts, totalModifiersCount
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/jbeamStats.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/jbeamStats.lua`.*

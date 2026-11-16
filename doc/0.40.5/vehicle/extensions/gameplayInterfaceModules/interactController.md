@@ -1,47 +1,47 @@
 # `gameplayInterfaceModules_interactController`
 
-*Fichier : `lua/vehicle/extensions/gameplayInterfaceModules/interactController.lua` · VM : Véhicule · 77 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/gameplayInterfaceModules/interactController.lua` · VM: Vehicle · 77 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplayInterfaceModules_interactController` : `extensions.load (VM véhicule)("gameplayInterfaceModules_interactController")`, puis la globale `gameplayInterfaceModules_interactController`
+**Access:** extension `gameplayInterfaceModules_interactController`: `extensions.load (vehicle VM)("gameplayInterfaceModules_interactController")`, then the global `gameplayInterfaceModules_interactController`
 
-Module de gameplayInterface pour le système de contrôleurs : envoyer un événement gameplay aux contrôleurs, geler le véhicule, changer le mode de boîte, passer un rapport et lire le mode de boîte ou l'état de gel.
+gameplayInterface module for the controller system: send a gameplay event to the controllers, freeze the vehicle, change the gearbox mode, shift a gear and read the gearbox mode or the freeze state.
 
-## Exemple
+## Example
 
 ```lua
 gameplayInterface.executeAction(0, 7, 'shiftToGearIndex', 1)
 gameplayInterface.executeAction(0, 8, 'setGearboxMode', 'arcade')
 ```
 
-## Remarques
+## Notes
 
-- Action 'controllerGameplayEvent'(eventName, ...) : appelle controller.onGameplayEvent(eventName, {autres paramètres}) ; aucun contrôle de type sur les paramètres.
-- Action 'setFreeze'(freeze:boolean) : controller.setFreeze(1) ou (0).
-- Action 'setGearboxMode'(mode:string) : controller.mainController.setGearboxMode(mode) (ex. 'arcade', 'realistic').
-- Action 'shiftToGearIndex'(gearIndex:number) : controller.mainController.shiftToGearIndex(gearIndex).
-- Lookup 'mainController'(dataKey:string) : 'gearboxMode' renvoie {result = mainController.gearboxBehavior} ; 'freezeState' renvoie {result = electrics.values.freezeState} ; autre clé renvoie {failReason = 'Invalid data key'}.
+- Action 'controllerGameplayEvent'(eventName, ...): calls controller.onGameplayEvent(eventName, {other parameters}); no type check on the parameters.
+- Action 'setFreeze'(freeze:boolean): controller.setFreeze(1) or (0).
+- Action 'setGearboxMode'(mode:string): controller.mainController.setGearboxMode(mode) (e.g. 'arcade', 'realistic').
+- Action 'shiftToGearIndex'(gearIndex:number): controller.mainController.shiftToGearIndex(gearIndex).
+- Lookup 'mainController'(dataKey:string): 'gearboxMode' returns {result = mainController.gearboxBehavior}; 'freezeState' returns {result = electrics.values.freezeState}; any other key returns {failReason = 'Invalid data key'}.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplayInterfaceModules_interactController.onExtensionLoaded()` | Appelé au chargement : remplit moduleActions et moduleLookups. *(interne)* *(hook)* | 65 |
-| `gameplayInterfaceModules_interactController.requestRegistration(gi)` | Enregistre les actions et lookups auprès de gameplayInterface. *(interne)* | 61 |
+| `gameplayInterfaceModules_interactController.onExtensionLoaded()` | Called at load: fills moduleActions and moduleLookups. *(internal)* *(hook)* | 65 |
+| `gameplayInterfaceModules_interactController.requestRegistration(gi)` | Registers the actions and lookups with gameplayInterface. *(internal)* | 61 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplayInterfaceModules_interactController.requestRegistration(gi)`
 
-Enregistre les actions et lookups auprès de gameplayInterface.
+Registers the actions and lookups with gameplayInterface.
 
-- `gi` (*table*) : Le module gameplayInterface.
+- `gi` (*table*) : The gameplayInterface module.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `moduleActions` | table<string, function> | Actions : controllerGameplayEvent, setFreeze, setGearboxMode, shiftToGearIndex. |
-| `moduleLookups` | table<string, function> | Lookups : mainController. |
+| `moduleActions` | table<string, function> | Actions: controllerGameplayEvent, setFreeze, setGearboxMode, shiftToGearIndex. |
+| `moduleLookups` | table<string, function> | Lookups: mainController. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/gameplayInterfaceModules/interactController.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/gameplayInterfaceModules/interactController.lua`.*

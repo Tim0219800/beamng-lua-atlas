@@ -1,24 +1,24 @@
 # `flowgraph_nodes_gameplay_vehiclePool_cyclePool`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/cyclePool.lua` · VM : Game Engine (GE) · 32 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/cyclePool.lua` · VM: Game Engine (GE) · 32 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/vehiclePool/cyclePool")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/vehiclePool/cyclePool")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Cycle Pool » (once_instant). Bascule un véhicule actif et un véhicule inactif du pool pour garder le même nombre de véhicules en marche (pool:cycle). Pins d'entrée : vehPool, vehId1 (actif, optionnel), vehId2 (inactif, optionnel) ; sorties : inactiveId, activeId. Nécessite le module core_vehicleActivePooling ; l'objet pool vient du nœud Create Vehicle Pool.
+Flowgraph node "Cycle Pool" (once_instant). Swaps an active vehicle and an inactive vehicle of the pool to keep the same number of running vehicles (pool:cycle). Input pins: vehPool, vehId1 (active, optional), vehId2 (inactive, optional); outputs: inactiveId, activeId. Requires the core_vehicleActivePooling module; the pool object comes from the Create Vehicle Pool node.
 
-## Remarques
+## Notes
 
-- Bug : workOnce lit self.pinIn.activeId et self.pinIn.inactiveId, qui n'existent pas (les pins d'entrée s'appellent vehId1 et vehId2 ; activeId/inactiveId sont des sorties) : l'appel provoque une erreur Lua et les sorties ne sont jamais écrites.
+- Bug: workOnce reads self.pinIn.activeId and self.pinIn.inactiveId, which do not exist (the input pins are named vehId1 and vehId2; activeId/inactiveId are outputs): the call raises a Lua error and the outputs are never written.
 
-**Dépendances (chargées avant) :** `core_vehicleActivePooling`
+**Dependencies (loaded first):** `core_vehicleActivePooling`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Prévu pour appeler pool:cycle(activeId, inactiveId) ; voir la note sur les noms de pins incorrects. | 26 |
+| `C:workOnce()` | Meant to call pool:cycle(activeId, inactiveId); see the note about the incorrect pin names. | 26 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/cyclePool.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/cyclePool.lua`.*

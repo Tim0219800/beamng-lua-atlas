@@ -1,0 +1,73 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/transformOperator.lua",
+  "module": "Opérateur de translation « modal » d'Easy Object Select, façon Blender : la touche G démarre le déplacement de la sélection, X/Y/Z contraignent à un axe, Shift+axe à un plan, appuyer deux fois sur le même axe bascule monde/local, des chiffres tapés donnent une distance exacte (transformNumericInput), clic gauche ou Entrée confirment, clic droit ou Échap annulent. S'appuie sur transformSession pour appliquer et valider (historique annulable) et sur transformGizmo/débug pour les guides.",
+  "notes": [
+    "Sans contrainte, le déplacement se fait dans le plan de la vue à la profondeur du pivot (centre de la boîte de sélection).",
+    "Le pas de grille (options.gridSize, absolu ou relatif) est ignoré pendant une saisie numérique.",
+    "L'ancre est le dernier objet de editor.selection.object ; begin échoue si une session est déjà active."
+  ],
+  "functions": {
+    "wantsBegin": {
+      "desc": "Indique si la touche G vient d'être pressée.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si G pressée cette frame."}],
+      "internal": false
+    },
+    "begin": {
+      "desc": "Démarre l'opération sur la sélection éditeur courante (ancre = dernier objet) : ouvre une transformSession, mémorise pivot, caméra, rayon de départ, axes monde/locaux, et masque le curseur.",
+      "params": {
+        "options": {"type": "table|nil", "desc": "defaultLocal (boolean) : démarrer les contraintes en espace local."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si l'opération a démarré."}],
+      "internal": false
+    },
+    "update": {
+      "desc": "À appeler chaque frame tant que l'opération est active : gère annulation/confirmation, contraintes, saisie numérique, calcule le delta et l'applique via transformSession.updateDelta, puis dessine les guides.",
+      "params": {
+        "options": {"type": "table|nil", "desc": "gridSize (m), gridRelative (boolean)."}
+      },
+      "returns": [
+        {"type": "string|nil", "desc": "nil si inactive ; \"active\" en cours ; \"confirm\" ou \"cancel\" à la fin."},
+        {"type": "table|nil", "desc": "À la confirmation, infos de fin ({anchorDistance} en m) renvoyées par transformSession.finish."}
+      ],
+      "internal": false
+    },
+    "cancel": {
+      "desc": "Annule l'opération en cours et restaure les transformations d'origine.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si une opération était active."}],
+      "internal": false
+    },
+    "drawScreen": {
+      "desc": "Dessine l'infobulle écran près du curseur : contrainte, espace, valeur (distance ou saisie), grille, rappel des raccourcis.",
+      "params": {
+        "options": {"type": "table|nil", "desc": "gridSize (m), gridRelative (boolean) pour l'affichage de la grille."}
+      },
+      "internal": false
+    },
+    "isActive": {
+      "desc": "Indique si une opération est en cours.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si active."}],
+      "internal": false
+    },
+    "setLocalSpace": {
+      "desc": "Fixe l'espace local/monde par défaut et l'applique à la contrainte courante.",
+      "params": {"localSpace": {"type": "boolean", "desc": "true pour local."}},
+      "returns": [{"type": "boolean", "desc": "false si aucune opération active."}],
+      "internal": false
+    },
+    "getObjectIds": {
+      "desc": "IDs des objets manipulés par la session.",
+      "params": {},
+      "returns": [{"type": "integer[]", "desc": "Liste d'IDs (vide si inactive)."}],
+      "internal": false
+    },
+    "status": {
+      "desc": "Résumé de l'état : contrainte (\"VIEW\", \"X\", \"SHIFT+X\"…), espace (\"WORLD\"/\"LOCAL\"), texte numérique saisi et delta courant.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "{constraint, space, numeric, delta}, ou nil si inactive."}],
+      "internal": false
+    }
+  }
+}

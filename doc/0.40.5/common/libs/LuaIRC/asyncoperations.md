@@ -1,30 +1,30 @@
 # `libs_LuaIRC_asyncoperations`
 
-*Fichier : `lua/common/libs/LuaIRC/asyncoperations.lua` · VM : Commun (GE + véhicule) · 90 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/LuaIRC/asyncoperations.lua` · VM: Common (GE + vehicle) · 90 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/LuaIRC/asyncoperations")`
+**Access:** `require("libs/LuaIRC/asyncoperations")`
 
-Partie de la bibliothèque tierce LuaIRC (client IRC en Lua). Ajoute à la métatable de connexion `irc._META` les commandes d'envoi : message brut, PRIVMSG, NOTICE, JOIN, PART, MODE et activation du suivi des utilisateurs. Fichier chargé par libs/LuaIRC/init via require "irc.asyncoperations" ; il utilise l'écriture `module "irc"` (Lua 5.1) et ne renvoie rien.
+Part of the third-party LuaIRC library (IRC client in Lua). Adds to the connection metatable `irc._META` the sending commands: raw message, PRIVMSG, NOTICE, JOIN, PART, MODE and enabling user tracking. File loaded by libs/LuaIRC/init via require "irc.asyncoperations"; it uses the `module "irc"` form (Lua 5.1) and returns nothing.
 
-## Remarques
+## Notes
 
-- Les méthodes ne sont accessibles qu'après un connect() réussi (avant, la métatable meta_preconnect lève une erreur).
-- Les paramètres de commande sont validés par verify() : une chaîne commençant par ':' (ou contenant un espace suivi d'un NUL) provoque une erreur 'malformed parameter'.
-- Bug probable : dans meta:send, error(err, errlevel) utilise une variable `errlevel` qui n'est jamais définie (nil, donc niveau par défaut).
+- The methods are only accessible after a successful connect() (before that, the meta_preconnect metatable raises an error).
+- Command parameters are validated by verify(): a string starting with ':' (or containing a space followed by a NUL) causes a 'malformed parameter' error.
+- Probable bug: in meta:send, error(err, errlevel) uses a variable `errlevel` that is never defined (nil, so default level).
 
-## Classe `meta`
+## Class `meta`
 
-Métatable des connexions IRC connectées (les méthodes sont appelées avec ':' sur l'objet renvoyé par irc.new).
+Metatable of connected IRC connections (the methods are called with ':' on the object returned by irc.new).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `meta:join(channel, key)` | Rejoint un salon, avec une clé (mot de passe) facultative. | 48 |
-| `meta:part(channel)` | Quitte un salon. Si le suivi des utilisateurs est actif, supprime le salon de self.channels. | 56 |
-| `meta:send(msg, ...)` | Envoie une ligne brute au serveur (suffixée de \r\n). Si des arguments supplémentaires sont donnés, msg est passé à string.format. Déclenche le hook OnSend avant l'envoi ; en cas d'erreur socket autre que timeout/wantwrite, déclenche OnDisconnect, ferme la connexion et lève l'erreur. | 11 |
-| `meta:sendChat(target, msg)` | Envoie un message PRIVMSG à un salon ou un utilisateur. Un message multi-lignes est découpé en une commande par ligne. | 34 |
-| `meta:sendNotice(target, msg)` | Comme sendChat mais avec la commande NOTICE (une commande par ligne du message). | 41 |
-| `meta:setMode(t)` | Envoie une commande MODE. La table peut contenir add (modes à ajouter) et/ou remove (modes à retirer) ; au moins l'un des deux est obligatoire (assert). | 73 |
-| `meta:trackUsers(b)` | Active ou désactive le suivi des utilisateurs par salon (self.track_users). En désactivant, vide self.channels. | 64 |
+| `meta:join(channel, key)` | Joins a channel, with an optional key (password). | 48 |
+| `meta:part(channel)` | Leaves a channel. If user tracking is active, removes the channel from self.channels. | 56 |
+| `meta:send(msg, ...)` | Sends a raw line to the server (suffixed with \r\n). If extra arguments are given, msg is passed to string.format. Fires the OnSend hook before sending; on a socket error other than timeout/wantwrite, fires OnDisconnect, closes the connection and raises the error. | 11 |
+| `meta:sendChat(target, msg)` | Sends a PRIVMSG message to a channel or a user. A multi-line message is split into one command per line. | 34 |
+| `meta:sendNotice(target, msg)` | Like sendChat but with the NOTICE command (one command per line of the message). | 41 |
+| `meta:setMode(t)` | Sends a MODE command. The table can contain add (modes to add) and/or remove (modes to remove); at least one of the two is required (assert). | 73 |
+| `meta:trackUsers(b)` | Enables or disables per-channel user tracking (self.track_users). When disabling, empties self.channels. | 64 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/LuaIRC/asyncoperations.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/LuaIRC/asyncoperations.lua`.*

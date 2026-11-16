@@ -2,26 +2,26 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/environment/setWind.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_environment_setWind_C
 local flowgraph_nodes_environment_setWind_C = {}
 
---- Appelle onNodeReset.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/environment/setWind.lua:26
+--- Calls onNodeReset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/environment/setWind.lua:26
 function flowgraph_nodes_environment_setWind_C:_executionStopped() end
 
---- Appelle onNodeReset (vent nul pour tous).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/environment/setWind.lua:22
+--- Calls onNodeReset (zero wind for all).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/environment/setWind.lua:22
 function flowgraph_nodes_environment_setWind_C:init() end
 
---- Envoie obj:setWind(0, 0, 0) à tous les véhicules.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/environment/setWind.lua:30
+--- Sends obj:setWind(0, 0, 0) to all vehicles.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/environment/setWind.lua:30
 function flowgraph_nodes_environment_setWind_C:onNodeReset() end
 
---- Calcule windDir * windSpeed et l'envoie par queueLuaCommand à chaque véhicule concerné.
----Source : lua/ge/extensions/flowgraph/nodes/environment/setWind.lua:37
+--- Computes windDir * windSpeed and sends it via queueLuaCommand to each affected vehicle.
+---Source: lua/ge/extensions/flowgraph/nodes/environment/setWind.lua:37
 function flowgraph_nodes_environment_setWind_C:work() end
 

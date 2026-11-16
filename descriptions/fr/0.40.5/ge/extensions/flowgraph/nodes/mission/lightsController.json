@@ -1,0 +1,32 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/mission/lightsController.lua",
+  "module": "Noeud flowgraph 'Lights Controller' (categorie repeat_instant) pour le feu de depart du drag race (version basee sur la vitesse). Meme sequence que Countdown Lights Controller (arbre Pro ou classique), mais le faux depart est detecte avec le pin 'velocity' > 0,5. Sorties : flow, disqualified, started.",
+  "notes": [
+    "self.lights n'est cree que par l'impulsion 'reset' : sans reset prealable, work provoque une erreur.",
+    "flow est toujours true en sortie.",
+    "La description du noeud est identique a celle des autres noeuds de lumieres de drag race."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "initLights": {
+          "desc": "Recherche les lumieres de stage et du compte a rebours dans la scene.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet l'etat et les sorties a zero.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Meme initialisation.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sur reset : remet l'etat et cache les lumieres. Sinon fait avancer le minuteur, gere les ambres/vert, passe started=true, detecte le faux depart (velocity > 0,5) : disqualified=true, ambres et rouge droit allumes.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

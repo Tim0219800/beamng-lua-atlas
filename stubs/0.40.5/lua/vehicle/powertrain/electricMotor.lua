@@ -2,166 +2,166 @@
 -- tim19Atlas stub generated from lua/vehicle/powertrain/electricMotor.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Composant powertrain `electricMotor` : moteur électrique de catégorie `engine`. Il produit un couple selon une courbe couple/régime (clé jbeam `torque`), le papillon (`electrics.values.throttle`) et la régénération (`regenThrottle`). Il consomme l'énergie de batteries `electricBattery` enregistrées (registerStorage), applique l'efficacité électrique, gère un limiteur de régime temporaire, l'allumage, des sons moteur et la réaction de couple sur la carrosserie. Avec un embrayage enfant (catégorie clutchlike) il intègre sa propre vitesse ; sans embrayage il impose directement le couple de sortie à l'enfant.
---- Accès : type de composant powertrain `electricMotor` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+--- Powertrain component `electricMotor`: electric motor of category `engine`. It produces a torque from a torque/RPM curve (jbeam key `torque`), the throttle (`electrics.values.throttle`) and regeneration (`regenThrottle`). It consumes energy from registered `electricBattery` batteries (registerStorage), applies electrical efficiency, handles a temporary rev limiter, ignition, engine sounds and the torque reaction on the body. With a child clutch (category clutchlike) it integrates its own speed; without a clutch it directly imposes the output torque on the child.
+--- Access: powertrain device type `electricMotor` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 ---@class powertrain_electricMotor
----@field deviceCategories table<string, boolean> {engine=true} : permet aux embrayages et boîtes de reconnaître le moteur comme parent valide.
----@field outputPorts table<integer, boolean> {[1]=true} : un port de sortie.
+---@field deviceCategories table<string, boolean> {engine=true}: lets clutches and gearboxes recognize the motor as a valid parent.
+---@field outputPorts table<integer, boolean> {[1]=true}: one output port.
 local powertrain_electricMotor = {}
 
---- Construit le moteur électrique : lit la courbe de couple (obligatoire), la courbe de régénération (fournie ou calculée à partir de maxRegenPower/maxRegenTorque/regenFadeRPM), le rendement électrique, les nœuds de réaction de couple, et prépare les données de courbe (getTorqueData).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:505
----@param jbeamData table Données jbeam du composant.
----@return table  Le device (classe `device`).
+--- Builds the electric motor: reads the torque curve (required), the regeneration curve (provided or computed from maxRegenPower/maxRegenTorque/regenFadeRPM), the electrical efficiency, the torque reaction nodes, and prepares the curve data (getTorqueData).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:505
+---@param jbeamData table jbeam data of the component.
+---@return table  The device (class `device`).
 function powertrain_electricMotor.new(jbeamData) end
 
---- Objet renvoyé par new(jbeamData). torqueUpdate est updateTorqueWithClutch ou updateTorqueWithoutClutch selon la présence d'un embrayage enfant.
+--- Object returned by new(jbeamData). torqueUpdate is updateTorqueWithClutch or updateTorqueWithoutClutch depending on the presence of a child clutch.
 ---@class powertrain_electricMotor_device
 local powertrain_electricMotor_device = {}
 
---- Prend l'inertie et le rapport cumulés du premier enfant comme cumulativeInertia et cumulativeGearRatio.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:323
+--- Takes the cumulative inertia and ratio of the first child as cumulativeInertia and cumulativeGearRatio.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:323
 function powertrain_electricMotor_device:calculateInertia() end
 
---- Coupe le moteur : outputTorqueState = 0, isDisabled = true.
----Source : lua/vehicle/powertrain/electricMotor.lua:88
+--- Cuts the motor: outputTorqueState = 0, isDisabled = true.
+---Source: lua/vehicle/powertrain/electricMotor.lua:88
 function powertrain_electricMotor_device:disable() end
 
---- Réactive le moteur : outputTorqueState = 1, isDisabled = false.
----Source : lua/vehicle/powertrain/electricMotor.lua:93
+--- Re-enables the motor: outputTorqueState = 1, isDisabled = false.
+---Source: lua/vehicle/powertrain/electricMotor.lua:93
 function powertrain_electricMotor_device:enable() end
 
---- Renvoie la table soundConfiguration (paramètres des sons moteur déjà initialisés, par référence).
----Source : lua/vehicle/powertrain/electricMotor.lua:337
----@return table|nil  Configuration sonore, nil si aucun son n'a été initialisé.
+--- Returns the soundConfiguration table (parameters of the already initialized engine sounds, by reference).
+---Source: lua/vehicle/powertrain/electricMotor.lua:337
+---@return table|nil  Sound configuration, nil if no sound has been initialized.
 function powertrain_electricMotor_device:getSoundConfiguration() end
 
---- Calcule les courbes de couple et de puissance nettes du frottement et renvoie {maxRPM, curves, maxTorque, maxPower, maxTorqueRPM, maxPowerRPM, finalCurveName, deviceName, vehicleID}. Utilisé par l'interface et par les embrayages/boîtes (maxTorque).
----Source : lua/vehicle/powertrain/electricMotor.lua:22
----@return table  Données de courbe de couple.
+--- Computes the torque and power curves net of friction and returns {maxRPM, curves, maxTorque, maxPower, maxTorqueRPM, maxPowerRPM, finalCurveName, deviceName, vehicleID}. Used by the interface and by the clutches/gearboxes (maxTorque).
+---Source: lua/vehicle/powertrain/electricMotor.lua:22
+---@return table  Torque curve data.
 function powertrain_electricMotor_device:getTorqueData() end
 
---- Mémorise la configuration d'un échantillon sonore et demande au moteur de jeu (GE Lua) de l'initialiser : core_sounds.initEngineSound.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:417
----@param soundID integer Identifiant du son moteur (powertrain.getEngineSoundID).
----@param samplePath string Chemin du fichier sfxBlend2D.
----@param engineNodeIDs table<integer, integer> Nœuds d'où le son est émis.
----@param offLoadGain number Gain hors charge.
----@param onLoadGain number Gain en charge.
----@param reference string Clé de rangement dans soundConfiguration.
+--- Stores the configuration of a sound sample and asks the game engine (GE Lua) to initialize it: core_sounds.initEngineSound.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:417
+---@param soundID integer Engine sound identifier (powertrain.getEngineSoundID).
+---@param samplePath string Path of the sfxBlend2D file.
+---@param engineNodeIDs table<integer, integer> Nodes from which the sound is emitted.
+---@param offLoadGain number No-load gain.
+---@param onLoadGain number Under-load gain.
+---@param reference string Storage key in soundConfiguration.
 function powertrain_electricMotor_device:initEngineSound(soundID, samplePath, engineNodeIDs, offLoadGain, onLoadGain, reference) end
 
---- Crée la configuration sonore depuis la table jbeam désignée par soundConfig (lisseurs, gains, EQ, échantillon) et active updateSounds. Journalise une erreur si la configuration est introuvable.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:432
----@param jbeamData table Données jbeam du composant (soundConfig).
+--- Creates the sound configuration from the jbeam table designated by soundConfig (smoothers, gains, EQ, sample) and enables updateSounds. Logs an error if the configuration cannot be found.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:432
+---@param jbeamData table jbeam data of the component (soundConfig).
 function powertrain_electricMotor_device:initSounds(jbeamData) end
 
---- Bloque le moteur : couple 0, vitesse de sortie forcée à 0 (outputAVState = 0) et isDisabled = true. Appelée par onBreak.
----Source : lua/vehicle/powertrain/electricMotor.lua:98
+--- Locks the motor: torque 0, output speed forced to 0 (outputAVState = 0) and isDisabled = true. Called by onBreak.
+---Source: lua/vehicle/powertrain/electricMotor.lua:98
 function powertrain_electricMotor_device:lockUp() end
 
---- Appelée quand la poutre de rupture casse : appelle lockUp.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:292
+--- Called when the break beam breaks: calls lockUp.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:292
 function powertrain_electricMotor_device:onBreak() end
 
---- Enregistre une batterie (stockage de type electricBattery avec capacité > 0) comme source d'énergie du moteur et recalcule les ratios.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:311
----@param storageName string Nom du stockage d'énergie (energyStorage.getStorage).
+--- Registers a battery (storage of type electricBattery with capacity > 0) as the motor's energy source and recomputes the ratios.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:311
+---@param storageName string Name of the energy storage (energyStorage.getStorage).
 function powertrain_electricMotor_device:registerStorage(storageName) end
 
---- Réinitialise l'état (vitesses, couple, papillon, charge, énergie, limiteur, coefficients), relit friction, dynamicFriction, inertia, defaultMotorDirection du jbeam et recalcule les données de courbe.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:341
----@param jbeamData table Données jbeam du composant.
+--- Resets the state (speeds, torque, throttle, load, energy, limiter, coefficients), rereads friction, dynamicFriction, inertia, defaultMotorDirection from the jbeam and recomputes the curve data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:341
+---@param jbeamData table jbeam data of the component.
 function powertrain_electricMotor_device:reset(jbeamData) end
 
---- Remet à zéro les lisseurs de son si la configuration sonore existe ; coupe les anciens sons moteur. Journalise une erreur si soundConfig est introuvable.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:398
----@param jbeamData table Données jbeam du composant.
+--- Resets the sound smoothers if the sound configuration exists; stops the old engine sounds. Logs an error if soundConfig cannot be found.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:398
+---@param jbeamData table jbeam data of the component.
 function powertrain_electricMotor_device:resetSounds(jbeamData) end
 
---- Désactive le limiteur de régime temporaire (valeur de coupure très haute, isTempRevLimiterActive = false).
----Source : lua/vehicle/powertrain/electricMotor.lua:303
+--- Disables the temporary rev limiter (very high cut-off value, isTempRevLimiterActive = false).
+---Source: lua/vehicle/powertrain/electricMotor.lua:303
 function powertrain_electricMotor_device:resetTempRevLimiter() end
 
---- Multiplie le frottement du moteur (friction) par le facteur donné.
----Source : lua/vehicle/powertrain/electricMotor.lua:80
----@param friction number Facteur multiplicatif.
+--- Multiplies the motor friction (friction) by the given factor.
+---Source: lua/vehicle/powertrain/electricMotor.lua:80
+---@param friction number Multiplicative factor.
 function powertrain_electricMotor_device:scaleFriction(friction) end
 
---- Multiplie outputTorqueState (0..1) par state. Sert à réduire le couple disponible ; attention, l'effet est cumulatif.
----Source : lua/vehicle/powertrain/electricMotor.lua:84
----@param state number Facteur multiplicatif.
+--- Multiplies outputTorqueState (0..1) by state. Used to reduce the available torque; note that the effect is cumulative.
+---Source: lua/vehicle/powertrain/electricMotor.lua:84
+---@param state number Multiplicative factor.
 function powertrain_electricMotor_device:scaleOutputTorque(state) end
 
---- Envoie l'événement GUI 'TorqueCurveChanged' avec les données de courbe (calculées si non fournies).
----Source : lua/vehicle/powertrain/electricMotor.lua:73
----@param data table|nil Résultat de getTorqueData ; nil pour le recalculer.
+--- Sends the GUI event 'TorqueCurveChanged' with the curve data (computed if not provided).
+---Source: lua/vehicle/powertrain/electricMotor.lua:73
+---@param data table|nil Result of getTorqueData; nil to recompute it.
 function powertrain_electricMotor_device:sendTorqueData(data) end
 
---- Mémorise et envoie (core_sounds.setEngineSoundParameterList) une liste de paramètres sonores pour un son moteur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:425
----@param soundID integer Identifiant du son moteur.
----@param params table<string, number> Paramètres FMOD (gains, fréquences EQ…).
----@param reference string Clé de rangement dans soundConfiguration.
+--- Stores and sends (core_sounds.setEngineSoundParameterList) a list of sound parameters for an engine sound.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:425
+---@param soundID integer Engine sound identifier.
+---@param params table<string, number> FMOD parameters (gains, EQ frequencies…).
+---@param reference string Storage key in soundConfiguration.
 function powertrain_electricMotor_device:setEngineSoundParameterList(soundID, params, reference) end
 
---- Règle le coefficient d'allumage : 1 si value > 0, sinon 0. N'a d'effet que si isAffectedByIgnitionLevel est vrai (défaut).
----Source : lua/vehicle/powertrain/electricMotor.lua:288
----@param value number Niveau d'allumage (> 0 = allumé).
+--- Sets the ignition coefficient: 1 if value > 0, otherwise 0. Only has an effect if isAffectedByIgnitionLevel is true (default).
+---Source: lua/vehicle/powertrain/electricMotor.lua:288
+---@param value number Ignition level (> 0 = on).
 function powertrain_electricMotor_device:setIgnition(value) end
 
---- Active un limiteur de régime temporaire : le papillon est réduit entre revLimiterAV et revLimiterAV + maxOvershootAV.
----Source : lua/vehicle/powertrain/electricMotor.lua:296
----@param revLimiterAV number Vitesse angulaire de coupure en rad/s.
----@param maxOvershootAV number|nil Plage de dépassement en rad/s (défaut 1 % de revLimiterAV).
+--- Enables a temporary rev limiter: the throttle is reduced between revLimiterAV and revLimiterAV + maxOvershootAV.
+---Source: lua/vehicle/powertrain/electricMotor.lua:296
+---@param revLimiterAV number Cut-off angular speed in rad/s.
+---@param maxOvershootAV number|nil Overshoot range in rad/s (default 1 % of revLimiterAV).
 function powertrain_electricMotor_device:setTempRevLimiter(revLimiterAV, maxOvershootAV) end
 
---- Appelée à chaque pas physique. Calcule le papillon lissé (avec limiteur de régime temporaire et allumage), le couple depuis la courbe, la charge, le travail brut, l'énergie dépensée et le couple de frottement. Avec embrayage : intègre outputAV1 et prend outputTorque1 = clutch.torqueDiff. Sans embrayage : inclut la régénération et applique le couple inertiel de réaction à la carrosserie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:dyn
----@param dt number Pas de temps en secondes.
+--- Called at each physics step. Computes the smoothed throttle (with temporary rev limiter and ignition), the torque from the curve, the load, the gross work, the spent energy and the friction torque. With a clutch: integrates outputAV1 and takes outputTorque1 = clutch.torqueDiff. Without a clutch: includes regeneration and applies the inertial reaction torque to the body.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:dyn
+---@param dt number Time step in seconds.
 function powertrain_electricMotor_device:torqueUpdate(dt) end
 
---- Recalcule la part d'énergie prélevée (ou rendue en régénération) par chaque batterie enregistrée selon le nombre de batteries avec énergie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:104
+--- Recomputes the share of energy drawn (or returned during regeneration) by each registered battery according to the number of batteries with energy.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:104
 function powertrain_electricMotor_device:updateEnergyStorageRatios() end
 
---- Retire spentEnergy des batteries enregistrées (ou y ajoute en régénération), met à jour les compteurs de batteries non vides et appelle disable/enable selon qu'il reste de l'énergie. Ne fait rien sans device.energyStorage.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:116
+--- Removes spentEnergy from the registered batteries (or adds to them during regeneration), updates the counters of non-empty batteries and calls disable/enable depending on whether energy remains. Does nothing without device.energyStorage.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:116
 function powertrain_electricMotor_device:updateEnergyUsage() end
 
---- Mise à jour par image : appelle updateEnergyUsage, calcule outputRPM et remet à zéro les compteurs de travail et de perte par friction.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:154
----@param dt number Durée de l'image en secondes.
+--- Per-frame update: calls updateEnergyUsage, computes outputRPM and resets the work and friction loss counters.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:154
+---@param dt number Frame duration in seconds.
 function powertrain_electricMotor_device:updateGFX(dt) end
 
---- Définie seulement si une soundConfig valide est présente (sinon nop). Lisse le régime et la charge et appelle obj:setEngineSound avec la fréquence fondamentale.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:163
----@param dt number Durée de l'image en secondes.
+--- Defined only if a valid soundConfig is present (otherwise nop). Smooths RPM and load and calls obj:setEngineSound with the fundamental frequency.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:163
+---@param dt number Frame duration in seconds.
 function powertrain_electricMotor_device:updateSounds(dt) end
 
---- Détecte l'embrayage enfant (un seul enfant de catégorie clutchlike), pose clutchChild et l'inertie effective, enregistre le moteur dans powertrain.engineData et sélectionne la version de torqueUpdate. Sans enfant : clutchChild = {torqueDiff = 0}.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:273
----@return boolean  Toujours true.
+--- Detects the child clutch (a single child of category clutchlike), sets clutchChild and the effective inertia, registers the motor in powertrain.engineData and selects the torqueUpdate version. Without a child: clutchChild = {torqueDiff = 0}.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:273
+---@return boolean  Always true.
 function powertrain_electricMotor_device:validate() end
 
---- Toujours nop pour un moteur : la vitesse de sortie est calculée dans torqueUpdate ou imposée par l'aval.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/electricMotor.lua:dyn
+--- Always nop for a motor: the output speed is computed in torqueUpdate or imposed from downstream.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/electricMotor.lua:dyn
 function powertrain_electricMotor_device:velocityUpdate() end
 
 return powertrain_electricMotor

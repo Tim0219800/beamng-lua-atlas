@@ -1,83 +1,83 @@
 # `editor_toolUtilities_cameraRig`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/cameraRig.lua` · VM : Game Engine (GE) · 252 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/cameraRig.lua` · VM: Game Engine (GE) · 252 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_cameraRig` : `extensions.load("editor_toolUtilities_cameraRig")`, puis la globale `editor_toolUtilities_cameraRig`
+**Access:** extension `editor_toolUtilities_cameraRig`: `extensions.load("editor_toolUtilities_cameraRig")`, then the global `editor_toolUtilities_cameraRig`
 
-Rig de caméra réutilisable pour les outils de l'éditeur : état de panoramique (pan, vue quasi aérienne nord en haut) et d'orbite avec inertie, qui produit une pose (pos, yaw, pitch, roll) pour une caméra pilotée par script (scriptedFree). Module d'état et de maths pur, sans couplage moteur : l'outil hôte lit les entrées, appelle update() chaque frame et pousse la pose renvoyée. Les transitions chronométrées entre focus restent à la charge de l'hôte.
+Reusable camera rig for editor tools: pan state (pan, near-aerial view with north up) and orbit state with inertia, which produces a pose (pos, yaw, pitch, roll) for a script-driven camera (scriptedFree). Pure state and math module, with no engine coupling: the host tool reads the inputs, calls update() every frame and pushes the returned pose. Timed transitions between focuses remain the host's responsibility.
 
-## Remarques
+## Notes
 
-- Les angles sont en degrés ; yaw 0 regarde vers +Y, un pitch positif regarde vers le bas.
-- La position renvoyée est un vec3 partagé réutilisé à chaque appel : la copier pour la conserver.
-- Le pan utilise pitch 89.9 (pas 90) et roll 0 pour éviter la dégénérescence de la base du quaternion.
-- Constantes : pan hauteur 15 à 3000 m (défaut 220), zoom x0.86 par cran ; orbite distance 6 à 2500 m (défaut 130), pitch -30 à 88, marge au sol 2 m ; les deltas de souris > 250 px sont rejetés (recentrage du curseur caché).
-- update() borne dt à 0.05 s.
+- Angles are in degrees; yaw 0 looks toward +Y, a positive pitch looks downward.
+- The returned position is a shared vec3 reused on every call: copy it to keep it.
+- The pan uses pitch 89.9 (not 90) and roll 0 to avoid degeneracy of the quaternion basis.
+- Constants: pan height 15 to 3000 m (default 220), zoom x0.86 per notch; orbit distance 6 to 2500 m (default 130), pitch -30 to 88, ground margin 2 m; mouse deltas > 250 px are rejected (hidden cursor recentering).
+- update() clamps dt to 0.05 s.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_cameraRig.focusFootprint(originXY, terrainH, height)` | Passe en mode PAN centré sur l'origine d'une emprise et renvoie sa pose cible vue de dessus. | 196 |
-| `editor_toolUtilities_cameraRig.focusMassing(centroid, radius, yawDeg, pitchDeg)` | Passe en mode ORBITE centré sur le centroïde d'un bâtiment et renvoie sa pose cible en 3/4. La distance vaut radius*2.4 (bornée), sinon 130 m. | 209 |
-| `editor_toolUtilities_cameraRig.getMode()` | Mode courant du rig. | 241 |
-| `editor_toolUtilities_cameraRig.recenter(centroid)` | Déplace le PIVOT de l'orbite vers `centroid` en gardant yaw/pitch/distance, et renvoie la pose qui conserve le cadrage. Passe en mode orbite et annule l'inertie. | 223 |
-| `editor_toolUtilities_cameraRig.settle()` | Annule toute inertie résiduelle (pan et orbite) et l'état de glissé ; à appeler quand une transition chronométrée se termine avant de rendre la main à l'interaction. | 234 |
-| `editor_toolUtilities_cameraRig.update(dt, input)` | Avance la caméra interactive d'une frame et renvoie la pose à pousser. En pan, un glissé attrape le sol (avec inertie) ; en orbite il fait tourner autour du pivot (avec inertie) ; la molette zoome/dolly. | 98 |
+| `editor_toolUtilities_cameraRig.focusFootprint(originXY, terrainH, height)` | Switches to PAN mode centered on the origin of a footprint and returns its target top-down pose. | 196 |
+| `editor_toolUtilities_cameraRig.focusMassing(centroid, radius, yawDeg, pitchDeg)` | Switches to ORBIT mode centered on the centroid of a building and returns its 3/4 target pose. The distance is radius*2.4 (clamped), otherwise 130 m. | 209 |
+| `editor_toolUtilities_cameraRig.getMode()` | Current mode of the rig. | 241 |
+| `editor_toolUtilities_cameraRig.recenter(centroid)` | Moves the orbit PIVOT to `centroid` while keeping yaw/pitch/distance, and returns the pose that preserves the framing. Switches to orbit mode and cancels inertia. | 223 |
+| `editor_toolUtilities_cameraRig.settle()` | Cancels any residual inertia (pan and orbit) and the drag state; to be called when a timed transition ends before handing control back to interaction. | 234 |
+| `editor_toolUtilities_cameraRig.update(dt, input)` | Advances the interactive camera by one frame and returns the pose to push. In pan, a drag grabs the ground (with inertia); in orbit it rotates around the pivot (with inertia); the wheel zooms/dollies. | 98 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_cameraRig.focusFootprint(originXY, terrainH, height)`
 
-Passe en mode PAN centré sur l'origine d'une emprise et renvoie sa pose cible vue de dessus.
+Switches to PAN mode centered on the origin of a footprint and returns its target top-down pose.
 
-- `originXY` (*table|nil*) : {x=,y=} centre (0,0 si nil).
-- `terrainH` (*number|nil*) : Altitude du sol ; si nil on garde la dernière connue.
-- `height` (*number|nil*) : Hauteur de la caméra au-dessus du sol (bornée à 15-3000 m).
-- **renvoie** : vec3 Position
-- **renvoie** : number yaw
-- **renvoie** : number pitch
-- **renvoie** : number roll
+- `originXY` (*table|nil*) : {x=,y=} center (0,0 if nil).
+- `terrainH` (*number|nil*) : Ground altitude; if nil the last known one is kept.
+- `height` (*number|nil*) : Camera height above the ground (clamped to 15-3000 m).
+- **returns**: vec3 Position
+- **returns**: number yaw
+- **returns**: number pitch
+- **returns**: number roll
 
 #### `editor_toolUtilities_cameraRig.focusMassing(centroid, radius, yawDeg, pitchDeg)`
 
-Passe en mode ORBITE centré sur le centroïde d'un bâtiment et renvoie sa pose cible en 3/4. La distance vaut radius*2.4 (bornée), sinon 130 m.
+Switches to ORBIT mode centered on the centroid of a building and returns its 3/4 target pose. The distance is radius*2.4 (clamped), otherwise 130 m.
 
-- `centroid` (*vec3|nil*) : Pivot (origine si nil).
-- `radius` (*number|nil*) : Rayon englobant ; utilisé seulement s'il est > 1.
-- `yawDeg` (*number|nil*) : Yaw initial (défaut 30).
-- `pitchDeg` (*number|nil*) : Pitch initial (défaut 32, borné -30..88).
-- **renvoie** : vec3 Position
-- **renvoie** : number yaw
-- **renvoie** : number pitch
-- **renvoie** : number roll (0)
+- `centroid` (*vec3|nil*) : Pivot (origin if nil).
+- `radius` (*number|nil*) : Bounding radius; used only if > 1.
+- `yawDeg` (*number|nil*) : Initial yaw (default 30).
+- `pitchDeg` (*number|nil*) : Initial pitch (default 32, clamped -30..88).
+- **returns**: vec3 Position
+- **returns**: number yaw
+- **returns**: number pitch
+- **returns**: number roll (0)
 
 #### `editor_toolUtilities_cameraRig.getMode()`
 
-Mode courant du rig.
+Current mode of the rig.
 
-- **renvoie** : string 'pan' (emprise) ou 'orbit' (volume).
+- **returns**: string 'pan' (footprint) or 'orbit' (volume).
 
 #### `editor_toolUtilities_cameraRig.recenter(centroid)`
 
-Déplace le PIVOT de l'orbite vers `centroid` en gardant yaw/pitch/distance, et renvoie la pose qui conserve le cadrage. Passe en mode orbite et annule l'inertie.
+Moves the orbit PIVOT to `centroid` while keeping yaw/pitch/distance, and returns the pose that preserves the framing. Switches to orbit mode and cancels inertia.
 
-- `centroid` (*vec3|nil*) : Nouveau pivot (chaque composante manquante garde l'ancienne).
-- **renvoie** : vec3 Position
-- **renvoie** : number yaw
-- **renvoie** : number pitch
-- **renvoie** : number roll (0)
+- `centroid` (*vec3|nil*) : New pivot (each missing component keeps the old one).
+- **returns**: vec3 Position
+- **returns**: number yaw
+- **returns**: number pitch
+- **returns**: number roll (0)
 
 #### `editor_toolUtilities_cameraRig.update(dt, input)`
 
-Avance la caméra interactive d'une frame et renvoie la pose à pousser. En pan, un glissé attrape le sol (avec inertie) ; en orbite il fait tourner autour du pivot (avec inertie) ; la molette zoome/dolly.
+Advances the interactive camera by one frame and returns the pose to push. In pan, a drag grabs the ground (with inertia); in orbit it rotates around the pivot (with inertia); the wheel zooms/dollies.
 
-- `dt` (*number|nil*) : Durée de frame en secondes (plafonnée à 0.05).
-- `input` (*table|nil*) : { dragActive:boolean, dragDX:number, dragDY:number (pixels écran), wheel:number (crans), groundZAt:function(x,y[,heightAbove])->number|nil (altitude du sol ; moyenne sur la vue si heightAbove), limitXY:function(x,y)->x,y (borne le centre du pan) }
-- **renvoie** : vec3 Position de la caméra (vec3 partagé).
-- **renvoie** : number yaw en degrés
-- **renvoie** : number pitch en degrés
-- **renvoie** : number roll en degrés
+- `dt` (*number|nil*) : Frame duration in seconds (capped at 0.05).
+- `input` (*table|nil*) : { dragActive:boolean, dragDX:number, dragDY:number (screen pixels), wheel:number (notches), groundZAt:function(x,y[,heightAbove])->number|nil (ground altitude; average over the view if heightAbove), limitXY:function(x,y)->x,y (bounds the pan center) }
+- **returns**: vec3 Camera position (shared vec3).
+- **returns**: number yaw in degrees
+- **returns**: number pitch in degrees
+- **returns**: number roll in degrees
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/cameraRig.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/cameraRig.lua`.*

@@ -1,0 +1,63 @@
+{
+  "path": "lua/ge/extensions/core/jobsystem.lua",
+  "module": "Extension GE `core_jobsystem` : mini ordonnanceur de tâches coopératives basé sur des coroutines Lua. Un moddeur y met un traitement long (scan de fichiers, calcul lourd) pour l'étaler sur plusieurs images au lieu de bloquer le jeu. La fonction du job reçoit un objet `job` avec `job.yield()` (rend la main si le budget de temps est dépassé) et `job.sleep(secondes)` (pause sans bloquer le jeu). Toutes les coroutines sont reprises une fois par image dans onUpdate.",
+  "usage": "local function work(job, path)\n  for i = 1, 10000 do\n    -- ... traitement ...\n    job.yield()          -- rend la main si le budget maxdt est dépassé\n  end\n  job.sleep(3)           -- attend 3 s en laissant le jeu tourner\nend\ncore_jobsystem.create(work, 1, 'some/path')   -- maxdt = 1 s : bien pour du fond\n\n-- variante qui ne lance pas deux fois la même fonction en parallèle\nlocal check = core_jobsystem.wrap(work, 0.5)\ncheck('some/path')",
+  "notes": [
+    "Unité de maxdt : l'en-tête du fichier et le code (dt = hp:stop()/1000 comparé à maxdt, défaut 0.01) indiquent des SECONDES ; le commentaire de create() dit 'milliseconds', ce qui est faux/trompeur. Défaut 0.01 s.",
+    "job.yield() ne s'interrompt que si maxdt s'est écoulé depuis le dernier yield effectif ; sinon il ne fait rien. Il ne peut pas interrompre un code qui ne l'appelle pas : insérer des yield dans les boucles longues.",
+    "job.yield et job.sleep ne font rien hors coroutine (coroutine.running() == nil).",
+    "Les arguments passés à create sont donnés à la fonction à la première reprise : fct(job, ...). Sans argument, fct(job, dtTable) reçoit une table partagée {dtReal, dtSim, dtRaw} en second paramètre (mise à jour à chaque image : lire les champs, ne pas la conserver).",
+    "Une erreur dans un job est loguée ('job error') et le job meurt si la coroutine est terminée ; elle n'arrête pas les autres jobs.",
+    "Bug probable : dans onUpdate, extensions.hook('onJobDone', coroutines[ci], #coroutines) est appelé APRÈS table.remove(coroutines, ci), donc le premier argument est l'entrée qui a pris la place du job terminé (ou nil si c'était le dernier), pas le job fini. De plus, plusieurs terminaisons dans une même image utilisent des indices mémorisés puis supprimés en ordre inverse, ce qui reste correct pour la suppression.",
+    "La variable locale disableBackgroundTasks vaut false et n'est jamais modifiée dans ce fichier : la branche 'exécution en avant-plan' de create() est inatteignable depuis l'extérieur.",
+    "wrap() ne renvoie pas le job et empêche seulement de relancer la même fonction tant qu'elle tourne (clé = la fonction elle-même)."
+  ],
+  "functions": {
+    "create": {
+      "desc": "Crée et enregistre un job (coroutine) exécuté par morceaux à chaque image. La fonction est appelée avec (job, ...).",
+      "params": {
+        "fct": {"type": "function", "desc": "Fonction de travail, fct(job, ...)."},
+        "maxdt": {"type": "number|nil", "desc": "Budget de temps en secondes entre deux yield effectifs ; défaut 0.01."},
+        "...": {"type": "any", "desc": "Arguments passés à fct après job."}
+      },
+      "returns": [{"type": "table", "desc": "Objet job : {yield(), sleep(secs), setExitCallback(fn), running, fct, maxdt}. exitcbl est appelé avec le job à sa fin."}]
+    },
+    "wrap": {
+      "desc": "Renvoie une fonction qui lance fct comme job, sauf si une instance de fct tourne déjà (dans ce cas l'appel est ignoré).",
+      "params": {
+        "fct": {"type": "function", "desc": "Fonction de travail du job."},
+        "maxdt": {"type": "number|nil", "desc": "Budget en secondes, comme pour create."}
+      },
+      "returns": [{"type": "function", "desc": "function(...) qui crée le job ; ne renvoie rien."}]
+    },
+    "onUpdate": {
+      "desc": "Hook par image (appelé avec les dt du jeu) : reprend chaque coroutine, loggue les erreurs, supprime les jobs terminés, appelle leur exitCallback puis émet onJobDone.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel en secondes."},
+        "dtSim": {"type": "number", "desc": "Delta temps de simulation en secondes."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut en secondes."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "getRunningJobCount": {
+      "desc": "Nombre de jobs actuellement en cours.",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Nombre de jobs."}]
+    },
+    "cancelJob": {
+      "desc": "Retire un job de la liste pour qu'il ne soit plus repris. N'appelle pas son exit callback ni onJobDone ; la coroutine est abandonnée.",
+      "params": {"jobHandle": {"type": "table", "desc": "Objet renvoyé par create."}},
+      "returns": [{"type": "boolean", "desc": "true si le job a été trouvé et retiré."}]
+    },
+    "findFilesAsync": {
+      "desc": "Cherche des fichiers sous un dossier : correspondances directes à la racine, puis recherche récursive native par sous-dossier de premier niveau, avec un appel à yieldFn après chacun. À appeler depuis un job en passant job.yield.",
+      "params": {
+        "rootPath": {"type": "string", "desc": "Dossier racine."},
+        "pattern": {"type": "string", "desc": "Motif de fichier (ex. '*.json')."},
+        "yieldFn": {"type": "function|nil", "desc": "Appelée avec un texte de debug après chaque sous-dossier ; défaut nop."}
+      },
+      "returns": [{"type": "string[]", "desc": "Chemins trouvés."}]
+    }
+  }
+}

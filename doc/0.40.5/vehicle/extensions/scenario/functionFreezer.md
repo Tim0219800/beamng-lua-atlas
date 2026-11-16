@@ -1,40 +1,40 @@
 # `scenario_functionFreezer`
 
-*Fichier : `lua/vehicle/extensions/scenario/functionFreezer.lua` · VM : Véhicule · 81 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/scenario/functionFreezer.lua` · VM: Vehicle · 81 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_functionFreezer` : `extensions.load (VM véhicule)("scenario_functionFreezer")`, puis la globale `scenario_functionFreezer`
+**Access:** extension `scenario_functionFreezer`: `extensions.load (vehicle VM)("scenario_functionFreezer")`, then the global `scenario_functionFreezer`
 
-Permet à un créateur de scénario d'empêcher l'exécution de certaines fonctions Lua du véhicule tant que le scénario n'a pas démarré (écran d'intro, caméra d'intro), par exemple pour qu'un canon ne tire pas pendant la lecture. À son chargement l'extension enveloppe controller.setFreeze : quand le jeu appelle setFreeze(1) les fonctions listées sont remplacées par `nop`, et setFreeze(autre valeur) les restaure. La liste vient du hook onVehicleScenarioData (tableau de chaînes comme "hydro_input.liftUp").
+Lets a scenario creator prevent some of the vehicle's Lua functions from running until the scenario has started (intro screen, intro camera), for example so that a cannon does not fire during playback. On load the extension wraps controller.setFreeze: when the game calls setFreeze(1) the listed functions are replaced by `nop`, and setFreeze(any other value) restores them. The list comes from the onVehicleScenarioData hook (array of strings like "hydro_input.liftUp").
 
-## Exemple
+## Example
 
 ```lua
--- dans le .json du scénario, extension functionFreezer :
+-- in the scenario .json, functionFreezer extension:
 -- ["hydro_input.liftUp", "controller.shiftDown"]
 ```
 
-## Remarques
+## Notes
 
-- Les noms sont évalués avec loadstring ("return nom"), donc ce sont des chemins globaux Lua. Une entrée inexistante ou qui n'est pas une fonction est refusée avec un log d'erreur.
-- La sauvegarde de la fonction originale est stockée dans une globale nommée `<nom>_freeze_backup`. Geler deux fois est ignoré (log D), dégeler une fonction jamais gelée donne un log E.
-- Seule la valeur 1 gèle ; toute autre valeur (0 ou autre) dégèle.
-- Le remplacement ne touche que la globale/table nommée : les références locales déjà capturées par d'autres modules (local f = module.func) ne sont pas affectées.
+- Names are evaluated with loadstring ("return name"), so they are global Lua paths. A nonexistent entry or one that is not a function is rejected with an error log.
+- The backup of the original function is stored in a global named `<name>_freeze_backup`. Freezing twice is ignored (D log), unfreezing a function that was never frozen gives an E log.
+- Only the value 1 freezes; any other value (0 or other) unfreezes.
+- The replacement only affects the named global/table: local references already captured by other modules (local f = module.func) are not affected.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_functionFreezer.onExtensionLoaded()` | Hook appelé au chargement de l'extension. Sauvegarde controller.setFreeze et le remplace par une fonction qui appelle l'original (s'il existe) puis applique le gel/dégel des fonctions listées. *(interne)* *(hook)* | 38 |
-| `scenario_functionFreezer.onExtensionUnloaded()` | Hook appelé au déchargement. Dégèle toutes les fonctions (setFreeze(0) interne) puis restaure controller.setFreeze d'origine. *(interne)* *(hook)* | 51 |
-| `scenario_functionFreezer.onVehicleScenarioData(data)` | Hook appelé avec la configuration du scénario. Dégèle d'abord tout, vide la liste, puis valide chaque nom de fonction du tableau et l'ajoute à la liste à geler (ne gèle pas immédiatement : le gel se fait au prochain controller.setFreeze(1)). *(interne)* *(hook)* | 57 |
+| `scenario_functionFreezer.onExtensionLoaded()` | Hook called when the extension loads. Saves controller.setFreeze and replaces it with a function that calls the original (if it exists) then applies the freeze/unfreeze of the listed functions. *(internal)* *(hook)* | 38 |
+| `scenario_functionFreezer.onExtensionUnloaded()` | Hook called on unload. Unfreezes all functions (internal setFreeze(0)) then restores the original controller.setFreeze. *(internal)* *(hook)* | 51 |
+| `scenario_functionFreezer.onVehicleScenarioData(data)` | Hook called with the scenario configuration. First unfreezes everything, empties the list, then validates each function name in the array and adds it to the list to freeze (does not freeze immediately: freezing happens at the next controller.setFreeze(1)). *(internal)* *(hook)* | 57 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_functionFreezer.onVehicleScenarioData(data)`
 
-Hook appelé avec la configuration du scénario. Dégèle d'abord tout, vide la liste, puis valide chaque nom de fonction du tableau et l'ajoute à la liste à geler (ne gèle pas immédiatement : le gel se fait au prochain controller.setFreeze(1)).
+Hook called with the scenario configuration. First unfreezes everything, empties the list, then validates each function name in the array and adds it to the list to freeze (does not freeze immediately: freezing happens at the next controller.setFreeze(1)).
 
-- `data` (*string[]*) : Tableau de chemins de fonctions globales sous forme de chaînes (ex. "controller.shiftDown").
+- `data` (*string[]*) : Array of global function paths as strings (e.g. "controller.shiftDown").
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/scenario/functionFreezer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/scenario/functionFreezer.lua`.*

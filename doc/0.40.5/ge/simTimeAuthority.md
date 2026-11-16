@@ -1,181 +1,181 @@
 # `simTimeAuthority`
 
-*Fichier : `lua/ge/simTimeAuthority.lua` · VM : Game Engine (GE) · 325 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/simTimeAuthority.lua` · VM: Game Engine (GE) · 325 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `simTimeAuthority`
+**Access:** global `simTimeAuthority`
 
-Autorité sur la vitesse du temps de simulation : pause, ralenti (bullet time) et reprise, avec lissage. Un moddeur l'utilise pour mettre le jeu en pause, régler un ralenti (0.001 à 1) ou empiler des demandes de pause (pushPauseRequest/popPauseRequest). Il synchronise le moteur C++ (be:setSimulationTimeScale, be:setEnabled) et le replay (core_replay), et prévient l'interface (messages bullettime).
+Authority over the simulation time speed: pause, slow motion (bullet time) and resume, with smoothing. A modder uses it to pause the game, set a slow motion (0.001 to 1) or stack pause requests (pushPauseRequest/popPauseRequest). It synchronizes the C++ engine (be:setSimulationTimeScale, be:setEnabled) and the replay (core_replay), and notifies the UI (bullettime messages).
 
-## Exemple
+## Example
 
 ```lua
-simTimeAuthority.set(0.25)        -- ralenti au quart de vitesse (lissé)
+simTimeAuthority.set(0.25)        -- slow motion at quarter speed (smoothed)
 simTimeAuthority.pause(true)      -- pause
 simTimeAuthority.pushPauseRequest('monMod')
--- ... plus tard
+-- ... later
 simTimeAuthority.popPauseRequest('monMod')
 ```
 
-## Remarques
+## Notes
 
-- Les valeurs de vitesse sont limitées à [0.001, 1] par setTargetSpeed (clamp) : il n'y a pas de vitesse accélérée > 1 malgré les commentaires '2=fastmotion' du code.
-- Les commentaires d'origine de get/getReal/set/setInstant sont décalés dans la page automatique : get() renvoie la vitesse DEMANDÉE (désirée), getReal() la vitesse EN VIGUEUR (après lissage), set() change la vitesse avec lissage progressif, setInstant() change aussi la valeur lissée immédiatement.
-- Pendant la lecture d'un replay (core_replay.state.state == 'playback'), pause/pauseSmooth/togglePause/selectPreset délèguent au replay au lieu du moteur.
-- pause() ne fait rien s'il n'y a pas de niveau chargé (getCurrentLevelIdentifier() nil) ; pause() fixe be:setEnabled et la vitesse tout de suite, alors que pauseSmooth() passe par une transition lissée jusqu'à vitesse 0.
-- Pile de pause : pushPauseRequest/popPauseRequest comptent par identifiant (un même id n'est compté qu'une fois). À la dernière levée, la simulation ne reprend que si elle n'était pas déjà en pause avant le premier push. Les deux fonctions sont sans effet si core_intapi.debug_isPauseAllowed() renvoie faux.
-- Les 12 crans de ralenti (selectionSlot) sont 1/1000, 1/500, 1/200, 1/100, 1/50, 1/32, 1/16, 1/8, 1/4, 1/2, 3/4 et 1 ; le cran de ralenti instantané et le cran 'toggle' valent le cran 8 (1/8).
-- Au chargement du module, simulationSpeed est lu dans le moteur (be:getSimulationTimeScale()) pour rester synchrone après un rechargement du Lua GE ; selectionSlot est choisi comme le cran le plus proche.
-- onSerialize/onDeserialized ont un TODO dans le code ('verify this is working') ; onDeserialized vide aussi la pile de pause.
+- Speed values are limited to [0.001, 1] by setTargetSpeed (clamp): there is no accelerated speed > 1 despite the '2=fastmotion' comments in the code.
+- The original comments of get/getReal/set/setInstant are shifted in the automatic page: get() returns the REQUESTED (desired) speed, getReal() the ACTUAL speed (after smoothing), set() changes the speed with gradual smoothing, setInstant() also changes the smoothed value immediately.
+- During replay playback (core_replay.state.state == 'playback'), pause/pauseSmooth/togglePause/selectPreset delegate to the replay instead of the engine.
+- pause() does nothing if no level is loaded (getCurrentLevelIdentifier() nil); pause() sets be:setEnabled and the speed right away, whereas pauseSmooth() goes through a smoothed transition down to speed 0.
+- Pause stack: pushPauseRequest/popPauseRequest count by identifier (the same id is counted only once). On the last release, the simulation resumes only if it was not already paused before the first push. Both functions have no effect if core_intapi.debug_isPauseAllowed() returns false.
+- The 12 slow-motion notches (selectionSlot) are 1/1000, 1/500, 1/200, 1/100, 1/50, 1/32, 1/16, 1/8, 1/4, 1/2, 3/4 and 1; the instant slow-motion notch and the 'toggle' notch are notch 8 (1/8).
+- At module load, simulationSpeed is read from the engine (be:getSimulationTimeScale()) to stay in sync after a GE Lua reload; selectionSlot is chosen as the closest notch.
+- onSerialize/onDeserialized have a TODO in the code ('verify this is working'); onDeserialized also empties the pause stack.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `simTimeAuthority.clearPauseStack()` | Vide toutes les demandes de pause et reprend la simulation (pause(false)). | 269 |
-| `simTimeAuthority.get()` | Renvoie la vitesse de simulation demandée (cible, pas forcément atteinte). | 152 |
-| `simTimeAuthority.getInitialTimeScale()` | Renvoie la vitesse sauvegardée avant la dernière pause : c'est celle qui sera restaurée à la reprise. | 292 |
-| `simTimeAuthority.getPause()` | Indique si le temps est en pause : état de pause du replay en lecture, sinon not be:getEnabled(). | 34 |
-| `simTimeAuthority.getReal()` | Renvoie la vitesse effectivement appliquée au moteur (tient compte du lissage). | 148 |
-| `simTimeAuthority.onDeserialized(data)` | Hook appelé après un rechargement du Lua GE : restaure simulationSpeed et la vitesse initiale, puis vide la pile de pause. *(interne)* *(hook)* | 284 |
-| `simTimeAuthority.onSerialize()` | Hook appelé avant un rechargement du Lua GE : renvoie la vitesse demandée et la vitesse initiale. *(interne)* *(hook)* | 279 |
-| `simTimeAuthority.onUIInitialised()` | Hook appelé quand l'interface est initialisée : vide la pile de pause (clearPauseStack). *(interne)* *(hook)* | 275 |
-| `simTimeAuthority.pause(paused, playPauseSound)` | Met en pause ou reprend instantanément. Diffuse le hook onSimTimePauseCalled(paused). En pause : sauvegarde la vitesse courante, vitesse 0, be:setEnabled(false). À la reprise : restaure la vitesse sauvegardée avec lissage. Sans effet si l'état demandé est déjà celui en cours ou si aucun niveau n'est chargé. | 170 |
-| `simTimeAuthority.pauseSmooth(paused, rateLimit, startAccel, stopAccel, playPauseSound)` | Pause ou reprise avec transition lissée de la vitesse (ralentissement progressif jusqu'à 0, ou accélération). Diffuse le hook simTimePauseCalled(paused). Les taux sont donnés par l'appelant et servent pour cette seule transition. | 199 |
-| `simTimeAuthority.popPauseRequest(id)` | Retire une demande de pause identifiée. Quand le compteur retombe à 0 et que le jeu n'était pas en pause avant la première demande, la simulation reprend. | 256 |
-| `simTimeAuthority.pushPauseRequest(id)` | Ajoute une demande de pause identifiée et met en pause. Mémorise si le jeu était déjà en pause à la première demande. Un même id n'est compté qu'une fois. | 242 |
-| `simTimeAuthority.reportSpeed(speed, simplified)` | Affiche à l'écran (guihooks 'Message', catégorie bullettime) un message sur la vitesse : accéléré, temps réel, ralenti (simplifié) ou ralenti d'un facteur calculé avec l'option courante. | 64 |
-| `simTimeAuthority.requestValue()` | Envoie à l'interface la vitesse demandée courante (guihooks 'BullettimeValueChanged'). | 166 |
-| `simTimeAuthority.selectPreset(val)` | Sélectionne un cran de ralenti avec des touches de direction. Pendant un replay, pilote la vitesse du replay à la place. | 122 |
-| `simTimeAuthority.set(val)` | Change la vitesse de simulation demandée (lissage progressif jusqu'à la nouvelle valeur) et affiche le message de vitesse simplifié. La valeur est limitée à [0.001, 1]. Une valeur non numérique est refusée avec une erreur loguée. | 156 |
-| `simTimeAuthority.setInstant(val)` | Comme set, mais force aussi la valeur lissée : la vitesse est appliquée sans transition. Ne montre pas de message. | 161 |
-| `simTimeAuthority.togglePause(playPauseSound)` | Bascule pause/reprise. Diffuse le hook onTogglePause ; en replay appelle core_replay.togglePlay(). | 229 |
-| `simTimeAuthority.update(...)` | Fonction de mise à jour enregistrée auprès du système d'extensions : applique à chaque appel le lissage de vitesse en cours (envoie la vitesse au moteur via be:setSimulationTimeScale et physicsEngineEvent) et se désactive à la fin de la transition. Elle sert d'enveloppe car un pointeur de fonction enregistré ne peut pas être remplacé par nop. *(interne)* | 297 |
+| `simTimeAuthority.clearPauseStack()` | Empties all pause requests and resumes the simulation (pause(false)). | 269 |
+| `simTimeAuthority.get()` | Returns the requested simulation speed (target, not necessarily reached). | 152 |
+| `simTimeAuthority.getInitialTimeScale()` | Returns the speed saved before the last pause: this is the one that will be restored on resume. | 292 |
+| `simTimeAuthority.getPause()` | Indicates whether time is paused: replay pause state during playback, otherwise not be:getEnabled(). | 34 |
+| `simTimeAuthority.getReal()` | Returns the speed actually applied to the engine (accounts for smoothing). | 148 |
+| `simTimeAuthority.onDeserialized(data)` | Hook called after a GE Lua reload: restores simulationSpeed and the initial speed, then empties the pause stack. *(internal)* *(hook)* | 284 |
+| `simTimeAuthority.onSerialize()` | Hook called before a GE Lua reload: returns the requested speed and the initial speed. *(internal)* *(hook)* | 279 |
+| `simTimeAuthority.onUIInitialised()` | Hook called when the UI is initialized: empties the pause stack (clearPauseStack). *(internal)* *(hook)* | 275 |
+| `simTimeAuthority.pause(paused, playPauseSound)` | Pauses or resumes instantly. Broadcasts the onSimTimePauseCalled(paused) hook. When pausing: saves the current speed, speed 0, be:setEnabled(false). On resume: restores the saved speed with smoothing. No effect if the requested state is already the current one or if no level is loaded. | 170 |
+| `simTimeAuthority.pauseSmooth(paused, rateLimit, startAccel, stopAccel, playPauseSound)` | Pauses or resumes with a smoothed speed transition (gradual slowdown to 0, or speed-up). Emits the hook simTimePauseCalled(paused). The rates are given by the caller and apply only to this transition. | 199 |
+| `simTimeAuthority.popPauseRequest(id)` | Removes an identified pause request. When the counter drops back to 0 and the game was not paused before the first request, the simulation resumes. | 256 |
+| `simTimeAuthority.pushPauseRequest(id)` | Adds an identified pause request and pauses. Remembers whether the game was already paused at the first request. A given id is counted only once. | 242 |
+| `simTimeAuthority.reportSpeed(speed, simplified)` | Displays a speed message on screen (guihooks 'Message', category bullettime): fast-forward, real time, slow motion (simplified) or slow motion by a factor computed with the current option. | 64 |
+| `simTimeAuthority.requestValue()` | Sends the current requested speed to the UI (guihooks 'BullettimeValueChanged'). | 166 |
+| `simTimeAuthority.selectPreset(val)` | Selects a slow-motion notch with direction keys. During a replay, drives the replay speed instead. | 122 |
+| `simTimeAuthority.set(val)` | Changes the requested simulation speed (progressive smoothing to the new value) and displays the simplified speed message. The value is clamped to [0.001, 1]. A non-numeric value is rejected with a logged error. | 156 |
+| `simTimeAuthority.setInstant(val)` | Like set, but also forces the smoothed value: the speed is applied without transition. Shows no message. | 161 |
+| `simTimeAuthority.togglePause(playPauseSound)` | Toggles pause/resume. Emits the hook onTogglePause; during a replay calls core_replay.togglePlay(). | 229 |
+| `simTimeAuthority.update(...)` | Update function registered with the extension system: on each call applies the ongoing speed smoothing (sends the speed to the engine via be:setSimulationTimeScale and physicsEngineEvent) and deactivates itself at the end of the transition. It serves as a wrapper because a registered function pointer cannot be replaced by nop. *(internal)* | 297 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `simTimeAuthority.get()`
 
-Renvoie la vitesse de simulation demandée (cible, pas forcément atteinte).
+Returns the requested simulation speed (target, not necessarily reached).
 
-- **renvoie** : number 1 = temps réel, 0.5 = ralenti, 0 = pause.
+- **returns**: number 1 = real time, 0.5 = slow motion, 0 = pause.
 
 #### `simTimeAuthority.getInitialTimeScale()`
 
-Renvoie la vitesse sauvegardée avant la dernière pause : c'est celle qui sera restaurée à la reprise.
+Returns the speed saved before the last pause: this is the one that will be restored on resume.
 
-- **renvoie** : number Vitesse à restaurer.
+- **returns**: number Speed to restore.
 
 #### `simTimeAuthority.getPause()`
 
-Indique si le temps est en pause : état de pause du replay en lecture, sinon not be:getEnabled().
+Indicates whether time is paused: replay pause state during playback, otherwise not be:getEnabled().
 
-- **renvoie** : boolean true si en pause.
+- **returns**: boolean true if paused.
 
 #### `simTimeAuthority.getReal()`
 
-Renvoie la vitesse effectivement appliquée au moteur (tient compte du lissage).
+Returns the speed actually applied to the engine (accounts for smoothing).
 
-- **renvoie** : number Vitesse en vigueur.
+- **returns**: number Actual speed.
 
 #### `simTimeAuthority.onDeserialized(data)`
 
-Hook appelé après un rechargement du Lua GE : restaure simulationSpeed et la vitesse initiale, puis vide la pile de pause.
+Hook called after a GE Lua reload: restores simulationSpeed and the initial speed, then empties the pause stack.
 
-- `data` (*table*) : Table renvoyée par onSerialize : {simulationSpeed, initialTimeScale}.
+- `data` (*table*) : Table returned by onSerialize: {simulationSpeed, initialTimeScale}.
 
 #### `simTimeAuthority.onSerialize()`
 
-Hook appelé avant un rechargement du Lua GE : renvoie la vitesse demandée et la vitesse initiale.
+Hook called before a GE Lua reload: returns the requested speed and the initial speed.
 
-- **renvoie** : table {simulationSpeed = number, initialTimeScale = number}.
+- **returns**: table {simulationSpeed = number, initialTimeScale = number}.
 
 #### `simTimeAuthority.pause(paused, playPauseSound)`
 
-Met en pause ou reprend instantanément. Diffuse le hook onSimTimePauseCalled(paused). En pause : sauvegarde la vitesse courante, vitesse 0, be:setEnabled(false). À la reprise : restaure la vitesse sauvegardée avec lissage. Sans effet si l'état demandé est déjà celui en cours ou si aucun niveau n'est chargé.
+Pauses or resumes instantly. Broadcasts the onSimTimePauseCalled(paused) hook. When pausing: saves the current speed, speed 0, be:setEnabled(false). On resume: restores the saved speed with smoothing. No effect if the requested state is already the current one or if no level is loaded.
 
-- `paused` (*boolean*) : true pour pause, false pour reprise.
-- `playPauseSound` (*boolean|nil*) : true pour jouer le son de pause (event:>UI>Main>Pause) en entrant en pause.
+- `paused` (*boolean*) : true to pause, false to resume.
+- `playPauseSound` (*boolean|nil*) : true to play the pause sound (event:>UI>Main>Pause) when entering pause.
 
 #### `simTimeAuthority.pauseSmooth(paused, rateLimit, startAccel, stopAccel, playPauseSound)`
 
-Pause ou reprise avec transition lissée de la vitesse (ralentissement progressif jusqu'à 0, ou accélération). Diffuse le hook simTimePauseCalled(paused). Les taux sont donnés par l'appelant et servent pour cette seule transition.
+Pauses or resumes with a smoothed speed transition (gradual slowdown to 0, or speed-up). Emits the hook simTimePauseCalled(paused). The rates are given by the caller and apply only to this transition.
 
-- `paused` (*boolean*) : true pour pause, false pour reprise.
-- `rateLimit` (*number|nil*) : Taux maximal de variation de la vitesse (20 par défaut si nil).
-- `startAccel` (*number|nil*) : Accélération au début de la transition (10 par défaut).
-- `stopAccel` (*number|nil*) : Décélération à la fin de la transition (3 par défaut).
-- `playPauseSound` (*boolean|nil*) : true pour jouer le son de pause.
+- `paused` (*boolean*) : true to pause, false to resume.
+- `rateLimit` (*number|nil*) : Maximum rate of speed change (20 by default if nil).
+- `startAccel` (*number|nil*) : Acceleration at the start of the transition (10 by default).
+- `stopAccel` (*number|nil*) : Deceleration at the end of the transition (3 by default).
+- `playPauseSound` (*boolean|nil*) : true to play the pause sound.
 
 #### `simTimeAuthority.popPauseRequest(id)`
 
-Retire une demande de pause identifiée. Quand le compteur retombe à 0 et que le jeu n'était pas en pause avant la première demande, la simulation reprend.
+Removes an identified pause request. When the counter drops back to 0 and the game was not paused before the first request, the simulation resumes.
 
-- `id` (*string*) : Identifiant de la demande (le même que pour pushPauseRequest).
+- `id` (*string*) : Request identifier (the same as for pushPauseRequest).
 
 #### `simTimeAuthority.pushPauseRequest(id)`
 
-Ajoute une demande de pause identifiée et met en pause. Mémorise si le jeu était déjà en pause à la première demande. Un même id n'est compté qu'une fois.
+Adds an identified pause request and pauses. Remembers whether the game was already paused at the first request. A given id is counted only once.
 
-- `id` (*string*) : Identifiant unique de l'appelant.
+- `id` (*string*) : Unique identifier of the caller.
 
 #### `simTimeAuthority.reportSpeed(speed, simplified)`
 
-Affiche à l'écran (guihooks 'Message', catégorie bullettime) un message sur la vitesse : accéléré, temps réel, ralenti (simplifié) ou ralenti d'un facteur calculé avec l'option courante.
+Displays a speed message on screen (guihooks 'Message', category bullettime): fast-forward, real time, slow motion (simplified) or slow motion by a factor computed with the current option.
 
-- `speed` (*number*) : Vitesse à annoncer.
-- `simplified` (*boolean*) : true : message générique de ralenti sans facteur ni indice de cran.
+- `speed` (*number*) : Speed to announce.
+- `simplified` (*boolean*) : true: generic slow-motion message with no factor or notch index.
 
 #### `simTimeAuthority.selectPreset(val)`
 
-Sélectionne un cran de ralenti avec des touches de direction. Pendant un replay, pilote la vitesse du replay à la place.
+Selects a slow-motion notch with direction keys. During a replay, drives the replay speed instead.
 
-- `val` (*string*) : '^' : bascule entre temps réel et le dernier cran de ralenti ; 'v' : cran de ralenti instantané (1/8) ; '<' : cran plus lent ; '>' : cran plus rapide.
+- `val` (*string*) : '^': toggles between real time and the last slow-motion notch; 'v': instant slow-motion notch (1/8); '<': slower notch; '>': faster notch.
 
 #### `simTimeAuthority.set(val)`
 
-Change la vitesse de simulation demandée (lissage progressif jusqu'à la nouvelle valeur) et affiche le message de vitesse simplifié. La valeur est limitée à [0.001, 1]. Une valeur non numérique est refusée avec une erreur loguée.
+Changes the requested simulation speed (progressive smoothing to the new value) and displays the simplified speed message. The value is clamped to [0.001, 1]. A non-numeric value is rejected with a logged error.
 
-- `val` (*number*) : Nouvelle vitesse (1 = temps réel, 0.5 = moitié).
+- `val` (*number*) : New speed (1 = real time, 0.5 = half).
 
 #### `simTimeAuthority.setInstant(val)`
 
-Comme set, mais force aussi la valeur lissée : la vitesse est appliquée sans transition. Ne montre pas de message.
+Like set, but also forces the smoothed value: the speed is applied without transition. Shows no message.
 
-- `val` (*number*) : Nouvelle vitesse (limitée à [0.001, 1]).
+- `val` (*number*) : New speed (clamped to [0.001, 1]).
 
 #### `simTimeAuthority.togglePause(playPauseSound)`
 
-Bascule pause/reprise. Diffuse le hook onTogglePause ; en replay appelle core_replay.togglePlay().
+Toggles pause/resume. Emits the hook onTogglePause; during a replay calls core_replay.togglePlay().
 
-- `playPauseSound` (*boolean|nil*) : true pour jouer le son de pause.
+- `playPauseSound` (*boolean|nil*) : true to play the pause sound.
 
 #### `simTimeAuthority.update(...)`
 
-Fonction de mise à jour enregistrée auprès du système d'extensions : applique à chaque appel le lissage de vitesse en cours (envoie la vitesse au moteur via be:setSimulationTimeScale et physicsEngineEvent) et se désactive à la fin de la transition. Elle sert d'enveloppe car un pointeur de fonction enregistré ne peut pas être remplacé par nop.
+Update function registered with the extension system: on each call applies the ongoing speed smoothing (sends the speed to the engine via be:setSimulationTimeScale and physicsEngineEvent) and deactivates itself at the end of the transition. It serves as a wrapper because a registered function pointer cannot be replaced by nop.
 
-- `...` (*any*) : Arguments de la mise à jour ; le premier est dt (s).
+- `...` (*any*) : Update arguments; the first is dt (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `selectionSlot` | integer | Indice (1 à 12) du cran de ralenti sélectionné dans la table interne des crans (12 = temps réel). |
-| `simulationSpeed` | number | Vitesse de simulation demandée (cible), 1 = temps réel, 0 = pause, 0.001 minimum hors pause. Initialisée depuis be:getSimulationTimeScale(). |
-| `simulationSpeedReal` | number | Vitesse actuellement appliquée au moteur après lissage (mise à jour par la fonction update). |
+| `selectionSlot` | integer | Index (1 to 12) of the selected slow-motion notch in the internal notch table (12 = real time). |
+| `simulationSpeed` | number | Requested (target) simulation speed, 1 = real time, 0 = pause, 0.001 minimum outside pause. Initialized from be:getSimulationTimeScale(). |
+| `simulationSpeedReal` | number | Speed currently applied to the engine after smoothing (updated by the update function). |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onSimTimePauseCalled`
-- `onTogglePause` — écouté par 1 module(s)
+- `onTogglePause` — listened to by 1 module(s)
 - `simTimePauseCalled`
 
-**Évènements UI (guihooks.trigger) :** `BullettimeValueChanged`, `Message`
+**UI events (guihooks.trigger):** `BullettimeValueChanged`, `Message`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getEnabled`, `getSimulationTimeScale`, `setEnabled`, `setSimulationTimeScale`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/simTimeAuthority.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/simTimeAuthority.lua`.*

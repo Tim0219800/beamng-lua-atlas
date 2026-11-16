@@ -1,26 +1,26 @@
 # `flowgraph_nodes_gameplay_rally_loop_loopInit`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/loopInit.lua` · VM : Game Engine (GE) · 89 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/loopInit.lua` · VM: Game Engine (GE) · 89 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/loop/loopInit")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/loop/loopInit")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Loop Init » (catégorie once_instant, tag rally). Initialise la boucle rally : recharge l'extension de boucle (déchargement puis chargement), détecte l'id et le dossier de la mission (RallyUtil.detectMissionIdHelper), applique la date et l'heure de l'environnement de la mission si activé (RallyLoopTime.applyCurrentDate, et RallyLoopTime.setPlaying(false, heure) si _rallyForceStatic), active le debug logging puis appelle gameplay_rallyLoop.setup(missionId, missionDir). Sorties : success (flow) ou failed (flow) si aucun id de mission n'est détecté.
+Flowgraph node "Rally Loop Init" (category once_instant, tag rally). Initializes the rally loop: reloads the loop extension (unload then load), detects the mission id and folder (RallyUtil.detectMissionIdHelper), applies the date and time of the mission environment if enabled (RallyLoopTime.applyCurrentDate, and RallyLoopTime.setPlaying(false, hour) if _rallyForceStatic), enables debug logging then calls gameplay_rallyLoop.setup(missionId, missionDir). Outputs: success (flow) or failed (flow) if no mission id is detected.
 
-## Remarques
+## Notes
 
-- En cas d'échec, un encadré d'erreur dans le log rappelle de choisir une spéciale rally dans l'éditeur de missions et d'ouvrir le fichier de course.
-- À l'arrêt du graphe, l'extension de boucle rally est déchargée.
+- On failure, an error box in the log reminds to choose a rally stage in the mission editor and to open the race file.
+- When the graph stops, the rally loop extension is unloaded.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Décharge l'extension rally loop si chargée. | 30 |
-| `C:loadExt()` | Charge l'extension rally loop si elle n'est pas chargée. | 45 |
-| `C:unloadExt()` | Décharge l'extension rally loop si elle est chargée. | 38 |
-| `C:workOnce()` | Recharge l'extension, détecte la mission, configure l'environnement et lance gameplay_rallyLoop.setup ; met success ou failed à vrai. | 52 |
+| `C:_executionStopped()` | Unloads the rally loop extension if loaded. | 30 |
+| `C:loadExt()` | Loads the rally loop extension if it is not loaded. | 45 |
+| `C:unloadExt()` | Unloads the rally loop extension if it is loaded. | 38 |
+| `C:workOnce()` | Reloads the extension, detects the mission, configures the environment and launches gameplay_rallyLoop.setup; sets success or failed to true. | 52 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/loopInit.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/loopInit.lua`.*

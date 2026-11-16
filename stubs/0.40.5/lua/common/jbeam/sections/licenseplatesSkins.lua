@@ -2,18 +2,18 @@
 -- tim19Atlas stub generated from lua/common/jbeam/sections/licenseplatesSkins.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Traite deux familles de pièces actives : plaques d'immatriculation et skins. Une pièce dont un slotType contient '_licenseplate' (ou ayant licenseplateFormat) active la plaque ; les formats utilisés sont collectés (défaut '30-15'). Une pièce de design de plaque (slotType contenant 'licenseplate_design') fournit licenseplate_path. Une pièce de skin (slotType contenant 'skin_' ou égal à 'paint_design') appelle vehicleObj:setSkin("<slot>.<nom du skin>") et peut imposer des couleurs par défaut. À la fin, si une plaque est utilisée, core_vehicles.setPlateText est appelé.
---- Accès : `require("jbeam/sections/licenseplatesSkins")`
+--- Processes two families of active parts: license plates and skins. A part with a slotType containing '_licenseplate' (or having licenseplateFormat) activates the plate; the formats used are collected (default '30-15'). A plate design part (slotType containing 'licenseplate_design') provides licenseplate_path. A skin part (slotType containing 'skin_' or equal to 'paint_design') calls vehicleObj:setSkin("<slot>.<skin name>") and can impose default colors. At the end, if a plate is used, core_vehicles.setPlateText is called.
+--- Access: `require("jbeam/sections/licenseplatesSkins")`
 ---@class jbeam_sections_licenseplatesSkins
 local jbeam_sections_licenseplatesSkins = {}
 
---- Parcourt les pièces actives pour configurer plaque d'immatriculation et skins du véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/jbeam/sections/licenseplatesSkins.lua:11
----@param objID integer Identifiant du véhicule.
----@param vehicleObj userdata Objet véhicule moteur.
----@param config table|nil Configuration du véhicule (licenseName).
----@param activePartsData table<string, table>|nil Pièces actives (nom -> données de pièce).
+--- Walks the active parts to configure the vehicle's license plate and skins.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/jbeam/sections/licenseplatesSkins.lua:11
+---@param objID integer Vehicle identifier.
+---@param vehicleObj userdata Engine vehicle object.
+---@param config table|nil Vehicle configuration (licenseName).
+---@param activePartsData table<string, table>|nil Active parts (name -> part data).
 function jbeam_sections_licenseplatesSkins.process(objID, vehicleObj, config, activePartsData) end
 
 return jbeam_sections_licenseplatesSkins

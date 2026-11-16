@@ -2,16 +2,16 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/activity/autoStarGoals.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_activity_autoStarGoals_C
 local flowgraph_nodes_activity_autoStarGoals_C = {}
 
---- Vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/activity/autoStarGoals.lua:25
+--- Empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/activity/autoStarGoals.lua:25
 function flowgraph_nodes_activity_autoStarGoals_C:init() end
 
---- Envoie SetTasklistHeader puis un SetTasklistTask (done/fail false, active true) pour chaque étoile de careerSetup.starsActive.
----Source : lua/ge/extensions/flowgraph/nodes/activity/autoStarGoals.lua:39
+--- Sends SetTasklistHeader then a SetTasklistTask (done/fail false, active true) for each star of careerSetup.starsActive.
+---Source: lua/ge/extensions/flowgraph/nodes/activity/autoStarGoals.lua:39
 function flowgraph_nodes_activity_autoStarGoals_C:workOnce() end
 

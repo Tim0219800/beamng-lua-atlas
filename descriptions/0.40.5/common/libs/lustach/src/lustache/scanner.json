@@ -1,33 +1,69 @@
 {
   "path": "lua/common/libs/lustach/src/lustache/scanner.lua",
-  "module": "Bibliothèque tierce lustache : scanneur de chaîne utilisé par l'analyseur de gabarits. Il garde la « queue » restante de la chaîne (`tail`) et la position courante (`pos`) et avance en consommant du texte par motifs Lua.",
+  "module": "Third-party library lustache: string scanner used by the template parser. It keeps the remaining \"tail\" of the string (`tail`) and the current position (`pos`) and advances by consuming text with Lua patterns.",
   "notes": [
-    "Instance créée par `Scanner:new(str)` : champs str, tail (reste à lire) et pos (position, commence à 1).",
-    "Les commentaires du source parlent de « null » ; en Lua, `scan` renvoie nil quand le motif ne correspond pas en début de queue."
+    "Instance created by `Scanner:new(str)`: fields str, tail (remainder to read) and pos (position, starts at 1).",
+    "The source comments talk about \"null\"; in Lua, `scan` returns nil when the pattern does not match at the start of the tail."
   ],
   "functions": {
     "new": {
-      "desc": "Crée un scanneur sur `str` (tail = str, pos = 1).",
+      "desc": "Creates a scanner on `str` (tail = str, pos = 1).",
       "params": {
-        "self": {"type": "table", "desc": "Classe scanner (appel avec les deux-points)."},
-        "str": {"type": "string", "desc": "Texte à parcourir."}
+        "self": {
+          "type": "table",
+          "desc": "Scanner class (call with a colon)."
+        },
+        "str": {
+          "type": "string",
+          "desc": "Text to scan."
+        }
       },
-      "returns": [{"type": "table", "desc": "Instance de scanneur."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Scanner instance."
+        }
+      ]
     },
     "eos": {
-      "desc": "Vrai si la queue est vide (fin de chaîne).",
+      "desc": "True if the tail is empty (end of string).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true à la fin."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true at the end."
+        }
+      ]
     },
     "scan": {
-      "desc": "Essaie de faire correspondre `pattern` exactement au début de la queue ; si oui, consomme et renvoie le texte trouvé, sinon renvoie nil.",
-      "params": {"pattern": {"type": "string", "desc": "Motif Lua."}},
-      "returns": [{"type": "string|nil", "desc": "Texte consommé ou nil."}]
+      "desc": "Tries to match `pattern` exactly at the start of the tail; if so, consumes and returns the text found, otherwise returns nil.",
+      "params": {
+        "pattern": {
+          "type": "string",
+          "desc": "Lua pattern."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Consumed text or nil."
+        }
+      ]
     },
     "scan_until": {
-      "desc": "Avance jusqu'à la prochaine correspondance de `pattern` et renvoie le texte sauté. Renvoie toute la queue si aucune correspondance ; renvoie nil si le motif correspond dès la position courante.",
-      "params": {"pattern": {"type": "string", "desc": "Motif Lua."}},
-      "returns": [{"type": "string|nil", "desc": "Texte sauté, ou nil."}]
+      "desc": "Advances to the next match of `pattern` and returns the skipped text. Returns the whole tail if there is no match; returns nil if the pattern matches right at the current position.",
+      "params": {
+        "pattern": {
+          "type": "string",
+          "desc": "Lua pattern."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Skipped text, or nil."
+        }
+      ]
     }
   }
 }

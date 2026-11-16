@@ -1,0 +1,52 @@
+{
+  "path": "lua/vehicle/powertrain/torsionReactor.lua",
+  "module": "Device « arbre fictif » qui sert de réacteur de torsion : il transmet le couple de son parent à ses enfants (multiplié par gearRatio) en conservant les noeuds de réaction du couple (torqueReactionNodes_nodes) qui permettent d'appliquer la réaction du couple moteur sur la carrosserie. Le powertrain l'utilise comme point d'ancrage des réactions de couple. Catégorie shaft, un seul port de sortie.",
+  "usage": "-- jbeam : [\"torsionReactor\", \"torsionReactor\", \"mainEngine\", 1, {\"torqueReactionNodes_nodes\":[10,11,12]}]",
+  "notes": [
+    "Clés jbeam : gearRatio (1), torqueReactionNodes_nodes (liste de 3 numéros de noeuds, seuls les nombres sont conservés ; absent = nil), electricsName, visualShaftAVName, inputName, inputIndex. breakTriggerBeam vaut toujours nil.",
+    "validate : si le nombre de noeuds de réaction n'est pas exactement 3, un avertissement est loggé et torqueUpdate est remplacé par updateTorqueDisabled, qui fait EXACTEMENT la même chose que updateTorque (aucun effet réel, les deux fonctions sont identiques).",
+    "velocityUpdate écrit device.parent[device.parentOutputAVName] = inputAV (champ du parent, nom renseigné par le powertrain), et torqueUpdate lit device.parent[device.parentOutputTorqueName] : ces deux noms sont posés par powertrain.lua lors du câblage.",
+    "Bug mineur : new() lit shallowcopy(M.requiredExternalInertiaOutputs) alors que M.requiredExternalInertiaOutputs n'est pas défini dans ce fichier (nil) : device.requiredExternalInertiaOutputs vaut donc nil (shallowcopy de nil).",
+    "Bug mineur : new() ne copie pas gearRatio vers reset ; reset(device, jbeamData) relit jbeamData.gearRatio (1 par défaut), cohérent. Mais onBreak = nop (nop est un global du jeu)."
+  ],
+  "fields": {
+    "outputPorts": {"type": "table<integer, boolean>", "desc": "{[1]=true}."},
+    "deviceCategories": {"type": "table<string, boolean>", "desc": "{shaft=true}."}
+  },
+  "functions": {
+    "new": {
+      "desc": "Construit le device à partir du jbeam. Filtre torqueReactionNodes_nodes pour ne garder que les valeurs numériques.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+      "returns": [{"type": "table", "desc": "Objet device."}],
+      "internal": true
+    }
+  },
+  "classes": {
+    "device": {
+      "desc": "Objet renvoyé par new(jbeamData). Champs : gearRatio, inputAV, outputAV1 (rad/s), outputTorque1 (N·m), torqueReactionNodes (liste de 3 noeuds ou nil), cumulativeInertia (kg·m²), cumulativeGearRatio, parent/children (posés par le powertrain).",
+      "functions": {
+        "velocityUpdate": {
+          "desc": "Pas de physique : inputAV = outputAV1 * gearRatio, puis recopie dans le champ du parent désigné par parentOutputAVName.",
+          "params": {"dt": {"type": "number", "desc": "Pas de physique (s)."}}
+        },
+        "torqueUpdate": {
+          "desc": "Pas de physique : outputTorque1 = couple de sortie du parent * gearRatio.",
+          "params": {}
+        },
+        "validate": {
+          "desc": "Vérifie la présence du parent et que torqueReactionNodes contient 3 noeuds (sinon avertissement et torqueUpdate désactivé en nom seulement).",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "Toujours true."}]
+        },
+        "calculateInertia": {
+          "desc": "Calcule l'inertie cumulée (celle de l'enfant divisée par gearRatio²), son inverse et les rapports cumulés à partir du premier enfant.",
+          "params": {}
+        },
+        "reset": {
+          "desc": "Remet à zéro vitesses, couple et inerties ; relit gearRatio depuis le jbeam.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}
+        }
+      }
+    }
+  }
+}

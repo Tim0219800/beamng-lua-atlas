@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/util/booster.lua",
+  "module": "Extension minuscule de démonstration pour un déclencheur « booster » : trigger(data) affiche les données reçues, puis devrait propulser un véhicule vers le haut via core_booster côté véhicule. Dans l'état du code, la propulsion ne se déclenche jamais.",
+  "notes": [
+    "Bug : trigger teste la variable globale `event` (nil) au lieu de `data.event`, donc la condition `event == 'enter'` est toujours fausse et le véhicule n'est jamais propulsé ; seuls print et dump sont exécutés.",
+    "Si la condition était vraie, elle enverrait au véhicule data.subjectID la commande extensions.core_booster.boost(vec3(0,0,1), 0.01)."
+  ],
+  "functions": {
+    "trigger": {
+      "desc": "Affiche « Booster triggered » et le contenu de data. Prévu pour réagir à un évènement de trigger (data.subjectID est l'id du véhicule), mais ne fait rien d'autre à cause du bug signalé.",
+      "params": {"data": {"type": "table", "desc": "Données de l'évènement de trigger (subjectID attendu)."}}
+    }
+  }
+}

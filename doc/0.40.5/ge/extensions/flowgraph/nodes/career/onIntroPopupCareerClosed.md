@@ -1,21 +1,21 @@
 # `flowgraph_nodes_career_onIntroPopupCareerClosed`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/career/onIntroPopupCareerClosed.lua` · VM : Game Engine (GE) · 53 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/career/onIntroPopupCareerClosed.lua` · VM: Game Engine (GE) · 53 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/career/onIntroPopupCareerClosed")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/career/onIntroPopupCareerClosed")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « On introPopupCareerClosed » (catégorie repeat_instant, couleur/icône ui). Détecte la fermeture de la fenêtre d'intro de la carrière. Sorties : closed (impulsion d'une frame) et id (any, id de la fenêtre fermée, nil sinon).
+Flowgraph node "On introPopupCareerClosed" (category repeat_instant, ui color/icon). Detects the closing of the career intro window. Outputs: closed (one-frame impulse) and id (any, id of the closed window, nil otherwise).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_afterTrigger()` | Efface les drapeaux après le déclenchement. | 44 |
-| `C:init()` | Crée la table de drapeaux. | 22 |
-| `C:onIntroPopupCareerClosed(id)` | Hook : lève closed et mémorise l'id de la fenêtre si fourni. | 36 |
-| `C:work(args)` | Chaque frame : closed à faux et id à nil, puis applique et efface les drapeaux. | 27 |
+| `C:_afterTrigger()` | Clears the flags after the trigger. | 44 |
+| `C:init()` | Creates the flag table. | 22 |
+| `C:onIntroPopupCareerClosed(id)` | Hook: raises closed and stores the window id if provided. | 36 |
+| `C:work(args)` | Every frame: closed to false and id to nil, then applies and clears the flags. | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/career/onIntroPopupCareerClosed.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/career/onIntroPopupCareerClosed.lua`.*

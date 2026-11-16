@@ -1,82 +1,167 @@
 {
   "path": "lua/ge/extensions/util/screenshotCreator.lua",
-  "module": "Point d'entrée de l'outil interne de génération de vignettes (thumbnails) de véhicules. Ce fichier est une façade : il déclare comme dépendances tous les sous-modules util_screenshotCreator_* (interface ImGui, réglages, cadrage, capture, job de traitement par lots, etc.) et délègue vers eux. Il sert à ouvrir la fenêtre de l'outil, lancer la génération par lots, cadrer un véhicule, prendre une capture hors écran et choisir le mode de cadrage.",
+  "module": "Entry point of the internal vehicle thumbnail generation tool. This file is a facade: it declares all the util_screenshotCreator_* submodules (ImGui interface, settings, framing, capture, batch processing job, etc.) as dependencies and delegates to them. It is used to open the tool window, start batch generation, frame a vehicle, take an off-screen capture and choose the framing mode.",
   "usage": "extensions.load('util_screenshotCreator')\nextensions.util_screenshotCreator.openWindow()",
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Liste des extensions util_screenshotCreator_* chargées avec celle-ci"},
-    "state": {"type": "table", "desc": "État du module, initialement {show = false}"}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "List of util_screenshotCreator_* extensions loaded with this one"
+    },
+    "state": {
+      "type": "table",
+      "desc": "Module state, initially {show = false}"
+    }
   },
   "notes": [
-    "Dans takeThumbnailScreenshot, la résolution, le sur-échantillonnage, le champ de vision et le plan proche viennent des réglages de util_screenshotCreator_settings et non d'arguments.",
-    "Le champ state.show n'est pas utilisé dans ce fichier."
+    "In takeThumbnailScreenshot, the resolution, supersampling, field of view and near plane come from the util_screenshotCreator_settings settings and not from arguments.",
+    "The state.show field is not used in this file."
   ],
   "functions": {
     "openWindow": {
-      "desc": "Ouvre la fenêtre ImGui de l'outil (délègue à util_screenshotCreator_ui.openWindow).",
+      "desc": "Opens the tool's ImGui window (delegates to util_screenshotCreator_ui.openWindow).",
       "params": {},
-      "returns": [{"type": "any", "desc": "Valeur renvoyée par util_screenshotCreator_ui.openWindow"}],
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Value returned by util_screenshotCreator_ui.openWindow"
+        }
+      ],
       "internal": false
     },
     "startWork": {
-      "desc": "Démarre la génération de vignettes par lots (délègue à util_screenshotCreator_job.startWork).",
-      "params": {"workOptions": {"type": "table", "desc": "Options du traitement (déduit du code : transmises telles quelles au module job)"}},
-      "returns": [{"type": "any", "desc": "Valeur renvoyée par util_screenshotCreator_job.startWork"}],
+      "desc": "Starts batch thumbnail generation (delegates to util_screenshotCreator_job.startWork).",
+      "params": {
+        "workOptions": {
+          "type": "table",
+          "desc": "Processing options (inferred from code: passed as is to the job module)"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Value returned by util_screenshotCreator_job.startWork"
+        }
+      ],
       "internal": false
     },
     "frameVehicle": {
-      "desc": "Calcule la position et l'orientation de caméra qui cadrent un véhicule avec le cadrage procédural, d'après le contexte de cadrage des réglages.",
+      "desc": "Computes the camera position and orientation that frame a vehicle with the procedural framing, based on the framing context from the settings.",
       "params": {
-        "vehicle": {"type": "userdata", "desc": "Objet véhicule à cadrer"},
-        "fov": {"type": "number|nil", "desc": "Champ de vision en degrés (défaut : valeur des réglages)"},
-        "nearPlane": {"type": "number|nil", "desc": "Plan proche de la caméra (défaut : réglages)"},
-        "aspectRatio": {"type": "number|nil", "desc": "Rapport largeur/hauteur (défaut : réglages)"},
-        "resolution": {"type": "table|nil", "desc": "Résolution {largeur, hauteur} utilisée pour le contexte de cadrage"},
-        "configName": {"type": "string|nil", "desc": "Nom de la configuration du véhicule"}
+        "vehicle": {
+          "type": "userdata",
+          "desc": "Vehicle object to frame"
+        },
+        "fov": {
+          "type": "number|nil",
+          "desc": "Field of view in degrees (default: settings value)"
+        },
+        "nearPlane": {
+          "type": "number|nil",
+          "desc": "Camera near plane (default: settings)"
+        },
+        "aspectRatio": {
+          "type": "number|nil",
+          "desc": "Aspect ratio (default: settings)"
+        },
+        "resolution": {
+          "type": "table|nil",
+          "desc": "Resolution {width, height} used for the framing context"
+        },
+        "configName": {
+          "type": "string|nil",
+          "desc": "Vehicle configuration name"
+        }
       },
       "returns": [
-        {"type": "vec3|nil", "desc": "Position de la caméra"},
-        {"type": "quat|nil", "desc": "Rotation de la caméra"},
-        {"type": "table|nil", "desc": "Données de cadrage (framingData)"}
+        {
+          "type": "vec3|nil",
+          "desc": "Camera position"
+        },
+        {
+          "type": "quat|nil",
+          "desc": "Camera rotation"
+        },
+        {
+          "type": "table|nil",
+          "desc": "Framing data (framingData)"
+        }
       ],
       "internal": false
     },
     "takeThumbnailScreenshot": {
-      "desc": "Prend une capture hors écran depuis la caméra donnée et l'enregistre dans filepath (délègue à util_screenshotCreator_capture), avec les paramètres de capture des réglages.",
+      "desc": "Takes an off-screen capture from the given camera and saves it to filepath (delegates to util_screenshotCreator_capture), with the capture parameters from the settings.",
       "params": {
-        "filepath": {"type": "string", "desc": "Chemin du fichier image à écrire"},
-        "camera": {"type": "table", "desc": "Caméra {pos, rot, fov?, nearPlane?, screenshotDelay?}"},
-        "callback": {"type": "function|nil", "desc": "Appelé à la fin de la capture"},
-        "uniqueId": {"type": "any", "desc": "Identifiant transmis au module de capture"}
+        "filepath": {
+          "type": "string",
+          "desc": "Path of the image file to write"
+        },
+        "camera": {
+          "type": "table",
+          "desc": "Camera {pos, rot, fov?, nearPlane?, screenshotDelay?}"
+        },
+        "callback": {
+          "type": "function|nil",
+          "desc": "Called at the end of the capture"
+        },
+        "uniqueId": {
+          "type": "any",
+          "desc": "Identifier passed to the capture module"
+        }
       },
       "returns": [],
       "internal": false
     },
     "listFramingModes": {
-      "desc": "Liste les modes de cadrage disponibles (délègue à util_screenshotCreator_framingManager.listModes).",
+      "desc": "Lists the available framing modes (delegates to util_screenshotCreator_framingManager.listModes).",
       "params": {},
-      "returns": [{"type": "table", "desc": "Modes de cadrage enregistrés"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Registered framing modes"
+        }
+      ],
       "internal": false
     },
     "getFramingMode": {
-      "desc": "Renvoie l'identifiant du mode de cadrage sélectionné.",
+      "desc": "Returns the identifier of the selected framing mode.",
       "params": {},
-      "returns": [{"type": "string", "desc": "Identifiant du mode"}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Mode identifier"
+        }
+      ],
       "internal": false
     },
     "setFramingMode": {
-      "desc": "Sélectionne le mode de cadrage.",
-      "params": {"modeId": {"type": "string", "desc": "Identifiant du mode (par exemple « fixedIsometric » ou « configured »)"}},
-      "returns": [{"type": "any", "desc": "Valeur renvoyée par framingManager.setSelectedModeId"}],
+      "desc": "Selects the framing mode.",
+      "params": {
+        "modeId": {
+          "type": "string",
+          "desc": "Mode identifier (for example \"fixedIsometric\" or \"configured\")"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Value returned by framingManager.setSelectedModeId"
+        }
+      ],
       "internal": false
     },
     "onDeserialized": {
-      "desc": "Hook appelé après un rechargement d'extensions : si les données contiennent un état d'interface (windowOpen, resolutionPtr, reviewData ou skipCustomCameras), les transmet à util_screenshotCreator_ui.onDeserialized.",
-      "params": {"data": {"type": "table|nil", "desc": "Données sauvegardées par la sérialisation"}},
+      "desc": "Hook called after an extension reload: if the data contains a UI state (windowOpen, resolutionPtr, reviewData or skipCustomCameras), passes it to util_screenshotCreator_ui.onDeserialized.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Data saved by serialization"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook appelé au déchargement : restaure l'environnement modifié par les réglages (restoreEnvironment) et logue le déchargement.",
+      "desc": "Hook called on unload: restores the environment modified by the settings (restoreEnvironment) and logs the unload.",
       "params": {},
       "returns": [],
       "internal": true

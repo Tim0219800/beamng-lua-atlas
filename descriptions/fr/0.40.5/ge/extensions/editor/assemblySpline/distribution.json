@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/editor/assemblySpline/distribution.lua",
+  "module": "Calcule, pour l'outil Assembly Spline, quel mesh placer à chaque emplacement le long de la spline pour chaque composant rigide et chaque pont (bridge) de la molécule. Chaque composant est un groupe (mesh de base + variations) : si isRandom, chaque emplacement tire une variation selon ses poids randomWeight normalisés ; sinon les variations activées sont alternées en tourniquet (round robin). Ne tient compte que des composants activés pour la spline (mol.getRigidEnabled / getBridgeEnabled).",
+  "notes": [
+    "Les tableaux de résultat sont préalloués et réutilisés d'un appel à l'autre (indexés par id de mesh) : ne pas les conserver après un nouvel appel de computeMeshMap.",
+    "Les ponts reçoivent numPlacements - 1 emplacements (un pont relie deux placements consécutifs).",
+    "Un groupe sans composant activé donne un tableau vide partagé (emptyTable) : ne pas le modifier.",
+    "Le tirage utilise math.random (non déterministe sauf si la graine globale est fixée ailleurs)."
+  ],
+  "functions": {
+    "computeMeshMap": {
+      "desc": "Calcule les cartes de meshes pour tous les composants rigides et ponts de la molécule.",
+      "params": {
+        "molecule": {"type": "table", "desc": "Molécule avec les listes rigids et bridges (chaque entrée : mesh, variations, isRandom, randomWeight)."},
+        "numPlacements": {"type": "integer", "desc": "Nombre d'emplacements le long de la spline."},
+        "spline": {"type": "table", "desc": "Assembly spline (pour l'état activé/désactivé des composants)."}
+      },
+      "returns": [
+        {"type": "table", "desc": "rigidMaps : pour chaque rigide (même indice que molecule.rigids), tableau des meshPath par emplacement."},
+        {"type": "table", "desc": "bridgeMaps : idem pour les ponts, sur numPlacements - 1 emplacements."}
+      ]
+    }
+  }
+}

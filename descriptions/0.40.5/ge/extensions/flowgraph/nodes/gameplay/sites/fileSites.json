@@ -1,43 +1,43 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/sites/fileSites.lua",
-  "module": "Nœud flowgraph « File Sites » (catégorie once_p_duration, tags scenario). Charge un fichier .sites.json via gameplay_sites_sitesManager.loadSites et le finalise. Pin d'entrée : file ; pin de sortie : sitesData (table de type sitesData) à brancher sur les nœuds Sites (location, zone, parking spot…). L'éditeur propose d'ouvrir le Sites Editor et de coder en dur le fichier actuellement ouvert. En cas d'échec, erreur de nœud « Failed to find sites file ».",
+  "module": "Flowgraph node \"File Sites\" (category once_p_duration, tags scenario). Loads a .sites.json file via gameplay_sites_sitesManager.loadSites and finalizes it. Input pin: file; output pin: sitesData (table of type sitesData) to connect to the Sites nodes (location, zone, parking spot...). The editor offers to open the Sites Editor and to hardcode the currently opened file. On failure, node error \"Failed to find sites file\".",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStopped": {
-          "desc": "Appelé à l'arrêt de l'exécution du projet flowgraph ; libère l'état interne.",
+          "desc": "Called when the flowgraph project execution stops; releases the internal state.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "desc": "Draws the node's custom properties in the flowgraph editor panel (ImGui).",
           "internal": true
         },
         "init": {
-          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "desc": "Initializes the node's internal state at creation (called by the flowgraph engine).",
           "internal": true,
           "params": {
             "mgr": {
               "type": "table",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           }
         },
         "onNodeReset": {
-          "desc": "Oublie les sites chargés pour forcer un nouveau chargement.",
+          "desc": "Forgets the loaded sites to force a new load.",
           "internal": true
         },
         "postInit": {
-          "desc": "Appelé après la création des pins du nœud ; sert à ajuster les pins (modèles de valeurs, filtres de fichiers, clés dynamiques).",
+          "desc": "Called after the node's pins are created; used to adjust the pins (value templates, file filters, dynamic keys).",
           "internal": true
         },
         "work": {
-          "desc": "Au premier appel, résout le chemin (avec ou sans extension .sites.json), charge et finalise les sites, puis publie la table sur sitesData. Les appels suivants ne font rien tant que self.sites est défini.",
+          "desc": "On the first call, resolves the path (with or without .sites.json extension), loads and finalizes the sites, then publishes the table on sitesData. Subsequent calls do nothing as long as self.sites is set.",
           "internal": true,
           "params": {
             "args": {
               "type": "table",
-              "desc": "arguments transmis par le moteur (non utilisés)"
+              "desc": "arguments passed by the engine (unused)"
             }
           }
         }

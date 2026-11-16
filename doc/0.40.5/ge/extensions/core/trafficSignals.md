@@ -1,334 +1,334 @@
 # `core_trafficSignals`
 
-*Fichier : `lua/ge/extensions/core/trafficSignals.lua` · VM : Game Engine (GE) · 1725 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/trafficSignals.lua` · VM: Game Engine (GE) · 1725 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_trafficSignals` : `extensions.load("core_trafficSignals")`, puis la globale `core_trafficSignals`
+**Access:** extension `core_trafficSignals`: `extensions.load("core_trafficSignals")`, then the global `core_trafficSignals`
 
-Extension GE `core_trafficSignals` (Traffic Signals V2) : simule les feux tricolores, stops et autres signaux d'un niveau. Trois types d'objets : SignalInstance (un signal placé dans le monde avec position, direction, controller et séquence), SignalController (type de signal et liste d'états avec durées : feu tricolore, stop…) et SignalSequence (phases qui enchaînent des controllers, partagées par les instances d'une intersection). Charge signals.json et signalControllerDefinitions.json du dossier du niveau, met à jour les lumières des objets TSStatic liés (champs dynamiques signalInstance, instanceColor*), publie l'état aux véhicules (mailbox 'trafficSignalUpdates') et via le hook onTrafficSignalUpdate.
+GE extension `core_trafficSignals` (Traffic Signals V2): simulates the traffic lights, stop signs and other signals of a level. Three object types: SignalInstance (a signal placed in the world with position, direction, controller and sequence), SignalController (signal type and list of states with durations: traffic light, stop...) and SignalSequence (phases chaining controllers, shared by the instances of an intersection). Loads signals.json and signalControllerDefinitions.json from the level folder, updates the lights of the linked TSStatic objects (dynamic fields signalInstance, instanceColor*), publishes the state to vehicles (mailbox 'trafficSignalUpdates') and through the onTrafficSignalUpdate hook.
 
-## Exemple
+## Example
 
 ```lua
--- État du premier signal
+-- State of the first signal
 local s = core_trafficSignals.getSignals()[1]
-local stateName, stateData = s:getState()   -- ex. 'greenTrafficLight'
--- Forcer une séquence à l'étape 2 sans que le timer interfère
+local stateName, stateData = s:getState()   -- e.g. 'greenTrafficLight'
+-- Force a sequence to step 2 without the timer interfering
 local seq = s:getSequence()
 seq:enableTimer(false)
 seq:setStep(2)
--- Signal le plus proche en amont d'un véhicule
+-- Nearest upstream signal of a vehicle
 local best = core_trafficSignals.getBestSignal(veh:getPosition(), veh:getDirectionVector())
 ```
 
-## Remarques
+## Notes
 
-- Cycle de vie : onClientStartMission -> loadSignals() ; le système n'est vraiment lancé (runSignals) par onNavgraphReloaded, quand le graphe de routes est prêt (ou immédiatement avec autoRun=true). onClientEndMission -> resetSignals().
-- Le temps du module (`timer`, lu par getTimer) avance de dtSim à chaque onUpdate (ou dt réel si M.useDtReal). Les changements d'étape sont planifiés dans une file de priorité (minheap) triée par temps.
-- Chaque changement d'état est publié aux véhicules sous forme de tableau {n1, n2, indexInterne, action} (action : 1 alert, 2 stop, 3 briefStop, 4 yield, 5 slow, 0 sinon) envoyé dans la mailbox 'trafficSignalUpdates', et au Lua GE via extensions.hook('onTrafficSignalUpdate', résultats) où résultats[nomInstance] = {state, linkedObjects, stateAction, lightColors, lightStates}.
-- Les définitions de controllers viennent de settings/trafficSignals.json (clés states et types) fusionnées avec celles du niveau ; signalActions et signalColors (ColorF de debug) sont ajoutés par le code.
-- BUG : setTimer(nil) appelle resetTimer() (timer = 0) puis exécute `timer = val`, ce qui remet timer à nil ; les additions suivantes dans onUpdate provoquent alors une erreur.
-- Signatures réelles différentes de la liste automatique : SignalController:autoSetTimings(speedMetresPerSecond, intersectionLength, isPermissive) ; SignalInstance:isVehAfterSignal(vehId, maxDist, minDot) ; SignalInstance:getStateAfterTime(seconds, isAbsolute) ; SignalInstance:createSignalObject(shapeFile, pos, rot) ; SignalInstance:setup(pos, dir, controllerId, sequenceId) ; SignalInstance:setStrictState(stateIdx) ; SignalInstance:getVehPlacement(vehId) ; SignalSequence:setStrictState(ctrlName, stateIdx) ; SignalSequence:createPhase(phase, idx) ; SignalSequence:deletePhase(idx) ; SignalSequence:setStep(index) ; SignalSequence:setPhase(index) ; SignalSequence:setActive(val) ; SignalSequence:enableTimer(val) ; SignalController:applyDefinition(key) ; SignalInstance:setActive(val) ; SignalInstance:setLights(lightsArray) ; SignalInstance:setController(id) ; SignalInstance:setSequence(id) ; SignalInstance:setAuxiliaryData().
-- Le paramètre de autoSetTimings `isPermissive` est accepté mais pas utilisé dans le code (les formules supposent déjà la règle du jaune permissif).
-- Les fonctions du module nommées newSignal/getSignals/getSignalByName sont en interne newInstance/getInstances/getInstanceByName ; ne pas chercher ces noms internes. Le champ getSignalsDict vaut `nop` (fonction vide globale du jeu) : il ne renvoie jamais rien. L'alerte « référence nop non définie » est une fausse alerte.
-- SignalSequence:calcDuration(controllersRef) est appelée avec un argument optionnel (utilisé par l'éditeur). SignalInstance:drawDebug(isEditMode, isSelected, showText, capColor, cylinderScl, arrowScl) dessine via debugDrawer ; onUpdate l'appelle quand M.debugLevel > 0 pour les signaux à moins de 300 m de la caméra (niveau 2 : textes et flèches).
+- Lifecycle: onClientStartMission -> loadSignals(); the system is only actually started (runSignals) by onNavgraphReloaded, when the road graph is ready (or immediately with autoRun=true). onClientEndMission -> resetSignals().
+- The module time (`timer`, read by getTimer) advances by dtSim on each onUpdate (or real dt if M.useDtReal). Step changes are scheduled in a priority queue (minheap) sorted by time.
+- Each state change is published to vehicles as a table {n1, n2, internalIndex, action} (action: 1 alert, 2 stop, 3 briefStop, 4 yield, 5 slow, 0 otherwise) sent in the 'trafficSignalUpdates' mailbox, and to GE Lua via extensions.hook('onTrafficSignalUpdate', results) where results[instanceName] = {state, linkedObjects, stateAction, lightColors, lightStates}.
+- Controller definitions come from settings/trafficSignals.json (keys states and types) merged with those of the level; signalActions and signalColors (debug ColorF) are added by the code.
+- BUG: setTimer(nil) calls resetTimer() (timer = 0) then executes `timer = val`, which sets timer back to nil; subsequent additions in onUpdate then cause an error.
+- Actual signatures differ from the automatic list: SignalController:autoSetTimings(speedMetresPerSecond, intersectionLength, isPermissive) ; SignalInstance:isVehAfterSignal(vehId, maxDist, minDot) ; SignalInstance:getStateAfterTime(seconds, isAbsolute) ; SignalInstance:createSignalObject(shapeFile, pos, rot) ; SignalInstance:setup(pos, dir, controllerId, sequenceId) ; SignalInstance:setStrictState(stateIdx) ; SignalInstance:getVehPlacement(vehId) ; SignalSequence:setStrictState(ctrlName, stateIdx) ; SignalSequence:createPhase(phase, idx) ; SignalSequence:deletePhase(idx) ; SignalSequence:setStep(index) ; SignalSequence:setPhase(index) ; SignalSequence:setActive(val) ; SignalSequence:enableTimer(val) ; SignalController:applyDefinition(key) ; SignalInstance:setActive(val) ; SignalInstance:setLights(lightsArray) ; SignalInstance:setController(id) ; SignalInstance:setSequence(id) ; SignalInstance:setAuxiliaryData().
+- The `isPermissive` parameter of autoSetTimings is accepted but not used in the code (the formulas already assume the permissive yellow rule).
+- The module functions named newSignal/getSignals/getSignalByName are internally newInstance/getInstances/getInstanceByName; do not look for these internal names. The getSignalsDict field equals `nop` (global empty game function): it never returns anything. The "undefined nop reference" warning is a false alarm.
+- SignalSequence:calcDuration(controllersRef) is called with an optional argument (used by the editor). SignalInstance:drawDebug(isEditMode, isSelected, showText, capColor, cylinderScl, arrowScl) draws via debugDrawer; onUpdate calls it when M.debugLevel > 0 for signals within 300 m of the camera (level 2: texts and arrows).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_trafficSignals.getBestSignal(pos, dirVec, resetCache)` | Renvoie le signal le plus pertinent près d'une position. Avec dirVec, favorise les signaux devant le véhicule et orientés dans le même sens (distance divisée par le plus petit des deux produits scalaires). Le résultat est mis en cache tant que le segment de route (n1, n2) ne change pas. | 1252 |
-| `core_trafficSignals.getControllerByName(name)` | Renvoie un controller par son nom. | 1216 |
-| `core_trafficSignals.getControllerDefinitions()` | Renvoie les définitions de controllers (states, types, signalActions, signalColors). | 1196 |
-| `core_trafficSignals.getControllers()` | Renvoie le tableau des controllers. | 1212 |
-| `core_trafficSignals.getData(full)` | Renvoie les données principales du module. | 1232 |
-| `core_trafficSignals.getElementById(id)` | Renvoie un élément (instance, controller ou séquence) d'après son id unique. | 47 |
-| `core_trafficSignals.getMapNodeSignals()` | Renvoie la table qui relie les noeuds de la carte routière aux signaux : [n1][n2] = liste de {instance, pos, useLane, state, action}. | 1204 |
-| `core_trafficSignals.getSequenceByName(name)` | Renvoie une séquence par son nom. | 1224 |
-| `core_trafficSignals.getSequences()` | Renvoie le tableau des séquences. | 1220 |
-| `core_trafficSignals.getSignalByName(name)` | Renvoie une instance par son nom. | 1208 |
-| `core_trafficSignals.getSignals()` | Renvoie le tableau des instances de signaux. | 1200 |
-| `core_trafficSignals.getTimer()` | Renvoie le temps écoulé du système (s) ; -1 tant qu'il n'a jamais été lancé. | 1228 |
-| `core_trafficSignals.loadControllerDefinitions(filePath)` | Recharge les définitions par défaut puis applique celles du niveau (signalControllerDefinitions.json dans le dossier du niveau, ou filePath). | 1459 |
-| `core_trafficSignals.loadSignals(filePath, autoRun)` | Charge un fichier de signaux JSON (instances, controllers, sequences) et l'installe avec setupSignals. Charge aussi les définitions de controllers du niveau. | 1476 |
-| `core_trafficSignals.newController(data)` | Crée un SignalController (non inclus tant que :include() n'est pas appelé). | 1181 |
-| `core_trafficSignals.newSequence(data)` | Crée une SignalSequence (non incluse tant que :include() n'est pas appelé). | 1185 |
-| `core_trafficSignals.newSignal(data)` | Crée une SignalInstance (non incluse dans le système tant que :include() n'est pas appelé). Sans pos : position de la caméra au sol ; sans dir : direction de la route la plus proche, sinon de la caméra. | 1177 |
-| `core_trafficSignals.onClientEndMission()` | Hook : le niveau se termine ; supprime les signaux. *(interne)* *(hook)* | 1631 |
-| `core_trafficSignals.onClientStartMission()` | Hook : un niveau démarre ; charge signals.json du niveau. *(interne)* *(hook)* | 1627 |
-| `core_trafficSignals.onDeserialized(data)` | Hook : recrée et inclut les éléments sérialisés, recharge les définitions et recalcule le compteur d'ids. *(interne)* *(hook)* | 1653 |
-| `core_trafficSignals.onNavgraphReloaded()` | Hook : le graphe de routes est (re)chargé. Si le système est actif, lance runSignals (calcule durées, routes, timer, table mapNodeSignals). *(interne)* *(hook)* | 1615 |
-| `core_trafficSignals.onSerialize()` | Hook : sérialise instances, controllers, séquences, active, loaded, useDtReal, debugLevel avant un rechargement Lua. *(interne)* *(hook)* | 1635 |
-| `core_trafficSignals.onUpdate(dt, dtSim)` | Hook appelé à chaque frame : fait clignoter les états à lumières clignotantes, avance le timer, dépile la file pour faire avancer les séquences, applique les changements d'état en attente (lumières, mailbox, hook onTrafficSignalUpdate) et dessine le debug si debugLevel > 0. *(interne)* *(hook)* | 1516 |
-| `core_trafficSignals.resetControllerDefinitions()` | Recharge les définitions par défaut (settings/trafficSignals.json : états et types) et ajoute signalActions (alert=1, stop=2, briefStop=3, yield=4, slow=5) et signalColors. | 66 |
-| `core_trafficSignals.resetSignals()` | Supprime tous les signaux, controllers et séquences (setupSignals sans argument). | 1455 |
-| `core_trafficSignals.resetTimer()` | Met le timer à 0, vide la file, (ré)active les séquences et instances valides puis émet onTrafficSignalsReset. | 1287 |
-| `core_trafficSignals.setActive(val, autoRun)` | Active ou met en pause le système. Avec autoRun=true et système non chargé, lance runSignals immédiatement ; sinon attend onNavgraphReloaded. | 1357 |
-| `core_trafficSignals.setControllerDefinitions(data)` | Fusionne des états et types personnalisés dans les définitions de controllers (tableMerge). | 1189 |
-| `core_trafficSignals.setLightsManual(id, stateArray)` | Allume ou éteint directement les 3 lumières d'un objet signal (champs instanceColor, instanceColor1, instanceColor2) sans changer l'état logique. | 1376 |
-| `core_trafficSignals.setTimer(val)` | Fixe directement le timer (peut changer instantanément les états). Voir le bug dans les notes si val est nil. | 1309 |
-| `core_trafficSignals.setupSignalObjects()` | Met en cache les objets TSStatic de la scène qui possèdent un champ dynamique `signalInstance` (nom d'instance), indexés par nom d'instance. | 51 |
-| `core_trafficSignals.setupSignals(data, merge, autoRun)` | Installe un jeu de signaux (et efface les index précédents). Sans data, vide tout. Avec data, remplace (ou fusionne si merge) instances, controllers et séquences, retire les doublons d'id puis appelle setActive(true, autoRun). | 1387 |
+| `core_trafficSignals.getBestSignal(pos, dirVec, resetCache)` | Returns the most relevant signal near a position. With dirVec, favors signals ahead of the vehicle and facing the same way (distance divided by the smaller of the two dot products). The result is cached as long as the road segment (n1, n2) does not change. | 1252 |
+| `core_trafficSignals.getControllerByName(name)` | Returns a controller by its name. | 1216 |
+| `core_trafficSignals.getControllerDefinitions()` | Returns the controller definitions (states, types, signalActions, signalColors). | 1196 |
+| `core_trafficSignals.getControllers()` | Returns the array of controllers. | 1212 |
+| `core_trafficSignals.getData(full)` | Returns the main data of the module. | 1232 |
+| `core_trafficSignals.getElementById(id)` | Returns an element (instance, controller or sequence) by its unique id. | 47 |
+| `core_trafficSignals.getMapNodeSignals()` | Returns the table that links road map nodes to signals: [n1][n2] = list of {instance, pos, useLane, state, action}. | 1204 |
+| `core_trafficSignals.getSequenceByName(name)` | Returns a sequence by its name. | 1224 |
+| `core_trafficSignals.getSequences()` | Returns the array of sequences. | 1220 |
+| `core_trafficSignals.getSignalByName(name)` | Returns an instance by its name. | 1208 |
+| `core_trafficSignals.getSignals()` | Returns the array of signal instances. | 1200 |
+| `core_trafficSignals.getTimer()` | Returns the elapsed system time (s); -1 as long as it has never been started. | 1228 |
+| `core_trafficSignals.loadControllerDefinitions(filePath)` | Reloads the default definitions then applies those of the level (signalControllerDefinitions.json in the level folder, or filePath). | 1459 |
+| `core_trafficSignals.loadSignals(filePath, autoRun)` | Loads a JSON signals file (instances, controllers, sequences) and installs it with setupSignals. Also loads the level's controller definitions. | 1476 |
+| `core_trafficSignals.newController(data)` | Creates a SignalController (not included until :include() is called). | 1181 |
+| `core_trafficSignals.newSequence(data)` | Creates a SignalSequence (not included until :include() is called). | 1185 |
+| `core_trafficSignals.newSignal(data)` | Creates a SignalInstance (not included in the system until :include() is called). Without pos: camera position on the ground; without dir: direction of the nearest road, otherwise of the camera. | 1177 |
+| `core_trafficSignals.onClientEndMission()` | Hook: the level ends; deletes the signals. *(internal)* *(hook)* | 1631 |
+| `core_trafficSignals.onClientStartMission()` | Hook: a level starts; loads the level's signals.json. *(internal)* *(hook)* | 1627 |
+| `core_trafficSignals.onDeserialized(data)` | Hook: recreates and includes the serialized elements, reloads the definitions and recomputes the id counter. *(internal)* *(hook)* | 1653 |
+| `core_trafficSignals.onNavgraphReloaded()` | Hook: the road graph is (re)loaded. If the system is active, runs runSignals (computes durations, roads, timer, mapNodeSignals table). *(internal)* *(hook)* | 1615 |
+| `core_trafficSignals.onSerialize()` | Hook: serializes instances, controllers, sequences, active, loaded, useDtReal, debugLevel before a Lua reload. *(internal)* *(hook)* | 1635 |
+| `core_trafficSignals.onUpdate(dt, dtSim)` | Hook called every frame: blinks the flashing-light states, advances the timer, pops the queue to advance sequences, applies pending state changes (lights, mailbox, onTrafficSignalUpdate hook) and draws debug if debugLevel > 0. *(internal)* *(hook)* | 1516 |
+| `core_trafficSignals.resetControllerDefinitions()` | Reloads the default definitions (settings/trafficSignals.json: states and types) and adds signalActions (alert=1, stop=2, briefStop=3, yield=4, slow=5) and signalColors. | 66 |
+| `core_trafficSignals.resetSignals()` | Deletes all signals, controllers and sequences (setupSignals without argument). | 1455 |
+| `core_trafficSignals.resetTimer()` | Sets the timer to 0, empties the queue, (re)activates the valid sequences and instances, then emits onTrafficSignalsReset. | 1287 |
+| `core_trafficSignals.setActive(val, autoRun)` | Enables or pauses the system. With autoRun=true and the system not loaded, runs runSignals immediately; otherwise waits for onNavgraphReloaded. | 1357 |
+| `core_trafficSignals.setControllerDefinitions(data)` | Merges custom states and types into the controller definitions (tableMerge). | 1189 |
+| `core_trafficSignals.setLightsManual(id, stateArray)` | Directly turns on or off the 3 lights of a signal object (fields instanceColor, instanceColor1, instanceColor2) without changing the logical state. | 1376 |
+| `core_trafficSignals.setTimer(val)` | Directly sets the timer (may change states instantly). See the bug in the notes if val is nil. | 1309 |
+| `core_trafficSignals.setupSignalObjects()` | Caches the scene's TSStatic objects that have a `signalInstance` dynamic field (instance name), keyed by instance name. | 51 |
+| `core_trafficSignals.setupSignals(data, merge, autoRun)` | Installs a set of signals (and clears the previous indexes). Without data, clears everything. With data, replaces (or merges if merge) instances, controllers and sequences, removes duplicate ids, then calls setActive(true, autoRun). | 1387 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_trafficSignals.getBestSignal(pos, dirVec, resetCache)`
 
-Renvoie le signal le plus pertinent près d'une position. Avec dirVec, favorise les signaux devant le véhicule et orientés dans le même sens (distance divisée par le plus petit des deux produits scalaires). Le résultat est mis en cache tant que le segment de route (n1, n2) ne change pas.
+Returns the most relevant signal near a position. With dirVec, favors signals ahead of the vehicle and facing the same way (distance divided by the smaller of the two dot products). The result is cached as long as the road segment (n1, n2) does not change.
 
-- `pos` (*vec3*) : position de recherche
-- `dirVec` (*vec3|nil*) : direction de déplacement
-- `resetCache` (*boolean|nil*) : true pour oublier le résultat en cache
-- **renvoie** : SignalInstance|nil meilleure instance valide ; nil si le système n'est pas lancé ou si aucune route proche
+- `pos` (*vec3*) : search position
+- `dirVec` (*vec3|nil*) : travel direction
+- `resetCache` (*boolean|nil*) : true to forget the cached result
+- **returns**: SignalInstance|nil best valid instance; nil if the system is not running or no road is nearby
 
 #### `core_trafficSignals.getControllerByName(name)`
 
-Renvoie un controller par son nom.
+Returns a controller by its name.
 
-- `name` (*string*) : nom
-- **renvoie** : SignalController|nil controller
+- `name` (*string*) : name
+- **returns**: SignalController|nil controller
 
 #### `core_trafficSignals.getControllerDefinitions()`
 
-Renvoie les définitions de controllers (states, types, signalActions, signalColors).
+Returns the controller definitions (states, types, signalActions, signalColors).
 
-- **renvoie** : table définitions (pas une copie)
+- **returns**: table definitions (not a copy)
 
 #### `core_trafficSignals.getControllers()`
 
-Renvoie le tableau des controllers.
+Returns the array of controllers.
 
-- **renvoie** : SignalController[] controllers
+- **returns**: SignalController[] controllers
 
 #### `core_trafficSignals.getData(full)`
 
-Renvoie les données principales du module.
+Returns the main data of the module.
 
-- `full` (*boolean|nil*) : si true, ajoute instancesByName, controllersByName, sequencesByName, elementsById
-- **renvoie** : table {instances, controllers, sequences, loaded, active, timer, nextTime (prochaine échéance de la file, 0 si vide)} (+ tables par nom/id si full)
+- `full` (*boolean|nil*) : if true, adds instancesByName, controllersByName, sequencesByName, elementsById
+- **returns**: table {instances, controllers, sequences, loaded, active, timer, nextTime (next deadline in the queue, 0 if empty)} (+ tables by name/id if full)
 
 #### `core_trafficSignals.getElementById(id)`
 
-Renvoie un élément (instance, controller ou séquence) d'après son id unique.
+Returns an element (instance, controller or sequence) by its unique id.
 
-- `id` (*integer|nil*) : identifiant unique
-- **renvoie** : SignalInstance|SignalController|SignalSequence|nil élément
+- `id` (*integer|nil*) : unique identifier
+- **returns**: SignalInstance|SignalController|SignalSequence|nil element
 
 #### `core_trafficSignals.getMapNodeSignals()`
 
-Renvoie la table qui relie les noeuds de la carte routière aux signaux : [n1][n2] = liste de {instance, pos, useLane, state, action}.
+Returns the table that links road map nodes to signals: [n1][n2] = list of {instance, pos, useLane, state, action}.
 
-- **renvoie** : table table de références (envoyée aux véhicules)
+- **returns**: table reference table (sent to vehicles)
 
 #### `core_trafficSignals.getSequenceByName(name)`
 
-Renvoie une séquence par son nom.
+Returns a sequence by its name.
 
-- `name` (*string*) : nom
-- **renvoie** : SignalSequence|nil séquence
+- `name` (*string*) : name
+- **returns**: SignalSequence|nil sequence
 
 #### `core_trafficSignals.getSequences()`
 
-Renvoie le tableau des séquences.
+Returns the array of sequences.
 
-- **renvoie** : SignalSequence[] séquences
+- **returns**: SignalSequence[] sequences
 
 #### `core_trafficSignals.getSignalByName(name)`
 
-Renvoie une instance par son nom.
+Returns an instance by its name.
 
-- `name` (*string*) : nom de l'instance
-- **renvoie** : SignalInstance|nil instance
+- `name` (*string*) : instance name
+- **returns**: SignalInstance|nil instance
 
 #### `core_trafficSignals.getSignals()`
 
-Renvoie le tableau des instances de signaux.
+Returns the array of signal instances.
 
-- **renvoie** : SignalInstance[] instances
+- **returns**: SignalInstance[] instances
 
 #### `core_trafficSignals.getTimer()`
 
-Renvoie le temps écoulé du système (s) ; -1 tant qu'il n'a jamais été lancé.
+Returns the elapsed system time (s); -1 as long as it has never been started.
 
-- **renvoie** : number timer
+- **returns**: number timer
 
 #### `core_trafficSignals.loadControllerDefinitions(filePath)`
 
-Recharge les définitions par défaut puis applique celles du niveau (signalControllerDefinitions.json dans le dossier du niveau, ou filePath).
+Reloads the default definitions then applies those of the level (signalControllerDefinitions.json in the level folder, or filePath).
 
-- `filePath` (*string|nil*) : fichier de définitions ; défaut = <dossier du niveau>/signalControllerDefinitions.json
+- `filePath` (*string|nil*) : definitions file; default = <level folder>/signalControllerDefinitions.json
 
 #### `core_trafficSignals.loadSignals(filePath, autoRun)`
 
-Charge un fichier de signaux JSON (instances, controllers, sequences) et l'installe avec setupSignals. Charge aussi les définitions de controllers du niveau.
+Loads a JSON signals file (instances, controllers, sequences) and installs it with setupSignals. Also loads the level's controller definitions.
 
-- `filePath` (*string|nil*) : fichier ; défaut = <dossier du niveau>/signals.json
-- `autoRun` (*boolean|nil*) : false si le graphe de routes n'est pas encore chargé (cas du chargement de niveau)
-- **renvoie** : boolean true si le fichier a été lu
+- `filePath` (*string|nil*) : file; default = <level folder>/signals.json
+- `autoRun` (*boolean|nil*) : false if the road graph is not loaded yet (level loading case)
+- **returns**: boolean true if the file was read
 
 #### `core_trafficSignals.newController(data)`
 
-Crée un SignalController (non inclus tant que :include() n'est pas appelé).
+Creates a SignalController (not included until :include() is called).
 
 - `data` (*table|nil*) : {id?, name?, type?, isSimple?, defaultIndex?, states?}
-- **renvoie** : SignalController nouveau controller
+- **returns**: SignalController new controller
 
 #### `core_trafficSignals.newSequence(data)`
 
-Crée une SignalSequence (non incluse tant que :include() n'est pas appelé).
+Creates a SignalSequence (not included until :include() is called).
 
 - `data` (*table|nil*) : {id?, name?, startTime?, phases?, startDisabled?, ignoreTimer?}
-- **renvoie** : SignalSequence nouvelle séquence
+- **returns**: SignalSequence new sequence
 
 #### `core_trafficSignals.newSignal(data)`
 
-Crée une SignalInstance (non incluse dans le système tant que :include() n'est pas appelé). Sans pos : position de la caméra au sol ; sans dir : direction de la route la plus proche, sinon de la caméra.
+Creates a SignalInstance (not included in the system until :include() is called). Without pos: camera position on the ground; without dir: direction of the nearest road, otherwise of the camera.
 
 - `data` (*table|nil*) : {id?, name?, pos?, dir?, group?, controllerId?, sequenceId?, useCurrentLane?, startDisabled?}
-- **renvoie** : SignalInstance nouvelle instance
+- **returns**: SignalInstance new instance
 
 #### `core_trafficSignals.onDeserialized(data)`
 
-Hook : recrée et inclut les éléments sérialisés, recharge les définitions et recalcule le compteur d'ids.
+Hook: recreates and includes the serialized elements, reloads the definitions and recomputes the id counter.
 
-- `data` (*table*) : données de onSerialize
+- `data` (*table*) : data from onSerialize
 
 #### `core_trafficSignals.onSerialize()`
 
-Hook : sérialise instances, controllers, séquences, active, loaded, useDtReal, debugLevel avant un rechargement Lua.
+Hook: serializes instances, controllers, sequences, active, loaded, useDtReal, debugLevel before a Lua reload.
 
-- **renvoie** : table données
+- **returns**: table data
 
 #### `core_trafficSignals.onUpdate(dt, dtSim)`
 
-Hook appelé à chaque frame : fait clignoter les états à lumières clignotantes, avance le timer, dépile la file pour faire avancer les séquences, applique les changements d'état en attente (lumières, mailbox, hook onTrafficSignalUpdate) et dessine le debug si debugLevel > 0.
+Hook called every frame: blinks the flashing-light states, advances the timer, pops the queue to advance sequences, applies pending state changes (lights, mailbox, onTrafficSignalUpdate hook) and draws debug if debugLevel > 0.
 
-- `dt` (*number*) : temps réel (s)
-- `dtSim` (*number*) : temps de simulation (s)
+- `dt` (*number*) : real time (s)
+- `dtSim` (*number*) : simulation time (s)
 
 #### `core_trafficSignals.setActive(val, autoRun)`
 
-Active ou met en pause le système. Avec autoRun=true et système non chargé, lance runSignals immédiatement ; sinon attend onNavgraphReloaded.
+Enables or pauses the system. With autoRun=true and the system not loaded, runs runSignals immediately; otherwise waits for onNavgraphReloaded.
 
-- `val` (*boolean*) : état actif
-- `autoRun` (*boolean|nil*) : true : lancer tout de suite (graphe de routes déjà prêt)
+- `val` (*boolean*) : active state
+- `autoRun` (*boolean|nil*) : true: run right away (road graph already ready)
 
 #### `core_trafficSignals.setControllerDefinitions(data)`
 
-Fusionne des états et types personnalisés dans les définitions de controllers (tableMerge).
+Merges custom states and types into the controller definitions (tableMerge).
 
 - `data` (*table*) : {states = {...}, types = {...}}
 
 #### `core_trafficSignals.setLightsManual(id, stateArray)`
 
-Allume ou éteint directement les 3 lumières d'un objet signal (champs instanceColor, instanceColor1, instanceColor2) sans changer l'état logique.
+Directly turns on or off the 3 lights of a signal object (fields instanceColor, instanceColor1, instanceColor2) without changing the logical state.
 
-- `id` (*integer*) : identifiant de l'objet scène (TSStatic)
-- `stateArray` (*boolean[]|nil*) : état de chaque lumière ; défaut {false,false,false}
+- `id` (*integer*) : scene object id (TSStatic)
+- `stateArray` (*boolean[]|nil*) : state of each light; default {false,false,false}
 
 #### `core_trafficSignals.setTimer(val)`
 
-Fixe directement le timer (peut changer instantanément les états). Voir le bug dans les notes si val est nil.
+Directly sets the timer (may change states instantly). See the bug in the notes if val is nil.
 
-- `val` (*number*) : nouvelle valeur du timer (s)
+- `val` (*number*) : new timer value (s)
 
 #### `core_trafficSignals.setupSignals(data, merge, autoRun)`
 
-Installe un jeu de signaux (et efface les index précédents). Sans data, vide tout. Avec data, remplace (ou fusionne si merge) instances, controllers et séquences, retire les doublons d'id puis appelle setActive(true, autoRun).
+Installs a set of signals (and clears the previous indexes). Without data, clears everything. With data, replaces (or merges if merge) instances, controllers and sequences, removes duplicate ids, then calls setActive(true, autoRun).
 
-- `data` (*table|nil*) : {instances, controllers, sequences} d'objets SignalInstance/Controller/Sequence
-- `merge` (*boolean|nil*) : true : ajoute aux éléments existants
-- `autoRun` (*boolean|nil*) : true : lancer immédiatement le système
+- `data` (*table|nil*) : {instances, controllers, sequences} of SignalInstance/Controller/Sequence objects
+- `merge` (*boolean|nil*) : true: adds to the existing elements
+- `autoRun` (*boolean|nil*) : true: run the system immediately
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `debugLevel` | number | 0 = aucun dessin debug ; 1 = dessin simple ; 2 = avec textes et flèches. Sauvegardé par onSerialize. |
-| `getSignalsDict` | function | Vaut `nop` (fonction vide) : sans effet. |
-| `useDtReal` | boolean | false par défaut ; si true, le timer avance avec le temps réel (dt) au lieu du temps de simulation (dtSim), donc même pendant une pause. |
+| `debugLevel` | number | 0 = no debug drawing; 1 = simple drawing; 2 = with texts and arrows. Saved by onSerialize. |
+| `getSignalsDict` | function | Equals `nop` (empty function): no effect. |
+| `useDtReal` | boolean | false by default; if true, the timer advances with real time (dt) instead of simulation time (dtSim), so even while paused. |
 
-## Classe `SignalController`
+## Class `SignalController`
 
-Type de signal avec sa liste d'états ordonnés ({state, duration}) : feu tricolore, stop, etc. Champs : id, name, type, isSimple (durées ignorées), defaultIndex (état par défaut), totalDuration, states. Réutilisable par plusieurs séquences.
+Signal type with its ordered list of states ({state, duration}): traffic light, stop, etc. Fields: id, name, type, isSimple (durations ignored), defaultIndex (default state), totalDuration, states. Reusable by several sequences.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `SignalController:applyDefinition(key)` | Applique un type de signal des définitions (copie isSimple, defaultIndex et les états avec leurs durées). | 695 |
-| `SignalController:autoSetTimings(speedMetresPerSecond, intersectionLength, isPermissive)` | Règle automatiquement les durées : vert = 0.7*vitesse + 0.6*longueur d'intersection (borné 10..40 s), jaune = 1 + (vitesse - 4.167)/3.27 (borné 3..7 s), rouge = 1 s. | 740 |
-| `SignalController:calcDuration()` | Calcule la durée totale des états (math.huge si une durée est absente ou négative ; 0 si isSimple). | 723 |
-| `SignalController:exclude()` | Retire le controller des données du module. | 763 |
-| `SignalController:getStateData(state)` | Données d'un état dans les définitions (lights, action, flashingLights…). | 719 |
-| `SignalController:include()` | Ajoute le controller aux données du module. | 755 |
-| `SignalController:new(data)` | Constructeur (voir newController). | 679 |
-| `SignalController:onDeserialized(data)` | Restaure les champs. | 795 |
-| `SignalController:onSerialize()` | Données à sauvegarder (les durées négatives sont ramenées à -1). | 776 |
+| `SignalController:applyDefinition(key)` | Applies a signal type from the definitions (copies isSimple, defaultIndex and the states with their durations). | 695 |
+| `SignalController:autoSetTimings(speedMetresPerSecond, intersectionLength, isPermissive)` | Automatically sets the durations: green = 0.7*speed + 0.6*intersection length (clamped 10..40 s), yellow = 1 + (speed - 4.167)/3.27 (clamped 3..7 s), red = 1 s. | 740 |
+| `SignalController:calcDuration()` | Computes the total duration of the states (math.huge if a duration is missing or negative; 0 if isSimple). | 723 |
+| `SignalController:exclude()` | Removes the controller from the module data. | 763 |
+| `SignalController:getStateData(state)` | State data in the definitions (lights, action, flashingLights...). | 719 |
+| `SignalController:include()` | Adds the controller to the module data. | 755 |
+| `SignalController:new(data)` | Constructor (see newController). | 679 |
+| `SignalController:onDeserialized(data)` | Restores the fields. | 795 |
+| `SignalController:onSerialize()` | Data to save (negative durations are set back to -1). | 776 |
 
-## Classe `SignalInstance`
+## Class `SignalInstance`
 
-Un signal placé dans le monde (feu, panneau). Champs : id, name, pos (vec3), dir (vec3), group, controllerId, sequenceId, startDisabled, active, road ({n1, n2, dist, pos, dir, radius}), linkedObjects (ids d'objets TSStatic liés), priorityStateIndex (état imposé qui prime sur la séquence), targetPos/intersectionId (centre de l'intersection), _invalid (signal inutilisable : pas de route ou de controller). Créé par newSignal.
+A signal placed in the world (light, sign). Fields: id, name, pos (vec3), dir (vec3), group, controllerId, sequenceId, startDisabled, active, road ({n1, n2, dist, pos, dir, radius}), linkedObjects (ids of linked TSStatic objects), priorityStateIndex (forced state that takes precedence over the sequence), targetPos/intersectionId (intersection center), _invalid (unusable signal: no road or controller). Created by newSignal.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `SignalInstance:calcIntersectionPos()` | Calcule le centre de l'intersection en moyennant les signaux de même séquence situés à moins de 40 m devant ce signal (au moins 2) et renseigne targetPos/intersectionId pour tous. Nécessite le système actif. | 346 |
-| `SignalInstance:clearSignalObjects(alsoDelete)` | Délie les objets liés (efface leur champ signalInstance) ou les supprime. | 182 |
-| `SignalInstance:createSignalObject(shapeFile, pos, rot)` | Crée un TSStatic (shape de feu, par défaut art/shapes/objects/trafficlight_overhead1.dae, cherchée dans le niveau puis dans art/shapes/), le place, le lie au signal et le range dans le groupe AutoTrafficSignals. | 207 |
-| `SignalInstance:drawDebug(isEditMode, isSelected, showText, capColor, cylinderScl, arrowScl)` | Dessine cylindre, flèche et texte de debug du signal. | 385 |
-| `SignalInstance:exclude()` | Retire l'instance des données du module. | 640 |
-| `SignalInstance:getBestRoad(pos, dir)` | Trouve la route la plus proche d'une position et renvoie le segment orienté dans le sens du signal (route à sens unique : sens de la route). | 286 |
-| `SignalInstance:getController()` | Controller associé (via controllerId). | 463 |
-| `SignalInstance:getSequence()` | Séquence associée (via sequenceId). | 467 |
-| `SignalInstance:getSignalObjects(refresh)` | Ids des objets TSStatic liés à ce signal (champ signalInstance = nom). | 177 |
-| `SignalInstance:getState()` | État courant (getStateAfterTime(0)). | 528 |
-| `SignalInstance:getStateAfterTime(seconds, isAbsolute)` | État du signal après `seconds` secondes (système actif requis) en simulant la séquence. | 471 |
-| `SignalInstance:getVehPlacement(vehId)` | Position d'un véhicule par rapport au signal. | 324 |
-| `SignalInstance:include()` | Ajoute l'instance (et son controller/sa séquence internes éventuels) aux données du module. | 624 |
-| `SignalInstance:isVehAfterSignal(vehId, maxDist, minDot)` | Vrai si le véhicule a franchi le point du signal dans le bon sens et à moins de maxDist. | 335 |
-| `SignalInstance:linkSignalObject(objId)` | Lie un objet scène à ce signal (champ dynamique signalInstance = nom). | 195 |
-| `SignalInstance:new(data)` | Constructeur. | 114 |
-| `SignalInstance:onDeserialized(data)` | Restaure les champs à partir de data (pos/dir reconverties en vec3). | 669 |
-| `SignalInstance:onSerialize()` | Données à sauvegarder (id, name, pos, dir, group, controllerId, sequenceId, useCurrentLane, startDisabled). | 653 |
-| `SignalInstance:refresh()` | Réactualise ce signal ainsi que sa séquence (réactive, rétablit l'étape courante). | 532 |
-| `SignalInstance:setActive(val)` | Active ou désactive le signal ; à l'activation, met l'état attendu (séquence, sinon état par défaut du controller) en file d'envoi. | 556 |
-| `SignalInstance:setAuxiliaryData()` | Cherche la route, vérifie la présence du controller et recense les objets liés ; marque le signal _invalid en cas de problème (log d'erreur). | 597 |
-| `SignalInstance:setController(id)` | Change le controller et rafraîchit si le système est actif. | 546 |
-| `SignalInstance:setLights(lightsArray)` | Allume/éteint directement les lumières de tous les objets liés (sans changer l'état logique). Surtout interne. | 146 |
-| `SignalInstance:setSequence(id)` | Change la séquence et rafraîchit si le système est actif. | 551 |
-| `SignalInstance:setStrictState(stateIdx)` | Impose l'état de ce signal d'après l'indice dans la liste d'états du controller (prime sur la séquence ; désactiver le timer de la séquence avant). Sans stateIdx valide (nil ou <= 0), le signal retrouve son état normal. | 161 |
-| `SignalInstance:setup(pos, dir, controllerId, sequenceId)` | Configuration alternative : fixe pos/dir, cherche la route, et crée un controller ('lightsBasic') et/ou une séquence si les ids donnés sont absents ou invalides. | 266 |
-| `SignalInstance:unlinkSignalObject(objId)` | Délie un objet scène de ce signal. | 201 |
+| `SignalInstance:calcIntersectionPos()` | Computes the intersection center by averaging the signals of the same sequence located less than 40 m ahead of this signal (at least 2) and fills in targetPos/intersectionId for all of them. Requires the system to be active. | 346 |
+| `SignalInstance:clearSignalObjects(alsoDelete)` | Unlinks the linked objects (clears their signalInstance field) or deletes them. | 182 |
+| `SignalInstance:createSignalObject(shapeFile, pos, rot)` | Creates a TSStatic (light shape, default art/shapes/objects/trafficlight_overhead1.dae, searched in the level then in art/shapes/), places it, links it to the signal and puts it in the AutoTrafficSignals group. | 207 |
+| `SignalInstance:drawDebug(isEditMode, isSelected, showText, capColor, cylinderScl, arrowScl)` | Draws the signal's debug cylinder, arrow and text. | 385 |
+| `SignalInstance:exclude()` | Removes the instance from the module data. | 640 |
+| `SignalInstance:getBestRoad(pos, dir)` | Finds the nearest road to a position and returns the segment oriented in the signal's direction (one-way road: the road's direction). | 286 |
+| `SignalInstance:getController()` | Associated controller (via controllerId). | 463 |
+| `SignalInstance:getSequence()` | Associated sequence (via sequenceId). | 467 |
+| `SignalInstance:getSignalObjects(refresh)` | Ids of the TSStatic objects linked to this signal (field signalInstance = name). | 177 |
+| `SignalInstance:getState()` | Current state (getStateAfterTime(0)). | 528 |
+| `SignalInstance:getStateAfterTime(seconds, isAbsolute)` | Signal state after `seconds` seconds (active system required), by simulating the sequence. | 471 |
+| `SignalInstance:getVehPlacement(vehId)` | Position of a vehicle relative to the signal. | 324 |
+| `SignalInstance:include()` | Adds the instance (and its internal controller/sequence, if any) to the module data. | 624 |
+| `SignalInstance:isVehAfterSignal(vehId, maxDist, minDot)` | True if the vehicle has passed the signal point in the right direction and within maxDist. | 335 |
+| `SignalInstance:linkSignalObject(objId)` | Links a scene object to this signal (dynamic field signalInstance = name). | 195 |
+| `SignalInstance:new(data)` | Constructor. | 114 |
+| `SignalInstance:onDeserialized(data)` | Restores the fields from data (pos/dir converted back to vec3). | 669 |
+| `SignalInstance:onSerialize()` | Data to save (id, name, pos, dir, group, controllerId, sequenceId, useCurrentLane, startDisabled). | 653 |
+| `SignalInstance:refresh()` | Refreshes this signal and its sequence (reactivates, restores the current step). | 532 |
+| `SignalInstance:setActive(val)` | Enables or disables the signal; on activation, queues the expected state (sequence, otherwise the controller's default state) for sending. | 556 |
+| `SignalInstance:setAuxiliaryData()` | Looks for the road, checks that the controller exists and lists the linked objects; marks the signal _invalid on any problem (error log). | 597 |
+| `SignalInstance:setController(id)` | Changes the controller and refreshes if the system is active. | 546 |
+| `SignalInstance:setLights(lightsArray)` | Directly turns on/off the lights of all linked objects (without changing the logical state). Mostly internal. | 146 |
+| `SignalInstance:setSequence(id)` | Changes the sequence and refreshes if the system is active. | 551 |
+| `SignalInstance:setStrictState(stateIdx)` | Forces the state of this signal from the index in the controller's state list (takes precedence over the sequence; disable the sequence timer first). Without a valid stateIdx (nil or <= 0), the signal returns to its normal state. | 161 |
+| `SignalInstance:setup(pos, dir, controllerId, sequenceId)` | Alternative setup: sets pos/dir, looks for the road, and creates a controller ('lightsBasic') and/or a sequence if the given ids are missing or invalid. | 266 |
+| `SignalInstance:unlinkSignalObject(objId)` | Unlinks a scene object from this signal. | 201 |
 
-## Classe `SignalSequence`
+## Class `SignalSequence`
 
-Enchaîne des phases ({controllerIds, startTime?, totalDuration}) pour piloter les controllers d'une intersection. Champs : id, name, startTime, totalDuration, phases, timeline ([temps] = liste {nomController, indexPhase, indexEtat}), timelineTimes (temps triés), controllerStates, currStep, currPhase, stateTime, startDisabled, ignoreTimer.
+Chains phases ({controllerIds, startTime?, totalDuration}) to drive the controllers of an intersection. Fields: id, name, startTime, totalDuration, phases, timeline ([time] = list of {controllerName, phaseIndex, stateIndex}), timelineTimes (sorted times), controllerStates, currStep, currPhase, stateTime, startDisabled, ignoreTimer.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `SignalSequence:advance()` | Passe à l'étape suivante (boucle au début). Appelé par la file du module quand l'échéance est atteinte. | 1012 |
-| `SignalSequence:calcDuration(controllersRef)` | Calcule la durée de chaque phase (plus longue durée de ses controllers) et de la séquence (somme, ou max de startTime + durée si startTime est donné). | 840 |
-| `SignalSequence:createPhase(phase, idx)` | Ajoute une phase (à la fin ou à l'indice idx). | 822 |
-| `SignalSequence:deletePhase(idx)` | Supprime une phase. | 833 |
-| `SignalSequence:enableTimer(val)` | Indique si la séquence suit le timer principal ; false la fige (utile avec setStep/setPhase/setStrictState). | 1125 |
-| `SignalSequence:exclude()` | Retire la séquence des données du module. | 1143 |
-| `SignalSequence:include()` | Ajoute la séquence aux données du module. | 1135 |
-| `SignalSequence:new(data)` | Constructeur (voir newSequence). | 803 |
-| `SignalSequence:onDeserialized(data)` | Restaure les champs. | 1169 |
-| `SignalSequence:onSequenceUpdate()` | Interne : traite l'étape courante et planifie la suivante dans la file. | 899 |
-| `SignalSequence:onSerialize()` | Données à sauvegarder (id, name, phases, startTime, startDisabled, ignoreTimer). | 1156 |
-| `SignalSequence:resetSequence()` | Remet la séquence au début (états par défaut des controllers) et planifie la première échéance. | 933 |
-| `SignalSequence:resolveUpdates(forceUpdate)` | Pousse l'état des controllers modifiés vers les instances actives en file d'envoi. | 884 |
-| `SignalSequence:setActive(val)` | Active la séquence (construit timeline et controllerStates, puis resetSequence ; ignorée avec un avertissement si durée nulle) ou la désactive (instances mises à l'état 'none'). | 1039 |
-| `SignalSequence:setPhase(index)` | Saute à la première étape de la phase donnée. | 978 |
-| `SignalSequence:setStep(index)` | Saute à l'étape d'indice donné de la timeline (si elle existe). | 952 |
-| `SignalSequence:setStrictState(ctrlName, stateIdx)` | Impose l'état d'un controller de la séquence pour toutes ses instances (lumières et état). Désactiver le timer avant (enableTimer(false)). | 1022 |
+| `SignalSequence:advance()` | Moves to the next step (loops back to the start). Called by the module queue when the deadline is reached. | 1012 |
+| `SignalSequence:calcDuration(controllersRef)` | Computes the duration of each phase (longest duration of its controllers) and of the sequence (sum, or max of startTime + duration if startTime is given). | 840 |
+| `SignalSequence:createPhase(phase, idx)` | Adds a phase (at the end or at index idx). | 822 |
+| `SignalSequence:deletePhase(idx)` | Deletes a phase. | 833 |
+| `SignalSequence:enableTimer(val)` | Indicates whether the sequence follows the main timer; false freezes it (useful with setStep/setPhase/setStrictState). | 1125 |
+| `SignalSequence:exclude()` | Removes the sequence from the module data. | 1143 |
+| `SignalSequence:include()` | Adds the sequence to the module data. | 1135 |
+| `SignalSequence:new(data)` | Constructor (see newSequence). | 803 |
+| `SignalSequence:onDeserialized(data)` | Restores the fields. | 1169 |
+| `SignalSequence:onSequenceUpdate()` | Internal: processes the current step and schedules the next one in the queue. | 899 |
+| `SignalSequence:onSerialize()` | Data to save (id, name, phases, startTime, startDisabled, ignoreTimer). | 1156 |
+| `SignalSequence:resetSequence()` | Resets the sequence to the beginning (controllers' default states) and schedules the first deadline. | 933 |
+| `SignalSequence:resolveUpdates(forceUpdate)` | Pushes the state of the modified controllers to the active instances into the send queue. | 884 |
+| `SignalSequence:setActive(val)` | Activates the sequence (builds timeline and controllerStates, then resetSequence; ignored with a warning if the duration is zero) or deactivates it (instances set to state 'none'). | 1039 |
+| `SignalSequence:setPhase(index)` | Jumps to the first step of the given phase. | 978 |
+| `SignalSequence:setStep(index)` | Jumps to the step with the given timeline index (if it exists). | 952 |
+| `SignalSequence:setStrictState(ctrlName, stateIdx)` | Forces the state of a sequence controller for all its instances (lights and state). Disable the timer beforehand (enableTimer(false)). | 1022 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onTrafficSignalUpdate`
 - `onTrafficSignalsReset`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`
 - `be:` `getSurfaceHeightBelow`, `sendToMailbox`
@@ -337,4 +337,4 @@ Enchaîne des phases ({controllerIds, startTime?, totalDuration}) pour piloter l
 - `scenetree.` `findObjectById`, `objectExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/trafficSignals.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/trafficSignals.lua`.*

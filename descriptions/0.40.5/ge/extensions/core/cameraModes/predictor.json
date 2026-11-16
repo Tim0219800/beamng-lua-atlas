@@ -1,12 +1,35 @@
 {
   "path": "lua/ge/extensions/core/cameraModes/predictor.lua",
-  "module": "Filtre qui anticipe le mouvement du véhicule : décale data.res.targetPos de dtFuture * data.vel (vitesse du véhicule) puis recalcule la rotation vers cette cible. Masqué. Renvoie un constructeur.",
+  "module": "Filter that anticipates the vehicle's movement: shifts data.res.targetPos by dtFuture * data.vel (vehicle velocity) then recomputes the rotation toward that target. Hidden. Returns a constructor.",
   "classes": {
     "C": {
-      "desc": "Filtre de prédiction de cible.",
+      "desc": "Target prediction filter.",
       "functions": {
-        "init": {"desc": "Définit isFilter, hidden et dtFuture.", "params": {"dtFuture": {"type": "number|nil", "desc": "avance en secondes (0.1 par défaut)"}}},
-        "update": {"desc": "Avance targetPos et met data.res.rot à jour.", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true}
+        "init": {
+          "desc": "Sets isFilter, hidden and dtFuture.",
+          "params": {
+            "dtFuture": {
+              "type": "number|nil",
+              "desc": "look-ahead in seconds (0.1 by default)"
+            }
+          }
+        },
+        "update": {
+          "desc": "Advances targetPos and updates data.res.rot.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "camData"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "always true"
+            }
+          ],
+          "internal": true
+        }
       }
     }
   }

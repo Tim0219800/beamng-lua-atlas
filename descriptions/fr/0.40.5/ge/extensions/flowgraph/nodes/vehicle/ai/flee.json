@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/flee.lua",
+  "module": "Nœud « AI Flee » (couleur ai, once_p_duration). Met un véhicule en mode IA « flee » pour fuir un autre véhicule. Entrées : aiVehId (sans valeur = véhicule du joueur), targetId (par défaut le véhicule du joueur).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "workOnce": {
+          "desc": "Envoie au véhicule ai.setMode(\"flee\") puis ai.setTargetObjectID(targetId).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

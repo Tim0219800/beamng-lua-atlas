@@ -1,70 +1,70 @@
 # `powertrain_cvtGearbox`
 
-*Fichier : `lua/vehicle/powertrain/cvtGearbox.lua` · VM : Véhicule · 256 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/cvtGearbox.lua` · VM: Vehicle · 256 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `cvtGearbox` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `cvtGearbox` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Composant powertrain `cvtGearbox` : boîte à variation continue (CVT) à rapport variable entre minGearRatio et maxGearRatio. Le rapport n'est pas choisi par ce fichier : un contrôleur extérieur appelle setGearRatio chaque pas. Les modes possibles sont posés par setMode : 'neutral' (masse virtuelle), 'park' (verrou de parking par ressort), 'reverse' (inverse le sens), sinon marche avant. Un accouplement visqueux à sens unique empêche le recul. Le fichier ne contient pas de logique de commande automatique.
+Powertrain component `cvtGearbox`: continuously variable transmission (CVT) with a variable ratio between minGearRatio and maxGearRatio. The ratio is not chosen by this file: an external controller calls setGearRatio each step. The possible modes are set by setMode: 'neutral' (virtual mass), 'park' (spring parking lock), 'reverse' (reverses the direction), otherwise forward. A one-way viscous coupling prevents rolling backward. The file contains no automatic control logic.
 
-## Exemple
+## Example
 
 ```lua
 local cvt = powertrain.getDevice("gearbox")
-cvt:setMode("drive")      -- tout mode autre que neutral/park/reverse = marche avant
-cvt:setGearRatio(1.2)     -- borné à [minGearRatio, maxGearRatio]
+cvt:setMode("drive")      -- any mode other than neutral/park/reverse = forward
+cvt:setGearRatio(1.2)     -- clamped to [minGearRatio, maxGearRatio]
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : name, type, inputName, inputIndex, gearRatio (valeur de départ, immédiatement écrasée par maxGearRatio), friction (N·m), dynamicFriction (N·m par rad/s), torqueLossCoef (0..1), minGearRatio (0.5), maxGearRatio (2.5), parkLockSpring (N·m/rad, sinon calculé), parkLockTorque (N·m, 1000), parkLockDampRatio (0.4), oneWayViscousCoef (5), oneWayViscousTorque (= oneWayViscousCoef * 25), oneWayViscousSmoothing (50), gearboxNode_nodes (premier nœud = transmissionNodeID), breakTriggerBeam.
-- Champs principaux : inputAV (rad/s côté moteur/embrayage = outputAV1 * gearRatio * lockCoef * reverseGearRatioCoef), outputAV1 (rad/s, posé par l'enfant), outputTorque1 (N·m), gearRatio (rapport courant, borné), minGearRatio, maxGearRatio, mode ('neutral', 'park', 'reverse' ou autre), reverseGearRatioCoef (+1 ou -1), lockCoef (0 si setLock(true)), virtualMassAV, parkEngaged (0 ou 1), parkClutchAngle (rad), cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, isBroken. gearCount, minGearIndex, maxGearIndex et gearIndex valent toujours 1 (compatibilité avec les boîtes à rapports).
-- Park : le verrou ne s'engage (parkEngaged = 1) que lorsque |outputAV1| < 100 rad/s, puis applique un couple ressort/amortisseur sur parkClutchAngle, borné par maxParkClutchAngle = parkLockTorque / parkLockSpring.
-- Le couple de sortie est (couple d'entrée - frottement) * gearRatio - couple visqueux à sens unique, multiplié par reverseGearRatioCoef et lockCoef.
-- Bug : setPartCondition appelle device:onBreak() si l'état contient isBroken = true, mais cvtGearbox ne définit pas onBreak (erreur Lua). Il n'y a pas non plus de logique pour isBroken dans selectUpdates.
-- calculateInertia divise par maxGearRatio² et calcule invCumulativeInertia = 1 / cumulativeInertia sans garde contre une inertie nulle.
+- Jbeam keys read: name, type, inputName, inputIndex, gearRatio (starting value, immediately overwritten by maxGearRatio), friction (N·m), dynamicFriction (N·m per rad/s), torqueLossCoef (0..1), minGearRatio (0.5), maxGearRatio (2.5), parkLockSpring (N·m/rad, otherwise computed), parkLockTorque (N·m, 1000), parkLockDampRatio (0.4), oneWayViscousCoef (5), oneWayViscousTorque (= oneWayViscousCoef * 25), oneWayViscousSmoothing (50), gearboxNode_nodes (first node = transmissionNodeID), breakTriggerBeam.
+- Main fields: inputAV (rad/s engine/clutch side = outputAV1 * gearRatio * lockCoef * reverseGearRatioCoef), outputAV1 (rad/s, set by the child), outputTorque1 (N·m), gearRatio (current ratio, clamped), minGearRatio, maxGearRatio, mode ('neutral', 'park', 'reverse' or other), reverseGearRatioCoef (+1 or -1), lockCoef (0 if setLock(true)), virtualMassAV, parkEngaged (0 or 1), parkClutchAngle (rad), cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, isBroken. gearCount, minGearIndex, maxGearIndex and gearIndex are always 1 (compatibility with geared gearboxes).
+- Park: the lock only engages (parkEngaged = 1) when |outputAV1| < 100 rad/s, then applies a spring/damper torque on parkClutchAngle, clamped by maxParkClutchAngle = parkLockTorque / parkLockSpring.
+- The output torque is (input torque - friction) * gearRatio - one-way viscous torque, multiplied by reverseGearRatioCoef and lockCoef.
+- Bug: setPartCondition calls device:onBreak() if the state contains isBroken = true, but cvtGearbox does not define onBreak (Lua error). There is also no logic for isBroken in selectUpdates.
+- calculateInertia divides by maxGearRatio² and computes invCumulativeInertia = 1 / cumulativeInertia with no guard against a zero inertia.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_cvtGearbox.new(jbeamData)` | Construit la boîte CVT : paramètres de rapport minimal/maximal, verrou de parking, accouplement à sens unique, puis règle le rapport sur maxGearRatio. *(interne)* | 180 |
+| `powertrain_cvtGearbox.new(jbeamData)` | Builds the CVT gearbox: minimum/maximum ratio parameters, parking lock, one-way coupling, then sets the ratio to maxGearRatio. *(internal)* | 180 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_cvtGearbox.new(jbeamData)`
 
-Construit la boîte CVT : paramètres de rapport minimal/maximal, verrou de parking, accouplement à sens unique, puis règle le rapport sur maxGearRatio.
+Builds the CVT gearbox: minimum/maximum ratio parameters, parking lock, one-way coupling, then sets the ratio to maxGearRatio.
 
-- `jbeamData` (*table*) : Données jbeam du composant.
-- **renvoie** : table Le device (classe `device`).
+- `jbeamData` (*table*) : jbeam data of the component.
+- **returns**: table The device (class `device`).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `deviceCategories` | table<string, boolean> | {gearbox=true}. |
 | `outputPorts` | table<integer, boolean> | {[1]=true}. |
 | `requiredExternalInertiaOutputs` | table<integer, integer> | {1}. |
 
-## Classe `device`
+## Class `device`
 
-Objet renvoyé par new(jbeamData). velocityUpdate/torqueUpdate dépendent du mode (normal, neutral, park).
+Object returned by new(jbeamData). velocityUpdate/torqueUpdate depend on the mode (normal, neutral, park).
 
-Objet `device` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `device` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `device:applyDeformGroupDamage(damageAmount)` | Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1). | 82 |
-| `device:calculateInertia()` | Prend l'inertie et les rapports cumulés du premier enfant ; calcule cumulativeInertia (divisée par maxGearRatio²), les paramètres du verrou de parking (ressort, amortissement, angle max) et les rapports cumulés. | 130 |
-| `device:getPartCondition()` | Renvoie l'intégrité 0..1 (0 si cassé) et {damageFrictionCoef, isBroken}. | 101 |
-| `device:reset(jbeamData)` | Remet à zéro vitesses, couple, masse virtuelle, coefficients, lisseur de sens unique et angle de parking, puis règle le rapport sur maxGearRatio. | 152 |
-| `device:setGearRatio(ratio)` | Fixe le rapport courant, borné entre minGearRatio et maxGearRatio. Appelée par un contrôleur de CVT. | 120 |
-| `device:setLock(enabled)` | Verrouille (lockCoef = 0 : aucune vitesse ni couple transmis) ou déverrouille (1) la transmission. | 126 |
-| `device:setMode(mode)` | Change le mode de la boîte (aucune validation de la chaîne). 'reverse' inverse le sens (reverseGearRatioCoef = -1) ; 'neutral' et 'park' sélectionnent des fonctions de mise à jour dédiées avec masse virtuelle ; toute autre valeur = marche avant. | 114 |
-| `device:setPartCondition(subSystem, odometer, integrity, visual)` | Applique l'usure (odomètre, coefficient de 1 à 2) et les dégâts (intégrité nombre 0..1 ou table {damageFrictionCoef, isBroken}). Appelle onBreak si isBroken, qui n'est pas défini sur ce device (voir notes). | 86 |
-| `device:torqueUpdate(dt)` | Appelée à chaque pas physique : calcule outputTorque1 selon le mode. Normal : transmission avec frottement et accouplement à sens unique ; neutre : couple de sortie 0 et accélération de la masse virtuelle ; park : couple de verrouillage ressort/amortisseur. | 48 |
-| `device:validate()` | Appelée après construction du powertrain ; renvoie toujours true. | 110 |
-| `device:velocityUpdate(dt)` | Appelée à chaque pas physique : inputAV = outputAV1 * gearRatio * lockCoef * reverseGearRatioCoef, écrit dans le parent. En neutre et en park : utilise la masse virtuelle. | 43 |
+| `device:applyDeformGroupDamage(damageAmount)` | Increases the damage friction coefficient (0.01 of damage = +0.1). | 82 |
+| `device:calculateInertia()` | Takes the cumulative inertia and ratios of the first child; computes cumulativeInertia (divided by maxGearRatio²), the parking lock parameters (spring, damping, max angle) and the cumulative ratios. | 130 |
+| `device:getPartCondition()` | Returns the integrity 0..1 (0 if broken) and {damageFrictionCoef, isBroken}. | 101 |
+| `device:reset(jbeamData)` | Resets speeds, torque, virtual mass, coefficients, the one-way smoother and the parking angle, then sets the ratio to maxGearRatio. | 152 |
+| `device:setGearRatio(ratio)` | Sets the current ratio, clamped between minGearRatio and maxGearRatio. Called by a CVT controller. | 120 |
+| `device:setLock(enabled)` | Locks (lockCoef = 0: no speed or torque transmitted) or unlocks (1) the transmission. | 126 |
+| `device:setMode(mode)` | Changes the gearbox mode (no validation of the string). 'reverse' reverses the direction (reverseGearRatioCoef = -1); 'neutral' and 'park' select dedicated update functions with virtual mass; any other value = forward. | 114 |
+| `device:setPartCondition(subSystem, odometer, integrity, visual)` | Applies wear (odometer, coefficient from 1 to 2) and damage (integrity number 0..1 or table {damageFrictionCoef, isBroken}). Calls onBreak if isBroken, which is not defined on this device (see notes). | 86 |
+| `device:torqueUpdate(dt)` | Called at each physics step: computes outputTorque1 according to the mode. Normal: transmission with friction and one-way coupling; neutral: output torque 0 and acceleration of the virtual mass; park: spring/damper lock torque. | 48 |
+| `device:validate()` | Called after the powertrain is built; always returns true. | 110 |
+| `device:velocityUpdate(dt)` | Called at each physics step: inputAV = outputAV1 * gearRatio * lockCoef * reverseGearRatioCoef, written to the parent. In neutral and park: uses the virtual mass. | 43 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/cvtGearbox.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/cvtGearbox.lua`.*

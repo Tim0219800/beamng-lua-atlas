@@ -1,12 +1,17 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftRacePath.lua",
-  "module": "Nœud flowgraph « Drift Race Path » (catégorie repeat_instant, drift). Utilise un chemin de course (pin racePath) pour définir checkpoints, destination et position de départ via gameplay_drift_destination.setRacePath. Pin d'entrée supplémentaire : disableWrongWayAndDist (désactive les messages de mauvais sens et de distance restante). Sorties : pathData (données du chemin pour d'autres nœuds) et waypoints (table).",
-  "notes": ["Chemin résolu avec mgr:getRelativeAbsolutePath ; sorties inchangées s'il est invalide.", "Rappelle setRacePath à chaque frame tant que le nœud est atteint."],
+  "module": "Flowgraph node \"Drift Race Path\" (category repeat_instant, drift). Uses a race path (racePath pin) to define checkpoints, destination and start position via gameplay_drift_destination.setRacePath. Additional input pin: disableWrongWayAndDist (disables the wrong-way and remaining-distance messages). Outputs: pathData (path data for other nodes) and waypoints (table).",
+  "notes": [
+    "Path resolved with mgr:getRelativeAbsolutePath; outputs unchanged if it is invalid.",
+    "Calls setRacePath again every frame as long as the node is reached."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Appelle setRacePath({filePath, disableWrongWayAndDist}) puis lit getWaypoints() et getPathData(file)."}
+        "work": {
+          "desc": "Calls setRacePath({filePath, disableWrongWayAndDist}) then reads getWaypoints() and getPathData(file)."
+        }
       }
     }
   }

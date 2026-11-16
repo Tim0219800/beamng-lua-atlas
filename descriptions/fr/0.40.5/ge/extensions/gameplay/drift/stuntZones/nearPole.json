@@ -1,0 +1,46 @@
+{
+  "path": "lua/ge/extensions/gameplay/drift/stuntZones/nearPole.lua",
+  "module": "Type de zone de cascade « nearPole » : un poteau rayé (delineator, config vehicles/delineator/stripes.pc) est spawné à pos ; le joueur marque des points en le frôlant en drift sans le toucher. Le module renvoie un constructeur appelé par gameplay_drift_stuntZones.setStuntZones ; ce n'est pas une extension. Émet onAnyStuntZoneAccomplished avec le sous-hook onNearPoleAccomplished (angle, closeness et points de base nearPole).",
+  "notes": [
+    "Un coin du véhicule doit passer à moins de maxDist = 4 m du poteau ; le score est donné quand le véhicule s'éloigne (distance centre-poteau supérieure à celle de la frame précédente) et que le poteau n'a pas été touché.",
+    "closeness = 1 - (minCornerDist / 4), avec minCornerDist la distance minimale d'un coin du véhicule au poteau ; plus c'est proche, plus le score est élevé (score = angle * closeness / 90 * points, dans scoring).",
+    "Toucher le poteau (collision lue dans objectCollisions) met hitPole à vrai et supprime le marqueur : la zone ne peut alors plus être validée.",
+    "Comme hitPole, reset() remet le poteau en place et recrée le marqueur après 0.1 s."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Zone nearPole. Champs : data = {id, zoneData = {pos}}, marker, activeData = {veh, hitPole, lastFrameHitPole, available, resetFlag, lastFramePlDist, minCornerDist}.",
+      "functions": {
+        "clear": {"desc": "Supprime le véhicule poteau et son marqueur."},
+        "clearMarker": {"desc": "Supprime le marqueur de course s'il existe."},
+        "createMarker": {"desc": "Crée un marqueur de course « overhead » (rayon 5) 2.5 m au-dessus du poteau."},
+        "resetData": {"desc": "Remet à zéro activeData (available = true, distances à l'infini).", "internal": true},
+        "reset": {"desc": "Remet le poteau en place (reset physique et mesh), réinitialise les données puis recrée le marqueur après 0.1 s via un job."},
+        "init": {
+          "desc": "Constructeur interne : mémorise les données, spawne le poteau rayé à zoneData.pos, crée le marqueur.",
+          "params": {"data": {"type": "table", "desc": "{id, zoneData = {pos}, nearDist}."}},
+          "internal": true
+        },
+        "accomplish": {"desc": "Réussite : supprime le marqueur, rend la zone indisponible et émet onAnyStuntZoneAccomplished (sous-hook onNearPoleAccomplished avec currDegAngle, closeness, points)."},
+        "detectStunt": {"desc": "Parcourt les 4 coins du véhicule (getVehCorners), mémorise la distance minimale et marque la zone comme réussie quand le véhicule s'éloigne du poteau sans l'avoir touché."},
+        "onUpdate": {
+          "desc": "Appelé à chaque frame : met à jour le marqueur et détecte une collision entre le véhicule du drift et le poteau.",
+          "params": {
+            "dtReal": {"type": "number", "desc": "Delta temps réel."},
+            "dtSim": {"type": "number", "desc": "Delta temps simulé."}
+          },
+          "internal": true
+        },
+        "onVehicleDestroyed": {
+          "desc": "Si le véhicule détruit est le poteau, oublie le poteau et retire la zone du gestionnaire.",
+          "params": {"vehId": {"type": "integer", "desc": "Véhicule détruit."}},
+          "internal": true
+        },
+        "isAvailable": {
+          "desc": "Indique si le poteau peut encore rapporter des points.",
+          "returns": [{"type": "boolean", "desc": "true tant que la zone n'a pas été réussie."}]
+        }
+      }
+    }
+  }
+}

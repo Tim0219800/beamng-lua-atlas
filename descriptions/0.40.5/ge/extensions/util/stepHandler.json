@@ -1,124 +1,279 @@
 {
   "path": "lua/ge/extensions/util/stepHandler.lua",
-  "module": "Exécuteur de séquences d'étapes (« steps ») asynchrones pour scénarios et scripts de test. On construit une liste d'étapes avec les fonctions makeStepXxx (fondu au noir, attente, apparition de véhicule ou de trafic, chargement de niveau, fonction personnalisée) puis on la lance avec startStepSequence. À chaque onUpdate, l'étape courante est traitée jusqu'à ce qu'elle soit terminée (step.complete) ; on passe alors à la suivante dans la même frame. Une étape qui dépasse son délai (timeout, 120 s par défaut) est journalisée comme erreur et forcée à « terminée ».",
-  "usage": "util_stepHandler.startStepSequence({\n  util_stepHandler.makeStepFadeToBlack(),\n  util_stepHandler.makeStepSpawnVehicleSimple('pickup', 'vehicles/pickup/d15_4wd_A.pc', function() print('Hello') end),\n  util_stepHandler.makeStepFadeFromBlack()\n}, function() print('Terminé') end)",
+  "module": "Executor of asynchronous step sequences (\"steps\") for scenarios and test scripts. You build a list of steps with the makeStepXxx functions (fade to black, wait, vehicle or traffic spawn, level load, custom function) then start it with startStepSequence. On each onUpdate, the current step is processed until it is complete (step.complete); the next one is then started in the same frame. A step that exceeds its timeout (timeout, 120 s by default) is logged as an error and forced to \"complete\".",
+  "usage": "util_stepHandler.startStepSequence({\n  util_stepHandler.makeStepFadeToBlack(),\n  util_stepHandler.makeStepSpawnVehicleSimple('pickup', 'vehicles/pickup/d15_4wd_A.pc', function() print('Hello') end),\n  util_stepHandler.makeStepFadeFromBlack()\n}, function() print('Done') end)",
   "notes": [
-    "Une étape est une table {name, processTask = function(step, dtTable), timeout, origin, ...} ; processTask met step.complete = true quand elle a fini. dtTable contient dtReal, dtSim et dtRaw.",
-    "startStepSequence remplace toute séquence en cours ; le callback de fin devient une dernière étape ajoutée à la liste fournie (la table steps est modifiée).",
-    "onClientStartMission marque comme terminée l'étape courante quelle qu'elle soit (pas seulement le chargement de niveau) ; taskLoadLevelStep ne se termine d'ailleurs que par ce hook, car step.levelLoaded n'est jamais renseigné. Délai de l'étape de chargement : 600 s.",
-    "Dans onUpdate, la variable logTag n'est pas définie dans ce fichier (valeur nil dans le log « Completed Step »).",
-    "makeStepReturnTrueFunction est déclarée deux fois (la seconde, locale, masque la première) ; elles sont identiques. Seule la première est exportée.",
-    "taskVehicleSpawnStep : si spawnNewVehicle échoue, step.veh est nil et l'appel step.veh:getId() qui suit provoque une erreur Lua.",
-    "Si showDebugWindow (variable locale, false) est mise à true dans le code, onUpdate affiche une fenêtre ImGui de débogage des étapes."
+    "A step is a table {name, processTask = function(step, dtTable), timeout, origin, ...}; processTask sets step.complete = true when it is done. dtTable contains dtReal, dtSim and dtRaw.",
+    "startStepSequence replaces any sequence in progress; the end callback becomes a last step appended to the supplied list (the steps table is modified).",
+    "onClientStartMission marks the current step as complete whatever it is (not only level loading); taskLoadLevelStep in fact only ends through this hook, because step.levelLoaded is never set. Timeout of the loading step: 600 s.",
+    "In onUpdate, the logTag variable is not defined in this file (nil value in the \"Completed Step\" log).",
+    "makeStepReturnTrueFunction is declared twice (the second, local, shadows the first); they are identical. Only the first is exported.",
+    "taskVehicleSpawnStep: if spawnNewVehicle fails, step.veh is nil and the following step.veh:getId() call causes a Lua error.",
+    "If showDebugWindow (local variable, false) is set to true in the code, onUpdate displays an ImGui step debug window."
   ],
   "functions": {
     "startStepSequence": {
-      "desc": "Démarre une séquence d'étapes (remplace l'éventuelle séquence en cours). Si un callback est donné, il est exécuté en dernière étape.",
+      "desc": "Starts a step sequence (replaces any sequence in progress). If a callback is given, it is run as the last step.",
       "params": {
-        "steps": {"type": "table[]", "desc": "Liste d'étapes créées avec les makeStepXxx."},
-        "callbackWhenFinished": {"type": "function|nil", "desc": "Appelée sans argument une fois toutes les étapes terminées."}
+        "steps": {
+          "type": "table[]",
+          "desc": "List of steps created with the makeStepXxx functions."
+        },
+        "callbackWhenFinished": {
+          "type": "function|nil",
+          "desc": "Called with no argument once all the steps are complete."
+        }
       }
     },
     "skipToLastStepOrCallback": {
-      "desc": "Termine l'étape courante et saute directement à la dernière étape (typiquement le callback de fin).",
+      "desc": "Completes the current step and jumps straight to the last step (typically the end callback).",
       "internal": false
     },
     "makeStepFadeToBlack": {
-      "desc": "Étape : lance le fondu vers le noir (ui_fadeScreen.start) et attend l'évènement d'écran noir (état 1, timeout 10 s).",
-      "params": {"duration": {"type": "number|nil", "desc": "Durée du fondu en secondes."}},
-      "returns": [{"type": "table", "desc": "Étape."}]
+      "desc": "Step: starts the fade to black (ui_fadeScreen.start) and waits for the black screen event (state 1, timeout 10 s).",
+      "params": {
+        "duration": {
+          "type": "number|nil",
+          "desc": "Fade duration in seconds."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Step."
+        }
+      ]
     },
     "makeStepFadeFromBlack": {
-      "desc": "Étape : lance le retour de fondu (ui_fadeScreen.stop) et attend l'état 3 de onScreenFadeState (timeout 10 s).",
-      "params": {"duration": {"type": "number|nil", "desc": "Durée du fondu en secondes."}},
-      "returns": [{"type": "table", "desc": "Étape."}]
+      "desc": "Step: starts the fade back in (ui_fadeScreen.stop) and waits for state 3 of onScreenFadeState (timeout 10 s).",
+      "params": {
+        "duration": {
+          "type": "number|nil",
+          "desc": "Fade duration in seconds."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Step."
+        }
+      ]
     },
     "makeStepWait": {
-      "desc": "Étape : attend un nombre de secondes réelles (os.clockhp).",
-      "params": {"seconds": {"type": "number", "desc": "Durée d'attente en secondes."}},
-      "returns": [{"type": "table", "desc": "Étape (timeout = seconds + 1)."}]
+      "desc": "Step: waits for a number of real seconds (os.clockhp).",
+      "params": {
+        "seconds": {
+          "type": "number",
+          "desc": "Wait duration in seconds."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Step (timeout = seconds + 1)."
+        }
+      ]
     },
     "makeStepWaitFrames": {
-      "desc": "Étape : attend un nombre de frames d'onUpdate, quelle que soit leur durée.",
-      "params": {"frames": {"type": "integer", "desc": "Nombre de frames."}},
-      "returns": [{"type": "table", "desc": "Étape."}]
+      "desc": "Step: waits for a number of onUpdate frames, whatever their duration.",
+      "params": {
+        "frames": {
+          "type": "integer",
+          "desc": "Number of frames."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Step."
+        }
+      ]
     },
     "makeStepReturnTrueFunction": {
-      "desc": "Étape : appelle fun(step, dtTable) à chaque frame jusqu'à ce qu'elle renvoie une valeur vraie.",
-      "params": {"fun": {"type": "function", "desc": "Fonction (step, dtTable) -> boolean."}},
-      "returns": [{"type": "table", "desc": "Étape."}]
+      "desc": "Step: calls fun(step, dtTable) every frame until it returns a true value.",
+      "params": {
+        "fun": {
+          "type": "function",
+          "desc": "Function (step, dtTable) -> boolean."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Step."
+        }
+      ]
     },
     "makeUiMessageStep": {
-      "desc": "Étape : affiche un message à l'écran (ui_message) et dans le journal (tag « test »), puis se termine immédiatement.",
-      "params": {"message": {"type": "string", "desc": "Texte du message."}},
-      "returns": [{"type": "table", "desc": "Étape."}]
+      "desc": "Step: displays a message on screen (ui_message) and in the log (tag \"test\"), then completes immediately.",
+      "params": {
+        "message": {
+          "type": "string",
+          "desc": "Message text."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Step."
+        }
+      ]
     },
     "makeStepSpawnVehicle": {
-      "desc": "Étape : fait apparaître un véhicule (core_vehicles.spawnNewVehicle) puis attend qu'il soit prêt (isReady) ; le callback reçoit alors (step, vehId).",
+      "desc": "Step: spawns a vehicle (core_vehicles.spawnNewVehicle) then waits for it to be ready (isReady); the callback then receives (step, vehId).",
       "params": {
-        "spawningOptions": {"type": "table", "desc": "Options d'apparition avec au moins model (et config, pos, rot…)."},
-        "callback": {"type": "function|nil", "desc": "Appelée avec (step, vehId) quand le véhicule est prêt."}
+        "spawningOptions": {
+          "type": "table",
+          "desc": "Spawn options with at least model (and config, pos, rot…)."
+        },
+        "callback": {
+          "type": "function|nil",
+          "desc": "Called with (step, vehId) when the vehicle is ready."
+        }
       },
-      "returns": [{"type": "table", "desc": "Étape."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Step."
+        }
+      ]
     },
     "makeStepSpawnVehicleSimple": {
-      "desc": "Version simple de makeStepSpawnVehicle : options construites par sanitizeVehicleSpawnOptions(model, {config = config}).",
+      "desc": "Simple version of makeStepSpawnVehicle: options built by sanitizeVehicleSpawnOptions(model, {config = config}).",
       "params": {
-        "model": {"type": "string", "desc": "Nom du modèle."},
-        "config": {"type": "string", "desc": "Chemin ou nom de la configuration (.pc)."},
-        "callback": {"type": "function|nil", "desc": "Appelée avec (step, vehId)."}
+        "model": {
+          "type": "string",
+          "desc": "Model name."
+        },
+        "config": {
+          "type": "string",
+          "desc": "Configuration path or name (.pc)."
+        },
+        "callback": {
+          "type": "function|nil",
+          "desc": "Called with (step, vehId)."
+        }
       },
-      "returns": [{"type": "table", "desc": "Étape."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Step."
+        }
+      ]
     },
     "makeStepSpawnTrafficSimple": {
-      "desc": "Étape : crée un groupe de véhicules de trafic (core_multiSpawn), attend son apparition, règle le nombre actif, active le trafic et le disperse (gameplay_traffic).",
+      "desc": "Step: creates a group of traffic vehicles (core_multiSpawn), waits for it to spawn, sets the active count, enables traffic and disperses it (gameplay_traffic).",
       "params": {
-        "amount": {"type": "integer", "desc": "Nombre de véhicules à faire apparaître."},
-        "active": {"type": "integer", "desc": "Nombre de véhicules actifs (activeAmount)."},
-        "generator": {"type": "any", "desc": "Générateur transmis à core_multiSpawn.createGroup (déduit du code)."}
+        "amount": {
+          "type": "integer",
+          "desc": "Number of vehicles to spawn."
+        },
+        "active": {
+          "type": "integer",
+          "desc": "Number of active vehicles (activeAmount)."
+        },
+        "generator": {
+          "type": "any",
+          "desc": "Generator passed to core_multiSpawn.createGroup (inferred from code)."
+        }
       },
-      "returns": [{"type": "table", "desc": "Étape."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Step."
+        }
+      ]
     },
     "makeLoadLevelStep": {
-      "desc": "Étape : charge un niveau par son nom (core_levels.startLevel) et attend onClientStartMission (timeout 600 s).",
-      "params": {"level": {"type": "string", "desc": "Nom du niveau (insensible à la casse)."}},
-      "returns": [{"type": "table", "desc": "Étape."}]
+      "desc": "Step: loads a level by name (core_levels.startLevel) and waits for onClientStartMission (timeout 600 s).",
+      "params": {
+        "level": {
+          "type": "string",
+          "desc": "Level name (case-insensitive)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Step."
+        }
+      ]
     },
     "taskSpawnTrafficStep": {
-      "desc": "Fonction processTask de l'étape de trafic : machine à états 0 (créer le groupe) → 1 (attente de onVehicleGroupSpawned) → 2 (activer le trafic).",
-      "params": {"step": {"type": "table", "desc": "Étape de trafic."}},
+      "desc": "processTask function of the traffic step: state machine 0 (create the group) → 1 (wait for onVehicleGroupSpawned) → 2 (enable traffic).",
+      "params": {
+        "step": {
+          "type": "table",
+          "desc": "Traffic step."
+        }
+      },
       "internal": true
     },
     "taskLoadLevelStep": {
-      "desc": "Fonction processTask de l'étape de chargement de niveau : lance le chargement au premier appel, journalise une erreur si le niveau est introuvable. Renvoie step.levelLoaded (jamais renseigné).",
-      "params": {"step": {"type": "table", "desc": "Étape de chargement."}},
-      "returns": [{"type": "boolean", "desc": "Toujours false en pratique."}],
+      "desc": "processTask function of the level loading step: starts the loading on the first call, logs an error if the level is not found. Returns step.levelLoaded (never set).",
+      "params": {
+        "step": {
+          "type": "table",
+          "desc": "Loading step."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Always false in practice."
+        }
+      ],
       "internal": true
     },
     "onScreenFadeState": {
-      "desc": "Hook appelé par ui_fadeScreen à chaque état du fondu : mémorise fadeState<état> sur l'étape courante si elle attend un fondu.",
-      "params": {"state": {"type": "integer", "desc": "État du fondu (1 = noir atteint, 3 = fondu retiré)."}},
+      "desc": "Hook called by ui_fadeScreen at each fade state: stores fadeState<state> on the current step if it is waiting for a fade.",
+      "params": {
+        "state": {
+          "type": "integer",
+          "desc": "Fade state (1 = black reached, 3 = fade removed)."
+        }
+      },
       "internal": true
     },
     "onVehicleGroupSpawned": {
-      "desc": "Hook appelé quand un groupe de véhicules est apparu : si c'est le groupe attendu par l'étape de trafic courante, passe son état à 2 et mémorise les identifiants.",
+      "desc": "Hook called when a vehicle group has spawned: if it is the group expected by the current traffic step, sets its state to 2 and stores the identifiers.",
       "params": {
-        "vehIds": {"type": "integer[]", "desc": "Identifiants des véhicules du groupe."},
-        "groupId": {"type": "any", "desc": "Identifiant du groupe."}
+        "vehIds": {
+          "type": "integer[]",
+          "desc": "Identifiers of the group's vehicles."
+        },
+        "groupId": {
+          "type": "any",
+          "desc": "Group identifier."
+        }
       },
       "internal": true
     },
     "onClientStartMission": {
-      "desc": "Hook appelé au démarrage d'un niveau : marque l'étape courante comme terminée.",
-      "params": {"state": {"type": "any", "desc": "Argument du hook (non utilisé)."}},
+      "desc": "Hook called when a level starts: marks the current step as complete.",
+      "params": {
+        "state": {
+          "type": "any",
+          "desc": "Hook argument (not used)."
+        }
+      },
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook appelé à chaque frame : traite l'étape courante, gère les délais d'expiration, enchaîne les étapes terminées et désactive la séquence à la fin.",
+      "desc": "Hook called every frame: processes the current step, handles timeouts, chains completed steps and disables the sequence at the end.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Durée réelle de la frame (s)."},
-        "dtSim": {"type": "number", "desc": "Durée simulée (s)."},
-        "dtRaw": {"type": "number", "desc": "Durée brute (s)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real frame time (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated duration (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw duration (s)."
+        }
       },
       "internal": true
     }

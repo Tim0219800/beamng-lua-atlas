@@ -1,22 +1,22 @@
 # `flowgraph_nodes_gameplay_recoveryPrompt_getRecoveryPromptButtonLimitAndCount`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/getRecoveryPromptButtonLimitAndCount.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/getRecoveryPromptButtonLimitAndCount.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/recoveryPrompt/getRecoveryPromptButtonLimitAndCount")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/recoveryPrompt/getRecoveryPromptButtonLimitAndCount")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Recovery Prompt Button Limit and Count » (catégorie once_instant, couleur/icône recoveryPrompt, dépend de gameplay_walk). Lit core_recoveryPrompt.getButtonLimitsAndCounts() et renvoie pour le bouton choisi (pin id) sa limite (limit) et son compteur d'utilisations (count). Valeurs -1 si absentes des données du bouton, nil si l'id est inconnu. Dans l'éditeur, la pin id propose les valeurs flipMission, recoverMission, submitMission et restartMission.
+Flowgraph node "Get Recovery Prompt Button Limit and Count" (category once_instant, recoveryPrompt color/icon, depends on gameplay_walk). Reads core_recoveryPrompt.getButtonLimitsAndCounts() and returns for the chosen button (id pin) its limit (limit) and its usage counter (count). Values -1 if absent from the button data, nil if the id is unknown. In the editor, the id pin offers the values flipMission, recoverMission, submitMission and restartMission.
 
-**Dépendances (chargées avant) :** `gameplay_walk`
+**Dependencies (loaded first):** `gameplay_walk`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Appelle builder:Middle() sans rien dessiner. | 39 |
-| `C:postInit()` | Définit les valeurs prédéfinies (hardTemplates) de la pin id. | 20 |
-| `C:workOnce(args)` | Lit les limites/compteurs et remplit limit et count pour l'id donné. | 29 |
+| `C:drawMiddle(builder, style)` | Calls builder:Middle() without drawing anything. | 39 |
+| `C:postInit()` | Sets the predefined values (hardTemplates) of the id pin. | 20 |
+| `C:workOnce(args)` | Reads the limits/counters and fills limit and count for the given id. | 29 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/getRecoveryPromptButtonLimitAndCount.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/getRecoveryPromptButtonLimitAndCount.lua`.*

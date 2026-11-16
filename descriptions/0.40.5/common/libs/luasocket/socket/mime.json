@@ -1,29 +1,62 @@
 {
   "path": "lua/common/libs/luasocket/socket/mime.lua",
-  "module": "Couche Lua du module MIME de LuaSocket (Diego Nehab, RFC 2045-2049) : encodage et décodage base64 et quoted-printable, découpe de lignes, normalisation de fins de ligne, protection des points (dot-stuffing SMTP). Construit des filtres LTN12 par-dessus les fonctions natives du module 'mime.core' (b64, unb64, qp, unqp, wrp, qpwrp, eol, dot).",
-  "usage": "local mime = require('mime')\nlocal b64 = mime.b64('texte')           -- natif (mime.core)\nlocal f = mime.encode('base64')         -- filtre ltn12\nlocal out = f('texte') .. (f(nil) or '')",
+  "module": "Lua layer of the LuaSocket MIME module (Diego Nehab, RFC 2045-2049): base64 and quoted-printable encoding and decoding, line wrapping, line-ending normalization, dot-stuffing (SMTP). Builds LTN12 filters on top of the native functions of the 'mime.core' module (b64, unb64, qp, unqp, wrp, qpwrp, eol, dot).",
+  "usage": "local mime = require('mime')\nlocal b64 = mime.b64('texte')           -- native (mime.core)\nlocal f = mime.encode('base64')         -- ltn12 filter\nlocal out = f('texte') .. (f(nil) or '')",
   "notes": [
-    "Le module fait require('mime.core') (partie native) et require('ltn12') (nom nu) : le fichier en dépend. La table renvoyée est celle de mime.core, enrichie par ce fichier, donc elle contient aussi les fonctions natives (b64, unb64, qp, unqp…).",
-    "encode, decode et wrap acceptent soit un nom d'algorithme, soit directement leurs options : si le premier argument n'est pas une chaîne, le nom 'default' est utilisé. Un nom inconnu lève l'erreur 'unknown key (...)'.",
-    "Algorithmes : encodet = base64, quoted-printable ; decodet = base64, quoted-printable ; wrapt = text, base64, default (longueur 76 par défaut), quoted-printable."
+    "The module does require('mime.core') (native part) and require('ltn12') (bare name): the file depends on them. The returned table is that of mime.core, extended by this file, so it also contains the native functions (b64, unb64, qp, unqp...).",
+    "encode, decode and wrap accept either an algorithm name or directly their options: if the first argument is not a string, the name 'default' is used. An unknown name raises the error 'unknown key (...)'.",
+    "Algorithms: encodet = base64, quoted-printable; decodet = base64, quoted-printable; wrapt = text, base64, default (length 76 by default), quoted-printable."
   ],
   "fields": {
-    "encodet": {"type": "table<string, function>", "desc": "Fabriques de filtres d'encodage ('base64', 'quoted-printable' ; en mode 'binary' le qp utilise =0D=0A)."},
-    "decodet": {"type": "table<string, function>", "desc": "Fabriques de filtres de décodage ('base64', 'quoted-printable')."},
-    "wrapt": {"type": "table<string, function>", "desc": "Fabriques de filtres de découpe de lignes ('text', 'base64', 'default', 'quoted-printable')."},
-    "encode": {"type": "function", "desc": "encode(nom, opt1, opt2) -> filtre ltn12 d'encodage choisi dans encodet."},
-    "decode": {"type": "function", "desc": "decode(nom, opt1, opt2) -> filtre ltn12 de décodage choisi dans decodet."},
-    "wrap": {"type": "function", "desc": "wrap(nom, longueur) -> filtre ltn12 de découpe de lignes choisi dans wrapt."}
+    "encodet": {
+      "type": "table<string, function>",
+      "desc": "Encoding filter factories ('base64', 'quoted-printable'; in 'binary' mode qp uses =0D=0A)."
+    },
+    "decodet": {
+      "type": "table<string, function>",
+      "desc": "Decoding filter factories ('base64', 'quoted-printable')."
+    },
+    "wrapt": {
+      "type": "table<string, function>",
+      "desc": "Line-wrapping filter factories ('text', 'base64', 'default', 'quoted-printable')."
+    },
+    "encode": {
+      "type": "function",
+      "desc": "encode(name, opt1, opt2) -> ltn12 encoding filter chosen from encodet."
+    },
+    "decode": {
+      "type": "function",
+      "desc": "decode(name, opt1, opt2) -> ltn12 decoding filter chosen from decodet."
+    },
+    "wrap": {
+      "type": "function",
+      "desc": "wrap(name, length) -> ltn12 line-wrapping filter chosen from wrapt."
+    }
   },
   "functions": {
     "normalize": {
-      "desc": "Crée un filtre qui normalise les fins de ligne vers le marqueur donné (via mime.eol).",
-      "params": {"marker": {"type": "string|nil", "desc": "Fin de ligne souhaitée (par ex. '\\r\\n')."}},
-      "returns": [{"type": "function", "desc": "Filtre LTN12."}]
+      "desc": "Creates a filter that normalizes line endings to the given marker (via mime.eol).",
+      "params": {
+        "marker": {
+          "type": "string|nil",
+          "desc": "Desired line ending (e.g. '\\r\\n')."
+        }
+      },
+      "returns": [
+        {
+          "type": "function",
+          "desc": "LTN12 filter."
+        }
+      ]
     },
     "stuff": {
-      "desc": "Crée un filtre de 'dot-stuffing' (double les points en début de ligne, pour SMTP) via mime.dot.",
-      "returns": [{"type": "function", "desc": "Filtre LTN12."}]
+      "desc": "Creates a 'dot-stuffing' filter (doubles the dots at the start of a line, for SMTP) via mime.dot.",
+      "returns": [
+        {
+          "type": "function",
+          "desc": "LTN12 filter."
+        }
+      ]
     }
   }
 }

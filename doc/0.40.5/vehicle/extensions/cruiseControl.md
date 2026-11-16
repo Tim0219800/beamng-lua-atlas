@@ -1,88 +1,88 @@
 # `cruiseControl`
 
-*Fichier : `lua/vehicle/extensions/cruiseControl.lua` · VM : Véhicule · 139 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/cruiseControl.lua` · VM: Vehicle · 139 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `cruiseControl` : `extensions.load (VM véhicule)("cruiseControl")`, puis la globale `cruiseControl`
+**Access:** extension `cruiseControl`: `extensions.load (vehicle VM)("cruiseControl")`, then the global `cruiseControl`
 
-Régulateur de vitesse (cruise control) : un PID pilote electrics.values.throttleOverride pour maintenir la vitesse de roue (electrics.values.wheelspeed, m/s) à une consigne. Il s'arrête au freinage, après un freinage post-crash et ne pilote pas la pédale si le conducteur appuie sur l'embrayage ou l'accélérateur. Un moddeur peut le piloter via setSpeed, changeSpeed, holdCurrentSpeed et setEnabled.
+Cruise control: a PID drives electrics.values.throttleOverride to keep the wheel speed (electrics.values.wheelspeed, m/s) at a setpoint. It stops on braking, after post-crash braking and does not drive the pedal if the driver presses the clutch or the throttle. A modder can drive it via setSpeed, changeSpeed, holdCurrentSpeed and setEnabled.
 
-## Exemple
+## Example
 
 ```lua
-extensions.cruiseControl.setSpeed(100 / 3.6)  -- 100 km/h en m/s, active le régulateur
+extensions.cruiseControl.setSpeed(100 / 3.6)  -- 100 km/h in m/s, enables the cruise control
 extensions.cruiseControl.setEnabled(false)
 ```
 
-## Remarques
+## Notes
 
-- Unités : vitesses en m/s. M.minimumSpeed = 30 / 3.6 (30 km/h) : la consigne est toujours bornée à ce minimum ; holdCurrentSpeed ne fait rien si la vitesse actuelle est inférieure.
-- Écrit electrics.values.throttleOverride (nil quand désactivé), cruiseControlTarget (consigne) et cruiseControlActive (booléen). Lit electrics.values.wheelspeed et postCrashBrakeTriggered. Envoie l'état à l'UI avec le hook 'CruiseControlState' ({targetSpeed, isEnabled}) si le premier joueur est assis.
-- La consigne est rampée (accélération cible 3 m/s², modifiable par setTargetAcceleration) pour éviter l'emballement de l'intégrateur ; le PID est newPIDStandard(0.3, 2, 0, ...) et la sortie est lissée par un lisseur temporel.
-- Si input.throttle > 0 ou input.clutch > 0, le régulateur reste actif mais n'écrase pas la pédale : throttleOverride prend la valeur de input.throttle.
-- hasReachedTargetSpeed devient vrai quand l'erreur relative à la consigne est <= 3 %.
-- disableOnReset (local, toujours false) : le régulateur reste donc armé au reset du véhicule ; seul hasReachedTargetSpeed et l'état interne sont remis à zéro.
-- Anomalie : le log de onReset dit 'Cruise Control online' à chaque reset.
+- Units: speeds in m/s. M.minimumSpeed = 30 / 3.6 (30 km/h): the setpoint is always clamped to this minimum; holdCurrentSpeed does nothing if the current speed is lower.
+- Writes electrics.values.throttleOverride (nil when disabled), cruiseControlTarget (setpoint) and cruiseControlActive (boolean). Reads electrics.values.wheelspeed and postCrashBrakeTriggered. Sends the state to the UI with the 'CruiseControlState' hook ({targetSpeed, isEnabled}) if the first player is seated.
+- The setpoint is ramped (target acceleration 3 m/s², changeable by setTargetAcceleration) to avoid integrator windup; the PID is newPIDStandard(0.3, 2, 0, ...) and the output is smoothed by a temporal smoother.
+- If input.throttle > 0 or input.clutch > 0, the cruise control stays active but does not override the pedal: throttleOverride takes the value of input.throttle.
+- hasReachedTargetSpeed becomes true when the relative error to the setpoint is <= 3%.
+- disableOnReset (local, always false): the cruise control therefore stays armed on vehicle reset; only hasReachedTargetSpeed and the internal state are reset.
+- Anomaly: the onReset log says 'Cruise Control online' at each reset.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `cruiseControl.changeSpeed(offset)` | Active le régulateur et ajoute un décalage à la consigne actuelle. | 81 |
-| `cruiseControl.getConfiguration()` | Renvoie la configuration courante. | 123 |
-| `cruiseControl.holdCurrentSpeed()` | Fixe la consigne sur la vitesse actuelle si elle dépasse la vitesse minimale. | 89 |
-| `cruiseControl.onReset()` | Hook de reset du véhicule : remet hasReachedTargetSpeed, l'état et le lisseur à zéro. *(interne)* *(hook)* | 23 |
-| `cruiseControl.requestState()` | Publie l'état (electrics.cruiseControlTarget/Active) et envoie 'CruiseControlState' à l'UI. | 110 |
-| `cruiseControl.setEnabled(enabled)` | Active ou désactive le régulateur ; remet throttleOverride à nil et le lisseur à zéro. | 97 |
-| `cruiseControl.setSpeed(speed)` | Active le régulateur avec la consigne donnée (bornée au minimum). | 73 |
-| `cruiseControl.setTargetAcceleration(target)` | Fixe l'accélération (en m/s²) de la rampe de consigne. | 106 |
-| `cruiseControl.updateGFX(dt)` | Appelé chaque frame : si actif, applique la régulation PID et gère les conditions d'arrêt. *(interne)* | 34 |
+| `cruiseControl.changeSpeed(offset)` | Enables the cruise control and adds an offset to the current setpoint. | 81 |
+| `cruiseControl.getConfiguration()` | Returns the current configuration. | 123 |
+| `cruiseControl.holdCurrentSpeed()` | Sets the setpoint to the current speed if it exceeds the minimum speed. | 89 |
+| `cruiseControl.onReset()` | Vehicle reset hook: resets hasReachedTargetSpeed, the state and the smoother to zero. *(internal)* *(hook)* | 23 |
+| `cruiseControl.requestState()` | Publishes the state (electrics.cruiseControlTarget/Active) and sends 'CruiseControlState' to the UI. | 110 |
+| `cruiseControl.setEnabled(enabled)` | Enables or disables the cruise control; resets throttleOverride to nil and the smoother to zero. | 97 |
+| `cruiseControl.setSpeed(speed)` | Enables the cruise control with the given setpoint (clamped to the minimum). | 73 |
+| `cruiseControl.setTargetAcceleration(target)` | Sets the acceleration (in m/s²) of the setpoint ramp. | 106 |
+| `cruiseControl.updateGFX(dt)` | Called every frame: if active, applies the PID regulation and handles the stop conditions. *(internal)* | 34 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `cruiseControl.changeSpeed(offset)`
 
-Active le régulateur et ajoute un décalage à la consigne actuelle.
+Enables the cruise control and adds an offset to the current setpoint.
 
-- `offset` (*number*) : Variation en m/s (positive ou négative).
+- `offset` (*number*) : Change in m/s (positive or negative).
 
 #### `cruiseControl.getConfiguration()`
 
-Renvoie la configuration courante.
+Returns the current configuration.
 
-- **renvoie** : table {isEnabled, targetSpeed, minimumSpeed, hasReachedTargetSpeed}.
+- **returns**: table {isEnabled, targetSpeed, minimumSpeed, hasReachedTargetSpeed}.
 
 #### `cruiseControl.setEnabled(enabled)`
 
-Active ou désactive le régulateur ; remet throttleOverride à nil et le lisseur à zéro.
+Enables or disables the cruise control; resets throttleOverride to nil and the smoother to zero.
 
-- `enabled` (*boolean*) : true pour activer.
+- `enabled` (*boolean*) : true to enable.
 
 #### `cruiseControl.setSpeed(speed)`
 
-Active le régulateur avec la consigne donnée (bornée au minimum).
+Enables the cruise control with the given setpoint (clamped to the minimum).
 
-- `speed` (*number*) : Consigne en m/s.
+- `speed` (*number*) : Setpoint in m/s.
 
 #### `cruiseControl.setTargetAcceleration(target)`
 
-Fixe l'accélération (en m/s²) de la rampe de consigne.
+Sets the acceleration (in m/s²) of the setpoint ramp.
 
-- `target` (*number*) : Accélération cible, défaut 3.
+- `target` (*number*) : Target acceleration, default 3.
 
 #### `cruiseControl.updateGFX(dt)`
 
-Appelé chaque frame : si actif, applique la régulation PID et gère les conditions d'arrêt.
+Called every frame: if active, applies the PID regulation and handles the stop conditions.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `hasReachedTargetSpeed` | boolean | true quand la vitesse est à moins de 3 % de la consigne. |
-| `minimumSpeed` | number | Consigne minimale en m/s (30 km/h). |
+| `hasReachedTargetSpeed` | boolean | true when the speed is within 3% of the setpoint. |
+| `minimumSpeed` | number | Minimum setpoint in m/s (30 km/h). |
 
-**Évènements UI (guihooks.trigger) :** `CruiseControlState`
+**UI events (guihooks.trigger):** `CruiseControlState`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/cruiseControl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/cruiseControl.lua`.*

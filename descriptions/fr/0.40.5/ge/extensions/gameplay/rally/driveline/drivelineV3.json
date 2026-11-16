@@ -1,0 +1,194 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/driveline/drivelineV3.lua",
+  "module": "Troisième version de la driveline de rallye : transforme l'enregistrement de reconnaissance (recce) en une spline éditable, puis en une liste de points finaux. Pipeline : charge les points bruts (DrivelineRecording.load), les simplifie par l'algorithme RDP en nœuds de spline, calcule la géométrie lissée collée au terrain (zSnap.conformSplineGeometry, avec ou sans raycast), puis génère les points finaux (position, quaternion, normale, ts simulé à 5 Hz). Sait aussi sauvegarder/charger la spline (JSON), charger l'ancienne driveline finale, dessiner les tracés de débogage/éditeur, projeter deux positions sur la driveline pour obtenir les points ou la distance entre elles, et lire les propriétés (limite de vitesse, temps alloué en liaison). Le module renvoie un constructeur : require(...)(missionDir).",
+  "usage": "local dl = require('/lua/ge/extensions/gameplay/rally/driveline/drivelineV3')(missionDir)\nif dl:loadDrivelineFromFile() or dl:loadFromRecording() then\n  local pointList = dl:getFinalPointList()\nend",
+  "notes": [
+    "Propriétés (self.properties) : speedLimitKph (100 par défaut), liaisonAllocatedTimeMins (5), useRaycast (false), vertRayRaise (2.0, bornée à [0,1 ; 20]). Elles sont sauvegardées dans le fichier de spline avec 'stats'.",
+    "Le temps ts des points finaux est simulé : indice / 5.0 (5 Hz), ce n'est pas le temps réellement enregistré.",
+    "loadDrivelineFromFile : si le fichier de spline existe on l'utilise, sinon repli sur l'ancien fichier de driveline finale (convertie en spline).",
+    "La simplification force une largeur constante (DrivelineUtil.defaultSplineWidth) pour tous les nœuds.",
+    "calculateDistanceBetweenPoints renvoie 0 si la driveline finale n'est pas disponible. La distance est mesurée le long de la driveline avec projection (xnorm) pour les segments partiels de début et de fin ; l'ordre de p1 et p2 est sans importance.",
+    "Les fichiers sont choisis via rallyUtil.drivelineSplineFile(missionDir) et rallyUtil.finalDrivelineFile(missionDir)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Driveline V3 renvoyée par le constructeur. Attributs : missionDir, rawDrivelinePoints, spline, finalDrivelinePoints, simplificationTolerance, properties, stats.",
+      "functions": {
+        "init": {
+          "desc": "Mémorise le dossier de mission et initialise l'état (tolérance de simplification par défaut, propriétés par défaut, aucune donnée chargée).",
+          "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}},
+          "returns": [],
+          "internal": true
+        },
+        "createEmptySpline": {
+          "desc": "Crée une table de spline vide ({name, id, isDirty, isEnabled, isLoop, nodes, widths, nmls, divPoints, divWidths, tangents, binormals, normals, discMap}). L'id est un UUID si absent.",
+          "params": {
+            "name": {"type": "string|nil", "desc": "Nom ('Driveline' par défaut)."},
+            "isLoop": {"type": "boolean|nil", "desc": "Spline fermée."},
+            "id": {"type": "string|nil", "desc": "Identifiant."}
+          },
+          "returns": [{"type": "table", "desc": "Spline vide."}],
+          "internal": false
+        },
+        "loadPropertiesFromData": {
+          "desc": "Lit data.properties (speedLimitKph, liaisonAllocatedTimeMins, useRaycast, vertRayRaise) avec valeurs par défaut.",
+          "params": {"data": {"type": "table|nil", "desc": "Données JSON."}},
+          "returns": [],
+          "internal": false
+        },
+        "serializeSpline": {
+          "desc": "Sérialise la spline courante en table JSON {version=1, name, isLoop, nodes, widths, nmls, properties, stats}. Renvoie nil si moins de 2 nœuds.",
+          "params": {},
+          "returns": [{"type": "table|nil", "desc": "Données de la spline."}],
+          "internal": false
+        },
+        "loadSplineFromData": {
+          "desc": "Construit la spline à partir de données JSON (nodes, widths, nmls, properties, stats). Échoue si moins de 2 nœuds ou un nœud invalide.",
+          "params": {"data": {"type": "table", "desc": "Données lues d'un fichier de spline."}},
+          "returns": [{"type": "boolean", "desc": "true si chargée."}],
+          "internal": false
+        },
+        "saveSplineToFile": {
+          "desc": "Écrit la spline dans le fichier de spline de la mission (dossier créé au besoin).",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true si l'écriture a réussi."}],
+          "internal": false
+        },
+        "loadDrivelineSplineFromFile": {
+          "desc": "Charge la spline depuis son fichier, calcule sa géométrie et génère les points finaux.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true si tout a réussi."}],
+          "internal": false
+        },
+        "loadRecceRecording": {
+          "desc": "Charge les points bruts enregistrés pendant la reconnaissance (DrivelineRecording.load) dans rawDrivelinePoints.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true si chargés."}],
+          "internal": false
+        },
+        "loadFinalDrivelineFromFile": {
+          "desc": "Charge l'ancienne driveline finale (liste de points [x,y,z], au moins 2) et en fait des points complets ; lit aussi les propriétés.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true si chargée."}],
+          "internal": false
+        },
+        "loadDrivelineFromFile": {
+          "desc": "Charge la driveline depuis un fichier : spline si présente, sinon driveline finale ancienne convertie en spline puis régénérée.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true si chargée."}],
+          "internal": false
+        },
+        "loadFromRecording": {
+          "desc": "Pipeline complet : charge l'enregistrement recce, convertit en spline, calcule la géométrie, génère les points finaux.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true si toutes les étapes ont réussi."}],
+          "internal": false
+        },
+        "convertDrivelineToSpline": {
+          "desc": "Convertit des points de driveline en spline : positions, largeur constante, normales ; simplification RDP (tolérance simplificationTolerance). Journalise le taux de réduction.",
+          "params": {"drivelinePoints": {"type": "table[]|nil", "desc": "Points {pos, normal?} ; par défaut rawDrivelinePoints. S'ils sont fournis, ils remplacent rawDrivelinePoints."}},
+          "returns": [{"type": "boolean", "desc": "false s'il y a moins de 2 points."}],
+          "internal": false
+        },
+        "updateSplineGeometry": {
+          "desc": "Recalcule la géométrie secondaire de la spline (points subdivisés divPoints, tangentes, normales...) conforme au terrain via zSnap.conformSplineGeometry, et sa longueur roadLength.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "false si pas de spline ou moins de 2 nœuds."}],
+          "internal": false
+        },
+        "createDrivelinePointsFromPositions": {
+          "desc": "Convertit une liste de positions en points complets : orientation (quatFromDir depuis la direction vers le point suivant), ts = indice/5, chaînage prev/next/id, normale (SnaproadNormals.forwardNormalVec), pacenoteDistances et cachedPacenotes vides.",
+          "params": {"positions": {"type": "vec3[]", "desc": "Au moins 2 positions."}},
+          "returns": [{"type": "table[]|nil", "desc": "Points, nil si moins de 2 positions."}],
+          "internal": false
+        },
+        "createDrivelineFromSpline": {
+          "desc": "Génère finalDrivelinePoints à partir des points subdivisés de la spline (divPoints). Met finalDrivelinePoints à nil si la spline n'est pas prête.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true si des points finaux existent."}],
+          "internal": false
+        },
+        "getFinalPointList": {
+          "desc": "Renvoie un PointList construit à partir des points finaux (nil et avertissement s'il y en a moins de 2).",
+          "params": {},
+          "returns": [{"type": "table|nil", "desc": "Instance de PointList."}],
+          "internal": false
+        },
+        "deepCopySpline": {
+          "desc": "Copie profonde de la spline (nodes, widths, nmls et métadonnées simples) pour annuler/rétablir dans l'éditeur. Ne copie pas la géométrie secondaire.",
+          "params": {},
+          "returns": [{"type": "table|nil", "desc": "Copie de la spline."}],
+          "internal": false
+        },
+        "renderRawDriveline": {
+          "desc": "Dessine (debugDrawer) les points bruts : cylindres rose-violet entre points et petits piquets verticaux. À appeler à chaque frame.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "renderSmoothCurve": {
+          "desc": "Dessine la courbe lissée (divPoints) comme un prisme bleu de la largeur d'un véhicule.",
+          "params": {"lineWidth": {"type": "number|nil", "desc": "Largeur du prisme en m (1,945 par défaut)."}},
+          "returns": [],
+          "internal": false
+        },
+        "renderFinalDriveline": {
+          "desc": "Dessine les points finaux en cylindres rouges semi-transparents avec piquets.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "renderSpline": {
+          "desc": "Dessine la spline éditable (outils d'éditeur rSpline) avec marqueurs de début et de fin ; pour un seul nœud, dessine la sphère du nœud.",
+          "params": {"selectedNodeIdx": {"type": "integer|nil", "desc": "Nœud sélectionné (surligné)."}},
+          "returns": [],
+          "internal": false
+        },
+        "getSpeedLimitKph": {
+          "desc": "Limite de vitesse de la driveline (propriété speedLimitKph).",
+          "params": {},
+          "returns": [{"type": "number", "desc": "km/h."}],
+          "internal": false
+        },
+        "getLiaisonAllocatedTimeSecs": {
+          "desc": "Temps alloué pour la liaison, en secondes (liaisonAllocatedTimeMins x 60).",
+          "params": {},
+          "returns": [{"type": "number", "desc": "Secondes."}],
+          "internal": false
+        },
+        "_findSegmentRange": {
+          "desc": "Projette p1 et p2 sur les segments de la driveline finale (projection la plus proche) et renvoie la plage de segments ordonnée : startIdx, startXnorm, endIdx, endXnorm (le début vient toujours en premier). nil si non résolu.",
+          "params": {
+            "p1": {"type": "vec3", "desc": "Premier point."},
+            "p2": {"type": "vec3", "desc": "Second point."}
+          },
+          "returns": [
+            {"type": "integer|nil", "desc": "startIdx."},
+            {"type": "number|nil", "desc": "startXnorm."},
+            {"type": "integer|nil", "desc": "endIdx."},
+            {"type": "number|nil", "desc": "endXnorm."}
+          ],
+          "internal": true
+        },
+        "getPointsBetween": {
+          "desc": "Liste ordonnée des points finaux couvrant l'intervalle entre p1 et p2 (extrémités de segments incluses).",
+          "params": {
+            "p1": {"type": "vec3", "desc": "Premier point."},
+            "p2": {"type": "vec3", "desc": "Second point."}
+          },
+          "returns": [{"type": "table[]|nil", "desc": "Points, ou nil si non résolu."}],
+          "internal": false
+        },
+        "calculateDistanceBetweenPoints": {
+          "desc": "Distance le long de la driveline finale entre les projections de p1 et p2 (segments partiels de début et de fin calculés avec xnorm).",
+          "params": {
+            "p1": {"type": "vec3", "desc": "Premier point."},
+            "p2": {"type": "vec3", "desc": "Second point."}
+          },
+          "returns": [{"type": "number", "desc": "Distance en mètres (0 si non résolu)."}],
+          "internal": false
+        }
+      }
+    }
+  }
+}

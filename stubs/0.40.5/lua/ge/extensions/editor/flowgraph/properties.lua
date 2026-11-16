@@ -2,111 +2,111 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/flowgraph/properties.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe de la fenêtre (windowName 'fg_properties', windowDescription 'Properties').
+--- Window class (windowName 'fg_properties', windowDescription 'Properties').
 ---@class editor_flowgraph_properties_C
 local editor_flowgraph_properties_C = {}
 
---- Dessine une table de données en deux colonnes clé/valeur (clés triées), ou une seule ligne si la seule clé est 'value'.
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:158
----@param path string Préfixe d'identifiants.
----@param cdata table Cache ImGui.
----@param v table Table éditée.
----@param savePath string Chemin de base.
+--- Draws a data table in two key/value columns (sorted keys), or a single row if the only key is 'value'.
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:158
+---@param path string Identifier prefix.
+---@param cdata table ImGui cache.
+---@param v table Edited table.
+---@param savePath string Base path.
 ---@param saveCallback function|nil function(savePath, newValue).
----@param keysEditable boolean|nil Permettre le renommage des clés.
+---@param keysEditable boolean|nil Allow renaming the keys.
 function editor_flowgraph_properties_C:_drawDataTable(path, cdata, v, savePath, saveCallback, keysEditable) end
 
---- Dessine un champ d'édition adapté au type de valeur et appelle saveCallback quand la saisie est validée.
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:24
----@param path string Identifiant unique du champ.
----@param cdata table Cache des valeurs ImGui.
----@param type string Type Lua de la valeur ('number', 'string', 'boolean'…).
----@param v any Valeur courante.
----@param savePath string Chemin transmis au callback.
+--- Draws an edit field suited to the value type and calls saveCallback when the input is validated.
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:24
+---@param path string Unique field identifier.
+---@param cdata table Cache of ImGui values.
+---@param type string Lua type of the value ('number', 'string', 'boolean'...).
+---@param v any Current value.
+---@param savePath string Path passed to the callback.
 ---@param saveCallback function function(savePath, newValue).
----@param enterOnly boolean|nil Valider seulement avec Entrée (déduit du nom).
----@param padRight number|nil Marge droite en pixels.
----@param pin table|nil Pin concerné (numericSetup).
+---@param enterOnly boolean|nil Validate only with Enter (inferred from the name).
+---@param padRight number|nil Right margin in pixels.
+---@param pin table|nil Pin concerned (numericSetup).
 function editor_flowgraph_properties_C:_drawInputField(path, cdata, type, v, savePath, saveCallback, enterOnly, padRight, pin) end
 
---- Dessine un sélecteur de couleur RGBA pour une propriété personnalisée et l'écrit dans item[customName] à la fin de l'édition.
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:199
----@param item table Nœud ou graphe.
----@param customName string Nom du champ couleur.
----@param cdata table Tableau ImGui de 4 flottants.
----@return string|nil  Raison d'historique si modifié.
+--- Draws an RGBA color picker for a custom property and writes it to item[customName] at the end of the edit.
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:199
+---@param item table Node or graph.
+---@param customName string Name of the color field.
+---@param cdata table ImGui array of 4 floats.
+---@return string|nil  History reason if modified.
 function editor_flowgraph_properties_C:customPropertyColor(item, customName, cdata) end
 
---- Dessine la fenêtre : surligne les liens des nœuds sélectionnés, gère le changement de sélection, affiche le nœud sélectionné ou les propriétés du graphe.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:1020
----@param dt number Delta temps réel (s), passé à node:drawCustomProperties.
+--- Draws the window: highlights the links of the selected nodes, handles selection changes, displays the selected node or the graph properties.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:1020
+---@param dt number Real delta time (s), passed to node:drawCustomProperties.
 function editor_flowgraph_properties_C:draw(dt) end
 
---- Dessine la section « Input Pins » éditable pour les nœuds à pins d'entrée personnalisés (allowCustomInPins).
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:397
----@param item table Nœud.
+--- Draws the editable "Input Pins" section for nodes with custom input pins (allowCustomInPins).
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:397
+---@param item table Node.
 function editor_flowgraph_properties_C:drawCustomInPins(item) end
 
---- Dessine la section de pins de sortie éditable (allowCustomOutPins).
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:610
----@param item table Nœud.
+--- Draws the editable output pins section (allowCustomOutPins).
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:610
+---@param item table Node.
 function editor_flowgraph_properties_C:drawCustomOutPins(item) end
 
---- Dessine les propriétés d'un graphe (nom, avec mise à jour du nœud intégré pour une macro, etc.).
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:1156
----@param graph table Graphe courant.
+--- Draws the properties of a graph (name, with update of the integrated node for a macro, etc.).
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:1156
+---@param graph table Current graph.
 function editor_flowgraph_properties_C:drawGraphProperties(graph) end
 
---- Dessine le combo « ... » proposant des modèles de valeur codée en dur pour un pin (sélection de fichier si pin.allowFiles, chemin relatif au dossier du projet).
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:745
----@param pin table Pin d'entrée.
----@param item table Nœud.
+--- Draws the "..." combo offering hardcoded value templates for a pin (file selection if pin.allowFiles, path relative to the project folder).
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:745
+---@param pin table Input pin.
+---@param item table Node.
 function editor_flowgraph_properties_C:drawHardTemplates(pin, item) end
 
---- Dessine la section « Input Pins » : visibilité, icône de type, nom, valeur codée en dur ou lien.
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:804
----@param item table Nœud.
+--- Draws the "Input Pins" section: visibility, type icon, name, hardcoded value or link.
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:804
+---@param item table Node.
 function editor_flowgraph_properties_C:drawInPins(item) end
 
---- Dessine l'en-tête coloré de l'élément avec son nom et le bouton de modification (mode_edit) du nom et des couleurs.
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:231
----@param item table Nœud ou graphe.
+--- Draws the item's colored header with its name and the edit button (mode_edit) for the name and colors.
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:231
+---@param item table Node or graph.
 function editor_flowgraph_properties_C:drawItemHeader(item) end
 
---- Dessine la table data de l'élément puis ses pins d'entrée et de sortie (éditables ou non).
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:976
----@param itemType string Type d'élément (non utilisé directement).
----@param item table Nœud.
+--- Draws the item's data table then its input and output pins (editable or not).
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:976
+---@param itemType string Item type (not used directly).
+---@param item table Node.
 function editor_flowgraph_properties_C:drawItemProperties(itemType, item) end
 
---- Dessine la section « Output Pins » : visibilité (masquable si non lié), type, nom et valeur courante (pin._value).
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:934
----@param item table Nœud.
+--- Draws the "Output Pins" section: visibility (can be hidden if not linked), type, name and current value (pin._value).
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:934
+---@param item table Node.
 function editor_flowgraph_properties_C:drawOutPins(item) end
 
---- Renvoie le premier type (ordre alphabétique) autorisé d'une table de types ; 'number' si types est nil, 'bool' si aucun.
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:388
----@param types table<string, boolean>|nil Types autorisés.
----@return string  Nom de type.
+--- Returns the first allowed type (alphabetical order) of a types table; 'number' if types is nil, 'bool' if none.
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:388
+---@param types table<string, boolean>|nil Allowed types.
+---@return string  Type name.
 function editor_flowgraph_properties_C:getFirstAllowedType(types) end
 
---- Enregistre la fenêtre (visible par défaut) et charge la texture d'en-tête art/imgui_node_header.png.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:18
+--- Registers the window (visible by default) and loads the header texture art/imgui_node_header.png.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:18
 function editor_flowgraph_properties_C:init() end
 
---- Prépare les champs d'édition du nom et des couleurs (customColor/color, iconColor) d'un élément.
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:211
----@param item table Nœud ou graphe.
+--- Prepares the name and color (customColor/color, iconColor) edit fields of an item.
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:211
+---@param item table Node or graph.
 function editor_flowgraph_properties_C:initCustomProperties(item) end
 
---- Liste les tags de macro du projet (mgr.macroTags) avec renommage et suppression.
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:1133
+--- Lists the project's macro tags (mgr.macroTags) with renaming and deletion.
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:1133
 function editor_flowgraph_properties_C:showAvailableMacroTags() end
 
---- Appelle hideProperties sur le nœud précédemment affiché et réinitialise les états d'édition. Appelée à la fermeture de la fenêtre.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/flowgraph/properties.lua:1124
+--- Calls hideProperties on the previously displayed node and resets the edit states. Called when the window closes.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/flowgraph/properties.lua:1124
 function editor_flowgraph_properties_C:unselect() end
 

@@ -1,0 +1,19 @@
+{
+  "path": "lua/vehicle/controller/powertrainControl/rimPullControl.lua",
+  "module": "Contrôleur auxiliaire de « rim pull » (commande de traction sur jante, ex. engins ferroviaires/tracteurs) : un axe d'entrée input.rimPull (0..1) réduit progressivement l'embrayage de la turbine du convertisseur de couple (de 1 à 0.2 entre 0 et 0.5) puis ajoute du frein (de 0 à 1 entre 0.5 et 1). Il s'exécute avant vehicleController (defaultOrder 40) pour modifier input.brake avant son utilisation.",
+  "notes": [
+    "Clé jbeam lue : torqueConverterName (\"torqueConverter\").",
+    "Si le convertisseur est introuvable, log D et updateGFX devient nop.",
+    "input.rimPull est lu mais aucune action d'entrée dans ce fichier ne l'alimente ; il doit venir des actions/bindings.",
+    "Le contrôleur modifie input.brake (max avec la sortie frein) et relevantTorqueConverter.impellerClutchCoef."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution (40)."}
+  },
+  "functions": {
+    "init": {"desc": "Récupère le convertisseur de couple (jbeam torqueConverterName).", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "reset": {"desc": "Ne fait rien.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "updateGFX": {"desc": "Chaque frame : convertit input.rimPull en consigne d'embrayage de turbine et en frein additionnel.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+  }
+}

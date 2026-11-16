@@ -1,0 +1,18 @@
+{
+  "path": "lua/vehicle/controller/powertrainControl/combustionEngineGovenor.lua",
+  "module": "Contrôleur auxiliaire « régulateur de régime » d'un moteur thermique (le nom du fichier contient la faute « Govenor »). Un PID calcule une commande de gaz pour que le régime du moteur suive une consigne qui varie linéairement de rpmTarget0 à rpmTarget1 selon l'entrée d'accélérateur ; la commande est publiée dans electrics.values.throttleGoverned (ou nom jbeam).",
+  "notes": [
+    "Clés jbeam lues : controlledEngineName (\"mainEngine\"), rpmPIDp (0.5), rpmPIDi (0.1), rpmPIDd (0.05), rpmTarget0 (ralenti du moteur), rpmTarget1 (régime max du moteur), throttleCommandElectricsName (\"throttleGoverned\"), throttleInputElectricsName (\"throttle\").",
+    "Le moteur introuvable laisse M.updateFixedStep à nil (log E « throttleGovenor »).",
+    "updateFixedStep est nil à la déclaration et affecté seulement après une init réussie.",
+    "Le contrôleur n'écrit que l'electric de commande : c'est à un autre élément (jbeam/électrique) de l'utiliser pour piloter le moteur."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "updateFixedStep": {"type": "function|nil", "desc": "Boucle PID, affectée dans init si le moteur est trouvé."}
+  },
+  "functions": {
+    "init": {"desc": "Récupère le moteur, crée le PID, calcule les consignes de vitesse angulaire et les noms d'electrics.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "reset": {"desc": "Réinitialise le PID si le moteur existe.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true}
+  }
+}

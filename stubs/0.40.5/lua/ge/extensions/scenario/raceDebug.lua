@@ -2,20 +2,20 @@
 -- tim19Atlas stub generated from lua/ge/extensions/scenario/raceDebug.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Aide de débogage visuel pour les courses de scénario : calcule le chemin entre les waypoints de lapConfig (map.getPath) et le dessine avec debugDrawer (sphères rouges aux waypoints, prismes verts le long de la route, rouges quand le segment est direct). N'est actif que si l'éditeur est activé et que le réglage BeamNGRaceDrawDebug est vrai.
---- Accès : extension `scenario_raceDebug` : `extensions.load("scenario_raceDebug")`, puis la globale `scenario_raceDebug`
+--- Visual debugging aid for scenario races: computes the path between the lapConfig waypoints (map.getPath) and draws it with debugDrawer (red spheres at waypoints, green prisms along the road, red when the segment is direct). Only active if the editor is enabled and the BeamNGRaceDrawDebug setting is true.
+--- Access: extension `scenario_raceDebug`: `extensions.load("scenario_raceDebug")`, then the global `scenario_raceDebug`
 ---@class scenario_raceDebug
 scenario_raceDebug = {}
 
---- Hook de dessin debug appelé à chaque image : dessine les waypoints (sphère de rayon n.radius et libellé 'wp i/N') et le chemin calculé.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/raceDebug.lua:46
----@param focusPos vec3 Position de focus de la caméra (non utilisée).
+--- Debug draw hook called every frame: draws the waypoints (sphere of radius n.radius and label 'wp i/N') and the computed path.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/raceDebug.lua:46
+---@param focusPos vec3 Camera focus position (unused).
 function scenario_raceDebug.onDrawDebug(focusPos) end
 
---- Hook appelé à chaque changement d'état du scénario. Si le scénario est 'running' et possède lapConfig, remplit currentScenario.debugPath (noeuds de la route) et currentScenario.debugNodes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/raceDebug.lua:7
----@param scenario table Scénario (non utilisé, le scénario courant est relu).
+--- Hook called on every scenario state change. If the scenario is 'running' and has lapConfig, fills currentScenario.debugPath (road nodes) and currentScenario.debugNodes.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/raceDebug.lua:7
+---@param scenario table Scenario (unused, the current scenario is re-read).
 function scenario_raceDebug.onScenarioChange(scenario) end
 

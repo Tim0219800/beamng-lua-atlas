@@ -1,12 +1,12 @@
 # `editor_missionPlaybook`
 
-*Fichier : `lua/ge/extensions/editor/missionPlaybook.lua` · VM : Game Engine (GE) · 471 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/missionPlaybook.lua` · VM: Game Engine (GE) · 471 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_missionPlaybook` : `extensions.load("editor_missionPlaybook")`, puis la globale `editor_missionPlaybook`
+**Access:** extension `editor_missionPlaybook`: `extensions.load("editor_missionPlaybook")`, then the global `editor_missionPlaybook`
 
-Extension d'éditeur « Mission Playbook » (menu Missions). Un playbook est une liste d'instructions (book.instructions) rejouées sur un slot de carrière pour tester le déblocage des missions : chaque instruction missionAttempt donne une mission et les étoiles obtenues, et est exécutée via gameplay_missions_progress.generateAttempt. Après chaque étape, le hook onPlaybookLogAfterStep est émis pour que les visionneuses (attributs, missions débloquées, arbre) enregistrent leur état dans book.results. La fenêtre permet de sauver/charger un playbook (.missionPlaybook.json, dossier missionPlaybooks/), de rejouer sur le slot courant ou un slot vide (playbookTestingSlot) et de générer automatiquement des playbooks (toutes missions, par tier, par branche, étoiles par défaut ou bonus).
+"Mission Playbook" editor extension (Missions menu). A playbook is a list of instructions (book.instructions) replayed on a career slot to test mission unlocking: each missionAttempt instruction gives a mission and the stars obtained, and is run via gameplay_missions_progress.generateAttempt. After each step, the hook onPlaybookLogAfterStep is emitted so the viewers (attributes, unlocked missions, tree) record their state in book.results. The window lets you save/load a playbook (.missionPlaybook.json, missionPlaybooks/ folder), replay on the current slot or an empty slot (playbookTestingSlot) and automatically generate playbooks (all missions, by tier, by branch, default or bonus stars).
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('editor_missionPlaybook')
@@ -14,61 +14,61 @@ editor_missionPlaybook.book.instructions[#editor_missionPlaybook.book.instructio
 editor_missionPlaybook.show()
 ```
 
-## Remarques
+## Notes
 
-- Les entrées « Run » et « Util » du menu sont désactivées tant que la carrière n'est pas active (career_career.isActive()) ; il faut charger la carrière à la main une première fois.
-- « Clear Testing Slot » et « Play with Empty Slot » désactivent la carrière, SUPPRIMENT le profil playbookTestingSlot (career_saveSystem.removeProfile) puis le recréent.
-- Bug : dans le menu Load, un échec de chargement assigne M.book = M.book.instructions (une liste d'instructions, pas un livre), ce qui casse M.book.page et M.book.results ; il manque probablement « or M.book ».
-- onEditorRegisterPreferences ne fait rien (code commenté).
-- La génération (generateAndPlaybook) exécute réellement les tentatives sur la progression du slot courant, jusqu'à 10000 étapes ou plus d'étoiles disponibles ; elle modifie la sauvegarde de carrière.
-- Du code de débogage (dump) reste actif dans play et getAllRemainingStarCombos.
+- The "Run" and "Util" menu entries are disabled as long as the career is not active (career_career.isActive()); you must load the career manually once first.
+- "Clear Testing Slot" and "Play with Empty Slot" deactivate the career, DELETE the playbookTestingSlot profile (career_saveSystem.removeProfile) then recreate it.
+- Bug: in the Load menu, a load failure assigns M.book = M.book.instructions (a list of instructions, not a book), which breaks M.book.page and M.book.results; "or M.book" is probably missing.
+- onEditorRegisterPreferences does nothing (commented-out code).
+- The generation (generateAndPlaybook) really runs the attempts on the current slot's progress, up to 10000 steps or until no stars are left; it modifies the career save.
+- Debug code (dump) remains active in play and getAllRemainingStarCombos.
 
-**Dépendances (chargées avant) :** `gameplay_missions_missions`, `editor_missionPlaybook_attributeViewer`, `editor_missionPlaybook_unlockedMissionsViewer`, `editor_missionPlaybook_missionTreeViewer`
+**Dependencies (loaded first):** `gameplay_missions_missions`, `editor_missionPlaybook_attributeViewer`, `editor_missionPlaybook_unlockedMissionsViewer`, `editor_missionPlaybook_missionTreeViewer`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_missionPlaybook.drawBookViewer()` | Dessine le curseur de page (1 à #book.results) et la case « Condensed ». Appelée par onEditorGui. *(interne)* | 430 |
-| `editor_missionPlaybook.onDeserialized(data)` | Restaure book et condensed après un rechargement des extensions. *(interne)* *(hook)* | 454 |
-| `editor_missionPlaybook.onEditorGui()` | Hook d'éditeur appelé à chaque frame : dessine la fenêtre « Mission Playbook » (menus File, Util, Run, Generate, liste des instructions avec boutons Up/Down/Remove hors mode condensé, bouton « Add... »). *(interne)* *(hook)* | 251 |
-| `editor_missionPlaybook.onEditorInitialized()` | Hook appelé quand l'éditeur est initialisé : enregistre la fenêtre (1500x700) et l'entrée de menu « Missions ». *(interne)* *(hook)* | 408 |
-| `editor_missionPlaybook.onEditorRegisterPreferences(prefsRegistry)` | Hook d'enregistrement des préférences d'éditeur ; vide. *(interne)* *(hook)* | 415 |
-| `editor_missionPlaybook.onSerialize()` | Appelé lors du rechargement des extensions Lua : renvoie {book, condensed} pour sauvegarder l'état. *(interne)* *(hook)* | 446 |
-| `editor_missionPlaybook.show()` | Affiche la fenêtre « Mission Playbook ». | 403 |
+| `editor_missionPlaybook.drawBookViewer()` | Draws the page slider (1 to #book.results) and the "Condensed" checkbox. Called by onEditorGui. *(internal)* | 430 |
+| `editor_missionPlaybook.onDeserialized(data)` | Restores book and condensed after an extensions reload. *(internal)* *(hook)* | 454 |
+| `editor_missionPlaybook.onEditorGui()` | Editor hook called every frame: draws the "Mission Playbook" window (File, Util, Run, Generate menus, list of instructions with Up/Down/Remove buttons outside condensed mode, "Add..." button). *(internal)* *(hook)* | 251 |
+| `editor_missionPlaybook.onEditorInitialized()` | Hook called when the editor is initialized: registers the window (1500x700) and the "Missions" menu entry. *(internal)* *(hook)* | 408 |
+| `editor_missionPlaybook.onEditorRegisterPreferences(prefsRegistry)` | Editor preferences registration hook; empty. *(internal)* *(hook)* | 415 |
+| `editor_missionPlaybook.onSerialize()` | Called when the Lua extensions are reloaded: returns {book, condensed} to save the state. *(internal)* *(hook)* | 446 |
+| `editor_missionPlaybook.show()` | Shows the "Mission Playbook" window. | 403 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_missionPlaybook.onDeserialized(data)`
 
-Restaure book et condensed après un rechargement des extensions.
+Restores book and condensed after an extensions reload.
 
-- `data` (*table|nil*) : Données renvoyées par onSerialize.
+- `data` (*table|nil*) : Data returned by onSerialize.
 
 #### `editor_missionPlaybook.onEditorRegisterPreferences(prefsRegistry)`
 
-Hook d'enregistrement des préférences d'éditeur ; vide.
+Editor preferences registration hook; empty.
 
-- `prefsRegistry` (*table*) : Registre de préférences.
+- `prefsRegistry` (*table*) : Preferences registry.
 
 #### `editor_missionPlaybook.onSerialize()`
 
-Appelé lors du rechargement des extensions Lua : renvoie {book, condensed} pour sauvegarder l'état.
+Called when the Lua extensions are reloaded: returns {book, condensed} to save the state.
 
-- **renvoie** : table Données à conserver.
+- **returns**: table Data to keep.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `book` | table | Livre courant : {page = integer, instructions = table[], results = table[]}. Sérialisé par onSerialize. |
-| `dependencies` | string[] | Extensions chargées avant : gameplay_missions_missions et les trois visionneuses du playbook. |
+| `book` | table | Current book: {page = integer, instructions = table[], results = table[]}. Serialized by onSerialize. |
+| `dependencies` | string[] | Extensions loaded before: gameplay_missions_missions and the three playbook viewers. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onPlaybookLogAfterStep` — écouté par 3 module(s)
+- `onPlaybookLogAfterStep` — listened to by 3 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionPlaybook.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/missionPlaybook.lua`.*

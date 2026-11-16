@@ -1,46 +1,70 @@
 {
   "path": "lua/ge/extensions/gameplay/missions/missionTypes/baseMission.lua",
-  "module": "Classe de base des types de mission (non-flowgraph). Le module renvoie une fabrique `function(derivedClass, ...)` : elle crée un objet à partir de la table d'options, lui donne la métatable C, appelle init(), copie dans l'objet toutes les clés de la classe dérivée (qui écrasent donc les méthodes de base), puis rappelle init(). Fournit des méthodes vides onStart / onUpdate / onStop que les types de mission surchargent, et la traduction des clés de progression.",
-  "usage": "-- dans un type de mission : local C = {}\n-- ... définir C:init(), C:onStart() ...\n-- return require('/lua/ge/extensions/gameplay/missions/missionTypes/baseMission')(C, ...)",
+  "module": "Base class of mission types (non-flowgraph). The module returns a factory `function(derivedClass, ...)`: it creates an object from the options table, gives it the metatable C, calls init(), copies into the object all keys of the derived class (which therefore overwrite the base methods), then calls init() again. Provides empty onStart / onUpdate / onStop methods that mission types override, and the translation of progress keys.",
+  "usage": "-- in a mission type: local C = {}\n-- ... define C:init(), C:onStart() ...\n-- return require('/lua/ge/extensions/gameplay/missions/missionTypes/baseMission')(C, ...)",
   "notes": [
-    "init() est appelé DEUX fois par la fabrique : une fois avec la version de base (avant la copie des clés dérivées), une fois après (version dérivée si elle existe). Une init dérivée doit donc supporter d'être exécutée sur un objet déjà initialisé ; seule la valeur de retour du second appel est renvoyée (2e valeur de retour de la fabrique).",
-    "Les clés de la classe dérivée sont copiées dans l'objet lui-même (o[k] = v), pas dans une métatable : elles masquent les méthodes de C.",
-    "C.__index = C est réassigné à chaque création d'objet (inoffensif)."
+    "init() is called TWICE by the factory: once with the base version (before the derived keys are copied), once after (derived version if it exists). A derived init must therefore tolerate being run on an already initialized object; only the return value of the second call is returned (2nd return value of the factory).",
+    "The derived class's keys are copied into the object itself (o[k] = v), not into a metatable: they mask the methods of C.",
+    "C.__index = C is reassigned on every object creation (harmless)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe de base d'une mission. L'objet porte les données de la mission (missionType, etc.) fournies via la table d'options.",
+      "desc": "Base class of a mission. The object carries the mission data (missionType, etc.) provided via the options table.",
       "functions": {
         "init": {
-          "desc": "Appelé à la création d'une mission de ce type. Définit self.missionTypeLabel = \"bigMap.missionLabels.\"..self.missionType et self.progressKeyTranslations = {default, custom} (clés de traduction missions.progressKeyLabels.*).",
+          "desc": "Called when a mission of this type is created. Sets self.missionTypeLabel = \"bigMap.missionLabels.\"..self.missionType and self.progressKeyTranslations = {default, custom} (translation keys missions.progressKeyLabels.*).",
           "params": {},
           "returns": [],
           "internal": true
         },
         "getProgressKeyTranslation": {
-          "desc": "Renvoie la clé de traduction d'une clé de progression (« default », « custom ») ; si elle est inconnue, renvoie la clé telle quelle.",
-          "params": {"progressKey": {"type": "string", "desc": "Clé de progression."}},
-          "returns": [{"type": "string", "desc": "Clé de traduction ou progressKey."}]
+          "desc": "Returns the translation key of a progress key (\"default\", \"custom\"); if unknown, returns the key as is.",
+          "params": {
+            "progressKey": {
+              "type": "string",
+              "desc": "Progress key."
+            }
+          },
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Translation key or progressKey."
+            }
+          ]
         },
         "onStart": {
-          "desc": "Appelé au démarrage de la mission. Vide dans la base, à surcharger.",
+          "desc": "Called when the mission starts. Empty in the base, to be overridden.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "onUpdate": {
-          "desc": "Appelé à chaque frame pendant la mission. Vide dans la base, à surcharger.",
+          "desc": "Called every frame during the mission. Empty in the base, to be overridden.",
           "params": {
-            "dtReal": {"type": "number", "desc": "Temps réel écoulé (s)."},
-            "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s)."},
-            "dtRaw": {"type": "number", "desc": "Temps brut écoulé (s)."}
+            "dtReal": {
+              "type": "number",
+              "desc": "Elapsed real time (s)."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Simulation elapsed time (s)."
+            },
+            "dtRaw": {
+              "type": "number",
+              "desc": "Raw elapsed time (s)."
+            }
           },
           "returns": [],
           "internal": true
         },
         "onStop": {
-          "desc": "Appelé à l'arrêt de la mission. `data` (la tentative) peut être nil. Vide dans la base.",
-          "params": {"data": {"type": "table|nil", "desc": "Données de fin de mission / tentative."}},
+          "desc": "Called when the mission stops. `data` (the attempt) can be nil. Empty in the base.",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "End of mission / attempt data."
+            }
+          },
           "returns": [],
           "internal": true
         }

@@ -1,0 +1,100 @@
+{
+  "path": "lua/ge/extensions/editor/api/objectHistoryActions.lua",
+  "module": "Actions annulables (undo/redo) de l'éditeur de niveau pour les objets de la scène : création, suppression (objet ou groupe entier, restauré par sérialisation), changement de champ ou de champ dynamique, sélection, transformation, échelle, appel de hook. Chaque action est enregistrée via `editor.history:commitAction`. Le module renvoie une FONCTION : l'appeler installe `editor.lockObjectSelectionWithUndo` & co sur `editor` puis renvoie la table de fonctions (M). Un outil d'éditeur utilise les `...WithUndo` pour que ses modifications soient annulables.",
+  "usage": "local actions = require(\"editor/api/objectHistoryActions\")()\nactions.changeObjectFieldWithUndo({objId}, \"hidden\", \"true\")",
+  "notes": [
+    "Les valeurs de champs sont des chaînes (ex. \"true\"/\"false\" pour locked/hidden). arrayIndex numérique >= 0 est converti en chaîne ; nil devient \"\".",
+    "Un changement de position/rotation/scale recalcule la bbox de sélection (editor.computeSelectionBBox).",
+    "Hooks émis : onEditorObjectAdded(objectId), onEditorInspectorFieldChanged(objectIds, fieldName, valeurs, arrayIndex), onEditorInspectorDynFieldChanged(objectIds, fieldName, valeurs, arrayIndex), onEditorObjectSelectionChanged().",
+    "`changeObjectFieldMultipleValuesUndo/Redo` existent dans le fichier mais ne sont pas exportés ; seule `changeObjectFieldMultipleValuesWithUndo` n'est pas non plus dans M (déduit : absente de la liste d'export).",
+    "Un objet verrouillé (isLocked) n'est pas supprimé par deleteObjectRedo ; l'action est quand même empilée.",
+    "La suppression d'un groupe (SimSet/SimGroup) sérialise toute la hiérarchie (JSON par objet) et la restaure avec les mêmes ids (SimObject.setForcedId) ; l'ordre dans le groupe parent est restauré via nextObjIdInGroup."
+  ],
+  "functions": {
+    "createObjectUndo": {"desc": "Annule une création : supprime l'objet actionData.objectId et remet objectId à nil.", "params": {"actionData": {"type": "table", "desc": "{objectId}"}}, "internal": true},
+    "createObjectRedo": {"desc": "Crée un objet de classe actionData.className, l'enregistre sous actionData.name et l'ajoute au groupe actionData.parentId ou à MissionGroup ; mémorise le nouvel id (réutilise l'ancien via setForcedId) et émet onEditorObjectAdded.", "params": {"actionData": {"type": "table", "desc": "{name, className, parentId?, objectId?}"}}, "returns": [{"type": "integer|nil", "desc": "id de l'objet créé (nil si MissionGroup absent)"}], "internal": true},
+    "deleteObjectUndo": {"desc": "Restaure l'objet (ou tout le groupe) supprimé depuis serializedData avec son id d'origine, le replace avant nextObjIdInGroup et émet onEditorObjectAdded.", "params": {"actionData": {"type": "table", "desc": "{objectId, serializedData, isSimSet?, nextObjIdInGroup?}"}}, "internal": true},
+    "deleteObjectRedo": {"desc": "Sérialise l'objet (ou la hiérarchie du groupe) puis le supprime avec editor.deleteObject, sauf s'il est verrouillé.", "params": {"actionData": {"type": "table", "desc": "{objectId}"}}, "internal": true},
+    "changeObjectFieldUndo": {"desc": "Remet les anciennes valeurs du champ sur tous les objets, met à jour le gizmo/la bbox et émet onEditorInspectorFieldChanged.", "params": {"actionData": {"type": "table", "desc": "{objectIds, fieldName, oldFieldValues, arrayIndex}"}}, "internal": true},
+    "changeObjectFieldRedo": {"desc": "Applique la nouvelle valeur du champ sur tous les objets et émet onEditorInspectorFieldChanged.", "params": {"actionData": {"type": "table", "desc": "{objectIds, fieldName, newFieldValue, arrayIndex}"}}, "internal": true},
+    "changeObjectDynFieldUndo": {"desc": "Restaure les anciennes valeurs d'un champ dynamique et émet onEditorInspectorDynFieldChanged.", "params": {"actionData": {"type": "table", "desc": "{objectIds, fieldName, oldFieldValues, arrayIndex}"}}, "internal": true},
+    "changeObjectDynFieldRedo": {"desc": "Applique la nouvelle valeur d'un champ dynamique et émet onEditorInspectorDynFieldChanged.", "params": {"actionData": {"type": "table", "desc": "{objectIds, fieldName, newFieldValue, arrayIndex}"}}, "internal": true},
+    "selectObjectsUndo": {"desc": "Rétablit l'ancienne sélection (oldSelection), recalcule la bbox et émet onEditorObjectSelectionChanged.", "params": {"actionData": {"type": "table", "desc": "{oldSelection}"}}, "internal": true},
+    "selectObjectsRedo": {"desc": "Applique la nouvelle sélection (newSelection), recalcule la bbox et émet onEditorObjectSelectionChanged.", "params": {"actionData": {"type": "table", "desc": "{newSelection}"}}, "internal": true},
+    "setObjectTransformUndo": {"desc": "Remet l'ancienne transformation (oldTransform, table convertie en matrice) sur l'objet.", "params": {"actionData": {"type": "table", "desc": "{objectId, oldTransform}"}}, "internal": true},
+    "setObjectTransformRedo": {"desc": "Applique newTransform à l'objet.", "params": {"actionData": {"type": "table", "desc": "{objectId, newTransform}"}}, "internal": true},
+    "setObjectScaleUndo": {"desc": "Remet oldScale sur l'objet.", "params": {"actionData": {"type": "table", "desc": "{objectId, oldScale}"}}, "internal": true},
+    "setObjectScaleRedo": {"desc": "Applique newScale à l'objet.", "params": {"actionData": {"type": "table", "desc": "{objectId, newScale}"}}, "internal": true},
+    "createObjectWithUndo": {
+      "desc": "Crée un objet via une action annulable \"CreateObject\" et marque l'éditeur comme modifié.",
+      "params": {"name": {"type": "string", "desc": "nom d'enregistrement"}, "className": {"type": "string", "desc": "classe C++ à créer"}}
+    },
+    "deleteObjectWithUndo": {
+      "desc": "Supprime un objet via une action annulable \"DeleteObject\", vide la sélection et marque l'éditeur modifié.",
+      "params": {"objId": {"type": "integer", "desc": "id de l'objet"}}
+    },
+    "deleteSelectedObjectsWithUndo": {"desc": "Supprime tous les objets sélectionnés dans une seule transaction \"DeleteSelectedObjects\". Ne fait rien si la sélection est vide."},
+    "changeObjectFieldWithUndo": {
+      "desc": "Change un champ sur plusieurs objets en mémorisant les anciennes valeurs (getField).",
+      "params": {
+        "objIds": {"type": "integer[]", "desc": "ids des objets"},
+        "fieldName": {"type": "string", "desc": "nom du champ"},
+        "newFieldValue": {"type": "string", "desc": "nouvelle valeur (identique pour tous)"},
+        "arrayIndex": {"type": "integer|nil", "desc": "index dans un champ tableau"}
+      }
+    },
+    "changeObjectFieldMultipleValuesWithUndo": {
+      "desc": "Comme changeObjectFieldWithUndo mais avec une valeur différente par objet.",
+      "params": {
+        "objIds": {"type": "integer[]", "desc": "ids des objets"},
+        "fieldName": {"type": "string", "desc": "nom du champ"},
+        "newFieldValues": {"type": "table", "desc": "valeurs, même ordre que objIds"},
+        "arrayIndex": {"type": "integer|nil", "desc": "index dans un champ tableau"}
+      }
+    },
+    "changeObjectFieldWithOldValues": {
+      "desc": "Comme changeObjectFieldWithUndo mais l'appelant fournit lui-même les anciennes valeurs (utile quand le champ a déjà été modifié pendant une édition interactive).",
+      "params": {
+        "objIds": {"type": "integer[]", "desc": "ids des objets"},
+        "fieldName": {"type": "string", "desc": "nom du champ"},
+        "newFieldValue": {"type": "string", "desc": "nouvelle valeur"},
+        "oldFieldValues": {"type": "table", "desc": "anciennes valeurs, même ordre que objIds"},
+        "arrayIndex": {"type": "integer|nil", "desc": "index dans un champ tableau"}
+      }
+    },
+    "changeObjectDynFieldWithUndo": {
+      "desc": "Change un champ dynamique sur plusieurs objets de façon annulable.",
+      "params": {
+        "objIds": {"type": "integer[]", "desc": "ids des objets"},
+        "fieldName": {"type": "string", "desc": "nom du champ dynamique"},
+        "newFieldValue": {"type": "string", "desc": "nouvelle valeur"},
+        "arrayIndex": {"type": "integer|nil", "desc": "index (non converti en chaîne ici)"}
+      }
+    },
+    "callHookWithUndo": {
+      "desc": "Enregistre une action \"CallHook\" dont undo et redo appellent tous deux extensions.hook(hookName, ...).",
+      "params": {
+        "hookName": {"type": "string", "desc": "nom du hook"},
+        "...": {"type": "any", "desc": "arguments passés au hook"}
+      }
+    },
+    "selectObjectsWithUndo": {
+      "desc": "Change la sélection d'objets de façon annulable. Ignore l'appel si l'ancienne et la nouvelle sélection sont égales, ou si la dernière action est déjà une SelectObjects avec la même nouvelle sélection.",
+      "params": {
+        "newSelection": {"type": "integer[]", "desc": "nouveaux ids sélectionnés"},
+        "oldSelection": {"type": "integer[]", "desc": "ids précédemment sélectionnés"}
+      }
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Fonctions ajoutées à `editor` quand on appelle la fonction renvoyée par le module. Elles agissent sur editor.selection.object.",
+      "functions": {
+        "lockObjectSelectionWithUndo": {"desc": "Verrouille (locked = \"true\") les objets sélectionnés, annulable."},
+        "unlockObjectSelectionWithUndo": {"desc": "Déverrouille (locked = \"false\") les objets sélectionnés, annulable."},
+        "hideObjectSelectionWithUndo": {"desc": "Cache (hidden = \"true\") les objets sélectionnés, annulable."},
+        "showObjectSelectionWithUndo": {"desc": "Affiche (hidden = \"false\") les objets sélectionnés, annulable."}
+      }
+    }
+  }
+}

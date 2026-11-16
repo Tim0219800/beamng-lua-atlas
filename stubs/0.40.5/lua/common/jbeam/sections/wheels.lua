@@ -2,21 +2,21 @@
 -- tim19Atlas stub generated from lua/common/jbeam/sections/wheels.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Répartiteur de la construction des roues lors du chargement d'un véhicule jbeam. Il parcourt les sections de roues du véhicule (wheels, monoHubWheels, hubWheelsTSV, hubWheelsTSI, hubWheels, pressureWheels) dans cet ordre, appelle pour chaque roue le gestionnaire du type (fichier jbeam/sections/wheelTypes/<section>.lua) qui crée nœuds, poutres et triangles, puis range toutes les roues dans vehicle.wheels avec un identifiant wheelID. processRotators ajoute ensuite les rotators (roues sans pneu) et renumérote les roues. Appelé par le chargeur jbeam, pas par un mod courant.
---- Accès : globale `wheels`
+--- Dispatcher for wheel construction when loading a jbeam vehicle. It goes through the vehicle's wheel sections (wheels, monoHubWheels, hubWheelsTSV, hubWheelsTSI, hubWheels, pressureWheels) in that order, calls for each wheel the type handler (file jbeam/sections/wheelTypes/<section>.lua) that creates nodes, beams and triangles, then stores all wheels in vehicle.wheels with a wheelID. processRotators then adds the rotators (wheels without a tire) and renumbers the wheels. Called by the jbeam loader, not by a typical mod.
+--- Access: global `wheels`
 ---@class wheels
 wheels = {}
 
---- Ajoute les rotators (vehicle.rotators) comme roues supplémentaires (wheelID, jbeamUtils.addRotator), retire les roues sans nœuds et renumérote vehicle.wheels / cid.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/jbeam/sections/wheels.lua:105
----@param vehicle table données du véhicule
+--- Adds the rotators (vehicle.rotators) as extra wheels (wheelID, jbeamUtils.addRotator), removes wheels without nodes and renumbers vehicle.wheels / cid.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/jbeam/sections/wheels.lua:105
+---@param vehicle table vehicle data
 function wheels.processRotators(vehicle) end
 
---- Construit toutes les roues du véhicule : réinitialise vehicle.wheels, traite chaque section de roues non vide via le gestionnaire du type de roue (require chargé à la demande puis mis en cache), assigne wheelID et range le résultat dans vehicle.wheels.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/jbeam/sections/wheels.lua:81
----@param vehicle table données du véhicule en cours de construction (nodes, beams, maxIDs, sections de roues, flexbodies…)
----@return boolean  toujours true
+--- Builds all the vehicle's wheels: resets vehicle.wheels, processes each non-empty wheel section via the wheel type handler (require loaded on demand then cached), assigns wheelID and stores the result in vehicle.wheels.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/jbeam/sections/wheels.lua:81
+---@param vehicle table data of the vehicle being built (nodes, beams, maxIDs, wheel sections, flexbodies...)
+---@return boolean  always true
 function wheels.processWheels(vehicle) end
 

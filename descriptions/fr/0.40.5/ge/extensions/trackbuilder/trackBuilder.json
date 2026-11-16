@@ -1,0 +1,114 @@
+{
+  "path": "lua/ge/extensions/trackbuilder/trackBuilder.lua",
+  "module": "Interface ImGui de l'éditeur de circuits (Track Builder). Elle pilote le moteur de spline `util_trackBuilder_splineTrack` (chargé via `extensions['util_trackBuilder_splineTrack']`) : ajout et suppression de pièces, modificateurs (largeur, inclinaison, etc.), matériaux, bordures, sous-circuits, sauvegarde avec capture d'écran, mode conduite et modes de peinture (Select, Paint, ChangeMesh, Merge). Un moddeur s'en sert surtout pour ouvrir ou fermer l'éditeur (enter, exit, toggleTrackBuilder) et savoir s'il est actif (isActive). L'éditeur s'ouvre par la route UI `trackBuilder`, par défaut sur le niveau `glow_city`.",
+  "usage": "-- ouvrir le Track Builder sur glow_city (charge le niveau si besoin)\ntrackbuilder_trackBuilder.enter('glow_city')\nprint(trackbuilder_trackBuilder.isActive())\ntrackbuilder_trackBuilder.exit()",
+  "notes": [
+    "Le fichier fait plus de 3600 lignes, surtout du code d'interface ImGui (fenêtres, barre d'outils, matériaux, sauvegarde) ; seules les fonctions de `M` ci-dessous sont l'API publique.",
+    "La table `tbFunctions` (navigate, refreshPieceInfo, pieceDeleted, pieceUpdated, modifierChange, modifierRemove, modifierShift, drive, unDrive, refreshTrackPositionRotation, switchSubTrack, mergeMultiTrack) est locale au fichier et n'est pas exportée dans M : ce sont des fonctions internes appelées par l'interface. La page automatique la présente comme classe, mais ce n'est pas un objet instanciable.",
+    "BUG : dans toggleTrackBuilder, la variable `active` est lue (`not freeCam and active`) avant sa déclaration `local active = open[0]` ; elle vaut donc nil (variable globale) et le passage en caméra de jeu de cette ligne n'a jamais lieu.",
+    "BUG mineur : une variable globale `i` est affectée quelque part dans le fichier (relevé par l'analyse automatique).",
+    "enter charge le niveau demandé via `freeroam_freeroam.startFreeroam` si nécessaire et ouvre l'éditeur au hook onClientStartMission ; pendant ce chargement `pendingEnter` empêche onClientEndMission de fermer l'éditeur. Son callback appelle `trackbuilder_trackBuilder.showTrackBuilder()` par la globale.",
+    "La fenêtre n'est dessinée dans onUpdate que si l'éditeur est initialisé ; pendant une capture d'écran de sauvegarde (hiddenForScreenshotTimer) rien n'est affiché.",
+    "En mode conduite (tbFunctions.drive), le code reset le véhicule 0, passe en caméra de jeu et envoie `ShowApps` à l'UI ; unDrive repasse en caméra libre."
+  ],
+  "functions": {
+    "enter": {
+      "desc": "Ouvre le Track Builder. Si le niveau demandé n'est pas déjà chargé (ou si forceLoad est vrai), le charge en freeroam puis ouvre l'éditeur ; sinon l'ouvre directement. Un niveau introuvable est loggé en erreur et rien n'est fait.",
+      "params": {
+        "levelName": {"type": "string|nil", "desc": "Nom du niveau (par exemple \"glow_city\")."},
+        "forceLoad": {"type": "boolean|nil", "desc": "Force le rechargement du niveau même s'il est déjà chargé."}
+      },
+      "internal": false
+    },
+    "exit": {
+      "desc": "Ferme le Track Builder s'il est actif, sans naviguer lui-même (le routeur garde la navigation), et libère la route de gameplay.",
+      "params": {},
+      "internal": false
+    },
+    "exitToMainMenu": {
+      "desc": "Annule une entrée en attente, ferme l'éditeur s'il est actif, puis appelle `returnToMainMenu()`.",
+      "params": {},
+      "internal": false
+    },
+    "isActive": {
+      "desc": "Indique si l'éditeur est initialisé et sa fenêtre ouverte.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si actif."}],
+      "internal": false
+    },
+    "showTrackBuilder": {
+      "desc": "Affiche l'éditeur : passe en caméra de jeu si la caméra n'est pas libre, puis ouvre la fenêtre.",
+      "params": {},
+      "internal": false
+    },
+    "hideTrackBuilder": {
+      "desc": "Ferme la fenêtre de l'éditeur, restaure le style ImGui BeamNG et réinitialise l'état. Si la fermeture n'est pas pilotée par le routeur, rend la route de gameplay en naviguant vers `play`. Sans effet si non initialisé.",
+      "params": {},
+      "internal": false
+    },
+    "toggleTrackBuilder": {
+      "desc": "Ouvre l'éditeur (en réglant la route de gameplay et en naviguant vers `trackBuilder`) ou le ferme s'il est ouvert.",
+      "params": {},
+      "internal": false
+    },
+    "showTrackBuilderWindow": {
+      "desc": "Ouvre ou ferme la fenêtre ImGui. À l'ouverture : initialise, récupère le moteur de spline et applique le style ; à la fermeture : désélectionne, masque les marqueurs, et supprime le circuit s'il a 2 pièces ou moins (hors glow_city). Émet toujours le hook `onTrackBuilderWindowToggled(open)`.",
+      "params": {"show": {"type": "boolean", "desc": "true pour ouvrir, false pour fermer."}},
+      "internal": false
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque frame. Affiche la fenêtre principale ou la barre du mode conduite, ou rien pendant la prise de capture d'écran de sauvegarde.",
+      "params": {},
+      "internal": true
+    },
+    "onWindowResized": {
+      "desc": "Hook appelé quand la fenêtre du jeu est redimensionnée. Mémorise la taille d'affichage utilisée par le style.",
+      "params": {"size": {"type": "table", "desc": "Taille de l'écran avec champs `x` et `y`."}},
+      "internal": true
+    },
+    "onRouteEnter": {
+      "desc": "Hook appelé par le routeur UI à l'entrée de la route `trackBuilder`. Réserve la route de gameplay et appelle enter avec `params.level` (\"glow_city\" par défaut) et `params.forceLoad`.",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte de la route (non utilisé)."},
+        "toRoute": {"type": "table", "desc": "Route d'arrivée ; son champ `params` est lu."},
+        "fromRoute": {"type": "any", "desc": "Route de départ (non utilisé)."},
+        "data": {"type": "any", "desc": "Données de route (non utilisées)."}
+      },
+      "internal": true
+    },
+    "onRouteLeave": {
+      "desc": "Hook appelé par le routeur UI quand on quitte la route : ferme l'éditeur s'il est actif.",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte de la route (non utilisé)."},
+        "toRoute": {"type": "any", "desc": "Route d'arrivée (non utilisé)."},
+        "fromRoute": {"type": "any", "desc": "Route de départ (non utilisé)."},
+        "data": {"type": "any", "desc": "Données de route (non utilisées)."}
+      },
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook appelé à la fin d'une mission/niveau. Ferme l'éditeur sauf si une entrée est en attente de chargement de niveau.",
+      "params": {},
+      "internal": true
+    }
+  },
+  "classes": {
+    "tbFunctions": {
+      "desc": "Table locale de fonctions internes de l'interface (non exportée). Elles modifient le circuit via le moteur de spline puis rafraîchissent les valeurs affichées ; `currentIndex` désigne la pièce sélectionnée.",
+      "functions": {
+        "navigate": {"desc": "Déplace le curseur : 1 suivant, -1 précédent (avec bouclage), 'first' ou 'last'. Recentre le marqueur et relit les infos de la pièce.", "params": {"off": {"type": "integer|string", "desc": "1, -1, 'first' ou 'last'."}}},
+        "refreshPieceInfo": {"desc": "Relit les paramètres de la pièce courante et les valeurs des modificateurs dans l'interface.", "params": {}},
+        "pieceDeleted": {"desc": "Supprime la pièce courante (si l'indice est supérieur à 2), reconstruit le circuit et recule d'une pièce.", "params": {}},
+        "pieceUpdated": {"desc": "Ajoute ou remplace une pièce avec les paramètres de l'interface. Ctrl remplace, Shift insère après la pièce courante, sans touche ajoute à la fin. Replace le curseur au début si le circuit vient de se fermer.", "params": {"replace": {"type": "boolean|nil", "desc": "true remplace, false insère ; nil déduit des touches Ctrl/Shift."}}},
+        "modifierChange": {"desc": "Applique la valeur d'un modificateur à la pièce courante et reconstruit le circuit.", "params": {"field": {"type": "string", "desc": "Nom du modificateur."}}},
+        "modifierRemove": {"desc": "Retire un modificateur de la pièce courante.", "params": {"field": {"type": "string", "desc": "Nom du modificateur."}}},
+        "modifierShift": {"desc": "Déplace un modificateur sur la pièce précédente ou suivante.", "params": {"name": {"type": "string", "desc": "Nom du modificateur."}, "offset": {"type": "integer", "desc": "1 ou -1."}}},
+        "drive": {"desc": "Démarre le mode conduite : circuit en haute qualité, marqueurs masqués, reset du véhicule 0 et placement sur la pièce donnée, caméra de jeu.", "params": {"index": {"type": "integer|nil", "desc": "Indice de la pièce de départ."}}},
+        "unDrive": {"desc": "Termine le mode conduite : caméra libre, marqueurs réaffichés, mode Select.", "params": {}},
+        "refreshTrackPositionRotation": {"desc": "Relit la position et le cap du circuit (cap converti en degrés) dans l'interface.", "params": {}},
+        "switchSubTrack": {"desc": "Passe à un autre sous-circuit et sélectionne sa dernière pièce.", "params": {"index": {"type": "integer", "desc": "Indice du sous-circuit."}}},
+        "mergeMultiTrack": {"desc": "Fusionne des segments de circuit via le moteur de spline.", "params": {"segments": {"type": "table", "desc": "Segments à fusionner."}}}
+      }
+    }
+  }
+}

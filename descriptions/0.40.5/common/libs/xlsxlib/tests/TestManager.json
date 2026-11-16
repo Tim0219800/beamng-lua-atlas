@@ -1,33 +1,57 @@
 {
   "path": "lua/common/libs/xlsxlib/tests/TestManager.lua",
-  "module": "Gestionnaire de tests unitaires minimal (Thomas Fischer, 2024) propre aux tests de xlsxlib ; c'est l'ancêtre de testFramework/TestManager. Il collecte les fonctions dont le nom commence par \"test\" dans une table, les exécute dans l'ordre alphabétique, journalise PASSED/FAILED, et écrit un rapport XML JUnit si un fichier de sortie est donné. Un test dont le nom finit par `_shouldFail` doit échouer pour être considéré comme réussi.",
+  "module": "Minimal unit test manager (Thomas Fischer, 2024) specific to the xlsxlib tests; it is the ancestor of testFramework/TestManager. It collects the functions whose name starts with \"test\" into a table, runs them in alphabetical order, logs PASSED/FAILED, and writes a JUnit XML report if an output file is given. A test whose name ends with `_shouldFail` must fail to be considered successful.",
   "usage": "local tm = require('libs/xlsxlib/tests/TestManager')\nlocal tests = {}\nfunction tests:testExemple(ctx) ctx:success('ok') end\ntm:run(tests, '/junit-results/exemple.xml')",
   "notes": [
-    "`run` appelle chaque test avec `func(tests, ctx)` : il faut donc écrire les tests avec la syntaxe `function Tests:test_x(context)` (le contexte est le second argument). L'exemple du fichier (`function tests.testExampleSuccess(context)`) est incorrect : `context` y reçoit la table de tests.",
-    "Contexte fourni : `ctx:fail(message)` (lève une erreur), `ctx:success(message)` (message affiché si le test réussit).",
-    "Le fichier fait `require('socket')` pour `socket.gettime` (durées) et `require('json')`, `libs.xlsxlib.xlsxlib`.",
-    "Les compteurs (`__internal.testPassCount/testFailCount/testResults`) sont remis à zéro après chaque run."
+    "`run` calls each test with `func(tests, ctx)`: tests must therefore be written with the syntax `function Tests:test_x(context)` (the context is the second argument). The file's example (`function tests.testExampleSuccess(context)`) is incorrect: `context` receives the tests table there.",
+    "Provided context: `ctx:fail(message)` (raises an error), `ctx:success(message)` (message displayed if the test succeeds).",
+    "The file does `require('socket')` for `socket.gettime` (durations) and `require('json')`, `libs.xlsxlib.xlsxlib`.",
+    "The counters (`__internal.testPassCount/testFailCount/testResults`) are reset after each run."
   ],
   "fields": {
-    "LogAlways": {"type": "integer", "desc": "Niveau de log 1."},
-    "LogErrors": {"type": "integer", "desc": "Niveau de log 2."},
-    "LogFails": {"type": "integer", "desc": "Niveau de log 3."}
+    "LogAlways": {
+      "type": "integer",
+      "desc": "Log level 1."
+    },
+    "LogErrors": {
+      "type": "integer",
+      "desc": "Log level 2."
+    },
+    "LogFails": {
+      "type": "integer",
+      "desc": "Log level 3."
+    }
   },
   "functions": {
     "setLogDefault": {
-      "desc": "Définit le niveau de log par défaut (champ interne LogDefault ; non utilisé ensuite par run).",
+      "desc": "Sets the default log level (internal field LogDefault; not used afterwards by run).",
       "params": {
-        "self": {"type": "table", "desc": "TestManager (appel avec les deux-points)."},
-        "logLevel": {"type": "integer", "desc": "LogAlways, LogErrors ou LogFails."}
+        "self": {
+          "type": "table",
+          "desc": "TestManager (call with a colon)."
+        },
+        "logLevel": {
+          "type": "integer",
+          "desc": "LogAlways, LogErrors or LogFails."
+        }
       },
       "returns": []
     },
     "run": {
-      "desc": "Exécute les tests de la table `tests` (clés commençant par \"test\", triées), journalise le résultat de chacun, affiche les compteurs, puis écrit le XML JUnit si `outputFile` est donné.",
+      "desc": "Runs the tests of the `tests` table (keys starting with \"test\", sorted), logs the result of each, displays the counters, then writes the JUnit XML if `outputFile` is given.",
       "params": {
-        "self": {"type": "table", "desc": "TestManager."},
-        "tests": {"type": "table<string, function>", "desc": "Fonctions de test ; les clés non \"test*\" provoquent un message d'erreur « Unknown test function »."},
-        "outputFile": {"type": "string|nil", "desc": "Chemin du rapport JUnit XML."}
+        "self": {
+          "type": "table",
+          "desc": "TestManager."
+        },
+        "tests": {
+          "type": "table<string, function>",
+          "desc": "Test functions; keys not matching \"test*\" cause an \"Unknown test function\" error message."
+        },
+        "outputFile": {
+          "type": "string|nil",
+          "desc": "Path of the JUnit XML report."
+        }
       },
       "returns": []
     }

@@ -1,24 +1,36 @@
 {
   "path": "lua/ge/extensions/ui/frustumOffset.lua",
-  "module": "Décale le centre du frustum de la caméra (scenetree.OnlyGui:setFrustumCameraCenterOffset) pour que la vue 3D soit recentrée quand des panneaux UI recouvrent une partie de l'écran (voir BngFrustumMover.js). Accepte un décalage brut en unités moteur et/ou un décalage en fraction de demi-écran, converti en tenant compte du ratio d'écran et du FoV.",
+  "module": "Shifts the camera frustum center (scenetree.OnlyGui:setFrustumCameraCenterOffset) so that the 3D view is recentered when UI panels cover part of the screen (see BngFrustumMover.js). Accepts a raw offset in engine units and/or an offset as a fraction of half the screen, converted taking the screen ratio and the FoV into account.",
   "notes": [
-    "Le décalage moteur est une pente en espace caméra : décalage écran = offset / (aspect * tan(vFov/2)).",
-    "Le FoV utilisé est borné à 10 degrés minimum, comme le moteur.",
-    "Les décalages écran sont recalculés dans onUpdate dès que le FoV change.",
-    "Signes : une valeur positive de screenX/screenY déplace le centre de la vue vers la droite/le haut."
+    "The engine offset is a slope in camera space: screen offset = offset / (aspect * tan(vFov/2)).",
+    "The FoV used is clamped to a minimum of 10 degrees, like the engine.",
+    "The screen offsets are recomputed in onUpdate as soon as the FoV changes.",
+    "Signs: a positive value of screenX/screenY shifts the view center to the right/up."
   ],
   "functions": {
     "set": {
-      "desc": "Définit les décalages et les applique immédiatement. Toute valeur absente vaut 0.",
+      "desc": "Sets the offsets and applies them immediately. Any missing value is 0.",
       "params": {
-        "newRawX": {"type": "number|nil", "desc": "Décalage horizontal brut (unités moteur), transmis tel quel."},
-        "newRawY": {"type": "number|nil", "desc": "Décalage vertical brut (unités moteur), transmis tel quel."},
-        "newScreenX": {"type": "number|nil", "desc": "Décalage horizontal en fraction de la demi-largeur d'écran."},
-        "newScreenY": {"type": "number|nil", "desc": "Décalage vertical en fraction de la demi-hauteur d'écran."}
+        "newRawX": {
+          "type": "number|nil",
+          "desc": "Raw horizontal offset (engine units), passed as is."
+        },
+        "newRawY": {
+          "type": "number|nil",
+          "desc": "Raw vertical offset (engine units), passed as is."
+        },
+        "newScreenX": {
+          "type": "number|nil",
+          "desc": "Horizontal offset as a fraction of half the screen width."
+        },
+        "newScreenY": {
+          "type": "number|nil",
+          "desc": "Vertical offset as a fraction of half the screen height."
+        }
       }
     },
     "onUpdate": {
-      "desc": "Hook par frame : si un décalage écran est actif et que le FoV a changé depuis la dernière application, réapplique le décalage.",
+      "desc": "Per-frame hook: if a screen offset is active and the FoV has changed since the last application, reapplies the offset.",
       "internal": true
     }
   }

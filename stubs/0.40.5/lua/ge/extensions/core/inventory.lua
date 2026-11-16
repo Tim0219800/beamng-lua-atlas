@@ -2,65 +2,65 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/inventory.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_inventory` : inventaire simple de la campagne/scénarios. Stocke par type (clé en MAJUSCULES) soit un compteur numérique (argent), soit une liste d'objets (véhicules, pièces). Fournit des fonctions pour ajouter, retirer et lire des éléments, et interprète les blocs `onEvent` des fichiers de campagne (récompenses ou pertes selon la médaille obtenue).
---- Accès : extension `core_inventory` : `extensions.load("core_inventory")`, puis la globale `core_inventory`
+--- GE extension `core_inventory`: simple inventory for the campaign/scenarios. Stores per type (UPPERCASE key) either a numeric counter (money) or a list of objects (vehicles, parts). Provides functions to add, remove and read items, and interprets the `onEvent` blocks of the campaign files (rewards or losses depending on the medal earned).
+--- Access: extension `core_inventory`: `extensions.load("core_inventory")`, then the global `core_inventory`
 ---@class core_inventory
----@field itemsTable table<string, number|table[]> Inventaire : type (MAJUSCULES) -> compteur ou liste d'objets.
+---@field itemsTable table<string, number|table[]> Inventory: type (UPPERCASE) -> counter or list of objects.
 core_inventory = {}
 
---- Ajoute à l'inventaire : somme d'un nombre ou insertion d'un objet (sans doublon). Ignoré si itemType ou valueObj est nil/false.
----Source : lua/ge/extensions/core/inventory.lua:29
----@param itemType string Type d'objet (converti en majuscules), par convention préfixé '$$$_'.
----@param valueObj number|table Quantité à ajouter, ou objet (ex. {model, config, color}).
+--- Adds to the inventory: sum of a number or insertion of an object (without duplicates). Ignored if itemType or valueObj is nil/false.
+---Source: lua/ge/extensions/core/inventory.lua:29
+---@param itemType string Object type (converted to uppercase), by convention prefixed '$$$_'.
+---@param valueObj number|table Quantity to add, or object (e.g. {model, config, color}).
 function core_inventory.addItem(itemType, valueObj) end
 
---- Lit un type. Pour un compteur renvoie sa valeur (0 si absent) ; pour une liste renvoie une copie de l'élément dont itemId est égal à itemId.
----Source : lua/ge/extensions/core/inventory.lua:85
----@param itemType string Type exact (déjà en majuscules).
----@param itemId any Valeur du champ itemId recherchée (liste seulement).
----@return number|table|nil  Quantité, copie de l'élément, ou nil si non trouvé dans une liste.
+--- Reads a type. For a counter returns its value (0 if absent); for a list returns a copy of the element whose itemId equals itemId.
+---Source: lua/ge/extensions/core/inventory.lua:85
+---@param itemType string Exact type (already in uppercase).
+---@param itemId any Value of the itemId field searched for (list only).
+---@return number|table|nil  Quantity, copy of the element, or nil if not found in a list.
 function core_inventory.getItem(itemType, itemId) end
 
---- Copie profonde de la liste d'un type ; crée une liste vide pour ce type si absente (effet de bord).
----Source : lua/ge/extensions/core/inventory.lua:101
----@param itemType string Type exact (déjà en majuscules).
----@return table  Copie de la liste (ou du compteur numérique s'il s'agit d'un nombre).
+--- Deep copy of a type's list; creates an empty list for this type if absent (side effect).
+---Source: lua/ge/extensions/core/inventory.lua:101
+---@param itemType string Exact type (already in uppercase).
+---@return table  Copy of the list (or of the numeric counter if it is a number).
 function core_inventory.getItemList(itemType) end
 
---- Hook de restauration : ne fait rien (voir notes).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/inventory.lua:196
----@param data table Données de onSerialize (non utilisées).
+--- Restore hook: does nothing (see notes).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/inventory.lua:196
+---@param data table Data from onSerialize (unused).
 function core_inventory.onDeserialized(data) end
 
---- Hook de reprise de campagne : remplace itemsTable par les données sauvegardées.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/inventory.lua:185
----@param campaignInProgress any Campagne en cours (non utilisé).
----@param data table Données sauvegardées.
+--- Campaign resume hook: replaces itemsTable with the saved data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/inventory.lua:185
+---@param campaignInProgress any Current campaign (not used).
+---@param data table Saved data.
 function core_inventory.onResumeCampaign(campaignInProgress, data) end
 
---- Hook de sauvegarde de campagne : appelle saveCallback(alias de l'extension, copie de itemsTable).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/inventory.lua:180
----@param saveCallback function Fonction (nomExtension, données).
+--- Campaign save hook: calls saveCallback(extension alias, copy of itemsTable).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/inventory.lua:180
+---@param saveCallback function Function (extensionName, data).
 function core_inventory.onSaveCampaign(saveCallback) end
 
---- Hook de sérialisation avant rechargement des extensions : renvoie une copie de itemsTable.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/inventory.lua:190
----@return table  Inventaire.
+--- Serialization hook before extensions reload: returns a copy of itemsTable.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/inventory.lua:190
+---@return table  Inventory.
 function core_inventory.onSerialize() end
 
---- Applique un bloc 'onEvent' de campagne : clés 'add' directes (type -> valeur ou liste) et bloc 'remove' (par médaille ou inconditionnel).
----Source : lua/ge/extensions/core/inventory.lua:129
----@param onEventData table|nil Bloc onEvent ; nil = rien.
----@param earnedMedal string|nil 'bronze', 'silver' ou 'gold' : sélectionne le sous-bloc de 'remove'.
+--- Applies a campaign 'onEvent' block: direct 'add' keys (type -> value or list) and 'remove' block (by medal or unconditional).
+---Source: lua/ge/extensions/core/inventory.lua:129
+---@param onEventData table|nil onEvent block; nil = nothing.
+---@param earnedMedal string|nil 'bronze', 'silver' or 'gold': selects the sub-block of 'remove'.
 function core_inventory.processOnEvent(onEventData, earnedMedal) end
 
---- Retire de l'inventaire : soustrait un nombre ou supprime l'objet dont model et config correspondent.
----Source : lua/ge/extensions/core/inventory.lua:58
----@param itemType string Type d'objet (converti en majuscules).
----@param valueObj number|table Quantité à retirer, ou objet avec model et config.
+--- Removes from the inventory: subtracts a number or deletes the object whose model and config match.
+---Source: lua/ge/extensions/core/inventory.lua:58
+---@param itemType string Object type (converted to uppercase).
+---@param valueObj number|table Quantity to remove, or object with model and config.
 function core_inventory.removeItem(itemType, valueObj) end
 

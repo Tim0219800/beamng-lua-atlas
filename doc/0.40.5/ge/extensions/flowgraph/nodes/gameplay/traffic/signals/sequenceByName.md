@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gameplay_traffic_signals_sequenceByName`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceByName.lua` · VM : Game Engine (GE) · 50 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceByName.lua` · VM: Game Engine (GE) · 50 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceByName")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceByName")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Sequence by Name » (once_instant). Cherche une séquence de feux (groupe de signaux / logique de phases) par nom dans signalsData.sequences. Sorties : exists (caché), sequenceData.
+Flowgraph node "Sequence by Name" (once_instant). Looks up a traffic light sequence (signal group / phase logic) by name in signalsData.sequences. Outputs: exists (hidden), sequenceData.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelle onNodeReset(). | 31 |
-| `C:init()` | Appelle onNodeReset(). | 27 |
-| `C:onNodeReset()` | Vide la sortie sequenceData. | 23 |
-| `C:work(args)` | Parcourt signalsData.sequences et publie la séquence de même nom. | 35 |
+| `C:_executionStopped()` | Calls onNodeReset(). | 31 |
+| `C:init()` | Calls onNodeReset(). | 27 |
+| `C:onNodeReset()` | Clears the sequenceData output. | 23 |
+| `C:work(args)` | Iterates over signalsData.sequences and publishes the sequence with the same name. | 35 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceByName.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceByName.lua`.*

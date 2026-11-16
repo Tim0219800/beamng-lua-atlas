@@ -1,43 +1,43 @@
 # `scenario_raceMarkers_attention`
 
-*Fichier : `lua/ge/extensions/scenario/raceMarkers/attention.lua` · VM : Game Engine (GE) · 194 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/raceMarkers/attention.lua` · VM: Game Engine (GE) · 194 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/scenario/raceMarkers/attention")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/scenario/raceMarkers/attention")` (file under extensions/ but not a regular extension)
 
-Marqueur de checkpoint « flèche d'attention » : une flèche bleue (modèle s_mm_arrow_ribbon_down.dae) qui flotte au-dessus du point, tournée vers la caméra, avec un balancement vertical. Le module renvoie un constructeur : require('scenario/raceMarkers/attention')(id) donne un objet de la classe C. Utilisé via scenario_race_marker (setupMarkers avec le nom 'attention') ou directement.
+"Attention arrow" checkpoint marker: a blue arrow (model s_mm_arrow_ribbon_down.dae) floating above the point, turned toward the camera, with a vertical sway. The module returns a constructor: require('scenario/raceMarkers/attention')(id) gives an object of class C. Used via scenario_race_marker (setupMarkers with the name 'attention') or directly.
 
-## Remarques
+## Notes
 
-- setToCheckpoint(wp) lit wp.pos (vec3) et wp.radius (échelle de la flèche, 1.5 par défaut).
-- La couleur est fixe (0, 0.4, 1) quel que soit le mode ; le mode ne sert qu'à masquer (mode 'hidden') ou afficher.
-- En marche à pied (gameplay_walk.isWalking), la flèche monte de 1 m quand la caméra est à moins de 4 m du marqueur.
-- La flèche est un TSStatic nommé cylinder_marker_left<id> ajouté à ScenarioObjectsGroup, avec useInstanceRenderData.
-- La méthode update a pour signature réelle (dt, dtSim) ; la page extraite l'affiche (dtSim) à cause de la déclaration avec ':'.
-- Le commentaire de setToCheckpoint décrit des modes (default, branch, next, lap, finish, start) qui ne sont pas utilisés par ce marqueur.
+- setToCheckpoint(wp) reads wp.pos (vec3) and wp.radius (arrow scale, 1.5 by default).
+- The color is fixed (0, 0.4, 1) regardless of the mode; the mode is only used to hide (mode 'hidden') or show.
+- When on foot (gameplay_walk.isWalking), the arrow rises by 1 m when the camera is within 4 m of the marker.
+- The arrow is a TSStatic named cylinder_marker_left<id> added to ScenarioObjectsGroup, with useInstanceRenderData.
+- The update method actually has the signature (dt, dtSim); the extracted page shows (dtSim) because of the ':' declaration.
+- The setToCheckpoint comment describes modes (default, branch, next, lap, finish, start) that this marker does not use.
 
-## Classe `C`
+## Class `C`
 
-Marqueur flèche d'attention.
+Attention arrow marker.
 
-Le module renvoie un constructeur : `local obj = require("scenario_raceMarkers_attention")(options)`.
+The module returns a constructor: `local obj = require("scenario_raceMarkers_attention")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearMarkers()` | Supprime les objets créés par ce marqueur. | 177 |
-| `C:createMarkers()` | Supprime les anciens objets puis crée la flèche. | 166 |
-| `C:createObject(shapeName, objectName)` | Crée un objet TSStatic caché (shapeName, couleur d'instance, non sauvegardable) enregistré sous objectName et ajouté à ScenarioObjectsGroup s'il existe. | 144 |
-| `C:hide()` | Appelle setVisibility(false). | 140 |
-| `C:init(id)` | Constructeur : initialise l'état (invisible, mode 'hidden', lisseur de hauteur). | 29 |
-| `C:setMode(mode)` | Change le mode : 'hidden' masque, tout autre mode affiche. Remet le minuteur de couleur à zéro. | 116 |
-| `C:setToCheckpoint(wp)` | Place le marqueur sur un checkpoint. | 106 |
-| `C:setVisibility(v)` | Affiche ou cache la flèche. | 131 |
-| `C:show()` | Appelle setVisibility(true). | 141 |
-| `C:update(dt, dtSim)` | Appel par image. Masque le marqueur une fois le fondu terminé en mode 'hidden', oriente la flèche vers la caméra (core_camera.getPosition), la fait osciller et applique la couleur. | 53 |
+| `C:clearMarkers()` | Removes the objects created by this marker. | 177 |
+| `C:createMarkers()` | Removes the old objects then creates the arrow. | 166 |
+| `C:createObject(shapeName, objectName)` | Creates a hidden TSStatic object (shapeName, instance color, not saveable) registered under objectName and added to ScenarioObjectsGroup if it exists. | 144 |
+| `C:hide()` | Calls setVisibility(false). | 140 |
+| `C:init(id)` | Constructor: initializes the state (invisible, mode 'hidden', height smoother). | 29 |
+| `C:setMode(mode)` | Changes the mode: 'hidden' hides, any other mode shows. Resets the color timer to zero. | 116 |
+| `C:setToCheckpoint(wp)` | Places the marker on a checkpoint. | 106 |
+| `C:setVisibility(v)` | Shows or hides the arrow. | 131 |
+| `C:show()` | Calls setVisibility(true). | 141 |
+| `C:update(dt, dtSim)` | Per-frame call. Hides the marker once the fade is finished in 'hidden' mode, turns the arrow toward the camera (core_camera.getPosition), makes it oscillate and applies the color. | 53 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `delete`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/raceMarkers/attention.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/raceMarkers/attention.lua`.*

@@ -1,69 +1,157 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/recceSettings.lua",
-  "module": "Préférences persistantes de la reconnaissance (recce) de rallye, enregistrées dans rallySettingsRoot/recce.json : dernier id de mission et dernier état de chargement par niveau, et nom du style d'annonce des virages. Charge aussi le fichier des angles de virage (corner angles) pour proposer les styles disponibles. Le module renvoie un constructeur.",
+  "module": "Persistent preferences of the rally recce, saved in rallySettingsRoot/recce.json: last mission id and last load state per level, and the name of the corner call style. Also loads the corner angles file to offer the available styles. The module returns a constructor.",
   "usage": "local RecceSettings = require('/lua/ge/extensions/gameplay/rally/recceSettings')\nlocal s = RecceSettings()\ns:load()\ns:setLastMissionId('west_coast_usa', 'rally/stage1')",
   "notes": [
-    "setLastMissionId, setLastLoadState et setCornerCallStyleName sauvegardent immédiatement le fichier.",
-    "Bug potentiel : cornerCallStyleNames et getCornerCallStyle indexent self.corner_angles_data.pacenoteStyles sans vérifier que corner_angles_data n'est pas nil (erreur si loadCornerAngles a échoué ou si load n'a pas été appelé).",
-    "Les valeurs par défaut sont partagées par référence (default_settings.last_mission_ids) : _reset réutilise les mêmes tables, donc une modification avant un rechargement peut polluer les défauts."
+    "setLastMissionId, setLastLoadState and setCornerCallStyleName save the file immediately.",
+    "Potential bug: cornerCallStyleNames and getCornerCallStyle index self.corner_angles_data.pacenoteStyles without checking that corner_angles_data is non-nil (error if loadCornerAngles failed or if load was not called).",
+    "The default values are shared by reference (default_settings.last_mission_ids): _reset reuses the same tables, so a modification before a reload can pollute the defaults."
   ],
   "classes": {
     "C": {
-      "desc": "Objet de réglages renvoyé par le constructeur.",
+      "desc": "Settings object returned by the constructor.",
       "functions": {
-        "init": {"desc": "Définit le chemin du fichier (recce.json) et remet les valeurs par défaut.", "internal": true},
-        "_reset": {"desc": "Remet last_mission_ids, last_load_states et corner_call_style_name aux valeurs par défaut.", "internal": true},
-        "loadCornerAngles": {"desc": "Charge les données d'angles de virage via rallyUtil.loadCornerAnglesFile ; corner_angles_data reste nil en cas d'échec."},
-        "load": {
-          "desc": "Remet à zéro, charge les angles de virage puis lit recce.json et le désérialise.",
-          "returns": [{"type": "boolean", "desc": "false si le chemin est nil, le fichier absent ou illisible"}]
+        "init": {
+          "desc": "Sets the file path (recce.json) and resets to the default values.",
+          "internal": true
         },
-        "save": {"desc": "Écrit les réglages sérialisés dans recce.json (jsonWriteFile, joli format)."},
+        "_reset": {
+          "desc": "Resets last_mission_ids, last_load_states and corner_call_style_name to the default values.",
+          "internal": true
+        },
+        "loadCornerAngles": {
+          "desc": "Loads the corner angle data via rallyUtil.loadCornerAnglesFile; corner_angles_data stays nil on failure."
+        },
+        "load": {
+          "desc": "Resets, loads the corner angles then reads recce.json and deserializes it.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false if the path is nil, the file absent or unreadable"
+            }
+          ]
+        },
+        "save": {
+          "desc": "Writes the serialized settings to recce.json (jsonWriteFile, pretty format)."
+        },
         "onSerialize": {
-          "desc": "Renvoie la table à sauvegarder (last_mission_ids, last_load_states, corner_call_style_name).",
-          "returns": [{"type": "table", "desc": "Données sérialisables"}]
+          "desc": "Returns the table to save (last_mission_ids, last_load_states, corner_call_style_name).",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Serializable data"
+            }
+          ]
         },
         "defaultCornerCallStyleName": {
-          "desc": "Nom du premier style de pacenoteStyles des angles de virage, ou la valeur par défaut (nil) si aucune donnée.",
-          "returns": [{"type": "string|nil", "desc": "Nom du style"}]
+          "desc": "Name of the first style in the corner angles' pacenoteStyles, or the default value (nil) if there is no data.",
+          "returns": [
+            {
+              "type": "string|nil",
+              "desc": "Style name"
+            }
+          ]
         },
         "cornerCallStyleNames": {
-          "desc": "Liste des noms de styles d'annonce de virage disponibles.",
-          "returns": [{"type": "string[]", "desc": "Noms des styles"}]
+          "desc": "List of the available corner call style names.",
+          "returns": [
+            {
+              "type": "string[]",
+              "desc": "Style names"
+            }
+          ]
         },
         "onDeserialized": {
-          "desc": "Applique les données lues du fichier ; les champs absents prennent leur valeur par défaut (style : premier style disponible).",
-          "params": {"data": {"type": "table|nil", "desc": "Contenu du JSON"}}
+          "desc": "Applies the data read from the file; missing fields take their default value (style: first available style).",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "JSON content"
+            }
+          }
         },
         "setLastMissionId": {
-          "desc": "Mémorise l'id de la dernière mission pour un niveau et sauvegarde.",
-          "params": {"level": {"type": "string", "desc": "Nom du niveau"}, "id": {"type": "string", "desc": "Id de mission"}}
+          "desc": "Stores the last mission id for a level and saves.",
+          "params": {
+            "level": {
+              "type": "string",
+              "desc": "Level name"
+            },
+            "id": {
+              "type": "string",
+              "desc": "Mission id"
+            }
+          }
         },
         "getLastMissionId": {
-          "desc": "Dernier id de mission pour un niveau.",
-          "params": {"level": {"type": "string", "desc": "Nom du niveau"}},
-          "returns": [{"type": "string|nil", "desc": "Id de mission"}]
+          "desc": "Last mission id for a level.",
+          "params": {
+            "level": {
+              "type": "string",
+              "desc": "Level name"
+            }
+          },
+          "returns": [
+            {
+              "type": "string|nil",
+              "desc": "Mission id"
+            }
+          ]
         },
         "setLastLoadState": {
-          "desc": "Mémorise le dernier état de chargement pour un niveau et sauvegarde.",
-          "params": {"level": {"type": "string", "desc": "Nom du niveau"}, "state": {"type": "any", "desc": "État à mémoriser (déduit du code : valeur libre)"}}
+          "desc": "Stores the last load state for a level and saves.",
+          "params": {
+            "level": {
+              "type": "string",
+              "desc": "Level name"
+            },
+            "state": {
+              "type": "any",
+              "desc": "State to store (inferred from code: free value)"
+            }
+          }
         },
         "getLastLoadState": {
-          "desc": "Dernier état de chargement pour un niveau.",
-          "params": {"level": {"type": "string", "desc": "Nom du niveau"}},
-          "returns": [{"type": "any", "desc": "État mémorisé ou nil"}]
+          "desc": "Last load state for a level.",
+          "params": {
+            "level": {
+              "type": "string",
+              "desc": "Level name"
+            }
+          },
+          "returns": [
+            {
+              "type": "any",
+              "desc": "Stored state or nil"
+            }
+          ]
         },
         "setCornerCallStyleName": {
-          "desc": "Définit le style d'annonce des virages et sauvegarde.",
-          "params": {"style_name": {"type": "string", "desc": "Nom du style"}}
+          "desc": "Sets the corner call style and saves.",
+          "params": {
+            "style_name": {
+              "type": "string",
+              "desc": "Style name"
+            }
+          }
         },
         "getCornerCallStyleName": {
-          "desc": "Nom du style d'annonce des virages actuel.",
-          "returns": [{"type": "string|nil", "desc": "Nom du style"}]
+          "desc": "Name of the current corner call style.",
+          "returns": [
+            {
+              "type": "string|nil",
+              "desc": "Style name"
+            }
+          ]
         },
         "getCornerCallStyle": {
-          "desc": "Renvoie la table du style correspondant au nom actuel dans pacenoteStyles.",
-          "returns": [{"type": "table|nil", "desc": "Style, ou nil si introuvable"}]
+          "desc": "Returns the style table matching the current name in pacenoteStyles.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Style, or nil if not found"
+            }
+          ]
         }
       }
     }

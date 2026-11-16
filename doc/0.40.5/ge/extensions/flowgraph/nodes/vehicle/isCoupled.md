@@ -1,18 +1,18 @@
 # `flowgraph_nodes_vehicle_isCoupled`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/isCoupled.lua` · VM : Game Engine (GE) · 34 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/isCoupled.lua` · VM: Game Engine (GE) · 34 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/isCoupled")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/isCoupled")` (file under extensions/ but not a regular extension)
 
-Nœud « Is Coupled » (catégorie `repeat_instant`, tags event/attach/detach). Teste si deux véhicules sont attelés (`mgr.modules.vehicle:isCoupledTo(vehA, vehB)`). Pins d'entrée : `vehA`, `vehB`. Sorties : flux `coupled`, flux `decoupled`, bool `isCoupled`.
+Node "Is Coupled" (category `repeat_instant`, tags event/attach/detach). Tests whether two vehicles are coupled (`mgr.modules.vehicle:isCoupledTo(vehA, vehB)`). Input pins: `vehA`, `vehB`. Outputs: flow `coupled`, flow `decoupled`, bool `isCoupled`.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work(args)` | Remplit `coupled`, `decoupled` et `isCoupled` depuis le résultat de `isCoupledTo`. Paramètre `args` non utilisé. | 27 |
+| `C:work(args)` | Fills `coupled`, `decoupled` and `isCoupled` from the result of `isCoupledTo`. Parameter `args` unused. | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/isCoupled.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/isCoupled.lua`.*

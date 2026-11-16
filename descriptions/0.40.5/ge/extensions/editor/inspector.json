@@ -1,69 +1,185 @@
 {
   "path": "lua/ge/extensions/editor/inspector.lua",
-  "module": "Fenêtre Inspector du World Editor : affiche et modifie les champs (statiques, dynamiques, tableaux) de l'objet ou des objets sélectionnés, avec éditeurs spécialisés (peinture métallique de véhicule, UV de billboards GroundCover, couleur/intensité/cookie des lumières, labels de DecalData) et undo/redo via editor.history. Plusieurs instances peuvent coexister, dont des instances verrouillées sur une sélection. Un moddeur s'en sert pour enregistrer des gestionnaires par type de sélection ou des modificateurs de champs.",
-  "usage": "editor.registerInspectorTypeHandler(\"mon_type\", function(inspectorInfo) ui_imgui.Text(\"Mon panneau\") end)\n-- puis : editor.selection = {}; editor.selection.mon_type = {1}",
+  "module": "World Editor Inspector window: displays and edits the fields (static, dynamic, arrays) of the selected object or objects, with specialized editors (vehicle metallic paint, GroundCover billboard UVs, light color/intensity/cookie, DecalData labels) and undo/redo via editor.history. Several instances can coexist, including instances locked to a selection. A modder uses it to register handlers per selection type or field modifiers.",
+  "usage": "editor.registerInspectorTypeHandler(\"my_type\", function(inspectorInfo) ui_imgui.Text(\"My panel\") end)\n-- then: editor.selection = {}; editor.selection.my_type = {1}",
   "notes": [
-    "Le type de sélection par défaut est « object » (gestionnaire objectInspectorGui).",
-    "onEditorGui émet le hook onEditorInspectorHeaderGui(inspectorInfo) en haut de la fenêtre (utilisé par ex. par editor_lightClassConverter).",
-    "Les index d'instances sont des chaînes (clés JSON), pas des nombres.",
-    "Les fonctions editor.* de la classe sont installées par onEditorRegisterApi / onExtensionLoaded (registerApi)."
+    "The default selection type is \"object\" (handler objectInspectorGui).",
+    "onEditorGui emits the hook onEditorInspectorHeaderGui(inspectorInfo) at the top of the window (used e.g. by editor_lightClassConverter).",
+    "Instance indices are strings (JSON keys), not numbers.",
+    "The class's editor.* functions are installed by onEditorRegisterApi / onExtensionLoaded (registerApi)."
   ],
   "functions": {
-    "onExtensionLoaded": {"desc": "Appelé au chargement : initialise les groupes repliables et installe l'API editor.* (addInspectorInstance, registerInspectorTypeHandler…).", "params": {}, "internal": true},
-    "onEditorRegisterApi": {"desc": "Définit editor.checkEditorDirtyFlag et editor.requestInspectorScrollToTopOnceForSelection(selectionId).", "params": {}, "internal": true},
-    "onEditorInitialized": {"desc": "Initialise le valueInspector, enregistre le gestionnaire « object », l'entrée de menu Window > Inspector et les éditeurs/labels de champs personnalisés (BeamNGVehicle.metallicPaintData, GroundCover.billboardUVs, DecalData.texRows/texCols, PointLight/SpotLight color, intensity, cookie).", "params": {}, "internal": true},
-    "onEditorActivated": {"desc": "Appelé à l'activation de l'éditeur : réinitialise les tables du valueInspector et le contexte partagé, puis rafraîchit la sélection.", "params": {}, "internal": true},
-    "onEditorDeactivated": {"desc": "Appelé à la désactivation de l'éditeur. Corps vide.", "params": {}, "internal": true},
-    "onEditorGui": {"desc": "Dessine chaque fenêtre d'inspecteur à chaque frame (ferme les instances dont la fenêtre n'est plus visible) et traite le rafraîchissement d'éclairage nocturne en attente.", "params": {}, "internal": true},
+    "onExtensionLoaded": {
+      "desc": "Called at load: initializes the collapsible groups and installs the editor.* API (addInspectorInstance, registerInspectorTypeHandler...).",
+      "params": {},
+      "internal": true
+    },
+    "onEditorRegisterApi": {
+      "desc": "Defines editor.checkEditorDirtyFlag and editor.requestInspectorScrollToTopOnceForSelection(selectionId).",
+      "params": {},
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Initializes the valueInspector, registers the \"object\" handler, the Window > Inspector menu entry and the custom field editors/labels (BeamNGVehicle.metallicPaintData, GroundCover.billboardUVs, DecalData.texRows/texCols, PointLight/SpotLight color, intensity, cookie).",
+      "params": {},
+      "internal": true
+    },
+    "onEditorActivated": {
+      "desc": "Called when the editor is activated: resets the valueInspector tables and the shared context, then refreshes the selection.",
+      "params": {},
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Called when the editor is deactivated. Empty body.",
+      "params": {},
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Draws each inspector window every frame (closes the instances whose window is no longer visible) and handles the pending night lighting refresh.",
+      "params": {},
+      "internal": true
+    },
     "onEditorLoadGuiInstancerState": {
-      "desc": "Restaure les instances d'inspecteur depuis l'état sauvegardé de l'éditeur.",
-      "params": {"state": {"type": "table", "desc": "État de l'éditeur."}},
+      "desc": "Restores the inspector instances from the editor's saved state.",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "Editor state."
+        }
+      },
       "internal": true
     },
     "onEditorSaveGuiInstancerState": {
-      "desc": "Écrit les instances d'inspecteur dans l'état de l'éditeur (clé « inspectorInstances »).",
-      "params": {"state": {"type": "table", "desc": "État à compléter."}},
+      "desc": "Writes the inspector instances into the editor state (key \"inspectorInstances\").",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "State to complete."
+        }
+      },
       "internal": true
     },
-    "onEditorObjectSelectionChanged": {"desc": "Appelé quand la sélection change : termine un éventuel « pickingLinkTo » ou reconstruit la liste des champs communs aux objets sélectionnés (avec compteur d'usage).", "params": {}, "internal": true},
-    "onEditorAfterOpenLevel": {"desc": "Appelé après l'ouverture d'un niveau : recharge les listes de datablocks des menus déroulants.", "params": {}, "internal": true}
+    "onEditorObjectSelectionChanged": {
+      "desc": "Called when the selection changes: ends a possible \"pickingLinkTo\" or rebuilds the list of fields common to the selected objects (with usage counter).",
+      "params": {},
+      "internal": true
+    },
+    "onEditorAfterOpenLevel": {
+      "desc": "Called after a level is opened: reloads the datablock lists of the dropdown menus.",
+      "params": {},
+      "internal": true
+    }
   },
   "classes": {
     "editor": {
-      "desc": "Méthodes ajoutées à la table globale `editor` par ce module.",
+      "desc": "Methods added to the global `editor` table by this module.",
       "functions": {
-        "checkEditorDirtyFlag": {"desc": "Pour chaque objet sélectionné, appelle inspectUpdate() ; si l'objet est modifié (ou isEditorDirty), marque l'éditeur comme modifié (editor.setDirty). Ne fait rien si déjà dirty.", "params": {}},
+        "checkEditorDirtyFlag": {
+          "desc": "For each selected object, calls inspectUpdate(); if the object is modified (or isEditorDirty), marks the editor as modified (editor.setDirty). Does nothing if already dirty.",
+          "params": {}
+        },
         "addInspectorInstance": {
-          "desc": "Crée une nouvelle fenêtre d'inspecteur. Avec une sélection, l'instance est verrouillée dessus (contexte propre) ; sans, elle suit la sélection courante.",
-          "params": {"selection": {"type": "table|nil", "desc": "Sélection à verrouiller (copiée en profondeur)."}},
-          "returns": [{"type": "string", "desc": "Index (clé chaîne) de l'instance."}]
+          "desc": "Creates a new inspector window. With a selection, the instance is locked to it (own context); without, it follows the current selection.",
+          "params": {
+            "selection": {
+              "type": "table|nil",
+              "desc": "Selection to lock to (deep copied)."
+            }
+          },
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Index (string key) of the instance."
+            }
+          ]
         },
         "closeInspectorInstance": {
-          "desc": "Ferme une instance d'inspecteur et désenregistre sa fenêtre.",
-          "params": {"idx": {"type": "string", "desc": "Index renvoyé par addInspectorInstance."}}
+          "desc": "Closes an inspector instance and unregisters its window.",
+          "params": {
+            "idx": {
+              "type": "string",
+              "desc": "Index returned by addInspectorInstance."
+            }
+          }
         },
-        "getInspectorInstances": {"desc": "Renvoie les instances d'inspecteur ouvertes.", "params": {}, "returns": [{"type": "table", "desc": "Table index -> infos d'instance."}]},
-        "getInspectorTypeHandlers": {"desc": "Renvoie les gestionnaires enregistrés par type de sélection.", "params": {}, "returns": [{"type": "table<string, table>", "desc": "typeName -> {typeName, guiCallback}."}]},
+        "getInspectorInstances": {
+          "desc": "Returns the open inspector instances.",
+          "params": {},
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Table index -> instance info."
+            }
+          ]
+        },
+        "getInspectorTypeHandlers": {
+          "desc": "Returns the handlers registered per selection type.",
+          "params": {},
+          "returns": [
+            {
+              "type": "table<string, table>",
+              "desc": "typeName -> {typeName, guiCallback}."
+            }
+          ]
+        },
         "registerInspectorTypeHandler": {
-          "desc": "Enregistre le rendu d'inspecteur d'un type de sélection (clé de editor.selection).",
+          "desc": "Registers the inspector rendering of a selection type (key of editor.selection).",
           "params": {
-            "typeName": {"type": "string", "desc": "Nom du type, par ex. « object »."},
-            "guiCallback": {"type": "function", "desc": "Fonction de dessin ImGui appelée avec l'instance d'inspecteur (déduit du code d'appel de levelSettings)."}
+            "typeName": {
+              "type": "string",
+              "desc": "Type name, e.g. \"object\"."
+            },
+            "guiCallback": {
+              "type": "function",
+              "desc": "ImGui drawing function called with the inspector instance (inferred from the calling code of levelSettings)."
+            }
           }
         },
-        "unregisterInspectorTypeHandler": {"desc": "Retire un gestionnaire de type.", "params": {"typeName": {"type": "string", "desc": "Nom du type."}}},
+        "unregisterInspectorTypeHandler": {
+          "desc": "Removes a type handler.",
+          "params": {
+            "typeName": {
+              "type": "string",
+              "desc": "Type name."
+            }
+          }
+        },
         "registerInspectorFieldModifier": {
-          "desc": "Enregistre un callback de modification de champs, identifié par un nom unique.",
+          "desc": "Registers a field modification callback, identified by a unique name.",
           "params": {
-            "uniqueName": {"type": "string", "desc": "Identifiant unique."},
-            "callback": {"type": "function", "desc": "Fonction de modification (signature non détaillée ici)."}
+            "uniqueName": {
+              "type": "string",
+              "desc": "Unique identifier."
+            },
+            "callback": {
+              "type": "function",
+              "desc": "Modification function (signature not detailed here)."
+            }
           }
         },
-        "unregisterInspectorFieldModifier": {"desc": "Retire un modificateur de champs.", "params": {"uniqueName": {"type": "string", "desc": "Identifiant utilisé à l'enregistrement."}}},
+        "unregisterInspectorFieldModifier": {
+          "desc": "Removes a field modifier.",
+          "params": {
+            "uniqueName": {
+              "type": "string",
+              "desc": "Identifier used at registration."
+            }
+          }
+        },
         "inspectorHasField": {
-          "desc": "Indique si l'inspecteur partagé affiche actuellement un champ de ce nom.",
-          "params": {"fieldName": {"type": "string", "desc": "Nom du champ."}},
-          "returns": [{"type": "boolean", "desc": "true si le champ est présent."}]
+          "desc": "Indicates whether the shared inspector currently displays a field of this name.",
+          "params": {
+            "fieldName": {
+              "type": "string",
+              "desc": "Field name."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if the field is present."
+            }
+          ]
         }
       }
     }

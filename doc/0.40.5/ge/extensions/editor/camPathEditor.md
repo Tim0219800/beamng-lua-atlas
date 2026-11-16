@@ -1,78 +1,78 @@
 # `editor_camPathEditor`
 
-*Fichier : `lua/ge/extensions/editor/camPathEditor.lua` · VM : Game Engine (GE) · 2496 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/camPathEditor.lua` · VM: Game Engine (GE) · 2496 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_camPathEditor` : `extensions.load("editor_camPathEditor")`, puis la globale `editor_camPathEditor`
+**Access:** extension `editor_camPathEditor`: `extensions.load("editor_camPathEditor")`, then the global `editor_camPathEditor`
 
-Éditeur de chemins de caméra du World Editor (fenêtre « Path Camera Tool », mode d'édition « Edit Camera Paths »). Il édite les chemins gérés par core_paths : chaque chemin est une liste de marqueurs {pos, rot, time, fov, positionSmooth, trackPosition, trackOffset, bullettime, cut, movingStart, movingEnd…} triés par temps. On peut créer/charger/sauver/supprimer un chemin, ajouter des marqueurs (Shift + clic gauche en mode édition, ou « + Add Marker » à la position de la caméra), régler les temps (Even Speed, Set Duration, Reverse, Relax Timings, Auto-smooth), orienter la caméra façon FPV (bank/aim), prévisualiser, lier le chemin à un replay (core_replay) et le jouer (core_paths.playPath), éventuellement en fermant l'éditeur. Il dessine les chemins (splines, frustums de caméra, sphères de marqueurs) et des surcouches de cadrage (règle des tiers, 16:9, 9:16). Dépend de core_camera.
+Camera path editor of the World Editor ("Path Camera Tool" window, "Edit Camera Paths" edit mode). It edits the paths managed by core_paths: each path is a list of markers {pos, rot, time, fov, positionSmooth, trackPosition, trackOffset, bullettime, cut, movingStart, movingEnd...} sorted by time. You can create/load/save/delete a path, add markers (Shift + left click in edit mode, or "+ Add Marker" at the camera position), adjust timings (Even Speed, Set Duration, Reverse, Relax Timings, Auto-smooth), orient the camera FPV-style (bank/aim), preview, link the path to a replay (core_replay) and play it (core_paths.playPath), optionally closing the editor. It draws the paths (splines, camera frustums, marker spheres) and framing overlays (rule of thirds, 16:9, 9:16). Depends on core_camera.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('editor_camPathEditor')
--- sélectionner un chemin existant dans l'éditeur :
+-- select an existing path in the editor:
 editor_camPathEditor.selectPath(core_paths.getPaths()[1])
 ```
 
-## Remarques
+## Notes
 
-- Bug : le module affecte M.onExtensionLoaded = onExtensionLoaded, mais aucune variable locale onExtensionLoaded n'est définie : le champ vaut nil (hook inexistant, sans effet).
-- onUpdate est vide (« currently unused but kept for future functionality »).
-- Décalage de suivi de véhicule : curseurs X (droite/gauche), Y (avant/arrière), Z (haut/bas) de -5 à +5 m, affichés quand un marqueur suit le véhicule joueur (trackPosition). getTrackingOffset() le renvoie à core/cameraModes/path.lua, qui l'utilise quand aucun marqueur n'a de trackOffset propre.
-- Chaque marqueur ajouté par addMarker a : time = temps du dernier marqueur + 2 s (ou position du replay si « Use with Replay » est coché), positionSmooth = 0.5, bullettime = 1, movingStart = movingEnd = true, fov de la caméra courante, trackPosition recopié du marqueur précédent. Si le temps du replay est identique à celui du dernier marqueur, ce dernier passe en cut = true.
-- Tri des marqueurs : par temps ; à temps égal, un marqueur « cut » passe avant (sortMarkers). L'indice du marqueur sélectionné est recalculé après chaque tri (setDirty).
-- Relax Timings (facteur 0,5) rapproche les temps intérieurs d'une répartition proportionnelle aux distances ; Even Speed répartit les temps pour une vitesse constante en ignorant les segments « cut » ; Auto-smooth combine adoucissement du cap, vitesse constante, limite de vitesse angulaire et active movingStart/movingEnd sur tous les marqueurs.
-- L'aperçu de rendu dans une fenêtre dédiée (« cameraPathPreviewWindow ») est enregistré mais son contenu est commenté dans onEditorGui.
-- Résolution des splines dessinées selon la distance : 0,1 / 0,2 / 0,25 / 0,5 m ; dessin limité à 600 m de rayon (drawDistance).
-- Le champ M.currentPath contient le chemin actuellement édité (nil si aucun).
+- Bug: the module assigns M.onExtensionLoaded = onExtensionLoaded, but no local variable onExtensionLoaded is defined: the field is nil (nonexistent hook, no effect).
+- onUpdate is empty ("currently unused but kept for future functionality").
+- Vehicle tracking offset: X (right/left), Y (forward/back), Z (up/down) sliders from -5 to +5 m, shown when a marker follows the player vehicle (trackPosition). getTrackingOffset() returns it to core/cameraModes/path.lua, which uses it when no marker has its own trackOffset.
+- Each marker added by addMarker has: time = time of the last marker + 2 s (or the replay position if "Use with Replay" is checked), positionSmooth = 0.5, bullettime = 1, movingStart = movingEnd = true, fov of the current camera, trackPosition copied from the previous marker. If the replay time is identical to that of the last marker, the latter becomes cut = true.
+- Marker sorting: by time; at equal time, a "cut" marker comes first (sortMarkers). The index of the selected marker is recomputed after each sort (setDirty).
+- Relax Timings (factor 0.5) brings the interior times closer to a distribution proportional to distances; Even Speed distributes the times for a constant speed, ignoring "cut" segments; Auto-smooth combines heading smoothing, constant speed, angular speed limit and enables movingStart/movingEnd on all markers.
+- The render preview in a dedicated window ("cameraPathPreviewWindow") is registered but its content is commented out in onEditorGui.
+- Resolution of the splines drawn according to distance: 0.1 / 0.2 / 0.25 / 0.5 m; drawing limited to a 600 m radius (drawDistance).
+- The M.currentPath field contains the path currently being edited (nil if none).
 
-**Dépendances (chargées avant) :** `core_camera`
+**Dependencies (loaded first):** `core_camera`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_camPathEditor.getTrackingOffset()` | Fournit à core/cameraModes/path le décalage de suivi du véhicule réglé dans l'éditeur. | 2476 |
-| `editor_camPathEditor.onClientStartMission()` | Appelé au début d'un niveau/mission : désélectionne le chemin courant (selectPath(nil)). *(interne)* *(hook)* | 2471 |
-| `editor_camPathEditor.onEditorGui()` | Dessine la fenêtre « Path Camera Tool » (menu File : New, Load, Save, Delete, Render Options ; choix du chemin, replay, liste et propriétés des marqueurs, outils de timing, FOV, suivi, boutons Play, Play (Close Editor) et Stop) et les chemins de caméra dans le monde. Appelé à chaque frame par l'éditeur. *(interne)* *(hook)* | 2020 |
-| `editor_camPathEditor.onEditorInitialized()` | Enregistre le mode d'édition camPathEditMode (icône, actionMap « CamPathEditor », raccourci Shift + clic gauche = « Add new marker ») et les fenêtres « pathCameraTool » (200x400) et « cameraPathPreviewWindow » (600x400). *(interne)* *(hook)* | 2453 |
-| `editor_camPathEditor.onPreRender()` | Appelé avant le rendu : si l'éditeur est actif en mode « Edit Camera Paths », mémorise le ratio d'aspect de la fenêtre et dessine la surcouche de cadrage. *(interne)* *(hook)* | 2433 |
-| `editor_camPathEditor.onUpdate(dtReal, dtSim, dtRaw)` | Hook par frame, actuellement vide. *(interne)* *(hook)* | 2429 |
-| `editor_camPathEditor.selectPath(path)` | Sélectionne un chemin de caméra : met à jour M.currentPath, désélectionne le marqueur, et charge le replay associé (path.replay) s'il existe et diffère du replay chargé ; sinon arrête le replay en cours. | 127 |
+| `editor_camPathEditor.getTrackingOffset()` | Provides core/cameraModes/path with the vehicle tracking offset set in the editor. | 2476 |
+| `editor_camPathEditor.onClientStartMission()` | Called at the start of a level/mission: deselects the current path (selectPath(nil)). *(internal)* *(hook)* | 2471 |
+| `editor_camPathEditor.onEditorGui()` | Draws the "Path Camera Tool" window (File menu: New, Load, Save, Delete, Render Options; path choice, replay, marker list and properties, timing tools, FOV, tracking, Play, Play (Close Editor) and Stop buttons) and the camera paths in the world. Called every frame by the editor. *(internal)* *(hook)* | 2020 |
+| `editor_camPathEditor.onEditorInitialized()` | Registers the camPathEditMode edit mode (icon, actionMap "CamPathEditor", shortcut Shift + left click = "Add new marker") and the "pathCameraTool" (200x400) and "cameraPathPreviewWindow" (600x400) windows. *(internal)* *(hook)* | 2453 |
+| `editor_camPathEditor.onPreRender()` | Called before rendering: if the editor is active in "Edit Camera Paths" mode, stores the window aspect ratio and draws the framing overlay. *(internal)* *(hook)* | 2433 |
+| `editor_camPathEditor.onUpdate(dtReal, dtSim, dtRaw)` | Per-frame hook, currently empty. *(internal)* *(hook)* | 2429 |
+| `editor_camPathEditor.selectPath(path)` | Selects a camera path: updates M.currentPath, deselects the marker, and loads the associated replay (path.replay) if it exists and differs from the loaded replay; otherwise stops the current replay. | 127 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_camPathEditor.getTrackingOffset()`
 
-Fournit à core/cameraModes/path le décalage de suivi du véhicule réglé dans l'éditeur.
+Provides core/cameraModes/path with the vehicle tracking offset set in the editor.
 
-- **renvoie** : table|nil {x = droite/gauche, y = avant/arrière, z = haut/bas} en mètres, ou nil si les trois valeurs sont à 0
+- **returns**: table|nil {x = right/left, y = forward/back, z = up/down} in meters, or nil if all three values are 0
 
 #### `editor_camPathEditor.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook par frame, actuellement vide.
+Per-frame hook, currently empty.
 
-- `dtReal` (*number*) : Delta temps réel en secondes
-- `dtSim` (*number*) : Delta temps de simulation
-- `dtRaw` (*number*) : Delta temps brut
+- `dtReal` (*number*) : Real-time delta in seconds
+- `dtSim` (*number*) : Simulation time delta
+- `dtRaw` (*number*) : Raw time delta
 
 #### `editor_camPathEditor.selectPath(path)`
 
-Sélectionne un chemin de caméra : met à jour M.currentPath, désélectionne le marqueur, et charge le replay associé (path.replay) s'il existe et diffère du replay chargé ; sinon arrête le replay en cours.
+Selects a camera path: updates M.currentPath, deselects the marker, and loads the associated replay (path.replay) if it exists and differs from the loaded replay; otherwise stops the current replay.
 
-- `path` (*table|nil*) : Chemin core_paths, ou nil pour désélectionner
+- `path` (*table|nil*) : core_paths path, or nil to deselect
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | {'core_camera'} : extensions chargées avant celle-ci. |
-| `onExtensionLoaded` | nil | Référence à une variable locale jamais définie : vaut nil (voir notes). ⚠ référence `onExtensionLoaded` non définie dans le fichier (vaut probablement nil) |
+| `dependencies` | string[] | {'core_camera'}: extensions loaded before this one. |
+| `onExtensionLoaded` | nil | Reference to a local variable that is never defined: is nil (see notes). ⚠ reference `onExtensionLoaded` not defined in the file (probably nil) |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 - `debugDrawer:` `drawLineInstance`, `drawSphere`, `drawText`, `drawTriSolid`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/camPathEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/camPathEditor.lua`.*

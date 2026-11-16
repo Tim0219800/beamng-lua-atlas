@@ -2,269 +2,269 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/drift/drift.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Moteur de détection du drift. Pour chaque véhicule suivi (un état par vehId, le véhicule du joueur 0 est suivi automatiquement), calcule à chaque frame l'angle de dérive, le survirage, la vitesse, la distance aux murs (raycasts avant/arrière), les crashs et spinouts, et décide si le véhicule drifte. Gère les structures driftActiveData (drift en cours) et driftChainActiveData (chaîne de drifts) et émet les hooks onDriftChainStarted, onDriftStatusChanged, onDriftTransition, onDriftActiveDataFinished, onDriftCompleted, onDriftCrash et onDriftSpinout que consomment scoring, display, quickMessages, statistics, etc. C'est le module à lire pour savoir si le joueur drifte et avec quel angle.
---- Accès : extension `gameplay_drift_drift` : `extensions.load("gameplay_drift_drift")`, puis la globale `gameplay_drift_drift`
+--- Drift detection engine. For each tracked vehicle (one state per vehId, player 0's vehicle is tracked automatically), computes every frame the drift angle, oversteer, speed, distance to walls (front/rear raycasts), crashes and spinouts, and decides whether the vehicle is drifting. Manages the driftActiveData (drift in progress) and driftChainActiveData (drift chain) structures and emits the hooks onDriftChainStarted, onDriftStatusChanged, onDriftTransition, onDriftActiveDataFinished, onDriftCompleted, onDriftCrash and onDriftSpinout that scoring, display, quickMessages, statistics, etc. consume. This is the module to read to know whether the player is drifting and at what angle.
+--- Access: extension `gameplay_drift_drift`: `extensions.load("gameplay_drift_drift")`, then the global `gameplay_drift_drift`
 ---@class gameplay_drift_drift
----@field dependencies string[] gameplay_walk, chargé avant.
+---@field dependencies string[] gameplay_walk, loaded beforehand.
 gameplay_drift_drift = {}
 
---- Ajoute un véhicule au suivi de drift (crée son état) et renvoie cet état. Avec opts.playerId, associe le véhicule à un joueur et retire tout autre véhicule suivi pour ce même joueur.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:873
----@param vehId integer Id du véhicule (ignoré si nil ou < 0).
+--- Adds a vehicle to the drift tracking (creates its state) and returns that state. With opts.playerId, associates the vehicle with a player and removes any other vehicle tracked for that same player.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:873
+---@param vehId integer Vehicle id (ignored if nil or < 0).
 ---@param opts table|nil {playerId = integer}.
----@return table|nil  État de drift du véhicule.
+---@return table|nil  Drift state of the vehicle.
 function gameplay_drift_drift.addTrackedVehicle(vehId, opts) end
 
---- Indique si le véhicule suivi a des données de map valides.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1000
----@param vehId integer|nil Id du véhicule.
----@return boolean|nil  true si vehData existe.
+--- Indicates whether the tracked vehicle has valid map data.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1000
+---@param vehId integer|nil Vehicle id.
+---@return boolean|nil  true if vehData exists.
 function gameplay_drift_drift.doesPlHaveVeh(vehId) end
 
---- Renvoie la vitesse du véhicule en km/h (norme de la vitesse * 3.6).
----Source : lua/ge/extensions/gameplay/drift/drift.lua:920
----@param vehId integer|nil Id du véhicule.
----@return number|nil  Vitesse en km/h.
+--- Returns the vehicle speed in km/h (velocity norm * 3.6).
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:920
+---@param vehId integer|nil Vehicle id.
+---@return number|nil  Speed in km/h.
 function gameplay_drift_drift.getAirSpeed(vehId) end
 
---- Renvoie la variation d'angle de la direction de vitesse depuis la frame précédente (degrés), calculée pendant un drift.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:962
----@param vehId integer|nil Id du véhicule.
----@return number|nil  Variation en degrés.
+--- Returns the change in angle of the velocity direction since the previous frame (degrees), computed during a drift.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:962
+---@param vehId integer|nil Vehicle id.
+---@return number|nil  Change in degrees.
 function gameplay_drift_drift.getAngleDiff(vehId) end
 
---- Renvoie l'angle de dérive actuel en degrés, signé (le signe donne le côté).
----Source : lua/ge/extensions/gameplay/drift/drift.lua:950
----@param vehId integer|nil Id du véhicule.
----@return number  Angle en degrés.
+--- Returns the current drift angle in degrees, signed (the sign gives the side).
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:950
+---@param vehId integer|nil Vehicle id.
+---@return number  Angle in degrees.
 function gameplay_drift_drift.getCurrDegAngleSigned(vehId) end
 
---- Renvoie la fraction (0..1) restante du temps de confirmation de la chaîne de drifts (1 = le drift vient d'avoir lieu, 0 = confirmé).
----Source : lua/ge/extensions/gameplay/drift/drift.lua:956
----@param vehId integer|nil Id du véhicule.
----@return number  Fraction du temps restant.
+--- Returns the remaining fraction (0..1) of the drift chain's confirmation time (1 = the drift just happened, 0 = confirmed).
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:956
+---@param vehId integer|nil Vehicle id.
+---@return number  Fraction of the remaining time.
 function gameplay_drift_drift.getCurrDriftCompletedTime(vehId) end
 
---- Renvoie la durée du drift en cours (totalDriftTime), 0 s'il ne drifte pas.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:972
----@param vehId integer|nil Id du véhicule.
----@return number  Durée en secondes.
+--- Returns the duration of the current drift (totalDriftTime), 0 if not drifting.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:972
+---@param vehId integer|nil Vehicle id.
+---@return number  Duration in seconds.
 function gameplay_drift_drift.getCurrentDriftDuration(vehId) end
 
---- Renvoie la distance parcourue depuis la frame précédente, en mètres.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:967
----@param vehId integer|nil Id du véhicule.
----@return number  Distance en m.
+--- Returns the distance traveled since the previous frame, in meters.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:967
+---@param vehId integer|nil Vehicle id.
+---@return number  Distance in m.
 function gameplay_drift_drift.getDistSinceLastFrame(vehId) end
 
---- Renvoie les données du drift en cours (nil s'il n'y en a pas).
----Source : lua/ge/extensions/gameplay/drift/drift.lua:900
----@param vehId integer|nil Id du véhicule.
+--- Returns the data of the current drift (nil if there is none).
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:900
+---@param vehId integer|nil Vehicle id.
 ---@return table|nil  driftActiveData.
 function gameplay_drift_drift.getDriftActiveData(vehId) end
 
---- Renvoie les données de la chaîne de drifts en cours (nil si aucune).
----Source : lua/ge/extensions/gameplay/drift/drift.lua:905
----@param vehId integer|nil Id du véhicule.
+--- Returns the data of the current drift chain (nil if none).
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:905
+---@param vehId integer|nil Vehicle id.
 ---@return table|nil  driftChainActiveData.
 function gameplay_drift_drift.getDriftChainActiveData(vehId) end
 
---- Renvoie le nombre de drifts enchaînés dans la chaîne en cours.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:910
----@param vehId integer|nil Id du véhicule.
----@return integer  Nombre de drifts, 0 si aucune chaîne.
+--- Returns the number of drifts chained in the current chain.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:910
+---@param vehId integer|nil Vehicle id.
+---@return integer  Number of drifts, 0 if no chain.
 function gameplay_drift_drift.getDriftChainChainedDrifts(vehId) end
 
---- Renvoie {default=true, canBeChanged=true} pour la fenêtre de debug drift.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1017
+--- Returns {default=true, canBeChanged=true} for the drift debug window.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1017
 ---@return table  {default = true, canBeChanged = true}
 function gameplay_drift_drift.getDriftDebugInfo() end
 
---- Renvoie la table des réglages de détection : minAngle 7, maxAngle 165, allowDonut, allowTightDrifts, raycastHeight 0.5, wallDetectionLength 3, baseDriftCompleteTime 1.2, failPointsCooldown 1.65, minAirSpeed 4, maxWasDriftingTime 4, crashDamageThreshold 150, etc. Table vivante, modifiable.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1005
+--- Returns the table of detection settings: minAngle 7, maxAngle 165, allowDonut, allowTightDrifts, raycastHeight 0.5, wallDetectionLength 3, baseDriftCompleteTime 1.2, failPointsCooldown 1.65, minAirSpeed 4, maxWasDriftingTime 4, crashDamageThreshold 150, etc. Live table, modifiable.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1005
 ---@return table  driftOptions.
 function gameplay_drift_drift.getDriftOptions() end
 
---- Renvoie la quantité de garbage mesurée par le profileur.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1013
----@return number|nil  nil tant que le debug général n'a jamais été actif.
+--- Returns the amount of garbage measured by the profiler.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1013
+---@return number|nil  nil as long as general debug has never been active.
 function gameplay_drift_drift.getGC() end
 
---- Indique si le véhicule est en train de crasher (gameplay_util_crashDetection).
----Source : lua/ge/extensions/gameplay/drift/drift.lua:995
----@param vehId integer|nil Id du véhicule.
----@return boolean  État de crash.
+--- Indicates whether the vehicle is crashing (gameplay_util_crashDetection).
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:995
+---@param vehId integer|nil Vehicle id.
+---@return boolean  Crash state.
 function gameplay_drift_drift.getIsCrashing(vehId) end
 
---- Indique si le véhicule est en train de drifter.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:915
----@param vehId integer|nil Id du véhicule.
----@return boolean  État de drift.
+--- Indicates whether the vehicle is drifting.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:915
+---@param vehId integer|nil Vehicle id.
+---@return boolean  Drift state.
 function gameplay_drift_drift.getIsDrifting(vehId) end
 
---- Indique si le véhicule n'est pas sur ses roues.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:990
----@param vehId integer|nil Id du véhicule.
----@return boolean  true en l'air.
+--- Indicates whether the vehicle is not on its wheels.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:990
+---@param vehId integer|nil Vehicle id.
+---@return boolean  true in the air.
 function gameplay_drift_drift.getIsInTheAir(vehId) end
 
---- Indique si la vitesse moyenne des points de référence dépasse minAirSpeed (4 km/h).
----Source : lua/ge/extensions/gameplay/drift/drift.lua:985
----@param vehId integer|nil Id du véhicule.
----@return boolean  true si assez rapide.
+--- Indicates whether the average speed of the reference points exceeds minAirSpeed (4 km/h).
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:985
+---@param vehId integer|nil Vehicle id.
+---@return boolean  true if fast enough.
 function gameplay_drift_drift.getIsOverMinSpeedForDrift(vehId) end
 
---- Indique si le véhicule est en survirage (avant et centre vont dans le même sens que l'arrière).
----Source : lua/ge/extensions/gameplay/drift/drift.lua:980
----@param vehId integer|nil Id du véhicule.
----@return boolean  État de survirage.
+--- Indicates whether the vehicle is oversteering (front and center go the same way as the rear).
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:980
+---@param vehId integer|nil Vehicle id.
+---@return boolean  Oversteer state.
 function gameplay_drift_drift.getIsOverSteering(vehId) end
 
---- Renvoie l'objet véhicule principal suivi.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:935
----@return userdata|nil  Objet véhicule de la scène.
+--- Returns the main tracked vehicle object.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:935
+---@return userdata|nil  Scene vehicle object.
 function gameplay_drift_drift.getPlVeh() end
 
---- Renvoie l'id de joueur associé à un véhicule suivi.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:859
----@param vehId integer Id du véhicule.
----@return integer  playerId, 0 si inconnu.
+--- Returns the player id associated with a tracked vehicle.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:859
+---@param vehId integer Vehicle id.
+---@return integer  playerId, 0 if unknown.
 function gameplay_drift_drift.getPlayerIdForVehicle(vehId) end
 
---- Renvoie la table des états de drift, indexée par vehId (table vivante).
----Source : lua/ge/extensions/gameplay/drift/drift.lua:896
----@return table<integer, table>  États de drift.
+--- Returns the table of drift states, keyed by vehId (live table).
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:896
+---@return table<integer, table>  Drift states.
 function gameplay_drift_drift.getTrackedVehicles() end
 
---- Renvoie les 4 coins de la boîte englobante utilisée pour les raycasts (avant droit, arrière droit, arrière gauche, avant gauche), à hauteur raycastHeight.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1009
+--- Returns the 4 corners of the bounding box used for the raycasts (front right, rear right, rear left, front left), at raycastHeight.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1009
 ---@return vec3[]  {corner_FR, corner_BR, corner_BL, corner_FL}
 function gameplay_drift_drift.getVehCorners() end
 
---- Renvoie les données de map.objects du véhicule (pos, vel, dirVec, ...).
----Source : lua/ge/extensions/gameplay/drift/drift.lua:940
----@param vehId integer|nil Id du véhicule.
----@return table|nil  Entrée map.objects.
+--- Returns the vehicle's map.objects data (pos, vel, dirVec, ...).
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:940
+---@param vehId integer|nil Vehicle id.
+---@return table|nil  map.objects entry.
 function gameplay_drift_drift.getVehData(vehId) end
 
---- Renvoie l'id du véhicule principal suivi (joueur 0 si possible).
----Source : lua/ge/extensions/gameplay/drift/drift.lua:930
----@return integer|nil  Id du véhicule.
+--- Returns the id of the main tracked vehicle (player 0 if possible).
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:930
+---@return integer|nil  Vehicle id.
 function gameplay_drift_drift.getVehId() end
 
---- Renvoie la position du véhicule suivie par le module.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:925
----@param vehId integer|nil Id du véhicule.
----@return vec3|nil  Position (vec3 partagé, à ne pas modifier).
+--- Returns the vehicle position tracked by the module.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:925
+---@param vehId integer|nil Vehicle id.
+---@return vec3|nil  Position (shared vec3, do not modify).
 function gameplay_drift_drift.getVehPos(vehId) end
 
---- Renvoie la direction normalisée de la vitesse du véhicule (velDir), pas son module.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:945
----@param vehId integer|nil Id du véhicule.
----@return vec3|nil  Direction unitaire de la vitesse.
+--- Returns the normalized direction of the vehicle's velocity (velDir), not its magnitude.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:945
+---@param vehId integer|nil Vehicle id.
+---@return vec3|nil  Unit direction of the velocity.
 function gameplay_drift_drift.getVehVel(vehId) end
 
---- Hook : une zone de cascade est réussie ; remet le temps de confirmation de la chaîne de drifts au maximum.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1080
+--- Hook: a cascade zone is completed; resets the drift chain's confirmation time to the maximum.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1080
 function gameplay_drift_drift.onAnyStuntZoneAccomplished() end
 
---- Hook : fin de niveau ; vide la liste des véhicules suivis.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1076
+--- Hook: level end; empties the list of tracked vehicles.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1076
 function gameplay_drift_drift.onClientEndMission() end
 
---- Hook : restaure la case de debug.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1151
----@param data table Table de onSerialize.
+--- Hook: restores the debug checkbox.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1151
+---@param data table onSerialize table.
 function gameplay_drift_drift.onDeserialized(data) end
 
---- Hook : fin d'un défi de drift ; émet onDriftCompleted pour les chaînes en cours et onDriftActiveDataFinished pour les drifts en cours.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1103
+--- Hook: end of a drift challenge; emits onDriftCompleted for the chains in progress and onDriftActiveDataFinished for the drifts in progress.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1103
 function gameplay_drift_drift.onDriftChallengeFinished() end
 
---- Hook : à un changement de contexte, ajoute les véhicules au suivi de crash (sauf en inAnotherMissionType, où ils en sont retirés).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1087
----@param context string Nouveau contexte.
----@param oldContext string|nil Ancien contexte.
+--- Hook: on a context change, adds the vehicles to the crash tracking (except in inAnotherMissionType, where they are removed from it).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1087
+---@param context string New context.
+---@param oldContext string|nil Old context.
 function gameplay_drift_drift.onDriftContextChanged(context, oldContext) end
 
---- Hook : véhicule remis en place ; réinitialise son état et active un timer de reset de 0.1 s pendant lequel il ne drifte pas.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1130
----@param vehId integer|nil Véhicule ; nil pour tous.
+--- Hook: vehicle put back in place; resets its state and activates a 0.1 s reset timer during which it does not drift.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1130
+---@param vehId integer|nil Vehicle; nil for all.
 function gameplay_drift_drift.onDriftPlVehReset(vehId) end
 
---- Hook : sauvegarde la case de debug avant rechargement Lua.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1145
+--- Hook: saves the debug checkbox before Lua reload.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1145
 ---@return table  {debugToggleSmothnessGraph}
 function gameplay_drift_drift.onSerialize() end
 
---- Appelé à chaque frame : suit automatiquement le véhicule du joueur 0 si rien n'est suivi, puis met à jour la détection pour chaque véhicule suivi. Sauté pendant firstDrive, la marche, la pause ou dtSim <= 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/drift.lua:807
----@param dtReal number Delta temps réel (inutilisé).
----@param _dtSim number Delta temps simulé.
----@param dtRaw number Delta temps brut (inutilisé).
+--- Called every frame: automatically tracks player 0's vehicle if nothing is tracked, then updates the detection for each tracked vehicle. Skipped during firstDrive, walking, pause or dtSim <= 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:807
+---@param dtReal number Real time delta (unused).
+---@param _dtSim number Simulated time delta.
+---@param dtRaw number Raw time delta (unused).
 function gameplay_drift_drift.onUpdate(dtReal, _dtSim, dtRaw) end
 
---- Hook : début de crash détecté par gameplay_util_crashDetection ; marque le véhicule comme crashé si son score en cache est > 0 (hors pause, gel, marche).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1117
----@param crashStartData table Contient vehId.
+--- Hook: crash start detected by gameplay_util_crashDetection; marks the vehicle as crashed if its cached score is > 0 (outside pause, freeze, walking).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1117
+---@param crashStartData table Contains vehId.
 function gameplay_drift_drift.onVehicleCrashStarted(crashStartData) end
 
---- Hook : retire le véhicule détruit du suivi.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1072
----@param vehId integer Véhicule détruit.
+--- Hook: removes the destroyed vehicle from the tracking.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1072
+---@param vehId integer Destroyed vehicle.
 function gameplay_drift_drift.onVehicleDestroyed(vehId) end
 
---- Hook : changement de véhicule d'un joueur ; retire l'ancien véhicule s'il appartenait à ce joueur et suit le nouveau (timer de reset 0.1 s).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1056
----@param oldId integer Ancien véhicule (-1 si aucun).
----@param newVehId integer Nouveau véhicule.
----@param player integer|nil Index du joueur (0 par défaut).
+--- Hook: a player's vehicle change; removes the old vehicle if it belonged to this player and tracks the new one (reset timer 0.1 s).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1056
+---@param oldId integer Old vehicle (-1 if none).
+---@param newVehId integer New vehicle.
+---@param player integer|nil Player index (0 by default).
 function gameplay_drift_drift.onVehicleSwitched(oldId, newVehId, player) end
 
---- Retire un véhicule du suivi de drift et du suivi de crash (gameplay_util_crashDetection).
----Source : lua/ge/extensions/gameplay/drift/drift.lua:864
----@param vehId integer Id du véhicule.
+--- Removes a vehicle from the drift tracking and from the crash tracking (gameplay_util_crashDetection).
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:864
+---@param vehId integer Vehicle id.
 function gameplay_drift_drift.removeTrackedVehicle(vehId) end
 
---- Réinitialise l'état de drift d'un véhicule (ou de tous si vehId est nil) : supprime drift/chaîne en cours, remet à zéro les données de crash.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1045
----@param vehId integer|nil Véhicule ; nil pour tous.
+--- Resets a vehicle's drift state (or all if vehId is nil): removes the drift/chain in progress, resets the crash data.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1045
+---@param vehId integer|nil Vehicle; nil for all.
 function gameplay_drift_drift.reset(vehId) end
 
---- Active/désactive la prise en compte des donuts (driftOptions.allowDonut), lue par les zones de cascade.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1021
----@param value boolean true pour autoriser.
+--- Enables/disables taking donuts into account (driftOptions.allowDonut), read by the cascade zones.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1021
+---@param value boolean true to allow.
 function gameplay_drift_drift.setAllowDonut(value) end
 
---- Active/désactive les drifts serrés (driftOptions.allowTightDrifts).
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1025
----@param value boolean true pour autoriser.
+--- Enables/disables tight drifts (driftOptions.allowTightDrifts).
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1025
+---@param value boolean true to allow.
 function gameplay_drift_drift.setAllowTightDrift(value) end
 
---- Active le mode « équilibre » : tant qu'il est actif le temps de confirmation reste figé à 1 et la chaîne de drifts n'est pas conclue.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1038
----@param _balanceMode boolean true pour activer.
----@param vehId integer|nil Id du véhicule.
+--- Enables "balance" mode: while it is active the confirmation time stays frozen at 1 and the drift chain is not concluded.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1038
+---@param _balanceMode boolean true to enable.
+---@param vehId integer|nil Vehicle id.
 function gameplay_drift_drift.setBalanceMode(_balanceMode, vehId) end
 
---- Ne suit plus que ce véhicule : retire tous les autres véhicules suivis puis l'ajoute.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:1029
----@param newVehId integer Id du véhicule à suivre.
+--- Tracks only this vehicle: removes all the other tracked vehicles then adds it.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:1029
+---@param newVehId integer Id of the vehicle to track.
 function gameplay_drift_drift.setVehId(newVehId) end
 
---- Active une simulation de drift pour le debug audio ; nil l'arrête.
----Source : lua/ge/extensions/gameplay/drift/drift.lua:855
+--- Enables a drift simulation for audio debug; nil stops it.
+---Source: lua/ge/extensions/gameplay/drift/drift.lua:855
 ---@param data table|nil {currDegAngle, airSpeed, wallDistance, isCrashing}.
 function gameplay_drift_drift.simulateADrift(data) end
 

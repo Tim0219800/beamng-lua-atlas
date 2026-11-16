@@ -1,12 +1,12 @@
 # `editor_trafficManager`
 
-*Fichier : `lua/ge/extensions/editor/trafficManager.lua` · VM : Game Engine (GE) · 2601 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/trafficManager.lua` · VM: Game Engine (GE) · 2601 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_trafficManager` : `extensions.load("editor_trafficManager")`, puis la globale `editor_trafficManager`
+**Access:** extension `editor_trafficManager`: `extensions.load("editor_trafficManager")`, then the global `editor_trafficManager`
 
-Éditeur « Traffic Manager » : permet de composer une session de trafic (véhicules et props placés sur la carte, feux de signalisation, panneaux), de lancer/arrêter la simulation (IA des véhicules non verrouillés, signaux), puis de sauvegarder la session en JSON avec un prefab associé. Fenêtres : principale (mode d'édition trafficEditMode), « Traffic Vehicles & Props », « Traffic Lights », « Traffic Signs » et « Options ». Les objets créés sont rangés dans le SimGroup « TrafficSession ». Un moddeur s'en sert via le menu de l'éditeur ; l'API Lua publique se limite au chargement/sauvegarde de session, à la lecture des données et à la simulation.
+Editor "Traffic Manager": lets you compose a traffic session (vehicles and props placed on the map, traffic lights, signs), start/stop the simulation (AI of unlocked vehicles, signals), then save the session as JSON with an associated prefab. Windows: main (trafficEditMode edit mode), "Traffic Vehicles & Props", "Traffic Lights", "Traffic Signs" and "Options". Created objects are stored in the "TrafficSession" SimGroup. A modder uses it through the editor menu; the public Lua API is limited to loading/saving a session, reading the data and the simulation.
 
-## Exemple
+## Example
 
 ```lua
 editor_trafficManager.loadSession('/levels/west_coast_usa/traffic/ma_session.json')
@@ -14,104 +14,104 @@ editor_trafficManager.enableSimulation()
 local session = editor_trafficManager.getSessionData()
 ```
 
-## Remarques
+## Notes
 
-- Le fichier de session contient : name, author, description, level, version (1), includePlayerVehicle, signalsKeepOriginal, signalsSaveApart, debugMode, vehicles, signals {instances, controllers, sequences}.
-- loadSession et saveSession remplacent .prefab.json par .json dans le chemin (pattern non échappé : le point est un joker) pour travailler sur le fichier de données ; un prefab du même nom est généré/chargé à côté.
-- Si le niveau du fichier diffère du niveau courant et que M.assertLevel est vrai, une confirmation est demandée ; accepter désactive assertLevel jusqu'à sa réactivation.
-- saveSession refuse d'écrire (notification « Missing session data! ») s'il n'y a ni véhicule, ni feu, ni panneau.
-- À la sauvegarde, chaque véhicule est téléporté sur place (spawn.safeTeleport) et les champs aiActive, stats et _tempData ne sont pas écrits.
-- onSerialize renvoie une table vide et onDeserialize ne fait rien : la session n'est pas conservée au rechargement Lua.
+- The session file contains: name, author, description, level, version (1), includePlayerVehicle, signalsKeepOriginal, signalsSaveApart, debugMode, vehicles, signals {instances, controllers, sequences}.
+- loadSession and saveSession replace .prefab.json with .json in the path (unescaped pattern: the dot is a wildcard) to work on the data file; a prefab of the same name is generated/loaded alongside.
+- If the file's level differs from the current level and M.assertLevel is true, a confirmation is requested; accepting disables assertLevel until it is re-enabled.
+- saveSession refuses to write (notification "Missing session data!") if there is no vehicle, no light and no sign.
+- On save, each vehicle is teleported in place (spawn.safeTeleport) and the fields aiActive, stats and _tempData are not written.
+- onSerialize returns an empty table and onDeserialize does nothing: the session is not kept across a Lua reload.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_trafficManager.disableSimulation()` | Arrête la simulation : désactive l'IA des véhicules non verrouillés et les signaux, met session.play à false. | 603 |
-| `editor_trafficManager.enableSimulation()` | Démarre la simulation : active l'IA de tous les véhicules non verrouillés et les signaux, recharge la collision si l'éditeur est modifié, met session.play à true. | 586 |
-| `editor_trafficManager.getSessionData()` | Renvoie la table de session courante (véhicules, feux, panneaux, nom, auteur, play…), non copiée. | 2305 |
-| `editor_trafficManager.loadSession(filePath)` | Charge une session depuis un fichier JSON : réinitialise la session, restaure options et métadonnées, charge le prefab associé s'il existe puis recrée véhicules et signaux. Sans argument, reprend le fichier mémorisé après une demande de confirmation de niveau (et désactive assertLevel). Notification d'échec si le fichier est illisible. | 2088 |
-| `editor_trafficManager.onDeserialized(data)` | Hook après rechargement Lua ; ne fait rien. *(interne)* *(hook)* | 2554 |
-| `editor_trafficManager.onEditorGui()` | Hook de frame de l'éditeur : dessine les fenêtres du Traffic Manager (seulement quand le mode d'édition courant est Traffic Manager) et le debug. *(interne)* *(hook)* | 2341 |
-| `editor_trafficManager.onEditorInitialized()` | Hook d'initialisation de l'éditeur : crée le mode d'édition trafficEditMode (raccourcis clic, Maj+clic déplacer, Alt) et enregistre les fenêtres. *(interne)* *(hook)* | 2566 |
-| `editor_trafficManager.onSerialize()` | Hook avant rechargement Lua ; renvoie une table vide. *(interne)* *(hook)* | 2549 |
-| `editor_trafficManager.onUpdate(dt, dtSim)` | Hook de mise à jour : si le SimGroup a disparu, réinitialise la session ; sinon range les véhicules apparus dans le SimGroup, met à jour les statistiques et un minuteur de 0.25 s. *(interne)* *(hook)* | 2423 |
-| `editor_trafficManager.onVehicleResetted(vehId)` | Hook appelé quand un véhicule est réinitialisé : recrée ses données de session (statistiques remises à zéro). *(interne)* *(hook)* | 2526 |
-| `editor_trafficManager.onVehicleSpawned(vehId)` | Hook appelé quand un véhicule apparaît : si la fenêtre véhicules ou panneaux est active, crée le SimGroup au besoin et met le véhicule en file pour l'ajouter à la session à la frame suivante. *(interne)* *(hook)* | 2513 |
-| `editor_trafficManager.onWindowMenuItem()` | Hook du menu : crée la session et vérifie le SimGroup si besoin, vide la sélection et affiche la fenêtre principale. *(interne)* *(hook)* | 2557 |
-| `editor_trafficManager.saveSession(filePath)` | Sauvegarde la session dans un fichier JSON et un prefab du même nom. Sans effet sans chemin. | 2212 |
+| `editor_trafficManager.disableSimulation()` | Stops the simulation: disables the AI of unlocked vehicles and the signals, sets session.play to false. | 603 |
+| `editor_trafficManager.enableSimulation()` | Starts the simulation: enables the AI of all unlocked vehicles and the signals, reloads the collision if the editor is modified, sets session.play to true. | 586 |
+| `editor_trafficManager.getSessionData()` | Returns the current session table (vehicles, lights, signs, name, author, play...), not copied. | 2305 |
+| `editor_trafficManager.loadSession(filePath)` | Loads a session from a JSON file: resets the session, restores options and metadata, loads the associated prefab if it exists then recreates vehicles and signals. Without an argument, resumes the remembered file after a level confirmation request (and disables assertLevel). Failure notification if the file is unreadable. | 2088 |
+| `editor_trafficManager.onDeserialized(data)` | Hook after Lua reload; does nothing. *(internal)* *(hook)* | 2554 |
+| `editor_trafficManager.onEditorGui()` | Editor frame hook: draws the Traffic Manager windows (only when the current edit mode is Traffic Manager) and the debug. *(internal)* *(hook)* | 2341 |
+| `editor_trafficManager.onEditorInitialized()` | Editor initialization hook: creates the trafficEditMode edit mode (shortcuts click, Shift+click move, Alt) and registers the windows. *(internal)* *(hook)* | 2566 |
+| `editor_trafficManager.onSerialize()` | Hook before Lua reload; returns an empty table. *(internal)* *(hook)* | 2549 |
+| `editor_trafficManager.onUpdate(dt, dtSim)` | Update hook: if the SimGroup has disappeared, resets the session; otherwise stores the vehicles that appeared in the SimGroup, updates the statistics and a 0.25 s timer. *(internal)* *(hook)* | 2423 |
+| `editor_trafficManager.onVehicleResetted(vehId)` | Hook called when a vehicle is reset: recreates its session data (statistics reset to zero). *(internal)* *(hook)* | 2526 |
+| `editor_trafficManager.onVehicleSpawned(vehId)` | Hook called when a vehicle spawns: if the vehicles or signs window is active, creates the SimGroup if needed and queues the vehicle to be added to the session on the next frame. *(internal)* *(hook)* | 2513 |
+| `editor_trafficManager.onWindowMenuItem()` | Menu hook: creates the session and checks the SimGroup if needed, clears the selection and shows the main window. *(internal)* *(hook)* | 2557 |
+| `editor_trafficManager.saveSession(filePath)` | Saves the session to a JSON file and a prefab of the same name. No effect without a path. | 2212 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_trafficManager.disableSimulation()`
 
-Arrête la simulation : désactive l'IA des véhicules non verrouillés et les signaux, met session.play à false.
+Stops the simulation: disables the AI of unlocked vehicles and the signals, sets session.play to false.
 
-- **renvoie** : boolean Faux si aucune session n'existe, vrai sinon.
+- **returns**: boolean False if no session exists, true otherwise.
 
 #### `editor_trafficManager.enableSimulation()`
 
-Démarre la simulation : active l'IA de tous les véhicules non verrouillés et les signaux, recharge la collision si l'éditeur est modifié, met session.play à true.
+Starts the simulation: enables the AI of all unlocked vehicles and the signals, reloads the collision if the editor is modified, sets session.play to true.
 
-- **renvoie** : boolean Faux si aucune session n'existe, vrai sinon.
+- **returns**: boolean False if no session exists, true otherwise.
 
 #### `editor_trafficManager.getSessionData()`
 
-Renvoie la table de session courante (véhicules, feux, panneaux, nom, auteur, play…), non copiée.
+Returns the current session table (vehicles, lights, signs, name, author, play...), not copied.
 
-- **renvoie** : table|nil Session, nil tant qu'elle n'est pas créée.
+- **returns**: table|nil Session, nil until it is created.
 
 #### `editor_trafficManager.loadSession(filePath)`
 
-Charge une session depuis un fichier JSON : réinitialise la session, restaure options et métadonnées, charge le prefab associé s'il existe puis recrée véhicules et signaux. Sans argument, reprend le fichier mémorisé après une demande de confirmation de niveau (et désactive assertLevel). Notification d'échec si le fichier est illisible.
+Loads a session from a JSON file: resets the session, restores options and metadata, loads the associated prefab if it exists then recreates vehicles and signals. Without an argument, resumes the remembered file after a level confirmation request (and disables assertLevel). Failure notification if the file is unreadable.
 
-- `filePath` (*string|nil*) : Chemin du fichier .json (ou .prefab.json, converti).
+- `filePath` (*string|nil*) : Path of the .json file (or .prefab.json, converted).
 
 #### `editor_trafficManager.onDeserialized(data)`
 
-Hook après rechargement Lua ; ne fait rien.
+Hook after Lua reload; does nothing.
 
-- `data` (*table*) : Valeur de onSerialize.
+- `data` (*table*) : Value of onSerialize.
 
 #### `editor_trafficManager.onSerialize()`
 
-Hook avant rechargement Lua ; renvoie une table vide.
+Hook before Lua reload; returns an empty table.
 
-- **renvoie** : table Table vide.
+- **returns**: table Empty table.
 
 #### `editor_trafficManager.onUpdate(dt, dtSim)`
 
-Hook de mise à jour : si le SimGroup a disparu, réinitialise la session ; sinon range les véhicules apparus dans le SimGroup, met à jour les statistiques et un minuteur de 0.25 s.
+Update hook: if the SimGroup has disappeared, resets the session; otherwise stores the vehicles that appeared in the SimGroup, updates the statistics and a 0.25 s timer.
 
-- `dt` (*number*) : Delta de temps réel (s).
-- `dtSim` (*number*) : Delta de temps de simulation (s).
+- `dt` (*number*) : Real-time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s).
 
 #### `editor_trafficManager.onVehicleResetted(vehId)`
 
-Hook appelé quand un véhicule est réinitialisé : recrée ses données de session (statistiques remises à zéro).
+Hook called when a vehicle is reset: recreates its session data (statistics reset to zero).
 
-- `vehId` (*integer*) : Identifiant du véhicule.
+- `vehId` (*integer*) : Vehicle identifier.
 
 #### `editor_trafficManager.onVehicleSpawned(vehId)`
 
-Hook appelé quand un véhicule apparaît : si la fenêtre véhicules ou panneaux est active, crée le SimGroup au besoin et met le véhicule en file pour l'ajouter à la session à la frame suivante.
+Hook called when a vehicle spawns: if the vehicles or signs window is active, creates the SimGroup if needed and queues the vehicle to be added to the session on the next frame.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
+- `vehId` (*integer*) : Vehicle identifier.
 
 #### `editor_trafficManager.saveSession(filePath)`
 
-Sauvegarde la session dans un fichier JSON et un prefab du même nom. Sans effet sans chemin.
+Saves the session to a JSON file and a prefab of the same name. No effect without a path.
 
-- `filePath` (*string*) : Chemin du fichier .json (ou .prefab.json, converti).
+- `filePath` (*string*) : Path of the .json file (or .prefab.json, converted).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `assertLevel` | boolean | Vrai par défaut : loadSession compare le niveau du fichier au niveau courant et demande confirmation en cas de différence. |
-| `debugMode` | boolean | Faux par défaut : active le dessin de debug (cible IA, boîte sous le véhicule) même pour les véhicules actifs ; recopié depuis le fichier chargé. |
+| `assertLevel` | boolean | True by default: loadSession compares the file's level with the current level and asks for confirmation if they differ. |
+| `debugMode` | boolean | False by default: enables debug drawing (AI target, box under the vehicle) even for active vehicles; copied from the loaded file. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 - `be:` `enterVehicle`, `getEnabled`, `getPlayerVehicleID`, `getSurfaceHeightBelow`, `reloadCollision`
@@ -120,4 +120,4 @@ Sauvegarde la session dans un fichier JSON et un prefab du même nom. Sans effet
 - `scenetree.` `findObject`, `findObjectById`, `objectExists`, `objectExistsById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/trafficManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/trafficManager.lua`.*

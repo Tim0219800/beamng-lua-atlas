@@ -1,0 +1,59 @@
+{
+  "path": "lua/ge/extensions/editor/dragRaceEditor/utils.lua",
+  "module": "Utilitaires de l'éditeur de drag race : affichage des erreurs, drapeau de modifications non sauvées, pile undo/redo sur dragRaceData, validation et création de données de course/voies par défaut, mise à jour de la souris, création d'un transformUtil et widgets d'en-tête ImGui.",
+  "notes": ["La pile d'annulation est limitée à state.getMaxUndoSteps() (20) entrées ; saveToUndoStack vide la pile de rétablissement.", "updateMouseInfo ici (contrairement à input.updateMouseInfo) suppose que core_forest existe et force down/hold/up à false si le raycast échoue.", "dragHeaderLabel renvoie deux valeurs (gsub renvoie aussi le nombre de remplacements) ; seule la première est utilisée à la concaténation.", "La validation exige stripId non vide ou strip.lanes, plus un dragType non vide."],
+  "functions": {
+    "logError": {"desc": "Mémorise le message comme dernière erreur, l'affiche 3 s et l'écrit dans le log (niveau E, tag DragRaceEditor).", "params": {"message": {"type": "string", "desc": "texte de l'erreur"}}},
+    "showError": {"desc": "Affiche en rouge l'erreur courante tant que son délai n'est pas écoulé ; décrémente le délai avec le DeltaTime ImGui. À appeler à chaque frame.", "params": {}},
+    "markUnsavedChanges": {"desc": "Marque l'état comme modifié non sauvegardé.", "params": {}},
+    "clearUnsavedChanges": {"desc": "Efface le drapeau de modifications non sauvées.", "params": {}},
+    "saveToUndoStack": {"desc": "Empile une copie profonde de dragRaceData (supprime la plus ancienne si la pile est pleine) et vide la pile redo.", "params": {}},
+    "undo": {"desc": "Dépile l'état précédent : le courant va dans la pile redo. Ne fait rien si la pile est vide.", "params": {}},
+    "redo": {"desc": "Rétablit l'état annulé : le courant retourne dans la pile undo.", "params": {}},
+    "validateDragRaceData": {
+      "desc": "Vérifie qu'un dragRaceData est exploitable.",
+      "params": {"data": {"type": "table|nil", "desc": "données à vérifier"}},
+      "returns": [{"type": "boolean", "desc": "validité"}, {"type": "string|nil", "desc": "message d'erreur si invalide"}]
+    },
+    "createNewLane": {
+      "desc": "Crée une voie par défaut : noms « Lane N », couleur blue, waypoints stage et endLine, boundary, tous avec la transformation par défaut.",
+      "params": {"laneIndex": {"type": "integer", "desc": "numéro de voie (laneOrder)"}},
+      "returns": [{"type": "table", "desc": "voie"}]
+    },
+    "createNewDragRaceData": {
+      "desc": "Crée un dragRaceData par défaut : contexte activity, type headsUpRace, 4 phases (stage, countdown, race, stop), prefabs (christmasTree .500, displaySign, paths, decorations) non utilisés.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "données"}]
+    },
+    "reorderLanes": {
+      "desc": "Déplace un élément d'un tableau de la position old à new en décalant les autres (modifie t sur place).",
+      "params": {"t": {"type": "table", "desc": "tableau"}, "old": {"type": "integer", "desc": "index source"}, "new": {"type": "integer", "desc": "index destination"}}
+    },
+    "updateMouseInfo": {"desc": "Met à jour la table souris de state (rayon caméra, raycast, clic/maintien/relâchement bouton gauche si ImGui ne capture pas la souris).", "params": {}},
+    "setupTransform": {
+      "desc": "Crée un transformUtil (gizmo) initialisé depuis une table transform {position, rotation, scale}.",
+      "params": {
+        "label": {"type": "string", "desc": "nom/identifiant du transformUtil"},
+        "transform": {"type": "table", "desc": "position {x,y,z}, rotation quaternion {x,y,z,w}, scale {x,y,z}"},
+        "allowTranslate": {"type": "boolean|nil", "desc": "faux seulement si false explicite"},
+        "allowRotate": {"type": "boolean|nil", "desc": "faux seulement si false explicite"},
+        "allowScale": {"type": "boolean|nil", "desc": "faux seulement si false explicite"}
+      },
+      "returns": [{"type": "table", "desc": "transformUtil"}]
+    },
+    "dragHeaderLabel": {
+      "desc": "Texte d'en-tête sûr pour ImGui : « Untitled » si vide, sinon la chaîne sans caractère #.",
+      "params": {"s": {"type": "string|nil", "desc": "texte"}},
+      "returns": [{"type": "string", "desc": "libellé"}]
+    },
+    "dragSectionHeader": {
+      "desc": "Dessine un CollapsingHeader avec un padding plus grand.",
+      "params": {
+        "visibleLabel": {"type": "string|nil", "desc": "texte affiché"},
+        "idSuffix": {"type": "string", "desc": "suffixe d'ID ImGui (ex. \"##xyz\")"},
+        "defaultOpen": {"type": "boolean", "desc": "ouvert par défaut"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si la section est ouverte"}]
+    }
+  }
+}

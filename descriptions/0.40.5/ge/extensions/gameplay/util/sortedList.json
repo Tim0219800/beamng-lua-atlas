@@ -1,29 +1,131 @@
 {
   "path": "lua/ge/extensions/gameplay/util/sortedList.lua",
-  "module": "Liste d'objets ordonnée par `sortOrder`, avec index par id (objects) et par nom (byName). Elle fabrique les objets via un constructeur fourni, gère le tri, le déplacement, la sérialisation et le dessin de debug. Le module renvoie un constructeur de liste ; il sert aux collections de l'éditeur de gameplay (sites, zones, etc.).",
+  "module": "List of objects ordered by `sortOrder`, with an index by id (objects) and by name (byName). It builds objects through a provided constructor, and handles sorting, moving, serialization and debug drawing. The module returns a list constructor; it is used for gameplay editor collections (sites, zones, etc.).",
   "usage": "local liste = require(\"gameplay/util/sortedList\")(\"zones\", parent, function(parent, name, forceId) return maClasse(parent, name, forceId) end)\nlocal obj = liste:create(\"zone1\")\nliste:buildNamesDir()",
   "notes": [
-    "Les objets créés doivent avoir id, name, sortOrder, drawDebug(), onSerialize() et onDeserialized().",
-    "objects a une métatable : lire un id inexistant renvoie {name = \"Missing!\", missing = true, id = -1} au lieu de nil.",
-    "byName n'est mis à jour que par buildNamesDir() ; en cas de doublon de nom, le premier objet trié gagne.",
-    "create() force obj.isProcedural = false ; seuls les objets non procéduraux sont sérialisés.",
-    "Dans onDeserialized, les anciens ids sont enregistrés dans oldIdMap[oldId] = nouvel id.",
-    "Les hooks postClear, postRemove et postCreate valent nop par défaut et peuvent être remplacés sur l'instance."
+    "Created objects must have id, name, sortOrder, drawDebug(), onSerialize() and onDeserialized().",
+    "objects has a metatable: reading a nonexistent id returns {name = \"Missing!\", missing = true, id = -1} instead of nil.",
+    "byName is only updated by buildNamesDir(); in case of duplicate names, the first sorted object wins.",
+    "create() forces obj.isProcedural = false; only non-procedural objects are serialized.",
+    "In onDeserialized, old ids are recorded in oldIdMap[oldId] = new id.",
+    "The postClear, postRemove and postCreate hooks default to nop and can be replaced on the instance."
   ],
   "classes": {
     "C": {
-      "desc": "Liste ordonnée. Champs : name, parent, objectConstructor, objects (id -> objet), sorted (tableau trié), byName.",
+      "desc": "Ordered list. Fields: name, parent, objectConstructor, objects (id -> object), sorted (sorted array), byName.",
       "functions": {
-        "init": {"desc": "Crée la liste (vide).", "params": {"name": {"type": "string", "desc": "Nom de la liste."}, "parent": {"type": "table", "desc": "Objet parent passé au constructeur des éléments."}, "objectConstructor": {"type": "function", "desc": "function(parent, name, forceId) renvoyant un nouvel élément."}}, "internal": true},
-        "clear": {"desc": "Vide la liste (objects, sorted, byName) puis appelle postClear.", "params": {}},
-        "create": {"desc": "Crée un élément via objectConstructor, l'enregistre et retrie (sauf skipSort), puis appelle postCreate.", "params": {"name": {"type": "string", "desc": "Nom de l'élément."}, "forceId": {"type": "integer|nil", "desc": "Id imposé."}, "skipSort": {"type": "boolean|nil", "desc": "Ne pas retrier (utile pour les créations en série)."}}, "returns": [{"type": "table", "desc": "Nouvel élément."}]},
-        "remove": {"desc": "Retire un élément (objet ou id), retrie puis appelle postRemove.", "params": {"obj": {"type": "table|integer", "desc": "Élément ou son id."}}},
-        "sort": {"desc": "Reconstruit sorted selon sortOrder et renumérote sortOrder de 1 à N.", "params": {}},
-        "move": {"desc": "Échange la position d'un élément avec son voisin dans la direction donnée.", "params": {"id": {"type": "integer", "desc": "Id de l'élément."}, "dir": {"type": "integer", "desc": "-1 vers le début, +1 vers la fin."}}},
-        "buildNamesDir": {"desc": "Reconstruit l'index byName.", "params": {}},
-        "drawDebug": {"desc": "Appelle drawDebug(drawMode) sur chaque élément.", "params": {"drawMode": {"type": "any", "desc": "Mode de dessin transmis tel quel."}}},
-        "onSerialize": {"desc": "Renvoie la liste des éléments non procéduraux sérialisés, dans l'ordre.", "params": {"parent": {"type": "any", "desc": "Inutilisé."}}, "returns": [{"type": "table[]", "desc": "Données des éléments."}]},
-        "onDeserialized": {"desc": "Vide la liste et recrée les éléments depuis les données.", "params": {"data": {"type": "table[]|nil", "desc": "Données sérialisées."}, "oldIdMap": {"type": "table<integer, integer>", "desc": "Table remplie avec ancien id -> nouvel id."}}}
+        "init": {
+          "desc": "Creates the (empty) list.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "List name."
+            },
+            "parent": {
+              "type": "table",
+              "desc": "Parent object passed to the element constructor."
+            },
+            "objectConstructor": {
+              "type": "function",
+              "desc": "function(parent, name, forceId) returning a new element."
+            }
+          },
+          "internal": true
+        },
+        "clear": {
+          "desc": "Clears the list (objects, sorted, byName) then calls postClear.",
+          "params": {}
+        },
+        "create": {
+          "desc": "Creates an element via objectConstructor, registers it and re-sorts (unless skipSort), then calls postCreate.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Element name."
+            },
+            "forceId": {
+              "type": "integer|nil",
+              "desc": "Forced id."
+            },
+            "skipSort": {
+              "type": "boolean|nil",
+              "desc": "Do not re-sort (useful for batch creation)."
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "New element."
+            }
+          ]
+        },
+        "remove": {
+          "desc": "Removes an element (object or id), re-sorts then calls postRemove.",
+          "params": {
+            "obj": {
+              "type": "table|integer",
+              "desc": "Element or its id."
+            }
+          }
+        },
+        "sort": {
+          "desc": "Rebuilds sorted according to sortOrder and renumbers sortOrder from 1 to N.",
+          "params": {}
+        },
+        "move": {
+          "desc": "Swaps an element's position with its neighbor in the given direction.",
+          "params": {
+            "id": {
+              "type": "integer",
+              "desc": "Element id."
+            },
+            "dir": {
+              "type": "integer",
+              "desc": "-1 toward the start, +1 toward the end."
+            }
+          }
+        },
+        "buildNamesDir": {
+          "desc": "Rebuilds the byName index.",
+          "params": {}
+        },
+        "drawDebug": {
+          "desc": "Calls drawDebug(drawMode) on each element.",
+          "params": {
+            "drawMode": {
+              "type": "any",
+              "desc": "Draw mode passed through unchanged."
+            }
+          }
+        },
+        "onSerialize": {
+          "desc": "Returns the list of serialized non-procedural elements, in order.",
+          "params": {
+            "parent": {
+              "type": "any",
+              "desc": "Unused."
+            }
+          },
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "Element data."
+            }
+          ]
+        },
+        "onDeserialized": {
+          "desc": "Clears the list and recreates the elements from the data.",
+          "params": {
+            "data": {
+              "type": "table[]|nil",
+              "desc": "Serialized data."
+            },
+            "oldIdMap": {
+              "type": "table<integer, integer>",
+              "desc": "Table filled with old id -> new id."
+            }
+          }
+        }
       }
     }
   }

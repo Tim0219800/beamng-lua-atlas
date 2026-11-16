@@ -1,38 +1,67 @@
 {
   "path": "lua/ge/extensions/gameplay/drift/bounds.lua",
-  "module": "Limites de zone du mode drift. Charge un fichier de sites (zones) avec setBounds, puis, à chaque frame, regarde pour chaque véhicule suivi par gameplay_drift_drift s'il est dans au moins une zone ; sinon il est « hors limites ». Un moddeur de mission de drift lit getIsOutOfBounds(vehId) pour pénaliser le joueur. Contient aussi une fenêtre ImGui de debug et un profileur.",
+  "module": "Zone boundaries of drift mode. Loads a sites file (zones) with setBounds, then, every frame, checks for each vehicle tracked by gameplay_drift_drift whether it is in at least one zone; otherwise it is \"out of bounds\". A drift mission modder reads getIsOutOfBounds(vehId) to penalize the player. Also contains an ImGui debug window and a profiler.",
   "notes": [
-    "setBounds : le paramètre drawBounds_ est mal géré : seul le cas nil met drawBounds à true ; une valeur true/false fournie n'est jamais copiée. De plus drawZones() (dessin des zones, clignotant rouge hors limites) est commenté dans onUpdate, donc rien n'est dessiné.",
-    "Dépend de gameplay_drift_drift (getTrackedVehicles, getVehPos) et de gameplay_drift_general (debug) ; les véhicules non suivis sont retirés de l'état.",
-    "getIsOutOfBounds sans argument renvoie true si n'importe quel véhicule suivi est hors limites (compatibilité).",
-    "Une position hors de toutes les zones du fichier de sites (sites:getZonesForPosition renvoie 0 zone) est considérée hors limites."
+    "setBounds: the drawBounds_ parameter is poorly handled: only the nil case sets drawBounds to true; a provided true/false value is never copied. Also drawZones() (drawing the zones, flashing red when out of bounds) is commented out in onUpdate, so nothing is drawn.",
+    "Depends on gameplay_drift_drift (getTrackedVehicles, getVehPos) and gameplay_drift_general (debug); untracked vehicles are removed from the state.",
+    "getIsOutOfBounds without argument returns true if any tracked vehicle is out of bounds (compatibility).",
+    "A position outside all the zones of the sites file (sites:getZonesForPosition returns 0 zones) is considered out of bounds."
   ],
   "fields": {},
   "functions": {
     "getDriftDebugInfo": {
-      "desc": "Table de configuration du debug de l'extension : {default = false, canBeChanged = true}.",
+      "desc": "Debug configuration table of the extension: {default = false, canBeChanged = true}.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Infos de debug."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Debug info."
+        }
+      ]
     },
     "getGC": {
-      "desc": "Garbage Lua produit par la dernière frame mesurée par le profileur (0 si le debug général est coupé).",
+      "desc": "Lua garbage produced by the last frame measured by the profiler (0 if general debug is off).",
       "params": {},
-      "returns": [{"type": "number", "desc": "Quantité de garbage mesurée."}]
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Measured garbage amount."
+        }
+      ]
     },
     "getIsOutOfBounds": {
-      "desc": "Indique si un véhicule est hors des zones de limites.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "ID du véhicule ; nil = vrai si un véhicule suivi quelconque est hors limites."}},
-      "returns": [{"type": "boolean", "desc": "true si hors limites."}]
+      "desc": "Indicates whether a vehicle is outside the boundary zones.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle ID; nil = true if any tracked vehicle is out of bounds."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if out of bounds."
+        }
+      ]
     },
     "onUpdate": {
-      "desc": "Hook par frame : met à jour l'état hors-limites de chaque véhicule suivi, la fenêtre de debug et le profileur.",
+      "desc": "Per-frame hook: updates the out-of-bounds state of each tracked vehicle, the debug window and the profiler.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "setBounds": {
-      "desc": "Charge le fichier de sites qui définit les zones autorisées (gameplay_sites_sitesManager.loadSites puis finalizeSites) et vide l'état des véhicules.",
-      "params": {"filePath": {"type": "string", "desc": "Chemin du fichier de sites contenant les zones."}, "drawBounds_": {"type": "boolean|nil", "desc": "Dessin des zones (nil = actif) ; voir notes, la valeur fournie est ignorée."}},
+      "desc": "Loads the sites file that defines the allowed zones (gameplay_sites_sitesManager.loadSites then finalizeSites) and empties the vehicle state.",
+      "params": {
+        "filePath": {
+          "type": "string",
+          "desc": "Path of the sites file containing the zones."
+        },
+        "drawBounds_": {
+          "type": "boolean|nil",
+          "desc": "Drawing of the zones (nil = active); see notes, the provided value is ignored."
+        }
+      },
       "returns": []
     }
   }

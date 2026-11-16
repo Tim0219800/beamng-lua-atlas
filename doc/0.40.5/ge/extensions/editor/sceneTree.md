@@ -1,135 +1,135 @@
 # `editor_sceneTree`
 
-*Fichier : `lua/ge/extensions/editor/sceneTree.lua` · VM : Game Engine (GE) · 2664 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/sceneTree.lua` · VM: Game Engine (GE) · 2664 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_sceneTree` : `extensions.load("editor_sceneTree")`, puis la globale `editor_sceneTree`
+**Access:** extension `editor_sceneTree`: `extensions.load("editor_sceneTree")`, then the global `editor_sceneTree`
 
-Fenêtre « Scene Tree » de l'éditeur de niveaux : affiche la hiérarchie des objets de la scène (MissionGroup, SimGroups, objets) sous forme d'arbre ImGui avec défilement virtuel, recherche (par nom, ID, ID persistant, classe ou tout), sélection multiple, glisser-déposer, renommage, tri, suppression, création d'objets et menus contextuels. Il met en cache l'arbre côté Lua (nœuds) et le synchronise avec le moteur via les transactions de SimSet. Il installe aussi des fonctions dans la table editor (voir classe « editor »). Un moddeur s'en sert surtout pour ajouter des entrées au menu contextuel et rafraîchir l'arbre après avoir créé/supprimé des objets par script.
+"Scene Tree" window of the level editor: displays the hierarchy of scene objects (MissionGroup, SimGroups, objects) as an ImGui tree with virtual scrolling, search (by name, ID, persistent ID, class or everything), multi-selection, drag and drop, renaming, sorting, deletion, object creation and context menus. It caches the tree on the Lua side (nodes) and synchronizes it with the engine via SimSet transactions. It also installs functions in the editor table (see class "editor"). A modder mainly uses it to add entries to the context menu and refresh the tree after creating/deleting objects by script.
 
-## Exemple
+## Example
 
 ```lua
--- ajouter une entrée au menu contextuel d'un objet
+-- add an entry to an object's context menu
 editor.addExtendedSceneTreeObjectMenuItem({
   title = 'Mon action',
   extendedSceneTreeObjectMenuItems = function(node) log('I','', 'noeud '..node.id) end,
   validator = function(node) return true end
 })
--- rafraichir l'arbre
+-- refresh the tree
 editor.refreshSceneTreeWindow()
 ```
 
-## Remarques
+## Notes
 
-- Le commentaire du code cite un champ onExtendedSceneTreeObjectMenuItemSelected, mais c'est bien le champ extendedSceneTreeObjectMenuItems (fonction appelée avec le nœud) que lit le menu contextuel. Le validator est facultatif et n'est pas vérifié par addExtendedSceneTreeObjectMenuItem.
-- Une seule instance de fenêtre est permise : openSceneTree ne fait rien si une instance existe déjà.
-- Les fonctions de la table editor ne sont installées qu'à partir de onExtensionLoaded / onEditorInitialized (par ex. editor.addExtendedSceneTreeObjectMenuItem existe seulement après le chargement de cette extension).
-- Avant la sauvegarde du niveau (onEditorBeforeSaveLevel), l'ordre de tous les objets sous MissionGroup est stocké dans editor.orderTable (liste d'ids, parcours en profondeur).
-- Le focus d'un groupe (focus lock) fait de ce groupe la racine de l'arbre ; il est levé à l'ouverture d'un niveau et à la désactivation de l'éditeur.
+- The code comment mentions a field onExtendedSceneTreeObjectMenuItemSelected, but it is actually the extendedSceneTreeObjectMenuItems field (function called with the node) that the context menu reads. The validator is optional and is not checked by addExtendedSceneTreeObjectMenuItem.
+- Only one window instance is allowed: openSceneTree does nothing if an instance already exists.
+- The functions of the editor table are only installed from onExtensionLoaded / onEditorInitialized (e.g. editor.addExtendedSceneTreeObjectMenuItem only exists after this extension has loaded).
+- Before the level is saved (onEditorBeforeSaveLevel), the order of all objects under MissionGroup is stored in editor.orderTable (list of ids, depth-first traversal).
+- A group's focus (focus lock) makes this group the root of the tree; it is released when a level is opened and when the editor is deactivated.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_sceneTree.closeAllInstances()` | Ferme et désenregistre toutes les fenêtres Scene Tree. | 2608 |
-| `editor_sceneTree.debugNode(id, level)` | Journalise (log niveau I) le nœud de cache correspondant à l'objet donné, dans chaque instance qui le contient. | 2616 |
-| `editor_sceneTree.moveSelectionIndex(up)` | Déplace la sélection d'une ligne dans l'instance qui a le focus (utilisé par les flèches de l'action map « SceneTree »). | 1009 |
-| `editor_sceneTree.onEditorActivated()` | Appelé à l'activation de l'éditeur : resynchronise la sélection de l'arbre. *(interne)* *(hook)* | 2455 |
-| `editor_sceneTree.onEditorAfterOpenLevel()` | Appelé après l'ouverture d'un niveau dans l'éditeur : lève le focus lock, reconstruit le cache, vide la sélection et le filtre. *(interne)* *(hook)* | 2459 |
-| `editor_sceneTree.onEditorBeforeSaveLevel()` | Appelé avant la sauvegarde du niveau : remplit editor.orderTable avec les ids de tous les objets sous MissionGroup (parcours en profondeur). *(interne)* *(hook)* | 2552 |
-| `editor_sceneTree.onEditorDeactivated()` | Appelé à la désactivation de l'éditeur : lève le focus lock s'il est actif. *(interne)* *(hook)* | 2470 |
-| `editor_sceneTree.onEditorFocusLockChanged()` | Appelé quand le focus lock change : ré-enracine toutes les instances sur le groupe verrouillé (ou la racine) en gardant l'état ouvert, et force la racine ouverte. *(interne)* *(hook)* | 2628 |
-| `editor_sceneTree.onEditorGui()` | Appelé à chaque image : dessine chaque instance de fenêtre Scene Tree (arbre virtualisé, barre de recherche, menus, glisser-déposer). *(interne)* *(hook)* | 2167 |
-| `editor_sceneTree.onEditorInitialized()` | Appelé à l'initialisation de l'éditeur : récupère les icônes de classes (worldEditorCppApi.getObjectClassIcons), met en cache l'arbre, installe les fonctions editor.* (removeObjectFromSet, submitTransactions, getSelectedSceneTreeNodes, getSceneTreeSelectedGroup, refreshSceneTreeWindow, hideAll/showAllSceneTreeInstances) et ajoute l'entrée de menu « Scene Tree ». *(interne)* *(hook)* | 2474 |
-| `editor_sceneTree.onEditorInspectorFieldChanged(selectedIds)` | Appelé quand un champ est modifié dans l'inspecteur : rafraîchit les noms des nœuds et, pour les objets contenus dans une instance de prefab, met à jour le décalage de transformation de l'enfant. *(interne)* *(hook)* | 2590 |
-| `editor_sceneTree.onEditorLoadGuiInstancerState(state)` | Restaure les instances de fenêtre Scene Tree depuis l'état sauvegardé de la disposition de l'éditeur. *(interne)* *(hook)* | 2430 |
-| `editor_sceneTree.onEditorObjectAdded()` | Appelé quand un objet est ajouté dans l'éditeur : reconstruit le cache (en gardant les groupes ouverts) et rafraîchit le cache de nœuds. *(interne)* *(hook)* | 2561 |
-| `editor_sceneTree.onEditorObjectSelectionChanged()` | Appelé quand la sélection d'objets de l'éditeur change : met à jour les nœuds sélectionnés de chaque instance. *(interne)* *(hook)* | 821 |
-| `editor_sceneTree.onEditorSaveGuiInstancerState(state)` | Sauvegarde les instances de fenêtre (sans sélection, cache ni filtre) dans l'état de disposition de l'éditeur. *(interne)* *(hook)* | 2441 |
-| `editor_sceneTree.onEditorToolWindowGotFocus(windowName)` | Appelé quand une fenêtre d'outil prend le focus : si c'est un Scene Tree, marque l'instance comme focalisée et pousse l'action map « SceneTree ». *(interne)* *(hook)* | 2512 |
-| `editor_sceneTree.onEditorToolWindowLostFocus(windowName)` | Appelé quand une fenêtre d'outil perd le focus : retire le focus de l'instance et dépile l'action map « SceneTree » quand plus aucune instance n'est focalisée. *(interne)* *(hook)* | 2522 |
-| `editor_sceneTree.onExtensionLoaded()` | Appelé au chargement de l'extension : prépare la liste des modes de recherche et installe editor.addExtendedSceneTreeObjectMenuItem. *(interne)* *(hook)* | 2409 |
-| `editor_sceneTree.openSceneTree()` | Ouvre une fenêtre Scene Tree si aucune n'existe encore (une seule instance autorisée). | 2161 |
-| `editor_sceneTree.recacheAllNodes(keepOpenStatus)` | Reconstruit entièrement le cache de nœuds de toutes les instances depuis la scène Sim. Avec keepOpenStatus, l'état ouvert/fermé des groupes est conservé. | 732 |
-| `editor_sceneTree.refreshAllNodes(incomingObjectIds)` | Met à jour le cache des groupes de chaque instance (à partir de sa racine) puis invalide le cache de taille ; version plus légère que recacheAllNodes. | 1030 |
-| `editor_sceneTree.refreshNodeNames(objectIds)` | Recalcule le nom et le nom affiché des nœuds dont l'id est dans la liste. Ne fait rien si objectIds est nil. | 2569 |
+| `editor_sceneTree.closeAllInstances()` | Closes and unregisters all Scene Tree windows. | 2608 |
+| `editor_sceneTree.debugNode(id, level)` | Logs (log level I) the cache node matching the given object, in each instance that contains it. | 2616 |
+| `editor_sceneTree.moveSelectionIndex(up)` | Moves the selection by one row in the instance that has focus (used by the arrows of the "SceneTree" action map). | 1009 |
+| `editor_sceneTree.onEditorActivated()` | Called when the editor is activated: resynchronizes the tree selection. *(internal)* *(hook)* | 2455 |
+| `editor_sceneTree.onEditorAfterOpenLevel()` | Called after a level is opened in the editor: releases the focus lock, rebuilds the cache, clears the selection and the filter. *(internal)* *(hook)* | 2459 |
+| `editor_sceneTree.onEditorBeforeSaveLevel()` | Called before the level is saved: fills editor.orderTable with the ids of all objects under MissionGroup (depth-first traversal). *(internal)* *(hook)* | 2552 |
+| `editor_sceneTree.onEditorDeactivated()` | Called when the editor is deactivated: releases the focus lock if it is active. *(internal)* *(hook)* | 2470 |
+| `editor_sceneTree.onEditorFocusLockChanged()` | Called when the focus lock changes: re-roots all instances on the locked group (or the root) while keeping the open state, and forces the root open. *(internal)* *(hook)* | 2628 |
+| `editor_sceneTree.onEditorGui()` | Called every frame: draws each Scene Tree window instance (virtualized tree, search bar, menus, drag and drop). *(internal)* *(hook)* | 2167 |
+| `editor_sceneTree.onEditorInitialized()` | Called when the editor initializes: fetches the class icons (worldEditorCppApi.getObjectClassIcons), caches the tree, installs the editor.* functions (removeObjectFromSet, submitTransactions, getSelectedSceneTreeNodes, getSceneTreeSelectedGroup, refreshSceneTreeWindow, hideAll/showAllSceneTreeInstances) and adds the "Scene Tree" menu entry. *(internal)* *(hook)* | 2474 |
+| `editor_sceneTree.onEditorInspectorFieldChanged(selectedIds)` | Called when a field is modified in the inspector: refreshes the node names and, for objects contained in a prefab instance, updates the child's transform offset. *(internal)* *(hook)* | 2590 |
+| `editor_sceneTree.onEditorLoadGuiInstancerState(state)` | Restores the Scene Tree window instances from the saved state of the editor layout. *(internal)* *(hook)* | 2430 |
+| `editor_sceneTree.onEditorObjectAdded()` | Called when an object is added in the editor: rebuilds the cache (keeping groups open) and refreshes the node cache. *(internal)* *(hook)* | 2561 |
+| `editor_sceneTree.onEditorObjectSelectionChanged()` | Called when the editor's object selection changes: updates the selected nodes of each instance. *(internal)* *(hook)* | 821 |
+| `editor_sceneTree.onEditorSaveGuiInstancerState(state)` | Saves the window instances (without selection, cache or filter) in the editor layout state. *(internal)* *(hook)* | 2441 |
+| `editor_sceneTree.onEditorToolWindowGotFocus(windowName)` | Called when a tool window gains focus: if it is a Scene Tree, marks the instance as focused and pushes the "SceneTree" action map. *(internal)* *(hook)* | 2512 |
+| `editor_sceneTree.onEditorToolWindowLostFocus(windowName)` | Called when a tool window loses focus: removes the focus from the instance and pops the "SceneTree" action map when no instance is focused anymore. *(internal)* *(hook)* | 2522 |
+| `editor_sceneTree.onExtensionLoaded()` | Called when the extension loads: prepares the list of search modes and installs editor.addExtendedSceneTreeObjectMenuItem. *(internal)* *(hook)* | 2409 |
+| `editor_sceneTree.openSceneTree()` | Opens a Scene Tree window if none exists yet (only one instance allowed). | 2161 |
+| `editor_sceneTree.recacheAllNodes(keepOpenStatus)` | Completely rebuilds the node cache of all instances from the Sim scene. With keepOpenStatus, the open/closed state of the groups is kept. | 732 |
+| `editor_sceneTree.refreshAllNodes(incomingObjectIds)` | Updates the group cache of each instance (from its root) then invalidates the size cache; lighter version than recacheAllNodes. | 1030 |
+| `editor_sceneTree.refreshNodeNames(objectIds)` | Recomputes the name and display name of the nodes whose id is in the list. Does nothing if objectIds is nil. | 2569 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_sceneTree.debugNode(id, level)`
 
-Journalise (log niveau I) le nœud de cache correspondant à l'objet donné, dans chaque instance qui le contient.
+Logs (log level I) the cache node matching the given object, in each instance that contains it.
 
-- `id` (*integer*) : Id de l'objet.
-- `level` (*integer|nil*) : Profondeur passée à dumpsz.
+- `id` (*integer*) : Object id.
+- `level` (*integer|nil*) : Depth passed to dumpsz.
 
 #### `editor_sceneTree.moveSelectionIndex(up)`
 
-Déplace la sélection d'une ligne dans l'instance qui a le focus (utilisé par les flèches de l'action map « SceneTree »).
+Moves the selection by one row in the instance that has focus (used by the arrows of the "SceneTree" action map).
 
-- `up` (*boolean*) : true pour monter, false pour descendre.
+- `up` (*boolean*) : true to move up, false to move down.
 
 #### `editor_sceneTree.onEditorInspectorFieldChanged(selectedIds)`
 
-Appelé quand un champ est modifié dans l'inspecteur : rafraîchit les noms des nœuds et, pour les objets contenus dans une instance de prefab, met à jour le décalage de transformation de l'enfant.
+Called when a field is modified in the inspector: refreshes the node names and, for objects contained in a prefab instance, updates the child's transform offset.
 
-- `selectedIds` (*integer[]*) : Ids des objets modifiés.
+- `selectedIds` (*integer[]*) : Ids of the modified objects.
 
 #### `editor_sceneTree.onEditorLoadGuiInstancerState(state)`
 
-Restaure les instances de fenêtre Scene Tree depuis l'état sauvegardé de la disposition de l'éditeur.
+Restores the Scene Tree window instances from the saved state of the editor layout.
 
-- `state` (*table*) : État global du guiInstancer.
+- `state` (*table*) : Global state of the guiInstancer.
 
 #### `editor_sceneTree.onEditorSaveGuiInstancerState(state)`
 
-Sauvegarde les instances de fenêtre (sans sélection, cache ni filtre) dans l'état de disposition de l'éditeur.
+Saves the window instances (without selection, cache or filter) in the editor layout state.
 
-- `state` (*table*) : État global à remplir.
+- `state` (*table*) : Global state to fill.
 
 #### `editor_sceneTree.onEditorToolWindowGotFocus(windowName)`
 
-Appelé quand une fenêtre d'outil prend le focus : si c'est un Scene Tree, marque l'instance comme focalisée et pousse l'action map « SceneTree ».
+Called when a tool window gains focus: if it is a Scene Tree, marks the instance as focused and pushes the "SceneTree" action map.
 
-- `windowName` (*string*) : Nom de la fenêtre.
+- `windowName` (*string*) : Window name.
 
 #### `editor_sceneTree.onEditorToolWindowLostFocus(windowName)`
 
-Appelé quand une fenêtre d'outil perd le focus : retire le focus de l'instance et dépile l'action map « SceneTree » quand plus aucune instance n'est focalisée.
+Called when a tool window loses focus: removes the focus from the instance and pops the "SceneTree" action map when no instance is focused anymore.
 
-- `windowName` (*string*) : Nom de la fenêtre.
+- `windowName` (*string*) : Window name.
 
 #### `editor_sceneTree.recacheAllNodes(keepOpenStatus)`
 
-Reconstruit entièrement le cache de nœuds de toutes les instances depuis la scène Sim. Avec keepOpenStatus, l'état ouvert/fermé des groupes est conservé.
+Completely rebuilds the node cache of all instances from the Sim scene. With keepOpenStatus, the open/closed state of the groups is kept.
 
-- `keepOpenStatus` (*boolean|nil*) : true pour garder les groupes ouverts dans leur état actuel.
+- `keepOpenStatus` (*boolean|nil*) : true to keep the groups open in their current state.
 
 #### `editor_sceneTree.refreshAllNodes(incomingObjectIds)`
 
-Met à jour le cache des groupes de chaque instance (à partir de sa racine) puis invalide le cache de taille ; version plus légère que recacheAllNodes.
+Updates the group cache of each instance (from its root) then invalidates the size cache; lighter version than recacheAllNodes.
 
-- `incomingObjectIds` (*table|nil*) : Ids des objets entrants à intégrer (déduit du code).
+- `incomingObjectIds` (*table|nil*) : Ids of the incoming objects to integrate (inferred from code).
 
 #### `editor_sceneTree.refreshNodeNames(objectIds)`
 
-Recalcule le nom et le nom affiché des nœuds dont l'id est dans la liste. Ne fait rien si objectIds est nil.
+Recomputes the name and display name of the nodes whose id is in the list. Does nothing if objectIds is nil.
 
-- `objectIds` (*integer[]|nil*) : Ids d'objets renommés.
+- `objectIds` (*integer[]|nil*) : Ids of renamed objects.
 
-## Classe `editor`
+## Class `editor`
 
-Fonctions ajoutées à la table globale `editor` par cette extension (et non un objet instancié). Elles sont disponibles une fois l'extension et l'éditeur initialisés. Autres ajouts non listés ici : addExtendedSceneTreeObjectMenuItem, getSelectedSceneTreeNodes, refreshSceneTreeWindow, hideAllSceneTreeInstances, showAllSceneTreeInstances.
+Functions added to the global `editor` table by this extension (and not an instantiated object). They are available once the extension and the editor are initialized. Other additions not listed here: addExtendedSceneTreeObjectMenuItem, getSelectedSceneTreeNodes, refreshSceneTreeWindow, hideAllSceneTreeInstances, showAllSceneTreeInstances.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.getSceneTreeSelectedGroup(instance)` | Renvoie le groupe de la scène dans lequel ajouter de nouveaux objets : le groupe focus-locké s'il y en a un, sinon le groupe sélectionné (ou le parent du premier nœud sélectionné), sinon MissionGroup. | 155 |
-| `editor.removeObjectFromSet(object, simset)` | Retire l'objet des nœuds de toutes les instances et rafraîchit l'arbre (appelé quand un objet quitte un SimSet). | 1068 |
-| `editor.submitTransactions(transactions)` | Traite le lot d'opérations de SimSet envoyé par le moteur : tableau plat de triplets (type, objId, groupId) pour ClearSet, AddObject, RemoveObject, AssignObjectName, ReorderObject, et met à jour l'arbre en conséquence (par lots). | 1100 |
+| `editor.getSceneTreeSelectedGroup(instance)` | Returns the scene group in which to add new objects: the focus-locked group if there is one, otherwise the selected group (or the parent of the first selected node), otherwise MissionGroup. | 155 |
+| `editor.removeObjectFromSet(object, simset)` | Removes the object from the nodes of all instances and refreshes the tree (called when an object leaves a SimSet). | 1068 |
+| `editor.submitTransactions(transactions)` | Processes the batch of SimSet operations sent by the engine: flat array of triplets (type, objId, groupId) for ClearSet, AddObject, RemoveObject, AssignObjectName, ReorderObject, and updates the tree accordingly (in batches). | 1100 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryExists`
 - `Sim.` `findObject`, `getRootGroup`, `upcast`
@@ -138,4 +138,4 @@ Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes 
 - `worldEditorCppApi.` `createObject`, `getObjectClassIcons`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/sceneTree.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/sceneTree.lua`.*

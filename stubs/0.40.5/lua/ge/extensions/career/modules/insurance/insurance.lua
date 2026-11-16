@@ -2,403 +2,403 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/insurance/insurance.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Système d'assurance et de réparation de véhicules du mode carrière. Il charge les définitions de gameplay/insurance (fournisseurs, classes, options de couverture, perks, paliers de score de conducteur), enregistre pour chaque véhicule d'inventaire (invVehs) son assurance et ses options, suit la distance parcourue pour renouveler la police tous les 100 km, accorder des gestes commerciaux (réparation gratuite) et faire monter le score de conducteur, calcule les primes (valeur du véhicule x taux de classe x options x remise de groupe x multiplicateur du palier de score), traite les réclamations et les réparations (instantanées ou différées, franchise, assistance routière) et alimente l'UI (guihooks insurancesData, chooseInsuranceData).
---- Accès : extension `career_modules_insurance_insurance` : `extensions.load("career_modules_insurance_insurance")`, puis la globale `career_modules_insurance_insurance`
+--- Career mode vehicle insurance and repair system. It loads the definitions from gameplay/insurance (providers, classes, coverage options, perks, driver score tiers), records for each inventory vehicle (invVehs) its insurance and options, tracks the distance driven to renew the policy every 100 km, grant goodwill gestures (free repair) and raise the driver score, computes the premiums (vehicle value x class rate x options x group discount x score tier multiplier), processes claims and repairs (instant or delayed, deductible, roadside assistance) and feeds the UI (guihooks insurancesData, chooseInsuranceData).
+--- Access: extension `career_modules_insurance_insurance`: `extensions.load("career_modules_insurance_insurance")`, then the global `career_modules_insurance_insurance`
 ---@class career_modules_insurance_insurance
----@field dependencies table<integer, string> Extensions chargées avant : career_career, payment, playerAttributes, insurance_history, tether, etc.
+---@field dependencies table<integer, string> Extensions loaded before: career_career, payment, playerAttributes, insurance_history, tether, etc.
 career_modules_insurance_insurance = {}
 
---- Raccourci vers career_modules_insurance_history.addToPlHistory.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:2035
----@param data table Entrée d'historique.
+--- Shortcut to career_modules_insurance_history.addToPlHistory.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:2035
+---@param data table History entry.
 function career_modules_insurance_insurance.addToPlHistory(data) end
 
---- Prix à payer pour ajouter un véhicule à un assureur : prime totale si c'est le premier, sinon prime du véhicule au prorata de la distance restante avant renouvellement.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1143
----@param insuranceId integer Assureur.
----@param vehValue number Valeur du véhicule.
----@return number  Montant.
+--- Price to pay to add a vehicle to an insurer: total premium if it is the first, otherwise the vehicle's premium prorated by the distance remaining before renewal.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1143
+---@param insuranceId integer Insurer.
+---@param vehValue number Vehicle value.
+---@return number  Amount.
 function career_modules_insurance_insurance.calculateAddVehiclePrice(insuranceId, vehValue) end
 
---- Prime totale d'un assureur : somme des primes de ses véhicules plus options à portée de l'assureur, puis totalPriceWithDriverScore (x multiplicateur du palier de score).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1064
----@param insuranceId integer Assureur.
----@param potentialCoverageOptions table|nil Options hypothétiques (une table vide est ignorée).
----@param potentialVehiclesCoverageOptions table|nil Options hypothétiques par véhicule, indexées par id en chaîne.
----@param potentialNewVehValue number|nil Valeur d'un véhicule supplémentaire à inclure.
+--- Total premium of an insurer: sum of the premiums of its vehicles plus the insurer-wide options, then totalPriceWithDriverScore (x score tier multiplier).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1064
+---@param insuranceId integer Insurer.
+---@param potentialCoverageOptions table|nil Hypothetical options (an empty table is ignored).
+---@param potentialVehiclesCoverageOptions table|nil Hypothetical options per vehicle, keyed by string id.
+---@param potentialNewVehValue number|nil Value of an additional vehicle to include.
 ---@return table  {items, totalPrice, totalPriceWithDriverScore, groupDiscountSavings}.
 function career_modules_insurance_insurance.calculateInsurancePremium(insuranceId, potentialCoverageOptions, potentialVehiclesCoverageOptions, potentialNewVehValue) end
 
---- Prime d'un véhicule : valeur x coverageRate de la classe x produit des influences des options x (1 - remise de groupe). Fournir invVehId (véhicule possédé) ou nonInvVehInfo ({vehValue, insuranceId}).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1013
----@param invVehId integer|nil Véhicule d'inventaire.
----@param nonInvVehInfo table|nil Véhicule hypothétique {vehValue, insuranceId}.
----@param potentialCoverageOptions table|nil Options hypothétiques à la place des options actuelles.
+--- Premium of a vehicle: value x class coverageRate x product of the option influences x (1 - group discount). Provide invVehId (owned vehicle) or nonInvVehInfo ({vehValue, insuranceId}).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1013
+---@param invVehId integer|nil Inventory vehicle.
+---@param nonInvVehInfo table|nil Hypothetical vehicle {vehValue, insuranceId}.
+---@param potentialCoverageOptions table|nil Hypothetical options instead of the current options.
 ---@return table  {cost, costWithoutGroupDiscount}.
 function career_modules_insurance_insurance.calculateVehiclePremium(invVehId, nonInvVehInfo, potentialCoverageOptions) end
 
---- Changement d'assurance déclenché par le joueur : refusé si le véhicule a besoin de réparation ; calcule le coût net (remboursement moins pénalité moins prix d'ajout), applique le nouvel assureur, paie ou reçoit la différence, journalise et débloque le succès POLICY_REVIEW.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1551
----@param invVehId integer Identifiant d'inventaire.
----@param newInsuranceId integer Nouvel assureur ; -1 ou moins pour aucune assurance.
+--- Insurance change triggered by the player: refused if the vehicle needs repair; computes the net cost (refund minus penalty minus add-on price), applies the new insurer, pays or receives the difference, logs and unlocks the POLICY_REVIEW achievement.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1551
+---@param invVehId integer Inventory identifier.
+---@param newInsuranceId integer New insurer; -1 or less for no insurance.
 function career_modules_insurance_insurance.changeInvVehInsurance(invVehId, newInsuranceId) end
 
---- Ancienne voie de modification des options de couverture d'un véhicule : enregistre l'historique et fait payer les frais de dossier (voir bug dans notes).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1642
----@param invVehId integer Identifiant d'inventaire.
----@param changedCoverageOptions table Options modifiées (nom -> valeur).
+--- Old way of changing a vehicle's coverage options: records the history and charges the paperwork fees (see the bug in the notes).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1642
+---@param invVehId integer Inventory identifier.
+---@param changedCoverageOptions table Modified options (name -> value).
 function career_modules_insurance_insurance.changeInvVehInsuranceCoverageOptions(invVehId, changedCoverageOptions) end
 
---- Ferme le menu des assurances (retour à l'ordinateur ou fermeture de tous les menus). Avec sauvegarde auto, peut attendre la fin de la sauvegarde.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1670
----@param _closeMenuAfterSaving boolean|nil Attendre onVehicleSaveFinished avant de fermer.
+--- Closes the insurance menu (back to the computer or closing all menus). With autosave, may wait for the end of the save.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1670
+---@param _closeMenuAfterSaving boolean|nil Wait for onVehicleSaveFinished before closing.
 function career_modules_insurance_insurance.closeMenu(_closeMenuAfterSaving) end
 
---- Indique si l'identifiant correspond à un assureur défini.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1953
----@param insuranceId integer Identifiant.
----@return boolean  true si défini.
+--- Indicates whether the identifier matches a defined insurer.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1953
+---@param insuranceId integer Identifier.
+---@return boolean  true if defined.
 function career_modules_insurance_insurance.doesInsuranceExist(insuranceId) end
 
---- Paie pour accéder immédiatement à un véhicule en réparation différée (supprime timeToAccess et delayReason).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1803
----@param inventoryId integer Identifiant d'inventaire.
----@param price number Prix à payer.
+--- Pays to get immediate access to a vehicle under delayed repair (removes timeToAccess and delayReason).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1803
+---@param inventoryId integer Inventory identifier.
+---@param price number Price to pay.
 function career_modules_insurance_insurance.expediteRepair(inventoryId, price) end
 
---- Construit la table d'icône de perk pour l'UI.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:958
----@param smallText string Texte court.
----@param tooltipText string Info-bulle.
----@param discount number|nil Remise liée.
----@param isSignaturePerk boolean Perk phare de l'assureur.
+--- Builds the perk icon table for the UI.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:958
+---@param smallText string Short text.
+---@param tooltipText string Tooltip.
+---@param discount number|nil Related discount.
+---@param isSignaturePerk boolean Insurer's signature perk.
 ---@return table  {smallText, tooltipText, discount, isSignaturePerk}.
 function career_modules_insurance_insurance.formatPerkIconData(smallText, tooltipText, discount, isSignaturePerk) end
 
---- Demande au véhicule (objet) ses conditions de pièces et appelle callback(needsRepair) à la réponse ; sert aux véhicules hors inventaire (par exemple d'essai).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:655
----@param vehId integer Identifiant d'objet véhicule.
----@param callback function fonction(needsRepair: boolean).
+--- Asks the vehicle (object) for its part conditions and calls callback(needsRepair) on reply; used for non-inventory vehicles (for example test drive).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:655
+---@param vehId integer Vehicle object identifier.
+---@param callback function function(needsRepair: boolean).
 function career_modules_insurance_insurance.genericVehNeedsRepair(vehId, callback) end
 
---- Nombre d'indulgences d'accident restantes chez un assureur.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1961
----@param insuranceId integer Assureur.
----@return integer  Nombre (0 si inconnu).
+--- Number of accident forgivenesses remaining with an insurer.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1961
+---@param insuranceId integer Insurer.
+---@return integer  Number (0 if unknown).
 function career_modules_insurance_insurance.getAccidentForgivenessCount(insuranceId) end
 
---- Usage interne : franchise de réparation du véhicule (valeur de l'option deductible).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:805
----@param invVehId integer Identifiant d'inventaire.
----@return number|nil  Franchise.
+--- Internal use: the vehicle's repair deductible (value of the deductible option).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:805
+---@param invVehId integer Inventory identifier.
+---@return number|nil  Deductible.
 function career_modules_insurance_insurance.getActualRepairPrice(invVehId) end
 
---- Assureur par défaut d'une classe : celui de plus petit id.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1889
----@param insuranceClassId string Identifiant de classe.
----@return table|nil  Données d'assureur.
+--- Default insurer of a class: the one with the smallest id.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1889
+---@param insuranceClassId string Class identifier.
+---@return table|nil  Insurer data.
 function career_modules_insurance_insurance.getDefaultInsuranceForClassId(insuranceClassId) end
 
---- Score de conducteur actuel (0 à 100).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:562
+--- Current driver score (0 to 100).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:562
 ---@return number  Score.
 function career_modules_insurance_insurance.getDriverScore() end
 
---- Coût pour remettre le score à la valeur par défaut (64) : 0 si le score est déjà au moins égal, sinon 500 + proportion x 19500, arrondi.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1738
----@return integer  Montant.
+--- Cost to reset the score to the default value (64): 0 if the score is already at least equal, otherwise 500 + proportion x 19500, rounded.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1738
+---@return integer  Amount.
 function career_modules_insurance_insurance.getDriverScoreResetCost() end
 
---- Palier de score (min, max, multiplicateur de prime…) pour un score ; le dernier palier si aucun ne correspond.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:552
----@param score number|nil Score ; défaut : le score actuel.
----@return table  Données de palier.
+--- Score tier (min, max, premium multiplier…) for a score; the last tier if none matches.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:552
+---@param score number|nil Score; default: the current score.
+---@return table  Tier data.
 function career_modules_insurance_insurance.getDriverScoreTierData(score) end
 
---- Détermine la classe d'assurance requise pour une annonce selon la classe JSON, la valeur, la population, la carrosserie et la classe commerciale (la priorité la plus haute l'emporte).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:923
----@param data table Annonce de boutique (Value, Population, BodyStyle, aggregates, 'Commercial Class').
----@return table|nil  Données de classe.
+--- Determines the insurance class required for a listing according to the JSON class, the value, the population, the body style and the commercial class (the highest priority wins).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:923
+---@param data table Shop listing (Value, Population, BodyStyle, aggregates, 'Commercial Class').
+---@return table|nil  Class data.
 function career_modules_insurance_insurance.getInsuranceClassFromVehicleShoppingData(data) end
 
---- Définition d'un assureur chargée depuis les fichiers du jeu.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1930
----@param insuranceId integer Assureur.
----@return table|nil  Définition.
+--- Definition of an insurer loaded from the game files.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1930
+---@param insuranceId integer Insurer.
+---@return table|nil  Definition.
 function career_modules_insurance_insurance.getInsuranceDataById(insuranceId) end
 
---- Nom de l'assureur, ou le libellé « pas d'assurance » si inconnu.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1957
----@param insuranceId integer Identifiant.
----@return string  Nom.
+--- Name of the insurer, or the "no insurance" label if unknown.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1957
+---@param insuranceId integer Identifier.
+---@return string  Name.
 function career_modules_insurance_insurance.getInsuranceName(insuranceId) end
 
---- Données de remise carburant d'un véhicule (hasFuelDiscount, fuelDiscount fraction, nom de l'assureur, icône de perk) ; utilisé par le module fuel.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1907
----@param invVehId integer Identifiant d'inventaire.
+--- Fuel discount data of a vehicle (hasFuelDiscount, fuelDiscount fraction, insurer name, perk icon); used by the fuel module.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1907
+---@param invVehId integer Inventory identifier.
 ---@return table  {hasFuelDiscount, fuelDiscount, perkData, insuranceName?}.
 function career_modules_insurance_insurance.getInvVehFuelDiscountData(invVehId) end
 
---- Délai de réparation inclus dans la police du véhicule (secondes ; 0 = instantané).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1782
----@param vehInvId integer Identifiant d'inventaire.
----@return number|nil  Secondes.
+--- Repair time included in the vehicle's policy (seconds; 0 = instant).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1782
+---@param vehInvId integer Inventory identifier.
+---@return number|nil  Seconds.
 function career_modules_insurance_insurance.getInvVehRepairTime(vehInvId) end
 
---- Table des entrées d'assurance des véhicules d'inventaire (insuranceId, name, id, initialValue, requiredInsuranceClass, insuranceData).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1965
----@return table<integer, table>  invVehs (référence).
+--- Table of the insurance entries of the inventory vehicles (insuranceId, name, id, initialValue, requiredInsuranceClass, insuranceData).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1965
+---@return table<integer, table>  invVehs (reference).
 function career_modules_insurance_insurance.getInvVehs() end
 
---- Valeur d'un perk d'un assureur.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1876
----@param insuranceId integer Assureur.
+--- Value of an insurer's perk.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1876
+---@param insuranceId integer Insurer.
 ---@param perkId string Perk (reduceDeductible, fuelDiscount, instantRepair…).
----@return number|boolean|nil  Valeur ou nil.
+---@return number|boolean|nil  Value or nil.
 function career_modules_insurance_insurance.getPerkValueByInsuranceId(insuranceId, perkId) end
 
---- Valeur d'un perk de l'assureur d'un véhicule.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1883
----@param invVehId integer Identifiant d'inventaire.
+--- Value of a perk of a vehicle's insurer.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1883
+---@param invVehId integer Inventory identifier.
 ---@param perkId string Perk.
----@return number|boolean|nil  Valeur ou nil.
+---@return number|boolean|nil  Value or nil.
 function career_modules_insurance_insurance.getPerkValueByInvVehId(invVehId, perkId) end
 
---- Valeur de l'option de couverture actuellement choisie pour un véhicule (ex. deductible, repairTime, paintRepair, roadsideAssistance). Ne renvoie rien si le véhicule n'est pas assuré.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:116
----@param invVehId integer Identifiant d'inventaire.
----@param coverageOptionName string Nom de l'option.
----@return number|boolean|nil  Valeur du choix.
+--- Value of the coverage option currently chosen for a vehicle (e.g. deductible, repairTime, paintRepair, roadsideAssistance). Returns nothing if the vehicle is not insured.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:116
+---@param invVehId integer Inventory identifier.
+---@param coverageOptionName string Option name.
+---@return number|boolean|nil  Choice value.
 function career_modules_insurance_insurance.getPlCoverageOptionValue(invVehId, coverageOptionName) end
 
---- Raccourci vers career_modules_insurance_history.getPlHistory.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1996
----@return table  Historique.
+--- Shortcut to career_modules_insurance_history.getPlHistory.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1996
+---@return table  History.
 function career_modules_insurance_insurance.getPlHistory() end
 
---- Résumé du joueur pour l'UI : score et palier, distances (totale, assurée, non assurée), nombre de réparations, coût de remise à zéro du score, bilan financier (primes, franchises, réparations privées, dégâts couverts).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1333
----@return table  Données de synthèse.
+--- Player summary for the UI: score and tier, distances (total, insured, uninsured), number of repairs, cost of resetting the score, financial summary (premiums, deductibles, private repairs, damage covered).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1333
+---@return table  Summary data.
 function career_modules_insurance_insurance.getPlayerAbstractData() end
 
---- Données sauvegardées par assureur (metersDriven, accidentForgiveness, roadsideAssistance, loyalty, coverageOptionsData…).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1786
----@return table  plInsurancesData (référence).
+--- Data saved per insurer (metersDriven, accidentForgiveness, roadsideAssistance, loyalty, coverageOptionsData…).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1786
+---@return table  plInsurancesData (reference).
 function career_modules_insurance_insurance.getPlayerInsurancesData() end
 
---- Supplément pour une réparation rapide (1000).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1790
----@return number  Montant.
+--- Surcharge for a quick repair (1000).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1790
+---@return number  Amount.
 function career_modules_insurance_insurance.getQuickRepairExtraPrice() end
 
---- Kilomètres restants avant le renouvellement de l'assureur (0 pour -1 ou assureur inconnu).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1127
----@param insuranceId integer Assureur.
----@return integer  Kilomètres (arrondi supérieur).
+--- Kilometers remaining before the insurer's renewal (0 for -1 or an unknown insurer).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1127
+---@param insuranceId integer Insurer.
+---@return integer  Kilometers (rounded up).
 function career_modules_insurance_insurance.getRenewsIn(insuranceId) end
 
---- Montant facturé en cas de dégâts pendant un essai de véhicule (500).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1872
----@return number  Montant.
+--- Amount charged for damage during a vehicle test drive (500).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1872
+---@return number  Amount.
 function career_modules_insurance_insurance.getTestDriveClaimPrice() end
 
---- Infos d'assurance d'un véhicule : assuré ou non, définition de l'assureur et classe requise.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1794
----@param vehInvId integer Identifiant d'inventaire.
+--- A vehicle's insurance info: insured or not, insurer definition and required class.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1794
+---@param vehInvId integer Inventory identifier.
 ---@return table|nil  {isInsured, insuranceInfo, insuranceClass}.
 function career_modules_insurance_insurance.getVehInsuranceInfo(vehInvId) end
 
---- Indique si un véhicule d'inventaire a des pièces à réparer (partConditions).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:374
----@param vehInvId integer Identifiant d'inventaire.
----@return boolean|nil  nil si le véhicule n'existe pas.
+--- Indicates whether an inventory vehicle has parts to repair (partConditions).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:374
+---@param vehInvId integer Inventory identifier.
+---@return boolean|nil  nil if the vehicle does not exist.
 function career_modules_insurance_insurance.inventoryVehNeedsRepair(vehInvId) end
 
---- Indique s'il reste des remorquages gratuits d'assistance routière pour l'assureur du véhicule.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1853
----@param invVehId integer Identifiant d'inventaire.
----@return boolean  true s'il en reste.
+--- Indicates whether free roadside assistance tows remain for the vehicle's insurer.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1853
+---@param invVehId integer Inventory identifier.
+---@return boolean  true if any remain.
 function career_modules_insurance_insurance.isRoadSideAssistanceFree(invVehId) end
 
---- Enregistre une réclamation de réparation : consomme une indulgence d'accident ou baisse le score de 1, ajoute l'historique (argent, bons, score, franchise, valeur des dégâts), émet onInsuranceRepairClaim et débloque le succès CLAIM_FILED. Sans effet si le véhicule n'est pas assuré.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:462
----@param invVehId integer Identifiant d'inventaire.
----@param costs table Coûts (nombres ou {money, vouchers}) et éventuellement deductible.
----@param vehInfo table|nil Véhicule, pour estimer le prix des dégâts.
+--- Records a repair claim: consumes an accident forgiveness or lowers the score by 1, adds the history (money, vouchers, score, deductible, damage value), emits onInsuranceRepairClaim and unlocks the CLAIM_FILED achievement. No effect if the vehicle is not insured.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:462
+---@param invVehId integer Inventory identifier.
+---@param costs table Costs (numbers or {money, vouchers}) and possibly deductible.
+---@param vehInfo table|nil Vehicle, to estimate the damage price.
 function career_modules_insurance_insurance.makeRepairClaim(invVehId, costs, vehInfo) end
 
---- Facture les dégâts d'un essai (500), affiche un message et ajoute une entrée 'testDriveClaim' à l'historique (voir notes : nom de véhicule codé en dur).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:441
----@param vehId integer|nil Ignoré.
+--- Charges the damage of a test drive (500), shows a message and adds a 'testDriveClaim' entry to the history (see notes: hardcoded vehicle name).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:441
+---@param vehId integer|nil Ignored.
 function career_modules_insurance_insurance.makeTestDriveDamageClaim(vehId) end
 
---- Callback de réparation avant mission : rouvre le menu de missions carrière et envoie l'état de dégâts du véhicule à l'UI.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:566
----@param vehInfo table Véhicule d'inventaire.
+--- Pre-mission repair callback: reopens the career missions menu and sends the vehicle's damage state to the UI.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:566
+---@param vehInfo table Inventory vehicle.
 function career_modules_insurance_insurance.missionStartRepairCallback(vehInfo) end
 
---- Hook appelé quand la carrière devient active : charge les données d'assurance (fichiers du jeu et sauvegarde insurance.json).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:949
----@param active boolean true à l'activation.
+--- Hook called when career becomes active: loads the insurance data (game files and the insurance.json save).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:949
+---@param active boolean true on activation.
 function career_modules_insurance_insurance.onCareerActive(active) end
 
---- Hook de l'ordinateur du garage : ajoute la fonction « Assurances » (désactivée avant l'achat du véhicule de départ).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1721
----@param menuData table Données du menu (computerFacility, hasBoughtStarterVehicle).
----@param computerFunctions table Fonctions à compléter.
+--- Garage computer hook: adds the "Insurances" function _anon(disabled before the starter vehicle is bought).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1721
+---@param menuData table Menu data (computerFacility, hasBoughtStarterVehicle).
+---@param computerFunctions table Functions to complete.
 function career_modules_insurance_insurance.onComputerAddFunctions(menuData, computerFunctions) end
 
---- Hook après entrée dans un véhicule : reprend une réparation différée mise en attente (voir bug dans notes).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:936
----@param invVehId integer Identifiant d'inventaire (non utilisé).
+--- Hook after entering a vehicle: resumes a delayed repair that was put on hold (see the bug in the notes).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:936
+---@param invVehId integer Inventory identifier (unused).
 function career_modules_insurance_insurance.onEnterVehicleFinished(invVehId) end
 
---- Hook : l'écran des assurances est quitté ; cesse l'envoi de mises à jour à l'UI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1717
+--- Hook: the insurance screen is left; stops sending updates to the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1717
 function career_modules_insurance_insurance.onExitInsurancesComputerScreen() end
 
---- Hook de fermeture de menu : retire la laisse (tether).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1713
+--- Menu close hook: removes the leash (tether).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1713
 function career_modules_insurance_insurance.onMenuClosed() end
 
---- Hook de sauvegarde : écrit career/insurance.json (score, distances, plInsurancesData, invVehs, historique).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:954
----@param currentSavePath string Dossier du profil de sauvegarde.
+--- Save hook: writes career/insurance.json (score, distances, plInsurancesData, invVehs, history).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:954
+---@param currentSavePath string Save profile folder.
 function career_modules_insurance_insurance.onSaveCurrentProfile(currentSavePath) end
 
---- Hook par image : hors mission au premier plan et hors marche à pied, cumule la distance, vérifie renouvellement, gestes et hausse du score de conducteur du véhicule assuré actif ; décompte aussi les minuteries d'édition de couverture.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:864
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulation (s).
----@param dtRaw number Delta temps brut (s).
+--- Per-frame hook: outside a foreground mission and outside walking, accumulates the distance, checks renewal, gestures and rise of the active insured vehicle's driver score; also counts down the coverage edit timers.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:864
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulation time delta (s).
+---@param dtRaw number Raw time delta (s).
 function career_modules_insurance_insurance.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook : un véhicule entre dans l'inventaire. Crée son entrée invVehs (valeur initiale, classe d'assurance requise selon valeur, population, carrosserie, classe commerciale) et applique l'assurance choisie à l'achat (ou -1).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1590
+--- Hook: a vehicle enters the inventory. Creates its invVehs entry (initial value, required insurance class according to value, population, body style, commercial class) and applies the insurance chosen at purchase (or -1).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1590
 ---@param data table {inventoryId, vehicleInfo, purchaseData = {insuranceId}}.
 function career_modules_insurance_insurance.onVehicleAddedToInventory(data) end
 
---- Hook : un véhicule est retiré de l'inventaire ; supprime son entrée d'assurance.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1508
----@param invVehId integer Identifiant d'inventaire.
+--- Hook: a vehicle is removed from the inventory; deletes its insurance entry.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1508
+---@param invVehId integer Inventory identifier.
 function career_modules_insurance_insurance.onVehicleRemoved(invVehId) end
 
---- Hook de fin de sauvegarde de véhicule : referme le menu si sa fermeture attendait la sauvegarde.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1683
+--- Vehicle save end hook: closes the menu again if its closing was waiting for the save.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1683
 function career_modules_insurance_insurance.onVehicleSaveFinished() end
 
---- Hook de changement de véhicule contrôlé : met à jour l'assurance active.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:945
+--- Controlled vehicle change hook: updates the active insurance.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:945
 function career_modules_insurance_insurance.onVehicleSwitched() end
 
---- Navigue vers l'écran de choix d'assurance : 'purchase' (achat en boutique) ou 'change' (changement depuis l'ordinateur).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1940
----@param mode string 'purchase' ou 'change'.
----@param params table Paramètres de route (achat : purchaseType, shopId, insuranceId? ; changement : vehicleId).
----@return table  Résultat de navigation, ou {result=false, success=false, reason='unknown_mode'}.
+--- Navigates to the insurance choice screen: 'purchase' (shop purchase) or 'change' (change from the computer).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1940
+---@param mode string 'purchase' or 'change'.
+---@param params table Route parameters (purchase: purchaseType, shopId, insuranceId? ; change: vehicleId).
+---@return table  Navigation result, or {result=false, success=false, reason='unknown_mode'}.
 function career_modules_insurance_insurance.openChooseInsuranceScreen(mode, params) end
 
---- Ouvre le menu des assurances depuis un ordinateur (laisse de 7 m) et émet onComputerInsurance. Ne fait rien sans identifiant d'ordinateur.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1691
----@param _originComputerId string Identifiant de l'ordinateur du garage.
+--- Opens the insurance menu from a computer (7 m leash) and emits onComputerInsurance. Does nothing without a computer identifier.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1691
+---@param _originComputerId string Garage computer identifier.
 function career_modules_insurance_insurance.openMenu(_originComputerId) end
 
---- Remet les pièces cassées à neuf dans data.partConditions (intégrité 1, repeinture ou apprêt selon paintRepair, compteur de réparations des pièces d'inventaire, réservoirs d'énergie conservés).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:380
+--- Restores the broken parts to new in data.partConditions (integrity 1, repaint or primer according to paintRepair, repair counter of inventory parts, energy tanks kept).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:380
 ---@param data table {partConditions, paintRepair?, inventoryId?}.
 function career_modules_insurance_insurance.repairPartConditions(data) end
 
---- Paie le coût de remise à zéro et rétablit le score par défaut, avec entrée d'historique et mise à jour de l'UI.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1754
----@return boolean  true si réussi ; false si coût nul ou fonds insuffisants.
+--- Pays the reset cost and restores the default score, with a history entry and UI update.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1754
+---@return boolean  true if successful; false if the cost is zero or funds are insufficient.
 function career_modules_insurance_insurance.resetDriverScore() end
 
---- Fonction de debug de carrière : recharge les données d'assurance en réinitialisant certaines données (loadInsurancesData(true)).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:2051
+--- Career debug function: reloads the insurance data while resetting some data (loadInsurancesData(true)).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:2051
 function career_modules_insurance_insurance.resetPlPolicyData() end
 
---- Prépare une option de couverture pour l'UI : clé, nom, choix, type de choix, texte de perk, ordre d'affichage et identifiant de la valeur actuelle.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:716
----@param insuranceId integer Assureur.
----@param coverageOptionId string Nom de l'option.
----@param invVehId integer|nil Véhicule (requis pour les options par véhicule).
----@return table|nil  Données d'option.
+--- Prepares a coverage option for the UI: key, name, choices, choice type, perk text, display order and identifier of the current value.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:716
+---@param insuranceId integer Insurer.
+---@param coverageOptionId string Option name.
+---@param invVehId integer|nil Vehicle (required for per-vehicle options).
+---@return table|nil  Option data.
 function career_modules_insurance_insurance.sanitizeCoverageOption(insuranceId, coverageOptionId, invVehId) end
 
---- Enregistre les options de couverture propres à l'assureur (franchise, assistance routière…) contre les frais de dossier (paperworkFees) ; recharge l'assistance routière si elle change.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1813
----@param insuranceId integer Assureur.
----@param newCoverageOptions table<string, integer> Nom de l'option -> identifiant du choix.
+--- Records the insurer-specific coverage options (deductible, roadside assistance…) against the paperwork fees (paperworkFees); recharges roadside assistance if it changes.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1813
+---@param insuranceId integer Insurer.
+---@param newCoverageOptions table<string, integer> Option name -> choice identifier.
 function career_modules_insurance_insurance.saveNewInsuranceCoverageOptions(insuranceId, newCoverageOptions) end
 
---- Enregistre les options de couverture propres à un véhicule contre les frais de dossier de son assureur.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1835
----@param vehicleId integer Identifiant d'inventaire.
----@param newCoverageOptions table<string, integer> Nom de l'option -> identifiant du choix.
+--- Records the vehicle-specific coverage options against the paperwork fees of its insurer.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1835
+---@param vehicleId integer Inventory identifier.
+---@param newCoverageOptions table<string, integer> Option name -> choice identifier.
 function career_modules_insurance_insurance.saveNewVehicleCoverageOptions(vehicleId, newCoverageOptions) end
 
---- Envoie 'chooseInsuranceData' pour le changement d'assurance d'un véhicule déjà possédé (coût net de changement, remboursement).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1425
----@param invVehId integer Identifiant d'inventaire.
+--- Sends 'chooseInsuranceData' for changing the insurance of an already owned vehicle (net change cost, refund).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1425
+---@param invVehId integer Inventory identifier.
 function career_modules_insurance_insurance.sendChangeInsuranceDataToTheUI(invVehId) end
 
---- Envoie 'chooseInsuranceData' pour l'achat d'un véhicule en boutique : cartes des assureurs de la bonne classe (prime d'ajout, remise de groupe) plus la carte « sans assurance ».
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1441
----@param purchaseType string Type d'achat transmis à l'UI.
----@param vehShopId string|integer Identifiant de l'annonce.
----@param defaultInsuranceId integer|nil Assureur présélectionné.
+--- Sends 'chooseInsuranceData' for buying a vehicle in the shop: cards of the insurers of the right class (add-on premium, group discount) plus the "no insurance" card.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1441
+---@param purchaseType string Purchase type passed to the UI.
+---@param vehShopId string|integer Listing identifier.
+---@param defaultInsuranceId integer|nil Preselected insurer.
 function career_modules_insurance_insurance.sendChooseInsuranceDataToTheUI(purchaseType, vehShopId, defaultInsuranceId) end
 
---- Envoie à l'UI (guihook 'insurancesData') l'historique, le score, les véhicules non assurés, les tuiles de véhicules et toutes les classes avec leurs assureurs.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1454
+--- Sends to the UI (guihook 'insurancesData') the history, the score, the uninsured vehicles, the vehicle tiles and all the classes with their insurers.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1454
 function career_modules_insurance_insurance.sendUIData() end
 
---- Fixe le score de conducteur sans aucune vérification (outils/debug).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1949
----@param score number Nouveau score.
+--- Sets the driver score without any check (tools/debug).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1949
+---@param score number New score.
 function career_modules_insurance_insurance.setDriverScore(score) end
 
---- Répare un véhicule d'inventaire : paie le coût, enregistre une réclamation (isInsuranceRepair) ou une réparation privée, répare les pièces, puis lance une réparation différée (repairTime > 0) ou instantanée.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:587
----@param vehInvId integer|nil Véhicule ; défaut : véhicule actuel.
+--- Repairs an inventory vehicle: pays the cost, records a claim (isInsuranceRepair) or a private repair, repairs the parts, then starts a delayed (repairTime > 0) or instant repair.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:587
+---@param vehInvId integer|nil Vehicle; default: current vehicle.
 ---@param repairOptionData table|nil {cost, isInsuranceRepair, repairTime}.
----@param callback function|nil Appelé après une réparation instantanée avec vehInfo.
+---@param callback function|nil Called after an instant repair with vehInfo.
 function career_modules_insurance_insurance.startRepair(vehInvId, repairOptionData, callback) end
 
---- Réparation depuis le garage : émet onRepairInGarage puis startRepair ; pour une réparation instantanée, téléporte le véhicule au garage le plus proche.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:644
----@param invVehId integer Identifiant d'inventaire.
+--- Repair from the garage: emits onRepairInGarage then startRepair; for an instant repair, teleports the vehicle to the nearest garage.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:644
+---@param invVehId integer Inventory identifier.
 ---@param repairOptionData table {cost, isInsuranceRepair, repairTime}.
----@return any  Valeur de startRepair (nil).
+---@return any  Value of startRepair (nil).
 function career_modules_insurance_insurance.startRepairInGarage(invVehId, repairOptionData) end
 
---- Réparation instantanée : joue un son, respawn le véhicule s'il est présent, puis marque le véhicule modifié, recharge le carburant minimum et sauvegarde.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:571
----@param vehInfo table Véhicule d'inventaire.
----@param callback function|nil Appelé après le respawn.
----@param skipSound boolean|nil Ne pas jouer le son.
+--- Instant repair: plays a sound, respawns the vehicle if present, then marks the vehicle as modified, reloads the minimum fuel and saves.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:571
+---@param vehInfo table Inventory vehicle.
+---@param callback function|nil Called after the respawn.
+---@param skipSound boolean|nil Do not play the sound.
 function career_modules_insurance_insurance.startRepairInstant(vehInfo, callback, skipSound) end
 
---- Recharge le nombre de remorquages gratuits selon l'option roadsideAssistance choisie (au renouvellement ou à la modification).
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1847
----@param insuranceId integer Assureur.
+--- Recharges the number of free tows according to the chosen roadsideAssistance option (on renewal or on modification).
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1847
+---@param insuranceId integer Insurer.
 function career_modules_insurance_insurance.topUpRoadsideAssistance(insuranceId) end
 
---- Consomme un remorquage gratuit de l'assureur du véhicule.
----Source : lua/ge/extensions/career/modules/insurance/insurance.lua:1861
----@param invVehId integer Identifiant d'inventaire.
+--- Consumes a free tow of the vehicle's insurer.
+---Source: lua/ge/extensions/career/modules/insurance/insurance.lua:1861
+---@param invVehId integer Inventory identifier.
 function career_modules_insurance_insurance.useRoadsideAssistance(invVehId) end
 

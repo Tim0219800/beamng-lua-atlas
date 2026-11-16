@@ -2,317 +2,317 @@
 -- tim19Atlas stub generated from lua/vehicle/beamstate.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Etat physique du vehicule cote Lua (VM vehicule, globale `beamstate`). Suit les poutres cassees ou deformees, les groupes de casse (breakGroup) et de deformation (deformGroup), le score de degats par piece et par zone de carrosserie, les pneus crevés, les planetes (attracteurs de gravite locaux) et tous les coupleurs (attelages, remorques). Un moddeur s'en sert pour casser des groupes, crever des pneus, ajouter des degats, lire les degats, attacher ou detacher les coupleurs, sauvegarder ou charger l'etat des noeuds et poutres. Les hooks beamBroken, onBeamDeformed, onCouplerAttached et onCouplerDetached sont appeles par le moteur C++ ; updateGFX et init/reset par la boucle principale du vehicule.
---- Accès : globale `beamstate`
+--- Physical state of the vehicle on the Lua side (vehicle VM, global `beamstate`). Tracks broken or deformed beams, break groups (breakGroup) and deform groups (deformGroup), the damage score per part and per body zone, flat tires, planets (local gravity attractors) and all couplers (hitches, trailers). A modder uses it to break groups, puncture tires, add damage, read damage, attach or detach couplers, save or load the state of nodes and beams. The hooks beamBroken, onBeamDeformed, onCouplerAttached and onCouplerDetached are called by the C++ engine; updateGFX and init/reset by the vehicle's main loop.
+--- Access: global `beamstate`
 ---@class beamstate
----@field activeParts string[] Noms des parties actives du vehicule, collectees depuis `v.data.slotMap`.
----@field attachedCouplers table<integer, table> Coupleurs actuellement attaches, par cid de noeud local : {obj2id, obj2nodeId, exportElectrics?, exportInputs?}.
----@field brokenBreakGroups table<string, boolean> Noms des breakGroups deja casses (valeur true). Table recreee a chaque init.
----@field couplerCache table<integer, table> Copie des noeuds jbeam qui ont un couplerTag ou un tag, indexee par cid de noeud (champs couplerTag, couplerWeld, couplerLock, couplerStrength, couplerRadius, couplerLockRadius, couplerLatchSpeed, couplerTargets, couplerStartRadius, breakGroup, importElectrics, importInputs).
----@field damage number Degats cumules du vehicule (energie dissipee + damageExt), mis a jour dans updateGFX.
----@field damageExt number Degats ajoutes artificiellement (addDamage, pneus crevés +1000). Remis a 0 par init.
----@field debugDraw function nop par defaut ; dessine des spheres sur les noeuds de coupleurs libres dont le tag est visible (setCouplerVisiblityExternal).
----@field deformGroupDamage table<string, table> Par deformGroup : {eventCount, damage, maxEvents, invMaxEvents}. `damage` = eventCount / maxEvents, de 0 a 1 environ.
----@field deformGroupsTriggerBeam table<string, integer> Par deformGroup, cid de la premiere poutre qui l'a declenche (deformation ou casse).
----@field deformedBeams table<integer, number> Alias de beamDamageTracker : par cid de poutre, ratio de deformation (onBeamDeformed) ou 1 si cassee.
----@field linkTagBeamMap table<string, integer[]> linkTag de poutre -> liste d'ids de poutres.
----@field lowpressure boolean true des qu'au moins un pneu a ete degonfle. Remis a false par reset().
----@field monetaryDamage number Remis a 0 par init, non modifie ailleurs dans ce fichier.
----@field nodeNameMap table<string, integer> Nom jbeam d'un noeud -> cid.
----@field tagBeamMap table<string, integer[]> Tag de poutre -> liste d'ids de poutres portant ce tag.
----@field update function nop sauf pendant la precompression progressive des poutres/barres de torsion ; appele par la boucle physique.
----@field updateRemoteElectrics function nop par defaut ; devient la vraie fonction apres sendExportCouplerData. Appelee deux fois par electrics.lua : fusionne dans electrics.values les valeurs recues d'un vehicule attele. Parametre retainReceivedElectrics : si faux/nil, vide la liste recue.
+---@field activeParts string[] Names of the active parts of the vehicle, collected from `v.data.slotMap`.
+---@field attachedCouplers table<integer, table> Couplers currently attached, by local node cid: {obj2id, obj2nodeId, exportElectrics?, exportInputs?}.
+---@field brokenBreakGroups table<string, boolean> Names of the breakGroups already broken (value true). Table recreated on every init.
+---@field couplerCache table<integer, table> Copy of the jbeam nodes that have a couplerTag or a tag, keyed by node cid (fields couplerTag, couplerWeld, couplerLock, couplerStrength, couplerRadius, couplerLockRadius, couplerLatchSpeed, couplerTargets, couplerStartRadius, breakGroup, importElectrics, importInputs).
+---@field damage number Cumulative vehicle damage (dissipated energy + damageExt), updated in updateGFX.
+---@field damageExt number Artificially added damage (addDamage, punctured tires +1000). Reset to 0 by init.
+---@field debugDraw function nop by default; draws spheres on the free coupler nodes whose tag is visible (setCouplerVisiblityExternal).
+---@field deformGroupDamage table<string, table> Per deformGroup: {eventCount, damage, maxEvents, invMaxEvents}. `damage` = eventCount / maxEvents, from 0 to about 1.
+---@field deformGroupsTriggerBeam table<string, integer> Per deformGroup, cid of the first beam that triggered it (deformation or break).
+---@field deformedBeams table<integer, number> Alias of beamDamageTracker: per beam cid, deformation ratio (onBeamDeformed) or 1 if broken.
+---@field linkTagBeamMap table<string, integer[]> Beam linkTag -> list of beam ids.
+---@field lowpressure boolean true as soon as at least one tire has been deflated. Reset to false by reset().
+---@field monetaryDamage number Reset to 0 by init, not modified elsewhere in this file.
+---@field nodeNameMap table<string, integer> Jbeam name of a node -> cid.
+---@field tagBeamMap table<string, integer[]> Beam tag -> list of ids of beams carrying this tag.
+---@field update function nop except during the progressive precompression of beams/torsion bars; called by the physics loop.
+---@field updateRemoteElectrics function nop by default; becomes the real function after sendExportCouplerData. Called twice by electrics.lua: merges into electrics.values the values received from a coupled vehicle. Parameter retainReceivedElectrics: if false/nil, empties the received list.
 beamstate = {}
 
---- Active l'attelage automatique : pendant 60 s max, toutes les 0,5 s les coupleurs (tous, ou ceux des tags donnes) sont rearmes via attachCouplers. Diffuse la visibilite des tags aux autres vehicules. Sans argument, prevoit aussi l'extension `couplings`. Ne fait rien si le vehicule n'a aucun coupleur a tag.
----Source : lua/vehicle/beamstate.lua:252
----@param _nodetag string|string[]|nil Tag(s) de coupleur a viser ; nil = tous les coupleurs libres (ni welded ni locked).
+--- Enables automatic coupling: for 60 s max, every 0.5 s the couplers (all, or those of the given tags) are rearmed via attachCouplers. Broadcasts tag visibility to other vehicles. Without argument, also arms the `couplings` extension. Does nothing if the vehicle has no tagged coupler.
+---Source: lua/vehicle/beamstate.lua:252
+---@param _nodetag string|string[]|nil Coupler tag(s) to target; nil = all free couplers (neither welded nor locked).
 function beamstate.activateAutoCoupling(_nodetag) end
 
---- Ajoute des degats artificiels a `damageExt` (donc a `damage`).
----Source : lua/vehicle/beamstate.lua:1426
----@param damage number Montant a ajouter.
+--- Adds artificial damage to `damageExt` (and therefore to `damage`).
+---Source: lua/vehicle/beamstate.lua:1426
+---@param damage number Amount to add.
 function beamstate.addDamage(damage) end
 
---- Ajoute une planete (attracteur) via obj:setPlanets. Avec dt, la planete est temporaire : si elle existe deja avec dt > 0 on prolonge sa duree, avec dt = 0 on la supprime.
----Source : lua/vehicle/beamstate.lua:631
----@param center vec3 Centre.
----@param radius number Rayon.
----@param mass number Masse.
----@param dt number|nil Duree de vie en secondes ; nil = permanente.
+--- Adds a planet (attractor) via obj:setPlanets. With dt, the planet is temporary: if it already exists with dt > 0 its duration is extended, with dt = 0 it is removed.
+---Source: lua/vehicle/beamstate.lua:631
+---@param center vec3 Center.
+---@param radius number Radius.
+---@param mass number Mass.
+---@param dt number|nil Lifetime in seconds; nil = permanent.
 function beamstate.addPlanet(center, radius, mass, dt) end
 
---- Arme (obj:attachCoupler) les coupleurs non welded portant un couplerTag, avec leurs parametres jbeam (couplerStrength defaut 1000000, couplerRadius 0.2, couplerLockRadius 0.025, couplerLatchSpeed 0.3, couplerTargets 0).
----Source : lua/vehicle/beamstate.lua:304
----@param _nodetag string|nil Ne traite que ce couplerTag ; nil = tous.
+--- Arms (obj:attachCoupler) the non-welded couplers carrying a couplerTag, with their jbeam parameters (couplerStrength default 1000000, couplerRadius 0.2, couplerLockRadius 0.025, couplerLatchSpeed 0.3, couplerTargets 0).
+---Source: lua/vehicle/beamstate.lua:304
+---@param _nodetag string|nil Processes only this couplerTag; nil = all.
 function beamstate.attachCouplers(_nodetag) end
 
---- Hook C++ appele quand une poutre casse. Met a jour le suivi de degats (zone de carrosserie, piece), degonfle le pneu ou le groupe de pression concerne, casse les triangles de collision et les meshes, les rails, propage au breakGroup (breakGroupType 0/nil), change le materiau (deformSwitches) et lance des particules (plastique, verre, bois).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:806
----@param id integer cid de la poutre.
----@param energy number Energie de rupture (non utilisee).
+--- C++ hook called when a beam breaks. Updates the damage tracking (body zone, part), deflates the relevant tire or pressure group, breaks collision triangles and meshes, rails, propagates to the breakGroup (breakGroupType 0/nil), changes the material (deformSwitches) and spawns particles (plastic, glass, wood).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:806
+---@param id integer cid of the beam.
+---@param energy number Break energy (unused).
 function beamstate.beamBroken(id, energy) end
 
---- Casse toutes les poutres qui ont un breakGroup (obj:breakBeam) et casse aussi les groupes qui ne contiennent que des coupleurs.
----Source : lua/vehicle/beamstate.lua:1356
+--- Breaks all beams that have a breakGroup (obj:breakBeam) and also breaks the groups that contain only couplers.
+---Source: lua/vehicle/beamstate.lua:1356
 function beamstate.breakAllBreakgroups() end
 
---- Casse un groupe : le marque dans brokenBreakGroups, cache les props du groupe, casse toutes ses poutres, detache ses coupleurs et casse les triangles de collision du meme groupe. Previent aussi la camera si c'est un groupe d'occupant (ocpAttach...).
----Source : lua/vehicle/beamstate.lua:169
----@param g string|nil Nom du breakGroup. nil : ne fait rien.
+--- Breaks a group: marks it in brokenBreakGroups, hides the group's props, breaks all its beams, detaches its couplers and breaks the collision triangles of the same group. Also notifies the camera if it is an occupant group (ocpAttach...).
+---Source: lua/vehicle/beamstate.lua:169
+---@param g string|nil Name of the breakGroup. nil: does nothing.
 function beamstate.breakBreakGroup(g) end
 
---- Casse les poutres dont un breakGroup contient "hinge" ou "latch" (charnieres, loquets), ainsi que les groupes de coupleurs de ce type.
----Source : lua/vehicle/beamstate.lua:1368
+--- Breaks the beams with a breakGroup containing "hinge" or "latch" (hinges, latches), as well as coupler groups of this type.
+---Source: lua/vehicle/beamstate.lua:1368
 function beamstate.breakHinges() end
 
---- Indique si un tag de coupleur (couplerTag ou tag) existe sur ce vehicule.
----Source : lua/vehicle/beamstate.lua:313
----@param _nodetag string Tag recherche.
----@return boolean|nil  true si existe, sinon nil.
+--- Indicates whether a coupler tag (couplerTag or tag) exists on this vehicle.
+---Source: lua/vehicle/beamstate.lua:313
+---@param _nodetag string Tag searched.
+---@return boolean|nil  true if it exists, otherwise nil.
 function beamstate.couplerExists(_nodetag) end
 
---- Hook C++ appele quand un coupleur proche est trouve. Corps vide dans cette version (seulement un print commente).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:381
----@param nodeId integer cid du noeud local.
----@param obj2id integer Id de l'autre vehicule.
----@param obj2nodeId integer cid du noeud de l'autre vehicule.
+--- C++ hook called when a nearby coupler is found. Empty body in this version (only a commented-out print).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:381
+---@param nodeId integer cid of the local node.
+---@param obj2id integer Id of the other vehicle.
+---@param obj2nodeId integer cid of the other vehicle's node.
 function beamstate.couplerFound(nodeId, obj2id, obj2nodeId) end
 
---- Degonfle un pneu pris au hasard parmi ceux qui ne sont pas deja degonfles.
----Source : lua/vehicle/beamstate.lua:1397
+--- Deflates a randomly chosen tire among those not already deflated.
+---Source: lua/vehicle/beamstate.lua:1397
 function beamstate.deflateRandomTire() end
 
---- Degonfle un pneu. Au premier appel pour la roue : marque isTireDeflated, affiche le message, joue le son d'eclatement, enregistre le degat, appelle le hook `onTireDeflated(wheelid)` via extensions.hook, ajoute 1000 a damageExt et ramollit les poutres de la bande de roulement, des flancs et de la pression. Les appels suivants font monter le compteur ; au-dela de 4 le groupe de pression est vide.
----Source : lua/vehicle/beamstate.lua:524
----@param wheelid integer Index de roue (v.data.wheels / wheels.wheels).
+--- Deflates a tire. On the first call for the wheel: marks isTireDeflated, displays the message, plays the burst sound, records the damage, calls the hook `onTireDeflated(wheelid)` via extensions.hook, adds 1000 to damageExt and softens the beams of the tread, sidewalls and pressure. Subsequent calls increment the counter; beyond 4 the pressure group is emptied.
+---Source: lua/vehicle/beamstate.lua:524
+---@param wheelid integer Wheel index (v.data.wheels / wheels.wheels).
 function beamstate.deflateTire(wheelid) end
 
---- Appelle deflateTire pour toutes les roues.
----Source : lua/vehicle/beamstate.lua:1391
+--- Calls deflateTire for all wheels.
+---Source: lua/vehicle/beamstate.lua:1391
 function beamstate.deflateTires() end
 
---- Supprime une planete (attracteur de gravite) identifiee par centre, rayon et masse exacts, puis met a jour le moteur.
----Source : lua/vehicle/beamstate.lua:621
----@param center vec3 Centre.
----@param radius number Rayon.
----@param mass number Masse.
+--- Removes a planet (gravity attractor) identified by exact center, radius and mass, then updates the engine.
+---Source: lua/vehicle/beamstate.lua:621
+---@param center vec3 Center.
+---@param radius number Radius.
+---@param mass number Mass.
 function beamstate.delPlanet(center, radius, mass) end
 
---- Detache (obj:detachCoupler) les coupleurs d'un tag ou tous. Les coupleurs locked ou welded sont ignores sauf si on force. Notifie le jeu (onCouplerDetach) et l'extension couplings.
----Source : lua/vehicle/beamstate.lua:317
----@param _nodetag string|nil Tag a detacher ; nil = tous.
----@param forceLocked boolean|nil Detache aussi les coupleurs couplerLock.
----@param forceWelded boolean|nil Detache aussi les coupleurs couplerWeld.
+--- Detaches (obj:detachCoupler) the couplers of a tag or all of them. Locked or welded couplers are ignored unless forced. Notifies the game (onCouplerDetach) and the couplings extension.
+---Source: lua/vehicle/beamstate.lua:317
+---@param _nodetag string|nil Tag to detach; nil = all.
+---@param forceLocked boolean|nil Also detaches couplerLock couplers.
+---@param forceWelded boolean|nil Also detaches couplerWeld couplers.
 function beamstate.detachCouplers(_nodetag, forceLocked, forceWelded) end
 
---- Arrete l'attelage automatique, efface les tags visibles et previent l'extension couplings.
----Source : lua/vehicle/beamstate.lua:291
+--- Stops automatic coupling, clears the visible tags and notifies the couplings extension.
+---Source: lua/vehicle/beamstate.lua:291
 function beamstate.disableAutoCoupling() end
 
---- Appelee depuis le vehicule qui veut importer des electrics. Chez le fournisseur, ajoute les electrics/inputs demandes a la liste transmise chaque frame (dans updateGFX) vers l'autre vehicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:479
----@param nodeid integer cid du noeud local de coupleur.
+--- Called from the vehicle that wants to import electrics. On the provider, adds the requested electrics/inputs to the list sent every frame (in updateGFX) to the other vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:479
+---@param nodeid integer cid of the local coupler node.
 ---@param dataList table {electrics = string[], inputs = string[]}.
 function beamstate.exportCouplerData(nodeid, dataList) end
 
---- Ecrit les degats par piece dans le fichier `partDamage.json` (dumpToFile). Outil de debug.
----Source : lua/vehicle/beamstate.lua:1627
+--- Writes the damage per part to the file `partDamage.json` (dumpToFile). Debug tool.
+---Source: lua/vehicle/beamstate.lua:1627
 function beamstate.exportPartDamageData() end
 
---- Degat des six zones de carrosserie.
----Source : lua/vehicle/beamstate.lua:1618
+--- Damage of the six body zones.
+---Source: lua/vehicle/beamstate.lua:1618
 ---@return table<string, number>  {FL=, FR=, ML=, MR=, RL=, RR=}.
 function beamstate.getBodyZoneDamage() end
 
---- Degat d'une zone de carrosserie (somme des poutres cassees + ratios de deformation, divisee par le nombre de poutres de la zone).
----Source : lua/vehicle/beamstate.lua:1606
----@param zone string "FL", "FR", "ML", "MR", "RL" ou "RR".
----@return number  Valeur de degat, 0 si zone inconnue ou vide.
+--- Damage of a body zone (sum of broken beams + deformation ratios, divided by the number of beams in the zone).
+---Source: lua/vehicle/beamstate.lua:1606
+---@param zone string "FL", "FR", "ML", "MR", "RL" or "RR".
+---@return number  Damage value, 0 if the zone is unknown or empty.
 function beamstate.getBodyZoneDamageValue(zone) end
 
---- Renvoie la position de chaque coupleur relative au noeud de reference du vehicule (refNodes[0].ref).
----Source : lua/vehicle/beamstate.lua:463
----@param couplerTag string|nil Filtre sur couplerTag ou tag ; nil ou "" = tous.
----@return table<integer, table>  Par cid : {x, y, z, couplerTag, tag}. Table vide si pas de noeuds.
+--- Returns the position of each coupler relative to the vehicle's reference node (refNodes[0].ref).
+---Source: lua/vehicle/beamstate.lua:463
+---@param couplerTag string|nil Filter on couplerTag or tag; nil or "" = all.
+---@return table<integer, table>  Per cid: {x, y, z, couplerTag, tag}. Empty table if there are no nodes.
 function beamstate.getCouplerOffset(couplerTag) end
 
---- Estime l'etat d'une piece a partir de ses breakGroups casses et des poutres deformees (`beamDamage`). La piece (qui doit avoir un flexbody) est dite a remplacer si trop de groupes sont casses (>1, ou tous), plus de 1 % de poutres deformees (>= 0.01) ou plus de 2 poutres cassees (>= 0.9).
----Source : lua/vehicle/beamstate.lua:106
----@param partId string Identifiant de la piece (pour debug).
----@param partTypeData string[]|nil Tags de la piece de forme "jbeam:breakGroup:nom", "jbeam:flexbody", "jbeam:beamDamage:<cid>".
----@return table  {integrityValue, integrityState, visualValue, visualState} ; visualState.needsReplacement = true et integrityValue = 0 si la piece est trop abimee.
----@return boolean  true si un etat a pu etre fourni.
+--- Estimates the state of a part from its broken breakGroups and deformed beams (`beamDamage`). The part (which must have a flexbody) is said to need replacement if too many groups are broken (>1, or all), more than 1% of beams are deformed (>= 0.01) or more than 2 beams are broken (>= 0.9).
+---Source: lua/vehicle/beamstate.lua:106
+---@param partId string Part identifier (for debug).
+---@param partTypeData string[]|nil Part tags of the form "jbeam:breakGroup:name", "jbeam:flexbody", "jbeam:beamDamage:<cid>".
+---@return table  {integrityValue, integrityState, visualValue, visualState}; visualState.needsReplacement = true and integrityValue = 0 if the part is too damaged.
+---@return boolean  true if a state could be provided.
 function beamstate.getPartCondition(partId, partTypeData) end
 
---- Score de degat d'une piece a partir de son nom de signal.
----Source : lua/vehicle/beamstate.lua:1581
----@param name string Nom de signal (cf. getPartDamageSignalList).
----@return number|nil  Score 0 a 1, nil si le nom est inconnu.
+--- Damage score of a part from its signal name.
+---Source: lua/vehicle/beamstate.lua:1581
+---@param name string Signal name (see getPartDamageSignalList).
+---@return number|nil  Score 0 to 1, nil if the name is unknown.
 function beamstate.getPartDamageBySignalName(name) end
 
---- Renvoie les pieces ayant un degat strictement positif.
----Source : lua/vehicle/beamstate.lua:1560
----@return table<string, table>  partPath -> {name, damage} ; damage = max(poutres cassees / seuil, poutres deformees / seuil), entre 0 et 1.
+--- Returns the parts with strictly positive damage.
+---Source: lua/vehicle/beamstate.lua:1560
+---@return table<string, table>  partPath -> {name, damage}; damage = max(broken beams / threshold, deformed beams / threshold), between 0 and 1.
 function beamstate.getPartDamageData() end
 
---- Table plate nom-de-signal -> score de degat pour toutes les pieces, y compris celles a 0.
----Source : lua/vehicle/beamstate.lua:1572
----@return table<string, number>  Nom court de piece (ou chemin avec "_" en cas de doublon) -> score 0 a 1.
+--- Flat table signal-name -> damage score for all parts, including those at 0.
+---Source: lua/vehicle/beamstate.lua:1572
+---@return table<string, number>  Short part name (or path with "_" in case of duplicates) -> score 0 to 1.
 function beamstate.getPartDamageScores() end
 
---- Liste triee des noms de signaux de pieces disponibles.
----Source : lua/vehicle/beamstate.lua:1593
+--- Sorted list of available part signal names.
+---Source: lua/vehicle/beamstate.lua:1593
 ---@return table[]  {{name = string, type = "number"}, ...}.
 function beamstate.getPartDamageSignalList() end
 
---- Renvoie une photo du vehicule (id, conditions de pieces, itemId de config, position, vecteurs avant et haut). Contient un faux delai de 1 s volontaire (voir notes).
----Source : lua/vehicle/beamstate.lua:1539
----@param ... any Valeurs renvoyees telles quelles apres l'etat.
+--- Returns a snapshot of the vehicle (id, parts conditions, config itemId, position, front and up vectors). Contains a deliberate fake 1 s delay (see notes).
+---Source: lua/vehicle/beamstate.lua:1539
+---@param ... any Values returned as is after the state.
 ---@return table  {objId, partsCondition, itemId, pos, front, up}.
----@return any  Les arguments supplementaires passes en entree.
+---@return any  The extra arguments passed as input.
 function beamstate.getVehicleState(...) end
 
---- Indique si le vehicule a au moins un coupleur non welded portant un couplerTag.
----Source : lua/vehicle/beamstate.lua:1447
----@param couplerTag string|nil Filtre sur couplerTag ou tag ; nil = tous.
----@return boolean  true si un coupleur correspond.
+--- Indicates whether the vehicle has at least one non-welded coupler carrying a couplerTag.
+---Source: lua/vehicle/beamstate.lua:1447
+---@param couplerTag string|nil Filter on couplerTag or tag; nil = all.
+---@return boolean  true if a coupler matches.
 function beamstate.hasCouplers(couplerTag) end
 
---- Appelee par l'hote fournisseur. Stocke les electrics recus (fusionnes ensuite dans electrics.values par updateRemoteElectrics) et rejoue les inputs via input.event(nom, valeur, 2). Ignore les donnees si le coupleur n'est plus attache.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:496
----@param nodeId integer cid du noeud local.
+--- Called by the provider host. Stores the received electrics (then merged into electrics.values by updateRemoteElectrics) and replays the inputs via input.event(name, value, 2). Ignores the data if the coupler is no longer attached.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:496
+---@param nodeId integer cid of the local node.
 ---@param data table {electrics = table<string, any>, inputs = table<string, number>}.
 function beamstate.importCouplerData(nodeId, data) end
 
---- Reconstruit tout l'etat a partir de `v.data` : remet les degats a zero, vide les caches, reindexe triangles, breakGroups, deformGroups, coupleurs, tags de poutres, zones de carrosserie, donnees de pieces ; prepare la precompression retardee, la liste des signaux de pieces, et enregistre le menu radial des coupleurs. Appelee au chargement du vehicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:1049
+--- Rebuilds the whole state from `v.data`: resets damage to zero, empties caches, reindexes triangles, breakGroups, deformGroups, couplers, beam tags, body zones, part data; prepares the delayed precompression, the part signal list, and registers the couplers radial menu. Called when the vehicle loads.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:1049
 function beamstate.init() end
 
---- Indique si beamstate a besoin de la boucle physique (true seulement tant que la precompression retardee est en cours).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:1632
----@return boolean  true si M.update est actif.
+--- Indicates whether beamstate needs the physics loop (true only while the delayed precompression is in progress).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:1632
+---@return boolean  true if M.update is active.
 function beamstate.isPhysicsStepUsed() end
 
---- Indique si un triangle de collision est casse (absent du suivi interne).
----Source : lua/vehicle/beamstate.lua:961
----@param triId integer cid du triangle.
----@return boolean  true si casse ou inconnu.
+--- Indicates whether a collision triangle is broken (absent from the internal tracking).
+---Source: lua/vehicle/beamstate.lua:961
+---@param triId integer cid of the triangle.
+---@return boolean  true if broken or unknown.
 function beamstate.isTriangleBroken(triId) end
 
---- Recharge un fichier ecrit par save. Verifie que le nombre de noeuds/poutres, le dossier du vehicule et le format correspondent, sinon log d'erreur et abandon. Restaure noeuds, masses, longueurs, poutres cassees/deformees puis appelle obj:commitLoad().
----Source : lua/vehicle/beamstate.lua:1496
----@param filename string|nil Chemin ; par defaut `<vehicleDirectory>/vehicle.save.json`.
+--- Reloads a file written by save. Checks that the number of nodes/beams, the vehicle folder and the format match, otherwise logs an error and aborts. Restores nodes, masses, lengths, broken/deformed beams then calls obj:commitLoad().
+---Source: lua/vehicle/beamstate.lua:1496
+---@param filename string|nil Path; by default `<vehicleDirectory>/vehicle.save.json`.
 function beamstate.load(filename) end
 
---- Hook C++ appele seulement pour les poutres qui ont un seuil de deformation. Met a jour `deformedBeams`, les degats de zone et de piece, change de materiau (deformSwitches) et compte les evenements du ou des deformGroup.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:1308
----@param id integer cid de la poutre.
----@param ratio number Ratio de deformation de la poutre.
+--- C++ hook called only for beams that have a deformation threshold. Updates `deformedBeams`, zone and part damage, changes material (deformSwitches) and counts the events of the deformGroup(s).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:1308
+---@param id integer cid of the beam.
+---@param ratio number Deformation ratio of the beam.
 function beamstate.onBeamDeformed(id, ratio) end
 
---- Hook C++ appele quand un coupleur s'attache. Enregistre l'attelage dans attachedCouplers, copie les flags lock/weld entre coupleurs du meme vehicule, coupe l'attelage auto si c'etait ce tag, demande l'import d'electrics/inputs si le noeud a importElectrics/importInputs, restaure ses breakGroups de coupleur, puis previent le jeu (onCouplerAttached cote GE, une seule fois : par le vehicule d'id le plus petit).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:402
----@param nodeId integer cid du noeud local.
----@param obj2id integer Id de l'autre vehicule.
----@param obj2nodeId integer cid du noeud de l'autre vehicule.
----@param attachSpeed number Vitesse d'attache (non utilisee ici).
----@param attachEnergy number Energie d'attache (non utilisee ici).
+--- C++ hook called when a coupler attaches. Records the coupling in attachedCouplers, copies the lock/weld flags between couplers of the same vehicle, stops auto coupling if it was for this tag, requests the import of electrics/inputs if the node has importElectrics/importInputs, restores its coupler breakGroups, then notifies the game (onCouplerAttached on the GE side, only once: by the vehicle with the lowest id).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:402
+---@param nodeId integer cid of the local node.
+---@param obj2id integer Id of the other vehicle.
+---@param obj2nodeId integer cid of the other vehicle's node.
+---@param attachSpeed number Attach speed (not used here).
+---@param attachEnergy number Attach energy (not used here).
 function beamstate.onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy) end
 
---- Hook C++ appele quand un coupleur se detache. Retire l'attelage, casse les breakGroups du noeud si breakGroupType vaut 0 ou nil, puis previent le jeu (onCouplerDetached cote GE, une seule fois par paire).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:441
----@param nodeId integer cid du noeud local.
----@param obj2id integer Id de l'autre vehicule.
----@param obj2nodeId integer cid du noeud de l'autre vehicule.
----@param breakForce number Force de rupture transmise au jeu.
+--- C++ hook called when a coupler detaches. Removes the coupling, breaks the node's breakGroups if breakGroupType is 0 or nil, then notifies the game (onCouplerDetached on the GE side, only once per pair).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:441
+---@param nodeId integer cid of the local node.
+---@param obj2id integer Id of the other vehicle.
+---@param obj2nodeId integer cid of the other vehicle's node.
+---@param breakForce number Break force passed to the game.
 function beamstate.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce) end
 
---- Enregistre un cid de noeud-coupleur dans un breakGroup, pour qu'un breakBreakGroup ulterieur le detache. Utilisee par des extensions de couplage.
----Source : lua/vehicle/beamstate.lua:776
----@param breakGroup string Nom du groupe.
----@param cid integer cid du noeud de coupleur.
+--- Registers a coupler node cid in a breakGroup, so that a later breakBreakGroup detaches it. Used by coupling extensions.
+---Source: lua/vehicle/beamstate.lua:776
+---@param breakGroup string Group name.
+---@param cid integer cid of the coupler node.
 function beamstate.registerExternalCouplerBreakGroup(breakGroup, cid) end
 
---- Pour l'UI : envoie la geometrie des poutres (paires de positions de noeuds) via guihooks "VehicleSkeleton", puis l'etat du squelette. Ne fait rien d'affichable si aucun joueur n'est assis.
----Source : lua/vehicle/beamstate.lua:1430
+--- For the UI: sends the beam geometry (pairs of node positions) via guihooks "VehicleSkeleton", then the skeleton state. Does nothing displayable if no player is seated.
+---Source: lua/vehicle/beamstate.lua:1430
 function beamstate.requestSkeleton() end
 
---- Envoie a l'UI l'etat des poutres (`beamDamageTracker`) via guihooks "VehicleSkeletonState" si un joueur est assis dans ce vehicule. Appelee aussi toutes les 0,25 s quand des degats ont change.
----Source : lua/vehicle/beamstate.lua:517
+--- Sends the beam state (`beamDamageTracker`) to the UI via guihooks "VehicleSkeletonState" if a player is seated in this vehicle. Also called every 0.25 s when damage has changed.
+---Source: lua/vehicle/beamstate.lua:517
 function beamstate.requestSkeletonState() end
 
---- Reinitialise l'etat (appelle init) et remet `lowpressure` a false. Appelee au reset du vehicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:1351
+--- Reinitializes the state (calls init) and resets `lowpressure` to false. Called on vehicle reset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:1351
 function beamstate.reset() end
 
---- Ecrit un JSON (format "v2") de l'etat : positions et masses des noeuds, longueur au repos, cassure et deformation des poutres, etat des hydros et paquets Lua serialises.
----Source : lua/vehicle/beamstate.lua:1457
----@param filename string|nil Chemin ; par defaut `<vehicleDirectory>/vehicle.save.json`.
+--- Writes a JSON ("v2" format) of the state: node positions and masses, rest length, beam breakage and deformation, hydro state and serialized Lua packets.
+---Source: lua/vehicle/beamstate.lua:1457
+---@param filename string|nil Path; by default `<vehicleDirectory>/vehicle.save.json`.
 function beamstate.save(filename) end
 
---- Demande a l'autre vehicule (queueObjectLuaCommand -> exportCouplerData) d'exporter vers nous certaines valeurs electrics/inputs, et active updateRemoteElectrics.
----Source : lua/vehicle/beamstate.lua:397
----@param obj2Id integer Id de l'autre vehicule.
----@param obj2nodeId integer cid du noeud de coupleur de l'autre vehicule.
+--- Asks the other vehicle (queueObjectLuaCommand -> exportCouplerData) to export certain electrics/inputs values to us, and activates updateRemoteElectrics.
+---Source: lua/vehicle/beamstate.lua:397
+---@param obj2Id integer Id of the other vehicle.
+---@param obj2nodeId integer cid of the other vehicle's coupler node.
 ---@param data table {electrics = string[], inputs = string[]}.
 function beamstate.sendExportCouplerData(obj2Id, obj2nodeId, data) end
 
---- Appelee par un autre vehicule (via BeamEngine:queueAllObjectLua) pour activer/desactiver la surbrillance des coupleurs dont le tag est dans la liste. (Le nom contient la faute "Visiblity".)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:242
----@param sourceObjectID integer Id du vehicule qui diffuse (non utilise).
----@param visibleTags table<string, boolean>|false|nil Tags visibles ; faux/nil desactive l'affichage.
+--- Called by another vehicle (via BeamEngine:queueAllObjectLua) to enable/disable the highlighting of couplers whose tag is in the list. (The name contains the typo "Visiblity".)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:242
+---@param sourceObjectID integer Id of the broadcasting vehicle (unused).
+---@param visibleTags table<string, boolean>|false|nil Visible tags; false/nil disables the display.
 function beamstate.setCouplerVisiblityExternal(sourceObjectID, visibleTags) end
 
---- Appliquerait un etat d'integrite/visuel a une piece. Dans cette version le corps est quasi vide (le code utile est commente) : ne fait rien d'utile.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:71
----@param partId string Identifiant de la piece.
----@param partTypeData string[] Liste de types de piece (ex. "jbeam:breakGroup:nom").
----@param odometer any Non utilise.
----@param integrity number|table Valeur ou table d'integrite.
----@param visual number|table Valeur ou table d'etat visuel.
+--- Would apply an integrity/visual state to a part. In this version the body is almost empty (the useful code is commented out): does nothing useful.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:71
+---@param partId string Part identifier.
+---@param partTypeData string[] List of part types (e.g. "jbeam:breakGroup:name").
+---@param odometer any Unused.
+---@param integrity number|table Integrity value or table.
+---@param visual number|table Visual state value or table.
 function beamstate.setPartCondition(partId, partTypeData, odometer, integrity, visual) end
 
---- Remplace toutes les planetes. Le tableau est lu par triplets (centre, rayon, masse).
----Source : lua/vehicle/beamstate.lua:659
----@param p table {vec3, rayon, masse, vec3, rayon, masse, ...}.
+--- Replaces all planets. The array is read in triplets (center, radius, mass).
+---Source: lua/vehicle/beamstate.lua:659
+---@param p table {vec3, radius, mass, vec3, radius, mass, ...}.
 function beamstate.setPlanets(p) end
 
---- Bascule les attelages ; appelee a l'appui sur la touche L. Sans tag : coupe l'attelage auto s'il est actif, detache tout si un coupleur est attache, sinon lance l'attelage auto. Avec un tag : detache s'il est attache, sinon l'attache (sauf forceAutoCoupling).
----Source : lua/vehicle/beamstate.lua:351
----@param _nodetag string|nil Tag cible.
----@param forceLocked boolean|nil Transmis a detachCouplers.
----@param forceWelded boolean|nil Transmis a detachCouplers.
----@param forceAutoCoupling boolean|nil Avec un tag, force la logique de l'attelage automatique.
+--- Toggles couplers; called when the L key is pressed. Without tag: stops auto coupling if active, detaches everything if a coupler is attached, otherwise starts auto coupling. With a tag: detaches if attached, otherwise attaches it (unless forceAutoCoupling).
+---Source: lua/vehicle/beamstate.lua:351
+---@param _nodetag string|nil Target tag.
+---@param forceLocked boolean|nil Passed to detachCouplers.
+---@param forceWelded boolean|nil Passed to detachCouplers.
+---@param forceAutoCoupling boolean|nil With a tag, forces the automatic coupling logic.
 function beamstate.toggleCouplers(_nodetag, forceLocked, forceWelded, forceAutoCoupling) end
 
---- Hook C++ appele quand une barre de torsion casse. Si elle a un breakGroup, cache les props et casse le groupe (breakGroupType 0 ou nil), comme beamBroken le fait pour les poutres.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:781
----@param id integer Index de la barre de torsion dans v.data.torsionbars.
----@param energy number Energie de rupture (non utilisee).
+--- C++ hook called when a torsion bar breaks. If it has a breakGroup, hides the props and breaks the group (breakGroupType 0 or nil), as beamBroken does for beams.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:781
+---@param id integer Index of the torsion bar in v.data.torsionbars.
+---@param energy number Break energy (unused).
 function beamstate.torsionBarBroken(id, energy) end
 
---- Declenche le changement de materiau du premier deformSwitches correspondant au groupe de deformation donne.
----Source : lua/vehicle/beamstate.lua:1409
----@param group string|nil Nom du deformGroup ; nil ne fait rien.
+--- Triggers the material change of the first deformSwitches matching the given deform group.
+---Source: lua/vehicle/beamstate.lua:1409
+---@param group string|nil Name of the deformGroup; nil does nothing.
 function beamstate.triggerDeformGroup(group) end
 
---- Appelee chaque frame graphique. Gere les minuteurs des planetes temporaires, recalcule `damage`, le score de degats par piece, envoie l'etat du squelette a l'UI (au plus toutes les 0,25 s), pilote l'attelage automatique (timeout 60 s) et transmet aux vehicules attelés les electrics/inputs demandes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/beamstate.lua:672
----@param dt number Pas de temps en secondes.
+--- Called every graphics frame. Handles the timers of temporary planets, recomputes `damage`, the damage score per part, sends the skeleton state to the UI (at most every 0.25 s), drives automatic coupling (60 s timeout) and passes the requested electrics/inputs to coupled vehicles.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/beamstate.lua:672
+---@param dt number Time step in seconds.
 function beamstate.updateGFX(dt) end
 

@@ -1,121 +1,834 @@
 {
   "path": "lua/ge/extensions/editor/rallyEditor/pacenotes.lua",
-  "module": "Onglet « Pacenotes » de l'éditeur de rallye, le plus important de l'éditeur : il gère la sélection de pacenotes et de waypoints (corner start / corner end) dans la vue 3D, leur création (Ctrl + clic sur la snaproad), leur déplacement à la souris avec accrochage à la route, la mesure géométrique des virages, la validation du carnet, la lecture d'une caméra le long de la route avec prévisualisation audio, l'édition additive de la driveline (spline) avec reprojection en direct des waypoints, et le choix d'ancres pour les clips audio personnalisés. Il contient aussi la liste/formulaire de pacenotes (PacenoteForm) et l'onglet « Audio » (customAudioList) pour les carnets en mode audio custom. Le module renvoie un constructeur (classe C). L'état partagé est dans self.pacenoteToolsState (selected_pn_id, selected_wp_id, hover_wp_id, snaproad, mode, drivelineEditActive, etc.).",
+  "module": "\"Pacenotes\" tab of the rally editor, the most important of the editor: it handles selection of pacenotes and waypoints (corner start / corner end) in the 3D view, their creation (Ctrl + click on the snaproad), moving them with the mouse with snapping to the road, geometric measurement of corners, notebook validation, playback of a camera along the road with audio preview, additive editing of the driveline (spline) with live waypoint reprojection, and the choice of anchors for custom audio clips. It also contains the pacenote list/form (PacenoteForm) and the \"Audio\" tab (customAudioList) for notebooks in custom audio mode. The module returns a constructor (class C). Shared state is in self.pacenoteToolsState (selected_pn_id, selected_wp_id, hover_wp_id, snaproad, mode, drivelineEditActive, etc.).",
   "usage": "local tab = editor_rallyEditor.getPacenotesWindow()\ntab:selectPacenote(id)\ntab:measureSelectedPacenote(true)\nif not tab:isValid() then dump(tab.validation_issues) end",
   "notes": [
-    "La snaproad est construite depuis la driveline finale sauvegardée (DrivelineV3:loadDrivelineFromFile). Sans driveline sauvegardée, loadSnaproad() journalise une erreur et met snaproad à nil : il faut d'abord créer la driveline dans l'onglet Driveline.",
-    "Modes d'édition : 'edit_all' et 'edit_corners' ; setModeEditAll/Corners désactivent aussi le verrouillage des waypoints.",
-    "La reprojection en direct pendant l'édition de driveline est anti-rebond de 0,15 s (drivelineReprojectDebounceSecs).",
-    "Création d'un pacenote : la fin de virage est placée à 10 m le long de la route (réduite si l'espace manque, minGap respecté) ; le pacenote reçoit un élément structuré de type 'corner' au slot \"4\".",
-    "Bug probable : deleteSelectedPacenote(shouldSelect) calcule `shouldSelect = (shouldSelect == nil) and true`. Appelé sans argument, il vaut true ; appelé avec true ou false, il vaut false, donc le pacenote voisin n'est alors pas sélectionné. Les fusions (merge) passent false volontairement.",
-    "toggleCornerCalls() est un stub (journalise « will be implemented in the future »).",
-    "Dans _moveSelectedWaypointHelper, quand aucun waypoint n'est sélectionné, la fonction sélectionne le suivant puis retourne sans déplacer.",
-    "Le gizmo d'axes est caché sous la carte (z = -1000) car le gizmo n'est pas utilisé pour l'édition ; les fonctions beginDrag/dragging/endDragging sont néanmoins branchées sur editor.updateAxisGizmo.",
-    "Le code de handleMouseInput contient un commentaire sur un bug connu de l'éditeur : getAxisGizmoSelectedElement renvoie 6 après un démarrage à froid, d'où l'absence du test isAxisGizmoHovered."
+    "The snaproad is built from the saved final driveline (DrivelineV3:loadDrivelineFromFile). Without a saved driveline, loadSnaproad() logs an error and sets snaproad to nil: the driveline must first be created in the Driveline tab.",
+    "Edit modes: 'edit_all' and 'edit_corners'; setModeEditAll/Corners also disable waypoint locking.",
+    "Live reprojection during driveline editing is debounced by 0.15 s (drivelineReprojectDebounceSecs).",
+    "Pacenote creation: the corner end is placed 10 m along the road (reduced if there is not enough room, minGap respected); the pacenote receives a structured element of type 'corner' at slot \"4\".",
+    "Probable bug: deleteSelectedPacenote(shouldSelect) computes `shouldSelect = (shouldSelect == nil) and true`. Called with no argument, it is true; called with true or false, it is false, so the neighboring pacenote is then not selected. Merges pass false deliberately.",
+    "toggleCornerCalls() is a stub (logs \"will be implemented in the future\").",
+    "In _moveSelectedWaypointHelper, when no waypoint is selected, the function selects the next one then returns without moving.",
+    "The axis gizmo is hidden below the map (z = -1000) because the gizmo is not used for editing; the beginDrag/dragging/endDragging functions are nevertheless wired to editor.updateAxisGizmo.",
+    "The handleMouseInput code contains a comment about a known editor bug: getAxisGizmoSelectedElement returns 6 after a cold start, hence the absence of the isAxisGizmoHovered test."
   ],
   "classes": {
     "C": {
-      "desc": "Objet onglet renvoyé par le constructeur (new(rallyEditor)). Champs principaux : rallyEditor, path (carnet), mouseInfo, pacenoteToolsState, pacenoteForm, ghostNotebookRenderer, notes_valid, invalid_notes_count, todo_count, validation_issues, validationDirty, pacenotesDrivelineHost, drivelineEditSnapshot, customAudioAnchorPick, previewAudioManager. windowDescription = 'Pacenotes'.",
+      "desc": "Tab object returned by the constructor (new(rallyEditor)). Main fields: rallyEditor, path (notebook), mouseInfo, pacenoteToolsState, pacenoteForm, ghostNotebookRenderer, notes_valid, invalid_notes_count, todo_count, validation_issues, validationDirty, pacenotesDrivelineHost, drivelineEditSnapshot, customAudioAnchorPick, previewAudioManager. windowDescription = 'Pacenotes'.",
       "functions": {
-        "init": {"desc": "Constructeur interne : crée l'état des outils, le formulaire pacenote et le rendu du carnet fantôme.", "params": {"rallyEditor": {"type": "table", "desc": "Instance de l'éditeur de rallye."}}, "internal": true},
-        "clearState": {"desc": "Réinitialise tout l'état (arrête l'audio, vide la sélection, la validation, l'édition de driveline, le formulaire).", "internal": true},
-        "isValid": {"desc": "Rafraîchit la validation si besoin puis indique si le carnet est valide.", "returns": [{"type": "boolean", "desc": "true si notes_valid et aucune issue."}], "internal": false},
-        "invalidateNoSelectionPreview": {"desc": "Invalide l'aperçu affiché quand aucun pacenote n'est sélectionné.", "internal": false},
-        "markPacenoteGeometryDirty": {"desc": "Marque la géométrie des pacenotes comme à recalculer (invalide l'aperçu sans sélection).", "internal": false},
-        "setPath": {"desc": "Définit le carnet courant ; s'il change, arrête l'audio et abandonne l'édition de driveline en cours. Marque la validation à refaire.", "params": {"path": {"type": "table", "desc": "Carnet."}}, "internal": true},
-        "onEditModeActivate": {"desc": "Appelée à l'activation du mode d'édition du carnet : resélectionne le pacenote courant.", "internal": true},
-        "onEditModeDeactivate": {"desc": "Appelée à la désactivation du mode d'édition : arrête l'audio et remet la caméra libre.", "internal": true},
-        "getRacePath": {"desc": "Renvoie le chemin de course courant de l'éditeur de course (editor_raceEditor.getCurrentPath()).", "returns": [{"type": "table|nil", "desc": "Chemin de course."}], "internal": false},
-        "selectedPacenote": {"desc": "Renvoie le pacenote sélectionné.", "returns": [{"type": "table|nil", "desc": "Pacenote, ou nil."}], "internal": false},
-        "selectedWaypoint": {"desc": "Renvoie le waypoint sélectionné du pacenote sélectionné.", "returns": [{"type": "table|nil", "desc": "Waypoint, ou nil."}], "internal": false},
-        "ensurePreviewAudioManager": {"desc": "Crée (ou recrée si le carnet a changé) le gestionnaire audio de prévisualisation.", "returns": [{"type": "table|nil", "desc": "AudioManager."}], "internal": false},
-        "startPreviewAudio": {"desc": "Met en file les clips audio du pacenote pour les jouer pendant la lecture de la caméra.", "params": {"pacenote": {"type": "table", "desc": "Pacenote à prévisualiser."}}, "returns": [{"type": "boolean", "desc": "true si un audio est en attente ou en cours."}], "internal": false},
-        "stopPreviewAudio": {"desc": "Vide la file audio de prévisualisation et la désactive.", "internal": false},
-        "updatePreviewAudio": {"desc": "Appelée à chaque image : fait avancer le gestionnaire audio tant que la caméra path joue, et s'arrête sinon ou quand la file est vide.", "params": {"dtReal": {"type": "number", "desc": "Delta temps réel."}, "dtSim": {"type": "number", "desc": "Delta temps simulation."}, "dtRaw": {"type": "number", "desc": "Delta temps brut."}}, "internal": true},
-        "beginCustomAudioAnchorPick": {"desc": "Démarre le mode « choisir un pacenote ancre » pour un clip audio personnalisé (le prochain clic dans la vue 3D choisit le pacenote).", "params": {"basename": {"type": "string", "desc": "Nom de base du fichier audio."}}, "internal": false},
-        "cancelCustomAudioAnchorPick": {"desc": "Annule le choix d'ancre en cours.", "internal": false},
-        "isCustomAudioAnchorPickActive": {"desc": "Indique si un choix d'ancre est en cours.", "returns": [{"type": "boolean|nil", "desc": "Vrai si actif."}], "internal": false},
-        "getCustomAudioAnchorPickBasename": {"desc": "Renvoie le clip pour lequel on choisit une ancre.", "returns": [{"type": "string|nil", "desc": "Nom de base, ou nil."}], "internal": false},
-        "isPickingCustomAudioAnchorFor": {"desc": "Indique si le choix d'ancre en cours concerne ce clip.", "params": {"basename": {"type": "string|nil", "desc": "Nom de base."}}, "returns": [{"type": "boolean", "desc": "Résultat."}], "internal": false},
-        "getSnaproad": {"desc": "Renvoie la snaproad courante.", "returns": [{"type": "table|nil", "desc": "Snaproad."}], "internal": false},
-        "loadSnaproad": {"desc": "Charge la driveline sauvegardée, construit la Snaproad, la donne au carnet (setSnaproad) et reprojette les waypoints si une snaproad précédente ou un instantané existe.", "params": {"snapshot": {"type": "table|nil", "desc": "Instantané d'édition de driveline (voir captureDrivelineEditSnapshot)."}}, "internal": false},
-        "isPacenotesDrivelineEditActive": {"desc": "Indique si l'édition de driveline dans l'onglet Pacenotes est active.", "returns": [{"type": "boolean|nil", "desc": "Vrai si actif."}], "internal": false},
-        "_newPacenotesDrivelineHost": {"desc": "Crée la table « hôte » (état d'édition) passée à DrivelineEditSurface.", "returns": [{"type": "table", "desc": "Hôte vide."}], "internal": true},
-        "ensurePacenotesDrivelineHost": {"desc": "Crée l'hôte d'édition de driveline et charge la driveline depuis le fichier si besoin.", "returns": [{"type": "table|nil", "desc": "Hôte, ou nil en cas d'échec (loadError rempli)."}], "internal": false},
-        "captureDrivelineEditSnapshot": {"desc": "Enregistre, pour chaque pacenote, les positions, normales et emplacements le long de la route de ses waypoints corner start/end avant une édition de driveline.", "returns": [{"type": "table|nil", "desc": "{pacenotes, snaproad}."}], "internal": false},
-        "ensureDrivelineEditSnapshot": {"desc": "Prend l'instantané s'il n'existe pas encore.", "returns": [{"type": "table|nil", "desc": "Instantané."}], "internal": false},
-        "replaceSnaproadFromDrivelineV3": {"desc": "Remplace la snaproad par une nouvelle construite depuis la driveline éditée et reprojette les waypoints d'après l'instantané.", "params": {"drivelineV3": {"type": "table", "desc": "Driveline en cours d'édition."}, "snapshot": {"type": "table|nil", "desc": "Instantané."}}, "returns": [{"type": "boolean", "desc": "Succès."}], "internal": false},
-        "refreshAfterDrivelineReproject": {"desc": "Après reprojection : remesure tous les pacenotes, remplit les appels de distance, rafraîchit le carnet et la sélection.", "internal": false},
-        "markLiveDrivelineReprojectDirty": {"desc": "Demande une reprojection en direct après le délai anti-rebond.", "internal": false},
-        "applyLiveDrivelineReproject": {"desc": "Applique la reprojection si elle est demandée et le délai écoulé (ou si force). Régénère la driveline depuis la spline, remplace la snaproad et rafraîchit.", "params": {"force": {"type": "boolean|nil", "desc": "Ignorer l'état dirty et le délai."}}, "internal": false},
-        "onPacenotesDrivelineEditCommitted": {"desc": "Callback de fin d'édition de spline : régénère la driveline, la sauvegarde, puis force la reprojection.", "params": {"host": {"type": "table", "desc": "Hôte d'édition."}}, "internal": true},
-        "setPacenotesDrivelineEditActive": {"desc": "Active ou désactive le mode d'édition de driveline (désélectionne tout et prend un instantané à l'activation).", "params": {"active": {"type": "boolean", "desc": "Nouvel état."}}, "internal": false},
-        "selected": {"desc": "Appelée par l'éditeur quand l'onglet est sélectionné : prépare le mode d'édition, recharge snaproad et pacenotes, ajoute les raccourcis (Ctrl : créer, Delete : supprimer) et émet onEditorEditModeChanged(nil, nil).", "internal": true},
-        "unselect": {"desc": "Appelée quand l'onglet est quitté : arrête l'audio, remet la caméra libre, retire les raccourcis et émet onEditorEditModeChanged(nil, nil).", "internal": true},
-        "setOrbitCameraToSelectedPacenote": {"desc": "Oriente la caméra (orbite pacenoteOrbit ou caméra V2) sur le pacenote sélectionné.", "internal": false},
-        "selectPacenote": {"desc": "Sélectionne un pacenote par id (nil pour désélectionner) : met à jour le formulaire, la partition de snaproad, la mesure et la caméra. Ignoré pendant l'édition de driveline si id est donné.", "params": {"id": {"type": "integer|nil", "desc": "Id du pacenote."}}, "internal": false},
-        "selectWaypoint": {"desc": "Sélectionne un waypoint par id (sélectionne aussi son pacenote) et règle le filtre de la snaproad. nil désélectionne le waypoint.", "params": {"id": {"type": "integer|nil", "desc": "Id du waypoint."}}, "internal": false},
-        "deselect": {"desc": "Désélectionne le waypoint, ou à défaut le pacenote (sans effet pendant la lecture caméra).", "internal": false},
-        "attemptToFixMapEdgeIssue": {"desc": "Remet le gizmo à l'origine (contournement d'un problème en bord de carte).", "internal": false},
-        "resetGizmoTransformToOrigin": {"desc": "Place le gizmo d'axes très bas (z = -1000) pour le cacher.", "internal": false},
-        "updateGizmoTransform": {"desc": "Place le gizmo sur un waypoint si le gizmo est autorisé.", "params": {"index": {"type": "integer", "desc": "Id du waypoint."}}, "internal": false},
-        "beginDrag": {"desc": "Début de manipulation au gizmo : mémorise l'état du waypoint (données, rotation, rayon).", "internal": true},
-        "dragging": {"desc": "Pendant la manipulation au gizmo : applique translation, rotation ou échelle (rayon) au waypoint.", "internal": true},
-        "endDragging": {"desc": "Fin de manipulation au gizmo : enregistre une action annulable dans l'historique.", "internal": true},
-        "drawCustomAudioAnchorPickOverlay": {"desc": "Dessine les sphères de départ de virage colorées selon la possibilité d'ancrer le clip, avec texte au survol.", "params": {"globalOpacity": {"type": "number|nil", "desc": "Opacité globale."}}, "internal": true},
-        "drawDebugEntrypoint": {"desc": "Rendu 3D principal appelé à chaque image : aperçu sans sélection, carnet, snaproad, carnet fantôme, partitions, ancres audio, position de caméra et surface d'édition de driveline.", "params": {"globalOpacity": {"type": "number|nil", "desc": "Opacité globale."}, "dt": {"type": "number|nil", "desc": "Delta temps pour l'animation de pulsation."}}, "internal": true},
-        "drawPacenotesDrivelineEditSurface": {"desc": "En mode édition de driveline : gère l'interaction avec la spline, la mise à jour de géométrie, le rendu et la reprojection anti-rebond.", "internal": true},
-        "drawDebugCameraPlaying": {"desc": "Dessine l'état de la snaproad pendant la lecture caméra.", "internal": true},
-        "handleMouseDown": {"desc": "Gère le clic : sélection de pacenote/waypoint survolé, début de glisser ; Maj recentre la caméra ; clic dans le vide désélectionne.", "params": {"hoveredWp": {"type": "table|nil", "desc": "Waypoint survolé."}}, "internal": true},
-        "onPacenoteDrag": {"desc": "Après un déplacement de waypoint : met à jour voisins, demi-point, distances, mesure et textes structurés des notes précédente/courante/suivante.", "params": {"pn_sel": {"type": "table", "desc": "Pacenote déplacé."}}, "internal": true},
-        "handleMouseHold": {"desc": "Pendant le maintien : déplace le waypoint sélectionné (non verrouillé) vers la position de la souris accrochée à la route et oriente sa normale.", "internal": true},
-        "handleMouseUp": {"desc": "Au relâchement : enregistre le déplacement dans l'historique (annuler/rétablir) et remet à zéro l'état de glisser.", "internal": true},
-        "setHover": {"desc": "Mémorise le waypoint survolé (hover_wp_id) et l'état de la touche Maj.", "params": {"wp": {"type": "table|nil", "desc": "Waypoint survolé."}}, "internal": true},
-        "handleUnmodifiedMouseInteraction": {"desc": "Aiguille l'entrée souris (down, hold, up, survol) sans modificateur.", "params": {"hoveredWp": {"type": "table|nil", "desc": "Waypoint survolé."}}, "internal": true},
-        "handleMouseInput": {"desc": "Point d'entrée de la souris : gizmo, choix d'ancre audio, édition de driveline, création Ctrl-clic ou interaction normale.", "internal": true},
-        "draw": {"desc": "Dessine l'onglet imgui : mémorise mouseInfo, met à jour l'audio de prévisualisation, traite la souris puis dessine la liste de pacenotes.", "params": {"mouseInfo": {"type": "table", "desc": "Informations souris."}, "dtReal": {"type": "number", "desc": "Delta temps réel."}, "dtSim": {"type": "number", "desc": "Delta temps simulation."}, "dtRaw": {"type": "number", "desc": "Delta temps brut."}}, "internal": true},
-        "debugDrawNewPacenote": {"desc": "Aperçu de debug d'un nouveau pacenote entre deux positions (variante 1).", "params": {"pos_cs": {"type": "vec3", "desc": "Début de virage."}, "pos_ce": {"type": "vec3", "desc": "Fin de virage."}}, "internal": true},
-        "debugDrawNewPacenote2": {"desc": "Aperçu de debug d'un nouveau pacenote entre deux positions (variante 2).", "params": {"pos_cs": {"type": "vec3", "desc": "Début de virage."}, "pos_ce": {"type": "vec3", "desc": "Fin de virage."}}, "internal": true},
-        "createMouseDragPacenote": {"desc": "Mode Ctrl : affiche « Click to Create New Pacenote » sur la route et, au clic, crée un pacenote (corner start au clic, corner end 10 m plus loin) à sa place dans l'ordre, en respectant l'espace entre pacenotes voisins.", "internal": false},
-        "detectCustomAudioAnchorPickHover": {"desc": "Cherche le waypoint corner start survolé (rayon de la souris contre la sphère du waypoint) pendant le choix d'ancre audio.", "returns": [{"type": "table|nil", "desc": "Waypoint le plus proche de la caméra."}], "internal": true},
-        "handleCustomAudioAnchorPickMouseInput": {"desc": "Gère la souris pendant le choix d'ancre : clic sur un pacenote valide pose l'ancre, sinon affiche la raison du refus ; clic dans le vide annule.", "returns": [{"type": "boolean", "desc": "Toujours true quand un choix est actif."}], "internal": true},
-        "detectMouseHoverWaypoint": {"desc": "Détermine quel waypoint est survolé par le rayon de la souris, selon la sélection et les préférences d'affichage des pacenotes précédent/suivant. Garde le plus proche de la caméra.", "returns": [{"type": "table|nil", "desc": "Waypoint survolé."}], "internal": true},
-        "wpPosForSimpleDrag": {"desc": "Calcule la nouvelle position d'un waypoint glissé (accrochage en z puis à la snaproad) et une position servant à orienter sa normale perpendiculairement.", "params": {"wp": {"type": "table", "desc": "Waypoint."}, "mousePos": {"type": "vec3", "desc": "Position de la souris."}, "mouseOffset": {"type": "vec3", "desc": "Décalage mémorisé au clic."}}, "returns": [{"type": "vec3|nil", "desc": "Nouvelle position."}, {"type": "vec3|nil", "desc": "Position d'alignement de la normale."}], "internal": true},
-        "deleteSelected": {"desc": "Supprime le pacenote sélectionné s'il y en a un.", "internal": false},
-        "deleteSelectedPacenote": {"desc": "Supprime le pacenote sélectionné puis sélectionne le précédent (ou le suivant) ; voir la note sur le calcul de shouldSelect.", "params": {"shouldSelect": {"type": "boolean|nil", "desc": "Sélectionner un voisin après suppression (comportement inversé, voir notes)."}}, "internal": false},
-        "measureSelectedPacenote": {"desc": "Mesure la géométrie du virage du pacenote sélectionné via la snaproad (measurePartition) et applique optionnellement les mesures au pacenote.", "params": {"applyMeasurements": {"type": "boolean|nil", "desc": "Appeler pacenote:applyMeasurements()."}}, "internal": false},
-        "remeasureAllPacenotes": {"desc": "Remesure tous les pacenotes (partition de la snaproad par pacenote) puis restaure la partition du pacenote sélectionné.", "internal": false},
-        "selectRecentPacenote": {"desc": "Si rien n'est sélectionné, resélectionne le dernier pacenote sélectionné.", "returns": [{"type": "boolean", "desc": "true si une resélection a eu lieu."}], "internal": false},
-        "selectPrevPacenote": {"desc": "Sélectionne le pacenote précédent qui correspond à la recherche (ou le dernier si rien n'est sélectionné). Sans effet pendant la lecture caméra.", "internal": false},
-        "selectNextPacenote": {"desc": "Sélectionne le pacenote suivant qui correspond à la recherche (ou le premier si rien n'est sélectionné). Sans effet pendant la lecture caméra.", "internal": false},
-        "refreshPacenotesTab": {"desc": "Recharge la snaproad, invalide la correspondance audio custom, remesure tous les pacenotes et rafraîchit les notes.", "params": {"snapshot": {"type": "table|nil", "desc": "Instantané de reprojection."}, "opts": {"type": "table|nil", "desc": "Options (recordHistory)."}}, "internal": false},
-        "insertMode": {"desc": "Active le mode insertion (sans effet pendant la lecture caméra).", "internal": false},
-        "markValidationDirty": {"desc": "Marque la validation comme à refaire.", "internal": false},
-        "ensureValidationFresh": {"desc": "Relance validate() si la validation est marquée à refaire.", "internal": false},
-        "validate": {"desc": "Valide chaque pacenote, compte les TODO et les notes invalides, remplit validation_issues et notes_valid.", "internal": false},
-        "deleteAllPacenotes": {"desc": "Supprime tous les pacenotes du carnet et désélectionne.", "internal": false},
-        "drawDrivelineEditToggle": {"desc": "Dessine le bouton « Edit Driveline » (orange quand actif).", "internal": true},
-        "drawPacenotesList": {"desc": "Dessine les onglets « Pacenote » (formulaire) et « Audio » (liste de clips si le carnet est en mode audio custom).", "internal": true},
-        "searchPacenoteMatchFn": {"desc": "Prédicat de recherche : pacenote non manquant et correspondant au texte de recherche.", "params": {"pacenote": {"type": "table|nil", "desc": "Pacenote."}}, "returns": [{"type": "boolean|nil", "desc": "Vrai si correspond."}], "internal": false},
-        "pacenoteSearchMatches": {"desc": "Teste le pacenote contre le texte de recherche courant (vrai si la recherche est vide).", "params": {"pacenote": {"type": "table", "desc": "Pacenote."}}, "returns": [{"type": "boolean", "desc": "Résultat."}], "internal": false},
-        "cleanupPacenoteNames": {"desc": "Renumérote proprement les noms de pacenotes ; par défaut avec une entrée d'historique annulable.", "params": {"recordHistory": {"type": "boolean|nil", "desc": "false pour ne pas enregistrer d'historique."}}, "internal": false},
-        "autofillDistanceCalls": {"desc": "Demande au carnet de remplir automatiquement les appels de distance, puis marque la validation à refaire.", "internal": false},
-        "refreshPacenotes": {"desc": "Nettoie les noms puis rafraîchit les pacenotes du carnet sans remesure.", "params": {"opts": {"type": "table|nil", "desc": "Options (recordHistory)."}}, "internal": false},
-        "placeVehicleAtPacenote": {"desc": "Téléporte le véhicule du joueur à la position de départ associée au pacenote sélectionné.", "internal": false},
-        "insertNewPacenoteAfter": {"desc": "Crée un pacenote après le pacenote donné, avec un numéro intermédiaire (ou +1 à la fin), puis retrie par nom.", "params": {"note": {"type": "table", "desc": "Pacenote de référence."}}, "internal": false},
-        "selectNextWaypoint": {"desc": "Alterne la sélection entre corner start et corner end du pacenote courant (corner start si aucun waypoint n'est sélectionné).", "internal": false},
-        "_moveSelectedWaypointHelper": {"desc": "Déplace le waypoint sélectionné le long de la snaproad ; efface le TODO du pacenote.", "params": {"fwd": {"type": "boolean", "desc": "Vers l'avant."}, "steps": {"type": "integer", "desc": "Nombre de pas."}}, "internal": true},
-        "moveSelectedWaypointForward": {"desc": "Avance le waypoint sélectionné le long de la route.", "params": {"steps": {"type": "integer|nil", "desc": "Pas, 1 par défaut."}}, "internal": false},
-        "moveSelectedWaypointBackward": {"desc": "Recule le waypoint sélectionné le long de la route.", "params": {"steps": {"type": "integer|nil", "desc": "Pas, 1 par défaut."}}, "internal": false},
-        "cameraPathPlay": {"desc": "Démarre ou arrête la lecture de la caméra le long de la route pour le pacenote sélectionné ; au démarrage mémorise la caméra et lance l'audio de prévisualisation, à l'arrêt restaure la caméra.", "internal": false},
-        "cameraPathIsPlaying": {"desc": "Indique si la caméra active est la caméra « path ».", "returns": [{"type": "boolean", "desc": "Résultat."}], "internal": false},
-        "toggleCornerCalls": {"desc": "Stub : journalise seulement que la fonction sera implémentée.", "internal": false},
-        "setModeEditAll": {"desc": "Passe en mode 'edit_all' et déverrouille les waypoints.", "internal": false},
-        "setModeEditCorners": {"desc": "Passe en mode 'edit_corners' et déverrouille les waypoints.", "internal": false},
-        "setupEditMode": {"desc": "Désélectionne le waypoint, passe en mode edit_corners et règle la partition de snaproad sur le pacenote sélectionné.", "internal": false},
-        "mergeSelectedWithPrevPacenote": {"desc": "Concatène le texte libre du pacenote sélectionné à la fin de celui du précédent, supprime le sélectionné et sélectionne le précédent.", "internal": false},
-        "mergeSelectedWithNextPacenote": {"desc": "Concatène le texte libre du pacenote sélectionné au début de celui du suivant, supprime le sélectionné et sélectionne le suivant.", "internal": false},
-        "generateElevationProfile": {"desc": "Construit un RallyManager pour la mission et appelle drivelineRoute:buildElevationProfile().", "returns": [{"type": "table|nil", "desc": "Profil d'élévation (liste de points), ou nil en cas d'échec."}], "internal": false}
+        "init": {
+          "desc": "Internal constructor: creates the tools state, the pacenote form and the ghost notebook renderer.",
+          "params": {
+            "rallyEditor": {
+              "type": "table",
+              "desc": "Rally editor instance."
+            }
+          },
+          "internal": true
+        },
+        "clearState": {
+          "desc": "Resets all state (stops audio, clears the selection, validation, driveline editing, form).",
+          "internal": true
+        },
+        "isValid": {
+          "desc": "Refreshes the validation if needed then returns whether the notebook is valid.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if notes_valid and no issues."
+            }
+          ],
+          "internal": false
+        },
+        "invalidateNoSelectionPreview": {
+          "desc": "Invalidates the preview displayed when no pacenote is selected.",
+          "internal": false
+        },
+        "markPacenoteGeometryDirty": {
+          "desc": "Marks the pacenote geometry as needing recomputation (invalidates the no-selection preview).",
+          "internal": false
+        },
+        "setPath": {
+          "desc": "Sets the current notebook; if it changes, stops audio and abandons any ongoing driveline editing. Marks validation as needing redoing.",
+          "params": {
+            "path": {
+              "type": "table",
+              "desc": "Notebook."
+            }
+          },
+          "internal": true
+        },
+        "onEditModeActivate": {
+          "desc": "Called when the notebook edit mode is activated: reselects the current pacenote.",
+          "internal": true
+        },
+        "onEditModeDeactivate": {
+          "desc": "Called when the edit mode is deactivated: stops audio and restores the free camera.",
+          "internal": true
+        },
+        "getRacePath": {
+          "desc": "Returns the race editor's current race path (editor_raceEditor.getCurrentPath()).",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Race path."
+            }
+          ],
+          "internal": false
+        },
+        "selectedPacenote": {
+          "desc": "Returns the selected pacenote.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Pacenote, or nil."
+            }
+          ],
+          "internal": false
+        },
+        "selectedWaypoint": {
+          "desc": "Returns the selected pacenote's selected waypoint.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Waypoint, or nil."
+            }
+          ],
+          "internal": false
+        },
+        "ensurePreviewAudioManager": {
+          "desc": "Creates (or recreates if the notebook changed) the preview audio manager.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "AudioManager."
+            }
+          ],
+          "internal": false
+        },
+        "startPreviewAudio": {
+          "desc": "Queues the pacenote's audio clips to play during camera playback.",
+          "params": {
+            "pacenote": {
+              "type": "table",
+              "desc": "Pacenote to preview."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if audio is pending or playing."
+            }
+          ],
+          "internal": false
+        },
+        "stopPreviewAudio": {
+          "desc": "Empties the preview audio queue and disables it.",
+          "internal": false
+        },
+        "updatePreviewAudio": {
+          "desc": "Called every frame: advances the audio manager while the path camera is playing, and stops otherwise or when the queue is empty.",
+          "params": {
+            "dtReal": {
+              "type": "number",
+              "desc": "Real-time delta."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Simulation time delta."
+            },
+            "dtRaw": {
+              "type": "number",
+              "desc": "Raw time delta."
+            }
+          },
+          "internal": true
+        },
+        "beginCustomAudioAnchorPick": {
+          "desc": "Starts the \"pick an anchor pacenote\" mode for a custom audio clip (the next click in the 3D view picks the pacenote).",
+          "params": {
+            "basename": {
+              "type": "string",
+              "desc": "Base name of the audio file."
+            }
+          },
+          "internal": false
+        },
+        "cancelCustomAudioAnchorPick": {
+          "desc": "Cancels the ongoing anchor pick.",
+          "internal": false
+        },
+        "isCustomAudioAnchorPickActive": {
+          "desc": "Returns whether an anchor pick is in progress.",
+          "returns": [
+            {
+              "type": "boolean|nil",
+              "desc": "True if active."
+            }
+          ],
+          "internal": false
+        },
+        "getCustomAudioAnchorPickBasename": {
+          "desc": "Returns the clip for which an anchor is being picked.",
+          "returns": [
+            {
+              "type": "string|nil",
+              "desc": "Base name, or nil."
+            }
+          ],
+          "internal": false
+        },
+        "isPickingCustomAudioAnchorFor": {
+          "desc": "Returns whether the ongoing anchor pick concerns this clip.",
+          "params": {
+            "basename": {
+              "type": "string|nil",
+              "desc": "Base name."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Result."
+            }
+          ],
+          "internal": false
+        },
+        "getSnaproad": {
+          "desc": "Returns the current snaproad.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Snaproad."
+            }
+          ],
+          "internal": false
+        },
+        "loadSnaproad": {
+          "desc": "Loads the saved driveline, builds the Snaproad, gives it to the notebook (setSnaproad) and reprojects the waypoints if a previous snaproad or a snapshot exists.",
+          "params": {
+            "snapshot": {
+              "type": "table|nil",
+              "desc": "Driveline edit snapshot (see captureDrivelineEditSnapshot)."
+            }
+          },
+          "internal": false
+        },
+        "isPacenotesDrivelineEditActive": {
+          "desc": "Returns whether driveline editing in the Pacenotes tab is active.",
+          "returns": [
+            {
+              "type": "boolean|nil",
+              "desc": "True if active."
+            }
+          ],
+          "internal": false
+        },
+        "_newPacenotesDrivelineHost": {
+          "desc": "Creates the \"host\" table (editing state) passed to DrivelineEditSurface.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Empty host."
+            }
+          ],
+          "internal": true
+        },
+        "ensurePacenotesDrivelineHost": {
+          "desc": "Creates the driveline editing host and loads the driveline from the file if needed.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Host, or nil on failure (loadError filled)."
+            }
+          ],
+          "internal": false
+        },
+        "captureDrivelineEditSnapshot": {
+          "desc": "Records, for each pacenote, the positions, normals and locations along the road of its corner start/end waypoints before a driveline edit.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "{pacenotes, snaproad}."
+            }
+          ],
+          "internal": false
+        },
+        "ensureDrivelineEditSnapshot": {
+          "desc": "Takes the snapshot if it does not exist yet.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Snapshot."
+            }
+          ],
+          "internal": false
+        },
+        "replaceSnaproadFromDrivelineV3": {
+          "desc": "Replaces the snaproad with a new one built from the edited driveline and reprojects the waypoints according to the snapshot.",
+          "params": {
+            "drivelineV3": {
+              "type": "table",
+              "desc": "Driveline being edited."
+            },
+            "snapshot": {
+              "type": "table|nil",
+              "desc": "Snapshot."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Success."
+            }
+          ],
+          "internal": false
+        },
+        "refreshAfterDrivelineReproject": {
+          "desc": "After reprojection: remeasures all pacenotes, fills the distance calls, refreshes the notebook and the selection.",
+          "internal": false
+        },
+        "markLiveDrivelineReprojectDirty": {
+          "desc": "Requests a live reprojection after the debounce delay.",
+          "internal": false
+        },
+        "applyLiveDrivelineReproject": {
+          "desc": "Applies the reprojection if requested and the delay has elapsed (or if force). Regenerates the driveline from the spline, replaces the snaproad and refreshes.",
+          "params": {
+            "force": {
+              "type": "boolean|nil",
+              "desc": "Ignore the dirty state and the delay."
+            }
+          },
+          "internal": false
+        },
+        "onPacenotesDrivelineEditCommitted": {
+          "desc": "Spline edit end callback: regenerates the driveline, saves it, then forces the reprojection.",
+          "params": {
+            "host": {
+              "type": "table",
+              "desc": "Editing host."
+            }
+          },
+          "internal": true
+        },
+        "setPacenotesDrivelineEditActive": {
+          "desc": "Enables or disables driveline editing mode (deselects everything and takes a snapshot on activation).",
+          "params": {
+            "active": {
+              "type": "boolean",
+              "desc": "New state."
+            }
+          },
+          "internal": false
+        },
+        "selected": {
+          "desc": "Called by the editor when the tab is selected: prepares the edit mode, reloads snaproad and pacenotes, adds the shortcuts (Ctrl: create, Delete: delete) and emits onEditorEditModeChanged(nil, nil).",
+          "internal": true
+        },
+        "unselect": {
+          "desc": "Called when the tab is left: stops audio, restores the free camera, removes the shortcuts and emits onEditorEditModeChanged(nil, nil).",
+          "internal": true
+        },
+        "setOrbitCameraToSelectedPacenote": {
+          "desc": "Aims the camera (pacenoteOrbit orbit or V2 camera) at the selected pacenote.",
+          "internal": false
+        },
+        "selectPacenote": {
+          "desc": "Selects a pacenote by id (nil to deselect): updates the form, the snaproad partition, the measurement and the camera. Ignored during driveline editing if id is given.",
+          "params": {
+            "id": {
+              "type": "integer|nil",
+              "desc": "Pacenote id."
+            }
+          },
+          "internal": false
+        },
+        "selectWaypoint": {
+          "desc": "Selects a waypoint by id (also selects its pacenote) and sets the snaproad filter. nil deselects the waypoint.",
+          "params": {
+            "id": {
+              "type": "integer|nil",
+              "desc": "Waypoint id."
+            }
+          },
+          "internal": false
+        },
+        "deselect": {
+          "desc": "Deselects the waypoint, or failing that the pacenote (no effect during camera playback).",
+          "internal": false
+        },
+        "attemptToFixMapEdgeIssue": {
+          "desc": "Resets the gizmo to the origin (workaround for a map edge issue).",
+          "internal": false
+        },
+        "resetGizmoTransformToOrigin": {
+          "desc": "Places the axis gizmo very low (z = -1000) to hide it.",
+          "internal": false
+        },
+        "updateGizmoTransform": {
+          "desc": "Places the gizmo on a waypoint if the gizmo is allowed.",
+          "params": {
+            "index": {
+              "type": "integer",
+              "desc": "Waypoint id."
+            }
+          },
+          "internal": false
+        },
+        "beginDrag": {
+          "desc": "Start of gizmo manipulation: stores the waypoint's state (data, rotation, radius).",
+          "internal": true
+        },
+        "dragging": {
+          "desc": "During gizmo manipulation: applies translation, rotation or scale (radius) to the waypoint.",
+          "internal": true
+        },
+        "endDragging": {
+          "desc": "End of gizmo manipulation: records an undoable action in the history.",
+          "internal": true
+        },
+        "drawCustomAudioAnchorPickOverlay": {
+          "desc": "Draws the corner start spheres colored according to whether the clip can be anchored, with text on hover.",
+          "params": {
+            "globalOpacity": {
+              "type": "number|nil",
+              "desc": "Global opacity."
+            }
+          },
+          "internal": true
+        },
+        "drawDebugEntrypoint": {
+          "desc": "Main 3D rendering called every frame: no-selection preview, notebook, snaproad, ghost notebook, partitions, audio anchors, camera position and driveline editing surface.",
+          "params": {
+            "globalOpacity": {
+              "type": "number|nil",
+              "desc": "Global opacity."
+            },
+            "dt": {
+              "type": "number|nil",
+              "desc": "Time delta for the pulse animation."
+            }
+          },
+          "internal": true
+        },
+        "drawPacenotesDrivelineEditSurface": {
+          "desc": "In driveline editing mode: handles spline interaction, geometry update, rendering and debounced reprojection.",
+          "internal": true
+        },
+        "drawDebugCameraPlaying": {
+          "desc": "Draws the snaproad state during camera playback.",
+          "internal": true
+        },
+        "handleMouseDown": {
+          "desc": "Handles the click: selection of the hovered pacenote/waypoint, start of drag; Shift recenters the camera; click on empty space deselects.",
+          "params": {
+            "hoveredWp": {
+              "type": "table|nil",
+              "desc": "Hovered waypoint."
+            }
+          },
+          "internal": true
+        },
+        "onPacenoteDrag": {
+          "desc": "After a waypoint move: updates neighbors, midpoint, distances, measurement and structured texts of the previous/current/next notes.",
+          "params": {
+            "pn_sel": {
+              "type": "table",
+              "desc": "Moved pacenote."
+            }
+          },
+          "internal": true
+        },
+        "handleMouseHold": {
+          "desc": "While held: moves the selected (unlocked) waypoint to the mouse position snapped to the road and orients its normal.",
+          "internal": true
+        },
+        "handleMouseUp": {
+          "desc": "On release: records the move in the history (undo/redo) and resets the drag state.",
+          "internal": true
+        },
+        "setHover": {
+          "desc": "Stores the hovered waypoint (hover_wp_id) and the Shift key state.",
+          "params": {
+            "wp": {
+              "type": "table|nil",
+              "desc": "Hovered waypoint."
+            }
+          },
+          "internal": true
+        },
+        "handleUnmodifiedMouseInteraction": {
+          "desc": "Routes the mouse input (down, hold, up, hover) without modifier.",
+          "params": {
+            "hoveredWp": {
+              "type": "table|nil",
+              "desc": "Hovered waypoint."
+            }
+          },
+          "internal": true
+        },
+        "handleMouseInput": {
+          "desc": "Mouse entry point: gizmo, audio anchor pick, driveline editing, Ctrl-click creation or normal interaction.",
+          "internal": true
+        },
+        "draw": {
+          "desc": "Draws the imgui tab: stores mouseInfo, updates the preview audio, handles the mouse then draws the pacenote list.",
+          "params": {
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Mouse information."
+            },
+            "dtReal": {
+              "type": "number",
+              "desc": "Real-time delta."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Simulation time delta."
+            },
+            "dtRaw": {
+              "type": "number",
+              "desc": "Raw time delta."
+            }
+          },
+          "internal": true
+        },
+        "debugDrawNewPacenote": {
+          "desc": "Debug preview of a new pacenote between two positions (variant 1).",
+          "params": {
+            "pos_cs": {
+              "type": "vec3",
+              "desc": "Corner start."
+            },
+            "pos_ce": {
+              "type": "vec3",
+              "desc": "Corner end."
+            }
+          },
+          "internal": true
+        },
+        "debugDrawNewPacenote2": {
+          "desc": "Debug preview of a new pacenote between two positions (variant 2).",
+          "params": {
+            "pos_cs": {
+              "type": "vec3",
+              "desc": "Corner start."
+            },
+            "pos_ce": {
+              "type": "vec3",
+              "desc": "Corner end."
+            }
+          },
+          "internal": true
+        },
+        "createMouseDragPacenote": {
+          "desc": "Ctrl mode: displays \"Click to Create New Pacenote\" on the road and, on click, creates a pacenote (corner start at the click, corner end 10 m further) in its place in the order, respecting the spacing between neighboring pacenotes.",
+          "internal": false
+        },
+        "detectCustomAudioAnchorPickHover": {
+          "desc": "Looks for the hovered corner start waypoint (mouse ray against the waypoint's sphere) during the audio anchor pick.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Waypoint closest to the camera."
+            }
+          ],
+          "internal": true
+        },
+        "handleCustomAudioAnchorPickMouseInput": {
+          "desc": "Handles the mouse during the anchor pick: click on a valid pacenote sets the anchor, otherwise displays the reason for the refusal; click on empty space cancels.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Always true when a pick is active."
+            }
+          ],
+          "internal": true
+        },
+        "detectMouseHoverWaypoint": {
+          "desc": "Determines which waypoint is hovered by the mouse ray, according to the selection and the previous/next pacenote display preferences. Keeps the one closest to the camera.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Hovered waypoint."
+            }
+          ],
+          "internal": true
+        },
+        "wpPosForSimpleDrag": {
+          "desc": "Computes the new position of a dragged waypoint (z snapping then snaproad snapping) and a position used to orient its normal perpendicularly.",
+          "params": {
+            "wp": {
+              "type": "table",
+              "desc": "Waypoint."
+            },
+            "mousePos": {
+              "type": "vec3",
+              "desc": "Mouse position."
+            },
+            "mouseOffset": {
+              "type": "vec3",
+              "desc": "Offset stored at click time."
+            }
+          },
+          "returns": [
+            {
+              "type": "vec3|nil",
+              "desc": "New position."
+            },
+            {
+              "type": "vec3|nil",
+              "desc": "Normal alignment position."
+            }
+          ],
+          "internal": true
+        },
+        "deleteSelected": {
+          "desc": "Deletes the selected pacenote if there is one.",
+          "internal": false
+        },
+        "deleteSelectedPacenote": {
+          "desc": "Deletes the selected pacenote then selects the previous (or next) one; see the note on the computation of shouldSelect.",
+          "params": {
+            "shouldSelect": {
+              "type": "boolean|nil",
+              "desc": "Select a neighbor after deletion (inverted behavior, see notes)."
+            }
+          },
+          "internal": false
+        },
+        "measureSelectedPacenote": {
+          "desc": "Measures the selected pacenote's corner geometry via the snaproad (measurePartition) and optionally applies the measurements to the pacenote.",
+          "params": {
+            "applyMeasurements": {
+              "type": "boolean|nil",
+              "desc": "Call pacenote:applyMeasurements()."
+            }
+          },
+          "internal": false
+        },
+        "remeasureAllPacenotes": {
+          "desc": "Remeasures all pacenotes (snaproad partition per pacenote) then restores the selected pacenote's partition.",
+          "internal": false
+        },
+        "selectRecentPacenote": {
+          "desc": "If nothing is selected, reselects the last selected pacenote.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if a reselection took place."
+            }
+          ],
+          "internal": false
+        },
+        "selectPrevPacenote": {
+          "desc": "Selects the previous pacenote matching the search (or the last if nothing is selected). No effect during camera playback.",
+          "internal": false
+        },
+        "selectNextPacenote": {
+          "desc": "Selects the next pacenote matching the search (or the first if nothing is selected). No effect during camera playback.",
+          "internal": false
+        },
+        "refreshPacenotesTab": {
+          "desc": "Reloads the snaproad, invalidates the custom audio matching, remeasures all pacenotes and refreshes the notes.",
+          "params": {
+            "snapshot": {
+              "type": "table|nil",
+              "desc": "Reprojection snapshot."
+            },
+            "opts": {
+              "type": "table|nil",
+              "desc": "Options (recordHistory)."
+            }
+          },
+          "internal": false
+        },
+        "insertMode": {
+          "desc": "Enables insert mode (no effect during camera playback).",
+          "internal": false
+        },
+        "markValidationDirty": {
+          "desc": "Marks the validation as needing redoing.",
+          "internal": false
+        },
+        "ensureValidationFresh": {
+          "desc": "Reruns validate() if the validation is marked as needing redoing.",
+          "internal": false
+        },
+        "validate": {
+          "desc": "Validates each pacenote, counts the TODOs and invalid notes, fills validation_issues and notes_valid.",
+          "internal": false
+        },
+        "deleteAllPacenotes": {
+          "desc": "Deletes all pacenotes of the notebook and deselects.",
+          "internal": false
+        },
+        "drawDrivelineEditToggle": {
+          "desc": "Draws the \"Edit Driveline\" button (orange when active).",
+          "internal": true
+        },
+        "drawPacenotesList": {
+          "desc": "Draws the \"Pacenote\" (form) and \"Audio\" (clip list if the notebook is in custom audio mode) tabs.",
+          "internal": true
+        },
+        "searchPacenoteMatchFn": {
+          "desc": "Search predicate: non-missing pacenote matching the search text.",
+          "params": {
+            "pacenote": {
+              "type": "table|nil",
+              "desc": "Pacenote."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean|nil",
+              "desc": "True if it matches."
+            }
+          ],
+          "internal": false
+        },
+        "pacenoteSearchMatches": {
+          "desc": "Tests the pacenote against the current search text (true if the search is empty).",
+          "params": {
+            "pacenote": {
+              "type": "table",
+              "desc": "Pacenote."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Result."
+            }
+          ],
+          "internal": false
+        },
+        "cleanupPacenoteNames": {
+          "desc": "Cleanly renumbers the pacenote names; by default with an undoable history entry.",
+          "params": {
+            "recordHistory": {
+              "type": "boolean|nil",
+              "desc": "false to not record history."
+            }
+          },
+          "internal": false
+        },
+        "autofillDistanceCalls": {
+          "desc": "Asks the notebook to automatically fill the distance calls, then marks the validation as needing redoing.",
+          "internal": false
+        },
+        "refreshPacenotes": {
+          "desc": "Cleans the names then refreshes the notebook's pacenotes without remeasuring.",
+          "params": {
+            "opts": {
+              "type": "table|nil",
+              "desc": "Options (recordHistory)."
+            }
+          },
+          "internal": false
+        },
+        "placeVehicleAtPacenote": {
+          "desc": "Teleports the player vehicle to the start position associated with the selected pacenote.",
+          "internal": false
+        },
+        "insertNewPacenoteAfter": {
+          "desc": "Creates a pacenote after the given pacenote, with an intermediate number (or +1 at the end), then re-sorts by name.",
+          "params": {
+            "note": {
+              "type": "table",
+              "desc": "Reference pacenote."
+            }
+          },
+          "internal": false
+        },
+        "selectNextWaypoint": {
+          "desc": "Toggles the selection between the current pacenote's corner start and corner end (corner start if no waypoint is selected).",
+          "internal": false
+        },
+        "_moveSelectedWaypointHelper": {
+          "desc": "Moves the selected waypoint along the snaproad; clears the pacenote's TODO.",
+          "params": {
+            "fwd": {
+              "type": "boolean",
+              "desc": "Forward."
+            },
+            "steps": {
+              "type": "integer",
+              "desc": "Number of steps."
+            }
+          },
+          "internal": true
+        },
+        "moveSelectedWaypointForward": {
+          "desc": "Moves the selected waypoint forward along the road.",
+          "params": {
+            "steps": {
+              "type": "integer|nil",
+              "desc": "Step, 1 by default."
+            }
+          },
+          "internal": false
+        },
+        "moveSelectedWaypointBackward": {
+          "desc": "Moves the selected waypoint backward along the road.",
+          "params": {
+            "steps": {
+              "type": "integer|nil",
+              "desc": "Step, 1 by default."
+            }
+          },
+          "internal": false
+        },
+        "cameraPathPlay": {
+          "desc": "Starts or stops camera playback along the road for the selected pacenote; on start stores the camera and starts the preview audio, on stop restores the camera.",
+          "internal": false
+        },
+        "cameraPathIsPlaying": {
+          "desc": "Returns whether the active camera is the \"path\" camera.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Result."
+            }
+          ],
+          "internal": false
+        },
+        "toggleCornerCalls": {
+          "desc": "Stub: only logs that the function will be implemented.",
+          "internal": false
+        },
+        "setModeEditAll": {
+          "desc": "Switches to 'edit_all' mode and unlocks the waypoints.",
+          "internal": false
+        },
+        "setModeEditCorners": {
+          "desc": "Switches to 'edit_corners' mode and unlocks the waypoints.",
+          "internal": false
+        },
+        "setupEditMode": {
+          "desc": "Deselects the waypoint, switches to edit_corners mode and sets the snaproad partition to the selected pacenote.",
+          "internal": false
+        },
+        "mergeSelectedWithPrevPacenote": {
+          "desc": "Appends the selected pacenote's freeform text to the end of the previous one's, deletes the selected one and selects the previous.",
+          "internal": false
+        },
+        "mergeSelectedWithNextPacenote": {
+          "desc": "Prepends the selected pacenote's freeform text to the start of the next one's, deletes the selected one and selects the next.",
+          "internal": false
+        },
+        "generateElevationProfile": {
+          "desc": "Builds a RallyManager for the mission and calls drivelineRoute:buildElevationProfile().",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Elevation profile (list of points), or nil on failure."
+            }
+          ],
+          "internal": false
+        }
       }
     }
   }

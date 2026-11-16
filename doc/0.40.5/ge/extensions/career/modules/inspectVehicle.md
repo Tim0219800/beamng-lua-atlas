@@ -1,153 +1,153 @@
 # `career_modules_inspectVehicle`
 
-*Fichier : `lua/ge/extensions/career/modules/inspectVehicle.lua` · VM : Game Engine (GE) · 539 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/inspectVehicle.lua` · VM: Game Engine (GE) · 539 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_inspectVehicle` : `extensions.load("career_modules_inspectVehicle")`, puis la globale `career_modules_inspectVehicle`
+**Access:** extension `career_modules_inspectVehicle`: `extensions.load("career_modules_inspectVehicle")`, then the global `career_modules_inspectVehicle`
 
-Gère l'inspection d'un véhicule à vendre (concession ou vendeur privé) en mode carrière avant achat. startInspection fait apparaître le véhicule gelé sur une place de parking, soit en téléportant le joueur, soit en lui donnant un trajet GPS à parcourir dans un temps limité ; une fois arrivé, un « tether » (laisse de distance) limite l'éloignement. Le module définit les règles d'essai (testDriveInfo : durée 60 s, zone, route, frais d'abandon), ouvre le menu d'achat, démarre l'essai via career_modules_testDrive, publie un point d'intérêt (POI) et nettoie à la fin (achat, abandon, trop loin, véhicule déplacé, mode livraison ou mission lancé).
+Handles the inspection of a vehicle for sale (dealership or private seller) in career mode before purchase. startInspection spawns the frozen vehicle on a parking spot, either by teleporting the player or by giving them a GPS route to follow within a time limit; once arrived, a "tether" (distance leash) limits how far they can move away. The module defines the test drive rules (testDriveInfo: duration 60 s, zone, route, abandonment fee), opens the purchase menu, starts the test via career_modules_testDrive, publishes a point of interest (POI) and cleans up at the end (purchase, abandonment, too far, vehicle moved, delivery mode or mission started).
 
-## Remarques
+## Notes
 
-- Constantes : distance de départ du vendeur 25 m (leaveSaleDist), arrivée à l'inspection à moins de 20 m avec ligne de vue (castRayStatic), véhicule déplacé de plus de 10 m de sa place = vente annulée, tether du menu d'achat 3 m, essai de 60 s.
-- Temps pour arriver à l'inspection : longueur du chemin GPS / 5 (m/s), arrondie à la minute supérieure ; au bout, la vente est annulée (sellerTimedOut).
-- Le véhicule inspecté est gelé (setFreeze) et contact coupé ; il est réinitialisé avec partCondition.initConditions selon son kilométrage (vehicleInfo.Mileage).
-- leaveSaleCallback modes de despawn : 'despawn' (supprime le véhicule), 'flagForDeletion' (marque pour suppression par career_modules_vehicleDeletionService), 'dontDespawn' (défaut : le garde, gelé si freezePreviousVeh).
-- Bug : repairVehicle utilise la variable `vehId` qui n'est définie nulle part dans la fonction (nil) : payRepairIfNeededGenericVeh reçoit nil. Le code est indiqué « utilisé seulement pendant le tutoriel ».
-- Bug : leaveSaleCallback teste `dontShowLeaveSaleMessage`, variable globale jamais définie (nil) : le message de départ s'affiche toujours.
-- Les marqueurs POI de type 'inspectVehicle' sont ajoutés à la liste des POI via onGetRawPoiListForLevel et l'invite d'activité propose « voir les informations d'achat ».
+- Constants: seller departure distance 25 m (leaveSaleDist), arrival at the inspection within 20 m with line of sight (castRayStatic), vehicle moved more than 10 m from its spot = sale canceled, purchase menu tether 3 m, 60 s test.
+- Time to reach the inspection: GPS path length / 5 (m/s), rounded up to the next minute; at the end, the sale is canceled (sellerTimedOut).
+- The inspected vehicle is frozen (setFreeze) with the ignition off; it is reset with partCondition.initConditions according to its mileage (vehicleInfo.Mileage).
+- leaveSaleCallback despawn modes: 'despawn' (removes the vehicle), 'flagForDeletion' (marks for deletion by career_modules_vehicleDeletionService), 'dontDespawn' (default: keeps it, frozen if freezePreviousVeh).
+- Bug: repairVehicle uses the variable `vehId`, which is not defined anywhere in the function (nil): payRepairIfNeededGenericVeh receives nil. The code is marked "only used during the tutorial".
+- Bug: leaveSaleCallback tests `dontShowLeaveSaleMessage`, a global variable that is never defined (nil): the leave message is always shown.
+- The 'inspectVehicle' POI markers are added to the POI list via onGetRawPoiListForLevel and the activity prompt offers "see purchase information".
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_inspectVehicle.buySpawnedVehicle(buyVehicleOptions)` | Achète le véhicule inspecté via career_modules_vehicleShopping puis quitte la vente en le conservant. | 293 |
-| `career_modules_inspectVehicle.getDidTestDrive()` | Indique si le joueur a fait l'essai pendant cette inspection. | 471 |
-| `career_modules_inspectVehicle.getInspectVehiclePoi()` | Construit le POI du véhicule inspecté (marqueur inspectVehicleMarker sur la place de départ ; marqueur de grande carte si le joueur doit s'y rendre). | 403 |
-| `career_modules_inspectVehicle.getSpawnedVehicleInfo()` | Infos du véhicule actuellement inspecté. | 388 |
-| `career_modules_inspectVehicle.isTestDriveDamageDetected()` | Indique si des dégâts ont été détectés pendant l'essai. | 368 |
-| `career_modules_inspectVehicle.leaveSaleCallback(despawnPreviousVehMode, freezePreviousVeh, checkDamage, defaultLeaveMessage)` | Termine la vente en cours (laisse dépassée, abandon, achat…) : ferme les menus, abandonne l'essai si actif, déclare une réclamation de dégâts d'essai s'il y a lieu, gère le véhicule selon despawnPreviousVehMode, puis réinitialise l'état. Ignoré sans véhicule inspecté ou si un départ est déjà en cours. *(interne)* | 157 |
-| `career_modules_inspectVehicle.onActivityAcceptGatherData(elemData, activityData)` | Hook du prompt d'activité : pour un élément de type inspectVehicle, ajoute une carte avec le nom du véhicule, le vendeur et un bouton qui ouvre le menu d'achat avec tether. *(interne)* *(hook)* | 443 |
-| `career_modules_inspectVehicle.onAnyMissionChanged(status, id)` | Hook : quand une mission démarre en carrière, quitte la vente et supprime le véhicule. *(interne)* *(hook)* | 372 |
-| `career_modules_inspectVehicle.onDeliveryModeStarted()` | Hook : le début du mode livraison termine l'inspection et supprime le véhicule. *(interne)* *(hook)* | 379 |
-| `career_modules_inspectVehicle.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook de collecte des POI : ajoute le POI d'inspection à la liste. *(interne)* *(hook)* | 436 |
-| `career_modules_inspectVehicle.onPurchaseMenuClosed()` | Hook : le menu d'achat est fermé ; retire le tether sphérique du menu. *(interne)* *(hook)* | 475 |
-| `career_modules_inspectVehicle.onTestDriveAbandoned()` | Hook : essai abandonné ; quitte la vente (véhicule marqué pour suppression). *(interne)* *(hook)* | 482 |
-| `career_modules_inspectVehicle.onTestDriveDamageDetected()` | Hook : un dégât a été détecté pendant l'essai. *(interne)* *(hook)* | 364 |
-| `career_modules_inspectVehicle.onTestDriveEndedAfterFade()` | Hook : essai terminé après fondu ; réarme les tethers et rouvre le menu d'achat. *(interne)* *(hook)* | 486 |
-| `career_modules_inspectVehicle.onTestDriveStarted()` | Hook de début d'essai : note qu'un essai a eu lieu et retire les tethers. *(interne)* *(hook)* | 356 |
-| `career_modules_inspectVehicle.onUpdate(dtReal, dtSim, dtRaw)` | Hook par image : détecte le déplacement du véhicule à vendre, décompte le temps imparti pour arriver et détecte l'arrivée du joueur. *(interne)* *(hook)* | 333 |
-| `career_modules_inspectVehicle.onVehicleDestroyed(vehId)` | Hook : si le véhicule inspecté est détruit, réinitialise l'inspection. *(interne)* *(hook)* | 349 |
-| `career_modules_inspectVehicle.onVehicleSwitched(oldId, newId, player)` | Hook : si le joueur passe dans le véhicule inspecté hors essai, le regèle. *(interne)* *(hook)* | 502 |
-| `career_modules_inspectVehicle.repairVehicle()` | Utilisé seulement dans le tutoriel : fondu d'écran puis paiement de la réparation d'un véhicule générique (voir bug dans notes : vehId non défini). *(interne)* | 393 |
-| `career_modules_inspectVehicle.showVehicle(vehicleInfo)` | Fait apparaître le véhicule à vendre (shopId) sans l'activer (contact coupé, gelé, conditions de pièces initialisées) et mémorise ses infos (shopId, vehId, nom, valeur). | 98 |
-| `career_modules_inspectVehicle.startInspection(vehicleInfo, teleportToVehicle, job)` | Démarre l'inspection : ferme une inspection précédente, fait apparaître le véhicule, choisit la place de parking (celle du vendeur privé, ou la meilleure place de la concession), déplace d'éventuels véhicules gênants, place le véhicule, puis téléporte le joueur (quickTravel) ou lui trace un chemin GPS avec limite de temps. Définit les règles d'essai. | 222 |
-| `career_modules_inspectVehicle.startTestDrive()` | Ferme les menus et démarre l'essai du véhicule inspecté avec les règles testDriveInfo. | 383 |
+| `career_modules_inspectVehicle.buySpawnedVehicle(buyVehicleOptions)` | Buys the inspected vehicle via career_modules_vehicleShopping then leaves the sale, keeping it. | 293 |
+| `career_modules_inspectVehicle.getDidTestDrive()` | Indicates whether the player did the test drive during this inspection. | 471 |
+| `career_modules_inspectVehicle.getInspectVehiclePoi()` | Builds the POI of the inspected vehicle (inspectVehicleMarker marker on the starting spot; big map marker if the player must go there). | 403 |
+| `career_modules_inspectVehicle.getSpawnedVehicleInfo()` | Info of the vehicle currently being inspected. | 388 |
+| `career_modules_inspectVehicle.isTestDriveDamageDetected()` | Indicates whether damage was detected during the test. | 368 |
+| `career_modules_inspectVehicle.leaveSaleCallback(despawnPreviousVehMode, freezePreviousVeh, checkDamage, defaultLeaveMessage)` | Ends the current sale (leash exceeded, abandonment, purchase…): closes the menus, abandons the test if active, files a test drive damage claim if applicable, handles the vehicle according to despawnPreviousVehMode, then resets the state. Ignored without an inspected vehicle or if a departure is already in progress. *(internal)* | 157 |
+| `career_modules_inspectVehicle.onActivityAcceptGatherData(elemData, activityData)` | Activity prompt hook: for an element of type inspectVehicle, adds a card with the vehicle name, the seller and a button that opens the purchase menu with a tether. *(internal)* *(hook)* | 443 |
+| `career_modules_inspectVehicle.onAnyMissionChanged(status, id)` | Hook: when a mission starts in career, leaves the sale and removes the vehicle. *(internal)* *(hook)* | 372 |
+| `career_modules_inspectVehicle.onDeliveryModeStarted()` | Hook: the start of delivery mode ends the inspection and removes the vehicle. *(internal)* *(hook)* | 379 |
+| `career_modules_inspectVehicle.onGetRawPoiListForLevel(levelIdentifier, elements)` | POI collection hook: adds the inspection POI to the list. *(internal)* *(hook)* | 436 |
+| `career_modules_inspectVehicle.onPurchaseMenuClosed()` | Hook: the purchase menu is closed; removes the menu's spherical tether. *(internal)* *(hook)* | 475 |
+| `career_modules_inspectVehicle.onTestDriveAbandoned()` | Hook: test abandoned; leaves the sale (vehicle marked for deletion). *(internal)* *(hook)* | 482 |
+| `career_modules_inspectVehicle.onTestDriveDamageDetected()` | Hook: damage was detected during the test. *(internal)* *(hook)* | 364 |
+| `career_modules_inspectVehicle.onTestDriveEndedAfterFade()` | Hook: test finished after fade; re-arms the tethers and reopens the purchase menu. *(internal)* *(hook)* | 486 |
+| `career_modules_inspectVehicle.onTestDriveStarted()` | Test start hook: notes that a test took place and removes the tethers. *(internal)* *(hook)* | 356 |
+| `career_modules_inspectVehicle.onUpdate(dtReal, dtSim, dtRaw)` | Per-frame hook: detects the movement of the vehicle for sale, counts down the time allowed to arrive and detects the player's arrival. *(internal)* *(hook)* | 333 |
+| `career_modules_inspectVehicle.onVehicleDestroyed(vehId)` | Hook: if the inspected vehicle is destroyed, resets the inspection. *(internal)* *(hook)* | 349 |
+| `career_modules_inspectVehicle.onVehicleSwitched(oldId, newId, player)` | Hook: if the player gets into the inspected vehicle outside a test, freezes it again. *(internal)* *(hook)* | 502 |
+| `career_modules_inspectVehicle.repairVehicle()` | Only used in the tutorial: screen fade then payment of the repair of a generic vehicle (see the bug in the notes: vehId not defined). *(internal)* | 393 |
+| `career_modules_inspectVehicle.showVehicle(vehicleInfo)` | Spawns the vehicle for sale (shopId) without activating it (ignition off, frozen, part conditions initialized) and stores its info (shopId, vehId, name, value). | 98 |
+| `career_modules_inspectVehicle.startInspection(vehicleInfo, teleportToVehicle, job)` | Starts the inspection: closes a previous inspection, spawns the vehicle, chooses the parking spot (the private seller's, or the dealership's best spot), moves any obstructing vehicles, places the vehicle, then teleports the player (quickTravel) or draws them a GPS path with a time limit. Defines the test drive rules. | 222 |
+| `career_modules_inspectVehicle.startTestDrive()` | Closes the menus and starts the test drive of the inspected vehicle with the testDriveInfo rules. | 383 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_inspectVehicle.buySpawnedVehicle(buyVehicleOptions)`
 
-Achète le véhicule inspecté via career_modules_vehicleShopping puis quitte la vente en le conservant.
+Buys the inspected vehicle via career_modules_vehicleShopping then leaves the sale, keeping it.
 
-- `buyVehicleOptions` (*table*) : Options d'achat transmises à vehicleShopping.buySpawnedVehicle.
+- `buyVehicleOptions` (*table*) : Purchase options passed to vehicleShopping.buySpawnedVehicle.
 
 #### `career_modules_inspectVehicle.getDidTestDrive()`
 
-Indique si le joueur a fait l'essai pendant cette inspection.
+Indicates whether the player did the test drive during this inspection.
 
-- **renvoie** : boolean|nil true si un essai a eu lieu.
+- **returns**: boolean|nil true if a test took place.
 
 #### `career_modules_inspectVehicle.getInspectVehiclePoi()`
 
-Construit le POI du véhicule inspecté (marqueur inspectVehicleMarker sur la place de départ ; marqueur de grande carte si le joueur doit s'y rendre).
+Builds the POI of the inspected vehicle (inspectVehicleMarker marker on the starting spot; big map marker if the player must go there).
 
-- **renvoie** : table|nil POI ou nil si carrière inactive / pas d'essai défini.
+- **returns**: table|nil POI or nil if career is inactive / no test defined.
 
 #### `career_modules_inspectVehicle.getSpawnedVehicleInfo()`
 
-Infos du véhicule actuellement inspecté.
+Info of the vehicle currently being inspected.
 
-- **renvoie** : table|nil {shopId, vehId, name, value} ou nil.
+- **returns**: table|nil {shopId, vehId, name, value} or nil.
 
 #### `career_modules_inspectVehicle.isTestDriveDamageDetected()`
 
-Indique si des dégâts ont été détectés pendant l'essai.
+Indicates whether damage was detected during the test.
 
-- **renvoie** : boolean true si oui.
+- **returns**: boolean true if so.
 
 #### `career_modules_inspectVehicle.leaveSaleCallback(despawnPreviousVehMode, freezePreviousVeh, checkDamage, defaultLeaveMessage)`
 
-Termine la vente en cours (laisse dépassée, abandon, achat…) : ferme les menus, abandonne l'essai si actif, déclare une réclamation de dégâts d'essai s'il y a lieu, gère le véhicule selon despawnPreviousVehMode, puis réinitialise l'état. Ignoré sans véhicule inspecté ou si un départ est déjà en cours.
+Ends the current sale (leash exceeded, abandonment, purchase…): closes the menus, abandons the test if active, files a test drive damage claim if applicable, handles the vehicle according to despawnPreviousVehMode, then resets the state. Ignored without an inspected vehicle or if a departure is already in progress.
 
-- `despawnPreviousVehMode` (*string|nil*) : 'despawn', 'flagForDeletion' ou 'dontDespawn' (défaut).
-- `freezePreviousVeh` (*boolean|nil*) : Geler le véhicule s'il est gardé ; true par défaut.
-- `checkDamage` (*boolean|nil*) : Vérifier les dégâts après un essai ; true par défaut.
-- `defaultLeaveMessage` (*string|nil*) : Message affiché si aucun essai actif ; « leftSale » par défaut.
+- `despawnPreviousVehMode` (*string|nil*) : 'despawn', 'flagForDeletion' or 'dontDespawn' (default).
+- `freezePreviousVeh` (*boolean|nil*) : Freeze the vehicle if it is kept; true by default.
+- `checkDamage` (*boolean|nil*) : Check for damage after a test; true by default.
+- `defaultLeaveMessage` (*string|nil*) : Message shown if no test is active; "leftSale" by default.
 
 #### `career_modules_inspectVehicle.onActivityAcceptGatherData(elemData, activityData)`
 
-Hook du prompt d'activité : pour un élément de type inspectVehicle, ajoute une carte avec le nom du véhicule, le vendeur et un bouton qui ouvre le menu d'achat avec tether.
+Activity prompt hook: for an element of type inspectVehicle, adds a card with the vehicle name, the seller and a button that opens the purchase menu with a tether.
 
-- `elemData` (*table*) : Éléments proches.
-- `activityData` (*table*) : Données d'activité à compléter.
+- `elemData` (*table*) : Nearby elements.
+- `activityData` (*table*) : Activity data to complete.
 
 #### `career_modules_inspectVehicle.onAnyMissionChanged(status, id)`
 
-Hook : quand une mission démarre en carrière, quitte la vente et supprime le véhicule.
+Hook: when a mission starts in career, leaves the sale and removes the vehicle.
 
-- `status` (*string*) : État de la mission ('started'…).
-- `id` (*string*) : Identifiant de la mission.
+- `status` (*string*) : Mission state ('started'…).
+- `id` (*string*) : Mission identifier.
 
 #### `career_modules_inspectVehicle.onGetRawPoiListForLevel(levelIdentifier, elements)`
 
-Hook de collecte des POI : ajoute le POI d'inspection à la liste.
+POI collection hook: adds the inspection POI to the list.
 
-- `levelIdentifier` (*string*) : Niveau courant.
-- `elements` (*table*) : Liste de POI à compléter.
+- `levelIdentifier` (*string*) : Current level.
+- `elements` (*table*) : POI list to complete.
 
 #### `career_modules_inspectVehicle.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook par image : détecte le déplacement du véhicule à vendre, décompte le temps imparti pour arriver et détecte l'arrivée du joueur.
+Per-frame hook: detects the movement of the vehicle for sale, counts down the time allowed to arrive and detects the player's arrival.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps de simulation (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
 #### `career_modules_inspectVehicle.onVehicleDestroyed(vehId)`
 
-Hook : si le véhicule inspecté est détruit, réinitialise l'inspection.
+Hook: if the inspected vehicle is destroyed, resets the inspection.
 
-- `vehId` (*integer*) : Véhicule supprimé.
+- `vehId` (*integer*) : Removed vehicle.
 
 #### `career_modules_inspectVehicle.onVehicleSwitched(oldId, newId, player)`
 
-Hook : si le joueur passe dans le véhicule inspecté hors essai, le regèle.
+Hook: if the player gets into the inspected vehicle outside a test, freezes it again.
 
-- `oldId` (*integer*) : Ancien véhicule.
-- `newId` (*integer*) : Nouveau véhicule.
-- `player` (*integer*) : Joueur concerné.
+- `oldId` (*integer*) : Old vehicle.
+- `newId` (*integer*) : New vehicle.
+- `player` (*integer*) : Player concerned.
 
 #### `career_modules_inspectVehicle.showVehicle(vehicleInfo)`
 
-Fait apparaître le véhicule à vendre (shopId) sans l'activer (contact coupé, gelé, conditions de pièces initialisées) et mémorise ses infos (shopId, vehId, nom, valeur).
+Spawns the vehicle for sale (shopId) without activating it (ignition off, frozen, part conditions initialized) and stores its info (shopId, vehId, name, value).
 
-- `vehicleInfo` (*table|nil*) : Infos de l'annonce (shopId, Brand, Name, Value…).
-- **renvoie** : userdata|nil Objet véhicule, nil en cas d'échec.
+- `vehicleInfo` (*table|nil*) : Listing info (shopId, Brand, Name, Value…).
+- **returns**: userdata|nil Vehicle object, nil on failure.
 
 #### `career_modules_inspectVehicle.startInspection(vehicleInfo, teleportToVehicle, job)`
 
-Démarre l'inspection : ferme une inspection précédente, fait apparaître le véhicule, choisit la place de parking (celle du vendeur privé, ou la meilleure place de la concession), déplace d'éventuels véhicules gênants, place le véhicule, puis téléporte le joueur (quickTravel) ou lui trace un chemin GPS avec limite de temps. Définit les règles d'essai.
+Starts the inspection: closes a previous inspection, spawns the vehicle, chooses the parking spot (the private seller's, or the dealership's best spot), moves any obstructing vehicles, places the vehicle, then teleports the player (quickTravel) or draws them a GPS path with a time limit. Defines the test drive rules.
 
-- `vehicleInfo` (*table*) : Annonce (shopId, sellerId, parkingSpotName pour un privé…).
-- `teleportToVehicle` (*boolean*) : true pour téléporter le joueur à la place du véhicule.
-- `job` (*table|nil*) : Job coroutine existant ; sinon un job est créé.
-- **renvoie** : boolean|nil Avec un job fourni : true si démarré, false si le spawn échoue ; sans job : nil (asynchrone).
+- `vehicleInfo` (*table*) : Listing (shopId, sellerId, parkingSpotName for a private seller…).
+- `teleportToVehicle` (*boolean*) : true to teleport the player to the vehicle's spot.
+- `job` (*table|nil*) : Existing coroutine job; otherwise a job is created.
+- **returns**: boolean|nil With a job provided: true if started, false if the spawn fails; without a job: nil (asynchronous).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table | Table vide : aucune dépendance. |
+| `dependencies` | table | Empty table: no dependency. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/inspectVehicle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/inspectVehicle.lua`.*

@@ -1,44 +1,44 @@
 # `gameplayInterfaceModules_interactEnergyStorage`
 
-*Fichier : `lua/vehicle/extensions/gameplayInterfaceModules/interactEnergyStorage.lua` · VM : Véhicule · 53 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/gameplayInterfaceModules/interactEnergyStorage.lua` · VM: Vehicle · 53 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplayInterfaceModules_interactEnergyStorage` : `extensions.load (VM véhicule)("gameplayInterfaceModules_interactEnergyStorage")`, puis la globale `gameplayInterfaceModules_interactEnergyStorage`
+**Access:** extension `gameplayInterfaceModules_interactEnergyStorage`: `extensions.load (vehicle VM)("gameplayInterfaceModules_interactEnergyStorage")`, then the global `gameplayInterfaceModules_interactEnergyStorage`
 
-Module de gameplayInterface pour energyStorage : fixer l'énergie stockée d'un réservoir et lister tous les stockages avec leur énergie courante et maximale.
+gameplayInterface module for energyStorage: sets the stored energy of a tank and lists all storages with their current and maximum energy.
 
-## Exemple
+## Example
 
 ```lua
 gameplayInterface.executeAction(0, 11, 'setEnergyStorageEnergy', 'mainTank', 1.0e8)
 gameplayInterface.getSystemData(0, 12, 'energyStorage')
 ```
 
-## Remarques
+## Notes
 
-- Action 'setEnergyStorageEnergy'(name:string, energy:number) : écrit directement storage.storedEnergy (en joules) ; {failReason} si le stockage est introuvable. Aucun clamp à energyCapacity.
-- Lookup 'energyStorage'() : renvoie une table contenant une liste {name, storageType, energyType, currentEnergy, maxEnergy} (currentEnergy = storedEnergy, maxEnergy = energyCapacity). La liste est englobée dans une table (le résultat est {liste}).
+- Action 'setEnergyStorageEnergy'(name:string, energy:number): writes storage.storedEnergy directly (in joules); {failReason} if the storage is not found. No clamp to energyCapacity.
+- Lookup 'energyStorage'(): returns a table containing a list {name, storageType, energyType, currentEnergy, maxEnergy} (currentEnergy = storedEnergy, maxEnergy = energyCapacity). The list is wrapped in a table (the result is {list}).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplayInterfaceModules_interactEnergyStorage.onExtensionLoaded()` | Appelé au chargement : remplit moduleActions et moduleLookups. *(interne)* *(hook)* | 44 |
-| `gameplayInterfaceModules_interactEnergyStorage.requestRegistration(gi)` | Enregistre les actions et lookups auprès de gameplayInterface. *(interne)* | 40 |
+| `gameplayInterfaceModules_interactEnergyStorage.onExtensionLoaded()` | Called at load: fills moduleActions and moduleLookups. *(internal)* *(hook)* | 44 |
+| `gameplayInterfaceModules_interactEnergyStorage.requestRegistration(gi)` | Registers the actions and lookups with gameplayInterface. *(internal)* | 40 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplayInterfaceModules_interactEnergyStorage.requestRegistration(gi)`
 
-Enregistre les actions et lookups auprès de gameplayInterface.
+Registers the actions and lookups with gameplayInterface.
 
-- `gi` (*table*) : Le module gameplayInterface.
+- `gi` (*table*) : The gameplayInterface module.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `moduleActions` | table<string, function> | Actions : setEnergyStorageEnergy. |
-| `moduleLookups` | table<string, function> | Lookups : energyStorage. |
+| `moduleActions` | table<string, function> | Actions: setEnergyStorageEnergy. |
+| `moduleLookups` | table<string, function> | Lookups: energyStorage. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/gameplayInterfaceModules/interactEnergyStorage.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/gameplayInterfaceModules/interactEnergyStorage.lua`.*

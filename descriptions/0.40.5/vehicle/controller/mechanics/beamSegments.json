@@ -1,10 +1,10 @@
 {
   "path": "lua/vehicle/controller/mechanics/beamSegments.lua",
-  "module": "Contrôleur de mécanique (type \"auxiliary\") qui répartit la longueur d'une poutre « capteur » sur plusieurs poutres « segments » : à chaque image, chaque segment reçoit la longueur du capteur divisée par le nombre de segments, multipliée par un facteur. Sert à construire des éléments téléscopiques ou des chaînes de segments dont la longueur totale suit un capteur.",
+  "module": "Mechanics controller (type \"auxiliary\") that distributes the length of a \"sensor\" beam over several \"segment\" beams: every frame, each segment receives the sensor length divided by the number of segments, multiplied by a factor. Used to build telescopic elements or chains of segments whose total length follows a sensor.",
   "notes": [
-    "Clés jbeam (défaut) : segmentBeamTag (obligatoire, tag des segments), sensorBeamTag (obligatoire, la première poutre trouvée sert de capteur), sensorBeamLengthMultiplier (1, mettre le nombre de portées parallèles).",
-    "Si aucun segment ou pas de capteur, une erreur est journalisée et le contrôleur reste inactif.",
-    "Incohérence : beamBroken met isActiveCoef à 0 mais updateGFX ne le consulte jamais, donc rien ne s'arrête quand une poutre casse."
+    "jbeam keys (default): segmentBeamTag (required, tag of the segments), sensorBeamTag (required, the first beam found serves as the sensor), sensorBeamLengthMultiplier (1, set the number of parallel spans).",
+    "If there is no segment or no sensor, an error is logged and the controller stays inactive.",
+    "Inconsistency: beamBroken sets isActiveCoef to 0 but updateGFX never checks it, so nothing stops when a beam breaks."
   ],
   "fields": {
     "type": {
@@ -13,53 +13,53 @@
     },
     "updateGFX": {
       "type": "function|nil",
-      "desc": "Défini à l'init si la configuration est valide."
+      "desc": "Defined at init if the configuration is valid."
     }
   },
   "functions": {
     "init": {
-      "desc": "Retrouve les poutres de segments et de capteur par tag.",
+      "desc": "Finds the segment and sensor beams by tag.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Réactive le contrôleur.",
+      "desc": "Reactivates the controller.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Règle la longueur de chaque segment d'après celle du capteur.",
+      "desc": "Sets the length of each segment from that of the sensor.",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "beamBroken": {
-      "desc": "Hook : appelé quand une poutre casse ; marque le contrôleur inactif si c'est un segment ou le capteur (voir notes).",
+      "desc": "Hook: called when a beam breaks; marks the controller inactive if it is a segment or the sensor (see notes).",
       "params": {
         "id": {
           "type": "integer",
-          "desc": "Identifiant (cid) de la poutre cassée."
+          "desc": "Identifier (cid) of the broken beam."
         },
         "energy": {
           "type": "number",
-          "desc": "Énergie de rupture."
+          "desc": "Break energy."
         }
       },
       "returns": [],

@@ -1,36 +1,36 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/touchingStatic.lua",
-  "module": "Nœud « Static Object Touch » (catégorie `repeat_instant`, tags collision/static). Détecte une intersection du véhicule avec des objets statiques ou le terrain, par rayons (`castRayStatic`) lancés depuis le centre vers 8 points (FL, F, FR, R, BR, B, BL, L) de l'OOBB, décalés. Pins d'entrée : `vehId`, `widthOffset`, `lengthOffset`, `heightOffset` (défaut 0,5), `debugMode`. Sorties : `touching`, flux `touchFL/F/FR/R/BR/B/BL/L` (cachés), `isTouching`.",
+  "module": "\"Static Object Touch\" node (category `repeat_instant`, tags collision/static). Detects an intersection of the vehicle with static objects or the terrain, using rays (`castRayStatic`) cast from the center toward 8 offset points (FL, F, FR, R, BR, B, BL, L) of the OOBB. Input pins: `vehId`, `widthOffset`, `lengthOffset`, `heightOffset` (default 0.5), `debugMode`. Outputs: `touching`, flow `touchFL/F/FR/R/BR/B/BL/L` (hidden), `isTouching`.",
   "notes": [
-    "Pas de flux d'entrée ni de sortie `flow` : seulement les sorties de touches.",
-    "Debug : sphères rouge (touché) ou verte dessinées dans `onPreRender`."
+    "No input flow and no `flow` output: only the touch outputs.",
+    "Debug: red (touched) or green spheres drawn in `onPreRender`."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_executionStarted": {
-          "desc": "Crée les 8 points et les vecteurs de travail.",
+          "desc": "Creates the 8 points and the working vectors.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Libère les points et réinitialise les sorties.",
+          "desc": "Frees the points and resets the outputs.",
           "internal": true
         },
         "init": {
-          "desc": "Constructeur ; appelle `reset`.",
+          "desc": "Constructor; calls `reset`.",
           "internal": true
         },
         "onPreRender": {
-          "desc": "Hook de rendu : dessine les sphères de debug si `debugMode` est actif.",
+          "desc": "Render hook: draws the debug spheres if `debugMode` is active.",
           "internal": true
         },
         "reset": {
-          "desc": "Met toutes les sorties à false et désactive le nœud.",
+          "desc": "Sets all outputs to false and disables the node.",
           "internal": false
         },
         "work": {
-          "desc": "Calcule les 8 points, lance les rayons et remplit les sorties.",
+          "desc": "Computes the 8 points, casts the rays and fills the outputs.",
           "internal": true
         }
       }

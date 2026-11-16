@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/editor/roadArchitect/staticMeshMgr.lua",
+  "module": "Gère l'« audition » des maillages statiques dans le Road Architect : il liste les fichiers .dae disponibles (dossiers art/shapes/objects et art/shapes/garage_and_dealership/Clutter), affiche un maillage choisi dans la scène à 1000 m d'altitude et déplace/fait tourner la caméra libre autour pour le prévisualiser. Il renseigne aussi, dans la couche de profil concernée, les dimensions du maillage (boîte). Utilisé par l'interface d'édition de profils.",
+  "notes": [
+    "L'objet d'audition s'appelle « Mesh Under Audition [temporary] » et est placé à (0, 0, 1000) dans MissionGroup.",
+    "La caméra tourne par pas de pi/500 par appel de manageRotateCam ; la distance est fonction de la taille du maillage (1.2 x longueur de la boîte).",
+    "availStaticMeshes est vidé et rempli en place (table.clear) : la référence exportée reste valide après fetchAvailableStaticMeshes.",
+    "Dans addMeshToAudition, la table scenetree.MissionGroup:addObject reçoit l'objet directement (et non .obj comme ailleurs) : incohérence possible avec les autres modules."
+  ],
+  "fields": {
+    "availStaticMeshes": {"type": "table<integer, {path: string, filename: string}>", "desc": "Maillages .dae trouvés, triés par nom de fichier. Rempli par fetchAvailableStaticMeshes."}
+  },
+  "functions": {
+    "fetchAvailableStaticMeshes": {"desc": "Cherche récursivement les *.dae dans les dossiers prédéfinis et remplit availStaticMeshes (triée par filename).", "params": {}, "returns": []},
+    "removeAuditionMesh": {"desc": "Supprime l'objet de scène du maillage en audition s'il existe.", "params": {}, "returns": []},
+    "updateCameraPose": {"desc": "Passe en caméra libre et place la caméra sur la pose d'audition (derrière et au-dessus du maillage, regardant vers lui).", "params": {}, "returns": []},
+    "addMeshToAudition": {"desc": "Remplace le maillage en audition par celui d'indice donné, ajuste la distance de la caméra à sa taille, puis écrit dans la couche du profil les distances de la boîte autour du centre (boxXLeft/Right, boxYLeft/Right, boxZLeft/Right) et ses extensions (extentsL, extentsW, extentsH).", "params": {"selectedMeshIdx": {"type": "integer", "desc": "Indice dans availStaticMeshes."}, "road": {"type": "table", "desc": "Route dont le profil contient la couche."}, "customIdx": {"type": "integer", "desc": "Indice de la couche dans road.profile.layers."}}, "returns": []},
+    "goToMeshView": {"desc": "Si la caméra n'est pas déjà en vue d'audition : mémorise sa pose, arrête et remet à zéro le chronomètre, et applique la pose d'audition.", "params": {"timer": {"type": "table", "desc": "Chronomètre avec stopAndReset()."}, "time": {"type": "number", "desc": "Temps courant."}}, "returns": [{"type": "number", "desc": "0.0 à l'entrée dans la vue ; sinon la valeur time reçue."}]},
+    "manageRotateCam": {"desc": "Fait avancer d'un pas l'angle de rotation de la caméra autour du maillage et applique la pose (à appeler à chaque frame).", "params": {}, "returns": []},
+    "goToOldView": {"desc": "Restaure la pose de caméra mémorisée avant l'audition et sort de la vue d'audition.", "params": {}, "returns": []}
+  }
+}

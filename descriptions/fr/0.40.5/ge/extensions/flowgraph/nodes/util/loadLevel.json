@@ -1,0 +1,56 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/loadLevel.lua",
+  "module": "Nœud « Load Level » (couleur bleue, icône public). Charge un niveau : levelPath est relatif à levels/ (info.json est ajouté automatiquement). Entrées : flow, levelPath (modèles = tous les niveaux), model et config (cachés, pour faire apparaître un véhicule précis). Sortie : flow, activé quand le niveau est chargé. Machine à états : 1 démarre le chargement (core_levels.startLevel), 2 attend, 3 attend delayBufferFrames puis émet onClientPostStartMission/onClientStartMission et recharge la carte (map.assureLoad), 4 terminé. Données du nœud : preventPlayerSpawning, forceLevelLoad, delayBufferFrames, stopRunningOnClientEndMission, noLoadInEdit, customLoadingScreen.",
+  "notes": [
+    "Si l'éditeur est actif, il est arrêté pendant le chargement puis réactivé.",
+    "Dans work, self.stopRunningOnClientEndMission (champ du nœud) est utilisé comme valeur de mgr.stopRunningOnClientEndMission, mais il n'est jamais défini : il vaut nil.",
+    "Le commentaire de config dit « specific color » alors que le pin est la config du véhicule."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Initialise l'état à 1, le pin flow à false et les données par défaut (preventPlayerSpawning=true, forceLevelLoad=true, delayBufferFrames=0, noLoadInEdit=true, customLoadingScreen=false...).",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet l'état à 1, flow à false et efface mgr.__delayedLoadingScreenFunctions.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Remplit les modèles du pin levelPath avec la liste triée de getAllLevelIdentifiers().",
+          "internal": true
+        },
+        "onLoadingScreenFadeout": {
+          "desc": "Hook appelé au fondu de sortie de l'écran de chargement ; passe à l'état 3 avec le délai de frames, sauf si déjà à l'état 4.",
+          "params": {
+            "missionFile": {
+              "type": "string",
+              "desc": "Fichier de mission chargé (utilisé pour le log)."
+            }
+          },
+          "internal": false
+        },
+        "work": {
+          "desc": "Fait avancer la machine à états. Si le niveau demandé est déjà chargé (et forceLevelLoad faux ou éditeur actif avec noLoadInEdit), passe directement à 4. Sinon lance core_levels.startLevel (en désactivant l'apparition automatique du joueur selon la donnée), puis finalise en état 3.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche l'état courant dans le corps du nœud.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Constructeur de nœud."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style du nœud."
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

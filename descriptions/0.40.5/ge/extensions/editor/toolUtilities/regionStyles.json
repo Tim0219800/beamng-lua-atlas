@@ -1,15 +1,20 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/regionStyles.lua",
-  "module": "Style de peinture de marquage routier pour une région. Pour l'instant une seule région est définie : USA (circulation à droite). Donne les matériaux et largeurs des lignes centrales, de voie, de rive, d'arrêt et de cédez-le-passage, ainsi que de la zone de séparation hachurée.",
+  "module": "Road marking paint style for a region. For now only one region is defined: USA (right-hand traffic). Provides the materials and widths of center, lane, edge, stop and give-way lines, as well as of the hatched separation zone.",
   "notes": [
-    "Le cédez-le-passage (dents de requin) n'existe pas comme matériau DecalRoad : c'est une barre blanche pleine.",
-    "getRegion ignore tout argument et renvoie toujours la table USA."
+    "The give-way line (shark teeth) does not exist as a DecalRoad material: it is a solid white bar.",
+    "getRegion ignores any argument and always returns the USA table."
   ],
   "functions": {
     "getRegion": {
-      "desc": "Renvoie la table de style de marquage de la région courante (toujours USA) : centerLineMaterial, centerLineWidthM, centerLineTexLen, laneLineMaterial, edgeLineMaterial, leftEdgeLineMaterial, stopLineMaterial, giveWayMaterial, stopLineWidthM, giveWayWidthM, goreSepMaterial, goreSepTexLen.",
+      "desc": "Returns the marking style table of the current region (always USA): centerLineMaterial, centerLineWidthM, centerLineTexLen, laneLineMaterial, edgeLineMaterial, leftEdgeLineMaterial, stopLineMaterial, giveWayMaterial, stopLineWidthM, giveWayWidthM, goreSepMaterial, goreSepTexLen.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Table de style (matériaux en string, largeurs et longueurs de texture en mètres)."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Style table (materials as strings, widths and texture lengths in meters)."
+        }
+      ],
       "internal": false
     }
   }

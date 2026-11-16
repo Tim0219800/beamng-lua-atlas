@@ -2,22 +2,22 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/notebook/systemPacenotes.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Détient la liste canonique des noms de pacenotes « système » du rallye (compte à rebours, avertissements de départ, vérifications radio/ceintures, faux départ…) et valide le tableau `system` d'un style de carnet. Chaque style doit fournir tous les noms de `required`, dans cet ordre ; les noms inconnus, doublons ou variantes sans texte sont rejetés. Utile à un moddeur qui écrit un style de copilote dans une nouvelle langue.
---- Accès : extension `gameplay_rally_notebook_systemPacenotes` : `extensions.load("gameplay_rally_notebook_systemPacenotes")`, puis la globale `gameplay_rally_notebook_systemPacenotes`
+--- Holds the canonical list of rally "system" pacenote names (countdown, start warnings, radio/belt checks, false start…) and validates the `system` array of a notebook style. Each style must provide all the names in `required`, in that order; unknown names, duplicates or variants without text are rejected. Useful to a modder writing a co-driver style in a new language.
+--- Access: extension `gameplay_rally_notebook_systemPacenotes`: `extensions.load("gameplay_rally_notebook_systemPacenotes")`, then the global `gameplay_rally_notebook_systemPacenotes`
 ---@class gameplay_rally_notebook_systemPacenotes
----@field required string[] Noms obligatoires, dans l'ordre : precountdown, countdown5 à countdown1, countdowngo, warningSeconds60/30/15/10, commsCheck, beltsCheck, rescheduled, falseStart (15 entrées).
+---@field required string[] Required names, in order: precountdown, countdown5 to countdown1, countdowngo, warningSeconds60/30/15/10, commsCheck, beltsCheck, rescheduled, falseStart (15 entries).
 gameplay_rally_notebook_systemPacenotes = {}
 
---- Construit le tableau ordonné `system` d'un style à partir d'une table compacte nom -> texte. Chaque valeur peut être une chaîne, une table {text=...}, ou une liste de chaînes/tables (variantes). Les noms manquants ou de type invalide donnent une liste de variantes vide.
----Source : lua/ge/extensions/gameplay/rally/notebook/systemPacenotes.lua:70
----@param localized table<string, string|table>|nil Textes localisés indexés par nom de pacenote système.
----@return table[]  Liste de { name = string, variants = { {text=string,...}, ... } } dans l'ordre de `required`.
+--- Builds a style's ordered `system` array from a compact name -> text table. Each value can be a string, a {text=...} table, or a list of strings/tables (variants). Missing or invalid-type names give an empty variants list.
+---Source: lua/ge/extensions/gameplay/rally/notebook/systemPacenotes.lua:70
+---@param localized table<string, string|table>|nil Localized texts keyed by system pacenote name.
+---@return table[]  List of { name = string, variants = { {text=string,...}, ... } } in the order of `required`.
 function gameplay_rally_notebook_systemPacenotes.localized(localized) end
 
---- Vérifie qu'un tableau `system` est une liste ordonnée complète : entrées-tables avec `name` chaîne, noms reconnus, dans l'ordre de `required`, sans doublon, avec une liste `variants` non vide dont chaque élément a un `text` non vide.
----Source : lua/ge/extensions/gameplay/rally/notebook/systemPacenotes.lua:82
----@param systemArray table Tableau à valider (typiquement renvoyé par localized).
----@param styleName string|nil Nom du style pour les messages de log ("?" par défaut).
----@return boolean  true si valide, false sinon (erreur journalisée).
+--- Checks that a `system` array is a complete ordered list: table entries with a string `name`, recognized names, in the order of `required`, without duplicates, with a non-empty `variants` list in which every element has a non-empty `text`.
+---Source: lua/ge/extensions/gameplay/rally/notebook/systemPacenotes.lua:82
+---@param systemArray table Array to validate (typically returned by localized).
+---@param styleName string|nil Style name for log messages ("?" by default).
+---@return boolean  true if valid, false otherwise (error logged).
 function gameplay_rally_notebook_systemPacenotes.validate(systemArray, styleName) end
 

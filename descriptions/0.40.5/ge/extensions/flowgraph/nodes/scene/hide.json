@@ -1,19 +1,19 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/hide.lua",
-  "module": "Noeud flowgraph « Show/Hide Object » (repeat_instant). Cache ou montre un objet de la scene. Entrees : objID (number), hide (bool, true = cacher). Met obj.hidden puis appelle updateInstanceRenderData si l'objet l'a.",
+  "module": "Flowgraph node \"Show/Hide Object\" (repeat_instant). Hides or shows a scene object. Inputs: objID (number), hide (bool, true = hide). Sets obj.hidden then calls updateInstanceRenderData if the object has it.",
   "notes": [
-    "Si l'id ne correspond a aucun objet, obj est nil et l'affectation obj.hidden provoque une erreur Lua (pas de garde)."
+    "If the id matches no object, obj is nil and the assignment obj.hidden raises a Lua error (no guard)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Rien a initialiser.",
+          "desc": "Nothing to initialize.",
           "internal": true
         },
         "work": {
-          "desc": "Trouve l'objet par id et applique hidden ; signale l'erreur « objID must be set » si le pin est vide.",
+          "desc": "Finds the object by id and applies hidden; reports the error \"objID must be set\" if the pin is empty.",
           "internal": false
         }
       }

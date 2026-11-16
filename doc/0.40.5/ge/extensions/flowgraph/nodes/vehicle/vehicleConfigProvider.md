@@ -1,23 +1,23 @@
 # `flowgraph_nodes_vehicle_vehicleConfigProvider`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleConfigProvider.lua` · VM : Game Engine (GE) · 75 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleConfigProvider.lua` · VM: Game Engine (GE) · 75 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/vehicleConfigProvider")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/vehicleConfigProvider")` (file under extensions/ but not a regular extension)
 
-Nœud fournisseur « Vehicle Config Provider » (comportement `simple`, catégorie `provider`). Permet de choisir un modèle et une config de véhicule dans l'éditeur (`ui_flowgraph_editor.vehicleSelector`). Sorties : `model`, `config` (chemin de la config), `modelName` et `configName` (cachées).
+"Vehicle Config Provider" provider node (`simple` behavior, category `provider`). Lets the user pick a vehicle model and config in the editor (`ui_flowgraph_editor.vehicleSelector`). Outputs: `model`, `config` (config path), `modelName` and `configName` (hidden).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(nodeData)` | Restaure modèle, config, chemin, type et noms. | 65 |
-| `C:_onSerialize(res)` | Sauvegarde modèle, config, chemin, type et noms. | 56 |
-| `C:drawCustomProperties()` | Affiche le sélecteur de véhicule. | 36 |
-| `C:drawMiddle(builder, style)` | Affichage central vide. | 42 |
-| `C:init()` | Constructeur ; vide les champs modèle/config. | 26 |
-| `C:work()` | Écrit le modèle et la config choisis sur les sorties. | 49 |
+| `C:_onDeserialized(nodeData)` | Restores model, config, path, type and names. | 65 |
+| `C:_onSerialize(res)` | Saves model, config, path, type and names. | 56 |
+| `C:drawCustomProperties()` | Displays the vehicle selector. | 36 |
+| `C:drawMiddle(builder, style)` | Empty central display. | 42 |
+| `C:init()` | Constructor; clears the model/config fields. | 26 |
+| `C:work()` | Writes the chosen model and config to the outputs. | 49 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleConfigProvider.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleConfigProvider.lua`.*

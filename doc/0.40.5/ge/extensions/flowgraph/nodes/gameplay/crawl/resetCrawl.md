@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gameplay_crawl_resetCrawl`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/resetCrawl.lua` · VM : Game Engine (GE) · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/resetCrawl.lua` · VM: Game Engine (GE) · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/crawl/resetCrawl")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/crawl/resetCrawl")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Reset Crawl » (catégorie once_instant, crawl). Remet à zéro le crawl actif : téléporte le véhicule au départ et réinitialise données et timers. Le système reste actif mais le timer est arrêté jusqu'à Start Crawl. Sorties : success, failed, isActive.
+Flowgraph node "Reset Crawl" (category once_instant, crawl). Resets the active crawl: teleports the vehicle to the start and resets data and timers. The system stays active but the timer is stopped until Start Crawl. Outputs: success, failed, isActive.
 
-**Dépendances (chargées avant) :** `gameplay_crawl_flowgraphBridge`
+**Dependencies (loaded first):** `gameplay_crawl_flowgraphBridge`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr)` | Charge le bridge du crawl. | 23 |
-| `C:work()` | Appelle bridge.resetCrawl(). Succès : isActive vrai ; échec : isActive = bridge.isCrawlActive(). | 27 |
+| `C:init(mgr)` | Loads the crawl bridge. | 23 |
+| `C:work()` | Calls bridge.resetCrawl(). Success: isActive true; failure: isActive = bridge.isCrawlActive(). | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/resetCrawl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/resetCrawl.lua`.*

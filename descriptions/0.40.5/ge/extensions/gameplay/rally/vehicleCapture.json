@@ -1,35 +1,46 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/vehicleCapture.lua",
-  "module": "Enregistreur de trajectoire du véhicule pendant la reconnaissance (recce) d'un rallye. Tous les 2 m parcourus, il capture position, orientation et braquage, met les captures en tampon et les ajoute au fichier `driveline.json` (une ligne JSON par capture) du dossier de reconnaissance de la mission. Le module renvoie un constructeur : `require(...)(vehicle, missionDir)`.",
+  "module": "Recorder of the vehicle's trajectory during a rally recce. Every 2 m traveled, it captures position, orientation and steering, buffers the captures and appends them to the `driveline.json` file (one JSON line per capture) in the mission's recce folder. The module returns a constructor: `require(...)(vehicle, missionDir)`.",
   "notes": [
-    "Le braquage est lu via core_vehicleBridge (clé 'steering', enregistrée en notification de changement) ; il vaut nil tant qu'aucune valeur n'est en cache.",
-    "La première capture sert seulement d'ancrage (last_dist_pos) : rien n'est mis en tampon avant d'avoir parcouru plus de interval_m.",
-    "Le tampon n'est écrit qu'à partir de 10 captures, sauf si writeCaptures(true) est appelé."
+    "The steering is read via core_vehicleBridge (key 'steering', registered as a change notification); it is nil as long as no value is cached.",
+    "The first capture only serves as an anchor (last_dist_pos): nothing is buffered until more than interval_m has been traveled.",
+    "The buffer is only written from 10 captures, unless writeCaptures(true) is called."
   ],
   "classes": {
     "C": {
-      "desc": "Enregistreur lié à un véhicule. Champs : vehicle, interval_m (2), last_dist_pos, capturesBuffer, fname.",
+      "desc": "Recorder bound to a vehicle. Fields: vehicle, interval_m (2), last_dist_pos, capturesBuffer, fname.",
       "functions": {
         "init": {
-          "desc": "Constructeur. Enregistre la notification de changement de 'steering' auprès de core_vehicleBridge et calcule le chemin du fichier driveline.json via rallyUtil.missionReccePath.",
+          "desc": "Constructor. Registers the 'steering' change notification with core_vehicleBridge and computes the path of the driveline.json file via rallyUtil.missionReccePath.",
           "params": {
-            "vehicle": {"type": "table", "desc": "Objet véhicule (getId, getPosition, getDirectionVector…)."},
-            "missionDir": {"type": "string", "desc": "Dossier de la mission."}
+            "vehicle": {
+              "type": "table",
+              "desc": "Vehicle object (getId, getPosition, getDirectionVector…)."
+            },
+            "missionDir": {
+              "type": "string",
+              "desc": "Mission folder."
+            }
           },
           "internal": true
         },
         "truncateCapturesFile": {
-          "desc": "Vide le fichier de captures (ouverture en mode \"w\"). Journalise une erreur si l'ouverture échoue."
+          "desc": "Empties the captures file (opened in \"w\" mode). Logs an error if opening fails."
         },
         "writeCaptures": {
-          "desc": "Ajoute les captures du tampon au fichier (une ligne JSON chacune) puis vide le tampon. Sans force, ne fait rien tant que le tampon contient moins de 10 éléments.",
-          "params": {"force": {"type": "boolean|nil", "desc": "true pour écrire même avec moins de 10 captures."}}
+          "desc": "Appends the buffer's captures to the file (one JSON line each) then empties the buffer. Without force, does nothing as long as the buffer contains fewer than 10 elements.",
+          "params": {
+            "force": {
+              "type": "boolean|nil",
+              "desc": "true to write even with fewer than 10 captures."
+            }
+          }
         },
         "capture": {
-          "desc": "À appeler à chaque image : lit position et orientation (quatf depuis direction et vecteur haut) du véhicule et, si celui-ci s'est éloigné de plus de interval_m de la dernière capture, met en tampon {ts, pos, quat, steering}. Tente ensuite d'écrire le tampon."
+          "desc": "To be called every frame: reads the vehicle's position and orientation (quatf from direction and up vector) and, if it has moved more than interval_m away from the last capture, buffers {ts, pos, quat, steering}. Then tries to write the buffer."
         },
         "drawDebug": {
-          "desc": "Dessine une sphère bleue semi-transparente de rayon 2 à la dernière position capturée (debugDrawer:drawSphere).",
+          "desc": "Draws a semi-transparent blue sphere of radius 2 at the last captured position (debugDrawer:drawSphere).",
           "internal": true
         }
       }

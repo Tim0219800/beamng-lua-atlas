@@ -2,175 +2,175 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gestionnaire des modes de jeu multi-sièges (écran partagé). Il charge les fournisseurs gameplay/discover/multiseat/*Rules.lua, collecte leurs infos via le hook onGetMultiseatGamemodeInfos, démarre/arrête/relance un mode, gère le fondu, le blocage des actions d'entrée, l'attente des véhicules, ainsi que les écrans de début et de fin (via ui_router et mission.control). Un moddeur qui ajoute un mode multi-sièges passe par lui : il appelle ext.start(settings), ext.onReady(vehicles), ext.stop(), buildStartScreen, buildEndScreen.
---- Accès : extension `gameplay_multiseat_gamemodeManager` : `extensions.load("gameplay_multiseat_gamemodeManager")`, puis la globale `gameplay_multiseat_gamemodeManager`
+--- Manager of multiseat game modes (split screen). It loads the gameplay/discover/multiseat/*Rules.lua providers, collects their info via the onGetMultiseatGamemodeInfos hook, starts/stops/restarts a mode, handles the fade, the blocking of input actions, the waiting for vehicles, and the start and end screens (via ui_router and mission.control). A modder adding a multiseat mode goes through it: it calls ext.start(settings), ext.onReady(vehicles), ext.stop(), buildStartScreen, buildEndScreen.
+--- Access: extension `gameplay_multiseat_gamemodeManager`: `extensions.load("gameplay_multiseat_gamemodeManager")`, then the global `gameplay_multiseat_gamemodeManager`
 ---@class gameplay_multiseat_gamemodeManager
----@field ModuleName string Nom du module : 'gamemodeManager'.
+---@field ModuleName string Module name: 'gamemodeManager'.
 gameplay_multiseat_gamemodeManager = {}
 
---- Passe la phase de 'starting' à 'waiting' : le mode annonce qu'il notifiera lui-même qu'il est prêt avec notifyReady.
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:372
+--- Moves the phase from 'starting' to 'waiting': the mode announces that it will itself notify when it is ready with notifyReady.
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:372
 function gameplay_multiseat_gamemodeManager.deferReady() end
 
---- Nom du mode en cours.
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:503
----@return string|nil  Nom, ou nil.
+--- Name of the current mode.
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:503
+---@return string|nil  Name, or nil.
 function gameplay_multiseat_gamemodeManager.getGamemodeId() end
 
---- Nombre maximal de joueurs du mode en cours (info.playerCount.max).
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:507
----@return integer|nil  Maximum, ou nil.
+--- Maximum number of players of the current mode (info.playerCount.max).
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:507
+---@return integer|nil  Maximum, or nil.
 function gameplay_multiseat_gamemodeManager.getMaxPlayers() end
 
---- Phase actuelle du mode.
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:512
----@return string|nil  nil, 'starting', 'waiting' ou 'running'.
+--- Current phase of the mode.
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:512
+---@return string|nil  nil, 'starting', 'waiting' or 'running'.
 function gameplay_multiseat_gamemodeManager.getPhase() end
 
---- Nom affiché du joueur local d'index donné, d'après le persona du participant rejoint.
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:128
----@param playerIndex integer Index du joueur (à partir de 0).
----@return string|nil  displayName, ou nil si inconnu.
+--- Display name of the local player with the given index, based on the joined participant's persona.
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:128
+---@param playerIndex integer Player index (0-based).
+---@return string|nil  displayName, or nil if unknown.
 function gameplay_multiseat_gamemodeManager.getPlayerName(playerIndex) end
 
---- Renvoie info.vehiclePool du mode en cours.
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:394
----@return table|nil  Pool de véhicules déclaré par le mode.
+--- Returns info.vehiclePool of the current mode.
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:394
+---@return table|nil  Vehicle pool declared by the mode.
 function gameplay_multiseat_gamemodeManager.getVehiclePool() end
 
---- Retourne au menu principal (returnToMainMenu).
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:319
+--- Returns to the main menu (returnToMainMenu).
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:319
 function gameplay_multiseat_gamemodeManager.goToMainMenu() end
 
---- Indique si un mode est en cours.
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:499
----@return boolean  true si un mode est actif.
+--- Indicates whether a mode is running.
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:499
+---@return boolean  true if a mode is active.
 function gameplay_multiseat_gamemodeManager.isActive() end
 
---- Indique si l'écran de début est en attente de la sortie de pause (la variable n'est jamais mise à true dans ce fichier).
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:516
----@return boolean  Toujours false en pratique.
+--- Indicates whether the start screen is waiting for the pause to end (the variable is never set to true in this file).
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:516
+---@return boolean  Always false in practice.
 function gameplay_multiseat_gamemodeManager.isStartScreenPending() end
 
---- Passe en phase 'running', termine le fondu s'il est actif et exécute le callback défini par setReadyCallback. Sans effet hors phases 'starting'/'waiting'.
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:378
+--- Moves to the 'running' phase, ends the fade if active and runs the callback set by setReadyCallback. Has no effect outside the 'starting'/'waiting' phases.
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:378
 function gameplay_multiseat_gamemodeManager.notifyReady() end
 
---- Hook après changement de route UI : si un écran de début est en attente et que la route cible est 'play' ou 'multiseat', le joue.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:591
----@param context table Contient toRoute.name.
+--- Hook after a UI route change: if a start screen is pending and the target route is 'play' or 'multiseat', plays it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:591
+---@param context table Contains toRoute.name.
 function gameplay_multiseat_gamemodeManager.onAfterRouteChange(context) end
 
---- Hook de fin de niveau : arrête le mode sans réactiver le freeroam.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:686
+--- End-of-level hook: stops the mode without reactivating freeroam.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:686
 function gameplay_multiseat_gamemodeManager.onClientEndMission() end
 
---- Hook de déchargement : débloque les actions, appelle ext.stop() et réinitialise tout l'état, y compris le registre des modes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:599
+--- Unload hook: unblocks the actions, calls ext.stop() and resets all state, including the mode registry.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:599
 function gameplay_multiseat_gamemodeManager.onExtensionUnloaded() end
 
---- Hook : ajoute le mode d'écran actif à la liste screensActive.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:581
----@param screensActive string[] Liste remplie en place.
+--- Hook: adds the active screen mode to the screensActive list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:581
+---@param screensActive string[] List filled in place.
 function gameplay_multiseat_gamemodeManager.onGetIsMissionStartOrEndScreenActive(screensActive) end
 
---- Hook vide : le flux « véhicules prêts » d'onPreRender gère déjà la transition.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:587
+--- Empty hook: the "vehicles ready" flow of onPreRender already handles the transition.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:587
 function gameplay_multiseat_gamemodeManager.onLoadingScreenFadeout() end
 
---- Hook : exécute le callback du bouton cliqué (mgrId 'multiseatGamemode'). Pour l'écran de fin, immédiatement ; pour l'écran de début, après retour à la route multiseat, onUIStartButtonClicked et 0,1 s de délai.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:557
----@param button table Bouton avec mgrId et funId.
+--- Hook: runs the callback of the clicked button (mgrId 'multiseatGamemode'). For the end screen, immediately; for the start screen, after returning to the multiseat route, onUIStartButtonClicked and a 0.1 s delay.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:557
+---@param button table Button with mgrId and funId.
 function gameplay_multiseat_gamemodeManager.onMissionScreenButtonClicked(button) end
 
---- Hook après application des réglages multi-sièges : relance le mode si changeSet.requiresRestart et si l'application a réussi sans exitAfterApply.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:681
----@param changeSet table Changements (requiresRestart).
----@param result table Résultat (success, exitAfterApply).
+--- Hook after multiseat settings are applied: restarts the mode if changeSet.requiresRestart and if the application succeeded without exitAfterApply.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:681
+---@param changeSet table Changes (requiresRestart).
+---@param result table Result (success, exitAfterApply).
 function gameplay_multiseat_gamemodeManager.onMultiseatSettingsApplied(changeSet, result) end
 
---- Hook de construction du menu pause multi-sièges : ajoute le bouton Modes de jeu s'il n'y a pas de mode actif, sinon Réglages, Quitter et Relancer le mode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:624
----@param actions table[] Liste d'actions à compléter.
----@param context table Contexte (inutilisé).
----@param registerButton function Fonction qui enregistre un bouton et son callback.
+--- Multiseat pause menu build hook: adds the Game modes button if there is no active mode, otherwise Settings, Quit and Restart mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:624
+---@param actions table[] List of actions to complete.
+---@param context table Context (unused).
+---@param registerButton function Function that registers a button and its callback.
 function gameplay_multiseat_gamemodeManager.onPauseHomeRailBuildMultiseatActions(actions, context, registerButton) end
 
---- Appelé chaque image. En phase 'waiting' avec véhicules en attente : attend qu'ils soient prêts (ou le délai de 5 s), notifie prêt, appelle ext.onReady(vehicles), gèle les véhicules puis affiche l'écran de début.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:533
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulé (s).
+--- Called every frame. In the 'waiting' phase with vehicles pending: waits for them to be ready (or the 5 s timeout), notifies ready, calls ext.onReady(vehicles), freezes the vehicles then shows the start screen.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:533
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulated time delta (s).
 function gameplay_multiseat_gamemodeManager.onPreRender(dtReal, dtSim) end
 
---- Hook : quand l'UI demande les données d'écran de mission (mode ne contenant pas 'test'), renvoie l'écran actif via onRequestMissionScreenDataReady et émet onMissionScreenReady.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:550
----@param mode string Mode d'écran demandé.
+--- Hook: when the UI requests the mission screen data (mode not containing 'test'), returns the active screen via onRequestMissionScreenDataReady and emits onMissionScreenReady.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:550
+---@param mode string Requested screen mode.
 function gameplay_multiseat_gamemodeManager.onRequestMissionScreenData(mode) end
 
---- Hook de fondu d'écran : quand state vaut 1 (écran noir) et qu'un lancement est différé, lance le mode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:527
----@param state integer État du fondu ; 1 = totalement fondu.
+--- Screen fade hook: when state is 1 (black screen) and a launch is deferred, launches the mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:527
+---@param state integer Fade state; 1 = fully faded.
 function gameplay_multiseat_gamemodeManager.onScreenFadeState(state) end
 
---- Hook de changement de véhicule : relance le mode si en phase 'running' et hors synchronisation des véhicules.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:675
----@param oldId integer Ancien id de véhicule.
----@param newId integer Nouvel id.
----@param player integer Joueur concerné.
+--- Vehicle switch hook: restarts the mode if in the 'running' phase and outside vehicle synchronization.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:675
+---@param oldId integer Old vehicle id.
+---@param newId integer New id.
+---@param player integer Player concerned.
 function gameplay_multiseat_gamemodeManager.onVehicleSwitched(oldId, newId, player) end
 
---- Affiche l'écran de début s'il était en attente.
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:520
----@return boolean  true si l'écran a été affiché.
+--- Shows the start screen if it was pending.
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:520
+---@return boolean  true if the screen was shown.
 function gameplay_multiseat_gamemodeManager.playPendingRound() end
 
---- Envoie à l'UI (guihooks OnGamemodeData, context 'multiseat') la liste des modes disponibles, le mode en cours, ses réglages et la liste des joueurs. Les modes mapUnsupported ou dépassant le nombre de joueurs sont comptés mais non listés.
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:144
+--- Sends the UI (guihooks OnGamemodeData, context 'multiseat') the list of available modes, the current mode, its settings and the list of players. Modes that are mapUnsupported or exceed the number of players are counted but not listed.
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:144
 function gameplay_multiseat_gamemodeManager.requestGamemodeData() end
 
---- Relance le mode (celui en cours si name est nil) avec fondu. Si le mode demandé n'est pas le mode actif, appelle start.
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:481
----@param name string|nil Mode à relancer.
----@param settings table|nil Nouveaux réglages ; nil = garder les actuels.
----@return boolean  false s'il n'y a aucun mode à relancer.
+--- Restarts the mode (the current one if name is nil) with fade. If the requested mode is not the active mode, calls start.
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:481
+---@param name string|nil Mode to restart.
+---@param settings table|nil New settings; nil = keep the current ones.
+---@return boolean  false if there is no mode to restart.
 function gameplay_multiseat_gamemodeManager.restart(name, settings) end
 
---- Définit une fonction appelée une fois, quand le mode passe à la phase 'running' (notifyReady).
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:368
----@param callback function|nil Fonction sans argument.
+--- Sets a function called once, when the mode enters the 'running' phase (notifyReady).
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:368
+---@param callback function|nil Function with no argument.
 function gameplay_multiseat_gamemodeManager.setReadyCallback(callback) end
 
---- Indique si le démarrage a été demandé avec options.assignVehiclePool = true.
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:399
----@return boolean  true si le pool doit être assigné.
+--- Indicates whether the start was requested with options.assignVehiclePool = true.
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:399
+---@return boolean  true if the pool must be assigned.
 function gameplay_multiseat_gamemodeManager.shouldAssignVehiclePool() end
 
---- Affiche l'écran de fin : émet onMultiseatGamemodeFinished, met le temps de simulation en pause, puis construit l'écran à partir de resultData et des surcharges de buildEndScreen du mode (header, headerColor, body, layout, pages, buttons). Par défaut : boutons Rejouer, Freeroam, Menu principal.
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:252
----@param resultData table|nil Champs lus : title, tied, winnerPlayer (index), text.
+--- Shows the end screen: emits onMultiseatGamemodeFinished, pauses the simulation time, then builds the screen from resultData and the mode's buildEndScreen overrides (header, headerColor, body, layout, pages, buttons). By default: Replay, Freeroam, Main menu buttons.
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:252
+---@param resultData table|nil Fields read: title, tied, winnerPlayer (index), text.
 function gameplay_multiseat_gamemodeManager.showEndScreen(resultData) end
 
---- Démarre un mode : charge ui_multiseat_freeroam, arrête le mode précédent, charge l'extension du mode (info.extensionPath), lui assigne ext.info, retient les réglages (défauts de info.settings si nil), désactive le freeroam multi-sièges puis lance le mode (avec fondu sauf options.withFade == false).
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:432
----@param name string Nom du mode dans le registre.
----@param settings table|nil Réglages ; nil = valeurs par défaut.
----@param options table|nil withFade (boolean, false = sans fondu), assignVehiclePool (boolean).
----@return boolean  true si le lancement est démarré, false en cas d'erreur.
+--- Starts a mode: loads ui_multiseat_freeroam, stops the previous mode, loads the mode's extension (info.extensionPath), assigns it ext.info, stores the settings (info.settings defaults if nil), disables multiseat freeroam then launches the mode (with fade unless options.withFade == false).
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:432
+---@param name string Mode name in the registry.
+---@param settings table|nil Settings; nil = default values.
+---@param options table|nil withFade (boolean, false = no fade), assignVehiclePool (boolean).
+---@return boolean  true if the launch is started, false on error.
 function gameplay_multiseat_gamemodeManager.start(name, settings, options) end
 
---- Arrête le mode en cours, appelle ext.stop() et réactive le freeroam multi-sièges (ui_multiseat_freeroam.activate).
----Source : lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:364
+--- Stops the current mode, calls ext.stop() and reactivates multiseat freeroam (ui_multiseat_freeroam.activate).
+---Source: lua/ge/extensions/gameplay/multiseat/gamemodeManager.lua:364
 function gameplay_multiseat_gamemodeManager.stop() end
 

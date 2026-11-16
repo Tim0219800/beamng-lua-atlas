@@ -1,14 +1,25 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/delivery/startDelivery.lua",
-  "module": "Nœud flowgraph « Start Delivery » (catégorie once_instant, livraison). Démarre la livraison : objectifs, indices, marqueurs et liste de tâches deviennent visibles et le chrono démarre. Nécessite une livraison chargée (Load Delivery) et non déjà active. Pins : flow, reset (caché) en entrée ; flow, success en sortie.",
+  "module": "Flowgraph node \"Start Delivery\" (category once_instant, delivery). Starts the delivery: objectives, hints, markers and task list become visible and the timer starts. Requires a loaded delivery (Load Delivery) that is not already active. Pins: flow, reset (hidden) as inputs; flow, success as outputs.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Remet flow et success à faux.", "internal": true},
-        "_executionStarted": {"desc": "Remet flow et success à faux.", "internal": true},
-        "_executionStopped": {"desc": "Remet flow et success à faux.", "internal": true},
-        "work": {"desc": "Si flow est actif : vérifie isLoaded() et not isActive(), appelle freeformDelivery.start() et renseigne success/flow ; journalise les erreurs."}
+        "init": {
+          "desc": "Resets flow and success to false.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Resets flow and success to false.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Resets flow and success to false.",
+          "internal": true
+        },
+        "work": {
+          "desc": "If flow is active: checks isLoaded() and not isActive(), calls freeformDelivery.start() and fills success/flow; logs errors."
+        }
       }
     }
   }

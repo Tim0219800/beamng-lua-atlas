@@ -2,10 +2,10 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/router/routes.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Registre racine des routes du routeur UI : l'unique point d'entrée explicite pour enregistrer les familles de routes de premier niveau. Chaque entrée `{ include = "nom" }` monte le module de routes/nom.lua (Root + Children). Il n'y a pas de découverte automatique par le système de fichiers : un module n'est enregistré que s'il est listé ici (ou ajouté à l'exécution via routeManager.addVueRoutes / registerModRoutes). Lu par routeManager.
---- Accès : extension `ui_router_routes` : `extensions.load("ui_router_routes")`, puis la globale `ui_router_routes`
+--- Root registry of the UI router routes: the single explicit entry point for registering top-level route families. Each `{ include = "name" }` entry mounts the routes/name.lua module (Root + Children). There is no automatic filesystem discovery: a module is registered only if it is listed here (or added at runtime via routeManager.addVueRoutes / registerModRoutes). Read by routeManager.
+--- Access: extension `ui_router_routes`: `extensions.load("ui_router_routes")`, then the global `ui_router_routes`
 ---@class ui_router_routes
----@field Children table[] Liste d'entrées `{ include = "module" }` : bigmap, campaign, career, debug, default, firstDrive, freeroamLevels, freeroamWizard, garage, legal, livery, liveries, menu, mission, mods, multiseat, multiplayer, options, pause, radial, scenario, taxi, trackBuilder.
----@field Global table `{ include = "global" }` : module des routes globales plates (play, /mainmenu, etc.).
+---@field Children table[] List of `{ include = "module" }` entries: bigmap, campaign, career, debug, default, firstDrive, freeroamLevels, freeroamWizard, garage, legal, livery, liveries, menu, mission, mods, multiseat, multiplayer, options, pause, radial, scenario, taxi, trackBuilder.
+---@field Global table `{ include = "global" }`: module of flat global routes (play, /mainmenu, etc.).
 ui_router_routes = {}
 

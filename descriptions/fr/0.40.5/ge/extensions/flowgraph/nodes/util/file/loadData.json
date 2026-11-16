@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/file/loadData.lua",
+  "module": "Nœud « Load Data » (catégorie once_instant, couleur file). Charge des données simples depuis un fichier, réutilisables entre sessions. Entrée : file (nom sans extension). Les pins de sortie personnalisés (types string, number, bool, any, table, vec3, quat, color) portent le nom des clés lues ; chaque sortie reçoit la valeur de la clé du même nom via modules.file:read.",
+  "notes": [
+    "La description du pin file dit « save into » mais il s'agit ici du fichier à lire."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Active la sauvegarde des pins et les pins de sortie personnalisés.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Pour chaque pin de sortie (hors flow), lit la valeur correspondante dans le fichier.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Force le rechargement du fichier (modules.file:forceReload).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,61 +1,61 @@
 # `core_cameraModes_orbit`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/orbit.lua` · VM : Game Engine (GE) · 601 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/orbit.lua` · VM: Game Engine (GE) · 601 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/orbit")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/orbit")` (file under extensions/ but not a regular extension)
 
-Caméra orbitale de poursuite, mode principal « extérieur » d'un véhicule. Tourne autour du point cible (nœud ref du véhicule + décalage offset, ou point imposé par setRef) à une distance camDist ; rotation souris/clavier (tangage limité à ±85 degrés), zoom (distance entre camMinDist et camMaxDist), lissage, relaxation derrière le véhicule, FOV dynamique selon la vitesse (effet dolly zoom qui conserve la taille apparente de l'arrière du véhicule), décalage de hauteur dynamique et inclinaison dynamique au-dessus de 10 m/s. Utilise le filtre collision pour ne pas traverser les décors. Utilisé aussi par d'autres extensions (couplerCameraModifier). Renvoie un constructeur.
+Orbital chase camera, main "external" mode of a vehicle. Orbits around the target point (the vehicle's ref node + offset, or a point imposed by setRef) at a distance camDist; mouse/keyboard rotation (pitch limited to ±85 degrees), zoom (distance between camMinDist and camMaxDist), smoothing, relaxation behind the vehicle, speed-dependent dynamic FOV (dolly zoom effect that keeps the apparent size of the vehicle's rear), dynamic height offset and dynamic pitch above 10 m/s. Uses the collision filter to avoid passing through scenery. Also used by other extensions (couplerCameraModifier). Returns a constructor.
 
-## Exemple
+## Example
 
 ```lua
--- via core_camera, par exemple pour régler la caméra orbit d'un véhicule :
+-- via core_camera, for example to adjust a vehicle's orbit camera:
 core_camera.setDistance({vehId = id, camName = 'orbit'}, 8)
 core_camera.setDefaultDistance({vehId = id, camName = 'orbit'}, 8)
 ```
 
-## Remarques
+## Notes
 
-- Champs de configuration jbeam : distance (5 par défaut), distanceMin (3), defaultRotation (vec3 degrés, défaut (0, -17, 0)), offset, mode ('ref' par défaut), fov (65), skipFovModifier, refNodes. camMaxDist = 10 * distanceMin (ou 50 si distanceMin est nil, déduit du code : (distanceMin or 5) * 10).
-- Réglages lus : cameraOrbitFovModifier, cameraOrbitRelaxation (3), cameraOrbitMaxDynamicFov (35), cameraOrbitMaxDrivingPitch, cameraOrbitMaxDynamicOffset, cameraOrbitSmoothing, multiseat (en multiseat l'inclinaison dynamique est désactivée).
-- FOV dynamique : fov = fov + fovModifier + maxDynamicFov * min(1, vitesse/130). Hauteur dynamique : jusqu'à 1.4 * maxDynamicOffset vers 70 m/s.
-- La page extraite indique calculateDynamicPitchLimit(targetPos) mais le code prend (data, targetPos) ; setTargetMode(targetMode, camBase) et setRef(center, left, back) ont aussi plus de paramètres que listé.
-- Le lissage de lacet est limité à la vitesse maxRot (4.5 rad... valeur 4.5 par seconde en entrée automatique, 1000 si l'utilisateur tourne la caméra) ; onSettingsChanged appelle core_camera.clearInputs() (commentaire du code : « is this really necessary? »).
+- jbeam configuration fields: distance (5 by default), distanceMin (3), defaultRotation (vec3 degrees, default (0, -17, 0)), offset, mode ('ref' by default), fov (65), skipFovModifier, refNodes. camMaxDist = 10 * distanceMin (or 50 if distanceMin is nil, inferred from code: (distanceMin or 5) * 10).
+- Settings read: cameraOrbitFovModifier, cameraOrbitRelaxation (3), cameraOrbitMaxDynamicFov (35), cameraOrbitMaxDrivingPitch, cameraOrbitMaxDynamicOffset, cameraOrbitSmoothing, multiseat (in multiseat the dynamic pitch is disabled).
+- Dynamic FOV: fov = fov + fovModifier + maxDynamicFov * min(1, speed/130). Dynamic height: up to 1.4 * maxDynamicOffset at around 70 m/s.
+- The extracted page says calculateDynamicPitchLimit(targetPos) but the code takes (data, targetPos); setTargetMode(targetMode, camBase) and setRef(center, left, back) also have more parameters than listed.
+- Yaw smoothing is limited to the speed maxRot (4.5 rad... value 4.5 per second in automatic input, 1000 if the user turns the camera); onSettingsChanged calls core_camera.clearInputs() (code comment: "is this really necessary?").
 
-## Classe `C`
+## Class `C`
 
-Mode orbit. Champs : camRot (vec3 degrés : x lacet, y tangage), camDist, camMinDist, camMaxDist, defaultDistance, defaultRotation, fov, offset, orbitOffset, mode, target, lockCamera, collision (instance du filtre collision), smoothingEnabled.
+Orbit mode. Fields: camRot (vec3 degrees: x yaw, y pitch), camDist, camMinDist, camMaxDist, defaultDistance, defaultRotation, fov, offset, orbitOffset, mode, target, lockCamera, collision (instance of the collision filter), smoothingEnabled.
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_orbit")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_orbit")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:calculateDynamicPitchLimit(data, targetPos)` | Calcule (une fois, mis en cache dans dynamicPitchLimit) l'inclinaison maximale vers le bas qui garde le bas de l'arrière du véhicule dans le champ de vision. | 53 |
-| `C:deserialize(s)` | Restaure l'état de serialize et garde la rotation restaurée. | 153 |
-| `C:init()` | Crée l'état, le filtre collision, puis appelle onVehicleCameraConfigChanged, onSettingsChanged et reset. | 27 |
-| `C:listParams()` | Réglages exposés à l'UI de contrôle caméra : dist, smooth, fov. | 169 |
-| `C:onSettingsChanged()` | Hook : relit les réglages cameraOrbit* et transmet au filtre collision. | 115 |
-| `C:onVehicleCameraConfigChanged()` | Hook : recharge distances, rotation par défaut, mode, FOV et réinitialise l'inclinaison dynamique. | 91 |
-| `C:onVehicleSwitched()` | Hook : transmet au filtre collision. | 127 |
-| `C:reset()` | Replanifie le recentrage de la caméra (3 images) et réinitialise le filtre collision ; sans effet si un recentrage est déjà en cours. | 131 |
-| `C:serialize()` | État pour les vues flux vidéo (core_camera get/setContextCameraState) : rotation, distance, FOV. | 145 |
-| `C:setDefaultDistance(d)` | Définit la distance par défaut (utilisée au recentrage). | 210 |
-| `C:setDefaultRotation(rot)` | Définit la rotation par défaut au recentrage. | 222 |
-| `C:setDistance(d)` | Définit la distance courante. | 214 |
-| `C:setFOV(fov)` | Fixe le FOV de base. | 164 |
-| `C:setMaxDistance(d)` | Définit la distance maximale de zoom. | 218 |
-| `C:setOffset(v)` | Définit orbitOffset, décalage monde ajouté à la position de caméra. | 183 |
-| `C:setParam(key, value)` | Modifie dist, smooth ou fov. | 177 |
-| `C:setRef(center, left, back)` | Impose le point cible et le repère en coordonnées monde (center nil = retour au suivi des nœuds du véhicule ; un changement déclenche reset). | 196 |
-| `C:setRefNodes(centerNodeID, leftNodeID, backNodeID, dynamicFovRearNodeID)` | Définit les nœuds de référence du véhicule et le nœud arrière pour le FOV dynamique. | 187 |
-| `C:setRotation(rot)` | Fixe la rotation d'orbite. | 139 |
-| `C:setSkipFovModifier(skip)` | Désactive le FOV dynamique selon la vitesse. | 226 |
-| `C:setTargetMode(targetMode, camBase)` | Choisit le mode de cible ('ref' par défaut) et la base de décalage de caméra. | 205 |
-| `C:update(data)` | Calcule la pose de l'orbite et écrit data.res (pos, rot, fov, targetPos, collisionCompatible = true), puis applique le filtre collision. | 248 |
+| `C:calculateDynamicPitchLimit(data, targetPos)` | Computes (once, cached in dynamicPitchLimit) the maximum downward pitch that keeps the bottom of the vehicle's rear in the field of view. | 53 |
+| `C:deserialize(s)` | Restores the state from serialize and keeps the restored rotation. | 153 |
+| `C:init()` | Creates the state, the collision filter, then calls onVehicleCameraConfigChanged, onSettingsChanged and reset. | 27 |
+| `C:listParams()` | Settings exposed to the camera control UI: dist, smooth, fov. | 169 |
+| `C:onSettingsChanged()` | Hook: re-reads the cameraOrbit* settings and forwards to the collision filter. | 115 |
+| `C:onVehicleCameraConfigChanged()` | Hook: reloads distances, default rotation, mode, FOV and resets the dynamic pitch. | 91 |
+| `C:onVehicleSwitched()` | Hook: forwards to the collision filter. | 127 |
+| `C:reset()` | Reschedules the camera recentering (3 frames) and resets the collision filter; no effect if a recentering is already in progress. | 131 |
+| `C:serialize()` | State for video stream views (core_camera get/setContextCameraState): rotation, distance, FOV. | 145 |
+| `C:setDefaultDistance(d)` | Sets the default distance (used when recentering). | 210 |
+| `C:setDefaultRotation(rot)` | Sets the default rotation when recentering. | 222 |
+| `C:setDistance(d)` | Sets the current distance. | 214 |
+| `C:setFOV(fov)` | Sets the base FOV. | 164 |
+| `C:setMaxDistance(d)` | Sets the maximum zoom distance. | 218 |
+| `C:setOffset(v)` | Sets orbitOffset, a world offset added to the camera position. | 183 |
+| `C:setParam(key, value)` | Changes dist, smooth or fov. | 177 |
+| `C:setRef(center, left, back)` | Imposes the target point and the frame in world coordinates (center nil = back to following the vehicle's nodes; a change triggers reset). | 196 |
+| `C:setRefNodes(centerNodeID, leftNodeID, backNodeID, dynamicFovRearNodeID)` | Sets the vehicle's reference nodes and the rear node for the dynamic FOV. | 187 |
+| `C:setRotation(rot)` | Sets the orbit rotation. | 139 |
+| `C:setSkipFovModifier(skip)` | Disables the speed-based dynamic FOV. | 226 |
+| `C:setTargetMode(targetMode, camBase)` | Chooses the target mode ('ref' by default) and the camera offset base. | 205 |
+| `C:update(data)` | Computes the orbit pose and writes data.res (pos, rot, fov, targetPos, collisionCompatible = true), then applies the collision filter. | 248 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectOOBBCenterXYZ`, `getObjectOOBBHalfAxisXYZ`, `getObjectOOBBHalfExtentsXYZ`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/orbit.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/orbit.lua`.*

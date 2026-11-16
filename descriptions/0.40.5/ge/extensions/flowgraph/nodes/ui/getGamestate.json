@@ -1,18 +1,18 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/getGamestate.lua",
-  "module": "Nœud flowgraph « Get Gamestate » (catégorie repeat_instant) : lit l'état courant de l'UI (core_gamestate.state.state). Sortie « state » (string).",
+  "module": "Flowgraph node \"Get Gamestate\" (category repeat_instant): reads the current UI state (core_gamestate.state.state). Output \"state\" (string).",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "init": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         },
         "work": {
-          "desc": "Écrit core_gamestate.state.state sur « state ».",
+          "desc": "Writes core_gamestate.state.state to \"state\".",
           "internal": true
         }
       }

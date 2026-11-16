@@ -1,22 +1,22 @@
 # `flowgraph_nodes_gameplay_rally_setNoteSearch`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/setNoteSearch.lua` · VM : Game Engine (GE) · 42 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/setNoteSearch.lua` · VM: Game Engine (GE) · 42 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/setNoteSearch")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/setNoteSearch")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Mode Set NoteSearch » (tag rally, pas de catégorie). Prévu pour chercher les pacenotes les plus proches plutôt que la suivante. Entrées : noteSearch (impulsion) et recoveredTo (table, point de recovery).
+Flowgraph node "Rally Mode Set NoteSearch" (tag rally, no category). Intended to search for the nearest pacenotes rather than the next one. Inputs: noteSearch (pulse) and recoveredTo (table, recovery point).
 
-## Remarques
+## Notes
 
-- Nœud inachevé : sur impulsion il logge seulement « setNoteSearch » et fait dump(recoveredTo) si fourni ; il ne modifie aucun état.
+- Unfinished node: on pulse it only logs "setNoteSearch" and does dump(recoveredTo) if provided; it does not modify any state.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Sur impulsion noteSearch : dump de recoveredTo et log de debug, sans autre effet. | 31 |
+| `C:work()` | On the noteSearch pulse: dump of recoveredTo and debug log, with no other effect. | 31 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/setNoteSearch.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/setNoteSearch.lua`.*

@@ -1,41 +1,41 @@
 {
   "path": "lua/ge/extensions/editor/api/gui.lua",
-  "module": "Coeur de l'interface ImGui de l'éditeur de niveau : gestion des fenêtres d'outils (enregistrement, affichage/masquage, groupes, modales, sauvegarde/chargement de l'état du layout), boucle de présentation (`presentGui` : dockspace principal puis hooks onEditorGui*), atlas d'icônes (`editor.icons`) et un grand nombre d'enveloppes `editor.ui*` autour des widgets ImGui (drag, input, slider, couleur) qui renseignent en plus un BoolPtr `editEnded` quand l'édition se termine. Un moddeur d'outil d'éditeur s'en sert pour déclarer ses fenêtres (`editor.registerWindow`, `editor.beginWindow`/`endWindow`) et dessiner ses widgets. `initialize` installe tout sur l'objet `editor`.",
+  "module": "Core of the level editor's ImGui interface: management of tool windows (registration, show/hide, groups, modals, saving/loading the layout state), the presentation loop (`presentGui`: main dockspace then onEditorGui* hooks), the icon atlas (`editor.icons`) and a large number of `editor.ui*` wrappers around ImGui widgets (drag, input, slider, color) that additionally fill an `editEnded` BoolPtr when editing ends. An editor tool modder uses it to declare their windows (`editor.registerWindow`, `editor.beginWindow`/`endWindow`) and draw their widgets. `initialize` installs everything on the `editor` object.",
   "usage": "-- onEditorInitialized\neditor.registerWindow(\"myToolWindow\", imgui.ImVec2(300, 200))\n-- onEditorGui\nif editor.beginWindow(\"myToolWindow\", \"My Tool\") then\n  -- widgets...\nend\neditor.endWindow()",
   "notes": [
-    "Tout l'API est exposé comme editor.xxx (installé par initialize) ; les paramètres editEnded sont des imgui.BoolPtr optionnels.",
-    "endWindow/endModalWindow doivent toujours être appelés, même si beginWindow a renvoyé false.",
-    "Les fenêtres modales sont sauvegardées invisibles ; elles ne réapparaissent qu'avec openModalWindow.",
-    "Le commentaire de showWindow dit « sets the visible boolean to false » alors que la fonction met la visibilité à true (ou à `show`).",
-    "uiIconImageButton sans libellé génère un id automatique par frame ; passer un `id` explicite si le nombre/ordre des boutons change.",
-    "Les helpers getTemp* partagent un tampon par type : ne pas conserver le pointeur au-delà de l'appel de widget.",
-    "Hooks émis : onEditorGui(dtReal, dtSim, dtRaw), onEditorGuiMainMenu, onEditorGuiToolBar, onEditorGuiStatusBar, onEditorToolWindowShow/Hide/GotFocus/LostFocus(windowName), onEditorSaveWindowsState, onEditorLoadWindowsState, onEditorSaveGuiInstancerState, onEditorLoadGuiInstancerState, onWindowResized(ImVec2)."
+    "The whole API is exposed as editor.xxx (installed by initialize); the editEnded parameters are optional imgui.BoolPtr.",
+    "endWindow/endModalWindow must always be called, even if beginWindow returned false.",
+    "Modal windows are saved as invisible; they only reappear with openModalWindow.",
+    "The comment of showWindow says \"sets the visible boolean to false\" while the function sets visibility to true (or to `show`).",
+    "uiIconImageButton without a label generates an automatic per-frame id; pass an explicit `id` if the number/order of buttons changes.",
+    "The getTemp* helpers share one buffer per type: do not keep the pointer beyond the widget call.",
+    "Emitted hooks: onEditorGui(dtReal, dtSim, dtRaw), onEditorGuiMainMenu, onEditorGuiToolBar, onEditorGuiStatusBar, onEditorToolWindowShow/Hide/GotFocus/LostFocus(windowName), onEditorSaveWindowsState, onEditorLoadWindowsState, onEditorSaveGuiInstancerState, onEditorLoadGuiInstancerState, onWindowResized(ImVec2)."
   ],
   "functions": {
     "initialize": {
-      "desc": "Mémorise l'éditeur, initialise l'état et installe toutes les fonctions ci-dessous sur `editor`.",
+      "desc": "Remembers the editor, initializes the state and installs all the functions below on `editor`.",
       "params": {
         "editorInstance": {
           "type": "table",
-          "desc": "objet `editor`"
+          "desc": "`editor` object"
         }
       },
       "internal": true
     },
     "presentGui": {
-      "desc": "Présente toute l'interface de l'éditeur : resynchronise editor.keyModifiers depuis ImGui, crée le dockspace principal, puis émet onEditorGuiMainMenu, onEditorGuiToolBar, onEditorGui(dtReal, dtSim, dtRaw), onEditorGuiStatusBar et vérifie le redimensionnement. Appelé chaque frame par l'éditeur.",
+      "desc": "Presents the whole editor interface: resyncs editor.keyModifiers from ImGui, creates the main dockspace, then emits onEditorGuiMainMenu, onEditorGuiToolBar, onEditorGui(dtReal, dtSim, dtRaw), onEditorGuiStatusBar and checks for resizing. Called every frame by the editor.",
       "params": {
         "dtReal": {
           "type": "number",
-          "desc": "delta temps réel (s)"
+          "desc": "real time delta (s)"
         },
         "dtSim": {
           "type": "number",
-          "desc": "delta temps simulation (s)"
+          "desc": "simulation time delta (s)"
         },
         "dtRaw": {
           "type": "number",
-          "desc": "delta temps brut (s)"
+          "desc": "raw time delta (s)"
         }
       },
       "internal": true
@@ -43,1022 +43,1022 @@
   },
   "classes": {
     "editor": {
-      "desc": "Fonctions ajoutées à `editor` par initialize.",
+      "desc": "Functions added to `editor` by initialize.",
       "functions": {
         "uiDragFloat": {
-          "desc": "Enveloppe de imgui.DragFloat (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.DragFloat (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiDragFloat2": {
-          "desc": "Enveloppe de imgui.DragFloat2 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.DragFloat2 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiDragFloat3": {
-          "desc": "Enveloppe de imgui.DragFloat3 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.DragFloat3 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiDragFloat4": {
-          "desc": "Enveloppe de imgui.DragFloat4 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.DragFloat4 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiDragFloatRange2": {
-          "desc": "Enveloppe de imgui.DragFloatRange2 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.DragFloatRange2 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiDragInt": {
-          "desc": "Enveloppe de imgui.DragInt (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.DragInt (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiDragInt2": {
-          "desc": "Enveloppe de imgui.DragInt2 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.DragInt2 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiDragInt3": {
-          "desc": "Enveloppe de imgui.DragInt3 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.DragInt3 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiDragInt4": {
-          "desc": "Enveloppe de imgui.DragInt4 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.DragInt4 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiDragIntRange2": {
-          "desc": "Enveloppe de imgui.DragIntRange2 (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.DragIntRange2 (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiDragScalar": {
-          "desc": "Enveloppe de imgui.DragScalar (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.DragScalar (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiDragScalarN": {
-          "desc": "Enveloppe de imgui.DragScalarN (glisser pour modifier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.DragScalarN (drag to modify) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputFloat": {
-          "desc": "Enveloppe de imgui.InputFloat (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputFloat (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputFloat2": {
-          "desc": "Enveloppe de imgui.InputFloat2 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputFloat2 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputFloat3": {
-          "desc": "Enveloppe de imgui.InputFloat3 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputFloat3 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputFloat4": {
-          "desc": "Enveloppe de imgui.InputFloat4 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputFloat4 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputInt": {
-          "desc": "Enveloppe de imgui.InputInt (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputInt (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputInt2": {
-          "desc": "Enveloppe de imgui.InputInt2 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputInt2 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputInt3": {
-          "desc": "Enveloppe de imgui.InputInt3 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputInt3 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputInt4": {
-          "desc": "Enveloppe de imgui.InputInt4 (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputInt4 (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputDouble": {
-          "desc": "Enveloppe de imgui.InputDouble (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputDouble (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputScalar": {
-          "desc": "Enveloppe de imgui.InputScalar (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputScalar (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputScalarN": {
-          "desc": "Enveloppe de imgui.InputScalarN (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputScalarN (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputText": {
-          "desc": "Enveloppe de imgui.InputText (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputText (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputTextMultiline": {
-          "desc": "Enveloppe de imgui.InputTextMultiline (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputTextMultiline (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputTextMultilineReadOnly": {
-          "desc": "Enveloppe de imgui.InputTextMultilineReadOnly (saisie clavier) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui ; renvoie true si la valeur a changé.",
+          "desc": "Wrapper of imgui.InputTextMultilineReadOnly (keyboard input) that additionally fills editEnded. Same parameters as ImGui; returns true if the value changed.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputFloatEx": {
-          "desc": "Variante de uiInputFloat avec step/step_fast gérés par l'éditeur ; renseigne editEnded.",
+          "desc": "Variant of uiInputFloat with step/step_fast handled by the editor; fills editEnded.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputFloat2Ex": {
-          "desc": "Variante de uiInputFloat2 avec step/step_fast gérés par l'éditeur ; renseigne editEnded.",
+          "desc": "Variant of uiInputFloat2 with step/step_fast handled by the editor; fills editEnded.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputFloat3Ex": {
-          "desc": "Variante de uiInputFloat3 avec step/step_fast gérés par l'éditeur ; renseigne editEnded.",
+          "desc": "Variant of uiInputFloat3 with step/step_fast handled by the editor; fills editEnded.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputFloat4Ex": {
-          "desc": "Variante de uiInputFloat4 avec step/step_fast gérés par l'éditeur ; renseigne editEnded.",
+          "desc": "Variant of uiInputFloat4 with step/step_fast handled by the editor; fills editEnded.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiSliderFloat": {
-          "desc": "Enveloppe de imgui.SliderFloat (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.SliderFloat (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiSliderFloat2": {
-          "desc": "Enveloppe de imgui.SliderFloat2 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.SliderFloat2 (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiSliderFloat3": {
-          "desc": "Enveloppe de imgui.SliderFloat3 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.SliderFloat3 (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiSliderFloat4": {
-          "desc": "Enveloppe de imgui.SliderFloat4 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.SliderFloat4 (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiSliderAngle": {
-          "desc": "Enveloppe de imgui.SliderAngle (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.SliderAngle (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiSliderInt": {
-          "desc": "Enveloppe de imgui.SliderInt (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.SliderInt (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiSliderInt2": {
-          "desc": "Enveloppe de imgui.SliderInt2 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.SliderInt2 (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiSliderInt3": {
-          "desc": "Enveloppe de imgui.SliderInt3 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.SliderInt3 (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiSliderInt4": {
-          "desc": "Enveloppe de imgui.SliderInt4 (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.SliderInt4 (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiSliderScalar": {
-          "desc": "Enveloppe de imgui.SliderScalar (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.SliderScalar (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiSliderScalarN": {
-          "desc": "Enveloppe de imgui.SliderScalarN (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.SliderScalarN (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiVSliderFloat": {
-          "desc": "Enveloppe de imgui.VSliderFloat (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.VSliderFloat (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiVSliderInt": {
-          "desc": "Enveloppe de imgui.VSliderInt (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.VSliderInt (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiVSliderScalar": {
-          "desc": "Enveloppe de imgui.VSliderScalar (curseur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.VSliderScalar (slider) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé / id ImGui du widget"
+              "desc": "widget label / ImGui id"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiColorEdit3": {
-          "desc": "Enveloppe de imgui.ColorEdit3 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.ColorEdit3 (color) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié / cliqué"
+              "desc": "true if modified / clicked"
             }
           ]
         },
         "uiColorEdit4": {
-          "desc": "Enveloppe de imgui.ColorEdit4 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.ColorEdit4 (color) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié / cliqué"
+              "desc": "true if modified / clicked"
             }
           ]
         },
         "uiColorEdit8": {
-          "desc": "Enveloppe de imgui.ColorEdit8 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.ColorEdit8 (color) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié / cliqué"
+              "desc": "true if modified / clicked"
             }
           ]
         },
         "uiColorPicker3": {
-          "desc": "Enveloppe de imgui.ColorPicker3 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.ColorPicker3 (color) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié / cliqué"
+              "desc": "true if modified / clicked"
             }
           ]
         },
         "uiColorPicker4": {
-          "desc": "Enveloppe de imgui.ColorPicker4 (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.ColorPicker4 (color) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié / cliqué"
+              "desc": "true if modified / clicked"
             }
           ]
         },
         "uiColorButton": {
-          "desc": "Enveloppe de imgui.ColorButton (couleur) qui renseigne editEnded en plus. Mêmes paramètres qu'ImGui.",
+          "desc": "Wrapper of imgui.ColorButton (color) that additionally fills editEnded. Same parameters as ImGui.",
           "params": {
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié / cliqué"
+              "desc": "true if modified / clicked"
             }
           ]
         },
         "uiPlotLines1": {
-          "desc": "Enveloppe de imgui.PlotLines1 : courbe de floats ; valeurs par défaut offset 0, échelle FLT_MAX, stride sizeof(float) ; auto_resize adapte la taille à la fenêtre.",
+          "desc": "Wrapper of imgui.PlotLines1: float curve; default values offset 0, scale FLT_MAX, stride sizeof(float); auto_resize fits the size to the window.",
           "params": {
             "string_label": {
               "type": "string",
-              "desc": "libellé"
+              "desc": "label"
             },
             "float_values": {
               "type": "cdata",
-              "desc": "tableau de floats"
+              "desc": "array of floats"
             },
             "int_values_count": {
               "type": "integer",
-              "desc": "nombre de valeurs"
+              "desc": "number of values"
             },
             "auto_resize": {
               "type": "boolean|nil",
-              "desc": "remplir la fenêtre si graph_size est nil"
+              "desc": "fill the window if graph_size is nil"
             }
           }
         },
         "IsItemDoubleClicked": {
-          "desc": "Vrai si le dernier item est survolé et double-cliqué.",
+          "desc": "True if the last item is hovered and double-clicked.",
           "params": {
             "int_mouse_button": {
               "type": "integer|nil",
-              "desc": "bouton (0 par défaut)"
+              "desc": "button (0 by default)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "résultat"
+              "desc": "result"
             }
           ]
         },
         "IsItemClicked": {
-          "desc": "Vrai si le dernier item est survolé et que le bouton vient d'être cliqué.",
+          "desc": "True if the last item is hovered and the button was just clicked.",
           "params": {
             "int_mouse_button": {
               "type": "integer|nil",
-              "desc": "bouton (0 par défaut)"
+              "desc": "button (0 by default)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "résultat"
+              "desc": "result"
             }
           ]
         },
         "uiInputSearch": {
-          "desc": "Champ de recherche (icône loupe + texte + bouton d'effacement) de largeur fixe. Renvoie true si le texte a changé ou a été effacé.",
+          "desc": "Search field (magnifier icon + text + clear button) of fixed width. Returns true if the text changed or was cleared.",
           "params": {
             "label": {
               "type": "string|nil",
-              "desc": "info-bulle"
+              "desc": "tooltip"
             },
             "text": {
               "type": "cdata",
-              "desc": "buffer ImGui ArrayChar"
+              "desc": "ImGui ArrayChar buffer"
             },
             "width": {
               "type": "number",
-              "desc": "largeur en pixels"
+              "desc": "width in pixels"
             },
             "extra_flags": {
               "type": "integer|nil",
-              "desc": "flags InputText"
+              "desc": "InputText flags"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputSearchTextFilter": {
-          "desc": "Comme uiInputSearch mais édite un ImGuiTextFilter et le reconstruit (ImGuiTextFilter_Build) à chaque changement.",
+          "desc": "Like uiInputSearch but edits an ImGuiTextFilter and rebuilds it (ImGuiTextFilter_Build) on each change.",
           "params": {
             "label": {
               "type": "string|nil",
-              "desc": "info-bulle"
+              "desc": "tooltip"
             },
             "txtfilter": {
               "type": "cdata",
@@ -1066,7 +1066,7 @@
             },
             "width": {
               "type": "number",
-              "desc": "largeur"
+              "desc": "width"
             },
             "extra_flags": {
               "type": "integer|nil",
@@ -1074,347 +1074,347 @@
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si modifié ce frame"
+              "desc": "true if modified this frame"
             }
           ]
         },
         "uiInputFile": {
-          "desc": "Champ de chemin de fichier avec bouton '...' ouvrant editor_fileDialog.openFile ; écrit le chemin choisi dans buf.",
+          "desc": "File path field with a '...' button opening editor_fileDialog.openFile; writes the chosen path into buf.",
           "params": {
             "label": {
               "type": "string",
-              "desc": "libellé (aussi clé du contexte du dialogue)"
+              "desc": "label (also the dialog context key)"
             },
             "buf": {
               "type": "cdata",
-              "desc": "buffer ArrayChar du chemin"
+              "desc": "ArrayChar buffer of the path"
             },
             "width": {
               "type": "number|nil",
-              "desc": "largeur du champ"
+              "desc": "field width"
             },
             "dir": {
               "type": "string|nil",
-              "desc": "dossier initial (défaut : dossier du chemin actuel)"
+              "desc": "initial folder (default: folder of the current path)"
             },
             "extFilter": {
               "type": "table|string|nil",
-              "desc": "filtre d'extensions du dialogue"
+              "desc": "dialog extension filter"
             },
             "flags": {
               "type": "integer|nil",
-              "desc": "flags InputText"
+              "desc": "InputText flags"
             },
             "editEnded": {
               "type": "imgui.BoolPtr|nil",
-              "desc": "si fourni, reçoit true quand l'édition vient de se terminer (IsItemDeactivatedAfterEdit)"
+              "desc": "if provided, receives true when editing has just ended (IsItemDeactivatedAfterEdit)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si le texte ou le fichier a changé"
+              "desc": "true if the text or file changed"
             }
           ]
         },
         "uiRenderAlternateRows": {
-          "desc": "Dessine des lignes de fond de couleurs alternées dans la fenêtre/l'enfant courant (technique de ocornut/imgui#2668). Doit être entouré de Begin/BeginChild ... End/EndChild.",
+          "desc": "Draws alternating-color background rows in the current window/child (technique from ocornut/imgui#2668). Must be wrapped in Begin/BeginChild ... End/EndChild.",
           "params": {
             "lineHeight": {
               "type": "number",
-              "desc": "hauteur d'une ligne"
+              "desc": "row height"
             },
             "mOddColor": {
               "type": "ImVec4|nil",
-              "desc": "couleur des lignes impaires"
+              "desc": "color of odd rows"
             },
             "mEvenColor": {
               "type": "ImVec4|nil",
-              "desc": "couleur des lignes paires"
+              "desc": "color of even rows"
             }
           }
         },
         "setKeyModifier": {
-          "desc": "Enregistre l'état d'une touche modificatrice dans editor.keyModifiers (appelé par l'action map de l'éditeur). Note : presentGui resynchronise ctrl/shift/alt chaque frame depuis ImGui.",
+          "desc": "Records the state of a modifier key in editor.keyModifiers (called by the editor's action map). Note: presentGui resyncs ctrl/shift/alt every frame from ImGui.",
           "params": {
             "mod": {
               "type": "string",
-              "desc": "modificateur (ex. ctrl, shift, alt)"
+              "desc": "modifier (e.g. ctrl, shift, alt)"
             },
             "pressed": {
               "type": "boolean",
-              "desc": "appuyée ou non"
+              "desc": "pressed or not"
             }
           },
           "internal": true
         },
         "uiTextUnformattedRightAlign": {
-          "desc": "Affiche un texte aligné à droite de la zone disponible.",
+          "desc": "Displays text right-aligned in the available area.",
           "params": {
             "string_label": {
               "type": "string",
-              "desc": "texte"
+              "desc": "text"
             },
             "bool_sameLine": {
               "type": "boolean|nil",
-              "desc": "true = sur la même ligne"
+              "desc": "true = on the same line"
             },
             "offset": {
               "type": "number|nil",
-              "desc": "décalage en pixels"
+              "desc": "offset in pixels"
             }
           }
         },
         "uiTextColoredWithFont": {
-          "desc": "Affiche un texte (coloré si color non nil) avec une police ImGui nommée.",
+          "desc": "Displays text (colored if color is not nil) with a named ImGui font.",
           "params": {
             "color": {
               "type": "ImVec4|nil",
-              "desc": "couleur"
+              "desc": "color"
             },
             "text": {
               "type": "string",
-              "desc": "texte"
+              "desc": "text"
             },
             "fontName": {
               "type": "string",
-              "desc": "nom de police (voir getFontList)"
+              "desc": "font name (see getFontList)"
             }
           }
         },
         "uiButtonRightAlign": {
-          "desc": "Bouton aligné à droite de la zone disponible.",
+          "desc": "Right-aligned button in the available area.",
           "params": {
             "string_label": {
               "type": "string",
-              "desc": "libellé"
+              "desc": "label"
             },
             "ImVec2_size": {
               "type": "ImVec2|nil",
-              "desc": "taille"
+              "desc": "size"
             },
             "bool_sameLine": {
               "type": "boolean|nil",
-              "desc": "même ligne"
+              "desc": "same line"
             },
             "id": {
               "type": "string|nil",
-              "desc": "suffixe d'id ImGui"
+              "desc": "ImGui id suffix"
             },
             "offset": {
               "type": "number|nil",
-              "desc": "décalage"
+              "desc": "offset"
             }
           },
           "returns": [
             {
               "type": "boolean|nil",
-              "desc": "true si cliqué"
+              "desc": "true if clicked"
             }
           ]
         },
         "uiIconImage": {
-          "desc": "Dessine une icône de l'atlas de l'éditeur (taille 32x32 par défaut, multipliée par imgui.uiscale).",
+          "desc": "Draws an icon from the editor atlas (32x32 size by default, multiplied by imgui.uiscale).",
           "params": {
             "icon": {
               "type": "table",
-              "desc": "entrée de editor.icons"
+              "desc": "entry of editor.icons"
             },
             "size": {
               "type": "ImVec2|nil",
-              "desc": "taille"
+              "desc": "size"
             },
             "col": {
               "type": "ImVec4|nil",
-              "desc": "teinte"
+              "desc": "tint"
             },
             "borderCol": {
               "type": "ImVec4|nil",
-              "desc": "bordure"
+              "desc": "border"
             },
             "label": {
               "type": "string|nil",
-              "desc": "texte à droite"
+              "desc": "text on the right"
             }
           },
           "returns": [
             {
               "type": "boolean|nil",
-              "desc": "true si l'image a renvoyé un clic"
+              "desc": "true if the image returned a click"
             }
           ]
         },
         "uiIconImageButton": {
-          "desc": "Bouton à icône (avec ou sans libellé). Sans id fourni, un id automatique par frame est généré. onRelease = clic détecté au relâchement.",
+          "desc": "Icon button (with or without a label). Without a provided id, an automatic per-frame id is generated. onRelease = click detected on release.",
           "params": {
             "icon": {
               "type": "table",
-              "desc": "entrée de editor.icons"
+              "desc": "entry of editor.icons"
             },
             "size": {
               "type": "ImVec2|nil",
-              "desc": "taille (défaut editor.getDefaultIconButtonSize)"
+              "desc": "size (default editor.getDefaultIconButtonSize)"
             },
             "col": {
               "type": "ImVec4|nil",
-              "desc": "teinte"
+              "desc": "tint"
             },
             "label": {
               "type": "string|nil",
-              "desc": "texte"
+              "desc": "text"
             },
             "backgroundCol": {
               "type": "ImVec4|nil",
-              "desc": "fond"
+              "desc": "background"
             },
             "id": {
               "type": "string|nil",
-              "desc": "id ImGui"
+              "desc": "ImGui id"
             },
             "textColor": {
               "type": "ImVec4|nil",
-              "desc": "couleur du texte"
+              "desc": "text color"
             },
             "textBG": {
               "type": "ImU32|nil",
-              "desc": "fond du texte"
+              "desc": "text background"
             },
             "onRelease": {
               "type": "boolean|nil",
-              "desc": "cliquer au relâchement"
+              "desc": "click on release"
             },
             "highlightText": {
               "type": "string|nil",
-              "desc": "sous-chaîne à surligner"
+              "desc": "substring to highlight"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si cliqué"
+              "desc": "true if clicked"
             }
           ]
         },
         "uiHighlightedText": {
-          "desc": "Affiche un texte en surlignant en jaune plusieurs occurrences (insensible à la casse, une dizaine au plus) de highlightText.",
+          "desc": "Displays text, highlighting in yellow several occurrences (case-insensitive, about ten at most) of highlightText.",
           "params": {
             "text": {
               "type": "string",
-              "desc": "texte"
+              "desc": "text"
             },
             "highlightText": {
               "type": "string|nil",
-              "desc": "sous-chaîne"
+              "desc": "substring"
             },
             "textColor": {
               "type": "ImVec4|nil",
-              "desc": "couleur"
+              "desc": "color"
             }
           }
         },
         "uiHelpButton": {
-          "desc": "Bouton d'aide : ouvre https://documentation.beamng.com/<relativeUrl> dans le navigateur (index par défaut).",
+          "desc": "Help button: opens https://documentation.beamng.com/<relativeUrl> in the browser (index by default).",
           "params": {
             "topicName": {
               "type": "string",
-              "desc": "sujet (id du bouton et info-bulle)"
+              "desc": "topic (button id and tooltip)"
             },
             "relativeUrl": {
               "type": "string|nil",
-              "desc": "chemin relatif"
+              "desc": "relative path"
             },
             "size": {
               "type": "ImVec2|nil",
-              "desc": "taille"
+              "desc": "size"
             }
           }
         },
         "uiVertSeparator": {
-          "desc": "Dessine un séparateur vertical sur la ligne courante.",
+          "desc": "Draws a vertical separator on the current line.",
           "params": {
             "float_height": {
               "type": "number|nil",
-              "desc": "hauteur (taille de police par défaut)"
+              "desc": "height (font size by default)"
             },
             "vec2_offset": {
               "type": "ImVec2|nil",
-              "desc": "décalage"
+              "desc": "offset"
             },
             "width": {
               "type": "number|nil",
-              "desc": "épaisseur (1)"
+              "desc": "thickness (1)"
             }
           }
         },
         "getFontList": {
-          "desc": "Liste les polices ImGui disponibles.",
+          "desc": "Lists the available ImGui fonts.",
           "returns": [
             {
               "type": "table[]",
-              "desc": "liste de {name}"
+              "desc": "list of {name}"
             }
           ]
         },
         "texObj": {
-          "desc": "Charge une texture et renvoie ses informations ; nil si le chargement échoue.",
+          "desc": "Loads a texture and returns its information; nil if loading fails.",
           "params": {
             "path": {
               "type": "string",
-              "desc": "chemin de l'image"
+              "desc": "image path"
             }
           },
           "returns": [
             {
               "type": "table|nil",
-              "desc": "{file, path, tex, texId (hérité, à ne pas utiliser), size, format}"
+              "desc": "{file, path, tex, texId (legacy, do not use), size, format}"
             }
           ]
         },
         "getDefaultIconButtonSize": {
-          "desc": "Renvoie la taille par défaut des boutons d'icône.",
+          "desc": "Returns the default size of icon buttons.",
           "returns": [
             {
               "type": "ImVec2",
-              "desc": "taille"
+              "desc": "size"
             }
           ]
         },
         "setDefaultIconButtonSize": {
-          "desc": "Définit la taille (carrée) par défaut des boutons d'icône.",
+          "desc": "Sets the default (square) size of icon buttons.",
           "params": {
             "size": {
               "type": "number",
-              "desc": "côté en pixels"
+              "desc": "side in pixels"
             }
           }
         },
         "createIconAtlas": {
-          "desc": "Charge l'atlas d'icônes de l'éditeur (JSON + image) et remplit editor.icons, editor.atlasWidth, editor.atlasHeight. Logue les icônes en double.",
+          "desc": "Loads the editor icon atlas (JSON + image) and fills editor.icons, editor.atlasWidth, editor.atlasHeight. Logs duplicate icons.",
           "internal": true
         },
         "showVizHelperWindow": {
-          "desc": "Ouvre la fenêtre d'aide à la visibilité (editor_vizHelper) si l'extension est chargée."
+          "desc": "Opens the visibility help window (editor_vizHelper) if the extension is loaded."
         },
         "drawBrush": {
-          "desc": "Dessine un pinceau (type 'ellipse' ou boîte) au sol autour de pos, collé au terrain (terrainBlock) ou à la géométrie statique par raycast.",
+          "desc": "Draws a brush ('ellipse' type or box) on the ground around pos, stuck to the terrain (terrainBlock) or to static geometry by raycast.",
           "params": {
             "brushType": {
               "type": "string",
-              "desc": "'ellipse' ou autre (boîte)"
+              "desc": "'ellipse' or other (box)"
             },
             "pos": {
               "type": "vec3",
-              "desc": "centre (rien n'est fait si nil)"
+              "desc": "center (nothing is done if nil)"
             },
             "radius": {
               "type": "number",
-              "desc": "rayon (rien si nil)"
+              "desc": "radius (nothing if nil)"
             },
             "numberOfSegments": {
               "type": "integer|nil",
@@ -1422,125 +1422,125 @@
             },
             "color": {
               "type": "ColorF|nil",
-              "desc": "couleur (blanc)"
+              "desc": "color (white)"
             },
             "terrainBlock": {
               "type": "userdata|nil",
-              "desc": "TerrainBlock pour la hauteur"
+              "desc": "TerrainBlock for the height"
             },
             "brushRatio": {
               "type": "number|nil",
-              "desc": "rapport d'aspect (1)"
+              "desc": "aspect ratio (1)"
             },
             "brushRotation": {
               "type": "number|nil",
-              "desc": "rotation en degrés (0)"
+              "desc": "rotation in degrees (0)"
             },
             "onlyTerrain": {
               "type": "boolean|nil",
-              "desc": "suivre uniquement le terrain"
+              "desc": "follow only the terrain"
             }
           }
         },
         "checkWindowResize": {
-          "desc": "Détecte un changement de taille de la fenêtre principale et émet le hook onWindowResized(ImVec2 DisplaySize).",
+          "desc": "Detects a change in the main window size and emits the onWindowResized(ImVec2 DisplaySize) hook.",
           "internal": true
         },
         "isViewportHovered": {
-          "desc": "Vrai si la souris est sur la vue 3D du jeu uniquement (aucun item ni fenêtre ImGui survolé).",
+          "desc": "True if the mouse is over the game's 3D view only (no ImGui item or window hovered).",
           "returns": [
             {
               "type": "boolean",
-              "desc": "résultat"
+              "desc": "result"
             }
           ]
         },
         "isViewportFocused": {
-          "desc": "Vrai si aucun item ImGui n'est actif.",
+          "desc": "True if no ImGui item is active.",
           "returns": [
             {
               "type": "boolean",
-              "desc": "résultat"
+              "desc": "result"
             }
           ]
         },
         "getSceneViewportRightEdge": {
-          "desc": "Renvoie la coordonnée X du bord droit de la vue 3D à la hauteur écran donnée, en tenant compte des fenêtres ancrées à droite.",
+          "desc": "Returns the X coordinate of the right edge of the 3D view at the given screen height, taking right-docked windows into account.",
           "params": {
             "screenY": {
               "type": "number",
-              "desc": "ordonnée écran"
+              "desc": "screen y coordinate"
             }
           },
           "returns": [
             {
               "type": "number",
-              "desc": "abscisse du bord droit"
+              "desc": "x coordinate of the right edge"
             }
           ]
         },
         "screenToClient": {
-          "desc": "Convertit un point écran en point client via le Canvas (identité si les viewports ImGui sont désactivés).",
+          "desc": "Converts a screen point to a client point via the Canvas (identity if ImGui viewports are disabled).",
           "params": {
             "pt2i": {
               "type": "Point2I",
-              "desc": "point écran"
+              "desc": "screen point"
             }
           },
           "returns": [
             {
               "type": "Point2I",
-              "desc": "point client"
+              "desc": "client point"
             }
           ]
         },
         "registerWindow": {
-          "desc": "Enregistre une fenêtre d'outil (à appeler dans onEditorInitialized). Conserve la visibilité précédente si elle existe déjà.",
+          "desc": "Registers a tool window (to be called in onEditorInitialized). Keeps the previous visibility if it already exists.",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom unique"
+              "desc": "unique name"
             },
             "defaultSize": {
               "type": "ImVec2|nil",
-              "desc": "taille initiale"
+              "desc": "initial size"
             },
             "defaultPos": {
               "type": "ImVec2|nil",
-              "desc": "position initiale"
+              "desc": "initial position"
             },
             "defaultVisibleBoolean": {
               "type": "boolean|nil",
-              "desc": "visibilité initiale"
+              "desc": "initial visibility"
             },
             "modal": {
               "type": "boolean|nil",
-              "desc": "fenêtre modale"
+              "desc": "modal window"
             },
             "centered": {
               "type": "boolean|nil",
-              "desc": "centrée"
+              "desc": "centered"
             },
             "groupName": {
               "type": "string|nil",
-              "desc": "groupe (ouvrir/fermer en bloc)"
+              "desc": "group (open/close as a block)"
             },
             "toolName": {
               "type": "string|nil",
-              "desc": "outil propriétaire"
+              "desc": "owning tool"
             }
           }
         },
         "registerModalWindow": {
-          "desc": "Enregistre une fenêtre modale (raccourci de registerWindow avec modal = true).",
+          "desc": "Registers a modal window (shortcut for registerWindow with modal = true).",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             },
             "defaultSize": {
               "type": "ImVec2|nil",
-              "desc": "taille"
+              "desc": "size"
             },
             "defaultPos": {
               "type": "ImVec2|nil",
@@ -1548,44 +1548,44 @@
             },
             "centered": {
               "type": "boolean|nil",
-              "desc": "centrée"
+              "desc": "centered"
             },
             "toolName": {
               "type": "string|nil",
-              "desc": "outil"
+              "desc": "tool"
             }
           }
         },
         "unregisterWindow": {
-          "desc": "Désenregistre une fenêtre pour qu'elle ne soit plus dans l'état sauvegardé. À appeler juste après imgui.Begin si la fenêtre n'est plus visible ; pour simplement la cacher, utiliser hideWindow.",
+          "desc": "Unregisters a window so that it is no longer in the saved state. To be called right after imgui.Begin if the window is no longer visible; to simply hide it, use hideWindow.",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             }
           }
         },
         "isWindowRegistered": {
-          "desc": "Vrai si la fenêtre est enregistrée.",
+          "desc": "True if the window is registered.",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "résultat"
+              "desc": "result"
             }
           ]
         },
         "isWindowVisible": {
-          "desc": "Vrai si la fenêtre est enregistrée et visible ; déclenche aussi les hooks Show/Hide si la visibilité a changé (ex. fermeture par la croix).",
+          "desc": "True if the window is registered and visible; also triggers the Show/Hide hooks if the visibility changed (e.g. closed with the cross).",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             }
           },
           "returns": [
@@ -1596,142 +1596,142 @@
           ]
         },
         "getWindowVisibleBoolPtr": {
-          "desc": "Renvoie le imgui.BoolPtr de visibilité de la fenêtre (utilisé par imgui.Begin), ou nil.",
+          "desc": "Returns the window's visibility imgui.BoolPtr (used by imgui.Begin), or nil.",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             }
           },
           "returns": [
             {
               "type": "imgui.BoolPtr|nil",
-              "desc": "pointeur"
+              "desc": "pointer"
             }
           ]
         },
         "hideWindow": {
-          "desc": "Cache la fenêtre et émet onEditorToolWindowLostFocus puis onEditorToolWindowHide.",
+          "desc": "Hides the window and emits onEditorToolWindowLostFocus then onEditorToolWindowHide.",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             }
           }
         },
         "hideAllWindows": {
-          "desc": "Cache toutes les fenêtres enregistrées visibles (émet les hooks)."
+          "desc": "Hides all visible registered windows (emits the hooks)."
         },
         "showWindow": {
-          "desc": "Affiche (ou masque si show == false) la fenêtre et émet onEditorToolWindowShow / onEditorToolWindowHide.",
+          "desc": "Shows (or hides if show == false) the window and emits onEditorToolWindowShow / onEditorToolWindowHide.",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             },
             "show": {
               "type": "boolean|nil",
-              "desc": "false pour masquer ; nil = afficher"
+              "desc": "false to hide; nil = show"
             }
           }
         },
         "setWindowVisibility": {
-          "desc": "Alias de showWindow(windowName, visible).",
+          "desc": "Alias of showWindow(windowName, visible).",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             },
             "visible": {
               "type": "boolean",
-              "desc": "visibilité"
+              "desc": "visibility"
             }
           }
         },
         "setWindowGroupVisibility": {
-          "desc": "Affiche ou masque toutes les fenêtres d'un groupe.",
+          "desc": "Shows or hides all the windows of a group.",
           "params": {
             "groupName": {
               "type": "string",
-              "desc": "groupe"
+              "desc": "group"
             },
             "visible": {
               "type": "boolean",
-              "desc": "visibilité"
+              "desc": "visibility"
             }
           }
         },
         "setWindowGroup": {
-          "desc": "Change le groupe d'une fenêtre enregistrée.",
+          "desc": "Changes the group of a registered window.",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             },
             "groupName": {
               "type": "string",
-              "desc": "groupe"
+              "desc": "group"
             }
           }
         },
         "setupWindow": {
-          "desc": "Applique taille et position par défaut (Cond_FirstUseEver, ou centrage) ; à appeler avant imgui.Begin. Peut forcer le dépliage selon la préférence ui.general.forceExpandWindowOnFirstShow.",
+          "desc": "Applies default size and position (Cond_FirstUseEver, or centering); to be called before imgui.Begin. Can force expansion according to the ui.general.forceExpandWindowOnFirstShow preference.",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             }
           }
         },
         "checkWindowFocus": {
-          "desc": "Détecte le gain/la perte de focus de la fenêtre ImGui courante et émet onEditorToolWindowGotFocus / onEditorToolWindowLostFocus.",
+          "desc": "Detects the gain/loss of focus of the current ImGui window and emits onEditorToolWindowGotFocus / onEditorToolWindowLostFocus.",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             }
           }
         },
         "beginWindow": {
-          "desc": "Équivalent de imgui.Begin pour une fenêtre enregistrée (titre##nom). Renvoie false si non enregistrée (avertissement) ou invisible. Toujours à associer à editor.endWindow().",
+          "desc": "Equivalent of imgui.Begin for a registered window (title##name). Returns false if not registered (warning) or invisible. Always to be paired with editor.endWindow().",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom enregistré"
+              "desc": "registered name"
             },
             "title": {
               "type": "string",
-              "desc": "titre affiché"
+              "desc": "displayed title"
             },
             "flags": {
               "type": "integer|nil",
-              "desc": "flags de fenêtre ImGui"
+              "desc": "ImGui window flags"
             },
             "noClose": {
               "type": "boolean|nil",
-              "desc": "true = pas de bouton de fermeture"
+              "desc": "true = no close button"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si le contenu doit être dessiné"
+              "desc": "true if the content must be drawn"
             }
           ]
         },
         "endWindow": {
-          "desc": "Ferme la fenêtre ouverte par beginWindow (appelle imgui.End si Begin a été appelé). À appeler même si beginWindow a renvoyé false."
+          "desc": "Closes the window opened by beginWindow (calls imgui.End if Begin was called). To be called even if beginWindow returned false."
         },
         "beginModalWindow": {
-          "desc": "Comme beginWindow pour une fenêtre modale : ouvre le popup si la fenêtre est marquée visible.",
+          "desc": "Like beginWindow for a modal window: opens the popup if the window is marked visible.",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom enregistré"
+              "desc": "registered name"
             },
             "title": {
               "type": "string",
-              "desc": "titre"
+              "desc": "title"
             },
             "flags": {
               "type": "integer|nil",
@@ -1739,244 +1739,244 @@
             },
             "noClose": {
               "type": "boolean|nil",
-              "desc": "sans croix"
+              "desc": "no cross"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si le contenu doit être dessiné"
+              "desc": "true if the content must be drawn"
             }
           ]
         },
         "endModalWindow": {
-          "desc": "Ferme une fenêtre modale (imgui.EndPopup si elle était affichée)."
+          "desc": "Closes a modal window (imgui.EndPopup if it was displayed)."
         },
         "openModalWindow": {
-          "desc": "Ouvre la fenêtre modale (showWindow).",
+          "desc": "Opens the modal window (showWindow).",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             }
           }
         },
         "closeModalWindow": {
-          "desc": "Cache la fenêtre modale et ferme le popup ImGui courant.",
+          "desc": "Hides the modal window and closes the current ImGui popup.",
           "params": {
             "windowName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             }
           }
         },
         "saveWindowsState": {
-          "desc": "Sauvegarde l'état des fenêtres (visibilité, taille, position, instances GUI) en JSON ; les modales sont sauvegardées invisibles. Émet onEditorSaveGuiInstancerState et onEditorSaveWindowsState.",
+          "desc": "Saves the windows state (visibility, size, position, GUI instances) as JSON; modals are saved as invisible. Emits onEditorSaveGuiInstancerState and onEditorSaveWindowsState.",
           "params": {
             "customFilename": {
               "type": "string|nil",
-              "desc": "fichier (défaut : fichier d'état de l'éditeur)"
+              "desc": "file (default: the editor state file)"
             },
             "toolName": {
               "type": "string|nil",
-              "desc": "ne sauver que les fenêtres de cet outil"
+              "desc": "only save the windows of this tool"
             }
           }
         },
         "loadWindowsState": {
-          "desc": "Recharge l'état des fenêtres (retombe sur settings/<outil>/layouts/Default/windowsState.json si le fichier manque ou a une version différente), masque d'abord toutes les fenêtres, puis émet onEditorLoadWindowsState et onEditorLoadGuiInstancerState.",
+          "desc": "Reloads the windows state (falls back to settings/<tool>/layouts/Default/windowsState.json if the file is missing or has a different version), first hides all windows, then emits onEditorLoadWindowsState and onEditorLoadGuiInstancerState.",
           "params": {
             "customFilename": {
               "type": "string|nil",
-              "desc": "fichier"
+              "desc": "file"
             },
             "toolName": {
               "type": "string|nil",
-              "desc": "outil à charger seulement"
+              "desc": "tool to load only"
             }
           }
         },
         "callShowWindowHookForVisibleWindows": {
-          "desc": "Émet onEditorToolWindowShow pour chaque fenêtre visible.",
+          "desc": "Emits onEditorToolWindowShow for each visible window.",
           "internal": true
         },
         "defocusFocusedWindow": {
-          "desc": "Retire le focus aux fenêtres marquées focalisées (émet onEditorToolWindowLostFocus)."
+          "desc": "Removes focus from the windows marked as focused (emits onEditorToolWindowLostFocus)."
         },
         "openModalDialog": {
-          "desc": "Ouvre un dialogue modal générique (fenêtre editorModalDialog) dont le contenu est dessiné par uiFunction.",
+          "desc": "Opens a generic modal dialog (editorModalDialog window) whose content is drawn by uiFunction.",
           "params": {
             "title": {
               "type": "string",
-              "desc": "titre"
+              "desc": "title"
             },
             "windowSize": {
               "type": "ImVec2",
-              "desc": "taille"
+              "desc": "size"
             },
             "uiFunction": {
               "type": "function",
-              "desc": "function() appelée à chaque frame pour dessiner le contenu"
+              "desc": "function() called every frame to draw the content"
             }
           }
         },
         "closeModalDialog": {
-          "desc": "Ferme le dialogue modal générique et désenregistre sa fenêtre."
+          "desc": "Closes the generic modal dialog and unregisters its window."
         },
         "modalDialogWindowUi": {
-          "desc": "Dessine le dialogue modal générique ; appelé par l'éditeur.",
+          "desc": "Draws the generic modal dialog; called by the editor.",
           "internal": true
         },
         "getTempBool_BoolBool": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : bool -> pointeur bool ; nil -> bool lu.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: bool -> bool pointer; nil -> bool read.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempBool_StringString": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string/bool -> pointeur bool (\"1\" = true) ; nil -> \"1\" ou \"0\".",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string/bool -> bool pointer (\"1\" = true); nil -> \"1\" or \"0\".",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempInt_NumberNumber": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : number -> pointeur int ; nil -> number.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: number -> int pointer; nil -> number.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempInt_StringString": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur int ; nil -> number.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> int pointer; nil -> number.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempIntArray2_StringString": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur/tableau d'int[2] ; nil -> string.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> int[2] pointer/array; nil -> string.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempFloat_NumberNumber": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : number -> pointeur float ; nil -> number.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: number -> float pointer; nil -> number.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempFloat_StringString": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur float ; nil -> number.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> float pointer; nil -> number.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempFloatArray2_StringString": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur/tableau de float[2] ; nil -> string.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> float[2] pointer/array; nil -> string.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempFloatArray2_TableTable": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> pointeur/tableau de float[2] ; nil -> table.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> float[2] pointer/array; nil -> table.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempFloatArray3_TableTable": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> pointeur/tableau de float[3] ; nil -> table.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> float[3] pointer/array; nil -> table.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempFloatArray3_Vec3Vec3": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : vec3 -> pointeur/tableau de float[3] ; nil -> vec3.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: vec3 -> float[3] pointer/array; nil -> vec3.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempFloatArray4_StringString": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur/tableau de float[4] ; nil -> string.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> float[4] pointer/array; nil -> string.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempFloatArray4_TableTable": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> pointeur/tableau de float[4] ; nil -> table.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> float[4] pointer/array; nil -> table.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempImVec4_TableTable": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> pointeur/tableau de float (ImVec4) ; nil -> table.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> float pointer/array (ImVec4); nil -> table.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempImVec4_TableImVec4": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : table -> ImVec4 ; nil -> ImVec4.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: table -> ImVec4; nil -> ImVec4.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempCharPtr": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : string -> pointeur char ; nil -> string.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string -> char pointer; nil -> string.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         },
         "getTempTextureObj": {
-          "desc": "Aide pour les widgets ImGui : convertit une valeur Lua en pointeur ImGui temporaire réutilisé (un seul tampon partagé par type, valable le temps d'un appel de widget). Conversion : chemin string -> objet texture ; nil -> objet texture courant.",
+          "desc": "Helper for ImGui widgets: converts a Lua value into a reused temporary ImGui pointer (a single shared buffer per type, valid for the duration of one widget call). Conversion: string path -> texture object; nil -> current texture object.",
           "params": {
             "value": {
               "type": "any",
-              "desc": "valeur à convertir, ou nil pour relire la valeur du tampon"
+              "desc": "value to convert, or nil to reread the buffer's value"
             }
           }
         }

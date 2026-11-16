@@ -1,32 +1,32 @@
 # `flowgraph_nodes_vehicle_beamstate_beamstate`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/beamstate.lua` · VM : Game Engine (GE) · 74 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/beamstate.lua` · VM: Game Engine (GE) · 74 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/beamstate/beamstate")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/beamstate/beamstate")` (file under extensions/ but not a regular extension)
 
-Nœud « Beamstate » (catégorie `once_p_duration`, tags destroy/damage/funstuff). Appelle une fonction sans paramètre de `beamstate` côté véhicule, choisie dans une liste déroulante : `breakAllBreakgroups`, `breakHinges`, `deflateTires`. Pin d'entrée : `vehId` (number, obligatoire). Exécuté une fois.
+Node "Beamstate" (category `once_p_duration`, tags destroy/damage/funstuff). Calls a parameterless function of `beamstate` on the vehicle side, chosen in a dropdown list: `breakAllBreakgroups`, `breakHinges`, `deflateTires`. Input pin: `vehId` (number, required). Executed once.
 
-## Remarques
+## Notes
 
-- Contrairement à d'autres nœuds, il n'y a pas de repli sur le véhicule joueur : sans `vehId` valide, rien ne se passe.
-- `drawCustomProperties` ne renvoie pas `reason` (return vide) : le changement de fonction n'est pas signalé à l'éditeur.
+- Unlike other nodes, there is no fallback to the player vehicle: without a valid `vehId`, nothing happens.
+- `drawCustomProperties` does not return `reason` (empty return): the function change is not reported to the editor.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(nodeData)` | Appelé au chargement du projet ; restaure les réglages du nœud depuis `nodeData`. | 69 |
-| `C:_onSerialize(res)` | Appelé à la sauvegarde du projet ; copie les réglages du nœud dans la table `res`. | 65 |
-| `C:drawCustomProperties()` | Affichage ImGui des propriétés du nœud dans le panneau de l'éditeur ; renvoie une chaîne décrivant la modification faite, ou nil. | 34 |
-| `C:drawMiddle(builder, style)` | Affichage ImGui au centre du nœud dans l'éditeur de flowgraph ; purement visuel. | 59 |
-| `C:init()` | Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne. | 25 |
-| `C:workOnce()` | Envoie `beamstate.<fonction choisie>()` au véhicule `vehId` via `queueLuaCommand`. Ne fait rien si le véhicule n'existe pas. | 48 |
+| `C:_onDeserialized(nodeData)` | Called when the project loads; restores the node's settings from `nodeData`. | 69 |
+| `C:_onSerialize(res)` | Called when the project is saved; copies the node's settings into the `res` table. | 65 |
+| `C:drawCustomProperties()` | ImGui display of the node's properties in the editor panel; returns a string describing the change made, or nil. | 34 |
+| `C:drawMiddle(builder, style)` | ImGui display in the center of the node in the flowgraph editor; purely visual. | 59 |
+| `C:init()` | Node constructor, called at its creation by the flowgraph editor/manager; initializes the internal state. | 25 |
+| `C:workOnce()` | Sends `beamstate.<chosen function>()` to the vehicle `vehId` via `queueLuaCommand`. Does nothing if the vehicle does not exist. | 48 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/beamstate.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/beamstate.lua`.*

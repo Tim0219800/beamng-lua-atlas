@@ -1,0 +1,40 @@
+{
+  "path": "lua/vehicle/controller/braking/adaptiveBrakeLights.lua",
+  "module": "Contrôleur auxiliaire qui calcule la valeur des feux stop (`electrics.values.brakelights` par défaut) en plus de la simple pédale de frein : clignotement pendant l'ABS, allumage lors d'une intervention de l'ESC au-dessus de 14 m/s, allumage quand la décélération (régénération « one pedal ») dépasse un seuil, ajout du freinage par récupération, et allumage automatique des feux de détresse après un freinage d'urgence jusqu'à l'arrêt. Ordre d'appel : `defaultOrder = 900` (tard).",
+  "notes": [
+    "Clés jbeam lues par init : `electricsName` (\"brakelights\"), `indicateESCUsageWithBrakelights` (true), `activateHazardsAfterEmergencyBraking` (true), `hazardArmSpeed` (10 m/s), `hazardActivateSpeed` (3 m/s), `hazardDeactivateThrottle` (0.3), `hazardDeactivateSpeed` (3 m/s), `blinkOnTime` (0.1 s), `blinkOffTime` (0.1 s), `activateBrakeLightsFromDecel` (true), `decelThreshold` (1.3 m/s², seuil légal britannique d'après le commentaire).",
+    "Electrics lus : brake, absActive, escActive, isYCBrakeActive (prioritaire sur escActive s'il existe), wheelspeed, throttle, regenFromOnePedal, regenFromBrake. Électrics écrit : la valeur de `electricsName`, arrondie au supérieur (0 ou 1).",
+    "Le champ jbeam n'a pas d'accès sûr : updateGFX utilise `electrics.values.wheelspeed` et `electrics.values.brake` sans valeur par défaut dans certains calculs ; ils doivent exister.",
+    "Les feux de détresse sont activés par `electrics.set_warn_signal(true)`, désactivés quand l'accélérateur dépasse le seuil à vitesse suffisante."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "900 : rang d'appel par défaut, tard dans la liste triée."}
+  },
+  "functions": {
+    "updateGFX": {
+      "desc": "Chaque frame : calcule la valeur des feux stop (frein + ESC + décélération + récupération, limitée à 1), applique le clignotement ABS et gère les feux de détresse de freinage d'urgence.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Éteint les feux de détresse déclenchés par ce contrôleur et remet à zéro les minuteurs, lisseurs et verrous.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Lit les paramètres jbeam et crée les lisseurs (ABS, ESC, accélération).",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setParameters": {
+      "desc": "Active ou désactive le comportement adaptatif ; désactivé, les feux suivent simplement le frein.",
+      "params": {"parameters": {"type": "table", "desc": "Champ facultatif : isEnabled (boolean)."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

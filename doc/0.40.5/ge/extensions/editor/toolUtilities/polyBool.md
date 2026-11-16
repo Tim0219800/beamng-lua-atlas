@@ -1,59 +1,59 @@
 # `editor_toolUtilities_polyBool`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/polyBool.lua` · VM : Game Engine (GE) · 879 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/polyBool.lua` · VM: Game Engine (GE) · 879 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_polyBool` : `extensions.load("editor_toolUtilities_polyBool")`, puis la globale `editor_toolUtilities_polyBool`
+**Access:** extension `editor_toolUtilities_polyBool`: `extensions.load("editor_toolUtilities_polyBool")`, then the global `editor_toolUtilities_polyBool`
 
-Booléens 2D sur polygones (union, différence), maison, de type Martinez, adaptés de l'approche polybooljs (MIT). Un polygone est une table { regions = { ring, ... }, inverted = bool } où chaque ring est une liste de points {x,y}. Les calculs se font dans un repère local proche de l'origine pour que l'epsilon absolu ne s'écrase pas aux coordonnées monde. areas range ensuite une liste d'anneaux en anneaux extérieurs avec leurs trous, prêts pour une triangulation.
+In-house 2D polygon booleans (union, difference), Martinez-like, adapted from the polybooljs approach (MIT). A polygon is a table { regions = { ring, ... }, inverted = bool } where each ring is a list of {x,y} points. Computations are done in a local frame near the origin so that the absolute epsilon does not get crushed at world coordinates. areas then sorts a list of rings into outer rings with their holes, ready for triangulation.
 
-## Exemple
+## Example
 
 ```lua
 local pb = extensions.editor_toolUtilities_polyBool
 local res = pb.difference(terrainRing, roadRing)
 for _, a in ipairs(pb.areas(res.regions)) do
-  -- a.ring (CCW), a.holes (liste d'anneaux CW)
+  -- a.ring (CCW), a.holes (list of CW rings)
 end
 ```
 
-## Remarques
+## Notes
 
-- difference accepte une entrée souple : { regions }, un anneau seul, ou une liste d'anneaux ; les points peuvent être {x=,y=} ou {[1],[2]}.
-- unionMany attend en revanche des tables avec le champ regions (et inverted) pour chaque élément.
-- Les anneaux de moins de 3 points sont ignorés. Si le clip est vide, difference renvoie le sujet tel quel.
-- Tolérances internes : eps 1e-10 pour le balayage, SNAP 1e-6 pour la grille d'entrée, WELD 1e-4 pour souder des coins presque confondus.
+- difference accepts flexible input: { regions }, a single ring, or a list of rings; points can be {x=,y=} or {[1],[2]}.
+- unionMany, in contrast, expects tables with the regions field (and inverted) for each element.
+- Rings of fewer than 3 points are ignored. If the clip is empty, difference returns the subject as is.
+- Internal tolerances: eps 1e-10 for the sweep, SNAP 1e-6 for the input grid, WELD 1e-4 to weld nearly coincident corners.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_polyBool.areas(regions)` | Trie la liste plate d'anneaux d'un résultat booléen en anneaux extérieurs portant chacun leurs trous. L'imbrication se déduit de la profondeur de contenance : pair = plein, impair = trou. Extérieurs orientés CCW, trous CW. Chaque trou est rattaché à l'anneau le plus profond qui le contient. | 829 |
-| `editor_toolUtilities_polyBool.difference(subject, clip)` | Différence booléenne : subject moins clip. Travaille dans un repère local comme unionMany. | 774 |
-| `editor_toolUtilities_polyBool.unionMany(polys)` | Réunit plusieurs polygones en un seul. Renvoie un polygone vide si la liste est vide. | 744 |
+| `editor_toolUtilities_polyBool.areas(regions)` | Sorts the flat list of rings of a boolean result into outer rings each carrying their holes. Nesting is deduced from containment depth: even = solid, odd = hole. Outer rings oriented CCW, holes CW. Each hole is attached to the deepest ring that contains it. | 829 |
+| `editor_toolUtilities_polyBool.difference(subject, clip)` | Boolean difference: subject minus clip. Works in a local frame like unionMany. | 774 |
+| `editor_toolUtilities_polyBool.unionMany(polys)` | Merges several polygons into one. Returns an empty polygon if the list is empty. | 744 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_polyBool.areas(regions)`
 
-Trie la liste plate d'anneaux d'un résultat booléen en anneaux extérieurs portant chacun leurs trous. L'imbrication se déduit de la profondeur de contenance : pair = plein, impair = trou. Extérieurs orientés CCW, trous CW. Chaque trou est rattaché à l'anneau le plus profond qui le contient.
+Sorts the flat list of rings of a boolean result into outer rings each carrying their holes. Nesting is deduced from containment depth: even = solid, odd = hole. Outer rings oriented CCW, holes CW. Each hole is attached to the deepest ring that contains it.
 
-- `regions` (*table*) : Liste d'anneaux {x,y} (par ex. result.regions de difference).
-- **renvoie** : table Liste de { ring = anneau, holes = { anneau, ... } }.
+- `regions` (*table*) : List of {x,y} rings (e.g. result.regions from difference).
+- **returns**: table List of { ring = ring, holes = { ring, ... } }.
 
 #### `editor_toolUtilities_polyBool.difference(subject, clip)`
 
-Différence booléenne : subject moins clip. Travaille dans un repère local comme unionMany.
+Boolean difference: subject minus clip. Works in a local frame like unionMany.
 
-- `subject` (*table*) : Polygone, anneau ou liste d'anneaux dont on soustrait.
-- `clip` (*table*) : Polygone, anneau ou liste d'anneaux à soustraire.
-- **renvoie** : table Polygone résultat { regions, inverted }.
+- `subject` (*table*) : Polygon, ring or list of rings to subtract from.
+- `clip` (*table*) : Polygon, ring or list of rings to subtract.
+- **returns**: table Result polygon { regions, inverted }.
 
 #### `editor_toolUtilities_polyBool.unionMany(polys)`
 
-Réunit plusieurs polygones en un seul. Renvoie un polygone vide si la liste est vide.
+Merges several polygons into one. Returns an empty polygon if the list is empty.
 
-- `polys` (*table*) : Liste de polygones { regions = {ring,...}, inverted = bool }.
-- **renvoie** : table Polygone résultat { regions, inverted } en coordonnées monde.
+- `polys` (*table*) : List of polygons { regions = {ring,...}, inverted = bool }.
+- **returns**: table Result polygon { regions, inverted } in world coordinates.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/polyBool.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/polyBool.lua`.*

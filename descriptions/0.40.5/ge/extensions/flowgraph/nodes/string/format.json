@@ -1,74 +1,74 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/string/format.lua",
-  "module": "Noeud « Format String » (repeat_instant). Applique string.format(data.pattern, valeurs...) avec jusqu'à 16 valeurs (pins d'entrée dynamiques value_1..value_N, N réglé par « Count » dans l'éditeur). Sortie : value (string). Pattern par défaut « %d ».",
+  "module": "Node \"Format String\" (repeat_instant). Applies string.format(data.pattern, values...) with up to 16 values (dynamic input pins value_1..value_N, N set by \"Count\" in the editor). Output: value (string). Default pattern \"%d\".",
   "notes": [
-    "Maximum 16 valeurs : au-delà de 16, work ne produit rien.",
-    "Une valeur nil ou d'un type incompatible avec le format (ex. %d avec une chaîne) fait échouer string.format."
+    "Maximum 16 values: beyond 16, work produces nothing.",
+    "A nil value or one of a type incompatible with the format (e.g. %d with a string) makes string.format fail."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "data.pattern = '%d' et count = 1.",
+          "desc": "data.pattern = '%d' and count = 1.",
           "internal": true
         },
         "postInit": {
-          "desc": "Crée les pins value_i initiaux.",
+          "desc": "Creates the initial value_i pins.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Champ « Count » (min 1) qui ajoute/retire des pins.",
+          "desc": "\"Count\" field (min 1) that adds/removes pins.",
           "internal": true
         },
         "updatePins": {
-          "desc": "Crée ou supprime les pins value_i (et les liens associés) pour passer de old à new valeurs.",
+          "desc": "Creates or deletes the value_i pins (and the associated links) to go from old to new values.",
           "params": {
             "old": {
               "type": "any",
-              "desc": "nombre actuel"
+              "desc": "current count"
             },
             "new": {
               "type": "any",
-              "desc": "nouveau nombre"
+              "desc": "new count"
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde l'état du noeud dans la table donnée.",
+          "desc": "Saves the node's state in the given table.",
           "params": {
             "res": {
               "type": "any",
-              "desc": "table de sauvegarde"
+              "desc": "save table"
             }
           },
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure count et recrée les pins.",
+          "desc": "Restores count and recreates the pins.",
           "params": {
             "res": {
               "type": "any",
-              "desc": "données sauvegardées"
+              "desc": "saved data"
             }
           },
           "internal": true
         },
         "work": {
-          "desc": "Formate le pattern avec les valeurs value_1..value_count.",
+          "desc": "Formats the pattern with the values value_1..value_count.",
           "internal": false
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "desc": "Draws the central content of the node in the editor.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true

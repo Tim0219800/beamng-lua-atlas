@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_rally_loop_getLoopServiceOutTC`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getLoopServiceOutTC.lua` · VM : Game Engine (GE) · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getLoopServiceOutTC.lua` · VM: Game Engine (GE) · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/loop/getLoopServiceOutTC")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/loop/getLoopServiceOutTC")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Loop Get Service Out TC » (catégorie once_instant, tag rally). Renvoie la position (pos, vec3) et la rotation (rot, quat) du contrôle horaire (TC) de sortie de parc d'assistance, via rm:getServiceOutTCPos() et rm:getServiceOutTCRot() du gestionnaire de la boucle rally.
+Flowgraph node "Rally Loop Get Service Out TC" (category once_instant, tag rally). Returns the position (pos, vec3) and rotation (rot, quat) of the service park exit time control (TC), via rm:getServiceOutTCPos() and rm:getServiceOutTCRot() of the rally loop manager.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Écrit pos et rot depuis le gestionnaire de boucle rally (rien si absent, erreur loggée). | 29 |
+| `C:workOnce()` | Writes pos and rot from the rally loop manager (nothing if absent, error logged). | 29 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getLoopServiceOutTC.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getLoopServiceOutTC.lua`.*

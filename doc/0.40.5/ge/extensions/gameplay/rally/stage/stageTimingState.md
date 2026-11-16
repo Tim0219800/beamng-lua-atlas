@@ -1,41 +1,41 @@
 # `gameplay_rally_stage_stageTimingState`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/stage/stageTimingState.lua` · VM : Game Engine (GE) · 168 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/stage/stageTimingState.lua` · VM: Game Engine (GE) · 168 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/stage/stageTimingState")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/stage/stageTimingState")` (file under extensions/ but not a regular extension)
 
-Machine d'état du chronomètre d'une spéciale de rallye : temps écoulé, activation, fin, pas de temps de la frame et temps intermédiaires (splits). Utilisé par rallyManager (getStageTimingState). Le module renvoie un constructeur.
+State machine of a rally special stage's timer: elapsed time, activation, finish, frame time step and split times. Used by rallyManager (getStageTimingState). The module returns a constructor.
 
-## Remarques
+## Notes
 
-- Statuts possibles : 'idle', 'active', 'complete'.
-- Une fois complete, setActive ne réactive plus le chrono ; seul reset le remet à zéro.
-- addTime ignore les valeurs <= 0 et renvoie false si le chrono n'est pas actif.
+- Possible statuses: 'idle', 'active', 'complete'.
+- Once complete, setActive no longer reactivates the timer; only reset puts it back to zero.
+- addTime ignores values <= 0 and returns false if the timer is not active.
 
-## Classe `C`
+## Class `C`
 
-Objet d'état de chronométrage.
+Timing state object.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_stage_stageTimingState")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_stage_stageTimingState")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:addTime(seconds)` | Ajoute des secondes au temps écoulé (pénalité, par exemple de récupération). | 50 |
-| `C:advance(dt)` | Fait avancer le chrono de dt s'il est actif et non terminé, en mémorisant le début et la durée de la frame ; sinon frameDt vaut 0. | 39 |
-| `C:completeAt(time)` | Termine le chrono : statut 'complete', fige finishTime et elapsedTime. | 60 |
-| `C:getFrameDt()` | Durée de la dernière frame traitée par advance (0 si inactif). | 143 |
-| `C:getFrameStartTime()` | Temps au début de la dernière frame traitée par advance. | 139 |
-| `C:getSplitOrder()` | Liste des pathnodeId dans l'ordre d'enregistrement. | 123 |
-| `C:getSplitTimes()` | Table des splits indexée par pathnodeId. | 119 |
-| `C:getState()` | Instantané de l'état : status, active, complete, elapsedTime, finishTime, frameStartTime, frameDt, splitTimes, splitOrder (les tables de splits sont partagées, pas copiées). | 147 |
-| `C:getTime()` | Temps de fin s'il existe, sinon temps écoulé (secondes). | 135 |
-| `C:init()` | Appelle reset. | 7 |
-| `C:isActive()` | Vrai si le chrono tourne (actif et non terminé). | 127 |
-| `C:isComplete()` | Vrai si le chrono est terminé. | 131 |
-| `C:markSplitMissing(splitData, reason)` | Marque un split comme manquant (sans temps) avec une raison ; l'entrée remplace une éventuelle entrée existante. | 95 |
-| `C:recordSplit(splitData, time, source)` | Enregistre un temps intermédiaire pour un point de chemin, si splitData.isSplitTiming. Complète splitData.time et splitData.source si absents. | 68 |
-| `C:reset()` | Remet tout à zéro : statut idle, inactif, non terminé, temps 0, aucun split. | 11 |
-| `C:setActive(active)` | Active ou met en pause le chrono (statut 'active' / 'idle'). Sans effet si le chrono est terminé (il reste inactif). | 23 |
+| `C:addTime(seconds)` | Adds seconds to the elapsed time (penalty, for example for a recovery). | 50 |
+| `C:advance(dt)` | Advances the timer by dt if it is active and not finished, storing the start and duration of the frame; otherwise frameDt is 0. | 39 |
+| `C:completeAt(time)` | Ends the timer: status 'complete', freezes finishTime and elapsedTime. | 60 |
+| `C:getFrameDt()` | Duration of the last frame processed by advance (0 if inactive). | 143 |
+| `C:getFrameStartTime()` | Time at the start of the last frame processed by advance. | 139 |
+| `C:getSplitOrder()` | List of pathnodeIds in recording order. | 123 |
+| `C:getSplitTimes()` | Table of splits keyed by pathnodeId. | 119 |
+| `C:getState()` | Snapshot of the state: status, active, complete, elapsedTime, finishTime, frameStartTime, frameDt, splitTimes, splitOrder (the splits tables are shared, not copied). | 147 |
+| `C:getTime()` | Finish time if it exists, otherwise elapsed time (seconds). | 135 |
+| `C:init()` | Calls reset. | 7 |
+| `C:isActive()` | True if the timer is running (active and not finished). | 127 |
+| `C:isComplete()` | True if the timer is finished. | 131 |
+| `C:markSplitMissing(splitData, reason)` | Marks a split as missing (without time) with a reason; the entry replaces any existing entry. | 95 |
+| `C:recordSplit(splitData, time, source)` | Records a split time for a path node, if splitData.isSplitTiming. Fills in splitData.time and splitData.source if absent. | 68 |
+| `C:reset()` | Resets everything: status idle, inactive, not finished, time 0, no splits. | 11 |
+| `C:setActive(active)` | Activates or pauses the timer (status 'active' / 'idle'). No effect if the timer is finished (it stays inactive). | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/stage/stageTimingState.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/stage/stageTimingState.lua`.*

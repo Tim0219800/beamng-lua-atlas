@@ -1,0 +1,57 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/vehicleConfigProvider.lua",
+  "module": "Nœud fournisseur « Vehicle Config Provider » (comportement `simple`, catégorie `provider`). Permet de choisir un modèle et une config de véhicule dans l'éditeur (`ui_flowgraph_editor.vehicleSelector`). Sorties : `model`, `config` (chemin de la config), `modelName` et `configName` (cachées).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_onDeserialized": {
+          "desc": "Restaure modèle, config, chemin, type et noms.",
+          "internal": true,
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "Données sauvegardées du nœud."
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde modèle, config, chemin, type et noms.",
+          "internal": true,
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde à remplir."
+            }
+          }
+        },
+        "drawCustomProperties": {
+          "desc": "Affiche le sélecteur de véhicule.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affichage central vide.",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+            },
+            "style": {
+              "type": "any",
+              "desc": "Style ImGui de l'éditeur."
+            }
+          }
+        },
+        "init": {
+          "desc": "Constructeur ; vide les champs modèle/config.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Écrit le modèle et la config choisis sur les sorties.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

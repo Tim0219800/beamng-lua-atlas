@@ -1,52 +1,52 @@
 # `ui_liveries_routeLifecycleCallbacks`
 
-*Fichier : `lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua` · VM : Game Engine (GE) · 273 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua` · VM: Game Engine (GE) · 273 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_liveries_routeLifecycleCallbacks` : `extensions.load("ui_liveries_routeLifecycleCallbacks")`, puis la globale `ui_liveries_routeLifecycleCallbacks`
+**Access:** extension `ui_liveries_routeLifecycleCallbacks`: `extensions.load("ui_liveries_routeLifecycleCallbacks")`, then the global `ui_liveries_routeLifecycleCallbacks`
 
-Relie les routes de l'interface de l'éditeur de livrées (liveries, liveries.edit, liveries.edit.decals…) au code Lua. Le routeur UI appelle ces hooks Enter, Mount et Leave quand l'utilisateur change d'écran ; ils démarrent et arrêtent les sessions (ui_liveries, ui_liveries_decal), gèlent la simulation, pilotent la caméra et le curseur de décalque, et remplissent data.liveries avec les données de l'écran d'arrivée.
+Links the livery editor's UI routes (liveries, liveries.edit, liveries.edit.decals...) to Lua code. The UI router calls these Enter, Mount and Leave hooks when the user changes screen; they start and stop the sessions (ui_liveries, ui_liveries_decal), freeze the simulation, drive the camera and the decal cursor, and fill data.liveries with the destination screen's data.
 
-## Remarques
+## Notes
 
-- Tous les hooks ont la même signature (context, toRoute, fromRoute, data). toRoute et fromRoute sont des tables avec name et params ; data est la table de données renvoyée à l'interface (clé data.liveries).
-- La simulation reste en pause dans toutes les routes dont le nom est « liveries » ou commence par « liveries. » : une demande de pause « ui_liveries » est poussée à l'entrée et retirée à la sortie via simTimeAuthority, pour que les déclencheurs du véhicule (portes, capot, coffre) ne s'activent pas.
-- Les hooks Leave s'enchaînent (onDecalTransformLeave appelle onDecalsLeave, qui appelle onLiveriesLeave) ; l'état pauseRequestActive garde l'équilibre des push et pop de pause.
-- Les sessions ne sont démarrées ou arrêtées que lorsqu'on entre dans une branche ou qu'on la quitte : naviguer à l'intérieur de liveries.edit ou de liveries.edit.decals garde la session.
-- Routes utilisées : liveries.edit.decals.camera.selector.transform (nouveau décalque) et liveries.edit.decals.transform (décalque existant), chacune avec une sous-route .settings.
-- onLiveriesMount est vide : il ne fait rien.
+- All hooks have the same signature (context, toRoute, fromRoute, data). toRoute and fromRoute are tables with name and params; data is the data table returned to the UI (key data.liveries).
+- The simulation stays paused in all routes whose name is "liveries" or starts with "liveries.": an "ui_liveries" pause request is pushed on entry and removed on exit via simTimeAuthority, so that the vehicle's triggers (doors, hood, trunk) do not activate.
+- The Leave hooks chain (onDecalTransformLeave calls onDecalsLeave, which calls onLiveriesLeave); the pauseRequestActive state keeps pause pushes and pops balanced.
+- Sessions are only started or stopped when entering or leaving a branch: navigating within liveries.edit or liveries.edit.decals keeps the session.
+- Routes used: liveries.edit.decals.camera.selector.transform (new decal) and liveries.edit.decals.transform (existing decal), each with a .settings sub-route.
+- onLiveriesMount is empty: it does nothing.
 
-**Dépendances (chargées avant) :** `ui_liveries_saves`, `ui_liveries`, `ui_liveries_fill`, `ui_liveries_decal`, `ui_liveries_textures`, `ui_liveries_camera`
+**Dependencies (loaded first):** `ui_liveries_saves`, `ui_liveries`, `ui_liveries_fill`, `ui_liveries_decal`, `ui_liveries_textures`, `ui_liveries_camera`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_liveries_routeLifecycleCallbacks.onDecalCameraEnter(context, toRoute, fromRoute, data)` | Appelé à l'entrée dans l'écran de choix de vue. Exécute onDecalsEnter et place dans data.liveries.cameraViews la liste ui_liveries_camera.getViews(). *(interne)* *(hook)* | 137 |
-| `ui_liveries_routeLifecycleCallbacks.onDecalMaterialEnter(context, toRoute, fromRoute, data)` | Appelé à l'entrée dans l'écran de matériau d'un décalque. Exécute onDecalsEnter, déplace la caméra libre sur le décalque (params.layerUid) et place sa peinture dans data.liveries.layerPaint. *(interne)* *(hook)* | 144 |
-| `ui_liveries_routeLifecycleCallbacks.onDecalMirrorEnter(context, toRoute, fromRoute, data)` | Appelé à l'entrée dans l'écran de miroir d'un décalque. Exécute onDecalsEnter, avertit si params.layerUid manque, cadre la caméra orbite sur le décalque et place ses réglages de miroir dans data.liveries.decalMirror. *(interne)* *(hook)* | 155 |
-| `ui_liveries_routeLifecycleCallbacks.onDecalSelectorMount(context, toRoute, fromRoute, data)` | Appelé au montage du sélecteur de décalques. Charge les textures avec ui_liveries_textures.loadTextures. *(interne)* *(hook)* | 170 |
-| `ui_liveries_routeLifecycleCallbacks.onDecalTransformLeave(context, toRoute, fromRoute, data)` | Appelé en quittant l'écran de transformation d'un nouveau décalque. Cache le curseur sauf si on va vers les réglages, puis exécute onDecalsLeave. *(interne)* *(hook)* | 196 |
-| `ui_liveries_routeLifecycleCallbacks.onDecalTransformMount(context, toRoute, fromRoute, data)` | Appelé au montage de l'écran de transformation d'un nouveau décalque. Notifie l'interface, reprend la table d'actions si on revient des réglages, sinon affiche le curseur du décalque sélectionné, puis place dans data.liveries decalTransform et decalMouseMode. *(interne)* *(hook)* | 174 |
-| `ui_liveries_routeLifecycleCallbacks.onDecalTransformSettingsEnter(context, toRoute, fromRoute, data)` | Appelé à l'entrée dans les réglages de transformation d'un nouveau décalque. Exécute onDecalsEnter, suspend la table d'actions de transformation et place decalMirror et layerPaint dans data.liveries. *(interne)* *(hook)* | 203 |
-| `ui_liveries_routeLifecycleCallbacks.onDecalTransformSettingsLeave(context, toRoute, fromRoute, data)` | Appelé en quittant les réglages de transformation. Si on retourne à une route de transformation, reprend la table d'actions ; sinon exécute onDecalsLeave. *(interne)* *(hook)* | 212 |
-| `ui_liveries_routeLifecycleCallbacks.onDecalsEnter(context, toRoute, fromRoute, data)` | Appelé à l'entrée dans la branche liveries.edit.decals. Démarre ui_liveries_decal.setup seulement si on vient de l'extérieur de cette branche. *(interne)* *(hook)* | 124 |
-| `ui_liveries_routeLifecycleCallbacks.onDecalsLeave(context, toRoute, fromRoute, data)` | Appelé en quittant la branche decals. Si la destination reste dans cette branche, ne fait rien ; sinon appelle ui_liveries_decal.teardown puis onLiveriesLeave. *(interne)* *(hook)* | 187 |
-| `ui_liveries_routeLifecycleCallbacks.onDecalsMount(context, toRoute, fromRoute, data)` | Appelé au montage de l'écran des décalques. Demande à ui_liveries_decal.notifyUi d'envoyer l'état à l'interface. *(interne)* *(hook)* | 133 |
-| `ui_liveries_routeLifecycleCallbacks.onExistingDecalTransformEnter(context, toRoute, fromRoute, data)` | Appelé à l'entrée dans l'écran de transformation d'un décalque existant. Exécute onDecalsEnter puis ui_liveries_decal.beginExistingTransform(params.layerUid) ; avertit si layerUid manque. *(interne)* *(hook)* | 220 |
-| `ui_liveries_routeLifecycleCallbacks.onExistingDecalTransformLeave(context, toRoute, fromRoute, data)` | Appelé en quittant la transformation d'un décalque existant. Termine la transformation (endExistingTransform) sauf si on va vers les réglages, puis exécute onDecalsLeave. *(interne)* *(hook)* | 245 |
-| `ui_liveries_routeLifecycleCallbacks.onExistingDecalTransformMount(context, toRoute, fromRoute, data)` | Appelé au montage de l'écran de transformation d'un décalque existant. Reprend la table d'actions si on revient des réglages, sinon affiche le curseur du décalque existant, puis place decalTransform et decalMouseMode dans data.liveries. *(interne)* *(hook)* | 233 |
-| `ui_liveries_routeLifecycleCallbacks.onLiveriesEditEnter(context, toRoute, fromRoute, data)` | Appelé à l'entrée dans liveries.edit. Si on vient de l'extérieur de la branche edit, démarre la session avec ui_liveries.setup(params.saveName) (pas de saveName : nouvelle livrée) et journalise un avertissement en cas d'échec. Place data.liveries.currentSaveName pour que le formulaire de sauvegarde propose d'écraser. *(interne)* *(hook)* | 81 |
-| `ui_liveries_routeLifecycleCallbacks.onLiveriesEnter(context, toRoute, fromRoute, data)` | Appelé à l'entrée dans la route liveries. Met en pause la simulation et place dans data.liveries.saveFiles la liste des livrées sauvegardées (ui_liveries_saves.getAll). *(interne)* *(hook)* | 70 |
-| `ui_liveries_routeLifecycleCallbacks.onLiveriesLeave(context, toRoute, fromRoute, data)` | Appelé en quittant une route de livrées. Si la destination reste dans la branche edit, ne fait rien de plus ; sinon appelle ui_liveries.teardown puis applique la peau en attente (ui_liveries_saves.consumeStagedApplySkin) avec core_vehicle_partmgmt.setSkin. *(interne)* *(hook)* | 110 |
-| `ui_liveries_routeLifecycleCallbacks.onLiveriesMount(context, toRoute, fromRoute, data)` | Appelé au montage de la route liveries. Ne fait rien. *(interne)* *(hook)* | 78 |
-| `ui_liveries_routeLifecycleCallbacks.onLiveriesPaintEnter(context, toRoute, fromRoute, data)` | Appelé à l'entrée dans l'écran de peinture. Place dans data.liveries.layerPaint la peinture de la couche de base (ui_liveries_fill.getPaint). *(interne)* *(hook)* | 100 |
-| `ui_liveries_routeLifecycleCallbacks.onLiveriesRootLeave(context, toRoute, fromRoute, data)` | Appelé en quittant l'écran d'accueil des livrées. Retire la demande de pause de la simulation (aucun autre hook Leave n'existe pour cet écran). *(interne)* *(hook)* | 106 |
+| `ui_liveries_routeLifecycleCallbacks.onDecalCameraEnter(context, toRoute, fromRoute, data)` | Called when entering the view selection screen. Runs onDecalsEnter and puts the ui_liveries_camera.getViews() list in data.liveries.cameraViews. *(internal)* *(hook)* | 137 |
+| `ui_liveries_routeLifecycleCallbacks.onDecalMaterialEnter(context, toRoute, fromRoute, data)` | Called when entering a decal's material screen. Runs onDecalsEnter, moves the free camera to the decal (params.layerUid) and puts its paint in data.liveries.layerPaint. *(internal)* *(hook)* | 144 |
+| `ui_liveries_routeLifecycleCallbacks.onDecalMirrorEnter(context, toRoute, fromRoute, data)` | Called when entering a decal's mirror screen. Runs onDecalsEnter, warns if params.layerUid is missing, frames the orbit camera on the decal and puts its mirror settings in data.liveries.decalMirror. *(internal)* *(hook)* | 155 |
+| `ui_liveries_routeLifecycleCallbacks.onDecalSelectorMount(context, toRoute, fromRoute, data)` | Called when the decal selector is mounted. Loads the textures with ui_liveries_textures.loadTextures. *(internal)* *(hook)* | 170 |
+| `ui_liveries_routeLifecycleCallbacks.onDecalTransformLeave(context, toRoute, fromRoute, data)` | Called when leaving the new decal transform screen. Hides the cursor unless going to the settings, then runs onDecalsLeave. *(internal)* *(hook)* | 196 |
+| `ui_liveries_routeLifecycleCallbacks.onDecalTransformMount(context, toRoute, fromRoute, data)` | Called when the new decal transform screen is mounted. Notifies the UI, resumes the action map if returning from the settings, otherwise shows the selected decal's cursor, then puts decalTransform and decalMouseMode in data.liveries. *(internal)* *(hook)* | 174 |
+| `ui_liveries_routeLifecycleCallbacks.onDecalTransformSettingsEnter(context, toRoute, fromRoute, data)` | Called when entering the new decal transform settings. Runs onDecalsEnter, suspends the transform action map and puts decalMirror and layerPaint in data.liveries. *(internal)* *(hook)* | 203 |
+| `ui_liveries_routeLifecycleCallbacks.onDecalTransformSettingsLeave(context, toRoute, fromRoute, data)` | Called when leaving the transform settings. If returning to a transform route, resumes the action map; otherwise runs onDecalsLeave. *(internal)* *(hook)* | 212 |
+| `ui_liveries_routeLifecycleCallbacks.onDecalsEnter(context, toRoute, fromRoute, data)` | Called when entering the liveries.edit.decals branch. Starts ui_liveries_decal.setup only if coming from outside this branch. *(internal)* *(hook)* | 124 |
+| `ui_liveries_routeLifecycleCallbacks.onDecalsLeave(context, toRoute, fromRoute, data)` | Called when leaving the decals branch. If the destination stays within this branch, does nothing; otherwise calls ui_liveries_decal.teardown then onLiveriesLeave. *(internal)* *(hook)* | 187 |
+| `ui_liveries_routeLifecycleCallbacks.onDecalsMount(context, toRoute, fromRoute, data)` | Called when the decals screen is mounted. Asks ui_liveries_decal.notifyUi to send the state to the UI. *(internal)* *(hook)* | 133 |
+| `ui_liveries_routeLifecycleCallbacks.onExistingDecalTransformEnter(context, toRoute, fromRoute, data)` | Called when entering the existing decal transform screen. Runs onDecalsEnter then ui_liveries_decal.beginExistingTransform(params.layerUid); warns if layerUid is missing. *(internal)* *(hook)* | 220 |
+| `ui_liveries_routeLifecycleCallbacks.onExistingDecalTransformLeave(context, toRoute, fromRoute, data)` | Called when leaving the existing decal transform. Ends the transform (endExistingTransform) unless going to the settings, then runs onDecalsLeave. *(internal)* *(hook)* | 245 |
+| `ui_liveries_routeLifecycleCallbacks.onExistingDecalTransformMount(context, toRoute, fromRoute, data)` | Called when the existing decal transform screen is mounted. Resumes the action map if returning from the settings, otherwise shows the existing decal's cursor, then puts decalTransform and decalMouseMode in data.liveries. *(internal)* *(hook)* | 233 |
+| `ui_liveries_routeLifecycleCallbacks.onLiveriesEditEnter(context, toRoute, fromRoute, data)` | Called when entering liveries.edit. If coming from outside the edit branch, starts the session with ui_liveries.setup(params.saveName) (no saveName: new livery) and logs a warning on failure. Sets data.liveries.currentSaveName so that the save form offers to overwrite. *(internal)* *(hook)* | 81 |
+| `ui_liveries_routeLifecycleCallbacks.onLiveriesEnter(context, toRoute, fromRoute, data)` | Called when entering the liveries route. Pauses the simulation and puts the list of saved liveries (ui_liveries_saves.getAll) in data.liveries.saveFiles. *(internal)* *(hook)* | 70 |
+| `ui_liveries_routeLifecycleCallbacks.onLiveriesLeave(context, toRoute, fromRoute, data)` | Called when leaving a liveries route. If the destination stays within the edit branch, does nothing more; otherwise calls ui_liveries.teardown then applies the pending skin (ui_liveries_saves.consumeStagedApplySkin) with core_vehicle_partmgmt.setSkin. *(internal)* *(hook)* | 110 |
+| `ui_liveries_routeLifecycleCallbacks.onLiveriesMount(context, toRoute, fromRoute, data)` | Called when the liveries route is mounted. Does nothing. *(internal)* *(hook)* | 78 |
+| `ui_liveries_routeLifecycleCallbacks.onLiveriesPaintEnter(context, toRoute, fromRoute, data)` | Called when entering the paint screen. Puts the base layer's paint (ui_liveries_fill.getPaint) in data.liveries.layerPaint. *(internal)* *(hook)* | 100 |
+| `ui_liveries_routeLifecycleCallbacks.onLiveriesRootLeave(context, toRoute, fromRoute, data)` | Called when leaving the liveries home screen. Removes the simulation pause request (no other Leave hook exists for this screen). *(internal)* *(hook)* | 106 |
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant celle-ci : ui_liveries_saves, ui_liveries, ui_liveries_fill, ui_liveries_decal, ui_liveries_textures, ui_liveries_camera. |
+| `dependencies` | string[] | Extensions loaded before this one: ui_liveries_saves, ui_liveries, ui_liveries_fill, ui_liveries_decal, ui_liveries_textures, ui_liveries_camera. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/liveries/routeLifecycleCallbacks.lua`.*

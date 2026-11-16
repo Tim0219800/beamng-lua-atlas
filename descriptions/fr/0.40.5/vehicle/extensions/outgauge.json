@@ -1,0 +1,10 @@
+{
+  "path": "lua/vehicle/extensions/outgauge.lua",
+  "module": "Fichier obsolète : il se contente d'écrire une erreur dans le log (avec la trace d'appel) disant que quelque chose a tenté d'utiliser l'ancienne extension outgauge, et renvoie une table vide. Le protocole OutGauge est géré ailleurs (voir https://go.beamng.com/protocols et le module protocols).",
+  "notes": [
+    "Le module renvoie {} : toute fonction appelée dessus sera nil.",
+    "L'erreur de log se produit au chargement du fichier (require/extensions.load)."
+  ],
+  "fields": {},
+  "functions": {}
+}

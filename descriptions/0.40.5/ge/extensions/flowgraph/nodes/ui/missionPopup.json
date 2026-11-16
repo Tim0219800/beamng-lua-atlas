@@ -1,31 +1,31 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/missionPopup.lua",
-  "module": "Nœud flowgraph « Popup » (catégorie par défaut, once + singleActive) : affiche un popup d'information que seul le bouton ferme (ui_popup.openPopupEntries, type 'info'). Entrées : flow, « reset » (impulsion), « title », « text » (string ou table traduisible), « buttonText » (défaut 'ui.scenarios.start.start'). Sortie : flow, mis à true à la fermeture. Dépend de core_input_bindings et ui_popup.",
+  "module": "Flowgraph node \"Popup\" (default category, once + singleActive): displays an information popup that only the button closes (ui_popup.openPopupEntries, type 'info'). Inputs: flow, \"reset\" (pulse), \"title\", \"text\" (string or translatable table), \"buttonText\" (default 'ui.scenarios.start.start'). Output: flow, set to true on close. Depends on core_input_bindings and ui_popup.",
   "notes": [
-    "Showing two popups at once les met en file d'attente (todo du code).",
-    "_executionStarted est défini deux fois (la dernière définition remplace la première et ne remet pas open/done à zéro).",
-    "onFilteredInputChanged est vide."
+    "Showing two popups at once queues them (todo from the code).",
+    "_executionStarted is defined twice (the last definition replaces the first and does not reset open/done).",
+    "onFilteredInputChanged is empty."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStarted": {
-          "desc": "Remet sorties et état à zéro.",
+          "desc": "Resets outputs and state.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Ferme le popup s'il est ouvert et réinitialise l'état.",
+          "desc": "Closes the popup if open and resets the state.",
           "internal": true
         },
         "closeDialogue": {
-          "desc": "Ferme le popup tutoriel si ouvert.",
+          "desc": "Closes the tutorial popup if open.",
           "internal": false
         },
         "getPopupId": {
-          "desc": "Renvoie l'identifiant unique du popup (manager, graphe, nœud).",
+          "desc": "Returns the unique identifier of the popup (manager, graph, node).",
           "internal": false
         },
         "init": {
@@ -33,51 +33,51 @@
           "internal": true
         },
         "onClientEndMission": {
-          "desc": "Hook : réinitialise open et _active.",
+          "desc": "Hook: resets open and _active.",
           "internal": true
         },
         "onFilteredInputChanged": {
-          "desc": "Hook d'entrée filtrée ; corps vide.",
+          "desc": "Filtered input hook; empty body.",
           "params": {
             "devName": {
               "type": "string",
-              "desc": "Nom du périphérique d'entrée."
+              "desc": "Name of the input device."
             },
             "action": {
               "type": "string",
-              "desc": "Nom du bouton ou du pin de sortie activé."
+              "desc": "Name of the activated button or output pin."
             },
             "value": {
               "type": "number",
-              "desc": "Valeur de l'entrée."
+              "desc": "Input value."
             }
           },
           "internal": true
         },
         "onIntroPopupCareerClosed": {
-          "desc": "Hook : popup fermé (id) ; si c'est celui de ce nœud, met le flux de sortie à true.",
+          "desc": "Hook: popup closed (id); if it is this node's, sets the output flow to true.",
           "params": {
             "id": {
               "type": "string",
-              "desc": "Identifiant du popup fermé."
+              "desc": "Identifier of the closed popup."
             }
           },
           "internal": true
         },
         "openDialogue": {
-          "desc": "Ouvre le popup avec titre, texte et libellé du bouton.",
+          "desc": "Opens the popup with title, text and button label.",
           "internal": false
         },
         "postInit": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         },
         "reset": {
-          "desc": "Remet done, open et _active à false.",
+          "desc": "Resets done, open and _active to false.",
           "internal": false
         },
         "work": {
-          "desc": "Gère le reset ; ouvre le popup quand le flux d'entrée est actif et qu'il n'est pas déjà ouvert.",
+          "desc": "Handles the reset; opens the popup when the input flow is active and it is not already open.",
           "internal": true
         }
       }

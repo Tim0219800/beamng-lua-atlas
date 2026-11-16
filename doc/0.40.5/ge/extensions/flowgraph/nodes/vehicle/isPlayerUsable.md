@@ -1,28 +1,28 @@
 # `flowgraph_nodes_vehicle_isPlayerUsable`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/isPlayerUsable.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/isPlayerUsable.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/isPlayerUsable")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/isPlayerUsable")` (file under extensions/ but not a regular extension)
 
-Nœud « Is Player usable » (catégorie `repeat_instant`). Lit `playerUsable` d'un véhicule. Pin d'entrée : `vehId` ; sorties : flux `true` et flux `false`.
+Node "Is Player usable" (category `repeat_instant`). Reads `playerUsable` of a vehicle. Input pin: `vehId`; outputs: flow `true` and flow `false`.
 
-## Remarques
+## Notes
 
-- Bug : si `vehId` est nil ou 0, le `else` est vide, donc `source` reste nil et `source.playerUsable` provoque une erreur (aucun repli sur le joueur).
-- La table `legacyPins` fait référence à `vehiId` (faute de frappe).
+- Bug: if `vehId` is nil or 0, the `else` is empty, so `source` stays nil and `source.playerUsable` causes an error (no fallback to the player).
+- The `legacyPins` table refers to `vehiId` (typo).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Constructeur vide. | 26 |
-| `C:work()` | Met `true` = `source.playerUsable` et `false` = son contraire. | 31 |
+| `C:init()` | Empty constructor. | 26 |
+| `C:work()` | Sets `true` = `source.playerUsable` and `false` = its opposite. | 31 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/isPlayerUsable.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/isPlayerUsable.lua`.*

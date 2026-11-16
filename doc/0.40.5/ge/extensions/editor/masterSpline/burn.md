@@ -1,38 +1,38 @@
 # `editor_masterSpline_burn`
 
-*Fichier : `lua/ge/extensions/editor/masterSpline/burn.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/masterSpline/burn.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_masterSpline_burn` : `extensions.load("editor_masterSpline_burn")`, puis la globale `editor_masterSpline_burn`
+**Access:** extension `editor_masterSpline_burn`: `extensions.load("editor_masterSpline_burn")`, then the global `editor_masterSpline_burn`
 
-Verrouillage (« burn » = lock) d'une Master Spline de l'éditeur. Une Master Spline possède une pile de splines enfants liées (mesh, assembly, road, tree, decal) ; la verrouiller verrouille aussi tous ses enfants : ils restent dans leurs outils, non modifiables, et leur contenu généré est sauvegardé avec le niveau. Le déverrouillage rend tout éditable.
+Locking ("burn" = lock) of an editor Master Spline. A Master Spline has a stack of linked child splines (mesh, assembly, road, tree, decal); locking it also locks all its children: they stay in their tools, uneditable, and their generated content is saved with the level. Unlocking makes everything editable again.
 
-## Remarques
+## Notes
 
-- Chaque verrouillage/déverrouillage est une action annulable de editor.history (« Lock Master Spline » / « Unlock Master Spline »).
-- Au déverrouillage, les modifications manuelles des enfants (outils mesh et assembly seulement, via eachObjectJumpTable) sont enregistrées dans data.records ; un verrouillage ultérieur (ex. annulation) les restaure via splineLock.restore.
-- Met spline.isEnabled = not isLocked et appelle editor.setDirty().
+- Each lock/unlock is an undoable editor.history action ("Lock Master Spline" / "Unlock Master Spline").
+- On unlock, the manual changes to the children (mesh and assembly tools only, via eachObjectJumpTable) are recorded in data.records; a later lock (e.g. undo) restores them via splineLock.restore.
+- Sets spline.isEnabled = not isLocked and calls editor.setDirty().
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_masterSpline_burn.run(idx)` | Action du bouton Burn : verrouille la Master Spline d'indice idx (équivaut à setLocked(idx, true)). | 56 |
-| `editor_masterSpline_burn.setLocked(idx, isLocked)` | Verrouille ou déverrouille la Master Spline d'indice idx, avec tous ses enfants liés, en une seule transaction annulable. Ne fait rien si l'indice est invalide. | 47 |
+| `editor_masterSpline_burn.run(idx)` | Burn button action: locks the Master Spline at index idx (equivalent to setLocked(idx, true)). | 56 |
+| `editor_masterSpline_burn.setLocked(idx, isLocked)` | Locks or unlocks the Master Spline at index idx, with all its linked children, in a single undoable transaction. Does nothing if the index is invalid. | 47 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_masterSpline_burn.run(idx)`
 
-Action du bouton Burn : verrouille la Master Spline d'indice idx (équivaut à setLocked(idx, true)).
+Burn button action: locks the Master Spline at index idx (equivalent to setLocked(idx, true)).
 
-- `idx` (*integer*) : Indice de la Master Spline dans la liste (à partir de 1).
+- `idx` (*integer*) : Index of the Master Spline in the list (1-based).
 
 #### `editor_masterSpline_burn.setLocked(idx, isLocked)`
 
-Verrouille ou déverrouille la Master Spline d'indice idx, avec tous ses enfants liés, en une seule transaction annulable. Ne fait rien si l'indice est invalide.
+Locks or unlocks the Master Spline at index idx, with all its linked children, in a single undoable transaction. Does nothing if the index is invalid.
 
-- `idx` (*integer*) : Indice de la Master Spline dans la liste (à partir de 1).
-- `isLocked` (*boolean*) : true pour verrouiller, false pour déverrouiller.
+- `idx` (*integer*) : Index of the Master Spline in the list (1-based).
+- `isLocked` (*boolean*) : true to lock, false to unlock.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/masterSpline/burn.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/masterSpline/burn.lua`.*

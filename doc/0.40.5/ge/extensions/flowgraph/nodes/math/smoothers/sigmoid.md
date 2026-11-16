@@ -1,26 +1,26 @@
 # `flowgraph_nodes_math_smoothers_sigmoid`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/math/smoothers/sigmoid.lua` · VM : Game Engine (GE) · 77 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/math/smoothers/sigmoid.lua` · VM: Game Engine (GE) · 77 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/math/smoothers/sigmoid")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/math/smoothers/sigmoid")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Sigmoid Smoother' (categorie simple). Lissage sigmoide avec newTemporalSigmoidSmoothing : limites de vitesse upRateLimit/downRateLimit et accelerations de depart/arret (up/down StartAccel et StopAccel) selon le sens ; 'set' force l'etat. Sortie 'value'.
+Flowgraph node 'Sigmoid Smoother' (simple category). Sigmoid smoothing with newTemporalSigmoidSmoothing: speed limits upRateLimit/downRateLimit and start/stop accelerations (up/down StartAccel and StopAccel) depending on direction; 'set' forces the state. Output 'value'.
 
-## Remarques
+## Notes
 
-- BUG : le pin est declare 'downstopAccel' (s minuscule) mais work lit self.pinIn.downStopAccel (nil) : indexer .value sur nil provoque une erreur des que la valeur d'entree est inferieure a l'etat (sens descendant).
-- init ecrit C.smoother (classe) : le lisseur est partage entre toutes les instances du noeud.
+- BUG: the pin is declared 'downstopAccel' (lowercase s) but work reads self.pinIn.downStopAccel (nil): indexing .value on nil raises an error as soon as the input value is below the state (downward direction).
+- init writes C.smoother (class): the smoother is shared between all instances of the node.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:checkSetValue()` | Si 'set' a change, force l'etat du lisseur. | 36 |
-| `C:drawMiddle(builder, style)` | Affiche l'etat du lisseur. | 69 |
-| `C:init()` | Met C.oldSet=0 et C.smoother (au niveau de la classe). | 30 |
-| `C:work()` | Sans entree, sort l'etat ; sinon choisit limit/start/stop selon le sens (defaut 1) et sort smoother:getWithRateAccel(sample, dt, limit, start, stop). | 44 |
+| `C:checkSetValue()` | If 'set' changed, forces the smoother state. | 36 |
+| `C:drawMiddle(builder, style)` | Displays the smoother state. | 69 |
+| `C:init()` | Sets C.oldSet=0 and C.smoother (at class level). | 30 |
+| `C:work()` | With no input, outputs the state; otherwise chooses limit/start/stop depending on direction (default 1) and outputs smoother:getWithRateAccel(sample, dt, limit, start, stop). | 44 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/math/smoothers/sigmoid.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/math/smoothers/sigmoid.lua`.*

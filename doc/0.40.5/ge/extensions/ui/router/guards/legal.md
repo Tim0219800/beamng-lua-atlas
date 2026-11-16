@@ -1,20 +1,20 @@
 # `ui_router_guards_legal`
 
-*Fichier : `lua/ge/extensions/ui/router/guards/legal.lua` · VM : Game Engine (GE) · 33 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/guards/legal.lua` · VM: Game Engine (GE) · 33 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_guards_legal` : `extensions.load("ui_router_guards_legal")`, puis la globale `ui_router_guards_legal`
+**Access:** extension `ui_router_guards_legal`: `extensions.load("ui_router_guards_legal")`, then the global `ui_router_guards_legal`
 
-Garde d'entrée « onlineConsentSet » : n'autorise la navigation vers une route que si le consentement en ligne a été donné, c'est-à-dire si les réglages onlineFeatures et telemetry ne valent plus "ask". Les routes du module « legal » (premier segment du nom de route) sont toujours autorisées pour que l'assistant de consentement puisse se terminer. Les gardes sont enregistrées par GuardManager à partir de M.guards.
+Entry guard "onlineConsentSet": allows navigation to a route only if online consent has been given, i.e. if the onlineFeatures and telemetry settings are no longer "ask". Routes of the "legal" module (first segment of the route name) are always allowed so that the consent wizard can finish. The guards are registered by GuardManager from M.guards.
 
-## Remarques
+## Notes
 
-- Les réglages sont lus avec core_settings_settings.getValue("onlineFeatures") et ("telemetry").
+- The settings are read with core_settings_settings.getValue("onlineFeatures") and ("telemetry").
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `guards` | table<string, function> | Table des gardes exposées : {onlineConsentSet = function(route) -> boolean}. |
+| `guards` | table<string, function> | Table of exposed guards: {onlineConsentSet = function(route) -> boolean}. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/guards/legal.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/guards/legal.lua`.*

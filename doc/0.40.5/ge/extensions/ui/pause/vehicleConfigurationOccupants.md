@@ -1,12 +1,12 @@
 # `ui_pause_vehicleConfigurationOccupants`
 
-*Fichier : `lua/ge/extensions/ui/pause/vehicleConfigurationOccupants.lua` · VM : Game Engine (GE) · 268 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/pause/vehicleConfigurationOccupants.lua` · VM: Game Engine (GE) · 268 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_pause_vehicleConfigurationOccupants` : `extensions.load("ui_pause_vehicleConfigurationOccupants")`, puis la globale `ui_pause_vehicleConfigurationOccupants`
+**Access:** extension `ui_pause_vehicleConfigurationOccupants`: `extensions.load("ui_pause_vehicleConfigurationOccupants")`, then the global `ui_pause_vehicleConfigurationOccupants`
 
-Extension GE qui alimente l'onglet « Occupants » de l'écran de configuration du véhicule (menu pause). Elle liste les sièges du véhicule configuré (via gameplay_seatOccupants), les joueurs disponibles (core_multiseat / core_playerPersonas) et permet d'asseoir un joueur, un mannequin (« dummy ») ou personne sur chaque siège. Le véhicule visé est celui de la session (sessionVehicleId) ou, à défaut, celui résolu par core_vehicle_configTarget. Chaque changement déclenche le hook UI VehicleConfigOccupantsStateChanged.
+GE extension that feeds the "Occupants" tab of the vehicle configuration screen (pause menu). It lists the seats of the configured vehicle (via gameplay_seatOccupants), the available players (core_multiseat / core_playerPersonas) and lets you seat a player, a dummy or nobody on each seat. The targeted vehicle is the session's (sessionVehicleId) or, failing that, the one resolved by core_vehicle_configTarget. Each change triggers the UI hook VehicleConfigOccupantsStateChanged.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('ui_pause_vehicleConfigurationOccupants')
@@ -15,129 +15,129 @@ ui_pause_vehicleConfigurationOccupants.setSeatOccupant(st.seats[1].seatId, 'dumm
 ui_pause_vehicleConfigurationOccupants.endSession()
 ```
 
-## Remarques
+## Notes
 
-- Le poids d'un occupant vaut seat.weight si présent, sinon defaultWeight = 89 (kg, valeur locale du fichier).
-- Format du paramètre occupant de setSeatOccupant : 'empty', 'dummy' ou 'player:<index>' (index de joueur, 0 pour le joueur solo).
-- Pendant une session, un override est posé sur le véhicule (setVehicleOccupantsEnabledOverride) : les occupants restent actifs si l'onglet Occupants est ouvert ou si enabledWhileConfiguring vaut true ; endSession retire l'override.
-- onVehicleReplaced et onVehicleResetted sont de simples alias de onVehicleSpawned.
+- An occupant's weight is seat.weight if present, otherwise defaultWeight = 89 (kg, local value in the file).
+- Format of the occupant parameter of setSeatOccupant: 'empty', 'dummy' or 'player:<index>' (player index, 0 for the solo player).
+- During a session, an override is set on the vehicle (setVehicleOccupantsEnabledOverride): occupants stay active if the Occupants tab is open or if enabledWhileConfiguring is true; endSession removes the override.
+- onVehicleReplaced and onVehicleResetted are simple aliases of onVehicleSpawned.
 
-**Dépendances (chargées avant) :** `gameplay_seatOccupants`, `core_multiseat`, `core_playerPersonas`, `core_vehicle_configTarget`, `core_vehicle_manager`
+**Dependencies (loaded first):** `gameplay_seatOccupants`, `core_multiseat`, `core_playerPersonas`, `core_vehicle_configTarget`, `core_vehicle_manager`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_pause_vehicleConfigurationOccupants.beginSession(enabled)` | Démarre une session de configuration sur le véhicule ciblé. Retire l'override de l'ancien véhicule s'il a changé, mémorise le nouveau et applique l'override des occupants. | 118 |
-| `ui_pause_vehicleConfigurationOccupants.endSession()` | Termine la session : supprime l'override des occupants sur le véhicule de session et réinitialise l'état local (sessionVehicleId, onglet actif). | 129 |
-| `ui_pause_vehicleConfigurationOccupants.fillEmptySeatsWithDummies()` | Place un mannequin de 89 kg sur chaque siège libre du véhicule ciblé. | 202 |
-| `ui_pause_vehicleConfigurationOccupants.getState()` | Renvoie l'état affiché par l'onglet : id du véhicule, sièges, joueurs, mode multi-siège, chemins des pièces (partPath) installées, et enabledWhileConfiguring. Si aucun véhicule valide n'est ciblé, renvoie {vehicleId=nil, seats={}, players={}}. | 102 |
-| `ui_pause_vehicleConfigurationOccupants.onExtensionUnloaded()` | Hook appelé au déchargement de l'extension ; appelle endSession. *(interne)* *(hook)* | 263 |
-| `ui_pause_vehicleConfigurationOccupants.onLocalParticipantsChanged()` | Hook appelé quand la liste des participants locaux (multi-siège) change ; notifie l'UI si une session est en cours. *(interne)* *(hook)* | 232 |
-| `ui_pause_vehicleConfigurationOccupants.onSeatOccupantEnter(_, vehId)` | Hook appelé quand un occupant s'assoit ; notifie l'UI si c'est le véhicule de session. *(interne)* *(hook)* | 224 |
-| `ui_pause_vehicleConfigurationOccupants.onSeatOccupantExit(_, vehId)` | Hook appelé quand un occupant quitte un siège ; notifie l'UI si c'est le véhicule de session. *(interne)* *(hook)* | 228 |
-| `ui_pause_vehicleConfigurationOccupants.onVehicleConfigTargetChanged()` | Hook appelé quand la cible de configuration change : retire l'override de l'ancien véhicule, bascule sur le nouveau et notifie l'UI. *(interne)* *(hook)* | 252 |
-| `ui_pause_vehicleConfigurationOccupants.onVehicleDestroyed(vehId)` | Hook appelé à la destruction d'un véhicule ; si c'est celui de la session, oublie la session et notifie l'UI. *(interne)* *(hook)* | 246 |
-| `ui_pause_vehicleConfigurationOccupants.onVehicleSpawned(vehId)` | Hook appelé à l'apparition d'un véhicule ; si c'est celui de la session, réapplique l'override et notifie l'UI. *(interne)* *(hook)* | 236 |
-| `ui_pause_vehicleConfigurationOccupants.removeAllDummies()` | Retire tous les mannequins du véhicule ciblé. | 216 |
-| `ui_pause_vehicleConfigurationOccupants.setEnabledWhileConfiguring(enabled)` | Active ou coupe les occupants pendant la configuration et réapplique l'override. | 137 |
-| `ui_pause_vehicleConfigurationOccupants.setOccupantTabActive(active)` | Indique si l'onglet Occupants est affiché ; tant qu'il l'est, les occupants restent actifs même si enabledWhileConfiguring vaut false. | 143 |
-| `ui_pause_vehicleConfigurationOccupants.setSeatOccupant(seatId, occupant)` | Définit l'occupant d'un siège : vide, mannequin ou joueur. Libère le siège au besoin avant de le réoccuper, puis notifie l'UI. | 148 |
-| `ui_pause_vehicleConfigurationOccupants.unseatAll()` | Vide tous les sièges du véhicule ciblé et notifie l'UI. | 194 |
+| `ui_pause_vehicleConfigurationOccupants.beginSession(enabled)` | Starts a configuration session on the targeted vehicle. Removes the override from the old vehicle if it changed, stores the new one and applies the occupants override. | 118 |
+| `ui_pause_vehicleConfigurationOccupants.endSession()` | Ends the session: removes the occupants override on the session vehicle and resets the local state (sessionVehicleId, active tab). | 129 |
+| `ui_pause_vehicleConfigurationOccupants.fillEmptySeatsWithDummies()` | Places an 89 kg dummy on each free seat of the targeted vehicle. | 202 |
+| `ui_pause_vehicleConfigurationOccupants.getState()` | Returns the state displayed by the tab: vehicle id, seats, players, multi-seat mode, installed part paths (partPath), and enabledWhileConfiguring. If no valid vehicle is targeted, returns {vehicleId=nil, seats={}, players={}}. | 102 |
+| `ui_pause_vehicleConfigurationOccupants.onExtensionUnloaded()` | Hook called when the extension is unloaded; calls endSession. *(internal)* *(hook)* | 263 |
+| `ui_pause_vehicleConfigurationOccupants.onLocalParticipantsChanged()` | Hook called when the list of local participants (multi-seat) changes; notifies the UI if a session is in progress. *(internal)* *(hook)* | 232 |
+| `ui_pause_vehicleConfigurationOccupants.onSeatOccupantEnter(_, vehId)` | Hook called when an occupant sits down; notifies the UI if it is the session vehicle. *(internal)* *(hook)* | 224 |
+| `ui_pause_vehicleConfigurationOccupants.onSeatOccupantExit(_, vehId)` | Hook called when an occupant leaves a seat; notifies the UI if it is the session vehicle. *(internal)* *(hook)* | 228 |
+| `ui_pause_vehicleConfigurationOccupants.onVehicleConfigTargetChanged()` | Hook called when the configuration target changes: removes the override from the old vehicle, switches to the new one and notifies the UI. *(internal)* *(hook)* | 252 |
+| `ui_pause_vehicleConfigurationOccupants.onVehicleDestroyed(vehId)` | Hook called when a vehicle is destroyed; if it is the session's, forgets the session and notifies the UI. *(internal)* *(hook)* | 246 |
+| `ui_pause_vehicleConfigurationOccupants.onVehicleSpawned(vehId)` | Hook called when a vehicle spawns; if it is the session's, reapplies the override and notifies the UI. *(internal)* *(hook)* | 236 |
+| `ui_pause_vehicleConfigurationOccupants.removeAllDummies()` | Removes all dummies from the targeted vehicle. | 216 |
+| `ui_pause_vehicleConfigurationOccupants.setEnabledWhileConfiguring(enabled)` | Enables or disables occupants during configuration and reapplies the override. | 137 |
+| `ui_pause_vehicleConfigurationOccupants.setOccupantTabActive(active)` | Indicates whether the Occupants tab is displayed; as long as it is, occupants stay active even if enabledWhileConfiguring is false. | 143 |
+| `ui_pause_vehicleConfigurationOccupants.setSeatOccupant(seatId, occupant)` | Sets a seat's occupant: empty, dummy or player. Frees the seat if needed before reoccupying it, then notifies the UI. | 148 |
+| `ui_pause_vehicleConfigurationOccupants.unseatAll()` | Empties all seats of the targeted vehicle and notifies the UI. | 194 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_pause_vehicleConfigurationOccupants.beginSession(enabled)`
 
-Démarre une session de configuration sur le véhicule ciblé. Retire l'override de l'ancien véhicule s'il a changé, mémorise le nouveau et applique l'override des occupants.
+Starts a configuration session on the targeted vehicle. Removes the override from the old vehicle if it changed, stores the new one and applies the occupants override.
 
-- `enabled` (*boolean|nil*) : false pour désactiver les occupants pendant la configuration ; toute autre valeur (y compris nil) active.
-- **renvoie** : table Le résultat de getState().
+- `enabled` (*boolean|nil*) : false to disable occupants during configuration; any other value (including nil) enables them.
+- **returns**: table The result of getState().
 
 #### `ui_pause_vehicleConfigurationOccupants.fillEmptySeatsWithDummies()`
 
-Place un mannequin de 89 kg sur chaque siège libre du véhicule ciblé.
+Places an 89 kg dummy on each free seat of the targeted vehicle.
 
-- **renvoie** : integer Nombre de mannequins ajoutés (0 si aucun véhicule).
+- **returns**: integer Number of dummies added (0 if no vehicle).
 
 #### `ui_pause_vehicleConfigurationOccupants.getState()`
 
-Renvoie l'état affiché par l'onglet : id du véhicule, sièges, joueurs, mode multi-siège, chemins des pièces (partPath) installées, et enabledWhileConfiguring. Si aucun véhicule valide n'est ciblé, renvoie {vehicleId=nil, seats={}, players={}}.
+Returns the state displayed by the tab: vehicle id, seats, players, multi-seat mode, installed part paths (partPath), and enabledWhileConfiguring. If no valid vehicle is targeted, returns {vehicleId=nil, seats={}, players={}}.
 
-- **renvoie** : table {vehicleId, seats, players, multiseatActive, vehiclePartPaths, enabledWhileConfiguring}. players : liste triée de {id, label, color '#RRGGBB', icon}.
+- **returns**: table {vehicleId, seats, players, multiseatActive, vehiclePartPaths, enabledWhileConfiguring}. players: sorted list of {id, label, color '#RRGGBB', icon}.
 
 #### `ui_pause_vehicleConfigurationOccupants.onSeatOccupantEnter(_, vehId)`
 
-Hook appelé quand un occupant s'assoit ; notifie l'UI si c'est le véhicule de session.
+Hook called when an occupant sits down; notifies the UI if it is the session vehicle.
 
-- `_` (*any*) : Ignoré (déduit du code).
-- `vehId` (*integer*) : Id du véhicule concerné.
+- `_` (*any*) : Ignored (inferred from code).
+- `vehId` (*integer*) : Id of the vehicle concerned.
 
 #### `ui_pause_vehicleConfigurationOccupants.onSeatOccupantExit(_, vehId)`
 
-Hook appelé quand un occupant quitte un siège ; notifie l'UI si c'est le véhicule de session.
+Hook called when an occupant leaves a seat; notifies the UI if it is the session vehicle.
 
-- `_` (*any*) : Ignoré (déduit du code).
-- `vehId` (*integer*) : Id du véhicule concerné.
+- `_` (*any*) : Ignored (inferred from code).
+- `vehId` (*integer*) : Id of the vehicle concerned.
 
 #### `ui_pause_vehicleConfigurationOccupants.onVehicleDestroyed(vehId)`
 
-Hook appelé à la destruction d'un véhicule ; si c'est celui de la session, oublie la session et notifie l'UI.
+Hook called when a vehicle is destroyed; if it is the session's, forgets the session and notifies the UI.
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `ui_pause_vehicleConfigurationOccupants.onVehicleSpawned(vehId)`
 
-Hook appelé à l'apparition d'un véhicule ; si c'est celui de la session, réapplique l'override et notifie l'UI.
+Hook called when a vehicle spawns; if it is the session's, reapplies the override and notifies the UI.
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `ui_pause_vehicleConfigurationOccupants.removeAllDummies()`
 
-Retire tous les mannequins du véhicule ciblé.
+Removes all dummies from the targeted vehicle.
 
-- **renvoie** : integer Nombre retiré, tel que renvoyé par gameplay_seatOccupants.clearDummyOccupants (0 si aucun véhicule).
+- **returns**: integer Number removed, as returned by gameplay_seatOccupants.clearDummyOccupants (0 if no vehicle).
 
 #### `ui_pause_vehicleConfigurationOccupants.setEnabledWhileConfiguring(enabled)`
 
-Active ou coupe les occupants pendant la configuration et réapplique l'override.
+Enables or disables occupants during configuration and reapplies the override.
 
-- `enabled` (*boolean|nil*) : false pour désactiver, sinon activé.
-- **renvoie** : boolean La valeur retenue.
+- `enabled` (*boolean|nil*) : false to disable, otherwise enabled.
+- **returns**: boolean The value retained.
 
 #### `ui_pause_vehicleConfigurationOccupants.setOccupantTabActive(active)`
 
-Indique si l'onglet Occupants est affiché ; tant qu'il l'est, les occupants restent actifs même si enabledWhileConfiguring vaut false.
+Indicates whether the Occupants tab is displayed; as long as it is, occupants stay active even if enabledWhileConfiguring is false.
 
-- `active` (*boolean*) : true si l'onglet est ouvert.
+- `active` (*boolean*) : true if the tab is open.
 
 #### `ui_pause_vehicleConfigurationOccupants.setSeatOccupant(seatId, occupant)`
 
-Définit l'occupant d'un siège : vide, mannequin ou joueur. Libère le siège au besoin avant de le réoccuper, puis notifie l'UI.
+Sets a seat's occupant: empty, dummy or player. Frees the seat if needed before reoccupying it, then notifies the UI.
 
-- `seatId` (*string*) : Identifiant du siège (seat.seatId).
-- `occupant` (*string*) : 'empty', 'dummy' ou 'player:<index>'.
-- **renvoie** : table {success=boolean, reason=string|nil}. Raisons : seatMissing, invalidOccupant, enterFailed, occupied, ou la raison renvoyée par setDummyOccupant.
+- `seatId` (*string*) : Seat identifier (seat.seatId).
+- `occupant` (*string*) : 'empty', 'dummy' or 'player:<index>'.
+- **returns**: table {success=boolean, reason=string|nil}. Reasons: seatMissing, invalidOccupant, enterFailed, occupied, or the reason returned by setDummyOccupant.
 
 #### `ui_pause_vehicleConfigurationOccupants.unseatAll()`
 
-Vide tous les sièges du véhicule ciblé et notifie l'UI.
+Empties all seats of the targeted vehicle and notifies the UI.
 
-- **renvoie** : boolean false si aucun véhicule n'est ciblé, sinon true.
+- **returns**: boolean false if no vehicle is targeted, otherwise true.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant celle-ci : gameplay_seatOccupants, core_multiseat, core_playerPersonas, core_vehicle_configTarget, core_vehicle_manager. |
-| `onVehicleReplaced` | function | Alias de onVehicleSpawned : réapplique l'override et notifie l'UI si le véhicule remplacé est celui de la session. |
-| `onVehicleResetted` | function | Alias de onVehicleSpawned : même comportement après un reset du véhicule. |
+| `dependencies` | table<integer, string> | Extensions loaded before this one: gameplay_seatOccupants, core_multiseat, core_playerPersonas, core_vehicle_configTarget, core_vehicle_manager. |
+| `onVehicleReplaced` | function | Alias of onVehicleSpawned: reapplies the override and notifies the UI if the replaced vehicle is the session's. |
+| `onVehicleResetted` | function | Alias of onVehicleSpawned: same behavior after a vehicle reset. |
 
-**Évènements UI (guihooks.trigger) :** `VehicleConfigOccupantsStateChanged`
+**UI events (guihooks.trigger):** `VehicleConfigOccupantsStateChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/pause/vehicleConfigurationOccupants.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/pause/vehicleConfigurationOccupants.lua`.*

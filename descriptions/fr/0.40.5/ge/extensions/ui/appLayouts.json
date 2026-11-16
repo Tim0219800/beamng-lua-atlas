@@ -1,0 +1,184 @@
+{
+  "path": "lua/ge/extensions/ui/appLayouts.lua",
+  "module": "Gère les dispositions (layouts) des apps de l'interface : lecture, création, copie, renommage, suppression et réinitialisation des fichiers `*.uilayout.json`, ainsi que l'ajout, le retrait et le déplacement des apps dans un layout. Les layouts d'origine sont dans `/settings/ui_apps/originalLayouts/`, ceux de l'utilisateur dans `/settings/ui_apps/layouts/`. Une table type de layout vers fichier est mémorisée dans `/temp/ui-layout-map.json`. Sert aux moddeurs qui veulent changer les apps affichées par code ; l'éditeur Vue s'appuie sur les mêmes fonctions.",
+  "usage": "local layouts = ui_appLayouts.getAvailableLayouts()\nfor _, l in ipairs(layouts) do print(l.filename, l.type, l.title) end\nui_appLayouts.setUsedLayout('freeroam')",
+  "notes": [
+    "Les apps officielles supprimées du jeu (engineDebug, gravityApp, radioTest, simpleRpmDebug, replayAppV2) sont filtrées de tous les layouts, y compris les layouts personnalisés ; la liste `removedApps` d'un layout d'origine est aussi utilisée comme liste d'obsolescence.",
+    "Les indices d'app sont 0-based côté JS : removeApp, applyPlacementPatch et applySettingsPatch convertissent en indice Lua 1-based. Une chaîne de la forme \"appName-<idx>\" est aussi acceptée (idx 0-based).",
+    "getAvailableLayouts met à jour les fichiers utilisateur : si la `version` du layout d'origine est plus récente, le layout utilisateur est remplacé ; sinon les apps dont `appVersion` est plus récent sont remplacées ou ajoutées. Le fichier est alors réécrit sur disque.",
+    "Chaque layout renvoyé reçoit les champs `filename`, `resettable`, `userFileExists` et éventuellement `default` (si le chemin contient \"default\").",
+    "addApp, removeApp et les patchs écrivent sur disque sans notification (écriture silencieuse) ; saveLayout, createLayout, renameLayout, duplicateLayout, deleteLayout, resetLayout et setCurrentLayout notifient `ui_apps.notifyLayoutsChanged`.",
+    "Le hook onCameraChanged envoie `PlayerCameraModeChanged` à l'UI ; un joueur qui marche est rapporté comme caméra \"unicycle\"."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : `{'ui_apps'}`."}
+  },
+  "functions": {
+    "getAvailableLayouts": {
+      "desc": "Liste tous les layouts disponibles (originaux sans copie utilisateur + fichiers utilisateur), après mise à jour des fichiers utilisateur depuis les originaux et filtrage des apps supprimées.",
+      "params": {},
+      "returns": [{"type": "table<integer, table>", "desc": "Layouts avec `apps`, `title`, `type`, `filename`, `resettable`, `userFileExists`, `default`."}],
+      "internal": false
+    },
+    "getCurrentLayout": {
+      "desc": "Renvoie le layout actuellement actif (après filtrage des apps obsolètes), ou nil.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Layout courant."}],
+      "internal": false
+    },
+    "setCurrentLayout": {
+      "desc": "Définit le layout courant à partir d'un nom de fichier ou d'une table de layout, puis notifie le changement. Renvoie nil si le fichier est introuvable.",
+      "params": {"layoutOrFilename": {"type": "string|table", "desc": "Chemin du fichier du layout ou table de layout."}},
+      "returns": [{"type": "table|nil", "desc": "Le layout courant."}],
+      "internal": false
+    },
+    "setUsedLayout": {
+      "desc": "Choisit le layout à utiliser à partir d'un nom de fichier ou d'un type. Un choix explicite par fichier est mémorisé comme préférence du type, sauf s'il s'agit du layout par défaut du type (la préférence est alors effacée).",
+      "params": {"idOrType": {"type": "string", "desc": "Nom de fichier du layout ou type de layout."}},
+      "returns": [{"type": "table|nil", "desc": "Layout activé, nil s'il est introuvable."}],
+      "internal": false
+    },
+    "resetUsedLayout": {
+      "desc": "Recharge le layout mémorisé par setUsedLayout comme layout courant. Renvoie le layout courant tel quel si aucun n'a été choisi.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Layout courant."}],
+      "internal": false
+    },
+    "saveLayout": {
+      "desc": "Enregistre un layout sur disque (champ `filename` obligatoire) puis notifie les consommateurs.",
+      "params": {"data": {"type": "table", "desc": "Layout à écrire, avec `filename`."}},
+      "internal": false
+    },
+    "createLayout": {
+      "desc": "Crée un nouveau layout. Sans `filename`, un nom libre est déduit du titre dans le dossier utilisateur. Titre par défaut \"My Layout\", type par défaut \"custom\".",
+      "params": {"data": {"type": "table|nil", "desc": "Champs facultatifs : title, type, apps, description, devonly, version, filename."}},
+      "returns": [{"type": "string|nil", "desc": "Nom de fichier créé, nil si aucun nom n'est disponible."}],
+      "internal": false
+    },
+    "renameLayout": {
+      "desc": "Change le titre d'un layout. Refuse les layouts du contenu officiel.",
+      "params": {
+        "filename": {"type": "string", "desc": "Fichier du layout."},
+        "title": {"type": "string", "desc": "Nouveau titre."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si renommé."}],
+      "internal": false
+    },
+    "duplicateLayout": {
+      "desc": "Copie un layout dans un nouveau fichier (titre « <titre> copy » par défaut) en retirant le drapeau `default`.",
+      "params": {
+        "filename": {"type": "string", "desc": "Fichier du layout source."},
+        "newTitle": {"type": "string|nil", "desc": "Titre de la copie."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Nom du fichier de la copie, nil en cas d'échec."}],
+      "internal": false
+    },
+    "deleteLayout": {
+      "desc": "Supprime le fichier d'un layout, sauf s'il fait partie du contenu officiel (un message est loggé et rien n'est supprimé).",
+      "params": {"filenameToDelete": {"type": "string", "desc": "Fichier à supprimer."}},
+      "returns": [{"type": "boolean", "desc": "true si le layout a été trouvé (même si la suppression a été refusée), false sinon."}],
+      "internal": false
+    },
+    "resetLayout": {
+      "desc": "Réinitialise un layout utilisateur en supprimant son fichier, ce qui fait réapparaître l'original. Refuse les fichiers hors du dossier utilisateur.",
+      "params": {
+        "filenameToReset": {"type": "string|nil", "desc": "Fichier utilisateur à réinitialiser."},
+        "layoutType": {"type": "string|nil", "desc": "Type utilisé pour retrouver l'original si le fichier n'en a pas."}
+      },
+      "returns": [{"type": "string|boolean", "desc": "Nom de fichier du layout réinitialisé, ou false en cas d'échec."}],
+      "internal": false
+    },
+    "addApp": {
+      "desc": "Ajoute une app à la fin d'un layout, avec un placement facultatif. Refuse les apps obsolètes.",
+      "params": {
+        "layoutId": {"type": "string", "desc": "Fichier du layout."},
+        "appName": {"type": "string", "desc": "Nom de l'app."},
+        "placement": {"type": "table|nil", "desc": "Position et taille de l'app."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si ajoutée."}],
+      "internal": false
+    },
+    "removeApp": {
+      "desc": "Retire une app d'un layout par indice (0-based) ou par identifiant \"nom-indice\".",
+      "params": {
+        "layoutId": {"type": "string", "desc": "Fichier du layout."},
+        "appInstanceIdOrIndex": {"type": "integer|string", "desc": "Indice 0-based ou \"appName-<idx>\"."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si retirée."}],
+      "internal": false
+    },
+    "applyPlacementPatch": {
+      "desc": "Remplace le placement d'une app d'un layout et écrit le fichier.",
+      "params": {
+        "layoutId": {"type": "string", "desc": "Fichier du layout."},
+        "appInstanceIdOrIndex": {"type": "integer|string", "desc": "Indice 0-based ou \"appName-<idx>\"."},
+        "placement": {"type": "table", "desc": "Nouveau placement."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si appliqué."}],
+      "internal": false
+    },
+    "applySettingsPatch": {
+      "desc": "Remplace les réglages d'une app d'un layout et écrit le fichier.",
+      "params": {
+        "layoutId": {"type": "string", "desc": "Fichier du layout."},
+        "appInstanceIdOrIndex": {"type": "integer|string", "desc": "Indice 0-based ou \"appName-<idx>\"."},
+        "settings": {"type": "table", "desc": "Nouveaux réglages de l'app."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si appliqué."}],
+      "internal": false
+    },
+    "setEditing": {
+      "desc": "Active ou désactive le mode édition des layouts.",
+      "params": {"enabled": {"type": "boolean", "desc": "Nouvel état."}},
+      "returns": [{"type": "boolean", "desc": "État enregistré."}],
+      "internal": false
+    },
+    "isEditing": {
+      "desc": "Indique si le mode édition est actif.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "État du mode édition."}],
+      "internal": false
+    },
+    "getPlayerCameraModes": {
+      "desc": "Renvoie le mode de caméra de chaque joueur (multi-siège) ; \"unicycle\" si le joueur marche.",
+      "params": {},
+      "returns": [{"type": "table<integer, table>", "desc": "Liste de `{player, name}`."}],
+      "internal": false
+    },
+    "onCameraChanged": {
+      "desc": "Hook appelé quand la caméra d'un joueur change. Envoie `PlayerCameraModeChanged` à l'UI avec `{player, name}`.",
+      "params": {
+        "player": {"type": "integer|nil", "desc": "Indice du joueur (0 par défaut)."},
+        "camName": {"type": "string|nil", "desc": "Nom du mode de caméra."}
+      },
+      "internal": true
+    },
+    "setLayoutForType": {
+      "desc": "Mémorise le layout à utiliser pour un type de layout.",
+      "params": {
+        "layoutType": {"type": "string", "desc": "Type de layout."},
+        "filename": {"type": "string", "desc": "Fichier du layout (doit exister)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si enregistré."}],
+      "internal": false
+    },
+    "clearLayoutForType": {
+      "desc": "Efface la préférence de layout d'un type.",
+      "params": {"layoutType": {"type": "string", "desc": "Type de layout."}},
+      "returns": [{"type": "boolean", "desc": "true si une préférence existait."}],
+      "internal": false
+    },
+    "getLayoutForType": {
+      "desc": "Renvoie le fichier de layout mémorisé pour un type.",
+      "params": {"layoutType": {"type": "string", "desc": "Type de layout."}},
+      "returns": [{"type": "string|nil", "desc": "Nom du fichier, ou nil."}],
+      "internal": false
+    },
+    "getTypeLayoutMap": {
+      "desc": "Renvoie une copie de la table type de layout vers fichier.",
+      "params": {},
+      "returns": [{"type": "table<string, string>", "desc": "Préférences par type."}],
+      "internal": false
+    }
+  }
+}

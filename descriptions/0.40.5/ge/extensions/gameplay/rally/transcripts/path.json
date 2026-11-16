@@ -1,45 +1,80 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/transcripts/path.lua",
-  "module": "Conteneur des transcriptions (texte reconnu de la voix du copilote lors de la reconnaissance) d'un rallye. Il charge et sauvegarde un fichier JSON, et gère une `sortedList` d'entrées (transcripts/entry.lua). Il fournit aussi les identifiants uniques et le dessin de debug des transcriptions. Le module renvoie un constructeur : `require(...)(fname)`.",
+  "module": "Container of a rally's transcriptions (recognized text of the co-driver's voice during the recce). It loads and saves a JSON file, and manages a `sortedList` of entries (transcripts/entry.lua). It also provides the unique identifiers and the debug drawing of the transcriptions. The module returns a constructor: `require(...)(fname)`.",
   "notes": [
-    "Le gros commentaire au-dessus de drawDebugTranscripts est du code de test mis en commentaire (rotation de quaternion) : il n'est pas exécuté.",
-    "_draw_debug_hover_tsc_id n'est jamais modifié dans ce fichier ; seule la valeur nil est utilisée."
+    "The big comment above drawDebugTranscripts is commented-out test code (quaternion rotation): it is not executed.",
+    "_draw_debug_hover_tsc_id is never modified in this file; only the nil value is used."
   ],
   "classes": {
     "C": {
-      "desc": "Chemin de transcriptions. Champs : fname, selection_sphere_r (4), _draw_debug_hover_tsc_id, transcripts (sortedList d'entrées).",
+      "desc": "Transcriptions path. Fields: fname, selection_sphere_r (4), _draw_debug_hover_tsc_id, transcripts (sortedList of entries).",
       "functions": {
         "getNextUniqueIdentifier": {
-          "desc": "Renvoie un entier croissant (1, 2, 3…) servant d'id aux entrées.",
-          "returns": [{"type": "integer", "desc": "Nouvel identifiant."}]
+          "desc": "Returns an increasing integer (1, 2, 3…) used as the entries' id.",
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "New identifier."
+            }
+          ]
         },
         "init": {
-          "desc": "Constructeur : mémorise le nom du fichier et crée la sortedList `transcripts`.",
-          "params": {"fname": {"type": "string|nil", "desc": "Fichier JSON des transcriptions."}},
+          "desc": "Constructor: stores the file name and creates the `transcripts` sortedList.",
+          "params": {
+            "fname": {
+              "type": "string|nil",
+              "desc": "Transcriptions JSON file."
+            }
+          },
           "internal": true
         },
         "load": {
-          "desc": "Charge le fichier JSON (jsonReadFile) et désérialise. Journalise un avertissement et renvoie false si fname est nil ou le fichier absent, une erreur si la lecture échoue.",
-          "returns": [{"type": "boolean", "desc": "true si le chargement a réussi."}]
+          "desc": "Loads the JSON file (jsonReadFile) and deserializes. Logs a warning and returns false if fname is nil or the file is absent, an error if reading fails.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if loading succeeded."
+            }
+          ]
         },
         "save": {
-          "desc": "Sérialise et écrit le fichier JSON (jsonWriteFile avec le paramètre compact à false)."
+          "desc": "Serializes and writes the JSON file (jsonWriteFile with the compact parameter set to false)."
         },
         "onSerialize": {
-          "desc": "Renvoie {transcripts = <liste sérialisée>}.",
-          "returns": [{"type": "table", "desc": "Données sérialisables."}]
+          "desc": "Returns {transcripts = <serialized list>}.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Serializable data."
+            }
+          ]
         },
         "onDeserialized": {
-          "desc": "Vide la liste et la recharge depuis data.transcripts. Ne fait rien si data est nil.",
-          "params": {"data": {"type": "table|nil", "desc": "Données lues du fichier."}}
+          "desc": "Empties the list and reloads it from data.transcripts. Does nothing if data is nil.",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "Data read from the file."
+            }
+          }
         },
         "drawDebug": {
-          "desc": "Point d'entrée du dessin de debug ; appelle drawDebugTranscripts.",
-          "params": {"selected_id": {"type": "integer|nil", "desc": "Id de l'entrée sélectionnée."}}
+          "desc": "Entry point of the debug drawing; calls drawDebugTranscripts.",
+          "params": {
+            "selected_id": {
+              "type": "integer|nil",
+              "desc": "Id of the selected entry."
+            }
+          }
         },
         "drawDebugTranscripts": {
-          "desc": "Appelle drawDebug(is_hovered, is_selected) sur chaque entrée de la liste triée.",
-          "params": {"selected_id": {"type": "integer|nil", "desc": "Id de l'entrée sélectionnée."}}
+          "desc": "Calls drawDebug(is_hovered, is_selected) on each entry of the sorted list.",
+          "params": {
+            "selected_id": {
+              "type": "integer|nil",
+              "desc": "Id of the selected entry."
+            }
+          }
         }
       }
     }

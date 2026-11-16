@@ -1,46 +1,74 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/selectionQuery.lua",
-  "module": "Requête de sélection de l'outil Easy Object Select. À partir de la position de la souris et de la caméra, il collecte les objets de la scène (StaticShape, StaticObject, véhicules) sous ou près du curseur, les résout vers leur prefab propriétaire, applique les filtres (classe, caché, verrouillé, bornes, motifs de nom, volume et distance max) et construit des « proxies » (géométrie écran) classés en relation « over » (curseur dessus) ou « discovery » (dans le rayon de découverte). Utilise le cache de selectionCache quand il est disponible, sinon un mode « broad » (rectangle écran + boîte autour de la caméra).",
+  "module": "Selection query of the Easy Object Select tool. From the mouse position and the camera, it collects the scene objects (StaticShape, StaticObject, vehicles) under or near the cursor, resolves them to their owning prefab, applies the filters (class, hidden, locked, bounds, name patterns, max volume and distance) and builds \"proxies\" (screen geometry) classified as \"over\" (cursor on top) or \"discovery\" (within the discovery radius) relation. Uses the selectionCache cache when available, otherwise a \"broad\" mode (screen rectangle + box around the camera).",
   "notes": [
-    "Classes exclues d'office : TerrainBlock, WaterPlane, Forest ; l'objet nommé gameCamera est ignoré.",
-    "Les motifs namePattern / ignorePattern sont des listes de motifs Lua (string.find) séparés par des virgules, testés sur le nom, le nom interne, le champ shapeName et le fichier modèle. Un motif invalide fait rejeter tous les objets (rejected.invalidPattern / invalidIgnorePattern).",
-    "Rayon de requête large : max(discoveryPixels + 8, 128 * uiscale) ; distance proche par défaut 40 m (nearQueryDistance) ; discoveryPixels par défaut 48.",
-    "Les raisons de rejet sont comptées dans la table rejected (unsupported, excludedClass, cameraObject, hidden, classDisabled, locked, selectionDisabled, invalidBounds, patternFilter, ignorePattern, outsideVolume, outsideRange, outsideDiscovery…).",
-    "Fonction locale passesPatterns définie mais non utilisée dans ce fichier."
+    "Classes excluded outright: TerrainBlock, WaterPlane, Forest; the object named gameCamera is ignored.",
+    "The namePattern / ignorePattern patterns are comma-separated lists of Lua patterns (string.find), tested against the name, the internal name, the shapeName field and the model file. An invalid pattern causes all objects to be rejected (rejected.invalidPattern / invalidIgnorePattern).",
+    "Broad query radius: max(discoveryPixels + 8, 128 * uiscale); default near distance 40 m (nearQueryDistance); default discoveryPixels 48.",
+    "Rejection reasons are counted in the rejected table (unsupported, excludedClass, cameraObject, hidden, classDisabled, locked, selectionDisabled, invalidBounds, patternFilter, ignorePattern, outsideVolume, outsideRange, outsideDiscovery...).",
+    "Local function passesPatterns defined but not used in this file."
   ],
   "functions": {
     "gather": {
-      "desc": "Collecte les candidats de sélection pour la frame courante. Renvoie nil si le contexte caméra est indisponible. Remplit proxies (relation over), discoveryProxies (relation discovery), filteredLarge (gros objets filtrés si options.collectFilteredLarge), queryStats, rejected et sourceCount.",
+      "desc": "Collects the selection candidates for the current frame. Returns nil if the camera context is unavailable. Fills proxies (over relation), discoveryProxies (discovery relation), filteredLarge (large filtered objects if options.collectFilteredLarge), queryStats, rejected and sourceCount.",
       "params": {
-        "options": {"type": "table|nil", "desc": "discoveryPixels (px, défaut 48), nearQueryDistance (m, défaut 40), maxDistance (m), maxVolume (m^3), namePattern, ignorePattern (listes de motifs Lua séparés par des virgules), collectFilteredLarge (boolean)."}
+        "options": {
+          "type": "table|nil",
+          "desc": "discoveryPixels (px, default 48), nearQueryDistance (m, default 40), maxDistance (m), maxVolume (m^3), namePattern, ignorePattern (comma-separated lists of Lua patterns), collectFilteredLarge (boolean)."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Table {camera, mouse, queryRadius, discoveryRadius, nearQueryDistance, proxies, discoveryProxies, filteredLarge, queryStats, rejected, sourceCount}."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Table {camera, mouse, queryRadius, discoveryRadius, nearQueryDistance, proxies, discoveryProxies, filteredLarge, queryStats, rejected, sourceCount}."
+        }
+      ],
       "internal": false
     },
     "activate": {
-      "desc": "Active le cache de sélection (selectionCache.activate). Appelé à l'ouverture de l'outil.",
+      "desc": "Enables the selection cache (selectionCache.activate). Called when the tool opens.",
       "params": {},
       "internal": false
     },
     "invalidateCache": {
-      "desc": "Invalide le cache de sélection.",
+      "desc": "Invalidates the selection cache.",
       "params": {
-        "reason": {"type": "string|nil", "desc": "Raison de l'invalidation (diagnostic)."}
+        "reason": {
+          "type": "string|nil",
+          "desc": "Reason for the invalidation (diagnostic)."
+        }
       },
       "internal": false
     },
     "getCacheStatus": {
-      "desc": "Renvoie l'état du cache de sélection (selectionCache.getStatus), utile pour l'affichage de debug.",
+      "desc": "Returns the state of the selection cache (selectionCache.getStatus), useful for the debug display.",
       "params": {},
-      "returns": [{"type": "table", "desc": "État du cache."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Cache state."
+        }
+      ],
       "internal": false
     },
     "validatePatternList": {
-      "desc": "Vérifie qu'une liste de motifs Lua séparés par des virgules est valide (chaque entrée est testée avec pcall(string.find)).",
+      "desc": "Checks that a comma-separated list of Lua patterns is valid (each entry is tested with pcall(string.find)).",
       "params": {
-        "value": {"type": "string|nil", "desc": "Liste de motifs, séparés par des virgules."}
+        "value": {
+          "type": "string|nil",
+          "desc": "List of patterns, comma-separated."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si tous les motifs sont valides."}, {"type": "string|nil", "desc": "Message d'erreur « entry N: … » si invalide."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if all patterns are valid."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error message \"entry N: ...\" if invalid."
+        }
+      ],
       "internal": false
     }
   }

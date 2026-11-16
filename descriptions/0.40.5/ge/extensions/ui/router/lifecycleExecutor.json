@@ -1,44 +1,96 @@
 {
   "path": "lua/ge/extensions/ui/router/lifecycleExecutor.lua",
-  "module": "Exécute les hooks de cycle de vie d'une route (onEnter, onMount, onLeave…) pour le routeur. Il résout la référence de fonction déclarée sur le nœud de route (via ui/router/utils), appelle le hook sous pcall avec (context, toRoute, fromRoute, data) et journalise les erreurs sans interrompre le routeur.",
+  "module": "Runs the lifecycle hooks of a route (onEnter, onMount, onLeave...) for the router. It resolves the function reference declared on the route node (via ui/router/utils), calls the hook under pcall with (context, toRoute, fromRoute, data) and logs errors without interrupting the router.",
   "notes": [
-    "runLifecycleHook renvoie (ok, erreur, estErreurDure). Un hook absent compte comme un succès. Une erreur de résolution de la référence peut être « dure » (isHard, définie par Utils.resolveFunctionReference) : le routeur abandonne alors la navigation (lifecycle_hook_error) ; une exception levée dans le hook n'est jamais dure.",
-    "Les messages d'erreur vides sont remplacés par \"unknown_error\"."
+    "runLifecycleHook returns (ok, error, isHardError). A missing hook counts as a success. A reference resolution error can be \"hard\" (isHard, defined by Utils.resolveFunctionReference): the router then aborts the navigation (lifecycle_hook_error); an exception thrown in the hook is never hard.",
+    "Empty error messages are replaced by \"unknown_error\"."
   ],
   "functions": {
     "sanitizeError": {
-      "desc": "Renvoie l'erreur si c'est une chaîne non vide, sinon \"unknown_error\".",
-      "params": {"err": {"type": "any", "desc": "Erreur brute."}},
-      "returns": [{"type": "string", "desc": "Message d'erreur exploitable."}],
+      "desc": "Returns the error if it is a non-empty string, otherwise \"unknown_error\".",
+      "params": {
+        "err": {
+          "type": "any",
+          "desc": "Raw error."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Usable error message."
+        }
+      ],
       "internal": false
     },
     "resolveHook": {
-      "desc": "Résout la fonction du hook hookName sur le nœud de route (via Utils.resolveFunctionReference, avec un libellé « Lifecycle hook X on route Y »). Renvoie nil, nil, nil si la route ou le hook est absent.",
+      "desc": "Resolves the hook function hookName on the route node (via Utils.resolveFunctionReference, with a label \"Lifecycle hook X on route Y\"). Returns nil, nil, nil if the route or the hook is absent.",
       "params": {
-        "route": {"type": "table|nil", "desc": "Nœud de route portant les hooks."},
-        "hookName": {"type": "string", "desc": "Nom du hook : onEnter, onMount, onLeave…"}
+        "route": {
+          "type": "table|nil",
+          "desc": "Route node carrying the hooks."
+        },
+        "hookName": {
+          "type": "string",
+          "desc": "Hook name: onEnter, onMount, onLeave..."
+        }
       },
       "returns": [
-        {"type": "function|nil", "desc": "La fonction résolue."},
-        {"type": "string|nil", "desc": "Message d'erreur de résolution."},
-        {"type": "boolean|nil", "desc": "true si l'erreur de résolution est dure."}
+        {
+          "type": "function|nil",
+          "desc": "The resolved function."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Resolution error message."
+        },
+        {
+          "type": "boolean|nil",
+          "desc": "true if the resolution error is hard."
+        }
       ],
       "internal": false
     },
     "runLifecycleHook": {
-      "desc": "Exécute le hook sous pcall avec (context, toRoute, fromRoute, data) ; journalise les erreurs au niveau E.",
+      "desc": "Runs the hook under pcall with (context, toRoute, fromRoute, data); logs errors at level E.",
       "params": {
-        "route": {"type": "table|nil", "desc": "Nœud de route portant le hook."},
-        "hookName": {"type": "string", "desc": "Nom du hook."},
-        "context": {"type": "table", "desc": "Contexte de navigation."},
-        "toRoute": {"type": "table|nil", "desc": "Route de destination."},
-        "fromRoute": {"type": "table|nil", "desc": "Route d'origine."},
-        "data": {"type": "table", "desc": "Données de route partagées entre hooks."}
+        "route": {
+          "type": "table|nil",
+          "desc": "Route node carrying the hook."
+        },
+        "hookName": {
+          "type": "string",
+          "desc": "Hook name."
+        },
+        "context": {
+          "type": "table",
+          "desc": "Navigation context."
+        },
+        "toRoute": {
+          "type": "table|nil",
+          "desc": "Destination route."
+        },
+        "fromRoute": {
+          "type": "table|nil",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Route data shared between hooks."
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "true si le hook est absent ou a réussi."},
-        {"type": "string|nil", "desc": "Message d'erreur."},
-        {"type": "boolean", "desc": "true si l'erreur est dure (résolution invalide)."}
+        {
+          "type": "boolean",
+          "desc": "true if the hook is absent or succeeded."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error message."
+        },
+        {
+          "type": "boolean",
+          "desc": "true if the error is hard (invalid resolution)."
+        }
       ],
       "internal": false
     }

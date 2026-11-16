@@ -1,72 +1,72 @@
 # `core_input_virtualInput`
 
-*Fichier : `lua/ge/extensions/core/input/virtualInput.lua` · VM : Game Engine (GE) · 60 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/input/virtualInput.lua` · VM: Game Engine (GE) · 60 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_input_virtualInput` : `extensions.load("core_input_virtualInput")`, puis la globale `core_input_virtualInput`
+**Access:** extension `core_input_virtualInput`: `extensions.load("core_input_virtualInput")`, then the global `core_input_virtualInput`
 
-Extension GE `core_input_virtualInput` : création de périphériques d'entrée virtuels (axes, boutons, POV) via le VirtualInputManager C++ et émission d'évènements sur ceux-ci. Un moddeur s'en sert pour injecter des commandes (volant, pédales, boutons) comme si un vrai contrôleur était branché ; les évènements passent par le système de bindings normal sous le nom de périphérique 'vinput<instance>'.
+GE extension `core_input_virtualInput`: creation of virtual input devices (axes, buttons, POV) via the C++ VirtualInputManager and emission of events on them. A modder uses it to inject commands (steering wheel, pedals, buttons) as if a real controller were plugged in; the events go through the normal bindings system under the device name 'vinput<instance>'.
 
-## Exemple
+## Example
 
 ```lua
 local inst = core_input_virtualInput.createDevice('MyPad', 'abcd1234', 2, 4, 0)
--- objType/action : valeurs attendues par le moteur (non définies dans ce fichier)
+-- objType/action: values expected by the engine (not defined in this file)
 core_input_virtualInput.emit(inst, objType, 0, action, 0.5)
 core_input_virtualInput.deleteDevice(inst)
 ```
 
-## Remarques
+## Notes
 
-- Les valeurs valides de objType et action pour emit sont définies côté C++ (non visibles dans ce fichier) ; val est un nombre.
-- Les évènements sont horodatés avec os.clockhp().
-- Le message d'erreur de deleteDevice dit 'Unable to create virtual device' : copier-coller dans le code du jeu, il s'agit bien d'une suppression.
+- The valid values of objType and action for emit are defined on the C++ side (not visible in this file); val is a number.
+- Events are timestamped with os.clockhp().
+- The error message of deleteDevice says 'Unable to create virtual device': copy-paste in the game code, it really is a deletion.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_input_virtualInput.createDevice(productName, vidpid, axes, buttons, povs)` | Enregistre un périphérique virtuel auprès du VirtualInputManager et le mémorise dans M.devices. | 9 |
-| `core_input_virtualInput.deleteDevice(deviceInstance)` | Désenregistre le périphérique 'vinput<deviceInstance>' et le retire de M.devices. | 26 |
-| `core_input_virtualInput.emit(deviceInstance, objType, objectInstance, action, val)` | Envoie un évènement de périphérique virtuel au moteur (mgr:emitEvent('vinput', ...)). Ne fait rien si le manager est absent. | 48 |
-| `core_input_virtualInput.getDeviceInfo(vidpid)` | Cherche un périphérique virtuel déjà créé par son vidpid. | 38 |
+| `core_input_virtualInput.createDevice(productName, vidpid, axes, buttons, povs)` | Registers a virtual device with the VirtualInputManager and stores it in M.devices. | 9 |
+| `core_input_virtualInput.deleteDevice(deviceInstance)` | Unregisters the device 'vinput<deviceInstance>' and removes it from M.devices. | 26 |
+| `core_input_virtualInput.emit(deviceInstance, objType, objectInstance, action, val)` | Sends a virtual device event to the engine (mgr:emitEvent('vinput', ...)). Does nothing if the manager is absent. | 48 |
+| `core_input_virtualInput.getDeviceInfo(vidpid)` | Looks up an already created virtual device by its vidpid. | 38 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_input_virtualInput.createDevice(productName, vidpid, axes, buttons, povs)`
 
-Enregistre un périphérique virtuel auprès du VirtualInputManager et le mémorise dans M.devices.
+Registers a virtual device with the VirtualInputManager and stores it in M.devices.
 
-- `productName` (*string*) : Nom du produit affiché.
-- `vidpid` (*string*) : Identifiant vendor/product ; sert à retrouver le périphérique avec getDeviceInfo.
-- `axes` (*integer*) : Nombre d'axes (déduit du code).
-- `buttons` (*integer*) : Nombre de boutons (déduit du code).
-- `povs` (*integer*) : Nombre de POV/chapeaux (déduit du code).
-- **renvoie** : integer|nil Numéro d'instance (>= 0) ; nil si le manager est absent ou l'instance < 0 (erreur loguée).
-- **renvoie** : table|nil {productName, vidpid, axes, buttons, povs}.
+- `productName` (*string*) : Displayed product name.
+- `vidpid` (*string*) : Vendor/product identifier; used to find the device with getDeviceInfo.
+- `axes` (*integer*) : Number of axes (inferred from code).
+- `buttons` (*integer*) : Number of buttons (inferred from code).
+- `povs` (*integer*) : Number of POVs/hats (inferred from code).
+- **returns**: integer|nil Instance number (>= 0); nil if the manager is absent or the instance < 0 (error logged).
+- **returns**: table|nil {productName, vidpid, axes, buttons, povs}.
 
 #### `core_input_virtualInput.deleteDevice(deviceInstance)`
 
-Désenregistre le périphérique 'vinput<deviceInstance>' et le retire de M.devices.
+Unregisters the device 'vinput<deviceInstance>' and removes it from M.devices.
 
-- `deviceInstance` (*integer*) : Instance renvoyée par createDevice.
+- `deviceInstance` (*integer*) : Instance returned by createDevice.
 
 #### `core_input_virtualInput.emit(deviceInstance, objType, objectInstance, action, val)`
 
-Envoie un évènement de périphérique virtuel au moteur (mgr:emitEvent('vinput', ...)). Ne fait rien si le manager est absent.
+Sends a virtual device event to the engine (mgr:emitEvent('vinput', ...)). Does nothing if the manager is absent.
 
-- `deviceInstance` (*integer*) : Instance du périphérique.
-- `objType` (*any*) : Type d'objet d'entrée (axe, bouton, POV) : valeur du moteur.
-- `objectInstance` (*integer*) : Indice de l'axe/bouton/POV.
-- `action` (*any*) : Type d'action (valeur du moteur).
-- `val` (*number*) : Valeur de l'évènement.
+- `deviceInstance` (*integer*) : Device instance.
+- `objType` (*any*) : Input object type (axis, button, POV): engine value.
+- `objectInstance` (*integer*) : Index of the axis/button/POV.
+- `action` (*any*) : Action type (engine value).
+- `val` (*number*) : Event value.
 
 #### `core_input_virtualInput.getDeviceInfo(vidpid)`
 
-Cherche un périphérique virtuel déjà créé par son vidpid.
+Looks up an already created virtual device by its vidpid.
 
-- `vidpid` (*string*) : Identifiant recherché.
-- **renvoie** : integer|nil Instance, ou nil si aucun.
-- **renvoie** : table|nil Infos du périphérique.
+- `vidpid` (*string*) : Identifier searched for.
+- **returns**: integer|nil Instance, or nil if none.
+- **returns**: table|nil Device info.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/input/virtualInput.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/input/virtualInput.lua`.*

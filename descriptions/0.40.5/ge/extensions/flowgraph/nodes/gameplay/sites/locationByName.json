@@ -1,52 +1,52 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/sites/locationByName.lua",
-  "module": "Nœud flowgraph « Location by Name ». Cherche une location par nom dans sitesData.locations.byName. Entrées : flow, sitesData, locationName ; sorties : flow (vrai si trouvée), exists (caché), location (locationData). L'éditeur permet de coder en dur le nom de la location sélectionnée dans le Sites Editor.",
+  "module": "Flowgraph node \"Location by Name\". Looks up a location by name in sitesData.locations.byName. Inputs: flow, sitesData, locationName; outputs: flow (true if found), exists (hidden), location (locationData). The editor allows hardcoding the name of the location selected in the Sites Editor.",
   "notes": [
-    "Si le nom n'existe pas, self._location vaut nil et `self._location.missing` provoque une erreur Lua (pas de test de nil)."
+    "If the name does not exist, self._location is nil and `self._location.missing` raises a Lua error (no nil check)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStarted": {
-          "desc": "Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud.",
+          "desc": "Called when the flowgraph project execution starts; resets the node's internal state.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "desc": "Draws the node's custom properties in the flowgraph editor panel (ImGui).",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui).",
+          "desc": "Draws the central content of the node in the flowgraph editor (ImGui).",
           "internal": true,
           "params": {
             "builder": {
               "type": "table",
-              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+              "desc": "editor node constructor (builder:Middle())"
             },
             "style": {
               "type": "table",
-              "desc": "style de dessin du nœud"
+              "desc": "node drawing style"
             }
           }
         },
         "init": {
-          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "desc": "Initializes the node's internal state at creation (called by the flowgraph engine).",
           "internal": true,
           "params": {
             "mgr": {
               "type": "table",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           }
         },
         "work": {
-          "desc": "Quand le flux est actif et que le nom change, retrouve la location et active la sortie flow si elle existe (non missing).",
+          "desc": "When the flow is active and the name changes, looks up the location and activates the flow output if it exists (not missing).",
           "internal": true,
           "params": {
             "args": {
               "type": "table",
-              "desc": "arguments transmis par le moteur (non utilisés)"
+              "desc": "arguments passed by the engine (unused)"
             }
           }
         }

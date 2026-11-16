@@ -1,0 +1,63 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/siteMarks.lua",
+  "module": "Marquages routiers tels qu'un site les porte : lignes de places, hachures, barres de cédez-le-passage, lignes d'axe d'allée, traces d'usure de pneus, fissures et zébras. Chacun est un DecalRoad, c'est-à-dire de la peinture posée SUR le sol et non de la géométrie : rien n'entre dans une coque, donc un parking cuit porte ce qu'il faut peindre et le repeint là où on le pose (même arrangement que pour l'eau). Le module crée les DecalRoad, convertit le plan vers/depuis le format du manifeste et les remet au niveau.",
+  "notes": [
+    "Enregistrement de marque (plan) : { pts = {{x,y},...} (au moins 2), mat, texLen, prio, lift, over, width (nombre ou liste par nœud, pour une trace qui s'amincit), closed, fade = {début, fin}, z (hauteur d'une dalle) }.",
+    "Les DecalRoad sont créés avec canSave = false et improvedSpline = true, drivability = -1 ; commit les rend sauvables (canSave et cansave à true) : elles sont alors au niveau et l'outil ne doit plus les supprimer.",
+    "localise regroupe par style (mat, texLen, prio, lift, width, over, z) : un lot peint un millier de marques en environ quatre styles, donc un indice par run au lieu de cinq champs. Les points sortent à plat { x1, y1, x2, y2, ... } arrondis au millimètre.",
+    "Le z d'une marque posée sur une dalle est relatif à oz dans le manifeste et à pz dans place."
+  ],
+  "functions": {
+    "emit": {
+      "desc": "Crée un DecalRoad depuis son enregistrement et l'ajoute à folder. Chaque nœud est à la hauteur du terrain (ou de rec.z pour une marque sur dalle) plus lift ; si closed, le premier point est rajouté à la fin. Renvoie nil s'il y a moins de 2 points ou si la création échoue.",
+      "params": {
+        "folder": {"type": "userdata", "desc": "Groupe de scène parent."},
+        "rec": {"type": "table", "desc": "Enregistrement de marque."},
+        "terrainZ": {"type": "function", "desc": "terrainZ(x, y) renvoie la hauteur du terrain."}
+      },
+      "returns": [{"type": "userdata|nil", "desc": "Objet DecalRoad."}],
+      "internal": false
+    },
+    "build": {
+      "desc": "Peint tout un plan d'un coup. Renvoie les objets créés, pour que le demandeur puisse les remettre au niveau ou les retirer. Liste vide si plan ou folder manque.",
+      "params": {
+        "plan": {"type": "table|nil", "desc": "Liste d'enregistrements de marques."},
+        "folder": {"type": "userdata|nil", "desc": "Groupe de scène parent."},
+        "terrainZ": {"type": "function", "desc": "terrainZ(x, y) renvoie la hauteur du terrain."}
+      },
+      "returns": [{"type": "table", "desc": "Liste des DecalRoad créés."}],
+      "internal": false
+    },
+    "commit": {
+      "desc": "Remet les marques au niveau. Peintes par l'outil, elles n'appartenaient à rien et n'étaient pas écrites ; à partir de là elles sont celles du niveau et l'outil ne doit plus les supprimer.",
+      "params": {"objs": {"type": "table|nil", "desc": "DecalRoad renvoyés par build."}},
+      "returns": [],
+      "internal": false
+    },
+    "localise": {
+      "desc": "Le plan tel qu'un manifeste le porte, local à l'origine de cuisson. Renvoie { styles, runs } ou nil si rien. Chaque run : { s = indice de style, pts = plat, closed, fade, w (largeurs par nœud) }.",
+      "params": {
+        "plan": {"type": "table|nil", "desc": "Liste d'enregistrements de marques."},
+        "ox": {"type": "number", "desc": "x de l'origine."},
+        "oy": {"type": "number", "desc": "y de l'origine."},
+        "oz": {"type": "number|nil", "desc": "z de l'origine (pour les marques sur dalle)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{ styles = {...}, runs = {...} }."}],
+      "internal": false
+    },
+    "place": {
+      "desc": "L'inverse : les marques du manifeste comme plan, posées là où se trouve un placement et tournées sur son cap. (ox, oy) est le point du repère du site autour duquel le placement tourne (le milieu de son empreinte, pas l'origine de cuisson dans un coin). pz est la hauteur du placement, utile seulement aux marques posées sur l'une de ses propres dalles.",
+      "params": {
+        "rec": {"type": "table|nil", "desc": "Enregistrement du manifeste { styles, runs }."},
+        "px": {"type": "number", "desc": "x du placement."},
+        "py": {"type": "number", "desc": "y du placement."},
+        "yaw": {"type": "number|nil", "desc": "Cap en radians (défaut 0)."},
+        "ox": {"type": "number|nil", "desc": "x du pivot (défaut 0)."},
+        "oy": {"type": "number|nil", "desc": "y du pivot (défaut 0)."},
+        "pz": {"type": "number|nil", "desc": "Hauteur du placement (défaut 0)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Plan de marques en coordonnées monde, nil s'il est vide."}],
+      "internal": false
+    }
+  }
+}

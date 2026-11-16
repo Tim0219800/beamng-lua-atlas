@@ -2,38 +2,38 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/dynamicDecals/colorHistory.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Section « Color History » de l'outil Dynamic Decals. Garde en préférence editor (`dynamicDecalsTool.colorHistory.history`) la liste des dernières couleurs utilisées (RGBA) et permet de les réappliquer comme couleur de decal ou de fill layer, ou de les supprimer. La taille maximale est la préférence `maxHistoryCount` (défaut 10, de 2 à 128).
---- Accès : extension `editor_dynamicDecals_colorHistory` : `extensions.load("editor_dynamicDecals_colorHistory")`, puis la globale `editor_dynamicDecals_colorHistory`
+--- "Color History" section of the Dynamic Decals tool. Keeps in an editor preference (`dynamicDecalsTool.colorHistory.history`) the list of the last used colors (RGBA) and lets you reapply them as a decal or fill layer color, or delete them. The maximum size is the `maxHistoryCount` preference (default 10, from 2 to 128).
+--- Access: extension `editor_dynamicDecals_colorHistory`: `extensions.load("editor_dynamicDecals_colorHistory")`, then the global `editor_dynamicDecals_colorHistory`
 ---@class editor_dynamicDecals_colorHistory
 editor_dynamicDecals_colorHistory = {}
 
---- Ajoute la couleur en tête de l'historique (retire d'abord une entrée identique), tronque à maxHistoryCount et enregistre la préférence.
----Source : lua/ge/extensions/editor/dynamicDecals/colorHistory.lua:15
----@param color Point4F Couleur avec champs x, y, z, w (RGBA).
+--- Adds the color at the head of the history (first removes an identical entry), truncates to maxHistoryCount and saves the preference.
+---Source: lua/ge/extensions/editor/dynamicDecals/colorHistory.lua:15
+---@param color Point4F Color with fields x, y, z, w (RGBA).
 function editor_dynamicDecals_colorHistory.addColorToHistory(color) end
 
---- Hook appelé quand une préférence change. Ne fait rien ici.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/colorHistory.lua:61
----@param path string Chemin de la préférence.
----@param value any Nouvelle valeur.
+--- Hook called when a preference changes. Does nothing here.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/colorHistory.lua:61
+---@param path string Preference path.
+---@param value any New value.
 function editor_dynamicDecals_colorHistory.editorPreferenceValueChanged(path, value) end
 
---- Dessine la liste : pour chaque couleur un widget, les boutons « Set as decal color » (api.setDecalColor), « Set as fill layer color » (api.setFillLayerColor) et une icône de suppression. Utilisé comme contenu de la section et de l'éditeur de la préférence `history`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/colorHistory.lua:29
----@param guiId string Suffixe pour rendre les identifiants ImGui uniques.
+--- Draws the list: a widget for each color, the buttons "Set as decal color" (api.setDecalColor), "Set as fill layer color" (api.setFillLayerColor) and a delete icon. Used as the section content and as the editor of the `history` preference.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/colorHistory.lua:29
+---@param guiId string Suffix to make ImGui identifiers unique.
 function editor_dynamicDecals_colorHistory.onGui(guiId) end
 
---- Enregistre la sous-catégorie `dynamicDecalsTool.colorHistory` : `history` (table, éditée par onGui) et `maxHistoryCount` (int, défaut 10, min 2, max 128).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/colorHistory.lua:52
----@param prefsRegistry table Registre de préférences de l'éditeur.
+--- Registers the subcategory `dynamicDecalsTool.colorHistory`: `history` (table, edited by onGui) and `maxHistoryCount` (int, default 10, min 2, max 128).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/colorHistory.lua:52
+---@param prefsRegistry table Editor preferences registry.
 function editor_dynamicDecals_colorHistory.registerEditorPreferences(prefsRegistry) end
 
---- Appelé par l'outil : récupère l'API et docs, enregistre la section « Color History » (ordre 122) et sa page de documentation.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/colorHistory.lua:76
----@param tool_in table Référence à l'outil editor_dynamicDecalsTool.
+--- Called by the tool: gets the API and docs, registers the "Color History" section (order 122) and its documentation page.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/colorHistory.lua:76
+---@param tool_in table Reference to the editor_dynamicDecalsTool tool.
 function editor_dynamicDecals_colorHistory.setup(tool_in) end
 

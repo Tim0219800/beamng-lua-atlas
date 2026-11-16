@@ -2,15 +2,15 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/rallyEditor/pacenotes/customAudioList.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Liste imgui des clips audio personnalisés d'un carnet de rallye, utilisée dans l'éditeur de pacenotes (mode audio custom). Elle affiche tous les clips dans l'ordre, regroupés sous un en-tête par pacenote (couleurs jaune/violet en alternance, vert pour le pacenote sélectionné). Chaque ligne a un bouton de lecture, un bouton « ancre » (viseur) pour choisir dans la vue 3D le pacenote auquel rattacher le clip, un bouton pour effacer l'ancre, et le texte de transcription (sinon le nom du fichier). Un bouton « Sync audio files » relit le dossier audio.
---- Accès : extension `editor_rallyEditor_pacenotes_customAudioList` : `extensions.load("editor_rallyEditor_pacenotes_customAudioList")`, puis la globale `editor_rallyEditor_pacenotes_customAudioList`
+--- Imgui list of a rally notebook's custom audio clips, used in the pacenote editor (custom audio mode). It displays all clips in order, grouped under a header per pacenote (alternating yellow/purple colors, green for the selected pacenote). Each row has a play button, an "anchor" button (crosshair) to choose in the 3D view the pacenote to attach the clip to, a button to clear the anchor, and the transcription text (otherwise the file name). A "Sync audio files" button re-reads the audio folder.
+--- Access: extension `editor_rallyEditor_pacenotes_customAudioList`: `extensions.load("editor_rallyEditor_pacenotes_customAudioList")`, then the global `editor_rallyEditor_pacenotes_customAudioList`
 ---@class editor_rallyEditor_pacenotes_customAudioList
 editor_rallyEditor_pacenotes_customAudioList = {}
 
---- Dessine la barre d'outils, l'aide de sélection d'ancre et la liste défilante des clips. Affiche un message si le carnet est absent ou si aucun fichier audio n'est trouvé.
----Source : lua/ge/extensions/editor/rallyEditor/pacenotes/customAudioList.lua:184
----@param notebook table|nil Carnet (méthodes customAudioBasenamesFor, scanCustomAudioBasenames, syncCustomAudioFromDisk, resolveCustomAudioBasename, getCustomAudioAnchorInfo, clearCustomAudioAnchor, loadCustomPacenoteTranscriptions).
----@param selectedPacenote table|nil Pacenote actuellement sélectionné, dont le groupe est surligné.
----@param pacenoteToolsWindow table|nil Fenêtre d'outils pacenotes : fournit beginCustomAudioAnchorPick, isPickingCustomAudioAnchorFor, getCustomAudioAnchorPickBasename.
+--- Draws the toolbar, the anchor pick help and the scrolling clip list. Displays a message if the notebook is missing or no audio file is found.
+---Source: lua/ge/extensions/editor/rallyEditor/pacenotes/customAudioList.lua:184
+---@param notebook table|nil Notebook (methods customAudioBasenamesFor, scanCustomAudioBasenames, syncCustomAudioFromDisk, resolveCustomAudioBasename, getCustomAudioAnchorInfo, clearCustomAudioAnchor, loadCustomPacenoteTranscriptions).
+---@param selectedPacenote table|nil Currently selected pacenote, whose group is highlighted.
+---@param pacenoteToolsWindow table|nil Pacenote tools window: provides beginCustomAudioAnchorPick, isPickingCustomAudioAnchorFor, getCustomAudioAnchorPickBasename.
 function editor_rallyEditor_pacenotes_customAudioList.draw(notebook, selectedPacenote, pacenoteToolsWindow) end
 

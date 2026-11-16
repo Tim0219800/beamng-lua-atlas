@@ -2,66 +2,66 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_gameplay_race_fileRace_C
 local flowgraph_nodes_gameplay_race_fileRace_C = {}
 
---- Remet à zéro race, started et vehicleChanged.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:103
+--- Resets race, started and vehicleChanged.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:103
 function flowgraph_nodes_gameplay_race_fileRace_C:_executionStarted() end
 
---- Appelle race:stopRace() si une course existe, puis l'oublie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:109
+--- Calls race:stopRace() if a race exists, then forgets it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:109
 function flowgraph_nodes_gameplay_race_fileRace_C:_executionStopped() end
 
---- Relit count (défaut 1) et recrée les pins.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:99
----@param res table Données sérialisées.
+--- Rereads count (default 1) and recreates the pins.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:99
+---@param res table Serialized data.
 function flowgraph_nodes_gameplay_race_fileRace_C:_onDeserialized(res) end
 
---- Sauvegarde count dans la table de sérialisation.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:95
----@param res table Table de résultat à compléter.
+--- Saves count in the serialization table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:95
+---@param res table Result table to complete.
 function flowgraph_nodes_gameplay_race_fileRace_C:_onSerialize(res) end
 
---- Champ éditeur « Vehicle Count » qui ajoute ou retire des pins vehId_i.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:59
----@return string|nil  Raison de la modification pour l'historique d'annulation.
+--- Editor field "Vehicle Count" that adds or removes vehId_i pins.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:59
+---@return string|nil  Change reason for the undo history.
 function flowgraph_nodes_gameplay_race_fileRace_C:drawCustomProperties() end
 
---- Affiche « Started » ou « Stopped » dans le nœud.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:115
----@param builder table Constructeur de nœud imgui.
----@param style table Style du nœud.
+--- Displays "Started" or "Stopped" in the node.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:115
+---@param builder table imgui node constructor.
+---@param style table Node style.
 function flowgraph_nodes_gameplay_race_fileRace_C:drawMiddle(builder, style) end
 
---- Initialise l'état (started, race, count = 1) et les options data.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:45
----@param mgr table Gestionnaire flowgraph.
+--- Initializes the state (started, race, count = 1) and the data options.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:45
+---@param mgr table Flowgraph manager.
 ---@param ... any
 function flowgraph_nodes_gameplay_race_fileRace_C:init(mgr, ...) end
 
---- Crée les pins vehId_i selon self.count.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:55
+--- Creates the vehId_i pins according to self.count.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:55
 function flowgraph_nodes_gameplay_race_fileRace_C:postInit() end
 
---- Passe le nombre de pins vehId_i de old à new : supprime les pins en trop (et leurs liens) ou en crée de nouvelles.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:77
----@param old integer Nombre actuel de véhicules.
----@param new integer Nouveau nombre de véhicules.
+--- Changes the number of vehId_i pins from old to new: removes the extra pins (and their links) or creates new ones.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:77
+---@param old integer Current number of vehicles.
+---@param new integer New number of vehicles.
 function flowgraph_nodes_gameplay_race_fileRace_C:updatePins(old, new) end
 
---- Gère reset, démarre la course au premier flux, la met à jour chaque frame et renseigne les pins de sortie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:120
----@param args table Arguments du moteur flowgraph (non utilisés).
+--- Handles reset, starts the race on first flow, updates it every frame and fills the output pins.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua:120
+---@param args table Flowgraph engine arguments (unused).
 function flowgraph_nodes_gameplay_race_fileRace_C:work(args) end
 

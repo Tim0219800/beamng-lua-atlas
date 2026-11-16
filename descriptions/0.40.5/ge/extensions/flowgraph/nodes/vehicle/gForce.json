@@ -1,33 +1,33 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/gForce.lua",
-  "module": "Nœud « Gravity Force » (catégorie `repeat_p_duration`, tags gravity/force/gforce). Calcule les g subis par le véhicule à partir des accélérations lissées `accXSmooth/accYSmooth/accZSmooth` du véhicule (lues via `core_vehicleBridge`) et de la gravité de `core_environment`. Sorties : `gx` (latéral), `gy` (longitudinal), `gz` (vertical, gravité retirée), `gForce` (total) et `gForceZ0` (sans composante verticale, pin caché). Pin d'entrée : `vehId` (défaut : joueur).",
+  "module": "Node \"Gravity Force\" (category `repeat_p_duration`, tags gravity/force/gforce). Computes the g-forces experienced by the vehicle from the vehicle's smoothed accelerations `accXSmooth/accYSmooth/accZSmooth` (read via `core_vehicleBridge`) and the gravity from `core_environment`. Outputs: `gx` (lateral), `gy` (longitudinal), `gz` (vertical, gravity removed), `gForce` (total) and `gForceZ0` (without vertical component, hidden pin). Input pin: `vehId` (default: player).",
   "notes": [
-    "Les valeurs sont stockées dans une table locale partagée par tous les nœuds gForce du fichier (`values`).",
-    "Les descriptions des pins disent gx = latéral, gy = longitudinal (conventions du code).",
-    "La gravité est bornée à |g| >= 0,01 avec son signe ; `accZSmooth == 0` est remplacé par la gravité pour la première frame."
+    "The values are stored in a local table shared by all gForce nodes of the file (`values`).",
+    "The pin descriptions say gx = lateral, gy = longitudinal (conventions from the code).",
+    "The gravity is clamped to |g| >= 0.01 with its sign; `accZSmooth == 0` is replaced by the gravity for the first frame."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_executionStarted": {
-          "desc": "Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.",
+          "desc": "Called by the manager when the flowgraph project execution starts; resets the internal state to zero.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Appelé par le gestionnaire quand l'exécution du projet s'arrête ; nettoie l'état interne.",
+          "desc": "Called by the manager when the project execution stops; cleans up the internal state.",
           "internal": true
         },
         "init": {
-          "desc": "Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne.",
+          "desc": "Node constructor, called at its creation by the flowgraph editor/manager; initializes the internal state.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Fonction vide (le code d'initialisation est commenté).",
+          "desc": "Empty function (the initialization code is commented out).",
           "internal": true
         },
         "work": {
-          "desc": "Lit les accélérations lissées (s'abonne aux valeurs au premier appel), les divise par la gravité et remplit les sorties en g.",
+          "desc": "Reads the smoothed accelerations (subscribes to the values on the first call), divides them by gravity and fills the outputs in g.",
           "internal": true
         }
       }

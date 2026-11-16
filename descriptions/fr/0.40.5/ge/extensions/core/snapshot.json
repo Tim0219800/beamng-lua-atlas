@@ -1,0 +1,51 @@
+{
+  "path": "lua/ge/extensions/core/snapshot.lua",
+  "module": "Sauvegarde et chargement de « snapshots » (position et rotation de caméra) via le service en ligne BeamNG (s2/v4/saveSnapshot et getSnapshot). Un snapshot peut être chargé depuis une commande de schéma d'URL (loadSnapshot). Émet les hooks onSnapshotCreate et onSnapshotLoad.",
+  "notes": [
+    "BUG : la fonction locale save(data) est une copie de load(data) (elle repositionne la caméra et émet onSnapshotLoad). createSnapshot appelle save() sans argument, donc data est nil et data.camPos provoque une erreur : la création de snapshot est cassée.",
+    "createSnapshot ignore ses paramètres scheme et saveToServer.",
+    "Le champ ignoreStartupCmd est conservé au rechargement des extensions (onSerialize renvoie true) pour ne pas rejouer la commande de démarrage."
+  ],
+  "fields": {
+    "ignoreStartupCmd": {"type": "boolean|nil", "desc": "Si vrai, onSnapshotSchemeCommand ignore les commandes passées en argument de démarrage."}
+  },
+  "functions": {
+    "createSnapshot": {
+      "desc": "Prévu pour construire les données de snapshot, émettre onSnapshotCreate(data) puis les envoyer au serveur avec core_online.apiCall('s2/v4/saveSnapshot'). Journalise l'id reçu ou une erreur.",
+      "params": {
+        "scheme": {"type": "any", "desc": "Non utilisé."},
+        "saveToServer": {"type": "any", "desc": "Non utilisé."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "loadSnapshot": {
+      "desc": "Télécharge le snapshot (s2/v4/getSnapshot) puis passe en caméra libre, place la caméra à data.camPos/camRot, émet onSnapshotLoad(data) et appelle changeMap() si core_modmanager.isReady().",
+      "params": {"snapshotId": {"type": "string|number", "desc": "Identifiant du snapshot sur le serveur."}},
+      "returns": [],
+      "internal": false
+    },
+    "onSnapshotSchemeCommand": {
+      "desc": "Hook appelé quand une commande de schéma d'URL arrive. Pour la commande \"loadSnapshot\", appelle loadSnapshot(data). Ignoré si isStartingArg et ignoreStartupCmd.",
+      "params": {
+        "command": {"type": "string", "desc": "Nom de la commande."},
+        "data": {"type": "any", "desc": "Argument de la commande (id du snapshot)."},
+        "isStartingArg": {"type": "boolean", "desc": "Vrai si la commande vient des arguments de lancement."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé avant un rechargement des extensions Lua. Renvoie {ignoreStartupCmd = true}.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "État à conserver."}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après rechargement. Restaure ignoreStartupCmd.",
+      "params": {"d": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

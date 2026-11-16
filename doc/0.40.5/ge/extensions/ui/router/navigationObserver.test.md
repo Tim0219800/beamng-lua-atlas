@@ -1,98 +1,98 @@
 # `ui_router_navigationObserver.test`
 
-*Fichier : `lua/ge/extensions/ui/router/navigationObserver.test.lua` · VM : Game Engine (GE) · 214 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/navigationObserver.test.lua` · VM: Game Engine (GE) · 214 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_navigationObserver.test` : `extensions.load("ui_router_navigationObserver.test")`, puis la globale `ui_router_navigationObserver.test`
+**Access:** extension `ui_router_navigationObserver.test`: `extensions.load("ui_router_navigationObserver.test")`, then the global `ui_router_navigationObserver.test`
 
-Tests unitaires du module non-shipping NavigationObserver (classification duplicate_navigation / conflicting_navigation, attribution de l'appelant, avertissement unique, reset). Ce n'est pas une API pour moddeur : fichier lancé par le framework de tests.
+Unit tests of the non-shipping NavigationObserver module (duplicate_navigation / conflicting_navigation classification, caller attribution, single warning, reset). Not an API for modders: file run by the test framework.
 
-## Remarques
+## Notes
 
-- Lancement : extensions.testFramework_TestManager:runTestFiles("navigationObserver").
+- Launch: extensions.testFramework_TestManager:runTestFiles("navigationObserver").
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_navigationObserver.test.testBeginAttemptAttributesExternalCaller(ctx)` | Vérifie que beginAttempt ignore les cadres internes du routeur et attribue l'appelant Lua externe. *(interne)* | 119 |
-| `ui_router_navigationObserver.test.testBeginAttemptFallsBackToBridgeUnknown(ctx)` | Vérifie le repli sur « bridge/unknown » quand aucun cadre Lua n'est disponible. *(interne)* | 135 |
-| `ui_router_navigationObserver.test.testDifferentOptionsIsConflict(ctx)` | Vérifie que des options de routeur différentes donnent conflicting_navigation. *(interne)* | 103 |
-| `ui_router_navigationObserver.test.testDifferentParamsIsConflict(ctx)` | Vérifie que des paramètres effectifs différents donnent conflicting_navigation. *(interne)* | 75 |
-| `ui_router_navigationObserver.test.testDifferentRouteIsConflict(ctx)` | Vérifie qu'une route différente donne conflicting_navigation. *(interne)* | 61 |
-| `ui_router_navigationObserver.test.testDifferentScopeIsConflict(ctx)` | Vérifie qu'une portée différente donne conflicting_navigation. *(interne)* | 89 |
-| `ui_router_navigationObserver.test.testIdenticalRequestsAreDuplicate(ctx)` | Vérifie que deux requêtes identiques (route, portée, params, options) sont classées duplicate_navigation. *(interne)* | 42 |
-| `ui_router_navigationObserver.test.testMissingAttemptsAreNotReported(ctx)` | Vérifie que reportPreemption ne fait rien si une des tentatives manque. *(interne)* | 192 |
-| `ui_router_navigationObserver.test.testPreemptedAttemptIsReportedOnlyOnce(ctx)` | Vérifie qu'une tentative préemptée n'est signalée qu'une fois. *(interne)* | 154 |
-| `ui_router_navigationObserver.test.testResetClearsCounterAndReportState(ctx)` | Vérifie que reset() remet à zéro le compteur, la tentative courante et l'état de déduplication. *(interne)* | 171 |
-| `ui_router_navigationObserver.test.testSelfPreemptionIsNotReported(ctx)` | Vérifie qu'une tentative ne se préempte jamais elle-même. *(interne)* | 203 |
+| `ui_router_navigationObserver.test.testBeginAttemptAttributesExternalCaller(ctx)` | Checks that beginAttempt ignores the router's internal frames and attributes the external Lua caller. *(internal)* | 119 |
+| `ui_router_navigationObserver.test.testBeginAttemptFallsBackToBridgeUnknown(ctx)` | Checks the fallback to "bridge/unknown" when no Lua frame is available. *(internal)* | 135 |
+| `ui_router_navigationObserver.test.testDifferentOptionsIsConflict(ctx)` | Checks that different router options give conflicting_navigation. *(internal)* | 103 |
+| `ui_router_navigationObserver.test.testDifferentParamsIsConflict(ctx)` | Checks that different effective parameters give conflicting_navigation. *(internal)* | 75 |
+| `ui_router_navigationObserver.test.testDifferentRouteIsConflict(ctx)` | Checks that a different route gives conflicting_navigation. *(internal)* | 61 |
+| `ui_router_navigationObserver.test.testDifferentScopeIsConflict(ctx)` | Checks that a different scope gives conflicting_navigation. *(internal)* | 89 |
+| `ui_router_navigationObserver.test.testIdenticalRequestsAreDuplicate(ctx)` | Checks that two identical requests (route, scope, params, options) are classified duplicate_navigation. *(internal)* | 42 |
+| `ui_router_navigationObserver.test.testMissingAttemptsAreNotReported(ctx)` | Checks that reportPreemption does nothing if one of the attempts is missing. *(internal)* | 192 |
+| `ui_router_navigationObserver.test.testPreemptedAttemptIsReportedOnlyOnce(ctx)` | Checks that a preempted attempt is reported only once. *(internal)* | 154 |
+| `ui_router_navigationObserver.test.testResetClearsCounterAndReportState(ctx)` | Checks that reset() resets the counter, the current attempt and the deduplication state. *(internal)* | 171 |
+| `ui_router_navigationObserver.test.testSelfPreemptionIsNotReported(ctx)` | Checks that an attempt never preempts itself. *(internal)* | 203 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_navigationObserver.test.testBeginAttemptAttributesExternalCaller(ctx)`
 
-Vérifie que beginAttempt ignore les cadres internes du routeur et attribue l'appelant Lua externe.
+Checks that beginAttempt ignores the router's internal frames and attributes the external Lua caller.
 
-- `ctx` (*table*) : Contexte du framework de tests (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_navigationObserver.test.testBeginAttemptFallsBackToBridgeUnknown(ctx)`
 
-Vérifie le repli sur « bridge/unknown » quand aucun cadre Lua n'est disponible.
+Checks the fallback to "bridge/unknown" when no Lua frame is available.
 
-- `ctx` (*table*) : Contexte du framework de tests (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_navigationObserver.test.testDifferentOptionsIsConflict(ctx)`
 
-Vérifie que des options de routeur différentes donnent conflicting_navigation.
+Checks that different router options give conflicting_navigation.
 
-- `ctx` (*table*) : Contexte du framework de tests (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_navigationObserver.test.testDifferentParamsIsConflict(ctx)`
 
-Vérifie que des paramètres effectifs différents donnent conflicting_navigation.
+Checks that different effective parameters give conflicting_navigation.
 
-- `ctx` (*table*) : Contexte du framework de tests (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_navigationObserver.test.testDifferentRouteIsConflict(ctx)`
 
-Vérifie qu'une route différente donne conflicting_navigation.
+Checks that a different route gives conflicting_navigation.
 
-- `ctx` (*table*) : Contexte du framework de tests (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_navigationObserver.test.testDifferentScopeIsConflict(ctx)`
 
-Vérifie qu'une portée différente donne conflicting_navigation.
+Checks that a different scope gives conflicting_navigation.
 
-- `ctx` (*table*) : Contexte du framework de tests (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_navigationObserver.test.testIdenticalRequestsAreDuplicate(ctx)`
 
-Vérifie que deux requêtes identiques (route, portée, params, options) sont classées duplicate_navigation.
+Checks that two identical requests (route, scope, params, options) are classified duplicate_navigation.
 
-- `ctx` (*table*) : Contexte du framework de tests (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_navigationObserver.test.testMissingAttemptsAreNotReported(ctx)`
 
-Vérifie que reportPreemption ne fait rien si une des tentatives manque.
+Checks that reportPreemption does nothing if one of the attempts is missing.
 
-- `ctx` (*table*) : Contexte du framework de tests (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_navigationObserver.test.testPreemptedAttemptIsReportedOnlyOnce(ctx)`
 
-Vérifie qu'une tentative préemptée n'est signalée qu'une fois.
+Checks that a preempted attempt is reported only once.
 
-- `ctx` (*table*) : Contexte du framework de tests (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_navigationObserver.test.testResetClearsCounterAndReportState(ctx)`
 
-Vérifie que reset() remet à zéro le compteur, la tentative courante et l'état de déduplication.
+Checks that reset() resets the counter, the current attempt and the deduplication state.
 
-- `ctx` (*table*) : Contexte du framework de tests (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 #### `ui_router_navigationObserver.test.testSelfPreemptionIsNotReported(ctx)`
 
-Vérifie qu'une tentative ne se préempte jamais elle-même.
+Checks that an attempt never preempts itself.
 
-- `ctx` (*table*) : Contexte du framework de tests (setDescription, assert, assertEqual).
+- `ctx` (*table*) : Test framework context (setDescription, assert, assertEqual).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/navigationObserver.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/navigationObserver.test.lua`.*

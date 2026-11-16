@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/ui/pause/providers/routeData/gamemodes.lua",
+  "module": "Fournisseur de données du menu pause pour les modes de jeu multijoueur : liste des modes (composant GamemodesTab), configuration d'un mode (GamemodeSetupView) et réglages du mode en cours (GamemodeSettingsView). Si le multijoueur est actif, il ajoute la liste des joueurs en panneau latéral via routeData_multiplayer.",
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{\"ui_pause_providers_routeData_multiplayer\"}"}
+  },
+  "functions": {
+    "getGamemodesData": {
+      "desc": "Renvoie le panneau principal GamemodesTab et, si context.isMultiplayerActive, le panneau latéral de la liste des joueurs.",
+      "params": {"context": {"type": "table", "desc": "Contexte pause (champ lu : isMultiplayerActive)."}},
+      "returns": [{"type": "table", "desc": "{mainPanelContent, sidePanelContents}"}],
+      "internal": false
+    },
+    "getGamemodeSetupData": {
+      "desc": "Renvoie la vue de configuration d'un mode (GamemodeSetupView, prop gamemodeName).",
+      "params": {
+        "context": {"type": "table", "desc": "Contexte pause."},
+        "params": {"type": "table|nil", "desc": "Champ lu : gamemodeName."}
+      },
+      "returns": [{"type": "table", "desc": "{mainCardClass, mainPanelContent, sidePanelContents}"}],
+      "internal": false
+    },
+    "getGamemodeSettingsData": {
+      "desc": "Renvoie la vue des réglages du mode en cours (GamemodeSettingsView).",
+      "params": {"context": {"type": "table", "desc": "Contexte pause."}},
+      "returns": [{"type": "table", "desc": "{mainCardClass, mainPanelContent, sidePanelContents}"}],
+      "internal": false
+    }
+  }
+}

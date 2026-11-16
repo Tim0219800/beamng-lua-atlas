@@ -2,237 +2,237 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/race/race.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Course en cours. Champs : path, vehIds, states (par id de véhicule), recoveryStates (instantanés de récupération par id), time (temps de course en s), lapCount, finishCount, started, suspended, checkpointTimes ('<tour>_<segment>' -> temps), aiPath, aiDetailedPath, sortPlacements (comparateur de classement : tour décroissant, puis index de point de contrôle décroissant, puis distance croissante au prochain point).
+--- Ongoing race. Fields: path, vehIds, states (by vehicle id), recoveryStates (recovery snapshots by id), time (race time in s), lapCount, finishCount, started, suspended, checkpointTimes ('<lap>_<segment>' -> time), aiPath, aiDetailedPath, sortPlacements (ranking comparator: descending lap, then descending checkpoint index, then ascending distance to the next point).
 ---@class gameplay_race_race
 local gameplay_race_race = {}
 
---- Abandonne la course d'un véhicule (ignoré s'il a fini ou n'est pas actif) : événement raceAborted, IA arrêtée.
----Source : lua/ge/extensions/gameplay/race/race.lua:615
----@param id integer Véhicule.
+--- Aborts a vehicle's race (ignored if it has finished or is not active): raceAborted event, AI stopped.
+---Source: lua/ge/extensions/gameplay/race/race.lua:615
+---@param id integer Vehicle.
 function gameplay_race_race:abortRace(id) end
 
---- Calcule le chemin IA (aiPath, aiDetailedPath) à partir du chemin de course.
----Source : lua/ge/extensions/gameplay/race/race.lua:47
+--- Computes the AI path (aiPath, aiDetailedPath) from the race path.
+---Source: lua/ge/extensions/gameplay/race/race.lua:47
 function gameplay_race_race:calcAIPath() end
 
---- Remplace un véhicule de course par un autre (transfère états et récupérations, recalcule les coins des roues).
----Source : lua/ge/extensions/gameplay/race/race.lua:361
----@param lastId integer Ancien véhicule.
----@param newId integer Nouveau véhicule.
+--- Replaces a race vehicle with another (transfers states and recoveries, recomputes the wheel corners).
+---Source: lua/ge/extensions/gameplay/race/race.lua:361
+---@param lastId integer Old vehicle.
+---@param newId integer New vehicle.
 function gameplay_race_race:changeRaceVehicle(lastId, newId) end
 
---- Vide la table d'événements d'un véhicule.
----Source : lua/ge/extensions/gameplay/race/race.lua:1166
----@param id integer Véhicule.
+--- Clears a vehicle's event table.
+---Source: lua/ge/extensions/gameplay/race/race.lua:1166
+---@param id integer Vehicle.
 function gameplay_race_race:clearEvents(id) end
 
---- Termine le tour d'un véhicule : enregistre les temps du tour (lap, beginTime, endTime, lapTime, segmentTimes). S'il reste des tours, repart sur les segments de départ (événement lapComplete) ; sinon marque la course terminée (placement, raceComplete, IA à l'agressivité 0.5) et écrit éventuellement l'historique dans raceRecord/ si logRaceInfo.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:667
----@param id integer Véhicule.
----@param endTime number Temps de fin du tour (s).
+--- Ends a vehicle's lap: records the lap times (lap, beginTime, endTime, lapTime, segmentTimes). If laps remain, restarts on the start segments (lapComplete event); otherwise marks the race finished (placement, raceComplete, AI at aggression 0.5) and optionally writes the history to raceRecord/ if logRaceInfo.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:667
+---@param id integer Vehicle.
+---@param endTime number Lap end time (s).
 function gameplay_race_race:completeLap(id, endTime) end
 
---- Enregistre un instantané de l'état du véhicule avec le temps de course et la position de récupération associée.
----Source : lua/ge/extensions/gameplay/race/race.lua:628
----@param id integer Véhicule.
----@param recovery table startPosition de récupération.
+--- Records a snapshot of the vehicle's state with the race time and the associated recovery position.
+---Source: lua/ge/extensions/gameplay/race/race.lua:628
+---@param id integer Vehicle.
+---@param recovery table Recovery startPosition.
 function gameplay_race_race:createRecoveryPoint(id, recovery) end
 
---- Dessine des sphères pour les données hors piste d'un véhicule (chemin hors piste, points de sortie, de retour et de coupe maximale).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:109
----@param data table État du véhicule contenant offTrackData.
+--- Draws spheres for a vehicle's off-track data (off-track path, exit, return and maximum cut points).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:109
+---@param data table Vehicle state containing offTrackData.
 function gameplay_race_race:debugDraw(data) end
 
---- Détecte les sorties et retours de piste d'un véhicule, enregistre sa trajectoire hors piste et calcule la profondeur de coupe et la distance parcourue hors piste (données de debug). Son appel est actuellement désactivé dans getTrackedData.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:118
----@param data table État du véhicule.
----@param dt number Delta temps (s).
+--- Detects a vehicle's track exits and returns, records its off-track trajectory and computes the cut depth and the distance driven off track (debug data). Its call is currently disabled in getTrackedData.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:118
+---@param data table Vehicle state.
+---@param dt number Time delta (s).
 function gameplay_race_race:detectOffTrack(data, dt) end
 
---- En attente d'un départ lancé : teste si le véhicule est entré dans un des segments de départ, calcule alors l'heure exacte de départ (interpolée) et lève rollingStarted.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:822
----@param id integer Véhicule.
----@param dt number Delta temps (s).
+--- Waiting for a rolling start: tests whether the vehicle entered one of the start segments, then computes the exact (interpolated) start time and raises rollingStarted.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:822
+---@param id integer Vehicle.
+---@param dt number Time delta (s).
 function gameplay_race_race:detectRollingStart(id, dt) end
 
---- Traite les événements d'un véhicule : notifie Hotlapping et LapTimes (pour le véhicule du joueur), remplit le journal d'événements, émet les hooks onRaceStarted, onRacePathnodeReached, onRaceComplete, onRaceAborted, enregistre les points de récupération et joue le son de point de passage.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:1028
----@param id integer Véhicule.
----@param dt number Delta temps (s).
+--- Processes a vehicle's events: notifies Hotlapping and LapTimes (for the player vehicle), fills the event log, emits the hooks onRaceStarted, onRacePathnodeReached, onRaceComplete, onRaceAborted, records the recovery points and plays the checkpoint sound.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:1028
+---@param id integer Vehicle.
+---@param dt number Time delta (s).
 function gameplay_race_race:digestEvents(id, dt) end
 
---- Suspend ou reprend la course (le temps et le suivi s'arrêtent) et prévient les applications Hotlapping et LapTimes.
----Source : lua/ge/extensions/gameplay/race/race.lua:330
----@param sus boolean true pour suspendre.
+--- Suspends or resumes the race (time and tracking stop) and notifies the Hotlapping and LapTimes apps.
+---Source: lua/ge/extensions/gameplay/race/race.lua:330
+---@param sus boolean true to suspend.
 function gameplay_race_race:doSuspend(sus) end
 
---- Dessine les prochains pathnodes (rouge), les suivants (orange) et les annonces restantes d'un véhicule.
----Source : lua/ge/extensions/gameplay/race/race.lua:1175
----@param id integer Véhicule.
+--- Draws a vehicle's next pathnodes (red), the following ones (orange) and the remaining calls.
+---Source: lua/ge/extensions/gameplay/race/race.lua:1175
+---@param id integer Vehicle.
 function gameplay_race_race:drawDebug(id) end
 
---- Recalcule pour un véhicule les prochains pathnodes visibles (nextPathnodes), ceux d'après (overNextPathnodes) et la liste décalée sans branchement, avec un type par pathnode : 'branch', 'final', 'lap', 'start', 'recovery' ou 'default'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:734
----@param id integer Véhicule.
+--- Recomputes for a vehicle the next visible pathnodes (nextPathnodes), the ones after (overNextPathnodes) and the shifted list without branching, with a type per pathnode: 'branch', 'final', 'lap', 'start', 'recovery' or 'default'.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:734
+---@param id integer Vehicle.
 function gameplay_race_race:findNextPathnodes(id) end
 
---- Formate un écart de temps avec signe au format +MM:SS.mmm ; renvoie 'N/A' si nil. Attend des secondes (voir notes pour l'incohérence avec timeDifferenceToFirst).
----Source : lua/ge/extensions/gameplay/race/race.lua:1315
----@param timeDiff number|nil Écart en secondes.
----@return string  Texte formaté.
+--- Formats a signed time difference as +MM:SS.mmm; returns 'N/A' if nil. Expects seconds (see notes for the inconsistency with timeDifferenceToFirst).
+---Source: lua/ge/extensions/gameplay/race/race.lua:1315
+---@param timeDiff number|nil Difference in seconds.
+---@return string  Formatted text.
 function gameplay_race_race:formatTimeDifference(timeDiff) end
 
---- Calcule, pour une portion hors route, la distance qu'il aurait fallu parcourir le long du chemin de navigation et la distance coupée à vol d'oiseau.
----Source : lua/ge/extensions/gameplay/race/race.lua:67
----@param pointA vec3 Point de sortie de route.
----@param pointB vec3 Point de retour sur la route.
----@param inNextAiPathIdx integer Index du point suivant du chemin IA à la sortie.
----@param inPrevAiPathIdx integer Index du point précédent à la sortie.
----@param outNextAiPathIdx integer Index du point suivant au retour.
----@param outPrevAiPathIdx integer Index du point précédent au retour.
----@return number  Distance le long du chemin (m).
----@return number  Distance coupée entre A et B (m).
+--- Computes, for an off-road portion, the distance that would have had to be driven along the navigation path and the distance cut as the crow flies.
+---Source: lua/ge/extensions/gameplay/race/race.lua:67
+---@param pointA vec3 Road exit point.
+---@param pointB vec3 Point of return to the road.
+---@param inNextAiPathIdx integer Index of the next AI path point at the exit.
+---@param inPrevAiPathIdx integer Index of the previous point at the exit.
+---@param outNextAiPathIdx integer Index of the next point at the return.
+---@param outPrevAiPathIdx integer Index of the previous point at the return.
+---@return number  Distance along the path (m).
+---@return number  Distance cut between A and B (m).
 function gameplay_race_race:getDistOnNav(pointA, pointB, inNextAiPathIdx, inPrevAiPathIdx, outNextAiPathIdx, outPrevAiPathIdx) end
 
---- Pour chaque véhicule ayant un timeDifferenceToFirst, renvoie l'écart avec le premier à avoir franchi le même point, son texte formaté et le classement.
----Source : lua/ge/extensions/gameplay/race/race.lua:1327
+--- For each vehicle with a timeDifferenceToFirst, returns the gap to the first one to have crossed the same point, its formatted text and the ranking.
+---Source: lua/ge/extensions/gameplay/race/race.lua:1327
 ---@return table<integer, table>  id -> {timeDifference, timeDifferenceFormatted, placement}
 function gameplay_race_race:getTimeDifferencesToFirst() end
 
---- Met à jour pour chaque véhicule en course la position de l'avant, l'index sur le chemin IA, l'état isOnRoad, puis calcule le classement (placement), en comptant les véhicules déjà arrivés.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:182
----@param dt number Delta temps (s).
+--- Updates for each racing vehicle the front position, the index on the AI path, the isOnRoad state, then computes the ranking (placement), counting the vehicles that have already finished.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:182
+---@param dt number Time delta (s).
 function gameplay_race_race:getTrackedData(dt) end
 
---- Position d'un véhicule : objet de scène, sinon map.objects ; renvoie vec3() avec un log d'erreur si introuvable.
----Source : lua/ge/extensions/gameplay/race/race.lua:602
----@param id integer Véhicule.
+--- Position of a vehicle: scene object, otherwise map.objects; returns vec3() with an error log if not found.
+---Source: lua/ge/extensions/gameplay/race/race.lua:602
+---@param id integer Vehicle.
 ---@return vec3  Position.
 function gameplay_race_race:getVehiclePosition(id) end
 
---- Détecte si le véhicule traverse une annonce non encore déclenchée dans ses segments courants ; lève pacenoteReached et pacenoteIdReached (une seule par image).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:1005
----@param id integer Véhicule.
+--- Detects whether the vehicle crosses a not-yet-triggered call in its current segments; raises pacenoteReached and pacenoteIdReached (only one per frame).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:1005
+---@param id integer Vehicle.
 function gameplay_race_race:handlePacenotes(id) end
 
---- Restaure l'état du dernier instantané, le temps de course si recoverAffectsTotalTime, et replace le véhicule sur la position de récupération sans réparation (moveResetVehicleTo avec repair false), puis réinitialise la caméra.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:650
----@param id integer Véhicule.
+--- Restores the state of the last snapshot, the race time if recoverAffectsTotalTime, and puts the vehicle back on the recovery position without repair (moveResetVehicleTo with repair false), then resets the camera.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:650
+---@param id integer Vehicle.
 function gameplay_race_race:handleRecover(id) end
 
---- Indique s'il existe au moins un point de récupération pour ce véhicule.
----Source : lua/ge/extensions/gameplay/race/race.lua:636
----@param id integer Véhicule.
----@return boolean  true s'il existe.
+--- Indicates whether at least one recovery point exists for this vehicle.
+---Source: lua/ge/extensions/gameplay/race/race.lua:636
+---@param id integer Vehicle.
+---@return boolean  true if one exists.
 function gameplay_race_race:hasRecoveryPosition(id) end
 
---- Affiche en ImGui le journal d'événements d'un véhicule (colonnes Time et Event).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:1194
----@param id integer Véhicule.
+--- Shows a vehicle's event log in ImGui (Time and Event columns).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:1194
+---@param id integer Vehicle.
 ---@param im table Module ui_imgui.
 function gameplay_race_race:inDrawEventlog(id, im) end
 
---- Affiche en ImGui un tour et ses temps de segments.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:1300
----@param lTimes table Entrée de historicTimes.
+--- Shows a lap and its segment times in ImGui.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:1300
+---@param lTimes table historicTimes entry.
 ---@param im table Module ui_imgui.
 function gameplay_race_race:inDrawLapTimes(lTimes, im) end
 
---- Affiche en ImGui la liste des temps de segments (du plus récent au plus ancien).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:1280
----@param sTimes table[] Temps de segments.
+--- Shows the list of segment times in ImGui (from most recent to oldest).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:1280
+---@param sTimes table[] Segment times.
 ---@param im table Module ui_imgui.
----@param mode string|nil 'index' (défaut), 'names' ou 'id'.
----@param prefix string|nil Préfixe du libellé.
+---@param mode string|nil 'index' (default), 'names' or 'id'.
+---@param prefix string|nil Label prefix.
 function gameplay_race_race:inDrawSegmentTimes(sTimes, im, mode, prefix) end
 
---- Affiche en ImGui les temps d'un véhicule (tour courant, total, tours précédents, segments si detail).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:1220
----@param id integer Véhicule.
+--- Shows a vehicle's times in ImGui (current lap, total, previous laps, segments if detail).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:1220
+---@param id integer Vehicle.
 ---@param im table Module ui_imgui.
----@param detail boolean|nil true pour afficher les temps de segments.
----@return boolean  true si l'icône de détail a été cliquée.
+---@param detail boolean|nil true to show the segment times.
+---@return boolean  true if the detail icon was clicked.
 function gameplay_race_race:inDrawTimes(id, im, detail) end
 
---- Constructeur : valeurs par défaut et comparateur de classement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:7
+--- Constructor: default values and ranking comparator.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:7
 function gameplay_race_race:init() end
 
---- À appeler à chaque image : pour chaque véhicule, vide les événements, gère les récupérations demandées, met à jour la position sur le parcours (updateVehicle), le dessin de debug et digère les événements ; puis met à jour le classement, l'application LapTimes et avance le temps de course. Ne fait rien tant que la course n'est pas démarrée.
----Source : lua/ge/extensions/gameplay/race/race.lua:278
----@param dt number Delta temps simulé (s).
+--- To be called every frame: for each vehicle, clears the events, handles the requested recoveries, updates the position on the course (updateVehicle), the debug drawing and digests the events; then updates the ranking, the LapTimes app and advances the race time. Does nothing until the race is started.
+---Source: lua/ge/extensions/gameplay/race/race.lua:278
+---@param dt number Simulated time delta (s).
 function gameplay_race_race:onUpdate(dt) end
 
---- Formate un temps en secondes au format MM:SS.mmm.
----Source : lua/ge/extensions/gameplay/race/race.lua:1308
----@param time number Temps en secondes.
----@return string  Texte formaté.
+--- Formats a time in seconds as MM:SS.mmm.
+---Source: lua/ge/extensions/gameplay/race/race.lua:1308
+---@param time number Time in seconds.
+---@return string  Formatted text.
 function gameplay_race_race:raceTime(time) end
 
---- Demande la récupération du véhicule au dernier point de récupération ; effective à la prochaine mise à jour.
----Source : lua/ge/extensions/gameplay/race/race.lua:644
----@param id integer Véhicule.
----@return boolean  true seulement si un état de récupération existe.
+--- Requests the vehicle's recovery at the last recovery point; effective at the next update.
+---Source: lua/ge/extensions/gameplay/race/race.lua:644
+---@param id integer Vehicle.
+---@return boolean  true only if a recovery state exists.
 function gameplay_race_race:requestRecover(id) end
 
---- Définit le chemin de course, lance autoConfig et calcule le chemin IA.
----Source : lua/ge/extensions/gameplay/race/race.lua:51
----@param path table Chemin (gameplay/race/path).
+--- Sets the race path, runs autoConfig and computes the AI path.
+---Source: lua/ge/extensions/gameplay/race/race.lua:51
+---@param path table Path (gameplay/race/path).
 function gameplay_race_race:setPath(path) end
 
---- Charge un chemin de course depuis un fichier JSON (désérialisé dans un nouveau chemin) puis l'applique avec setPath. Logue une erreur si le fichier est introuvable.
----Source : lua/ge/extensions/gameplay/race/race.lua:35
----@param file string|nil Chemin du fichier .race.json / .path.json.
+--- Loads a race path from a JSON file (deserialized into a new path) then applies it with setPath. Logs an error if the file is not found.
+---Source: lua/ge/extensions/gameplay/race/race.lua:35
+---@param file string|nil Path of the .race.json / .path.json file.
 function gameplay_race_race:setPathFile(file) end
 
---- Définit la liste des véhicules participants et réinitialise leurs états.
----Source : lua/ge/extensions/gameplay/race/race.lua:57
----@param ids integer[] Ids de véhicules.
+--- Sets the list of participating vehicles and resets their states.
+---Source: lua/ge/extensions/gameplay/race/race.lua:57
+---@param ids integer[] Vehicle ids.
 function gameplay_race_race:setVehicleIds(ids) end
 
---- Invalide le tour en cours d'un véhicule (circuits fermés uniquement). Sans keepLapProgress, saute aussi la progression : le prochain pathnode devient la ligne d'arrivée du tour.
----Source : lua/ge/extensions/gameplay/race/race.lua:349
----@param id integer Véhicule.
----@param keepLapProgress boolean|nil true pour garder la progression du tour.
+--- Invalidates a vehicle's current lap (closed circuits only). Without keepLapProgress, also skips the progress: the next pathnode becomes the lap's finish line.
+---Source: lua/ge/extensions/gameplay/race/race.lua:349
+---@param id integer Vehicle.
+---@param keepLapProgress boolean|nil true to keep the lap progress.
 function gameplay_race_race:skipLap(id, keepLapProgress) end
 
---- Lance l'IA d'un véhicule sur le chemin de course (ai.driveUsingPath) : boucle jusqu'à un tour de plus pour un circuit fermé, ou chemin prolongé de 250 m après l'arrivée sinon. Sans agressivité donnée, l'estime d'après la classe de performance du véhicule (S 1, A 0.9, B 0.8, C 0.7, D 0.6, autre 0.85).
----Source : lua/ge/extensions/gameplay/race/race.lua:395
----@param id integer Véhicule.
----@param aggression number|nil Agressivité de 0 à 1.
+--- Starts a vehicle's AI on the race path (ai.driveUsingPath): loops up to one more lap for a closed circuit, or the path extended by 250 m after the finish otherwise. Without a given aggression, estimates it from the vehicle's performance class (S 1, A 0.9, B 0.8, C 0.7, D 0.6, other 0.85).
+---Source: lua/ge/extensions/gameplay/race/race.lua:395
+---@param id integer Vehicle.
+---@param aggression number|nil Aggression from 0 to 1.
 function gameplay_race_race:startAiVehicle(id, aggression) end
 
---- Démarre la course : charge si besoin core_hotlapping / core_lapTimes, remet le temps à 0, crée l'état de chaque véhicule (segments de départ, coins des roues, IA si autoAiMode) et calcule les prochains pathnodes. L'événement raceStarted est levé pour chaque véhicule.
----Source : lua/ge/extensions/gameplay/race/race.lua:469
+--- Starts the race: loads core_hotlapping / core_lapTimes if needed, resets the time to 0, creates each vehicle's state (start segments, wheel corners, AI if autoAiMode) and computes the next pathnodes. The raceStarted event is raised for each vehicle.
+---Source: lua/ge/extensions/gameplay/race/race.lua:469
 function gameplay_race_race:startRace() end
 
---- Arrête l'IA d'un véhicule (mode 'stop').
----Source : lua/ge/extensions/gameplay/race/race.lua:461
----@param id integer Véhicule.
+--- Stops a vehicle's AI ('stop' mode).
+---Source: lua/ge/extensions/gameplay/race/race.lua:461
+---@param id integer Vehicle.
 function gameplay_race_race:stopAiVehicle(id) end
 
---- Arrête la course : prévient Hotlapping et LapTimes et arrête les véhicules IA.
----Source : lua/ge/extensions/gameplay/race/race.lua:584
+--- Stops the race: notifies Hotlapping and LapTimes and stops the AI vehicles.
+---Source: lua/ge/extensions/gameplay/race/race.lua:584
 function gameplay_race_race:stopRace() end
 
---- Avance les coins des roues du véhicule, gère le départ lancé, les annonces, un éventuel tour invalidé, puis teste si un segment est terminé ou un suivant atteint. Enregistre le temps du segment (interpolé avec l'instant de franchissement), applique l'agressivité IA des champs personnalisés (aiAggression, tag aiCoef), termine le tour si besoin, met à jour les prochains pathnodes et signale un point de récupération atteint.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/race/race.lua:852
----@param id integer Véhicule.
----@param dt number Delta temps (s).
+--- Advances the vehicle's wheel corners, handles the rolling start, the calls, a possible invalidated lap, then tests whether a segment is finished or a next one reached. Records the segment time (interpolated with the crossing instant), applies the AI aggression of the custom fields (aiAggression, aiCoef tag), ends the lap if needed, updates the next pathnodes and signals a recovery point reached.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/race/race.lua:852
+---@param id integer Vehicle.
+---@param dt number Time delta (s).
 function gameplay_race_race:updateVehicle(id, dt) end
 

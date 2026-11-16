@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/timetrials/onRaceConfig.lua",
-  "module": "Noeud « Race Config » (provider, tag input). Donne la configuration choisie par le joueur pour la course, lue une seule fois dans scenario_scenarios.getScenario() : laps (scenario.lapCount), reverse (scenario.isReverse), rollingStart (scenario.rollingStart).",
+  "module": "Node \"Race Config\" (provider, tag input). Gives the configuration chosen by the player for the race, read once from scenario_scenarios.getScenario(): laps (scenario.lapCount), reverse (scenario.isReverse), rollingStart (scenario.rollingStart).",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
           "desc": "done = false, clearOutPinsOnStart = false.",
           "params": {
             "mgr": {
               "type": "any",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           },
           "internal": true
@@ -20,11 +20,11 @@
           "internal": true
         },
         "work": {
-          "desc": "Tant que non fait et qu'un scénario existe, copie ses réglages sur les pins.",
+          "desc": "As long as not done and a scenario exists, copies its settings to the pins.",
           "internal": false
         },
         "onScenarioRestarted": {
-          "desc": "Hook de redémarrage : relit la configuration.",
+          "desc": "Restart hook: reads the configuration again.",
           "internal": true
         }
       }

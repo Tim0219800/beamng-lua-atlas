@@ -1,72 +1,72 @@
 # `gameplay_markers_missionMarker`
 
-*Fichier : `lua/ge/extensions/gameplay/markers/missionMarker.lua` · VM : Game Engine (GE) · 534 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/markers/missionMarker.lua` · VM: Game Engine (GE) · 534 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_markers_missionMarker` : `extensions.load("gameplay_markers_missionMarker")`, puis la globale `gameplay_markers_missionMarker`
+**Access:** extension `gameplay_markers_missionMarker`: `extensions.load("gameplay_markers_missionMarker")`, then the global `gameplay_markers_missionMarker`
 
-Marqueur de mission en mode jeu : une icône (exclamation par défaut) flottant au-dessus d'un point, reliée au sol par un trait, plus deux décalques au sol (un point et un anneau). Quand le joueur s'approche, l'icône apparaît en fondu ; quand son véhicule touche la sphère du marqueur (rayon fixe 1.2 m), l'anneau s'allume et le marqueur devient interactif (liste des missions du cluster). Plusieurs missions proches (moins de 3 m) sont fusionnées en un cluster avec une icône numérotée. Le module renvoie {create, cluster}.
+Mission marker in play mode: an icon (exclamation mark by default) floating above a point, linked to the ground by a line, plus two ground decals (a dot and a ring). When the player approaches, the icon fades in; when their vehicle touches the marker's sphere (fixed radius 1.2 m), the ring lights up and the marker becomes interactive (list of the cluster's missions). Several nearby missions (less than 3 m) are merged into a single cluster with a numbered icon. The module returns {create, cluster}.
 
-## Remarques
+## Notes
 
-- Deux rendus d'icône : l'icon renderer C++ (par défaut) ou render_skiaIcons si la variable locale useSkiaIcons est true ; elle vaut false dans ce fichier, donc le chemin Skia est inactif ; son changement n'agit qu'à la création des marqueurs.
-- Rayon fixe hardcodedRadius = 1.2 m pour la zone et le test de présence ; la fusion de clusters utilise un rayon de 1.5 m (deux POI fusionnent si distance au carré < (1.5 + 1.5)^2).
-- merge : trie les POI par date décroissante (data.date), icône = mission_no-NN_triangle (NN = min(count, 9)) si plusieurs ; si les iconFontIcon diffèrent, markerText = nombre de missions ("9+" au-delà de 9). visibleBySetting = "showMissionMarkers" ; visibilityRadius = rayon + 5.
-- Les POI doivent fournir markerInfo.missionMarker.{pos, rot, icon, iconFontIcon} et data.
-- Distances d'affichage : icône jusqu'à 50 m (100 m si le cluster est en focus), décalques jusqu'à 40 m ; tout s'efface en fondu quand la grande carte est active ou quand une mission est au premier plan (globalAlpha).
-- isInAreaChanged ("in"/"out") n'est mis à jour que lorsque le joueur marche (data.isWalking) ; le véhicule déclenche l'interaction via interactInPlayMode.
-- Le maillage d'icône (iconMesh / createObject) est présent mais son appel dans createObjects est commenté : iconMeshId reste nil.
-- setVisibilityInBigmap et instantFade sont des méthodes vides.
+- Two icon renderings: the C++ icon renderer (default) or render_skiaIcons if the local variable useSkiaIcons is true; it is false in this file, so the Skia path is inactive; changing it only takes effect when markers are created.
+- Fixed radius hardcodedRadius = 1.2 m for the zone and the presence test; cluster merging uses a radius of 1.5 m (two POIs merge if squared distance < (1.5 + 1.5)^2).
+- merge: sorts the POIs by descending date (data.date), icon = mission_no-NN_triangle (NN = min(count, 9)) if several; if the iconFontIcon values differ, markerText = number of missions ("9+" beyond 9). visibleBySetting = "showMissionMarkers"; visibilityRadius = radius + 5.
+- POIs must provide markerInfo.missionMarker.{pos, rot, icon, iconFontIcon} and data.
+- Display distances: icon up to 50 m (100 m if the cluster is in focus), decals up to 40 m; everything fades out when the big map is active or when a mission is in the foreground (globalAlpha).
+- isInAreaChanged ("in"/"out") is only updated when the player is walking (data.isWalking); the vehicle triggers the interaction via interactInPlayMode.
+- The icon mesh (iconMesh / createObject) is present but its call in createObjects is commented out: iconMeshId stays nil.
+- setVisibilityInBigmap and instantFade are empty methods.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_markers_missionMarker.cluster(pois, allClusters)` | Regroupe les POI missionMarker qui se chevauchent (quadtree, rayon 1.5 m) et ajoute un cluster fusionné par groupe à allClusters. *(interne)* | 488 |
-| `gameplay_markers_missionMarker.create(...)` | Fabrique un marqueur de mission (instance de C). | 436 |
+| `gameplay_markers_missionMarker.cluster(pois, allClusters)` | Groups overlapping missionMarker POIs (quadtree, radius 1.5 m) and adds one merged cluster per group to allClusters. *(internal)* | 488 |
+| `gameplay_markers_missionMarker.create(...)` | Builds a mission marker (instance of C). | 436 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_markers_missionMarker.cluster(pois, allClusters)`
 
-Regroupe les POI missionMarker qui se chevauchent (quadtree, rayon 1.5 m) et ajoute un cluster fusionné par groupe à allClusters.
+Groups overlapping missionMarker POIs (quadtree, radius 1.5 m) and adds one merged cluster per group to allClusters.
 
-- `pois` (*table[]*) : POI avec markerInfo.missionMarker.
-- `allClusters` (*table[]*) : Liste de clusters complétée en place.
+- `pois` (*table[]*) : POIs with markerInfo.missionMarker.
+- `allClusters` (*table[]*) : List of clusters completed in place.
 
 #### `gameplay_markers_missionMarker.create(...)`
 
-Fabrique un marqueur de mission (instance de C).
+Builds a mission marker (instance of C).
 
-- `...` (*any*) : Arguments transmis à C:init (non utilisés).
-- **renvoie** : table Instance de marqueur.
+- `...` (*any*) : Arguments passed to C:init (unused).
+- **returns**: table Marker instance.
 
-## Classe `C`
+## Class `C`
 
-Marqueur de mission avec icône, trait et décalques.
+Mission marker with icon, line and decals.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearObjects()` | Libère l'icône (Skia ou icon renderer), supprime le maillage éventuel et vide les références. | 387 |
-| `C:createObject(shapeName, objectName)` | Crée et enregistre un objet TSStatic avec couleur d'instance ; utilitaire non utilisé par défaut. | 318 |
-| `C:createObjects()` | Nettoie les objets existants (la création du maillage est commentée). | 333 |
-| `C:drawOnMinimap(td, dpi)` | Dessine un marqueur triangle bleu sur la minimap (couche GAMEPLAY_MARKERS). | 428 |
-| `C:hide()` | Passe invisible, réinitialise les lisseurs et rend l'icône transparente immédiatement. | 345 |
-| `C:init()` | Attribue un id, rayon par défaut 1.2 m et crée les lisseurs ; visible = true. | 61 |
-| `C:instantFade(visible)` | Ne fait rien. | 380 |
-| `C:interactInPlayMode(interactData, interactableElements)` | Si canInteract et que le véhicule touche la sphère, ajoute les données (elemData) des missions du cluster aux éléments interactifs. | 414 |
-| `C:playerIsInArea(data)` | Teste si la boîte englobante orientée du véhicule du joueur recouvre la sphère du marqueur (overlapsOBB_Sphere). | 86 |
-| `C:setVisibilityInBigmap(vis, instant)` | Ne fait rien. | 383 |
-| `C:setup(cluster)` | Mémorise pos et cluster, crée l'icône (cluster.icon ou poi_exclamationmark ; ou icône Skia), initialise les lisseurs et crée groundDecalData (point dot_128 et anneau outline_512). | 250 |
-| `C:show()` | Repasse visible. | 375 |
-| `C:update(data)` | Chaque frame : calcule les distances, masque l'icône derrière la géométrie (rayon), anime l'opacité et la hauteur de l'icône, dessine le trait vers le sol, pilote l'opacité du point et de l'anneau au sol et met à jour isInAreaChanged. | 100 |
+| `C:clearObjects()` | Frees the icon (Skia or icon renderer), removes the mesh if any and clears the references. | 387 |
+| `C:createObject(shapeName, objectName)` | Creates and registers a TSStatic object with instance color; utility not used by default. | 318 |
+| `C:createObjects()` | Cleans up existing objects (the mesh creation is commented out). | 333 |
+| `C:drawOnMinimap(td, dpi)` | Draws a blue triangle marker on the minimap (GAMEPLAY_MARKERS layer). | 428 |
+| `C:hide()` | Becomes invisible, resets the smoothers and makes the icon transparent immediately. | 345 |
+| `C:init()` | Assigns an id, default radius 1.2 m and creates the smoothers; visible = true. | 61 |
+| `C:instantFade(visible)` | Does nothing. | 380 |
+| `C:interactInPlayMode(interactData, interactableElements)` | If canInteract and the vehicle touches the sphere, adds the data (elemData) of the cluster's missions to the interactive elements. | 414 |
+| `C:playerIsInArea(data)` | Tests whether the oriented bounding box of the player's vehicle overlaps the marker's sphere (overlapsOBB_Sphere). | 86 |
+| `C:setVisibilityInBigmap(vis, instant)` | Does nothing. | 383 |
+| `C:setup(cluster)` | Stores pos and cluster, creates the icon (cluster.icon or poi_exclamationmark; or Skia icon), initializes the smoothers and creates groundDecalData (dot_128 dot and outline_512 ring). | 250 |
+| `C:show()` | Becomes visible again. | 375 |
+| `C:update(data)` | Every frame: computes distances, hides the icon behind geometry (ray), animates the icon's opacity and height, draws the line to the ground, drives the opacity of the ground dot and ring and updates isInAreaChanged. | 100 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawLineInstance`
 - `obj:` `registerObject`, `setField`, `setPosition`
 - `scenetree.` `findObjectById`
 
-**Charge les extensions :** `render_skiaIcons`
+**Loads extensions:** `render_skiaIcons`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/markers/missionMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/markers/missionMarker.lua`.*

@@ -1,18 +1,35 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/career/setFuelLevel.lua",
-  "module": "Nœud flowgraph « Set Fuel Level » (catégorie once_f_duration, couleur/icône career). Règle le niveau de carburant d'un véhicule au même pourcentage dans tous ses réservoirs. Entrées : vehId (number, sinon véhicule du joueur 0), mult (number 0-1, fraction du maximum). Demande d'abord l'énergie des réservoirs (core_vehicleBridge 'energyStorage'), puis exécute l'action setEnergyStorageEnergy avec maxEnergy * mult pour chaque réservoir ; l'état passe à finished.",
-  "notes": ["_executionStarted est défini deux fois (identiques).", "La variable locale allowedTypes (gasoline, diesel, electricEnergy) et fuelType ne sont pas utilisées : tous les réservoirs sont réglés.", "Le code ne vérifie pas que mult est non nil."],
+  "module": "Flowgraph node \"Set Fuel Level\" (category once_f_duration, career color/icon). Sets a vehicle's fuel level to the same percentage in all its tanks. Inputs: vehId (number, otherwise player vehicle 0), mult (number 0-1, fraction of the maximum). First requests the tanks' energy (core_vehicleBridge 'energyStorage'), then runs the setEnergyStorageEnergy action with maxEnergy * mult for each tank; the state becomes finished.",
+  "notes": [
+    "_executionStarted is defined twice (identically).",
+    "The local variable allowedTypes (gasoline, diesel, electricEnergy) and fuelType are unused: all tanks are set.",
+    "The code does not check that mult is non-nil."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Appelle onNodeReset.", "internal": true},
-        "_executionStarted": {"desc": "Appelle onNodeReset au démarrage du graphe.", "internal": true},
-        "onNodeReset": {"desc": "Réinitialise les données reçues, le drapeau d'envoi et l'état de durée ('inactive').", "internal": true},
-        "workOnce": {"desc": "Trouve le véhicule, demande les données d'énergie et passe à l'état 'started'."},
-        "work": {"desc": "Quand les données sont arrivées, règle chaque réservoir à maxEnergy*mult et passe à 'finished'."}
+        "init": {
+          "desc": "Calls onNodeReset.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Calls onNodeReset when the graph starts.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Resets the received data, the send flag and the duration state ('inactive').",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Finds the vehicle, requests the energy data and switches to the 'started' state."
+        },
+        "work": {
+          "desc": "Once the data has arrived, sets each tank to maxEnergy*mult and switches to 'finished'."
+        }
       }
     }
   }

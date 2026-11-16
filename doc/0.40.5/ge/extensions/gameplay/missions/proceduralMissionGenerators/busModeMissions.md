@@ -1,42 +1,42 @@
 # `gameplay_missions_proceduralMissionGenerators_busModeMissions`
 
-*Fichier : `lua/ge/extensions/gameplay/missions/proceduralMissionGenerators/busModeMissions.lua` · VM : Game Engine (GE) · 120 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/missions/proceduralMissionGenerators/busModeMissions.lua` · VM: Game Engine (GE) · 120 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_missions_proceduralMissionGenerators_busModeMissions` : `extensions.load("gameplay_missions_proceduralMissionGenerators_busModeMissions")`, puis la globale `gameplay_missions_proceduralMissionGenerators_busModeMissions`
+**Access:** extension `gameplay_missions_proceduralMissionGenerators_busModeMissions`: `extensions.load("gameplay_missions_proceduralMissionGenerators_busModeMissions")`, then the global `gameplay_missions_proceduralMissionGenerators_busModeMissions`
 
-Générateur procédural de missions « busMode » (conduite de bus en freeroam). Pour chaque niveau possédant des fichiers /levels/<niveau>/buslines/*.buslines.json, il crée une mission par scénario « bus » de scenario_scenariosLoader, avec les données de route (liste de tâches, aides de navigation, couleur, véhicule, route inverse) et un déclencheur placé sur le point d'apparition du bus. Appelé par gameplay_missions_missions pour ajouter ces missions à la liste.
+Procedural mission generator for "busMode" (bus driving in freeroam). For each level that has /levels/<level>/buslines/*.buslines.json files, it creates one mission per "bus" scenario of scenario_scenariosLoader, with the route data (task list, navigation helpers, color, vehicle, reverse route) and a trigger placed on the bus spawn point. Called by gameplay_missions_missions to add these missions to the list.
 
-## Exemple
+## Example
 
 ```lua
 local missions = gameplay_missions_proceduralMissionGenerators_busModeMissions.generate('gridmap')
 ```
 
-## Remarques
+## Notes
 
-- Les missions générées ont l'id « <niveau>/<routeID>-<variance>-procedural », missionType « busMode », startCondition vide (le TODO dit qu'il faudrait exiger un bus), trafficAllowed=false, étoiles justFinish et noAccident, showInCareer=false et showInFreeroam=true.
-- La route inverse est la route de même routeID avec la variance opposée (a <-> b) ; ses données sont stockées dans missionTypeData.rtasklist / rnavhelp / rdirection.
-- Bug probable : quand le spawn est donné par rotAngAxisF, l'angle est converti avec (w * 3.1459) / 180, donc une approximation fautive de pi (3.14159).
-- Le niveau est identifié par string.lower(level.levelName) ; si la route d'un scénario est introuvable dans les buslines, `route.tasklist` lèvera une erreur (aucune garde).
+- The generated missions have the id "<level>/<routeID>-<variance>-procedural", missionType "busMode", an empty startCondition (the TODO says a bus should be required), trafficAllowed=false, justFinish and noAccident stars, showInCareer=false and showInFreeroam=true.
+- The reverse route is the route with the same routeID and the opposite variance (a <-> b); its data is stored in missionTypeData.rtasklist / rnavhelp / rdirection.
+- Probable bug: when the spawn is given by rotAngAxisF, the angle is converted with (w * 3.1459) / 180, so a faulty approximation of pi (3.14159).
+- The level is identified by string.lower(level.levelName); if a scenario's route is not found in the buslines, `route.tasklist` will raise an error (no guard).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_missions_proceduralMissionGenerators_busModeMissions.generate(levelIdentifier)` | Génère la liste des missions busMode pour un ou plusieurs niveaux (tous si nil). Ne garde que les niveaux ayant au moins une route de bus. Place le déclencheur (startTrigger) sur missionStartTriggerPos s'il existe, sinon sur le point d'apparition du bus, et remplit missionTypeData.spawnPos / spawnRot. | 32 |
+| `gameplay_missions_proceduralMissionGenerators_busModeMissions.generate(levelIdentifier)` | Generates the list of busMode missions for one or more levels (all if nil). Keeps only levels with at least one bus route. Places the trigger (startTrigger) on missionStartTriggerPos if it exists, otherwise on the bus spawn point, and fills missionTypeData.spawnPos / spawnRot. | 32 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_missions_proceduralMissionGenerators_busModeMissions.generate(levelIdentifier)`
 
-Génère la liste des missions busMode pour un ou plusieurs niveaux (tous si nil). Ne garde que les niveaux ayant au moins une route de bus. Place le déclencheur (startTrigger) sur missionStartTriggerPos s'il existe, sinon sur le point d'apparition du bus, et remplit missionTypeData.spawnPos / spawnRot.
+Generates the list of busMode missions for one or more levels (all if nil). Keeps only levels with at least one bus route. Places the trigger (startTrigger) on missionStartTriggerPos if it exists, otherwise on the bus spawn point, and fills missionTypeData.spawnPos / spawnRot.
 
-- `levelIdentifier` (*string|table|nil*) : Nom de niveau ou liste de noms ; nil = tous les niveaux.
-- **renvoie** : table Liste de définitions de missions (tables non enregistrées sur disque).
+- `levelIdentifier` (*string|table|nil*) : Level name or list of names; nil = all levels.
+- **returns**: table List of mission definitions (tables not saved to disk).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/missions/proceduralMissionGenerators/busModeMissions.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/missions/proceduralMissionGenerators/busModeMissions.lua`.*

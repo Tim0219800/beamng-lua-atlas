@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/keepPrefab.lua",
+  "module": "Noeud flowgraph « Keep Prefab » (once_instant). Marque un prefab pour qu'il soit conserve apres l'arret du flowgraph ; par defaut un prefab cree pendant l'execution est supprime a la fin. Entrees : id (number), keep (bool). Utilise self.mgr.modules.prefab:setKeepPrefab.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Rien a initialiser.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Appelle setKeepPrefab(id, keep) et recopie l'entree flow vers la sortie flow.",
+          "internal": false
+        }
+      }
+    }
+  }
+}

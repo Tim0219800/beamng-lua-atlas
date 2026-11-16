@@ -2,54 +2,54 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Exporte les données de calibration des virages d'un carnet de rallye vers un fichier JSON destiné à être analysé (par exemple par un LLM) pour ajuster les seuils d'intensité et de longueur des virages. Pour chaque pacenote non TODO, il remesure le virage sur la snaproad et sérialise les mesures, les étiquettes manuelles (métadonnées de calibration), les ajustements, l'aperçu composé et le contexte des waypoints, avec la calibration courante, les surcharges actives et des instructions d'analyse. Deux formats : v1 (complet, calibrationAnalysis.json) et v2 (compact avec comparaisons cible/projeté par intensité et longueur, calibrationAnalysis.v2.json). Utilisé par l'onglet Export de la fenêtre de calibration.
---- Accès : extension `editor_rallyEditor_pacenotes_calibrationAnalysisExport` : `extensions.load("editor_rallyEditor_pacenotes_calibrationAnalysisExport")`, puis la globale `editor_rallyEditor_pacenotes_calibrationAnalysisExport`
+--- Exports a rally notebook's corner calibration data to a JSON file intended for analysis (for example by an LLM) to adjust the corner intensity and length thresholds. For each non-TODO pacenote, it remeasures the corner on the snaproad and serializes the measurements, the manual labels (calibration metadata), the adjustments, the composed preview and the waypoint context, with the current calibration, the active overrides and analysis instructions. Two formats: v1 (full, calibrationAnalysis.json) and v2 (compact with target/projected comparisons by intensity and length, calibrationAnalysis.v2.json). Used by the Export tab of the calibration window.
+--- Access: extension `editor_rallyEditor_pacenotes_calibrationAnalysisExport`: `extensions.load("editor_rallyEditor_pacenotes_calibrationAnalysisExport")`, then the global `editor_rallyEditor_pacenotes_calibrationAnalysisExport`
 ---@class editor_rallyEditor_pacenotes_calibrationAnalysisExport
 editor_rallyEditor_pacenotes_calibrationAnalysisExport = {}
 
---- Construit la table d'export v1 en mémoire (version = 1) : identité du carnet, style de compositeur actif, calibration courante, surcharges, instructions, schéma, contexte, pacenotes et résumé.
----Source : lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua:478
----@param path table|nil Carnet.
----@param pacenotesWindow table|nil Onglet Pacenotes (pour la snaproad).
----@return table|nil  Données d'export, ou nil en cas d'erreur.
----@return string|nil  Message d'erreur (pas de carnet, pas de calibration corner active, snaproad non chargée).
+--- Builds the v1 export table in memory (version = 1): notebook identity, active composer style, current calibration, overrides, instructions, schema, context, pacenotes and summary.
+---Source: lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua:478
+---@param path table|nil Notebook.
+---@param pacenotesWindow table|nil Pacenotes tab (for the snaproad).
+---@return table|nil  Export data, or nil on error.
+---@return string|nil  Error message (no notebook, no active corner calibration, snaproad not loaded).
 function editor_rallyEditor_pacenotes_calibrationAnalysisExport.build(path, pacenotesWindow) end
 
---- Construit l'export compact v2 (version = 2) à partir de build() : plages de calibration, surcharges actives, analyse (distributions cible/projeté) et instructions.
----Source : lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua:964
----@param path table|nil Carnet.
----@param pacenotesWindow table|nil Onglet Pacenotes.
----@return table|nil  Données v2, ou nil.
----@return string|nil  Message d'erreur.
+--- Builds the compact v2 export (version = 2) from build(): calibration ranges, active overrides, analysis (target/projected distributions) and instructions.
+---Source: lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua:964
+---@param path table|nil Notebook.
+---@param pacenotesWindow table|nil Pacenotes tab.
+---@return table|nil  v2 data, or nil.
+---@return string|nil  Error message.
 function editor_rallyEditor_pacenotes_calibrationAnalysisExport.buildV2(path, pacenotesWindow) end
 
---- Construit l'export v1, l'écrit sur disque et vérifie la relecture.
----Source : lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua:546
----@param path table|nil Carnet.
----@param pacenotesWindow table|nil Onglet Pacenotes.
----@return boolean  Succès.
----@return string|nil  Chemin du fichier en cas de succès, sinon message d'erreur.
----@return table|string|nil  Données exportées en cas de succès ; en cas d'échec d'écriture, chemin du fichier.
+--- Builds the v1 export, writes it to disk and checks the re-read.
+---Source: lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua:546
+---@param path table|nil Notebook.
+---@param pacenotesWindow table|nil Pacenotes tab.
+---@return boolean  Success.
+---@return string|nil  File path on success, otherwise error message.
+---@return table|string|nil  Exported data on success; on write failure, file path.
 function editor_rallyEditor_pacenotes_calibrationAnalysisExport.export(path, pacenotesWindow) end
 
---- Chemin du fichier d'export v1 pour une mission.
----Source : lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua:20
----@param missionDir string|nil Dossier de la mission.
----@return string|nil  <missionDir>/rally/calibrationAnalysis.json, ou nil sans dossier.
+--- Path of the v1 export file for a mission.
+---Source: lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua:20
+---@param missionDir string|nil Mission folder.
+---@return string|nil  <missionDir>/rally/calibrationAnalysis.json, or nil without a folder.
 function editor_rallyEditor_pacenotes_calibrationAnalysisExport.exportFile(missionDir) end
 
---- Construit l'export v2, l'écrit sur disque et vérifie la relecture. Mêmes valeurs de retour que export().
----Source : lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua:991
----@param path table|nil Carnet.
----@param pacenotesWindow table|nil Onglet Pacenotes.
----@return boolean  Succès.
----@return string|nil  Chemin du fichier en cas de succès, sinon message d'erreur.
----@return table|string|nil  Données exportées, ou chemin en cas d'échec d'écriture.
+--- Builds the v2 export, writes it to disk and checks the re-read. Same return values as export().
+---Source: lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua:991
+---@param path table|nil Notebook.
+---@param pacenotesWindow table|nil Pacenotes tab.
+---@return boolean  Success.
+---@return string|nil  File path on success, otherwise error message.
+---@return table|string|nil  Exported data, or path on write failure.
 function editor_rallyEditor_pacenotes_calibrationAnalysisExport.exportV2(path, pacenotesWindow) end
 
---- Chemin du fichier d'export v2 pour une mission.
----Source : lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua:26
----@param missionDir string|nil Dossier de la mission.
----@return string|nil  <missionDir>/rally/calibrationAnalysis.v2.json, ou nil sans dossier.
+--- Path of the v2 export file for a mission.
+---Source: lua/ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.lua:26
+---@param missionDir string|nil Mission folder.
+---@return string|nil  <missionDir>/rally/calibrationAnalysis.v2.json, or nil without a folder.
 function editor_rallyEditor_pacenotes_calibrationAnalysisExport.exportV2File(missionDir) end
 

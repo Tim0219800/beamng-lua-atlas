@@ -2,38 +2,38 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/couplings/kingpin.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur auxiliaire du pivot d'attelage (kingpin) d'une semi-remorque. Il ne fait que répondre au contrôleur `couplings/fifthwheel` d'un tracteur : si la clé de la sellette correspond à la sienne, il renvoie son cid de noeud et sa position monde. Il peut aussi afficher son noeud en debug quand la sellette demande l'affichage de l'indicateur.
---- Accès : contrôleur `couplings/kingpin` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Auxiliary kingpin controller of a semi-trailer. It only answers the tractor's `couplings/fifthwheel` controller: if the fifth wheel's key matches its own, it returns its node cid and its world position. It can also display its node in debug when the fifth wheel requests the indicator display.
+--- Access: controller `couplings/kingpin` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_couplings_kingpin
----@field debugDraw function|nil nil par défaut ; fonction de dessin du noeud de pivot quand l'indicateur est visible.
+---@field debugDraw function|nil nil by default; drawing function of the kingpin node when the indicator is visible.
 ---@field type string "auxiliary".
 local controller_couplings_kingpin = {}
 
---- Retrouve le noeud de pivot par nom et lit la clé.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/kingpin.lua:42
----@param jbeamData table Données jbeam du contrôleur.
+--- Finds the kingpin node by name and reads the key.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/kingpin.lua:42
+---@param jbeamData table Controller jbeam data.
 function controller_couplings_kingpin.init(jbeamData) end
 
---- Vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/kingpin.lua:39
----@param jbeamData table Données jbeam.
+--- Empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/kingpin.lua:39
+---@param jbeamData table Jbeam data.
 function controller_couplings_kingpin.reset(jbeamData) end
 
---- Appelée à distance par une sellette : si `couplerTag` est égal à la clé de ce pivot, renvoie {nodeId, nodePosition} à `kingpinDataCallback` du contrôleur de sellette du véhicule demandeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/kingpin.lua:13
----@param objId integer Id du véhicule demandeur (tracteur).
----@param controllerName string Nom du contrôleur de sellette à rappeler.
----@param couplerTag string Clé de sellette demandée.
+--- Called remotely by a fifth wheel: if `couplerTag` equals this kingpin's key, returns {nodeId, nodePosition} to `kingpinDataCallback` of the requesting vehicle's fifth wheel controller.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/kingpin.lua:13
+---@param objId integer Id of the requesting vehicle (tractor).
+---@param controllerName string Name of the fifth wheel controller to call back.
+---@param couplerTag string Requested fifth wheel key.
 function controller_couplings_kingpin.sendDataToVehicle(objId, controllerName, couplerTag) end
 
---- Active ou retire l'affichage de debug du noeud de pivot si la clé correspond.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/kingpin.lua:31
----@param key string Clé de sellette concernée.
----@param visible boolean true pour afficher.
+--- Enables or removes the kingpin node debug display if the key matches.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/kingpin.lua:31
+---@param key string Fifth wheel key concerned.
+---@param visible boolean true to show.
 function controller_couplings_kingpin.setKingpinVisibility(key, visible) end
 
 return controller_couplings_kingpin

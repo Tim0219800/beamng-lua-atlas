@@ -1,537 +1,537 @@
 # `gameplay_drag_core`
 
-*Fichier : `lua/ge/extensions/gameplay/drag/core.lua` · VM : Game Engine (GE) · 1664 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drag/core.lua` · VM: Game Engine (GE) · 1664 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drag_core` : `extensions.load("gameplay_drag_core")`, puis la globale `gameplay_drag_core`
+**Access:** extension `gameplay_drag_core`: `extensions.load("gameplay_drag_core")`, then the global `gameplay_drag_core`
 
-Noyau du système de drag race (solo et multijoueur). Il possède la table dragData (piste, couloirs, pilotes, timers, phases), crée les « racers » (setupRacer), gère reset/clear de la course, les hooks réseau MP (onDragRace*), les récompenses carrière, le chargement paresseux des extensions drag (phaseHandlers, dragTypes_*, times, display) et la détection de sortie de zone. Un moddeur l'utilise pour charger une piste (loadDragDataForMission), armer une course (startDragRaceActivity) ou lire l'état (getData, getRacerData, getTimers).
+Core of the drag race system (solo and multiplayer). It owns the dragData table (track, lanes, drivers, timers, phases), creates the "racers" (setupRacer), handles race reset/clear, the MP network hooks (onDragRace*), career rewards, the lazy loading of the drag extensions (phaseHandlers, dragTypes_*, times, display) and the detection of leaving the zone. A modder uses it to load a track (loadDragDataForMission), arm a race (startDragRaceActivity) or read the state (getData, getRacerData, getTimers).
 
-## Exemple
+## Example
 
 ```lua
 local data = gameplay_drag_core.loadDragDataForMission('/levels/west_coast_usa/dragstrips/strip.dragSettings.json')
 if data then gameplay_drag_core.startDragRaceActivity(1, be:getPlayerVehicleID(0)) end
 ```
 
-## Remarques
+## Notes
 
-- Les extensions gameplay_drag_phaseHandlers, gameplay_drag_dragTypes_headsUpRace / bracketRace, gameplay_drag_times et gameplay_drag_display sont chargées à la demande par ensureAllExtensionsLoaded (appelée par setDragRaceData et startDragRaceActivity) et déchargées par clear({extensions=true}).
-- dragType doit valoir 'headsUpRace' ou 'bracketRace', sinon setDragRaceData/startDragRaceActivity échouent (log E).
-- Les champs de disqualification existent en double : isDisqualified/disqualifiedReason et les anciens alias (orthographe fautive) isDesqualified/desqualifiedReason, gardés pour compatibilité.
-- Deux états de reset : 'idle', 'resetting', 'ready' (getResetState).
-- Les raisons de DQ sont des clés de traduction (missions.dragRace.gameplay.disqualified.vehicleReset, vehicleSwitched, vehicleRemoved, playerLeft).
-- onDragRaceCancelled et onExtensionLoaded sont des fonctions vides (le reset/clear est fait par dragBridge ou les hooks véhicule).
-- Les hooks onVehicleResetted/onVehicleSwitched/onVehicleDestroyed ne disqualifient qu'en contexte 'freeroam', course démarrée et hors multijoueur.
-- onUpdate : hors MP en freeroam, appelle onPlayerLeftDragArea si aucun pilote n'est dans la stripZone, ou si tous les pilotes en phase 'stage' sont à plus de 25 m (STAGE_RUNAWAY_CLEAR_DISTANCE) de l'origine.
-- getResetState/validateResetState : la validation de reset n'émet qu'un warning dans le log (pas d'erreur bloquante).
-- Récompense carrière : 5 (careerRewards) en monnaie 'bmra', une seule fois par course, pas en contexte 'activity'.
+- The extensions gameplay_drag_phaseHandlers, gameplay_drag_dragTypes_headsUpRace / bracketRace, gameplay_drag_times and gameplay_drag_display are loaded on demand by ensureAllExtensionsLoaded (called by setDragRaceData and startDragRaceActivity) and unloaded by clear({extensions=true}).
+- dragType must be 'headsUpRace' or 'bracketRace', otherwise setDragRaceData/startDragRaceActivity fail (E log).
+- The disqualification fields exist twice: isDisqualified/disqualifiedReason and the old aliases (misspelled) isDesqualified/desqualifiedReason, kept for compatibility.
+- Reset states: 'idle', 'resetting', 'ready' (getResetState).
+- DQ reasons are translation keys (missions.dragRace.gameplay.disqualified.vehicleReset, vehicleSwitched, vehicleRemoved, playerLeft).
+- onDragRaceCancelled and onExtensionLoaded are empty functions (the reset/clear is done by dragBridge or the vehicle hooks).
+- The hooks onVehicleResetted/onVehicleSwitched/onVehicleDestroyed only disqualify in the 'freeroam' context, with the race started and outside multiplayer.
+- onUpdate: outside MP in freeroam, calls onPlayerLeftDragArea if no driver is in the stripZone, or if all drivers in the 'stage' phase are more than 25 m (STAGE_RUNAWAY_CLEAR_DISTANCE) from the origin.
+- getResetState/validateResetState: the reset validation only emits a warning in the log (no blocking error).
+- Career reward: 5 (careerRewards) in 'bmra' currency, only once per race, not in the 'activity' context.
 
-**Dépendances (chargées avant) :** `gameplay_drag_saveSystem`, `gameplay_drag_dragBridge`, `gameplay_drag_rulesMenu`, `gameplay_drag_timeslip`, `gameplay_drag_poi`
+**Dependencies (loaded first):** `gameplay_drag_saveSystem`, `gameplay_drag_dragBridge`, `gameplay_drag_rulesMenu`, `gameplay_drag_timeslip`, `gameplay_drag_poi`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drag_core.allRacersFinished(data)` | Vrai si data contient au moins un racer et que tous ont isFinished. | 1330 |
-| `gameplay_drag_core.calculateStateChecksum(data)` | Somme de contrôle simple de l'état de course (isStarted, isCompleted, phases, DQ, fini des racers), utilisée pour logguer l'effet d'un reset. | 532 |
-| `gameplay_drag_core.clear(opts)` | Nettoie l'état drag selon les options (toutes à false par défaut) : hooks (onDragClear puis onDragClearComplete), transitionLock, localRace (MP), extensions (décharge les extensions paresseuses), data (décharge les prefabs et met dragData à nil), context (retour à 'freeroam'), ui (cache l'app 'drag'), treeLightStaging (éteint le voyant de staging). | 700 |
-| `gameplay_drag_core.clearPoiJoinRequest(poiKey)` | Oublie la demande de participation envoyée pour un POI (MP). | 1601 |
-| `gameplay_drag_core.clearRaceState(raceId)` | Supprime l'état stocké pour une course MP (raceStateStore). | 914 |
-| `gameplay_drag_core.createTimeslipData()` | Délègue à gameplay_drag_timeslip.createTimeslipData. | 1572 |
-| `gameplay_drag_core.createTimeslipPanelData()` | Délègue à gameplay_drag_timeslip.createTimeslipPanelData. | 1575 |
-| `gameplay_drag_core.finalizeMPPostRace()` | Fin de course MP : appelle display.dragRaceEndLineReached pour chaque racer, génère les données de victoire (phaseHandlers.generateWinData) puis envoie le ticket à l'UI (et sauvegarde les temps de dial). | 1390 |
-| `gameplay_drag_core.getCurrentSavePath()` | Chemin de sauvegarde courant du système de sauvegarde drag. | 1449 |
-| `gameplay_drag_core.getData()` | Source unique des données drag (piste, racers, timers). Solo et MP : core en est propriétaire. | 205 |
-| `gameplay_drag_core.getDragDataForLevel(levelIdentifier)` | Charge (puis met en cache) toutes les pistes *.dragSettings.json du dossier dragstrips d'un niveau. Ajoute _originFile, _fnWithoutExt et _index à chaque entrée. | 1489 |
-| `gameplay_drag_core.getDragGamemode()` | Renvoie l'extension du gamemode drag multijoueur (multiplayer/gamemodes/drag/drag) si elle est chargée. | 37 |
-| `gameplay_drag_core.getDragIsStarted()` | Indique si la course est démarrée (dragData.isStarted). | 964 |
-| `gameplay_drag_core.getExpectedStagingRacerCount()` | Nombre de pilotes attendus en staging avant de lancer le compte à rebours (1 par défaut). | 910 |
-| `gameplay_drag_core.getExtension()` | Extension de type de course active (headsUpRace ou bracketRace). | 1480 |
-| `gameplay_drag_core.getGameplayContext()` | Contexte de jeu courant : 'freeroam' par défaut, ou data.context de la piste (par ex. 'activity'). | 969 |
-| `gameplay_drag_core.getMaxLanes(data)` | Nombre de couloirs de la piste (au moins 1 ; 2 par défaut si la piste n'a pas de lanes). | 1512 |
-| `gameplay_drag_core.getPoiKey(poiData)` | Clé stable « niveau:nom » d'une piste (nom = _fnWithoutExt ou name), utilisée pour un lobby par piste en MP. | 1518 |
-| `gameplay_drag_core.getRaceState(raceId)` | Renvoie un instantané de l'état de course. En MP : issu du raceStateStore (id, players, queue, currentPairIndex, treeType, finishTimes, timerValues, lobbyId, poiData…), ou nil si introuvable. En solo : data, isStarted, isCompleted, treeType. | 918 |
-| `gameplay_drag_core.getRacerData(vehicleId)` | Renvoie la table du racer d'un véhicule. | 806 |
-| `gameplay_drag_core.getResetState()` | État du reset : 'idle', 'resetting' ou 'ready'. | 589 |
-| `gameplay_drag_core.getStagingCheckData()` | Appelée par l'hôte MP : vérifie si tous les pilotes sont en staging (lecture seule). | 1339 |
-| `gameplay_drag_core.getTimers(vehicleId)` | Timers d'un racer (dial, timer, distanceTimer, velocity…). | 797 |
-| `gameplay_drag_core.isDragEnabled()` | Drag autorisé si la carrière est active ou si le réglage enableDragRaceInFreeroam est vrai. | 1525 |
-| `gameplay_drag_core.isJoinWindowOpen(data)` | Fenêtre de participation ouverte : course non terminée et aucun racer au-delà de la phase 1. | 818 |
-| `gameplay_drag_core.isPoiJoinRequestSent(poiKey)` | Indique si une demande de participation a déjà été envoyée pour ce POI. | 1597 |
-| `gameplay_drag_core.loadDragDataForMission(filepath)` | Aide pour les missions : charge la piste depuis un fichier, charge les prefabs, fixe le contexte et arme les données (setDragRaceData). | 521 |
-| `gameplay_drag_core.loadDragStripData(filepath)` | Charge les données de piste via saveSystem.loadDragStripData et les stocke dans dragData. | 182 |
-| `gameplay_drag_core.onAnyMissionChanged(status, mission)` | Hook : à chaque démarrage ou arrêt de mission, fait un clear complet (tous les drapeaux à true). *(interne)* *(hook)* | 1443 |
-| `gameplay_drag_core.onCareerActive()` | Hook : carrière activée, délègue à saveSystem.onCareerActive. *(interne)* *(hook)* | 1466 |
-| `gameplay_drag_core.onDragRaceCancelled(raceId)` | Hook MP : course annulée. Ne fait rien (le reset/clear vient du dragBridge ou des hooks véhicule). *(interne)* *(hook)* | 1268 |
-| `gameplay_drag_core.onDragRaceClientDisconnected(client)` | Hook MP : un client se déconnecte. Retrouve le joueur MP correspondant et appelle onDragRacePlayerLeft. *(interne)* *(hook)* | 1315 |
-| `gameplay_drag_core.onDragRaceCountdownStart(mappedTime, randValue)` | Hook : début du compte à rebours. En MP côté client, termine la phase 1 de tous les racers et passe à la phase suivante ; en solo, passe à la phase suivante si tous les pilotes attendus sont en staging. Puis démarre la phase 2 de chaque racer (hook startDragCountdown). *(interne)* *(hook)* | 1011 |
-| `gameplay_drag_core.onDragRaceJoinAccepted(raceId, lane, poiData, treeType)` | Hook MP : participation acceptée. Arme les données de la piste (avec treeType), crée le racer du véhicule local, démarre l'activité et ouvre le menu de lobby si fermé. *(interne)* *(hook)* | 1112 |
-| `gameplay_drag_core.onDragRaceListChanged()` | Hook MP : la liste des courses a changé ; relayée au gamemode drag. *(interne)* *(hook)* | 1251 |
-| `gameplay_drag_core.onDragRacePlayerLeft(player)` | Hook MP : marque le racer d'un joueur parti comme disqualifié et fini (raison playerLeft). Recherche par vehicleId, sinon par couloir. *(interne)* *(hook)* | 1273 |
-| `gameplay_drag_core.onDragRaceReset(raceId)` | Hook MP : remet isStarted/isCompleted à false et autorise un nouveau onDragRaceStarted pour la même course (manche suivante). *(interne)* *(hook)* | 1258 |
-| `gameplay_drag_core.onDragRaceStart(raceStartTime)` | Hook MP : l'hôte diffuse le départ ; les clients (non hôtes) terminent la phase 2 et passent tous les racers en phase de course (phase 3). *(interne)* *(hook)* | 1090 |
-| `gameplay_drag_core.onDragRaceStarted(raceId)` | Hook MP : la manche démarre. Reconstruit dragData depuis raceState.poiData (copie profonde), crée les racers de la manche, marque le racer local (isLocalRacer), applique les dials, émet onDragReset, lance startDragRaceActivity et ouvre le contrôle de dial en bracketRace si le dial local est vide. Ignore les appels doublons pour le même raceId. *(interne)* *(hook)* | 1134 |
-| `gameplay_drag_core.onDragRaceTimerUpdated(raceId, mpPlayerId, timerName, timerValue)` | Hook MP : un timer réseau arrive. Applique le dial d'un joueur distant et ré-associe le racer au vrai vehicleId si la clé a changé (même couloir). *(interne)* *(hook)* | 1621 |
-| `gameplay_drag_core.onDragRaceTreeLights(lane, lightState)` | Hook MP : état des feux de l'arbre reçu pour un couloir. Met à jour le staging des racers du couloir (si stageLight défini) puis l'affichage. *(interne)* *(hook)* | 1074 |
-| `gameplay_drag_core.onDragRaceWinningLights(lane)` | Hook MP : allume le feu du gagnant du couloir (display.onWinnerLightOn). *(interne)* *(hook)* | 1083 |
-| `gameplay_drag_core.onExtensionLoaded()` | Hook de chargement ; ne fait rien. *(interne)* *(hook)* | 1324 |
-| `gameplay_drag_core.onExtensionUnloaded()` | Hook de déchargement : clear complet de l'état drag. *(interne)* *(hook)* | 1660 |
-| `gameplay_drag_core.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook : ajoute les POI de pistes de drag d'un niveau (délègue à gameplay_drag_poi). *(interne)* *(hook)* | 1586 |
-| `gameplay_drag_core.onGetRawPoiListForTutorial(elements)` | Hook : liste de POI pour le tutoriel, toujours celle du niveau west_coast_usa. *(interne)* *(hook)* | 1589 |
-| `gameplay_drag_core.onPlayerLeftDragArea()` | Appelée quand le joueur quitte la zone de la piste (hors ligne) : clear complet avec déchargement des extensions. Aussi appelée depuis onUpdate. *(hook)* | 1351 |
-| `gameplay_drag_core.onSaveCurrentProfile(currentSavePath)` | Hook : sauvegarde du profil carrière ; écrit le fichier des temps de dial. *(interne)* *(hook)* | 1460 |
-| `gameplay_drag_core.onUpdate(dtReal, dtSim, dtRaw)` | Hook par frame : détecte la sortie de zone (stripZone) et la fuite de staging (> 25 m), puis gère la re-staging après DQ en freeroam et les minuteries de staging distant. *(interne)* *(hook)* | 1407 |
-| `gameplay_drag_core.onVehicleDestroyed(vehicleId)` | Hook : véhicule détruit. En freeroam solo avec course démarrée, marque le racer comme retiré et disqualifié. *(interne)* *(hook)* | 999 |
-| `gameplay_drag_core.onVehicleResetted(vehicleId)` | Hook : véhicule réinitialisé. En freeroam solo avec course démarrée, disqualifie le racer (vehicleReset). *(interne)* *(hook)* | 973 |
-| `gameplay_drag_core.onVehicleSwitched(oldId, newId)` | Hook : changement de véhicule joué. En freeroam solo avec course démarrée, disqualifie l'ancien et le nouveau racer (vehicleSwitched). *(interne)* *(hook)* | 985 |
-| `gameplay_drag_core.reset(opts)` | Remet l'état de course à zéro selon les options (false/nil par défaut) : raceState (isStarted/isCompleted), racers (phase, DQ, fini, timers de chaque racer), clearRacers (vide la liste), timeslip (efface le ticket UI), transitionLock, treeLightStaging (voyant de staging allumé), hooks (émet onDragReset), raceId (passé au hook). Valide ensuite l'état et logue un warning si incohérent. | 644 |
-| `gameplay_drag_core.saveDialTimes(timeslip)` | Enregistre les temps du ticket dans le carnet de dial via saveSystem.saveDialTimes (si des données sont chargées). | 1453 |
-| `gameplay_drag_core.sendTimeslipDataToUi()` | Envoie le ticket à l'UI (guihook onDragRaceTimeslipData). En MP, émet plutôt le hook onDragMPTimeslipRequested et laisse le gamemode finaliser. Sauvegarde aussi les temps de dial ; en gamemode multiseat drag, n'envoie pas le ticket au HUD. | 71 |
-| `gameplay_drag_core.setCareerRewards()` | Accorde la récompense carrière (monnaie bmra, valeur 5) une fois par course, sauf contexte 'activity' ou carrière inactive. | 1470 |
-| `gameplay_drag_core.setDragRaceData(data)` | Arme les données de piste : normalise les champs de DQ, calcule raceEndTimerId (timer de plus grande distance), restaure les métatables de zones, synchronise les waypoints avec la scène, charge les extensions requises, lit le carnet de dial puis émet onDragDataSet. | 493 |
-| `gameplay_drag_core.setExpectedStagingRacerCount(count)` | Fixe le nombre de pilotes qui doivent être en staging avant le départ (minimum 1). | 906 |
-| `gameplay_drag_core.setExtension(ext)` | Remplace l'extension de type de course active. | 1484 |
-| `gameplay_drag_core.setPlayableVehicle(vehicleId)` | Marque le racer du véhicule comme jouable (isPlayable = true). | 789 |
-| `gameplay_drag_core.setPoiJoinRequestSent(poiKey, val)` | Mémorise (val vrai) ou oublie une demande de participation pour un POI. | 1598 |
-| `gameplay_drag_core.setRaceState(raceId, updates)` | Fusionne des champs dans l'état stocké d'une course MP. | 897 |
-| `gameplay_drag_core.setRacerDial(vehicleId, dialValue)` | Fixe le dial (temps annoncé, en secondes) d'un racer et le marque isSet. Crée le timer dial s'il manque. | 741 |
-| `gameplay_drag_core.setRacerWheelGeometry(racer, vehicle)` | Calcule la géométrie des roues du véhicule (groupes par « frontness », décalages par rapport au centre) et initialise racer.allWheelsOffsets, wheelsCenter, beamState et frontWheelId. Si aucune roue n'est trouvée, utilise l'OOBB. | 356 |
-| `gameplay_drag_core.setRacersDial(dials)` | Applique plusieurs dials d'un coup. | 768 |
-| `gameplay_drag_core.setupRacer(vehicleId, lane)` | Crée le racer d'un véhicule dans un couloir (phases, timers depuis la config de piste, dial initial, géométrie des roues, nom, plaque, état stock). Refuse un couloir déjà occupé. En MP, crée un stub si le véhicule n'existe pas localement. | 384 |
-| `gameplay_drag_core.startDragRaceActivity(lane, vehicleId)` | Démarre l'activité de drag : charge les extensions, crée le racer du joueur en freeroam solo, affiche l'app UI 'drag', allume le staging, coupe/met le contact sur 3 pour les racers jouables hors freeroam, émet onDragRacersSetup puis appelle startActivity du type de course. | 827 |
-| `gameplay_drag_core.validateResetState(data)` | Vérifie qu'un reset est complet (course non démarrée, racers en phase 1, ni DQ ni finis, timers arrêtés, phases remises à zéro). | 553 |
+| `gameplay_drag_core.allRacersFinished(data)` | True if data contains at least one racer and all have isFinished. | 1330 |
+| `gameplay_drag_core.calculateStateChecksum(data)` | Simple checksum of the race state (isStarted, isCompleted, phases, DQ, racers' finished), used to log the effect of a reset. | 532 |
+| `gameplay_drag_core.clear(opts)` | Cleans the drag state according to the options (all false by default): hooks (onDragClear then onDragClearComplete), transitionLock, localRace (MP), extensions (unloads the lazy extensions), data (unloads the prefabs and sets dragData to nil), context (back to 'freeroam'), ui (hides the 'drag' app), treeLightStaging (turns off the staging light). | 700 |
+| `gameplay_drag_core.clearPoiJoinRequest(poiKey)` | Forgets the participation request sent for a POI (MP). | 1601 |
+| `gameplay_drag_core.clearRaceState(raceId)` | Removes the state stored for an MP race (raceStateStore). | 914 |
+| `gameplay_drag_core.createTimeslipData()` | Delegates to gameplay_drag_timeslip.createTimeslipData. | 1572 |
+| `gameplay_drag_core.createTimeslipPanelData()` | Delegates to gameplay_drag_timeslip.createTimeslipPanelData. | 1575 |
+| `gameplay_drag_core.finalizeMPPostRace()` | MP race end: calls display.dragRaceEndLineReached for each racer, generates the win data (phaseHandlers.generateWinData) then sends the slip to the UI (and saves the dial times). | 1390 |
+| `gameplay_drag_core.getCurrentSavePath()` | Current save path of the drag save system. | 1449 |
+| `gameplay_drag_core.getData()` | Single source of drag data (track, racers, timers). Solo and MP: core owns it. | 205 |
+| `gameplay_drag_core.getDragDataForLevel(levelIdentifier)` | Loads (then caches) all *.dragSettings.json tracks from a level's dragstrips folder. Adds _originFile, _fnWithoutExt and _index to each entry. | 1489 |
+| `gameplay_drag_core.getDragGamemode()` | Returns the multiplayer drag gamemode extension (multiplayer/gamemodes/drag/drag) if it is loaded. | 37 |
+| `gameplay_drag_core.getDragIsStarted()` | Indicates whether the race is started (dragData.isStarted). | 964 |
+| `gameplay_drag_core.getExpectedStagingRacerCount()` | Number of drivers expected in staging before starting the countdown (1 by default). | 910 |
+| `gameplay_drag_core.getExtension()` | Active race type extension (headsUpRace or bracketRace). | 1480 |
+| `gameplay_drag_core.getGameplayContext()` | Current game context: 'freeroam' by default, or the track's data.context (e.g. 'activity'). | 969 |
+| `gameplay_drag_core.getMaxLanes(data)` | Number of lanes of the track (at least 1; 2 by default if the track has no lanes). | 1512 |
+| `gameplay_drag_core.getPoiKey(poiData)` | Stable "level:name" key of a track (name = _fnWithoutExt or name), used for a per-track lobby in MP. | 1518 |
+| `gameplay_drag_core.getRaceState(raceId)` | Returns a snapshot of the race state. In MP: from the raceStateStore (id, players, queue, currentPairIndex, treeType, finishTimes, timerValues, lobbyId, poiData...), or nil if not found. In solo: data, isStarted, isCompleted, treeType. | 918 |
+| `gameplay_drag_core.getRacerData(vehicleId)` | Returns the racer table of a vehicle. | 806 |
+| `gameplay_drag_core.getResetState()` | Reset state: 'idle', 'resetting' or 'ready'. | 589 |
+| `gameplay_drag_core.getStagingCheckData()` | Called by the MP host: checks whether all drivers are in staging (read-only). | 1339 |
+| `gameplay_drag_core.getTimers(vehicleId)` | Timers of a racer (dial, timer, distanceTimer, velocity...). | 797 |
+| `gameplay_drag_core.isDragEnabled()` | Drag is allowed if career is active or if the enableDragRaceInFreeroam setting is true. | 1525 |
+| `gameplay_drag_core.isJoinWindowOpen(data)` | Participation window open: race not finished and no racer beyond phase 1. | 818 |
+| `gameplay_drag_core.isPoiJoinRequestSent(poiKey)` | Indicates whether a participation request has already been sent for this POI. | 1597 |
+| `gameplay_drag_core.loadDragDataForMission(filepath)` | Helper for missions: loads the track from a file, loads the prefabs, sets the context and arms the data (setDragRaceData). | 521 |
+| `gameplay_drag_core.loadDragStripData(filepath)` | Loads the track data via saveSystem.loadDragStripData and stores it in dragData. | 182 |
+| `gameplay_drag_core.onAnyMissionChanged(status, mission)` | Hook: at every mission start or stop, does a full clear (all flags true). *(internal)* *(hook)* | 1443 |
+| `gameplay_drag_core.onCareerActive()` | Hook: career activated, delegates to saveSystem.onCareerActive. *(internal)* *(hook)* | 1466 |
+| `gameplay_drag_core.onDragRaceCancelled(raceId)` | MP hook: race cancelled. Does nothing (the reset/clear comes from dragBridge or the vehicle hooks). *(internal)* *(hook)* | 1268 |
+| `gameplay_drag_core.onDragRaceClientDisconnected(client)` | MP hook: a client disconnects. Finds the matching MP player and calls onDragRacePlayerLeft. *(internal)* *(hook)* | 1315 |
+| `gameplay_drag_core.onDragRaceCountdownStart(mappedTime, randValue)` | Hook: countdown start. In MP on the client side, ends phase 1 of all racers and moves to the next phase; in solo, moves to the next phase if all expected drivers are in staging. Then starts phase 2 of each racer (startDragCountdown hook). *(internal)* *(hook)* | 1011 |
+| `gameplay_drag_core.onDragRaceJoinAccepted(raceId, lane, poiData, treeType)` | MP hook: participation accepted. Arms the track data (with treeType), creates the local vehicle's racer, starts the activity and opens the lobby menu if closed. *(internal)* *(hook)* | 1112 |
+| `gameplay_drag_core.onDragRaceListChanged()` | MP hook: the race list changed; relayed to the drag gamemode. *(internal)* *(hook)* | 1251 |
+| `gameplay_drag_core.onDragRacePlayerLeft(player)` | MP hook: marks the racer of a player who left as disqualified and finished (playerLeft reason). Looks up by vehicleId, otherwise by lane. *(internal)* *(hook)* | 1273 |
+| `gameplay_drag_core.onDragRaceReset(raceId)` | MP hook: resets isStarted/isCompleted to false and allows a new onDragRaceStarted for the same race (next round). *(internal)* *(hook)* | 1258 |
+| `gameplay_drag_core.onDragRaceStart(raceStartTime)` | MP hook: the host broadcasts the start; the (non-host) clients end phase 2 and put all racers in the race phase (phase 3). *(internal)* *(hook)* | 1090 |
+| `gameplay_drag_core.onDragRaceStarted(raceId)` | MP hook: the round starts. Rebuilds dragData from raceState.poiData (deep copy), creates the round's racers, marks the local racer (isLocalRacer), applies the dials, emits onDragReset, runs startDragRaceActivity and opens the dial control in bracketRace if the local dial is empty. Ignores duplicate calls for the same raceId. *(internal)* *(hook)* | 1134 |
+| `gameplay_drag_core.onDragRaceTimerUpdated(raceId, mpPlayerId, timerName, timerValue)` | MP hook: a network timer arrives. Applies a remote player's dial and re-associates the racer with the real vehicleId if the key changed (same lane). *(internal)* *(hook)* | 1621 |
+| `gameplay_drag_core.onDragRaceTreeLights(lane, lightState)` | MP hook: tree light state received for a lane. Updates the staging of the lane's racers (if stageLight is set) then the display. *(internal)* *(hook)* | 1074 |
+| `gameplay_drag_core.onDragRaceWinningLights(lane)` | MP hook: turns on the lane winner's light (display.onWinnerLightOn). *(internal)* *(hook)* | 1083 |
+| `gameplay_drag_core.onExtensionLoaded()` | Load hook; does nothing. *(internal)* *(hook)* | 1324 |
+| `gameplay_drag_core.onExtensionUnloaded()` | Unload hook: full clear of the drag state. *(internal)* *(hook)* | 1660 |
+| `gameplay_drag_core.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook: adds the drag track POIs of a level (delegates to gameplay_drag_poi). *(internal)* *(hook)* | 1586 |
+| `gameplay_drag_core.onGetRawPoiListForTutorial(elements)` | Hook: POI list for the tutorial, always that of the west_coast_usa level. *(internal)* *(hook)* | 1589 |
+| `gameplay_drag_core.onPlayerLeftDragArea()` | Called when the player leaves the track zone (offline): full clear with unloading of the extensions. Also called from onUpdate. *(hook)* | 1351 |
+| `gameplay_drag_core.onSaveCurrentProfile(currentSavePath)` | Hook: career profile save; writes the dial times file. *(internal)* *(hook)* | 1460 |
+| `gameplay_drag_core.onUpdate(dtReal, dtSim, dtRaw)` | Per-frame hook: detects leaving the zone (stripZone) and staging runaway (> 25 m), then handles re-staging after DQ in freeroam and the remote staging timers. *(internal)* *(hook)* | 1407 |
+| `gameplay_drag_core.onVehicleDestroyed(vehicleId)` | Hook: vehicle destroyed. In solo freeroam with the race started, marks the racer as removed and disqualified. *(internal)* *(hook)* | 999 |
+| `gameplay_drag_core.onVehicleResetted(vehicleId)` | Hook: vehicle reset. In solo freeroam with the race started, disqualifies the racer (vehicleReset). *(internal)* *(hook)* | 973 |
+| `gameplay_drag_core.onVehicleSwitched(oldId, newId)` | Hook: played vehicle switched. In solo freeroam with the race started, disqualifies the old and the new racer (vehicleSwitched). *(internal)* *(hook)* | 985 |
+| `gameplay_drag_core.reset(opts)` | Resets the race state according to the options (false/nil by default): raceState (isStarted/isCompleted), racers (phase, DQ, finished, timers of each racer), clearRacers (empties the list), timeslip (clears the UI slip), transitionLock, treeLightStaging (staging light on), hooks (emits onDragReset), raceId (passed to the hook). Then validates the state and logs a warning if inconsistent. | 644 |
+| `gameplay_drag_core.saveDialTimes(timeslip)` | Records the slip times in the dial book via saveSystem.saveDialTimes (if data is loaded). | 1453 |
+| `gameplay_drag_core.sendTimeslipDataToUi()` | Sends the slip to the UI (guihook onDragRaceTimeslipData). In MP, emits the hook onDragMPTimeslipRequested instead and lets the gamemode finalize. Also saves the dial times; in drag multiseat gamemode, does not send the slip to the HUD. | 71 |
+| `gameplay_drag_core.setCareerRewards()` | Grants the career reward (bmra currency, value 5) once per race, except in the 'activity' context or with career inactive. | 1470 |
+| `gameplay_drag_core.setDragRaceData(data)` | Arms the track data: normalizes the DQ fields, computes raceEndTimerId (timer with the greatest distance), restores the zones' metatables, synchronizes the waypoints with the scene, loads the required extensions, reads the dial book then emits onDragDataSet. | 493 |
+| `gameplay_drag_core.setExpectedStagingRacerCount(count)` | Sets the number of drivers that must be in staging before the start (minimum 1). | 906 |
+| `gameplay_drag_core.setExtension(ext)` | Replaces the active race type extension. | 1484 |
+| `gameplay_drag_core.setPlayableVehicle(vehicleId)` | Marks the vehicle's racer as playable (isPlayable = true). | 789 |
+| `gameplay_drag_core.setPoiJoinRequestSent(poiKey, val)` | Stores (val true) or forgets a participation request for a POI. | 1598 |
+| `gameplay_drag_core.setRaceState(raceId, updates)` | Merges fields into the stored state of an MP race. | 897 |
+| `gameplay_drag_core.setRacerDial(vehicleId, dialValue)` | Sets the dial (announced time, in seconds) of a racer and marks it isSet. Creates the dial timer if missing. | 741 |
+| `gameplay_drag_core.setRacerWheelGeometry(racer, vehicle)` | Computes the vehicle's wheel geometry (groups by "frontness", offsets from the center) and initializes racer.allWheelsOffsets, wheelsCenter, beamState and frontWheelId. If no wheel is found, uses the OOBB. | 356 |
+| `gameplay_drag_core.setRacersDial(dials)` | Applies several dials at once. | 768 |
+| `gameplay_drag_core.setupRacer(vehicleId, lane)` | Creates a vehicle's racer in a lane (phases, timers from the track config, initial dial, wheel geometry, name, plate, stock state). Refuses an already occupied lane. In MP, creates a stub if the vehicle does not exist locally. | 384 |
+| `gameplay_drag_core.startDragRaceActivity(lane, vehicleId)` | Starts the drag activity: loads the extensions, creates the player's racer in solo freeroam, shows the 'drag' UI app, turns on staging, turns the ignition off/on to 3 for playable racers outside freeroam, emits onDragRacersSetup then calls the race type's startActivity. | 827 |
+| `gameplay_drag_core.validateResetState(data)` | Checks that a reset is complete (race not started, racers in phase 1, neither DQ nor finished, timers stopped, phases reset). | 553 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drag_core.allRacersFinished(data)`
 
-Vrai si data contient au moins un racer et que tous ont isFinished.
+True if data contains at least one racer and all have isFinished.
 
-- `data` (*table|nil*) : Données de piste (dragData ou poiData).
-- **renvoie** : boolean true si tous les pilotes ont fini.
+- `data` (*table|nil*) : Track data (dragData or poiData).
+- **returns**: boolean true if all drivers have finished.
 
 #### `gameplay_drag_core.calculateStateChecksum(data)`
 
-Somme de contrôle simple de l'état de course (isStarted, isCompleted, phases, DQ, fini des racers), utilisée pour logguer l'effet d'un reset.
+Simple checksum of the race state (isStarted, isCompleted, phases, DQ, racers' finished), used to log the effect of a reset.
 
-- `data` (*table|nil*) : Données de piste.
-- **renvoie** : integer Checksum, 0 si data est nil.
+- `data` (*table|nil*) : Track data.
+- **returns**: integer Checksum, 0 if data is nil.
 
 #### `gameplay_drag_core.clear(opts)`
 
-Nettoie l'état drag selon les options (toutes à false par défaut) : hooks (onDragClear puis onDragClearComplete), transitionLock, localRace (MP), extensions (décharge les extensions paresseuses), data (décharge les prefabs et met dragData à nil), context (retour à 'freeroam'), ui (cache l'app 'drag'), treeLightStaging (éteint le voyant de staging).
+Cleans the drag state according to the options (all false by default): hooks (onDragClear then onDragClearComplete), transitionLock, localRace (MP), extensions (unloads the lazy extensions), data (unloads the prefabs and sets dragData to nil), context (back to 'freeroam'), ui (hides the 'drag' app), treeLightStaging (turns off the staging light).
 
-- `opts` (*table|nil*) : Table d'options booléennes nommées hooks, transitionLock, localRace, extensions, data, context, ui, treeLightStaging.
+- `opts` (*table|nil*) : Table of boolean options named hooks, transitionLock, localRace, extensions, data, context, ui, treeLightStaging.
 
 #### `gameplay_drag_core.clearPoiJoinRequest(poiKey)`
 
-Oublie la demande de participation envoyée pour un POI (MP).
+Forgets the participation request sent for a POI (MP).
 
-- `poiKey` (*string|nil*) : Clé renvoyée par getPoiKey.
+- `poiKey` (*string|nil*) : Key returned by getPoiKey.
 
 #### `gameplay_drag_core.clearRaceState(raceId)`
 
-Supprime l'état stocké pour une course MP (raceStateStore).
+Removes the state stored for an MP race (raceStateStore).
 
-- `raceId` (*any*) : Identifiant de course.
+- `raceId` (*any*) : Race identifier.
 
 #### `gameplay_drag_core.createTimeslipData()`
 
-Délègue à gameplay_drag_timeslip.createTimeslipData.
+Delegates to gameplay_drag_timeslip.createTimeslipData.
 
-- **renvoie** : table Données du ticket de chronométrage.
+- **returns**: table Timing slip data.
 
 #### `gameplay_drag_core.createTimeslipPanelData()`
 
-Délègue à gameplay_drag_timeslip.createTimeslipPanelData.
+Delegates to gameplay_drag_timeslip.createTimeslipPanelData.
 
-- **renvoie** : table Données du panneau de ticket.
+- **returns**: table Slip panel data.
 
 #### `gameplay_drag_core.getCurrentSavePath()`
 
-Chemin de sauvegarde courant du système de sauvegarde drag.
+Current save path of the drag save system.
 
-- **renvoie** : string|nil Chemin (déduit de saveSystem.getCurrentSavePath).
+- **returns**: string|nil Path (inferred from saveSystem.getCurrentSavePath).
 
 #### `gameplay_drag_core.getData()`
 
-Source unique des données drag (piste, racers, timers). Solo et MP : core en est propriétaire.
+Single source of drag data (track, racers, timers). Solo and MP: core owns it.
 
-- **renvoie** : table|nil dragData, nil si rien de chargé.
+- **returns**: table|nil dragData, nil if nothing is loaded.
 
 #### `gameplay_drag_core.getDragDataForLevel(levelIdentifier)`
 
-Charge (puis met en cache) toutes les pistes *.dragSettings.json du dossier dragstrips d'un niveau. Ajoute _originFile, _fnWithoutExt et _index à chaque entrée.
+Loads (then caches) all *.dragSettings.json tracks from a level's dragstrips folder. Adds _originFile, _fnWithoutExt and _index to each entry.
 
-- `levelIdentifier` (*string*) : Nom du niveau (core_levels.getLevelByName).
-- **renvoie** : table[] Liste des données de pistes.
+- `levelIdentifier` (*string*) : Level name (core_levels.getLevelByName).
+- **returns**: table[] List of track data.
 
 #### `gameplay_drag_core.getDragGamemode()`
 
-Renvoie l'extension du gamemode drag multijoueur (multiplayer/gamemodes/drag/drag) si elle est chargée.
+Returns the multiplayer drag gamemode extension (multiplayer/gamemodes/drag/drag) if it is loaded.
 
-- **renvoie** : table|nil L'extension ou nil.
+- **returns**: table|nil The extension or nil.
 
 #### `gameplay_drag_core.getDragIsStarted()`
 
-Indique si la course est démarrée (dragData.isStarted).
+Indicates whether the race is started (dragData.isStarted).
 
-- **renvoie** : boolean false si aucune donnée.
+- **returns**: boolean false if no data.
 
 #### `gameplay_drag_core.getExpectedStagingRacerCount()`
 
-Nombre de pilotes attendus en staging avant de lancer le compte à rebours (1 par défaut).
+Number of drivers expected in staging before starting the countdown (1 by default).
 
-- **renvoie** : integer Nombre attendu.
+- **returns**: integer Expected number.
 
 #### `gameplay_drag_core.getExtension()`
 
-Extension de type de course active (headsUpRace ou bracketRace).
+Active race type extension (headsUpRace or bracketRace).
 
-- **renvoie** : table|nil L'extension dragType.
+- **returns**: table|nil The dragType extension.
 
 #### `gameplay_drag_core.getGameplayContext()`
 
-Contexte de jeu courant : 'freeroam' par défaut, ou data.context de la piste (par ex. 'activity').
+Current game context: 'freeroam' by default, or the track's data.context (e.g. 'activity').
 
-- **renvoie** : string Contexte.
+- **returns**: string Context.
 
 #### `gameplay_drag_core.getMaxLanes(data)`
 
-Nombre de couloirs de la piste (au moins 1 ; 2 par défaut si la piste n'a pas de lanes).
+Number of lanes of the track (at least 1; 2 by default if the track has no lanes).
 
-- `data` (*table|nil*) : poiData ou dragData.
-- **renvoie** : integer Nombre de couloirs.
+- `data` (*table|nil*) : poiData or dragData.
+- **returns**: integer Number of lanes.
 
 #### `gameplay_drag_core.getPoiKey(poiData)`
 
-Clé stable « niveau:nom » d'une piste (nom = _fnWithoutExt ou name), utilisée pour un lobby par piste en MP.
+Stable "level:name" key of a track (name = _fnWithoutExt or name), used for a per-track lobby in MP.
 
-- `poiData` (*table|nil*) : Données du POI.
-- **renvoie** : string|nil Clé, nil si poiData est nil.
+- `poiData` (*table|nil*) : POI data.
+- **returns**: string|nil Key, nil if poiData is nil.
 
 #### `gameplay_drag_core.getRaceState(raceId)`
 
-Renvoie un instantané de l'état de course. En MP : issu du raceStateStore (id, players, queue, currentPairIndex, treeType, finishTimes, timerValues, lobbyId, poiData…), ou nil si introuvable. En solo : data, isStarted, isCompleted, treeType.
+Returns a snapshot of the race state. In MP: from the raceStateStore (id, players, queue, currentPairIndex, treeType, finishTimes, timerValues, lobbyId, poiData...), or nil if not found. In solo: data, isStarted, isCompleted, treeType.
 
-- `raceId` (*any*) : Identifiant de course MP ; nil = course locale active ou première stockée.
-- **renvoie** : table|nil État de course.
+- `raceId` (*any*) : MP race identifier; nil = active local race or first stored.
+- **returns**: table|nil Race state.
 
 #### `gameplay_drag_core.getRacerData(vehicleId)`
 
-Renvoie la table du racer d'un véhicule.
+Returns the racer table of a vehicle.
 
-- `vehicleId` (*integer*) : ID du véhicule.
-- **renvoie** : table|nil Racer, nil si inconnu.
+- `vehicleId` (*integer*) : Vehicle ID.
+- **returns**: table|nil Racer, nil if unknown.
 
 #### `gameplay_drag_core.getResetState()`
 
-État du reset : 'idle', 'resetting' ou 'ready'.
+Reset state: 'idle', 'resetting' or 'ready'.
 
-- **renvoie** : string État.
+- **returns**: string State.
 
 #### `gameplay_drag_core.getStagingCheckData()`
 
-Appelée par l'hôte MP : vérifie si tous les pilotes sont en staging (lecture seule).
+Called by the MP host: checks whether all drivers are in staging (read-only).
 
-- **renvoie** : boolean allStaged ; false si pas hôte, course non démarrée ou pas de données.
-- **renvoie** : table|nil dragData courant, nil si la vérification n'a pas eu lieu.
+- **returns**: boolean allStaged; false if not host, race not started or no data.
+- **returns**: table|nil Current dragData, nil if the check did not take place.
 
 #### `gameplay_drag_core.getTimers(vehicleId)`
 
-Timers d'un racer (dial, timer, distanceTimer, velocity…).
+Timers of a racer (dial, timer, distanceTimer, velocity...).
 
-- `vehicleId` (*integer*) : ID du véhicule.
-- **renvoie** : table|nil Table des timers ({} si racer inconnu, nil si pas de données).
+- `vehicleId` (*integer*) : Vehicle ID.
+- **returns**: table|nil Timers table ({} if racer unknown, nil if no data).
 
 #### `gameplay_drag_core.isDragEnabled()`
 
-Drag autorisé si la carrière est active ou si le réglage enableDragRaceInFreeroam est vrai.
+Drag is allowed if career is active or if the enableDragRaceInFreeroam setting is true.
 
-- **renvoie** : boolean Activé ou non.
+- **returns**: boolean Enabled or not.
 
 #### `gameplay_drag_core.isJoinWindowOpen(data)`
 
-Fenêtre de participation ouverte : course non terminée et aucun racer au-delà de la phase 1.
+Participation window open: race not finished and no racer beyond phase 1.
 
-- `data` (*table|nil*) : Données de piste.
-- **renvoie** : boolean Ouverte ou non.
+- `data` (*table|nil*) : Track data.
+- **returns**: boolean Open or not.
 
 #### `gameplay_drag_core.isPoiJoinRequestSent(poiKey)`
 
-Indique si une demande de participation a déjà été envoyée pour ce POI.
+Indicates whether a participation request has already been sent for this POI.
 
-- `poiKey` (*string*) : Clé de POI.
-- **renvoie** : boolean|nil true si envoyée.
+- `poiKey` (*string*) : POI key.
+- **returns**: boolean|nil true if sent.
 
 #### `gameplay_drag_core.loadDragDataForMission(filepath)`
 
-Aide pour les missions : charge la piste depuis un fichier, charge les prefabs, fixe le contexte et arme les données (setDragRaceData).
+Helper for missions: loads the track from a file, loads the prefabs, sets the context and arms the data (setDragRaceData).
 
-- `filepath` (*string*) : Chemin du fichier de piste (.dragSettings.json).
-- **renvoie** : table|nil Données chargées, nil en cas d'échec.
+- `filepath` (*string*) : Path of the track file (.dragSettings.json).
+- **returns**: table|nil Loaded data, nil on failure.
 
 #### `gameplay_drag_core.loadDragStripData(filepath)`
 
-Charge les données de piste via saveSystem.loadDragStripData et les stocke dans dragData.
+Loads the track data via saveSystem.loadDragStripData and stores it in dragData.
 
-- `filepath` (*string*) : Chemin du fichier.
-- **renvoie** : table|nil Données ou nil (log E).
+- `filepath` (*string*) : File path.
+- **returns**: table|nil Data or nil (E log).
 
 #### `gameplay_drag_core.onAnyMissionChanged(status, mission)`
 
-Hook : à chaque démarrage ou arrêt de mission, fait un clear complet (tous les drapeaux à true).
+Hook: at every mission start or stop, does a full clear (all flags true).
 
-- `status` (*string*) : 'started' ou 'stopped' déclenchent le nettoyage.
-- `mission` (*table*) : Mission concernée.
+- `status` (*string*) : 'started' or 'stopped' trigger the cleanup.
+- `mission` (*table*) : Mission concerned.
 
 #### `gameplay_drag_core.onDragRaceCancelled(raceId)`
 
-Hook MP : course annulée. Ne fait rien (le reset/clear vient du dragBridge ou des hooks véhicule).
+MP hook: race cancelled. Does nothing (the reset/clear comes from dragBridge or the vehicle hooks).
 
-- `raceId` (*any*) : Identifiant de course.
+- `raceId` (*any*) : Race identifier.
 
 #### `gameplay_drag_core.onDragRaceClientDisconnected(client)`
 
-Hook MP : un client se déconnecte. Retrouve le joueur MP correspondant et appelle onDragRacePlayerLeft.
+MP hook: a client disconnects. Finds the matching MP player and calls onDragRacePlayerLeft.
 
-- `client` (*table*) : Client avec champ id.
+- `client` (*table*) : Client with an id field.
 
 #### `gameplay_drag_core.onDragRaceCountdownStart(mappedTime, randValue)`
 
-Hook : début du compte à rebours. En MP côté client, termine la phase 1 de tous les racers et passe à la phase suivante ; en solo, passe à la phase suivante si tous les pilotes attendus sont en staging. Puis démarre la phase 2 de chaque racer (hook startDragCountdown).
+Hook: countdown start. In MP on the client side, ends phase 1 of all racers and moves to the next phase; in solo, moves to the next phase if all expected drivers are in staging. Then starts phase 2 of each racer (startDragCountdown hook).
 
-- `mappedTime` (*number*) : Temps du compte à rebours (non utilisé directement).
-- `randValue` (*number*) : Valeur aléatoire (non utilisée directement).
+- `mappedTime` (*number*) : Countdown time (not used directly).
+- `randValue` (*number*) : Random value (not used directly).
 
 #### `gameplay_drag_core.onDragRaceJoinAccepted(raceId, lane, poiData, treeType)`
 
-Hook MP : participation acceptée. Arme les données de la piste (avec treeType), crée le racer du véhicule local, démarre l'activité et ouvre le menu de lobby si fermé.
+MP hook: participation accepted. Arms the track data (with treeType), creates the local vehicle's racer, starts the activity and opens the lobby menu if closed.
 
-- `raceId` (*any*) : Identifiant de course.
-- `lane` (*integer*) : Couloir attribué.
-- `poiData` (*table*) : Données de la piste.
-- `treeType` (*string*) : Type d'arbre de départ (par ex. '.500').
+- `raceId` (*any*) : Race identifier.
+- `lane` (*integer*) : Assigned lane.
+- `poiData` (*table*) : Track data.
+- `treeType` (*string*) : Starting tree type (e.g. '.500').
 
 #### `gameplay_drag_core.onDragRacePlayerLeft(player)`
 
-Hook MP : marque le racer d'un joueur parti comme disqualifié et fini (raison playerLeft). Recherche par vehicleId, sinon par couloir.
+MP hook: marks the racer of a player who left as disqualified and finished (playerLeft reason). Looks up by vehicleId, otherwise by lane.
 
-- `player` (*table*) : Table avec mpPlayerId.
+- `player` (*table*) : Table with mpPlayerId.
 
 #### `gameplay_drag_core.onDragRaceReset(raceId)`
 
-Hook MP : remet isStarted/isCompleted à false et autorise un nouveau onDragRaceStarted pour la même course (manche suivante).
+MP hook: resets isStarted/isCompleted to false and allows a new onDragRaceStarted for the same race (next round).
 
-- `raceId` (*any*) : Identifiant de course.
+- `raceId` (*any*) : Race identifier.
 
 #### `gameplay_drag_core.onDragRaceStart(raceStartTime)`
 
-Hook MP : l'hôte diffuse le départ ; les clients (non hôtes) terminent la phase 2 et passent tous les racers en phase de course (phase 3).
+MP hook: the host broadcasts the start; the (non-host) clients end phase 2 and put all racers in the race phase (phase 3).
 
-- `raceStartTime` (*number*) : Heure de départ (non utilisée directement).
+- `raceStartTime` (*number*) : Start time (not used directly).
 
 #### `gameplay_drag_core.onDragRaceStarted(raceId)`
 
-Hook MP : la manche démarre. Reconstruit dragData depuis raceState.poiData (copie profonde), crée les racers de la manche, marque le racer local (isLocalRacer), applique les dials, émet onDragReset, lance startDragRaceActivity et ouvre le contrôle de dial en bracketRace si le dial local est vide. Ignore les appels doublons pour le même raceId.
+MP hook: the round starts. Rebuilds dragData from raceState.poiData (deep copy), creates the round's racers, marks the local racer (isLocalRacer), applies the dials, emits onDragReset, runs startDragRaceActivity and opens the dial control in bracketRace if the local dial is empty. Ignores duplicate calls for the same raceId.
 
-- `raceId` (*any*) : Identifiant de course.
+- `raceId` (*any*) : Race identifier.
 
 #### `gameplay_drag_core.onDragRaceTimerUpdated(raceId, mpPlayerId, timerName, timerValue)`
 
-Hook MP : un timer réseau arrive. Applique le dial d'un joueur distant et ré-associe le racer au vrai vehicleId si la clé a changé (même couloir).
+MP hook: a network timer arrives. Applies a remote player's dial and re-associates the racer with the real vehicleId if the key changed (same lane).
 
-- `raceId` (*any*) : Identifiant de course.
-- `mpPlayerId` (*any*) : Joueur MP.
-- `timerName` (*string*) : Nom du timer (par ex. 'dial').
-- `timerValue` (*number*) : Valeur.
+- `raceId` (*any*) : Race identifier.
+- `mpPlayerId` (*any*) : MP player.
+- `timerName` (*string*) : Timer name (e.g. 'dial').
+- `timerValue` (*number*) : Value.
 
 #### `gameplay_drag_core.onDragRaceTreeLights(lane, lightState)`
 
-Hook MP : état des feux de l'arbre reçu pour un couloir. Met à jour le staging des racers du couloir (si stageLight défini) puis l'affichage.
+MP hook: tree light state received for a lane. Updates the staging of the lane's racers (if stageLight is set) then the display.
 
-- `lane` (*integer*) : Couloir.
-- `lightState` (*table*) : État des feux (stageLights.stageLight, etc.).
+- `lane` (*integer*) : Lane.
+- `lightState` (*table*) : Light state (stageLights.stageLight, etc.).
 
 #### `gameplay_drag_core.onDragRaceWinningLights(lane)`
 
-Hook MP : allume le feu du gagnant du couloir (display.onWinnerLightOn).
+MP hook: turns on the lane winner's light (display.onWinnerLightOn).
 
-- `lane` (*integer*) : Couloir gagnant.
+- `lane` (*integer*) : Winning lane.
 
 #### `gameplay_drag_core.onGetRawPoiListForLevel(levelIdentifier, elements)`
 
-Hook : ajoute les POI de pistes de drag d'un niveau (délègue à gameplay_drag_poi).
+Hook: adds the drag track POIs of a level (delegates to gameplay_drag_poi).
 
-- `levelIdentifier` (*string*) : Nom du niveau.
-- `elements` (*table*) : Liste de POI à compléter.
+- `levelIdentifier` (*string*) : Level name.
+- `elements` (*table*) : POI list to complete.
 
 #### `gameplay_drag_core.onGetRawPoiListForTutorial(elements)`
 
-Hook : liste de POI pour le tutoriel, toujours celle du niveau west_coast_usa.
+Hook: POI list for the tutorial, always that of the west_coast_usa level.
 
-- `elements` (*table*) : Liste de POI à compléter.
+- `elements` (*table*) : POI list to complete.
 
 #### `gameplay_drag_core.onSaveCurrentProfile(currentSavePath)`
 
-Hook : sauvegarde du profil carrière ; écrit le fichier des temps de dial.
+Hook: career profile save; writes the dial times file.
 
-- `currentSavePath` (*string|nil*) : Chemin de sauvegarde.
+- `currentSavePath` (*string|nil*) : Save path.
 
 #### `gameplay_drag_core.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook par frame : détecte la sortie de zone (stripZone) et la fuite de staging (> 25 m), puis gère la re-staging après DQ en freeroam et les minuteries de staging distant.
+Per-frame hook: detects leaving the zone (stripZone) and staging runaway (> 25 m), then handles re-staging after DQ in freeroam and the remote staging timers.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
-- `dtRaw` (*number*) : Delta brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
+- `dtRaw` (*number*) : Raw delta (s).
 
 #### `gameplay_drag_core.onVehicleDestroyed(vehicleId)`
 
-Hook : véhicule détruit. En freeroam solo avec course démarrée, marque le racer comme retiré et disqualifié.
+Hook: vehicle destroyed. In solo freeroam with the race started, marks the racer as removed and disqualified.
 
-- `vehicleId` (*integer*) : ID du véhicule.
+- `vehicleId` (*integer*) : Vehicle ID.
 
 #### `gameplay_drag_core.onVehicleResetted(vehicleId)`
 
-Hook : véhicule réinitialisé. En freeroam solo avec course démarrée, disqualifie le racer (vehicleReset).
+Hook: vehicle reset. In solo freeroam with the race started, disqualifies the racer (vehicleReset).
 
-- `vehicleId` (*integer*) : ID du véhicule.
+- `vehicleId` (*integer*) : Vehicle ID.
 
 #### `gameplay_drag_core.onVehicleSwitched(oldId, newId)`
 
-Hook : changement de véhicule joué. En freeroam solo avec course démarrée, disqualifie l'ancien et le nouveau racer (vehicleSwitched).
+Hook: played vehicle switched. In solo freeroam with the race started, disqualifies the old and the new racer (vehicleSwitched).
 
-- `oldId` (*integer*) : Ancien véhicule.
-- `newId` (*integer*) : Nouveau véhicule.
+- `oldId` (*integer*) : Old vehicle.
+- `newId` (*integer*) : New vehicle.
 
 #### `gameplay_drag_core.reset(opts)`
 
-Remet l'état de course à zéro selon les options (false/nil par défaut) : raceState (isStarted/isCompleted), racers (phase, DQ, fini, timers de chaque racer), clearRacers (vide la liste), timeslip (efface le ticket UI), transitionLock, treeLightStaging (voyant de staging allumé), hooks (émet onDragReset), raceId (passé au hook). Valide ensuite l'état et logue un warning si incohérent.
+Resets the race state according to the options (false/nil by default): raceState (isStarted/isCompleted), racers (phase, DQ, finished, timers of each racer), clearRacers (empties the list), timeslip (clears the UI slip), transitionLock, treeLightStaging (staging light on), hooks (emits onDragReset), raceId (passed to the hook). Then validates the state and logs a warning if inconsistent.
 
-- `opts` (*table|nil*) : Options nommées.
+- `opts` (*table|nil*) : Named options.
 
 #### `gameplay_drag_core.saveDialTimes(timeslip)`
 
-Enregistre les temps du ticket dans le carnet de dial via saveSystem.saveDialTimes (si des données sont chargées).
+Records the slip times in the dial book via saveSystem.saveDialTimes (if data is loaded).
 
-- `timeslip` (*table*) : Données du ticket.
+- `timeslip` (*table*) : Slip data.
 
 #### `gameplay_drag_core.setCareerRewards()`
 
-Accorde la récompense carrière (monnaie bmra, valeur 5) une fois par course, sauf contexte 'activity' ou carrière inactive.
+Grants the career reward (bmra currency, value 5) once per race, except in the 'activity' context or with career inactive.
 
-- **renvoie** : table|nil {bmra = n} si accordée, nil sinon.
+- **returns**: table|nil {bmra = n} if granted, nil otherwise.
 
 #### `gameplay_drag_core.setDragRaceData(data)`
 
-Arme les données de piste : normalise les champs de DQ, calcule raceEndTimerId (timer de plus grande distance), restaure les métatables de zones, synchronise les waypoints avec la scène, charge les extensions requises, lit le carnet de dial puis émet onDragDataSet.
+Arms the track data: normalizes the DQ fields, computes raceEndTimerId (timer with the greatest distance), restores the zones' metatables, synchronizes the waypoints with the scene, loads the required extensions, reads the dial book then emits onDragDataSet.
 
-- `data` (*table*) : Données de piste (dragSettings).
+- `data` (*table*) : Track data (dragSettings).
 
 #### `gameplay_drag_core.setExpectedStagingRacerCount(count)`
 
-Fixe le nombre de pilotes qui doivent être en staging avant le départ (minimum 1).
+Sets the number of drivers that must be in staging before the start (minimum 1).
 
-- `count` (*integer*) : Nombre de pilotes.
+- `count` (*integer*) : Number of drivers.
 
 #### `gameplay_drag_core.setExtension(ext)`
 
-Remplace l'extension de type de course active.
+Replaces the active race type extension.
 
-- `ext` (*table|nil*) : Extension dragType.
+- `ext` (*table|nil*) : dragType extension.
 
 #### `gameplay_drag_core.setPlayableVehicle(vehicleId)`
 
-Marque le racer du véhicule comme jouable (isPlayable = true).
+Marks the vehicle's racer as playable (isPlayable = true).
 
-- `vehicleId` (*integer*) : ID du véhicule.
+- `vehicleId` (*integer*) : Vehicle ID.
 
 #### `gameplay_drag_core.setPoiJoinRequestSent(poiKey, val)`
 
-Mémorise (val vrai) ou oublie une demande de participation pour un POI.
+Stores (val true) or forgets a participation request for a POI.
 
-- `poiKey` (*string*) : Clé de POI.
-- `val` (*boolean*) : true pour mémoriser, sinon efface.
+- `poiKey` (*string*) : POI key.
+- `val` (*boolean*) : true to store, otherwise clears.
 
 #### `gameplay_drag_core.setRaceState(raceId, updates)`
 
-Fusionne des champs dans l'état stocké d'une course MP.
+Merges fields into the stored state of an MP race.
 
-- `raceId` (*any*) : Identifiant de course.
-- `updates` (*table*) : Champs à écrire.
+- `raceId` (*any*) : Race identifier.
+- `updates` (*table*) : Fields to write.
 
 #### `gameplay_drag_core.setRacerDial(vehicleId, dialValue)`
 
-Fixe le dial (temps annoncé, en secondes) d'un racer et le marque isSet. Crée le timer dial s'il manque.
+Sets the dial (announced time, in seconds) of a racer and marks it isSet. Creates the dial timer if missing.
 
-- `vehicleId` (*integer*) : ID du véhicule.
-- `dialValue` (*number*) : Valeur >= 0.
-- **renvoie** : boolean true si appliqué.
+- `vehicleId` (*integer*) : Vehicle ID.
+- `dialValue` (*number*) : Value >= 0.
+- **returns**: boolean true if applied.
 
 #### `gameplay_drag_core.setRacerWheelGeometry(racer, vehicle)`
 
-Calcule la géométrie des roues du véhicule (groupes par « frontness », décalages par rapport au centre) et initialise racer.allWheelsOffsets, wheelsCenter, beamState et frontWheelId. Si aucune roue n'est trouvée, utilise l'OOBB.
+Computes the vehicle's wheel geometry (groups by "frontness", offsets from the center) and initializes racer.allWheelsOffsets, wheelsCenter, beamState and frontWheelId. If no wheel is found, uses the OOBB.
 
-- `racer` (*table*) : Racer à compléter.
-- `vehicle` (*userdata*) : Objet BeamNGVehicle.
+- `racer` (*table*) : Racer to complete.
+- `vehicle` (*userdata*) : BeamNGVehicle object.
 
 #### `gameplay_drag_core.setRacersDial(dials)`
 
-Applique plusieurs dials d'un coup.
+Applies several dials at once.
 
-- `dials` (*table[]*) : Liste d'entrées {racerId = vehId, value = dial}.
-- **renvoie** : boolean true si au moins un dial a été appliqué.
+- `dials` (*table[]*) : List of entries {racerId = vehId, value = dial}.
+- **returns**: boolean true if at least one dial was applied.
 
 #### `gameplay_drag_core.setupRacer(vehicleId, lane)`
 
-Crée le racer d'un véhicule dans un couloir (phases, timers depuis la config de piste, dial initial, géométrie des roues, nom, plaque, état stock). Refuse un couloir déjà occupé. En MP, crée un stub si le véhicule n'existe pas localement.
+Creates a vehicle's racer in a lane (phases, timers from the track config, initial dial, wheel geometry, name, plate, stock state). Refuses an already occupied lane. In MP, creates a stub if the vehicle does not exist locally.
 
-- `vehicleId` (*integer*) : ID du véhicule.
-- `lane` (*integer|nil*) : Couloir.
+- `vehicleId` (*integer*) : Vehicle ID.
+- `lane` (*integer|nil*) : Lane.
 
 #### `gameplay_drag_core.startDragRaceActivity(lane, vehicleId)`
 
-Démarre l'activité de drag : charge les extensions, crée le racer du joueur en freeroam solo, affiche l'app UI 'drag', allume le staging, coupe/met le contact sur 3 pour les racers jouables hors freeroam, émet onDragRacersSetup puis appelle startActivity du type de course.
+Starts the drag activity: loads the extensions, creates the player's racer in solo freeroam, shows the 'drag' UI app, turns on staging, turns the ignition off/on to 3 for playable racers outside freeroam, emits onDragRacersSetup then calls the race type's startActivity.
 
-- `lane` (*integer|nil*) : Couloir du joueur.
-- `vehicleId` (*integer|nil*) : Véhicule (défaut : véhicule joueur 0).
-- **renvoie** : boolean true si démarré.
+- `lane` (*integer|nil*) : Player's lane.
+- `vehicleId` (*integer|nil*) : Vehicle (default: player 0's vehicle).
+- **returns**: boolean true if started.
 
 #### `gameplay_drag_core.validateResetState(data)`
 
-Vérifie qu'un reset est complet (course non démarrée, racers en phase 1, ni DQ ni finis, timers arrêtés, phases remises à zéro).
+Checks that a reset is complete (race not started, racers in phase 1, neither DQ nor finished, timers stopped, phases reset).
 
-- `data` (*table|nil*) : Données de piste.
-- **renvoie** : boolean Valide ou non.
-- **renvoie** : string Message explicatif.
+- `data` (*table|nil*) : Track data.
+- **returns**: boolean Valid or not.
+- **returns**: string Explanatory message.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant : saveSystem, dragBridge, rulesMenu, timeslip, poi. |
+| `dependencies` | string[] | Extensions loaded beforehand: saveSystem, dragBridge, rulesMenu, timeslip, poi. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onBeforeDragUnloadAllExtensions` — écouté par 1 module(s)
-- `onDragClear` — écouté par 5 module(s)
-- `onDragClearComplete` — écouté par 1 module(s)
-- `onDragDataSet` — écouté par 3 module(s)
+- `onBeforeDragUnloadAllExtensions` — listened to by 1 module(s)
+- `onDragClear` — listened to by 5 module(s)
+- `onDragClearComplete` — listened to by 1 module(s)
+- `onDragDataSet` — listened to by 3 module(s)
 - `onDragMPTimeslipRequested`
-- `onDragRacersSetup` — écouté par 2 module(s)
-- `onDragReset` — écouté par 4 module(s)
+- `onDragRacersSetup` — listened to by 2 module(s)
+- `onDragReset` — listened to by 4 module(s)
 - `startDragCountdown`
 
-**Évènements UI (guihooks.trigger) :** `onDragRaceTimeslipData`, `updateTreeLightStaging`
+**UI events (guihooks.trigger):** `onDragRaceTimeslipData`, `updateTreeLightStaging`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `be:` `getPlayerVehicleID`, `reloadCollision`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drag/core.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drag/core.lua`.*

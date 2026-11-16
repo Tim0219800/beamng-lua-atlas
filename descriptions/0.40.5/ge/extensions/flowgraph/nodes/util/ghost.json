@@ -1,45 +1,45 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/ghost.lua",
-  "module": "Nœud caché « GHOST » (catégorie logic, hidden=true). Sert de remplaçant quand un projet flowgraph référence un type de nœud qui n'existe plus : il garde les données d'origine (ghostData) pour ne pas les perdre à la sauvegarde, affiche le type d'origine et marque une erreur « Node ... doesn't exist! ». Ne fait rien à l'exécution.",
+  "module": "Hidden node \"GHOST\" (category logic, hidden=true). Serves as a replacement when a flowgraph project references a node type that no longer exists: it keeps the original data (ghostData) so it is not lost on save, displays the original type and marks an error \"Node ... doesn't exist!\". Does nothing at runtime.",
   "notes": [
-    "Le nom affiché est construit avec le motif %a+, il ne garde que le dernier groupe de lettres du type (les chiffres coupent le mot)."
+    "The displayed name is built with the %a+ pattern, so it keeps only the last group of letters of the type (digits split the word)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Initialise formerNodeType à « NOT GHOST ».",
+          "desc": "Initializes formerNodeType to \"NOT GHOST\".",
           "internal": true
         },
         "work": {
-          "desc": "Ne fait rien.",
+          "desc": "Does nothing.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine le type de nœud d'origine et un bouton « Dump ghost data » qui affiche ghostData dans la console.",
+          "desc": "Draws the original node type and a \"Dump ghost data\" button that prints ghostData to the console.",
           "params": {
             "builder": {
               "type": "table",
-              "desc": "Constructeur de nœud de l'éditeur."
+              "desc": "Editor node constructor."
             },
             "style": {
               "type": "table",
-              "desc": "Style du nœud."
+              "desc": "Node style."
             }
           },
           "internal": true
         },
         "__onSerialize": {
-          "desc": "Renvoie les données d'origine (ghostData) telles quelles pour que le nœud soit resauvegardé à l'identique.",
+          "desc": "Returns the original data (ghostData) as is so that the node is saved again identically.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Enregistre l'erreur, mémorise le type d'origine, renomme le nœud « [GHOST]<dernier mot du type> » et garde nodeData dans ghostData.",
+          "desc": "Records the error, stores the original type, renames the node \"[GHOST]<last word of the type>\" and keeps nodeData in ghostData.",
           "params": {
             "nodeData": {
               "type": "table",
-              "desc": "Données sauvegardées du nœud d'origine."
+              "desc": "Saved data of the original node."
             }
           },
           "internal": true

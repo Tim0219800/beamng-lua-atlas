@@ -1,72 +1,72 @@
 # `editor_toolUtilities_polygonPaint`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/polygonPaint.lua` · VM : Game Engine (GE) · 197 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/polygonPaint.lua` · VM: Game Engine (GE) · 197 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_polygonPaint` : `extensions.load("editor_toolUtilities_polygonPaint")`, puis la globale `editor_toolUtilities_polygonPaint`
+**Access:** extension `editor_toolUtilities_polygonPaint`: `extensions.load("editor_toolUtilities_polygonPaint")`, then the global `editor_toolUtilities_polygonPaint`
 
-Outil de polygone à main levée pour l'éditeur : l'utilisateur maintient le clic gauche et glisse sur le terrain pour poser des points, relâche pour terminer (la fermeture est implicite entre le dernier et le premier point). Le tracé est simplifié par RDP pour obtenir un polygone éditable propre. Dessine un aperçu (sphères et lignes bleues) et le curseur.
+Freehand polygon tool for the editor: the user holds the left click and drags over the terrain to lay points, releases to finish (closing is implicit between the last and the first point). The stroke is simplified by RDP to obtain a clean editable polygon. Draws a preview (blue spheres and lines) and the cursor.
 
-## Exemple
+## Example
 
 ```lua
 local pp = extensions.editor_toolUtilities_polygonPaint
 pp.start({stepMeters = 2, rdpTolMeters = 6})
--- chaque frame :
+-- every frame:
 if pp.update() then
   local poly = pp.consumePolygon()
 end
 ```
 
-## Remarques
+## Notes
 
-- Le dessin ne démarre que si la souris survole le terrain : évite qu'un clic sur l'interface (ex. bouton « New ») commence et termine un trait.
-- Les points sont posés à la hauteur du terrain + 0.05 m (anti z-fighting).
-- Un trait de moins de 3 points (ou moins de 3 après RDP) est jeté et l'outil reste armé.
-- À la fin d'un tracé valide, active passe à false et finished à true jusqu'à consumePolygon.
+- Drawing starts only if the mouse hovers over the terrain: prevents a click on the UI (e.g. a "New" button) from starting and ending a stroke.
+- Points are placed at terrain height + 0.05 m (anti z-fighting).
+- A stroke of fewer than 3 points (or fewer than 3 after RDP) is discarded and the tool stays armed.
+- At the end of a valid stroke, active becomes false and finished becomes true until consumePolygon.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_polygonPaint.cancel()` | Désarme l'outil et efface les points. | 61 |
-| `editor_toolUtilities_polygonPaint.consumePolygon(out)` | Récupère le polygone simplifié terminé et efface le drapeau finished. Renvoie nil s'il n'y a rien de terminé. | 75 |
-| `editor_toolUtilities_polygonPaint.hasFinished()` | Indique si un polygone terminé attend d'être récupéré par consumePolygon. | 71 |
-| `editor_toolUtilities_polygonPaint.isActive()` | Indique si l'outil est armé. | 67 |
-| `editor_toolUtilities_polygonPaint.start(opts)` | Arme l'outil et réinitialise les tables. stepMeters (défaut 2.0) est la distance minimale entre deux points capturés, rdpTolMeters (défaut 6.0) la tolérance de simplification. | 50 |
-| `editor_toolUtilities_polygonPaint.update()` | À appeler chaque frame pendant que la peinture doit être possible : dessine l'aperçu et le curseur, capture les points tant que le clic gauche est enfoncé sur le terrain, termine au relâchement. | 128 |
+| `editor_toolUtilities_polygonPaint.cancel()` | Disarms the tool and clears the points. | 61 |
+| `editor_toolUtilities_polygonPaint.consumePolygon(out)` | Retrieves the finished simplified polygon and clears the finished flag. Returns nil if nothing is finished. | 75 |
+| `editor_toolUtilities_polygonPaint.hasFinished()` | Tells whether a finished polygon is waiting to be retrieved by consumePolygon. | 71 |
+| `editor_toolUtilities_polygonPaint.isActive()` | Tells whether the tool is armed. | 67 |
+| `editor_toolUtilities_polygonPaint.start(opts)` | Arms the tool and resets the tables. stepMeters (default 2.0) is the minimum distance between two captured points, rdpTolMeters (default 6.0) the simplification tolerance. | 50 |
+| `editor_toolUtilities_polygonPaint.update()` | To be called every frame while painting must be possible: draws the preview and the cursor, captures points while the left click is held down on the terrain, finishes on release. | 128 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_polygonPaint.consumePolygon(out)`
 
-Récupère le polygone simplifié terminé et efface le drapeau finished. Renvoie nil s'il n'y a rien de terminé.
+Retrieves the finished simplified polygon and clears the finished flag. Returns nil if nothing is finished.
 
-- `out` (*table|nil*) : Table de sortie réutilisable, vidée puis remplie ; créée si nil.
-- **renvoie** : table|nil Liste de vec3 du polygone.
+- `out` (*table|nil*) : Reusable output table, emptied then filled; created if nil.
+- **returns**: table|nil List of vec3 of the polygon.
 
 #### `editor_toolUtilities_polygonPaint.hasFinished()`
 
-Indique si un polygone terminé attend d'être récupéré par consumePolygon.
+Tells whether a finished polygon is waiting to be retrieved by consumePolygon.
 
-- **renvoie** : boolean true si un polygone est prêt.
+- **returns**: boolean true if a polygon is ready.
 
 #### `editor_toolUtilities_polygonPaint.isActive()`
 
-Indique si l'outil est armé.
+Tells whether the tool is armed.
 
-- **renvoie** : boolean true si armé.
+- **returns**: boolean true if armed.
 
 #### `editor_toolUtilities_polygonPaint.start(opts)`
 
-Arme l'outil et réinitialise les tables. stepMeters (défaut 2.0) est la distance minimale entre deux points capturés, rdpTolMeters (défaut 6.0) la tolérance de simplification.
+Arms the tool and resets the tables. stepMeters (default 2.0) is the minimum distance between two captured points, rdpTolMeters (default 6.0) the simplification tolerance.
 
 - `opts` (*table|nil*) : { stepMeters = number, rdpTolMeters = number }
 
 #### `editor_toolUtilities_polygonPaint.update()`
 
-À appeler chaque frame pendant que la peinture doit être possible : dessine l'aperçu et le curseur, capture les points tant que le clic gauche est enfoncé sur le terrain, termine au relâchement.
+To be called every frame while painting must be possible: draws the preview and the cursor, captures points while the left click is held down on the terrain, finishes on release.
 
-- **renvoie** : boolean true si un polygone s'est terminé pendant cette frame.
+- **returns**: boolean true if a polygon finished during this frame.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/polygonPaint.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/polygonPaint.lua`.*

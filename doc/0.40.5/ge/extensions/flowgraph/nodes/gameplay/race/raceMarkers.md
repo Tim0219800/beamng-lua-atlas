@@ -1,31 +1,31 @@
 # `flowgraph_nodes_gameplay_race_raceMarkers`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceMarkers.lua` · VM : Game Engine (GE) · 175 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceMarkers.lua` · VM: Game Engine (GE) · 175 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/race/raceMarkers")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/race/raceMarkers")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Race Markers » (catégorie repeat_instant, tag scenario). Affiche en 3D (module scenario/race_marker) les marqueurs de course d'un véhicule et dessine les mêmes points sur la minimap. Au premier flux avec raceData, crée un marqueur par pathnode (position, rayon, normale, position du suivant) ; à chaque évènement rollingStarted/pathnodeReached/raceStarted du véhicule, recalcule les modes (default, next, start, lap, recovery, final, branch, hidden) à partir de state.nextPathnodes et overNextPathnodes. Entrées : clear (impulsion qui supprime les marqueurs), raceData, vehId, ignoreRecovery, minAlpha (0,15), maxAlpha (1), minDistance (5), maxDistance (50), alwaysShowFinal.
+Flowgraph node "Race Markers" (category repeat_instant, tag scenario). Displays in 3D (module scenario/race_marker) the race markers of a vehicle and draws the same points on the minimap. On first flow with raceData, creates one marker per pathnode (position, radius, normal, position of the next one); on each rollingStarted/pathnodeReached/raceStarted event of the vehicle, recomputes the modes (default, next, start, lap, recovery, final, branch, hidden) from state.nextPathnodes and overNextPathnodes. Inputs: clear (pulse that removes the markers), raceData, vehId, ignoreRecovery, minAlpha (0.15), maxAlpha (1), minDistance (5), maxDistance (50), alwaysShowFinal.
 
-## Remarques
+## Notes
 
-- Les pins minAlpha, maxAlpha, minDistance, maxDistance sont déclarées mais jamais lues dans ce fichier.
-- L'ancienne pin 'reset' est redirigée vers 'clear'.
-- Il reste un « ]] » isolé dans le code (reste d'un bloc commenté).
+- The pins minAlpha, maxAlpha, minDistance, maxDistance are declared but never read in this file.
+- The old pin 'reset' is redirected to 'clear'.
+- A stray "]]" remains in the code (leftover of a commented-out block).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Détruit les marqueurs (markers.onClientEndMission) et vide la route. | 156 |
-| `C:destroy()` | Destruction du nœud : appelle _executionStopped. | 169 |
-| `C:init()` | Initialise markers, minimapMarkers et route. | 45 |
-| `C:onClientEndMission()` | Hook de fin de mission : appelle _executionStopped. | 164 |
-| `C:onDrawOnMinimap(td)` | Hook minimap : dessine ligne (pathnode avec normale) ou cercle de chaque marqueur non caché, avec pointeur de bord. | 135 |
-| `C:onMinimapRouteOverride(routeOverrides)` | Hook minimap : ajoute à routeOverrides une copie du chemin détaillé aiDetailedPath de la course (refermé s'il est fermé). | dyn |
-| `C:onPreRender(dt, dtSim)` | Hook de rendu : appelle markers.render(dt, dtSim). | 149 |
-| `C:work()` | Gère clear ; crée les marqueurs au besoin et met à jour leurs modes sur évènement de course. | 50 |
+| `C:_executionStopped()` | Destroys the markers (markers.onClientEndMission) and empties the route. | 156 |
+| `C:destroy()` | Node destruction: calls _executionStopped. | 169 |
+| `C:init()` | Initializes markers, minimapMarkers and route. | 45 |
+| `C:onClientEndMission()` | Mission end hook: calls _executionStopped. | 164 |
+| `C:onDrawOnMinimap(td)` | Minimap hook: draws a line (pathnode with normal) or a circle for each non-hidden marker, with an edge pointer. | 135 |
+| `C:onMinimapRouteOverride(routeOverrides)` | Minimap hook: adds to routeOverrides a copy of the race's detailed path aiDetailedPath (closed again if it is closed). | dyn |
+| `C:onPreRender(dt, dtSim)` | Render hook: calls markers.render(dt, dtSim). | 149 |
+| `C:work()` | Handles clear; creates the markers if needed and updates their modes on race events. | 50 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceMarkers.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceMarkers.lua`.*

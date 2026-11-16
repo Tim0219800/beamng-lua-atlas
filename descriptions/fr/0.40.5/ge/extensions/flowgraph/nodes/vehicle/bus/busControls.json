@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/bus/busControls.lua",
+  "module": "Nœud « Bus Controls Detection » (catégorie `repeat_instant`, icône bus). Lit l'état d'un bus : sorties `isKneeling` (bool, bus agenouillé) et `doorsOpen` (bool, portes ouvertes), avec un flux de sortie `flow`. Pins d'entrée : `flow`, `vehId` (défaut 0). À utiliser avec le nœud « Register Bus Data » appelé après le spawn du bus. Lit `mgr.modules.vehicle:isBusKneel/isBusDoorOpen`.",
+  "notes": [
+    "Sans appel préalable de Register Bus Data, les valeurs restent à false.",
+    "Le repli « véhicule joueur » annoncé dans la description du pin dépend du module vehicle (`isBusKneel(nil)`), non vérifié ici."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "executionStarted": {
+          "desc": "Remet les deux sorties à false au démarrage (note : nom sans underscore, donc jamais appelé par le gestionnaire qui appelle `_executionStarted`).",
+          "internal": true
+        },
+        "init": {
+          "desc": "Constructeur ; met `isKneeling` et `doorsOpen` à false.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Met à jour `isKneeling`, `doorsOpen` depuis le module `vehicle` du manager et active le flux de sortie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

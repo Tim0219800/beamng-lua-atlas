@@ -1,0 +1,55 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/imVehicleSelect.lua",
+  "module": "Nœud flowgraph « im Vehicle Selector » (catégorie once_instant, tags imgui/vehicle/config) : fenêtre imgui de choix de véhicule basée sur editor/util/vehicleSelectUtil. Sorties : « selected » (flux après le bouton Select), « model », « config », « configPath » et, cachées, « paintName1/2/3 ». Options dans data : enableConfigs (vrai), enablePaints (faux), enableCustomConfig (faux).",
+  "notes": [
+    "La fenêtre fait 480 x 300 px.",
+    "Le flux « selected » n'est remis à false qu'au reset du nœud."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Crée l'utilitaire de sélection avec les options data.",
+          "internal": true
+        },
+        "displayWindow": {
+          "desc": "Dessine la fenêtre « Vehicle Select » (widget, boutons Select et Reset) et met à jour les sorties.",
+          "internal": false
+        },
+        "drawMiddle": {
+          "desc": "Zone centrale vide.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale)."
+            },
+            "style": {
+              "type": "any",
+              "desc": "Style d'affichage du nœud fourni par l'éditeur."
+            }
+          },
+          "internal": true
+        },
+        "init": {
+          "desc": "Options data par défaut.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Ferme la fenêtre et remet selected à false.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Affiche la fenêtre si ouverte.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Ouvre la fenêtre.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

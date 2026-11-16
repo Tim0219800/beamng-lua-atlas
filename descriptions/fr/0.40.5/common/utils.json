@@ -1,0 +1,824 @@
+{
+  "path": "lua/common/utils.lua",
+  "module": "Boîte à outils commune (GE et véhicule) chargée au démarrage de chaque VM Lua. Ce fichier ne renvoie pas de table M : il définit directement des centaines de fonctions GLOBALES (dump, deepcopy, tableMerge, jsonReadFile, jsonWriteFile, readFile, split, couleurs, sérialisation, etc.), étend la bibliothèque `string` (string.startswith, string.split…), crée la table globale `path` et assigne la globale `lpack`. Un moddeur les appelle directement, sans require. Il charge aussi `filters`, `inputFilters`, `lpack` et `libs/inspect/inspect`.",
+  "usage": "local data = jsonReadFile('/settings/monfichier.json') or {}\ndata.compteur = (data.compteur or 0) + 1\njsonWriteFile('/settings/monfichier.json', data, true)\ndump(tableKeysSorted(data))\nlocal parties = split('a,b,c', ',')  -- {'a','b','c'}\nlocal copie = deepcopy(data)",
+  "notes": [
+    "Les chemins de fichiers sont ceux du système de fichiers virtuel du jeu (ex. '/settings/...', '/levels/...') ou des chemins disque pour io.open.",
+    "Couleurs : color(r,g,b,a) renvoie un entier 32 bits RGBA (r*2^24 + g*2^16 + b*2^8 + a), composantes 0..255 ; hueColor/jetColor/ironbowColor/greyColor prennent x dans [0..1].",
+    "tableSize/tableDepth/deepcopy sont lents (parcourent toute la table) : à éviter dans une boucle par image.",
+    "Beaucoup de fonctions renvoient un buffer partagé (jsonEncodeWorkBuffer, serializeWorkBuffer, concatWorkBuffer, stringFormatWorkBuffer) : le contenu est écrasé au prochain appel, il faut le convertir (tostring) tout de suite.",
+    "jsonEncode et jsonEncodeWorkBuffer partagent le même buffer interne que serialize : ne pas imbriquer ces appels.",
+    "Bug/incohérence : getCurrentLevelIdentifier(raw) -> le paramètre raw ne change rien (le résultat de string.gsub est ignoré quand raw est vrai, la valeur renvoyée est toujours en minuscules).",
+    "Bug/incohérence : concatWorkBuffer, dans la branche table, teste `vtype == 'boolean'` au lieu de `vtype1` et met `v` (la table) au lieu de `v1` dans le buffer pour les éléments non numériques : cela déclenche une erreur si un élément de la table n'est pas un nombre.",
+    "Bug/incohérence : dumpToFile appelle inspect(...) avec tous les arguments : le deuxième argument éventuel est interprété comme la table d'options d'inspect, pas comme une seconde valeur à écrire.",
+    "Incohérence : arrayFindValueIndex renvoie false (et non nil) quand la valeur est absente.",
+    "Incohérence : saveIni ne renvoie rien (ni true ni false), alors que loadIni renvoie nil en cas d'échec.",
+    "Incohérence : string.rstripchars et string.stripchars renvoient deux valeurs (le résultat de gsub : texte puis nombre de remplacements).",
+    "Incohérence : dump et dumpz loguent avec le niveau 'A' et l'origine 'lua.utils' ; dumpNotNil passe par Lua:log avec une origine vide.",
+    "Le code commenté `pairs = sortedPairs` en bas de fichier montre comment rendre les boucles pairs déterministes (la vraie fonction pairs est conservée dans `unsortedPairs` local)."
+  ],
+  "fields": {},
+  "functions": {
+    "RGBtoHSV": {
+      "desc": "Convertit une couleur RGB en HSV. Les entrées r,g,b sont dans [0..1] (déduit du code : pas de mise à l'échelle 255).",
+      "params": {
+        "r": {"type": "number", "desc": "Rouge [0..1]"},
+        "g": {"type": "number", "desc": "Vert [0..1]"},
+        "b": {"type": "number", "desc": "Bleu [0..1]"}
+      },
+      "returns": [
+        {"type": "number", "desc": "Teinte h dans [0..1]"},
+        {"type": "number", "desc": "Saturation s dans [0..1]"},
+        {"type": "number", "desc": "Valeur v (= max(r,g,b))"}
+      ]
+    },
+    "HSVtoRGB": {
+      "desc": "Convertit une couleur HSV en RGB, composantes dans [0..1].",
+      "params": {
+        "h": {"type": "number", "desc": "Teinte [0..1]"},
+        "s": {"type": "number", "desc": "Saturation [0..1]"},
+        "v": {"type": "number", "desc": "Valeur [0..1]"}
+      },
+      "returns": [
+        {"type": "number", "desc": "r [0..1]"},
+        {"type": "number", "desc": "g [0..1]"},
+        {"type": "number", "desc": "b [0..1]"}
+      ]
+    },
+    "color": {
+      "desc": "Fabrique un entier couleur RGBA 32 bits. Chaque composante est arrondie à l'entier inférieur et bornée à 0..255.",
+      "params": {
+        "r": {"type": "number", "desc": "Rouge 0..255"},
+        "g": {"type": "number", "desc": "Vert 0..255"},
+        "b": {"type": "number", "desc": "Bleu 0..255"},
+        "a": {"type": "number|nil", "desc": "Alpha 0..255, 255 par défaut"}
+      },
+      "returns": [{"type": "integer", "desc": "r*16777216 + g*65536 + b*256 + a"}]
+    },
+    "colorGetRGBA": {
+      "desc": "Opération inverse de color() : décompose un entier RGBA.",
+      "params": {"col": {"type": "integer", "desc": "Couleur RGBA 32 bits"}},
+      "returns": [
+        {"type": "integer", "desc": "r"},
+        {"type": "integer", "desc": "g"},
+        {"type": "integer", "desc": "b"},
+        {"type": "integer", "desc": "a"}
+      ]
+    },
+    "colorHex": {
+      "desc": "Fabrique un entier couleur RGBA à partir d'un hexadécimal RGB (ex. 0xff8800) et d'un alpha.",
+      "params": {
+        "rgbHex": {"type": "integer", "desc": "Couleur 0xRRGGBB"},
+        "a": {"type": "number|nil", "desc": "Alpha 0..255, 255 par défaut"}
+      },
+      "returns": [{"type": "integer", "desc": "Couleur RGBA 32 bits"}]
+    },
+    "tableToColor": {
+      "desc": "Convertit une table {r,g,b,a} (0..255) en entier couleur. Renvoie 0 si la table est nil.",
+      "params": {"v": {"type": "table|nil", "desc": "Table avec les champs r, g, b, a"}},
+      "returns": [{"type": "integer", "desc": "Couleur RGBA 32 bits"}]
+    },
+    "parseColor": {
+      "desc": "Convertit en entier couleur une table {r,g,b,a}, une chaîne '#RRGGBBAA' (au moins 8 caractères avec le #) ou nil (donne transparent 0,0,0,0). Tout autre type renvoie nil.",
+      "params": {"v": {"type": "table|string|nil", "desc": "Table {r,g,b,a}, chaîne '#RRGGBBAA' ou nil"}},
+      "returns": [{"type": "integer|nil", "desc": "Couleur RGBA 32 bits, nil si le format n'est pas reconnu"}]
+    },
+    "hueColor": {
+      "desc": "Couleur du spectre de teinte complet (saturation et valeur maximales). Utile pour des couleurs indexées : hueColor(indexedBlueNoise(i)).",
+      "params": {
+        "x": {"type": "number", "desc": "Teinte [0..1]"},
+        "a": {"type": "number|nil", "desc": "Alpha 0..255 (255 par défaut)"}
+      },
+      "returns": [{"type": "integer", "desc": "Couleur RGBA 32 bits"}]
+    },
+    "rainbowColor": {
+      "desc": "Couleur arc-en-ciel pour l'étape step sur numOfSteps. Le code recommande plutôt jetColor sauf raison contraire.",
+      "params": {
+        "numOfSteps": {"type": "number", "desc": "Nombre total d'étapes"},
+        "step": {"type": "number", "desc": "Étape courante"},
+        "format": {"type": "number|nil", "desc": "255 (défaut) pour des composantes entières 0..255, toute autre valeur pour des composantes [0..1]"}
+      },
+      "returns": [{"type": "table", "desc": "{r,g,b,a} (a vaut 255 ou 1 selon le format)"}]
+    },
+    "ironbowColor": {
+      "desc": "Couleur de la palette thermique 'ironbow'.",
+      "params": {
+        "x": {"type": "number", "desc": "Valeur [0..1]"},
+        "a": {"type": "number|nil", "desc": "Alpha 0..255 (255 par défaut)"}
+      },
+      "returns": [{"type": "integer", "desc": "Couleur RGBA 32 bits"}]
+    },
+    "jetColor": {
+      "desc": "Couleur de la palette 'jet' (bleu, vert, rouge). Palette par défaut recommandée pour visualiser une valeur.",
+      "params": {
+        "x": {"type": "number", "desc": "Valeur [0..1]"},
+        "a": {"type": "number|nil", "desc": "Alpha 0..255 (255 par défaut)"}
+      },
+      "returns": [{"type": "integer", "desc": "Couleur RGBA 32 bits"}]
+    },
+    "greyColor": {
+      "desc": "Niveau de gris.",
+      "params": {
+        "x": {"type": "number", "desc": "Luminosité [0..1]"},
+        "a": {"type": "number|nil", "desc": "Alpha 0..255 (255 par défaut)"}
+      },
+      "returns": [{"type": "integer", "desc": "Couleur RGBA 32 bits"}]
+    },
+    "dumps": {
+      "desc": "Renvoie la représentation texte (via libs/inspect) des arguments, séparés par ', '. Sans argument renvoie ''. Pour un unique userdata ayant une métatable, inspecte la métatable.",
+      "params": {"...": {"type": "any", "desc": "Valeurs à convertir en texte"}},
+      "returns": [{"type": "string", "desc": "Texte inspecté"}]
+    },
+    "dump": {
+      "desc": "Affiche dans le log (niveau 'A', origine 'lua.utils') le résultat de dumps(...). Fonction de debug la plus courante pour inspecter une table.",
+      "params": {"...": {"type": "any", "desc": "Valeurs à afficher"}},
+      "returns": []
+    },
+    "dumpsz": {
+      "desc": "Comme inspect mais avec profondeur illimitée par défaut (depth = math.huge).",
+      "params": {
+        "o": {"type": "any", "desc": "Valeur à inspecter"},
+        "depth": {"type": "number|nil", "desc": "Profondeur maximale, illimitée par défaut"}
+      },
+      "returns": [{"type": "string", "desc": "Texte inspecté"}]
+    },
+    "dumpz": {
+      "desc": "Affiche dans le log (niveau 'A', origine 'lua.utils') le résultat de dumpsz(o, depth).",
+      "params": {
+        "o": {"type": "any", "desc": "Valeur à inspecter"},
+        "depth": {"type": "number|nil", "desc": "Profondeur maximale, illimitée par défaut"}
+      },
+      "returns": []
+    },
+    "dumpNotNil": {
+      "desc": "Comme dump, mais n'affiche rien si x est nil (et ne prend qu'une valeur).",
+      "params": {"x": {"type": "any", "desc": "Valeur à afficher si non nil"}},
+      "returns": []
+    },
+    "addLevelLog": {
+      "desc": "Ajoute une entrée au journal de niveau du moteur (Engine.Debug.addLevelLogLua), avec le fichier et la ligne de l'appelant (debug.getinfo(2)). Sans objet, utilise addLevelLogLuaNoObject.",
+      "params": {
+        "object": {"type": "any|nil", "desc": "Objet auquel rattacher le log, nil pour aucun"},
+        "logLevel": {"type": "any", "desc": "Niveau de log (transmis tel quel au moteur)"},
+        "origin": {"type": "string", "desc": "Origine du message"},
+        "uniqueErrorCode": {"type": "any", "desc": "Code d'erreur unique (transmis au moteur)"},
+        "message": {"type": "string", "desc": "Message"}
+      },
+      "returns": []
+    },
+    "getLevelLogs": {
+      "desc": "Renvoie les logs de niveau accumulés (Engine.Debug.getLevelLogsLua).",
+      "params": {},
+      "returns": [{"type": "any", "desc": "Résultat du moteur (déduit du code : liste des logs)"}]
+    },
+    "clearLevelLogs": {
+      "desc": "Vide les logs de niveau (Engine.Debug.clearLevelLogs).",
+      "params": {},
+      "returns": []
+    },
+    "lpad": {
+      "desc": "Complète s à gauche avec le caractère c jusqu'à la longueur l. s est converti par tostring.",
+      "params": {
+        "s": {"type": "any", "desc": "Valeur à compléter"},
+        "l": {"type": "integer", "desc": "Longueur cible"},
+        "c": {"type": "string", "desc": "Caractère de remplissage"}
+      },
+      "returns": [{"type": "string", "desc": "Texte complété (inchangé s'il est déjà assez long)"}]
+    },
+    "rpad": {
+      "desc": "Complète s à droite avec le caractère c jusqu'à la longueur l. s est converti par tostring.",
+      "params": {
+        "s": {"type": "any", "desc": "Valeur à compléter"},
+        "l": {"type": "integer", "desc": "Longueur cible"},
+        "c": {"type": "string", "desc": "Caractère de remplissage"}
+      },
+      "returns": [{"type": "string", "desc": "Texte complété"}]
+    },
+    "trim": {
+      "desc": "Supprime les espaces au début et à la fin d'une chaîne.",
+      "params": {"s": {"type": "string", "desc": "Chaîne à nettoyer"}},
+      "returns": [{"type": "string", "desc": "Chaîne sans espaces aux extrémités"}]
+    },
+    "split": {
+      "desc": "Découpe str selon le séparateur delim (recherche textuelle simple, pas une regex). Une chaîne vide renvoie un tableau vide. Les champs vides sont conservés.",
+      "params": {
+        "str": {"type": "string", "desc": "Texte à découper"},
+        "delim": {"type": "string", "desc": "Séparateur littéral"},
+        "nMax": {"type": "integer|nil", "desc": "Nombre maximal de coupures (défaut -1 = illimité) ; le reste de la chaîne est mis dans le dernier élément"}
+      },
+      "returns": [{"type": "table<integer, string>", "desc": "Tableau des morceaux"}]
+    },
+    "stringHash": {
+      "desc": "Calcule un hash numérique d'une chaîne (algorithme StringHash du wiki WoW).",
+      "params": {"text": {"type": "string", "desc": "Texte à hacher"}},
+      "returns": [{"type": "number", "desc": "Hash dans [0..4294967291)"}]
+    },
+    "bytes_to_string": {
+      "desc": "Convertit un nombre d'octets en texte lisible avec 2 décimales. Utilise des puissances de 1000 (KB, MB, GB), pas de 1024.",
+      "params": {"bytes": {"type": "number", "desc": "Nombre d'octets"}},
+      "returns": [{"type": "string", "desc": "Ex. '1.50 MB'"}]
+    },
+    "formatTimeStringNow": {
+      "desc": "Remplace dans res les jetons de date/heure locale courante : {YYYY} {YY} {Y} {MM} {M} {DD} {D} {HH} {H} {mm} {m} {ss} {s} (les formes doublées sont sur 2 chiffres, YYYY sur 4).",
+      "params": {"res": {"type": "string", "desc": "Modèle de texte contenant les jetons"}},
+      "returns": [{"type": "string", "desc": "Texte avec la date/heure insérée"}]
+    },
+    "graphs": {
+      "desc": "Construit un petit graphique ASCII d'une valeur : '[' + len signes (+ ou - selon le signe de v) + espaces + ']'.",
+      "params": {
+        "v": {"type": "number", "desc": "Valeur (seule la partie entière de |v| compte)"},
+        "len": {"type": "integer", "desc": "Largeur de la jauge en caractères"}
+      },
+      "returns": [{"type": "string", "desc": "Jauge texte"}]
+    },
+    "jsonEncodeWorkBuffer": {
+      "desc": "Encode une valeur en JSON dans un buffer string.buffer partagé (sans copie en chaîne). Les nombres infinis/NaN sont écrits 9e999 / -9e999 ; les vec3/quat (cdata) deviennent {x,y,z[,w]} ; les types non supportés deviennent null. Une table dont la clé 1 existe est écrite comme tableau.",
+      "params": {"v": {"type": "any", "desc": "Valeur à encoder"}},
+      "returns": [{"type": "userdata", "desc": "Buffer partagé (réécrit au prochain appel)"}]
+    },
+    "jsonEncode": {
+      "desc": "Encode une valeur Lua en texte JSON compact.",
+      "params": {"v": {"type": "any", "desc": "Valeur à encoder"}},
+      "returns": [{"type": "string", "desc": "Texte JSON"}]
+    },
+    "jsonEncodePrefix": {
+      "desc": "Encode v en JSON compact, précédé de prefix et suivi (facultatif) de postfix.",
+      "params": {
+        "prefix": {"type": "string", "desc": "Texte placé avant le JSON"},
+        "v": {"type": "any", "desc": "Valeur à encoder"},
+        "postfix": {"type": "string|nil", "desc": "Texte placé après le JSON"}
+      },
+      "returns": [{"type": "string", "desc": "prefix .. JSON .. postfix"}]
+    },
+    "jsonEncodePretty": {
+      "desc": "Encode en JSON indenté (2 espaces par niveau), clés d'objet triées. Récursif.",
+      "params": {
+        "v": {"type": "any", "desc": "Valeur à encoder"},
+        "lvl": {"type": "integer|nil", "desc": "Niveau d'indentation courant, 1 par défaut"},
+        "numberPrecision": {"type": "integer|nil", "desc": "Si donné, les nombres non entiers sont écrits avec ce nombre de décimales (format %N.Nf) ; nil = tostring"}
+      },
+      "returns": [{"type": "string", "desc": "Texte JSON indenté"}]
+    },
+    "jsonDecode": {
+      "desc": "Décode du JSON (module json) dans un xpcall. En cas d'erreur, loggue le contexte et l'erreur et renvoie nil.",
+      "params": {
+        "content": {"type": "string|userdata", "desc": "Texte JSON (ou buffer)"},
+        "context": {"type": "any", "desc": "Texte (souvent le nom de fichier) affiché dans le message d'erreur"}
+      },
+      "returns": [{"type": "any|nil", "desc": "Valeur décodée, nil en cas d'erreur"}]
+    },
+    "jsonWriteFile": {
+      "desc": "Écrit une table dans un fichier JSON. Refuse (log E + false) si obj n'est pas une table. Avec atomicWrite, écrit d'abord dans un fichier temporaire puis le renomme (FS:renameFile).",
+      "params": {
+        "filename": {"type": "string", "desc": "Fichier de destination"},
+        "obj": {"type": "table", "desc": "Données à écrire"},
+        "pretty": {"type": "boolean|nil", "desc": "true : JSON indenté (jsonEncodePretty), sinon compact"},
+        "numberPrecision": {"type": "integer|nil", "desc": "Décimales pour le mode pretty (voir jsonEncodePretty)"},
+        "atomicWrite": {"type": "boolean|string|nil", "desc": "Truthy : écriture atomique via fichier temporaire ; si c'est une chaîne, elle sert de nom de fichier temporaire, sinon filename..'.tmp'"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si l'écriture a réussi"}]
+    },
+    "jsonReadFile": {
+      "desc": "Lit et décode un fichier JSON. Renvoie nil si le fichier est illisible (sans log : l'appelant gère l'erreur) ou si le JSON est invalide (log E par jsonDecode).",
+      "params": {"filename": {"type": "string", "desc": "Chemin du fichier"}},
+      "returns": [{"type": "any|nil", "desc": "Données décodées ou nil"}]
+    },
+    "readDictJSONTable": {
+      "desc": "Lit un JSON de tableaux 'en-têtes + lignes' : pour chaque entrée, la première ligne donne les noms de colonnes, et chaque ligne suivante est transformée en table nommée ; la ligne d'en-tête est ensuite supprimée (v[1] = nil).",
+      "params": {"filename": {"type": "string", "desc": "Chemin du fichier JSON"}},
+      "returns": [{"type": "table|nil", "desc": "Données transformées, nil si lecture impossible"}]
+    },
+    "setEqual": {
+      "desc": "Teste si deux tableaux contiennent les mêmes valeurs (comparaison de longueur puis d'appartenance ; ignore l'ordre).",
+      "params": {
+        "set1": {"type": "table", "desc": "Premier tableau"},
+        "set2": {"type": "table", "desc": "Second tableau"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si égaux en tant qu'ensembles"}]
+    },
+    "setUnion": {
+      "desc": "Ajoute à dst toutes les valeurs de src absentes de dst (modifie dst).",
+      "params": {
+        "dst": {"type": "table", "desc": "Tableau modifié"},
+        "src": {"type": "table", "desc": "Tableau source"}
+      },
+      "returns": [{"type": "table", "desc": "dst"}]
+    },
+    "setDifference": {
+      "desc": "Retire de dst toutes les valeurs présentes dans src. Modifie dst et change l'ordre de ses éléments.",
+      "params": {
+        "dst": {"type": "table", "desc": "Tableau modifié"},
+        "src": {"type": "table", "desc": "Valeurs à retirer"}
+      },
+      "returns": [{"type": "table", "desc": "dst"}]
+    },
+    "concatWorkBuffer": {
+      "desc": "Concatène les arguments (nombres, textes, booléens, ou tableaux de nombres) dans un buffer partagé. S'arrête au premier argument nil. Les nombres infinis/NaN sont écrits 9e999 / -9e999.",
+      "params": {"...": {"type": "any", "desc": "Valeurs à concaténer"}},
+      "returns": [{"type": "userdata", "desc": "Buffer partagé (réécrit au prochain appel)"}]
+    },
+    "stringFormatWorkBuffer": {
+      "desc": "Équivalent de string.format écrit dans un buffer partagé (buffer:putf), sans allocation de chaîne.",
+      "params": {"...": {"type": "any", "desc": "Format puis valeurs"}},
+      "returns": [{"type": "userdata", "desc": "Buffer partagé"}]
+    },
+    "tableIsDict": {
+      "desc": "Renvoie true si tbl est une table dont le premier élément n'a pas la clé 1 (test rapide : next(tbl) ~= 1). Une table vide compte donc comme dictionnaire. Renvoie false si ce n'est pas une table.",
+      "params": {"tbl": {"type": "any", "desc": "Valeur à tester"}},
+      "returns": [{"type": "boolean", "desc": "true si dictionnaire"}]
+    },
+    "tableIsArraySlow": {
+      "desc": "Vérifie strictement que toutes les clés sont des entiers de 1 à #tbl sans trou. Parcourt toute la table.",
+      "params": {"tbl": {"type": "table", "desc": "Table à tester"}},
+      "returns": [{"type": "boolean", "desc": "true si tableau pur"}]
+    },
+    "tableIsEmpty": {
+      "desc": "Renvoie true si tbl n'est pas une table ou si elle est vide.",
+      "params": {"tbl": {"type": "any", "desc": "Valeur à tester"}},
+      "returns": [{"type": "boolean", "desc": "true si vide ou non-table"}]
+    },
+    "tableKeys": {
+      "desc": "Renvoie un tableau de toutes les clés de tbl (ordre non défini).",
+      "params": {
+        "tbl": {"type": "table", "desc": "Table source"},
+        "target": {"type": "table|nil", "desc": "Tableau réutilisé comme sortie (créé sinon)"}
+      },
+      "returns": [{"type": "table", "desc": "Tableau des clés"}]
+    },
+    "tableKeysSorted": {
+      "desc": "Comme tableKeys, mais trié. Le tri accepte des types mixtes : d'abord par nom de type, puis par valeur (nombres, chaînes), booléens true d'abord, autres par tostring.",
+      "params": {
+        "tbl": {"type": "table", "desc": "Table source"},
+        "target": {"type": "table|nil", "desc": "Tableau réutilisé comme sortie"}
+      },
+      "returns": [{"type": "table", "desc": "Tableau trié des clés"}]
+    },
+    "tableValuesAsLookupDict": {
+      "desc": "Construit un dictionnaire valeur -> 1 à partir des valeurs de tbl, pour tester l'appartenance en O(1).",
+      "params": {
+        "tbl": {"type": "table", "desc": "Table dont on prend les valeurs"},
+        "target": {"type": "table|nil", "desc": "Table réutilisée comme sortie"}
+      },
+      "returns": [{"type": "table<any, integer>", "desc": "Dictionnaire {valeur = 1}"}]
+    },
+    "arrayConcat": {
+      "desc": "Ajoute à la fin de dst tous les éléments du tableau src (inclut l'indice 0 de src s'il existe). Modifie dst.",
+      "params": {
+        "dst": {"type": "table", "desc": "Tableau modifié"},
+        "src": {"type": "table", "desc": "Tableau ajouté"}
+      },
+      "returns": [{"type": "table", "desc": "dst"}]
+    },
+    "tableMerge": {
+      "desc": "Copie toutes les paires clé/valeur de src dans dst (écrase les clés existantes, non récursif).",
+      "params": {
+        "dst": {"type": "table", "desc": "Table modifiée"},
+        "src": {"type": "table", "desc": "Table source"}
+      },
+      "returns": [{"type": "table", "desc": "dst"}]
+    },
+    "tableMergeRecursive": {
+      "desc": "Fusion récursive des sous-tables de t2 dans t1. Attention : les tableaux ne sont pas concaténés, leurs éléments s'écrasent par indice.",
+      "params": {
+        "t1": {"type": "table", "desc": "Table modifiée"},
+        "t2": {"type": "table", "desc": "Table source"}
+      },
+      "returns": [{"type": "table", "desc": "t1"}]
+    },
+    "tableMergeRecursiveArray": {
+      "desc": "Fusion récursive qui concatène les tableaux purs (au lieu de les écraser) et fusionne les tables associatives. Les tables absentes de t1 sont copiées.",
+      "params": {
+        "t1": {"type": "table", "desc": "Table modifiée"},
+        "t2": {"type": "table", "desc": "Table source"}
+      },
+      "returns": [{"type": "table", "desc": "t1"}]
+    },
+    "tableSize": {
+      "desc": "Compte les entrées d'une table (tableau ou dictionnaire) en la parcourant entièrement. Renvoie 0 pour un non-table.",
+      "params": {"tbl": {"type": "any", "desc": "Table à compter"}},
+      "returns": [{"type": "integer", "desc": "Nombre d'entrées"}]
+    },
+    "tableReadOnly": {
+      "desc": "Renvoie une table proxy en lecture seule (metatable __index vers l'original ; toute écriture lève une erreur). Seul le premier niveau est protégé.",
+      "params": {"table": {"type": "table", "desc": "Table à protéger"}},
+      "returns": [{"type": "table", "desc": "Proxy en lecture seule"}]
+    },
+    "tableSizeC": {
+      "desc": "Taille d'un tableau en comptant aussi l'élément d'indice 0 (convention C) s'il existe.",
+      "params": {"tbl": {"type": "table", "desc": "Tableau"}},
+      "returns": [{"type": "integer", "desc": "#tbl + 1 si tbl[0] existe, sinon #tbl"}]
+    },
+    "tableEndC": {
+      "desc": "Renvoie l'indice où insérer le prochain élément dans un tableau à base 0 : 0 si la table est vide, sinon #tbl + 1.",
+      "params": {"tbl": {"type": "table", "desc": "Tableau"}},
+      "returns": [{"type": "integer", "desc": "Prochain indice"}]
+    },
+    "tableInsertC": {
+      "desc": "Insère data en fin de tableau à base 0 : en tbl[0] si l'indice 0 est libre, sinon table.insert.",
+      "params": {
+        "tbl": {"type": "table", "desc": "Tableau modifié"},
+        "data": {"type": "any", "desc": "Élément à insérer"}
+      },
+      "returns": []
+    },
+    "tableFindKey": {
+      "desc": "Renvoie la première clé associée à la valeur element (non récursif, ordre pairs).",
+      "params": {
+        "t": {"type": "table", "desc": "Table parcourue"},
+        "element": {"type": "any", "desc": "Valeur cherchée"}
+      },
+      "returns": [{"type": "any|nil", "desc": "Clé trouvée ou nil"}]
+    },
+    "tableContains": {
+      "desc": "Teste si la table contient la valeur element (non récursif).",
+      "params": {
+        "t": {"type": "table", "desc": "Table parcourue"},
+        "element": {"type": "any", "desc": "Valeur cherchée"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si présente"}]
+    },
+    "tableContainsCaseInsensitive": {
+      "desc": "Teste si la table contient la chaîne element, sans tenir compte de la casse. Les valeurs de la table doivent être des chaînes.",
+      "params": {
+        "table": {"type": "table", "desc": "Table de chaînes"},
+        "element": {"type": "string", "desc": "Chaîne cherchée"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si présente"}]
+    },
+    "arrayFindValueIndex": {
+      "desc": "Renvoie l'indice de la première occurrence de val dans le tableau t.",
+      "params": {
+        "t": {"type": "table", "desc": "Tableau"},
+        "val": {"type": "any", "desc": "Valeur cherchée"}
+      },
+      "returns": [{"type": "integer|boolean", "desc": "Indice, ou false (et non nil) si absente"}]
+    },
+    "arrayShuffle": {
+      "desc": "Mélange un tableau pur en place (Fisher-Yates, math.random).",
+      "params": {"array": {"type": "table", "desc": "Tableau modifié"}},
+      "returns": [{"type": "table", "desc": "array"}]
+    },
+    "arrayReverse": {
+      "desc": "Inverse un tableau pur en place.",
+      "params": {"array": {"type": "table", "desc": "Tableau modifié"}},
+      "returns": [{"type": "table", "desc": "array"}]
+    },
+    "tableDepth": {
+      "desc": "Calcule la profondeur d'imbrication d'une table (clés et valeurs tables). Récursif et très lent ; 0 pour un non-table.",
+      "params": {
+        "tbl": {"type": "any", "desc": "Table à mesurer"},
+        "lookup": {"type": "table|nil", "desc": "Cache interne de récursion (laisser nil)"}
+      },
+      "returns": [{"type": "integer", "desc": "Profondeur"}]
+    },
+    "tableRoundRobinKey": {
+      "desc": "Itère en rond sur les clés : renvoie la clé suivant lastKey, ou la première clé si on arrive à la fin ou si lastKey est nil/absente.",
+      "params": {
+        "tbl": {"type": "table", "desc": "Table parcourue"},
+        "lastKey": {"type": "any|nil", "desc": "Clé renvoyée à l'appel précédent"}
+      },
+      "returns": [{"type": "any|nil", "desc": "Clé suivante (nil si la table est vide)"}]
+    },
+    "shallowcopy": {
+      "desc": "Copie non récursive d'une table (les sous-tables restent partagées). Les valeurs non-table sont renvoyées telles quelles. La métatable n'est pas copiée.",
+      "params": {"orig": {"type": "any", "desc": "Valeur ou table à copier"}},
+      "returns": [{"type": "any", "desc": "Copie"}]
+    },
+    "deepcopy": {
+      "desc": "Copie récursive d'une table, en gérant les références circulaires/partagées et en conservant la métatable. Les structures FFI (vec3, quat) sont copiées superficiellement. Lent.",
+      "params": {"object": {"type": "any", "desc": "Valeur ou table à copier"}},
+      "returns": [{"type": "any", "desc": "Copie profonde"}]
+    },
+    "checkTableDataTypes": {
+      "desc": "Valide les types d'un tableau de paramètres. Préfixer un type attendu par 'optional:' autorise nil. Uniquement pour des tableaux purs.",
+      "params": {
+        "data": {"type": "table", "desc": "Tableau à vérifier"},
+        "expectedTypes": {"type": "table<integer, string>", "desc": "Noms de types Lua attendus, ex. {\"string\", \"optional:number\"}"}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "true si conforme"},
+        {"type": "string|nil", "desc": "Message d'erreur si non conforme (nombre de paramètres trop grand ou mauvais type)"}
+      ]
+    },
+    "dumpToFile": {
+      "desc": "Écrit dans un fichier le texte inspect(...) de l'argument.",
+      "params": {
+        "filename": {"type": "string", "desc": "Fichier de sortie (écrasé)"},
+        "...": {"type": "any", "desc": "Valeur à inspecter (voir notes : le 2e argument est lu comme options d'inspect)"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si le fichier a été écrit, false si ouverture impossible"}]
+    },
+    "readFile": {
+      "desc": "Lit tout le contenu d'un fichier texte (io.open en mode 'r', avec événement profileur 'readFile').",
+      "params": {"filename": {"type": "string", "desc": "Chemin du fichier"}},
+      "returns": [{"type": "string|nil", "desc": "Contenu, nil si le fichier n'existe pas ou ne s'ouvre pas"}]
+    },
+    "writeFile": {
+      "desc": "Écrit du texte dans un fichier (mode 'w', écrase). En cas d'échec d'ouverture, loggue un avertissement.",
+      "params": {
+        "filename": {"type": "string", "desc": "Chemin du fichier"},
+        "data": {"type": "string", "desc": "Texte à écrire"}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "true si écrit, nil si ouverture impossible"}]
+    },
+    "ui_message": {
+      "desc": "Affiche un message à l'écran via guihooks.message. Raccourci utilisé par beaucoup de scripts.",
+      "params": {
+        "msg": {"type": "string", "desc": "Texte (ou clé de traduction)"},
+        "ttl": {"type": "number|nil", "desc": "Durée d'affichage en secondes, 5 par défaut"},
+        "category": {"type": "string|nil", "desc": "Catégorie du message, '' par défaut"},
+        "icon": {"type": "string|nil", "desc": "Icône, 'info' par défaut"}
+      },
+      "returns": []
+    },
+    "ui_toast": {
+      "desc": "Affiche une notification 'toast' dans l'interface (évènement UI toastrMsg).",
+      "params": {
+        "msg": {"type": "string", "desc": "Texte"},
+        "title": {"type": "string|nil", "desc": "Titre"},
+        "type": {"type": "string|nil", "desc": "'info' (défaut), 'success', 'warning' ou 'error'"},
+        "_config": {"type": "table|nil", "desc": "Options supplémentaires copiées dans config"}
+      },
+      "returns": []
+    },
+    "fillActionLabelSimple": {
+      "desc": "À partir d'une liste de noms d'actions, construit {action=...} puis appelle fillActionLabels.",
+      "params": {"actionSimple": {"type": "table<integer, string>", "desc": "Noms d'actions d'input"}},
+      "returns": [{"type": "table", "desc": "Liste d'éléments {action, label, missing}"}]
+    },
+    "fillActionLabels": {
+      "desc": "Pour chaque élément {action=...}, renseigne `missing` (true si l'action n'est pas active dans core_input_actions) et `label` (le titre de l'action, ou son nom si absent) si label est nil.",
+      "params": {"actionItems": {"type": "table", "desc": "Liste d'éléments avec le champ action"}},
+      "returns": [{"type": "table", "desc": "actionItems (modifié)"}]
+    },
+    "serializePackages": {
+      "desc": "Collecte l'état à conserver avant un rechargement Lua : pour chaque package chargé définissant onSerialize ou onDeserialized, appelle onSerialize(reason), sinon prend M.state, sinon M. Ajoute les données d'extensions (extensions.getSerializationData). Les erreurs sont loguées et ignorées. Appelé par le moteur lors des rechargements.",
+      "params": {"reason": {"type": "string|nil", "desc": "Motif du rechargement, 'reload' par défaut"}},
+      "returns": [{"type": "table", "desc": "Données indexées par nom de package"}],
+      "internal": true
+    },
+    "deserializePackages": {
+      "desc": "Restaure l'état produit par serializePackages : appelle extensions.deserialize, puis pour chaque package concerné appelle onDeserialize(data) ou fusionne les données (hors fonctions) dans M.state ou M, puis appelle onDeserialized(data).",
+      "params": {
+        "data": {"type": "table|nil", "desc": "Données de serializePackages (nil : ne fait rien)"},
+        "filter": {"type": "string|nil", "desc": "Si donné, ne restaure que ce package"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "getCurrentLevelIdentifier": {
+      "desc": "Renvoie l'identifiant (dossier) du niveau courant en minuscules, déduit du chemin de getMissionFilename() sous /levels/. Renvoie nil si le chemin n'a pas de dossier.",
+      "params": {"raw": {"type": "boolean|nil", "desc": "Sans effet réel (voir notes)"}},
+      "returns": [{"type": "string|nil", "desc": "Nom de niveau en minuscules"}]
+    },
+    "getAllLevelIdentifiers": {
+      "desc": "Liste les dossiers sous /levels/ (FS:findFiles) et renvoie leurs noms en minuscules.",
+      "params": {},
+      "returns": [{"type": "table<integer, string>", "desc": "Identifiants de niveaux"}]
+    },
+    "loadIni": {
+      "desc": "Lit un fichier INI simple (clé = valeur, sans sections). Ignore les lignes vides et celles commençant par #, ; ou /. Convertit les valeurs en nombre ou booléen quand c'est possible ; une ligne illisible est loguée en erreur.",
+      "params": {"filename": {"type": "string", "desc": "Chemin du fichier"}},
+      "returns": [{"type": "table<string, number|boolean|string>|nil", "desc": "Paires clé/valeur, nil si le fichier ne s'ouvre pas"}]
+    },
+    "saveIni": {
+      "desc": "Écrit un INI simple : 3 lignes de commentaire d'en-tête (titre de fenêtre, version du jeu, date), puis les clés triées au format 'clé = valeur'.",
+      "params": {
+        "filename": {"type": "string", "desc": "Fichier de sortie"},
+        "d": {"type": "table", "desc": "Paires clé/valeur"}
+      },
+      "returns": []
+    },
+    "serializeWorkBuffer": {
+      "desc": "Sérialise une valeur en code Lua (rechargeable par deserialize) dans un buffer partagé. Gère _noSerialize (écrit nil), _serialize (table ou true : restreint ou non les clés, format _kv{...}), QuatF (userdata), cdata (tostring). Les fonctions deviennent nil.",
+      "params": {"v": {"type": "any", "desc": "Valeur à sérialiser"}},
+      "returns": [{"type": "userdata", "desc": "Buffer partagé (réécrit au prochain appel)"}]
+    },
+    "serialize": {
+      "desc": "Sérialise une valeur en texte Lua que deserialize() sait relire.",
+      "params": {"v": {"type": "any", "desc": "Valeur à sérialiser"}},
+      "returns": [{"type": "string", "desc": "Code Lua"}]
+    },
+    "_kv": {
+      "desc": "Aide utilisée par le texte produit par serialize : construit une table à partir d'une liste plate {k1, v1, k2, v2…}. Un moddeur n'a normalement pas à l'appeler.",
+      "params": {"kv": {"type": "table", "desc": "Liste plate clé, valeur, clé, valeur…"}},
+      "returns": [{"type": "table", "desc": "Table {k1=v1, k2=v2…}"}],
+      "internal": true
+    },
+    "deserialize": {
+      "desc": "Relit du texte produit par serialize() en exécutant loadstring('return '..s). Renvoie nil si s est nil. Plante si le texte n'est pas du Lua valide (ex. cdata non sérialisable).",
+      "params": {"s": {"type": "string|nil", "desc": "Texte sérialisé"}},
+      "returns": [{"type": "any", "desc": "Valeur reconstruite"}]
+    },
+    "detectGlobalWrites": {
+      "desc": "Outil de debug : installe une métatable sur _G qui loggue (niveau W, avec trace) chaque création d'une nouvelle variable globale.",
+      "params": {},
+      "returns": []
+    },
+    "gcprobe": {
+      "desc": "Mesure les octets de garbage créés entre deux appels. Premier appel : arrête le GC et mémorise la mémoire. Second appel : relance le GC, imprime (si > 0 ou printZero) et renvoie la différence.",
+      "params": {
+        "printZero": {"type": "boolean|nil", "desc": "Imprimer aussi quand la différence est 0"},
+        "omitPrint": {"type": "boolean|nil", "desc": "Ne rien imprimer"}
+      },
+      "returns": [{"type": "number|nil", "desc": "Octets créés (second appel seulement)"}]
+    },
+    "timeprobeStart": {
+      "desc": "Démarre toujours un chronomètre (os.clockhp), même si un timeprobe était en cours.",
+      "params": {},
+      "returns": []
+    },
+    "timeprobe": {
+      "desc": "Premier appel : démarre le chrono. Second appel : imprime la durée en millisecondes et la renvoie en secondes.",
+      "params": {"omitPrint": {"type": "boolean|nil", "desc": "Ne rien imprimer"}},
+      "returns": [{"type": "number|nil", "desc": "Durée en secondes (second appel seulement)"}]
+    },
+    "jitprobe": {
+      "desc": "Bascule la trace du compilateur JIT (jit.v) : activée au premier appel, désactivée au suivant.",
+      "params": {},
+      "returns": []
+    },
+    "flattenTable": {
+      "desc": "Remplace dans tbl, en place, les références multiples à une même sous-table par un jeton texte '>#>/chemin' (pour sérialiser des graphes). Les clés sont parcourues triées.",
+      "params": {"tbl": {"type": "table", "desc": "Table modifiée"}},
+      "returns": [{"type": "table|nil", "desc": "tbl, ou nil si ce n'est pas une table"}]
+    },
+    "unflattenTable": {
+      "desc": "Inverse de flattenTable : remplace les jetons '>#>/chemin' par les sous-tables d'origine. Loggue une erreur si le lien n'existe pas.",
+      "params": {"tbl": {"type": "table", "desc": "Table modifiée"}},
+      "returns": [{"type": "table|nil", "desc": "tbl, ou nil si ce n'est pas une table"}]
+    },
+    "sortedPairs": {
+      "desc": "Comme pairs mais dans l'ordre trié des clés (types mixtes acceptés, ou fonction de tri f). Les clés sont figées au départ ; une valeur mise à nil pendant la boucle est sautée.",
+      "params": {
+        "t": {"type": "table", "desc": "Table à parcourir"},
+        "ctx": {"type": "table|nil", "desc": "Table de travail réutilisable pour éviter les allocations"},
+        "f": {"type": "function|nil", "desc": "Comparateur de clés (défaut : tri multi-types)"}
+      },
+      "returns": [
+        {"type": "function", "desc": "Itérateur"},
+        {"type": "table", "desc": "État de l'itérateur"}
+      ]
+    },
+    "shuffledPairs": {
+      "desc": "Comme pairs mais dans un ordre aléatoire.",
+      "params": {
+        "t": {"type": "table", "desc": "Table à parcourir"},
+        "ctx": {"type": "table|nil", "desc": "Table de travail réutilisable"}
+      },
+      "returns": [
+        {"type": "function", "desc": "Itérateur"},
+        {"type": "table", "desc": "État de l'itérateur"}
+      ]
+    },
+    "hex_dump": {
+      "desc": "Imprime (print) un dump hexadécimal d'une chaîne, 8 octets par ligne avec la colonne ASCII.",
+      "params": {"str": {"type": "string", "desc": "Données à afficher"}},
+      "returns": []
+    },
+    "objectTeleported": {
+      "desc": "Décide si un objet s'est téléporté entre deux images, d'après sa position et sa vitesse précédentes. Pas de téléportation si le déplacement est inférieur à 1,5 m ou à 277*dt (1000 km/h), ou si la vitesse est cohérente avec la précédente. Sans données précédentes, renvoie true.",
+      "params": {
+        "curPos": {"type": "vec3", "desc": "Position actuelle (m)"},
+        "prevPos": {"type": "vec3", "desc": "Position à l'image précédente (m)"},
+        "prevVel": {"type": "vec3", "desc": "Vitesse précédente (m/s)"},
+        "dt": {"type": "number", "desc": "Pas de temps (s)"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si téléportation détectée"}]
+    },
+    "simpleDebugText3d": {
+      "desc": "Dessine via debugDrawer un texte 3D, une sphère et/ou trois petites sphères d'axes orientées par dir.",
+      "params": {
+        "text": {"type": "any|nil", "desc": "Texte (converti par tostring)"},
+        "pos": {"type": "vec3", "desc": "Position monde"},
+        "radius": {"type": "number|nil", "desc": "Rayon de la sphère (m), rien si nil ou <= 0"},
+        "sphereColor": {"type": "ColorF|nil", "desc": "Couleur de la sphère (blanc translucide par défaut)"},
+        "dir": {"type": "quat|nil", "desc": "Orientation : dessine les axes X (rouge), Y (vert), Z (bleu) à distance radius"}
+      },
+      "returns": []
+    },
+    "string.startswith": {
+      "desc": "Ajoutée à la bibliothèque string : true si String commence par Start. Utilisable en String:startswith(Start).",
+      "params": {
+        "String": {"type": "string", "desc": "Texte"},
+        "Start": {"type": "string", "desc": "Préfixe"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si préfixe"}]
+    },
+    "string.endswith": {
+      "desc": "Ajoutée à string : true si String finit par End (End vide donne toujours true).",
+      "params": {
+        "String": {"type": "string", "desc": "Texte"},
+        "End": {"type": "string", "desc": "Suffixe"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si suffixe"}]
+    },
+    "string.rstripchars": {
+      "desc": "Ajoutée à string : retire à la fin du texte UN caractère de l'ensemble chrs (gsub avec classe [chrs]$). chrs est inséré dans une classe de caractères Lua.",
+      "params": {
+        "String": {"type": "string", "desc": "Texte"},
+        "chrs": {"type": "string", "desc": "Caractères à retirer"}
+      },
+      "returns": [
+        {"type": "string", "desc": "Texte modifié"},
+        {"type": "integer", "desc": "Nombre de remplacements (0 ou 1)"}
+      ]
+    },
+    "string.stripchars": {
+      "desc": "Ajoutée à string : retire partout dans le texte les caractères de l'ensemble chrs.",
+      "params": {
+        "String": {"type": "string", "desc": "Texte"},
+        "chrs": {"type": "string", "desc": "Caractères à retirer"}
+      },
+      "returns": [
+        {"type": "string", "desc": "Texte modifié"},
+        {"type": "integer", "desc": "Nombre de remplacements"}
+      ]
+    },
+    "string.stripcharsFrontBack": {
+      "desc": "Ajoutée à string : retire au début et à la fin les caractères de l'ensemble chrs.",
+      "params": {
+        "str": {"type": "string", "desc": "Texte"},
+        "chrs": {"type": "string", "desc": "Caractères à retirer"}
+      },
+      "returns": [{"type": "string", "desc": "Texte nettoyé"}]
+    },
+    "string.split": {
+      "desc": "Ajoutée à string : découpe en renvoyant toutes les correspondances du motif delimregex (string.gmatch). Attention : le motif décrit les MORCEAUX à garder, pas le séparateur. Par défaut '%S+' (mots séparés par des espaces). Différent de la fonction globale split.",
+      "params": {
+        "str": {"type": "string", "desc": "Texte"},
+        "delimregex": {"type": "string|nil", "desc": "Motif Lua des morceaux, '%S+' par défaut"}
+      },
+      "returns": [{"type": "table<integer, string>", "desc": "Morceaux trouvés"}]
+    },
+    "string.sentenceCase": {
+      "desc": "Ajoutée à string : insère une espace avant chaque majuscule puis met la première lettre en majuscule (ex. 'maVariable' devient 'Ma Variable').",
+      "params": {"str": {"type": "string", "desc": "Texte en camelCase"}},
+      "returns": [{"type": "string", "desc": "Texte avec espaces"}]
+    }
+  },
+  "classes": {
+    "path": {
+      "desc": "Table globale `path` définie dans ce fichier : utilitaires de chemins de fichiers (séparateur '/').",
+      "functions": {
+        "dirname": {
+          "desc": "Renvoie le dossier d'un chemin, avec le '/' final ('.' si aucun dossier).",
+          "params": {"filename": {"type": "string", "desc": "Chemin"}},
+          "returns": [{"type": "string", "desc": "Dossier"}]
+        },
+        "is_file": {
+          "desc": "Teste si le fichier peut être ouvert en lecture (io.open).",
+          "params": {"filename": {"type": "string", "desc": "Chemin"}},
+          "returns": [{"type": "boolean", "desc": "true si ouvrable"}]
+        },
+        "split": {
+          "desc": "Sépare un chemin en dossier, nom de fichier (AVEC extension) et extension. Sans extension, ext vaut ''.",
+          "params": {
+            "path": {"type": "string", "desc": "Chemin"},
+            "compositeExtension": {"type": "boolean|nil", "desc": "true : l'extension est tout ce qui suit le premier point du nom (ex. 'level.json')"}
+          },
+          "returns": [
+            {"type": "string|nil", "desc": "Dossier avec '/' final (nil pour un simple nom de fichier)"},
+            {"type": "string", "desc": "Nom avec extension"},
+            {"type": "string", "desc": "Extension sans point"}
+          ]
+        },
+        "splitWithoutExt": {
+          "desc": "Comme split mais le nom de fichier renvoyé n'a pas l'extension. Attention : retire via gsub('.'..ext) (le point est un joker de motif).",
+          "params": {
+            "filepath": {"type": "string", "desc": "Chemin"},
+            "compositeExtension": {"type": "boolean|nil", "desc": "Voir path.split"}
+          },
+          "returns": [
+            {"type": "string|nil", "desc": "Dossier"},
+            {"type": "string", "desc": "Nom sans extension"},
+            {"type": "string", "desc": "Extension"}
+          ]
+        },
+        "getCurrentPath": {
+          "desc": "Renvoie le dossier du fichier Lua de l'appelant (debug.getinfo(2).short_src).",
+          "params": {},
+          "returns": [{"type": "string|nil", "desc": "Dossier du script appelant"}]
+        },
+        "getPathLevelMain": {
+          "desc": "Chemin du fichier main.level.json d'un niveau, normalisé par sanitizePath.",
+          "params": {"levelName": {"type": "string", "desc": "Nom du niveau"}},
+          "returns": [{"type": "string", "desc": "/levels/<nom>/main.level.json"}]
+        },
+        "getPathLevelInfo": {
+          "desc": "Chemin du fichier info.json d'un niveau, normalisé par sanitizePath.",
+          "params": {"levelName": {"type": "string", "desc": "Nom du niveau"}},
+          "returns": [{"type": "string", "desc": "/levels/<nom>/info.json"}]
+        },
+        "levelFromPath": {
+          "desc": "Extrait d'un chemin le nom de niveau (sous 'levels/') et le reste du chemin.",
+          "params": {"filepath": {"type": "string", "desc": "Chemin contenant 'levels/<nom>...'"}},
+          "returns": [
+            {"type": "string|nil", "desc": "Nom du niveau"},
+            {"type": "string|nil", "desc": "Reste du chemin"}
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/editor/api/assets.lua",
+  "module": "API de l'éditeur pour le glisser-déposer d'assets (chemins de fichiers sous forme de chaînes) entre fenêtres ImGui. À l'initialisation, ajoute à l'instance de l'éditeur : editor.dragDropAsset (état interne), editor.dragDropSource et editor.dragDropTarget. Une source et une cible se correspondent si elles utilisent le même dragDropId ; la donnée est transportée dans un tampon de 2048 caractères.",
+  "usage": "-- source\neditor.dragDropSource(\"MonAsset\", \"/art/shapes/x.dae\", function(str) end)\n-- cible\neditor.dragDropTarget(\"MonAsset\")",
+  "notes": [
+    "dragDropTarget vérifie par assert que la taille de la charge utile vaut 2048 ; le callback enregistré par la source est appelé avec la chaîne déposée, puis l'état est réinitialisé.",
+    "Dans dragDropSource, le code utilise `im.ArrayChar` et `im.ArraySize` alors que la variable locale s'appelle `imgui` : `im` n'est pas défini dans ce fichier, ce qui provoquerait une erreur si une globale `im` n'existe pas (déduit du code).",
+    "Les deux fonctions sont installées sur l'objet editor, pas sur le module ; seule initialize est exportée par le module."
+  ],
+  "functions": {
+    "initialize": {
+      "desc": "Initialise le module : mémorise l'éditeur et y installe dragDropAsset, dragDropSource et dragDropTarget.",
+      "params": {"editorInstance": {"type": "table", "desc": "Instance de l'éditeur."}},
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Méthodes ajoutées à l'instance de l'éditeur par ce module.",
+      "functions": {
+        "dragDropSource": {
+          "desc": "À appeler pendant le dessin de l'élément ImGui qui sert de source : si un glissement commence, crée la charge utile (data, tampon de 2048 caractères), mémorise le callback et affiche le texte pendant le glissement.",
+          "params": {
+            "dragDropId": {"type": "string", "desc": "Identifiant de type de charge utile ; les cibles n'acceptent que le même identifiant."},
+            "data": {"type": "string", "desc": "Chaîne transportée (ex. chemin d'asset)."},
+            "callback": {"type": "function|nil", "desc": "Appelée avec la chaîne quand le dépôt a réussi."}
+          }
+        },
+        "dragDropTarget": {
+          "desc": "À appeler après l'élément ImGui qui sert de cible : accepte une charge utile du même dragDropId, appelle le callback de la source avec la chaîne reçue puis réinitialise l'état.",
+          "params": {"dragDropId": {"type": "string", "desc": "Identifiant de type de charge utile accepté."}}
+        }
+      }
+    }
+  }
+}

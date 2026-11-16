@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_rally_loop_saveRallyLoopAttempt`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/saveRallyLoopAttempt.lua` · VM : Game Engine (GE) · 69 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/saveRallyLoopAttempt.lua` · VM: Game Engine (GE) · 69 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/loop/saveRallyLoopAttempt")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/loop/saveRallyLoopAttempt")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Loop Save Attempt » (catégorie once_instant, tag rally). Enregistre la tentative de la boucle rally. Avec dnfType renseigné (« restart » ou « abandon »), crée une tentative DNF via RallyAttempts.createRallyLoopAttemptForDnf (sauf si la mission courante est 'serviceOut', non comptée). Sans dnfType, crée la tentative de fin (createRallyLoopAttemptForFinish) et produit : change (objet de changement) et outroTranslation ({txt = texte de fin, context = copie de attempt.data}), le texte venant de RallyLoopStars.getOutroText ou à défaut de missionTypeData.endScreenText.
+Flowgraph node "Rally Loop Save Attempt" (category once_instant, tag rally). Records the rally loop attempt. With dnfType set ("restart" or "abandon"), creates a DNF attempt via RallyAttempts.createRallyLoopAttemptForDnf (unless the current mission is 'serviceOut', not counted). Without dnfType, creates the finish attempt (createRallyLoopAttemptForFinish) and outputs: change (change object) and outroTranslation ({txt = end text, context = copy of attempt.data}), the text coming from RallyLoopStars.getOutroText or otherwise from missionTypeData.endScreenText.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Crée la tentative DNF ou de fin et renseigne les sorties change et outroTranslation (cas fin seulement). | 39 |
+| `C:workOnce()` | Creates the DNF or finish attempt and fills the outputs change and outroTranslation (finish case only). | 39 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/saveRallyLoopAttempt.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/saveRallyLoopAttempt.lua`.*

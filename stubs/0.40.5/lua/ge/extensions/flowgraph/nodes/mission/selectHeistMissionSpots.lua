@@ -2,27 +2,27 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/mission/selectHeistMissionSpots.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+--- Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 ---@class flowgraph_nodes_mission_selectHeistMissionSpots_C
 local flowgraph_nodes_mission_selectHeistMissionSpots_C = {}
 
---- Appelle resetData.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/selectHeistMissionSpots.lua:56
+--- Calls resetData.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/selectHeistMissionSpots.lua:56
 function flowgraph_nodes_mission_selectHeistMissionSpots_C:_executionStarted() end
 
---- Initialise les listes de lieux et les sorties.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/selectHeistMissionSpots.lua:36
+--- Initializes the location lists and the outputs.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/selectHeistMissionSpots.lua:36
 function flowgraph_nodes_mission_selectHeistMissionSpots_C:init() end
 
---- Remet les listes, la machine a etats et les sorties a zero.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/selectHeistMissionSpots.lua:60
+--- Resets the lists, the state machine and the outputs to zero.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/selectHeistMissionSpots.lua:60
 function flowgraph_nodes_mission_selectHeistMissionSpots_C:resetData() end
 
---- Sur reset : resetData. Si flow, avance la machine a etats : 1 tri des places par tag et melange, 2 valide le depart, 3 valide le lieu de braquage, 4 valide l'evasion, 5 ecrit les zones et loaded=true, 6 loaded=false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/mission/selectHeistMissionSpots.lua:80
+--- On reset: resetData. If flow, advances the state machine: 1 sorts the spots by tag and shuffles, 2 validates the start, 3 validates the heist location, 4 validates the escape, 5 writes the zones and loaded=true, 6 loaded=false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/mission/selectHeistMissionSpots.lua:80
 function flowgraph_nodes_mission_selectHeistMissionSpots_C:work() end
 

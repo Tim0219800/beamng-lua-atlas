@@ -1,26 +1,31 @@
 {
   "path": "lua/ge/extensions/editor/missionPlaybook/unlockedMissionsViewer.lua",
-  "module": "Fenêtre « Playbook Unlocked Missions Viewer » associée à editor_missionPlaybook. Après chaque étape du playbook, elle classe les missions de carrière en trois listes (startable, visible, invisible) d'après gameplay_missions_unlocks.isMissionStartable / isMissionVisible et les range dans resultData.unlockedMissions. La fenêtre affiche trois colonnes pour la page courante et met en vert les missions devenues démarrables à cette étape (unlockChange.byId).",
+  "module": "\"Playbook Unlocked Missions Viewer\" window associated with editor_missionPlaybook. After each playbook step, it sorts the career missions into three lists (startable, visible, invisible) according to gameplay_missions_unlocks.isMissionStartable / isMissionVisible and stores them in resultData.unlockedMissions. The window displays three columns for the current page and colors green the missions that became startable at this step (unlockChange.byId).",
   "notes": [
-    "La fenêtre n'est dessinée que si « Mission Playbook » est visible.",
-    "Bug : M.onEditorRegisterPreferences est assigné à une variable globale non définie (nil).",
-    "Une mission « visible » mais non démarrable va dans visible ; une mission démarrable mais non visible va dans invisible."
+    "The window is only drawn if \"Mission Playbook\" is visible.",
+    "Bug: M.onEditorRegisterPreferences is assigned to an undefined global variable (nil).",
+    "A mission that is \"visible\" but not startable goes in visible; a mission that is startable but not visible goes in invisible."
   ],
   "functions": {
     "show": {
-      "desc": "Affiche les fenêtres « Mission Playbook » et « Playbook Unlocked Missions Viewer »."
+      "desc": "Shows the \"Mission Playbook\" and \"Playbook Unlocked Missions Viewer\" windows."
     },
     "onEditorGui": {
-      "desc": "Hook d'éditeur appelé à chaque frame : dessine les trois colonnes de missions pour book.results[book.page].",
+      "desc": "Editor hook called every frame: draws the three mission columns for book.results[book.page].",
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre (500x500) et l'entrée de menu « Missions ».",
+      "desc": "Hook called at editor initialization: registers the window (500x500) and the \"Missions\" menu entry.",
       "internal": true
     },
     "onPlaybookLogAfterStep": {
-      "desc": "Hook émis après chaque instruction du playbook : ajoute resultData.unlockedMissions = {startable, visible, invisible} (listes d'ids).",
-      "params": {"resultData": {"type": "table", "desc": "Résultat de l'étape, modifié sur place."}},
+      "desc": "Hook emitted after each playbook instruction: adds resultData.unlockedMissions = {startable, visible, invisible} (lists of ids).",
+      "params": {
+        "resultData": {
+          "type": "table",
+          "desc": "Result of the step, modified in place."
+        }
+      },
       "internal": true
     }
   }

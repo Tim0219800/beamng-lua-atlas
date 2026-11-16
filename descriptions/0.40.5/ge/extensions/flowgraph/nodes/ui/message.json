@@ -1,34 +1,34 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/message.lua",
-  "module": "Nœud flowgraph « Message » (catégorie once_instant par défaut, durée) : affiche un message dans la petite app de messages via le hook 'Message'. Entrées : flow, « message » (any ; nil efface), « duration » (5 s), « category » (flowgraph ; un seul message par catégorie), « icon » (info, caché). Sortie : flow.",
+  "module": "Flowgraph node \"Message\" (category once_instant by default, duration): displays a message in the small messages app via the 'Message' hook. Inputs: flow, \"message\" (any; nil clears), \"duration\" (5 s), \"category\" (flowgraph; only one message per category), \"icon\" (info, hidden). Output: flow.",
   "notes": [
-    "Le message est renvoyé toutes les 0.05 s tant que le flux est actif, pour rester affiché.",
-    "Sans catégorie, l'identifiant '__<id du nœud>' est utilisé."
+    "The message is resent every 0.05 s while the flow is active, to stay displayed.",
+    "Without a category, the identifier '__<node id>' is used."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_afterTrigger": {
-          "desc": "Remet le minuteur à 0 si le flux d'entrée est coupé.",
+          "desc": "Resets the timer to 0 if the input flow is cut.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Remet le minuteur à 0 et prépare la catégorie par défaut.",
+          "desc": "Resets the timer to 0 and prepares the default category.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Efface le message affiché.",
+          "desc": "Clears the displayed message.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Bouton « Open Icons overview ».",
+          "desc": "\"Open Icons overview\" button.",
           "internal": true
         },
         "work": {
-          "desc": "Renvoie périodiquement le message à l'UI et propage le flux.",
+          "desc": "Periodically resends the message to the UI and propagates the flow.",
           "internal": true
         }
       }

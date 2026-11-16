@@ -1,23 +1,23 @@
 # `flowgraph_nodes_vehicle_freeze`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/freeze.lua` · VM : Game Engine (GE) · 47 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/freeze.lua` · VM: Game Engine (GE) · 47 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/freeze")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/freeze")` (file under extensions/ but not a regular extension)
 
-Nœud « Freeze Vehicle » (catégorie `repeat_instant`). Gèle ou dégèle un véhicule via `core_vehicleBridge.executeAction(veh,'setFreeze', freeze)`. Pins d'entrée : `vehId`, `freeze` (bool). Si `vehId` est absent, véhicule joueur.
+Node "Freeze Vehicle" (category `repeat_instant`). Freezes or unfreezes a vehicle via `core_vehicleBridge.executeAction(veh,'setFreeze', freeze)`. Input pins: `vehId`, `freeze` (bool). If `vehId` is absent, player vehicle.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Constructeur vide. | 28 |
-| `C:work()` | Envoie l'action `setFreeze` avec la valeur du pin `freeze`. | 32 |
+| `C:init()` | Empty constructor. | 28 |
+| `C:work()` | Sends the `setFreeze` action with the value of the `freeze` pin. | 32 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/freeze.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/freeze.lua`.*

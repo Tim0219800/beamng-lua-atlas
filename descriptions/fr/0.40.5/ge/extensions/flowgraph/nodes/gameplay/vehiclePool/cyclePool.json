@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/cyclePool.lua",
+  "module": "Nœud flowgraph « Cycle Pool » (once_instant). Bascule un véhicule actif et un véhicule inactif du pool pour garder le même nombre de véhicules en marche (pool:cycle). Pins d'entrée : vehPool, vehId1 (actif, optionnel), vehId2 (inactif, optionnel) ; sorties : inactiveId, activeId. Nécessite le module core_vehicleActivePooling ; l'objet pool vient du nœud Create Vehicle Pool.",
+  "notes": [
+    "Bug : workOnce lit self.pinIn.activeId et self.pinIn.inactiveId, qui n'existent pas (les pins d'entrée s'appellent vehId1 et vehId2 ; activeId/inactiveId sont des sorties) : l'appel provoque une erreur Lua et les sorties ne sont jamais écrites."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "workOnce": {
+          "desc": "Prévu pour appeler pool:cycle(activeId, inactiveId) ; voir la note sur les noms de pins incorrects.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

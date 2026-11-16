@@ -2,27 +2,27 @@
 -- tim19Atlas stub generated from lua/ge/extensions/campaign/photoSafari.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Logique de la mission « photo safari » de la campagne : le joueur doit photographier des lieux. À l'acceptation, un fichier JSON liste les lieux (clés = noms de triggers) avec leurs indices (hints), l'objet cible (objectName) et le trigger closeToPhoto. Les triggers BeamNG (onBeamNGTrigger) débloquent des indices et ouvrent le mode photo ; takepiccheck, appelée par photomode.js, vérifie que la cible est entièrement dans le champ de la caméra et assez proche.
---- Accès : extension `campaign_photoSafari` : `extensions.load("campaign_photoSafari")`, puis la globale `campaign_photoSafari`
+--- Logic of the campaign's "photo safari" mission: the player must photograph places. On acceptance, a JSON file lists the places (keys = trigger names) with their hints, the target object (objectName) and the closeToPhoto trigger. BeamNG triggers (onBeamNGTrigger) unlock hints and open photo mode; takepiccheck, called by photomode.js, checks that the target is entirely within the camera's field of view and close enough.
+--- Access: extension `campaign_photoSafari`: `extensions.load("campaign_photoSafari")`, then the global `campaign_photoSafari`
 ---@class campaign_photoSafari
----@field accept boolean Vrai quand la mission a été acceptée et son JSON chargé.
----@field photomodeOpen boolean Vrai quand le joueur est dans le trigger d'un lieu et peut prendre la photo.
----@field targetObj string|nil Nom de l'objet de scène à photographier.
+---@field accept boolean True when the mission has been accepted and its JSON loaded.
+---@field photomodeOpen boolean True when the player is in a place's trigger and can take the photo.
+---@field targetObj string|nil Name of the scene object to photograph.
 campaign_photoSafari = {}
 
---- Charge le fichier JSON de la mission (jsonReadFile), met accept à true, remet à zéro indices, lieux trouvés et vus, et mémorise les hints de chaque lieu. Ne fait rien si le fichier n'existe pas.
----Source : lua/ge/extensions/campaign/photoSafari.lua:22
----@param file string Chemin du JSON de la mission photo safari.
+--- Loads the mission's JSON file (jsonReadFile), sets accept to true, resets hints, found and seen places, and stores each place's hints. Does nothing if the file does not exist.
+---Source: lua/ge/extensions/campaign/photoSafari.lua:22
+---@param file string Path of the photo safari mission's JSON.
 function campaign_photoSafari.missionaccepted(file) end
 
---- Hook appelé quand un trigger est franchi. Ignore tout sauf le véhicule du joueur. À l'entrée dans un trigger d'indice : débloque l'indice suivant de chaque lieu non trouvé ; dans un trigger de lieu : mémorise location/targetObj et ouvre le mode photo ; dans closeToPhoto : calcule la distance caméra-objet. À la sortie, referme le mode photo ou closeToPhoto.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/campaign/photoSafari.lua:40
----@param data table Données du trigger : subjectID, event ('enter'/'exit'), triggerName.
+--- Hook called when a trigger is crossed. Ignores everything except the player's vehicle. On entering a hint trigger: unlocks the next hint of each place not yet found; in a place trigger: stores location/targetObj and opens photo mode; in closeToPhoto: computes the camera-object distance. On exit, closes photo mode or closeToPhoto.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/campaign/photoSafari.lua:40
+---@param data table Trigger data: subjectID, event ('enter'/'exit'), triggerName.
 function campaign_photoSafari.onBeamNGTrigger(data) end
 
---- Vérifie la photo : refuse si le joueur n'est pas assez proche, sinon teste la distance de la caméra à l'objet et que la boîte englobante de l'objet est entièrement dans le frustum (Engine.sceneGetCameraFrustum). En cas de succès, marque le lieu comme trouvé. Affiche le message résultat.
----Source : lua/ge/extensions/campaign/photoSafari.lua:144
----@return boolean|nil  true si la photo est valide, false sinon, nil si le lieu est déjà trouvé ou si le joueur est trop loin.
+--- Checks the photo: refuses if the player is not close enough, otherwise tests the camera's distance to the object and that the object's bounding box is entirely within the frustum (Engine.sceneGetCameraFrustum). On success, marks the place as found. Displays the result message.
+---Source: lua/ge/extensions/campaign/photoSafari.lua:144
+---@return boolean|nil  true if the photo is valid, false otherwise, nil if the place is already found or if the player is too far.
 function campaign_photoSafari.takepiccheck() end
 

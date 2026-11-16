@@ -1,0 +1,55 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/mission/selectGarage2GarageZones.lua",
+  "module": "Noeud flowgraph 'Select Garage Sites' (categorie once_instant, auteur BeamNG). Choisit une place de depart dans les zones initiales de la mission et une place d'arrivee dans les zones de destination (mission.initialZones et destinationZones, generees par mission:generateZoneLists si besoin), a partir de sitesData.parkingSpots. Evite les places deja utilisees, impose une distance entre minDist et maxDist (sinon prend le meilleur candidat). Sorties : impulsion 'loaded', startSpot, endSpot, startLocation, endLocation (noms des zones).",
+  "notes": [
+    "Le meilleur candidat est celui dont (distance - maxDist) est le plus petit, ce qui peut etre une valeur negative (trop proche).",
+    "Les places sont comparees par nom et marquees utilisees dans usedStartSpots / usedEndSpots."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise l'etat, les places utilisees et les sorties.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet la selection et les sorties a zero.",
+          "internal": true
+        },
+        "resetData": {
+          "desc": "Remet la selection, state=1 et les sorties a zero.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Appelle resetData.",
+          "internal": true
+        },
+        "findEndSpotForStartingSpot": {
+          "desc": "Melange les places d'arrivee possibles et renvoie la premiere dont la distance a la place de depart est dans [minDist, maxDist] ; sinon la plus proche de maxDist par le bas (meilleur candidat).",
+          "internal": true,
+          "params": {
+            "startSpot": {
+              "type": "table",
+              "desc": "place de depart"
+            },
+            "possibleEndSpots": {
+              "type": "table",
+              "desc": "liste de {name, spot}"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "donnees de la place d'arrivee"
+            }
+          ]
+        },
+        "work": {
+          "desc": "state 1 : calcule les places possibles, vide les listes d'utilisation quand elles sont epuisees, choisit depart et arrivee, trie les zones par prio, ecrit les sorties et loaded=true, passe a state 2. state 2 : loaded=false.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

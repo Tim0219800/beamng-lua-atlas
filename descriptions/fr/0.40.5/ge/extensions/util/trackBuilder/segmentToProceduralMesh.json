@@ -1,0 +1,56 @@
+{
+  "path": "lua/ge/extensions/util/trackBuilder/segmentToProceduralMesh.lua",
+  "module": "Transforme un segment de piste du Track Builder en objet ProceduralMesh dans la scène. Il calcule le repère local (nx, ny, nz) de chaque point de contrôle, assemble les meshes des modules basicBorders, basicCenters, borderWallMesh et ceilingMesh, puis crée (ou met à jour) l'objet 'procMesh<subTrackIndex>-<index>' dans MissionGroup.",
+  "notes": [
+    "materialize réutilise segment.mesh s'il existe (createMesh à nouveau) et le crée sinon ; l'objet a canSave = false.",
+    "Le même tableau de meshes est donné trois fois (segment.meshes[1], [2], [3]) : il n'y a pas de LOD distinct.",
+    "materialize remet submeshIndexes/submeshCount à zéro, puis submeshCount à nil après la compilation ; segment.meshes est effacé à la fin.",
+    "Bug : M.settings = settings, mais la variable settings n'existe pas dans ce fichier ; le champ vaut nil.",
+    "Le paramètre lod de compileMeshInfo n'est pas utilisé.",
+    "clearShapes délègue à basicCenters.clearShapes, qui ne fait rien en pratique."
+  ],
+  "fields": {
+    "settings": {"type": "nil", "desc": "Toujours nil : exporte une variable locale jamais définie (bug)."}
+  },
+  "functions": {
+    "materialize": {
+      "desc": "Fonction principale : calcule les repères des points, compile les meshes du segment et crée ou met à jour son ProceduralMesh (stocké dans segment.mesh).",
+      "params": {"segment": {"type": "table", "desc": "Segment avec points, quality, subTrackIndex, index (et mesh s'il existe déjà)."}},
+      "internal": false
+    },
+    "clearShapes": {
+      "desc": "Demande à basicCenters de vider ses caches de profils (sans effet réel, voir notes).",
+      "params": {},
+      "internal": false
+    },
+    "calculatePointCoordinateSystem": {
+      "desc": "Pour chaque point du segment disponible pour la qualité courante (controlPoint.quality[segment.quality]), calcule orientation = {nx, ny, nz} en tournant les axes X, Y, Z par controlPoint.finalRot.",
+      "params": {"segment": {"type": "table", "desc": "Segment dont les points reçoivent le champ orientation."}},
+      "internal": false
+    },
+    "compileMeshInfo": {
+      "desc": "Concatène les meshes des bordures, du centre, des murs et du plafond du segment et les renvoie sous forme de liste. Les caps de début et fin sont gérés par les modules appelés.",
+      "params": {
+        "segment": {"type": "table", "desc": "Segment du Track Builder."},
+        "lod": {"type": "any", "desc": "Non utilisé."}
+      },
+      "returns": [{"type": "table[]", "desc": "Liste de tables de mesh {verts, uvs, normals, faces, material, tag}."}],
+      "internal": false
+    },
+    "rotateVectorByQuat": {
+      "desc": "Renvoie le vecteur v tourné par le quaternion q (q * v).",
+      "params": {
+        "v": {"type": "vec3", "desc": "Vecteur à tourner."},
+        "q": {"type": "quat", "desc": "Rotation."}
+      },
+      "returns": [{"type": "vec3", "desc": "Vecteur tourné."}],
+      "internal": false
+    },
+    "getReferences": {
+      "desc": "Renvoie les modules basicCenters et basicBorders (utilisés pour injecter ces dépendances dans multiTrackMerger.setReferences).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{basicCenters = module, basicBorders = module}."}],
+      "internal": false
+    }
+  }
+}

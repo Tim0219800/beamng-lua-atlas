@@ -1,51 +1,100 @@
 {
   "path": "lua/ge/extensions/flowgraph/baseStateNode.lua",
-  "module": "Classe de base des nœuds d'un graphe d'états (state graph) du flowgraph. Elle étend flowgraph/basenode en ajoutant huit pins de type « transition » aux bords du nœud (entrées et sorties N, E, S, W) et leur dessin dans l'éditeur. Un moddeur ne l'appelle pas directement : elle sert aux nœuds d'état.",
+  "module": "Base class of the nodes of a flowgraph state graph. It extends flowgraph/basenode by adding eight \"transition\" pins on the node's edges (inputs and outputs N, E, S, W) and drawing them in the editor. A modder does not call it directly: it is used by state nodes.",
   "notes": [
-    "Les pins créés se nomment tInN/tInE/tInS/tInW et tOutN/tOutE/tOutS/tOutW, de type 'transition'.",
-    "Les pins d'entrée sont dessinés avec une flèche (PinArrowSize/Width = 20) et un LinkStrength de 0 ; les pins de sortie n'ont pas de flèche.",
-    "M.createBase copie les méthodes de C directement dans l'objet (o[k] = v) : C:init remplace donc l'init de basenode. L'init de basenode est bien appelé d'abord par basenode.createBase, mais C:init(mgr) est ensuite appelé avec les mêmes arguments et utilise self.graph, déjà défini."
+    "The created pins are named tInN/tInE/tInS/tInW and tOutN/tOutE/tOutS/tOutW, of type 'transition'.",
+    "Input pins are drawn with an arrow (PinArrowSize/Width = 20) and a LinkStrength of 0; output pins have no arrow.",
+    "M.createBase copies the methods of C directly into the object (o[k] = v): C:init therefore replaces basenode's init. basenode's init is indeed called first by basenode.createBase, but C:init(mgr) is then called with the same arguments and uses self.graph, which is already defined."
   ],
   "functions": {
     "createBase": {
-      "desc": "Crée un nœud basenode, y copie les méthodes de la classe d'états (init, customDrawEnd, drawTransitionPin) puis appelle init(...).",
-      "params": {"...": {"type": "any", "desc": "arguments de basenode.createBase : mgr, graph, forceId"}},
-      "returns": [{"type": "table", "desc": "nœud d'état"}],
+      "desc": "Creates a basenode node, copies the state class methods (init, customDrawEnd, drawTransitionPin) onto it, then calls init(...).",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "arguments of basenode.createBase: mgr, graph, forceId"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "state node"
+        }
+      ],
       "internal": true
     },
     "use": {
-      "desc": "Crée un nœud d'état, applique derivedClass par-dessus, puis exécute _preInit, init (si redéfini) et _postInit comme basenode.use.",
+      "desc": "Creates a state node, applies derivedClass on top, then runs _preInit, init (if redefined) and _postInit like basenode.use.",
       "params": {
-        "mgr": {"type": "table", "desc": "manager flowgraph"},
-        "graph": {"type": "table", "desc": "graphe qui contient le nœud"},
-        "forceId": {"type": "integer|nil", "desc": "identifiant imposé, sinon le manager en attribue un"},
-        "derivedClass": {"type": "table", "desc": "méthodes/champs du type de nœud concret"}
+        "mgr": {
+          "type": "table",
+          "desc": "flowgraph manager"
+        },
+        "graph": {
+          "type": "table",
+          "desc": "graph that contains the node"
+        },
+        "forceId": {
+          "type": "integer|nil",
+          "desc": "forced identifier, otherwise the manager assigns one"
+        },
+        "derivedClass": {
+          "type": "table",
+          "desc": "methods/fields of the concrete node type"
+        }
       },
-      "returns": [{"type": "table", "desc": "nœud initialisé"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "initialized node"
+        }
+      ],
       "internal": true
     }
   },
   "classes": {
     "C": {
-      "desc": "Méthodes ajoutées aux nœuds d'état.",
+      "desc": "Methods added to state nodes.",
       "functions": {
         "init": {
-          "desc": "Crée les 8 pins de transition (4 entrées, 4 sorties : N, E, S, W) via flowgraph/pin et les range dans self.transitionPins._in et ._out.",
-          "params": {"mgr": {"type": "table", "desc": "manager flowgraph (non utilisé directement)"}},
+          "desc": "Creates the 8 transition pins (4 inputs, 4 outputs: N, E, S, W) via flowgraph/pin and stores them in self.transitionPins._in and ._out.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "flowgraph manager (not used directly)"
+            }
+          },
           "internal": true
         },
         "customDrawEnd": {
-          "desc": "Appelé par le builder à la fin du dessin du nœud (builder:End). Dessine les 8 pins de transition le long des bords du rectangle du nœud (entrées sur les côtés antihoraires, sorties côtés horaires).",
-          "params": {"builder": {"type": "table", "desc": "builder flowgraph (flowgraph/builder), qui fournit NodeRect"}},
+          "desc": "Called by the builder at the end of node drawing (builder:End). Draws the 8 transition pins along the edges of the node rectangle (inputs on the counterclockwise sides, outputs on the clockwise sides).",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "flowgraph builder (flowgraph/builder), which provides NodeRect"
+            }
+          },
           "internal": true
         },
         "drawTransitionPin": {
-          "desc": "Dessine un pin de transition rectangulaire à la position donnée avec ui_flowgraph_editor (BeginPin, PinRect, PinPivotRect, EndPin) et mémorise pin.imPos.",
+          "desc": "Draws a rectangular transition pin at the given position with ui_flowgraph_editor (BeginPin, PinRect, PinPivotRect, EndPin) and stores pin.imPos.",
           "params": {
-            "pin": {"type": "table", "desc": "pin de transition"},
-            "kind": {"type": "integer", "desc": "ui_flowgraph_editor.PinKind_Input ou PinKind_Output"},
-            "pos": {"type": "ImVec2", "desc": "position du curseur ImGui"},
-            "size": {"type": "ImVec2", "desc": "taille du rectangle du pin (pixels)"}
+            "pin": {
+              "type": "table",
+              "desc": "transition pin"
+            },
+            "kind": {
+              "type": "integer",
+              "desc": "ui_flowgraph_editor.PinKind_Input or PinKind_Output"
+            },
+            "pos": {
+              "type": "ImVec2",
+              "desc": "ImGui cursor position"
+            },
+            "size": {
+              "type": "ImVec2",
+              "desc": "size of the pin rectangle (pixels)"
+            }
           },
           "internal": true
         }

@@ -1,88 +1,88 @@
 # `impl`
 
-*Fichier : `lua/common/settings.lua` · VM : Commun (GE + véhicule) · 274 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/settings.lua` · VM: Common (GE + vehicle) · 274 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `impl`, `settings`
+**Access:** global `impl`, `settings`
 
-Accès en lecture aux réglages du jeu depuis Lua (les deux VM). Au chargement il lit /settings/defaults.json (définitions : chaque réglage est un tableau dont l'élément [2] est la valeur par défaut), le fichier deprecated.json (réglages renommés/obsolètes), applique des préréglages (unités selon la langue de l'OS, fichier de plateforme, valeurs internes hors build shipping), puis getValues() fusionne défauts + réglages cloud + réglages locaux. C'est ce qu'un mod interroge avec settings.getValue('clé', valeurParDéfaut).
+Read access to the game's settings from Lua (both VMs). At load it reads /settings/defaults.json (definitions: each setting is an array whose element [2] is the default value), the file deprecated.json (renamed/obsolete settings), applies presets (units according to the OS language, platform file, internal values outside the shipping build), then getValues() merges defaults + cloud settings + local settings. This is what a mod queries with settings.getValue('key', defaultValue).
 
-## Exemple
+## Example
 
 ```lua
 local units = settings.getValue('uiUnitLength', 'metric')
 local all = settings.getValues()
 ```
 
-## Remarques
+## Notes
 
-- Les valeurs sont mises en cache (valuesCache) ; il faut appeler invalidateCache() (alias refresh, settingsChanged) après un changement de réglage pour relire les fichiers. Ce module est en lecture seule : il n'écrit aucun fichier.
-- Ordre de priorité des valeurs : défauts (modifiés par preset d'unités, plateforme, valeurs internes) < /settings/cloud/settings.json < /settings/settings.json (local). Les noms obsolètes/renommés sont convertis par upgradeSetting (deprecated.json), avec journalisation côté GE seulement.
-- Si une table C++ CppSettings existe et que le type de la valeur Lua diffère du type C++, la valeur est ignorée avec une erreur dans le log.
-- Les réglages 'persona' (personaScopedSettings : defaultGearboxBehavior, autoClutch, autoThrottle, spawnVehicleIgnitionLevel, playerCharacterFace) peuvent avoir une valeur par persona stockée dans /settings/persona-settings.tmp.json ; getValue/getPersonaValue y consultent persona (id ou table avec champ id).
-- Préréglage d'unités selon getOSLanguage : région US ou langue 'en' sans région -> imperial ; GB/UK -> british ; sinon metric ; appliqué aux défauts uiUnits*, uiUnitLength, etc.
-- Particularité : si l'UI est en menu simple (Engine.UI.isSimpleMenu), le défaut de uiContentScale vaut 1.05.
-- Les chemins M.path* ne sont pas des fonctions mais des champs de configuration (p. ex. M.pathLocal = '/settings/settings.json') ; M.defaults, M.deprecated, M.defaultValues sont des tables de travail.
+- Values are cached (valuesCache); invalidateCache() (alias refresh, settingsChanged) must be called after a setting change to re-read the files. This module is read-only: it writes no file.
+- Value priority order: defaults (modified by units preset, platform, internal values) < /settings/cloud/settings.json < /settings/settings.json (local). Obsolete/renamed names are converted by upgradeSetting (deprecated.json), with logging on the GE side only.
+- If a C++ table CppSettings exists and the type of the Lua value differs from the C++ type, the value is ignored with an error in the log.
+- The 'persona' settings (personaScopedSettings: defaultGearboxBehavior, autoClutch, autoThrottle, spawnVehicleIgnitionLevel, playerCharacterFace) can have a per-persona value stored in /settings/persona-settings.tmp.json; getValue/getPersonaValue consult persona (id or table with an id field) there.
+- Units preset according to getOSLanguage: US region or 'en' language without a region -> imperial; GB/UK -> british; otherwise metric; applied to the defaults uiUnits*, uiUnitLength, etc.
+- Peculiarity: if the UI is in simple menu mode (Engine.UI.isSimpleMenu), the default of uiContentScale is 1.05.
+- The M.path* paths are not functions but configuration fields (e.g. M.pathLocal = '/settings/settings.json'); M.defaults, M.deprecated, M.defaultValues are working tables.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `impl.getPersonaValue(key, fallbackValue, persona)` | Valeur d'un réglage par persona. Si key n'est pas un réglage 'persona' ou s'il n'y a pas de persona, renvoie fallbackValue ; sinon la valeur stockée pour ce persona, ou à défaut la première fallbackValue mémorisée pour ce persona et cette clé. | 223 |
-| `impl.getValue(key, defaultValue, persona)` | Renvoie la valeur du réglage `key` (fusion défauts/cloud/local), ou defaultValue si elle est nil ; puis applique la valeur de persona le cas échéant (si key est dans personaScopedSettings et qu'un persona est fourni). | 248 |
-| `impl.getValues()` | Renvoie la table complète des réglages fusionnés (mise en cache). Ne pas modifier la table renvoyée (c'est le cache). | 188 |
-| `impl.invalidateCache()` | Oublie le cache des réglages et des réglages persona : le prochain getValue/getValues relira les fichiers. Mêmes fonctions : refresh et settingsChanged (compatibilité). | 260 |
-| `impl.invalidatePersonaCache()` | Oublie le cache des valeurs par persona (relu au prochain accès). | 256 |
-| `impl.refresh()` | Alias d'invalidateCache (rétrocompatibilité). | 260 |
-| `impl.settingsChanged()` | Alias d'invalidateCache, à appeler (par le moteur ou l'UI) quand des réglages viennent de changer. | 260 |
+| `impl.getPersonaValue(key, fallbackValue, persona)` | Value of a per-persona setting. If key is not a 'persona' setting or if there is no persona, returns fallbackValue; otherwise the value stored for this persona, or failing that the first fallbackValue memorized for this persona and this key. | 223 |
+| `impl.getValue(key, defaultValue, persona)` | Returns the value of the setting `key` (defaults/cloud/local merge), or defaultValue if it is nil; then applies the persona value if applicable (if key is in personaScopedSettings and a persona is provided). | 248 |
+| `impl.getValues()` | Returns the complete table of merged settings (cached). Do not modify the returned table (it is the cache). | 188 |
+| `impl.invalidateCache()` | Forgets the settings and persona settings cache: the next getValue/getValues will re-read the files. Same functions: refresh and settingsChanged (compatibility). | 260 |
+| `impl.invalidatePersonaCache()` | Forgets the per-persona value cache (re-read on next access). | 256 |
+| `impl.refresh()` | Alias of invalidateCache (backward compatibility). | 260 |
+| `impl.settingsChanged()` | Alias of invalidateCache, to be called (by the engine or the UI) when settings have just changed. | 260 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `impl.getPersonaValue(key, fallbackValue, persona)`
 
-Valeur d'un réglage par persona. Si key n'est pas un réglage 'persona' ou s'il n'y a pas de persona, renvoie fallbackValue ; sinon la valeur stockée pour ce persona, ou à défaut la première fallbackValue mémorisée pour ce persona et cette clé.
+Value of a per-persona setting. If key is not a 'persona' setting or if there is no persona, returns fallbackValue; otherwise the value stored for this persona, or failing that the first fallbackValue memorized for this persona and this key.
 
-- `key` (*string*) : nom du réglage
-- `fallbackValue` (*any*) : valeur par défaut
-- `persona` (*table|string|number|nil*) : persona ou id
-- **renvoie** : any valeur
+- `key` (*string*) : setting name
+- `fallbackValue` (*any*) : default value
+- `persona` (*table|string|number|nil*) : persona or id
+- **returns**: any value
 
 #### `impl.getValue(key, defaultValue, persona)`
 
-Renvoie la valeur du réglage `key` (fusion défauts/cloud/local), ou defaultValue si elle est nil ; puis applique la valeur de persona le cas échéant (si key est dans personaScopedSettings et qu'un persona est fourni).
+Returns the value of the setting `key` (defaults/cloud/local merge), or defaultValue if it is nil; then applies the persona value if applicable (if key is in personaScopedSettings and a persona is provided).
 
-- `key` (*string*) : nom du réglage
-- `defaultValue` (*any*) : valeur de repli si le réglage n'existe pas
-- `persona` (*table|string|number|nil*) : persona (ou son id) pour les réglages par persona
-- **renvoie** : any valeur du réglage
+- `key` (*string*) : setting name
+- `defaultValue` (*any*) : fallback value if the setting does not exist
+- `persona` (*table|string|number|nil*) : persona (or its id) for per-persona settings
+- **returns**: any setting value
 
 #### `impl.getValues()`
 
-Renvoie la table complète des réglages fusionnés (mise en cache). Ne pas modifier la table renvoyée (c'est le cache).
+Returns the complete table of merged settings (cached). Do not modify the returned table (it is the cache).
 
-- **renvoie** : table<string, any> tous les réglages
+- **returns**: table<string, any> all settings
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `defaultValues` | table<string, any> | valeurs par défaut précalculées (clé -> defaults[clé][2]) |
-| `defaults` | table<string, table> | définitions des réglages lues dans defaults.json ; chaque entrée est un tableau dont [2] est la valeur par défaut |
-| `deprecated` | table<string, table> | réglages obsolètes (champs replacement ou obsolete) |
-| `deprecatedPathTorquescript` | string | '/settings/game-settings.cs' (ancien format TorqueScript) |
+| `defaultValues` | table<string, any> | precomputed default values (key -> defaults[key][2]) |
+| `defaults` | table<string, table> | setting definitions read from defaults.json; each entry is an array whose [2] is the default value |
+| `deprecated` | table<string, table> | obsolete settings (fields replacement or obsolete) |
+| `deprecatedPathTorquescript` | string | '/settings/game-settings.cs' (old TorqueScript format) |
 | `path` | string | '/settings/' |
 | `pathCloud` | string | '/settings/cloud/settings.json' |
 | `pathDefaults` | string | '/settings/defaults.json' |
 | `pathDeprecated` | string | '/settings/deprecated.json' |
-| `pathInternal` | string | '/settings/not-shipping.internal.json' (valeurs internes, lues hors build shipping) |
-| `pathLocal` | string | '/settings/settings.json' (réglages de l'utilisateur) |
+| `pathInternal` | string | '/settings/not-shipping.internal.json' (internal values, read outside the shipping build) |
+| `pathLocal` | string | '/settings/settings.json' (user settings) |
 | `pathPersona` | string | '/settings/persona-settings.tmp.json' |
 | `pathVariables` | string | '/settings/game-settings.json' |
-| `personaScopedSettings` | table<string, boolean> | réglages pouvant avoir une valeur par persona |
+| `personaScopedSettings` | table<string, boolean> | settings that can have a per-persona value |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 - `Lua:` `getOSLanguage`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/settings.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/settings.lua`.*

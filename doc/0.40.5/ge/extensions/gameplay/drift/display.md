@@ -1,206 +1,206 @@
 # `gameplay_drift_display`
 
-*Fichier : `lua/ge/extensions/gameplay/drift/display.lua` · VM : Game Engine (GE) · 532 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drift/display.lua` · VM: Game Engine (GE) · 532 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drift_display` : `extensions.load("gameplay_drift_display")`, puis la globale `gameplay_drift_display`
+**Access:** extension `gameplay_drift_display`: `extensions.load("gameplay_drift_display")`, then the global `gameplay_drift_display`
 
-Couche d'affichage (UI) du drift. Chaque frame, publie sur le stream UI "drift" l'état de chaque véhicule suivi (score permanent, score potentiel, score en cache, combo, temps de combo restant, creep, angle, vitesse, facteur de performance, phase de présentation du score confirmé). Réagit aux hooks de score, crash, spinout, zones de cascade, spots et paliers par des messages flash (TopCenterAppsFlashMessage) et des évènements guihooks, et affiche/masque les apps UI de drift (scoreboard, tasks, driftScores, flashMessage) selon le contexte de gameplay_drift_general. Chargé par general dans les contextes inChallenge, inFreeroamChallenge, inFreeroamCruising et inSplitscreen.
+Display (UI) layer of drift. Every frame, publishes on the "drift" UI stream the state of each tracked vehicle (permanent score, potential score, cached score, combo, remaining combo time, creep, angle, speed, performance factor, confirmed score presentation phase). Reacts to the score, crash, spinout, cascade zone, spot and tier hooks with flash messages (TopCenterAppsFlashMessage) and guihooks events, and shows/hides the drift UI apps (scoreboard, tasks, driftScores, flashMessage) depending on the gameplay_drift_general context. Loaded by general in the contexts inChallenge, inFreeroamChallenge, inFreeroamCruising and inSplitscreen.
 
-## Remarques
+## Notes
 
-- Stream "drift" : { context, players = { ["<playerId>"] = {permanentScore, potentialScore, realtimePerformanceFactor, realtimeCachedScoreFloored, realtimeCombo, realtimeRemainingComboTime, realtimeCreep, realtimeAngle, realtimeAirSpeed, scorePhase, scorePhaseProgress, confirmedScore, confirmedScoreId} } }. Les clés de players sont des chaînes pour que le stream soit toujours sérialisé comme un objet.
-- Présentation du score confirmé : machine à phases hold (0.9 s) -> dwindle (0.6 s) -> linger (0.5 s) -> idle ; durée totale 2.0 s (getScorePresentationDuration). Les durées sont comptées en temps réel (dtReal).
-- Les messages flash sont ignorés en contexte inFreeroam et si le message est vide ; durée par défaut 1.5 s (2 s pour un échec de spot).
-- realtimeAngle n'est renseigné que si |angle| < maxAngle, véhicule en survirage, au-dessus de la vitesse min de drift, pas en l'air et pas en mode marche.
-- Évènements guihooks émis : ScenarioRealtimeDisplay, ClearTasklist, TopCenterAppsFlashMessage, displayDriftScoreModifier, setDriftPersistentDriftScored, setDriftRealtimeFail (table unique {reason, playerId}), stuntZoneScored ({type, score}).
-- Contextes -> apps : inChallenge = enableDriftMissionUI (état de jeu driftMission, app tasks) ; inFreeroamChallenge = scoreboard si multijoueur sinon driftScores, plus tasks ; inFreeroamCruising = driftScores ; inFreeroam = tout masquer.
-- Après onExtensionUnloaded, isUnloaded vaut true et onUpdate ne publie plus rien : la variable n'est jamais remise à false (le module est rechargé comme nouvelle instance).
+- "drift" stream: { context, players = { ["<playerId>"] = {permanentScore, potentialScore, realtimePerformanceFactor, realtimeCachedScoreFloored, realtimeCombo, realtimeRemainingComboTime, realtimeCreep, realtimeAngle, realtimeAirSpeed, scorePhase, scorePhaseProgress, confirmedScore, confirmedScoreId} } }. The players keys are strings so that the stream is always serialized as an object.
+- Confirmed score presentation: phase machine hold (0.9 s) -> dwindle (0.6 s) -> linger (0.5 s) -> idle; total duration 2.0 s (getScorePresentationDuration). Durations are counted in real time (dtReal).
+- Flash messages are ignored in the inFreeroam context and if the message is empty; default duration 1.5 s (2 s for a spot failure).
+- realtimeAngle is only filled if |angle| < maxAngle, vehicle oversteering, above the min drift speed, not airborne and not in walking mode.
+- Emitted guihooks events: ScenarioRealtimeDisplay, ClearTasklist, TopCenterAppsFlashMessage, displayDriftScoreModifier, setDriftPersistentDriftScored, setDriftRealtimeFail (single table {reason, playerId}), stuntZoneScored ({type, score}).
+- Contexts -> apps: inChallenge = enableDriftMissionUI (driftMission game state, tasks app); inFreeroamChallenge = scoreboard if multiplayer otherwise driftScores, plus tasks; inFreeroamCruising = driftScores; inFreeroam = hide everything.
+- After onExtensionUnloaded, isUnloaded is true and onUpdate no longer publishes anything: the variable is never set back to false (the module is reloaded as a new instance).
 
-**Dépendances (chargées avant) :** `gameplay_drift_general`, `gameplay_drift_drift`, `gameplay_drift_scoring`, `ui_apps_genericMissionData`, `ui_appContainers`
+**Dependencies (loaded first):** `gameplay_drift_general`, `gameplay_drift_drift`, `gameplay_drift_scoring`, `ui_apps_genericMissionData`, `ui_appContainers`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drift_display.getDriftDebugInfo()` | Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift. | 494 |
-| `gameplay_drift_display.getIsScorePresentationActive(vehId)` | Indique si l'animation du score confirmé est en cours pour ce véhicule. | 70 |
-| `gameplay_drift_display.getScorePresentationDuration()` | Renvoie la durée totale de la présentation du score confirmé (hold + dwindle + linger). Utilisée par driftSpots pour attendre la fin de l'animation. | 56 |
-| `gameplay_drift_display.onDeserialized(data)` | Hook : restaure driftDebugUILayout. *(interne)* *(hook)* | 453 |
-| `gameplay_drift_display.onDonutDriftScored(score)` | Hook : message flash et évènement stuntZoneScored (type donut). *(interne)* *(hook)* | 171 |
-| `gameplay_drift_display.onDriftCachedScoreReset(vehId)` | Hook : le score en cache a été réinitialisé ; efface le message temps réel. *(interne)* *(hook)* | 407 |
-| `gameplay_drift_display.onDriftCompletedScored(data)` | Hook : lance la présentation du score confirmé, affiche « +points » et notifie l'UI (setDriftPersistentDriftScored). *(interne)* *(hook)* | 143 |
-| `gameplay_drift_display.onDriftContextChanged(context)` | Hook : montre ou masque les apps UI de drift selon le nouveau contexte. *(interne)* *(hook)* | 463 |
-| `gameplay_drift_display.onDriftCrash(vehId)` | Hook : affiche l'échec « crashed » dans l'UI et remet le lisseur à zéro. *(interne)* *(hook)* | 163 |
-| `gameplay_drift_display.onDriftDebugChanged(value)` | Hook : à la désactivation du debug, masque l'interface de drift. *(interne)* *(hook)* | 457 |
-| `gameplay_drift_display.onDriftPlVehReset(vehId)` | Hook : véhicule du joueur remis en place ; remet à zéro lisseur, présentation du score et message temps réel. *(interne)* *(hook)* | 401 |
-| `gameplay_drift_display.onDriftQuickMessageDisplay(data)` | Hook : envoie un quick message à l'UI (displayDriftScoreModifier). *(interne)* *(hook)* | 396 |
-| `gameplay_drift_display.onDriftScoreWrappedUp(score, vehId)` | Hook : le score en cours est validé de force (fin de spot) ; lance la présentation et affiche les points bonus. *(interne)* *(hook)* | 436 |
-| `gameplay_drift_display.onDriftSpinout(vehId)` | Hook : affiche l'échec « spinout » dans l'UI. *(interne)* *(hook)* | 167 |
-| `gameplay_drift_display.onDriftSpotCompleted(data)` | Hook : message flash de fin de spot (nouveau record ou zone terminée) avec le score. *(interne)* *(hook)* | 392 |
-| `gameplay_drift_display.onDriftSpotFailed(data)` | Hook : message flash de 2 s avec le texte de la raison d'échec. *(interne)* *(hook)* | 432 |
-| `gameplay_drift_display.onExtensionLoaded()` | Hook : applique tout de suite l'UI correspondant au contexte drift déjà actif. *(interne)* *(hook)* | 480 |
-| `gameplay_drift_display.onExtensionUnloaded()` | Hook : masque l'UI, vide les données et publie un stream vide. *(interne)* *(hook)* | 411 |
-| `gameplay_drift_display.onFreeroamDriftZoneNewHighscore()` | Hook : message flash « nouveau meilleur score ». *(interne)* *(hook)* | 428 |
-| `gameplay_drift_display.onHitPoleScored(score)` | Hook : message flash et évènement stuntZoneScored (type hitPole). *(interne)* *(hook)* | 186 |
-| `gameplay_drift_display.onNearPoleScored(score)` | Hook : message flash et évènement stuntZoneScored (type nearPole). *(interne)* *(hook)* | 176 |
-| `gameplay_drift_display.onNewDriftTierReached(tierData)` | Hook : affiche le nom du nouveau palier en message flash. *(interne)* *(hook)* | 442 |
-| `gameplay_drift_display.onSerialize()` | Hook : sauvegarde driftDebugUILayout avant rechargement Lua. *(interne)* *(hook)* | 447 |
-| `gameplay_drift_display.onTightDriftScored(score)` | Hook : message flash et évènement stuntZoneScored (type tightDrift). *(interne)* *(hook)* | 181 |
-| `gameplay_drift_display.onUpdate(dtReal, dtSim, dtRaw)` | Appelé à chaque frame (sauf après déchargement) : fenêtre de debug, publication du stream drift, messages de contresens, de sortie de limites et de distance restante. *(interne)* *(hook)* | 381 |
-| `gameplay_drift_display.onVehicleDestroyed(vehId)` | Hook : supprime lisseur et présentation du véhicule détruit. *(interne)* *(hook)* | 423 |
-| `gameplay_drift_display.reset()` | Vide les lisseurs de creep, les présentations de score, le pool de données joueur et les données de gameplay_ui genericMissionData. | 487 |
+| `gameplay_drift_display.getDriftDebugInfo()` | Returns {default=false, canBeChanged=true} for the drift debug window. | 494 |
+| `gameplay_drift_display.getIsScorePresentationActive(vehId)` | Indicates whether the confirmed score animation is in progress for this vehicle. | 70 |
+| `gameplay_drift_display.getScorePresentationDuration()` | Returns the total duration of the confirmed score presentation (hold + dwindle + linger). Used by driftSpots to wait for the end of the animation. | 56 |
+| `gameplay_drift_display.onDeserialized(data)` | Hook: restores driftDebugUILayout. *(internal)* *(hook)* | 453 |
+| `gameplay_drift_display.onDonutDriftScored(score)` | Hook: flash message and stuntZoneScored event (donut type). *(internal)* *(hook)* | 171 |
+| `gameplay_drift_display.onDriftCachedScoreReset(vehId)` | Hook: the cached score was reset; clears the real-time message. *(internal)* *(hook)* | 407 |
+| `gameplay_drift_display.onDriftCompletedScored(data)` | Hook: starts the confirmed score presentation, displays "+points" and notifies the UI (setDriftPersistentDriftScored). *(internal)* *(hook)* | 143 |
+| `gameplay_drift_display.onDriftContextChanged(context)` | Hook: shows or hides the drift UI apps according to the new context. *(internal)* *(hook)* | 463 |
+| `gameplay_drift_display.onDriftCrash(vehId)` | Hook: shows the "crashed" failure in the UI and sets the smoother back to zero. *(internal)* *(hook)* | 163 |
+| `gameplay_drift_display.onDriftDebugChanged(value)` | Hook: when debug is disabled, hides the drift interface. *(internal)* *(hook)* | 457 |
+| `gameplay_drift_display.onDriftPlVehReset(vehId)` | Hook: player's vehicle put back in place; resets the smoother, the score presentation and the real-time message. *(internal)* *(hook)* | 401 |
+| `gameplay_drift_display.onDriftQuickMessageDisplay(data)` | Hook: sends a quick message to the UI (displayDriftScoreModifier). *(internal)* *(hook)* | 396 |
+| `gameplay_drift_display.onDriftScoreWrappedUp(score, vehId)` | Hook: the current score is force-validated (end of spot); starts the presentation and shows the bonus points. *(internal)* *(hook)* | 436 |
+| `gameplay_drift_display.onDriftSpinout(vehId)` | Hook: shows the "spinout" failure in the UI. *(internal)* *(hook)* | 167 |
+| `gameplay_drift_display.onDriftSpotCompleted(data)` | Hook: end-of-spot flash message (new record or zone completed) with the score. *(internal)* *(hook)* | 392 |
+| `gameplay_drift_display.onDriftSpotFailed(data)` | Hook: 2 s flash message with the failure reason text. *(internal)* *(hook)* | 432 |
+| `gameplay_drift_display.onExtensionLoaded()` | Hook: immediately applies the UI matching the already active drift context. *(internal)* *(hook)* | 480 |
+| `gameplay_drift_display.onExtensionUnloaded()` | Hook: hides the UI, empties the data and publishes an empty stream. *(internal)* *(hook)* | 411 |
+| `gameplay_drift_display.onFreeroamDriftZoneNewHighscore()` | Hook: "new best score" flash message. *(internal)* *(hook)* | 428 |
+| `gameplay_drift_display.onHitPoleScored(score)` | Hook: flash message and stuntZoneScored event (hitPole type). *(internal)* *(hook)* | 186 |
+| `gameplay_drift_display.onNearPoleScored(score)` | Hook: flash message and stuntZoneScored event (nearPole type). *(internal)* *(hook)* | 176 |
+| `gameplay_drift_display.onNewDriftTierReached(tierData)` | Hook: shows the name of the new tier as a flash message. *(internal)* *(hook)* | 442 |
+| `gameplay_drift_display.onSerialize()` | Hook: saves driftDebugUILayout before Lua reload. *(internal)* *(hook)* | 447 |
+| `gameplay_drift_display.onTightDriftScored(score)` | Hook: flash message and stuntZoneScored event (tightDrift type). *(internal)* *(hook)* | 181 |
+| `gameplay_drift_display.onUpdate(dtReal, dtSim, dtRaw)` | Called every frame (except after unloading): debug window, drift stream publishing, wrong-way, out-of-bounds and remaining distance messages. *(internal)* *(hook)* | 381 |
+| `gameplay_drift_display.onVehicleDestroyed(vehId)` | Hook: removes the smoother and presentation of the destroyed vehicle. *(internal)* *(hook)* | 423 |
+| `gameplay_drift_display.reset()` | Empties the creep smoothers, the score presentations, the player data pool and the gameplay_ui genericMissionData data. | 487 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drift_display.getDriftDebugInfo()`
 
-Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift.
+Returns {default=false, canBeChanged=true} for the drift debug window.
 
-- **renvoie** : table {default = false, canBeChanged = true}
+- **returns**: table {default = false, canBeChanged = true}
 
 #### `gameplay_drift_display.getIsScorePresentationActive(vehId)`
 
-Indique si l'animation du score confirmé est en cours pour ce véhicule.
+Indicates whether the confirmed score animation is in progress for this vehicle.
 
-- `vehId` (*integer*) : Id du véhicule.
-- **renvoie** : boolean true si la phase n'est pas idle.
+- `vehId` (*integer*) : Vehicle id.
+- **returns**: boolean true if the phase is not idle.
 
 #### `gameplay_drift_display.getScorePresentationDuration()`
 
-Renvoie la durée totale de la présentation du score confirmé (hold + dwindle + linger). Utilisée par driftSpots pour attendre la fin de l'animation.
+Returns the total duration of the confirmed score presentation (hold + dwindle + linger). Used by driftSpots to wait for the end of the animation.
 
-- **renvoie** : number Durée en secondes (2.0).
+- **returns**: number Duration in seconds (2.0).
 
 #### `gameplay_drift_display.onDeserialized(data)`
 
-Hook : restaure driftDebugUILayout.
+Hook: restores driftDebugUILayout.
 
-- `data` (*table*) : Table de onSerialize.
+- `data` (*table*) : onSerialize table.
 
 #### `gameplay_drift_display.onDonutDriftScored(score)`
 
-Hook : message flash et évènement stuntZoneScored (type donut).
+Hook: flash message and stuntZoneScored event (donut type).
 
-- `score` (*number*) : Points gagnés.
+- `score` (*number*) : Points earned.
 
 #### `gameplay_drift_display.onDriftCachedScoreReset(vehId)`
 
-Hook : le score en cache a été réinitialisé ; efface le message temps réel.
+Hook: the cached score was reset; clears the real-time message.
 
-- `vehId` (*integer*) : Véhicule concerné.
+- `vehId` (*integer*) : Vehicle concerned.
 
 #### `gameplay_drift_display.onDriftCompletedScored(data)`
 
-Hook : lance la présentation du score confirmé, affiche « +points » et notifie l'UI (setDriftPersistentDriftScored).
+Hook: starts the confirmed score presentation, displays "+points" and notifies the UI (setDriftPersistentDriftScored).
 
 - `data` (*table*) : {vehId, addedScore, combo}.
 
 #### `gameplay_drift_display.onDriftContextChanged(context)`
 
-Hook : montre ou masque les apps UI de drift selon le nouveau contexte.
+Hook: shows or hides the drift UI apps according to the new context.
 
-- `context` (*string*) : Nouveau contexte de gameplay_drift_general.
+- `context` (*string*) : New context of gameplay_drift_general.
 
 #### `gameplay_drift_display.onDriftCrash(vehId)`
 
-Hook : affiche l'échec « crashed » dans l'UI et remet le lisseur à zéro.
+Hook: shows the "crashed" failure in the UI and sets the smoother back to zero.
 
-- `vehId` (*integer*) : Véhicule concerné.
+- `vehId` (*integer*) : Vehicle concerned.
 
 #### `gameplay_drift_display.onDriftDebugChanged(value)`
 
-Hook : à la désactivation du debug, masque l'interface de drift.
+Hook: when debug is disabled, hides the drift interface.
 
-- `value` (*boolean*) : Nouvel état du debug.
+- `value` (*boolean*) : New debug state.
 
 #### `gameplay_drift_display.onDriftPlVehReset(vehId)`
 
-Hook : véhicule du joueur remis en place ; remet à zéro lisseur, présentation du score et message temps réel.
+Hook: player's vehicle put back in place; resets the smoother, the score presentation and the real-time message.
 
-- `vehId` (*integer*) : Véhicule concerné.
+- `vehId` (*integer*) : Vehicle concerned.
 
 #### `gameplay_drift_display.onDriftQuickMessageDisplay(data)`
 
-Hook : envoie un quick message à l'UI (displayDriftScoreModifier).
+Hook: sends a quick message to the UI (displayDriftScoreModifier).
 
 - `data` (*table*) : {msg, displayTime, vehId?}.
 
 #### `gameplay_drift_display.onDriftScoreWrappedUp(score, vehId)`
 
-Hook : le score en cours est validé de force (fin de spot) ; lance la présentation et affiche les points bonus.
+Hook: the current score is force-validated (end of spot); starts the presentation and shows the bonus points.
 
-- `score` (*number*) : Score validé.
-- `vehId` (*integer*) : Véhicule concerné.
+- `score` (*number*) : Validated score.
+- `vehId` (*integer*) : Vehicle concerned.
 
 #### `gameplay_drift_display.onDriftSpinout(vehId)`
 
-Hook : affiche l'échec « spinout » dans l'UI.
+Hook: shows the "spinout" failure in the UI.
 
-- `vehId` (*integer*) : Véhicule concerné.
+- `vehId` (*integer*) : Vehicle concerned.
 
 #### `gameplay_drift_display.onDriftSpotCompleted(data)`
 
-Hook : message flash de fin de spot (nouveau record ou zone terminée) avec le score.
+Hook: end-of-spot flash message (new record or zone completed) with the score.
 
 - `data` (*table*) : {newRecord, score, duration}.
 
 #### `gameplay_drift_display.onDriftSpotFailed(data)`
 
-Hook : message flash de 2 s avec le texte de la raison d'échec.
+Hook: 2 s flash message with the failure reason text.
 
-- `data` (*table*) : {reason = {msg = clé de traduction}, ...}.
+- `data` (*table*) : {reason = {msg = translation key}, ...}.
 
 #### `gameplay_drift_display.onHitPoleScored(score)`
 
-Hook : message flash et évènement stuntZoneScored (type hitPole).
+Hook: flash message and stuntZoneScored event (hitPole type).
 
-- `score` (*number*) : Points gagnés.
+- `score` (*number*) : Points earned.
 
 #### `gameplay_drift_display.onNearPoleScored(score)`
 
-Hook : message flash et évènement stuntZoneScored (type nearPole).
+Hook: flash message and stuntZoneScored event (nearPole type).
 
-- `score` (*number*) : Points gagnés.
+- `score` (*number*) : Points earned.
 
 #### `gameplay_drift_display.onNewDriftTierReached(tierData)`
 
-Hook : affiche le nom du nouveau palier en message flash.
+Hook: shows the name of the new tier as a flash message.
 
-- `tierData` (*table*) : Données du palier (name utilisé).
+- `tierData` (*table*) : Tier data (name used).
 
 #### `gameplay_drift_display.onSerialize()`
 
-Hook : sauvegarde driftDebugUILayout avant rechargement Lua.
+Hook: saves driftDebugUILayout before Lua reload.
 
-- **renvoie** : table {driftDebugUILayout}
+- **returns**: table {driftDebugUILayout}
 
 #### `gameplay_drift_display.onTightDriftScored(score)`
 
-Hook : message flash et évènement stuntZoneScored (type tightDrift).
+Hook: flash message and stuntZoneScored event (tightDrift type).
 
-- `score` (*number*) : Points gagnés.
+- `score` (*number*) : Points earned.
 
 #### `gameplay_drift_display.onUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé à chaque frame (sauf après déchargement) : fenêtre de debug, publication du stream drift, messages de contresens, de sortie de limites et de distance restante.
+Called every frame (except after unloading): debug window, drift stream publishing, wrong-way, out-of-bounds and remaining distance messages.
 
-- `dtReal` (*number*) : Delta temps réel en secondes, utilisé pour les animations.
-- `dtSim` (*number*) : Delta temps simulé (inutilisé).
-- `dtRaw` (*number*) : Delta temps brut (inutilisé).
+- `dtReal` (*number*) : Real time delta in seconds, used for the animations.
+- `dtSim` (*number*) : Simulated time delta (unused).
+- `dtRaw` (*number*) : Raw time delta (unused).
 
 #### `gameplay_drift_display.onVehicleDestroyed(vehId)`
 
-Hook : supprime lisseur et présentation du véhicule détruit.
+Hook: removes the smoother and presentation of the destroyed vehicle.
 
-- `vehId` (*integer*) : Véhicule détruit.
+- `vehId` (*integer*) : Destroyed vehicle.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | gameplay_drift_general, gameplay_drift_drift, gameplay_drift_scoring, ui_apps_genericMissionData, ui_appContainers. |
 
-**Évènements UI (guihooks.trigger) :** `ClearTasklist`, `ScenarioRealtimeDisplay`, `TopCenterAppsFlashMessage`, `displayDriftScoreModifier`, `setDriftPersistentDriftScored`, `setDriftRealtimeFail`, `stuntZoneScored`
+**UI events (guihooks.trigger):** `ClearTasklist`, `ScenarioRealtimeDisplay`, `TopCenterAppsFlashMessage`, `displayDriftScoreModifier`, `setDriftPersistentDriftScored`, `setDriftRealtimeFail`, `stuntZoneScored`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drift/display.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drift/display.lua`.*

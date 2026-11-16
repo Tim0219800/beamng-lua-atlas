@@ -1,107 +1,182 @@
 {
   "path": "lua/vehicle/controller/couplings/fifthwheel.lua",
-  "module": "Contrôleur auxiliaire de sellette d'attelage (fifth wheel) du tracteur : il cherche, parmi les véhicules en collision, les pivots (kingpin) compatibles en demandant leurs données au contrôleur `couplings/kingpin` de la remorque, calcule les distances, et attache un coupleur externe (`obj:attachExternalCoupler`) quand un pivot passe à moins de 80 % du rayon du coupleur. Il suit l'état attached, attaching, detaching, detached, joue des sons et publie un electrics d'attache.",
+  "module": "Auxiliary fifth wheel controller of the tractor: among the colliding vehicles, it looks for compatible kingpins by requesting their data from the trailer's `couplings/kingpin` controller, computes the distances, and attaches an external coupler (`obj:attachExternalCoupler`) when a kingpin comes within 80% of the coupler radius. It tracks the state attached, attaching, detaching, detached, plays sounds and publishes an attach electrics.",
   "usage": "controller.getControllerSafe(\"fifthwheel\").detachFifthwheel()\nprint(controller.getControllerSafe(\"fifthwheel\").isAttached())",
   "notes": [
-    "Clés jbeam lues par init : `fifthwheelNode` (nom du noeud), `fifthwheelKey` (\"fifthwheel_v2\" : doit correspondre à `kingpinKey` du pivot), `attachmentStateElectricsName` (`<nom>_attachmentState`). Lues par initSounds : `attachSoundEvent` (\"event:>Vehicle>Latches>Special>tailgate_01_close\"), `detachSoundEvent` (\"...tailgate_01_open\"), `attachSoundEventVolume` (0.5), `detachSoundEventVolume` (0.5). Les paramètres du coupleur (`couplerStrength` 10000000, `couplerRadius` 0.5, `couplerLockRadius` 0.025, `couplerLatchSpeed` 0.3) sont lus sur le noeud jbeam lui-même.",
-    "Les demandes de données aux pivots se font à 5 Hz tant que le coupleur n'est pas attaché ; une réponse est attendue en 1 s (sinon le cache du véhicule est effacé).",
-    "Après détachement (`detaching`), le contrôleur attend que le pivot précédent s'éloigne à plus de 0.6 m avant de redevenir `detached`.",
-    "Appelle `extensions.couplings.couplingAttached/couplingDetached` pour informer l'extension de couplage.",
-    "Anomalie : onCouplerAttached appelle `setFifthwheelIndicatorVisibility(false)` pour tout noeud attaché, pas seulement la sellette.",
-    "`M.debugDraw` est nil au départ ; setFifthwheelIndicatorVisibility l'active ou le retire puis appelle `controller.cacheAllControllerFunctions()` et diffuse la visibilité aux contrôleurs kingpin de tous les véhicules.",
-    "La variable interne s'écrit `fithwheel...` (faute de frappe sans effet)."
+    "Jbeam keys read by init: `fifthwheelNode` (node name), `fifthwheelKey` (\"fifthwheel_v2\": must match the kingpin's `kingpinKey`), `attachmentStateElectricsName` (`<name>_attachmentState`). Read by initSounds: `attachSoundEvent` (\"event:>Vehicle>Latches>Special>tailgate_01_close\"), `detachSoundEvent` (\"...tailgate_01_open\"), `attachSoundEventVolume` (0.5), `detachSoundEventVolume` (0.5). The coupler parameters (`couplerStrength` 10000000, `couplerRadius` 0.5, `couplerLockRadius` 0.025, `couplerLatchSpeed` 0.3) are read from the jbeam node itself.",
+    "Data requests to the kingpins are made at 5 Hz as long as the coupler is not attached; a response is expected within 1 s (otherwise the vehicle's cache is cleared).",
+    "After detachment (`detaching`), the controller waits for the previous kingpin to move away by more than 0.6 m before going back to `detached`.",
+    "Calls `extensions.couplings.couplingAttached/couplingDetached` to inform the coupling extension.",
+    "Anomaly: onCouplerAttached calls `setFifthwheelIndicatorVisibility(false)` for any attached node, not only the fifth wheel.",
+    "`M.debugDraw` is nil at the start; setFifthwheelIndicatorVisibility sets or removes it then calls `controller.cacheAllControllerFunctions()` and broadcasts the visibility to the kingpin controllers of all vehicles.",
+    "The internal variable is spelled `fithwheel...` (harmless typo)."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "debugDraw": {"type": "function|nil", "desc": "nil par défaut ; devient la fonction de dessin du noeud de sellette quand l'indicateur est visible."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "debugDraw": {
+      "type": "function|nil",
+      "desc": "nil by default; becomes the fifth wheel node drawing function when the indicator is visible."
+    }
   },
   "functions": {
     "detachFifthwheel": {
-      "desc": "Détache le coupleur de la sellette (obj:detachCoupler). Appelée par l'entrée du menu radial.",
+      "desc": "Detaches the fifth wheel coupler (obj:detachCoupler). Called by the radial menu entry.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "kingpinDataCallback": {
-      "desc": "Rappel venant du contrôleur kingpin d'une remorque : calcule la distance entre la sellette et le pivot et la met en cache.",
+      "desc": "Callback from a trailer's kingpin controller: computes the distance between the fifth wheel and the kingpin and caches it.",
       "params": {
-        "obj2Id": {"type": "integer", "desc": "Id du véhicule remorque."},
-        "data": {"type": "table", "desc": "{nodeId = cid du pivot, nodePosition = position monde}."}
+        "obj2Id": {
+          "type": "integer",
+          "desc": "Trailer vehicle id."
+        },
+        "data": {
+          "type": "table",
+          "desc": "{nodeId = kingpin cid, nodePosition = world position}."
+        }
       },
       "returns": [],
       "internal": true
     },
     "setFifthwheelIndicatorVisibility": {
-      "desc": "Affiche ou masque l'indicateur de debug de la sellette ici et sur les pivots de tous les véhicules (par clé).",
-      "params": {"visible": {"type": "boolean", "desc": "true pour afficher."}},
+      "desc": "Shows or hides the fifth wheel debug indicator here and on the kingpins of all vehicles (by key).",
+      "params": {
+        "visible": {
+          "type": "boolean",
+          "desc": "true to show."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "toggleFifthwheelIndicatorVisibility": {
-      "desc": "Inverse la visibilité de l'indicateur.",
+      "desc": "Toggles the indicator visibility.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "updateGFX": {
-      "desc": "Chaque frame : met à jour les collisions et les délais de requêtes, interroge les pivots proches, gère la sortie de l'état detaching, déclenche l'attache externe vers le pivot le plus proche et publie l'electrics.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "desc": "Every frame: updates the collisions and the request delays, queries nearby kingpins, handles leaving the detaching state, triggers the external attach to the nearest kingpin and publishes the electrics.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onCouplerFound": {
-      "desc": "Hook de coupleur trouvé, vide.",
+      "desc": "Coupler found hook, empty.",
       "params": {
-        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
-        "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
-        "obj2nodeId": {"type": "integer", "desc": "cid du noeud de l'autre véhicule."}
+        "nodeId": {
+          "type": "integer",
+          "desc": "cid of the local node."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Id of the other vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "cid of the other vehicle's node."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onCouplerAttached": {
-      "desc": "Hook : pour le noeud de sellette, passe à attached, mémorise le pivot, joue le son d'attache et prévient l'extension couplings. Masque l'indicateur.",
+      "desc": "Hook: for the fifth wheel node, switches to attached, stores the kingpin, plays the attach sound and notifies the couplings extension. Hides the indicator.",
       "params": {
-        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
-        "obj2id": {"type": "integer", "desc": "Id du véhicule remorque."},
-        "obj2nodeId": {"type": "integer", "desc": "cid du pivot."},
-        "attachForce": {"type": "number", "desc": "Reçoit en pratique `attachSpeed` de controller.lua (déduit du code) ; sert à l'agressivité du son."}
+        "nodeId": {
+          "type": "integer",
+          "desc": "cid of the local node."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Trailer vehicle id."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "cid of the kingpin."
+        },
+        "attachForce": {
+          "type": "number",
+          "desc": "In practice receives `attachSpeed` from controller.lua (inferred from code); used for the sound's aggressiveness."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onCouplerDetached": {
-      "desc": "Hook : pour le noeud de sellette, passe à detaching, mémorise le pivot quitté, joue le son de détache et prévient l'extension couplings.",
+      "desc": "Hook: for the fifth wheel node, switches to detaching, stores the kingpin left, plays the detach sound and notifies the couplings extension.",
       "params": {
-        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
-        "obj2id": {"type": "integer", "desc": "Id du véhicule remorque."},
-        "obj2nodeId": {"type": "integer", "desc": "cid du pivot."},
-        "breakForce": {"type": "number", "desc": "Force de rupture (non utilisée)."}
+        "nodeId": {
+          "type": "integer",
+          "desc": "cid of the local node."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Trailer vehicle id."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "cid of the kingpin."
+        },
+        "breakForce": {
+          "type": "number",
+          "desc": "Breaking force (unused)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "isAttached": {
-      "desc": "Indique si la sellette est attachée à un pivot.",
+      "desc": "Indicates whether the fifth wheel is attached to a kingpin.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si l'état est attached."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the state is attached."
+        }
+      ],
       "internal": false
     },
     "reset": {
-      "desc": "Remet l'état à detached et vide les caches de pivots.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "desc": "Puts the state back to detached and empties the kingpin caches.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "initSounds": {
-      "desc": "Lit les événements et volumes de sons d'attache et de détache.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "desc": "Reads the attach and detach sound events and volumes.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "init": {
-      "desc": "Retrouve le noeud de sellette, lit les paramètres du coupleur sur ce noeud, initialise l'état et ajoute l'entrée du menu radial de détachement (une seule fois).",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "desc": "Finds the fifth wheel node, reads the coupler parameters from this node, initializes the state and adds the detach radial menu entry (only once).",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     }

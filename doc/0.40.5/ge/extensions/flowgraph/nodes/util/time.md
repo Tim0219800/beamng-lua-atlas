@@ -1,24 +1,24 @@
 # `flowgraph_nodes_util_time`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/time.lua` · VM : Game Engine (GE) · 36 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/time.lua` · VM: Game Engine (GE) · 36 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/time")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/time")` (file under extensions/ but not a regular extension)
 
-Nœud « Time » (catégorie provider, sans flow). Fournit le temps courant. Sorties : time (os.clockhp(), horloge haute précision), dtReal (temps réel entre frames en s, ignore la pause), dtSim (temps simulé en s, 0 en pause, réduit au ralenti).
+Node "Time" (category provider, no flow). Provides the current time. Outputs: time (os.clockhp(), high-precision clock), dtReal (real time between frames in s, ignores pause), dtSim (simulated time in s, 0 when paused, reduced in slow motion).
 
-## Remarques
+## Notes
 
-- La description du pin time dit « Time since start of project » mais la valeur est l'horloge absolue os.clockhp(), pas le temps depuis le démarrage.
+- The description of the time pin says "Time since start of project" but the value is the absolute clock os.clockhp(), not the time since start.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Corps vide. | 31 |
-| `C:init(mgr, ...)` | Ne fait rien. | 22 |
-| `C:work()` | Écrit os.clockhp() dans time et mgr.dtReal / mgr.dtSim dans les deux autres sorties. | 25 |
+| `C:drawMiddle(builder, style)` | Empty body. | 31 |
+| `C:init(mgr, ...)` | Does nothing. | 22 |
+| `C:work()` | Writes os.clockhp() to time and mgr.dtReal / mgr.dtSim to the other two outputs. | 25 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/time.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/time.lua`.*

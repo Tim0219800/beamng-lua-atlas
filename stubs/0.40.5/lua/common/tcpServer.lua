@@ -2,45 +2,45 @@
 -- tim19Atlas stub generated from lua/common/tcpServer.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Serveur TCP non bloquant servant aux outils externes (chaîne d'outils d'édition, scripts). Utilise ASIO via createNetworkServer s'il est disponible, sinon LuaSocket. Les messages sont des charges JSON précédées d'un en-tête fixe de 8 octets. Un moddeur l'utilise pour dialoguer avec un programme externe : on crée un serveur puis on appelle receiveData() à chaque frame.
---- Accès : `require("tcpServer")`
+--- Non-blocking TCP server used by external tools (editing toolchain, scripts). Uses ASIO via createNetworkServer if available, otherwise LuaSocket. Messages are JSON payloads preceded by a fixed 8-byte header. A modder uses it to talk to an external program: you create a server then call receiveData() every frame.
+--- Access: `require("tcpServer")`
 ---@class tcpServer
 local tcpServer = {}
 
---- Interne : accumule les octets reçus d'une connexion dans un tampon, extrait les messages complets (en-tête valide, longueur, terminateur nul), décode le JSON (jsonDecode) et ajoute {connection, données} à res.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/tcpServer.lua:141
+--- Internal: accumulates the bytes received from a connection in a buffer, extracts complete messages (valid header, length, null terminator), decodes the JSON (jsonDecode) and adds {connection, data} to res.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/tcpServer.lua:141
 ---@param self any
----@param connection table connexion
----@param dataRaw string octets reçus
----@param res table liste de résultats à compléter
+---@param connection table connection
+---@param dataRaw string bytes received
+---@param res table list of results to complete
 function tcpServer._onDataRaw(self, connection, dataRaw, res) end
 
---- Ferme toutes les connexions et le socket serveur (LuaSocket) ou détruit le serveur ASIO (destroyNetworkServer), et vide les tampons.
----Source : lua/common/tcpServer.lua:251
+--- Closes all connections and the server socket (LuaSocket) or destroys the ASIO server (destroyNetworkServer), and empties the buffers.
+---Source: lua/common/tcpServer.lua:251
 ---@param self any
 function tcpServer.destroy(self) end
 
---- Crée un serveur TCP écoutant sur le port donné (appel `TCPServer:new(host, port)`). Choisit ASIO si createNetworkServer existe, sinon LuaSocket non bloquant. Renvoie false si LuaSocket ne peut pas se lier.
----Source : lua/common/tcpServer.lua:88
+--- Creates a TCP server listening on the given port (call `TCPServer:new(host, port)`). Picks ASIO if createNetworkServer exists, otherwise non-blocking LuaSocket. Returns false if LuaSocket cannot bind.
+---Source: lua/common/tcpServer.lua:88
 ---@param self any
----@param listenHost string adresse d'écoute (LuaSocket), par ex. 'localhost'
----@param port integer port TCP
----@return table|boolean  objet serveur, ou false en cas d'échec
+---@param listenHost string listening address (LuaSocket), e.g. 'localhost'
+---@param port integer TCP port
+---@return table|boolean  server object, or false on failure
 function tcpServer.new(self, listenHost, port) end
 
---- À appeler régulièrement. Accepte les nouvelles connexions, lit les données disponibles, extrait les messages complets. Renvoie une liste d'entrées {connection, message}.
----Source : lua/common/tcpServer.lua:186
+--- To be called regularly. Accepts new connections, reads the available data, extracts complete messages. Returns a list of {connection, message} entries.
+---Source: lua/common/tcpServer.lua:186
 ---@param self any
----@return table[]  liste de {connection, message | 'disconnect'[, erreur]}
+---@return table[]  list of {connection, message | 'disconnect'[, error]}
 function tcpServer.receiveData(self) end
 
---- Envoie un message JSON (en-tête BN01 + taille + JSON + '\0') sur une connexion. Si recData.context existe, il est copié dans sendData.context pour la réponse (puis retiré de sendData).
----Source : lua/common/tcpServer.lua:123
+--- Sends a JSON message (BN01 header + size + JSON + '\0') on a connection. If recData.context exists, it is copied into sendData.context for the response (then removed from sendData).
+---Source: lua/common/tcpServer.lua:123
 ---@param self any
----@param connection table connexion (premier élément d'une entrée de receiveData)
----@param sendData table message à encoder en JSON
----@param recData table|nil message reçu auquel on répond (pour recopier context)
+---@param connection table connection (first element of a receiveData entry)
+---@param sendData table message to encode as JSON
+---@param recData table|nil received message being answered (to copy context)
 function tcpServer.send(self, connection, sendData, recData) end
 
 return tcpServer

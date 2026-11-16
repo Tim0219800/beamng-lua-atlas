@@ -1,123 +1,252 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/render/spline.lua",
-  "module": "Rendu fil de fer et surfaces des splines et couches pour les outils d'édition de splines (l'essentiel de l'ancien render.lua). Module composite : dessine via render/spheres, lines, tris et markup, avec sa propre réserve de vec3 temporaires. handleSplineRendering dessine nœuds, noms, nervures, barres et élévations ; les autres fonctions dessinent coques, rubans, surfaces homologuées ou projetées sur le sol et aperçus. À appeler chaque frame depuis un outil d'éditeur.",
+  "module": "Wireframe and surface rendering of splines and layers for the spline editing tools (most of the old render.lua). Composite module: draws via render/spheres, lines, tris and markup, with its own pool of temporary vec3s. handleSplineRendering draws nodes, names, ribs, bars and elevations; the other functions draw hulls, ribbons, surfaces conformed to or projected onto the ground, and previews. To be called every frame from an editor tool.",
   "notes": [
-    "Une spline attendue est une table avec nodes, divPoints (points subdivisés), divWidths, binormals, isEnabled, isLink, isLoop, isPolyline, etc. ; les champs exacts viennent de l'outil appelant.",
-    "Les surfaces projetées (renderDrivePathSurface) lancent un raycast vertical depuis 3 m au-dessus (zRayLift) et ajoutent 0.05 m (zRayOffset) ; elles sont ignorées pour les splines isLink.",
-    "Un arc de torsion est dessiné en 16 segments, à 0.97 * 5 m du centre.",
-    "Une demi-spline (champ tileSet ou spacing présent) ne dessine que les nervures droites (indices pairs)."
+    "An expected spline is a table with nodes, divPoints (subdivided points), divWidths, binormals, isEnabled, isLink, isLoop, isPolyline, etc.; the exact fields come from the calling tool.",
+    "The projected surfaces (renderDrivePathSurface) cast a vertical raycast from 3 m above (zRayLift) and add 0.05 m (zRayOffset); they are skipped for isLink splines.",
+    "A twist arc is drawn in 16 segments, at 0.97 * 5 m from the center.",
+    "A half-spline (tileSet or spacing field present) draws only the right-hand ribs (even indices)."
   ],
   "functions": {
     "drawArc": {
-      "desc": "Dessine un arc de cercle (16 segments) du point a au point b autour de center, avec l'étiquette d'angle de torsion au milieu pour le nœud sélectionné.",
+      "desc": "Draws a circular arc (16 segments) from point a to point b around center, with the twist angle label in the middle for the selected node.",
       "params": {
-        "center": {"type": "vec3", "desc": "Centre de l'arc."},
-        "isSelectedNode": {"type": "boolean", "desc": "true pour afficher l'angle de torsion."},
-        "a": {"type": "vec3", "desc": "Point de départ."},
-        "b": {"type": "vec3", "desc": "Point d'arrivée."},
-        "axis": {"type": "vec3", "desc": "Axe de rotation."},
-        "twistAngle": {"type": "number", "desc": "Angle de torsion ; son signe donne le sens de l'arc."}
+        "center": {
+          "type": "vec3",
+          "desc": "Center of the arc."
+        },
+        "isSelectedNode": {
+          "type": "boolean",
+          "desc": "true to display the twist angle."
+        },
+        "a": {
+          "type": "vec3",
+          "desc": "Start point."
+        },
+        "b": {
+          "type": "vec3",
+          "desc": "End point."
+        },
+        "axis": {
+          "type": "vec3",
+          "desc": "Rotation axis."
+        },
+        "twistAngle": {
+          "type": "number",
+          "desc": "Twist angle; its sign gives the direction of the arc."
+        }
       },
       "returns": []
     },
     "drawRibPoints": {
-      "desc": "Dessine les points de nervure (sphères) et les lignes de nervure : pour une spline complète, gauche et droite reliées ; pour une demi-spline, seulement le bord droit relié au nœud central.",
+      "desc": "Draws the rib points (spheres) and rib lines: for a full spline, left and right connected; for a half-spline, only the right edge connected to the center node.",
       "params": {
-        "ribs": {"type": "vec3[]", "desc": "Points de nervure, par paires gauche/droite."},
-        "spline": {"type": "table", "desc": "Spline (tileSet ou spacing signale une demi-spline ; nodes)."}
+        "ribs": {
+          "type": "vec3[]",
+          "desc": "Rib points, in left/right pairs."
+        },
+        "spline": {
+          "type": "table",
+          "desc": "Spline (tileSet or spacing signals a half-spline; nodes)."
+        }
       },
       "returns": []
     },
     "drawBarPoints": {
-      "desc": "Dessine les poignées de barre et leur ligne de chute vers le sol (raycast vertical), colorée selon l'élévation. Sans effet s'il y a moins de 2 barres.",
+      "desc": "Draws the bar handles and their drop line to the ground (vertical raycast), colored according to elevation. No effect if there are fewer than 2 bars.",
       "params": {
-        "bars": {"type": "vec3[]", "desc": "Points de barre."},
-        "elevScale": {"type": "number", "desc": "Hauteur correspondant au rouge de la rampe."}
+        "bars": {
+          "type": "vec3[]",
+          "desc": "Bar points."
+        },
+        "elevScale": {
+          "type": "number",
+          "desc": "Height corresponding to the red of the ramp."
+        }
       },
       "returns": []
     },
     "handleSplineRendering": {
-      "desc": "Dessine toutes les splines : la sélectionnée avec ses nœuds, surbrillance, gizmo/rotation, nervures, barres, élévation et nom/longueur ; les autres en version atténuée avec leur nom.",
+      "desc": "Draws all splines: the selected one with its nodes, highlight, gizmo/rotation, ribs, bars, elevation and name/length; the others in dimmed form with their name.",
       "params": {
-        "splines": {"type": "table", "desc": "Liste de splines."},
-        "splineIdx": {"type": "integer", "desc": "Indice de la spline sélectionnée."},
-        "nodeIdx": {"type": "integer", "desc": "Indice du nœud sélectionné."},
-        "isGizmoActive": {"type": "boolean", "desc": "Le gizmo de translation est actif."},
-        "isUseRot": {"type": "boolean", "desc": "Mode rotation (affichage de torsion)."},
-        "isShapeLocked": {"type": "boolean", "desc": "Forme verrouillée."},
-        "isShowElevation": {"type": "boolean", "desc": "Afficher élévations et lignes de chute."},
-        "isShowRibs": {"type": "boolean", "desc": "Afficher les nervures."},
-        "elevScale": {"type": "number", "desc": "Échelle de couleur d'élévation."},
-        "hiddenNodeSet": {"type": "table<integer, boolean>|nil", "desc": "Ensemble de nœuds de la spline sélectionnée dont la grosse sphère, la surbrillance et la ligne d'élévation sont supprimées (coins ingénierés de heroRoad où le nœud PI est loin de la route)."},
-        "noNames": {"type": "boolean|nil", "desc": "Supprime le nom des splines non sélectionnées (réseaux de centaines de liens)."}
+        "splines": {
+          "type": "table",
+          "desc": "List of splines."
+        },
+        "splineIdx": {
+          "type": "integer",
+          "desc": "Index of the selected spline."
+        },
+        "nodeIdx": {
+          "type": "integer",
+          "desc": "Index of the selected node."
+        },
+        "isGizmoActive": {
+          "type": "boolean",
+          "desc": "The translation gizmo is active."
+        },
+        "isUseRot": {
+          "type": "boolean",
+          "desc": "Rotation mode (twist display)."
+        },
+        "isShapeLocked": {
+          "type": "boolean",
+          "desc": "Locked shape."
+        },
+        "isShowElevation": {
+          "type": "boolean",
+          "desc": "Show elevations and drop lines."
+        },
+        "isShowRibs": {
+          "type": "boolean",
+          "desc": "Show the ribs."
+        },
+        "elevScale": {
+          "type": "number",
+          "desc": "Elevation color scale."
+        },
+        "hiddenNodeSet": {
+          "type": "table<integer, boolean>|nil",
+          "desc": "Set of nodes of the selected spline whose large sphere, highlight and elevation line are suppressed (engineered corners of heroRoad where the PI node is far from the road)."
+        },
+        "noNames": {
+          "type": "boolean|nil",
+          "desc": "Suppresses the name of unselected splines (networks of hundreds of links)."
+        }
       },
       "returns": []
     },
     "renderLayer": {
-      "desc": "Dessine le fil de fer d'une couche d'une spline (avec décalage binormal), éventuellement projeté au sol par raycast.",
+      "desc": "Draws the wireframe of a spline layer (with binormal offset), optionally projected onto the ground by raycast.",
       "params": {
-        "layer": {"type": "table", "desc": "Couche à dessiner."},
-        "spline": {"type": "table", "desc": "Spline contenant la couche."},
-        "isRaycast": {"type": "boolean", "desc": "Projeter les points sur le sol."},
-        "binormalSpacing": {"type": "integer", "desc": "Espacement des lignes binormales, en points de division."}
+        "layer": {
+          "type": "table",
+          "desc": "Layer to draw."
+        },
+        "spline": {
+          "type": "table",
+          "desc": "Spline containing the layer."
+        },
+        "isRaycast": {
+          "type": "boolean",
+          "desc": "Project the points onto the ground."
+        },
+        "binormalSpacing": {
+          "type": "integer",
+          "desc": "Spacing of the binormal lines, in division points."
+        }
       },
       "returns": []
     },
     "renderMasterLayer": {
-      "desc": "Comme renderLayer pour une couche de spline maître, sans appliquer le décalage binormal.",
+      "desc": "Like renderLayer for a master spline layer, without applying the binormal offset.",
       "params": {
-        "layer": {"type": "table", "desc": "Couche à dessiner."},
-        "spline": {"type": "table", "desc": "Spline contenant la couche."},
-        "isRaycast": {"type": "boolean", "desc": "Projeter sur le sol."},
-        "binormalSpacing": {"type": "integer", "desc": "Espacement des lignes binormales."}
+        "layer": {
+          "type": "table",
+          "desc": "Layer to draw."
+        },
+        "spline": {
+          "type": "table",
+          "desc": "Spline containing the layer."
+        },
+        "isRaycast": {
+          "type": "boolean",
+          "desc": "Project onto the ground."
+        },
+        "binormalSpacing": {
+          "type": "integer",
+          "desc": "Spacing of the binormal lines."
+        }
       },
       "returns": []
     },
     "renderShells": {
-      "desc": "Dessine les coques des splines (fil de fer simple avec étiquettes) quand l'outil est inactif.",
-      "params": {"splines": {"type": "table", "desc": "Liste de splines."}},
+      "desc": "Draws the hulls of splines (simple wireframe with labels) when the tool is inactive.",
+      "params": {
+        "splines": {
+          "type": "table",
+          "desc": "List of splines."
+        }
+      },
       "returns": []
     },
     "renderHalfSplineWireFrame": {
-      "desc": "Dessine le fil de fer des demi-splines (par ex. trottoirs).",
+      "desc": "Draws the wireframe of half-splines (e.g. sidewalks).",
       "params": {
-        "splines": {"type": "table", "desc": "Liste de splines."},
-        "selSplineIdx": {"type": "integer", "desc": "Indice de la spline sélectionnée."},
-        "binormalSpacing": {"type": "integer", "desc": "Espacement des lignes binormales."}
+        "splines": {
+          "type": "table",
+          "desc": "List of splines."
+        },
+        "selSplineIdx": {
+          "type": "integer",
+          "desc": "Index of the selected spline."
+        },
+        "binormalSpacing": {
+          "type": "integer",
+          "desc": "Spacing of the binormal lines."
+        }
       },
       "returns": []
     },
     "renderWireframeRibbons": {
-      "desc": "Dessine un contour fil de fer des splines données.",
-      "params": {"splines": {"type": "table", "desc": "Liste de splines."}},
+      "desc": "Draws a wireframe outline of the given splines.",
+      "params": {
+        "splines": {
+          "type": "table",
+          "desc": "List of splines."
+        }
+      },
       "returns": []
     },
     "renderHomologatedSurface": {
-      "desc": "Dessine le fil de fer des splines maîtres, avec une surface en carte de chaleur pour la spline sélectionnée.",
+      "desc": "Draws the wireframe of master splines, with a heat-map surface for the selected spline.",
       "params": {
-        "splines": {"type": "table", "desc": "Liste de splines."},
-        "selSplineIdx": {"type": "integer", "desc": "Indice de la spline sélectionnée."}
+        "splines": {
+          "type": "table",
+          "desc": "List of splines."
+        },
+        "selSplineIdx": {
+          "type": "integer",
+          "desc": "Index of the selected spline."
+        }
       },
       "returns": []
     },
     "renderDrivePathSurface": {
-      "desc": "Dessine une surface quadrilatérale fil de fer dont les z sont obtenus par raycast sur le sol, le long de divPoints (une ligne sur deux).",
-      "params": {"spline": {"type": "table|nil", "desc": "Spline avec divPoints, divWidths, binormals."}},
+      "desc": "Draws a quadrilateral wireframe surface whose z values are obtained by raycast onto the ground, along divPoints (every other line).",
+      "params": {
+        "spline": {
+          "type": "table|nil",
+          "desc": "Spline with divPoints, divWidths, binormals."
+        }
+      },
       "returns": []
     },
     "renderPreviewRibbon": {
-      "desc": "Dessine un ruban d'aperçu : sphères de nœuds, lignes de largeur et d'arêtes et surface de prévisualisation. Les binormales sont calculées en 2D (horizontales).",
+      "desc": "Draws a preview ribbon: node spheres, width and edge lines and preview surface. The binormals are computed in 2D (horizontal).",
       "params": {
-        "nodes": {"type": "vec3[]", "desc": "Nœuds du ruban."},
-        "widths": {"type": "number[]", "desc": "Largeur du ruban à chaque nœud, en mètres."}
+        "nodes": {
+          "type": "vec3[]",
+          "desc": "Ribbon nodes."
+        },
+        "widths": {
+          "type": "number[]",
+          "desc": "Ribbon width at each node, in meters."
+        }
       },
       "returns": []
     },
     "renderSplinePolylines": {
-      "desc": "Dessine les polylignes des outils de spline de maillage, d'assemblage, de rail et de décalque : trait épais pour la spline sélectionnée, atténué pour les autres. Une spline isPolyline est tracée par ses nœuds (fermée si isLoop), sinon par divPoints ; les splines désactivées ou isLink sont ignorées.",
+      "desc": "Draws the polylines of the mesh, assembly, rail and decal spline tools: thick stroke for the selected spline, dimmed for the others. An isPolyline spline is drawn through its nodes (closed if isLoop), otherwise through divPoints; disabled or isLink splines are skipped.",
       "params": {
-        "splines": {"type": "table|nil", "desc": "Liste de splines."},
-        "selectedSplineIdx": {"type": "integer", "desc": "Indice de la spline sélectionnée."}
+        "splines": {
+          "type": "table|nil",
+          "desc": "List of splines."
+        },
+        "selectedSplineIdx": {
+          "type": "integer",
+          "desc": "Index of the selected spline."
+        }
       },
       "returns": []
     }

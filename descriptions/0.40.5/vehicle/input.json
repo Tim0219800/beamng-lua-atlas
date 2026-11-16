@@ -1,123 +1,205 @@
 {
   "path": "lua/vehicle/input.lua",
-  "module": "Réception et filtrage des entrées de conduite du véhicule (volant, gaz, frein, frein à main, embrayage, et toute entrée spécifique au véhicule). Les actions de contrôle (clavier, manette, volant, IA, scripts) appellent input.event(type, valeur, filtre, …) ; la valeur est stockée dans input.state[type]. À chaque frame, input.updateGFX applique le filtre choisi (lissage clavier/manette, mise en correspondance d'angle du volant, assistances de direction), borne la valeur et l'écrit dans input[type] (ex. input.throttle) et dans electrics.values[type .. '_input']. Les modules du véhicule (controller, hydros, wheels, powertrain) lisent ensuite electrics.values.* ou input.*.",
-  "usage": "-- piloter la direction depuis une extension (comme straightLine) :\ninput.event('steering', -0.3, FILTER_DIRECT)   -- valeur -1..1, filtre direct\ninput.event('throttle', 1, FILTER_PAD)\nlocal gaz = input.throttle                       -- valeur filtrée de la dernière frame\ninput.toggleEvent('parkingbrake')",
+  "module": "Reception and filtering of the vehicle's driving inputs (steering, throttle, brake, parking brake, clutch, and any vehicle-specific input). Control actions (keyboard, gamepad, wheel, AI, scripts) call input.event(type, value, filter, …); the value is stored in input.state[type]. Every frame, input.updateGFX applies the chosen filter (keyboard/gamepad smoothing, wheel angle mapping, steering assists), clamps the value and writes it into input[type] (e.g. input.throttle) and into electrics.values[type .. '_input']. The vehicle modules (controller, hydros, wheels, powertrain) then read electrics.values.* or input.*.",
+  "usage": "-- drive the steering from an extension (like straightLine):\ninput.event('steering', -0.3, FILTER_DIRECT)   -- value -1..1, direct filter\ninput.event('throttle', 1, FILTER_PAD)\nlocal gaz = input.throttle                       -- filtered value from the last frame\ninput.toggleEvent('parkingbrake')",
   "notes": [
-    "Constantes de filtre (common/inputFilters.lua) : FILTER_KBD = 0 (clavier, lissage avec taux dynamiques), FILTER_PAD = 1 (manette, lissage sans autocentrage), FILTER_DIRECT = 2 (valeur reprise telle quelle, pour volant physique/scripts), FILTER_KBD2 = 3 (clavier, variante), FILTER_AI = \"FILTER_AI\" (IA).",
-    "Types d'entrée par défaut dans input.state : steering (-1..1), throttle (0..1), brake (0..1), parkingbrake (0..1), clutch (0..1). Chaque entrée est une table {val, filter, smootherKBD, smootherPAD, minLimit, maxLimit} + angle, lockType, osClockHP, source après un event. Une entrée spécifique au véhicule (autre nom) est acceptée par event mais avec un état par défaut (limites -1..1, lissage 10/10) et un log d'avertissement ; le créateur du véhicule devrait définir input.state[nom] = {minLimit, maxLimit, smootherKBD, smootherPAD, val=0, filter=0} dans son init.",
-    "Les valeurs filtrées sont publiées à la fois comme champs du module (input.steering, input.throttle, input.brake, input.parkingbrake, input.clutch, input.<nom>) et dans electrics.values.<nom>_input (steering_input, throttle_input…). electrics.values.steeringUnassisted contient la direction avant assistances. Si osClockHP est fourni, electrics.values.<nom>_timestamp est aussi écrit.",
-    "Mise en correspondance d'angle du volant (filtre direct, ou angle > 0 pour steering qui force FILTER_DIRECT) : lockType 0 = désactivé, 1 = normal (valeur x angle/(2 x steeringWheelLock)), 2 = progressif (plus rapide après mi-course pour garantir la butée), 3 = désactivé tant que l'angle du volant < angle du véhicule. vehicleSteeringWheelLock vient de v.data.input.steeringWheelLock ou de l'hydro steering_input, défaut 450 (degrés).",
-    "Assistances de direction (réglages settings : steeringStabilization*, steeringUndersteerReduction*, steeringSlowdown*, steeringLimit*, steeringAutocenterEnabled) : contre-braquage anti-survirage, réduction de sous-virage selon le grip, ralentissement et limitation de la direction à haute vitesse. Chacune a une variante *Direct pour s'appliquer aussi au filtre direct. Les vitesses sont en m/s.",
-    "setAllowedInputSource filtre les sources : tant qu'une entrée a une liste de sources autorisées, seul un event dont `source` y figure est pris en compte. La source par défaut d'un event est \"local\". Les valeurs reçues sont quand même mémorisées dans input.lastInputs[source][type].",
-    "Quand le joueur humain conduit (anyPlayerSeated et pas d'IA), un changement de filtre de direction déclenche côté GE extensions.hook('onSteeringFilterChanged', nomDuFiltre).",
-    "Le frein à main joue les sons handbrakeEngaging/Disengaging/Disengaged (si une roue a parkingTorque > 0) lors des changements de valeur.",
-    "Incohérences repérées : M.keys est un reliquat de compatibilité (accès journalisé comme obsolète une seule fois) ; M.lowspeedCoef vaut toujours nil (seul M.lowspeedCoefFFB est affecté, dans initSecondStage, quand un hydro steering_input définit lowspeedCoefFFB) ; reset appelle `M:settingsChanged()` avec deux-points (M passé en argument inutilisé) ; updateUIAppDebugging utilise des globales non définies (smExtra2, dt) mais n'est jamais appelée."
+    "Filter constants (common/inputFilters.lua): FILTER_KBD = 0 (keyboard, smoothing with dynamic rates), FILTER_PAD = 1 (gamepad, smoothing without autocenter), FILTER_DIRECT = 2 (value taken as is, for physical wheel/scripts), FILTER_KBD2 = 3 (keyboard, variant), FILTER_AI = \"FILTER_AI\" (AI).",
+    "Default input types in input.state: steering (-1..1), throttle (0..1), brake (0..1), parkingbrake (0..1), clutch (0..1). Each input is a table {val, filter, smootherKBD, smootherPAD, minLimit, maxLimit} + angle, lockType, osClockHP, source after an event. A vehicle-specific input (other name) is accepted by event but with a default state (limits -1..1, smoothing 10/10) and a warning log; the vehicle creator should define input.state[name] = {minLimit, maxLimit, smootherKBD, smootherPAD, val=0, filter=0} in their init.",
+    "The filtered values are published both as module fields (input.steering, input.throttle, input.brake, input.parkingbrake, input.clutch, input.<name>) and in electrics.values.<name>_input (steering_input, throttle_input…). electrics.values.steeringUnassisted contains the steering before assists. If osClockHP is provided, electrics.values.<name>_timestamp is also written.",
+    "Steering wheel angle mapping (direct filter, or angle > 0 for steering which forces FILTER_DIRECT): lockType 0 = disabled, 1 = normal (value x angle/(2 x steeringWheelLock)), 2 = progressive (faster after mid-travel to guarantee the end stop), 3 = disabled while the wheel angle < vehicle angle. vehicleSteeringWheelLock comes from v.data.input.steeringWheelLock or from the steering_input hydro, default 450 (degrees).",
+    "Steering assists (settings: steeringStabilization*, steeringUndersteerReduction*, steeringSlowdown*, steeringLimit*, steeringAutocenterEnabled): oversteer countersteer, understeer reduction according to grip, slowdown and limiting of steering at high speed. Each has a *Direct variant to also apply to the direct filter. Speeds are in m/s.",
+    "setAllowedInputSource filters the sources: as long as an input has a list of allowed sources, only an event whose `source` is in it is taken into account. The default source of an event is \"local\". The values received are still stored in input.lastInputs[source][type].",
+    "When the human player is driving (anyPlayerSeated and no AI), a change of steering filter triggers extensions.hook('onSteeringFilterChanged', filterName) on the GE side.",
+    "The parking brake plays the sounds handbrakeEngaging/Disengaging/Disengaged (if a wheel has parkingTorque > 0) when the value changes.",
+    "Inconsistencies spotted: M.keys is a compatibility leftover (access logged as obsolete only once); M.lowspeedCoef is always nil (only M.lowspeedCoefFFB is assigned, in initSecondStage, when a steering_input hydro defines lowspeedCoefFFB); reset calls `M:settingsChanged()` with a colon (M passed as an unused argument); updateUIAppDebugging uses undefined globals (smExtra2, dt) but is never called."
   ],
   "fields": {
-    "state": {"type": "table<string, table>", "desc": "Un état par type d'entrée (steering, throttle, brake, parkingbrake, clutch, + entrées véhicule) : val brute, filter, angle, lockType, osClockHP, source, minLimit/maxLimit, smoothers. Recréé par init()."},
-    "keys": {"type": "table", "desc": "Compatibilité ancienne : toute lecture input.keys[x] est loguée comme obsolète (bindings spécifiques au véhicule à utiliser à la place)."},
-    "lastFilterType": {"type": "integer|string", "desc": "Dernier filtre de direction vu par updateGFX (-1 au départ)."},
-    "lastInputs": {"type": "table<string, table<string, number>>", "desc": "Dernière valeur brute reçue par source puis par type d'entrée (vidé au reset)."},
-    "allowedInputSources": {"type": "table<string, table<string, boolean>>", "desc": "Sources autorisées par type d'entrée ; absent = toutes. Géré par setAllowedInputSource."},
-    "lowspeedCoef": {"type": "nil", "desc": "Toujours nil (déclaré mais jamais affecté, voir notes)."},
-    "steering": {"type": "number", "desc": "Direction filtrée et bornée de la dernière frame (-1..1). Champ créé par updateGFX ; de même throttle, brake, parkingbrake, clutch (0..1)."}
+    "state": {
+      "type": "table<string, table>",
+      "desc": "One state per input type (steering, throttle, brake, parkingbrake, clutch, + vehicle inputs): raw val, filter, angle, lockType, osClockHP, source, minLimit/maxLimit, smoothers. Recreated by init()."
+    },
+    "keys": {
+      "type": "table",
+      "desc": "Legacy compatibility: any read of input.keys[x] is logged as obsolete (use vehicle-specific bindings instead)."
+    },
+    "lastFilterType": {
+      "type": "integer|string",
+      "desc": "Last steering filter seen by updateGFX (-1 at start)."
+    },
+    "lastInputs": {
+      "type": "table<string, table<string, number>>",
+      "desc": "Last raw value received by source then by input type (cleared on reset)."
+    },
+    "allowedInputSources": {
+      "type": "table<string, table<string, boolean>>",
+      "desc": "Allowed sources by input type; absent = all. Managed by setAllowedInputSource."
+    },
+    "lowspeedCoef": {
+      "type": "nil",
+      "desc": "Always nil (declared but never assigned, see notes)."
+    },
+    "steering": {
+      "type": "number",
+      "desc": "Filtered and clamped steering of the last frame (-1..1). Field created by updateGFX; likewise throttle, brake, parkingbrake, clutch (0..1)."
+    }
   },
   "functions": {
     "event": {
-      "desc": "Enregistre une valeur d'entrée pour la frame suivante. Le filtrage et la publication dans electrics se font dans updateGFX. Ignorée (mais mémorisée dans lastInputs) si des sources sont restreintes pour ce type et que `source` n'en fait pas partie.",
+      "desc": "Records an input value for the next frame. Filtering and publication into electrics happen in updateGFX. Ignored (but stored in lastInputs) if sources are restricted for this type and `source` is not among them.",
       "params": {
-        "itype": {"type": "string", "desc": "Type d'entrée : \"steering\", \"throttle\", \"brake\", \"parkingbrake\", \"clutch\" ou entrée spécifique au véhicule."},
-        "ivalue": {"type": "number", "desc": "Valeur brute (steering -1..1, autres 0..1 ; bornée par minLimit/maxLimit après filtrage)."},
-        "filter": {"type": "integer|string", "desc": "FILTER_KBD (0), FILTER_PAD (1), FILTER_DIRECT (2), FILTER_KBD2 (3) ou FILTER_AI."},
-        "angle": {"type": "number|nil", "desc": "Angle du volant physique en degrés pour la mise en correspondance (steering uniquement)."},
-        "lockType": {"type": "integer|nil", "desc": "Type de verrouillage d'angle : 0 désactivé, 1 normal, 2 plus rapide si nécessaire, 3 désactivé si nécessaire."},
-        "osClockHP": {"type": "number|nil", "desc": "Horodatage haute précision de l'évènement, publié dans electrics.values.<type>_timestamp."},
-        "source": {"type": "string|nil", "desc": "Origine de l'évènement ; \"local\" si nil."}
+        "itype": {
+          "type": "string",
+          "desc": "Input type: \"steering\", \"throttle\", \"brake\", \"parkingbrake\", \"clutch\" or vehicle-specific input."
+        },
+        "ivalue": {
+          "type": "number",
+          "desc": "Raw value (steering -1..1, others 0..1; clamped by minLimit/maxLimit after filtering)."
+        },
+        "filter": {
+          "type": "integer|string",
+          "desc": "FILTER_KBD (0), FILTER_PAD (1), FILTER_DIRECT (2), FILTER_KBD2 (3) or FILTER_AI."
+        },
+        "angle": {
+          "type": "number|nil",
+          "desc": "Physical wheel angle in degrees for the mapping (steering only)."
+        },
+        "lockType": {
+          "type": "integer|nil",
+          "desc": "Angle lock type: 0 disabled, 1 normal, 2 faster if needed, 3 disabled if needed."
+        },
+        "osClockHP": {
+          "type": "number|nil",
+          "desc": "High-precision timestamp of the event, published in electrics.values.<type>_timestamp."
+        },
+        "source": {
+          "type": "string|nil",
+          "desc": "Origin of the event; \"local\" if nil."
+        }
       },
       "returns": [],
       "internal": false
     },
     "toggleEvent": {
-      "desc": "Bascule une entrée : met val à 0 si elle dépasse 0.5, sinon à 1, avec le filtre 0 (clavier). Ignoré si le type n'existe pas dans state. Ne tient pas compte des sources autorisées.",
-      "params": {"itype": {"type": "string", "desc": "Type d'entrée existant (ex. \"parkingbrake\")."}},
+      "desc": "Toggles an input: sets val to 0 if it exceeds 0.5, otherwise to 1, with filter 0 (keyboard). Ignored if the type does not exist in state. Does not take allowed sources into account.",
+      "params": {
+        "itype": {
+          "type": "string",
+          "desc": "Existing input type (e.g. \"parkingbrake\")."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "kbdSteer": {
-      "desc": "Compatibilité clavier multi-touches : mémorise la valeur de la touche gauche ou droite et envoie event('steering', droite - gauche, filter).",
+      "desc": "Multi-key keyboard compatibility: stores the value of the left or right key and sends event('steering', right - left, filter).",
       "params": {
-        "isRight": {"type": "boolean", "desc": "true pour la touche droite, false pour la gauche."},
-        "val": {"type": "number", "desc": "Valeur de la touche (0..1)."},
-        "filter": {"type": "integer", "desc": "Filtre à utiliser."}
+        "isRight": {
+          "type": "boolean",
+          "desc": "true for the right key, false for the left."
+        },
+        "val": {
+          "type": "number",
+          "desc": "Key value (0..1)."
+        },
+        "filter": {
+          "type": "integer",
+          "desc": "Filter to use."
+        }
       },
       "returns": [],
       "internal": false
     },
     "padAccelerateBrake": {
-      "desc": "Compatibilité manette mono-axe : val > 0 va sur throttle (frein à 0), val <= 0 va sur brake avec -val (gaz à 0).",
+      "desc": "Single-axis gamepad compatibility: val > 0 goes to throttle (brake at 0), val <= 0 goes to brake with -val (throttle at 0).",
       "params": {
-        "val": {"type": "number", "desc": "Axe -1..1 (positif = accélération)."},
-        "filter": {"type": "integer", "desc": "Filtre à utiliser."}
+        "val": {
+          "type": "number",
+          "desc": "Axis -1..1 (positive = acceleration)."
+        },
+        "filter": {
+          "type": "integer",
+          "desc": "Filter to use."
+        }
       },
       "returns": [],
       "internal": false
     },
     "neutralizeControls": {
-      "desc": "Remet à 0 (filtre clavier) toutes les entrées sauf le frein à main, et réinitialise les touches gauche/droite de kbdSteer.",
+      "desc": "Resets all inputs to 0 (keyboard filter) except the parking brake, and resets the kbdSteer left/right keys.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "setAllowedInputSource": {
-      "desc": "Restreint ou libère les sources acceptées pour un type d'entrée. source == nil supprime la restriction ; sinon marque la source comme autorisée (enabled true) ou refusée (false). Dès qu'une table existe pour un type, seules les sources à true sont acceptées.",
+      "desc": "Restricts or releases the accepted sources for an input type. source == nil removes the restriction; otherwise marks the source as allowed (enabled true) or denied (false). As soon as a table exists for a type, only sources set to true are accepted.",
       "params": {
-        "itype": {"type": "string", "desc": "Type d'entrée."},
-        "source": {"type": "string|nil", "desc": "Nom de la source ; nil pour supprimer toute restriction sur ce type."},
-        "enabled": {"type": "boolean|nil", "desc": "true pour autoriser la source, false pour la refuser."}
+        "itype": {
+          "type": "string",
+          "desc": "Input type."
+        },
+        "source": {
+          "type": "string|nil",
+          "desc": "Source name; nil to remove any restriction on this type."
+        },
+        "enabled": {
+          "type": "boolean|nil",
+          "desc": "true to allow the source, false to deny it."
+        }
       },
       "returns": [],
       "internal": false
     },
     "settingsChanged": {
-      "desc": "Relit les réglages (settings.getValue) des assistances de direction : stabilisation anti-survirage, réduction de sous-virage, ralentissement et limitation à haute vitesse, autocentrage à basse vitesse. Appelée par reset() et par onSettingsChanged de main.lua. Intervertit les vitesses de début/fin si elles sont inversées.",
+      "desc": "Rereads the settings (settings.getValue) of the steering assists: oversteer stabilization, understeer reduction, slowdown and limiting at high speed, autocenter at low speed. Called by reset() and by onSettingsChanged in main.lua. Swaps the start/end speeds if they are inverted.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "init": {
-      "desc": "Premier étage d'initialisation (main.lua : initSystems) : recrée input.state avec les cinq entrées par défaut et leurs lisseurs.",
+      "desc": "First initialization stage (main.lua: initSystems): recreates input.state with the five default inputs and their smoothers.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "initSecondStage": {
-      "desc": "Second étage (après sounds/electrics) : détermine l'angle de volant du véhicule (hydro steering_input ou v.data.input.steeringWheelLock), autocentrage et lowspeedCoefFFB demandés par l'hydro, crée les sons de frein à main, identifie roues avant/arrière pour les assistances, calcule les taux de lissage clavier, puis appelle reset().",
+      "desc": "Second stage (after sounds/electrics): determines the vehicle's wheel angle (steering_input hydro or v.data.input.steeringWheelLock), autocenter and lowspeedCoefFFB requested by the hydro, creates the parking brake sounds, identifies front/rear wheels for the assists, computes the keyboard smoothing rates, then calls reset().",
       "params": {},
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Remet à zéro les lisseurs, lastInputs et l'état des assistances, relit les réglages. Appelée par main.lua au reset du véhicule et par initSecondStage.",
+      "desc": "Resets the smoothers, lastInputs and the assists state, rereads the settings. Called by main.lua on vehicle reset and by initSecondStage.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Appelée à chaque frame graphique par main.lua, très tôt (après sensors et ai, avant electrics). Pour chaque entrée : applique le filtre (direct/pad/clavier/IA), la mise en correspondance d'angle et les assistances de direction, borne la valeur, joue les sons de frein à main et publie le résultat dans input[nom] et electrics.values[nom_input].",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps de simulation en secondes."}},
+      "desc": "Called every graphics frame by main.lua, very early (after sensors and ai, before electrics). For each input: applies the filter (direct/pad/keyboard/AI), the angle mapping and the steering assists, clamps the value, plays the parking brake sounds and publishes the result in input[name] and electrics.values[name_input].",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Simulation time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     }
   },
   "classes": {
     "MT": {
-      "desc": "Métatable posée sur input.keys, uniquement pour la compatibilité : son __index loggue une erreur (une seule fois) indiquant que l'accès à input.keys est obsolète, puis renvoie rawget(M.keys, key).",
+      "desc": "Metatable set on input.keys, for compatibility only: its __index logs an error (only once) saying that access to input.keys is obsolete, then returns rawget(M.keys, key).",
       "functions": {
         "__index": {
-          "desc": "Journalise l'utilisation obsolète d'input.keys[key] puis renvoie la valeur brute.",
+          "desc": "Logs the obsolete use of input.keys[key] then returns the raw value.",
           "params": {
-            "tbl": {"type": "table", "desc": "Table input.keys."},
-            "key": {"type": "any", "desc": "Clé lue."}
+            "tbl": {
+              "type": "table",
+              "desc": "Table input.keys."
+            },
+            "key": {
+              "type": "any",
+              "desc": "Key read."
+            }
           },
           "internal": true
         }

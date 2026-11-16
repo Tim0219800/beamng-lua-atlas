@@ -2,34 +2,34 @@
 -- tim19Atlas stub generated from lua/common/libs/LuaIRC/set.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Ensemble de connexions IRC.
+--- Set of IRC connections.
 ---@class libs_LuaIRC_set_set
 local libs_LuaIRC_set_set = {}
 
---- Ajoute une connexion (sa socket est ajoutée à la liste surveillée).
----Source : lua/common/libs/LuaIRC/set.lua:20
----@param connection table Connexion IRC avec champ socket
+--- Adds a connection (its socket is added to the monitored list).
+---Source: lua/common/libs/LuaIRC/set.lua:20
+---@param connection table IRC connection with a socket field
 function libs_LuaIRC_set_set:add(connection) end
 
---- Comme select, mais en cas de timeout renvoie toutes les connexions (pour qu'elles puissent faire leur travail périodique).
----Source : lua/common/libs/LuaIRC/set.lua:53
----@return table  Connexions à traiter
+--- Like select, but on timeout returns all the connections (so that they can do their periodic work).
+---Source: lua/common/libs/LuaIRC/set.lua:53
+---@return table  Connections to process
 function libs_LuaIRC_set_set:poll() end
 
---- Retire une connexion de l'ensemble.
----Source : lua/common/libs/LuaIRC/set.lua:28
----@param connection table Connexion à retirer
+--- Removes a connection from the set.
+---Source: lua/common/libs/LuaIRC/set.lua:28
+---@param connection table Connection to remove
 function libs_LuaIRC_set_set:remove(connection) end
 
---- Appelle socket.select sur les sockets avec self.timeout et renvoie la liste des connexions prêtes à lire.
----Source : lua/common/libs/LuaIRC/set.lua:40
----@return table|nil  Connexions prêtes en lecture
----@return string|nil  Erreur (ex. "timeout")
+--- Calls socket.select on the sockets with self.timeout and returns the list of connections ready to read.
+---Source: lua/common/libs/LuaIRC/set.lua:40
+---@return table|nil  Connections ready for reading
+---@return string|nil  Error (e.g. "timeout")
 function libs_LuaIRC_set_set:select() end
 
---- Transforme la table t en ensemble (champs connections et sockets créés vides, métatable set).
----Source : lua/common/libs/LuaIRC/set.lua:14
----@param t table Table de configuration, ex. {timeout = 1}
----@return table  L'ensemble
+--- Turns the table t into a set (connections and sockets fields created empty, set metatable).
+---Source: lua/common/libs/LuaIRC/set.lua:14
+---@param t table Configuration table, e.g. {timeout = 1}
+---@return table  The set
 function new(t) end
 

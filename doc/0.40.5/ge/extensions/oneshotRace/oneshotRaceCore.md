@@ -1,46 +1,46 @@
 # `oneshotRace_oneshotRaceCore`
 
-*Fichier : `lua/ge/extensions/oneshotRace/oneshotRaceCore.lua` · VM : Game Engine (GE) · 283 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/oneshotRace/oneshotRaceCore.lua` · VM: Game Engine (GE) · 283 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `oneshotRace_oneshotRaceCore` : `extensions.load("oneshotRace_oneshotRaceCore")`, puis la globale `oneshotRace_oneshotRaceCore`
+**Access:** extension `oneshotRace_oneshotRaceCore`: `extensions.load("oneshotRace_oneshotRaceCore")`, then the global `oneshotRace_oneshotRaceCore`
 
-Cœur commun des assistants (wizards) de course « one shot » : à partir d'un descripteur, createConfigurator() renvoie un objet qui garde la sélection (niveau, piste/« middle », réglages, véhicule), la résume pour l'interface (getConfiguration), fournit les meilleurs scores et démarre la course. Utilisé par quickraceConfigurator et lightrunnerConfigurator ; un moddeur peut s'en servir pour créer un nouvel assistant de sélection.
+Common core of the "one shot" race wizards: from a descriptor, createConfigurator() returns an object that holds the selection (level, track/"middle", settings, vehicle), summarizes it for the interface (getConfiguration), provides the best scores and starts the race. Used by quickraceConfigurator and lightrunnerConfigurator; a modder can use it to create a new selection wizard.
 
-## Exemple
+## Example
 
 ```lua
 local cfg = require("ge/extensions/oneshotRace/oneshotRaceCore").createConfigurator(descripteur)
 cfg.selectLevel("glow_city"); cfg.selectMiddle("glow_city", "maPiste"); cfg.selectVehicle("sbr", "powerglow"); cfg.start()
 ```
 
-## Remarques
+## Notes
 
-- Contrat du descripteur : logTag (string) ; gridBackendName (backend ui_gridSelector source des niveaux et pistes) ; routeDataKey (clé dans les données de route du routeur) ; vehicleRestrictionMode (facultatif, passé à ui_vehicleSelector_general.setVehicleRestrictionMode pendant la route véhicule) ; defaultSettings() -> table ; onSelectMiddle(settings, middle) ; onUpdateSetting(settings, key, value, middle) (facultatif) ; extraSettingKeys (facultatif, clés acceptées en plus de celles de defaultSettings) ; buildLevelSummary(level) ; buildMiddleSummary(middle, selection) (doit contenir un champ settings) ; getHighscoreKey(selection, middle) -> {levelName, scenarioName, configKey} ou nil ; start(level, middle, settings, vehicleFile, selection) ; getDefaultSelection(selector) (facultatif, appelé une fois à la première entrée dans l'assistant, renvoie {levelName, middleName, vehicle = {model, config}} ou nil).
-- Dans selectVehicle, une config inconnue est remplacée par la config par défaut (default_pc) du modèle.
-- updateSetting refuse une clé qui n'existe pas dans les réglages courants ni dans extraSettingKeys. Un réglage dont la valeur initiale est nil (comme seed) doit donc figurer dans extraSettingKeys.
-- start() échoue (false) si niveau, piste ou modèle de véhicule ne sont pas sélectionnés.
-- Les trois premiers hooks d'entrée de route retirent toute restriction de véhicule ; seul onWizardVehicleRouteEnter applique vehicleRestrictionMode.
+- Descriptor contract: logTag (string); gridBackendName (ui_gridSelector backend that is the source of levels and tracks); routeDataKey (key in the router's route data); vehicleRestrictionMode (optional, passed to ui_vehicleSelector_general.setVehicleRestrictionMode during the vehicle route); defaultSettings() -> table; onSelectMiddle(settings, middle); onUpdateSetting(settings, key, value, middle) (optional); extraSettingKeys (optional, keys accepted in addition to those of defaultSettings); buildLevelSummary(level); buildMiddleSummary(middle, selection) (must contain a settings field); getHighscoreKey(selection, middle) -> {levelName, scenarioName, configKey} or nil; start(level, middle, settings, vehicleFile, selection); getDefaultSelection(selector) (optional, called once on first entry into the wizard, returns {levelName, middleName, vehicle = {model, config}} or nil).
+- In selectVehicle, an unknown config is replaced by the model's default config (default_pc).
+- updateSetting rejects a key that exists neither in the current settings nor in extraSettingKeys. A setting whose initial value is nil (like seed) must therefore be listed in extraSettingKeys.
+- start() fails (false) if level, track or vehicle model are not selected.
+- The first three route-entry hooks remove any vehicle restriction; only onWizardVehicleRouteEnter applies vehicleRestrictionMode.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `oneshotRace_oneshotRaceCore.createConfigurator(descriptor)` | Crée un configurateur lié à un descripteur. L'objet renvoyé (Cfg) possède : getSelection, selectLevel(levelName), selectMiddle(levelName, middleName), selectVehicle(model, config, additionalData), updateSetting(key, value), toggleShowLapRecords(), getHighscores(), getConfiguration(), onWizardRouteEnter / onWizardLevelRouteEnter / onWizardMiddleRouteEnter / onWizardVehicleRouteEnter(context, toRoute, fromRoute, data), start(). | 78 |
+| `oneshotRace_oneshotRaceCore.createConfigurator(descriptor)` | Creates a configurator bound to a descriptor. The returned object (Cfg) has: getSelection, selectLevel(levelName), selectMiddle(levelName, middleName), selectVehicle(model, config, additionalData), updateSetting(key, value), toggleShowLapRecords(), getHighscores(), getConfiguration(), onWizardRouteEnter / onWizardLevelRouteEnter / onWizardMiddleRouteEnter / onWizardVehicleRouteEnter(context, toRoute, fromRoute, data), start(). | 78 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `oneshotRace_oneshotRaceCore.createConfigurator(descriptor)`
 
-Crée un configurateur lié à un descripteur. L'objet renvoyé (Cfg) possède : getSelection, selectLevel(levelName), selectMiddle(levelName, middleName), selectVehicle(model, config, additionalData), updateSetting(key, value), toggleShowLapRecords(), getHighscores(), getConfiguration(), onWizardRouteEnter / onWizardLevelRouteEnter / onWizardMiddleRouteEnter / onWizardVehicleRouteEnter(context, toRoute, fromRoute, data), start().
+Creates a configurator bound to a descriptor. The returned object (Cfg) has: getSelection, selectLevel(levelName), selectMiddle(levelName, middleName), selectVehicle(model, config, additionalData), updateSetting(key, value), toggleShowLapRecords(), getHighscores(), getConfiguration(), onWizardRouteEnter / onWizardLevelRouteEnter / onWizardMiddleRouteEnter / onWizardVehicleRouteEnter(context, toRoute, fromRoute, data), start().
 
-- `descriptor` (*table*) : Descripteur respectant le contrat décrit dans les notes.
-- **renvoie** : table Configurateur (Cfg). getConfiguration renvoie {level, middle, vehicle, highscores, showLapRecords, isDisabled, todOptionKeys} ; isDisabled est vrai tant que niveau, piste et véhicule ne sont pas tous définis.
+- `descriptor` (*table*) : Descriptor following the contract described in the notes.
+- **returns**: table Configurator (Cfg). getConfiguration returns {level, middle, vehicle, highscores, showLapRecords, isDisabled, todOptionKeys}; isDisabled is true until level, track and vehicle are all set.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `todNames` | string[] | Noms des heures du jour proposées (night, sunrise, morning, earlyNoon, noon, lateNoon, afternoon, evening, sunset), indexées à partir de 1 (tod = 3 correspond à morning). |
+| `todNames` | string[] | Names of the proposed times of day (night, sunrise, morning, earlyNoon, noon, lateNoon, afternoon, evening, sunset), 1-based (tod = 3 corresponds to morning). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/oneshotRace/oneshotRaceCore.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/oneshotRace/oneshotRaceCore.lua`.*

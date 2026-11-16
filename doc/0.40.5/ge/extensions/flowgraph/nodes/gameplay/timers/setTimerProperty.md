@@ -1,23 +1,23 @@
 # `flowgraph_nodes_gameplay_timers_setTimerProperty`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/timers/setTimerProperty.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/timers/setTimerProperty.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/timers/setTimerProperty")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/timers/setTimerProperty")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Set Timer Property » (catégorie repeat_instant). Modifie un timer existant : progress (temps écoulé en s), pause, duration, ref (mode). Seules les propriétés dont le pin n'est pas nil sont changées.
+Flowgraph node "Set Timer Property" (category repeat_instant). Modifies an existing timer: progress (elapsed time in s), pause, duration, ref (mode). Only properties whose pin is not nil are changed.
 
-## Remarques
+## Notes
 
-- duration et ref ont des valeurs par défaut (5, dtSim) : sans pin connecté elles sont donc réécrites à chaque frame.
+- duration and ref have default values (5, dtSim): with no connected pin they are therefore rewritten every frame.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:postInit()` | Définit les valeurs prédéfinies du pin ref. | 20 |
-| `C:work()` | Applique progress, pause, duration et ref au timer via le module timer. | 24 |
+| `C:postInit()` | Defines the preset values of the ref pin. | 20 |
+| `C:work()` | Applies progress, pause, duration and ref to the timer via the timer module. | 24 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/timers/setTimerProperty.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/timers/setTimerProperty.lua`.*

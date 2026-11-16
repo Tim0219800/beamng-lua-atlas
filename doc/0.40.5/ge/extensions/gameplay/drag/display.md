@@ -1,185 +1,185 @@
 # `gameplay_drag_display`
 
-*Fichier : `lua/ge/extensions/gameplay/drag/display.lua` · VM : Game Engine (GE) · 1770 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drag/display.lua` · VM: Game Engine (GE) · 1770 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drag_display` : `extensions.load("gameplay_drag_display")`, puis la globale `gameplay_drag_display`
+**Access:** extension `gameplay_drag_display`: `extensions.load("gameplay_drag_display")`, then the global `gameplay_drag_display`
 
-Affichage de la piste de drag : arbre de départ (feux pré-stage, stage, trois ambres, vert, rouge, bleu global, feu gagnant, feu conducteur clignotant), panneaux de chrono/vitesse (chiffres 5 par couloir, temps en 3 décimales, vitesse en mph avec 2 décimales), messages flash, repère de guidage de staging, et événements UI (guihooks) pour l'app d'arbre. Il pilote les objets de scène nommés par couloir (displayTime1..5, displaySpeed1..5, displayLight) et applique les états reçus du réseau en multijoueur. Chargée à la demande par gameplay_drag_core ; un moddeur s'en sert surtout via les hooks et pour allumer/éteindre des feux.
+Drag track display: starting tree (pre-stage lights, stage, three ambers, green, red, global blue, winner light, flashing driver light), timing/speed panels (5 digits per lane, time with 3 decimals, speed in mph with 2 decimals), flash messages, staging guide marker, and UI events (guihooks) for the tree app. It drives the scene objects named per lane (displayTime1..5, displaySpeed1..5, displayLight) and applies the states received from the network in multiplayer. Loaded on demand by gameplay_drag_core; a modder mostly uses it through the hooks and to turn lights on/off.
 
-## Remarques
+## Notes
 
-- Les chiffres des panneaux sont mis en file (queueDigitShape/applyPendingDigitShapes) car changer le shapeName recharge le mesh : tout faire sur la frame d'arrivée gèlerait le jeu.
-- La vitesse affichée vient de timers en m/s multipliés par 2.23694 (mph) ; le temps est celui du timer important (importantTimerId, time_1_4 par défaut) ; rien n'est affiché tant que ce timer vaut 0.
-- Deux arbres supportés : treeType '.500' (par défaut) et '.400', gérés par handle500TreeLogic / handle400TreeLogic. En MP seul l'hôte pilote les feux de décompte ; les clients appliquent l'état reçu (updateTreeLightsFromNetwork).
-- Le feu conducteur clignote 6 fois à 6 Hz après l'allumage du feu gagnant.
-- Séquence ambre/vert de l'arbre (lightStages) : ambre 1 à 1,0 s, ambre 2 à 1,5 s, ambre 3 à 2,0 s, vert à 2,5 s (temps du laneTimer).
-- Option de jeu dragAssistStageGuideVisualizer : active le repère de guidage de staging (onPreRender).
-- M.alwaysShowStageApp vaut true : l'app de staging reste visible même loin de la ligne ; si false, elle est cachée au-delà de 10 m en freeroam.
-- Multiseat : les événements UI sont dupliqués par joueur sous le nom multiseatDrag.<joueur>.<événement>.
-- Les fonctions onBeforeDragUnloadAllExtensions et clearAll sont la même fonction.
+- The panel digits are queued (queueDigitShape/applyPendingDigitShapes) because changing the shapeName reloads the mesh: doing everything on the arrival frame would freeze the game.
+- The displayed speed comes from timers in m/s multiplied by 2.23694 (mph); the time is that of the important timer (importantTimerId, time_1_4 by default); nothing is displayed as long as this timer is 0.
+- Two supported trees: treeType '.500' (default) and '.400', handled by handle500TreeLogic / handle400TreeLogic. In MP only the host drives the countdown lights; clients apply the received state (updateTreeLightsFromNetwork).
+- The driver light flashes 6 times at 6 Hz after the winner light turns on.
+- Amber/green sequence of the tree (lightStages): amber 1 at 1.0 s, amber 2 at 1.5 s, amber 3 at 2.0 s, green at 2.5 s (laneTimer time).
+- Game option dragAssistStageGuideVisualizer: enables the staging guide marker (onPreRender).
+- M.alwaysShowStageApp is true: the staging app stays visible even far from the line; if false, it is hidden beyond 10 m in freeroam.
+- Multiseat: UI events are duplicated per player under the name multiseatDrag.<player>.<event>.
+- The functions onBeforeDragUnloadAllExtensions and clearAll are the same function.
 
-**Dépendances (chargées avant) :** `gameplay_drag_core`, `gameplay_drag_phaseHandlers`
+**Dependencies (loaded first):** `gameplay_drag_core`, `gameplay_drag_phaseHandlers`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drag_display.broadcastTreeLightStaging(visible)` | Affiche ou cache le voyant de staging de l'UI (guihook updateTreeLightStaging), et le répète pour chaque joueur multiseat. | 117 |
-| `gameplay_drag_display.clearAll()` | Éteint tous les feux de l'arbre, cache les chiffres des panneaux et le repère de staging, annule un flash en cours et réinitialise la graine aléatoire. | 684 |
-| `gameplay_drag_display.dragRaceEndLineReached(vehId)` | Ligne d'arrivée franchie : met à jour les panneaux (temps et vitesse) du couloir du racer. | 1651 |
-| `gameplay_drag_display.dragRaceVehicleStopped()` | Véhicule arrêté après la course : envoie updateTreeLightPhase=false à l'UI. N'efface pas les résultats affichés. | 1655 |
-| `gameplay_drag_display.onBeforeDragUnloadAllExtensions()` | Hook émis par core avant de décharger les extensions drag ; fait clearAll (même fonction). *(interne)* *(hook)* | 684 |
-| `gameplay_drag_display.onDragClear(options)` | Hook de clear complet : vide les caches joueur, fait clearAll puis lance un flash « reset système » (feux et chiffres clignotent 2 fois puis restent éteints) à partir d'un cache de la piste. *(interne)* *(hook)* | 1724 |
-| `gameplay_drag_display.onDragDataSet(data)` | Hook émis par core.setDragRaceData : construit l'arbre de feux et les chiffres de la piste. En MP, ne déclenche pas le staging et garde les chiffres de la manche précédente (réinitialise seulement les feux) ; en solo fait clearAll. *(interne)* *(hook)* | 1733 |
-| `gameplay_drag_display.onDragRaceTimerUpdated(raceId, mpPlayerId, timerName, timerValue)` | Hook MP : un timer d'un pilote distant est arrivé ; met à jour ses panneaux. *(interne)* *(hook)* | 1758 |
-| `gameplay_drag_display.onDragReset(options)` | Hook de reset : éteint les feux (mais garde les chiffres des résultats), annule un flash, remet à zéro les timers de couloir et les drapeaux treeStarted/raceStartBroadcasted. *(interne)* *(hook)* | 1711 |
-| `gameplay_drag_display.onExtensionLoaded()` | Hook de chargement : init() puis clearAll(). *(interne)* *(hook)* | 695 |
-| `gameplay_drag_display.onPreRender(dtReal, dtSim, dtRaw)` | Hook de pré-rendu : met à jour ou efface le repère de guidage de staging selon l'option dragAssistStageGuideVisualizer. *(interne)* *(hook)* | 1350 |
-| `gameplay_drag_display.onUpdate(dtReal, dtSim, dtRaw)` | Hook par frame : applique les chiffres en attente, envoie les mises à jour d'arbre différées (MP), avance l'éventuel flash, vérifie la visibilité de l'app de staging, fait avancer le décompte de chaque racer et le clignotement du feu conducteur. *(interne)* *(hook)* | 1303 |
-| `gameplay_drag_display.onWinnerLightOn(lane)` | Allume le feu gagnant du couloir et fait clignoter son feu conducteur. *(hook)* | 1365 |
-| `gameplay_drag_display.preStageLightOff(vehId)` | Éteint le feu de pré-stage du couloir du racer et met l'UI à jour. | 1472 |
-| `gameplay_drag_display.preStageLightOn(vehId)` | Allume le feu de pré-stage du couloir du racer, met l'UI à jour et affiche le message flash ui.drag.flash.preStage pour un racer jouable. | 1437 |
-| `gameplay_drag_display.resetDragRaceValues()` | Remet à zéro les timers de couloir de l'arbre (laneTimer, laneTimerFlag, dialOffset) et les drapeaux treeStarted/raceStartBroadcasted de chaque racer. | 1681 |
-| `gameplay_drag_display.setDisqualifiedLights(vehId)` | Éteint les ambres du racer disqualifié ; si la raison est le faux départ (redLightReason), éteint le vert et allume le rouge. Efface les panneaux, émet startRaceFromTree et affiche la raison en message flash (5 s) pour un racer jouable. | 1597 |
-| `gameplay_drag_display.stageLightOff(vehId)` | Éteint le feu de stage, le feu bleu, décrémente le compteur de racers en stage et synchronise l'état (MP : drag.syncStageLightState). | 1537 |
-| `gameplay_drag_display.stageLightOn(vehId)` | Allume le feu de stage du racer ; quand tous les couloirs sont en stage, allume le feu bleu. Met l'UI à jour, synchronise l'état (MP) et affiche ui.drag.flash.stage pour un racer jouable. | 1500 |
-| `gameplay_drag_display.startDragCountdown(vehId, dial)` | Démarre le décompte de l'arbre pour un racer en phase 2 'countdown' : émet onDragCountdownStarted, met treeStarted à true et règle dialOffset (dial moins le temps déjà écoulé depuis le départ MP). | 1568 |
-| `gameplay_drag_display.stoppingVehicleDrag(vehId)` | Affiche le message flash missions.dragRace.gameplay.inLine (5 s) pour un racer jouable. | 1644 |
-| `gameplay_drag_display.updateTreeLightsFromNetwork(lane, lightState)` | Applique à un couloir l'état de feux reçu du réseau (countDownLights, stageLights) : met à jour isOn, les objets de scène, et l'UI du joueur du couloir (et multiseat). Construit l'arbre s'il n'existe pas encore. | 455 |
+| `gameplay_drag_display.broadcastTreeLightStaging(visible)` | Shows or hides the UI staging light (guihook updateTreeLightStaging), and repeats it for each multiseat player. | 117 |
+| `gameplay_drag_display.clearAll()` | Turns off all the tree lights, hides the panel digits and the staging marker, cancels a flash in progress and resets the random seed. | 684 |
+| `gameplay_drag_display.dragRaceEndLineReached(vehId)` | Finish line crossed: updates the panels (time and speed) of the racer's lane. | 1651 |
+| `gameplay_drag_display.dragRaceVehicleStopped()` | Vehicle stopped after the race: sends updateTreeLightPhase=false to the UI. Does not clear the displayed results. | 1655 |
+| `gameplay_drag_display.onBeforeDragUnloadAllExtensions()` | Hook emitted by core before unloading the drag extensions; does clearAll (same function). *(internal)* *(hook)* | 684 |
+| `gameplay_drag_display.onDragClear(options)` | Full clear hook: empties the player caches, does clearAll then starts a "system reset" flash (lights and digits blink twice then stay off) from a track cache. *(internal)* *(hook)* | 1724 |
+| `gameplay_drag_display.onDragDataSet(data)` | Hook emitted by core.setDragRaceData: builds the track's light tree and digits. In MP, does not trigger staging and keeps the digits of the previous round (only resets the lights); in solo does clearAll. *(internal)* *(hook)* | 1733 |
+| `gameplay_drag_display.onDragRaceTimerUpdated(raceId, mpPlayerId, timerName, timerValue)` | MP hook: a timer from a remote driver arrived; updates their panels. *(internal)* *(hook)* | 1758 |
+| `gameplay_drag_display.onDragReset(options)` | Reset hook: turns off the lights (but keeps the result digits), cancels a flash, resets the lane timers and the treeStarted/raceStartBroadcasted flags. *(internal)* *(hook)* | 1711 |
+| `gameplay_drag_display.onExtensionLoaded()` | Load hook: init() then clearAll(). *(internal)* *(hook)* | 695 |
+| `gameplay_drag_display.onPreRender(dtReal, dtSim, dtRaw)` | Pre-render hook: updates or clears the staging guide marker according to the dragAssistStageGuideVisualizer option. *(internal)* *(hook)* | 1350 |
+| `gameplay_drag_display.onUpdate(dtReal, dtSim, dtRaw)` | Per-frame hook: applies the pending digits, sends the deferred tree updates (MP), advances the current flash if any, checks the visibility of the staging app, advances each racer's countdown and the driver light blinking. *(internal)* *(hook)* | 1303 |
+| `gameplay_drag_display.onWinnerLightOn(lane)` | Turns on the lane's winner light and makes its driver light flash. *(hook)* | 1365 |
+| `gameplay_drag_display.preStageLightOff(vehId)` | Turns off the pre-stage light of the racer's lane and updates the UI. | 1472 |
+| `gameplay_drag_display.preStageLightOn(vehId)` | Turns on the pre-stage light of the racer's lane, updates the UI and shows the flash message ui.drag.flash.preStage for a playable racer. | 1437 |
+| `gameplay_drag_display.resetDragRaceValues()` | Resets the tree's lane timers (laneTimer, laneTimerFlag, dialOffset) and the treeStarted/raceStartBroadcasted flags of each racer. | 1681 |
+| `gameplay_drag_display.setDisqualifiedLights(vehId)` | Turns off the ambers of the disqualified racer; if the reason is the false start (redLightReason), turns off the green and turns on the red. Clears the panels, emits startRaceFromTree and shows the reason as a flash message (5 s) for a playable racer. | 1597 |
+| `gameplay_drag_display.stageLightOff(vehId)` | Turns off the stage light and the blue light, decrements the count of racers in stage and synchronizes the state (MP: drag.syncStageLightState). | 1537 |
+| `gameplay_drag_display.stageLightOn(vehId)` | Turns on the racer's stage light; when all lanes are in stage, turns on the blue light. Updates the UI, synchronizes the state (MP) and shows ui.drag.flash.stage for a playable racer. | 1500 |
+| `gameplay_drag_display.startDragCountdown(vehId, dial)` | Starts the tree countdown for a racer in phase 2 'countdown': emits onDragCountdownStarted, sets treeStarted to true and sets dialOffset (dial minus the time already elapsed since the MP start). | 1568 |
+| `gameplay_drag_display.stoppingVehicleDrag(vehId)` | Shows the flash message missions.dragRace.gameplay.inLine (5 s) for a playable racer. | 1644 |
+| `gameplay_drag_display.updateTreeLightsFromNetwork(lane, lightState)` | Applies to a lane the light state received from the network (countDownLights, stageLights): updates isOn, the scene objects, and the UI of the lane's player (and multiseat). Builds the tree if it does not exist yet. | 455 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drag_display.broadcastTreeLightStaging(visible)`
 
-Affiche ou cache le voyant de staging de l'UI (guihook updateTreeLightStaging), et le répète pour chaque joueur multiseat.
+Shows or hides the UI staging light (guihook updateTreeLightStaging), and repeats it for each multiseat player.
 
-- `visible` (*boolean*) : true pour afficher.
+- `visible` (*boolean*) : true to show.
 
 #### `gameplay_drag_display.dragRaceEndLineReached(vehId)`
 
-Ligne d'arrivée franchie : met à jour les panneaux (temps et vitesse) du couloir du racer.
+Finish line crossed: updates the panels (time and speed) of the racer's lane.
 
-- `vehId` (*integer*) : ID du véhicule du racer.
+- `vehId` (*integer*) : Racer's vehicle ID.
 
 #### `gameplay_drag_display.onDragClear(options)`
 
-Hook de clear complet : vide les caches joueur, fait clearAll puis lance un flash « reset système » (feux et chiffres clignotent 2 fois puis restent éteints) à partir d'un cache de la piste.
+Full clear hook: empties the player caches, does clearAll then starts a "system reset" flash (lights and digits blink twice then stay off) from a track cache.
 
-- `options` (*table*) : Options du clear (non utilisées).
+- `options` (*table*) : Clear options (unused).
 
 #### `gameplay_drag_display.onDragDataSet(data)`
 
-Hook émis par core.setDragRaceData : construit l'arbre de feux et les chiffres de la piste. En MP, ne déclenche pas le staging et garde les chiffres de la manche précédente (réinitialise seulement les feux) ; en solo fait clearAll.
+Hook emitted by core.setDragRaceData: builds the track's light tree and digits. In MP, does not trigger staging and keeps the digits of the previous round (only resets the lights); in solo does clearAll.
 
-- `data` (*table*) : Données de piste armées.
+- `data` (*table*) : Armed track data.
 
 #### `gameplay_drag_display.onDragRaceTimerUpdated(raceId, mpPlayerId, timerName, timerValue)`
 
-Hook MP : un timer d'un pilote distant est arrivé ; met à jour ses panneaux.
+MP hook: a timer from a remote driver arrived; updates their panels.
 
-- `raceId` (*any*) : Identifiant de course.
-- `mpPlayerId` (*any*) : Joueur MP.
-- `timerName` (*string*) : Nom du timer.
-- `timerValue` (*number*) : Valeur.
+- `raceId` (*any*) : Race identifier.
+- `mpPlayerId` (*any*) : MP player.
+- `timerName` (*string*) : Timer name.
+- `timerValue` (*number*) : Value.
 
 #### `gameplay_drag_display.onDragReset(options)`
 
-Hook de reset : éteint les feux (mais garde les chiffres des résultats), annule un flash, remet à zéro les timers de couloir et les drapeaux treeStarted/raceStartBroadcasted.
+Reset hook: turns off the lights (but keeps the result digits), cancels a flash, resets the lane timers and the treeStarted/raceStartBroadcasted flags.
 
-- `options` (*table*) : Options (raceId...), non utilisées.
+- `options` (*table*) : Options (raceId...), unused.
 
 #### `gameplay_drag_display.onPreRender(dtReal, dtSim, dtRaw)`
 
-Hook de pré-rendu : met à jour ou efface le repère de guidage de staging selon l'option dragAssistStageGuideVisualizer.
+Pre-render hook: updates or clears the staging guide marker according to the dragAssistStageGuideVisualizer option.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
-- `dtRaw` (*number*) : Delta brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
+- `dtRaw` (*number*) : Raw delta (s).
 
 #### `gameplay_drag_display.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook par frame : applique les chiffres en attente, envoie les mises à jour d'arbre différées (MP), avance l'éventuel flash, vérifie la visibilité de l'app de staging, fait avancer le décompte de chaque racer et le clignotement du feu conducteur.
+Per-frame hook: applies the pending digits, sends the deferred tree updates (MP), advances the current flash if any, checks the visibility of the staging app, advances each racer's countdown and the driver light blinking.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
-- `dtRaw` (*number*) : Delta brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
+- `dtRaw` (*number*) : Raw delta (s).
 
 #### `gameplay_drag_display.onWinnerLightOn(lane)`
 
-Allume le feu gagnant du couloir et fait clignoter son feu conducteur.
+Turns on the lane's winner light and makes its driver light flash.
 
-- `lane` (*integer*) : Couloir gagnant.
+- `lane` (*integer*) : Winning lane.
 
 #### `gameplay_drag_display.preStageLightOff(vehId)`
 
-Éteint le feu de pré-stage du couloir du racer et met l'UI à jour.
+Turns off the pre-stage light of the racer's lane and updates the UI.
 
-- `vehId` (*integer*) : ID du véhicule.
+- `vehId` (*integer*) : Vehicle ID.
 
 #### `gameplay_drag_display.preStageLightOn(vehId)`
 
-Allume le feu de pré-stage du couloir du racer, met l'UI à jour et affiche le message flash ui.drag.flash.preStage pour un racer jouable.
+Turns on the pre-stage light of the racer's lane, updates the UI and shows the flash message ui.drag.flash.preStage for a playable racer.
 
-- `vehId` (*integer*) : ID du véhicule.
+- `vehId` (*integer*) : Vehicle ID.
 
 #### `gameplay_drag_display.setDisqualifiedLights(vehId)`
 
-Éteint les ambres du racer disqualifié ; si la raison est le faux départ (redLightReason), éteint le vert et allume le rouge. Efface les panneaux, émet startRaceFromTree et affiche la raison en message flash (5 s) pour un racer jouable.
+Turns off the ambers of the disqualified racer; if the reason is the false start (redLightReason), turns off the green and turns on the red. Clears the panels, emits startRaceFromTree and shows the reason as a flash message (5 s) for a playable racer.
 
-- `vehId` (*integer*) : ID du véhicule disqualifié.
+- `vehId` (*integer*) : ID of the disqualified vehicle.
 
 #### `gameplay_drag_display.stageLightOff(vehId)`
 
-Éteint le feu de stage, le feu bleu, décrémente le compteur de racers en stage et synchronise l'état (MP : drag.syncStageLightState).
+Turns off the stage light and the blue light, decrements the count of racers in stage and synchronizes the state (MP: drag.syncStageLightState).
 
-- `vehId` (*integer*) : ID du véhicule.
+- `vehId` (*integer*) : Vehicle ID.
 
 #### `gameplay_drag_display.stageLightOn(vehId)`
 
-Allume le feu de stage du racer ; quand tous les couloirs sont en stage, allume le feu bleu. Met l'UI à jour, synchronise l'état (MP) et affiche ui.drag.flash.stage pour un racer jouable.
+Turns on the racer's stage light; when all lanes are in stage, turns on the blue light. Updates the UI, synchronizes the state (MP) and shows ui.drag.flash.stage for a playable racer.
 
-- `vehId` (*integer*) : ID du véhicule.
+- `vehId` (*integer*) : Vehicle ID.
 
 #### `gameplay_drag_display.startDragCountdown(vehId, dial)`
 
-Démarre le décompte de l'arbre pour un racer en phase 2 'countdown' : émet onDragCountdownStarted, met treeStarted à true et règle dialOffset (dial moins le temps déjà écoulé depuis le départ MP).
+Starts the tree countdown for a racer in phase 2 'countdown': emits onDragCountdownStarted, sets treeStarted to true and sets dialOffset (dial minus the time already elapsed since the MP start).
 
-- `vehId` (*integer*) : ID du véhicule.
-- `dial` (*number*) : Délai avant le début de la séquence de feux (s).
+- `vehId` (*integer*) : Vehicle ID.
+- `dial` (*number*) : Delay before the start of the light sequence (s).
 
 #### `gameplay_drag_display.stoppingVehicleDrag(vehId)`
 
-Affiche le message flash missions.dragRace.gameplay.inLine (5 s) pour un racer jouable.
+Shows the flash message missions.dragRace.gameplay.inLine (5 s) for a playable racer.
 
-- `vehId` (*integer*) : ID du véhicule.
+- `vehId` (*integer*) : Vehicle ID.
 
 #### `gameplay_drag_display.updateTreeLightsFromNetwork(lane, lightState)`
 
-Applique à un couloir l'état de feux reçu du réseau (countDownLights, stageLights) : met à jour isOn, les objets de scène, et l'UI du joueur du couloir (et multiseat). Construit l'arbre s'il n'existe pas encore.
+Applies to a lane the light state received from the network (countDownLights, stageLights): updates isOn, the scene objects, and the UI of the lane's player (and multiseat). Builds the tree if it does not exist yet.
 
-- `lane` (*integer*) : Couloir.
+- `lane` (*integer*) : Lane.
 - `lightState` (*table*) : {countDownLights = {amberLight1..3, greenLight, redLight}, stageLights = {prestageLight, stageLight}}.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `alwaysShowStageApp` | boolean | true par défaut : garde l'app de staging visible quelle que soit la distance à la ligne de stage. |
+| `alwaysShowStageApp` | boolean | true by default: keeps the staging app visible regardless of the distance to the stage line. |
 | `dependencies` | string[] | gameplay_drag_core, gameplay_drag_phaseHandlers. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onDragCountdownStarted` — écouté par 1 module(s)
+- `onDragCountdownStarted` — listened to by 1 module(s)
 - `startRaceFromTree`
 
-**Évènements UI (guihooks.trigger) :** `ScenarioFlashMessage`, `TopCenterAppsFlashMessage`, `updateTreeLightApp`, `updateTreeLightDistance`, `updateTreeLightPhase`, `updateTreeLightStaging`
+**UI events (guihooks.trigger):** `ScenarioFlashMessage`, `TopCenterAppsFlashMessage`, `updateTreeLightApp`, `updateTreeLightDistance`, `updateTreeLightPhase`, `updateTreeLightStaging`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drag/display.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drag/display.lua`.*

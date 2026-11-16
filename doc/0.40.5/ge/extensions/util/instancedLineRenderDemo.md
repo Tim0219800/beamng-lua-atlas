@@ -1,44 +1,44 @@
 # `util_instancedLineRenderDemo`
 
-*Fichier : `lua/ge/extensions/util/instancedLineRenderDemo.lua` · VM : Game Engine (GE) · 248 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/instancedLineRenderDemo.lua` · VM: Game Engine (GE) · 248 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_instancedLineRenderDemo` : `extensions.load("util_instancedLineRenderDemo")`, puis la globale `util_instancedLineRenderDemo`
+**Access:** extension `util_instancedLineRenderDemo`: `extensions.load("util_instancedLineRenderDemo")`, then the global `util_instancedLineRenderDemo`
 
-Démo technique du dessin de lignes « instanciées » du debugDrawer (drawLineInstance, drawDot), qui permettent des lignes épaisses avec contour et extrémités arrondies. Une fois chargée, l'extension lance une simulation de 6 masses en attraction (inspirée d'un n-body JavaScript) et dessine chaque frame leurs trajectoires à 3 m de haut au-dessus de l'origine, deux fois : sans test de profondeur et avec (décalé de 5 m en X). Les autres démos (grille, sinusoïdes, bords, feu tricolore) sont du code mort commenté dans onPreRender.
+Technical demo of "instanced" line drawing in the debugDrawer (drawLineInstance, drawDot), which allows thick lines with an outline and rounded ends. Once loaded, the extension runs a simulation of 6 attracting masses (inspired by a JavaScript n-body) and draws their trajectories every frame at 3 m height above the origin, twice: without depth test and with it (offset by 5 m in X). The other demos (grid, sine waves, edges, traffic light) are dead code commented out in onPreRender.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('util_instancedLineRenderDemo')
 ```
 
-## Remarques
+## Notes
 
-- Les trajectoires s'accumulent (jusqu'à 10000 segments par masse, puis la table est vidée) : le coût de dessin augmente avec le temps.
-- Il n'y a pas de décharge propre : décharger l'extension arrête simplement le dessin. Recharger l'extension ajoute de nouvelles masses sans effacer les anciennes (startSim ne vide pas la table masses).
-- L'appel vec3Random(1) ignore son argument ; startSim crée nMasses+1 = 6 masses (boucle de 0 à nMasses).
-- testGrid, drawSinWaveTest, drawEdgeTest et drawSignal ne sont jamais appelées (appels commentés).
+- Trajectories accumulate (up to 10000 segments per mass, then the table is cleared): the drawing cost increases over time.
+- There is no clean unload: unloading the extension simply stops the drawing. Reloading the extension adds new masses without clearing the old ones (startSim does not clear the masses table).
+- The vec3Random(1) call ignores its argument; startSim creates nMasses+1 = 6 masses (loop from 0 to nMasses).
+- testGrid, drawSinWaveTest, drawEdgeTest and drawSignal are never called (calls commented out).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_instancedLineRenderDemo.onExtensionLoaded()` | Appelé au chargement de l'extension : initialise les masses de la simulation (startSim). *(interne)* *(hook)* | 240 |
-| `util_instancedLineRenderDemo.onPreRender(dtReal, dtSim, dtRaw)` | Hook appelé chaque frame avant le rendu. Avance le temps de la démo, fait un pas de simulation et dessine les trajectoires (sans puis avec profondeur). *(interne)* *(hook)* | 222 |
+| `util_instancedLineRenderDemo.onExtensionLoaded()` | Called when the extension is loaded: initializes the simulation masses (startSim). *(internal)* *(hook)* | 240 |
+| `util_instancedLineRenderDemo.onPreRender(dtReal, dtSim, dtRaw)` | Hook called every frame before rendering. Advances the demo time, performs a simulation step and draws the trajectories (without then with depth). *(internal)* *(hook)* | 222 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_instancedLineRenderDemo.onPreRender(dtReal, dtSim, dtRaw)`
 
-Hook appelé chaque frame avant le rendu. Avance le temps de la démo, fait un pas de simulation et dessine les trajectoires (sans puis avec profondeur).
+Hook called every frame before rendering. Advances the demo time, performs a simulation step and draws the trajectories (without then with depth).
 
-- `dtReal` (*number*) : Delta de temps réel en secondes
-- `dtSim` (*number*) : Delta de temps de simulation en secondes (utilisé par la démo)
-- `dtRaw` (*number*) : Delta de temps brut (non utilisé)
+- `dtReal` (*number*) : Real-time delta in seconds
+- `dtSim` (*number*) : Simulation time delta in seconds (used by the demo)
+- `dtRaw` (*number*) : Raw time delta (unused)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawDot`, `drawLine`, `drawLineInstance`, `drawText`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/instancedLineRenderDemo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/instancedLineRenderDemo.lua`.*

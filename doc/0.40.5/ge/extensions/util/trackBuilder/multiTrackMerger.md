@@ -1,56 +1,56 @@
 # `util_trackBuilder_multiTrackMerger`
 
-*Fichier : `lua/ge/extensions/util/trackBuilder/multiTrackMerger.lua` · VM : Game Engine (GE) · 367 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/trackBuilder/multiTrackMerger.lua` · VM: Game Engine (GE) · 367 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_trackBuilder_multiTrackMerger` : `extensions.load("util_trackBuilder_multiTrackMerger")`, puis la globale `util_trackBuilder_multiTrackMerger`
+**Access:** extension `util_trackBuilder_multiTrackMerger`: `extensions.load("util_trackBuilder_multiTrackMerger")`, then the global `util_trackBuilder_multiTrackMerger`
 
-Construit le mesh de raccord (intersection) entre plusieurs segments de piste du Track Builder qui se rejoignent à un même point. Il prend l'extrémité de chaque segment, relie les extrémités consécutives par des courbes de Bézier (bords), génère pour chacune une pseudo-segment (centre 'halfRegular' + bordure) à l'aide de basicCenters et basicBorders, ajoute un remplissage central s'il y a plus de deux segments, puis crée un objet ProceduralMesh dans MissionGroup.
+Builds the junction (intersection) mesh between several Track Builder track segments that meet at the same point. It takes the end of each segment, links consecutive ends with Bézier curves (edges), generates a pseudo-segment for each (center 'halfRegular' + border) using basicCenters and basicBorders, adds a central fill if there are more than two segments, then creates a ProceduralMesh object in MissionGroup.
 
-## Remarques
+## Notes
 
-- setReferences doit être appelé avant mergeMultiTrack : il injecte les modules basicCenters et basicBorders (list.basicCenters, list.basicBorders) ; sinon l'appel échoue sur des références nil.
-- mergeMultiTrack dessine des sphères de débogage (debugDrawer:drawSphere rouge pour chaque extrémité, verte pour le centre) au moment de l'appel.
-- Le nom de l'objet est 'procMerger-' suivi de [r]index x sub de chaque segment ; un nom identique pour la même intersection peut entrer en conflit.
-- L'objet créé a canSave = false.
-- Chaque entrée de segments est une table {segment, reverse, index, sub} ; si reverse est vrai, le premier point est utilisé avec orientation, bank et pitch inversés.
+- setReferences must be called before mergeMultiTrack: it injects the basicCenters and basicBorders modules (list.basicCenters, list.basicBorders); otherwise the call fails on nil references.
+- mergeMultiTrack draws debug spheres (debugDrawer:drawSphere red for each end, green for the center) at call time.
+- The object name is 'procMerger-' followed by [r]index x sub of each segment; an identical name for the same intersection can conflict.
+- The created object has canSave = false.
+- Each entry of segments is a table {segment, reverse, index, sub}; if reverse is true, the first point is used with orientation, bank and pitch reversed.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_trackBuilder_multiTrackMerger.mergeMultiTrack(segments, centerMat, borderMat, borderMesh)` | Crée l'objet ProceduralMesh qui raccorde les segments donnés. Matériaux par défaut : 'track_editor_A_center', 'track_editor_A_border', bordure 'regular'. | 352 |
-| `util_trackBuilder_multiTrackMerger.setMaterials(intersection, centerMat, borderMat)` | Change les matériaux d'un raccord déjà créé : un matériau de centre par segment, un de bordure par segment, et le matériau de remplissage s'il y a plus de deux segments. | 338 |
-| `util_trackBuilder_multiTrackMerger.setReferences(list)` | Enregistre les modules dont ce fichier dépend. *(interne)* | 360 |
+| `util_trackBuilder_multiTrackMerger.mergeMultiTrack(segments, centerMat, borderMat, borderMesh)` | Creates the ProceduralMesh object that joins the given segments. Default materials: 'track_editor_A_center', 'track_editor_A_border', border 'regular'. | 352 |
+| `util_trackBuilder_multiTrackMerger.setMaterials(intersection, centerMat, borderMat)` | Changes the materials of an already created junction: one center material per segment, one border material per segment, and the fill material if there are more than two segments. | 338 |
+| `util_trackBuilder_multiTrackMerger.setReferences(list)` | Registers the modules this file depends on. *(internal)* | 360 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_trackBuilder_multiTrackMerger.mergeMultiTrack(segments, centerMat, borderMat, borderMesh)`
 
-Crée l'objet ProceduralMesh qui raccorde les segments donnés. Matériaux par défaut : 'track_editor_A_center', 'track_editor_A_border', bordure 'regular'.
+Creates the ProceduralMesh object that joins the given segments. Default materials: 'track_editor_A_center', 'track_editor_A_border', border 'regular'.
 
-- `segments` (*table[]*) : Liste d'entrées {segment, reverse, index, sub} décrivant les extrémités à raccorder.
-- `centerMat` (*string|nil*) : Matériau du centre.
-- `borderMat` (*string|nil*) : Matériau de la bordure.
-- `borderMesh` (*string|nil*) : Nom du profil de bordure (voir basicBorders).
-- **renvoie** : userdata L'objet ProceduralMesh créé.
+- `segments` (*table[]*) : List of entries {segment, reverse, index, sub} describing the ends to join.
+- `centerMat` (*string|nil*) : Center material.
+- `borderMat` (*string|nil*) : Border material.
+- `borderMesh` (*string|nil*) : Name of the border profile (see basicBorders).
+- **returns**: userdata The created ProceduralMesh object.
 
 #### `util_trackBuilder_multiTrackMerger.setMaterials(intersection, centerMat, borderMat)`
 
-Change les matériaux d'un raccord déjà créé : un matériau de centre par segment, un de bordure par segment, et le matériau de remplissage s'il y a plus de deux segments.
+Changes the materials of an already created junction: one center material per segment, one border material per segment, and the fill material if there are more than two segments.
 
-- `intersection` (*table*) : Table contenant .segments (liste) et .obj (le ProceduralMesh renvoyé par mergeMultiTrack).
-- `centerMat` (*string|nil*) : Matériau du centre ; ignoré si nil.
-- `borderMat` (*string|nil*) : Matériau de la bordure ; ignoré si nil.
+- `intersection` (*table*) : Table containing .segments (list) and .obj (the ProceduralMesh returned by mergeMultiTrack).
+- `centerMat` (*string|nil*) : Center material; ignored if nil.
+- `borderMat` (*string|nil*) : Border material; ignored if nil.
 
 #### `util_trackBuilder_multiTrackMerger.setReferences(list)`
 
-Enregistre les modules dont ce fichier dépend.
+Registers the modules this file depends on.
 
 - `list` (*table*) : Table {basicCenters = module, basicBorders = module}.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawSphere`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/trackBuilder/multiTrackMerger.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/trackBuilder/multiTrackMerger.lua`.*

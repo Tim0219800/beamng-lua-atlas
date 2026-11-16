@@ -1,25 +1,25 @@
 # `gameplay_traffic_roles_empty`
 
-*Fichier : `lua/ge/extensions/gameplay/traffic/roles/empty.lua` · VM : Game Engine (GE) · 17 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/traffic/roles/empty.lua` · VM: Game Engine (GE) · 17 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/traffic/roles/empty")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/traffic/roles/empty")` (file under extensions/ but not a regular extension)
 
-Rôle de trafic minimal (« empty »). Il hérite de baseRole mais vide la table d'actions : aucune action supplémentaire ni IA spécifique n'est appliquée au véhicule. Utile pour un véhicule de trafic qu'on veut laisser totalement passif.
+Minimal traffic role ("empty"). It inherits from baseRole but empties the actions table: no extra action or specific AI is applied to the vehicle. Useful for a traffic vehicle you want to leave completely passive.
 
-## Remarques
+## Notes
 
-- Le module renvoie un constructeur : require('/lua/ge/extensions/gameplay/traffic/baseRole')(C, ...) enveloppe la classe C.
-- init copie les baseActions de baseRole dans self.actions puis met self.baseActions à nil.
+- The module returns a constructor: require('/lua/ge/extensions/gameplay/traffic/baseRole')(C, ...) wraps class C.
+- init copies the baseActions of baseRole into self.actions then sets self.baseActions to nil.
 
-## Classe `C`
+## Class `C`
 
-Classe du rôle, complétée par baseRole.
+Role class, completed by baseRole.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_traffic_roles_empty")(options)`.
+The module returns a constructor: `local obj = require("gameplay_traffic_roles_empty")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Appelé à la création du rôle. Copie les actions de base (self.baseActions) dans self.actions, puis supprime self.baseActions ; aucune action propre au rôle n'est ajoutée. | 9 |
+| `C:init()` | Called when the role is created. Copies the base actions (self.baseActions) into self.actions, then removes self.baseActions; no role-specific action is added. | 9 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/traffic/roles/empty.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/traffic/roles/empty.lua`.*

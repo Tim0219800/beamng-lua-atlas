@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/math/quaternion/lookAt.lua",
-  "module": "Noeud flowgraph 'Look At' (categorie simple). Calcule le quaternion qui oriente une direction allant du point 'from' vers 'to', avec le vecteur 'up' (cache, defaut (0,0,1)). Utilise quat:setFromDir.",
+  "module": "Flowgraph node 'Look At' (simple category). Computes the quaternion that orients a direction going from point 'from' to 'to', with the 'up' vector (hidden, default (0,0,1)). Uses quat:setFromDir.",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         },
         "work": {
-          "desc": "Si from et to existent : direction = to - from, up = pin up ou (0,0,1), ecrit la table du quaternion sur 'value'. Sinon ne fait rien.",
+          "desc": "If from and to exist: direction = to - from, up = pin up or (0,0,1), writes the quaternion table to 'value'. Otherwise does nothing.",
           "internal": true
         }
       }

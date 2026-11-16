@@ -1,0 +1,22 @@
+# `flowgraph_nodes_vehicle_ai_follow`
+
+*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/follow.lua` · VM : Game Engine (GE) · 37 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+
+**Accès :** `require("extensions/flowgraph/nodes/vehicle/ai/follow")` (fichier sous extensions/ mais pas une extension classique)
+
+Nœud « AI Follow » (couleur ai, once_p_duration). Met un véhicule en mode IA « follow » pour suivre un autre véhicule, sans contact intentionnel. Entrées : aiVehId (sans valeur = véhicule du joueur), targetId (par défaut le véhicule du joueur).
+
+## Classe `C`
+
+Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+
+| Méthode | Description | Ligne |
+|---|---|---|
+| `C:workOnce()` | Envoie au véhicule ai.setMode("follow") puis ai.setTargetObjectID(targetId). | 22 |
+
+## Appels vers le moteur (C++)
+
+- `be:` `getPlayerVehicleID`
+
+---
+*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/follow.lua`.*

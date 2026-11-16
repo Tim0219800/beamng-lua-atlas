@@ -1,7 +1,10 @@
 {
   "path": "lua/ge/extensions/ui/router/guards/vehicleConfiguration.lua",
-  "module": "Garde de sortie « confirmVehicleConfigurationCombinedExit » : délègue à ui_pause_vehicleConfigurationGuard.confirmExit(route, params, context) la confirmation de sortie de l'écran de configuration de véhicule ; autorise si ce module n'est pas chargé.",
+  "module": "Exit guard \"confirmVehicleConfigurationCombinedExit\": delegates to ui_pause_vehicleConfigurationGuard.confirmExit(route, params, context) the exit confirmation of the vehicle configuration screen; allows if this module is not loaded.",
   "fields": {
-    "guards": {"type": "table<string, function>", "desc": "Table des gardes exposées : {confirmVehicleConfigurationCombinedExit = function(route, params, context)}."}
+    "guards": {
+      "type": "table<string, function>",
+      "desc": "Table of exposed guards: {confirmVehicleConfigurationCombinedExit = function(route, params, context)}."
+    }
   }
 }

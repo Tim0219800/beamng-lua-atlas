@@ -1,92 +1,92 @@
 # `util_screenshotCreator_lightingSetup`
 
-*Fichier : `lua/ge/extensions/util/screenshotCreator/lightingSetup.lua` · VM : Game Engine (GE) · 939 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/screenshotCreator/lightingSetup.lua` · VM: Game Engine (GE) · 939 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_screenshotCreator_lightingSetup` : `extensions.load("util_screenshotCreator_lightingSetup")`, puis la globale `util_screenshotCreator_lightingSetup`
+**Access:** extension `util_screenshotCreator_lightingSetup`: `extensions.load("util_screenshotCreator_lightingSetup")`, then the global `util_screenshotCreator_lightingSetup`
 
-Prépare l'éclairage de studio pour les vignettes de véhicules et le remet en état ensuite. Il retrouve dans la scène (scenetree) les objets marqués par le champ dynamique thumbnailRole : des SpotLight (rôles key, fill, rim, top, groundFill, horizonFill) et des TSStatic « lightplane » servant de cartes de réflexion (horizonCard, shoulderCard, topCard, cameraCard). adjust() les place autour du véhicule en fonction de la caméra et de la boîte englobante, règle leur intensité en lux, applique une correction d'exposition, ajuste le SSAO, affiche ou masque le marquage de parking (champ thumbnailLayer = parkingMarkup) et cache les occupants du véhicule. restore() annule tout (transformations, champs de lumière, visibilité).
+Sets up the studio lighting for vehicle thumbnails and restores it afterwards. It finds in the scene (scenetree) the objects marked by the dynamic field thumbnailRole: SpotLights (roles key, fill, rim, top, groundFill, horizonFill) and "lightplane" TSStatics serving as reflection cards (horizonCard, shoulderCard, topCard, cameraCard). adjust() places them around the vehicle based on the camera and the bounding box, sets their intensity in lux, applies an exposure correction, adjusts the SSAO, shows or hides the parking markup (field thumbnailLayer = parkingMarkup) and hides the vehicle's occupants. restore() undoes everything (transforms, light fields, visibility).
 
-## Remarques
+## Notes
 
-- adjust() commence par restore() ; il renvoie false (et restaure) à la moindre erreur. Appeler restore() après la capture est donc obligatoire (job.lua le fait).
-- Les réglages viennent de util_screenshotCreator_settings.getLightingRig() : enabled, roles, exposureCorrection, ssaoMode, parkingMarkup.
-- Si le rig est désactivé, seuls les projecteurs existants proches du véhicule sont ajustés (plans de spots), plus les cartes, le SSAO, le marquage et les occupants.
-- Une correction d'exposition vise 850 lx au total sur les faces visibles du véhicule, avec un gain borné entre 0,5 et 2 ; seuls key, fill, rim et top sont modifiés.
-- Chaque rôle ne peut être pris que par un seul objet : les doublons ou objets de mauvaise classe sont ignorés avec un avertissement dans le journal (tag screenshotCreatorLighting).
-- selfCheck() est exécuté une fois au premier adjust ; une assertion échouée lèverait une erreur Lua.
+- adjust() starts with restore(); it returns false (and restores) on the slightest error. Calling restore() after the capture is therefore mandatory (job.lua does it).
+- The settings come from util_screenshotCreator_settings.getLightingRig(): enabled, roles, exposureCorrection, ssaoMode, parkingMarkup.
+- If the rig is disabled, only the existing spotlights near the vehicle are adjusted (spot planes), plus the cards, the SSAO, the markup and the occupants.
+- An exposure correction targets 850 lx in total on the visible faces of the vehicle, with a gain clamped between 0.5 and 2; only key, fill, rim and top are modified.
+- Each role can be taken by only one object: duplicates or objects of the wrong class are ignored with a warning in the log (tag screenshotCreatorLighting).
+- selfCheck() runs once at the first adjust; a failed assertion would raise a Lua error.
 
-**Dépendances (chargées avant) :** `util_screenshotCreator_settings`, `util_screenshotCreator_vehicleSetup`
+**Dependencies (loaded first):** `util_screenshotCreator_settings`, `util_screenshotCreator_vehicleSetup`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_screenshotCreator_lightingSetup.adjust(vehicle, camera)` | Met en place l'éclairage de capture pour ce véhicule et cette caméra : projecteurs du rig, cartes de réflexion, SSAO, marquage de parking, masquage des occupants, et activation du masque de rendu des cartes sur la vue principale. | 876 |
-| `util_screenshotCreator_lightingSetup.clearMarkupTags()` | Efface le champ thumbnailLayer de tous les objets de marquage de parking. | 719 |
-| `util_screenshotCreator_lightingSetup.getMarkupCount()` | Compte les objets de la scène marqués thumbnailLayer = parkingMarkup. | 714 |
-| `util_screenshotCreator_lightingSetup.hideReflectionCardsForTechCapture()` | Cache temporairement les cartes de réflexion actives (setHidden et setRenderEnabled(false)) pour une capture « Tech ». À rappeler avec restoreReflectionCardsAfterTechCapture. | 295 |
-| `util_screenshotCreator_lightingSetup.restore()` | Annule tous les changements faits par adjust : masque de vue, SSAO, marquage, occupants, cartes de réflexion et lumières (transformation et champs intensity, innerAngle, outerAngle, range, castShadows). Les états non restaurés sont conservés pour une nouvelle tentative. | 334 |
-| `util_screenshotCreator_lightingSetup.restoreReflectionCardsAfterTechCapture()` | Rétablit la visibilité d'origine des cartes cachées par hideReflectionCardsForTechCapture. | 260 |
-| `util_screenshotCreator_lightingSetup.selfCheck()` | Test interne par assertions sur la géométrie des cartes (direction, transformation, côté arrière, rotation autour de l'axe vertical). *(interne)* | 548 |
+| `util_screenshotCreator_lightingSetup.adjust(vehicle, camera)` | Sets up the capture lighting for this vehicle and this camera: rig spotlights, reflection cards, SSAO, parking markup, occupant hiding, and enabling the cards' render mask on the main view. | 876 |
+| `util_screenshotCreator_lightingSetup.clearMarkupTags()` | Clears the thumbnailLayer field of all parking markup objects. | 719 |
+| `util_screenshotCreator_lightingSetup.getMarkupCount()` | Counts the scene objects marked thumbnailLayer = parkingMarkup. | 714 |
+| `util_screenshotCreator_lightingSetup.hideReflectionCardsForTechCapture()` | Temporarily hides the active reflection cards (setHidden and setRenderEnabled(false)) for a "Tech" capture. To be followed by restoreReflectionCardsAfterTechCapture. | 295 |
+| `util_screenshotCreator_lightingSetup.restore()` | Undoes all the changes made by adjust: view mask, SSAO, markup, occupants, reflection cards and lights (transform and fields intensity, innerAngle, outerAngle, range, castShadows). Unrestored states are kept for a new attempt. | 334 |
+| `util_screenshotCreator_lightingSetup.restoreReflectionCardsAfterTechCapture()` | Restores the original visibility of the cards hidden by hideReflectionCardsForTechCapture. | 260 |
+| `util_screenshotCreator_lightingSetup.selfCheck()` | Internal assertion-based test on the card geometry (direction, transform, rear side, rotation around the vertical axis). *(internal)* | 548 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_screenshotCreator_lightingSetup.adjust(vehicle, camera)`
 
-Met en place l'éclairage de capture pour ce véhicule et cette caméra : projecteurs du rig, cartes de réflexion, SSAO, marquage de parking, masquage des occupants, et activation du masque de rendu des cartes sur la vue principale.
+Sets up the capture lighting for this vehicle and this camera: rig spotlights, reflection cards, SSAO, parking markup, occupant hiding, and enabling the cards' render mask on the main view.
 
-- `vehicle` (*table*) : Objet véhicule à photographier.
-- `camera` (*table*) : Caméra résolue : {pos = vec3, rot = quat, ...} (résultat du cadrage).
-- **renvoie** : boolean true si tout a été appliqué, false en cas d'échec (l'état est alors restauré).
+- `vehicle` (*table*) : Vehicle object to photograph.
+- `camera` (*table*) : Resolved camera: {pos = vec3, rot = quat, ...} (framing result).
+- **returns**: boolean true if everything was applied, false on failure (the state is then restored).
 
 #### `util_screenshotCreator_lightingSetup.clearMarkupTags()`
 
-Efface le champ thumbnailLayer de tous les objets de marquage de parking.
+Clears the thumbnailLayer field of all parking markup objects.
 
-- **renvoie** : integer Nombre d'objets dont le tag a été effacé.
+- **returns**: integer Number of objects whose tag was cleared.
 
 #### `util_screenshotCreator_lightingSetup.getMarkupCount()`
 
-Compte les objets de la scène marqués thumbnailLayer = parkingMarkup.
+Counts the scene objects marked thumbnailLayer = parkingMarkup.
 
-- **renvoie** : integer Nombre d'objets de marquage.
+- **returns**: integer Number of markup objects.
 
 #### `util_screenshotCreator_lightingSetup.hideReflectionCardsForTechCapture()`
 
-Cache temporairement les cartes de réflexion actives (setHidden et setRenderEnabled(false)) pour une capture « Tech ». À rappeler avec restoreReflectionCardsAfterTechCapture.
+Temporarily hides the active reflection cards (setHidden and setRenderEnabled(false)) for a "Tech" capture. To be followed by restoreReflectionCardsAfterTechCapture.
 
-- **renvoie** : boolean false si un masquage est déjà en cours (appel imbriqué) ou en cas d'erreur (visibilité restaurée).
+- **returns**: boolean false if a hide is already in progress (nested call) or on error (visibility restored).
 
 #### `util_screenshotCreator_lightingSetup.restore()`
 
-Annule tous les changements faits par adjust : masque de vue, SSAO, marquage, occupants, cartes de réflexion et lumières (transformation et champs intensity, innerAngle, outerAngle, range, castShadows). Les états non restaurés sont conservés pour une nouvelle tentative.
+Undoes all the changes made by adjust: view mask, SSAO, markup, occupants, reflection cards and lights (transform and fields intensity, innerAngle, outerAngle, range, castShadows). Unrestored states are kept for a new attempt.
 
-- **renvoie** : boolean true si tout a été restauré exactement.
+- **returns**: boolean true if everything was restored exactly.
 
 #### `util_screenshotCreator_lightingSetup.restoreReflectionCardsAfterTechCapture()`
 
-Rétablit la visibilité d'origine des cartes cachées par hideReflectionCardsForTechCapture.
+Restores the original visibility of the cards hidden by hideReflectionCardsForTechCapture.
 
-- **renvoie** : boolean true si toutes les cartes ont retrouvé leur état.
+- **returns**: boolean true if all cards have recovered their state.
 
 #### `util_screenshotCreator_lightingSetup.selfCheck()`
 
-Test interne par assertions sur la géométrie des cartes (direction, transformation, côté arrière, rotation autour de l'axe vertical).
+Internal assertion-based test on the card geometry (direction, transform, rear side, rotation around the vertical axis).
 
-- **renvoie** : boolean Toujours true (sinon une assertion échoue).
+- **returns**: boolean Always true (otherwise an assertion fails).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant : util_screenshotCreator_settings et util_screenshotCreator_vehicleSetup. |
-| `onClientEndMission` | function | Alias de M.restore : restaure l'éclairage à la fin du niveau. |
-| `onExit` | function | Alias de M.restore : restaure l'éclairage à la fermeture du jeu. |
-| `onExtensionUnloaded` | function | Alias de M.restore : restaure l'éclairage au déchargement de l'extension. |
+| `dependencies` | string[] | Extensions loaded before: util_screenshotCreator_settings and util_screenshotCreator_vehicleSetup. |
+| `onClientEndMission` | function | Alias of M.restore: restores the lighting at the end of the level. |
+| `onExit` | function | Alias of M.restore: restores the lighting when the game closes. |
+| `onExtensionUnloaded` | function | Alias of M.restore: restores the lighting when the extension is unloaded. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`, `getAllObjects`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/screenshotCreator/lightingSetup.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/screenshotCreator/lightingSetup.lua`.*

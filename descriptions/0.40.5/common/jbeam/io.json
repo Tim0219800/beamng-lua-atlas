@@ -1,99 +1,188 @@
 {
   "path": "lua/common/jbeam/io.lua",
-  "module": "Lecture et mise en cache des fichiers .jbeam des véhicules. Pour chaque dossier demandé, parse chaque *.jbeam (JSON), normalise les sections slots/slots2 vers le format slots2 (name, allowTypes, denyTypes, default, description), stocke chaque pièce encodée dans un cache et construit des index (pièce -> fichier, slotType -> pièces, pièce -> description). Permet ensuite de récupérer une pièce (getPart), de lister les pièces disponibles et celles compatibles avec un emplacement. Un moddeur s'en sert pour interroger les pièces/slots d'un véhicule depuis une extension GE.",
+  "module": "Reading and caching of vehicles' .jbeam files. For each requested folder, parses each *.jbeam (JSON), normalizes the slots/slots2 sections to the slots2 format (name, allowTypes, denyTypes, default, description), stores each encoded part in a cache and builds indexes (part -> file, slotType -> parts, part -> description). It then allows retrieving a part (getPart), listing the available parts and those compatible with a slot. A modder uses it to query a vehicle's parts/slots from a GE extension.",
   "usage": "local io = require('jbeam/io')\nlocal ioCtx = io.startLoading({'/vehicles/pickup/', '/vehicles/common/'})\nlocal mainName = io.getMainPartName(ioCtx)\nlocal part, filename = io.getPart(ioCtx, mainName)",
   "notes": [
-    "ioCtx est le contexte renvoyé par startLoading : {preloadedDirs = liste de dossiers}. Les dossiers sont de la forme '/vehicles/<nom>/' (avec slash final, sans slash initial dans le motif interne).",
-    "Le cache est global au module : chaque fichier n'est parsé qu'une fois. onFileChanged l'invalide pour un .jbeam modifié et force un nouveau scan des dossiers au prochain startLoading ; les index restent périmés jusqu'à ce rechargement (voulu d'après le commentaire).",
-    "Les pièces sont stockées encodées (stringBufferEncode) : getPart renvoie à chaque appel une copie décodée neuve, qu'on peut modifier sans effet sur le cache.",
-    "Une pièce sans slotType (string ou table) est ignorée avec une erreur de journal. Une pièce de même nom présente deux fois dans un même slotType déclenche l'erreur 'Duplicate part found'.",
-    "Le format slots (v1) est converti en slots2 (name = type, allowTypes = {type}, denyTypes = {}); le tableau d'en-tête manquant est ajouté avec avertissement. À la sortie, part.slots vaut nil et part.slots2 existe.",
-    "getAvailableSlotNameMap est marqué DEPRECATED dans le code (incompatible slots2) ; utiliser getCompatiblePartNamesForSlot.",
-    "La fonction locale updateAllVehiclesCompatibleParts n'est pas exportée.",
-    "Le fichier est marqué « do not change this file without speaking to tdev » dans le code.",
-    "Les modules core_modmanager (onExtensionLoaded) et FS ne sont disponibles que côté GE."
+    "ioCtx is the context returned by startLoading: {preloadedDirs = list of folders}. Folders have the form '/vehicles/<name>/' (with trailing slash, without leading slash in the internal pattern).",
+    "The cache is global to the module: each file is parsed only once. onFileChanged invalidates it for a modified .jbeam and forces a new scan of the folders at the next startLoading; the indexes stay stale until that reload (intended according to the comment).",
+    "Parts are stored encoded (stringBufferEncode): getPart returns a fresh decoded copy on each call, which can be modified without affecting the cache.",
+    "A part without slotType (string or table) is ignored with a log error. A part with the same name present twice in the same slotType triggers the error 'Duplicate part found'.",
+    "The slots (v1) format is converted to slots2 (name = type, allowTypes = {type}, denyTypes = {}); the missing header array is added with a warning. On output, part.slots is nil and part.slots2 exists.",
+    "getAvailableSlotNameMap is marked DEPRECATED in the code (incompatible with slots2); use getCompatiblePartNamesForSlot.",
+    "The local function updateAllVehiclesCompatibleParts is not exported.",
+    "The file is marked \"do not change this file without speaking to tdev\" in the code.",
+    "The modules core_modmanager (onExtensionLoaded) and FS are only available on the GE side."
   ],
   "fields": {},
   "functions": {
     "startLoading": {
-      "desc": "Parse (ou récupère du cache) tous les *.jbeam des dossiers donnés, reconstruit les index globaux si un fichier a changé et mémorise des statistiques (total/cachedHits).",
-      "params": {"directories": {"type": "string[]", "desc": "Liste de dossiers jbeam (ex. '/vehicles/pickup/')."}},
-      "returns": [{"type": "table", "desc": "Contexte ioCtx {preloadedDirs = directories}."}],
+      "desc": "Parses (or fetches from cache) all the *.jbeam of the given folders, rebuilds the global indexes if a file changed and records statistics (total/cachedHits).",
+      "params": {
+        "directories": {
+          "type": "string[]",
+          "desc": "List of jbeam folders (e.g. '/vehicles/pickup/')."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Context ioCtx {preloadedDirs = directories}."
+        }
+      ],
       "internal": false
     },
     "finishLoading": {
-      "desc": "Ne fait rien (le corps est commenté) ; existe pour symétrie avec startLoading.",
+      "desc": "Does nothing (the body is commented out); exists for symmetry with startLoading.",
       "params": {},
       "internal": false
     },
     "getPart": {
-      "desc": "Renvoie la définition complète d'une pièce (table jbeam décodée, avec partName) et le fichier d'origine.",
+      "desc": "Returns the full definition of a part (decoded jbeam table, with partName) and the source file.",
       "params": {
-        "ioCtx": {"type": "table", "desc": "Contexte renvoyé par startLoading."},
-        "partName": {"type": "string|nil", "desc": "Nom de la pièce."}
+        "ioCtx": {
+          "type": "table",
+          "desc": "Context returned by startLoading."
+        },
+        "partName": {
+          "type": "string|nil",
+          "desc": "Part name."
+        }
       },
       "returns": [
-        {"type": "table|nil", "desc": "Pièce décodée ; nil si introuvable ou nom nil."},
-        {"type": "string|nil", "desc": "Nom du fichier .jbeam."}
+        {
+          "type": "table|nil",
+          "desc": "Decoded part; nil if not found or name is nil."
+        },
+        {
+          "type": "string|nil",
+          "desc": ".jbeam file name."
+        }
       ],
       "internal": false
     },
     "getMainPartName": {
-      "desc": "Nom de la première pièce déclarée avec le slotType 'main' dans les dossiers du contexte.",
-      "params": {"ioCtx": {"type": "table", "desc": "Contexte renvoyé par startLoading."}},
-      "returns": [{"type": "string|nil", "desc": "Nom de la pièce principale."}],
+      "desc": "Name of the first part declared with the slotType 'main' in the context's folders.",
+      "params": {
+        "ioCtx": {
+          "type": "table",
+          "desc": "Context returned by startLoading."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Name of the main part."
+        }
+      ],
       "internal": false
     },
     "getAvailableParts": {
-      "desc": "Liste toutes les pièces des dossiers du contexte avec leur description (description, authors, isAuxiliary, slotInfoUi, modName éventuel). Recharge si les index manquent ; journalise une erreur en cas de noms en double.",
-      "params": {"ioCtx": {"type": "table", "desc": "Contexte renvoyé par startLoading."}},
-      "returns": [{"type": "table<string, table>|nil", "desc": "Table nomDePièce -> description ; nil si le contexte est invalide."}],
+      "desc": "Lists all the parts of the context's folders with their description (description, authors, isAuxiliary, slotInfoUi, modName if any). Reloads if the indexes are missing; logs an error in case of duplicate names.",
+      "params": {
+        "ioCtx": {
+          "type": "table",
+          "desc": "Context returned by startLoading."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, table>|nil",
+          "desc": "Table partName -> description; nil if the context is invalid."
+        }
+      ],
       "internal": false
     },
     "getAvailableSlotNameMap": {
-      "desc": "Obsolète. Renvoie pour chaque slotType la liste des pièces qui s'y adaptent (selon le slotType de la pièce).",
-      "params": {"ioCtx": {"type": "table", "desc": "Contexte renvoyé par startLoading."}},
-      "returns": [{"type": "table<string, string[]>|nil", "desc": "slotType -> noms de pièces ; nil si contexte invalide."}],
+      "desc": "Obsolete. Returns for each slotType the list of parts that fit it (according to the part's slotType).",
+      "params": {
+        "ioCtx": {
+          "type": "table",
+          "desc": "Context returned by startLoading."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, string[]>|nil",
+          "desc": "slotType -> part names; nil if invalid context."
+        }
+      ],
       "internal": false
     },
     "getAvailablePartNamesForSlot": {
-      "desc": "Liste les noms de pièces dont le slotType est slotType (ne gère pas slots2).",
+      "desc": "Lists the part names whose slotType is slotType (does not handle slots2).",
       "params": {
-        "ioCtx": {"type": "table", "desc": "Contexte renvoyé par startLoading."},
-        "slotType": {"type": "string", "desc": "Type d'emplacement."}
+        "ioCtx": {
+          "type": "table",
+          "desc": "Context returned by startLoading."
+        },
+        "slotType": {
+          "type": "string",
+          "desc": "Slot type."
+        }
       },
-      "returns": [{"type": "string[]", "desc": "Noms de pièces ({} si aucune)."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Part names ({} if none)."
+        }
+      ],
       "internal": false
     },
     "getCompatiblePartNamesForSlot": {
-      "desc": "Pièces compatibles avec un emplacement. Pour un slot v1 (champ type) renvoie les pièces du type. Pour un slot v2, garde les pièces dont un slotType est dans allowTypes sans qu'aucun de leurs types ne soit dans denyTypes ; les autres sont renvoyées avec la raison 'Part type is in deny list'.",
+      "desc": "Parts compatible with a slot. For a v1 slot (field type) returns the parts of that type. For a v2 slot, keeps the parts with a slotType in allowTypes and none of whose types is in denyTypes; the others are returned with the reason 'Part type is in deny list'.",
       "params": {
-        "ioCtx": {"type": "table", "desc": "Contexte renvoyé par startLoading."},
-        "slotDef": {"type": "table", "desc": "Définition de slot (élément de part.slots2 ou part.slots)."},
-        "slotMap": {"type": "table|nil", "desc": "Résultat de getAvailableSlotNameMap, à fournir si on appelle plusieurs fois (optimisation)."}
+        "ioCtx": {
+          "type": "table",
+          "desc": "Context returned by startLoading."
+        },
+        "slotDef": {
+          "type": "table",
+          "desc": "Slot definition (element of part.slots2 or part.slots)."
+        },
+        "slotMap": {
+          "type": "table|nil",
+          "desc": "Result of getAvailableSlotNameMap, to provide if calling several times (optimization)."
+        }
       },
       "returns": [
-        {"type": "string[]", "desc": "Noms de pièces compatibles."},
-        {"type": "table[]", "desc": "Pièces refusées : {partName, reason}."}
+        {
+          "type": "string[]",
+          "desc": "Compatible part names."
+        },
+        {
+          "type": "table[]",
+          "desc": "Rejected parts: {partName, reason}."
+        }
       ],
       "internal": false
     },
     "getLastStartLoadingStats": {
-      "desc": "Statistiques du dernier startLoading : nombre total de fichiers et nombre servis par le cache.",
+      "desc": "Statistics of the last startLoading: total number of files and number served by the cache.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{total = integer, cachedHits = integer}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{total = integer, cachedHits = integer}."
+        }
+      ],
       "internal": false
     },
     "onFileChanged": {
-      "desc": "Hook appelé quand un fichier change sur le disque : pour un .jbeam, supprime son cache et force un nouveau scan des dossiers.",
+      "desc": "Hook called when a file changes on disk: for a .jbeam, deletes its cache and forces a new scan of the folders.",
       "params": {
-        "filename": {"type": "string", "desc": "Fichier modifié."},
-        "type": {"type": "string", "desc": "Type de changement (utilisé dans le journal)."}
+        "filename": {
+          "type": "string",
+          "desc": "Modified file."
+        },
+        "type": {
+          "type": "string",
+          "desc": "Change type (used in the log)."
+        }
       },
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement de l'extension : récupère extensions.core_modmanager pour associer les pièces à leur mod.",
+      "desc": "Hook called when the extension loads: gets extensions.core_modmanager to associate parts with their mod.",
       "params": {},
       "internal": true
     }

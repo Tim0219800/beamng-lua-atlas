@@ -1,32 +1,32 @@
 {
   "path": "lua/ge/extensions/editor/assetManagementTool.lua",
-  "module": "Outil d'éditeur « Asset Management Tool » (menu Window > Assets, fenêtre 1200x900) destiné à la gestion des fichiers assets et des fichiers lien (link files, pour le dépôt SVN de BeamNG). Onglets : Duplicated Assets (visible seulement en devMode), Link Checker, Delinker, Relinker, Link Files Cleanup, Naming Checker. Il s'appuie sur FS:hashFile, FS:findLinkFiles, FS:convertLinkFileToTargetCopy, FS:copyFile, etc. Outil interne de développement, peu utile à un mod.",
+  "module": "Editor tool \"Asset Management Tool\" (Window > Assets menu, 1200x900 window) for managing asset files and link files (for BeamNG's SVN repository). Tabs: Duplicated Assets (only visible in devMode), Link Checker, Delinker, Relinker, Link Files Cleanup, Naming Checker. It relies on FS:hashFile, FS:findLinkFiles, FS:convertLinkFileToTargetCopy, FS:copyFile, etc. Internal development tool, of little use to a mod.",
   "notes": [
-    "L'onglet Duplicated Assets exige devMode et que le userpath soit identique au chemin du jeu (option de ligne de commande -nouserpath), sinon il affiche un avertissement.",
-    "Seuls onEditorInitialized, onEditorActivated, onEditorGui et onExtensionLoaded sont exportés ; la fonction onWindowMenuItem reste locale (utilisée par le menu).",
-    "Les dossiers de données de jeu considérés sont /art, /core, /campaigns, /levels, /protected, /vehicles."
+    "The Duplicated Assets tab requires devMode and the userpath to be identical to the game path (command line option -nouserpath), otherwise it shows a warning.",
+    "Only onEditorInitialized, onEditorActivated, onEditorGui and onExtensionLoaded are exported; the onWindowMenuItem function stays local (used by the menu).",
+    "The game data folders considered are /art, /core, /campaigns, /levels, /protected, /vehicles."
   ],
   "functions": {
     "onEditorActivated": {
-      "desc": "Hook appelé à l'activation de l'éditeur ; corps vide.",
+      "desc": "Hook called when the editor is activated; empty body.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onEditorGui": {
-      "desc": "Hook appelé à chaque frame de l'éditeur : dessine la fenêtre à onglets (Duplicated Assets si devMode, Link Checker, Delinker, Relinker, Link Files Cleanup, Naming Checker) et les dialogues modaux associés (ex. confirmation de retrait d'assets de la liste).",
+      "desc": "Hook called every editor frame: draws the tabbed window (Duplicated Assets if devMode, Link Checker, Delinker, Relinker, Link Files Cleanup, Naming Checker) and the associated modal dialogs (e.g. confirmation to remove assets from the list).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre 'assetManagementTool' et ses ~15 fenêtres modales, ajoute l'entrée de menu « Asset Management Tool » (groupe Assets) et charge la liste de doublons sauvegardée (loadDuplicatesList).",
+      "desc": "Hook called at editor initialization: registers the 'assetManagementTool' window and its ~15 modal windows, adds the \"Asset Management Tool\" menu entry (Assets group) and loads the saved duplicates list (loadDuplicatesList).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement de l'extension ; corps vide.",
+      "desc": "Hook called when the extension is loaded; empty body.",
       "params": {},
       "returns": [],
       "internal": true

@@ -2,67 +2,67 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/freeformDelivery/setup.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Mise en place et démontage d'une livraison libre. Associe les véhicules déjà spawnés par le chargeur (delivery._vehicleIndex, par internalName) aux ID de la livraison, applique leur état de départ (mode de boîte, rapport, moteur, niveau d'allumage), enregistre des aperçus, planifie les attelages (couplings) via util_stepHandler, place le joueur (dans un véhicule, à pied ou sur une place de parking) et mémorise les positions initiales pour un reset.
---- Accès : extension `gameplay_freeformDelivery_setup` : `extensions.load("gameplay_freeformDelivery_setup")`, puis la globale `gameplay_freeformDelivery_setup`
+--- Setup and teardown of a freeform delivery. Associates the vehicles already spawned by the loader (delivery._vehicleIndex, by internalName) with the delivery's IDs, applies their starting state (gearbox mode, gear, engine, ignition level), registers previews, schedules couplings (couplings) via util_stepHandler, places the player (in a vehicle, on foot or on a parking spot) and stores the initial positions for a reset.
+--- Access: extension `gameplay_freeformDelivery_setup`: `extensions.load("gameplay_freeformDelivery_setup")`, then the global `gameplay_freeformDelivery_setup`
 ---@class gameplay_freeformDelivery_setup
 gameplay_freeformDelivery_setup = {}
 
---- Démonte la livraison : si keepVehicles, extrait les véhicules des préfabs (explosion du préfab) et les remet dans MissionGroup ; supprime les préfabs créés (et recharge la collision si besoin) ; sinon supprime les véhicules. Vide ensuite tout l'état.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/freeformDelivery/setup.lua:568
----@param delivery table|nil Données de livraison (_prefabIds, _hasColliders).
----@param keepVehicles boolean|nil true pour conserver les véhicules (faux par défaut).
+--- Tears down the delivery: if keepVehicles, extracts the vehicles from the prefabs (exploding the prefab) and puts them back in MissionGroup; removes the created prefabs (and reloads collision if needed); otherwise removes the vehicles. Then clears all state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/freeformDelivery/setup.lua:568
+---@param delivery table|nil Delivery data (_prefabIds, _hasColliders).
+---@param keepVehicles boolean|nil true to keep the vehicles (false by default).
 function gameplay_freeformDelivery_setup.cleanup(delivery, keepVehicles) end
 
---- Gèle ou dégèle tous les véhicules de la livraison (action setFreeze via core_vehicleBridge).
----Source : lua/ge/extensions/gameplay/freeformDelivery/setup.lua:557
----@param freeze boolean|nil true par défaut ; false pour dégeler.
+--- Freezes or unfreezes all vehicles of the delivery (setFreeze action via core_vehicleBridge).
+---Source: lua/ge/extensions/gameplay/freeformDelivery/setup.lua:557
+---@param freeze boolean|nil true by default; false to unfreeze.
 function gameplay_freeformDelivery_setup.freezeAllVehicles(freeze) end
 
---- Renvoie la liste des attelages collectés lors du dernier setup.
----Source : lua/ge/extensions/gameplay/freeformDelivery/setup.lua:549
----@return table[]  Entrées {vehId, nodeTag, targetVehId}.
+--- Returns the list of couplings collected during the last setup.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/setup.lua:549
+---@return table[]  Entries {vehId, nodeTag, targetVehId}.
 function gameplay_freeformDelivery_setup.getAllCouplingSetup() end
 
---- Liste des ID de véhicules dont un attelage est en attente.
----Source : lua/ge/extensions/gameplay/freeformDelivery/setup.lua:541
----@return integer[]  ID d'objets.
+--- List of vehicle IDs with a pending coupling.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/setup.lua:541
+---@return integer[]  Object IDs.
 function gameplay_freeformDelivery_setup.getPendingCouplings() end
 
---- Renvoie les véhicules indexés par ID d'objet.
----Source : lua/ge/extensions/gameplay/freeformDelivery/setup.lua:553
----@return table<integer, table>  Entrées {vehicleId, vehicle, deliveryVehicle}.
+--- Returns the vehicles keyed by object ID.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/setup.lua:553
+---@return table<integer, table>  Entries {vehicleId, vehicle, deliveryVehicle}.
 function gameplay_freeformDelivery_setup.getSpawnedVehicles() end
 
---- Convertit un ID de véhicule de livraison en ID d'objet du jeu.
----Source : lua/ge/extensions/gameplay/freeformDelivery/setup.lua:529
----@param deliveryVehicleId string ID du véhicule dans la définition de livraison.
----@return integer|nil  ID d'objet ou nil.
+--- Converts a delivery vehicle ID into a game object ID.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/setup.lua:529
+---@param deliveryVehicleId string Vehicle ID in the delivery definition.
+---@return integer|nil  Object ID or nil.
 function gameplay_freeformDelivery_setup.getVehicleId(deliveryVehicleId) end
 
---- Indique si la mise en place asynchrone est terminée (tous les véhicules prêts et aucun attelage en attente). Quand c'est le cas, remet setupInProgress à false.
----Source : lua/ge/extensions/gameplay/freeformDelivery/setup.lua:466
----@return boolean  true si terminée ou non démarrée.
+--- Returns whether the asynchronous setup is finished (all vehicles ready and no coupling pending). When so, sets setupInProgress back to false.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/setup.lua:466
+---@return boolean  true if finished or not started.
 function gameplay_freeformDelivery_setup.isSetupComplete() end
 
---- Renvoie le drapeau interne de mise en place en cours.
----Source : lua/ge/extensions/gameplay/freeformDelivery/setup.lua:533
----@return boolean  true tant que setup/reset n'est pas terminé.
+--- Returns the internal setup-in-progress flag.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/setup.lua:533
+---@return boolean  true as long as setup/reset is not finished.
 function gameplay_freeformDelivery_setup.isSetupInProgress() end
 
---- Remet chaque véhicule à sa position/rotation initiale (reset physique, flexmesh réparé), réapplique l'état de départ puis relance la séquence d'attelages.
----Source : lua/ge/extensions/gameplay/freeformDelivery/setup.lua:490
+--- Puts each vehicle back at its initial position/rotation (physics reset, flexmesh repaired), reapplies the starting state then restarts the coupling sequence.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/setup.lua:490
 function gameplay_freeformDelivery_setup.restoreVehicleTransforms() end
 
---- Prépare la livraison : résout les images des zones cibles, indexe les véhicules spawnés, applique l'état de départ, blacklist les véhicules non enterables, collecte et lance les attelages, place le joueur et stocke les transformations initiales.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/freeformDelivery/setup.lua:394
----@param delivery table Données de livraison (vehicles, targetAreas, playerStart, _vehicleIndex, _basePath...).
----@return boolean  false si delivery est nil, sinon true (les opérations asynchrones continuent ensuite).
+--- Prepares the delivery: resolves the target area images, indexes the spawned vehicles, applies the starting state, blacklists non-enterable vehicles, collects and launches the couplings, places the player and stores the initial transforms.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/freeformDelivery/setup.lua:394
+---@param delivery table Delivery data (vehicles, targetAreas, playerStart, _vehicleIndex, _basePath...).
+---@return boolean  false if delivery is nil, otherwise true (asynchronous operations continue afterwards).
 function gameplay_freeformDelivery_setup.setup(delivery) end
 
---- Place le joueur selon delivery.playerStart (véhicule, marche à une position, ou marche sur une place de parking).
----Source : lua/ge/extensions/gameplay/freeformDelivery/setup.lua:537
----@param delivery table Données de livraison contenant playerStart.
+--- Places the player according to delivery.playerStart (vehicle, walking at a position, or walking on a parking spot).
+---Source: lua/ge/extensions/gameplay/freeformDelivery/setup.lua:537
+---@param delivery table Delivery data containing playerStart.
 function gameplay_freeformDelivery_setup.setupPlayer(delivery) end
 

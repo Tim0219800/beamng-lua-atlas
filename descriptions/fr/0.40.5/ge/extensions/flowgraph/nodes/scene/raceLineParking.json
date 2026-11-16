@@ -1,0 +1,147 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/raceLineParking.lua",
+  "module": "Noeud flowgraph « Raceline Parking » (repeat_instant, auteur BeamNG). Vérifie qu'un véhicule est garé dans une place définie par position/rotation/scale (le scale donne demi-largeur x, longueur y et profondeur z). Calcule dotAngle, forward, sideDistance, forwardDistance (basés sur le centre des deux roues avant) et détecte l'arrêt (vitesse <= 0.05 m/s pendant stop_timer secondes). Dessine un volume de debug coloré dans le monde et, si le pin imgui est vrai, un aperçu 2D imgui.",
+  "notes": [
+    "Bug : checkParking lit self.pinIn.vehicleID alors que le pin s'appelle vehId : ce pin est ignoré et c'est toujours le véhicule du joueur (getPlayerVehicle(0)) qui est suivi. drawImgui utilise aussi toujours le véhicule du joueur.",
+    "getTwoSmallestValues renvoie deux fois la même roue si le nombre de roues est impair.",
+    "drawDebug référence la variable globale drawMode, probablement nil (alpha 0.25).",
+    "Valeurs de rotation par défaut quat(0,0,0,0) (non valide) si le pin n'est pas branché."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Rien à initialiser.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet stopTimer à nil au démarrage du graphe.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Remet stopTimer à nil à l'arrêt du graphe.",
+          "internal": true
+        },
+        "onClientEndMission": {
+          "desc": "Hook de fin de mission : appelle _executionStopped.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sur clear, remet les sorties à nil ; sur flow, appelle checkParking, drawDebug et éventuellement drawImgui.",
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "non utilisé"
+            }
+          },
+          "internal": false
+        },
+        "toInternal2d": {
+          "desc": "Convertit une position monde en coordonnées 2D de l'aperçu imgui, relatives à la place.",
+          "params": {
+            "pos": {
+              "type": "any",
+              "desc": "vec3 monde"
+            }
+          },
+          "internal": true
+        },
+        "drawLine": {
+          "desc": "Dessine une polyligne 2D dans la ImDrawList courante.",
+          "params": {
+            "line": {
+              "type": "any",
+              "desc": "liste de points {x,y}"
+            },
+            "color": {
+              "type": "any",
+              "desc": "couleur imgui U32 (blanc par défaut)"
+            },
+            "thickness": {
+              "type": "any",
+              "desc": "épaisseur en pixels"
+            }
+          },
+          "internal": true
+        },
+        "worldLineToMapLine": {
+          "desc": "Convertit une liste de points monde en points 2D de l'aperçu (table réutilisée entre appels).",
+          "params": {
+            "line": {
+              "type": "any",
+              "desc": "liste de vec3"
+            }
+          },
+          "internal": true
+        },
+        "drawImgui": {
+          "desc": "Dessine l'aperçu imgui 280x300 : bords de la place (vert/jaune/rouge), contour du véhicule, essieu avant et cercle de progression de l'arrêt.",
+          "internal": true
+        },
+        "checkParking": {
+          "desc": "Calcule les sorties (dotAngle, forward, sideDistance, forwardDistance, inside, stopping, stoppedPercent, stopped) pour le véhicule suivi.",
+          "internal": true
+        },
+        "getVehicleFrontwheelsCenterPosition": {
+          "desc": "Renvoie le centre des deux roues les plus à l'avant, puis les positions de chaque roue (vec3), ou rien si vehicle/pos est nil.",
+          "params": {
+            "vehicle": {
+              "type": "any",
+              "desc": "objet véhicule"
+            },
+            "pos": {
+              "type": "any",
+              "desc": "vec3 (doit être non nil)"
+            }
+          },
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Ne sauvegarde rien.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Ne restaure rien.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "données sauvegardées"
+            }
+          },
+          "internal": true
+        },
+        "drawDebug": {
+          "desc": "Dessine avec debugDrawer des triangles semi-transparents (boîte de la place, côtés gauche/droit) colorés selon l'état.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

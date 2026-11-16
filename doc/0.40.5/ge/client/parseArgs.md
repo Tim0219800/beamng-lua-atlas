@@ -1,38 +1,38 @@
 # `parseArgs`
 
-*Fichier : `lua/ge/client/parseArgs.lua` · VM : Game Engine (GE) · 142 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/client/parseArgs.lua` · VM: Game Engine (GE) · 142 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `parseArgs`
+**Access:** global `parseArgs`
 
-Analyse les arguments de la ligne de commande du jeu ($Game::argc / $Game::argv0…) et applique ou mémorise les options reconnues. Utile pour lancer BeamNG avec -level, -vehicle, -lua, -luafile, etc.
+Parses the game's command-line arguments ($Game::argc / $Game::argv0…) and applies or stores the recognized options. Useful to launch BeamNG with -level, -vehicle, -lua, -luafile, etc.
 
-## Exemple
+## Example
 
 ```lua
--- ligne de commande : BeamNG.drive.exe -level gridmap_v2 -vehicle pickup -vehicleConfig "pickup/myConfig.pc" -lua "print('salut')"
+-- command line: BeamNG.drive.exe -level gridmap_v2 -vehicle pickup -vehicleConfig "pickup/myConfig.pc" -lua "print('hi')"
 ```
 
-## Remarques
+## Notes
 
-- Options gérées : -log <0|1|2> (le mode reçu est décalé de +4 sauf si 0), -cefdev, -fullscreen, -windowed, -vehicleConfig, -vehicle ($beamngVehicleArgs), -useDefaultPc, -translationScrambleDebug, -luafile (require), -lua (LuaExecuteQueueString), -onLevelLoad_ext, -level ($levelToLoad), -tcom / -tcom-capture (charge tech/techCore ; -tcom ouvre aussi le serveur), -levelOffset x y z (server.setLevelOffset), -enableAiRecordingForMissions.
-- -worldeditor est obsolète : seule une erreur est journalisée (utiliser -worldEditor).
-- Les options simples sont stockées dans M.args (vehicleConfig, useDefaultPc, translationScrambleDebug, enableAiRecordingForMissions) ; les autres passent par VariableRegistry ou par des fonctions du moteur.
-- Bug : dans la boucle for, « i = i + 1 » ne saute pas réellement l'argument suivant en Lua (la variable de boucle est locale à chaque itération) ; la valeur consommée est donc relue comme argument ensuite, sans effet tant qu'elle ne ressemble pas à une option.
-- Les fonctions locales pushFront/pushBack/popFront ne sont pas utilisées.
+- Handled options: -log <0|1|2> (the received mode is shifted by +4 unless 0), -cefdev, -fullscreen, -windowed, -vehicleConfig, -vehicle ($beamngVehicleArgs), -useDefaultPc, -translationScrambleDebug, -luafile (require), -lua (LuaExecuteQueueString), -onLevelLoad_ext, -level ($levelToLoad), -tcom / -tcom-capture (loads tech/techCore; -tcom also opens the server), -levelOffset x y z (server.setLevelOffset), -enableAiRecordingForMissions.
+- -worldeditor is obsolete: only an error is logged (use -worldEditor).
+- Simple options are stored in M.args (vehicleConfig, useDefaultPc, translationScrambleDebug, enableAiRecordingForMissions); the others go through VariableRegistry or engine functions.
+- Bug: in the for loop, "i = i + 1" does not actually skip the next argument in Lua (the loop variable is local to each iteration); the consumed value is therefore re-read as an argument afterwards, with no effect as long as it does not look like an option.
+- The local functions pushFront/pushBack/popFront are not used.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `parseArgs.defaultParseArgs()` | Réinitialise M.args puis parcourt tous les arguments de la ligne de commande et applique chaque option reconnue. *(interne)* | 29 |
+| `parseArgs.defaultParseArgs()` | Resets M.args then goes through all command-line arguments and applies each recognized option. *(internal)* | 29 |
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `args` | table | Résultat de l'analyse : clés vehicleConfig (string), useDefaultPc, translationScrambleDebug, enableAiRecordingForMissions (booléens). Remise à {} à chaque appel de defaultParseArgs. |
+| `args` | table | Parsing result: keys vehicleConfig (string), useDefaultPc, translationScrambleDebug, enableAiRecordingForMissions (booleans). Reset to {} on each call of defaultParseArgs. |
 
-**Charge les extensions :** `tech/techCore`
+**Loads extensions:** `tech/techCore`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/client/parseArgs.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/client/parseArgs.lua`.*

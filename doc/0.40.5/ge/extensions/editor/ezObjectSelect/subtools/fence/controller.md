@@ -1,50 +1,50 @@
 # `editor_ezObjectSelect_subtools_fence_controller`
 
-*Fichier : `lua/ge/extensions/editor/ezObjectSelect/subtools/fence/controller.lua` · VM : Game Engine (GE) · 164 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ezObjectSelect/subtools/fence/controller.lua` · VM: Game Engine (GE) · 164 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ezObjectSelect_subtools_fence_controller` : `extensions.load("editor_ezObjectSelect_subtools_fence_controller")`, puis la globale `editor_ezObjectSelect_subtools_fence_controller`
+**Access:** extension `editor_ezObjectSelect_subtools_fence_controller`: `extensions.load("editor_ezObjectSelect_subtools_fence_controller")`, then the global `editor_ezObjectSelect_subtools_fence_controller`
 
-Panneau ImGui du sous-outil « Fence » d'Easy Object Select. Permet de choisir le mesh de clôture (sélection de l'Asset Browser ou objet sélectionné dans Easy Select), de régler la distance de correspondance des ancres (0.05 à 5 m) et l'option « No overlap », puis de lancer Select Fence, et, une fois le mode actif, de valider (Exit Fence Mode), annuler (Cancel Fence) ou supprimer (Delete Fence) la clôture. Délègue toute la logique à fence/session.
+ImGui panel of the "Fence" sub-tool of Easy Object Select. Lets you choose the fence mesh (Asset Browser selection or object selected in Easy Select), set the anchor matching distance (0.05 to 5 m) and the "No overlap" option, then start Select Fence, and, once the mode is active, confirm (Exit Fence Mode), cancel (Cancel Fence) or delete (Delete Fence) the fence. Delegates all the logic to fence/session.
 
-## Remarques
+## Notes
 
-- Exit Fence Mode et Delete Fence sont désactivés quand la session a atteint sa limite de sécurité (isCapped).
-- L'état du panneau (asset choisi, distance, noOverlap, message) est local au module.
+- Exit Fence Mode and Delete Fence are disabled when the session has reached its safety limit (isCapped).
+- The panel state (chosen asset, distance, noOverlap, message) is local to the module.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ezObjectSelect_subtools_fence_controller.cancel()` | Annule la session de clôture en cours (restaure les pièces d'origine). | 155 |
-| `editor_ezObjectSelect_subtools_fence_controller.drawWorkspace(options)` | Dessine le panneau du sous-outil et traite les clics sur ses boutons (appelle fenceSession.begin / exitAndCommit / cancel / deleteAndCommit / setNoOverlap). | 28 |
-| `editor_ezObjectSelect_subtools_fence_controller.isModeActive()` | Indique si le mode clôture est actif. | 159 |
-| `editor_ezObjectSelect_subtools_fence_controller.update(canAcceptInput)` | Passe la frame à fenceSession.update (entrées souris/clavier, aperçu, dessin). | 151 |
+| `editor_ezObjectSelect_subtools_fence_controller.cancel()` | Cancels the current fence session (restores the original pieces). | 155 |
+| `editor_ezObjectSelect_subtools_fence_controller.drawWorkspace(options)` | Draws the sub-tool panel and handles clicks on its buttons (calls fenceSession.begin / exitAndCommit / cancel / deleteAndCommit / setNoOverlap). | 28 |
+| `editor_ezObjectSelect_subtools_fence_controller.isModeActive()` | Indicates whether fence mode is active. | 159 |
+| `editor_ezObjectSelect_subtools_fence_controller.update(canAcceptInput)` | Passes the frame to fenceSession.update (mouse/keyboard input, preview, drawing). | 151 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_ezObjectSelect_subtools_fence_controller.drawWorkspace(options)`
 
-Dessine le panneau du sous-outil et traite les clics sur ses boutons (appelle fenceSession.begin / exitAndCommit / cancel / deleteAndCommit / setNoOverlap).
+Draws the sub-tool panel and handles clicks on its buttons (calls fenceSession.begin / exitAndCommit / cancel / deleteAndCommit / setNoOverlap).
 
-- `options` (*table|nil*) : canEnter (boolean) : si false, Select Fence est désactivé.
+- `options` (*table|nil*) : canEnter (boolean): if false, Select Fence is disabled.
 
 #### `editor_ezObjectSelect_subtools_fence_controller.isModeActive()`
 
-Indique si le mode clôture est actif.
+Indicates whether fence mode is active.
 
-- **renvoie** : boolean true si une session est active.
+- **returns**: boolean true if a session is active.
 
 #### `editor_ezObjectSelect_subtools_fence_controller.update(canAcceptInput)`
 
-Passe la frame à fenceSession.update (entrées souris/clavier, aperçu, dessin).
+Passes the frame to fenceSession.update (mouse/keyboard input, preview, drawing).
 
-- `canAcceptInput` (*boolean*) : true si la vue peut recevoir les entrées.
-- **renvoie** : boolean true si une session est active.
+- `canAcceptInput` (*boolean*) : true if the view can receive input.
+- **returns**: boolean true if a session is active.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getField`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ezObjectSelect/subtools/fence/controller.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ezObjectSelect/subtools/fence/controller.lua`.*

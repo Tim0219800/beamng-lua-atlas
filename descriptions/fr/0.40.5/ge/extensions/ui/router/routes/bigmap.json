@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/ui/router/routes/bigmap.lua",
+  "module": "Routes de la grande carte (Vue) : écran « bigmap » (titre Map) avec une sous-route bigmapMenu. Arbre de portées (scopes) de navigation manette : bigmap-layout contient bigmap-camera et bigmap-main, qui contient bigmap-details. Inclus par d'autres modules (ex. pause.bigmap).",
+  "notes": [
+    "Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = \"<nom>\" }`.",
+    "Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.",
+    "`ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change."
+  ],
+  "fields": {
+    "Root": {
+      "type": "table",
+      "desc": "{screenId = \"bigmap\", title = \"Map\", targetScope = \"bigmap-main\", scopeTree = bigmap-layout > (bigmap-camera, bigmap-main > bigmap-details), ui = Vue uniquement, infoBar par défaut, topBar masquée, uiApps par défaut}"
+    },
+    "Children": {
+      "type": "table<string, table>",
+      "desc": "Enfant « bigmapMenu » (screenId bigmap.bigmapMenu, Vue)."
+    }
+  }
+}

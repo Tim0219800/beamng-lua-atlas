@@ -1,68 +1,68 @@
 # `gameplay_drag_poi`
 
-*Fichier : `lua/ge/extensions/gameplay/drag/poi.lua` · VM : Game Engine (GE) · 221 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drag/poi.lua` · VM: Game Engine (GE) · 221 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drag_poi` : `extensions.load("gameplay_drag_poi")`, puis la globale `gameplay_drag_poi`
+**Access:** extension `gameplay_drag_poi`: `extensions.load("gameplay_drag_poi")`, then the global `gameplay_drag_poi`
 
-Points d'intérêt (POI) des pistes de drag. Pour chaque couloir de chaque piste du niveau, crée un déclencheur invisible de 6 m de rayon posé sur la ligne de stage. Quand un véhicule y entre, le module arme la piste (core.setDragRaceData avec les règles utilisateur sauvegardées) et lance la course (core.startDragRaceActivity), ou ouvre le menu MP si le mode multijoueur est actif. Gère aussi l'entrée multiseat (plusieurs joueurs, un par couloir) et empêche de rejoindre immédiatement après une course tant que le véhicule reste à la ligne.
+Points of interest (POI) of the drag tracks. For each lane of each track of the level, creates an invisible trigger of 6 m radius placed on the stage line. When a vehicle enters it, the module arms the track (core.setDragRaceData with the saved user rules) and starts the race (core.startDragRaceActivity), or opens the MP menu if multiplayer mode is active. Also handles multiseat entry (several players, one per lane) and prevents rejoining immediately after a race as long as the vehicle stays at the line.
 
-## Remarques
+## Notes
 
-- Rayon de déclenchement : 6 m (JOIN_RADIUS_SQ = 36). En multiseat, seul le couloir le plus proche du véhicule le prend en charge.
-- Dans le tutoriel carrière (career_modules_tutorial actif), le point de stage du POI est décalé de 10 m vers l'arrière de la ligne.
-- Les POI ne sont générés que si core.isDragEnabled() est vrai (carrière active ou réglage enableDragRaceInFreeroam).
-- Identifiant d'un POI : 'drag##<nom du fichier de piste>-<shortName du couloir ou laneN>'.
-- En solo freeroam, si une course est finie et que le joueur revient dans le déclencheur, la course est remise à zéro (dragBridge.reset).
-- Un seul appel startDragRaceActivity par couloir tant que la demande n'est pas effacée (poiJoinRequestSent).
+- Trigger radius: 6 m (JOIN_RADIUS_SQ = 36). In multiseat, only the lane closest to the vehicle takes it over.
+- In the career tutorial (career_modules_tutorial active), the POI's stage point is shifted 10 m behind the line.
+- The POIs are only generated if core.isDragEnabled() is true (career active or enableDragRaceInFreeroam setting).
+- POI identifier: 'drag##<track file name>-<lane shortName or laneN>'.
+- In solo freeroam, if a race is finished and the player returns to the trigger, the race is reset (dragBridge.reset).
+- Only one startDragRaceActivity call per lane as long as the request is not cleared (poiJoinRequestSent).
 
-**Dépendances (chargées avant) :** `gameplay_drag_rulesMenu`
+**Dependencies (loaded first):** `gameplay_drag_rulesMenu`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drag_poi.applyUserRulesToData(data, stripId, levelId)` | Applique à data les règles sauvegardées par l'utilisateur pour la piste (dragType, importantTimerId, prefabs.christmasTree.treeType). | 55 |
-| `gameplay_drag_poi.blockRejoinForStagedRacers()` | Marque les racers encore à moins de 6 m d'une ligne de stage : ils ne pourront pas relancer une course tant qu'ils ne sont pas sortis de tous les déclencheurs de stage. | 40 |
-| `gameplay_drag_poi.clearRejoinBlocks()` | Efface la liste des véhicules interdits de relance. | 51 |
-| `gameplay_drag_poi.createStagePoi(data, lane, laneIndex)` | Crée la définition d'un POI (id et markerInfo.invisibleTrigger multiseat avec onInside/onExit) pour un couloir. Renvoie nil avec un warning si le couloir n'a pas de point de stage. | 68 |
-| `gameplay_drag_poi.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook (relayé par core) : ajoute à elements un POI par couloir de chaque piste de drag du niveau, si le drag est activé. *(interne)* *(hook)* | 205 |
+| `gameplay_drag_poi.applyUserRulesToData(data, stripId, levelId)` | Applies to data the rules saved by the user for the track (dragType, importantTimerId, prefabs.christmasTree.treeType). | 55 |
+| `gameplay_drag_poi.blockRejoinForStagedRacers()` | Marks the racers still within 6 m of a stage line: they cannot restart a race until they have left all the stage triggers. | 40 |
+| `gameplay_drag_poi.clearRejoinBlocks()` | Clears the list of vehicles forbidden to restart. | 51 |
+| `gameplay_drag_poi.createStagePoi(data, lane, laneIndex)` | Creates the definition of a POI (id and multiseat markerInfo.invisibleTrigger with onInside/onExit) for a lane. Returns nil with a warning if the lane has no stage point. | 68 |
+| `gameplay_drag_poi.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook (relayed by core): adds to elements one POI per lane of each drag track of the level, if drag is enabled. *(internal)* *(hook)* | 205 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drag_poi.applyUserRulesToData(data, stripId, levelId)`
 
-Applique à data les règles sauvegardées par l'utilisateur pour la piste (dragType, importantTimerId, prefabs.christmasTree.treeType).
+Applies to data the rules saved by the user for the track (dragType, importantTimerId, prefabs.christmasTree.treeType).
 
-- `data` (*table*) : Données de piste, modifiées en place.
-- `stripId` (*string|nil*) : Identifiant de piste.
-- `levelId` (*string|nil*) : Identifiant de niveau.
+- `data` (*table*) : Track data, modified in place.
+- `stripId` (*string|nil*) : Track identifier.
+- `levelId` (*string|nil*) : Level identifier.
 
 #### `gameplay_drag_poi.createStagePoi(data, lane, laneIndex)`
 
-Crée la définition d'un POI (id et markerInfo.invisibleTrigger multiseat avec onInside/onExit) pour un couloir. Renvoie nil avec un warning si le couloir n'a pas de point de stage.
+Creates the definition of a POI (id and multiseat markerInfo.invisibleTrigger with onInside/onExit) for a lane. Returns nil with a warning if the lane has no stage point.
 
-- `data` (*table*) : Données de piste (strip, _fnWithoutExt...).
-- `lane` (*table*) : Couloir (waypoints.stage, shortName).
-- `laneIndex` (*integer*) : Indice du couloir.
-- **renvoie** : table|nil POI {id, markerInfo} ou nil.
+- `data` (*table*) : Track data (strip, _fnWithoutExt...).
+- `lane` (*table*) : Lane (waypoints.stage, shortName).
+- `laneIndex` (*integer*) : Lane index.
+- **returns**: table|nil POI {id, markerInfo} or nil.
 
 #### `gameplay_drag_poi.onGetRawPoiListForLevel(levelIdentifier, elements)`
 
-Hook (relayé par core) : ajoute à elements un POI par couloir de chaque piste de drag du niveau, si le drag est activé.
+Hook (relayed by core): adds to elements one POI per lane of each drag track of the level, if drag is enabled.
 
-- `levelIdentifier` (*string*) : Nom du niveau.
-- `elements` (*table[]*) : Liste de POI complétée en place.
+- `levelIdentifier` (*string*) : Level name.
+- `elements` (*table[]*) : POI list completed in place.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | gameplay_drag_rulesMenu. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drag/poi.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drag/poi.lua`.*

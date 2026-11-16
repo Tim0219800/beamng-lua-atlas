@@ -1,101 +1,101 @@
 # `thrusters`
 
-*Fichier : `lua/vehicle/thrusters.lua` · VM : Véhicule · 189 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/thrusters.lua` · VM: Vehicle · 189 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `thrusters`
+**Access:** global `thrusters`
 
-Applique des poussées au véhicule : propulseurs jbeam (section 'thrusters', commandés par une valeur electrics ou en mode 'auto' qui fabrique une poussée proportionnelle à la vitesse relative entre deux noeuds), impulsions de force entre deux noeuds, et accélérations/vitesses imposées à un cluster de noeuds. Un moddeur ou un outil (scénarios, script) s'en sert pour pousser ou lancer un véhicule pendant une durée donnée. Le module n'est actif dans la boucle de physique que lorsqu'il y a quelque chose à appliquer.
+Applies thrust to the vehicle: jbeam thrusters ('thrusters' section, driven by an electrics value or in 'auto' mode which produces a thrust proportional to the relative speed between two nodes), force impulses between two nodes, and imposed accelerations/velocities on a cluster of nodes. A modder or a tool (scenarios, script) uses it to push or throw a vehicle for a given duration. The module is only active in the physics loop when there is something to apply.
 
-## Exemple
+## Example
 
 ```lua
--- pousser le véhicule vers l'avant (déduit : base arrière -> avant) pendant 0.5 s
+-- push the vehicle forward (inferred: rear base -> front) for 0.5 s
 thrusters.applyImpulseBody(5000, 0.5)
--- imposer une accélération de 20 m/s² vers le haut pendant 0.2 s
+-- impose an acceleration of 20 m/s² upward for 0.2 s
 thrusters.applyAccel(vec3(0, 0, 20), 0.2)
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam d'un thruster (v.data.thrusters) : id1 (noeud source), id2 (noeud destination), control (nom d'une valeur electrics, ou 'auto'), factor (1 par défaut), thrustLimit (poussée max en N, infinie par défaut). La force appliquée est min(electrics[control]*factor, thrustLimit) sur la paire de noeuds (id2, id1), calculée dans updateGFX et appliquée à chaque pas de physique.
-- Mode 'auto' : vel = -vitesse du noeud id2 par rapport à id1 ; si vel > 0.3 m/s, poussée = vel² * factor, bornée par thrustLimit ; si d'autres propulseurs sont actifs, on ajoute la force mesurée entre les noeuds (max(0, force)). Note : factor et thrustLimit n'ont pas de défaut pour les auto (seul le chemin activeThrusters les initialise) : sans factor ou thrustLimit définis, l'arithmétique ou la comparaison peut échouer.
-- Un control qui n'existe pas dans electrics provoque un log d'erreur une seule fois (invalidThrusterControlWarned) ; il est recommandé d'utiliser des bindings de véhicule ou un canal electrics.
-- applyImpulse/applyImpulseBody/applyAccel activent update() (physique) ; lorsque plus rien n'est actif, M.update repasse à nop et updateCorePhysicsStepEnabled() est rappelée pour désactiver le pas physique.
-- Bug/incohérence : applyImpulse et applyImpulseBody remplacent dt par lastDt (`dt or lastDt`) seulement quand l'impulsion existe déjà ; pour une nouvelle impulsion elles insèrent le dt brut ; si dt est nil, thruster[4] est nil et le calcul `ttl - physicsDt` de update() lève une erreur. Toujours passer dt.
-- Unités : forces en N, accélérations en m/s², vitesses en m/s, durées en s ; angularAccel est une accélération angulaire (rad/s², vec3).
-- lastDt et physicsDt, updateCorePhysicsStepEnabled sont des variables globales du jeu (non définies dans ce fichier).
+- jbeam keys of a thruster (v.data.thrusters): id1 (source node), id2 (destination node), control (name of an electrics value, or 'auto'), factor (1 by default), thrustLimit (max thrust in N, infinite by default). The applied force is min(electrics[control]*factor, thrustLimit) on the node pair (id2, id1), computed in updateGFX and applied at each physics step.
+- 'auto' mode: vel = -speed of node id2 relative to id1; if vel > 0.3 m/s, thrust = vel² * factor, capped by thrustLimit; if other thrusters are active, the force measured between the nodes is added (max(0, force)). Note: factor and thrustLimit have no default for auto ones (only the activeThrusters path initializes them): without factor or thrustLimit defined, the arithmetic or the comparison may fail.
+- A control that does not exist in electrics causes an error log only once (invalidThrusterControlWarned); it is recommended to use vehicle bindings or an electrics channel.
+- applyImpulse/applyImpulseBody/applyAccel activate update() (physics); when nothing is active any more, M.update goes back to nop and updateCorePhysicsStepEnabled() is called again to disable the physics step.
+- Bug/inconsistency: applyImpulse and applyImpulseBody replace dt with lastDt (`dt or lastDt`) only when the impulse already exists; for a new impulse they insert the raw dt; if dt is nil, thruster[4] is nil and the computation `ttl - physicsDt` in update() raises an error. Always pass dt.
+- Units: forces in N, accelerations in m/s², speeds in m/s, durations in s; angularAccel is an angular acceleration (rad/s², vec3).
+- lastDt and physicsDt, updateCorePhysicsStepEnabled are game global variables (not defined in this file).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `thrusters.applyAccel(accel, dt, nodeId, angularAccel)` | Impose une accélération linéaire (et angulaire facultative) au cluster de noeuds contenant nodeId pendant dt secondes (obj:applyClusterLinearAngularAccel). Une seule accélération par nodeId à la fois : un nouvel appel remplace l'ancien. | 124 |
-| `thrusters.applyImpulse(n1, n2, force, dt)` | Applique une force constante entre deux noeuds pendant dt secondes ; si l'impulsion existe déjà pour cette paire de noeuds, met à jour sa force et sa durée. | 95 |
-| `thrusters.applyImpulseBody(force, dt)` | Comme applyImpulse mais entre le noeud ref et le noeud back du véhicule (refNodes[0].ref et .back), c'est-à-dire selon l'axe longitudinal du châssis. | 109 |
-| `thrusters.applyVelocity(velocity, dt, nodeId)` | Fait atteindre une vitesse donnée au cluster en une durée dt, en appliquant l'accélération (velocity - vitesse actuelle hors roues) / dt. Ne fait rien si dt vaut 0. | 137 |
-| `thrusters.getAccelDt(nodeId)` | Renvoie la durée restante d'une accélération appliquée par applyAccel/applyVelocity sur ce noeud. | 132 |
-| `thrusters.init()` | Charge les propulseurs jbeam du véhicule (séparés en auto et commandés), remet à zéro les impulsions et choisit update/updateGFX. Si le véhicule n'a pas de thrusters, met les deux à nop. *(interne)* | 148 |
-| `thrusters.isPhysicsStepUsed()` | Indique si le module est actuellement appelé à chaque pas de physique (M.update == update). *(interne)* | 144 |
-| `thrusters.reset()` | Identique à init (M.reset = init) : réinitialise les propulseurs. *(interne)* | 148 |
+| `thrusters.applyAccel(accel, dt, nodeId, angularAccel)` | Imposes a linear (and optionally angular) acceleration on the cluster of nodes containing nodeId for dt seconds (obj:applyClusterLinearAngularAccel). Only one acceleration per nodeId at a time: a new call replaces the old one. | 124 |
+| `thrusters.applyImpulse(n1, n2, force, dt)` | Applies a constant force between two nodes for dt seconds; if the impulse already exists for this node pair, updates its force and duration. | 95 |
+| `thrusters.applyImpulseBody(force, dt)` | Like applyImpulse but between the vehicle's ref node and back node (refNodes[0].ref and .back), i.e. along the longitudinal axis of the chassis. | 109 |
+| `thrusters.applyVelocity(velocity, dt, nodeId)` | Makes the cluster reach a given speed over a duration dt, by applying the acceleration (velocity - current speed excluding wheels) / dt. Does nothing if dt is 0. | 137 |
+| `thrusters.getAccelDt(nodeId)` | Returns the remaining duration of an acceleration applied by applyAccel/applyVelocity on this node. | 132 |
+| `thrusters.init()` | Loads the vehicle's jbeam thrusters (split into auto and controlled), resets the impulses and chooses update/updateGFX. If the vehicle has no thrusters, sets both to nop. *(internal)* | 148 |
+| `thrusters.isPhysicsStepUsed()` | Indicates whether the module is currently called at each physics step (M.update == update). *(internal)* | 144 |
+| `thrusters.reset()` | Identical to init (M.reset = init): reinitializes the thrusters. *(internal)* | 148 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `thrusters.applyAccel(accel, dt, nodeId, angularAccel)`
 
-Impose une accélération linéaire (et angulaire facultative) au cluster de noeuds contenant nodeId pendant dt secondes (obj:applyClusterLinearAngularAccel). Une seule accélération par nodeId à la fois : un nouvel appel remplace l'ancien.
+Imposes a linear (and optionally angular) acceleration on the cluster of nodes containing nodeId for dt seconds (obj:applyClusterLinearAngularAccel). Only one acceleration per nodeId at a time: a new call replaces the old one.
 
-- `accel` (*vec3*) : Accélération linéaire en m/s² (modifiée sur place en fin de durée).
-- `dt` (*number|nil*) : Durée en secondes (lastDt par défaut).
-- `nodeId` (*integer|nil*) : Noeud du cluster (noeud ref par défaut, ou 0).
-- `angularAccel` (*vec3|nil*) : Accélération angulaire en rad/s² (zéro par défaut).
+- `accel` (*vec3*) : Linear acceleration in m/s² (modified in place at the end of the duration).
+- `dt` (*number|nil*) : Duration in seconds (lastDt by default).
+- `nodeId` (*integer|nil*) : Node of the cluster (ref node by default, or 0).
+- `angularAccel` (*vec3|nil*) : Angular acceleration in rad/s² (zero by default).
 
 #### `thrusters.applyImpulse(n1, n2, force, dt)`
 
-Applique une force constante entre deux noeuds pendant dt secondes ; si l'impulsion existe déjà pour cette paire de noeuds, met à jour sa force et sa durée.
+Applies a constant force between two nodes for dt seconds; if the impulse already exists for this node pair, updates its force and duration.
 
-- `n1` (*integer*) : Noeud (cid) auquel la force est appliquée en premier.
-- `n2` (*integer*) : Noeud (cid) de l'autre extrémité.
-- `force` (*number*) : Force en N (obj:applyForce(n1, n2, force)).
-- `dt` (*number*) : Durée en secondes (à fournir : voir bug dans notes).
+- `n1` (*integer*) : Node (cid) to which the force is applied first.
+- `n2` (*integer*) : Node (cid) of the other end.
+- `force` (*number*) : Force in N (obj:applyForce(n1, n2, force)).
+- `dt` (*number*) : Duration in seconds (must be provided: see bug in notes).
 
 #### `thrusters.applyImpulseBody(force, dt)`
 
-Comme applyImpulse mais entre le noeud ref et le noeud back du véhicule (refNodes[0].ref et .back), c'est-à-dire selon l'axe longitudinal du châssis.
+Like applyImpulse but between the vehicle's ref node and back node (refNodes[0].ref and .back), i.e. along the longitudinal axis of the chassis.
 
-- `force` (*number*) : Force en N.
-- `dt` (*number*) : Durée en secondes.
+- `force` (*number*) : Force in N.
+- `dt` (*number*) : Duration in seconds.
 
 #### `thrusters.applyVelocity(velocity, dt, nodeId)`
 
-Fait atteindre une vitesse donnée au cluster en une durée dt, en appliquant l'accélération (velocity - vitesse actuelle hors roues) / dt. Ne fait rien si dt vaut 0.
+Makes the cluster reach a given speed over a duration dt, by applying the acceleration (velocity - current speed excluding wheels) / dt. Does nothing if dt is 0.
 
-- `velocity` (*vec3*) : Vitesse cible en m/s.
-- `dt` (*number|nil*) : Durée en secondes (lastDt par défaut).
-- `nodeId` (*integer|nil*) : Noeud du cluster (noeud ref par défaut).
+- `velocity` (*vec3*) : Target speed in m/s.
+- `dt` (*number|nil*) : Duration in seconds (lastDt by default).
+- `nodeId` (*integer|nil*) : Node of the cluster (ref node by default).
 
 #### `thrusters.getAccelDt(nodeId)`
 
-Renvoie la durée restante d'une accélération appliquée par applyAccel/applyVelocity sur ce noeud.
+Returns the remaining duration of an acceleration applied by applyAccel/applyVelocity on this node.
 
-- `nodeId` (*integer*) : Noeud du cluster.
-- **renvoie** : number Durée restante en secondes (0 s'il n'y en a pas).
+- `nodeId` (*integer*) : Node of the cluster.
+- **returns**: number Remaining duration in seconds (0 if there is none).
 
 #### `thrusters.isPhysicsStepUsed()`
 
-Indique si le module est actuellement appelé à chaque pas de physique (M.update == update).
+Indicates whether the module is currently called at each physics step (M.update == update).
 
-- **renvoie** : boolean true s'il y a des poussées en cours.
+- **returns**: boolean true if there are thrusts in progress.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `update` | function | nop, ou la fonction de physique de ce module quand au moins un propulseur, impulsion ou cluster est actif. Appelée à chaque pas de physique. ⚠ nop est un global du jeu. |
-| `updateGFX` | function | nop, ou la fonction qui recalcule les poussées commandées par electrics à chaque frame graphique si le véhicule a des thrusters jbeam. |
+| `update` | function | nop, or this module's physics function when at least one thruster, impulse or cluster is active. Called at each physics step. ⚠ nop is a game global. |
+| `updateGFX` | function | nop, or the function that recomputes the electrics-driven thrusts each graphics frame if the vehicle has jbeam thrusters. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `applyClusterLinearAngularAccel`, `applyForce`, `getClusterVelocityWithoutWheels`, `getNodeForce`, `getNodeVelocity`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/thrusters.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/thrusters.lua`.*

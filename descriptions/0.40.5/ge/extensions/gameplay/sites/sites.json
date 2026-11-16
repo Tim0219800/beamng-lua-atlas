@@ -1,89 +1,184 @@
 {
   "path": "lua/ge/extensions/gameplay/sites/sites.lua",
-  "module": "Classe « Sites » : conteneur d'un fichier *.sites.json. Regroupe trois listes triées (locations, zones, parkingSpots), des index par tag et des arbres spatiaux (kd-trees) pour les requêtes par position. Le module renvoie un constructeur ; on l'obtient en général via gameplay_sites_sitesManager.loadSites. Après chargement, finalizeSites() calcule les liens zone/lieu/place et les index.",
+  "module": "\"Sites\" class: container of a *.sites.json file. Groups three sorted lists (locations, zones, parkingSpots), tag indexes and spatial trees (kd-trees) for position queries. The module returns a constructor; it is usually obtained via gameplay_sites_sitesManager.loadSites. After loading, finalizeSites() computes the zone/location/spot links and the indexes.",
   "usage": "local sites = gameplay_sites_sitesManager.loadSites(path)\nlocal list = sites:getRadialParkingSpots(pos, 0, 50)\nfor _, e in ipairs(list) do print(e.ps.name, math.sqrt(e.squaredDistance)) end",
   "notes": [
-    "Le compteur d'identifiants _uid est local au module et partagé par tous les objets sites : les identifiants sont uniques globalement, pas par fichier.",
-    "onDeserialized vide locations et zones mais pas parkingSpots avant de recharger.",
-    "Les requêtes radiales travaillent en 2D (z ignoré) ; les distances renvoyées sont au carré.",
-    "Les requêtes spatiales (getRadial*, getClosestParkingSpot, getZonesForPosition) ne fonctionnent qu'après finalizeSites()."
+    "The _uid identifier counter is local to the module and shared by all sites objects: identifiers are globally unique, not per file.",
+    "onDeserialized clears locations and zones but not parkingSpots before reloading.",
+    "Radial queries work in 2D (z ignored); the returned distances are squared.",
+    "Spatial queries (getRadial*, getClosestParkingSpot, getZonesForPosition) only work after finalizeSites()."
   ],
   "classes": {
     "C": {
-      "desc": "Objet sites. Champs : name, description, id, locations / zones / parkingSpots (gameplay/util/sortedList, avec .sorted et .objects), tags, sortedTags, tagsToZones, tagsToLocations, quadtreeLocations, quadtreeZones, quadtreeParkingSpots, dir, filename.",
+      "desc": "Sites object. Fields: name, description, id, locations / zones / parkingSpots (gameplay/util/sortedList, with .sorted and .objects), tags, sortedTags, tagsToZones, tagsToLocations, quadtreeLocations, quadtreeZones, quadtreeParkingSpots, dir, filename.",
       "functions": {
         "getNextUniqueIdentifier": {
-          "desc": "Incrémente et renvoie le compteur global d'identifiants d'objets de sites.",
-          "returns": [{"type": "integer", "desc": "Nouvel identifiant."}]
+          "desc": "Increments and returns the global counter of sites object identifiers.",
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "New identifier."
+            }
+          ]
         },
         "init": {
-          "desc": "Constructeur : crée les trois listes triées et un nom par défaut « Sites ».",
-          "params": {"name": {"type": "string|nil", "desc": "Nom du jeu de sites."}},
+          "desc": "Constructor: creates the three sorted lists and a default name \"Sites\".",
+          "params": {
+            "name": {
+              "type": "string|nil",
+              "desc": "Name of the sites set."
+            }
+          },
           "internal": true
         },
-        "drawDebug": {"desc": "Dessine en debug toutes les locations, zones et places de parking."},
+        "drawDebug": {
+          "desc": "Draws all locations, zones and parking spots in debug."
+        },
         "onSerialize": {
-          "desc": "Sérialise name, description, les trois listes, dir et filename.",
-          "returns": [{"type": "table", "desc": "Données JSON-compatibles."}]
+          "desc": "Serializes name, description, the three lists, dir and filename.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "JSON-compatible data."
+            }
+          ]
         },
         "onDeserialized": {
-          "desc": "Recharge le jeu de sites depuis une table sérialisée (les « \\n » littéraux de la description deviennent de vrais retours à la ligne).",
+          "desc": "Reloads the sites set from a serialized table (literal \"\\n\" in the description become real line breaks).",
           "params": {
-            "data": {"type": "table|nil", "desc": "Données du fichier .sites.json."},
-            "oldIdMap": {"type": "table|nil", "desc": "Correspondance ancien id -> nouvel id, remplie par les listes."}
+            "data": {
+              "type": "table|nil",
+              "desc": "Data of the .sites.json file."
+            },
+            "oldIdMap": {
+              "type": "table|nil",
+              "desc": "Old id -> new id mapping, filled by the lists."
+            }
           }
         },
         "finalizeSites": {
-          "desc": "À appeler après chargement. Génère les places multiples, trie, construit les index de noms et de tags, rattache les locations et places aux zones qui les contiennent (test 2D) et construit les kd-trees."
+          "desc": "To call after loading. Generates multiple spots, sorts, builds the name and tag indexes, attaches locations and spots to the zones that contain them (2D test) and builds the kd-trees."
         },
         "getRadialLocations": {
-          "desc": "Liste les locations dont la distance 2D à pos est comprise entre minRadius et maxRadius.",
+          "desc": "Lists the locations whose 2D distance to pos is between minRadius and maxRadius.",
           "params": {
-            "pos": {"type": "vec3", "desc": "Centre de recherche."},
-            "minRadius": {"type": "number", "desc": "Distance minimale en mètres."},
-            "maxRadius": {"type": "number", "desc": "Distance maximale en mètres."}
+            "pos": {
+              "type": "vec3",
+              "desc": "Search center."
+            },
+            "minRadius": {
+              "type": "number",
+              "desc": "Minimum distance in meters."
+            },
+            "maxRadius": {
+              "type": "number",
+              "desc": "Maximum distance in meters."
+            }
           },
-          "returns": [{"type": "table[]", "desc": "Éléments {loc, squaredDistance} (distance au carré)."}]
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "Items {loc, squaredDistance} (squared distance)."
+            }
+          ]
         },
         "getRadialParkingSpots": {
-          "desc": "Liste les places de parking dont la distance 2D à pos est comprise entre minRadius et maxRadius.",
+          "desc": "Lists the parking spots whose 2D distance to pos is between minRadius and maxRadius.",
           "params": {
-            "pos": {"type": "vec3", "desc": "Centre de recherche."},
-            "minRadius": {"type": "number", "desc": "Distance minimale en mètres."},
-            "maxRadius": {"type": "number", "desc": "Distance maximale en mètres."}
+            "pos": {
+              "type": "vec3",
+              "desc": "Search center."
+            },
+            "minRadius": {
+              "type": "number",
+              "desc": "Minimum distance in meters."
+            },
+            "maxRadius": {
+              "type": "number",
+              "desc": "Maximum distance in meters."
+            }
           },
-          "returns": [{"type": "table[]", "desc": "Éléments {ps, squaredDistance} (distance au carré)."}]
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "Items {ps, squaredDistance} (squared distance)."
+            }
+          ]
         },
         "getClosestParkingSpot": {
-          "desc": "Place de parking la plus proche de pos (kd-tree 3D).",
-          "params": {"pos": {"type": "vec3", "desc": "Position de référence."}},
+          "desc": "Parking spot closest to pos (3D kd-tree).",
+          "params": {
+            "pos": {
+              "type": "vec3",
+              "desc": "Reference position."
+            }
+          },
           "returns": [
-            {"type": "table|nil", "desc": "Objet parkingSpot."},
-            {"type": "number", "desc": "Distance renvoyée par findNearest du kd-tree."}
+            {
+              "type": "table|nil",
+              "desc": "parkingSpot object."
+            },
+            {
+              "type": "number",
+              "desc": "Distance returned by the kd-tree's findNearest."
+            }
           ]
         },
         "getZonesForPosition": {
-          "desc": "Zones dont le contour 2D contient pos.",
-          "params": {"pos": {"type": "vec3", "desc": "Position à tester."}},
-          "returns": [{"type": "table[]", "desc": "Liste d'objets zone."}]
-        },
-        "zonesForPositionIterator": {
-          "desc": "Itérateur générique sur les zones contenant pos, à utiliser dans un for : for id, zone in sites:zonesForPositionIterator(pos) do. Évite d'allouer une table ; ctx peut être réutilisé.",
+          "desc": "Zones whose 2D outline contains pos.",
           "params": {
-            "pos": {"type": "vec3", "desc": "Position à tester."},
-            "ctx": {"type": "table|nil", "desc": "Table de contexte réutilisable."}
+            "pos": {
+              "type": "vec3",
+              "desc": "Position to test."
+            }
           },
           "returns": [
-            {"type": "function", "desc": "Fonction itératrice (ctx) -> id, zone."},
-            {"type": "table", "desc": "Contexte."}
+            {
+              "type": "table[]",
+              "desc": "List of zone objects."
+            }
+          ]
+        },
+        "zonesForPositionIterator": {
+          "desc": "Generic iterator over the zones containing pos, to use in a for: for id, zone in sites:zonesForPositionIterator(pos) do. Avoids allocating a table; ctx can be reused.",
+          "params": {
+            "pos": {
+              "type": "vec3",
+              "desc": "Position to test."
+            },
+            "ctx": {
+              "type": "table|nil",
+              "desc": "Reusable context table."
+            }
+          },
+          "returns": [
+            {
+              "type": "function",
+              "desc": "Iterator function (ctx) -> id, zone."
+            },
+            {
+              "type": "table",
+              "desc": "Context."
+            }
           ]
         },
         "getTagsForZonesAtPosition": {
-          "desc": "Réunit les tags de toutes les zones qui contiennent pos.",
-          "params": {"pos": {"type": "vec3", "desc": "Position à tester."}},
+          "desc": "Gathers the tags of all zones that contain pos.",
+          "params": {
+            "pos": {
+              "type": "vec3",
+              "desc": "Position to test."
+            }
+          },
           "returns": [
-            {"type": "table<string, integer>", "desc": "Ensemble des tags (valeur 1)."},
-            {"type": "string[]", "desc": "Tags triés alphabétiquement."}
+            {
+              "type": "table<string, integer>",
+              "desc": "Set of tags (value 1)."
+            },
+            {
+              "type": "string[]",
+              "desc": "Tags sorted alphabetically."
+            }
           ]
         }
       }

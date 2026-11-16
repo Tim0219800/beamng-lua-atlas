@@ -1,18 +1,18 @@
 # `flowgraph_nodes_ui_hideGameUI`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/hideGameUI.lua` · VM : Game Engine (GE) · 29 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/hideGameUI.lua` · VM: Game Engine (GE) · 29 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/hideGameUI")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/hideGameUI")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Hide Game UI » (catégorie repeat_instant, auteur BeamNG) : affiche ou masque l'UI normale du jeu (apps, etc.) avec extensions.ui_visibility.setCef(not value). Entrée « value » (vrai = masquer).
+Flowgraph node "Hide Game UI" (category repeat_instant, author BeamNG): shows or hides the normal game UI (apps, etc.) with extensions.ui_visibility.setCef(not value). Input "value" (true = hide).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Appelle ui_visibility.setCef(not value) à chaque frame. | 23 |
+| `C:work()` | Calls ui_visibility.setCef(not value) every frame. | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/hideGameUI.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/hideGameUI.lua`.*

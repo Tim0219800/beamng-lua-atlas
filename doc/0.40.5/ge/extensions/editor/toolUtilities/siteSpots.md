@@ -1,76 +1,76 @@
 # `editor_toolUtilities_siteSpots`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/siteSpots.lua` · VM : Game Engine (GE) · 162 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/siteSpots.lua` · VM: Game Engine (GE) · 162 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_siteSpots` : `extensions.load("editor_toolUtilities_siteSpots")`, puis la globale `editor_toolUtilities_siteSpots`
+**Access:** extension `editor_toolUtilities_siteSpots`: `extensions.load("editor_toolUtilities_siteSpots")`, then the global `editor_toolUtilities_siteSpots`
 
-Places de stationnement telles qu'un site les porte et telles que le niveau les relit dans son fichier de sites. Une place n'est ni de la géométrie ni de la peinture : c'est une boîte que le jeu cherche quand il veut garer une voiture. Elle ne va donc pas dans une coque, mais dans city.sites.json du niveau (champ parkingSpots), seule sortie d'une cuisson de site qui n'est pas un fichier à elle. Elle attend la « gravure » : cuites en local et écrites à ce moment, les copies d'un parking ont chacune leurs places à leur endroit et à leur hauteur.
+Parking spaces as a site carries them and as the level rereads them in its sites file. A space is neither geometry nor paint: it is a box the game looks for when it wants to park a car. It therefore does not go into a shell, but into the level's city.sites.json (parkingSpots field), the only output of a site bake that is not a file of its own. It waits for the "burn": baked locally and written at that time, the copies of a parking lot each have their spaces at their place and at their height.
 
-## Remarques
+## Notes
 
-- Place cuite : { x, y, yaw, w (largeur d'une place), d (profondeur), n (nombre de places du run, absent pour une place seule), dir ('Left' si le run avance à gauche) }. Seule la position est recentrée ; le cap reste, place y ajoute celui du placement.
-- Un run de places identiques côte à côte est écrit comme UNE multi-place (isMultiSpot, spotAmount = n, spotOffset = 0 car les places sont jointes bord à bord, spotDirection 'Right' par défaut) comme le font les places de villes faites à la main.
-- SPOT_H = 3 : hauteur de la boîte ; la position est au sol et la boîte s'étend d'une demi-hauteur de chaque côté.
-- Le fichier est <dossier du niveau>/city.sites.json (getMissionFilename). Si absent ou illisible, un fichier de sites vide est créé en mémoire { name = 'sites', description, locations, zones, parkingSpots }.
-- write ajoute au lieu de remplacer : noms prefix + numéro (en sautant ceux déjà pris) et oldId au-delà du plus grand existant, pour que deux gravures et une place faite à la main cohabitent.
-- write renvoie nil sans place à écrire ou sans niveau chargé (sitesPath nil).
+- Baked space: { x, y, yaw, w (width of a space), d (depth), n (number of spaces in the run, absent for a single space), dir ('Left' if the run advances to the left) }. Only the position is recentered; the heading stays, place adds that of the placement to it.
+- A run of identical spaces side by side is written as ONE multi-space (isMultiSpot, spotAmount = n, spotOffset = 0 because the spaces are joined edge to edge, spotDirection 'Right' by default) like the spaces of hand-made cities.
+- SPOT_H = 3: height of the box; the position is on the ground and the box extends half a height on each side.
+- The file is <level folder>/city.sites.json (getMissionFilename). If absent or unreadable, an empty sites file is created in memory { name = 'sites', description, locations, zones, parkingSpots }.
+- write appends instead of replacing: names prefix + number (skipping those already taken) and oldId beyond the largest existing one, so that two burns and a hand-made space coexist.
+- write returns nil without a space to write or without a loaded level (sitesPath nil).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_siteSpots.localise(list, ox, oy)` | Les places calculées par le solveur d'un site, locales à l'origine de cuisson. Chaque place entre sous la forme { x, y, yaw, w, d, n, dir } et sort arrondie au millimètre, n et dir omis pour une place simple droite. Renvoie nil si la liste est vide. | 38 |
-| `editor_toolUtilities_siteSpots.place(rec, px, py, yaw, ox, oy, groundZ)` | L'inverse : les places du manifeste comme enregistrements parkingSpot (pos, rot, scl = {largeur, profondeur, SPOT_H}, isMultiSpot, spotAmount, spotOffset, spotDirection, spotRotation, color, customFields), posées là où se trouve un placement et tournées sur son cap. (ox, oy) est le pivot du site (milieu de son empreinte). groundZ(x, y) donne la hauteur du sol, car une place repose sur le sol où elle est et non sur le repère du placement. Aucun nom ici : ils doivent être uniques dans tout le fichier du niveau et sont attribués par write. | 62 |
-| `editor_toolUtilities_siteSpots.restore(undo)` | Annule un write : remet le tableau parkingSpots exactement comme il était. | 145 |
-| `editor_toolUtilities_siteSpots.write(spots, prefix)` | Ajoute des places au fichier de sites du niveau, sous des noms commençant par prefix, en conservant l'existant. Écrit le fichier avec jsonWriteFile. | 108 |
+| `editor_toolUtilities_siteSpots.localise(list, ox, oy)` | The spaces computed by a site's solver, local to the bake origin. Each space enters in the form { x, y, yaw, w, d, n, dir } and comes out rounded to the millimeter, n and dir omitted for a simple right-hand space. Returns nil if the list is empty. | 38 |
+| `editor_toolUtilities_siteSpots.place(rec, px, py, yaw, ox, oy, groundZ)` | The inverse: the manifest's spaces as parkingSpot records (pos, rot, scl = {width, depth, SPOT_H}, isMultiSpot, spotAmount, spotOffset, spotDirection, spotRotation, color, customFields), placed where a placement is and rotated to its heading. (ox, oy) is the site's pivot (middle of its footprint). groundZ(x, y) gives the ground height, because a space rests on the ground where it is and not on the placement's frame. No name here: they must be unique across the whole level file and are assigned by write. | 62 |
+| `editor_toolUtilities_siteSpots.restore(undo)` | Undoes a write: puts the parkingSpots array back exactly as it was. | 145 |
+| `editor_toolUtilities_siteSpots.write(spots, prefix)` | Adds spaces to the level's sites file, under names starting with prefix, keeping what exists. Writes the file with jsonWriteFile. | 108 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_siteSpots.localise(list, ox, oy)`
 
-Les places calculées par le solveur d'un site, locales à l'origine de cuisson. Chaque place entre sous la forme { x, y, yaw, w, d, n, dir } et sort arrondie au millimètre, n et dir omis pour une place simple droite. Renvoie nil si la liste est vide.
+The spaces computed by a site's solver, local to the bake origin. Each space enters in the form { x, y, yaw, w, d, n, dir } and comes out rounded to the millimeter, n and dir omitted for a simple right-hand space. Returns nil if the list is empty.
 
-- `list` (*table|nil*) : Liste de places { x, y, yaw, w, d, n, dir }.
-- `ox` (*number|nil*) : x de l'origine (défaut 0).
-- `oy` (*number|nil*) : y de l'origine (défaut 0).
-- **renvoie** : table|nil Liste de places locales.
+- `list` (*table|nil*) : List of spaces { x, y, yaw, w, d, n, dir }.
+- `ox` (*number|nil*) : x of the origin (default 0).
+- `oy` (*number|nil*) : y of the origin (default 0).
+- **returns**: table|nil List of local spaces.
 
 #### `editor_toolUtilities_siteSpots.place(rec, px, py, yaw, ox, oy, groundZ)`
 
-L'inverse : les places du manifeste comme enregistrements parkingSpot (pos, rot, scl = {largeur, profondeur, SPOT_H}, isMultiSpot, spotAmount, spotOffset, spotDirection, spotRotation, color, customFields), posées là où se trouve un placement et tournées sur son cap. (ox, oy) est le pivot du site (milieu de son empreinte). groundZ(x, y) donne la hauteur du sol, car une place repose sur le sol où elle est et non sur le repère du placement. Aucun nom ici : ils doivent être uniques dans tout le fichier du niveau et sont attribués par write.
+The inverse: the manifest's spaces as parkingSpot records (pos, rot, scl = {width, depth, SPOT_H}, isMultiSpot, spotAmount, spotOffset, spotDirection, spotRotation, color, customFields), placed where a placement is and rotated to its heading. (ox, oy) is the site's pivot (middle of its footprint). groundZ(x, y) gives the ground height, because a space rests on the ground where it is and not on the placement's frame. No name here: they must be unique across the whole level file and are assigned by write.
 
-- `rec` (*table|nil*) : Places du manifeste.
-- `px` (*number*) : x du placement.
-- `py` (*number*) : y du placement.
-- `yaw` (*number|nil*) : Cap en radians (défaut 0).
-- `ox` (*number|nil*) : x du pivot (défaut 0).
-- `oy` (*number|nil*) : y du pivot (défaut 0).
-- `groundZ` (*function|nil*) : groundZ(x, y) renvoie la hauteur du sol (0 si absent).
-- **renvoie** : table|nil Liste d'enregistrements parkingSpot, nil si vide.
+- `rec` (*table|nil*) : Manifest spaces.
+- `px` (*number*) : x of the placement.
+- `py` (*number*) : y of the placement.
+- `yaw` (*number|nil*) : Heading in radians (default 0).
+- `ox` (*number|nil*) : x of the pivot (default 0).
+- `oy` (*number|nil*) : y of the pivot (default 0).
+- `groundZ` (*function|nil*) : groundZ(x, y) returns the ground height (0 if absent).
+- **returns**: table|nil List of parkingSpot records, nil if empty.
 
 #### `editor_toolUtilities_siteSpots.restore(undo)`
 
-Annule un write : remet le tableau parkingSpots exactement comme il était.
+Undoes a write: puts the parkingSpots array back exactly as it was.
 
-- `undo` (*table|nil*) : Table renvoyée par write.
+- `undo` (*table|nil*) : Table returned by write.
 
 #### `editor_toolUtilities_siteSpots.write(spots, prefix)`
 
-Ajoute des places au fichier de sites du niveau, sous des noms commençant par prefix, en conservant l'existant. Écrit le fichier avec jsonWriteFile.
+Adds spaces to the level's sites file, under names starting with prefix, keeping what exists. Writes the file with jsonWriteFile.
 
-- `spots` (*table|nil*) : Enregistrements parkingSpot renvoyés par place ; leur name et oldId sont renseignés par cet appel.
-- `prefix` (*string*) : Préfixe des noms de places.
-- **renvoie** : table|nil { path, prev } : ce qu'il faut pour annuler (le tableau tel qu'il était), ou nil s'il n'y avait rien à ajouter.
+- `spots` (*table|nil*) : parkingSpot records returned by place; their name and oldId are filled in by this call.
+- `prefix` (*string*) : Prefix of the space names.
+- **returns**: table|nil { path, prev }: what is needed to undo (the array as it was), or nil if there was nothing to add.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `SPOT_H` | number | Hauteur de la boîte d'une place, en mètres (3). |
+| `SPOT_H` | number | Height of a space's box, in meters (3). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/siteSpots.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/siteSpots.lua`.*

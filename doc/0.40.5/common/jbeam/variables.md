@@ -1,15 +1,15 @@
 # `jbeam_variables`
 
-*Fichier : `lua/common/jbeam/variables.lua` · VM : Commun (GE + véhicule) · 527 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/variables.lua` · VM: Common (GE + vehicle) · 527 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/variables")`
+**Access:** `require("jbeam/variables")`
 
-Gère les variables jbeam (réglages de véhicule de type range : géométrie, alignement, etc.) et la substitution des '$...' dans les pièces. Il collecte les variables de la pièce racine et de toutes les pièces choisies en respectant la portée des slots (un slot peut fournir des variables à sa pièce enfant), calcule leur valeur (valeur de l'utilisateur ou défaut, bornée), remplace les références '$nom', '$=expression', '$>>composant' dans les valeurs ET les clés des tables, fusionne les sections 'components' et prépare vehicle.variables pour l'UI. Utilisé par le chargeur jbeam.
+Manages jbeam variables (range-type vehicle settings: geometry, alignment, etc.) and the substitution of '$...' in parts. It collects the variables of the root part and of all chosen parts while respecting slot scope (a slot can provide variables to its child part), computes their value (user value or default, clamped), replaces the references '$name', '$=expression', '$>>component' in the values AND keys of tables, merges the 'components' sections and prepares vehicle.variables for the UI. Used by the jbeam loader.
 
-## Exemple
+## Example
 
 ```lua
--- ordre d'utilisation par le chargeur (jbeam/loader) :
+-- order of use by the loader (jbeam/loader):
 local v = require('jbeam/variables')
 local vars = v.getAllVariables(rootPart, unifyJournal, vehicleConfig)
 v.processParts(rootPart, unifyJournal, vehicleConfig, vars)
@@ -18,70 +18,70 @@ v.postProcessVariables(vehicle, vars)
 v.cleanup(vehicle)
 ```
 
-## Remarques
+## Notes
 
-- Syntaxe de substitution (chaînes commençant par '$') : '$nom' = valeur de la variable (le champ val si c'est une définition range) ; '$=expr' = expression évaluée par jbeam/expressionParser avec les variables courantes (parseSafe) ; '$.xxx' = '<$prefix>xxx<$suffix>' (préfixe/suffixe fournis par la portée) ; '$>>chemin.vers.valeur' = copie profonde d'une valeur de la section components (chemin avec points, premier élément obligatoirement 'components', accepté seulement pour les valeurs, jamais pour les clés). Les chaînes commençant par '$+', '$<', '$>', '$*' sont des indicateurs de fusion numérique (voir slotSystem) et ne sont pas substituées.
-- Une variable inconnue est journalisée en erreur (log E 'missing variable') et sa valeur devient nil.
-- Variables de type 'range' : champs name, type='range', min, max, default (nombres obligatoires), unit, category (défaut 'alignment', 'cat.sous' est scindé en category/subCategory), minDis/maxDis/stepDis pour l'affichage (défaut -100/100/1 sans unité, ou min/max et (maxDis-minDis)/100 avec unité), step, hidden. La valeur finale val vient de vehicleConfig.vars[name] sinon default, bornée à [min,max] (message d'avertissement si elle est modifiée). Un type autre que 'range' est ignoré avec erreur.
-- Portée par slot : chaque pièce hérite des variables de sa pièce parente, plus les variables du slot (slotDef.variables, résolues contre la portée parente, jusqu'à 400 passes) et ses propres variables. Si une pièce redéfinit une variable de même nom, la dernière rencontrée (parcours du journal de l'enfant vers le parent) écrase la première dans la liste globale.
-- BUG probable : applySlotVars termine par `for k, v in ipairs(slotVars)` sur une table à clés textuelles : cette boucle ne s'exécute jamais, donc les variables de slot encore non résolues après les 400 passes sont silencieusement perdues au lieu d'être évaluées avec parseSafe.
-- La variable spéciale '$components' = {val = rootPart.components} est ajoutée aux portées pour permettre d'écrire '$=$components.xxx' dans des expressions. postProcessVariables l'exclut de vehicle.variables.
-- cleanup retire des fonctions des composants (setFunctionsToNil, récursif) et supprime de vehicle.variables celles marquées hidden = true : vehicle.variables doit déjà exister (sinon erreur : postProcessVariables doit être appelé avant).
+- Substitution syntax (strings starting with '$'): '$name' = value of the variable (the val field if it is a range definition); '$=expr' = expression evaluated by jbeam/expressionParser with the current variables (parseSafe); '$.xxx' = '<$prefix>xxx<$suffix>' (prefix/suffix provided by the scope); '$>>path.to.value' = deep copy of a value from the components section (dotted path, first element must be 'components', accepted only for values, never for keys). Strings starting with '$+', '$<', '$>', '$*' are numeric merge indicators (see slotSystem) and are not substituted.
+- An unknown variable is logged as an error (log E 'missing variable') and its value becomes nil.
+- 'range' type variables: fields name, type='range', min, max, default (required numbers), unit, category (default 'alignment', 'cat.sub' is split into category/subCategory), minDis/maxDis/stepDis for display (default -100/100/1 without unit, or min/max and (maxDis-minDis)/100 with unit), step, hidden. The final val comes from vehicleConfig.vars[name] otherwise default, clamped to [min,max] (warning message if it is modified). A type other than 'range' is ignored with an error.
+- Scope per slot: each part inherits the variables of its parent part, plus the slot's variables (slotDef.variables, resolved against the parent scope, up to 400 passes) and its own variables. If a part redefines a variable of the same name, the last one encountered (walking the journal from child to parent) overwrites the first in the global list.
+- Probable BUG: applySlotVars ends with `for k, v in ipairs(slotVars)` over a table with string keys: this loop never runs, so slot variables still unresolved after the 400 passes are silently lost instead of being evaluated with parseSafe.
+- The special variable '$components' = {val = rootPart.components} is added to the scopes to allow writing '$=$components.xxx' in expressions. postProcessVariables excludes it from vehicle.variables.
+- cleanup removes functions from the components (setFunctionsToNil, recursive) and deletes from vehicle.variables those marked hidden = true: vehicle.variables must already exist (otherwise error: postProcessVariables must be called first).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_variables.cleanup(vehicle)` | Nettoyage final : supprime les fonctions dans vehicle.components et les variables hidden de vehicle.variables. *(interne)* | 502 |
-| `jbeam_variables.getAllVariables(rootPart, unifyJournal, vehicleConfig)` | Collecte toutes les variables connues (pièce racine puis pièces du journal, de l'enfant vers le parent) en évaluant uniquement les '$=' dans leurs listes (sans renommer de clés), selon la portée de chaque slot. Renvoie la table nom -> définition avec val calculée (utilisateur ou défaut, bornée). *(interne)* | 321 |
-| `jbeam_variables.postProcessVariables(vehicle, allVariables)` | Place dans vehicle.variables la table des variables indexées par leur nom (v.name), à partir de la table de getAllVariables (ignore '$components' et les valeurs non-table). *(interne)* | 427 |
-| `jbeam_variables.processComponents(rootPart, unifyJournal, vehicleConfig, vars)` | Fusionne les sections 'components' de toutes les pièces dans rootPart.components (substitutions de variables appliquées, y compris sur les clés '$' des tables 'variables' imbriquées, comportement historique) puis retire 'components' des pièces sources. *(interne)* | 462 |
-| `jbeam_variables.processParts(rootPart, unifyJournal, vehicleConfig, vars)` | Applique les substitutions de variables dans la pièce racine (composants d'abord) puis dans chaque pièce du journal et dans ses options de slot, avec la portée propre à chaque slot. Modifie les pièces en place. *(interne)* | 382 |
+| `jbeam_variables.cleanup(vehicle)` | Final cleanup: removes functions in vehicle.components and hidden variables from vehicle.variables. *(internal)* | 502 |
+| `jbeam_variables.getAllVariables(rootPart, unifyJournal, vehicleConfig)` | Collects all known variables (root part then journal parts, from child to parent) evaluating only the '$=' in their lists (without renaming keys), according to each slot's scope. Returns the name -> definition table with val computed (user or default, clamped). *(internal)* | 321 |
+| `jbeam_variables.postProcessVariables(vehicle, allVariables)` | Places in vehicle.variables the table of variables keyed by their name (v.name), from the getAllVariables table (ignores '$components' and non-table values). *(internal)* | 427 |
+| `jbeam_variables.processComponents(rootPart, unifyJournal, vehicleConfig, vars)` | Merges the 'components' sections of all parts into rootPart.components (variable substitutions applied, including on the '$' keys of nested 'variables' tables, legacy behavior) then removes 'components' from the source parts. *(internal)* | 462 |
+| `jbeam_variables.processParts(rootPart, unifyJournal, vehicleConfig, vars)` | Applies variable substitutions in the root part (components first) then in each part of the journal and in its slot options, with the scope specific to each slot. Modifies the parts in place. *(internal)* | 382 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_variables.cleanup(vehicle)`
 
-Nettoyage final : supprime les fonctions dans vehicle.components et les variables hidden de vehicle.variables.
+Final cleanup: removes functions in vehicle.components and hidden variables from vehicle.variables.
 
-- `vehicle` (*table*) : véhicule (components et variables)
-- **renvoie** : boolean toujours true
+- `vehicle` (*table*) : vehicle (components and variables)
+- **returns**: boolean always true
 
 #### `jbeam_variables.getAllVariables(rootPart, unifyJournal, vehicleConfig)`
 
-Collecte toutes les variables connues (pièce racine puis pièces du journal, de l'enfant vers le parent) en évaluant uniquement les '$=' dans leurs listes (sans renommer de clés), selon la portée de chaque slot. Renvoie la table nom -> définition avec val calculée (utilisateur ou défaut, bornée).
+Collects all known variables (root part then journal parts, from child to parent) evaluating only the '$=' in their lists (without renaming keys), according to each slot's scope. Returns the name -> definition table with val computed (user or default, clamped).
 
-- `rootPart` (*table*) : pièce principale (variables, components)
-- `unifyJournal` (*table[]*) : journal de fusion de slotSystem.findParts (entrées {parent, pièce, niveau, options, chemin, slotDef})
-- `vehicleConfig` (*table*) : configuration (vars = valeurs choisies par l'utilisateur)
-- **renvoie** : table<string, table> variables résolues indexées par nom (ex. '$AAA')
+- `rootPart` (*table*) : main part (variables, components)
+- `unifyJournal` (*table[]*) : merge journal from slotSystem.findParts (entries {parent, part, level, options, path, slotDef})
+- `vehicleConfig` (*table*) : configuration (vars = values chosen by the user)
+- **returns**: table<string, table> resolved variables keyed by name (e.g. '$AAA')
 
 #### `jbeam_variables.postProcessVariables(vehicle, allVariables)`
 
-Place dans vehicle.variables la table des variables indexées par leur nom (v.name), à partir de la table de getAllVariables (ignore '$components' et les valeurs non-table).
+Places in vehicle.variables the table of variables keyed by their name (v.name), from the getAllVariables table (ignores '$components' and non-table values).
 
-- `vehicle` (*table*) : véhicule en construction (reçoit variables)
-- `allVariables` (*table*) : variables résolues
+- `vehicle` (*table*) : vehicle under construction (receives variables)
+- `allVariables` (*table*) : resolved variables
 
 #### `jbeam_variables.processComponents(rootPart, unifyJournal, vehicleConfig, vars)`
 
-Fusionne les sections 'components' de toutes les pièces dans rootPart.components (substitutions de variables appliquées, y compris sur les clés '$' des tables 'variables' imbriquées, comportement historique) puis retire 'components' des pièces sources.
+Merges the 'components' sections of all parts into rootPart.components (variable substitutions applied, including on the '$' keys of nested 'variables' tables, legacy behavior) then removes 'components' from the source parts.
 
-- `rootPart` (*table*) : pièce principale (reçoit components)
-- `unifyJournal` (*table[]*) : journal de fusion
-- `vehicleConfig` (*table*) : configuration (non utilisée directement)
-- `vars` (*table*) : variables résolues
-- **renvoie** : boolean toujours true
+- `rootPart` (*table*) : main part (receives components)
+- `unifyJournal` (*table[]*) : merge journal
+- `vehicleConfig` (*table*) : configuration (not used directly)
+- `vars` (*table*) : resolved variables
+- **returns**: boolean always true
 
 #### `jbeam_variables.processParts(rootPart, unifyJournal, vehicleConfig, vars)`
 
-Applique les substitutions de variables dans la pièce racine (composants d'abord) puis dans chaque pièce du journal et dans ses options de slot, avec la portée propre à chaque slot. Modifie les pièces en place.
+Applies variable substitutions in the root part (components first) then in each part of the journal and in its slot options, with the scope specific to each slot. Modifies the parts in place.
 
-- `rootPart` (*table*) : pièce principale
-- `unifyJournal` (*table[]*) : journal de fusion
-- `vehicleConfig` (*table*) : configuration du véhicule (non utilisée directement ici)
-- `vars` (*table*) : variables résolues de getAllVariables (reçoit aussi '$components')
-- **renvoie** : table vars
+- `rootPart` (*table*) : main part
+- `unifyJournal` (*table[]*) : merge journal
+- `vehicleConfig` (*table*) : vehicle configuration (not used directly here)
+- `vars` (*table*) : resolved variables from getAllVariables (also receives '$components')
+- **returns**: table vars
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/variables.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/variables.lua`.*

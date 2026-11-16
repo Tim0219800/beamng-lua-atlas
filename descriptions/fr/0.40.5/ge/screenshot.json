@@ -1,0 +1,203 @@
+{
+  "path": "lua/ge/screenshot.lua",
+  "module": "Prise de captures d'écran côté Game Engine. Il prépare le nom de fichier (dossier screenshots/<mois>/screenshot_<date>), les options de qualité (super-échantillonnage, mise à l'échelle), les métadonnées (niveau, véhicules, partage), et lance la capture via le moteur (createScreenshot2). Il suit chaque capture comme un « job » (file, en cours, sauvegarde, terminé, erreur) et prévient l'interface. Il gère aussi l'envoi vers le serveur de médias BeamNG, la liste des dernières photos du mode photo et le retour des réglages graphiques après une capture haute qualité.",
+  "usage": "screenshot.takeScreenShot()            -- capture normale\nscreenshot.takeBigScreenShot()         -- 2x linéaire (4x pixels)\nscreenshot.takeCustomScreenShot(4, 1)  -- supersampling 4, rescale 1",
+  "notes": [
+    "Les fonctions takeXxxScreenShot acceptent des arguments positionnels flexibles : (splitSceneVehicle, saveNormalDepth, options...) ou, si le premier argument est une table, les booléens sont lus aux positions c et d. Une table passée en dernière ou avant-dernière position est interprétée comme 'options' (callOrigin, upload, jsonMetaData, includeMetadata, persistMetadataSidecar, forceSidecar).",
+    "Le super-échantillonnage est le multiplicateur TOTAL de pixels (1 = natif, 4 = 2x linéaire, 9 = 3x linéaire). Il est borné par un budget GPU (getMaxSafeScreenshotSuperSampling) : Big 4, Huge 9, Custom/MotionBlur jusqu'à 24. Les valeurs élevées peuvent bloquer ou faire planter certains pilotes GPU.",
+    "À partir d'un super-échantillonnage >= 9 (highest), le module passe temporairement $pref::TS::detailAdjust à 20, $pref::Terrain::lodScale à 0.001 et l'échelle des herbes à 8 ; avec super-échantillonnage > 1 il règle aussi la couche de nuages volumétriques (étapes 256). screenshotAllDone remet les valeurs d'origine.",
+    "Une seule capture à la fois : doScreenshot, takeBig et takeHuge sortent si captureInProgress est vrai (log 'ignoring screenshot capture'). captureInProgress est remis à false par screenshotAllDone. takeScreenShot, takeCustom et takeMotionBlur ne testent pas ce verrou.",
+    "takeMotionBlurScreenShot appelle exactement le même code que takeCustomScreenShot : aucun traitement de flou de mouvement n'y est visible.",
+    "Les formats de fichier viennent du réglage settings 'screenshotFormat' (png par défaut, jpg/jpeg possible). doScreenshot peut recevoir un chemin et une extension imposés.",
+    "Les fonctions screenshotProgress, screenshotTaken, screenshotSaved, screenshotUploaded et screenshotAllDone sont appelées par le moteur C++ ; ne pas les appeler soi-même.",
+    "Les phases d'un job (champ phase) : 'queue' -> 'in progress' -> 'saving' -> 'done' ou 'error'. result == 0 signifie succès.",
+    "L'envoi (publish) est refusé si le réglage onlineFeatures n'est pas 'enable'. doSteamScreenshot demande aussi onlineFeatures, mais prend en photo puis appelle OnlineServiceProvider.triggerScreenshot().",
+    "Le module écrit aussi un fichier annexe (sidecar) ou une métadonnée intégrée à l'image (writeScreenshotEmbeddedMetadata) avec level, véhicules, lien de partage, utilisés par getPhotomodeRollEntries.",
+    "Champs créés dynamiquement : hqActive, cloudHqActive, sc_detailAdjustSaved, sc_lodScaleSaved, sc_GroundCoverScaleSaved, sc_cloudDownsampleSaved, sc_cloudStepCountSaved, sc_cloudSunShadowStepCountSaved (état sauvegardé pendant une capture haute qualité)."
+  ],
+  "fields": {
+    "hqActive": {"type": "boolean|nil", "desc": "true tant que les réglages graphiques haute qualité d'une capture sont appliqués ; remis à false par clearScreenshotJobs et screenshotAllDone."},
+    "cloudHqActive": {"type": "boolean|nil", "desc": "true tant que la couche de nuages est en mode capture (pleine résolution, plus d'étapes)."}
+  },
+  "functions": {
+    "clearScreenshotJobs": {
+      "desc": "Oublie tous les jobs de capture (listes, métadonnées, envois en attente), remet hqActive à false et prévient l'interface.",
+      "params": {},
+      "returns": []
+    },
+    "createScreenshotTracked": {
+      "desc": "Crée une capture dans le moteur (createScreenshot2) à partir d'une copie de la table de paramètres et enregistre le job pour le suivi (filename, bufferType, type, métadonnées, upload). Positionne captureInProgress.",
+      "params": {"p": {"type": "table", "desc": "Paramètres de capture : filename, writeJPG, superSampling, tiles, overlap, rescaleFactor, upload, jsonMetaData (string JSON), persistMetadataSidecar, bufferType ('color', 'depth'…), jobType, masques d'objets (objectTypeWhitelistMask…), etc."}},
+      "returns": [{"type": "integer|nil", "desc": "Id du job renvoyé par le moteur (nil ou 0 si la création échoue)."}]
+    },
+    "doScreenshot": {
+      "desc": "Prend une capture simple (échelle 1, un seul tile) avec nom de fichier unique 'screenshot_<date>[_n]'. Si path et ext sont fournis, utilise ce chemin et ignore upload et batchTag. Joint les métadonnées si demandé ou si upload.",
+      "params": {
+        "batchTag": {"type": "string|nil", "desc": "Étiquette de lot (ignorée si path/ext fournis ; non utilisée ensuite dans le code lu)."},
+        "upload": {"type": "boolean|nil", "desc": "true pour envoyer la capture au serveur de médias."},
+        "path": {"type": "string|nil", "desc": "Chemin de sortie sans extension."},
+        "ext": {"type": "string|nil", "desc": "Extension/format ('png' ou 'jpg'), à fournir avec path."},
+        "options": {"type": "table|nil", "desc": "jsonMetaData, includeMetadata, persistMetadataSidecar, callOrigin…"}
+      },
+      "returns": []
+    },
+    "doSteamScreenshot": {
+      "desc": "Prend une capture puis demande au fournisseur de services en ligne (Steam) de déclencher sa capture. Refusé si onlineFeatures n'est pas 'enable'.",
+      "params": {"options": {"type": "table|nil", "desc": "Options ; options.upload == true envoie aussi la capture."}},
+      "returns": []
+    },
+    "getPhotomodeRollEntries": {
+      "desc": "Liste les dernières captures principales du mode photo (fichiers 'screenshot_AAAAMMJJ_HHMMSS', hors _scene/_vehicle/_normal/_depth), les plus récentes d'abord, avec lien de partage et métadonnées lus dans le fichier annexe ou la métadonnée intégrée.",
+      "params": {"limit": {"type": "integer|nil", "desc": "Nombre maximum d'entrées (10 par défaut). Une valeur <= 0 cherche récursivement dans tous les dossiers screenshots sans limite."}},
+      "returns": [{"type": "table[]", "desc": "Liste de {gamePath = string, shareUrl = string|nil, metadata = table|nil, openMap = table|nil}."}]
+    },
+    "getPhotomodeRollEntriesJson": {
+      "desc": "Même résultat que getPhotomodeRollEntries mais encodé en chaîne JSON, pour l'interface (les tables ne passent pas toujours bien vers Angular/CEF).",
+      "params": {"limit": {"type": "integer|nil", "desc": "Voir getPhotomodeRollEntries."}},
+      "returns": [{"type": "string", "desc": "JSON du tableau d'entrées."}]
+    },
+    "getScreenshotCompletion": {
+      "desc": "Renvoie l'état final d'un job de capture, seulement s'il est terminé ('done') ou en erreur ('error').",
+      "params": {"id": {"type": "integer", "desc": "Id du job."}},
+      "returns": [{"type": "table|nil", "desc": "{id, result, filename, phase}, ou nil si le job est inconnu ou pas fini."}]
+    },
+    "getScreenshotJobsSnapshotJson": {
+      "desc": "Instantané des jobs en cours sous forme de JSON : id, runId, percent, message, phase, result, filename, bufferType, type, metadata, openMap.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "JSON du tableau de jobs."}]
+    },
+    "isDebugTracingEnabled": {
+      "desc": "Indique si les logs de trace '[Trace]' du module sont activés.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si activé."}]
+    },
+    "openScreenshotFileInExplorer": {
+      "desc": "Ouvre l'explorateur de fichiers du système sur une capture. Ne fait rien (avec un avertissement) si le fichier n'existe pas ou si le chemin est vide.",
+      "params": {"filePath": {"type": "string", "desc": "Chemin du fichier."}},
+      "returns": []
+    },
+    "openScreenshotsFolderInExplorer": {
+      "desc": "Crée si besoin le dossier screenshots/<mois> et l'ouvre dans l'explorateur de fichiers.",
+      "params": {},
+      "returns": []
+    },
+    "publish": {
+      "desc": "Prend une capture et l'envoie au serveur de médias BeamNG. Refusé avec un toast d'erreur si onlineFeatures n'est pas 'enable'.",
+      "params": {
+        "batchTag": {"type": "string|nil", "desc": "Étiquette de lot (passée à doScreenshot)."},
+        "options": {"type": "table|nil", "desc": "Options de capture (voir doScreenshot)."}
+      },
+      "returns": []
+    },
+    "runPhotomodeFlashCapture": {
+      "desc": "Point d'entrée unique des anciens callbacks d'interface du mode photo : charge l'extension util/photomodeFlash et appelle util_photomodeFlash.runCapture(kind, ...).",
+      "params": {
+        "kind": {"type": "string", "desc": "Type de capture demandé à l'extension (valeurs définies dans util/photomodeFlash)."},
+        "...": {"type": "any", "desc": "Arguments transmis à runCapture."}
+      },
+      "returns": []
+    },
+    "screenshotAllDone": {
+      "desc": "Appelée par le moteur quand tous les jobs d'une série sont finis : remet les réglages graphiques et nuages d'origine, libère les noms de fichiers réservés, remet captureInProgress à false, émet le hook onScreenshotAllDone et l'évènement UI ScreenshotJobsAllDone.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "screenshotProgress": {
+      "desc": "Appelée par le moteur : met à jour le pourcentage et le message d'un job (phase 'in progress') et prévient l'interface.",
+      "params": {
+        "id": {"type": "integer", "desc": "Id du job."},
+        "percent": {"type": "number", "desc": "Avancement en %."},
+        "message": {"type": "string", "desc": "Message d'étape."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "screenshotSaved": {
+      "desc": "Appelée par le moteur quand l'image est écrite sur disque. res == 0 : succès (phase 'done', 100 %, écriture du fichier annexe de métadonnées si prévu) ; sinon phase 'error'.",
+      "params": {
+        "id": {"type": "integer", "desc": "Id du job."},
+        "res": {"type": "integer", "desc": "Code de résultat, 0 = succès."},
+        "filename": {"type": "string", "desc": "Chemin du fichier écrit."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "screenshotTaken": {
+      "desc": "Appelée par le moteur quand l'image est capturée côté GPU mais pas encore écrite : passe le job en phase 'saving'.",
+      "params": {"id": {"type": "integer", "desc": "Id du job."}},
+      "returns": [],
+      "internal": true
+    },
+    "screenshotUploaded": {
+      "desc": "Appelée par le moteur à la fin d'un envoi : écrit le lien de partage dans le fichier annexe, notifie l'interface (ScreenshotUploadComplete) et affiche un toast de succès ou d'échec (result == 0 = succès).",
+      "params": {
+        "id": {"type": "integer|string", "desc": "Id du job (converti en nombre)."},
+        "result": {"type": "integer|string", "desc": "Code de résultat, 0 = succès (1 par défaut si invalide)."},
+        "_adminUrl": {"type": "string", "desc": "URL d'administration (non utilisée)."},
+        "shareUrl": {"type": "string", "desc": "URL publique de partage."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setDebugTracingEnabled": {
+      "desc": "Active ou désactive les logs de trace du module.",
+      "params": {"value": {"type": "boolean", "desc": "true pour activer (toute autre valeur désactive)."}},
+      "returns": []
+    },
+    "takeBigScreenShot": {
+      "desc": "Capture « Big » : super-échantillonnage 4 (2x linéaire, 4x pixels). Un écran 1080p donne une image 4K. Ignorée si une capture est déjà en cours.",
+      "params": {
+        "a": {"type": "boolean|table|nil", "desc": "splitSceneVehicle (enregistrer aussi scène et véhicule séparés), ou une table d'options."},
+        "b": {"type": "boolean|nil", "desc": "saveNormalDepth (enregistrer aussi normales et profondeur)."},
+        "c": {"type": "boolean|table|nil", "desc": "Table d'options, ou splitSceneVehicle si a est une table."},
+        "d": {"type": "boolean|table|nil", "desc": "Table d'options, ou saveNormalDepth si a est une table."}
+      },
+      "returns": []
+    },
+    "takeCustomScreenShot": {
+      "desc": "Capture avec super-échantillonnage et mise à l'échelle choisis (limité à 24 et au budget GPU). Au-dessus de 9 le risque de gel du pilote est réel.",
+      "params": {
+        "superSampling": {"type": "number", "desc": "Multiplicateur total de pixels (1 natif, 4 = 2x linéaire, 9 = 3x linéaire)."},
+        "rescaleFactor": {"type": "number|nil", "desc": "Facteur de redimensionnement final (1 si invalide ou <= 0)."},
+        "a": {"type": "boolean|table|nil", "desc": "splitSceneVehicle ou table d'options."},
+        "b": {"type": "boolean|nil", "desc": "saveNormalDepth."},
+        "c": {"type": "boolean|table|nil", "desc": "Table d'options, ou splitSceneVehicle si a est une table."},
+        "d": {"type": "boolean|table|nil", "desc": "Table d'options, ou saveNormalDepth si a est une table."}
+      },
+      "returns": []
+    },
+    "takeHugeScreenShot": {
+      "desc": "Capture « Huge » : super-échantillonnage 9 (3x linéaire, 9x pixels), avec réglages graphiques maximaux. 1080p donne environ du 6K, 4K donne environ du 12K. Ignorée si une capture est déjà en cours.",
+      "params": {
+        "a": {"type": "boolean|table|nil", "desc": "splitSceneVehicle ou table d'options."},
+        "b": {"type": "boolean|nil", "desc": "saveNormalDepth."},
+        "c": {"type": "boolean|table|nil", "desc": "Table d'options, ou splitSceneVehicle si a est une table."},
+        "d": {"type": "boolean|table|nil", "desc": "Table d'options, ou saveNormalDepth si a est une table."}
+      },
+      "returns": []
+    },
+    "takeMotionBlurScreenShot": {
+      "desc": "Même comportement que takeCustomScreenShot (même appel interne) : voir les notes sur l'absence de traitement spécifique du flou de mouvement.",
+      "params": {
+        "superSampling": {"type": "number", "desc": "Multiplicateur total de pixels (limité à 24 et au budget GPU)."},
+        "rescaleFactor": {"type": "number|nil", "desc": "Facteur de redimensionnement final."},
+        "a": {"type": "boolean|table|nil", "desc": "splitSceneVehicle ou table d'options."},
+        "b": {"type": "boolean|nil", "desc": "saveNormalDepth."},
+        "c": {"type": "boolean|table|nil", "desc": "Table d'options, ou splitSceneVehicle."},
+        "d": {"type": "boolean|table|nil", "desc": "Table d'options, ou saveNormalDepth."}
+      },
+      "returns": []
+    },
+    "takeScreenShot": {
+      "desc": "Capture « Normal » à la résolution native (1080p donne une image 1080p). Peut enregistrer en plus des images scène/véhicule séparées et normales/profondeur.",
+      "params": {
+        "a": {"type": "boolean|table|nil", "desc": "splitSceneVehicle (true pour sauvegarder séparément scène et véhicule) ou table d'options."},
+        "b": {"type": "boolean|nil", "desc": "saveNormalDepth (true pour sauvegarder normales et profondeur)."},
+        "c": {"type": "boolean|table|nil", "desc": "Table d'options, ou splitSceneVehicle si a est une table."},
+        "d": {"type": "boolean|table|nil", "desc": "Table d'options, ou saveNormalDepth si a est une table."}
+      },
+      "returns": []
+    }
+  }
+}

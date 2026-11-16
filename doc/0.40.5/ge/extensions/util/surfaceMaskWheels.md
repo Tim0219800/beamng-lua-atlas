@@ -1,178 +1,178 @@
 # `util_surfaceMaskWheels`
 
-*Fichier : `lua/ge/extensions/util/surfaceMaskWheels.lua` · VM : Game Engine (GE) · 559 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/surfaceMaskWheels.lua` · VM: Game Engine (GE) · 559 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_surfaceMaskWheels` : `extensions.load("util_surfaceMaskWheels")`, puis la globale `util_surfaceMaskWheels`
+**Access:** extension `util_surfaceMaskWheels`: `extensions.load("util_surfaceMaskWheels")`, then the global `util_surfaceMaskWheels`
 
-Fait laisser aux roues du véhicule du joueur une trace dans le « surface mask » (SurfaceMaskClipmap, objet C++ qui garde un masque dynamique de la surface du terrain, par exemple l'herbe aplatie). Toutes les 0,05 s, pour chaque roue, il convertit la position (nœud d'axe de roue) en monde et appelle maskCircleWorld (premier contact) ou maskLineWorld (segment depuis la dernière position) avec une largeur de 1,8 m (3,2 m en mode tondeuse). Il possède aussi le cycle de vie du clipmap : stockage des tuiles sous /temp/levels/<niveau>/dynamicTiles, recentrage sur le véhicule, effacement. Il offre un mode tondeuse (particules d'herbe coupée) et des outils de débogage (ligne de console, fenêtre ImGui « SurfaceMask Pages », contours 3D des pages de 16 m). D'autres extensions (par exemple util_lawnMower) s'en servent comme service via isReady, setCenter, maskCircleWorld et maskLineWorld.
+Makes the player vehicle's wheels leave a trace in the "surface mask" (SurfaceMaskClipmap, a C++ object that keeps a dynamic mask of the terrain surface, for example flattened grass). Every 0.05 s, for each wheel, it converts the position (wheel axle node) to world and calls maskCircleWorld (first contact) or maskLineWorld (segment since the last position) with a width of 1.8 m (3.2 m in mower mode). It also owns the clipmap lifecycle: tile storage under /temp/levels/<level>/dynamicTiles, recentering on the vehicle, clearing. It offers a mower mode (cut grass particles) and debug tools (console line, "SurfaceMask Pages" ImGui window, 3D outlines of the 16 m pages). Other extensions (for example util_lawnMower) use it as a service via isReady, setCenter, maskCircleWorld and maskLineWorld.
 
-## Exemple
+## Example
 
 ```lua
-extensions.load('util_surfaceMaskWheels') -- actif dès le chargement (onExtensionLoaded appelle setEnabled(true))
+extensions.load('util_surfaceMaskWheels') -- active as soon as loaded (onExtensionLoaded calls setEnabled(true))
 util_surfaceMaskWheels.setMowingEnabled(true)
-util_surfaceMaskWheels.setDebugMode(1) -- ligne de statistiques dans la console toutes les secondes
+util_surfaceMaskWheels.setDebugMode(1) -- statistics line in the console every second
 ```
 
-## Remarques
+## Notes
 
-- Seul le véhicule du joueur 0 est traité ; les données (décalages des roues, positions précédentes) sont gardées par identifiant de véhicule et supprimées à onVehicleDestroyed et onVehicleResetted (reconstruction après reset ou changement de pièces).
-- Paramètres internes (non exposés mais sérialisés) : maskInterval 0,05 s, maskWidth 1,8 m, mowerWidth 3,2 m, flattenStrength 1, markStrength 0,75, mowerMarkStrength 1, seuils de déplacement par intervalle minMoveSq 0,04 (0,2 m) et maxMoveSq 100 (10 m ; au-delà la roue est considérée comme téléportée et ignorée), pageWorldSize 16 m.
-- Le mode tondeuse envoie à chaque tronçon marqué la commande obj:addParticleByNodesRelative (type de particule 21, 3 particules) au véhicule.
-- Modes de débogage : 0 aucun, 1 ligne de console (tag surfaceMask) throttlée à 1 Hz, 2 fenêtre ImGui complète plus contours 3D des pages autour du véhicule. setDebugMode active la collecte de statistiques côté C++ seulement quand le mode est > 0.
-- M.enabled vaut false à la déclaration mais onExtensionLoaded le met à true aussitôt ; onSerialize/onDeserialized conservent l'état entre rechargements (wheelMaskEnabled, interrupteur interne de test, n'est pas sérialisé).
-- Toutes les fonctions qui touchent SurfaceMaskClipmap ne font rien si ce global n'existe pas (build sans clipmap) ; isReady() le vérifie.
+- Only player 0's vehicle is processed; the data (wheel offsets, previous positions) is kept per vehicle id and removed on onVehicleDestroyed and onVehicleResetted (rebuilt after reset or part changes).
+- Internal parameters (not exposed but serialized): maskInterval 0.05 s, maskWidth 1.8 m, mowerWidth 3.2 m, flattenStrength 1, markStrength 0.75, mowerMarkStrength 1, movement thresholds per interval minMoveSq 0.04 (0.2 m) and maxMoveSq 100 (10 m; beyond that the wheel is considered teleported and ignored), pageWorldSize 16 m.
+- Mower mode sends the obj:addParticleByNodesRelative command (particle type 21, 3 particles) to the vehicle for each marked segment.
+- Debug modes: 0 none, 1 console line (tag surfaceMask) throttled to 1 Hz, 2 full ImGui window plus 3D outlines of the pages around the vehicle. setDebugMode enables C++-side statistics collection only when the mode is > 0.
+- M.enabled is false at declaration but onExtensionLoaded sets it to true immediately; onSerialize/onDeserialized keep the state across reloads (wheelMaskEnabled, an internal test switch, is not serialized).
+- All the functions that touch SurfaceMaskClipmap do nothing if this global does not exist (build without clipmap); isReady() checks it.
 
-**Dépendances (chargées avant) :** `ui_imgui`
+**Dependencies (loaded first):** `ui_imgui`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_surfaceMaskWheels.clear()` | Efface tout le surface mask (SurfaceMaskClipmap:clear()). | 448 |
-| `util_surfaceMaskWheels.cycleDebug()` | Passe au mode de débogage suivant (0, 1, 2, puis retour à 0). | 538 |
-| `util_surfaceMaskWheels.getPerformanceStats()` | Renvoie une copie des statistiques de performance côté Lua. | 512 |
-| `util_surfaceMaskWheels.isReady()` | Indique si l'objet SurfaceMaskClipmap existe. Permet aux modules consommateurs de sauter leur travail. | 455 |
-| `util_surfaceMaskWheels.maskCircleWorld(x, y, radius, flatten, mark)` | Estampille un disque dans le masque. | 463 |
-| `util_surfaceMaskWheels.maskLineWorld(x1, y1, x2, y2, width, flatten, mark)` | Estampille un segment épais dans le masque. | 467 |
-| `util_surfaceMaskWheels.onClientStartMission()` | Hook appelé au démarrage d'un niveau : repointe le stockage des tuiles du clipmap vers le niveau courant. *(interne)* *(hook)* | 427 |
-| `util_surfaceMaskWheels.onDeserialized(data)` | Hook appelé après rechargement avec l'état sérialisé ; restaure les paramètres (taille de tuile de débogage limitée à 36). *(interne)* *(hook)* | 492 |
-| `util_surfaceMaskWheels.onExtensionLoaded()` | Hook appelé au chargement de l'extension : active le module, coupe le débogage et initialise le stockage des tuiles. *(interne)* *(hook)* | 421 |
-| `util_surfaceMaskWheels.onPreRender(dtReal, dtSim)` | Hook appelé à chaque frame avant le rendu : accumule le temps simulé, exécute le marquage des roues du véhicule du joueur à chaque maskInterval, puis le débogage éventuel. *(interne)* *(hook)* | 391 |
-| `util_surfaceMaskWheels.onSerialize()` | Hook de sérialisation avant rechargement des extensions : renvoie l'état et les paramètres (enabled, largeurs, forces, seuils, mode de débogage, tondeuse, particules). *(interne)* *(hook)* | 471 |
-| `util_surfaceMaskWheels.onVehicleDestroyed(vehId)` | Hook appelé quand un véhicule est détruit : supprime ses données de roues. *(interne)* *(hook)* | 431 |
-| `util_surfaceMaskWheels.onVehicleResetted(vehId)` | Hook appelé après un reset de véhicule : supprime ses données de roues pour les reconstruire. *(interne)* *(hook)* | 435 |
-| `util_surfaceMaskWheels.setCenter(x, y)` | Recentre le clipmap : le C++ sauvegarde les tuiles modifiées qui sortent et charge celles qui entrent. | 459 |
-| `util_surfaceMaskWheels.setDebug(enabled)` | Compatibilité : true active le mode 2, false le mode 0. | 534 |
-| `util_surfaceMaskWheels.setDebugMode(mode)` | Choisit le mode de débogage (0 aucun, 1 console, 2 fenêtre + 3D) ; la valeur est bornée à 0..2 et la première ligne de console est émise tout de suite. | 527 |
-| `util_surfaceMaskWheels.setDebugPageRadius(radius)` | Fixe le rayon (en pages) de la grille de débogage affichée autour du véhicule (0 = page courante seulement). | 554 |
-| `util_surfaceMaskWheels.setEnabled(enabled)` | Active ou désactive le marquage par les roues et remet à zéro le minuteur. | 439 |
-| `util_surfaceMaskWheels.setMowerWidth(width)` | Fixe la largeur de coupe de la tondeuse. | 550 |
-| `util_surfaceMaskWheels.setMowingEnabled(enabled)` | Active ou désactive le mode tondeuse (largeur 3,2 m, marquage 1, particules d'herbe). | 542 |
-| `util_surfaceMaskWheels.toggle()` | Inverse l'état d'activation. | 444 |
-| `util_surfaceMaskWheels.toggleMowing()` | Inverse le mode tondeuse. | 546 |
+| `util_surfaceMaskWheels.clear()` | Clears the whole surface mask (SurfaceMaskClipmap:clear()). | 448 |
+| `util_surfaceMaskWheels.cycleDebug()` | Switches to the next debug mode (0, 1, 2, then back to 0). | 538 |
+| `util_surfaceMaskWheels.getPerformanceStats()` | Returns a copy of the Lua-side performance statistics. | 512 |
+| `util_surfaceMaskWheels.isReady()` | Indicates whether the SurfaceMaskClipmap object exists. Lets consumer modules skip their work. | 455 |
+| `util_surfaceMaskWheels.maskCircleWorld(x, y, radius, flatten, mark)` | Stamps a disc into the mask. | 463 |
+| `util_surfaceMaskWheels.maskLineWorld(x1, y1, x2, y2, width, flatten, mark)` | Stamps a thick segment into the mask. | 467 |
+| `util_surfaceMaskWheels.onClientStartMission()` | Hook called when a level starts: repoints the clipmap's tile storage to the current level. *(internal)* *(hook)* | 427 |
+| `util_surfaceMaskWheels.onDeserialized(data)` | Hook called after reload with the serialized state; restores the parameters (debug tile size limited to 36). *(internal)* *(hook)* | 492 |
+| `util_surfaceMaskWheels.onExtensionLoaded()` | Hook called on extension load: enables the module, turns off debugging and initializes the tile storage. *(internal)* *(hook)* | 421 |
+| `util_surfaceMaskWheels.onPreRender(dtReal, dtSim)` | Hook called every frame before rendering: accumulates the simulated time, runs the player vehicle's wheel marking every maskInterval, then the debug if any. *(internal)* *(hook)* | 391 |
+| `util_surfaceMaskWheels.onSerialize()` | Serialization hook before extension reload: returns the state and the parameters (enabled, widths, strengths, thresholds, debug mode, mower, particles). *(internal)* *(hook)* | 471 |
+| `util_surfaceMaskWheels.onVehicleDestroyed(vehId)` | Hook called when a vehicle is destroyed: removes its wheel data. *(internal)* *(hook)* | 431 |
+| `util_surfaceMaskWheels.onVehicleResetted(vehId)` | Hook called after a vehicle reset: removes its wheel data so it is rebuilt. *(internal)* *(hook)* | 435 |
+| `util_surfaceMaskWheels.setCenter(x, y)` | Recenters the clipmap: the C++ side saves the modified tiles that leave and loads those that enter. | 459 |
+| `util_surfaceMaskWheels.setDebug(enabled)` | Compatibility: true enables mode 2, false mode 0. | 534 |
+| `util_surfaceMaskWheels.setDebugMode(mode)` | Chooses the debug mode (0 none, 1 console, 2 window + 3D); the value is clamped to 0..2 and the first console line is emitted right away. | 527 |
+| `util_surfaceMaskWheels.setDebugPageRadius(radius)` | Sets the radius (in pages) of the debug grid displayed around the vehicle (0 = current page only). | 554 |
+| `util_surfaceMaskWheels.setEnabled(enabled)` | Enables or disables wheel marking and resets the timer. | 439 |
+| `util_surfaceMaskWheels.setMowerWidth(width)` | Sets the mower's cutting width. | 550 |
+| `util_surfaceMaskWheels.setMowingEnabled(enabled)` | Enables or disables mower mode (width 3.2 m, marking 1, grass particles). | 542 |
+| `util_surfaceMaskWheels.toggle()` | Toggles the enabled state. | 444 |
+| `util_surfaceMaskWheels.toggleMowing()` | Toggles mower mode. | 546 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_surfaceMaskWheels.getPerformanceStats()`
 
-Renvoie une copie des statistiques de performance côté Lua.
+Returns a copy of the Lua-side performance statistics.
 
-- **renvoie** : table {maskTicks, lastLuaFrameMs, avgLuaFrameMs, lastLuaMaskMs, avgLuaMaskMs, lastWheelCount, lastMovedWheels, lastSkippedWheels, lastMaskCalls, lastParticleCalls}.
+- **returns**: table {maskTicks, lastLuaFrameMs, avgLuaFrameMs, lastLuaMaskMs, avgLuaMaskMs, lastWheelCount, lastMovedWheels, lastSkippedWheels, lastMaskCalls, lastParticleCalls}.
 
 #### `util_surfaceMaskWheels.isReady()`
 
-Indique si l'objet SurfaceMaskClipmap existe. Permet aux modules consommateurs de sauter leur travail.
+Indicates whether the SurfaceMaskClipmap object exists. Lets consumer modules skip their work.
 
-- **renvoie** : boolean true si SurfaceMaskClipmap est disponible.
+- **returns**: boolean true if SurfaceMaskClipmap is available.
 
 #### `util_surfaceMaskWheels.maskCircleWorld(x, y, radius, flatten, mark)`
 
-Estampille un disque dans le masque.
+Stamps a disc into the mask.
 
-- `x` (*number*) : X monde du centre (m).
-- `y` (*number*) : Y monde du centre (m).
-- `radius` (*number*) : Rayon (m).
-- `flatten` (*number*) : Force d'aplatissement de l'herbe (0 à 1 d'après les valeurs utilisées).
-- `mark` (*number*) : Force de marquage (0 à 1 d'après les valeurs utilisées).
+- `x` (*number*) : World X of the center (m).
+- `y` (*number*) : World Y of the center (m).
+- `radius` (*number*) : Radius (m).
+- `flatten` (*number*) : Grass flattening strength (0 to 1 based on the values used).
+- `mark` (*number*) : Marking strength (0 to 1 based on the values used).
 
 #### `util_surfaceMaskWheels.maskLineWorld(x1, y1, x2, y2, width, flatten, mark)`
 
-Estampille un segment épais dans le masque.
+Stamps a thick segment into the mask.
 
-- `x1` (*number*) : X monde du début (m).
-- `y1` (*number*) : Y monde du début (m).
-- `x2` (*number*) : X monde de la fin (m).
-- `y2` (*number*) : Y monde de la fin (m).
-- `width` (*number*) : Largeur du trait (m).
-- `flatten` (*number*) : Force d'aplatissement.
-- `mark` (*number*) : Force de marquage.
+- `x1` (*number*) : World X of the start (m).
+- `y1` (*number*) : World Y of the start (m).
+- `x2` (*number*) : World X of the end (m).
+- `y2` (*number*) : World Y of the end (m).
+- `width` (*number*) : Line width (m).
+- `flatten` (*number*) : Flattening strength.
+- `mark` (*number*) : Marking strength.
 
 #### `util_surfaceMaskWheels.onDeserialized(data)`
 
-Hook appelé après rechargement avec l'état sérialisé ; restaure les paramètres (taille de tuile de débogage limitée à 36).
+Hook called after reload with the serialized state; restores the parameters (debug tile size limited to 36).
 
-- `data` (*table|nil*) : État sérialisé.
+- `data` (*table|nil*) : Serialized state.
 
 #### `util_surfaceMaskWheels.onPreRender(dtReal, dtSim)`
 
-Hook appelé à chaque frame avant le rendu : accumule le temps simulé, exécute le marquage des roues du véhicule du joueur à chaque maskInterval, puis le débogage éventuel.
+Hook called every frame before rendering: accumulates the simulated time, runs the player vehicle's wheel marking every maskInterval, then the debug if any.
 
-- `dtReal` (*number*) : Durée réelle de la frame (s).
-- `dtSim` (*number*) : Durée simulée (s), prioritaire sur dtReal.
+- `dtReal` (*number*) : Real frame time (s).
+- `dtSim` (*number*) : Simulated duration (s), takes priority over dtReal.
 
 #### `util_surfaceMaskWheels.onSerialize()`
 
-Hook de sérialisation avant rechargement des extensions : renvoie l'état et les paramètres (enabled, largeurs, forces, seuils, mode de débogage, tondeuse, particules).
+Serialization hook before extension reload: returns the state and the parameters (enabled, widths, strengths, thresholds, debug mode, mower, particles).
 
-- **renvoie** : table État à restaurer.
+- **returns**: table State to restore.
 
 #### `util_surfaceMaskWheels.onVehicleDestroyed(vehId)`
 
-Hook appelé quand un véhicule est détruit : supprime ses données de roues.
+Hook called when a vehicle is destroyed: removes its wheel data.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
+- `vehId` (*integer*) : Vehicle identifier.
 
 #### `util_surfaceMaskWheels.onVehicleResetted(vehId)`
 
-Hook appelé après un reset de véhicule : supprime ses données de roues pour les reconstruire.
+Hook called after a vehicle reset: removes its wheel data so it is rebuilt.
 
-- `vehId` (*integer*) : Identifiant du véhicule.
+- `vehId` (*integer*) : Vehicle identifier.
 
 #### `util_surfaceMaskWheels.setCenter(x, y)`
 
-Recentre le clipmap : le C++ sauvegarde les tuiles modifiées qui sortent et charge celles qui entrent.
+Recenters the clipmap: the C++ side saves the modified tiles that leave and loads those that enter.
 
-- `x` (*number*) : Coordonnée X monde (m).
-- `y` (*number*) : Coordonnée Y monde (m).
+- `x` (*number*) : World X coordinate (m).
+- `y` (*number*) : World Y coordinate (m).
 
 #### `util_surfaceMaskWheels.setDebug(enabled)`
 
-Compatibilité : true active le mode 2, false le mode 0.
+Compatibility: true enables mode 2, false mode 0.
 
-- `enabled` (*boolean*) : Activer le débogage complet.
+- `enabled` (*boolean*) : Enable full debugging.
 
 #### `util_surfaceMaskWheels.setDebugMode(mode)`
 
-Choisit le mode de débogage (0 aucun, 1 console, 2 fenêtre + 3D) ; la valeur est bornée à 0..2 et la première ligne de console est émise tout de suite.
+Chooses the debug mode (0 none, 1 console, 2 window + 3D); the value is clamped to 0..2 and the first console line is emitted right away.
 
-- `mode` (*integer|nil*) : Mode de débogage.
+- `mode` (*integer|nil*) : Debug mode.
 
 #### `util_surfaceMaskWheels.setDebugPageRadius(radius)`
 
-Fixe le rayon (en pages) de la grille de débogage affichée autour du véhicule (0 = page courante seulement).
+Sets the radius (in pages) of the debug grid displayed around the vehicle (0 = current page only).
 
-- `radius` (*integer|nil*) : Rayon en pages, minimum 0.
+- `radius` (*integer|nil*) : Radius in pages, minimum 0.
 
 #### `util_surfaceMaskWheels.setEnabled(enabled)`
 
-Active ou désactive le marquage par les roues et remet à zéro le minuteur.
+Enables or disables wheel marking and resets the timer.
 
-- `enabled` (*boolean*) : true pour activer.
+- `enabled` (*boolean*) : true to enable.
 
 #### `util_surfaceMaskWheels.setMowerWidth(width)`
 
-Fixe la largeur de coupe de la tondeuse.
+Sets the mower's cutting width.
 
-- `width` (*number|nil*) : Largeur en mètres ; nil conserve la valeur actuelle.
+- `width` (*number|nil*) : Width in meters; nil keeps the current value.
 
 #### `util_surfaceMaskWheels.setMowingEnabled(enabled)`
 
-Active ou désactive le mode tondeuse (largeur 3,2 m, marquage 1, particules d'herbe).
+Enables or disables mower mode (width 3.2 m, marking 1, grass particles).
 
-- `enabled` (*boolean*) : true pour activer.
+- `enabled` (*boolean*) : true to enable.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extension chargée avant : ui_imgui. |
-| `enabled` | boolean | true quand le marquage par les roues est actif (modifié par setEnabled/toggle). |
+| `dependencies` | string[] | Extension loaded before: ui_imgui. |
+| `enabled` | boolean | true when wheel marking is active (changed by setEnabled/toggle). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicle`
 - `debugDrawer:` `drawLineInstance`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/surfaceMaskWheels.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/surfaceMaskWheels.lua`.*

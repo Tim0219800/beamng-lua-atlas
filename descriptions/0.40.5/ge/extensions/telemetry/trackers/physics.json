@@ -1,15 +1,37 @@
 {
   "path": "lua/ge/extensions/telemetry/trackers/physics.lua",
-  "module": "Suiveur de télémétrie physique : rapporte les instabilités physiques avec assez de contexte pour les reproduire (évènement « physicsInstability » : modèle, config, mod d'origine, niveau, vitesse de simulation, nombre de véhicules, position et somme des dégâts de sections du véhicule) puis demande l'écriture du rapport.",
+  "module": "Physics telemetry tracker: reports physics instabilities with enough context to reproduce them (\"physicsInstability\" event: model, config, originating mod, level, simulation speed, vehicle count, position and sum of the vehicle's section damage) then requests the report to be written.",
   "notes": [
-    "Ce suiveur ne fait qu'observer : il ne met jamais instabilityHandled, donc n'interfère pas avec ce qui traite l'instabilité.",
-    "Si telemetry_vehicleInfo ne connaît pas le véhicule, rien n'est envoyé."
+    "This tracker only observes: it never sets instabilityHandled, so it does not interfere with whatever handles the instability.",
+    "If telemetry_vehicleInfo does not know the vehicle, nothing is sent."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "telemetry_core."
+    }
   },
   "functions": {
-    "onInstabilityDetected": {"desc": "Hook appelé quand une instabilité physique est détectée sur un véhicule : construit et envoie l'évènement, puis appelle telemetry_core.triggerReportWrite().", "params": {"vid": {"type": "integer", "desc": "Id du véhicule instable."}, "returnData": {"type": "table", "desc": "Table de retour des gestionnaires d'instabilité (non utilisée ici)."}}, "returns": [], "internal": true},
-    "onExtensionLoaded": {"desc": "Hook appelé au chargement : déchargement manuel.", "params": {}, "returns": [], "internal": true}
+    "onInstabilityDetected": {
+      "desc": "Hook called when a physics instability is detected on a vehicle: builds and sends the event, then calls telemetry_core.triggerReportWrite().",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "Id of the unstable vehicle."
+        },
+        "returnData": {
+          "type": "table",
+          "desc": "Return table of the instability handlers (not used here)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook called on load: manual unload.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
   }
 }

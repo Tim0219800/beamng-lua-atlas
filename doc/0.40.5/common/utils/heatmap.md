@@ -1,48 +1,48 @@
 # `utils_heatmap`
 
-*Fichier : `lua/common/utils/heatmap.lua` · VM : Commun (GE + véhicule) · 128 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/utils/heatmap.lua` · VM: Common (GE + vehicle) · 128 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("utils/heatmap")`
+**Access:** `require("utils/heatmap")`
 
-Preuve de concept : génère une image SVG (2048x2048) du réseau routier de la carte (map.getMap()) avec un point rouge par véhicule à chaque appel de update(). Se charge avec require('utils/heatmap'). Sert à visualiser des trajectoires ; l'image est écrite avec la bibliothèque libs/EzSVG.
+Proof of concept: generates an SVG image (2048x2048) of the map's road network (map.getMap()) with a red dot per vehicle on each call of update(). Loaded with require('utils/heatmap'). Used to visualize trajectories; the image is written with the libs/EzSVG library.
 
-## Exemple
+## Example
 
 ```lua
 local heatmap = require('utils/heatmap')
 heatmap.init('trace.svg')
--- chaque frame : heatmap.update()
-heatmap.destroy() -- sauvegarde puis libère
+-- every frame: heatmap.update()
+heatmap.destroy() -- saves then frees
 ```
 
-## Remarques
+## Notes
 
-- Taille fixée à 2048 (terrainSize), non lue du terrain (commentaire dans le code) ; les coordonnées sont décalées par la position du TerrainBlock et l'axe Y est inversé.
-- Routes dont la valeur de lien (difficulté) est < 0.7 : brun (terre), sinon noir. Largeur = 2 x rayon du noeud.
-- init() suppose qu'un TerrainBlock existe dans la scène (scenetree.findClassObjects('TerrainBlock')[1]) : plante sinon.
-- update() ajoute un cercle SVG par véhicule et par appel : le document grossit à chaque frame.
-- destroy() appelle save() avant de libérer ; init() appelle destroy() d'abord, ce qui sauvegarde l'ancien document éventuel (dans le NOUVEAU nom de fichier, car filename est déjà remplacé).
+- Size fixed at 2048 (terrainSize), not read from the terrain (comment in the code); coordinates are offset by the TerrainBlock position and the Y axis is inverted.
+- Roads whose link value (difficulty) is < 0.7: brown (dirt), otherwise black. Width = 2 x node radius.
+- init() assumes a TerrainBlock exists in the scene (scenetree.findClassObjects('TerrainBlock')[1]): crashes otherwise.
+- update() adds one SVG circle per vehicle per call: the document grows every frame.
+- destroy() calls save() before freeing; init() calls destroy() first, which saves the old document if any (into the NEW file name, because filename has already been replaced).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `utils_heatmap.destroy()` | Sauvegarde puis libère le document et la position du terrain. | 74 |
-| `utils_heatmap.init(_filename)` | Crée le document SVG, mémorise la position du terrain et dessine les routes et noeuds de la carte. | 80 |
-| `utils_heatmap.save()` | Écrit le SVG courant dans le fichier choisi à init(). Ne fait rien si aucun document. | 69 |
-| `utils_heatmap.update()` | À appeler à chaque frame (y compris en menu, sans rendu 3D) : dessine un cercle rouge à la position de chaque objet de map.objects. | 96 |
+| `utils_heatmap.destroy()` | Saves then frees the document and the terrain position. | 74 |
+| `utils_heatmap.init(_filename)` | Creates the SVG document, remembers the terrain position and draws the map's roads and nodes. | 80 |
+| `utils_heatmap.save()` | Writes the current SVG to the file chosen at init(). Does nothing if there is no document. | 69 |
+| `utils_heatmap.update()` | To be called every frame (including in menus, without 3D rendering): draws a red circle at the position of each object in map.objects. | 96 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `utils_heatmap.init(_filename)`
 
-Crée le document SVG, mémorise la position du terrain et dessine les routes et noeuds de la carte.
+Creates the SVG document, remembers the terrain position and draws the map's roads and nodes.
 
-- `_filename` (*string*) : Fichier SVG de sortie
+- `_filename` (*string*) : Output SVG file
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findClassObjects`, `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/utils/heatmap.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/utils/heatmap.lua`.*

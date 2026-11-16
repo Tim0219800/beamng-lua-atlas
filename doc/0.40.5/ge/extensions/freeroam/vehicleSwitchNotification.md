@@ -1,49 +1,49 @@
 # `freeroam_vehicleSwitchNotification`
 
-*Fichier : `lua/ge/extensions/freeroam/vehicleSwitchNotification.lua` · VM : Game Engine (GE) · 168 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/freeroam/vehicleSwitchNotification.lua` · VM: Game Engine (GE) · 168 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `freeroam_vehicleSwitchNotification` : `extensions.load("freeroam_vehicleSwitchNotification")`, puis la globale `freeroam_vehicleSwitchNotification`
+**Access:** extension `freeroam_vehicleSwitchNotification`: `extensions.load("freeroam_vehicleSwitchNotification")`, then the global `freeroam_vehicleSwitchNotification`
 
-Affiche une notification à l'écran quand le joueur change de véhicule ou de siège : nom du véhicule (marque, nom, configuration), icône selon le type, siège occupé ou mode spectateur, et nombre de véhicules sélectionnables (position courante). Efface le message quand le joueur n'a plus de véhicule ou passe en mode marche (unicycle). Passe par guihooks.trigger('Message', …) avec la catégorie « vehicleSwitch<joueur> ». Global : freeroam_vehicleSwitchNotification.
+Displays an on-screen notification when the player changes vehicle or seat: vehicle name (brand, name, configuration), icon by type, occupied seat or spectator mode, and the number of selectable vehicles (current position). Clears the message when the player has no vehicle anymore or switches to walking mode (unicycle). Goes through guihooks.trigger('Message', ...) with the category "vehicleSwitch<player>". Global: freeroam_vehicleSwitchNotification.
 
-## Remarques
+## Notes
 
-- Icône : Trailer -> smallTrailer, Prop -> trafficCone, Truck -> boxTruck, Car -> car, autre type -> beamNG ; défaut car.
-- Les véhicules comptés comme « sélectionnables » excluent : unicycle, non playerUsable, inactifs, blacklistés (gameplay_walk.isVehicleBlacklisted) et les Type PropParked/PropTraffic. Si les actions switch_next_vehicle/switch_previous_vehicle sont bloquées, le compte est forcé à 1 / index 0.
-- Le message dépend de presence.seatId (siège, via gameplay_seatOccupants.getSeats pour le nom) ou de presence.permissionMode ('passenger' = spectateur, sinon pleins contrôles).
-- TTL du message : 5 s.
+- Icon: Trailer -> smallTrailer, Prop -> trafficCone, Truck -> boxTruck, Car -> car, other type -> beamNG; default car.
+- The vehicles counted as "selectable" exclude: unicycle, non-playerUsable, inactive, blacklisted (gameplay_walk.isVehicleBlacklisted) and the Types PropParked/PropTraffic. If the switch_next_vehicle/switch_previous_vehicle actions are blocked, the count is forced to 1 / index 0.
+- The message depends on presence.seatId (seat, via gameplay_seatOccupants.getSeats for the name) or on presence.permissionMode ('passenger' = spectator, otherwise full controls).
+- Message TTL: 5 s.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `freeroam_vehicleSwitchNotification.onPlayerVehiclePresenceChanged(player, _, presence)` | Hook appelé quand la présence d'un joueur dans un véhicule/siège change : affiche la notification correspondante. *(interne)* *(hook)* | 159 |
-| `freeroam_vehicleSwitchNotification.onVehicleSwitched(_, newId, player)` | Hook de changement de véhicule : si le nouveau véhicule n'existe pas ou est l'unicycle, efface la notification (clear=true) de ce joueur. *(interne)* *(hook)* | 147 |
+| `freeroam_vehicleSwitchNotification.onPlayerVehiclePresenceChanged(player, _, presence)` | Hook called when a player's presence in a vehicle/seat changes: displays the corresponding notification. *(internal)* *(hook)* | 159 |
+| `freeroam_vehicleSwitchNotification.onVehicleSwitched(_, newId, player)` | Vehicle change hook: if the new vehicle does not exist or is the unicycle, clears this player's notification (clear=true). *(internal)* *(hook)* | 147 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `freeroam_vehicleSwitchNotification.onPlayerVehiclePresenceChanged(player, _, presence)`
 
-Hook appelé quand la présence d'un joueur dans un véhicule/siège change : affiche la notification correspondante.
+Hook called when a player's presence in a vehicle/seat changes: displays the corresponding notification.
 
-- `player` (*integer|nil*) : Joueur (défaut 0).
-- `_` (*any*) : Non utilisé (ancienne présence, déduit du code).
+- `player` (*integer|nil*) : Player (default 0).
+- `_` (*any*) : Unused (old presence, inferred from code).
 - `presence` (*table|nil*) : {vehicleId, seatId?, permissionMode?}
 
 #### `freeroam_vehicleSwitchNotification.onVehicleSwitched(_, newId, player)`
 
-Hook de changement de véhicule : si le nouveau véhicule n'existe pas ou est l'unicycle, efface la notification (clear=true) de ce joueur.
+Vehicle change hook: if the new vehicle does not exist or is the unicycle, clears this player's notification (clear=true).
 
-- `_` (*integer*) : Ancien id (non utilisé).
-- `newId` (*integer*) : Nouvel id (-1 = aucun).
-- `player` (*integer|nil*) : Joueur (défaut 0).
+- `_` (*integer*) : Old id (unused).
+- `newId` (*integer*) : New id (-1 = none).
+- `player` (*integer|nil*) : Player (default 0).
 
-**Évènements UI (guihooks.trigger) :** `Message`
+**UI events (guihooks.trigger):** `Message`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObject`, `getObjectCount`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/freeroam/vehicleSwitchNotification.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/freeroam/vehicleSwitchNotification.lua`.*

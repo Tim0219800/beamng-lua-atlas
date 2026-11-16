@@ -2,75 +2,75 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/pause/actions.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Registre des actions du menu pause. Il enregistre des boutons (via ui/gridSelectorUtils/buttonModule) exécutables par id, gère l'enchaînement « sauvegarder la carrière puis exécuter un callback », et maintient les onglets et boutons ajoutés par des mods au menu pause. Un mod peut y déclarer un onglet et des boutons ; le module notifie l'UI par le hook GUI PauseModActionsChanged.
---- Accès : extension `ui_pause_actions` : `extensions.load("ui_pause_actions")`, puis la globale `ui_pause_actions`
+--- Pause menu action registry. It registers buttons (via ui/gridSelectorUtils/buttonModule) executable by id, handles the "save the career then run a callback" chain, and maintains the tabs and buttons added by mods to the pause menu. A mod can declare a tab and buttons there; the module notifies the UI through the GUI hook PauseModActionsChanged.
+--- Access: extension `ui_pause_actions`: `extensions.load("ui_pause_actions")`, then the global `ui_pause_actions`
 ---@class ui_pause_actions
 ui_pause_actions = {}
 
---- Efface tous les boutons enregistrés via registerButton et annule le callback de sauvegarde en attente. Ne touche pas aux onglets/boutons de mods.
----Source : lua/ge/extensions/ui/pause/actions.lua:24
+--- Clears all buttons registered via registerButton and cancels the pending save callback. Does not touch the mods' tabs/buttons.
+---Source: lua/ge/extensions/ui/pause/actions.lua:24
 function ui_pause_actions.clearActions() end
 
---- Exécute le bouton enregistré portant cet id.
----Source : lua/ge/extensions/ui/pause/actions.lua:42
----@param buttonId any Id attribué par registerButton.
----@param payload any Données transmises au callback du bouton.
----@return any  Résultat de buttonInstance.executeButton.
+--- Executes the registered button with this id.
+---Source: lua/ge/extensions/ui/pause/actions.lua:42
+---@param buttonId any Id assigned by registerButton.
+---@param payload any Data passed to the button's callback.
+---@return any  Result of buttonInstance.executeButton.
 function ui_pause_actions.executeAction(buttonId, payload) end
 
---- Renvoie les infos de tous les boutons enregistrés.
----Source : lua/ge/extensions/ui/pause/actions.lua:50
----@return table  Résultat de buttonInstance.getAllButtonInfos.
+--- Returns the info of all registered buttons.
+---Source: lua/ge/extensions/ui/pause/actions.lua:50
+---@return table  Result of buttonInstance.getAllButtonInfos.
 function ui_pause_actions.getAllButtonInfos() end
 
---- Renvoie les onglets de mods non vides, au format attendu par buildPauseTabs (tabId "mod:<id>", isModTab, label, icon, buttons, visible, enabled).
----Source : lua/ge/extensions/ui/pause/actions.lua:194
----@return table[]  Liste d'onglets.
+--- Returns the non-empty mod tabs, in the format expected by buildPauseTabs (tabId "mod:<id>", isModTab, label, icon, buttons, visible, enabled).
+---Source: lua/ge/extensions/ui/pause/actions.lua:194
+---@return table[]  List of tabs.
 function ui_pause_actions.getVisibleModTabs() end
 
---- Hook appelé au chargement ; met le mode de déchargement en manuel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/pause/actions.lua:54
+--- Hook called on load; sets the unload mode to manual.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/pause/actions.lua:54
 function ui_pause_actions.onExtensionLoaded() end
 
---- Hook appelé quand une sauvegarde de carrière se termine ; exécute le callback en attente de saveCareerThen s'il n'a pas expiré.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/pause/actions.lua:34
+--- Hook called when a career save finishes; runs the pending saveCareerThen callback if it has not expired.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/pause/actions.lua:34
 function ui_pause_actions.onSaveFinished() end
 
---- Enregistre un bouton d'action et renvoie une copie des métadonnées avec buttonId. Si metadata.visible == false, rien n'est enregistré et les métadonnées sont renvoyées telles quelles.
----Source : lua/ge/extensions/ui/pause/actions.lua:46
----@param metadata table|nil Description du bouton (nil devient {}).
----@param callback function|nil Fonction appelée à l'exécution ; défaut : fonction renvoyant false.
----@return table  Copie des métadonnées, avec buttonId si enregistré.
+--- Registers an action button and returns a copy of the metadata with buttonId. If metadata.visible == false, nothing is registered and the metadata is returned as is.
+---Source: lua/ge/extensions/ui/pause/actions.lua:46
+---@param metadata table|nil Button description (nil becomes {}).
+---@param callback function|nil Function called on execution; default: a function returning false.
+---@return table  Copy of the metadata, with buttonId if registered.
 function ui_pause_actions.registerButton(metadata, callback) end
 
---- Ajoute ou met à jour un bouton de mod dans un onglet (déplace le bouton si son tabId change) et notifie l'UI.
----Source : lua/ge/extensions/ui/pause/actions.lua:133
----@param button table Champs : id et tabId (requis), label, icon, componentName, props, card2ComponentName, card2Props.
----@return table  {success = true} ou {success = false, reason = "missing_id_or_tab" | "unknown_tab"}.
+--- Adds or updates a mod button in a tab (moves the button if its tabId changes) and notifies the UI.
+---Source: lua/ge/extensions/ui/pause/actions.lua:133
+---@param button table Fields: id and tabId (required), label, icon, componentName, props, card2ComponentName, card2Props.
+---@return table  {success = true} or {success = false, reason = "missing_id_or_tab" | "unknown_tab"}.
 function ui_pause_actions.registerModButton(button) end
 
---- Crée ou met à jour un onglet de mod (conserve l'ordre des boutons existants) et notifie l'UI.
----Source : lua/ge/extensions/ui/pause/actions.lua:102
----@param tab table Champs : id (requis), label (défaut id), icon, card2ComponentName, card2Props.
----@return table  {success = true} ou {success = false, reason = "missing_id"}.
+--- Creates or updates a mod tab (keeps the order of existing buttons) and notifies the UI.
+---Source: lua/ge/extensions/ui/pause/actions.lua:102
+---@param tab table Fields: id (required), label (default id), icon, card2ComponentName, card2Props.
+---@return table  {success = true} or {success = false, reason = "missing_id"}.
 function ui_pause_actions.registerModTab(tab) end
 
---- Mémorise un callback puis lance career_saveSystem.saveCurrent(). Le callback est appelé dans onSaveFinished s'il n'a pas plus de 30 s.
----Source : lua/ge/extensions/ui/pause/actions.lua:29
----@param callback function Fonction sans argument appelée après la sauvegarde.
+--- Stores a callback then launches career_saveSystem.saveCurrent(). The callback is called in onSaveFinished if it is no more than 30 s old.
+---Source: lua/ge/extensions/ui/pause/actions.lua:29
+---@param callback function Function with no argument called after the save.
 function ui_pause_actions.saveCareerThen(callback) end
 
---- Retire un bouton de mod ; supprime l'onglet "mods" s'il devient vide ; notifie l'UI.
----Source : lua/ge/extensions/ui/pause/actions.lua:173
----@param id string Id du bouton.
----@return table  {success = true} ou {success = false, reason = "not_found"}.
+--- Removes a mod button; removes the "mods" tab if it becomes empty; notifies the UI.
+---Source: lua/ge/extensions/ui/pause/actions.lua:173
+---@param id string Button id.
+---@return table  {success = true} or {success = false, reason = "not_found"}.
 function ui_pause_actions.unregisterModButton(id) end
 
---- Supprime un onglet de mod et ses boutons, puis notifie l'UI.
----Source : lua/ge/extensions/ui/pause/actions.lua:124
----@param id string Id de l'onglet.
----@return table  {success = true} ou {success = false, reason = "not_found"}.
+--- Removes a mod tab and its buttons, then notifies the UI.
+---Source: lua/ge/extensions/ui/pause/actions.lua:124
+---@param id string Tab id.
+---@return table  {success = true} or {success = false, reason = "not_found"}.
 function ui_pause_actions.unregisterModTab(id) end
 

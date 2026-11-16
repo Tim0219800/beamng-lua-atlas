@@ -1,44 +1,44 @@
 # `editor_heroRoadEditor_placeablesUI`
 
-*Fichier : `lua/ge/extensions/editor/heroRoadEditor/placeablesUI.lua` · VM : Game Engine (GE) · 512 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/heroRoadEditor/placeablesUI.lua` · VM: Game Engine (GE) · 512 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_heroRoadEditor_placeablesUI` : `extensions.load("editor_heroRoadEditor_placeablesUI")`, puis la globale `editor_heroRoadEditor_placeablesUI`
+**Access:** extension `editor_heroRoadEditor_placeablesUI`: `extensions.load("editor_heroRoadEditor_placeablesUI")`, then the global `editor_heroRoadEditor_placeablesUI`
 
-Interface ImGui de l'onglet Features du Hero Road Editor, pour les éléments posables sur la route : passages piétons, amas de réparations, nids-de-poule, élargissements, carrefours et barrières. Elle affiche une liste unifiée (renommage, bouton « aller à » qui déplace la caméra, suppression), une rangée de boutons de placement (mode via roadPlaceables.setPlaceMode) puis les curseurs de l'élément sélectionné. Les modifications passent par groupMgr (copie profonde du groupe) et editor.history pour l'annulation.
+ImGui interface of the Features tab of the Hero Road Editor, for the elements that can be placed on the road: crosswalks, repair patch clusters, potholes, widenings, intersections and barriers. It displays a unified list (rename, "go to" button that moves the camera, delete), a row of placement buttons (mode via roadPlaceables.setPlaceMode) then the sliders of the selected element. Changes go through groupMgr (deep copy of the group) and editor.history for undo.
 
-## Remarques
+## Notes
 
-- Chaque curseur (itemSlider) s'applique à un champ d'un élément (item[key]), pas à group[key] ; un bouton de remise à la valeur par défaut apparaît quand la valeur diffère du défaut.
-- Pour les barrières, les curseurs lengthM (4 à 500 m), offsetM (0 à 5 m) et zOffsetM (-2 à 1 m) reconstruisent le mobilier en direct (barrierMgr.updateGroup puis be:reloadCollision).
-- Passage piéton : curseur depthM de 1.5 à 8.0 m ; sa position t est recalée dans les extrémités de la route (groupMgr.clampCrossingT).
-- Si le groupe a previewMesh == false et qu'un mode de placement est activé, previewMesh repasse à true (et isDirty) car il faut la collision du maillage pour poser les éléments.
-- Le drapeau liveDrag est mis par un curseur 'live' maintenu ; heroRoadEditor le lit avec consumeLiveDrag au début de la frame suivante (pipeline à 1 frame de retard).
+- Each slider (itemSlider) applies to a field of an element (item[key]), not to group[key]; a button to reset to the default value appears when the value differs from the default.
+- For barriers, the sliders lengthM (4 to 500 m), offsetM (0 to 5 m) and zOffsetM (-2 to 1 m) rebuild the furniture live (barrierMgr.updateGroup then be:reloadCollision).
+- Crosswalk: depthM slider from 1.5 to 8.0 m; its position t is adjusted within the road ends (groupMgr.clampCrossingT).
+- If the group has previewMesh == false and a placement mode is enabled, previewMesh goes back to true (and isDirty) because the mesh collision is needed to place the elements.
+- The liveDrag flag is set by a held 'live' slider; heroRoadEditor reads it with consumeLiveDrag at the start of the next frame (1-frame-delayed pipeline).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_heroRoadEditor_placeablesUI.consumeLiveDrag()` | Indique si un curseur 'live' était maintenu à la frame précédente et remet le drapeau à false. La fenêtre d'outil est dessinée après le pipeline de glissement, donc heroRoadEditor l'appelle en début de frame suivante. *(interne)* | 31 |
-| `editor_heroRoadEditor_placeablesUI.draw(selGroup, selectedGroupIdx)` | Dessine tout l'onglet Features pour la route sélectionnée : liste unifiée des éléments posables (crossings, repairs, potholes, widenings, junctions, barriers), rangée de boutons d'ajout, puis les contrôles de l'élément sélectionné. | 377 |
+| `editor_heroRoadEditor_placeablesUI.consumeLiveDrag()` | Indicates whether a 'live' slider was held in the previous frame and resets the flag to false. The tool window is drawn after the drag pipeline, so heroRoadEditor calls it at the start of the next frame. *(internal)* | 31 |
+| `editor_heroRoadEditor_placeablesUI.draw(selGroup, selectedGroupIdx)` | Draws the whole Features tab for the selected road: unified list of placeable elements (crossings, repairs, potholes, widenings, junctions, barriers), row of add buttons, then the controls of the selected element. | 377 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_heroRoadEditor_placeablesUI.consumeLiveDrag()`
 
-Indique si un curseur 'live' était maintenu à la frame précédente et remet le drapeau à false. La fenêtre d'outil est dessinée après le pipeline de glissement, donc heroRoadEditor l'appelle en début de frame suivante.
+Indicates whether a 'live' slider was held in the previous frame and resets the flag to false. The tool window is drawn after the drag pipeline, so heroRoadEditor calls it at the start of the next frame.
 
-- **renvoie** : boolean true si un curseur live était tenu.
+- **returns**: boolean true if a live slider was held.
 
 #### `editor_heroRoadEditor_placeablesUI.draw(selGroup, selectedGroupIdx)`
 
-Dessine tout l'onglet Features pour la route sélectionnée : liste unifiée des éléments posables (crossings, repairs, potholes, widenings, junctions, barriers), rangée de boutons d'ajout, puis les contrôles de l'élément sélectionné.
+Draws the whole Features tab for the selected road: unified list of placeable elements (crossings, repairs, potholes, widenings, junctions, barriers), row of add buttons, then the controls of the selected element.
 
-- `selGroup` (*table|nil*) : Groupe Hero Road sélectionné ; nil affiche une liste vide ('No features yet.').
-- `selectedGroupIdx` (*integer*) : Indice du groupe sélectionné, comparé à la sélection de roadPlaceables.
+- `selGroup` (*table|nil*) : Selected Hero Road group; nil displays an empty list ('No features yet.').
+- `selectedGroupIdx` (*integer*) : Index of the selected group, compared with the roadPlaceables selection.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `reloadCollision`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/heroRoadEditor/placeablesUI.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/heroRoadEditor/placeablesUI.lua`.*

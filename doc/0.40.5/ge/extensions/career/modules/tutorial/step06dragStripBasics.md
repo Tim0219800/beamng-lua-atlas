@@ -1,90 +1,90 @@
 # `career_modules_tutorial_step06dragStripBasics`
 
-*Fichier : `lua/ge/extensions/career/modules/tutorial/step06dragStripBasics.lua` · VM : Game Engine (GE) · 649 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/tutorial/step06dragStripBasics.lua` · VM: Game Engine (GE) · 649 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_tutorial_step06dragStripBasics` : `extensions.load("career_modules_tutorial_step06dragStripBasics")`, puis la globale `career_modules_tutorial_step06dragStripBasics`
+**Access:** extension `career_modules_tutorial_step06dragStripBasics`: `extensions.load("career_modules_tutorial_step06dragStripBasics")`, then the global `career_modules_tutorial_step06dragStripBasics`
 
-Étape 6 du tutoriel de carrière (« dragStripBasics ») : apprendre une course de drag. Le joueur se place (staging), attend le compte à rebours, part, atteint la ligne d'arrivée, puis une popup de bulletin de temps (timeslip) conclut l'étape. Gère aussi les disqualifications (faux départ ou sortie de voie), des popups de coaching qui mettent le jeu en pause (simTimeAuthority) et un ralenti à la fin du compte à rebours. Les hooks dragRaceStarted, dragRaceEndLineReached, onDragRacersSetup et onRacerPhaseTransition sont émis par gameplay_drag_*.
+Career tutorial step 6 ("dragStripBasics"): learning a drag race. The player lines up (staging), waits for the countdown, launches, reaches the finish line, then a timeslip popup concludes the step. Also handles disqualifications (false start or leaving the lane), coaching popups that pause the game (simTimeAuthority) and a slow motion at the end of the countdown. The hooks dragRaceStarted, dragRaceEndLineReached, onDragRacersSetup and onRacerPhaseTransition are emitted by gameplay_drag_*.
 
-## Remarques
+## Notes
 
-- Phases internes : waitIntroPopup, active, waitDqPopup, waitFalseStartRestage, waitTimeslipPopup.
-- Après 3 échecs depuis la dernière réinitialisation, les popups de coaching (approche, compte à rebours) sont de nouveau autorisées.
-- Une disqualification pour faux départ amène à un objectif « retourner au staging » ; une sortie de voie provoque un reset avec fondu sur la place dragStripResetSpot puis un redémarrage de la tentative (attente de 2,5 s).
-- Les hooks de course ne comptent que si l'étape courante est 06dragStripBasics, si le véhicule est celui du tutoriel et si le joueur est dans les limites.
-- Ralenti de fin de compte à rebours : le temps de simulation passe de 0,1 à 0,75 sur 2 s (courbe quadratique), puis revient à 1.
+- Internal phases: waitIntroPopup, active, waitDqPopup, waitFalseStartRestage, waitTimeslipPopup.
+- After 3 failures since the last reset, the coaching popups (approach, countdown) are allowed again.
+- A false start disqualification leads to a "return to staging" objective; leaving the lane causes a reset with fade onto the dragStripResetSpot spot then a restart of the attempt (2.5 s wait).
+- The race hooks only count if the current step is 06dragStripBasics, if the vehicle is the tutorial one and if the player is within the bounds.
+- End-of-countdown slow motion: simulation time goes from 0.1 to 0.75 over 2 s (quadratic curve), then returns to 1.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_tutorial_step06dragStripBasics.cleanup()` | Retire le reset de zone, lève la pause, remet le temps de simulation à 1 et supprime marqueurs, guidage et tâches. *(interne)* | 609 |
-| `career_modules_tutorial_step06dragStripBasics.dragRaceEndLineReached(vehId)` | Hook émis à l'arrivée du véhicule : démarre le flux de disqualification si le pilote est disqualifié, sinon valide l'objectif d'arrivée et ouvre la popup de timeslip après 2 s. *(interne)* | 506 |
-| `career_modules_tutorial_step06dragStripBasics.dragRaceStarted(vehId)` | Hook émis au départ réel de la course : valide les objectifs « se placer » et « partir ». *(interne)* | 493 |
-| `career_modules_tutorial_step06dragStripBasics.onCareerTutorialLeftBounds()` | Hook de sortie de zone : lance le reset de sortie de zone de l'étape. *(interne)* *(hook)* | 412 |
-| `career_modules_tutorial_step06dragStripBasics.onDebugMenu(im)` | Affiche la phase et l'état des objectifs ; bouton « Skip Step 6 » (marque tout comme fait et avance). *(interne)* *(hook)* | 626 |
-| `career_modules_tutorial_step06dragStripBasics.onDragRacersSetup(data)` | Hook émis quand les coureurs sont remis en place pour une nouvelle tentative : valide l'objectif « retourner au staging » après un faux départ et relance la tentative après 1 s. *(interne)* *(hook)* | 594 |
-| `career_modules_tutorial_step06dragStripBasics.onIntroPopupCareerClosed(id)` | Hook de fermeture de popup : fait avancer la machine d'état (accueil terminé -> affiche les objectifs ; popup de disqualification -> reset ou retour au staging ; timeslip -> avance à l'étape suivante ; coaching -> reprise de la pause et éventuel ralenti). *(interne)* *(hook)* | 416 |
-| `career_modules_tutorial_step06dragStripBasics.onRacerPhaseTransition(vehId, oldPhase, newPhase, newPhaseName)` | Hook de gameplay_drag : à la phase compte à rebours, valide l'objectif « se placer » et ouvre la popup de coaching du compte à rebours (une fois). *(interne)* *(hook)* | 477 |
-| `career_modules_tutorial_step06dragStripBasics.onUpdate(dtReal, dtSim, dtRaw)` | Appelé chaque frame : gère le ralenti de départ, déclenche la popup d'approche à moins de 15 m de la ligne de départ, masque le marqueur de ligne à moins de 5 m, et détecte les disqualifications. *(interne)* *(hook)* | 543 |
-| `career_modules_tutorial_step06dragStripBasics.setup(stepData)` | Appelé à l'activation : réinitialise l'état, active les zones drivingToDragBounds et dragStripBounds, retrouve les places beforeDragStrip et dragStartLine, affiche la popup d'accueil v2/dragStripWelcome, bascule les préfabriqués et crée les marqueurs de direction (dragGuide1 à 3). *(interne)* | 359 |
+| `career_modules_tutorial_step06dragStripBasics.cleanup()` | Removes the zone reset, lifts the pause, resets simulation time to 1 and deletes markers, guidance and tasks. *(internal)* | 609 |
+| `career_modules_tutorial_step06dragStripBasics.dragRaceEndLineReached(vehId)` | Hook emitted when the vehicle reaches the finish: starts the disqualification flow if the driver is disqualified, otherwise validates the finish objective and opens the timeslip popup after 2 s. *(internal)* | 506 |
+| `career_modules_tutorial_step06dragStripBasics.dragRaceStarted(vehId)` | Hook emitted at the actual start of the race: validates the "line up" and "launch" objectives. *(internal)* | 493 |
+| `career_modules_tutorial_step06dragStripBasics.onCareerTutorialLeftBounds()` | Out-of-bounds hook: starts the step's out-of-bounds reset. *(internal)* *(hook)* | 412 |
+| `career_modules_tutorial_step06dragStripBasics.onDebugMenu(im)` | Displays the phase and the objectives state; "Skip Step 6" button (marks everything as done and advances). *(internal)* *(hook)* | 626 |
+| `career_modules_tutorial_step06dragStripBasics.onDragRacersSetup(data)` | Hook emitted when the racers are put back in place for a new attempt: validates the "return to staging" objective after a false start and restarts the attempt after 1 s. *(internal)* *(hook)* | 594 |
+| `career_modules_tutorial_step06dragStripBasics.onIntroPopupCareerClosed(id)` | Popup close hook: advances the state machine (welcome done -> displays the objectives; disqualification popup -> reset or return to staging; timeslip -> advances to the next step; coaching -> resumes from pause and possible slow motion). *(internal)* *(hook)* | 416 |
+| `career_modules_tutorial_step06dragStripBasics.onRacerPhaseTransition(vehId, oldPhase, newPhase, newPhaseName)` | gameplay_drag hook: at the countdown phase, validates the "line up" objective and opens the countdown coaching popup (once). *(internal)* *(hook)* | 477 |
+| `career_modules_tutorial_step06dragStripBasics.onUpdate(dtReal, dtSim, dtRaw)` | Called every frame: handles the start slow motion, triggers the approach popup within 15 m of the start line, hides the line marker within 5 m, and detects disqualifications. *(internal)* *(hook)* | 543 |
+| `career_modules_tutorial_step06dragStripBasics.setup(stepData)` | Called on activation: resets the state, activates the drivingToDragBounds and dragStripBounds zones, finds the beforeDragStrip and dragStartLine spots, displays the v2/dragStripWelcome welcome popup, switches the prefabs and creates the direction markers (dragGuide1 to 3). *(internal)* | 359 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_tutorial_step06dragStripBasics.dragRaceEndLineReached(vehId)`
 
-Hook émis à l'arrivée du véhicule : démarre le flux de disqualification si le pilote est disqualifié, sinon valide l'objectif d'arrivée et ouvre la popup de timeslip après 2 s.
+Hook emitted when the vehicle reaches the finish: starts the disqualification flow if the driver is disqualified, otherwise validates the finish objective and opens the timeslip popup after 2 s.
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `career_modules_tutorial_step06dragStripBasics.dragRaceStarted(vehId)`
 
-Hook émis au départ réel de la course : valide les objectifs « se placer » et « partir ».
+Hook emitted at the actual start of the race: validates the "line up" and "launch" objectives.
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `career_modules_tutorial_step06dragStripBasics.onDebugMenu(im)`
 
-Affiche la phase et l'état des objectifs ; bouton « Skip Step 6 » (marque tout comme fait et avance).
+Displays the phase and the objectives state; "Skip Step 6" button (marks everything as done and advances).
 
-- `im` (*table*) : Table ui_imgui.
+- `im` (*table*) : ui_imgui table.
 
 #### `career_modules_tutorial_step06dragStripBasics.onDragRacersSetup(data)`
 
-Hook émis quand les coureurs sont remis en place pour une nouvelle tentative : valide l'objectif « retourner au staging » après un faux départ et relance la tentative après 1 s.
+Hook emitted when the racers are put back in place for a new attempt: validates the "return to staging" objective after a false start and restarts the attempt after 1 s.
 
-- `data` (*table*) : Données de mise en place (non utilisées).
+- `data` (*table*) : Setup data (unused).
 
 #### `career_modules_tutorial_step06dragStripBasics.onIntroPopupCareerClosed(id)`
 
-Hook de fermeture de popup : fait avancer la machine d'état (accueil terminé -> affiche les objectifs ; popup de disqualification -> reset ou retour au staging ; timeslip -> avance à l'étape suivante ; coaching -> reprise de la pause et éventuel ralenti).
+Popup close hook: advances the state machine (welcome done -> displays the objectives; disqualification popup -> reset or return to staging; timeslip -> advances to the next step; coaching -> resumes from pause and possible slow motion).
 
-- `id` (*string*) : Id de la popup fermée.
+- `id` (*string*) : Id of the closed popup.
 
 #### `career_modules_tutorial_step06dragStripBasics.onRacerPhaseTransition(vehId, oldPhase, newPhase, newPhaseName)`
 
-Hook de gameplay_drag : à la phase compte à rebours, valide l'objectif « se placer » et ouvre la popup de coaching du compte à rebours (une fois).
+gameplay_drag hook: at the countdown phase, validates the "line up" objective and opens the countdown coaching popup (once).
 
-- `vehId` (*integer*) : Id du véhicule.
-- `oldPhase` (*integer*) : Ancienne phase.
-- `newPhase` (*integer*) : Nouvelle phase (2 = compte à rebours).
-- `newPhaseName` (*string*) : Nom de la nouvelle phase (« countdown »).
+- `vehId` (*integer*) : Vehicle id.
+- `oldPhase` (*integer*) : Old phase.
+- `newPhase` (*integer*) : New phase (2 = countdown).
+- `newPhaseName` (*string*) : Name of the new phase ("countdown").
 
 #### `career_modules_tutorial_step06dragStripBasics.onUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé chaque frame : gère le ralenti de départ, déclenche la popup d'approche à moins de 15 m de la ligne de départ, masque le marqueur de ligne à moins de 5 m, et détecte les disqualifications.
+Called every frame: handles the start slow motion, triggers the approach popup within 15 m of the start line, hides the line marker within 5 m, and detects disqualifications.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta simulation (s).
-- `dtRaw` (*number*) : Delta brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation delta (s).
+- `dtRaw` (*number*) : Raw delta (s).
 
 #### `career_modules_tutorial_step06dragStripBasics.setup(stepData)`
 
-Appelé à l'activation : réinitialise l'état, active les zones drivingToDragBounds et dragStripBounds, retrouve les places beforeDragStrip et dragStartLine, affiche la popup d'accueil v2/dragStripWelcome, bascule les préfabriqués et crée les marqueurs de direction (dragGuide1 à 3).
+Called on activation: resets the state, activates the drivingToDragBounds and dragStripBounds zones, finds the beforeDragStrip and dragStartLine spots, displays the v2/dragStripWelcome welcome popup, switches the prefabs and creates the direction markers (dragGuide1 to 3).
 
-- `stepData` (*any*) : Données de l'étape (non utilisées).
+- `stepData` (*any*) : Step data (unused).
 
-**Évènements UI (guihooks.trigger) :** `ClearTasklist`
+**UI events (guihooks.trigger):** `ClearTasklist`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/tutorial/step06dragStripBasics.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/tutorial/step06dragStripBasics.lua`.*

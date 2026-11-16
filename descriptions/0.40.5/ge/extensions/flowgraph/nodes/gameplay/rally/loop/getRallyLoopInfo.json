@@ -1,11 +1,14 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopInfo.lua",
-  "module": "Nœud flowgraph « Rally Loop Get Info » (catégorie once_instant, tag rally). Lit dans le gestionnaire de la boucle rally le nom du rally (rm:getRallyLoopName()) et les textes d'écran de départ et de fin de la mission (missionTypeData.startScreenText / endScreenText, « » par défaut). Sorties : name, startScreenText, endScreenText (string ou table translationObject).",
+  "module": "Flowgraph node \"Rally Loop Get Info\" (category once_instant, tag rally). Reads from the rally loop manager the name of the rally (rm:getRallyLoopName()) and the start and end screen texts of the mission (missionTypeData.startScreenText / endScreenText, \"\" by default). Outputs: name, startScreenText, endScreenText (string or translationObject table).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Écrit name, startScreenText et endScreenText ; log d'erreur si aucun gestionnaire.", "internal": true}
+        "workOnce": {
+          "desc": "Writes name, startScreenText and endScreenText; error log if there is no manager.",
+          "internal": true
+        }
       }
     }
   }

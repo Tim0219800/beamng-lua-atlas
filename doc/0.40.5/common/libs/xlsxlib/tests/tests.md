@@ -1,50 +1,50 @@
 # `libs_xlsxlib_tests_tests`
 
-*Fichier : `lua/common/libs/xlsxlib/tests/tests.lua` · VM : Commun (GE + véhicule) · 131 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/xlsxlib/tests/tests.lua` · VM: Common (GE + vehicle) · 131 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/xlsxlib/tests/tests")`
+**Access:** `require("libs/xlsxlib/tests/tests")`
 
-Tests unitaires de xlsxlib (Thomas Fischer, 2024). Chaque test charge `test_input_1.xlsx`, lit une feuille ou une plage et compare le résultat au fichier JSON attendu situé dans lua/common/libs/xlsxlib/tests/. Si le fichier attendu n'existe pas, il est créé à partir du résultat courant (avec un avertissement : à vérifier à la main). Lancement : `rerequire('libs/xlsxlib/tests/tests').runTests()`.
+Unit tests of xlsxlib (Thomas Fischer, 2024). Each test loads `test_input_1.xlsx`, reads a sheet or a range and compares the result to the expected JSON file located in lua/common/libs/xlsxlib/tests/. If the expected file does not exist, it is created from the current result (with a warning: to be checked by hand). Launch: `rerequire('libs/xlsxlib/tests/tests').runTests()`.
 
-## Exemple
+## Example
 
 ```lua
 rerequire('libs/xlsxlib/tests/tests').runTests()
 ```
 
-## Remarques
+## Notes
 
-- `runTests` crée le dossier /junit-results/ et écrit le rapport dans /junit-results/xlsxlib-results.xml.
-- Les tests utilisent le gestionnaire libs/xlsxlib/tests/TestManager ; les noms finissant par `_shouldFail` doivent échouer.
-- Utilise les fonctions globales du jeu serialize, jsonEncodePretty, writeFile, jsonReadFile, dumps, log et le moteur FS:fileExists.
+- `runTests` creates the /junit-results/ folder and writes the report to /junit-results/xlsxlib-results.xml.
+- The tests use the libs/xlsxlib/tests/TestManager manager; names ending in `_shouldFail` must fail.
+- Uses the game's global functions serialize, jsonEncodePretty, writeFile, jsonReadFile, dumps, log and the engine's FS:fileExists.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_xlsxlib_tests_tests.runTests()` | Crée /junit-results/ puis exécute tous les tests de la table Tests via TestManager et écrit /junit-results/xlsxlib-results.xml. | 123 |
+| `libs_xlsxlib_tests_tests.runTests()` | Creates /junit-results/ then runs all the tests of the Tests table via TestManager and writes /junit-results/xlsxlib-results.xml. | 123 |
 
-## Classe `Tests`
+## Class `Tests`
 
-Table des cas de test (méthodes appelées par TestManager avec un contexte `context`).
+Table of test cases (methods called by TestManager with a `context`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `Tests:test_firstSheet(context)` | Lit la première feuille du classeur (sans nom de feuille). | 81 |
-| `Tests:test_nonExistentSheet_shouldFail(context)` | Demande une feuille inexistante ; doit échouer (erreur « Sheet not found »). | 77 |
-| `Tests:test_selectCellRange(context)` | Sélectionne une plage de cellules. | 105 |
-| `Tests:test_selectColumnRange(context)` | Sélectionne une plage de colonnes. | 97 |
-| `Tests:test_selectEntireColumn(context)` | Sélectionne une colonne entière. | 89 |
-| `Tests:test_selectEntireRow(context)` | Sélectionne une ligne entière. | 93 |
-| `Tests:test_selectEntireSheet(context)` | Sélectionne toute la feuille « Sheet1 ». | 117 |
-| `Tests:test_selectInvalidRange_shouldFail(context)` | Plage invalide ; doit échouer. | 113 |
-| `Tests:test_selectMixedAbsoluteRelative(context)` | Sélectionne une plage mêlant références absolues et relatives. | 109 |
-| `Tests:test_selectRowRange(context)` | Sélectionne une plage de lignes. | 101 |
-| `Tests:test_selectSingleCell(context)` | Sélectionne une cellule unique. | 85 |
+| `Tests:test_firstSheet(context)` | Reads the first sheet of the workbook (without a sheet name). | 81 |
+| `Tests:test_nonExistentSheet_shouldFail(context)` | Requests a nonexistent sheet; must fail ("Sheet not found" error). | 77 |
+| `Tests:test_selectCellRange(context)` | Selects a range of cells. | 105 |
+| `Tests:test_selectColumnRange(context)` | Selects a range of columns. | 97 |
+| `Tests:test_selectEntireColumn(context)` | Selects a whole column. | 89 |
+| `Tests:test_selectEntireRow(context)` | Selects a whole row. | 93 |
+| `Tests:test_selectEntireSheet(context)` | Selects the whole "Sheet1" sheet. | 117 |
+| `Tests:test_selectInvalidRange_shouldFail(context)` | Invalid range; must fail. | 113 |
+| `Tests:test_selectMixedAbsoluteRelative(context)` | Selects a range mixing absolute and relative references. | 109 |
+| `Tests:test_selectRowRange(context)` | Selects a range of rows. | 101 |
+| `Tests:test_selectSingleCell(context)` | Selects a single cell. | 85 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`, `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/xlsxlib/tests/tests.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/xlsxlib/tests/tests.lua`.*

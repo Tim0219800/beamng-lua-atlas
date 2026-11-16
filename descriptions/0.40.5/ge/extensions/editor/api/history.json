@@ -1,65 +1,138 @@
 {
   "path": "lua/ge/extensions/editor/api/history.lua",
-  "module": "Pile annuler/rétablir (undo/redo) de l'éditeur. Chaque action a un nom, une table de données et deux fonctions undo/redo qui reçoivent cette table. Les actions sont regroupées en transactions (une action seule forme une transaction d'une action) ; undo/redo opèrent par transaction. Le module renvoie un constructeur sans argument (appelle `init`). Limite par défaut : 1000 niveaux.",
+  "module": "Editor undo/redo stack. Each action has a name, a data table and two undo/redo functions that receive this table. Actions are grouped into transactions (a single action forms a one-action transaction); undo/redo operate per transaction. The module returns a constructor with no arguments (calls `init`). Default limit: 1000 levels.",
   "usage": "local h = require(\"editor/api/history\")()\nh:commitAction(\"MyMove\", {id = 5, old = a, new = b},\n  function(d) --[[ undo ]] end,\n  function(d) --[[ redo ]] end)\nh:undo()",
   "notes": [
-    "`commitAction` hors transaction exécute immédiatement redoFunc (sauf dontCallRedoNow) et renvoie le RÉSULTAT de redoFunc, non l'action comme le dit le commentaire ; dans une transaction il renvoie l'action. Il renvoie nil si l'action est identique à la dernière transaction de la pile (hors timestamp), et false si undo ou redo manque.",
-    "`table.remove(self.undoStack, 0)` est utilisé pour retirer la plus ancienne transaction quand la pile est pleine : l'indice 0 n'est pas un indice valide d'une séquence Lua, donc la limite de 1000 niveaux ne semble pas vraiment appliquée (déduit du code).",
-    "`endTransaction` plante si aucune transaction n'est commencée (currentTransaction nil). Une transaction vide n'est pas ajoutée à la pile.",
-    "Tout nouveau commit ou endTransaction non vide vide la pile de redo.",
-    "Hooks optionnels posés par l'appelant : `self.onUndo(action)`, `self.onRedo(action)`, `self.onCommitAction(action)`. Les actions stockent `userId` (editor.userId) et `timestamp` (os.time())."
+    "`commitAction` outside a transaction immediately runs redoFunc (unless dontCallRedoNow) and returns the RESULT of redoFunc, not the action as the comment says; inside a transaction it returns the action. It returns nil if the action is identical to the last transaction on the stack (ignoring timestamp), and false if undo or redo is missing.",
+    "`table.remove(self.undoStack, 0)` is used to remove the oldest transaction when the stack is full: index 0 is not a valid index of a Lua sequence, so the 1000-level limit does not seem to be actually enforced (inferred from code).",
+    "`endTransaction` crashes if no transaction has been started (currentTransaction nil). An empty transaction is not added to the stack.",
+    "Any new commit or non-empty endTransaction clears the redo stack.",
+    "Optional hooks set by the caller: `self.onUndo(action)`, `self.onRedo(action)`, `self.onCommitAction(action)`. Actions store `userId` (editor.userId) and `timestamp` (os.time())."
   ],
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Objet d'historique. Champs : maxUndoLevels, undoStack, redoStack, currentTransaction.",
+      "desc": "History object. Fields: maxUndoLevels, undoStack, redoStack, currentTransaction.",
       "functions": {
-        "init": {"desc": "Initialise les piles vides, maxUndoLevels = 1000, aucune transaction en cours. Appelé par le constructeur.", "internal": true},
+        "init": {
+          "desc": "Initializes empty stacks, maxUndoLevels = 1000, no transaction in progress. Called by the constructor.",
+          "internal": true
+        },
         "undo": {
-          "desc": "Annule `steps` transactions : appelle undo de chaque action en ordre inverse, puis déplace la transaction sur la pile de redo. S'arrête si la pile est vide.",
-          "params": {"steps": {"type": "integer|nil", "desc": "nombre de transactions à annuler, 1 par défaut"}}
+          "desc": "Undoes `steps` transactions: calls the undo of each action in reverse order, then moves the transaction to the redo stack. Stops if the stack is empty.",
+          "params": {
+            "steps": {
+              "type": "integer|nil",
+              "desc": "number of transactions to undo, 1 by default"
+            }
+          }
         },
         "redo": {
-          "desc": "Rétablit `steps` transactions : appelle redo de chaque action dans l'ordre, puis les remet sur la pile d'undo.",
-          "params": {"steps": {"type": "integer|nil", "desc": "nombre de transactions à rétablir, 1 par défaut"}}
+          "desc": "Redoes `steps` transactions: calls the redo of each action in order, then puts them back on the undo stack.",
+          "params": {
+            "steps": {
+              "type": "integer|nil",
+              "desc": "number of transactions to redo, 1 by default"
+            }
+          }
         },
         "beginTransaction": {
-          "desc": "Démarre un groupe d'actions annulables d'un seul coup. Les redo ne sont exécutés qu'à endTransaction.",
-          "params": {"name": {"type": "string|nil", "desc": "nom de la transaction (optionnel)"}},
-          "returns": [{"type": "table|boolean", "desc": "la transaction créée, ou false si une transaction est déjà en cours"}]
+          "desc": "Starts a group of actions that can be undone at once. The redos are only run at endTransaction.",
+          "params": {
+            "name": {
+              "type": "string|nil",
+              "desc": "transaction name (optional)"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|boolean",
+              "desc": "the created transaction, or false if a transaction is already in progress"
+            }
+          ]
         },
-        "cancelTransaction": {"desc": "Abandonne la transaction en cours sans rien exécuter ni empiler (utile si une action a échoué)."},
+        "cancelTransaction": {
+          "desc": "Abandons the current transaction without running or pushing anything (useful if an action failed)."
+        },
         "endTransaction": {
-          "desc": "Termine la transaction : l'empile et exécute les redo de toutes ses actions (sauf dontCallRedoNow), puis vide la pile de redo.",
-          "params": {"dontCallRedoNow": {"type": "boolean|nil", "desc": "true = ne pas exécuter les redo maintenant"}},
-          "returns": [{"type": "boolean", "desc": "toujours true"}]
+          "desc": "Ends the transaction: pushes it and runs the redos of all its actions (unless dontCallRedoNow), then clears the redo stack.",
+          "params": {
+            "dontCallRedoNow": {
+              "type": "boolean|nil",
+              "desc": "true = do not run the redos now"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "always true"
+            }
+          ]
         },
         "commitAction": {
-          "desc": "Enregistre une action undo/redo et exécute son redo. Dans une transaction, l'action est seulement ajoutée au groupe.",
+          "desc": "Records an undo/redo action and runs its redo. Inside a transaction, the action is only added to the group.",
           "params": {
-            "name": {"type": "string", "desc": "nom de l'action, sans suffixe \"Action\" (ex. \"MyCreateWhatever\")"},
-            "data": {"type": "table", "desc": "données partagées par undoFunc et redoFunc"},
-            "undoFunc": {"type": "function", "desc": "function(actionData) qui annule l'action"},
-            "redoFunc": {"type": "function", "desc": "function(actionData) qui fait/refait l'action"},
-            "dontCallRedoNow": {"type": "boolean|nil", "desc": "true = ne pas appeler redoFunc maintenant"}
+            "name": {
+              "type": "string",
+              "desc": "action name, without the \"Action\" suffix (e.g. \"MyCreateWhatever\")"
+            },
+            "data": {
+              "type": "table",
+              "desc": "data shared by undoFunc and redoFunc"
+            },
+            "undoFunc": {
+              "type": "function",
+              "desc": "function(actionData) that undoes the action"
+            },
+            "redoFunc": {
+              "type": "function",
+              "desc": "function(actionData) that does/redoes the action"
+            },
+            "dontCallRedoNow": {
+              "type": "boolean|nil",
+              "desc": "true = do not call redoFunc now"
+            }
           },
-          "returns": [{"type": "any", "desc": "voir notes : résultat de redoFunc, action, nil (doublon) ou false"}]
+          "returns": [
+            {
+              "type": "any",
+              "desc": "see notes: result of redoFunc, action, nil (duplicate) or false"
+            }
+          ]
         },
-        "clear": {"desc": "Vide les piles d'undo et de redo (nouveau document)."},
+        "clear": {
+          "desc": "Clears the undo and redo stacks (new document)."
+        },
         "updateRedoStackObjectId": {
-          "desc": "Dans les actions de la pile de redo, remplace `data.objectId` et les éléments de `data.objectIds` égaux à oldObjectId par newObjectId (utile quand un objet est recréé avec un autre id).",
+          "desc": "In the actions of the redo stack, replaces `data.objectId` and the elements of `data.objectIds` equal to oldObjectId with newObjectId (useful when an object is recreated with a different id).",
           "params": {
-            "oldObjectId": {"type": "integer", "desc": "ancien id"},
-            "newObjectId": {"type": "integer", "desc": "nouvel id"}
+            "oldObjectId": {
+              "type": "integer",
+              "desc": "old id"
+            },
+            "newObjectId": {
+              "type": "integer",
+              "desc": "new id"
+            }
           }
         },
         "serialize": {
-          "desc": "Écrit `data.history = { undoStack, redoStack }` (références, pas de copie).",
-          "params": {"data": {"type": "table", "desc": "table à remplir"}}
+          "desc": "Writes `data.history = { undoStack, redoStack }` (references, not a copy).",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "table to fill"
+            }
+          }
         },
         "deserialize": {
-          "desc": "Restaure les piles depuis `data.history` s'il existe et annule la transaction en cours.",
-          "params": {"data": {"type": "table", "desc": "table contenant history"}}
+          "desc": "Restores the stacks from `data.history` if it exists and cancels the current transaction.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "table containing history"
+            }
+          }
         }
       }
     }

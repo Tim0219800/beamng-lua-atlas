@@ -2,62 +2,62 @@
 -- tim19Atlas stub generated from lua/common/interpolateScatteredMap.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Interpolation 2D sur points non structurés par triangulation de Delaunay (Bowyer-Watson). loadData construit la triangulation une fois ; get(x, y) cherche le triangle contenant le point en marchant de triangle voisin en triangle voisin (sans allocation) et interpole en coordonnées barycentriques. Utile pour des cartes z(x, y) dont les échantillons ne forment pas une grille.
---- Accès : `require("interpolateScatteredMap")`
+--- 2D interpolation over unstructured points using Delaunay triangulation (Bowyer-Watson). loadData builds the triangulation once; get(x, y) finds the triangle containing the point by walking from neighboring triangle to neighboring triangle (no allocation) and interpolates in barycentric coordinates. Useful for z(x, y) maps whose samples do not form a grid.
+--- Access: `require("interpolateScatteredMap")`
 ---@class interpolateScatteredMap
 local interpolateScatteredMap = {}
 
---- Crée un objet d'interpolation vide (valid = false, outsideMode 'default', defaultValue 0).
----Source : lua/common/interpolateScatteredMap.lua:491
----@return table  Objet avec méthodes loadData, get, validate, outsideValue, bruteForce, exportTriangles.
+--- Creates an empty interpolation object (valid = false, outsideMode 'default', defaultValue 0).
+---Source: lua/common/interpolateScatteredMap.lua:491
+---@return table  Object with methods loadData, get, validate, outsideValue, bruteForce, exportTriangles.
 function interpolateScatteredMap.new() end
 
---- Objet renvoyé par new(). Champs : tris, triCount, hullEdges, valid, outsideMode, defaultValue, minX/maxX/minY/maxY, sx, sy.
+--- Object returned by new(). Fields: tris, triCount, hullEdges, valid, outsideMode, defaultValue, minX/maxX/minY/maxY, sx, sy.
 ---@class interpolateScatteredMap_interpolateScatteredMap
 local interpolateScatteredMap_interpolateScatteredMap = {}
 
---- Recherche linéaire du triangle contenant (x, y) ; repli quand la marche échoue.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/interpolateScatteredMap.lua:dyn
----@param x number Abscisse.
----@param y number Ordonnée.
----@return integer  Indice du triangle, 0 si aucun.
+--- Linear search for the triangle containing (x, y); fallback when the walk fails.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/interpolateScatteredMap.lua:dyn
+---@param x number X coordinate.
+---@param y number Y coordinate.
+---@return integer  Triangle index, 0 if none.
 function interpolateScatteredMap_interpolateScatteredMap:bruteForce(x, y) end
 
---- Reconstruit les triangles en coordonnées d'entrée pour debug/visualisation.
----Source : lua/common/interpolateScatteredMap.lua:dyn
----@return table[]  Liste {ax, ay, bx, by, cx, cy, va, vb, vc}.
+--- Rebuilds the triangles in input coordinates for debug/visualization.
+---Source: lua/common/interpolateScatteredMap.lua:dyn
+---@return table[]  List {ax, ay, bx, by, cx, cy, va, vb, vc}.
 function interpolateScatteredMap_interpolateScatteredMap:exportTriangles() end
 
---- Renvoie la valeur interpolée au point (x, y). Hors de l'enveloppe convexe, dépend de outsideMode.
----Source : lua/common/interpolateScatteredMap.lua:dyn
----@param x number Abscisse, dans les mêmes unités que les points après application de xScale (déduit du code : get n'applique pas xScale).
----@param y number Ordonnée.
----@return number|nil  Valeur ; nil seulement si outsideMode == 'nil' et point hors enveloppe.
+--- Returns the interpolated value at the point (x, y). Outside the convex hull, depends on outsideMode.
+---Source: lua/common/interpolateScatteredMap.lua:dyn
+---@param x number X coordinate, in the same units as the points after applying xScale (inferred from code: get does not apply xScale).
+---@param y number Y coordinate.
+---@return number|nil  Value; nil only if outsideMode == 'nil' and the point is outside the hull.
 function interpolateScatteredMap_interpolateScatteredMap:get(x, y) end
 
---- Charge les points, normalise, dédoublonne, triangule et prépare le voisinage des triangles.
----Source : lua/common/interpolateScatteredMap.lua:dyn
----@param inputData table[] Liste de points {x, y, value} ou {x=, y=, value=}.
----@param opts table|nil Options (voir notes).
----@return table  self ; vérifier self.valid.
+--- Loads the points, normalizes, deduplicates, triangulates and prepares the triangle neighborhood.
+---Source: lua/common/interpolateScatteredMap.lua:dyn
+---@param inputData table[] List of points {x, y, value} or {x=, y=, value=}.
+---@param opts table|nil Options (see notes).
+---@return table  self; check self.valid.
 function interpolateScatteredMap_interpolateScatteredMap:loadData(inputData, opts) end
 
---- Valeur à renvoyer pour un point hors enveloppe selon outsideMode (normalement appelée par get ; px, py en coordonnées normalisées).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/interpolateScatteredMap.lua:dyn
----@param px number x normalisé.
----@param py number y normalisé.
----@param ti integer Indice du triangle courant (utilisé en mode extrapolate).
----@return number|nil  Valeur extérieure.
+--- Value to return for a point outside the hull according to outsideMode (normally called by get; px, py in normalized coordinates).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/interpolateScatteredMap.lua:dyn
+---@param px number Normalized x.
+---@param py number Normalized y.
+---@param ti integer Index of the current triangle (used in extrapolate mode).
+---@return number|nil  Outside value.
 function interpolateScatteredMap_interpolateScatteredMap:outsideValue(px, py, ti) end
 
---- Teste la carte sur les points d'entrée et renvoie l'erreur maximale.
----Source : lua/common/interpolateScatteredMap.lua:dyn
----@param inputData table[] Les points d'origine.
----@param tolerance number|nil Erreur tolérée (défaut 1e-4).
----@return number  Erreur absolue maximale.
----@return boolean  true si <= tolérance.
+--- Tests the map on the input points and returns the maximum error.
+---Source: lua/common/interpolateScatteredMap.lua:dyn
+---@param inputData table[] The original points.
+---@param tolerance number|nil Tolerated error (default 1e-4).
+---@return number  Maximum absolute error.
+---@return boolean  true if <= tolerance.
 function interpolateScatteredMap_interpolateScatteredMap:validate(inputData, tolerance) end
 
 return interpolateScatteredMap

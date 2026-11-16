@@ -1,20 +1,20 @@
 # `flowgraph_nodes_gameplay_allowWalking`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/allowWalking.lua` · VM : Game Engine (GE) · 42 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/allowWalking.lua` · VM: Game Engine (GE) · 42 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/allowWalking")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/allowWalking")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Allow Walking » (catégorie par défaut, dépend de gameplay_walk). Autorise ou interdit le mode marche, donc l'entrée et la sortie des véhicules. Pins d'entrée : flow, allow, deny, set (caché) et enable (bool caché, utilisé avec set). Sortie : flow, recopie de l'entrée. Appelle gameplay_walk.enableToggling.
+Flowgraph node "Allow Walking" (default category, depends on gameplay_walk). Allows or forbids walking mode, and therefore entering and exiting vehicles. Input pins: flow, allow, deny, set (hidden) and enable (hidden bool, used with set). Output: flow, copy of the input. Calls gameplay_walk.enableToggling.
 
-**Dépendances (chargées avant) :** `gameplay_walk`
+**Dependencies (loaded first):** `gameplay_walk`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work(args)` | Si flow est actif : allow active le mode marche, deny le désactive, set l'applique selon enable. Recopie flow en sortie. | 25 |
+| `C:work(args)` | If flow is active: allow enables walking mode, deny disables it, set applies it according to enable. Copies flow to the output. | 25 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/allowWalking.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/allowWalking.lua`.*

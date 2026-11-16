@@ -1,15 +1,34 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/environment/setGravity.lua",
-  "module": "Nœud flowgraph « Set Gravity » (catégorie dynamic_instant). Règle la gravité globale (pin value, en m/s², 0 par défaut) via core_environment.setGravity. La gravité d'origine est mémorisée au démarrage du graphe et restaurée à l'arrêt (data.restoreGravity).",
+  "module": "Flowgraph node \"Set Gravity\" (category dynamic_instant). Sets the global gravity (value pin, in m/s², 0 by default) via core_environment.setGravity. The original gravity is stored when the graph starts and restored on stop (data.restoreGravity).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Définit data.restoreGravity = true.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "_executionStarted": {"desc": "Mémorise la gravité actuelle.", "internal": true},
-        "_executionStopped": {"desc": "Restaure la gravité mémorisée si data.restoreGravity est vrai.", "internal": true},
-        "workOnce": {"desc": "Applique la gravité du pin value une fois."},
-        "work": {"desc": "En mode repeat, réapplique la gravité à chaque frame seulement si le pin value est utilisé (branché)."}
+        "init": {
+          "desc": "Sets data.restoreGravity = true.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Stores the current gravity.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Restores the stored gravity if data.restoreGravity is true.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Applies the gravity of the value pin once."
+        },
+        "work": {
+          "desc": "In repeat mode, reapplies the gravity every frame only if the value pin is used (connected)."
+        }
       }
     }
   }

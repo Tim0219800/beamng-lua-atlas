@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/comment.lua",
+  "module": "Nœud flowgraph « Comment » (catégorie logic, tag group, aucun pin). Place un commentaire dans le graphe, sous forme de cadre de groupe redimensionnable qui peut regrouper visuellement des nœuds. Propriétés éditables : titre, texte (2048 caractères max), alpha, couleurs de fond/bordure/texte, mode « Simple » (pas de groupe, juste du texte) et mode de déplacement (With Nodes : les nœuds à l'intérieur bougent avec le cadre ; Without Nodes). Purement éditeur, sans effet à l'exécution. Sérialise taille, couleurs, alpha, titre, texte (les retours à la ligne sont échappés en \\n), simple et moveMode.",
+  "notes": ["Dans _onDeserialized, le test pour charger borderColor vérifie nodeData.backgroundColor (et non borderColor) : plante si borderColor est absent alors que backgroundColor existe.", "drawCustomProperties appelle dump(self.te) si un éditeur de texte existe, mais self.te n'est jamais créé (code commenté)."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud (éditeur uniquement).",
+      "functions": {
+        "init": {"desc": "Initialise taille 200x200, titre « Comment », couleurs (fond gris 0.5, bordure 0.8, texte blanc), alpha 0.75, moveMode 'withoutNodes', simple faux.", "internal": true},
+        "showProperties": {"desc": "Appelée à l'ouverture du panneau de propriétés ; sans effet (code commenté).", "internal": true},
+        "hideProperties": {"desc": "Appelée à la fermeture du panneau de propriétés ; sans effet (code commenté).", "internal": true},
+        "drawCustomProperties": {"desc": "Dessine le panneau de propriétés (titre, alpha, couleurs, simple, mode de déplacement, texte) et renvoie la raison de modification pour l'historique d'annulation.", "returns": [{"type": "string|nil", "desc": "description du changement"}], "internal": true},
+        "refreshColors": {"desc": "Recalcule les ImVec4 de fond, bordure et texte depuis les tableaux de floats.", "internal": true},
+        "_onSerialize": {"desc": "Ajoute au résultat les champs propres au commentaire.", "params": {"res": {"type": "table", "desc": "table de sérialisation du nœud"}}, "internal": true},
+        "_onDeserialized": {"desc": "Restaure les champs depuis les données chargées.", "params": {"nodeData": {"type": "table", "desc": "données sauvegardées"}}, "internal": true},
+        "updateEditorPosition": {"desc": "Repositionne le nœud dans l'éditeur à l'ouverture du gestionnaire (si la position est dans des bornes valides) et force la taille.", "internal": true},
+        "draw": {"desc": "Dessine le cadre, le titre, le groupe redimensionnable et l'indication de groupe dans l'éditeur.", "internal": true}
+      }
+    }
+  }
+}

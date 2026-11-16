@@ -1,46 +1,46 @@
 # `editor_dragRaceEditor`
 
-*Fichier : `lua/ge/extensions/editor/dragRaceEditor.lua` · VM : Game Engine (GE) · 286 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dragRaceEditor.lua` · VM: Game Engine (GE) · 286 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dragRaceEditor` : `extensions.load("editor_dragRaceEditor")`, puis la globale `editor_dragRaceEditor`
+**Access:** extension `editor_dragRaceEditor`: `extensions.load("editor_dragRaceEditor")`, then the global `editor_dragRaceEditor`
 
-Fenêtre principale de l'éditeur de drag race (menu Gameplay > Drag Race Editor). Elle assemble les sous-modules dragRaceEditor/* : liste des strips et des fichiers de réglages (dragSettings) à gauche, détails du strip ou des réglages sélectionnés à droite. Elle enregistre aussi le mode d'édition « Edit Drag Zone » pour éditer les zones (strip ou voie) dans la vue 3D. Au premier affichage dans un niveau, elle charge tous les strips et réglages.
+Main window of the drag race editor (Gameplay > Drag Race Editor menu). It assembles the dragRaceEditor/* submodules: list of strips and settings files (dragSettings) on the left, details of the selected strip or settings on the right. It also registers the "Edit Drag Zone" edit mode to edit zones (strip or lane) in the 3D view. On first display in a level, it loads all strips and settings.
 
-## Remarques
+## Notes
 
-- Le menu File propose Save All (sauve seulement les éléments marqués _dirty), Clear All (retire de la liste les éléments non sauvegardés) et Refresh Editor (recharge tout depuis le disque).
-- Dans le mode Edit Drag Zone : Maj+clic gauche ajoute un sommet, Alt+clic insère un sommet entre deux, Ctrl+clic sélectionne plusieurs sommets.
-- M.selectStrip est une référence à strips.selectStrip prise au chargement du module.
+- The File menu offers Save All (saves only the items marked _dirty), Clear All (removes unsaved items from the list) and Refresh Editor (reloads everything from disk).
+- In Edit Drag Zone mode: Shift+left click adds a vertex, Alt+click inserts a vertex between two, Ctrl+click selects several vertices.
+- M.selectStrip is a reference to strips.selectStrip taken at module load.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dragRaceEditor.onDeserialized(data)` | Hook appelé après rechargement : restaure l'état renvoyé par onSerialize (valeurs par défaut -1 pour les index). *(interne)* *(hook)* | 212 |
-| `editor_dragRaceEditor.onEditorGui()` | Hook appelé à chaque frame par l'éditeur : synchronise l'éditeur de zone, dessine la fenêtre (menu, listes, détails) et l'aperçu 3D des strips. Charge les strips et réglages une seule fois si un niveau est chargé. *(interne)* *(hook)* | 228 |
-| `editor_dragRaceEditor.onEditorInitialized()` | Hook de l'éditeur : enregistre la fenêtre (1800x900), l'entrée de menu, crée les données drag vides si besoin et déclare le mode d'édition editor.editModes.dragZoneEditMode. *(interne)* *(hook)* | 178 |
-| `editor_dragRaceEditor.onSerialize()` | Hook appelé avant un rechargement des extensions Lua : renvoie le dossier/nom de fichier courant, les données drag, l'indicateur de modifications non sauvées et les index de strip/réglage sélectionnés. *(interne)* *(hook)* | 201 |
-| `editor_dragRaceEditor.show()` | Vide la sélection d'objets de l'éditeur et affiche la fenêtre « Drag Race Editor ». | 223 |
+| `editor_dragRaceEditor.onDeserialized(data)` | Hook called after reload: restores the state returned by onSerialize (default values -1 for the indices). *(internal)* *(hook)* | 212 |
+| `editor_dragRaceEditor.onEditorGui()` | Hook called every frame by the editor: synchronizes the zone editor, draws the window (menu, lists, details) and the 3D preview of the strips. Loads the strips and settings only once if a level is loaded. *(internal)* *(hook)* | 228 |
+| `editor_dragRaceEditor.onEditorInitialized()` | Editor hook: registers the window (1800x900), the menu entry, creates empty drag data if needed and declares the edit mode editor.editModes.dragZoneEditMode. *(internal)* *(hook)* | 178 |
+| `editor_dragRaceEditor.onSerialize()` | Hook called before a reload of the Lua extensions: returns the current folder/file name, the drag data, the unsaved changes flag and the selected strip/settings indices. *(internal)* *(hook)* | 201 |
+| `editor_dragRaceEditor.show()` | Clears the editor object selection and shows the "Drag Race Editor" window. | 223 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dragRaceEditor.onDeserialized(data)`
 
-Hook appelé après rechargement : restaure l'état renvoyé par onSerialize (valeurs par défaut -1 pour les index).
+Hook called after reload: restores the state returned by onSerialize (default values -1 for the indices).
 
-- `data` (*table|nil*) : Table produite par onSerialize.
+- `data` (*table|nil*) : Table produced by onSerialize.
 
 #### `editor_dragRaceEditor.onSerialize()`
 
-Hook appelé avant un rechargement des extensions Lua : renvoie le dossier/nom de fichier courant, les données drag, l'indicateur de modifications non sauvées et les index de strip/réglage sélectionnés.
+Hook called before a reload of the Lua extensions: returns the current folder/file name, the drag data, the unsaved changes flag and the selected strip/settings indices.
 
-- **renvoie** : table currentFileDir, currentFileName, dragRaceData, hasUnsavedChanges, selectedStripIndex, selectedSettingsIndex
+- **returns**: table currentFileDir, currentFileName, dragRaceData, hasUnsavedChanges, selectedStripIndex, selectedSettingsIndex
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `selectStrip` | function | Alias de strips.selectStrip (sélectionne un strip par index dans l'éditeur). |
+| `selectStrip` | function | Alias of strips.selectStrip (selects a strip by index in the editor). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dragRaceEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dragRaceEditor.lua`.*

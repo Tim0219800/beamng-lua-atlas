@@ -1,149 +1,149 @@
 # `editor_ezObjectSelect_transformSession`
 
-*Fichier : `lua/ge/extensions/editor/ezObjectSelect/transformSession.lua` · VM : Game Engine (GE) · 565 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ezObjectSelect/transformSession.lua` · VM: Game Engine (GE) · 565 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ezObjectSelect_transformSession` : `extensions.load("editor_ezObjectSelect_transformSession")`, puis la globale `editor_ezObjectSelect_transformSession`
+**Access:** extension `editor_ezObjectSelect_transformSession`: `extensions.load("editor_ezObjectSelect_transformSession")`, then the global `editor_ezObjectSelect_transformSession`
 
-Session de transformation (déplacement, rotation, échelle) des objets sélectionnés pour Easy Object Select. begin() mémorise la transformation et l'échelle initiales de chaque objet sélectionné ; les fonctions update* repositionnent les objets à partir de l'état initial (pas cumulatif) ; finish() enregistre le résultat dans l'historique de l'éditeur (SetObjectTransform / SetObjectScale, annulables, dans une transaction) ; cancel() restaure tout. Gère aussi la mise à jour des offsets de prefab et la remise à la verticale.
+Transform session (move, rotate, scale) of the selected objects for Easy Object Select. begin() stores the initial transform and scale of each selected object; the update* functions reposition the objects from the initial state (not cumulative); finish() records the result in the editor history (SetObjectTransform / SetObjectScale, undoable, in a transaction); cancel() restores everything. Also handles prefab offset updates and reset to upright.
 
-## Remarques
+## Notes
 
-- Une seule session à la fois (upvalue local). begin échoue si l'ancre n'est pas sélectionnée ou si un objet n'est pas manipulable (editor.canManipulateObject).
-- Échelle limitée à [0.01, 1000] par composante ; le facteur est identique pour tous les axes édités et borné pour que tous les objets restent dans cet intervalle.
-- finish() ne crée aucune action d'historique s'il n'y a aucun changement net : les objets sont alors restaurés.
-- Le hook onEditorObjectSelectionTransformChanged n'est émis que lors d'un undo/redo des actions (applyHistoryTransform/Scale), pas pendant la session.
-- finish() renvoie false sans session, nil si la transaction d'historique n'a pas pu s'ouvrir, sinon hasNetChange (boolean) puis completion.
+- Only one session at a time (local upvalue). begin fails if the anchor is not selected or if an object cannot be manipulated (editor.canManipulateObject).
+- Scale is clamped to [0.01, 1000] per component; the factor is identical for all edited axes and bounded so that all objects stay within that range.
+- finish() creates no history action if there is no net change: the objects are then restored.
+- The onEditorObjectSelectionTransformChanged hook is emitted only on undo/redo of the actions (applyHistoryTransform/Scale), not during the session.
+- finish() returns false without a session, nil if the history transaction could not be opened, otherwise hasNetChange (boolean) then completion.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ezObjectSelect_transformSession.begin(anchorObject, options)` | Ouvre une session sur tous les objets de editor.selection.object. Renvoie false si une session existe déjà, si l'ancre n'est pas sélectionnée ou si un objet ne peut pas être manipulé. | 133 |
-| `editor_ezObjectSelect_transformSession.cancel()` | Annule la session et remet transformation et échelle initiales de chaque objet. | 458 |
-| `editor_ezObjectSelect_transformSession.finish()` | Termine la session : s'il y a un changement net, ouvre une transaction d'historique et enregistre une action SetObjectTransform et/ou SetObjectScale par objet ; sinon restaure l'état initial. | 364 |
-| `editor_ezObjectSelect_transformSession.getDesiredAnchorPosition(surfacePosition, options)` | Calcule la position voulue de l'ancre pour un point de surface (surface - grabOffset), avec accrochage à la grille éventuel. | 191 |
-| `editor_ezObjectSelect_transformSession.getObjectIds()` | IDs des objets de la session. | 557 |
-| `editor_ezObjectSelect_transformSession.isActive()` | Indique si une session est ouverte. | 539 |
-| `editor_ezObjectSelect_transformSession.resetRotation(objectIds)` | Remet les objets à la verticale (axe Z monde) en conservant leur cap, dans une transaction d'historique « ResetObjectRotation ». Refuse si une session est active. | 497 |
-| `editor_ezObjectSelect_transformSession.selectionMatches()` | Vérifie que la sélection de l'éditeur est toujours exactement celle de la session et que les objets restent manipulables. | 543 |
-| `editor_ezObjectSelect_transformSession.setGrabSurface(surfacePosition, maintainRelativeZ, verticalOffset)` | Définit le décalage entre le point de surface saisi et la position de l'ancre. | 162 |
-| `editor_ezObjectSelect_transformSession.update(surfacePosition, surfaceNormal, options)` | Déplace la sélection pour que l'ancre suive un point de surface ; peut aligner chaque objet sur la normale de surface et utiliser un fournisseur de position/normale individuels. | 331 |
-| `editor_ezObjectSelect_transformSession.updateDelta(delta, options)` | Translate tous les objets de delta par rapport à leur position initiale, avec accrochage à la grille optionnel (masque par axe, absolu ou relatif). | 198 |
-| `editor_ezObjectSelect_transformSession.updateRotation(pivot, axis, angle)` | Fait tourner tous les objets (orientation et position) autour du pivot, à partir de l'état initial. | 245 |
-| `editor_ezObjectSelect_transformSession.updateScale(pivot, axes, factors)` | Met à l'échelle les objets autour du pivot le long des axes donnés ; les positions sont étirées par rapport au pivot. | 268 |
+| `editor_ezObjectSelect_transformSession.begin(anchorObject, options)` | Opens a session on all objects of editor.selection.object. Returns false if a session already exists, if the anchor is not selected or if an object cannot be manipulated. | 133 |
+| `editor_ezObjectSelect_transformSession.cancel()` | Cancels the session and restores the initial transform and scale of each object. | 458 |
+| `editor_ezObjectSelect_transformSession.finish()` | Ends the session: if there is a net change, opens a history transaction and records a SetObjectTransform and/or SetObjectScale action per object; otherwise restores the initial state. | 364 |
+| `editor_ezObjectSelect_transformSession.getDesiredAnchorPosition(surfacePosition, options)` | Computes the desired anchor position for a surface point (surface - grabOffset), with optional grid snapping. | 191 |
+| `editor_ezObjectSelect_transformSession.getObjectIds()` | IDs of the session's objects. | 557 |
+| `editor_ezObjectSelect_transformSession.isActive()` | Indicates whether a session is open. | 539 |
+| `editor_ezObjectSelect_transformSession.resetRotation(objectIds)` | Resets the objects to upright (world Z axis) while keeping their heading, in a "ResetObjectRotation" history transaction. Refuses if a session is active. | 497 |
+| `editor_ezObjectSelect_transformSession.selectionMatches()` | Checks that the editor selection is still exactly the session's selection and that the objects remain manipulable. | 543 |
+| `editor_ezObjectSelect_transformSession.setGrabSurface(surfacePosition, maintainRelativeZ, verticalOffset)` | Sets the offset between the grabbed surface point and the anchor position. | 162 |
+| `editor_ezObjectSelect_transformSession.update(surfacePosition, surfaceNormal, options)` | Moves the selection so that the anchor follows a surface point; can align each object to the surface normal and use an individual position/normal provider. | 331 |
+| `editor_ezObjectSelect_transformSession.updateDelta(delta, options)` | Translates all objects by delta relative to their initial position, with optional grid snapping (per-axis mask, absolute or relative). | 198 |
+| `editor_ezObjectSelect_transformSession.updateRotation(pivot, axis, angle)` | Rotates all objects (orientation and position) around the pivot, from the initial state. | 245 |
+| `editor_ezObjectSelect_transformSession.updateScale(pivot, axes, factors)` | Scales the objects around the pivot along the given axes; positions are stretched relative to the pivot. | 268 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_ezObjectSelect_transformSession.begin(anchorObject, options)`
 
-Ouvre une session sur tous les objets de editor.selection.object. Renvoie false si une session existe déjà, si l'ancre n'est pas sélectionnée ou si un objet ne peut pas être manipulé.
+Opens a session on all objects of editor.selection.object. Returns false if a session already exists, if the anchor is not selected or if an object cannot be manipulated.
 
-- `anchorObject` (*userdata*) : Objet ancre (dont la position sert de référence pour la saisie de surface et la distance).
-- `options` (*table|nil*) : historyName (string, nom de la transaction d'historique, défaut "EasySelectDrag").
-- **renvoie** : boolean true si la session est ouverte.
+- `anchorObject` (*userdata*) : Anchor object (its position is the reference for surface grabbing and distance).
+- `options` (*table|nil*) : historyName (string, name of the history transaction, default "EasySelectDrag").
+- **returns**: boolean true if the session is open.
 
 #### `editor_ezObjectSelect_transformSession.cancel()`
 
-Annule la session et remet transformation et échelle initiales de chaque objet.
+Cancels the session and restores the initial transform and scale of each object.
 
-- **renvoie** : boolean true si une session était active.
+- **returns**: boolean true if a session was active.
 
 #### `editor_ezObjectSelect_transformSession.finish()`
 
-Termine la session : s'il y a un changement net, ouvre une transaction d'historique et enregistre une action SetObjectTransform et/ou SetObjectScale par objet ; sinon restaure l'état initial.
+Ends the session: if there is a net change, opens a history transaction and records a SetObjectTransform and/or SetObjectScale action per object; otherwise restores the initial state.
 
-- **renvoie** : boolean|nil true si changement validé, false si aucun changement (ou pas de session), nil si la transaction n'a pas pu s'ouvrir.
-- **renvoie** : table|nil {anchorDistance} (m) lorsqu'il y a un changement.
+- **returns**: boolean|nil true if change committed, false if no change (or no session), nil if the transaction could not be opened.
+- **returns**: table|nil {anchorDistance} (m) when there is a change.
 
 #### `editor_ezObjectSelect_transformSession.getDesiredAnchorPosition(surfacePosition, options)`
 
-Calcule la position voulue de l'ancre pour un point de surface (surface - grabOffset), avec accrochage à la grille éventuel.
+Computes the desired anchor position for a surface point (surface - grabOffset), with optional grid snapping.
 
-- `surfacePosition` (*vec3*) : Point de surface sous le curseur.
+- `surfacePosition` (*vec3*) : Surface point under the cursor.
 - `options` (*table|nil*) : gridSize (m), gridRelative (boolean), snapZ (boolean).
-- **renvoie** : vec3|boolean Position de l'ancre, ou false si pas de session / pas de grabOffset / pas de point.
+- **returns**: vec3|boolean Anchor position, or false if no session / no grabOffset / no point.
 
 #### `editor_ezObjectSelect_transformSession.getObjectIds()`
 
-IDs des objets de la session.
+IDs of the session's objects.
 
-- **renvoie** : integer[] Liste d'IDs (vide sans session).
+- **returns**: integer[] List of IDs (empty without a session).
 
 #### `editor_ezObjectSelect_transformSession.isActive()`
 
-Indique si une session est ouverte.
+Indicates whether a session is open.
 
-- **renvoie** : boolean true si active.
+- **returns**: boolean true if active.
 
 #### `editor_ezObjectSelect_transformSession.resetRotation(objectIds)`
 
-Remet les objets à la verticale (axe Z monde) en conservant leur cap, dans une transaction d'historique « ResetObjectRotation ». Refuse si une session est active.
+Resets the objects to upright (world Z axis) while keeping their heading, in a "ResetObjectRotation" history transaction. Refuses if a session is active.
 
-- `objectIds` (*integer[]*) : IDs des objets à redresser.
-- **renvoie** : boolean true si au moins un objet a changé.
+- `objectIds` (*integer[]*) : IDs of the objects to straighten.
+- **returns**: boolean true if at least one object changed.
 
 #### `editor_ezObjectSelect_transformSession.selectionMatches()`
 
-Vérifie que la sélection de l'éditeur est toujours exactement celle de la session et que les objets restent manipulables.
+Checks that the editor selection is still exactly the session's selection and that the objects remain manipulable.
 
-- **renvoie** : boolean true sans session ou si la sélection correspond.
+- **returns**: boolean true without a session or if the selection matches.
 
 #### `editor_ezObjectSelect_transformSession.setGrabSurface(surfacePosition, maintainRelativeZ, verticalOffset)`
 
-Définit le décalage entre le point de surface saisi et la position de l'ancre.
+Sets the offset between the grabbed surface point and the anchor position.
 
-- `surfacePosition` (*vec3*) : Point de surface saisi.
-- `maintainRelativeZ` (*boolean|nil*) : Si false, le décalage vertical est mis à 0.
-- `verticalOffset` (*number|nil*) : Si fourni, impose le décalage vertical (prioritaire sur maintainRelativeZ).
-- **renvoie** : boolean false sans session ou sans surfacePosition.
+- `surfacePosition` (*vec3*) : Grabbed surface point.
+- `maintainRelativeZ` (*boolean|nil*) : If false, the vertical offset is set to 0.
+- `verticalOffset` (*number|nil*) : If provided, forces the vertical offset (takes precedence over maintainRelativeZ).
+- **returns**: boolean false without a session or without surfacePosition.
 
 #### `editor_ezObjectSelect_transformSession.update(surfacePosition, surfaceNormal, options)`
 
-Déplace la sélection pour que l'ancre suive un point de surface ; peut aligner chaque objet sur la normale de surface et utiliser un fournisseur de position/normale individuels.
+Moves the selection so that the anchor follows a surface point; can align each object to the surface normal and use an individual position/normal provider.
 
-- `surfacePosition` (*vec3*) : Point de surface sous le curseur.
-- `surfaceNormal` (*vec3|nil*) : Normale de la surface.
-- `options` (*table*) : gridSize, gridRelative, snapZ, followRotation (boolean), rotateSnapSize (degrés), rotateRelative (boolean), individualProvider (function(entry, position) -> {position, normal}|nil). Le paramètre doit être une table (déduit du code : options.followRotation est lu sans garde).
-- **renvoie** : boolean false si pas de session ou de grabOffset.
+- `surfacePosition` (*vec3*) : Surface point under the cursor.
+- `surfaceNormal` (*vec3|nil*) : Surface normal.
+- `options` (*table*) : gridSize, gridRelative, snapZ, followRotation (boolean), rotateSnapSize (degrees), rotateRelative (boolean), individualProvider (function(entry, position) -> {position, normal}|nil). The parameter must be a table (inferred from code: options.followRotation is read without a guard).
+- **returns**: boolean false if no session or no grabOffset.
 
 #### `editor_ezObjectSelect_transformSession.updateDelta(delta, options)`
 
-Translate tous les objets de delta par rapport à leur position initiale, avec accrochage à la grille optionnel (masque par axe, absolu ou relatif).
+Translates all objects by delta relative to their initial position, with optional grid snapping (per-axis mask, absolute or relative).
 
-- `delta` (*vec3*) : Déplacement en mètres, monde.
-- `options` (*table|nil*) : gridSize (m), gridPivot (vec3), gridMask ({x,y,z} booléens), gridRelative (boolean), snapZ (boolean).
-- **renvoie** : boolean false sans session ou sans delta.
+- `delta` (*vec3*) : Displacement in meters, world space.
+- `options` (*table|nil*) : gridSize (m), gridPivot (vec3), gridMask ({x,y,z} booleans), gridRelative (boolean), snapZ (boolean).
+- **returns**: boolean false without a session or without delta.
 
 #### `editor_ezObjectSelect_transformSession.updateRotation(pivot, axis, angle)`
 
-Fait tourner tous les objets (orientation et position) autour du pivot, à partir de l'état initial.
+Rotates all objects (orientation and position) around the pivot, from the initial state.
 
-- `pivot` (*vec3*) : Centre de rotation.
-- `axis` (*vec3*) : Axe (normalisé en interne ; longueur nulle refusée).
-- `angle` (*number*) : Angle en radians.
-- **renvoie** : boolean true si appliqué.
+- `pivot` (*vec3*) : Center of rotation.
+- `axis` (*vec3*) : Axis (normalized internally; zero length is rejected).
+- `angle` (*number*) : Angle in radians.
+- **returns**: boolean true if applied.
 
 #### `editor_ezObjectSelect_transformSession.updateScale(pivot, axes, factors)`
 
-Met à l'échelle les objets autour du pivot le long des axes donnés ; les positions sont étirées par rapport au pivot.
+Scales the objects around the pivot along the given axes; positions are stretched relative to the pivot.
 
-- `pivot` (*vec3*) : Centre de l'échelle.
-- `axes` (*table<string, vec3>*) : Axes x, y, z utilisés pour étirer les positions.
-- `factors` (*table<string, number>*) : Facteurs {x, y, z} ; un axe est « édité » si son facteur diffère de 1.
-- **renvoie** : boolean true si appliqué.
-- **renvoie** : number Facteur effectif après bornage.
+- `pivot` (*vec3*) : Scale center.
+- `axes` (*table<string, vec3>*) : Axes x, y, z used to stretch the positions.
+- `factors` (*table<string, number>*) : Factors {x, y, z}; an axis is "edited" if its factor differs from 1.
+- **returns**: boolean true if applied.
+- **returns**: number Effective factor after clamping.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onEditorObjectSelectionTransformChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `findObjectById`, `upcast`
 - `obj:` `getScale`, `getTransform`, `setScale`, `setTransform`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ezObjectSelect/transformSession.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ezObjectSelect/transformSession.lua`.*

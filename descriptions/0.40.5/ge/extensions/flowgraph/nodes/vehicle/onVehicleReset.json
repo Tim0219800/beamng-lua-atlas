@@ -1,37 +1,37 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleReset.lua",
-  "module": "Nœud événement « On Vehicle Reset » (catégorie `logic`). Émet une impulsion sur `flow` quand un véhicule est remis à zéro (hook `onVehicleResetted`). Si le pin d'entrée `vehId` est fourni, ne réagit que pour ce véhicule. Sortie `vehId` (caché) : le véhicule reseté.",
+  "module": "Event node \"On Vehicle Reset\" (category `logic`). Emits a pulse on `flow` when a vehicle is reset (hook `onVehicleResetted`). If the input pin `vehId` is provided, reacts only for this vehicle. Output `vehId` (hidden): the reset vehicle.",
   "notes": [
-    "Le nom du hook est `onVehicleResetted` (avec « ted »)."
+    "The hook name is `onVehicleResetted` (with \"ted\")."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_afterTrigger": {
-          "desc": "Appelé par le gestionnaire après le déclenchement du nœud ; remet le drapeau d'événement à false.",
+          "desc": "Called by the manager after the node is triggered; resets the event flag to false.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.",
+          "desc": "Called by the manager when the flowgraph project execution starts; resets the internal state to zero.",
           "internal": true
         },
         "init": {
-          "desc": "Constructeur vide.",
+          "desc": "Empty constructor.",
           "internal": true
         },
         "onVehicleResetted": {
-          "desc": "Hook appelé quand un véhicule est reset ; filtre éventuellement par `vehId` puis lève le drapeau.",
+          "desc": "Hook called when a vehicle is reset; optionally filters by `vehId` then raises the flag.",
           "internal": true,
           "params": {
             "id": {
               "type": "integer",
-              "desc": "Id du véhicule reseté."
+              "desc": "Id of the reset vehicle."
             }
           }
         },
         "work": {
-          "desc": "Si le drapeau est levé, remplit `vehId` et met `flow` à true une frame, sinon false.",
+          "desc": "If the flag is raised, fills `vehId` and sets `flow` to true for one frame, otherwise false.",
           "internal": true
         }
       }

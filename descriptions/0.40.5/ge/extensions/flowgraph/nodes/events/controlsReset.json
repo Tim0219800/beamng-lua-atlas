@@ -1,19 +1,63 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/events/controlsReset.lua",
-  "module": "Nœud flowgraph « Controls Reset » (catégorie logic, événement). Laisse passer le flux quand le joueur appuie sur Reset. Quand il est utilisé, le reset par défaut du freeroam n'a plus lieu (data.blocksOnResetGameplay = true). Pins : flow (entrée), flow (sortie impulsion) et value (bool caché).",
-  "notes": ["Enregistre un événement dans le log du flowgraph (logEvent) à chaque appui.", "Ajoute un bouton « Reset » à l'interface de contexte de jeu (onGatherGameContextUiButtons), actif seulement si le nœud est dans un état actif et a été utilisé à la frame courante."],
+  "module": "Flowgraph node \"Controls Reset\" (category logic, event). Lets flow through when the player presses Reset. When it is used, the default freeroam reset no longer happens (data.blocksOnResetGameplay = true). Pins: flow (input), flow (pulse output) and value (hidden bool).",
+  "notes": [
+    "Records an event in the flowgraph log (logEvent) on each press.",
+    "Adds a \"Reset\" button to the game context interface (onGatherGameContextUiButtons), active only if the node is in an active state and was used in the current frame."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise self.reset et data.blocksOnResetGameplay.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "_executionStarted": {"desc": "Remet self.reset à false.", "internal": true},
-        "_executionStopped": {"desc": "Remet self.reset à false.", "internal": true},
-        "_afterTrigger": {"desc": "Remet self.reset à false après le déclenchement.", "internal": true},
-        "onResetGameplay": {"desc": "Hook appelé par extensions.hook(\"onResetGameplay\") : mémorise l'appui.", "internal": true},
-        "onGatherGameContextUiButtons": {"desc": "Hook : ajoute à results le bouton {id='controlsReset', label='Reset', order=0, active}.", "params": {"results": {"type": "table", "desc": "Liste de boutons à compléter"}}, "internal": true},
-        "drawMiddle": {"desc": "Dessin du nœud dans l'éditeur.", "internal": true},
-        "work": {"desc": "Met flow et value à vrai une frame après un reset, sinon à faux.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}}
+        "init": {
+          "desc": "Initializes self.reset and data.blocksOnResetGameplay.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Resets self.reset to false.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Resets self.reset to false.",
+          "internal": true
+        },
+        "_afterTrigger": {
+          "desc": "Resets self.reset to false after triggering.",
+          "internal": true
+        },
+        "onResetGameplay": {
+          "desc": "Hook called by extensions.hook(\"onResetGameplay\"): stores the press.",
+          "internal": true
+        },
+        "onGatherGameContextUiButtons": {
+          "desc": "Hook: adds to results the button {id='controlsReset', label='Reset', order=0, active}.",
+          "params": {
+            "results": {
+              "type": "table",
+              "desc": "List of buttons to complete"
+            }
+          },
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Node drawing in the editor.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sets flow and value to true one frame after a reset, otherwise to false.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph arguments"
+            }
+          }
+        }
       }
     }
   }

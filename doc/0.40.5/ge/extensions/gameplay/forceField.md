@@ -1,12 +1,12 @@
 # `gameplay_forceField`
 
-*Fichier : `lua/ge/extensions/gameplay/forceField.lua` · VM : Game Engine (GE) · 113 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/forceField.lua` · VM: Game Engine (GE) · 113 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_forceField` : `extensions.load("gameplay_forceField")`, puis la globale `gameplay_forceField`
+**Access:** extension `gameplay_forceField`: `extensions.load("gameplay_forceField")`, then the global `gameplay_forceField`
 
-Mode « champ de force » du menu radial Fun Stuff : crée autour du véhicule du joueur 0 une « planète » de gravité (obj:setPlanets) envoyée à tous les autres véhicules, qui sont ainsi repoussés (multiplicateur > 0) ou attirés (< 0). Mise à jour toutes les 0.05 s de temps simulé. Se désactive au changement de véhicule, en fin de niveau, au passage en carrière et avant une sérialisation.
+"Force field" mode of the Fun Stuff radial menu: creates a gravity "planet" (obj:setPlanets) around player 0's vehicle, sent to all other vehicles, which are thus pushed away (multiplier > 0) or attracted (< 0). Updated every 0.05 s of simulated time. Disables itself on vehicle change, at level end, when switching to career and before serialization.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('gameplay_forceField')
@@ -14,74 +14,74 @@ gameplay_forceField.setForceMultiplier(-1) -- attraction
 gameplay_forceField.activate()
 ```
 
-## Remarques
+## Notes
 
-- Paramètres codés en dur : portée 100 (inutilisée), rayon de la planète 5, masse de base -6e13 (négative = répulsion), multiplié par la taille du véhicule (plus grand demi-côté / 3) et par forceMultiplier.
-- Commande envoyée à chaque véhicule (VM véhicule) : obj:setPlanets({x, y, z, rayon, masse}). La désactivation envoie obj:setPlanets({}) à tous les véhicules.
-- active vaut nil (et non false) tant que le mode n'a jamais été activé : isActive peut renvoyer nil.
-- Bug : longestHalfExtent = math.max(math.max(halfExtents.x, halfExtents.y), halfExtents.y) répète y et ignore z. Aussi, l'appel vehicle:getID() est utilisé pour la comparaison alors que le reste du code utilise getId().
-- La variable range est déclarée mais jamais utilisée.
+- Hardcoded parameters: range 100 (unused), planet radius 5, base mass -6e13 (negative = repulsion), multiplied by the vehicle size (longest half-side / 3) and by forceMultiplier.
+- Command sent to each vehicle (vehicle VM): obj:setPlanets({x, y, z, radius, mass}). Deactivation sends obj:setPlanets({}) to all vehicles.
+- active is nil (not false) as long as the mode has never been activated: isActive can return nil.
+- Bug: longestHalfExtent = math.max(math.max(halfExtents.x, halfExtents.y), halfExtents.y) repeats y and ignores z. Also, the call vehicle:getID() is used for the comparison while the rest of the code uses getId().
+- The variable range is declared but never used.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_forceField.activate()` | Active le champ de force (sans effet s'il est déjà actif) et affiche un message UI indiquant répulsion ou attraction selon le signe de forceMultiplier. | 17 |
-| `gameplay_forceField.deactivate(silent)` | Désactive le champ : envoie obj:setPlanets({}) à tous les véhicules et affiche un message « désactivé » sauf si silent. Sans effet s'il est inactif. | 24 |
-| `gameplay_forceField.getForceMultiplier()` | Renvoie le multiplicateur de force courant. | 95 |
-| `gameplay_forceField.isActive()` | Indique si le champ de force est actif. | 74 |
-| `gameplay_forceField.onCareerActive(enabled)` | Hook : activation de la carrière ; désactive le champ si enabled est vrai. *(interne)* *(hook)* | 85 |
-| `gameplay_forceField.onClientEndMission()` | Hook : fin de niveau ; désactive le champ. *(interne)* *(hook)* | 66 |
-| `gameplay_forceField.onDeserialized()` | Hook : après un rechargement Lua ; ne fait rien. *(interne)* *(hook)* | 82 |
-| `gameplay_forceField.onSerialize()` | Hook : avant un rechargement Lua ; désactive le champ (ne renvoie rien). *(interne)* *(hook)* | 78 |
-| `gameplay_forceField.onUpdate(dtReal, dtSim, dtRaw)` | Appelé à chaque frame : si actif, toutes les 0.05 s (dtSim) calcule la planète à partir de la boîte englobante du véhicule du joueur 0 et l'envoie aux autres véhicules. *(interne)* *(hook)* | 45 |
-| `gameplay_forceField.onVehicleSwitched()` | Hook : changement de véhicule du joueur ; désactive le champ. *(interne)* *(hook)* | 70 |
-| `gameplay_forceField.setForceMultiplier(factor)` | Définit le multiplicateur de force : positif = répulsion, négatif = attraction. Pris en compte à la prochaine mise à jour. | 91 |
-| `gameplay_forceField.toggleActive()` | Bascule entre actif et inactif. | 36 |
+| `gameplay_forceField.activate()` | Activates the force field (no effect if already active) and displays a UI message indicating repulsion or attraction depending on the sign of forceMultiplier. | 17 |
+| `gameplay_forceField.deactivate(silent)` | Deactivates the field: sends obj:setPlanets({}) to all vehicles and displays a "deactivated" message unless silent. No effect if inactive. | 24 |
+| `gameplay_forceField.getForceMultiplier()` | Returns the current force multiplier. | 95 |
+| `gameplay_forceField.isActive()` | Returns whether the force field is active. | 74 |
+| `gameplay_forceField.onCareerActive(enabled)` | Hook: career activation; deactivates the field if enabled is true. *(internal)* *(hook)* | 85 |
+| `gameplay_forceField.onClientEndMission()` | Hook: level end; deactivates the field. *(internal)* *(hook)* | 66 |
+| `gameplay_forceField.onDeserialized()` | Hook: after a Lua reload; does nothing. *(internal)* *(hook)* | 82 |
+| `gameplay_forceField.onSerialize()` | Hook: before a Lua reload; deactivates the field (returns nothing). *(internal)* *(hook)* | 78 |
+| `gameplay_forceField.onUpdate(dtReal, dtSim, dtRaw)` | Called every frame: if active, every 0.05 s (dtSim) computes the planet from the bounding box of player 0's vehicle and sends it to the other vehicles. *(internal)* *(hook)* | 45 |
+| `gameplay_forceField.onVehicleSwitched()` | Hook: player vehicle change; deactivates the field. *(internal)* *(hook)* | 70 |
+| `gameplay_forceField.setForceMultiplier(factor)` | Sets the force multiplier: positive = repulsion, negative = attraction. Taken into account at the next update. | 91 |
+| `gameplay_forceField.toggleActive()` | Toggles between active and inactive. | 36 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_forceField.deactivate(silent)`
 
-Désactive le champ : envoie obj:setPlanets({}) à tous les véhicules et affiche un message « désactivé » sauf si silent. Sans effet s'il est inactif.
+Deactivates the field: sends obj:setPlanets({}) to all vehicles and displays a "deactivated" message unless silent. No effect if inactive.
 
-- `silent` (*boolean|nil*) : true pour ne pas afficher de message.
+- `silent` (*boolean|nil*) : true to not display a message.
 
 #### `gameplay_forceField.getForceMultiplier()`
 
-Renvoie le multiplicateur de force courant.
+Returns the current force multiplier.
 
-- **renvoie** : number Multiplicateur.
+- **returns**: number Multiplier.
 
 #### `gameplay_forceField.isActive()`
 
-Indique si le champ de force est actif.
+Returns whether the force field is active.
 
-- **renvoie** : boolean|nil true si actif, false ou nil sinon.
+- **returns**: boolean|nil true if active, false or nil otherwise.
 
 #### `gameplay_forceField.onCareerActive(enabled)`
 
-Hook : activation de la carrière ; désactive le champ si enabled est vrai.
+Hook: career activation; deactivates the field if enabled is true.
 
-- `enabled` (*boolean*) : Carrière activée.
+- `enabled` (*boolean*) : Career enabled.
 
 #### `gameplay_forceField.onUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé à chaque frame : si actif, toutes les 0.05 s (dtSim) calcule la planète à partir de la boîte englobante du véhicule du joueur 0 et l'envoie aux autres véhicules.
+Called every frame: if active, every 0.05 s (dtSim) computes the planet from the bounding box of player 0's vehicle and sends it to the other vehicles.
 
-- `dtReal` (*number*) : Delta temps réel (inutilisé).
-- `dtSim` (*number*) : Delta temps simulé, cumulé pour la cadence.
-- `dtRaw` (*number*) : Delta temps brut (inutilisé).
+- `dtReal` (*number*) : Real time delta (unused).
+- `dtSim` (*number*) : Simulated delta time, accumulated for the rate.
+- `dtRaw` (*number*) : Raw time delta (unused).
 
 #### `gameplay_forceField.setForceMultiplier(factor)`
 
-Définit le multiplicateur de force : positif = répulsion, négatif = attraction. Pris en compte à la prochaine mise à jour.
+Sets the force multiplier: positive = repulsion, negative = attraction. Taken into account at the next update.
 
-- `factor` (*number*) : Multiplicateur (1 par défaut).
+- `factor` (*number*) : Multiplier (1 by default).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObject`, `getObjectCount`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/forceField.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/forceField.lua`.*

@@ -2,61 +2,61 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/util/damageAssessment.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Évalue les dégâts d'un véhicule : niveau global (aucun, léger, modéré, sévère) d'après map.objects[id].damage, et répartition par zone. Pour la répartition, la boîte orientée du véhicule est découpée en 27 cellules (3x3x3) dont on lit les dégâts de poutres et de collision ; les cellules sont regroupées en zones nommées (Front, Front Left, Rear, Top, Left…). Utilisé par gameplay_util_crashDetection pour dire où un impact a eu lieu.
---- Accès : extension `gameplay_util_damageAssessment` : `extensions.load("gameplay_util_damageAssessment")`, puis la globale `gameplay_util_damageAssessment`
+--- Assesses a vehicle's damage: overall level (none, light, moderate, severe) based on map.objects[id].damage, and per-zone breakdown. For the breakdown, the vehicle's oriented box is split into 27 cells (3x3x3) whose beam and collision damage is read; the cells are grouped into named zones (Front, Front Left, Rear, Top, Left...). Used by gameplay_util_crashDetection to tell where an impact occurred.
+--- Access: extension `gameplay_util_damageAssessment`: `extensions.load("gameplay_util_damageAssessment")`, then the global `gameplay_util_damageAssessment`
 ---@class gameplay_util_damageAssessment
 gameplay_util_damageAssessment = {}
 
---- Mesure l'hétérogénéité d'une série de dégâts : écart-type divisé par la moitié de maxValue, plafonné à 1.
----Source : lua/ge/extensions/gameplay/util/damageAssessment.lua:272
----@param tableNumbers number[] Dégâts par cellule.
----@param maxValue number|nil Valeur de référence (500000 par défaut).
----@return number  0 (uniforme ou moins de 2 valeurs) à 1.
+--- Measures the heterogeneity of a damage series: standard deviation divided by half of maxValue, capped at 1.
+---Source: lua/ge/extensions/gameplay/util/damageAssessment.lua:272
+---@param tableNumbers number[] Damage per cell.
+---@param maxValue number|nil Reference value (500000 by default).
+---@return number  0 (uniform or fewer than 2 values) to 1.
 function gameplay_util_damageAssessment.calculateDamageVariation(tableNumbers, maxValue) end
 
---- Renvoie le niveau de dégâts global d'un véhicule d'après map.objects[vehId].damage.
----Source : lua/ge/extensions/gameplay/util/damageAssessment.lua:149
----@param vehId integer Id du véhicule (doit exister dans map.objects).
+--- Returns a vehicle's overall damage level based on map.objects[vehId].damage.
+---Source: lua/ge/extensions/gameplay/util/damageAssessment.lua:149
+---@param vehId integer Vehicle id (must exist in map.objects).
 ---@return table  {damageName = "No damage"|"Minor"|"Moderate"|"Severe", damageSeverity = 0..3}
 function gameplay_util_damageAssessment.getOverallDamageLevel(vehId) end
 
---- Lit les dégâts de poutres et de collision des 27 cellules du véhicule.
----Source : lua/ge/extensions/gameplay/util/damageAssessment.lua:182
----@param vehId integer|nil Id du véhicule ; joueur 0 si nil.
----@return table<integer, table>  Indices 0 à 26 -> {sectionBeamDamage, sectionCollisionDamage}.
+--- Reads the beam and collision damage of the vehicle's 27 cells.
+---Source: lua/ge/extensions/gameplay/util/damageAssessment.lua:182
+---@param vehId integer|nil Vehicle id; player 0 if nil.
+---@return table<integer, table>  Indices 0 to 26 -> {sectionBeamDamage, sectionCollisionDamage}.
 function gameplay_util_damageAssessment.getSectionsDamageInfoRaw(vehId) end
 
---- Identique à getTextualCollisionDamageLocations mais sur les dégâts de poutres (déformation), pour savoir où le véhicule s'est abîmé.
----Source : lua/ge/extensions/gameplay/util/damageAssessment.lua:408
----@param data table|nil Même format.
----@return table  Même format.
+--- Same as getTextualCollisionDamageLocations but on beam damage (deformation), to know where the vehicle was damaged.
+---Source: lua/ge/extensions/gameplay/util/damageAssessment.lua:408
+---@param data table|nil Same format.
+---@return table  Same format.
 function gameplay_util_damageAssessment.getTextualBeamDamageLocations(data) end
 
---- Compare les dégâts de collision actuels à un état précédent et renvoie, par zone nommée, total, maximum, moyenne, variation, intensité et score. Sert à savoir où un impact a eu lieu.
----Source : lua/ge/extensions/gameplay/util/damageAssessment.lua:403
----@param data table|nil {vehId, oldSectionsDamageRaw (sortie de getSectionsDamageInfoRaw), newSectionsDamageInfoRaw (facultatif)}.
----@return table  {damagedLocations (par nom de zone), mostDamagedLocation, totalDamage, bestDamageLocation, bestDamageScore}
+--- Compares current collision damage to a previous state and returns, per named zone, total, maximum, average, variation, intensity and score. Used to know where an impact occurred.
+---Source: lua/ge/extensions/gameplay/util/damageAssessment.lua:403
+---@param data table|nil {vehId, oldSectionsDamageRaw (output of getSectionsDamageInfoRaw), newSectionsDamageInfoRaw (optional)}.
+---@return table  {damagedLocations (by zone name), mostDamagedLocation, totalDamage, bestDamageLocation, bestDamageScore}
 function gameplay_util_damageAssessment.getTextualCollisionDamageLocations(data) end
 
---- Hook appelé après rechargement : restaure le drapeau debug.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/util/damageAssessment.lua:418
----@param data table Table de onSerialize.
+--- Hook called after reload: restores the debug flag.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/util/damageAssessment.lua:418
+---@param data table onSerialize table.
 function gameplay_util_damageAssessment.onDeserialized(data) end
 
---- Hook appelé lors du rechargement des extensions : sauvegarde le drapeau debug.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/util/damageAssessment.lua:412
+--- Hook called when extensions are reloaded: saves the debug flag.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/util/damageAssessment.lua:412
 ---@return table  {debug}
 function gameplay_util_damageAssessment.onSerialize() end
 
---- Hook appelé à chaque image ; en mode debug, redessine les cellules du véhicule du joueur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/util/damageAssessment.lua:422
+--- Hook called every frame; in debug mode, redraws the player vehicle's cells.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/util/damageAssessment.lua:422
 function gameplay_util_damageAssessment.onUpdate() end
 
---- Active ou désactive le dessin de debug des cellules de dégâts.
----Source : lua/ge/extensions/gameplay/util/damageAssessment.lua:428
----@param newDebug boolean true pour activer.
+--- Enables or disables debug drawing of the damage cells.
+---Source: lua/ge/extensions/gameplay/util/damageAssessment.lua:428
+---@param newDebug boolean true to enable.
 function gameplay_util_damageAssessment.setDebug(newDebug) end
 

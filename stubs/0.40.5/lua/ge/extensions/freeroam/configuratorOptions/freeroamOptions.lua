@@ -2,27 +2,27 @@
 -- tim19Atlas stub generated from lua/ge/extensions/freeroam/configuratorOptions/freeroamOptions.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Ajoute au configurateur de partie libre (écran de choix du niveau en freeroam) les options propres au freeroam : mode de trafic (désactivé, voitures garées, normal, police), heure du jour, date et défilement du jour (cycle jour/nuit). Il réagit aux hooks onFreeroamConfiguratorGetOptions (construction du menu) et onFreeroamConfiguratorApplyOptions (valeurs choisies) et écrit les choix dans freeroam_freeroam.spawningOptionsHelper. Un moddeur peut copier ce schéma pour ajouter ses propres options.
---- Accès : extension `freeroam_configuratorOptions_freeroamOptions` : `extensions.load("freeroam_configuratorOptions_freeroamOptions")`, puis la globale `freeroam_configuratorOptions_freeroamOptions`
+--- Adds to the freeroam configurator (the level selection screen in freeroam) the freeroam-specific options: traffic mode (disabled, parked cars, normal, police), time of day, date and day progression (day/night cycle). It reacts to the hooks onFreeroamConfiguratorGetOptions (menu construction) and onFreeroamConfiguratorApplyOptions (chosen values) and writes the choices into freeroam_freeroam.spawningOptionsHelper. A modder can copy this pattern to add their own options.
+--- Access: extension `freeroam_configuratorOptions_freeroamOptions`: `extensions.load("freeroam_configuratorOptions_freeroamOptions")`, then the global `freeroam_configuratorOptions_freeroamOptions`
 ---@class freeroam_configuratorOptions_freeroamOptions
 freeroam_configuratorOptions_freeroamOptions = {}
 
---- Date par défaut d'un niveau pour l'environnement.
----Source : lua/ge/extensions/freeroam/configuratorOptions/freeroamOptions.lua:167
----@param levelName string Nom du niveau (résolu via core_levels.getLevelByName).
----@return integer  Horodatage os.time() de la date (heure fixée à 12 h).
+--- Default date of a level for the environment.
+---Source: lua/ge/extensions/freeroam/configuratorOptions/freeroamOptions.lua:167
+---@param levelName string Level name (resolved via core_levels.getLevelByName).
+---@return integer  os.time() timestamp of the date (time set to 12:00).
 function freeroam_configuratorOptions_freeroamOptions.getDefaultEnvironmentDate(levelName) end
 
---- Hook appelé quand le joueur valide le configurateur : transmet les options traffic_trafficMode, environment_timeOfDay, environment_date et environment_timePlay à freeroam_freeroam.spawningOptionsHelper (le mode de trafic est converti en trafficMode, trafficPolice et trafficParked).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/configuratorOptions/freeroamOptions.lua:149
----@param options table<string, any> Valeurs choisies, indexées par la clé (key) de l'option.
+--- Hook called when the player confirms the configurator: passes the options traffic_trafficMode, environment_timeOfDay, environment_date and environment_timePlay to freeroam_freeroam.spawningOptionsHelper (the traffic mode is converted into trafficMode, trafficPolice and trafficParked).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/configuratorOptions/freeroamOptions.lua:149
+---@param options table<string, any> Chosen values, keyed by the option's key.
 function freeroam_configuratorOptions_freeroamOptions.onFreeroamConfiguratorApplyOptions(options) end
 
---- Hook appelé quand le configurateur construit ses options pour un niveau : insère dans options les groupes trafic et heure/date/défilement du jour.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/freeroam/configuratorOptions/freeroamOptions.lua:14
----@param level table Données du niveau (supportsTraffic, levelName, dir, defaultDate).
----@param options table[] Liste de groupes d'options à compléter (modifiée sur place).
+--- Hook called when the configurator builds its options for a level: inserts the traffic and time/date/day progression groups into options.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/freeroam/configuratorOptions/freeroamOptions.lua:14
+---@param level table Level data (supportsTraffic, levelName, dir, defaultDate).
+---@param options table[] List of option groups to complete (modified in place).
 function freeroam_configuratorOptions_freeroamOptions.onFreeroamConfiguratorGetOptions(level, options) end
 

@@ -2,69 +2,69 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/screenshotCreator.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Point d'entrée de l'outil interne de génération de vignettes (thumbnails) de véhicules. Ce fichier est une façade : il déclare comme dépendances tous les sous-modules util_screenshotCreator_* (interface ImGui, réglages, cadrage, capture, job de traitement par lots, etc.) et délègue vers eux. Il sert à ouvrir la fenêtre de l'outil, lancer la génération par lots, cadrer un véhicule, prendre une capture hors écran et choisir le mode de cadrage.
---- Accès : extension `util_screenshotCreator` : `extensions.load("util_screenshotCreator")`, puis la globale `util_screenshotCreator`
+--- Entry point of the internal vehicle thumbnail generation tool. This file is a facade: it declares all the util_screenshotCreator_* submodules (ImGui interface, settings, framing, capture, batch processing job, etc.) as dependencies and delegates to them. It is used to open the tool window, start batch generation, frame a vehicle, take an off-screen capture and choose the framing mode.
+--- Access: extension `util_screenshotCreator`: `extensions.load("util_screenshotCreator")`, then the global `util_screenshotCreator`
 ---@class util_screenshotCreator
----@field dependencies string[] Liste des extensions util_screenshotCreator_* chargées avec celle-ci
----@field state table État du module, initialement {show = false}
+---@field dependencies string[] List of util_screenshotCreator_* extensions loaded with this one
+---@field state table Module state, initially {show = false}
 util_screenshotCreator = {}
 
---- Calcule la position et l'orientation de caméra qui cadrent un véhicule avec le cadrage procédural, d'après le contexte de cadrage des réglages.
----Source : lua/ge/extensions/util/screenshotCreator.lua:43
----@param vehicle userdata Objet véhicule à cadrer
----@param fov number|nil Champ de vision en degrés (défaut : valeur des réglages)
----@param nearPlane number|nil Plan proche de la caméra (défaut : réglages)
----@param aspectRatio number|nil Rapport largeur/hauteur (défaut : réglages)
----@param resolution table|nil Résolution {largeur, hauteur} utilisée pour le contexte de cadrage
----@param configName string|nil Nom de la configuration du véhicule
----@return vec3|nil  Position de la caméra
----@return quat|nil  Rotation de la caméra
----@return table|nil  Données de cadrage (framingData)
+--- Computes the camera position and orientation that frame a vehicle with the procedural framing, based on the framing context from the settings.
+---Source: lua/ge/extensions/util/screenshotCreator.lua:43
+---@param vehicle userdata Vehicle object to frame
+---@param fov number|nil Field of view in degrees (default: settings value)
+---@param nearPlane number|nil Camera near plane (default: settings)
+---@param aspectRatio number|nil Aspect ratio (default: settings)
+---@param resolution table|nil Resolution {width, height} used for the framing context
+---@param configName string|nil Vehicle configuration name
+---@return vec3|nil  Camera position
+---@return quat|nil  Camera rotation
+---@return table|nil  Framing data (framingData)
 function util_screenshotCreator.frameVehicle(vehicle, fov, nearPlane, aspectRatio, resolution, configName) end
 
---- Renvoie l'identifiant du mode de cadrage sélectionné.
----Source : lua/ge/extensions/util/screenshotCreator.lua:101
----@return string  Identifiant du mode
+--- Returns the identifier of the selected framing mode.
+---Source: lua/ge/extensions/util/screenshotCreator.lua:101
+---@return string  Mode identifier
 function util_screenshotCreator.getFramingMode() end
 
---- Liste les modes de cadrage disponibles (délègue à util_screenshotCreator_framingManager.listModes).
----Source : lua/ge/extensions/util/screenshotCreator.lua:98
----@return table  Modes de cadrage enregistrés
+--- Lists the available framing modes (delegates to util_screenshotCreator_framingManager.listModes).
+---Source: lua/ge/extensions/util/screenshotCreator.lua:98
+---@return table  Registered framing modes
 function util_screenshotCreator.listFramingModes() end
 
---- Hook appelé après un rechargement d'extensions : si les données contiennent un état d'interface (windowOpen, resolutionPtr, reviewData ou skipCustomCameras), les transmet à util_screenshotCreator_ui.onDeserialized.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator.lua:76
----@param data table|nil Données sauvegardées par la sérialisation
+--- Hook called after an extension reload: if the data contains a UI state (windowOpen, resolutionPtr, reviewData or skipCustomCameras), passes it to util_screenshotCreator_ui.onDeserialized.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator.lua:76
+---@param data table|nil Data saved by serialization
 function util_screenshotCreator.onDeserialized(data) end
 
---- Hook appelé au déchargement : restaure l'environnement modifié par les réglages (restoreEnvironment) et logue le déchargement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator.lua:87
+--- Hook called on unload: restores the environment modified by the settings (restoreEnvironment) and logs the unload.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator.lua:87
 function util_screenshotCreator.onExtensionUnloaded() end
 
---- Ouvre la fenêtre ImGui de l'outil (délègue à util_screenshotCreator_ui.openWindow).
----Source : lua/ge/extensions/util/screenshotCreator.lua:35
----@return any  Valeur renvoyée par util_screenshotCreator_ui.openWindow
+--- Opens the tool's ImGui window (delegates to util_screenshotCreator_ui.openWindow).
+---Source: lua/ge/extensions/util/screenshotCreator.lua:35
+---@return any  Value returned by util_screenshotCreator_ui.openWindow
 function util_screenshotCreator.openWindow() end
 
---- Sélectionne le mode de cadrage.
----Source : lua/ge/extensions/util/screenshotCreator.lua:104
----@param modeId string Identifiant du mode (par exemple « fixedIsometric » ou « configured »)
----@return any  Valeur renvoyée par framingManager.setSelectedModeId
+--- Selects the framing mode.
+---Source: lua/ge/extensions/util/screenshotCreator.lua:104
+---@param modeId string Mode identifier (for example "fixedIsometric" or "configured")
+---@return any  Value returned by framingManager.setSelectedModeId
 function util_screenshotCreator.setFramingMode(modeId) end
 
---- Démarre la génération de vignettes par lots (délègue à util_screenshotCreator_job.startWork).
----Source : lua/ge/extensions/util/screenshotCreator.lua:39
----@param workOptions table Options du traitement (déduit du code : transmises telles quelles au module job)
----@return any  Valeur renvoyée par util_screenshotCreator_job.startWork
+--- Starts batch thumbnail generation (delegates to util_screenshotCreator_job.startWork).
+---Source: lua/ge/extensions/util/screenshotCreator.lua:39
+---@param workOptions table Processing options (inferred from code: passed as is to the job module)
+---@return any  Value returned by util_screenshotCreator_job.startWork
 function util_screenshotCreator.startWork(workOptions) end
 
---- Prend une capture hors écran depuis la caméra donnée et l'enregistre dans filepath (délègue à util_screenshotCreator_capture), avec les paramètres de capture des réglages.
----Source : lua/ge/extensions/util/screenshotCreator.lua:60
----@param filepath string Chemin du fichier image à écrire
----@param camera table Caméra {pos, rot, fov?, nearPlane?, screenshotDelay?}
----@param callback function|nil Appelé à la fin de la capture
----@param uniqueId any Identifiant transmis au module de capture
+--- Takes an off-screen capture from the given camera and saves it to filepath (delegates to util_screenshotCreator_capture), with the capture parameters from the settings.
+---Source: lua/ge/extensions/util/screenshotCreator.lua:60
+---@param filepath string Path of the image file to write
+---@param camera table Camera {pos, rot, fov?, nearPlane?, screenshotDelay?}
+---@param callback function|nil Called at the end of the capture
+---@param uniqueId any Identifier passed to the capture module
 function util_screenshotCreator.takeThumbnailScreenshot(filepath, camera, callback, uniqueId) end
 

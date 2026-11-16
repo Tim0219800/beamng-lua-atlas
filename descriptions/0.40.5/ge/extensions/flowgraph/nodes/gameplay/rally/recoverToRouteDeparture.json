@@ -1,18 +1,42 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/recoverToRouteDeparture.lua",
-  "module": "Nœud flowgraph « Rally Mode Recover To Route Departure » (catégorie repeat_p_duration, tags rally, recover, teleport). Replace le véhicule au dernier point de recovery de sortie de route suivi, via gameplay_rally.getRallyManager():recoverVehicleToRouteDeparture(veh, {repairVehicle, backoffDistance}). Entrées : flow, vehId (sinon véhicule joueur 0) et backoffDistance (distance en amont du point suivi, le long du driveline statique). Si la réparation est active, un instantané de carburant est pris avant et réappliqué après.",
-  "notes": ["Erreur loggée si le rally manager est introuvable ; avertissement avec la raison si recoverVehicleToRouteDeparture échoue.", "Contrairement à recoverInPlace, ce nœud n'émet pas lui-même les hooks de fin de recovery."],
+  "module": "Flowgraph node \"Rally Mode Recover To Route Departure\" (category repeat_p_duration, tags rally, recover, teleport). Puts the vehicle back at the last tracked off-road recovery point, via gameplay_rally.getRallyManager():recoverVehicleToRouteDeparture(veh, {repairVehicle, backoffDistance}). Inputs: flow, vehId (otherwise player vehicle 0) and backoffDistance (distance upstream of the tracked point, along the static driveline). If repair is active, a fuel snapshot is taken before and reapplied after.",
+  "notes": [
+    "Error logged if the rally manager cannot be found; warning with the reason if recoverVehicleToRouteDeparture fails.",
+    "Unlike recoverInPlace, this node does not itself emit the end-of-recovery hooks."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Appelle onNodeReset.", "internal": true},
-        "_executionStarted": {"desc": "Appelle onNodeReset.", "internal": true},
-        "_executionStopped": {"desc": "Appelle onNodeReset.", "internal": true},
-        "onNodeReset": {"desc": "Efface la recovery en attente et l'instantané de carburant.", "internal": true},
-        "runRecovery": {"desc": "Appelle rm:recoverVehicleToRouteDeparture puis réapplique le carburant si réparé.", "internal": true},
-        "startRecovery": {"desc": "Prépare la recovery en attente (véhicule, réparation, backoffDistance) et la lance, après l'instantané de carburant si nécessaire.", "internal": true},
-        "work": {"desc": "Si flow est actif, appelle startRecovery.", "internal": true}
+        "init": {
+          "desc": "Calls onNodeReset.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Calls onNodeReset.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Calls onNodeReset.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Clears the pending recovery and the fuel snapshot.",
+          "internal": true
+        },
+        "runRecovery": {
+          "desc": "Calls rm:recoverVehicleToRouteDeparture then reapplies the fuel if repaired.",
+          "internal": true
+        },
+        "startRecovery": {
+          "desc": "Prepares the pending recovery (vehicle, repair, backoffDistance) and launches it, after the fuel snapshot if needed.",
+          "internal": true
+        },
+        "work": {
+          "desc": "If flow is active, calls startRecovery.",
+          "internal": true
+        }
       }
     }
   }

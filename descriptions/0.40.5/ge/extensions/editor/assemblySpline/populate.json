@@ -1,16 +1,82 @@
 {
   "path": "lua/ge/extensions/editor/assemblySpline/populate.lua",
-  "module": "Place dans le niveau les meshes TSStatic d'une assembly spline : à partir de la géométrie de la spline (divPoints, tangentes, normales), de la molécule et de la carte de distribution (distribution.computeMeshMap), il positionne les rigides le long de la courbe (espacement, décalage vertical, affaissement, rotation préalable, jitter, graine aléatoire) et étire/oriente les ponts entre deux rigides. Les meshes sont rangés dans des pools par spline et par chemin de mesh pour être réutilisés, et sont enfants du SimGroup de la spline. Gère aussi l'état verrouillé (splineLock) : une spline verrouillée dont les meshes existent n'est pas replacée.",
+  "module": "Places the TSStatic meshes of an assembly spline in the level: from the spline geometry (divPoints, tangents, normals), the molecule and the distribution map (distribution.computeMeshMap), it positions the rigids along the curve (spacing, vertical offset, sag, pre-rotation, jitter, random seed) and stretches/orients the bridges between two rigids. The meshes are stored in pools per spline and per mesh path for reuse, and are children of the spline's SimGroup. Also handles the locked state (splineLock): a locked spline whose meshes exist is not re-placed.",
   "notes": [
-    "Constante : minSpacingBetweenMolecules = 3.0 m.",
-    "release/adopt servent au rechargement Lua : une spline verrouillée garde ses meshes dans la scène ; release renvoie leurs ids par chemin de mesh et adopt les reprend.",
-    "Les ponts sont mis à l'échelle en X pour couvrir la distance entre rigides et en Z pour l'affaissement (sag) voulu par l'utilisateur."
+    "Constant: minSpacingBetweenMolecules = 3.0 m.",
+    "release/adopt are used for Lua reload: a locked spline keeps its meshes in the scene; release returns their ids by mesh path and adopt takes them back.",
+    "Bridges are scaled in X to cover the distance between rigids and in Z for the sag desired by the user."
   ],
   "functions": {
-    "eachObject": {"desc": "Appelle fn(mesh, true) pour chaque mesh que l'outil détient pour la spline (le « each » de splineLock).", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "fn": {"type": "function", "desc": "Callback fn(mesh, true)."}}, "returns": []},
-    "populateAssemblySpline": {"desc": "Met la spline à jour dans la scène. Si la spline est verrouillée (isEnabled faux) et que ses meshes existent, applique seulement l'état de verrouillage sans les déplacer ; sinon (re)place tous les meshes.", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "splineIdx": {"type": "integer", "desc": "Index de la spline."}, "molecule": {"type": "table", "desc": "Molécule (spline.moleculeDescription)."}}, "returns": []},
-    "tryRemove": {"desc": "Supprime tous les meshes de la spline (objets de la scène et pools) et oublie son état de verrouillage appliqué.", "params": {"spline": {"type": "table", "desc": "Assembly spline."}}, "returns": []},
-    "release": {"desc": "Rechargement Lua : l'outil lâche les meshes d'une spline verrouillée sans les supprimer (ils font partie du niveau) et renvoie leurs ids par chemin de mesh.", "params": {"spline": {"type": "table", "desc": "Assembly spline."}}, "returns": [{"type": "table<string, integer[]>", "desc": "Ids des meshes par meshPath."}]},
-    "adopt": {"desc": "Reprend les meshes lâchés par release (ceux encore présents dans la scène) tels quels et mémorise l'état de verrouillage.", "params": {"spline": {"type": "table", "desc": "Assembly spline."}, "ids": {"type": "table<string, integer[]>", "desc": "Résultat de release."}}, "returns": []}
+    "eachObject": {
+      "desc": "Calls fn(mesh, true) for each mesh the tool holds for the spline (the \"each\" of splineLock).",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "fn": {
+          "type": "function",
+          "desc": "Callback fn(mesh, true)."
+        }
+      },
+      "returns": []
+    },
+    "populateAssemblySpline": {
+      "desc": "Updates the spline in the scene. If the spline is locked (isEnabled false) and its meshes exist, only applies the lock state without moving them; otherwise (re)places all meshes.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "splineIdx": {
+          "type": "integer",
+          "desc": "Spline index."
+        },
+        "molecule": {
+          "type": "table",
+          "desc": "Molecule (spline.moleculeDescription)."
+        }
+      },
+      "returns": []
+    },
+    "tryRemove": {
+      "desc": "Deletes all meshes of the spline (scene objects and pools) and forgets its applied lock state.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        }
+      },
+      "returns": []
+    },
+    "release": {
+      "desc": "Lua reload: the tool lets go of the meshes of a locked spline without deleting them (they are part of the level) and returns their ids by mesh path.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, integer[]>",
+          "desc": "Mesh ids by meshPath."
+        }
+      ]
+    },
+    "adopt": {
+      "desc": "Takes back as-is the meshes released by release (those still present in the scene) and remembers the lock state.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Assembly spline."
+        },
+        "ids": {
+          "type": "table<string, integer[]>",
+          "desc": "Result of release."
+        }
+      },
+      "returns": []
+    }
   }
 }

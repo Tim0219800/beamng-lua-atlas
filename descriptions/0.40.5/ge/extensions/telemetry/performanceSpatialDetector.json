@@ -1,23 +1,23 @@
 {
   "path": "lua/ge/extensions/telemetry/performanceSpatialDetector.lua",
-  "module": "Détecteur de chutes de performance (« dips ») pour le tracker performanceSpatial. Il suit une moyenne mobile exponentielle du temps de frame (baseline, alpha 0,05) et ouvre un épisode quand les FPS passent sous un seuil absolu ou quand le temps de frame dépasse baseline * ratio. L'épisode se termine au retour à la normale et ne produit un événement que s'il a duré assez longtemps. Un délai de repos et un plafond d'événements par session limitent le bruit.",
+  "module": "Performance dip detector for the performanceSpatial tracker. It follows an exponential moving average of the frame time (baseline, alpha 0.05) and opens an episode when the FPS drops below an absolute threshold or when the frame time exceeds baseline * ratio. The episode ends on return to normal and only produces an event if it lasted long enough. A cooldown delay and a per-session event cap limit the noise.",
   "notes": [
-    "Les temps sont en millisecondes. Un épisode est découpé automatiquement après maxEpisodeMs (1 800 000 ms par défaut).",
-    "Le champ 'trigger' de l'événement vaut 'absolute', 'relative' ou 'both'."
+    "Times are in milliseconds. An episode is automatically split after maxEpisodeMs (1,800,000 ms by default).",
+    "The event's 'trigger' field is 'absolute', 'relative' or 'both'."
   ],
   "functions": {
     "new": {
-      "desc": "Crée un détecteur.",
+      "desc": "Creates a detector.",
       "params": {
         "config": {
           "type": "table",
-          "desc": "dipFpsThreshold, dipFrameTimeRatio, dipMinDurationMs, dipCooldownSeconds, maxDipEventsPerSession, maxEpisodeMs (facultatif)."
+          "desc": "dipFpsThreshold, dipFrameTimeRatio, dipMinDurationMs, dipCooldownSeconds, maxDipEventsPerSession, maxEpisodeMs (optional)."
         }
       },
       "returns": [
         {
           "type": "Detector",
-          "desc": "Instance du détecteur."
+          "desc": "Detector instance."
         }
       ],
       "internal": false
@@ -25,74 +25,74 @@
   },
   "classes": {
     "Detector": {
-      "desc": "Détecteur renvoyé par new(config).",
+      "desc": "Detector returned by new(config).",
       "functions": {
         "reset": {
-          "desc": "Oublie la baseline et l'épisode en cours.",
+          "desc": "Forgets the baseline and the current episode.",
           "params": {},
           "returns": [],
           "internal": false
         },
         "canReport": {
-          "desc": "Vrai si le délai de repos est écoulé et si le plafond d'événements de la session n'est pas atteint.",
+          "desc": "True if the cooldown delay has elapsed and the session's event cap is not reached.",
           "params": {
             "nowMs": {
               "type": "number",
-              "desc": "Temps courant en ms."
+              "desc": "Current time in ms."
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si un nouvel épisode peut être ouvert."
+              "desc": "true if a new episode can be opened."
             }
           ],
           "internal": false
         },
         "finish": {
-          "desc": "Force la fin de l'épisode ouvert et renvoie son événement s'il a duré au moins dipMinDurationMs.",
+          "desc": "Forces the end of the open episode and returns its event if it lasted at least dipMinDurationMs.",
           "params": {
             "nowMs": {
               "type": "number",
-              "desc": "Temps courant en ms."
+              "desc": "Current time in ms."
             }
           },
           "returns": [
             {
               "type": "table|nil",
-              "desc": "Événement {durationMs, worstAgoMs, baselineFrameMs, trigger, seuils…} ou nil."
+              "desc": "Event {durationMs, worstAgoMs, baselineFrameMs, trigger, thresholds...} or nil."
             }
           ],
           "internal": false
         },
         "update": {
-          "desc": "Traite un échantillon. Renvoie un booléen « capturer cette frame » (début d'épisode ou nouveau pire temps de frame) puis éventuellement l'événement d'un épisode terminé. Hors épisode, met à jour la baseline.",
+          "desc": "Processes a sample. Returns a \"capture this frame\" boolean (episode start or new worst frame time) then possibly the event of a finished episode. Outside an episode, updates the baseline.",
           "params": {
             "nowMs": {
               "type": "number",
-              "desc": "Temps courant en ms."
+              "desc": "Current time in ms."
             },
             "fps": {
               "type": "number",
-              "desc": "FPS instantanés."
+              "desc": "Instantaneous FPS."
             },
             "frameMs": {
               "type": "number",
-              "desc": "Durée de la frame en ms."
+              "desc": "Frame duration in ms."
             },
             "absoluteAllowed": {
               "type": "boolean|nil",
-              "desc": "false si le plafond de FPS est volontaire (le déclencheur absolu est alors ignoré)."
+              "desc": "false if the FPS cap is intentional (the absolute trigger is then ignored)."
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true s'il faut capturer un instantané."
+              "desc": "true if a snapshot must be captured."
             },
             {
               "type": "table|nil",
-              "desc": "Événement de fin d'épisode."
+              "desc": "End-of-episode event."
             }
           ],
           "internal": false

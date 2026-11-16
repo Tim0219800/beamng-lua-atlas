@@ -1,15 +1,22 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/activity/attemptStars.lua",
-  "module": "Nœud flowgraph « Activity Attempt Stars » (catégorie once_instant, tags activity/mission). Ajoute à une tentative les étoiles remplies : chaque pin d'entrée bool personnalisé (le nom du pin = clé d'étoile) est écrit dans attempt.unlockedStars. Entrée et sortie fixes « attempt » (attemptData). Seul le type bool est autorisé pour les pins manuels.",
-  "notes": ["Une valeur nil sur un pin devient false dans unlockedStars. La table attempt est modifiée sur place puis renvoyée."],
+  "module": "Flowgraph node \"Activity Attempt Stars\" (category once_instant, tags activity/mission). Adds the completed stars to an attempt: each custom bool input pin (pin name = star key) is written into attempt.unlockedStars. Fixed input and output \"attempt\" (attemptData). Only the bool type is allowed for manual pins.",
+  "notes": [
+    "A nil value on a pin becomes false in unlockedStars. The attempt table is modified in place then returned."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Active savePins et allowCustomInPins.", "internal": true},
-        "workOnce": {"desc": "Pour chaque pin d'entrée non fixe et non flow, met attempt.unlockedStars[nom] = valeur du pin (ou false), puis sort attempt."}
+        "init": {
+          "desc": "Enables savePins and allowCustomInPins.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "For each non-fixed, non-flow input pin, sets attempt.unlockedStars[name] = pin value (or false), then outputs attempt."
+        }
       }
     }
   }

@@ -1,27 +1,27 @@
 # `flowgraph_nodes_debug_debugPrism`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/debug/debugPrism.lua` · VM : Game Engine (GE) · 49 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/debug/debugPrism.lua` · VM: Game Engine (GE) · 49 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/debug/debugPrism")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/debug/debugPrism")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Debug Prism » (catégorie repeat_instant, tags util/draw). Dessine chaque frame un prisme à base carrée/rectangulaire (debugDrawer:drawSquarePrism) entre posA et posB, avec une largeur et une hauteur à chaque extrémité. Entrées : posA, posB (vec3 requis), widthA, heightA, widthB, heightB (number, 1 par défaut), color (caché, rose par défaut).
+Flowgraph node "Debug Prism" (category repeat_instant, tags util/draw). Draws a square/rectangular-base prism (debugDrawer:drawSquarePrism) between posA and posB every frame, with a width and a height at each end. Inputs: posA, posB (vec3 required), widthA, heightA, widthB, heightB (number, 1 by default), color (hidden, pink by default).
 
-## Remarques
+## Notes
 
-- Le code construit Point2F(hauteur, largeur) : l'ordre passé au moteur est (height, width).
+- The code builds Point2F(height, width): the order passed to the engine is (height, width).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Vide. | 27 |
-| `C:work()` | Si posA et posB sont définis, dessine le prisme. | 30 |
+| `C:init()` | Empty. | 27 |
+| `C:work()` | If posA and posB are set, draws the prism. | 30 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSquarePrism`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/debug/debugPrism.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/debug/debugPrism.lua`.*

@@ -1,39 +1,39 @@
 # `flowgraph_nodes_math_math`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/math/math.lua` · VM : Game Engine (GE) · 293 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/math/math.lua` · VM: Game Engine (GE) · 293 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/math/math")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/math/math")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Expression' (categorie simple, fichier math). Evalue une expression mathematique Lua (data.expression) sur les pins a, b, c... (number, vec3 ou quat) et sort le resultat sur 'value'. L'environnement expose les fonctions de math, clamp, round, sign, lerp, inverseLerp, smoothstep, case, vec3, quat, quatFromEuler, terrainHeight, pingpong, random, etc. Les tables de pins sont converties en vec3 (3 composantes) ou quat (4). Modeles proposes : distance entre deux positions, lerp.
+Flowgraph node 'Expression' (simple category, file math). Evaluates a Lua math expression (data.expression) on pins a, b, c... (number, vec3 or quat) and outputs the result on 'value'. The environment exposes the math functions, clamp, round, sign, lerp, inverseLerp, smoothstep, case, vec3, quat, quatFromEuler, terrainHeight, pingpong, random, etc. Pin tables are converted to vec3 (3 components) or quat (4). Offered templates: distance between two positions, lerp.
 
-## Exemple
+## Example
 
 ```lua
-Expression : '(a-b):length()' avec a et b de type vec3 donne la distance ; 'lerp(a,b,c)' interpole.
+Expression: '(a-b):length()' with a and b of type vec3 gives the distance; 'lerp(a,b,c)' interpolates.
 ```
 
-## Remarques
+## Notes
 
-- Une table de pin est interpretee comme quat si elle a 4 elements, sinon comme vec3.
-- Aucune liste blanche de caracteres n'est appliquee : toute fonction exposee dans l'environnement (et les methodes de vec3/quat) peut etre appelee.
-- La table keyworkdWhiteListLookup est construite mais jamais utilisee.
+- A pin table is interpreted as a quat if it has 4 elements, otherwise as a vec3.
+- No character whitelist is applied: any function exposed in the environment (and the vec3/quat methods) can be called.
+- The keyworkdWhiteListLookup table is built but never used.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Construit activePinList (pins d'entree reliees). | 258 |
-| `C:_onDeserialized(nodeData)` | Appelle parseExpression apres chargement (resultat ignore). | 269 |
-| `C:buildBaseEnv()` | Construit l'environnement de l'expression (fonctions math et utilitaires, lecture des pins avec cache vec3/quat). | 101 |
-| `C:drawCustomProperties()` | Liste des modeles d'expression et description de leurs pins. | 47 |
-| `C:drawMiddle(builder, style)` | Affiche l'expression. | 246 |
-| `C:init()` | safeMode=true, expression vide, creation de l'environnement et des caches vec3/quat. | 277 |
-| `C:onLink(link)` | Cree un pin d'entree supplementaire (lettre suivante, valeur par defaut 0) quand un lien est ajoute et qu'il manque un pin. | 251 |
-| `C:onUnlink(link)` | Vide. | 273 |
-| `C:parseExpression()` | Refuse les affectations ('=' isole) puis compile 'return <expression>' avec load() dans l'environnement. | 182 |
-| `C:work()` | En safeMode, ne fait rien si une entree connectee est nil. Recompile si l'expression a change, execute avec pcall, convertit un resultat vec3/quat (cdata) en table {x,y,z[,w]}, ecrit 'value' et signale les erreurs (noeud + logEvent). | 199 |
+| `C:_executionStarted()` | Builds activePinList (connected input pins). | 258 |
+| `C:_onDeserialized(nodeData)` | Calls parseExpression after loading (result ignored). | 269 |
+| `C:buildBaseEnv()` | Builds the expression environment (math functions and utilities, pin reading with vec3/quat cache). | 101 |
+| `C:drawCustomProperties()` | List of expression templates and description of their pins. | 47 |
+| `C:drawMiddle(builder, style)` | Displays the expression. | 246 |
+| `C:init()` | safeMode=true, empty expression, creation of the environment and the vec3/quat caches. | 277 |
+| `C:onLink(link)` | Creates an additional input pin (next letter, default value 0) when a link is added and a pin is missing. | 251 |
+| `C:onUnlink(link)` | Empty. | 273 |
+| `C:parseExpression()` | Rejects assignments (isolated '=') then compiles 'return <expression>' with load() in the environment. | 182 |
+| `C:work()` | In safeMode, does nothing if a connected input is nil. Recompiles if the expression changed, runs with pcall, converts a vec3/quat result (cdata) to a table {x,y,z[,w]}, writes 'value' and reports errors (node + logEvent). | 199 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/math/math.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/math/math.lua`.*

@@ -1,0 +1,120 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/startScreen.lua",
+  "module": "Nœud flowgraph « Start Screen » (catégorie par défaut, once + singleActive) : affiche l'écran de démarrage d'un scénario (navigation UI 'scenario.start'). Entrées : flow, « reset », « layout » (portrait, htmlOnly, popup), « title », « text » (string ou multiTranslationObject), « buttonText » (défaut 'ui.scenarios.start.start'), « portraitImg », « showProgress » (progression de la mission), « progressKey ». Sortie : flow mis à true quand le joueur lance.",
+  "notes": [
+    "Showing two of these at the same time will break everything (todo du code).",
+    "_executionStarted est défini deux fois (la deuxième définition remplace la première, sans open/done).",
+    "Ancien format : _onDeserialized convertit hardcodedPins.portraitMode en layout portrait/htmlOnly."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Sorties à false, _active = false.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Ferme et réinitialise.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Convertit l'ancien format portraitMode en layout.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Données sauvegardées / reçues."
+            }
+          },
+          "internal": true
+        },
+        "buttonPushed": {
+          "desc": "Met à true la sortie du bouton ; les autres à false.",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du bouton ou du pin de sortie activé."
+            }
+          },
+          "internal": false
+        },
+        "closeDialogue": {
+          "desc": "Marque l'écran comme fermé.",
+          "internal": false
+        },
+        "closed": {
+          "desc": "done = true, _active = false.",
+          "internal": false
+        },
+        "getCmd": {
+          "desc": "Renvoie la commande Lua qui rappelle buttonPushed(action).",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du bouton ou du pin de sortie activé."
+            }
+          },
+          "internal": false
+        },
+        "init": {
+          "desc": "open = false, done = false.",
+          "internal": true
+        },
+        "onClientEndMission": {
+          "desc": "Hook : ferme l'écran.",
+          "internal": true
+        },
+        "onFilteredInputChanged": {
+          "desc": "Hook d'entrée filtrée ; corps vide.",
+          "params": {
+            "devName": {
+              "type": "string",
+              "desc": "Nom du périphérique d'entrée."
+            },
+            "action": {
+              "type": "string",
+              "desc": "Nom du bouton ou du pin de sortie activé."
+            },
+            "value": {
+              "type": "number",
+              "desc": "Valeur de l'entrée."
+            }
+          },
+          "internal": true
+        },
+        "onScenarioUIReady": {
+          "desc": "Hook : l'UI est prête ; renvoie les données mémorisées via 'ScenarioChange' si l'écran est actif.",
+          "params": {
+            "state": {
+              "type": "integer",
+              "desc": "État du fondu d'écran (1 = noir atteint, 3 = fondu terminé)."
+            }
+          },
+          "internal": true
+        },
+        "openDialogue": {
+          "desc": "Prépare les données et navigue vers 'scenario.start'.",
+          "internal": false
+        },
+        "postInit": {
+          "desc": "Modèles de layout.",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Remet done, open et _active à false.",
+          "internal": false
+        },
+        "started": {
+          "desc": "Ferme l'écran et met le flux de sortie à true.",
+          "internal": false
+        },
+        "work": {
+          "desc": "Gère reset ; ouvre l'écran quand le flux d'entrée est actif.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

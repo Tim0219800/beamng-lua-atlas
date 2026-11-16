@@ -1,0 +1,31 @@
+{
+  "path": "lua/vehicle/controller/tirePressureControl.lua",
+  "module": "Contrôleur auxiliaire de gonflage/dégonflage centralisé des pneus (CTIS, véhicules tout-terrain/militaires). Les roues sont regroupées en « groupes » (essieux, côtés…) ; le conducteur active/désactive des groupes, puis lance gonflage, dégonflage ou arrêt pour tous les groupes actifs. Le contrôleur modifie directement la pression des groupes de pression des roues (obj:setGroupPressure), égalise les pressions dans un groupe et publie la pression moyenne des groupes actifs et l'état actif de chaque groupe dans electrics. Enregistre un menu radial « Contrôle de pression des pneus ».",
+  "usage": "local tpc = controller.getController(\"tirePressureControl\")\ntpc.setGroupState(\"front\", true)\ntpc.startDeflateActiveGroups()",
+  "notes": [
+    "Clés jbeam lues dans initSecondStage : mode (\"manualControl\", seul mode géré), inflateMaxFlow (10) et deflateMaxFlow (10) (variation de pression par seconde, unité de obj:getGroupPressure, Pa), activeGroupPressureElectricsName (<nom>_activeGroupPressure), wheelGroups (table d'en-tête : groupName, uiName, uiIcon, wheelNames, maxPressure, minPressure, groupEqualizeFlowLimit ; tous sauf uiIcon obligatoires).",
+    "Electrics publiés : <nom>_activeGroupPressure (pression moyenne lissée des groupes actifs, Pa absolus) et <nom>_<groupe>_isActive (1 ou 0).",
+    "La pression ne descend jamais sous obj:getEnvPressure(). Une roue cassée est ignorée dans la moyenne et dans l'égalisation.",
+    "Les limites minPressure/maxPressure sont absolues : le gonflage (resp. dégonflage) d'une roue s'arrête à maxPressure (resp. minPressure) mais l'égalisation continue.",
+    "Les groupes sont inactifs après reset ; les groupes inconnus donnent un log E dans setGroupState/toggleGroupState.",
+    "init ne fait rien : toute l'initialisation est dans initSecondStage (appelé après l'init de tous les contrôleurs, car il lit wheels.*).",
+    "reset met currentPressure à 0 pour toutes les roues jusqu'à la prochaine lecture dans updateGFX.",
+    "Le menu radial est enregistré une seule fois par VM (hasRegisteredQuickAccess) ; il utilise controller.getControllerSafe(M.name)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Ne fait rien (voir initSecondStage).", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "initSecondStage": {"desc": "Construit les groupes de roues, lit débits et limites de pression et enregistre le menu radial. Appelé après l'init des autres contrôleurs.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "reset": {"desc": "Désactive tous les groupes, arrête les changements de pression et remet le lisseur de l'electric à zéro.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "updateGFX": {"desc": "Chaque frame : lit les pressions, égalise entre roues d'un groupe, applique gonflage/dégonflage aux groupes actifs et publie les electrics.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true},
+    "setGroupState": {"desc": "Active ou désactive un groupe de roues et affiche un message. Un nom de groupe inconnu logue une erreur et ne fait rien.", "params": {"groupName": {"type": "string", "desc": "Nom du groupe (jbeam groupName)."}, "state": {"type": "boolean", "desc": "Actif ?"}}},
+    "toggleGroupState": {"desc": "Bascule l'activation d'un groupe de roues.", "params": {"groupName": {"type": "string", "desc": "Nom du groupe."}}},
+    "startInflateActiveGroups": {"desc": "Lance le gonflage (variation = +inflateMaxFlow par seconde) des groupes actifs et affiche un message."},
+    "startDeflateActiveGroups": {"desc": "Lance le dégonflage (variation = -deflateMaxFlow par seconde) des groupes actifs et affiche un message."},
+    "stopActiveGroups": {"desc": "Arrête le gonflage/dégonflage en cours et affiche un message."},
+    "getState": {"desc": "État sauvegardable : variation de pression active, état actif de chaque groupe et pression de chaque roue (clés préfixées par le nom du contrôleur).", "returns": [{"type": "table", "desc": "Table d'état."}]},
+    "setState": {"desc": "Restaure activations, variation de pression et pressions des roues (bornées entre pression ambiante et maxPressure, roues cassées ignorées).", "params": {"data": {"type": "table|nil", "desc": "Table produite par getState."}}}
+  }
+}

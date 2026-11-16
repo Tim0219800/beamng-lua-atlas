@@ -1,20 +1,41 @@
 {
   "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactController.lua",
-  "module": "Module de gameplayInterface pour le système de contrôleurs : envoyer un événement gameplay aux contrôleurs, geler le véhicule, changer le mode de boîte, passer un rapport et lire le mode de boîte ou l'état de gel.",
+  "module": "gameplayInterface module for the controller system: send a gameplay event to the controllers, freeze the vehicle, change the gearbox mode, shift a gear and read the gearbox mode or the freeze state.",
   "usage": "gameplayInterface.executeAction(0, 7, 'shiftToGearIndex', 1)\ngameplayInterface.executeAction(0, 8, 'setGearboxMode', 'arcade')",
   "notes": [
-    "Action 'controllerGameplayEvent'(eventName, ...) : appelle controller.onGameplayEvent(eventName, {autres paramètres}) ; aucun contrôle de type sur les paramètres.",
-    "Action 'setFreeze'(freeze:boolean) : controller.setFreeze(1) ou (0).",
-    "Action 'setGearboxMode'(mode:string) : controller.mainController.setGearboxMode(mode) (ex. 'arcade', 'realistic').",
-    "Action 'shiftToGearIndex'(gearIndex:number) : controller.mainController.shiftToGearIndex(gearIndex).",
-    "Lookup 'mainController'(dataKey:string) : 'gearboxMode' renvoie {result = mainController.gearboxBehavior} ; 'freezeState' renvoie {result = electrics.values.freezeState} ; autre clé renvoie {failReason = 'Invalid data key'}."
+    "Action 'controllerGameplayEvent'(eventName, ...): calls controller.onGameplayEvent(eventName, {other parameters}); no type check on the parameters.",
+    "Action 'setFreeze'(freeze:boolean): controller.setFreeze(1) or (0).",
+    "Action 'setGearboxMode'(mode:string): controller.mainController.setGearboxMode(mode) (e.g. 'arcade', 'realistic').",
+    "Action 'shiftToGearIndex'(gearIndex:number): controller.mainController.shiftToGearIndex(gearIndex).",
+    "Lookup 'mainController'(dataKey:string): 'gearboxMode' returns {result = mainController.gearboxBehavior}; 'freezeState' returns {result = electrics.values.freezeState}; any other key returns {failReason = 'Invalid data key'}."
   ],
   "fields": {
-    "moduleActions": {"type": "table<string, function>", "desc": "Actions : controllerGameplayEvent, setFreeze, setGearboxMode, shiftToGearIndex."},
-    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups : mainController."}
+    "moduleActions": {
+      "type": "table<string, function>",
+      "desc": "Actions: controllerGameplayEvent, setFreeze, setGearboxMode, shiftToGearIndex."
+    },
+    "moduleLookups": {
+      "type": "table<string, function>",
+      "desc": "Lookups: mainController."
+    }
   },
   "functions": {
-    "onExtensionLoaded": {"desc": "Appelé au chargement : remplit moduleActions et moduleLookups.", "params": {}, "returns": [], "internal": true},
-    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+    "onExtensionLoaded": {
+      "desc": "Called at load: fills moduleActions and moduleLookups.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "requestRegistration": {
+      "desc": "Registers the actions and lookups with gameplayInterface.",
+      "params": {
+        "gi": {
+          "type": "table",
+          "desc": "The gameplayInterface module."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

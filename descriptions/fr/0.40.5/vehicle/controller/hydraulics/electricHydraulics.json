@@ -1,0 +1,48 @@
+{
+  "path": "lua/vehicle/controller/hydraulics/electricHydraulics.lua",
+  "module": "Petit contrôleur auxiliaire pour un groupe hydraulique électrique : met la valeur electrics motorThrottleElectricsName à 1 dès qu'une des valeurs de commande listées est non nulle, sinon à 0 (pour alimenter le moteur de la pompe seulement quand une fonction hydraulique est demandée).",
+  "notes": [
+    "Clés jbeam : controlElectricsName (nom ou liste de noms de valeurs electrics à surveiller), motorThrottleElectricsName (nom de la valeur electrics de sortie ; aucune valeur par défaut : nil provoquerait une erreur)."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Lit les noms electrics.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Ne fait rien.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Met à jour la valeur de sortie 0/1.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

@@ -1,28 +1,28 @@
 # `gameplay_rally_transcripts_vehicleSnapshot`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/transcripts/vehicleSnapshot.lua` · VM : Game Engine (GE) · 50 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/transcripts/vehicleSnapshot.lua` · VM: Game Engine (GE) · 50 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/transcripts/vehicleSnapshot")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/transcripts/vehicleSnapshot")` (file under extensions/ but not a regular extension)
 
-Classe squelette représentant un instantané de véhicule (position, orientation, braquage, horodatage) rattaché à un chemin de transcriptions du rallye. Elle se comporte comme un élément de `sortedList` (champs id, name, sortOrder). Le module renvoie un constructeur : `require(...)(path, name, forceId)`. Dans cette version, la plupart des champs restent à nil et la désérialisation est vide.
+Skeleton class representing a vehicle snapshot (position, orientation, steering, timestamp) attached to a rally transcriptions path. It behaves like an element of `sortedList` (fields id, name, sortOrder). The module returns a constructor: `require(...)(path, name, forceId)`. In this version, most fields stay nil and deserialization is empty.
 
-## Remarques
+## Notes
 
-- onSerialize lit self.text, qui n'est jamais initialisé dans init : le champ sérialisé `text` vaudra toujours nil.
-- onDeserialized ne fait rien (tout le corps est commenté) : le code semble être une copie inachevée de transcripts/entry.lua.
-- sortOrder est fixé à 999999.
+- onSerialize reads self.text, which is never initialized in init: the serialized `text` field will always be nil.
+- onDeserialized does nothing (the whole body is commented out): the code appears to be an unfinished copy of transcripts/entry.lua.
+- sortOrder is set to 999999.
 
-## Classe `C`
+## Class `C`
 
-Instantané de véhicule. Champs initialisés : path, id, name, sortOrder, pos, quat, steering, timestamp, cornerCall (les cinq derniers à nil).
+Vehicle snapshot. Initialized fields: path, id, name, sortOrder, pos, quat, steering, timestamp, cornerCall (the last five nil).
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_transcripts_vehicleSnapshot")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_transcripts_vehicleSnapshot")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(path, name, forceId)` | Constructeur appelé par la fonction retournée par le module. Mémorise le chemin parent, prend l'id fourni ou un nouvel id via path:getNextUniqueIdentifier(), et nomme l'objet `t_<id>` par défaut. | 7 |
-| `C:onDeserialized(data, oldIdMap)` | Restauration depuis les données sauvegardées. Ne fait rien dans cette version. | 33 |
-| `C:onSerialize()` | Renvoie une table {oldId, name, text} pour la sauvegarde. | 22 |
+| `C:init(path, name, forceId)` | Constructor called by the function returned by the module. Stores the parent path, takes the provided id or a new id via path:getNextUniqueIdentifier(), and names the object `t_<id>` by default. | 7 |
+| `C:onDeserialized(data, oldIdMap)` | Restoration from the saved data. Does nothing in this version. | 33 |
+| `C:onSerialize()` | Returns a table {oldId, name, text} for saving. | 22 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/transcripts/vehicleSnapshot.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/transcripts/vehicleSnapshot.lua`.*

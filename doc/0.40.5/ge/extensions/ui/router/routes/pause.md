@@ -1,26 +1,26 @@
 # `ui_router_routes_pause`
 
-*Fichier : `lua/ge/extensions/ui/router/routes/pause.lua` · VM : Game Engine (GE) · 1498 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/routes/pause.lua` · VM: Game Engine (GE) · 1498 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_routes_pause` : `extensions.load("ui_router_routes_pause")`, puis la globale `ui_router_routes_pause`
+**Access:** extension `ui_router_routes_pause`: `extensions.load("ui_router_routes_pause")`, then the global `ui_router_routes_pause`
 
-Routes du menu pause (Vue), le plus gros module : écran de pause racine (retour par pauseExitHandler) avec rails gauche/droite/bas, puis system, hudApps (éditeur de disposition), career (branches, missions, historique, journal), milestones, vehicleDetails, multiseat (réglages, modes de jeu, sélecteur de véhicule), vehicleSelector, stats, vehicle (configuration combinée, sauvegarde, miroirs, sélecteur, détails), manageVehicles, photomode (overlay > edit > adjust), freeroamselector, environment, replay, plus des sous-arbres inclus (mods, bigmap, options, multiplayer, freeroamLevels). Presque tous les enfants utilisent les hooks ui_pause_routeLifecycleCallbacks.onPauseEnter/onPauseMount/onPauseLeave.
+Pause menu routes (Vue), the largest module: root pause screen (back via pauseExitHandler) with left/right/bottom rails, then system, hudApps (layout editor), career (branches, missions, history, logbook), milestones, vehicleDetails, multiseat (settings, game modes, vehicle selector), vehicleSelector, stats, vehicle (combined configuration, save, mirrors, selector, details), manageVehicles, photomode (overlay > edit > adjust), freeroamselector, environment, replay, plus included subtrees (mods, bigmap, options, multiplayer, freeroamLevels). Almost all children use the hooks ui_pause_routeLifecycleCallbacks.onPauseEnter/onPauseMount/onPauseLeave.
 
-## Remarques
+## Notes
 
-- Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = "<nom>" }`.
-- Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.
-- `ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change.
-- Commentaire du code : sans onLeave, la demande de pause physique de ui_pause_home_tab reste bloquée ; c'est pourquoi les enfants mods reçoivent le cycle de vie de pause.
-- Certains enfants gardent des screenId d'autres familles (career.milestones, bigmap.bigmapMenu, freeroamselector).
+- Route configuration module: it exports no function. routeManager reads it (via the ui_router_routes_<name> extension) when routes.lua includes it with `{ include = "<name>" }`.
+- The keys of `Children` form the segments of the dotted name: "<module>.<child>". `children` (lowercase) in a node designates its sub-routes; `include` mounts another module there.
+- `ui` is inherited by child routes (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause): a child redefines it only for what changes.
+- Code comment: without onLeave, the physics pause request of ui_pause_home_tab stays stuck; this is why the mods children receive the pause lifecycle.
+- Some children keep screenIds from other families (career.milestones, bigmap.bigmapMenu, freeroamselector).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `Children` | table<string, table> | Voir le résumé du module. Inclusions : mods (avec backTarget pause.system et modsPauseLifecycle sur chaque enfant), bigmap (onLeave onPauseBigmapLeave), options, multiplayer, freeroamLevels. |
-| `ModuleName` | string | Nom du module de routes (premier segment du nom pointé). |
-| `Root` | table | {screenId = "pause", title = "ui.environment.pause", back = handler pauseExitHandler, hooks onPauseEnter/Mount/Leave, targetScope "pause-left-rails", scopeTree pause-root > (pause-left-rails, pause-right-rails, pause-bottom-rails, menu-content-card-1), ui = Vue uniquement, topBar masquée} |
+| `Children` | table<string, table> | See the module summary. Includes: mods (with backTarget pause.system and modsPauseLifecycle on each child), bigmap (onLeave onPauseBigmapLeave), options, multiplayer, freeroamLevels. |
+| `ModuleName` | string | Name of the routes module (first segment of the dotted name). |
+| `Root` | table | {screenId = "pause", title = "ui.environment.pause", back = handler pauseExitHandler, hooks onPauseEnter/Mount/Leave, targetScope "pause-left-rails", scopeTree pause-root > (pause-left-rails, pause-right-rails, pause-bottom-rails, menu-content-card-1), ui = Vue only, topBar hidden} |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/routes/pause.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/routes/pause.lua`.*

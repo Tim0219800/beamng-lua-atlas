@@ -1,113 +1,189 @@
 {
   "path": "lua/ge/extensions/ui/apps/minimap/minimap.lua",
-  "module": "Minimap affichée en ImGui (API marquée expérimentale par BeamNG). Elle dessine dans une texture les routes, le joueur, les autres véhicules, la boussole, les marqueurs de playmode, etc., en forme de cercle ou de rectangle (réglage `minimapMode`). Un autre module l'active avec setDrawTransform (position et taille relatives à l'écran, entre 0 et 1) et la masque avec hide. Chaque frame, elle émet le hook `onDrawOnMinimap(td)` pour que d'autres extensions dessinent par-dessus. Contient aussi une fenêtre de réglages de debug (profilage, mesure du garbage, options d'affichage).",
+  "module": "Minimap displayed in ImGui (API marked experimental by BeamNG). It draws into a texture the roads, the player, the other vehicles, the compass, the playmode markers, etc., in a circle or rectangle shape (setting `minimapMode`). Another module activates it with setDrawTransform (position and size relative to the screen, between 0 and 1) and hides it with hide. Every frame, it emits the hook `onDrawOnMinimap(td)` so that other extensions draw on top. Also contains a debug settings window (profiling, garbage measurement, display options).",
   "notes": [
-    "Le fichier annonce : « This API is experimental and may change ».",
-    "`M.onUpdate` vaut nil au chargement : setDrawTransform le branche sur la fonction de dessin et appelle `extensions.hookUpdate(\"onUpdate\")` ; hide le remet à nil. La minimap ne dessine donc rien tant que setDrawTransform n'a pas été appelé.",
-    "setDrawTransform et setOcclusionTransform attendent des valeurs normalisées entre 0 et 1 ; sinon un avertissement est loggé (setDrawTransform masque alors la minimap, setOcclusionTransform ignore la zone).",
-    "Le mode lu dans les réglages est forcé à \"rect\" s'il n'est ni \"circle\" ni \"rect\".",
-    "BUG probable : minimap.lua utilise `ui_apps_sdfTopomap` (lignes 311-312 et 605) alors que le module de topographie de 0.40.5 s'appelle `ui_apps_minimap_topomap` ; ce nom n'est défini nulle part, donc les courbes de niveau ne sont pas dessinées.",
-    "Réglages utilisés : minimapMode, minimapOrientation (\"rotateWithCamera\"), minimapDrawGrid (\"always\"), minimapLookahead (disabled/low/medium/high)."
+    "The file states: \"This API is experimental and may change\".",
+    "`M.onUpdate` is nil on load: setDrawTransform hooks it to the drawing function and calls `extensions.hookUpdate(\"onUpdate\")`; hide resets it to nil. The minimap therefore draws nothing until setDrawTransform has been called.",
+    "setDrawTransform and setOcclusionTransform expect normalized values between 0 and 1; otherwise a warning is logged (setDrawTransform then hides the minimap, setOcclusionTransform ignores the zone).",
+    "The mode read from the settings is forced to \"rect\" if it is neither \"circle\" nor \"rect\".",
+    "Probable BUG: minimap.lua uses `ui_apps_sdfTopomap` (lines 311-312 and 605) while the 0.40.5 topography module is called `ui_apps_minimap_topomap`; this name is defined nowhere, so the contour lines are not drawn.",
+    "Settings used: minimapMode, minimapOrientation (\"rotateWithCamera\"), minimapDrawGrid (\"always\"), minimapLookahead (disabled/low/medium/high)."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : topomap, additionalInfo, route, utils, roads, vehicles de la minimap, et gameplay_playmodeMarkers."},
-    "onUpdate": {"type": "function|nil", "desc": "nil au départ ; défini par setDrawTransform (fonction de dessin), remis à nil par hide."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: topomap, additionalInfo, route, utils, roads, vehicles of the minimap, and gameplay_playmodeMarkers."
+    },
+    "onUpdate": {
+      "type": "function|nil",
+      "desc": "nil at start; set by setDrawTransform (drawing function), reset to nil by hide."
+    }
   },
   "functions": {
     "onInit": {
-      "desc": "Appelé à l'initialisation de l'extension. Passe en déchargement manuel et lit les réglages de minimap.",
+      "desc": "Called on extension initialization. Switches to manual unload and reads the minimap settings.",
       "params": {},
       "internal": true
     },
     "getScale": {
-      "desc": "Renvoie l'échelle courante de la minimap.",
+      "desc": "Returns the minimap's current scale.",
       "params": {},
-      "returns": [{"type": "number", "desc": "Échelle en pixels par mètre."}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Scale in pixels per meter."
+        }
+      ],
       "internal": false
     },
     "getMode": {
-      "desc": "Renvoie la forme de la minimap.",
+      "desc": "Returns the minimap's shape.",
       "params": {},
-      "returns": [{"type": "string", "desc": "\"circle\" ou \"rect\"."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "\"circle\" or \"rect\"."
+        }
+      ],
       "internal": false
     },
     "onMinimapSettingsChanged": {
-      "desc": "Hook appelé quand les réglages de la minimap changent. Relit le mode, l'orientation, la grille et l'anticipation (lookahead) et l'état des viewports ImGui.",
-      "params": {"m": {"type": "any", "desc": "Argument non utilisé (déduit du code)."}},
+      "desc": "Hook called when the minimap settings change. Rereads the mode, orientation, grid and lookahead and the state of the ImGui viewports.",
+      "params": {
+        "m": {
+          "type": "any",
+          "desc": "Unused argument (inferred from code)."
+        }
+      },
       "internal": true
     },
     "setBuffers": {
-      "desc": "Fixe des marges personnalisées autour de la minimap (gauche, droite, haut, bas). Une valeur nil devient 10.",
+      "desc": "Sets custom margins around the minimap (left, right, top, bottom). A nil value becomes 10.",
       "params": {
-        "left": {"type": "number|nil", "desc": "Marge gauche."},
-        "right": {"type": "number|nil", "desc": "Marge droite."},
-        "top": {"type": "number|nil", "desc": "Marge haut."},
-        "bottom": {"type": "number|nil", "desc": "Marge bas."}
+        "left": {
+          "type": "number|nil",
+          "desc": "Left margin."
+        },
+        "right": {
+          "type": "number|nil",
+          "desc": "Right margin."
+        },
+        "top": {
+          "type": "number|nil",
+          "desc": "Top margin."
+        },
+        "bottom": {
+          "type": "number|nil",
+          "desc": "Bottom margin."
+        }
       },
       "internal": false
     },
     "setDrawTransform": {
-      "desc": "Positionne la minimap et l'active (branche onUpdate). Les 4 valeurs doivent être entre 0 et 1, sinon avertissement et appel de hide.",
+      "desc": "Positions the minimap and activates it (hooks onUpdate). The 4 values must be between 0 and 1, otherwise a warning and a call to hide.",
       "params": {
-        "x": {"type": "number", "desc": "Position horizontale relative (0 à 1)."},
-        "y": {"type": "number", "desc": "Position verticale relative (0 à 1)."},
-        "width": {"type": "number", "desc": "Largeur relative (0 à 1)."},
-        "height": {"type": "number", "desc": "Hauteur relative (0 à 1)."}
+        "x": {
+          "type": "number",
+          "desc": "Relative horizontal position (0 to 1)."
+        },
+        "y": {
+          "type": "number",
+          "desc": "Relative vertical position (0 to 1)."
+        },
+        "width": {
+          "type": "number",
+          "desc": "Relative width (0 to 1)."
+        },
+        "height": {
+          "type": "number",
+          "desc": "Relative height (0 to 1)."
+        }
       },
       "internal": false
     },
     "setOcclusionTransform": {
-      "desc": "Déclare une zone qui masque une partie de la minimap (par exemple un élément d'interface posé dessus). Ignorée avec un avertissement si une valeur sort de 0..1.",
+      "desc": "Declares a zone that masks part of the minimap (for example an interface element placed over it). Ignored with a warning if a value is outside 0..1.",
       "params": {
-        "id": {"type": "string", "desc": "Identifiant de la zone."},
-        "x": {"type": "number", "desc": "Position horizontale relative (0 à 1)."},
-        "y": {"type": "number", "desc": "Position verticale relative (0 à 1)."},
-        "width": {"type": "number", "desc": "Largeur relative (0 à 1)."},
-        "height": {"type": "number", "desc": "Hauteur relative (0 à 1)."}
+        "id": {
+          "type": "string",
+          "desc": "Zone identifier."
+        },
+        "x": {
+          "type": "number",
+          "desc": "Relative horizontal position (0 to 1)."
+        },
+        "y": {
+          "type": "number",
+          "desc": "Relative vertical position (0 to 1)."
+        },
+        "width": {
+          "type": "number",
+          "desc": "Relative width (0 to 1)."
+        },
+        "height": {
+          "type": "number",
+          "desc": "Relative height (0 to 1)."
+        }
       },
       "internal": false
     },
     "resetOcclusionTransform": {
-      "desc": "Supprime la zone d'occlusion portant cet id ; si l'id n'est pas une chaîne non vide, supprime toutes les zones.",
-      "params": {"id": {"type": "string|nil", "desc": "Identifiant de la zone, ou nil pour tout effacer."}},
+      "desc": "Removes the occlusion zone with this id; if the id is not a non-empty string, removes all zones.",
+      "params": {
+        "id": {
+          "type": "string|nil",
+          "desc": "Zone identifier, or nil to clear everything."
+        }
+      },
       "internal": false
     },
     "drawOcclusion": {
-      "desc": "Dessine les masques d'occlusion et le découpage circulaire ou rectangulaire de la minimap dans la texture. Appelé par la boucle de dessin de la minimap.",
+      "desc": "Draws the occlusion masks and the circular or rectangular cropping of the minimap into the texture. Called by the minimap's drawing loop.",
       "params": {
-        "offsetX": {"type": "number", "desc": "Décalage horizontal de dessin."},
-        "offsetY": {"type": "number", "desc": "Décalage vertical de dessin."}
+        "offsetX": {
+          "type": "number",
+          "desc": "Horizontal drawing offset."
+        },
+        "offsetY": {
+          "type": "number",
+          "desc": "Vertical drawing offset."
+        }
       },
       "internal": true
     },
     "drawDebugOverlay": {
-      "desc": "Dessine des repères de debug (coins, marges) et affiche les tailles dans ImGui.",
+      "desc": "Draws debug markers (corners, margins) and displays the sizes in ImGui.",
       "params": {},
       "internal": true
     },
     "hide": {
-      "desc": "Masque la minimap : remet la transformation à 0 et détache onUpdate.",
+      "desc": "Hides the minimap: resets the transform to 0 and unhooks onUpdate.",
       "params": {},
       "internal": false
     },
     "toggledebugSettings": {
-      "desc": "Ouvre ou ferme la fenêtre de réglages de debug.",
+      "desc": "Opens or closes the debug settings window.",
       "params": {},
       "internal": false
     },
     "getDebugSettingsData": {
-      "desc": "Renvoie les listes de choix de la fenêtre de debug (`lookaheadValue`, `profileEveryNthFrame`).",
+      "desc": "Returns the choice lists of the debug window (`lookaheadValue`, `profileEveryNthFrame`).",
       "params": {},
-      "returns": [{"type": "table", "desc": "Tables `{name, value}` par réglage."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "`{name, value}` tables per setting."
+        }
+      ],
       "internal": false
     },
     "onClientStartMission": {
-      "desc": "Hook appelé au début d'une mission/niveau. Masque la minimap et réinitialise les routes (`ui_apps_minimap_roads.reset`).",
+      "desc": "Hook called at the start of a mission/level. Hides the minimap and resets the roads (`ui_apps_minimap_roads.reset`).",
       "params": {},
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook appelé à la fin d'une mission/niveau. Masque la minimap et réinitialise les routes.",
+      "desc": "Hook called at the end of a mission/level. Hides the minimap and resets the roads.",
       "params": {},
       "internal": true
     }

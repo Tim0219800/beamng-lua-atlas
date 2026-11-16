@@ -1,0 +1,194 @@
+{
+  "path": "lua/common/libs/ezSVG/EzSVG.lua",
+  "module": "EzSVG : bibliothèque tierce (Patrick Borgeat, 2012, reprise par BeamNG) pour générer des fichiers SVG depuis Lua. On crée des éléments (Circle, Rect, Line, Path, Polyline, Text, Group, dégradés…), on les ajoute à un groupe ou un document (add) puis on écrit le fichier avec Document:writeTo. Une pile de styles par défaut (setStyle, pushStyle, popStyle) s'applique aux éléments créés. Utile pour exporter des tracés (routes, graphes) depuis un script.",
+  "usage": "local svg = require('libs/ezSVG/EzSVG')\nlocal doc = svg.Document(200, 200, svg.rgb(255,255,255))\ndoc:add(svg.Polyline({0, 0, 100, 100}, {fill = 'none', stroke = svg.rgb(255, 0, 0), stroke_width = 1}))\ndoc:writeTo('test.svg')",
+  "notes": [
+    "Dans les tables de style, les clés avec _ sont converties en - (stroke_width devient stroke-width).",
+    "popStyle lève « Style Stack Underflow! » si la pile est vide.",
+    "Document:writeTo effectue une passe préliminaire pour placer dans <defs> les objets référencés qui ne sont pas dans l'arbre, puis écrit le fichier (io.open) sans vérifier que l'ouverture a réussi.",
+    "Le dernier argument style de chaque constructeur est facultatif."
+  ],
+  "fields": {
+    "knownTags": {"type": "table<integer, string>", "desc": "Liste des balises SVG connues (rect, circle, ellipse, line, polyline, polygon, path, text, tspan, textPath, image, svg, g, defs, tref, linearGradient, radialGradient, stop, use, symbol, pattern, mask) pour lesquelles un style par défaut existe."},
+    "styleStack": {"type": "table", "desc": "Pile des jeux de styles sauvegardés par pushStyle."}
+  },
+  "functions": {
+    "clearStyle": {"desc": "Réinitialise les styles par défaut de toutes les balises connues (tables vides)."},
+    "pushStyle": {"desc": "Sauvegarde une copie des styles par défaut sur la pile."},
+    "popStyle": {"desc": "Restaure les styles par défaut sauvegardés ; erreur si la pile est vide."},
+    "setStyle": {
+      "desc": "Définit un style par défaut, pour une balise ou pour toutes. Accepte soit (clé, valeur, balise?), soit (table de styles, balise?).",
+      "params": {
+        "key": {"type": "string|table", "desc": "Nom de propriété (stroke_width…) ou table de propriétés"},
+        "value": {"type": "any", "desc": "Valeur (ou nom de balise si key est une table)"},
+        "tag": {"type": "string|nil", "desc": "Balise ciblée ; toutes si nil"}
+      }
+    },
+    "Document": {
+      "desc": "Crée le document SVG racine (groupe svg avec xmlns, taille et fond facultatif). Possède add et writeTo(filename).",
+      "params": {
+        "width": {"type": "number", "desc": "Largeur"},
+        "height": {"type": "number", "desc": "Hauteur"},
+        "bgcolor": {"type": "string|nil", "desc": "Couleur de fond (ajoute un rectangle)"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      },
+      "returns": [{"type": "table", "desc": "Document"}]
+    },
+    "SVG": {
+      "desc": "Crée un élément <svg> imbriqué (groupe positionné).",
+      "params": {
+        "x": {"type": "number", "desc": "X"}, "y": {"type": "number", "desc": "Y"},
+        "width": {"type": "number", "desc": "Largeur"}, "height": {"type": "number", "desc": "Hauteur"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "Group": {"desc": "Crée un groupe <g> contenant d'autres éléments (méthode add).", "params": {"style": {"type": "table|nil", "desc": "Style"}}},
+    "Circle": {
+      "desc": "Crée un cercle.",
+      "params": {
+        "cx": {"type": "number", "desc": "Centre X"}, "cy": {"type": "number", "desc": "Centre Y"},
+        "r": {"type": "number", "desc": "Rayon"}, "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "Ellipse": {
+      "desc": "Crée une ellipse.",
+      "params": {
+        "cx": {"type": "number", "desc": "Centre X"}, "cy": {"type": "number", "desc": "Centre Y"},
+        "rx": {"type": "number", "desc": "Rayon X"}, "ry": {"type": "number", "desc": "Rayon Y"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "Line": {
+      "desc": "Crée un segment.",
+      "params": {
+        "x1": {"type": "number", "desc": "X de départ"}, "y1": {"type": "number", "desc": "Y de départ"},
+        "x2": {"type": "number", "desc": "X d'arrivée"}, "y2": {"type": "number", "desc": "Y d'arrivée"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "Path": {"desc": "Crée un tracé <path> dont les commandes d est construit par des méthodes sur l'objet.", "params": {"style": {"type": "table|nil", "desc": "Style"}}},
+    "Polyline": {
+      "desc": "Crée une polyligne ouverte.",
+      "params": {
+        "points": {"type": "table<integer, number>", "desc": "Liste plate de coordonnées {x1, y1, x2, y2, …}"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "Polygon": {
+      "desc": "Crée un polygone fermé.",
+      "params": {
+        "points": {"type": "table<integer, number>", "desc": "Liste plate de coordonnées {x1, y1, …}"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "Rect": {
+      "desc": "Crée un rectangle, éventuellement à coins arrondis.",
+      "params": {
+        "x": {"type": "number", "desc": "X"}, "y": {"type": "number", "desc": "Y"},
+        "width": {"type": "number", "desc": "Largeur"}, "height": {"type": "number", "desc": "Hauteur"},
+        "rx": {"type": "number|nil", "desc": "Rayon des coins en X"}, "ry": {"type": "number|nil", "desc": "Rayon des coins en Y"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "Image": {
+      "desc": "Crée une image référencée.",
+      "params": {
+        "href": {"type": "string", "desc": "URL ou chemin de l'image"},
+        "x": {"type": "number", "desc": "X"}, "y": {"type": "number", "desc": "Y"},
+        "width": {"type": "number", "desc": "Largeur"}, "height": {"type": "number", "desc": "Hauteur"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "Text": {
+      "desc": "Crée un élément texte.",
+      "params": {
+        "text": {"type": "string", "desc": "Contenu"},
+        "x": {"type": "number", "desc": "X"}, "y": {"type": "number", "desc": "Y"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "TextRef": {
+      "desc": "Crée une référence de texte (<tref>) vers un autre élément.",
+      "params": {"href": {"type": "any", "desc": "Élément ou identifiant référencé (déduit du code)"}, "style": {"type": "table|nil", "desc": "Style"}}
+    },
+    "Use": {
+      "desc": "Crée un <use> qui réutilise un élément défini ailleurs.",
+      "params": {
+        "href": {"type": "any", "desc": "Élément ou identifiant à réutiliser"},
+        "x": {"type": "number|nil", "desc": "X"}, "y": {"type": "number|nil", "desc": "Y"},
+        "width": {"type": "number|nil", "desc": "Largeur"}, "height": {"type": "number|nil", "desc": "Hauteur"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "Symbol": {
+      "desc": "Crée un <symbol> (modèle réutilisable via Use).",
+      "params": {
+        "preserveAspectRatio": {"type": "string|nil", "desc": "Attribut SVG"},
+        "viewBox": {"type": "string|nil", "desc": "Attribut SVG"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "Pattern": {
+      "desc": "Crée un motif de remplissage <pattern>.",
+      "params": {
+        "x": {"type": "number", "desc": "X"}, "y": {"type": "number", "desc": "Y"},
+        "width": {"type": "number", "desc": "Largeur"}, "height": {"type": "number", "desc": "Hauteur"},
+        "preserveAspectRatio": {"type": "string|nil", "desc": "Attribut SVG"},
+        "patternUnits": {"type": "string|nil", "desc": "Attribut SVG"},
+        "patternContentUnits": {"type": "string|nil", "desc": "Attribut SVG"},
+        "viewbox": {"type": "string|nil", "desc": "Attribut SVG viewBox"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "Mask": {
+      "desc": "Crée un masque <mask>.",
+      "params": {
+        "x": {"type": "number", "desc": "X"}, "y": {"type": "number", "desc": "Y"},
+        "width": {"type": "number", "desc": "Largeur"}, "height": {"type": "number", "desc": "Hauteur"},
+        "maskUnits": {"type": "string|nil", "desc": "Attribut SVG"},
+        "maskContentUnits": {"type": "string|nil", "desc": "Attribut SVG"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "LinearGradient": {
+      "desc": "Crée un dégradé linéaire (stops ajoutés ensuite sur l'objet).",
+      "params": {
+        "x1": {"type": "number", "desc": "X de départ"}, "y1": {"type": "number", "desc": "Y de départ"},
+        "x2": {"type": "number", "desc": "X d'arrivée"}, "y2": {"type": "number", "desc": "Y d'arrivée"},
+        "userSpaceUnits": {"type": "boolean|nil", "desc": "Utiliser les unités utilisateur (déduit du nom)"},
+        "spread": {"type": "string|nil", "desc": "Méthode d'étalement (spreadMethod)"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "RadialGradient": {
+      "desc": "Crée un dégradé radial.",
+      "params": {
+        "cx": {"type": "number", "desc": "Centre X"}, "cy": {"type": "number", "desc": "Centre Y"},
+        "r": {"type": "number", "desc": "Rayon"},
+        "fx": {"type": "number|nil", "desc": "Foyer X"}, "fy": {"type": "number|nil", "desc": "Foyer Y"},
+        "userSpaceUnits": {"type": "boolean|nil", "desc": "Utiliser les unités utilisateur (déduit du nom)"},
+        "spread": {"type": "string|nil", "desc": "Méthode d'étalement"},
+        "style": {"type": "table|nil", "desc": "Style"}
+      }
+    },
+    "rgb": {
+      "desc": "Formate une couleur SVG \"rgb(r, g, b)\" (valeurs 0..255, arrondies à l'entier inférieur).",
+      "params": {"r": {"type": "number", "desc": "Rouge"}, "g": {"type": "number", "desc": "Vert"}, "b": {"type": "number", "desc": "Bleu"}},
+      "returns": [{"type": "string", "desc": "Couleur"}]
+    },
+    "gray": {
+      "desc": "Gris : rgb(v, v, v).",
+      "params": {"v": {"type": "number", "desc": "Niveau 0..255"}},
+      "returns": [{"type": "string", "desc": "Couleur"}]
+    },
+    "hsv": {
+      "desc": "Convertit une couleur TSV en chaîne rgb(). Les trois composantes sont en 0..255 (divisées par 255).",
+      "params": {
+        "h": {"type": "number", "desc": "Teinte 0..255"},
+        "s": {"type": "number", "desc": "Saturation 0..255"},
+        "v": {"type": "number", "desc": "Valeur 0..255"}
+      },
+      "returns": [{"type": "string", "desc": "Couleur rgb(...)"}]
+    }
+  }
+}

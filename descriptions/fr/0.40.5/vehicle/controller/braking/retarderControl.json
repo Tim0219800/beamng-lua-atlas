@@ -1,0 +1,67 @@
+{
+  "path": "lua/vehicle/controller/braking/retarderControl.lua",
+  "module": "Contrôleur auxiliaire qui commande un ralentisseur (retarder) du powertrain. Une liste de réglages ordonnée (auto facultatif, off, puis niveaux manuels) détermine le coefficient envoyé à `retarder:setRetarderCoef`. En mode auto, le ralentisseur suit `brake_input` ; il est coupé quand l'ABS est actif, pendant un changement de rapport, ou (par défaut) quand l'accélérateur est appliqué. Ajoute un sous-menu au menu radial.",
+  "usage": "local r = controller.getControllerSafe(\"retarderControl\")\nr.setRetarderMode(\"off\")\nr.changeRetarderSettingIndex(1)",
+  "notes": [
+    "Clés jbeam lues par init : `controlledRetarder` (\"retarder\"), `electricsNameActual`, `electricsNameSetting`, `electricsNameIsEnabled`, `electricsNameLevelIndex` (par défaut `<retarder>_actual|_setting|_isEnabled|_levelIndex`), `retarderManualLevels` ({0.2, 0.4, 0.6, 0.8, 1.0}), `throttleDisableElectricsName` (\"throttle\"), `throttleDisableThreshold` (0.001), `disableWhenThrottleApplied` (true), `hasAutoMode` (false).",
+    "Liste des réglages : [\"auto\" si hasAutoMode], \"off\", puis les niveaux manuels. Au démarrage le mode est \"off\".",
+    "Si le périphérique est introuvable ou n'a pas `setRetarderCoef`, init logue une erreur et remplace `updateGFX` par `nop`.",
+    "Les electrics `<retarder>_setting` et `_actual` reçoivent la même valeur dans ce fichier."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "setRetarderSettingIndex": {
+      "desc": "Applique le réglage situé à cet index de la liste (auto, off ou niveau manuel) ; ignoré si l'index n'existe pas.",
+      "params": {
+        "settingIndex": {"type": "integer", "desc": "Index (1 = premier de la liste de réglages)."},
+        "silent": {"type": "boolean|nil", "desc": "true pour ne pas afficher de message."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "changeRetarderSettingIndex": {
+      "desc": "Décale l'index de réglage (borné aux limites de la liste) et l'applique.",
+      "params": {"indexChange": {"type": "integer", "desc": "Variation d'index (+1, -1...)."}},
+      "returns": [],
+      "internal": false
+    },
+    "setRetarderMode": {
+      "desc": "Cherche un réglage égal à `newMode` dans la liste et l'applique ; avertissement dans le log sinon.",
+      "params": {"newMode": {"type": "string|number", "desc": "\"auto\", \"off\" ou un niveau manuel de la liste."}},
+      "returns": [],
+      "internal": false
+    },
+    "updateGFX": {
+      "desc": "Chaque frame : calcule le coefficient (selon le mode, l'ABS, le passage de rapports et l'accélérateur), le transmet au ralentisseur quand il change et publie les electrics.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Force la prochaine transmission du coefficient au ralentisseur.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Retrouve le ralentisseur, construit la liste des réglages et le menu radial (une seule fois).",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    },
+    "getState": {
+      "desc": "Renvoie l'index de réglage actif sous la clé `<nom>_settingIndex`.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Table d'état."}],
+      "internal": false
+    },
+    "setState": {
+      "desc": "Restaure l'index de réglage s'il est valide (silencieusement).",
+      "params": {"data": {"type": "table|nil", "desc": "Table d'état."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

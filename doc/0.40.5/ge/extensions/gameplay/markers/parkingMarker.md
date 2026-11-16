@@ -1,70 +1,70 @@
 # `gameplay_markers_parkingMarker`
 
-*Fichier : `lua/ge/extensions/gameplay/markers/parkingMarker.lua` · VM : Game Engine (GE) · 544 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/markers/parkingMarker.lua` · VM: Game Engine (GE) · 544 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_markers_parkingMarker` : `extensions.load("gameplay_markers_parkingMarker")`, puis la globale `gameplay_markers_parkingMarker`
+**Access:** extension `gameplay_markers_parkingMarker`: `extensions.load("gameplay_markers_parkingMarker")`, then the global `gameplay_markers_parkingMarker`
 
-Marqueur de place de parking en mode jeu (par exemple pour livrer ou déposer un véhicule) : un décalque rayé au sol, un contour 3D (park_outline_marker.dae) dont la hauteur et l'opacité dépendent de la vitesse, et une icône flottante (poi_parking_rect par défaut). Le véhicule du joueur est « garé » quand sa boîte englobante recouvre (mode overlap) ou est contenue dans (mode contained) la place, à moins de 15 m et sous environ 20 km/h ; le marqueur devient alors interactif. Le module renvoie {create, cluster}.
+Parking spot marker in play mode (for example to deliver or drop off a vehicle): a striped decal on the ground, a 3D outline (park_outline_marker.dae) whose height and opacity depend on speed, and a floating icon (poi_parking_rect by default). The player's vehicle is "parked" when its bounding box overlaps (overlap mode) or is contained in (contained mode) the spot, within 15 m and below about 20 km/h; the marker then becomes interactive. The module returns {create, cluster}.
 
-## Remarques
+## Notes
 
-- mode d'un cluster : "overlap" (défaut, la boîte du véhicule touche une boîte de 1 m x 1 m centrée) ou "contained" (le véhicule doit tenir entièrement dans la place agrandie de 1 m en x/y).
-- cluster regroupe les POI par chemin (markerInfo.parkingMarker.path) ; sans chemin, ils vont dans le groupe "noPath". Les POI reprennent pos, rot, scl, mode, icon, focus du premier POI du groupe ; visibilityRadius = 5.
-- Bug : cluster calcule count = #poisByPath sur une table indexée par chaîne : la valeur est toujours 0, la condition count > 1 est donc fausse et l'icône numérotée (poi_no-0N) n'est jamais utilisée.
-- Bug : C:setup lit la variable globale parkDelay, jamais définie dans ce fichier : self.stopTimer vaut nil.
-- distance est une variable locale du module partagée par tous les marqueurs (mise à jour par checkParking juste avant update) ; distanceToHeight ignore son argument et lit cette variable.
-- Distances : l'icône apparaît à moins de 60 m (farDist) hors focus et se lève au-dessus du véhicule à moins de 15 m (nearDist) ; avec focus elle reste affichée de loin avec rebond.
-- Le décalque de sol est fourni dans groundDecalData (texture parkDecalStripes.png) et dessiné par le gestionnaire de marqueurs ; sa distance de fondu s'allonge de 20 m quand le véhicule est garé.
-- isInAreaChanged vaut "in"/"out" pendant une frame ; la fonction drawAxisBox et l'ancienne version hexagonale de drawOnMinimap (commentée) ne sont pas utilisées.
+- mode of a cluster: "overlap" (default, the vehicle's box touches a centered 1 m x 1 m box) or "contained" (the vehicle must fit entirely in the spot enlarged by 1 m in x/y).
+- cluster groups the POIs by path (markerInfo.parkingMarker.path); without a path, they go in the "noPath" group. The POIs take pos, rot, scl, mode, icon, focus from the first POI of the group; visibilityRadius = 5.
+- Bug: cluster computes count = #poisByPath on a string-keyed table: the value is always 0, so the condition count > 1 is false and the numbered icon (poi_no-0N) is never used.
+- Bug: C:setup reads the global variable parkDelay, never defined in this file: self.stopTimer is nil.
+- distance is a local variable of the module shared by all markers (updated by checkParking just before update); distanceToHeight ignores its argument and reads this variable.
+- Distances: the icon appears within 60 m (farDist) when not in focus and rises above the vehicle within 15 m (nearDist); with focus it stays displayed from afar with a bounce.
+- The ground decal is provided in groundDecalData (texture parkDecalStripes.png) and drawn by the marker manager; its fade distance grows by 20 m when the vehicle is parked.
+- isInAreaChanged is "in"/"out" for one frame; the drawAxisBox function and the old hexagonal version of drawOnMinimap (commented out) are not used.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_markers_parkingMarker.cluster(pois, allClusters)` | Regroupe les POI parkingMarker par chemin identique et ajoute un cluster par groupe à allClusters. *(interne)* | 497 |
-| `gameplay_markers_parkingMarker.create(...)` | Fabrique un marqueur de place de parking (instance de C). | 487 |
+| `gameplay_markers_parkingMarker.cluster(pois, allClusters)` | Groups the parkingMarker POIs by identical path and adds one cluster per group to allClusters. *(internal)* | 497 |
+| `gameplay_markers_parkingMarker.create(...)` | Builds a parking spot marker (instance of C). | 487 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_markers_parkingMarker.cluster(pois, allClusters)`
 
-Regroupe les POI parkingMarker par chemin identique et ajoute un cluster par groupe à allClusters.
+Groups the parkingMarker POIs by identical path and adds one cluster per group to allClusters.
 
-- `pois` (*table[]*) : POI avec markerInfo.parkingMarker {path, pos, rot, scl, mode, icon, focus}.
-- `allClusters` (*table[]*) : Liste de clusters complétée en place.
+- `pois` (*table[]*) : POIs with markerInfo.parkingMarker {path, pos, rot, scl, mode, icon, focus}.
+- `allClusters` (*table[]*) : List of clusters completed in place.
 
 #### `gameplay_markers_parkingMarker.create(...)`
 
-Fabrique un marqueur de place de parking (instance de C).
+Builds a parking spot marker (instance of C).
 
-- `...` (*any*) : Arguments transmis à C:init (non utilisés).
-- **renvoie** : table Instance de marqueur.
+- `...` (*any*) : Arguments passed to C:init (unused).
+- **returns**: table Marker instance.
 
-## Classe `C`
+## Class `C`
 
-Marqueur de place de parking.
+Parking spot marker.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:checkParking(data)` | Calcule la distance joueur/caméra à la place et détermine overlap (et parked) selon le mode, à moins de 15 m et sous la vitesse de croisière ; met la distance à 0 si garé. | 257 |
-| `C:clearObjects()` | Supprime le contour (notifie l'éditeur si présent) et l'icône flottante. | 329 |
-| `C:createObject(shapeName, objectName)` | Crée et enregistre un TSStatic à couleur d'instance (utilisé pour le contour). | 288 |
-| `C:createObjects()` | Nettoie les objets existants (n'en crée pas de nouveaux ; le contour est créé dans setup). | 302 |
-| `C:drawAxisBox(corner, x, y, z, clr)` | Dessine une boîte de debug (arêtes et faces) par debugDrawer ; non utilisée ici. | 430 |
-| `C:drawOnMinimap(td)` | Dessine un cercle bleu à la position de la place sur la minimap. | 368 |
-| `C:hide()` | Passe invisible, rend le contour et l'icône transparents. | 306 |
-| `C:init()` | Attribue un numId et crée les lisseurs (position d'icône, croisière, opacité, distance, recouvrement) ; visible = true. | 26 |
-| `C:instantFade(visible)` | Ne fait rien. | 360 |
-| `C:interactInPlayMode(interactData, interactableElements)` | Si canInteract et que le véhicule est garé, ajoute les données (elemData) du cluster aux éléments interactifs. | 352 |
-| `C:setup(cluster)` | Lit pos, rot, scl, mode du cluster, calcule les demi-axes de la boîte de test, crée l'objet de contour (TSStatic) positionné et mis à l'échelle sur la place, l'icône et le décalque au sol. | 41 |
-| `C:show()` | Repasse visible et force la mise à jour du contour. | 323 |
-| `C:update(data)` | Chaque frame : appelle checkParking, anime la hauteur et l'opacité de l'icône, dessine le trait vers le sol, ajuste hauteur et opacité du contour, met à jour isInAreaChanged et la distance de fondu du décalque. | 135 |
+| `C:checkParking(data)` | Computes the player/camera distance to the spot and determines overlap (and parked) according to the mode, within 15 m and below the cruising speed; sets the distance to 0 if parked. | 257 |
+| `C:clearObjects()` | Removes the outline (notifies the editor if present) and the floating icon. | 329 |
+| `C:createObject(shapeName, objectName)` | Creates and registers a TSStatic with instance color (used for the outline). | 288 |
+| `C:createObjects()` | Cleans up existing objects (does not create new ones; the outline is created in setup). | 302 |
+| `C:drawAxisBox(corner, x, y, z, clr)` | Draws a debug box (edges and faces) via debugDrawer; not used here. | 430 |
+| `C:drawOnMinimap(td)` | Draws a blue circle at the spot's position on the minimap. | 368 |
+| `C:hide()` | Becomes invisible, makes the outline and the icon transparent. | 306 |
+| `C:init()` | Assigns a numId and creates the smoothers (icon position, cruising, opacity, distance, overlap); visible = true. | 26 |
+| `C:instantFade(visible)` | Does nothing. | 360 |
+| `C:interactInPlayMode(interactData, interactableElements)` | If canInteract and the vehicle is parked, adds the cluster's data (elemData) to the interactive elements. | 352 |
+| `C:setup(cluster)` | Reads pos, rot, scl, mode from the cluster, computes the half-axes of the test box, creates the outline object (TSStatic) positioned and scaled on the spot, the icon and the ground decal. | 41 |
+| `C:show()` | Becomes visible again and forces the outline update. | 323 |
+| `C:update(data)` | Every frame: calls checkParking, animates the icon's height and opacity, draws the line to the ground, adjusts the outline's height and opacity, updates isInAreaChanged and the decal's fade distance. | 135 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawLineInstance`, `drawTriSolid`
 - `obj:` `registerObject`, `setField`, `setPosition`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/markers/parkingMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/markers/parkingMarker.lua`.*

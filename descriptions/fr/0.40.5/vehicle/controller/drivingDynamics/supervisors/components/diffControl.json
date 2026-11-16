@@ -1,0 +1,53 @@
+{
+  "path": "lua/vehicle/controller/drivingDynamics/supervisors/components/diffControl.lua",
+  "module": "Composant de contrôle de lacet agissant sur les différentiels avant/arrière à pilotage électronique (type \"auxiliary\", defaultOrder 70). Il s'enregistre auprès de tractionControl (ordre 20, sans action) et de yawControl (ordre 10). Quand le véhicule survire sous accélération, il règle overrideMin/overrideMax des contrôleurs de différentiel (activeDiffLock ou electronicDiffLock) pour verrouiller ou ouvrir le différentiel selon l'angle de dérive de caisse.",
+  "notes": [
+    "Clés jbeam : frontDiffName (défaut \"lockFront\") et rearDiffName (défaut \"lockRear\") = noms de contrôleurs de différentiel ; seuils d'angle de dérive (rad) openFrontDiffOversteerThresholdMin/Max (0/0), openRearDiffOversteerThresholdMin/Max (0/0.1), lockableFrontDiffOversteerThresholdMin/Max (0/0.2), lockableRearDiffOversteerThresholdMin/Max (0/0.2).",
+    "Le type de contrôleur de différentiel (champ typeName) détermine la méthode : \"drivingDynamics/actuators/activeDiffLock\" (différentiel verrouillable) ou \"drivingDynamics/actuators/electronicDiffLock\" (différentiel ouvert). Autre type = nop. Si aucun des deux différentiels n'existe, le composant se neutralise (actAs... = nop).",
+    "actAsYawControl renvoie toujours false pour ne pas déclencher le voyant ESC ; l'état réel est dans isActingAsYC. Il ne réagit que si electrics.values.throttle > 0.",
+    "Les fonctions internes yawControlBiasFrontDiff/yawControlBiasRearDiff sont définies mais jamais utilisées.",
+    "Le différentiel avant ouvert est sans effet (override max fixé à 1, « TODO » dans le code).",
+    "Les paramètres tractionControl.isEnabled sont déclarés dans controlParameters mais setParameters ne les traite pas (seule la branche yawControl est appliquée)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution par défaut (70)."},
+    "componentOrderTractionControl": {"type": "number", "desc": "20."},
+    "componentOrderYawControl": {"type": "number", "desc": "10."},
+    "componentOrderABSControl": {"type": "number", "desc": "1000 : inutilisé."},
+    "isActive": {"type": "boolean", "desc": "Vrai après initSecondStage."},
+    "isActingAsTC": {"type": "boolean", "desc": "Toujours false."},
+    "isActingAsYC": {"type": "boolean", "desc": "Vrai quand un différentiel est actuellement forcé."},
+    "isActingAsABS": {"type": "boolean", "desc": "Toujours false."},
+    "actAsABSControl": {"type": "function", "desc": "nop."}
+  },
+  "functions": {
+    "init": {"desc": "Remet à false les indicateurs.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
+    "initSecondStage": {"desc": "Cherche les contrôleurs de différentiel, s'enregistre auprès des superviseurs et lit les seuils.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (voir notes)."}}, "returns": [], "internal": true},
+    "initLastStage": {"desc": "Ne fait rien.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
+    "reset": {"desc": "Remet à false les indicateurs.", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Vide (version debug : envoie un paquet d'état).", "params": {"dt": {"type": "number", "desc": "Pas de temps graphique (s)."}}, "returns": [], "internal": true},
+    "actAsTractionControl": {"desc": "Appelé par tractionControl ; ne fait rien et renvoie false.", "params": {"wheelGroup": {"type": "table", "desc": "Groupe de roues."}, "dt": {"type": "number", "desc": "Pas de temps (s)."}}, "returns": [{"type": "boolean", "desc": "false."}], "internal": true},
+    "actAsYawControl": {
+      "desc": "Appelé par yawControl : remet à zéro les overrides puis, en cas de survirage sous accélération, applique les méthodes de contrôle avant/arrière.",
+      "params": {
+        "measuredYaw": {"type": "number", "desc": "Lacet mesuré (rad/s)."},
+        "expectedYaw": {"type": "number", "desc": "Lacet attendu."},
+        "yawDifference": {"type": "number", "desc": "Écart de lacet."},
+        "bodySlipAngle": {"type": "number", "desc": "Angle de dérive de caisse ajusté (rad)."},
+        "frontSlipAngle": {"type": "number", "desc": "Non utilisé."},
+        "rearSlipAngle": {"type": "number", "desc": "Non utilisé."},
+        "dt": {"type": "number", "desc": "Pas de temps (s)."}
+      },
+      "returns": [{"type": "boolean", "desc": "Toujours false (voir notes)."}],
+      "internal": true
+    },
+    "setDebugMode": {"desc": "Active/désactive les paquets de debug.", "params": {"debugEnabled": {"type": "boolean", "desc": "Vrai pour activer."}}, "returns": []},
+    "registerCMU": {"desc": "Mémorise la référence au CMU.", "params": {"cmu": {"type": "table", "desc": "Contrôleur CMU."}}, "returns": [], "internal": true},
+    "shutdown": {"desc": "Désactive le composant.", "params": {}, "returns": []},
+    "setParameters": {"desc": "Applique les paramètres yawControl.* (isEnabled et les huit seuils) via CMU.applyParameter.", "params": {"parameters": {"type": "table<string, any>", "desc": "Paramètres à appliquer."}}, "returns": []},
+    "setConfig": {"desc": "Remplace la configuration complète.", "params": {"configTable": {"type": "table", "desc": "Table {tractionControl, yawControl}."}}, "returns": []},
+    "getConfig": {"desc": "Renvoie une copie de la configuration.", "params": {}, "returns": [{"type": "table", "desc": "Copie de la configuration."}]},
+    "sendConfigData": {"desc": "Envoie la configuration au CMU (paquet de debug).", "params": {}, "returns": []}
+  }
+}

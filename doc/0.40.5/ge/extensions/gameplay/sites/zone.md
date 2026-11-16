@@ -1,61 +1,61 @@
 # `gameplay_sites_zone`
 
-*Fichier : `lua/ge/extensions/gameplay/sites/zone.lua` · VM : Game Engine (GE) · 501 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/sites/zone.lua` · VM: Game Engine (GE) · 501 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/sites/zone")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/sites/zone")` (file under extensions/ but not a regular extension)
 
-Classe « Zone » d'un jeu de sites : un polygone 2D (liste de sommets en coordonnées monde) délimitant une région de la carte, avec en option deux plans (haut et bas) qui bornent la zone en hauteur. Sert à tester si un point ou un véhicule est dans la zone (limites de ville, zones de trafic, de mission) et à la dessiner en debug. Le module renvoie un constructeur.
+"Zone" class of a sites set: a 2D polygon (list of vertices in world coordinates) delimiting a map region, optionally with two planes (top and bottom) bounding the zone in height. Used to test whether a point or vehicle is inside the zone (city limits, traffic zones, mission zones) and to draw it in debug. The module returns a constructor.
 
-## Exemple
+## Example
 
 ```lua
 local zone = sites.zones.objects[id]
-if zone:containsPoint2D(veh:getPosition()) then print('dans', zone.name) end
+if zone:containsPoint2D(veh:getPosition()) then print('inside', zone.name) end
 print(zone:zoneArea())
 ```
 
-## Remarques
+## Notes
 
-- Le test d'appartenance est 2D (algorithme par parité sur x/y) : la hauteur n'intervient que via les plans top/bot actifs (pointBetweenPlanes) ; sans plan actif, la zone est infinie en z.
-- processVertices fixe v.radius = 5 pour chaque sommet et chaîne les sommets en boucle (v.next / v.prev). Il faut l'appeler après toute modification manuelle de self.vertices ; addVertex, removeVertex et autoPlanes le font.
-- Une zone sans sommet est marquée aabb.invalid = true et journalise une erreur.
-- rayIntersectsZone suppose que tous les sommets ont un champ next (donc processVertices déjà appelé).
-- makeHighResolutionFence remplace les sommets par des points intermédiaires (pas max 3 m par défaut), recalés sur le terrain si core_terrain existe.
-- drawFence modifie le champ a du ColorI passé en argument.
+- The containment test is 2D (parity algorithm on x/y): height only matters through the active top/bot planes (pointBetweenPlanes); with no active plane, the zone is infinite in z.
+- processVertices sets v.radius = 5 for each vertex and chains the vertices in a loop (v.next / v.prev). It must be called after any manual modification of self.vertices; addVertex, removeVertex and autoPlanes do so.
+- A zone with no vertices is marked aabb.invalid = true and logs an error.
+- rayIntersectsZone assumes all vertices have a next field (so processVertices has already been called).
+- makeHighResolutionFence replaces the vertices with intermediate points (max step 3 m by default), snapped to the terrain if core_terrain exists.
+- drawFence modifies the a field of the ColorI passed as an argument.
 
-## Classe `C`
+## Class `C`
 
-Objet zone. Champs : sites, id, name, color, vertices (liste de {pos, radius, index, next, prev}), center, labelPos, aabb {xMin..zMax, invalid}, top / bot ({pos, normal, active}), fenceDown, fenceHeight, usePlanes, customFields, locations et parkingSpots (remplis par finalizeSites).
+Zone object. Fields: sites, id, name, color, vertices (list of {pos, radius, index, next, prev}), center, labelPos, aabb {xMin..zMax, invalid}, top / bot ({pos, normal, active}), fenceDown, fenceHeight, usePlanes, customFields, locations and parkingSpots (filled by finalizeSites).
 
-Le module renvoie un constructeur : `local obj = require("gameplay_sites_zone")(options)`.
+The module returns a constructor: `local obj = require("gameplay_sites_zone")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:aabbCheck(point)` | Test rapide x/y contre la boîte englobante (z ignoré). | 197 |
-| `C:addVertex(pos, index)` | Insère un sommet (à la fin ou à l'index donné) et recalcule les données dérivées. | 72 |
-| `C:autoPlanes(ignoreTop, ignoreBot)` | Crée automatiquement des plans horizontaux 5 m au-dessus du sommet le plus haut et 5 m en dessous du plus bas, centrés sur la zone. | 143 |
-| `C:changedPlanes()` | À appeler après modification des plans top/bot ; relance processVertices. | 132 |
-| `C:containsPoint2D(point)` | Teste si un point est dans le polygone (x/y) et entre les plans. | 252 |
-| `C:containsVehicle(veh, basic)` | Teste si un véhicule est dans la zone, d'après sa boîte englobante de spawn : centre seul en mode basic, sinon les quatre coins du bas/haut utilisés (points 0, 3, 4 et 7) doivent tous être dans la zone. | 275 |
-| `C:drawDebug(drawMode, clr, customHeight, customDown, nearCam, drawDistance)` | Dessine la zone en debug (clôture translucide, nom, plans selon le mode). Ne dessine que si la caméra est assez proche. | 291 |
-| `C:drawFence(from, to, clrI, down, up, usePlanes, nearCam, drawDistance, shapeAlpha)` | Dessine un panneau de clôture (deux triangles, double face) entre deux points. | 393 |
-| `C:drawMinimap(td)` | Dessine le contour de la zone sur la minimap de l'interface (lignes blanches). | 380 |
-| `C:drawPlane(plane, clrF)` | Dessine un plan (haut ou bas) par des lignes reliant son point d'ancrage aux sommets projetés, et sa normale. | 369 |
-| `C:init(sites, name, forceId)` | Constructeur. sites peut être nil (identifiant -1). Valeurs par défaut : fenceDown 0, fenceHeight 5, plans inactifs. | 7 |
-| `C:makeHighResolutionFence(maxStep)` | Remplace les sommets par une version échantillonnée tous les maxStep mètres (au minimum 1), recalée sur la hauteur du terrain. | 446 |
-| `C:onDeserialized(data)` | Restaure la zone depuis les données et appelle processVertices. | 51 |
-| `C:onSerialize()` | Sérialise nom, sommets, couleur, champs personnalisés et plans top/bot. | 26 |
-| `C:pointBetweenPlanes(point)` | Indique si un point se trouve entre les plans actifs (un plan inactif est ignoré). | 167 |
-| `C:processVertices()` | Précalculs : boîte englobante (aabb), centre, position du libellé, chaînage des sommets, extension de l'aabb par les plans. Si un plan n'est pas actif, la borne z correspondante est infinie. | 83 |
-| `C:rayIntersectsZone(rayPos, rayDir)` | Distance d'intersection d'un rayon avec la « clôture » (murs verticaux le long du contour, bornés par fenceDown/fenceHeight ou par les plans). | 214 |
-| `C:removeVertex(index)` | Supprime le sommet d'index donné et recalcule. | 77 |
-| `C:validPlanes()` | Teste que les deux plans sont actifs et que leurs normales pointent respectivement vers le haut (top) et vers le bas (bot). | 137 |
-| `C:vertexPlaneIntersection(vertex, plane)` | Projette verticalement (axe z) un sommet sur un plan. Renvoie le sommet inchangé si le plan est inactif ou aligné avec l'axe z (erreur journalisée). | 181 |
-| `C:zoneArea()` | Aire du polygone en m² (formule du lacet, x/y). 0 si moins de 3 sommets. | 476 |
+| `C:aabbCheck(point)` | Quick x/y test against the bounding box (z ignored). | 197 |
+| `C:addVertex(pos, index)` | Inserts a vertex (at the end or at the given index) and recalculates the derived data. | 72 |
+| `C:autoPlanes(ignoreTop, ignoreBot)` | Automatically creates horizontal planes 5 m above the highest vertex and 5 m below the lowest, centered on the zone. | 143 |
+| `C:changedPlanes()` | To call after modifying the top/bot planes; reruns processVertices. | 132 |
+| `C:containsPoint2D(point)` | Tests whether a point is inside the polygon (x/y) and between the planes. | 252 |
+| `C:containsVehicle(veh, basic)` | Tests whether a vehicle is inside the zone, based on its spawn bounding box: center only in basic mode, otherwise the four bottom/top corners used (points 0, 3, 4 and 7) must all be inside the zone. | 275 |
+| `C:drawDebug(drawMode, clr, customHeight, customDown, nearCam, drawDistance)` | Draws the zone in debug (translucent fence, name, planes depending on the mode). Only draws if the camera is close enough. | 291 |
+| `C:drawFence(from, to, clrI, down, up, usePlanes, nearCam, drawDistance, shapeAlpha)` | Draws a fence panel (two triangles, double-sided) between two points. | 393 |
+| `C:drawMinimap(td)` | Draws the zone outline on the UI minimap (white lines). | 380 |
+| `C:drawPlane(plane, clrF)` | Draws a plane (top or bottom) with lines linking its anchor point to the projected vertices, and its normal. | 369 |
+| `C:init(sites, name, forceId)` | Constructor. sites may be nil (identifier -1). Default values: fenceDown 0, fenceHeight 5, planes inactive. | 7 |
+| `C:makeHighResolutionFence(maxStep)` | Replaces the vertices with a version sampled every maxStep meters (at least 1), snapped to the terrain height. | 446 |
+| `C:onDeserialized(data)` | Restores the zone from the data and calls processVertices. | 51 |
+| `C:onSerialize()` | Serializes name, vertices, color, custom fields and top/bot planes. | 26 |
+| `C:pointBetweenPlanes(point)` | Indicates whether a point is between the active planes (an inactive plane is ignored). | 167 |
+| `C:processVertices()` | Precomputations: bounding box (aabb), center, label position, vertex chaining, aabb extension by the planes. If a plane is not active, the corresponding z bound is infinite. | 83 |
+| `C:rayIntersectsZone(rayPos, rayDir)` | Intersection distance of a ray with the "fence" (vertical walls along the outline, bounded by fenceDown/fenceHeight or by the planes). | 214 |
+| `C:removeVertex(index)` | Removes the vertex at the given index and recalculates. | 77 |
+| `C:validPlanes()` | Tests that both planes are active and that their normals point up (top) and down (bot) respectively. | 137 |
+| `C:vertexPlaneIntersection(vertex, plane)` | Vertically projects (z axis) a vertex onto a plane. Returns the vertex unchanged if the plane is inactive or aligned with the z axis (error logged). | 181 |
+| `C:zoneArea()` | Polygon area in m² (shoelace formula, x/y). 0 if fewer than 3 vertices. | 476 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawCylinder`, `drawLine`, `drawTextAdvanced`, `drawTriSolid`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/sites/zone.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/sites/zone.lua`.*

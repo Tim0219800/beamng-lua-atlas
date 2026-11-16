@@ -1,35 +1,35 @@
 # `utRecorder`
 
-*Fichier : `lua/vehicle/extensions/utRecorder.lua` · VM : Véhicule · 31 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/utRecorder.lua` · VM: Vehicle · 31 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `utRecorder` : `extensions.load (VM véhicule)("utRecorder")`, puis la globale `utRecorder`
+**Access:** extension `utRecorder`: `extensions.load (vehicle VM)("utRecorder")`, then the global `utRecorder`
 
-Envoie à chaque frame les données du véhicule au Lua du moteur de jeu (GE) pour qu'elles soient enregistrées avec le reste (outil de test). Le message est mis en file par obj:queueGameEngineLua et appelle extensions.test_utRecorder.onVehicleData(vehId, tableDonnées) côté GE.
+Sends the vehicle data to the game engine (GE) Lua every frame so that it is recorded with the rest (test tool). The message is queued by obj:queueGameEngineLua and calls extensions.test_utRecorder.onVehicleData(vehId, dataTable) on the GE side.
 
-## Remarques
+## Notes
 
-- Table envoyée (tableau indexé, sérialisé avec serialize) : [1] input.throttle, [2] input.brake, [3] input.steering, [4] norme de la vitesse obj:getVelocity() (m/s), [5] electrics.values.airspeed, [6] electrics.values.wheelspeed, [7] input.parkingbrake, [8] {x,y,z} position, [9] {x,y,z} direction avant.
-- Les valeurs nil (ex. airspeed absent) créent des trous dans le tableau et la sérialisation peut en être affectée.
-- Côté GE l'extension cible s'appelle test_utRecorder : elle doit être chargée sinon l'appel échoue.
-- Envoi à chaque frame sans limitation de débit.
+- Table sent (indexed array, serialized with serialize): [1] input.throttle, [2] input.brake, [3] input.steering, [4] norm of the velocity obj:getVelocity() (m/s), [5] electrics.values.airspeed, [6] electrics.values.wheelspeed, [7] input.parkingbrake, [8] {x,y,z} position, [9] {x,y,z} forward direction.
+- nil values (e.g. missing airspeed) create holes in the array and the serialization may be affected.
+- On the GE side the target extension is called test_utRecorder: it must be loaded, otherwise the call fails.
+- Sent every frame with no rate limiting.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `utRecorder.updateGFX(dt)` | Appelé à chaque frame graphique (extensions.hook('updateGFX')). Construit la table de données du véhicule et l'envoie à extensions.test_utRecorder.onVehicleData côté GE. *(interne)* | 9 |
+| `utRecorder.updateGFX(dt)` | Called every graphics frame (extensions.hook('updateGFX')). Builds the vehicle data table and sends it to extensions.test_utRecorder.onVehicleData on the GE side. *(internal)* | 9 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `utRecorder.updateGFX(dt)`
 
-Appelé à chaque frame graphique (extensions.hook('updateGFX')). Construit la table de données du véhicule et l'envoie à extensions.test_utRecorder.onVehicleData côté GE.
+Called every graphics frame (extensions.hook('updateGFX')). Builds the vehicle data table and sends it to extensions.test_utRecorder.onVehicleData on the GE side.
 
-- `dt` (*number*) : Pas de temps (non utilisé).
+- `dt` (*number*) : Time step (unused).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getDirectionVector`, `getId`, `getPosition`, `getVelocity`, `queueGameEngineLua`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/utRecorder.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/utRecorder.lua`.*

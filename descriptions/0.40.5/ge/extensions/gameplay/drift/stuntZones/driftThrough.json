@@ -1,33 +1,60 @@
 {
   "path": "lua/ge/extensions/gameplay/drift/stuntZones/driftThrough.lua",
-  "module": "Type de zone de cascade « driftThrough » (passage serré) : le joueur doit traverser en drift une boîte orientée (OBB, centre pos, demi-axes dérivés de rot et scl) et en ressortir. Le module renvoie un constructeur appelé par gameplay_drift_stuntZones.setStuntZones ; ce n'est pas une extension. En cas de réussite, émet onAnyStuntZoneAccomplished avec le sous-hook onDriftThroughAccomplished (angle de drift et points de base driftThrough).",
+  "module": "\"driftThrough\" stunt zone type (tight pass): the player must drift through an oriented box (OBB, center pos, half-axes derived from rot and scl) and come out of it. The module returns a constructor called by gameplay_drift_stuntZones.setStuntZones; it is not an extension. On success, emits onAnyStuntZoneAccomplished with the sub-hook onDriftThroughAccomplished (drift angle and driftThrough base points).",
   "notes": [
-    "La zone est validée à la sortie de la boîte : tant que le joueur est dedans il n'y a rien ; au premier relevé « dehors » usedFlag passe à vrai, puis detectStunt appelle accomplish. Détails : isPlayerInside n'est appelé que quand le joueur drifte, donc la sortie n'est détectée que s'il drifte encore.",
-    "Si aucun driftActiveData n'existe (test imgui), l'angle envoyé vaut 30°.",
-    "Cooldown de zoneData.cooldown secondes après réussite. Dessin : deux lignes qui se colorent (vert prêt, blanc/rouge pendant le cooldown)."
+    "The zone is validated on exiting the box: while the player is inside nothing happens; on the first \"outside\" reading usedFlag becomes true, then detectStunt calls accomplish. Details: isPlayerInside is only called when the player is drifting, so the exit is only detected if they are still drifting.",
+    "If no driftActiveData exists (imgui test), the angle sent is 30°.",
+    "Cooldown of zoneData.cooldown seconds after success. Drawing: two lines that change color (green ready, white/red during cooldown)."
   ],
   "classes": {
     "C": {
-      "desc": "Zone driftThrough. Champs : data = {id, zoneData = {pos, scl (vec3), rot (quat), cooldown}, x, y, z (demi-axes), drawData = {pointA..D}}, activeData = {isActive, currCooldown, usedFlag}.",
+      "desc": "driftThrough zone. Fields: data = {id, zoneData = {pos, scl (vec3), rot (quat), cooldown}, x, y, z (half-axes), drawData = {pointA..D}}, activeData = {isActive, currCooldown, usedFlag}.",
       "functions": {
-        "reset": {"desc": "Réinitialise activeData (cooldown 0, usedFlag false)."},
+        "reset": {
+          "desc": "Resets activeData (cooldown 0, usedFlag false)."
+        },
         "init": {
-          "desc": "Constructeur interne : mémorise les données de la zone et appelle reset().",
-          "params": {"data": {"type": "table", "desc": "{id, zoneData, x, y, z, drawData, nearDist}."}},
+          "desc": "Internal constructor: stores the zone data and calls reset().",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "{id, zoneData, x, y, z, drawData, nearDist}."
+            }
+          },
           "internal": true
         },
-        "accomplish": {"desc": "Réussite : remet usedFlag à false, démarre le cooldown et émet onAnyStuntZoneAccomplished (sous-hook onDriftThroughAccomplished avec currDegAngle et points)."},
-        "detectStunt": {"desc": "Appelé quand le joueur drifte dans la zone ; appelle accomplish si usedFlag est vrai."},
+        "accomplish": {
+          "desc": "Success: resets usedFlag to false, starts the cooldown and emits onAnyStuntZoneAccomplished (sub-hook onDriftThroughAccomplished with currDegAngle and points)."
+        },
+        "detectStunt": {
+          "desc": "Called when the player drifts in the zone; calls accomplish if usedFlag is true."
+        },
         "isAvailable": {
-          "desc": "Indique si le cooldown est écoulé.",
-          "returns": [{"type": "boolean", "desc": "true si la zone peut être validée."}]
+          "desc": "Returns whether the cooldown has elapsed.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if the zone can be validated."
+            }
+          ]
         },
         "isPlayerInside": {
-          "desc": "Teste avec containsOBB_point si le véhicule est dans la boîte ; s'il n'y est pas, met usedFlag à true.",
-          "returns": [{"type": "boolean", "desc": "true si le joueur est dans la boîte."}]
+          "desc": "Uses containsOBB_point to test whether the vehicle is in the box; if it is not, sets usedFlag to true.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if the player is in the box."
+            }
+          ]
         },
-        "onUpdate": {"desc": "Appelé à chaque frame par le gestionnaire : dessine les lignes.", "internal": true},
-        "sendDecals": {"desc": "Dessine les deux bords de la zone avec debugDrawer:drawLineInstance (si le tracé est activé).", "internal": true}
+        "onUpdate": {
+          "desc": "Called every frame by the manager: draws the lines.",
+          "internal": true
+        },
+        "sendDecals": {
+          "desc": "Draws the two edges of the zone with debugDrawer:drawLineInstance (if drawing is enabled).",
+          "internal": true
+        }
       }
     }
   }

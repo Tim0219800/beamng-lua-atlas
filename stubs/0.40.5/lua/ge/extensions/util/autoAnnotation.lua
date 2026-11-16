@@ -2,41 +2,41 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/autoAnnotation.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Outil d'éditeur de niveau : parcourt récursivement l'arbre de scène (MissionGroup) et le jeu de données des objets de forêt (ForestItemDataSet) pour poser automatiquement un champ d'annotation (catégorie sémantique, mode 'Override') sur les objets qui n'en ont pas. Les catégories sont devinées d'après le nom du fichier de forme (TSStatic, ForestItemData) ou le nom du GroundCover.
---- Accès : extension `util_autoAnnotation` : `extensions.load("util_autoAnnotation")`, puis la globale `util_autoAnnotation`
+--- Level editor tool: recursively walks the scene tree (MissionGroup) and the forest item dataset (ForestItemDataSet) to automatically set an annotation field (semantic category, 'Override' mode) on objects that lack one. Categories are guessed from the shape file name (TSStatic, ForestItemData) or the GroundCover name.
+--- Access: extension `util_autoAnnotation`: `extensions.load("util_autoAnnotation")`, then the global `util_autoAnnotation`
 ---@class util_autoAnnotation
 util_autoAnnotation = {}
 
---- Annote les données d'objets de forêt (ForestItemDataSet).
----Source : lua/ge/extensions/util/autoAnnotation.lua:132
+--- Annotates the forest object data (ForestItemDataSet).
+---Source: lua/ge/extensions/util/autoAnnotation.lua:132
 function util_autoAnnotation.autoAnnotateGroups() end
 
---- Annote le niveau entier : arbre de scène puis jeu de données de forêt.
----Source : lua/ge/extensions/util/autoAnnotation.lua:137
+--- Annotates the whole level: scene tree then forest dataset.
+---Source: lua/ge/extensions/util/autoAnnotation.lua:137
 function util_autoAnnotation.autoAnnotateLevel() end
 
---- Annote tout l'arbre de scène à partir de MissionGroup. Logue une erreur et s'arrête si MissionGroup est introuvable.
----Source : lua/ge/extensions/util/autoAnnotation.lua:121
+--- Annotates the whole scene tree starting from MissionGroup. Logs an error and stops if MissionGroup is not found.
+---Source: lua/ge/extensions/util/autoAnnotation.lua:121
 function util_autoAnnotation.autoAnnotateScenetree() end
 
---- Hook d'initialisation sans effet (corps vide).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/autoAnnotation.lua:118
+--- Initialization hook with no effect (empty body).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/autoAnnotation.lua:118
 function util_autoAnnotation.onInit() end
 
---- Table interne de visiteurs 'visit<Classe>' appelés selon la classe de chaque nœud. Les visiteurs de TSStatic et ForestItemData posent l'annotation d'après shapeName ; ceux de SFXSpace, SFXEmitter, PointLight, SpotLight ne font rien.
+--- Internal table of 'visit<Class>' visitors called according to each node's class. The TSStatic and ForestItemData visitors set the annotation from shapeName; those of SFXSpace, SFXEmitter, PointLight, SpotLight do nothing.
 ---@class util_autoAnnotation_visitors
 local util_autoAnnotation_visitors = {}
 
---- Visite chaque élément d'une forêt (Forest) et annote les données de ses items.
----Source : lua/ge/extensions/util/autoAnnotation.lua:94
----@param parent userdata Nœud parent.
----@param node userdata Objet Forest.
+--- Visits each element of a forest (Forest) and annotates the data of its items.
+---Source: lua/ge/extensions/util/autoAnnotation.lua:94
+---@param parent userdata Parent node.
+---@param node userdata Forest object.
 function util_autoAnnotation_visitors.visitForest(parent, node) end
 
---- Annote un GroundCover sans annotation d'après son nom (NATURE par défaut).
----Source : lua/ge/extensions/util/autoAnnotation.lua:102
----@param parent userdata Nœud parent.
----@param node userdata Objet GroundCover.
+--- Annotates a GroundCover without annotation from its name (NATURE by default).
+---Source: lua/ge/extensions/util/autoAnnotation.lua:102
+---@param parent userdata Parent node.
+---@param node userdata GroundCover object.
 function util_autoAnnotation_visitors.visitGroundCover(parent, node) end
 

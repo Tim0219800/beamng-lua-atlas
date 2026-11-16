@@ -1,29 +1,29 @@
 # `flowgraph_nodes_mission_selectGarageSpots`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/mission/selectGarageSpots.lua` · VM : Game Engine (GE) · 193 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/mission/selectGarageSpots.lua` · VM: Game Engine (GE) · 193 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/mission/selectGarageSpots")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/mission/selectGarageSpots")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Select Garage Spots' (categorie once_p_duration, auteur BeamNG). Choisit une place de depart et une place d'arrivee parmi sitesData.parkingSpots : en mode isLocal, la place de depart doit appartenir a la zone 'zone' (zone de plus faible prio) ; la place d'arrivee est choisie au hasard entre minDist et maxDist de distance. Sorties : flow (une fois trouve), impulsion loaded, startSpot, endSpot, startLocation, endLocation. Les descriptions des pins d'entree sont vides dans le code.
+Flowgraph node 'Select Garage Spots' (once_p_duration category, author BeamNG). Picks a start spot and an end spot among sitesData.parkingSpots: in isLocal mode, the start spot must belong to the zone 'zone' (zone with the lowest prio); the end spot is chosen at random between minDist and maxDist distance. Outputs: flow (once found), impulse loaded, startSpot, endSpot, startLocation, endLocation. The input pin descriptions are empty in the code.
 
-## Remarques
+## Notes
 
-- Le message de journal parle de 'G2G Route' (reprise du noeud garage-to-garage).
-- Le reset (pin) n'est pas lu dans work ; seul resetData via workOnce/_executionStarted remet a zero.
-- Si possibleStartingSpots est vide (aucune place dans la zone), self.startSpot est nil et le noeud plante.
+- The log message mentions 'G2G Route' (carried over from the garage-to-garage node).
+- The reset (pin) is not read in work; only resetData via workOnce/_executionStarted resets to zero.
+- If possibleStartingSpots is empty (no spot in the zone), self.startSpot is nil and the node crashes.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Appelle resetData. | 52 |
-| `C:findEndSpotForStartingSpot(startSpot)` | Choisit une place d'arrivee a distance acceptable de la place de depart (voir Select Garage Sites), sinon le meilleur candidat. | 77 |
-| `C:init()` | Initialise les listes, state=1 et les sorties. | 37 |
-| `C:resetData()` | Vide les places utilisees et remet tout a zero. | 56 |
-| `C:work()` | Si flow : state 1 selectionne depart et arrivee, ecrit les sorties, flow et loaded a true ; state 2 garde flow=true et loaded=false. | 119 |
-| `C:workOnce()` | Appelle resetData. | 72 |
+| `C:_executionStarted()` | Calls resetData. | 52 |
+| `C:findEndSpotForStartingSpot(startSpot)` | Picks an end spot at an acceptable distance from the start spot (see Select Garage Sites), otherwise the best candidate. | 77 |
+| `C:init()` | Initializes the lists, state=1 and the outputs. | 37 |
+| `C:resetData()` | Empties the used spots and resets everything to zero. | 56 |
+| `C:work()` | If flow: state 1 selects start and end, writes the outputs, flow and loaded to true; state 2 keeps flow=true and loaded=false. | 119 |
+| `C:workOnce()` | Calls resetData. | 72 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/mission/selectGarageSpots.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/mission/selectGarageSpots.lua`.*

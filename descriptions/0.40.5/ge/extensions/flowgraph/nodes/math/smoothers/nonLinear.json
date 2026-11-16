@@ -1,28 +1,28 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/math/smoothers/nonLinear.lua",
-  "module": "Noeud flowgraph 'Nonlinear Smoother' (categorie simple). Lissage non lineaire avec newTemporalSmoothingNonLinear : taux upRate/downRate selon le sens, pas de temps 'dt', 'set' pour forcer l'etat. Sortie 'value'. Descriptions de pins 'TODO' dans le code.",
+  "module": "Flowgraph node 'Nonlinear Smoother' (simple category). Nonlinear smoothing with newTemporalSmoothingNonLinear: upRate/downRate depending on direction, time step 'dt', 'set' to force the state. Output 'value'. Pin descriptions are 'TODO' in the code.",
   "notes": [
-    "init ecrit C.oldSet (classe) au lieu de self.oldSet.",
-    "Le lisseur est cree dans init, donc il n'est pas remis a zero au redemarrage du graphe (contrairement au Linear Smoother)."
+    "init writes C.oldSet (class) instead of self.oldSet.",
+    "The smoother is created in init, so it is not reset when the graph restarts (unlike the Linear Smoother)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Met C.oldSet=0 (classe) et cree le lisseur non lineaire.",
+          "desc": "Sets C.oldSet=0 (class) and creates the nonlinear smoother.",
           "internal": true
         },
         "checkSetValue": {
-          "desc": "Si 'set' a change, force l'etat du lisseur.",
+          "desc": "If 'set' changed, forces the smoother state.",
           "internal": true
         },
         "work": {
-          "desc": "Sans entree, sort l'etat ; sinon sort smoother:getWithRate(sample, dt, rate) avec rate = upRate/downRate (defaut 1).",
+          "desc": "With no input, outputs the state; otherwise outputs smoother:getWithRate(sample, dt, rate) with rate = upRate/downRate (default 1).",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche l'etat du lisseur.",
+          "desc": "Displays the smoother state.",
           "internal": true
         }
       }

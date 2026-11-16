@@ -1,0 +1,97 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/macro/integrated.lua",
+  "module": "Noeud macro 'Integrated' (cache, canHaveGraph) : represente un sous-graphe (graphe cible / macro) dans le graphe parent. Ses pins sont recopies depuis les noeuds I/O du sous-graphe : les entrees sont ecrites dans le noeud I/O 'in', les sorties lues depuis le noeud I/O 'out'. Double-clic dans l'editeur pour ouvrir le sous-graphe.",
+  "notes": [
+    "Dans _onDeserialized (cas non instance), l'offset getGraphNodeOffset est ajoute a targetID puis encore une fois dans l'index de mgr.graphs ; _postDeserialize l'ajoute de nouveau : incoherence possible.",
+    "_onSerialize utilise le meme code dans les deux branches du if (instance ou non)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "representsGraph": {
+          "desc": "Renvoie le graphe represente.",
+          "internal": true,
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "targetGraph"
+            }
+          ]
+        },
+        "init": {
+          "desc": "savePins=true et couleur grise.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Bouton de debogage 'Manually Refresh Pins'.",
+          "internal": true
+        },
+        "setTargetGraph": {
+          "desc": "Lie le noeud a un graphe : retrouve ses noeuds macro/io 'in' et 'out', memorise targetGraph/targetID et fixe le nom.",
+          "internal": true,
+          "params": {
+            "graph": {
+              "type": "table",
+              "desc": "graphe cible"
+            }
+          }
+        },
+        "_postDeserialize": {
+          "desc": "Relie le graphe cible via mgr.graphs[targetID + offset].",
+          "internal": true
+        },
+        "gatherPins": {
+          "desc": "Recree les pins d'entree/sortie depuis les pin lists des noeuds I/O.",
+          "internal": true,
+          "returns": [
+            {
+              "type": "table",
+              "desc": "liste des pins d'entree"
+            },
+            {
+              "type": "table",
+              "desc": "liste des pins de sortie"
+            }
+          ]
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde name, graphType, targetID et couleur.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Relit nom, couleur, type de graphe et cible (instance de macro creee depuis macroPath si besoin).",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Icone de recherche avec apercu au survol et variables surveillees.",
+          "internal": true
+        },
+        "doubleClicked": {
+          "desc": "Selectionne le graphe cible dans l'editeur (sauf depuis un graphe macro).",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Copie les valeurs des pins d'entree vers le noeud I/O 'in' et celles du noeud I/O 'out' vers les pins de sortie.",
+          "internal": true
+        },
+        "_afterTrigger": {
+          "desc": "Appelle updatePins apres chaque execution.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Pousse les valeurs des pins d'entree codes en dur vers le noeud I/O 'in'.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Remet a nil ces valeurs dans le noeud I/O 'in'.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Vide.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

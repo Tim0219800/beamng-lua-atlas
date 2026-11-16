@@ -1,31 +1,40 @@
 {
   "path": "lua/ge/extensions/ui/vehiclePaint.lua",
-  "module": "Petite fenêtre imgui de débogage « Metallic paint » pour régler en direct les paramètres de peinture métallique du véhicule du joueur (3 peintures : métallique, rugosité, vernis, rugosité du vernis). Elle lit et écrit le champ objet `metallicPaintData` du véhicule sous forme de chaîne de 4 nombres.",
+  "module": "Small \"Metallic paint\" imgui debug window to adjust the metallic paint parameters of the player's vehicle live (3 paints: metallic, roughness, clearcoat, clearcoat roughness). It reads and writes the object field `metallicPaintData` of the vehicle as a string of 4 numbers.",
   "usage": "extensions.load('ui_vehiclePaint'); ui_vehiclePaint.show()",
   "notes": [
-    "Les 4 valeurs de metallicPaintData sont, dans l'ordre : [1] Roughness, [2] Metallic, [3] Coat, [4] Coat roughness (d'après les indices passés à sliderUI). Chaque curseur va de 0 à 1.",
-    "changeData n'écrit toujours que dans la peinture 0 : son paramètre index désigne la composante du tableau, pas la peinture."
+    "The 4 values of metallicPaintData are, in order: [1] Roughness, [2] Metallic, [3] Coat, [4] Coat roughness (from the indices passed to sliderUI). Each slider goes from 0 to 1.",
+    "changeData always writes only to paint 0: its index parameter designates the array component, not the paint."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "ui_imgui."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "ui_imgui."
+    }
   },
   "functions": {
     "show": {
-      "desc": "Ouvre la fenêtre 'Metallic paint' (la fenêtre est dessinée dans onUpdate)."
+      "desc": "Opens the 'Metallic paint' window (the window is drawn in onUpdate)."
     },
     "changeData": {
-      "desc": "Modifie une composante de metallicPaintData de la peinture 0 du véhicule du joueur 0 et réécrit le champ.",
+      "desc": "Modifies one component of metallicPaintData of player 0's vehicle paint 0 and rewrites the field.",
       "params": {
-        "change": {"type": "number", "desc": "Nouvelle valeur."},
-        "index": {"type": "integer", "desc": "Indice (1 à 4) dans le tableau de 4 valeurs."}
+        "change": {
+          "type": "number",
+          "desc": "New value."
+        },
+        "index": {
+          "type": "integer",
+          "desc": "Index (1 to 4) in the array of 4 values."
+        }
       }
     },
     "onUpdate": {
-      "desc": "Hook appelé à chaque frame : si la fenêtre est ouverte et qu'un véhicule joueur existe, dessine les curseurs des peintures 0, 1 et 2 et applique les changements via setField.",
+      "desc": "Hook called every frame: if the window is open and a player vehicle exists, draws the sliders of paints 0, 1 and 2 and applies the changes via setField.",
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement : crée le pointeur booléen de visibilité (faux) et le pointeur flottant des curseurs.",
+      "desc": "Hook called on load: creates the visibility boolean pointer (false) and the float pointer of the sliders.",
       "internal": true
     }
   }

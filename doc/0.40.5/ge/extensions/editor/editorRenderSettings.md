@@ -1,39 +1,39 @@
 # `editor_editorRenderSettings`
 
-*Fichier : `lua/ge/extensions/editor/editorRenderSettings.lua` · VM : Game Engine (GE) · 533 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/editorRenderSettings.lua` · VM: Game Engine (GE) · 533 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_editorRenderSettings` : `extensions.load("editor_editorRenderSettings")`, puis la globale `editor_editorRenderSettings`
+**Access:** extension `editor_editorRenderSettings`: `extensions.load("editor_editorRenderSettings")`, then the global `editor_editorRenderSettings`
 
-Fenêtre « Editor Render Settings » de l'éditeur : permet d'utiliser dans l'éditeur des réglages graphiques différents de ceux du jeu (anti-aliasing, résolution, qualité des meshes/terrain/clusters/nuages, herbe, ombres, réflexions dynamiques, SSAO, DOF, flou de mouvement, limite de FPS). Les valeurs sont stockées dans les préférences editor.renderSettings.* (followGameSettings, values). À l'activation de l'éditeur l'état graphique du jeu est capturé, puis restauré à la désactivation, à l'arrêt de l'éditeur ou au déchargement de l'extension.
+"Editor Render Settings" window of the editor: lets you use graphics settings in the editor that differ from those of the game (anti-aliasing, resolution, quality of meshes/terrain/clusters/clouds, grass, shadows, dynamic reflections, SSAO, DOF, motion blur, FPS limit). Values are stored in the preferences editor.renderSettings.* (followGameSettings, values). On editor activation the game's graphics state is captured, then restored on deactivation, on editor shutdown or on extension unload.
 
-## Remarques
+## Notes
 
-- Si « followGameSettings » est vrai (défaut), les réglages du jeu sont utilisés tels quels ; sinon les valeurs sauvegardées sont appliquées à l'activation de l'éditeur.
-- Certains réglages ne sont proposés que si l'objet correspondant existe dans la scène (CloudLayer, ScreenSpaceShadowsPostFx, SSAOPostFx, DOFPostEffect, PostFxMotionBlur).
+- If "followGameSettings" is true (default), the game settings are used as-is; otherwise the saved values are applied on editor activation.
+- Some settings are only offered if the matching object exists in the scene (CloudLayer, ScreenSpaceShadowsPostFx, SSAOPostFx, DOFPostEffect, PostFxMotionBlur).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_editorRenderSettings.onEditorActivated()` | Capture l'état graphique du jeu ; si followGameSettings est faux, sauvegarde et applique les valeurs de l'éditeur. *(interne)* *(hook)* | 504 |
-| `editor_editorRenderSettings.onEditorDeactivated()` | Restaure l'état graphique du jeu capturé à l'activation. *(interne)* *(hook)* | 520 |
-| `editor_editorRenderSettings.onEditorGui()` | Dessine la fenêtre : case « suivre les réglages du jeu », bouton de synchronisation depuis le jeu, préréglages de qualité, puis sections Antialiasing, Qualité de scène, Ombres, Réflexions, Post-traitement et Limite de FPS. *(interne)* *(hook)* | 426 |
-| `editor_editorRenderSettings.onEditorInitialized()` | Enregistre la fenêtre « editorRenderSettings » (420x700). *(interne)* *(hook)* | 500 |
-| `editor_editorRenderSettings.onEditorRegisterPreferences(prefsRegistry)` | Enregistre la catégorie « editor » et la sous-catégorie renderSettings (followGameSettings = true par défaut, values = {}). *(interne)* *(hook)* | 492 |
-| `editor_editorRenderSettings.onEditorShutdown()` | Même fonction que la restauration de l'état du jeu (alias). *(interne)* *(hook)* | 513 |
-| `editor_editorRenderSettings.onExtensionUnloaded()` | Même fonction que la restauration de l'état du jeu (alias). *(interne)* *(hook)* | 513 |
+| `editor_editorRenderSettings.onEditorActivated()` | Captures the game's graphics state; if followGameSettings is false, saves and applies the editor values. *(internal)* *(hook)* | 504 |
+| `editor_editorRenderSettings.onEditorDeactivated()` | Restores the game's graphics state captured at activation. *(internal)* *(hook)* | 520 |
+| `editor_editorRenderSettings.onEditorGui()` | Draws the window: "follow game settings" checkbox, sync-from-game button, quality presets, then the sections Antialiasing, Scene Quality, Shadows, Reflections, Post-processing and FPS Limit. *(internal)* *(hook)* | 426 |
+| `editor_editorRenderSettings.onEditorInitialized()` | Registers the "editorRenderSettings" window (420x700). *(internal)* *(hook)* | 500 |
+| `editor_editorRenderSettings.onEditorRegisterPreferences(prefsRegistry)` | Registers the "editor" category and the renderSettings subcategory (followGameSettings = true by default, values = {}). *(internal)* *(hook)* | 492 |
+| `editor_editorRenderSettings.onEditorShutdown()` | Same function as the game state restoration (alias). *(internal)* *(hook)* | 513 |
+| `editor_editorRenderSettings.onExtensionUnloaded()` | Same function as the game state restoration (alias). *(internal)* *(hook)* | 513 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_editorRenderSettings.onEditorRegisterPreferences(prefsRegistry)`
 
-Enregistre la catégorie « editor » et la sous-catégorie renderSettings (followGameSettings = true par défaut, values = {}).
+Registers the "editor" category and the renderSettings subcategory (followGameSettings = true by default, values = {}).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur
+- `prefsRegistry` (*table*) : Editor preferences registry
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/editorRenderSettings.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/editorRenderSettings.lua`.*

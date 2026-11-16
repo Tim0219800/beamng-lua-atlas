@@ -1,37 +1,37 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/logic/wait.lua",
-  "module": "Noeud flowgraph 'Wait' (categorie logic, behaviour duration+once). Quand le flux arrive, attend 'duration' secondes (3 par defaut) avant de sortir du flux ; necessite un flux d'entree continu. Pin 'reset' (impulsion), 'useDtSim' (utilise dtSim au lieu de dtReal). Sorties : flow (apres l'attente) et impulsion 'impulse' une seule fois.",
+  "module": "Flowgraph node 'Wait' (logic category, behaviour duration+once). When the flow arrives, waits 'duration' seconds (3 by default) before outputting flow; requires a continuous input flow. Pin 'reset' (impulse), 'useDtSim' (uses dtSim instead of dtReal). Outputs: flow (after the wait) and impulse 'impulse' only once.",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
           "desc": "timer=0, running=false.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Remet timer et running a zero.",
+          "desc": "Resets timer and running to zero.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Migre l'ancien champ 'duration' vers le pin code en dur 'duration'.",
+          "desc": "Migrates the old field 'duration' to the hard-coded pin 'duration'.",
           "internal": true
         },
         "updateTimer": {
-          "desc": "Si en cours, ajoute dtSim ou dtReal au timer ; a la fin arrete et emet l'impulsion.",
+          "desc": "If running, adds dtSim or dtReal to the timer; at the end stops and emits the impulse.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Barre de progression et bouton Reset.",
+          "desc": "Progress bar and Reset button.",
           "internal": true
         },
         "work": {
-          "desc": "Gere flux/reset, appelle updateTimer ; flow = (timer >= duration) ET flux d'entree.",
+          "desc": "Handles flow/reset, calls updateTimer; flow = (timer >= duration) AND input flow.",
           "internal": true,
           "params": {
             "args": {
               "type": "any",
-              "desc": "non utilise"
+              "desc": "unused"
             }
           }
         }

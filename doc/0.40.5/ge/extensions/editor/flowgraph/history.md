@@ -1,22 +1,22 @@
 # `editor_flowgraph_history`
 
-*Fichier : `lua/ge/extensions/editor/flowgraph/history.lua` · VM : Game Engine (GE) · 90 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/flowgraph/history.lua` · VM: Game Engine (GE) · 90 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/flowgraph/history")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/flowgraph/history")` (file under extensions/ but not a regular extension)
 
-Fenêtre « History » (fg_history) de l'éditeur Flowgraph : boutons Undo/Redo et liste des actions (mgr.history) de la plus récente à la plus ancienne. L'entrée courante (mgr.currentHistoryIndex) est marquée « > », les entrées annulées sont grisées ; cliquer sur une entrée appelle mgr:goToHistory(index).
+"History" window (fg_history) of the Flowgraph editor: Undo/Redo buttons and list of actions (mgr.history) from most recent to oldest. The current entry (mgr.currentHistoryIndex) is marked "> ", undone entries are grayed out; clicking an entry calls mgr:goToHistory(index).
 
-## Classe `C`
+## Class `C`
 
-Classe de la fenêtre History (windowName = 'fg_history').
+History window class (windowName = 'fg_history').
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(data)` | Désérialisation (vide). | 85 |
-| `C:_onSerialize(data)` | Sérialisation (vide). | 81 |
-| `C:attach(mgr)` | Associe le manager flowgraph. | 12 |
-| `C:draw()` | Dessine la fenêtre si visible : Undo, Redo et tableau Idx/Action cliquable. | 20 |
-| `C:init()` | Enregistre la fenêtre éditeur. | 16 |
+| `C:_onDeserialized(data)` | Deserialization (empty). | 85 |
+| `C:_onSerialize(data)` | Serialization (empty). | 81 |
+| `C:attach(mgr)` | Associates the flowgraph manager. | 12 |
+| `C:draw()` | Draws the window if visible: Undo, Redo and clickable Idx/Action table. | 20 |
+| `C:init()` | Registers the editor window. | 16 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/flowgraph/history.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/flowgraph/history.lua`.*

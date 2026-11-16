@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/telemetry/configManager.test.lua",
+  "module": "Test unitaire de telemetry/configManager (extensions.testFramework_TestManager:runTestFiles(\"configManager\")).",
+  "functions": {
+    "testMissingTrackerConfigIsDisabledAndAllocationFree": {
+      "desc": "Vérifie qu'un tracker inconnu est désactivé par défaut et que getModuleConfig renvoie la même table à chaque appel (pas d'allocation).",
+      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

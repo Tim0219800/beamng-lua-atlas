@@ -1,48 +1,48 @@
 # `editor_dynamicDecals_layerTypes_brushStroke`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.lua` · VM : Game Engine (GE) · 609 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.lua` · VM: Game Engine (GE) · 609 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_layerTypes_brushStroke` : `extensions.load("editor_dynamicDecals_layerTypes_brushStroke")`, puis la globale `editor_dynamicDecals_layerTypes_brushStroke`
+**Access:** extension `editor_dynamicDecals_layerTypes_brushStroke`: `extensions.load("editor_dynamicDecals_layerTypes_brushStroke")`, then the global `editor_dynamicDecals_layerTypes_brushStroke`
 
-Type de calque « Brush Stroke » de l'outil Dynamic Decals : un coup de pinceau virtuel qui pose un decal à chaque frame pendant le déplacement et interpole des decals entre les frames. Il partage les propriétés d'un calque decal. Ce module fournit la section « Brush Stroke Properties » (nombre d'étapes d'interpolation, ordre 1070), la GUI d'inspecteur du type brushStroke (uid, nom, enabled, couleur, échelle, rotation, masque alpha, SDF, textures, dataPoints, etc.) et les pages de documentation (Brush Stroke Layers, Properties).
+"Brush Stroke" layer type of the Dynamic Decals tool: a virtual brush stroke that places a decal every frame during movement and interpolates decals between frames. It shares the properties of a decal layer. This module provides the "Brush Stroke Properties" section (number of interpolation steps, order 1070), the inspector GUI of the brushStroke type (uid, name, enabled, color, scale, rotation, alpha mask, SDF, textures, dataPoints, etc.) and the documentation pages (Brush Stroke Layers, Properties).
 
-## Remarques
+## Notes
 
-- Dans l'inspecteur, les points de données (dataPoints) sont dessinés dans le monde 3D avec debugDrawer:drawSphere et drawTextAdvanced (index du point), taille/couleur selon les préférences `dynamicDecalsTool.general.dataPointSphereSize` / `dataPointSphereColor`.
-- La page « Properties » liste api.properties["Brush Stroke Layer"] et un bouton « Highlight » ouvre la section « Decal Properties » et surligne le widget correspondant.
+- In the inspector, the data points (dataPoints) are drawn in the 3D world with debugDrawer:drawSphere and drawTextAdvanced (point index), size/color according to the preferences `dynamicDecalsTool.general.dataPointSphereSize` / `dataPointSphereColor`.
+- The "Properties" page lists api.properties["Brush Stroke Layer"] and a "Highlight" button opens the "Decal Properties" section and highlights the matching widget.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_layerTypes_brushStroke.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 544 |
-| `editor_dynamicDecals_layerTypes_brushStroke.registerEditorPreferences(prefsRegistry)` | Ne déclare aucune préférence (corps commenté). *(interne)* | 538 |
-| `editor_dynamicDecals_layerTypes_brushStroke.setup(tool_in)` | Appelé par l'outil : récupère les modules liés, enregistre la section « Brush Stroke Properties », la GUI d'inspecteur du type brushStroke et les pages de documentation. *(interne)* | 589 |
+| `editor_dynamicDecals_layerTypes_brushStroke.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 544 |
+| `editor_dynamicDecals_layerTypes_brushStroke.registerEditorPreferences(prefsRegistry)` | Declares no preference (body commented out). *(internal)* | 538 |
+| `editor_dynamicDecals_layerTypes_brushStroke.setup(tool_in)` | Called by the tool: gets the related modules, registers the "Brush Stroke Properties" section, the inspector GUI of the brushStroke type and the documentation pages. *(internal)* | 589 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_layerTypes_brushStroke.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_layerTypes_brushStroke.registerEditorPreferences(prefsRegistry)`
 
-Ne déclare aucune préférence (corps commenté).
+Declares no preference (body commented out).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_layerTypes_brushStroke.setup(tool_in)`
 
-Appelé par l'outil : récupère les modules liés, enregistre la section « Brush Stroke Properties », la GUI d'inspecteur du type brushStroke et les pages de documentation.
+Called by the tool: gets the related modules, registers the "Brush Stroke Properties" section, the inspector GUI of the brushStroke type and the documentation pages.
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.lua`.*

@@ -1,51 +1,51 @@
 # `editor_dynamicDecals_layerTypes_group`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/layerTypes/group.lua` · VM : Game Engine (GE) · 69 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/layerTypes/group.lua` · VM: Game Engine (GE) · 69 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_layerTypes_group` : `extensions.load("editor_dynamicDecals_layerTypes_group")`, puis la globale `editor_dynamicDecals_layerTypes_group`
+**Access:** extension `editor_dynamicDecals_layerTypes_group`: `extensions.load("editor_dynamicDecals_layerTypes_group")`, then the global `editor_dynamicDecals_layerTypes_group`
 
-Type de calque « Group » de l'outil Dynamic Decals : un calque conteneur qui regroupe d'autres calques ; le désactiver masque tous ses enfants. Ce module ajoute le bouton « Add group » dans la barre d'outils (api.addGroup), enregistre une GUI d'inspecteur vide pour ce type et la page de documentation « Layer Types / Group Layers ».
+"Group" layer type of the Dynamic Decals tool: a container layer that groups other layers; disabling it hides all its children. This module adds the "Add group" button to the toolbar (api.addGroup), registers an empty inspector GUI for this type and the "Layer Types / Group Layers" documentation page.
 
-## Remarques
+## Notes
 
-- inspectLayerGui et sectionGui (exporté sous le nom onGui) sont des fonctions vides : un groupe n'a pas de propriété propre dans l'inspecteur au-delà du nom et de enabled.
-- L'enregistrement de la section « Group Properties » est commenté.
+- inspectLayerGui and sectionGui (exported under the name onGui) are empty functions: a group has no property of its own in the inspector beyond name and enabled.
+- The registration of the "Group Properties" section is commented out.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_layerTypes_group.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 37 |
-| `editor_dynamicDecals_layerTypes_group.onGui(guiId)` | Fonction vide (section non utilisée). *(interne)* *(hook)* | 27 |
-| `editor_dynamicDecals_layerTypes_group.registerEditorPreferences(prefsRegistry)` | Ne déclare aucune préférence (corps commenté). *(interne)* | 31 |
-| `editor_dynamicDecals_layerTypes_group.setup(tool_in)` | Appelé par l'outil : enregistre la GUI d'inspecteur du type group, l'élément de barre d'outils « group » (ordre 30) et la page de documentation. *(interne)* | 52 |
+| `editor_dynamicDecals_layerTypes_group.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 37 |
+| `editor_dynamicDecals_layerTypes_group.onGui(guiId)` | Empty function (unused section). *(internal)* *(hook)* | 27 |
+| `editor_dynamicDecals_layerTypes_group.registerEditorPreferences(prefsRegistry)` | Declares no preference (body commented out). *(internal)* | 31 |
+| `editor_dynamicDecals_layerTypes_group.setup(tool_in)` | Called by the tool: registers the inspector GUI of the group type, the "group" toolbar item (order 30) and the documentation page. *(internal)* | 52 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_layerTypes_group.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_layerTypes_group.onGui(guiId)`
 
-Fonction vide (section non utilisée).
+Empty function (unused section).
 
-- `guiId` (*string*) : Suffixe d'identifiant ImGui (non utilisé).
+- `guiId` (*string*) : ImGui identifier suffix (unused).
 
 #### `editor_dynamicDecals_layerTypes_group.registerEditorPreferences(prefsRegistry)`
 
-Ne déclare aucune préférence (corps commenté).
+Declares no preference (body commented out).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_layerTypes_group.setup(tool_in)`
 
-Appelé par l'outil : enregistre la GUI d'inspecteur du type group, l'élément de barre d'outils « group » (ordre 30) et la page de documentation.
+Called by the tool: registers the inspector GUI of the group type, the "group" toolbar item (order 30) and the documentation page.
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/layerTypes/group.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/layerTypes/group.lua`.*

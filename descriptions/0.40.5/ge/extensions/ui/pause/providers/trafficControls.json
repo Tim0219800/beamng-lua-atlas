@@ -1,27 +1,48 @@
 {
   "path": "lua/ge/extensions/ui/pause/providers/trafficControls.lua",
-  "module": "Fournisseur de données du panneau « contrôles du trafic » du menu pause. Il compte les véhicules de trafic (en circulation, garés, police, actifs/inactifs) via gameplay_traffic, gameplay_parking et gameplay_police, calcule les quantités à faire apparaître d'après les réglages (trafficAmount, trafficExtraAmount, trafficParkingAmount, trafficParkedVehicles) et construit les boutons (démarrer, arrêter, supprimer, faire apparaître du trafic normal, de police ou des véhicules garés, activer/désactiver). Les boutons sont exécutés par executeTrafficControlAction.",
+  "module": "Data provider for the pause menu \"traffic controls\" panel. It counts traffic vehicles (driving, parked, police, active/inactive) via gameplay_traffic, gameplay_parking and gameplay_police, computes the quantities to spawn from the settings (trafficAmount, trafficExtraAmount, trafficParkingAmount, trafficParkedVehicles) and builds the buttons (start, stop, delete, spawn normal traffic, police or parked vehicles, enable/disable). The buttons are executed by executeTrafficControlAction.",
   "notes": [
-    "Les boutons sont créés une seule fois (buttonModule) puis clonés à chaque appel de getData, avec disabled et, pour les boutons d'apparition, spawnAmount {total, traffic, activeTraffic, extraTraffic, normalTraffic, police, parked}.",
-    "La quantité de police prévue vaut 25 % (arrondi supérieur) du trafic actif ; le trafic « actif » vaut trafficAmount, ou getMaxVehicleAmount(10) si le réglage vaut 0 (puis ajusté par gameplay_traffic.getIdealSpawnAmount).",
-    "Si les véhicules de police ne sont pas listés par gameplay_police, les véhicules de trafic dont le Config Type est « police » (ou dont le .pc contient « police ») sont comptés à la place.",
-    "Le trafic est considéré activé si au moins un véhicule existe et si l'état du trafic est « on » ou le parking actif.",
-    "Pendant la leçon « traffic » de la première conduite, l'état renvoyé est forcé à « off » tant qu'aucun véhicule de trafic ni garé n'existe.",
-    "Les libellés sont traduits avec _tr (ui.radialmenu2.traffic.*), sauf le bouton « toggleTraffic » dont le libellé « Traffic » est en dur."
+    "The buttons are created once (buttonModule) then cloned on each getData call, with disabled and, for the spawn buttons, spawnAmount {total, traffic, activeTraffic, extraTraffic, normalTraffic, police, parked}.",
+    "The planned police quantity is 25% (rounded up) of the active traffic; \"active\" traffic is trafficAmount, or getMaxVehicleAmount(10) if the setting is 0 (then adjusted by gameplay_traffic.getIdealSpawnAmount).",
+    "If police vehicles are not listed by gameplay_police, traffic vehicles whose Config Type is \"police\" (or whose .pc contains \"police\") are counted instead.",
+    "Traffic is considered enabled if at least one vehicle exists and the traffic state is \"on\" or parking is active.",
+    "During the \"traffic\" lesson of the first drive, the returned state is forced to \"off\" as long as no traffic or parked vehicle exists.",
+    "Labels are translated with _tr (ui.radialmenu2.traffic.*), except the \"toggleTraffic\" button whose \"Traffic\" label is hard-coded."
   ],
   "functions": {
     "getData": {
-      "desc": "Construit l'état du panneau de trafic : état du trafic, parking actif, enabled, canActivateExisting (plus d'un objet dans la scène), compteurs driving/parked/police/total ({total, active, inactive}) et boutons d'action (toggle, controls, spawn).",
-      "params": {"payload": {"type": "table|nil", "desc": "requestId est renvoyé tel quel ; editable == false désactive tous les boutons."}},
-      "returns": [{"type": "table", "desc": "{requestId, state, parkingActive, enabled, canActivateExisting, driving, parked, police, total, actions}."}]
+      "desc": "Builds the traffic panel state: traffic state, parking active, enabled, canActivateExisting (more than one object in the scene), driving/parked/police/total counters ({total, active, inactive}) and action buttons (toggle, controls, spawn).",
+      "params": {
+        "payload": {
+          "type": "table|nil",
+          "desc": "requestId is returned as is; editable == false disables all buttons."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{requestId, state, parkingActive, enabled, canActivateExisting, driving, parked, police, total, actions}."
+        }
+      ]
     },
     "executeTrafficControlAction": {
-      "desc": "Exécute l'action d'un bouton par son identifiant : démarrage, arrêt ou suppression du trafic, apparition de trafic normal, de police ou garé, ou bascule.",
+      "desc": "Executes a button's action by its identifier: start, stop or delete traffic, spawn normal, police or parked traffic, or toggle.",
       "params": {
-        "buttonId": {"type": "any", "desc": "Identifiant du bouton, fourni par getData."},
-        "payload": {"type": "any", "desc": "Données transmises au callback du bouton."}
+        "buttonId": {
+          "type": "any",
+          "desc": "Button identifier, provided by getData."
+        },
+        "payload": {
+          "type": "any",
+          "desc": "Data passed to the button's callback."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si buttonId est nil, sinon résultat du callback."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if buttonId is nil, otherwise the callback result."
+        }
+      ]
     }
   }
 }

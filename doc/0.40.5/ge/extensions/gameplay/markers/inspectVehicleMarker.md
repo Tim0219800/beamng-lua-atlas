@@ -1,61 +1,61 @@
 # `gameplay_markers_inspectVehicleMarker`
 
-*Fichier : `lua/ge/extensions/gameplay/markers/inspectVehicleMarker.lua` · VM : Game Engine (GE) · 274 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/markers/inspectVehicleMarker.lua` · VM: Game Engine (GE) · 274 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_markers_inspectVehicleMarker` : `extensions.load("gameplay_markers_inspectVehicleMarker")`, puis la globale `gameplay_markers_inspectVehicleMarker`
+**Access:** extension `gameplay_markers_inspectVehicleMarker`: `extensions.load("gameplay_markers_inspectVehicleMarker")`, then the global `gameplay_markers_inspectVehicleMarker`
 
-Marqueur « inspecter un véhicule » en mode jeu (par exemple un véhicule à examiner chez un vendeur) : une icône flottante (poi_parking_rect par défaut) reliée au sol par un trait, qui se lève au-dessus du véhicule du joueur quand il est dans le rayon. Dans la zone, le marqueur rend son POI interactif (data du POI). Une version « focus » reste visible de loin avec un petit rebond. Le module renvoie {create, cluster}.
+"Inspect a vehicle" marker in play mode (for example a vehicle to examine at a dealer): a floating icon (poi_parking_rect by default) linked to the ground by a line, which rises above the player's vehicle when it is within the radius. In the zone, the marker makes its POI interactive (the POI's data). A "focus" version stays visible from afar with a small bounce. The module returns {create, cluster}.
 
-## Remarques
+## Notes
 
-- cluster : un cluster par POI (pas de fusion), id 'inspectVehicleMarker#<poi.id>', data = poi.data ; lit poi.markerInfo.inspectVehicleMarker.{pos, radius, icon, focus} ; visibilityRadius = 0.
-- Distances : l'icône n'apparaît qu'à moins de 60 m (farDist) hors focus ; elle se lève à partir de 15 m (nearDist) ; en focus, la taille décroît de 1 à 0.65 entre 100 et 1000 m, l'opacité retombe à 0.35 sous 750 m si l'icône est cachée.
-- Si la caméra libre est active, les distances sont mesurées depuis la caméra, sinon depuis la position du joueur.
-- L'icône est masquée par les obstacles statiques entre la caméra et l'icône (castRayStatic).
-- isInAreaChanged vaut "in" ou "out" pendant une frame au changement d'état dedans/dehors.
-- Les constantes smallScaleDist/bigScaleDist/iconHeightBottom sont utilisées par update ; la fonction distanceToHeight appelle linearScale(dist, 15, 700, 1.0, 500).
+- cluster: one cluster per POI (no merging), id 'inspectVehicleMarker#<poi.id>', data = poi.data; reads poi.markerInfo.inspectVehicleMarker.{pos, radius, icon, focus}; visibilityRadius = 0.
+- Distances: the icon only appears within 60 m (farDist) when not in focus; it rises from 15 m (nearDist); in focus, the size decreases from 1 to 0.65 between 100 and 1000 m, the opacity drops to 0.35 below 750 m if the icon is hidden.
+- If the free camera is active, distances are measured from the camera, otherwise from the player's position.
+- The icon is hidden by static obstacles between the camera and the icon (castRayStatic).
+- isInAreaChanged is "in" or "out" for one frame when the inside/outside state changes.
+- The constants smallScaleDist/bigScaleDist/iconHeightBottom are used by update; the function distanceToHeight calls linearScale(dist, 15, 700, 1.0, 500).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_markers_inspectVehicleMarker.cluster(pois, allClusters)` | Transforme chaque POI inspectVehicleMarker en un cluster distinct et l'ajoute à allClusters. *(interne)* | 248 |
-| `gameplay_markers_inspectVehicleMarker.create(...)` | Fabrique un marqueur d'inspection de véhicule (instance de C). | 239 |
+| `gameplay_markers_inspectVehicleMarker.cluster(pois, allClusters)` | Turns each inspectVehicleMarker POI into a distinct cluster and adds it to allClusters. *(internal)* | 248 |
+| `gameplay_markers_inspectVehicleMarker.create(...)` | Builds a vehicle inspection marker (instance of C). | 239 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_markers_inspectVehicleMarker.cluster(pois, allClusters)`
 
-Transforme chaque POI inspectVehicleMarker en un cluster distinct et l'ajoute à allClusters.
+Turns each inspectVehicleMarker POI into a distinct cluster and adds it to allClusters.
 
-- `pois` (*table[]*) : POI avec markerInfo.inspectVehicleMarker.
-- `allClusters` (*table[]*) : Liste de clusters complétée en place.
+- `pois` (*table[]*) : POIs with markerInfo.inspectVehicleMarker.
+- `allClusters` (*table[]*) : List of clusters completed in place.
 
 #### `gameplay_markers_inspectVehicleMarker.create(...)`
 
-Fabrique un marqueur d'inspection de véhicule (instance de C).
+Builds a vehicle inspection marker (instance of C).
 
-- `...` (*any*) : Arguments transmis à C:init (non utilisés).
-- **renvoie** : table Instance de marqueur.
+- `...` (*any*) : Arguments passed to C:init (unused).
+- **returns**: table Marker instance.
 
-## Classe `C`
+## Class `C`
 
-Marqueur d'inspection de véhicule avec icône animée.
+Vehicle inspection marker with animated icon.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearObjects()` | Retire l'icône de l'icon renderer. | 42 |
-| `C:createObjects()` | Nettoie les objets existants (n'en crée pas). | 38 |
-| `C:hide()` | Passe invisible et met l'opacité de l'icône à 0. | 52 |
-| `C:init()` | Attribue un id et crée les lisseurs (position, croisière, opacité, distance) ; visible = true. | 26 |
-| `C:interactInPlayMode(interactData, interactableElements)` | Si canInteract et que le joueur est dans la zone, ajoute cluster.data aux éléments interactifs. | 231 |
-| `C:setup(cluster)` | Mémorise cluster, pos, radius, focus, réinitialise les lisseurs et crée l'icône d'opacité initiale 0. | 202 |
-| `C:show()` | Repasse visible. | 63 |
-| `C:update(data)` | Chaque frame : calcule la distance, anime la hauteur de l'icône (au-dessus du véhicule du joueur s'il est dedans), gère la perspective en mode focus, ajuste taille et opacité, dessine le trait vers le sol (debugDrawer) et met à jour _inside et isInAreaChanged. | 86 |
+| `C:clearObjects()` | Removes the icon from the icon renderer. | 42 |
+| `C:createObjects()` | Cleans up existing objects (does not create any). | 38 |
+| `C:hide()` | Becomes invisible and sets the icon opacity to 0. | 52 |
+| `C:init()` | Assigns an id and creates the smoothers (position, cruising, opacity, distance); visible = true. | 26 |
+| `C:interactInPlayMode(interactData, interactableElements)` | If canInteract and the player is in the zone, adds cluster.data to the interactive elements. | 231 |
+| `C:setup(cluster)` | Stores cluster, pos, radius, focus, resets the smoothers and creates the icon with initial opacity 0. | 202 |
+| `C:show()` | Becomes visible again. | 63 |
+| `C:update(data)` | Every frame: computes the distance, animates the icon's height (above the player's vehicle if it is inside), handles perspective in focus mode, adjusts size and opacity, draws the line to the ground (debugDrawer) and updates _inside and isInAreaChanged. | 86 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawLineInstance`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/markers/inspectVehicleMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/markers/inspectVehicleMarker.lua`.*

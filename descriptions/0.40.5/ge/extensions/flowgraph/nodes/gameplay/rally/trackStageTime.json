@@ -1,13 +1,33 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackStageTime.lua",
-  "module": "Nœud flowgraph « Rally Track Stage Time » (catégorie repeat, icône timer, tag rally). À chaque frame, émet le hook onRallyDataUpdated avec {activeState = stageActive} pour signaler au système rally que la spéciale est active. Recopie flow en sortie.",
-  "notes": ["Malgré son nom, le nœud ne mesure aucun temps : stageTime = os.clockhp() est calculé mais jamais utilisé."],
+  "module": "Flowgraph node \"Rally Track Stage Time\" (category repeat, timer icon, tag rally). Every frame, emits the onRallyDataUpdated hook with {activeState = stageActive} to signal to the rally system that the stage is active. Copies flow to the output.",
+  "notes": [
+    "Despite its name, the node measures no time: stageTime = os.clockhp() is computed but never used."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Vide.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
-        "work": {"desc": "Émet onRallyDataUpdated (stageActive) et recopie le flux.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+        "init": {
+          "desc": "Empty.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager."
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Emits onRallyDataUpdated (stageActive) and copies the flow.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph engine arguments (unused)."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

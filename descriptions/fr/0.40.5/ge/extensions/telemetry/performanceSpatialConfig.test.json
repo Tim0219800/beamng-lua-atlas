@@ -1,0 +1,83 @@
+{
+  "path": "lua/ge/extensions/telemetry/performanceSpatialConfig.test.lua",
+  "module": "Tests unitaires de telemetry/performanceSpatialConfig (runTestFiles(\"performanceSpatialConfig\")).",
+  "functions": {
+    "testAdvancedCollectionDefaultsOff": {
+      "desc": "Vérifie qu'avec une config vide, intervalle 0 et tous les suivis avancés sont désactivés.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testRecoveryTrackingIsExplicit": {
+      "desc": "Vérifie que recoveryTrackingEnabled doit être mis à true explicitement.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testGameplayExitTrackingIsExplicit": {
+      "desc": "Vérifie que gameplayExitTrackingEnabled doit être mis à true explicitement.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testShaderGenerationTrackingIsExplicit": {
+      "desc": "Vérifie que shaderGenerationTrackingEnabled doit être mis à true explicitement.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testDetailedMetricsAreExplicit": {
+      "desc": "Vérifie que sceneComplexityTrackingEnabled et renderTimingTrackingEnabled doivent être activés explicitement.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testLevelFilterBecomesLookup": {
+      "desc": "Vérifie que la liste levels devient une table de recherche nom -> true.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testDipSettingsAreClamped": {
+      "desc": "Vérifie que les seuils de chute hors limites sont ramenés dans leurs bornes.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

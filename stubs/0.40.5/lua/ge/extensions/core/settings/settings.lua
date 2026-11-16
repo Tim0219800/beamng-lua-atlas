@@ -2,102 +2,102 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/settings/settings.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension centrale des réglages du jeu côté GE. Elle tient la table des valeurs courantes (initialisée depuis les valeurs par défaut du module common settings), applique chaque changement via des « option helpers » (setters Lua ou propagation vers CppSettings), enregistre sur disque avec un délai (local, cloud, persona), notifie l'UI (guihooks SettingsChanged) et les extensions (hook onSettingsChanged), gère les langues, et charge ou décharge des extensions selon certains réglages (ui_extApp, core_couplerCameraModifier, mcp_server, workbench_webSocketHandler). C'est le point d'entrée pour lire ou modifier un réglage depuis un mod.
---- Accès : extension `core_settings_settings` : `extensions.load("core_settings_settings")`, puis la globale `core_settings_settings`
+--- Central extension for the game settings on the GE side. It keeps the table of current values (initialized from the default values of the common settings module), applies each change through "option helpers" (Lua setters or propagation to CppSettings), saves to disk with a delay (local, cloud, persona), notifies the UI (guihooks SettingsChanged) and the extensions (onSettingsChanged hook), manages languages, and loads or unloads extensions depending on certain settings (ui_extApp, core_couplerCameraModifier, mcp_server, workbench_webSocketHandler). It is the entry point for reading or changing a setting from a mod.
+--- Access: extension `core_settings_settings`: `extensions.load("core_settings_settings")`, then the global `core_settings_settings`
 ---@class core_settings_settings
----@field impl table Module common 'settings' : valeurs par défaut (defaultValues, defaults), chemins de fichiers, cache et valeurs par persona (getPersonaValue, invalidateCache…).
----@field settingsTick function Hook de boucle appelé par le moteur à chaque image (dtReal, dtSim, dtRaw). Vaut nop au repos ; requestSave y met une fonction qui décompte 0.5 s puis sauvegarde.
+---@field impl table Common module 'settings': default values (defaultValues, defaults), file paths, cache and per-persona values (getPersonaValue, invalidateCache...).
+---@field settingsTick function Loop hook called by the engine every frame (dtReal, dtSim, dtRaw). Is nop at rest; requestSave puts a function there that counts down 0.5 s then saves.
 core_settings_settings = {}
 
---- Appelé à la fermeture : sauvegarde immédiatement et supprime le fichier des valeurs persona.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/settings/settings.lua:579
+--- Called on shutdown: saves immediately and deletes the persona values file.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/settings/settings.lua:579
 function core_settings_settings.exit() end
 
---- Fin d'initialisation appelée par le moteur : load(true), onFirstUpdateSettings des modules graphic et audio, chargement des réglages de plateforme (PlatformSwitches.settingsJsonPath, déprécié), autorise les sauvegardes, charge telemetry_core.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/settings/settings.lua:539
+--- End of initialization called by the engine: load(true), onFirstUpdateSettings of the graphic and audio modules, loading of platform settings (PlatformSwitches.settingsJsonPath, deprecated), allows saves, loads telemetry_core.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/settings/settings.lua:539
 function core_settings_settings.finalizeInit() end
 
---- Lit la valeur courante d'un réglage, ou defaultValue si nil. Avec multiseat actif, la valeur peut être surchargée par le persona.
----Source : lua/ge/extensions/core/settings/settings.lua:416
----@param key string Nom du réglage.
----@param defaultValue any Valeur de repli si le réglage est nil.
----@param persona string|table|nil Persona (ignoré si multiseat n'est pas actif).
----@return any  Valeur du réglage.
+--- Reads a setting's current value, or defaultValue if nil. With multiseat active, the value can be overridden by the persona.
+---Source: lua/ge/extensions/core/settings/settings.lua:416
+---@param key string Setting name.
+---@param defaultValue any Fallback value if the setting is nil.
+---@param persona string|table|nil Persona (ignored if multiseat is not active).
+---@return any  Setting value.
 function core_settings_settings.getValue(key, defaultValue, persona) end
 
---- Renvoie une copie profonde de toutes les valeurs courantes.
----Source : lua/ge/extensions/core/settings/settings.lua:575
----@return table<string, any>  Copie des réglages.
+--- Returns a deep copy of all current values.
+---Source: lua/ge/extensions/core/settings/settings.lua:575
+---@return table<string, any>  Copy of the settings.
 function core_settings_settings.getValuesCopy() end
 
---- Initialisation : construit les dictionnaires clés/valeurs des options, charge core_settings_graphic, core_settings_audio et core_settings_multiplayer et fusionne leurs buildOptionHelpers, ajoute un setter propageant vers CppSettings pour chaque réglage connu du C++ (type vérifié), puis lit le fichier de réglages et appelle core_settings_graphic.onInitSettings.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/settings/settings.lua:479
----@param reason string|nil Raison de l'init ; 'reload' pour un rechargement de Lua (sinon les valeurs persona sont effacées).
+--- Initialization: builds the key/value dictionaries of the options, loads core_settings_graphic, core_settings_audio and core_settings_multiplayer and merges their buildOptionHelpers, adds a setter propagating to CppSettings for each setting known to the C++ (type checked), then reads the settings file and calls core_settings_graphic.onInitSettings.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/settings/settings.lua:479
+---@param reason string|nil Reason for the init; 'reload' for a Lua reload (otherwise the persona values are cleared).
 function core_settings_settings.initSettings(reason) end
 
---- Recharge les réglages depuis les fichiers : monte translations.zip si présent, fusionne les valeurs lues avec les courantes, applique via setState puis core_settings_graphic.load. Journalise la dernière erreur CppSettings si elle existe. Pendant ce temps, les sauvegardes sont bloquées.
----Source : lua/ge/extensions/core/settings/settings.lua:454
----@param ignoreCache boolean|nil Force l'application de toutes les valeurs.
+--- Reloads the settings from the files: mounts translations.zip if present, merges the values read with the current ones, applies via setState then core_settings_graphic.load. Logs the last CppSettings error if there is one. Meanwhile, saves are blocked.
+---Source: lua/ge/extensions/core/settings/settings.lua:454
+---@param ignoreCache boolean|nil Forces the application of all values.
 function core_settings_settings.load(ignoreCache) end
 
---- Charge un JSON de réglages spécifiques à la plateforme et les applique avec setState. Journalise une erreur si le fichier est illisible.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/settings/settings.lua:527
----@param platformSettingsPath string|nil Chemin du JSON ; ignoré si nil ou vide.
+--- Loads a JSON of platform-specific settings and applies them with setState. Logs an error if the file is unreadable.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/settings/settings.lua:527
+---@param platformSettingsPath string|nil Path of the JSON; ignored if nil or empty.
 function core_settings_settings.loadPlatformSettings(platformSettingsPath) end
 
---- Envoie à l'UI l'évènement guihooks 'SettingsChanged' avec {values, options}.
----Source : lua/ge/extensions/core/settings/settings.lua:57
+--- Sends the guihooks event 'SettingsChanged' with {values, options} to the UI.
+---Source: lua/ge/extensions/core/settings/settings.lua:57
 function core_settings_settings.notifyUI() end
 
---- Hook de surveillance de fichiers : si les fichiers de réglages local ou cloud ont changé de l'extérieur (et plus de 5 s après la dernière sauvegarde), recharge via load(false).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/settings/settings.lua:558
----@param files table[] Liste d'entrées avec un champ filename.
+--- File watching hook: if the local or cloud settings files changed externally (and more than 5 s after the last save), reloads via load(false).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/settings/settings.lua:558
+---@param files table[] List of entries with a filename field.
 function core_settings_settings.onFilesChanged(files) end
 
---- Hook premier update. Si communityTranslations vaut 'enable' et que le jeu a été mis à jour depuis une version 0.x avec x < 39, appelle updateTranslations() (défini dans ge/main.lua).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/settings/settings.lua:589
+--- First-update hook. If communityTranslations is 'enable' and the game was updated from a 0.x version with x < 39, calls updateTranslations() (defined in ge/main.lua).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/settings/settings.lua:589
 function core_settings_settings.onFirstUpdate() end
 
---- Recopie dans la table des valeurs le résultat des get() des options (si withValue) et recalcule les modes (getModes) des options qui en ont. Nom hérité de TorqueScript.
----Source : lua/ge/extensions/core/settings/settings.lua:116
----@param withValue boolean Si vrai, relit aussi les valeurs via get().
+--- Copies the result of the options' get() into the values table (if withValue) and recomputes the modes (getModes) of the options that have them. Name inherited from TorqueScript.
+---Source: lua/ge/extensions/core/settings/settings.lua:116
+---@param withValue boolean If true, also rereads the values via get().
 function core_settings_settings.refreshTSState(withValue) end
 
---- Programme une sauvegarde différée des réglages (0.5 s) via settingsTick.
----Source : lua/ge/extensions/core/settings/settings.lua:317
+--- Schedules a deferred save of the settings (0.5 s) via settingsTick.
+---Source: lua/ge/extensions/core/settings/settings.lua:317
 function core_settings_settings.requestSave() end
 
---- Alias de notifyUI (rétrocompatibilité).
----Source : lua/ge/extensions/core/settings/settings.lua:57
+--- Alias of notifyUI (backward compatibility).
+---Source: lua/ge/extensions/core/settings/settings.lua:57
 function core_settings_settings.requestState() end
 
---- Remet un réglage à sa valeur par défaut (M.impl.defaultValues) via setValue, si une valeur par défaut existe.
----Source : lua/ge/extensions/core/settings/settings.lua:410
----@param key string Nom du réglage.
+--- Resets a setting to its default value (M.impl.defaultValues) via setValue, if a default value exists.
+---Source: lua/ge/extensions/core/settings/settings.lua:410
+---@param key string Setting name.
 function core_settings_settings.resetSettingToDefault(key) end
 
---- Alias de requestSave : sauvegarde différée, pas immédiate.
----Source : lua/ge/extensions/core/settings/settings.lua:317
+--- Alias of requestSave: deferred save, not immediate.
+---Source: lua/ge/extensions/core/settings/settings.lua:317
 function core_settings_settings.save() end
 
---- Applique une table de réglages : groupes de qualité graphique d'abord, puis le reste par ordre alphabétique, via setValue. Si quelque chose a changé (ou ignoreCache), relit l'état, sauvegarde, et réconcilie les extensions dépendantes (ui_extApp selon externalUI2, core_couplerCameraModifier selon couplerCameraModifier, mcp_server selon enableMcp, workbench_webSocketHandler selon workbenchMobile) puis les langues. Les clés non string sont ignorées avec un avertissement.
----Source : lua/ge/extensions/core/settings/settings.lua:212
----@param newState table<string, any>|nil Réglages à appliquer ; nil = rien.
----@param ignoreCache boolean|nil Si vrai, applique même les valeurs inchangées.
+--- Applies a table of settings: graphics quality groups first, then the rest in alphabetical order, via setValue. If something changed (or ignoreCache), rereads the state, saves, and reconciles the dependent extensions (ui_extApp according to externalUI2, core_couplerCameraModifier according to couplerCameraModifier, mcp_server according to enableMcp, workbench_webSocketHandler according to workbenchMobile) then the languages. Non-string keys are ignored with a warning.
+---Source: lua/ge/extensions/core/settings/settings.lua:212
+---@param newState table<string, any>|nil Settings to apply; nil = nothing.
+---@param ignoreCache boolean|nil If true, applies even unchanged values.
 function core_settings_settings.setState(newState, ignoreCache) end
 
---- Change un réglage : met à jour la valeur, appelle le setter de l'option, et programme la sauvegarde. Avec un persona (et multiseat actif) et une clé spécifique aux personas, écrit dans le fichier persona au lieu des réglages globaux.
----Source : lua/ge/extensions/core/settings/settings.lua:357
----@param key string Nom du réglage.
----@param value any Nouvelle valeur.
----@param ignoreCache boolean|nil Applique même si la valeur est identique. Si une valeur non booléenne est passée ici sans persona, elle est interprétée comme persona.
----@param persona string|table|nil Identifiant de persona, ou table avec un champ id.
----@return boolean|nil  true si l'état a changé ; false si rien ou persona invalide ; nil si appel récursif sur la même clé.
+--- Changes a setting: updates the value, calls the option's setter, and schedules the save. With a persona (and multiseat active) and a persona-specific key, writes to the persona file instead of the global settings.
+---Source: lua/ge/extensions/core/settings/settings.lua:357
+---@param key string Setting name.
+---@param value any New value.
+---@param ignoreCache boolean|nil Applies even if the value is identical. If a non-boolean value is passed here without a persona, it is interpreted as the persona.
+---@param persona string|table|nil Persona identifier, or table with an id field.
+---@return boolean|nil  true if the state changed; false if nothing or invalid persona; nil if recursive call on the same key.
 function core_settings_settings.setValue(key, value, ignoreCache, persona) end
 

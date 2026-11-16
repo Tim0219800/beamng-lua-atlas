@@ -1,66 +1,66 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/states/transition.lua",
-  "module": "Noeud « Transition » du stategraph. Termine l'état courant et passe à un nouvel état : au flow, collecte la valeur de tous ses pins d'entrée personnalisés (hors 'flow') et appelle self.mgr.states:transition(stateId, transitionName, data, self). transitionName vaut 'success' par défaut et se choisit parmi les transitions du noeud état. Les données sont lisibles dans l'état suivant avec le noeud « Get Transition Variables ».",
+  "module": "Stategraph node \"Transition\". Ends the current state and moves to a new state: on flow, collects the value of all its custom input pins (except 'flow') and calls self.mgr.states:transition(stateId, transitionName, data, self). transitionName is 'success' by default and is chosen among the transitions of the state node. The data can be read in the next state with the \"Get Transition Variables\" node.",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
           "desc": "savePins = true, allowCustomInPins = true, transitionName = 'success'.",
           "internal": true
         },
         "makePinTemplates": {
-          "desc": "Construit les modèles de pins (nom/type) à partir des autres noeuds transition et transitionStack du projet.",
+          "desc": "Builds the pin templates (name/type) from the other transition and transitionStack nodes of the project.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Liste déroulante « Transition Name » basée sur le noeud état parent.",
+          "desc": "\"Transition Name\" dropdown based on the parent state node.",
           "internal": true
         },
         "hideProperties": {
-          "desc": "Libère le cache de modèles de pins.",
+          "desc": "Frees the pin template cache.",
           "internal": true
         },
         "work": {
-          "desc": "Si flow, déclenche la transition avec les données des pins (nil s'il n'y en a pas).",
+          "desc": "If flow, triggers the transition with the pins' data (nil if there are none).",
           "internal": false
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "desc": "Draws the central content of the node in the editor.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde transitionName.",
+          "desc": "Saves transitionName.",
           "params": {
             "res": {
               "type": "any",
-              "desc": "table de sauvegarde"
+              "desc": "save table"
             }
           },
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure transitionName ('success' par défaut).",
+          "desc": "Restores transitionName ('success' by default).",
           "params": {
             "data": {
               "type": "any",
-              "desc": "données sauvegardées"
+              "desc": "saved data"
             }
           },
           "internal": true
         },
         "customContextMenu": {
-          "desc": "Ajoute au menu contextuel « Go to target... » listant les graphes cibles de cette transition.",
+          "desc": "Adds to the context menu \"Go to target...\" listing the target graphs of this transition.",
           "internal": true
         }
       }

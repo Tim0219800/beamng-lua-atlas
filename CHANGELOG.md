@@ -1,6 +1,17 @@
 # Changelog
 
-## Unreleased (0.40.5, next release)
+## 0.40.5-3 (2026-11-16)
+
+English becomes the main language of the atlas; French stays available as the secondary language.
+
+- All 2507 module descriptions translated into English (`descriptions/0.40.5/`); the French originals moved to `descriptions/fr/0.40.5/`.
+- Documentation generated in both languages: English in `doc/0.40.5/` (site root), French in `doc/fr/0.40.5/` (site section "Français").
+- Stubs: English comments in `stubs/0.40.5/` and `stubs-0.40.5.zip`; French comments in the new release asset `stubs-0.40.5-fr.zip`.
+- `generer.py` takes `--lang en|fr` (default `en`); every fixed label of the pages and stubs is translated.
+- `comparer.py` writes the changes page in both languages; `reporter_descriptions.py` carries both description trees over.
+- New English guides: `NEW_VERSION.md`, `DESCRIPTION_GUIDELINES.md` (French versions kept: `NOUVELLE_VERSION.md`, `CONSIGNES_DESCRIPTIONS.md`).
+
+## 0.40.5-2 (2026-11-13)
 
 - Written descriptions (French) now cover all 2507 modules (was 560): every GE, common, vehicle and console file, including the flowgraph nodes, the editor tools, career, gameplay, UI router and bundled third-party libraries.
 - New tools: `comparer.py` (API diff between versions, generates `changements.md`), `reporter_descriptions.py` (carries descriptions over, flags changed signatures),

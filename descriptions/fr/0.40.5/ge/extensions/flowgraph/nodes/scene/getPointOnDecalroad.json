@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/getPointOnDecalroad.lua",
+  "module": "Noeud flowgraph « Get Point on Decalroad » (repeat_instant). Donne la position d'un point de controle d'une DecalRoad (roadId, idx) et une approximation de sa direction (quat). Si la route est en boucle ('looped'), les voisins du premier/dernier point bouclent ; sinon ils sont clampes. Le calcul n'est refait que si roadId ou idx change.",
+  "notes": [
+    "idx est base 0, borne a [0, getNodeCount()-1] ; hors bornes le noeud ne fait rien.",
+    "La direction est calculee comme position(precedent) - position(suivant) : verifier le sens si la rotation semble inversee. Le code la dit approximative."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Rien a initialiser.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Reinitialise le cache (oldRoadId, oldIdx, roadObj) et vide les pins de sortie.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Cherche la route, calcule pos ({x,y,z} du noeud idx) et rot (quatFromDir de la direction suivant->precedent, vecteur haut Z).",
+          "internal": false
+        }
+      }
+    }
+  }
+}

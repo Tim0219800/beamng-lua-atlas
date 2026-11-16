@@ -1,12 +1,23 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlData.lua",
-  "module": "Nœud flowgraph « Get Crawl Data » (catégorie repeat_instant, crawl). Lit les données d'exécution du crawl actif via le bridge. Sorties : onCompleted, onDisqualified, onCheckpointReached (flux sur front), isCompleted, disqualified, crawlerPosition (vec3), crawlerDirection (quat, lacet seul), vehicleId, hasRecoveryCheckpoint, recoveryPosition, recoveryRotation. Sans crawl actif : erreur de nœud et valeurs nulles par défaut ({0,0,0}, {0,0,0,1}).",
+  "module": "Flowgraph node \"Get Crawl Data\" (category repeat_instant, crawl). Reads the runtime data of the active crawl via the bridge. Outputs: onCompleted, onDisqualified, onCheckpointReached (flow on edge), isCompleted, disqualified, crawlerPosition (vec3), crawlerDirection (quat, yaw only), vehicleId, hasRecoveryCheckpoint, recoveryPosition, recoveryRotation. Without an active crawl: node error and null default values ({0,0,0}, {0,0,0,1}).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Charge le bridge et initialise les derniers états (complété, disqualifié, index de checkpoint).", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "work": {"desc": "Appelle bridge.getCrawlRuntimeData et getLastRecoveryCheckpoint, détecte les changements d'état et renseigne les pins."}
+        "init": {
+          "desc": "Loads the bridge and initializes the last states (completed, disqualified, checkpoint index).",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Calls bridge.getCrawlRuntimeData and getLastRecoveryCheckpoint, detects state changes and fills the pins."
+        }
       }
     }
   }

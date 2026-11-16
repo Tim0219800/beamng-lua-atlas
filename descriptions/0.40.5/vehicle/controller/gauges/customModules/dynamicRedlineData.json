@@ -1,9 +1,9 @@
 {
   "path": "lua/vehicle/controller/gauges/customModules/dynamicRedlineData.lua",
-  "module": "Module de données pour genericGauges : calcule une zone rouge/jaune de compte-tours qui dépend de la température d'huile (moteur froid = régime max réduit) et un voyant de changement de rapport. Les valeurs sont converties en une échelle de sortie entière (ex. nombre de segments d'une barre de LED).",
+  "module": "Data module for genericGauges: computes a red/yellow tachometer zone that depends on the oil temperature (cold engine = reduced max RPM) and a shift light. The values are converted to an integer output scale (e.g. number of segments of an LED bar).",
   "notes": [
-    "Clés jbeam du module (défaut) : minOutput (0), maxOutput (20), minOutputRPM (0), maxOutputRPM (10000), minOilTemp (50, °C), maxOilTemp (90), yellowOutputOffset (-2), coldOilRPMCoef (0.5).",
-    "Régime rouge ajusté = maxrpm * interpolation linéaire du coefficient entre coldOilRPMCoef (huile froide) et 1 (huile chaude). shiftLight vrai à partir de 95 % de ce régime, sauf au dernier rapport (gearIndex >= maxGearIndex)."
+    "Module jbeam keys (default): minOutput (0), maxOutput (20), minOutputRPM (0), maxOutputRPM (10000), minOilTemp (50, °C), maxOilTemp (90), yellowOutputOffset (-2), coldOilRPMCoef (0.5).",
+    "Adjusted red RPM = maxrpm * linear interpolation of the coefficient between coldOilRPMCoef (cold oil) and 1 (hot oil). shiftLight is true from 95% of this RPM, except in the last gear (gearIndex >= maxGearIndex)."
   ],
   "fields": {
     "type": {
@@ -13,54 +13,54 @@
   },
   "functions": {
     "init": {
-      "desc": "Lit les paramètres jbeam de l'échelle de sortie et de la température d'huile.",
+      "desc": "Reads the jbeam parameters of the output scale and the oil temperature.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Réinitialise l'état interne du module.",
+      "desc": "Resets the module's internal state.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Ne fait rien (la mise à jour se fait par updateGaugeData).",
+      "desc": "Does nothing (the update is done by updateGaugeData).",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "setupGaugeData": {
-      "desc": "Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : aucune propriété n'est lue ; produit toujours yellow, red (entiers) et shiftLight (booléen).",
+      "desc": "Called by genericGauges with the properties requested in displayData.customModules: no property is read; always produces yellow, red (integers) and shiftLight (boolean).",
       "params": {
         "properties": {
           "type": "table<string, boolean>",
-          "desc": "Ensemble des propriétés demandées (clé = nom, valeur = true)."
+          "desc": "Set of requested properties (key = name, value = true)."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGaugeData": {
-      "desc": "Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées.",
+      "desc": "Called by genericGauges before each send: fills moduleData with the requested values.",
       "params": {
         "moduleData": {
           "type": "table",
-          "desc": "Table de données du module, envoyée ensuite à la page HTML."
+          "desc": "Module data table, then sent to the HTML page."
         },
         "dt": {
           "type": "number",
-          "desc": "Temps écoulé depuis le dernier envoi (s)."
+          "desc": "Time elapsed since the last send (s)."
         }
       },
       "returns": [],

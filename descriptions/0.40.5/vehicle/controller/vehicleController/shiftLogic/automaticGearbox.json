@@ -1,64 +1,255 @@
 {
   "path": "lua/vehicle/controller/vehicleController/shiftLogic/automaticGearbox.lua",
-  "module": "Logique de boîte automatique (modes P R N D S 1-9 M, convertisseur de couple avec verrouillage partiel). Chargé par vehicleController quand le device « gearbox » est de type automaticGearbox. Selon le mode de boîte (arcade ou realistic), il décide du rapport cible à partir des points de passage (agressivité, patinage), gère les gaz/frein (inversion automatique en marche arrière en arcade, frein auto à l'arrêt) et le verrouillage du convertisseur (electrics.values.lockupClutchRatio).",
-  "usage": "-- depuis un autre contrôleur ou la console du véhicule\ncontroller.mainController.shiftToGearIndex(0) -- délégué à ce module\n-- jbeam : \"automaticModes\":\"PRNDS21M\", \"torqueConverterLockupRPM\":1800",
+  "module": "Automatic gearbox logic (modes P R N D S 1-9 M, torque converter with partial lockup). Loaded by vehicleController when the \"gearbox\" device is of type automaticGearbox. Depending on the gearbox mode (arcade or realistic), it decides the target gear from the shift points (aggression, slip), handles throttle/brake (automatic inversion in reverse in arcade, auto brake at standstill) and converter lockup (electrics.values.lockupClutchRatio).",
+  "usage": "-- from another controller or the vehicle console\ncontroller.mainController.shiftToGearIndex(0) -- delegated to this module\n-- jbeam: \"automaticModes\":\"PRNDS21M\", \"torqueConverterLockupRPM\":1800",
   "notes": [
-    "Clés jbeam lues dans init : automaticModes (défaut \"PRNDS21M\"; lettres P R N D S 1-9 M, « M » est remplacé par M1..Mn selon maxGearIndex), hShifterModePositions (table mode -> index de levier ; défaut {[-1]=R,[0]=N,P,D,S,2,1,M1}), defaultAutomaticMode (N), defaultAutomaticForwardMode (premier mode avant, sinon D), maxGearChangeTime / minGearChangeTime / sportGearChangeTime (0), autoDownShiftInM (true), autoDownShiftInMMinGear (2), throttleCoefWhileShifting (1), torqueConverterLockupRPM, torqueConverterLockupRange, torqueConverterLockupMinGear (0), torqueConverterHasPartialLockup (true), torqueConverterMinPartialLockupRatio ou torqueConverterLockupRatioWhileShifting (0.67), partialLockupTipInThreshold (0.85), partialLockupTipInGain (1.5), torqueConverterLockupRate (5), torqueConverterLockupInRate (2x rate), torqueConverterLockupOutRate (rate).",
-    "Le verrouillage du convertisseur n'est actif que si torqueConverterLockupRPM > 0 et si un device « torqueConverter » existe.",
-    "Contrat commun des modules shiftLogic : gearboxHandling, timer, timerConstants, inputValues, shiftPreventionData, shiftBehavior, smoothedValues sont injectés par vehicleController (nil jusqu'à l'injection).",
-    "updateGearboxGFX est nop à la création puis remplacé dans gearboxBehaviorChanged par la fonction « inGear » du mode de boîte courant, et temporairement par « whileShifting » pendant un changement de rapport.",
-    "En mode arcade, shiftUp/shiftDown affichent seulement un avertissement (warnCannotShiftSequential) et shiftToGearIndex bascule en realistic.",
-    "Incohérence : init met M.minGearIndex = abs(minGearIndex) alors que updateExposedData (chaque frame) le remplace par gearbox.minGearIndex (signé).",
-    "M.running et M.isShifting sont écrits par updateExposedData sans être déclarés initialement.",
-    "applyGearboxModeRestrictions peut stocker des chaînes (index de mode M extrait de la chaîne) dans maxGearIndex/minGearIndex, comparées ensuite avec des nombres : Lua convertit les chaînes numériques pour les comparaisons arithmétiques mais pas pour < / > entre chaîne et nombre (risque d'erreur) ; seulement déduit du code."
+    "jbeam keys read in init: automaticModes (default \"PRNDS21M\"; letters P R N D S 1-9 M, \"M\" is replaced by M1..Mn depending on maxGearIndex), hShifterModePositions (table mode -> lever index; default {[-1]=R,[0]=N,P,D,S,2,1,M1}), defaultAutomaticMode (N), defaultAutomaticForwardMode (first forward mode, otherwise D), maxGearChangeTime / minGearChangeTime / sportGearChangeTime (0), autoDownShiftInM (true), autoDownShiftInMMinGear (2), throttleCoefWhileShifting (1), torqueConverterLockupRPM, torqueConverterLockupRange, torqueConverterLockupMinGear (0), torqueConverterHasPartialLockup (true), torqueConverterMinPartialLockupRatio or torqueConverterLockupRatioWhileShifting (0.67), partialLockupTipInThreshold (0.85), partialLockupTipInGain (1.5), torqueConverterLockupRate (5), torqueConverterLockupInRate (2x rate), torqueConverterLockupOutRate (rate).",
+    "Converter lockup is active only if torqueConverterLockupRPM > 0 and a \"torqueConverter\" device exists.",
+    "Common contract of the shiftLogic modules: gearboxHandling, timer, timerConstants, inputValues, shiftPreventionData, shiftBehavior, smoothedValues are injected by vehicleController (nil until injected).",
+    "updateGearboxGFX is nop at creation then replaced in gearboxBehaviorChanged by the \"inGear\" function of the current gearbox mode, and temporarily by \"whileShifting\" during a gear change.",
+    "In arcade mode, shiftUp/shiftDown only display a warning (warnCannotShiftSequential) and shiftToGearIndex switches to realistic.",
+    "Inconsistency: init sets M.minGearIndex = abs(minGearIndex) whereas updateExposedData (every frame) replaces it with gearbox.minGearIndex (signed).",
+    "M.running and M.isShifting are written by updateExposedData without being declared initially.",
+    "applyGearboxModeRestrictions can store strings (M mode index extracted from the string) in maxGearIndex/minGearIndex, then compared with numbers: Lua converts numeric strings for arithmetic but not for < / > comparisons between a string and a number (risk of error); only inferred from code."
   ],
   "fields": {
-    "throttle": {"type": "number", "desc": "Gaz décidés (0..1), éventuellement inversés en marche arrière arcade ou limités pendant un passage."},
-    "brake": {"type": "number", "desc": "Frein décidé (0..1) ; en arcade, au moins arcadeAutoBrakeAmount à l'arrêt sans gaz."},
-    "clutchRatio": {"type": "number", "desc": "Toujours 1 (boîte automatique, pas d'embrayage piloté)."},
-    "currentGearIndex": {"type": "integer", "desc": "Index de rapport visé par la logique."},
-    "minGearIndex": {"type": "integer", "desc": "Plus petit index de rapport (marche arrière) ; voir notes sur le signe."},
-    "maxGearIndex": {"type": "integer", "desc": "Plus grand rapport avant."},
-    "shiftingAggression": {"type": "number", "desc": "Recopie de smoothedValues.drivingAggression."},
-    "isArcadeSwitched": {"type": "boolean", "desc": "Vrai quand gaz et frein sont permutés (arcade, marche arrière)."},
-    "isSportModeActive": {"type": "boolean", "desc": "Vrai en mode S."},
-    "isManualModeActive": {"type": "boolean", "desc": "Vrai en modes M1..Mn."},
-    "smoothedAvgAVInput": {"type": "number", "desc": "Vitesse angulaire de sortie de la boîte (rad/s), sert à vehicleController."},
-    "rpm": {"type": "number", "desc": "Régime moteur en tr/min."},
-    "idleRPM": {"type": "number", "desc": "Régime de ralenti."},
-    "maxRPM": {"type": "number", "desc": "Régime maximal."},
-    "engineThrottle": {"type": "number", "desc": "Gaz effectivement appliqués au moteur."},
-    "engineLoad": {"type": "number", "desc": "Charge moteur."},
-    "engineTorque": {"type": "number", "desc": "Couple de combustion."},
-    "flywheelTorque": {"type": "number", "desc": "Couple moteur en sortie."},
-    "gearboxTorque": {"type": "number", "desc": "Couple de sortie de boîte."},
-    "ignition": {"type": "boolean", "desc": "ignitionLevel > 1."},
-    "isEngineRunning": {"type": "number", "desc": "1 si le moteur tourne, 0 sinon."},
-    "oilTemp": {"type": "number", "desc": "Température d'huile moteur."},
-    "waterTemp": {"type": "number", "desc": "Température liquide de refroidissement."},
-    "checkEngine": {"type": "boolean", "desc": "Vrai si le moteur est désactivé."},
-    "energyStorages": {"type": "table<integer, string>", "desc": "Réservoirs du moteur principal."},
-    "gearboxHandling": {"type": "table|nil", "desc": "Injecté par vehicleController."},
-    "timer": {"type": "table|nil", "desc": "Injecté."},
-    "timerConstants": {"type": "table|nil", "desc": "Injecté."},
-    "inputValues": {"type": "table|nil", "desc": "Injecté."},
-    "shiftPreventionData": {"type": "table|nil", "desc": "Injecté."},
-    "shiftBehavior": {"type": "table|nil", "desc": "Injecté (shiftUpAV / shiftDownAV en rad/s)."},
-    "smoothedValues": {"type": "table|nil", "desc": "Injecté."},
-    "updateGearboxGFX": {"type": "function", "desc": "Boucle de décision courante : nop, puis inGear/whileShifting du mode de boîte actif."}
+    "throttle": {
+      "type": "number",
+      "desc": "Decided throttle (0..1), possibly inverted in arcade reverse or limited during a shift."
+    },
+    "brake": {
+      "type": "number",
+      "desc": "Decided brake (0..1); in arcade, at least arcadeAutoBrakeAmount at standstill without throttle."
+    },
+    "clutchRatio": {
+      "type": "number",
+      "desc": "Always 1 (automatic gearbox, no driven clutch)."
+    },
+    "currentGearIndex": {
+      "type": "integer",
+      "desc": "Gear index targeted by the logic."
+    },
+    "minGearIndex": {
+      "type": "integer",
+      "desc": "Smallest gear index (reverse); see notes on the sign."
+    },
+    "maxGearIndex": {
+      "type": "integer",
+      "desc": "Highest forward gear."
+    },
+    "shiftingAggression": {
+      "type": "number",
+      "desc": "Copy of smoothedValues.drivingAggression."
+    },
+    "isArcadeSwitched": {
+      "type": "boolean",
+      "desc": "True when throttle and brake are swapped (arcade, reverse)."
+    },
+    "isSportModeActive": {
+      "type": "boolean",
+      "desc": "True in S mode."
+    },
+    "isManualModeActive": {
+      "type": "boolean",
+      "desc": "True in M1..Mn modes."
+    },
+    "smoothedAvgAVInput": {
+      "type": "number",
+      "desc": "Gearbox output angular velocity (rad/s), used by vehicleController."
+    },
+    "rpm": {
+      "type": "number",
+      "desc": "Engine speed in RPM."
+    },
+    "idleRPM": {
+      "type": "number",
+      "desc": "Idle RPM."
+    },
+    "maxRPM": {
+      "type": "number",
+      "desc": "Maximum RPM."
+    },
+    "engineThrottle": {
+      "type": "number",
+      "desc": "Throttle actually applied to the engine."
+    },
+    "engineLoad": {
+      "type": "number",
+      "desc": "Engine load."
+    },
+    "engineTorque": {
+      "type": "number",
+      "desc": "Combustion torque."
+    },
+    "flywheelTorque": {
+      "type": "number",
+      "desc": "Engine output torque."
+    },
+    "gearboxTorque": {
+      "type": "number",
+      "desc": "Gearbox output torque."
+    },
+    "ignition": {
+      "type": "boolean",
+      "desc": "ignitionLevel > 1."
+    },
+    "isEngineRunning": {
+      "type": "number",
+      "desc": "1 if the engine is running, 0 otherwise."
+    },
+    "oilTemp": {
+      "type": "number",
+      "desc": "Engine oil temperature."
+    },
+    "waterTemp": {
+      "type": "number",
+      "desc": "Coolant temperature."
+    },
+    "checkEngine": {
+      "type": "boolean",
+      "desc": "True if the engine is disabled."
+    },
+    "energyStorages": {
+      "type": "table<integer, string>",
+      "desc": "Tanks of the main engine."
+    },
+    "gearboxHandling": {
+      "type": "table|nil",
+      "desc": "Injected by vehicleController."
+    },
+    "timer": {
+      "type": "table|nil",
+      "desc": "Injected."
+    },
+    "timerConstants": {
+      "type": "table|nil",
+      "desc": "Injected."
+    },
+    "inputValues": {
+      "type": "table|nil",
+      "desc": "Injected."
+    },
+    "shiftPreventionData": {
+      "type": "table|nil",
+      "desc": "Injected."
+    },
+    "shiftBehavior": {
+      "type": "table|nil",
+      "desc": "Injected (shiftUpAV / shiftDownAV in rad/s)."
+    },
+    "smoothedValues": {
+      "type": "table|nil",
+      "desc": "Injected."
+    },
+    "updateGearboxGFX": {
+      "type": "function",
+      "desc": "Current decision loop: nop, then inGear/whileShifting of the active gearbox mode."
+    }
   },
   "functions": {
-    "init": {"desc": "Lit les devices (mainEngine, gearbox, torqueConverter), construit la liste des modes, la table du levier en H, les paramètres de verrouillage et applique le mode par défaut. Appelé par vehicleController (init et reset).", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (voir notes)."}, "sharedFunctionTable": {"type": "table", "desc": "sharedFunctions de vehicleController."}}, "internal": true},
-    "gearboxBehaviorChanged": {"desc": "Appelé par vehicleController lors d'un changement arcade/realistic : choisit la logique correspondante et, en arcade, recale le mode (mode avant par défaut, R ou N selon le rapport).", "params": {"behavior": {"type": "string", "desc": "\"arcade\" ou \"realistic\"."}}, "internal": true},
-    "areShiftLEDsInUse": {"desc": "Vrai si on n'est pas en arcade et en mode manuel M.", "returns": [{"type": "boolean", "desc": "Utiliser les LEDs de régime ?"}], "internal": true},
-    "getGearName": {"desc": "Nom du rapport affiché : P/R/N/D, \"S<n>\" en mode S, \"M<n>\" en manuel, sinon le nom du mode.", "returns": [{"type": "string", "desc": "Nom affiché."}]},
-    "getGearPosition": {"desc": "Position du levier pour animation : (index-1)/(nombre de modes-1) et index de mode.", "returns": [{"type": "number", "desc": "Position normalisée 0..1."}, {"type": "integer", "desc": "Index de mode."}]},
-    "setDefaultForwardMode": {"desc": "Définit le mode « avant » par défaut (D, S, M1...) et l'applique si on roule déjà en avant.", "params": {"mode": {"type": "string", "desc": "Nom du mode (\"M1\" bascule en manuel sur le rapport courant)."}}},
-    "shiftUp": {"desc": "Mode realistic : avance d'un cran dans la liste des modes (P->R->N->D...). Avec gearboxSafety, refuse un rapport manuel qui ferait dépasser maxAV au moteur.", "internal": false},
-    "shiftDown": {"desc": "Mode realistic : recule d'un cran dans la liste des modes. Avec gearboxSafety, refuse de descendre sous M1 au-dessus de 2 m/s ou un rapport qui ferait surrégimer.", "internal": false},
-    "shiftToGearIndex": {"desc": "Mode realistic : sélectionne le mode correspondant à la position du levier en H (hShifterModePositions) ; mode inexistant -> message et N.", "params": {"index": {"type": "integer", "desc": "Position du levier (-1 R, 0 N, 1.. selon table)."}}},
-    "sendTorqueData": {"desc": "Demande au moteur d'envoyer ses courbes de couple à l'UI.", "internal": true},
-    "getState": {"desc": "État sauvegardable : {grb_mde = mode courant}.", "returns": [{"type": "table|nil", "desc": "Table d'état."}]},
-    "setState": {"desc": "Restaure le mode courant depuis data.grb_mde.", "params": {"data": {"type": "table", "desc": "Table produite par getState."}}}
+    "init": {
+      "desc": "Reads the devices (mainEngine, gearbox, torqueConverter), builds the mode list, the H-shifter table, the lockup parameters and applies the default mode. Called by vehicleController (init and reset).",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "jbeam data (see notes)."
+        },
+        "sharedFunctionTable": {
+          "type": "table",
+          "desc": "sharedFunctions of vehicleController."
+        }
+      },
+      "internal": true
+    },
+    "gearboxBehaviorChanged": {
+      "desc": "Called by vehicleController on an arcade/realistic change: chooses the matching logic and, in arcade, resets the mode (default forward mode, R or N depending on the gear).",
+      "params": {
+        "behavior": {
+          "type": "string",
+          "desc": "\"arcade\" or \"realistic\"."
+        }
+      },
+      "internal": true
+    },
+    "areShiftLEDsInUse": {
+      "desc": "True if not in arcade and in manual M mode.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Use RPM LEDs?"
+        }
+      ],
+      "internal": true
+    },
+    "getGearName": {
+      "desc": "Displayed gear name: P/R/N/D, \"S<n>\" in S mode, \"M<n>\" in manual, otherwise the mode name.",
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Displayed name."
+        }
+      ]
+    },
+    "getGearPosition": {
+      "desc": "Lever position for animation: (index-1)/(number of modes-1) and mode index.",
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Normalized position 0..1."
+        },
+        {
+          "type": "integer",
+          "desc": "Mode index."
+        }
+      ]
+    },
+    "setDefaultForwardMode": {
+      "desc": "Sets the default \"forward\" mode (D, S, M1...) and applies it if already driving forward.",
+      "params": {
+        "mode": {
+          "type": "string",
+          "desc": "Mode name (\"M1\" switches to manual on the current gear)."
+        }
+      }
+    },
+    "shiftUp": {
+      "desc": "Realistic mode: advances one step in the mode list (P->R->N->D...). With gearboxSafety, refuses a manual gear that would make the engine exceed maxAV.",
+      "internal": false
+    },
+    "shiftDown": {
+      "desc": "Realistic mode: goes back one step in the mode list. With gearboxSafety, refuses to downshift below M1 above 2 m/s or a gear that would over-rev.",
+      "internal": false
+    },
+    "shiftToGearIndex": {
+      "desc": "Realistic mode: selects the mode matching the H-shifter lever position (hShifterModePositions); nonexistent mode -> message and N.",
+      "params": {
+        "index": {
+          "type": "integer",
+          "desc": "Lever position (-1 R, 0 N, 1.. according to the table)."
+        }
+      }
+    },
+    "sendTorqueData": {
+      "desc": "Asks the engine to send its torque curves to the UI.",
+      "internal": true
+    },
+    "getState": {
+      "desc": "Saveable state: {grb_mde = current mode}.",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "State table."
+        }
+      ]
+    },
+    "setState": {
+      "desc": "Restores the current mode from data.grb_mde.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Table produced by getState."
+        }
+      }
+    }
   }
 }

@@ -1,32 +1,32 @@
 # `flowgraph_nodes_util_perlinNoise`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/perlinNoise.lua` · VM : Game Engine (GE) · 238 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/perlinNoise.lua` · VM: Game Engine (GE) · 238 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/perlinNoise")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/perlinNoise")` (file under extensions/ but not a regular extension)
 
-Nœud « Perlin Noise » (repeat_instant). Produit un nombre pseudo-aléatoire cohérent (bruit de Perlin à octaves) en fonction d'une valeur d'entrée, par exemple le temps. Entrées : flow, value (graine/abscisse), octaves (6), amplitude (128), frequency (4), normalize (false), randomStartSeed (true, décale l'abscisse aléatoirement à chaque démarrage). Sorties : flow, value. Boutons de préréglage « Smooth » et « Natural » dans l'inspecteur ; un graphe de débogage est dessiné dans le nœud (data.debug). Implémentation adaptée d'un gist de kymckay.
+Node "Perlin Noise" (repeat_instant). Produces a coherent pseudo-random number (octave Perlin noise) as a function of an input value, for example time. Inputs: flow, value (seed/abscissa), octaves (6), amplitude (128), frequency (4), normalize (false), randomStartSeed (true, randomly offsets the abscissa at each start). Outputs: flow, value. "Smooth" and "Natural" preset buttons in the inspector; a debug graph is drawn in the node (data.debug). Implementation adapted from a gist by kymckay.
 
-## Remarques
+## Notes
 
-- La boucle d'OctavePerlin va de 0 à octaves inclus : il y a octaves+1 passes.
-- Dans _executionStarted, amplitude.value est lu pour l'échelle du graphe ; sans valeur la ligne échouerait.
+- The OctavePerlin loop goes from 0 to octaves inclusive: there are octaves+1 passes.
+- In _executionStarted, amplitude.value is read for the graph scale; without a value the line would fail.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:OctavePerlin(x, y, z, octaves, amplitude, frequency)` | Somme le bruit sur plusieurs octaves (fréquence ×2 et amplitude ÷2 à chaque octave) ; divise par la somme des amplitudes si normalize. | 145 |
-| `C:_executionStarted()` | Vide le graphe, règle l'échelle, remplit la table de permutation (doublée) et tire la graine aléatoire si randomStartSeed. | 103 |
-| `C:drawCustomProperties()` | Dessine les boutons « Smooth preset » et « Natural preset » qui règlent frequency/amplitude/octaves. | 76 |
-| `C:drawMiddle(builder, style)` | Dessine la courbe des dernières valeurs si data.debug. | 94 |
-| `C.fade(t)` | Courbe de lissage 6t^5 - 15t^4 + 10t^3 (appelée sans self). | 228 |
-| `C:grad(hash, x, y, z)` | Gradient pseudo-aléatoire choisi selon les 4 bits bas du hash. | 223 |
-| `C:init()` | Initialise le tampon du graphe, la graine, data.debug=true et data.graphDataCount=1000. | 67 |
-| `C.lerp(t, a, b)` | Interpolation linéaire a + t(b-a) (appelée sans self). | 232 |
-| `C:noise(x, y, z)` | Bruit de Perlin 3D de base (interpolation des 8 coins du cube unité). | 162 |
-| `C:work()` | Si flow est actif, calcule OctavePerlin(randomStartSeed + value, 0, 0, ...), alimente le graphe et écrit value et flow. | 127 |
+| `C:OctavePerlin(x, y, z, octaves, amplitude, frequency)` | Sums the noise over several octaves (frequency ×2 and amplitude ÷2 at each octave); divides by the sum of the amplitudes if normalize. | 145 |
+| `C:_executionStarted()` | Clears the graph, sets the scale, fills the permutation table (doubled) and draws the random seed if randomStartSeed. | 103 |
+| `C:drawCustomProperties()` | Draws the "Smooth preset" and "Natural preset" buttons that set frequency/amplitude/octaves. | 76 |
+| `C:drawMiddle(builder, style)` | Draws the curve of the latest values if data.debug. | 94 |
+| `C.fade(t)` | Smoothing curve 6t^5 - 15t^4 + 10t^3 (called without self). | 228 |
+| `C:grad(hash, x, y, z)` | Pseudo-random gradient chosen according to the 4 low bits of the hash. | 223 |
+| `C:init()` | Initializes the graph buffer, the seed, data.debug=true and data.graphDataCount=1000. | 67 |
+| `C.lerp(t, a, b)` | Linear interpolation a + t(b-a) (called without self). | 232 |
+| `C:noise(x, y, z)` | Basic 3D Perlin noise (interpolation of the 8 corners of the unit cube). | 162 |
+| `C:work()` | If flow is active, computes OctavePerlin(randomStartSeed + value, 0, 0, ...), feeds the graph and writes value and flow. | 127 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/perlinNoise.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/perlinNoise.lua`.*

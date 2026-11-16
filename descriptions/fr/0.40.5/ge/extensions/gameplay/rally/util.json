@@ -1,0 +1,346 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/util.lua",
+  "module": "Boîte à outils commune du mode rallye (GE) : constantes (noms de dossiers, états actifs, couleurs flowgraph, valeurs par défaut du copilote), chemins des fichiers d'une mission (notebooks, reconnaissance, driveline, cuts, transcriptions), chargement de carnets de notes (notebook) et de tracés de course, détection de l'id de mission courant, nommage des fichiers audio de notes d'allure, calcul d'appel de virage depuis l'angle de braquage, aides de dessin de debug du véhicule et formatage d'heure. Presque tous les autres fichiers de gameplay/rally l'utilisent via require.",
+  "usage": "local rallyUtil = require('/lua/ge/extensions/gameplay/rally/util')\nlocal missionId, missionDir, err = rallyUtil.detectMissionIdHelper()\nlocal nb = rallyUtil.loadNotebookForMissionDir(missionDir, rallyUtil.defaultNotebookFname)",
+  "notes": [
+    "Arborescence d'une mission : <missionDir>/rally/notebooks/*.notebook.json ; <missionDir>/rally/recce/primary/{driveline,cuts,transcripts}.json ; <missionDir>/rally/finalDriveline.json et drivelineSpline.json.",
+    "formatTimeFromSeconds est cassé : formatTime24Hour et formatTime12Hour renvoient des tables {time=...}, or la fonction les concatène avec `..` ; l'appel provoque une erreur dès que timeSecs n'est pas nil.",
+    "determineCornerCall renvoie nil (aucune valeur) si la valeur absolue du braquage ne tombe dans aucune plage [fromAngleDegrees, toAngleDegrees[.",
+    "detectRallyEditorMissionId est locale et n'est pas exportée, mais detectMissionIdHelper l'utilise (ordre : missionManager, rallyEditor, missionEditor).",
+    "detectMissionEditorMissionId appelle editor_missionEditor.getSelectedMissionId() puis lit `.id` sur le résultat : le nom de la fonction suggère que c'est déjà un id, ce qui pourrait donner nil (déduit du code).",
+    "missionRecceDir est locale et non exportée ; le commentaire du drawVehBB parle de vert mais la couleur est bleue (0.2, 0.2, 1.0).",
+    "getAppropriateTextColor teste clr[1] < 0.1 et clr[2] < 0.5 et clr[3] > 0.7 (fonds bleus) : blanc dans ce cas, noir sinon.",
+    "Le noms audio : `pacenote_<hash>.ogg`, variantes `pacenote_<hash>_<n>.ogg`, système `pacenote_system_<clé>_<n>.ogg`."
+  ],
+  "fields": {
+    "rallySettingsRoot": {"type": "string", "desc": "'/settings/rally'."},
+    "missionRallyDir": {"type": "string", "desc": "'rally' : sous-dossier rallye d'une mission."},
+    "notebooksDir": {"type": "string", "desc": "'notebooks'."},
+    "notebooksPath": {"type": "string", "desc": "'rally/notebooks' (relatif au dossier de la mission)."},
+    "recceDir": {"type": "string", "desc": "'recce'."},
+    "recceRecordSubdir": {"type": "string", "desc": "'primary' : sous-dossier de l'enregistrement de reconnaissance principal."},
+    "generatedPacenotesDir": {"type": "string", "desc": "'gen'."},
+    "freeformDir": {"type": "string", "desc": "'freeform'."},
+    "structuredDir": {"type": "string", "desc": "'structured'."},
+    "systemDir": {"type": "string", "desc": "'system'."},
+    "pacenotesMetadataBasename": {"type": "string", "desc": "'metadata.json'."},
+    "pacenotesTranscriptionsBasename": {"type": "string", "desc": "'transcriptions.json'."},
+    "transcriptsExt": {"type": "string", "desc": "'transcripts.json'."},
+    "defaultNotebookFname": {"type": "string", "desc": "'primary.notebook.json'."},
+    "defaultCodriverName": {"type": "string", "desc": "'Sophia'."},
+    "default_codriver_voice": {"type": "string", "desc": "'british_female'."},
+    "default_codriver_language": {"type": "string", "desc": "'english'."},
+    "default_waypoint_intersect_radius": {"type": "number", "desc": "40 (rayon d'intersection par défaut d'un waypoint, en mètres, unité déduite du nom)."},
+    "autofill_blocker": {"type": "string", "desc": "'#' : texte de note qui bloque le remplissage automatique."},
+    "autodist_internal_level1": {"type": "string", "desc": "'<none>' : valeur interne de distance automatique niveau 1."},
+    "unknown_transcript_str": {"type": "string", "desc": "'[unknown]'."},
+    "validPunctuation": {"type": "string[]", "desc": "{'?', '.', '!'}."},
+    "var_db": {"type": "string", "desc": "'{db}' : variable de gabarit de note."},
+    "var_da": {"type": "string", "desc": "'{da}' : variable de gabarit de note."},
+    "rally_flowgraph_color": {"type": "ImVec4", "desc": "Couleur de nœuds flowgraph du rallye (0, 1, 0.87, 0.75)."},
+    "rallyLoop_flowgraph_color": {"type": "ImVec4", "desc": "Couleur de nœuds flowgraph de la boucle de rallye (0, 0.97, 1, 0.75)."},
+    "extRally": {"type": "string", "desc": "'gameplay_rally' : nom de l'extension rallye."},
+    "extRallyLoop": {"type": "string", "desc": "'gameplay_rallyLoop' : nom de l'extension boucle de rallye."},
+    "activeState_inactive": {"type": "string", "desc": "'inactive'."},
+    "activeState_vehicleProximity": {"type": "string", "desc": "'vehicleProximity'."},
+    "activeState_stageActive": {"type": "string", "desc": "'stageActive'."},
+    "activeState_countdown": {"type": "string", "desc": "'countdown'."}
+  },
+  "functions": {
+    "pacenoteHashSha1": {
+      "desc": "Hash SHA-1 tronqué aux 16 premiers caractères d'un texte.",
+      "params": {"s": {"type": "string", "desc": "Texte."}},
+      "returns": [{"type": "string", "desc": "16 caractères hexadécimaux."}]
+    },
+    "getTime": {
+      "desc": "Temps haute précision (os.clockhp). Le commentaire d'origine dit « secondes depuis epoch » mais c'est une horloge de processus.",
+      "returns": [{"type": "number", "desc": "Secondes."}]
+    },
+    "normalizeName": {
+      "desc": "Remplace tout caractère non alphanumérique par `_` puis réduit les `_` répétés.",
+      "params": {"name": {"type": "string|nil", "desc": "Nom."}},
+      "returns": [{"type": "string|nil", "desc": "Nom normalisé, nil si nil."}]
+    },
+    "hasPunctuation": {
+      "desc": "Teste si un caractère est un de `?`, `.`, `!`.",
+      "params": {"last_char": {"type": "string", "desc": "Caractère."}},
+      "returns": [{"type": "boolean", "desc": "true si ponctuation de fin de phrase."}]
+    },
+    "detectMissionManagerMissionId": {
+      "desc": "Id de la mission au premier plan d'après gameplay_missions_missionManager.",
+      "returns": [{"type": "string|nil", "desc": "Id de mission."}]
+    },
+    "detectMissionEditorMissionId": {
+      "desc": "Id de la mission sélectionnée dans l'éditeur de missions (voir notes).",
+      "returns": [{"type": "string|nil", "desc": "Id de mission."}]
+    },
+    "missionDirHelper": {
+      "desc": "Dossier d'une mission : '/gameplay/missions/<id>'.",
+      "params": {"missionId": {"type": "string|nil", "desc": "Id de mission."}},
+      "returns": [{"type": "string|nil", "desc": "Chemin, nil si id nil."}]
+    },
+    "detectMissionIdHelper": {
+      "desc": "Détecte l'id de mission courant dans l'ordre : missionManager, rallyEditor, missionEditor, et calcule son dossier.",
+      "returns": [
+        {"type": "string|nil", "desc": "Id de mission."},
+        {"type": "string|nil", "desc": "Dossier de la mission."},
+        {"type": "string|nil", "desc": "Message d'erreur 'missionId could not be detected' en cas d'échec."}
+      ]
+    },
+    "getNotebookFullPath": {
+      "desc": "Chemin complet d'un notebook : <missionDir>/rally/notebooks/<basename>.",
+      "params": {
+        "missionDir": {"type": "string", "desc": "Dossier de la mission."},
+        "basename": {"type": "string", "desc": "Nom du fichier notebook."}
+      },
+      "returns": [{"type": "string", "desc": "Chemin."}]
+    },
+    "listNotebooks": {
+      "desc": "Liste, triés, les noms de fichiers *.notebook.json du dossier notebooks de la mission.",
+      "params": {"missionDir": {"type": "string|nil", "desc": "Dossier de la mission."}},
+      "returns": [{"type": "string[]", "desc": "Noms de fichiers ; vide si missionDir est nil."}]
+    },
+    "createNotebook": {
+      "desc": "Crée un notebook vide (rally/notebook/path) à ce chemin et le sauvegarde.",
+      "params": {"fname": {"type": "string", "desc": "Chemin du fichier."}},
+      "returns": [{"type": "table|nil", "desc": "Objet notebook, nil si la sauvegarde échoue."}]
+    },
+    "loadNotebook": {
+      "desc": "Charge un notebook depuis un fichier. Si le fichier est vide ou blanc, l'initialise et le sauvegarde. Calcule ensuite les notes adjacentes (setAllAdjacentNotes).",
+      "params": {"notebookFname": {"type": "string", "desc": "Chemin du fichier."}},
+      "returns": [{"type": "table|nil", "desc": "Notebook, nil en cas d'erreur (journalisée)."}]
+    },
+    "loadNotebookForMissionDir": {
+      "desc": "Charge un notebook d'une mission d'après son nom de fichier.",
+      "params": {
+        "missionDir": {"type": "string", "desc": "Dossier de la mission."},
+        "basename": {"type": "string", "desc": "Nom de fichier notebook."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Notebook."}]
+    },
+    "loadRacePath": {
+      "desc": "Charge <missionDir>/race.race.json dans un objet gameplay/race/path.",
+      "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}},
+      "returns": [
+        {"type": "table|nil", "desc": "Chemin de course."},
+        {"type": "string|nil", "desc": "Message d'erreur si le fichier est absent."}
+      ]
+    },
+    "missionRecceRecordDir": {
+      "desc": "Dossier d'enregistrement de reconnaissance : <missionDir>/rally/recce/primary.",
+      "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}},
+      "returns": [{"type": "string", "desc": "Chemin."}]
+    },
+    "missionReccePath": {
+      "desc": "Chemin d'un fichier du dossier d'enregistrement de reconnaissance.",
+      "params": {
+        "missionDir": {"type": "string", "desc": "Dossier de la mission."},
+        "basename": {"type": "string", "desc": "Nom de fichier."}
+      },
+      "returns": [{"type": "string", "desc": "Chemin."}]
+    },
+    "drivelineFile": {
+      "desc": "Chemin de driveline.json de la reconnaissance.",
+      "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}},
+      "returns": [{"type": "string", "desc": "Chemin."}]
+    },
+    "finalDrivelineFile": {
+      "desc": "Chemin de <missionDir>/rally/finalDriveline.json.",
+      "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}},
+      "returns": [{"type": "string", "desc": "Chemin."}]
+    },
+    "drivelineSplineFile": {
+      "desc": "Chemin de <missionDir>/rally/drivelineSpline.json.",
+      "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}},
+      "returns": [{"type": "string", "desc": "Chemin."}]
+    },
+    "cutsFile": {
+      "desc": "Chemin de cuts.json de la reconnaissance.",
+      "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}},
+      "returns": [{"type": "string", "desc": "Chemin."}]
+    },
+    "transcriptsFile": {
+      "desc": "Chemin de transcripts.json de la reconnaissance.",
+      "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}},
+      "returns": [{"type": "string", "desc": "Chemin."}]
+    },
+    "calculateForwardNormal": {
+      "desc": "Vecteur unitaire allant de snap_pos vers next_pos. Lève une erreur si les deux positions sont identiques.",
+      "params": {
+        "snap_pos": {"type": "vec3", "desc": "Position de départ."},
+        "next_pos": {"type": "vec3", "desc": "Position suivante."}
+      },
+      "returns": [{"type": "vec3", "desc": "Direction normalisée."}]
+    },
+    "loadCornerAnglesFile": {
+      "desc": "Lit lua/ge/extensions/gameplay/rally/corner_angles.json (styles d'angles de virage).",
+      "returns": [
+        {"type": "table|nil", "desc": "Contenu JSON."},
+        {"type": "string|nil", "desc": "Message d'erreur."}
+      ]
+    },
+    "determineCornerCall": {
+      "desc": "Trouve la plage d'angle correspondant à la valeur absolue du braquage et construit l'appel de virage en majuscules avec direction (L si braquage >= 0, R sinon) ; une plage '_deadzone' donne 'C'.",
+      "params": {
+        "angles": {"type": "table[]", "desc": "Liste de {fromAngleDegrees, toAngleDegrees, cornerCall}."},
+        "steering": {"type": "number", "desc": "Braquage en degrés (signé)."}
+      },
+      "returns": [
+        {"type": "table|nil", "desc": "Plage trouvée."},
+        {"type": "string", "desc": "Appel de virage (ex. '3L')."},
+        {"type": "number", "desc": "Position dans la plage entre 0 et 1."}
+      ]
+    },
+    "trimString": {
+      "desc": "Supprime les espaces au début et à la fin.",
+      "params": {"txt": {"type": "string|nil", "desc": "Texte."}},
+      "returns": [{"type": "string|nil", "desc": "Texte nettoyé."}]
+    },
+    "stripBasename": {
+      "desc": "Renvoie le dossier d'un chemin (retire le nom de fichier ou le dernier dossier, et le `/` final).",
+      "params": {"thepath": {"type": "string|nil", "desc": "Chemin."}},
+      "returns": [{"type": "string|nil", "desc": "Dossier parent."}]
+    },
+    "matchSearchPattern": {
+      "desc": "Teste une chaîne avec un motif simple : les caractères spéciaux Lua sont échappés et `*` devient `.*`. La correspondance n'est pas ancrée.",
+      "params": {
+        "searchPattern": {"type": "string", "desc": "Motif avec jokers *."},
+        "stringToMatch": {"type": "string", "desc": "Chaîne testée."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si trouvé."}]
+    },
+    "useNote": {
+      "desc": "Indique si un texte de note doit être utilisé : non vide, différent de '#' et de '<none>'.",
+      "params": {"text": {"type": "string|nil", "desc": "Texte de note."}},
+      "returns": [{"type": "boolean|nil", "desc": "Truthy si utilisable."}]
+    },
+    "customRound": {
+      "desc": "Arrondit une valeur au multiple le plus proche.",
+      "params": {
+        "dist": {"type": "number", "desc": "Valeur."},
+        "round_to": {"type": "number", "desc": "Pas d'arrondi."}
+      },
+      "returns": [{"type": "number", "desc": "Valeur arrondie."}]
+    },
+    "makePacenoteAudioFilename": {
+      "desc": "Nom de fichier audio d'une note : 'pacenote_<hash>.ogg'.",
+      "params": {"pacenoteHash": {"type": "string", "desc": "Hash de la note."}},
+      "returns": [{"type": "string", "desc": "Nom de fichier."}]
+    },
+    "makePacenoteVariantAudioFilename": {
+      "desc": "Nom de fichier audio d'une variante : 'pacenote_<hash>_<n>.ogg' (n entier >= 1).",
+      "params": {
+        "pacenoteHash": {"type": "string", "desc": "Hash de la note."},
+        "variant": {"type": "number|string", "desc": "Numéro de variante ; défaut 1, minimum 1."}
+      },
+      "returns": [{"type": "string", "desc": "Nom de fichier."}]
+    },
+    "pacenoteAudioBasenameVariantIndex": {
+      "desc": "Extrait le numéro de variante d'un nom de fichier audio (suffixe _<n>.ogg), 1 par défaut.",
+      "params": {"basename": {"type": "string", "desc": "Nom de fichier."}},
+      "returns": [{"type": "integer|nil", "desc": "Variante, nil si basename n'est pas une chaîne."}]
+    },
+    "customPacenoteAudioBasenameParts": {
+      "desc": "Décompose un nom de la forme 'pacenote_<nombre><lettre>_<variante>.ogg'.",
+      "params": {"basename": {"type": "string", "desc": "Nom de fichier."}},
+      "returns": [{"type": "table|nil", "desc": "{number, letter, variant, basename} ou nil si le format ne correspond pas."}]
+    },
+    "compareCustomPacenoteAudioBasenames": {
+      "desc": "Comparateur de tri : par nombre, lettre puis variante ; les noms reconnus passent avant les autres, qui sont triés alphabétiquement.",
+      "params": {
+        "a": {"type": "string", "desc": "Premier nom."},
+        "b": {"type": "string", "desc": "Second nom."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}]
+    },
+    "makeSystemPacenoteAudioFilename": {
+      "desc": "Nom de fichier audio d'une note système : 'pacenote_system_<clé>_<n>.ogg'.",
+      "params": {
+        "systemKey": {"type": "string", "desc": "Clé de la note système."},
+        "variantIndex": {"type": "number|nil", "desc": "Variante ; défaut 1."}
+      },
+      "returns": [{"type": "string", "desc": "Nom de fichier."}]
+    },
+    "getMissionName": {
+      "desc": "Nom (clé de traduction) d'une mission ; renvoie l'id si la mission est introuvable.",
+      "params": {"missionId": {"type": "string", "desc": "Id de mission."}},
+      "returns": [{"type": "string", "desc": "Nom ou id."}]
+    },
+    "translatedMissionName": {
+      "desc": "Traduit un nom de mission avec _tr.",
+      "params": {"missionName": {"type": "string|nil", "desc": "Nom ou clé."}},
+      "returns": [{"type": "string|nil", "desc": "Texte traduit."}]
+    },
+    "translatedMissionNameFromId": {
+      "desc": "Nom traduit d'une mission à partir de son id.",
+      "params": {"missionId": {"type": "string", "desc": "Id de mission."}},
+      "returns": [{"type": "string", "desc": "Nom traduit, ou id."}]
+    },
+    "randomId": {
+      "desc": "Identifiant aléatoire de 8 caractères (SHA-1 d'un entier aléatoire). Faible entropie : 1 million de valeurs possibles.",
+      "returns": [{"type": "string", "desc": "8 caractères hexadécimaux."}]
+    },
+    "getAppropriateTextColor": {
+      "desc": "Choisit la couleur de texte lisible sur un fond : blanc pour un fond bleu foncé, noir sinon.",
+      "params": {"clr": {"type": "number[]", "desc": "Couleur de fond {r, g, b} entre 0 et 1."}},
+      "returns": [{"type": "ColorF", "desc": "Blanc ou noir opaque."}]
+    },
+    "arePointsEqualWithinThreshold": {
+      "desc": "Teste si deux points sont à une distance inférieure ou égale au seuil.",
+      "params": {
+        "point1": {"type": "vec3", "desc": "Premier point."},
+        "point2": {"type": "vec3", "desc": "Second point."},
+        "threshold": {"type": "number", "desc": "Distance maximale en mètres."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si proches."}]
+    },
+    "getVehFrontCenter": {
+      "desc": "Centre de la face avant de la boîte englobante orientée (OOBB) du véhicule au spawn (moyenne des points 0 à 3).",
+      "params": {"vehId": {"type": "integer", "desc": "Id d'objet du véhicule."}},
+      "returns": [{"type": "vec3|nil", "desc": "Position monde, nil si le véhicule est introuvable."}]
+    },
+    "getVehFrontBottom": {
+      "desc": "Milieu du bord avant bas de l'OOBB du véhicule (points 0 et 3).",
+      "params": {"vehId": {"type": "integer", "desc": "Id d'objet du véhicule."}},
+      "returns": [{"type": "vec3|nil", "desc": "Position monde."}]
+    },
+    "drawVehLeadingPoint": {
+      "desc": "Dessine une petite sphère (rayon 0,1) au centre de la face avant du véhicule : verte si inside, rouge sinon.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Id d'objet du véhicule."},
+        "inside": {"type": "boolean", "desc": "Choix de la couleur."}
+      }
+    },
+    "drawVehBB": {
+      "desc": "Dessine en bleu les 12 arêtes de l'OOBB du véhicule avec debugDrawer:drawLineInstance.",
+      "params": {"vehId": {"type": "integer", "desc": "Id d'objet du véhicule."}}
+    },
+    "formatTime24Hour": {
+      "desc": "Formate un nombre de secondes depuis minuit en HH:MM[:SS[.d]] (modulo 24 h).",
+      "params": {
+        "timeSecs": {"type": "number|nil", "desc": "Secondes."},
+        "includeSeconds": {"type": "boolean|nil", "desc": "Ajoute les secondes."},
+        "includeTenths": {"type": "boolean|nil", "desc": "Ajoute les dixièmes (avec includeSeconds)."}
+      },
+      "returns": [{"type": "table", "desc": "{time = string} ; 'N/A' si timeSecs est nil."}]
+    },
+    "formatTime12Hour": {
+      "desc": "Idem au format 12 h.",
+      "params": {
+        "timeSecs": {"type": "number|nil", "desc": "Secondes."},
+        "includeSeconds": {"type": "boolean|nil", "desc": "Ajoute les secondes."},
+        "includeTenths": {"type": "boolean|nil", "desc": "Ajoute les dixièmes."}
+      },
+      "returns": [{"type": "table", "desc": "{time = string, ampm = 'AM'|'PM'}."}]
+    },
+    "formatTimeFromSeconds": {
+      "desc": "Censée renvoyer « 24h / 12h » ; bogue : concatène deux tables (voir notes).",
+      "params": {
+        "timeSecs": {"type": "number|nil", "desc": "Secondes."},
+        "includeSeconds": {"type": "boolean|nil", "desc": "Ajoute les secondes."},
+        "includeTenths": {"type": "boolean|nil", "desc": "Ajoute les dixièmes."}
+      },
+      "returns": [{"type": "string", "desc": "'N/A' si timeSecs est nil ; sinon erreur."}]
+    }
+  }
+}

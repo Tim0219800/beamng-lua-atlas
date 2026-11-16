@@ -1,15 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/states.lua",
-  "module": "Nœud « Vehicle States » (catégorie `repeat_instant`). Lit dans `map.objects[vehId].states` l'état du klaxon (`horn`) et de la barre lumineuse (`lightbar`). Sorties : flux `horn`, flux `lightbar`, bool `hornb`, bool `lightbarb` (cachés). Pin d'entrée : `vehId`.",
+  "module": "Node \"Vehicle States\" (category `repeat_instant`). Reads from `map.objects[vehId].states` the state of the horn (`horn`) and the lightbar (`lightbar`). Outputs: flow `horn`, flow `lightbar`, bool `hornb`, bool `lightbarb` (hidden). Input pin: `vehId`.",
   "notes": [
-    "Si `map.objects[vehId]` n'existe pas, `horn` et `lightbar` sont à false mais `hornb`/`lightbarb` gardent leur ancienne valeur."
+    "If `map.objects[vehId]` does not exist, `horn` and `lightbar` are false but `hornb`/`lightbarb` keep their old value."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "work": {
-          "desc": "Met à jour les sorties de klaxon et de barre lumineuse depuis la table `map.objects`.",
+          "desc": "Updates the horn and lightbar outputs from the `map.objects` table.",
           "internal": true
         }
       }

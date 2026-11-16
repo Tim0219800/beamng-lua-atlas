@@ -1,47 +1,95 @@
 {
   "path": "lua/ge/extensions/flowgraph/baseModule.lua",
-  "module": "Classe de base des modules du gestionnaire flowgraph (les « modules » attachés au manager, par opposition aux nœuds). Elle définit une classe C avec des hooks vides (clear, onUpdate, executionStarted, executionStopped) que les modules dérivés surchargent. Le fichier n'est pas une extension utilisable seule : il est utilisé par les modules flowgraph via M.use(mgr, derivedClass).",
+  "module": "Base class of the flowgraph manager's modules (the \"modules\" attached to the manager, as opposed to nodes). It defines a class C with empty hooks (clear, onUpdate, executionStarted, executionStopped) that derived modules override. The file is not a usable extension on its own: it is used by flowgraph modules via M.use(mgr, derivedClass).",
   "usage": "local base = require('/lua/ge/extensions/flowgraph/baseModule')\nlocal module = base.use(mgr, {\n  onUpdate = function(self, dtReal, dtSim, dtRaw) end,\n})",
   "notes": [
-    "C.moduleOrder = 0 : ordre de traitement des modules, les valeurs basses passent en premier.",
-    "C.hooks est une table vide, destinée à déclarer les hooks gérés par le module.",
-    "Les fonctions preTrigger/afterTrigger sont commentées dans le code (non disponibles).",
-    "M.use n'appelle o:init() une seconde fois que si la classe dérivée a redéfini init (sans argument mgr dans ce cas)."
+    "C.moduleOrder = 0: module processing order, lower values come first.",
+    "C.hooks is an empty table, meant to declare the hooks handled by the module.",
+    "The preTrigger/afterTrigger functions are commented out in the code (not available).",
+    "M.use calls o:init() a second time only if the derived class redefined init (without the mgr argument in that case)."
   ],
   "functions": {
     "createBase": {
-      "desc": "Crée une instance de la classe de base : table avec C comme métatable, puis appelle init(...) (donc init(mgr)).",
-      "params": {"...": {"type": "any", "desc": "arguments transmis à init, normalement le manager flowgraph mgr"}},
-      "returns": [{"type": "table", "desc": "instance du module de base"}],
+      "desc": "Creates an instance of the base class: a table with C as metatable, then calls init(...) (so init(mgr)).",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "arguments passed to init, normally the flowgraph manager mgr"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "base module instance"
+        }
+      ],
       "internal": true
     },
     "use": {
-      "desc": "Crée un module de base, copie dessus tous les champs/méthodes de derivedClass (surcharge), puis rappelle init() si la classe dérivée l'a redéfini.",
+      "desc": "Creates a base module, copies all fields/methods of derivedClass onto it (override), then calls init() again if the derived class redefined it.",
       "params": {
-        "mgr": {"type": "table", "desc": "manager flowgraph propriétaire du module"},
-        "derivedClass": {"type": "table", "desc": "table de méthodes/champs qui remplacent ceux de la base"}
+        "mgr": {
+          "type": "table",
+          "desc": "flowgraph manager that owns the module"
+        },
+        "derivedClass": {
+          "type": "table",
+          "desc": "table of methods/fields that replace those of the base"
+        }
       },
-      "returns": [{"type": "table", "desc": "instance du module"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "module instance"
+        }
+      ],
       "internal": true
     }
   },
   "classes": {
     "C": {
-      "desc": "Classe de base d'un module flowgraph. Les méthodes vides sont à surcharger.",
+      "desc": "Base class of a flowgraph module. The empty methods are meant to be overridden.",
       "functions": {
-        "init": {"desc": "Mémorise le manager dans self.mgr.", "params": {"mgr": {"type": "table", "desc": "manager flowgraph"}}, "internal": true},
-        "clear": {"desc": "Hook vide « utilisable » par les modules dérivés pour vider leur état."},
-        "onUpdate": {
-          "desc": "Hook vide appelé à chaque mise à jour du manager (surchargé par les modules).",
+        "init": {
+          "desc": "Stores the manager in self.mgr.",
           "params": {
-            "dtReal": {"type": "number", "desc": "delta de temps réel (s)"},
-            "dtSim": {"type": "number", "desc": "delta de temps de simulation (s)"},
-            "dtRaw": {"type": "number", "desc": "delta de temps brut (s)"}
+            "mgr": {
+              "type": "table",
+              "desc": "flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "clear": {
+          "desc": "Empty hook \"usable\" by derived modules to clear their state."
+        },
+        "onUpdate": {
+          "desc": "Empty hook called on every manager update (overridden by modules).",
+          "params": {
+            "dtReal": {
+              "type": "number",
+              "desc": "real time delta (s)"
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "simulation time delta (s)"
+            },
+            "dtRaw": {
+              "type": "number",
+              "desc": "raw time delta (s)"
+            }
           }
         },
-        "executionStopped": {"desc": "Hook vide appelé à l'arrêt de l'exécution du flowgraph."},
-        "executionStarted": {"desc": "Hook vide appelé au démarrage de l'exécution du flowgraph."},
-        "onClear": {"desc": "Appelle self:executionStopped(). Sert de réaction au vidage du manager.", "internal": true}
+        "executionStopped": {
+          "desc": "Empty hook called when the flowgraph execution stops."
+        },
+        "executionStarted": {
+          "desc": "Empty hook called when the flowgraph execution starts."
+        },
+        "onClear": {
+          "desc": "Calls self:executionStopped(). Serves as the reaction to the manager being cleared.",
+          "internal": true
+        }
       }
     }
   }

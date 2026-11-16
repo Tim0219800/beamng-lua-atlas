@@ -1,176 +1,298 @@
 {
   "path": "lua/vehicle/bdebugImpl.lua",
-  "module": "Implémentation complète de l'outil de debug visuel du véhicule (chargée paresseusement par bdebug.lua). Dessine nœuds, poutres, barres de torsion, triangles de collision, rails/slidenodes, centre de gravité, aérodynamique, thermique des roues, point de contact des pneus et géométrie de direction via debugDrawer, selon M.state.vehicle (modes numérotés à partir de 1 ; 1 = 'off'). Il envoie l'état au GE (guihooks BdebugUpdate et extensions.hook onBDebugUpdate). Les moddeurs passent en général par bdebug.*, pas directement par bdebugImpl.",
+  "module": "Full implementation of the vehicle's visual debug tool (lazily loaded by bdebug.lua). Draws nodes, beams, torsion bars, collision triangles, rails/slidenodes, center of gravity, aerodynamics, wheel thermals, tire contact point and steering geometry via debugDrawer, according to M.state.vehicle (modes numbered from 1; 1 = 'off'). It sends the state to the GE (guihooks BdebugUpdate and extensions.hook onBDebugUpdate). Modders generally go through bdebug.*, not directly through bdebugImpl.",
   "notes": [
-    "M.state.vehicle contient pour chaque famille un index (nodeTextMode, nodeVisMode, beamTextMode, beamVisMode, collisionTriangleVisMode, torsionBarVisMode, railsSlideNodesVisMode, cogMode, nodeDebugTextMode…) et la liste des modes correspondants (…Modes) ; mode 1 = 'off'. Le dessin n'est activé que si vehicleDebugVisible est true et qu'au moins un champ non-table diffère de initState.vehicle.",
-    "Types de poutres (valeurs C, ne pas changer) : 0 NORMALTYPE, 1 BEAM_ANISOTROPIC, 2 BEAM_BOUNDED, 3 BEAM_PRESSURED, 4 BEAM_LBEAM, 5 BEAM_BROKEN, 6 BEAM_HYDRO, 7 BEAM_SUPPORT.",
-    "Les nodes/poutres affichés ne sont envoyés au GE (requestDrawnNodesGE/BeamsGE) qu'une fois : la liste de callbacks est vidée après l'envoi. Les callbacks sont appelés sous la forme geFuncName(liste, échelle).",
-    "M.nodeCollision reste nop jusqu'à ce que le mode de visualisation concerné l'active en interne ; M.beamBroke n'est actif que pour les modes de poutres 'type+broken' (5) et 'brokenOnly' (6) quand l'outil est visible.",
-    "Chaque debugDraw demande au GE la taille de viewport (debug_vehicleDebug.bdebugRequestViewportSize) ; le GE répond par receiveViewportSize.",
-    "Incohérence : dans setNodeDebugText, la garde `if not M.state then return log(...) end` fait un `return log(...)` ; elle fonctionne mais le retour est la valeur de log. Par ailleurs updateUIs envoie volontairement l'état au GE via queueGameEngineLua (contournement d'un bug, d'après le commentaire).",
-    "Le premier appel à init copie le savedState (ou initState) et reprend de newPartialState uniquement les champs nodeDebugTextTypeToID, nodeDebugTextMode et nodeDebugTextModes (et partsSelected)."
+    "M.state.vehicle contains for each family an index (nodeTextMode, nodeVisMode, beamTextMode, beamVisMode, collisionTriangleVisMode, torsionBarVisMode, railsSlideNodesVisMode, cogMode, nodeDebugTextMode...) and the list of corresponding modes (...Modes); mode 1 = 'off'. Drawing is enabled only if vehicleDebugVisible is true and at least one non-table field differs from initState.vehicle.",
+    "Beam types (C values, do not change): 0 NORMALTYPE, 1 BEAM_ANISOTROPIC, 2 BEAM_BOUNDED, 3 BEAM_PRESSURED, 4 BEAM_LBEAM, 5 BEAM_BROKEN, 6 BEAM_HYDRO, 7 BEAM_SUPPORT.",
+    "The displayed nodes/beams are sent to the GE (requestDrawnNodesGE/BeamsGE) only once: the callback list is emptied after sending. The callbacks are called as geFuncName(list, scale).",
+    "M.nodeCollision stays nop until the relevant visualization mode enables it internally; M.beamBroke is active only for the beam modes 'type+broken' (5) and 'brokenOnly' (6) when the tool is visible.",
+    "Each debugDraw asks the GE for the viewport size (debug_vehicleDebug.bdebugRequestViewportSize); the GE answers with receiveViewportSize.",
+    "Inconsistency: in setNodeDebugText, the guard `if not M.state then return log(...) end` does a `return log(...)`; it works but the return value is that of log. Also, updateUIs deliberately sends the state to the GE via queueGameEngineLua (workaround for a bug, according to the comment).",
+    "The first call to init copies the savedState (or initState) and takes from newPartialState only the fields nodeDebugTextTypeToID, nodeDebugTextMode and nodeDebugTextModes (and partsSelected)."
   ],
   "fields": {
-    "initState": {"type": "table", "desc": "État par défaut : vehicleDebugVisible=false, objectId, et vehicle = tous les modes (nodeTextModes, nodeVisModes, beamTextModes, beamVisModes, collisionTriangleVisModes, torsionBarVisModes, railsSlideNodesVisModes, cogModes, aérodynamique…), échelles (aerodynamicsScale 0.1, nodeTextMaxDist 10), tireContactPoint, steeringGeometry (steeringGeometryLineLength 20), wheelThermals."},
-    "state": {"type": "table", "desc": "État courant (copie de initState au init, remplacé par setState). Défini à l'init : nil avant."},
-    "stateNoReset": {"type": "table", "desc": "État conservé aux resets de modes (reçu avec setState)."},
-    "partsState": {"type": "table", "desc": "{partsSelected = table} : pièces sélectionnées à mettre en valeur."},
-    "nodeCollision": {"type": "function", "desc": "Hook nodeCollision(p) appelé par le moteur sur collision de nœud ; nop par défaut, activé par le mode de visualisation correspondant."},
-    "beamBroke": {"type": "function", "desc": "Hook beamBroke(id, energy) appelé quand une poutre casse ; nop sauf mode poutres cassées."},
-    "debugDraw": {"type": "function", "desc": "Dessin debug debugDraw(focusPos) appelé à chaque frame par la boucle principale ; nop si aucun mode actif."}
+    "initState": {
+      "type": "table",
+      "desc": "Default state: vehicleDebugVisible=false, objectId, and vehicle = all the modes (nodeTextModes, nodeVisModes, beamTextModes, beamVisModes, collisionTriangleVisModes, torsionBarVisModes, railsSlideNodesVisModes, cogModes, aerodynamics...), scales (aerodynamicsScale 0.1, nodeTextMaxDist 10), tireContactPoint, steeringGeometry (steeringGeometryLineLength 20), wheelThermals."
+    },
+    "state": {
+      "type": "table",
+      "desc": "Current state (copy of initState at init, replaced by setState). Set at init: nil before."
+    },
+    "stateNoReset": {
+      "type": "table",
+      "desc": "State kept across mode resets (received with setState)."
+    },
+    "partsState": {
+      "type": "table",
+      "desc": "{partsSelected = table}: selected parts to highlight."
+    },
+    "nodeCollision": {
+      "type": "function",
+      "desc": "Hook nodeCollision(p) called by the engine on node collision; nop by default, enabled by the relevant visualization mode."
+    },
+    "beamBroke": {
+      "type": "function",
+      "desc": "Hook beamBroke(id, energy) called when a beam breaks; nop except in broken beams mode."
+    },
+    "debugDraw": {
+      "type": "function",
+      "desc": "Debug drawing debugDraw(focusPos) called every frame by the main loop; nop if no mode is active."
+    }
   },
   "functions": {
     "init": {
-      "desc": "Initialise l'outil : compte nœuds, poutres, triangles, barres de torsion, rails et slidenodes de v.data, copie l'état sauvegardé, récupère les textes de debug et les pièces sélectionnées de bdebug.lua et envoie l'état à l'UI. Appelée par bdebug.lua au chargement paresseux.",
+      "desc": "Initializes the tool: counts nodes, beams, triangles, torsion bars, rails and slidenodes of v.data, copies the saved state, retrieves the debug texts and selected parts from bdebug.lua and sends the state to the UI. Called by bdebug.lua on lazy loading.",
       "params": {
-        "savedState": {"type": "table|nil", "desc": "État sauvegardé avant rechargement ; nil pour partir de initState."},
-        "newPartialState": {"type": "table", "desc": "État partiel accumulé par bdebug avant l'init (vehicle.nodeDebugText*, partsSelected)."}
+        "savedState": {
+          "type": "table|nil",
+          "desc": "State saved before reload; nil to start from initState."
+        },
+        "newPartialState": {
+          "type": "table",
+          "desc": "Partial state accumulated by bdebug before init (vehicle.nodeDebugText*, partsSelected)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Au reset du véhicule : vide les mémoires des poutres cassées/déformées et groupes déclenchés pour que les messages se répètent.",
+      "desc": "On vehicle reset: empties the memories of broken/deformed beams and triggered groups so that the messages repeat.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "requestState": {
-      "desc": "Envoie l'état courant (state et stateNoReset) au GE (guihooks BdebugUpdate et hook onBDebugUpdate).",
+      "desc": "Sends the current state (state and stateNoReset) to the GE (guihooks BdebugUpdate and hook onBDebugUpdate).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "setState": {
-      "desc": "Remplace l'état par celui reçu de l'UI (ignoré si state.objectId diffère de l'objet courant), recalcule vehicleDebugVisible et le dessin, puis renvoie l'état à l'UI sauf si notSendBack.",
+      "desc": "Replaces the state with the one received from the UI (ignored if state.objectId differs from the current object), recomputes vehicleDebugVisible and the drawing, then sends the state back to the UI unless notSendBack.",
       "params": {
-        "state": {"type": "table", "desc": "Nouvel état (avec objectId et vehicle)."},
-        "stateNoReset": {"type": "table", "desc": "Nouvel état non remis à zéro."},
-        "notSendBack": {"type": "boolean|nil", "desc": "true pour ne pas renvoyer l'état à l'UI."}
+        "state": {
+          "type": "table",
+          "desc": "New state (with objectId and vehicle)."
+        },
+        "stateNoReset": {
+          "type": "table",
+          "desc": "New non-reset state."
+        },
+        "notSendBack": {
+          "type": "boolean|nil",
+          "desc": "true to not send the state back to the UI."
+        }
       },
       "returns": [],
       "internal": false
     },
     "receiveViewportSize": {
-      "desc": "Mémorise la taille du viewport (utile au placement des textes/légendes). Appelée par le GE en réponse à bdebugRequestViewportSize.",
+      "desc": "Stores the viewport size (useful for placing texts/legends). Called by the GE in response to bdebugRequestViewportSize.",
       "params": {
-        "sizeX": {"type": "number", "desc": "Largeur en pixels."},
-        "sizeY": {"type": "number", "desc": "Hauteur en pixels."}
+        "sizeX": {
+          "type": "number",
+          "desc": "Width in pixels."
+        },
+        "sizeY": {
+          "type": "number",
+          "desc": "Height in pixels."
+        }
       },
       "returns": [],
       "internal": true
     },
     "requestDrawnNodesGE": {
-      "desc": "Enregistre une fonction GE à appeler au prochain dessin avec la liste des nœuds dessinés : geFuncName(nodesDrawn, nodeScale).",
-      "params": {"geFuncName": {"type": "string", "desc": "Nom de la fonction GE."}},
+      "desc": "Registers a GE function to call at the next draw with the list of drawn nodes: geFuncName(nodesDrawn, nodeScale).",
+      "params": {
+        "geFuncName": {
+          "type": "string",
+          "desc": "Name of the GE function."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "requestDrawnBeamsGE": {
-      "desc": "Enregistre une fonction GE à appeler au prochain dessin avec la liste des poutres dessinées : geFuncName(beamsDrawn, beamScale).",
-      "params": {"geFuncName": {"type": "string", "desc": "Nom de la fonction GE."}},
+      "desc": "Registers a GE function to call at the next draw with the list of drawn beams: geFuncName(beamsDrawn, beamScale).",
+      "params": {
+        "geFuncName": {
+          "type": "string",
+          "desc": "Name of the GE function."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "onPlayersChanged": {
-      "desc": "Hook appelé quand le joueur change de véhicule (m = true si ce véhicule est concerné) : met à jour le dessin et renvoie l'état à l'UI.",
-      "params": {"m": {"type": "boolean", "desc": "Vrai si ce véhicule est (devient) le véhicule joueur (déduit du code)."}},
+      "desc": "Hook called when the player changes vehicle (m = true if this vehicle is concerned): updates the drawing and sends the state back to the UI.",
+      "params": {
+        "m": {
+          "type": "boolean",
+          "desc": "True if this vehicle is (becomes) the player vehicle (inferred from code)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setPartsSelected": {
-      "desc": "Définit les pièces sélectionnées (M.partsState.partsSelected) utilisées pour mettre en valeur nœuds, poutres, etc.",
-      "params": {"parts": {"type": "table", "desc": "Sélection de pièces."}},
+      "desc": "Defines the selected parts (M.partsState.partsSelected) used to highlight nodes, beams, etc.",
+      "params": {
+        "parts": {
+          "type": "table",
+          "desc": "Part selection."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setNodeDebugText": {
-      "desc": "Ajoute un texte sur un nœud dans le groupe donné (créé si absent), puis met à jour le dessin et l'UI.",
+      "desc": "Adds a text on a node in the given group (created if absent), then updates the drawing and the UI.",
       "params": {
-        "type": {"type": "string", "desc": "Nom du groupe de textes."},
-        "nodeCID": {"type": "integer", "desc": "ID du nœud à l'exécution."},
-        "text": {"type": "string", "desc": "Texte à afficher."}
+        "type": {
+          "type": "string",
+          "desc": "Name of the text group."
+        },
+        "nodeCID": {
+          "type": "integer",
+          "desc": "Runtime node ID."
+        },
+        "text": {
+          "type": "string",
+          "desc": "Text to display."
+        }
       },
       "returns": [],
       "internal": false
     },
     "clearNodeDebugText": {
-      "desc": "Supprime les textes d'un nœud dans un groupe.",
+      "desc": "Removes the texts of a node in a group.",
       "params": {
-        "type": {"type": "string", "desc": "Nom du groupe."},
-        "nodeCID": {"type": "integer", "desc": "ID du nœud à l'exécution."}
+        "type": {
+          "type": "string",
+          "desc": "Group name."
+        },
+        "nodeCID": {
+          "type": "integer",
+          "desc": "Runtime node ID."
+        }
       },
       "returns": [],
       "internal": false
     },
     "clearTypeNodeDebugText": {
-      "desc": "Supprime un groupe de textes entier et recale les index des groupes suivants ainsi que le mode sélectionné.",
-      "params": {"type": {"type": "string", "desc": "Nom du groupe."}},
+      "desc": "Removes an entire text group and realigns the indices of the following groups as well as the selected mode.",
+      "params": {
+        "type": {
+          "type": "string",
+          "desc": "Group name."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "clearAllNodeDebugText": {
-      "desc": "Supprime tous les groupes de textes debug de nœuds (ne reste que 'off').",
+      "desc": "Removes all node debug text groups (only 'off' remains).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "isEnabled": {
-      "desc": "Indique si le debug visuel est affiché.",
+      "desc": "Indicates whether the visual debug is displayed.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "M.state.vehicleDebugVisible."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "M.state.vehicleDebugVisible."
+        }
+      ],
       "internal": false
     },
     "setEnabled": {
-      "desc": "Affiche ou masque le debug visuel, met à jour le dessin et l'UI.",
-      "params": {"enabled": {"type": "boolean", "desc": "true pour afficher."}},
+      "desc": "Shows or hides the visual debug, updates the drawing and the UI.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to show."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "toggleEnabled": {
-      "desc": "Inverse l'affichage du debug. Réservée au système d'input, pas à l'UI.",
+      "desc": "Toggles the debug display. Reserved for the input system, not for the UI.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "nodetextModeChange": {
-      "desc": "Décale le mode de texte de nœuds (cyclique) et affiche un message UI avec le nom du mode.",
-      "params": {"change": {"type": "integer", "desc": "+1 suivant, -1 précédent."}},
+      "desc": "Shifts the node text mode (cyclic) and displays a UI message with the mode name.",
+      "params": {
+        "change": {
+          "type": "integer",
+          "desc": "+1 next, -1 previous."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "nodevisModeChange": {
-      "desc": "Décale le mode de visualisation des nœuds (cyclique) avec message UI.",
-      "params": {"change": {"type": "integer", "desc": "+1 / -1."}},
+      "desc": "Shifts the node visualization mode (cyclic) with a UI message.",
+      "params": {
+        "change": {
+          "type": "integer",
+          "desc": "+1 / -1."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "nodedebugtextModeChange": {
-      "desc": "Décale le groupe de textes debug de nœuds affiché (cyclique) avec message UI.",
-      "params": {"change": {"type": "integer", "desc": "+1 / -1."}},
+      "desc": "Shifts the displayed node debug text group (cyclic) with a UI message.",
+      "params": {
+        "change": {
+          "type": "integer",
+          "desc": "+1 / -1."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "skeletonModeChange": {
-      "desc": "Décale le mode de visualisation des poutres (beamVisMode, cyclique) avec message UI.",
-      "params": {"change": {"type": "integer", "desc": "+1 / -1."}},
+      "desc": "Shifts the beam visualization mode (beamVisMode, cyclic) with a UI message.",
+      "params": {
+        "change": {
+          "type": "integer",
+          "desc": "+1 / -1."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "colTrisModeChange": {
-      "desc": "Décale le mode des triangles de collision (cyclique) avec message UI.",
-      "params": {"change": {"type": "integer", "desc": "+1 / -1."}},
+      "desc": "Shifts the collision triangle mode (cyclic) with a UI message.",
+      "params": {
+        "change": {
+          "type": "integer",
+          "desc": "+1 / -1."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "cogChange": {
-      "desc": "Décale le mode d'affichage du centre de gravité (cyclique) avec message UI.",
-      "params": {"change": {"type": "integer", "desc": "+1 / -1."}},
+      "desc": "Shifts the center of gravity display mode (cyclic) with a UI message.",
+      "params": {
+        "change": {
+          "type": "integer",
+          "desc": "+1 / -1."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "resetModes": {
-      "desc": "Remet l'état à une copie de initState (tous modes sur 'off'), affiche le message vehicle.bdebug.clear et met à jour l'UI.",
+      "desc": "Resets the state to a copy of initState (all modes 'off'), displays the message vehicle.bdebug.clear and updates the UI.",
       "params": {},
       "returns": [],
       "internal": false

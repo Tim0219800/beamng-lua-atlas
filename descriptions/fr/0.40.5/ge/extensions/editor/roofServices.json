@@ -1,0 +1,5 @@
+{
+  "path": "lua/ge/extensions/editor/roofServices.lua",
+  "module": "Fichier vide dans BeamNG.drive 0.40.5 (0 ligne) : aucun code, aucune fonction exportée. Probablement un emplacement réservé pour un futur outil de toits de l'éditeur.",
+  "notes": ["Le fichier est vide ; require('extensions/editor/roofServices') renvoie true (valeur par défaut de require pour un chunk sans retour), pas une table."]
+}

@@ -1,28 +1,28 @@
 # `flowgraph_nodes_recording_recordReplay`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/recording/recordReplay.lua` · VM : Game Engine (GE) · 71 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/recording/recordReplay.lua` · VM: Game Engine (GE) · 71 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/recording/recordReplay")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/recording/recordReplay")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Record Replay' (categorie repeat_f_duration). Doit enregistrer un replay du vehicule courant : l'impulsion 'start' puis 'stop' appellent core_replay.toggleRecording(false). Sortie 'filename' mise a jour par onReplayStateChanged quand l'etat devient 'recording'.
+Flowgraph node 'Record Replay' (repeat_f_duration category). Meant to record a replay of the current vehicle: the impulse 'start' then 'stop' call core_replay.toggleRecording(false). Output 'filename' updated by onReplayStateChanged when the state becomes 'recording'.
 
-## Remarques
+## Notes
 
-- Le champ C.todo du code signale que le systeme de replay ne permet pas de choisir d'autres vehicules.
-- start et stop appellent tous deux toggleRecording(false) (basculement) ; le pin 'prefix' n'est utilise que dans saveFile qui n'est jamais appelee.
+- The C.todo field in the code notes that the replay system does not allow choosing other vehicles.
+- start and stop both call toggleRecording(false) (toggle); the 'prefix' pin is only used in saveFile, which is never called.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Etat de duree 'inactive'. | 28 |
-| `C:drawMiddle(builder, style)` | Affiche l'etat de duree. | 63 |
+| `C:_executionStarted()` | Duration state 'inactive'. | 28 |
+| `C:drawMiddle(builder, style)` | Displays the duration state. | 63 |
 | `C:init()` | state = 'none'. | 24 |
-| `C:onReplayStateChanged(state)` | Hook appele par le systeme de replay quand son etat change ; en enregistrement, memorise le fichier charge dans 'filename'. | 32 |
-| `C:saveFile()` | Construit un nom de fichier (prefix ou 'Recording_<id>' suivi d'un numero) mais ne l'utilise pas : la fonction ne fait rien d'utile. | 38 |
-| `C:work()` | Etat inactive : 'start' lance toggleRecording et passe a 'started'. Etat started : 'stop' relance toggleRecording et passe a 'finished'. | 45 |
+| `C:onReplayStateChanged(state)` | Hook called by the replay system when its state changes; while recording, stores the loaded file in 'filename'. | 32 |
+| `C:saveFile()` | Builds a file name (prefix or 'Recording_<id>' followed by a number) but does not use it: the function does nothing useful. | 38 |
+| `C:work()` | State inactive: 'start' launches toggleRecording and goes to 'started'. State started: 'stop' launches toggleRecording again and goes to 'finished'. | 45 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/recording/recordReplay.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/recording/recordReplay.lua`.*

@@ -1,0 +1,42 @@
+{
+  "path": "lua/ge/extensions/editor/heroRoadEditor/profile.lua",
+  "module": "Profil en travers d'un groupe du Hero Road Editor. Transforme les paramètres de voie, de bombé (crown) et d'accotement en une coupe 2D par station (décalage latéral o, écart vertical dz par rapport au plan de la ligne centrale) et en un angle de dévers (bank) piloté par la courbure. mesh.lua balaie ces coupes le long de la route pour fabriquer la surface. Gère aussi l'élargissement en courbe, les élargissements posés (laybys, voies, carrefours), les extrémités plates et un plafond anti-repli du bord intérieur.",
+  "notes": [
+    "Paramètres lus sur le groupe (défaut) : leftExtM/rightExtM 5.0 m, crownOn (true sauf false), crossfallPct 2.5 %, shoulderWidthM 0, shoulderFallPct 6 %, superElevMaxDeg 6 degrés, superMinRadiusM 80 m (min 1), latRes 4 sous-divisions par côté, curveWidenMaxM, flatEnds / flatEndLenM, sideChamfers / chamferWidthM 0.6 m.",
+    "Le bombé est parabolique (sommet plat au centre, pas de pli central) ; il s'efface en courbe (facteur 1 - |t|) et aux extrémités plates.",
+    "Le dévers atteint son maximum quand le rayon vaut superMinRadiusM ; il est lissé sur une demi-fenêtre de 18 m. En mode group.geometryMode == 'engineered', des superElevDeg par virage (group.corners) peuvent le remplacer.",
+    "Anti-repli : le côté intérieur est limité à 0.8 fois le rayon de virage local (foldSafety), la courbure exacte divCurv étant utilisée si elle est alignée sur les stations, sinon une estimation par trame discrète ; la contrainte est érodée sur 8 m.",
+    "Le nombre de colonnes est constant (accotement + 2*latRes + accotement) : toutes les stations ont la même forme de coupe.",
+    "build renvoie nil, nil si divPoints a moins de 2 points ou si tangents est absent."
+  ],
+  "fields": {
+    "MAT_ROAD": {"type": "string", "desc": "Clé de matériau de bande 'road' (résolue en vrai matériau dans mesh.lua)."},
+    "MAT_SHOULDER": {"type": "string", "desc": "Clé de matériau de bande 'shoulder'."}
+  },
+  "functions": {
+    "build": {
+      "desc": "Construit les coupes par station et le dévers pour le groupe. Chaque coupe est une liste de points {o, dz} de gauche à droite.",
+      "params": {"group": {"type": "table", "desc": "Groupe Hero Road (divPoints, tangents, divCurv, discMap, corners, widenings, junctions, paramètres de profil)."}},
+      "returns": [
+        {"type": "table|nil", "desc": "Tableau sur divPoints de { pts = {{o, dz}, ...}, bank = angle en radians }, ou nil si la géométrie n'est pas prête."},
+        {"type": "string[]|nil", "desc": "Clé de matériau par bande (MAT_ROAD ou MAT_SHOULDER), une entrée par segment de coupe."}
+      ],
+      "internal": false
+    },
+    "minSafeRadius": {
+      "desc": "Plus petit rayon (m) de ligne centrale que le groupe peut arrondir avant que le plafond de repli du bord intérieur ne morde : demi-largeur intérieure (largeur max + accotement + chanfrein + moitié de l'élargissement max) divisée par 0.8, plus 1.5 m de marge.",
+      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "returns": [{"type": "number", "desc": "Rayon minimal sûr en mètres."}],
+      "internal": false
+    },
+    "previewCrossSection": {
+      "desc": "Coupe d'une section droite (bombé complet, sans dévers ni plafond de repli) pour l'aperçu en lecture seule de l'interface.",
+      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "returns": [
+        {"type": "table", "desc": "Liste de points {o, dz}."},
+        {"type": "string[]", "desc": "Matériau par bande."}
+      ],
+      "internal": false
+    }
+  }
+}

@@ -1,39 +1,39 @@
 # `ljson`
 
-*Fichier : `lua/common/ljson.lua` · VM : Commun (GE + véhicule) · 363 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/ljson.lua` · VM: Common (GE + vehicle) · 363 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("ljson")`
+**Access:** `require("ljson")`
 
-Ancien parseur SJSON écrit en Lua pur (Lua 5.1), conservé quand json.lua est passé à string.buffer de LuaJIT. Il décode le format SJSON d'Autodesk (JSON étendu) utilisé par les fichiers jbeam et de configuration. Rarement utile à un moddeur (préférer json.decode, plus rapide), mais il tolère les mêmes extensions et produit des erreurs avec numéro de ligne.
+Old SJSON parser written in pure Lua (Lua 5.1), kept when json.lua switched to LuaJIT's string.buffer. It decodes Autodesk's SJSON format (extended JSON) used by jbeam and configuration files. Rarely useful to a modder (prefer json.decode, which is faster), but it tolerates the same extensions and produces errors with line numbers.
 
-## Exemple
+## Example
 
 ```lua
 local t = require('ljson').decode(readFile('mon.sjson'))
 ```
 
-## Remarques
+## Notes
 
-- Extensions SJSON acceptées : commentaires // et /* */ (les commentaires /* imbriqués sont une erreur), virgules traitées comme des espaces (donc facultatives), clés sans guillemets (caractères [A-Za-z0-9_]), séparateur de clé ':' ou '=', dictionnaire racine sans accolades (suite de clé:valeur), valeurs Infinity et 1#INF00 (-> math.huge).
-- Échappements de chaîne reconnus après '\' : t n f r b " \ et, de façon surprenante dans le code, un retour à la ligne (-> '\n'), le chiffre 9 (-> tabulation) et le chiffre 0 (-> CR). Les autres '\x' laissent la barre oblique telle quelle.
-- Pendant le décodage, le ramasse-miettes est arrêté (collectgarbage('stop')) puis relancé ; une erreur de syntaxe lève error() avec 'message near line N, <texte de la ligne>'. L'état du module (chaîne source) est global au module : decode n'est pas réentrant.
-- Dans ljson, les clés en double ne sont pas signalées (la dernière gagne) ; jsonDebug.lua est la même base avec avertissements de doublons.
-- Les nombres sont lus à la main (partie entière, fractionnaire par multiplication de 0.1 : pas d'exactitude binaire parfaite pour les décimales ; les exposants utilisent tonumber).
+- Accepted SJSON extensions: // and /* */ comments (nested /* comments are an error), commas treated as whitespace (hence optional), unquoted keys (characters [A-Za-z0-9_]), key separator ':' or '=', root dictionary without braces (sequence of key:value), values Infinity and 1#INF00 (-> math.huge).
+- String escapes recognized after '\': t n f r b " \ and, surprisingly in the code, a line break (-> '\n'), the digit 9 (-> tab) and the digit 0 (-> CR). Other '\x' leave the backslash as is.
+- During decoding, the garbage collector is stopped (collectgarbage('stop')) then restarted; a syntax error raises error() with 'message near line N, <line text>'. The module state (source string) is global to the module: decode is not reentrant.
+- In ljson, duplicate keys are not reported (the last one wins); jsonDebug.lua is the same base with duplicate warnings.
+- Numbers are read by hand (integer part, fractional part by multiplication by 0.1: no perfect binary exactness for decimals; exponents use tonumber).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ljson.decode(si)` | Décode un texte SJSON/JSON en table Lua. Renvoie nil si si est nil. Lève une erreur avec numéro de ligne si le texte est invalide. | 233 |
+| `ljson.decode(si)` | Decodes SJSON/JSON text into a Lua table. Returns nil if si is nil. Raises an error with a line number if the text is invalid. | 233 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ljson.decode(si)`
 
-Décode un texte SJSON/JSON en table Lua. Renvoie nil si si est nil. Lève une erreur avec numéro de ligne si le texte est invalide.
+Decodes SJSON/JSON text into a Lua table. Returns nil if si is nil. Raises an error with a line number if the text is invalid.
 
-- `si` (*string|nil*) : texte SJSON
-- **renvoie** : table|nil valeur décodée
+- `si` (*string|nil*) : SJSON text
+- **returns**: table|nil decoded value
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/ljson.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/ljson.lua`.*

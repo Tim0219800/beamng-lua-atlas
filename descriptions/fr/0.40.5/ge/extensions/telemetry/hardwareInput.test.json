@@ -1,0 +1,72 @@
+{
+  "path": "lua/ge/extensions/telemetry/hardwareInput.test.lua",
+  "module": "Tests unitaires de telemetry/hardwareInput (runTestFiles(\"hardwareInput\")).",
+  "functions": {
+    "testMapsEveryAvailableWheelField": {
+      "desc": "Vérifie que tous les champs d'un volant (noms, vidpid, productId/vendorId, GUID, FFB, révisions, controls, controlCounts) sont repris.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testUnknownDefaultUpdateRateStaysAbsent": {
+      "desc": "Vérifie que sans période d'échantillonnage FFB valide, ni la période ni maxRawFfbUpdateRateHz ne sont renseignées.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testEnglishNameComesOnlyFromOfficialInputMap": {
+      "desc": "Vérifie que le nom anglais est lu dans /settings/inputmaps/<vidpid>.json quand le fichier est officiel.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testUnofficialInputMapCannotSupplyTelemetryName": {
+      "desc": "Vérifie qu'une table d'entrée non officielle ne peut pas fournir de nom.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testNonWheelsKeepOnlyCommonIdentity": {
+      "desc": "Vérifie qu'un périphérique qui n'est pas un volant ne garde que type, productName, vidpid et forceFeedback.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testSymbolicDeviceIdentityKeepsItsCase": {
+      "desc": "Vérifie qu'un identifiant symbolique (ex. 'XIDevice') n'est pas mis en majuscules.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

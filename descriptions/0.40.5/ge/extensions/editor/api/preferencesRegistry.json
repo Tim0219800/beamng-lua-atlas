@@ -1,108 +1,359 @@
 {
   "path": "lua/ge/extensions/editor/api/preferencesRegistry.lua",
-  "module": "Registre des préférences de l'éditeur : organise les préférences en catégorie > sous-catégorie > item (chemin \"categorie.souscategorie.item\"), avec type, valeur par défaut, description, libellé, bornes, drapeaux hidden/advanced, fonction UI personnalisée, libellés d'enum et version. Gère le chargement/sauvegarde dans `settings/editor/preferences.json` (format version 2, seules les valeurs différant du défaut sont écrites) et l'émission du hook `onEditorPreferenceValueChanged`. Les extensions d'éditeur y déclarent leurs réglages ; on y accède aussi via `editor.getPreference(path)`. Le module renvoie un constructeur sans argument.",
-  "usage": "local reg = require(\"editor/api/preferencesRegistry\")()\nreg:registerCategory(\"myTool\", \"My Tool\")\nreg:registerSubCategory(\"myTool\", \"general\", \"General\", {\n  {speed = {\"float\", 1.0, \"Vitesse\", nil, 0, 10}},\n})\nreg:loadPreferences()\nlocal v = reg:get(\"myTool.general.speed\")",
+  "module": "Editor preferences registry: organizes preferences as category > subcategory > item (path \"category.subcategory.item\"), with type, default value, description, label, bounds, hidden/advanced flags, custom UI function, enum labels and version. Handles loading/saving in `settings/editor/preferences.json` (format version 2, only values differing from the default are written) and emission of the `onEditorPreferenceValueChanged` hook. Editor extensions declare their settings there; it is also accessed via `editor.getPreference(path)`. The module returns a constructor with no arguments.",
+  "usage": "local reg = require(\"editor/api/preferencesRegistry\")()\nreg:registerCategory(\"myTool\", \"My Tool\")\nreg:registerSubCategory(\"myTool\", \"general\", \"General\", {\n  {speed = {\"float\", 1.0, \"Speed\", nil, 0, 10}},\n})\nreg:loadPreferences()\nlocal v = reg:get(\"myTool.general.speed\")",
   "notes": [
-    "Format d'un item dans registerPreferences (table positionnelle) : [1] type, [2] defaultValue, [3] description, [4] label (sinon sentenceCase du nom), [5] minValue, [6] maxValue, [7] hidden, [8] advanced, [9] customUiFunc, [10] enumLabels (liste de chaînes, enum générée {name, value=index}), [11] version (défaut 0). Chaque élément de `prefs` est une table à UNE seule paire {nom = infos} pour garder l'ordre.",
-    "Types gérés pour (dé)sérialisation en chaîne : float, int, double, char, bool, table (JSON), Point3F/vec3, Point2F, Point2I, Point4F, ColorI, ColorF, RectF. Les vecteurs sont écrits sans virgules.",
-    "`set` borne les nombres entre minValue et maxValue et marque `dirty` ; un chemin non enregistré est logué une seule fois puis ignoré. `get` plante si `loadPreferences` n'a pas encore été appelé (self.preferences nil).",
-    "Les changements sont accumulés dans `changedItems` et diffusés par `broadcastPreferenceValueChanged` (à appeler depuis la boucle de l'éditeur), pas immédiatement.",
-    "Si le fichier a une version de format différente de 2, il est ignoré (valeurs par défaut) et écrasé à la prochaine sauvegarde.",
-    "Hooks émis : onEditorPreferenceValueChanged(itemPath, value), onEditorPreferenceVersionChanged(itemPath, valFichier, item), onEditorDeprecatedPreferencesItem(itemPath, value) (retourner true supprime l'item).",
-    "`getAsString` et `resetItemToDefault` plantent si le chemin n'est pas enregistré (item nil).",
-    "`loadCategory` plante si le fichier contient un item non enregistré (findItem renvoie nil puis itemValueFromString(nil, …))."
+    "Format of an item in registerPreferences (positional table): [1] type, [2] defaultValue, [3] description, [4] label (otherwise sentenceCase of the name), [5] minValue, [6] maxValue, [7] hidden, [8] advanced, [9] customUiFunc, [10] enumLabels (list of strings, generated enum {name, value=index}), [11] version (default 0). Each element of `prefs` is a table with ONE single {name = infos} pair to keep the order.",
+    "Types handled for string (de)serialization: float, int, double, char, bool, table (JSON), Point3F/vec3, Point2F, Point2I, Point4F, ColorI, ColorF, RectF. Vectors are written without commas.",
+    "`set` clamps numbers between minValue and maxValue and marks `dirty`; an unregistered path is logged once then ignored. `get` crashes if `loadPreferences` has not been called yet (self.preferences nil).",
+    "Changes are accumulated in `changedItems` and broadcast by `broadcastPreferenceValueChanged` (to be called from the editor loop), not immediately.",
+    "If the file has a format version other than 2, it is ignored (default values) and overwritten at the next save.",
+    "Emitted hooks: onEditorPreferenceValueChanged(itemPath, value), onEditorPreferenceVersionChanged(itemPath, fileValue, item), onEditorDeprecatedPreferencesItem(itemPath, value) (returning true deletes the item).",
+    "`getAsString` and `resetItemToDefault` crash if the path is not registered (item nil).",
+    "`loadCategory` crashes if the file contains an unregistered item (findItem returns nil then itemValueFromString(nil, ...))."
   ],
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Objet registre. Champs : categories, nonPersistentItemPaths, preferences (valeurs courantes par catégorie), changedItems, dirty.",
+      "desc": "Registry object. Fields: categories, nonPersistentItemPaths, preferences (current values per category), changedItems, dirty.",
       "functions": {
-        "init": {"desc": "Appelle clear(). Appelé par le constructeur.", "internal": true},
-        "clear": {"desc": "Vide catégories, chemins non persistants, préférences, éléments modifiés et remet dirty à false."},
+        "init": {
+          "desc": "Calls clear(). Called by the constructor.",
+          "internal": true
+        },
+        "clear": {
+          "desc": "Clears categories, non-persistent paths, preferences and changed items, and resets dirty to false."
+        },
         "itemValueFromString": {
-          "desc": "Convertit une valeur texte (lue du fichier) en valeur Lua selon item.type (nombre, bool, table JSON, vec3, Point2F, ColorF…).",
-          "params": {"item": {"type": "table", "desc": "item du registre (champ type)"}, "itemVal": {"type": "string", "desc": "valeur texte"}},
-          "returns": [{"type": "any", "desc": "valeur convertie (inchangée pour les types non listés)"}]
+          "desc": "Converts a text value (read from the file) into a Lua value according to item.type (number, bool, JSON table, vec3, Point2F, ColorF...).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "registry item (type field)"
+            },
+            "itemVal": {
+              "type": "string",
+              "desc": "text value"
+            }
+          },
+          "returns": [
+            {
+              "type": "any",
+              "desc": "converted value (unchanged for unlisted types)"
+            }
+          ]
         },
         "itemValueToString": {
-          "desc": "Convertit une valeur en texte pour le fichier : tostring pour les nombres/bool, JSON pour table (inchangé si déjà une string), tostring sans virgules pour les vecteurs/couleurs.",
-          "params": {"item": {"type": "table", "desc": "item du registre"}, "itemVal": {"type": "any", "desc": "valeur"}},
-          "returns": [{"type": "any", "desc": "valeur sérialisée"}]
+          "desc": "Converts a value to text for the file: tostring for numbers/bool, JSON for table (unchanged if already a string), tostring without commas for vectors/colors.",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "registry item"
+            },
+            "itemVal": {
+              "type": "any",
+              "desc": "value"
+            }
+          },
+          "returns": [
+            {
+              "type": "any",
+              "desc": "serialized value"
+            }
+          ]
         },
         "registerCategory": {
-          "desc": "Crée (ou retrouve) une catégorie de premier niveau. Si elle existe avec un autre libellé, avertit et remplace le libellé.",
-          "params": {"categName": {"type": "string", "desc": "nom interne"}, "categLabel": {"type": "string|nil", "desc": "libellé affiché (défaut sentenceCase du nom)"}},
-          "returns": [{"type": "table", "desc": "la catégorie {name, label, subcategories}"}]
+          "desc": "Creates (or finds) a top-level category. If it exists with a different label, warns and replaces the label.",
+          "params": {
+            "categName": {
+              "type": "string",
+              "desc": "internal name"
+            },
+            "categLabel": {
+              "type": "string|nil",
+              "desc": "displayed label (default sentenceCase of the name)"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "the category {name, label, subcategories}"
+            }
+          ]
         },
         "registerSubCategory": {
-          "desc": "Crée (ou retrouve) une sous-catégorie dans une catégorie déjà enregistrée et y enregistre éventuellement des préférences. Logue une erreur et renvoie nil si la catégorie n'existe pas.",
+          "desc": "Creates (or finds) a subcategory in an already registered category and optionally registers preferences in it. Logs an error and returns nil if the category does not exist.",
           "params": {
-            "categName": {"type": "string", "desc": "catégorie parente"},
-            "subCategName": {"type": "string", "desc": "nom interne"},
-            "subCategLabel": {"type": "string|nil", "desc": "libellé affiché"},
-            "prefs": {"type": "table|nil", "desc": "liste de {nom = {type, défaut, …}} (voir notes)"}
+            "categName": {
+              "type": "string",
+              "desc": "parent category"
+            },
+            "subCategName": {
+              "type": "string",
+              "desc": "internal name"
+            },
+            "subCategLabel": {
+              "type": "string|nil",
+              "desc": "displayed label"
+            },
+            "prefs": {
+              "type": "table|nil",
+              "desc": "list of {name = {type, default, ...}} (see notes)"
+            }
           },
-          "returns": [{"type": "table|nil", "desc": "la sous-catégorie {name, label, items}"}]
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "the subcategory {name, label, items}"
+            }
+          ]
         },
         "registerPreferences": {
-          "desc": "Ajoute des items à une sous-catégorie existante. Un nom déjà présent est refusé avec une erreur loguée.",
+          "desc": "Adds items to an existing subcategory. A name already present is refused with a logged error.",
           "params": {
-            "categName": {"type": "string", "desc": "catégorie"},
-            "subCategName": {"type": "string", "desc": "sous-catégorie"},
-            "prefs": {"type": "table", "desc": "liste de tables à une paire {nom = {type, défaut, description, label, min, max, hidden, advanced, customUiFunc, enumLabels, version}}"}
+            "categName": {
+              "type": "string",
+              "desc": "category"
+            },
+            "subCategName": {
+              "type": "string",
+              "desc": "subcategory"
+            },
+            "prefs": {
+              "type": "table",
+              "desc": "list of one-pair tables {name = {type, default, description, label, min, max, hidden, advanced, customUiFunc, enumLabels, version}}"
+            }
           }
         },
-        "addNonPersistentItemPath": {"desc": "Marque un chemin comme non persistant : il n'est pas écrit dans les fichiers de préférences.", "params": {"subCategoryPath": {"type": "string", "desc": "chemin complet de l'item (malgré le nom du paramètre)"}}},
-        "removeNonPersistentItemPath": {"desc": "Retire un chemin de la liste des non persistants.", "params": {"subCategoryPath": {"type": "string", "desc": "chemin de l'item"}}},
-        "findCategory": {"desc": "Cherche une catégorie par nom.", "params": {"name": {"type": "string", "desc": "nom"}}, "returns": [{"type": "table|nil", "desc": "catégorie"}]},
-        "findSubCategory": {"desc": "Cherche une sous-catégorie par nom dans une catégorie.", "params": {"category": {"type": "table", "desc": "catégorie"}, "name": {"type": "string", "desc": "nom"}}, "returns": [{"type": "table|nil", "desc": "sous-catégorie"}]},
-        "findItem": {"desc": "Cherche un item par chemin \"cat.souscat.item\" ; nil si moins de 3 segments ou introuvable.", "params": {"itemPath": {"type": "string", "desc": "chemin"}}, "returns": [{"type": "table|nil", "desc": "item du registre"}]},
-        "findItemInSubCategory": {"desc": "Cherche un item par nom dans une sous-catégorie.", "params": {"subCateg": {"type": "table|nil", "desc": "sous-catégorie"}, "itemName": {"type": "string", "desc": "nom"}}, "returns": [{"type": "table|nil", "desc": "item"}]},
+        "addNonPersistentItemPath": {
+          "desc": "Marks a path as non-persistent: it is not written to the preferences files.",
+          "params": {
+            "subCategoryPath": {
+              "type": "string",
+              "desc": "full path of the item (despite the parameter name)"
+            }
+          }
+        },
+        "removeNonPersistentItemPath": {
+          "desc": "Removes a path from the non-persistent list.",
+          "params": {
+            "subCategoryPath": {
+              "type": "string",
+              "desc": "item path"
+            }
+          }
+        },
+        "findCategory": {
+          "desc": "Looks up a category by name.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "name"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "category"
+            }
+          ]
+        },
+        "findSubCategory": {
+          "desc": "Looks up a subcategory by name in a category.",
+          "params": {
+            "category": {
+              "type": "table",
+              "desc": "category"
+            },
+            "name": {
+              "type": "string",
+              "desc": "name"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "subcategory"
+            }
+          ]
+        },
+        "findItem": {
+          "desc": "Looks up an item by path \"cat.subcat.item\"; nil if fewer than 3 segments or not found.",
+          "params": {
+            "itemPath": {
+              "type": "string",
+              "desc": "path"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "registry item"
+            }
+          ]
+        },
+        "findItemInSubCategory": {
+          "desc": "Looks up an item by name in a subcategory.",
+          "params": {
+            "subCateg": {
+              "type": "table|nil",
+              "desc": "subcategory"
+            },
+            "itemName": {
+              "type": "string",
+              "desc": "name"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "item"
+            }
+          ]
+        },
         "migratePreferences": {
-          "desc": "Parcourt les préférences chargées et, pour chaque item absent du registre, émet onEditorDeprecatedPreferencesItem ; supprime l'item si deleteDeprecatedItems est vrai ou si le hook renvoie true. Corrige aussi les catégories/sous-catégories qui ne sont pas des tables.",
-          "params": {"deleteDeprecatedItems": {"type": "boolean|nil", "desc": "true = supprimer tous les items obsolètes"}}
+          "desc": "Walks the loaded preferences and, for each item absent from the registry, emits onEditorDeprecatedPreferencesItem; deletes the item if deleteDeprecatedItems is true or if the hook returns true. Also fixes categories/subcategories that are not tables.",
+          "params": {
+            "deleteDeprecatedItems": {
+              "type": "boolean|nil",
+              "desc": "true = delete all obsolete items"
+            }
+          }
         },
         "set": {
-          "desc": "Fixe la valeur d'une préférence par chemin (bornée pour un nombre), marque dirty et met le changement en file pour le hook.",
-          "params": {"itemPath": {"type": "string", "desc": "\"cat.souscat.item\""}, "value": {"type": "any", "desc": "nouvelle valeur"}}
+          "desc": "Sets the value of a preference by path (clamped for a number), marks dirty and queues the change for the hook.",
+          "params": {
+            "itemPath": {
+              "type": "string",
+              "desc": "\"cat.subcat.item\""
+            },
+            "value": {
+              "type": "any",
+              "desc": "new value"
+            }
+          }
         },
         "broadcastPreferenceValueChanged": {
-          "desc": "Émet onEditorPreferenceValueChanged pour chaque changement en file puis vide la file.",
-          "returns": [{"type": "boolean", "desc": "true s'il y avait des changements"}]
+          "desc": "Emits onEditorPreferenceValueChanged for each queued change then clears the queue.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if there were changes"
+            }
+          ]
         },
         "get": {
-          "desc": "Renvoie la valeur d'une préférence par chemin (équivalent de editor.getPreference).",
-          "params": {"itemPath": {"type": "string", "desc": "\"cat.souscat.item\""}},
-          "returns": [{"type": "any", "desc": "valeur, ou nil si inconnue"}]
+          "desc": "Returns the value of a preference by path (equivalent of editor.getPreference).",
+          "params": {
+            "itemPath": {
+              "type": "string",
+              "desc": "\"cat.subcat.item\""
+            }
+          },
+          "returns": [
+            {
+              "type": "any",
+              "desc": "value, or nil if unknown"
+            }
+          ]
         },
-        "getAsString": {"desc": "Renvoie la valeur d'une préférence sérialisée en texte selon son type.", "params": {"itemPath": {"type": "string", "desc": "chemin"}}, "returns": [{"type": "any", "desc": "valeur sérialisée"}]},
+        "getAsString": {
+          "desc": "Returns the value of a preference serialized as text according to its type.",
+          "params": {
+            "itemPath": {
+              "type": "string",
+              "desc": "path"
+            }
+          },
+          "returns": [
+            {
+              "type": "any",
+              "desc": "serialized value"
+            }
+          ]
+        },
         "loadPreferences": {
-          "desc": "Lit le fichier de préférences (défaut settings/editor/preferences.json), rejette un format de version différente, puis remplit chaque item enregistré avec la valeur du fichier ou la valeur par défaut. Gère les anciennes valeurs (non-table) et appelle onEditorPreferenceVersionChanged si la version d'un item a changé. Pas de hook de changement pendant le chargement.",
-          "params": {"filename": {"type": "string|nil", "desc": "fichier json"}}
+          "desc": "Reads the preferences file (default settings/editor/preferences.json), rejects a different format version, then fills each registered item with the file value or the default value. Handles old (non-table) values and calls onEditorPreferenceVersionChanged if an item's version changed. No change hook during loading.",
+          "params": {
+            "filename": {
+              "type": "string|nil",
+              "desc": "json file"
+            }
+          }
         },
-        "callHookForSetValue": {"desc": "Émet onEditorPreferenceValueChanged pour TOUS les items enregistrés avec leur valeur actuelle (utile après un chargement)."},
+        "callHookForSetValue": {
+          "desc": "Emits onEditorPreferenceValueChanged for ALL registered items with their current value (useful after a load)."
+        },
         "loadCategory": {
-          "desc": "Charge une seule catégorie depuis un fichier au format de saveCategory et applique ses valeurs ; marque dirty.",
-          "params": {"categoryName": {"type": "string", "desc": "catégorie"}, "filename": {"type": "string", "desc": "fichier json"}}
+          "desc": "Loads a single category from a file in saveCategory's format and applies its values; marks dirty.",
+          "params": {
+            "categoryName": {
+              "type": "string",
+              "desc": "category"
+            },
+            "filename": {
+              "type": "string",
+              "desc": "json file"
+            }
+          }
         },
         "saveCategory": {
-          "desc": "Sauvegarde toutes les préférences d'une catégorie (même celles à la valeur par défaut, hors chemins non persistants) dans un fichier json.",
-          "params": {"categoryName": {"type": "string", "desc": "catégorie et ses sous-catégories"}, "filename": {"type": "string", "desc": "fichier json cible"}}
+          "desc": "Saves all the preferences of a category (even those at the default value, excluding non-persistent paths) to a json file.",
+          "params": {
+            "categoryName": {
+              "type": "string",
+              "desc": "category and its subcategories"
+            },
+            "filename": {
+              "type": "string",
+              "desc": "target json file"
+            }
+          }
         },
         "savePreferences": {
-          "desc": "Écrit les préférences dans le fichier (défaut settings/editor/preferences.json) en omettant les valeurs égales au défaut et les chemins non persistants ; remet dirty à false. Conserve les valeurs d'extensions non chargées.",
-          "params": {"filename": {"type": "string|nil", "desc": "fichier json"}},
-          "returns": [{"type": "boolean|nil", "desc": "false si aucune préférence chargée"}]
+          "desc": "Writes the preferences to the file (default settings/editor/preferences.json) omitting values equal to the default and non-persistent paths; resets dirty to false. Keeps values of unloaded extensions.",
+          "params": {
+            "filename": {
+              "type": "string|nil",
+              "desc": "json file"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean|nil",
+              "desc": "false if no preferences are loaded"
+            }
+          ]
         },
         "resetToDefaults": {
-          "desc": "Remet à leur valeur par défaut tous les items d'une catégorie, ou de toutes les catégories si categoryName est nil.",
-          "params": {"categoryName": {"type": "string|nil", "desc": "catégorie ou nil pour tout"}},
-          "returns": [{"type": "boolean", "desc": "false si la catégorie n'existe pas"}]
+          "desc": "Resets all the items of a category, or of all categories if categoryName is nil, to their default value.",
+          "params": {
+            "categoryName": {
+              "type": "string|nil",
+              "desc": "category or nil for all"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false if the category does not exist"
+            }
+          ]
         },
         "resetItemToDefault": {
-          "desc": "Remet un item à sa valeur par défaut.",
-          "params": {"itemPath": {"type": "string", "desc": "chemin de l'item"}},
-          "returns": [{"type": "boolean", "desc": "true"}]
+          "desc": "Resets an item to its default value.",
+          "params": {
+            "itemPath": {
+              "type": "string",
+              "desc": "item path"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true"
+            }
+          ]
         }
       }
     }

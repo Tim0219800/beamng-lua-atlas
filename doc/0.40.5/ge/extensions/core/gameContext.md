@@ -1,51 +1,51 @@
 # `core_gameContext`
 
-*Fichier : `lua/ge/extensions/core/gameContext.lua` · VM : Game Engine (GE) · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/gameContext.lua` · VM: Game Engine (GE) · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_gameContext` : `extensions.load("core_gameContext")`, puis la globale `core_gameContext`
+**Access:** extension `core_gameContext`: `extensions.load("core_gameContext")`, then the global `core_gameContext`
 
-Extension GE `core_gameContext` : petit relais vers `gameplay_markerInteraction` (contexte de jeu courant) et vers l'UI (changement de mission en avant-plan). Fournit aussi le libellé d'avertissement « expérimental » affiché pour la carrière et les missions de rallye.
+GE extension `core_gameContext`: small relay to `gameplay_markerInteraction` (current game context) and to the UI (foreground mission change). Also provides the "experimental" warning label displayed for the career and rally missions.
 
-## Remarques
+## Notes
 
-- getGameContext charge gameplay_markerInteraction à la demande et renvoie son contexte ; renvoie {} si l'extension n'est pas disponible. Le contenu du contexte est défini dans gameplay_markerInteraction.
-- toggleMenues est une fonction vide (corps vide) : probablement un reste de code.
-- getWIPWarningLabel suppose que gameplay_missions_missionManager, gameplay_missions_missions et career_career sont chargées (sinon erreur Lua).
+- getGameContext loads gameplay_markerInteraction on demand and returns its context; returns {} if the extension is not available. The content of the context is defined in gameplay_markerInteraction.
+- toggleMenues is an empty function (empty body): probably leftover code.
+- getWIPWarningLabel assumes gameplay_missions_missionManager, gameplay_missions_missions and career_career are loaded (otherwise Lua error).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_gameContext.getGameContext(...)` | Renvoie le contexte de jeu fourni par gameplay_markerInteraction.getGameContext(...) en chargeant l'extension si besoin. | 7 |
-| `core_gameContext.getWIPWarningLabel()` | Clé de traduction du bandeau « expérimental » : 'ui.rally.experimentalWarning' si la mission de premier plan est de type rallyStage, rallyLoop ou rallyLoop2 et que le réglage rallyHideExperimentalBanner est faux ; 'ui.career.experimentalWarning' si la carrière est active ; sinon nil. | 25 |
-| `core_gameContext.onAnyMissionChanged(state, mission)` | Hook appelé quand l'état d'une mission change : transmet à l'UI l'évènement guihooks 'onAnyMissionChanged' (state, id de la mission). *(interne)* *(hook)* | 21 |
-| `core_gameContext.toggleMenues()` | Ne fait rien (fonction vide). | 17 |
+| `core_gameContext.getGameContext(...)` | Returns the game context provided by gameplay_markerInteraction.getGameContext(...), loading the extension if needed. | 7 |
+| `core_gameContext.getWIPWarningLabel()` | Translation key of the "experimental" banner: 'ui.rally.experimentalWarning' if the foreground mission is of type rallyStage, rallyLoop or rallyLoop2 and the rallyHideExperimentalBanner setting is false; 'ui.career.experimentalWarning' if career is active; otherwise nil. | 25 |
+| `core_gameContext.onAnyMissionChanged(state, mission)` | Hook called when a mission's state changes: forwards the guihooks event 'onAnyMissionChanged' (state, mission id) to the UI. *(internal)* *(hook)* | 21 |
+| `core_gameContext.toggleMenues()` | Does nothing (empty function). | 17 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_gameContext.getGameContext(...)`
 
-Renvoie le contexte de jeu fourni par gameplay_markerInteraction.getGameContext(...) en chargeant l'extension si besoin.
+Returns the game context provided by gameplay_markerInteraction.getGameContext(...), loading the extension if needed.
 
-- `...` (*any*) : Arguments transmis tels quels à gameplay_markerInteraction.getGameContext.
-- **renvoie** : table Contexte de jeu, ou {} si l'extension est indisponible.
+- `...` (*any*) : Arguments passed as is to gameplay_markerInteraction.getGameContext.
+- **returns**: table Game context, or {} if the extension is unavailable.
 
 #### `core_gameContext.getWIPWarningLabel()`
 
-Clé de traduction du bandeau « expérimental » : 'ui.rally.experimentalWarning' si la mission de premier plan est de type rallyStage, rallyLoop ou rallyLoop2 et que le réglage rallyHideExperimentalBanner est faux ; 'ui.career.experimentalWarning' si la carrière est active ; sinon nil.
+Translation key of the "experimental" banner: 'ui.rally.experimentalWarning' if the foreground mission is of type rallyStage, rallyLoop or rallyLoop2 and the rallyHideExperimentalBanner setting is false; 'ui.career.experimentalWarning' if career is active; otherwise nil.
 
-- **renvoie** : string|nil Clé de traduction ou nil.
+- **returns**: string|nil Translation key or nil.
 
 #### `core_gameContext.onAnyMissionChanged(state, mission)`
 
-Hook appelé quand l'état d'une mission change : transmet à l'UI l'évènement guihooks 'onAnyMissionChanged' (state, id de la mission).
+Hook called when a mission's state changes: forwards the guihooks event 'onAnyMissionChanged' (state, mission id) to the UI.
 
-- `state` (*string*) : Nouvel état de la mission (valeur définie par le gestionnaire de missions).
-- `mission` (*table|nil*) : Mission concernée ; seul mission.id est envoyé.
+- `state` (*string*) : New state of the mission (value defined by the mission manager).
+- `mission` (*table|nil*) : Mission concerned; only mission.id is sent.
 
-**Évènements UI (guihooks.trigger) :** `onAnyMissionChanged`
+**UI events (guihooks.trigger):** `onAnyMissionChanged`
 
-**Charge les extensions :** `gameplay_markerInteraction`
+**Loads extensions:** `gameplay_markerInteraction`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/gameContext.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/gameContext.lua`.*

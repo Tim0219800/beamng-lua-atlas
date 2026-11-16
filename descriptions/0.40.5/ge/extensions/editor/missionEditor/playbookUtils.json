@@ -1,27 +1,37 @@
 {
   "path": "lua/ge/extensions/editor/missionEditor/playbookUtils.lua",
-  "module": "Onglet « Playbook Utils » de l'éditeur de missions. Il propose des boutons qui ajoutent à editor_missionPlaybook.book.instructions des instructions de type missionAttempt pour la mission courante, avec différentes combinaisons d'étoiles (toutes, par défaut, bonus, aléatoires, une par une). Le module renvoie un constructeur : require(...)(missionEditor).",
+  "module": "\"Playbook Utils\" tab of the mission editor. It offers buttons that add missionAttempt instructions for the current mission to editor_missionPlaybook.book.instructions, with different star combinations (all, default, bonus, random, one by one). The module returns a constructor: require(...)(missionEditor).",
   "notes": [
-    "Chaque instruction a la forme {type = 'missionAttempt', missionId = id, stars = {clé = true}}.",
-    "Utilise careerSetup._activeStarCache (sortedStars, defaultStarKeysSorted, bonusStarKeysSorted) de l'instance de mission.",
-    "« Add Random Single Star » n'ajoute une étoile que s'il y a plus d'une étoile ; sinon l'instruction est ajoutée avec stars vide."
+    "Each instruction has the form {type = 'missionAttempt', missionId = id, stars = {key = true}}.",
+    "Uses the mission instance's careerSetup._activeStarCache (sortedStars, defaultStarKeysSorted, bonusStarKeysSorted).",
+    "\"Add Random Single Star\" only adds a star if there is more than one star; otherwise the instruction is added with empty stars."
   ],
   "classes": {
     "C": {
-      "desc": "Instance de l'onglet. Champs : missionEditor, tabName = 'Playbook Utils', mission, missionInstance.",
+      "desc": "Instance of the tab. Fields: missionEditor, tabName = 'Playbook Utils', mission, missionInstance.",
       "functions": {
         "init": {
-          "desc": "Constructeur : mémorise missionEditor et le nom d'onglet.",
-          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "desc": "Constructor: remembers missionEditor and the tab name.",
+          "params": {
+            "missionEditor": {
+              "type": "table",
+              "desc": "Main editor_missionEditor module."
+            }
+          },
           "internal": true
         },
         "setMission": {
-          "desc": "Définit la mission courante et son instance de jeu.",
-          "params": {"mission": {"type": "table", "desc": "Mission courante."}},
+          "desc": "Sets the current mission and its game instance.",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Current mission."
+            }
+          },
           "internal": true
         },
         "draw": {
-          "desc": "Dessine les boutons d'ajout d'instructions au playbook (vide, toutes les étoiles, étoiles par défaut, bonus, une étoile aléatoire, étoiles aléatoires, ajout individuel progressif, bonus dans un ordre aléatoire).",
+          "desc": "Draws the buttons for adding instructions to the playbook (empty, all stars, default stars, bonus, one random star, random stars, progressive individual addition, bonus in random order).",
           "internal": true
         }
       }

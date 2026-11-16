@@ -1,27 +1,59 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/objectBoxAnchors.lua",
-  "module": "Calcule des points d'ancrage sur le bas de la boîte englobante d'un objet pour l'outil Easy Select. Trois motifs sont produits : shortEdge (milieu du petit côté, à z min), longEdge (milieu du grand côté) et shortEdgeOrigin (comme shortEdge mais à z = 0 local, au niveau de l'origine). Le « long » axe est X si l'étendue mise à l'échelle en X >= celle en Y. Sert à décrire des arêtes de référence pour le déplacement/aimantation.",
+  "module": "Computes anchor points on the bottom of an object's bounding box for the Easy Select tool. Three patterns are produced: shortEdge (middle of the short side, at z min), longEdge (middle of the long side) and shortEdgeOrigin (like shortEdge but at local z = 0, at the origin level). The \"long\" axis is X if the scaled extent in X >= that in Y. Used to describe reference edges for moving/snapping.",
   "functions": {
     "describeBox": {
-      "desc": "Décrit une boîte locale (méthodes getCenter/getExtents et minExtents/maxExtents). Renvoie nil si la boîte n'est pas valide.",
+      "desc": "Describes a local box (methods getCenter/getExtents and minExtents/maxExtents). Returns nil if the box is not valid.",
       "params": {
-        "box": {"type": "table", "desc": "Boîte englobante locale"},
-        "scale": {"type": "vec3|nil", "desc": "Échelle de l'objet (défaut 1,1,1)"}
+        "box": {
+          "type": "table",
+          "desc": "Local bounding box"
+        },
+        "scale": {
+          "type": "vec3|nil",
+          "desc": "Object scale (default 1,1,1)"
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "{isLongX, scaledX, scaledY, shortEdge, longEdge, shortEdgeOrigin}, chaque arête ayant firstLocal/secondLocal"}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{isLongX, scaledX, scaledY, shortEdge, longEdge, shortEdgeOrigin}, each edge having firstLocal/secondLocal"
+        }
+      ]
     },
     "describeMeshBox": {
-      "desc": "Idem describeBox pour une boîte de mesh simple {minExtents, maxExtents, center, extents}. nil si un champ manque.",
+      "desc": "Same as describeBox for a simple mesh box {minExtents, maxExtents, center, extents}. nil if a field is missing.",
       "params": {
-        "meshBox": {"type": "table", "desc": "Boîte de mesh"},
-        "scale": {"type": "vec3|nil", "desc": "Échelle (défaut 1,1,1)"}
+        "meshBox": {
+          "type": "table",
+          "desc": "Mesh box"
+        },
+        "scale": {
+          "type": "vec3|nil",
+          "desc": "Scale (default 1,1,1)"
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Même structure que describeBox"}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Same structure as describeBox"
+        }
+      ]
     },
     "describeObject": {
-      "desc": "Décrit un objet de la scène en coordonnées monde. Utilise getObjBox + getTransform + getScale si possible ; sinon retombe sur la boîte monde getWorldBox. Chaque motif contient first, second, firstOffset, secondOffset, centerOffset (offsets relatifs à la position de l'objet).",
-      "params": {"obj": {"type": "userdata", "desc": "Objet de la scène (doit avoir getPosition)"}},
-      "returns": [{"type": "table|nil", "desc": "{isLongX, scaledX, scaledY, shortEdge, longEdge, shortEdgeOrigin} ou nil si aucune boîte valide"}]
+      "desc": "Describes a scene object in world coordinates. Uses getObjBox + getTransform + getScale if possible; otherwise falls back to the world box getWorldBox. Each pattern contains first, second, firstOffset, secondOffset, centerOffset (offsets relative to the object's position).",
+      "params": {
+        "obj": {
+          "type": "userdata",
+          "desc": "Scene object (must have getPosition)"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{isLongX, scaledX, scaledY, shortEdge, longEdge, shortEdgeOrigin} or nil if no valid box"
+        }
+      ]
     }
   }
 }

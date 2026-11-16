@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/parkingTrackVehicle.lua",
+  "module": "Nœud flowgraph « Track Vehicle Parking » (catégorie par défaut). Active le suivi de stationnement d'un véhicule (gameplay_parking.enableTracking) et sort enter/exit (impulsions), inside/outside, spotExists et spot (place cible, parkingSpotData). Entrée reset : désactive le suivi et remet l'état à zéro.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Appelle reset().",
+          "internal": true
+        },
+        "init": {
+          "desc": "Appelle reset().",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Désactive le suivi du véhicule et remet les sorties inside/outside/spotExists à false.",
+          "internal": false
+        },
+        "work": {
+          "desc": "Active le suivi si besoin, lit getTrackingData()[vehId] et détecte les passages garé / non garé.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

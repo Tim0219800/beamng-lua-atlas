@@ -2,86 +2,86 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/missionEditor/objectives.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Instance du panneau Objectives. Champs : missionEditor, mission, missionInstance (gameplay_missions_missions.getMissionById), careerSetup, attributeOptions, skillOptions, copiedStars (presse-papiers par type de mission), starKeysSorted.
+--- Instance of the Objectives panel. Fields: missionEditor, mission, missionInstance (gameplay_missions_missions.getMissionById), careerSetup, attributeOptions, skillOptions, copiedStars (clipboard per mission type), starKeysSorted.
 ---@class editor_missionEditor_objectives
 local editor_missionEditor_objectives = {}
 
---- Petit combo « ... » listant attributeOptions.
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:171
----@return string|nil  Clé d'attribut choisie ce frame, sinon nil.
+--- Small "..." combo listing attributeOptions.
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:171
+---@return string|nil  Attribute key chosen this frame, otherwise nil.
 function editor_missionEditor_objectives:attributeDropdown() end
 
---- Dessine l'en-tête « Career Setup » (case Raw, copier/coller de la configuration par type de mission) puis drawCareerSetup ou l'éditeur JSON brut de mission.careerSetup.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:505
+--- Draws the "Career Setup" header (Raw checkbox, copy/paste of the configuration per mission type) then drawCareerSetup or the raw JSON editor of mission.careerSetup.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:505
 function editor_missionEditor_objectives:draw() end
 
---- Contrôles d'ajout d'une récompense (texte, combo, +) et boutons copier/coller des récompenses.
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:219
----@param key string Clé de l'étoile.
----@param rewards table[]|nil Liste de récompenses actuelle.
----@return table[]|nil  Nouvelle liste si elle a changé, sinon nil.
+--- Controls for adding a reward (text, combo, +) and copy/paste buttons for the rewards.
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:219
+---@param key string Star key.
+---@param rewards table[]|nil Current rewards list.
+---@return table[]|nil  New list if it changed, otherwise nil.
 function editor_missionEditor_objectives:drawAddReward(key, rewards) end
 
---- Champ texte + combo pour l'attributeKey d'une récompense ; met à jour re.attributeKey.
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:191
----@param re table Récompense {attributeKey, rewardAmount}.
----@param idx integer Indice de la récompense.
----@param key string Clé de l'étoile.
+--- Text field + combo for a reward's attributeKey; updates re.attributeKey.
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:191
+---@param re table Reward {attributeKey, rewardAmount}.
+---@param idx integer Index of the reward.
+---@param key string Star key.
 function editor_missionEditor_objectives:drawAttributeInput(re, idx, key) end
 
---- Dessine toute la configuration : liste des étoiles avec cases à cocher, emplacement, éditeur du type, récompenses, textes de fin, puis résumé (étoiles par défaut, bonus, totaux de récompenses).
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:371
+--- Draws the whole configuration: list of stars with checkboxes, slot, type editor, rewards, ending texts, then summary (default stars, bonus, reward totals).
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:371
 function editor_missionEditor_objectives:drawCareerSetup() end
 
---- Combo pour choisir quelle étoile active occupe l'emplacement d'étoile par défaut donné. Non appelée dans ce fichier.
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:148
----@param defaultIndex integer Numéro d'emplacement (1 à 3).
+--- Combo to choose which active star occupies the given default star slot. Not called in this file.
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:148
+---@param defaultIndex integer Slot number (1 to 3).
 function editor_missionEditor_objectives:drawDefaultStar(defaultIndex) end
 
---- Ligne d'édition du texte de fin d'une étoile (ou « noStarUnlocked »), avec icônes d'état de la traduction par défaut et de la traduction actuelle.
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:328
----@param key string Clé de l'étoile ou « noStarUnlocked ».
+--- Edit row for a star's ending text (or "noStarUnlocked"), with status icons for the default translation and the current translation.
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:328
+---@param key string Star key or "noStarUnlocked".
 function editor_missionEditor_objectives:drawOutroText(key) end
 
---- Champ entier pour rewardAmount ; mémorise aussi _originalRewardAmount.
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:208
----@param re table Récompense.
----@param idx integer Indice de la récompense.
----@param key string Clé de l'étoile.
+--- Integer field for rewardAmount; also remembers _originalRewardAmount.
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:208
+---@param re table Reward.
+---@param idx integer Index of the reward.
+---@param key string Star key.
 function editor_missionEditor_objectives:drawRewardAmount(re, idx, key) end
 
---- Affiche et édite la liste des récompenses d'une étoile (suppression par bouton « Rem », ajout).
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:268
----@param key string Clé de l'étoile.
+--- Displays and edits a star's rewards list (deletion via "Rem" button, addition).
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:268
+---@param key string Star key.
 function editor_missionEditor_objectives:drawStarRewards(key) end
 
---- Appelle setMission(m) puis renvoie les problèmes d'étoiles, de textes et de récompenses de la mission.
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:46
----@param m table Mission à vérifier.
----@return table[]  Liste d'éléments {label, severity}.
+--- Calls setMission(m) then returns the mission's star, text and reward issues.
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:46
+---@param m table Mission to check.
+---@return table[]  List of elements {label, severity}.
 function editor_missionEditor_objectives:getMissionIssues(m) end
 
---- Renvoie le libellé traduit (_tr) de l'étoile, en gérant les libellés sous forme de fonction, de chaîne ou de table {txt}.
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:133
----@param key string Clé de l'étoile.
----@return string  Libellé traduit, ou chaîne vide.
+--- Returns the star's translated label (_tr), handling labels as a function, a string or a table {txt}.
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:133
+---@param key string Star key.
+---@return string  Translated label, or empty string.
 function editor_missionEditor_objectives:getStarLabel(key) end
 
---- Constructeur : charge career_branches et construit les listes attributeOptions et skillOptions (branches avec isSkill).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:20
----@param missionEditor table Module principal editor_missionEditor.
+--- Constructor: loads career_branches and builds the attributeOptions and skillOptions lists (branches with isSkill).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:20
+---@param missionEditor table Main editor_missionEditor module.
 function editor_missionEditor_objectives:init(missionEditor) end
 
---- Définit la mission courante, récupère son instance de jeu, les clés d'étoiles triées et l'éditeur du type de mission (setContainer(mission, 'mission')).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:113
----@param mission table Mission éditée.
+--- Sets the current mission, gets its game instance, the sorted star keys and the mission type's editor (setContainer(mission, 'mission')).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:113
+---@param mission table Edited mission.
 function editor_missionEditor_objectives:setMission(mission) end
 
---- Combo pour placer l'étoile en « Bonus Star » ou en « Default Star N ».
----Source : lua/ge/extensions/editor/missionEditor/objectives.lua:300
----@param key string Clé de l'étoile.
+--- Combo to place the star as "Bonus Star" or as "Default Star N".
+---Source: lua/ge/extensions/editor/missionEditor/objectives.lua:300
+---@param key string Star key.
 function editor_missionEditor_objectives:starSlotSelector(key) end
 

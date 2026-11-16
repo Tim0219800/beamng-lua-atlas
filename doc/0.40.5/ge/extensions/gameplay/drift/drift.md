@@ -1,12 +1,12 @@
 # `gameplay_drift_drift`
 
-*Fichier : `lua/ge/extensions/gameplay/drift/drift.lua` · VM : Game Engine (GE) · 1206 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drift/drift.lua` · VM: Game Engine (GE) · 1206 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drift_drift` : `extensions.load("gameplay_drift_drift")`, puis la globale `gameplay_drift_drift`
+**Access:** extension `gameplay_drift_drift`: `extensions.load("gameplay_drift_drift")`, then the global `gameplay_drift_drift`
 
-Moteur de détection du drift. Pour chaque véhicule suivi (un état par vehId, le véhicule du joueur 0 est suivi automatiquement), calcule à chaque frame l'angle de dérive, le survirage, la vitesse, la distance aux murs (raycasts avant/arrière), les crashs et spinouts, et décide si le véhicule drifte. Gère les structures driftActiveData (drift en cours) et driftChainActiveData (chaîne de drifts) et émet les hooks onDriftChainStarted, onDriftStatusChanged, onDriftTransition, onDriftActiveDataFinished, onDriftCompleted, onDriftCrash et onDriftSpinout que consomment scoring, display, quickMessages, statistics, etc. C'est le module à lire pour savoir si le joueur drifte et avec quel angle.
+Drift detection engine. For each tracked vehicle (one state per vehId, player 0's vehicle is tracked automatically), computes every frame the drift angle, oversteer, speed, distance to walls (front/rear raycasts), crashes and spinouts, and decides whether the vehicle is drifting. Manages the driftActiveData (drift in progress) and driftChainActiveData (drift chain) structures and emits the hooks onDriftChainStarted, onDriftStatusChanged, onDriftTransition, onDriftActiveDataFinished, onDriftCompleted, onDriftCrash and onDriftSpinout that scoring, display, quickMessages, statistics, etc. consume. This is the module to read to know whether the player is drifting and at what angle.
 
-## Exemple
+## Example
 
 ```lua
 if gameplay_drift_drift.getIsDrifting() then
@@ -15,376 +15,376 @@ if gameplay_drift_drift.getIsDrifting() then
 end
 ```
 
-## Remarques
+## Notes
 
-- Condition de drift (isDrifting) : survirage détecté, pas de marche arrière « cheesing » (angle > 120° avec accélération lissée > -0.07), minAngle (7°) < angle < maxAngle (165°), vitesse moyenne des points de référence > minAirSpeed (4 km/h), pas en mode marche, véhicule au sol, pas de cooldown d'échec (1.65 s), pas de timer de reset (0.1 s), pas de crash en cours.
-- Unités : angles en degrés ; getAirSpeed et kphAirSpeed en km/h (vel * 3.6) ; getVehVel renvoie la DIRECTION normalisée de la vitesse (velDir), pas la vitesse ; distances en mètres.
-- Une chaîne de drifts se termine (hook onDriftCompleted) quand le temps de confirmation s'écoule sans drift et que le score en cache est > 0 ; ce temps va de 1.2 s (combo <= 5) à 2.25 s (combo >= 20). Les zones de cascade remettent ce temps au maximum.
-- Les fonctions get* sans vehId utilisent le véhicule du joueur 0 s'il est suivi, sinon n'importe quel véhicule suivi ; avec un vehId inconnu elles renvoient nil/false/0.
-- Crash : onVehicleCrashStarted marque le véhicule comme crashé seulement si son score en cache est > 0 ; le hook onDriftCrash est émis 0.3 s plus tard. Spinout : vitesse < 1.5 km/h avec angle > 110° après un drift avec score en cache > 0.
-- Les murs sont détectés avec castRayStatic sur wallDetectionLength = 3 m, depuis l'avant et l'arrière du véhicule, avec un bruit bleu pour balayer la largeur ; les valeurs sont closestWallDistanceFront/Rear dans driftActiveData.
-- driftActiveData : {driftDuration, driftDistance, closestWallDistanceFront/Rear, currDegAngle, direction ("left"/"right"), totalDriftAngle, totalDriftTime, angleVelocity, startPos, lastPos, score, totalAngles, totalSpeeds, totalPerformanceFactors, totalSteps, ...}. driftChainActiveData : {totalDriftDistance, totalDriftTime, rightDrifts, leftDrifts, chainedDrifts, currentCircleDrift = {totalAngle}}.
-- Pas de détection pendant le tutoriel firstDrive, en marche à pied, en pause, quand dtSim <= 0, ni en multiseat hors contexte inSplitscreen.
-- simulateADrift(data) (debug audio) force angle, vitesse, distance au mur et crash simulé ; passer nil arrête la simulation.
-- Le champ driftDuration de driftActiveData n'est jamais mis à jour (reste 0) : utiliser totalDriftTime ou getCurrentDriftDuration.
-- getVehCorners renvoie une nouvelle table de 4 vec3 partagés (réutilisés à chaque frame, ne pas les modifier).
+- Drift condition (isDrifting): oversteer detected, no reverse "cheesing" (angle > 120° with smoothed acceleration > -0.07), minAngle (7°) < angle < maxAngle (165°), average speed of the reference points > minAirSpeed (4 km/h), not in walking mode, vehicle on the ground, no failure cooldown (1.65 s), no reset timer (0.1 s), no crash in progress.
+- Units: angles in degrees; getAirSpeed and kphAirSpeed in km/h (vel * 3.6); getVehVel returns the normalized DIRECTION of the velocity (velDir), not the speed; distances in meters.
+- A drift chain ends (onDriftCompleted hook) when the confirmation time runs out with no drift and the cached score is > 0; this time ranges from 1.2 s (combo <= 5) to 2.25 s (combo >= 20). Cascade zones reset this time to the maximum.
+- The get* functions without vehId use player 0's vehicle if it is tracked, otherwise any tracked vehicle; with an unknown vehId they return nil/false/0.
+- Crash: onVehicleCrashStarted marks the vehicle as crashed only if its cached score is > 0; the onDriftCrash hook is emitted 0.3 s later. Spinout: speed < 1.5 km/h with angle > 110° after a drift with cached score > 0.
+- Walls are detected with castRayStatic over wallDetectionLength = 3 m, from the front and rear of the vehicle, with blue noise to sweep the width; the values are closestWallDistanceFront/Rear in driftActiveData.
+- driftActiveData: {driftDuration, driftDistance, closestWallDistanceFront/Rear, currDegAngle, direction ("left"/"right"), totalDriftAngle, totalDriftTime, angleVelocity, startPos, lastPos, score, totalAngles, totalSpeeds, totalPerformanceFactors, totalSteps, ...}. driftChainActiveData: {totalDriftDistance, totalDriftTime, rightDrifts, leftDrifts, chainedDrifts, currentCircleDrift = {totalAngle}}.
+- No detection during the firstDrive tutorial, when walking, when paused, when dtSim <= 0, nor in multiseat outside the inSplitscreen context.
+- simulateADrift(data) (audio debug) forces angle, speed, wall distance and simulated crash; passing nil stops the simulation.
+- The driftDuration field of driftActiveData is never updated (stays 0): use totalDriftTime or getCurrentDriftDuration.
+- getVehCorners returns a new table of 4 shared vec3 (reused every frame, do not modify them).
 
-**Dépendances (chargées avant) :** `gameplay_walk`
+**Dependencies (loaded first):** `gameplay_walk`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drift_drift.addTrackedVehicle(vehId, opts)` | Ajoute un véhicule au suivi de drift (crée son état) et renvoie cet état. Avec opts.playerId, associe le véhicule à un joueur et retire tout autre véhicule suivi pour ce même joueur. | 873 |
-| `gameplay_drift_drift.doesPlHaveVeh(vehId)` | Indique si le véhicule suivi a des données de map valides. | 1000 |
-| `gameplay_drift_drift.getAirSpeed(vehId)` | Renvoie la vitesse du véhicule en km/h (norme de la vitesse * 3.6). | 920 |
-| `gameplay_drift_drift.getAngleDiff(vehId)` | Renvoie la variation d'angle de la direction de vitesse depuis la frame précédente (degrés), calculée pendant un drift. | 962 |
-| `gameplay_drift_drift.getCurrDegAngleSigned(vehId)` | Renvoie l'angle de dérive actuel en degrés, signé (le signe donne le côté). | 950 |
-| `gameplay_drift_drift.getCurrDriftCompletedTime(vehId)` | Renvoie la fraction (0..1) restante du temps de confirmation de la chaîne de drifts (1 = le drift vient d'avoir lieu, 0 = confirmé). | 956 |
-| `gameplay_drift_drift.getCurrentDriftDuration(vehId)` | Renvoie la durée du drift en cours (totalDriftTime), 0 s'il ne drifte pas. | 972 |
-| `gameplay_drift_drift.getDistSinceLastFrame(vehId)` | Renvoie la distance parcourue depuis la frame précédente, en mètres. | 967 |
-| `gameplay_drift_drift.getDriftActiveData(vehId)` | Renvoie les données du drift en cours (nil s'il n'y en a pas). | 900 |
-| `gameplay_drift_drift.getDriftChainActiveData(vehId)` | Renvoie les données de la chaîne de drifts en cours (nil si aucune). | 905 |
-| `gameplay_drift_drift.getDriftChainChainedDrifts(vehId)` | Renvoie le nombre de drifts enchaînés dans la chaîne en cours. | 910 |
-| `gameplay_drift_drift.getDriftDebugInfo()` | Renvoie {default=true, canBeChanged=true} pour la fenêtre de debug drift. | 1017 |
-| `gameplay_drift_drift.getDriftOptions()` | Renvoie la table des réglages de détection : minAngle 7, maxAngle 165, allowDonut, allowTightDrifts, raycastHeight 0.5, wallDetectionLength 3, baseDriftCompleteTime 1.2, failPointsCooldown 1.65, minAirSpeed 4, maxWasDriftingTime 4, crashDamageThreshold 150, etc. Table vivante, modifiable. | 1005 |
-| `gameplay_drift_drift.getGC()` | Renvoie la quantité de garbage mesurée par le profileur. | 1013 |
-| `gameplay_drift_drift.getIsCrashing(vehId)` | Indique si le véhicule est en train de crasher (gameplay_util_crashDetection). | 995 |
-| `gameplay_drift_drift.getIsDrifting(vehId)` | Indique si le véhicule est en train de drifter. | 915 |
-| `gameplay_drift_drift.getIsInTheAir(vehId)` | Indique si le véhicule n'est pas sur ses roues. | 990 |
-| `gameplay_drift_drift.getIsOverMinSpeedForDrift(vehId)` | Indique si la vitesse moyenne des points de référence dépasse minAirSpeed (4 km/h). | 985 |
-| `gameplay_drift_drift.getIsOverSteering(vehId)` | Indique si le véhicule est en survirage (avant et centre vont dans le même sens que l'arrière). | 980 |
-| `gameplay_drift_drift.getPlVeh()` | Renvoie l'objet véhicule principal suivi. | 935 |
-| `gameplay_drift_drift.getPlayerIdForVehicle(vehId)` | Renvoie l'id de joueur associé à un véhicule suivi. | 859 |
-| `gameplay_drift_drift.getTrackedVehicles()` | Renvoie la table des états de drift, indexée par vehId (table vivante). | 896 |
-| `gameplay_drift_drift.getVehCorners()` | Renvoie les 4 coins de la boîte englobante utilisée pour les raycasts (avant droit, arrière droit, arrière gauche, avant gauche), à hauteur raycastHeight. | 1009 |
-| `gameplay_drift_drift.getVehData(vehId)` | Renvoie les données de map.objects du véhicule (pos, vel, dirVec, ...). | 940 |
-| `gameplay_drift_drift.getVehId()` | Renvoie l'id du véhicule principal suivi (joueur 0 si possible). | 930 |
-| `gameplay_drift_drift.getVehPos(vehId)` | Renvoie la position du véhicule suivie par le module. | 925 |
-| `gameplay_drift_drift.getVehVel(vehId)` | Renvoie la direction normalisée de la vitesse du véhicule (velDir), pas son module. | 945 |
-| `gameplay_drift_drift.onAnyStuntZoneAccomplished()` | Hook : une zone de cascade est réussie ; remet le temps de confirmation de la chaîne de drifts au maximum. *(interne)* *(hook)* | 1080 |
-| `gameplay_drift_drift.onClientEndMission()` | Hook : fin de niveau ; vide la liste des véhicules suivis. *(interne)* *(hook)* | 1076 |
-| `gameplay_drift_drift.onDeserialized(data)` | Hook : restaure la case de debug. *(interne)* *(hook)* | 1151 |
-| `gameplay_drift_drift.onDriftChallengeFinished()` | Hook : fin d'un défi de drift ; émet onDriftCompleted pour les chaînes en cours et onDriftActiveDataFinished pour les drifts en cours. *(interne)* *(hook)* | 1103 |
-| `gameplay_drift_drift.onDriftContextChanged(context, oldContext)` | Hook : à un changement de contexte, ajoute les véhicules au suivi de crash (sauf en inAnotherMissionType, où ils en sont retirés). *(interne)* *(hook)* | 1087 |
-| `gameplay_drift_drift.onDriftPlVehReset(vehId)` | Hook : véhicule remis en place ; réinitialise son état et active un timer de reset de 0.1 s pendant lequel il ne drifte pas. *(interne)* *(hook)* | 1130 |
-| `gameplay_drift_drift.onSerialize()` | Hook : sauvegarde la case de debug avant rechargement Lua. *(interne)* *(hook)* | 1145 |
-| `gameplay_drift_drift.onUpdate(dtReal, _dtSim, dtRaw)` | Appelé à chaque frame : suit automatiquement le véhicule du joueur 0 si rien n'est suivi, puis met à jour la détection pour chaque véhicule suivi. Sauté pendant firstDrive, la marche, la pause ou dtSim <= 0. *(interne)* *(hook)* | 807 |
-| `gameplay_drift_drift.onVehicleCrashStarted(crashStartData)` | Hook : début de crash détecté par gameplay_util_crashDetection ; marque le véhicule comme crashé si son score en cache est > 0 (hors pause, gel, marche). *(interne)* *(hook)* | 1117 |
-| `gameplay_drift_drift.onVehicleDestroyed(vehId)` | Hook : retire le véhicule détruit du suivi. *(interne)* *(hook)* | 1072 |
-| `gameplay_drift_drift.onVehicleSwitched(oldId, newVehId, player)` | Hook : changement de véhicule d'un joueur ; retire l'ancien véhicule s'il appartenait à ce joueur et suit le nouveau (timer de reset 0.1 s). *(interne)* *(hook)* | 1056 |
-| `gameplay_drift_drift.removeTrackedVehicle(vehId)` | Retire un véhicule du suivi de drift et du suivi de crash (gameplay_util_crashDetection). | 864 |
-| `gameplay_drift_drift.reset(vehId)` | Réinitialise l'état de drift d'un véhicule (ou de tous si vehId est nil) : supprime drift/chaîne en cours, remet à zéro les données de crash. | 1045 |
-| `gameplay_drift_drift.setAllowDonut(value)` | Active/désactive la prise en compte des donuts (driftOptions.allowDonut), lue par les zones de cascade. | 1021 |
-| `gameplay_drift_drift.setAllowTightDrift(value)` | Active/désactive les drifts serrés (driftOptions.allowTightDrifts). | 1025 |
-| `gameplay_drift_drift.setBalanceMode(_balanceMode, vehId)` | Active le mode « équilibre » : tant qu'il est actif le temps de confirmation reste figé à 1 et la chaîne de drifts n'est pas conclue. | 1038 |
-| `gameplay_drift_drift.setVehId(newVehId)` | Ne suit plus que ce véhicule : retire tous les autres véhicules suivis puis l'ajoute. | 1029 |
-| `gameplay_drift_drift.simulateADrift(data)` | Active une simulation de drift pour le debug audio ; nil l'arrête. | 855 |
+| `gameplay_drift_drift.addTrackedVehicle(vehId, opts)` | Adds a vehicle to the drift tracking (creates its state) and returns that state. With opts.playerId, associates the vehicle with a player and removes any other vehicle tracked for that same player. | 873 |
+| `gameplay_drift_drift.doesPlHaveVeh(vehId)` | Indicates whether the tracked vehicle has valid map data. | 1000 |
+| `gameplay_drift_drift.getAirSpeed(vehId)` | Returns the vehicle speed in km/h (velocity norm * 3.6). | 920 |
+| `gameplay_drift_drift.getAngleDiff(vehId)` | Returns the change in angle of the velocity direction since the previous frame (degrees), computed during a drift. | 962 |
+| `gameplay_drift_drift.getCurrDegAngleSigned(vehId)` | Returns the current drift angle in degrees, signed (the sign gives the side). | 950 |
+| `gameplay_drift_drift.getCurrDriftCompletedTime(vehId)` | Returns the remaining fraction (0..1) of the drift chain's confirmation time (1 = the drift just happened, 0 = confirmed). | 956 |
+| `gameplay_drift_drift.getCurrentDriftDuration(vehId)` | Returns the duration of the current drift (totalDriftTime), 0 if not drifting. | 972 |
+| `gameplay_drift_drift.getDistSinceLastFrame(vehId)` | Returns the distance traveled since the previous frame, in meters. | 967 |
+| `gameplay_drift_drift.getDriftActiveData(vehId)` | Returns the data of the current drift (nil if there is none). | 900 |
+| `gameplay_drift_drift.getDriftChainActiveData(vehId)` | Returns the data of the current drift chain (nil if none). | 905 |
+| `gameplay_drift_drift.getDriftChainChainedDrifts(vehId)` | Returns the number of drifts chained in the current chain. | 910 |
+| `gameplay_drift_drift.getDriftDebugInfo()` | Returns {default=true, canBeChanged=true} for the drift debug window. | 1017 |
+| `gameplay_drift_drift.getDriftOptions()` | Returns the table of detection settings: minAngle 7, maxAngle 165, allowDonut, allowTightDrifts, raycastHeight 0.5, wallDetectionLength 3, baseDriftCompleteTime 1.2, failPointsCooldown 1.65, minAirSpeed 4, maxWasDriftingTime 4, crashDamageThreshold 150, etc. Live table, modifiable. | 1005 |
+| `gameplay_drift_drift.getGC()` | Returns the amount of garbage measured by the profiler. | 1013 |
+| `gameplay_drift_drift.getIsCrashing(vehId)` | Indicates whether the vehicle is crashing (gameplay_util_crashDetection). | 995 |
+| `gameplay_drift_drift.getIsDrifting(vehId)` | Indicates whether the vehicle is drifting. | 915 |
+| `gameplay_drift_drift.getIsInTheAir(vehId)` | Indicates whether the vehicle is not on its wheels. | 990 |
+| `gameplay_drift_drift.getIsOverMinSpeedForDrift(vehId)` | Indicates whether the average speed of the reference points exceeds minAirSpeed (4 km/h). | 985 |
+| `gameplay_drift_drift.getIsOverSteering(vehId)` | Indicates whether the vehicle is oversteering (front and center go the same way as the rear). | 980 |
+| `gameplay_drift_drift.getPlVeh()` | Returns the main tracked vehicle object. | 935 |
+| `gameplay_drift_drift.getPlayerIdForVehicle(vehId)` | Returns the player id associated with a tracked vehicle. | 859 |
+| `gameplay_drift_drift.getTrackedVehicles()` | Returns the table of drift states, keyed by vehId (live table). | 896 |
+| `gameplay_drift_drift.getVehCorners()` | Returns the 4 corners of the bounding box used for the raycasts (front right, rear right, rear left, front left), at raycastHeight. | 1009 |
+| `gameplay_drift_drift.getVehData(vehId)` | Returns the vehicle's map.objects data (pos, vel, dirVec, ...). | 940 |
+| `gameplay_drift_drift.getVehId()` | Returns the id of the main tracked vehicle (player 0 if possible). | 930 |
+| `gameplay_drift_drift.getVehPos(vehId)` | Returns the vehicle position tracked by the module. | 925 |
+| `gameplay_drift_drift.getVehVel(vehId)` | Returns the normalized direction of the vehicle's velocity (velDir), not its magnitude. | 945 |
+| `gameplay_drift_drift.onAnyStuntZoneAccomplished()` | Hook: a cascade zone is completed; resets the drift chain's confirmation time to the maximum. *(internal)* *(hook)* | 1080 |
+| `gameplay_drift_drift.onClientEndMission()` | Hook: level end; empties the list of tracked vehicles. *(internal)* *(hook)* | 1076 |
+| `gameplay_drift_drift.onDeserialized(data)` | Hook: restores the debug checkbox. *(internal)* *(hook)* | 1151 |
+| `gameplay_drift_drift.onDriftChallengeFinished()` | Hook: end of a drift challenge; emits onDriftCompleted for the chains in progress and onDriftActiveDataFinished for the drifts in progress. *(internal)* *(hook)* | 1103 |
+| `gameplay_drift_drift.onDriftContextChanged(context, oldContext)` | Hook: on a context change, adds the vehicles to the crash tracking (except in inAnotherMissionType, where they are removed from it). *(internal)* *(hook)* | 1087 |
+| `gameplay_drift_drift.onDriftPlVehReset(vehId)` | Hook: vehicle put back in place; resets its state and activates a 0.1 s reset timer during which it does not drift. *(internal)* *(hook)* | 1130 |
+| `gameplay_drift_drift.onSerialize()` | Hook: saves the debug checkbox before Lua reload. *(internal)* *(hook)* | 1145 |
+| `gameplay_drift_drift.onUpdate(dtReal, _dtSim, dtRaw)` | Called every frame: automatically tracks player 0's vehicle if nothing is tracked, then updates the detection for each tracked vehicle. Skipped during firstDrive, walking, pause or dtSim <= 0. *(internal)* *(hook)* | 807 |
+| `gameplay_drift_drift.onVehicleCrashStarted(crashStartData)` | Hook: crash start detected by gameplay_util_crashDetection; marks the vehicle as crashed if its cached score is > 0 (outside pause, freeze, walking). *(internal)* *(hook)* | 1117 |
+| `gameplay_drift_drift.onVehicleDestroyed(vehId)` | Hook: removes the destroyed vehicle from the tracking. *(internal)* *(hook)* | 1072 |
+| `gameplay_drift_drift.onVehicleSwitched(oldId, newVehId, player)` | Hook: a player's vehicle change; removes the old vehicle if it belonged to this player and tracks the new one (reset timer 0.1 s). *(internal)* *(hook)* | 1056 |
+| `gameplay_drift_drift.removeTrackedVehicle(vehId)` | Removes a vehicle from the drift tracking and from the crash tracking (gameplay_util_crashDetection). | 864 |
+| `gameplay_drift_drift.reset(vehId)` | Resets a vehicle's drift state (or all if vehId is nil): removes the drift/chain in progress, resets the crash data. | 1045 |
+| `gameplay_drift_drift.setAllowDonut(value)` | Enables/disables taking donuts into account (driftOptions.allowDonut), read by the cascade zones. | 1021 |
+| `gameplay_drift_drift.setAllowTightDrift(value)` | Enables/disables tight drifts (driftOptions.allowTightDrifts). | 1025 |
+| `gameplay_drift_drift.setBalanceMode(_balanceMode, vehId)` | Enables "balance" mode: while it is active the confirmation time stays frozen at 1 and the drift chain is not concluded. | 1038 |
+| `gameplay_drift_drift.setVehId(newVehId)` | Tracks only this vehicle: removes all the other tracked vehicles then adds it. | 1029 |
+| `gameplay_drift_drift.simulateADrift(data)` | Enables a drift simulation for audio debug; nil stops it. | 855 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drift_drift.addTrackedVehicle(vehId, opts)`
 
-Ajoute un véhicule au suivi de drift (crée son état) et renvoie cet état. Avec opts.playerId, associe le véhicule à un joueur et retire tout autre véhicule suivi pour ce même joueur.
+Adds a vehicle to the drift tracking (creates its state) and returns that state. With opts.playerId, associates the vehicle with a player and removes any other vehicle tracked for that same player.
 
-- `vehId` (*integer*) : Id du véhicule (ignoré si nil ou < 0).
+- `vehId` (*integer*) : Vehicle id (ignored if nil or < 0).
 - `opts` (*table|nil*) : {playerId = integer}.
-- **renvoie** : table|nil État de drift du véhicule.
+- **returns**: table|nil Drift state of the vehicle.
 
 #### `gameplay_drift_drift.doesPlHaveVeh(vehId)`
 
-Indique si le véhicule suivi a des données de map valides.
+Indicates whether the tracked vehicle has valid map data.
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : boolean|nil true si vehData existe.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: boolean|nil true if vehData exists.
 
 #### `gameplay_drift_drift.getAirSpeed(vehId)`
 
-Renvoie la vitesse du véhicule en km/h (norme de la vitesse * 3.6).
+Returns the vehicle speed in km/h (velocity norm * 3.6).
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : number|nil Vitesse en km/h.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: number|nil Speed in km/h.
 
 #### `gameplay_drift_drift.getAngleDiff(vehId)`
 
-Renvoie la variation d'angle de la direction de vitesse depuis la frame précédente (degrés), calculée pendant un drift.
+Returns the change in angle of the velocity direction since the previous frame (degrees), computed during a drift.
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : number|nil Variation en degrés.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: number|nil Change in degrees.
 
 #### `gameplay_drift_drift.getCurrDegAngleSigned(vehId)`
 
-Renvoie l'angle de dérive actuel en degrés, signé (le signe donne le côté).
+Returns the current drift angle in degrees, signed (the sign gives the side).
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : number Angle en degrés.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: number Angle in degrees.
 
 #### `gameplay_drift_drift.getCurrDriftCompletedTime(vehId)`
 
-Renvoie la fraction (0..1) restante du temps de confirmation de la chaîne de drifts (1 = le drift vient d'avoir lieu, 0 = confirmé).
+Returns the remaining fraction (0..1) of the drift chain's confirmation time (1 = the drift just happened, 0 = confirmed).
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : number Fraction du temps restant.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: number Fraction of the remaining time.
 
 #### `gameplay_drift_drift.getCurrentDriftDuration(vehId)`
 
-Renvoie la durée du drift en cours (totalDriftTime), 0 s'il ne drifte pas.
+Returns the duration of the current drift (totalDriftTime), 0 if not drifting.
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : number Durée en secondes.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: number Duration in seconds.
 
 #### `gameplay_drift_drift.getDistSinceLastFrame(vehId)`
 
-Renvoie la distance parcourue depuis la frame précédente, en mètres.
+Returns the distance traveled since the previous frame, in meters.
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : number Distance en m.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: number Distance in m.
 
 #### `gameplay_drift_drift.getDriftActiveData(vehId)`
 
-Renvoie les données du drift en cours (nil s'il n'y en a pas).
+Returns the data of the current drift (nil if there is none).
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : table|nil driftActiveData.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: table|nil driftActiveData.
 
 #### `gameplay_drift_drift.getDriftChainActiveData(vehId)`
 
-Renvoie les données de la chaîne de drifts en cours (nil si aucune).
+Returns the data of the current drift chain (nil if none).
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : table|nil driftChainActiveData.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: table|nil driftChainActiveData.
 
 #### `gameplay_drift_drift.getDriftChainChainedDrifts(vehId)`
 
-Renvoie le nombre de drifts enchaînés dans la chaîne en cours.
+Returns the number of drifts chained in the current chain.
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : integer Nombre de drifts, 0 si aucune chaîne.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: integer Number of drifts, 0 if no chain.
 
 #### `gameplay_drift_drift.getDriftDebugInfo()`
 
-Renvoie {default=true, canBeChanged=true} pour la fenêtre de debug drift.
+Returns {default=true, canBeChanged=true} for the drift debug window.
 
-- **renvoie** : table {default = true, canBeChanged = true}
+- **returns**: table {default = true, canBeChanged = true}
 
 #### `gameplay_drift_drift.getDriftOptions()`
 
-Renvoie la table des réglages de détection : minAngle 7, maxAngle 165, allowDonut, allowTightDrifts, raycastHeight 0.5, wallDetectionLength 3, baseDriftCompleteTime 1.2, failPointsCooldown 1.65, minAirSpeed 4, maxWasDriftingTime 4, crashDamageThreshold 150, etc. Table vivante, modifiable.
+Returns the table of detection settings: minAngle 7, maxAngle 165, allowDonut, allowTightDrifts, raycastHeight 0.5, wallDetectionLength 3, baseDriftCompleteTime 1.2, failPointsCooldown 1.65, minAirSpeed 4, maxWasDriftingTime 4, crashDamageThreshold 150, etc. Live table, modifiable.
 
-- **renvoie** : table driftOptions.
+- **returns**: table driftOptions.
 
 #### `gameplay_drift_drift.getGC()`
 
-Renvoie la quantité de garbage mesurée par le profileur.
+Returns the amount of garbage measured by the profiler.
 
-- **renvoie** : number|nil nil tant que le debug général n'a jamais été actif.
+- **returns**: number|nil nil as long as general debug has never been active.
 
 #### `gameplay_drift_drift.getIsCrashing(vehId)`
 
-Indique si le véhicule est en train de crasher (gameplay_util_crashDetection).
+Indicates whether the vehicle is crashing (gameplay_util_crashDetection).
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : boolean État de crash.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: boolean Crash state.
 
 #### `gameplay_drift_drift.getIsDrifting(vehId)`
 
-Indique si le véhicule est en train de drifter.
+Indicates whether the vehicle is drifting.
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : boolean État de drift.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: boolean Drift state.
 
 #### `gameplay_drift_drift.getIsInTheAir(vehId)`
 
-Indique si le véhicule n'est pas sur ses roues.
+Indicates whether the vehicle is not on its wheels.
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : boolean true en l'air.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: boolean true in the air.
 
 #### `gameplay_drift_drift.getIsOverMinSpeedForDrift(vehId)`
 
-Indique si la vitesse moyenne des points de référence dépasse minAirSpeed (4 km/h).
+Indicates whether the average speed of the reference points exceeds minAirSpeed (4 km/h).
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : boolean true si assez rapide.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: boolean true if fast enough.
 
 #### `gameplay_drift_drift.getIsOverSteering(vehId)`
 
-Indique si le véhicule est en survirage (avant et centre vont dans le même sens que l'arrière).
+Indicates whether the vehicle is oversteering (front and center go the same way as the rear).
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : boolean État de survirage.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: boolean Oversteer state.
 
 #### `gameplay_drift_drift.getPlVeh()`
 
-Renvoie l'objet véhicule principal suivi.
+Returns the main tracked vehicle object.
 
-- **renvoie** : userdata|nil Objet véhicule de la scène.
+- **returns**: userdata|nil Scene vehicle object.
 
 #### `gameplay_drift_drift.getPlayerIdForVehicle(vehId)`
 
-Renvoie l'id de joueur associé à un véhicule suivi.
+Returns the player id associated with a tracked vehicle.
 
-- `vehId` (*integer*) : Id du véhicule.
-- **renvoie** : integer playerId, 0 si inconnu.
+- `vehId` (*integer*) : Vehicle id.
+- **returns**: integer playerId, 0 if unknown.
 
 #### `gameplay_drift_drift.getTrackedVehicles()`
 
-Renvoie la table des états de drift, indexée par vehId (table vivante).
+Returns the table of drift states, keyed by vehId (live table).
 
-- **renvoie** : table<integer, table> États de drift.
+- **returns**: table<integer, table> Drift states.
 
 #### `gameplay_drift_drift.getVehCorners()`
 
-Renvoie les 4 coins de la boîte englobante utilisée pour les raycasts (avant droit, arrière droit, arrière gauche, avant gauche), à hauteur raycastHeight.
+Returns the 4 corners of the bounding box used for the raycasts (front right, rear right, rear left, front left), at raycastHeight.
 
-- **renvoie** : vec3[] {corner_FR, corner_BR, corner_BL, corner_FL}
+- **returns**: vec3[] {corner_FR, corner_BR, corner_BL, corner_FL}
 
 #### `gameplay_drift_drift.getVehData(vehId)`
 
-Renvoie les données de map.objects du véhicule (pos, vel, dirVec, ...).
+Returns the vehicle's map.objects data (pos, vel, dirVec, ...).
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : table|nil Entrée map.objects.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: table|nil map.objects entry.
 
 #### `gameplay_drift_drift.getVehId()`
 
-Renvoie l'id du véhicule principal suivi (joueur 0 si possible).
+Returns the id of the main tracked vehicle (player 0 if possible).
 
-- **renvoie** : integer|nil Id du véhicule.
+- **returns**: integer|nil Vehicle id.
 
 #### `gameplay_drift_drift.getVehPos(vehId)`
 
-Renvoie la position du véhicule suivie par le module.
+Returns the vehicle position tracked by the module.
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : vec3|nil Position (vec3 partagé, à ne pas modifier).
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: vec3|nil Position (shared vec3, do not modify).
 
 #### `gameplay_drift_drift.getVehVel(vehId)`
 
-Renvoie la direction normalisée de la vitesse du véhicule (velDir), pas son module.
+Returns the normalized direction of the vehicle's velocity (velDir), not its magnitude.
 
-- `vehId` (*integer|nil*) : Id du véhicule.
-- **renvoie** : vec3|nil Direction unitaire de la vitesse.
+- `vehId` (*integer|nil*) : Vehicle id.
+- **returns**: vec3|nil Unit direction of the velocity.
 
 #### `gameplay_drift_drift.onDeserialized(data)`
 
-Hook : restaure la case de debug.
+Hook: restores the debug checkbox.
 
-- `data` (*table*) : Table de onSerialize.
+- `data` (*table*) : onSerialize table.
 
 #### `gameplay_drift_drift.onDriftContextChanged(context, oldContext)`
 
-Hook : à un changement de contexte, ajoute les véhicules au suivi de crash (sauf en inAnotherMissionType, où ils en sont retirés).
+Hook: on a context change, adds the vehicles to the crash tracking (except in inAnotherMissionType, where they are removed from it).
 
-- `context` (*string*) : Nouveau contexte.
-- `oldContext` (*string|nil*) : Ancien contexte.
+- `context` (*string*) : New context.
+- `oldContext` (*string|nil*) : Old context.
 
 #### `gameplay_drift_drift.onDriftPlVehReset(vehId)`
 
-Hook : véhicule remis en place ; réinitialise son état et active un timer de reset de 0.1 s pendant lequel il ne drifte pas.
+Hook: vehicle put back in place; resets its state and activates a 0.1 s reset timer during which it does not drift.
 
-- `vehId` (*integer|nil*) : Véhicule ; nil pour tous.
+- `vehId` (*integer|nil*) : Vehicle; nil for all.
 
 #### `gameplay_drift_drift.onSerialize()`
 
-Hook : sauvegarde la case de debug avant rechargement Lua.
+Hook: saves the debug checkbox before Lua reload.
 
-- **renvoie** : table {debugToggleSmothnessGraph}
+- **returns**: table {debugToggleSmothnessGraph}
 
 #### `gameplay_drift_drift.onUpdate(dtReal, _dtSim, dtRaw)`
 
-Appelé à chaque frame : suit automatiquement le véhicule du joueur 0 si rien n'est suivi, puis met à jour la détection pour chaque véhicule suivi. Sauté pendant firstDrive, la marche, la pause ou dtSim <= 0.
+Called every frame: automatically tracks player 0's vehicle if nothing is tracked, then updates the detection for each tracked vehicle. Skipped during firstDrive, walking, pause or dtSim <= 0.
 
-- `dtReal` (*number*) : Delta temps réel (inutilisé).
-- `_dtSim` (*number*) : Delta temps simulé.
-- `dtRaw` (*number*) : Delta temps brut (inutilisé).
+- `dtReal` (*number*) : Real time delta (unused).
+- `_dtSim` (*number*) : Simulated time delta.
+- `dtRaw` (*number*) : Raw time delta (unused).
 
 #### `gameplay_drift_drift.onVehicleCrashStarted(crashStartData)`
 
-Hook : début de crash détecté par gameplay_util_crashDetection ; marque le véhicule comme crashé si son score en cache est > 0 (hors pause, gel, marche).
+Hook: crash start detected by gameplay_util_crashDetection; marks the vehicle as crashed if its cached score is > 0 (outside pause, freeze, walking).
 
-- `crashStartData` (*table*) : Contient vehId.
+- `crashStartData` (*table*) : Contains vehId.
 
 #### `gameplay_drift_drift.onVehicleDestroyed(vehId)`
 
-Hook : retire le véhicule détruit du suivi.
+Hook: removes the destroyed vehicle from the tracking.
 
-- `vehId` (*integer*) : Véhicule détruit.
+- `vehId` (*integer*) : Destroyed vehicle.
 
 #### `gameplay_drift_drift.onVehicleSwitched(oldId, newVehId, player)`
 
-Hook : changement de véhicule d'un joueur ; retire l'ancien véhicule s'il appartenait à ce joueur et suit le nouveau (timer de reset 0.1 s).
+Hook: a player's vehicle change; removes the old vehicle if it belonged to this player and tracks the new one (reset timer 0.1 s).
 
-- `oldId` (*integer*) : Ancien véhicule (-1 si aucun).
-- `newVehId` (*integer*) : Nouveau véhicule.
-- `player` (*integer|nil*) : Index du joueur (0 par défaut).
+- `oldId` (*integer*) : Old vehicle (-1 if none).
+- `newVehId` (*integer*) : New vehicle.
+- `player` (*integer|nil*) : Player index (0 by default).
 
 #### `gameplay_drift_drift.removeTrackedVehicle(vehId)`
 
-Retire un véhicule du suivi de drift et du suivi de crash (gameplay_util_crashDetection).
+Removes a vehicle from the drift tracking and from the crash tracking (gameplay_util_crashDetection).
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `gameplay_drift_drift.reset(vehId)`
 
-Réinitialise l'état de drift d'un véhicule (ou de tous si vehId est nil) : supprime drift/chaîne en cours, remet à zéro les données de crash.
+Resets a vehicle's drift state (or all if vehId is nil): removes the drift/chain in progress, resets the crash data.
 
-- `vehId` (*integer|nil*) : Véhicule ; nil pour tous.
+- `vehId` (*integer|nil*) : Vehicle; nil for all.
 
 #### `gameplay_drift_drift.setAllowDonut(value)`
 
-Active/désactive la prise en compte des donuts (driftOptions.allowDonut), lue par les zones de cascade.
+Enables/disables taking donuts into account (driftOptions.allowDonut), read by the cascade zones.
 
-- `value` (*boolean*) : true pour autoriser.
+- `value` (*boolean*) : true to allow.
 
 #### `gameplay_drift_drift.setAllowTightDrift(value)`
 
-Active/désactive les drifts serrés (driftOptions.allowTightDrifts).
+Enables/disables tight drifts (driftOptions.allowTightDrifts).
 
-- `value` (*boolean*) : true pour autoriser.
+- `value` (*boolean*) : true to allow.
 
 #### `gameplay_drift_drift.setBalanceMode(_balanceMode, vehId)`
 
-Active le mode « équilibre » : tant qu'il est actif le temps de confirmation reste figé à 1 et la chaîne de drifts n'est pas conclue.
+Enables "balance" mode: while it is active the confirmation time stays frozen at 1 and the drift chain is not concluded.
 
-- `_balanceMode` (*boolean*) : true pour activer.
-- `vehId` (*integer|nil*) : Id du véhicule.
+- `_balanceMode` (*boolean*) : true to enable.
+- `vehId` (*integer|nil*) : Vehicle id.
 
 #### `gameplay_drift_drift.setVehId(newVehId)`
 
-Ne suit plus que ce véhicule : retire tous les autres véhicules suivis puis l'ajoute.
+Tracks only this vehicle: removes all the other tracked vehicles then adds it.
 
-- `newVehId` (*integer*) : Id du véhicule à suivre.
+- `newVehId` (*integer*) : Id of the vehicle to track.
 
 #### `gameplay_drift_drift.simulateADrift(data)`
 
-Active une simulation de drift pour le debug audio ; nil l'arrête.
+Enables a drift simulation for audio debug; nil stops it.
 
 - `data` (*table|nil*) : {currDegAngle, airSpeed, wallDistance, isCrashing}.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | gameplay_walk, chargé avant. |
+| `dependencies` | string[] | gameplay_walk, loaded beforehand. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onDriftActiveDataFinished` — écouté par 2 module(s)
-- `onDriftChainStarted` — écouté par 1 module(s)
-- `onDriftCompleted` — écouté par 3 module(s)
-- `onDriftCrash` — écouté par 7 module(s)
-- `onDriftSpinout` — écouté par 6 module(s)
-- `onDriftStatusChanged` — écouté par 2 module(s)
-- `onDriftTransition` — écouté par 1 module(s)
+- `onDriftActiveDataFinished` — listened to by 2 module(s)
+- `onDriftChainStarted` — listened to by 1 module(s)
+- `onDriftCompleted` — listened to by 3 module(s)
+- `onDriftCrash` — listened to by 7 module(s)
+- `onDriftSpinout` — listened to by 6 module(s)
+- `onDriftStatusChanged` — listened to by 2 module(s)
+- `onDriftTransition` — listened to by 1 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectOOBBCenterXYZ`, `getObjectOOBBHalfAxisXYZ`, `getPlayerVehicleID`
 - `debugDrawer:` `drawLine`, `drawLineInstance`, `drawSphere`, `drawTextAdvanced`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drift/drift.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drift/drift.lua`.*

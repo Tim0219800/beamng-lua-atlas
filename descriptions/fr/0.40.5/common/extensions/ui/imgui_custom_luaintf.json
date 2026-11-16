@@ -1,0 +1,130 @@
+{
+  "path": "lua/common/extensions/ui/imgui_custom_luaintf.lua",
+  "module": "Ajouts écrits à la main à l'API ImGui (par opposition à imgui_luaintf.lua, généré). Le fichier renvoie une fonction qui reçoit la table M d'imgui_api et y définit : constructeurs de valeurs/pointeurs (ImVec2, ImVec4, BoolPtr, IntPtr, FloatPtr, DoublePtr, ArrayChar, ArrayInt, ArrayFloat), versions personnalisées de Begin/InputText/InputTextMultiline/Combo1/OpenPopup/SetDragDropPayload, gestion de polices, d'échelle, de textures, aides (ShowHelpMarker, tooltip, tooltipWrapped, HighlightText, HeaderText, BeginDisabled), wrappers de moniteur/ini, et les widgets Knob. Il est chargé après imgui_luaintf, donc ses définitions écrasent celles du fichier généré.",
+  "usage": "local im = ui_imgui\nlocal val = im.FloatPtr(0.5)\nim.SliderFloat('x', val, 0, 1)\nim.tooltip('Aide')",
+  "notes": [
+    "En GE, les « pointeurs » sont de simples tables {[0] = valeur} : lire/écrire val[0]. BoolPtr/IntPtr/FloatPtr/DoublePtr renvoient {[0]=0 ou false} si le type de l'argument est incorrect (log commenté). BoolPtr convertit 0/1 en booléen.",
+    "ArrayChar(len, val) renvoie un string.buffer pré-rempli (tampon texte pour InputText) ; ffi.string(buf) ou tostring pour relire.",
+    "Begin(): flags par défaut = WindowFlags_NoFocusOnAppearing (et non 0 comme dans la version générée). Si le nom est nil, une erreur est loguée et la fonction retourne.",
+    "InputText: buf_size par défaut 2^32, flags 0 ; le callback passé est ignoré (nil transmis).",
+    "GetKeyIndex est un no-op (renvoie l'index) depuis ImGui 1.87.",
+    "GetContentRegionAvailWidth et GetWindowContentRegionWidth sont des wrappers ajoutés car supprimés de la version récente d'ImGui.",
+    "TableSetSortSpecsDirty utilise M.TableGetSortSpecs().SpecsDirty.",
+    "Bug : headerDefaultColor est construit avec ImVec4(1,0.6,0,8,0.75), soit 5 arguments (le 5e est ignoré, w vaut 8 au lieu d'un 0.8 probable).",
+    "Alias de compatibilité : SelectableFlags_AllowItemOverlap = SelectableFlags_AllowOverlap, Mod_Shortcut = Mod_Ctrl, Key_ModCtrl/Shift/Alt/Super vers Mod_*.",
+    "uiscale = {[0] = 1} : échelle d'UI globale utilisée par ui_imguiUtils et tooltipWrapped. plotLineColor = 4288453788 et plotLineBgColor = 2323270185 sont des couleurs ImU32 par défaut."
+  ],
+  "fields": {
+    "uiscale": {"type": "table<integer, number>", "desc": "Échelle d'UI globale, valeur dans uiscale[0] (1 par défaut)."},
+    "plotLineColor": {"type": "integer", "desc": "Couleur de courbe par défaut (ImU32) : 4288453788."},
+    "plotLineBgColor": {"type": "integer", "desc": "Couleur de fond de courbe par défaut (ImU32) : 2323270185."}
+  },
+  "functions": {
+    "ImVec2": {"desc": "Crée un ImVec2 (x, y).", "params": {"x": {"type": "number", "desc": "X."}, "y": {"type": "number", "desc": "Y."}}, "returns": [{"type": "ImVec2", "desc": "Vecteur."}]},
+    "ImVec4": {"desc": "Crée un ImVec4 (x, y, z, w).", "params": {"x": {"type": "number", "desc": "X / R."}, "y": {"type": "number", "desc": "Y / G."}, "z": {"type": "number", "desc": "Z / B."}, "w": {"type": "number", "desc": "W / A."}}, "returns": [{"type": "ImVec4", "desc": "Vecteur."}]},
+    "BoolPtr": {"desc": "Crée un pointeur booléen {[0]=bool} (0/1 convertis, autre type -> false).", "params": {"x": {"type": "boolean|number", "desc": "Valeur initiale."}}, "returns": [{"type": "table", "desc": "{[0]=bool}"}]},
+    "IntPtr": {"desc": "Crée un pointeur entier {[0]=n} (0 si x n'est pas un nombre).", "params": {"x": {"type": "number", "desc": "Valeur initiale."}}, "returns": [{"type": "table", "desc": "{[0]=n}"}]},
+    "FloatPtr": {"desc": "Crée un pointeur flottant {[0]=n} (0 si x n'est pas un nombre).", "params": {"x": {"type": "number", "desc": "Valeur initiale."}}, "returns": [{"type": "table", "desc": "{[0]=n}"}]},
+    "DoublePtr": {"desc": "Crée un pointeur double {[0]=n}.", "params": {"x": {"type": "number", "desc": "Valeur initiale."}}, "returns": [{"type": "table", "desc": "{[0]=n}"}]},
+    "ArrayChar": {
+      "desc": "Crée un tampon texte (string.buffer) de taille len, éventuellement pré-rempli avec val.",
+      "params": {"len": {"type": "integer", "desc": "Taille en octets."}, "val": {"type": "string|nil", "desc": "Texte initial."}},
+      "returns": [{"type": "userdata", "desc": "string.buffer."}]
+    },
+    "ArrayInt": {"desc": "Tableau d'entiers indexé depuis 0, initialisé à 0.", "params": {"size": {"type": "integer", "desc": "Taille."}}, "returns": [{"type": "table", "desc": "Tableau [0..size-1]."}]},
+    "ArrayFloat": {"desc": "Tableau de flottants indexé depuis 0, initialisé à 0.", "params": {"size": {"type": "integer", "desc": "Taille."}}, "returns": [{"type": "table", "desc": "Tableau [0..size-1]."}]},
+    "ImColorByRGB": {
+      "desc": "Crée un ImColor depuis des composantes 0-255 (alpha 255 par défaut) et renseigne Value en 0-1.",
+      "params": {"r": {"type": "number", "desc": "Rouge 0-255."}, "g": {"type": "number", "desc": "Vert 0-255."}, "b": {"type": "number", "desc": "Bleu 0-255."}, "a": {"type": "number|nil", "desc": "Alpha 0-255."}},
+      "returns": [{"type": "ImColor", "desc": "Couleur."}]
+    },
+    "Begin": {
+      "desc": "Ouvre une fenêtre ImGui. Flags par défaut : WindowFlags_NoFocusOnAppearing.",
+      "params": {"string_name": {"type": "string", "desc": "Titre/identifiant."}, "bool_p_open": {"type": "table|nil", "desc": "BoolPtr pour la croix de fermeture."}, "ImGuiWindowFlags_flags": {"type": "integer|nil", "desc": "Flags de fenêtre."}},
+      "returns": [{"type": "boolean", "desc": "Vrai si le contenu doit être dessiné."}]
+    },
+    "InputText": {
+      "desc": "Champ texte sur un tampon ArrayChar ; taille par défaut 2^32, flags 0. Le callback est ignoré.",
+      "params": {"label": {"type": "string", "desc": "Libellé."}, "buf": {"type": "userdata", "desc": "Tampon ArrayChar."}, "buf_size": {"type": "integer|nil", "desc": "Taille max."}, "flags": {"type": "integer|nil", "desc": "InputTextFlags."}, "callback": {"type": "any", "desc": "Ignoré."}, "user_data": {"type": "any", "desc": "Données utilisateur."}, "editEnded": {"type": "any", "desc": "Non utilisé."}},
+      "returns": [{"type": "boolean", "desc": "Vrai si modifié."}]
+    },
+    "InputTextMultiline": {
+      "desc": "Champ texte multiligne ; taille (0,0) et flags 0 par défaut. Le callback est ignoré.",
+      "params": {"label": {"type": "string", "desc": "Libellé."}, "buf": {"type": "userdata", "desc": "Tampon ArrayChar."}, "buf_size": {"type": "integer|nil", "desc": "Taille max."}, "size": {"type": "ImVec2|nil", "desc": "Taille."}, "flags": {"type": "integer|nil", "desc": "Flags."}, "callback": {"type": "any", "desc": "Ignoré."}, "user_data": {"type": "any", "desc": "Données utilisateur."}},
+      "returns": [{"type": "boolean", "desc": "Vrai si modifié."}]
+    },
+    "Combo1": {
+      "desc": "Liste déroulante sur un tableau de chaînes ; items_count calculé avec #items si nil, hauteur max -1 par défaut.",
+      "params": {"label": {"type": "string", "desc": "Libellé."}, "current_item": {"type": "table", "desc": "IntPtr de l'élément courant."}, "items": {"type": "table", "desc": "Tableau de chaînes."}, "items_count": {"type": "integer|nil", "desc": "Nombre d'éléments."}, "popup_max_height_in_items": {"type": "integer|nil", "desc": "-1 par défaut."}},
+      "returns": [{"type": "boolean", "desc": "Vrai si changé."}]
+    },
+    "tooltip": {
+      "desc": "Si l'élément précédent est survolé, affiche message en infobulle (SetTooltip).",
+      "params": {"message": {"type": "string", "desc": "Texte."}},
+      "returns": []
+    },
+    "tooltipWrapped": {
+      "desc": "Comme tooltip mais avec retour à la ligne à wrapWidth pixels (350 par défaut, multiplié par uiscale[0]).",
+      "params": {"message": {"type": "string", "desc": "Texte."}, "wrapWidth": {"type": "number|nil", "desc": "Largeur de retour à la ligne."}},
+      "returns": []
+    },
+    "ShowHelpMarker": {
+      "desc": "Affiche « (?) » grisé ; au survol, infobulle avec desc sur 35 caractères de large.",
+      "params": {"desc": {"type": "string", "desc": "Texte d'aide."}, "sameLine": {"type": "boolean|nil", "desc": "Si true, SameLine avant."}},
+      "returns": []
+    },
+    "BeginDisabled": {"desc": "Début d'une zone désactivée (true par défaut).", "params": {"disable": {"type": "boolean|nil", "desc": "Désactive si vrai ou nil."}}, "returns": []},
+    "EndDisabled": {"desc": "Fin de zone désactivée.", "params": {}, "returns": []},
+    "SetDragDropPayload": {
+      "desc": "Définit le payload de glisser-déposer ; erreur loguée si type ou data est nil ; cond 0 par défaut.",
+      "params": {"string_type": {"type": "string", "desc": "Type de payload."}, "void_data": {"type": "any", "desc": "Données."}, "size_t_sz": {"type": "integer", "desc": "Taille."}, "ImGuiCond_cond": {"type": "integer|nil", "desc": "Condition."}},
+      "returns": [{"type": "boolean", "desc": "Résultat d'imgui.SetDragDropPayload."}]
+    },
+    "ImTextureHandler": {
+      "desc": "Crée un handler de texture et lui affecte path comme identifiant.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la texture."}},
+      "returns": [{"type": "userdata", "desc": "ImTextureHandler (méthodes getID, getSize…)."}]
+    },
+    "ImTextureHandlerIsCached": {
+      "desc": "Indique si la texture est déjà en cache.",
+      "params": {"path": {"type": "string", "desc": "Chemin."}},
+      "returns": [{"type": "boolean", "desc": "Vrai si en cache."}]
+    },
+    "ImGuiIO_FontGlobalScale": {
+      "desc": "Écrit io.FontGlobalScale.",
+      "params": {"io": {"type": "userdata", "desc": "Résultat de GetIO()."}, "value": {"type": "number", "desc": "Échelle."}},
+      "returns": []
+    },
+    "getCurrentMonitorSize": {"desc": "Renvoie la taille du moniteur courant.", "params": {}, "returns": [{"type": "ImVec2", "desc": "Taille en pixels."}]},
+    "getMonitorIndex": {"desc": "Index du moniteur (imgui.getMonitorIndex).", "params": {}, "returns": [{"type": "integer", "desc": "Index."}]},
+    "getMainViewPortId": {"desc": "Id du viewport principal.", "params": {}, "returns": [{"type": "integer", "desc": "Id."}]},
+    "loadIniSettingsFromDisk": {"desc": "Charge les réglages ImGui (.ini) depuis un fichier.", "params": {"filename": {"type": "string", "desc": "Chemin."}}, "returns": []},
+    "saveIniSettingsToDisk": {"desc": "Enregistre les réglages ImGui (.ini) dans un fichier.", "params": {"filename": {"type": "string", "desc": "Chemin."}}, "returns": []},
+    "GetContentRegionAvailWidth": {"desc": "Largeur disponible (GetContentRegionAvail().x).", "params": {}, "returns": [{"type": "number", "desc": "Largeur."}]},
+    "HighlightText": {
+      "desc": "Affiche label avec la sous-chaîne highlightText en orange (matchColor). Si highlightText est vide, tout le label est coloré.",
+      "params": {"label": {"type": "string", "desc": "Texte."}, "highlightText": {"type": "string", "desc": "Sous-chaîne à surligner."}},
+      "returns": []
+    },
+    "HighlightSelectable": {
+      "desc": "Comme HighlightText mais dessine en plus un fond de surbrillance quand l'élément est survolé (Col_HeaderHovered/HeaderActive) ou sélectionné (Col_Header). Ne renvoie rien.",
+      "params": {"label": {"type": "string", "desc": "Texte."}, "highlightText": {"type": "string", "desc": "Sous-chaîne."}, "selected": {"type": "boolean", "desc": "État sélectionné."}},
+      "returns": []
+    },
+    "HeaderText": {
+      "desc": "Affiche un texte d'en-tête avec la police cairo_regular_medium ; couleur par défaut ImVec4(1,0.6,0,8,0.75).",
+      "params": {"text": {"type": "string", "desc": "Texte."}, "color": {"type": "ImVec4|nil", "desc": "Couleur."}},
+      "returns": []
+    },
+    "Knob": {
+      "desc": "Bouton rotatif (knob) pour un flottant.",
+      "params": {"string_label": {"type": "string", "desc": "Libellé."}, "floatPtr_value": {"type": "table", "desc": "FloatPtr."}, "float_v_min": {"type": "number", "desc": "Min."}, "float_v_max": {"type": "number", "desc": "Max."}, "float_speed": {"type": "number|nil", "desc": "Vitesse."}, "string_format": {"type": "string|nil", "desc": "Format d'affichage."}, "ImGuiKnobVariant_variant": {"type": "integer|nil", "desc": "KnobVariant_*."}, "float_size": {"type": "number|nil", "desc": "Taille."}, "ImGuiKnobFlags_flags": {"type": "integer|nil", "desc": "KnobFlags_*."}, "int_steps": {"type": "integer|nil", "desc": "Nombre de crans."}},
+      "returns": [{"type": "boolean", "desc": "Vrai si la valeur change."}]
+    },
+    "KnobInt": {
+      "desc": "Knob pour un entier ; mêmes paramètres que Knob avec un IntPtr.",
+      "params": {"string_label": {"type": "string", "desc": "Libellé."}, "intPtr_value": {"type": "table", "desc": "IntPtr."}, "int_v_min": {"type": "integer", "desc": "Min."}, "int_v_max": {"type": "integer", "desc": "Max."}, "float_speed": {"type": "number|nil", "desc": "Vitesse."}, "string_format": {"type": "string|nil", "desc": "Format."}, "ImGuiKnobVariant_variant": {"type": "integer|nil", "desc": "KnobVariant_*."}, "float_size": {"type": "number|nil", "desc": "Taille."}, "ImGuiKnobFlags_flags": {"type": "integer|nil", "desc": "KnobFlags_*."}, "int_steps": {"type": "integer|nil", "desc": "Crans."}},
+      "returns": [{"type": "boolean", "desc": "Vrai si la valeur change."}]
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/timers/setTimerProperty.lua",
+  "module": "Nœud flowgraph « Set Timer Property » (catégorie repeat_instant). Modifie un timer existant : progress (temps écoulé en s), pause, duration, ref (mode). Seules les propriétés dont le pin n'est pas nil sont changées.",
+  "notes": [
+    "duration et ref ont des valeurs par défaut (5, dtSim) : sans pin connecté elles sont donc réécrites à chaque frame."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "postInit": {
+          "desc": "Définit les valeurs prédéfinies du pin ref.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Applique progress, pause, duration et ref au timer via le module timer.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

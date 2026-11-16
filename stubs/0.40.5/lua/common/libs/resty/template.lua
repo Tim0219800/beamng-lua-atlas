@@ -2,70 +2,70 @@
 -- tim19Atlas stub generated from lua/common/libs/resty/template.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Bibliothèque tierce lua-resty-template (version 1.9, conçue pour OpenResty/nginx mais utilisable en Lua pur) : moteur de gabarits qui convertit un texte à balises en code Lua compilé. Balises : `{{expr}}` (sortie échappée HTML), `{*expr*}` (sortie brute), `{% code %}` (code Lua), `{# commentaire #}`, `{(fichier)}` / `{(fichier, contexte)}` (inclusion), `{[expr]}` (inclusion dynamique), `{-bloc-}...{-bloc-}` (blocs de mise en page), `{-verbatim-}`/`{-raw-}` (texte non interprété). Un `\` devant une balise l'échappe.
---- Accès : `require("libs/resty/template")`
+--- Third-party library lua-resty-template (version 1.9, designed for OpenResty/nginx but usable in pure Lua): template engine that converts tagged text into compiled Lua code. Tags: `{{expr}}` (HTML-escaped output), `{*expr*}` (raw output), `{% code %}` (Lua code), `{# comment #}`, `{(file)}` / `{(file, context)}` (include), `{[expr]}` (dynamic include), `{-block-}...{-block-}` (layout blocks), `{-verbatim-}`/`{-raw-}` (uninterpreted text). A `\` before a tag escapes it.
+--- Access: `require("libs/resty/template")`
 ---@class libs_resty_template
----@field _VERSION string Version du module : "1.9".
----@field cache table<string, function> Cache des gabarits compilés.
+---@field _VERSION string Module version: "1.9".
+---@field cache table<string, function> Cache of compiled templates.
 local libs_resty_template = {}
 
---- Active/désactive le cache de compilation si `enable` est donné, et renvoie l'état courant.
----Source : lua/common/libs/resty/template.lua:166
----@param enable boolean|nil true pour activer, false pour désactiver ; nil laisse inchangé.
----@return boolean  État du cache.
+--- Enables/disables the compilation cache if `enable` is given, and returns the current state.
+---Source: lua/common/libs/resty/template.lua:166
+---@param enable boolean|nil true to enable, false to disable; nil leaves it unchanged.
+---@return boolean  Cache state.
 function libs_resty_template.caching(enable) end
 
---- Analyse et compile un gabarit en fonction `f(context)`. Met le résultat en cache sous `key` (par défaut le texte du gabarit).
----Source : lua/common/libs/resty/template.lua:236
----@param view string Gabarit ou chemin.
----@param key string|nil Clé de cache ; "no-cache" désactive le cache pour cet appel.
----@param plain boolean|nil Si true, `view` est du texte brut (pas de chargement de fichier).
----@return function  Fonction de rendu.
----@return boolean  true si elle vient du cache.
+--- Parses and compiles a template into a function `f(context)`. Caches the result under `key` (by default the template text).
+---Source: lua/common/libs/resty/template.lua:236
+---@param view string Template or path.
+---@param key string|nil Cache key; "no-cache" disables the cache for this call.
+---@param plain boolean|nil If true, `view` is raw text (no file loading).
+---@return function  Render function.
+---@return boolean  true if it comes from the cache.
 function libs_resty_template.compile(view, key, plain) end
 
---- Échappe le HTML d'une chaîne (& < > " ' /). Si `c` est vrai, échappe aussi { et } (mode code). Les valeurs non chaînes passent par `output`.
----Source : lua/common/libs/resty/template.lua:177
----@param s any Valeur.
----@param c boolean|nil Échapper aussi les accolades.
----@return string  Texte échappé (la version chaîne renvoie aussi le nombre de remplacements).
+--- HTML-escapes a string (& < > " ' /). If `c` is true, also escapes { and } (code mode). Non-string values go through `output`.
+---Source: lua/common/libs/resty/template.lua:177
+---@param s any Value.
+---@param c boolean|nil Also escape the braces.
+---@return string  Escaped text (the string version also returns the number of replacements).
 function libs_resty_template.escape(s, c) end
 
---- Crée un objet gabarit avec `render(context)` et `tostring`, avec une mise en page (layout) facultative, table ou texte.
----Source : lua/common/libs/resty/template.lua:185
----@param view string Gabarit (texte ou chemin).
----@param layout string|table|nil Gabarit de mise en page ; reçoit `view` rendu dans context.view.
----@return table  Objet {render} avec __tostring.
+--- Creates a template object with `render(context)` and `tostring`, with an optional layout, table or text.
+---Source: lua/common/libs/resty/template.lua:185
+---@param view string Template (text or path).
+---@param layout string|table|nil Layout template; receives the rendered `view` in context.view.
+---@return table  Object {render} with __tostring.
 function libs_resty_template.new(view, layout) end
 
---- Convertit une valeur en texte de sortie : nil (ou ngx.null) -> "", fonction -> résultat de son appel, sinon tostring.
----Source : lua/common/libs/resty/template.lua:171
----@param s any Valeur à afficher.
----@return string  Texte.
+--- Converts a value to output text: nil (or ngx.null) -> "", function -> result of its call, otherwise tostring.
+---Source: lua/common/libs/resty/template.lua:171
+---@param s any Value to display.
+---@return string  Text.
 function libs_resty_template.output(s) end
 
---- Traduit le gabarit en code source Lua (chaîne) prêt pour load.
----Source : lua/common/libs/resty/template.lua:249
----@param view string Gabarit ou chemin.
----@param plain boolean|nil Si true, ne passe pas par template.load.
----@return string  Code Lua (ou bytecode si le gabarit en est déjà).
+--- Translates the template into Lua source code (string) ready for load.
+---Source: lua/common/libs/resty/template.lua:249
+---@param view string Template or path.
+---@param plain boolean|nil If true, does not go through template.load.
+---@return string  Lua code (or bytecode if the template already is).
 function libs_resty_template.parse(view, plain) end
 
---- Compile le gabarit et renvoie son bytecode (string.dump) ; l'écrit dans `path` si fourni.
----Source : lua/common/libs/resty/template.lua:226
----@param view string Gabarit.
----@param path string|nil Fichier de sortie (io.open, mode wb).
----@param strip boolean|nil Retirer les infos de debug (défaut true).
+--- Compiles the template and returns its bytecode (string.dump); writes it to `path` if provided.
+---Source: lua/common/libs/resty/template.lua:226
+---@param view string Template.
+---@param path string|nil Output file (io.open, mode wb).
+---@param strip boolean|nil Strip the debug info (default true).
 ---@return string  Bytecode.
 function libs_resty_template.precompile(view, path, strip) end
 
---- Compile (avec cache) puis exécute le gabarit avec `context` et renvoie le texte produit.
----Source : lua/common/libs/resty/template.lua:473
----@param view string Gabarit.
----@param context table Variables disponibles dans le gabarit.
----@param key string|nil Clé de cache.
----@param plain boolean|nil Gabarit en texte brut.
----@return string  Texte rendu.
+--- Compiles (with cache) then runs the template with `context` and returns the produced text.
+---Source: lua/common/libs/resty/template.lua:473
+---@param view string Template.
+---@param context table Variables available in the template.
+---@param key string|nil Cache key.
+---@param plain boolean|nil Template as raw text.
+---@return string  Rendered text.
 function libs_resty_template.renderReturn(view, context, key, plain) end
 
 return libs_resty_template

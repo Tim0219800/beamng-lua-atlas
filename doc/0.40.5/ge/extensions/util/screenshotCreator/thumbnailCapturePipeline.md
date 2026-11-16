@@ -1,63 +1,63 @@
 # `util_screenshotCreator_thumbnailCapturePipeline`
 
-*Fichier : `lua/ge/extensions/util/screenshotCreator/thumbnailCapturePipeline.lua` · VM : Game Engine (GE) · 137 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/screenshotCreator/thumbnailCapturePipeline.lua` · VM: Game Engine (GE) · 137 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_screenshotCreator_thumbnailCapturePipeline` : `extensions.load("util_screenshotCreator_thumbnailCapturePipeline")`, puis la globale `util_screenshotCreator_thumbnailCapturePipeline`
+**Access:** extension `util_screenshotCreator_thumbnailCapturePipeline`: `extensions.load("util_screenshotCreator_thumbnailCapturePipeline")`, then the global `util_screenshotCreator_thumbnailCapturePipeline`
 
-Chaîne de capture d'une vignette de véhicule utilisée par le compositeur de vignettes (thumbnailComposerRun) : remplace le véhicule par la configuration voulue, le place et le laisse se stabiliser, gèle la physique, calcule la caméra avec le cadrage « legacy » (angle « warehouse », marges réduites à 85 %), pointe la caméra principale sur la prise de vue, règle l'éclairage, attend 2 s puis capture l'image avec util_screenshotCreator_capture.captureFramedThumbnail. Contrairement à job.lua, les caméras enregistrées par config ou modèle sont ignorées. processWorkItem doit être appelé depuis une coroutine, car il fait des yield.
+Vehicle thumbnail capture chain used by the thumbnail composer (thumbnailComposerRun): replaces the vehicle with the desired configuration, places it and lets it settle, freezes the physics, computes the camera with the "legacy" framing ("warehouse" angle, margins reduced to 85%), points the main camera at the shot, sets the lighting, waits 2 s then captures the image with util_screenshotCreator_capture.captureFramedThumbnail. Unlike job.lua, cameras saved per config or model are ignored. processWorkItem must be called from a coroutine, because it yields.
 
-## Remarques
+## Notes
 
-- processWorkItem utilise coroutine.yield (attentes de 0,7 s et de 2 s) : à appeler uniquement dans une coroutine.
-- Le mode de capture « defaults » écrit default.jpg pour la config par défaut ; avec « all », la vignette de la config par défaut est aussi copiée en default.jpg (voir thumbnailPaths).
-- La caméra principale est mise en vue libre et son état d'origine est mémorisé (une seule fois) ; resetRenderState() le restaure. Il faut l'appeler à la fin ou en cas d'annulation.
-- Le FOV transmis à la capture est framingContext.fieldOfView (réglage utilisateur) alors que le mode legacy cadre avec un FOV fixe de 20° : le FOV réglé doit rester à 20 pour un cadrage cohérent.
+- processWorkItem uses coroutine.yield (waits of 0.7 s and 2 s): call it only inside a coroutine.
+- The "defaults" capture mode writes default.jpg for the default config; with "all", the default config's thumbnail is also copied to default.jpg (see thumbnailPaths).
+- The main camera is switched to free view and its original state is stored (only once); resetRenderState() restores it. It must be called at the end or on cancellation.
+- The FOV passed to the capture is framingContext.fieldOfView (user setting) whereas the legacy mode frames with a fixed 20° FOV: the set FOV must stay at 20 for consistent framing.
 
-**Dépendances (chargées avant) :** `core_vehicles`, `core_camera`, `util_screenshotCreator_settings`, `util_screenshotCreator_vehicleSetup`, `util_screenshotCreator_capture`, `util_screenshotCreator_lightingSetup`, `util_screenshotCreator_framing_legacy`, `util_screenshotCreator_framingManager`, `util_screenshotCreator_thumbnailPaths`
+**Dependencies (loaded first):** `core_vehicles`, `core_camera`, `util_screenshotCreator_settings`, `util_screenshotCreator_vehicleSetup`, `util_screenshotCreator_capture`, `util_screenshotCreator_lightingSetup`, `util_screenshotCreator_framing_legacy`, `util_screenshotCreator_framingManager`, `util_screenshotCreator_thumbnailPaths`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_screenshotCreator_thumbnailCapturePipeline.processWorkItem(item, index, total, settingsSnapshot, runContext, options)` | Traite un élément de la file : remplace le véhicule, le place, attend sa stabilisation, gèle la physique, cadre, éclaire, capture et restaure l'éclairage. Renvoie un résultat {status = "saved", current, camera, outputFolder, outputPath} ou {status = "failed", error}, ou nil si l'annulation a été demandée. | 65 |
-| `util_screenshotCreator_thumbnailCapturePipeline.resetRenderState()` | Restaure la caméra principale mémorisée par pointMainCameraAt et l'éclairage (lightingSetup.restore). | 128 |
-| `util_screenshotCreator_thumbnailCapturePipeline.resolveCamera(vehicle, modelName, configName, outputResolution)` | Calcule la caméra de cadrage « warehouse angle » : contexte de cadrage issu des réglages, mode « legacy », marges multipliées par 0,85. Journalise une erreur et renvoie nil si le cadrage échoue. | 45 |
+| `util_screenshotCreator_thumbnailCapturePipeline.processWorkItem(item, index, total, settingsSnapshot, runContext, options)` | Processes a queue item: replaces the vehicle, places it, waits for it to settle, freezes the physics, frames, lights, captures and restores the lighting. Returns a result {status = "saved", current, camera, outputFolder, outputPath} or {status = "failed", error}, or nil if cancellation was requested. | 65 |
+| `util_screenshotCreator_thumbnailCapturePipeline.resetRenderState()` | Restores the main camera stored by pointMainCameraAt and the lighting (lightingSetup.restore). | 128 |
+| `util_screenshotCreator_thumbnailCapturePipeline.resolveCamera(vehicle, modelName, configName, outputResolution)` | Computes the "warehouse angle" framing camera: framing context from the settings, "legacy" mode, margins multiplied by 0.85. Logs an error and returns nil if the framing fails. | 45 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_screenshotCreator_thumbnailCapturePipeline.processWorkItem(item, index, total, settingsSnapshot, runContext, options)`
 
-Traite un élément de la file : remplace le véhicule, le place, attend sa stabilisation, gèle la physique, cadre, éclaire, capture et restaure l'éclairage. Renvoie un résultat {status = "saved", current, camera, outputFolder, outputPath} ou {status = "failed", error}, ou nil si l'annulation a été demandée.
+Processes a queue item: replaces the vehicle, places it, waits for it to settle, freezes the physics, frames, lights, captures and restores the lighting. Returns a result {status = "saved", current, camera, outputFolder, outputPath} or {status = "failed", error}, or nil if cancellation was requested.
 
-- `item` (*table*) : Élément {modelName, modelKey, configName, isDefaultConfig...}.
-- `index` (*integer*) : Rang de l'élément (à partir de 1).
-- `total` (*integer*) : Nombre total d'éléments.
-- `settingsSnapshot` (*table*) : Instantané des réglages : capture {superSampling, freezePhysics...}, captureTimeout.
-- `runContext` (*table*) : {initialPosition, initialRotation} : transformation de départ du véhicule.
-- `options` (*table*) : {sendProgress = function(fait, total, courant), isCancelled = function, outputResolution, captureMode}.
-- **renvoie** : table|nil Résultat de l'élément ; nil si annulé.
+- `item` (*table*) : Item {modelName, modelKey, configName, isDefaultConfig...}.
+- `index` (*integer*) : Rank of the item (starting at 1).
+- `total` (*integer*) : Total number of items.
+- `settingsSnapshot` (*table*) : Settings snapshot: capture {superSampling, freezePhysics...}, captureTimeout.
+- `runContext` (*table*) : {initialPosition, initialRotation}: the vehicle's starting transform.
+- `options` (*table*) : {sendProgress = function(done, total, current), isCancelled = function, outputResolution, captureMode}.
+- **returns**: table|nil Item result; nil if canceled.
 
 #### `util_screenshotCreator_thumbnailCapturePipeline.resolveCamera(vehicle, modelName, configName, outputResolution)`
 
-Calcule la caméra de cadrage « warehouse angle » : contexte de cadrage issu des réglages, mode « legacy », marges multipliées par 0,85. Journalise une erreur et renvoie nil si le cadrage échoue.
+Computes the "warehouse angle" framing camera: framing context from the settings, "legacy" mode, margins multiplied by 0.85. Logs an error and returns nil if the framing fails.
 
-- `vehicle` (*table*) : Objet véhicule.
-- `modelName` (*string*) : Nom du modèle.
-- `configName` (*string*) : Nom de la configuration.
-- `outputResolution` (*integer[]|nil*) : {largeur, hauteur} de l'image finale.
-- **renvoie** : table|nil Caméra {pos, rot, fov, name, ...} ou nil.
-- **renvoie** : table|nil Contexte de cadrage utilisé.
+- `vehicle` (*table*) : Vehicle object.
+- `modelName` (*string*) : Model name.
+- `configName` (*string*) : Configuration name.
+- `outputResolution` (*integer[]|nil*) : {width, height} of the final image.
+- **returns**: table|nil Camera {pos, rot, fov, name, ...} or nil.
+- **returns**: table|nil Framing context used.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant : core_vehicles, core_camera et util_screenshotCreator_settings, vehicleSetup, capture, lightingSetup, framing_legacy, framingManager, thumbnailPaths. |
+| `dependencies` | string[] | Extensions loaded before: core_vehicles, core_camera and util_screenshotCreator_settings, vehicleSetup, capture, lightingSetup, framing_legacy, framingManager, thumbnailPaths. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `copyFile`
 - `be:` `getPhysicsRunning`, `setPhysicsRunning`, `setPhysicsSpeedFactor`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/screenshotCreator/thumbnailCapturePipeline.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/screenshotCreator/thumbnailCapturePipeline.lua`.*

@@ -1,22 +1,22 @@
 # `flowgraph_nodes_vehicle_states`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/states.lua` · VM : Game Engine (GE) · 38 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/states.lua` · VM: Game Engine (GE) · 38 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/states")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/states")` (file under extensions/ but not a regular extension)
 
-Nœud « Vehicle States » (catégorie `repeat_instant`). Lit dans `map.objects[vehId].states` l'état du klaxon (`horn`) et de la barre lumineuse (`lightbar`). Sorties : flux `horn`, flux `lightbar`, bool `hornb`, bool `lightbarb` (cachés). Pin d'entrée : `vehId`.
+Node "Vehicle States" (category `repeat_instant`). Reads from `map.objects[vehId].states` the state of the horn (`horn`) and the lightbar (`lightbar`). Outputs: flow `horn`, flow `lightbar`, bool `hornb`, bool `lightbarb` (hidden). Input pin: `vehId`.
 
-## Remarques
+## Notes
 
-- Si `map.objects[vehId]` n'existe pas, `horn` et `lightbar` sont à false mais `hornb`/`lightbarb` gardent leur ancienne valeur.
+- If `map.objects[vehId]` does not exist, `horn` and `lightbar` are false but `hornb`/`lightbarb` keep their old value.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Met à jour les sorties de klaxon et de barre lumineuse depuis la table `map.objects`. | 24 |
+| `C:work()` | Updates the horn and lightbar outputs from the `map.objects` table. | 24 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/states.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/states.lua`.*

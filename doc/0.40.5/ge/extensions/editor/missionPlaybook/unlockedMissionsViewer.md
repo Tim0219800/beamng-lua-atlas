@@ -1,39 +1,39 @@
 # `editor_missionPlaybook_unlockedMissionsViewer`
 
-*Fichier : `lua/ge/extensions/editor/missionPlaybook/unlockedMissionsViewer.lua` · VM : Game Engine (GE) · 90 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/missionPlaybook/unlockedMissionsViewer.lua` · VM: Game Engine (GE) · 90 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_missionPlaybook_unlockedMissionsViewer` : `extensions.load("editor_missionPlaybook_unlockedMissionsViewer")`, puis la globale `editor_missionPlaybook_unlockedMissionsViewer`
+**Access:** extension `editor_missionPlaybook_unlockedMissionsViewer`: `extensions.load("editor_missionPlaybook_unlockedMissionsViewer")`, then the global `editor_missionPlaybook_unlockedMissionsViewer`
 
-Fenêtre « Playbook Unlocked Missions Viewer » associée à editor_missionPlaybook. Après chaque étape du playbook, elle classe les missions de carrière en trois listes (startable, visible, invisible) d'après gameplay_missions_unlocks.isMissionStartable / isMissionVisible et les range dans resultData.unlockedMissions. La fenêtre affiche trois colonnes pour la page courante et met en vert les missions devenues démarrables à cette étape (unlockChange.byId).
+"Playbook Unlocked Missions Viewer" window associated with editor_missionPlaybook. After each playbook step, it sorts the career missions into three lists (startable, visible, invisible) according to gameplay_missions_unlocks.isMissionStartable / isMissionVisible and stores them in resultData.unlockedMissions. The window displays three columns for the current page and colors green the missions that became startable at this step (unlockChange.byId).
 
-## Remarques
+## Notes
 
-- La fenêtre n'est dessinée que si « Mission Playbook » est visible.
-- Bug : M.onEditorRegisterPreferences est assigné à une variable globale non définie (nil).
-- Une mission « visible » mais non démarrable va dans visible ; une mission démarrable mais non visible va dans invisible.
+- The window is only drawn if "Mission Playbook" is visible.
+- Bug: M.onEditorRegisterPreferences is assigned to an undefined global variable (nil).
+- A mission that is "visible" but not startable goes in visible; a mission that is startable but not visible goes in invisible.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_missionPlaybook_unlockedMissionsViewer.onEditorGui()` | Hook d'éditeur appelé à chaque frame : dessine les trois colonnes de missions pour book.results[book.page]. *(interne)* *(hook)* | 13 |
-| `editor_missionPlaybook_unlockedMissionsViewer.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre (500x500) et l'entrée de menu « Missions ». *(interne)* *(hook)* | 54 |
-| `editor_missionPlaybook_unlockedMissionsViewer.onPlaybookLogAfterStep(resultData)` | Hook émis après chaque instruction du playbook : ajoute resultData.unlockedMissions = {startable, visible, invisible} (listes d'ids). *(interne)* *(hook)* | 59 |
-| `editor_missionPlaybook_unlockedMissionsViewer.show()` | Affiche les fenêtres « Mission Playbook » et « Playbook Unlocked Missions Viewer ». | 49 |
+| `editor_missionPlaybook_unlockedMissionsViewer.onEditorGui()` | Editor hook called every frame: draws the three mission columns for book.results[book.page]. *(internal)* *(hook)* | 13 |
+| `editor_missionPlaybook_unlockedMissionsViewer.onEditorInitialized()` | Hook called at editor initialization: registers the window (500x500) and the "Missions" menu entry. *(internal)* *(hook)* | 54 |
+| `editor_missionPlaybook_unlockedMissionsViewer.onPlaybookLogAfterStep(resultData)` | Hook emitted after each playbook instruction: adds resultData.unlockedMissions = {startable, visible, invisible} (lists of ids). *(internal)* *(hook)* | 59 |
+| `editor_missionPlaybook_unlockedMissionsViewer.show()` | Shows the "Mission Playbook" and "Playbook Unlocked Missions Viewer" windows. | 49 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_missionPlaybook_unlockedMissionsViewer.onPlaybookLogAfterStep(resultData)`
 
-Hook émis après chaque instruction du playbook : ajoute resultData.unlockedMissions = {startable, visible, invisible} (listes d'ids).
+Hook emitted after each playbook instruction: adds resultData.unlockedMissions = {startable, visible, invisible} (lists of ids).
 
-- `resultData` (*table*) : Résultat de l'étape, modifié sur place.
+- `resultData` (*table*) : Result of the step, modified in place.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `onEditorRegisterPreferences` | any |  ⚠ référence `onEditorRegisterPreferences` non définie dans le fichier (vaut probablement nil) |
+| `onEditorRegisterPreferences` | any |  ⚠ reference `onEditorRegisterPreferences` not defined in the file (probably nil) |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionPlaybook/unlockedMissionsViewer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/missionPlaybook/unlockedMissionsViewer.lua`.*

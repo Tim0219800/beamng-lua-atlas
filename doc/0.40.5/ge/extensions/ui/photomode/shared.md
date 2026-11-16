@@ -1,181 +1,181 @@
 # `ui_photomode_shared`
 
-*Fichier : `lua/ge/extensions/ui/photomode/shared.lua` · VM : Game Engine (GE) · 372 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/photomode/shared.lua` · VM: Game Engine (GE) · 372 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_photomode_shared` : `extensions.load("ui_photomode_shared")`, puis la globale `ui_photomode_shared`
+**Access:** extension `ui_photomode_shared`: `extensions.load("ui_photomode_shared")`, then the global `ui_photomode_shared`
 
-Bibliothèque d'outils et état partagé de tous les modules du mode photo (ui_photomode_*). Elle contient la table d'état de session S, le journal de debug, des fonctions de normalisation (nombres, booléens, chemins), des accès protégés (pcall) à VariableRegistry, aux réglages (settings) et à l'API de capture « screenshot », ainsi que le calcul de la disponibilité des actions média (téléversement, Steam, ouverture d'URL de partage).
+Tool library and shared state of all photo mode modules (ui_photomode_*). It contains the session state table S, the debug log, normalization functions (numbers, booleans, paths), protected (pcall) accesses to VariableRegistry, to the settings and to the "screenshot" capture API, as well as the computation of media action availability (upload, Steam, share URL opening).
 
-## Remarques
+## Notes
 
-- Le journal utilise l'étiquette "ui_pause_photomode" (reste d'un ancien nom) et le debug est activé par défaut (isDebugEnabled = true).
-- S.routePayloadContractVersion = 8 et S.photomodeMetadataStateVersion = 2 (versions des formats de charge utile de route et de métadonnées d'état).
-- S contient notamment : sessionActive, activeProfile ("pause" par défaut), photoModeOpen, les états de restauration de session (caméra, scène, effets, rendu avancé, node grabber), les bookmarks sauvegardés, pendingPreviewPlayback, pendingMotionCapture, captureInProgressFramesRemaining, exitConfirmationBypass, pendingExitNavigation, persistentSessionState et panelSurfaceMode ("hidden" par défaut).
-- Actions média : le téléversement exige un backend screenshot.publish, onlineFeatures == "enable", OnlineServiceProvider.isWorking et un compte connecté ; l'action Steam exige les mêmes conditions sauf le compte ; l'ouverture d'URL exige openWebBrowser. Raisons possibles : backend_unavailable, online_features_disabled, online_service_unavailable, online_account_required, browser_unavailable.
-- La table de libellés interne contient aussi shipping_build_required, mais buildMediaActions ne produit jamais cette raison.
+- The log uses the tag "ui_pause_photomode" (leftover from an old name) and debug is enabled by default (isDebugEnabled = true).
+- S.routePayloadContractVersion = 8 and S.photomodeMetadataStateVersion = 2 (versions of the route payload and state metadata formats).
+- S notably contains: sessionActive, activeProfile ("pause" by default), photoModeOpen, the session restore states (camera, scene, effects, advanced render, node grabber), the saved bookmarks, pendingPreviewPlayback, pendingMotionCapture, captureInProgressFramesRemaining, exitConfirmationBypass, pendingExitNavigation, persistentSessionState and panelSurfaceMode ("hidden" by default).
+- Media actions: upload requires a screenshot.publish backend, onlineFeatures == "enable", OnlineServiceProvider.isWorking and a logged-in account; the Steam action requires the same conditions except the account; URL opening requires openWebBrowser. Possible reasons: backend_unavailable, online_features_disabled, online_service_unavailable, online_account_required, browser_unavailable.
+- The internal label table also contains shipping_build_required, but buildMediaActions never produces this reason.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_photomode_shared.buildDescribedState(source, fieldDescriptors)` | Construit une table de sortie à partir de source en ne copiant que les champs décrits et non nil, en appliquant field.normalize si présent et en renommant la clé en field.outputKey si défini. | 143 |
-| `ui_photomode_shared.buildMediaActions()` | Calcule la disponibilité des actions média du mode photo à partir du contexte d'exécution (build shipping, fonctionnalités en ligne, service en ligne, compte connecté, backends screenshot, navigateur). | 313 |
-| `ui_photomode_shared.clampNumber(value, minValue, maxValue, fallback)` | Convertit en nombre et borne entre minValue et maxValue ; renvoie fallback si la valeur n'est pas numérique. | 95 |
-| `ui_photomode_shared.getCoreCameraFunction(name)` | Renvoie la fonction core_camera[name] si elle existe, sinon nil. | 160 |
-| `ui_photomode_shared.getScreenshotApi()` | Charge le module « screenshot » avec pcall(require) et le renvoie, ou nil s'il est indisponible. | 263 |
-| `ui_photomode_shared.hasAnyDescribedField(state, fieldDescriptors)` | Indique si la table state contient au moins un des champs décrits par fieldDescriptors (clé field.key non nil). | 131 |
-| `ui_photomode_shared.isDebugEnabled()` | Indique si le journal de debug du mode photo est activé. | 55 |
-| `ui_photomode_shared.logDebug(message)` | Écrit un message de niveau Info préfixé par « [Photomode] » si le debug est activé. | 68 |
-| `ui_photomode_shared.normalizeBoolean(value, fallback)` | Convertit une valeur en booléen : booléen inchangé, nombre (~= 0), chaînes "true"/"1" et "false"/"0" (insensible à la casse) ; sinon fallback == true. nil donne fallback == true. | 109 |
-| `ui_photomode_shared.normalizePathForCompare(value)` | Normalise un chemin pour comparaison : antislashs convertis en /, slashs initiaux et espaces finaux retirés, passage en minuscules. | 171 |
-| `ui_photomode_shared.normalizePreviewNumberArray(values, expectedLength)` | Vérifie qu'une table contient au moins expectedLength nombres convertibles et renvoie une copie des expectedLength premiers ; nil si l'un manque. | 179 |
-| `ui_photomode_shared.notifySettingsUi()` | Demande à l'interface de se rafraîchir en appelant settings.notifyUI (protégé par pcall). | 254 |
-| `ui_photomode_shared.playPhotoCaptureSound()` | Joue le son de capture photo (événement FMOD "event:>UI>Main>Photo" sur AudioGui). | 89 |
-| `ui_photomode_shared.readSettingValue(settingName)` | Lit un réglage via settings.getValue (protégé par pcall) ; nil en cas d'indisponibilité ou d'erreur. | 218 |
-| `ui_photomode_shared.readVariableRegistryValue(variableName)` | Lit une variable de VariableRegistry (protégé par pcall). Renvoie nil si le registre est indisponible ou en cas d'erreur. | 194 |
-| `ui_photomode_shared.setDebugEnabled(value)` | Active ou désactive le debug du mode photo et propage le réglage à l'API screenshot (setDebugTracingEnabled) si elle est disponible. | 59 |
-| `ui_photomode_shared.stringifyDebugPayload(payload)` | Convertit une charge utile en texte pour le journal : chaîne vide pour nil, chaîne inchangée, sinon JSON (jsonEncode) ou tostring en cas d'échec. | 75 |
-| `ui_photomode_shared.writeSettingValue(settingName, value)` | Écrit un réglage via settings.setValue (protégé par pcall, erreur journalisée). | 230 |
-| `ui_photomode_shared.writeSettingsState(partialState)` | Applique plusieurs réglages d'un coup via settings.setState (protégé par pcall). | 242 |
-| `ui_photomode_shared.writeVariableRegistryValue(variableName, value)` | Écrit une variable de VariableRegistry (protégé par pcall, erreur journalisée). | 206 |
+| `ui_photomode_shared.buildDescribedState(source, fieldDescriptors)` | Builds an output table from source by copying only the described, non-nil fields, applying field.normalize if present and renaming the key to field.outputKey if defined. | 143 |
+| `ui_photomode_shared.buildMediaActions()` | Computes the availability of photo mode media actions from the runtime context (shipping build, online features, online service, logged-in account, screenshot backends, browser). | 313 |
+| `ui_photomode_shared.clampNumber(value, minValue, maxValue, fallback)` | Converts to a number and clamps between minValue and maxValue; returns fallback if the value is not numeric. | 95 |
+| `ui_photomode_shared.getCoreCameraFunction(name)` | Returns the function core_camera[name] if it exists, otherwise nil. | 160 |
+| `ui_photomode_shared.getScreenshotApi()` | Loads the "screenshot" module with pcall(require) and returns it, or nil if unavailable. | 263 |
+| `ui_photomode_shared.hasAnyDescribedField(state, fieldDescriptors)` | Indicates whether the state table contains at least one of the fields described by fieldDescriptors (key field.key non-nil). | 131 |
+| `ui_photomode_shared.isDebugEnabled()` | Indicates whether the photo mode debug log is enabled. | 55 |
+| `ui_photomode_shared.logDebug(message)` | Writes an Info-level message prefixed with "[Photomode]" if debug is enabled. | 68 |
+| `ui_photomode_shared.normalizeBoolean(value, fallback)` | Converts a value to a boolean: boolean unchanged, number (~= 0), strings "true"/"1" and "false"/"0" (case-insensitive); otherwise fallback == true. nil gives fallback == true. | 109 |
+| `ui_photomode_shared.normalizePathForCompare(value)` | Normalizes a path for comparison: backslashes converted to /, leading slashes and trailing spaces removed, converted to lowercase. | 171 |
+| `ui_photomode_shared.normalizePreviewNumberArray(values, expectedLength)` | Checks that a table contains at least expectedLength convertible numbers and returns a copy of the first expectedLength; nil if one is missing. | 179 |
+| `ui_photomode_shared.notifySettingsUi()` | Asks the UI to refresh by calling settings.notifyUI (protected by pcall). | 254 |
+| `ui_photomode_shared.playPhotoCaptureSound()` | Plays the photo capture sound (FMOD event "event:>UI>Main>Photo" on AudioGui). | 89 |
+| `ui_photomode_shared.readSettingValue(settingName)` | Reads a setting via settings.getValue (protected by pcall); nil if unavailable or on error. | 218 |
+| `ui_photomode_shared.readVariableRegistryValue(variableName)` | Reads a VariableRegistry variable (protected by pcall). Returns nil if the registry is unavailable or on error. | 194 |
+| `ui_photomode_shared.setDebugEnabled(value)` | Enables or disables photo mode debug and propagates the setting to the screenshot API (setDebugTracingEnabled) if available. | 59 |
+| `ui_photomode_shared.stringifyDebugPayload(payload)` | Converts a payload to text for the log: empty string for nil, string unchanged, otherwise JSON (jsonEncode) or tostring on failure. | 75 |
+| `ui_photomode_shared.writeSettingValue(settingName, value)` | Writes a setting via settings.setValue (protected by pcall, error logged). | 230 |
+| `ui_photomode_shared.writeSettingsState(partialState)` | Applies several settings at once via settings.setState (protected by pcall). | 242 |
+| `ui_photomode_shared.writeVariableRegistryValue(variableName, value)` | Writes a VariableRegistry variable (protected by pcall, error logged). | 206 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_photomode_shared.buildDescribedState(source, fieldDescriptors)`
 
-Construit une table de sortie à partir de source en ne copiant que les champs décrits et non nil, en appliquant field.normalize si présent et en renommant la clé en field.outputKey si défini.
+Builds an output table from source by copying only the described, non-nil fields, applying field.normalize if present and renaming the key to field.outputKey if defined.
 
-- `source` (*table*) : Table source ; un non-table donne {}.
-- `fieldDescriptors` (*table[]*) : Liste de descripteurs {key, outputKey?, normalize?}.
-- **renvoie** : table État construit.
+- `source` (*table*) : Source table; a non-table gives {}.
+- `fieldDescriptors` (*table[]*) : List of descriptors {key, outputKey?, normalize?}.
+- **returns**: table Built state.
 
 #### `ui_photomode_shared.buildMediaActions()`
 
-Calcule la disponibilité des actions média du mode photo à partir du contexte d'exécution (build shipping, fonctionnalités en ligne, service en ligne, compte connecté, backends screenshot, navigateur).
+Computes the availability of photo mode media actions from the runtime context (shipping build, online features, online service, logged-in account, screenshot backends, browser).
 
-- **renvoie** : table {runtime={shippingBuild, uiDevMode, onlineFeaturesEnabled, onlineServiceWorking, onlineAccountLoggedIn}, capture={upload, steam}, preview={openShareUrl}} ; chaque action vaut {visible, enabled, reason, reasonLabel}.
+- **returns**: table {runtime={shippingBuild, uiDevMode, onlineFeaturesEnabled, onlineServiceWorking, onlineAccountLoggedIn}, capture={upload, steam}, preview={openShareUrl}}; each action is {visible, enabled, reason, reasonLabel}.
 
 #### `ui_photomode_shared.clampNumber(value, minValue, maxValue, fallback)`
 
-Convertit en nombre et borne entre minValue et maxValue ; renvoie fallback si la valeur n'est pas numérique.
+Converts to a number and clamps between minValue and maxValue; returns fallback if the value is not numeric.
 
-- `value` (*any*) : Valeur à convertir avec tonumber.
-- `minValue` (*number*) : Borne basse.
-- `maxValue` (*number*) : Borne haute.
-- `fallback` (*any*) : Valeur renvoyée si la conversion échoue (non bornée).
-- **renvoie** : number|any Nombre borné ou fallback.
+- `value` (*any*) : Value to convert with tonumber.
+- `minValue` (*number*) : Bottom bound.
+- `maxValue` (*number*) : Top bound.
+- `fallback` (*any*) : Value returned if the conversion fails (not clamped).
+- **returns**: number|any Clamped number or fallback.
 
 #### `ui_photomode_shared.getCoreCameraFunction(name)`
 
-Renvoie la fonction core_camera[name] si elle existe, sinon nil.
+Returns the function core_camera[name] if it exists, otherwise nil.
 
-- `name` (*string*) : Nom de la fonction de core_camera (par exemple setPosRot, setFOV).
-- **renvoie** : function|nil La fonction, ou nil.
+- `name` (*string*) : Name of the core_camera function (for example setPosRot, setFOV).
+- **returns**: function|nil The function, or nil.
 
 #### `ui_photomode_shared.getScreenshotApi()`
 
-Charge le module « screenshot » avec pcall(require) et le renvoie, ou nil s'il est indisponible.
+Loads the "screenshot" module with pcall(require) and returns it, or nil if unavailable.
 
-- **renvoie** : table|nil Module screenshot.
+- **returns**: table|nil Screenshot module.
 
 #### `ui_photomode_shared.hasAnyDescribedField(state, fieldDescriptors)`
 
-Indique si la table state contient au moins un des champs décrits par fieldDescriptors (clé field.key non nil).
+Indicates whether the state table contains at least one of the fields described by fieldDescriptors (key field.key non-nil).
 
-- `state` (*table*) : Table à tester ; un non-table donne false.
-- `fieldDescriptors` (*table[]*) : Liste de descripteurs {key, outputKey?, normalize?}.
-- **renvoie** : boolean true si un champ est présent.
+- `state` (*table*) : Table to test; a non-table gives false.
+- `fieldDescriptors` (*table[]*) : List of descriptors {key, outputKey?, normalize?}.
+- **returns**: boolean true if a field is present.
 
 #### `ui_photomode_shared.isDebugEnabled()`
 
-Indique si le journal de debug du mode photo est activé.
+Indicates whether the photo mode debug log is enabled.
 
-- **renvoie** : boolean true si le debug est activé.
+- **returns**: boolean true if debug is enabled.
 
 #### `ui_photomode_shared.logDebug(message)`
 
-Écrit un message de niveau Info préfixé par « [Photomode] » si le debug est activé.
+Writes an Info-level message prefixed with "[Photomode]" if debug is enabled.
 
-- `message` (*any*) : Message (converti avec tostring).
+- `message` (*any*) : Message (converted with tostring).
 
 #### `ui_photomode_shared.normalizeBoolean(value, fallback)`
 
-Convertit une valeur en booléen : booléen inchangé, nombre (~= 0), chaînes "true"/"1" et "false"/"0" (insensible à la casse) ; sinon fallback == true. nil donne fallback == true.
+Converts a value to a boolean: boolean unchanged, number (~= 0), strings "true"/"1" and "false"/"0" (case-insensitive); otherwise fallback == true. nil gives fallback == true.
 
-- `value` (*any*) : Valeur à normaliser.
-- `fallback` (*any*) : Valeur par défaut (seul fallback == true compte).
-- **renvoie** : boolean Booléen normalisé.
+- `value` (*any*) : Value to normalize.
+- `fallback` (*any*) : Default value (only fallback == true counts).
+- **returns**: boolean Normalized boolean.
 
 #### `ui_photomode_shared.normalizePathForCompare(value)`
 
-Normalise un chemin pour comparaison : antislashs convertis en /, slashs initiaux et espaces finaux retirés, passage en minuscules.
+Normalizes a path for comparison: backslashes converted to /, leading slashes and trailing spaces removed, converted to lowercase.
 
-- `value` (*any*) : Chemin (nil donne chaîne vide).
-- **renvoie** : string Chemin normalisé.
+- `value` (*any*) : Path (nil gives empty string).
+- **returns**: string Normalized path.
 
 #### `ui_photomode_shared.normalizePreviewNumberArray(values, expectedLength)`
 
-Vérifie qu'une table contient au moins expectedLength nombres convertibles et renvoie une copie des expectedLength premiers ; nil si l'un manque.
+Checks that a table contains at least expectedLength convertible numbers and returns a copy of the first expectedLength; nil if one is missing.
 
-- `values` (*table*) : Tableau d'entrée.
-- `expectedLength` (*integer*) : Nombre d'éléments attendus (3 pour une position, 4 pour un quaternion).
-- **renvoie** : number[]|nil Tableau normalisé ou nil.
+- `values` (*table*) : Input array.
+- `expectedLength` (*integer*) : Number of expected elements (3 for a position, 4 for a quaternion).
+- **returns**: number[]|nil Normalized array or nil.
 
 #### `ui_photomode_shared.readSettingValue(settingName)`
 
-Lit un réglage via settings.getValue (protégé par pcall) ; nil en cas d'indisponibilité ou d'erreur.
+Reads a setting via settings.getValue (protected by pcall); nil if unavailable or on error.
 
-- `settingName` (*string*) : Nom du réglage.
-- **renvoie** : any Valeur du réglage ou nil.
+- `settingName` (*string*) : Setting name.
+- **returns**: any Setting value or nil.
 
 #### `ui_photomode_shared.readVariableRegistryValue(variableName)`
 
-Lit une variable de VariableRegistry (protégé par pcall). Renvoie nil si le registre est indisponible ou en cas d'erreur.
+Reads a VariableRegistry variable (protected by pcall). Returns nil if the registry is unavailable or on error.
 
-- `variableName` (*string*) : Nom de la variable.
-- **renvoie** : any Valeur ou nil.
+- `variableName` (*string*) : Variable name.
+- **returns**: any Value or nil.
 
 #### `ui_photomode_shared.setDebugEnabled(value)`
 
-Active ou désactive le debug du mode photo et propage le réglage à l'API screenshot (setDebugTracingEnabled) si elle est disponible.
+Enables or disables photo mode debug and propagates the setting to the screenshot API (setDebugTracingEnabled) if available.
 
-- `value` (*any*) : Activé uniquement si value == true.
+- `value` (*any*) : Enabled only if value == true.
 
 #### `ui_photomode_shared.stringifyDebugPayload(payload)`
 
-Convertit une charge utile en texte pour le journal : chaîne vide pour nil, chaîne inchangée, sinon JSON (jsonEncode) ou tostring en cas d'échec.
+Converts a payload to text for the log: empty string for nil, string unchanged, otherwise JSON (jsonEncode) or tostring on failure.
 
-- `payload` (*any*) : Valeur à convertir.
-- **renvoie** : string Texte à journaliser.
+- `payload` (*any*) : Value to convert.
+- **returns**: string Text to log.
 
 #### `ui_photomode_shared.writeSettingValue(settingName, value)`
 
-Écrit un réglage via settings.setValue (protégé par pcall, erreur journalisée).
+Writes a setting via settings.setValue (protected by pcall, error logged).
 
-- `settingName` (*string*) : Nom du réglage.
-- `value` (*any*) : Nouvelle valeur.
-- **renvoie** : boolean true si l'écriture a réussi.
+- `settingName` (*string*) : Setting name.
+- `value` (*any*) : New value.
+- **returns**: boolean true if the write succeeded.
 
 #### `ui_photomode_shared.writeSettingsState(partialState)`
 
-Applique plusieurs réglages d'un coup via settings.setState (protégé par pcall).
+Applies several settings at once via settings.setState (protected by pcall).
 
-- `partialState` (*table<string, any>*) : Réglages à modifier.
-- **renvoie** : boolean true si l'appel a réussi.
+- `partialState` (*table<string, any>*) : Settings to change.
+- **returns**: boolean true if the call succeeded.
 
 #### `ui_photomode_shared.writeVariableRegistryValue(variableName, value)`
 
-Écrit une variable de VariableRegistry (protégé par pcall, erreur journalisée).
+Writes a VariableRegistry variable (protected by pcall, error logged).
 
-- `variableName` (*string*) : Nom de la variable.
-- `value` (*any*) : Valeur à écrire.
-- **renvoie** : boolean true si l'écriture a réussi.
+- `variableName` (*string*) : Variable name.
+- `value` (*any*) : Value to write.
+- **returns**: boolean true if the write succeeded.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `S` | table | Table d'état mutable partagée par tous les modules du mode photo (session active, états de restauration, lecture d'aperçu en attente, etc.). Les autres modules la lisent et l'écrivent directement via ui_photomode_shared.S. |
+| `S` | table | Mutable state table shared by all photo mode modules (active session, restore states, pending preview playback, etc.). The other modules read and write it directly via ui_photomode_shared.S. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/photomode/shared.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/photomode/shared.lua`.*

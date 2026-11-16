@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_recoveryPrompt_setRecoveryPromptButton`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptButton.lua` · VM : Game Engine (GE) · 25 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptButton.lua` · VM: Game Engine (GE) · 25 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptButton")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptButton")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Set Recovery Prompt Button » (catégorie once_instant). Crée ou modifie un bouton du recovery prompt via core_recoveryPrompt.addButton. Pins d'entrée : buttonId, label (défaut « Button »), order (laisser vide = ajouté à la fin), fadeActive (caché, défaut true : fondu d'écran), icon (id d'icône).
+Flowgraph node "Set Recovery Prompt Button" (category once_instant). Creates or modifies a recovery prompt button via core_recoveryPrompt.addButton. Input pins: buttonId, label (default "Button"), order (leave empty = added at the end), fadeActive (hidden, default true: screen fade), icon (icon id).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Appelle core_recoveryPrompt.addButton avec buttonId, label, une fonction vide (nop), order, fadeActive et icon. | 20 |
+| `C:workOnce()` | Calls core_recoveryPrompt.addButton with buttonId, label, an empty function (nop), order, fadeActive and icon. | 20 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptButton.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptButton.lua`.*

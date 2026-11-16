@@ -1,12 +1,12 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/mission/prepareVehicle.lua",
-  "module": "Noeud flowgraph 'Prepare Vehicle' (categorie once_instant). Prepare un ou plusieurs vehicules pour le gameplay (electrique et valeurs) via self.mgr.modules.mission:prepareVehicle. Pins optionnels : vehId (defaut vehicule joueur) et vehicleIds (table d'ids supplementaires).",
+  "module": "Flowgraph node 'Prepare Vehicle' (once_instant category). Prepares one or more vehicles for gameplay (electric and values) via self.mgr.modules.mission:prepareVehicle. Optional pins: vehId (default player vehicle) and vehicleIds (table of additional ids).",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "workOnce": {
-          "desc": "Prepare vehId (ou le vehicule joueur) avec le second argument false, puis chaque id de vehicleIds avec le second argument true sauf s'il s'agit du vehicule principal ou du joueur.",
+          "desc": "Prepares vehId (or the player vehicle) with the second argument false, then each id of vehicleIds with the second argument true unless it is the main vehicle or the player.",
           "internal": true
         }
       }

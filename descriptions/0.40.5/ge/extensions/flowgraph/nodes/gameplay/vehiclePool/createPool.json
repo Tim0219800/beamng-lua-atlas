@@ -1,28 +1,28 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/createPool.lua",
-  "module": "Nœud flowgraph « Create Vehicle Pool » (once_instant). Crée un pool de véhicules (core_vehicleActivePooling.createPool({name})) pour gérer l'activation/désactivation des objets véhicule ; sortie vehPool. Option data.keepVehicles (« Keep Inactive Vehicles ») : à la suppression du pool, garde les véhicules inactifs (deletePool(keepVehicles)).",
+  "module": "Flowgraph node \"Create Vehicle Pool\" (once_instant). Creates a vehicle pool (core_vehicleActivePooling.createPool({name})) to manage the activation/deactivation of vehicle objects; output vehPool. Option data.keepVehicles (\"Keep Inactive Vehicles\"): when the pool is deleted, keeps the inactive vehicles (deletePool(keepVehicles)).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStopped": {
-          "desc": "Appelle onNodeReset().",
+          "desc": "Calls onNodeReset().",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Affiche la case « Keep Inactive Vehicles » (data.keepVehicles).",
+          "desc": "Displays the \"Keep Inactive Vehicles\" checkbox (data.keepVehicles).",
           "internal": true
         },
         "init": {
-          "desc": "Appelle onNodeReset().",
+          "desc": "Calls onNodeReset().",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Supprime le pool créé (deletePool) et l'oublie.",
+          "desc": "Deletes the created pool (deletePool) and forgets it.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Crée le pool s'il n'existe pas et le publie sur vehPool.",
+          "desc": "Creates the pool if it does not exist and publishes it on vehPool.",
           "internal": true
         }
       }

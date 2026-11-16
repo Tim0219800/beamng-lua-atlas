@@ -1,32 +1,32 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/string/match.lua",
-  "module": "Noeud « Match String » (simple). Doit renvoyer la première capture d'un pattern Lua appliqué à la chaîne d'entrée ; pins : value (in, string), value (out, string). Pattern dans data.pattern (« %d » par défaut).",
+  "module": "Node \"Match String\" (simple). Should return the first capture of a Lua pattern applied to the input string; pins: value (in, string), value (out, string). Pattern in data.pattern (\"%d\" by default).",
   "notes": [
-    "Bug : work utilise self.data.pattern.value alors que data.pattern est une chaîne : l'indexation d'une chaîne par 'value' donne nil, string.match reçoit un pattern nil et lève une erreur.",
-    "Le fichier note en todo que les patterns utilisables restent à documenter."
+    "Bug: work uses self.data.pattern.value whereas data.pattern is a string: indexing a string by 'value' gives nil, string.match receives a nil pattern and raises an error.",
+    "The file notes as a todo that the usable patterns remain to be documented."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
           "desc": "data.pattern = '%d'.",
           "internal": true
         },
         "work": {
-          "desc": "Appelle string.match(value, data.pattern.value) et écrit le résultat.",
+          "desc": "Calls string.match(value, data.pattern.value) and writes the result.",
           "internal": false
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "desc": "Draws the central content of the node in the editor.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true

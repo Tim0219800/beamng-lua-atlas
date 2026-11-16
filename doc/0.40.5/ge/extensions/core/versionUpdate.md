@@ -1,56 +1,56 @@
 # `core_versionUpdate`
 
-*Fichier : `lua/ge/extensions/core/versionUpdate.lua` · VM : Game Engine (GE) · 55 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/versionUpdate.lua` · VM: Game Engine (GE) · 55 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_versionUpdate` : `extensions.load("core_versionUpdate")`, puis la globale `core_versionUpdate`
+**Access:** extension `core_versionUpdate`: `extensions.load("core_versionUpdate")`, then the global `core_versionUpdate`
 
-Détecte au démarrage si le jeu vient d'être mis à jour vers une nouvelle version majeure (comparaison des deux premiers nombres de beamng_version avec le réglage lastVersion). Dans ce cas il lance FS:folderCleanup pour sauvegarder les dossiers utilisateur de l'ancienne version, puis enregistre la version courante dans les réglages. Un moddeur s'en sert rarement ; updatedFromVersion() indique de quelle version on vient.
+Detects at startup whether the game was just updated to a new major version (comparison of the first two numbers of beamng_version with the lastVersion setting). In that case it runs FS:folderCleanup to back up the user folders of the old version, then stores the current version in the settings. A modder rarely uses it; updatedFromVersion() indicates which version we come from.
 
-## Exemple
+## Example
 
 ```lua
-local ancienne = core_versionUpdate.updatedFromVersion()
-if ancienne then log('I', 'mod', 'mise à jour depuis ' .. ancienne) end
+local previous = core_versionUpdate.updatedFromVersion()
+if previous then log('I', 'mod', 'updated from ' .. previous) end
 ```
 
-## Remarques
+## Notes
 
-- Nouvelle installation (pas de lastVersion et onlineFeatures == 'ask') ou même version majeure : pas de sauvegarde, sauf si le réglage folderCleanupRequested est vrai, auquel cas FS:folderCleanup("") est exécuté.
-- Si lastVersion est absent mais que ce n'est pas une nouvelle installation, la valeur « 0.0.0.0.unknown_before_0.38 » est utilisée.
-- M.updateBackupPath (chemin renvoyé par FS:folderCleanup) est défini mais absent de la liste des champs exportés ; il n'existe que lors d'une mise à jour majeure.
-- onUpdate attend 2 appels (contournement d'un bug du système de réglages), puis se retire (M.onUpdate = nil), relance extensions.hookUpdate('onUpdate') pour reconstruire la liste des hooks, écrit lastVersion et efface folderCleanupRequested.
+- New installation (no lastVersion and onlineFeatures == 'ask') or same major version: no backup, unless the folderCleanupRequested setting is true, in which case FS:folderCleanup("") is executed.
+- If lastVersion is absent but it is not a new installation, the value "0.0.0.0.unknown_before_0.38" is used.
+- M.updateBackupPath (path returned by FS:folderCleanup) is defined but absent from the list of exported fields; it only exists during a major update.
+- onUpdate waits for 2 calls (workaround for a settings system bug), then removes itself (M.onUpdate = nil), reruns extensions.hookUpdate('onUpdate') to rebuild the hook list, writes lastVersion and clears folderCleanupRequested.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_versionUpdate.onExtensionLoaded()` | Hook appelé au chargement : compare version courante et dernière version enregistrée, lance éventuellement la sauvegarde/nettoyage des dossiers et mémorise lastVersion. *(interne)* *(hook)* | 12 |
-| `core_versionUpdate.onUpdate()` | Hook appelé à chaque image, mais seulement jusqu'à la 2e fois : enregistre la version courante dans les réglages puis se supprime lui-même. *(interne)* *(hook)* | 41 |
-| `core_versionUpdate.updatedFromVersion()` | Renvoie la version dont on vient de migrer. | 51 |
+| `core_versionUpdate.onExtensionLoaded()` | Hook called on load: compares the current version and the last stored version, optionally runs the folder backup/cleanup and stores lastVersion. *(internal)* *(hook)* | 12 |
+| `core_versionUpdate.onUpdate()` | Hook called every frame, but only until the 2nd time: stores the current version in the settings then removes itself. *(internal)* *(hook)* | 41 |
+| `core_versionUpdate.updatedFromVersion()` | Returns the version we just migrated from. | 51 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_versionUpdate.updatedFromVersion()`
 
-Renvoie la version dont on vient de migrer.
+Returns the version we just migrated from.
 
-- **renvoie** : string|nil Ancienne version, nil s'il n'y a pas eu de mise à jour majeure à ce lancement.
+- **returns**: string|nil Old version, nil if there was no major update at this launch.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `lastVersion` | string|nil | Version précédente du jeu si une mise à jour majeure a été détectée à ce lancement, sinon nil. |
+| `lastVersion` | string|nil | Previous game version if a major update was detected at this launch, otherwise nil. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onUpdate` — écouté par 186 module(s)
+- `onUpdate` — listened to by 186 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `folderCleanup`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/versionUpdate.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/versionUpdate.lua`.*

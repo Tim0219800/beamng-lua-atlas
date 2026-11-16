@@ -1,80 +1,80 @@
 # `controller_lineLock`
 
-*Fichier : `lua/vehicle/controller/lineLock.lua` · VM : Véhicule · 156 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/lineLock.lua` · VM: Vehicle · 156 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `lineLock` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `lineLock` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire « line lock » de dragster (type "auxiliary", defaultOrder 40) : verrouille la pression de frein des roues listées (typiquement l'avant) au niveau actuel pour permettre de chauffer les pneus arrière. À l'activation, il mémorise le couple de frein principal courant de chaque roue verrouillée et le réapplique à chaque pas dans wd.desiredBrakingTorque tant que le line lock est actif. Une entrée « Line Lock » est ajoutée au menu radial.
+Dragster "line lock" auxiliary controller (type "auxiliary", defaultOrder 40): locks the brake pressure of the listed wheels (typically the front) at the current level to allow heating the rear tires. On activation, it stores the current main brake torque of each locked wheel and reapplies it at each step into wd.desiredBrakingTorque as long as the line lock is active. A "Line Lock" entry is added to the radial menu.
 
-## Exemple
+## Example
 
 ```lua
 local ll = controller.getControllerSafe('lineLock')
 ll.toggleLineLock()
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam (défaut) : name (nom du contrôleur, utilisé par le menu radial pour le retrouver), lockedLines (liste de noms de roues), electricsName ("linelock").
-- electrics.values[electricsName] vaut 1 quand actif, 0 sinon. Un message d'interface indique les roues verrouillées et le pourcentage de frein au moment de l'activation.
-- setLineLock(value) : value >= 1 active ; toute valeur < 1 désactive (couples mémorisés remis à 0).
+- jbeam keys (default): name (controller name, used by the radial menu to find it), lockedLines (list of wheel names), electricsName ("linelock").
+- electrics.values[electricsName] is 1 when active, 0 otherwise. An interface message indicates the locked wheels and the brake percentage at the time of activation.
+- setLineLock(value): value >= 1 activates; any value < 1 deactivates (stored torques reset to 0).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_lineLock.getState()` | Renvoie l'état actif et les couples mémorisés par roue. | 115 |
-| `controller_lineLock.init(jbeamData)` | Lit les roues à verrouiller, enregistre l'entrée du menu radial. *(interne)* | 66 |
-| `controller_lineLock.setLineLock(value)` | Active ou désactive le line lock et mémorise le couple de frein courant des roues verrouillées. | 43 |
-| `controller_lineLock.setState(data)` | Restaure l'état renvoyé par getState. | 123 |
-| `controller_lineLock.toggleLineLock()` | Inverse l'état du line lock. | 61 |
-| `controller_lineLock.updateGFX(dt)` | Écrit l'état dans electrics.values. *(interne)* | 39 |
-| `controller_lineLock.updateWheelsIntermediate(dt)` | Chaque pas : applique les couples de frein mémorisés aux roues verrouillées quand le line lock est actif. *(interne)* | 30 |
+| `controller_lineLock.getState()` | Returns the active state and the stored torques per wheel. | 115 |
+| `controller_lineLock.init(jbeamData)` | Reads the wheels to lock, registers the radial menu entry. *(internal)* | 66 |
+| `controller_lineLock.setLineLock(value)` | Enables or disables the line lock and stores the current brake torque of the locked wheels. | 43 |
+| `controller_lineLock.setState(data)` | Restores the state returned by getState. | 123 |
+| `controller_lineLock.toggleLineLock()` | Toggles the line lock state. | 61 |
+| `controller_lineLock.updateGFX(dt)` | Writes the state into electrics.values. *(internal)* | 39 |
+| `controller_lineLock.updateWheelsIntermediate(dt)` | Every step: applies the stored brake torques to the locked wheels when the line lock is active. *(internal)* | 30 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_lineLock.getState()`
 
-Renvoie l'état actif et les couples mémorisés par roue.
+Returns the active state and the stored torques per wheel.
 
-- **renvoie** : table Table d'état (réutilisée).
+- **returns**: table State table (reused).
 
 #### `controller_lineLock.init(jbeamData)`
 
-Lit les roues à verrouiller, enregistre l'entrée du menu radial.
+Reads the wheels to lock, registers the radial menu entry.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_lineLock.setLineLock(value)`
 
-Active ou désactive le line lock et mémorise le couple de frein courant des roues verrouillées.
+Enables or disables the line lock and stores the current brake torque of the locked wheels.
 
-- `value` (*number*) : 1 pour activer, 0 pour désactiver.
+- `value` (*number*) : 1 to activate, 0 to deactivate.
 
 #### `controller_lineLock.setState(data)`
 
-Restaure l'état renvoyé par getState.
+Restores the state returned by getState.
 
-- `data` (*table|nil*) : Table d'état.
+- `data` (*table|nil*) : State table.
 
 #### `controller_lineLock.updateGFX(dt)`
 
-Écrit l'état dans electrics.values.
+Writes the state into electrics.values.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_lineLock.updateWheelsIntermediate(dt)`
 
-Chaque pas : applique les couples de frein mémorisés aux roues verrouillées quand le line lock est actif.
+Every step: applies the stored brake torques to the locked wheels when the line lock is active.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `defaultOrder` | number | 40. |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/lineLock.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/lineLock.lua`.*

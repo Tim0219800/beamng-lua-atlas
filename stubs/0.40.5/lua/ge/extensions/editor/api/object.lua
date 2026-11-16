@@ -2,387 +2,387 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/api/object.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- API de l'éditeur pour manipuler les objets de la scène : sélection (par id, référence, type, masque de nom, rectangle écran), lecture/écriture des champs (statiques et dynamiques, copier/coller), verrouiller/cacher, aligner, translater/tourner/mettre à l'échelle la sélection, centroïde et boîte englobante, Focus-Lock sur un groupe, prefabs (créer, exploser, convertir en v2, dépaqueter) et mementos de SimObject. `initialize` installe tout sur `editor` et définit les constantes `editor.SelectMode_*` ; `initializeFocusLock` ajoute les fonctions de Focus-Lock. La sélection vit dans `editor.selection.object` (liste d'ids). Les fonctions de ce fichier n'enregistrent PAS d'historique d'annulation : voir objectHistoryActions pour les versions `...WithUndo`.
---- Accès : extension `editor_api_object` : `extensions.load("editor_api_object")`, puis la globale `editor_api_object`
+--- Editor API for manipulating scene objects: selection (by id, reference, type, name mask, screen rectangle), reading/writing fields (static and dynamic, copy/paste), lock/hide, align, translate/rotate/scale the selection, centroid and bounding box, Focus-Lock on a group, prefabs (create, explode, convert to v2, unpack) and SimObject mementos. `initialize` installs everything on `editor` and defines the `editor.SelectMode_*` constants; `initializeFocusLock` adds the Focus-Lock functions. The selection lives in `editor.selection.object` (list of ids). The functions in this file do NOT record undo history: see objectHistoryActions for the `...WithUndo` versions.
+--- Access: extension `editor_api_object`: `extensions.load("editor_api_object")`, then the global `editor_api_object`
 ---@class editor_api_object
 editor_api_object = {}
 
---- Mémorise l'éditeur, définit editor.SelectMode_* et editor.objectSelectionBBox, et installe les fonctions de sélection, champs, alignement, transformation et prefabs sur `editor`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/object.lua:1408
----@param editorInstance table objet `editor`
+--- Remembers the editor, defines editor.SelectMode_* and editor.objectSelectionBBox, and installs the selection, fields, alignment, transform and prefab functions on `editor`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/object.lua:1408
+---@param editorInstance table `editor` object
 function editor_api_object.initialize(editorInstance) end
 
---- Installe séparément les fonctions de Focus-Lock (getFocusLockedGroup, isFocusLockActive, setFocusLockedGroup, clearFocusLock, isObjectInFocusLockedGroup, resolveAddGroup) pour contourner la limite de 60 upvalues de initialize.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/object.lua:1482
+--- Separately installs the Focus-Lock functions (getFocusLockedGroup, isFocusLockActive, setFocusLockedGroup, clearFocusLock, isObjectInFocusLockedGroup, resolveAddGroup) to work around initialize's 60-upvalue limit.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/object.lua:1482
 function editor_api_object.initializeFocusLock() end
 
---- Fonctions ajoutées à `editor` par initialize et initializeFocusLock.
+--- Functions added to `editor` by initialize and initializeFocusLock.
 ---@class editor_api_object_editor
 local editor_api_object_editor = {}
 
---- Aligne les objets sur la boîte englobante extrême selon l'axe. Valeurs de boundsAxis : 0-2 (editor.AxisX/Y/Z) = alignement sur le bord max de cet axe ; 3-5 = bord min de l'axe (valeur - 3). Ne fait rien (renvoie true) s'il y a moins de 2 objets.
----Source : lua/ge/extensions/editor/api/object.lua:685
----@param boundsAxis integer 0-5 (voir description)
----@return boolean  false si boundsAxis hors de 0..5, sinon true
+--- Aligns the objects to the extreme bounding box along the axis. boundsAxis values: 0-2 (editor.AxisX/Y/Z) = alignment on the max edge of that axis; 3-5 = min edge of the axis (value - 3). Does nothing (returns true) if there are fewer than 2 objects.
+---Source: lua/ge/extensions/editor/api/object.lua:685
+---@param boundsAxis integer 0-5 (see description)
+---@return boolean  false if boundsAxis is outside 0..5, otherwise true
 function editor_api_object_editor.alignObjectSelectionByBounds(boundsAxis) end
 
---- Aligne tous les objets manipulables sur la coordonnée du premier objet sélectionné pour l'axe donné.
----Source : lua/ge/extensions/editor/api/object.lua:755
----@param axis integer editor.AxisX, AxisY ou AxisZ
----@return boolean  false si axe invalide ou premier objet introuvable, sinon true
+--- Aligns all manipulable objects to the coordinate of the first selected object for the given axis.
+---Source: lua/ge/extensions/editor/api/object.lua:755
+---@param axis integer editor.AxisX, AxisY or AxisZ
+---@return boolean  false if the axis is invalid or the first object is not found, otherwise true
 function editor_api_object_editor.alignObjectSelectionByCenter(axis) end
 
---- Calcule le centre de la boîte englobante des enfants non-groupe des SimGroup donnés (mêmes limites que calculateObjectsCenter pour les sous-groupes).
----Source : lua/ge/extensions/editor/api/object.lua:1050
----@param objects integer[] ids de groupes
----@return vec3  centre de boîte
+--- Computes the center of the bounding box of the non-group children of the given SimGroups (same limits as calculateObjectsCenter for subgroups).
+---Source: lua/ge/extensions/editor/api/object.lua:1050
+---@param objects integer[] group ids
+---@return vec3  box center
 function editor_api_object_editor.calculateBoundingBoxCenter(objects) end
 
---- Calcule le centre (moyenne des positions) des enfants des SimGroup donnés. Les objets non-groupe de la liste sont ignorés ; les sous-groupes ne sont pas parcourus (bug : `childId` est une variable non définie, donc rien n'est empilé). Divise par zéro (NaN) si aucun enfant.
----Source : lua/ge/extensions/editor/api/object.lua:1005
----@param objects integer[] ids de groupes
----@return vec3  centre
+--- Computes the center (average of positions) of the children of the given SimGroups. Non-group objects in the list are ignored; subgroups are not traversed (bug: `childId` is an undefined variable, so nothing is pushed). Divides by zero (NaN) if there are no children.
+---Source: lua/ge/extensions/editor/api/object.lua:1005
+---@param objects integer[] group ids
+---@return vec3  center
 function editor_api_object_editor.calculateObjectsCenter(objects) end
 
---- Vrai si l'objet existe, n'est ni un SimSet ni un SimGroup et n'est pas verrouillé.
----Source : lua/ge/extensions/editor/api/object.lua:45
----@param object userdata|nil objet
+--- True if the object exists, is neither a SimSet nor a SimGroup, and is not locked.
+---Source: lua/ge/extensions/editor/api/object.lua:45
+---@param object userdata|nil object
 ---@return boolean  manipulable
 function editor_api_object_editor.canManipulateObject(object) end
 
---- Désactive le Focus-Lock et émet onEditorFocusLockChanged.
----Source : lua/ge/extensions/editor/api/object.lua:79
+--- Disables Focus-Lock and emits onEditorFocusLockChanged.
+---Source: lua/ge/extensions/editor/api/object.lua:79
 function editor_api_object_editor.clearFocusLock() end
 
---- Désélectionne tout (côté C++ aussi), met la sélection à nil, recalcule la bbox et émet onEditorObjectSelectionChanged.
----Source : lua/ge/extensions/editor/api/object.lua:475
+--- Deselects everything (on the C++ side too), sets the selection to nil, recomputes the bbox and emits onEditorObjectSelectionChanged.
+---Source: lua/ge/extensions/editor/api/object.lua:475
 function editor_api_object_editor.clearObjectSelection() end
 
---- Recalcule editor.objectSelectionBBox et editor.objectSelectionRadius à partir des boîtes monde de la sélection (bornes infinies ignorées, repli sur la boîte objet), met à jour le centroïde et, par défaut, le gizmo (editor.updateObjectSelectionAxisGizmo).
----Source : lua/ge/extensions/editor/api/object.lua:189
----@param updateGizmo boolean|nil false pour ne pas mettre à jour le gizmo (défaut true)
+--- Recomputes editor.objectSelectionBBox and editor.objectSelectionRadius from the selection's world boxes (infinite bounds ignored, falls back to the object box), updates the centroid and, by default, the gizmo (editor.updateObjectSelectionAxisGizmo).
+---Source: lua/ge/extensions/editor/api/object.lua:189
+---@param updateGizmo boolean|nil false to not update the gizmo (default true)
 function editor_api_object_editor.computeSelectionBBox(updateGizmo) end
 
---- Convertit les prefabs sélectionnés au format v2 et les remplace par des instances (replaceGroupWithPrefabInstance) au centre de leur boîte.
----Source : lua/ge/extensions/editor/api/object.lua:1253
----@return userdata[]|nil  instances créées
+--- Converts the selected prefabs to v2 format and replaces them with instances (replaceGroupWithPrefabInstance) at the center of their box.
+---Source: lua/ge/extensions/editor/api/object.lua:1253
+---@return userdata[]|nil  instances created
 function editor_api_object_editor.convertSelectedPrefabsToV2() end
 
---- Copie les valeurs de champs d'un objet (hors groupe Transform, name, persistentId, parentGroup), y compris éléments de tableaux et champs dynamiques.
----Source : lua/ge/extensions/editor/api/object.lua:354
----@param objectID integer id de l'objet
+--- Copies an object's field values (excluding the Transform group, name, persistentId, parentGroup), including array elements and dynamic fields.
+---Source: lua/ge/extensions/editor/api/object.lua:354
+---@param objectID integer object id
 ---@return table  {fields, dynamicFields, arrayElements}
 function editor_api_object_editor.copyFields(objectID) end
 
---- Crée un Prefab depuis la sélection : regroupe les objets valides dans un SimGroup relatif au centroïde, enregistre le Prefab dans le groupe du plus haut objet, le sauvegarde, supprime les anciens groupes, sélectionne le prefab et marque le niveau modifié. Pas d'annulation (TODO).
----Source : lua/ge/extensions/editor/api/object.lua:1095
----@param newPrefabFilename string fichier .prefab.json de destination
----@param objName string|nil nom de l'objet (défaut : nom du fichier)
----@param loadmode string|nil "auto" ou "manual"
----@param pathNative boolean|nil true si le chemin est natif (converti en virtuel)
----@return userdata|nil  le Prefab, nil si rien de valide
+--- Creates a Prefab from the selection: groups the valid objects into a SimGroup relative to the centroid, registers the Prefab in the group of the topmost object, saves it, deletes the old groups, selects the prefab and marks the level as modified. No undo (TODO).
+---Source: lua/ge/extensions/editor/api/object.lua:1095
+---@param newPrefabFilename string destination .prefab.json file
+---@param objName string|nil object name (default: file name)
+---@param loadmode string|nil "auto" or "manual"
+---@param pathNative boolean|nil true if the path is native (converted to virtual)
+---@return userdata|nil  the Prefab, nil if nothing valid
 function editor_api_object_editor.createPrefabFromObjectSelection(newPrefabFilename, objName, loadmode, pathNative) end
 
---- Supprime (editor.deleteObject) tous les objets sélectionnés et vide la sélection. Pas d'historique : pour l'annulation utiliser deleteSelectedObjectsWithUndo.
----Source : lua/ge/extensions/editor/api/object.lua:467
+--- Deletes (editor.deleteObject) all the selected objects and clears the selection. No history: for undo use deleteSelectedObjectsWithUndo.
+---Source: lua/ge/extensions/editor/api/object.lua:467
 function editor_api_object_editor.deleteSelectedObjects() end
 
---- Vide la sélection (table vide, côté C++ aussi) et émet onEditorObjectSelectionChanged.
----Source : lua/ge/extensions/editor/api/object.lua:648
+--- Clears the selection (empty table, on the C++ side too) and emits onEditorObjectSelectionChanged.
+---Source: lua/ge/extensions/editor/api/object.lua:648
 function editor_api_object_editor.deselectObjectSelection() end
 
---- Appelle onEditorEnable ou onEditorDisable sur tous les objets de la scène qui ont ces méthodes. Utilisé en interne au basculement du mode éditeur ; ne fait rien si le niveau n'est pas chargé.
----Source : lua/ge/extensions/editor/api/object.lua:267
----@param enable boolean true = activer le mode édition
+--- Calls onEditorEnable or onEditorDisable on all scene objects that have these methods. Used internally when toggling editor mode; does nothing if the level is not loaded.
+---Source: lua/ge/extensions/editor/api/object.lua:267
+---@param enable boolean true = enable edit mode
 function editor_api_object_editor.enableEditorOnObjects(enable) end
 
---- Explose les prefabs sélectionnés en groupes d'objets (nom <prefab>_unpacked), supprime les prefabs, sélectionne les groupes et émet onEditorPrefabExploded(groups).
----Source : lua/ge/extensions/editor/api/object.lua:1211
----@return userdata[]|nil  groupes créés
+--- Explodes the selected prefabs into object groups (name <prefab>_unpacked), deletes the prefabs, selects the groups and emits onEditorPrefabExploded(groups).
+---Source: lua/ge/extensions/editor/api/object.lua:1211
+---@return userdata[]|nil  groups created
 function editor_api_object_editor.explodeSelectedPrefab() end
 
---- Renvoie le premier objet sélectionné dont le nom de classe est classname.
----Source : lua/ge/extensions/editor/api/object.lua:1355
----@param classname string nom de classe
----@return userdata|nil  objet
+--- Returns the first selected object whose class name is classname.
+---Source: lua/ge/extensions/editor/api/object.lua:1355
+---@param classname string class name
+---@return userdata|nil  object
 function editor_api_object_editor.findFirstSelectedByType(classname) end
 
---- Renvoie la liste des noms de champs dynamiques de l'objet.
----Source : lua/ge/extensions/editor/api/object.lua:346
----@param objectId integer id de l'objet
----@return string[]|nil  noms
+--- Returns the list of the object's dynamic field names.
+---Source: lua/ge/extensions/editor/api/object.lua:346
+---@param objectId integer object id
+---@return string[]|nil  names
 function editor_api_object_editor.getDynamicFields(objectId) end
 
---- Renvoie le type et les flags d'un champ ; table vide si l'objet n'existe pas.
----Source : lua/ge/extensions/editor/api/object.lua:326
----@param objectId integer id de l'objet
----@param fieldName string nom du champ
+--- Returns the type and flags of a field; empty table if the object does not exist.
+---Source: lua/ge/extensions/editor/api/object.lua:326
+---@param objectId integer object id
+---@param fieldName string field name
 ---@return table  {type, flags}
 function editor_api_object_editor.getFieldInfo(objectId, fieldName) end
 
---- Lit un champ d'objet sous forme de chaîne. Renvoie "" si l'objet n'existe pas.
----Source : lua/ge/extensions/editor/api/object.lua:238
----@param objectId integer id de l'objet
----@param fieldName string nom du champ
----@param arrayIndex integer|nil index dans un champ tableau
----@return string  valeur
+--- Reads an object field as a string. Returns "" if the object does not exist.
+---Source: lua/ge/extensions/editor/api/object.lua:238
+---@param objectId integer object id
+---@param fieldName string field name
+---@param arrayIndex integer|nil index in an array field
+---@return string  value
 function editor_api_object_editor.getFieldValue(objectId, fieldName, arrayIndex) end
 
---- Renvoie les champs de l'objet destinés à l'éditeur (getFieldsForEditor), indexés par nom (id, groupName, type, elementCount, fields pour les tableaux...).
----Source : lua/ge/extensions/editor/api/object.lua:338
----@param objectId integer id de l'objet
----@return table|nil  champs
+--- Returns the object's fields intended for the editor (getFieldsForEditor), keyed by name (id, groupName, type, elementCount, fields for arrays...).
+---Source: lua/ge/extensions/editor/api/object.lua:338
+---@param objectId integer object id
+---@return table|nil  fields
 function editor_api_object_editor.getFields(objectId) end
 
---- Renvoie le groupe sur lequel le Focus-Lock est actif (l'arbre de scène ne montre que lui, seuls ses objets sont sélectionnables dans la vue, les nouveaux objets y sont créés). Efface le verrou s'il pointe vers un groupe supprimé.
----Source : lua/ge/extensions/editor/api/object.lua:59
----@return userdata|nil  groupe verrouillé
+--- Returns the group on which Focus-Lock is active (the scene tree shows only it, only its objects are selectable in the view, new objects are created in it). Clears the lock if it points to a deleted group.
+---Source: lua/ge/extensions/editor/api/object.lua:59
+---@return userdata|nil  locked group
 function editor_api_object_editor.getFocusLockedGroup() end
 
---- Renvoie, parmi les ids donnés, l'objet le moins profond dans la hiérarchie des groupes.
----Source : lua/ge/extensions/editor/api/object.lua:991
+--- Returns, among the given ids, the object that is shallowest in the group hierarchy.
+---Source: lua/ge/extensions/editor/api/object.lua:991
 ---@param objects integer[] ids
----@return userdata|nil  objet le plus haut
+---@return userdata|nil  topmost object
 function editor_api_object_editor.getHighestObject(objects) end
 
---- Renvoie la liste des ids sélectionnés (table vide si aucune).
----Source : lua/ge/extensions/editor/api/object.lua:1367
+--- Returns the list of selected ids (empty table if none).
+---Source: lua/ge/extensions/editor/api/object.lua:1367
 ---@return integer[]  ids
 function editor_api_object_editor.getObjectSelection() end
 
---- Renvoie les objets (ou items de forêt si forestData fourni) dont le volume intersecte un rectangle écran, via un frustum dérivé du frustum caméra.
----Source : lua/ge/extensions/editor/api/object.lua:574
----@param rect table rectangle écran {topLeft, bottomRight}
----@param forestData userdata|nil ForestData optionnel
----@param objectFlags integer|nil masque de types (défaut terrain, eau, static shape, joueur, item, véhicule, lumière)
----@return table  liste d'objets/items
----@return Frustum  frustum du rectangle
+--- Returns the objects (or forest items if forestData is provided) whose volume intersects a screen rectangle, via a frustum derived from the camera frustum.
+---Source: lua/ge/extensions/editor/api/object.lua:574
+---@param rect table screen rectangle {topLeft, bottomRight}
+---@param forestData userdata|nil optional ForestData
+---@param objectFlags integer|nil type mask (default terrain, water, static shape, player, item, vehicle, light)
+---@return table  list of objects/items
+---@return Frustum  frustum of the rectangle
 function editor_api_object_editor.getObjectsByRectangle(rect, forestData, objectFlags) end
 
---- Renvoie le centre de la sélection : moyenne des positions, ou centre de la boîte englobante si la préférence gizmos.general.useObjectBoxCenter est vraie (sauf si un objet a des bornes globales). vec3(0,0,0) si vide.
----Source : lua/ge/extensions/editor/api/object.lua:173
----@return vec3  centre
+--- Returns the selection center: average of the positions, or the center of the bounding box if the gizmos.general.useObjectBoxCenter preference is true (unless an object has global bounds). vec3(0,0,0) if empty.
+---Source: lua/ge/extensions/editor/api/object.lua:173
+---@return vec3  center
 function editor_api_object_editor.getSelectionCentroid() end
 
---- Cache les objets sélectionnés (hidden = "true").
----Source : lua/ge/extensions/editor/api/object.lua:668
+--- Hides the selected objects (hidden = "true").
+---Source: lua/ge/extensions/editor/api/object.lua:668
 function editor_api_object_editor.hideObjectSelection() end
 
---- Vrai si un Focus-Lock valide est actif.
----Source : lua/ge/extensions/editor/api/object.lua:70
----@return boolean  actif
+--- True if a valid Focus-Lock is active.
+---Source: lua/ge/extensions/editor/api/object.lua:70
+---@return boolean  active
 function editor_api_object_editor.isFocusLockActive() end
 
---- Vrai si aucun Focus-Lock n'est actif, ou si l'objet est le groupe verrouillé ou l'un de ses descendants.
----Source : lua/ge/extensions/editor/api/object.lua:84
----@param object userdata|nil objet
----@return boolean  dans le groupe verrouillé
+--- True if no Focus-Lock is active, or if the object is the locked group or one of its descendants.
+---Source: lua/ge/extensions/editor/api/object.lua:84
+---@param object userdata|nil object
+---@return boolean  in the locked group
 function editor_api_object_editor.isObjectInFocusLockedGroup(object) end
 
---- Vrai si l'objet est dans le groupe Focus-Lock et, pour un SceneObject, si sa sélection est activée.
----Source : lua/ge/extensions/editor/api/object.lua:102
----@param object userdata objet
----@return boolean  sélectionnable
+--- True if the object is in the Focus-Lock group and, for a SceneObject, if its selection is enabled.
+---Source: lua/ge/extensions/editor/api/object.lua:102
+---@param object userdata object
+---@return boolean  selectable
 function editor_api_object_editor.isObjectSelectable(object) end
 
---- Vrai si l'id fait partie de la sélection d'objets.
----Source : lua/ge/extensions/editor/api/object.lua:117
----@param objectId integer id de l'objet
----@return boolean  sélectionné
+--- True if the id is part of the object selection.
+---Source: lua/ge/extensions/editor/api/object.lua:117
+---@param objectId integer object id
+---@return boolean  selected
 function editor_api_object_editor.isObjectSelected(objectId) end
 
---- Vrai si la sélection d'objets est vide.
----Source : lua/ge/extensions/editor/api/object.lua:113
----@return boolean  vide
+--- True if the object selection is empty.
+---Source: lua/ge/extensions/editor/api/object.lua:113
+---@return boolean  empty
 function editor_api_object_editor.isObjectSelectionEmpty() end
 
---- Verrouille les objets sélectionnés (champ locked = "true"). Le commentaire d'origine (« Select all the objects ») est erroné. Pas annulable (voir lockObjectSelectionWithUndo).
----Source : lua/ge/extensions/editor/api/object.lua:656
+--- Locks the selected objects (locked = "true" field). The original comment ("Select all the objects") is wrong. Not undoable (see lockObjectSelectionWithUndo).
+---Source: lua/ge/extensions/editor/api/object.lua:656
 function editor_api_object_editor.lockObjectSelection() end
 
---- Convertit une MatrixF en table sérialisable {c0, c1, c2, c3} (colonnes).
----Source : lua/ge/extensions/editor/api/object.lua:28
----@param mtx MatrixF matrice
+--- Converts a MatrixF into a serializable table {c0, c1, c2, c3} (columns).
+---Source: lua/ge/extensions/editor/api/object.lua:28
+---@param mtx MatrixF matrix
 ---@return table  {c0, c1, c2, c3}
 function editor_api_object_editor.matrixToTable(mtx) end
 
---- Applique une copie de copyFields sur un objet par id (via setFieldValue/setDynamicFieldValue), recharge les templates de route si useTemplate == "true" et marque le niveau modifié.
----Source : lua/ge/extensions/editor/api/object.lua:417
----@param fields table résultat de copyFields
----@param targetObjectID integer id cible
+--- Applies a copy of copyFields onto an object by id (via setFieldValue/setDynamicFieldValue), reloads the road templates if useTemplate == "true" and marks the level as modified.
+---Source: lua/ge/extensions/editor/api/object.lua:417
+---@param fields table result of copyFields
+---@param targetObjectID integer target id
 function editor_api_object_editor.pasteFields(fields, targetObjectID) end
 
---- Comme pasteFields mais sur un objet déjà résolu (appelle setField directement, sans preApply/postApply).
----Source : lua/ge/extensions/editor/api/object.lua:442
----@param fields table résultat de copyFields
----@param targetObject userdata objet cible
+--- Like pasteFields but on an already resolved object (calls setField directly, without preApply/postApply).
+---Source: lua/ge/extensions/editor/api/object.lua:442
+---@param fields table result of copyFields
+---@param targetObject userdata target object
 function editor_api_object_editor.pasteFieldsToObject(fields, targetObject) end
 
---- Renvoie une copie de la liste sans les ids qui ne correspondent plus à un objet existant.
----Source : lua/ge/extensions/editor/api/object.lua:1371
+--- Returns a copy of the list without the ids that no longer match an existing object.
+---Source: lua/ge/extensions/editor/api/object.lua:1371
 ---@param objectIds integer[] ids
----@return integer[]  ids valides
+---@return integer[]  valid ids
 function editor_api_object_editor.removeInvalidObjects(objectIds) end
 
---- Retire de la sélection les ids d'objets disparus.
----Source : lua/ge/extensions/editor/api/object.lua:1382
+--- Removes from the selection the ids of objects that no longer exist.
+---Source: lua/ge/extensions/editor/api/object.lua:1382
 function editor_api_object_editor.removeInvalidSelectedObjects() end
 
---- Fait apparaître une instance du prefab v2 (spawn, échelle 1, rotation nulle) à la position donnée, l'ajoute au groupe parent et demande la reconstruction des collisions.
----Source : lua/ge/extensions/editor/api/object.lua:1329
----@param prefab userdata|nil prefab v2
----@param parentGroup userdata|nil groupe parent
----@param instanceName string nom de l'instance
+--- Spawns an instance of the v2 prefab (spawn, scale 1, zero rotation) at the given position, adds it to the parent group and requests a collision rebuild.
+---Source: lua/ge/extensions/editor/api/object.lua:1329
+---@param prefab userdata|nil v2 prefab
+---@param parentGroup userdata|nil parent group
+---@param instanceName string instance name
 ---@param position vec3 position
 ---@return userdata|nil  instance
 function editor_api_object_editor.replaceGroupWithPrefabInstance(prefab, parentGroup, instanceName, position) end
 
---- Remet la rotation à "0 0 0 0" des objets manipulables sélectionnés.
----Source : lua/ge/extensions/editor/api/object.lua:799
+--- Resets the rotation to "0 0 0 0" of the selected manipulable objects.
+---Source: lua/ge/extensions/editor/api/object.lua:799
 function editor_api_object_editor.resetObjectSelectionRotation() end
 
---- Remet l'échelle à "1 1 1" des objets manipulables sélectionnés.
----Source : lua/ge/extensions/editor/api/object.lua:809
+--- Resets the scale to "1 1 1" of the selected manipulable objects.
+---Source: lua/ge/extensions/editor/api/object.lua:809
 function editor_api_object_editor.resetObjectSelectionScale() end
 
---- Remet rotation à zéro et échelle à 1,1,1 pour la sélection.
----Source : lua/ge/extensions/editor/api/object.lua:793
+--- Resets rotation to zero and scale to 1,1,1 for the selection.
+---Source: lua/ge/extensions/editor/api/object.lua:793
 function editor_api_object_editor.resetObjectSelectionTransform() end
 
---- Renvoie le groupe de Focus-Lock s'il existe, sinon defaultGroup (groupe où ajouter les nouveaux objets).
----Source : lua/ge/extensions/editor/api/object.lua:98
----@param defaultGroup userdata|nil groupe par défaut
----@return userdata|nil  groupe cible
+--- Returns the Focus-Lock group if it exists, otherwise defaultGroup (group where new objects are added).
+---Source: lua/ge/extensions/editor/api/object.lua:98
+---@param defaultGroup userdata|nil default group
+---@return userdata|nil  target group
 function editor_api_object_editor.resolveAddGroup(defaultGroup) end
 
---- Recrée un objet depuis un memento : retire persistentId, désérialise et donne un nom unique (Sim.getUniqueName) dérivé du nom d'origine.
----Source : lua/ge/extensions/editor/api/object.lua:1394
----@param jsonString string memento de saveSimObjectMemento
----@return userdata|nil  nouvel objet
+--- Recreates an object from a memento: removes persistentId, deserializes and gives a unique name (Sim.getUniqueName) derived from the original name.
+---Source: lua/ge/extensions/editor/api/object.lua:1394
+---@param jsonString string memento from saveSimObjectMemento
+---@return userdata|nil  new object
 function editor_api_object_editor.restoreSimObjectMemento(jsonString) end
 
---- Applique aux objets sélectionnés la rotation du gizmo depuis l'état initial, autour de centerPoint (positions et orientations). Ne fait rien sans initialTransformations.
----Source : lua/ge/extensions/editor/api/object.lua:842
----@param gizmoTransform MatrixF transformation courante du gizmo
----@param centerPoint vec3 centre de rotation
----@param initialTransformations MatrixF[] transformations des objets au début du glissement
----@param initialGizmoTransform MatrixF transformation du gizmo au début du glissement
+--- Applies the gizmo rotation to the selected objects from the initial state, around centerPoint (positions and orientations). Does nothing without initialTransformations.
+---Source: lua/ge/extensions/editor/api/object.lua:842
+---@param gizmoTransform MatrixF current gizmo transform
+---@param centerPoint vec3 rotation center
+---@param initialTransformations MatrixF[] object transforms at the start of the drag
+---@param initialGizmoTransform MatrixF gizmo transform at the start of the drag
 function editor_api_object_editor.rotateObjectSelection(gizmoTransform, centerPoint, initialTransformations, initialGizmoTransform) end
 
---- Sérialise un objet en texte JSON (memento), "" si nil.
----Source : lua/ge/extensions/editor/api/object.lua:1386
----@param obj userdata|nil objet
+--- Serializes an object to JSON text (memento), "" if nil.
+---Source: lua/ge/extensions/editor/api/object.lua:1386
+---@param obj userdata|nil object
 ---@return string  JSON
 function editor_api_object_editor.saveSimObjectMemento(obj) end
 
---- Met à l'échelle les objets sélectionnés d'un delta, autour de centerPoint (centre de la bbox par défaut), avec bornes 0.01 à 1000 et exclusion des axes à delta nul ; les positions sont mises à l'échelle dans le repère du gizmo.
----Source : lua/ge/extensions/editor/api/object.lua:885
----@param deltaScale vec3 delta d'échelle (ne fait rien si longueur nulle)
----@param centerPoint vec3|nil centre de l'échelle
+--- Scales the selected objects by a delta, around centerPoint (bbox center by default), with bounds 0.01 to 1000 and excluding axes with a zero delta; positions are scaled in the gizmo's frame.
+---Source: lua/ge/extensions/editor/api/object.lua:885
+---@param deltaScale vec3 scale delta (does nothing if zero length)
+---@param centerPoint vec3|nil scale center
 function editor_api_object_editor.scaleObjectSelection(deltaScale, centerPoint) end
 
---- Sélectionne un objet par id selon le mode.
----Source : lua/ge/extensions/editor/api/object.lua:642
----@param id integer id de l'objet
----@param selectMode integer|nil mode : editor.SelectMode_New (1, défaut), _Add (2), _Remove (3), _Toggle (4)
----@return boolean  sélection changée
+--- Selects an object by id according to the mode.
+---Source: lua/ge/extensions/editor/api/object.lua:642
+---@param id integer object id
+---@param selectMode integer|nil mode: editor.SelectMode_New (1, default), _Add (2), _Remove (3), _Toggle (4)
+---@return boolean  selection changed
 function editor_api_object_editor.selectObjectById(id, selectMode) end
 
---- Modifie la sélection d'objets selon le mode, met à jour l'état côté C++, recalcule la bbox et émet onEditorObjectSelectionChanged si elle a changé. Ne passe pas par l'historique.
----Source : lua/ge/extensions/editor/api/object.lua:548
----@param idArray integer[] ids des objets
----@param selectMode integer|nil mode : editor.SelectMode_New (1, défaut), _Add (2), _Remove (3), _Toggle (4)
----@return boolean  true si la sélection a changé
+--- Modifies the object selection according to the mode, updates the C++ side state, recomputes the bbox and emits onEditorObjectSelectionChanged if it changed. Does not go through the history.
+---Source: lua/ge/extensions/editor/api/object.lua:548
+---@param idArray integer[] object ids
+---@param selectMode integer|nil mode: editor.SelectMode_New (1, default), _Add (2), _Remove (3), _Toggle (4)
+---@return boolean  true if the selection changed
 function editor_api_object_editor.selectObjects(idArray, selectMode) end
 
---- Sélectionne les objets dont le nom contient le motif Lua (string.find).
----Source : lua/ge/extensions/editor/api/object.lua:598
----@param nameMask string motif Lua
----@param selectMode integer|nil mode : editor.SelectMode_New (1, défaut), _Add (2), _Remove (3), _Toggle (4)
----@return boolean  sélection changée
+--- Selects the objects whose name contains the Lua pattern (string.find).
+---Source: lua/ge/extensions/editor/api/object.lua:598
+---@param nameMask string Lua pattern
+---@param selectMode integer|nil mode: editor.SelectMode_New (1, default), _Add (2), _Remove (3), _Toggle (4)
+---@return boolean  selection changed
 function editor_api_object_editor.selectObjectsByNameMask(nameMask, selectMode) end
 
---- Comme selectObjects mais avec des objets plutôt que des ids.
----Source : lua/ge/extensions/editor/api/object.lua:560
----@param objects table liste d'objets
----@param selectMode integer|nil mode : editor.SelectMode_New (1, défaut), _Add (2), _Remove (3), _Toggle (4)
----@return boolean  sélection changée
+--- Like selectObjects but with objects rather than ids.
+---Source: lua/ge/extensions/editor/api/object.lua:560
+---@param objects table list of objects
+---@param selectMode integer|nil mode: editor.SelectMode_New (1, default), _Add (2), _Remove (3), _Toggle (4)
+---@return boolean  selection changed
 function editor_api_object_editor.selectObjectsByRef(objects, selectMode) end
 
---- Sélectionne les objets dont `className` vaut typeName.
----Source : lua/ge/extensions/editor/api/object.lua:619
----@param typeName string nom de classe
----@param selectMode integer|nil mode : editor.SelectMode_New (1, défaut), _Add (2), _Remove (3), _Toggle (4)
----@return boolean  sélection changée
+--- Selects the objects whose `className` equals typeName.
+---Source: lua/ge/extensions/editor/api/object.lua:619
+---@param typeName string class name
+---@param selectMode integer|nil mode: editor.SelectMode_New (1, default), _Add (2), _Remove (3), _Toggle (4)
+---@return boolean  selection changed
 function editor_api_object_editor.selectObjectsByType(typeName, selectMode) end
 
---- Fixe un champ dynamique d'un objet (index 0 par défaut). Pour un champ statique utiliser setFieldValue.
----Source : lua/ge/extensions/editor/api/object.lua:312
----@param objectId integer id de l'objet
----@param fieldName string nom
----@param value string valeur en texte
+--- Sets a dynamic field of an object (index 0 by default). For a static field use setFieldValue.
+---Source: lua/ge/extensions/editor/api/object.lua:312
+---@param objectId integer object id
+---@param fieldName string name
+---@param value string value as text
 ---@param arrayIndex integer|nil index (0)
 function editor_api_object_editor.setDynamicFieldValue(objectId, fieldName, value, arrayIndex) end
 
---- Fixe un champ statique d'un objet (preApply, setField, marque editor-dirty, postApply). Ne passe pas par l'historique : pour l'annulation utiliser editor.changeObjectFieldWithUndo.
----Source : lua/ge/extensions/editor/api/object.lua:297
----@param objectId integer id de l'objet
----@param fieldName string nom du champ
----@param value string valeur en texte
----@param arrayIndex integer|string|nil index de tableau (passé via tostring ; nil devient la chaîne "nil")
+--- Sets a static field of an object (preApply, setField, marks editor-dirty, postApply). Does not go through the history: for undo use editor.changeObjectFieldWithUndo.
+---Source: lua/ge/extensions/editor/api/object.lua:297
+---@param objectId integer object id
+---@param fieldName string field name
+---@param value string value as text
+---@param arrayIndex integer|string|nil array index (passed through tostring; nil becomes the string "nil")
 function editor_api_object_editor.setFieldValue(objectId, fieldName, value, arrayIndex) end
 
---- Active le Focus-Lock sur le groupe d'id donné et émet onEditorFocusLockChanged.
----Source : lua/ge/extensions/editor/api/object.lua:74
----@param id integer id du SimGroup
+--- Enables Focus-Lock on the group with the given id and emits onEditorFocusLockChanged.
+---Source: lua/ge/extensions/editor/api/object.lua:74
+---@param id integer id of the SimGroup
 function editor_api_object_editor.setFocusLockedGroup(id) end
 
---- Marque/démarque chaque objet comme sélectionné côté C++ (setSelected) puis reconstruit les données d'instances de shapes.
----Source : lua/ge/extensions/editor/api/object.lua:247
+--- Marks/unmarks each object as selected on the C++ side (setSelected) then rebuilds the shape instance data.
+---Source: lua/ge/extensions/editor/api/object.lua:247
 ---@param objectIds integer[]|nil ids
----@param selected boolean|nil sélectionné (false si nil)
+---@param selected boolean|nil selected (false if nil)
 function editor_api_object_editor.setObjectSelectedBool(objectIds, selected) end
 
---- Idem pour un seul objet.
----Source : lua/ge/extensions/editor/api/object.lua:257
+--- Same for a single object.
+---Source: lua/ge/extensions/editor/api/object.lua:257
 ---@param objectId integer|nil id
----@param selected boolean sélectionné
+---@param selected boolean selected
 function editor_api_object_editor.setObjectSelectedBoolSingle(objectId, selected) end
 
---- Place chaque objet manipulable sélectionné à la transformation de la caméra de l'éditeur en conservant son échelle (sans annulation, TODO dans le code).
----Source : lua/ge/extensions/editor/api/object.lua:779
+--- Places each selected manipulable object at the editor camera's transform while keeping its scale (no undo, TODO in the code).
+---Source: lua/ge/extensions/editor/api/object.lua:779
 function editor_api_object_editor.setObjectSelectionTransformFromCamera() end
 
---- Affiche les objets sélectionnés (hidden = "false").
----Source : lua/ge/extensions/editor/api/object.lua:674
+--- Shows the selected objects (hidden = "false").
+---Source: lua/ge/extensions/editor/api/object.lua:674
 function editor_api_object_editor.showObjectSelection() end
 
---- Reconstruit une MatrixF depuis une table {c0, c1, c2, c3}.
----Source : lua/ge/extensions/editor/api/object.lua:36
----@param tbl table table produite par matrixToTable
----@return MatrixF  matrice
+--- Rebuilds a MatrixF from a table {c0, c1, c2, c3}.
+---Source: lua/ge/extensions/editor/api/object.lua:36
+---@param tbl table table produced by matrixToTable
+---@return MatrixF  matrix
 function editor_api_object_editor.tableToMatrix(tbl) end
 
---- Translate les objets manipulables sélectionnés d'un delta (via setFieldValue "position").
----Source : lua/ge/extensions/editor/api/object.lua:820
----@param deltaTranslate vec3 delta de position (mètres)
+--- Translates the selected manipulable objects by a delta (via setFieldValue "position").
+---Source: lua/ge/extensions/editor/api/object.lua:820
+---@param deltaTranslate vec3 position delta (meters)
 function editor_api_object_editor.translateObjectSelection(deltaTranslate) end
 
---- Déverrouille les objets sélectionnés (locked = "false").
----Source : lua/ge/extensions/editor/api/object.lua:662
+--- Unlocks the selected objects (locked = "false").
+---Source: lua/ge/extensions/editor/api/object.lua:662
 function editor_api_object_editor.unlockObjectSelection() end
 
---- Dépaquette les instances de prefab sélectionnées (unpackage) en groupes et supprime les instances.
----Source : lua/ge/extensions/editor/api/object.lua:1294
----@return userdata[]|nil  groupes créés
+--- Unpackages the selected prefab instances (unpackage) into groups and deletes the instances.
+---Source: lua/ge/extensions/editor/api/object.lua:1294
+---@return userdata[]|nil  groups created
 function editor_api_object_editor.unpackageSelectedPrefabInstance() end
 
---- Valide un nom d'objet (isValidObjectName) ; refuse un nom vide quand newName est vrai.
----Source : lua/ge/extensions/editor/api/object.lua:282
----@param name string nom
----@param newName boolean|nil true si c'est un nouveau nom
----@return boolean  valide
+--- Validates an object name (isValidObjectName); rejects an empty name when newName is true.
+---Source: lua/ge/extensions/editor/api/object.lua:282
+---@param name string name
+---@param newName boolean|nil true if it is a new name
+---@return boolean  valid
 function editor_api_object_editor.validateObjectName(name, newName) end
 

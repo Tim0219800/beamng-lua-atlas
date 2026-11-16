@@ -1,19 +1,19 @@
 # `flowgraph_nodes_util_file_saveData`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/file/saveData.lua` · VM : Game Engine (GE) · 49 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/file/saveData.lua` · VM: Game Engine (GE) · 49 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/file/saveData")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/file/saveData")` (file under extensions/ but not a regular extension)
 
-Nœud « Save Data » (once_instant, couleur file). Sauvegarde des données simples dans un fichier réutilisable entre sessions. Entrée : file (nom sans extension) ; les pins d'entrée personnalisés (types string, number, bool, any, table, vec3, quat, color) sont écrits comme clés du fichier via modules.file:write.
+Node "Save Data" (once_instant, color file). Saves simple data to a file reusable between sessions. Input: file (name without extension); the custom input pins (types string, number, bool, any, table, vec3, quat, color) are written as keys of the file via modules.file:write.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr)` | Active la sauvegarde des pins et les pins d'entrée personnalisés. | 33 |
-| `C:workOnce()` | Écrit dans le fichier la valeur de chaque pin d'entrée sauf flow, reset et file. | 38 |
+| `C:init(mgr)` | Enables pin saving and custom input pins. | 33 |
+| `C:workOnce()` | Writes to the file the value of each input pin except flow, reset and file. | 38 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/file/saveData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/file/saveData.lua`.*

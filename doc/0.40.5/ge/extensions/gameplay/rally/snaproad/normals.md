@@ -1,35 +1,35 @@
 # `gameplay_rally_snaproad_normals`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/snaproad/normals.lua` · VM : Game Engine (GE) · 39 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/snaproad/normals.lua` · VM: Game Engine (GE) · 39 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_snaproad_normals` : `extensions.load("gameplay_rally_snaproad_normals")`, puis la globale `gameplay_rally_snaproad_normals`
+**Access:** extension `gameplay_rally_snaproad_normals`: `extensions.load("gameplay_rally_snaproad_normals")`, then the global `gameplay_rally_snaproad_normals`
 
-Petit utilitaire de calcul de normales pour les points d'un snaproad de rallye. À partir d'un point doté de liens prev/next, il calcule le vecteur normal « vers l'avant » en s'appuyant sur les voisins disponibles (rallyUtil.calculateForwardNormal).
+Small normal computation utility for the points of a rally snaproad. From a point with prev/next links, it computes the "forward" normal vector using the available neighbors (rallyUtil.calculateForwardNormal).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_snaproad_normals.forwardNormalVec(point)` | Calcule la normale vers l'avant du point. Utilise prev→next si les deux existent, sinon courant→next, sinon prev→courant ; renvoie nil si aucun voisin n'existe. | 19 |
-| `gameplay_rally_snaproad_normals.normalAlignPoints(point)` | Renvoie le triplet (point précédent, point courant, point suivant) d'un point ; renvoie nil, nil, nil si le point est nil. | 9 |
+| `gameplay_rally_snaproad_normals.forwardNormalVec(point)` | Computes the point's forward normal. Uses prev→next if both exist, otherwise current→next, otherwise prev→current; returns nil if no neighbor exists. | 19 |
+| `gameplay_rally_snaproad_normals.normalAlignPoints(point)` | Returns the triplet (previous point, current point, next point) of a point; returns nil, nil, nil if the point is nil. | 9 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_snaproad_normals.forwardNormalVec(point)`
 
-Calcule la normale vers l'avant du point. Utilise prev→next si les deux existent, sinon courant→next, sinon prev→courant ; renvoie nil si aucun voisin n'existe.
+Computes the point's forward normal. Uses prev→next if both exist, otherwise current→next, otherwise prev→current; returns nil if no neighbor exists.
 
-- `point` (*table*) : Point avec pos, prev et next
-- **renvoie** : vec3|nil Vecteur normal construit à partir de x, y, z du résultat de rallyUtil.calculateForwardNormal
+- `point` (*table*) : Point with pos, prev and next
+- **returns**: vec3|nil Normal vector built from the x, y, z of the result of rallyUtil.calculateForwardNormal
 
 #### `gameplay_rally_snaproad_normals.normalAlignPoints(point)`
 
-Renvoie le triplet (point précédent, point courant, point suivant) d'un point ; renvoie nil, nil, nil si le point est nil.
+Returns the triplet (previous point, current point, next point) of a point; returns nil, nil, nil if the point is nil.
 
-- `point` (*table|nil*) : Point avec champs prev et next (et pos)
-- **renvoie** : table|nil point.prev
-- **renvoie** : table|nil le point lui-même
-- **renvoie** : table|nil point.next
+- `point` (*table|nil*) : Point with prev and next fields (and pos)
+- **returns**: table|nil point.prev
+- **returns**: table|nil the point itself
+- **returns**: table|nil point.next
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/snaproad/normals.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/snaproad/normals.lua`.*

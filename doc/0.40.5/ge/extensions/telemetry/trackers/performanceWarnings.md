@@ -1,34 +1,34 @@
 # `telemetry_trackers_performanceWarnings`
 
-*Fichier : `lua/ge/extensions/telemetry/trackers/performanceWarnings.lua` · VM : Game Engine (GE) · 35 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/trackers/performanceWarnings.lua` · VM: Game Engine (GE) · 35 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_trackers_performanceWarnings` : `extensions.load("telemetry_trackers_performanceWarnings")`, puis la globale `telemetry_trackers_performanceWarnings`
+**Access:** extension `telemetry_trackers_performanceWarnings`: `extensions.load("telemetry_trackers_performanceWarnings")`, then the global `telemetry_trackers_performanceWarnings`
 
-Suiveur de télémétrie des avertissements matériels de performance affichés au joueur : chaque avertissement (catégorie + message) n'est rapporté qu'une seule fois par session (évènement « performanceHardwareWarning » avec catégorie, message, gravité, contexte et acquittement).
+Telemetry tracker for the hardware performance warnings shown to the player: each warning (category + message) is reported only once per session ("performanceHardwareWarning" event with category, message, severity, context and acknowledgment).
 
-**Dépendances (chargées avant) :** `telemetry_core`
+**Dependencies (loaded first):** `telemetry_core`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_trackers_performanceWarnings.onExtensionLoaded()` | Hook appelé au chargement : déchargement manuel. *(interne)* *(hook)* | 27 |
-| `telemetry_trackers_performanceWarnings.onPerformanceHardwareWarning(category, warning)` | Hook appelé quand le jeu émet un avertissement matériel de performance ; dédoublonne par catégorie et message. *(interne)* *(hook)* | 12 |
+| `telemetry_trackers_performanceWarnings.onExtensionLoaded()` | Hook called on load: manual unload. *(internal)* *(hook)* | 27 |
+| `telemetry_trackers_performanceWarnings.onPerformanceHardwareWarning(category, warning)` | Hook called when the game emits a hardware performance warning; deduplicates by category and message. *(internal)* *(hook)* | 12 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_trackers_performanceWarnings.onPerformanceHardwareWarning(category, warning)`
 
-Hook appelé quand le jeu émet un avertissement matériel de performance ; dédoublonne par catégorie et message.
+Hook called when the game emits a hardware performance warning; deduplicates by category and message.
 
-- `category` (*string*) : Catégorie de l'avertissement.
-- `warning` (*table*) : {msg, type (gravité), context, ack}
+- `category` (*string*) : Warning category.
+- `warning` (*table*) : {msg, type (severity), context, ack}
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | telemetry_core. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/trackers/performanceWarnings.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/trackers/performanceWarnings.lua`.*

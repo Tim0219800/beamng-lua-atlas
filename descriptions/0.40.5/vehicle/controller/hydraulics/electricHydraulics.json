@@ -1,8 +1,8 @@
 {
   "path": "lua/vehicle/controller/hydraulics/electricHydraulics.lua",
-  "module": "Petit contrôleur auxiliaire pour un groupe hydraulique électrique : met la valeur electrics motorThrottleElectricsName à 1 dès qu'une des valeurs de commande listées est non nulle, sinon à 0 (pour alimenter le moteur de la pompe seulement quand une fonction hydraulique est demandée).",
+  "module": "Small auxiliary controller for an electric hydraulic unit: sets the electrics value motorThrottleElectricsName to 1 as soon as one of the listed command values is non-zero, otherwise to 0 (to power the pump motor only when a hydraulic function is requested).",
   "notes": [
-    "Clés jbeam : controlElectricsName (nom ou liste de noms de valeurs electrics à surveiller), motorThrottleElectricsName (nom de la valeur electrics de sortie ; aucune valeur par défaut : nil provoquerait une erreur)."
+    "jbeam keys: controlElectricsName (name or list of names of electrics values to watch), motorThrottleElectricsName (name of the output electrics value; no default value: nil would cause an error)."
   ],
   "fields": {
     "type": {
@@ -12,33 +12,33 @@
   },
   "functions": {
     "init": {
-      "desc": "Lit les noms electrics.",
+      "desc": "Reads the electrics names.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Ne fait rien.",
+      "desc": "Does nothing.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Met à jour la valeur de sortie 0/1.",
+      "desc": "Updates the 0/1 output value.",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],

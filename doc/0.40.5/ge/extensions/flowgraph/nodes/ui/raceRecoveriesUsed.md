@@ -1,24 +1,24 @@
 # `flowgraph_nodes_ui_raceRecoveriesUsed`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/raceRecoveriesUsed.lua` · VM : Game Engine (GE) · 43 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/raceRecoveriesUsed.lua` · VM: Game Engine (GE) · 43 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/raceRecoveriesUsed")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/raceRecoveriesUsed")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Set UI Race Recovery » (catégorie repeat_instant, auteur BeamNG, durée) : met à jour l'app UI du compteur de récupérations (reset véhicule). Entrées : « cur » (number ou string), « max ». Texte envoyé via 'RaceRecoveryCounterSet' (ex. « Recoveries Used: 2 / 5 ») ; réinitialisé avec 'RaceRecoveryCounterReset'.
+Flowgraph node "Set UI Race Recovery" (category repeat_instant, author BeamNG, duration): updates the recovery counter UI app (vehicle reset). Inputs: "cur" (number or string), "max". Text sent via 'RaceRecoveryCounterSet' (e.g. "Recoveries Used: 2 / 5"); reset with 'RaceRecoveryCounterReset'.
 
-## Remarques
+## Notes
 
-- Le texte « Recoveries Used » est en dur (non traduit).
+- The text "Recoveries Used" is hardcoded (not translated).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Envoie le compteur si cur et le flux d'entrée sont actifs, sinon réinitialise. | 25 |
+| `C:work()` | Sends the counter if cur and the input flow are active, otherwise resets. | 25 |
 
-**Évènements UI (guihooks.trigger) :** `RaceRecoveryCounterReset`, `RaceRecoveryCounterSet`
+**UI events (guihooks.trigger):** `RaceRecoveryCounterReset`, `RaceRecoveryCounterSet`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/raceRecoveriesUsed.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/raceRecoveriesUsed.lua`.*

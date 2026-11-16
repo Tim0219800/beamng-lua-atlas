@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraFOV.lua",
+  "module": "Noeud flowgraph « Set Camera FOV » (categorie repeat_instant, couleur/icone camera). Pin d'entree : value (number), le champ de vision en degres. A chaque execution (work), passe en camera libre si ce n'est pas deja le cas puis appelle core_camera.setFOV(0, value). Au demarrage du graphe il memorise le FOV courant (core_camera.getFovDeg) et le restaure a l'arret.",
+  "notes": [
+    "Si le pin value n'a pas de valeur, core_camera.setFOV est quand meme appele avec nil (pas de garde dans le code)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "work": {
+          "desc": "Force la camera libre (commands.setFreeCamera) si besoin, puis applique le FOV du pin value via core_camera.setFOV(0, ...).",
+          "internal": false
+        },
+        "_executionStarted": {
+          "desc": "Appele au demarrage du graphe : memorise le FOV actuel dans self._storedFov.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Appele a l'arret du graphe : restaure le FOV memorise puis l'oublie.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine la valeur du FOV (2 decimales) au milieu du noeud dans l'editeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

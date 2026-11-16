@@ -1,30 +1,30 @@
 # `editor_roadNetworkExporter`
 
-*Fichier : `lua/ge/extensions/editor/roadNetworkExporter.lua` · VM : Game Engine (GE) · 311 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadNetworkExporter.lua` · VM: Game Engine (GE) · 311 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadNetworkExporter` : `extensions.load("editor_roadNetworkExporter")`, puis la globale `editor_roadNetworkExporter`
+**Access:** extension `editor_roadNetworkExporter`: `extensions.load("editor_roadNetworkExporter")`, then the global `editor_roadNetworkExporter`
 
-Fenêtre d'éditeur « Road Network Import/Exporter » (menu Window > Tech), visible uniquement avec une licence tech (ResearchVerifier.isTechLicenseVerified()). Elle permet d'importer et d'exporter le réseau routier du Road Architect aux formats OpenDRIVE (.xodr), OpenStreetMap (.osm) et SUMO (.nod.xml / .edg.xml), avec des options d'import (placement, décalage vertical, terraformage, domaine d'influence et marge) reprises du Road Architect.
+"Road Network Import/Exporter" editor window (Window > Tech menu), visible only with a tech license (ResearchVerifier.isTechLicenseVerified()). It allows importing and exporting the Road Architect road network in OpenDRIVE (.xodr), OpenStreetMap (.osm) and SUMO (.nod.xml / .edg.xml) formats, with import options (placement, vertical offset, terraforming, domain of influence and margin) taken from Road Architect.
 
-## Remarques
+## Notes
 
-- Sans licence tech, onEditorInitialized ne crée ni fenêtre ni entrée de menu et les autres hooks sortent immédiatement.
-- L'import passe par require() des modules editor/roadArchitect/openDriveImport, osmImport et sumoImport (importFromFile(chemin, options)) dans un pcall ; l'erreur éventuelle est affichée dans la fenêtre.
-- Les options d'import envoyées sont : placeMode (0 = comme dans le fichier, 1 = X/Y personnalisés, 2 = XY de la caméra), placeX, placeY, offsetToTerrain, verticalOffset, terraform, domainOfInfluence (défaut 30), margin (défaut 1.0).
-- L'export peut mettre le jeu en pause temporairement pendant le traitement (avertissement affiché dans la fenêtre).
+- Without a tech license, onEditorInitialized creates neither a window nor a menu entry and the other hooks return immediately.
+- The import goes through require() of the editor/roadArchitect/openDriveImport, osmImport and sumoImport modules (importFromFile(path, options)) inside a pcall; any error is displayed in the window.
+- The import options sent are: placeMode (0 = as in the file, 1 = custom X/Y, 2 = camera XY), placeX, placeY, offsetToTerrain, verticalOffset, terraform, domainOfInfluence (default 30), margin (default 1.0).
+- The export may temporarily pause the game during processing (warning displayed in the window).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadNetworkExporter.onEditorActivated()` | Hook appelé quand l'éditeur est activé. Mémorise le TerrainBlock courant (extensions.editor_terrainEditor.getTerrainBlock()). Sans effet sans licence tech. *(interne)* *(hook)* | 43 |
-| `editor_roadNetworkExporter.onEditorGui()` | Hook appelé à chaque frame d'interface de l'éditeur. Dessine la fenêtre : options d'import, tableau Import/Export pour OpenDRIVE, OpenStreetMap et SUMO, puis le résultat de l'import (routes importées/ignorées, avertissements). *(interne)* *(hook)* | 241 |
-| `editor_roadNetworkExporter.onEditorInitialized()` | Hook de l'éditeur, appelé à l'initialisation. Vérifie la licence tech et, si elle est valide, enregistre la fenêtre (600x600) et l'entrée de menu « Road Network Import/Exporter » dans le groupe Tech. *(interne)* *(hook)* | 36 |
+| `editor_roadNetworkExporter.onEditorActivated()` | Hook called when the editor is activated. Stores the current TerrainBlock (extensions.editor_terrainEditor.getTerrainBlock()). No effect without a tech license. *(internal)* *(hook)* | 43 |
+| `editor_roadNetworkExporter.onEditorGui()` | Hook called every editor UI frame. Draws the window: import options, Import/Export table for OpenDRIVE, OpenStreetMap and SUMO, then the import result (imported/skipped roads, warnings). *(internal)* *(hook)* | 241 |
+| `editor_roadNetworkExporter.onEditorInitialized()` | Editor hook, called on initialization. Checks the tech license and, if valid, registers the window (600x600) and the "Road Network Import/Exporter" menu entry in the Tech group. *(internal)* *(hook)* | 36 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `virtual2Native`
 - `ResearchVerifier.` `isTechLicenseVerified`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadNetworkExporter.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadNetworkExporter.lua`.*

@@ -1,28 +1,28 @@
 # `flowgraph_nodes_ui_updatedUI_startScreenFinish`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenFinish.lua` · VM : Game Engine (GE) · 27 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenFinish.lua` · VM: Game Engine (GE) · 27 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/updatedUI/startScreenFinish")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/updatedUI/startScreenFinish")` (file under extensions/ but not a regular extension)
 
-Nœud « Screen Finish » (repeat_instant, couleur ui). Termine la construction d'un écran (début ou fin) et l'envoie à l'UI. Entrée flow (chainFlow), sortie flow. À placer en bout de chaîne après StartScreen Begin / EndScreen Begin et les nœuds de panneaux.
+Node "Screen Finish" (repeat_instant, color ui). Ends the building of a screen (start or end) and sends it to the UI. Input flow (chainFlow), output flow. To be placed at the end of the chain after StartScreen Begin / EndScreen Begin and the panel nodes.
 
-## Remarques
+## Notes
 
-- Le pin de sortie flow n'est jamais écrit par work.
+- The output flow pin is never written by work.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Émet le hook onStartScreenFinishedBuilding puis appelle modules.ui:finishUIBuilding(). | 21 |
+| `C:work()` | Emits the onStartScreenFinishedBuilding hook then calls modules.ui:finishUIBuilding(). | 21 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onStartScreenFinishedBuilding` — écouté par 1 module(s)
+- `onStartScreenFinishedBuilding` — listened to by 1 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenFinish.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenFinish.lua`.*

@@ -1,0 +1,100 @@
+{
+  "path": "lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua",
+  "module": "Actionneur de la Driving Dynamics Suite : verrouillage actif d'un différentiel d'essieu. À 100 Hz (updateFixedStep) il compare les vitesses des deux sorties corrigées du rayon de braquage (`CMU.vehicleData.turningCircleSpeedRatios`) ; sous accélérateur, un PID règle un coefficient de verrouillage 0..1 qui monte quand l'écart de vitesse dépasse `avDiffThreshold`. Le coefficient est écrit dans `relevantDifferential.activeLockCoef`. Les superviseurs peuvent le borner par `overrideMin`/`overrideMax`. Ordre d'appel : `defaultOrder = 80`.",
+  "notes": [
+    "Clés jbeam lues par init : `avDiffThreshold` (3 rad/s), `lockingPIDkP` (0.5), `lockingPIDkI` (0.5), `lockingPIDkD` (0), `name`. Lue par initSecondStage : `differentialName`.",
+    "Sans accélérateur (`electrics.values.throttle` <= 0), le verrouillage est 0 et le PID et le lisseur sont remis à zéro.",
+    "Une vitesse de sortie de signe opposé à l'entrée est mise à 0 avant le calcul de l'écart.",
+    "Nécessite `CMU.vehicleData` ; sans CMU enregistré, initSecondStage appelle shutdown.",
+    "`reset` ne remet pas `overrideMin`/`overrideMax` (appeler resetOverride) ni le coefficient interne.",
+    "`shutdown` met isActive/isActing à false et retire updateGFX et updateFixedStep."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "80."},
+    "isActive": {"type": "boolean", "desc": "true si le différentiel et ses roues ont été trouvés."},
+    "isActing": {"type": "boolean", "desc": "true si le coefficient de verrouillage est > 0."},
+    "overrideMin": {"type": "number", "desc": "Borne basse du verrouillage (0 par défaut)."},
+    "overrideMax": {"type": "number", "desc": "Borne haute du verrouillage (1 par défaut)."}
+  },
+  "functions": {
+    "resetOverride": {
+      "desc": "Remet les bornes d'override à 0 et 1.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "updateFixedStep": {
+      "desc": "Pas fixe (100 Hz) : calcule l'écart de vitesse corrigé, le coefficient de verrouillage (PID lissé, borné par l'override) et l'écrit dans `activeLockCoef` du différentiel.",
+      "params": {"dt": {"type": "number", "desc": "Pas en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Chaque frame : rien d'utile. Variante debug : envoie les valeurs au CMU.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "shutdown": {
+      "desc": "Arrête l'actionneur.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet isActing à false.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Lit les paramètres jbeam et crée le PID.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "initSecondStage": {
+      "desc": "Retrouve le différentiel (`differentialName`) et les roues de chaque sortie ; active le système.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "registerCMU": {
+      "desc": "Appelée par le CMU pour donner une référence vers lui.",
+      "params": {"cmu": {"type": "table", "desc": "Module CMU."}},
+      "returns": [],
+      "internal": true
+    },
+    "setDebugMode": {
+      "desc": "Active ou désactive l'envoi de paquets de debug.",
+      "params": {"debugEnabled": {"type": "boolean", "desc": "true pour envoyer."}},
+      "returns": [],
+      "internal": true
+    },
+    "setParameters": {
+      "desc": "Modifie à chaud avDiffThreshold, isEnabled et lockingPIDkP/kI/kD (via CMU.applyParameter).",
+      "params": {"parameters": {"type": "table", "desc": "Table des paramètres à changer."}},
+      "returns": [],
+      "internal": false
+    },
+    "setConfig": {
+      "desc": "Remplace toute la table de paramètres.",
+      "params": {"configTable": {"type": "table", "desc": "Nouveaux paramètres."}},
+      "returns": [],
+      "internal": true
+    },
+    "getConfig": {
+      "desc": "Renvoie une copie des paramètres.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Copie profonde."}],
+      "internal": false
+    },
+    "sendConfigData": {
+      "desc": "Envoie les paramètres au CMU dans un paquet de debug config.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

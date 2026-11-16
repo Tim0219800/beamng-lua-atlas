@@ -1,0 +1,42 @@
+{
+  "path": "lua/ge/extensions/mcp/tools/camera.lua",
+  "module": "Outils MCP pour la caméra du joueur : changer de mode, orbiter autour d'un véhicule (avec rotation continue), lire l'état de la caméra et placer la caméra libre. S'appuie sur core_camera. Module chargé par mcp_tools ; chaque M.xxx est un outil qui renvoie (texte, estErreur).",
+  "notes": [
+    "La rotation continue de l'orbite (spin) est appliquée dans onUpdate ; changer de mode caméra avec set_camera (autre que orbit), set_free_camera ou spin=0 l'arrête.",
+    "Les angles sont en degrés, la distance en mètres. get_camera_state renvoie la rotation sous forme de quaternion {x,y,z,w}."
+  ],
+  "fields": {
+    "schemas": {"type": "table<string, table>", "desc": "Schémas des outils set_camera, orbit_camera, get_camera_state, set_free_camera."}
+  },
+  "functions": {
+    "onUpdate": {
+      "desc": "Appelé chaque frame (via le fan-out de mcp_tools) : si une orbite continue est active, incrémente le yaw de speed*dtReal (modulo 360) et applique core_camera.setRotation.",
+      "params": {"dtReal": {"type": "number", "desc": "Durée réelle de la frame (s)."}},
+      "internal": true
+    },
+    "set_camera": {
+      "desc": "Change le mode caméra du joueur 0 par son nom (core_camera.setByName).",
+      "params": {"args": {"type": "table", "desc": "{name: string} orbit, driver, chase, external, hood, top, dash… (obligatoire)."}},
+      "returns": [{"type": "string", "desc": "Confirmation ou erreur."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "orbit_camera": {
+      "desc": "Passe en caméra orbit et règle distance, rotation ou rotation continue autour d'un véhicule.",
+      "params": {"args": {"type": "table|nil", "desc": "{yaw?: number°, pitch?: number° (défaut 20), distance?: number m, spin?: number °/s (0 stoppe), id?: integer}"}},
+      "returns": [{"type": "string", "desc": "Résumé."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "get_camera_state": {
+      "desc": "État de la caméra en JSON : mode, pos, rot (quaternion), fov (degrés).",
+      "params": {},
+      "returns": [{"type": "string", "desc": "JSON."}, {"type": "boolean", "desc": "true si core_camera indisponible."}],
+      "internal": false
+    },
+    "set_free_camera": {
+      "desc": "Passe en caméra libre et la place (position, rotation quaternion, fov) via core_camera.globalCameraFunction. La pose persiste ensuite, la caméra libre se déplace avec les entrées.",
+      "params": {"args": {"type": "table|nil", "desc": "{pos?: {x,y,z}, rot?: {x,y,z,w}, fov?: number°}"}},
+      "returns": [{"type": "string", "desc": "« free camera set »."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    }
+  }
+}

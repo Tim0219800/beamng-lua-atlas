@@ -1,237 +1,1489 @@
 {
   "path": "lua/common/filters.lua",
-  "module": "Collection de filtres numériques à état (lissage, passe-bas/haut, ressort, détecteur de fréquence, régression linéaire) utilisés partout dans le code véhicule (entrées pédales/volant, capteurs, contrôleurs). Chaque filtre est créé par une fonction globale newXxx(...) qui renvoie un objet avec une méthode get(sample, dt) (ou get(sample) pour les filtres à pas fixe) qui met à jour l'état interne et renvoie la valeur filtrée. Les constructeurs sont des variables globales : `require('filters')` n'est pas nécessaire une fois le module chargé (chargé par défaut dans les deux VM).",
-  "usage": "local smoother = newTemporalSmoothing(5, 5)          -- 5 unités/s en montée et en descente\nfunction updateGFX(dt)\n  local out = smoother:get(rawInput, dt)\nend\n\nlocal lp = newFreqFilter1()\nlocal y = lp:getLowPassFreq(sample, dt, 10) -- passe-bas 10 Hz",
+  "module": "Collection of stateful numeric filters (smoothing, low-pass/high-pass, spring, frequency detector, linear regression) used throughout the vehicle code (pedal/steering inputs, sensors, controllers). Each filter is created by a global function newXxx(...) that returns an object with a get(sample, dt) method (or get(sample) for fixed-step filters) that updates the internal state and returns the filtered value. The constructors are global variables: `require('filters')` is not necessary once the module is loaded (loaded by default in both VMs).",
+  "usage": "local smoother = newTemporalSmoothing(5, 5)          -- 5 units/s when rising and falling\nfunction updateGFX(dt)\n  local out = smoother:get(rawInput, dt)\nend\n\nlocal lp = newFreqFilter1()\nlocal y = lp:getLowPassFreq(sample, dt, 10) -- 10 Hz low-pass",
   "notes": [
-    "Ce fichier ne retourne pas de table M : tout est global (freqGenC, newFreqFilter1, newFreqDetector, newFreqExists, newTemporalSpring, newTemporalSigmoidSmoothing, newTemporalSmoothingHybrid, newTemporalSmoothingNonLinear, newTemporalSmoothing, newLinearSmoothing, newNopSmoothing, newExponentialSmoothing, newExponentialSmoothingT, newLineFitting). Les classes (metatables) sont locales et accessibles seulement via les objets créés.",
-    "IMPORTANT : les extraits de la page automatique donnent des signatures sans l'échantillon (ex. get(dt)). Dans le code, l'échantillon est TOUJOURS le premier argument après self : get(sample, dt), getLowPassFreq(sample, dt, cutOffFreq), lineFitting:getS(x, y), lineFitting:get(x, y, dt), etc.",
-    "Filtres à taux d'entrée/sortie (temporalSmoothing, temporalSmoothingNonLinear, temporalSmoothingHybrid, temporalSigmoidSmoothing, linearSmoothing) : l'objet stocke deux taux dans les clés booléennes [false] = inRate et [true] = outRate. À chaque pas, la clé utilisée est (sample - état) * état >= 0 : donc quand l'écart a le même signe que l'état (la valeur s'éloigne de 0, ou l'état est 0), c'est le taux stocké dans [true] (= outRate) qui s'applique ; quand la valeur revient vers 0, c'est [false] (= inRate). C'est le comportement du code, indépendamment des noms de paramètres.",
-    "temporalSmoothing est LINÉAIRE (vitesse bornée à rate unités/s), temporalSmoothingNonLinear est EXPONENTIEL (st += dif * rate*dt/(1+rate*dt)), temporalSmoothingHybrid = exponentiel avec une vitesse minimale linearRate. Les taux d'entrée infinis sont ramenés à 1e30 (NonLinear, Hybrid) ou la borne basse à 1e-307 (Linear).",
-    "temporalSmoothing:getCapped/getWithRateCapped bornent la sortie à [-1, 1] ; getUncapped = get (alias) et getWithRateUncapped = getWithRate (alias). Si autoCenterRate (3e argument du constructeur) diffère de inRate, getUncapped devient getUncappedAutoCenter ; getCapped passe par getUncapped, donc autocentrage actif seulement via getCapped/getUncapped, pas via get().",
-    "newExponentialSmoothing : la constante interne est calculée avec fixedDt (0.0005 s par défaut) ; la fenêtre est exprimée en nombre d'échantillons (minimum 2). Ne pas l'utiliser à pas variable (utiliser getWindow ou un filtre temporel).",
-    "lineFitting : échantillons x, y ; weight = pente, bias = ordonnée à l'origine. window est en nombre d'échantillons pour getS, en secondes pour get. Pour la stabilité numérique, mettre les entrées à l'échelle [0,1] ou [-1,1] (note du code). Si scale <= 0 ou nil, scale = 1000. lineFitting:set(window, ...) ne règle que decay avec la formule sample-based (1 - 2/(window+1)), mais get() recalcule decay à chaque appel.",
-    "freqExists:get / getS / bufferStart-bufferAdd-bufferEnd implémentent l'algorithme de Goertzel pour mesurer l'amplitude d'une fréquence donnée dans un signal.",
-    "Dans le code, getUncapped est référencé dans temporalSmoothing:getCapped mais n'est défini que par alias après la définition de la classe (temporalSmoothing.getUncapped = temporalSmoothing.get) : OK.",
-    "temporalSigmoidSmoothing et temporalSpring ont leur propre convention : voir la description de chaque méthode."
+    "This file does not return a table M: everything is global (freqGenC, newFreqFilter1, newFreqDetector, newFreqExists, newTemporalSpring, newTemporalSigmoidSmoothing, newTemporalSmoothingHybrid, newTemporalSmoothingNonLinear, newTemporalSmoothing, newLinearSmoothing, newNopSmoothing, newExponentialSmoothing, newExponentialSmoothingT, newLineFitting). The classes (metatables) are local and only accessible through the created objects.",
+    "IMPORTANT: the snippets of the auto page give signatures without the sample (e.g. get(dt)). In the code, the sample is ALWAYS the first argument after self: get(sample, dt), getLowPassFreq(sample, dt, cutOffFreq), lineFitting:getS(x, y), lineFitting:get(x, y, dt), etc.",
+    "Input/output rate filters (temporalSmoothing, temporalSmoothingNonLinear, temporalSmoothingHybrid, temporalSigmoidSmoothing, linearSmoothing): the object stores two rates in the boolean keys [false] = inRate and [true] = outRate. At each step, the key used is (sample - state) * state >= 0: so when the difference has the same sign as the state (the value moves away from 0, or the state is 0), the rate stored in [true] (= outRate) applies; when the value comes back toward 0, it is [false] (= inRate). This is the code's behavior, regardless of the parameter names.",
+    "temporalSmoothing is LINEAR (speed bounded to rate units/s), temporalSmoothingNonLinear is EXPONENTIAL (st += dif * rate*dt/(1+rate*dt)), temporalSmoothingHybrid = exponential with a minimum speed linearRate. Infinite input rates are brought to 1e30 (NonLinear, Hybrid) or the lower bound to 1e-307 (Linear).",
+    "temporalSmoothing:getCapped/getWithRateCapped bound the output to [-1, 1]; getUncapped = get (alias) and getWithRateUncapped = getWithRate (alias). If autoCenterRate (3rd constructor argument) differs from inRate, getUncapped becomes getUncappedAutoCenter; getCapped goes through getUncapped, so auto-centering is only active via getCapped/getUncapped, not via get().",
+    "newExponentialSmoothing: the internal constant is computed with fixedDt (0.0005 s by default); the window is expressed as a number of samples (minimum 2). Do not use it with a variable time step (use getWindow or a temporal filter).",
+    "lineFitting: samples x, y; weight = slope, bias = intercept. window is in samples for getS, in seconds for get. For numerical stability, scale the inputs to [0,1] or [-1,1] (code note). If scale <= 0 or nil, scale = 1000. lineFitting:set(window, ...) only sets decay with the sample-based formula (1 - 2/(window+1)), but get() recomputes decay on each call.",
+    "freqExists:get / getS / bufferStart-bufferAdd-bufferEnd implement the Goertzel algorithm to measure the amplitude of a given frequency in a signal.",
+    "In the code, getUncapped is referenced in temporalSmoothing:getCapped but is only defined by alias after the class definition (temporalSmoothing.getUncapped = temporalSmoothing.get): OK.",
+    "temporalSigmoidSmoothing and temporalSpring have their own convention: see the description of each method."
   ],
   "fields": {},
   "functions": {
     "freqGenC": {
-      "desc": "Générateur de cosinus : cos(2*pi*t/period) * ampl. Utile pour des signaux de test.",
-      "params": {"period": {"type": "number", "desc": "période en secondes (1e-30 ajouté pour éviter la division par zéro)"}, "ampl": {"type": "number", "desc": "amplitude"}, "t": {"type": "number", "desc": "temps en secondes"}},
-      "returns": [{"type": "number", "desc": "valeur du signal"}],
+      "desc": "Cosine generator: cos(2*pi*t/period) * ampl. Useful for test signals.",
+      "params": {
+        "period": {
+          "type": "number",
+          "desc": "period in seconds (1e-30 added to avoid division by zero)"
+        },
+        "ampl": {
+          "type": "number",
+          "desc": "amplitude"
+        },
+        "t": {
+          "type": "number",
+          "desc": "time in seconds"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "signal value"
+        }
+      ],
       "internal": false
     },
     "newFreqFilter1": {
-      "desc": "Crée un filtre du premier ordre (passe-bas, passe-haut, passe-bande, coupe-bande), avec état interne. Chaque méthode est appelée une fois par pas avec le nouvel échantillon.",
+      "desc": "Creates a first-order filter (low-pass, high-pass, band-pass, band-stop), with internal state. Each method is called once per step with the new sample.",
       "params": {},
-      "returns": [{"type": "freqFilter1", "desc": "filtre"}],
+      "returns": [
+        {
+          "type": "freqFilter1",
+          "desc": "filter"
+        }
+      ],
       "internal": false
     },
     "newFreqDetector": {
-      "desc": "Crée un détecteur de fréquence d'un signal oscillant (suit pics et creux). Voir la classe freqDetector.",
+      "desc": "Creates a frequency detector for an oscillating signal (tracks peaks and troughs). See the freqDetector class.",
       "params": {},
-      "returns": [{"type": "freqDetector", "desc": "détecteur"}],
+      "returns": [
+        {
+          "type": "freqDetector",
+          "desc": "detector"
+        }
+      ],
       "internal": false
     },
     "newFreqExists": {
-      "desc": "Crée un détecteur d'amplitude à fréquence cible (algorithme de Goertzel). Voir la classe freqExists.",
+      "desc": "Creates an amplitude detector at a target frequency (Goertzel algorithm). See the freqExists class.",
       "params": {},
-      "returns": [{"type": "freqExists", "desc": "détecteur"}],
+      "returns": [
+        {
+          "type": "freqExists",
+          "desc": "detector"
+        }
+      ],
       "internal": false
     },
     "newTemporalSpring": {
-      "desc": "Crée un filtre ressort amorti qui suit la consigne (valeur lissée avec vitesse et inertie).",
-      "params": {"spring": {"type": "number|nil", "desc": "raideur, défaut 10"}, "damp": {"type": "number|nil", "desc": "amortissement, défaut 2"}, "startingValue": {"type": "number|nil", "desc": "valeur initiale, défaut 0"}},
-      "returns": [{"type": "temporalSpring", "desc": "filtre"}],
+      "desc": "Creates a damped spring filter that follows the setpoint (smoothed value with velocity and inertia).",
+      "params": {
+        "spring": {
+          "type": "number|nil",
+          "desc": "stiffness, default 10"
+        },
+        "damp": {
+          "type": "number|nil",
+          "desc": "damping, default 2"
+        },
+        "startingValue": {
+          "type": "number|nil",
+          "desc": "initial value, default 0"
+        }
+      },
+      "returns": [
+        {
+          "type": "temporalSpring",
+          "desc": "filter"
+        }
+      ],
       "internal": false
     },
     "newTemporalSigmoidSmoothing": {
-      "desc": "Crée un lissage en courbe en S (accélération limitée au démarrage et à l'arrêt, vitesse bornée par le taux). Moins brutal que le lissage linéaire.",
-      "params": {"inRate": {"type": "number|nil", "desc": "vitesse max (unités/s), défaut 1"}, "startAccel": {"type": "number|nil", "desc": "accélération de départ, défaut +infini"}, "stopAccel": {"type": "number|nil", "desc": "décélération d'arrivée, défaut startAccel"}, "outRate": {"type": "number|nil", "desc": "vitesse max quand la valeur s'éloigne de 0 (clé true), défaut inRate"}, "startingValue": {"type": "number|nil", "desc": "valeur initiale, défaut 0"}},
-      "returns": [{"type": "temporalSigmoidSmoothing", "desc": "filtre"}],
+      "desc": "Creates an S-curve smoothing (acceleration limited at start and stop, speed bounded by the rate). Less abrupt than linear smoothing.",
+      "params": {
+        "inRate": {
+          "type": "number|nil",
+          "desc": "max speed (units/s), default 1"
+        },
+        "startAccel": {
+          "type": "number|nil",
+          "desc": "start acceleration, default +infinity"
+        },
+        "stopAccel": {
+          "type": "number|nil",
+          "desc": "arrival deceleration, default startAccel"
+        },
+        "outRate": {
+          "type": "number|nil",
+          "desc": "max speed when the value moves away from 0 (key true), default inRate"
+        },
+        "startingValue": {
+          "type": "number|nil",
+          "desc": "initial value, default 0"
+        }
+      },
+      "returns": [
+        {
+          "type": "temporalSigmoidSmoothing",
+          "desc": "filter"
+        }
+      ],
       "internal": false
     },
     "newTemporalSmoothingHybrid": {
-      "desc": "Crée un lissage exponentiel avec vitesse minimale linéaire (évite la queue infinie de l'exponentielle).",
-      "params": {"inRate": {"type": "number|nil", "desc": "taux exponentiel (1/s), défaut 1, borné à 1e30"}, "outRate": {"type": "number|nil", "desc": "taux quand l'écart a le même signe que l'état, défaut inRate"}, "startingValue": {"type": "number|nil", "desc": "valeur initiale, défaut 0"}, "linearRate": {"type": "number|nil", "desc": "vitesse minimale (unités/s), défaut 0"}},
-      "returns": [{"type": "temporalSmoothingHybrid", "desc": "filtre"}],
+      "desc": "Creates an exponential smoothing with a linear minimum speed (avoids the infinite tail of the exponential).",
+      "params": {
+        "inRate": {
+          "type": "number|nil",
+          "desc": "exponential rate (1/s), default 1, capped at 1e30"
+        },
+        "outRate": {
+          "type": "number|nil",
+          "desc": "rate when the difference has the same sign as the state, default inRate"
+        },
+        "startingValue": {
+          "type": "number|nil",
+          "desc": "initial value, default 0"
+        },
+        "linearRate": {
+          "type": "number|nil",
+          "desc": "minimum speed (units/s), default 0"
+        }
+      },
+      "returns": [
+        {
+          "type": "temporalSmoothingHybrid",
+          "desc": "filter"
+        }
+      ],
       "internal": false
     },
     "newTemporalSmoothingNonLinear": {
-      "desc": "Crée un lissage exponentiel pur : st += (sample - st) * r/(1+r) avec r = rate*dt.",
-      "params": {"inRate": {"type": "number|nil", "desc": "taux (1/s), défaut 1, borné à 1e30"}, "outRate": {"type": "number|nil", "desc": "taux quand l'écart a le même signe que l'état, défaut inRate"}, "startingValue": {"type": "number|nil", "desc": "valeur initiale, défaut 0"}},
-      "returns": [{"type": "temporalSmoothingNonLinear", "desc": "filtre"}],
+      "desc": "Creates a pure exponential smoothing: st += (sample - st) * r/(1+r) with r = rate*dt.",
+      "params": {
+        "inRate": {
+          "type": "number|nil",
+          "desc": "rate (1/s), default 1, capped at 1e30"
+        },
+        "outRate": {
+          "type": "number|nil",
+          "desc": "rate when the difference has the same sign as the state, default inRate"
+        },
+        "startingValue": {
+          "type": "number|nil",
+          "desc": "initial value, default 0"
+        }
+      },
+      "returns": [
+        {
+          "type": "temporalSmoothingNonLinear",
+          "desc": "filter"
+        }
+      ],
       "internal": false
     },
     "newTemporalSmoothing": {
-      "desc": "Crée un lissage linéaire dans le temps (la valeur avance à vitesse bornée vers la consigne). Typique pour pédales, volant. Peut avoir un taux d'autocentrage quand la consigne est exactement 0.",
-      "params": {"inRate": {"type": "number|nil", "desc": "vitesse (unités/s) quand la valeur revient vers 0, défaut 1, min 1e-307"}, "outRate": {"type": "number|nil", "desc": "vitesse quand elle s'éloigne de 0, défaut inRate"}, "autoCenterRate": {"type": "number|nil", "desc": "vitesse d'autocentrage quand sample == 0, défaut inRate"}, "startingValue": {"type": "number|nil", "desc": "valeur initiale (aussi valeur de reset), défaut 0"}},
-      "returns": [{"type": "temporalSmoothing", "desc": "filtre"}],
+      "desc": "Creates a linear smoothing over time (the value moves at a bounded speed toward the setpoint). Typical for pedals, steering. Can have an auto-centering rate when the setpoint is exactly 0.",
+      "params": {
+        "inRate": {
+          "type": "number|nil",
+          "desc": "speed (units/s) when the value comes back toward 0, default 1, min 1e-307"
+        },
+        "outRate": {
+          "type": "number|nil",
+          "desc": "speed when it moves away from 0, default inRate"
+        },
+        "autoCenterRate": {
+          "type": "number|nil",
+          "desc": "auto-centering speed when sample == 0, default inRate"
+        },
+        "startingValue": {
+          "type": "number|nil",
+          "desc": "initial value (also reset value), default 0"
+        }
+      },
+      "returns": [
+        {
+          "type": "temporalSmoothing",
+          "desc": "filter"
+        }
+      ],
       "internal": false
     },
     "newLinearSmoothing": {
-      "desc": "Crée un lissage linéaire à pas de temps FIXE dt (get ne prend pas dt) ; sans autocentrage.",
-      "params": {"dt": {"type": "number", "desc": "pas de temps fixe en secondes"}, "inRate": {"type": "number|nil", "desc": "vitesse quand la valeur revient vers 0, défaut 1"}, "outRate": {"type": "number|nil", "desc": "vitesse quand elle s'éloigne de 0, défaut inRate"}},
-      "returns": [{"type": "linearSmoothing", "desc": "filtre"}],
+      "desc": "Creates a linear smoothing with a FIXED time step dt (get does not take dt); no auto-centering.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "fixed time step in seconds"
+        },
+        "inRate": {
+          "type": "number|nil",
+          "desc": "speed when the value comes back toward 0, default 1"
+        },
+        "outRate": {
+          "type": "number|nil",
+          "desc": "speed when it moves away from 0, default inRate"
+        }
+      },
+      "returns": [
+        {
+          "type": "linearSmoothing",
+          "desc": "filter"
+        }
+      ],
       "internal": false
     },
     "newNopSmoothing": {
-      "desc": "Filtre neutre : get(sample) renvoie sample. Sert à désactiver un lissage sans changer le code appelant.",
+      "desc": "Neutral filter: get(sample) returns sample. Used to disable a smoothing without changing the calling code.",
       "params": {},
-      "returns": [{"type": "nopSmoothing", "desc": "filtre"}],
+      "returns": [
+        {
+          "type": "nopSmoothing",
+          "desc": "filter"
+        }
+      ],
       "internal": false
     },
     "newExponentialSmoothing": {
-      "desc": "Crée une moyenne exponentielle à pas fixe, paramétrée par une fenêtre en nombre d'échantillons (minimum 2).",
-      "params": {"window": {"type": "number", "desc": "fenêtre en échantillons"}, "startingValue": {"type": "number|nil", "desc": "valeur initiale, défaut 0"}, "fixedDt": {"type": "number|nil", "desc": "pas de temps de référence, défaut 0.0005 s"}},
-      "returns": [{"type": "exponentialSmoothing", "desc": "filtre"}],
+      "desc": "Creates a fixed-step exponential average, parameterized by a window in number of samples (minimum 2).",
+      "params": {
+        "window": {
+          "type": "number",
+          "desc": "window in samples"
+        },
+        "startingValue": {
+          "type": "number|nil",
+          "desc": "initial value, default 0"
+        },
+        "fixedDt": {
+          "type": "number|nil",
+          "desc": "reference time step, default 0.0005 s"
+        }
+      },
+      "returns": [
+        {
+          "type": "exponentialSmoothing",
+          "desc": "filter"
+        }
+      ],
       "internal": false
     },
     "newExponentialSmoothingT": {
-      "desc": "Crée une moyenne exponentielle avec suivi de tendance (réduit le retard sur des rampes) ; window2 règle la mémoire de la tendance.",
-      "params": {"window": {"type": "number", "desc": "fenêtre en échantillons (min 2)"}, "window2": {"type": "number|nil", "desc": "fenêtre de tendance, défaut infinie"}, "startingValue": {"type": "number|nil", "desc": "valeur initiale, défaut 0"}},
-      "returns": [{"type": "exponentialSmoothingT", "desc": "filtre"}],
+      "desc": "Creates an exponential average with trend tracking (reduces lag on ramps); window2 sets the trend memory.",
+      "params": {
+        "window": {
+          "type": "number",
+          "desc": "window in samples (min 2)"
+        },
+        "window2": {
+          "type": "number|nil",
+          "desc": "trend window, default infinite"
+        },
+        "startingValue": {
+          "type": "number|nil",
+          "desc": "initial value, default 0"
+        }
+      },
+      "returns": [
+        {
+          "type": "exponentialSmoothingT",
+          "desc": "filter"
+        }
+      ],
       "internal": false
     },
     "newLineFitting": {
-      "desc": "Crée un estimateur de droite y = weight*x + bias par moindres carrés à pondération exponentielle (mise à jour récursive). Mettre les entrées à l'échelle [0,1] ou [-1,1] pour la stabilité.",
-      "params": {"window": {"type": "number", "desc": "mémoire : en échantillons (getS) ou en secondes (get)"}, "weight": {"type": "number|nil", "desc": "pente initiale, défaut 0"}, "bias": {"type": "number|nil", "desc": "ordonnée initiale, défaut 0"}, "scale": {"type": "number|nil", "desc": "échelle d'initialisation de la matrice de covariance, défaut 1000"}, "weightMin": {"type": "number|nil", "desc": "borne basse pente"}, "weightMax": {"type": "number|nil", "desc": "borne haute pente"}, "biasMin": {"type": "number|nil", "desc": "borne basse ordonnée"}, "biasMax": {"type": "number|nil", "desc": "borne haute ordonnée"}},
-      "returns": [{"type": "lineFitting", "desc": "estimateur"}],
+      "desc": "Creates an estimator of the line y = weight*x + bias by exponentially weighted least squares (recursive update). Scale the inputs to [0,1] or [-1,1] for stability.",
+      "params": {
+        "window": {
+          "type": "number",
+          "desc": "memory: in samples (getS) or in seconds (get)"
+        },
+        "weight": {
+          "type": "number|nil",
+          "desc": "initial slope, default 0"
+        },
+        "bias": {
+          "type": "number|nil",
+          "desc": "initial intercept, default 0"
+        },
+        "scale": {
+          "type": "number|nil",
+          "desc": "initialization scale of the covariance matrix, default 1000"
+        },
+        "weightMin": {
+          "type": "number|nil",
+          "desc": "slope lower bound"
+        },
+        "weightMax": {
+          "type": "number|nil",
+          "desc": "slope upper bound"
+        },
+        "biasMin": {
+          "type": "number|nil",
+          "desc": "intercept lower bound"
+        },
+        "biasMax": {
+          "type": "number|nil",
+          "desc": "intercept upper bound"
+        }
+      },
+      "returns": [
+        {
+          "type": "lineFitting",
+          "desc": "estimator"
+        }
+      ],
       "internal": false
     }
   },
   "classes": {
     "freqFilter1": {
-      "desc": "Filtre du premier ordre (état : state, state2, x). Toutes les méthodes prennent (sample, dt, ...) et renvoient la valeur filtrée. Ne mélanger qu'un seul type de filtre par objet (états partagés).",
+      "desc": "First-order filter (state: state, state2, x). All methods take (sample, dt, ...) and return the filtered value. Mix only one type of filter per object (shared states).",
       "functions": {
-        "getLowPassFreq": {"desc": "Passe-bas, coupure en Hz.", "params": {"sample": {"type": "number", "desc": "échantillon"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "cutOffFreq": {"type": "number", "desc": "fréquence de coupure (Hz)"}}, "returns": [{"type": "number", "desc": "sortie filtrée"}]},
-        "getLowPassPeriod": {"desc": "Passe-bas, coupure donnée par une période (constante de temps 2*pi*... voir code : pdt = 2*pi*dt, filtre pdt/(pdt+période)).", "params": {"sample": {"type": "number", "desc": "échantillon"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "cutOffPeriod": {"type": "number", "desc": "période de coupure (s)"}}, "returns": [{"type": "number", "desc": "sortie filtrée"}]},
-        "getHighPassFreq": {"desc": "Passe-haut, coupure en Hz.", "params": {"sample": {"type": "number", "desc": "échantillon"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "cutOffFreq": {"type": "number", "desc": "fréquence de coupure (Hz)"}}, "returns": [{"type": "number", "desc": "sortie filtrée"}]},
-        "getHighPassPeriod": {"desc": "Passe-haut, coupure en période.", "params": {"sample": {"type": "number", "desc": "échantillon"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "cutOffPeriod": {"type": "number", "desc": "période de coupure (s)"}}, "returns": [{"type": "number", "desc": "sortie filtrée"}]},
-        "getBandPassFreq": {"desc": "Passe-bande (passe-haut à lowFreq puis passe-bas à highFreq).", "params": {"sample": {"type": "number", "desc": "échantillon"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "lowFreq": {"type": "number", "desc": "fréquence basse (Hz)"}, "highFreq": {"type": "number", "desc": "fréquence haute (Hz)"}}, "returns": [{"type": "number", "desc": "sortie filtrée"}]},
-        "getBandPassPeriod": {"desc": "Passe-bande avec périodes.", "params": {"sample": {"type": "number", "desc": "échantillon"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "lowPeriod": {"type": "number", "desc": "période basse"}, "highPeriod": {"type": "number", "desc": "période haute"}}, "returns": [{"type": "number", "desc": "sortie filtrée"}]},
-        "getBandStopFreq": {"desc": "Coupe-bande (somme d'un passe-haut à highFreq et d'un passe-bas à lowFreq).", "params": {"sample": {"type": "number", "desc": "échantillon"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "lowFreq": {"type": "number", "desc": "fréquence basse (Hz)"}, "highFreq": {"type": "number", "desc": "fréquence haute (Hz)"}}, "returns": [{"type": "number", "desc": "sortie filtrée"}]},
-        "getBandStopPeriod": {"desc": "Coupe-bande avec périodes.", "params": {"sample": {"type": "number", "desc": "échantillon"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "lowPeriod": {"type": "number", "desc": "période basse"}, "highPeriod": {"type": "number", "desc": "période haute"}}, "returns": [{"type": "number", "desc": "sortie filtrée"}]}
+        "getLowPassFreq": {
+          "desc": "Low-pass, cutoff in Hz.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "cutOffFreq": {
+              "type": "number",
+              "desc": "cutoff frequency (Hz)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered output"
+            }
+          ]
+        },
+        "getLowPassPeriod": {
+          "desc": "Low-pass, cutoff given by a period (time constant 2*pi*... see code: pdt = 2*pi*dt, filter pdt/(pdt+period)).",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "cutOffPeriod": {
+              "type": "number",
+              "desc": "cutoff period (s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered output"
+            }
+          ]
+        },
+        "getHighPassFreq": {
+          "desc": "High-pass, cutoff in Hz.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "cutOffFreq": {
+              "type": "number",
+              "desc": "cutoff frequency (Hz)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered output"
+            }
+          ]
+        },
+        "getHighPassPeriod": {
+          "desc": "High-pass, cutoff as a period.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "cutOffPeriod": {
+              "type": "number",
+              "desc": "cutoff period (s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered output"
+            }
+          ]
+        },
+        "getBandPassFreq": {
+          "desc": "Band-pass (high-pass at lowFreq then low-pass at highFreq).",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "lowFreq": {
+              "type": "number",
+              "desc": "low frequency (Hz)"
+            },
+            "highFreq": {
+              "type": "number",
+              "desc": "high frequency (Hz)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered output"
+            }
+          ]
+        },
+        "getBandPassPeriod": {
+          "desc": "Band-pass with periods.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "lowPeriod": {
+              "type": "number",
+              "desc": "low period"
+            },
+            "highPeriod": {
+              "type": "number",
+              "desc": "high period"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered output"
+            }
+          ]
+        },
+        "getBandStopFreq": {
+          "desc": "Band-stop (sum of a high-pass at highFreq and a low-pass at lowFreq).",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "lowFreq": {
+              "type": "number",
+              "desc": "low frequency (Hz)"
+            },
+            "highFreq": {
+              "type": "number",
+              "desc": "high frequency (Hz)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered output"
+            }
+          ]
+        },
+        "getBandStopPeriod": {
+          "desc": "Band-stop with periods.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "lowPeriod": {
+              "type": "number",
+              "desc": "low period"
+            },
+            "highPeriod": {
+              "type": "number",
+              "desc": "high period"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered output"
+            }
+          ]
+        }
       }
     },
     "freqDetector": {
-      "desc": "Estime la période, l'amplitude et le biais DC d'un signal oscillant en suivant les pics et creux.",
+      "desc": "Estimates the period, amplitude and DC bias of an oscillating signal by tracking peaks and troughs.",
       "functions": {
-        "get": {"desc": "Met à jour avec un échantillon. Renvoie période, amplitude de crête, temps depuis le dernier pic précédent (prevPeakDt) et biais DC. Le signal approché est cos(peakDt*2*pi/(période+1e-30))*ampl + bias.", "params": {"sample": {"type": "number", "desc": "échantillon"}, "dt": {"type": "number", "desc": "pas de temps (s)"}}, "returns": [{"type": "number", "desc": "période (s)"}, {"type": "number", "desc": "amplitude de crête"}, {"type": "number", "desc": "prevPeakDt"}, {"type": "number", "desc": "biais DC"}]},
-        "reset": {"desc": "Remet à zéro pics, creux, période, amplitude et biais.", "params": {}, "returns": []},
-        "value": {"desc": "Renvoie la dernière estimation (période, amplitude, prevPeakDt, biais) en avançant les chronomètres de dt (0 par défaut).", "params": {"dt": {"type": "number|nil", "desc": "temps écoulé depuis le dernier get, défaut 0"}}, "returns": [{"type": "number", "desc": "période"}, {"type": "number", "desc": "amplitude"}, {"type": "number", "desc": "prevPeakDt"}, {"type": "number", "desc": "biais"}]}
+        "get": {
+          "desc": "Updates with a sample. Returns period, peak amplitude, time since the previous peak (prevPeakDt) and DC bias. The approximated signal is cos(peakDt*2*pi/(period+1e-30))*ampl + bias.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "period (s)"
+            },
+            {
+              "type": "number",
+              "desc": "peak amplitude"
+            },
+            {
+              "type": "number",
+              "desc": "prevPeakDt"
+            },
+            {
+              "type": "number",
+              "desc": "DC bias"
+            }
+          ]
+        },
+        "reset": {
+          "desc": "Resets peaks, troughs, period, amplitude and bias to zero.",
+          "params": {},
+          "returns": []
+        },
+        "value": {
+          "desc": "Returns the latest estimate (period, amplitude, prevPeakDt, bias) while advancing the timers by dt (0 by default).",
+          "params": {
+            "dt": {
+              "type": "number|nil",
+              "desc": "time elapsed since the last get, default 0"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "period"
+            },
+            {
+              "type": "number",
+              "desc": "amplitude"
+            },
+            {
+              "type": "number",
+              "desc": "prevPeakDt"
+            },
+            {
+              "type": "number",
+              "desc": "bias"
+            }
+          ]
+        }
       }
     },
     "freqExists": {
-      "desc": "Mesure l'amplitude d'une fréquence précise dans un signal (algorithme de Goertzel).",
+      "desc": "Measures the amplitude of a specific frequency in a signal (Goertzel algorithm).",
       "functions": {
-        "get": {"desc": "Mode par cycles : accumule des échantillons et, tous les cycleCount cycles de freq, met à jour et renvoie l'amplitude (sinon renvoie la dernière amplitude). Plus de cycles = plus précis mais plus de latence.", "params": {"sample": {"type": "number", "desc": "échantillon"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "freq": {"type": "number", "desc": "fréquence cible (Hz)"}, "cycleCount": {"type": "number|nil", "desc": "nombre de cycles par mesure, défaut 1"}}, "returns": [{"type": "number", "desc": "amplitude de freq"}]},
-        "getS": {"desc": "Mode glissant par échantillon : renvoie l'amplitude à chaque appel ; renvoie 0 si freq*dt >= 0.5 (au-delà de Nyquist). winCoef plus grand = plus précis mais plus lent.", "params": {"sample": {"type": "number", "desc": "échantillon"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "freq": {"type": "number", "desc": "fréquence cible (Hz)"}, "winCoef": {"type": "number|nil", "desc": "coefficient de fenêtre, défaut 10"}}, "returns": [{"type": "number", "desc": "amplitude"}]},
-        "bufferStart": {"desc": "Démarre un traitement par lot (buffer) pour la fréquence freq à pas dt. Suivre de bufferAdd pour chaque échantillon puis bufferEnd.", "params": {"dt": {"type": "number", "desc": "pas de temps (s)"}, "freq": {"type": "number", "desc": "fréquence cible (Hz)"}}, "returns": []},
-        "bufferAdd": {"desc": "Ajoute un échantillon au lot en cours.", "params": {"sample": {"type": "number", "desc": "échantillon"}}, "returns": []},
-        "bufferEnd": {"desc": "Termine le lot et renvoie l'amplitude de la fréquence.", "params": {}, "returns": [{"type": "number", "desc": "amplitude"}]},
-        "reset": {"desc": "Remet l'état à zéro.", "params": {}, "returns": []}
+        "get": {
+          "desc": "Cycle mode: accumulates samples and, every cycleCount cycles of freq, updates and returns the amplitude (otherwise returns the last amplitude). More cycles = more accurate but more latency.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "freq": {
+              "type": "number",
+              "desc": "target frequency (Hz)"
+            },
+            "cycleCount": {
+              "type": "number|nil",
+              "desc": "number of cycles per measurement, default 1"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "amplitude of freq"
+            }
+          ]
+        },
+        "getS": {
+          "desc": "Per-sample sliding mode: returns the amplitude on each call; returns 0 if freq*dt >= 0.5 (beyond Nyquist). Larger winCoef = more accurate but slower.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "freq": {
+              "type": "number",
+              "desc": "target frequency (Hz)"
+            },
+            "winCoef": {
+              "type": "number|nil",
+              "desc": "window coefficient, default 10"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "amplitude"
+            }
+          ]
+        },
+        "bufferStart": {
+          "desc": "Starts batch processing (buffer) for frequency freq at step dt. Follow with bufferAdd for each sample then bufferEnd.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "freq": {
+              "type": "number",
+              "desc": "target frequency (Hz)"
+            }
+          },
+          "returns": []
+        },
+        "bufferAdd": {
+          "desc": "Adds a sample to the current batch.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            }
+          },
+          "returns": []
+        },
+        "bufferEnd": {
+          "desc": "Ends the batch and returns the amplitude of the frequency.",
+          "params": {},
+          "returns": [
+            {
+              "type": "number",
+              "desc": "amplitude"
+            }
+          ]
+        },
+        "reset": {
+          "desc": "Resets the state to zero.",
+          "params": {},
+          "returns": []
+        }
       }
     },
     "temporalSpring": {
-      "desc": "Filtre ressort amorti : la valeur accélère vers la consigne avec inertie (vel).",
+      "desc": "Damped spring filter: the value accelerates toward the setpoint with inertia (vel).",
       "functions": {
-        "get": {"desc": "Avance d'un pas vers sample avec la raideur/amortissement du constructeur.", "params": {"sample": {"type": "number", "desc": "consigne"}, "dt": {"type": "number", "desc": "pas de temps (s)"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "getWithSpringDamp": {"desc": "Comme get avec raideur et amortissement fournis.", "params": {"sample": {"type": "number", "desc": "consigne"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "spring": {"type": "number", "desc": "raideur"}, "damp": {"type": "number", "desc": "amortissement"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "set": {"desc": "Force la valeur et annule la vitesse.", "params": {"sample": {"type": "number", "desc": "valeur"}}, "returns": []},
-        "value": {"desc": "Valeur courante.", "params": {}, "returns": [{"type": "number", "desc": "état"}]}
+        "get": {
+          "desc": "Advances one step toward sample with the stiffness/damping of the constructor.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "getWithSpringDamp": {
+          "desc": "Like get with the given stiffness and damping.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "spring": {
+              "type": "number",
+              "desc": "stiffness"
+            },
+            "damp": {
+              "type": "number",
+              "desc": "damping"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "set": {
+          "desc": "Forces the value and cancels the velocity.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "value"
+            }
+          },
+          "returns": []
+        },
+        "value": {
+          "desc": "Current value.",
+          "params": {},
+          "returns": [
+            {
+              "type": "number",
+              "desc": "state"
+            }
+          ]
+        }
       }
     },
     "temporalSigmoidSmoothing": {
-      "desc": "Lissage en courbe en S avec limitation de vitesse (taux) et d'accélération.",
+      "desc": "S-curve smoothing with speed (rate) and acceleration limiting.",
       "functions": {
-        "get": {"desc": "Avance d'un pas vers sample. La vitesse maximale est celle du constructeur (inRate / outRate selon que la valeur s'éloigne de 0).", "params": {"sample": {"type": "number", "desc": "consigne"}, "dt": {"type": "number", "desc": "pas de temps (s)"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "getWithRateAccel": {"desc": "Comme get avec vitesse max et accélérations fournies (stopAccel défaut startAccel).", "params": {"sample": {"type": "number", "desc": "consigne"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "ratelimit": {"type": "number", "desc": "vitesse maximale"}, "startAccel": {"type": "number", "desc": "accélération de départ"}, "stopAccel": {"type": "number|nil", "desc": "décélération d'arrivée"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "set": {"desc": "Force la valeur et annule la vitesse.", "params": {"sample": {"type": "number", "desc": "valeur"}}, "returns": []},
-        "reset": {"desc": "Remet état et vitesse à 0 (pas à la valeur initiale du constructeur).", "params": {}, "returns": []},
-        "value": {"desc": "Valeur courante.", "params": {}, "returns": [{"type": "number", "desc": "état"}]}
+        "get": {
+          "desc": "Advances one step toward sample. The max speed is that of the constructor (inRate / outRate depending on whether the value moves away from 0).",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "getWithRateAccel": {
+          "desc": "Like get with the given max speed and accelerations (stopAccel default startAccel).",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "ratelimit": {
+              "type": "number",
+              "desc": "max speed"
+            },
+            "startAccel": {
+              "type": "number",
+              "desc": "start acceleration"
+            },
+            "stopAccel": {
+              "type": "number|nil",
+              "desc": "arrival deceleration"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "set": {
+          "desc": "Forces the value and cancels the velocity.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "value"
+            }
+          },
+          "returns": []
+        },
+        "reset": {
+          "desc": "Resets state and velocity to 0 (not to the constructor's initial value).",
+          "params": {},
+          "returns": []
+        },
+        "value": {
+          "desc": "Current value.",
+          "params": {},
+          "returns": [
+            {
+              "type": "number",
+              "desc": "state"
+            }
+          ]
+        }
       }
     },
     "temporalSmoothingHybrid": {
-      "desc": "Lissage exponentiel avec vitesse minimale linéaire.",
+      "desc": "Exponential smoothing with a linear minimum speed.",
       "functions": {
-        "get": {"desc": "Avance d'un pas vers sample (taux choisi selon le sens, voir notes).", "params": {"sample": {"type": "number", "desc": "consigne"}, "dt": {"type": "number", "desc": "pas de temps (s)"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "getWithRate": {"desc": "Comme get avec taux et vitesse linéaire fournis.", "params": {"sample": {"type": "number", "desc": "consigne"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "rate": {"type": "number", "desc": "taux exponentiel (1/s)"}, "linearRate": {"type": "number|nil", "desc": "vitesse minimale, défaut 0"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "set": {"desc": "Force la valeur.", "params": {"sample": {"type": "number", "desc": "valeur"}}, "returns": []},
-        "value": {"desc": "Valeur courante.", "params": {}, "returns": [{"type": "number", "desc": "état"}]},
-        "reset": {"desc": "Met l'état à 0 (pas à startingValue).", "params": {}, "returns": []}
+        "get": {
+          "desc": "Advances one step toward sample (rate chosen according to direction, see notes).",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "getWithRate": {
+          "desc": "Like get with the given rate and linear speed.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "rate": {
+              "type": "number",
+              "desc": "exponential rate (1/s)"
+            },
+            "linearRate": {
+              "type": "number|nil",
+              "desc": "minimum speed, default 0"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "set": {
+          "desc": "Forces the value.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "value"
+            }
+          },
+          "returns": []
+        },
+        "value": {
+          "desc": "Current value.",
+          "params": {},
+          "returns": [
+            {
+              "type": "number",
+              "desc": "state"
+            }
+          ]
+        },
+        "reset": {
+          "desc": "Sets the state to 0 (not to startingValue).",
+          "params": {},
+          "returns": []
+        }
       }
     },
     "temporalSmoothingNonLinear": {
-      "desc": "Lissage exponentiel dépendant du temps.",
+      "desc": "Time-dependent exponential smoothing.",
       "functions": {
-        "get": {"desc": "Avance d'un pas vers sample.", "params": {"sample": {"type": "number", "desc": "consigne"}, "dt": {"type": "number", "desc": "pas de temps (s)"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "getWithRate": {"desc": "Comme get avec taux fourni.", "params": {"sample": {"type": "number", "desc": "consigne"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "rate": {"type": "number", "desc": "taux (1/s)"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "set": {"desc": "Force la valeur.", "params": {"sample": {"type": "number", "desc": "valeur"}}, "returns": []},
-        "value": {"desc": "Valeur courante.", "params": {}, "returns": [{"type": "number", "desc": "état"}]},
-        "reset": {"desc": "Met l'état à 0.", "params": {}, "returns": []}
+        "get": {
+          "desc": "Advances one step toward sample.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "getWithRate": {
+          "desc": "Like get with the given rate.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "rate": {
+              "type": "number",
+              "desc": "rate (1/s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "set": {
+          "desc": "Forces the value.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "value"
+            }
+          },
+          "returns": []
+        },
+        "value": {
+          "desc": "Current value.",
+          "params": {},
+          "returns": [
+            {
+              "type": "number",
+              "desc": "state"
+            }
+          ]
+        },
+        "reset": {
+          "desc": "Sets the state to 0.",
+          "params": {},
+          "returns": []
+        }
       }
     },
     "temporalSmoothing": {
-      "desc": "Lissage linéaire dépendant du temps (vitesse bornée). Alias : getUncapped = get, getWithRateUncapped = getWithRate.",
+      "desc": "Time-dependent linear smoothing (bounded speed). Aliases: getUncapped = get, getWithRateUncapped = getWithRate.",
       "functions": {
-        "get": {"desc": "Avance d'un pas vers sample à la vitesse (unités/s) inRate/outRate ; ne dépasse jamais la consigne.", "params": {"sample": {"type": "number", "desc": "consigne"}, "dt": {"type": "number", "desc": "pas de temps (s)"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "getUncappedAutoCenter": {"desc": "Comme get mais avec autocentrage : si sample == 0 la vitesse est autoCenterRate. Devient getUncapped quand autoCenterRate ~= inRate.", "params": {"sample": {"type": "number", "desc": "consigne"}, "dt": {"type": "number", "desc": "pas de temps (s)"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "getCapped": {"desc": "getUncapped puis borne la sortie à [-1, 1].", "params": {"sample": {"type": "number", "desc": "consigne"}, "dt": {"type": "number", "desc": "pas de temps (s)"}}, "returns": [{"type": "number", "desc": "valeur dans [-1,1]"}]},
-        "getWithRate": {"desc": "Comme get avec une vitesse fournie.", "params": {"sample": {"type": "number", "desc": "consigne"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "rate": {"type": "number", "desc": "vitesse (unités/s)"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "getWithRateCapped": {"desc": "getWithRate borné à [-1, 1].", "params": {"sample": {"type": "number", "desc": "consigne"}, "dt": {"type": "number", "desc": "pas de temps (s)"}, "rate": {"type": "number", "desc": "vitesse (unités/s)"}}, "returns": [{"type": "number", "desc": "valeur dans [-1,1]"}]},
-        "reset": {"desc": "Remet l'état à startingValue du constructeur.", "params": {}, "returns": []},
-        "value": {"desc": "Valeur courante.", "params": {}, "returns": [{"type": "number", "desc": "état"}]},
-        "set": {"desc": "Force la valeur.", "params": {"v": {"type": "number", "desc": "valeur"}}, "returns": []}
+        "get": {
+          "desc": "Advances one step toward sample at speed (units/s) inRate/outRate; never overshoots the setpoint.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "getUncappedAutoCenter": {
+          "desc": "Like get but with auto-centering: if sample == 0 the speed is autoCenterRate. Becomes getUncapped when autoCenterRate ~= inRate.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "getCapped": {
+          "desc": "getUncapped then bounds the output to [-1, 1].",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "value in [-1,1]"
+            }
+          ]
+        },
+        "getWithRate": {
+          "desc": "Like get with a given speed.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "rate": {
+              "type": "number",
+              "desc": "speed (units/s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "getWithRateCapped": {
+          "desc": "getWithRate bounded to [-1, 1].",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            },
+            "rate": {
+              "type": "number",
+              "desc": "speed (units/s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "value in [-1,1]"
+            }
+          ]
+        },
+        "reset": {
+          "desc": "Resets the state to the constructor's startingValue.",
+          "params": {},
+          "returns": []
+        },
+        "value": {
+          "desc": "Current value.",
+          "params": {},
+          "returns": [
+            {
+              "type": "number",
+              "desc": "state"
+            }
+          ]
+        },
+        "set": {
+          "desc": "Forces the value.",
+          "params": {
+            "v": {
+              "type": "number",
+              "desc": "value"
+            }
+          },
+          "returns": []
+        }
       }
     },
     "linearSmoothing": {
-      "desc": "Lissage linéaire à pas de temps fixe fourni au constructeur.",
+      "desc": "Linear smoothing with a fixed time step given to the constructor.",
       "functions": {
-        "get": {"desc": "Avance d'un pas vers sample (pas d'argument dt).", "params": {"sample": {"type": "number", "desc": "consigne"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "set": {"desc": "Force la valeur.", "params": {"v": {"type": "number", "desc": "valeur"}}, "returns": []},
-        "reset": {"desc": "Remet l'état à 0.", "params": {}, "returns": []}
+        "get": {
+          "desc": "Advances one step toward sample (no dt argument).",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "setpoint"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "set": {
+          "desc": "Forces the value.",
+          "params": {
+            "v": {
+              "type": "number",
+              "desc": "value"
+            }
+          },
+          "returns": []
+        },
+        "reset": {
+          "desc": "Resets the state to 0.",
+          "params": {},
+          "returns": []
+        }
       }
     },
     "nopSmoothing": {
-      "desc": "Filtre de contournement (aucun lissage).",
+      "desc": "Bypass filter (no smoothing).",
       "functions": {
-        "get": {"desc": "Renvoie sample tel quel.", "params": {"sample": {"type": "number", "desc": "valeur"}}, "returns": [{"type": "number", "desc": "sample"}]},
-        "set": {"desc": "Ne fait rien.", "params": {}, "returns": []},
-        "reset": {"desc": "Ne fait rien.", "params": {}, "returns": []}
+        "get": {
+          "desc": "Returns sample as is.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "value"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "sample"
+            }
+          ]
+        },
+        "set": {
+          "desc": "Does nothing.",
+          "params": {},
+          "returns": []
+        },
+        "reset": {
+          "desc": "Does nothing.",
+          "params": {},
+          "returns": []
+        }
       }
     },
     "exponentialSmoothing": {
-      "desc": "Moyenne exponentielle à pas fixe.",
+      "desc": "Fixed-step exponential average.",
       "functions": {
-        "get": {"desc": "Un pas de lissage vers sample avec le coefficient du constructeur.", "params": {"sample": {"type": "number", "desc": "échantillon"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "getWindow": {"desc": "Un pas avec une fenêtre (en échantillons, min 2) fournie à l'appel.", "params": {"sample": {"type": "number", "desc": "échantillon"}, "window": {"type": "number", "desc": "fenêtre en échantillons"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "value": {"desc": "Valeur courante.", "params": {}, "returns": [{"type": "number", "desc": "état"}]},
-        "set": {"desc": "Force la valeur.", "params": {"value": {"type": "number", "desc": "valeur"}}, "returns": []},
-        "reset": {"desc": "Remet l'état à value, ou à la valeur de départ.", "params": {"value": {"type": "number|nil", "desc": "valeur de reset"}}, "returns": []}
+        "get": {
+          "desc": "One smoothing step toward sample with the constructor's coefficient.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "getWindow": {
+          "desc": "One step with a window (in samples, min 2) provided in the call.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            },
+            "window": {
+              "type": "number",
+              "desc": "window in samples"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "value": {
+          "desc": "Current value.",
+          "params": {},
+          "returns": [
+            {
+              "type": "number",
+              "desc": "state"
+            }
+          ]
+        },
+        "set": {
+          "desc": "Forces the value.",
+          "params": {
+            "value": {
+              "type": "number",
+              "desc": "value"
+            }
+          },
+          "returns": []
+        },
+        "reset": {
+          "desc": "Resets the state to value, or to the start value.",
+          "params": {
+            "value": {
+              "type": "number|nil",
+              "desc": "reset value"
+            }
+          },
+          "returns": []
+        }
       }
     },
     "exponentialSmoothingT": {
-      "desc": "Moyenne exponentielle avec compensation de tendance.",
+      "desc": "Exponential average with trend compensation.",
       "functions": {
-        "get": {"desc": "Un pas de lissage (fenêtres du constructeur).", "params": {"sample": {"type": "number", "desc": "échantillon"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "getWindow": {"desc": "Un pas avec fenêtres fournies à l'appel.", "params": {"sample": {"type": "number", "desc": "échantillon"}, "window": {"type": "number", "desc": "fenêtre principale"}, "window2": {"type": "number|nil", "desc": "fenêtre de tendance, défaut infinie"}}, "returns": [{"type": "number", "desc": "valeur filtrée"}]},
-        "value": {"desc": "Valeur courante.", "params": {}, "returns": [{"type": "number", "desc": "état"}]},
-        "set": {"desc": "Force la valeur (n'efface pas la tendance).", "params": {"value": {"type": "number", "desc": "valeur"}}, "returns": []},
-        "reset": {"desc": "Remet état à value (ou valeur de départ) et efface la tendance.", "params": {"value": {"type": "number|nil", "desc": "valeur de reset"}}, "returns": []}
+        "get": {
+          "desc": "One smoothing step (constructor windows).",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "getWindow": {
+          "desc": "One step with windows provided in the call.",
+          "params": {
+            "sample": {
+              "type": "number",
+              "desc": "sample"
+            },
+            "window": {
+              "type": "number",
+              "desc": "main window"
+            },
+            "window2": {
+              "type": "number|nil",
+              "desc": "trend window, default infinite"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "filtered value"
+            }
+          ]
+        },
+        "value": {
+          "desc": "Current value.",
+          "params": {},
+          "returns": [
+            {
+              "type": "number",
+              "desc": "state"
+            }
+          ]
+        },
+        "set": {
+          "desc": "Forces the value (does not clear the trend).",
+          "params": {
+            "value": {
+              "type": "number",
+              "desc": "value"
+            }
+          },
+          "returns": []
+        },
+        "reset": {
+          "desc": "Resets the state to value (or start value) and clears the trend.",
+          "params": {
+            "value": {
+              "type": "number|nil",
+              "desc": "reset value"
+            }
+          },
+          "returns": []
+        }
       }
     },
     "lineFitting": {
-      "desc": "Régression linéaire récursive pondérée exponentiellement. Champs publics : weight, bias, plus bornes weightMin/Max et biasMin/Max.",
+      "desc": "Exponentially weighted recursive linear regression. Public fields: weight, bias, plus bounds weightMin/Max and biasMin/Max.",
       "functions": {
-        "getS": {"desc": "Mise à jour par échantillon (fenêtre en échantillons). Renvoie la pente et l'ordonnée estimées.", "params": {"x": {"type": "number", "desc": "entrée x"}, "y": {"type": "number", "desc": "sortie y"}}, "returns": [{"type": "number", "desc": "weight (pente)"}, {"type": "number", "desc": "bias (ordonnée à l'origine)"}]},
-        "get": {"desc": "Mise à jour avec pas de temps (fenêtre en secondes). Renvoie la pente et l'ordonnée.", "params": {"x": {"type": "number", "desc": "entrée x"}, "y": {"type": "number", "desc": "sortie y"}, "dt": {"type": "number", "desc": "pas de temps (s)"}}, "returns": [{"type": "number", "desc": "weight"}, {"type": "number", "desc": "bias"}]},
-        "value": {"desc": "Pente et ordonnée courantes.", "params": {}, "returns": [{"type": "number", "desc": "weight"}, {"type": "number", "desc": "bias"}]},
-        "getY": {"desc": "y estimé pour x : weight*x + bias.", "params": {"x": {"type": "number", "desc": "x"}}, "returns": [{"type": "number", "desc": "y"}]},
-        "getX": {"desc": "x estimé pour y (inverse de la droite, garde contre pente nulle).", "params": {"y": {"type": "number", "desc": "y"}}, "returns": [{"type": "number", "desc": "x"}]},
-        "set": {"desc": "Modifie fenêtre (decay), pente, ordonnée et bornes (les arguments nil gardent la valeur actuelle).", "params": {"window": {"type": "number|nil", "desc": "nouvelle fenêtre (échantillons)"}, "weight": {"type": "number|nil", "desc": "pente"}, "bias": {"type": "number|nil", "desc": "ordonnée"}, "weightMin": {"type": "number|nil", "desc": "borne basse pente"}, "weightMax": {"type": "number|nil", "desc": "borne haute pente"}, "biasMin": {"type": "number|nil", "desc": "borne basse ordonnée"}, "biasMax": {"type": "number|nil", "desc": "borne haute ordonnée"}}, "returns": []},
-        "reset": {"desc": "Remet pente, ordonnée et matrice de covariance à l'état initial.", "params": {}, "returns": []}
+        "getS": {
+          "desc": "Per-sample update (window in samples). Returns the estimated slope and intercept.",
+          "params": {
+            "x": {
+              "type": "number",
+              "desc": "input x"
+            },
+            "y": {
+              "type": "number",
+              "desc": "output y"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "weight (slope)"
+            },
+            {
+              "type": "number",
+              "desc": "bias (intercept)"
+            }
+          ]
+        },
+        "get": {
+          "desc": "Update with a time step (window in seconds). Returns the slope and intercept.",
+          "params": {
+            "x": {
+              "type": "number",
+              "desc": "input x"
+            },
+            "y": {
+              "type": "number",
+              "desc": "output y"
+            },
+            "dt": {
+              "type": "number",
+              "desc": "time step (s)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "weight"
+            },
+            {
+              "type": "number",
+              "desc": "bias"
+            }
+          ]
+        },
+        "value": {
+          "desc": "Current slope and intercept.",
+          "params": {},
+          "returns": [
+            {
+              "type": "number",
+              "desc": "weight"
+            },
+            {
+              "type": "number",
+              "desc": "bias"
+            }
+          ]
+        },
+        "getY": {
+          "desc": "Estimated y for x: weight*x + bias.",
+          "params": {
+            "x": {
+              "type": "number",
+              "desc": "x"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "y"
+            }
+          ]
+        },
+        "getX": {
+          "desc": "Estimated x for y (inverse of the line, guards against a zero slope).",
+          "params": {
+            "y": {
+              "type": "number",
+              "desc": "y"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "x"
+            }
+          ]
+        },
+        "set": {
+          "desc": "Changes window (decay), slope, intercept and bounds (nil arguments keep the current value).",
+          "params": {
+            "window": {
+              "type": "number|nil",
+              "desc": "new window (samples)"
+            },
+            "weight": {
+              "type": "number|nil",
+              "desc": "slope"
+            },
+            "bias": {
+              "type": "number|nil",
+              "desc": "intercept"
+            },
+            "weightMin": {
+              "type": "number|nil",
+              "desc": "slope lower bound"
+            },
+            "weightMax": {
+              "type": "number|nil",
+              "desc": "slope upper bound"
+            },
+            "biasMin": {
+              "type": "number|nil",
+              "desc": "intercept lower bound"
+            },
+            "biasMax": {
+              "type": "number|nil",
+              "desc": "intercept upper bound"
+            }
+          },
+          "returns": []
+        },
+        "reset": {
+          "desc": "Resets slope, intercept and covariance matrix to the initial state.",
+          "params": {},
+          "returns": []
+        }
       }
     }
   }

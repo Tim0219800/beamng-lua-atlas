@@ -1,79 +1,79 @@
 # `editor_api_preferencesRegistry`
 
-*Fichier : `lua/ge/extensions/editor/api/preferencesRegistry.lua` · VM : Game Engine (GE) · 554 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/preferencesRegistry.lua` · VM: Game Engine (GE) · 554 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/api/preferencesRegistry")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/api/preferencesRegistry")` (file under extensions/ but not a regular extension)
 
-Registre des préférences de l'éditeur : organise les préférences en catégorie > sous-catégorie > item (chemin "categorie.souscategorie.item"), avec type, valeur par défaut, description, libellé, bornes, drapeaux hidden/advanced, fonction UI personnalisée, libellés d'enum et version. Gère le chargement/sauvegarde dans `settings/editor/preferences.json` (format version 2, seules les valeurs différant du défaut sont écrites) et l'émission du hook `onEditorPreferenceValueChanged`. Les extensions d'éditeur y déclarent leurs réglages ; on y accède aussi via `editor.getPreference(path)`. Le module renvoie un constructeur sans argument.
+Editor preferences registry: organizes preferences as category > subcategory > item (path "category.subcategory.item"), with type, default value, description, label, bounds, hidden/advanced flags, custom UI function, enum labels and version. Handles loading/saving in `settings/editor/preferences.json` (format version 2, only values differing from the default are written) and emission of the `onEditorPreferenceValueChanged` hook. Editor extensions declare their settings there; it is also accessed via `editor.getPreference(path)`. The module returns a constructor with no arguments.
 
-## Exemple
+## Example
 
 ```lua
 local reg = require("editor/api/preferencesRegistry")()
 reg:registerCategory("myTool", "My Tool")
 reg:registerSubCategory("myTool", "general", "General", {
-  {speed = {"float", 1.0, "Vitesse", nil, 0, 10}},
+  {speed = {"float", 1.0, "Speed", nil, 0, 10}},
 })
 reg:loadPreferences()
 local v = reg:get("myTool.general.speed")
 ```
 
-## Remarques
+## Notes
 
-- Format d'un item dans registerPreferences (table positionnelle) : [1] type, [2] defaultValue, [3] description, [4] label (sinon sentenceCase du nom), [5] minValue, [6] maxValue, [7] hidden, [8] advanced, [9] customUiFunc, [10] enumLabels (liste de chaînes, enum générée {name, value=index}), [11] version (défaut 0). Chaque élément de `prefs` est une table à UNE seule paire {nom = infos} pour garder l'ordre.
-- Types gérés pour (dé)sérialisation en chaîne : float, int, double, char, bool, table (JSON), Point3F/vec3, Point2F, Point2I, Point4F, ColorI, ColorF, RectF. Les vecteurs sont écrits sans virgules.
-- `set` borne les nombres entre minValue et maxValue et marque `dirty` ; un chemin non enregistré est logué une seule fois puis ignoré. `get` plante si `loadPreferences` n'a pas encore été appelé (self.preferences nil).
-- Les changements sont accumulés dans `changedItems` et diffusés par `broadcastPreferenceValueChanged` (à appeler depuis la boucle de l'éditeur), pas immédiatement.
-- Si le fichier a une version de format différente de 2, il est ignoré (valeurs par défaut) et écrasé à la prochaine sauvegarde.
-- Hooks émis : onEditorPreferenceValueChanged(itemPath, value), onEditorPreferenceVersionChanged(itemPath, valFichier, item), onEditorDeprecatedPreferencesItem(itemPath, value) (retourner true supprime l'item).
-- `getAsString` et `resetItemToDefault` plantent si le chemin n'est pas enregistré (item nil).
-- `loadCategory` plante si le fichier contient un item non enregistré (findItem renvoie nil puis itemValueFromString(nil, …)).
+- Format of an item in registerPreferences (positional table): [1] type, [2] defaultValue, [3] description, [4] label (otherwise sentenceCase of the name), [5] minValue, [6] maxValue, [7] hidden, [8] advanced, [9] customUiFunc, [10] enumLabels (list of strings, generated enum {name, value=index}), [11] version (default 0). Each element of `prefs` is a table with ONE single {name = infos} pair to keep the order.
+- Types handled for string (de)serialization: float, int, double, char, bool, table (JSON), Point3F/vec3, Point2F, Point2I, Point4F, ColorI, ColorF, RectF. Vectors are written without commas.
+- `set` clamps numbers between minValue and maxValue and marks `dirty`; an unregistered path is logged once then ignored. `get` crashes if `loadPreferences` has not been called yet (self.preferences nil).
+- Changes are accumulated in `changedItems` and broadcast by `broadcastPreferenceValueChanged` (to be called from the editor loop), not immediately.
+- If the file has a format version other than 2, it is ignored (default values) and overwritten at the next save.
+- Emitted hooks: onEditorPreferenceValueChanged(itemPath, value), onEditorPreferenceVersionChanged(itemPath, fileValue, item), onEditorDeprecatedPreferencesItem(itemPath, value) (returning true deletes the item).
+- `getAsString` and `resetItemToDefault` crash if the path is not registered (item nil).
+- `loadCategory` crashes if the file contains an unregistered item (findItem returns nil then itemValueFromString(nil, ...)).
 
-## Classe `C`
+## Class `C`
 
-Objet registre. Champs : categories, nonPersistentItemPaths, preferences (valeurs courantes par catégorie), changedItems, dirty.
+Registry object. Fields: categories, nonPersistentItemPaths, preferences (current values per category), changedItems, dirty.
 
-Le module renvoie un constructeur : `local obj = require("editor_api_preferencesRegistry")(options)`.
+The module returns a constructor: `local obj = require("editor_api_preferencesRegistry")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:addNonPersistentItemPath(subCategoryPath)` | Marque un chemin comme non persistant : il n'est pas écrit dans les fichiers de préférences. | 128 |
-| `C:broadcastPreferenceValueChanged()` | Émet onEditorPreferenceValueChanged pour chaque changement en file puis vide la file. | 288 |
-| `C:callHookForSetValue()` | Émet onEditorPreferenceValueChanged pour TOUS les items enregistrés avec leur valeur actuelle (utile après un chargement). | 412 |
-| `C:clear()` | Vide catégories, chemins non persistants, préférences, éléments modifiés et remet dirty à false. | 69 |
-| `C:findCategory(name)` | Cherche une catégorie par nom. | 189 |
-| `C:findItem(itemPath)` | Cherche un item par chemin "cat.souscat.item" ; nil si moins de 3 segments ou introuvable. | 201 |
-| `C:findItemInSubCategory(subCateg, itemName)` | Cherche un item par nom dans une sous-catégorie. | 217 |
-| `C:findSubCategory(category, name)` | Cherche une sous-catégorie par nom dans une catégorie. | 195 |
-| `C:get(itemPath)` | Renvoie la valeur d'une préférence par chemin (équivalent de editor.getPreference). | 301 |
-| `C:getAsString(itemPath)` | Renvoie la valeur d'une préférence sérialisée en texte selon son type. | 314 |
-| `C:init()` | Appelle clear(). Appelé par le constructeur. | 77 |
-| `C:itemValueFromString(item, itemVal)` | Convertit une valeur texte (lue du fichier) en valeur Lua selon item.type (nombre, bool, table JSON, vec3, Point2F, ColorF…). | 11 |
-| `C:itemValueToString(item, itemVal)` | Convertit une valeur en texte pour le fichier : tostring pour les nombres/bool, JSON pour table (inchangé si déjà une string), tostring sans virgules pour les vecteurs/couleurs. | 41 |
-| `C:loadCategory(categoryName, filename)` | Charge une seule catégorie depuis un fichier au format de saveCategory et applique ses valeurs ; marque dirty. | 424 |
-| `C:loadPreferences(filename)` | Lit le fichier de préférences (défaut settings/editor/preferences.json), rejette un format de version différente, puis remplit chaque item enregistré avec la valeur du fichier ou la valeur par défaut. Gère les anciennes valeurs (non-table) et appelle onEditorPreferenceVersionChanged si la version d'un item a changé. Pas de hook de changement pendant le chargement. | 319 |
-| `C:migratePreferences(deleteDeprecatedItems)` | Parcourt les préférences chargées et, pour chaque item absent du registre, émet onEditorDeprecatedPreferencesItem ; supprime l'item si deleteDeprecatedItems est vrai ou si le hook renvoie true. Corrige aussi les catégories/sous-catégories qui ne sont pas des tables. | 224 |
-| `C:registerCategory(categName, categLabel)` | Crée (ou retrouve) une catégorie de premier niveau. Si elle existe avec un autre libellé, avertit et remplace le libellé. | 81 |
-| `C:registerPreferences(categName, subCategName, prefs)` | Ajoute des items à une sous-catégorie existante. Un nom déjà présent est refusé avec une erreur loguée. | 136 |
-| `C:registerSubCategory(categName, subCategName, subCategLabel, prefs)` | Crée (ou retrouve) une sous-catégorie dans une catégorie déjà enregistrée et y enregistre éventuellement des préférences. Logue une erreur et renvoie nil si la catégorie n'existe pas. | 99 |
-| `C:removeNonPersistentItemPath(subCategoryPath)` | Retire un chemin de la liste des non persistants. | 132 |
-| `C:resetItemToDefault(itemPath)` | Remet un item à sa valeur par défaut. | 542 |
-| `C:resetToDefaults(categoryName)` | Remet à leur valeur par défaut tous les items d'une catégorie, ou de toutes les catégories si categoryName est nil. | 523 |
-| `C:saveCategory(categoryName, filename)` | Sauvegarde toutes les préférences d'une catégorie (même celles à la valeur par défaut, hors chemins non persistants) dans un fichier json. | 452 |
-| `C:savePreferences(filename)` | Écrit les préférences dans le fichier (défaut settings/editor/preferences.json) en omettant les valeurs égales au défaut et les chemins non persistants ; remet dirty à false. Conserve les valeurs d'extensions non chargées. | 475 |
-| `C:set(itemPath, value)` | Fixe la valeur d'une préférence par chemin (bornée pour un nombre), marque dirty et met le changement en file pour le hook. | 255 |
+| `C:addNonPersistentItemPath(subCategoryPath)` | Marks a path as non-persistent: it is not written to the preferences files. | 128 |
+| `C:broadcastPreferenceValueChanged()` | Emits onEditorPreferenceValueChanged for each queued change then clears the queue. | 288 |
+| `C:callHookForSetValue()` | Emits onEditorPreferenceValueChanged for ALL registered items with their current value (useful after a load). | 412 |
+| `C:clear()` | Clears categories, non-persistent paths, preferences and changed items, and resets dirty to false. | 69 |
+| `C:findCategory(name)` | Looks up a category by name. | 189 |
+| `C:findItem(itemPath)` | Looks up an item by path "cat.subcat.item"; nil if fewer than 3 segments or not found. | 201 |
+| `C:findItemInSubCategory(subCateg, itemName)` | Looks up an item by name in a subcategory. | 217 |
+| `C:findSubCategory(category, name)` | Looks up a subcategory by name in a category. | 195 |
+| `C:get(itemPath)` | Returns the value of a preference by path (equivalent of editor.getPreference). | 301 |
+| `C:getAsString(itemPath)` | Returns the value of a preference serialized as text according to its type. | 314 |
+| `C:init()` | Calls clear(). Called by the constructor. | 77 |
+| `C:itemValueFromString(item, itemVal)` | Converts a text value (read from the file) into a Lua value according to item.type (number, bool, JSON table, vec3, Point2F, ColorF...). | 11 |
+| `C:itemValueToString(item, itemVal)` | Converts a value to text for the file: tostring for numbers/bool, JSON for table (unchanged if already a string), tostring without commas for vectors/colors. | 41 |
+| `C:loadCategory(categoryName, filename)` | Loads a single category from a file in saveCategory's format and applies its values; marks dirty. | 424 |
+| `C:loadPreferences(filename)` | Reads the preferences file (default settings/editor/preferences.json), rejects a different format version, then fills each registered item with the file value or the default value. Handles old (non-table) values and calls onEditorPreferenceVersionChanged if an item's version changed. No change hook during loading. | 319 |
+| `C:migratePreferences(deleteDeprecatedItems)` | Walks the loaded preferences and, for each item absent from the registry, emits onEditorDeprecatedPreferencesItem; deletes the item if deleteDeprecatedItems is true or if the hook returns true. Also fixes categories/subcategories that are not tables. | 224 |
+| `C:registerCategory(categName, categLabel)` | Creates (or finds) a top-level category. If it exists with a different label, warns and replaces the label. | 81 |
+| `C:registerPreferences(categName, subCategName, prefs)` | Adds items to an existing subcategory. A name already present is refused with a logged error. | 136 |
+| `C:registerSubCategory(categName, subCategName, subCategLabel, prefs)` | Creates (or finds) a subcategory in an already registered category and optionally registers preferences in it. Logs an error and returns nil if the category does not exist. | 99 |
+| `C:removeNonPersistentItemPath(subCategoryPath)` | Removes a path from the non-persistent list. | 132 |
+| `C:resetItemToDefault(itemPath)` | Resets an item to its default value. | 542 |
+| `C:resetToDefaults(categoryName)` | Resets all the items of a category, or of all categories if categoryName is nil, to their default value. | 523 |
+| `C:saveCategory(categoryName, filename)` | Saves all the preferences of a category (even those at the default value, excluding non-persistent paths) to a json file. | 452 |
+| `C:savePreferences(filename)` | Writes the preferences to the file (default settings/editor/preferences.json) omitting values equal to the default and non-persistent paths; resets dirty to false. Keeps values of unloaded extensions. | 475 |
+| `C:set(itemPath, value)` | Sets the value of a preference by path (clamped for a number), marks dirty and queues the change for the hook. | 255 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onEditorDeprecatedPreferencesItem`
-- `onEditorPreferenceValueChanged` — écouté par 15 module(s)
+- `onEditorPreferenceValueChanged` — listened to by 15 module(s)
 - `onEditorPreferenceVersionChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `ColorF.` `fromString`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/preferencesRegistry.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/preferencesRegistry.lua`.*

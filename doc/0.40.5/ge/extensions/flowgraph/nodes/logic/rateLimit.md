@@ -1,27 +1,27 @@
 # `flowgraph_nodes_logic_rateLimit`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/logic/rateLimit.lua` · VM : Game Engine (GE) · 80 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/logic/rateLimit.lua` · VM: Game Engine (GE) · 80 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/logic/rateLimit")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/logic/rateLimit")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Flow Interval' (categorie logic, fichier rateLimit). Laisse passer une impulsion de flux a intervalle regulier tant que le flux d'entree est actif. 'input' est une frequence (Hz) ou, si asDuration est vrai, une duree (s) ; 'reverseHit' decide si l'impulsion tombe en fin ou debut de cycle. dt optionnel, sinon mgr.dtSim.
+Flowgraph node 'Flow Interval' (logic category, file rateLimit). Lets a flow impulse through at regular intervals as long as the input flow is active. 'input' is a frequency (Hz) or, if asDuration is true, a duration (s); 'reverseHit' decides whether the impulse falls at the end or start of the cycle. Optional dt, otherwise mgr.dtSim.
 
-## Remarques
+## Notes
 
-- legacyPins renomme fps et interval vers 'frequency', un pin qui n'existe pas dans le schema (le pin s'appelle 'input').
-- fps = |input| : une valeur 0 donnerait une division par zero (1/fps) en mode frequence.
-- work plante si input est nil (math.abs(nil)).
+- legacyPins renames fps and interval to 'frequency', a pin that does not exist in the schema (the pin is called 'input').
+- fps = |input|: a value of 0 would cause a division by zero (1/fps) in frequency mode.
+- work crashes if input is nil (math.abs(nil)).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet time et prevFps a leur valeur initiale. | 39 |
-| `C:drawMiddle(builder, style)` | Barre de progression du cycle. | 44 |
+| `C:_executionStarted()` | Resets time and prevFps to their initial value. | 39 |
+| `C:drawMiddle(builder, style)` | Cycle progress bar. | 44 |
 | `C:init()` | time=0, prevFps=-1. | 34 |
-| `C:work()` | Reinitialise le minuteur au reset ou quand input change ; avec du flux, decremente time de dt ; quand time <= 0, ajoute 1/fps (ou input en mode duree) et emet flow=true cette frame, sinon false. | 51 |
+| `C:work()` | Resets the timer on reset or when input changes; with flow, decrements time by dt; when time <= 0, adds 1/fps (or input in duration mode) and emits flow=true this frame, otherwise false. | 51 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/logic/rateLimit.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/logic/rateLimit.lua`.*

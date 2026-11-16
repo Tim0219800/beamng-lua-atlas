@@ -1,12 +1,12 @@
 # `gameplay_rallyLoop`
 
-*Fichier : `lua/ge/extensions/gameplay/rallyLoop.lua` · VM : Game Engine (GE) · 394 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rallyLoop.lua` · VM: Game Engine (GE) · 394 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rallyLoop` : `extensions.load("gameplay_rallyLoop")`, puis la globale `gameplay_rallyLoop`
+**Access:** extension `gameplay_rallyLoop`: `extensions.load("gameplay_rallyLoop")`, then the global `gameplay_rallyLoop`
 
-Extension façade du mode « boucle de rallye » (enchaînement service, liaison, spéciales). Elle possède l'instance de RallyLoopManager (loop/rallyLoopManager) créée par setup(missionId, missionDir), lui relaie les mises à jour et les hooks du jeu, et publie chaque image le flux UI « rallyLoop » via guihooks.queueStream. Sans manager, elle publie le flux du StandaloneFallbackStream (mode `standaloneUiBridge`) ; getRuntimeMode renvoie 'rallyLoop', 'standaloneUiBridge' ou 'idle'. Elle héberge aussi la fenêtre imgui « Loop Toolbox » de debug.
+Facade extension of the "rally loop" mode (chaining service, liaison, special stages). It owns the RallyLoopManager instance (loop/rallyLoopManager) created by setup(missionId, missionDir), relays the game's updates and hooks to it, and publishes the "rallyLoop" UI stream every frame via guihooks.queueStream. Without a manager, it publishes the StandaloneFallbackStream stream (`standaloneUiBridge` mode); getRuntimeMode returns 'rallyLoop', 'standaloneUiBridge' or 'idle'. It also hosts the "Loop Toolbox" debug imgui window.
 
-## Exemple
+## Example
 
 ```lua
 gameplay_rallyLoop.setup(missionId, missionDir)
@@ -14,218 +14,218 @@ print(gameplay_rallyLoop.getRuntimeMode()) -- 'rallyLoop'
 gameplay_rallyLoop.unload()
 ```
 
-## Remarques
+## Notes
 
-- Le compte à rebours du flux UI est masqué (activeState remplacé par inactive, countdownData supprimé) si le réglage `rallyStartCountdownDisplay` n'est pas '2d' et que l'horloge 3D est disponible (ou que le réglage vaut autre chose que '3d').
-- handleGOTO : la branche par défaut appelle rallyLoopManager:startNextMission() même si rallyLoopManager est nil, ce qui provoque une erreur dans ce cas.
-- Pour 'abandon' d'une mission en cours (onAnyMissionWillChange avec state 'stopped' et abandoned), une tentative DNF est enregistrée sauf si la mission courante est 'serviceOut'.
-- La plupart des accesseurs renvoient une valeur neutre (false, nil, 0) quand aucun manager n'existe.
+- The UI stream's countdown is hidden (activeState replaced by inactive, countdownData removed) if the `rallyStartCountdownDisplay` setting is not '2d' and the 3D clock is available (or the setting is anything other than '3d').
+- handleGOTO: the default branch calls rallyLoopManager:startNextMission() even if rallyLoopManager is nil, which causes an error in that case.
+- For an 'abandon' of a mission in progress (onAnyMissionWillChange with state 'stopped' and abandoned), a DNF attempt is recorded unless the current mission is 'serviceOut'.
+- Most getters return a neutral value (false, nil, 0) when no manager exists.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rallyLoop.addTestPenalty(amount)` | Enregistre une pénalité de test dans le manager (recordTestPenalty). | 324 |
-| `gameplay_rallyLoop.drawDebug(zOnTop, drawRoute, drawLabels)` | Délègue le dessin de debug au manager. | 205 |
-| `gameplay_rallyLoop.getDebugLogging()` | État du log de debug. | 278 |
-| `gameplay_rallyLoop.getDrawFlag(flagName)` | Lit un indicateur de dessin de debug du manager. | 374 |
-| `gameplay_rallyLoop.getLoopToolbox()` | Objet LoopToolbox courant. | 201 |
-| `gameplay_rallyLoop.getManager()` | Instance RallyLoopManager courante. | 368 |
-| `gameplay_rallyLoop.getMissionExecutionTransferFlag()` | Lit l'indicateur de transfert d'exécution. | 296 |
-| `gameplay_rallyLoop.getNextMissionId()` | Id de la prochaine mission de la boucle. | 303 |
-| `gameplay_rallyLoop.getRuntimeMode()` | Mode d'exécution courant. | 83 |
-| `gameplay_rallyLoop.getSSRescheduleCount()` | Nombre de reprogrammations de spéciale (SS) du manager. | 387 |
-| `gameplay_rallyLoop.handleGOTO(gotoRallyLoop)` | Traite une demande de navigation depuis l'UI : 'restart' relance la boucle, 'abandon' retourne instantanément à la boucle, 'postServiceIn' et tout autre valeur démarrent la mission suivante. | 331 |
-| `gameplay_rallyLoop.isLoopToolboxVisible()` | Indique si la fenêtre Loop Toolbox est affichée. | 283 |
-| `gameplay_rallyLoop.isReady()` | API publique : vrai si un manager existe. | 75 |
-| `gameplay_rallyLoop.onAnyMissionWillChange(state, mission, abandoned)` | Hook appelé avant tout changement d'état de mission. Supprime l'exclusion de trafic du manager et enregistre un DNF en cas d'abandon (sauf en serviceOut). *(interne)* *(hook)* | 351 |
-| `gameplay_rallyLoop.onCreatedRallyGroundMarkerRoute()` | Hook appelé quand la route des marqueurs au sol est créée ; relayé au manager. *(interne)* *(hook)* | 239 |
-| `gameplay_rallyLoop.onExtensionLoaded()` | Hook de chargement ; n'écrit qu'un log si debugLogging est actif. *(interne)* *(hook)* | 161 |
-| `gameplay_rallyLoop.onExtensionUnloaded()` | Hook de déchargement : publie un flux {activeState = inactive} et vide le flux de repli. *(interne)* *(hook)* | 169 |
-| `gameplay_rallyLoop.onGameplayInteract()` | Hook d'interaction gameplay ; appelle manager:onRallyModeInteract(). *(interne)* *(hook)* | 219 |
-| `gameplay_rallyLoop.onGuiUpdate(dtReal, dtSim, dtRaw)` | Hook appelé à chaque mise à jour GUI ; relayé au manager. *(interne)* *(hook)* | 136 |
-| `gameplay_rallyLoop.onRallyDataUpdated(data)` | Hook émis quand les données de rallye changent ; relayé au manager, sinon au flux de repli. *(interne)* *(hook)* | 211 |
-| `gameplay_rallyLoop.onRallyRouteRecoveryComplete(data)` | Hook appelé quand la récupération de route est terminée ; relayé au manager s'il gère le hook. *(interne)* *(hook)* | 251 |
-| `gameplay_rallyLoop.onRallyVehicleRecovery(recoveryType)` | Hook appelé lors d'une récupération du véhicule ; appelle manager:trackRecovery. *(interne)* *(hook)* | 245 |
-| `gameplay_rallyLoop.onRecalculatedRoute()` | Hook appelé quand la route a été recalculée ; relayé au manager. *(interne)* *(hook)* | 233 |
-| `gameplay_rallyLoop.onSettingsChanged()` | Hook appelé quand les réglages changent ; relayé au manager (s'il gère le hook) et au flux de repli. *(interne)* *(hook)* | 185 |
-| `gameplay_rallyLoop.onUIStartButtonClicked()` | Hook appelé quand le bouton de départ de l'UI est cliqué ; relayé au manager. *(interne)* *(hook)* | 227 |
-| `gameplay_rallyLoop.onUpdate(dtReal, dtSim, dtRaw)` | Hook d'extension appelé chaque image. Met à jour le manager et publie le flux 'rallyLoop' ; gère aussi la fenêtre Loop Toolbox. *(interne)* *(hook)* | 101 |
-| `gameplay_rallyLoop.setDebugLogging(val)` | Active le log de debug. | 279 |
-| `gameplay_rallyLoop.setDrawFlag(flagName, value)` | Fixe un indicateur de dessin de debug du manager. | 381 |
-| `gameplay_rallyLoop.setMissionExecutionTransferFlag(val)` | Fixe l'indicateur de transfert d'exécution de mission du manager. | 291 |
-| `gameplay_rallyLoop.setup(missionId, missionDir)` | Crée le RallyLoopManager pour la mission et vide le flux de repli. | 64 |
-| `gameplay_rallyLoop.setupForNewMission()` | Prépare le manager pour la mission suivante (manager:setupForNewMission). | 285 |
-| `gameplay_rallyLoop.skipLiaisonForTesting(options)` | Aide de test : saute la liaison. | 317 |
-| `gameplay_rallyLoop.startNextMission()` | Démarre la mission suivante de la boucle. | 310 |
-| `gameplay_rallyLoop.toggleDebug()` | Affiche ou masque la fenêtre Loop Toolbox. | 193 |
-| `gameplay_rallyLoop.unload()` | Détruit le manager et vide le flux de repli. | 69 |
+| `gameplay_rallyLoop.addTestPenalty(amount)` | Records a test penalty in the manager (recordTestPenalty). | 324 |
+| `gameplay_rallyLoop.drawDebug(zOnTop, drawRoute, drawLabels)` | Delegates the debug drawing to the manager. | 205 |
+| `gameplay_rallyLoop.getDebugLogging()` | Debug log state. | 278 |
+| `gameplay_rallyLoop.getDrawFlag(flagName)` | Reads a debug drawing flag of the manager. | 374 |
+| `gameplay_rallyLoop.getLoopToolbox()` | Current LoopToolbox object. | 201 |
+| `gameplay_rallyLoop.getManager()` | Current RallyLoopManager instance. | 368 |
+| `gameplay_rallyLoop.getMissionExecutionTransferFlag()` | Reads the execution transfer flag. | 296 |
+| `gameplay_rallyLoop.getNextMissionId()` | Id of the loop's next mission. | 303 |
+| `gameplay_rallyLoop.getRuntimeMode()` | Current runtime mode. | 83 |
+| `gameplay_rallyLoop.getSSRescheduleCount()` | Number of special stage (SS) reschedules of the manager. | 387 |
+| `gameplay_rallyLoop.handleGOTO(gotoRallyLoop)` | Handles a navigation request from the UI: 'restart' restarts the loop, 'abandon' instantly returns to the loop, 'postServiceIn' and any other value start the next mission. | 331 |
+| `gameplay_rallyLoop.isLoopToolboxVisible()` | Indicates whether the Loop Toolbox window is shown. | 283 |
+| `gameplay_rallyLoop.isReady()` | Public API: true if a manager exists. | 75 |
+| `gameplay_rallyLoop.onAnyMissionWillChange(state, mission, abandoned)` | Hook called before any mission state change. Removes the manager's traffic exclusion and records a DNF on abandon (except in serviceOut). *(internal)* *(hook)* | 351 |
+| `gameplay_rallyLoop.onCreatedRallyGroundMarkerRoute()` | Hook called when the ground markers route is created; relayed to the manager. *(internal)* *(hook)* | 239 |
+| `gameplay_rallyLoop.onExtensionLoaded()` | Load hook; only writes a log if debugLogging is active. *(internal)* *(hook)* | 161 |
+| `gameplay_rallyLoop.onExtensionUnloaded()` | Unload hook: publishes a {activeState = inactive} stream and clears the fallback stream. *(internal)* *(hook)* | 169 |
+| `gameplay_rallyLoop.onGameplayInteract()` | Gameplay interaction hook; calls manager:onRallyModeInteract(). *(internal)* *(hook)* | 219 |
+| `gameplay_rallyLoop.onGuiUpdate(dtReal, dtSim, dtRaw)` | Hook called on every GUI update; relayed to the manager. *(internal)* *(hook)* | 136 |
+| `gameplay_rallyLoop.onRallyDataUpdated(data)` | Hook emitted when the rally data changes; relayed to the manager, otherwise to the fallback stream. *(internal)* *(hook)* | 211 |
+| `gameplay_rallyLoop.onRallyRouteRecoveryComplete(data)` | Hook called when the route recovery is finished; relayed to the manager if it handles the hook. *(internal)* *(hook)* | 251 |
+| `gameplay_rallyLoop.onRallyVehicleRecovery(recoveryType)` | Hook called on a vehicle recovery; calls manager:trackRecovery. *(internal)* *(hook)* | 245 |
+| `gameplay_rallyLoop.onRecalculatedRoute()` | Hook called when the route has been recomputed; relayed to the manager. *(internal)* *(hook)* | 233 |
+| `gameplay_rallyLoop.onSettingsChanged()` | Hook called when the settings change; relayed to the manager (if it handles the hook) and to the fallback stream. *(internal)* *(hook)* | 185 |
+| `gameplay_rallyLoop.onUIStartButtonClicked()` | Hook called when the UI start button is clicked; relayed to the manager. *(internal)* *(hook)* | 227 |
+| `gameplay_rallyLoop.onUpdate(dtReal, dtSim, dtRaw)` | Extension hook called every frame. Updates the manager and publishes the 'rallyLoop' stream; also handles the Loop Toolbox window. *(internal)* *(hook)* | 101 |
+| `gameplay_rallyLoop.setDebugLogging(val)` | Enables the debug log. | 279 |
+| `gameplay_rallyLoop.setDrawFlag(flagName, value)` | Sets a debug drawing flag of the manager. | 381 |
+| `gameplay_rallyLoop.setMissionExecutionTransferFlag(val)` | Sets the manager's mission execution transfer flag. | 291 |
+| `gameplay_rallyLoop.setup(missionId, missionDir)` | Creates the RallyLoopManager for the mission and clears the fallback stream. | 64 |
+| `gameplay_rallyLoop.setupForNewMission()` | Prepares the manager for the next mission (manager:setupForNewMission). | 285 |
+| `gameplay_rallyLoop.skipLiaisonForTesting(options)` | Test helper: skips the liaison. | 317 |
+| `gameplay_rallyLoop.startNextMission()` | Starts the loop's next mission. | 310 |
+| `gameplay_rallyLoop.toggleDebug()` | Shows or hides the Loop Toolbox window. | 193 |
+| `gameplay_rallyLoop.unload()` | Destroys the manager and clears the fallback stream. | 69 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rallyLoop.addTestPenalty(amount)`
 
-Enregistre une pénalité de test dans le manager (recordTestPenalty).
+Records a test penalty in the manager (recordTestPenalty).
 
-- `amount` (*number*) : Montant de la pénalité (unité déduite du code : temps).
-- **renvoie** : boolean|any Résultat du manager, ou false et 'no rally loop manager'.
+- `amount` (*number*) : Penalty amount (unit inferred from code: time).
+- **returns**: boolean|any Manager result, or false and 'no rally loop manager'.
 
 #### `gameplay_rallyLoop.drawDebug(zOnTop, drawRoute, drawLabels)`
 
-Délègue le dessin de debug au manager.
+Delegates the debug drawing to the manager.
 
-- `zOnTop` (*boolean*) : Dessiner au premier plan.
-- `drawRoute` (*boolean*) : Dessiner la route.
-- `drawLabels` (*boolean*) : Dessiner les étiquettes.
+- `zOnTop` (*boolean*) : Draw in the foreground.
+- `drawRoute` (*boolean*) : Draw the route.
+- `drawLabels` (*boolean*) : Draw the labels.
 
 #### `gameplay_rallyLoop.getDebugLogging()`
 
-État du log de debug.
+Debug log state.
 
-- **renvoie** : boolean debugLogging.
+- **returns**: boolean debugLogging.
 
 #### `gameplay_rallyLoop.getDrawFlag(flagName)`
 
-Lit un indicateur de dessin de debug du manager.
+Reads a debug drawing flag of the manager.
 
-- `flagName` (*string*) : Nom de l'indicateur.
-- **renvoie** : boolean false sans manager.
+- `flagName` (*string*) : Flag name.
+- **returns**: boolean false without a manager.
 
 #### `gameplay_rallyLoop.getLoopToolbox()`
 
-Objet LoopToolbox courant.
+Current LoopToolbox object.
 
-- **renvoie** : table|nil Toolbox, nil si la fenêtre n'a jamais été ouverte ou est fermée.
+- **returns**: table|nil Toolbox, nil if the window was never opened or is closed.
 
 #### `gameplay_rallyLoop.getManager()`
 
-Instance RallyLoopManager courante.
+Current RallyLoopManager instance.
 
-- **renvoie** : table|nil Manager.
+- **returns**: table|nil Manager.
 
 #### `gameplay_rallyLoop.getMissionExecutionTransferFlag()`
 
-Lit l'indicateur de transfert d'exécution.
+Reads the execution transfer flag.
 
-- **renvoie** : boolean false sans manager.
+- **returns**: boolean false without a manager.
 
 #### `gameplay_rallyLoop.getNextMissionId()`
 
-Id de la prochaine mission de la boucle.
+Id of the loop's next mission.
 
-- **renvoie** : string|nil Id, nil sans manager.
+- **returns**: string|nil Id, nil without a manager.
 
 #### `gameplay_rallyLoop.getRuntimeMode()`
 
-Mode d'exécution courant.
+Current runtime mode.
 
-- **renvoie** : string 'rallyLoop', 'standaloneUiBridge' ou 'idle'.
+- **returns**: string 'rallyLoop', 'standaloneUiBridge' or 'idle'.
 
 #### `gameplay_rallyLoop.getSSRescheduleCount()`
 
-Nombre de reprogrammations de spéciale (SS) du manager.
+Number of special stage (SS) reschedules of the manager.
 
-- **renvoie** : integer 0 sans manager.
+- **returns**: integer 0 without a manager.
 
 #### `gameplay_rallyLoop.handleGOTO(gotoRallyLoop)`
 
-Traite une demande de navigation depuis l'UI : 'restart' relance la boucle, 'abandon' retourne instantanément à la boucle, 'postServiceIn' et tout autre valeur démarrent la mission suivante.
+Handles a navigation request from the UI: 'restart' restarts the loop, 'abandon' instantly returns to the loop, 'postServiceIn' and any other value start the next mission.
 
-- `gotoRallyLoop` (*string*) : 'restart', 'abandon', 'postServiceIn' ou autre.
+- `gotoRallyLoop` (*string*) : 'restart', 'abandon', 'postServiceIn' or other.
 
 #### `gameplay_rallyLoop.isLoopToolboxVisible()`
 
-Indique si la fenêtre Loop Toolbox est affichée.
+Indicates whether the Loop Toolbox window is shown.
 
-- **renvoie** : boolean Visibilité.
+- **returns**: boolean Visibility.
 
 #### `gameplay_rallyLoop.isReady()`
 
-API publique : vrai si un manager existe.
+Public API: true if a manager exists.
 
-- **renvoie** : boolean true après setup.
+- **returns**: boolean true after setup.
 
 #### `gameplay_rallyLoop.onAnyMissionWillChange(state, mission, abandoned)`
 
-Hook appelé avant tout changement d'état de mission. Supprime l'exclusion de trafic du manager et enregistre un DNF en cas d'abandon (sauf en serviceOut).
+Hook called before any mission state change. Removes the manager's traffic exclusion and records a DNF on abandon (except in serviceOut).
 
-- `state` (*string*) : Nouvel état de la mission (ex. 'stopped').
-- `mission` (*table|nil*) : Mission concernée.
-- `abandoned` (*boolean*) : true si la mission est abandonnée.
+- `state` (*string*) : New mission state (e.g. 'stopped').
+- `mission` (*table|nil*) : Mission concerned.
+- `abandoned` (*boolean*) : true if the mission is abandoned.
 
 #### `gameplay_rallyLoop.onGuiUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé à chaque mise à jour GUI ; relayé au manager.
+Hook called on every GUI update; relayed to the manager.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
 #### `gameplay_rallyLoop.onRallyDataUpdated(data)`
 
-Hook émis quand les données de rallye changent ; relayé au manager, sinon au flux de repli.
+Hook emitted when the rally data changes; relayed to the manager, otherwise to the fallback stream.
 
-- `data` (*table*) : Données de rallye.
+- `data` (*table*) : Rally data.
 
 #### `gameplay_rallyLoop.onRallyRouteRecoveryComplete(data)`
 
-Hook appelé quand la récupération de route est terminée ; relayé au manager s'il gère le hook.
+Hook called when the route recovery is finished; relayed to the manager if it handles the hook.
 
-- `data` (*table*) : Données de la récupération.
+- `data` (*table*) : Recovery data.
 
 #### `gameplay_rallyLoop.onRallyVehicleRecovery(recoveryType)`
 
-Hook appelé lors d'une récupération du véhicule ; appelle manager:trackRecovery.
+Hook called on a vehicle recovery; calls manager:trackRecovery.
 
-- `recoveryType` (*string*) : Type de récupération.
+- `recoveryType` (*string*) : Recovery type.
 
 #### `gameplay_rallyLoop.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook d'extension appelé chaque image. Met à jour le manager et publie le flux 'rallyLoop' ; gère aussi la fenêtre Loop Toolbox.
+Extension hook called every frame. Updates the manager and publishes the 'rallyLoop' stream; also handles the Loop Toolbox window.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
 #### `gameplay_rallyLoop.setDebugLogging(val)`
 
-Active le log de debug.
+Enables the debug log.
 
-- `val` (*boolean*) : Nouvelle valeur.
+- `val` (*boolean*) : New value.
 
 #### `gameplay_rallyLoop.setDrawFlag(flagName, value)`
 
-Fixe un indicateur de dessin de debug du manager.
+Sets a debug drawing flag of the manager.
 
-- `flagName` (*string*) : Nom de l'indicateur.
-- `value` (*boolean*) : Valeur.
+- `flagName` (*string*) : Flag name.
+- `value` (*boolean*) : Value.
 
 #### `gameplay_rallyLoop.setMissionExecutionTransferFlag(val)`
 
-Fixe l'indicateur de transfert d'exécution de mission du manager.
+Sets the manager's mission execution transfer flag.
 
-- `val` (*boolean*) : Valeur.
+- `val` (*boolean*) : Value.
 
 #### `gameplay_rallyLoop.setup(missionId, missionDir)`
 
-Crée le RallyLoopManager pour la mission et vide le flux de repli.
+Creates the RallyLoopManager for the mission and clears the fallback stream.
 
-- `missionId` (*string*) : Id de la mission boucle.
-- `missionDir` (*string*) : Dossier de la mission.
+- `missionId` (*string*) : Loop mission id.
+- `missionDir` (*string*) : Mission folder.
 
 #### `gameplay_rallyLoop.skipLiaisonForTesting(options)`
 
-Aide de test : saute la liaison.
+Test helper: skips the liaison.
 
-- `options` (*table|nil*) : Options transmises au manager (déduit du code).
-- **renvoie** : boolean Succès.
-- **renvoie** : string|nil 'no rally loop manager' sans manager.
+- `options` (*table|nil*) : Options passed to the manager (inferred from code).
+- **returns**: boolean Success.
+- **returns**: string|nil 'no rally loop manager' without a manager.
 
 #### `gameplay_rallyLoop.startNextMission()`
 
-Démarre la mission suivante de la boucle.
+Starts the loop's next mission.
 
-- **renvoie** : any Résultat du manager (false sans manager).
+- **returns**: any Manager result (false without a manager).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rallyLoop.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rallyLoop.lua`.*

@@ -1,24 +1,24 @@
 # `flowgraph_nodes_gameplay_rally_raceEditorPath`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/raceEditorPath.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/raceEditorPath.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/raceEditorPath")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/raceEditorPath")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Mode Race Editor Path » (catégorie once_instant, tag rally). Renvoie le nom de fichier de course à utiliser dans la pin fname : 'race.race.json' (source « Mission ») si un identifiant de mission du Mission Manager est détecté, sinon le fichier ouvert dans editor_raceEditor (source « Editor ») s'il n'est pas un fichier vierge (/gameplay/races/new.path.json ou NewRace.race.json). Dans l'éditeur, affiche la source et le fichier.
+Flowgraph node "Rally Mode Race Editor Path" (category once_instant, tag rally). Returns the race file name to use in the fname pin: 'race.race.json' (source "Mission") if a Mission Manager mission identifier is detected, otherwise the file opened in editor_raceEditor (source "Editor") if it is not a blank file (/gameplay/races/new.path.json or NewRace.race.json). In the editor, displays the source and the file.
 
-## Remarques
+## Notes
 
-- Si editor_raceEditor existe mais que le fichier ouvert est vierge, loadCurrentRaceFileState ne renvoie rien (nil) ; fname est alors nil.
+- If editor_raceEditor exists but the opened file is blank, loadCurrentRaceFileState returns nothing (nil); fname is then nil.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawCustomProperties()` | Affiche le fichier de course et sa source dans le panneau de propriétés. | 50 |
-| `C:drawMiddle(builder, style)` | Affiche « Source: … » dans le corps du nœud. | 44 |
-| `C:workOnce()` | Détermine le fichier de course, le logge (niveau D) et l'écrit dans la pin fname. | 57 |
+| `C:drawCustomProperties()` | Displays the race file and its source in the properties panel. | 50 |
+| `C:drawMiddle(builder, style)` | Displays "Source: ..." in the node body. | 44 |
+| `C:workOnce()` | Determines the race file, logs it (level D) and writes it to the fname pin. | 57 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/raceEditorPath.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/raceEditorPath.lua`.*

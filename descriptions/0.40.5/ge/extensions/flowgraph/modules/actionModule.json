@@ -1,21 +1,74 @@
 {
   "path": "lua/ge/extensions/flowgraph/modules/actionModule.lua",
-  "module": "Module flowgraph (moduleOrder 0) qui bloque ou autorise des actions d'entrée (input actions) pendant l'exécution d'un projet flowgraph. Il garde un ensemble d'actions bloquées et, dans afterTrigger, pousse la liste vers core_input_actionFilter sous le groupe 'fg_filter_<id du manager>'. Il mémorise aussi l'état d'autorisation du mode marche (gameplay_walk) au démarrage pour le restaurer à l'arrêt.",
+  "module": "Flowgraph module (moduleOrder 0) that blocks or allows input actions while a flowgraph project is running. It keeps a set of blocked actions and, in afterTrigger, pushes the list to core_input_actionFilter under the group 'fg_filter_<manager id>'. It also stores the walking mode (gameplay_walk) allowed state at start to restore it on stop.",
   "notes": [
-    "Les blocages ne sont appliqués qu'à la fin du tick (afterTrigger), seulement si self.changed est vrai.",
-    "Bug probable : dans executionStopped, la variable 'list' n'est pas définie (global nil), donc setGroup est appelé avec nil.",
-    "Bug probable : blockActions/allowActions utilisent la clé 'k' (index de la liste) pour addActions/removeActions, et afterTrigger les parcourt avec ipairs : des blocages de listes différentes s'écrasent mutuellement par index.",
-    "Les valeurs de addActions/removeActions ne sont jamais vidées après application."
+    "Blocks are applied only at the end of the tick (afterTrigger), only if self.changed is true.",
+    "Probable bug: in executionStopped, the variable 'list' is not defined (nil global), so setGroup is called with nil.",
+    "Probable bug: blockActions/allowActions use the key 'k' (list index) for addActions/removeActions, and afterTrigger iterates over them with ipairs: blocks from different lists overwrite each other by index.",
+    "The values of addActions/removeActions are never cleared after being applied."
   ],
   "functions": {
-    "getFreeId": {"desc": "Incrémente et renvoie un identifiant unique pour enregistrer une liste d'actions.", "returns": [{"type": "integer", "desc": "nouvel identifiant"}]},
-    "init": {"desc": "Appelé à la création du module : appelle clear().", "internal": true},
-    "clear": {"desc": "Réinitialise les tables storedActions, actionsByName, addActions, removeActions et lists.", "internal": true},
-    "registerList": {"desc": "Enregistre une liste de noms d'actions et renvoie son identifiant, utilisable ensuite avec blockActions/allowActions.", "params": {"list": {"type": "string[]", "desc": "noms d'actions d'entrée"}}, "returns": [{"type": "integer", "desc": "identifiant de la liste"}]},
-    "blockActions": {"desc": "Marque les actions de la liste enregistrée comme à bloquer (appliqué dans afterTrigger).", "params": {"id": {"type": "integer", "desc": "identifiant renvoyé par registerList"}}},
-    "allowActions": {"desc": "Marque les actions de la liste enregistrée comme à autoriser de nouveau (appliqué dans afterTrigger).", "params": {"id": {"type": "integer", "desc": "identifiant renvoyé par registerList"}}},
-    "afterTrigger": {"desc": "Appelé par le manager après le tick du graphe. Si des changements ont eu lieu, recalcule la liste des actions bloquées et l'envoie à core_input_actionFilter (setGroup puis addAction(0, groupe, true)).", "internal": true},
-    "executionStopped": {"desc": "Appelé à l'arrêt du projet : désactive le groupe de filtre et restaure la permission de basculer en mode marche mémorisée au démarrage.", "internal": true},
-    "executionStarted": {"desc": "Appelé au démarrage du projet : mémorise gameplay_walk.isTogglingEnabled().", "internal": true}
+    "getFreeId": {
+      "desc": "Increments and returns a unique identifier for registering an action list.",
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "new identifier"
+        }
+      ]
+    },
+    "init": {
+      "desc": "Called when the module is created: calls clear().",
+      "internal": true
+    },
+    "clear": {
+      "desc": "Resets the tables storedActions, actionsByName, addActions, removeActions and lists.",
+      "internal": true
+    },
+    "registerList": {
+      "desc": "Registers a list of action names and returns its identifier, which can then be used with blockActions/allowActions.",
+      "params": {
+        "list": {
+          "type": "string[]",
+          "desc": "input action names"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "list identifier"
+        }
+      ]
+    },
+    "blockActions": {
+      "desc": "Marks the actions of the registered list as to be blocked (applied in afterTrigger).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "identifier returned by registerList"
+        }
+      }
+    },
+    "allowActions": {
+      "desc": "Marks the actions of the registered list as to be allowed again (applied in afterTrigger).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "identifier returned by registerList"
+        }
+      }
+    },
+    "afterTrigger": {
+      "desc": "Called by the manager after the graph tick. If changes occurred, recomputes the list of blocked actions and sends it to core_input_actionFilter (setGroup then addAction(0, group, true)).",
+      "internal": true
+    },
+    "executionStopped": {
+      "desc": "Called when the project stops: disables the filter group and restores the permission to toggle walking mode that was stored at start.",
+      "internal": true
+    },
+    "executionStarted": {
+      "desc": "Called when the project starts: stores gameplay_walk.isTogglingEnabled().",
+      "internal": true
+    }
   }
 }

@@ -2,68 +2,68 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_activity_activityFlow_C
 local flowgraph_nodes_activity_activityFlow_C = {}
 
---- Hook : quand le graphe passe à 'stopped', déclenche stop() et arrête la mission (si activité en cours).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:82
----@param newState string nouvel état d'exécution
+--- Hook: when the graph becomes 'stopped', triggers stop() and stops the mission (if an activity is running).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:82
+---@param newState string new execution state
 function flowgraph_nodes_activity_activityFlow_C:changedRunningState(newState) end
 
---- Éditeur : affiche si une activité est associée et la fin de son id.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:102
+--- Editor: shows whether an activity is associated and the end of its id.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:102
 function flowgraph_nodes_activity_activityFlow_C:drawMiddle() end
 
---- Éditeur : infobulle indiquant l'id de l'activité ou le mode de compatibilité limitée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:106
+--- Editor: tooltip showing the activity id or the limited compatibility mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:106
 function flowgraph_nodes_activity_activityFlow_C:drawTooltip() end
 
---- Hook : au démarrage du graphe, si une activité existe et n'est pas en cours, la démarre via gameplay_missions_missionManager.start ; sans activité, appelle start().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:39
+--- Hook: when the graph starts, if an activity exists and is not running, starts it via gameplay_missions_missionManager.start; without an activity, calls start().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:39
 function flowgraph_nodes_activity_activityFlow_C:onExecutionStarted() end
 
---- Hook appelé au démarrage de l'activité ; appelle start().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:48
+--- Hook called when the activity starts; calls start().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:48
 function flowgraph_nodes_activity_activityFlow_C:onStartActivity() end
 
---- Hook appelé à l'arrêt de l'activité ; appelle stop().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:95
+--- Hook called when the activity stops; calls stop().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:95
 function flowgraph_nodes_activity_activityFlow_C:onStopActivity() end
 
---- Hook par frame ; n'appelle update que si le graphe n'a pas d'activité.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:65
+--- Per-frame hook; calls update only if the graph has no activity.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:65
 ---@param ... any
 function flowgraph_nodes_activity_activityFlow_C:onUpdate(...) end
 
---- Hook par frame envoyé par l'activité ; appelle update.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:70
+--- Per-frame hook sent by the activity; calls update.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:70
 ---@param ... any
 function flowgraph_nodes_activity_activityFlow_C:onUpdateActivity(...) end
 
---- Met le flux de « started » à vrai (update et stopped à faux) et déclenche le nœud.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:33
+--- Sets the "started" flow to true (update and stopped to false) and triggers the node.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:33
 function flowgraph_nodes_activity_activityFlow_C:start() end
 
---- Active le flux « stopped » et déclenche le nœud.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:75
+--- Enables the "stopped" flow and triggers the node.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:75
 function flowgraph_nodes_activity_activityFlow_C:stop() end
 
---- Met à jour dtReal/dtSim/dtRaw (pins et gestionnaire), active « update » et déclenche le nœud.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:53
----@param dtReal number delta temps réel (s)
----@param dtSim number delta temps simulé (s)
----@param dtRaw number delta temps brut (s)
+--- Updates dtReal/dtSim/dtRaw (pins and manager), enables "update" and triggers the node.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua:53
+---@param dtReal number real time delta (s)
+---@param dtSim number simulation time delta (s)
+---@param dtRaw number raw time delta (s)
 function flowgraph_nodes_activity_activityFlow_C:update(dtReal, dtSim, dtRaw) end
 

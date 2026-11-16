@@ -2,149 +2,149 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/pursuit/pursuit.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gestionnaire de mode poursuite : événement de gameplay où plusieurs véhicules « chase » (police) poursuivent plusieurs véhicules « flee » (fuyards), joueurs ou IA. Une seule instance à la fois. Il insère les véhicules (rôles police/suspect), gère les objectifs (mode free, timed, score, destination), le démarrage (manuel ou à une vitesse donnée), les arrestations, la récupération des fuyards libérés et la détection de blocage. Les états du gestionnaire sont 'off', 'ready', 'active', 'inactive' et 'complete'.
---- Accès : extension `gameplay_pursuit_pursuit` : `extensions.load("gameplay_pursuit_pursuit")`, puis la globale `gameplay_pursuit_pursuit`
+--- Pursuit mode manager: a gameplay event where several "chase" vehicles (police) pursue several "flee" vehicles (fugitives), players or AI. Only one instance at a time. It inserts the vehicles (police/suspect roles), handles the goals (free, timed, score, destination modes), the start (manual or at a given speed), arrests, recovery of released fugitives and stuck detection. The manager states are 'off', 'ready', 'active', 'inactive' and 'complete'.
+--- Access: extension `gameplay_pursuit_pursuit`: `extensions.load("gameplay_pursuit_pursuit")`, then the global `gameplay_pursuit_pursuit`
 ---@class gameplay_pursuit_pursuit
 gameplay_pursuit_pursuit = {}
 
---- Copie la liste de points de parking et, si les deux quantités sont données, la réarrange en n points tagués 'chase' puis n points tagués 'flee' (sans tag inverse). Garde la liste d'origine si les deux listes ne sont pas assez remplies.
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:280
----@param parkingSpots table[] Points de parking avec customFields.tags.
----@param chaseAmount integer|nil Nombre de points chase voulus.
----@param fleeAmount integer|nil Nombre de points flee voulus.
----@return table[]  Liste filtrée (copie superficielle).
+--- Copies the parking point list and, if both quantities are given, rearranges it into n points tagged 'chase' then n points tagged 'flee' (without the opposite tag). Keeps the original list if the two lists are not filled enough.
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:280
+---@param parkingSpots table[] Parking points with customFields.tags.
+---@param chaseAmount integer|nil Number of chase points wanted.
+---@param fleeAmount integer|nil Number of flee points wanted.
+---@return table[]  Filtered list (shallow copy).
 function gameplay_pursuit_pursuit.filterParkingSpots(parkingSpots, chaseAmount, fleeAmount) end
 
---- Renvoie l'objet gestionnaire (vehData, vehIds, chaseVehs, fleeVehs, options, goals, state, running, data{duration, arrests, totalScore, tempScore, locations, roadblocks}).
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:507
----@return table  Gestionnaire (référence directe).
+--- Returns the manager object (vehData, vehIds, chaseVehs, fleeVehs, options, goals, state, running, data{duration, arrests, totalScore, tempScore, locations, roadblocks}).
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:507
+---@return table  Manager (direct reference).
 function gameplay_pursuit_pursuit.getManager() end
 
---- Valide et insère un véhicule dans le gestionnaire. Réutilise les données de trafic s'il y en a (isShared), sinon crée un objet véhicule de trafic. Lui donne le rôle police ou suspect, désactive respawn et pooling, et met l'IA en mode 'stop' (ou 'disabled' pour un joueur).
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:106
----@param vehId integer Id du véhicule.
----@param isChase boolean true = poursuivant, false = fuyard.
----@param isAiControlled boolean true si piloté par l'IA (non utilisable par le joueur).
----@param options table|nil Options (non utilisées dans la fonction).
----@return boolean|nil  true si inséré, false si les données n'ont pu être créées, nil si id absent ou déjà inséré.
+--- Validates and inserts a vehicle into the manager. Reuses the traffic data if there is any (isShared), otherwise creates a traffic vehicle object. Gives it the police or suspect role, disables respawn and pooling, and sets the AI to 'stop' mode (or 'disabled' for a player).
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:106
+---@param vehId integer Vehicle id.
+---@param isChase boolean true = pursuer, false = fugitive.
+---@param isAiControlled boolean true if driven by the AI (not usable by the player).
+---@param options table|nil Options (not used in the function).
+---@return boolean|nil  true if inserted, false if the data could not be created, nil if id is missing or already inserted.
 function gameplay_pursuit_pursuit.insertVeh(vehId, isChase, isAiControlled, options) end
 
---- Hook après rechargement Lua : réinitialise puis restaure le gestionnaire et réinsère les véhicules.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:746
----@param data table Résultat de onSerialize.
+--- Hook after Lua reload: resets then restores the manager and reinserts the vehicles.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:746
+---@param data table Result of onSerialize.
 function gameplay_pursuit_pursuit.onDeserialized(data) end
 
---- Hook émis par gameplay_police pour une action de poursuite. Actif seulement si l'état est 'active' et pour un fuyard : 'arrest' compte l'arrestation, 'evade' retire le fuyard du ciblage, 'release' applique le recoveryMode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:511
----@param vehId integer Fuyard concerné.
+--- Hook emitted by gameplay_police for a pursuit action. Active only if the state is 'active' and for a fugitive: 'arrest' counts the arrest, 'evade' removes the fugitive from targeting, 'release' applies the recoveryMode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:511
+---@param vehId integer Fugitive concerned.
 ---@param action string 'start', 'arrest', 'evade', 'release', 'roadblockAlert', 'roadblock'.
----@param pursuit table Données de poursuite du véhicule.
+---@param pursuit table Pursuit data of the vehicle.
 function gameplay_pursuit_pursuit.onPursuitAction(vehId, action, pursuit) end
 
---- Hook avant rechargement Lua : renvoie l'état du gestionnaire (options, objectifs, données, état) et les données sérialisées des véhicules.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:719
+--- Hook before Lua reload: returns the manager state (options, goals, data, state) and the serialized vehicle data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:719
 ---@return table  {manager, vehicles}
 function gameplay_pursuit_pursuit.onSerialize() end
 
---- Hook de changement du nombre de véhicules de trafic ; ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:716
+--- Hook on change of the number of traffic vehicles; does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:716
 function gameplay_pursuit_pursuit.onTrafficAmountChanged() end
 
---- Hook au démarrage du trafic : remplace les entrées de trafic par les données du gestionnaire pour les véhicules qui en font partie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:704
+--- Hook at traffic start: replaces the traffic entries with the manager's data for the vehicles that are part of it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:704
 function gameplay_pursuit_pursuit.onTrafficStarted() end
 
---- Hook à l'arrêt du trafic ; ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:713
+--- Hook at traffic stop; does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:713
 function gameplay_pursuit_pursuit.onTrafficStopped() end
 
---- Appelé à chaque image. Met à jour les véhicules non partagés, déclenche le démarrage automatique (options.startSpeed), et en jeu actif : durée, ciblage chaque seconde, détection de blocage, récupération, fondus, score total et conditions de victoire.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:560
----@param dt number Delta temps réel (s).
----@param dtSim number Delta temps simulé (s).
+--- Called every frame. Updates the non-shared vehicles, triggers the automatic start (options.startSpeed), and in active play: duration, targeting every second, stuck detection, recovery, fades, total score and victory conditions.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:560
+---@param dt number Real time delta (s).
+---@param dtSim number Simulated time delta (s).
 function gameplay_pursuit_pursuit.onUpdate(dt, dtSim) end
 
---- Hook de core_multiSpawn : quand les groupes 'autoPursuitChase' puis 'autoPursuitFlee' sont apparus, appelle setupPursuitMulti avec les données mémorisées ; échoue (reset) si l'un des groupes est vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:682
----@param vehList integer[] Ids des véhicules apparus.
----@param groupId any Id du groupe (inutilisé).
----@param groupName string Nom du groupe.
+--- core_multiSpawn hook: when the 'autoPursuitChase' then 'autoPursuitFlee' groups have spawned, calls setupPursuitMulti with the stored data; fails (reset) if one of the groups is empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:682
+---@param vehList integer[] Ids of the spawned vehicles.
+---@param groupId any Group id (unused).
+---@param groupName string Group name.
 function gameplay_pursuit_pursuit.onVehicleGroupSpawned(vehList, groupId, groupName) end
 
---- Retire un véhicule du gestionnaire et lui rend son rôle automatique de trafic s'il en fait partie.
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:159
----@param vehId integer Id du véhicule.
+--- Removes a vehicle from the manager and gives it back its automatic traffic role if it is part of it.
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:159
+---@param vehId integer Vehicle id.
 function gameplay_pursuit_pursuit.removeVeh(vehId) end
 
---- Réinitialise complètement le gestionnaire (arrête le gameplay s'il tourne, vide les véhicules, remet l'état à 'off', réinitialise les véhicules et les variables de gameplay_police).
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:221
+--- Completely resets the manager (stops the gameplay if running, clears the vehicles, sets the state to 'off', resets the vehicles and the gameplay_police variables).
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:221
 function gameplay_pursuit_pursuit.reset() end
 
---- Remet le gameplay à l'état 'ready' sans vider le gestionnaire : réinitialise les données, les poursuites et renvoie les véhicules à leur position d'origine (interactRecovery loadHome). Ne démarre pas.
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:241
+--- Sets the gameplay back to the 'ready' state without clearing the manager: resets the data, the pursuits and returns the vehicles to their original position (interactRecovery loadHome). Does not start.
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:241
 function gameplay_pursuit_pursuit.restart() end
 
---- Calcule les objectifs (mode, temps, score, arrestations, lieux) à partir des options ; applique des minimums selon le mode.
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:70
----@param options table|nil gameMode, timeLimit, scoreGoal, arrestGoal, locationGoal ; défaut manager.options.
+--- Computes the goals (mode, time, score, arrests, locations) from the options; applies minimums depending on the mode.
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:70
+---@param options table|nil gameMode, timeLimit, scoreGoal, arrestGoal, locationGoal; default manager.options.
 function gameplay_pursuit_pursuit.setupGoals(options) end
 
---- Crée une poursuite avec un poursuivant et un fuyard existants (réinitialise d'abord le gestionnaire s'il n'est pas 'off'). Passe en état 'ready'.
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:310
----@param chaseVehId integer Id du poursuivant.
----@param fleeVehId integer Id du fuyard.
----@param options table|nil Options de gameplay.
----@param pursuitVars table|nil Variables passées à gameplay_police.setPursuitVars.
----@return boolean  false si l'un des véhicules est introuvable.
+--- Creates a pursuit with one existing pursuer and one existing fugitive (first resets the manager if it is not 'off'). Moves to the 'ready' state.
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:310
+---@param chaseVehId integer Pursuer id.
+---@param fleeVehId integer Fugitive id.
+---@param options table|nil Gameplay options.
+---@param pursuitVars table|nil Variables passed to gameplay_police.setPursuitVars.
+---@return boolean  false if one of the vehicles is not found.
 function gameplay_pursuit_pursuit.setupPursuit(chaseVehId, fleeVehId, options, pursuitVars) end
 
---- Crée une poursuite avec plusieurs poursuivants et fuyards. Échoue (reset) s'il n'y a aucun poursuivant ou aucun fuyard inséré ; avertit si certains ont échoué.
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:342
----@param chaseVehIds integer[] Ids des poursuivants.
----@param fleeVehIds integer[] Ids des fuyards.
----@param options table|nil Options de gameplay.
----@param pursuitVars table|nil Variables de poursuite.
----@return boolean  true si la configuration est prête.
+--- Creates a pursuit with several pursuers and fugitives. Fails (reset) if there is no pursuer or no fugitive inserted; warns if some failed.
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:342
+---@param chaseVehIds integer[] Pursuer ids.
+---@param fleeVehIds integer[] Fugitive ids.
+---@param options table|nil Gameplay options.
+---@param pursuitVars table|nil Pursuit variables.
+---@return boolean  true if the setup is ready.
 function gameplay_pursuit_pursuit.setupPursuitMulti(chaseVehIds, fleeVehIds, options, pursuitVars) end
 
---- Fait apparaître les groupes de véhicules (core_multiSpawn.spawnGroup, noms 'autoPursuitChase' et 'autoPursuitFlee') puis, via onVehicleGroupSpawned, appelle setupPursuitMulti. Utilise les points de parking fournis, sinon place les véhicules sur la route devant (écart 15 m).
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:420
----@param chaseAmount integer|nil Nombre de poursuivants (défaut 1).
----@param fleeAmount integer|nil Nombre de fuyards (défaut 1).
----@param chaseVehGroup table|nil Groupe de véhicules {model, config…} des poursuivants.
----@param fleeVehGroup table|nil Groupe des fuyards.
----@param parkingSpots table[]|nil Points {pos, rot}, les premiers pour les poursuivants.
----@param options table|nil Options (shuffleVehGroups…).
----@param pursuitVars table|nil Variables de poursuite.
----@return boolean  false si une quantité est inférieure à 1.
+--- Spawns the vehicle groups (core_multiSpawn.spawnGroup, names 'autoPursuitChase' and 'autoPursuitFlee') then, via onVehicleGroupSpawned, calls setupPursuitMulti. Uses the provided parking points, otherwise places the vehicles on the road ahead (15 m gap).
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:420
+---@param chaseAmount integer|nil Number of pursuers (default 1).
+---@param fleeAmount integer|nil Number of fugitives (default 1).
+---@param chaseVehGroup table|nil Vehicle group {model, config...} of the pursuers.
+---@param fleeVehGroup table|nil Fugitives' group.
+---@param parkingSpots table[]|nil Points {pos, rot}, the first ones for the pursuers.
+---@param options table|nil Options (shuffleVehGroups...).
+---@param pursuitVars table|nil Pursuit variables.
+---@return boolean  false if a quantity is less than 1.
 function gameplay_pursuit_pursuit.setupVehicles(chaseAmount, fleeAmount, chaseVehGroup, fleeVehGroup, parkingSpots, options, pursuitVars) end
 
---- Comme setupVehicles mais lit les groupes de véhicules (champ data) dans des fichiers JSON, et éventuellement les points de parking d'un fichier de sites (zone optionnelle options.zoneName, mélange options.shuffleSpots, filtre par tags chase/flee).
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:448
----@param chaseAmount integer Nombre de poursuivants (>= 1).
----@param fleeAmount integer Nombre de fuyards (>= 1).
----@param chaseVehGroupFile string Chemin du JSON du groupe de poursuivants.
----@param fleeVehGroupFile string Chemin du JSON du groupe de fuyards.
----@param sitesFile string|nil Chemin du fichier de sites.
----@param options table|nil Options (zoneName, shuffleSpots, shuffleVehGroups…).
----@param pursuitVars table|nil Variables de poursuite.
----@return boolean  false si les quantités sont invalides ou un fichier de groupe est illisible.
+--- Like setupVehicles but reads the vehicle groups (data field) from JSON files, and optionally the parking points from a sites file (optional zone options.zoneName, shuffle options.shuffleSpots, filter by chase/flee tags).
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:448
+---@param chaseAmount integer Number of pursuers (>= 1).
+---@param fleeAmount integer Number of fugitives (>= 1).
+---@param chaseVehGroupFile string Path of the pursuer group JSON.
+---@param fleeVehGroupFile string Path of the fugitive group JSON.
+---@param sitesFile string|nil Path of the sites file.
+---@param options table|nil Options (zoneName, shuffleSpots, shuffleVehGroups...).
+---@param pursuitVars table|nil Pursuit variables.
+---@return boolean  false if the quantities are invalid or a group file is unreadable.
 function gameplay_pursuit_pursuit.setupVehiclesFromFiles(chaseAmount, fleeAmount, chaseVehGroupFile, fleeVehGroupFile, sitesFile, options, pursuitVars) end
 
---- Démarre le gameplay (états 'ready' ou 'inactive' seulement) : active les véhicules (poursuivants en action pursuitStart niveau 3, fuyards en fleePolice) et émet onPursuitGameplayStarted.
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:250
+--- Starts the gameplay ('ready' or 'inactive' states only): activates the vehicles (pursuers in pursuitStart action level 3, fugitives in fleePolice) and emits onPursuitGameplayStarted.
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:250
 function gameplay_pursuit_pursuit.start() end
 
---- Arrête le gameplay actif. Avec un gagnant, l'état devient 'complete', les poursuites des fuyards sont réinitialisées et onPursuitGameplayFinished est émis ; sans gagnant, l'état devient 'inactive'.
----Source : lua/ge/extensions/gameplay/pursuit/pursuit.lua:258
----@param winner string|nil 'flee', 'chase' ou autre valeur non nil pour terminer ; nil pour simplement mettre en pause.
+--- Stops the active gameplay. With a winner, the state becomes 'complete', the fugitives' pursuits are reset and onPursuitGameplayFinished is emitted; without a winner, the state becomes 'inactive'.
+---Source: lua/ge/extensions/gameplay/pursuit/pursuit.lua:258
+---@param winner string|nil 'flee', 'chase' or another non-nil value to finish; nil to simply pause.
 function gameplay_pursuit_pursuit.stop(winner) end
 

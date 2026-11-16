@@ -1,135 +1,318 @@
 {
   "path": "lua/ge/extensions/util/datastore.lua",
-  "module": "Magasin clé/valeur persistant générique, avec index secondaires construits à la demande. Chaque « store » est enregistré sous un nom avec un champ clé primaire (unique) et stocké dans un fichier <chemin>/<prefix->nom.bin (MessagePack ; le format JSON existe dans le code mais USE_MSGPACK est à true). Il sert de cache de données (le code mentionne un cache de l'UI) et permet de chercher des entrées par n'importe quel champ, de suivre des chaînes de relations (getChain) et de réécrire le fichier à chaque modification.",
+  "module": "Generic persistent key/value store, with secondary indexes built on demand. Each \"store\" is registered under a name with a (unique) primary key field and stored in a file <path>/<prefix->name.bin (MessagePack; the JSON format exists in the code but USE_MSGPACK is true). It serves as a data cache (the code mentions a UI cache) and allows searching entries by any field, following relation chains (getChain) and rewriting the file on each modification.",
   "usage": "util_datastore.register('myStore', 'id', {path = '/temp'})\nutil_datastore.putEntries('myStore', {{id = 'a', color = 'red'}, {id = 'b', color = 'red'}})\nlocal reds = util_datastore.getEntries('myStore', 'color', {'red'})",
   "notes": [
-    "Un store non enregistré fait renvoyer à la plupart des fonctions une table d'échec {ok = false, err = 'store_not_registered', storeName = ...} (et non nil). Tester avec isUnregisteredFailure(result).",
-    "Le fichier n'est lu qu'au premier accès (chargement paresseux) ; un fichier tronqué ou illisible donne un store vide. Les fichiers écrits ne contiennent que des entrées (tableau de tables) ; l'ordre n'est pas garanti.",
-    "Chemin par défaut : /temp ; clé primaire par défaut : 'name'. Les chemins sont normalisés (barres obliques, sans barre finale). Avec opts.prefix non vide, le fichier devient <prefix>-<storeName>.bin.",
-    "Store en lecture seule (opts.readonly = true) : putEntries, removeEntries et clear renvoient false sans écrire.",
-    "Les index secondaires sont multivalués (plusieurs entrées par valeur) et construits au premier usage d'un champ, puis maintenus à chaque putEntries/removeEntries. Les valeurs nil ne sont pas indexées.",
-    "getChain part d'une entrée « graine » puis suit en profondeur le champ chainField (tableau de clés) en résolvant chaque clé dans le champ chainResolveField (réglés par setChain), sans doublons ; renvoie la liste des entrées trouvées, graine en tête.",
-    "Rechargement à chaud : onSerialize ne conserve que les enregistrements (chemin, champs, lecture seule, chaîne), pas les entrées, qui sont relues depuis le fichier.",
-    "register réutilise la configuration de chaîne d'un enregistrement précédent du même nom. L'extension passe en déchargement manuel (onInit)."
+    "For an unregistered store, most functions return a failure table {ok = false, err = 'store_not_registered', storeName = ...} (not nil). Test with isUnregisteredFailure(result).",
+    "The file is read only on first access (lazy loading); a truncated or unreadable file gives an empty store. Written files contain only entries (array of tables); order is not guaranteed.",
+    "Default path: /temp; default primary key: 'name'. Paths are normalized (slashes, no trailing slash). With a non-empty opts.prefix, the file becomes <prefix>-<storeName>.bin.",
+    "Read-only store (opts.readonly = true): putEntries, removeEntries and clear return false without writing.",
+    "Secondary indexes are multivalued (several entries per value) and built on first use of a field, then maintained on each putEntries/removeEntries. nil values are not indexed.",
+    "getChain starts from a \"seed\" entry then follows in depth the chainField field (array of keys), resolving each key in the chainResolveField field (set by setChain), without duplicates; returns the list of entries found, seed first.",
+    "Hot reload: onSerialize keeps only the registrations (path, fields, read-only, chain), not the entries, which are re-read from the file.",
+    "register reuses the chain configuration of a previous registration of the same name. The extension goes into manual unload (onInit)."
   ],
   "functions": {
     "register": {
-      "desc": "Enregistre (ou ré-enregistre) un store en mémoire ; ne charge pas le fichier.",
+      "desc": "Registers (or re-registers) a store in memory; does not load the file.",
       "params": {
-        "storeName": {"type": "string", "desc": "Nom du store (non vide)."},
-        "primaryField": {"type": "string|nil", "desc": "Champ de clé primaire unique, 'name' par défaut."},
-        "opts": {"type": "table|nil", "desc": "{path = dossier (défaut /temp), prefix = préfixe du fichier, readonly = boolean}."}
+        "storeName": {
+          "type": "string",
+          "desc": "Store name (non-empty)."
+        },
+        "primaryField": {
+          "type": "string|nil",
+          "desc": "Unique primary key field, 'name' by default."
+        },
+        "opts": {
+          "type": "table|nil",
+          "desc": "{path = folder (default /temp), prefix = file prefix, readonly = boolean}."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si le nom est invalide, sinon true."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the name is invalid, otherwise true."
+        }
+      ]
     },
     "unregister": {
-      "desc": "Retire l'enregistrement en mémoire sans toucher au fichier.",
-      "params": {"storeName": {"type": "string", "desc": "Nom du store."}},
-      "returns": [{"type": "boolean", "desc": "true si le store existait."}]
+      "desc": "Removes the in-memory registration without touching the file.",
+      "params": {
+        "storeName": {
+          "type": "string",
+          "desc": "Store name."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the store existed."
+        }
+      ]
     },
     "isRegistered": {
-      "desc": "Indique si un store est enregistré.",
-      "params": {"storeName": {"type": "string", "desc": "Nom du store."}},
-      "returns": [{"type": "boolean", "desc": "true si enregistré."}]
+      "desc": "Returns whether a store is registered.",
+      "params": {
+        "storeName": {
+          "type": "string",
+          "desc": "Store name."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if saved."
+        }
+      ]
     },
     "isUnregisteredFailure": {
-      "desc": "Indique si un résultat est l'échec « store_not_registered ».",
-      "params": {"result": {"type": "any", "desc": "Résultat d'une fonction du module."}},
-      "returns": [{"type": "boolean", "desc": "true si c'est cet échec."}]
+      "desc": "Returns whether a result is the \"store_not_registered\" failure.",
+      "params": {
+        "result": {
+          "type": "any",
+          "desc": "Result of a module function."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if it is that failure."
+        }
+      ]
     },
     "getEntry": {
-      "desc": "Renvoie la première entrée dont le champ vaut value.",
+      "desc": "Returns the first entry whose field equals value.",
       "params": {
-        "storeName": {"type": "string", "desc": "Nom du store."},
-        "field": {"type": "string", "desc": "Champ de recherche (clé primaire ou autre)."},
-        "value": {"type": "any", "desc": "Valeur cherchée."}
+        "storeName": {
+          "type": "string",
+          "desc": "Store name."
+        },
+        "field": {
+          "type": "string",
+          "desc": "Search field (primary key or other)."
+        },
+        "value": {
+          "type": "any",
+          "desc": "Value searched."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Entrée, nil si absente, ou table d'échec si le store n'est pas enregistré."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Entry, nil if absent, or failure table if the store is not registered."
+        }
+      ]
     },
     "getEntries": {
-      "desc": "Renvoie les entrées dont le champ vaut l'une des valeurs, sans doublons (dédoublonnées par clé primaire).",
+      "desc": "Returns the entries whose field equals one of the values, without duplicates (deduplicated by primary key).",
       "params": {
-        "storeName": {"type": "string", "desc": "Nom du store."},
-        "field": {"type": "string", "desc": "Champ de recherche."},
-        "values": {"type": "table", "desc": "Liste de valeurs ; une valeur non-table donne une liste vide."}
+        "storeName": {
+          "type": "string",
+          "desc": "Store name."
+        },
+        "field": {
+          "type": "string",
+          "desc": "Search field."
+        },
+        "values": {
+          "type": "table",
+          "desc": "List of values; a non-table value gives an empty list."
+        }
       },
-      "returns": [{"type": "table[]", "desc": "Entrées trouvées (ou table d'échec)."}]
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Entries found (or failure table)."
+        }
+      ]
     },
     "getIndex": {
-      "desc": "Sans primaryKey : liste des valeurs distinctes présentes pour le champ. Avec primaryKey = true : table clé primaire -> valeur du champ pour chaque entrée (non dédoublonnée).",
+      "desc": "Without primaryKey: list of the distinct values present for the field. With primaryKey = true: table primary key -> field value for each entry (not deduplicated).",
       "params": {
-        "storeName": {"type": "string", "desc": "Nom du store."},
-        "field": {"type": "string", "desc": "Champ à indexer."},
-        "primaryKey": {"type": "boolean|nil", "desc": "true pour la table indexée par clé primaire."}
+        "storeName": {
+          "type": "string",
+          "desc": "Store name."
+        },
+        "field": {
+          "type": "string",
+          "desc": "Field to index."
+        },
+        "primaryKey": {
+          "type": "boolean|nil",
+          "desc": "true for the table keyed by primary key."
+        }
       },
-      "returns": [{"type": "table", "desc": "Liste ou table, ou table d'échec."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List or table, or failure table."
+        }
+      ]
     },
     "getAll": {
-      "desc": "Renvoie toutes les entrées du store (ordre non garanti).",
-      "params": {"storeName": {"type": "string", "desc": "Nom du store."}},
-      "returns": [{"type": "table[]", "desc": "Entrées (ou table d'échec)."}]
+      "desc": "Returns all the entries of the store (order not guaranteed).",
+      "params": {
+        "storeName": {
+          "type": "string",
+          "desc": "Store name."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Entries (or failure table)."
+        }
+      ]
     },
     "hasEntry": {
-      "desc": "Indique si au moins une entrée a ce champ égal à value.",
+      "desc": "Returns whether at least one entry has this field equal to value.",
       "params": {
-        "storeName": {"type": "string", "desc": "Nom du store."},
-        "field": {"type": "string", "desc": "Champ de recherche."},
-        "value": {"type": "any", "desc": "Valeur cherchée."}
+        "storeName": {
+          "type": "string",
+          "desc": "Store name."
+        },
+        "field": {
+          "type": "string",
+          "desc": "Search field."
+        },
+        "value": {
+          "type": "any",
+          "desc": "Value searched."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si trouvée (ou table d'échec si store inconnu)."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if found (or failure table if the store is unknown)."
+        }
+      ]
     },
     "getChain": {
-      "desc": "Cherche une entrée graine puis suit sa chaîne de relations (chainField/resolveField définis par setChain), sans cycle.",
+      "desc": "Looks up a seed entry then follows its relation chain (chainField/resolveField set by setChain), without cycles.",
       "params": {
-        "storeName": {"type": "string", "desc": "Nom du store."},
-        "field": {"type": "string", "desc": "Champ pour trouver la graine."},
-        "value": {"type": "any", "desc": "Valeur de la graine."}
+        "storeName": {
+          "type": "string",
+          "desc": "Store name."
+        },
+        "field": {
+          "type": "string",
+          "desc": "Field used to find the seed."
+        },
+        "value": {
+          "type": "any",
+          "desc": "Seed value."
+        }
       },
-      "returns": [{"type": "table[]", "desc": "Graine puis entrées liées ; vide si la graine n'existe pas."}]
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Seed then linked entries; empty if the seed does not exist."
+        }
+      ]
     },
     "putEntries": {
-      "desc": "Insère ou remplace des entrées (identifiées par la clé primaire), met à jour les index et réécrit le fichier. Les entrées sans clé primaire sont ignorées avec un avertissement.",
+      "desc": "Inserts or replaces entries (identified by the primary key), updates the indexes and rewrites the file. Entries without a primary key are ignored with a warning.",
       "params": {
-        "storeName": {"type": "string", "desc": "Nom du store."},
-        "entries": {"type": "table[]", "desc": "Liste d'entrées (tables)."}
+        "storeName": {
+          "type": "string",
+          "desc": "Store name."
+        },
+        "entries": {
+          "type": "table[]",
+          "desc": "List of entries (tables)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si quelque chose a changé ; false si lecture seule, argument invalide ou rien à écrire (ou table d'échec)."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if something changed; false if read-only, invalid argument or nothing to write (or failure table)."
+        }
+      ]
     },
     "removeEntries": {
-      "desc": "Supprime les entrées dont le champ vaut l'une des valeurs, puis réécrit le fichier.",
+      "desc": "Removes the entries whose field equals one of the values, then rewrites the file.",
       "params": {
-        "storeName": {"type": "string", "desc": "Nom du store."},
-        "field": {"type": "string", "desc": "Champ de recherche."},
-        "values": {"type": "table", "desc": "Liste de valeurs."}
+        "storeName": {
+          "type": "string",
+          "desc": "Store name."
+        },
+        "field": {
+          "type": "string",
+          "desc": "Search field."
+        },
+        "values": {
+          "type": "table",
+          "desc": "List of values."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si des entrées ont été supprimées."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if entries were removed."
+        }
+      ]
     },
     "clear": {
-      "desc": "Vide le store et réécrit le fichier (vide).",
-      "params": {"storeName": {"type": "string", "desc": "Nom du store."}},
-      "returns": [{"type": "boolean|table", "desc": "true ; false si lecture seule ; table d'échec si non enregistré."}]
+      "desc": "Empties the store and rewrites the (empty) file.",
+      "params": {
+        "storeName": {
+          "type": "string",
+          "desc": "Store name."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|table",
+          "desc": "true; false if read-only; failure table if not registered."
+        }
+      ]
     },
     "setChain": {
-      "desc": "Définit comment suivre les relations pour getChain : chainField contient un tableau de clés, résolues via le champ field.",
+      "desc": "Defines how to follow relations for getChain: chainField contains an array of keys, resolved via the field field.",
       "params": {
-        "storeName": {"type": "string", "desc": "Nom du store."},
-        "chainField": {"type": "string", "desc": "Champ de l'entrée contenant un tableau de clés liées."},
-        "field": {"type": "string", "desc": "Champ dans lequel chercher chaque clé."}
+        "storeName": {
+          "type": "string",
+          "desc": "Store name."
+        },
+        "chainField": {
+          "type": "string",
+          "desc": "Entry field containing an array of linked keys."
+        },
+        "field": {
+          "type": "string",
+          "desc": "Field in which to look up each key."
+        }
       },
-      "returns": [{"type": "boolean|table", "desc": "true, ou table d'échec."}]
+      "returns": [
+        {
+          "type": "boolean|table",
+          "desc": "true, or failure table."
+        }
+      ]
     },
     "onInit": {
-      "desc": "Hook d'initialisation : passe l'extension en déchargement manuel.",
+      "desc": "Initialization hook: sets the extension to manual unload.",
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook de rechargement à chaud : sérialise seulement les enregistrements des stores (pas les entrées).",
-      "returns": [{"type": "table", "desc": "{registrations = ...}."}],
+      "desc": "Hot reload hook: serializes only the stores' registrations (not the entries).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{registrations = ...}."
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook de rechargement à chaud : recrée les stores à partir des enregistrements sauvegardés (entrées à relire du fichier).",
-      "params": {"data": {"type": "table", "desc": "Résultat d'onSerialize."}},
+      "desc": "Hot reload hook: recreates the stores from the saved registrations (entries to re-read from the file).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Result of onSerialize."
+        }
+      },
       "internal": true
     }
   }

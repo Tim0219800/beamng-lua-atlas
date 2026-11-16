@@ -1,36 +1,73 @@
 {
   "path": "lua/common/libs/lustach/src/lustache/context.lua",
-  "module": "Bibliothèque tierce lustache : contexte de rendu Mustache. Un contexte enveloppe la vue (table de données) courante, garde un lien vers le contexte parent (pile d'imbrication des sections) et un cache de résolution de noms. Le renderer s'en sert pour résoudre `{{nom}}`, `{{a.b.c}}` et `{{.}}`.",
+  "module": "Third-party library lustache: Mustache rendering context. A context wraps the current view (data table), keeps a link to the parent context (section nesting stack) and a name-resolution cache. The renderer uses it to resolve `{{name}}`, `{{a.b.c}}` and `{{.}}`.",
   "notes": [
-    "Les méthodes s'appellent avec les deux-points sur une instance créée par `Context:new(view, parent)` ; `new` renvoie une table dont la métatable est `context` elle-même.",
-    "Bug mineur : `lookup` teste `string_find(name, \".\") > 0` ; le motif \".\" désigne n'importe quel caractère, donc la condition est toujours vraie pour un nom non vide et le chemin découpé par points est toujours emprunté (le résultat reste correct).",
-    "Les valeurs `false` ou nil ne sont pas mises en cache efficacement (le test `if not value` relance la recherche) et la recherche remonte alors aux contextes parents."
+    "The methods are called with a colon on an instance created by `Context:new(view, parent)`; `new` returns a table whose metatable is `context` itself.",
+    "Minor bug: `lookup` tests `string_find(name, \".\") > 0`; the pattern \".\" matches any character, so the condition is always true for a non-empty name and the dot-split path is always taken (the result remains correct).",
+    "`false` or nil values are not cached effectively (the `if not value` test restarts the lookup) and the lookup then goes up to the parent contexts."
   ],
   "fields": {
-    "__index": {"type": "table", "desc": "Auto-référence de la classe (la table `context` sert de métatable)."}
+    "__index": {
+      "type": "table",
+      "desc": "Self-reference of the class (the `context` table serves as metatable)."
+    }
   },
   "functions": {
     "new": {
-      "desc": "Crée un contexte pour `view` avec un parent optionnel et un cache vide.",
+      "desc": "Creates a context for `view` with an optional parent and an empty cache.",
       "params": {
-        "self": {"type": "table", "desc": "Classe context (appel avec les deux-points)."},
-        "view": {"type": "any", "desc": "Données du contexte (table, nombre ou autre valeur)."},
-        "parent": {"type": "table|nil", "desc": "Contexte parent."}
+        "self": {
+          "type": "table",
+          "desc": "Context class (call with a colon)."
+        },
+        "view": {
+          "type": "any",
+          "desc": "Context data (table, number or other value)."
+        },
+        "parent": {
+          "type": "table|nil",
+          "desc": "Parent context."
+        }
       },
-      "returns": [{"type": "table", "desc": "Nouveau contexte {view, parent, cache}."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "New context {view, parent, cache}."
+        }
+      ]
     },
     "push": {
-      "desc": "Crée un contexte enfant pour `view` dont le parent est le contexte courant (entrée dans une section).",
-      "params": {"view": {"type": "any", "desc": "Données de la section."}},
-      "returns": [{"type": "table", "desc": "Contexte enfant."}]
+      "desc": "Creates a child context for `view` whose parent is the current context (entering a section).",
+      "params": {
+        "view": {
+          "type": "any",
+          "desc": "Section data."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Child context."
+        }
+      ]
     },
     "lookup": {
-      "desc": "Résout un nom dans la vue courante puis, à défaut, dans les contextes parents. Gère les chemins à points (`a.b.c`) et le nom `.` (la vue elle-même). Le résultat est mis en cache.",
-      "params": {"name": {"type": "string", "desc": "Nom ou chemin à résoudre."}},
-      "returns": [{"type": "any", "desc": "Valeur trouvée, ou nil."}]
+      "desc": "Resolves a name in the current view, then, failing that, in the parent contexts. Handles dotted paths (`a.b.c`) and the name `.` (the view itself). The result is cached.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Name or path to resolve."
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Value found, or nil."
+        }
+      ]
     },
     "clear_cache": {
-      "desc": "Vide le cache de résolution de ce contexte.",
+      "desc": "Clears the resolution cache of this context.",
       "params": {}
     }
   }

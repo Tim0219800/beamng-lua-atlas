@@ -1,225 +1,225 @@
 # `editor_api_forestItemTools`
 
-*Fichier : `lua/ge/extensions/editor/api/forestItemTools.lua` · VM : Game Engine (GE) · 718 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/forestItemTools.lua` · VM: Game Engine (GE) · 718 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_forestItemTools` : `extensions.load("editor_api_forestItemTools")`, puis la globale `editor_api_forestItemTools`
+**Access:** extension `editor_api_forestItemTools`: `extensions.load("editor_api_forestItemTools")`, then the global `editor_api_forestItemTools`
 
-Outils partagés de l'éditeur pour placer, sélectionner, déplacer et annuler des items de forêt (Forest / ForestData), extraits de forestEditor.lua pour qu'un second outil (l'éditeur d'intérieurs parallax) réutilise la même mécanique. Tout est paramétré par le handle `forest`/`forestData` (pas d'état de scène dans le module) ; la sélection est le store global `editor.selection.forestItem`, et les modifications passent par `editor.history` (annulables). Contient aussi l'empaquetage des données par-instance des fenêtres « parallax » (customData entier 32 bits) et des filtres sur le préfixe `parallax_` des datablocks ForestItemData.
+Shared editor tools for placing, selecting, moving and undoing forest items (Forest / ForestData), extracted from forestEditor.lua so that a second tool (the parallax interior editor) reuses the same mechanics. Everything is parameterized by the `forest`/`forestData` handle (no scene state in the module); the selection is the global store `editor.selection.forestItem`, and modifications go through `editor.history` (undoable). Also contains the packing of the per-instance data of the "parallax" windows (32-bit integer customData) and filters on the `parallax_` prefix of ForestItemData datablocks.
 
-## Exemple
+## Example
 
 ```lua
--- dans le onUpdate d'un outil :
+-- in a tool's onUpdate:
 local tools = require("editor/api/forestItemTools")
 tools.updateSelectMode(forest, tools.isParallaxItem)
 tools.handleGizmo(forest)
 ```
 
-## Remarques
+## Notes
 
-- Le module est un `require` classique qui renvoie M ; il dépend d'un `editor` global déjà initialisé (editor.createForestItem, editor.updateForestItem, editor.history, gizmo d'axes).
-- customData parallax : bits 0-23 = id du jeu de textures (0xFFFFFF = aucun/désactivé), bits 24-31 = drapeaux (bit 0 = emissive). Valeur < 0 = désactivé et non sauvegardé côté C++. Doit rester synchronisé avec shaders/common/examples/parallaxInterior.h.hlsl.
-- Shift au début d'un glissement de gizmo arme un duplicata : le clone n'est créé qu'à la première frame de glissement, et le tout est enregistré comme une seule action « AddForestItems » (undo = suppression des clones).
-- En mode échelle, le gizmo ajoute au plus 0.1 par frame à l'échelle uniforme de chaque item.
-- `removeItems` ne fait rien (renvoie nil) si la liste est vide ; `addItems`/`removeItems` renvoient le résultat de commitAction.
-- Hook émis : onEditorObjectSelectionChanged (depuis select).
+- The module is a regular `require` that returns M; it depends on an already initialized global `editor` (editor.createForestItem, editor.updateForestItem, editor.history, axis gizmo).
+- Parallax customData: bits 0-23 = texture set id (0xFFFFFF = none/disabled), bits 24-31 = flags (bit 0 = emissive). Value < 0 = disabled and not saved on the C++ side. Must stay in sync with shaders/common/examples/parallaxInterior.h.hlsl.
+- Shift at the start of a gizmo drag arms a duplicate: the clone is only created on the first drag frame, and everything is recorded as a single "AddForestItems" action (undo = deletion of the clones).
+- In scale mode, the gizmo adds at most 0.1 per frame to each item's uniform scale.
+- `removeItems` does nothing (returns nil) if the list is empty; `addItems`/`removeItems` return the result of commitAction.
+- Emitted hook: onEditorObjectSelectionChanged (from select).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_forestItemTools.addItems(forestData, items, dontCallRedo)` | Ajoute des items de façon annulable (action "AddForestItems") ; le redo sélectionne les items ajoutés. | 139 |
-| `editor_api_forestItemTools.clearSelection(forestData)` | Désélectionne tous les items de forêt sélectionnés, reconstruit les données d'instances et vide la sélection. | 70 |
-| `editor_api_forestItemTools.filterItems(items, keep)` | Renvoie une nouvelle liste contenant les items pour lesquels keep(item) est vrai (liste nil = liste vide). | 679 |
-| `editor_api_forestItemTools.getSelection()` | Renvoie la sélection courante d'items de forêt (editor.selection.forestItem) ou une table vide. | 43 |
-| `editor_api_forestItemTools.handleGizmo(forest)` | Pilote et dessine le gizmo d'axes pour la sélection courante (translation avec accrochage terrain, rotation autour du centroïde, échelle uniforme, duplication par Shift). Enregistre l'action annulable "SetForestItemTransform" (ou "AddForestItems" pour un duplicata) à la fin du glissement. À appeler une fois par frame depuis le onUpdate de l'outil. Ne fait rien sans sélection. | 295 |
-| `editor_api_forestItemTools.isParallaxDataObject(cobj)` | Même test sur un objet datablock ForestItemData (issu de scenetree.findObject), pour filtrer la palette de meshes. | 667 |
-| `editor_api_forestItemTools.isParallaxItem(item)` | Prédicat pratique pour les filtres de sélection : l'item est-il une fenêtre parallax (préfixe parallax_) ? | 660 |
-| `editor_api_forestItemTools.itemDataSelectable(uniqueId, label, isSelected, icon)` | Ligne de liste de meshes partagée : icône de datablock + sélectionnable pleine largeur, surligné si sélectionné. Renvoie true au clic ; l'appelant gère l'état de sélection. | 625 |
-| `editor_api_forestItemTools.itemMatchesPrefix(item, prefix)` | Vrai si le nom (ou l'internalName) du datablock de l'item commence par prefix. | 647 |
-| `editor_api_forestItemTools.listItemDatas(prefix, matchPrefix)` | Liste les datablocks ForestItemData filtrés par préfixe de nom (ou internalName). matchPrefix = true : seulement ceux qui commencent par prefix (éditeur parallax) ; false : tous les autres (éditeur de forêt). Triée par nom sans casse. | 601 |
-| `editor_api_forestItemTools.packParallaxData(setId, emissive)` | Encode (setId, emissive) en customData. setId < 0 ou nil donne -1 (désactivé ; le C++ ne sauvegarde pas customData < 0). | 709 |
-| `editor_api_forestItemTools.pick(forest, rayRange, filterFn)` | Renvoie l'item de forêt rendu sous la souris (rayon caméra-souris), ou nil ; filterFn peut rejeter les items qui ne sont pas à l'outil. | 186 |
-| `editor_api_forestItemTools.place(forest, itemData, transform, scale, afterCreate)` | Instancie un item à partir d'un datablock à la transformation donnée et renvoie le handle final. N'enregistre PAS d'historique : l'appelant commite (typiquement via addItems). afterCreate peut modifier l'item neuf (ex. customData parallax) et renvoyer le handle final à garder. | 173 |
-| `editor_api_forestItemTools.placementBasis(hitNormal, yawRad, alignToNormal, flip)` | Calcule la base de placement du tableau et l'orientation de chaque item : (right, up, forward) unitaires. Colonnes de la transformation : X = right, Y = forward (face de la fenêtre), Z = up ; le tableau avance selon right (colonnes) et up (lignes). Mode monde : axes monde tournés de yawRad autour de Z. alignToNormal : la face suit la normale de la surface, le tableau est dans le plan de la surface et yawRad est une rotation dans ce plan. flip inverse la face. | 453 |
-| `editor_api_forestItemTools.removeItems(forestData, items, dontCallRedo)` | Supprime des items de façon annulable (action "RemoveForestItems"). Ne fait rien si la liste est vide. | 145 |
-| `editor_api_forestItemTools.select(forestData, forestItems, addToSelection)` | Sélectionne les items donnés (nil ou vide = effacer). Place le gizmo d'axes (sur l'item en mode local avec un seul item, sinon sur le centroïde), reconstruit les instances et émet onEditorObjectSelectionChanged. Ne déclenche pas l'aperçu du mesh de l'éditeur de forêt. | 83 |
-| `editor_api_forestItemTools.unpackParallaxData(customData)` | Décode le customData en (setId, emissive). setId vaut -1 si aucun jeu parallax n'est assigné. | 698 |
-| `editor_api_forestItemTools.updateInstantiateMode(forest, itemDataId, opts)` | Une frame de l'interaction « instancier un item » : raycast sous le curseur, aperçu (sphère, boîte englobante réelle du mesh, ligne de face ; cellule pivot en orange) et, au clic gauche, création d'un tableau cols x rows d'items du datablock itemDataId (échelle opts.scale, 1 par défaut), commité en UNE action annulable. Renvoie la liste des items créés au clic, sinon nil. | 494 |
-| `editor_api_forestItemTools.updateSelectMode(forest, filterFn, rayRange)` | Une frame de l'interaction « sélectionner des items de forêt » (outil Select de l'éditeur de forêt) : survol en blanc, clic = sélection (Ctrl ajoute, clic dans le vide efface), rectangle de sélection (Ctrl ajoute), dessin des boîtes de la sélection (orange) et gizmo de transformation. Restreint aux items passant filterFn. | 327 |
+| `editor_api_forestItemTools.addItems(forestData, items, dontCallRedo)` | Adds items in an undoable way ("AddForestItems" action); redo selects the added items. | 139 |
+| `editor_api_forestItemTools.clearSelection(forestData)` | Deselects all selected forest items, rebuilds the instance data and clears the selection. | 70 |
+| `editor_api_forestItemTools.filterItems(items, keep)` | Returns a new list containing the items for which keep(item) is true (nil list = empty list). | 679 |
+| `editor_api_forestItemTools.getSelection()` | Returns the current selection of forest items (editor.selection.forestItem) or an empty table. | 43 |
+| `editor_api_forestItemTools.handleGizmo(forest)` | Drives and draws the axis gizmo for the current selection (translation with terrain snapping, rotation around the centroid, uniform scale, duplication via Shift). Records the undoable "SetForestItemTransform" action (or "AddForestItems" for a duplicate) at the end of the drag. To be called once per frame from the tool's onUpdate. Does nothing without a selection. | 295 |
+| `editor_api_forestItemTools.isParallaxDataObject(cobj)` | Same test on a ForestItemData datablock object (from scenetree.findObject), to filter the mesh palette. | 667 |
+| `editor_api_forestItemTools.isParallaxItem(item)` | Convenience predicate for selection filters: is the item a parallax window (parallax_ prefix)? | 660 |
+| `editor_api_forestItemTools.itemDataSelectable(uniqueId, label, isSelected, icon)` | Shared mesh list row: datablock icon + full-width selectable, highlighted if selected. Returns true on click; the caller handles the selection state. | 625 |
+| `editor_api_forestItemTools.itemMatchesPrefix(item, prefix)` | True if the name (or internalName) of the item's datablock starts with prefix. | 647 |
+| `editor_api_forestItemTools.listItemDatas(prefix, matchPrefix)` | Lists the ForestItemData datablocks filtered by name prefix (or internalName). matchPrefix = true: only those starting with prefix (parallax editor); false: all the others (forest editor). Sorted by name, case-insensitive. | 601 |
+| `editor_api_forestItemTools.packParallaxData(setId, emissive)` | Encodes (setId, emissive) into customData. setId < 0 or nil gives -1 (disabled; the C++ does not save customData < 0). | 709 |
+| `editor_api_forestItemTools.pick(forest, rayRange, filterFn)` | Returns the forest item rendered under the mouse (camera-mouse ray), or nil; filterFn can reject items that don't belong to the tool. | 186 |
+| `editor_api_forestItemTools.place(forest, itemData, transform, scale, afterCreate)` | Instantiates an item from a datablock at the given transform and returns the final handle. Does NOT record history: the caller commits (typically via addItems). afterCreate can modify the new item (e.g. parallax customData) and return the final handle to keep. | 173 |
+| `editor_api_forestItemTools.placementBasis(hitNormal, yawRad, alignToNormal, flip)` | Computes the placement basis of the array and the orientation of each item: unit (right, up, forward). Transform columns: X = right, Y = forward (window face), Z = up; the array advances along right (columns) and up (rows). World mode: world axes rotated by yawRad around Z. alignToNormal: the face follows the surface normal, the array lies in the surface plane and yawRad is a rotation in that plane. flip inverts the face. | 453 |
+| `editor_api_forestItemTools.removeItems(forestData, items, dontCallRedo)` | Removes items in an undoable way ("RemoveForestItems" action). Does nothing if the list is empty. | 145 |
+| `editor_api_forestItemTools.select(forestData, forestItems, addToSelection)` | Selects the given items (nil or empty = clear). Places the axis gizmo (on the item in local mode with a single item, otherwise on the centroid), rebuilds the instances and emits onEditorObjectSelectionChanged. Does not trigger the forest editor's mesh preview. | 83 |
+| `editor_api_forestItemTools.unpackParallaxData(customData)` | Decodes the customData into (setId, emissive). setId is -1 if no parallax set is assigned. | 698 |
+| `editor_api_forestItemTools.updateInstantiateMode(forest, itemDataId, opts)` | One frame of the "instantiate an item" interaction: raycast under the cursor, preview (sphere, the mesh's actual bounding box, face line; pivot cell in orange) and, on left click, creation of a cols x rows array of items of the itemDataId datablock (scale opts.scale, 1 by default), committed as ONE undoable action. Returns the list of items created on click, otherwise nil. | 494 |
+| `editor_api_forestItemTools.updateSelectMode(forest, filterFn, rayRange)` | One frame of the "select forest items" interaction (the forest editor's Select tool): hover in white, click = select (Ctrl adds, click in empty space clears), selection rectangle (Ctrl adds), drawing of the selection boxes (orange) and the transform gizmo. Restricted to items passing filterFn. | 327 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_forestItemTools.addItems(forestData, items, dontCallRedo)`
 
-Ajoute des items de façon annulable (action "AddForestItems") ; le redo sélectionne les items ajoutés.
+Adds items in an undoable way ("AddForestItems" action); redo selects the added items.
 
 - `forestData` (*userdata*) : ForestData
-- `items` (*table*) : items à ajouter
-- `dontCallRedo` (*boolean|nil*) : true si les items existent déjà (n'exécute pas le redo) ; défaut false
-- **renvoie** : any résultat de editor.history:commitAction
+- `items` (*table*) : items to add
+- `dontCallRedo` (*boolean|nil*) : true if the items already exist (does not run the redo); default false
+- **returns**: any result of editor.history:commitAction
 
 #### `editor_api_forestItemTools.clearSelection(forestData)`
 
-Désélectionne tous les items de forêt sélectionnés, reconstruit les données d'instances et vide la sélection.
+Deselects all selected forest items, rebuilds the instance data and clears the selection.
 
 - `forestData` (*userdata*) : ForestData
 
 #### `editor_api_forestItemTools.filterItems(items, keep)`
 
-Renvoie une nouvelle liste contenant les items pour lesquels keep(item) est vrai (liste nil = liste vide).
+Returns a new list containing the items for which keep(item) is true (nil list = empty list).
 
-- `items` (*table|nil*) : liste d'items
+- `items` (*table|nil*) : list of items
 - `keep` (*function*) : function(item) -> boolean
-- **renvoie** : table liste filtrée
+- **returns**: table filtered list
 
 #### `editor_api_forestItemTools.getSelection()`
 
-Renvoie la sélection courante d'items de forêt (editor.selection.forestItem) ou une table vide.
+Returns the current selection of forest items (editor.selection.forestItem) or an empty table.
 
-- **renvoie** : table liste d'items
+- **returns**: table list of items
 
 #### `editor_api_forestItemTools.handleGizmo(forest)`
 
-Pilote et dessine le gizmo d'axes pour la sélection courante (translation avec accrochage terrain, rotation autour du centroïde, échelle uniforme, duplication par Shift). Enregistre l'action annulable "SetForestItemTransform" (ou "AddForestItems" pour un duplicata) à la fin du glissement. À appeler une fois par frame depuis le onUpdate de l'outil. Ne fait rien sans sélection.
+Drives and draws the axis gizmo for the current selection (translation with terrain snapping, rotation around the centroid, uniform scale, duplication via Shift). Records the undoable "SetForestItemTransform" action (or "AddForestItems" for a duplicate) at the end of the drag. To be called once per frame from the tool's onUpdate. Does nothing without a selection.
 
-- `forest` (*userdata*) : objet Forest
+- `forest` (*userdata*) : Forest object
 
 #### `editor_api_forestItemTools.isParallaxDataObject(cobj)`
 
-Même test sur un objet datablock ForestItemData (issu de scenetree.findObject), pour filtrer la palette de meshes.
+Same test on a ForestItemData datablock object (from scenetree.findObject), to filter the mesh palette.
 
 - `cobj` (*userdata|nil*) : datablock
-- **renvoie** : boolean true si name/internalName commence par parallax_
+- **returns**: boolean true if name/internalName starts with parallax_
 
 #### `editor_api_forestItemTools.isParallaxItem(item)`
 
-Prédicat pratique pour les filtres de sélection : l'item est-il une fenêtre parallax (préfixe parallax_) ?
+Convenience predicate for selection filters: is the item a parallax window (parallax_ prefix)?
 
-- `item` (*userdata*) : item de forêt
-- **renvoie** : boolean résultat
+- `item` (*userdata*) : forest item
+- **returns**: boolean result
 
 #### `editor_api_forestItemTools.itemDataSelectable(uniqueId, label, isSelected, icon)`
 
-Ligne de liste de meshes partagée : icône de datablock + sélectionnable pleine largeur, surligné si sélectionné. Renvoie true au clic ; l'appelant gère l'état de sélection.
+Shared mesh list row: datablock icon + full-width selectable, highlighted if selected. Returns true on click; the caller handles the selection state.
 
-- `uniqueId` (*any*) : id du datablock (distingue l'id ImGui)
-- `label` (*string*) : texte affiché
-- `isSelected` (*boolean*) : surligner
-- `icon` (*any|nil*) : icône de remplacement (défaut editor.icons.forest_brushelement)
-- **renvoie** : boolean true si cliqué
+- `uniqueId` (*any*) : datablock id (distinguishes the ImGui id)
+- `label` (*string*) : displayed text
+- `isSelected` (*boolean*) : highlight
+- `icon` (*any|nil*) : fallback icon (default editor.icons.forest_brushelement)
+- **returns**: boolean true if clicked
 
 #### `editor_api_forestItemTools.itemMatchesPrefix(item, prefix)`
 
-Vrai si le nom (ou l'internalName) du datablock de l'item commence par prefix.
+True if the name (or internalName) of the item's datablock starts with prefix.
 
-- `item` (*userdata*) : item de forêt
-- `prefix` (*string*) : préfixe
-- **renvoie** : boolean résultat
+- `item` (*userdata*) : forest item
+- `prefix` (*string*) : prefix
+- **returns**: boolean result
 
 #### `editor_api_forestItemTools.listItemDatas(prefix, matchPrefix)`
 
-Liste les datablocks ForestItemData filtrés par préfixe de nom (ou internalName). matchPrefix = true : seulement ceux qui commencent par prefix (éditeur parallax) ; false : tous les autres (éditeur de forêt). Triée par nom sans casse.
+Lists the ForestItemData datablocks filtered by name prefix (or internalName). matchPrefix = true: only those starting with prefix (parallax editor); false: all the others (forest editor). Sorted by name, case-insensitive.
 
-- `prefix` (*string*) : préfixe (utilisé dans un motif Lua "^"..prefix)
-- `matchPrefix` (*boolean*) : true = garder ceux qui correspondent, false = les autres
-- **renvoie** : table[] liste de {id, name}
+- `prefix` (*string*) : prefix (used in a Lua pattern "^"..prefix)
+- `matchPrefix` (*boolean*) : true = keep the matching ones, false = the others
+- **returns**: table[] list of {id, name}
 
 #### `editor_api_forestItemTools.packParallaxData(setId, emissive)`
 
-Encode (setId, emissive) en customData. setId < 0 ou nil donne -1 (désactivé ; le C++ ne sauvegarde pas customData < 0).
+Encodes (setId, emissive) into customData. setId < 0 or nil gives -1 (disabled; the C++ does not save customData < 0).
 
-- `setId` (*integer|nil*) : id du jeu de textures (24 bits)
-- `emissive` (*boolean|nil*) : drapeau emissive
-- **renvoie** : integer customData
+- `setId` (*integer|nil*) : texture set id (24 bits)
+- `emissive` (*boolean|nil*) : emissive flag
+- **returns**: integer customData
 
 #### `editor_api_forestItemTools.pick(forest, rayRange, filterFn)`
 
-Renvoie l'item de forêt rendu sous la souris (rayon caméra-souris), ou nil ; filterFn peut rejeter les items qui ne sont pas à l'outil.
+Returns the forest item rendered under the mouse (camera-mouse ray), or nil; filterFn can reject items that don't belong to the tool.
 
-- `forest` (*userdata*) : objet Forest
-- `rayRange` (*number*) : portée du rayon en mètres
+- `forest` (*userdata*) : Forest object
+- `rayRange` (*number*) : ray range in meters
 - `filterFn` (*function|nil*) : function(item) -> boolean
-- **renvoie** : userdata|nil item touché
+- **returns**: userdata|nil item hit
 
 #### `editor_api_forestItemTools.place(forest, itemData, transform, scale, afterCreate)`
 
-Instancie un item à partir d'un datablock à la transformation donnée et renvoie le handle final. N'enregistre PAS d'historique : l'appelant commite (typiquement via addItems). afterCreate peut modifier l'item neuf (ex. customData parallax) et renvoyer le handle final à garder.
+Instantiates an item from a datablock at the given transform and returns the final handle. Does NOT record history: the caller commits (typically via addItems). afterCreate can modify the new item (e.g. parallax customData) and return the final handle to keep.
 
-- `forest` (*userdata*) : objet Forest
-- `itemData` (*userdata*) : datablock ForestItemData
-- `transform` (*MatrixF*) : transformation monde
-- `scale` (*number*) : échelle
+- `forest` (*userdata*) : Forest object
+- `itemData` (*userdata*) : ForestItemData datablock
+- `transform` (*MatrixF*) : world transform
+- `scale` (*number*) : scale
 - `afterCreate` (*function|nil*) : function(item, forestData) -> item|nil
-- **renvoie** : userdata handle de l'item créé
+- **returns**: userdata handle of the created item
 
 #### `editor_api_forestItemTools.placementBasis(hitNormal, yawRad, alignToNormal, flip)`
 
-Calcule la base de placement du tableau et l'orientation de chaque item : (right, up, forward) unitaires. Colonnes de la transformation : X = right, Y = forward (face de la fenêtre), Z = up ; le tableau avance selon right (colonnes) et up (lignes). Mode monde : axes monde tournés de yawRad autour de Z. alignToNormal : la face suit la normale de la surface, le tableau est dans le plan de la surface et yawRad est une rotation dans ce plan. flip inverse la face.
+Computes the placement basis of the array and the orientation of each item: unit (right, up, forward). Transform columns: X = right, Y = forward (window face), Z = up; the array advances along right (columns) and up (rows). World mode: world axes rotated by yawRad around Z. alignToNormal: the face follows the surface normal, the array lies in the surface plane and yawRad is a rotation in that plane. flip inverts the face.
 
-- `hitNormal` (*vec3*) : normale de la surface touchée
-- `yawRad` (*number*) : rotation en radians
-- `alignToNormal` (*boolean*) : aligner sur la normale
-- `flip` (*boolean*) : inverser la face
-- **renvoie** : vec3 right
-- **renvoie** : vec3 up
-- **renvoie** : vec3 forward
+- `hitNormal` (*vec3*) : normal of the surface hit
+- `yawRad` (*number*) : rotation in radians
+- `alignToNormal` (*boolean*) : align to the normal
+- `flip` (*boolean*) : flip the face
+- **returns**: vec3 right
+- **returns**: vec3 up
+- **returns**: vec3 forward
 
 #### `editor_api_forestItemTools.removeItems(forestData, items, dontCallRedo)`
 
-Supprime des items de façon annulable (action "RemoveForestItems"). Ne fait rien si la liste est vide.
+Removes items in an undoable way ("RemoveForestItems" action). Does nothing if the list is empty.
 
 - `forestData` (*userdata*) : ForestData
-- `items` (*table*) : items à supprimer
-- `dontCallRedo` (*boolean|nil*) : true = ne pas exécuter maintenant ; défaut false
-- **renvoie** : any résultat de commitAction
+- `items` (*table*) : items to remove
+- `dontCallRedo` (*boolean|nil*) : true = do not execute now; default false
+- **returns**: any result of commitAction
 
 #### `editor_api_forestItemTools.select(forestData, forestItems, addToSelection)`
 
-Sélectionne les items donnés (nil ou vide = effacer). Place le gizmo d'axes (sur l'item en mode local avec un seul item, sinon sur le centroïde), reconstruit les instances et émet onEditorObjectSelectionChanged. Ne déclenche pas l'aperçu du mesh de l'éditeur de forêt.
+Selects the given items (nil or empty = clear). Places the axis gizmo (on the item in local mode with a single item, otherwise on the centroid), rebuilds the instances and emits onEditorObjectSelectionChanged. Does not trigger the forest editor's mesh preview.
 
 - `forestData` (*userdata*) : ForestData
-- `forestItems` (*table|nil*) : items à sélectionner
-- `addToSelection` (*boolean|nil*) : true = garder la sélection actuelle
+- `forestItems` (*table|nil*) : items to select
+- `addToSelection` (*boolean|nil*) : true = keep the current selection
 
 #### `editor_api_forestItemTools.unpackParallaxData(customData)`
 
-Décode le customData en (setId, emissive). setId vaut -1 si aucun jeu parallax n'est assigné.
+Decodes the customData into (setId, emissive). setId is -1 if no parallax set is assigned.
 
-- `customData` (*integer|nil*) : entier 32 bits de l'item
-- **renvoie** : integer id du jeu de textures, -1 si désactivé
-- **renvoie** : boolean drapeau emissive
+- `customData` (*integer|nil*) : 32-bit integer of the item
+- **returns**: integer texture set id, -1 if disabled
+- **returns**: boolean emissive flag
 
 #### `editor_api_forestItemTools.updateInstantiateMode(forest, itemDataId, opts)`
 
-Une frame de l'interaction « instancier un item » : raycast sous le curseur, aperçu (sphère, boîte englobante réelle du mesh, ligne de face ; cellule pivot en orange) et, au clic gauche, création d'un tableau cols x rows d'items du datablock itemDataId (échelle opts.scale, 1 par défaut), commité en UNE action annulable. Renvoie la liste des items créés au clic, sinon nil.
+One frame of the "instantiate an item" interaction: raycast under the cursor, preview (sphere, the mesh's actual bounding box, face line; pivot cell in orange) and, on left click, creation of a cols x rows array of items of the itemDataId datablock (scale opts.scale, 1 by default), committed as ONE undoable action. Returns the list of items created on click, otherwise nil.
 
-- `forest` (*userdata*) : objet Forest
-- `itemDataId` (*integer*) : id du datablock ForestItemData
-- `opts` (*table|nil*) : rayRange (préférence par défaut), cols/rows (1x1), colGap/rowGap (m, bord à bord sur les bornes du mesh, 0), yaw (degrés), alignToNormal, flipNormal, normalOffset (m, décalage le long de la face), scale (1), afterCreate(item, forestData, index) (index 1-based)
-- **renvoie** : table|nil items placés (au clic) ou nil
+- `forest` (*userdata*) : Forest object
+- `itemDataId` (*integer*) : id of the ForestItemData datablock
+- `opts` (*table|nil*) : rayRange (default preference), cols/rows (1x1), colGap/rowGap (m, edge to edge on the mesh bounds, 0), yaw (degrees), alignToNormal, flipNormal, normalOffset (m, offset along the face), scale (1), afterCreate(item, forestData, index) (1-based index)
+- **returns**: table|nil items placed (on click) or nil
 
 #### `editor_api_forestItemTools.updateSelectMode(forest, filterFn, rayRange)`
 
-Une frame de l'interaction « sélectionner des items de forêt » (outil Select de l'éditeur de forêt) : survol en blanc, clic = sélection (Ctrl ajoute, clic dans le vide efface), rectangle de sélection (Ctrl ajoute), dessin des boîtes de la sélection (orange) et gizmo de transformation. Restreint aux items passant filterFn.
+One frame of the "select forest items" interaction (the forest editor's Select tool): hover in white, click = select (Ctrl adds, click in empty space clears), selection rectangle (Ctrl adds), drawing of the selection boxes (orange) and the transform gizmo. Restricted to items passing filterFn.
 
-- `forest` (*userdata|nil*) : objet Forest (rien n'est fait si nil)
-- `filterFn` (*function|nil*) : function(item) -> boolean ; nil = tous
-- `rayRange` (*number|nil*) : portée du rayon (défaut : préférence de distance de travail)
+- `forest` (*userdata|nil*) : Forest object (nothing is done if nil)
+- `filterFn` (*function|nil*) : function(item) -> boolean; nil = all
+- `rayRange` (*number|nil*) : ray range (default: working distance preference)
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `PARALLAX_ITEM_PREFIX` | string | Préfixe "parallax_" du nom (ou internalName) d'un datablock ForestItemData identifiant une fenêtre parallax ; l'éditeur parallax ne touche que ces items, l'éditeur de forêt les autres. |
+| `PARALLAX_ITEM_PREFIX` | string | "parallax_" prefix of the name (or internalName) of a ForestItemData datablock identifying a parallax window; the parallax editor only touches these items, the forest editor the others. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onEditorObjectSelectionChanged` — écouté par 8 module(s)
+- `onEditorObjectSelectionChanged` — listened to by 8 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `getUniqueName`
 - `debugDrawer:` `drawLine`, `drawSphere`
@@ -229,4 +229,4 @@ Une frame de l'interaction « sélectionner des items de forêt » (outil Select
 - `worldEditorCppApi.` `getAxisGizmoScaleOffset`, `getAxisGizmoTotalRotateOffset`, `rebuildForestManagerInstanceData`, `renderForestBBs`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/forestItemTools.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/forestItemTools.lua`.*

@@ -1,34 +1,34 @@
 # `flowgraph_nodes_util_customLua`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/customLua.lua` · VM : Game Engine (GE) · 320 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/customLua.lua` · VM: Game Engine (GE) · 320 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/customLua")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/customLua")` (file under extensions/ but not a regular extension)
 
-Nœud « Custom Lua » (catégorie repeat_instant, couleur debug). Permet d'écrire du code Lua directement dans l'éditeur flowgraph, avec pins d'entrée/sortie personnalisés (sauvegardés). Quatre blocs de code : work (chaque frame si un flow d'entrée est actif), _executionStarted, _executionStopped et onPreRender. Le code est compilé avec load dans un environnement restreint (buildBaseEnv) et exécuté sous pcall ; les erreurs sont journalisées sur le nœud. L'éditeur permet de nommer le nœud et de le sauvegarder dans une bibliothèque (préférence flowgraph.general.customLuaNodes).
+Node "Custom Lua" (category repeat_instant, color debug). Lets you write Lua code directly in the flowgraph editor, with custom input/output pins (saved). Four code blocks: work (every frame if an input flow is active), _executionStarted, _executionStopped and onPreRender. The code is compiled with load in a restricted environment (buildBaseEnv) and run under pcall; errors are logged on the node. The editor allows naming the node and saving it to a library (preference flowgraph.general.customLuaNodes).
 
-## Remarques
+## Notes
 
-- Le code est exécuté sans argument utile : pcall reçoit debug.traceback comme argument du chunk.
-- L'environnement expose require, dofile, loadfile, load, io et os : le code n'est pas sandboxé.
-- Le tag du log d'erreur dans exec contient un guillemet parasite : 'Custom Lua Node: " .. code'.
+- The code is executed without a useful argument: pcall receives debug.traceback as the chunk's argument.
+- The environment exposes require, dofile, loadfile, load, io and os: the code is not sandboxed.
+- The error log tag in exec contains a stray quote: 'Custom Lua Node: " .. code'.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Compile les quatre blocs puis exécute _executionStarted. | 131 |
-| `C:_executionStopped()` | Exécute _executionStopped puis libère l'environnement. | 137 |
-| `C:_onDeserialized(data)` | Restaure nom et code puis recompile. | 160 |
-| `C:_onSerialize(data)` | Sauvegarde nom et code. | 168 |
-| `C:buildBaseEnv()` | Construit (une fois) et renvoie la table d'environnement du code utilisateur : self, map, be, FS, scenetree, extensions, vec3/quat, outils JSON et math, toutes les extensions chargées, etc. Fournit aussi refreshExtensions, loadExtension, unloadExtension, log (journalise aussi dans le gestionnaire). | 173 |
-| `C:compile(code)` | Compile le bloc de code donné avec l'environnement de base ; enregistre le message d'erreur dans self.status, sinon la fonction dans self.compiled (nop en cas d'erreur). | 44 |
-| `C:drawCustomProperties()` | Dessine l'éditeur : chargement depuis la bibliothèque, nom, bouton de sauvegarde, et un champ multiligne par bloc avec indicateur d'erreur de compilation. Renvoie la description du changement ou false. | 54 |
-| `C:exec(code)` | Exécute le bloc compilé sous pcall ; en cas d'erreur, logue, marque le nœud en erreur et ajoute un évènement au gestionnaire. | 145 |
-| `C:init()` | Crée les quatre blocs de code vides et autorise les pins d'entrée et de sortie personnalisés (savePins=true). | 29 |
-| `C:onPreRender(dt, dtSim)` | Exécute le bloc onPreRender (avant le rendu). | 141 |
-| `C:work()` | Exécute le bloc work. | 156 |
+| `C:_executionStarted()` | Compiles the four blocks then runs _executionStarted. | 131 |
+| `C:_executionStopped()` | Runs _executionStopped then releases the environment. | 137 |
+| `C:_onDeserialized(data)` | Restores name and code then recompiles. | 160 |
+| `C:_onSerialize(data)` | Saves name and code. | 168 |
+| `C:buildBaseEnv()` | Builds (once) and returns the environment table of the user code: self, map, be, FS, scenetree, extensions, vec3/quat, JSON and math tools, all loaded extensions, etc. Also provides refreshExtensions, loadExtension, unloadExtension, log (also logs to the manager). | 173 |
+| `C:compile(code)` | Compiles the given code block with the base environment; stores the error message in self.status, otherwise the function in self.compiled (nop on error). | 44 |
+| `C:drawCustomProperties()` | Draws the editor: loading from the library, name, save button, and a multiline field per block with a compile error indicator. Returns the description of the change or false. | 54 |
+| `C:exec(code)` | Runs the compiled block under pcall; on error, logs, marks the node as in error and adds an event to the manager. | 145 |
+| `C:init()` | Creates the four empty code blocks and allows custom input and output pins (savePins=true). | 29 |
+| `C:onPreRender(dt, dtSim)` | Runs the onPreRender block (before rendering). | 141 |
+| `C:work()` | Runs the work block. | 156 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/customLua.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/customLua.lua`.*

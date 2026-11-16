@@ -1,31 +1,31 @@
 {
   "path": "lua/ge/extensions/editor/bulkRename.lua",
-  "module": "Fenêtre « Bulk Rename » (menu Assets) de l'éditeur de niveaux : renomme en lot les objets de la scène. On choisit le champ à renommer (name ou internalName), l'ensemble d'objets (sélection courante, ou objets dont le nom correspond à un motif avec * et ?), et un motif de renommage où %n insère un compteur (%4n = 4 chiffres avec zéros), et %o l'ancien nom. Un tableau d'aperçu montre ancien nom, nouveau nom, ID et ID de collision ; le renommage passe par objectHistoryActions.changeObjectFieldMultipleValuesWithUndo (annulable).",
-  "usage": "-- motif de renommage : \"barrier_%3n\" -> barrier_001, barrier_002, ...",
+  "module": "\"Bulk Rename\" window (Assets menu) of the level editor: renames scene objects in bulk. You choose the field to rename (name or internalName), the set of objects (current selection, or objects whose name matches a pattern with * and ?), and a rename pattern where %n inserts a counter (%4n = 4 digits with zeros), and %o the old name. A preview table shows old name, new name, ID and collision ID; the rename goes through objectHistoryActions.changeObjectFieldMultipleValuesWithUndo (undoable).",
+  "usage": "-- rename pattern: \"barrier_%3n\" -> barrier_001, barrier_002, ...",
   "notes": [
-    "Les collisions de noms sont détectées seulement pour le champ name (l'internalName peut être en double) ; le bouton RENAME n'est pas bloqué en cas de collision.",
-    "Le motif de recherche est pris dans le filtre ImGui et passé à Sim.findObjectsByNameMask.",
-    "Après renommage, editor_sceneTree.recacheAllNodes() est appelé."
+    "Name collisions are detected only for the name field (internalName may be duplicated); the RENAME button is not blocked in case of collision.",
+    "The search pattern is taken from the ImGui filter and passed to Sim.findObjectsByNameMask.",
+    "After renaming, editor_sceneTree.recacheAllNodes() is called."
   ],
   "functions": {
     "onEditorGui": {
-      "desc": "Appelé chaque frame de l'éditeur : dessine la fenêtre Bulk Rename (options, motifs, bouton RENAME, tableau d'aperçu).",
+      "desc": "Called every editor frame: draws the Bulk Rename window (options, patterns, RENAME button, preview table).",
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Enregistre la fenêtre « bulkRename » (600x600) et l'entrée de menu « Bulk Rename » (groupe Assets).",
+      "desc": "Registers the \"bulkRename\" window (600x600) and the \"Bulk Rename\" menu entry (Assets group).",
       "internal": true
     },
     "onEditorActivated": {
-      "desc": "Hook appelé à l'activation de l'éditeur ; fonction vide.",
+      "desc": "Hook called when the editor is activated; empty function.",
       "internal": true
     },
     "onEditorObjectSelectionChanged": {
-      "desc": "Hook appelé quand la sélection d'objets de l'éditeur change ; recalcule l'aperçu des noms.",
+      "desc": "Hook called when the editor object selection changes; recomputes the name preview.",
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement de l'extension ; fonction vide.",
+      "desc": "Hook called when the extension is loaded; empty function.",
       "internal": true
     }
   }

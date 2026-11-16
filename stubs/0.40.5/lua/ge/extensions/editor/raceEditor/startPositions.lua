@@ -2,90 +2,90 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/raceEditor/startPositions.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre Start Positions (windowDescription = 'Start Positions'). Instanciée avec init(raceEditor).
+--- Start Positions window (windowDescription = 'Start Positions'). Instantiated with init(raceEditor).
 ---@class editor_raceEditor_startPositions
 local editor_raceEditor_startPositions = {}
 
---- Valide une action d'historique pour la position courante à partir de l'état sérialisé précédent et de l'état actuel.
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:144
----@param name string Nom de l'action.
----@param old table Résultat de sp:onSerialize() avant la modification.
+--- Commits a history action for the current position from the previous serialized state and the current state.
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:144
+---@param name string Name of the action.
+---@param old table Result of sp:onSerialize() before the modification.
 function editor_raceEditor_startPositions:addHistory(name, old) end
 
---- Début de manipulation au gizmo : mémorise la rotation et l'état sérialisé.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:102
+--- Start of gizmo manipulation: stores the rotation and the serialized state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:102
 function editor_raceEditor_startPositions:beginDrag() end
 
---- Affiche l'aide et l'aperçu (prismes) pendant le glisser, puis au relâchement crée une position (position = point d'appui, orientation = direction du glisser) via l'historique.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:151
+--- Displays the help and the preview (prisms) during the drag, then on release creates a position (position = anchor point, orientation = drag direction) via history.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:151
 function editor_raceEditor_startPositions:createStartPosition() end
 
---- Pendant la manipulation : applique translation (pos) ou rotation (rot).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:109
+--- During manipulation: applies translation (pos) or rotation (rot).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:109
 function editor_raceEditor_startPositions:dragging() end
 
---- Appelé à chaque frame : mémorise mouseInfo, gère gizmo et entrées si autorisé, puis dessine la liste et le panneau.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:211
----@param mouseInfo table Infos souris (valid, down, hold, up, camPos, rayDir, rayCast, _downPos, _holdPos, _upPos).
+--- Called every frame: stores mouseInfo, handles gizmo and inputs if allowed, then draws the list and the panel.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:211
+---@param mouseInfo table Mouse info (valid, down, hold, up, camPos, rayDir, rayCast, _downPos, _holdPos, _upPos).
 function editor_raceEditor_startPositions:draw(mouseInfo) end
 
---- Dessine la liste des positions et le panneau de la position courante : suppression, déplacement dans la liste, nom, position, terrain, véhicule, groupe.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:223
+--- Draws the position list and the current position panel: delete, move in the list, name, position, terrain, vehicle, group.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:223
 function editor_raceEditor_startPositions:drawStartPositions() end
 
---- Fin de manipulation : valide l'action « Moved Start Position by Gizmo ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:126
+--- End of manipulation: commits the "Moved Start Position by Gizmo" action.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:126
 function editor_raceEditor_startPositions:endDragging() end
 
---- Renvoie la position de départ survolée par le rayon souris (sphère de 3 m), la plus proche de la caméra.
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:69
----@return table|nil  Position survolée.
+--- Returns the start position hovered by the mouse ray (3 m sphere), the one closest to the camera.
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:69
+---@return table|nil  Hovered position.
 function editor_raceEditor_startPositions:hoveringStartPosition() end
 
---- Mémorise raceEditor et met l'index de sélection à nil.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:13
+--- Stores raceEditor and sets the selection index to nil.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:13
 ---@param raceEditor table Module editor_raceEditor.
 function editor_raceEditor_startPositions:init(raceEditor) end
 
---- Gère la souris : avec Shift, création ; sinon clic pour sélectionner ou désélectionner.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:86
+--- Handles the mouse: with Shift, creation; otherwise click to select or deselect.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:86
 function editor_raceEditor_startPositions:input() end
 
---- Appelé à l'activation du mode d'édition : resélectionne la position courante si elle existe.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:205
+--- Called when the edit mode is activated: reselects the current position if it exists.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:205
 function editor_raceEditor_startPositions:onEditModeActivate() end
 
---- Sélectionne la position d'ID id (nil pour aucune) : surbrillance, charge nom et groupe, place le gizmo.
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:39
----@param id integer|nil ID de la position de départ.
+--- Selects the position with ID id (nil for none): highlight, loads name and group, places the gizmo.
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:39
+---@param id integer|nil Start position ID.
 function editor_raceEditor_startPositions:selectStartPosition(id) end
 
---- Appelé quand l'onglet devient actif : désélectionne, dessine les positions en « normal » et ajoute le raccourci Shift « Add New ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:22
+--- Called when the tab becomes active: deselects, draws positions in "normal" and adds the Shift shortcut "Add New".
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:22
 function editor_raceEditor_startPositions:selected() end
 
---- Définit le chemin de course édité.
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:18
----@param path table Objet gameplay/race/path.
+--- Sets the race path being edited.
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:18
+---@param path table gameplay/race/path object.
 function editor_raceEditor_startPositions:setPath(path) end
 
---- Appelé quand l'onglet est quitté : positions en « faded », retire le raccourci Shift.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:31
+--- Called when the tab is left: positions in "faded", removes the Shift shortcut.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:31
 function editor_raceEditor_startPositions:unselect() end
 
---- Place le gizmo sur la position (orienté selon sp.rot en alignement local). Sans effet si le gizmo est interdit.
----Source : lua/ge/extensions/editor/raceEditor/startPositions.lua:52
----@param index integer ID de la position.
+--- Places the gizmo on the position (oriented along sp.rot in local alignment). No effect if the gizmo is forbidden.
+---Source: lua/ge/extensions/editor/raceEditor/startPositions.lua:52
+---@param index integer Position ID.
 function editor_raceEditor_startPositions:updateTransform(index) end
 

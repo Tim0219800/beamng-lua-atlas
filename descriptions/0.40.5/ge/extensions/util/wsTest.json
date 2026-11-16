@@ -1,24 +1,24 @@
 {
   "path": "lua/ge/extensions/util/wsTest.lua",
-  "module": "Outil de développement : démarre un serveur web/WebSocket (port 8083, protocole « bng-test », page ./ui/entrypoints/util_wsTest/) écoutant sur toutes les adresses. Un client distant peut exécuter du code Lua GE, recharger le Lua, recharger l'interface CEF, ouvrir la console de développement CEF et mesurer la bande passante. Sert aux tests d'outils externes.",
+  "module": "Development tool: starts a web/WebSocket server (port 8083, \"bng-test\" protocol, page ./ui/entrypoints/util_wsTest/) listening on all addresses. A remote client can run GE Lua code, reload Lua, reload the CEF UI, open the CEF developer console and measure bandwidth. Used for testing external tools.",
   "usage": "extensions.load('util_wsTest')",
   "notes": [
-    "Sécurité : la commande execGELua évalue du Lua arbitraire envoyé par n'importe quel client connecté, sur toutes les interfaces réseau. À n'utiliser qu'en local de confiance.",
-    "Commandes JSON reconnues (champ type) : execGELua (cmd), reloadGELua, reloadCEF, toggleCEFDevConsole, bandwidthDown, bandwidthUpStart (size). Le message texte « ping » répond « pong ».",
-    "Bug mineur : en cas d'échec du décodage JSON, le message d'erreur utilise la variable `e`, non définie (nil), au lieu de evt.msg.",
-    "Le résultat de execGELua est renvoyé tel quel dans jsonEncode({result = ...}) ; une erreur donne une chaîne « Error: ... »."
+    "Security: the execGELua command evaluates arbitrary Lua sent by any connected client, on all network interfaces. Use only in a trusted local environment.",
+    "Recognized JSON commands (field type): execGELua (cmd), reloadGELua, reloadCEF, toggleCEFDevConsole, bandwidthDown, bandwidthUpStart (size). The text message \"ping\" answers \"pong\".",
+    "Minor bug: if JSON decoding fails, the error message uses the variable `e`, which is undefined (nil), instead of evt.msg.",
+    "The result of execGELua is returned as is in jsonEncode({result = ...}); an error gives an \"Error: ...\" string."
   ],
   "functions": {
     "onExtensionLoaded": {
-      "desc": "Crée (ou récupère) le serveur WebSocket via utils/wsUtils sur le port 8083 et affiche son adresse dans la console.",
+      "desc": "Creates (or retrieves) the WebSocket server via utils/wsUtils on port 8083 and prints its address in the console.",
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Détruit le serveur WebSocket (BNGWebWSServer.destroy) s'il existe.",
+      "desc": "Destroys the WebSocket server (BNGWebWSServer.destroy) if it exists.",
       "internal": true
     },
     "onUpdate": {
-      "desc": "Chaque image : lit les évènements des clients, répond au ping, décode les commandes JSON et les traite, puis met à jour le serveur.",
+      "desc": "Each frame: reads the clients' events, answers ping, decodes the JSON commands and processes them, then updates the server.",
       "internal": true
     }
   }

@@ -1,36 +1,36 @@
 # `bananabench_async`
 
-*Fichier : `lua/console/bananabench-async.lua` · VM : Console · 220 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/console/bananabench-async.lua` · VM: Console · 220 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("bananabench-async")`
+**Access:** `require("bananabench-async")`
 
-Ancienne version (0.4) du banc d'essai bananabench, asynchrone : `benchPhysics` tourne dans une coroutine pilotée image par image (`coroutine.yield()` pendant gfxSteps = 20 images), avec mesure en comparant dynamic collision activée puis désactivée. Version historique, remplacée par console/bananabench.lua.
+Old version (0.4) of the bananabench test bench, asynchronous: `benchPhysics` runs in a coroutine driven frame by frame (`coroutine.yield()` during gfxSteps = 20 frames), measuring by comparing dynamic collision enabled then disabled. Historical version, replaced by console/bananabench.lua.
 
-## Remarques
+## Notes
 
-- Code probablement non fonctionnel dans 0.40.5 : il fait `require("lua/console/test")` (fichier qui n'existe pas dans console/), utilise `BeamEngine` comme global jamais défini ici, et l'ancienne API `BeamEngine:spawnObject` (le nouveau code utilise spawnObject2).
-- La table `M = {}` est créée globalement (pas de `local`) et n'est pas renvoyée.
-- Fonctionnement : `benchmark_start()` crée la coroutine, `benchmark_update()` la reprend une fois (à appeler à chaque mise à jour du moteur).
-- Les résultats par véhicule contiennent pour chaque nombre de véhicules deux entrées res (collision dynamique activée/désactivée) avec beamspersec, percentRealtime, time et spawntime (en secondes).
-- Pour chaque mesure, un tour d'échauffement est joué puis deux mesures sont cumulées (totalSteps = physicsSteps * 2 * gfxSteps).
+- Code probably non-functional in 0.40.5: it does `require("lua/console/test")` (a file that does not exist in console/), uses `BeamEngine` as a global never defined here, and the old `BeamEngine:spawnObject` API (the new code uses spawnObject2).
+- The table `M = {}` is created globally (no `local`) and is not returned.
+- How it works: `benchmark_start()` creates the coroutine, `benchmark_update()` resumes it once (to be called on every engine update).
+- The per-vehicle results contain, for each vehicle count, two res entries (dynamic collision enabled/disabled) with beamspersec, percentRealtime, time and spawntime (in seconds).
+- For each measurement, a warm-up round is played then two measurements are accumulated (totalSteps = physicsSteps * 2 * gfxSteps).
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `benchLog(level, origin, msg, newline)` | Collecteur de logs : stocke les entrées (sauf niveaux A, D, S) dans une liste locale et mémorise la gravité maximale (warn/error). | 41 |
-| `benchPhysics(vehicles, vehicleMin, vehicleMax)` | Exécute le benchmark (collision dynamique activée puis désactivée) pour chaque véhicule et renvoie le tableau de résultats ; doit tourner dans une coroutine. | 72 |
-| `benchmark_start()` | Crée la coroutine qui exécutera benchPhysics. | 210 |
-| `benchmark_update()` | Reprend la coroutine d'une étape ; à appeler à chaque mise à jour par le programme hôte. | 215 |
-| `myBenchStep(testVehicle, n)` | Fait apparaître des véhicules jusqu'à n (positions 300*i), puis laisse passer gfxSteps images (coroutine.yield) en mesurant le temps. Signale une instabilité. | 16 |
+| `benchLog(level, origin, msg, newline)` | Log collector: stores the entries (except levels A, D, S) in a local list and remembers the maximum severity (warn/error). | 41 |
+| `benchPhysics(vehicles, vehicleMin, vehicleMax)` | Runs the benchmark (dynamic collision enabled then disabled) for each vehicle and returns the results table; must run in a coroutine. | 72 |
+| `benchmark_start()` | Creates the coroutine that will run benchPhysics. | 210 |
+| `benchmark_update()` | Resumes the coroutine by one step; to be called on every update by the host program. | 215 |
+| `myBenchStep(testVehicle, n)` | Spawns vehicles up to n (positions 300*i), then lets gfxSteps frames pass (coroutine.yield) while measuring the time. Reports an instability. | 16 |
 
-**Globales affectées :** `M`
+**Globals assigned:** `M`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `BeamEngine:` `deleteAllObjects`, `getSlot`, `instabilityDetected`, `setDynamicCollisionEnabled`, `spawnObject`
 - `FS:` `closeDirectory`, `openDirectory`
 - `obj:` `getBeamCount`, `getNodeCount`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/console/bananabench-async.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/console/bananabench-async.lua`.*

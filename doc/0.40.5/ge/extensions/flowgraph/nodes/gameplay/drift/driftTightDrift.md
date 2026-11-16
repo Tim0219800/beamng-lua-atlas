@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_drift_driftTightDrift`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftTightDrift.lua` · VM : Game Engine (GE) · 33 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftTightDrift.lua` · VM: Game Engine (GE) · 33 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/drift/driftTightDrift")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/drift/driftTightDrift")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Drift Through Detected » (catégorie repeat_instant, drift). Détecte les zones de drift serré : émet tightDrift (impulsion) et tightDriftScore quand le callback tight du module drift du flowgraph est actif (ttl > 0).
+Flowgraph node "Drift Through Detected" (category repeat_instant, drift). Detects tight drift zones: emits tightDrift (pulse) and tightDriftScore when the tight callback of the flowgraph drift module is active (ttl > 0).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Lit mgr.modules.drift:getCallBacks().tight et renseigne tightDrift et tightDriftScore. | 23 |
+| `C:work()` | Reads mgr.modules.drift:getCallBacks().tight and fills tightDrift and tightDriftScore. | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftTightDrift.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftTightDrift.lua`.*

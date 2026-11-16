@@ -1,19 +1,54 @@
 {
   "path": "lua/vehicle/extensions/dragAi.lua",
-  "module": "Mini-IA de dragster : gaz à fond, direction proportionnelle vers un point cible, puis freinage et frein à main à l'arrivée. L'état évolue de 'ready' (gaz enclenchés, frein à main serré) à 'go' (frein à main relâché, roule vers la cible), 'stopping', 'finished'. Elle pilote le véhicule en envoyant des événements d'entrée (input.event).",
+  "module": "Mini drag-racing AI: full throttle, proportional steering toward a target point, then braking and handbrake on arrival. The state goes from 'ready' (throttle engaged, handbrake applied) to 'go' (handbrake released, drives to the target), 'stopping', 'finished'. It drives the vehicle by sending input events (input.event).",
   "usage": "extensions.dragAi.setTarget(vec3(0, 400, 0))\nextensions.dragAi.getReady()\nextensions.dragAi.go()",
   "notes": [
-    "États internes : nil/idle, 'ready', 'go', 'stopping', 'finished'. En 'go' la direction vaut (cos - sign(cos)) * 30 * sign(côté) (sans clamp) vers targetPosition (plan horizontal) ; passage en 'stopping' à moins de 10 m de la cible.",
-    "En 'stopping' : frein et frein à main, gaz et direction à zéro ; 'finished' quand electrics.values.airspeed < 2 (m/s), puis frein à main maintenu.",
-    "Si go() est appelé sans setTarget préalable, vec3(nil) provoquera une erreur.",
-    "reset() met l'état à 'idle', coupe les gaz et serre le frein à main."
+    "Internal states: nil/idle, 'ready', 'go', 'stopping', 'finished'. In 'go' the steering equals (cos - sign(cos)) * 30 * sign(side) (no clamp) toward targetPosition (horizontal plane); switches to 'stopping' within 10 m of the target.",
+    "In 'stopping': brake and handbrake, throttle and steering at zero; 'finished' when electrics.values.airspeed < 2 (m/s), then handbrake held.",
+    "If go() is called without a prior setTarget, vec3(nil) will cause an error.",
+    "reset() sets the state to 'idle', cuts the throttle and applies the handbrake."
   ],
   "fields": {},
   "functions": {
-    "getReady": {"desc": "Passe en état 'ready' : applique les gaz à fond.", "params": {}, "returns": [], "internal": false},
-    "go": {"desc": "Passe en état 'go' : relâche le frein à main, la boucle conduit vers la cible.", "params": {}, "returns": [], "internal": false},
-    "setTarget": {"desc": "Définit le point cible à atteindre.", "params": {"targetPos": {"type": "vec3", "desc": "Position monde de la cible (x,y utilisés)."}}, "returns": [], "internal": false},
-    "reset": {"desc": "Hook de reset du véhicule : état 'idle', gaz à zéro, frein à main serré.", "params": {}, "returns": [], "internal": true},
-    "updateGFX": {"desc": "Appelé chaque frame : exécute la machine à états de conduite.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (non utilisé)."}}, "returns": [], "internal": true}
+    "getReady": {
+      "desc": "Switches to the 'ready' state: applies full throttle.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "go": {
+      "desc": "Switches to the 'go' state: releases the handbrake, the loop drives toward the target.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setTarget": {
+      "desc": "Sets the target point to reach.",
+      "params": {
+        "targetPos": {
+          "type": "vec3",
+          "desc": "World position of the target (x,y used)."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "reset": {
+      "desc": "Vehicle reset hook: 'idle' state, throttle at zero, handbrake applied.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Called every frame: runs the driving state machine.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds (unused)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

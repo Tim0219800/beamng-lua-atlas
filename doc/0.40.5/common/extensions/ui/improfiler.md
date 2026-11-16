@@ -1,39 +1,39 @@
 # `ui_improfiler`
 
-*Fichier : `lua/common/extensions/ui/improfiler.lua` · VM : Commun (GE + véhicule) · 332 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/extensions/ui/improfiler.lua` · VM: Common (GE + vehicle) · 332 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_improfiler` : `extensions.load("ui_improfiler")`, puis la globale `ui_improfiler`
+**Access:** extension `ui_improfiler`: `extensions.load("ui_improfiler")`, then the global `ui_improfiler`
 
-Profileur LuaJIT affiché dans une fenêtre ImGui « LuaJIT Profiler ». La première partie du fichier est le module jit/p de Mike Pall (MIT, 2005-2017) adapté : échantillonnage du profileur intégré de LuaJIT (jit.profile) et formatage du résultat dans une chaîne au lieu de stdout. La fin du fichier est la partie BeamNG : toutes les 3 secondes, le profil est terminé, son texte affiché dans la fenêtre, puis un nouveau profil est lancé avec le mode « vzm0lspi0 500 -500 » (états VM, zones, minimum 0 %, split, chemins complets, intervalle 0 ms...).
+LuaJIT profiler displayed in an ImGui window "LuaJIT Profiler". The first part of the file is Mike Pall's jit/p module (MIT, 2005-2017) adapted: sampling of LuaJIT's built-in profiler (jit.profile) and formatting of the result into a string instead of stdout. The end of the file is the BeamNG part: every 3 seconds, the profile is finished, its text displayed in the window, then a new profile is started with the mode "vzm0lspi0 500 -500" (VM states, zones, minimum 0%, split, full paths, interval 0 ms...).
 
-## Exemple
+## Example
 
 ```lua
-extensions.load('ui_improfiler') -- la fenêtre apparaît ; le texte est rafraîchi toutes les 3 s
+extensions.load('ui_improfiler') -- the window appears; the text is refreshed every 3 s
 ```
 
-## Remarques
+## Notes
 
-- Le fichier fait require('libs/LuaJIT/vmdef') alors que la copie du jeu est dans common/jit/vmdef.lua : chemin différent (pas de bug prouvé, seulement à garder en tête).
-- Le fichier assert que jit.version_num == 20100.
-- Seul onUpdate est exposé ; le profil démarre au premier cycle de 3 s (prof_finish ne fait rien tant qu'aucun profil n'est lancé).
-- Le temps est cumulé avec dtReal (temps réel, non affecté par le ralenti).
+- The file does require('libs/LuaJIT/vmdef') while the game's copy is in common/jit/vmdef.lua: different path (no proven bug, just to keep in mind).
+- The file asserts that jit.version_num == 20100.
+- Only onUpdate is exposed; the profile starts at the first 3 s cycle (prof_finish does nothing as long as no profile is running).
+- Time is accumulated with dtReal (real time, unaffected by slow motion).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_improfiler.onUpdate(dtReal, dtSim, dtRaw)` | Hook appelé chaque frame : dessine la fenêtre « LuaJIT Profiler » avec le dernier résultat ; toutes les 3 s de temps réel, termine le profil en cours, met à jour le texte affiché et relance le profileur. *(interne)* *(hook)* | 307 |
+| `ui_improfiler.onUpdate(dtReal, dtSim, dtRaw)` | Hook called every frame: draws the "LuaJIT Profiler" window with the latest result; every 3 s of real time, finishes the current profile, updates the displayed text and restarts the profiler. *(internal)* *(hook)* | 307 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_improfiler.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé chaque frame : dessine la fenêtre « LuaJIT Profiler » avec le dernier résultat ; toutes les 3 s de temps réel, termine le profil en cours, met à jour le texte affiché et relance le profileur.
+Hook called every frame: draws the "LuaJIT Profiler" window with the latest result; every 3 s of real time, finishes the current profile, updates the displayed text and restarts the profiler.
 
-- `dtReal` (*number*) : Delta temps réel (s), cumulé pour le minuteur de 3 s.
-- `dtSim` (*number*) : Non utilisé.
-- `dtRaw` (*number*) : Non utilisé.
+- `dtReal` (*number*) : Real delta time (s), accumulated for the 3 s timer.
+- `dtSim` (*number*) : Not used.
+- `dtRaw` (*number*) : Not used.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/extensions/ui/improfiler.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/extensions/ui/improfiler.lua`.*

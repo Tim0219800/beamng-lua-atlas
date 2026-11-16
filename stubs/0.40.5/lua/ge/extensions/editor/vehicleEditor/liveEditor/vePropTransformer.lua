@@ -2,53 +2,53 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre 'Prop Transformer' du Vehicle Editor live : permet de choisir un prop (pièce visuelle comme un rétroviseur ou une lampe) du véhicule en visant son nœud de référence ('Pick Prop', molette pour parcourir les props superposés) puis de modifier sa transformation en direct : baseTranslation, baseTranslationGlobal (m), baseRotation, baseRotationGlobal (affichées en degrés, converties en radians pour le moteur), soit par champs numériques, soit avec le gizmo d'axes. Les valeurs « sans nodeRotate/Offset/Move » peuvent être copiées dans le presse-papiers au format JSON "x":…, "y":…, "z":… pour les coller dans le jbeam.
---- Accès : extension `editor_vehicleEditor_liveEditor_vePropTransformer` : `extensions.load("editor_vehicleEditor_liveEditor_vePropTransformer")`, puis la globale `editor_vehicleEditor_liveEditor_vePropTransformer`
+--- 'Prop Transformer' window of the live Vehicle Editor: lets you choose a prop (visual part such as a mirror or a lamp) of the vehicle by aiming at its reference node ('Pick Prop', wheel to cycle through overlapping props) then modify its transformation live: baseTranslation, baseTranslationGlobal (m), baseRotation, baseRotationGlobal (displayed in degrees, converted to radians for the engine), either by numeric fields or with the axis gizmo. The values "without nodeRotate/Offset/Move" can be copied to the clipboard in the JSON format "x":…, "y":…, "z":… to paste them into the jbeam.
+--- Access: extension `editor_vehicleEditor_liveEditor_vePropTransformer`: `extensions.load("editor_vehicleEditor_liveEditor_vePropTransformer")`, then the global `editor_vehicleEditor_liveEditor_vePropTransformer`
 ---@class editor_vehicleEditor_liveEditor_vePropTransformer
 ---@field menuEntry string 'Prop Transformer'.
 editor_vehicleEditor_liveEditor_vePropTransformer = {}
 
---- Restaure l'état d'ouverture.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:560
----@param data table Table de onSerialize.
+--- Restores the open state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:560
+---@param data table onSerialize table.
 function editor_vehicleEditor_liveEditor_vePropTransformer.onDeserialized(data) end
 
---- Renvoie {windowOpen}.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:554
+--- Returns {windowOpen}.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:554
 ---@return table  {windowOpen = boolean}
 function editor_vehicleEditor_liveEditor_vePropTransformer.onSerialize() end
 
---- Appelé chaque frame : dessine la fenêtre (bouton Pick Prop, champs de translation/rotation, boutons de copie et de gizmo).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:452
----@param dt number Delta temps.
+--- Called every frame: draws the window (Pick Prop button, translation/rotation fields, copy and gizmo buttons).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:452
+---@param dt number Time delta.
 function editor_vehicleEditor_liveEditor_vePropTransformer.onUpdate(dt) end
 
---- Hook de rendu émis par editor_veMain : initialise l'état si besoin, dessine le prop choisi, applique la transformation via gizmo et exécute le picking de prop (mode 2).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:433
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulation (s).
----@param dtRaw number Delta temps brut (s).
+--- Render hook emitted by editor_veMain: initializes the state if needed, draws the chosen prop, applies the transformation via the gizmo and runs the prop picking (mode 2).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:433
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulation time delta (s).
+---@param dtRaw number Raw time delta (s).
 function editor_vehicleEditor_liveEditor_vePropTransformer.onVehicleEditorRenderJBeams(dtReal, dtSim, dtRaw) end
 
---- Quand un véhicule apparaît, oublie puis recrée son état.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:545
----@param id integer ID du véhicule.
+--- When a vehicle spawns, forgets then recreates its state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:545
+---@param id integer Vehicle ID.
 function editor_vehicleEditor_liveEditor_vePropTransformer.onVehicleSpawned(id) end
 
---- Au changement de véhicule, bascule vers l'état du nouveau véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:541
----@param oldVehicle integer ID de l'ancien véhicule.
----@param newVehicle integer ID du nouveau véhicule.
----@param player integer Index du joueur.
+--- On vehicle change, switches to the state of the new vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:541
+---@param oldVehicle integer ID of the old vehicle.
+---@param newVehicle integer ID of the new vehicle.
+---@param player integer Player index.
 function editor_vehicleEditor_liveEditor_vePropTransformer.onVehicleSwitched(oldVehicle, newVehicle, player) end
 
---- Ouvre la fenêtre.
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:550
+--- Opens the window.
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.lua:550
 function editor_vehicleEditor_liveEditor_vePropTransformer.open() end
 

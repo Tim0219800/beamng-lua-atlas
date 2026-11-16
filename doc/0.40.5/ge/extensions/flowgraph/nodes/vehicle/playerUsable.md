@@ -1,29 +1,29 @@
 # `flowgraph_nodes_vehicle_playerUsable`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/playerUsable.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/playerUsable.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/playerUsable")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/playerUsable")` (file under extensions/ but not a regular extension)
 
-Nœud « Player Usable » (catégorie `repeat_instant`). Fixe si un véhicule peut être contrôlé par le joueur : `source.obj.playerUsable = controllable`. Pins d'entrée : `vehId`, `controllable` (bool).
+Node "Player Usable" (category `repeat_instant`). Sets whether a vehicle can be controlled by the player: `source.obj.playerUsable = controllable`. Input pins: `vehId`, `controllable` (bool).
 
-## Remarques
+## Notes
 
-- `C.todo` : « PlayerUsable a des bugs et ne fonctionne que la première fois ».
-- Bug : `vehId` nil ou 0 → `source` nil → erreur à l'accès `source.obj` ; pas de repli sur le joueur.
-- `legacyPins` référence `vehiId` (faute de frappe).
+- `C.todo`: "PlayerUsable has bugs and only works the first time".
+- Bug: `vehId` nil or 0 -> `source` nil -> error on access to `source.obj`; no fallback to the player.
+- `legacyPins` references `vehiId` (typo).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Constructeur vide. | 26 |
-| `C:work()` | Écrit `controllable` dans `playerUsable` du véhicule. | 31 |
+| `C:init()` | Empty constructor. | 26 |
+| `C:work()` | Writes `controllable` to the vehicle's `playerUsable`. | 31 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/playerUsable.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/playerUsable.lua`.*

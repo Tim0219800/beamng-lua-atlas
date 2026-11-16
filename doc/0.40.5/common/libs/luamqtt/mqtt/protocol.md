@@ -1,222 +1,222 @@
 # `libs_luamqtt_mqtt_protocol`
 
-*Fichier : `lua/common/libs/luamqtt/mqtt/protocol.lua` · VM : Commun (GE + véhicule) · 526 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/luamqtt/mqtt/protocol.lua` · VM: Common (GE + vehicle) · 526 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/luamqtt/mqtt/protocol")`
+**Access:** `require("libs/luamqtt/mqtt/protocol")`
 
-Briques génériques du protocole MQTT (communes aux versions 3.1.1 et 5.0) de luamqtt : création et lecture d'entiers, chaînes UTF-8 et champs de longueur variable, en-tête fixe, constantes de types de paquets et codes CONNACK, identifiants de paquet, paquets combinés. Utilisé par protocol4.lua et protocol5.lua. Convention des fonctions parse_* : elles reçoivent read_func(n) qui lit n octets et renvoie la chaîne, ou false/nil et un message d'erreur.
+Generic building blocks of the MQTT protocol (shared by versions 3.1.1 and 5.0) of luamqtt: creating and reading integers, UTF-8 strings and variable-length fields, fixed header, packet type constants and CONNACK codes, packet identifiers, combined packets. Used by protocol4.lua and protocol5.lua. parse_* function convention: they receive read_func(n), which reads n bytes and returns the string, or false/nil and an error message.
 
-## Remarques
+## Notes
 
-- Uniquement utile pour écrire ou analyser des paquets MQTT à la main ; un moddeur utilise normalement client.lua.
+- Only useful for writing or parsing MQTT packets by hand; a modder normally uses client.lua.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_luamqtt_mqtt_protocol.check_packet_id(val)` | Vrai si la valeur est un identifiant de paquet valide. | 265 |
-| `libs_luamqtt_mqtt_protocol.check_qos(val)` | Vrai si la valeur est un QoS valide. | 258 |
-| `libs_luamqtt_mqtt_protocol.combine(...)` | Combine plusieurs morceaux de données en un paquet combiné (se comporte comme une chaîne : tostring, len, append). | 414 |
-| `libs_luamqtt_mqtt_protocol.make_header(ptype, flags, len)` | Crée l'en-tête fixe d'un paquet. | 252 |
-| `libs_luamqtt_mqtt_protocol.make_string(str)` | Crée une chaîne UTF-8 préfixée par sa longueur sur 2 octets. | 85 |
-| `libs_luamqtt_mqtt_protocol.make_uint16(val)` | Crée les données d'un entier 16 bits. | 66 |
-| `libs_luamqtt_mqtt_protocol.make_uint16_nonzero(value)` | Données d'une propriété 2 octets avec contrôle de valeur non nulle. | 120 |
-| `libs_luamqtt_mqtt_protocol.make_uint32(val)` | Crée les données d'un entier 32 bits. | 75 |
-| `libs_luamqtt_mqtt_protocol.make_uint8(val)` | Crée les données d'un entier 8 bits. | 57 |
-| `libs_luamqtt_mqtt_protocol.make_uint8_0_or_1(value)` | Données d'une propriété 1 octet qui ne peut valoir que 0 ou 1. | 112 |
-| `libs_luamqtt_mqtt_protocol.make_var_length(len)` | Encode un entier en champ de longueur variable (Remaining Length). | 92 |
-| `libs_luamqtt_mqtt_protocol.make_var_length_nonzero(value)` | Données d'une propriété de longueur variable avec contrôle de valeur non nulle. | 128 |
-| `libs_luamqtt_mqtt_protocol.next_packet_id(curr)` | Renvoie l'identifiant de paquet suivant celui donné. | 272 |
-| `libs_luamqtt_mqtt_protocol.packet_id_required(args)` | Vrai si le paquet décrit par args (champ type, et qos pour PUBLISH) exige un identifiant de paquet. Lève une exception si args n'est pas une table ou si args.type n'est pas un nombre. | 372 |
-| `libs_luamqtt_mqtt_protocol.packet_tostring(packet)` | Convertit un paquet analysé en texte lisible. | 443 |
-| `libs_luamqtt_mqtt_protocol.parse_string(read_func)` | Lit une chaîne UTF-8 préfixée par sa longueur. Renvoie false et un message en cas d'échec. | 138 |
-| `libs_luamqtt_mqtt_protocol.parse_uint16(read_func)` | Lit un entier 16 bits. | 175 |
-| `libs_luamqtt_mqtt_protocol.parse_uint16_nonzero(read_func)` | Lit un entier 16 bits non nul. | 187 |
-| `libs_luamqtt_mqtt_protocol.parse_uint32(read_func)` | Lit un entier 32 bits. | 199 |
-| `libs_luamqtt_mqtt_protocol.parse_uint8(read_func)` | Lit un entier 8 bits avec read_func. | 152 |
-| `libs_luamqtt_mqtt_protocol.parse_uint8_0_or_1(read_func)` | Lit un octet qui doit valoir 0 ou 1. | 163 |
-| `libs_luamqtt_mqtt_protocol.parse_var_length(read_func)` | Lit un champ de longueur variable (Remaining Length). | 217 |
-| `libs_luamqtt_mqtt_protocol.parse_var_length_nonzero(read_func)` | Lit un entier de longueur variable qui doit être non nul. | 238 |
-| `libs_luamqtt_mqtt_protocol.start_parse_packet(read_func)` | Commence l'analyse d'un nouveau paquet : lit l'en-tête fixe et prépare un flux d'entrée (table avec read_func et available) pour le contenu. Renvoie le type, les drapeaux, le flux, etc. | 476 |
+| `libs_luamqtt_mqtt_protocol.check_packet_id(val)` | True if the value is a valid packet identifier. | 265 |
+| `libs_luamqtt_mqtt_protocol.check_qos(val)` | True if the value is a valid QoS. | 258 |
+| `libs_luamqtt_mqtt_protocol.combine(...)` | Combines several pieces of data into a combined packet (behaves like a string: tostring, len, append). | 414 |
+| `libs_luamqtt_mqtt_protocol.make_header(ptype, flags, len)` | Creates the fixed header of a packet. | 252 |
+| `libs_luamqtt_mqtt_protocol.make_string(str)` | Creates a UTF-8 string prefixed by its 2-byte length. | 85 |
+| `libs_luamqtt_mqtt_protocol.make_uint16(val)` | Creates the data for a 16-bit integer. | 66 |
+| `libs_luamqtt_mqtt_protocol.make_uint16_nonzero(value)` | Data of a 2-byte property with a non-zero value check. | 120 |
+| `libs_luamqtt_mqtt_protocol.make_uint32(val)` | Creates the data for a 32-bit integer. | 75 |
+| `libs_luamqtt_mqtt_protocol.make_uint8(val)` | Creates the data for an 8-bit integer. | 57 |
+| `libs_luamqtt_mqtt_protocol.make_uint8_0_or_1(value)` | Data of a 1-byte property that can only be 0 or 1. | 112 |
+| `libs_luamqtt_mqtt_protocol.make_var_length(len)` | Encodes an integer as a variable-length field (Remaining Length). | 92 |
+| `libs_luamqtt_mqtt_protocol.make_var_length_nonzero(value)` | Data of a variable-length property with a non-zero value check. | 128 |
+| `libs_luamqtt_mqtt_protocol.next_packet_id(curr)` | Returns the packet identifier following the given one. | 272 |
+| `libs_luamqtt_mqtt_protocol.packet_id_required(args)` | True if the packet described by args (type field, and qos for PUBLISH) requires a packet identifier. Raises an exception if args is not a table or if args.type is not a number. | 372 |
+| `libs_luamqtt_mqtt_protocol.packet_tostring(packet)` | Converts a parsed packet to readable text. | 443 |
+| `libs_luamqtt_mqtt_protocol.parse_string(read_func)` | Reads a UTF-8 string prefixed by its length. Returns false and a message on failure. | 138 |
+| `libs_luamqtt_mqtt_protocol.parse_uint16(read_func)` | Reads a 16-bit integer. | 175 |
+| `libs_luamqtt_mqtt_protocol.parse_uint16_nonzero(read_func)` | Reads a non-zero 16-bit integer. | 187 |
+| `libs_luamqtt_mqtt_protocol.parse_uint32(read_func)` | Reads a 32-bit integer. | 199 |
+| `libs_luamqtt_mqtt_protocol.parse_uint8(read_func)` | Reads an 8-bit integer with read_func. | 152 |
+| `libs_luamqtt_mqtt_protocol.parse_uint8_0_or_1(read_func)` | Reads a byte that must be 0 or 1. | 163 |
+| `libs_luamqtt_mqtt_protocol.parse_var_length(read_func)` | Reads a variable-length field (Remaining Length). | 217 |
+| `libs_luamqtt_mqtt_protocol.parse_var_length_nonzero(read_func)` | Reads a variable-length integer that must be non-zero. | 238 |
+| `libs_luamqtt_mqtt_protocol.start_parse_packet(read_func)` | Starts parsing a new packet: reads the fixed header and prepares an input stream (table with read_func and available) for the content. Returns the type, the flags, the stream, etc. | 476 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_luamqtt_mqtt_protocol.check_packet_id(val)`
 
-Vrai si la valeur est un identifiant de paquet valide.
+True if the value is a valid packet identifier.
 
-- `val` (*any*) : Valeur testée.
-- **renvoie** : boolean Validité.
+- `val` (*any*) : Value tested.
+- **returns**: boolean Validity.
 
 #### `libs_luamqtt_mqtt_protocol.check_qos(val)`
 
-Vrai si la valeur est un QoS valide.
+True if the value is a valid QoS.
 
-- `val` (*any*) : Valeur testée.
-- **renvoie** : boolean Validité.
+- `val` (*any*) : Value tested.
+- **returns**: boolean Validity.
 
 #### `libs_luamqtt_mqtt_protocol.combine(...)`
 
-Combine plusieurs morceaux de données en un paquet combiné (se comporte comme une chaîne : tostring, len, append).
+Combines several pieces of data into a combined packet (behaves like a string: tostring, len, append).
 
-- `...` (*any*) : Morceaux.
-- **renvoie** : table Paquet combiné.
+- `...` (*any*) : Pieces.
+- **returns**: table Combined packet.
 
 #### `libs_luamqtt_mqtt_protocol.make_header(ptype, flags, len)`
 
-Crée l'en-tête fixe d'un paquet.
+Creates the fixed header of a packet.
 
-- `ptype` (*integer*) : Type de paquet (packet_type).
-- `flags` (*integer*) : Drapeaux.
-- `len` (*integer*) : Longueur restante.
-- **renvoie** : string En-tête.
+- `ptype` (*integer*) : Packet type (packet_type).
+- `flags` (*integer*) : Flags.
+- `len` (*integer*) : Remaining length.
+- **returns**: string Header.
 
 #### `libs_luamqtt_mqtt_protocol.make_string(str)`
 
-Crée une chaîne UTF-8 préfixée par sa longueur sur 2 octets.
+Creates a UTF-8 string prefixed by its 2-byte length.
 
-- `str` (*string*) : Texte.
-- **renvoie** : string Données.
+- `str` (*string*) : Text.
+- **returns**: string Data.
 
 #### `libs_luamqtt_mqtt_protocol.make_uint16(val)`
 
-Crée les données d'un entier 16 bits.
+Creates the data for a 16-bit integer.
 
-- `val` (*integer*) : Valeur.
-- **renvoie** : string 2 octets.
+- `val` (*integer*) : Value.
+- **returns**: string 2 bytes.
 
 #### `libs_luamqtt_mqtt_protocol.make_uint16_nonzero(value)`
 
-Données d'une propriété 2 octets avec contrôle de valeur non nulle.
+Data of a 2-byte property with a non-zero value check.
 
-- `value` (*integer*) : Valeur non nulle.
+- `value` (*integer*) : Non-zero value.
 
 #### `libs_luamqtt_mqtt_protocol.make_uint32(val)`
 
-Crée les données d'un entier 32 bits.
+Creates the data for a 32-bit integer.
 
-- `val` (*integer*) : Valeur.
-- **renvoie** : string 4 octets.
+- `val` (*integer*) : Value.
+- **returns**: string 4 bytes.
 
 #### `libs_luamqtt_mqtt_protocol.make_uint8(val)`
 
-Crée les données d'un entier 8 bits.
+Creates the data for an 8-bit integer.
 
-- `val` (*integer*) : Valeur.
-- **renvoie** : string 1 octet.
+- `val` (*integer*) : Value.
+- **returns**: string 1 byte.
 
 #### `libs_luamqtt_mqtt_protocol.make_uint8_0_or_1(value)`
 
-Données d'une propriété 1 octet qui ne peut valoir que 0 ou 1.
+Data of a 1-byte property that can only be 0 or 1.
 
-- `value` (*integer*) : 0 ou 1.
+- `value` (*integer*) : 0 or 1.
 
 #### `libs_luamqtt_mqtt_protocol.make_var_length(len)`
 
-Encode un entier en champ de longueur variable (Remaining Length).
+Encodes an integer as a variable-length field (Remaining Length).
 
-- `len` (*integer*) : Valeur.
-- **renvoie** : string Octets encodés.
+- `len` (*integer*) : Value.
+- **returns**: string Encoded bytes.
 
 #### `libs_luamqtt_mqtt_protocol.make_var_length_nonzero(value)`
 
-Données d'une propriété de longueur variable avec contrôle de valeur non nulle.
+Data of a variable-length property with a non-zero value check.
 
-- `value` (*integer*) : Valeur non nulle.
+- `value` (*integer*) : Non-zero value.
 
 #### `libs_luamqtt_mqtt_protocol.next_packet_id(curr)`
 
-Renvoie l'identifiant de paquet suivant celui donné.
+Returns the packet identifier following the given one.
 
-- `curr` (*integer|nil*) : Identifiant courant.
-- **renvoie** : integer Identifiant suivant.
+- `curr` (*integer|nil*) : Current identifier.
+- **returns**: integer Next identifier.
 
 #### `libs_luamqtt_mqtt_protocol.packet_id_required(args)`
 
-Vrai si le paquet décrit par args (champ type, et qos pour PUBLISH) exige un identifiant de paquet. Lève une exception si args n'est pas une table ou si args.type n'est pas un nombre.
+True if the packet described by args (type field, and qos for PUBLISH) requires a packet identifier. Raises an exception if args is not a table or if args.type is not a number.
 
-- `args` (*table*) : Arguments de création de paquet.
-- **renvoie** : boolean Résultat.
+- `args` (*table*) : Packet creation arguments.
+- **returns**: boolean Result.
 
 #### `libs_luamqtt_mqtt_protocol.packet_tostring(packet)`
 
-Convertit un paquet analysé en texte lisible.
+Converts a parsed packet to readable text.
 
-- `packet` (*table*) : Paquet.
-- **renvoie** : string Représentation.
+- `packet` (*table*) : Packet.
+- **returns**: string Representation.
 
 #### `libs_luamqtt_mqtt_protocol.parse_string(read_func)`
 
-Lit une chaîne UTF-8 préfixée par sa longueur. Renvoie false et un message en cas d'échec.
+Reads a UTF-8 string prefixed by its length. Returns false and a message on failure.
 
-- `read_func` (*function*) : Fonction de lecture.
-- **renvoie** : string|boolean Texte, ou false.
+- `read_func` (*function*) : Read function.
+- **returns**: string|boolean Text, or false.
 
 #### `libs_luamqtt_mqtt_protocol.parse_uint16(read_func)`
 
-Lit un entier 16 bits.
+Reads a 16-bit integer.
 
-- `read_func` (*function*) : Fonction de lecture.
+- `read_func` (*function*) : Read function.
 
 #### `libs_luamqtt_mqtt_protocol.parse_uint16_nonzero(read_func)`
 
-Lit un entier 16 bits non nul.
+Reads a non-zero 16-bit integer.
 
-- `read_func` (*function*) : Fonction de lecture.
+- `read_func` (*function*) : Read function.
 
 #### `libs_luamqtt_mqtt_protocol.parse_uint32(read_func)`
 
-Lit un entier 32 bits.
+Reads a 32-bit integer.
 
-- `read_func` (*function*) : Fonction de lecture.
+- `read_func` (*function*) : Read function.
 
 #### `libs_luamqtt_mqtt_protocol.parse_uint8(read_func)`
 
-Lit un entier 8 bits avec read_func.
+Reads an 8-bit integer with read_func.
 
-- `read_func` (*function*) : Fonction de lecture.
-- **renvoie** : integer|boolean Valeur, ou false et message.
+- `read_func` (*function*) : Read function.
+- **returns**: integer|boolean Value, or false and a message.
 
 #### `libs_luamqtt_mqtt_protocol.parse_uint8_0_or_1(read_func)`
 
-Lit un octet qui doit valoir 0 ou 1.
+Reads a byte that must be 0 or 1.
 
-- `read_func` (*function*) : Fonction de lecture.
+- `read_func` (*function*) : Read function.
 
 #### `libs_luamqtt_mqtt_protocol.parse_var_length(read_func)`
 
-Lit un champ de longueur variable (Remaining Length).
+Reads a variable-length field (Remaining Length).
 
-- `read_func` (*function*) : Fonction de lecture.
+- `read_func` (*function*) : Read function.
 
 #### `libs_luamqtt_mqtt_protocol.parse_var_length_nonzero(read_func)`
 
-Lit un entier de longueur variable qui doit être non nul.
+Reads a variable-length integer that must be non-zero.
 
-- `read_func` (*function*) : Fonction de lecture.
+- `read_func` (*function*) : Read function.
 
 #### `libs_luamqtt_mqtt_protocol.start_parse_packet(read_func)`
 
-Commence l'analyse d'un nouveau paquet : lit l'en-tête fixe et prépare un flux d'entrée (table avec read_func et available) pour le contenu. Renvoie le type, les drapeaux, le flux, etc.
+Starts parsing a new packet: reads the fixed header and prepares an input stream (table with read_func and available) for the content. Returns the type, the flags, the stream, etc.
 
-- `read_func` (*function*) : Fonction de lecture de la connexion.
+- `read_func` (*function*) : Connection read function.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `connack_packet_mt` | table | Métatable des paquets CONNACK analysés. |
-| `connack_rc` | table | Table des codes de retour CONNACK. |
-| `packet_mt` | table | Métatable des paquets analysés (fournit notamment __tostring). |
-| `packet_type` | table | Types de paquets MQTT : CONNECT=1, CONNACK=2, PUBLISH=3, PUBACK=4, PUBREC=5, PUBREL=6, PUBCOMP=7, SUBSCRIBE=8, SUBACK=9, UNSUBSCRIBE=10, UNSUBACK=11, PINGREQ=12, PINGRESP=13, DISCONNECT=14, AUTH=15 (MQTT 5). Table aussi indexée dans l'autre sens (1 -> 'CONNECT'). |
+| `connack_packet_mt` | table | Metatable of parsed CONNACK packets. |
+| `connack_rc` | table | Table of CONNACK return codes. |
+| `packet_mt` | table | Metatable of parsed packets (provides __tostring in particular). |
+| `packet_type` | table | MQTT packet types: CONNECT=1, CONNACK=2, PUBLISH=3, PUBACK=4, PUBREC=5, PUBREL=6, PUBCOMP=7, SUBSCRIBE=8, SUBACK=9, UNSUBSCRIBE=10, UNSUBACK=11, PINGREQ=12, PINGRESP=13, DISCONNECT=14, AUTH=15 (MQTT 5). Table also keyed the other way (1 -> 'CONNECT'). |
 
-## Classe `combined_packet_mt`
+## Class `combined_packet_mt`
 
-Métatable des données combinées créées par combine.
+Metatable of the combined data created by combine.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `combined_packet_mt.__index(_, key)` | Fait fonctionner la table comme une classe (accès aux méthodes tostring, len, append). | 409 |
+| `combined_packet_mt.__index(_, key)` | Makes the table work like a class (access to the tostring, len, append methods). | 409 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luamqtt/mqtt/protocol.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/luamqtt/mqtt/protocol.lua`.*

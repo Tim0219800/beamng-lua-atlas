@@ -1,22 +1,70 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/debug/comment.lua",
-  "module": "Nœud flowgraph « Comment » (catégorie logic, tag group, aucun pin). Place un commentaire dans le graphe, sous forme de cadre de groupe redimensionnable qui peut regrouper visuellement des nœuds. Propriétés éditables : titre, texte (2048 caractères max), alpha, couleurs de fond/bordure/texte, mode « Simple » (pas de groupe, juste du texte) et mode de déplacement (With Nodes : les nœuds à l'intérieur bougent avec le cadre ; Without Nodes). Purement éditeur, sans effet à l'exécution. Sérialise taille, couleurs, alpha, titre, texte (les retours à la ligne sont échappés en \\n), simple et moveMode.",
-  "notes": ["Dans _onDeserialized, le test pour charger borderColor vérifie nodeData.backgroundColor (et non borderColor) : plante si borderColor est absent alors que backgroundColor existe.", "drawCustomProperties appelle dump(self.te) si un éditeur de texte existe, mais self.te n'est jamais créé (code commenté)."],
+  "module": "Flowgraph node \"Comment\" (category logic, tag group, no pins). Places a comment in the graph, as a resizable group frame that can visually group nodes. Editable properties: title, text (2048 characters max), alpha, background/border/text colors, \"Simple\" mode (no group, just text) and move mode (With Nodes: the nodes inside move with the frame; Without Nodes). Editor only, no effect at runtime. Serializes size, colors, alpha, title, text (line breaks are escaped as \\n), simple and moveMode.",
+  "notes": [
+    "In _onDeserialized, the test to load borderColor checks nodeData.backgroundColor (not borderColor): crashes if borderColor is absent while backgroundColor exists.",
+    "drawCustomProperties calls dump(self.te) if a text editor exists, but self.te is never created (commented-out code)."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud (éditeur uniquement).",
+      "desc": "Node class (editor only).",
       "functions": {
-        "init": {"desc": "Initialise taille 200x200, titre « Comment », couleurs (fond gris 0.5, bordure 0.8, texte blanc), alpha 0.75, moveMode 'withoutNodes', simple faux.", "internal": true},
-        "showProperties": {"desc": "Appelée à l'ouverture du panneau de propriétés ; sans effet (code commenté).", "internal": true},
-        "hideProperties": {"desc": "Appelée à la fermeture du panneau de propriétés ; sans effet (code commenté).", "internal": true},
-        "drawCustomProperties": {"desc": "Dessine le panneau de propriétés (titre, alpha, couleurs, simple, mode de déplacement, texte) et renvoie la raison de modification pour l'historique d'annulation.", "returns": [{"type": "string|nil", "desc": "description du changement"}], "internal": true},
-        "refreshColors": {"desc": "Recalcule les ImVec4 de fond, bordure et texte depuis les tableaux de floats.", "internal": true},
-        "_onSerialize": {"desc": "Ajoute au résultat les champs propres au commentaire.", "params": {"res": {"type": "table", "desc": "table de sérialisation du nœud"}}, "internal": true},
-        "_onDeserialized": {"desc": "Restaure les champs depuis les données chargées.", "params": {"nodeData": {"type": "table", "desc": "données sauvegardées"}}, "internal": true},
-        "updateEditorPosition": {"desc": "Repositionne le nœud dans l'éditeur à l'ouverture du gestionnaire (si la position est dans des bornes valides) et force la taille.", "internal": true},
-        "draw": {"desc": "Dessine le cadre, le titre, le groupe redimensionnable et l'indication de groupe dans l'éditeur.", "internal": true}
+        "init": {
+          "desc": "Initializes size 200x200, title \"Comment\", colors (background gray 0.5, border 0.8, text white), alpha 0.75, moveMode 'withoutNodes', simple false.",
+          "internal": true
+        },
+        "showProperties": {
+          "desc": "Called when the properties panel opens; no effect (commented-out code).",
+          "internal": true
+        },
+        "hideProperties": {
+          "desc": "Called when the properties panel closes; no effect (commented-out code).",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Draws the properties panel (title, alpha, colors, simple, move mode, text) and returns the change reason for the undo history.",
+          "returns": [
+            {
+              "type": "string|nil",
+              "desc": "change description"
+            }
+          ],
+          "internal": true
+        },
+        "refreshColors": {
+          "desc": "Recomputes the background, border and text ImVec4 from the float arrays.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Adds the comment-specific fields to the result.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "node serialization table"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restores the fields from the loaded data.",
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "saved data"
+            }
+          },
+          "internal": true
+        },
+        "updateEditorPosition": {
+          "desc": "Repositions the node in the editor when the manager opens (if the position is within valid bounds) and forces the size.",
+          "internal": true
+        },
+        "draw": {
+          "desc": "Draws the frame, the title, the resizable group and the group hint in the editor.",
+          "internal": true
+        }
       }
     }
   }

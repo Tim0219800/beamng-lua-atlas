@@ -1,320 +1,320 @@
 # `scenario_scenarios`
 
-*Fichier : `lua/ge/extensions/scenario/scenarios.lua` · VM : Game Engine (GE) · 2482 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/scenarios.lua` · VM: Game Engine (GE) · 2482 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_scenarios` : `extensions.load("scenario_scenarios")`, puis la globale `scenario_scenarios`
+**Access:** extension `scenario_scenarios`: `extensions.load("scenario_scenarios")`, then the global `scenario_scenarios`
 
-Cœur du mode « scénario » : machine à états qui charge le niveau d'un scénario, fait apparaître ses prefabs et véhicules, gère la phase d'introduction, le compte à rebours, la course (chrono, tentatives, suivi de dégâts), la fin avec agrégation des résultats, les statistiques et l'écran de fin. Un scénario est une table (produite par scenario_scenariosLoader) stockée dans une variable locale unique ; on la lit avec getScenario(). Un moddeur s'en sert pour lancer/arrêter un scénario (executeScenario, stop, restartScenario), terminer (endScenario, finish) ou écouter les hooks émis (onScenarioChange, onRaceStart, onRaceResult…).
+Core of the "scenario" mode: a state machine that loads a scenario's level, spawns its prefabs and vehicles, handles the intro phase, the countdown, the race (timer, attempts, damage tracking), the end with result aggregation, the statistics and the end screen. A scenario is a table (produced by scenario_scenariosLoader) stored in a single local variable; it is read with getScenario(). A modder uses it to start/stop a scenario (executeScenario, stop, restartScenario), end it (endScenario, finish) or listen to the emitted hooks (onScenarioChange, onRaceStart, onRaceResult...).
 
-## Exemple
+## Example
 
 ```lua
--- lancer un scénario déjà traité par scenario_scenariosLoader :
+-- start a scenario already processed by scenario_scenariosLoader:
 local sc = scenario_scenariosLoader.loadScenario('/levels/west_coast_usa/scenarios/xxx.json')
 scenario_scenarios.executeScenario(sc)
--- dans une extension, réagir aux changements d'état :
-local function onScenarioChange(sc) if sc and sc.state == 'running' then log('I','','course lancée') end end
--- terminer avec un échec :
-scenario_scenarios.finish({failed = 'Trop lent'})
+-- in an extension, react to state changes:
+local function onScenarioChange(sc) if sc and sc.state == 'running' then log('I','','race started') end end
+-- end with a failure:
+scenario_scenarios.finish({failed = 'Too slow'})
 ```
 
-## Remarques
+## Notes
 
-- Cycle de vie d'un scénario (scenario.state) : executeScenario -> core_levels.startLevel(scenario.mission) avec spawn.preventPlayerSpawning=true ; au chargement du niveau, onClientStartMission supprime l'ancien ScenarioObjectsGroup, crée un nouveau SimGroup 'ScenarioObjectsGroup' dans MissionGroup, spawne scenario.prefabs, démarre la physique, spawne éventuellement le véhicule choisi par l'utilisateur (userSelectedVehicle), émet onLoadCustomPrefabs(scenario) puis changeState('pre-start').
-- Machine à états, pilotée depuis onPreRender selon scenario.state : 'pre-start' (tickPreStart : stage 0 attend le véhicule utilisateur, stage 1 appelle completeStartUp : traite véhicules, transformations de départ, waypoints, état du niveau, filtre d'actions, multiseat, émet onScenarioLoaded, puis affiche l'UI de départ, stage 2 fin) -> 'pre-running' (introduction ; l'UI envoie onScenarioUIReady('start') qui déclenche cet état ; caméra de chemin, vérification des extensions du scénario) -> 'running' (déclenché par onScenarioUIReady('play')) avec scenario.raceState 'countdown' puis 'racing' -> 'finished' (endRace) -> 'post' (résultats, stats, écran de fin) ; 'restart' pour un redémarrage ; 'physicsPaused' pendant une pause physique ; 'deferredRunning' repasse aussitôt en 'running'. Chaque changeState émet à la fin le hook onScenarioChange(scenario).
-- Entrée en 'pre-running' : initialise raceMarker, scenario_raceUI, scenario_raceGoals.initialiseGoals(), scenario_waypoints.initialise(), gèle tous les véhicules (controller.setFreeze) et passe en caméra de jeu. Entrée en 'running' : finalise le multiseat, remet la caméra du joueur, cache l'intro, démarre le compte à rebours (3,5 s avec affichage 3-2-1, sinon 1,5 s), initialise l'IA des véhicules (initVehicleAIState) et émet onRaceInit.
-- Compte à rebours (tickRunning, raceState 'countdown') : décrémente countDownTime avec dtSim ; à <= 3 s émet onCountdownStarted et les messages UI 3-2-1 ; à <= 0 affiche GO, passe raceState à 'racing', dégèle les véhicules, remet le chrono à 0, émet onCountdownEnded puis processRaceStart (sauf rollingStart : dans ce cas rollingStartTriggered() doit être appelée plus tard). processRaceStart émet onRaceStart et l'évènement UI RaceStart.
-- En course : scenario.timer += dtSim (si timerActive et pas en pause), évènement UI raceTime, fin automatique (endRace) si timer > maxTime + extraTime, gestion des tentatives (attemptsInfo : onNewAttempt, onLastAttemptTaken, onAttemptFailed/Completed via onBeamNGTrigger), hook onRaceTick(0.25, timer) toutes les 0,25 s de temps simulé, hook onFailureTimerFired après failureTriggerTime (temps réel), suivi des véhicules (onObjectCollision, onVehicleTakenDamage, onVehicleStoppedMoving).
-- Fin : endRace/endScenario passent en 'finished' avec un délai (endCountDownTime ou 3 s, temps réel) ; tickFinished émet onRaceResult({finalTime}), agrège scenario.pooledResults (le premier échec l'emporte si seul, sinon le premier succès ; sinon victoire par défaut), fixe scenario.result {msg|failed, finalTime, finalTimeStr}, passe en 'post', met à jour les buts, collecte les statistiques, les sauvegarde dans settings/playerStatistics.json, et prépare l'écran de fin (ui_router 'scenario.end' ou 'scenario.quickrace.end'). Pendant l'écran de fin le temps est ralenti à 1/8.
-- Résultat : finish(result) ajoute result à scenario.pooledResults et termine la course ; result.failed (chaîne ou table de traduction) = échec, result.msg = succès.
-- Filtrage d'entrées : en début de scénario, les actions listées dans scenario.blackListActions et whiteListActions sont appliquées au joueur 0 (groupe d'actions camera_blacklist toujours ajouté). stop() les retire. Pendant une lecture de replay qui n'autorise pas le gameplay, le filtre est levé.
-- Redémarrage : restartScenario (aussi déclenché par onResetGameplay) copie le scénario, appelle stop(), restaure la copie et passe en 'restart' ; tickRestart remet les triggers, réinitialise les véhicules, retraite les véhicules, puis revient à 'pre-start' et émet onScenarioRestarted.
-- Persistance au rechargement Lua : onSerialize sauvegarde état, chrono, buts, etc. ; onDeserialized recharge le scénario depuis son fichier source via scenario_scenariosLoader.loadScenario puis retraite véhicules et waypoints.
-- Compatibilité : onExtensionLoaded crée la globale scenario_race (obsolète) qui redirige chaque appel vers scenario_scenarios en loguant une erreur ; scenario.vehiclesByName/vehiclesByID/vehicleInitialTransform sont des champs obsolètes (métatable de compatibilité). spawnPrefab est obsolète (utiliser ge_utils).
-- Bug/incohérence : M.onRaceWaypointReached est assigné depuis une variable locale jamais définie (donc nil) : le champ n'existe pas réellement.
-- Bug/incohérence : la fonction locale onUpdate (fenêtre imgui de debug « Scenario Runtime Debug ») n'est jamais exportée (ligne M.onUpdate commentée) : code mort.
-- Bug/incohérence : dans tickRunning, « abs(vehicleData.damage - data.lastDamage) » est testé via « delataDamage > 0 » ; si vehicleData est nil, delataDamage vaut nil et la comparaison lève une erreur Lua.
-- Bug/incohérence : dans tickFinished, « {msg = scenario.defaultWin} or {...} » : la partie « or » n'est jamais atteinte (une table est toujours vraie), donc le message par défaut de traduction n'est jamais utilisé ; si scenario.defaultWin est nil, msg est nil.
-- Bug/incohérence : initializeVehicle convertit les degrés en radians avec 3.1459 (au lieu de 3.14159).
-- Bug/incohérence : onClientStartMission ne vérifie pas que spawnPrefab renvoie un objet avant d'utiliser prefabObj.obj.
-- Bug/incohérence : getscenarioName() plante si aucun scénario n'est chargé (scenario nil).
+- Scenario lifecycle (scenario.state): executeScenario -> core_levels.startLevel(scenario.mission) with spawn.preventPlayerSpawning=true; when the level loads, onClientStartMission removes the old ScenarioObjectsGroup, creates a new SimGroup 'ScenarioObjectsGroup' in MissionGroup, spawns scenario.prefabs, starts the physics, optionally spawns the vehicle chosen by the user (userSelectedVehicle), emits onLoadCustomPrefabs(scenario) then changeState('pre-start').
+- State machine, driven from onPreRender according to scenario.state: 'pre-start' (tickPreStart: stage 0 waits for the user vehicle, stage 1 calls completeStartUp: processes vehicles, start transforms, waypoints, level state, action filter, multiseat, emits onScenarioLoaded, then displays the start UI, stage 2 end) -> 'pre-running' (introduction; the UI sends onScenarioUIReady('start') which triggers this state; path camera, check of the scenario's extensions) -> 'running' (triggered by onScenarioUIReady('play')) with scenario.raceState 'countdown' then 'racing' -> 'finished' (endRace) -> 'post' (results, stats, end screen); 'restart' for a restart; 'physicsPaused' during a physics pause; 'deferredRunning' immediately goes back to 'running'. Each changeState emits the onScenarioChange(scenario) hook at the end.
+- Entering 'pre-running': initializes raceMarker, scenario_raceUI, scenario_raceGoals.initialiseGoals(), scenario_waypoints.initialise(), freezes all vehicles (controller.setFreeze) and switches to the game camera. Entering 'running': finalizes multiseat, restores the player's camera, hides the intro, starts the countdown (3.5 s with 3-2-1 display, otherwise 1.5 s), initializes the vehicles' AI (initVehicleAIState) and emits onRaceInit.
+- Countdown (tickRunning, raceState 'countdown'): decrements countDownTime with dtSim; at <= 3 s emits onCountdownStarted and the 3-2-1 UI messages; at <= 0 displays GO, sets raceState to 'racing', unfreezes the vehicles, resets the timer to 0, emits onCountdownEnded then processRaceStart (except rollingStart: in that case rollingStartTriggered() must be called later). processRaceStart emits onRaceStart and the UI event RaceStart.
+- During the race: scenario.timer += dtSim (if timerActive and not paused), UI event raceTime, automatic end (endRace) if timer > maxTime + extraTime, attempts handling (attemptsInfo: onNewAttempt, onLastAttemptTaken, onAttemptFailed/Completed via onBeamNGTrigger), hook onRaceTick(0.25, timer) every 0.25 s of simulated time, hook onFailureTimerFired after failureTriggerTime (real time), vehicle tracking (onObjectCollision, onVehicleTakenDamage, onVehicleStoppedMoving).
+- End: endRace/endScenario switch to 'finished' with a delay (endCountDownTime or 3 s, real time); tickFinished emits onRaceResult({finalTime}), aggregates scenario.pooledResults (the first failure wins if alone, otherwise the first success; otherwise default win), sets scenario.result {msg|failed, finalTime, finalTimeStr}, switches to 'post', updates the goals, collects the statistics, saves them in settings/playerStatistics.json, and prepares the end screen (ui_router 'scenario.end' or 'scenario.quickrace.end'). During the end screen time is slowed to 1/8.
+- Result: finish(result) adds result to scenario.pooledResults and ends the race; result.failed (string or translation table) = failure, result.msg = success.
+- Input filtering: at the start of the scenario, the actions listed in scenario.blackListActions and whiteListActions are applied to player 0 (action group camera_blacklist always added). stop() removes them. During a replay playback that does not allow gameplay, the filter is lifted.
+- Restart: restartScenario (also triggered by onResetGameplay) copies the scenario, calls stop(), restores the copy and switches to 'restart'; tickRestart resets the triggers, reinitializes the vehicles, reprocesses the vehicles, then goes back to 'pre-start' and emits onScenarioRestarted.
+- Persistence on Lua reload: onSerialize saves state, timer, goals, etc.; onDeserialized reloads the scenario from its source file via scenario_scenariosLoader.loadScenario then reprocesses vehicles and waypoints.
+- Compatibility: onExtensionLoaded creates the (obsolete) global scenario_race which redirects every call to scenario_scenarios while logging an error; scenario.vehiclesByName/vehiclesByID/vehicleInitialTransform are obsolete fields (compatibility metatable). spawnPrefab is obsolete (use ge_utils).
+- BUG/inconsistency: M.onRaceWaypointReached is assigned from a local variable that is never defined (so nil): the field does not actually exist.
+- BUG/inconsistency: the local function onUpdate (imgui debug window "Scenario Runtime Debug") is never exported (the M.onUpdate line is commented out): dead code.
+- BUG/inconsistency: in tickRunning, "abs(vehicleData.damage - data.lastDamage)" is tested via "delataDamage > 0"; if vehicleData is nil, delataDamage is nil and the comparison raises a Lua error.
+- BUG/inconsistency: in tickFinished, "{msg = scenario.defaultWin} or {...}": the "or" part is never reached (a table is always truthy), so the default translation message is never used; if scenario.defaultWin is nil, msg is nil.
+- BUG/inconsistency: initializeVehicle converts degrees to radians with 3.1459 (instead of 3.14159).
+- BUG/inconsistency: onClientStartMission does not check that spawnPrefab returns an object before using prefabObj.obj.
+- BUG/inconsistency: getscenarioName() crashes if no scenario is loaded (scenario nil).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_scenarios.changeState(newState)` | Change scenario.state et exécute les actions d'entrée de l'état ('pre-start', 'pre-running', 'deferredRunning', 'running', 'finished', 'post'), puis émet onScenarioChange(scenario). Ne fait rien sans scénario. | 252 |
-| `scenario_scenarios.continueScenario()` | Reprend le temps de simulation (simTimeAuthority.pause(false)). | 396 |
-| `scenario_scenarios.displayEndUI()` | Efface displayEndUIRefs (autorise l'affichage de l'écran de fin). | 1523 |
-| `scenario_scenarios.displayStartUI()` | Navigue vers l'écran 'scenario.start' (ui_router) et efface displayStartUIRefs. | 1518 |
-| `scenario_scenarios.endRace(countDownTime)` | Passe en état 'finished' (sauf si déjà finished/post), fixe le délai avant les résultats (countDownTime, sinon scenario.endCountDownTime, sinon 3 s) et mémorise le temps final. | 401 |
-| `scenario_scenarios.endScenario(countDownTime)` | Termine la course (endRace), émet onEndScenario(countDownTime) pour laisser buts et Lua custom décider du résultat, et ralentit le temps à 1/8 si besoin. | 1452 |
-| `scenario_scenarios.executeScenario(sc)` | Lance un scénario : arrête le scénario courant s'il y en a un, mémorise sc, charge ses extensions (scenario.extensions), interdit le spawn automatique du joueur puis démarre le niveau scenario.mission via core_levels.startLevel. La suite se passe dans onClientStartMission. | 1110 |
-| `scenario_scenarios.finish(result)` | Ajoute un résultat à scenario.pooledResults et termine la course si elle n'est pas déjà finie (endRace(0), sans délai). result.failed (chaîne) = échec ; result.msg = succès. | 677 |
-| `scenario_scenarios.freezeAll(state)` | Gèle ou dégèle tous les véhicules du scénario via controller.setFreeze côté véhicule (utilisé avant la fin du compte à rebours). | 118 |
-| `scenario_scenarios.getRaceDistance(scenario)` | Longueur d'un tour : somme des distances entre les points successifs de scenario.lapConfig (noeuds de la carte ou objets de scène). | 336 |
-| `scenario_scenarios.getScenario()` | Renvoie la table du scénario actuellement chargé. | 1440 |
-| `scenario_scenarios.getScenarioStateAtPauseEvent()` | État du scénario mémorisé au moment de la pause physique. | 2276 |
-| `scenario_scenarios.getVehicleName(vehicleID)` | Nom de scénario d'un véhicule à partir de son id. | 1489 |
-| `scenario_scenarios.getscenarioName()` | Renvoie scenario.name du scénario courant (erreur Lua s'il n'y en a pas). | 2345 |
-| `scenario_scenarios.onBeamNGTrigger(data)` | Hook : gère les tentatives (scenario.attemptsInfo) quand le véhicule joueur entre dans un trigger : émet onAttemptFailed ou onAttemptCompleted selon failAttempts/completeAttempt et arme le minuteur d'attente. *(interne)* *(hook)* | 2395 |
-| `scenario_scenarios.onCameraModeChanged(modeName)` | Hook : mémorise le dernier mode de caméra (sauf 'path' et 'observer') dans scenario.lastModeName, pour le restaurer au départ de la course. *(interne)* *(hook)* | 1444 |
-| `scenario_scenarios.onClientEndMission()` | Hook de fin de niveau : nettoie raceMarker. *(interne)* *(hook)* | 2426 |
-| `scenario_scenarios.onClientStartMission(levelPath)` | Hook appelé par main.lua quand le niveau est chargé (clientStartMission). Si un scénario est en attente : crée ScenarioObjectsGroup, spawne les prefabs et le véhicule choisi, émet onLoadCustomPrefabs et passe en 'pre-start'. Supprime toujours l'ancien groupe d'objets de scénario et lève preventPlayerSpawning. *(interne)* *(hook)* | 999 |
-| `scenario_scenarios.onDeserialized(data)` | Hook de désérialisation après rechargement Lua : recharge le scénario depuis sourceFile/scenarioKey et restaure l'état. *(interne)* *(hook)* | 2314 |
-| `scenario_scenarios.onDrawDebug(focusPos)` | Hook de dessin debug : si l'éditeur est activé et le réglage BeamNGRaceDrawDebug vrai, dessine sphères et noms des noeuds de waypoints du scénario dans un rayon de 200 m. *(interne)* *(hook)* | 1168 |
-| `scenario_scenarios.onExtensionLoaded()` | Hook de chargement de l'extension : crée la globale obsolète scenario_race qui redirige vers scenario_scenarios. *(interne)* *(hook)* | 2355 |
-| `scenario_scenarios.onExtensionUnloaded()` | Hook de déchargement : appelle stop() et efface scenario_race. *(interne)* *(hook)* | 2350 |
-| `scenario_scenarios.onFilteredInputChanged(devName, action, value)` | Hook : en scénario multiseat, un mouvement de direction (steering, steer_left, steer_right) d'un périphérique change le véhicule assigné (limité à une fois par 500 ms, seuil 0,2). *(interne)* *(hook)* | 1354 |
-| `scenario_scenarios.onInputBindingsChanged(assignedPlayers)` | Hook : rapproche les périphériques et les places multiseat quand les assignations d'entrée changent. *(interne)* *(hook)* | 1350 |
-| `scenario_scenarios.onPhysicsPaused()` | Hook : mémorise l'état courant et passe en 'physicsPaused' (sauf éditeur actif). *(interne)* *(hook)* | 2267 |
-| `scenario_scenarios.onPhysicsUnpaused()` | Hook : restaure l'état mémorisé au moment de la pause (sauf si le scénario est en 'restart'). *(interne)* *(hook)* | 2256 |
-| `scenario_scenarios.onPreRender(dt, dtSim)` | Hook appelé chaque frame depuis luaPreRender : exécute la fonction de tick de l'état courant (tickPreStart, tickPreRunning, tickRunning, tickFinished, tickPost, tickRestart) puis dessine les marqueurs de course. Ne fait rien pendant une lecture de replay qui interdit le gameplay. *(interne)* *(hook)* | 2119 |
-| `scenario_scenarios.onReplayCoreEvent(data)` | Hook du replay : lève ou rétablit le filtre d'actions du scénario selon que le replay autorise le gameplay. *(interne)* *(hook)* | 2223 |
-| `scenario_scenarios.onResetGameplay(playerID)` | Hook : un reset du gameplay redémarre le scénario (restartScenario). *(interne)* *(hook)* | 2250 |
-| `scenario_scenarios.onScenarioUIReady(state)` | Callback envoyé par l'UI : 'start' (en pre-start) lance la phase d'introduction (pre-running) ; 'play' (en pre-running) lance la course (running). Re-publie ScenarioChange à l'UI. *(interne)* *(hook)* | 1400 |
-| `scenario_scenarios.onSerialize()` | Hook de sérialisation avant rechargement Lua : renvoie l'état minimal du scénario. *(interne)* *(hook)* | 2287 |
-| `scenario_scenarios.onVehicleSelected(vehicleData)` | Hook appelé quand le joueur choisit un véhicule dans l'UI du scénario : remplace ou spawne le véhicule du joueur avec model/config/color/licenseText, puis gèle tous les véhicules. *(interne)* *(hook)* | 1985 |
-| `scenario_scenarios.onVehicleStoppedMoving(vehicleID)` | Hook : si trackPlayerVehicle est actif et que le véhicule est le joueur 0, marque playerIsDamaged et playerHasStopped. *(interne)* *(hook)* | 2239 |
-| `scenario_scenarios.pauseScenario()` | Met le temps de simulation en pause (simTimeAuthority.pause(true)). | 391 |
-| `scenario_scenarios.prepareStartUI()` | Remet à 0 le compteur displayStartUIRefs du scénario ; l'UI de départ s'affiche tant que ce compteur vaut 0 au stage 1 de pre-start. | 413 |
-| `scenario_scenarios.restartScenario()` | Redémarre le scénario courant depuis le début en conservant le niveau chargé : copie le scénario, appelle stop(), puis passe à l'état 'restart'. Doit rester un « reload » et non un « onload » (commentaire du code). | 1136 |
-| `scenario_scenarios.rollingStartTriggered()` | À appeler pour un départ lancé (scenario.rollingStart) : remet le chrono à 0 et lance processRaceStart (onRaceStart). | 1581 |
-| `scenario_scenarios.setScenarioStateAtPauseEvent(state)` | Force l'état à restaurer à la reprise de la physique. | 2280 |
-| `scenario_scenarios.spawnPrefab(val, objName, objFileName, objPos, objRotation, objScale)` | OBSOLÈTE : utiliser spawnPrefab/addPrefab/removePrefab de ge_utils. val 2 = ajouter et charger, 1 = ajouter sans charger, 0 = décharger. | 687 |
-| `scenario_scenarios.stop()` | Arrête et décharge complètement le scénario : coupe le multiseat, décharge les extensions du scénario, remet la vitesse du temps à 1, retire le filtre d'actions, réactive trailerRespawn, vide la variable scénario, nettoie raceMarker, envoie ScenarioChange(nil) à l'UI et émet onScenarioChange sans argument. Ne fait rien s'il n'y a pas de scénario. | 469 |
-| `scenario_scenarios.stopRaceTimer()` | Arrête le chronomètre du scénario (timerActive = false). | 386 |
-| `scenario_scenarios.trackVehicleMovementAfterDamage(vehicleName, trackingOptions)` | Enregistre un véhicule dans scenario.vehicleTrackingTable : le suivi émet ensuite onObjectCollision, onVehicleTakenDamage et onVehicleStoppedMoving pendant la course. | 1493 |
-| `scenario_scenarios.uiEventFreeRoam()` | Appelée par l'UI (bouton Free roam) : supprime les véhicules IA du scénario, arrête le scénario et passe l'état de jeu en 'freeroam' sans restaurer l'état du niveau. *(interne)* | 1481 |
-| `scenario_scenarios.uiEventRetry()` | Appelée par l'UI (bouton Réessayer) : restartScenario puis prepareStartUI. *(interne)* | 1475 |
-| `scenario_scenarios.updateVehicleAiState(vehicleName, data)` | Met à jour scenario.aiControlledVehiclesById pour un véhicule (mode 'disable' le retire) et émet onVehicleAIStateChanged({vehicleId, vehicleName, aiControlled}). | 2374 |
+| `scenario_scenarios.changeState(newState)` | Changes scenario.state and runs the entry actions of the state ('pre-start', 'pre-running', 'deferredRunning', 'running', 'finished', 'post'), then emits onScenarioChange(scenario). Does nothing without a scenario. | 252 |
+| `scenario_scenarios.continueScenario()` | Resumes simulation time (simTimeAuthority.pause(false)). | 396 |
+| `scenario_scenarios.displayEndUI()` | Clears displayEndUIRefs (allows the end screen to be displayed). | 1523 |
+| `scenario_scenarios.displayStartUI()` | Navigates to the 'scenario.start' screen (ui_router) and clears displayStartUIRefs. | 1518 |
+| `scenario_scenarios.endRace(countDownTime)` | Switches to the 'finished' state (unless already finished/post), sets the delay before results (countDownTime, otherwise scenario.endCountDownTime, otherwise 3 s) and stores the final time. | 401 |
+| `scenario_scenarios.endScenario(countDownTime)` | Ends the race (endRace), emits onEndScenario(countDownTime) to let goals and custom Lua decide the result, and slows time to 1/8 if needed. | 1452 |
+| `scenario_scenarios.executeScenario(sc)` | Starts a scenario: stops the current scenario if there is one, stores sc, loads its extensions (scenario.extensions), forbids automatic player spawn then starts the level scenario.mission via core_levels.startLevel. The rest happens in onClientStartMission. | 1110 |
+| `scenario_scenarios.finish(result)` | Adds a result to scenario.pooledResults and ends the race if it is not already finished (endRace(0), no delay). result.failed (string) = failure; result.msg = success. | 677 |
+| `scenario_scenarios.freezeAll(state)` | Freezes or unfreezes all the scenario's vehicles via controller.setFreeze on the vehicle side (used before the end of the countdown). | 118 |
+| `scenario_scenarios.getRaceDistance(scenario)` | Length of a lap: sum of the distances between successive points of scenario.lapConfig (map nodes or scene objects). | 336 |
+| `scenario_scenarios.getScenario()` | Returns the table of the currently loaded scenario. | 1440 |
+| `scenario_scenarios.getScenarioStateAtPauseEvent()` | Scenario state stored at the time of the physics pause. | 2276 |
+| `scenario_scenarios.getVehicleName(vehicleID)` | Scenario name of a vehicle from its id. | 1489 |
+| `scenario_scenarios.getscenarioName()` | Returns scenario.name of the current scenario (Lua error if there is none). | 2345 |
+| `scenario_scenarios.onBeamNGTrigger(data)` | Hook: handles attempts (scenario.attemptsInfo) when the player vehicle enters a trigger: emits onAttemptFailed or onAttemptCompleted according to failAttempts/completeAttempt and arms the wait timer. *(internal)* *(hook)* | 2395 |
+| `scenario_scenarios.onCameraModeChanged(modeName)` | Hook: stores the last camera mode (except 'path' and 'observer') in scenario.lastModeName, to restore it at the start of the race. *(internal)* *(hook)* | 1444 |
+| `scenario_scenarios.onClientEndMission()` | Level end hook: cleans up raceMarker. *(internal)* *(hook)* | 2426 |
+| `scenario_scenarios.onClientStartMission(levelPath)` | Hook called by main.lua when the level is loaded (clientStartMission). If a scenario is pending: creates ScenarioObjectsGroup, spawns the prefabs and the chosen vehicle, emits onLoadCustomPrefabs and switches to 'pre-start'. Always removes the old scenario object group and lifts preventPlayerSpawning. *(internal)* *(hook)* | 999 |
+| `scenario_scenarios.onDeserialized(data)` | Deserialization hook after Lua reload: reloads the scenario from sourceFile/scenarioKey and restores the state. *(internal)* *(hook)* | 2314 |
+| `scenario_scenarios.onDrawDebug(focusPos)` | Debug draw hook: if the editor is enabled and the BeamNGRaceDrawDebug setting is true, draws spheres and names of the scenario's waypoint nodes within a 200 m radius. *(internal)* *(hook)* | 1168 |
+| `scenario_scenarios.onExtensionLoaded()` | Extension load hook: creates the obsolete global scenario_race that redirects to scenario_scenarios. *(internal)* *(hook)* | 2355 |
+| `scenario_scenarios.onExtensionUnloaded()` | Unload hook: calls stop() and clears scenario_race. *(internal)* *(hook)* | 2350 |
+| `scenario_scenarios.onFilteredInputChanged(devName, action, value)` | Hook: in a multiseat scenario, a steering movement (steering, steer_left, steer_right) from a device changes the assigned vehicle (limited to once per 500 ms, threshold 0.2). *(internal)* *(hook)* | 1354 |
+| `scenario_scenarios.onInputBindingsChanged(assignedPlayers)` | Hook: matches devices and multiseat seats when the input assignments change. *(internal)* *(hook)* | 1350 |
+| `scenario_scenarios.onPhysicsPaused()` | Hook: stores the current state and switches to 'physicsPaused' (unless the editor is active). *(internal)* *(hook)* | 2267 |
+| `scenario_scenarios.onPhysicsUnpaused()` | Hook: restores the state stored at the time of the pause (unless the scenario is in 'restart'). *(internal)* *(hook)* | 2256 |
+| `scenario_scenarios.onPreRender(dt, dtSim)` | Hook called every frame from luaPreRender: runs the current state's tick function (tickPreStart, tickPreRunning, tickRunning, tickFinished, tickPost, tickRestart) then draws the race markers. Does nothing during a replay playback that forbids gameplay. *(internal)* *(hook)* | 2119 |
+| `scenario_scenarios.onReplayCoreEvent(data)` | Replay hook: lifts or restores the scenario's action filter depending on whether the replay allows gameplay. *(internal)* *(hook)* | 2223 |
+| `scenario_scenarios.onResetGameplay(playerID)` | Hook: a gameplay reset restarts the scenario (restartScenario). *(internal)* *(hook)* | 2250 |
+| `scenario_scenarios.onScenarioUIReady(state)` | Callback sent by the UI: 'start' (in pre-start) starts the introduction phase (pre-running); 'play' (in pre-running) starts the race (running). Republishes ScenarioChange to the UI. *(internal)* *(hook)* | 1400 |
+| `scenario_scenarios.onSerialize()` | Serialization hook before Lua reload: returns the scenario's minimal state. *(internal)* *(hook)* | 2287 |
+| `scenario_scenarios.onVehicleSelected(vehicleData)` | Hook called when the player chooses a vehicle in the scenario UI: replaces or spawns the player's vehicle with model/config/color/licenseText, then freezes all vehicles. *(internal)* *(hook)* | 1985 |
+| `scenario_scenarios.onVehicleStoppedMoving(vehicleID)` | Hook: if trackPlayerVehicle is active and the vehicle is player 0, sets playerIsDamaged and playerHasStopped. *(internal)* *(hook)* | 2239 |
+| `scenario_scenarios.pauseScenario()` | Pauses simulation time (simTimeAuthority.pause(true)). | 391 |
+| `scenario_scenarios.prepareStartUI()` | Resets the scenario's displayStartUIRefs counter to 0; the start UI is displayed while this counter is 0 at stage 1 of pre-start. | 413 |
+| `scenario_scenarios.restartScenario()` | Restarts the current scenario from the beginning while keeping the loaded level: copies the scenario, calls stop(), then switches to the 'restart' state. Must remain a "reload" and not an "onload" (code comment). | 1136 |
+| `scenario_scenarios.rollingStartTriggered()` | To be called for a rolling start (scenario.rollingStart): resets the timer to 0 and runs processRaceStart (onRaceStart). | 1581 |
+| `scenario_scenarios.setScenarioStateAtPauseEvent(state)` | Forces the state to restore when physics resumes. | 2280 |
+| `scenario_scenarios.spawnPrefab(val, objName, objFileName, objPos, objRotation, objScale)` | OBSOLETE: use spawnPrefab/addPrefab/removePrefab from ge_utils. val 2 = add and load, 1 = add without loading, 0 = unload. | 687 |
+| `scenario_scenarios.stop()` | Stops and fully unloads the scenario: turns off multiseat, unloads the scenario's extensions, resets the time speed to 1, removes the action filter, re-enables trailerRespawn, clears the scenario variable, cleans up raceMarker, sends ScenarioChange(nil) to the UI and emits onScenarioChange with no argument. Does nothing if there is no scenario. | 469 |
+| `scenario_scenarios.stopRaceTimer()` | Stops the scenario timer (timerActive = false). | 386 |
+| `scenario_scenarios.trackVehicleMovementAfterDamage(vehicleName, trackingOptions)` | Registers a vehicle in scenario.vehicleTrackingTable: the tracking then emits onObjectCollision, onVehicleTakenDamage and onVehicleStoppedMoving during the race. | 1493 |
+| `scenario_scenarios.uiEventFreeRoam()` | Called by the UI (Free roam button): removes the scenario's AI vehicles, stops the scenario and sets the game state to 'freeroam' without restoring the level state. *(internal)* | 1481 |
+| `scenario_scenarios.uiEventRetry()` | Called by the UI (Retry button): restartScenario then prepareStartUI. *(internal)* | 1475 |
+| `scenario_scenarios.updateVehicleAiState(vehicleName, data)` | Updates scenario.aiControlledVehiclesById for a vehicle (mode 'disable' removes it) and emits onVehicleAIStateChanged({vehicleId, vehicleName, aiControlled}). | 2374 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_scenarios.changeState(newState)`
 
-Change scenario.state et exécute les actions d'entrée de l'état ('pre-start', 'pre-running', 'deferredRunning', 'running', 'finished', 'post'), puis émet onScenarioChange(scenario). Ne fait rien sans scénario.
+Changes scenario.state and runs the entry actions of the state ('pre-start', 'pre-running', 'deferredRunning', 'running', 'finished', 'post'), then emits onScenarioChange(scenario). Does nothing without a scenario.
 
 - `newState` (*string*) : 'pre-start', 'pre-running', 'deferredRunning', 'running', 'finished', 'post', 'restart', 'physicsPaused'
 
 #### `scenario_scenarios.endRace(countDownTime)`
 
-Passe en état 'finished' (sauf si déjà finished/post), fixe le délai avant les résultats (countDownTime, sinon scenario.endCountDownTime, sinon 3 s) et mémorise le temps final.
+Switches to the 'finished' state (unless already finished/post), sets the delay before results (countDownTime, otherwise scenario.endCountDownTime, otherwise 3 s) and stores the final time.
 
-- `countDownTime` (*number|nil*) : délai en s
+- `countDownTime` (*number|nil*) : delay in s
 
 #### `scenario_scenarios.endScenario(countDownTime)`
 
-Termine la course (endRace), émet onEndScenario(countDownTime) pour laisser buts et Lua custom décider du résultat, et ralentit le temps à 1/8 si besoin.
+Ends the race (endRace), emits onEndScenario(countDownTime) to let goals and custom Lua decide the result, and slows time to 1/8 if needed.
 
-- `countDownTime` (*number|nil*) : délai avant le résultat (s, temps réel)
+- `countDownTime` (*number|nil*) : delay before the result (s, real time)
 
 #### `scenario_scenarios.executeScenario(sc)`
 
-Lance un scénario : arrête le scénario courant s'il y en a un, mémorise sc, charge ses extensions (scenario.extensions), interdit le spawn automatique du joueur puis démarre le niveau scenario.mission via core_levels.startLevel. La suite se passe dans onClientStartMission.
+Starts a scenario: stops the current scenario if there is one, stores sc, loads its extensions (scenario.extensions), forbids automatic player spawn then starts the level scenario.mission via core_levels.startLevel. The rest happens in onClientStartMission.
 
-- `sc` (*table*) : table de scénario traitée par scenario_scenariosLoader
+- `sc` (*table*) : scenario table processed by scenario_scenariosLoader
 
 #### `scenario_scenarios.finish(result)`
 
-Ajoute un résultat à scenario.pooledResults et termine la course si elle n'est pas déjà finie (endRace(0), sans délai). result.failed (chaîne) = échec ; result.msg = succès.
+Adds a result to scenario.pooledResults and ends the race if it is not already finished (endRace(0), no delay). result.failed (string) = failure; result.msg = success.
 
 - `result` (*table*) : {failed = ..., msg = ...}
 
 #### `scenario_scenarios.freezeAll(state)`
 
-Gèle ou dégèle tous les véhicules du scénario via controller.setFreeze côté véhicule (utilisé avant la fin du compte à rebours).
+Freezes or unfreezes all the scenario's vehicles via controller.setFreeze on the vehicle side (used before the end of the countdown).
 
-- `state` (*integer*) : 1 pour geler, 0 pour dégeler
+- `state` (*integer*) : 1 to freeze, 0 to unfreeze
 
 #### `scenario_scenarios.getRaceDistance(scenario)`
 
-Longueur d'un tour : somme des distances entre les points successifs de scenario.lapConfig (noeuds de la carte ou objets de scène).
+Length of a lap: sum of the distances between successive points of scenario.lapConfig (map nodes or scene objects).
 
-- `scenario` (*table*) : scénario (utilise lapConfig)
-- **renvoie** : number distance en m (0 si pas de lapConfig)
+- `scenario` (*table*) : scenario (uses lapConfig)
+- **returns**: number distance in m (0 if no lapConfig)
 
 #### `scenario_scenarios.getScenario()`
 
-Renvoie la table du scénario actuellement chargé.
+Returns the table of the currently loaded scenario.
 
-- **renvoie** : table|nil scénario ou nil
+- **returns**: table|nil scenario or nil
 
 #### `scenario_scenarios.getScenarioStateAtPauseEvent()`
 
-État du scénario mémorisé au moment de la pause physique.
+Scenario state stored at the time of the physics pause.
 
-- **renvoie** : string|nil état
+- **returns**: string|nil state
 
 #### `scenario_scenarios.getVehicleName(vehicleID)`
 
-Nom de scénario d'un véhicule à partir de son id.
+Scenario name of a vehicle from its id.
 
-- `vehicleID` (*integer*) : id du véhicule
-- **renvoie** : string|nil nom, nil si aucun scénario ou inconnu
+- `vehicleID` (*integer*) : vehicle id
+- **returns**: string|nil name, nil if no scenario or unknown
 
 #### `scenario_scenarios.getscenarioName()`
 
-Renvoie scenario.name du scénario courant (erreur Lua s'il n'y en a pas).
+Returns scenario.name of the current scenario (Lua error if there is none).
 
-- **renvoie** : string nom du scénario
+- **returns**: string scenario name
 
 #### `scenario_scenarios.onBeamNGTrigger(data)`
 
-Hook : gère les tentatives (scenario.attemptsInfo) quand le véhicule joueur entre dans un trigger : émet onAttemptFailed ou onAttemptCompleted selon failAttempts/completeAttempt et arme le minuteur d'attente.
+Hook: handles attempts (scenario.attemptsInfo) when the player vehicle enters a trigger: emits onAttemptFailed or onAttemptCompleted according to failAttempts/completeAttempt and arms the wait timer.
 
 - `data` (*table*) : {event, subjectID, triggerName, ...}
 
 #### `scenario_scenarios.onCameraModeChanged(modeName)`
 
-Hook : mémorise le dernier mode de caméra (sauf 'path' et 'observer') dans scenario.lastModeName, pour le restaurer au départ de la course.
+Hook: stores the last camera mode (except 'path' and 'observer') in scenario.lastModeName, to restore it at the start of the race.
 
-- `modeName` (*string*) : nom du mode de caméra
+- `modeName` (*string*) : camera mode name
 
 #### `scenario_scenarios.onClientStartMission(levelPath)`
 
-Hook appelé par main.lua quand le niveau est chargé (clientStartMission). Si un scénario est en attente : crée ScenarioObjectsGroup, spawne les prefabs et le véhicule choisi, émet onLoadCustomPrefabs et passe en 'pre-start'. Supprime toujours l'ancien groupe d'objets de scénario et lève preventPlayerSpawning.
+Hook called by main.lua when the level is loaded (clientStartMission). If a scenario is pending: creates ScenarioObjectsGroup, spawns the prefabs and the chosen vehicle, emits onLoadCustomPrefabs and switches to 'pre-start'. Always removes the old scenario object group and lifts preventPlayerSpawning.
 
-- `levelPath` (*string*) : chemin du niveau
+- `levelPath` (*string*) : level path
 
 #### `scenario_scenarios.onDeserialized(data)`
 
-Hook de désérialisation après rechargement Lua : recharge le scénario depuis sourceFile/scenarioKey et restaure l'état.
+Deserialization hook after Lua reload: reloads the scenario from sourceFile/scenarioKey and restores the state.
 
-- `data` (*table*) : données produites par onSerialize
+- `data` (*table*) : data produced by onSerialize
 
 #### `scenario_scenarios.onDrawDebug(focusPos)`
 
-Hook de dessin debug : si l'éditeur est activé et le réglage BeamNGRaceDrawDebug vrai, dessine sphères et noms des noeuds de waypoints du scénario dans un rayon de 200 m.
+Debug draw hook: if the editor is enabled and the BeamNGRaceDrawDebug setting is true, draws spheres and names of the scenario's waypoint nodes within a 200 m radius.
 
-- `focusPos` (*vec3*) : position de focalisation de debug
+- `focusPos` (*vec3*) : debug focus position
 
 #### `scenario_scenarios.onFilteredInputChanged(devName, action, value)`
 
-Hook : en scénario multiseat, un mouvement de direction (steering, steer_left, steer_right) d'un périphérique change le véhicule assigné (limité à une fois par 500 ms, seuil 0,2).
+Hook: in a multiseat scenario, a steering movement (steering, steer_left, steer_right) from a device changes the assigned vehicle (limited to once per 500 ms, threshold 0.2).
 
-- `devName` (*string*) : périphérique
+- `devName` (*string*) : device
 - `action` (*string*) : action
-- `value` (*number*) : valeur de l'axe
+- `value` (*number*) : axis value
 
 #### `scenario_scenarios.onInputBindingsChanged(assignedPlayers)`
 
-Hook : rapproche les périphériques et les places multiseat quand les assignations d'entrée changent.
+Hook: matches devices and multiseat seats when the input assignments change.
 
-- `assignedPlayers` (*table*) : joueurs assignés
+- `assignedPlayers` (*table*) : assigned players
 
 #### `scenario_scenarios.onPreRender(dt, dtSim)`
 
-Hook appelé chaque frame depuis luaPreRender : exécute la fonction de tick de l'état courant (tickPreStart, tickPreRunning, tickRunning, tickFinished, tickPost, tickRestart) puis dessine les marqueurs de course. Ne fait rien pendant une lecture de replay qui interdit le gameplay.
+Hook called every frame from luaPreRender: runs the current state's tick function (tickPreStart, tickPreRunning, tickRunning, tickFinished, tickPost, tickRestart) then draws the race markers. Does nothing during a replay playback that forbids gameplay.
 
 - `dt` (*number*) : dtReal (s)
-- `dtSim` (*number*) : temps simulé (s)
+- `dtSim` (*number*) : simulated time (s)
 
 #### `scenario_scenarios.onReplayCoreEvent(data)`
 
-Hook du replay : lève ou rétablit le filtre d'actions du scénario selon que le replay autorise le gameplay.
+Replay hook: lifts or restores the scenario's action filter depending on whether the replay allows gameplay.
 
-- `data` (*table*) : données de l'évènement (non utilisées)
+- `data` (*table*) : event data (unused)
 
 #### `scenario_scenarios.onResetGameplay(playerID)`
 
-Hook : un reset du gameplay redémarre le scénario (restartScenario).
+Hook: a gameplay reset restarts the scenario (restartScenario).
 
-- `playerID` (*integer*) : joueur
+- `playerID` (*integer*) : player
 
 #### `scenario_scenarios.onScenarioUIReady(state)`
 
-Callback envoyé par l'UI : 'start' (en pre-start) lance la phase d'introduction (pre-running) ; 'play' (en pre-running) lance la course (running). Re-publie ScenarioChange à l'UI.
+Callback sent by the UI: 'start' (in pre-start) starts the introduction phase (pre-running); 'play' (in pre-running) starts the race (running). Republishes ScenarioChange to the UI.
 
-- `state` (*string*) : 'start' ou 'play'
+- `state` (*string*) : 'start' or 'play'
 
 #### `scenario_scenarios.onSerialize()`
 
-Hook de sérialisation avant rechargement Lua : renvoie l'état minimal du scénario.
+Serialization hook before Lua reload: returns the scenario's minimal state.
 
-- **renvoie** : table données (vide si aucun scénario)
+- **returns**: table data (empty if no scenario)
 
 #### `scenario_scenarios.onVehicleSelected(vehicleData)`
 
-Hook appelé quand le joueur choisit un véhicule dans l'UI du scénario : remplace ou spawne le véhicule du joueur avec model/config/color/licenseText, puis gèle tous les véhicules.
+Hook called when the player chooses a vehicle in the scenario UI: replaces or spawns the player's vehicle with model/config/color/licenseText, then freezes all vehicles.
 
 - `vehicleData` (*table*) : {model, config, color, licenseText}
 
 #### `scenario_scenarios.onVehicleStoppedMoving(vehicleID)`
 
-Hook : si trackPlayerVehicle est actif et que le véhicule est le joueur 0, marque playerIsDamaged et playerHasStopped.
+Hook: if trackPlayerVehicle is active and the vehicle is player 0, sets playerIsDamaged and playerHasStopped.
 
-- `vehicleID` (*integer*) : id du véhicule
+- `vehicleID` (*integer*) : vehicle id
 
 #### `scenario_scenarios.setScenarioStateAtPauseEvent(state)`
 
-Force l'état à restaurer à la reprise de la physique.
+Forces the state to restore when physics resumes.
 
-- `state` (*string|nil*) : état
+- `state` (*string|nil*) : state
 
 #### `scenario_scenarios.spawnPrefab(val, objName, objFileName, objPos, objRotation, objScale)`
 
-OBSOLÈTE : utiliser spawnPrefab/addPrefab/removePrefab de ge_utils. val 2 = ajouter et charger, 1 = ajouter sans charger, 0 = décharger.
+OBSOLETE: use spawnPrefab/addPrefab/removePrefab from ge_utils. val 2 = add and load, 1 = add without loading, 0 = unload.
 
-- `val` (*integer*) : 0, 1 ou 2
-- `objName` (*string*) : nom
-- `objFileName` (*string*) : fichier
+- `val` (*integer*) : 0, 1 or 2
+- `objName` (*string*) : name
+- `objFileName` (*string*) : file
 - `objPos` (*string*) : position
 - `objRotation` (*string*) : rotation
-- `objScale` (*string*) : échelle
-- **renvoie** : table|nil prefab
+- `objScale` (*string*) : scale
+- **returns**: table|nil prefab
 
 #### `scenario_scenarios.trackVehicleMovementAfterDamage(vehicleName, trackingOptions)`
 
-Enregistre un véhicule dans scenario.vehicleTrackingTable : le suivi émet ensuite onObjectCollision, onVehicleTakenDamage et onVehicleStoppedMoving pendant la course.
+Registers a vehicle in scenario.vehicleTrackingTable: the tracking then emits onObjectCollision, onVehicleTakenDamage and onVehicleStoppedMoving during the race.
 
-- `vehicleName` (*string*) : nom de l'objet véhicule
-- `trackingOptions` (*table|nil*) : {waitTimerLimit (s, défaut 1.0), vehDisplacementLimit (m, défaut 0.25)}
+- `vehicleName` (*string*) : vehicle object name
+- `trackingOptions` (*table|nil*) : {waitTimerLimit (s, default 1.0), vehDisplacementLimit (m, default 0.25)}
 
 #### `scenario_scenarios.updateVehicleAiState(vehicleName, data)`
 
-Met à jour scenario.aiControlledVehiclesById pour un véhicule (mode 'disable' le retire) et émet onVehicleAIStateChanged({vehicleId, vehicleName, aiControlled}).
+Updates scenario.aiControlledVehiclesById for a vehicle (mode 'disable' removes it) and emits onVehicleAIStateChanged({vehicleId, vehicleName, aiControlled}).
 
-- `vehicleName` (*string*) : nom du véhicule
-- `data` (*table*) : {mode = 'disable'|autre}
+- `vehicleName` (*string*) : vehicle name
+- `data` (*table*) : {mode = 'disable'|other}
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `onRaceWaypointReached` | nil | Exporté mais vaut nil (variable locale non définie dans le fichier). ⚠ référence `onRaceWaypointReached` non définie dans le fichier (vaut probablement nil) |
+| `onRaceWaypointReached` | nil | Exported but is nil (local variable not defined in the file). ⚠ reference `onRaceWaypointReached` not defined in the file (probably nil) |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onAttemptCompleted` — écouté par 1 module(s)
-- `onAttemptFailed` — écouté par 1 module(s)
-- `onCountdownEnded` — écouté par 2 module(s)
+- `onAttemptCompleted` — listened to by 1 module(s)
+- `onAttemptFailed` — listened to by 1 module(s)
+- `onCountdownEnded` — listened to by 2 module(s)
 - `onCountdownStarted`
-- `onCustomWaypoints` — écouté par 1 module(s)
+- `onCustomWaypoints` — listened to by 1 module(s)
 - `onEndScenario`
 - `onFailureTimerFired`
 - `onLastAttemptTaken`
-- `onLoadCustomPrefabs` — écouté par 1 module(s)
-- `onNewAttempt` — écouté par 1 module(s)
+- `onLoadCustomPrefabs` — listened to by 1 module(s)
+- `onNewAttempt` — listened to by 1 module(s)
 - `onObjectCollision`
-- `onRaceInit` — écouté par 2 module(s)
-- `onRaceResult` — écouté par 6 module(s)
-- `onRaceStart` — écouté par 5 module(s)
-- `onRaceTick` — écouté par 2 module(s)
-- `onScenarioChange` — écouté par 9 module(s)
-- `onScenarioFinished` — écouté par 2 module(s)
-- `onScenarioLoaded` — écouté par 5 module(s)
-- `onScenarioRestarted` — écouté par 7 module(s)
-- `onScenarioUIReady` — écouté par 1 module(s)
-- `onVehicleAIStateChanged` — écouté par 1 module(s)
-- `onVehicleStoppedMoving` — écouté par 1 module(s)
+- `onRaceInit` — listened to by 2 module(s)
+- `onRaceResult` — listened to by 6 module(s)
+- `onRaceStart` — listened to by 5 module(s)
+- `onRaceTick` — listened to by 2 module(s)
+- `onScenarioChange` — listened to by 9 module(s)
+- `onScenarioFinished` — listened to by 2 module(s)
+- `onScenarioLoaded` — listened to by 5 module(s)
+- `onScenarioRestarted` — listened to by 7 module(s)
+- `onScenarioUIReady` — listened to by 1 module(s)
+- `onVehicleAIStateChanged` — listened to by 1 module(s)
+- `onVehicleStoppedMoving` — listened to by 1 module(s)
 - `onVehicleTakenDamage`
 
-**Évènements UI (guihooks.trigger) :** `HotlappingResetApp`, `PlayersChanged`, `RaceStart`, `ScenarioChange`, `ScenarioFlashMessage`, `ScenarioFlashMessageReset`, `ScenarioNotRunning`, `ScenarioResetTimer`, `raceTime`, `scenarioStart:showStartButton`, `setQuickRaceMode`
+**UI events (guihooks.trigger):** `HotlappingResetApp`, `PlayersChanged`, `RaceStart`, `ScenarioChange`, `ScenarioFlashMessage`, `ScenarioFlashMessageReset`, `ScenarioNotRunning`, `ScenarioResetTimer`, `raceTime`, `scenarioStart:showStartButton`, `setQuickRaceMode`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 - `Sim.` `upcast`
@@ -323,7 +323,7 @@ Met à jour scenario.aiControlledVehiclesById pour un véhicule (mode 'disable' 
 - `debugDrawer:` `drawSphere`, `drawText`
 - `scenetree.` `findClassObjects`, `findObject`
 
-**Charge les extensions :** `scenario_`
+**Loads extensions:** `scenario_`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/scenarios.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/scenarios.lua`.*

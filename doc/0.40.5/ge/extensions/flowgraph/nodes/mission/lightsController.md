@@ -1,31 +1,31 @@
 # `flowgraph_nodes_mission_lightsController`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/mission/lightsController.lua` · VM : Game Engine (GE) · 162 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/mission/lightsController.lua` · VM: Game Engine (GE) · 162 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/mission/lightsController")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/mission/lightsController")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Lights Controller' (categorie repeat_instant) pour le feu de depart du drag race (version basee sur la vitesse). Meme sequence que Countdown Lights Controller (arbre Pro ou classique), mais le faux depart est detecte avec le pin 'velocity' > 0,5. Sorties : flow, disqualified, started.
+Flowgraph node 'Lights Controller' (repeat_instant category) for the drag race starting light (speed-based version). Same sequence as Countdown Lights Controller (Pro or classic tree), but the false start is detected with the 'velocity' pin > 0.5. Outputs: flow, disqualified, started.
 
-## Remarques
+## Notes
 
-- self.lights n'est cree que par l'impulsion 'reset' : sans reset prealable, work provoque une erreur.
-- flow est toujours true en sortie.
-- La description du noeud est identique a celle des autres noeuds de lumieres de drag race.
+- self.lights is only created by the 'reset' impulse: without a prior reset, work raises an error.
+- flow is always true on output.
+- The node's description is identical to that of the other drag race light nodes.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet l'etat et les sorties a zero. | 46 |
-| `C:init()` | Meme initialisation. | 54 |
-| `C:initLights()` | Recherche les lumieres de stage et du compte a rebours dans la scene. | 23 |
-| `C:work()` | Sur reset : remet l'etat et cache les lumieres. Sinon fait avancer le minuteur, gere les ambres/vert, passe started=true, detecte le faux depart (velocity > 0,5) : disqualified=true, ambres et rouge droit allumes. | 62 |
+| `C:_executionStarted()` | Resets the state and the outputs to zero. | 46 |
+| `C:init()` | Same initialization. | 54 |
+| `C:initLights()` | Searches the scene for the stage and countdown lights. | 23 |
+| `C:work()` | On reset: resets the state and hides the lights. Otherwise advances the timer, handles the ambers/green, sets started=true, detects the false start (velocity > 0.5): disqualified=true, ambers and right red on. | 62 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/mission/lightsController.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/mission/lightsController.lua`.*

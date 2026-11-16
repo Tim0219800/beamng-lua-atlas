@@ -1,20 +1,20 @@
 {
   "path": "lua/ge/extensions/ui/router/routes/global.lua",
-  "module": "Routes globales à un seul segment (hors module) : onboarding, buttonLayout, play, /mainmenu. Pour un nom à un segment, routeManager cherche d'abord ici (module global désigné par routes.lua : Global.include). « play » et « /mainmenu » ont `back = {mode = \"rootExit\"}`.",
+  "module": "Single-segment global routes (outside a module): onboarding, buttonLayout, play, /mainmenu. For a single-segment name, routeManager looks here first (global module designated by routes.lua: Global.include). \"play\" and \"/mainmenu\" have `back = {mode = \"rootExit\"}`.",
   "notes": [
-    "Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = \"<nom>\" }`.",
-    "Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.",
-    "`ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change.",
-    "Pas de M.Root dans ce fichier ; routeManager utilise donc `mod.Root or {}`."
+    "Route configuration module: it exports no function. routeManager reads it (via the ui_router_routes_<name> extension) when routes.lua includes it with `{ include = \"<name>\" }`.",
+    "The keys of `Children` form the segments of the dotted name: \"<module>.<child>\". `children` (lowercase) in a node designates its sub-routes; `include` mounts another module there.",
+    "`ui` is inherited by child routes (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause): a child redefines it only for what changes.",
+    "No M.Root in this file; routeManager therefore uses `mod.Root or {}`."
   ],
   "fields": {
     "Root": {
       "type": "table",
-      "desc": "(absent : ce module n'a pas de Root)"
+      "desc": "(absent: this module has no Root)"
     },
     "Children": {
       "type": "table<string, table>",
-      "desc": "onboarding (backTarget menu), buttonLayout (infoBar par défaut), play (screenId play, Vue, uiNav = false, uiApps visibles), /mainmenu (screenId menu, uiApps masquées)."
+      "desc": "onboarding (backTarget menu), buttonLayout (default infoBar), play (screenId play, Vue, uiNav = false, uiApps visible), /mainmenu (screenId menu, uiApps hidden)."
     }
   }
 }

@@ -2,55 +2,55 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_gameplay_rally_rallyStageInfoPanel_C
 local flowgraph_nodes_gameplay_rally_rallyStageInfoPanel_C = {}
 
---- Liste des spéciales de la boucle (nom, distance, surfaces) d'après les champs stage1..4_rallyStage de la mission.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:96
----@return table|nil  Liste d'entrées ou nil.
+--- List of the loop's stages (name, distance, surfaces) from the stage1..4_rallyStage fields of the mission.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:96
+---@return table|nil  List of entries or nil.
 function flowgraph_nodes_gameplay_rally_rallyStageInfoPanel_C:buildLoopStages() end
 
---- Distances de spéciales, de liaison et totale de la boucle rally (formatées en km).
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:78
----@return table|nil  {specialStageDistance, liaisonDistance, totalDistance} ou nil si planning invalide.
+--- Stage, liaison and total distances of the rally loop (formatted in km).
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:78
+---@return table|nil  {specialStageDistance, liaisonDistance, totalDistance} or nil if the schedule is invalid.
 function flowgraph_nodes_gameplay_rally_rallyStageInfoPanel_C:buildLoopStats() end
 
---- Construit la liste des règles (clés de traduction ou {txt, context}) selon isLoop et la réparation.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:132
----@param repairEnabled boolean Si la recovery répare le véhicule.
----@return table  Liste de règles.
+--- Builds the list of rules (translation keys or {txt, context}) according to isLoop and the repair.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:132
+---@param repairEnabled boolean Whether the recovery repairs the vehicle.
+---@return table  List of rules.
 function flowgraph_nodes_gameplay_rally_rallyStageInfoPanel_C:buildRules(repairEnabled) end
 
---- Stats formatées de la spéciale courante.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:74
----@return table|nil  Voir formatStats.
+--- Formatted stats of the current stage.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:74
+---@return table|nil  See formatStats.
 function flowgraph_nodes_gameplay_rally_rallyStageInfoPanel_C:buildStats() end
 
---- Formate les stats : distance (« %.2f km ») et surfaces arrondies > 0 % triées par valeur décroissante.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:49
----@param stats table|nil Stats brutes.
----@return table|nil  {distance, surfaces} ou nil.
+--- Formats the stats: distance ("%.2f km") and rounded surfaces > 0 % sorted by descending value.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:49
+---@param stats table|nil Raw stats.
+---@return table|nil  {distance, surfaces} or nil.
 function flowgraph_nodes_gameplay_rally_rallyStageInfoPanel_C:formatStats(stats) end
 
---- Limite de vitesse du parc d'assistance affichable (30 km/h par défaut).
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:123
----@return string  Texte du type « 30 km/h ».
+--- Displayable service park speed limit (30 km/h by default).
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:123
+---@return string  Text like "30 km/h".
 function flowgraph_nodes_gameplay_rally_rallyStageInfoPanel_C:getServiceParkSpeedLimit() end
 
---- Lit les stats du driveline du rally manager, ou du fichier spline de la mission.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:27
----@return table|nil  Stats (raceDistanceKms, surfacePercentages…) ou nil.
+--- Reads the driveline stats from the rally manager, or from the mission's spline file.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:27
+---@return table|nil  Stats (raceDistanceKms, surfacePercentages...) or nil.
 function flowgraph_nodes_gameplay_rally_rallyStageInfoPanel_C:readStats() end
 
---- Lit les stats du fichier driveline d'un dossier de mission.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:41
----@param folder string|nil Dossier de mission.
----@return table|nil  Stats ou nil.
+--- Reads the stats from the driveline file of a mission folder.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:41
+---@param folder string|nil Mission folder.
+---@return table|nil  Stats or nil.
 function flowgraph_nodes_gameplay_rally_rallyStageInfoPanel_C:readStatsForFolder(folder) end
 
---- Chaque frame : recopie flow et ajoute l'élément UI rallyStageInfo.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:168
+--- Every frame: copies flow and adds the rallyStageInfo UI element.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.lua:168
 function flowgraph_nodes_gameplay_rally_rallyStageInfoPanel_C:work() end
 

@@ -2,29 +2,29 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/dragTimer.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur auxiliaire de chronométrage de drag (accélération). Machine à états ready, countdown, measuring, done : quand le transbrake est actif et l'accélérateur appuyé, un compte à rebours de 3 s démarre ; à la fin, il relâche le transbrake (contrôleur nommé "transbrake") et mesure les temps au 60 pieds (18,288 m), 1/8 de mile (201,168 m) et 1/4 de mile (402,336 m) ainsi que les vitesses à ces deux derniers repères, puis affiche les résultats dans la console (en mph). Ordre lié au périphérique `gearbox`.
---- Accès : contrôleur `dragTimer` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Auxiliary drag (acceleration) timing controller. State machine ready, countdown, measuring, done: when the transbrake is active and the throttle pressed, a 3 s countdown starts; at the end, it releases the transbrake (controller named "transbrake") and measures the times at 60 feet (18.288 m), 1/8 mile (201.168 m) and 1/4 mile (402.336 m) as well as the speeds at these last two marks, then displays the results in the console (in mph). Order tied to the `gearbox` device.
+--- Access: controller `dragTimer` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_dragTimer
----@field relevantDevice string "gearbox" : périphérique powertrain utilisé pour l'ordre d'appel.
+---@field relevantDevice string "gearbox": powertrain device used for the call order.
 ---@field type string "auxiliary".
 local controller_dragTimer = {}
 
---- Remet la machine à l'état ready et tous les temps à 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/dragTimer.lua:93
----@param jbeamData table Données jbeam (non utilisées).
+--- Puts the state machine back to ready and all times to 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/dragTimer.lua:93
+---@param jbeamData table Jbeam data (unused).
 function controller_dragTimer.init(jbeamData) end
 
---- Pas physique : fait avancer la machine à états (armement, compte à rebours, mesure, affichage des résultats).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/dragTimer.lua:28
----@param dt number Pas physique en secondes.
+--- Physics step: advances the state machine (arming, countdown, measurement, results display).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/dragTimer.lua:28
+---@param dt number Physics step in seconds.
 function controller_dragTimer.update(dt) end
 
---- Vide (le travail est fait dans update).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/dragTimer.lua:25
----@param dt number Pas de temps en secondes.
+--- Empty (the work is done in update).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/dragTimer.lua:25
+---@param dt number Time step in seconds.
 function controller_dragTimer.updateGFX(dt) end
 
 return controller_dragTimer

@@ -1,27 +1,27 @@
 # `flowgraph_nodes_gameplay_sites_locationsByTag`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/sites/locationsByTag.lua` · VM : Game Engine (GE) · 135 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/sites/locationsByTag.lua` · VM: Game Engine (GE) · 135 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/sites/locationsByTag")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/sites/locationsByTag")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Locations by Tags » (catégorie once_instant). Trouve au plus `count` locations portant un tag donné, éventuellement entre minDist et maxDist d'une position pos. Les résultats sont mélangés (math.random) puis triés par distance à pos si fourni. Sorties : count, found_i (flow) et loc_i (locationData) pour i=1..N (N réglable). Entrées : sitesData, tag, pos, minDist/maxDist (-1 = pas de limite), amount (-1 = maximum).
+Flowgraph node "Locations by Tags" (category once_instant). Finds at most `count` locations with a given tag, optionally between minDist and maxDist of a position pos. Results are shuffled (math.random), then sorted by distance to pos if provided. Outputs: count, found_i (flow) and loc_i (locationData) for i=1..N (N adjustable). Inputs: sitesData, tag, pos, minDist/maxDist (-1 = no limit), amount (-1 = maximum).
 
-## Remarques
+## Notes
 
-- `reason` est une variable globale dans drawCustomProperties (non déclarée local).
+- `reason` is a global variable in drawCustomProperties (not declared local).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(res)` | Restaure les réglages propres au nœud à partir des données sauvegardées. | 129 |
-| `C:_onSerialize(res)` | Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe. | 125 |
-| `C:drawCustomProperties()` | Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui). | 37 |
-| `C:init(mgr, ...)` | Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph). | 34 |
-| `C:updatePins(old, new)` | Ajoute ou retire les paires de pins found_i / loc_i. | 53 |
-| `C:workOnce()` | Construit la liste des locations (par tag ou par rayon), la mélange, garde les premières, les trie par distance, puis remplit found_i, loc_i et count. | 77 |
+| `C:_onDeserialized(res)` | Restores the node's own settings from the saved data. | 129 |
+| `C:_onSerialize(res)` | Adds the node's own settings to the `res` table when saving the graph. | 125 |
+| `C:drawCustomProperties()` | Draws the node's custom properties in the flowgraph editor panel (ImGui). | 37 |
+| `C:init(mgr, ...)` | Initializes the node's internal state at creation (called by the flowgraph engine). | 34 |
+| `C:updatePins(old, new)` | Adds or removes the found_i / loc_i pin pairs. | 53 |
+| `C:workOnce()` | Builds the list of locations (by tag or by radius), shuffles it, keeps the first ones, sorts them by distance, then fills found_i, loc_i and count. | 77 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/sites/locationsByTag.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/sites/locationsByTag.lua`.*

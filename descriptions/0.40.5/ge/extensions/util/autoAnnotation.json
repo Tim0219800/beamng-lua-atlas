@@ -1,42 +1,57 @@
 {
   "path": "lua/ge/extensions/util/autoAnnotation.lua",
-  "module": "Outil d'éditeur de niveau : parcourt récursivement l'arbre de scène (MissionGroup) et le jeu de données des objets de forêt (ForestItemDataSet) pour poser automatiquement un champ d'annotation (catégorie sémantique, mode 'Override') sur les objets qui n'en ont pas. Les catégories sont devinées d'après le nom du fichier de forme (TSStatic, ForestItemData) ou le nom du GroundCover.",
+  "module": "Level editor tool: recursively walks the scene tree (MissionGroup) and the forest item dataset (ForestItemDataSet) to automatically set an annotation field (semantic category, 'Override' mode) on objects that lack one. Categories are guessed from the shape file name (TSStatic, ForestItemData) or the GroundCover name.",
   "usage": "util_autoAnnotation.autoAnnotateLevel()",
   "notes": [
-    "Correspondances de formes (recherche par sous-chaîne, insensible à la casse) : building, fence, fencing, busstop -> BUILDINGS ; tree -> NATURE ; sidewalk -> SIDEWALK ; sign -> TRAFFIC_SIGNS ; tunnel -> STREET ; road -> ASPHALT ; excavator -> CAR. Sans correspondance : OBSTACLES (avertissement loggé).",
-    "GroundCover : grass et shrubs -> NATURE ; par défaut NATURE (avertissement loggé).",
-    "Seuls les objets dont le champ annotation est vide sont modifiés. Les SFXSpace, SFXEmitter, PointLight et SpotLight sont ignorés.",
-    "Les objets modifiés reçoivent setField('annotation', ...), setField('mode', 'Override') puis postApply() : le niveau doit ensuite être sauvegardé par l'éditeur.",
-    "autoAnnotateGroups ne vérifie pas que ForestItemDataSet existe : visitNode planterait si l'objet est absent."
+    "Shape matches (substring search, case-insensitive): building, fence, fencing, busstop -> BUILDINGS; tree -> NATURE; sidewalk -> SIDEWALK; sign -> TRAFFIC_SIGNS; tunnel -> STREET; road -> ASPHALT; excavator -> CAR. No match: OBSTACLES (warning logged).",
+    "GroundCover: grass and shrubs -> NATURE; default NATURE (warning logged).",
+    "Only objects whose annotation field is empty are modified. SFXSpace, SFXEmitter, PointLight and SpotLight are ignored.",
+    "Modified objects receive setField('annotation', ...), setField('mode', 'Override') then postApply(): the level must then be saved by the editor.",
+    "autoAnnotateGroups does not check that ForestItemDataSet exists: visitNode would crash if the object is absent."
   ],
   "functions": {
-    "onInit": {"desc": "Hook d'initialisation sans effet (corps vide).", "internal": true},
+    "onInit": {
+      "desc": "Initialization hook with no effect (empty body).",
+      "internal": true
+    },
     "autoAnnotateScenetree": {
-      "desc": "Annote tout l'arbre de scène à partir de MissionGroup. Logue une erreur et s'arrête si MissionGroup est introuvable."
+      "desc": "Annotates the whole scene tree starting from MissionGroup. Logs an error and stops if MissionGroup is not found."
     },
     "autoAnnotateGroups": {
-      "desc": "Annote les données d'objets de forêt (ForestItemDataSet)."
+      "desc": "Annotates the forest object data (ForestItemDataSet)."
     },
     "autoAnnotateLevel": {
-      "desc": "Annote le niveau entier : arbre de scène puis jeu de données de forêt."
+      "desc": "Annotates the whole level: scene tree then forest dataset."
     }
   },
   "classes": {
     "visitors": {
-      "desc": "Table interne de visiteurs 'visit<Classe>' appelés selon la classe de chaque nœud. Les visiteurs de TSStatic et ForestItemData posent l'annotation d'après shapeName ; ceux de SFXSpace, SFXEmitter, PointLight, SpotLight ne font rien.",
+      "desc": "Internal table of 'visit<Class>' visitors called according to each node's class. The TSStatic and ForestItemData visitors set the annotation from shapeName; those of SFXSpace, SFXEmitter, PointLight, SpotLight do nothing.",
       "functions": {
         "visitForest": {
-          "desc": "Visite chaque élément d'une forêt (Forest) et annote les données de ses items.",
+          "desc": "Visits each element of a forest (Forest) and annotates the data of its items.",
           "params": {
-            "parent": {"type": "userdata", "desc": "Nœud parent."},
-            "node": {"type": "userdata", "desc": "Objet Forest."}
+            "parent": {
+              "type": "userdata",
+              "desc": "Parent node."
+            },
+            "node": {
+              "type": "userdata",
+              "desc": "Forest object."
+            }
           }
         },
         "visitGroundCover": {
-          "desc": "Annote un GroundCover sans annotation d'après son nom (NATURE par défaut).",
+          "desc": "Annotates a GroundCover without annotation from its name (NATURE by default).",
           "params": {
-            "parent": {"type": "userdata", "desc": "Nœud parent."},
-            "node": {"type": "userdata", "desc": "Objet GroundCover."}
+            "parent": {
+              "type": "userdata",
+              "desc": "Parent node."
+            },
+            "node": {
+              "type": "userdata",
+              "desc": "GroundCover object."
+            }
           }
         }
       }

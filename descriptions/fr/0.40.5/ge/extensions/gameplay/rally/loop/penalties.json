@@ -1,0 +1,44 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/loop/penalties.lua",
+  "module": "Calcul des pénalités de contrôle horaire (time control) d'une boucle de rallye : arrivée en avance, en retard, faux départ. Le temps est comparé à la minute près (arrivée dans la même minute que l'heure prévue = à l'heure). Chaque minute d'écart coûte 10 s.",
+  "usage": "local r = gameplay_rally_loop_penalties.getTimingStatus(actualEpoch, scheduledEpoch)\nif r.hasPenalty then print(r.status, r.totalPenalty) end",
+  "notes": [
+    "Les temps passés à getTimingStatus sont des temps epoch en secondes ; la comparaison se fait sur math.floor(t/60).",
+    "Si scheduledTime ou actualTime est nil, le résultat est 'on-time' sans pénalité.",
+    "Les commentaires parlent de 'minute ou fraction de minute', mais le code compte les minutes calendaires d'écart (différence des minutes entières), pas la durée réelle.",
+    "calculateFalseStartPenalty ignore son argument et renvoie toujours falseStartPenaltySeconds."
+  ],
+  "fields": {
+    "timeControlPenaltySecondsPerMinute": {"type": "number", "desc": "Pénalité en secondes par minute d'avance ou de retard (10)."},
+    "falseStartPenaltySeconds": {"type": "number", "desc": "Pénalité de faux départ en secondes (10)."}
+  },
+  "functions": {
+    "calculateEarlyPenalty": {
+      "desc": "Pénalité d'une arrivée en avance : minutesEarly multiplié par timeControlPenaltySecondsPerMinute.",
+      "params": {"minutesEarly": {"type": "number", "desc": "Nombre de minutes d'avance."}},
+      "returns": [{"type": "number", "desc": "Pénalité en secondes."}],
+      "internal": false
+    },
+    "calculateLatePenalty": {
+      "desc": "Pénalité d'une arrivée en retard : minutesLate multiplié par timeControlPenaltySecondsPerMinute.",
+      "params": {"minutesLate": {"type": "number", "desc": "Nombre de minutes de retard."}},
+      "returns": [{"type": "number", "desc": "Pénalité en secondes."}],
+      "internal": false
+    },
+    "calculateFalseStartPenalty": {
+      "desc": "Pénalité de faux départ ; constante, indépendante du nombre de faux départs.",
+      "params": {"falseStartCount": {"type": "integer", "desc": "Nombre de faux départs (ignoré)."}},
+      "returns": [{"type": "number", "desc": "falseStartPenaltySeconds."}],
+      "internal": false
+    },
+    "getTimingStatus": {
+      "desc": "Détermine si l'arrivée à un point de contrôle est en avance, à l'heure ou en retard, et calcule la pénalité associée.",
+      "params": {
+        "actualTime": {"type": "number|nil", "desc": "Heure d'arrivée réelle, epoch en secondes."},
+        "scheduledTime": {"type": "number|nil", "desc": "Heure prévue, epoch en secondes (peut être nil)."}
+      },
+      "returns": [{"type": "table", "desc": "{status = 'early'|'on-time'|'late', totalPenalty, hasPenalty, penalties}. Chaque élément de penalties : {type = 'time_control_early'|'time_control_late', amount, data = {minutesEarly|minutesLate, actualMinute, scheduledMinute}} pour l'i18n."}],
+      "internal": false
+    }
+  }
+}

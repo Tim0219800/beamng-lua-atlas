@@ -1,22 +1,22 @@
 # `flowgraph_nodes_gameplay_rally_rallyRouteData`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyRouteData.lua` · VM : Game Engine (GE) · 28 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyRouteData.lua` · VM: Game Engine (GE) · 28 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/rallyRouteData")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/rallyRouteData")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Route Data » (catégorie repeat_instant, tag rally). Lit le gestionnaire rally (gameplay_rally.getRallyManager()) et publie dans nextRoutePointPos (vec3) la position de destination de recovery (rm:getRecoveryDestinationPos()). Recopie aussi flow en sortie.
+Flowgraph node "Rally Route Data" (category repeat_instant, tag rally). Reads the rally manager (gameplay_rally.getRallyManager()) and publishes in nextRoutePointPos (vec3) the recovery destination position (rm:getRecoveryDestinationPos()). Also copies flow to the output.
 
-## Remarques
+## Notes
 
-- La description de la pin parle du « prochain point de route devant le véhicule » mais le code renvoie getRecoveryDestinationPos().
+- The pin description talks about the "next route point ahead of the vehicle" but the code returns getRecoveryDestinationPos().
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Chaque frame : met à jour nextRoutePointPos depuis le rally manager et recopie le flux. | 19 |
+| `C:work()` | Every frame: updates nextRoutePointPos from the rally manager and copies the flow. | 19 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyRouteData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyRouteData.lua`.*

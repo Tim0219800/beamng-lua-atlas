@@ -1,49 +1,49 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/timetrials/onRaceCheckpoint.lua",
-  "module": "Noeud « Race CP Reached » (repeat_instant). Laisse passer une impulsion quand le joueur franchit un checkpoint de course. Sorties : checked (impulsion), vehId (caché), index (checkpoint), lap (tour courant, compté avec data.lapDiff). Reçoit le hook onRaceWaypointReached.",
+  "module": "Node \"Race CP Reached\" (repeat_instant). Lets an impulse through when the player crosses a race checkpoint. Outputs: checked (impulse), vehId (hidden), index (checkpoint), lap (current lap, counted with data.lapDiff). Receives the hook onRaceWaypointReached.",
   "notes": [
-    "Ancien nom de pin : vehicleID -> vehId (legacyPins)."
+    "Old pin name: vehicleID -> vehId (legacyPins)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Initialise enterFlag, lap = 1 et clearOutPinsOnStart = false.",
+          "desc": "Initializes enterFlag, lap = 1 and clearOutPinsOnStart = false.",
           "params": {
             "mgr": {
               "type": "any",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           },
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Remet lap = 1 et enterFlag = false.",
+          "desc": "Resets lap = 1 and enterFlag = false.",
           "internal": true
         },
         "onRaceWaypointReached": {
-          "desc": "Hook : mémorise vehId, index (data.cur) et met à jour le tour (data.lapDiff).",
+          "desc": "Hook: stores vehId, index (data.cur) and updates the lap (data.lapDiff).",
           "params": {
             "data": {
               "type": "any",
-              "desc": "table {vehId, cur, lapDiff}"
+              "desc": "{vehId, cur, lapDiff} table"
             }
           },
           "internal": true
         },
         "work": {
-          "desc": "Écrit checked = enterFlag puis le remet à false.",
+          "desc": "Writes checked = enterFlag then resets it to false.",
           "params": {
             "args": {
               "type": "any",
-              "desc": "non utilisé"
+              "desc": "unused"
             }
           },
           "internal": false
         },
         "onScenarioRestarted": {
-          "desc": "Hook de redémarrage du scénario : réinitialise le noeud.",
+          "desc": "Scenario restart hook: resets the node.",
           "internal": true
         }
       }

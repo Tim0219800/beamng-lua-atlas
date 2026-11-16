@@ -1,35 +1,35 @@
 # `editor_missionStartPositionEditor`
 
-*Fichier : `lua/ge/extensions/editor/missionStartPositionEditor.lua` · VM : Game Engine (GE) · 286 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/missionStartPositionEditor.lua` · VM: Game Engine (GE) · 286 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_missionStartPositionEditor` : `extensions.load("editor_missionStartPositionEditor")`, puis la globale `editor_missionStartPositionEditor`
+**Access:** extension `editor_missionStartPositionEditor`: `extensions.load("editor_missionStartPositionEditor")`, then the global `editor_missionStartPositionEditor`
 
-Mode d'édition « Edit Mission Start Position » du World Editor (icône drapeau). Il dessine avec debugDrawer une sphère et le nom pour chaque mission dont startTrigger.level est le niveau courant, et permet de déplacer le point de départ de la mission sélectionnée : clic-glisser, ou Ctrl+clic pour poser directement à la position de la souris (raycast caméra). Chaque déplacement est enregistré dans l'historique d'annulation de l'éditeur (editor.history). Un bouton déplace aussi toutes les missions situées à moins de 10 m de la mission sélectionnée vers sa position.
+"Edit Mission Start Position" edit mode of the World Editor (flag icon). It draws with debugDrawer a sphere and the name for each mission whose startTrigger.level is the current level, and lets you move the start point of the selected mission: click-drag, or Ctrl+click to place directly at the mouse position (camera raycast). Each move is recorded in the editor's undo history (editor.history). A button also moves all the missions located within 10 m of the selected mission to its position.
 
-## Remarques
+## Notes
 
-- Code couleur : vert = mission sélectionnée, orange = missions proches (<= 10 m), bleu = autres. La taille des sphères augmente avec la distance à la caméra (1.5 à 10, entre 500 m et 1500 m) ; x1.3 pour la sélection, x1.2 pour les proches.
-- Modifie startTrigger.pos (table {x,y,z}) et met mission._dirty = true ; la sauvegarde se fait depuis l'éditeur de missions.
-- Le test im.IsItemHovered() dans onUpdate n'est pas lié à un élément imgui : l'infobulle de mission n'est probablement jamais affichée (déduit du code).
+- Color code: green = selected mission, orange = nearby missions (<= 10 m), blue = others. The sphere size increases with the distance to the camera (1.5 to 10, between 500 m and 1500 m); x1.3 for the selection, x1.2 for nearby ones.
+- Modifies startTrigger.pos ({x,y,z} table) and sets mission._dirty = true; saving is done from the mission editor.
+- The im.IsItemHovered() test in onUpdate is not tied to an imgui item: the mission tooltip is probably never displayed (inferred from code).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_missionStartPositionEditor.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : déclare le mode d'édition missionStartPositionEditMode (action map « MissionStartPositionEditor », onActivate, onDeactivate, onUpdate, onToolbar). *(interne)* *(hook)* | 267 |
-| `editor_missionStartPositionEditor.setSelectedMission(mission)` | Définit la mission sélectionnée dans ce mode d'édition (utile pour l'éditeur de missions). | 284 |
+| `editor_missionStartPositionEditor.onEditorInitialized()` | Hook called at editor initialization: declares the missionStartPositionEditMode edit mode (action map "MissionStartPositionEditor", onActivate, onDeactivate, onUpdate, onToolbar). *(internal)* *(hook)* | 267 |
+| `editor_missionStartPositionEditor.setSelectedMission(mission)` | Sets the selected mission in this edit mode (useful for the mission editor). | 284 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_missionStartPositionEditor.setSelectedMission(mission)`
 
-Définit la mission sélectionnée dans ce mode d'édition (utile pour l'éditeur de missions).
+Sets the selected mission in this edit mode (useful for the mission editor).
 
-- `mission` (*table|nil*) : Mission (avec startTrigger.pos) ou nil pour désélectionner.
+- `mission` (*table|nil*) : Mission (with startTrigger.pos) or nil to deselect.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawText`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionStartPositionEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/missionStartPositionEditor.lua`.*

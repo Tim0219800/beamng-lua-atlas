@@ -2,49 +2,49 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/pause/providers/routeData/common.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Outils partagés par les fournisseurs routeData du menu pause : navigation par séquence d'états, enregistrement de boutons via ui_pause_actions, confirmation de sortie (niveau ou jeu) adaptée à la carrière, exécution d'une sortie avec sauvegarde préalable, et construction de groupes de rail. Les ids de texte de confirmation sont exposés dans ExitLevelTexts et ExitGameTexts.
---- Accès : extension `ui_pause_providers_routeData_common` : `extensions.load("ui_pause_providers_routeData_common")`, puis la globale `ui_pause_providers_routeData_common`
+--- Tools shared by the pause menu routeData providers: navigation by state sequence, button registration via ui_pause_actions, exit confirmation (level or game) adapted to career, execution of an exit with prior save, and building of rail groups. The confirmation text ids are exposed in ExitLevelTexts and ExitGameTexts.
+--- Access: extension `ui_pause_providers_routeData_common`: `extensions.load("ui_pause_providers_routeData_common")`, then the global `ui_pause_providers_routeData_common`
 ---@class ui_pause_providers_routeData_common
----@field ExitGameTexts table<string, string> Ids de traduction pour quitter le jeu : default, career, notSaved.
----@field ExitLevelTexts table<string, string> Ids de traduction pour quitter le niveau : default, career, notSaved.
+---@field ExitGameTexts table<string, string> Translation ids for quitting the game: default, career, notSaved.
+---@field ExitLevelTexts table<string, string> Translation ids for quitting the level: default, career, notSaved.
 ui_pause_providers_routeData_common = {}
 
---- Crée un groupe de rail {id, actions}, ou nil si la liste est vide.
----Source : lua/ge/extensions/ui/pause/providers/routeData/common.lua:81
----@param id string Id du groupe.
----@param actions table[]|nil Boutons du groupe.
----@return table|nil  Groupe ou nil.
+--- Creates a rail group {id, actions}, or nil if the list is empty.
+---Source: lua/ge/extensions/ui/pause/providers/routeData/common.lua:81
+---@param id string Group id.
+---@param actions table[]|nil Group buttons.
+---@return table|nil  Group or nil.
 function ui_pause_providers_routeData_common.asRailGroup(id, actions) end
 
---- Convertit n'importe quelle valeur en booléen (truthy -> true, sinon false).
----Source : lua/ge/extensions/ui/pause/providers/routeData/common.lua:7
----@param value any Valeur à convertir.
----@return boolean  Booléen.
+--- Converts any value to a boolean (truthy -> true, otherwise false).
+---Source: lua/ge/extensions/ui/pause/providers/routeData/common.lua:7
+---@param value any Value to convert.
+---@return boolean  Boolean.
 function ui_pause_providers_routeData_common.bool(value) end
 
---- Enregistre un bouton de pause : extrait button.callback, copie le reste des métadonnées et appelle ui_pause_actions.registerButton. Sans callback, utilise une fonction qui renvoie false.
----Source : lua/ge/extensions/ui/pause/providers/routeData/common.lua:21
----@param button table|nil Métadonnées du bouton plus callback.
----@return table|nil  Métadonnées enregistrées (avec buttonId) ou nil si button est nil.
+--- Registers a pause button: extracts button.callback, copies the rest of the metadata and calls ui_pause_actions.registerButton. Without a callback, uses a function that returns false.
+---Source: lua/ge/extensions/ui/pause/providers/routeData/common.lua:21
+---@param button table|nil Button metadata plus callback.
+---@return table|nil  Registered metadata (with buttonId) or nil if button is nil.
 function ui_pause_providers_routeData_common.registerPauseButton(button) end
 
---- Exécute la fonction de sortie ; si payload.saveFirst est vrai, sauvegarde d'abord la carrière via ui_pause_actions.saveCareerThen.
----Source : lua/ge/extensions/ui/pause/providers/routeData/common.lua:72
----@param exitFn function Fonction de sortie (returnToMainMenu, quit…).
----@param payload table|nil Charge utile du bouton (champ lu : saveFirst).
+--- Executes the exit function; if payload.saveFirst is true, first saves the career via ui_pause_actions.saveCareerThen.
+---Source: lua/ge/extensions/ui/pause/providers/routeData/common.lua:72
+---@param exitFn function Exit function _anon(returnToMainMenu, quit...).
+---@param payload table|nil Button payload (field read: saveFirst).
 function ui_pause_providers_routeData_common.runExit(exitFn, payload) end
 
---- Essaie de naviguer vers chaque état via ui_router.navigate (dans un pcall) jusqu'à ce qu'un réussisse (result.result ~= false).
----Source : lua/ge/extensions/ui/pause/providers/routeData/common.lua:11
----@param states string|string[]|nil Nom d'état ou liste d'états à essayer dans l'ordre.
----@return boolean  true si une navigation a réussi.
+--- Tries to navigate to each state via ui_router.navigate (in a pcall) until one succeeds (result.result ~= false).
+---Source: lua/ge/extensions/ui/pause/providers/routeData/common.lua:11
+---@param states string|string[]|nil State name or list of states to try in order.
+---@return boolean  true if a navigation succeeded.
 function ui_pause_providers_routeData_common.tryPushStateSequence(states) end
 
---- Complète un bouton de sortie avec les champs de confirmation (cancelLabel, confirmText, confirmSince, confirmLabel, altLabel…) selon le mode (carrière ou non) et l'état de sauvegarde.
----Source : lua/ge/extensions/ui/pause/providers/routeData/common.lua:49
----@param button table Métadonnées du bouton, modifiées en place.
----@param context table Contexte pause (champ lu : mode).
----@param texts table ExitLevelTexts ou ExitGameTexts.
----@return table  Le même bouton.
+--- Completes an exit button with the confirmation fields (cancelLabel, confirmText, confirmSince, confirmLabel, altLabel...) depending on the mode (career or not) and the save state.
+---Source: lua/ge/extensions/ui/pause/providers/routeData/common.lua:49
+---@param button table Button metadata, modified in place.
+---@param context table Pause context (field read: mode).
+---@param texts table ExitLevelTexts or ExitGameTexts.
+---@return table  The same button.
 function ui_pause_providers_routeData_common.withExitConfirm(button, context, texts) end
 

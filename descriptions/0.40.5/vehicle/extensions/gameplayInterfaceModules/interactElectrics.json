@@ -1,19 +1,40 @@
 {
   "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactElectrics.lua",
-  "module": "Module de gameplayInterface pour electrics : fixer le niveau d'allumage, le mode de la barre lumineuse et l'état des phares, et lire n'importe quelle valeur de electrics.values.",
+  "module": "gameplayInterface module for electrics: set the ignition level, the light bar mode and the headlight state, and read any value of electrics.values.",
   "usage": "gameplayInterface.executeAction(0, 9, 'setIgnitionLevel', 2)\ngameplayInterface.getSystemData(0, 10, 'electricsValue', 'rpm')",
   "notes": [
-    "Action 'setIgnitionLevel'(level:number) : electrics.setIgnitionLevel(level) (0 à 3).",
-    "Action 'setLightbarMode'(mode:number) : electrics.set_lightbar_signal(mode).",
-    "Action 'setLightMode'(mode:number) : electrics.setLightsState(mode) (0 éteint, 1 croisement, 2 route).",
-    "Lookup 'electricsValue'(key:string) : renvoie {result = electrics.values[key]} (nil si la clé n'existe pas)."
+    "Action 'setIgnitionLevel'(level:number): electrics.setIgnitionLevel(level) (0 to 3).",
+    "Action 'setLightbarMode'(mode:number): electrics.set_lightbar_signal(mode).",
+    "Action 'setLightMode'(mode:number): electrics.setLightsState(mode) (0 off, 1 low beam, 2 high beam).",
+    "Lookup 'electricsValue'(key:string): returns {result = electrics.values[key]} (nil if the key does not exist)."
   ],
   "fields": {
-    "moduleActions": {"type": "table<string, function>", "desc": "Actions : setIgnitionLevel, setLightbarMode, setLightMode."},
-    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups : electricsValue."}
+    "moduleActions": {
+      "type": "table<string, function>",
+      "desc": "Actions: setIgnitionLevel, setLightbarMode, setLightMode."
+    },
+    "moduleLookups": {
+      "type": "table<string, function>",
+      "desc": "Lookups: electricsValue."
+    }
   },
   "functions": {
-    "onExtensionLoaded": {"desc": "Appelé au chargement : remplit moduleActions et moduleLookups.", "params": {}, "returns": [], "internal": true},
-    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+    "onExtensionLoaded": {
+      "desc": "Called at load: fills moduleActions and moduleLookups.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "requestRegistration": {
+      "desc": "Registers the actions and lookups with gameplayInterface.",
+      "params": {
+        "gi": {
+          "type": "table",
+          "desc": "The gameplayInterface module."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

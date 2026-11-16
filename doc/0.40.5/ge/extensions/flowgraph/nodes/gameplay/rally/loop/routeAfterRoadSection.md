@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_rally_loop_routeAfterRoadSection`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/routeAfterRoadSection.lua` · VM : Game Engine (GE) · 58 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/routeAfterRoadSection.lua` · VM: Game Engine (GE) · 58 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/loop/routeAfterRoadSection")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/loop/routeAfterRoadSection")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Route After Road Section » (catégorie once_instant, tag rally). Aiguille le flux après une section de route selon la mission courante du planning de la boucle rally : toServiceIn si rm:getCurrentMissionId() vaut 'serviceIn', sinon toSpecialStage. Si aucune mission courante n'existe, un avertissement est loggé et aucune sortie n'est activée.
+Flowgraph node "Rally Route After Road Section" (category once_instant, tag rally). Routes the flow after a road section according to the current mission of the rally loop schedule: toServiceIn if rm:getCurrentMissionId() is 'serviceIn', otherwise toSpecialStage. If there is no current mission, a warning is logged and no output is activated.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Active toServiceIn ou toSpecialStage selon l'id de la mission courante. | 29 |
+| `C:workOnce()` | Activates toServiceIn or toSpecialStage according to the id of the current mission. | 29 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/routeAfterRoadSection.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/routeAfterRoadSection.lua`.*

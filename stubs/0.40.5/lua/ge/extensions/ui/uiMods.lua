@@ -2,57 +2,57 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/uiMods.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fournit à l'interface (Vue) la liste des mods d'UI, des apps UI et des listes d'images, et surveille les changements de fichiers pour prévenir l'UI en direct (rechargement à chaud). Il suit aussi des révisions de fichiers d'exécution (« runtime ») servis à l'UI pour le développement. onFilesChanged déclenche les évènements UiModsChanged, UiAppsChanged, UiImageListChanged et UiRuntimeFileChanged, et rappelle sendUIModules() quand /ui/modModules/ change.
---- Accès : extension `ui_uiMods` : `extensions.load("ui_uiMods")`, puis la globale `ui_uiMods`
+--- Provides the interface (Vue) with the list of UI mods, UI apps and image lists, and watches file changes to notify the UI live (hot reload). It also tracks revisions of runtime files served to the UI for development. onFilesChanged triggers the events UiModsChanged, UiAppsChanged, UiImageListChanged and UiRuntimeFileChanged, and calls sendUIModules() again when /ui/modModules/ changes.
+--- Access: extension `ui_uiMods`: `extensions.load("ui_uiMods")`, then the global `ui_uiMods`
 ---@class ui_uiMods
 ui_uiMods = {}
 
---- Incrémente la révision d'un chemin pour forcer un rechargement manuel. Renvoie 0 si le service d'exécution n'est pas configuré ou si path n'est pas une chaîne.
----Source : lua/ge/extensions/ui/uiMods.lua:341
----@param path string Chemin du fichier.
----@return integer  Nouvelle révision.
+--- Increments the revision of a path to force a manual reload. Returns 0 if the runtime service is not configured or if path is not a string.
+---Source: lua/ge/extensions/ui/uiMods.lua:341
+---@param path string File path.
+---@return integer  New revision.
 function ui_uiMods.bumpUiRuntimeRevision(path) end
 
---- Liste les images d'un dossier (récursif), triées par nom, en associant l'image normale et sa variante _blur. Le dossier est ajouté à la surveillance.
----Source : lua/ge/extensions/ui/uiMods.lua:108
----@param path string Dossier virtuel du jeu ; les '\' sont normalisés en '/'.
----@return {normal: string|nil, blur: string|nil}[]  Entrées d'images ; {} si le chemin est vide.
+--- Lists the images in a folder (recursive), sorted by name, associating the normal image and its _blur variant. The folder is added to the watch list.
+---Source: lua/ge/extensions/ui/uiMods.lua:108
+---@param path string Virtual game folder; '\' are normalized to '/'.
+---@return {normal: string|nil, blur: string|nil}[]  Image entries; {} if the path is empty.
 function ui_uiMods.getImageList(path) end
 
---- Renvoie, depuis extensions.ui_apps.getUIAppsData(), une copie filtrée des métadonnées des apps UI (appName, directive, folder, appJsonPath, jsSource, vueFile, types, category, version, essential, devonly, official, preview = première prévisualisation, etc.). Table vide si ui_apps est indisponible.
----Source : lua/ge/extensions/ui/uiMods.lua:53
----@return table<string, table>  Apps par nom.
+--- Returns, from extensions.ui_apps.getUIAppsData(), a filtered copy of the UI apps metadata (appName, directive, folder, appJsonPath, jsSource, vueFile, types, category, version, essential, devonly, official, preview = first preview, etc.). Empty table if ui_apps is unavailable.
+---Source: lua/ge/extensions/ui/uiMods.lua:53
+---@return table<string, table>  Apps by name.
 function ui_uiMods.getUiApps() end
 
---- Liste les fichiers d'exécution servis (sous les dossiers `includes`, de type suivi, et non intégrés au bundle sauf les styles).
----Source : lua/ge/extensions/ui/uiMods.lua:347
----@param withMtime boolean|nil Si true, ajoute `mtime` à chaque entrée (et mémorise les mtimes).
----@return {path: string, mtime: number|nil}[]  Fichiers servis ; {} si non configuré.
+--- Lists the served runtime files (under the `includes` folders, of a tracked type, and not built into the bundle except styles).
+---Source: lua/ge/extensions/ui/uiMods.lua:347
+---@param withMtime boolean|nil If true, adds `mtime` to each entry (and stores the mtimes).
+---@return {path: string, mtime: number|nil}[]  Served files; {} if not configured.
 function ui_uiMods.getUiRuntimeFileList(withMtime) end
 
---- Renvoie la table chemin -> numéro de révision des fichiers d'exécution (référence directe, pas une copie).
----Source : lua/ge/extensions/ui/uiMods.lua:336
----@return table<string, integer>  Révisions.
+--- Returns the path -> revision number table of runtime files (direct reference, not a copy).
+---Source: lua/ge/extensions/ui/uiMods.lua:336
+---@return table<string, integer>  Revisions.
 function ui_uiMods.getUiRuntimeRevisions() end
 
---- Parcourt /ui/ui-vue/mods et regroupe les fichiers par mod (premier dossier sous mods/).
----Source : lua/ge/extensions/ui/uiMods.lua:31
----@return table<string, {path: string, files: string[]}>  Par nom de mod : dossier et chemins relatifs des fichiers.
+--- Walks /ui/ui-vue/mods and groups files by mod (first folder under mods/).
+---Source: lua/ge/extensions/ui/uiMods.lua:31
+---@return table<string, {path: string, files: string[]}>  By mod name: folder and relative file paths.
 function ui_uiMods.getVueMods() end
 
---- Hook appelé au chargement de l'extension : passe le mode de déchargement en « manual ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/uiMods.lua:7
+--- Hook called when the extension loads: sets the unload mode to "manual".
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/uiMods.lua:7
 function ui_uiMods.onExtensionLoaded() end
 
---- Hook appelé par le moteur quand des fichiers changent. Pour chaque fichier : appelle sendUIModules() pour /ui/modModules/, déclenche UiModsChanged pour /ui/ui-vue/mods/, UiAppsChanged (avec files et apps concernées) pour /ui/modules/apps/, UiImageListChanged pour les dossiers d'images surveillés, et UiRuntimeFileChanged {path, rev, change} pour les fichiers d'exécution servis.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/uiMods.lua:274
----@param files table[] Liste d'objets {filename, type} (type « deleted » pour une suppression).
+--- Hook called by the engine when files change. For each file: calls sendUIModules() for /ui/modModules/, triggers UiModsChanged for /ui/ui-vue/mods/, UiAppsChanged (with the affected files and apps) for /ui/modules/apps/, UiImageListChanged for watched image folders, and UiRuntimeFileChanged {path, rev, change} for served runtime files.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/uiMods.lua:274
+---@param files table[] List of {filename, type} objects (type "deleted" for a deletion).
 function ui_uiMods.onFilesChanged(files) end
 
---- Configure le service de fichiers d'exécution de l'UI : dossiers inclus, exclus, extensions suivies (statExts) et extensions de style (styleExts). Ignoré si cfg n'est pas une table ou si cfg.includes est vide.
----Source : lua/ge/extensions/ui/uiMods.lua:208
+--- Configures the UI runtime file service: included folders, excluded folders, tracked extensions (statExts) and style extensions (styleExts). Ignored if cfg is not a table or if cfg.includes is empty.
+---Source: lua/ge/extensions/ui/uiMods.lua:208
 ---@param cfg table { includes = string[], excludes = string[]|nil, statExts = string[]|nil, styleExts = string[]|nil }
 function ui_uiMods.setUiRuntimeBundled(cfg) end
 

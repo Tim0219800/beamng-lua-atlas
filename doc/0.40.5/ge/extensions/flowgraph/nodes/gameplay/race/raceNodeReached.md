@@ -1,25 +1,25 @@
 # `flowgraph_nodes_gameplay_race_raceNodeReached`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceNodeReached.lua` · VM : Game Engine (GE) · 76 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceNodeReached.lua` · VM: Game Engine (GE) · 76 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/race/raceNodeReached")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/race/raceNodeReached")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Race Pathnode Reached » (catégorie logic, tag scenario). Laisse passer le flux quand un véhicule atteint un pathnode de la course (events.pathnodeReached). Sorties fixes : flow et nodeName (nom du pathnode atteint). Le moddeur peut ajouter des pins de sortie string ou number : leur valeur est lue dans les customFields du pathnode (même nom et même type).
+Flowgraph node "Race Pathnode Reached" (category logic, tag scenario). Lets flow through when a vehicle reaches a pathnode of the race (events.pathnodeReached). Fixed outputs: flow and nodeName (name of the reached pathnode). The modder can add string or number output pins: their value is read from the pathnode's customFields (same name and same type).
 
-## Remarques
+## Notes
 
-- Quand aucun pathnode n'est atteint, flow vaut false et nodeName et les pins personnalisées valent nil.
-- work() indexe race.states[vehId] sans test : un véhicule absent de la course provoque une erreur.
+- When no pathnode is reached, flow is false and nodeName and the custom pins are nil.
+- work() indexes race.states[vehId] without a check: a vehicle absent from the race causes an error.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Vide. | 41 |
-| `C:init(mgr, ...)` | Active allowCustomOutPins et savePins, data.detailed = false. | 35 |
-| `C:work(args)` | Lit les events du véhicule et remplit flow, nodeName et les pins personnalisées. | 45 |
+| `C:drawMiddle(builder, style)` | Empty. | 41 |
+| `C:init(mgr, ...)` | Enables allowCustomOutPins and savePins, data.detailed = false. | 35 |
+| `C:work(args)` | Reads the vehicle's events and fills flow, nodeName and the custom pins. | 45 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceNodeReached.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceNodeReached.lua`.*

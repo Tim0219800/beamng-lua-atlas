@@ -2,102 +2,102 @@
 -- tim19Atlas stub generated from lua/vehicle/recovery.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Système de récupération (touche « recover ») du véhicule. En roulant, enregistre toutes les 0,2 s un historique de positions/orientations (jusqu'à 700 points, un point au moins 2 m après le précédent). Quand on maintient la récupération, le véhicule « rembobine » ce chemin à vitesse croissante (3 -> 20 -> 50 m/s) avec une caméra de récupération et un fil de fer des poutres, puis est téléporté au point atteint à la relâche. Gère aussi le point « home » (saveHome/loadHome) et le mode multijoueur (validation par le serveur).
---- Accès : globale `recovery`
+--- Vehicle recovery system ("recover" key). While driving, records a history of positions/orientations every 0.2 s (up to 700 points, a point at least 2 m after the previous one). When recovery is held, the vehicle "rewinds" this path at increasing speed (3 -> 20 -> 50 m/s) with a recovery camera and a beam wireframe, then is teleported to the point reached on release. Also handles the "home" point (saveHome/loadHome) and multiplayer mode (server validation).
+--- Access: global `recovery`
 ---@class recovery
----@field recoveryHooksOnly boolean Si vrai, l'entrée de récupération n'émet que les hooks sans modifier le véhicule (tutoriel First Drive). Faux par défaut.
----@field recoveryPoints dequeue Historique des points de récupération ({pos=vec3, dirFront=vec3, dirUp=vec3}), du plus ancien (gauche) au plus récent (droite).
----@field updateGFX function nop au chargement, puis remplacée par updateGFXRecord (enregistrement) ou updateGFXRecovery (rembobinage). ⚠ référence nop non définie dans le fichier (global du jeu).
+---@field recoveryHooksOnly boolean If true, the recovery input only emits the hooks without modifying the vehicle (First Drive tutorial). False by default.
+---@field recoveryPoints dequeue History of recovery points ({pos=vec3, dirFront=vec3, dirUp=vec3}), from oldest (left) to newest (right).
+---@field updateGFX function nop at load, then replaced by updateGFXRecord (recording) or updateGFXRecovery (rewind). ⚠ nop reference not defined in the file (game global).
 recovery = {}
 
---- Finalise une récupération : remet à zéro les poutres de flexmesh cassées, libère les noeuds fixés par le grabber, affiche le message adapté, ferme la caméra et émet le hook GE onStopRecovering.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/recovery.lua:283
----@param timer number|string|nil Durée de la récupération en secondes (défaut : durée mesurée).
+--- Finalizes a recovery: resets broken flexmesh beams, releases the nodes fixed by the grabber, displays the appropriate message, closes the camera and emits the GE hook onStopRecovering.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/recovery.lua:283
+---@param timer number|string|nil Recovery duration in seconds (default: measured duration).
 function recovery.afterStopRecovering(timer) end
 
---- Entre réellement en mode rembobinage : crée un point de départ, passe updateGFX sur updateGFXRecovery, émet le hook GE onStartRecovering. Appelé par startRecovering ou après autorisation MP.
----Source : lua/vehicle/recovery.lua:491
----@param useAltMode boolean|nil Voir startRecovering.
+--- Actually enters rewind mode: creates a starting point, switches updateGFX to updateGFXRecovery, emits the GE hook onStartRecovering. Called by startRecovering or after MP authorization.
+---Source: lua/vehicle/recovery.lua:491
+---@param useAltMode boolean|nil See startRecovering.
 function recovery.beginRecoveringPreview(useAltMode) end
 
---- Annule la récupération en cours sans téléporter : remet l'enregistrement, réinitialise les matériaux et ferme la caméra de récupération.
----Source : lua/vehicle/recovery.lua:260
+--- Cancels the current recovery without teleporting: resumes recording, resets the materials and closes the recovery camera.
+---Source: lua/vehicle/recovery.lua:260
 function recovery.cancelRecoveringPreview() end
 
---- Vide l'historique des points, supprime homePoint et invalide le dernier point de récupération.
----Source : lua/vehicle/recovery.lua:50
+--- Empties the point history, removes homePoint and invalidates the last recovery point.
+---Source: lua/vehicle/recovery.lua:50
 function recovery.clear() end
 
---- Passe en mode enregistrement, mémorise le nombre de poutres et précalcule les positions relatives des noeuds par rapport au noeud de référence (pour dessiner le fil de fer).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/recovery.lua:559
----@param path string Non utilisé (déduit du code).
+--- Switches to recording mode, stores the number of beams and precomputes the relative positions of the nodes with respect to the reference node (to draw the wireframe).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/recovery.lua:559
+---@param path string Unused (inferred from code).
 function recovery.init(path) end
 
---- Demande le retour au point home (ne fait rien s'il n'y en a pas). Passe par multiplayer_vehicleSync.requestLoadHome si présent, sinon rappelle loadHomeLocal côté véhicule.
----Source : lua/vehicle/recovery.lua:507
----@param moveTraffic boolean|nil Transmis à spawn.safeTeleport : déplacer aussi le trafic gênant.
+--- Requests the return to the home point (does nothing if there is none). Goes through multiplayer_vehicleSync.requestLoadHome if present, otherwise calls loadHomeLocal on the vehicle side.
+---Source: lua/vehicle/recovery.lua:507
+---@param moveTraffic boolean|nil Passed to spawn.safeTeleport: also move obstructing traffic.
 function recovery.loadHome(moveTraffic) end
 
---- Téléporte immédiatement le véhicule au point home et affiche 'vehicle.recovery.loadHome'. Appelé par loadHome (ou le serveur MP).
----Source : lua/vehicle/recovery.lua:521
----@param moveTraffic boolean|nil Voir loadHome.
+--- Immediately teleports the vehicle to the home point and displays 'vehicle.recovery.loadHome'. Called by loadHome (or the MP server).
+---Source: lua/vehicle/recovery.lua:521
+---@param moveTraffic boolean|nil See loadHome.
 function recovery.loadHomeLocal(moveTraffic) end
 
---- Applique un point de récupération validé par le serveur multijoueur : téléporte le véhicule (smart spawn ou vehicleSetPositionRotation) puis notifie multiplayer_vehicleSync.onVehicleRecoveryApplied.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/recovery.lua:180
----@param requestId integer Identifiant de la requête MP.
----@param action string Nom de l'action renvoyé au serveur.
----@param px number Position X (m).
----@param py number Position Y (m).
----@param pz number Position Z (m).
----@param fx number Direction avant X.
----@param fy number Direction avant Y.
----@param fz number Direction avant Z.
----@param ux number Direction haut X.
----@param uy number Direction haut Y.
----@param uz number Direction haut Z.
----@param useSmartSpawnParam boolean|nil Forcer/interdire le smart spawn (sinon valeur interne).
----@param player any Joueur concerné, transmis à safeTeleport.
----@param moveTraffic boolean|nil Déplacer le trafic gênant.
+--- Applies a recovery point validated by the multiplayer server: teleports the vehicle (smart spawn or vehicleSetPositionRotation) then notifies multiplayer_vehicleSync.onVehicleRecoveryApplied.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/recovery.lua:180
+---@param requestId integer MP request identifier.
+---@param action string Action name sent back to the server.
+---@param px number X position (m).
+---@param py number Y position (m).
+---@param pz number Z position (m).
+---@param fx number Front direction X.
+---@param fy number Front direction Y.
+---@param fz number Front direction Z.
+---@param ux number Up direction X.
+---@param uy number Up direction Y.
+---@param uz number Up direction Z.
+---@param useSmartSpawnParam boolean|nil Force/forbid smart spawn (otherwise internal value).
+---@param player any Player concerned, passed to safeTeleport.
+---@param moveTraffic boolean|nil Move obstructing traffic.
 function recovery.mpApplyRecoveryPoint(requestId, action, px, py, pz, fx, fy, fz, ux, uy, uz, useSmartSpawnParam, player, moveTraffic) end
 
---- Hook de désérialisation (rechargement du Lua véhicule) : fusionne l'état sauvegardé dans M et reconstruit la file recoveryPoints.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/recovery.lua:56
----@param v table Données sauvegardées.
+--- Deserialization hook (vehicle Lua reload): merges the saved state into M and rebuilds the recoveryPoints queue.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/recovery.lua:56
+---@param v table Saved data.
 function recovery.onDeserialized(v) end
 
---- Hook appelé en multijoueur quand le serveur autorise la récupération : mémorise requestId et lance beginRecoveringPreview.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/recovery.lua:546
----@param requestId integer Identifiant de requête.
----@param useAltMode boolean|string Mode alternatif (true ou la chaîne 'true').
+--- Hook called in multiplayer when the server allows the recovery: stores requestId and launches beginRecoveringPreview.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/recovery.lua:546
+---@param requestId integer Request identifier.
+---@param useAltMode boolean|string Alternative mode (true or the string 'true').
 function recovery.onRecoveringBeginAllowed(requestId, useAltMode) end
 
---- Hook appelé en multijoueur quand le serveur refuse la récupération : annule l'état d'attente.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/recovery.lua:551
+--- Hook called in multiplayer when the server denies the recovery: cancels the waiting state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/recovery.lua:551
 function recovery.onRecoveringBeginDenied() end
 
---- Remet le véhicule d'aplomb à sa position actuelle (point de récupération = état courant, appliqué tout de suite).
----Source : lua/vehicle/recovery.lua:555
+--- Puts the vehicle upright at its current position (recovery point = current state, applied immediately).
+---Source: lua/vehicle/recovery.lua:555
 function recovery.recoverInPlace() end
 
---- Mémorise un point home. Sans argument, utilise la position/orientation actuelle et affiche le message 'vehicle.recovery.saveHome'.
----Source : lua/vehicle/recovery.lua:223
----@param point table|nil Point {pos, dirFront, dirUp} ; position actuelle si nil.
+--- Stores a home point. Without argument, uses the current position/orientation and displays the message 'vehicle.recovery.saveHome'.
+---Source: lua/vehicle/recovery.lua:223
+---@param point table|nil Point {pos, dirFront, dirUp}; current position if nil.
 function recovery.saveHome(point) end
 
---- Démarre la récupération (appui sur la touche). En solo lance directement beginRecoveringPreview ; en multijoueur demande d'abord l'autorisation au serveur. Ignoré si déjà en cours.
----Source : lua/vehicle/recovery.lua:527
----@param useAltMode boolean|nil Mode alternatif : inverse le réglage 'enableSmartRecovery' (faux par défaut).
+--- Starts the recovery (key press). In solo mode directly launches beginRecoveringPreview; in multiplayer first requests authorization from the server. Ignored if already in progress.
+---Source: lua/vehicle/recovery.lua:527
+---@param useAltMode boolean|nil Alternative mode: inverts the 'enableSmartRecovery' setting (false by default).
 function recovery.startRecovering(useAltMode) end
 
---- Demande l'arrêt de la récupération (relâche de la touche) ; l'arrêt effectif et la téléportation ont lieu à la prochaine updateGFX.
----Source : lua/vehicle/recovery.lua:274
----@param player any Joueur à l'origine de la demande, transmis à la téléportation (déduit du code).
+--- Requests the end of the recovery (key release); the actual stop and the teleport occur at the next updateGFX.
+---Source: lua/vehicle/recovery.lua:274
+---@param player any Player that originated the request, passed to the teleport (inferred from code).
 function recovery.stopRecovering(player) end
 

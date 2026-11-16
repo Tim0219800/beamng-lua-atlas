@@ -1,45 +1,45 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/logic/timedTrigger.lua",
-  "module": "Noeud flowgraph 'Timed Trigger' (categorie logic, behaviour once+duration). Il faut maintenir du flux sur 'charge' pendant data.duration secondes (3 par defaut) pour declencher ; si 'charge' est coupe plus de data.resetTimer secondes (1 par defaut), la charge est remise a zero. Sorties : flow (tant que charge complete) et impulsion 'complete' une seule fois.",
+  "module": "Flowgraph node 'Timed Trigger' (logic category, behaviour once+duration). Flow must be held on 'charge' for data.duration seconds (3 by default) to trigger; if 'charge' is cut for more than data.resetTimer seconds (1 by default), the charge is reset to zero. Outputs: flow (while the charge is complete) and impulse 'complete' only once.",
   "notes": [
-    "Seule data.duration est sauvegardee ; resetTimer retombe sur 1 au chargement (valeur d'init).",
-    "Le pin d'entree 'flow' n'est pas lu dans work."
+    "Only data.duration is saved; resetTimer falls back to 1 on load (init value).",
+    "The input pin 'flow' is not read in work."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Initialise resetTimer=1, duration=3 et l'etat interne.",
+          "desc": "Initializes resetTimer=1, duration=3 and the internal state.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Remet tous les compteurs a zero.",
+          "desc": "Resets all counters to zero.",
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde data.duration.",
+          "desc": "Saves data.duration.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Relit data.duration.",
+          "desc": "Reads data.duration back.",
           "internal": true
         },
         "updateCharge": {
-          "desc": "Incremente timer (dtSim) quand charge est actif, declenche completeTrigger a la duree ; sinon incremente reset et remet le timer a zero apres resetTimer.",
+          "desc": "Increments timer (dtSim) when charge is active, fires completeTrigger at the duration; otherwise increments reset and resets the timer to zero after resetTimer.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Deux barres de progression (charge et reset) avec temps restant.",
+          "desc": "Two progress bars (charge and reset) with remaining time.",
           "internal": true
         },
         "work": {
-          "desc": "Appelle updateCharge, flow = (timer >= duration), complete = impulsion une seule fois (completeReady).",
+          "desc": "Calls updateCharge, flow = (timer >= duration), complete = impulse only once (completeReady).",
           "internal": true,
           "params": {
             "args": {
               "type": "any",
-              "desc": "non utilise"
+              "desc": "unused"
             }
           }
         }

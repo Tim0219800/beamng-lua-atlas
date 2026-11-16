@@ -1,47 +1,47 @@
 # `editor_raceEditor_pacenotes`
 
-*Fichier : `lua/ge/extensions/editor/raceEditor/pacenotes.lua` · VM : Game Engine (GE) · 433 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/raceEditor/pacenotes.lua` · VM: Game Engine (GE) · 433 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/raceEditor/pacenotes")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/raceEditor/pacenotes")` (file under extensions/ but not a regular extension)
 
-Sous-fenêtre « Pacenotes » de l'éditeur de course (raceEditor). Elle permet de lister, sélectionner, créer (Shift + glisser dans le monde pour définir position, rayon et direction), déplacer au gizmo, et supprimer des pacenotes du chemin courant (path.pacenotes). Les actions passent par editor.history (annuler/rétablir). Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/pacenotes')(raceEditor).
+"Pacenotes" sub-window of the race editor (raceEditor). It lets you list, select, create (Shift + drag in the world to set position, radius and direction), move with the gizmo, and delete pacenotes of the current path (path.pacenotes). Actions go through editor.history (undo/redo). The module returns a constructor: require('/lua/ge/extensions/editor/raceEditor/pacenotes')(raceEditor).
 
-## Remarques
+## Notes
 
-- Cette fenêtre est commentée dans raceEditor.lua (table.insert ... pacenotes) : elle n'est pas chargée dans le jeu 0.40.5.
-- C:selectPacenote teste self.note, champ qui n'est jamais défini dans ce fichier ; s'il était renseigné, la fonction se rappellerait elle-même indéfiniment. C:onEditModeActivate teste aussi self.note.
-- C:selector indexe segments.objects[node[fieldName]] : avec la valeur -1 (« None ») l'entrée n'existe pas dans la table, ce qui provoquerait une erreur sur .name.
+- This window is commented out in raceEditor.lua (table.insert ... pacenotes): it is not loaded in game 0.40.5.
+- C:selectPacenote tests self.note, a field that is never set in this file; if it were set, the function would call itself indefinitely. C:onEditModeActivate also tests self.note.
+- C:selector indexes segments.objects[node[fieldName]]: with the value -1 ("None") the entry does not exist in the table, which would cause an error on .name.
 
-## Classe `C`
+## Class `C`
 
-Fenêtre Pacenotes. Créée par le constructeur renvoyé par le module, avec init(raceEditor). windowDescription = 'Pacenotes'. Les méthodes sont appelées par raceEditor.lua (setPath, selected, unselect, draw, onEditModeActivate).
+Pacenotes window. Created by the constructor returned by the module, with init(raceEditor). windowDescription = 'Pacenotes'. The methods are called by raceEditor.lua (setPath, selected, unselect, draw, onEditModeActivate).
 
-Le module renvoie un constructeur : `local obj = require("editor_raceEditor_pacenotes")(options)`.
+The module returns a constructor: `local obj = require("editor_raceEditor_pacenotes")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:beginDrag()` | Début de manipulation au gizmo : mémorise l'état sérialisé, la rotation et le rayon de la pacenote (navRadiusScale si mode navgraph). | 87 |
-| `C:createManualPacenote()` | Affiche l'aide de création et l'aperçu (sphère, prismes) pendant le glisser, puis au relâchement crée une pacenote manuelle (rayon 5 si le glisser est ≤ 1 m) via l'historique ; la direction est donnée par le glisser. | 174 |
-| `C:dragging()` | Pendant la manipulation : applique translation (pos), rotation (normal) ou mise à l'échelle (radius, jamais négatif) du gizmo à la pacenote. | 101 |
-| `C:draw(mouseInfo)` | Appelé à chaque frame : mémorise mouseInfo, gère gizmo et entrées si autorisé, puis dessine la liste et le panneau de détail. | 165 |
-| `C:drawPacenoteList()` | Dessine la liste des pacenotes triées (+ entrée « New... ») et le panneau de la pacenote courante (suppression, déplacement, champs). | 273 |
-| `C:endDragging()` | Fin de manipulation : valide l'action d'historique « Manipulated Note via Gizmo » (avant/après via onSerialize/onDeserialized). | 140 |
-| `C:init(raceEditor)` | Initialise la fenêtre : mémorise raceEditor, index de sélection nil et mouseInfo vide. | 17 |
-| `C:input()` | Gère la souris : avec Shift, création manuelle ; sinon clic sur une pacenote pour la sélectionner (ou aucune). | 247 |
-| `C:mouseOverPacenotes()` | Renvoie la pacenote dont la sphère est traversée par le rayon souris, la plus proche de la caméra. | 230 |
-| `C:onEditModeActivate()` | Appelé à l'activation du mode d'édition de course (voir notes). | 159 |
-| `C:selectPacenote(id)` | Sélectionne la pacenote d'ID id (nil pour aucune). Voir notes sur le rappel récursif conditionnel à self.note. | 49 |
-| `C:selected()` | Appelé quand l'onglet devient actif : désélectionne, dessine les pacenotes en mode « normal », les segments en « faded », ajoute le raccourci Shift « Add New » et récupère la carte de navigation (map.getMap()). | 27 |
-| `C:selector(name, fieldName, tt)` | Liste déroulante pour choisir un segment (ou « None » = -1) dans un champ de la pacenote courante, avec action d'historique. | 401 |
-| `C:setPath(path)` | Définit le chemin de course (gameplay/race/path) édité. | 23 |
-| `C:unselect()` | Appelé quand l'onglet est quitté : cache les pacenotes (_drawMode = 'none') et retire le raccourci Shift. | 41 |
-| `C:updateTransform(index)` | Place le gizmo d'axes sur la pacenote d'index donné, orienté selon sa normale en alignement local. Sans effet si le gizmo n'est pas autorisé. | 67 |
+| `C:beginDrag()` | Start of gizmo manipulation: stores the serialized state, rotation and radius of the pacenote (navRadiusScale in navgraph mode). | 87 |
+| `C:createManualPacenote()` | Displays the creation help and the preview (sphere, prisms) during the drag, then on release creates a manual pacenote (radius 5 if the drag is ≤ 1 m) via history; the direction is given by the drag. | 174 |
+| `C:dragging()` | During manipulation: applies gizmo translation (pos), rotation (normal) or scaling (radius, never negative) to the pacenote. | 101 |
+| `C:draw(mouseInfo)` | Called every frame: stores mouseInfo, handles gizmo and inputs if allowed, then draws the list and the detail panel. | 165 |
+| `C:drawPacenoteList()` | Draws the sorted pacenote list (+ "New..." entry) and the current pacenote panel (delete, move, fields). | 273 |
+| `C:endDragging()` | End of manipulation: commits the "Manipulated Note via Gizmo" history action (before/after via onSerialize/onDeserialized). | 140 |
+| `C:init(raceEditor)` | Initializes the window: stores raceEditor, selection index nil and empty mouseInfo. | 17 |
+| `C:input()` | Handles the mouse: with Shift, manual creation; otherwise click on a pacenote to select it (or none). | 247 |
+| `C:mouseOverPacenotes()` | Returns the pacenote whose sphere is crossed by the mouse ray, the one closest to the camera. | 230 |
+| `C:onEditModeActivate()` | Called when the race edit mode is activated (see notes). | 159 |
+| `C:selectPacenote(id)` | Selects the pacenote with ID id (nil for none). See notes on the recursive call conditional on self.note. | 49 |
+| `C:selected()` | Called when the tab becomes active: deselects, draws pacenotes in "normal" mode, segments in "faded" mode, adds the Shift shortcut "Add New" and fetches the navigation map (map.getMap()). | 27 |
+| `C:selector(name, fieldName, tt)` | Dropdown to choose a segment (or "None" = -1) in a field of the current pacenote, with a history action. | 401 |
+| `C:setPath(path)` | Sets the race path (gameplay/race/path) being edited. | 23 |
+| `C:unselect()` | Called when the tab is left: hides pacenotes (_drawMode = 'none') and removes the Shift shortcut. | 41 |
+| `C:updateTransform(index)` | Places the axis gizmo on the pacenote at the given index, oriented along its normal in local alignment. No effect if the gizmo is not allowed. | 67 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawSquarePrism`, `drawTextAdvanced`
 - `scenetree.` `findClassObjects`
 - `worldEditorCppApi.` `getAxisGizmoScale`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/raceEditor/pacenotes.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/raceEditor/pacenotes.lua`.*

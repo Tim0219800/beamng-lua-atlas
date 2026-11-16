@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/trailerRespawn.lua",
-  "module": "Nœud « Trailer Respawn Control » (catégorie `once_instant`, dépend de `core_trailerRespawn`). Active ou désactive le respawn automatique des remorques avec leurs véhicules (`core_trailerRespawn.setEnabled(enabled)`). Pins : `enabled` (bool, défaut false, codé en dur), `flow` en entrée et sortie.",
+  "module": "\"Trailer Respawn Control\" node (category `once_instant`, depends on `core_trailerRespawn`). Enables or disables automatic respawn of trailers along with their vehicles (`core_trailerRespawn.setEnabled(enabled)`). Pins: `enabled` (bool, default false, hardcoded), `flow` as input and output.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "init": {
-          "desc": "Constructeur ; `self.enabled = true` (champ non utilisé ensuite).",
+          "desc": "Constructor; `self.enabled = true` (field not used afterwards).",
           "internal": true
         },
         "work": {
-          "desc": "Si le flux d'entrée est actif, appelle `setEnabled` et propage le flux.",
+          "desc": "If the input flow is active, calls `setEnabled` and propagates the flow.",
           "internal": true
         }
       }

@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/staticEditor/vePartList.lua",
+  "module": "Fenêtre « Part List » du Static Editor de l'éditeur de véhicule. Elle liste les parties JBeam disponibles du véhicule chargé (ou seulement les parties actives, case « Active »), avec colonnes Name, Filename et Last modified, tri par colonne et recherche texte (nom ou fichier). Cliquer une ligne sélectionne la partie (vEditor.selectedPart) et ouvre les fenêtres Part Tree et Part Text View ; double-clic sur une colonne copie le nom de la partie ou le nom du fichier dans le presse-papiers ; clic droit ouvre le dossier du fichier.",
+  "usage": "extensions.load('editor_vehicleEditor_staticEditor_vePartList')\neditor_vehicleEditor_staticEditor_vePartList.open()",
+  "notes": [
+    "Utilise jbeam/io : getAvailableParts(ioCtx) et getPart(ioCtx, partName), avec vEditor.vehData.ioCtx et vEditor.vehData.vdata.activePartsData.",
+    "À la construction de la liste, la partie dont slotType vaut 'main' devient la partie sélectionnée.",
+    "La date de modification (FS:stat(fichier).modtime) est affichée en texte relatif : « last minute », « last hour », « last 24h: date », « last week: date », puis date seule.",
+    "Les colonnes Filename et Last modified sont masquées par défaut (TableColumnFlags_DefaultHide).",
+    "La recherche est une recherche de sous-chaîne sensible à la casse du texte saisi sur le nom/fichier mis en minuscules (partName:lower():find(texte, 1, true)) : une saisie contenant des majuscules ne trouve rien.",
+    "onSerialize/onDeserialized conservent vEditor.selectedPart à travers un rechargement Lua."
+  ],
+  "fields": {
+    "menuEntry": {"type": "string", "desc": "Texte de l'entrée du menu Apps : « Part List »."}
+  },
+  "functions": {
+    "open": {"desc": "Affiche la fenêtre « Part List » (editor.showWindow)."},
+    "onEditorGui": {
+      "desc": "Hook de l'éditeur appelé à chaque frame : construit la liste de parties au premier passage (ou après changement du filtre Active), puis dessine la fenêtre, le tableau trié/filtré et le menu contextuel. Ne fait rien sans véhicule chargé dans l'éditeur.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook de l'éditeur appelé à l'initialisation : enregistre la fenêtre (500x400, outil vehicleEditor).",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé avant un rechargement Lua : sauvegarde la partie sélectionnée.",
+      "returns": [{"type": "table", "desc": "{selectedPart = string|nil}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après un rechargement Lua : restaure vEditor.selectedPart.",
+      "params": {"data": {"type": "table", "desc": "table produite par onSerialize"}},
+      "internal": true
+    }
+  }
+}

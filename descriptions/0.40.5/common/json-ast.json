@@ -1,50 +1,121 @@
 {
   "path": "lua/common/json-ast.lua",
-  "module": "Parseur JSON/SJSON qui construit un arbre syntaxique (AST) sans perte : chaque espace, tabulation, saut de ligne, commentaire (// et /* */), délimiteur, chaîne, nombre (avec sa précision) devient un noeud. On peut ainsi relire un fichier .jbeam, modifier des valeurs et le réécrire à l'identique (stringify). Sert à l'éditeur de texte jbeam intégré ; en plus de l'AST il produit les données Lua natives et le schéma de tables jbeam déjà traité.",
-  "usage": "local jsonAst = require('json-ast')\nlocal ctx = jsonAst.parse(readFile('vehicles/pickup/pickup.jbeam'))\nif ctx then\n  local data = ctx.transient.luaData  -- données natives (schéma jbeam traité)\n  local text = jsonAst.stringify(ctx.ast) -- doit redonner le texte d'origine\nend",
+  "module": "JSON/SJSON parser that builds a lossless syntax tree (AST): every space, tab, line break, comment (// and /* */), delimiter, string and number (with its precision) becomes a node. A .jbeam file can thus be re-read, have values modified and be written back identically (stringify). Used by the built-in jbeam text editor; besides the AST it produces the native Lua data and the already-processed jbeam table schema.",
+  "usage": "local jsonAst = require('json-ast')\nlocal ctx = jsonAst.parse(readFile('vehicles/pickup/pickup.jbeam'))\nif ctx then\n  local data = ctx.transient.luaData  -- native data (processed jbeam schema)\n  local text = jsonAst.stringify(ctx.ast) -- must give back the original text\nend",
   "notes": [
-    "Un noeud est une table {type, valeur, précision?}. Types produits : object_begin, object_end, list_begin, list_end, array_delimiter, key_delimiter, newline, newline_windows, bool, string, string_single, number ({'number', valeur, nbDécimales}, avec prefixPlus et addPostfixDot), comment, comment_multiline, space ({'space', n}), tab, literal (repli quand rien n'est reconnu : journalisé en erreur).",
-    "parse renvoie un contexte ctx (ou nil si plusieurs racines) avec : ctx.ast.nodes (liste de noeuds) ; ctx.transient.hierarchy (indice de noeud conteneur -> indices des enfants) ; ctx.transient.root (indice du noeud racine) ; ctx.transient.luaDataRaw (données natives brutes) ; ctx.transient.luaData (copie profonde après jbeamTableSchema.process sur chaque section et création de pos = vec3(posX,posY,posZ)) ; ctx.transient.linesIndexes (indice du premier noeud de chaque ligne) ; ctx.transient.nodeIdxToLineNum. ctx.str et ctx.pos sont supprimés.",
-    "Avec addAstId vrai, chaque table native (liste ou objet) reçoit un champ __astNodeIdx qui renvoie à son noeud AST ; chaque section traitée reçoit aussi __schemaProcessed = true.",
-    "Les chaînes à guillemets simples sont réécrites avec des guillemets doubles par stringify, et l'échappement n'est pas géré : une chaîne contenant un guillemet échappé ne s'écrit pas à l'identique (le parseur ne traite pas les séquences \\ ).",
-    "Le test jbeam compare aussi avec le parseur rapide (json.decode) et écrit des fichiers *_dump_ast.txt / *.ast.json en cas de différence : utilitaire de développement.",
-    "La page extraite ne listait pas findDifferences : c'est une fonction locale (pas exportée)."
+    "A node is a table {type, value, precision?}. Types produced: object_begin, object_end, list_begin, list_end, array_delimiter, key_delimiter, newline, newline_windows, bool, string, string_single, number ({'number', value, decimalCount}, with prefixPlus and addPostfixDot), comment, comment_multiline, space ({'space', n}), tab, literal (fallback when nothing is recognized: logged as an error).",
+    "parse returns a context ctx (or nil if there are several roots) with: ctx.ast.nodes (list of nodes); ctx.transient.hierarchy (container node index -> children indices); ctx.transient.root (root node index); ctx.transient.luaDataRaw (raw native data); ctx.transient.luaData (deep copy after jbeamTableSchema.process on each section and creation of pos = vec3(posX,posY,posZ)); ctx.transient.linesIndexes (index of the first node of each line); ctx.transient.nodeIdxToLineNum. ctx.str and ctx.pos are removed.",
+    "With addAstId true, each native table (list or object) receives an __astNodeIdx field that points to its AST node; each processed section also receives __schemaProcessed = true.",
+    "Single-quoted strings are rewritten with double quotes by stringify, and escaping is not handled: a string containing an escaped quote is not written back identically (the parser does not handle \\ sequences).",
+    "The jbeam test also compares with the fast parser (json.decode) and writes *_dump_ast.txt / *.ast.json files in case of a difference: development utility.",
+    "The extracted page did not list findDifferences: it is a local function (not exported)."
   ],
   "fields": {},
   "functions": {
     "parse": {
-      "desc": "Analyse un texte JSON/SJSON/jbeam et renvoie le contexte (AST + données Lua). Renvoie nil si le texte contient plusieurs noeuds racine. Les erreurs de nombre ou de caractère inconnu sont journalisées (log E) sans arrêter.",
-      "params": {"str": {"type": "string", "desc": "texte source"}, "addAstId": {"type": "boolean|nil", "desc": "ajoute __astNodeIdx dans les tables natives"}},
-      "returns": [{"type": "table|nil", "desc": "contexte {ast = {nodes}, transient = {luaData, luaDataRaw, hierarchy, root, linesIndexes, nodeIdxToLineNum}}"}],
+      "desc": "Parses a JSON/SJSON/jbeam text and returns the context (AST + Lua data). Returns nil if the text contains several root nodes. Number or unknown-character errors are logged (log E) without stopping.",
+      "params": {
+        "str": {
+          "type": "string",
+          "desc": "source text"
+        },
+        "addAstId": {
+          "type": "boolean|nil",
+          "desc": "adds __astNodeIdx in the native tables"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "context {ast = {nodes}, transient = {luaData, luaDataRaw, hierarchy, root, linesIndexes, nodeIdxToLineNum}}"
+        }
+      ],
       "internal": false
     },
     "stringify": {
-      "desc": "Reconstitue le texte à partir d'un AST (concatène stringifyNodes(ast.nodes)).",
-      "params": {"ast": {"type": "table", "desc": "ctx.ast (table avec champ nodes)"}},
-      "returns": [{"type": "string", "desc": "texte"}],
+      "desc": "Rebuilds the text from an AST (concatenates stringifyNodes(ast.nodes)).",
+      "params": {
+        "ast": {
+          "type": "table",
+          "desc": "ctx.ast (table with a nodes field)"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "text"
+        }
+      ],
       "internal": false
     },
     "stringifyNode": {
-      "desc": "Texte d'un seul noeud (ex. '{' pour object_begin, '//commentaire', nombre formaté avec sa précision d'origine). Renvoie nil pour un type inconnu.",
-      "params": {"node": {"type": "table", "desc": "noeud {type, valeur, précision}"}},
-      "returns": [{"type": "string|nil", "desc": "texte du noeud"}],
+      "desc": "Text of a single node (e.g. '{' for object_begin, '//comment', number formatted with its original precision). Returns nil for an unknown type.",
+      "params": {
+        "node": {
+          "type": "table",
+          "desc": "node {type, value, precision}"
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "node text"
+        }
+      ],
       "internal": false
     },
     "stringifyNodes": {
-      "desc": "Concatène le texte de tous les noeuds d'une liste (erreur Lua si un noeud est de type inconnu, car stringifyNode renvoie nil).",
-      "params": {"nodes": {"type": "table[]", "desc": "liste de noeuds"}},
-      "returns": [{"type": "string", "desc": "texte"}],
+      "desc": "Concatenates the text of all the nodes in a list (Lua error if a node has an unknown type, because stringifyNode returns nil).",
+      "params": {
+        "nodes": {
+          "type": "table[]",
+          "desc": "list of nodes"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "text"
+        }
+      ],
       "internal": false
     },
     "testFile": {
-      "desc": "Outil de test : lit un fichier, le parse, compare avec json.decode, reconstruit le texte et vérifie qu'il est identique à l'original. Écrit des fichiers de diagnostic en cas de différence. Renvoie true si le cycle parse -> stringify est sans perte.",
-      "params": {"filename": {"type": "string", "desc": "chemin du fichier"}, "writeAST": {"type": "boolean|nil", "desc": "écrit <fichier>.ast.json si succès"}, "addASTId": {"type": "boolean|nil", "desc": "ajoute __astNodeIdx"}},
-      "returns": [{"type": "boolean|nil", "desc": "true si OK, false/nil sinon"}],
+      "desc": "Test tool: reads a file, parses it, compares with json.decode, rebuilds the text and checks that it is identical to the original. Writes diagnostic files in case of a difference. Returns true if the parse -> stringify cycle is lossless.",
+      "params": {
+        "filename": {
+          "type": "string",
+          "desc": "file path"
+        },
+        "writeAST": {
+          "type": "boolean|nil",
+          "desc": "writes <file>.ast.json on success"
+        },
+        "addASTId": {
+          "type": "boolean|nil",
+          "desc": "adds __astNodeIdx"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true if OK, false/nil otherwise"
+        }
+      ],
       "internal": false
     },
     "testFiles": {
-      "desc": "Outil de test : exécute testFile sur tous les *.jbeam trouvés depuis la racine ('/') et journalise les erreurs (et les OK si reportOK).",
-      "params": {"writeAST": {"type": "boolean|nil", "desc": "écrire les .ast.json"}, "reportOK": {"type": "boolean|nil", "desc": "journaliser aussi les fichiers OK"}},
+      "desc": "Test tool: runs testFile on all the *.jbeam files found from the root ('/') and logs the errors (and the OKs if reportOK).",
+      "params": {
+        "writeAST": {
+          "type": "boolean|nil",
+          "desc": "write the .ast.json files"
+        },
+        "reportOK": {
+          "type": "boolean|nil",
+          "desc": "also log the OK files"
+        }
+      },
       "returns": [],
       "internal": false
     }

@@ -1,79 +1,79 @@
 # `editor_api_camera`
 
-*Fichier : `lua/ge/extensions/editor/api/camera.lua` · VM : Game Engine (GE) · 375 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/camera.lua` · VM: Game Engine (GE) · 375 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_camera` : `extensions.load("editor_api_camera")`, puis la globale `editor_api_camera`
+**Access:** extension `editor_api_camera`: `extensions.load("editor_api_camera")`, then the global `editor_api_camera`
 
-API de caméra de l'éditeur. initialize(editorInstance) installe sur l'objet editor les constantes de type de caméra (CameraType_Game = 1, CameraType_Free = 2), les constantes de vitesse (CameraSpeed_Slowest 5, Slow 35, Slower 70, Normal 100, Faster 130, Fast 165, Fastest 200), l'état currentCameraType / previousCameraType et les fonctions de caméra libre, de repères de caméra (bookmarks stockés dans MissionGroup/CameraBookmarks) et de paramètres de caméra « lisse » (newton). Les fonctions listées sont donc des méthodes de editor, pas du module.
+Editor camera API. initialize(editorInstance) installs on the editor object the camera type constants (CameraType_Game = 1, CameraType_Free = 2), the speed constants (CameraSpeed_Slowest 5, Slow 35, Slower 70, Normal 100, Faster 130, Fast 165, Fastest 200), the currentCameraType / previousCameraType state and the functions for the free camera, camera bookmarks (stored in MissionGroup/CameraBookmarks) and "smooth" camera parameters (newton). The functions listed are therefore methods of editor, not of the module.
 
-## Exemple
+## Example
 
 ```lua
 editor.toggleFreeCamera()
-local id = editor.addCameraBookmark("vue du pont")
+local id = editor.addCameraBookmark("bridge view")
 editor.jumpToCameraBookmark(id)
 ```
 
-## Remarques
+## Notes
 
-- selectCamera ne fait rien tant que le niveau n'est pas chargé (variable globale levelLoaded).
-- Le zoom lisse (fitViewToSelectionSmooth) s'exécute dans un job de 21 pas de 50 ms ; le rayon de vue est borné entre 20 et 16000.
-- Incohérence : fitViewToSelection teste editor.selection.objects (pluriel) alors que les autres fonctions testent editor.selection.object (singulier) ; le test sur le pluriel est donc toujours vrai pour « aucun objet » et utilise le gizmo.
-- getCameraSpeed(speed) ignore son argument et retourne core_camera.getSpeed().
-- setSmoothCameraMove / Rotate n'agissent qu'en caméra libre ; les valeurs « normalisées » de drag sont converties vers la plage 5-20 (1 = 5, 0 = 20).
-- isFreeCamera est une fonction locale non exportée.
+- selectCamera does nothing until the level is loaded (global variable levelLoaded).
+- The smooth zoom (fitViewToSelectionSmooth) runs in a job of 21 steps of 50 ms; the view radius is clamped between 20 and 16000.
+- Inconsistency: fitViewToSelection tests editor.selection.objects (plural) whereas the other functions test editor.selection.object (singular); the test on the plural is therefore always true for "no object" and uses the gizmo.
+- getCameraSpeed(speed) ignores its argument and returns core_camera.getSpeed().
+- setSmoothCameraMove / Rotate only act in free camera; the "normalized" drag values are converted to the 5-20 range (1 = 5, 0 = 20).
+- isFreeCamera is a local function that is not exported.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_camera.initialize(editorInstance)` | Appelé par l'éditeur : installe les constantes et fonctions de caméra sur l'instance de l'éditeur. *(interne)* | 323 |
+| `editor_api_camera.initialize(editorInstance)` | Called by the editor: installs the camera constants and functions on the editor instance. *(internal)* | 323 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_camera.initialize(editorInstance)`
 
-Appelé par l'éditeur : installe les constantes et fonctions de caméra sur l'instance de l'éditeur.
+Called by the editor: installs the camera constants and functions on the editor instance.
 
-- `editorInstance` (*table*) : Instance de l'éditeur.
+- `editorInstance` (*table*) : Editor instance.
 
-## Classe `editor`
+## Class `editor`
 
-Méthodes ajoutées à l'instance de l'éditeur par ce module.
+Methods added to the editor instance by this module.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.addCameraBookmark(name)` | Ajoute un repère de caméra nommé à la position actuelle de la caméra libre, dans MissionGroup/CameraBookmarks (groupe créé au besoin). | 171 |
-| `editor.cameraLookAtPoint(pt)` | Oriente la caméra vers un point du monde. | 45 |
-| `editor.clearCameraBookmarks()` | Supprime tous les repères de caméra. | 221 |
-| `editor.copyCameraBookmarkToClipboard(obj)` | Copie dans le presse-papiers la position et rotation d'un repère sous forme de texte [x, y, z, qx, qy, qz, qw]. | 210 |
-| `editor.deleteCameraBookmark(objectId)` | Supprime un repère de caméra. | 185 |
-| `editor.fitViewToSelection(center)` | Place la caméra à 15 m en arrière du centre de la sélection (ou du gizmo) en gardant son orientation de départ puis la tourne vers le centre. | 74 |
-| `editor.fitViewToSelectionSmooth()` | Comme fitViewToSelection mais avec une approche animée et une distance adaptée à la taille de la sélection. | 106 |
-| `editor.getCamera()` | Retourne la caméra libre (commands.getCamera). | 39 |
-| `editor.getCameraBookmarks()` | Retourne le groupe SimGroup contenant les repères (le crée si besoin ; nil sans MissionGroup). | 193 |
-| `editor.getCameraSpeed(speed)` | Retourne la vitesse de la caméra libre. | 153 |
-| `editor.getObjectLocationText(obj)` | Retourne la position et rotation d'un objet en texte [x, y, z, qx, qy, qz, qw] (usage interne à l'éditeur). | 199 |
-| `editor.getSmoothCameraParams()` | Retourne les paramètres de la caméra libre lisse. | 290 |
-| `editor.jumpToCameraBookmark(objectId)` | Déplace la caméra à la position et rotation d'un repère. | 237 |
-| `editor.pasteCameraBookmarkFromClipboard()` | Applique à la caméra libre le texte de transformation lu dans le presse-papiers (commands.setFreeCameraTransformJson). | 215 |
-| `editor.placeCameraAtPlayer()` | Place la caméra à la position du joueur (commands.dropCameraAtPlayer). | 60 |
-| `editor.placeCameraAtSelection()` | Place la caméra au centroïde de la sélection d'objets (sans effet si rien n'est sélectionné). | 51 |
-| `editor.placePlayerAtCamera()` | Place le véhicule du joueur à la position de la caméra (position seulement). | 65 |
-| `editor.selectCamera(type)` | Choisit la caméra de la vue : jeu (commands.setGameCamera) ou libre (commands.setFreeCamera) ; mémorise le type précédent. | 12 |
-| `editor.setCameraSpeed(speed)` | Règle la vitesse de la caméra libre (core_camera.setSpeed). | 149 |
-| `editor.setSmoothCameraAngularDrag(drag)` | Règle la traînée angulaire de la caméra libre. | 269 |
-| `editor.setSmoothCameraAngularDragNormalized(value)` | Règle la traînée angulaire à partir d'une valeur 0-1 (même échelle). | 283 |
-| `editor.setSmoothCameraDrag(drag)` | Règle la traînée de translation de la caméra libre. | 262 |
-| `editor.setSmoothCameraDragNormalized(value)` | Règle la traînée à partir d'une valeur 0-1 (1 donne 5, 0 donne 20). | 276 |
-| `editor.setSmoothCameraMove(value)` | Active ou règle la translation « newton » (inertie) de la caméra libre. | 248 |
-| `editor.setSmoothCameraParams(params)` | Applique des paramètres de caméra libre lisse et remet la vitesse angulaire à zéro. | 307 |
-| `editor.setSmoothCameraRotate(value)` | Active ou règle la rotation « newton » de la caméra libre. | 255 |
-| `editor.toggleFreeCamera()` | Bascule entre la caméra de jeu courante et la caméra libre de l'éditeur. | 30 |
+| `editor.addCameraBookmark(name)` | Adds a named camera bookmark at the free camera's current position, in MissionGroup/CameraBookmarks (group created if needed). | 171 |
+| `editor.cameraLookAtPoint(pt)` | Orients the camera toward a point in the world. | 45 |
+| `editor.clearCameraBookmarks()` | Deletes all camera bookmarks. | 221 |
+| `editor.copyCameraBookmarkToClipboard(obj)` | Copies to the clipboard a bookmark's position and rotation as text [x, y, z, qx, qy, qz, qw]. | 210 |
+| `editor.deleteCameraBookmark(objectId)` | Deletes a camera bookmark. | 185 |
+| `editor.fitViewToSelection(center)` | Places the camera 15 m behind the center of the selection (or of the gizmo) keeping its starting orientation then turns it toward the center. | 74 |
+| `editor.fitViewToSelectionSmooth()` | Like fitViewToSelection but with an animated approach and a distance adapted to the selection's size. | 106 |
+| `editor.getCamera()` | Returns the free camera (commands.getCamera). | 39 |
+| `editor.getCameraBookmarks()` | Returns the SimGroup containing the bookmarks (creates it if needed; nil without MissionGroup). | 193 |
+| `editor.getCameraSpeed(speed)` | Returns the free camera's speed. | 153 |
+| `editor.getObjectLocationText(obj)` | Returns an object's position and rotation as text [x, y, z, qx, qy, qz, qw] (internal editor use). | 199 |
+| `editor.getSmoothCameraParams()` | Returns the smooth free camera's parameters. | 290 |
+| `editor.jumpToCameraBookmark(objectId)` | Moves the camera to a bookmark's position and rotation. | 237 |
+| `editor.pasteCameraBookmarkFromClipboard()` | Applies to the free camera the transform text read from the clipboard (commands.setFreeCameraTransformJson). | 215 |
+| `editor.placeCameraAtPlayer()` | Places the camera at the player's position (commands.dropCameraAtPlayer). | 60 |
+| `editor.placeCameraAtSelection()` | Places the camera at the centroid of the object selection (no effect if nothing is selected). | 51 |
+| `editor.placePlayerAtCamera()` | Places the player's vehicle at the camera's position (position only). | 65 |
+| `editor.selectCamera(type)` | Chooses the view's camera: game (commands.setGameCamera) or free (commands.setFreeCamera); remembers the previous type. | 12 |
+| `editor.setCameraSpeed(speed)` | Sets the free camera's speed (core_camera.setSpeed). | 149 |
+| `editor.setSmoothCameraAngularDrag(drag)` | Sets the free camera's angular drag. | 269 |
+| `editor.setSmoothCameraAngularDragNormalized(value)` | Sets the angular drag from a 0-1 value (same scale). | 283 |
+| `editor.setSmoothCameraDrag(drag)` | Sets the free camera's translation drag. | 262 |
+| `editor.setSmoothCameraDragNormalized(value)` | Sets the drag from a 0-1 value (1 gives 5, 0 gives 20). | 276 |
+| `editor.setSmoothCameraMove(value)` | Enables or sets the free camera's "newton" translation (inertia). | 248 |
+| `editor.setSmoothCameraParams(params)` | Applies smooth free camera parameters and resets the angular velocity to zero. | 307 |
+| `editor.setSmoothCameraRotate(value)` | Enables or sets the free camera's "newton" rotation. | 255 |
+| `editor.toggleFreeCamera()` | Toggles between the current game camera and the editor's free camera. | 30 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `findObjectById`, `upcast`
 - `obj:` `deleteObject`, `getId`, `getPosition`, `getRotation`, `getTransform`
@@ -81,4 +81,4 @@ Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes 
 - `worldEditorCppApi.` `createObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/camera.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/camera.lua`.*

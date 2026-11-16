@@ -1,21 +1,21 @@
 # `editor_logger`
 
-*Fichier : `lua/ge/extensions/editor/logger.lua` · VM : Game Engine (GE) · 18 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/logger.lua` · VM: Game Engine (GE) · 18 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_logger` : `extensions.load("editor_logger")`, puis la globale `editor_logger`
+**Access:** extension `editor_logger`: `extensions.load("editor_logger")`, then the global `editor_logger`
 
-Extension d'éditeur vide (squelette). Elle déclare onEditorGui et onExtensionLoaded sans aucun code : aucune fenêtre ni aucun comportement n'est ajouté.
+Empty editor extension (skeleton). It declares onEditorGui and onExtensionLoaded without any code: no window or behavior is added.
 
-## Remarques
+## Notes
 
-- Les deux fonctions du fichier sont des coquilles vides ; le fichier est chargé comme extension d'éditeur parce qu'il contient « M.onEditor ».
+- Both functions in the file are empty shells; the file is loaded as an editor extension because it contains "M.onEditor".
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_logger.onEditorGui()` | Hook appelé à chaque frame par l'éditeur pour dessiner l'interface. Corps vide ici. *(interne)* *(hook)* | 9 |
-| `editor_logger.onExtensionLoaded()` | Hook appelé au chargement de l'extension. Corps vide ici. *(interne)* *(hook)* | 12 |
+| `editor_logger.onEditorGui()` | Hook called every frame by the editor to draw the interface. Empty body here. *(internal)* *(hook)* | 9 |
+| `editor_logger.onExtensionLoaded()` | Hook called when the extension loads. Empty body here. *(internal)* *(hook)* | 12 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/logger.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/logger.lua`.*

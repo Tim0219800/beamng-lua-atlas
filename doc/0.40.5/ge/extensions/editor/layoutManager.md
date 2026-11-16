@@ -1,86 +1,86 @@
 # `editor_layoutManager`
 
-*Fichier : `lua/ge/extensions/editor/layoutManager.lua` · VM : Game Engine (GE) · 83 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/layoutManager.lua` · VM: Game Engine (GE) · 83 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_layoutManager` : `extensions.load("editor_layoutManager")`, puis la globale `editor_layoutManager`
+**Access:** extension `editor_layoutManager`: `extensions.load("editor_layoutManager")`, then the global `editor_layoutManager`
 
-Gestion des dispositions (layouts) de fenêtres de l'éditeur. Chaque layout est un dossier settings/<outil>/layouts/<nom>/ contenant windowsState.json ; le layout courant est settings/<outil>/windowsState.json. Les positions ImGui sont lues/écrites dans settings/imgui.ini (ou settings/default_imgui.ini pour le layout Default). L'outil vaut « editor » par défaut.
+Management of the editor's window layouts. Each layout is a folder settings/<tool>/layouts/<name>/ containing windowsState.json; the current layout is settings/<tool>/windowsState.json. The ImGui positions are read/written in settings/imgui.ini (or settings/default_imgui.ini for the Default layout). The tool is "editor" by default.
 
-## Exemple
+## Example
 
 ```lua
-editor_layoutManager.saveWindowLayout("MonLayout")
-local liste = editor_layoutManager.getWindowLayouts()
+editor_layoutManager.saveWindowLayout("MyLayout")
+local list = editor_layoutManager.getWindowLayouts()
 ```
 
-## Remarques
+## Notes
 
-- Dépend de editor.loadWindowsState / editor.saveWindowsState (définis ailleurs) et de ui_imgui.
-- saveCurrentWindowLayout ne transmet pas toolName à editor.saveWindowsState, contrairement à saveWindowLayout et loadCurrentWindowLayout.
-- resetLayouts supprime tous les layouts dont le chemin ne contient pas « /Default », puis recharge Default.
+- Depends on editor.loadWindowsState / editor.saveWindowsState (defined elsewhere) and on ui_imgui.
+- saveCurrentWindowLayout does not pass toolName to editor.saveWindowsState, unlike saveWindowLayout and loadCurrentWindowLayout.
+- resetLayouts deletes all layouts whose path does not contain "/Default", then reloads Default.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_layoutManager.deleteWindowLayout(layoutPath)` | Supprime tous les fichiers d'un dossier de layout puis le dossier lui-même. | 55 |
-| `editor_layoutManager.getWindowLayouts(toolName)` | Liste les dossiers de layouts de settings/<outil>/layouts/. | 14 |
-| `editor_layoutManager.loadCurrentWindowLayout(toolName)` | Charge l'état courant des fenêtres (settings/<outil>/windowsState.json). Si editor.needsDefaultImguiIniLoad est vrai, charge default_imgui.ini une fois, sinon imgui.ini. | 37 |
-| `editor_layoutManager.loadWindowLayout(layout, toolName)` | Charge windowsState.json d'un layout et recharge imgui.ini : default_imgui.ini si le layout est Default, sinon imgui.ini. | 18 |
-| `editor_layoutManager.resetLayouts(toolName)` | Supprime tous les layouts personnalisés (tout sauf Default) de settings/<outil>/layouts puis charge le layout Default. | 63 |
-| `editor_layoutManager.saveCurrentWindowLayout(toolName)` | Enregistre l'état courant des fenêtres dans settings/<outil>/windowsState.json et sauvegarde imgui.ini. | 50 |
-| `editor_layoutManager.saveWindowLayout(layoutName, toolName)` | Enregistre l'état des fenêtres dans settings/<outil>/layouts/<layoutName>/windowsState.json et sauvegarde imgui.ini. | 30 |
+| `editor_layoutManager.deleteWindowLayout(layoutPath)` | Deletes all files of a layout folder then the folder itself. | 55 |
+| `editor_layoutManager.getWindowLayouts(toolName)` | Lists the layout folders of settings/<tool>/layouts/. | 14 |
+| `editor_layoutManager.loadCurrentWindowLayout(toolName)` | Loads the current windows state (settings/<tool>/windowsState.json). If editor.needsDefaultImguiIniLoad is true, loads default_imgui.ini once, otherwise imgui.ini. | 37 |
+| `editor_layoutManager.loadWindowLayout(layout, toolName)` | Loads the windowsState.json of a layout and reloads imgui.ini: default_imgui.ini if the layout is Default, otherwise imgui.ini. | 18 |
+| `editor_layoutManager.resetLayouts(toolName)` | Deletes all custom layouts (everything except Default) from settings/<tool>/layouts then loads the Default layout. | 63 |
+| `editor_layoutManager.saveCurrentWindowLayout(toolName)` | Saves the current windows state to settings/<tool>/windowsState.json and saves imgui.ini. | 50 |
+| `editor_layoutManager.saveWindowLayout(layoutName, toolName)` | Saves the windows state to settings/<tool>/layouts/<layoutName>/windowsState.json and saves imgui.ini. | 30 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_layoutManager.deleteWindowLayout(layoutPath)`
 
-Supprime tous les fichiers d'un dossier de layout puis le dossier lui-même.
+Deletes all files of a layout folder then the folder itself.
 
-- `layoutPath` (*string*) : Chemin du dossier de layout à supprimer.
+- `layoutPath` (*string*) : Path of the layout folder to delete.
 
 #### `editor_layoutManager.getWindowLayouts(toolName)`
 
-Liste les dossiers de layouts de settings/<outil>/layouts/.
+Lists the layout folders of settings/<tool>/layouts/.
 
-- `toolName` (*string|nil*) : Nom de l'outil ; « editor » si nil.
-- **renvoie** : table<integer, string> Chemins des dossiers de layouts (FS:directoryList).
+- `toolName` (*string|nil*) : Tool name; "editor" if nil.
+- **returns**: table<integer, string> Paths of the layout folders (FS:directoryList).
 
 #### `editor_layoutManager.loadCurrentWindowLayout(toolName)`
 
-Charge l'état courant des fenêtres (settings/<outil>/windowsState.json). Si editor.needsDefaultImguiIniLoad est vrai, charge default_imgui.ini une fois, sinon imgui.ini.
+Loads the current windows state (settings/<tool>/windowsState.json). If editor.needsDefaultImguiIniLoad is true, loads default_imgui.ini once, otherwise imgui.ini.
 
-- `toolName` (*string|nil*) : Nom de l'outil ; « editor » si nil.
+- `toolName` (*string|nil*) : Tool name; "editor" if nil.
 
 #### `editor_layoutManager.loadWindowLayout(layout, toolName)`
 
-Charge windowsState.json d'un layout et recharge imgui.ini : default_imgui.ini si le layout est Default, sinon imgui.ini.
+Loads the windowsState.json of a layout and reloads imgui.ini: default_imgui.ini if the layout is Default, otherwise imgui.ini.
 
-- `layout` (*string|nil*) : Dossier du layout ; settings/editor/layouts/Default si nil.
-- `toolName` (*string|nil*) : Nom de l'outil passé à editor.loadWindowsState.
+- `layout` (*string|nil*) : Layout folder; settings/editor/layouts/Default if nil.
+- `toolName` (*string|nil*) : Tool name passed to editor.loadWindowsState.
 
 #### `editor_layoutManager.resetLayouts(toolName)`
 
-Supprime tous les layouts personnalisés (tout sauf Default) de settings/<outil>/layouts puis charge le layout Default.
+Deletes all custom layouts (everything except Default) from settings/<tool>/layouts then loads the Default layout.
 
-- `toolName` (*string|nil*) : Nom de l'outil ; « editor » si nil.
+- `toolName` (*string|nil*) : Tool name; "editor" if nil.
 
 #### `editor_layoutManager.saveCurrentWindowLayout(toolName)`
 
-Enregistre l'état courant des fenêtres dans settings/<outil>/windowsState.json et sauvegarde imgui.ini.
+Saves the current windows state to settings/<tool>/windowsState.json and saves imgui.ini.
 
-- `toolName` (*string|nil*) : Sert à construire le chemin, mais n'est pas transmis à editor.saveWindowsState.
+- `toolName` (*string|nil*) : Used to build the path, but is not passed to editor.saveWindowsState.
 
 #### `editor_layoutManager.saveWindowLayout(layoutName, toolName)`
 
-Enregistre l'état des fenêtres dans settings/<outil>/layouts/<layoutName>/windowsState.json et sauvegarde imgui.ini.
+Saves the windows state to settings/<tool>/layouts/<layoutName>/windowsState.json and saves imgui.ini.
 
-- `layoutName` (*string*) : Nom du layout (nom du dossier).
-- `toolName` (*string|nil*) : Nom de l'outil ; « editor » si nil.
+- `layoutName` (*string*) : Layout name (folder name).
+- `toolName` (*string|nil*) : Tool name; "editor" if nil.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryList`, `directoryRemove`, `findFiles`, `getFileRealPath`, `removeFile`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/layoutManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/layoutManager.lua`.*

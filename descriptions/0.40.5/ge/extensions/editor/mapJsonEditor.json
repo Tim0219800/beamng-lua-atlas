@@ -1,41 +1,96 @@
 {
   "path": "lua/ge/extensions/editor/mapJsonEditor.lua",
-  "module": "Éditeur du fichier navgraph levels/<niveau>/map.json (menu Window > Roads > Map Json Editor). Ce fichier contient des segments de route manuels : chaînes ordonnées et nommées de BeamNGWaypoint avec surcharges de drivabilité, sens, voies, vitesse limite, etc. Les waypoints sont des objets de la scène, le fichier ne les référence que par nom. map.lua surveille le fichier et recharge le navgraph quand il est écrit. L'outil dessine les segments et waypoints en 3D (debugDrawer) et ajoute un mode d'édition « Edit Map Json ».",
+  "module": "Editor for the navgraph file levels/<level>/map.json (menu Window > Roads > Map Json Editor). This file contains manual road segments: ordered, named chains of BeamNGWaypoint with overrides for drivability, direction, lanes, speed limit, etc. The waypoints are scene objects, the file only references them by name. map.lua watches the file and reloads the navgraph when it is written. The tool draws the segments and waypoints in 3D (debugDrawer) and adds an \"Edit Map Json\" edit mode.",
   "usage": "editor_mapJsonEditor.show()\neditor_mapJsonEditor.saveFile()",
   "notes": [
-    "Clic gauche : sélectionner un segment ; Ctrl + clic gauche : ajouter un waypoint au segment.",
-    "À la sauvegarde, les clés connues sont écrites dans un ordre fixe (drivability, oneWay, flipDirection, autoLanes, lanesLeft, lanesRight, autoJunction, hiddenInNavi, gatedRoad, type, speedLimit), les autres clés sont ajoutées triées pour ne rien perdre ; le format compact d'origine est conservé.",
-    "Une liste nodes donnée sous forme de chaîne dans le fichier est développée en tableau au chargement.",
-    "onSerialize/onDeserialized conservent les données non sauvegardées lors d'un rechargement Lua ; onEditorExitLevel les efface."
+    "Left click: select a segment; Ctrl + left click: add a waypoint to the segment.",
+    "On save, the known keys are written in a fixed order (drivability, oneWay, flipDirection, autoLanes, lanesLeft, lanesRight, autoJunction, hiddenInNavi, gatedRoad, type, speedLimit), the other keys are appended sorted so that nothing is lost; the original compact format is kept.",
+    "A nodes list given as a string in the file is expanded into an array on load.",
+    "onSerialize/onDeserialized keep the unsaved data across a Lua reload; onEditorExitLevel clears them."
   ],
   "functions": {
     "loadFile": {
-      "desc": "Lit un fichier map.json, remet la sélection à zéro et rescanne les waypoints de la scène.",
-      "params": {"fp": {"type": "string|nil", "desc": "Chemin du fichier ; map.json du niveau courant si nil."}},
-      "returns": [{"type": "boolean", "desc": "true si le fichier a été lu, false sinon (pas de niveau ou lecture impossible)."}]
+      "desc": "Reads a map.json file, resets the selection and rescans the scene's waypoints.",
+      "params": {
+        "fp": {
+          "type": "string|nil",
+          "desc": "File path; the current level's map.json if nil."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the file was read, false otherwise (no level or file unreadable)."
+        }
+      ]
     },
     "saveFile": {
-      "desc": "Écrit les segments dans le fichier (le navgraph se recharge au changement de fichier). Ne fait rien s'il n'y a pas de données ; journalise une erreur si l'écriture échoue.",
-      "params": {"fp": {"type": "string|nil", "desc": "Chemin cible ; chemin courant ou map.json du niveau par défaut."}}
+      "desc": "Writes the segments to the file (the navgraph reloads when the file changes). Does nothing if there is no data; logs an error if the write fails.",
+      "params": {
+        "fp": {
+          "type": "string|nil",
+          "desc": "Target path; current path or the level's map.json by default."
+        }
+      }
     },
-    "show": {"desc": "Affiche la fenêtre, active le mode d'édition mapJsonEditMode, charge map.json du niveau s'il n'est pas déjà ouvert, puis rescanne les waypoints.", "params": {}},
-    "onEditorGui": {"desc": "Dessine la fenêtre de l'outil (ouvrir/nouveau, SAVE, liste des segments et nœuds, options d'affichage) et le dessin 3D à chaque frame.", "params": {}, "internal": true},
-    "onEditorInitialized": {"desc": "Définit le mode d'édition mapJsonEditMode, enregistre la fenêtre et l'entrée de menu (groupe Roads).", "params": {}, "internal": true},
+    "show": {
+      "desc": "Shows the window, activates the mapJsonEditMode edit mode, loads the level's map.json if not already open, then rescans the waypoints.",
+      "params": {}
+    },
+    "onEditorGui": {
+      "desc": "Draws the tool window (open/new, SAVE, list of segments and nodes, display options) and the 3D drawing every frame.",
+      "params": {},
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Defines the mapJsonEditMode edit mode, registers the window and the menu entry (Roads group).",
+      "params": {},
+      "internal": true
+    },
     "onEditorToolWindowHide": {
-      "desc": "Quand la fenêtre de l'outil est masquée, revient au mode d'édition objectSelect.",
-      "params": {"windowName": {"type": "string", "desc": "Nom de la fenêtre masquée."}},
+      "desc": "When the tool window is hidden, goes back to the objectSelect edit mode.",
+      "params": {
+        "windowName": {
+          "type": "string",
+          "desc": "Name of the hidden window."
+        }
+      },
       "internal": true
     },
     "onWindowGotFocus": {
-      "desc": "Quand la fenêtre de l'outil prend le focus, active le mode d'édition mapJsonEditMode.",
-      "params": {"windowName": {"type": "string", "desc": "Nom de la fenêtre."}},
+      "desc": "When the tool window gets focus, activates the mapJsonEditMode edit mode.",
+      "params": {
+        "windowName": {
+          "type": "string",
+          "desc": "Window name."
+        }
+      },
       "internal": true
     },
-    "onEditorExitLevel": {"desc": "Appelé à la sortie du niveau : efface données, chemin, sélection et caches.", "params": {}, "internal": true},
-    "onSerialize": {"desc": "Appelé avant un rechargement Lua.", "params": {}, "returns": [{"type": "table", "desc": "{data, filePath, dirty}."}], "internal": true},
+    "onEditorExitLevel": {
+      "desc": "Called on level exit: clears data, path, selection and caches.",
+      "params": {},
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Called before a Lua reload.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{data, filePath, dirty}."
+        }
+      ],
+      "internal": true
+    },
     "onDeserialized": {
-      "desc": "Restaure l'état après un rechargement Lua.",
-      "params": {"d": {"type": "table|nil", "desc": "Table renvoyée par onSerialize."}},
+      "desc": "Restores the state after a Lua reload.",
+      "params": {
+        "d": {
+          "type": "table|nil",
+          "desc": "Table returned by onSerialize."
+        }
+      },
       "internal": true
     }
   }

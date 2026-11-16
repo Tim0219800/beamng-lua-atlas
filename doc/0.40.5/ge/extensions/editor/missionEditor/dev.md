@@ -1,28 +1,28 @@
 # `editor_missionEditor_dev`
 
-*Fichier : `lua/ge/extensions/editor/missionEditor/dev.lua` · VM : Game Engine (GE) · 60 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/missionEditor/dev.lua` · VM: Game Engine (GE) · 60 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/missionEditor/dev")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/missionEditor/dev")` (file under extensions/ but not a regular extension)
 
-Section « Dev Notes » du Mission Editor : édite mission.devNotes (texte libre, mode silent/info/warning/error, case « Dev Mission » qui cache la mission hors mode développeur). Le module renvoie un constructeur. Chaque modification met mission._dirty = true.
+"Dev Notes" section of the Mission Editor: edits mission.devNotes (free text, silent/info/warning/error mode, "Dev Mission" checkbox that hides the mission outside developer mode). The module returns a constructor. Each modification sets mission._dirty = true.
 
-## Remarques
+## Notes
 
-- Dans missionEditor.lua la ligne qui crée cette fenêtre est commentée : le module n'est actuellement pas instancié.
-- mission.devNotes doit exister (setMission lit devNotes.text et devNotes.devMission sans test) sinon erreur.
-- Modes : silent, info, warning, error (icônes visibility_off, info, warning, error, déclarées mais non affichées ici).
+- In missionEditor.lua the line that creates this window is commented out: the module is currently not instantiated.
+- mission.devNotes must exist (setMission reads devNotes.text and devNotes.devMission without a test) otherwise error.
+- Modes: silent, info, warning, error (icons visibility_off, info, warning, error, declared but not displayed here).
 
-## Classe `C`
+## Class `C`
 
-Sous-fenêtre des notes de développement.
+Dev notes sub-window.
 
-Le module renvoie un constructeur : `local obj = require("editor_missionEditor_dev")(options)`.
+The module returns a constructor: `local obj = require("editor_missionEditor_dev")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:draw()` | Dessine le texte multiligne, le sélecteur de mode et la case « Dev Mission » (infobulle : la mission n'apparaît que si le mode dev est activé). | 20 |
-| `C:init(missionEditor)` | Constructeur : mémorise la référence au missionEditor. | 9 |
-| `C:setMission(mission)` | Sélectionne la mission : crée le tampon du texte (2048 caractères) et la case devMission à partir de mission.devNotes. | 14 |
+| `C:draw()` | Draws the multiline text, the mode selector and the "Dev Mission" checkbox (tooltip: the mission only appears if dev mode is enabled). | 20 |
+| `C:init(missionEditor)` | Constructor: remembers the reference to the missionEditor. | 9 |
+| `C:setMission(mission)` | Selects the mission: creates the text buffer (2048 characters) and the devMission checkbox from mission.devNotes. | 14 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionEditor/dev.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/missionEditor/dev.lua`.*

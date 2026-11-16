@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/layerStack.lua",
+  "module": "Section « Decal Stack / Layers » (ordre 140) de l'outil Dynamic Decals : liste hiérarchique de tous les calques du design, avec icône colorée par type, sélection (via le module selection), activation, duplication, suppression, édition de masque, miroir et réorganisation par glisser-déposer (changement d'ordre et de parent, dans des groupes). L'ordre d'affichage est configurable (haut vers bas ou bas vers haut).",
+  "notes": [
+    "Préférences `dynamicDecalsTool.layerStack` : topToBottomLayerStructure (bool, vrai) et layerTypeIconColor (table type -> RGBA : decal rouge, fill vert, textureFill bleu, group jaune, brushStroke cyan, path magenta, linkedSet orange).",
+    "registerLayerElementGui est une fonction vide (point d'extension non implémenté).",
+    "Le fichier fait environ 850 lignes ; la fonction layerElement (dessin d'un calque) en représente la majeure partie."
+  ],
+  "functions": {
+    "registerLayerElementGui": {
+      "desc": "Fonction vide, sans effet (point d'extension prévu pour des éléments d'interface de calque).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "registerEditorPreferences": {
+      "desc": "Enregistre la sous-catégorie `dynamicDecalsTool.layerStack` : topToBottomLayerStructure et layerTypeIconColor (avec un éditeur graphique de couleurs par type).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : récupère l'API et les modules (fill, textureFill, gizmo, selection, helper, docs), enregistre la section « Decal Stack / Layers » (ordre 140, ouverte par défaut) et la page de documentation « Layer Stack ».",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

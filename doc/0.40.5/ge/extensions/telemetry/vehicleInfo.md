@@ -1,49 +1,49 @@
 # `telemetry_vehicleInfo`
 
-*Fichier : `lua/ge/extensions/telemetry/vehicleInfo.lua` · VM : Game Engine (GE) · 50 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/vehicleInfo.lua` · VM: Game Engine (GE) · 50 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_vehicleInfo` : `extensions.load("telemetry_vehicleInfo")`, puis la globale `telemetry_vehicleInfo`
+**Access:** extension `telemetry_vehicleInfo`: `extensions.load("telemetry_vehicleInfo")`, then the global `telemetry_vehicleInfo`
 
-Utilitaires partagés par les traceurs de télémétrie pour décrire un véhicule : modèle et configuration (`getData`) et mod d'origine (`getMod`). Ce n'est pas un traceur lui-même, d'où sa place hors du dossier `trackers`.
+Utilities shared by the telemetry trackers to describe a vehicle: model and configuration (`getData`) and originating mod (`getMod`). It is not a tracker itself, hence its place outside the `trackers` folder.
 
-## Exemple
+## Example
 
 ```lua
 local data = telemetry_vehicleInfo.getData(be:getPlayerVehicleID(0))
 if data then print(data.model, data.config) end
 ```
 
-## Remarques
+## Notes
 
-- Une configuration personnalisée (partConfig contenant `{` ou `[`) est rapportée comme ":custom", pour qu'aucune configuration construite par l'utilisateur ne quitte la machine.
-- getMod ne sait résoudre que les mods zippés : un mod décompressé renvoie nil.
+- A custom configuration (partConfig containing `{` or `[`) is reported as ":custom", so that no user-built configuration leaves the machine.
+- getMod can only resolve zipped mods: an unpacked mod returns nil.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_vehicleInfo.getData(vid)` | Renvoie le modèle (`vehicle.JBeam`) et la configuration d'un véhicule. La configuration est le nom du fichier sans extension, ou ":custom" si elle est personnalisée. Renvoie nil (avec un avertissement dans le log si l'id est inconnu) si le véhicule n'existe pas ou n'est pas un BeamNGVehicle. | 14 |
-| `telemetry_vehicleInfo.getMod(model)` | Renvoie le mod d'où provient un modèle de véhicule, via `core_modmanager.getModForFilename('/vehicles/<model>/info.json')`. Nil pour le contenu d'origine, si le modèle est nil ou si `core_modmanager` est absent. | 37 |
+| `telemetry_vehicleInfo.getData(vid)` | Returns the model (`vehicle.JBeam`) and configuration of a vehicle. The configuration is the file name without extension, or ":custom" if it is custom. Returns nil (with a warning in the log if the id is unknown) if the vehicle does not exist or is not a BeamNGVehicle. | 14 |
+| `telemetry_vehicleInfo.getMod(model)` | Returns the mod a vehicle model comes from, via `core_modmanager.getModForFilename('/vehicles/<model>/info.json')`. Nil for base content, if the model is nil or if `core_modmanager` is absent. | 37 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_vehicleInfo.getData(vid)`
 
-Renvoie le modèle (`vehicle.JBeam`) et la configuration d'un véhicule. La configuration est le nom du fichier sans extension, ou ":custom" si elle est personnalisée. Renvoie nil (avec un avertissement dans le log si l'id est inconnu) si le véhicule n'existe pas ou n'est pas un BeamNGVehicle.
+Returns the model (`vehicle.JBeam`) and configuration of a vehicle. The configuration is the file name without extension, or ":custom" if it is custom. Returns nil (with a warning in the log if the id is unknown) if the vehicle does not exist or is not a BeamNGVehicle.
 
-- `vid` (*integer*) : Id de l'objet véhicule.
-- **renvoie** : table|nil `{model = string, config = string}` ou nil.
+- `vid` (*integer*) : Vehicle object id.
+- **returns**: table|nil `{model = string, config = string}` or nil.
 
 #### `telemetry_vehicleInfo.getMod(model)`
 
-Renvoie le mod d'où provient un modèle de véhicule, via `core_modmanager.getModForFilename('/vehicles/<model>/info.json')`. Nil pour le contenu d'origine, si le modèle est nil ou si `core_modmanager` est absent.
+Returns the mod a vehicle model comes from, via `core_modmanager.getModForFilename('/vehicles/<model>/info.json')`. Nil for base content, if the model is nil or if `core_modmanager` is absent.
 
-- `model` (*string|nil*) : Nom du modèle de véhicule (dossier sous /vehicles).
-- **renvoie** : table|nil `{name = string, modID = any}` (modID peut être nil), ou nil.
+- `model` (*string|nil*) : Vehicle model name (folder under /vehicles).
+- **returns**: table|nil `{name = string, modID = any}` (modID may be nil), or nil.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/vehicleInfo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/vehicleInfo.lua`.*

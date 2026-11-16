@@ -2,71 +2,71 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/scriptAIManager.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre 'Script AI Manager' (menu Gameplay) : enregistre, rejoue et sauvegarde la conduite des véhicules de la scène pour les concepteurs de niveaux. Pour chaque véhicule, elle pilote le module ai du véhicule par queueLuaCommand (ai.startRecording, ai.stopRecording, ai.startFollowing, ai.stopFollowing, ai.scriptStop) et reçoit les enregistrements et l'état du script par des hooks. Elle affiche l'état, la progression, un tracé 3D du chemin enregistré et gère les fichiers *.track.json.
---- Accès : extension `editor_scriptAIManager` : `extensions.load("editor_scriptAIManager")`, puis la globale `editor_scriptAIManager`
+--- 'Script AI Manager' window (Gameplay menu): records, replays and saves the driving of the scene's vehicles for level designers. For each vehicle, it drives the vehicle's ai module via queueLuaCommand (ai.startRecording, ai.stopRecording, ai.startFollowing, ai.stopFollowing, ai.scriptStop) and receives the recordings and the script state through hooks. It displays the state, the progress, a 3D plot of the recorded path and manages the *.track.json files.
+--- Access: extension `editor_scriptAIManager`: `extensions.load("editor_scriptAIManager")`, then the global `editor_scriptAIManager`
 ---@class editor_scriptAIManager
 editor_scriptAIManager = {}
 
---- Renvoie la table des enregistrements en mémoire, indexée par id de véhicule (chaque enregistrement contient notamment le chemin path).
----Source : lua/ge/extensions/editor/scriptAIManager.lua:576
----@return table<integer, table>  Enregistrements par id de véhicule.
+--- Returns the table of in-memory recordings, keyed by vehicle id (each recording notably contains the path).
+---Source: lua/ge/extensions/editor/scriptAIManager.lua:576
+---@return table<integer, table>  Recordings by vehicle id.
 function editor_scriptAIManager.getCurrentRecordings() end
 
---- Hook de restauration après rechargement Lua : réinstalle recordings et vehState.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIManager.lua:561
----@param data table Données renvoyées par onSerialize.
+--- Restore hook after a Lua reload: reinstalls recordings and vehState.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIManager.lua:561
+---@param data table Data returned by onSerialize.
 function editor_scriptAIManager.onDeserialized(data) end
 
---- Hook de dessin debug : trace en prismes carrés colorés le chemin enregistré de chaque véhicule (si Display Path est coché et la fenêtre visible), limité aux points proches de la caméra.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIManager.lua:464
----@param lastDebugFocusPos any Non utilisé : le code lit Lua.lastDebugFocusPos.
----@param dtReal number Delta temps réel.
----@param dtSim number Delta temps simulation.
----@param dtRaw number Delta temps brut.
+--- Debug drawing hook: plots the recorded path of each vehicle as colored square prisms (if Display Path is checked and the window is visible), limited to points near the camera.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIManager.lua:464
+---@param lastDebugFocusPos any Not used: the code reads Lua.lastDebugFocusPos.
+---@param dtReal number Real-time delta.
+---@param dtSim number Simulation time delta.
+---@param dtRaw number Raw time delta.
 function editor_scriptAIManager.onDrawDebug(lastDebugFocusPos, dtReal, dtSim, dtRaw) end
 
---- Hook de dessin appelé chaque frame : demande l'état de script de tous les véhicules et dessine le tableau (nom, état, progression, boutons enregistrer/lire/stop/sauvegarder/charger/More) et les options de débogage (Fast forward, Display IDs, Display Path).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIManager.lua:130
+--- Drawing hook called every frame: requests the script state of all vehicles and draws the table (name, state, progress, record/play/stop/save/load/More buttons) and the debug options (Fast forward, Display IDs, Display Path).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIManager.lua:130
 function editor_scriptAIManager.onEditorGui() end
 
---- Hook d'initialisation de l'éditeur : enregistre la fenêtre (640x200) et l'entrée de menu 'Script AI Manager' (groupe Gameplay).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIManager.lua:571
+--- Editor initialization hook: registers the window (640x200) and the 'Script AI Manager' menu entry (Gameplay group).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIManager.lua:571
 function editor_scriptAIManager.onEditorInitialized() end
 
---- Hook de sérialisation (rechargement Lua) : renvoie {recordings, vehState}.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIManager.lua:557
----@return table  Données à restaurer.
+--- Serialization hook (Lua reload): returns {recordings, vehState}.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIManager.lua:557
+---@return table  Data to restore.
 function editor_scriptAIManager.onSerialize() end
 
---- Appelé par le véhicule (via extensions.hook) avec ai.scriptState() : calcule le pourcentage (time / endScriptTime), détecte l'état de sommeil (time < startDelay) et le passage à 'idle' quand le script est terminé (data nil).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIManager.lua:515
----@param vehId integer Id du véhicule.
----@param data table|nil État du script (status, time, scriptTime, endScriptTime, posError...) ou nil si plus de script.
+--- Called by the vehicle (via extensions.hook) with ai.scriptState(): computes the percentage (time / endScriptTime), detects the sleeping state (time < startDelay) and the switch to 'idle' when the script is finished (data nil).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIManager.lua:515
+---@param vehId integer Vehicle id.
+---@param data table|nil Script state (status, time, scriptTime, endScriptTime, posError...) or nil if there is no script anymore.
 function editor_scriptAIManager.onVehicleSubmitInfo(vehId, data) end
 
---- Appelé par le véhicule (via extensions.hook) quand un enregistrement est terminé : stocke les données dans recordings[vehId]. Ne pas appeler directement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIManager.lua:509
----@param vehId integer Id du véhicule.
----@param data table Enregistrement renvoyé par ai.stopRecording().
+--- Called by the vehicle (via extensions.hook) when a recording is finished: stores the data in recordings[vehId]. Do not call directly.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIManager.lua:509
+---@param vehId integer Vehicle id.
+---@param data table Recording returned by ai.stopRecording().
 function editor_scriptAIManager.onVehicleSubmitRecording(vehId, data) end
 
---- Hook appelé au changement de véhicule joueur : met à jour le véhicule actif dans la liste.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIManager.lua:567
----@param oldVehicle integer Ancien véhicule (déduit du code).
----@param newVehicle integer Nouveau véhicule, id utilisé pour trouver l'index.
----@param player integer Joueur concerné.
+--- Hook called when the player vehicle changes: updates the active vehicle in the list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIManager.lua:567
+---@param oldVehicle integer Old vehicle (inferred from code).
+---@param newVehicle integer New vehicle, id used to find the index.
+---@param player integer Player concerned.
 function editor_scriptAIManager.onVehicleSwitched(oldVehicle, newVehicle, player) end
 
---- Appelé par l'entrée de menu : retrouve le véhicule joueur actif et affiche la fenêtre.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/scriptAIManager.lua:552
+--- Called by the menu entry: finds the active player vehicle and displays the window.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/scriptAIManager.lua:552
 function editor_scriptAIManager.onWindowMenuItem() end
 

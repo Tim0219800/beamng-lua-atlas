@@ -1,53 +1,53 @@
 # `editor_vehicleEditor_liveEditor_veTCSDebug`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veTCSDebug.lua` · VM : Game Engine (GE) · 238 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veTCSDebug.lua` · VM: Game Engine (GE) · 238 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_liveEditor_veTCSDebug` : `extensions.load("editor_vehicleEditor_liveEditor_veTCSDebug")`, puis la globale `editor_vehicleEditor_liveEditor_veTCSDebug`
+**Access:** extension `editor_vehicleEditor_liveEditor_veTCSDebug`: `extensions.load("editor_vehicleEditor_liveEditor_veTCSDebug")`, then the global `editor_vehicleEditor_liveEditor_veTCSDebug`
 
-Fenêtre 'TCS Debug' du Vehicle Editor live : trace en temps réel (600 points d'historique) les données de contrôle de traction du premier contrôleur de type 'esc' du véhicule (debugData.tcs) : facteurs de freinage par roue, glissement par roue avec seuil, facteurs d'accélérateur et glissement global. Trois graphes PlotMultiLines.
+'TCS Debug' window of the live Vehicle Editor: plots in real time (600 history points) the traction control data of the vehicle's first 'esc' type controller (debugData.tcs): braking factors per wheel, slip per wheel with threshold, throttle factors and overall slip. Three PlotMultiLines graphs.
 
-## Remarques
+## Notes
 
-- Si le véhicule n'a pas de contrôleur esc, vEditor.tcsData est nil et rien n'est tracé.
-- Les historiques sont initialisés une seule fois (didInit) avec les clés vues à la première réception ; un changement de véhicule ne les réinitialise pas.
-- Au plus 4 couleurs de roues (5 pour le graphe 2) sont définies ; au-delà, la couleur est nil.
+- If the vehicle has no esc controller, vEditor.tcsData is nil and nothing is plotted.
+- The histories are initialized only once (didInit) with the keys seen at the first reception; a vehicle change does not reinitialize them.
+- At most 4 wheel colors (5 for graph 2) are defined; beyond that, the color is nil.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_liveEditor_veTCSDebug.onDeserialized(data)` | Restaure l'état d'ouverture. *(interne)* *(hook)* | 222 |
-| `editor_vehicleEditor_liveEditor_veTCSDebug.onExtensionLoaded()` | Appelé au chargement de l'extension : remplit l'historique slipThresholds de 600 zéros. *(interne)* *(hook)* | 206 |
-| `editor_vehicleEditor_liveEditor_veTCSDebug.onExtensionUnloaded()` | Appelé au déchargement (ne fait rien). *(interne)* *(hook)* | 213 |
-| `editor_vehicleEditor_liveEditor_veTCSDebug.onSerialize()` | Renvoie {windowOpen}. *(interne)* *(hook)* | 216 |
-| `editor_vehicleEditor_liveEditor_veTCSDebug.onUpdate(dt)` | Appelé chaque frame : demande les données TCS au véhicule, met à jour les historiques et dessine les graphes. *(interne)* *(hook)* | 35 |
-| `editor_vehicleEditor_liveEditor_veTCSDebug.open()` | Ouvre la fenêtre. | 201 |
+| `editor_vehicleEditor_liveEditor_veTCSDebug.onDeserialized(data)` | Restores the open state. *(internal)* *(hook)* | 222 |
+| `editor_vehicleEditor_liveEditor_veTCSDebug.onExtensionLoaded()` | Called when the extension is loaded: fills the slipThresholds history with 600 zeros. *(internal)* *(hook)* | 206 |
+| `editor_vehicleEditor_liveEditor_veTCSDebug.onExtensionUnloaded()` | Called on unload (does nothing). *(internal)* *(hook)* | 213 |
+| `editor_vehicleEditor_liveEditor_veTCSDebug.onSerialize()` | Returns {windowOpen}. *(internal)* *(hook)* | 216 |
+| `editor_vehicleEditor_liveEditor_veTCSDebug.onUpdate(dt)` | Called every frame: requests the TCS data from the vehicle, updates the histories and draws the graphs. *(internal)* *(hook)* | 35 |
+| `editor_vehicleEditor_liveEditor_veTCSDebug.open()` | Opens the window. | 201 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_liveEditor_veTCSDebug.onDeserialized(data)`
 
-Restaure l'état d'ouverture.
+Restores the open state.
 
-- `data` (*table*) : Table de onSerialize.
+- `data` (*table*) : onSerialize table.
 
 #### `editor_vehicleEditor_liveEditor_veTCSDebug.onSerialize()`
 
-Renvoie {windowOpen}.
+Returns {windowOpen}.
 
-- **renvoie** : table {windowOpen = boolean}
+- **returns**: table {windowOpen = boolean}
 
 #### `editor_vehicleEditor_liveEditor_veTCSDebug.onUpdate(dt)`
 
-Appelé chaque frame : demande les données TCS au véhicule, met à jour les historiques et dessine les graphes.
+Called every frame: requests the TCS data from the vehicle, updates the histories and draws the graphs.
 
-- `dt` (*number*) : Delta temps.
+- `dt` (*number*) : Time delta.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `menuEntry` | string | 'TCS'. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veTCSDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veTCSDebug.lua`.*

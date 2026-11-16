@@ -1,0 +1,231 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/meshPart.lua",
+  "module": "Assemblage générique de « parts » de maillage pour les pièces de kit cuites (bridgeKit, islandKit, etc.). Une part est { verts, normals, uvs, faces } où chaque entrée de faces est { v, n, u } avec des indices en base 0, le format consommé à la fois par ProceduralMesh et par l'export DAE. Toutes les géométries de kit passent par ici pour partager une seule convention de bobinage. Fournit aussi la triangulation par ear clipping, des poteaux chanfreinés et emitObject, qui crée le ProceduralMesh dans la scène.",
+  "usage": "local mp = require('editor/toolUtilities/meshPart')\nlocal part = mp.newPart()\nmp.face4(part, p1, p2, p3, p4, 0, 0, 1, {0,0}, {1,0}, {1,1}, {0,1}) -- face visible côté +Z\nmp.emitObject(folder, 'ma_dalle', {part}, false)",
+  "notes": [
+    "Bobinage : la face avant d'un ProceduralMesh a sa normale géométrique de bobinage orientée À L'OPPOSÉ du côté visible ; la normale d'ombrage stockée pointe vers le côté visible. Les fonctions face* prennent un point de référence (rx, ry, rz) = direction du côté visible et retournent le bobinage si besoin. Ne pas assembler les faces à la main avec la convention inverse (daeExport inverse le bobinage une seule fois).",
+    "Les entrées faces comptent un enregistrement par COIN de triangle (trois par triangle) ; face4 écrit 6 coins, face3 en écrit 3.",
+    "Limite moteur : ProceduralMesh remplit un tampon d'index 16 bits avec un compteur 16 bits ; au-delà de 65535 coins dans un mesh, le compteur déborde et le jeu se fige. emitObject coupe donc à 60000 coins par mesh et renvoie alors un SimGroup de plusieurs meshes.",
+    "Les meshes créés ont canSave = false. Sans collide, collisionType vaut 'None'. Les parts issues d'un pool ne sont pas conservées pour partsOf (elles sont réutilisées).",
+    "UV : listes {u, v} ; les points sont des tables { x, y, z }."
+  ],
+  "functions": {
+    "newPool": {
+      "desc": "Crée un pool de parts réutilisables, pour des parts émises puis jetées encore et encore. Le moteur copie les données du mesh à la création : une part passée par emitObject n'a plus besoin d'être conservée.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Pool { n = 0 }."}],
+      "internal": false
+    },
+    "poolReset": {
+      "desc": "Remet à zéro le compteur du pool : les parts redonnées par newPart(pool) seront de nouveau remplies.",
+      "params": {"pool": {"type": "table", "desc": "Pool de newPool."}},
+      "returns": [],
+      "internal": false
+    },
+    "newPart": {
+      "desc": "Renvoie une part vide { verts, normals, uvs, faces }. Avec un pool, réutilise la part suivante du pool en vidant ses tables (les entrées internes sont gardées pour éviter des allocations).",
+      "params": {"pool": {"type": "table|nil", "desc": "Pool optionnel."}},
+      "returns": [{"type": "table", "desc": "Part."}],
+      "internal": false
+    },
+    "face4": {
+      "desc": "Émet un quad p1 -> p2 -> p3 -> p4 dans la part, avec la face avant visible du côté du vecteur (rx, ry, rz). La normale d'ombrage est celle de la face (vers le côté visible), sauf si snx/sny/snz est fourni (le bobinage suit toujours la géométrie).",
+      "params": {
+        "part": {"type": "table", "desc": "Part cible."},
+        "p1": {"type": "table", "desc": "Point {x, y, z}."},
+        "p2": {"type": "table", "desc": "Point {x, y, z}."},
+        "p3": {"type": "table", "desc": "Point {x, y, z}."},
+        "p4": {"type": "table", "desc": "Point {x, y, z}."},
+        "rx": {"type": "number", "desc": "Côté visible, composante x."},
+        "ry": {"type": "number", "desc": "Côté visible, composante y."},
+        "rz": {"type": "number", "desc": "Côté visible, composante z."},
+        "u1": {"type": "number[]", "desc": "UV {u, v} du coin 1."},
+        "u2": {"type": "number[]", "desc": "UV du coin 2."},
+        "u3": {"type": "number[]", "desc": "UV du coin 3."},
+        "u4": {"type": "number[]", "desc": "UV du coin 4."},
+        "snx": {"type": "number|nil", "desc": "Normale d'ombrage imposée, x."},
+        "sny": {"type": "number|nil", "desc": "Normale d'ombrage imposée, y."},
+        "snz": {"type": "number|nil", "desc": "Normale d'ombrage imposée, z."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "face4n": {
+      "desc": "Comme face4 mais avec une normale d'ombrage par coin (n1..n4 = {x, y, z}), pour ombrer en douceur une surface bosselée à partir de normales de sommets précalculées au lieu d'une seule normale de facette.",
+      "params": {
+        "part": {"type": "table", "desc": "Part cible."},
+        "p1": {"type": "table", "desc": "Point."},
+        "p2": {"type": "table", "desc": "Point."},
+        "p3": {"type": "table", "desc": "Point."},
+        "p4": {"type": "table", "desc": "Point."},
+        "rx": {"type": "number", "desc": "Côté visible x."},
+        "ry": {"type": "number", "desc": "Côté visible y."},
+        "rz": {"type": "number", "desc": "Côté visible z."},
+        "u1": {"type": "number[]", "desc": "UV coin 1."},
+        "u2": {"type": "number[]", "desc": "UV coin 2."},
+        "u3": {"type": "number[]", "desc": "UV coin 3."},
+        "u4": {"type": "number[]", "desc": "UV coin 4."},
+        "n1": {"type": "table", "desc": "Normale coin 1 {x, y, z}, vers le côté visible."},
+        "n2": {"type": "table", "desc": "Normale coin 2."},
+        "n3": {"type": "table", "desc": "Normale coin 3."},
+        "n4": {"type": "table", "desc": "Normale coin 4."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "face3": {
+      "desc": "Émet un triangle p1 -> p2 -> p3 avec le même contrat de bobinage que face4. Pour des capuchons plats (toits, terrasses) où un quad ne convient pas.",
+      "params": {
+        "part": {"type": "table", "desc": "Part cible."},
+        "p1": {"type": "table", "desc": "Point."},
+        "p2": {"type": "table", "desc": "Point."},
+        "p3": {"type": "table", "desc": "Point."},
+        "rx": {"type": "number", "desc": "Côté visible x."},
+        "ry": {"type": "number", "desc": "Côté visible y."},
+        "rz": {"type": "number", "desc": "Côté visible z."},
+        "u1": {"type": "number[]", "desc": "UV coin 1."},
+        "u2": {"type": "number[]", "desc": "UV coin 2."},
+        "u3": {"type": "number[]", "desc": "UV coin 3."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "faces3": {
+      "desc": "Émet des triangles sur des coins partagés, tous à ombrage plat : coin i en (x[i], y[i], z[i]) avec uv (u[i], v[i]), nv coins et nt triangles dont les coins sont tri[3t-2..3t] (indices 1-based). Chaque triangle est bobiné comme face3, mais un coin n'est stocké qu'une fois.",
+      "params": {
+        "part": {"type": "table", "desc": "Part cible."},
+        "x": {"type": "number[]", "desc": "X des coins."},
+        "y": {"type": "number[]", "desc": "Y des coins."},
+        "z": {"type": "number[]", "desc": "Z des coins."},
+        "u": {"type": "number[]", "desc": "U des coins."},
+        "v": {"type": "number[]", "desc": "V des coins."},
+        "nv": {"type": "integer", "desc": "Nombre de coins."},
+        "tri": {"type": "integer[]", "desc": "Indices des triangles, 3 par triangle, base 1."},
+        "nt": {"type": "integer", "desc": "Nombre de triangles."},
+        "rx": {"type": "number", "desc": "Côté visible x."},
+        "ry": {"type": "number", "desc": "Côté visible y."},
+        "rz": {"type": "number", "desc": "Côté visible z."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "quad": {
+      "desc": "Émet un quad qui peut en réalité être un TRIANGLE (un coin confondu avec son voisin à 1e-6 près) : dans ce cas appelle face3 au lieu de gaspiller un triangle d'aire nulle ; sinon appelle face4.",
+      "params": {
+        "part": {"type": "table", "desc": "Part cible."},
+        "p1": {"type": "table", "desc": "Point."},
+        "p2": {"type": "table", "desc": "Point."},
+        "p3": {"type": "table", "desc": "Point."},
+        "p4": {"type": "table", "desc": "Point."},
+        "rx": {"type": "number", "desc": "Côté visible x."},
+        "ry": {"type": "number", "desc": "Côté visible y."},
+        "rz": {"type": "number", "desc": "Côté visible z."},
+        "u1": {"type": "number[]", "desc": "UV coin 1."},
+        "u2": {"type": "number[]", "desc": "UV coin 2."},
+        "u3": {"type": "number[]", "desc": "UV coin 3."},
+        "u4": {"type": "number[]", "desc": "UV coin 4."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "ccwRing": {
+      "desc": "Renvoie l'anneau fermé de paires {x, y} bobiné dans le sens anti-horaire (la normale sortante d'une arête a->b est (dy, -dx)). Si l'anneau est déjà anti-horaire, il est renvoyé tel quel ; sinon une copie inversée.",
+      "params": {"poly": {"type": "number[][]", "desc": "Anneau de points {x, y} (indexés [1] et [2])."}},
+      "returns": [{"type": "number[][]", "desc": "Anneau anti-horaire."}],
+      "internal": false
+    },
+    "triangulate": {
+      "desc": "Triangulation par ear clipping d'un anneau anti-horaire. S'arrête sans finir si aucune oreille n'est trouvée (anneau dégénéré ou auto-intersecté).",
+      "params": {"poly": {"type": "number[][]", "desc": "Anneau anti-horaire de points {x, y}."}},
+      "returns": [{"type": "integer[][]", "desc": "Triplets d'indices {i0, i1, i2} dans poly."}],
+      "internal": false
+    },
+    "postPlan": {
+      "desc": "Plan d'un poteau carré de demi-largeur d centré en (cx, cy), arêtes verticales abattues de cham (anti-horaire). Sous 0.1 mm de chanfrein, c'est le carré simple (4 points) ; sinon un octogone (8 points).",
+      "params": {
+        "d": {"type": "number", "desc": "Demi-largeur (m)."},
+        "cx": {"type": "number", "desc": "Centre x."},
+        "cy": {"type": "number", "desc": "Centre y."},
+        "cham": {"type": "number", "desc": "Chanfrein (m)."}
+      },
+      "returns": [{"type": "number[][]", "desc": "Anneau de points {x, y}."}],
+      "internal": false
+    },
+    "postStage": {
+      "desc": "Un étage de poteau habillé (dé de pilier, chapeau de poteau) : le plan de postPlan extrudé de z0 à z1, toutes les faces vers l'extérieur et les deux bouts fermés. UV en mètres multipliés par uv (U autour du plan, V en hauteur).",
+      "params": {
+        "part": {"type": "table", "desc": "Part cible."},
+        "d": {"type": "number", "desc": "Demi-largeur (m)."},
+        "cx": {"type": "number", "desc": "Centre x."},
+        "cy": {"type": "number", "desc": "Centre y."},
+        "z0": {"type": "number", "desc": "Cote basse."},
+        "z1": {"type": "number", "desc": "Cote haute."},
+        "cham": {"type": "number|nil", "desc": "Chanfrein (défaut 0)."},
+        "uv": {"type": "number|nil", "desc": "Facteur d'échelle UV (défaut 1)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "scaleUVs": {
+      "desc": "Met à l'échelle sur place les UV d'une liste de parts : permet à un kit de poser ses UV en mètres puis de convertir au tiling du kit au moment de la cuisson.",
+      "params": {
+        "parts": {"type": "table[]", "desc": "Liste de parts."},
+        "s": {"type": "number", "desc": "Facteur."}
+      },
+      "returns": [{"type": "table[]", "desc": "La même liste parts."}],
+      "internal": false
+    },
+    "tintParts": {
+      "desc": "Applique une teinte à chaque part de la liste dont le champ material vaut m. Sans tint, ne fait rien.",
+      "params": {
+        "parts": {"type": "table[]", "desc": "Liste de parts."},
+        "m": {"type": "string", "desc": "Nom du matériau."},
+        "tint": {"type": "any|nil", "desc": "Teinte à affecter à part.tint."}
+      },
+      "returns": [{"type": "table[]", "desc": "La liste parts."}],
+      "internal": false
+    },
+    "partsTris": {
+      "desc": "Nombre de triangles d'une liste de parts (entrées de faces divisées par 3), pour rapporter ce qu'une cuisson a réellement écrit.",
+      "params": {"parts": {"type": "table[]|nil", "desc": "Liste de parts."}},
+      "returns": [{"type": "integer", "desc": "Nombre de triangles."}],
+      "internal": false
+    },
+    "partsCentre": {
+      "desc": "Centre de l'étendue d'une liste de parts. Une forme est écrite autour de ce point et son objet statique y est posé : écrite autour de l'origine du monde, elle perdrait en précision loin sur la carte. Renvoie 0, 0, 0 si la liste est vide.",
+      "params": {"parts": {"type": "table[]|nil", "desc": "Liste de parts."}},
+      "returns": [{"type": "number", "desc": "x du centre."}, {"type": "number", "desc": "y du centre."}, {"type": "number", "desc": "z du centre."}],
+      "internal": false
+    },
+    "emitObject": {
+      "desc": "Construit un ProceduralMesh nommé name à partir de parts, dans folder, en remplaçant tout objet de même nom (qui survit à un rechargement Lua seul). Un nom nil laisse le mesh sans nom. Au-delà de 60000 coins, renvoie à la place un SimGroup de plusieurs meshes sous ce nom. Par défaut sans collision.",
+      "params": {
+        "folder": {"type": "userdata", "desc": "SimGroup parent ; nil = renvoie nil."},
+        "name": {"type": "string|nil", "desc": "Nom d'objet de scène."},
+        "parts": {"type": "table[]", "desc": "Liste de parts ; vide = nil."},
+        "collide": {"type": "boolean|nil", "desc": "Cuire une collision (là où le mesh est la seule surface, par exemple une bordure que la voiture doit sentir)."},
+        "decalSurface": {"type": "boolean|nil", "desc": "Marque le mesh comme surface sur laquelle des décalques s'appliquent."}
+      },
+      "returns": [{"type": "userdata|nil", "desc": "ProceduralMesh ou SimGroup créé."}],
+      "internal": false
+    },
+    "partsOf": {
+      "desc": "Renvoie les parts à partir desquelles un mesh vivant a été construit (par id), pour pouvoir l'exporter ensuite comme forme. Nil pour un mesh issu de parts d'un pool. La table est purgée des meshes disparus tous les 2000 enregistrements.",
+      "params": {"id": {"type": "integer", "desc": "Id de l'objet mesh."}},
+      "returns": [{"type": "table[]|nil", "desc": "Liste de parts."}],
+      "internal": false
+    },
+    "markDecalSurface": {
+      "desc": "Marque un objet comme surface drapée de décalques (tablier, dalle, sol de tunnel, place pavée) en posant decalSurface = '1' (sauvegardé avec l'objet). Les décalques se plaquent sur les formes statiques mais pas sur les items Forest : ces objets restent donc des TSStatic.",
+      "params": {"o": {"type": "userdata", "desc": "Objet de scène."}},
+      "returns": [],
+      "internal": false
+    },
+    "isDecalSurface": {
+      "desc": "Indique si un objet est marqué comme surface de décalques.",
+      "params": {"o": {"type": "userdata", "desc": "Objet de scène."}},
+      "returns": [{"type": "boolean", "desc": "true si decalSurface vaut '1'."}],
+      "internal": false
+    }
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "path": "lua/vehicle/partCondition.lua",
+  "module": "Système d'usure et d'état des pièces du véhicule (kilométrage, intégrité/dommages, état visuel dont la peinture vieillie). Il découvre quelles pièces (parts) contiennent quoi (devices de powertrain, réservoirs, flexbodies, poutres cassables/déformables), appelle powertrain, energyStorage et beamstate pour appliquer ou lire leur condition, et gère des instantanés (snapshots) pour pouvoir remettre le véhicule dans son état de spawn au reset. Le Lua du jeu l'utilise pour sauvegarder et recharger l'état d'un véhicule (garage, carrière) : initConditions à l'apparition, getConditions pour sauvegarder.",
+  "usage": "-- sauvegarder l'état\nlocal conditions = partCondition.getConditions()  -- table partId -> {odometer, integrityValue, visualValue, integrityState, visualState} ou false\n-- recharger\npartCondition.initConditions(conditions, 0, 1, 1)",
+  "notes": [
+    "Dépend de l'extension `odometer` (extensions.odometer.getRelativeRecording / startRecording) : le kilométrage d'une pièce = valeur de base absolue + distance parcourue depuis la pose de la condition. Les unités d'odomètre sont celles de l'extension odometer (le seuil de vieillissement de peinture 5 000 000 -> 800 000 000 laisse penser à des mètres cumulés, déduit).",
+    "Types de pièces (partTypeData[partId]) déduits au premier appel : \"powertrainDevice:<nom>\" (+ \":radiator\", \":exhaust\", \":turbocharger\" pour les sous-systèmes), \"energyStorage:<nom>\", \"jbeam:flexbody:<mesh>\", \"jbeam:breakGroup:<groupe>\", \"jbeam:beamDamage:<cid>\" (poutres cassables/déformables hors poutres support de type 7).",
+    "Le vieillissement de peinture (getAgedPaint) augmente la rugosité (du clearcoat s'il y en a), diminue la saturation (jusqu'à 0.95) et éclaircit la couleur entre 5e6 et 8e8 d'odomètre. Pour le canal bleu l'éclaircissement utilise la constante du vert (maxColorBrightnessIncreaseG) au lieu de celle du bleu (incohérence apparente dans le code).",
+    "Un snapshot nommé \"reset\" est créé à chaque initConditions et devient le snapshot de reset : partCondition.reset() (appelé par main.lua:onVehicleReset) efface les valeurs et ré-applique ce snapshot.",
+    "initCondition journalise une erreur si on applique deux fois la condition d'une pièce (hasSetPartCondition) sans passer par reset ou un snapshot.",
+    "Bugs mineurs : dans createConditionSnapshot le message d'erreur concatène snapshotKey même quand il est nil (ce qui lèverait une erreur) ; le message d'erreur de applyConditionSnapshot parle de « créer » un snapshot.",
+    "getConditions renvoie false (pas une table) si aucune condition n'a encore été posée. Les erreurs par pièce sont capturées (xpcall) et loguées, la pièce est alors absente du résultat.",
+    "testInit / testLoad / testSave servent au debug : écrivent ou lisent partConditionTest.json dans le répertoire courant."
+  ],
+  "fields": {},
+  "functions": {
+    "initConditions": {
+      "desc": "Applique l'état de chaque pièce du véhicule à partir d'une table sauvegardée (ou un état neuf si nil), via powertrain, energyStorage, beamstate et la peinture, puis crée le snapshot « reset ».",
+      "params": {
+        "partsCondition": {"type": "table|nil", "desc": "Table partId -> {odometer, integrityValue, visualValue, integrityState, visualState} ; nil = véhicule neuf."},
+        "fallbackOdometer": {"type": "number|nil", "desc": "Odomètre pour les pièces sans donnée (0 par défaut)."},
+        "fallbackIntegrityValue": {"type": "number|nil", "desc": "Intégrité 0..1 par défaut (1)."},
+        "fallbackVisualValue": {"type": "number|nil", "desc": "État visuel 0..1 par défaut (1)."},
+        "defaultPaints": {"type": "table|nil", "desc": "Peintures par défaut (3 entrées) remplaçant celles du jbeam pour une valeur visuelle numérique."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "ensureConditionsInit": {
+      "desc": "Appel « à l'aveugle » : initialise un état neuf si aucune condition n'a encore été posée (sinon ne fait rien).",
+      "params": {
+        "fallbackOdometer": {"type": "number|nil", "desc": "Odomètre de repli."},
+        "fallbackIntegrityValue": {"type": "number|nil", "desc": "Intégrité de repli."},
+        "fallbackVisualValue": {"type": "number|nil", "desc": "État visuel de repli."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getConditions": {
+      "desc": "Lit l'état courant de toutes les pièces : kilométrage, intégrité (min des sous-systèmes), état visuel (dont peinture) et états détaillés par sous-système, prêts pour être sauvegardés ou repassés à initConditions.",
+      "params": {},
+      "returns": [{"type": "table|boolean", "desc": "Table partId -> condition, ou false si rien n'a encore été initialisé."}],
+      "internal": false
+    },
+    "reset": {
+      "desc": "Efface les conditions mémorisées et, si un snapshot de reset existe, le ré-applique. Appelée par main.lua au reset du véhicule.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "createConditionSnapshot": {
+      "desc": "Mémorise l'état courant (getConditions) sous une clé.",
+      "params": {"snapshotKey": {"type": "string", "desc": "Nom du snapshot."}},
+      "returns": []
+    },
+    "applyConditionSnapshot": {
+      "desc": "Ré-applique un snapshot mémorisé (réinitialise l'état de pose puis initConditions). Erreur loguée si la clé est absente.",
+      "params": {"snapshotKey": {"type": "string", "desc": "Nom du snapshot."}},
+      "returns": []
+    },
+    "deleteConditionSnapshots": {
+      "desc": "Supprime tous les snapshots et la clé de reset.",
+      "params": {},
+      "returns": []
+    },
+    "setResetSnapshotKey": {
+      "desc": "Choisit le snapshot appliqué par reset().",
+      "params": {"snapshotKey": {"type": "string|nil", "desc": "Clé du snapshot de reset ; nil pour ne rien restaurer."}},
+      "returns": []
+    },
+    "getRootPartOdometerValue": {
+      "desc": "Renvoie l'odomètre total de la pièce racine (slotType 'main') : valeur de base + distance depuis la pose.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Odomètre de la pièce principale."}]
+    },
+    "getRootPartTripValue": {
+      "desc": "Renvoie la distance parcourue depuis la pose de la condition de la pièce racine (trajet).",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Distance du trajet."}]
+    },
+    "setPartMeshPaints": {
+      "desc": "Applique les 3 peintures (couleur de base, rugosité, métal, vernis) aux flexbodies d'une pièce en envoyant des commandes setMeshColor / setMeshPaintData au GE.",
+      "params": {
+        "partId": {"type": "string", "desc": "Identifiant (chemin) de la pièce."},
+        "paints": {"type": "table", "desc": "Tableau de 3 peintures {baseColor = {r,g,b,a (0..1)}, roughness, metallic, clearcoat, clearcoatRoughness}."}
+      },
+      "returns": []
+    },
+    "setPartPaints": {
+      "desc": "Mémorise les peintures d'une pièce (les entrées 2 et 3 copient la 1 si absentes), les vieillit selon l'odomètre de peinture et les applique aux meshes.",
+      "params": {
+        "partId": {"type": "string", "desc": "Identifiant de la pièce."},
+        "paints": {"type": "table", "desc": "Tableau de 1 à 3 peintures."},
+        "paintOdometer": {"type": "number", "desc": "Usure de la peinture (0 = neuve)."}
+      },
+      "returns": []
+    },
+    "setAllPartPaints": {
+      "desc": "Applique le même jeu de peintures vieillies à toutes les pièces actives.",
+      "params": {
+        "paints": {"type": "table", "desc": "Tableau de 1 à 3 peintures."},
+        "paintOdometer": {"type": "number", "desc": "Usure de la peinture."}
+      },
+      "returns": []
+    },
+    "testInit": {
+      "desc": "Debug : initialise un état de test (odomètre 812812000, intégrité 1, visuel 1).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "testLoad": {
+      "desc": "Debug : charge partConditionTest.json et l'applique avec initConditions.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "testSave": {
+      "desc": "Debug : initialise si nécessaire puis écrit getConditions() dans partConditionTest.json.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

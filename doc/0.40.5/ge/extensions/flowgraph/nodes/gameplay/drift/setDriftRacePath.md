@@ -1,23 +1,23 @@
 # `flowgraph_nodes_gameplay_drift_setDriftRacePath`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftRacePath.lua` · VM : Game Engine (GE) · 33 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftRacePath.lua` · VM: Game Engine (GE) · 33 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/drift/setDriftRacePath")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/drift/setDriftRacePath")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Drift Race Path » (catégorie repeat_instant, drift). Utilise un chemin de course (pin racePath) pour définir checkpoints, destination et position de départ via gameplay_drift_destination.setRacePath. Pin d'entrée supplémentaire : disableWrongWayAndDist (désactive les messages de mauvais sens et de distance restante). Sorties : pathData (données du chemin pour d'autres nœuds) et waypoints (table).
+Flowgraph node "Drift Race Path" (category repeat_instant, drift). Uses a race path (racePath pin) to define checkpoints, destination and start position via gameplay_drift_destination.setRacePath. Additional input pin: disableWrongWayAndDist (disables the wrong-way and remaining-distance messages). Outputs: pathData (path data for other nodes) and waypoints (table).
 
-## Remarques
+## Notes
 
-- Chemin résolu avec mgr:getRelativeAbsolutePath ; sorties inchangées s'il est invalide.
-- Rappelle setRacePath à chaque frame tant que le nœud est atteint.
+- Path resolved with mgr:getRelativeAbsolutePath; outputs unchanged if it is invalid.
+- Calls setRacePath again every frame as long as the node is reached.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Appelle setRacePath({filePath, disableWrongWayAndDist}) puis lit getWaypoints() et getPathData(file). | 24 |
+| `C:work()` | Calls setRacePath({filePath, disableWrongWayAndDist}) then reads getWaypoints() and getPathData(file). | 24 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftRacePath.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftRacePath.lua`.*

@@ -2,62 +2,62 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+--- Flowgraph node class (created via `_flowgraph_createNode(C)`).
 ---@class flowgraph_nodes_gameplay_traffic_trafficCustomGroup_C
 local flowgraph_nodes_gameplay_traffic_trafficCustomGroup_C = {}
 
---- Remet self.done à false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:133
+--- Sets self.done back to false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:133
 function flowgraph_nodes_gameplay_traffic_trafficCustomGroup_C:_executionStarted() end
 
---- Restaure les réglages propres au nœud à partir des données sauvegardées.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:222
----@param data table données sauvegardées du nœud
+--- Restores the node's own settings from the saved data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:222
+---@param data table saved node data
 function flowgraph_nodes_gameplay_traffic_trafficCustomGroup_C:_onDeserialized(data) end
 
---- Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:212
----@param res table table de sérialisation à remplir
+--- Adds the node's own settings to the `res` table when saving the graph.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:212
+---@param res table serialization table to fill
 function flowgraph_nodes_gameplay_traffic_trafficCustomGroup_C:_onSerialize(res) end
 
---- Construit un groupe de type 'custom' à partir des pins model_i / config_i.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:137
+--- Builds a 'custom' type group from the model_i / config_i pins.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:137
 function flowgraph_nodes_gameplay_traffic_trafficCustomGroup_C:buildGroup() end
 
---- Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:34
+--- Draws the node's custom properties in the flowgraph editor panel (ImGui).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:34
 function flowgraph_nodes_gameplay_traffic_trafficCustomGroup_C:drawCustomProperties() end
 
---- Construit un groupe de type 'generator' à partir des paramètres choisis (20 véhicules via core_multiSpawn.createGroup ou copie depuis réglages/monde).
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:149
+--- Builds a 'generator' type group from the chosen parameters (20 vehicles via core_multiSpawn.createGroup or copy from settings/world).
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:149
 function flowgraph_nodes_gameplay_traffic_trafficCustomGroup_C:generateGroup() end
 
---- Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:24
+--- Initializes the node's internal state at creation (called by the flowgraph engine).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:24
 function flowgraph_nodes_gameplay_traffic_trafficCustomGroup_C:init() end
 
---- Remet self.done à false.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:105
+--- Sets self.done back to false.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:105
 function flowgraph_nodes_gameplay_traffic_trafficCustomGroup_C:onStateStarted() end
 
---- Remet les paramètres du mode Parameters à leurs valeurs par défaut.
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:30
+--- Resets the Parameters mode parameters to their default values.
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:30
 function flowgraph_nodes_gameplay_traffic_trafficCustomGroup_C:resetParams() end
 
---- Ajoute ou retire les paires de pins model_i / config_i (mode Custom).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:109
----@param old integer ancien nombre de pins
----@param new integer nouveau nombre de pins
+--- Adds or removes the model_i / config_i pin pairs (Custom mode).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:109
+---@param old integer old number of pins
+---@param new integer new number of pins
 function flowgraph_nodes_gameplay_traffic_trafficCustomGroup_C:updatePins(old, new) end
 
---- Une seule fois par exécution : génère le groupe (generateGroup ou buildGroup) et le publie sur group.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:192
+--- Once per run: generates the group (generateGroup or buildGroup) and publishes it on group.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua:192
 function flowgraph_nodes_gameplay_traffic_trafficCustomGroup_C:work() end
 

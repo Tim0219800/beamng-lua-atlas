@@ -1,49 +1,49 @@
 # `controller_hydraulics_orbitrolSteering`
 
-*Fichier : `lua/vehicle/controller/hydraulics/orbitrolSteering.lua` · VM : Véhicule · 71 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/hydraulics/orbitrolSteering.lua` · VM: Vehicle · 71 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `hydraulics/orbitrolSteering` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `hydraulics/orbitrolSteering` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Régulateur de direction hydraulique de type orbitrol (type "auxiliary"). Un PID compare la position moyenne des vérins de direction (normalisée -1..1) à l'entrée de direction (electrics.values.steering_input par défaut) et écrit la commande de vanne dans electrics.values.
+Orbitrol-type hydraulic steering regulator (type "auxiliary"). A PID compares the average position of the steering cylinders (normalized -1..1) to the steering input (electrics.values.steering_input by default) and writes the valve command into electrics.values.
 
-## Remarques
+## Notes
 
-- Clés jbeam (défaut) : steeringPositionCylinders (liste de noms de vérins), inputElectricsName ("steering_input"), steeringValveElectricsName ("steerCylinder"), steeringPositionMin (0), steeringPositionMax (1), steeringPIDKp (0.5), steeringPIDKi (0.3), steeringPIDKd (0.01).
-- La position de chaque vérin est multipliée par cylinder.direction avant la moyenne.
+- jbeam keys (default): steeringPositionCylinders (list of cylinder names), inputElectricsName ("steering_input"), steeringValveElectricsName ("steerCylinder"), steeringPositionMin (0), steeringPositionMax (1), steeringPIDKp (0.5), steeringPIDKi (0.3), steeringPIDKd (0.01).
+- Each cylinder's position is multiplied by cylinder.direction before averaging.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_hydraulics_orbitrolSteering.init(jbeamData)` | Crée le PID et retrouve les vérins. *(interne)* | 40 |
-| `controller_hydraulics_orbitrolSteering.reset(jbeamData)` | Remet la vanne et le PID à zéro. *(interne)* | 35 |
-| `controller_hydraulics_orbitrolSteering.updateFixedStep(dt)` | Calcule et écrit la commande de vanne de direction. *(interne)* | 19 |
+| `controller_hydraulics_orbitrolSteering.init(jbeamData)` | Creates the PID and finds the cylinders. *(internal)* | 40 |
+| `controller_hydraulics_orbitrolSteering.reset(jbeamData)` | Resets the valve and the PID to zero. *(internal)* | 35 |
+| `controller_hydraulics_orbitrolSteering.updateFixedStep(dt)` | Computes and writes the steering valve command. *(internal)* | 19 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_hydraulics_orbitrolSteering.init(jbeamData)`
 
-Crée le PID et retrouve les vérins.
+Creates the PID and finds the cylinders.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_hydraulics_orbitrolSteering.reset(jbeamData)`
 
-Remet la vanne et le PID à zéro.
+Resets the valve and the PID to zero.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_hydraulics_orbitrolSteering.updateFixedStep(dt)`
 
-Calcule et écrit la commande de vanne de direction.
+Computes and writes the steering valve command.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/hydraulics/orbitrolSteering.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/hydraulics/orbitrolSteering.lua`.*

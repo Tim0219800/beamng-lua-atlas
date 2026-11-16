@@ -1,122 +1,122 @@
 # `controller_couplings_containerLockLead`
 
-*Fichier : `lua/vehicle/controller/couplings/containerLockLead.lua` · VM : Véhicule · 640 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/couplings/containerLockLead.lua` · VM: Vehicle · 640 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `couplings/containerLockLead` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `couplings/containerLockLead` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Côté « leader » du système de verrouillage de conteneurs (twist-locks) : placé sur le véhicule qui porte les verrous (grue, portique, châssis porte-conteneur). Pour chaque site, un coupleur « tâteur » (feeler) cherche un conteneur, puis le leader interroge le contrôleur `containerLockFollow` du conteneur pour obtenir la position du verrou cible, calcule une force d'alignement dans un cône (appliquée aux deux véhicules) et, quand l'alignement vertical est suffisant, active le coupleur de verrou (lock). Gère les états feeling, locking, locked, la stabilité du verrouillage et les electrics de visibilité des props.
+"Leader" side of the container locking system (twist-locks): placed on the vehicle carrying the locks (crane, gantry, container chassis). For each site, a "feeler" coupler looks for a container, then the leader queries the container's `containerLockFollow` controller for the target lock position, computes an alignment force within a cone (applied to both vehicles) and, when the vertical alignment is sufficient, activates the lock coupler. Handles the feeling, locking, locked states, lock stability and the props visibility electrics.
 
-## Remarques
+## Notes
 
-- États d'un site : feeling (cherche), locking (verrou armé), locked (verrouillé). Le global `lockState` est locked seulement si tous les sites le sont.
-- Clés jbeam communes : `feelerCouplerRadius` (0.35), `feelerCouplerLockRadius` (0.005), `feelerCouplerLatchSpeed` (1.0), `feelerCouplerStrength` (500), `aligningForceMaximum` (10000 N), `lockCouplerRadius` (0.05), `lockCouplerLockRadius` (0.02), `lockCouplerLatchSpeed` (0.05), `lockCouplerStrength` (10001000), `aligningForceConeVerticalOffset` (0.05), `aligningForceConeSlope` (0.2), `aligningForceConeTransitionWidth` (0.01), `aligningForceConeDeadzoneRadius` (lockCouplerRadius × 0.5), `aligningForceSmootherIn` (math.huge), `aligningForceSmootherOut` (aligningForceMaximum), `stableLockTime` (0.5 s).
-- Clés par site (table `lockSites`) : `name`, `feelerCouplerNodeName`, `lockCouplerNodeName`, `verticalReferenceNodeName`, `feelerCouplerTag`, `lockCouplerTag`, `lockStateElectricsName` (`<name>_lock_state` par défaut).
-- Electrics écrits : `<site>_lock_state` (0 au repos, 0.5 en feeling/locking, 1 verrouillé), `<nom>_<site>_lock_is_visible` et `<nom>_<site>_lock_is_locked`.
-- La force d'alignement croît quand la distance verticale diminue (0 à 0.5 m) ; la composante horizontale est limitée par un cône puis un tube mort ; la force réaction est envoyée au suiveur par `applyAligningForce`.
-- Verrouillage lorsque la distance verticale est inférieure à 0.8 × lockCouplerRadius ; retour en feeling si elle remonte au-dessus de 0.9 × lockCouplerRadius.
-- Après un déverrouillage normal (breakForce <= 0) d'un verrou stable, le site mémorise la dernière cible pour ne pas se reverrouiller sur le même conteneur tant que le verrou n'a pas bougé de plus de 0.2 m ; toggleLockState efface cette mémoire.
-- Un flux de debug `containerLockDebug` est envoyé via `gui.send` si le flux est écouté. La fonction debugDraw est écrite mais n'est pas exportée dans M (jamais appelée). `beamBroken`, `onCouplerFound`, `initSounds` sont exportés vides.
-- Si aucun site n'est défini, updateGFX est remplacé par `nop`.
-- Anomalie : toggleLockState, dans les deux branches, appelle setLockState(feeling) ; seule la branche non verrouillée efface en plus la mémoire de dernière cible.
+- States of a site: feeling (searching), locking (lock armed), locked (locked). The global `lockState` is locked only if all sites are.
+- Common jbeam keys: `feelerCouplerRadius` (0.35), `feelerCouplerLockRadius` (0.005), `feelerCouplerLatchSpeed` (1.0), `feelerCouplerStrength` (500), `aligningForceMaximum` (10000 N), `lockCouplerRadius` (0.05), `lockCouplerLockRadius` (0.02), `lockCouplerLatchSpeed` (0.05), `lockCouplerStrength` (10001000), `aligningForceConeVerticalOffset` (0.05), `aligningForceConeSlope` (0.2), `aligningForceConeTransitionWidth` (0.01), `aligningForceConeDeadzoneRadius` (lockCouplerRadius × 0.5), `aligningForceSmootherIn` (math.huge), `aligningForceSmootherOut` (aligningForceMaximum), `stableLockTime` (0.5 s).
+- Per-site keys (`lockSites` table): `name`, `feelerCouplerNodeName`, `lockCouplerNodeName`, `verticalReferenceNodeName`, `feelerCouplerTag`, `lockCouplerTag`, `lockStateElectricsName` (`<name>_lock_state` by default).
+- Electrics written: `<site>_lock_state` (0 at rest, 0.5 in feeling/locking, 1 locked), `<name>_<site>_lock_is_visible` and `<name>_<site>_lock_is_locked`.
+- The alignment force grows as the vertical distance decreases (0 to 0.5 m); the horizontal component is limited by a cone then a dead tube; the reaction force is sent to the follower by `applyAligningForce`.
+- Locking when the vertical distance is below 0.8 × lockCouplerRadius; back to feeling if it rises above 0.9 × lockCouplerRadius.
+- After a normal unlock (breakForce <= 0) of a stable lock, the site remembers the last target so as not to lock again onto the same container until the lock has moved by more than 0.2 m; toggleLockState clears this memory.
+- A debug stream `containerLockDebug` is sent via `gui.send` if the stream is being listened to. The debugDraw function is written but not exported in M (never called). `beamBroken`, `onCouplerFound`, `initSounds` are exported empty.
+- If no site is defined, updateGFX is replaced by `nop`.
+- Anomaly: toggleLockState, in both branches, calls setLockState(feeling); only the unlocked branch also clears the last target memory.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_couplings_containerLockLead.beamBroken(id, energy)` | Hook de rupture de poutre, vide. *(interne)* | 388 |
-| `controller_couplings_containerLockLead.init(jbeamData)` | Lit les paramètres communs et les sites depuis le jbeam, résout les noeuds par nom, crée les tables de recherche et initialise les electrics. *(interne)* | 513 |
-| `controller_couplings_containerLockLead.initSounds(jbeamData)` | Vide. *(interne)* | 510 |
-| `controller_couplings_containerLockLead.lastLockCouplerPositionCallback(lockCouplerNodeId, lastLockCouplerPosition)` | Rappel venant du suiveur : enregistre la dernière position connue du verrou précédemment relâché, pour détecter que le leader s'en est éloigné. *(interne)* | 48 |
-| `controller_couplings_containerLockLead.lockSitePositionCallback(lockSiteId, lockCouplerPosition, needsVisualLockProp)` | Rappel venant du suiveur : enregistre la position monde du verrou du suiveur et si un prop visuel est requis. *(interne)* | 65 |
-| `controller_couplings_containerLockLead.onCouplerAttached(nodeId, obj2id, obj2nodeId)` | Hook : si le noeud est un tâteur, mémorise le véhicule suiveur et l'id du site, efface l'alignement ; si c'est un verrou, passe le site à locked et supprime la force d'alignement du suiveur. *(interne)* *(hook)* | 394 |
-| `controller_couplings_containerLockLead.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook : oublie le suiveur pour un tâteur ; pour un verrou, mémorise la cible précédente si le détachement est normal et le verrou stable (sinon l'efface) et remet le site en feeling. *(interne)* *(hook)* | 427 |
-| `controller_couplings_containerLockLead.onCouplerFound(nodeId, obj2id, obj2nodeId)` | Hook de coupleur trouvé, vide. *(interne)* *(hook)* | 391 |
-| `controller_couplings_containerLockLead.reset(jbeamData)` | Remet tous les sites en feeling avec des valeurs neutres et les electrics à 0. *(interne)* | 482 |
-| `controller_couplings_containerLockLead.toggleLockState()` | Ramène tous les sites en feeling (ce qui déverrouille s'ils sont verrouillés). Quand rien n'est verrouillé, efface aussi la mémoire de dernière cible pour permettre de reverrouiller la même. | 464 |
-| `controller_couplings_containerLockLead.updateGFX(dt)` | Chaque frame : fait tourner la recherche de tâteurs inactifs (10 Hz), interroge les suiveurs, calcule et applique la force d'alignement, fait passer les sites de feeling à locking, met à jour la stabilité du verrou et les electrics, et envoie les données de debug. *(interne)* | 231 |
+| `controller_couplings_containerLockLead.beamBroken(id, energy)` | Beam break hook, empty. *(internal)* | 388 |
+| `controller_couplings_containerLockLead.init(jbeamData)` | Reads the common parameters and the sites from the jbeam, resolves the nodes by name, creates the lookup tables and initializes the electrics. *(internal)* | 513 |
+| `controller_couplings_containerLockLead.initSounds(jbeamData)` | Empty. *(internal)* | 510 |
+| `controller_couplings_containerLockLead.lastLockCouplerPositionCallback(lockCouplerNodeId, lastLockCouplerPosition)` | Callback from the follower: records the last known position of the previously released lock, to detect that the leader has moved away from it. *(internal)* | 48 |
+| `controller_couplings_containerLockLead.lockSitePositionCallback(lockSiteId, lockCouplerPosition, needsVisualLockProp)` | Callback from the follower: records the world position of the follower's lock and whether a visual prop is required. *(internal)* | 65 |
+| `controller_couplings_containerLockLead.onCouplerAttached(nodeId, obj2id, obj2nodeId)` | Hook: if the node is a feeler, stores the follower vehicle and the site id, clears the alignment; if it is a lock, sets the site to locked and removes the follower's alignment force. *(internal)* *(hook)* | 394 |
+| `controller_couplings_containerLockLead.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook: forgets the follower for a feeler; for a lock, stores the previous target if the detachment is normal and the lock stable (otherwise clears it) and puts the site back to feeling. *(internal)* *(hook)* | 427 |
+| `controller_couplings_containerLockLead.onCouplerFound(nodeId, obj2id, obj2nodeId)` | Coupler found hook, empty. *(internal)* *(hook)* | 391 |
+| `controller_couplings_containerLockLead.reset(jbeamData)` | Puts all sites back to feeling with neutral values and the electrics to 0. *(internal)* | 482 |
+| `controller_couplings_containerLockLead.toggleLockState()` | Brings all sites back to feeling (which unlocks them if they are locked). When nothing is locked, also clears the last target memory to allow locking the same one again. | 464 |
+| `controller_couplings_containerLockLead.updateGFX(dt)` | Every frame: runs the search of inactive feelers (10 Hz), queries the followers, computes and applies the alignment force, moves sites from feeling to locking, updates the lock stability and the electrics, and sends the debug data. *(internal)* | 231 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_couplings_containerLockLead.beamBroken(id, energy)`
 
-Hook de rupture de poutre, vide.
+Beam break hook, empty.
 
-- `id` (*integer*) : cid de la poutre.
-- `energy` (*number*) : Énergie de rupture.
+- `id` (*integer*) : cid of the beam.
+- `energy` (*number*) : Break energy.
 
 #### `controller_couplings_containerLockLead.init(jbeamData)`
 
-Lit les paramètres communs et les sites depuis le jbeam, résout les noeuds par nom, crée les tables de recherche et initialise les electrics.
+Reads the common parameters and the sites from the jbeam, resolves the nodes by name, creates the lookup tables and initializes the electrics.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_couplings_containerLockLead.initSounds(jbeamData)`
 
-Vide.
+Empty.
 
-- `jbeamData` (*table*) : Non utilisé.
+- `jbeamData` (*table*) : Not used.
 
 #### `controller_couplings_containerLockLead.lastLockCouplerPositionCallback(lockCouplerNodeId, lastLockCouplerPosition)`
 
-Rappel venant du suiveur : enregistre la dernière position connue du verrou précédemment relâché, pour détecter que le leader s'en est éloigné.
+Callback from the follower: records the last known position of the previously released lock, to detect that the leader has moved away from it.
 
-- `lockCouplerNodeId` (*integer*) : cid du noeud verrou du suiveur.
-- `lastLockCouplerPosition` (*vec3*) : Position monde.
+- `lockCouplerNodeId` (*integer*) : cid of the follower's lock node.
+- `lastLockCouplerPosition` (*vec3*) : World position.
 
 #### `controller_couplings_containerLockLead.lockSitePositionCallback(lockSiteId, lockCouplerPosition, needsVisualLockProp)`
 
-Rappel venant du suiveur : enregistre la position monde du verrou du suiveur et si un prop visuel est requis.
+Callback from the follower: records the world position of the follower's lock and whether a visual prop is required.
 
-- `lockSiteId` (*integer*) : Id du site (cid du noeud tâteur côté suiveur).
-- `lockCouplerPosition` (*vec3*) : Position monde du verrou du suiveur.
-- `needsVisualLockProp` (*boolean*) : true si le prop visuel de verrou est nécessaire.
+- `lockSiteId` (*integer*) : Site id (cid of the feeler node on the follower side).
+- `lockCouplerPosition` (*vec3*) : World position of the follower's lock.
+- `needsVisualLockProp` (*boolean*) : true if the visual lock prop is needed.
 
 #### `controller_couplings_containerLockLead.onCouplerAttached(nodeId, obj2id, obj2nodeId)`
 
-Hook : si le noeud est un tâteur, mémorise le véhicule suiveur et l'id du site, efface l'alignement ; si c'est un verrou, passe le site à locked et supprime la force d'alignement du suiveur.
+Hook: if the node is a feeler, stores the follower vehicle and the site id, clears the alignment; if it is a lock, sets the site to locked and removes the follower's alignment force.
 
-- `nodeId` (*integer*) : cid du noeud local.
-- `obj2id` (*integer*) : Id de l'autre véhicule.
-- `obj2nodeId` (*integer*) : cid du noeud de l'autre véhicule.
+- `nodeId` (*integer*) : cid of the local node.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : cid of the other vehicle's node.
 
 #### `controller_couplings_containerLockLead.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)`
 
-Hook : oublie le suiveur pour un tâteur ; pour un verrou, mémorise la cible précédente si le détachement est normal et le verrou stable (sinon l'efface) et remet le site en feeling.
+Hook: forgets the follower for a feeler; for a lock, stores the previous target if the detachment is normal and the lock stable (otherwise clears it) and puts the site back to feeling.
 
-- `nodeId` (*integer*) : cid du noeud local.
-- `obj2id` (*integer*) : Id de l'autre véhicule.
-- `obj2nodeId` (*integer*) : cid du noeud de l'autre véhicule.
-- `breakForce` (*number*) : Force de rupture (> 0 si le verrou a cassé).
+- `nodeId` (*integer*) : cid of the local node.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : cid of the other vehicle's node.
+- `breakForce` (*number*) : Break force (> 0 if the lock broke).
 
 #### `controller_couplings_containerLockLead.onCouplerFound(nodeId, obj2id, obj2nodeId)`
 
-Hook de coupleur trouvé, vide.
+Coupler found hook, empty.
 
-- `nodeId` (*integer*) : cid du noeud local.
-- `obj2id` (*integer*) : Id de l'autre véhicule.
-- `obj2nodeId` (*integer*) : cid du noeud de l'autre véhicule.
+- `nodeId` (*integer*) : cid of the local node.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : cid of the other vehicle's node.
 
 #### `controller_couplings_containerLockLead.reset(jbeamData)`
 
-Remet tous les sites en feeling avec des valeurs neutres et les electrics à 0.
+Puts all sites back to feeling with neutral values and the electrics to 0.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_couplings_containerLockLead.updateGFX(dt)`
 
-Chaque frame : fait tourner la recherche de tâteurs inactifs (10 Hz), interroge les suiveurs, calcule et applique la force d'alignement, fait passer les sites de feeling à locking, met à jour la stabilité du verrou et les electrics, et envoie les données de debug.
+Every frame: runs the search of inactive feelers (10 Hz), queries the followers, computes and applies the alignment force, moves sites from feeling to locking, updates the lock stability and the electrics, and sends the debug data.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `applyForceVectorTime`, `attachCoupler`, `detachCoupler`, `getNodeCoupler`, `getNodeLatch`, `getNodePosition`, `getNodesVector`, `getPosition`, `queueObjectLuaCommand`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/couplings/containerLockLead.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/couplings/containerLockLead.lua`.*

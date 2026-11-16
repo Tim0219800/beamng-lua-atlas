@@ -1,20 +1,35 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/selectionDebug.lua",
-  "module": "Dessin de debug et de retour visuel de l'outil Easy Select dans le monde 3D (debugDrawer) : boîtes des objets découverts, de la pile de candidats, de l'objet choisi, des objets sélectionnés ou en cours de glisser, objets filtrés car trop grands, axes de la sélection (X rouge, Y vert, Z bleu) et anneau de distance maximale autour de la caméra. Le dessin 2D de debug est délégué au module selectionScreenDebug.",
+  "module": "Debug and visual feedback drawing of the Easy Select tool in the 3D world (debugDrawer): boxes of discovered objects, of the candidate stack, of the chosen object, of selected or dragged objects, objects filtered out for being too large, selection axes (X red, Y green, Z blue) and maximum distance ring around the camera. The 2D debug drawing is delegated to the selectionScreenDebug module.",
   "functions": {
     "drawWorld": {
-      "desc": "Dessine dans le monde les boîtes et axes décrits par le snapshot de sélection et les options. Les boîtes sont tracées en lignes si options.outlineMode == 1 (sinon remplies).",
+      "desc": "Draws in the world the boxes and axes described by the selection snapshot and the options. Boxes are drawn as lines if options.outlineMode == 1 (otherwise filled).",
       "params": {
-        "snapshot": {"type": "table|nil", "desc": "État de sélection : discovery, candidates, pick, filteredLarge, camera"},
-        "options": {"type": "table", "desc": "outlineMode, selectedIds, draggingIds, depthTest, dragDepthTest, selectedDepthTest, showFilteredLarge, debugEnabled, maxDiscoveryOutlines, maxStackOutlines, showSelectionAxes, axisLocal, axisLengthScale, axisLineWidth, showDistanceRing, maxDistance"}
+        "snapshot": {
+          "type": "table|nil",
+          "desc": "Selection state: discovery, candidates, pick, filteredLarge, camera"
+        },
+        "options": {
+          "type": "table",
+          "desc": "outlineMode, selectedIds, draggingIds, depthTest, dragDepthTest, selectedDepthTest, showFilteredLarge, debugEnabled, maxDiscoveryOutlines, maxStackOutlines, showSelectionAxes, axisLocal, axisLengthScale, axisLineWidth, showDistanceRing, maxDistance"
+        }
       }
     },
     "drawScreen": {
-      "desc": "Délègue à selectionScreenDebug.draw(snapshot, options) le debug en overlay 2D.",
-      "params": {"snapshot": {"type": "table|nil", "desc": "Snapshot"}, "options": {"type": "table", "desc": "Options"}}
+      "desc": "Delegates the 2D overlay debug to selectionScreenDebug.draw(snapshot, options).",
+      "params": {
+        "snapshot": {
+          "type": "table|nil",
+          "desc": "Snapshot"
+        },
+        "options": {
+          "type": "table",
+          "desc": "Options"
+        }
+      }
     },
     "reset": {
-      "desc": "Réinitialise l'état de selectionScreenDebug.",
+      "desc": "Resets the state of selectionScreenDebug.",
       "params": {}
     }
   }

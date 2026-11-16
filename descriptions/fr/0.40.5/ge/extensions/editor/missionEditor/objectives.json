@@ -1,0 +1,88 @@
+{
+  "path": "lua/ge/extensions/editor/missionEditor/objectives.lua",
+  "module": "Panneau « Objectives / Career Setup » de l'éditeur de missions. Il configure les étoiles de la mission (starsActive, defaultStarKeys pour les 3 étoiles par défaut, étoiles bonus), les récompenses par étoile (starRewards : attributeKey + rewardAmount) et les textes de fin (starOutroTexts, avec traduction par défaut). Il contient aussi des vérifications (getMissionIssues) et un mode « Raw » JSON. Charge l'extension career_branches pour proposer les attributs de récompense (money, beamXP, vouchers, plus les attributeKey des branches). Le module renvoie un constructeur : require(...)(missionEditor).",
+  "notes": [
+    "Bug : le mode Raw appelle pushStyle(\"red\") et popStyle() qui ne sont pas définies dans ce fichier (globales nil) ; une erreur de JSON dans l'éditeur brut provoquerait donc une erreur Lua au moment d'afficher le message.",
+    "getMissionIssues : « Star X using default translations » (minor), « has no text and no default » ou « is not translated » (error), « No Stars set at all! » (error si showInCareer, sinon warning), récompense à 0 (error, seulement si showInCareer).",
+    "Cocher une étoile l'assigne au premier emplacement libre parmi les 3 étoiles par défaut ; la décocher la retire de ces emplacements.",
+    "Les stats « Summary » additionnent rewardAmount par attributeKey pour toutes les étoiles, les étoiles par défaut et les étoiles bonus."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance du panneau Objectives. Champs : missionEditor, mission, missionInstance (gameplay_missions_missions.getMissionById), careerSetup, attributeOptions, skillOptions, copiedStars (presse-papiers par type de mission), starKeysSorted.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : charge career_branches et construit les listes attributeOptions et skillOptions (branches avec isSkill).",
+          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "internal": true
+        },
+        "getMissionIssues": {
+          "desc": "Appelle setMission(m) puis renvoie les problèmes d'étoiles, de textes et de récompenses de la mission.",
+          "params": {"m": {"type": "table", "desc": "Mission à vérifier."}},
+          "returns": [{"type": "table[]", "desc": "Liste d'éléments {label, severity}."}]
+        },
+        "setMission": {
+          "desc": "Définit la mission courante, récupère son instance de jeu, les clés d'étoiles triées et l'éditeur du type de mission (setContainer(mission, 'mission')).",
+          "params": {"mission": {"type": "table", "desc": "Mission éditée."}},
+          "internal": true
+        },
+        "getStarLabel": {
+          "desc": "Renvoie le libellé traduit (_tr) de l'étoile, en gérant les libellés sous forme de fonction, de chaîne ou de table {txt}.",
+          "params": {"key": {"type": "string", "desc": "Clé de l'étoile."}},
+          "returns": [{"type": "string", "desc": "Libellé traduit, ou chaîne vide."}]
+        },
+        "drawDefaultStar": {
+          "desc": "Combo pour choisir quelle étoile active occupe l'emplacement d'étoile par défaut donné. Non appelée dans ce fichier.",
+          "params": {"defaultIndex": {"type": "integer", "desc": "Numéro d'emplacement (1 à 3)."}}
+        },
+        "attributeDropdown": {
+          "desc": "Petit combo « ... » listant attributeOptions.",
+          "returns": [{"type": "string|nil", "desc": "Clé d'attribut choisie ce frame, sinon nil."}]
+        },
+        "drawAttributeInput": {
+          "desc": "Champ texte + combo pour l'attributeKey d'une récompense ; met à jour re.attributeKey.",
+          "params": {
+            "re": {"type": "table", "desc": "Récompense {attributeKey, rewardAmount}."},
+            "idx": {"type": "integer", "desc": "Indice de la récompense."},
+            "key": {"type": "string", "desc": "Clé de l'étoile."}
+          }
+        },
+        "drawRewardAmount": {
+          "desc": "Champ entier pour rewardAmount ; mémorise aussi _originalRewardAmount.",
+          "params": {
+            "re": {"type": "table", "desc": "Récompense."},
+            "idx": {"type": "integer", "desc": "Indice de la récompense."},
+            "key": {"type": "string", "desc": "Clé de l'étoile."}
+          }
+        },
+        "drawAddReward": {
+          "desc": "Contrôles d'ajout d'une récompense (texte, combo, +) et boutons copier/coller des récompenses.",
+          "params": {
+            "key": {"type": "string", "desc": "Clé de l'étoile."},
+            "rewards": {"type": "table[]|nil", "desc": "Liste de récompenses actuelle."}
+          },
+          "returns": [{"type": "table[]|nil", "desc": "Nouvelle liste si elle a changé, sinon nil."}]
+        },
+        "drawStarRewards": {
+          "desc": "Affiche et édite la liste des récompenses d'une étoile (suppression par bouton « Rem », ajout).",
+          "params": {"key": {"type": "string", "desc": "Clé de l'étoile."}}
+        },
+        "starSlotSelector": {
+          "desc": "Combo pour placer l'étoile en « Bonus Star » ou en « Default Star N ».",
+          "params": {"key": {"type": "string", "desc": "Clé de l'étoile."}}
+        },
+        "drawOutroText": {
+          "desc": "Ligne d'édition du texte de fin d'une étoile (ou « noStarUnlocked »), avec icônes d'état de la traduction par défaut et de la traduction actuelle.",
+          "params": {"key": {"type": "string", "desc": "Clé de l'étoile ou « noStarUnlocked »."}}
+        },
+        "drawCareerSetup": {
+          "desc": "Dessine toute la configuration : liste des étoiles avec cases à cocher, emplacement, éditeur du type, récompenses, textes de fin, puis résumé (étoiles par défaut, bonus, totaux de récompenses)."
+        },
+        "draw": {
+          "desc": "Dessine l'en-tête « Career Setup » (case Raw, copier/coller de la configuration par type de mission) puis drawCareerSetup ou l'éditeur JSON brut de mission.careerSetup.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

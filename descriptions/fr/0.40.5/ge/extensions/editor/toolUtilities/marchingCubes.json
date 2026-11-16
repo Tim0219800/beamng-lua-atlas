@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/marchingCubes.lua",
+  "module": "Extraction de surface par marching cubes (Lorensen & Cline 1987, tables d'après Paul Bourke) : produit un maillage de triangles à partir d'un champ de densité scalaire échantillonné sur une grille 3D régulière, au croisement iso = 0, avec F > 0 = intérieur (solide). Ne calcule pas de normales : l'appelant les recalcule après soudure/décimation.",
+  "notes": [
+    "Les tampons de travail (gVal, gEdgeCache) sont réutilisés entre appels ; les tableaux de sommets sont recréés à chaque appel car l'appelant les conserve.",
+    "Le champ est évalué sur une grille de nx = max(2, floor((max-min)/cell)+2) coins par axe.",
+    "Page .md auto : la globale 'ci' est signalée comme affectée par le module, ce qui laisse penser à une variable locale oubliée (déduit de l'analyse automatique)."
+  ],
+  "functions": {
+    "polygonize": {
+      "desc": "Extrait la surface iso = 0 de sampleFn(sampleCtx, x, y, z) (positif = intérieur) sur la boîte bounds avec une grille de pas cell. Renvoie un maillage indexé en structure de tableaux { vx, vy, vz (positions), ta, tb, tc (indices 1-based des coins de triangle), nv, nt }, ou nil s'il est vide. Si 'store' est fourni, les valeurs des coins sont copiées depuis cette grille pré-échantillonnée au lieu d'appeler sampleFn, ce qui évite de réévaluer le champ sur les plans de coins partagés entre blocs voisins.",
+      "params": {
+        "bounds": {"type": "table", "desc": "Boîte { minx, miny, minz, maxx, maxy, maxz }."},
+        "cell": {"type": "number", "desc": "Pas de la grille."},
+        "sampleFn": {"type": "function", "desc": "sampleFn(sampleCtx, x, y, z) -> number."},
+        "sampleCtx": {"type": "any", "desc": "Contexte passé tel quel à sampleFn."},
+        "store": {"type": "table|nil", "desc": "Grille de valeurs partagée : sval (valeurs à plat, une colonne en z après l'autre), colBase (décalage par colonne de coins globale), colStride (colonnes par rangée = NX global + 1 ; col = gj*colStride + gi + 1), gi0, gj0, gk0 (origine globale des coins de ce bloc)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{ vx, vy, vz, ta, tb, tc, nv, nt } ou nil."}],
+      "internal": false
+    }
+  }
+}

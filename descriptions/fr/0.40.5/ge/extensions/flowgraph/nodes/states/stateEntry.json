@@ -1,0 +1,4 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/states/stateEntry.lua",
+  "module": "Noeud d'état « State Entry » du stategraph (créé par _flowgraph_createStateNode, pas _flowgraph_createNode). Point d'entrée du graphe d'états, caché dans les menus, non supprimable ni copiable (undeleteable, uncopyable). Un seul pin de sortie 'flow' de type state. Aucune méthode propre."
+}

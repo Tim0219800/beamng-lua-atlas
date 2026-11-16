@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/editor/missionPlaybook/attributeViewer.lua",
+  "module": "Fenêtre « Playbook Attribute Viewer » associée à editor_missionPlaybook. À chaque étape du playbook, elle enregistre les attributs du joueur (career_modules_playerAttributes.getAllAttributes : valeur, niveau de branche, progression vers le niveau suivant) dans resultData.attributes. La fenêtre affiche pour la page courante un tableau Key / Value / Tier / Change (vert pour une hausse, rouge pour une baisse) et une courbe de l'évolution des attributs (hors « money ») via plotHelperUtil.",
+  "notes": [
+    "La fenêtre n'est dessinée que si la fenêtre « Mission Playbook » est visible.",
+    "Bug : M.onEditorRegisterPreferences est assigné à une variable globale non définie dans ce fichier (nil) ; sans effet.",
+    "Le graphique est conditionné par plotInvalid, mis à true à chaque onPlaybookLogAfterStep ; il n'apparaît donc qu'après une première étape exécutée.",
+    "Le calcul de « Change » lit prevData[key].value sans vérifier que la clé existe dans l'étape précédente."
+  ],
+  "functions": {
+    "show": {
+      "desc": "Affiche les fenêtres « Mission Playbook » et « Playbook Attribute Viewer »."
+    },
+    "onEditorGui": {
+      "desc": "Hook d'éditeur appelé à chaque frame : dessine le tableau et le graphique des attributs pour book.results[book.page].",
+      "params": {"dt": {"type": "number", "desc": "Durée de la frame en secondes (passée au tracé)."}},
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre (500x500), l'entrée de menu « Missions » et crée l'utilitaire de tracé.",
+      "internal": true
+    },
+    "onPlaybookLogAfterStep": {
+      "desc": "Hook émis par editor_missionPlaybook après chaque instruction : ajoute resultData.attributes = {clé = {value, level, curLvlProgress, neededForNext}}.",
+      "params": {"resultData": {"type": "table", "desc": "Résultat de l'étape, modifié sur place."}},
+      "internal": true
+    }
+  }
+}

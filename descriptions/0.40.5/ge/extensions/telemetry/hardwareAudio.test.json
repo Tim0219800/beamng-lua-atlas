@@ -1,46 +1,46 @@
 {
   "path": "lua/ge/extensions/telemetry/hardwareAudio.test.lua",
-  "module": "Tests unitaires de telemetry/hardwareAudio (runTestFiles(\"hardwareAudio\")).",
+  "module": "Unit tests of telemetry/hardwareAudio (runTestFiles(\"hardwareAudio\")).",
   "functions": {
     "testClassifiesKnownOutputTypes": {
-      "desc": "Vérifie la classification casque, écran/TV, haut-parleurs et périphérique virtuel à partir de noms types.",
+      "desc": "Checks the classification of headphones, display/TV, speakers and virtual device from typical names.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testUnknownNamesStayUnknown": {
-      "desc": "Vérifie qu'un nom sans mot-clé (ex. 'WH-1000XM5') donne la catégorie 'unknown'.",
+      "desc": "Checks that a name without a keyword (e.g. 'WH-1000XM5') gives the category 'unknown'.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testRawDeviceNameIsRemoved": {
-      "desc": "Vérifie que le nom brut et les champs de diagnostic n'entrent pas dans la télémétrie, alors que sampleRateHz, speakerMode et channels sont conservés.",
+      "desc": "Checks that the raw name and the diagnostic fields do not enter the telemetry, while sampleRateHz, speakerMode and channels are kept.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testMissingDeviceIsNotReported": {
-      "desc": "Vérifie que fromDeviceInfo(nil) renvoie nil.",
+      "desc": "Checks that fromDeviceInfo(nil) returns nil.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],

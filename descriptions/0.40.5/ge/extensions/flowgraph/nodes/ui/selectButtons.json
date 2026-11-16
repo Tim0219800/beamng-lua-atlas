@@ -1,73 +1,73 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua",
-  "module": "Nœud flowgraph « Select Buttons » (catégorie once_instant, once + singleActive) : dialogue de choix avec plusieurs boutons (ui_missionInfo.openDialogue). Entrées : « title », « description » (string ou multiTranslationObject), « altMode » (dialogue en bas de l'écran, caché), « hideApps » (cache les apps, caché), et pour chaque option (défaut accept / decline) un pin d'entrée string (libellé ; vide = ignoré) et un pin de sortie flux mis à true au clic.",
+  "module": "Flowgraph node \"Select Buttons\" (category once_instant, once + singleActive): choice dialogue with several buttons (ui_missionInfo.openDialogue). Inputs: \"title\", \"description\" (string or multiTranslationObject), \"altMode\" (dialogue at the bottom of the screen, hidden), \"hideApps\" (hides the apps, hidden), and for each option (default accept / decline) a string input pin (label; empty = ignored) and a flow output pin set to true on click.",
   "notes": [
-    "Showing two of these at the same time will break everything (todo du code).",
-    "_executionStarted est défini deux fois (même corps).",
-    "Si le flux d'entrée tombe à false alors que le dialogue est ouvert, il est fermé."
+    "Showing two of these at the same time will break everything (todo from the code).",
+    "_executionStarted is defined twice (same body).",
+    "If the input flow drops to false while the dialogue is open, it is closed."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_afterTrigger": {
-          "desc": "Ferme le dialogue si le flux d'entrée est false.",
+          "desc": "Closes the dialogue if the input flow is false.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Remet les sorties à false.",
+          "desc": "Resets the outputs to false.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Ferme le dialogue s'il est ouvert.",
+          "desc": "Closes the dialogue if it is open.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure options.",
+          "desc": "Restores options.",
           "params": {
             "nodeData": {
               "type": "table",
-              "desc": "Données sauvegardées du nœud."
+              "desc": "Saved node data."
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde options.",
+          "desc": "Saves options.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "buttonPushed": {
-          "desc": "Met à true la sortie du bouton cliqué (les autres à false) et ferme le dialogue.",
+          "desc": "Sets the output of the clicked button to true (the others to false) and closes the dialogue.",
           "params": {
             "action": {
               "type": "string",
-              "desc": "Nom du bouton ou du pin de sortie activé."
+              "desc": "Name of the activated button or output pin."
             }
           },
           "internal": false
         },
         "closeDialogue": {
-          "desc": "Ferme le dialogue (ui_missionInfo) et réaffiche les apps si masquées.",
+          "desc": "Closes the dialogue (ui_missionInfo) and shows the apps again if hidden.",
           "internal": false
         },
         "drawCustomProperties": {
-          "desc": "Édition de la liste des boutons.",
+          "desc": "Button list editing.",
           "internal": true
         },
         "getCmd": {
-          "desc": "Renvoie la commande Lua qui rappelle buttonPushed(action).",
+          "desc": "Returns the Lua command that calls buttonPushed(action) back.",
           "params": {
             "action": {
               "type": "string",
-              "desc": "Nom du bouton ou du pin de sortie activé."
+              "desc": "Name of the activated button or output pin."
             }
           },
           "internal": false
@@ -77,23 +77,23 @@
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Ferme le dialogue et remet les sorties à false.",
+          "desc": "Closes the dialogue and resets the outputs to false.",
           "internal": true
         },
         "openDialogue": {
-          "desc": "Construit les boutons et ouvre le dialogue ; masque les apps si hideApps.",
+          "desc": "Builds the buttons and opens the dialogue; hides the apps if hideApps.",
           "internal": false
         },
         "postInit": {
-          "desc": "Crée les pins des options.",
+          "desc": "Creates the option pins.",
           "internal": true
         },
         "updateButtons": {
-          "desc": "Recrée les pins par option en rétablissant les liens.",
+          "desc": "Recreates the pins per option, restoring the links.",
           "internal": false
         },
         "workOnce": {
-          "desc": "Ouvre le dialogue.",
+          "desc": "Opens the dialogue.",
           "internal": true
         }
       }

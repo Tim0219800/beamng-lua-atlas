@@ -1,34 +1,34 @@
 # `jbeam_sections_licenseplatesSkins`
 
-*Fichier : `lua/common/jbeam/sections/licenseplatesSkins.lua` · VM : Commun (GE + véhicule) · 75 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/sections/licenseplatesSkins.lua` · VM: Common (GE + vehicle) · 75 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/sections/licenseplatesSkins")`
+**Access:** `require("jbeam/sections/licenseplatesSkins")`
 
-Traite deux familles de pièces actives : plaques d'immatriculation et skins. Une pièce dont un slotType contient '_licenseplate' (ou ayant licenseplateFormat) active la plaque ; les formats utilisés sont collectés (défaut '30-15'). Une pièce de design de plaque (slotType contenant 'licenseplate_design') fournit licenseplate_path. Une pièce de skin (slotType contenant 'skin_' ou égal à 'paint_design') appelle vehicleObj:setSkin("<slot>.<nom du skin>") et peut imposer des couleurs par défaut. À la fin, si une plaque est utilisée, core_vehicles.setPlateText est appelé.
+Processes two families of active parts: license plates and skins. A part with a slotType containing '_licenseplate' (or having licenseplateFormat) activates the plate; the formats used are collected (default '30-15'). A plate design part (slotType containing 'licenseplate_design') provides licenseplate_path. A skin part (slotType containing 'skin_' or equal to 'paint_design') calls vehicleObj:setSkin("<slot>.<skin name>") and can impose default colors. At the end, if a plate is used, core_vehicles.setPlateText is called.
 
-## Remarques
+## Notes
 
-- Le nom du skin est part.skinName, sinon part.globalSkin, sinon chaîne vide ; le slot de skin est part.skinType (si chaîne non vide) sinon le slotType ; 'paint_design' ou un slotType non chaîne donne un préfixe vide.
-- Les couleurs par défaut (part.default_color, default_color_2, default_color_3) sont envoyées via core_vehicle_manager.setVehicleColorsNames.
-- Le texte de plaque vient de config.licenseName, sinon false (le gestionnaire génère le texte).
-- slotType peut être une chaîne ou une table de chaînes.
+- The skin name is part.skinName, otherwise part.globalSkin, otherwise empty string; the skin slot is part.skinType (if non-empty string) otherwise the slotType; 'paint_design' or a non-string slotType gives an empty prefix.
+- The default colors (part.default_color, default_color_2, default_color_3) are sent via core_vehicle_manager.setVehicleColorsNames.
+- The plate text comes from config.licenseName, otherwise false (the manager generates the text).
+- slotType can be a string or a table of strings.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_sections_licenseplatesSkins.process(objID, vehicleObj, config, activePartsData)` | Parcourt les pièces actives pour configurer plaque d'immatriculation et skins du véhicule. *(interne)* | 11 |
+| `jbeam_sections_licenseplatesSkins.process(objID, vehicleObj, config, activePartsData)` | Walks the active parts to configure the vehicle's license plate and skins. *(internal)* | 11 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_sections_licenseplatesSkins.process(objID, vehicleObj, config, activePartsData)`
 
-Parcourt les pièces actives pour configurer plaque d'immatriculation et skins du véhicule.
+Walks the active parts to configure the vehicle's license plate and skins.
 
-- `objID` (*integer*) : Identifiant du véhicule.
-- `vehicleObj` (*userdata*) : Objet véhicule moteur.
-- `config` (*table|nil*) : Configuration du véhicule (licenseName).
-- `activePartsData` (*table<string, table>|nil*) : Pièces actives (nom -> données de pièce).
+- `objID` (*integer*) : Vehicle identifier.
+- `vehicleObj` (*userdata*) : Engine vehicle object.
+- `config` (*table|nil*) : Vehicle configuration (licenseName).
+- `activePartsData` (*table<string, table>|nil*) : Active parts (name -> part data).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/sections/licenseplatesSkins.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/sections/licenseplatesSkins.lua`.*

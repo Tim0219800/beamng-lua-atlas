@@ -1,58 +1,58 @@
 # `gameplay_rally_startClocks_rallyStartTree`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/startClocks/rallyStartTree.lua` · VM : Game Engine (GE) · 203 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/startClocks/rallyStartTree.lua` · VM: Game Engine (GE) · 203 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_startClocks_rallyStartTree` : `extensions.load("gameplay_rally_startClocks_rallyStartTree")`, puis la globale `gameplay_rally_startClocks_rallyStartTree`
+**Access:** extension `gameplay_rally_startClocks_rallyStartTree`: `extensions.load("gameplay_rally_startClocks_rallyStartTree")`, then the global `gameplay_rally_startClocks_rallyStartTree`
 
-Affichage LED du panneau d'horloge de départ (« rally start tree ») de BeamNG. Il retrouve dans la scène les TSStatic utilisant la forme s_rally_start_tree.dae, puis dessine dans deux textures (couleur et opacité, 900x540) une grille de LED : feux tricolores (R/A/G), horloge à 6 chiffres en vert, libellé d'étape en ambre et compte à rebours en rouge. Aide aussi à choisir l'orientation de l'affichage vers un point cible. Module simple (table C), sans constructeur.
+LED display of BeamNG's start clock panel ("rally start tree"). It finds in the scene the TSStatics using the s_rally_start_tree.dae shape, then draws into two textures (color and opacity, 900x540) an LED grid: traffic lights (R/A/G), a 6-digit clock in green, a stage label in amber and a countdown in red. Also helps choose the display's orientation toward a target point. Simple module (table C), without a constructor.
 
-## Remarques
+## Notes
 
-- Les textures sont déclarées dans C.textures (tags @rallyStartClockDisplay et @rallyStartClockOpacity) ; draw doit recevoir une table avec les champs color et opacity correspondants.
-- Chiffres disponibles : 0 à 9, S et tiret ; un caractère sans motif est ignoré.
-- Les LED éteintes sont dessinées en noir (showInactiveLeds = true).
+- The textures are declared in C.textures (tags @rallyStartClockDisplay and @rallyStartClockOpacity); draw must receive a table with the matching color and opacity fields.
+- Available digits: 0 to 9, S and dash; a character without a pattern is ignored.
+- Unlit LEDs are drawn in black (showInactiveLeds = true).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_startClocks_rallyStartTree.draw(textures, display)` | Dessine l'état complet de l'afficheur dans les textures : feux, horloge, libellé d'étape et compte à rebours (format « -N », « M:SS » ou un ou deux chiffres). | 130 |
-| `gameplay_rally_startClocks_rallyStartTree.findClocks()` | Parcourt les TSStatic de la scène et renvoie ceux dont shapeName est la forme du start tree. | 66 |
-| `gameplay_rally_startClocks_rallyStartTree.getView(clock, startLine, targetPos)` | Calcule un vecteur de visée pour l'affichage d'une horloge : combine la tangente et la normale de la surface de la horloge, orientées dans le sens de la route et vers l'intérieur, selon que l'horloge est à droite ou à gauche de la ligne de départ. | 178 |
+| `gameplay_rally_startClocks_rallyStartTree.draw(textures, display)` | Draws the display's full state into the textures: lights, clock, stage label and countdown ("-N", "M:SS" or one or two digits format). | 130 |
+| `gameplay_rally_startClocks_rallyStartTree.findClocks()` | Walks through the scene's TSStatics and returns those whose shapeName is the start tree's shape. | 66 |
+| `gameplay_rally_startClocks_rallyStartTree.getView(clock, startLine, targetPos)` | Computes an aiming vector for a clock's display: combines the tangent and the normal of the clock's surface, oriented in the direction of the road and inward, depending on whether the clock is to the right or to the left of the start line. | 178 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_startClocks_rallyStartTree.draw(textures, display)`
 
-Dessine l'état complet de l'afficheur dans les textures : feux, horloge, libellé d'étape et compte à rebours (format « -N », « M:SS » ou un ou deux chiffres).
+Draws the display's full state into the textures: lights, clock, stage label and countdown ("-N", "M:SS" or one or two digits format).
 
-- `textures` (*table*) : {color, opacity} : objets texture ciblés
+- `textures` (*table*) : {color, opacity}: target texture objects
 - `display` (*table*) : {clock=string "HH:MM:SS" style, label=string, countdown=string, semaphore="R"|"A"|"G"}
 
 #### `gameplay_rally_startClocks_rallyStartTree.findClocks()`
 
-Parcourt les TSStatic de la scène et renvoie ceux dont shapeName est la forme du start tree.
+Walks through the scene's TSStatics and returns those whose shapeName is the start tree's shape.
 
-- **renvoie** : table[] Liste de {anchor, shapeName (forme d'affichage), transform, scale}
+- **returns**: table[] List of {anchor, shapeName (display shape), transform, scale}
 
 #### `gameplay_rally_startClocks_rallyStartTree.getView(clock, startLine, targetPos)`
 
-Calcule un vecteur de visée pour l'affichage d'une horloge : combine la tangente et la normale de la surface de la horloge, orientées dans le sens de la route et vers l'intérieur, selon que l'horloge est à droite ou à gauche de la ligne de départ.
+Computes an aiming vector for a clock's display: combines the tangent and the normal of the clock's surface, oriented in the direction of the road and inward, depending on whether the clock is to the right or to the left of the start line.
 
-- `clock` (*table*) : Élément renvoyé par findClocks (utilise clock.anchor)
-- `startLine` (*table*) : {pos, rot} de la ligne de départ ; rot nécessaire
-- `targetPos` (*vec3*) : Position de la cible (côté où se trouve la horloge par rapport à la route)
-- **renvoie** : vec3|nil Direction composée ; nil si la rotation est absente ou dégénérée
+- `clock` (*table*) : Element returned by findClocks (uses clock.anchor)
+- `startLine` (*table*) : {pos, rot} of the start line; rot required
+- `targetPos` (*vec3*) : Target position (side where the clock is relative to the road)
+- **returns**: vec3|nil Composed direction; nil if the rotation is absent or degenerate
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `textures` | table | Définition des deux textures dynamiques : color (clearColor transparent) et opacity (clearColor noir), chacune avec tag, width et height. |
+| `textures` | table | Definition of the two dynamic textures: color (transparent clearColor) and opacity (black clearColor), each with tag, width and height. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findClassObjects`, `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/startClocks/rallyStartTree.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/startClocks/rallyStartTree.lua`.*

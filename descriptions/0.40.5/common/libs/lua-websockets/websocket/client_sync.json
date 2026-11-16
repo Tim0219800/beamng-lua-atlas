@@ -1,20 +1,51 @@
 {
   "path": "lua/common/libs/lua-websockets/websocket/client_sync.lua",
-  "module": "Backend client WebSocket synchrone (bloquant) de lua-websockets, basé sur luasocket. Le module renvoie une fonction constructeur (aussi accessible par websocket.client.new). L'objet est étendu par websocket/sync, ce qui lui donne connect, send, receive et close. À utiliser pour un client WebSocket simple dans un script Lua du jeu.",
-  "usage": "local newClient = require('libs/lua-websockets/websocket/client_sync')\nlocal ws = newClient({timeout = 1})\nlocal ok, protocole = ws:connect('ws://127.0.0.1:8080', 'echo')\nif ok then ws:send('hello'); local msg, opcode = ws:receive() end",
+  "module": "Synchronous (blocking) WebSocket client backend of lua-websockets, based on luasocket. The module returns a constructor function (also accessible via websocket.client.new). The object is extended by websocket/sync, which gives it connect, send, receive and close. To be used for a simple WebSocket client in a game Lua script.",
+  "usage": "local newClient = require('libs/lua-websockets/websocket/client_sync')\nlocal ws = newClient({timeout = 1})\nlocal ok, protocol = ws:connect('ws://127.0.0.1:8080', 'echo')\nif ok then ws:send('hello'); local msg, opcode = ws:receive() end",
   "notes": [
-    "Bug/limitation : la variable locale ssl est fixée à nil (le require de luasec est commenté). dohandshake appelle ssl.wrap, donc une URL 'wss://' provoque une erreur Lua.",
-    "Les appels sont bloquants (timeout facultatif via ws.timeout)."
+    "Bug/limitation: the local variable ssl is set to nil (the luasec require is commented out). dohandshake calls ssl.wrap, so a 'wss://' URL causes a Lua error.",
+    "Calls are blocking (optional timeout via ws.timeout)."
   ],
   "classes": {
     "client": {
-      "desc": "Objet renvoyé par le constructeur new(ws). ws est une table d'options facultative (timeout en secondes). connect/send/receive/close proviennent de websocket/sync.",
+      "desc": "Object returned by the constructor new(ws). ws is an optional options table (timeout in seconds). connect/send/receive/close come from websocket/sync.",
       "functions": {
-        "sock_connect": {"desc": "Crée un socket TCP luasocket, applique ws.timeout et se connecte. Renvoie nil et l'erreur en cas d'échec.", "params": {"host": {"type": "string", "desc": "Hôte."}, "port": {"type": "integer", "desc": "Port."}}, "internal": true},
-        "sock_send": {"desc": "Envoie des données sur le socket (luasocket send).", "internal": true},
-        "sock_receive": {"desc": "Lit des données sur le socket (luasocket receive).", "internal": true},
-        "sock_close": {"desc": "Ferme le socket.", "internal": true},
-        "dohandshake": {"desc": "Enveloppe le socket avec ssl.wrap puis lance la négociation TLS. Inutilisable en pratique car ssl vaut nil.", "params": {"ssl_params": {"type": "table", "desc": "Paramètres TLS."}}, "internal": true}
+        "sock_connect": {
+          "desc": "Creates a luasocket TCP socket, applies ws.timeout and connects. Returns nil and the error on failure.",
+          "params": {
+            "host": {
+              "type": "string",
+              "desc": "Host."
+            },
+            "port": {
+              "type": "integer",
+              "desc": "Port."
+            }
+          },
+          "internal": true
+        },
+        "sock_send": {
+          "desc": "Sends data on the socket (luasocket send).",
+          "internal": true
+        },
+        "sock_receive": {
+          "desc": "Reads data on the socket (luasocket receive).",
+          "internal": true
+        },
+        "sock_close": {
+          "desc": "Closes the socket.",
+          "internal": true
+        },
+        "dohandshake": {
+          "desc": "Wraps the socket with ssl.wrap then starts the TLS negotiation. Unusable in practice because ssl is nil.",
+          "params": {
+            "ssl_params": {
+              "type": "table",
+              "desc": "TLS parameters."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

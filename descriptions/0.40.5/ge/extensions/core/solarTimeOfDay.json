@@ -1,76 +1,163 @@
 {
   "path": "lua/ge/extensions/core/solarTimeOfDay.lua",
-  "module": "Calculs solaires purs (sans appel moteur) : à partir d'une latitude, longitude, date et décalage UTC, calcule lever, midi solaire, coucher et minuit solaire, puis les convertit dans la convention de temps du jeu (tod.time : 0 = midi, 0.25 = 18h, 0.5 = minuit, 0.75 = 6h). Sert aux choix d'heure du jour (matin, après-midi, soir…) dans les menus de course rapide, et gère les cas polaires (jour ou nuit continu).",
-  "usage": "local state = {latitude = 45, longitude = 5, year = 2026, month = 6, day = 21}\nlocal events = core_solarTimeOfDay.getSolarTimeOfDayEvents(state) -- minutes locales\nlocal values = core_solarTimeOfDay.getSolarTimeOfDayValues(state) -- valeurs tod.time",
+  "module": "Pure solar computations (no engine call): from a latitude, longitude, date and UTC offset, computes sunrise, solar noon, sunset and solar midnight, then converts them to the game's time convention (tod.time: 0 = noon, 0.25 = 6 pm, 0.5 = midnight, 0.75 = 6 am). Used for time-of-day choices (morning, afternoon, evening...) in the quick race menus, and handles polar cases (continuous day or night).",
+  "usage": "local state = {latitude = 45, longitude = 5, year = 2026, month = 6, day = 21}\nlocal events = core_solarTimeOfDay.getSolarTimeOfDayEvents(state) -- local minutes\nlocal values = core_solarTimeOfDay.getSolarTimeOfDayValues(state) -- tod.time values",
   "notes": [
-    "Le paramètre state est une table {latitude, longitude (degrés, longitude positive à l'est), year, month, day, utcOffset (h, facultatif), dstRule (facultatif)}. Si utcOffset manque, il vaut round(longitude/15) plus 1 si l'heure d'été est active.",
-    "dstRule : 'eu', 'us', 'au', 'none' ou 'auto' (défaut) ; 'auto' choisit au (lat <= -30), eu ou us (lat >= 30 ; us si -170 < lon < -30), sinon none.",
-    "Les événements sont en minutes locales entières depuis minuit (0 à 1439). Les valeurs 'values' sont dans la convention tod.time (0 à 1).",
-    "Les fonctions renvoient nil si des champs de state sont manquants ou non numériques.",
-    "Cas polaire : sunrise et sunset valent nil et events.polar vaut 'day' ou 'night'.",
-    "Le calcul du lever/coucher utilise l'angle zénithal 90.833 degrés (refraction incluse) et la déclinaison/équation du temps de type NOAA."
+    "The state parameter is a table {latitude, longitude (degrees, longitude positive east), year, month, day, utcOffset (h, optional), dstRule (optional)}. If utcOffset is missing, it is round(longitude/15) plus 1 if daylight saving time is active.",
+    "dstRule: 'eu', 'us', 'au', 'none' or 'auto' (default); 'auto' chooses au (lat <= -30), eu or us (lat >= 30; us if -170 < lon < -30), otherwise none.",
+    "The events are in whole local minutes since midnight (0 to 1439). The 'values' are in the tod.time convention (0 to 1).",
+    "The functions return nil if fields of state are missing or non-numeric.",
+    "Polar case: sunrise and sunset are nil and events.polar is 'day' or 'night'.",
+    "The sunrise/sunset computation uses the zenith angle 90.833 degrees (refraction included) and the NOAA-style declination/equation of time."
   ],
   "fields": {},
   "functions": {
     "timeFromMinutes": {
-      "desc": "Convertit des minutes locales depuis minuit en valeur tod.time ((minutes/1440 - 0.5) modulo 1). Les minutes sont arrondies puis ramenées dans 0..1439.",
-      "params": {"minutes": {"type": "number", "desc": "Minutes depuis minuit."}},
-      "returns": [{"type": "number|nil", "desc": "Valeur tod.time (0 = midi), nil si minutes n'est pas un nombre fini."}],
+      "desc": "Converts local minutes since midnight into a tod.time value ((minutes/1440 - 0.5) modulo 1). The minutes are rounded then brought into 0..1439.",
+      "params": {
+        "minutes": {
+          "type": "number",
+          "desc": "Minutes since midnight."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "tod.time value (0 = noon), nil if minutes is not a finite number."
+        }
+      ],
       "internal": false
     },
     "getCivilOffsetHours": {
-      "desc": "Décalage horaire civil (heures) : state.utcOffset s'il est donné, sinon déduit de la longitude et de la règle d'heure d'été.",
-      "params": {"state": {"type": "table", "desc": "Voir notes."}},
-      "returns": [{"type": "number|nil", "desc": "Décalage en heures, nil si state est incomplet."}],
+      "desc": "Civil time offset (hours): state.utcOffset if given, otherwise inferred from the longitude and the daylight saving rule.",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "See notes."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Offset in hours, nil if state is incomplete."
+        }
+      ],
       "internal": false
     },
     "timeFromNormalizedTime": {
-      "desc": "Convertit un temps normalisé en heure du jeu en suivant le soleil réel : 0 à 0.25 = midi vers coucher, 0.25 à 0.5 = coucher vers minuit, 0.5 à 0.75 = minuit vers lever, 0.75 à 1 = lever vers midi. En cas polaire, utilise seulement le midi solaire. Sans événements solaires valides, renvoie le temps normalisé inchangé.",
+      "desc": "Converts a normalized time into game time following the real sun: 0 to 0.25 = noon to sunset, 0.25 to 0.5 = sunset to midnight, 0.5 to 0.75 = midnight to sunrise, 0.75 to 1 = sunrise to noon. In a polar case, uses only solar noon. Without valid solar events, returns the normalized time unchanged.",
       "params": {
-        "normalizedTime": {"type": "number", "desc": "Temps normalisé ; ramené dans 0..1 par modulo."},
-        "state": {"type": "table", "desc": "Voir notes."}
+        "normalizedTime": {
+          "type": "number",
+          "desc": "Normalized time; brought into 0..1 by modulo."
+        },
+        "state": {
+          "type": "table",
+          "desc": "See notes."
+        }
       },
-      "returns": [{"type": "number|nil", "desc": "Valeur tod.time ; -1 si normalizedTime est négatif ; nil si non numérique."}],
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "tod.time value; -1 if normalizedTime is negative; nil if non-numeric."
+        }
+      ],
       "internal": false
     },
     "getSolarTimeOfDayEvents": {
-      "desc": "Calcule les événements solaires en minutes locales : sunrise, noon, sunset, night (minuit solaire) et polar.",
-      "params": {"state": {"type": "table", "desc": "Voir notes."}},
-      "returns": [{"type": "{sunrise: integer|nil, noon: integer, sunset: integer|nil, night: integer, polar: string|nil}|nil", "desc": "Événements, nil si state est incomplet."}],
+      "desc": "Computes the solar events in local minutes: sunrise, noon, sunset, night (solar midnight) and polar.",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "See notes."
+        }
+      },
+      "returns": [
+        {
+          "type": "{sunrise: integer|nil, noon: integer, sunset: integer|nil, night: integer, polar: string|nil}|nil",
+          "desc": "Events, nil if state is incomplete."
+        }
+      ],
       "internal": false
     },
     "getSolarTimeOfDayValues": {
-      "desc": "Valeurs tod.time nommées : sunrise, noon, sunset, night, plus morning (1/3 du lever vers midi), earlyNoon (5/9), lateNoon (40 % de midi vers coucher), afternoon (70 %) et evening (94 %) quand lever et coucher existent.",
-      "params": {"state": {"type": "table", "desc": "Voir notes."}},
-      "returns": [{"type": "table<string, number>|nil", "desc": "Valeurs par clé, nil si state est incomplet."}],
+      "desc": "Named tod.time values: sunrise, noon, sunset, night, plus morning (1/3 from sunrise to noon), earlyNoon (5/9), lateNoon (40% from noon to sunset), afternoon (70%) and evening (94%) when sunrise and sunset exist.",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "See notes."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, number>|nil",
+          "desc": "Values by key, nil if state is incomplete."
+        }
+      ],
       "internal": false
     },
     "getSolarNightWindow": {
-      "desc": "Fenêtre de nuit : début (coucher) et fin (lever) en valeurs tod.time.",
-      "params": {"state": {"type": "table", "desc": "Voir notes."}},
+      "desc": "Night window: start (sunset) and end (sunrise) as tod.time values.",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "See notes."
+        }
+      },
       "returns": [
-        {"type": "number|nil", "desc": "Début de la nuit (coucher)."},
-        {"type": "number|nil", "desc": "Fin de la nuit (lever). nil si polaire ou state incomplet."}
+        {
+          "type": "number|nil",
+          "desc": "Start of night (sunset)."
+        },
+        {
+          "type": "number|nil",
+          "desc": "End of night (sunrise). nil if polar or state incomplete."
+        }
       ],
       "internal": false
     },
     "buildSolarTimeOfDayOptions": {
-      "desc": "Construit la liste d'options d'heure du jeu. Dans un cas polaire, renvoie seulement solarMidnight et solarNoon (clés de traduction ui.quickrace.tod.*). Sinon copie chaque option fournie en y ajoutant value = valeur solaire pour sa clé (nil si inconnue).",
+      "desc": "Builds the list of time-of-day options. In a polar case, returns only solarMidnight and solarNoon (translation keys ui.quickrace.tod.*). Otherwise copies each provided option adding value = solar value for its key (nil if unknown).",
       "params": {
-        "state": {"type": "table", "desc": "Voir notes."},
-        "options": {"type": "table[]|nil", "desc": "Options existantes avec un champ key (morning, earlyNoon, noon, lateNoon, afternoon, evening, sunset, night, sunrise…)."}
+        "state": {
+          "type": "table",
+          "desc": "See notes."
+        },
+        "options": {
+          "type": "table[]|nil",
+          "desc": "Existing options with a key field (morning, earlyNoon, noon, lateNoon, afternoon, evening, sunset, night, sunrise...)."
+        }
       },
-      "returns": [{"type": "table[]", "desc": "Options avec champ value."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Options with a value field."
+        }
+      ],
       "internal": false
     },
     "getTimeValueForKey": {
-      "desc": "Renvoie la valeur tod.time de l'option dont la clé est donnée parmi celles de buildSolarTimeOfDayOptions.",
+      "desc": "Returns the tod.time value of the option whose key is given among those of buildSolarTimeOfDayOptions.",
       "params": {
-        "key": {"type": "string", "desc": "Clé d'option."},
-        "state": {"type": "table", "desc": "Voir notes."},
-        "options": {"type": "table[]|nil", "desc": "Options candidates."}
+        "key": {
+          "type": "string",
+          "desc": "Option key."
+        },
+        "state": {
+          "type": "table",
+          "desc": "See notes."
+        },
+        "options": {
+          "type": "table[]|nil",
+          "desc": "Candidate options."
+        }
       },
-      "returns": [{"type": "number|nil", "desc": "Valeur, nil si clé non texte ou introuvable."}],
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Value, nil if the key is not text or not found."
+        }
+      ],
       "internal": false
     }
   }

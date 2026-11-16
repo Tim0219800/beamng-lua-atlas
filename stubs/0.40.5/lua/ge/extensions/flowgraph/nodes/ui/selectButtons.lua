@@ -2,81 +2,81 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+--- Flowgraph node class (returned by _flowgraph_createNode(C)).
 ---@class flowgraph_nodes_ui_selectButtons_C
 local flowgraph_nodes_ui_selectButtons_C = {}
 
---- Ferme le dialogue si le flux d'entrée est false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:164
+--- Closes the dialogue if the input flow is false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:164
 function flowgraph_nodes_ui_selectButtons_C:_afterTrigger() end
 
---- Remet les sorties à false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:39
+--- Resets the outputs to false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:39
 function flowgraph_nodes_ui_selectButtons_C:_executionStarted() end
 
---- Ferme le dialogue s'il est ouvert.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:158
+--- Closes the dialogue if it is open.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:158
 function flowgraph_nodes_ui_selectButtons_C:_executionStopped() end
 
---- Restaure options.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:147
----@param nodeData table Données sauvegardées du nœud.
+--- Restores options.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:147
+---@param nodeData table Saved node data.
 function flowgraph_nodes_ui_selectButtons_C:_onDeserialized(nodeData) end
 
---- Sauvegarde options.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:143
----@param res table Table de sauvegarde du nœud à remplir.
+--- Saves options.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:143
+---@param res table Node save table to fill.
 function flowgraph_nodes_ui_selectButtons_C:_onSerialize(res) end
 
---- Met à true la sortie du bouton cliqué (les autres à false) et ferme le dialogue.
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:169
----@param action string Nom du bouton ou du pin de sortie activé.
+--- Sets the output of the clicked button to true (the others to false) and closes the dialogue.
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:169
+---@param action string Name of the activated button or output pin.
 function flowgraph_nodes_ui_selectButtons_C:buttonPushed(action) end
 
---- Ferme le dialogue (ui_missionInfo) et réaffiche les apps si masquées.
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:182
+--- Closes the dialogue (ui_missionInfo) and shows the apps again if hidden.
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:182
 function flowgraph_nodes_ui_selectButtons_C:closeDialogue() end
 
---- Édition de la liste des boutons.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:45
+--- Button list editing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:45
 function flowgraph_nodes_ui_selectButtons_C:drawCustomProperties() end
 
---- Renvoie la commande Lua qui rappelle buttonPushed(action).
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:178
----@param action string Nom du bouton ou du pin de sortie activé.
+--- Returns the Lua command that calls buttonPushed(action) back.
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:178
+---@param action string Name of the activated button or output pin.
 function flowgraph_nodes_ui_selectButtons_C:getCmd(action) end
 
 --- Options {accept, decline}, count = 1.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:27
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:27
 function flowgraph_nodes_ui_selectButtons_C:init() end
 
---- Ferme le dialogue et remet les sorties à false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:209
+--- Closes the dialogue and resets the outputs to false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:209
 function flowgraph_nodes_ui_selectButtons_C:onNodeReset() end
 
---- Construit les boutons et ouvre le dialogue ; masque les apps si hideApps.
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:192
+--- Builds the buttons and opens the dialogue; hides the apps if hideApps.
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:192
 function flowgraph_nodes_ui_selectButtons_C:openDialogue() end
 
---- Crée les pins des options.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:35
+--- Creates the option pins.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:35
 function flowgraph_nodes_ui_selectButtons_C:postInit() end
 
---- Recrée les pins par option en rétablissant les liens.
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:94
+--- Recreates the pins per option, restoring the links.
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:94
 function flowgraph_nodes_ui_selectButtons_C:updateButtons() end
 
---- Ouvre le dialogue.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:218
+--- Opens the dialogue.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/selectButtons.lua:218
 function flowgraph_nodes_ui_selectButtons_C:workOnce() end
 

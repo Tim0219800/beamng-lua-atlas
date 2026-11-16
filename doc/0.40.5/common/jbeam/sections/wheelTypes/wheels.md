@@ -1,39 +1,39 @@
 # `wheels`
 
-*Fichier : `lua/common/jbeam/sections/wheelTypes/wheels.lua` · VM : Commun (GE + véhicule) · 168 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/sections/wheelTypes/wheels.lua` · VM: Common (GE + vehicle) · 168 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `wheels`
+**Access:** global `wheels`
 
-Gestionnaire du type de roue 'wheels' (section jbeam wheels) : la roue simple. À partir de deux nœuds d'axe (node1, node2), il crée un anneau de 2 x numRays nœuds de pneu autour de l'axe puis les poutres associées (côtés, renforts en X, bande de roulement, périphérie). Appelé par jbeam/sections/wheels.lua pendant le chargement du véhicule ; sert à comprendre comment un jbeam de roue est converti en physique.
+Handler for the 'wheels' wheel type (jbeam wheels section): the simple wheel. From two axle nodes (node1, node2), it creates a ring of 2 x numRays tire nodes around the axle then the associated beams (sides, X reinforcements, tread, periphery). Called by jbeam/sections/wheels.lua during vehicle loading; useful for understanding how a wheel jbeam is converted into physics.
 
-## Exemple
+## Example
 
 ```lua
--- appelé par le répartiteur : process(vehicle, wheelKey, wheel)
+-- called by the dispatcher: process(vehicle, wheelKey, wheel)
 ```
 
-## Remarques
+## Notes
 
-- Paramètres jbeam lus dans la roue : node1, node2 (nœuds d'axe, obligatoires, sinon avertissement 'invalid wheel' et sortie sans rien créer), radius (défaut 0.5 m), numRays (défaut 10), tireWidth, wheelOffset, et les familles wheelSideBeam*, wheelReinforcementBeam*, wheelTreadBeam*, wheelPeripheryBeam* (Spring, Damp, Deform, Strength ; Expansion pour renfort et bande). Les nœuds du pneu héritent des options de la roue (via addNodeWithOptions).
-- wheel.collision est forcé à true (les nœuds de pneu collisionnent). Les nœuds sont créés en alternant extérieur/intérieur ; à la fin wheel.nodes contient les nœuds du pneu (vehicle.nodes[n]).
-- Les nœuds node1/node2 sont échangés si node1.z > node2.z pour le calcul, mais les poutres créées utilisent encore wheel.node1 / wheel.node2 (noms d'origine) : l'échange n'affecte que la géométrie des anneaux. nodeArm est lu mais jamais utilisé.
-- Constantes C codées en dur : NORMALTYPE = 0, BEAM_ANISOTROPIC = 1 (ne pas changer).
+- jbeam parameters read in the wheel: node1, node2 (axle nodes, required, otherwise warning 'invalid wheel' and exit without creating anything), radius (default 0.5 m), numRays (default 10), tireWidth, wheelOffset, and the families wheelSideBeam*, wheelReinforcementBeam*, wheelTreadBeam*, wheelPeripheryBeam* (Spring, Damp, Deform, Strength; Expansion for reinforcement and tread). The tire nodes inherit the wheel's options (via addNodeWithOptions).
+- wheel.collision is forced to true (the tire nodes collide). The nodes are created alternating outer/inner; at the end wheel.nodes contains the tire nodes (vehicle.nodes[n]).
+- The node1/node2 nodes are swapped if node1.z > node2.z for the computation, but the beams created still use wheel.node1 / wheel.node2 (original names): the swap only affects the geometry of the rings. nodeArm is read but never used.
+- Hardcoded C constants: NORMALTYPE = 0, BEAM_ANISOTROPIC = 1 (do not change).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `wheels.process(vehicle, wheelKey, wheel)` | Crée nœuds et poutres d'une roue simple (alias de addWheel) : 2*numRays nœuds de pneu, puis par rayon 8 poutres (2 côtés, 2 renforts en X, 1 bande, 2 périphérie, 1 diagonale). Stocke vehicle.nodes de la roue dans wheel.nodes. *(interne)* | 18 |
+| `wheels.process(vehicle, wheelKey, wheel)` | Creates nodes and beams of a simple wheel (alias of addWheel): 2*numRays tire nodes, then per ray 8 beams (2 sides, 2 X reinforcements, 1 tread, 2 periphery, 1 diagonal). Stores the wheel's vehicle.nodes in wheel.nodes. *(internal)* | 18 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `wheels.process(vehicle, wheelKey, wheel)`
 
-Crée nœuds et poutres d'une roue simple (alias de addWheel) : 2*numRays nœuds de pneu, puis par rayon 8 poutres (2 côtés, 2 renforts en X, 1 bande, 2 périphérie, 1 diagonale). Stocke vehicle.nodes de la roue dans wheel.nodes.
+Creates nodes and beams of a simple wheel (alias of addWheel): 2*numRays tire nodes, then per ray 8 beams (2 sides, 2 X reinforcements, 1 tread, 2 periphery, 1 diagonal). Stores the wheel's vehicle.nodes in wheel.nodes.
 
-- `vehicle` (*table*) : véhicule en construction (nodes, maxIDs…)
-- `wheelKey` (*integer*) : indice de la roue dans sa section
-- `wheel` (*table*) : définition jbeam de la roue (modifiée : collision, radius, numRays, nodes)
+- `vehicle` (*table*) : vehicle under construction (nodes, maxIDs...)
+- `wheelKey` (*integer*) : index of the wheel in its section
+- `wheel` (*table*) : jbeam definition of the wheel (modified: collision, radius, numRays, nodes)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/sections/wheelTypes/wheels.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/sections/wheelTypes/wheels.lua`.*

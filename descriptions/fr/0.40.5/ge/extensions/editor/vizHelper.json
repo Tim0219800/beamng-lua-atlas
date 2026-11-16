@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/editor/vizHelper.lua",
+  "module": "Petit outil pour les level designers (menu Debug > « Viz Helper ») : il pose des décalcomanies (decals) dynamiques d'images prises dans art/vizhelper/ à l'endroit visé par la souris dans la vue 3D, pour marquer des choses. Molette = rotation, Ctrl+molette = taille, Alt+molette = changer d'image, Maj = sensibilité x10, clic gauche = poser (maintenu = peindre avec une distance minimale).",
+  "usage": "extensions.load('editor_vizHelper')\neditor_vizHelper.openWindow()",
+  "notes": [
+    "Les decals posés sont gardés dans une table locale savedDecals et réaffichés à chaque onUpdate via Engine.Render.DynamicDecalMgr.addDecals ; ils sont vidés à la désactivation de l'éditeur (onEditorDeactivated) ou par le bouton « clear ». Ils ne sont pas sauvegardés dans le niveau.",
+    "Les images sont listées au chargement de l'extension (FS:findFiles sur art/vizhelper/) ; si le dossier est vide, vizHelper[curItem+1] est nil et la concaténation du chemin échoue.",
+    "Le fenêtrage utilise im.Begin directement (un TODO dans le code prévoit de passer à editor.beginWindow).",
+    "Valeurs fixes des decals : fadeStart 2000, fadeEnd 2500 (m), échelle uniforme = Size, forwardVec tourné autour de la normale."
+  ],
+  "fields": {
+    "windowOpen": {"type": "ImGui BoolPtr", "desc": "État ouvert/fermé de la fenêtre ; lire/écrire avec windowOpen[0]."}
+  },
+  "functions": {
+    "openWindow": {"desc": "Ouvre la fenêtre Viz Helper (windowOpen[0] = true).", "internal": false},
+    "onEditorGui": {"desc": "Hook de l'éditeur appelé à chaque frame : dessine la fenêtre, gère l'entrée (molette, clic), fait un cameraMouseRayCast, dessine une sphère verte au point visé et ajoute le decal de prévisualisation ou le sauvegarde.", "internal": true},
+    "onEditorInitialized": {"desc": "Hook de l'éditeur : ajoute l'entrée de menu « Viz Helper » (groupe Debug).", "internal": true},
+    "onEditorActivated": {"desc": "Hook de l'éditeur appelé à l'activation ; ne fait rien.", "internal": true},
+    "onEditorDeactivated": {"desc": "Hook de l'éditeur appelé à la désactivation : vide savedDecals.", "internal": true},
+    "onExtensionLoaded": {"desc": "Hook d'extension appelé au chargement : liste les fichiers de art/vizhelper/ et construit la chaîne de la liste déroulante.", "internal": true},
+    "onUpdate": {"desc": "Hook d'extension appelé à chaque frame : réaffiche tous les decals sauvegardés.", "internal": true},
+    "onSerialize": {
+      "desc": "Hook appelé avant un rechargement Lua : renvoie {windowOpen = bool}.",
+      "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après un rechargement Lua : restaure l'état ouvert de la fenêtre.",
+      "params": {"data": {"type": "table", "desc": "table produite par onSerialize"}},
+      "internal": true
+    }
+  }
+}

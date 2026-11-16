@@ -1,24 +1,51 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/recoveryClockAdvance.lua",
-  "module": "Table des pénalités de chronomètre appliquées à chaque récupération du véhicule (reset) en rallye. Une récupération coûte un nombre fixe de secondes, indépendant de la longueur de l'étape. Sur une spéciale : 5 s pour un recovery, 0 s pour un flip (retournement). Hors spéciale (liaison) : 60 s et 10 s. Utilisé par rallyManager:addRecoveryRaceTime.",
+  "module": "Table of the timer penalties applied at each vehicle recovery (reset) in rally. A recovery costs a fixed number of seconds, independent of the stage length. On a special stage: 5 s for a recovery, 0 s for a flip. Off a special stage (road section): 60 s and 10 s. Used by rallyManager:addRecoveryRaceTime.",
   "fields": {
-    "specialStageSeconds": {"type": "table<string, number>", "desc": "Pénalités sur une spéciale : recovery = 5, flip = 0 (le chemin de code est gardé mais n'ajoute rien)."},
-    "nonSpecialStageSeconds": {"type": "table<string, number>", "desc": "Pénalités hors spéciale : recovery = 60, flip = 10."}
+    "specialStageSeconds": {
+      "type": "table<string, number>",
+      "desc": "Penalties on a special stage: recovery = 5, flip = 0 (the code path is kept but adds nothing)."
+    },
+    "nonSpecialStageSeconds": {
+      "type": "table<string, number>",
+      "desc": "Penalties off a special stage: recovery = 60, flip = 10."
+    }
   },
   "functions": {
     "getSpecialStageSeconds": {
-      "desc": "Renvoie la pénalité en secondes pour un type de récupération sur une spéciale ; 0 si le type est inconnu.",
-      "params": {"recoveryType": {"type": "string", "desc": "\"recovery\" ou \"flip\""}},
-      "returns": [{"type": "number", "desc": "Secondes ajoutées au chrono"}],
+      "desc": "Returns the penalty in seconds for a recovery type on a special stage; 0 if the type is unknown.",
+      "params": {
+        "recoveryType": {
+          "type": "string",
+          "desc": "\"recovery\" or \"flip\""
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Seconds added to the timer"
+        }
+      ],
       "internal": false
     },
     "getSeconds": {
-      "desc": "Renvoie la pénalité en secondes selon que l'étape est une spéciale ou non ; 0 si le type est inconnu.",
+      "desc": "Returns the penalty in seconds depending on whether the stage is a special stage or not; 0 if the type is unknown.",
       "params": {
-        "recoveryType": {"type": "string", "desc": "\"recovery\" ou \"flip\""},
-        "isSpecialStage": {"type": "boolean", "desc": "true pour une spéciale, false pour une liaison / autre étape"}
+        "recoveryType": {
+          "type": "string",
+          "desc": "\"recovery\" or \"flip\""
+        },
+        "isSpecialStage": {
+          "type": "boolean",
+          "desc": "true for a special stage, false for a road section / other stage"
+        }
       },
-      "returns": [{"type": "number", "desc": "Secondes ajoutées au chrono"}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Seconds added to the timer"
+        }
+      ],
       "internal": false
     }
   }

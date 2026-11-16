@@ -1,0 +1,53 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/codriverTiming.lua",
+  "module": "Calcule le délai du copilote de rallye : l'écart (en secondes) entre la fin de l'annonce d'une note et l'arrivée de la voiture au virage. Le délai minimum vient du réglage utilisateur 'rallyCodriverTiming' (plus un décalage propre au pack vocal) ; il augmente avec la vitesse entre startSpeedMph et endSpeedMph jusqu'à un supplément maxDelayOffsetSeconds. Les valeurs par défaut sont lues dans /gameplay/rally/codriverTiming.json.",
+  "usage": "local d = gameplay_rally_codriverTiming.delayForSpeed(speedMph, true, 0)",
+  "notes": [
+    "Les vitesses sont en mph (pas en m/s).",
+    "Défauts si le JSON est absent : maxDelayOffsetSeconds=0.5, startSpeedMph=40, endSpeedMph=80.",
+    "enableSpeedScaling == false (comparaison stricte) désactive la partie dépendante de la vitesse ; nil la laisse active.",
+    "nudge borne le délai minimum entre 1 et 10 s et l'écrit dans les settings."
+  ],
+  "functions": {
+    "config": {
+      "desc": "Renvoie la configuration chargée (et mise en cache) : maxDelayOffsetSeconds, startSpeedMph, endSpeedMph.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{maxDelayOffsetSeconds, startSpeedMph, endSpeedMph}."}],
+      "internal": false
+    },
+    "minDelay": {
+      "desc": "Délai minimum en secondes : réglage rallyCodriverTiming + décalage du pack vocal.",
+      "params": {"offsetSeconds": {"type": "number|nil", "desc": "Décalage du pack vocal (0 si nil)."}},
+      "returns": [{"type": "number", "desc": "Délai minimum en secondes."}],
+      "internal": false
+    },
+    "maxDelay": {
+      "desc": "Délai maximum en secondes (atteint à endSpeedMph) : minDelay + maxDelayOffsetSeconds, ou minDelay si la mise à l'échelle par la vitesse est désactivée.",
+      "params": {
+        "enableSpeedScaling": {"type": "boolean|nil", "desc": "false pour désactiver la partie liée à la vitesse."},
+        "offsetSeconds": {"type": "number|nil", "desc": "Décalage du pack vocal."}
+      },
+      "returns": [{"type": "number", "desc": "Délai maximum en secondes."}],
+      "internal": false
+    },
+    "delayForSpeed": {
+      "desc": "Délai pour une vitesse donnée : minDelay en dessous de startSpeedMph, puis interpolation linéaire jusqu'à minDelay + maxDelayOffsetSeconds à endSpeedMph (plafonné).",
+      "params": {
+        "speedMph": {"type": "number", "desc": "Vitesse du véhicule en mph."},
+        "enableSpeedScaling": {"type": "boolean|nil", "desc": "false pour toujours renvoyer le minimum."},
+        "offsetSeconds": {"type": "number|nil", "desc": "Décalage du pack vocal."}
+      },
+      "returns": [{"type": "number", "desc": "Délai en secondes."}],
+      "internal": false
+    },
+    "nudge": {
+      "desc": "Décale la plage de délais de 'tick' secondes : seul le minimum (réglage rallyCodriverTiming, borné à [1, 10]) bouge, le maximum suit via le décalage. Enregistre le nouveau réglage.",
+      "params": {"tick": {"type": "number", "desc": "Variation en secondes (positive ou négative)."}},
+      "returns": [
+        {"type": "number", "desc": "Nouveau délai minimum."},
+        {"type": "number", "desc": "Nouveau délai maximum (min + maxDelayOffsetSeconds)."}
+      ],
+      "internal": false
+    }
+  }
+}

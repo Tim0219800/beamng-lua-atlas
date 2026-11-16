@@ -1,0 +1,70 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/imDialogue.lua",
+  "module": "Nœud flowgraph « im Dialogue » (catégorie repeat_instant, singleActive, tag imgui) : fenêtre imgui avec titre, description et boutons. Entrées : « title », « description » ; pour chaque option (liste modifiable, défaut accept / decline) un pin d'entrée string (libellé) et un pin de sortie flux mis à true au clic. Largeur de retour à la ligne : data.wrapSize (500).",
+  "notes": [
+    "Bug : work() appelle self:closeDialogue() et self:closed(), qui ne sont pas définies dans ce fichier (erreur au premier clic si la classe de base ne les fournit pas).",
+    "Showing two of these at the same time will break everything (todo du code).",
+    "updateButtons : tous les liens de sortie sont mis dans flowLinks, et strLinks reste vide (les liens d'entrée ne sont pas recréés correctement)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Appelle onNodeReset.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure options.",
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "Données sauvegardées du nœud."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde options.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Édition de la liste des boutons.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Options par défaut {accept, decline}, wrapSize = 500.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Ferme la fenêtre (open = false).",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Crée les pins des options.",
+          "internal": true
+        },
+        "updateButtons": {
+          "desc": "Recrée les pins des options.",
+          "internal": false
+        },
+        "work": {
+          "desc": "Si ouvert, dessine la fenêtre, le texte et les boutons.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Ouvre la fenêtre (open = true).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

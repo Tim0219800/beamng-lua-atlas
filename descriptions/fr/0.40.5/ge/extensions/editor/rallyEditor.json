@@ -1,0 +1,334 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor.lua",
+  "module": "Fenêtre principale « Rally Editor » de l'éditeur de monde (menu Gameplay > Rally Editor, mode d'édition « Rally Editor » / notebookEditMode, action map « rallyEditor »). Elle édite un carnet de notes de rallye (notebook : *.notebook.json dans le dossier d'une mission, sous rallyUtil.notebooksPath) à travers des onglets : notebookInfo, missionTab, voicepacksTab, pacenotes, drivelineTab, systemPacenotesTab, measurementsTab, aiCompetitorsTab, et testTab uniquement si un fichier dev.txt existe à la racine. Elle gère la mission courante (currentMissionDir/Name/Id), le choix de voicepack (pick), un « ghost notebook » de comparaison, des fenêtres annexes (DevTools, RallyToolbox, calibration, chargeur de spéciale) et les préférences rallyEditor.* (editing, view, waypoints, ui). Les autres modules (onglets) appellent ses getters (getPref*, getCurrentPath…).",
+  "usage": "local nb = editor_rallyEditor.getCurrentPath()  -- carnet en cours ou nil\neditor_rallyEditor.loadOrCreateForMissionEditor('/gameplay/missions/italy/rallyStage/001-...')\neditor_rallyEditor.saveNotebook()",
+  "notes": [
+    "Préférences enregistrées : rallyEditor.editing (lockWaypoints [cachée], showPreviousPacenote, showNextPacenote, waypointSnapMethod), rallyEditor.view (pacenoteLabelMode « all »|« distance », pacenoteLabelDistance 100-1500 [650 par défaut], pacenoteLabelNearCameraCount 0-10 [3], showAdjacentPacenoteText, showSelectedPacenoteUtility, drivelineSplinePrismWidth 0.5-5 [1.945], showAllPacenoteLabels [héritée, cachée]), rallyEditor.waypoints.defaultRadius (8, de 1 à 50), rallyEditor.ui.pacenoteNoteFieldWidth (300).",
+    "Bug : M.getVolatilePreferences renvoie la variable « volatilePreferences » qui n'est jamais définie dans ce fichier ; elle renvoie donc toujours nil.",
+    "La préférence héritée showAllPacenoteLabels = true force le mode d'étiquettes « all ».",
+    "moveSelectedWaypointForward/Backward, zoomIn et zoomOut sont appelés directement par des actions d'entrée avec une valeur (0 = relâché, 1 = appuyé) ; la répétition est limitée par un anti-rebond (0.25 s pour les waypoints, 0.05 s pour le zoom). zoomIn/zoomOut/mouseWheelZoom n'agissent que si la caméra active est « pacenoteOrbit ».",
+    "Les raccourcis de navigation (selectPrevPacenote, selectNextPacenote, insertMode, deselect, selectNextWaypoint, cameraPathPlay, toggleCornerCalls) ne font rien si l'onglet actif n'est pas Pacenotes.",
+    "Dépendance déclarée : gameplay_missions_missions. L'extension gameplay_rallyLoop est chargée/déchargée par la case « RallyLoop Extension » du menu Tools.",
+    "À l'activation puis désactivation du mode d'édition, resetEphemeralViewOptions remet à zéro l'option de masquage de la forêt (theForest) et l'affichage du snaproad au premier plan."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions requises : {'gameplay_missions_missions'}."},
+    "devToolsWindowOpen": {"type": "ImBoolPtr", "desc": "Indicateur d'ouverture de la fenêtre DevTools (remplacé à la désérialisation)."},
+    "rallyToolboxWindowOpen": {"type": "ImBoolPtr", "desc": "Indicateur d'ouverture de la fenêtre RallyToolbox (remplacé à la désérialisation)."},
+    "picksMatch": {"type": "function", "desc": "Alias de voicepack.picksMatch (compatibilité avec les appelants externes)."},
+    "notebookBasenamesForPick": {"type": "function", "desc": "Alias de voicepack.notebookBasenamesForPick (liste des noms de carnets candidats pour un pick de voicepack)."}
+  },
+  "functions": {
+    "allowGizmo": {
+      "desc": "Indique si le gizmo est autorisé : vrai quand le mode d'édition courant est « Rally Editor ».",
+      "returns": [{"type": "boolean", "desc": "true en mode Rally Editor."}]
+    },
+    "buildVoicepackPickerEntries": {
+      "desc": "Construit la liste des voicepacks proposés pour une mission (voicepack.buildPickerEntries avec suffixe « (mission) » pour les voicepacks de mission).",
+      "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}},
+      "returns": [{"type": "table<integer, table>", "desc": "Entrées contenant notamment un champ pick."}]
+    },
+    "cameraPathPlay": {
+      "desc": "Lance/arrête la lecture du chemin de caméra de l'onglet Pacenotes ; sans effet si un autre onglet est actif.",
+      "internal": false
+    },
+    "changeDebugDrawOpacity": {
+      "desc": "Change l'opacité du dessin de debug par pas de 0.2, bornée entre 0.1 et 1.0 : val = 0 diminue, val = 1.0 augmente.",
+      "params": {"val": {"type": "number", "desc": "0 pour diminuer, 1.0 pour augmenter."}}
+    },
+    "clearGhostNotebook": {
+      "desc": "Efface le carnet « fantôme » de comparaison s'il existe."
+    },
+    "deselect": {
+      "desc": "Désélectionne dans l'onglet Pacenotes (ignoré hors de cet onglet)."
+    },
+    "detectNotebookToLoad": {
+      "desc": "Choisit le carnet à charger pour une mission : résolution par voicepack, sinon premier carnet existant, sinon « structured.notebook.json » à créer.",
+      "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}},
+      "returns": [{"type": "string", "desc": "Chemin complet du fichier de carnet."}]
+    },
+    "drawStageLoaderModal": {
+      "desc": "Dessine la fenêtre modale de chargement de spéciale (StageLoaderModal).",
+      "internal": true
+    },
+    "drawToolbarMissionContext": {
+      "desc": "Dessine dans la barre d'outils le texte « mission | carnet | voicepack » (en cyan) avec une infobulle ; ne fait rien si aucune mission courante.",
+      "params": {"pathObj": {"type": "table|nil", "desc": "Carnet courant (basenameNoExt() pour le nom)."}},
+      "internal": true
+    },
+    "getCurrentFilename": {
+      "desc": "Renvoie le chemin du fichier du carnet courant.",
+      "returns": [{"type": "string|nil", "desc": "currentPath.fname ou nil si aucun carnet."}]
+    },
+    "getCurrentMissionDir": {
+      "desc": "Renvoie le dossier de la mission courante.",
+      "returns": [{"type": "string|nil", "desc": "Chemin absolu."}]
+    },
+    "getCurrentMissionId": {
+      "desc": "Renvoie l'identifiant de la mission courante (ex. « italy/rallyStage/001-ss-fastello-norte », extrait après « /missions/ »).",
+      "returns": [{"type": "string|nil", "desc": "Identifiant ou nil."}]
+    },
+    "getCurrentMissionName": {
+      "desc": "Renvoie le nom lisible de la mission (info.json name traduit, sinon dernier segment du chemin).",
+      "returns": [{"type": "string|nil", "desc": "Nom."}]
+    },
+    "getCurrentPath": {
+      "desc": "Renvoie le carnet (notebook) en cours d'édition.",
+      "returns": [{"type": "table|nil", "desc": "Objet carnet ou nil."}]
+    },
+    "getCurrentVoicepackPick": {
+      "desc": "Renvoie le choix de voicepack courant : {type='voicepack', scope='global'|'mission', dirname=...}.",
+      "returns": [{"type": "table|nil", "desc": "Pick courant."}]
+    },
+    "getGhostNotebookError": {
+      "desc": "Renvoie l'erreur du dernier chargement du carnet fantôme.",
+      "returns": [{"type": "string|nil", "desc": "Message d'erreur."}]
+    },
+    "getGhostNotebookLabelForPacenote": {
+      "desc": "Renvoie l'étiquette du carnet fantôme correspondant à une pacenote.",
+      "params": {"pacenote": {"type": "table", "desc": "Pacenote du carnet courant."}},
+      "returns": [{"type": "string|nil", "desc": "Étiquette."}]
+    },
+    "getGhostNotebookPath": {
+      "desc": "Renvoie le carnet fantôme chargé.",
+      "returns": [{"type": "table|nil", "desc": "Carnet fantôme."}]
+    },
+    "getGhostNotebookSelectedFname": {
+      "desc": "Renvoie le nom de fichier du carnet fantôme sélectionné.",
+      "returns": [{"type": "string|nil", "desc": "Chemin du fichier."}]
+    },
+    "getGhostNotebookSelectedLabel": {
+      "desc": "Renvoie l'étiquette du carnet fantôme sélectionné.",
+      "returns": [{"type": "string", "desc": "Étiquette, ou « (none) »."}]
+    },
+    "getMissionDir": {
+      "desc": "Renvoie le dossier de mission du carnet courant (currentPath:getMissionDir()).",
+      "returns": [{"type": "string|nil", "desc": "Dossier ou nil."}]
+    },
+    "getMissionId": {
+      "desc": "Renvoie l'identifiant de mission du carnet courant (currentPath:getMissionId()).",
+      "returns": [{"type": "string|nil", "desc": "Identifiant ou nil."}]
+    },
+    "getPacenotesWindow": {
+      "desc": "Renvoie l'onglet Pacenotes.",
+      "returns": [{"type": "table|nil", "desc": "Instance de l'onglet."}]
+    },
+    "getPrefDefaultRadius": {
+      "desc": "Préférence rallyEditor.waypoints.defaultRadius : rayon d'affichage des waypoints.",
+      "returns": [{"type": "integer", "desc": "Rayon (8 par défaut)."}]
+    },
+    "getPrefDrivelineSplinePrismWidth": {
+      "desc": "Largeur du prisme (largeur de véhicule) servant à dessiner la spline de driveline.",
+      "returns": [{"type": "number", "desc": "Largeur en mètres, bornée à 0.5-5 (1.945 par défaut)."}]
+    },
+    "getPrefLockWaypoints": {
+      "desc": "Préférence rallyEditor.editing.lockWaypoints : verrouille la position des waypoints.",
+      "returns": [{"type": "boolean", "desc": "false par défaut."}]
+    },
+    "getPrefPacenoteLabelDistance": {
+      "desc": "Distance caméra à partir de laquelle l'aperçu sans sélection passe en vue d'ensemble arc-en-ciel.",
+      "returns": [{"type": "number", "desc": "Distance en mètres, bornée à 100-1500 (650 par défaut)."}]
+    },
+    "getPrefPacenoteLabelMode": {
+      "desc": "Mode d'affichage des étiquettes d'aperçu de pacenotes.",
+      "returns": [{"type": "string", "desc": "« all » ou « distance » (par défaut)."}]
+    },
+    "getPrefPacenoteLabelNearCameraCount": {
+      "desc": "Nombre de pacenotes avant et après le pivot de la caméra qui affichent leur étiquette.",
+      "returns": [{"type": "integer", "desc": "0 à 10 (3 par défaut)."}]
+    },
+    "getPrefShowAdjacentPacenoteText": {
+      "desc": "Indique si les textes d'aperçu des pacenotes précédente et suivante sont affichés.",
+      "returns": [{"type": "boolean", "desc": "true par défaut."}]
+    },
+    "getPrefShowAllPacenoteLabels": {
+      "desc": "Vrai si le mode d'étiquettes est « all ».",
+      "returns": [{"type": "boolean", "desc": "true si toutes les étiquettes sont affichées."}]
+    },
+    "getPrefShowNextPacenote": {
+      "desc": "Affiche aussi la pacenote suivante quand une pacenote est sélectionnée.",
+      "returns": [{"type": "boolean", "desc": "true par défaut."}]
+    },
+    "getPrefShowPreviousPacenote": {
+      "desc": "Affiche aussi la pacenote précédente quand une pacenote est sélectionnée.",
+      "returns": [{"type": "boolean", "desc": "true par défaut."}]
+    },
+    "getPrefShowSelectedPacenoteUtility": {
+      "desc": "Indique si la fenêtre flottante d'utilitaire de la pacenote sélectionnée est affichée.",
+      "returns": [{"type": "boolean", "desc": "false par défaut."}]
+    },
+    "getPrefUiPacenoteNoteFieldWidth": {
+      "desc": "Largeur du champ notes.note.freeform d'une pacenote.",
+      "returns": [{"type": "integer", "desc": "Largeur (300 par défaut, de 1 à 1000)."}]
+    },
+    "getPrefWaypointSnapMethod": {
+      "desc": "Méthode de recalage en Z lors du glisser d'un waypoint, avant de chercher le point de snaproad le plus proche.",
+      "returns": [{"type": "string", "desc": "Valeur valide de zSnap (zSnap.defaultMethod sinon)."}]
+    },
+    "getViewSnaproadPathOnTop": {
+      "desc": "Indique si le chemin du snaproad est dessiné au premier plan (option de vue éphémère, remise à false à la désactivation du mode).",
+      "returns": [{"type": "boolean", "desc": "Valeur courante."}]
+    },
+    "getVolatilePreferences": {
+      "desc": "Censée renvoyer les préférences volatiles ; renvoie la variable non définie volatilePreferences, donc nil (voir notes).",
+      "returns": [{"type": "nil", "desc": "Toujours nil."}]
+    },
+    "insertMode": {
+      "desc": "Active le mode d'insertion de l'onglet Pacenotes (ignoré hors de cet onglet)."
+    },
+    "isCalibrationWindowOpen": {
+      "desc": "Indique si la fenêtre de calibration est ouverte.",
+      "returns": [{"type": "boolean", "desc": "État de la fenêtre."}]
+    },
+    "isPacenotesToolsSectionExpanded": {
+      "desc": "Vrai si DevTools est ouvert et que sa section d'outils de pacenotes est dépliée.",
+      "returns": [{"type": "boolean", "desc": "État de la section."}]
+    },
+    "isToolboxOpen": {
+      "desc": "Vrai si la fenêtre RallyToolbox ou DevTools est ouverte.",
+      "returns": [{"type": "boolean", "desc": "true si l'une des deux est ouverte."}]
+    },
+    "isVisible": {
+      "desc": "Indique si la fenêtre « rallyEditor » est affichée.",
+      "returns": [{"type": "boolean", "desc": "Visibilité."}]
+    },
+    "listGhostNotebookChoices": {
+      "desc": "Liste les carnets proposés comme carnet fantôme.",
+      "returns": [{"type": "table", "desc": "Choix (liste vide si le module fantôme n'est pas prêt)."}]
+    },
+    "listNotebooks": {
+      "desc": "Liste, triés, les fichiers *.notebook.json (recherche récursive) sous le dossier des carnets d'une mission.",
+      "params": {"folder": {"type": "string|nil", "desc": "Dossier de la mission ; par défaut celui du carnet courant (erreur si aucun carnet chargé)."}},
+      "returns": [{"type": "table<integer, string>", "desc": "Chemins complets triés."}]
+    },
+    "loadForMissionEditor": {
+      "desc": "Définit la mission courante, construit la liste des voicepacks et applique le premier (ce qui charge son premier carnet) ; sinon efface le carnet.",
+      "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}}
+    },
+    "loadNotebook": {
+      "desc": "Charge un carnet existant (rallyUtil.loadNotebook), le définit comme courant, met à jour tous les onglets et recalcule les notes structurées. Journalise une erreur si le chargement échoue.",
+      "params": {"fullFilename": {"type": "string", "desc": "Chemin complet du fichier .notebook.json."}}
+    },
+    "loadOrCreateForMissionEditor": {
+      "desc": "Définit la mission courante, retire le pick de voicepack, détecte le carnet (detectNotebookToLoad) et le charge ou le crée.",
+      "params": {"missionDir": {"type": "string", "desc": "Dossier de la mission."}}
+    },
+    "loadOrCreateNotebook": {
+      "desc": "Charge le carnet ou, s'il est introuvable, en crée un nouveau (rallyUtil.createNotebook), puis met à jour les onglets et recalcule les notes structurées.",
+      "params": {"fullFilename": {"type": "string", "desc": "Chemin complet du fichier .notebook.json."}}
+    },
+    "mouseWheelZoom": {
+      "desc": "Zoom de la caméra « pacenoteOrbit » à la molette : val = 0 zoome de 0.4, val = 1.0 dézoome de 0.4. Sans effet avec une autre caméra.",
+      "params": {"val": {"type": "number", "desc": "0 ou 1.0."}}
+    },
+    "moveSelectedWaypointBackward": {
+      "desc": "Appelé directement par l'action d'entrée : demande le déplacement du waypoint sélectionné vers l'arrière (répété avec anti-rebond de 0.25 s). Seulement dans l'onglet Pacenotes.",
+      "params": {"v": {"type": "number", "desc": "0 relâché, 1 appuyé."}},
+      "internal": true
+    },
+    "moveSelectedWaypointForward": {
+      "desc": "Appelé directement par l'action d'entrée : demande le déplacement du waypoint sélectionné vers l'avant (anti-rebond de 0.25 s). Seulement dans l'onglet Pacenotes.",
+      "params": {"v": {"type": "number", "desc": "0 relâché, 1 appuyé."}},
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Appelé après un rechargement Lua avec l'état sauvegardé : restaure la mission, le pick de voicepack (les picks « custom » hérités sont ignorés), le carnet (ou le premier carnet du pick si le fichier n'existe plus) et l'état des fenêtres Toolbox/DevTools.",
+      "params": {"data": {"type": "table|nil", "desc": "Table de onSerialize."}},
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Appelé à chaque frame par l'éditeur : dessine la fenêtre (menus File, View, Tools, onglets, entrées clavier et souris, fenêtres annexes).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel."},
+        "dtSim": {"type": "number", "desc": "Delta temps de simulation."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut."}
+      },
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Appelé à l'initialisation de l'éditeur, y compris après un rechargement Lua (Ctrl+L) : réinitialise les références, crée le ghost notebook, déclare le mode d'édition notebookEditMode, enregistre la fenêtre et le menu Gameplay > Rally Editor, instancie les onglets et sélectionne Pacenotes (ou le premier onglet utile s'il n'y a pas de carnet).",
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Déclare la catégorie de préférences rallyEditor (editing, view, waypoints, ui).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "internal": true
+    },
+    "onEditorToolWindowHide": {
+      "desc": "Si la fenêtre masquée est rallyEditor, repasse en mode objectSelect.",
+      "params": {"windowName": {"type": "string", "desc": "Nom de la fenêtre."}},
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Appelé avant un rechargement Lua ; sauvegarde mission, pick de voicepack, fichier du carnet courant et état d'ouverture de RallyToolbox et DevTools.",
+      "returns": [{"type": "table", "desc": "{currentMissionDir, currentVoicepackPick, currentNotebookFname, rallyToolboxWindowOpen, devToolsWindowOpen}."}],
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook appelé à la réinitialisation d'un véhicule : transmis à DevTools s'il est ouvert.",
+      "internal": true
+    },
+    "onWindowGotFocus": {
+      "desc": "Si la fenêtre qui prend le focus est rallyEditor, active le mode d'édition notebookEditMode.",
+      "params": {"windowName": {"type": "string", "desc": "Nom de la fenêtre."}},
+      "internal": true
+    },
+    "openStageLoaderModal": {
+      "desc": "Ouvre la fenêtre modale « Open Rally Stage... »."
+    },
+    "saveNotebook": {
+      "desc": "Enregistre le carnet courant (currentPath:save()). Journalise un avertissement s'il n'y a aucun carnet chargé."
+    },
+    "selectGhostNotebook": {
+      "desc": "Sélectionne un carnet fantôme de comparaison par nom de fichier.",
+      "params": {"fname": {"type": "string", "desc": "Chemin du carnet."}},
+      "returns": [{"type": "boolean", "desc": "Résultat de la sélection ; false si le module fantôme n'est pas prêt."}]
+    },
+    "selectNextPacenote": {
+      "desc": "Sélectionne la pacenote suivante dans l'onglet Pacenotes (ignoré ailleurs)."
+    },
+    "selectNextWaypoint": {
+      "desc": "Sélectionne le waypoint suivant dans l'onglet Pacenotes (ignoré ailleurs)."
+    },
+    "selectPrevPacenote": {
+      "desc": "Sélectionne la pacenote précédente dans l'onglet Pacenotes (ignoré ailleurs)."
+    },
+    "setFreeCam": {
+      "desc": "Passe à la caméra libre de l'éditeur en conservant la position et la rotation de la caméra actuelle."
+    },
+    "setPrefLockWaypoints": {
+      "desc": "Écrit la préférence rallyEditor.editing.lockWaypoints.",
+      "params": {"val": {"type": "boolean", "desc": "true pour verrouiller."}}
+    },
+    "setVoicepackPick": {
+      "desc": "Définit le pick de voicepack actif et charge automatiquement le premier carnet candidat ; si le pick n'a aucun carnet résolvable, efface le carnet chargé.",
+      "params": {"pick": {"type": "table", "desc": "{type='voicepack', scope='global'|'mission', dirname=<dossier du voicepack>}."}}
+    },
+    "show": {
+      "desc": "Vide la sélection, affiche la fenêtre Rally Editor et active le mode d'édition notebookEditMode."
+    },
+    "showPacenotesTab": {
+      "desc": "Sélectionne l'onglet Pacenotes (sélection programmatique)."
+    },
+    "showRallyTool": {
+      "desc": "Affiche la fenêtre (ou lui donne le focus), ouvre l'onglet Pacenotes et active le mode d'édition notebookEditMode.",
+      "internal": false
+    },
+    "toggleCalibrationWindow": {
+      "desc": "Ouvre ou ferme la fenêtre de calibration."
+    },
+    "toggleCornerCalls": {
+      "desc": "Active/désactive les annonces de virages dans l'onglet Pacenotes (ignoré ailleurs)."
+    },
+    "zoomIn": {
+      "desc": "Appelé directement par l'action d'entrée : zoom avant continu (anti-rebond 0.05 s) de la caméra « pacenoteOrbit ». Sans effet avec une autre caméra.",
+      "params": {"val": {"type": "number", "desc": "0 relâché, 1 appuyé."}},
+      "internal": true
+    },
+    "zoomOut": {
+      "desc": "Appelé directement par l'action d'entrée : zoom arrière continu (anti-rebond 0.05 s) de la caméra « pacenoteOrbit ». Sans effet avec une autre caméra.",
+      "params": {"val": {"type": "number", "desc": "0 relâché, 1 appuyé."}},
+      "internal": true
+    }
+  }
+}

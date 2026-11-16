@@ -1,50 +1,50 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficSpawnGroup.lua",
-  "module": "Nœud flowgraph « Spawn Vehicle Group » (catégorie par défaut). Fait apparaître un groupe de véhicules avec core_multiSpawn.spawnGroup. Pins : group (sans groupe : groupe de trafic par défaut), quantity (-1 ou nil : valeur trafficAmount des réglages du jeu), shuffle, spawnMode (roadAhead, roadBehind, traffic, lineAhead, lineBehind, lineLeft, lineRight, lineAbove, raceGrid, raceGridAlt ; défaut road), spawnGap (15), startPos, startRot, randomColors, dontDelete ; reset supprime les véhicules créés. Sorties : flow, impulsion loaded, vehicleIds. Les véhicules sont ajoutés au module vehicle du flowgraph.",
+  "module": "Flowgraph node \"Spawn Vehicle Group\" (default category). Spawns a group of vehicles with core_multiSpawn.spawnGroup. Pins: group (without a group: default traffic group), quantity (-1 or nil: trafficAmount value from the game settings), shuffle, spawnMode (roadAhead, roadBehind, traffic, lineAhead, lineBehind, lineLeft, lineRight, lineAbove, raceGrid, raceGridAlt; default road), spawnGap (15), startPos, startRot, randomColors, dontDelete; reset deletes the created vehicles. Outputs: flow, loaded pulse, vehicleIds. The vehicles are added to the flowgraph vehicle module.",
   "notes": [
-    "Le défaut de spawnMode ('road') n'est pas dans la liste de modes proposés (déduit du code).",
-    "Machine à états self.state : 0 attente, 1 apparition en cours, 2 chargé, 3 terminé."
+    "The default of spawnMode ('road') is not in the list of offered modes (inferred from code).",
+    "State machine self.state: 0 waiting, 1 spawning in progress, 2 loaded, 3 finished."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStopped": {
-          "desc": "Appelle resetState().",
+          "desc": "Calls resetState().",
           "internal": true
         },
         "init": {
-          "desc": "Appelle resetState().",
+          "desc": "Calls resetState().",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Supprime les véhicules créés par ce nœud (scène et éditeur) puis réinitialise l'état.",
+          "desc": "Deletes the vehicles created by this node (scene and editor) then resets the state.",
           "internal": true
         },
         "onVehicleGroupSpawned": {
-          "desc": "Hook appelé quand un groupe a été créé ; si groupId correspond, enregistre les véhicules, publie vehicleIds et passe à l'état 2.",
+          "desc": "Hook called when a group has been created; if groupId matches, registers the vehicles, publishes vehicleIds and goes to state 2.",
           "internal": false,
           "params": {
             "vehIds": {
               "type": "any",
-              "desc": "table des ids de véhicules créés"
+              "desc": "table of created vehicle ids"
             },
             "groupId": {
               "type": "any",
-              "desc": "identifiant du groupe créé par core_multiSpawn"
+              "desc": "identifier of the group created by core_multiSpawn"
             }
           }
         },
         "postInit": {
-          "desc": "Définit les valeurs prédéfinies du pin spawnMode.",
+          "desc": "Defines the preset values of the spawnMode pin.",
           "internal": true
         },
         "resetState": {
-          "desc": "Remet état, groupId, liste d'ids et sortie flow à zéro.",
+          "desc": "Resets state, groupId, id list and flow output.",
           "internal": false
         },
         "work": {
-          "desc": "Au premier flux, lance spawnGroup (ou termine directement si la quantité est 0), puis émet loaded et laisse passer le flux une fois chargé.",
+          "desc": "On the first flow, launches spawnGroup (or finishes directly if the quantity is 0), then emits loaded and lets the flow through once loaded.",
           "internal": true
         }
       }

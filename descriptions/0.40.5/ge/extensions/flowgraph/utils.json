@@ -1,84 +1,84 @@
 {
   "path": "lua/ge/extensions/flowgraph/utils.lua",
-  "module": "Utilitaires du flowgraph : détection de type d'une valeur, test de compatibilité avec un type de pin, valeur par défaut par type, étiquette ImGui, et fonctions de fusion (merge) utilisées par les variables du `variableStorage` quand plusieurs nœuds écrivent la même variable dans la même frame. Il est chargé comme extension `flowgraph_utils` mais aussi par `require` depuis pin et variableStorage.",
+  "module": "Flowgraph utilities: detection of a value's type, compatibility test with a pin type, default value per type, ImGui label, and merge functions used by `variableStorage` variables when several nodes write the same variable in the same frame. It is loaded as the `flowgraph_utils` extension but also via `require` from pin and variableStorage.",
   "notes": [
-    "`getVariableType` ne reconnaît une table que par sa taille : 3 éléments = vec3, 4 = quat ; une couleur (4 composantes) est donc vue comme `quat`.",
-    "`isVariableCompatible` accepte un vecteur de 3 pour 'vec3' ou 'table', et 4 éléments pour 'quat', 'color' ou 'table'. Un `nil` ou autre type est incompatible.",
-    "Stratégies de fusion : `all` (first, last, readOnly), `number` (min, max, average, sum), `bool` (or_, and_), `vec3` (average, sum), `string` (concat, concatComma, concatSpace, concatNewline), `any` (toutes, préfixées num_, bool_, vec_, any_).",
-    "Chaque stratégie a `init(variable)`, `merge(variable, newValue)` et `finalize(variable)`, appelées par `variableStorage`.",
-    "Pour les stratégies `vec3`, `merge` garde la table de la première valeur et l'additionne en place : cela modifie la table passée par le premier appelant.",
-    "`any_concat*` sont rangées sous la clé `any_` mais s'appliquent aux chaînes."
+    "`getVariableType` recognizes a table only by its size: 3 elements = vec3, 4 = quat; a color (4 components) is therefore seen as `quat`.",
+    "`isVariableCompatible` accepts a 3-vector for 'vec3' or 'table', and 4 elements for 'quat', 'color' or 'table'. A `nil` or other type is incompatible.",
+    "Merge strategies: `all` (first, last, readOnly), `number` (min, max, average, sum), `bool` (or_, and_), `vec3` (average, sum), `string` (concat, concatComma, concatSpace, concatNewline), `any` (all of them, prefixed num_, bool_, vec_, any_).",
+    "Each strategy has `init(variable)`, `merge(variable, newValue)` and `finalize(variable)`, called by `variableStorage`.",
+    "For `vec3` strategies, `merge` keeps the first value's table and adds to it in place: this modifies the table passed by the first caller.",
+    "`any_concat*` are stored under the `any_` key but apply to strings."
   ],
   "fields": {
     "mergeFuns": {
       "type": "table<string, table>",
-      "desc": "Fonctions de fusion par catégorie : all, number, bool, vec3, string, any. Chaque entrée : {num, description, init, merge, finalize}."
+      "desc": "Merge functions by category: all, number, bool, vec3, string, any. Each entry: {num, description, init, merge, finalize}."
     },
     "sortedMergeFuns": {
       "type": "table<string, table[]>",
-      "desc": "Listes triées {name, desc, num} par catégorie (any, all, number, string, bool, vec3), pour l'affichage dans l'éditeur."
+      "desc": "Sorted lists {name, desc, num} by category (any, all, number, string, bool, vec3), for display in the editor."
     }
   },
   "functions": {
     "getVariableType": {
-      "desc": "Donne le type flowgraph d'une valeur Lua : bool, string, number, vec3 (table de 3), quat (table de 4), sinon nil.",
+      "desc": "Gives the flowgraph type of a Lua value: bool, string, number, vec3 (table of 3), quat (table of 4), otherwise nil.",
       "params": {
         "value": {
           "type": "any",
-          "desc": "Valeur à tester."
+          "desc": "Value to test."
         }
       },
       "returns": [
         {
           "type": "string|nil",
-          "desc": "Nom du type ou nil."
+          "desc": "Type name or nil."
         }
       ]
     },
     "isVariableCompatible": {
-      "desc": "Dit si une valeur peut être stockée dans un pin/variable du type `compType`.",
+      "desc": "Tells whether a value can be stored in a pin/variable of type `compType`.",
       "params": {
         "value": {
           "type": "any",
-          "desc": "Valeur."
+          "desc": "Value."
         },
         "compType": {
           "type": "string",
-          "desc": "Type visé (bool, string, number, vec3, quat, color, table)."
+          "desc": "Target type (bool, string, number, vec3, quat, color, table)."
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "true si compatible."
+          "desc": "true if compatible."
         }
       ]
     },
     "getDefaultValueForType": {
-      "desc": "Valeur par défaut d'un type : 0 (number/any), '' (string), true (bool), {0,0,0} (vec3), {0,0,0,0} (quat), {1,1,1,1} (color), {} (table). Si `typeName` est une liste, utilise le premier élément. Autre type : nil.",
+      "desc": "Default value of a type: 0 (number/any), '' (string), true (bool), {0,0,0} (vec3), {0,0,0,0} (quat), {1,1,1,1} (color), {} (table). If `typeName` is a list, uses the first element. Other type: nil.",
       "params": {
         "typeName": {
           "type": "string|table",
-          "desc": "Type ou liste de types."
+          "desc": "Type or list of types."
         }
       },
       "returns": [
         {
           "type": "any",
-          "desc": "Valeur par défaut ou nil."
+          "desc": "Default value or nil."
         }
       ]
     },
     "showLabel": {
-      "desc": "Dessine en ImGui une petite étiquette (fond rouge translucide par défaut) juste au-dessus de la ligne courante.",
+      "desc": "Draws a small ImGui label (translucent red background by default) just above the current line.",
       "params": {
         "label": {
           "type": "string",
-          "desc": "Texte."
+          "desc": "Text."
         },
         "color": {
           "type": "any",
-          "desc": "ImVec4 de fond (défaut rouge 0,4 alpha)."
+          "desc": "Background ImVec4 (default red, 0.4 alpha)."
         }
       }
     }

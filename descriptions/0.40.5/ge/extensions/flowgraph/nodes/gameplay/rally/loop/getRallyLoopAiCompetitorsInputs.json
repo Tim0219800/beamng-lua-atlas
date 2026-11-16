@@ -1,12 +1,18 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopAiCompetitorsInputs.lua",
-  "module": "Nœud flowgraph « Rally Loop AI Competitors Inputs » (catégorie once_instant, tag rally). Prépare les entrées du nœud Rally AI Competitors Leaderboard à partir de la boucle rally : playerTimes (temps bruts des spéciales en secondes, sans pénalités, tirés de l'event log ; nil à partir du premier temps manquant), silverTimes (temps de référence configurés des missions rallyStage liées, jusqu'à 4 via stage1..4_rallyStage), stageLabels (libellés alignés) et playerTotalTimeSec (total officiel de la boucle = temps + pénalités). Pins flow en entrée et sortie (chainFlow).",
-  "notes": ["Si une spéciale n'a pas de temps de référence utilisable (AiCompetitors.getReferenceTime), un avertissement est loggé et la liste des temps de référence est vide.", "Si le nombre de libellés ne correspond pas au nombre de temps de référence, les libellés restent vides (avertissement)."],
+  "module": "Flowgraph node \"Rally Loop AI Competitors Inputs\" (category once_instant, tag rally). Prepares the inputs of the Rally AI Competitors Leaderboard node from the rally loop: playerTimes (raw stage times in seconds, without penalties, taken from the event log; nil from the first missing time), silverTimes (configured reference times of the linked rallyStage missions, up to 4 via stage1..4_rallyStage), stageLabels (aligned labels) and playerTotalTimeSec (official total of the loop = time + penalties). Flow pins as input and output (chainFlow).",
+  "notes": [
+    "If a stage has no usable reference time (AiCompetitors.getReferenceTime), a warning is logged and the list of reference times is empty.",
+    "If the number of labels does not match the number of reference times, the labels stay empty (warning)."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Initialise les sorties à vide puis remplit silverTimes, stageLabels, playerTotalTimeSec et playerTimes depuis le gestionnaire de boucle rally.", "internal": true}
+        "workOnce": {
+          "desc": "Initializes the outputs to empty then fills silverTimes, stageLabels, playerTotalTimeSec and playerTimes from the rally loop manager.",
+          "internal": true
+        }
       }
     }
   }

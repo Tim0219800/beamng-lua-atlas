@@ -1,59 +1,59 @@
 # `scenario_finishRaceGoal`
 
-*Fichier : `lua/ge/extensions/scenario/finishRaceGoal.lua` · VM : Game Engine (GE) · 87 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/finishRaceGoal.lua` · VM: Game Engine (GE) · 87 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `scenario_finishRaceGoal` : `extensions.load("scenario_finishRaceGoal")`, puis la globale `scenario_finishRaceGoal`
+**Access:** extension `scenario_finishRaceGoal`: `extensions.load("scenario_finishRaceGoal")`, then the global `scenario_finishRaceGoal`
 
-Objectif de scénario « finishRace » (goals.vehicles avec id = 'finishRace') : le véhicule doit terminer la course. Il écoute le dernier waypoint atteint, puis, à l'état 'onRaceResult', termine le scénario en réussite ou en échec.
+"finishRace" scenario goal (goals.vehicles with id = 'finishRace'): the vehicle must finish the race. It listens for the last waypoint reached, then, on the 'onRaceResult' state, ends the scenario in success or failure.
 
-## Exemple
+## Example
 
 ```lua
--- JSON du scénario :
+-- scenario JSON:
 -- {"id":"finishRace", "value":{"mustWin":true, "passed":"Victoire !", "failed":"Perdu"}}
 ```
 
-## Remarques
+## Notes
 
-- Options de instance.value : mustWin (boolean : le véhicule doit être le premier à franchir le dernier waypoint), passed et failed (messages finaux).
-- Sur 'onRaceWaypointReached', quand stateData.next est nil (dernier waypoint), le résultat est 'passed' pour le véhicule stateData.vehicleId et 'failed' pour les autres. Avec mustWin, seul le premier arrivé est évalué (le résultat n'est plus écrasé).
-- Sur 'onRaceResult', chaque instance sans résultat ou en échec appelle failedGoal (message par défaut anglais 'You failed to finish the race.'), sinon passedGoal ; chacun appelle scenario_scenarios.finish.
+- instance.value options: mustWin (boolean: the vehicle must be the first to cross the last waypoint), passed and failed (final messages).
+- On 'onRaceWaypointReached', when stateData.next is nil (last waypoint), the result is 'passed' for vehicle stateData.vehicleId and 'failed' for the others. With mustWin, only the first to arrive is evaluated (the result is no longer overwritten).
+- On 'onRaceResult', each instance with no result or a failed one calls failedGoal (default English message 'You failed to finish the race.'), otherwise passedGoal; each calls scenario_scenarios.finish.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `scenario_finishRaceGoal.init(scenario)` | Réinitialise instances et ajoute chaque goal id='finishRace' en remettant status.result à nil. *(interne)* | 66 |
-| `scenario_finishRaceGoal.processState(scenario, state, stateData)` | Appelé à chaque état du scénario. Traite 'onRaceWaypointReached' (stateData.next, stateData.vehicleId) et 'onRaceResult'. *(interne)* | 31 |
-| `scenario_finishRaceGoal.updateFinalStatus(scenario)` | Envoie le résultat de chaque instance à statistics_statistics.setGoalProgress en fin de scénario. *(interne)* | 76 |
+| `scenario_finishRaceGoal.init(scenario)` | Resets instances and adds each goal id='finishRace', resetting status.result to nil. *(internal)* | 66 |
+| `scenario_finishRaceGoal.processState(scenario, state, stateData)` | Called on every scenario state. Handles 'onRaceWaypointReached' (stateData.next, stateData.vehicleId) and 'onRaceResult'. *(internal)* | 31 |
+| `scenario_finishRaceGoal.updateFinalStatus(scenario)` | Sends each instance's result to statistics_statistics.setGoalProgress at the end of the scenario. *(internal)* | 76 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `scenario_finishRaceGoal.init(scenario)`
 
-Réinitialise instances et ajoute chaque goal id='finishRace' en remettant status.result à nil.
+Resets instances and adds each goal id='finishRace', resetting status.result to nil.
 
-- `scenario` (*table*) : Scénario courant.
+- `scenario` (*table*) : Current scenario.
 
 #### `scenario_finishRaceGoal.processState(scenario, state, stateData)`
 
-Appelé à chaque état du scénario. Traite 'onRaceWaypointReached' (stateData.next, stateData.vehicleId) et 'onRaceResult'.
+Called on every scenario state. Handles 'onRaceWaypointReached' (stateData.next, stateData.vehicleId) and 'onRaceResult'.
 
-- `scenario` (*table*) : Scénario courant.
-- `state` (*string*) : Nom de l'état.
-- `stateData` (*table*) : Pour 'onRaceWaypointReached' : next (prochain waypoint, nil si dernier) et vehicleId.
+- `scenario` (*table*) : Current scenario.
+- `state` (*string*) : State name.
+- `stateData` (*table*) : For 'onRaceWaypointReached': next (next waypoint, nil if last) and vehicleId.
 
 #### `scenario_finishRaceGoal.updateFinalStatus(scenario)`
 
-Envoie le résultat de chaque instance à statistics_statistics.setGoalProgress en fin de scénario.
+Sends each instance's result to statistics_statistics.setGoalProgress at the end of the scenario.
 
-- `scenario` (*table*) : Scénario courant.
+- `scenario` (*table*) : Current scenario.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `instances` | table | Liste des goals 'finishRace', remplie par init(). |
+| `instances` | table | List of 'finishRace' goals, filled by init(). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/finishRaceGoal.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/finishRaceGoal.lua`.*

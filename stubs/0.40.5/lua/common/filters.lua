@@ -2,596 +2,596 @@
 -- tim19Atlas stub generated from lua/common/filters.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Moyenne exponentielle à pas fixe.
+--- Fixed-step exponential average.
 ---@class filters_exponentialSmoothing
 local filters_exponentialSmoothing = {}
 
---- Un pas de lissage vers sample avec le coefficient du constructeur.
----Source : lua/common/filters.lua:513
----@param sample number échantillon
----@return number  valeur filtrée
+--- One smoothing step toward sample with the constructor's coefficient.
+---Source: lua/common/filters.lua:513
+---@param sample number sample
+---@return number  filtered value
 function filters_exponentialSmoothing:get(sample) end
 
---- Un pas avec une fenêtre (en échantillons, min 2) fournie à l'appel.
----Source : lua/common/filters.lua:520
----@param sample number échantillon
----@param window number fenêtre en échantillons
----@return number  valeur filtrée
+--- One step with a window (in samples, min 2) provided in the call.
+---Source: lua/common/filters.lua:520
+---@param sample number sample
+---@param window number window in samples
+---@return number  filtered value
 function filters_exponentialSmoothing:getWindow(sample, window) end
 
---- Remet l'état à value, ou à la valeur de départ.
----Source : lua/common/filters.lua:535
----@param value number|nil valeur de reset
+--- Resets the state to value, or to the start value.
+---Source: lua/common/filters.lua:535
+---@param value number|nil reset value
 function filters_exponentialSmoothing:reset(value) end
 
---- Force la valeur.
----Source : lua/common/filters.lua:531
----@param value number valeur
+--- Forces the value.
+---Source: lua/common/filters.lua:531
+---@param value number value
 function filters_exponentialSmoothing:set(value) end
 
---- Valeur courante.
----Source : lua/common/filters.lua:527
----@return number  état
+--- Current value.
+---Source: lua/common/filters.lua:527
+---@return number  state
 function filters_exponentialSmoothing:value() end
 
---- Moyenne exponentielle avec compensation de tendance.
+--- Exponential average with trend compensation.
 ---@class filters_exponentialSmoothingT
 local filters_exponentialSmoothingT = {}
 
---- Un pas de lissage (fenêtres du constructeur).
----Source : lua/common/filters.lua:549
----@param sample number échantillon
----@return number  valeur filtrée
+--- One smoothing step (constructor windows).
+---Source: lua/common/filters.lua:549
+---@param sample number sample
+---@return number  filtered value
 function filters_exponentialSmoothingT:get(sample) end
 
---- Un pas avec fenêtres fournies à l'appel.
----Source : lua/common/filters.lua:567
----@param sample number échantillon
----@param window number fenêtre principale
----@param window2 number|nil fenêtre de tendance, défaut infinie
----@return number  valeur filtrée
+--- One step with windows provided in the call.
+---Source: lua/common/filters.lua:567
+---@param sample number sample
+---@param window number main window
+---@param window2 number|nil trend window, default infinite
+---@return number  filtered value
 function filters_exponentialSmoothingT:getWindow(sample, window, window2) end
 
---- Remet état à value (ou valeur de départ) et efface la tendance.
----Source : lua/common/filters.lua:593
----@param value number|nil valeur de reset
+--- Resets the state to value (or start value) and clears the trend.
+---Source: lua/common/filters.lua:593
+---@param value number|nil reset value
 function filters_exponentialSmoothingT:reset(value) end
 
---- Force la valeur (n'efface pas la tendance).
----Source : lua/common/filters.lua:589
----@param value number valeur
+--- Forces the value (does not clear the trend).
+---Source: lua/common/filters.lua:589
+---@param value number value
 function filters_exponentialSmoothingT:set(value) end
 
---- Valeur courante.
----Source : lua/common/filters.lua:585
----@return number  état
+--- Current value.
+---Source: lua/common/filters.lua:585
+---@return number  state
 function filters_exponentialSmoothingT:value() end
 
---- Estime la période, l'amplitude et le biais DC d'un signal oscillant en suivant les pics et creux.
+--- Estimates the period, amplitude and DC bias of an oscillating signal by tracking peaks and troughs.
 ---@class filters_freqDetector
 local filters_freqDetector = {}
 
---- Met à jour avec un échantillon. Renvoie période, amplitude de crête, temps depuis le dernier pic précédent (prevPeakDt) et biais DC. Le signal approché est cos(peakDt*2*pi/(période+1e-30))*ampl + bias.
----Source : lua/common/filters.lua:101
----@param sample number échantillon
----@param dt number pas de temps (s)
----@return number  période (s)
----@return number  amplitude de crête
+--- Updates with a sample. Returns period, peak amplitude, time since the previous peak (prevPeakDt) and DC bias. The approximated signal is cos(peakDt*2*pi/(period+1e-30))*ampl + bias.
+---Source: lua/common/filters.lua:101
+---@param sample number sample
+---@param dt number time step (s)
+---@return number  period (s)
+---@return number  peak amplitude
 ---@return number  prevPeakDt
----@return number  biais DC
+---@return number  DC bias
 function filters_freqDetector:get(sample, dt) end
 
---- Remet à zéro pics, creux, période, amplitude et biais.
----Source : lua/common/filters.lua:141
+--- Resets peaks, troughs, period, amplitude and bias to zero.
+---Source: lua/common/filters.lua:141
 function filters_freqDetector:reset() end
 
---- Renvoie la dernière estimation (période, amplitude, prevPeakDt, biais) en avançant les chronomètres de dt (0 par défaut).
----Source : lua/common/filters.lua:146
----@param dt number|nil temps écoulé depuis le dernier get, défaut 0
----@return number  période
+--- Returns the latest estimate (period, amplitude, prevPeakDt, bias) while advancing the timers by dt (0 by default).
+---Source: lua/common/filters.lua:146
+---@param dt number|nil time elapsed since the last get, default 0
+---@return number  period
 ---@return number  amplitude
 ---@return number  prevPeakDt
----@return number  biais
+---@return number  bias
 function filters_freqDetector:value(dt) end
 
---- Mesure l'amplitude d'une fréquence précise dans un signal (algorithme de Goertzel).
+--- Measures the amplitude of a specific frequency in a signal (Goertzel algorithm).
 ---@class filters_freqExists
 local filters_freqExists = {}
 
---- Ajoute un échantillon au lot en cours.
----Source : lua/common/filters.lua:192
----@param sample number échantillon
+--- Adds a sample to the current batch.
+---Source: lua/common/filters.lua:192
+---@param sample number sample
 function filters_freqExists:bufferAdd(sample) end
 
---- Termine le lot et renvoie l'amplitude de la fréquence.
----Source : lua/common/filters.lua:198
+--- Ends the batch and returns the amplitude of the frequency.
+---Source: lua/common/filters.lua:198
 ---@return number  amplitude
 function filters_freqExists:bufferEnd() end
 
---- Démarre un traitement par lot (buffer) pour la fréquence freq à pas dt. Suivre de bufferAdd pour chaque échantillon puis bufferEnd.
----Source : lua/common/filters.lua:188
----@param dt number pas de temps (s)
----@param freq number fréquence cible (Hz)
+--- Starts batch processing (buffer) for frequency freq at step dt. Follow with bufferAdd for each sample then bufferEnd.
+---Source: lua/common/filters.lua:188
+---@param dt number time step (s)
+---@param freq number target frequency (Hz)
 function filters_freqExists:bufferStart(dt, freq) end
 
---- Mode par cycles : accumule des échantillons et, tous les cycleCount cycles de freq, met à jour et renvoie l'amplitude (sinon renvoie la dernière amplitude). Plus de cycles = plus précis mais plus de latence.
----Source : lua/common/filters.lua:163
----@param sample number échantillon
----@param dt number pas de temps (s)
----@param freq number fréquence cible (Hz)
----@param cycleCount number|nil nombre de cycles par mesure, défaut 1
----@return number  amplitude de freq
+--- Cycle mode: accumulates samples and, every cycleCount cycles of freq, updates and returns the amplitude (otherwise returns the last amplitude). More cycles = more accurate but more latency.
+---Source: lua/common/filters.lua:163
+---@param sample number sample
+---@param dt number time step (s)
+---@param freq number target frequency (Hz)
+---@param cycleCount number|nil number of cycles per measurement, default 1
+---@return number  amplitude of freq
 function filters_freqExists:get(sample, dt, freq, cycleCount) end
 
---- Mode glissant par échantillon : renvoie l'amplitude à chaque appel ; renvoie 0 si freq*dt >= 0.5 (au-delà de Nyquist). winCoef plus grand = plus précis mais plus lent.
----Source : lua/common/filters.lua:177
----@param sample number échantillon
----@param dt number pas de temps (s)
----@param freq number fréquence cible (Hz)
----@param winCoef number|nil coefficient de fenêtre, défaut 10
+--- Per-sample sliding mode: returns the amplitude on each call; returns 0 if freq*dt >= 0.5 (beyond Nyquist). Larger winCoef = more accurate but slower.
+---Source: lua/common/filters.lua:177
+---@param sample number sample
+---@param dt number time step (s)
+---@param freq number target frequency (Hz)
+---@param winCoef number|nil window coefficient, default 10
 ---@return number  amplitude
 function filters_freqExists:getS(sample, dt, freq, winCoef) end
 
---- Remet l'état à zéro.
----Source : lua/common/filters.lua:204
+--- Resets the state to zero.
+---Source: lua/common/filters.lua:204
 function filters_freqExists:reset() end
 
---- Filtre du premier ordre (état : state, state2, x). Toutes les méthodes prennent (sample, dt, ...) et renvoient la valeur filtrée. Ne mélanger qu'un seul type de filtre par objet (états partagés).
+--- First-order filter (state: state, state2, x). All methods take (sample, dt, ...) and return the filtered value. Mix only one type of filter per object (shared states).
 ---@class filters_freqFilter1
 local filters_freqFilter1 = {}
 
---- Passe-bande (passe-haut à lowFreq puis passe-bas à highFreq).
----Source : lua/common/filters.lua:53
----@param sample number échantillon
----@param dt number pas de temps (s)
----@param lowFreq number fréquence basse (Hz)
----@param highFreq number fréquence haute (Hz)
----@return number  sortie filtrée
+--- Band-pass (high-pass at lowFreq then low-pass at highFreq).
+---Source: lua/common/filters.lua:53
+---@param sample number sample
+---@param dt number time step (s)
+---@param lowFreq number low frequency (Hz)
+---@param highFreq number high frequency (Hz)
+---@return number  filtered output
 function filters_freqFilter1:getBandPassFreq(sample, dt, lowFreq, highFreq) end
 
---- Passe-bande avec périodes.
----Source : lua/common/filters.lua:62
----@param sample number échantillon
----@param dt number pas de temps (s)
----@param lowPeriod number période basse
----@param highPeriod number période haute
----@return number  sortie filtrée
+--- Band-pass with periods.
+---Source: lua/common/filters.lua:62
+---@param sample number sample
+---@param dt number time step (s)
+---@param lowPeriod number low period
+---@param highPeriod number high period
+---@return number  filtered output
 function filters_freqFilter1:getBandPassPeriod(sample, dt, lowPeriod, highPeriod) end
 
---- Coupe-bande (somme d'un passe-haut à highFreq et d'un passe-bas à lowFreq).
----Source : lua/common/filters.lua:70
----@param sample number échantillon
----@param dt number pas de temps (s)
----@param lowFreq number fréquence basse (Hz)
----@param highFreq number fréquence haute (Hz)
----@return number  sortie filtrée
+--- Band-stop (sum of a high-pass at highFreq and a low-pass at lowFreq).
+---Source: lua/common/filters.lua:70
+---@param sample number sample
+---@param dt number time step (s)
+---@param lowFreq number low frequency (Hz)
+---@param highFreq number high frequency (Hz)
+---@return number  filtered output
 function filters_freqFilter1:getBandStopFreq(sample, dt, lowFreq, highFreq) end
 
---- Coupe-bande avec périodes.
----Source : lua/common/filters.lua:79
----@param sample number échantillon
----@param dt number pas de temps (s)
----@param lowPeriod number période basse
----@param highPeriod number période haute
----@return number  sortie filtrée
+--- Band-stop with periods.
+---Source: lua/common/filters.lua:79
+---@param sample number sample
+---@param dt number time step (s)
+---@param lowPeriod number low period
+---@param highPeriod number high period
+---@return number  filtered output
 function filters_freqFilter1:getBandStopPeriod(sample, dt, lowPeriod, highPeriod) end
 
---- Passe-haut, coupure en Hz.
----Source : lua/common/filters.lua:41
----@param sample number échantillon
----@param dt number pas de temps (s)
----@param cutOffFreq number fréquence de coupure (Hz)
----@return number  sortie filtrée
+--- High-pass, cutoff in Hz.
+---Source: lua/common/filters.lua:41
+---@param sample number sample
+---@param dt number time step (s)
+---@param cutOffFreq number cutoff frequency (Hz)
+---@return number  filtered output
 function filters_freqFilter1:getHighPassFreq(sample, dt, cutOffFreq) end
 
---- Passe-haut, coupure en période.
----Source : lua/common/filters.lua:47
----@param sample number échantillon
----@param dt number pas de temps (s)
----@param cutOffPeriod number période de coupure (s)
----@return number  sortie filtrée
+--- High-pass, cutoff as a period.
+---Source: lua/common/filters.lua:47
+---@param sample number sample
+---@param dt number time step (s)
+---@param cutOffPeriod number cutoff period (s)
+---@return number  filtered output
 function filters_freqFilter1:getHighPassPeriod(sample, dt, cutOffPeriod) end
 
---- Passe-bas, coupure en Hz.
----Source : lua/common/filters.lua:27
----@param sample number échantillon
----@param dt number pas de temps (s)
----@param cutOffFreq number fréquence de coupure (Hz)
----@return number  sortie filtrée
+--- Low-pass, cutoff in Hz.
+---Source: lua/common/filters.lua:27
+---@param sample number sample
+---@param dt number time step (s)
+---@param cutOffFreq number cutoff frequency (Hz)
+---@return number  filtered output
 function filters_freqFilter1:getLowPassFreq(sample, dt, cutOffFreq) end
 
---- Passe-bas, coupure donnée par une période (constante de temps 2*pi*... voir code : pdt = 2*pi*dt, filtre pdt/(pdt+période)).
----Source : lua/common/filters.lua:34
----@param sample number échantillon
----@param dt number pas de temps (s)
----@param cutOffPeriod number période de coupure (s)
----@return number  sortie filtrée
+--- Low-pass, cutoff given by a period (time constant 2*pi*... see code: pdt = 2*pi*dt, filter pdt/(pdt+period)).
+---Source: lua/common/filters.lua:34
+---@param sample number sample
+---@param dt number time step (s)
+---@param cutOffPeriod number cutoff period (s)
+---@return number  filtered output
 function filters_freqFilter1:getLowPassPeriod(sample, dt, cutOffPeriod) end
 
---- Régression linéaire récursive pondérée exponentiellement. Champs publics : weight, bias, plus bornes weightMin/Max et biasMin/Max.
+--- Exponentially weighted recursive linear regression. Public fields: weight, bias, plus bounds weightMin/Max and biasMin/Max.
 ---@class filters_lineFitting
 local filters_lineFitting = {}
 
---- Mise à jour avec pas de temps (fenêtre en secondes). Renvoie la pente et l'ordonnée.
----Source : lua/common/filters.lua:645
----@param x number entrée x
----@param y number sortie y
----@param dt number pas de temps (s)
+--- Update with a time step (window in seconds). Returns the slope and intercept.
+---Source: lua/common/filters.lua:645
+---@param x number input x
+---@param y number output y
+---@param dt number time step (s)
 ---@return number  weight
 ---@return number  bias
 function filters_lineFitting:get(x, y, dt) end
 
---- Mise à jour par échantillon (fenêtre en échantillons). Renvoie la pente et l'ordonnée estimées.
----Source : lua/common/filters.lua:621
----@param x number entrée x
----@param y number sortie y
----@return number  weight (pente)
----@return number  bias (ordonnée à l'origine)
+--- Per-sample update (window in samples). Returns the estimated slope and intercept.
+---Source: lua/common/filters.lua:621
+---@param x number input x
+---@param y number output y
+---@return number  weight (slope)
+---@return number  bias (intercept)
 function filters_lineFitting:getS(x, y) end
 
---- x estimé pour y (inverse de la droite, garde contre pente nulle).
----Source : lua/common/filters.lua:678
+--- Estimated x for y (inverse of the line, guards against a zero slope).
+---Source: lua/common/filters.lua:678
 ---@param y number y
 ---@return number  x
 function filters_lineFitting:getX(y) end
 
---- y estimé pour x : weight*x + bias.
----Source : lua/common/filters.lua:674
+--- Estimated y for x: weight*x + bias.
+---Source: lua/common/filters.lua:674
 ---@param x number x
 ---@return number  y
 function filters_lineFitting:getY(x) end
 
---- Remet pente, ordonnée et matrice de covariance à l'état initial.
----Source : lua/common/filters.lua:688
+--- Resets slope, intercept and covariance matrix to the initial state.
+---Source: lua/common/filters.lua:688
 function filters_lineFitting:reset() end
 
---- Modifie fenêtre (decay), pente, ordonnée et bornes (les arguments nil gardent la valeur actuelle).
----Source : lua/common/filters.lua:682
----@param window number|nil nouvelle fenêtre (échantillons)
----@param weight number|nil pente
----@param bias number|nil ordonnée
----@param weightMin number|nil borne basse pente
----@param weightMax number|nil borne haute pente
----@param biasMin number|nil borne basse ordonnée
----@param biasMax number|nil borne haute ordonnée
+--- Changes window (decay), slope, intercept and bounds (nil arguments keep the current value).
+---Source: lua/common/filters.lua:682
+---@param window number|nil new window (samples)
+---@param weight number|nil slope
+---@param bias number|nil intercept
+---@param weightMin number|nil slope lower bound
+---@param weightMax number|nil slope upper bound
+---@param biasMin number|nil intercept lower bound
+---@param biasMax number|nil intercept upper bound
 function filters_lineFitting:set(window, weight, bias, weightMin, weightMax, biasMin, biasMax) end
 
---- Pente et ordonnée courantes.
----Source : lua/common/filters.lua:670
+--- Current slope and intercept.
+---Source: lua/common/filters.lua:670
 ---@return number  weight
 ---@return number  bias
 function filters_lineFitting:value() end
 
---- Lissage linéaire à pas de temps fixe fourni au constructeur.
+--- Linear smoothing with a fixed time step given to the constructor.
 ---@class filters_linearSmoothing
 local filters_linearSmoothing = {}
 
---- Avance d'un pas vers sample (pas d'argument dt).
----Source : lua/common/filters.lua:469
----@param sample number consigne
----@return number  valeur filtrée
+--- Advances one step toward sample (no dt argument).
+---Source: lua/common/filters.lua:469
+---@param sample number setpoint
+---@return number  filtered value
 function filters_linearSmoothing:get(sample) end
 
---- Remet l'état à 0.
----Source : lua/common/filters.lua:481
+--- Resets the state to 0.
+---Source: lua/common/filters.lua:481
 function filters_linearSmoothing:reset() end
 
---- Force la valeur.
----Source : lua/common/filters.lua:477
----@param v number valeur
+--- Forces the value.
+---Source: lua/common/filters.lua:477
+---@param v number value
 function filters_linearSmoothing:set(v) end
 
---- Filtre de contournement (aucun lissage).
+--- Bypass filter (no smoothing).
 ---@class filters_nopSmoothing
 local filters_nopSmoothing = {}
 
---- Renvoie sample tel quel.
----Source : lua/common/filters.lua:493
----@param sample number valeur
+--- Returns sample as is.
+---Source: lua/common/filters.lua:493
+---@param sample number value
 ---@return number  sample
 function filters_nopSmoothing:get(sample) end
 
---- Ne fait rien.
----Source : lua/common/filters.lua:500
+--- Does nothing.
+---Source: lua/common/filters.lua:500
 function filters_nopSmoothing:reset() end
 
---- Ne fait rien.
----Source : lua/common/filters.lua:497
+--- Does nothing.
+---Source: lua/common/filters.lua:497
 function filters_nopSmoothing:set() end
 
---- Lissage en courbe en S avec limitation de vitesse (taux) et d'accélération.
+--- S-curve smoothing with speed (rate) and acceleration limiting.
 ---@class filters_temporalSigmoidSmoothing
 local filters_temporalSigmoidSmoothing = {}
 
---- Avance d'un pas vers sample. La vitesse maximale est celle du constructeur (inRate / outRate selon que la valeur s'éloigne de 0).
----Source : lua/common/filters.lua:251
----@param sample number consigne
----@param dt number pas de temps (s)
----@return number  valeur filtrée
+--- Advances one step toward sample. The max speed is that of the constructor (inRate / outRate depending on whether the value moves away from 0).
+---Source: lua/common/filters.lua:251
+---@param sample number setpoint
+---@param dt number time step (s)
+---@return number  filtered value
 function filters_temporalSigmoidSmoothing:get(sample, dt) end
 
---- Comme get avec vitesse max et accélérations fournies (stopAccel défaut startAccel).
----Source : lua/common/filters.lua:273
----@param sample number consigne
----@param dt number pas de temps (s)
----@param ratelimit number vitesse maximale
----@param startAccel number accélération de départ
----@param stopAccel number|nil décélération d'arrivée
----@return number  valeur filtrée
+--- Like get with the given max speed and accelerations (stopAccel default startAccel).
+---Source: lua/common/filters.lua:273
+---@param sample number setpoint
+---@param dt number time step (s)
+---@param ratelimit number max speed
+---@param startAccel number start acceleration
+---@param stopAccel number|nil arrival deceleration
+---@return number  filtered value
 function filters_temporalSigmoidSmoothing:getWithRateAccel(sample, dt, ratelimit, startAccel, stopAccel) end
 
---- Remet état et vitesse à 0 (pas à la valeur initiale du constructeur).
----Source : lua/common/filters.lua:298
+--- Resets state and velocity to 0 (not to the constructor's initial value).
+---Source: lua/common/filters.lua:298
 function filters_temporalSigmoidSmoothing:reset() end
 
---- Force la valeur et annule la vitesse.
----Source : lua/common/filters.lua:293
----@param sample number valeur
+--- Forces the value and cancels the velocity.
+---Source: lua/common/filters.lua:293
+---@param sample number value
 function filters_temporalSigmoidSmoothing:set(sample) end
 
---- Valeur courante.
----Source : lua/common/filters.lua:303
----@return number  état
+--- Current value.
+---Source: lua/common/filters.lua:303
+---@return number  state
 function filters_temporalSigmoidSmoothing:value() end
 
---- Lissage linéaire dépendant du temps (vitesse bornée). Alias : getUncapped = get, getWithRateUncapped = getWithRate.
+--- Time-dependent linear smoothing (bounded speed). Aliases: getUncapped = get, getWithRateUncapped = getWithRate.
 ---@class filters_temporalSmoothing
 local filters_temporalSmoothing = {}
 
---- Avance d'un pas vers sample à la vitesse (unités/s) inRate/outRate ; ne dépasse jamais la consigne.
----Source : lua/common/filters.lua:418
----@param sample number consigne
----@param dt number pas de temps (s)
----@return number  valeur filtrée
+--- Advances one step toward sample at speed (units/s) inRate/outRate; never overshoots the setpoint.
+---Source: lua/common/filters.lua:418
+---@param sample number setpoint
+---@param dt number time step (s)
+---@return number  filtered value
 function filters_temporalSmoothing:get(sample, dt) end
 
---- getUncapped puis borne la sortie à [-1, 1].
----Source : lua/common/filters.lua:426
----@param sample number consigne
----@param dt number pas de temps (s)
----@return number  valeur dans [-1,1]
+--- getUncapped then bounds the output to [-1, 1].
+---Source: lua/common/filters.lua:426
+---@param sample number setpoint
+---@param dt number time step (s)
+---@return number  value in [-1,1]
 function filters_temporalSmoothing:getCapped(sample, dt) end
 
---- Comme get mais avec autocentrage : si sample == 0 la vitesse est autoCenterRate. Devient getUncapped quand autoCenterRate ~= inRate.
----Source : lua/common/filters.lua:403
----@param sample number consigne
----@param dt number pas de temps (s)
----@return number  valeur filtrée
+--- Like get but with auto-centering: if sample == 0 the speed is autoCenterRate. Becomes getUncapped when autoCenterRate ~= inRate.
+---Source: lua/common/filters.lua:403
+---@param sample number setpoint
+---@param dt number time step (s)
+---@return number  filtered value
 function filters_temporalSmoothing:getUncappedAutoCenter(sample, dt) end
 
---- Comme get avec une vitesse fournie.
----Source : lua/common/filters.lua:430
----@param sample number consigne
----@param dt number pas de temps (s)
----@param rate number vitesse (unités/s)
----@return number  valeur filtrée
+--- Like get with a given speed.
+---Source: lua/common/filters.lua:430
+---@param sample number setpoint
+---@param dt number time step (s)
+---@param rate number speed (units/s)
+---@return number  filtered value
 function filters_temporalSmoothing:getWithRate(sample, dt, rate) end
 
---- getWithRate borné à [-1, 1].
----Source : lua/common/filters.lua:438
----@param sample number consigne
----@param dt number pas de temps (s)
----@param rate number vitesse (unités/s)
----@return number  valeur dans [-1,1]
+--- getWithRate bounded to [-1, 1].
+---Source: lua/common/filters.lua:438
+---@param sample number setpoint
+---@param dt number time step (s)
+---@param rate number speed (units/s)
+---@return number  value in [-1,1]
 function filters_temporalSmoothing:getWithRateCapped(sample, dt, rate) end
 
---- Remet l'état à startingValue du constructeur.
----Source : lua/common/filters.lua:445
+--- Resets the state to the constructor's startingValue.
+---Source: lua/common/filters.lua:445
 function filters_temporalSmoothing:reset() end
 
---- Force la valeur.
----Source : lua/common/filters.lua:453
----@param v number valeur
+--- Forces the value.
+---Source: lua/common/filters.lua:453
+---@param v number value
 function filters_temporalSmoothing:set(v) end
 
---- Valeur courante.
----Source : lua/common/filters.lua:449
----@return number  état
+--- Current value.
+---Source: lua/common/filters.lua:449
+---@return number  state
 function filters_temporalSmoothing:value() end
 
---- Lissage exponentiel avec vitesse minimale linéaire.
+--- Exponential smoothing with a linear minimum speed.
 ---@class filters_temporalSmoothingHybrid
 local filters_temporalSmoothingHybrid = {}
 
---- Avance d'un pas vers sample (taux choisi selon le sens, voir notes).
----Source : lua/common/filters.lua:317
----@param sample number consigne
----@param dt number pas de temps (s)
----@return number  valeur filtrée
+--- Advances one step toward sample (rate chosen according to direction, see notes).
+---Source: lua/common/filters.lua:317
+---@param sample number setpoint
+---@param dt number time step (s)
+---@return number  filtered value
 function filters_temporalSmoothingHybrid:get(sample, dt) end
 
---- Comme get avec taux et vitesse linéaire fournis.
----Source : lua/common/filters.lua:326
----@param sample number consigne
----@param dt number pas de temps (s)
----@param rate number taux exponentiel (1/s)
----@param linearRate number|nil vitesse minimale, défaut 0
----@return number  valeur filtrée
+--- Like get with the given rate and linear speed.
+---Source: lua/common/filters.lua:326
+---@param sample number setpoint
+---@param dt number time step (s)
+---@param rate number exponential rate (1/s)
+---@param linearRate number|nil minimum speed, default 0
+---@return number  filtered value
 function filters_temporalSmoothingHybrid:getWithRate(sample, dt, rate, linearRate) end
 
---- Met l'état à 0 (pas à startingValue).
----Source : lua/common/filters.lua:343
+--- Sets the state to 0 (not to startingValue).
+---Source: lua/common/filters.lua:343
 function filters_temporalSmoothingHybrid:reset() end
 
---- Force la valeur.
----Source : lua/common/filters.lua:335
----@param sample number valeur
+--- Forces the value.
+---Source: lua/common/filters.lua:335
+---@param sample number value
 function filters_temporalSmoothingHybrid:set(sample) end
 
---- Valeur courante.
----Source : lua/common/filters.lua:339
----@return number  état
+--- Current value.
+---Source: lua/common/filters.lua:339
+---@return number  state
 function filters_temporalSmoothingHybrid:value() end
 
---- Lissage exponentiel dépendant du temps.
+--- Time-dependent exponential smoothing.
 ---@class filters_temporalSmoothingNonLinear
 local filters_temporalSmoothingNonLinear = {}
 
---- Avance d'un pas vers sample.
----Source : lua/common/filters.lua:357
----@param sample number consigne
----@param dt number pas de temps (s)
----@return number  valeur filtrée
+--- Advances one step toward sample.
+---Source: lua/common/filters.lua:357
+---@param sample number setpoint
+---@param dt number time step (s)
+---@return number  filtered value
 function filters_temporalSmoothingNonLinear:get(sample, dt) end
 
---- Comme get avec taux fourni.
----Source : lua/common/filters.lua:366
----@param sample number consigne
----@param dt number pas de temps (s)
----@param rate number taux (1/s)
----@return number  valeur filtrée
+--- Like get with the given rate.
+---Source: lua/common/filters.lua:366
+---@param sample number setpoint
+---@param dt number time step (s)
+---@param rate number rate (1/s)
+---@return number  filtered value
 function filters_temporalSmoothingNonLinear:getWithRate(sample, dt, rate) end
 
---- Met l'état à 0.
----Source : lua/common/filters.lua:382
+--- Sets the state to 0.
+---Source: lua/common/filters.lua:382
 function filters_temporalSmoothingNonLinear:reset() end
 
---- Force la valeur.
----Source : lua/common/filters.lua:374
----@param sample number valeur
+--- Forces the value.
+---Source: lua/common/filters.lua:374
+---@param sample number value
 function filters_temporalSmoothingNonLinear:set(sample) end
 
---- Valeur courante.
----Source : lua/common/filters.lua:378
----@return number  état
+--- Current value.
+---Source: lua/common/filters.lua:378
+---@return number  state
 function filters_temporalSmoothingNonLinear:value() end
 
---- Filtre ressort amorti : la valeur accélère vers la consigne avec inertie (vel).
+--- Damped spring filter: the value accelerates toward the setpoint with inertia (vel).
 ---@class filters_temporalSpring
 local filters_temporalSpring = {}
 
---- Avance d'un pas vers sample avec la raideur/amortissement du constructeur.
----Source : lua/common/filters.lua:219
----@param sample number consigne
----@param dt number pas de temps (s)
----@return number  valeur filtrée
+--- Advances one step toward sample with the stiffness/damping of the constructor.
+---Source: lua/common/filters.lua:219
+---@param sample number setpoint
+---@param dt number time step (s)
+---@return number  filtered value
 function filters_temporalSpring:get(sample, dt) end
 
---- Comme get avec raideur et amortissement fournis.
----Source : lua/common/filters.lua:225
----@param sample number consigne
----@param dt number pas de temps (s)
----@param spring number raideur
----@param damp number amortissement
----@return number  valeur filtrée
+--- Like get with the given stiffness and damping.
+---Source: lua/common/filters.lua:225
+---@param sample number setpoint
+---@param dt number time step (s)
+---@param spring number stiffness
+---@param damp number damping
+---@return number  filtered value
 function filters_temporalSpring:getWithSpringDamp(sample, dt, spring, damp) end
 
---- Force la valeur et annule la vitesse.
----Source : lua/common/filters.lua:231
----@param sample number valeur
+--- Forces the value and cancels the velocity.
+---Source: lua/common/filters.lua:231
+---@param sample number value
 function filters_temporalSpring:set(sample) end
 
---- Valeur courante.
----Source : lua/common/filters.lua:236
----@return number  état
+--- Current value.
+---Source: lua/common/filters.lua:236
+---@return number  state
 function filters_temporalSpring:value() end
 
---- Générateur de cosinus : cos(2*pi*t/period) * ampl. Utile pour des signaux de test.
----Source : lua/common/filters.lua:12
----@param period number période en secondes (1e-30 ajouté pour éviter la division par zéro)
+--- Cosine generator: cos(2*pi*t/period) * ampl. Useful for test signals.
+---Source: lua/common/filters.lua:12
+---@param period number period in seconds (1e-30 added to avoid division by zero)
 ---@param ampl number amplitude
----@param t number temps en secondes
----@return number  valeur du signal
+---@param t number time in seconds
+---@return number  signal value
 function freqGenC(period, ampl, t) end
 
---- Crée une moyenne exponentielle à pas fixe, paramétrée par une fenêtre en nombre d'échantillons (minimum 2).
----Source : lua/common/filters.lua:506
----@param window number fenêtre en échantillons
----@param startingValue number|nil valeur initiale, défaut 0
----@param fixedDt number|nil pas de temps de référence, défaut 0.0005 s
----@return exponentialSmoothing  filtre
+--- Creates a fixed-step exponential average, parameterized by a window in number of samples (minimum 2).
+---Source: lua/common/filters.lua:506
+---@param window number window in samples
+---@param startingValue number|nil initial value, default 0
+---@param fixedDt number|nil reference time step, default 0.0005 s
+---@return exponentialSmoothing  filter
 function newExponentialSmoothing(window, startingValue, fixedDt) end
 
---- Crée une moyenne exponentielle avec suivi de tendance (réduit le retard sur des rampes) ; window2 règle la mémoire de la tendance.
----Source : lua/common/filters.lua:543
----@param window number fenêtre en échantillons (min 2)
----@param window2 number|nil fenêtre de tendance, défaut infinie
----@param startingValue number|nil valeur initiale, défaut 0
----@return exponentialSmoothingT  filtre
+--- Creates an exponential average with trend tracking (reduces lag on ramps); window2 sets the trend memory.
+---Source: lua/common/filters.lua:543
+---@param window number window in samples (min 2)
+---@param window2 number|nil trend window, default infinite
+---@param startingValue number|nil initial value, default 0
+---@return exponentialSmoothingT  filter
 function newExponentialSmoothingT(window, window2, startingValue) end
 
---- Crée un détecteur de fréquence d'un signal oscillant (suit pics et creux). Voir la classe freqDetector.
----Source : lua/common/filters.lua:91
----@return freqDetector  détecteur
+--- Creates a frequency detector for an oscillating signal (tracks peaks and troughs). See the freqDetector class.
+---Source: lua/common/filters.lua:91
+---@return freqDetector  detector
 function newFreqDetector() end
 
---- Crée un détecteur d'amplitude à fréquence cible (algorithme de Goertzel). Voir la classe freqExists.
----Source : lua/common/filters.lua:157
----@return freqExists  détecteur
+--- Creates an amplitude detector at a target frequency (Goertzel algorithm). See the freqExists class.
+---Source: lua/common/filters.lua:157
+---@return freqExists  detector
 function newFreqExists() end
 
---- Crée un filtre du premier ordre (passe-bas, passe-haut, passe-bande, coupe-bande), avec état interne. Chaque méthode est appelée une fois par pas avec le nouvel échantillon.
----Source : lua/common/filters.lua:20
----@return freqFilter1  filtre
+--- Creates a first-order filter (low-pass, high-pass, band-pass, band-stop), with internal state. Each method is called once per step with the new sample.
+---Source: lua/common/filters.lua:20
+---@return freqFilter1  filter
 function newFreqFilter1() end
 
---- Crée un estimateur de droite y = weight*x + bias par moindres carrés à pondération exponentielle (mise à jour récursive). Mettre les entrées à l'échelle [0,1] ou [-1,1] pour la stabilité.
----Source : lua/common/filters.lua:603
----@param window number mémoire : en échantillons (getS) ou en secondes (get)
----@param weight number|nil pente initiale, défaut 0
----@param bias number|nil ordonnée initiale, défaut 0
----@param scale number|nil échelle d'initialisation de la matrice de covariance, défaut 1000
----@param weightMin number|nil borne basse pente
----@param weightMax number|nil borne haute pente
----@param biasMin number|nil borne basse ordonnée
----@param biasMax number|nil borne haute ordonnée
----@return lineFitting  estimateur
+--- Creates an estimator of the line y = weight*x + bias by exponentially weighted least squares (recursive update). Scale the inputs to [0,1] or [-1,1] for stability.
+---Source: lua/common/filters.lua:603
+---@param window number memory: in samples (getS) or in seconds (get)
+---@param weight number|nil initial slope, default 0
+---@param bias number|nil initial intercept, default 0
+---@param scale number|nil initialization scale of the covariance matrix, default 1000
+---@param weightMin number|nil slope lower bound
+---@param weightMax number|nil slope upper bound
+---@param biasMin number|nil intercept lower bound
+---@param biasMax number|nil intercept upper bound
+---@return lineFitting  estimator
 function newLineFitting(window, weight, bias, scale, weightMin, weightMax, biasMin, biasMax) end
 
---- Crée un lissage linéaire à pas de temps FIXE dt (get ne prend pas dt) ; sans autocentrage.
----Source : lua/common/filters.lua:463
----@param dt number pas de temps fixe en secondes
----@param inRate number|nil vitesse quand la valeur revient vers 0, défaut 1
----@param outRate number|nil vitesse quand elle s'éloigne de 0, défaut inRate
----@return linearSmoothing  filtre
+--- Creates a linear smoothing with a FIXED time step dt (get does not take dt); no auto-centering.
+---Source: lua/common/filters.lua:463
+---@param dt number fixed time step in seconds
+---@param inRate number|nil speed when the value comes back toward 0, default 1
+---@param outRate number|nil speed when it moves away from 0, default inRate
+---@return linearSmoothing  filter
 function newLinearSmoothing(dt, inRate, outRate) end
 
---- Filtre neutre : get(sample) renvoie sample. Sert à désactiver un lissage sans changer le code appelant.
----Source : lua/common/filters.lua:489
----@return nopSmoothing  filtre
+--- Neutral filter: get(sample) returns sample. Used to disable a smoothing without changing the calling code.
+---Source: lua/common/filters.lua:489
+---@return nopSmoothing  filter
 function newNopSmoothing() end
 
---- Crée un lissage en courbe en S (accélération limitée au démarrage et à l'arrêt, vitesse bornée par le taux). Moins brutal que le lissage linéaire.
----Source : lua/common/filters.lua:244
----@param inRate number|nil vitesse max (unités/s), défaut 1
----@param startAccel number|nil accélération de départ, défaut +infini
----@param stopAccel number|nil décélération d'arrivée, défaut startAccel
----@param outRate number|nil vitesse max quand la valeur s'éloigne de 0 (clé true), défaut inRate
----@param startingValue number|nil valeur initiale, défaut 0
----@return temporalSigmoidSmoothing  filtre
+--- Creates an S-curve smoothing (acceleration limited at start and stop, speed bounded by the rate). Less abrupt than linear smoothing.
+---Source: lua/common/filters.lua:244
+---@param inRate number|nil max speed (units/s), default 1
+---@param startAccel number|nil start acceleration, default +infinity
+---@param stopAccel number|nil arrival deceleration, default startAccel
+---@param outRate number|nil max speed when the value moves away from 0 (key true), default inRate
+---@param startingValue number|nil initial value, default 0
+---@return temporalSigmoidSmoothing  filter
 function newTemporalSigmoidSmoothing(inRate, startAccel, stopAccel, outRate, startingValue) end
 
---- Crée un lissage linéaire dans le temps (la valeur avance à vitesse bornée vers la consigne). Typique pour pédales, volant. Peut avoir un taux d'autocentrage quand la consigne est exactement 0.
----Source : lua/common/filters.lua:390
----@param inRate number|nil vitesse (unités/s) quand la valeur revient vers 0, défaut 1, min 1e-307
----@param outRate number|nil vitesse quand elle s'éloigne de 0, défaut inRate
----@param autoCenterRate number|nil vitesse d'autocentrage quand sample == 0, défaut inRate
----@param startingValue number|nil valeur initiale (aussi valeur de reset), défaut 0
----@return temporalSmoothing  filtre
+--- Creates a linear smoothing over time (the value moves at a bounded speed toward the setpoint). Typical for pedals, steering. Can have an auto-centering rate when the setpoint is exactly 0.
+---Source: lua/common/filters.lua:390
+---@param inRate number|nil speed (units/s) when the value comes back toward 0, default 1, min 1e-307
+---@param outRate number|nil speed when it moves away from 0, default inRate
+---@param autoCenterRate number|nil auto-centering speed when sample == 0, default inRate
+---@param startingValue number|nil initial value (also reset value), default 0
+---@return temporalSmoothing  filter
 function newTemporalSmoothing(inRate, outRate, autoCenterRate, startingValue) end
 
---- Crée un lissage exponentiel avec vitesse minimale linéaire (évite la queue infinie de l'exponentielle).
----Source : lua/common/filters.lua:311
----@param inRate number|nil taux exponentiel (1/s), défaut 1, borné à 1e30
----@param outRate number|nil taux quand l'écart a le même signe que l'état, défaut inRate
----@param startingValue number|nil valeur initiale, défaut 0
----@param linearRate number|nil vitesse minimale (unités/s), défaut 0
----@return temporalSmoothingHybrid  filtre
+--- Creates an exponential smoothing with a linear minimum speed (avoids the infinite tail of the exponential).
+---Source: lua/common/filters.lua:311
+---@param inRate number|nil exponential rate (1/s), default 1, capped at 1e30
+---@param outRate number|nil rate when the difference has the same sign as the state, default inRate
+---@param startingValue number|nil initial value, default 0
+---@param linearRate number|nil minimum speed (units/s), default 0
+---@return temporalSmoothingHybrid  filter
 function newTemporalSmoothingHybrid(inRate, outRate, startingValue, linearRate) end
 
---- Crée un lissage exponentiel pur : st += (sample - st) * r/(1+r) avec r = rate*dt.
----Source : lua/common/filters.lua:351
----@param inRate number|nil taux (1/s), défaut 1, borné à 1e30
----@param outRate number|nil taux quand l'écart a le même signe que l'état, défaut inRate
----@param startingValue number|nil valeur initiale, défaut 0
----@return temporalSmoothingNonLinear  filtre
+--- Creates a pure exponential smoothing: st += (sample - st) * r/(1+r) with r = rate*dt.
+---Source: lua/common/filters.lua:351
+---@param inRate number|nil rate (1/s), default 1, capped at 1e30
+---@param outRate number|nil rate when the difference has the same sign as the state, default inRate
+---@param startingValue number|nil initial value, default 0
+---@return temporalSmoothingNonLinear  filter
 function newTemporalSmoothingNonLinear(inRate, outRate, startingValue) end
 
---- Crée un filtre ressort amorti qui suit la consigne (valeur lissée avec vitesse et inertie).
----Source : lua/common/filters.lua:214
----@param spring number|nil raideur, défaut 10
----@param damp number|nil amortissement, défaut 2
----@param startingValue number|nil valeur initiale, défaut 0
----@return temporalSpring  filtre
+--- Creates a damped spring filter that follows the setpoint (smoothed value with velocity and inertia).
+---Source: lua/common/filters.lua:214
+---@param spring number|nil stiffness, default 10
+---@param damp number|nil damping, default 2
+---@param startingValue number|nil initial value, default 0
+---@return temporalSpring  filter
 function newTemporalSpring(spring, damp, startingValue) end
 

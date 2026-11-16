@@ -1,13 +1,51 @@
 {
   "path": "lua/ge/extensions/editor/roadArchitect/tunnelMesh.lua",
-  "module": "Génère les tunnels automatiques du Road Architect : un maillage procédural (ProceduralMesh) en forme de tube autour de la route, et il perce la holemap du terrain pour que le tunnel traverse le relief. À la suppression du tunnel, il restaure la holemap d'origine. Appelé par roads.finalise (création) et unfinalise/removeAll (suppression).",
+  "module": "Generates the automatic tunnels of Road Architect: a procedural mesh (ProceduralMesh) shaped as a tube around the road, and it punches the terrain holemap so that the tunnel passes through the relief. When the tunnel is removed, it restores the original holemap. Called by roads.finalise (creation) and unfinalise/removeAll (removal).",
   "notes": [
-    "Les maillages sont stockés par indice de route puis par nom de tunnel ; l'API est donc basée sur l'indice de route (et non sur le nom).",
-    "createTunnel modifie la holemap du terrain (editHolemap) ; tryRemove la rétablit (recoverHolemap) : toujours supprimer le tunnel par tryRemove pour ne pas laisser de trous.",
-    "Les paramètres du tunnel viennent de la route : radGran, radOffset, thickness, zOffsetFromRoad, protrudeS/E, extraS/E."
+    "The meshes are stored by road index then by tunnel name; the API is therefore based on the road index (and not on the name).",
+    "createTunnel modifies the terrain holemap (editHolemap); tryRemove restores it (recoverHolemap): always delete the tunnel with tryRemove so as not to leave holes.",
+    "The tunnel parameters come from the road: radGran, radOffset, thickness, zOffsetFromRoad, protrudeS/E, extraS/E."
   ],
   "functions": {
-    "createTunnel": {"desc": "Crée le maillage procédural du tunnel à partir du renderData de la route (centre et bords latéraux, section circulaire) et perce la holemap du terrain le long du tunnel.", "params": {"roadIdx": {"type": "integer", "desc": "Indice de la route dans roads."}, "name": {"type": "string", "desc": "Nom du tunnel (clé dans la table des maillages)."}, "rData": {"type": "table", "desc": "renderData de la route."}, "tunnel": {"type": "table", "desc": "Description du tunnel (indices de début s et de fin e, etc.)."}, "folder": {"type": "userdata", "desc": "SimGroup de scène qui reçoit le maillage."}}, "returns": []},
-    "tryRemove": {"desc": "Si le tunnel existe : restaure la holemap, supprime l'objet maillage et oublie l'entrée.", "params": {"roadIdx": {"type": "integer", "desc": "Indice de la route."}, "name": {"type": "string|nil", "desc": "Nom du tunnel ; ne fait rien si nil."}}, "returns": []}
+    "createTunnel": {
+      "desc": "Creates the tunnel's procedural mesh from the road's renderData (center and lateral edges, circular section) and punches the terrain holemap along the tunnel.",
+      "params": {
+        "roadIdx": {
+          "type": "integer",
+          "desc": "Index of the road in roads."
+        },
+        "name": {
+          "type": "string",
+          "desc": "Name of the tunnel (key in the meshes table)."
+        },
+        "rData": {
+          "type": "table",
+          "desc": "renderData of the road."
+        },
+        "tunnel": {
+          "type": "table",
+          "desc": "Description of the tunnel (start index s and end index e, etc.)."
+        },
+        "folder": {
+          "type": "userdata",
+          "desc": "Scene SimGroup that receives the mesh."
+        }
+      },
+      "returns": []
+    },
+    "tryRemove": {
+      "desc": "If the tunnel exists: restores the holemap, deletes the mesh object and forgets the entry.",
+      "params": {
+        "roadIdx": {
+          "type": "integer",
+          "desc": "Index of the road."
+        },
+        "name": {
+          "type": "string|nil",
+          "desc": "Name of the tunnel; does nothing if nil."
+        }
+      },
+      "returns": []
+    }
   }
 }

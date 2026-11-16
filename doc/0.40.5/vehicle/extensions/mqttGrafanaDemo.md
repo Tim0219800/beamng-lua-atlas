@@ -1,51 +1,51 @@
 # `mqttGrafanaDemo`
 
-*Fichier : `lua/vehicle/extensions/mqttGrafanaDemo.lua` · VM : Véhicule · 170 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/mqttGrafanaDemo.lua` · VM: Vehicle · 170 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `mqttGrafanaDemo` : `extensions.load (VM véhicule)("mqttGrafanaDemo")`, puis la globale `mqttGrafanaDemo`
+**Access:** extension `mqttGrafanaDemo`: `extensions.load (vehicle VM)("mqttGrafanaDemo")`, then the global `mqttGrafanaDemo`
 
-Démonstration : publie la télémétrie du véhicule vers un broker MQTT (127.0.0.1) sur le sujet 'car_data', en JSON, à chaque frame, pour l'afficher par exemple dans Grafana. Données : géométrie et état de chaque roue, valeurs d'electrics du tableau de bord, capteurs d'accélération et de force du volant, position et attitude.
+Demo: publishes the vehicle telemetry to an MQTT broker (127.0.0.1) on the topic 'car_data', as JSON, every frame, to display it for example in Grafana. Data: geometry and state of each wheel, dashboard electrics values, acceleration and steering wheel force sensors, position and attitude.
 
-## Exemple
+## Example
 
 ```lua
-extensions.load('mqttGrafanaDemo')   -- (commentaire du fichier)
+extensions.load('mqttGrafanaDemo')   -- (file comment)
 ```
 
-## Remarques
+## Notes
 
-- Le broker est codé en dur (mqttBrokerURI = '127.0.0.1'). La connexion est lancée par client:start_connecting() ; en cas d'échec le client est mis à nil et rien n'est publié.
-- Clés publiées : wheel_<nom> {caster, sai, camber, toe (degrés), pressure (psi), angularVelocity, brakeSurfaceTemperature, brakeCoreTemperature, isBrakeMolten, radius, wheelDir, propulsionTorque, lastSlip, downForce, brakingTorque, brakeTorque}, temp (°C), valeurs electrics (signal_L/R, lights, highbeam, lowpressure, lowfuel, parkingbrake, checkengine, hazard, oil, cruiseControlActive, gear, rpmTacho, fuel, watertemp, engineRunning, wheelspeed, esc, escActive, tcs, tcsActive, clutch, brake, throttle), engineInfo, gx/gy/gz/gx2/gy2/gz2, forceAtWheelNorm, forceAtDriverNorm, curForceLimitNorm, position, roll, pitch, yaw, gravity.
-- Anomalie : data.pwr reçoit `powerDisplay`, variable non définie dans ce fichier (nil) ; la clé n'existe donc pas dans le JSON.
-- Anomalie : M.reset = reset affecte une variable globale `reset` non définie (nil) : aucun hook reset effectif.
-- La réception de messages (subscribe/on_message) est du code commenté (TODO).
-- La publication à chaque frame, avec jsonEncode complet, est coûteuse ; c'est une démo.
+- The broker is hard-coded (mqttBrokerURI = '127.0.0.1'). The connection is started by client:start_connecting(); on failure the client is set to nil and nothing is published.
+- Published keys: wheel_<name> {caster, sai, camber, toe (degrees), pressure (psi), angularVelocity, brakeSurfaceTemperature, brakeCoreTemperature, isBrakeMolten, radius, wheelDir, propulsionTorque, lastSlip, downForce, brakingTorque, brakeTorque}, temp (°C), electrics values (signal_L/R, lights, highbeam, lowpressure, lowfuel, parkingbrake, checkengine, hazard, oil, cruiseControlActive, gear, rpmTacho, fuel, watertemp, engineRunning, wheelspeed, esc, escActive, tcs, tcsActive, clutch, brake, throttle), engineInfo, gx/gy/gz/gx2/gy2/gz2, forceAtWheelNorm, forceAtDriverNorm, curForceLimitNorm, position, roll, pitch, yaw, gravity.
+- Anomaly: data.pwr receives `powerDisplay`, a variable not defined in this file (nil); the key therefore does not exist in the JSON.
+- Anomaly: M.reset = reset assigns an undefined global variable `reset` (nil): no effective reset hook.
+- Message reception (subscribe/on_message) is commented-out code (TODO).
+- Publishing every frame, with a full jsonEncode, is costly; this is a demo.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mqttGrafanaDemo.onExtensionLoaded()` | Appelé au chargement : crée le client MQTT et démarre la connexion. *(interne)* *(hook)* | 142 |
-| `mqttGrafanaDemo.onExtensionUnloaded()` | Appelé au déchargement : déconnecte le client MQTT. *(interne)* *(hook)* | 155 |
-| `mqttGrafanaDemo.updateGFX(dt)` | Appelé chaque frame : collecte les données et les publie sur le sujet 'car_data' si le client est connecté. *(interne)* | 116 |
+| `mqttGrafanaDemo.onExtensionLoaded()` | Called on load: creates the MQTT client and starts the connection. *(internal)* *(hook)* | 142 |
+| `mqttGrafanaDemo.onExtensionUnloaded()` | Called on unload: disconnects the MQTT client. *(internal)* *(hook)* | 155 |
+| `mqttGrafanaDemo.updateGFX(dt)` | Called every frame: collects the data and publishes it on the topic 'car_data' if the client is connected. *(internal)* | 116 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mqttGrafanaDemo.updateGFX(dt)`
 
-Appelé chaque frame : collecte les données et les publie sur le sujet 'car_data' si le client est connecté.
+Called every frame: collects the data and publishes it on the topic 'car_data' if the client is connected.
 
-- `dt` (*number*) : Pas de temps en secondes (non utilisé).
+- `dt` (*number*) : Time step in seconds (unused).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `reset` | any |  ⚠ référence `reset` non définie dans le fichier (vaut probablement nil) |
+| `reset` | any |  ⚠ reference `reset` not defined in the file (probably nil) |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getDirectionVector`, `getDirectionVectorUp`, `getEnvTemperature`, `getGravity`, `getGroupPressure`, `getPositionXYZ`, `getRollPitchYaw`, `nodeVecCos`, `nodeVecPlanarCos`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/mqttGrafanaDemo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/mqttGrafanaDemo.lua`.*

@@ -1,18 +1,18 @@
 # `flowgraph_nodes_logic_branch`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/logic/branch.lua` · VM : Game Engine (GE) · 42 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/logic/branch.lua` · VM: Game Engine (GE) · 42 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/logic/branch")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/logic/branch")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Branch' (categorie logic) : un 'if'. Si le flux d'entree est actif, laisse passer le flux par la sortie True ou False selon le pin bool 'condition'. Le pin de sortie 'flow' (cache) suit simplement l'entree. S'execute a chaque frame.
+Flowgraph node 'Branch' (logic category): an 'if'. If the input flow is active, lets the flow through the True or False output depending on the bool pin 'condition'. The (hidden) 'flow' output pin simply follows the input. Runs every frame.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Si flow est vrai : flow en sortie = flow, True = condition, False = not condition. Sinon toutes les sorties passent a false. | 24 |
+| `C:work()` | If flow is true: output flow = flow, True = condition, False = not condition. Otherwise all outputs go to false. | 24 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/logic/branch.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/logic/branch.lua`.*

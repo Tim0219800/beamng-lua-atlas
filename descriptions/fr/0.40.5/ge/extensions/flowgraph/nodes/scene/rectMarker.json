@@ -1,0 +1,116 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/rectMarker.lua",
+  "module": "Noeud flowgraph « Parking Markers » (repeat_instant, auteur BeamNG). Crée une place de parking rectangulaire : un BeamNGTrigger de type Box et 4 marqueurs de coin (TSStatic art/shapes/interface/position_marker.dae) posés sur le sol, colorés selon que le véhicule est dedans. Sorties : inside, outside, partlyInside, stopped, stopping, stoppedPercent, dotAngle, forward, sideDistance, forwardDistance (et versions relatives, cachées). Détecte l'arrêt (vitesse <= 0.15 m/s pendant stop_timer s).",
+  "notes": [
+    "Bug : dans checkParking, sc est rempli depuis self.pinIn.position (au lieu de scale) : sideDistanceRelative et forwardDistanceRelative sont divisés par la position, pas par la taille.",
+    "updateMarkerPositions écrase la couleur de chaque marqueur par « 1 0 0 1 » à chaque changement ; checkParking la recolorie ensuite.",
+    "Pin ancien nom reset -> clear (legacyPins)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise trigger, marqueurs, debug=false et stopTimer=1.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "clear": {
+          "desc": "Supprime le trigger et les marqueurs créés et remet l'état à zéro.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet stopTimer à 1 et marque l'état comme changé.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Appelle clear à l'arrêt du graphe.",
+          "internal": true
+        },
+        "onClientEndMission": {
+          "desc": "Hook de fin de mission : appelle clear.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sur clear, supprime tout et vide les sorties ; sur flow, gère le trigger, replace les marqueurs et vérifie le stationnement.",
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "non utilisé"
+            }
+          },
+          "internal": false
+        },
+        "checkParking": {
+          "desc": "Teste si les 8 coins de la boîte englobante du véhicule sont dans le trigger, colore les marqueurs et calcule les sorties (inside, partlyInside, distances, arrêt).",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Panneau de propriétés de l'éditeur (vide).",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        },
+        "createCornerMarker": {
+          "desc": "Crée un TSStatic marqueur de coin enregistré sous le nom donné et l'ajoute au MissionGroup.",
+          "params": {
+            "markerName": {
+              "type": "any",
+              "desc": "nom de l'objet"
+            }
+          },
+          "internal": true
+        },
+        "createMarkers": {
+          "desc": "Crée les 4 marqueurs de coin.",
+          "internal": true
+        },
+        "updateMarkerPositions": {
+          "desc": "Si la place a changé, replace chaque marqueur sur le sol (raycast) en alignant sa normale, ou à plat si staticMarkers.",
+          "internal": true
+        },
+        "manageTrigger": {
+          "desc": "Crée le BeamNGTrigger (position, scale, rotation) au premier appel, puis le met à jour si les pins changent.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Ne sauvegarde rien.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Ne restaure rien.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "données sauvegardées"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

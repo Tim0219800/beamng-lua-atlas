@@ -2,72 +2,72 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Moteur d'exécution du « Thumbnail Composer » (v2) : orchestre une série de captures de vignettes de véhicules pour une interface appelante (identifiée par ownerId) qui reçoit des évènements via une table de handlers. Il valide les cibles (thumbnailTargets), filtre éventuellement celles qui ont déjà une vignette (missingOnly), prend le contrôle de la physique, applique pour la durée du travail des réglages graphiques de référence (qualité Ultra, SMAA, pas de flou de mouvement, pas d'occupants…), puis traite chaque élément dans une coroutine (thumbnailCapturePipeline.processWorkItem). Il gère aussi un aperçu de la caméra, un flou d'arrière-plan par profondeur de champ calé sur le mur du fond du showroom, une exposition forcée, et le panneau ImGui « Showroom Tools » (drawShowroomTools) du graphe de flux showroom_thumbnails.
---- Accès : extension `util_screenshotCreator_thumbnailComposerRun` : `extensions.load("util_screenshotCreator_thumbnailComposerRun")`, puis la globale `util_screenshotCreator_thumbnailComposerRun`
+--- Execution engine of the "Thumbnail Composer" (v2): orchestrates a series of vehicle thumbnail captures for a calling UI (identified by ownerId) that receives events via a table of handlers. It validates the targets (thumbnailTargets), optionally filters out those that already have a thumbnail (missingOnly), takes control of the physics, applies reference graphics settings for the duration of the job (Ultra quality, SMAA, no motion blur, no occupants…), then processes each item in a coroutine (thumbnailCapturePipeline.processWorkItem). It also handles a camera preview, a depth-of-field background blur tuned to the showroom's back wall, a forced exposure, and the "Showroom Tools" ImGui panel (drawShowroomTools) of the showroom_thumbnails flowgraph.
+--- Access: extension `util_screenshotCreator_thumbnailComposerRun`: `extensions.load("util_screenshotCreator_thumbnailComposerRun")`, then the global `util_screenshotCreator_thumbnailComposerRun`
 ---@class util_screenshotCreator_thumbnailComposerRun
----@field dependencies string[] Extensions chargées avant : ui_imgui et util_screenshotCreator_settings, lightingSetup, thumbnailCapturePipeline, thumbnailConfig, thumbnailPaths, thumbnailTargets.
----@field onClientEndMission function Alias de onExtensionUnloaded : nettoie à la fin du niveau.
----@field onExit function Alias de onExtensionUnloaded : nettoie à la fermeture du jeu.
+---@field dependencies string[] Extensions loaded before: ui_imgui and util_screenshotCreator_settings, lightingSetup, thumbnailCapturePipeline, thumbnailConfig, thumbnailPaths, thumbnailTargets.
+---@field onClientEndMission function Alias of onExtensionUnloaded: cleans up at the end of the level.
+---@field onExit function Alias of onExtensionUnloaded: cleans up when the game closes.
 util_screenshotCreator_thumbnailComposerRun = {}
 
---- Annule le travail en cours (émet Failed avec cancelled = true). Si ownerId est donné, il doit correspondre à l'appelant du travail.
----Source : lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:385
----@param ownerId string|nil Identifiant de l'appelant.
----@return boolean  true si un travail a été annulé.
+--- Cancels the current job (emits Failed with cancelled = true). If ownerId is given, it must match the job's caller.
+---Source: lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:385
+---@param ownerId string|nil Caller identifier.
+---@return boolean  true if a job was canceled.
 function util_screenshotCreator_thumbnailComposerRun.cancel(ownerId) end
 
---- Dessine dans la fenêtre ImGui du graphe de flux le panneau des outils vignettes : options de flou et d'exposition, résolution, grille de sélection des véhicules, boutons « Capture current config », « Capture all configs » et « Capture missing thumbnails », barre de progression et bouton Cancel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:542
+--- Draws in the flowgraph's ImGui window the thumbnail tools panel: blur and exposure options, resolution, vehicle selection grid, "Capture current config", "Capture all configs" and "Capture missing thumbnails" buttons, progress bar and Cancel button.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:542
 function util_screenshotCreator_thumbnailComposerRun.drawShowroomTools() end
 
---- Indique si un travail est en cours (pour cet ownerId si précisé).
----Source : lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:392
----@param ownerId string|nil Identifiant de l'appelant.
----@return boolean  true si actif.
+--- Indicates whether a job is in progress (for this ownerId if specified).
+---Source: lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:392
+---@param ownerId string|nil Caller identifier.
+---@return boolean  true if active.
 function util_screenshotCreator_thumbnailComposerRun.isActive(ownerId) end
 
---- Hook de déchargement : arrête le travail, restaure l'exposition, le flou, les réglages graphiques, l'environnement et la physique.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:415
+--- Unload hook: stops the job, restores the exposure, the blur, the graphics settings, the environment and the physics.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:415
 function util_screenshotCreator_thumbnailComposerRun.onExtensionUnloaded() end
 
---- Hook appelé à chaque frame avant le rendu : fait avancer la coroutine de travail (une erreur la fait échouer) et met à jour le flou DOF et l'exposition forcée pendant un aperçu ou un travail.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:397
+--- Hook called every frame before rendering: advances the work coroutine (an error makes it fail) and updates the DOF blur and the forced exposure during a preview or a job.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:397
 function util_screenshotCreator_thumbnailComposerRun.onPreRender() end
 
---- Émet l'évènement Status : {active, runId, currentModel, currentConfig, currentFlipped} (currentFlipped = rotation de vignette de 180°).
----Source : lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:311
----@param ownerId string Identifiant de l'appelant.
----@param handlers table Handlers avec emit.
+--- Emits the Status event: {active, runId, currentModel, currentConfig, currentFlipped} (currentFlipped = 180° thumbnail rotation).
+---Source: lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:311
+---@param ownerId string Caller identifier.
+---@param handlers table Handlers with emit.
 function util_screenshotCreator_thumbnailComposerRun.sendStatus(ownerId, handlers) end
 
---- Fixe les options de vue (flou d'arrière-plan, distance de début du flou, exposition forcée) à partir d'un message.
----Source : lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:85
+--- Sets the view options (background blur, blur start distance, forced exposure) from a message.
+---Source: lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:85
 ---@param message table {backgroundBlur, blurStartDistance, forceExposure, exposureEV}.
 function util_screenshotCreator_thumbnailComposerRun.setViewOptions(message) end
 
---- Démarre un travail de capture pour l'appelant ownerId. Résout les cibles, applique les réglages de capture et lance la coroutine de travail. Renvoie false (et émet « Failed ») en cas de refus.
----Source : lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:335
----@param ownerId string Identifiant de l'appelant (converti en chaîne).
----@param message table Options : targets, captureMode, missingOnly, outputWidth, outputHeight, backgroundBlur, blurStartDistance, forceExposure, exposureEV.
----@param handlers table {emit = function(ownerId, nom, données)} qui reçoit les évènements.
----@return boolean  true si le travail a démarré.
+--- Starts a capture job for the caller ownerId. Resolves the targets, applies the capture settings and starts the work coroutine. Returns false (and emits "Failed") on refusal.
+---Source: lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:335
+---@param ownerId string Caller identifier (converted to a string).
+---@param message table Options: targets, captureMode, missingOnly, outputWidth, outputHeight, backgroundBlur, blurStartDistance, forceExposure, exposureEV.
+---@param handlers table {emit = function(ownerId, name, data)} that receives the events.
+---@return boolean  true if the job started.
 function util_screenshotCreator_thumbnailComposerRun.start(ownerId, message, handlers) end
 
---- Aperçu : place la caméra libre du joueur sur le cadrage calculé pour le véhicule du joueur (cadrage legacy du pipeline) et ajuste l'éclairage. Ne fait rien s'il n'y a pas de véhicule ou si un travail est actif.
----Source : lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:159
----@param message table Options de vue et outputWidth/outputHeight.
+--- Preview: places the player's free camera on the framing computed for the player vehicle (the pipeline's legacy framing) and adjusts the lighting. Does nothing if there is no vehicle or if a job is active.
+---Source: lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:159
+---@param message table View options and outputWidth/outputHeight.
 function util_screenshotCreator_thumbnailComposerRun.startPreview(message) end
 
---- Termine l'aperçu : restaure l'état de caméra mémorisé et l'éclairage.
----Source : lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:152
+--- Ends the preview: restores the stored camera state and the lighting.
+---Source: lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:152
 function util_screenshotCreator_thumbnailComposerRun.stopPreview() end
 
---- Enregistre un appelant : émet Status puis Catalog {models = catalogue des véhicules, resolutions = préréglages de résolution}.
----Source : lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:324
----@param ownerId string Identifiant de l'appelant.
----@param handlers table Handlers avec emit.
+--- Registers a caller: emits Status then Catalog {models = vehicle catalog, resolutions = resolution presets}.
+---Source: lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua:324
+---@param ownerId string Caller identifier.
+---@param handlers table Handlers with emit.
 function util_screenshotCreator_thumbnailComposerRun.subscribe(ownerId, handlers) end
 

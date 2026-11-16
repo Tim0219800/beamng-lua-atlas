@@ -1,16 +1,45 @@
 {
   "path": "lua/ge/extensions/editor/shortcutLegend.lua",
-  "module": "Fenêtre de l'éditeur de monde (sans barre de titre) qui affiche une légende des raccourcis du mode d'édition actif. Elle lit soit editor.editMode.getLegendCurrentActionNames(), soit les actions de l'actionMap du mode (bindings clavier et souris de core_input_bindings), plus editor.editMode.auxShortcuts, puis les trie et les affiche en ligne. Un moddeur d'outil d'éditeur remplit auxShortcuts ou getLegendCurrentActionNames pour que ses raccourcis apparaissent.",
+  "module": "World editor window (no title bar) that displays a legend of the shortcuts of the active edit mode. It reads either editor.editMode.getLegendCurrentActionNames(), or the actions of the mode's actionMap (keyboard and mouse bindings from core_input_bindings), plus editor.editMode.auxShortcuts, then sorts them and displays them inline. An editor tool modder fills auxShortcuts or getLegendCurrentActionNames so that their shortcuts appear.",
   "notes": [
-    "auxShortcuts est une table {drapeau editor.AuxControl_xxx ou chaîne = titre} ; les drapeaux numériques sont combinés en texte (ex. 'Ctrl + LMB').",
-    "Le titre passe par _tr() pour la traduction.",
-    "La liste est reconstruite uniquement après un changement de mode d'édition (onEditorEditModeChanged).",
-    "La touche 'zaxis' est affichée sous le nom 'MouseWheel'."
+    "auxShortcuts is a table {editor.AuxControl_xxx flag or string = title}; numeric flags are combined into text (e.g. 'Ctrl + LMB').",
+    "The title goes through _tr() for translation.",
+    "The list is rebuilt only after an edit mode change (onEditorEditModeChanged).",
+    "The 'zaxis' key is displayed as 'MouseWheel'."
   ],
   "functions": {
-    "onEditorGui": {"desc": "Hook appelé à chaque frame de l'UI de l'éditeur : reconstruit la liste des raccourcis si nécessaire et dessine la légende centrée avec des pastilles pour les touches.", "params": {}, "returns": [], "internal": true},
-    "onExtensionLoaded": {"desc": "Hook de chargement de l'extension ; vide.", "params": {}, "returns": [], "internal": true},
-    "onEditorInitialized": {"desc": "Hook appelé à l'initialisation de l'éditeur : remplit la table des noms de modificateurs (Ctrl, Shift, Alt, LMB, MMB, RMB, MouseWheel, Copy, Paste, etc.), enregistre et affiche la fenêtre shortcutLegend.", "params": {}, "returns": [], "internal": true},
-    "onEditorEditModeChanged": {"desc": "Hook appelé quand le mode d'édition change : demande la reconstruction de la liste des raccourcis.", "params": {"oldEditMode": {"type": "table", "desc": "Ancien mode d'édition."}, "newEditMode": {"type": "table", "desc": "Nouveau mode d'édition."}}, "returns": [], "internal": true}
+    "onEditorGui": {
+      "desc": "Hook called every frame of the editor UI: rebuilds the shortcut list if needed and draws the centered legend with key badges.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Extension load hook; empty.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook called at editor initialization: fills the modifier name table (Ctrl, Shift, Alt, LMB, MMB, RMB, MouseWheel, Copy, Paste, etc.), registers and shows the shortcutLegend window.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorEditModeChanged": {
+      "desc": "Hook called when the edit mode changes: requests a rebuild of the shortcut list.",
+      "params": {
+        "oldEditMode": {
+          "type": "table",
+          "desc": "Old edit mode."
+        },
+        "newEditMode": {
+          "type": "table",
+          "desc": "New edit mode."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

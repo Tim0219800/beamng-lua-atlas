@@ -1,0 +1,47 @@
+{
+  "path": "lua/ge/extensions/util/groundModelDebug.lua",
+  "module": "Fenêtre ImGui de débogage et de réglage des ground models (modèles de sol : friction, fluide de surface, type de collision). Elle permet d'afficher en 3D, autour du pointeur de la souris (ou du point de focus du debugger), la carte de hauteur des ground models, sa profondeur et les triangles de collision statiques, avec une couleur par ground model, et une densité de triangles de collision par tuile. Chaque ground model peut être modifié en direct (be:setGroundModel, aliases inclus) puis sauvegardé dans /art/groundmodels.json ; le bouton « Default » recharge les valeurs d'origine. Les réglages d'affichage sont mémorisés dans settings/editor/groundModelDebug_settings.json.",
+  "usage": "extensions.load('util_groundModelDebug')\nextensions.util_groundModelDebug.openWindow()",
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{\"ui_imguiUtils\"} : utilisé pour charger l'atlas d'icônes de l'éditeur"}
+  },
+  "notes": [
+    "Les propriétés modifiables d'un ground model : collisiontype (index de matériau physique), defaultDepth (m), dragAnisotropy, flowBehaviorIndex, flowConsistencyIndex, fluidDensity (kg/m3), hydrodynamicFriction, roughnessCoefficient, shearStrength, skidMarks, slidingFrictionCoefficient, staticFrictionCoefficient, strength, stribeckVelocity (m/s). Les info-bulles de la fenêtre expliquent chacune.",
+    "Les modifications sont appliquées en direct côté jeu ; elles ne sont écrites dans /art/groundmodels.json que par le bouton Save (le fichier est remplacé en entier ; les ground models alias ne sont pas écrits mais listés dans le champ aliases de leur parent).",
+    "La fenêtre se reconstruit (setup) quand core_environment.groundModels est remplacé (par exemple au chargement d'un niveau).",
+    "À la fermeture de la fenêtre, l'affichage des triangles statiques et de la densité sont désactivés (Engine.setStaticColDebugEnabled(false)).",
+    "Le bloc d'affichage de la collision statique détaillée est commenté dans le code car il provoquait de fortes chutes de framerate."
+  ],
+  "functions": {
+    "openWindow": {
+      "desc": "Ouvre la fenêtre « GroundModel Debug Window ».",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onUpdate": {
+      "desc": "Hook appelé chaque frame : tant que la fenêtre est ouverte, détermine le point de focus (raycast de la souris ou Lua.lastDebugFocusPos), dessine les visualisations debug de chaque ground model actif et l'interface ImGui.",
+      "params": {"dt": {"type": "number", "desc": "Delta de temps en secondes (non utilisé)"}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Appelé au chargement : construit la liste des ground models depuis core_environment.groundModels et relit les réglages sauvegardés.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation avant un rechargement d'extensions : conserve l'état d'ouverture de la fenêtre, de l'affichage des triangles statiques et de la densité.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{windowOpen, staticDebug, colDensityEnabled}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook de désérialisation : restaure l'état sauvegardé et réactive le débogage des collisions statiques côté moteur si nécessaire.",
+      "params": {"data": {"type": "table", "desc": "Données renvoyées par onSerialize"}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

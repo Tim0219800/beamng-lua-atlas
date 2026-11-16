@@ -2,21 +2,21 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/cameraModes/smooth.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Filtre de lissage de position.
+--- Position smoothing filter.
 ---@class core_cameraModes_smooth
 local core_cameraModes_smooth = {}
 
---- Crée les ressorts ; si pos est donné, les initialise à cette position.
----Source : lua/ge/extensions/core/cameraModes/smooth.lua:8
----@param spring number|nil raideur (30)
----@param damp number|nil amortissement (10)
----@param pos vec3|nil position initiale des ressorts
+--- Creates the springs; if pos is given, initializes them to that position.
+---Source: lua/ge/extensions/core/cameraModes/smooth.lua:8
+---@param spring number|nil stiffness (30)
+---@param damp number|nil damping (10)
+---@param pos vec3|nil initial position of the springs
 function core_cameraModes_smooth:init(spring, damp, pos) end
 
---- Lisse data.res.pos axe par axe avec data.dt.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/smooth.lua:23
+--- Smooths data.res.pos axis by axis with data.dt.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/smooth.lua:23
 ---@param data table camData
----@return boolean  toujours true
+---@return boolean  always true
 function core_cameraModes_smooth:update(data) end
 

@@ -2,84 +2,84 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/photomode/overlays.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gestion des « overlays » du mode photo : des superpositions d'images (cadres, filigranes, applis UI) décrites par un dossier contenant overlay.json, une vignette overlay.png facultative et des images. Le module découvre les overlays sous /ui/ui-vue/src/modules/pause/views/photomode/overlays, les met en cache, permet de les créer, cloner, renommer, enregistrer et supprimer (seulement ceux du dossier utilisateur) et diffuse l'évènement UI PhotomodeOverlaysChanged à chaque changement. Il fournit aussi la liste des applis UI et des textures de livrée utilisables comme calques.
---- Accès : extension `ui_photomode_overlays` : `extensions.load("ui_photomode_overlays")`, puis la globale `ui_photomode_overlays`
+--- Management of photo mode "overlays": image overlays (frames, watermarks, UI apps) described by a folder containing overlay.json, an optional overlay.png thumbnail and images. The module discovers overlays under /ui/ui-vue/src/modules/pause/views/photomode/overlays, caches them, lets you create, clone, rename, save and delete them (only those in the user folder) and broadcasts the UI event PhotomodeOverlaysChanged on each change. It also provides the list of UI apps and livery textures usable as layers.
+--- Access: extension `ui_photomode_overlays`: `extensions.load("ui_photomode_overlays")`, then the global `ui_photomode_overlays`
 ---@class ui_photomode_overlays
 ui_photomode_overlays = {}
 
---- Copie un overlay (overlay.json, vignette et images) vers un nouveau dossier. Fonctionne aussi pour les overlays non éditables.
----Source : lua/ge/extensions/ui/photomode/overlays.lua:288
----@param sourceId string Identifiant de l'overlay à copier
----@param destId string Identifiant de la copie (valide et inexistant)
----@return table  {ok = true, id = destId} ou {ok = false, reason = ...}
+--- Copies an overlay (overlay.json, thumbnail and images) to a new folder. Also works for non-editable overlays.
+---Source: lua/ge/extensions/ui/photomode/overlays.lua:288
+---@param sourceId string Identifier of the overlay to copy
+---@param destId string Identifier of the copy (valid and not existing)
+---@return table  {ok = true, id = destId} or {ok = false, reason = ...}
 function ui_photomode_overlays.cloneOverlay(sourceId, destId) end
 
---- Crée un nouveau dossier d'overlay avec un overlay.json (version 1, name = destId, author vide, layers vides par défaut, surchargés par version, name, author et layers de la charge utile).
----Source : lua/ge/extensions/ui/photomode/overlays.lua:251
----@param destId string Identifiant du nouvel overlay (doit être valide et inexistant)
----@param payload table|nil Valeurs initiales facultatives
----@return table  {ok = true, id = destId} ou {ok = false, reason = ...}
+--- Creates a new overlay folder with an overlay.json (version 1, name = destId, empty author, empty layers by default, overridden by the payload's version, name, author and layers).
+---Source: lua/ge/extensions/ui/photomode/overlays.lua:251
+---@param destId string Identifier of the new overlay (must be valid and not exist)
+---@param payload table|nil Optional initial values
+---@return table  {ok = true, id = destId} or {ok = false, reason = ...}
 function ui_photomode_overlays.createOverlay(destId, payload) end
 
---- Supprime le dossier d'un overlay éditable (overlay.json, vignette, images) puis invalide le cache et diffuse PhotomodeOverlaysChanged.
----Source : lua/ge/extensions/ui/photomode/overlays.lua:494
----@param id string Identifiant de l'overlay
----@return table  {ok = true} ou {ok = false, reason = ...}
+--- Deletes an editable overlay's folder (overlay.json, thumbnail, images) then invalidates the cache and broadcasts PhotomodeOverlaysChanged.
+---Source: lua/ge/extensions/ui/photomode/overlays.lua:494
+---@param id string Overlay identifier
+---@return table  {ok = true} or {ok = false, reason = ...}
 function ui_photomode_overlays.deleteOverlay(id) end
 
---- Force une nouvelle découverte des overlays (recherche récursive de overlay.json), remplace le cache et renvoie la liste triée par nom. Chaque entrée contient les champs de overlay.json plus id, images, editable, folderPath, hasThumbnail, ts.
----Source : lua/ge/extensions/ui/photomode/overlays.lua:206
----@return table[]  Liste d'overlays
+--- Forces a new discovery of the overlays (recursive search for overlay.json), replaces the cache and returns the list sorted by name. Each entry contains the overlay.json fields plus id, images, editable, folderPath, hasThumbnail, ts.
+---Source: lua/ge/extensions/ui/photomode/overlays.lua:206
+---@return table[]  List of overlays
 function ui_photomode_overlays.discover() end
 
---- Renvoie les overlays en cache, en lançant la découverte si le cache est vide.
----Source : lua/ge/extensions/ui/photomode/overlays.lua:211
----@return table[]  Liste d'overlays
+--- Returns the cached overlays, starting discovery if the cache is empty.
+---Source: lua/ge/extensions/ui/photomode/overlays.lua:211
+---@return table[]  List of overlays
 function ui_photomode_overlays.getOverlays() end
 
---- Parcourt /art/dynamicDecals/textures (png, jpg, jpeg) et regroupe les images par tags lus dans le fichier compagnon <image>.dynDecalTexture.json. Les images sans tag vont dans la catégorie « others ». Catégories et images sont triées sans tenir compte de la casse.
----Source : lua/ge/extensions/ui/photomode/overlays.lua:443
----@return table[]  Catégories {value, label, items = {{name, label, path}}}
+--- Scans /art/dynamicDecals/textures (png, jpg, jpeg) and groups the images by tags read from the companion file <image>.dynDecalTexture.json. Images without a tag go into the "others" category. Categories and images are sorted case-insensitively.
+---Source: lua/ge/extensions/ui/photomode/overlays.lua:443
+---@return table[]  Categories {value, label, items = {{name, label, path}}}
 function ui_photomode_overlays.listLiveryGraphics() end
 
---- Liste les applis UI disponibles comme calques via ui_apps.getUIAppsData() : appName, displayName, description, category, première prévisualisation, photomode (booléen) et css (left, top, width, height en chaînes, valeurs par défaut 0px, 0px, 320px, 48px). Les applis compatibles mode photo viennent en premier, puis tri par nom. Renvoie une liste vide si ui_apps est indisponible.
----Source : lua/ge/extensions/ui/photomode/overlays.lua:401
----@return table[]  Applis triées
+--- Lists the UI apps available as layers via ui_apps.getUIAppsData(): appName, displayName, description, category, first preview, photomode (boolean) and css (left, top, width, height as strings, default values 0px, 0px, 320px, 48px). Photo mode compatible apps come first, then sorted by name. Returns an empty list if ui_apps is unavailable.
+---Source: lua/ge/extensions/ui/photomode/overlays.lua:401
+---@return table[]  Sorted apps
 function ui_photomode_overlays.listUiApps() end
 
---- Hook appelé au chargement de l'extension : vide le cache et réarme la découverte initiale.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/overlays.lua:536
+--- Hook called when the extension is loaded: empties the cache and re-arms the initial discovery.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/overlays.lua:536
 function ui_photomode_overlays.onExtensionLoaded() end
 
---- Hook appelé au déchargement : vide le cache.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/overlays.lua:541
+--- Hook called on unload: empties the cache.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/overlays.lua:541
 function ui_photomode_overlays.onExtensionUnloaded() end
 
---- Hook appelé par le moteur quand des fichiers changent. Si l'un des chemins est sous le dossier des overlays, invalide le cache et diffuse PhotomodeOverlaysChanged.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/overlays.lua:525
----@param files table Liste d'éléments {filename = ...}
+--- Hook called by the engine when files change. If one of the paths is under the overlays folder, invalidates the cache and broadcasts PhotomodeOverlaysChanged.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/overlays.lua:525
+---@param files table List of items {filename = ...}
 function ui_photomode_overlays.onFilesChanged(files) end
 
---- Hook appelé quand l'UI est prête : lance une seule fois la découverte des overlays pour préremplir le cache.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/photomode/overlays.lua:545
+--- Hook called when the UI is ready: runs the overlay discovery once to prefill the cache.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/photomode/overlays.lua:545
 function ui_photomode_overlays.onUiReady() end
 
---- Renomme un overlay éditable : change son nom affiché et/ou son identifiant (donc son dossier). Avec un nouvel identifiant, copie les fichiers, met à jour name dans le nouvel overlay.json et supprime l'ancien dossier.
----Source : lua/ge/extensions/ui/photomode/overlays.lua:316
----@param sourceId string Identifiant actuel
----@param destId string Nouvel identifiant (peut être identique à sourceId)
----@param newName string|nil Nouveau nom affiché ; ignoré si vide, l'ancien nom est alors conservé
----@return table  {ok = true, id = ...} ou {ok = false, reason = ...}
+--- Renames an editable overlay: changes its display name and/or its identifier (hence its folder). With a new identifier, copies the files, updates name in the new overlay.json and deletes the old folder.
+---Source: lua/ge/extensions/ui/photomode/overlays.lua:316
+---@param sourceId string Current identifier
+---@param destId string New identifier (may be identical to sourceId)
+---@param newName string|nil New display name; ignored if empty, the old name is then kept
+---@return table  {ok = true, id = ...} or {ok = false, reason = ...}
 function ui_photomode_overlays.renameOverlay(sourceId, destId, newName) end
 
---- Écrit la charge utile dans overlay.json d'un overlay existant et éditable, puis invalide le cache et diffuse PhotomodeOverlaysChanged.
----Source : lua/ge/extensions/ui/photomode/overlays.lua:215
----@param id string Identifiant (nom de dossier) de l'overlay
----@param payload table Nouveau contenu de overlay.json (version, name, author, layers…)
----@return table  {ok = true} ou {ok = false, reason = ...}
+--- Writes the payload into the overlay.json of an existing, editable overlay, then invalidates the cache and broadcasts PhotomodeOverlaysChanged.
+---Source: lua/ge/extensions/ui/photomode/overlays.lua:215
+---@param id string Identifier (folder name) of the overlay
+---@param payload table New content of overlay.json (version, name, author, layers...)
+---@return table  {ok = true} or {ok = false, reason = ...}
 function ui_photomode_overlays.saveOverlay(id, payload) end
 

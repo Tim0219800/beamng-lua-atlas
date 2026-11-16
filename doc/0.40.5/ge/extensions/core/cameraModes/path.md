@@ -1,46 +1,46 @@
 # `core_cameraModes_path`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/path.lua` · VM : Game Engine (GE) · 582 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/path.lua` · VM: Game Engine (GE) · 582 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/path")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/path")` (file under extensions/ but not a regular extension)
 
-Caméra qui suit un chemin de caméra (core_paths : marqueurs avec position, rotation, FOV, temps). Interpole la position par Catmull-Rom chordal avec temps normalisé (Steffen monotone), la rotation par Catmull-Rom centripète (nlerp) et le FOV/nearClip par Steffen. Gère : coupures (marker.cut), marqueurs attachés au véhicule (attachToVehicle, poses en repère véhicule), suivi du véhicule (trackPosition, avec décalage trackOffset), courbes de mouvement Bézier par marqueur (motion*, rotMotion*, yaw/pitch/rollMotion*), départs/arrivées en mouvement (movingStart/movingEnd), zoom manuel (path.manualFov), bouclage (path.looped) et chemins liés à un replay (path.replay, vitesse bullettime). Renvoie un constructeur.
+Camera that follows a camera path (core_paths: markers with position, rotation, FOV, time). Interpolates position by chordal Catmull-Rom with normalized time (monotone Steffen), rotation by centripetal Catmull-Rom (nlerp) and FOV/nearClip by Steffen. Handles: cuts (marker.cut), markers attached to the vehicle (attachToVehicle, poses in vehicle frame), vehicle tracking (trackPosition, with trackOffset offset), per-marker Bezier motion curves (motion*, rotMotion*, yaw/pitch/rollMotion*), moving starts/ends (movingStart/movingEnd), manual zoom (path.manualFov), looping (path.looped) and replay-linked paths (path.replay, bullettime speed). Returns a constructor.
 
-## Exemple
+## Example
 
 ```lua
--- le chemin vient de core_paths ; customData peut fournir getNextPath(), onNextControlPoint(n, total), finishedPath(), reset(), useJsonVersion, useDtReal, offset, path
+-- the path comes from core_paths; customData can provide getNextPath(), onNextControlPoint(n, total), finishedPath(), reset(), useJsonVersion, useDtReal, offset, path
 core_camera.setByName(0, 'path', false, {getNextPath = function() return 'monChemin' end})
 ```
 
-## Remarques
+## Notes
 
-- Deux modes : useJsonVersion = true (customData.getNextPath renvoie la table du chemin, temps absolus par marqueur) ; sinon le chemin est cherché par nom (core_paths.getPath(pathName)) et marker.time est la durée jusqu'au marqueur suivant (cumulée).
-- Ne fait rien s'il y a moins de 2 marqueurs. Utilise data.dtSim (ou dtReal si customData.useDtReal).
-- Ensemble des champs de marqueur lus : pos, rot, fov, nearClip, time, cut, attachToVehicle, trackPosition, trackOffset{x,y,z}, movingStart, movingEnd, positionSmooth, motion*(Out|In|OutTime|InTime), bullettime.
-- Le décalage de suivi (tracking offset) vient des marqueurs sinon, en secours, de editor_camPathEditor ou d'une extension pathCameraEditor.getTrackingOffset().
-- Un TODO du code signale que la rotation avec movingEnd n'a pas le bon timing.
-- Les signatures de la page extraite sont inexactes : getTimeToNext(path, index) et getGlobalTime(path, index, looped).
-- update modifie les quaternions des marqueurs (inversion de signe) pour éviter les sauts d'interpolation.
+- Two modes: useJsonVersion = true (customData.getNextPath returns the path table, absolute times per marker); otherwise the path is looked up by name (core_paths.getPath(pathName)) and marker.time is the duration to the next marker (cumulative).
+- Does nothing if there are fewer than 2 markers. Uses data.dtSim (or dtReal if customData.useDtReal).
+- Set of marker fields read: pos, rot, fov, nearClip, time, cut, attachToVehicle, trackPosition, trackOffset{x,y,z}, movingStart, movingEnd, positionSmooth, motion*(Out|In|OutTime|InTime), bullettime.
+- The tracking offset comes from the markers, otherwise, as a fallback, from editor_camPathEditor or from a pathCameraEditor.getTrackingOffset() extension.
+- A TODO in the code notes that rotation with movingEnd does not have the right timing.
+- The signatures of the extracted page are inaccurate: getTimeToNext(path, index) and getGlobalTime(path, index, looped).
+- update modifies the markers' quaternions (sign inversion) to avoid interpolation jumps.
 
-## Classe `C`
+## Class `C`
 
-Mode chemin. Champs : ctrlPoint, camT (temps courant en s), customData, path, pathName, fovOffset.
+Path mode. Fields: ctrlPoint, camT (current time in s), customData, path, pathName, fovOffset.
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_path")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_path")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:getGlobalTime(path, index, looped)` | Temps absolu du marqueur index depuis le début du chemin. | 174 |
-| `C:getTimeToNext(path, index)` | Durée entre le marqueur index et le suivant (dernier marqueur : durée de boucle ou 2 s en mode JSON). | 165 |
-| `C:init()` | isGlobal = true, hidden = true, état initial. | 16 |
-| `C:reset()` | Remet temps, point de contrôle, décalage FOV et noms de chemin à zéro (appelle customData:reset s'il existe). | 560 |
-| `C:setCustomData(data)` | Réinitialise le mode et fixe les données du parcours ; temps de départ = customData.offset. Si le chemin a un replay, le charge (ou l'ignore s'il n'existe pas). | 545 |
-| `C:update(data)` | Avance le temps, interpole la caméra et écrit data.res (pos, rot, fov, nearClip), appelle les callbacks de customData et gère la fin/boucle du chemin. | 221 |
+| `C:getGlobalTime(path, index, looped)` | Absolute time of marker index since the start of the path. | 174 |
+| `C:getTimeToNext(path, index)` | Duration between marker index and the next (last marker: loop duration or 2 s in JSON mode). | 165 |
+| `C:init()` | isGlobal = true, hidden = true, initial state. | 16 |
+| `C:reset()` | Resets time, control point, FOV offset and path names to zero (calls customData:reset if it exists). | 560 |
+| `C:setCustomData(data)` | Resets the mode and sets the course data; start time = customData.offset. If the path has a replay, loads it (or ignores it if it does not exist). | 545 |
+| `C:update(data)` | Advances time, interpolates the camera and writes data.res (pos, rot, fov, nearClip), calls the customData callbacks and handles the end/loop of the path. | 221 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/path.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/path.lua`.*

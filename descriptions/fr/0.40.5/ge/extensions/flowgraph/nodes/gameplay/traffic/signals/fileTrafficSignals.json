@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/fileTrafficSignals.lua",
+  "module": "Nœud flowgraph « File Traffic Signals » (once_p_duration, dépend de core_trafficSignals). Charge un fichier de feux de signalisation (core_trafficSignals.loadSignals(file)), ou celui du niveau si data.useDefaultFileFromLevel (défaut true) et pas de fichier. Active la simulation (setActive(true, true)) et sort signalsData. Erreur de nœud si le chargement échoue. À l'arrêt, recharge le fichier par défaut de la carte.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Vide la sortie et recharge le fichier de signaux par défaut de la carte.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "internal": true
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Vide la sortie signalsData.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Appelé après la création des pins du nœud ; sert à ajuster les pins (modèles de valeurs, filtres de fichiers, clés dynamiques).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Au premier appel, charge les signaux, active la simulation et publie core_trafficSignals.getData() sur signalsData.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

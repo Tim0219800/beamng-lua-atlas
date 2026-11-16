@@ -1,65 +1,65 @@
 # `editor_biomeTool`
 
-*Fichier : `lua/ge/extensions/editor/biomeTool.lua` · VM : Game Engine (GE) · 3986 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/biomeTool.lua` · VM: Game Engine (GE) · 3986 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_biomeTool` : `extensions.load("editor_biomeTool")`, puis la globale `editor_biomeTool`
+**Access:** extension `editor_biomeTool`: `extensions.load("editor_biomeTool")`, then the global `editor_biomeTool`
 
-Outil « Biome Tool » (mode d'édition « Edit Biome ») de l'éditeur de niveaux : génère de la végétation (objets Forest) et peint des matériaux de terrain par couches. Deux types de couches (terrain = 0, area = 1) ; les couches « area » contiennent des zones au lasso (inclusion/exclusion) ou par matériau de terrain. Chaque couche a des champs (densité de forêt, influence et plage de pente, falloff et densité de bordure, méthode de fusion Add/Replace/Delete, placement en champ avec distance/rangées/orientation, zone aléatoire par bruit RA_*, placement sur les bords EP_*). L'outil s'appuie sur ForestBrushTool et les brosses de forêt. Les couches sont lues dans <niveau>/art/biomeTool/biomeTool.json à l'initialisation et réécrites après chaque sauvegarde du niveau.
+"Biome Tool" (edit mode "Edit Biome") of the level editor: generates vegetation (Forest objects) and paints terrain materials in layers. Two layer types (terrain = 0, area = 1); "area" layers contain lasso zones (inclusion/exclusion) or zones by terrain material. Each layer has fields (forest density, slope influence and range, falloff and border density, Add/Replace/Delete blending method, field placement with distance/rows/orientation, random area by RA_* noise, edge placement EP_*). The tool relies on ForestBrushTool and the forest brushes. Layers are read from <level>/art/biomeTool/biomeTool.json at initialization and rewritten after each level save.
 
-## Remarques
+## Notes
 
-- Presque tout le fichier est local (140 fonctions locales) ; l'API exportée se limite à 5 hooks. La table « var » est l'état interne de l'outil, pas une classe exposée ; ses méthodes get/setEP* sont listées dans classes.var pour référence.
-- Bug : M.onExtensionLoaded = onExtensionLoaded référence une variable jamais définie dans le fichier : le champ exporté vaut nil.
-- Si aucun objet Forest n'existe, onEditorGui ouvre une fenêtre modale « NoForestObjDialog » proposant d'en créer un (worldEditorCppApi.createObject('Forest'), nommé « theForest »).
-- Au chargement et à la sauvegarde, le chemin du niveau est déduit de getMissionFilename() (deuxième segment du chemin) ; le fichier biomeTool.json est supprimé puis réécrit seulement s'il existe au moins une couche.
-- Les fonctions var.setEP* renvoient parfois fieldInfo.val (valeur par défaut du modèle) lorsqu'elles créent le champ, et nil sinon : valeur de retour peu fiable, à ignorer.
-- var.setEPRandomTiltRange modifie la table passée en paramètre (range est réutilisée comme slopeRangeValid).
+- Almost the whole file is local (140 local functions); the exported API is limited to 5 hooks. The "var" table is the internal state of the tool, not an exposed class; its get/setEP* methods are listed in classes.var for reference.
+- Bug: M.onExtensionLoaded = onExtensionLoaded references a variable never defined in the file: the exported field is nil.
+- If no Forest object exists, onEditorGui opens a "NoForestObjDialog" modal window offering to create one (worldEditorCppApi.createObject('Forest'), named "theForest").
+- On load and save, the level path is deduced from getMissionFilename() (second segment of the path); the biomeTool.json file is deleted then rewritten only if at least one layer exists.
+- The var.setEP* functions sometimes return fieldInfo.val (default value of the template) when they create the field, and nil otherwise: unreliable return value, to be ignored.
+- var.setEPRandomTiltRange modifies the table passed as a parameter (range is reused as slopeRangeValid).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_biomeTool.onEditorAfterSaveLevel()` | Hook appelé après la sauvegarde du niveau : écrit les couches (var.layers) dans <niveau>/art/biomeTool/biomeTool.json (ancien fichier supprimé d'abord). Ne fait rien si aucune couche. *(interne)* *(hook)* | 3962 |
-| `editor_biomeTool.onEditorGui()` | Appelé chaque frame de l'éditeur. Ne fait rien hors du mode « Edit Biome ». Sinon vérifie la présence d'un objet Forest (dialogue de création sinon) et dessine l'interface (onglets Level Biome / Biome Areas), le lasso, les zones et les animations de mise en évidence. *(interne)* *(hook)* | 3623 |
-| `editor_biomeTool.onEditorInitialized()` | Initialisation : charge biomeTool.json du niveau s'il existe, remplit la liste des brosses de forêt et des matériaux, enregistre le mode d'édition biomeEditMode (icône biome_tool), la fenêtre « biomeTool » (500x560), la fenêtre modale NoForestObjDialog et les éditeurs de champs personnalisés (TerrainMaterial, BlendingMethod, SlopeRange, VegetationFalloff, FieldPlacement, RA_Map). *(interne)* *(hook)* | 3903 |
-| `editor_biomeTool.onEditorToolWindowGotFocus(windowName)` | Hook : quand la fenêtre « biomeTool » prend le focus, active le mode d'édition biomeEditMode. *(interne)* *(hook)* | 3956 |
-| `editor_biomeTool.onEditorToolWindowHide(windowName)` | Hook : quand la fenêtre « biomeTool » est masquée, repasse en mode d'édition objectSelect. *(interne)* *(hook)* | 3950 |
+| `editor_biomeTool.onEditorAfterSaveLevel()` | Hook called after the level is saved: writes the layers (var.layers) to <level>/art/biomeTool/biomeTool.json (old file deleted first). Does nothing if there is no layer. *(internal)* *(hook)* | 3962 |
+| `editor_biomeTool.onEditorGui()` | Called every editor frame. Does nothing outside the "Edit Biome" mode. Otherwise checks for the presence of a Forest object (creation dialog otherwise) and draws the interface (Level Biome / Biome Areas tabs), the lasso, the zones and the highlight animations. *(internal)* *(hook)* | 3623 |
+| `editor_biomeTool.onEditorInitialized()` | Initialization: loads the level's biomeTool.json if it exists, fills the list of forest brushes and materials, registers the biomeEditMode edit mode (biome_tool icon), the "biomeTool" window (500x560), the NoForestObjDialog modal window and the custom field editors (TerrainMaterial, BlendingMethod, SlopeRange, VegetationFalloff, FieldPlacement, RA_Map). *(internal)* *(hook)* | 3903 |
+| `editor_biomeTool.onEditorToolWindowGotFocus(windowName)` | Hook: when the "biomeTool" window gets focus, activates the biomeEditMode edit mode. *(internal)* *(hook)* | 3956 |
+| `editor_biomeTool.onEditorToolWindowHide(windowName)` | Hook: when the "biomeTool" window is hidden, switches back to the objectSelect edit mode. *(internal)* *(hook)* | 3950 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_biomeTool.onEditorToolWindowGotFocus(windowName)`
 
-Hook : quand la fenêtre « biomeTool » prend le focus, active le mode d'édition biomeEditMode.
+Hook: when the "biomeTool" window gets focus, activates the biomeEditMode edit mode.
 
-- `windowName` (*string*) : Nom de la fenêtre qui a pris le focus.
+- `windowName` (*string*) : Name of the window that got focus.
 
 #### `editor_biomeTool.onEditorToolWindowHide(windowName)`
 
-Hook : quand la fenêtre « biomeTool » est masquée, repasse en mode d'édition objectSelect.
+Hook: when the "biomeTool" window is hidden, switches back to the objectSelect edit mode.
 
-- `windowName` (*string*) : Nom de la fenêtre masquée.
+- `windowName` (*string*) : Name of the hidden window.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `onExtensionLoaded` | nil | Vaut nil : référence à une variable jamais définie dans le fichier. ⚠ référence `onExtensionLoaded` non définie dans le fichier (vaut probablement nil) |
+| `onExtensionLoaded` | nil | Is nil: reference to a variable never defined in the file. ⚠ reference `onExtensionLoaded` not defined in the file (probably nil) |
 
-## Classe `var`
+## Class `var`
 
-Table d'état interne de l'outil (couches, zones, lasso, brosses de forêt, file de génération). Seules quelques méthodes d'accès aux champs « edge placement » et aux bornes sont définies dessus ; layerType vaut 0 (terrain), 1 (area) ou 2 (any, dans les modèles de champs).
+Internal state table of the tool (layers, zones, lasso, forest brushes, generation queue). Only a few accessor methods for the "edge placement" fields and the bounds are defined on it; layerType is 0 (terrain), 1 (area) or 2 (any, in the field templates).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `var.getEPFalloff(layerType, layerID)` | Renvoie l'atténuation de bordure (EP_BorderFalloff, -10 à 10) d'une couche ; crée le champ avec la valeur par défaut (0.0) s'il manque. | 1473 |
-| `var.getEPItemDistance(layerType, layerID)` | Renvoie la distance entre objets pour le placement sur les bords (EP_ItemDistance, -10 à 10, défaut 1) ; crée le champ s'il manque. | 1516 |
-| `var.getEPRandomTiltRange(layerType, layerID)` | Renvoie la plage d'inclinaison aléatoire (champ EP_RandomTilt) d'une couche ; {-5, 5} par défaut si la couche n'a pas ce champ. | 1431 |
-| `var.getFieldMinMax(layerType, layerID, fieldName)` | Renvoie les bornes {min, max} d'un champ du modèle fieldInfoTemplate pour ce type de couche ; {0, 0} si introuvable. | 1421 |
-| `var.setEPFalloff(layerType, layerID, val)` | Fixe EP_BorderFalloff d'une couche, bornée aux minValue/maxValue du champ ; crée le champ s'il manque. | 1494 |
-| `var.setEPItemDistance(layerType, layerID, val)` | Fixe EP_ItemDistance d'une couche, bornée à -10..10 ; crée le champ s'il manque. | 1537 |
-| `var.setEPRandomTiltRange(layerType, layerID, range)` | Fixe la plage EP_RandomTilt d'une couche, bornée à -40..40 ; crée le champ s'il manque. La table passée est modifiée. | 1447 |
+| `var.getEPFalloff(layerType, layerID)` | Returns the border falloff (EP_BorderFalloff, -10 to 10) of a layer; creates the field with the default value (0.0) if missing. | 1473 |
+| `var.getEPItemDistance(layerType, layerID)` | Returns the distance between objects for edge placement (EP_ItemDistance, -10 to 10, default 1); creates the field if missing. | 1516 |
+| `var.getEPRandomTiltRange(layerType, layerID)` | Returns the random tilt range (EP_RandomTilt field) of a layer; {-5, 5} by default if the layer does not have this field. | 1431 |
+| `var.getFieldMinMax(layerType, layerID, fieldName)` | Returns the {min, max} bounds of a field of the fieldInfoTemplate template for this layer type; {0, 0} if not found. | 1421 |
+| `var.setEPFalloff(layerType, layerID, val)` | Sets EP_BorderFalloff of a layer, clamped to the field's minValue/maxValue; creates the field if missing. | 1494 |
+| `var.setEPItemDistance(layerType, layerID, val)` | Sets EP_ItemDistance of a layer, clamped to -10..10; creates the field if missing. | 1537 |
+| `var.setEPRandomTiltRange(layerType, layerID, range)` | Sets the EP_RandomTilt range of a layer, clamped to -40..40; creates the field if missing. The passed table is modified. | 1447 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `castRay`
 - `FS:` `fileExists`, `removeFile`
@@ -69,4 +69,4 @@ Table d'état interne de l'outil (couches, zones, lasso, brosses de forêt, file
 - `worldEditorCppApi.` `createObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/biomeTool.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/biomeTool.lua`.*

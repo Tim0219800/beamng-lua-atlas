@@ -1,35 +1,35 @@
 # `gameplay_rally_recce_drivelineRecording`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/recce/drivelineRecording.lua` · VM : Game Engine (GE) · 60 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/recce/drivelineRecording.lua` · VM: Game Engine (GE) · 60 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_recce_drivelineRecording` : `extensions.load("gameplay_rally_recce_drivelineRecording")`, puis la globale `gameplay_rally_recce_drivelineRecording`
+**Access:** extension `gameplay_rally_recce_drivelineRecording`: `extensions.load("gameplay_rally_recce_drivelineRecording")`, then the global `gameplay_rally_recce_drivelineRecording`
 
-Chargeur du fichier de « driveline » enregistré pendant une reconnaissance (recce) de rallye. Une driveline est une suite de points horodatés (position, orientation) du parcours roulé. Le module lit le fichier JSONL de la mission et construit une PointList avec relations entre points et normales. Extension gameplay_rally_recce_drivelineRecording, utilisée par la classe recce.
+Loader of the "driveline" file recorded during a rally recce. A driveline is a sequence of timestamped points (position, orientation) of the driven route. The module reads the mission's JSONL file and builds a PointList with relationships between points and normals. Extension gameplay_rally_recce_drivelineRecording, used by the recce class.
 
-## Remarques
+## Notes
 
-- Chaque ligne JSONL doit contenir pos (vec3), quat et ts (horodatage) ; ils sont passés à PointList():createPoint.
-- Il faut au moins 3 points, sinon le chargement échoue (log E, retour nil).
-- Le temps de chargement est loggé (rallyUtil.getTime()).
+- Each JSONL line must contain pos (vec3), quat and ts (timestamp); they are passed to PointList():createPoint.
+- At least 3 points are required, otherwise loading fails (E log, nil return).
+- The loading time is logged (rallyUtil.getTime()).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_recce_drivelineRecording.load(missionDir)` | Charge le fichier de driveline de la mission et renvoie une PointList prête à l'emploi (setupPointRelationships et setupPointNormals déjà appelés). | 17 |
+| `gameplay_rally_recce_drivelineRecording.load(missionDir)` | Loads the mission's driveline file and returns a ready-to-use PointList (setupPointRelationships and setupPointNormals already called). | 17 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_recce_drivelineRecording.load(missionDir)`
 
-Charge le fichier de driveline de la mission et renvoie une PointList prête à l'emploi (setupPointRelationships et setupPointNormals déjà appelés).
+Loads the mission's driveline file and returns a ready-to-use PointList (setupPointRelationships and setupPointNormals already called).
 
-- `missionDir` (*string*) : Dossier de la mission contenant le fichier de driveline (rallyUtil.drivelineFile)
-- **renvoie** : table|nil PointList, ou nil si le fichier est absent, illisible ou a moins de 3 points
+- `missionDir` (*string*) : Mission folder containing the driveline file (rallyUtil.drivelineFile)
+- **returns**: table|nil PointList, or nil if the file is absent, unreadable or has fewer than 3 points
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/recce/drivelineRecording.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/recce/drivelineRecording.lua`.*

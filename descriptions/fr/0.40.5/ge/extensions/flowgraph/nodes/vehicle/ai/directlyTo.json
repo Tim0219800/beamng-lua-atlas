@@ -1,0 +1,58 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/directlyTo.lua",
+  "module": "Nœud « AI Directly To » (couleur ai, comportement duration + once). Fait rouler un véhicule en ligne droite vers une position cible, via un chemin interpolé envoyé à ai.startFollowing (mode « neverReset »). Entrées : flow, reset, vehId, target (vec3), targetVelocity (m/s, 1 par défaut). Sortie : flow, actif quand le véhicule est arrivé. Données : minDistance (1,5 m), handBrakeWhenFinished, straightenWheelsWhenFinished, maxStepDistance (5 m).",
+  "notes": [
+    "Dans setupAI, la boucle va de 1 à steps+3 : le chemin dépasse la cible de trois points.",
+    "La variable locale target est réassignée (target = target - origin), ce qui crée un nouvel objet à chaque appel.",
+    "Le pin flow de sortie n'est jamais remis à false une fois complete."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Initialise started/complete et les données par défaut.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Appelle reset.",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Remet started/complete à false et appelle endAI.",
+          "internal": false
+        },
+        "getVeh": {
+          "desc": "Renvoie le véhicule de vehId, ou celui du joueur sans entrée.",
+          "internal": false
+        },
+        "endAI": {
+          "desc": "Envoie au véhicule ai:scriptStop(handBrake, straightenWheels) selon les données du nœud.",
+          "internal": false
+        },
+        "setupAI": {
+          "desc": "Construit un chemin de points espacés d'au plus maxStepDistance entre la position du véhicule et la cible (temps = distance / vitesse) et l'envoie par ai.startFollowing.",
+          "internal": false
+        },
+        "work": {
+          "desc": "Gère reset ; au premier flow lance setupAI ; ensuite teste la distance au carré à la cible et, sous minDistance, arrête l'IA, marque complete et active la sortie flow.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche les états Complete et Started.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Constructeur de nœud."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style du nœud."
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

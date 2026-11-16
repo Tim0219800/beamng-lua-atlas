@@ -1,0 +1,11 @@
+{
+  "path": "lua/common/libs/luamqtt/mqtt/bit53.lua",
+  "module": "Implémentation de secours de quelques fonctions de BitOp (lshift, rshift, bor, band) avec les opérateurs natifs de Lua 5.3 (<<, >>, |, &). Chargé par bitwrap uniquement si l'interpréteur n'est ni Lua 5.1/LuaJIT ni Lua 5.2. Dans BeamNG (LuaJIT) il n'est jamais chargé.",
+  "notes": ["Ne pas le charger sous LuaJIT : la syntaxe des opérateurs de bits de Lua 5.3 n'y est pas valide et provoquerait une erreur de compilation."],
+  "functions": {
+    "lshift": {"desc": "Décalage à gauche.", "params": {"x": {"type": "integer", "desc": "Valeur."}, "n": {"type": "integer", "desc": "Nombre de bits."}}, "returns": [{"type": "integer", "desc": "x << n."}]},
+    "rshift": {"desc": "Décalage à droite.", "params": {"x": {"type": "integer", "desc": "Valeur."}, "n": {"type": "integer", "desc": "Nombre de bits."}}, "returns": [{"type": "integer", "desc": "x >> n."}]},
+    "bor": {"desc": "OU bit à bit.", "params": {"x1": {"type": "integer", "desc": "Valeur."}, "x2": {"type": "integer", "desc": "Valeur."}}, "returns": [{"type": "integer", "desc": "x1 | x2."}]},
+    "band": {"desc": "ET bit à bit.", "params": {"x1": {"type": "integer", "desc": "Valeur."}, "x2": {"type": "integer", "desc": "Valeur."}}, "returns": [{"type": "integer", "desc": "x1 & x2."}]}
+  }
+}

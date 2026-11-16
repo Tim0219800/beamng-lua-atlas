@@ -1,51 +1,51 @@
 # `gameplay_rally_voicepackMissionSettings`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/voicepackMissionSettings.lua` · VM : Game Engine (GE) · 34 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/voicepackMissionSettings.lua` · VM: Game Engine (GE) · 34 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_voicepackMissionSettings` : `extensions.load("gameplay_rally_voicepackMissionSettings")`, puis la globale `gameplay_rally_voicepackMissionSettings`
+**Access:** extension `gameplay_rally_voicepackMissionSettings`: `extensions.load("gameplay_rally_voicepackMissionSettings")`, then the global `gameplay_rally_voicepackMissionSettings`
 
-Fine couche autour de gameplay/rally/voicepack pour les réglages utilisateur d'une mission de rallye : construit le réglage « pack de voix » d'une étape ou d'une boucle, et mémorise le choix de l'utilisateur dans la liste des packs récemment utilisés (MRU). Le choix est stocké dans les réglages utilisateur sous la clé `rallyVoicepackPick`. Toute la logique est déléguée à voicepack.lua.
+Thin layer around gameplay/rally/voicepack for the user settings of a rally mission: builds the "voice pack" setting of a stage or a loop, and stores the user's choice in the most recently used (MRU) pack list. The choice is stored in the user settings under the key `rallyVoicepackPick`. All logic is delegated to voicepack.lua.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_voicepackMissionSettings.buildLoopSetting(missionTypeData)` | Construit le réglage utilisateur « pack de voix » pour une mission de type boucle (délègue à voicepack.buildLoopMissionUserSetting). | 19 |
-| `gameplay_rally_voicepackMissionSettings.buildStageSetting(missionDir, missionId)` | Construit le réglage utilisateur « pack de voix » pour une étape (délègue à voicepack.buildMissionUserSetting). | 15 |
-| `gameplay_rally_voicepackMissionSettings.rememberLoopPick(missionTypeData, userSettings)` | Ajoute le choix de pack (userSettings.rallyVoicepackPick) au MRU des missions boucle via voicepack.addLoopMissionSettingToMRU. | 29 |
-| `gameplay_rally_voicepackMissionSettings.rememberStagePick(userSettings, missionDir, missionId)` | Lit le choix de pack dans userSettings.rallyVoicepackPick et l'ajoute au MRU de la mission. Ne fait rien si aucun choix n'est valide ou si le choix est de type 'preferences'. | 23 |
+| `gameplay_rally_voicepackMissionSettings.buildLoopSetting(missionTypeData)` | Builds the "voice pack" user setting for a loop-type mission (delegates to voicepack.buildLoopMissionUserSetting). | 19 |
+| `gameplay_rally_voicepackMissionSettings.buildStageSetting(missionDir, missionId)` | Builds the "voice pack" user setting for a stage (delegates to voicepack.buildMissionUserSetting). | 15 |
+| `gameplay_rally_voicepackMissionSettings.rememberLoopPick(missionTypeData, userSettings)` | Adds the pack choice (userSettings.rallyVoicepackPick) to the loop missions' MRU via voicepack.addLoopMissionSettingToMRU. | 29 |
+| `gameplay_rally_voicepackMissionSettings.rememberStagePick(userSettings, missionDir, missionId)` | Reads the pack choice from userSettings.rallyVoicepackPick and adds it to the mission's MRU. Does nothing if no choice is valid or if the choice is of type 'preferences'. | 23 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_voicepackMissionSettings.buildLoopSetting(missionTypeData)`
 
-Construit le réglage utilisateur « pack de voix » pour une mission de type boucle (délègue à voicepack.buildLoopMissionUserSetting).
+Builds the "voice pack" user setting for a loop-type mission (delegates to voicepack.buildLoopMissionUserSetting).
 
-- `missionTypeData` (*table*) : Données du type de mission boucle.
-- **renvoie** : table Définition du réglage utilisateur.
+- `missionTypeData` (*table*) : Loop mission type data.
+- **returns**: table User setting definition.
 
 #### `gameplay_rally_voicepackMissionSettings.buildStageSetting(missionDir, missionId)`
 
-Construit le réglage utilisateur « pack de voix » pour une étape (délègue à voicepack.buildMissionUserSetting).
+Builds the "voice pack" user setting for a stage (delegates to voicepack.buildMissionUserSetting).
 
-- `missionDir` (*string*) : Dossier de la mission.
-- `missionId` (*string*) : Identifiant de la mission.
-- **renvoie** : table Définition du réglage utilisateur (telle que renvoyée par voicepack).
+- `missionDir` (*string*) : Mission folder.
+- `missionId` (*string*) : Mission identifier.
+- **returns**: table User setting definition (as returned by voicepack).
 
 #### `gameplay_rally_voicepackMissionSettings.rememberLoopPick(missionTypeData, userSettings)`
 
-Ajoute le choix de pack (userSettings.rallyVoicepackPick) au MRU des missions boucle via voicepack.addLoopMissionSettingToMRU.
+Adds the pack choice (userSettings.rallyVoicepackPick) to the loop missions' MRU via voicepack.addLoopMissionSettingToMRU.
 
-- `missionTypeData` (*table*) : Données du type de mission boucle.
-- `userSettings` (*table|nil*) : Réglages utilisateur.
+- `missionTypeData` (*table*) : Loop mission type data.
+- `userSettings` (*table|nil*) : User settings.
 
 #### `gameplay_rally_voicepackMissionSettings.rememberStagePick(userSettings, missionDir, missionId)`
 
-Lit le choix de pack dans userSettings.rallyVoicepackPick et l'ajoute au MRU de la mission. Ne fait rien si aucun choix n'est valide ou si le choix est de type 'preferences'.
+Reads the pack choice from userSettings.rallyVoicepackPick and adds it to the mission's MRU. Does nothing if no choice is valid or if the choice is of type 'preferences'.
 
-- `userSettings` (*table|nil*) : Réglages utilisateur de la mission.
-- `missionDir` (*string*) : Dossier de la mission.
-- `missionId` (*string*) : Identifiant de la mission.
+- `userSettings` (*table|nil*) : Mission user settings.
+- `missionDir` (*string*) : Mission folder.
+- `missionId` (*string*) : Mission identifier.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/voicepackMissionSettings.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/voicepackMissionSettings.lua`.*

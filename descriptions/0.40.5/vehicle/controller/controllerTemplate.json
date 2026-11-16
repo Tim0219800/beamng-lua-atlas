@@ -1,34 +1,52 @@
 {
   "path": "lua/vehicle/controller/controllerTemplate.lua",
-  "module": "Modèle de départ pour écrire un contrôleur de véhicule. Un contrôleur est un module Lua placé dans lua/vehicle/controller/, déclaré dans le jbeam (section `controller` avec `fileName`, et éventuellement `name`) et chargé par `controller.lua`. Cycle de vie : `init(jbeamData)` à la création (jbeamData = déclaration fusionnée avec les données jbeam portant le nom du contrôleur), puis `initSecondStage`, `initSounds`, `initLastStage` (facultatifs) une fois les autres systèmes prêts ; au reset, `reset(jbeamData)` (ou, s'il est absent, `init` rappelé) ainsi que `resetLastStage` et `resetSounds`. En fonctionnement : `update(dt)` à chaque pas physique, `updateWheelsIntermediate(dt)`, `updateFixedStep(dt)` à pas fixe de 100 Hz, `updateGFX(dt)` à chaque frame graphique. Seules les fonctions réellement exportées dans M sont appelées. Autres hooks facultatifs : debugDraw, beamBroken, beamDeformed, nodeCollision, onCouplerFound/Attached/Detached, onGameplayEvent, settingsChanged, serialize/deserialize.",
-  "usage": "local M = {}\nM.type = \"auxiliary\"\nlocal function init(jbeamData)\n  -- lire jbeamData.maCle\nend\nlocal function updateGFX(dt)\nend\nM.init = init\nM.reset = init\nM.updateGFX = updateGFX\nreturn M",
+  "module": "Starter template for writing a vehicle controller. A controller is a Lua module placed in lua/vehicle/controller/, declared in the jbeam (`controller` section with `fileName`, and optionally `name`) and loaded by `controller.lua`. Lifecycle: `init(jbeamData)` on creation (jbeamData = the declaration merged with the jbeam data bearing the controller's name), then `initSecondStage`, `initSounds`, `initLastStage` (optional) once the other systems are ready; on reset, `reset(jbeamData)` (or, if absent, `init` is called again) as well as `resetLastStage` and `resetSounds`. In operation: `update(dt)` every physics step, `updateWheelsIntermediate(dt)`, `updateFixedStep(dt)` at a fixed 100 Hz step, `updateGFX(dt)` every graphics frame. Only the functions actually exported in M are called. Other optional hooks: debugDraw, beamBroken, beamDeformed, nodeCollision, onCouplerFound/Attached/Detached, onGameplayEvent, settingsChanged, serialize/deserialize.",
+  "usage": "local M = {}\nM.type = \"auxiliary\"\nlocal function init(jbeamData)\n  -- read jbeamData.myKey\nend\nlocal function updateGFX(dt)\nend\nM.init = init\nM.reset = init\nM.updateGFX = updateGFX\nreturn M",
   "notes": [
-    "`M.type` : \"auxiliary\" pour un contrôleur ordinaire ; \"main\" désigne le contrôleur principal (un seul par véhicule, jamais chargeable à chaud).",
-    "controller.lua ajoute lui-même `name`, `typeName`, `hasCustomName`, `manualOrder` (clé jbeam `manualOrder`) et `order` au module après init. Un contrôleur peut définir `M.relevantDevice` (nom d'un périphérique du powertrain) ou `M.defaultOrder` pour influencer l'ordre d'appel.",
-    "Le hook de casse de poutre doit s'appeler `beamBroken` (et non beamBroke) pour être détecté.",
-    "Dans le modèle, onCouplerFound et onCouplerAttached sont commentés avec moins d'arguments que ceux réellement transmis par controller.lua (nodeDist pour Found ; attachSpeed, attachEnergy pour Attached).",
-    "Si un contrôleur ajoute ou retire dynamiquement `M.update` & co, il doit appeler `controller.cacheAllControllerFunctions()`.",
-    "Les fonctions commentées du modèle ne sont pas exportées ; seuls init, reset et updateGFX sont actifs."
+    "`M.type`: \"auxiliary\" for an ordinary controller; \"main\" designates the main controller (only one per vehicle, never hot-loadable).",
+    "controller.lua itself adds `name`, `typeName`, `hasCustomName`, `manualOrder` (jbeam key `manualOrder`) and `order` to the module after init. A controller can define `M.relevantDevice` (name of a powertrain device) or `M.defaultOrder` to influence the call order.",
+    "The beam break hook must be called `beamBroken` (and not beamBroke) to be detected.",
+    "In the template, onCouplerFound and onCouplerAttached are commented out with fewer arguments than those actually passed by controller.lua (nodeDist for Found; attachSpeed, attachEnergy for Attached).",
+    "If a controller dynamically adds or removes `M.update` & co, it must call `controller.cacheAllControllerFunctions()`.",
+    "The commented-out functions of the template are not exported; only init, reset and updateGFX are active."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\" dans le modèle (contrôleur annexe). \"main\" pour le contrôleur principal du véhicule."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\" in the template (secondary controller). \"main\" for the vehicle's main controller."
+    }
   },
   "functions": {
     "init": {
-      "desc": "Appelée par controller.lua à la création du contrôleur (et au reset si `reset` n'existe pas). Corps vide dans le modèle ; c'est ici qu'on lit les clés jbeam.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur (fileName, name, clés personnalisées…)."}},
+      "desc": "Called by controller.lua when the controller is created (and on reset if `reset` does not exist). Empty body in the template; this is where the jbeam keys are read.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data (fileName, name, custom keys...)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Appelée au reset du véhicule (étape resetSecondStage de controller.lua). Corps vide dans le modèle.",
-      "params": {"jbeamData": {"type": "table", "desc": "Mêmes données jbeam que pour init."}},
+      "desc": "Called on vehicle reset (resetSecondStage step of controller.lua). Empty body in the template.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Same jbeam data as for init."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Appelée à chaque frame graphique. Corps vide dans le modèle. Les variantes `update` (pas physique), `updateWheelsIntermediate` et `updateFixedStep` (100 Hz) sont fournies en commentaire.",
-      "params": {"dt": {"type": "number", "desc": "Durée du pas en secondes."}},
+      "desc": "Called every graphics frame. Empty body in the template. The variants `update` (physics step), `updateWheelsIntermediate` and `updateFixedStep` (100 Hz) are provided as comments.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Step duration in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     }

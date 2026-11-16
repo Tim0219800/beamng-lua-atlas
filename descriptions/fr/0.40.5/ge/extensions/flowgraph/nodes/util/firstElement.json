@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/firstElement.lua",
+  "module": "Nœud « Get First Element of Table » (repeat_instant). Renvoie le premier élément (index 1) d'une table. Entrée : table. Sortie : firstElement (any).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Ne fait rien.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Met oldPos à nil (champ inutilisé ensuite).",
+          "internal": true
+        },
+        "getFirstElement": {
+          "desc": "Renvoie table[1] du pin d'entrée table (l'argument n'est pas utilisé).",
+          "params": {
+            "table": {
+              "type": "table",
+              "desc": "Ignoré : la fonction relit le pin d'entrée."
+            }
+          },
+          "internal": false
+        },
+        "work": {
+          "desc": "Écrit le premier élément dans firstElement si la table est connectée.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

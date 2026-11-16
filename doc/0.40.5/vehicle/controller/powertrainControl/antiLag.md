@@ -1,82 +1,82 @@
 # `controller_powertrainControl_antiLag`
 
-*Fichier : `lua/vehicle/controller/powertrainControl/antiLag.lua` · VM : Véhicule · 231 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/powertrainControl/antiLag.lua` · VM: Vehicle · 231 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `powertrainControl/antiLag` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `powertrainControl/antiLag` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire d'anti-lag (ALS) pour moteur turbocompressé. Machine à états off / idle / armed / manualOverride / timeout : en idle il s'arme après quelques secondes de plein gaz à haut régime ; armé, quand le véhicule roule, que les gaz sont levés (ou le frein appuyé) et que le moteur tourne assez, il pilote par PID le coefficient d'anti-lag du moteur (engine:setAntilagCoef) pour maintenir le turbo à turboTargetRPM. Un temps maximal continu évite la surchauffe. Publie electrics.values.alsActive (booléen) et alsState (chaîne).
+Auxiliary anti-lag (ALS) controller for a turbocharged engine. State machine off / idle / armed / manualOverride / timeout: in idle it arms after a few seconds of full throttle at high RPM; when armed, when the vehicle is moving, the throttle is lifted (or the brake pressed) and the engine runs fast enough, it uses a PID to drive the engine's anti-lag coefficient (engine:setAntilagCoef) to keep the turbo at turboTargetRPM. A maximum continuous time prevents overheating. Publishes electrics.values.alsActive (boolean) and alsState (string).
 
-## Exemple
+## Example
 
 ```lua
 local als = controller.getController("antiLag")
-als.setAntilagState("manualOverride") -- anti-lag forcé (coef = 1)
+als.setAntilagState("manualOverride") -- forced anti-lag (coef = 1)
 als.setAntilagState("off")
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : controlledEngine ("mainEngine"), turboTargetRPM (90000), minActiveEngineRPM (2000), minActiveWheelSpeed (1 m/s), maxActiveThrottleInput (0.2), minActiveBrakeInput (0.2), timeoutTime (30 s), timeoutResetTime (2 s), autoArmMinRPM (5000), autoArmMinThrottle (0.5), autoArmTime (1 s), autoDisarmMaxRPM (3000), autoDisarmMaxThrottle (0.3), autoDisarmTime (3 s).
-- États valides pour setAntilagState : "off", "idle", "armed", "manualOverride", "timeout" (aucune validation : toute valeur est acceptée telle quelle).
-- Sans moteur ou si le moteur n'a pas de turbocompresseur (engine.turbocharger), log E et updateGFX devient nop.
-- Le timeout s'accumule quand l'anti-lag est actif et décroît 3 fois plus vite sinon.
-- reset remet toujours l'état à idle même si le mode précédent était off, et ne réinitialise pas les timers d'armement/désarmement.
-- getState/setState exposent un mode distant : "off", "automatic" (idle/armed/timeout) ou "manualOverride" (clé <nom du contrôleur>_mode).
+- jbeam keys read: controlledEngine ("mainEngine"), turboTargetRPM (90000), minActiveEngineRPM (2000), minActiveWheelSpeed (1 m/s), maxActiveThrottleInput (0.2), minActiveBrakeInput (0.2), timeoutTime (30 s), timeoutResetTime (2 s), autoArmMinRPM (5000), autoArmMinThrottle (0.5), autoArmTime (1 s), autoDisarmMaxRPM (3000), autoDisarmMaxThrottle (0.3), autoDisarmTime (3 s).
+- Valid states for setAntilagState: "off", "idle", "armed", "manualOverride", "timeout" (no validation: any value is accepted as is).
+- Without an engine or if the engine has no turbocharger (engine.turbocharger), log E and updateGFX becomes nop.
+- The timeout accumulates when the anti-lag is active and decreases 3 times faster otherwise.
+- reset always sets the state back to idle even if the previous mode was off, and does not reset the arming/disarming timers.
+- getState/setState expose a remote mode: "off", "automatic" (idle/armed/timeout) or "manualOverride" (key <controller name>_mode).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_powertrainControl_antiLag.getState()` | État sauvegardable : mode distant (off / automatic / manualOverride). | 204 |
-| `controller_powertrainControl_antiLag.init(jbeamData)` | Récupère le moteur et son turbocompresseur, lit les seuils jbeam et crée le PID de régime turbo. *(interne)* | 134 |
-| `controller_powertrainControl_antiLag.reset(jbeamData)` | Remet timeout, PID et état (idle) à zéro et les electrics alsActive/alsState. *(interne)* | 126 |
-| `controller_powertrainControl_antiLag.setAntilagState(newState)` | Force l'état interne de la machine à états (off, idle, armed, manualOverride, timeout). | 47 |
-| `controller_powertrainControl_antiLag.setState(data)` | Restaure le mode depuis la table (modes inconnus ignorés). | 209 |
-| `controller_powertrainControl_antiLag.updateGFX(dt)` | Chaque frame : fait avancer la machine à états et applique le coefficient d'anti-lag au moteur. *(interne)* | 51 |
+| `controller_powertrainControl_antiLag.getState()` | Saveable state: remote mode (off / automatic / manualOverride). | 204 |
+| `controller_powertrainControl_antiLag.init(jbeamData)` | Gets the engine and its turbocharger, reads the jbeam thresholds and creates the turbo RPM PID. *(internal)* | 134 |
+| `controller_powertrainControl_antiLag.reset(jbeamData)` | Resets timeout, PID and state (idle) to zero and the alsActive/alsState electrics. *(internal)* | 126 |
+| `controller_powertrainControl_antiLag.setAntilagState(newState)` | Forces the internal state of the state machine (off, idle, armed, manualOverride, timeout). | 47 |
+| `controller_powertrainControl_antiLag.setState(data)` | Restores the mode from the table (unknown modes ignored). | 209 |
+| `controller_powertrainControl_antiLag.updateGFX(dt)` | Every frame: advances the state machine and applies the anti-lag coefficient to the engine. *(internal)* | 51 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_powertrainControl_antiLag.getState()`
 
-État sauvegardable : mode distant (off / automatic / manualOverride).
+Saveable state: remote mode (off / automatic / manualOverride).
 
-- **renvoie** : table Table d'état.
+- **returns**: table State table.
 
 #### `controller_powertrainControl_antiLag.init(jbeamData)`
 
-Récupère le moteur et son turbocompresseur, lit les seuils jbeam et crée le PID de régime turbo.
+Gets the engine and its turbocharger, reads the jbeam thresholds and creates the turbo RPM PID.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_powertrainControl_antiLag.reset(jbeamData)`
 
-Remet timeout, PID et état (idle) à zéro et les electrics alsActive/alsState.
+Resets timeout, PID and state (idle) to zero and the alsActive/alsState electrics.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_powertrainControl_antiLag.setAntilagState(newState)`
 
-Force l'état interne de la machine à états (off, idle, armed, manualOverride, timeout).
+Forces the internal state of the state machine (off, idle, armed, manualOverride, timeout).
 
-- `newState` (*string*) : Nom de l'état.
+- `newState` (*string*) : State name.
 
 #### `controller_powertrainControl_antiLag.setState(data)`
 
-Restaure le mode depuis la table (modes inconnus ignorés).
+Restores the mode from the table (unknown modes ignored).
 
-- `data` (*table|nil*) : Table produite par getState.
+- `data` (*table|nil*) : Table produced by getState.
 
 #### `controller_powertrainControl_antiLag.updateGFX(dt)`
 
-Chaque frame : fait avancer la machine à états et applique le coefficient d'anti-lag au moteur.
+Every frame: advances the state machine and applies the anti-lag coefficient to the engine.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/powertrainControl/antiLag.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/powertrainControl/antiLag.lua`.*

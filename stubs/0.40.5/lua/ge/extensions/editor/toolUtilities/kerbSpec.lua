@@ -2,17 +2,17 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/kerbSpec.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Section unique de bordure (kerb) et de trottoir (footway) à laquelle tous les outils de l'éditeur construisent, et pierre dont elles sont taillées. Les dimensions vivent ici pour qu'une voiture ressente le même ressaut sur une rue, un parking, un pont ou une place. Donne aussi les lignes de texture d'une variante de bordure.
---- Accès : extension `editor_toolUtilities_kerbSpec` : `extensions.load("editor_toolUtilities_kerbSpec")`, puis la globale `editor_toolUtilities_kerbSpec`
+--- Single kerb and footway section that all the editor tools build to, and the stone they are cut from. The dimensions live here so that a car feels the same step on a street, a car park, a bridge or a plaza. Also gives the texture rows of a kerb variant.
+--- Access: extension `editor_toolUtilities_kerbSpec`: `extensions.load("editor_toolUtilities_kerbSpec")`, then the global `editor_toolUtilities_kerbSpec`
 ---@class editor_toolUtilities_kerbSpec
----@field spec table Dimensions et matériaux : slabW, slabThick, kerbW, kerbH, buryM, slabMaterial, kerbMaterial.
+---@field spec table Dimensions and materials: slabW, slabThick, kerbW, kerbH, buryM, slabMaterial, kerbMaterial.
 editor_toolUtilities_kerbSpec = {}
 
---- Renvoie les trois lignes V de la texture occupées par une variante de bordure : le dos de la marche, l'arête et le pied de la face. La variante est tronquée à l'entier et bornée à 0..4 ; une valeur non numérique donne 0.
----Source : lua/ge/extensions/editor/toolUtilities/kerbSpec.lua:35
----@param variant integer|nil Indice de variante, 0 à 4.
----@return number  Rangée du dos de la marche (variante * 0.2).
----@return number  Rangée de l'arête (+0.1).
----@return number  Rangée du pied de la face (+0.2 moins un petit écart de 0.00332).
+--- Returns the three V rows of the texture occupied by a kerb variant: the back of the step, the edge and the foot of the face. The variant is truncated to an integer and clamped to 0..4; a non-numeric value gives 0.
+---Source: lua/ge/extensions/editor/toolUtilities/kerbSpec.lua:35
+---@param variant integer|nil Variant index, 0 to 4.
+---@return number  Row of the back of the step (variant * 0.2).
+---@return number  Row of the edge (+0.1).
+---@return number  Row of the foot of the face (+0.2 minus a small gap of 0.00332).
 function editor_toolUtilities_kerbSpec.kerbRows(variant) end
 

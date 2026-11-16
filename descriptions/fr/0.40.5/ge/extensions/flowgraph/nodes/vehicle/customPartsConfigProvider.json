@@ -1,0 +1,84 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/customPartsConfigProvider.lua",
+  "module": "Nœud fournisseur « Custom Parts Config Provider » (catégorie `provider`). Permet de construire dans l'éditeur une configuration de pièces personnalisée (`partConfig = {parts, vars}`) : chargement depuis un fichier .pc, copie depuis le véhicule joueur (tout, pièces seules, variables seules) puis édition clé/valeur. Sorties : `model` (string) et `config` (table de type `vehicleConfig`), utilisables par « Spawn Vehicle ».",
+  "notes": [
+    "`showKVPairs` : à la renommage d'une clé, la variable `old` n'est jamais définie (nil), donc la table n'est pas mise à jour correctement. À la suppression, `self.partConfig.vars[...]` est utilisé même pour le champ `parts`.",
+    "Bouton « Read from File » : `partConfigFilename` reçoit `self.configPath` (peut être nil) au lieu du chemin du véhicule.",
+    "Le nœud écrit ses sorties à chaque frame (`work`) sans notion de flux."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_onDeserialized": {
+          "desc": "Appelé au chargement du projet ; restaure les réglages du nœud depuis `nodeData`.",
+          "internal": true,
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "Données sauvegardées du nœud."
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Appelé à la sauvegarde du projet ; copie les réglages du nœud dans la table `res`.",
+          "internal": true,
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde à remplir."
+            }
+          }
+        },
+        "drawCustomProperties": {
+          "desc": "Affichage ImGui des propriétés du nœud dans le panneau de l'éditeur ; renvoie une chaîne décrivant la modification faite, ou nil.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affichage ImGui au centre du nœud dans l'éditeur de flowgraph ; purement visuel.",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+            },
+            "style": {
+              "type": "any",
+              "desc": "Style ImGui de l'éditeur."
+            }
+          }
+        },
+        "init": {
+          "desc": "Constructeur ; vide modèles/configs et crée `partConfig = {parts = {}, vars = {}}`.",
+          "internal": true
+        },
+        "showKVPairs": {
+          "desc": "Affiche un tableau éditable de paires clé/valeur (`field` = 'parts' avec valeurs string, ou 'vars' avec valeurs number), avec tri, ajout et suppression.",
+          "internal": false,
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Titre affiché."
+            },
+            "field": {
+              "type": "string",
+              "desc": "'parts' ou 'vars'."
+            },
+            "tpe": {
+              "type": "string",
+              "desc": "'string' ou 'number' : type des valeurs."
+            }
+          }
+        },
+        "sortKeys": {
+          "desc": "Reconstruit `sortedKeys` (clés de `parts` et `vars` triées alphabétiquement).",
+          "internal": false
+        },
+        "work": {
+          "desc": "Copie `partConfig` et `model` sur les pins de sortie `config` et `model`.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

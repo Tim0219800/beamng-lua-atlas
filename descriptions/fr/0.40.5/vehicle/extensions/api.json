@@ -1,0 +1,18 @@
+{
+  "path": "lua/vehicle/extensions/api.lua",
+  "module": "Extension véhicule qui démarre un petit serveur HTTP/JSON local (utils/httpJsonServer) sur localhost:23512 au chargement de l'extension. Il répond à deux routes : v1/ping et v1/getData (nœuds, poutres et triangles du véhicule, pour un éditeur externe). L'extension est chargée par véhicule ; le serveur est démarré une seule fois dans ce VM.",
+  "usage": "-- requête externe : POST/GET http://localhost:23512/v1/ping  ->  {\"ok\": true}\n-- http://localhost:23512/v1/getData -> [nodes, beams, tris]",
+  "notes": [
+    "Format de v1/getData : tableau {nodes, beams, tris}. nodes[k] = {cid, {x, y, z}, nodeWeight} (nœuds sans wheelTreadBeamDeform) ; beams[k] = {cid, {id1, id2}, beamSpring, beamDamp} (poutres sans wheelID) ; tris[k] = {{id1, id2, id3}} (triangles ayant un cid).",
+    "Le port (23512) et l'hôte (localhost) sont codés en dur ; une requête sans uri renvoie nil (erreur HTTP 500).",
+    "Le serveur est traité dans updateGFX (httpJsonServer.update) : il ne répond qu'une fois par frame, et seulement tant que l'extension est chargée.",
+    "onExtensionLoaded écrit un log de niveau erreur ('INIT WEBSERVER TO PORT ...') même en fonctionnement normal.",
+    "jsonRequest (client HTTP POST avec corps data=<json>) est défini mais n'est jamais appelé ni exporté."
+  ],
+  "fields": {},
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement de l'extension : démarre une fois le serveur HTTP JSON sur localhost:23512 avec le gestionnaire de requêtes interne.", "params": {}, "returns": [], "internal": true},
+    "onVehicleLoaded": {"desc": "Hook appelé quand le véhicule est chargé ; corps vide (code de débogage commenté).", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Appelé chaque frame : traite les connexions en attente du serveur HTTP.", "params": {}, "returns": [], "internal": true}
+  }
+}

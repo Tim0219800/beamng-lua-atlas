@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/ui/vehicleSelector/vehicleMetadataEditor.lua",
+  "module": "Ébauche d'éditeur de métadonnées de véhicule pour le sélecteur. Le module est quasi vide : sa seule fonction renvoie des valeurs fixes. Sa référence dans les dépendances de ui_vehicleSelector_general est commentée.",
+  "notes": [
+    "getVehicleMetadataDetails ignore son paramètre data et renvoie toujours {name = 'Default Vehicle Name', description = 'Default vehicle description', type = 'Car'} : c'est un espace réservé."
+  ],
+  "functions": {
+    "getVehicleMetadataDetails": {
+      "desc": "Renvoie des métadonnées factices de véhicule (nom, description, type), quel que soit l'argument.",
+      "params": {"data": {"type": "any", "desc": "Ignoré."}},
+      "returns": [{"type": "table", "desc": "{name, description, type} avec des valeurs par défaut fixes."}]
+    }
+  }
+}

@@ -1,39 +1,39 @@
 # `editor_flowgraph_main`
 
-*Fichier : `lua/ge/extensions/editor/flowgraph/main.lua` · VM : Game Engine (GE) · 1131 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/flowgraph/main.lua` · VM: Game Engine (GE) · 1131 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/flowgraph/main")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/flowgraph/main")` (file under extensions/ but not a regular extension)
 
-Fenêtre principale (fg_main, « Main view ») de l'éditeur Flowgraph : barre de menus (File : nouveau projet, chargement via editor_fileDialog, fichiers récents, restauration, encodage du presse-papiers…), canevas de nœuds du graphe courant avec modes de dessin (default, simple, heatmap, geometry), bordures colorées selon l'état du projet (running, paused, stopped, macro), menus contextuels (nœuds, pins, liens, création de nœud, Quick Connect) et gestion du glisser-déposer de nœuds, macros et variables. Fichier très volumineux (≈1100 lignes) : seules les fonctions utiles sont détaillées.
+Main window (fg_main, "Main view") of the Flowgraph editor: menu bar (File: new project, loading via editor_fileDialog, recent files, restore, clipboard encoding...), node canvas of the current graph with drawing modes (default, simple, heatmap, geometry), colored borders according to the project state (running, paused, stopped, macro), context menus (nodes, pins, links, node creation, Quick Connect) and handling of drag and drop of nodes, macros and variables. Very large file (about 1100 lines): only the useful functions are detailed.
 
-## Remarques
+## Notes
 
-- Le glisser-déposer crée des nœuds via mgr.graph:createNode : « types/getVariable » ou « types/setVariable » pour les variables, « macro/integrated » pour les macros ; chaque création ajoute une entrée d'historique (fgEditor.addHistory).
-- La création de nœuds/macros n'est possible que si mgr.allowEditing est vrai ; sinon le menu affiche « Disabled. ».
+- Drag and drop creates nodes via mgr.graph:createNode: "types/getVariable" or "types/setVariable" for variables, "macro/integrated" for macros; each creation adds a history entry (fgEditor.addHistory).
+- Creating nodes/macros is only possible if mgr.allowEditing is true; otherwise the menu displays "Disabled.".
 
-## Classe `C`
+## Class `C`
 
-Classe de la fenêtre principale Flowgraph (windowName = 'fg_main').
+Main Flowgraph window class (windowName = 'fg_main').
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(data)` | Désérialisation de l'état de la fenêtre. | 1126 |
-| `C:_onSerialize(data)` | Sérialisation de l'état de la fenêtre. | 1122 |
-| `C:attach(mgr)` | Associe le manager, prépare les couleurs de bordure et définit focusGraph sur le graphe principal. | 26 |
-| `C:doContextMenus()` | Gère l'ouverture et le dessin des menus contextuels (nœud, pin, lien, fond) en suspendant l'éditeur de nœuds. | 1047 |
-| `C:draw()` | Point d'entrée par frame ; appelle drawSelf. | 810 |
-| `C:drawGraph(graph, builder, style)` | Dessine un graphe (nœuds et liens) avec un builder et un style donnés. | 206 |
-| `C:drawMenu()` | Dessine la barre de menus de la fenêtre (File, etc.). | 73 |
-| `C:drawSelf()` | Corps principal du dessin : fenêtre, canevas, interactions, menus contextuels. | 293 |
-| `C:init()` | Initialise les identifiants de contexte (nœud/pin/lien), tailles de colonnes, lissage de FPS, et enregistre la fenêtre 600x600. | 38 |
-| `C:isMouseHovering()` | Indique si la souris est dans le rectangle de la fenêtre. | 1037 |
-| `C:resolveDragDropPayload()` | Traite un glisser-déposer terminé : crée le nœud, la macro ou le nœud de variable à la position de la souris, aligné sur la grille. | 1003 |
-| `C:showNewNodeContextMenu(menuPos)` | Affiche le menu de création de nœud (bibliothèque de nœuds) dans un enfant 300x300 (× échelle UI), ou « Disabled. » si l'édition est interdite. | 988 |
-| `C:showQuickAccessSubmenu(menuPos, pin)` | Affiche le sous-menu « Quick Connect » listant les pins compatibles (quickAccess, direction opposée) du graphe. | 817 |
+| `C:_onDeserialized(data)` | Deserialization of the window state. | 1126 |
+| `C:_onSerialize(data)` | Serialization of the window state. | 1122 |
+| `C:attach(mgr)` | Associates the manager, prepares the border colors and sets focusGraph to the main graph. | 26 |
+| `C:doContextMenus()` | Handles the opening and drawing of the context menus (node, pin, link, background) by suspending the node editor. | 1047 |
+| `C:draw()` | Per-frame entry point; calls drawSelf. | 810 |
+| `C:drawGraph(graph, builder, style)` | Draws a graph (nodes and links) with a given builder and style. | 206 |
+| `C:drawMenu()` | Draws the window's menu bar (File, etc.). | 73 |
+| `C:drawSelf()` | Main drawing body: window, canvas, interactions, context menus. | 293 |
+| `C:init()` | Initializes the context identifiers (node/pin/link), column sizes, FPS smoothing, and registers the 600x600 window. | 38 |
+| `C:isMouseHovering()` | Indicates whether the mouse is inside the window rectangle. | 1037 |
+| `C:resolveDragDropPayload()` | Handles a completed drag and drop: creates the node, macro or variable node at the mouse position, aligned to the grid. | 1003 |
+| `C:showNewNodeContextMenu(menuPos)` | Displays the node creation menu (node library) in a 300x300 child (× UI scale), or "Disabled." if editing is forbidden. | 988 |
+| `C:showQuickAccessSubmenu(menuPos, pin)` | Displays the "Quick Connect" submenu listing the compatible pins (quickAccess, opposite direction) of the graph. | 817 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/flowgraph/main.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/flowgraph/main.lua`.*

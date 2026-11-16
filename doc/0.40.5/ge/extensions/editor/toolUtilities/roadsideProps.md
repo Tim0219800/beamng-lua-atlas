@@ -1,12 +1,12 @@
 # `editor_toolUtilities_roadsideProps`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/roadsideProps.lua` · VM : Game Engine (GE) · 538 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/roadsideProps.lua` · VM: Game Engine (GE) · 538 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_roadsideProps` : `extensions.load("editor_toolUtilities_roadsideProps")`, puis la globale `editor_toolUtilities_roadsideProps`
+**Access:** extension `editor_toolUtilities_roadsideProps`: `extensions.load("editor_toolUtilities_roadsideProps")`, then the global `editor_toolUtilities_roadsideProps`
 
-Placeur partagé de lignes d'objets en bord de route (glissières, barrières, clôtures, lampadaires, bornes, poubelles, abri-bus…). Une table de préréglages (presets) décrit chaque pièce (forme .dae, rotation, écart entre pièces, mode de normale, pièces alternées, embouts) ; runLine pose une ligne de pièces le long d'un rail, placePoints une pièce à chaque point donné, placeScatter des éléments épars aléatoires. Les pièces vont dans des « pools » identifiés par poolId (scène via kitPlacer), que l'outil peut supprimer, compter ou graver (commitPool) en objets persistants. Les lampadaires créent aussi leur lumière (siteLights).
+Shared placer of lines of objects at the roadside (guardrails, barriers, fences, lampposts, bollards, bins, bus shelters...). A presets table describes each piece (.dae shape, rotation, gap between pieces, normal mode, alternating pieces, end caps); runLine places a line of pieces along a rail, placePoints one piece at each given point, placeScatter random scattered elements. The pieces go into "pools" identified by poolId (scene via kitPlacer), which the tool can delete, count or burn (commitPool) into persistent objects. Lampposts also create their light (siteLights).
 
-## Exemple
+## Example
 
 ```lua
 local rp = extensions.editor_toolUtilities_roadsideProps
@@ -16,124 +16,124 @@ print(rp.poolCount('edgeL'))
 rp.removePool('edgeL')
 ```
 
-## Remarques
+## Notes
 
-- Préréglages fournis (clé) : jersey, plastic, fence, chainlink, scrap, guardrail, lampMast, lampVictorian, lampSingle, lampTwin, lampStreet, lampHighway, lampSidewalk, bollard, bollardStone, bollardTall, bin, binMetal, binSmall, busShelter. Un préréglage avec reach est un lampadaire (lumière créée). normalMode 'surface' suit la normale du sol/rail, 'global' dresse la pièce à la verticale (props ponctuels, pas de chaînage).
-- Les pièces de mobilier cuites par le kit de props ne font pas partie de la version livrée : elles s'enregistrent via addPresets.
-- Les pièces d'un pool sont créées transitoires ; commitPool les rend persistantes (canSave=true) et les détache du pool.
-- Les noms d'objets sont « HeroProp_ » + poolId (+ _ownerTag) + index : plusieurs tronçons dans un même pool (keepPool) doivent avoir un ownerTag différent, sinon ils écrasent les noms des précédents.
-- Pour les props ponctuels, le pas par défaut est preset.pointStepM ou 25 m ; pour les pièces chaînées, longueur de pièce + gapM + extraGapM. Le pas minimum est 0.05 m.
-- placeScatter est déterministe pour un opts.seed donné (congruentiel linéaire 1103515245/12345 modulo 2^31).
+- Provided presets (key): jersey, plastic, fence, chainlink, scrap, guardrail, lampMast, lampVictorian, lampSingle, lampTwin, lampStreet, lampHighway, lampSidewalk, bollard, bollardStone, bollardTall, bin, binMetal, binSmall, busShelter. A preset with reach is a lamppost (light created). normalMode 'surface' follows the ground/rail normal, 'global' stands the piece upright (spot props, no chaining).
+- The street furniture pieces baked by the props kit are not part of the shipped version: they register via addPresets.
+- The pieces of a pool are created transient; commitPool makes them persistent (canSave=true) and detaches them from the pool.
+- Object names are "HeroProp_" + poolId (+ _ownerTag) + index: several sections in the same pool (keepPool) must have different ownerTags, otherwise they overwrite the names of the previous ones.
+- For spot props, the default step is preset.pointStepM or 25 m; for chained pieces, piece length + gapM + extraGapM. The minimum step is 0.05 m.
+- placeScatter is deterministic for a given opts.seed (linear congruential 1103515245/12345 modulo 2^31).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_roadsideProps.addPresets(t)` | Fusionne des préréglages supplémentaires dans la table presets (par clé). Utilisé par le kit de props, hors version livrée, pour enregistrer le mobilier et les pièces civiques. | 517 |
-| `editor_toolUtilities_roadsideProps.beginPointBatch(minGap)` | Démarre un lot de props ponctuels avec dédoublonnage spatial : tout point à moins de minGap d'un point déjà posé dans ce lot est refusé (désagrège les endroits où des lignes se rejoignent). Sans minGap positif, désactive le dédoublonnage. | 244 |
-| `editor_toolUtilities_roadsideProps.commitPool(poolId)` | Grave un pool : rend persistantes (canSave=true) les pièces transitoires et les lumières de ses lampadaires, puis les détache du pool sans les supprimer. | 301 |
-| `editor_toolUtilities_roadsideProps.endPointBatch()` | Termine le lot de props ponctuels. | 248 |
-| `editor_toolUtilities_roadsideProps.lampLight(presetKey, px, py, pz, q, scale, col, bright, reach)` | Fabrique l'enregistrement de lumière (voir siteLights) d'un lampadaire posé en (px, py, pz) et tourné de q ; la tête est placée sous le haut de la boîte du maillage, au bout du bras s'il y en a un. Renvoie nil si le préréglage n'est pas un lampadaire. | 210 |
-| `editor_toolUtilities_roadsideProps.orientation(along, up, preIdx, sideSign)` | Rotation donnée à une pièce posée (voir orient) pour un outil qui dresse ses propres pièces. Quaternion partagé : l'utiliser ou le copier avant l'appel suivant. | 179 |
-| `editor_toolUtilities_roadsideProps.placePoints(opts)` | Pose un préréglage à chaque point monde fourni. Remplace le pool sauf si keepPool. Chaque point peut porter ax, ay (direction le long, horizontale) et scl (nombre, ou {x,y,z} dans le repère de la pièce) pour ajuster cette instance. Pour un lampadaire, crée aussi la lumière. | 314 |
-| `editor_toolUtilities_roadsideProps.placeScatter(opts)` | Disperse des maillages libres aux points donnés (forme, lacet, inclinaison, taille et enfouissement aléatoires) dans un pool. Déterministe pour opts.seed. Remplace toujours le pool. | 340 |
-| `editor_toolUtilities_roadsideProps.poolCount(poolId)` | Nombre de pièces actuellement dans un pool (0 si vide, non construit ou gravé). Lecture en O(1), utilisable à chaque frame. | 289 |
-| `editor_toolUtilities_roadsideProps.poolList(poolId)` | Renvoie les pièces posées d'un pool, pour une cuisson qui les relit dans la scène. Lecture seule. | 295 |
-| `editor_toolUtilities_roadsideProps.removePool(poolId)` | Supprime le pool de pièces posées par l'appelant (pièces et lumières). | 278 |
-| `editor_toolUtilities_roadsideProps.runLine(opts)` | Construit (ou reconstruit) une ligne de props le long d'un rail. keepPool ajoute au pool au lieu de le remplacer, ce qui permet de bâtir une ligne faite de plusieurs rails (un parapet interrompu par des volées arrive en quelques tronçons ouverts). Les props ponctuels (mode global) sont posés à intervalles réguliers, avec lockEnds pour verrouiller les deux extrémités et répartir l'intérieur. | 372 |
+| `editor_toolUtilities_roadsideProps.addPresets(t)` | Merges additional presets into the presets table (by key). Used by the props kit, outside the shipped version, to register street furniture and civic pieces. | 517 |
+| `editor_toolUtilities_roadsideProps.beginPointBatch(minGap)` | Starts a batch of spot props with spatial deduplication: any point within minGap of a point already placed in this batch is rejected (breaks up places where lines meet). Without a positive minGap, disables deduplication. | 244 |
+| `editor_toolUtilities_roadsideProps.commitPool(poolId)` | Burns a pool: makes the transient pieces and the lights of its lampposts persistent (canSave=true), then detaches them from the pool without deleting them. | 301 |
+| `editor_toolUtilities_roadsideProps.endPointBatch()` | Ends the batch of spot props. | 248 |
+| `editor_toolUtilities_roadsideProps.lampLight(presetKey, px, py, pz, q, scale, col, bright, reach)` | Builds the light record (see siteLights) of a lamppost placed at (px, py, pz) and rotated by q; the head is placed under the top of the mesh's box, at the end of the arm if there is one. Returns nil if the preset is not a lamppost. | 210 |
+| `editor_toolUtilities_roadsideProps.orientation(along, up, preIdx, sideSign)` | Rotation given to a placed piece (see orient) for a tool that stands up its own pieces. Shared quaternion: use or copy it before the next call. | 179 |
+| `editor_toolUtilities_roadsideProps.placePoints(opts)` | Places a preset at each world point provided. Replaces the pool unless keepPool. Each point can carry ax, ay (horizontal direction along) and scl (number, or {x,y,z} in the piece's frame) to adjust that instance. For a lamppost, also creates the light. | 314 |
+| `editor_toolUtilities_roadsideProps.placeScatter(opts)` | Scatters free meshes at the given points (random shape, yaw, tilt, size and burial) into a pool. Deterministic for opts.seed. Always replaces the pool. | 340 |
+| `editor_toolUtilities_roadsideProps.poolCount(poolId)` | Number of pieces currently in a pool (0 if empty, not built or burned). O(1) read, usable every frame. | 289 |
+| `editor_toolUtilities_roadsideProps.poolList(poolId)` | Returns the placed pieces of a pool, for a bake that rereads them from the scene. Read-only. | 295 |
+| `editor_toolUtilities_roadsideProps.removePool(poolId)` | Deletes the pool of pieces placed by the caller (pieces and lights). | 278 |
+| `editor_toolUtilities_roadsideProps.runLine(opts)` | Builds (or rebuilds) a line of props along a rail. keepPool adds to the pool instead of replacing it, which allows building a line made of several rails (a parapet interrupted by flights of stairs comes as a few open sections). Spot props (global mode) are placed at regular intervals, with lockEnds to lock both ends and distribute the interior. | 372 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_roadsideProps.addPresets(t)`
 
-Fusionne des préréglages supplémentaires dans la table presets (par clé). Utilisé par le kit de props, hors version livrée, pour enregistrer le mobilier et les pièces civiques.
+Merges additional presets into the presets table (by key). Used by the props kit, outside the shipped version, to register street furniture and civic pieces.
 
-- `t` (*table<string, table>*) : Préréglages à ajouter ou remplacer.
+- `t` (*table<string, table>*) : Presets to add or replace.
 
 #### `editor_toolUtilities_roadsideProps.beginPointBatch(minGap)`
 
-Démarre un lot de props ponctuels avec dédoublonnage spatial : tout point à moins de minGap d'un point déjà posé dans ce lot est refusé (désagrège les endroits où des lignes se rejoignent). Sans minGap positif, désactive le dédoublonnage.
+Starts a batch of spot props with spatial deduplication: any point within minGap of a point already placed in this batch is rejected (breaks up places where lines meet). Without a positive minGap, disables deduplication.
 
-- `minGap` (*number|nil*) : Distance minimale entre points, en mètres.
+- `minGap` (*number|nil*) : Minimum distance between points, in meters.
 
 #### `editor_toolUtilities_roadsideProps.commitPool(poolId)`
 
-Grave un pool : rend persistantes (canSave=true) les pièces transitoires et les lumières de ses lampadaires, puis les détache du pool sans les supprimer.
+Burns a pool: makes the transient pieces and the lights of its lampposts persistent (canSave=true), then detaches them from the pool without deleting them.
 
-- `poolId` (*string*) : Identifiant du pool.
-- **renvoie** : table Liste des identifiants/noms des objets rendus persistants.
+- `poolId` (*string*) : Pool identifier.
+- **returns**: table List of identifiers/names of the objects made persistent.
 
 #### `editor_toolUtilities_roadsideProps.lampLight(presetKey, px, py, pz, q, scale, col, bright, reach)`
 
-Fabrique l'enregistrement de lumière (voir siteLights) d'un lampadaire posé en (px, py, pz) et tourné de q ; la tête est placée sous le haut de la boîte du maillage, au bout du bras s'il y en a un. Renvoie nil si le préréglage n'est pas un lampadaire.
+Builds the light record (see siteLights) of a lamppost placed at (px, py, pz) and rotated by q; the head is placed under the top of the mesh's box, at the end of the arm if there is one. Returns nil if the preset is not a lamppost.
 
-- `presetKey` (*string*) : Clé du préréglage.
-- `px` (*number*) : x du pied.
-- `py` (*number*) : y du pied.
-- `pz` (*number*) : z du pied.
-- `q` (*quat*) : Rotation de la pièce.
-- `scale` (*number|nil*) : Échelle (défaut 1).
-- `col` (*any|nil*) : Couleur de lueur (défaut siteLights.TONES.warm).
-- `bright` (*number|nil*) : Luminosité (défaut celle du préréglage).
-- `reach` (*number|nil*) : Rayon de la lumière (défaut celui du préréglage).
-- **renvoie** : table|nil { px, py, pz, glow, radius, brightness }.
+- `presetKey` (*string*) : Preset key.
+- `px` (*number*) : x of the foot.
+- `py` (*number*) : y of the foot.
+- `pz` (*number*) : z of the foot.
+- `q` (*quat*) : Rotation of the piece.
+- `scale` (*number|nil*) : Scale (default 1).
+- `col` (*any|nil*) : Glow color (default siteLights.TONES.warm).
+- `bright` (*number|nil*) : Brightness (default that of the preset).
+- `reach` (*number|nil*) : Light radius (default that of the preset).
+- **returns**: table|nil { px, py, pz, glow, radius, brightness }.
 
 #### `editor_toolUtilities_roadsideProps.orientation(along, up, preIdx, sideSign)`
 
-Rotation donnée à une pièce posée (voir orient) pour un outil qui dresse ses propres pièces. Quaternion partagé : l'utiliser ou le copier avant l'appel suivant.
+Rotation given to a placed piece (see orient) for a tool that stands up its own pieces. Shared quaternion: use or copy it before the next call.
 
-- `along` (*vec3*) : Direction le long du rail.
-- `up` (*vec3*) : Direction vers le haut.
-- `preIdx` (*integer*) : Pré-rotation de la pièce, 0 à 3 (0, 90, 180, 270 degrés autour de Z).
-- `sideSign` (*number|nil*) : Côté : valeur négative retourne la pièce de 180 degrés (défaut 1).
-- **renvoie** : quat Rotation (instance partagée du module).
+- `along` (*vec3*) : Direction along the rail.
+- `up` (*vec3*) : Upward direction.
+- `preIdx` (*integer*) : Pre-rotation of the piece, 0 to 3 (0, 90, 180, 270 degrees around Z).
+- `sideSign` (*number|nil*) : Side: a negative value flips the piece by 180 degrees (default 1).
+- **returns**: quat Rotation (shared instance of the module).
 
 #### `editor_toolUtilities_roadsideProps.placePoints(opts)`
 
-Pose un préréglage à chaque point monde fourni. Remplace le pool sauf si keepPool. Chaque point peut porter ax, ay (direction le long, horizontale) et scl (nombre, ou {x,y,z} dans le repère de la pièce) pour ajuster cette instance. Pour un lampadaire, crée aussi la lumière.
+Places a preset at each world point provided. Replaces the pool unless keepPool. Each point can carry ax, ay (horizontal direction along) and scl (number, or {x,y,z} in the piece's frame) to adjust that instance. For a lamppost, also creates the light.
 
-- `opts` (*table*) : poolId, presetKey, folder (groupe de scène parent), points ({x,y,z,ax,ay,scl}), sideSign (défaut 1), keepPool, ownerTag, outPositions (reçoit les positions posées), outLights (reçoit les lumières).
-- **renvoie** : integer Nombre de pièces posées (0 si préréglage ou points manquants).
+- `opts` (*table*) : poolId, presetKey, folder (parent scene group), points ({x,y,z,ax,ay,scl}), sideSign (default 1), keepPool, ownerTag, outPositions (receives the placed positions), outLights (receives the lights).
+- **returns**: integer Number of pieces placed (0 if preset or points are missing).
 
 #### `editor_toolUtilities_roadsideProps.placeScatter(opts)`
 
-Disperse des maillages libres aux points donnés (forme, lacet, inclinaison, taille et enfouissement aléatoires) dans un pool. Déterministe pour opts.seed. Remplace toujours le pool.
+Scatters free meshes at the given points (random shape, yaw, tilt, size and burial) into a pool. Deterministic for opts.seed. Always replaces the pool.
 
-- `opts` (*table*) : poolId, folder, shapePaths (formes au choix), points ({x,y,z}), seed, base (échelle de base, défaut 1), var (variation relative, défaut 0), tiltMax (inclinaison max en radians, défaut 0.2), buryBase (défaut 0.03 m), buryVar (défaut 0.12), collidable (booléen), outPositions.
-- **renvoie** : integer Nombre de pièces posées.
+- `opts` (*table*) : poolId, folder, shapePaths (shapes to choose from), points ({x,y,z}), seed, base (base scale, default 1), var (relative variation, default 0), tiltMax (max tilt in radians, default 0.2), buryBase (default 0.03 m), buryVar (default 0.12), collidable (boolean), outPositions.
+- **returns**: integer Number of pieces placed.
 
 #### `editor_toolUtilities_roadsideProps.poolCount(poolId)`
 
-Nombre de pièces actuellement dans un pool (0 si vide, non construit ou gravé). Lecture en O(1), utilisable à chaque frame.
+Number of pieces currently in a pool (0 if empty, not built or burned). O(1) read, usable every frame.
 
-- `poolId` (*string*) : Identifiant du pool.
-- **renvoie** : integer Nombre de pièces.
+- `poolId` (*string*) : Pool identifier.
+- **returns**: integer Number of pieces.
 
 #### `editor_toolUtilities_roadsideProps.poolList(poolId)`
 
-Renvoie les pièces posées d'un pool, pour une cuisson qui les relit dans la scène. Lecture seule.
+Returns the placed pieces of a pool, for a bake that rereads them from the scene. Read-only.
 
-- `poolId` (*string*) : Identifiant du pool.
-- **renvoie** : table|nil Liste d'objets de scène, ou nil.
+- `poolId` (*string*) : Pool identifier.
+- **returns**: table|nil List of scene objects, or nil.
 
 #### `editor_toolUtilities_roadsideProps.removePool(poolId)`
 
-Supprime le pool de pièces posées par l'appelant (pièces et lumières).
+Deletes the pool of pieces placed by the caller (pieces and lights).
 
-- `poolId` (*string*) : Identifiant du pool.
+- `poolId` (*string*) : Pool identifier.
 
 #### `editor_toolUtilities_roadsideProps.runLine(opts)`
 
-Construit (ou reconstruit) une ligne de props le long d'un rail. keepPool ajoute au pool au lieu de le remplacer, ce qui permet de bâtir une ligne faite de plusieurs rails (un parapet interrompu par des volées arrive en quelques tronçons ouverts). Les props ponctuels (mode global) sont posés à intervalles réguliers, avec lockEnds pour verrouiller les deux extrémités et répartir l'intérieur.
+Builds (or rebuilds) a line of props along a rail. keepPool adds to the pool instead of replacing it, which allows building a line made of several rails (a parapet interrupted by flights of stairs comes as a few open sections). Spot props (global mode) are placed at regular intervals, with lockEnds to lock both ends and distribute the interior.
 
-- `opts` (*table*) : poolId, presetKey ('none' = rien), folder, railPts (au moins 2 points), railUps (normales), sideSign, stepM, extraGapM, lockEnds, isLoop, keepPool, ownerTag, outPositions, outLights, rejectFn (renvoie true pour refuser un échantillon).
-- **renvoie** : integer Nombre de pièces posées.
+- `opts` (*table*) : poolId, presetKey ('none' = nothing), folder, railPts (at least 2 points), railUps (normals), sideSign, stepM, extraGapM, lockEnds, isLoop, keepPool, ownerTag, outPositions, outLights, rejectFn (returns true to reject a sample).
+- **returns**: integer Number of pieces placed.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `presets` | table<string, table> | Table des préréglages de pièces, par clé. Champs usuels : name, shapePath, preRot (0 à 3, quarts de tour autour de Z), gapM (écart entre pièces, négatif = recouvrement), nativeLenM, normalMode ('surface' ou 'global'), altPaths (formes alternées), capMode/capPath/capPreRot (embouts), reach/bright (lampadaires). |
+| `presets` | table<string, table> | Table of piece presets, by key. Usual fields: name, shapePath, preRot (0 to 3, quarter turns around Z), gapM (gap between pieces, negative = overlap), nativeLenM, normalMode ('surface' or 'global'), altPaths (alternating shapes), capMode/capPath/capPreRot (end caps), reach/bright (lampposts). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/roadsideProps.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/roadsideProps.lua`.*

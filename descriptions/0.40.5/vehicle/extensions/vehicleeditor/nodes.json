@@ -1,21 +1,35 @@
 {
   "path": "lua/vehicle/extensions/vehicleeditor/nodes.lua",
-  "module": "Petit utilitaire de l'éditeur de véhicule : calcule la masse cumulée de nœuds du véhicule à partir de la masse physique réellement simulée (obj:getNodeMass).",
+  "module": "Small vehicle editor utility: computes the cumulative node mass of the vehicle from the physical mass actually simulated (obj:getNodeMass).",
   "usage": "local total, min, max = vehicleeditor_nodes.calculateNodesWeight()",
   "notes": [
-    "obj:getNodeMass est appelé jusqu'à 3 fois par nœud (pas mis en cache).",
-    "Masses en kg (déduit : unité des masses de nœuds jbeam).",
-    "Si la table est vide : renvoie 0, -math.huge, math.huge."
+    "obj:getNodeMass is called up to 3 times per node (not cached).",
+    "Masses in kg (inferred: unit of jbeam node masses).",
+    "If the table is empty: returns 0, -math.huge, math.huge."
   ],
   "fields": {},
   "functions": {
     "calculateNodesWeight": {
-      "desc": "Somme les masses des nœuds de la table et renvoie aussi la plus petite et la plus grande masse de nœud.",
-      "params": {"nodesTbl": {"type": "table|nil", "desc": "Table de nœuds (chacun avec un champ cid) ; v.data.nodes si nil."}},
+      "desc": "Sums the masses of the nodes in the table and also returns the smallest and largest node mass.",
+      "params": {
+        "nodesTbl": {
+          "type": "table|nil",
+          "desc": "Table of nodes (each with a cid field); v.data.nodes if nil."
+        }
+      },
       "returns": [
-        {"type": "number", "desc": "Masse totale."},
-        {"type": "number", "desc": "Masse minimale d'un nœud."},
-        {"type": "number", "desc": "Masse maximale d'un nœud."}
+        {
+          "type": "number",
+          "desc": "Total mass."
+        },
+        {
+          "type": "number",
+          "desc": "Minimum mass of a node."
+        },
+        {
+          "type": "number",
+          "desc": "Maximum mass of a node."
+        }
       ],
       "internal": false
     }

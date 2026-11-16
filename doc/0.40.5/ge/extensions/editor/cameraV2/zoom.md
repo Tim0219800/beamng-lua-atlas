@@ -1,60 +1,60 @@
 # `editor_cameraV2_zoom`
 
-*Fichier : `lua/ge/extensions/editor/cameraV2/zoom.lua` · VM : Game Engine (GE) · 267 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/cameraV2/zoom.lua` · VM: Game Engine (GE) · 267 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_cameraV2_zoom` : `extensions.load("editor_cameraV2_zoom")`, puis la globale `editor_cameraV2_zoom`
+**Access:** extension `editor_cameraV2_zoom`: `extensions.load("editor_cameraV2_zoom")`, then the global `editor_cameraV2_zoom`
 
-Zoom de Camera V2 : remplace le mouvement de molette standard par un dolly lissé le long du centre de la vue. Chaque cran de molette change la distance au point focal de façon proportionnelle (en espace logarithmique), avec lissage exponentiel et collision contre le terrain et la géométrie statique pour ne pas traverser le décor. Lit les préférences camera.cameraV2.zoomMinDistance, zoomMaxDistance, zoomFactorPerNotch et zoomResponse.
+Camera V2 zoom: replaces the standard wheel movement with a smoothed dolly along the view center. Each wheel notch changes the distance to the focal point proportionally (in logarithmic space), with exponential smoothing and collision against the terrain and static geometry so as not to pass through the scenery. Reads the preferences camera.cameraV2.zoomMinDistance, zoomMaxDistance, zoomFactorPerNotch and zoomResponse.
 
-## Remarques
+## Notes
 
-- Le point focal est le point touché par Engine.castRay depuis la caméra vers l'avant (portée 100000 m) ; sans impact, il est placé à 50 m (limité entre min et max) devant la caméra.
-- Distance max codée en dur à 2500 m (clamp sur zoomMaxDistance). Réponse : amount = 1 - exp(-zoomResponse * dt), dt limité à 0,05 s.
-- Le zoom est annulé si le bouton droit ou milieu de la souris est enfoncé, ou si la caméra a été déplacée/tournée par ailleurs de façon incompatible (reconcileCameraTranslation).
-- Incohérence : zoomAnchor renvoie toujours terrainOnly = false et onMouseWheel met terrainOnly = false avec un focus fixe ; la branche clampDistanceToTerrainOnly et lastZoomUsedTerrainOnly() ne peuvent donc jamais être vraies dans cette version.
+- The focal point is the point hit by Engine.castRay from the camera forward (range 100000 m); with no hit, it is placed 50 m (clamped between min and max) in front of the camera.
+- Max distance hard-coded to 2500 m (clamp on zoomMaxDistance). Response: amount = 1 - exp(-zoomResponse * dt), dt limited to 0.05 s.
+- The zoom is cancelled if the right or middle mouse button is held, or if the camera was otherwise moved/rotated in an incompatible way (reconcileCameraTranslation).
+- Inconsistency: zoomAnchor always returns terrainOnly = false and onMouseWheel sets terrainOnly = false with a fixed focus; the clampDistanceToTerrainOnly branch and lastZoomUsedTerrainOnly() can therefore never be true in this version.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_cameraV2_zoom.cancel()` | Abandonne le zoom en cours. | 254 |
-| `editor_cameraV2_zoom.isActive()` | Indique si un zoom lissé est en cours. | 258 |
-| `editor_cameraV2_zoom.lastZoomUsedTerrainOnly()` | Indique si le dernier zoom utilisait seulement la collision avec le terrain (voir notes : toujours false dans le code actuel). | 262 |
-| `editor_cameraV2_zoom.onMouseWheel(value, fixedFocus)` | Démarre ou prolonge un zoom : calcule le point focal, la distance courante et la distance cible (distance * facteur^-value, bornée), puis mémorise l'état que update() fait converger. Les crans successifs dans le même sens s'accumulent. *(hook)* | 171 |
-| `editor_cameraV2_zoom.update(deltaTime)` | Fait avancer le zoom lissé d'une frame : déplace la caméra le long de la direction vers le focus. Met fin au zoom (état annulé) en cas de geste souris, de pose incohérente ou de collision. *(interne)* | 234 |
+| `editor_cameraV2_zoom.cancel()` | Abandons the zoom in progress. | 254 |
+| `editor_cameraV2_zoom.isActive()` | Indicates whether a smoothed zoom is in progress. | 258 |
+| `editor_cameraV2_zoom.lastZoomUsedTerrainOnly()` | Indicates whether the last zoom used only terrain collision (see notes: always false in the current code). | 262 |
+| `editor_cameraV2_zoom.onMouseWheel(value, fixedFocus)` | Starts or extends a zoom: computes the focal point, the current distance and the target distance (distance * factor^-value, clamped), then stores the state that update() makes converge. Successive notches in the same direction accumulate. *(hook)* | 171 |
+| `editor_cameraV2_zoom.update(deltaTime)` | Advances the smoothed zoom by one frame: moves the camera along the direction toward the focus. Ends the zoom (state cancelled) in case of a mouse gesture, an inconsistent pose or a collision. *(internal)* | 234 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_cameraV2_zoom.isActive()`
 
-Indique si un zoom lissé est en cours.
+Indicates whether a smoothed zoom is in progress.
 
-- **renvoie** : boolean true si un état de zoom existe
+- **returns**: boolean true if a zoom state exists
 
 #### `editor_cameraV2_zoom.lastZoomUsedTerrainOnly()`
 
-Indique si le dernier zoom utilisait seulement la collision avec le terrain (voir notes : toujours false dans le code actuel).
+Indicates whether the last zoom used only terrain collision (see notes: always false in the current code).
 
-- **renvoie** : boolean dernier terrainOnly
+- **returns**: boolean last terrainOnly
 
 #### `editor_cameraV2_zoom.onMouseWheel(value, fixedFocus)`
 
-Démarre ou prolonge un zoom : calcule le point focal, la distance courante et la distance cible (distance * facteur^-value, bornée), puis mémorise l'état que update() fait converger. Les crans successifs dans le même sens s'accumulent.
+Starts or extends a zoom: computes the focal point, the current distance and the target distance (distance * factor^-value, clamped), then stores the state that update() makes converge. Successive notches in the same direction accumulate.
 
-- `value` (*number*) : Crans de molette ; > 0 rapproche (zoom avant), < 0 éloigne. |value| <= 0,0001 est ignoré
-- `fixedFocus` (*vec3|nil*) : Point focal imposé (s'il est raisonnable) à la place du raycast central
-- **renvoie** : boolean false si la valeur est négligeable, true sinon (événement traité, même en cas d'échec de validation)
+- `value` (*number*) : Wheel notches; > 0 moves closer (zoom in), < 0 moves away. |value| <= 0.0001 is ignored
+- `fixedFocus` (*vec3|nil*) : Imposed focal point (if reasonable) instead of the central raycast
+- **returns**: boolean false if the value is negligible, true otherwise (event handled, even if validation fails)
 
 #### `editor_cameraV2_zoom.update(deltaTime)`
 
-Fait avancer le zoom lissé d'une frame : déplace la caméra le long de la direction vers le focus. Met fin au zoom (état annulé) en cas de geste souris, de pose incohérente ou de collision.
+Advances the smoothed zoom by one frame: moves the camera along the direction toward the focus. Ends the zoom (state cancelled) in case of a mouse gesture, an inconsistent pose or a collision.
 
-- `deltaTime` (*number|nil*) : Secondes ; limité à [0 ; 0,05], à défaut ui_imgui.GetIO().DeltaTime
+- `deltaTime` (*number|nil*) : Seconds; clamped to [0; 0.05], defaults to ui_imgui.GetIO().DeltaTime
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `castRay`
 - `ui_imgui.` `GetIO`, `IsMouseDown`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/cameraV2/zoom.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/cameraV2/zoom.lua`.*

@@ -1,29 +1,29 @@
 # `flowgraph_nodes_states_transitionStack`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/states/transitionStack.lua` · VM : Game Engine (GE) · 111 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/states/transitionStack.lua` · VM: Game Engine (GE) · 111 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/states/transitionStack")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/states/transitionStack")` (file under extensions/ but not a regular extension)
 
-Noeud « Get Transition Variables » du stategraph. Lit les variables passées par le noeud « Transition » de l'état précédent (pile transitionStack de l'état démarré) et les expose sur ses pins de sortie personnalisés ; le flow d'entrée est recopié en sortie.
+Stategraph node "Get Transition Variables". Reads the variables passed by the "Transition" node of the previous state (transitionStack of the started state) and exposes them on its custom output pins; the input flow is copied to the output.
 
-## Remarques
+## Notes
 
-- work écrase aussi pinOut.flow avec nil via la boucle (self._stack['flow']) avant de le réécrire à la fin : sans conséquence.
+- work also overwrites pinOut.flow with nil via the loop (self._stack['flow']) before rewriting it at the end: harmless.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Oublie la pile à l'arrêt. | 47 |
-| `C:drawCustomProperties()` | Prépare les modèles de pins si besoin. | 90 |
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du noeud dans l'éditeur. | 98 |
-| `C:hideProperties()` | Libère le cache de modèles de pins. | 94 |
+| `C:_executionStopped()` | Forgets the stack on stop. | 47 |
+| `C:drawCustomProperties()` | Prepares the pin templates if needed. | 90 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the editor. | 98 |
+| `C:hideProperties()` | Frees the pin template cache. | 94 |
 | `C:init()` | savePins = true, allowCustomOutPins = true. | 37 |
-| `C:makePinTemplates()` | Construit les modèles de pins comme le noeud transition. | 60 |
-| `C:onStateStarted(state)` | Hook : à l'entrée dans l'état, mémorise state.transitionStack. | 42 |
-| `C:work()` | Copie _stack[nom] sur chaque pin de sortie et recopie flow. | 51 |
+| `C:makePinTemplates()` | Builds the pin templates like the transition node. | 60 |
+| `C:onStateStarted(state)` | Hook: on entering the state, stores state.transitionStack. | 42 |
+| `C:work()` | Copies _stack[name] to each output pin and copies flow. | 51 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/states/transitionStack.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/states/transitionStack.lua`.*

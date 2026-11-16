@@ -1,84 +1,84 @@
 # `core_audio`
 
-*Fichier : `lua/ge/extensions/core/audio.lua` · VM : Game Engine (GE) · 293 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/audio.lua` · VM: Game Engine (GE) · 293 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_audio` : `extensions.load("core_audio")`, puis la globale `core_audio`
+**Access:** extension `core_audio`: `extensions.load("core_audio")`, then the global `core_audio`
 
-Extension GE (core_audio) qui charge les banques FMOD du jeu. Au premier update, elle scanne /art/sound/fmod/<plateforme> (et le sous-dossier mods, plus le dossier _headphones si le mode casque est activé), regroupe les fichiers .bank en jeux de banques (assets/strings/streams/meta), les trie (strings d'abord, puis 'preload', puis par taille) et crée un SFXFMODProject par jeu. Elle gère aussi le rechargement à chaud des banques et le paramètre FMOD g_GamePause. Un moddeur l'utilise pour enregistrer une banque ou forcer un rechargement.
+GE extension (core_audio) that loads the game's FMOD banks. On the first update, it scans /art/sound/fmod/<platform> (and the mods subfolder, plus the _headphones folder if headphone mode is enabled), groups the .bank files into bank sets (assets/strings/streams/meta), sorts them (strings first, then 'preload', then by size) and creates an SFXFMODProject per set. It also handles hot-reloading of banks and the FMOD parameter g_GamePause. A modder uses it to register a bank or force a reload.
 
-## Exemple
+## Example
 
 ```lua
 core_audio.registerBaseBank('/art/sound/fmod/monmod/macollection.bank')
 core_audio.triggerBankHotloading()
 ```
 
-## Remarques
+## Notes
 
-- Bug : dans registerBaseBank, la variable est déclarée `inLevelOrLoadingOrLoading` mais testée sous le nom `inLevelOrLoading` (globale nil) : le garde 'pas pendant un niveau ou un chargement' n'a jamais d'effet.
-- Dans registerBaseBank, les chemins sont mis en minuscules et préfixés par '/' ; avant le premier chargement ils sont mémorisés dans registeredBanks, mais la boucle qui les utilisait (loadBankSets) est commentée : ces banques ne sont alors jamais chargées par cette liste. Après init, la banque est chargée immédiatement via SFXFMODProject.loadBaseBank (une seule fois grâce à loadedBankCache).
-- Rechargement à chaud : onFilesChanged marque comme non chargée toute banque .bank modifiée et ne déclenche triggerBankHotloading que quand toutes les banques connues sont marquées non chargées (attend la fin de la reconstruction).
-- Les champs M.keepLoadedBanks et M.prevReplayState/M.prevReplayPaused sont créés dynamiquement (pas déclarés dans le module au chargement).
-- Pause : onPhysicsPaused / onPhysicsUnpaused mettent le paramètre global FMOD g_GamePause à 1 / 0 ; onReplayStateChanged le met à jour d'après simTimeAuthority.getPause().
+- Bug: in registerBaseBank, the variable is declared `inLevelOrLoadingOrLoading` but tested under the name `inLevelOrLoading` (nil global): the "not during a level or loading" guard never has any effect.
+- In registerBaseBank, paths are lowercased and prefixed with '/'; before the first load they are remembered in registeredBanks, but the loop that used them (loadBankSets) is commented out: these banks are then never loaded through this list. After init, the bank is loaded immediately via SFXFMODProject.loadBaseBank (only once thanks to loadedBankCache).
+- Hot reload: onFilesChanged marks any modified .bank bank as not loaded and only triggers triggerBankHotloading when all known banks are marked as not loaded (waits for the end of the rebuild).
+- The fields M.keepLoadedBanks and M.prevReplayState/M.prevReplayPaused are created dynamically (not declared in the module at load time).
+- Pause: onPhysicsPaused / onPhysicsUnpaused set the global FMOD parameter g_GamePause to 1 / 0; onReplayStateChanged updates it from simTimeAuthority.getPause().
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_audio.onClientEndMission()` | Hook appelé à la fin d'un niveau. Ne fait rien (corps vide, avec un commentaire). *(interne)* *(hook)* | 173 |
-| `core_audio.onClientPreStartMission(levelPath)` | Hook appelé avant le démarrage d'un niveau. N'ajoute que des événements profileur (le chargement de banques de niveau est commenté). *(interne)* *(hook)* | 165 |
-| `core_audio.onDeserialized(data)` | Hook de restauration après rechargement Lua. *(interne)* *(hook)* | 249 |
-| `core_audio.onFilesChanged(files)` | Hook appelé quand des fichiers surveillés changent : gère le rechargement à chaud des .bank (voir notes). *(interne)* *(hook)* | 210 |
-| `core_audio.onFirstUpdate()` | Hook appelé au premier update du GE : scanne et charge les banques (populateBankSets puis loadBankSets), sauf si keepLoadedBanks est vrai (rechargement Lua : on ne fait rien). *(interne)* *(hook)* | 150 |
-| `core_audio.onPhysicsPaused()` | Hook appelé quand la physique est mise en pause : SFXSystem.setGlobalParameter('g_GamePause', 1). *(interne)* *(hook)* | 255 |
-| `core_audio.onPhysicsUnpaused()` | Hook appelé à la reprise de la physique : g_GamePause = 0. *(interne)* *(hook)* | 259 |
-| `core_audio.onReplayStateChanged(newState)` | Hook appelé quand l'état du replay change : met g_GamePause selon simTimeAuthority.getPause(), seulement si state ou paused a changé depuis la dernière fois. *(interne)* *(hook)* | 263 |
-| `core_audio.onSerialize()` | Hook de sérialisation avant rechargement Lua : renvoie keepLoadedBanks=true, levelProjectsCache et loadedBankCache. *(interne)* *(hook)* | 241 |
-| `core_audio.registerBaseBank(path)` | Enregistre une banque FMOD de base (voir notes pour le comportement avant/après l'initialisation). | 15 |
-| `core_audio.triggerBankHotloading()` | Supprime les projets FMOD créés, vide les caches, prévient SFXFMODProject (hotloadingTriggered), re-scanne et recharge toutes les banques puis signale la fin (hotloadingCompleted). | 188 |
+| `core_audio.onClientEndMission()` | Hook called at the end of a level. Does nothing (empty body, with a comment). *(internal)* *(hook)* | 173 |
+| `core_audio.onClientPreStartMission(levelPath)` | Hook called before a level starts. Only adds profiler events (level bank loading is commented out). *(internal)* *(hook)* | 165 |
+| `core_audio.onDeserialized(data)` | Restore hook after a Lua reload. *(internal)* *(hook)* | 249 |
+| `core_audio.onFilesChanged(files)` | Hook called when watched files change: handles hot reloading of .bank files (see notes). *(internal)* *(hook)* | 210 |
+| `core_audio.onFirstUpdate()` | Hook called on the GE's first update: scans and loads the banks (populateBankSets then loadBankSets), unless keepLoadedBanks is true (Lua reload: nothing is done). *(internal)* *(hook)* | 150 |
+| `core_audio.onPhysicsPaused()` | Hook called when physics is paused: SFXSystem.setGlobalParameter('g_GamePause', 1). *(internal)* *(hook)* | 255 |
+| `core_audio.onPhysicsUnpaused()` | Hook called when physics resumes: g_GamePause = 0. *(internal)* *(hook)* | 259 |
+| `core_audio.onReplayStateChanged(newState)` | Hook called when the replay state changes: sets g_GamePause according to simTimeAuthority.getPause(), only if state or paused changed since last time. *(internal)* *(hook)* | 263 |
+| `core_audio.onSerialize()` | Serialization hook before a Lua reload: returns keepLoadedBanks=true, levelProjectsCache and loadedBankCache. *(internal)* *(hook)* | 241 |
+| `core_audio.registerBaseBank(path)` | Registers a base FMOD bank (see notes for the behavior before/after initialization). | 15 |
+| `core_audio.triggerBankHotloading()` | Deletes the created FMOD projects, clears the caches, notifies SFXFMODProject (hotloadingTriggered), rescans and reloads all banks then signals completion (hotloadingCompleted). | 188 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_audio.onClientPreStartMission(levelPath)`
 
-Hook appelé avant le démarrage d'un niveau. N'ajoute que des événements profileur (le chargement de banques de niveau est commenté).
+Hook called before a level starts. Only adds profiler events (level bank loading is commented out).
 
-- `levelPath` (*string*) : Chemin du niveau
+- `levelPath` (*string*) : Level path
 
 #### `core_audio.onDeserialized(data)`
 
-Hook de restauration après rechargement Lua.
+Restore hook after a Lua reload.
 
-- `data` (*table*) : Table renvoyée par onSerialize
+- `data` (*table*) : Table returned by onSerialize
 
 #### `core_audio.onFilesChanged(files)`
 
-Hook appelé quand des fichiers surveillés changent : gère le rechargement à chaud des .bank (voir notes).
+Hook called when watched files change: handles hot reloading of .bank files (see notes).
 
-- `files` (*table<integer, table>*) : Liste d'entrées avec le champ filename (sans '/' initial)
+- `files` (*table<integer, table>*) : List of entries with the filename field (without leading '/')
 
 #### `core_audio.onReplayStateChanged(newState)`
 
-Hook appelé quand l'état du replay change : met g_GamePause selon simTimeAuthority.getPause(), seulement si state ou paused a changé depuis la dernière fois.
+Hook called when the replay state changes: sets g_GamePause according to simTimeAuthority.getPause(), only if state or paused changed since last time.
 
-- `newState` (*table*) : Table avec les champs state et paused
+- `newState` (*table*) : Table with the fields state and paused
 
 #### `core_audio.onSerialize()`
 
-Hook de sérialisation avant rechargement Lua : renvoie keepLoadedBanks=true, levelProjectsCache et loadedBankCache.
+Serialization hook before a Lua reload: returns keepLoadedBanks=true, levelProjectsCache and loadedBankCache.
 
-- **renvoie** : table {keepLoadedBanks, levelProjectsCache, loadedBankCache}
+- **returns**: table {keepLoadedBanks, levelProjectsCache, loadedBankCache}
 
 #### `core_audio.registerBaseBank(path)`
 
-Enregistre une banque FMOD de base (voir notes pour le comportement avant/après l'initialisation).
+Registers a base FMOD bank (see notes for the behavior before/after initialization).
 
-- `path` (*string*) : Chemin du fichier .bank, avec ou sans '/' initial (mis en minuscules)
+- `path` (*string*) : Path of the .bank file, with or without a leading '/' (lowercased)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`, `stat`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/audio.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/audio.lua`.*

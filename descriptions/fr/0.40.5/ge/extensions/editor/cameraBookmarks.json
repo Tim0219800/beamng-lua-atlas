@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/editor/cameraBookmarks.lua",
+  "module": "Fenêtre d'éditeur « Camera Bookmarks » (menu Camera). Permet de créer, copier, coller, rejoindre et supprimer des signets de caméra (objets CameraBookmark rangés dans le groupe retourné par editor.getCameraBookmarks()). L'ajout, la suppression et le collage de position passent par l'historique d'annulation de l'éditeur (editor.history:commitAction).",
+  "notes": [
+    "Aucune fonction utilitaire exportée : le module n'expose que des hooks d'éditeur.",
+    "Un signet est créé via worldEditorCppApi.createObject('CameraBookmark') avec datablock CameraBookmarkMarker et échelle '5 5 5'.",
+    "Les fonctions de rejeu undo/redo sont locales (createBookmarkRedo, deleteBookmarkRedo, setCameraTransformRedo/Undo)."
+  ],
+  "functions": {
+    "onEditorGui": {
+      "desc": "Dessine la fenêtre « Camera Bookmarks » : champ de nom + bouton Add, boutons Copy Location / Paste Location, puis la liste des signets avec Go To, Copy et Delete. Appelé à chaque frame par l'éditeur.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Enregistre la fenêtre (500x500) et l'entrée de menu « Camera Bookmarks » dans le groupe de menu Camera. Appelé une fois à l'initialisation de l'éditeur.",
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook de chargement de l'extension ; vide.",
+      "internal": true
+    }
+  }
+}

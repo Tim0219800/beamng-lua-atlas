@@ -1,38 +1,61 @@
 {
   "path": "lua/ge/extensions/scenario/positionGoal.lua",
-  "module": "Objectif de scénario « position » (goals.vehicles avec id = 'position') : en fin de course, le véhicule doit se trouver dans la zone d'un objet du scenetree (par exemple une zone de freinage). La zone est définie par la distance au centre de l'objet endPoint, comparée à son scale.x.",
-  "usage": "-- JSON du scénario :\n-- {\"id\":\"position\", \"value\":{\"endPoint\":\"brake_zone\", \"purpose\":\"fail\", \"msg\":\"Vous n'êtes pas dans la zone\"}}",
+  "module": "\"position\" scenario goal (goals.vehicles with id = 'position'): at the end of the race, the vehicle must be in the zone of a scenetree object (for example a braking zone). The zone is defined by the distance to the center of the endPoint object, compared to its scale.x.",
+  "usage": "-- scenario JSON:\n-- {\"id\":\"position\", \"value\":{\"endPoint\":\"brake_zone\", \"purpose\":\"fail\", \"msg\":\"Vous n'êtes pas dans la zone\"}}",
   "notes": [
-    "Options de instance.value : endPoint (nom d'objet du scenetree), purpose ('fail' par défaut ou 'win'), msg.",
-    "La vérification n'a lieu que sur l'état 'onRaceResult' : si la distance au centre de endPoint dépasse endPoint.scale.x, showMsg termine le scénario ; sinon status.result = 'passed'.",
-    "Bug probable : en purpose 'win', instance.value.msg .. timeStr plante si msg est nil (le 'or' de repli est évalué trop tard).",
-    "Le message d'échec par défaut ('Not in brake area') est en anglais codé en dur."
+    "instance.value options: endPoint (scenetree object name), purpose ('fail' by default or 'win'), msg.",
+    "The check only happens on the 'onRaceResult' state: if the distance to the center of endPoint exceeds endPoint.scale.x, showMsg ends the scenario; otherwise status.result = 'passed'.",
+    "Probable bug: in purpose 'win', instance.value.msg .. timeStr crashes if msg is nil (the fallback 'or' is evaluated too late).",
+    "The default failure message ('Not in brake area') is hard-coded in English."
   ],
   "fields": {
-    "instances": {"type": "table", "desc": "Liste des goals 'position' valides, remplie par init()."}
+    "instances": {
+      "type": "table",
+      "desc": "List of valid 'position' goals, filled by init()."
+    }
   },
   "functions": {
     "init": {
-      "desc": "Réinitialise instances et ajoute chaque goal id='position' ; purpose vaut 'fail' si absent.",
-      "params": {"scenario": {"type": "table", "desc": "Scénario courant."}},
+      "desc": "Resets instances and adds each goal id='position'; purpose is 'fail' if absent.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Current scenario."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "processState": {
-      "desc": "Appelé à chaque état du scénario. Sur 'onRaceResult', vérifie que le véhicule est dans la zone de l'objet endPoint.",
+      "desc": "Called on every scenario state. On 'onRaceResult', checks that the vehicle is in the zone of the endPoint object.",
       "params": {
-        "scenario": {"type": "table", "desc": "Scénario courant."},
-        "state": {"type": "string", "desc": "Nom de l'état."},
-        "stateData": {"type": "table", "desc": "Données de l'état (non utilisées)."}
+        "scenario": {
+          "type": "table",
+          "desc": "Current scenario."
+        },
+        "state": {
+          "type": "string",
+          "desc": "State name."
+        },
+        "stateData": {
+          "type": "table",
+          "desc": "State data (unused)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "updateFinalStatus": {
-      "desc": "Envoie le résultat de chaque instance à statistics_statistics.setGoalProgress.",
+      "desc": "Sends each instance's result to statistics_statistics.setGoalProgress.",
       "params": {
-        "scenario": {"type": "table", "desc": "Scénario courant."},
-        "instance": {"type": "table|nil", "desc": "Non utilisé."}
+        "scenario": {
+          "type": "table",
+          "desc": "Current scenario."
+        },
+        "instance": {
+          "type": "table|nil",
+          "desc": "Not used."
+        }
       },
       "returns": [],
       "internal": true

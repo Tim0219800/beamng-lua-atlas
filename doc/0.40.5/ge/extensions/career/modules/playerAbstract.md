@@ -1,74 +1,74 @@
 # `career_modules_playerAbstract`
 
-*Fichier : `lua/ge/extensions/career/modules/playerAbstract.lua` · VM : Game Engine (GE) · 68 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/playerAbstract.lua` · VM: Game Engine (GE) · 68 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_playerAbstract` : `extensions.load("career_modules_playerAbstract")`, puis la globale `career_modules_playerAbstract`
+**Access:** extension `career_modules_playerAbstract`: `extensions.load("career_modules_playerAbstract")`, then the global `career_modules_playerAbstract`
 
-Écran « résumé du conducteur » (driver abstract) accessible depuis l'ordinateur du garage en carrière. Il ajoute une entrée au menu de l'ordinateur et fournit à l'UI les données calculées par le module d'assurance (career_modules_insurance_insurance.getPlayerAbstractData).
+"Driver abstract" screen accessible from the garage computer in career. It adds an entry to the computer menu and provides the UI with the data computed by the insurance module (career_modules_insurance_insurance.getPlayerAbstractData).
 
-## Remarques
+## Notes
 
-- La fonction de l'ordinateur est désactivée tant que le véhicule de départ n'est pas acheté (reasons.hasBoughtStarterVehicle).
-- Le menu ne s'ouvre via navigate que si un id d'ordinateur d'origine est fourni.
+- The computer function is disabled until the starter vehicle is bought (reasons.hasBoughtStarterVehicle).
+- The menu only opens via navigate if an originating computer id is provided.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_playerAbstract.closePlayerAbstractMenu()` | Revient au menu de l'ordinateur d'origine, ou ferme tous les menus carrière s'il n'y en a pas. | 31 |
-| `career_modules_playerAbstract.getPlayerAbstractData()` | Renvoie les données du résumé du conducteur fournies par le module d'assurance. | 40 |
-| `career_modules_playerAbstract.onComputerAddFunctions(menuData, computerFunctions)` | Hook de l'ordinateur : ajoute la fonction playerAbstract (ordre 15, catégorie general) si l'installation l'autorise. *(interne)* *(hook)* | 14 |
-| `career_modules_playerAbstract.onRouteLeave(context, toRoute, fromRoute, data)` | Cycle de vie du routeur UI : oublie l'ordinateur d'origine en quittant l'écran. *(interne)* *(hook)* | 51 |
-| `career_modules_playerAbstract.onRouteMount(context, toRoute, fromRoute, data)` | Cycle de vie du routeur UI : place les données du résumé dans data.playerAbstract. *(interne)* *(hook)* | 46 |
-| `career_modules_playerAbstract.openPlayerAbstractMenu(_originComputerId)` | Mémorise l'ordinateur d'origine et, s'il existe, navigue vers career.computer.playerAbstract puis déclenche le hook onComputerPlayerAbstract. | 6 |
-| `career_modules_playerAbstract.sendPlayerAbstractDataToUI()` | Pousse des données fraîches vers un écran déjà ouvert (guihooks playerAbstractData), par ex. après une remise à zéro du score. | 56 |
+| `career_modules_playerAbstract.closePlayerAbstractMenu()` | Returns to the originating computer's menu, or closes all career menus if there is none. | 31 |
+| `career_modules_playerAbstract.getPlayerAbstractData()` | Returns the driver abstract data provided by the insurance module. | 40 |
+| `career_modules_playerAbstract.onComputerAddFunctions(menuData, computerFunctions)` | Computer hook: adds the playerAbstract function (order 15, category general) if the facility allows it. *(internal)* *(hook)* | 14 |
+| `career_modules_playerAbstract.onRouteLeave(context, toRoute, fromRoute, data)` | UI router lifecycle: forgets the originating computer when leaving the screen. *(internal)* *(hook)* | 51 |
+| `career_modules_playerAbstract.onRouteMount(context, toRoute, fromRoute, data)` | UI router lifecycle: places the abstract data in data.playerAbstract. *(internal)* *(hook)* | 46 |
+| `career_modules_playerAbstract.openPlayerAbstractMenu(_originComputerId)` | Remembers the originating computer and, if it exists, navigates to career.computer.playerAbstract then triggers the onComputerPlayerAbstract hook. | 6 |
+| `career_modules_playerAbstract.sendPlayerAbstractDataToUI()` | Pushes fresh data to an already open screen (guihooks playerAbstractData), e.g. after a score reset. | 56 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_playerAbstract.getPlayerAbstractData()`
 
-Renvoie les données du résumé du conducteur fournies par le module d'assurance.
+Returns the driver abstract data provided by the insurance module.
 
-- **renvoie** : table Données du résumé.
+- **returns**: table Abstract data.
 
 #### `career_modules_playerAbstract.onComputerAddFunctions(menuData, computerFunctions)`
 
-Hook de l'ordinateur : ajoute la fonction playerAbstract (ordre 15, catégorie general) si l'installation l'autorise.
+Computer hook: adds the playerAbstract function (order 15, category general) if the facility allows it.
 
-- `menuData` (*table*) : Données du menu (computerFacility, hasBoughtStarterVehicle).
-- `computerFunctions` (*table*) : Tables de fonctions à compléter.
+- `menuData` (*table*) : Menu data (computerFacility, hasBoughtStarterVehicle).
+- `computerFunctions` (*table*) : Function tables to fill.
 
 #### `career_modules_playerAbstract.onRouteLeave(context, toRoute, fromRoute, data)`
 
-Cycle de vie du routeur UI : oublie l'ordinateur d'origine en quittant l'écran.
+UI router lifecycle: forgets the originating computer when leaving the screen.
 
-- `context` (*any*) : Contexte du routeur.
-- `toRoute` (*any*) : Route cible.
-- `fromRoute` (*any*) : Route quittée.
+- `context` (*any*) : Router context.
+- `toRoute` (*any*) : Target route.
+- `fromRoute` (*any*) : Route being left.
 - `data` (*table*) : routeData.
 
 #### `career_modules_playerAbstract.onRouteMount(context, toRoute, fromRoute, data)`
 
-Cycle de vie du routeur UI : place les données du résumé dans data.playerAbstract.
+UI router lifecycle: places the abstract data in data.playerAbstract.
 
-- `context` (*any*) : Contexte du routeur.
-- `toRoute` (*any*) : Route cible.
-- `fromRoute` (*any*) : Route précédente.
-- `data` (*table*) : routeData à remplir.
+- `context` (*any*) : Router context.
+- `toRoute` (*any*) : Target route.
+- `fromRoute` (*any*) : Previous route.
+- `data` (*table*) : routeData to fill.
 
 #### `career_modules_playerAbstract.openPlayerAbstractMenu(_originComputerId)`
 
-Mémorise l'ordinateur d'origine et, s'il existe, navigue vers career.computer.playerAbstract puis déclenche le hook onComputerPlayerAbstract.
+Remembers the originating computer and, if it exists, navigates to career.computer.playerAbstract then triggers the onComputerPlayerAbstract hook.
 
-- `_originComputerId` (*string|nil*) : Id de l'ordinateur du garage.
+- `_originComputerId` (*string|nil*) : Garage computer id.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onComputerPlayerAbstract`
 
-**Évènements UI (guihooks.trigger) :** `playerAbstractData`
+**UI events (guihooks.trigger):** `playerAbstractData`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/playerAbstract.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/playerAbstract.lua`.*

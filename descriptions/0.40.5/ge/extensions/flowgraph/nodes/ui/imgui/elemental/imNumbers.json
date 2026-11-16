@@ -1,50 +1,50 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imNumbers.lua",
-  "module": "Nœud flowgraph « im Number » (catégorie repeat_instant, tag imgui) : champ numérique imgui. Mode choisi dans les propriétés : Int, Float, SliderInt, SliderFloat, DragInt, DragFloat. Entrées : « text », « set » (impulsion : réapplique setVal), « setVal » (0), « min » (0), « max » (10), « step » (1), « format » (%0.2f), « power » (1). Sorties : « value » et « changed » (impulsion).",
+  "module": "Flowgraph node \"im Number\" (category repeat_instant, tag imgui): imgui number field. Mode chosen in the properties: Int, Float, SliderInt, SliderFloat, DragInt, DragFloat. Inputs: \"text\", \"set\" (pulse: reapplies setVal), \"setVal\" (0), \"min\" (0), \"max\" (10), \"step\" (1), \"format\" (%0.2f), \"power\" (1). Outputs: \"value\" and \"changed\" (pulse).",
   "notes": [
-    "La valeur est bornée à min/max même en mode Int/Float libre.",
-    "Sans valeur initiale (setVal nil), rien n'est dessiné."
+    "The value is clamped to min/max even in free Int/Float mode.",
+    "Without an initial value (setVal nil), nothing is drawn."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStarted": {
-          "desc": "Efface les sorties et la valeur.",
+          "desc": "Clears the outputs and the value.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure le mode (défaut 'Int').",
+          "desc": "Restores the mode (default 'Int').",
           "params": {
             "nodeData": {
               "type": "table",
-              "desc": "Données sauvegardées du nœud."
+              "desc": "Saved node data."
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde le mode.",
+          "desc": "Saves the mode.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Combo du mode d'édition.",
+          "desc": "Edit mode combo.",
           "internal": true
         },
         "init": {
-          "desc": "Liste des modes et mode = 'Int'.",
+          "desc": "List of modes and mode = 'Int'.",
           "internal": true
         },
         "work": {
-          "desc": "Dessine le widget du mode choisi, borne la valeur et écrit value/changed.",
+          "desc": "Draws the widget of the chosen mode, clamps the value and writes value/changed.",
           "internal": true
         }
       }

@@ -1,79 +1,79 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/customLua.lua",
-  "module": "Nœud « Custom Lua » (catégorie repeat_instant, couleur debug). Permet d'écrire du code Lua directement dans l'éditeur flowgraph, avec pins d'entrée/sortie personnalisés (sauvegardés). Quatre blocs de code : work (chaque frame si un flow d'entrée est actif), _executionStarted, _executionStopped et onPreRender. Le code est compilé avec load dans un environnement restreint (buildBaseEnv) et exécuté sous pcall ; les erreurs sont journalisées sur le nœud. L'éditeur permet de nommer le nœud et de le sauvegarder dans une bibliothèque (préférence flowgraph.general.customLuaNodes).",
+  "module": "Node \"Custom Lua\" (category repeat_instant, color debug). Lets you write Lua code directly in the flowgraph editor, with custom input/output pins (saved). Four code blocks: work (every frame if an input flow is active), _executionStarted, _executionStopped and onPreRender. The code is compiled with load in a restricted environment (buildBaseEnv) and run under pcall; errors are logged on the node. The editor allows naming the node and saving it to a library (preference flowgraph.general.customLuaNodes).",
   "notes": [
-    "Le code est exécuté sans argument utile : pcall reçoit debug.traceback comme argument du chunk.",
-    "L'environnement expose require, dofile, loadfile, load, io et os : le code n'est pas sandboxé.",
-    "Le tag du log d'erreur dans exec contient un guillemet parasite : 'Custom Lua Node: \" .. code'."
+    "The code is executed without a useful argument: pcall receives debug.traceback as the chunk's argument.",
+    "The environment exposes require, dofile, loadfile, load, io and os: the code is not sandboxed.",
+    "The error log tag in exec contains a stray quote: 'Custom Lua Node: \" .. code'."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Crée les quatre blocs de code vides et autorise les pins d'entrée et de sortie personnalisés (savePins=true).",
+          "desc": "Creates the four empty code blocks and allows custom input and output pins (savePins=true).",
           "internal": true
         },
         "compile": {
-          "desc": "Compile le bloc de code donné avec l'environnement de base ; enregistre le message d'erreur dans self.status, sinon la fonction dans self.compiled (nop en cas d'erreur).",
+          "desc": "Compiles the given code block with the base environment; stores the error message in self.status, otherwise the function in self.compiled (nop on error).",
           "params": {
             "code": {
               "type": "string",
-              "desc": "Nom du bloc : work, _executionStarted, _executionStopped ou onPreRender."
+              "desc": "Block name: work, _executionStarted, _executionStopped or onPreRender."
             }
           },
           "internal": false
         },
         "drawCustomProperties": {
-          "desc": "Dessine l'éditeur : chargement depuis la bibliothèque, nom, bouton de sauvegarde, et un champ multiligne par bloc avec indicateur d'erreur de compilation. Renvoie la description du changement ou false.",
+          "desc": "Draws the editor: loading from the library, name, save button, and a multiline field per block with a compile error indicator. Returns the description of the change or false.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Compile les quatre blocs puis exécute _executionStarted.",
+          "desc": "Compiles the four blocks then runs _executionStarted.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Exécute _executionStopped puis libère l'environnement.",
+          "desc": "Runs _executionStopped then releases the environment.",
           "internal": true
         },
         "onPreRender": {
-          "desc": "Exécute le bloc onPreRender (avant le rendu).",
+          "desc": "Runs the onPreRender block (before rendering).",
           "params": {
             "dt": {
               "type": "number",
-              "desc": "Delta temps réel."
+              "desc": "Real-time delta."
             },
             "dtSim": {
               "type": "number",
-              "desc": "Delta temps simulé."
+              "desc": "Simulated time delta."
             }
           },
           "internal": true
         },
         "exec": {
-          "desc": "Exécute le bloc compilé sous pcall ; en cas d'erreur, logue, marque le nœud en erreur et ajoute un évènement au gestionnaire.",
+          "desc": "Runs the compiled block under pcall; on error, logs, marks the node as in error and adds an event to the manager.",
           "params": {
             "code": {
               "type": "string",
-              "desc": "Nom du bloc."
+              "desc": "Block name."
             }
           },
           "internal": false
         },
         "work": {
-          "desc": "Exécute le bloc work.",
+          "desc": "Runs the work block.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure nom et code puis recompile.",
+          "desc": "Restores name and code then recompiles.",
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde nom et code.",
+          "desc": "Saves name and code.",
           "internal": true
         },
         "buildBaseEnv": {
-          "desc": "Construit (une fois) et renvoie la table d'environnement du code utilisateur : self, map, be, FS, scenetree, extensions, vec3/quat, outils JSON et math, toutes les extensions chargées, etc. Fournit aussi refreshExtensions, loadExtension, unloadExtension, log (journalise aussi dans le gestionnaire).",
+          "desc": "Builds (once) and returns the environment table of the user code: self, map, be, FS, scenetree, extensions, vec3/quat, JSON and math tools, all loaded extensions, etc. Also provides refreshExtensions, loadExtension, unloadExtension, log (also logs to the manager).",
           "internal": false
         }
       }

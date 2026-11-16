@@ -1,16 +1,50 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackVehicleDistanceToPos.lua",
-  "module": "Nœud flowgraph « Track Vehicle Distance to Position » (catégorie repeat, icône straighten, tag rally). Mesure la distance entre le centre avant d'un véhicule (RallyUtil.getVehFrontCenter) et une position cible, et la diffuse à l'UI via extensions.hook('onRallyDataUpdated', {activeState = vehicleProximity, vehicleProximity = {isNear = false, distance, isStopped = false, isFrozen = false, timer = 0, duration = 0}}). Entrées : flow, vehId (sinon véhicule joueur 0), pos (vec3 ou table). Sortie : flow (recopie).",
-  "notes": ["La position cible est mise en cache à la première lecture et ne change plus jusqu'au redémarrage du graphe."],
+  "module": "Flowgraph node \"Track Vehicle Distance to Position\" (category repeat, straighten icon, tag rally). Measures the distance between a vehicle's front center (RallyUtil.getVehFrontCenter) and a target position, and broadcasts it to the UI via extensions.hook('onRallyDataUpdated', {activeState = vehicleProximity, vehicleProximity = {isNear = false, distance, isStopped = false, isFrozen = false, timer = 0, duration = 0}}). Inputs: flow, vehId (otherwise player vehicle 0), pos (vec3 or table). Output: flow (copy).",
+  "notes": [
+    "The target position is cached on first read and no longer changes until the graph restarts."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise targetPos à nil.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
-        "_executionStarted": {"desc": "Oublie la position cible mémorisée.", "internal": true},
-        "updateVehicleData2": {"desc": "Met à jour (variables locales du module) position avant, rotation et vitesse du véhicule suivi à partir de map.objects.", "internal": true},
-        "getDistanceSquared": {"desc": "Calcule le carré de la distance entre le centre avant du véhicule et la position cible.", "returns": [{"type": "number|nil", "desc": "Distance au carré en m², ou nil sans cible."}]},
-        "work": {"desc": "Chaque frame : met à jour les données du véhicule, diffuse la distance à l'UI et recopie le flux.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+        "init": {
+          "desc": "Initializes targetPos to nil.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager."
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Forgets the stored target position.",
+          "internal": true
+        },
+        "updateVehicleData2": {
+          "desc": "Updates (module local variables) the front position, rotation and speed of the tracked vehicle from map.objects.",
+          "internal": true
+        },
+        "getDistanceSquared": {
+          "desc": "Computes the squared distance between the vehicle's front center and the target position.",
+          "returns": [
+            {
+              "type": "number|nil",
+              "desc": "Squared distance in m², or nil without a target."
+            }
+          ]
+        },
+        "work": {
+          "desc": "Every frame: updates the vehicle data, broadcasts the distance to the UI and copies the flow.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph engine arguments (unused)."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

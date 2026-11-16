@@ -1,0 +1,322 @@
+{
+  "path": "lua/ge/extensions/core/environment.lua",
+  "module": "Extension GE `core_environment` : point d'entrée unique pour lire et modifier l'environnement du niveau (heure du jour, nuages, vent, brouillard, précipitations, gravité, température) et pour charger les ground models (art/groundmodels.json + groundModels/*.json du niveau). Il agit sur les objets de la scène (TimeOfDay, CloudLayer, LevelInfo, Precipitation) trouvés par classe, allume/éteint les lumières nocturnes selon l'heure, et envoie l'état à l'UI. Un moddeur l'utilise pour changer l'heure, le vent ou la gravité par script, ou pour réagir à `onEnvironmentChanged`.",
+  "usage": "extensions.load('core_environment')\n-- midi (time = 0), jour de 30 min réelles, horloge en marche\ncore_environment.setTimeOfDay({time = 0, play = true, dayLength = 1800})\ncore_environment.setGravity(-1.62)            -- m/s², négatif = vers le bas\ncore_environment.setGroundWind(5, 0, 0)       -- m/s dans le repère monde\ncore_environment.setFogDensity(0.002)         -- valeur brute LevelInfo\nprint(core_environment.getTemperatureK() - 273.15)",
+  "notes": [
+    "Heure : `time` est normalisé 0..1 et boucle (modulo 1). 0 = midi (clé `noon`), 0.25 = coucher de soleil environ (`sunset` 0.245), 0.5 = minuit (`night`), 0.775 = lever (`sunrise`). Pour convertir une heure d'horloge : time = (secondes_depuis_minuit / 86400 - 0.5) % 1 (formule utilisée par syncTimeToRealClock).",
+    "`dayLength` = secondes réelles pour un cycle jour/nuit complet (presets : 900, 1800, 7200, 86400). `play` active l'écoulement du temps (écrit aussi l'ancien champ `animate`).",
+    "Gravité : m/s², valeur NÉGATIVE pour aller vers le bas (-9.81 par défaut, repli de getGravity). 0 = apesanteur, +9.81 = gravité inversée. setGravity met à jour LevelInfo.gravity ET envoie obj:setGravity à tous les véhicules (queueAllObjectLua).",
+    "Vent : setGroundWind(x,y,z) est un vec3 monde en m/s (déduit du code : transmis tel quel à be:setGroundWind et obj:setWind). setWindSpeed/getWindSpeed agissent sur CloudLayer.windSpeed (vitesse de déplacement des nuages), pas sur le vent physique des véhicules.",
+    "Brouillard : LevelInfo.fogDensity est une valeur brute très petite ; l'UI manipule fogDensity*1000 (getState renvoie fogDensity*1000, applyStateNow divise par 1000). Les fonctions setFogDensity/getFogDensity utilisent la valeur brute. fogAtmosphereHeight : hauteur d'atmosphère de brouillard (plage de lerp UI ~0..2000, déduit de lerpRanges).",
+    "Nuages : altitudes en kilomètres (`...Km`), coverage de CloudLayer (plage de lerp 0..3 dans setState), cirrus coverage/density sont les champs cirrusCoverage/cirrusDensity de CloudLayer. Les variantes `...ByID` visent un CloudLayer précis par id d'objet scène ; elles n'émettent pas onEnvironmentChanged et ignorent enableChanges.",
+    "Température : getTemperatureK() renvoie des kelvins (température au niveau de la mer envoyée au moteur via be:setSeaLevelTemperatureK). La courbe du niveau (LevelInfo:getTemperatureCurveC, en °C, points {t 0..1, °C}) est évaluée selon l'heure à chaque onUpdate. setTemperatureProfile travaille en °C, borné à -50..60 (UI) ; la courbe d'override est bornée -273.15..200 °C à la normalisation.",
+    "enableChanges(false) bloque toutes les écritures sur la scène (mais les hooks onEnvironmentChanged sont quand même émis pour la plupart des setters). Utilisé par les scénarios pour figer le ciel.",
+    "Hook émis : `onEnvironmentChanged(changedTable)` à chaque setter (sauf pendant une mise à jour d'état globale). Évènements UI : `EnvironmentStateUpdate` (état complet) et `EnvironmentCanUpdateChanged` (booléen).",
+    "Fonctions dépréciées qui ne font que logger un avertissement et renvoient nil : get/setShadowDistance, get/setSkyBrightness, tous les get/set...GradientFile, get/setFogDensityOffset, get/setCloudExposureByID.",
+    "Incohérences : setFogDensityOffset est exporté (M.setFogDensityOffset) mais absent de la liste automatique ; setFogAtmosphereHeight n'émet pas onEnvironmentChanged contrairement à setFogDensity ; setPrecipitation n'émet pas de hook et ignore enableChanges ; setTemperatureK interne n'est pas exporté (pas de réglage direct de la température, seulement via setTemperatureProfile). onVehicleResetted et onVehicleSpawned sont tous deux liés à applyGroundWind (ré-applique le vent aux véhicules)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'core_solarTimeOfDay'} : extension chargée avant celle-ci (calcul solaire : fenêtre de nuit, événements lever/coucher)."},
+    "groundModels": {"type": "table<string, {cdata: any, isAlias: boolean, parent: string}>", "desc": "Ground models connus, clés en MAJUSCULES. cdata = structure C++ ground_model ; isAlias/parent indiquent si l'entrée est un alias d'un autre modèle. Reconstruit par reloadGroundModels."},
+    "loadedGroundModelFiles": {"type": "string[]", "desc": "Chemins des fichiers JSON de ground models chargés (commun + niveau). Sert à onFilesChanged pour détecter une modification à chaud."},
+    "defaultTimeOfDayOptions": {"type": "table[]", "desc": "Liste {key, value, label} des moments clés : sunrise 0.775, morning 0.825, earlyNoon 0.9, noon 0, lateNoon 0.1, afternoon 0.175, evening 0.23, sunset 0.245, night 0.5. label = clé de traduction."},
+    "defaultSolarTimeOfDayOptions": {"type": "table[]", "desc": "Copie profonde de defaultTimeOfDayOptions, base pour les options calculées astronomiquement."},
+    "timeOfDayKeyToTime": {"type": "table<string, number>", "desc": "Table clé -> valeur de time pour les moments clés par défaut (noon -> 0, night -> 0.5, …)."},
+    "gravityPresets": {"type": "table[]", "desc": "Presets {key, title, value} en m/s² (terre -9.81, lune -1.62, mars -3.71, soleil -274, jupiter -24.92, neptune -11.15, saturne -10.44, uranus -8.87, vénus -8.87, mercure -3.7, pluton -0.58, zéro 0, terre inversée 9.81)."},
+    "dayCyclePresets": {"type": "table[]", "desc": "{speed, seconds} : secondes réelles par cycle jour/nuit : fast 900, normal 1800, slow 7200, realtime 86400."},
+    "simSpeedPresets": {"type": "table[]", "desc": "{key, label, value} : facteurs de ralenti de la simulation (value = diviseur : 1 temps réel, 2 = 1/2x, 4, 10, 25, 50, 100, 1000)."}
+  },
+  "functions": {
+    "getState": {
+      "desc": "Construit l'état complet de l'environnement. Clés : champs TimeOfDay (time, play, dayLength, startTime, latitude, longitude, year, month, day, utcOffset, dstRule, celestialProfile), windSpeed, groundWind, cloudCover, cloudWindDirection, cloudAltitudeKm, cloudWeatherOffsetKm, cloudCirrus*, fogDensity (x1000), fogAtmosphereHeight, numOfDrops, gravity, temperatureC (°C), temperatureProfile, temperatureCurveOverrideC.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Table d'état (jamais nil en pratique car temperatureCurveOverrideC est toujours présent)."}]
+    },
+    "setState": {
+      "desc": "Applique un état (même format que getState). Émet onEnvironmentChanged. Avec lerpSeconds > 0, cloudCover, fogDensity, fogAtmosphereHeight et time sont interpolés (courbe smootherstep, durée réduite si l'écart est faible, minimum 0.12 s) ; les autres champs sont appliqués tout de suite.",
+      "params": {
+        "state": {"type": "table", "desc": "État partiel ou complet ; fogDensity attendu x1000 ; time optionnel (sans time l'horloge n'est pas déplacée)."},
+        "lerpSeconds": {"type": "number|nil", "desc": "Durée maximale de transition en secondes réelles ; nil ou <= 0 = immédiat."}
+      },
+      "returns": []
+    },
+    "requestState": {
+      "desc": "Alias de sendState : envoie l'état courant à l'UI (guihooks EnvironmentStateUpdate) et l'état du drapeau canChange.",
+      "params": {},
+      "returns": []
+    },
+    "getInitState": {
+      "desc": "Copie de l'état capturé au chargement du niveau (onClientPostStartMission), avec temperatureProfile calculé sur la courbe d'origine du niveau et éventuellement authoredDayLength.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "État initial."}]
+    },
+    "reset_init": {
+      "desc": "Ré-applique l'état initial du niveau (setState(init_env)).",
+      "params": {},
+      "returns": []
+    },
+    "reset": {
+      "desc": "Relit la courbe de température du niveau, supprime l'override de température, notifie l'UI et recharge les ground models. Sert aussi de onInit.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "enableChanges": {
+      "desc": "Autorise ou interdit les modifications de l'environnement et prévient l'UI.",
+      "params": {"enabled": {"type": "boolean", "desc": "false = les setters n'écrivent plus sur la scène."}},
+      "returns": []
+    },
+    "canChange": {
+      "desc": "Indique si les modifications d'environnement sont autorisées.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "État du drapeau défini par enableChanges (true par défaut)."}]
+    },
+    "getTimeOfDay": {
+      "desc": "Lit l'objet scène TimeOfDay et renvoie un état partagé (la même table est réutilisée à chaque appel : copier avant de conserver).",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "{time, play, dayLength, startTime, latitude, longitude, year, month, day, utcOffset, dstRule, celestialProfile} ; nil s'il n'y a pas d'objet TimeOfDay (menu principal)."}]
+    },
+    "setTimeOfDay": {
+      "desc": "Applique des champs de l'heure du jour sur l'objet TimeOfDay. Ne fait rien si la table ne contient aucun champ connu. Émet onEnvironmentChanged et met à jour les lumières nocturnes si time est fourni. Changer year/month/day/latitude force le recalcul de la position du soleil.",
+      "params": {"timeOfDay": {"type": "table", "desc": "Champs facultatifs : time (0..1, 0 = midi, 0.5 = minuit), play (boolean), dayLength (s réelles), startTime, latitude, longitude (degrés, déduit du code), year, month, day, utcOffset (heures), dstRule, celestialProfile (nom, recharge core_celestial)."}},
+      "returns": []
+    },
+    "cycleTimeOfDay": {
+      "desc": "Fait passer l'heure à la valeur suivante parmi trois : si time < 0.2 -> 0.23 (soir), si time >= 0.5 -> 0.05 (jour), sinon -> 0.5 (nuit).",
+      "params": {},
+      "returns": []
+    },
+    "getLightState": {
+      "desc": "État d'éclairage du monde : jour ou nuit. Retourne {time, phase = 'day'|'night', isNight, nightLightsActive, nightStart, nightEnd}. nightLightsActive reflète ce que le moteur a réellement appliqué.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "nil s'il n'y a pas de TimeOfDay."}]
+    },
+    "refreshnightLightsObjects": {
+      "desc": "Recense dans la scène les lumières à allumer la nuit (champ nightLight), les lumières à intensité jour/nuit (dayIntensity/nightIntensity), et les TSStatic émissifs (nightEmissive ou liés par le champ `child` à une lumière), puis applique l'état courant. À appeler après avoir ajouté de tels objets en cours de partie.",
+      "params": {},
+      "returns": []
+    },
+    "getTimeOfDayOptions": {
+      "desc": "Options de moments de la journée adaptées au niveau, calculées astronomiquement (core_solarTimeOfDay) à partir des options du niveau (core_levels).",
+      "params": {"levelIdentifier": {"type": "string|nil", "desc": "Identifiant du niveau ; défaut getCurrentLevelIdentifier()."}},
+      "returns": [{"type": "table", "desc": "Liste d'options {key, value, label…}."}]
+    },
+    "getDefaultTimeOfDayOptions": {
+      "desc": "Renvoie M.defaultTimeOfDayOptions.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Moments clés par défaut."}]
+    },
+    "getSolarTimeOfDayOptions": {
+      "desc": "Options de moments calculées pour la position et la date solaires de l'état, à partir des options par défaut.",
+      "params": {"state": {"type": "table|nil", "desc": "État TimeOfDay ; défaut getTimeOfDay()."}},
+      "returns": [{"type": "table", "desc": "Options."}]
+    },
+    "getSolarTimeOfDayValue": {
+      "desc": "Valeur de time pour une clé de moment (ex. 'sunrise') avec la date/position de l'état.",
+      "params": {
+        "key": {"type": "string", "desc": "Clé : sunrise, morning, earlyNoon, noon, lateNoon, afternoon, evening, sunset, night."},
+        "state": {"type": "table|nil", "desc": "État TimeOfDay ; défaut getTimeOfDay()."}
+      },
+      "returns": [{"type": "number|nil", "desc": "time normalisé 0..1 (selon core_solarTimeOfDay)."}]
+    },
+    "getTimeOfDayValueForNormalizedTime": {
+      "desc": "Convertit un temps normalisé via core_solarTimeOfDay.timeFromNormalizedTime pour l'état donné (sens exact défini dans core_solarTimeOfDay).",
+      "params": {
+        "normalizedTime": {"type": "number", "desc": "Temps normalisé."},
+        "state": {"type": "table|nil", "desc": "État TimeOfDay ; défaut getTimeOfDay()."}
+      },
+      "returns": [{"type": "number|nil", "desc": "Valeur de time."}]
+    },
+    "syncTimeToRealClock": {
+      "desc": "Règle l'heure du jeu sur l'heure locale réelle de l'ordinateur (os.date('*t')), en conservant l'état play.",
+      "params": {"lerpSeconds": {"type": "number|nil", "desc": "Durée de transition en secondes."}},
+      "returns": []
+    },
+    "syncTimeToRealClockUtc": {
+      "desc": "Règle heure ET date du jeu sur l'instant UTC réel converti au fuseau (utcOffset/dstRule) du niveau.",
+      "params": {"lerpSeconds": {"type": "number|nil", "desc": "Durée de transition en secondes."}},
+      "returns": []
+    },
+    "getDayCyclePresets": {"desc": "Renvoie M.dayCyclePresets.", "params": {}, "returns": [{"type": "table[]", "desc": "{speed, seconds}."}]},
+    "getDayCycleSeconds": {
+      "desc": "Durée en secondes réelles du cycle jour/nuit pour un preset.",
+      "params": {"speed": {"type": "string", "desc": "'fast', 'normal', 'slow' ou 'realtime'."}},
+      "returns": [{"type": "number|nil", "desc": "900, 1800, 7200 ou 86400 ; nil si inconnu."}]
+    },
+    "getAuthoredDayLength": {
+      "desc": "Cherche dans les *.level.json du dossier du niveau (hors /scenarios/) une valeur dayLength écrite explicitement dans l'objet TimeOfDay (le moteur remplit dayLength même si absent du fichier).",
+      "params": {"levelDir": {"type": "string", "desc": "Dossier du niveau."}},
+      "returns": [{"type": "number|nil", "desc": "Secondes (> 0) ou nil."}]
+    },
+    "getGravityPresets": {"desc": "Renvoie M.gravityPresets.", "params": {}, "returns": [{"type": "table[]", "desc": "Presets de gravité."}]},
+    "getSimSpeedPresets": {"desc": "Renvoie M.simSpeedPresets.", "params": {}, "returns": [{"type": "table[]", "desc": "Presets de ralenti."}]},
+    "setGravity": {
+      "desc": "Définit la gravité : écrit LevelInfo.gravity (pour les futurs spawns) et envoie obj:setGravity à tous les véhicules. Émet onEnvironmentChanged({gravity}).",
+      "params": {"grav": {"type": "number", "desc": "Accélération en m/s², négative vers le bas (-9.81 = Terre). nil/false : ignoré ; 0 est accepté."}},
+      "returns": []
+    },
+    "getGravity": {
+      "desc": "Gravité du niveau (LevelInfo.gravity).",
+      "params": {},
+      "returns": [{"type": "number", "desc": "m/s² (négatif vers le bas) ; -9.81 si LevelInfo absent."}]
+    },
+    "setGroundWind": {
+      "desc": "Définit le vent au sol appliqué au monde et à tous les véhicules (obj:setWind + be:setGroundWind).",
+      "params": {"...": {"type": "vec3|number", "desc": "Un vec3, ou 3 nombres x, y, z (m/s, repère monde, déduit du code)."}},
+      "returns": []
+    },
+    "getGroundWind": {
+      "desc": "Renvoie le vec3 interne du vent au sol (référence directe, ne pas modifier).",
+      "params": {},
+      "returns": [{"type": "vec3", "desc": "Vent en m/s."}]
+    },
+    "setWindSpeed": {
+      "desc": "Fixe CloudLayer.windSpeed du premier CloudLayer de la scène.",
+      "params": {"windSpeed": {"type": "number", "desc": "Vitesse du vent des nuages (unité du champ moteur, non précisée dans le code)."}},
+      "returns": []
+    },
+    "getWindSpeed": {
+      "desc": "Lit CloudLayer.windSpeed du premier CloudLayer.",
+      "params": {},
+      "returns": [{"type": "number|nil", "desc": "nil sans CloudLayer."}]
+    },
+    "setCloudCover": {
+      "desc": "Fixe CloudLayer.coverage du premier CloudLayer et annule une transition d'état en cours.",
+      "params": {"cloud": {"type": "number", "desc": "Couverture nuageuse (plage de lerp 0..3 dans setState)."}},
+      "returns": []
+    },
+    "getCloudCover": {"desc": "Lit CloudLayer.coverage du premier CloudLayer.", "params": {}, "returns": [{"type": "number|nil", "desc": "Couverture, nil sans CloudLayer."}]},
+    "setCloudWindDirection": {
+      "desc": "Fixe CloudLayer.windDirection (Point2F) du premier CloudLayer ; seuls x et y sont utilisés.",
+      "params": {"...": {"type": "vec3|number", "desc": "Un vec3 ou deux nombres x, y."}},
+      "returns": []
+    },
+    "getCloudWindDirection": {"desc": "Direction du vent des nuages.", "params": {}, "returns": [{"type": "vec3|nil", "desc": "vec3(x, y, 0) ; nil sans CloudLayer."}]},
+    "setCloudAltitudeKm": {"desc": "Altitude de la couche de nuages.", "params": {"altitudeKm": {"type": "number", "desc": "Altitude en kilomètres."}}, "returns": []},
+    "getCloudAltitudeKm": {"desc": "Altitude des nuages en km.", "params": {}, "returns": [{"type": "number|nil", "desc": "km."}]},
+    "getCloudWeatherOffsetKm": {
+      "desc": "Décalage de la carte météo des nuages (CloudLayer.getWeatherOffsetKm).",
+      "params": {},
+      "returns": [{"type": "vec3|nil", "desc": "Décalage en km ; nil si l'API C++ n'est pas disponible."}]
+    },
+    "setCloudWeatherOffsetKm": {
+      "desc": "Décale la carte météo des nuages. Émet onEnvironmentChanged.",
+      "params": {"...": {"type": "vec3|number", "desc": "Un vec3 ou 3 nombres x, y, z en km."}},
+      "returns": [{"type": "boolean", "desc": "true si appliqué, false si l'API est absente ou si les changements sont désactivés (nil si l'argument est nil)."}]
+    },
+    "resetCloudWeatherOffsetKm": {"desc": "Remet le décalage météo à (0,0,0).", "params": {}, "returns": [{"type": "boolean", "desc": "Résultat de setCloudWeatherOffsetKm."}]},
+    "regenerateWeatherMap": {
+      "desc": "Régénère la carte météo (forme des nuages) avec une graine. Appelée avec une graine aléatoire à chaque chargement de niveau.",
+      "params": {"seed": {"type": "integer|nil", "desc": "Graine, arrondie et bornée à 0..2147483647 ; aléatoire si nil."}},
+      "returns": [
+        {"type": "boolean", "desc": "true si exécuté."},
+        {"type": "integer|nil", "desc": "Graine normalisée utilisée (absente si l'API C++ manque)."}
+      ]
+    },
+    "getCloudCirrusAltitudeKm": {"desc": "Altitude des cirrus.", "params": {}, "returns": [{"type": "number|nil", "desc": "km."}]},
+    "setCloudCirrusAltitudeKm": {"desc": "Fixe l'altitude des cirrus.", "params": {"altitudeKm": {"type": "number", "desc": "km."}}, "returns": []},
+    "getCloudCirrusCoverage": {"desc": "Couverture des cirrus.", "params": {}, "returns": [{"type": "number|nil", "desc": "Valeur du champ cirrusCoverage."}]},
+    "setCloudCirrusCoverage": {"desc": "Fixe la couverture des cirrus.", "params": {"coverage": {"type": "number", "desc": "Valeur de cirrusCoverage."}}, "returns": []},
+    "getCloudCirrusDensity": {"desc": "Densité des cirrus.", "params": {}, "returns": [{"type": "number|nil", "desc": "Valeur du champ cirrusDensity."}]},
+    "setCloudCirrusDensity": {"desc": "Fixe la densité des cirrus.", "params": {"density": {"type": "number", "desc": "Valeur de cirrusDensity."}}, "returns": []},
+    "getCloudCoverByID": {"desc": "Couverture d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet scène."}}, "returns": [{"type": "number|nil", "desc": "coverage."}]},
+    "setCloudCoverByID": {"desc": "Fixe la couverture d'un CloudLayer précis (sans hook, sans test enableChanges).", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}, "coverage": {"type": "number", "desc": "Couverture."}}, "returns": []},
+    "getCloudExposureByID": {"desc": "Déprécié : log un avertissement.", "params": {"objectID": {"type": "integer", "desc": "Ignoré."}}, "returns": [{"type": "nil", "desc": "Toujours nil."}]},
+    "setCloudExposureByID": {"desc": "Déprécié : log un avertissement, ne fait rien.", "params": {"objectID": {"type": "integer", "desc": "Ignoré."}, "exposure": {"type": "any", "desc": "Ignoré."}}, "returns": []},
+    "getCloudWindByID": {"desc": "windSpeed d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}}, "returns": [{"type": "number|nil", "desc": "windSpeed."}]},
+    "setCloudWindByID": {"desc": "Fixe windSpeed d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}, "windSpeed": {"type": "number", "desc": "Vitesse."}}, "returns": []},
+    "getCloudHeightByID": {"desc": "Champ height d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}}, "returns": [{"type": "number|nil", "desc": "height."}]},
+    "setCloudHeightByID": {"desc": "Fixe le champ height d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}, "height": {"type": "number", "desc": "Hauteur."}}, "returns": []},
+    "getCloudWindDirectionByID": {"desc": "Direction du vent d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}}, "returns": [{"type": "vec3|nil", "desc": "vec3(x, y, 0)."}]},
+    "setCloudWindDirectionByID": {"desc": "Fixe la direction du vent d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}, "...": {"type": "vec3|number", "desc": "Un vec3 ou deux nombres x, y."}}, "returns": []},
+    "getCloudAltitudeKmByID": {"desc": "Altitude (km) d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}}, "returns": [{"type": "number|nil", "desc": "km."}]},
+    "setCloudAltitudeKmByID": {"desc": "Fixe l'altitude (km) d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}, "altitudeKm": {"type": "number", "desc": "km."}}, "returns": []},
+    "getCloudCirrusAltitudeKmByID": {"desc": "Altitude des cirrus (km) d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}}, "returns": [{"type": "number|nil", "desc": "km."}]},
+    "setCloudCirrusAltitudeKmByID": {"desc": "Fixe l'altitude des cirrus d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}, "altitudeKm": {"type": "number", "desc": "km."}}, "returns": []},
+    "getCloudCirrusCoverageByID": {"desc": "Couverture des cirrus d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}}, "returns": [{"type": "number|nil", "desc": "cirrusCoverage."}]},
+    "setCloudCirrusCoverageByID": {"desc": "Fixe la couverture des cirrus d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}, "coverage": {"type": "number", "desc": "Couverture."}}, "returns": []},
+    "getCloudCirrusDensityByID": {"desc": "Densité des cirrus d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}}, "returns": [{"type": "number|nil", "desc": "cirrusDensity."}]},
+    "setCloudCirrusDensityByID": {"desc": "Fixe la densité des cirrus d'un CloudLayer précis.", "params": {"objectID": {"type": "integer", "desc": "Id de l'objet."}, "density": {"type": "number", "desc": "Densité."}}, "returns": []},
+    "setFogDensity": {
+      "desc": "Fixe LevelInfo.fogDensity (valeur brute, très petite : l'UI utilise 1000x cette valeur) et annule une transition en cours. Émet onEnvironmentChanged({fogDensity}) avec la valeur brute.",
+      "params": {"fog": {"type": "number", "desc": "Densité brute du brouillard (ex. 0.002)."}},
+      "returns": []
+    },
+    "getFogDensity": {
+      "desc": "Densité brute du brouillard de LevelInfo.",
+      "params": {},
+      "returns": [
+        {"type": "number", "desc": "fogDensity, 0.0 sans LevelInfo."},
+        {"type": "userdata|nil", "desc": "Objet LevelInfo."}
+      ]
+    },
+    "setFogDensityOffset": {"desc": "Déprécié : log un avertissement, ne fait rien.", "params": {"fogOffset": {"type": "any", "desc": "Ignoré."}}, "returns": []},
+    "getFogDensityOffset": {"desc": "Déprécié : log un avertissement.", "params": {}, "returns": [{"type": "nil", "desc": "Toujours nil."}]},
+    "setFogAtmosphereHeight": {
+      "desc": "Fixe LevelInfo.FogAtmosphereHeight. N'émet pas onEnvironmentChanged et ignore enableChanges.",
+      "params": {"fogHeight": {"type": "number", "desc": "Hauteur d'atmosphère du brouillard (plage UI jusqu'à ~2000, déduit de lerpRanges)."}},
+      "returns": []
+    },
+    "getFogAtmosphereHeight": {"desc": "Hauteur d'atmosphère du brouillard.", "params": {}, "returns": [{"type": "number", "desc": "0.0 sans LevelInfo."}]},
+    "setPrecipitation": {
+      "desc": "Fixe Precipitation.numDrops (nombre de gouttes/particules de pluie). Sans hook, sans test enableChanges.",
+      "params": {"rainDrops": {"type": "number", "desc": "Nombre de gouttes."}},
+      "returns": []
+    },
+    "getPrecipitation": {"desc": "Nombre de gouttes de l'objet Precipitation.", "params": {}, "returns": [{"type": "number|nil", "desc": "nil sans objet Precipitation."}]},
+    "getTemperatureK": {
+      "desc": "Température de l'air au niveau de la mer actuellement envoyée au moteur.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Kelvins (0.0 tant que la courbe n'a pas été évaluée)."}]
+    },
+    "setTemperatureProfile": {
+      "desc": "Crée un override de la courbe de température du jour : décale la courbe pour viser la moyenne, puis étire les creux/pics pour viser min et max. Valeurs bornées à -50..60 °C. Ignoré si enableChanges(false) ou table invalide.",
+      "params": {"profile": {"type": "table", "desc": "{averageC?, minC?, maxC?} en °C ; au moins un champ numérique fini requis."}},
+      "returns": []
+    },
+    "resetTemperatureProfile": {"desc": "Supprime l'override et revient à la courbe de température du niveau.", "params": {}, "returns": []},
+    "setShadowDistance": {"desc": "Déprécié : avertissement seul.", "params": {"shadowDistance": {"type": "any", "desc": "Ignoré."}}, "returns": []},
+    "getShadowDistance": {"desc": "Déprécié : renvoie nil.", "params": {}, "returns": [{"type": "nil", "desc": "nil"}]},
+    "setSkyBrightness": {"desc": "Déprécié : avertissement seul.", "params": {"skyBrightness": {"type": "any", "desc": "Ignoré."}}, "returns": []},
+    "getSkyBrightness": {"desc": "Déprécié : renvoie nil.", "params": {}, "returns": [{"type": "nil", "desc": "nil"}]},
+    "setColorizeGradientFile": {"desc": "Déprécié : avertissement seul.", "params": {"colorizeGradientFile": {"type": "any", "desc": "Ignoré."}}, "returns": []},
+    "getColorizeGradientFile": {"desc": "Déprécié : renvoie nil.", "params": {}, "returns": [{"type": "nil", "desc": "nil"}]},
+    "setSunScaleGradientFile": {"desc": "Déprécié : avertissement seul.", "params": {"sunScaleGradientFile": {"type": "any", "desc": "Ignoré."}}, "returns": []},
+    "getSunScaleGradientFile": {"desc": "Déprécié : renvoie nil.", "params": {}, "returns": [{"type": "nil", "desc": "nil"}]},
+    "setAmbientScaleGradientFile": {"desc": "Déprécié : avertissement seul.", "params": {"ambientScaleGradientFile": {"type": "any", "desc": "Ignoré."}}, "returns": []},
+    "getAmbientScaleGradientFile": {"desc": "Déprécié : renvoie nil.", "params": {}, "returns": [{"type": "nil", "desc": "nil"}]},
+    "setFogScaleGradientFile": {"desc": "Déprécié : avertissement seul.", "params": {"fogScaleGradientFile": {"type": "any", "desc": "Ignoré."}}, "returns": []},
+    "getFogScaleGradientFile": {"desc": "Déprécié : renvoie nil.", "params": {}, "returns": [{"type": "nil", "desc": "nil"}]},
+    "setNightGradientFile": {"desc": "Déprécié : avertissement seul.", "params": {"nightGradientFile": {"type": "any", "desc": "Ignoré."}}, "returns": []},
+    "getNightGradientFile": {"desc": "Déprécié : renvoie nil.", "params": {}, "returns": [{"type": "nil", "desc": "nil"}]},
+    "setNightFogGradientFile": {"desc": "Déprécié : avertissement seul.", "params": {"nightFogGradientFile": {"type": "any", "desc": "Ignoré."}}, "returns": []},
+    "getNightFogGradientFile": {"desc": "Déprécié : renvoie nil.", "params": {}, "returns": [{"type": "nil", "desc": "nil"}]},
+    "resetTireMarks": {"desc": "Efface toutes les traces de pneus (be:resetTireMarks).", "params": {}, "returns": []},
+    "saveTireMarks": {"desc": "Sauvegarde les traces de pneus dans un fichier.", "params": {"filename": {"type": "string|nil", "desc": "Défaut 'tiremarks.dat'."}}, "returns": []},
+    "loadTireMarks": {"desc": "Charge des traces de pneus depuis un fichier.", "params": {"filename": {"type": "string|nil", "desc": "Défaut 'tiremarks.dat'."}}, "returns": []},
+    "reloadGroundModels": {
+      "desc": "Réinitialise puis recharge tous les ground models : art/groundmodels.json, puis les *.json de <niveau>/groundModels/. ASPHALT est soumis en premier (indice 0), puis les autres par ordre alphabétique. Les noms sont mis en majuscules et tronqués à 30 caractères si > 31.",
+      "params": {"levelPath": {"type": "string|nil", "desc": "Chemin du niveau ; défaut getMissionFilename()."}},
+      "returns": []
+    },
+    "dumpGroundModels": {
+      "desc": "Écrit groundmodels_dump.json avec les propriétés physiques de chaque ground model enregistré (frottements, résistance, densité du fluide…). Outil de debug.",
+      "params": {},
+      "returns": []
+    },
+    "onInit": {"desc": "Alias de reset : appelé au chargement de l'extension.", "params": {}, "returns": [], "internal": true},
+    "onClientPreStartMission": {"desc": "Hook avant le démarrage d'un niveau : relit la courbe de température, supprime l'override, recharge les ground models.", "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}}, "returns": [], "internal": true},
+    "onClientPostStartMission": {"desc": "Hook après démarrage du niveau : mémorise l'état initial (init_env), y ajoute authoredDayLength puis le réapplique.", "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}}, "returns": [], "internal": true},
+    "onClientStartMission": {"desc": "Hook au démarrage du niveau : vide le cache d'objets, recense les lumières nocturnes, applique le vent et régénère la carte météo avec une graine aléatoire.", "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}}, "returns": [], "internal": true},
+    "onClientEndMission": {"desc": "Hook à la fin du niveau : arrête l'horloge TimeOfDay, remet le vent à 0, vide les lumières nocturnes et appelle reset.", "params": {}, "returns": [], "internal": true},
+    "onUpdate": {"desc": "Hook par image : avance la transition d'état, applique les lumières nocturnes et met à jour la température effective selon l'heure.", "params": {"dtReal": {"type": "number", "desc": "Delta temps réel en secondes."}}, "returns": [], "internal": true},
+    "onFilesChanged": {"desc": "Hook appelé quand des fichiers changent : si un fichier de ground models chargé est modifié, appelle reset() et be:reloadCollision().", "params": {"files": {"type": "table[]", "desc": "Liste d'entrées avec champ filename."}}, "returns": [], "internal": true},
+    "onSerialize": {"desc": "Hook de sauvegarde avant rechargement des extensions : renvoie {groundWind}.", "params": {}, "returns": [{"type": "table", "desc": "{groundWind = vec3}."}], "internal": true},
+    "onDeserialized": {"desc": "Hook de restauration : réapplique le vent au sol sauvegardé.", "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize."}}, "returns": [], "internal": true},
+    "onVehicleSpawned": {"desc": "Hook : ré-applique le vent au sol aux véhicules (alias de applyGroundWind, reçoit l'id du véhicule mais l'ignore).", "params": {}, "returns": [], "internal": true},
+    "onVehicleResetted": {"desc": "Hook : ré-applique le vent au sol (alias de applyGroundWind).", "params": {}, "returns": [], "internal": true},
+    "onEditorDeactivated": {"desc": "Hook à la sortie de l'éditeur : vide le cache et recense à nouveau les lumières nocturnes.", "params": {}, "returns": [], "internal": true},
+    "onEditorBeforeSaveLevel": {"desc": "Hook avant sauvegarde du niveau dans l'éditeur : éteint les lumières nocturnes pour ne pas les sauvegarder allumées.", "params": {}, "returns": [], "internal": true},
+    "onEditorAfterSaveLevel": {"desc": "Hook après sauvegarde : restaure l'état des lumières nocturnes.", "params": {}, "returns": [], "internal": true}
+  }
+}

@@ -1,54 +1,72 @@
 {
   "path": "lua/vehicle/bullettime.lua",
-  "module": "Ancienne API de ralenti (bullet time) côté véhicule, conservée pour la compatibilité des mods. Elle ne fait que relayer vers `simTimeAuthority` dans le moteur de jeu (GE Lua). Les fonctions dépréciées affichent un toast d'erreur dans l'UI et loguent une trace ; il faut utiliser `get`, `set` ou `selectPreset`.",
-  "usage": "local scale = bullettime.get() -- échelle de temps actuelle\nbullettime.set(0.5)             -- demi-vitesse",
+  "module": "Old slow-motion (bullet time) API on the vehicle side, kept for mod compatibility. It only relays to `simTimeAuthority` in the game engine (GE Lua). Deprecated functions show an error toast in the UI and log a trace; use `get`, `set` or `selectPreset`.",
+  "usage": "local scale = bullettime.get() -- current time scale\nbullettime.set(0.5)             -- half speed",
   "notes": [
-    "L'ancien champ `bullettime.simulationSpeed` est encore lu via une métatable : il renvoie `get() * 100` et logue une erreur de dépréciation (une seule fois).",
-    "`set(v)` envoie à simTimeAuthority la valeur `1/v` : v est donc un facteur de vitesse (0.5 = moitié moins vite) ; v = 0 donnerait une division par zéro (inf).",
-    "`update`, `reset` et `slowMotion` sont tous la même fonction `deprecated` ; `requestValue` appelle aussi deprecated puis transmet la requête."
+    "The old field `bullettime.simulationSpeed` is still read via a metatable: it returns `get() * 100` and logs a deprecation error (only once).",
+    "`set(v)` sends the value `1/v` to simTimeAuthority: v is therefore a speed factor (0.5 = half as fast); v = 0 would give a division by zero (inf).",
+    "`update`, `reset` and `slowMotion` are all the same `deprecated` function; `requestValue` also calls deprecated then forwards the request."
   ],
   "fields": {
-    "simulationSpeed": {"type": "number", "desc": "Champ virtuel déprécié (via métatable __index) : échelle de simulation × 100."}
+    "simulationSpeed": {
+      "type": "number",
+      "desc": "Deprecated virtual field (via metatable __index): simulation scale × 100."
+    }
   },
   "functions": {
     "get": {
-      "desc": "Renvoie l'échelle de temps de simulation actuelle (`obj:getSimulationTimeScale()`).",
+      "desc": "Returns the current simulation time scale (`obj:getSimulationTimeScale()`).",
       "params": {},
-      "returns": [{"type": "number", "desc": "Échelle de temps (1 = temps réel)."}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Time scale (1 = real time)."
+        }
+      ],
       "internal": false
     },
     "set": {
-      "desc": "Demande au moteur de jeu de changer la vitesse de simulation, en exécutant `simTimeAuthority.set(1/v)` côté GE.",
-      "params": {"v": {"type": "number", "desc": "Facteur de vitesse voulu (déduit du code : la valeur envoyée est 1/v)."}},
+      "desc": "Asks the game engine to change the simulation speed, by running `simTimeAuthority.set(1/v)` on the GE side.",
+      "params": {
+        "v": {
+          "type": "number",
+          "desc": "Desired speed factor (inferred from code: the value sent is 1/v)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "selectPreset": {
-      "desc": "Demande à `simTimeAuthority.selectPreset` (côté GE) de choisir un préréglage de vitesse.",
-      "params": {"v": {"type": "any", "desc": "Préréglage, sérialisé par dumps (déduit du code)."}},
+      "desc": "Asks `simTimeAuthority.selectPreset` (GE side) to choose a speed preset.",
+      "params": {
+        "v": {
+          "type": "any",
+          "desc": "Preset, serialized by dumps (inferred from code)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "requestValue": {
-      "desc": "Déprécié : affiche l'avertissement puis appelle `simTimeAuthority.requestValue()` côté GE.",
+      "desc": "Deprecated: shows the warning then calls `simTimeAuthority.requestValue()` on the GE side.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "update": {
-      "desc": "Déprécié : affiche un toast d'erreur « Deprecated API: bullettime » et logue une trace.",
+      "desc": "Deprecated: shows an error toast \"Deprecated API: bullettime\" and logs a trace.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "reset": {
-      "desc": "Déprécié (même fonction que update) : toast d'erreur et trace.",
+      "desc": "Deprecated (same function as update): error toast and trace.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "slowMotion": {
-      "desc": "Déprécié (même fonction que update) : toast d'erreur et trace.",
+      "desc": "Deprecated (same function as update): error toast and trace.",
       "params": {},
       "returns": [],
       "internal": false

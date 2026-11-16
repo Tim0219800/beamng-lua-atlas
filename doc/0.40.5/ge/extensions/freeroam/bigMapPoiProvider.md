@@ -1,143 +1,143 @@
 # `freeroam_bigMapPoiProvider`
 
-*Fichier : `lua/ge/extensions/freeroam/bigMapPoiProvider.lua` · VM : Game Engine (GE) · 717 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/freeroam/bigMapPoiProvider.lua` · VM: Game Engine (GE) · 717 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `freeroam_bigMapPoiProvider` : `extensions.load("freeroam_bigMapPoiProvider")`, puis la globale `freeroam_bigMapPoiProvider`
+**Access:** extension `freeroam_bigMapPoiProvider`: `extensions.load("freeroam_bigMapPoiProvider")`, then the global `freeroam_bigMapPoiProvider`
 
-Fournisseur de données pour la grande carte : transforme les POI bruts (missions, garages, stations-service, concessionnaires, points de départ, drift, drag, crawl, véhicules du joueur, livraison…) en une structure prête pour l'interface (poiData), des groupes (groupData : rating_, type_, distance_, difficulty_, branch_, missionType_…) et des filtres prédéfinis (freeroam ou carrière). Gère aussi l'état de visibilité de chaque groupe et envoie le tout à l'interface par le hook UI BigmapMissionData. Un moddeur qui ajoute des POI les voit apparaître via gameplay_rawPois ; ce module décide dans quel groupe ils tombent.
+Data provider for the big map: turns the raw POIs (missions, garages, gas stations, dealerships, spawn points, drift, drag, crawl, player vehicles, delivery...) into a UI-ready structure (poiData), groups (groupData: rating_, type_, distance_, difficulty_, branch_, missionType_...) and predefined filters (freeroam or career). Also manages each group's visibility state and sends everything to the UI through the BigmapMissionData UI hook. A modder who adds POIs sees them appear via gameplay_rawPois; this module decides which group they fall into.
 
-## Exemple
+## Example
 
 ```lua
--- masquer le groupe des stations-service puis renvoyer les données à la grande carte
+-- hide the gas station group then send the data back to the big map
 freeroam_bigMapPoiProvider.setGroupVisibility('type_gasStation', false)
 freeroam_bigMapPoiProvider.sendCurrentLevelMissionsToBigmap()
 ```
 
-## Remarques
+## Notes
 
-- Les visibilités de groupes sont stockées en mémoire seulement ; un groupe inconnu est considéré visible (getGroupVisibility renvoie vrai sauf si la valeur est false). Les groupes par défaut sont initialisés à visible à la première construction des groupes.
-- Les données (cachedGroupData, cachedPoiData, cachedFilters) sont reconstruites par sendCurrentLevelMissionsToBigmap ; les accesseurs getCached* la déclenchent si le cache est invalide.
-- Bug : sendCurrentLevelMissionsToBigmap appelle d'abord invalidateCache() puis teste isCacheValid(), donc le cache n'est jamais réutilisé : tout est recalculé à chaque appel (et gameplay_rawPois.clear() est appelé dans buildPoiDataCache).
-- Bug/incohérence : le tri par distance est neutralisé (distance fixée à 10, calcul commenté), donc tous les POI sont dans le groupe distance_veryClose.
-- sendMissionLocationsToMinimap ne fait que mettre le drapeau sendToMinimap à false ; elle n'envoie rien à la minicarte. forceSend, onClientStartMission et requestMissionLocationsForMinimap le remettent à true. clearMissionsFromMinimap envoie NavigationStaticMarkers avec une liste vide.
-- Les fonctions de formatage et de construction supposent que les modules career_* (career_career, career_branches, career_modules_tutorial, career_modules_testDrive, career_modules_delivery_general) existent comme globales.
-- Filtres : en carrière -> careerPois, un filtre par domaine (domain_<id>) et delivery si le mode livraison est actif ; en freeroam -> missionsByType, freeroamActivities, freeroamPois.
-- gameMode envoyé à l'interface : 'freeroam' par défaut, 'career' si la carrière est active, 'mission' si une mission est au premier plan (priorité à ce dernier).
+- Group visibilities are stored in memory only; an unknown group is considered visible (getGroupVisibility returns true unless the value is false). The default groups are initialized to visible the first time the groups are built.
+- The data (cachedGroupData, cachedPoiData, cachedFilters) is rebuilt by sendCurrentLevelMissionsToBigmap; the getCached* accessors trigger it if the cache is invalid.
+- Bug: sendCurrentLevelMissionsToBigmap first calls invalidateCache() then tests isCacheValid(), so the cache is never reused: everything is recomputed on every call (and gameplay_rawPois.clear() is called in buildPoiDataCache).
+- Bug/inconsistency: the distance sort is neutralized (distance fixed at 10, computation commented out), so all POIs are in the distance_veryClose group.
+- sendMissionLocationsToMinimap only sets the sendToMinimap flag to false; it sends nothing to the minimap. forceSend, onClientStartMission and requestMissionLocationsForMinimap set it back to true. clearMissionsFromMinimap sends NavigationStaticMarkers with an empty list.
+- The formatting and building functions assume the career_* modules (career_career, career_branches, career_modules_tutorial, career_modules_testDrive, career_modules_delivery_general) exist as globals.
+- Filters: in career -> careerPois, one filter per domain (domain_<id>) and delivery if delivery mode is active; in freeroam -> missionsByType, freeroamActivities, freeroamPois.
+- gameMode sent to the UI: 'freeroam' by default, 'career' if career is active, 'mission' if a mission is in the foreground (the latter takes priority).
 
-**Dépendances (chargées avant) :** `gameplay_missions_missions`, `freeroam_bigMapMode`, `gameplay_rawPois`, `gameplay_playmodeMarkers`
+**Dependencies (loaded first):** `gameplay_missions_missions`, `freeroam_bigMapMode`, `gameplay_rawPois`, `gameplay_playmodeMarkers`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `freeroam_bigMapPoiProvider.clearMissionsFromMinimap()` | Vide les marqueurs de missions de la minicarte (hook UI NavigationStaticMarkers avec la clé 'missions' et une liste vide) si un niveau est chargé. | 158 |
-| `freeroam_bigMapPoiProvider.forceSend()` | Marque le drapeau sendToMinimap à true : le prochain onPreRender rappellera sendMissionLocationsToMinimap. Sert aussi de onClientStartMission et requestMissionLocationsForMinimap. | 10 |
-| `freeroam_bigMapPoiProvider.formatMissionForBigmap(elemData)` | Convertit une mission en table pour l'interface : id, icône, nom, description, miniature, aperçus, difficulté, voyage rapide disponible/débloqué, progression, classement (rating), clé de classement, etc. | 199 |
-| `freeroam_bigMapPoiProvider.formatPoiForBigmap(poi)` | Convertit un POI non mission en table pour l'interface (id, icône issue de bigmapMarker.cardIcon ou du type, nom, description, miniature, aperçus, voyage rapide, canSetRoute, agrégats). Le voyage rapide n'est disponible qu'hors carrière ou pendant le tutoriel de carrière. | 177 |
-| `freeroam_bigMapPoiProvider.getActiveGroupIds()` | Clés des groupes actuellement visibles (selon l'état mémorisé). | 77 |
-| `freeroam_bigMapPoiProvider.getAllActiveGroupPoiIds()` | Ids des POI appartenant aux groupes visibles des filtres du cache (reconstruit si besoin). Un POI présent dans plusieurs groupes apparaît plusieurs fois. | 96 |
-| `freeroam_bigMapPoiProvider.getAllGroupIds()` | Clés de tous les groupes connus (visibles ou non). | 88 |
-| `freeroam_bigMapPoiProvider.getCachedFilters()` | Filtres de la grande carte (freeroam ou carrière), reconstruits si le cache est invalide. | 143 |
-| `freeroam_bigMapPoiProvider.getCachedGroupData()` | Groupes indexés par clé (label, icon, elements, visible, groupKey), reconstruits si le cache est invalide. | 127 |
-| `freeroam_bigMapPoiProvider.getCachedPoiData()` | Données formatées des POI indexées par id, chacune avec filterData (groupTags, sortingValues). | 135 |
-| `freeroam_bigMapPoiProvider.getGroupVisibility(groupKey)` | Indique si un groupe est visible (vrai par défaut si inconnu). | 63 |
-| `freeroam_bigMapPoiProvider.invalidateCache()` | Efface le cache de groupes, POI et filtres ; il sera reconstruit à la prochaine demande. | 45 |
-| `freeroam_bigMapPoiProvider.onClientStartMission()` | Hook appelé au démarrage d'un niveau : équivaut à forceSend(). *(interne)* *(hook)* | 10 |
-| `freeroam_bigMapPoiProvider.onPreRender(dtReal, dtSim)` | Hook appelé à chaque image : si l'état de jeu a des marqueurs de mode de jeu et qu'un niveau est chargé et que sendToMinimap est vrai, appelle sendMissionLocationsToMinimap (qui remet le drapeau à false). *(interne)* *(hook)* | 702 |
-| `freeroam_bigMapPoiProvider.requestMissionLocationsForMinimap()` | Demande un nouvel envoi des positions de missions à la minicarte (équivaut à forceSend). | 10 |
-| `freeroam_bigMapPoiProvider.resetAllGroupsToVisible()` | Remet tous les groupes connus à visible. | 120 |
-| `freeroam_bigMapPoiProvider.sendCurrentLevelMissionsToBigmap()` | Reconstruit tout (groupes, POI, filtres), détermine gameMode et règles (canSetRoute), appelle freeroam_bigMapMode.setOnlyIdsVisible avec les POI des groupes visibles, puis envoie le tout à l'interface via guihooks.trigger('BigmapMissionData', data). | 643 |
-| `freeroam_bigMapPoiProvider.sendMissionLocationsToMinimap()` | Remet le drapeau interne sendToMinimap à false ; n'envoie en réalité rien (corps réduit à ce drapeau). | 153 |
-| `freeroam_bigMapPoiProvider.setGroupVisibility(groupKey, isVisible)` | Définit la visibilité d'un groupe ; l'effet n'apparaît qu'après un nouvel envoi à la grande carte. | 58 |
-| `freeroam_bigMapPoiProvider.toggleGroupVisibility(groupKey)` | Inverse la visibilité d'un groupe (la mise à jour de la grande carte est commentée dans le code). | 68 |
+| `freeroam_bigMapPoiProvider.clearMissionsFromMinimap()` | Clears the mission markers from the minimap (NavigationStaticMarkers UI hook with the 'missions' key and an empty list) if a level is loaded. | 158 |
+| `freeroam_bigMapPoiProvider.forceSend()` | Sets the sendToMinimap flag to true: the next onPreRender will call sendMissionLocationsToMinimap again. Also serves as onClientStartMission and requestMissionLocationsForMinimap. | 10 |
+| `freeroam_bigMapPoiProvider.formatMissionForBigmap(elemData)` | Converts a mission into a table for the UI: id, icon, name, description, thumbnail, previews, difficulty, fast travel available/unlocked, progress, rating, rating key, etc. | 199 |
+| `freeroam_bigMapPoiProvider.formatPoiForBigmap(poi)` | Converts a non-mission POI into a table for the UI (id, icon from bigmapMarker.cardIcon or from the type, name, description, thumbnail, previews, fast travel, canSetRoute, aggregates). Fast travel is only available outside career or during the career tutorial. | 177 |
+| `freeroam_bigMapPoiProvider.getActiveGroupIds()` | Keys of the groups currently visible (according to the stored state). | 77 |
+| `freeroam_bigMapPoiProvider.getAllActiveGroupPoiIds()` | Ids of the POIs belonging to the visible groups of the cached filters (rebuilt if needed). A POI present in several groups appears several times. | 96 |
+| `freeroam_bigMapPoiProvider.getAllGroupIds()` | Keys of all known groups (visible or not). | 88 |
+| `freeroam_bigMapPoiProvider.getCachedFilters()` | Big map filters (freeroam or career), rebuilt if the cache is invalid. | 143 |
+| `freeroam_bigMapPoiProvider.getCachedGroupData()` | Groups keyed by key (label, icon, elements, visible, groupKey), rebuilt if the cache is invalid. | 127 |
+| `freeroam_bigMapPoiProvider.getCachedPoiData()` | Formatted POI data keyed by id, each with filterData (groupTags, sortingValues). | 135 |
+| `freeroam_bigMapPoiProvider.getGroupVisibility(groupKey)` | Tells whether a group is visible (true by default if unknown). | 63 |
+| `freeroam_bigMapPoiProvider.invalidateCache()` | Clears the group, POI and filter cache; it will be rebuilt on the next request. | 45 |
+| `freeroam_bigMapPoiProvider.onClientStartMission()` | Hook called when a level starts: equivalent to forceSend(). *(internal)* *(hook)* | 10 |
+| `freeroam_bigMapPoiProvider.onPreRender(dtReal, dtSim)` | Hook called every frame: if the game state has game mode markers and a level is loaded and sendToMinimap is true, calls sendMissionLocationsToMinimap (which sets the flag back to false). *(internal)* *(hook)* | 702 |
+| `freeroam_bigMapPoiProvider.requestMissionLocationsForMinimap()` | Requests a new send of the mission positions to the minimap (equivalent to forceSend). | 10 |
+| `freeroam_bigMapPoiProvider.resetAllGroupsToVisible()` | Sets all known groups back to visible. | 120 |
+| `freeroam_bigMapPoiProvider.sendCurrentLevelMissionsToBigmap()` | Rebuilds everything (groups, POIs, filters), determines gameMode and rules (canSetRoute), calls freeroam_bigMapMode.setOnlyIdsVisible with the POIs of the visible groups, then sends everything to the UI via guihooks.trigger('BigmapMissionData', data). | 643 |
+| `freeroam_bigMapPoiProvider.sendMissionLocationsToMinimap()` | Sets the internal sendToMinimap flag back to false; actually sends nothing (body reduced to this flag). | 153 |
+| `freeroam_bigMapPoiProvider.setGroupVisibility(groupKey, isVisible)` | Sets a group's visibility; the effect only appears after a new send to the big map. | 58 |
+| `freeroam_bigMapPoiProvider.toggleGroupVisibility(groupKey)` | Toggles a group's visibility (the big map update is commented out in the code). | 68 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `freeroam_bigMapPoiProvider.formatMissionForBigmap(elemData)`
 
-Convertit une mission en table pour l'interface : id, icône, nom, description, miniature, aperçus, difficulté, voyage rapide disponible/débloqué, progression, classement (rating), clé de classement, etc.
+Converts a mission into a table for the UI: id, icon, name, description, thumbnail, previews, difficulty, fast travel available/unlocked, progress, rating, rating key, etc.
 
-- `elemData` (*table*) : Données du POI de mission (utilise missionId et idInCluster).
-- **renvoie** : table|nil Table formatée, nil si la mission n'existe pas.
+- `elemData` (*table*) : Mission POI data (uses missionId and idInCluster).
+- **returns**: table|nil Formatted table, nil if the mission does not exist.
 
 #### `freeroam_bigMapPoiProvider.formatPoiForBigmap(poi)`
 
-Convertit un POI non mission en table pour l'interface (id, icône issue de bigmapMarker.cardIcon ou du type, nom, description, miniature, aperçus, voyage rapide, canSetRoute, agrégats). Le voyage rapide n'est disponible qu'hors carrière ou pendant le tutoriel de carrière.
+Converts a non-mission POI into a table for the UI (id, icon from bigmapMarker.cardIcon or from the type, name, description, thumbnail, previews, fast travel, canSetRoute, aggregates). Fast travel is only available outside career or during the career tutorial.
 
-- `poi` (*table*) : POI brut de gameplay_rawPois avec markerInfo.bigmapMarker.
-- **renvoie** : table Table formatée pour la grande carte.
+- `poi` (*table*) : Raw POI from gameplay_rawPois with markerInfo.bigmapMarker.
+- **returns**: table Table formatted for the big map.
 
 #### `freeroam_bigMapPoiProvider.getActiveGroupIds()`
 
-Clés des groupes actuellement visibles (selon l'état mémorisé).
+Keys of the groups currently visible (according to the stored state).
 
-- **renvoie** : string[] Clés de groupes visibles.
+- **returns**: string[] Visible group keys.
 
 #### `freeroam_bigMapPoiProvider.getAllActiveGroupPoiIds()`
 
-Ids des POI appartenant aux groupes visibles des filtres du cache (reconstruit si besoin). Un POI présent dans plusieurs groupes apparaît plusieurs fois.
+Ids of the POIs belonging to the visible groups of the cached filters (rebuilt if needed). A POI present in several groups appears several times.
 
-- **renvoie** : string[] Ids de POI.
+- **returns**: string[] POI ids.
 
 #### `freeroam_bigMapPoiProvider.getAllGroupIds()`
 
-Clés de tous les groupes connus (visibles ou non).
+Keys of all known groups (visible or not).
 
-- **renvoie** : string[] Clés de groupes.
+- **returns**: string[] Group keys.
 
 #### `freeroam_bigMapPoiProvider.getCachedFilters()`
 
-Filtres de la grande carte (freeroam ou carrière), reconstruits si le cache est invalide.
+Big map filters (freeroam or career), rebuilt if the cache is invalid.
 
-- **renvoie** : table[] Liste de filtres {key, icon, title, groups}.
+- **returns**: table[] List of filters {key, icon, title, groups}.
 
 #### `freeroam_bigMapPoiProvider.getCachedGroupData()`
 
-Groupes indexés par clé (label, icon, elements, visible, groupKey), reconstruits si le cache est invalide.
+Groups keyed by key (label, icon, elements, visible, groupKey), rebuilt if the cache is invalid.
 
-- **renvoie** : table<string, table> Données des groupes.
+- **returns**: table<string, table> Group data.
 
 #### `freeroam_bigMapPoiProvider.getCachedPoiData()`
 
-Données formatées des POI indexées par id, chacune avec filterData (groupTags, sortingValues).
+Formatted POI data keyed by id, each with filterData (groupTags, sortingValues).
 
-- **renvoie** : table<string, table> POI formatés.
+- **returns**: table<string, table> Formatted POIs.
 
 #### `freeroam_bigMapPoiProvider.getGroupVisibility(groupKey)`
 
-Indique si un groupe est visible (vrai par défaut si inconnu).
+Tells whether a group is visible (true by default if unknown).
 
-- `groupKey` (*string*) : Clé du groupe, par ex. 'type_garage'.
-- **renvoie** : boolean true si visible.
+- `groupKey` (*string*) : Group key, e.g. 'type_garage'.
+- **returns**: boolean true if visible.
 
 #### `freeroam_bigMapPoiProvider.onPreRender(dtReal, dtSim)`
 
-Hook appelé à chaque image : si l'état de jeu a des marqueurs de mode de jeu et qu'un niveau est chargé et que sendToMinimap est vrai, appelle sendMissionLocationsToMinimap (qui remet le drapeau à false).
+Hook called every frame: if the game state has game mode markers and a level is loaded and sendToMinimap is true, calls sendMissionLocationsToMinimap (which sets the flag back to false).
 
-- `dtReal` (*number*) : Temps réel écoulé (s).
-- `dtSim` (*number*) : Temps de simulation écoulé (s).
+- `dtReal` (*number*) : Elapsed real time (s).
+- `dtSim` (*number*) : Simulation elapsed time (s).
 
 #### `freeroam_bigMapPoiProvider.setGroupVisibility(groupKey, isVisible)`
 
-Définit la visibilité d'un groupe ; l'effet n'apparaît qu'après un nouvel envoi à la grande carte.
+Sets a group's visibility; the effect only appears after a new send to the big map.
 
-- `groupKey` (*string*) : Clé du groupe.
-- `isVisible` (*boolean*) : true pour afficher.
+- `groupKey` (*string*) : Group key.
+- `isVisible` (*boolean*) : true to show.
 
 #### `freeroam_bigMapPoiProvider.toggleGroupVisibility(groupKey)`
 
-Inverse la visibilité d'un groupe (la mise à jour de la grande carte est commentée dans le code).
+Toggles a group's visibility (the big map update is commented out in the code).
 
-- `groupKey` (*string*) : Clé du groupe.
+- `groupKey` (*string*) : Group key.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | gameplay_missions_missions, freeroam_bigMapMode, gameplay_rawPois, gameplay_playmodeMarkers. |
 
-**Évènements UI (guihooks.trigger) :** `BigmapMissionData`, `NavigationStaticMarkers`
+**UI events (guihooks.trigger):** `BigmapMissionData`, `NavigationStaticMarkers`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/freeroam/bigMapPoiProvider.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/freeroam/bigMapPoiProvider.lua`.*

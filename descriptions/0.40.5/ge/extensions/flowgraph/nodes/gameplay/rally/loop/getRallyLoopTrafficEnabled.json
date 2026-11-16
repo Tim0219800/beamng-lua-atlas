@@ -1,11 +1,14 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopTrafficEnabled.lua",
-  "module": "Nœud flowgraph « Rally Get Traffic Enabled » (catégorie once_instant, tags rally et traffic). Indique dans trafficEnabled (bool) si le trafic doit être activé pour la boucle rally : rm:getTrafficEnabled() si disponible, sinon true sauf pour une mission de dev (devMission) dont missionTypeData.devDisableTraffic est vrai.",
+  "module": "Flowgraph node \"Rally Get Traffic Enabled\" (category once_instant, tags rally and traffic). Indicates in trafficEnabled (bool) whether traffic must be enabled for the rally loop: rm:getTrafficEnabled() if available, otherwise true except for a dev mission (devMission) whose missionTypeData.devDisableTraffic is true.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Écrit trafficEnabled depuis le gestionnaire de boucle, ou la valeur de repli.", "internal": true}
+        "workOnce": {
+          "desc": "Writes trafficEnabled from the loop manager, or the fallback value.",
+          "internal": true
+        }
       }
     }
   }

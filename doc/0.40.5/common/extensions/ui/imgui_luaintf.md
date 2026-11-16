@@ -1,150 +1,150 @@
 # `ui_imgui_luaintf`
 
-*Fichier : `lua/common/extensions/ui/imgui_luaintf.lua` · VM : Commun (GE + véhicule) · 2198 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/extensions/ui/imgui_luaintf.lua` · VM: Common (GE + vehicle) · 2198 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/ui/imgui_luaintf")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/ui/imgui_luaintf")` (file under extensions/ but not a regular extension)
 
-Fichier généré (≈ 2200 lignes, ~485 fonctions) qui expose presque toute l'API Dear ImGui en Lua sous forme de wrappers très fins vers Engine.imgui (binding C++ du jeu) : NewFrame/Render, fenêtres, widgets (Text, Button, Slider*, Drag*, Input*, Combo, Tree*, Table*, Plot*), ImDrawList_*, styles (PushStyleColor*, PushStyleVar*), IO, polices, et les enums sous forme de constantes M.Xxx_Yyy (ex. WindowFlags_NoTitleBar, Col_Text, Key_*). Ce n'est pas une extension : il renvoie une fonction qui reçoit la table M d'imgui_api. Les suffixes numériques (Button/SmallButton, TreeNode1/TreeNode2, Combo1, PushStyleColor2…) correspondent aux surcharges C++ d'une même fonction.
+Generated file (about 2200 lines, ~485 functions) that exposes almost the entire Dear ImGui API in Lua as very thin wrappers over Engine.imgui (the game's C++ binding): NewFrame/Render, windows, widgets (Text, Button, Slider*, Drag*, Input*, Combo, Tree*, Table*, Plot*), ImDrawList_*, styles (PushStyleColor*, PushStyleVar*), IO, fonts, and the enums as constants M.Xxx_Yyy (e.g. WindowFlags_NoTitleBar, Col_Text, Key_*). It is not an extension: it returns a function that receives the table M of imgui_api. The numeric suffixes (Button/SmallButton, TreeNode1/TreeNode2, Combo1, PushStyleColor2...) correspond to the C++ overloads of the same function.
 
-## Exemple
+## Example
 
 ```lua
--- On l'utilise via ui_imgui :
+-- Used via ui_imgui:
 local im = ui_imgui
 if im.Begin('Test') then
-  if im.Button('OK') then print('clic') end
+  if im.Button('OK') then print('click') end
 end
 im.End()
 ```
 
-## Remarques
+## Notes
 
-- Convention du fichier : chaque wrapper vérifie les paramètres de type 'const char *' ; si nil, il logue une erreur (« Parameter 'x' of function 'F' cannot be nil, as the c type is 'const char *' ») et retourne sans appeler ImGui.
-- Les paramètres « pointeur » (bool_p_open, float*, int*...) sont des tables {[0]=valeur} créées par BoolPtr/FloatPtr/IntPtr/ArrayChar (voir imgui_custom_luaintf).
-- Les valeurs par défaut sont posées dans les wrappers (ex. flags = 0 si nil).
-- Plusieurs fonctions de ce fichier sont réécrites par imgui_custom_luaintf.lua (Begin, InputText, GetKeyIndex...) : la version custom l'emporte puisqu'elle est chargée après.
-- Les fonctions de ce fichier ne sont pas listées une à une ici : elles suivent la documentation officielle de Dear ImGui (le suffixe de nom indique la surcharge).
+- File convention: each wrapper checks the parameters of type 'const char *'; if nil, it logs an error ("Parameter 'x' of function 'F' cannot be nil, as the c type is 'const char *'") and returns without calling ImGui.
+- The "pointer" parameters (bool_p_open, float*, int*...) are tables {[0]=value} created by BoolPtr/FloatPtr/IntPtr/ArrayChar (see imgui_custom_luaintf).
+- Default values are set in the wrappers (e.g. flags = 0 if nil).
+- Several functions in this file are rewritten by imgui_custom_luaintf.lua (Begin, InputText, GetKeyIndex...): the custom version wins since it is loaded afterwards.
+- The functions of this file are not listed one by one here: they follow the official Dear ImGui documentation (the name suffix indicates the overload).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_imgui_luaintf.Begin(string_name, bool_p_open, ImGuiWindowFlags_flags)` | Ouvre une fenêtre (flags 0 par défaut dans cette version ; la version custom met NoFocusOnAppearing). (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.EndFrame()` | Termine la frame ImGui (géré par le moteur). (assignée dynamiquement) *(interne)* | dyn |
-| `ui_imgui_luaintf.GetCurrentContext()` | Renvoie le contexte ImGui courant. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.GetKeyIndex(ImGuiKey_key)` | Convertit une touche en index (imgui.GetKeyIndex) ; remplacée par une version no-op dans imgui_custom_luaintf. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.GetVersion()` | Renvoie la version de Dear ImGui. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.NewFrame()` | Démarre une nouvelle frame ImGui (normalement géré par le moteur). (assignée dynamiquement) *(interne)* | dyn |
-| `ui_imgui_luaintf.Render()` | Finalise le rendu ImGui (géré par le moteur). (assignée dynamiquement) *(interne)* | dyn |
-| `ui_imgui_luaintf.ShowAboutWindow(bool_p_open)` | Affiche la fenêtre « À propos » d'ImGui. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.ShowDebugLogWindow(bool_p_open)` | Affiche la fenêtre de log de debug d'ImGui. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.ShowDemoWindow(bool_p_open)` | Affiche la fenêtre de démonstration d'ImGui. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.ShowFontSelector(string_label)` | Affiche un sélecteur de police. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.ShowMetricsWindow(bool_p_open)` | Affiche la fenêtre de métriques d'ImGui. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.ShowStackToolWindow(bool_p_open)` | Affiche l'outil de pile d'ID d'ImGui. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.ShowStyleEditor(ImGuiStyle_ref)` | Affiche l'éditeur de style d'ImGui. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.ShowStyleSelector(string_label)` | Affiche un sélecteur de style. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.ShowUserGuide()` | Affiche le guide utilisateur d'ImGui. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.StyleColorsClassic(ImGuiStyle_dst)` | Applique le thème classique. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.StyleColorsDark(ImGuiStyle_dst)` | Applique le thème sombre. (assignée dynamiquement) | dyn |
-| `ui_imgui_luaintf.StyleColorsLight(ImGuiStyle_dst)` | Applique le thème clair. (assignée dynamiquement) | dyn |
+| `ui_imgui_luaintf.Begin(string_name, bool_p_open, ImGuiWindowFlags_flags)` | Opens a window (flags 0 by default in this version; the custom version sets NoFocusOnAppearing). (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.EndFrame()` | Ends the ImGui frame (handled by the engine). (dynamically assigned) *(internal)* | dyn |
+| `ui_imgui_luaintf.GetCurrentContext()` | Returns the current ImGui context. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.GetKeyIndex(ImGuiKey_key)` | Converts a key to an index (imgui.GetKeyIndex); replaced by a no-op version in imgui_custom_luaintf. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.GetVersion()` | Returns the Dear ImGui version. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.NewFrame()` | Starts a new ImGui frame (normally handled by the engine). (dynamically assigned) *(internal)* | dyn |
+| `ui_imgui_luaintf.Render()` | Finalizes the ImGui rendering (handled by the engine). (dynamically assigned) *(internal)* | dyn |
+| `ui_imgui_luaintf.ShowAboutWindow(bool_p_open)` | Shows the ImGui "About" window. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.ShowDebugLogWindow(bool_p_open)` | Shows the ImGui debug log window. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.ShowDemoWindow(bool_p_open)` | Shows the ImGui demo window. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.ShowFontSelector(string_label)` | Shows a font selector. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.ShowMetricsWindow(bool_p_open)` | Shows the ImGui metrics window. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.ShowStackToolWindow(bool_p_open)` | Shows the ImGui ID stack tool. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.ShowStyleEditor(ImGuiStyle_ref)` | Shows the ImGui style editor. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.ShowStyleSelector(string_label)` | Shows a style selector. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.ShowUserGuide()` | Shows the ImGui user guide. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.StyleColorsClassic(ImGuiStyle_dst)` | Applies the classic theme. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.StyleColorsDark(ImGuiStyle_dst)` | Applies the dark theme. (dynamically assigned) | dyn |
+| `ui_imgui_luaintf.StyleColorsLight(ImGuiStyle_dst)` | Applies the light theme. (dynamically assigned) | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_imgui_luaintf.Begin(string_name, bool_p_open, ImGuiWindowFlags_flags)`
 
-Ouvre une fenêtre (flags 0 par défaut dans cette version ; la version custom met NoFocusOnAppearing). (assignée dynamiquement)
+Opens a window (flags 0 by default in this version; the custom version sets NoFocusOnAppearing). (dynamically assigned)
 
-- `string_name` (*string*) : Titre (ne peut pas être nil).
-- `bool_p_open` (*table|nil*) : BoolPtr optionnel.
-- `ImGuiWindowFlags_flags` (*integer|nil*) : Flags de fenêtre.
-- **renvoie** : boolean Vrai si la fenêtre est visible.
+- `string_name` (*string*) : Title (cannot be nil).
+- `bool_p_open` (*table|nil*) : Optional BoolPtr.
+- `ImGuiWindowFlags_flags` (*integer|nil*) : Window flags.
+- **returns**: boolean True if the window is visible.
 
 #### `ui_imgui_luaintf.GetCurrentContext()`
 
-Renvoie le contexte ImGui courant. (assignée dynamiquement)
+Returns the current ImGui context. (dynamically assigned)
 
-- **renvoie** : userdata Contexte.
+- **returns**: userdata Context.
 
 #### `ui_imgui_luaintf.GetKeyIndex(ImGuiKey_key)`
 
-Convertit une touche en index (imgui.GetKeyIndex) ; remplacée par une version no-op dans imgui_custom_luaintf. (assignée dynamiquement)
+Converts a key to an index (imgui.GetKeyIndex); replaced by a no-op version in imgui_custom_luaintf. (dynamically assigned)
 
-- `ImGuiKey_key` (*integer*) : Touche ImGui.
-- **renvoie** : integer Index de touche.
+- `ImGuiKey_key` (*integer*) : ImGui key.
+- **returns**: integer Key index.
 
 #### `ui_imgui_luaintf.GetVersion()`
 
-Renvoie la version de Dear ImGui. (assignée dynamiquement)
+Returns the Dear ImGui version. (dynamically assigned)
 
-- **renvoie** : string Version.
+- **returns**: string Version.
 
 #### `ui_imgui_luaintf.ShowAboutWindow(bool_p_open)`
 
-Affiche la fenêtre « À propos » d'ImGui. (assignée dynamiquement)
+Shows the ImGui "About" window. (dynamically assigned)
 
-- `bool_p_open` (*table|nil*) : BoolPtr optionnel.
+- `bool_p_open` (*table|nil*) : Optional BoolPtr.
 
 #### `ui_imgui_luaintf.ShowDebugLogWindow(bool_p_open)`
 
-Affiche la fenêtre de log de debug d'ImGui. (assignée dynamiquement)
+Shows the ImGui debug log window. (dynamically assigned)
 
-- `bool_p_open` (*table|nil*) : BoolPtr optionnel.
+- `bool_p_open` (*table|nil*) : Optional BoolPtr.
 
 #### `ui_imgui_luaintf.ShowDemoWindow(bool_p_open)`
 
-Affiche la fenêtre de démonstration d'ImGui. (assignée dynamiquement)
+Shows the ImGui demo window. (dynamically assigned)
 
-- `bool_p_open` (*table|nil*) : BoolPtr optionnel.
+- `bool_p_open` (*table|nil*) : Optional BoolPtr.
 
 #### `ui_imgui_luaintf.ShowFontSelector(string_label)`
 
-Affiche un sélecteur de police. (assignée dynamiquement)
+Shows a font selector. (dynamically assigned)
 
-- `string_label` (*string*) : Libellé (ne peut pas être nil).
+- `string_label` (*string*) : Label (cannot be nil).
 
 #### `ui_imgui_luaintf.ShowMetricsWindow(bool_p_open)`
 
-Affiche la fenêtre de métriques d'ImGui. (assignée dynamiquement)
+Shows the ImGui metrics window. (dynamically assigned)
 
-- `bool_p_open` (*table|nil*) : BoolPtr optionnel.
+- `bool_p_open` (*table|nil*) : Optional BoolPtr.
 
 #### `ui_imgui_luaintf.ShowStackToolWindow(bool_p_open)`
 
-Affiche l'outil de pile d'ID d'ImGui. (assignée dynamiquement)
+Shows the ImGui ID stack tool. (dynamically assigned)
 
-- `bool_p_open` (*table|nil*) : BoolPtr optionnel.
+- `bool_p_open` (*table|nil*) : Optional BoolPtr.
 
 #### `ui_imgui_luaintf.ShowStyleEditor(ImGuiStyle_ref)`
 
-Affiche l'éditeur de style d'ImGui. (assignée dynamiquement)
+Shows the ImGui style editor. (dynamically assigned)
 
-- `ImGuiStyle_ref` (*userdata|nil*) : Style à éditer, optionnel.
+- `ImGuiStyle_ref` (*userdata|nil*) : Style to edit, optional.
 
 #### `ui_imgui_luaintf.ShowStyleSelector(string_label)`
 
-Affiche un sélecteur de style. (assignée dynamiquement)
+Shows a style selector. (dynamically assigned)
 
-- `string_label` (*string*) : Libellé (ne peut pas être nil).
-- **renvoie** : boolean Vrai si le style a changé.
+- `string_label` (*string*) : Label (cannot be nil).
+- **returns**: boolean True if the style changed.
 
 #### `ui_imgui_luaintf.StyleColorsClassic(ImGuiStyle_dst)`
 
-Applique le thème classique. (assignée dynamiquement)
+Applies the classic theme. (dynamically assigned)
 
-- `ImGuiStyle_dst` (*userdata|nil*) : Style cible, optionnel.
+- `ImGuiStyle_dst` (*userdata|nil*) : Target style, optional.
 
 #### `ui_imgui_luaintf.StyleColorsDark(ImGuiStyle_dst)`
 
-Applique le thème sombre. (assignée dynamiquement)
+Applies the dark theme. (dynamically assigned)
 
-- `ImGuiStyle_dst` (*userdata|nil*) : Style cible, optionnel.
+- `ImGuiStyle_dst` (*userdata|nil*) : Target style, optional.
 
 #### `ui_imgui_luaintf.StyleColorsLight(ImGuiStyle_dst)`
 
-Applique le thème clair. (assignée dynamiquement)
+Applies the light theme. (dynamically assigned)
 
-- `ImGuiStyle_dst` (*userdata|nil*) : Style cible, optionnel.
+- `ImGuiStyle_dst` (*userdata|nil*) : Target style, optional.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/extensions/ui/imgui_luaintf.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/extensions/ui/imgui_luaintf.lua`.*

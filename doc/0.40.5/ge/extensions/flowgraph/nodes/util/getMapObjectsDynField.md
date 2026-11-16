@@ -1,26 +1,26 @@
 # `flowgraph_nodes_util_getMapObjectsDynField`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/getMapObjectsDynField.lua` · VM : Game Engine (GE) · 47 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/getMapObjectsDynField.lua` · VM: Game Engine (GE) · 47 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/getMapObjectsDynField")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/getMapObjectsDynField")` (file under extensions/ but not a regular extension)
 
-Nœud « Get Map Objects IDs by DynField » (repeat_instant). Renvoie la liste des ids des objets de la carte (map.objects, donc les véhicules suivis) qui possèdent un champ dynamique donné. Entrée : dynamicFieldName. Sortie : objects (table d'ids).
+Node "Get Map Objects IDs by DynField" (repeat_instant). Returns the list of ids of the map objects (map.objects, hence the tracked vehicles) that have a given dynamic field. Input: dynamicFieldName. Output: objects (table of ids).
 
-## Remarques
+## Notes
 
-- Seul le nom du champ est testé, pas sa valeur.
-- Recalcule à chaque frame : coût proportionnel au nombre d'objets.
+- Only the field name is tested, not its value.
+- Recomputed every frame: cost proportional to the number of objects.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Met oldPos à nil (champ inutilisé ensuite). | 24 |
-| `C:findObjectsWithDynField(dynamicFieldName)` | Parcourt map.objects, lit object:getDynamicFields() et renvoie les ids dont un nom correspond. | 28 |
-| `C:init(mgr)` | Ne fait rien. | 20 |
-| `C:work()` | Si le nom est fourni, recalcule la liste à chaque frame et l'écrit dans objects. | 41 |
+| `C:_executionStarted()` | Sets oldPos to nil (field unused afterwards). | 24 |
+| `C:findObjectsWithDynField(dynamicFieldName)` | Iterates over map.objects, reads object:getDynamicFields() and returns the ids for which a name matches. | 28 |
+| `C:init(mgr)` | Does nothing. | 20 |
+| `C:work()` | If the name is provided, recomputes the list every frame and writes it to objects. | 41 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/getMapObjectsDynField.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/getMapObjectsDynField.lua`.*

@@ -1,111 +1,111 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/rectMarker.lua",
-  "module": "Noeud flowgraph « Parking Markers » (repeat_instant, auteur BeamNG). Crée une place de parking rectangulaire : un BeamNGTrigger de type Box et 4 marqueurs de coin (TSStatic art/shapes/interface/position_marker.dae) posés sur le sol, colorés selon que le véhicule est dedans. Sorties : inside, outside, partlyInside, stopped, stopping, stoppedPercent, dotAngle, forward, sideDistance, forwardDistance (et versions relatives, cachées). Détecte l'arrêt (vitesse <= 0.15 m/s pendant stop_timer s).",
+  "module": "Flowgraph node \"Parking Markers\" (repeat_instant, author BeamNG). Creates a rectangular parking spot: a Box-type BeamNGTrigger and 4 corner markers (TSStatic art/shapes/interface/position_marker.dae) placed on the ground, colored depending on whether the vehicle is inside. Outputs: inside, outside, partlyInside, stopped, stopping, stoppedPercent, dotAngle, forward, sideDistance, forwardDistance (and relative versions, hidden). Detects stopping (speed <= 0.15 m/s for stop_timer s).",
   "notes": [
-    "Bug : dans checkParking, sc est rempli depuis self.pinIn.position (au lieu de scale) : sideDistanceRelative et forwardDistanceRelative sont divisés par la position, pas par la taille.",
-    "updateMarkerPositions écrase la couleur de chaque marqueur par « 1 0 0 1 » à chaque changement ; checkParking la recolorie ensuite.",
-    "Pin ancien nom reset -> clear (legacyPins)."
+    "Bug: in checkParking, sc is filled from self.pinIn.position (instead of scale): sideDistanceRelative and forwardDistanceRelative are divided by the position, not by the size.",
+    "updateMarkerPositions overwrites the color of each marker with \"1 0 0 1\" on every change; checkParking then recolors it.",
+    "Old pin name reset -> clear (legacyPins)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Initialise trigger, marqueurs, debug=false et stopTimer=1.",
+          "desc": "Initializes trigger, markers, debug=false and stopTimer=1.",
           "params": {
             "mgr": {
               "type": "any",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           },
           "internal": true
         },
         "clear": {
-          "desc": "Supprime le trigger et les marqueurs créés et remet l'état à zéro.",
+          "desc": "Deletes the created trigger and markers and resets the state to zero.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Remet stopTimer à 1 et marque l'état comme changé.",
+          "desc": "Resets stopTimer to 1 and marks the state as changed.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Appelle clear à l'arrêt du graphe.",
+          "desc": "Calls clear when the graph stops.",
           "internal": true
         },
         "onClientEndMission": {
-          "desc": "Hook de fin de mission : appelle clear.",
+          "desc": "End-of-mission hook: calls clear.",
           "internal": true
         },
         "work": {
-          "desc": "Sur clear, supprime tout et vide les sorties ; sur flow, gère le trigger, replace les marqueurs et vérifie le stationnement.",
+          "desc": "On clear, deletes everything and empties the outputs; on flow, handles the trigger, repositions the markers and checks the parking.",
           "params": {
             "args": {
               "type": "any",
-              "desc": "non utilisé"
+              "desc": "unused"
             }
           },
           "internal": false
         },
         "checkParking": {
-          "desc": "Teste si les 8 coins de la boîte englobante du véhicule sont dans le trigger, colore les marqueurs et calcule les sorties (inside, partlyInside, distances, arrêt).",
+          "desc": "Tests whether the 8 corners of the vehicle's bounding box are inside the trigger, colors the markers and computes the outputs (inside, partlyInside, distances, stopping).",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Panneau de propriétés de l'éditeur (vide).",
+          "desc": "Editor properties panel (empty).",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "desc": "Draws the central content of the node in the editor.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true
         },
         "createCornerMarker": {
-          "desc": "Crée un TSStatic marqueur de coin enregistré sous le nom donné et l'ajoute au MissionGroup.",
+          "desc": "Creates a corner-marker TSStatic registered under the given name and adds it to the MissionGroup.",
           "params": {
             "markerName": {
               "type": "any",
-              "desc": "nom de l'objet"
+              "desc": "object name"
             }
           },
           "internal": true
         },
         "createMarkers": {
-          "desc": "Crée les 4 marqueurs de coin.",
+          "desc": "Creates the 4 corner markers.",
           "internal": true
         },
         "updateMarkerPositions": {
-          "desc": "Si la place a changé, replace chaque marqueur sur le sol (raycast) en alignant sa normale, ou à plat si staticMarkers.",
+          "desc": "If the spot changed, repositions each marker on the ground (raycast) aligning its normal, or flat if staticMarkers.",
           "internal": true
         },
         "manageTrigger": {
-          "desc": "Crée le BeamNGTrigger (position, scale, rotation) au premier appel, puis le met à jour si les pins changent.",
+          "desc": "Creates the BeamNGTrigger (position, scale, rotation) on the first call, then updates it if the pins change.",
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Ne sauvegarde rien.",
+          "desc": "Saves nothing.",
           "params": {
             "res": {
               "type": "any",
-              "desc": "table de sauvegarde"
+              "desc": "save table"
             }
           },
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Ne restaure rien.",
+          "desc": "Restores nothing.",
           "params": {
             "res": {
               "type": "any",
-              "desc": "données sauvegardées"
+              "desc": "saved data"
             }
           },
           "internal": true

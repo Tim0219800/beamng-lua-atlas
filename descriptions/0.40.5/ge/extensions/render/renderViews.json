@@ -1,21 +1,27 @@
 {
   "path": "lua/ge/extensions/render/renderViews.lua",
-  "module": "Prise de captures d'écran depuis une caméra virtuelle indépendante (RenderView) : on donne position, rotation, résolution, FOV et masques d'objets, le module crée une vue de rendu nommée, attend une courte durée, sauvegarde l'image sur disque (PNG, éventuellement réduite) puis détruit la vue. Utile pour des miniatures, aperçus de véhicules ou masques. Pendant la capture il masque CEF, imgui et les marqueurs de gameplay. Global : render_renderViews.",
+  "module": "Takes screenshots from an independent virtual camera (RenderView): you give position, rotation, resolution, FOV and object masks, the module creates a named render view, waits a short time, saves the image to disk (PNG, optionally downscaled) then destroys the view. Useful for thumbnails, vehicle previews or masks. During the capture it hides CEF, imgui and gameplay markers. Global: render_renderViews.",
   "usage": "render_renderViews.takeScreenshot({\n  pos = vec3(0, 0, 100), rot = quat(0, 0, 0, 1),\n  resolution = vec3(1024, 512, 0), fov = 60,\n  filename = '/temp/vue.png', copyMainViewExposure = true,\n}, function(success) print(success) end)",
   "notes": [
-    "L'image est d'abord écrite dans `<filename>.tmp.png` puis copiée (ou réduite avec downscaleFactor) vers filename ; le fichier temporaire est supprimé. La réduction convertit en format R8G8B8 (GFXFormat 10).",
-    "La capture s'exécute dans un job (core_jobsystem) : le callback est appelé à la fin avec un booléen de succès ; options.screenshotDelay (défaut 0.1 s) laisse le temps au rendu.",
-    "L'anticrénelage est temporairement désactivé (GraphicAntialias 4 -> 0) si le type est smaaT2x ou fxaa (sauf allowAntialiasing=true), puis restauré à 4 après la capture.",
-    "La résolution est donnée sous forme de vec3(x=largeur, y=hauteur, z ignoré) ; défaut 512x256. FOV en degrés (défaut 75), plan proche 0.1 m, plan lointain 2000 m (nearPlane, farClip).",
-    "Exposition : copyMainViewExposure copie l'exposition de la vue principale (EV manuel ou exposition courante) ; sinon manualEV/currentExposure des options.",
-    "Le nom de vue par défaut est 'defaultRenderView' (identifiant unique de vue ; namedTexTargetColor reçoit le même nom). Deux captures simultanées avec le même nom partagent la même vue."
+    "The image is first written to `<filename>.tmp.png` then copied (or downscaled with downscaleFactor) to filename; the temporary file is deleted. Downscaling converts to R8G8B8 format (GFXFormat 10).",
+    "The capture runs in a job (core_jobsystem): the callback is called at the end with a success boolean; options.screenshotDelay (default 0.1 s) gives the render time.",
+    "Antialiasing is temporarily disabled (GraphicAntialias 4 -> 0) if the type is smaaT2x or fxaa (unless allowAntialiasing=true), then restored to 4 after the capture.",
+    "The resolution is given as vec3(x=width, y=height, z ignored); default 512x256. FOV in degrees (default 75), near plane 0.1 m, far plane 2000 m (nearPlane, farClip).",
+    "Exposure: copyMainViewExposure copies the main view's exposure (manual EV or current exposure); otherwise manualEV/currentExposure from the options.",
+    "The default view name is 'defaultRenderView' (unique view identifier; namedTexTargetColor receives the same name). Two simultaneous captures with the same name share the same view."
   ],
   "functions": {
     "takeScreenshot": {
-      "desc": "Crée une RenderView selon les options, programme un job qui masque l'UI, sauvegarde l'image dans options.filename, détruit la vue, restaure l'UI et l'AA, puis appelle le callback.",
+      "desc": "Creates a RenderView according to the options, schedules a job that hides the UI, saves the image to options.filename, destroys the view, restores the UI and AA, then calls the callback.",
       "params": {
-        "options": {"type": "table", "desc": "{pos: vec3, rot: quat, filename: string, resolution?: vec3 (px), downscaleFactor?: number, fov?: number°, nearPlane?: number m, farClip?: number m, renderViewName?: string, renderViewMaskBit?: integer, usePostEffects?: boolean, clearColor?: ColorF (déduit du code), objectTypeWhitelistMask?/objectTypeBlacklistMask?/shadowCasterObjectTypeWhitelistMask?/shadowCasterObjectTypeBlacklistMask?: integer, focusObjects?: object[], manualEV?: number, currentExposure?: number, copyMainViewExposure?: boolean, allowAntialiasing?: boolean, screenshotDelay?: number s}"},
-        "callback": {"type": "function|nil", "desc": "function(success: boolean) appelée à la fin."}
+        "options": {
+          "type": "table",
+          "desc": "{pos: vec3, rot: quat, filename: string, resolution?: vec3 (px), downscaleFactor?: number, fov?: number°, nearPlane?: number m, farClip?: number m, renderViewName?: string, renderViewMaskBit?: integer, usePostEffects?: boolean, clearColor?: ColorF (inferred from code), objectTypeWhitelistMask?/objectTypeBlacklistMask?/shadowCasterObjectTypeWhitelistMask?/shadowCasterObjectTypeBlacklistMask?: integer, focusObjects?: object[], manualEV?: number, currentExposure?: number, copyMainViewExposure?: boolean, allowAntialiasing?: boolean, screenshotDelay?: number s}"
+        },
+        "callback": {
+          "type": "function|nil",
+          "desc": "function(success: boolean) called at the end."
+        }
       },
       "internal": false
     }

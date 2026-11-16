@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/drawGraph.lua",
+  "module": "Nœud flowgraph « Multi Graph » (catégorie repeat_instant, tags util/draw/table/data). Trace plusieurs courbes dans un même graphe dans le corps du nœud : un pin d'entrée number (value1, value2…) par courbe, leur nombre se règle par data.count. Garde les 400 dernières valeurs par courbe ; l'échelle (data.scaleMin/scaleMax) s'agrandit automatiquement avec les valeurs.",
+  "notes": ["Un commentaire du jeu signale « TODO: fix invalid C type error » sur l'appel à im.PlotMultiLines.", "Les séries sont indexées par l'ordre de pairs() sur les pins, donc l'ordre des courbes n'est pas garanti."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise tables de données, 400 points max, count = 1, échelle 0..1.", "internal": true},
+        "work": {"desc": "Ajoute la valeur numérique de chaque pin à sa série, étend l'échelle, supprime les valeurs les plus anciennes au-delà de la taille max."},
+        "resetGraphData": {"desc": "Reconstruit étiquettes, couleurs arc-en-ciel et séries d'après les pins numériques connectés.", "internal": true},
+        "updatePins": {"desc": "Ajoute ou retire des pins value<i> pour passer de old à new (supprime les liens des pins retirés), puis réinitialise les données.", "params": {"old": {"type": "integer", "desc": "ancien nombre de pins"}, "new": {"type": "number", "desc": "nouveau nombre de pins (arrondi par excès, minimum 0)"}}, "internal": true},
+        "onLinkDeleted": {"desc": "Hook éditeur : réinitialise les données.", "internal": true},
+        "onLink": {"desc": "Hook éditeur : réinitialise les données.", "internal": true},
+        "onUnlink": {"desc": "Hook éditeur : réinitialise les données.", "internal": true},
+        "_onSerialize": {"desc": "Vide.", "params": {"res": {"type": "table", "desc": "table de sérialisation"}}, "internal": true},
+        "_onDeserialized": {"desc": "Recrée les pins selon data.count.", "params": {"data": {"type": "table", "desc": "données chargées"}}, "internal": true},
+        "drawMiddle": {"desc": "Éditeur : synchronise le nombre de pins avec data.count et dessine les courbes (PlotMultiLines).", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true}
+      }
+    }
+  }
+}

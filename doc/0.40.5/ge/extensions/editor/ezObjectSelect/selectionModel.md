@@ -1,64 +1,64 @@
 # `editor_ezObjectSelect_selectionModel`
 
-*Fichier : `lua/ge/extensions/editor/ezObjectSelect/selectionModel.lua` · VM : Game Engine (GE) · 355 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ezObjectSelect/selectionModel.lua` · VM: Game Engine (GE) · 355 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ezObjectSelect_selectionModel` : `extensions.load("editor_ezObjectSelect_selectionModel")`, puis la globale `editor_ezObjectSelect_selectionModel`
+**Access:** extension `editor_ezObjectSelect_selectionModel`: `extensions.load("editor_ezObjectSelect_selectionModel")`, then the global `editor_ezObjectSelect_selectionModel`
 
-Modèle de sélection de l'outil « Easy Object Select » de l'éditeur. À chaque frame il interroge selectionQuery.gather, regroupe les candidats sous le curseur en pile (empilement d'objets), choisit automatiquement le gagnant (avec hystérésis pour éviter le clignotement), et gère le cycle manuel à la molette ainsi que le « gel » du pick. Il produit un snapshot (camera, mouse, candidates, pick, activeIndex, cycleActive, stackCount…) lu par les modules de dessin et d'interaction.
+Selection model of the editor's "Easy Object Select" tool. Every frame it queries selectionQuery.gather, groups the candidates under the cursor into a stack (object stacking), automatically chooses the winner (with hysteresis to avoid flickering), and handles manual wheel cycling as well as pick "freezing". It produces a snapshot (camera, mouse, candidates, pick, activeIndex, cycleActive, stackCount...) read by the drawing and interaction modules.
 
-## Remarques
+## Notes
 
-- État temporel (cible automatique, cycle, pick gelé) conservé dans un upvalue local ; activate() et deactivate() le remettent à zéro.
-- Le cycle de molette se réinitialise quand la souris sort de la zone morte (cycleDeadZone, 6 px par défaut) ou quand la caméra a bougé (cycleShouldReset).
-- Si le premier candidat est plus loin que options.maxStackDistance, la pile est réduite à ce seul candidat (stackLimited = true) et le cycle est annulé.
-- Le sens du cycle : wheelDelta > 0 recule d'un cran dans la pile, wheelDelta < 0 avance (modulo stackCount).
+- Temporal state (automatic target, cycle, frozen pick) kept in a local upvalue; activate() and deactivate() reset it to zero.
+- The wheel cycle resets when the mouse leaves the dead zone (cycleDeadZone, 6 px by default) or when the camera has moved (cycleShouldReset).
+- If the first candidate is farther than options.maxStackDistance, the stack is reduced to that single candidate (stackLimited = true) and the cycle is cancelled.
+- Cycle direction: wheelDelta > 0 steps back one notch in the stack, wheelDelta < 0 steps forward (modulo stackCount).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ezObjectSelect_selectionModel.activate()` | Réinitialise l'état temporel (cible automatique, cycle, pick gelé, snapshot) et active le cache de selectionQuery. À appeler à l'ouverture de l'outil. | 204 |
-| `editor_ezObjectSelect_selectionModel.cycle(wheelDelta)` | Fait avancer le pick actif dans la pile de candidats suivant le sens de la molette. Sans effet s'il y a moins de 2 candidats ou si wheelDelta vaut 0. Mémorise l'ancre souris et la caméra pour détecter plus tard un mouvement. | 311 |
-| `editor_ezObjectSelect_selectionModel.deactivate()` | Réinitialise l'état temporel (cible, cycle, pick gelé, snapshot) à la fermeture de l'outil. | 209 |
-| `editor_ezObjectSelect_selectionModel.freezePick()` | Fige le pick actuel : tant qu'il est gelé, il reste la cible même si le curseur bouge (utile pendant un glisser). | 332 |
-| `editor_ezObjectSelect_selectionModel.getSnapshot()` | Renvoie le dernier snapshot calculé par update. | 346 |
-| `editor_ezObjectSelect_selectionModel.invalidateCache(reason)` | Invalide le cache de sélection de selectionQuery (le cache sera reconstruit à la prochaine requête). | 350 |
-| `editor_ezObjectSelect_selectionModel.releasePick()` | Libère le pick gelé par freezePick. | 340 |
-| `editor_ezObjectSelect_selectionModel.update(options)` | Calcule le snapshot de la frame : appelle selectionQuery.gather(options), groupe et trie les candidats, applique la limite de pile, gère la réinitialisation du cycle, le pick gelé et le gagnant automatique. Renvoie un snapshot vide si la requête échoue (pas de caméra). | 213 |
+| `editor_ezObjectSelect_selectionModel.activate()` | Resets the temporal state (automatic target, cycle, frozen pick, snapshot) and enables the selectionQuery cache. To be called when the tool opens. | 204 |
+| `editor_ezObjectSelect_selectionModel.cycle(wheelDelta)` | Advances the active pick in the candidate stack following the wheel direction. No effect if there are fewer than 2 candidates or if wheelDelta is 0. Stores the mouse anchor and the camera to detect movement later. | 311 |
+| `editor_ezObjectSelect_selectionModel.deactivate()` | Resets the temporal state (target, cycle, frozen pick, snapshot) when the tool closes. | 209 |
+| `editor_ezObjectSelect_selectionModel.freezePick()` | Freezes the current pick: while frozen, it remains the target even if the cursor moves (useful during a drag). | 332 |
+| `editor_ezObjectSelect_selectionModel.getSnapshot()` | Returns the last snapshot computed by update. | 346 |
+| `editor_ezObjectSelect_selectionModel.invalidateCache(reason)` | Invalidates the selection cache of selectionQuery (the cache will be rebuilt at the next query). | 350 |
+| `editor_ezObjectSelect_selectionModel.releasePick()` | Releases the pick frozen by freezePick. | 340 |
+| `editor_ezObjectSelect_selectionModel.update(options)` | Computes the frame's snapshot: calls selectionQuery.gather(options), groups and sorts the candidates, applies the stack limit, handles cycle reset, the frozen pick and the automatic winner. Returns an empty snapshot if the query fails (no camera). | 213 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_ezObjectSelect_selectionModel.cycle(wheelDelta)`
 
-Fait avancer le pick actif dans la pile de candidats suivant le sens de la molette. Sans effet s'il y a moins de 2 candidats ou si wheelDelta vaut 0. Mémorise l'ancre souris et la caméra pour détecter plus tard un mouvement.
+Advances the active pick in the candidate stack following the wheel direction. No effect if there are fewer than 2 candidates or if wheelDelta is 0. Stores the mouse anchor and the camera to detect movement later.
 
-- `wheelDelta` (*number*) : Delta de molette ; > 0 recule dans la pile, < 0 avance.
-- **renvoie** : table|nil Le snapshot courant (modifié en place), ou nil s'il n'y en a pas.
+- `wheelDelta` (*number*) : Wheel delta; > 0 steps back in the stack, < 0 steps forward.
+- **returns**: table|nil The current snapshot (modified in place), or nil if there is none.
 
 #### `editor_ezObjectSelect_selectionModel.freezePick()`
 
-Fige le pick actuel : tant qu'il est gelé, il reste la cible même si le curseur bouge (utile pendant un glisser).
+Freezes the current pick: while frozen, it remains the target even if the cursor moves (useful during a drag).
 
-- **renvoie** : table|nil Le candidat gelé, ou nil s'il n'y a pas de pick.
+- **returns**: table|nil The frozen candidate, or nil if there is no pick.
 
 #### `editor_ezObjectSelect_selectionModel.getSnapshot()`
 
-Renvoie le dernier snapshot calculé par update.
+Returns the last snapshot computed by update.
 
-- **renvoie** : table|nil Snapshot courant.
+- **returns**: table|nil Current snapshot.
 
 #### `editor_ezObjectSelect_selectionModel.invalidateCache(reason)`
 
-Invalide le cache de sélection de selectionQuery (le cache sera reconstruit à la prochaine requête).
+Invalidates the selection cache of selectionQuery (the cache will be rebuilt at the next query).
 
-- `reason` (*string|nil*) : Raison de l'invalidation (diagnostic).
+- `reason` (*string|nil*) : Reason for the invalidation (diagnostic).
 
 #### `editor_ezObjectSelect_selectionModel.update(options)`
 
-Calcule le snapshot de la frame : appelle selectionQuery.gather(options), groupe et trie les candidats, applique la limite de pile, gère la réinitialisation du cycle, le pick gelé et le gagnant automatique. Renvoie un snapshot vide si la requête échoue (pas de caméra).
+Computes the frame's snapshot: calls selectionQuery.gather(options), groups and sorts the candidates, applies the stack limit, handles cycle reset, the frozen pick and the automatic winner. Returns an empty snapshot if the query fails (no camera).
 
-- `options` (*table|nil*) : Options transmises à gather (discoveryPixels, nearQueryDistance, maxDistance, maxVolume, namePattern, ignorePattern, collectFilteredLarge) plus preferUnselected (boolean : favoriser les objets non sélectionnés), maxStackDistance (number, m) et cycleDeadZone (number, px).
-- **renvoie** : table Snapshot : camera, mouse, queryRadius, discoveryRadius, nearQueryDistance, candidates, discovery, filteredLarge, queryStats, rejected, sourceCount, stackCount, stackLimited, activeIndex, pick, cycleActive, cycleAnchor, cycleDeadZone, frozenTargetId.
+- `options` (*table|nil*) : Options passed to gather (discoveryPixels, nearQueryDistance, maxDistance, maxVolume, namePattern, ignorePattern, collectFilteredLarge) plus preferUnselected (boolean: favor unselected objects), maxStackDistance (number, m) and cycleDeadZone (number, px).
+- **returns**: table Snapshot: camera, mouse, queryRadius, discoveryRadius, nearQueryDistance, candidates, discovery, filteredLarge, queryStats, rejected, sourceCount, stackCount, stackLimited, activeIndex, pick, cycleActive, cycleAnchor, cycleDeadZone, frozenTargetId.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ezObjectSelect/selectionModel.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ezObjectSelect/selectionModel.lua`.*

@@ -1,39 +1,39 @@
 # `jbeam_sections_wheelTypes_monoHubWheels`
 
-*Fichier : `lua/common/jbeam/sections/wheelTypes/monoHubWheels.lua` · VM : Commun (GE + véhicule) · 206 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/sections/wheelTypes/monoHubWheels.lua` · VM: Common (GE + vehicle) · 206 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/sections/wheelTypes/monoHubWheels")`
+**Access:** `require("jbeam/sections/wheelTypes/monoHubWheels")`
 
-Gestionnaire du type de roue 'monoHubWheels' : roue à moyeu simple. Anneau de pneu (2 x numRays nœuds) relié aux deux nœuds d'axe par des côtés et des poutres de soutien, plus UN seul anneau de numRays nœuds de moyeu placé au milieu de l'axe et relié à node1, node2 et au pneu par des poutres anisotropes de renfort. Appelé par jbeam/sections/wheels.lua pendant le chargement du véhicule.
+Handler for the 'monoHubWheels' wheel type: a single-hub wheel. A tire ring (2 x numRays nodes) linked to the two axle nodes by sides and support beams, plus ONE single ring of numRays hub nodes placed at the middle of the axle and linked to node1, node2 and the tire by anisotropic reinforcement beams. Called by jbeam/sections/wheels.lua during vehicle loading.
 
-## Exemple
+## Example
 
 ```lua
--- appelé par le répartiteur : process(vehicle, wheelKey, wheel)
+-- called by the dispatcher: process(vehicle, wheelKey, wheel)
 ```
 
-## Remarques
+## Notes
 
-- Paramètres lus : node1, node2 (obligatoires), radius (0.5), hubRadius (0.65*radius), numRays (10), tireWidth, wheelOffset, wheelSideBeam*, wheelTreadBeam*, wheelPeripheryBeam*, wheelReinforcementBeam*, hubBeam*, hubNodeWeight, hubCollision, hubNodeMaterial, hubFrictionCoef. Les nœuds du moyeu sont décalés d'un demi-pas angulaire (rotation initiale 2*pi/(4*numRays)).
-- Poutres de soutien BEAM_SUPPORT (7) entre node1/node2 et le pneu avec beamPrecompression = 0.75*hubRadius/radius + 0.25 (toujours créées, contrairement aux types hubWheels*).
-- Résultat : wheel.nodes = nœuds du moyeu (numRays nœuds). wheel.collision forcé à true. Constantes C : NORMALTYPE 0, BEAM_ANISOTROPIC 1, BEAM_SUPPORT 7.
-- Les nœuds du pneu sont créés avant ceux du moyeu : leurs identifiants commencent à maxIDs.nodes avant création.
+- Parameters read: node1, node2 (required), radius (0.5), hubRadius (0.65*radius), numRays (10), tireWidth, wheelOffset, wheelSideBeam*, wheelTreadBeam*, wheelPeripheryBeam*, wheelReinforcementBeam*, hubBeam*, hubNodeWeight, hubCollision, hubNodeMaterial, hubFrictionCoef. The hub nodes are offset by half an angular step (initial rotation 2*pi/(4*numRays)).
+- BEAM_SUPPORT (7) support beams between node1/node2 and the tire with beamPrecompression = 0.75*hubRadius/radius + 0.25 (always created, unlike the hubWheels* types).
+- Result: wheel.nodes = hub nodes (numRays nodes). wheel.collision forced to true. C constants: NORMALTYPE 0, BEAM_ANISOTROPIC 1, BEAM_SUPPORT 7.
+- The tire nodes are created before the hub ones: their ids start at maxIDs.nodes before creation.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_sections_wheelTypes_monoHubWheels.process(vehicle, wheelKey, wheel)` | Crée nœuds et poutres d'une roue monoHubWheels (alias de addMonoHubWheel). Avertissement 'invalid monohub wheel' et sortie si node1 ou node2 manque. *(interne)* | 19 |
+| `jbeam_sections_wheelTypes_monoHubWheels.process(vehicle, wheelKey, wheel)` | Creates nodes and beams of a monoHubWheels wheel (alias of addMonoHubWheel). Warning 'invalid monohub wheel' and exits if node1 or node2 is missing. *(internal)* | 19 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_sections_wheelTypes_monoHubWheels.process(vehicle, wheelKey, wheel)`
 
-Crée nœuds et poutres d'une roue monoHubWheels (alias de addMonoHubWheel). Avertissement 'invalid monohub wheel' et sortie si node1 ou node2 manque.
+Creates nodes and beams of a monoHubWheels wheel (alias of addMonoHubWheel). Warning 'invalid monohub wheel' and exits if node1 or node2 is missing.
 
-- `vehicle` (*table*) : véhicule en construction
-- `wheelKey` (*integer*) : indice de la roue dans sa section
-- `wheel` (*table*) : définition jbeam de la roue (modifiée : collision, radius, hubRadius, numRays, nodes)
+- `vehicle` (*table*) : vehicle under construction
+- `wheelKey` (*integer*) : index of the wheel in its section
+- `wheel` (*table*) : jbeam definition of the wheel (modified: collision, radius, hubRadius, numRays, nodes)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/sections/wheelTypes/monoHubWheels.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/sections/wheelTypes/monoHubWheels.lua`.*

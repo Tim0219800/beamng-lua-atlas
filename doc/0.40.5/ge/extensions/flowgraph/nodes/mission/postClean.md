@@ -1,26 +1,26 @@
 # `flowgraph_nodes_mission_postClean`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/mission/postClean.lua` · VM : Game Engine (GE) · 61 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/mission/postClean.lua` · VM: Game Engine (GE) · 61 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/mission/postClean")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/mission/postClean")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Mission Post Clean' (categorie once_p_duration). Nettoie apres une mission : si keepVeh, garde le vehicule vehId (ou le vehicule joueur), supprime le vehicule joueur mis de cote (stashed) si ce n'est pas l'original, le degele et peut le recuperer sur place (recoverInPlace, avec reparation sauf en mode carriere avec vehicule d'inventaire). resetStartPos demande de replacer le vehicule d'origine a son point de depart (mission.restoreStartingInfoSetup). Si la mission utilisait le trafic precedent, garde l'etat du trafic.
+Flowgraph node 'Mission Post Clean' (once_p_duration category). Cleans up after a mission: if keepVeh, keeps the vehicle vehId (or the player vehicle), deletes the stashed player vehicle if it is not the original, unfreezes it and can recover it in place (recoverInPlace, with repair except in career mode with an inventory vehicle). resetStartPos asks to put the original vehicle back at its starting point (mission.restoreStartingInfoSetup). If the mission used the previous traffic, keeps the traffic state.
 
-## Remarques
+## Notes
 
-- Plante si keepVeh est vrai et qu'aucun vehicule n'est trouve (veh nil).
+- Crashes if keepVeh is true and no vehicle is found (veh nil).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Execute le nettoyage une seule fois (voir description du module). | 22 |
+| `C:workOnce()` | Runs the cleanup only once (see module description). | 22 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/mission/postClean.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/mission/postClean.lua`.*

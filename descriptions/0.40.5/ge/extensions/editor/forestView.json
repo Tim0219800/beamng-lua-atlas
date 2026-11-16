@@ -1,25 +1,25 @@
 {
   "path": "lua/ge/extensions/editor/forestView.lua",
-  "module": "Fenêtre « Forest View » de l'éditeur, destinée à lister les ForestItemData de la forêt (« theForest ») sous forme de boutons triés par nom. Le module est en grande partie inachevé : les hooks d'activation/désactivation du mode d'édition sont commentés à l'export, donc la liste n'est jamais remplie et la fenêtre reste vide.",
+  "module": "Editor \"Forest View\" window, intended to list the forest's ForestItemData (\"theForest\") as buttons sorted by name. The module is largely unfinished: the edit mode activation/deactivation hooks are commented out at export, so the list is never filled and the window stays empty.",
   "notes": [
-    "Bug : forestItemDataTreeNode appelle selectForestItemData, dont la définition est entièrement commentée ; cliquer sur un bouton lèverait une erreur si la liste contenait des éléments.",
-    "populateForestItems, onEditorEditModeActivated et onEditorEditModeDeactivated sont définis mais jamais appelés (les exports M.onEditorEditModeActivated/Deactivated sont commentés) : forestItemsInfo reste vide."
+    "Bug: forestItemDataTreeNode calls selectForestItemData, whose definition is entirely commented out; clicking a button would raise an error if the list contained elements.",
+    "populateForestItems, onEditorEditModeActivated and onEditorEditModeDeactivated are defined but never called (the exports M.onEditorEditModeActivated/Deactivated are commented out): forestItemsInfo stays empty."
   ],
   "functions": {
     "onEditorActivated": {
-      "desc": "Hook appelé à l'activation de l'éditeur ; corps vide.",
+      "desc": "Hook called when the editor is activated; empty body.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onEditorGui": {
-      "desc": "Hook appelé chaque frame par l'éditeur : dessine la fenêtre « Forest View » avec un bouton par entrée de forestItemsInfo.",
+      "desc": "Hook called every frame by the editor: draws the \"Forest View\" window with one button per forestItemsInfo entry.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre « forestEditorView » (220x320).",
+      "desc": "Hook called at editor initialization: registers the \"forestEditorView\" window (220x320).",
       "params": {},
       "returns": [],
       "internal": true

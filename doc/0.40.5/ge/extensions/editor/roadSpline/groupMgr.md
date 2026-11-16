@@ -1,12 +1,12 @@
 # `editor_roadSpline_groupMgr`
 
-*Fichier : `lua/ge/extensions/editor/roadSpline/groupMgr.lua` · VM : Game Engine (GE) · 887 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadSpline/groupMgr.lua` · VM: Game Engine (GE) · 887 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadSpline_groupMgr` : `extensions.load("editor_roadSpline_groupMgr")`, puis la globale `editor_roadSpline_groupMgr`
+**Access:** extension `editor_roadSpline_groupMgr`: `extensions.load("editor_roadSpline_groupMgr")`, then the global `editor_roadSpline_groupMgr`
 
-Gestionnaire des « groupes » de l'outil Road Spline : un groupe = une route (nœuds, largeurs, normales, couches, options de couches automatiques, peinture de terrain, verrouillage) avec son dossier SimGroup dans MissionGroup. Gère création/suppression, reconstruction des groupes sales (updateDirtyGroups : échantillonnage Catmull-Rom ou géométrie « engineered », points de côtes, puis couches), copie profonde, découpe/jointure, sérialisation (buffer ou table JSON de session), annulation/rétablissement et liaison avec la Master Spline. Un moddeur l'utilise pour créer ou modifier des routes par script.
+Manager of the "groups" of the Road Spline tool: a group = a road (nodes, widths, normals, layers, automatic layer options, terrain painting, locking) with its SimGroup folder in MissionGroup. Handles creation/deletion, rebuilding of dirty groups (updateDirtyGroups: Catmull-Rom sampling or "engineered" geometry, rib points, then layers), deep copy, cutting/joining, serialization (buffer or session JSON table), undo/redo and linking with the Master Spline. A modder uses it to create or modify roads by script.
 
-## Exemple
+## Example
 
 ```lua
 local gm = require('editor/roadSpline/groupMgr')
@@ -15,285 +15,285 @@ local g = gm.getGroups()[#gm.getGroups()]
 g.nodes = {vec3(0,0,0), vec3(50,0,0), vec3(100,20,0)}
 g.widths = {8, 8, 8}
 g.nmls = {vec3(0,0,1), vec3(0,0,1), vec3(0,0,1)}
-g.isDirty = true -- reconstruit au prochain updateDirtyGroups()
+g.isDirty = true -- rebuilt on the next updateDirtyGroups()
 ```
 
-## Remarques
+## Notes
 
-- Champs d'un groupe utilisés dans le code : name, id (UUID), isLoop, sceneTreeFolderId, isEnabled (false = verrouillé), isDirty, isLink/linkId, nodes (vec3[]), widths, nmls, layers, corners, geometryMode, roadLength, ribPoints, divPoints, divWidths, tangents, binormals, normals, discMap, chunkStartIndices/chunkEndIndices/numChunks, isPainting + paint*.
-- Le nom exporté convertPathsToRoadGroups correspond à la fonction locale convertPathsToRoadSplines.
-- convertPathsToRoadGroups crée le groupe (addNewGroup) AVANT de tester la taille du tracé : un chemin trop petit laisse un groupe vide, et le message de log « paths too small » compte #paths - #groups, donc toujours 0.
-- Un groupe verrouillé (isEnabled = false) dont les DecalRoads existent n'est pas reconstruit (keepLocked) : l'outil ne les déplace plus et ne repeint pas le terrain.
-- Les ids de groupes sont des UUID (chaînes) ; groupMap associe id -> indice et doit être recalculé après toute insertion/suppression (util.computeIdToIdxMap).
+- Group fields used in the code: name, id (UUID), isLoop, sceneTreeFolderId, isEnabled (false = locked), isDirty, isLink/linkId, nodes (vec3[]), widths, nmls, layers, corners, geometryMode, roadLength, ribPoints, divPoints, divWidths, tangents, binormals, normals, discMap, chunkStartIndices/chunkEndIndices/numChunks, isPainting + paint*.
+- The exported name convertPathsToRoadGroups corresponds to the local function convertPathsToRoadSplines.
+- convertPathsToRoadGroups creates the group (addNewGroup) BEFORE testing the path size: a path that is too small leaves an empty group, and the "paths too small" log message counts #paths - #groups, so always 0.
+- A locked group (isEnabled = false) whose DecalRoads exist is not rebuilt (keepLocked): the tool no longer moves them and does not repaint the terrain.
+- Group ids are UUIDs (strings); groupMap maps id -> index and must be recomputed after any insertion/removal (util.computeIdToIdxMap).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadSpline_groupMgr.addGroupToGroupArray(group)` | Ajoute un groupe déjà construit à la liste, avec un nom unique ; crée son dossier SimGroup (cansave = false) dans MissionGroup s'il n'existe pas encore. | 55 |
-| `editor_roadSpline_groupMgr.addNewGroup(name)` | Crée un nouveau groupe vide (nom unique, UUID, dossier SimGroup transitoire sous MissionGroup, couches automatiques initiales) et l'ajoute à la liste. | 281 |
-| `editor_roadSpline_groupMgr.adopt(group, ids)` | Reprend les DecalRoads listés par release() (seulement ceux encore présents dans la scène) et fixe l'état de verrouillage appliqué. *(interne)* | 129 |
-| `editor_roadSpline_groupMgr.convertPathsToRoadGroups(paths)` | Convertit des tracés issus d'un bitmap en Road Splines : points de grille convertis en coordonnées monde via le terrain, normales prises sur le terrain ; un tracé dont la plus petite dimension est inférieure ou égale à 10 m n'est pas importé. | 567 |
-| `editor_roadSpline_groupMgr.copyGroupProfile(sourceGroup)` | Copie le « profil » d'un groupe : ses couches non cachées (serializeLayer, sans ids de scène) et ses options/réglages de couches automatiques (largeurs et décalages de lignes et fondus). | 381 |
-| `editor_roadSpline_groupMgr.deepCopyAllGroups()` | Copie profonde de tous les groupes (pour l'historique d'annulation). | 483 |
-| `editor_roadSpline_groupMgr.deepCopyGroup(group)` | Copie profonde d'un groupe via string.buffer ; vide la géométrie dérivée (divPoints, divWidths, tangents, binormals, normals, discMap, divCurv) qui sera recalculée. | 470 |
-| `editor_roadSpline_groupMgr.deserializeGroup(data, isCreateObject)` | Désérialise un groupe, soit depuis un blob (string), soit depuis une table JSON : garantit toutes les tables, ré-hydrate les couches et les vec3, remplit les valeurs par défaut des décors de bord et crée le dossier de scène si demandé (sauf si un dossier gardé existe encore). Marque le groupe sale. | 632 |
-| `editor_roadSpline_groupMgr.findGroup(id)` | Cherche un groupe par id. | 143 |
-| `editor_roadSpline_groupMgr.getCurrentRoadSplineList()` | Liste les Road Splines actifs (isEnabled), pour les menus de liaison d'autres outils. | 785 |
-| `editor_roadSpline_groupMgr.getEditModeKey()` | Renvoie la clé du mode d'édition de l'outil (« roadSplineEditor »). | 52 |
-| `editor_roadSpline_groupMgr.getGroups()` | Renvoie le tableau vivant des groupes (routes) de l'outil. | 43 |
-| `editor_roadSpline_groupMgr.getIdToIdxMap()` | Renvoie la table id de groupe -> indice dans getGroups(). | 46 |
-| `editor_roadSpline_groupMgr.getToolPrefixStr()` | Renvoie le préfixe de nom de l'outil (« Road Spline »). | 49 |
-| `editor_roadSpline_groupMgr.isLinked(id)` | Indique si la route est liée à une Master Spline. | 798 |
-| `editor_roadSpline_groupMgr.joinRoadSplines(groupIdx1, nodeIdx1, groupIdx2, nodeIdx2)` | Joint deux routes non bouclées en une seule : group1 est modifié, group2 est supprimé. Ne fait rien si un groupe est introuvable ou si les indices de nœuds sont invalides. | 538 |
-| `editor_roadSpline_groupMgr.pasteGroupProfile(targetGroup, profile)` | Applique un profil au groupe cible : supprime ses couches, recrée celles du profil, recopie les options (valeurs par défaut si absentes), puis régénère les couches automatiques et marque le groupe sale. | 426 |
-| `editor_roadSpline_groupMgr.recomputeIdMap()` | Recalcule la table id -> indice (appelé par l'assistant de session après un chargement qui ajoute des routes). | 782 |
-| `editor_roadSpline_groupMgr.recreateAutoGeneratedLayers(group)` | Supprime les couches cachées (automatiques) puis recrée celles dont l'option du groupe est active (marques de pneus, réparations, fissures, rustines, asphalte abîmé, ligne centrale, lignes de rive/de voie, fondus de bord 1 à 3), et marque le groupe sale. | 177 |
-| `editor_roadSpline_groupMgr.release(group)` | Avant un rechargement Lua : renvoie, par id de couche, les ids de DecalRoad du groupe verrouillé, pour que adopt() les reprenne ensuite (routes, dossier et peinture restent dans la scène). *(interne)* | 120 |
-| `editor_roadSpline_groupMgr.removeAllGroups(isIncludeDisabled)` | Supprime les groupes. Avec isIncludeDisabled, supprime tout et vide la liste ; sinon seulement les groupes activés et non liés (les verrouillés et liés restent). | 157 |
-| `editor_roadSpline_groupMgr.removeGroup(idx)` | Supprime le groupe à l'indice donné : annule la peinture de terrain, supprime ses couches (DecalRoads) et son dossier de scène, puis recalcule la table id -> indice. | 75 |
-| `editor_roadSpline_groupMgr.removeLinkedRoadSpline(splineId)` | Supprime une spline liée par son id (appelé quand la couche correspondante de la Master Spline est retirée). | 149 |
-| `editor_roadSpline_groupMgr.serializeGroup(group)` | Sérialise un groupe en blob string.buffer : annule la peinture de terrain si activé et vide les tables dérivées avant encodage. | 600 |
-| `editor_roadSpline_groupMgr.serializeGroupToTable(group)` | Sérialise un groupe en table portable pour un fichier de session JSON : sans géométrie dérivée ni poignées de scène, couches réduites aux champs auteur (serializeLayer). Le groupe vivant n'est pas modifié. | 615 |
-| `editor_roadSpline_groupMgr.setFixedWidth(group, width)` | Met la même largeur à chaque nœud du groupe et le marque sale. | 273 |
-| `editor_roadSpline_groupMgr.setLink(id, groupId, isLink)` | Active ou désactive la liaison d'une route avec une autre spline (champ linkId) et la marque sale. | 804 |
-| `editor_roadSpline_groupMgr.singleGroupEditRedo(data)` | Rétablissement d'une édition d'un seul groupe : restaure data.new. *(interne)* | 760 |
-| `editor_roadSpline_groupMgr.singleGroupEditUndo(data)` | Annulation d'une édition d'un seul groupe : restaure data.old (couches recopiées, tous les champs de la route, peinture, nom du dossier si renommé). *(interne)* | 759 |
-| `editor_roadSpline_groupMgr.splitGroup(group, groupIdx, selectedNodeIdx)` | Coupe un groupe au nœud donné. Une boucle devient une route ouverte réordonnée ; une route ouverte est remplacée par deux nouveaux groupes « nom (1) » et « nom (2) » (nouveaux UUID). Les réglages par virage (corners) suivent. | 492 |
-| `editor_roadSpline_groupMgr.transGroupEditRedo(groupsData)` | Rétablissement d'une édition multi-groupes : réinsère les copies de groupsData.new. *(interne)* | 779 |
-| `editor_roadSpline_groupMgr.transGroupEditUndo(groupsData)` | Annulation d'une édition touchant plusieurs groupes : supprime tous les groupes et réinsère les copies de groupsData.old. *(interne)* | 778 |
-| `editor_roadSpline_groupMgr.unlinkAll()` | Détache toutes les routes liées (isLink = false, linkId = nil) et marque tous les groupes sales. | 828 |
-| `editor_roadSpline_groupMgr.updateDirtyGroups(dragging)` | Reconstruit les groupes marqués sales (isDirty) : ignore les groupes de moins de 2 nœuds (couches supprimées), plaque les nœuds au terrain (raycast vertical), échantillonne la spline (Catmull-Rom, ou clothoïde en mode engineered), calcule les points de côtes et la longueur, repeint le terrain si actif, régénère les couches automatiques et met à jour les DecalRoads. Met aussi à jour les couches seules marquées sales. Pendant un glissement de poignée, seul l'échantillonnage est fait et le groupe reste sale. | 204 |
-| `editor_roadSpline_groupMgr.updateLinkedRoadSpline(id, points, widths, nmls, isLoop, isConformToTerrain)` | Remplace la géométrie (nœuds, largeurs, normales, boucle) d'une route liée et la marque sale. | 818 |
+| `editor_roadSpline_groupMgr.addGroupToGroupArray(group)` | Adds an already built group to the list, with a unique name; creates its SimGroup folder (cansave = false) in MissionGroup if it does not exist yet. | 55 |
+| `editor_roadSpline_groupMgr.addNewGroup(name)` | Creates a new empty group (unique name, UUID, transient SimGroup folder under MissionGroup, initial automatic layers) and adds it to the list. | 281 |
+| `editor_roadSpline_groupMgr.adopt(group, ids)` | Takes back the DecalRoads listed by release() (only those still present in the scene) and sets the applied lock state. *(internal)* | 129 |
+| `editor_roadSpline_groupMgr.convertPathsToRoadGroups(paths)` | Converts paths from a bitmap into Road Splines: grid points converted to world coordinates via the terrain, normals taken from the terrain; a path whose smallest dimension is less than or equal to 10 m is not imported. | 567 |
+| `editor_roadSpline_groupMgr.copyGroupProfile(sourceGroup)` | Copies the "profile" of a group: its non-hidden layers (serializeLayer, without scene ids) and its automatic layer options/settings (widths and offsets of lines and fades). | 381 |
+| `editor_roadSpline_groupMgr.deepCopyAllGroups()` | Deep copy of all groups (for the undo history). | 483 |
+| `editor_roadSpline_groupMgr.deepCopyGroup(group)` | Deep copy of a group via string.buffer; empties the derived geometry (divPoints, divWidths, tangents, binormals, normals, discMap, divCurv) which will be recomputed. | 470 |
+| `editor_roadSpline_groupMgr.deserializeGroup(data, isCreateObject)` | Deserializes a group, either from a blob (string) or from a JSON table: guarantees all tables, rehydrates the layers and vec3s, fills in the default values of the edge decor and creates the scene folder if requested (unless a kept folder still exists). Marks the group dirty. | 632 |
+| `editor_roadSpline_groupMgr.findGroup(id)` | Looks up a group by id. | 143 |
+| `editor_roadSpline_groupMgr.getCurrentRoadSplineList()` | Lists the active Road Splines (isEnabled), for the link menus of other tools. | 785 |
+| `editor_roadSpline_groupMgr.getEditModeKey()` | Returns the tool's edit mode key ("roadSplineEditor"). | 52 |
+| `editor_roadSpline_groupMgr.getGroups()` | Returns the live array of the tool's groups (roads). | 43 |
+| `editor_roadSpline_groupMgr.getIdToIdxMap()` | Returns the table group id -> index in getGroups(). | 46 |
+| `editor_roadSpline_groupMgr.getToolPrefixStr()` | Returns the tool's name prefix ("Road Spline"). | 49 |
+| `editor_roadSpline_groupMgr.isLinked(id)` | Indicates whether the road is linked to a Master Spline. | 798 |
+| `editor_roadSpline_groupMgr.joinRoadSplines(groupIdx1, nodeIdx1, groupIdx2, nodeIdx2)` | Joins two non-looped roads into one: group1 is modified, group2 is deleted. Does nothing if a group is not found or if the node indices are invalid. | 538 |
+| `editor_roadSpline_groupMgr.pasteGroupProfile(targetGroup, profile)` | Applies a profile to the target group: deletes its layers, recreates those of the profile, copies the options (default values if absent), then regenerates the automatic layers and marks the group dirty. | 426 |
+| `editor_roadSpline_groupMgr.recomputeIdMap()` | Recomputes the id -> index table (called by the session helper after a load that adds roads). | 782 |
+| `editor_roadSpline_groupMgr.recreateAutoGeneratedLayers(group)` | Deletes the hidden (automatic) layers then recreates those whose group option is active (tire marks, repairs, cracks, patches, damaged asphalt, centerline, edge/lane lines, edge fades 1 to 3), and marks the group dirty. | 177 |
+| `editor_roadSpline_groupMgr.release(group)` | Before a Lua reload: returns, by layer id, the DecalRoad ids of the locked group, so that adopt() takes them back afterwards (roads, folder and painting stay in the scene). *(internal)* | 120 |
+| `editor_roadSpline_groupMgr.removeAllGroups(isIncludeDisabled)` | Deletes the groups. With isIncludeDisabled, deletes everything and empties the list; otherwise only the enabled and unlinked groups (locked and linked ones stay). | 157 |
+| `editor_roadSpline_groupMgr.removeGroup(idx)` | Deletes the group at the given index: undoes the terrain painting, deletes its layers (DecalRoads) and its scene folder, then recomputes the id -> index table. | 75 |
+| `editor_roadSpline_groupMgr.removeLinkedRoadSpline(splineId)` | Deletes a linked spline by its id (called when the corresponding Master Spline layer is removed). | 149 |
+| `editor_roadSpline_groupMgr.serializeGroup(group)` | Serializes a group into a string.buffer blob: undoes the terrain painting if enabled and empties the derived tables before encoding. | 600 |
+| `editor_roadSpline_groupMgr.serializeGroupToTable(group)` | Serializes a group into a portable table for a JSON session file: without derived geometry or scene handles, layers reduced to the authoring fields (serializeLayer). The live group is not modified. | 615 |
+| `editor_roadSpline_groupMgr.setFixedWidth(group, width)` | Sets the same width on every node of the group and marks it dirty. | 273 |
+| `editor_roadSpline_groupMgr.setLink(id, groupId, isLink)` | Enables or disables the link of a road with another spline (linkId field) and marks it dirty. | 804 |
+| `editor_roadSpline_groupMgr.singleGroupEditRedo(data)` | Redo of an edit of a single group: restores data.new. *(internal)* | 760 |
+| `editor_roadSpline_groupMgr.singleGroupEditUndo(data)` | Undo of an edit of a single group: restores data.old (layers copied back, all fields of the road, painting, folder name if renamed). *(internal)* | 759 |
+| `editor_roadSpline_groupMgr.splitGroup(group, groupIdx, selectedNodeIdx)` | Cuts a group at the given node. A loop becomes a reordered open road; an open road is replaced by two new groups "name (1)" and "name (2)" (new UUIDs). The per-corner settings (corners) follow. | 492 |
+| `editor_roadSpline_groupMgr.transGroupEditRedo(groupsData)` | Redo of a multi-group edit: reinserts the copies of groupsData.new. *(internal)* | 779 |
+| `editor_roadSpline_groupMgr.transGroupEditUndo(groupsData)` | Undo of an edit touching several groups: deletes all groups and reinserts the copies of groupsData.old. *(internal)* | 778 |
+| `editor_roadSpline_groupMgr.unlinkAll()` | Detaches all linked roads (isLink = false, linkId = nil) and marks all groups dirty. | 828 |
+| `editor_roadSpline_groupMgr.updateDirtyGroups(dragging)` | Rebuilds the groups marked dirty (isDirty): ignores groups with fewer than 2 nodes (layers deleted), snaps the nodes to the terrain (vertical raycast), samples the spline (Catmull-Rom, or clothoid in engineered mode), computes the rib points and the length, repaints the terrain if active, regenerates the automatic layers and updates the DecalRoads. Also updates the individual layers marked dirty. During a handle drag, only the sampling is done and the group stays dirty. | 204 |
+| `editor_roadSpline_groupMgr.updateLinkedRoadSpline(id, points, widths, nmls, isLoop, isConformToTerrain)` | Replaces the geometry (nodes, widths, normals, loop) of a linked road and marks it dirty. | 818 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadSpline_groupMgr.addGroupToGroupArray(group)`
 
-Ajoute un groupe déjà construit à la liste, avec un nom unique ; crée son dossier SimGroup (cansave = false) dans MissionGroup s'il n'existe pas encore.
+Adds an already built group to the list, with a unique name; creates its SimGroup folder (cansave = false) in MissionGroup if it does not exist yet.
 
-- `group` (*table*) : Groupe à ajouter.
+- `group` (*table*) : Group to add.
 
 #### `editor_roadSpline_groupMgr.addNewGroup(name)`
 
-Crée un nouveau groupe vide (nom unique, UUID, dossier SimGroup transitoire sous MissionGroup, couches automatiques initiales) et l'ajoute à la liste.
+Creates a new empty group (unique name, UUID, transient SimGroup folder under MissionGroup, initial automatic layers) and adds it to the list.
 
-- `name` (*string|nil*) : Nom de base ; par défaut « Road Spline N ».
+- `name` (*string|nil*) : Base name; default "Road Spline N".
 
 #### `editor_roadSpline_groupMgr.adopt(group, ids)`
 
-Reprend les DecalRoads listés par release() (seulement ceux encore présents dans la scène) et fixe l'état de verrouillage appliqué.
+Takes back the DecalRoads listed by release() (only those still present in the scene) and sets the applied lock state.
 
-- `group` (*table*) : Groupe recréé.
-- `ids` (*table*) : Valeur renvoyée par release().
+- `group` (*table*) : Recreated group.
+- `ids` (*table*) : Value returned by release().
 
 #### `editor_roadSpline_groupMgr.convertPathsToRoadGroups(paths)`
 
-Convertit des tracés issus d'un bitmap en Road Splines : points de grille convertis en coordonnées monde via le terrain, normales prises sur le terrain ; un tracé dont la plus petite dimension est inférieure ou égale à 10 m n'est pas importé.
+Converts paths from a bitmap into Road Splines: grid points converted to world coordinates via the terrain, normals taken from the terrain; a path whose smallest dimension is less than or equal to 10 m is not imported.
 
-- `paths` (*table[]*) : Liste de {points = {{x=,y=},...}, widths = {...}} en coordonnées de grille.
+- `paths` (*table[]*) : List of {points = {{x=,y=},...}, widths = {...}} in grid coordinates.
 
 #### `editor_roadSpline_groupMgr.copyGroupProfile(sourceGroup)`
 
-Copie le « profil » d'un groupe : ses couches non cachées (serializeLayer, sans ids de scène) et ses options/réglages de couches automatiques (largeurs et décalages de lignes et fondus).
+Copies the "profile" of a group: its non-hidden layers (serializeLayer, without scene ids) and its automatic layer options/settings (widths and offsets of lines and fades).
 
-- `sourceGroup` (*table*) : Groupe source.
-- **renvoie** : table Profil prêt pour pasteGroupProfile ou JSON.
+- `sourceGroup` (*table*) : Source group.
+- **returns**: table Profile ready for pasteGroupProfile or JSON.
 
 #### `editor_roadSpline_groupMgr.deepCopyAllGroups()`
 
-Copie profonde de tous les groupes (pour l'historique d'annulation).
+Deep copy of all groups (for the undo history).
 
-- **renvoie** : table[] Liste de copies.
+- **returns**: table[] List of copies.
 
 #### `editor_roadSpline_groupMgr.deepCopyGroup(group)`
 
-Copie profonde d'un groupe via string.buffer ; vide la géométrie dérivée (divPoints, divWidths, tangents, binormals, normals, discMap, divCurv) qui sera recalculée.
+Deep copy of a group via string.buffer; empties the derived geometry (divPoints, divWidths, tangents, binormals, normals, discMap, divCurv) which will be recomputed.
 
-- `group` (*table*) : Groupe.
-- **renvoie** : table Copie indépendante.
+- `group` (*table*) : Group.
+- **returns**: table Independent copy.
 
 #### `editor_roadSpline_groupMgr.deserializeGroup(data, isCreateObject)`
 
-Désérialise un groupe, soit depuis un blob (string), soit depuis une table JSON : garantit toutes les tables, ré-hydrate les couches et les vec3, remplit les valeurs par défaut des décors de bord et crée le dossier de scène si demandé (sauf si un dossier gardé existe encore). Marque le groupe sale.
+Deserializes a group, either from a blob (string) or from a JSON table: guarantees all tables, rehydrates the layers and vec3s, fills in the default values of the edge decor and creates the scene folder if requested (unless a kept folder still exists). Marks the group dirty.
 
-- `data` (*string|table*) : Blob string.buffer ou table de session.
-- `isCreateObject` (*boolean*) : true pour créer le dossier SimGroup dans MissionGroup.
-- **renvoie** : table Le groupe prêt à être ajouté.
+- `data` (*string|table*) : string.buffer blob or session table.
+- `isCreateObject` (*boolean*) : true to create the SimGroup folder in MissionGroup.
+- **returns**: table The group ready to be added.
 
 #### `editor_roadSpline_groupMgr.findGroup(id)`
 
-Cherche un groupe par id.
+Looks up a group by id.
 
-- `id` (*string*) : UUID du groupe.
-- **renvoie** : table|nil Le groupe ou nil.
+- `id` (*string*) : UUID of the group.
+- **returns**: table|nil The group or nil.
 
 #### `editor_roadSpline_groupMgr.getCurrentRoadSplineList()`
 
-Liste les Road Splines actifs (isEnabled), pour les menus de liaison d'autres outils.
+Lists the active Road Splines (isEnabled), for the link menus of other tools.
 
-- **renvoie** : table[] Éléments { name, id, type = « Road Spline » }.
+- **returns**: table[] Elements { name, id, type = "Road Spline" }.
 
 #### `editor_roadSpline_groupMgr.getEditModeKey()`
 
-Renvoie la clé du mode d'édition de l'outil (« roadSplineEditor »).
+Returns the tool's edit mode key ("roadSplineEditor").
 
-- **renvoie** : string « roadSplineEditor »
+- **returns**: string "roadSplineEditor"
 
 #### `editor_roadSpline_groupMgr.getGroups()`
 
-Renvoie le tableau vivant des groupes (routes) de l'outil.
+Returns the live array of the tool's groups (roads).
 
-- **renvoie** : table[] Liste des groupes, modifiable en place.
+- **returns**: table[] List of groups, modifiable in place.
 
 #### `editor_roadSpline_groupMgr.getIdToIdxMap()`
 
-Renvoie la table id de groupe -> indice dans getGroups().
+Returns the table group id -> index in getGroups().
 
-- **renvoie** : table<string, integer> Table vivante.
+- **returns**: table<string, integer> Live table.
 
 #### `editor_roadSpline_groupMgr.getToolPrefixStr()`
 
-Renvoie le préfixe de nom de l'outil (« Road Spline »).
+Returns the tool's name prefix ("Road Spline").
 
-- **renvoie** : string « Road Spline »
+- **returns**: string "Road Spline"
 
 #### `editor_roadSpline_groupMgr.isLinked(id)`
 
-Indique si la route est liée à une Master Spline.
+Indicates whether the road is linked to a Master Spline.
 
-- `id` (*string*) : UUID du groupe.
-- **renvoie** : boolean true si liée (false si inconnue).
+- `id` (*string*) : UUID of the group.
+- **returns**: boolean true if linked (false if unknown).
 
 #### `editor_roadSpline_groupMgr.joinRoadSplines(groupIdx1, nodeIdx1, groupIdx2, nodeIdx2)`
 
-Joint deux routes non bouclées en une seule : group1 est modifié, group2 est supprimé. Ne fait rien si un groupe est introuvable ou si les indices de nœuds sont invalides.
+Joins two non-looped roads into one: group1 is modified, group2 is deleted. Does nothing if a group is not found or if the node indices are invalid.
 
-- `groupIdx1` (*integer*) : Indice du premier groupe.
-- `nodeIdx1` (*integer*) : Nœud d'extrémité du premier groupe.
-- `groupIdx2` (*integer*) : Indice du second groupe.
-- `nodeIdx2` (*integer*) : Nœud d'extrémité du second groupe.
+- `groupIdx1` (*integer*) : Index of the first group.
+- `nodeIdx1` (*integer*) : End node of the first group.
+- `groupIdx2` (*integer*) : Index of the second group.
+- `nodeIdx2` (*integer*) : End node of the second group.
 
 #### `editor_roadSpline_groupMgr.pasteGroupProfile(targetGroup, profile)`
 
-Applique un profil au groupe cible : supprime ses couches, recrée celles du profil, recopie les options (valeurs par défaut si absentes), puis régénère les couches automatiques et marque le groupe sale.
+Applies a profile to the target group: deletes its layers, recreates those of the profile, copies the options (default values if absent), then regenerates the automatic layers and marks the group dirty.
 
-- `targetGroup` (*table*) : Groupe cible.
-- `profile` (*table*) : Profil de copyGroupProfile.
+- `targetGroup` (*table*) : Target group.
+- `profile` (*table*) : Profile from copyGroupProfile.
 
 #### `editor_roadSpline_groupMgr.recreateAutoGeneratedLayers(group)`
 
-Supprime les couches cachées (automatiques) puis recrée celles dont l'option du groupe est active (marques de pneus, réparations, fissures, rustines, asphalte abîmé, ligne centrale, lignes de rive/de voie, fondus de bord 1 à 3), et marque le groupe sale.
+Deletes the hidden (automatic) layers then recreates those whose group option is active (tire marks, repairs, cracks, patches, damaged asphalt, centerline, edge/lane lines, edge fades 1 to 3), and marks the group dirty.
 
-- `group` (*table*) : Groupe.
+- `group` (*table*) : Group.
 
 #### `editor_roadSpline_groupMgr.release(group)`
 
-Avant un rechargement Lua : renvoie, par id de couche, les ids de DecalRoad du groupe verrouillé, pour que adopt() les reprenne ensuite (routes, dossier et peinture restent dans la scène).
+Before a Lua reload: returns, by layer id, the DecalRoad ids of the locked group, so that adopt() takes them back afterwards (roads, folder and painting stay in the scene).
 
-- `group` (*table*) : Groupe.
-- **renvoie** : table { [layerId] = {id = decalRoadId, ids = {...}} }
+- `group` (*table*) : Group.
+- **returns**: table { [layerId] = {id = decalRoadId, ids = {...}} }
 
 #### `editor_roadSpline_groupMgr.removeAllGroups(isIncludeDisabled)`
 
-Supprime les groupes. Avec isIncludeDisabled, supprime tout et vide la liste ; sinon seulement les groupes activés et non liés (les verrouillés et liés restent).
+Deletes the groups. With isIncludeDisabled, deletes everything and empties the list; otherwise only the enabled and unlinked groups (locked and linked ones stay).
 
-- `isIncludeDisabled` (*boolean|nil*) : true pour tout supprimer, y compris verrouillés et liés.
+- `isIncludeDisabled` (*boolean|nil*) : true to delete everything, including locked and linked ones.
 
 #### `editor_roadSpline_groupMgr.removeGroup(idx)`
 
-Supprime le groupe à l'indice donné : annule la peinture de terrain, supprime ses couches (DecalRoads) et son dossier de scène, puis recalcule la table id -> indice.
+Deletes the group at the given index: undoes the terrain painting, deletes its layers (DecalRoads) and its scene folder, then recomputes the id -> index table.
 
-- `idx` (*integer*) : Indice dans la liste des groupes.
+- `idx` (*integer*) : Index in the list of groups.
 
 #### `editor_roadSpline_groupMgr.removeLinkedRoadSpline(splineId)`
 
-Supprime une spline liée par son id (appelé quand la couche correspondante de la Master Spline est retirée).
+Deletes a linked spline by its id (called when the corresponding Master Spline layer is removed).
 
-- `splineId` (*string*) : UUID du groupe.
+- `splineId` (*string*) : UUID of the group.
 
 #### `editor_roadSpline_groupMgr.serializeGroup(group)`
 
-Sérialise un groupe en blob string.buffer : annule la peinture de terrain si activé et vide les tables dérivées avant encodage.
+Serializes a group into a string.buffer blob: undoes the terrain painting if enabled and empties the derived tables before encoding.
 
-- `group` (*table*) : Groupe.
-- **renvoie** : string Données encodées.
+- `group` (*table*) : Group.
+- **returns**: string Encoded data.
 
 #### `editor_roadSpline_groupMgr.serializeGroupToTable(group)`
 
-Sérialise un groupe en table portable pour un fichier de session JSON : sans géométrie dérivée ni poignées de scène, couches réduites aux champs auteur (serializeLayer). Le groupe vivant n'est pas modifié.
+Serializes a group into a portable table for a JSON session file: without derived geometry or scene handles, layers reduced to the authoring fields (serializeLayer). The live group is not modified.
 
-- `group` (*table*) : Groupe.
-- **renvoie** : table Table JSON-compatible.
+- `group` (*table*) : Group.
+- **returns**: table JSON-compatible table.
 
 #### `editor_roadSpline_groupMgr.setFixedWidth(group, width)`
 
-Met la même largeur à chaque nœud du groupe et le marque sale.
+Sets the same width on every node of the group and marks it dirty.
 
-- `group` (*table*) : Groupe.
-- `width` (*number*) : Largeur en mètres.
+- `group` (*table*) : Group.
+- `width` (*number*) : Width in meters.
 
 #### `editor_roadSpline_groupMgr.setLink(id, groupId, isLink)`
 
-Active ou désactive la liaison d'une route avec une autre spline (champ linkId) et la marque sale.
+Enables or disables the link of a road with another spline (linkId field) and marks it dirty.
 
-- `id` (*string*) : UUID de la route.
-- `groupId` (*string*) : UUID de la spline maître (ignoré si isLink est false).
-- `isLink` (*boolean*) : true pour lier.
+- `id` (*string*) : UUID of the road.
+- `groupId` (*string*) : UUID of the master spline (ignored if isLink is false).
+- `isLink` (*boolean*) : true to link.
 
 #### `editor_roadSpline_groupMgr.singleGroupEditRedo(data)`
 
-Rétablissement d'une édition d'un seul groupe : restaure data.new.
+Redo of an edit of a single group: restores data.new.
 
-- `data` (*table*) : { old = groupe, new = groupe }
+- `data` (*table*) : { old = group, new = group }
 
 #### `editor_roadSpline_groupMgr.singleGroupEditUndo(data)`
 
-Annulation d'une édition d'un seul groupe : restaure data.old (couches recopiées, tous les champs de la route, peinture, nom du dossier si renommé).
+Undo of an edit of a single group: restores data.old (layers copied back, all fields of the road, painting, folder name if renamed).
 
-- `data` (*table*) : { old = groupe, new = groupe }
+- `data` (*table*) : { old = group, new = group }
 
 #### `editor_roadSpline_groupMgr.splitGroup(group, groupIdx, selectedNodeIdx)`
 
-Coupe un groupe au nœud donné. Une boucle devient une route ouverte réordonnée ; une route ouverte est remplacée par deux nouveaux groupes « nom (1) » et « nom (2) » (nouveaux UUID). Les réglages par virage (corners) suivent.
+Cuts a group at the given node. A loop becomes a reordered open road; an open road is replaced by two new groups "name (1)" and "name (2)" (new UUIDs). The per-corner settings (corners) follow.
 
-- `group` (*table*) : Groupe à couper.
-- `groupIdx` (*integer*) : Indice du groupe.
-- `selectedNodeIdx` (*integer*) : Indice du nœud de coupe.
+- `group` (*table*) : Group to cut.
+- `groupIdx` (*integer*) : Group index.
+- `selectedNodeIdx` (*integer*) : Index of the cut node.
 
 #### `editor_roadSpline_groupMgr.transGroupEditRedo(groupsData)`
 
-Rétablissement d'une édition multi-groupes : réinsère les copies de groupsData.new.
+Redo of a multi-group edit: reinserts the copies of groupsData.new.
 
-- `groupsData` (*table*) : { old = groupes[], new = groupes[] }
+- `groupsData` (*table*) : { old = groups[], new = groups[] }
 
 #### `editor_roadSpline_groupMgr.transGroupEditUndo(groupsData)`
 
-Annulation d'une édition touchant plusieurs groupes : supprime tous les groupes et réinsère les copies de groupsData.old.
+Undo of an edit touching several groups: deletes all groups and reinserts the copies of groupsData.old.
 
-- `groupsData` (*table*) : { old = groupes[], new = groupes[] }
+- `groupsData` (*table*) : { old = groups[], new = groups[] }
 
 #### `editor_roadSpline_groupMgr.updateDirtyGroups(dragging)`
 
-Reconstruit les groupes marqués sales (isDirty) : ignore les groupes de moins de 2 nœuds (couches supprimées), plaque les nœuds au terrain (raycast vertical), échantillonne la spline (Catmull-Rom, ou clothoïde en mode engineered), calcule les points de côtes et la longueur, repeint le terrain si actif, régénère les couches automatiques et met à jour les DecalRoads. Met aussi à jour les couches seules marquées sales. Pendant un glissement de poignée, seul l'échantillonnage est fait et le groupe reste sale.
+Rebuilds the groups marked dirty (isDirty): ignores groups with fewer than 2 nodes (layers deleted), snaps the nodes to the terrain (vertical raycast), samples the spline (Catmull-Rom, or clothoid in engineered mode), computes the rib points and the length, repaints the terrain if active, regenerates the automatic layers and updates the DecalRoads. Also updates the individual layers marked dirty. During a handle drag, only the sampling is done and the group stays dirty.
 
-- `dragging` (*boolean|nil*) : true pendant un glissement en direct (reconstruction lourde différée).
+- `dragging` (*boolean|nil*) : true during a live drag (heavy rebuild deferred).
 
 #### `editor_roadSpline_groupMgr.updateLinkedRoadSpline(id, points, widths, nmls, isLoop, isConformToTerrain)`
 
-Remplace la géométrie (nœuds, largeurs, normales, boucle) d'une route liée et la marque sale.
+Replaces the geometry (nodes, widths, normals, loop) of a linked road and marks it dirty.
 
-- `id` (*string*) : UUID de la route liée.
-- `points` (*vec3[]*) : Nouveaux nœuds.
-- `widths` (*number[]*) : Largeurs en m.
-- `nmls` (*vec3[]*) : Normales.
-- `isLoop` (*boolean*) : État de boucle du maître.
-- `isConformToTerrain` (*boolean*) : Reçu mais non utilisé dans le code.
+- `id` (*string*) : UUID of the linked road.
+- `points` (*vec3[]*) : New nodes.
+- `widths` (*number[]*) : Widths in m.
+- `nmls` (*vec3[]*) : Normals.
+- `isLoop` (*boolean*) : Loop state of the master.
+- `isConformToTerrain` (*boolean*) : Received but not used in the code.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadSpline/groupMgr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadSpline/groupMgr.lua`.*

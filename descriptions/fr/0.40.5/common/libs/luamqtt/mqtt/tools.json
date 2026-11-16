@@ -1,0 +1,8 @@
+{
+  "path": "lua/common/libs/luamqtt/mqtt/tools.lua",
+  "module": "Deux petits utilitaires de luamqtt : conversion d'une chaîne en hexadécimal et division entière. Utilisés par protocol.lua et pour le débogage.",
+  "functions": {
+    "hex": {"desc": "Encode chaque octet de la chaîne en deux chiffres hexadécimaux majuscules.", "params": {"str": {"type": "string", "desc": "Chaîne source."}}, "returns": [{"type": "string", "desc": "Chaîne hexadécimale."}]},
+    "div": {"desc": "Division entière : math.floor(x / y).", "params": {"x": {"type": "number", "desc": "Dividende."}, "y": {"type": "number", "desc": "Diviseur."}}, "returns": [{"type": "integer", "desc": "Quotient arrondi à l'inférieur."}]}
+  }
+}

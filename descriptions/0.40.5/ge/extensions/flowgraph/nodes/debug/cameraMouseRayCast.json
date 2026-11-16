@@ -1,14 +1,19 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/debug/cameraMouseRayCast.lua",
-  "module": "Nœud flowgraph « Camera Mouse Raycast » (catégorie repeat_instant, tags util/click). Tire un rayon depuis la caméra vers la position de la souris (cameraMouseRayCast) et sort le résultat. Sorties : clicking (impulsion au clic gauche), hold (maintenu), objID, objName, et pins cachés distance, pos (vec3), normal (vec3), face. Les clics sont ignorés si l'interface ImGui capture la souris. Le jeu note qu'il n'est peut-être plus nécessaire (nœud « mouse tool »).",
-  "notes": ["C.todo du jeu : « Might not be needed anymore, since we have mouse tool node. »", "Sans impact, toutes les sorties sont mises à nil/faux."],
+  "module": "Flowgraph node \"Camera Mouse Raycast\" (category repeat_instant, tags util/click). Casts a ray from the camera toward the mouse position (cameraMouseRayCast) and outputs the result. Outputs: clicking (pulse on left click), hold (held), objID, objName, and hidden pins distance, pos (vec3), normal (vec3), face. Clicks are ignored if the ImGui interface captures the mouse. The game notes it may no longer be needed (\"mouse tool\" node).",
+  "notes": [
+    "Game C.todo: \"Might not be needed anymore, since we have mouse tool node.\"",
+    "No effect, all outputs are set to nil/false."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Chaque frame : lance le rayon et remplit les pins (position, normale en tables {x,y,z}, objet touché) ; remet tout à nil/faux s'il n'y a pas de collision."}
+        "work": {
+          "desc": "Every frame: casts the ray and fills the pins (position, normal as {x,y,z} tables, hit object); resets everything to nil/false if there is no collision."
+        }
       }
     }
   }

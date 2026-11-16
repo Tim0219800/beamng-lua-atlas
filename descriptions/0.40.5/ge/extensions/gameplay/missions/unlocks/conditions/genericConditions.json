@@ -1,16 +1,31 @@
 {
   "path": "lua/ge/extensions/gameplay/missions/unlocks/conditions/genericConditions.lua",
-  "module": "Types de condition génériques pour les déblocages de missions : never, missing, always et les combinateurs multiAnd / multiOr. Chargés par gameplay_missions_unlocks ; chaque type a conditionMet(c) (renvoie met et éventuellement la liste des résultats imbriqués) et getLabel(c).",
+  "module": "Generic condition types for mission unlocks: never, missing, always and the combinators multiAnd / multiOr. Loaded by gameplay_missions_unlocks; each type has conditionMet(c) (returns met and optionally the list of nested results) and getLabel(c).",
   "notes": [
-    "missing est utilisé quand le type de condition est inconnu, et renvoie true (la condition est donc considérée remplie).",
-    "multiOr renvoie true si la liste nested est vide ; multiAnd aussi (aucun élément).",
-    "always est marquée hidden = true (non affichée dans l'interface)."
+    "missing is used when the condition type is unknown, and returns true (the condition is therefore considered fulfilled).",
+    "multiOr returns true if the nested list is empty; multiAnd too (no elements).",
+    "always is marked hidden = true (not shown in the UI)."
   ],
   "fields": {
-    "never": {"type": "table", "desc": "Toujours false. Label littéral 'Never'."},
-    "missing": {"type": "table", "desc": "Condition de repli pour un type invalide ou introuvable ; toujours true."},
-    "always": {"type": "table", "desc": "Toujours true ; hidden = true."},
-    "multiAnd": {"type": "table", "desc": "ET logique sur c.nested (chaque sous-condition évaluée via gameplay_missions_unlocks.conditionMet). Renvoie met, nested. editorFunction 'displayNestedCondition'."},
-    "multiOr": {"type": "table", "desc": "OU logique sur c.nested ; true si la liste est vide. Renvoie met, nested. editorFunction 'displayNestedCondition'."}
+    "never": {
+      "type": "table",
+      "desc": "Always false. Literal label 'Never'."
+    },
+    "missing": {
+      "type": "table",
+      "desc": "Fallback condition for an invalid or unknown type; always true."
+    },
+    "always": {
+      "type": "table",
+      "desc": "Always true; hidden = true."
+    },
+    "multiAnd": {
+      "type": "table",
+      "desc": "Logical AND over c.nested (each sub-condition evaluated via gameplay_missions_unlocks.conditionMet). Returns met, nested. editorFunction 'displayNestedCondition'."
+    },
+    "multiOr": {
+      "type": "table",
+      "desc": "Logical OR over c.nested; true if the list is empty. Returns met, nested. editorFunction 'displayNestedCondition'."
+    }
   }
 }

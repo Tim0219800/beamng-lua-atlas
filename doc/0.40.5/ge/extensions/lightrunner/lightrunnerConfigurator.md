@@ -1,23 +1,23 @@
 # `lightrunner_lightrunnerConfigurator`
 
-*Fichier : `lua/ge/extensions/lightrunner/lightrunnerConfigurator.lua` · VM : Game Engine (GE) · 55 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/lightrunner/lightrunnerConfigurator.lua` · VM: Game Engine (GE) · 55 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `lightrunner_lightrunnerConfigurator` : `extensions.load("lightrunner_lightrunnerConfigurator")`, puis la globale `lightrunner_lightrunnerConfigurator`
+**Access:** extension `lightrunner_lightrunnerConfigurator`: `extensions.load("lightrunner_lightrunnerConfigurator")`, then the global `lightrunner_lightrunnerConfigurator`
 
-Configurateur de l'assistant (wizard) « Light Runner » : course rapide sur le niveau glow_city. Il construit un descripteur à partir de quickRaceConfiguratorDescriptor (backend de grille lightRunnerSelector, clé de route lightrunnerWizard, type de course lightRunner, restriction de véhicule lightRunner) et le passe à oneshotRaceCore.createConfigurator. Le module renvoyé expose donc l'API du configurateur (getSelection, selectLevel, selectMiddle, selectVehicle, updateSetting, getConfiguration, start, onWizard…RouteEnter) décrite dans oneshotRaceCore.
+Configurator of the "Light Runner" wizard: quick race on the glow_city level. It builds a descriptor from quickRaceConfiguratorDescriptor (grid backend lightRunnerSelector, route key lightrunnerWizard, race type lightRunner, vehicle restriction lightRunner) and passes it to oneshotRaceCore.createConfigurator. The returned module therefore exposes the configurator API (getSelection, selectLevel, selectMiddle, selectVehicle, updateSetting, getConfiguration, start, onWizard…RouteEnter) described in oneshotRaceCore.
 
-## Remarques
+## Notes
 
-- Sélection par défaut (à la première entrée dans l'assistant) : niveau glow_city, piste « Argon Curves » (ou la première piste du niveau), véhicule sbr / config powerglow.
-- Le démarrage de la course passe par scenario_quickRaceLoader.startQuickrace avec le type « lightRunner ».
+- Default selection (on first entry into the wizard): level glow_city, track "Argon Curves" (or the level's first track), vehicle sbr / config powerglow.
+- Starting the race goes through scenario_quickRaceLoader.startQuickrace with the type "lightRunner".
 
-**Dépendances (chargées avant) :** `scenario_quickRaceLoader`, `core_highscores`, `ui_vehicleSelector_general`, `ui_lightRunnerSelector_general`
+**Dependencies (loaded first):** `scenario_quickRaceLoader`, `core_highscores`, `ui_vehicleSelector_general`, `ui_lightRunnerSelector_general`
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | scenario_quickRaceLoader, core_highscores, ui_vehicleSelector_general, ui_lightRunnerSelector_general. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/lightrunner/lightrunnerConfigurator.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/lightrunner/lightrunnerConfigurator.lua`.*

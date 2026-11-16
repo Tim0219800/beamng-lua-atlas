@@ -1,93 +1,93 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenWhole.lua",
-  "module": "Nœud « EndScreen Whole » (couleur ui, singleActive). Version tout-en-un de l'écran de fin d'un scénario/mission : construit les boutons (missions suivantes, Retry, Continuer au début, Continuer ici, boutons personnalisés) et, si data.autoBuild (vrai par défaut), génère aussi l'en-tête, le panneau Results, les objectifs et notes puis termine la construction UI. Entrées : flow, reset, text, failed (caché), change, progressKey, customBtnsFirst (caché) et pins par bouton ; sorties : flow, build, retry, contStart, contHere et un flow par bouton.",
+  "module": "Node \"EndScreen Whole\" (color ui, singleActive). All-in-one version of the end screen of a scenario/mission: builds the buttons (next missions, Retry, Continue at start, Continue here, custom buttons) and, if data.autoBuild (true by default), also generates the header, the Results panel, the objectives and ratings then ends the UI building. Inputs: flow, reset, text, failed (hidden), change, progressKey, customBtnsFirst (hidden) and pins per button; outputs: flow, build, retry, contStart, contHere and one flow per button.",
   "notes": [
-    "Le champ todo du nœud indique que deux nœuds de ce type simultanés cassent tout.",
-    "L'auto-skip teste startingOptions.autoSkipStartScreen alors que EndScreen Begin teste autoSkipEndScreen (incohérence probable).",
-    "Contrairement à EndScreen Begin, openDialogue accède à self.mgr.activity.setupModules sans vérifier que mgr.activity existe."
+    "The node's todo field indicates that two simultaneous nodes of this type break everything.",
+    "Auto-skip tests startingOptions.autoSkipStartScreen while EndScreen Begin tests autoSkipEndScreen (probable inconsistency).",
+    "Unlike EndScreen Begin, openDialogue accesses self.mgr.activity.setupModules without checking that mgr.activity exists."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Initialise open, options, data.includeRetryButton=true, data.autoBuild=true et l'auto-skip.",
+          "desc": "Initializes open, options, data.includeRetryButton=true, data.autoBuild=true and auto-skip.",
           "internal": true
         },
         "postInit": {
-          "desc": "Appelé juste après init, une fois les pins créés.",
+          "desc": "Called right after init, once the pins are created.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état du nœud.",
+          "desc": "Called when the flowgraph project starts executing; resets the node state.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Dessine dans l'éditeur flowgraph la liste des boutons personnalisés (champ texte par bouton, boutons « add » et « rem »). Renvoie la raison de la modification (chaîne) ou nil.",
+          "desc": "Draws the custom button list in the flowgraph editor (text field per button, \"add\" and \"rem\" buttons). Returns the reason for the change (string) or nil.",
           "internal": true
         },
         "updateButtons": {
-          "desc": "Recrée les pins du nœud pour chaque nom de bouton de self.options : pin d'entrée string (libellé), pin d'entrée bool « <nom>_active » (caché, true par défaut) et pin de sortie flow. Reconnecte les liens existants quand le nom n'a pas changé.",
+          "desc": "Recreates the node's pins for each button name in self.options: string input pin (label), bool input pin \"<name>_active\" (hidden, true by default) and flow output pin. Reconnects the existing links when the name has not changed.",
           "internal": false
         },
         "_onSerialize": {
-          "desc": "Sauvegarde la liste des boutons personnalisés (options).",
+          "desc": "Saves the list of custom buttons (options).",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Recharge les boutons personnalisés puis recrée les pins.",
+          "desc": "Reloads the custom buttons then recreates the pins.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Appelé à l'arrêt du projet ; ferme le dialogue.",
+          "desc": "Called when the project stops; closes the dialogue.",
           "internal": true
         },
         "onClientEndMission": {
-          "desc": "Hook appelé à la fin de la mission côté client ; ferme le dialogue.",
+          "desc": "Hook called at the end of the mission on the client side; closes the dialogue.",
           "internal": true
         },
         "_afterTrigger": {
-          "desc": "Appelé après le déclenchement du nœud ; corps vide (code commenté).",
+          "desc": "Called after the node is triggered; empty body (commented-out code).",
           "internal": true
         },
         "buttonPushed": {
-          "desc": "Appelé quand un bouton est cliqué : met à true le pin de sortie du même nom que l'action, puis ferme le dialogue (navigation vers « play »).",
+          "desc": "Called when a button is clicked: sets the output pin with the same name as the action to true, then closes the dialogue (navigation to \"play\").",
           "params": {
             "action": {
               "type": "string",
-              "desc": "Nom du pin de sortie (contStart, contHere, ou nom d'un bouton personnalisé)."
+              "desc": "Name of the output pin (contStart, contHere, or name of a custom button)."
             }
           },
           "internal": false
         },
         "getCmd": {
-          "desc": "Renvoie la commande Lua (chaîne) qui retrouve ce nœud via core_flowgraphManager.getManagerGraphNode et appelle buttonPushed(action) ; utilisable depuis l'UI.",
+          "desc": "Returns the Lua command (string) that finds this node via core_flowgraphManager.getManagerGraphNode and calls buttonPushed(action); usable from the UI.",
           "params": {
             "action": {
               "type": "string",
-              "desc": "Nom du bouton/pin."
+              "desc": "Name of the button/pin."
             }
           },
           "internal": false
         },
         "onResetGameplay": {
-          "desc": "Hook de reset du gameplay ; si l'écran est ouvert et Retry inclus, ferme le dialogue et active le pin retry.",
+          "desc": "Gameplay reset hook; if the screen is open and Retry is included, closes the dialogue and activates the retry pin.",
           "internal": true
         },
         "closeDialogue": {
-          "desc": "Si construit, navigue vers « play ».",
+          "desc": "If built, navigates to \"play\".",
           "internal": false
         },
         "openDialogue": {
-          "desc": "Construit les boutons (voir EndScreen Begin) et, si autoBuild, remplit l'écran (en-tête, textPanel Results, objectifs, notes) puis appelle finishUIBuilding.",
+          "desc": "Builds the buttons (see EndScreen Begin) and, if autoBuild, fills the screen (header, Results textPanel, objectives, ratings) then calls finishUIBuilding.",
           "internal": false
         },
         "onNodeReset": {
-          "desc": "Appelé quand le nœud est réinitialisé (pin reset ou reset du graphe).",
+          "desc": "Called when the node is reset (reset pin or graph reset).",
           "internal": true
         },
         "work": {
-          "desc": "Gère reset, construit l'écran à la première frame de flow, active build une frame, et applique l'auto-skip (startingOptions.autoSkipStartScreen, 2 s) en arrêtant la mission.",
+          "desc": "Handles reset, builds the screen on the first frame of flow, activates build for one frame, and applies auto-skip (startingOptions.autoSkipStartScreen, 2 s) by stopping the mission.",
           "internal": true
         }
       }

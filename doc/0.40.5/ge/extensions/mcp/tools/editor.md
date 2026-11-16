@@ -1,170 +1,170 @@
 # `mcp_tools_editor`
 
-*Fichier : `lua/ge/extensions/mcp/tools/editor.lua` · VM : Game Engine (GE) · 577 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/mcp/tools/editor.lua` · VM: Game Engine (GE) · 577 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `mcp_tools_editor` : `extensions.load("mcp_tools_editor")`, puis la globale `mcp_tools_editor`
+**Access:** extension `mcp_tools_editor`: `extensions.load("mcp_tools_editor")`, then the global `mcp_tools_editor`
 
-Outils MCP pour le World Editor : activer/désactiver, état, sélection, annuler/rétablir, modes d'édition, ouvrir/sauvegarder un niveau, lister les classes, créer des objets et modifier leur transformation, avec historique d'annulation. Charge editor_main à la demande.
+MCP tools for the World Editor: enable/disable, state, selection, undo/redo, edit modes, open/save a level, list classes, create objects and modify their transform, with undo history. Loads editor_main on demand.
 
-## Remarques
+## Notes
 
-- La plupart des outils exigent que l'éditeur soit actif (set_editor_active active=true, asynchrone sur quelques frames ; vérifier avec editor_status), sinon ils renvoient une erreur explicite.
-- editor_load_level force ensuite editor.active=false : le code explique qu'openLevel met editor.active=true avant le démarrage de la mission, ce qui ferait ignorer le chemin d'activation F11 ; le remettre à false permet de relancer l'activation complète.
-- create_editor_object et set_editor_transform passent par editor.history (annulables) et marquent l'éditeur « dirty » ; create_editor_object sélectionne le nouvel objet. Par défaut : classe TSStatic, forme no_mesh.dae, collisionType et decalType 'Collision Mesh', position à 10 m devant la caméra, parent = parent sélectionné ou MissionGroup.
-- Rotation de set_editor_transform : euler {x,y,z} en degrés ou quaternion rot {x,y,z,w} (rot prime) ; scale nombre uniforme ou {x,y,z}. Seules les composantes fournies changent.
-- editor_save_level écrit le niveau sur disque ; à utiliser avec précaution.
+- Most tools require the editor to be active (set_editor_active active=true, asynchronous over a few frames; check with editor_status), otherwise they return an explicit error.
+- editor_load_level then forces editor.active=false: the code explains that openLevel sets editor.active=true before the mission starts, which would make the F11 activation path be ignored; setting it back to false allows the full activation to run again.
+- create_editor_object and set_editor_transform go through editor.history (undoable) and mark the editor "dirty"; create_editor_object selects the new object. Defaults: class TSStatic, shape no_mesh.dae, collisionType and decalType 'Collision Mesh', position 10 m in front of the camera, parent = selected parent or MissionGroup.
+- Rotation of set_editor_transform: euler {x,y,z} in degrees or quaternion rot {x,y,z,w} (rot takes precedence); scale a uniform number or {x,y,z}. Only the components provided change.
+- editor_save_level writes the level to disk; use with caution.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mcp_tools_editor.clear_editor_selection()` | Vide la sélection. | 112 |
-| `mcp_tools_editor.create_editor_object(args)` | Crée un objet de scène (worldEditorCppApi.createObject), configure champs, nom, position, échelle, yaw, l'ajoute au parent et enregistre une action d'historique CreateObject. | 293 |
-| `mcp_tools_editor.delete_editor_selection()` | Supprime les objets sélectionnés (annulable). | 120 |
-| `mcp_tools_editor.editor_load_level(args)` | Ouvre un niveau dans l'éditeur (editor.openLevel, perd les modifications non sauvegardées, asynchrone). Ajoute un '/' final à un dossier. | 205 |
-| `mcp_tools_editor.editor_redo(args)` | Rétablit des étapes de l'historique. | 141 |
-| `mcp_tools_editor.editor_save_level()` | Sauvegarde le niveau courant (editor.saveLevel). | 223 |
-| `mcp_tools_editor.editor_status()` | État de l'éditeur : active, initialized, dirty, levelName, levelPath, editMode, selectionCount, undoCount, redoCount, headless. | 68 |
-| `mcp_tools_editor.editor_undo(args)` | Annule des étapes de l'historique. | 133 |
-| `mcp_tools_editor.fit_view_to_selection()` | Cadre la caméra de l'éditeur sur la sélection (fitViewToSelectionSmooth ou fitViewToSelection). | 171 |
-| `mcp_tools_editor.get_editor_selection()` | Objets actuellement sélectionnés. | 95 |
-| `mcp_tools_editor.list_edit_modes()` | Liste les modes d'édition enregistrés et le mode courant. | 149 |
-| `mcp_tools_editor.list_editor_classes(args)` | Liste (500 max, triée) les classes dérivées de SimObject via Sim.getSimObjectDerivedClassNames. | 273 |
-| `mcp_tools_editor.select_editor_objects(args)` | Sélectionne des objets par id, ids[] ou name. | 103 |
-| `mcp_tools_editor.set_edit_mode(args)` | Change de mode d'édition par nom (editor.selectEditMode). | 159 |
-| `mcp_tools_editor.set_editor_active(args)` | Active ou désactive le World Editor (editor.setEditorActive). | 86 |
-| `mcp_tools_editor.set_editor_transform(args)` | Applique position/rotation/échelle à des objets en une transaction d'historique annulable. | 435 |
+| `mcp_tools_editor.clear_editor_selection()` | Clears the selection. | 112 |
+| `mcp_tools_editor.create_editor_object(args)` | Creates a scene object (worldEditorCppApi.createObject), configures fields, name, position, scale, yaw, adds it to the parent and records a CreateObject history action. | 293 |
+| `mcp_tools_editor.delete_editor_selection()` | Deletes the selected objects (undoable). | 120 |
+| `mcp_tools_editor.editor_load_level(args)` | Opens a level in the editor (editor.openLevel, loses unsaved changes, asynchronous). Appends a trailing '/' to a folder. | 205 |
+| `mcp_tools_editor.editor_redo(args)` | Redoes history steps. | 141 |
+| `mcp_tools_editor.editor_save_level()` | Saves the current level (editor.saveLevel). | 223 |
+| `mcp_tools_editor.editor_status()` | Editor state: active, initialized, dirty, levelName, levelPath, editMode, selectionCount, undoCount, redoCount, headless. | 68 |
+| `mcp_tools_editor.editor_undo(args)` | Undoes history steps. | 133 |
+| `mcp_tools_editor.fit_view_to_selection()` | Frames the editor camera on the selection (fitViewToSelectionSmooth or fitViewToSelection). | 171 |
+| `mcp_tools_editor.get_editor_selection()` | Currently selected objects. | 95 |
+| `mcp_tools_editor.list_edit_modes()` | Lists the registered edit modes and the current mode. | 149 |
+| `mcp_tools_editor.list_editor_classes(args)` | Lists (500 max, sorted) the classes derived from SimObject via Sim.getSimObjectDerivedClassNames. | 273 |
+| `mcp_tools_editor.select_editor_objects(args)` | Selects objects by id, ids[] or name. | 103 |
+| `mcp_tools_editor.set_edit_mode(args)` | Changes the edit mode by name (editor.selectEditMode). | 159 |
+| `mcp_tools_editor.set_editor_active(args)` | Enables or disables the World Editor (editor.setEditorActive). | 86 |
+| `mcp_tools_editor.set_editor_transform(args)` | Applies position/rotation/scale to objects in a single undoable history transaction. | 435 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mcp_tools_editor.clear_editor_selection()`
 
-Vide la sélection.
+Clears the selection.
 
-- **renvoie** : string Message.
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string Message.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_editor.create_editor_object(args)`
 
-Crée un objet de scène (worldEditorCppApi.createObject), configure champs, nom, position, échelle, yaw, l'ajoute au parent et enregistre une action d'historique CreateObject.
+Creates a scene object (worldEditorCppApi.createObject), configures fields, name, position, scale, yaw, adds it to the parent and records a CreateObject history action.
 
 - `args` (*table|nil*) : {class?|classname?: string, shape?|shapeName?: string, name?: string, pos?: {x,y,z}, scale?: number|{x,y,z}, yaw?: number°, parent?: string, parentId?: integer, fields?: table, field?: string, value?: any, index?: string, collisionType?: string, decalType?: string}
-- **renvoie** : string JSON {id, name, class, parentId, shapeName?}.
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string JSON {id, name, class, parentId, shapeName?}.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_editor.delete_editor_selection()`
 
-Supprime les objets sélectionnés (annulable).
+Deletes the selected objects (undoable).
 
-- **renvoie** : string Message.
-- **renvoie** : boolean true si rien n'est sélectionné ou erreur.
+- **returns**: string Message.
+- **returns**: boolean true if nothing is selected or on error.
 
 #### `mcp_tools_editor.editor_load_level(args)`
 
-Ouvre un niveau dans l'éditeur (editor.openLevel, perd les modifications non sauvegardées, asynchrone). Ajoute un '/' final à un dossier.
+Opens a level in the editor (editor.openLevel, loses unsaved changes, asynchronous). Appends a trailing '/' to a folder.
 
 - `args` (*table*) : {name?: string, path?: string}
-- **renvoie** : string Message.
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string Message.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_editor.editor_redo(args)`
 
-Rétablit des étapes de l'historique.
+Redoes history steps.
 
-- `args` (*table|nil*) : {steps?: integer (défaut 1)}
-- **renvoie** : string Message.
-- **renvoie** : boolean true en cas d'erreur.
+- `args` (*table|nil*) : {steps?: integer (default 1)}
+- **returns**: string Message.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_editor.editor_save_level()`
 
-Sauvegarde le niveau courant (editor.saveLevel).
+Saves the current level (editor.saveLevel).
 
-- **renvoie** : string « saved level: … ».
-- **renvoie** : boolean true si aucun chemin de niveau.
+- **returns**: string "saved level: …".
+- **returns**: boolean true if there is no level path.
 
 #### `mcp_tools_editor.editor_status()`
 
-État de l'éditeur : active, initialized, dirty, levelName, levelPath, editMode, selectionCount, undoCount, redoCount, headless.
+Editor state: active, initialized, dirty, levelName, levelPath, editMode, selectionCount, undoCount, redoCount, headless.
 
-- **renvoie** : string JSON.
-- **renvoie** : boolean true si editor_main ne charge pas.
+- **returns**: string JSON.
+- **returns**: boolean true if editor_main fails to load.
 
 #### `mcp_tools_editor.editor_undo(args)`
 
-Annule des étapes de l'historique.
+Undoes history steps.
 
-- `args` (*table|nil*) : {steps?: integer (défaut 1)}
-- **renvoie** : string Message.
-- **renvoie** : boolean true en cas d'erreur.
+- `args` (*table|nil*) : {steps?: integer (default 1)}
+- **returns**: string Message.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_editor.fit_view_to_selection()`
 
-Cadre la caméra de l'éditeur sur la sélection (fitViewToSelectionSmooth ou fitViewToSelection).
+Frames the editor camera on the selection (fitViewToSelectionSmooth or fitViewToSelection).
 
-- **renvoie** : string Message.
-- **renvoie** : boolean true si rien n'est sélectionné ou erreur.
+- **returns**: string Message.
+- **returns**: boolean true if nothing is selected or on error.
 
 #### `mcp_tools_editor.get_editor_selection()`
 
-Objets actuellement sélectionnés.
+Currently selected objects.
 
-- **renvoie** : string JSON {count, objects:[{id, name, class}]}.
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string JSON {count, objects:[{id, name, class}]}.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_editor.list_edit_modes()`
 
-Liste les modes d'édition enregistrés et le mode courant.
+Lists the registered edit modes and the current mode.
 
-- **renvoie** : string JSON {current, modes}.
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string JSON {current, modes}.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_editor.list_editor_classes(args)`
 
-Liste (500 max, triée) les classes dérivées de SimObject via Sim.getSimObjectDerivedClassNames.
+Lists (500 max, sorted) the classes derived from SimObject via Sim.getSimObjectDerivedClassNames.
 
-- `args` (*table|nil*) : {pattern?: string} sous-chaîne insensible à la casse.
-- **renvoie** : string JSON {count, classes}.
-- **renvoie** : boolean true en cas d'erreur.
+- `args` (*table|nil*) : {pattern?: string} case-insensitive substring.
+- **returns**: string JSON {count, classes}.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_editor.select_editor_objects(args)`
 
-Sélectionne des objets par id, ids[] ou name.
+Selects objects by id, ids[] or name.
 
-- `args` (*table*) : {id?, ids?: integer[], name?: string, mode?: 'new'|'add'|'remove'|'toggle' (défaut new)}
-- **renvoie** : string JSON {count, ids}.
-- **renvoie** : boolean true en cas d'erreur.
+- `args` (*table*) : {id?, ids?: integer[], name?: string, mode?: 'new'|'add'|'remove'|'toggle' (default new)}
+- **returns**: string JSON {count, ids}.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_editor.set_edit_mode(args)`
 
-Change de mode d'édition par nom (editor.selectEditMode).
+Changes the edit mode by name (editor.selectEditMode).
 
-- `args` (*table*) : {name: string} (de list_edit_modes).
-- **renvoie** : string Message.
-- **renvoie** : boolean true en cas d'erreur.
+- `args` (*table*) : {name: string} (from list_edit_modes).
+- **returns**: string Message.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_editor.set_editor_active(args)`
 
-Active ou désactive le World Editor (editor.setEditorActive).
+Enables or disables the World Editor (editor.setEditorActive).
 
 - `args` (*table*) : {active: boolean, safeMode?: boolean}
-- **renvoie** : string « editor activating/deactivating ».
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string "editor activating/deactivating".
+- **returns**: boolean true on error.
 
 #### `mcp_tools_editor.set_editor_transform(args)`
 
-Applique position/rotation/échelle à des objets en une transaction d'historique annulable.
+Applies position/rotation/scale to objects in a single undoable history transaction.
 
-- `args` (*table*) : {items?: {id|name, pos?, euler?|rot?, scale?}[], id?, ids?, name?, pos?, euler?, rot?, rotation?, scale?}. Sans cible, utilise la sélection.
-- **renvoie** : string JSON {count, ids}.
-- **renvoie** : boolean true en cas d'erreur.
+- `args` (*table*) : {items?: {id|name, pos?, euler?|rot?, scale?}[], id?, ids?, name?, pos?, euler?, rot?, rotation?, scale?}. Without a target, uses the selection.
+- **returns**: string JSON {count, ids}.
+- **returns**: boolean true on error.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `schemas` | table<string, table> | Schémas des outils d'éditeur. |
+| `schemas` | table<string, table> | Schemas of the editor tools. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `getSystemTimeMS`
 - `Sim.` `deserializeObjectsFromText`, `findObjectById`, `getSimObjectDerivedClassNames`, `getUniqueName`, `upcast`
@@ -172,7 +172,7 @@ Applique position/rotation/échelle à des objets en une transaction d'historiqu
 - `scenetree.` `findObject`, `findObjectById`
 - `worldEditorCppApi.` `createObject`
 
-**Charge les extensions :** `editor_main`
+**Loads extensions:** `editor_main`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/mcp/tools/editor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/mcp/tools/editor.lua`.*

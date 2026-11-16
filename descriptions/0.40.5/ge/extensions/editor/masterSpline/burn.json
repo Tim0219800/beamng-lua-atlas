@@ -1,21 +1,32 @@
 {
   "path": "lua/ge/extensions/editor/masterSpline/burn.lua",
-  "module": "Verrouillage (« burn » = lock) d'une Master Spline de l'éditeur. Une Master Spline possède une pile de splines enfants liées (mesh, assembly, road, tree, decal) ; la verrouiller verrouille aussi tous ses enfants : ils restent dans leurs outils, non modifiables, et leur contenu généré est sauvegardé avec le niveau. Le déverrouillage rend tout éditable.",
+  "module": "Locking (\"burn\" = lock) of an editor Master Spline. A Master Spline has a stack of linked child splines (mesh, assembly, road, tree, decal); locking it also locks all its children: they stay in their tools, uneditable, and their generated content is saved with the level. Unlocking makes everything editable again.",
   "notes": [
-    "Chaque verrouillage/déverrouillage est une action annulable de editor.history (« Lock Master Spline » / « Unlock Master Spline »).",
-    "Au déverrouillage, les modifications manuelles des enfants (outils mesh et assembly seulement, via eachObjectJumpTable) sont enregistrées dans data.records ; un verrouillage ultérieur (ex. annulation) les restaure via splineLock.restore.",
-    "Met spline.isEnabled = not isLocked et appelle editor.setDirty()."
+    "Each lock/unlock is an undoable editor.history action (\"Lock Master Spline\" / \"Unlock Master Spline\").",
+    "On unlock, the manual changes to the children (mesh and assembly tools only, via eachObjectJumpTable) are recorded in data.records; a later lock (e.g. undo) restores them via splineLock.restore.",
+    "Sets spline.isEnabled = not isLocked and calls editor.setDirty()."
   ],
   "functions": {
     "run": {
-      "desc": "Action du bouton Burn : verrouille la Master Spline d'indice idx (équivaut à setLocked(idx, true)).",
-      "params": {"idx": {"type": "integer", "desc": "Indice de la Master Spline dans la liste (à partir de 1)."}}
+      "desc": "Burn button action: locks the Master Spline at index idx (equivalent to setLocked(idx, true)).",
+      "params": {
+        "idx": {
+          "type": "integer",
+          "desc": "Index of the Master Spline in the list (1-based)."
+        }
+      }
     },
     "setLocked": {
-      "desc": "Verrouille ou déverrouille la Master Spline d'indice idx, avec tous ses enfants liés, en une seule transaction annulable. Ne fait rien si l'indice est invalide.",
+      "desc": "Locks or unlocks the Master Spline at index idx, with all its linked children, in a single undoable transaction. Does nothing if the index is invalid.",
       "params": {
-        "idx": {"type": "integer", "desc": "Indice de la Master Spline dans la liste (à partir de 1)."},
-        "isLocked": {"type": "boolean", "desc": "true pour verrouiller, false pour déverrouiller."}
+        "idx": {
+          "type": "integer",
+          "desc": "Index of the Master Spline in the list (1-based)."
+        },
+        "isLocked": {
+          "type": "boolean",
+          "desc": "true to lock, false to unlock."
+        }
       }
     }
   }

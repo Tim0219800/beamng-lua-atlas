@@ -1,0 +1,16 @@
+{
+  "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactRecovery.lua",
+  "module": "Module de gameplayInterface donnant accès au système de récupération (recovery) : appel à distance d'une fonction sans argument du module recovery par son nom.",
+  "usage": "gameplayInterface.executeAction(0, 19, 'interactRecovery', 'startRecovering')",
+  "notes": [
+    "Action 'interactRecovery'(methodName:string) : appelle recovery[methodName]() sans argument ; {failReason} si la fonction n'existe pas. Les noms valides dépendent du module recovery."
+  ],
+  "fields": {
+    "moduleActions": {"type": "table<string, function>", "desc": "Actions : interactRecovery."},
+    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups : aucun."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : remplit moduleActions.", "params": {}, "returns": [], "internal": true},
+    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+  }
+}

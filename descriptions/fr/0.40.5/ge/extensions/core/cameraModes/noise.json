@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/noise.lua",
+  "module": "Effet de bruit : ajoute à data.res.pos un décalage aléatoire (± factor/2 par axe) renouvelé toutes les 0,1 s. Mode masqué, pas un filtre au sens isFilter. Renvoie un constructeur.",
+  "classes": {
+    "C": {
+      "desc": "Bruit de position de la caméra.",
+      "functions": {
+        "init": {"desc": "Prépare le décalage ; chaque appel force un nouveau tirage au premier update.", "params": {"factor": {"type": "number|nil", "desc": "amplitude totale du bruit en mètres (0.2 par défaut, ou self.factor existant)"}}},
+        "update": {"desc": "Ajoute le décalage courant à data.res.pos.", "params": {"data": {"type": "table", "desc": "camData"}}, "internal": true}
+      }
+    }
+  }
+}

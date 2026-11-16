@@ -1,18 +1,51 @@
 {
   "path": "lua/vehicle/controller/sound/AVAS.lua",
-  "module": "Contrôleur auxiliaire de système d'alerte sonore pour piétons (AVAS) des véhicules électriques. Joue une boucle « avant » en modes D/S, une boucle « arrière » en R, et rien sinon ou au-dessus de la vitesse maximale (+1 m/s) ; le paramètre de pitch/volume dépend de la vitesse.",
+  "module": "Auxiliary controller for the pedestrian acoustic vehicle alerting system (AVAS) of electric vehicles. Plays a \"forward\" loop in D/S modes, a \"reverse\" loop in R, and nothing otherwise or above the maximum speed (+1 m/s); the pitch/volume parameter depends on speed.",
   "notes": [
-    "Clés jbeam lues dans initSounds : forwardSoundEvent (\"event:>Engine>Pedestrian Warning>Forward_01\"), reverseSoundEvent (\"..._Reverse_01\"), forwardSoundNode_nodes et reverseSoundNode_nodes (premier élément = nœud, 0 sinon), warningMaxSpeed (50/3.6 m/s), warningVolume (0.5).",
-    "Lit electrics.values.gear (nom du rapport) et wheelspeed. Le paramètre CT (ControlTrigger) de vitesse est linéaire de 0 à warningMaxSpeed.",
-    "reset appelle obj:stopSFX sur des sources qui ne sont créées que dans initSounds (nil possible si reset est appelé avant)."
+    "jbeam keys read in initSounds: forwardSoundEvent (\"event:>Engine>Pedestrian Warning>Forward_01\"), reverseSoundEvent (\"..._Reverse_01\"), forwardSoundNode_nodes and reverseSoundNode_nodes (first element = node, 0 otherwise), warningMaxSpeed (50/3.6 m/s), warningVolume (0.5).",
+    "Reads electrics.values.gear (gear name) and wheelspeed. The speed CT (ControlTrigger) parameter is linear from 0 to warningMaxSpeed.",
+    "reset calls obj:stopSFX on sources that are only created in initSounds (possibly nil if reset is called before)."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
   },
   "functions": {
-    "init": {"desc": "Ne fait rien (la configuration est lue dans initSounds).", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
-    "initSounds": {"desc": "Crée les deux sources sonores en boucle et lit vitesse maximale et volume. Appelé par le moteur à l'initialisation des sons.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
-    "reset": {"desc": "Arrête les deux sons et remet l'état à « stopped ».", "internal": true},
-    "updateGFX": {"desc": "Chaque frame : choisit l'état (avant/arrière/arrêté) selon le rapport et la vitesse, joue/arrête les sons et ajuste le paramètre de vitesse.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+    "init": {
+      "desc": "Does nothing (the configuration is read in initSounds).",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "initSounds": {
+      "desc": "Creates the two looping sound sources and reads the maximum speed and volume. Called by the engine at sound initialization.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "reset": {
+      "desc": "Stops both sounds and resets the state to \"stopped\".",
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Every frame: chooses the state (forward/reverse/stopped) depending on the gear and speed, plays/stops the sounds and adjusts the speed parameter.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
+      "internal": true
+    }
   }
 }

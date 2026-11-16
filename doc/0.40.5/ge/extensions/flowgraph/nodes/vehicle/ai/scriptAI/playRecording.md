@@ -1,33 +1,33 @@
 # `flowgraph_nodes_vehicle_ai_scriptAI_playRecording`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/playRecording.lua` · VM : Game Engine (GE) · 130 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/playRecording.lua` · VM: Game Engine (GE) · 130 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/ai/scriptAI/playRecording")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/ai/scriptAI/playRecording")` (file under extensions/ but not a regular extension)
 
-Nœud « Play ScriptAI Recording » (couleur ai, repeat_p_duration). Fait rejouer à un véhicule un enregistrement ScriptAI lu dans un fichier .track.json. Entrées : start (impulsion), stop (impulsion), fileName, vehId (sans valeur = joueur), loopCount (-1 par défaut si vide). Le fichier est cherché relativement au projet puis dans /replays/scriptai/tracks/. Donnée renderDebug : dessine le tracé. Pas de pins de sortie.
+Node "Play ScriptAI Recording" (color ai, repeat_p_duration). Makes a vehicle replay a ScriptAI recording read from a .track.json file. Inputs: start (pulse), stop (pulse), fileName, vehId (no value = player), loopCount (-1 by default if empty). The file is searched relative to the project then in /replays/scriptai/tracks/. Data renderDebug: draws the path. No output pins.
 
-## Remarques
+## Notes
 
-- Le commentaire du fichier précise que la catégorie est techniquement f_duration mais qu'aucun callback n'existe pour des pins de fin.
+- The file's comment states that the category is technically f_duration but that no callback exists for end pins.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Affiche un bouton Load, l'état et les infos de l'enregistrement (véhicule, niveau, nombre de points, durée) ; dessine le tracé si renderDebug. | 96 |
-| `C:getVeh()` | Renvoie le véhicule dont l'id est donné en entrée, ou le véhicule du joueur (getPlayerVehicle(0)) sans entrée. | 44 |
-| `C:init()` | Initialise recording=nil, data.renderDebug=false et running=false. | 32 |
-| `C:loadRecording()` | Lit le fichier JSON en essayant trois emplacements (relatif au projet, dossier des pistes, dossier des pistes + extension) et le mémorise. | 76 |
-| `C:play()` | Charge l'enregistrement, fixe loopCount et loopType « firstOnlyTeleport » puis envoie ai.startFollowing(recording). | 54 |
-| `C:postInit()` | Limite le sélecteur de fichier de fileName aux fichiers .track.json. | 38 |
-| `C:stop()` | Passe running à false et envoie ai.stopFollowing() au véhicule. | 67 |
-| `C:work()` | Appelle play sur l'impulsion start, ou stop sur l'impulsion stop. | 88 |
+| `C:drawMiddle(builder, style)` | Displays a Load button, the state and the recording info (vehicle, level, number of points, duration); draws the path if renderDebug. | 96 |
+| `C:getVeh()` | Returns the vehicle whose id is given as input, or the player's vehicle (getPlayerVehicle(0)) without input. | 44 |
+| `C:init()` | Initializes recording=nil, data.renderDebug=false and running=false. | 32 |
+| `C:loadRecording()` | Reads the JSON file trying three locations (relative to the project, tracks folder, tracks folder + extension) and stores it. | 76 |
+| `C:play()` | Loads the recording, sets loopCount and loopType "firstOnlyTeleport" then sends ai.startFollowing(recording). | 54 |
+| `C:postInit()` | Restricts the file picker of fileName to .track.json files. | 38 |
+| `C:stop()` | Sets running to false and sends ai.stopFollowing() to the vehicle. | 67 |
+| `C:work()` | Calls play on the start pulse, or stop on the stop pulse. | 88 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawSquarePrism`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/playRecording.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/playRecording.lua`.*

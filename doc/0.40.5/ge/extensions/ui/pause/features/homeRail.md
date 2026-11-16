@@ -1,56 +1,56 @@
 # `ui_pause_features_homeRail`
 
-*Fichier : `lua/ge/extensions/ui/pause/features/homeRail.lua` · VM : Game Engine (GE) · 717 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/pause/features/homeRail.lua` · VM: Game Engine (GE) · 717 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_pause_features_homeRail` : `extensions.load("ui_pause_features_homeRail")`, puis la globale `ui_pause_features_homeRail`
+**Access:** extension `ui_pause_features_homeRail`: `extensions.load("ui_pause_features_homeRail")`, then the global `ui_pause_features_homeRail`
 
-Construit le rail de boutons de droite de l'accueil du menu pause. Selon le contexte (mode freeroam, career, mission, multiplayer, garage, freeroamTutorial, scénario, première conduite, multiseat) il assemble des groupes de boutons : recovery (reprendre, réparer, récupération carrière/mission), firstDriveLearning, tutorialLesson, career, auxiliary (sélecteur de véhicule, carte, mode photo, replay), mainMenu (changer de niveau, quitter l'activité, quitter le niveau) et multiseat. Utilisé par ui_pause_providers_routeData_home.
+Builds the right-hand button rail of the pause menu home. Depending on the context (freeroam, career, mission, multiplayer, garage, freeroamTutorial mode, scenario, first drive, multiseat) it assembles button groups: recovery (resume, repair, career/mission recovery), firstDriveLearning, tutorialLesson, career, auxiliary (vehicle selector, map, photo mode, replay), mainMenu (change level, quit activity, quit level) and multiseat. Used by ui_pause_providers_routeData_home.
 
-## Exemple
+## Example
 
 ```lua
--- ajouter ses boutons multiseat au rail
+-- add your multiseat buttons to the rail
 function M.onPauseHomeRailBuildMultiseatActions(actions, context, registerButton)
   actions[#actions + 1] = registerButton({id = 'home.monBouton', label = 'Mon bouton', icon = 'play', visible = true, enabled = true}, function() return true end)
 end
 ```
 
-## Remarques
+## Notes
 
-- registerButton(definition, callback) est fourni par l'appelant (ui_pause_actions.registerButton) ; la définition contient id, label, icon, rail, routeTarget, visible, enabled, disabledReason, confirmText, flavor (« danger », « system »), showIndicator, hideInSimpleMenu, cancelLabel. Le callback renvoie true en cas de succès.
-- Ordre des groupes : recovery, firstDriveLearning, tutorialLesson, career, puis le groupe multiseat avant auxiliary si le multiseat est actif (sinon après), enfin mainMenu.
-- En première conduite guidée, seuls deux groupes existent : recovery (continuer) et mainMenu (quitter).
-- En mode mission, les boutons de récupération viennent de core_recoveryPrompt.getPauseMissionRightRailButtons() ; à défaut, des boutons fixes (redémarrer, remettre sur les roues, dernier chemin, remorquage) sont créés. En carrière, ils viennent de getPauseCareerRightRailButtons().
-- Le bouton « quitter l'activité » est masqué pour les scénarios assistants (quickrace, lightRunner, busRoute) car « quitter » n'y fait que vider l'état du scénario.
-- Le bouton « Réparer ici » (home.repairHere) téléporte le véhicule en place avec spawn.safeTeleport (réparation) et émet onPauseMenuRightRailButtonPressed("repairHere") ; il n'existe pas en multiseat.
-- Hooks émis : onPauseHomeRailBuildMultiseatActions(actions, context, registerButton), onGameplayActivityAborted, onPauseMenuRightRailButtonPressed(nom).
-- Le libellé de la carte désactivée (« Disabled in current context ») est en dur, non traduit.
+- registerButton(definition, callback) is provided by the caller (ui_pause_actions.registerButton); the definition contains id, label, icon, rail, routeTarget, visible, enabled, disabledReason, confirmText, flavor ("danger", "system"), showIndicator, hideInSimpleMenu, cancelLabel. The callback returns true on success.
+- Group order: recovery, firstDriveLearning, tutorialLesson, career, then the multiseat group before auxiliary if multiseat is active (otherwise after), finally mainMenu.
+- In guided first drive, only two groups exist: recovery (continue) and mainMenu (quit).
+- In mission mode, the recovery buttons come from core_recoveryPrompt.getPauseMissionRightRailButtons(); failing that, fixed buttons (restart, flip upright, last road, towing) are created. In career, they come from getPauseCareerRightRailButtons().
+- The "quit activity" button is hidden for assistant scenarios (quickrace, lightRunner, busRoute) because "quit" there only clears the scenario state.
+- The "Repair here" button (home.repairHere) teleports the vehicle in place with spawn.safeTeleport (repair) and emits onPauseMenuRightRailButtonPressed("repairHere"); it does not exist in multiseat.
+- Hooks emitted: onPauseHomeRailBuildMultiseatActions(actions, context, registerButton), onGameplayActivityAborted, onPauseMenuRightRailButtonPressed(name).
+- The disabled card's label ("Disabled in current context") is hardcoded, not translated.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_pause_features_homeRail.build(context, registerButton)` | Construit la liste des groupes du rail pour le contexte du pause. Chaque groupe vient de Common.asRailGroup(nom, actions) et les groupes vides sont omis. Journalise le nombre de groupes et d'actions multiseat. | 681 |
+| `ui_pause_features_homeRail.build(context, registerButton)` | Builds the list of rail groups for the pause context. Each group comes from Common.asRailGroup(name, actions) and empty groups are omitted. Logs the number of groups and multiseat actions. | 681 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_pause_features_homeRail.build(context, registerButton)`
 
-Construit la liste des groupes du rail pour le contexte du pause. Chaque groupe vient de Common.asRailGroup(nom, actions) et les groupes vides sont omis. Journalise le nombre de groupes et d'actions multiseat.
+Builds the list of rail groups for the pause context. Each group comes from Common.asRailGroup(name, actions) and empty groups are omitted. Logs the number of groups and multiseat actions.
 
-- `context` (*table*) : Contexte du pause : mode, isFirstDriveGuided, isFirstDriveActive, isMultiseatActive, isScenarioActive, isMissionActive, isBigMapAllowed…
-- `registerButton` (*function*) : Fonction (definition, callback) qui enregistre un bouton et renvoie sa description.
-- **renvoie** : table[] Groupes de boutons du rail.
+- `context` (*table*) : Pause context: mode, isFirstDriveGuided, isFirstDriveActive, isMultiseatActive, isScenarioActive, isMissionActive, isBigMapAllowed...
+- `registerButton` (*function*) : Function (definition, callback) that registers a button and returns its description.
+- **returns**: table[] Rail button groups.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onGameplayActivityAborted`
-- `onPauseHomeRailBuildMultiseatActions` — écouté par 2 module(s)
+- `onPauseHomeRailBuildMultiseatActions` — listened to by 2 module(s)
 - `onPauseMenuRightRailButtonPressed`
 
-**Charge les extensions :** `ui_multiseat_freeroam`
+**Loads extensions:** `ui_multiseat_freeroam`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/pause/features/homeRail.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/pause/features/homeRail.lua`.*

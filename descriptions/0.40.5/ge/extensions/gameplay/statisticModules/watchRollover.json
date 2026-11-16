@@ -1,32 +1,58 @@
 {
   "path": "lua/ge/extensions/gameplay/statisticModules/watchRollover.lua",
-  "module": "Module de statistiques qui détecte les tonneaux (véhicule retourné sur le toit puis remis sur ses roues) et incrémente la métrique « vehicle/rollover » via gameplay_statistic.metricAdd. Il est appelé par gameplay_statistic avec la fonction workload.",
+  "module": "Statistics module that detects rollovers (vehicle flipped onto its roof then back on its wheels) and increments the metric \"vehicle/rollover\" via gameplay_statistic.metricAdd. It is called by gameplay_statistic with the workload function.",
   "notes": [
-    "Le toit est détecté quand l'axe haut du véhicule a une composante z < -0,7 et que le véhicule glisse plus latéralement que longitudinalement. Le retour sur roues (z > 0,7) valide le tonneau si le toit a été vu depuis moins de 4 s et la dernière position sur roues depuis moins de 8 s.",
-    "La fonction onPreRender (debug) est commentée à l'export et référence une variable vpos non définie."
+    "The roof is detected when the vehicle's up axis has a z component < -0.7 and the vehicle slides more laterally than longitudinally. Returning to the wheels (z > 0.7) validates the rollover if the roof was seen less than 4 s ago and the last on-wheels position less than 8 s ago.",
+    "The onPreRender function (debug) is commented out on export and references an undefined variable vpos."
   ],
   "functions": {
     "workload": {
-      "desc": "Analyse un véhicule à chaque appel (axes haut/avant, vitesse) et compte un tonneau quand la séquence toit puis roues est détectée.",
+      "desc": "Analyzes a vehicle on each call (up/forward axes, speed) and counts a rollover when the roof-then-wheels sequence is detected.",
       "params": {
-        "v": {"type": "userdata", "desc": "Objet véhicule."},
-        "vid": {"type": "integer", "desc": "Identifiant du véhicule ; un changement annule la détection."},
-        "dtSim": {"type": "number", "desc": "Temps simulé écoulé en secondes."}
+        "v": {
+          "type": "userdata",
+          "desc": "Vehicle object."
+        },
+        "vid": {
+          "type": "integer",
+          "desc": "Vehicle identifier; a change cancels the detection."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time elapsed in seconds."
+        }
       },
       "internal": true
     },
     "onVehicleResetted": {
-      "desc": "Hook appelé quand un véhicule est réinitialisé : annule la détection s'il s'agit du véhicule suivi.",
-      "params": {"vid": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "desc": "Hook called when a vehicle is reset: cancels the detection if it is the tracked vehicle.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
       "internal": true
     },
-    "onExtensionLoaded": {"desc": "Hook appelé au chargement de l'extension ; ne fait rien.", "internal": true},
+    "onExtensionLoaded": {
+      "desc": "Hook called when the extension loads; does nothing.",
+      "internal": true
+    },
     "onVehicleSwitched": {
-      "desc": "Hook appelé au changement de véhicule contrôlé : annule la détection.",
+      "desc": "Hook called when the controlled vehicle changes: cancels the detection.",
       "params": {
-        "oldid": {"type": "integer", "desc": "Ancien véhicule."},
-        "newid": {"type": "integer", "desc": "Nouveau véhicule."},
-        "player": {"type": "integer", "desc": "Indice du joueur."}
+        "oldid": {
+          "type": "integer",
+          "desc": "Old vehicle."
+        },
+        "newid": {
+          "type": "integer",
+          "desc": "New vehicle."
+        },
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        }
       },
       "internal": true
     }

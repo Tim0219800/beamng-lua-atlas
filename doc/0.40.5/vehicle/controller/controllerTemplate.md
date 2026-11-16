@@ -1,18 +1,18 @@
 # `controller_controllerTemplate`
 
-*Fichier : `lua/vehicle/controller/controllerTemplate.lua` · VM : Véhicule · 120 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/controllerTemplate.lua` · VM: Vehicle · 120 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `controllerTemplate` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `controllerTemplate` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Modèle de départ pour écrire un contrôleur de véhicule. Un contrôleur est un module Lua placé dans lua/vehicle/controller/, déclaré dans le jbeam (section `controller` avec `fileName`, et éventuellement `name`) et chargé par `controller.lua`. Cycle de vie : `init(jbeamData)` à la création (jbeamData = déclaration fusionnée avec les données jbeam portant le nom du contrôleur), puis `initSecondStage`, `initSounds`, `initLastStage` (facultatifs) une fois les autres systèmes prêts ; au reset, `reset(jbeamData)` (ou, s'il est absent, `init` rappelé) ainsi que `resetLastStage` et `resetSounds`. En fonctionnement : `update(dt)` à chaque pas physique, `updateWheelsIntermediate(dt)`, `updateFixedStep(dt)` à pas fixe de 100 Hz, `updateGFX(dt)` à chaque frame graphique. Seules les fonctions réellement exportées dans M sont appelées. Autres hooks facultatifs : debugDraw, beamBroken, beamDeformed, nodeCollision, onCouplerFound/Attached/Detached, onGameplayEvent, settingsChanged, serialize/deserialize.
+Starter template for writing a vehicle controller. A controller is a Lua module placed in lua/vehicle/controller/, declared in the jbeam (`controller` section with `fileName`, and optionally `name`) and loaded by `controller.lua`. Lifecycle: `init(jbeamData)` on creation (jbeamData = the declaration merged with the jbeam data bearing the controller's name), then `initSecondStage`, `initSounds`, `initLastStage` (optional) once the other systems are ready; on reset, `reset(jbeamData)` (or, if absent, `init` is called again) as well as `resetLastStage` and `resetSounds`. In operation: `update(dt)` every physics step, `updateWheelsIntermediate(dt)`, `updateFixedStep(dt)` at a fixed 100 Hz step, `updateGFX(dt)` every graphics frame. Only the functions actually exported in M are called. Other optional hooks: debugDraw, beamBroken, beamDeformed, nodeCollision, onCouplerFound/Attached/Detached, onGameplayEvent, settingsChanged, serialize/deserialize.
 
-## Exemple
+## Example
 
 ```lua
 local M = {}
 M.type = "auxiliary"
 local function init(jbeamData)
-  -- lire jbeamData.maCle
+  -- read jbeamData.myKey
 end
 local function updateGFX(dt)
 end
@@ -22,48 +22,48 @@ M.updateGFX = updateGFX
 return M
 ```
 
-## Remarques
+## Notes
 
-- `M.type` : "auxiliary" pour un contrôleur ordinaire ; "main" désigne le contrôleur principal (un seul par véhicule, jamais chargeable à chaud).
-- controller.lua ajoute lui-même `name`, `typeName`, `hasCustomName`, `manualOrder` (clé jbeam `manualOrder`) et `order` au module après init. Un contrôleur peut définir `M.relevantDevice` (nom d'un périphérique du powertrain) ou `M.defaultOrder` pour influencer l'ordre d'appel.
-- Le hook de casse de poutre doit s'appeler `beamBroken` (et non beamBroke) pour être détecté.
-- Dans le modèle, onCouplerFound et onCouplerAttached sont commentés avec moins d'arguments que ceux réellement transmis par controller.lua (nodeDist pour Found ; attachSpeed, attachEnergy pour Attached).
-- Si un contrôleur ajoute ou retire dynamiquement `M.update` & co, il doit appeler `controller.cacheAllControllerFunctions()`.
-- Les fonctions commentées du modèle ne sont pas exportées ; seuls init, reset et updateGFX sont actifs.
+- `M.type`: "auxiliary" for an ordinary controller; "main" designates the main controller (only one per vehicle, never hot-loadable).
+- controller.lua itself adds `name`, `typeName`, `hasCustomName`, `manualOrder` (jbeam key `manualOrder`) and `order` to the module after init. A controller can define `M.relevantDevice` (name of a powertrain device) or `M.defaultOrder` to influence the call order.
+- The beam break hook must be called `beamBroken` (and not beamBroke) to be detected.
+- In the template, onCouplerFound and onCouplerAttached are commented out with fewer arguments than those actually passed by controller.lua (nodeDist for Found; attachSpeed, attachEnergy for Attached).
+- If a controller dynamically adds or removes `M.update` & co, it must call `controller.cacheAllControllerFunctions()`.
+- The commented-out functions of the template are not exported; only init, reset and updateGFX are active.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_controllerTemplate.init(jbeamData)` | Appelée par controller.lua à la création du contrôleur (et au reset si `reset` n'existe pas). Corps vide dans le modèle ; c'est ici qu'on lit les clés jbeam. *(interne)* | 64 |
-| `controller_controllerTemplate.reset(jbeamData)` | Appelée au reset du véhicule (étape resetSecondStage de controller.lua). Corps vide dans le modèle. *(interne)* | 55 |
-| `controller_controllerTemplate.updateGFX(dt)` | Appelée à chaque frame graphique. Corps vide dans le modèle. Les variantes `update` (pas physique), `updateWheelsIntermediate` et `updateFixedStep` (100 Hz) sont fournies en commentaire. *(interne)* | 22 |
+| `controller_controllerTemplate.init(jbeamData)` | Called by controller.lua when the controller is created (and on reset if `reset` does not exist). Empty body in the template; this is where the jbeam keys are read. *(internal)* | 64 |
+| `controller_controllerTemplate.reset(jbeamData)` | Called on vehicle reset (resetSecondStage step of controller.lua). Empty body in the template. *(internal)* | 55 |
+| `controller_controllerTemplate.updateGFX(dt)` | Called every graphics frame. Empty body in the template. The variants `update` (physics step), `updateWheelsIntermediate` and `updateFixedStep` (100 Hz) are provided as comments. *(internal)* | 22 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_controllerTemplate.init(jbeamData)`
 
-Appelée par controller.lua à la création du contrôleur (et au reset si `reset` n'existe pas). Corps vide dans le modèle ; c'est ici qu'on lit les clés jbeam.
+Called by controller.lua when the controller is created (and on reset if `reset` does not exist). Empty body in the template; this is where the jbeam keys are read.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur (fileName, name, clés personnalisées…).
+- `jbeamData` (*table*) : Controller jbeam data (fileName, name, custom keys...).
 
 #### `controller_controllerTemplate.reset(jbeamData)`
 
-Appelée au reset du véhicule (étape resetSecondStage de controller.lua). Corps vide dans le modèle.
+Called on vehicle reset (resetSecondStage step of controller.lua). Empty body in the template.
 
-- `jbeamData` (*table*) : Mêmes données jbeam que pour init.
+- `jbeamData` (*table*) : Same jbeam data as for init.
 
 #### `controller_controllerTemplate.updateGFX(dt)`
 
-Appelée à chaque frame graphique. Corps vide dans le modèle. Les variantes `update` (pas physique), `updateWheelsIntermediate` et `updateFixedStep` (100 Hz) sont fournies en commentaire.
+Called every graphics frame. Empty body in the template. The variants `update` (physics step), `updateWheelsIntermediate` and `updateFixedStep` (100 Hz) are provided as comments.
 
-- `dt` (*number*) : Durée du pas en secondes.
+- `dt` (*number*) : Step duration in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `type` | string | "auxiliary" dans le modèle (contrôleur annexe). "main" pour le contrôleur principal du véhicule. |
+| `type` | string | "auxiliary" in the template (secondary controller). "main" for the vehicle's main controller. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/controllerTemplate.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/controllerTemplate.lua`.*

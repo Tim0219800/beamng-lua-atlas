@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/editor/flowgraph/legend.lua",
+  "module": "Fenêtre « Legend Test » (fg_legend) de l'éditeur Flowgraph. C'est un squelette de test : quatre onglets A, B, C, D réordonnables et fermables (ImGui TabBar) avec affichage de la liste des onglets ouverts. Sans lien avec le graphe réel.",
+  "classes": {
+    "C": {
+      "desc": "Classe de la fenêtre Legend (windowName = 'fg_legend').",
+      "functions": {
+        "attach": {"desc": "Associe le manager flowgraph.", "params": {"mgr": {"type": "table", "desc": "Manager."}}, "internal": false},
+        "init": {"desc": "Enregistre la fenêtre et crée les 4 éléments de test.", "params": {}, "internal": true},
+        "draw": {"desc": "Dessine la barre d'onglets de test si la fenêtre est visible.", "params": {}, "internal": false},
+        "_onSerialize": {"desc": "Sérialisation (vide).", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true},
+        "_onDeserialized": {"desc": "Désérialisation (vide).", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true}
+      }
+    }
+  }
+}

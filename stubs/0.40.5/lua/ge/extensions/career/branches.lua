@@ -2,156 +2,156 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/branches.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Arbre des domaines, branches et compétences (skills) du mode carrière. Il lit tous les fichiers info.json sous /gameplay/domains/ (récursivement) et en déduit, d'après l'arborescence des dossiers (domains / branches / skills), l'identifiant pathId (noms de dossiers joints par « - », par ex. « apm-motorsport »), le parent et le type (isDomain, isBranch, isSkill). Il calcule niveaux et XP à partir de la valeur de l'attribut du joueur (career_modules_playerAttributes), les multiplicateurs de récompense par niveau, les conditions de déverrouillage (flags) et sauvegarde l'état « unlocked » dans career/branchUnlocks.json.
---- Accès : extension `career_branches` : `extensions.load("career_branches")`, puis la globale `career_branches`
+--- Tree of domains, branches and skills of career mode. It reads all info.json files under /gameplay/domains/ (recursively) and infers from the folder structure (domains / branches / skills) the pathId (folder names joined by "-", e.g. "apm-motorsport"), the parent and the type (isDomain, isBranch, isSkill). It computes levels and XP from the value of the player's attribute (career_modules_playerAttributes), the reward multipliers per level, the unlock conditions (flags) and saves the "unlocked" state in career/branchUnlocks.json.
+--- Access: extension `career_branches`: `extensions.load("career_branches")`, then the global `career_branches`
 ---@class career_branches
----@field newAttributeNamesToOldNames table<string, string> Table inverse. Construite à partir de l'ancienne table ; si plusieurs anciens noms visent le même chemin, le dernier parcouru gagne.
----@field oldAttributeNamesToNewNames table<string, string> Anciens noms d'attributs vers les chemins actuels (par ex. drift vers bmra-drift).
----@field onPlayerAttributesChanged nil Toujours nil : référence à une variable non définie dans le fichier.
+---@field newAttributeNamesToOldNames table<string, string> Inverse table. Built from the old table; if several old names target the same path, the last one walked wins.
+---@field oldAttributeNamesToNewNames table<string, string> Old attribute names to current paths (e.g. drift to bmra-drift).
+---@field onPlayerAttributesChanged nil Always nil: reference to a variable not defined in the file.
 career_branches = {}
 
---- Calcule le niveau d'une branche pour une valeur d'XP : dernier niveau dont requiredValue <= val, plus la progression vers le suivant.
----Source : lua/ge/extensions/career/branches.lua:294
----@param val number Valeur de l'attribut (XP).
----@param id string Identifiant de la branche.
----@return integer  Niveau (-1 si aucun).
----@return number  Progression dans le niveau courant (-1 si pas de suivant).
----@return number  XP nécessaire pour passer au suivant (-1 si pas de suivant).
----@return number  Seuil du niveau courant (-1 si pas de suivant).
----@return number  Seuil du niveau suivant (-1 si pas de suivant).
+--- Computes a branch's level for an XP value: last level whose requiredValue <= val, plus the progress toward the next one.
+---Source: lua/ge/extensions/career/branches.lua:294
+---@param val number Attribute value (XP).
+---@param id string Branch identifier.
+---@return integer  Level (-1 if none).
+---@return number  Progress within the current level (-1 if there is no next).
+---@return number  XP needed to reach the next level (-1 if there is no next).
+---@return number  Threshold of the current level (-1 if there is no next).
+---@return number  Threshold of the next level (-1 if there is no next).
 function career_branches.calcBranchLevelFromValue(val, id) end
 
---- Recalcule unlocked, unlockInfo, lockedReason et unlockInfos de chaque branche selon unlockCondition et career_modules_unlockFlags.
----Source : lua/ge/extensions/career/branches.lua:462
+--- Recomputes unlocked, unlockInfo, lockedReason and unlockInfos of each branch according to unlockCondition and career_modules_unlockFlags.
+---Source: lua/ge/extensions/career/branches.lua:462
 function career_branches.checkUnlocks() end
 
---- Remplace dans la liste d'unlocks d'un niveau chaque entrée « automaticMission » par une carte « unlockCard » donnant le nombre de défis disponibles pour cette branche ; les autres entrées sont conservées.
----Source : lua/ge/extensions/career/branches.lua:396
----@param skill table Branche (id utilisé).
----@param level integer Niveau (non utilisé dans le calcul).
----@param unlocks table[] Liste d'unlocks du niveau.
----@return table[]  Nouvelle liste.
+--- Replaces in a level's unlock list each "automaticMission" entry with an "unlockCard" card giving the number of challenges available for this branch; the other entries are kept.
+---Source: lua/ge/extensions/career/branches.lua:396
+---@param skill table Branch (id used).
+---@param level integer Level (not used in the computation).
+---@param unlocks table[] Unlock list of the level.
+---@return table[]  New list.
 function career_branches.expandUnlocks(skill, level, unlocks) end
 
---- Déduit le pathId d'un chemin de fichier situé sous /gameplay/domains/.
----Source : lua/ge/extensions/career/branches.lua:624
----@param filePath string Chemin d'un fichier d'une branche.
+--- Infers the pathId from a file path located under /gameplay/domains/.
+---Source: lua/ge/extensions/career/branches.lua:624
+---@param filePath string Path of a branch's file.
 ---@return string  pathId.
 function career_branches.extractBranchPathIdFromFilePath(filePath) end
 
---- Construit le pathId « domaine-branche-compétence » (les parties absentes sont omises) et retourne la branche.
----Source : lua/ge/extensions/career/branches.lua:265
----@param domainId string Domaine.
----@param branchId string|nil Branche.
----@param skillId string|nil Compétence (utilisée seulement si branchId est donné).
----@return table  La branche.
+--- Builds the pathId "domain-branch-skill" (absent parts are omitted) and returns the branch.
+---Source: lua/ge/extensions/career/branches.lua:265
+---@param domainId string Domain.
+---@param branchId string|nil Branch.
+---@param skillId string|nil Skill (used only if branchId is given).
+---@return table  The branch.
 function career_branches.getBranchByDomainBranchSkill(domainId, branchId, skillId) end
 
---- Alias de getBranchByPath.
----Source : lua/ge/extensions/career/branches.lua:248
----@param id string Identifiant (pathId).
----@return table  La branche, ou la branche « missing ».
+--- Alias of getBranchByPath.
+---Source: lua/ge/extensions/career/branches.lua:248
+---@param id string Identifier (pathId).
+---@return table  The branch, or the "missing" branch.
 function career_branches.getBranchById(id) end
 
---- Cherche une branche par pathId ; accepte les anciens noms (avertissement journalisé).
----Source : lua/ge/extensions/career/branches.lua:252
----@param pathId string Chemin comme « apm-motorsport ».
----@return table  La branche ou la branche « missing ».
+--- Looks up a branch by pathId; accepts the old names (warning logged).
+---Source: lua/ge/extensions/career/branches.lua:252
+---@param pathId string Path like "apm-motorsport".
+---@return table  The branch or the "missing" branch.
 function career_branches.getBranchByPath(pathId) end
 
---- Retourne l'icône de la branche (nil si « missing »).
----Source : lua/ge/extensions/career/branches.lua:360
----@param id string Identifiant de la branche.
----@return string|nil  Icône.
+--- Returns the branch's icon (nil if "missing").
+---Source: lua/ge/extensions/career/branches.lua:360
+---@param id string Branch identifier.
+---@return string|nil  Icon.
 function career_branches.getBranchIcon(id) end
 
---- Niveau actuel du joueur dans une branche (d'après son attribut). Retourne nil si la branche est inconnue ; renvoie aussi les valeurs de calcBranchLevelFromValue.
----Source : lua/ge/extensions/career/branches.lua:331
----@param id string Identifiant de la branche.
----@return integer|nil  Niveau.
+--- The player's current level in a branch (based on their attribute). Returns nil if the branch is unknown; also returns the values of calcBranchLevelFromValue.
+---Source: lua/ge/extensions/career/branches.lua:331
+---@param id string Branch identifier.
+---@return integer|nil  Level.
 function career_branches.getBranchLevel(id) end
 
---- Même chose que getBranchLevel, en passant un pathId.
----Source : lua/ge/extensions/career/branches.lua:338
----@param pathId string Chemin de la branche.
----@return integer|nil  Niveau.
+--- Same as getBranchLevel, taking a pathId.
+---Source: lua/ge/extensions/career/branches.lua:338
+---@param pathId string Branch path.
+---@return integer|nil  Level.
 function career_branches.getBranchLevelByPath(pathId) end
 
---- Retourne un résumé pour l'UI : label, level, icon, curLvlProgress, neededForNext, processPercent et max (nombre de niveaux).
----Source : lua/ge/extensions/career/branches.lua:315
----@param id string Identifiant de la branche.
----@return table  Résumé.
+--- Returns a summary for the UI: label, level, icon, curLvlProgress, neededForNext, processPercent and max (number of levels).
+---Source: lua/ge/extensions/career/branches.lua:315
+---@param id string Branch identifier.
+---@return table  Summary.
 function career_branches.getBranchSimpleInfo(id) end
 
---- Valeur de l'attribut (XP) du joueur pour la branche, -1 si elle est inconnue du système d'attributs, nil si la branche est « missing ».
----Source : lua/ge/extensions/career/branches.lua:345
----@param id string Identifiant de la branche.
+--- The player's attribute value (XP) for the branch, -1 if it is unknown to the attribute system, nil if the branch is "missing".
+---Source: lua/ge/extensions/career/branches.lua:345
+---@param id string Branch identifier.
 ---@return number|nil  XP.
 function career_branches.getBranchXP(id) end
 
---- Retourne toutes les branches indexées par id. Au premier appel, charge les info.json de /gameplay/domains/, les trie (domaines puis enfants) et propage la couleur du parent.
----Source : lua/ge/extensions/career/branches.lua:158
----@return table<string, table>  Branches par id.
+--- Returns all branches keyed by id. On the first call, loads the info.json files of /gameplay/domains/, sorts them (domains then children) and propagates the parent's color.
+---Source: lua/ge/extensions/career/branches.lua:158
+---@return table<string, table>  Branches by id.
 function career_branches.getBranches() end
 
---- Libellé d'un niveau : « ui.career.lvlLabelMax » pour le dernier, levelName du niveau sinon, ou un texte avec contexte {lvl}.
----Source : lua/ge/extensions/career/branches.lua:366
----@param id string Identifiant de la branche.
----@param level integer|nil Niveau.
----@return string|table|nil  Clé de traduction ou table {txt, context}.
+--- Label of a level: "ui.career.lvlLabelMax" for the last one, the level's levelName otherwise, or a text with context {lvl}.
+---Source: lua/ge/extensions/career/branches.lua:366
+---@param id string Branch identifier.
+---@param level integer|nil Level.
+---@return string|table|nil  Translation key or table {txt, context}.
 function career_branches.getLevelLabel(id, level) end
 
---- Multiplicateur de récompense du niveau actuel du joueur (levels[niveau].rewardMultiplier). Les multiplicateurs par défaut vont de 1 à 5 par pas de 0,25 quand la branche déclare defaultRewardMultipliers.
----Source : lua/ge/extensions/career/branches.lua:374
----@param id string Identifiant de la branche.
----@return number|nil  Multiplicateur.
+--- Reward multiplier of the player's current level (levels[level].rewardMultiplier). The default multipliers go from 1 to 5 in steps of 0.25 when the branch declares defaultRewardMultipliers.
+---Source: lua/ge/extensions/career/branches.lua:374
+---@param id string Branch identifier.
+---@return number|nil  Multiplier.
 function career_branches.getLevelRewardMultiplier(id) end
 
---- Retourne l'ordre d'une clé d'attribut (table order) ou -math.huge si inconnue.
----Source : lua/ge/extensions/career/branches.lua:21
----@param key string Clé d'attribut (money, beamXP, ...).
----@return number  Rang d'ordre.
+--- Returns the order of an attribute key (order table) or -math.huge if unknown.
+---Source: lua/ge/extensions/career/branches.lua:21
+---@param key string Attribute key (money, beamXP, ...).
+---@return number  Order rank.
 function career_branches.getOrder(key) end
 
---- Retourne la liste des branches triée par ordre (mise en cache).
----Source : lua/ge/extensions/career/branches.lua:281
----@return table[]  Branches triées.
+--- Returns the list of branches sorted by order (cached).
+---Source: lua/ge/extensions/career/branches.lua:281
+---@return table[]  Sorted branches.
 function career_branches.getSortedBranches() end
 
---- XP requis (requiredValue) pour atteindre un niveau, -1 si le niveau n'existe pas.
----Source : lua/ge/extensions/career/branches.lua:352
----@param id string Identifiant de la branche.
----@param level integer Niveau visé.
----@return number|nil  XP requis.
+--- XP required (requiredValue) to reach a level, -1 if the level does not exist.
+---Source: lua/ge/extensions/career/branches.lua:352
+---@param id string Branch identifier.
+---@param level integer Target level.
+---@return number|nil  Required XP.
 function career_branches.getXPNeededForLevel(id, level) end
 
---- Hook appelé à l'activation/désactivation de la carrière ; à l'activation lit branchUnlocks.json (voir notes : la restauration est vide).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/branches.lua:445
----@param active boolean Carrière active ou non.
+--- Hook called on career activation/deactivation; on activation reads branchUnlocks.json (see notes: the restoration is empty).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/branches.lua:445
+---@param active boolean Career active or not.
 function career_branches.onCareerActive(active) end
 
---- Hook où chaque branche déclare des flags de déverrouillage : « <id>-level-<n> » pour chaque niveau (et unlockFlags du niveau) et un flag par certification (réussi quand la mission requise est passée).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/branches.lua:509
----@param flagDefinitions table<string, table> Table à remplir avec les définitions de flags.
+--- Hook where each branch declares unlock flags: "<id>-level-<n>" for each level (and unlockFlags of the level) and one flag per certification (set when the required mission is passed).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/branches.lua:509
+---@param flagDefinitions table<string, table> Table to fill with the flag definitions.
 function career_branches.onGetUnlockFlagDefinitions(flagDefinitions) end
 
---- Hook de sauvegarde du profil : écrit <save>/career/branchUnlocks.json avec le champ unlocked de chaque branche (career_saveSystem.jsonWriteFileSafe).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/branches.lua:432
----@param currentSavePath string Dossier de la sauvegarde courante.
+--- Profile save hook: writes <save>/career/branchUnlocks.json with the unlocked field of each branch (career_saveSystem.jsonWriteFileSafe).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/branches.lua:432
+---@param currentSavePath string Folder of the current save.
 function career_branches.onSaveCurrentProfile(currentSavePath) end
 
---- Trie une liste de clés d'attributs sur place selon l'ordre des branches et la retourne.
----Source : lua/ge/extensions/career/branches.lua:383
----@param list string[] Clés à trier.
----@return string[]  La même liste triée.
+--- Sorts a list of attribute keys in place according to the branch order and returns it.
+---Source: lua/ge/extensions/career/branches.lua:383
+---@param list string[] Keys to sort.
+---@return string[]  The same sorted list.
 function career_branches.orderAttributeKeysByBranchOrder(list) end
 
---- Trie une liste d'identifiants de branche (par défaut toutes) selon l'ordre des branches.
----Source : lua/ge/extensions/career/branches.lua:389
----@param list string[]|nil Identifiants ; défaut : toutes les branches.
----@return string[]  Liste triée.
+--- Sorts a list of branch identifiers (all by default) according to the branch order.
+---Source: lua/ge/extensions/career/branches.lua:389
+---@param list string[]|nil Identifiers; default: all branches.
+---@return string[]  Sorted list.
 function career_branches.orderBranchNamesKeysByBranchOrder(list) end
 

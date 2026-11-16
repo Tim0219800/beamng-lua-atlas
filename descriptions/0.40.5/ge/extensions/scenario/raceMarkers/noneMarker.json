@@ -1,25 +1,78 @@
 {
   "path": "lua/ge/extensions/scenario/raceMarkers/noneMarker.lua",
-  "module": "Marqueur de checkpoint « vide » : il implémente l'interface commune des marqueurs de course (init, update, setToCheckpoint, setMode, setVisibility, hide, show, createMarkers, clearMarkers) sans rien afficher. Sert à désactiver les marqueurs visuels. Le module renvoie un constructeur : require('scenario/raceMarkers/noneMarker')(id) donne un objet de la classe C.",
+  "module": "\"Empty\" checkpoint marker: it implements the common race marker interface (init, update, setToCheckpoint, setMode, setVisibility, hide, show, createMarkers, clearMarkers) without displaying anything. Used to disable visual markers. The module returns a constructor: require('scenario/raceMarkers/noneMarker')(id) gives an object of class C.",
   "notes": [
-    "C:init n'enregistre pas l'identifiant : self.id reste nil. Utilisé via scenario_race_marker.createRaceMarker (qui range le marqueur dans idToMarker[marker.id]), cela produit une clé nil et une erreur Lua : probable bug.",
-    "Toutes les méthodes sont vides, sauf hide et show qui appellent setVisibility (vide)."
+    "C:init does not store the identifier: self.id stays nil. Used via scenario_race_marker.createRaceMarker (which stores the marker in idToMarker[marker.id]), this produces a nil key and a Lua error: probable bug.",
+    "All methods are empty, except hide and show which call setVisibility (empty)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Marqueur sans effet visuel, interface identique aux autres marqueurs de course.",
+      "desc": "Marker with no visual effect, same interface as the other race markers.",
       "functions": {
-        "init": {"desc": "Constructeur appelé par le module : ne fait rien (l'id n'est pas mémorisé).", "params": {"id": {"type": "integer", "desc": "Identifiant de marqueur (ignoré)."}}, "internal": true},
-        "update": {"desc": "Appel par image : ne fait rien.", "params": {}, "internal": true},
-        "setToCheckpoint": {"desc": "Ne fait rien.", "params": {"wp": {"type": "table", "desc": "Données de checkpoint (ignorées)."}, "mode": {"type": "string|nil", "desc": "Ignoré."}}},
-        "setMode": {"desc": "Ne fait rien.", "params": {"mode": {"type": "string", "desc": "Ignoré."}}},
-        "setVisibility": {"desc": "Ne fait rien.", "params": {"v": {"type": "boolean", "desc": "Ignoré."}}},
-        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
-        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
-        "createMarkers": {"desc": "Ne crée aucun objet.", "params": {}},
-        "clearMarkers": {"desc": "Ne supprime rien.", "params": {}}
+        "init": {
+          "desc": "Constructor called by the module: does nothing (the id is not stored).",
+          "params": {
+            "id": {
+              "type": "integer",
+              "desc": "Marker identifier (ignored)."
+            }
+          },
+          "internal": true
+        },
+        "update": {
+          "desc": "Per-frame call: does nothing.",
+          "params": {},
+          "internal": true
+        },
+        "setToCheckpoint": {
+          "desc": "Does nothing.",
+          "params": {
+            "wp": {
+              "type": "table",
+              "desc": "Checkpoint data (ignored)."
+            },
+            "mode": {
+              "type": "string|nil",
+              "desc": "Ignored."
+            }
+          }
+        },
+        "setMode": {
+          "desc": "Does nothing.",
+          "params": {
+            "mode": {
+              "type": "string",
+              "desc": "Ignored."
+            }
+          }
+        },
+        "setVisibility": {
+          "desc": "Does nothing.",
+          "params": {
+            "v": {
+              "type": "boolean",
+              "desc": "Ignored."
+            }
+          }
+        },
+        "hide": {
+          "desc": "Calls setVisibility(false).",
+          "params": {}
+        },
+        "show": {
+          "desc": "Calls setVisibility(true).",
+          "params": {}
+        },
+        "createMarkers": {
+          "desc": "Creates no object.",
+          "params": {}
+        },
+        "clearMarkers": {
+          "desc": "Removes nothing.",
+          "params": {}
+        }
       }
     }
   }

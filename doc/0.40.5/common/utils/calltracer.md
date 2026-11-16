@@ -1,45 +1,45 @@
 # `utils_calltracer`
 
-*Fichier : `lua/common/utils/calltracer.lua` · VM : Commun (GE + véhicule) · 97 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/utils/calltracer.lua` · VM: Common (GE + vehicle) · 97 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("utils/calltracer")`
+**Access:** `require("utils/calltracer")`
 
-Outil de profilage/diagnostic : enregistre, grâce à un hook debug.sethook sur les appels de fonctions, qui appelle qui pendant une période, puis exporte le graphe d'appels au format TGF (ouvrable dans yEd). Se charge avec require('utils/calltracer'). Réservé au débogage.
+Profiling/diagnostic tool: using a debug.sethook hook on function calls, records who calls whom during a period, then exports the call graph in TGF format (openable in yEd). Loaded with require('utils/calltracer'). Debugging only.
 
-## Exemple
+## Example
 
 ```lua
 local calltracer = require('utils/calltracer')
 calltracer.reset()
 calltracer.start()
--- code à examiner
+-- code to examine
 calltracer.stop()
 calltracer.save('callgraph.tgf')
 ```
 
-## Remarques
+## Notes
 
-- Les fonctions C et les fonctions sans nom (debug.getinfo().name nil) sont ignorées.
-- Chaque noeud est identifié par nom + source + ligne de définition ; une arête relie l'appelant de l'appelant (s2) à l'appelant immédiat (s1).
-- Le hook remplace tout hook debug existant (debug.sethook / debug.sethook() sans argument pour l'arrêt).
-- save() écrit via la globale writeFile ; le tableau des noeuds n'est pas vidé après sauvegarde, utiliser reset().
+- C functions and unnamed functions (debug.getinfo().name nil) are ignored.
+- Each node is identified by name + source + definition line; an edge links the caller's caller (s2) to the immediate caller (s1).
+- The hook replaces any existing debug hook (debug.sethook / debug.sethook() with no argument to stop).
+- save() writes via the global writeFile; the node table is not cleared after saving, use reset().
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `utils_calltracer.reset()` | Efface tous les noeuds et arêtes enregistrés. | 86 |
-| `utils_calltracer.save(filename)` | Écrit le graphe d'appels enregistré au format TGF (liste de noeuds numérotés, ligne '#', puis les arêtes) dans un fichier. | 61 |
-| `utils_calltracer.start()` | Installe le hook d'appels (debug.sethook(trace, 'c')) : les appels sont enregistrés dès cet instant. | 52 |
-| `utils_calltracer.stop()` | Retire le hook (debug.sethook()). Les noeuds déjà enregistrés sont conservés. | 56 |
+| `utils_calltracer.reset()` | Clears all recorded nodes and edges. | 86 |
+| `utils_calltracer.save(filename)` | Writes the recorded call graph in TGF format (list of numbered nodes, '#' line, then the edges) to a file. | 61 |
+| `utils_calltracer.start()` | Installs the call hook (debug.sethook(trace, 'c')): calls are recorded from that moment. | 52 |
+| `utils_calltracer.stop()` | Removes the hook (debug.sethook()). Nodes already recorded are kept. | 56 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `utils_calltracer.save(filename)`
 
-Écrit le graphe d'appels enregistré au format TGF (liste de noeuds numérotés, ligne '#', puis les arêtes) dans un fichier.
+Writes the recorded call graph in TGF format (list of numbered nodes, '#' line, then the edges) to a file.
 
-- `filename` (*string*) : Fichier de sortie, ex. 'callgraph.tgf'
+- `filename` (*string*) : Output file, e.g. 'callgraph.tgf'
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/utils/calltracer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/utils/calltracer.lua`.*

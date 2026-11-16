@@ -1,75 +1,75 @@
 # `powertrain_dctGearbox`
 
-*Fichier : `lua/vehicle/powertrain/dctGearbox.lua` · VM : Véhicule · 500 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/dctGearbox.lua` · VM: Vehicle · 500 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `dctGearbox` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `dctGearbox` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Composant powertrain `dctGearbox` : boîte à double embrayage (DCT). Elle contient deux embrayages internes (voie 1 et voie 2) qui reçoivent chacun un rapport pré-sélectionné (setGearIndex1 / setGearIndex2). Elle est de catégorie `clutchlike` et `gearbox` : le moteur la prend directement pour enfant (le parent doit être un moteur) et lit sa valeur `torqueDiff`. Les taux d'embrayage viennent de `electrics.values.clutchRatio1` et `clutchRatio2`, pilotés par un contrôleur de boîte DCT. Modes : 'neutral', 'park', ou autre (marche avant/arrière selon les rapports).
+Powertrain component `dctGearbox`: dual-clutch gearbox (DCT). It contains two internal clutches (lane 1 and lane 2) that each receive a preselected gear (setGearIndex1 / setGearIndex2). It is of category `clutchlike` and `gearbox`: the engine takes it directly as a child (the parent must be an engine) and reads its `torqueDiff` value. The clutch ratios come from `electrics.values.clutchRatio1` and `clutchRatio2`, driven by a DCT gearbox controller. Modes: 'neutral', 'park', or other (forward/reverse depending on the gears).
 
-## Exemple
+## Example
 
 ```lua
 local dct = powertrain.getDevice("gearbox")
-dct:setGearIndex1(1)   -- voie 1 sur le 1er rapport
-dct:setGearIndex2(2)   -- voie 2 pré-sélectionnée sur le 2e
--- le contrôleur règle electrics.values.clutchRatio1 / clutchRatio2
+dct:setGearIndex1(1)   -- lane 1 on 1st gear
+dct:setGearIndex2(2)   -- lane 2 preselected on 2nd
+-- the controller sets electrics.values.clutchRatio1 / clutchRatio2
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : name, type, inputName, inputIndex, friction (N·m), dynamicFriction, torqueLossCoef (0..1, lu mais non utilisé dans les calculs de ce fichier), additionalEngineInertia (kg·m², lue par le moteur), electricsClutchRatio1Name ('clutchRatio1'), electricsClutchRatio2Name ('clutchRatio2'), clutchStiffness (1), lockDampRatio1 / lockDampRatio2 (0.15), lockTorque (N·m, sinon 1.25 * couple max moteur + inertie * régime max), lockSpring (N·m/rad, sinon calculé), parkLockTorque (1000), parkLockDampRatio (0.4), parkLockSpring, gearRatios (liste obligatoire, même indexation que manualGearbox), gearWhineCoefs / gearWhineCoefsOutput / gearWhineCoefsInput, gearboxNode_nodes, breakTriggerBeam, et pour les sons : gearWhineOutputEvent, gearWhineInputEvent, forward/reverse Input/Output PitchCoef, gearWhine*Smoothing.
-- Indexation des rapports : identique à manualGearbox. gearRatios[0] est le neutre, valeurs >= 0 = marche avant, valeurs < 0 = marche arrière (la première valeur négative de la liste prend l'indice le plus bas).
-- Champs principaux : inputAV (rad/s, = parent.outputAV1), outputAV1 (rad/s, posé par l'enfant), outputTorque1 (N·m), gearRatio1 / gearRatio2 (rapports des deux voies), gearIndex1 / gearIndex2, clutchAV1 / clutchAV2 (vitesses en sortie de chaque embrayage, = outputAV1 * gearRatioN * lockCoef), clutchRatio1 / clutchRatio2 (0..1), clutchRatio (max des deux), clutchAngle1 / clutchAngle2 (rad), torqueDiff1 / torqueDiff2 (N·m transmis par chaque embrayage), torqueDiff (somme, vue par le moteur comme couple de charge), lockTorque, minGearIndex, maxGearIndex, maxGearRatio, minGearRatio, cumulativeInertia1/2, cumulativeGearRatio (rapport de la voie la plus embrayée), mode, lockCoef.
-- Si le régime d'entrée est inférieur à la moitié du régime de ralenti du moteur (inputAV < idleAV * 0.5), les deux embrayages sont forcés ouverts (anti-calage).
-- Incohérences : le device n'a pas de champs gearIndex ni gearRatio utiles (gearRatio vaut toujours 0), alors que updateSounds les lit : les coefficients de bruit d'engrenage utilisent alors gearWhineCoefs[nil] = 0 et gearRatio >= 0 est toujours vrai (hauteur « avant »). setPartCondition ne gère pas isBroken (pas de onBreak sur ce device).
-- calculateInertia lit device.clutchRatio1/2 (valeurs de la dernière image) pour choisir cumulativeGearRatio ; il n'y a pas de garde contre une inertie parent nulle.
+- Jbeam keys read: name, type, inputName, inputIndex, friction (N·m), dynamicFriction, torqueLossCoef (0..1, read but not used in the calculations of this file), additionalEngineInertia (kg·m², read by the engine), electricsClutchRatio1Name ('clutchRatio1'), electricsClutchRatio2Name ('clutchRatio2'), clutchStiffness (1), lockDampRatio1 / lockDampRatio2 (0.15), lockTorque (N·m, otherwise 1.25 * max engine torque + inertia * max RPM), lockSpring (N·m/rad, otherwise computed), parkLockTorque (1000), parkLockDampRatio (0.4), parkLockSpring, gearRatios (required list, same indexing as manualGearbox), gearWhineCoefs / gearWhineCoefsOutput / gearWhineCoefsInput, gearboxNode_nodes, breakTriggerBeam, and for the sounds: gearWhineOutputEvent, gearWhineInputEvent, forward/reverse Input/Output PitchCoef, gearWhine*Smoothing.
+- Gear indexing: identical to manualGearbox. gearRatios[0] is neutral, values >= 0 = forward, values < 0 = reverse (the first negative value in the list takes the lowest index).
+- Main fields: inputAV (rad/s, = parent.outputAV1), outputAV1 (rad/s, set by the child), outputTorque1 (N·m), gearRatio1 / gearRatio2 (ratios of the two lanes), gearIndex1 / gearIndex2, clutchAV1 / clutchAV2 (speeds at the output of each clutch, = outputAV1 * gearRatioN * lockCoef), clutchRatio1 / clutchRatio2 (0..1), clutchRatio (max of both), clutchAngle1 / clutchAngle2 (rad), torqueDiff1 / torqueDiff2 (N·m transmitted by each clutch), torqueDiff (sum, seen by the engine as load torque), lockTorque, minGearIndex, maxGearIndex, maxGearRatio, minGearRatio, cumulativeInertia1/2, cumulativeGearRatio (ratio of the most engaged lane), mode, lockCoef.
+- If the input speed is below half of the engine idle speed (inputAV < idleAV * 0.5), both clutches are forced open (anti-stall).
+- Inconsistencies: the device has no useful gearIndex or gearRatio fields (gearRatio is always 0), whereas updateSounds reads them: the gear whine coefficients then use gearWhineCoefs[nil] = 0 and gearRatio >= 0 is always true ("forward" pitch). setPartCondition does not handle isBroken (no onBreak on this device).
+- calculateInertia reads device.clutchRatio1/2 (values from the last frame) to choose cumulativeGearRatio; there is no guard against a zero parent inertia.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_dctGearbox.new(jbeamData)` | Construit la boîte DCT : table des rapports (avant/arrière), paramètres des deux embrayages et du verrou de parking, coefficients de bruit d'engrenage, puis pré-sélectionne les rapports 1 et 2. *(interne)* | 351 |
+| `powertrain_dctGearbox.new(jbeamData)` | Builds the DCT gearbox: gear table (forward/reverse), parameters of the two clutches and of the parking lock, gear whine coefficients, then preselects gears 1 and 2. *(internal)* | 351 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_dctGearbox.new(jbeamData)`
 
-Construit la boîte DCT : table des rapports (avant/arrière), paramètres des deux embrayages et du verrou de parking, coefficients de bruit d'engrenage, puis pré-sélectionne les rapports 1 et 2.
+Builds the DCT gearbox: gear table (forward/reverse), parameters of the two clutches and of the parking lock, gear whine coefficients, then preselects gears 1 and 2.
 
-- `jbeamData` (*table*) : Données jbeam du composant (gearRatios obligatoire).
-- **renvoie** : table Le device (classe `device`).
+- `jbeamData` (*table*) : jbeam data of the component (gearRatios required).
+- **returns**: table The device (class `device`).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `deviceCategories` | table<string, boolean> | {clutchlike=true, gearbox=true} : le moteur le reconnaît comme embrayage. |
+| `deviceCategories` | table<string, boolean> | {clutchlike=true, gearbox=true}: the engine recognizes it as a clutch. |
 | `outputPorts` | table<integer, boolean> | {[1]=true}. |
 | `requiredExternalInertiaOutputs` | table<integer, integer> | {1}. |
 
-## Classe `device`
+## Class `device`
 
-Objet renvoyé par new(jbeamData). velocityUpdate/torqueUpdate dépendent du mode (normal, neutral, park).
+Object returned by new(jbeamData). velocityUpdate/torqueUpdate depend on the mode (normal, neutral, park).
 
-Objet `device` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `device` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `device:applyDeformGroupDamage(damageAmount)` | Réduit le coefficient de couple de verrouillage (damageLockTorqueCoef, minimum 0.2) selon les dégâts. | 145 |
-| `device:calculateInertia()` | Calcule les inerties cumulées de chaque voie (bornées à la moitié de l'inertie du moteur), les ressorts et amortissements des deux embrayages, l'angle d'embrayage maximal, le verrou de parking et les rapports cumulés. | 233 |
-| `device:getPartCondition()` | Renvoie l'intégrité 0..1 (selon damageLockTorqueCoef) et la table {damageLockTorqueCoef}. | 162 |
-| `device:initSounds(jbeamData)` | Crée les boucles sonores d'engrenage (entrée et sortie), les lisseurs et les coefficients de hauteur depuis le jbeam, et règle le paramètre FMOD c_gearboxMaxPower. | 281 |
-| `device:reset(jbeamData)` | Réinitialise l'état des deux embrayages, des couples et des coefficients d'usure/dégâts, puis pré-sélectionne les rapports 1 et 2. | 315 |
-| `device:resetSounds()` | Remet à zéro les lisseurs et valeurs de son d'engrenage. | 269 |
-| `device:setGearIndex1(index)` | Pré-sélectionne le rapport de la voie 1 (indice borné à [minGearIndex, maxGearIndex]) et recalcule l'inertie du groupe motopropulseur. | 211 |
-| `device:setGearIndex2(index)` | Pré-sélectionne le rapport de la voie 2 (indice borné) et recalcule l'inertie du groupe motopropulseur. | 220 |
-| `device:setLock(enabled)` | Verrouille (lockCoef = 0) ou déverrouille (1) la transmission. | 229 |
-| `device:setMode(mode)` | Change le mode ('neutral', 'park' ou autre) sans validation, et sélectionne les fonctions de mise à jour correspondantes. 'park' remet parkEngaged à 0. | 206 |
-| `device:setPartCondition(subSystem, odometer, integrity, visual)` | Applique l'usure (couple de verrouillage de 1 à 0.7 entre 30000 km et 500000 km) et les dégâts (intégrité nombre 0..1 ou table {damageLockTorqueCoef}). | 149 |
-| `device:torqueUpdate(dt)` | Appelée à chaque pas physique : calcule les deux couples d'embrayage (ressort sur l'angle d'embrayage + amortissement, bornés par lockTorque), torqueDiff = somme et outputTorque1 = somme des couples * rapports. En neutre : tout à 0. En park : couple de verrouillage de parking. | 111 |
-| `device:updateSounds(dt)` | Met à jour volume et hauteur des boucles sonores d'engrenage (entrée et sortie) d'après vitesses et couples lissés. Appelée à chaque image. | 19 |
-| `device:validate()` | Vérifie que le parent est un moteur (sinon erreur loguée et false). Calcule lockTorque par défaut, et les valeurs attendues (couple, vitesse, puissance) pour normaliser les sons. | 172 |
-| `device:velocityUpdate(dt)` | Appelée à chaque pas physique : inputAV = parent.outputAV1 ; clutchAV1/2 = outputAV1 * gearRatio1/2 * lockCoef. N'écrit pas de vitesse dans le parent : le moteur lit torqueDiff directement. | 105 |
+| `device:applyDeformGroupDamage(damageAmount)` | Reduces the lock torque coefficient (damageLockTorqueCoef, minimum 0.2) according to the damage. | 145 |
+| `device:calculateInertia()` | Computes the cumulative inertias of each lane (capped at half of the engine inertia), the springs and dampings of the two clutches, the maximum clutch angle, the parking lock and the cumulative ratios. | 233 |
+| `device:getPartCondition()` | Returns the integrity 0..1 (according to damageLockTorqueCoef) and the table {damageLockTorqueCoef}. | 162 |
+| `device:initSounds(jbeamData)` | Creates the gear sound loops (input and output), the smoothers and the pitch coefficients from the jbeam, and sets the FMOD parameter c_gearboxMaxPower. | 281 |
+| `device:reset(jbeamData)` | Resets the state of the two clutches, the torques and the wear/damage coefficients, then preselects gears 1 and 2. | 315 |
+| `device:resetSounds()` | Resets the gear sound smoothers and values. | 269 |
+| `device:setGearIndex1(index)` | Preselects the gear of lane 1 (index clamped to [minGearIndex, maxGearIndex]) and recomputes the powertrain inertia. | 211 |
+| `device:setGearIndex2(index)` | Preselects the gear of lane 2 (index clamped) and recomputes the powertrain inertia. | 220 |
+| `device:setLock(enabled)` | Locks (lockCoef = 0) or unlocks (1) the transmission. | 229 |
+| `device:setMode(mode)` | Changes the mode ('neutral', 'park' or other) without validation, and selects the corresponding update functions. 'park' resets parkEngaged to 0. | 206 |
+| `device:setPartCondition(subSystem, odometer, integrity, visual)` | Applies wear (lock torque from 1 to 0.7 between 30000 km and 500000 km) and damage (integrity number 0..1 or table {damageLockTorqueCoef}). | 149 |
+| `device:torqueUpdate(dt)` | Called at each physics step: computes the two clutch torques (spring on the clutch angle + damping, clamped by lockTorque), torqueDiff = sum and outputTorque1 = sum of the torques * ratios. In neutral: everything at 0. In park: parking lock torque. | 111 |
+| `device:updateSounds(dt)` | Updates the volume and pitch of the gear sound loops (input and output) from smoothed speeds and torques. Called every frame. | 19 |
+| `device:validate()` | Checks that the parent is an engine (otherwise logs an error and returns false). Computes the default lockTorque, and the expected values (torque, speed, power) to normalize the sounds. | 172 |
+| `device:velocityUpdate(dt)` | Called at each physics step: inputAV = parent.outputAV1; clutchAV1/2 = outputAV1 * gearRatio1/2 * lockCoef. Does not write a speed into the parent: the engine reads torqueDiff directly. | 105 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/dctGearbox.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/dctGearbox.lua`.*

@@ -1,72 +1,114 @@
 {
   "path": "lua/ge/extensions/editor/rallyEditor/aiCompetitorsTab.lua",
-  "module": "Onglet « AI Competitors Configuration » de l'éditeur de rallye. Il permet de régler les paramètres globaux du modèle de résultats des concurrents IA (26 curseurs regroupés), le temps de référence de la spéciale et les traits d'un concurrent à la fois (Pace = skill, Consistency, Risk), avec un aperçu en direct : parts de chaque résultat en % et courbe de distribution des temps d'arrivée. Boutons Reload / Save : relit ou écrit gameplay/rally/aiCompetitorsConfig.json via aiCompetitorsEditorModel. Le module renvoie une fonction sans argument qui crée l'onglet : require('/lua/ge/extensions/editor/rallyEditor/aiCompetitorsTab')().",
+  "module": "\"AI Competitors Configuration\" tab of the rally editor. It lets you set the global parameters of the AI competitors' outcome model (26 grouped sliders), the stage reference time and the traits of one competitor at a time (Pace = skill, Consistency, Risk), with a live preview: share of each outcome in % and finish time distribution curve. Reload / Save buttons: reads or writes gameplay/rally/aiCompetitorsConfig.json via aiCompetitorsEditorModel. The module returns a function with no arguments that creates the tab: require('/lua/ge/extensions/editor/rallyEditor/aiCompetitorsTab')().",
   "notes": [
-    "Les modifications ne sont écrites sur disque qu'avec le bouton Save ; le temps de référence saisi est enregistré dans ui.default_player_time_sec (minimum 1 s, défaut 100 s).",
-    "Les valeurs chargées sont bornées à la plage de leur curseur (clampParamToSliderRange).",
-    "Bug : drawTraitSliders lit aiCompetitorsTexts.driverPreviewSection.emptycompetitors (minuscules) alors que la clé définie est emptyCompetitors ; si la liste de concurrents était vide, im.Text recevrait nil. Peu probable en pratique car configWithDefaults fournit toujours au moins un concurrent.",
-    "Un seul concurrent est prévisualisé à la fois ; Prev / Next recopient d'abord les curseurs dans le concurrent courant."
+    "Changes are only written to disk with the Save button; the entered reference time is stored in ui.default_player_time_sec (minimum 1 s, default 100 s).",
+    "Loaded values are clamped to their slider's range (clampParamToSliderRange).",
+    "Bug: drawTraitSliders reads aiCompetitorsTexts.driverPreviewSection.emptycompetitors (lowercase) while the defined key is emptyCompetitors; if the competitors list were empty, im.Text would receive nil. Unlikely in practice because configWithDefaults always provides at least one competitor.",
+    "Only one competitor is previewed at a time; Prev / Next first copy the sliders into the current competitor."
   ],
   "classes": {
     "Panel": {
-      "desc": "Onglet de configuration des concurrents IA (windowDescription = « AI Competitors Configuration »). Champs principaux : competitors (liste copiée pour l'édition), ui, selectedCompetitorIndex, generalFloatPtrs (un FloatPtr par paramètre général), referenceTimePtr et traitSkillPtr / traitConsistencyPtr / traitRiskPtr. Appelé par la fenêtre de l'éditeur de rallye (draw).",
+      "desc": "AI competitors configuration tab (windowDescription = \"AI Competitors Configuration\"). Main fields: competitors (list copied for editing), ui, selectedCompetitorIndex, generalFloatPtrs (one FloatPtr per general parameter), referenceTimePtr and traitSkillPtr / traitConsistencyPtr / traitRiskPtr. Called by the rally editor window (draw).",
       "functions": {
         "init": {
-          "desc": "Crée les pointeurs ImGui (paramètres généraux par défaut, temps de référence, traits à 0.5) puis charge le fichier de configuration.",
+          "desc": "Creates the ImGui pointers (default general parameters, reference time, traits at 0.5) then loads the configuration file.",
           "internal": true
         },
         "gatherGeneralTable": {
-          "desc": "Relit les valeurs des curseurs dans une table des paramètres généraux.",
-          "returns": [{"type": "table<string, number>", "desc": "Paramètres généraux courants."}]
+          "desc": "Reads the slider values back into a general parameters table.",
+          "returns": [
+            {
+              "type": "table<string, number>",
+              "desc": "Current general parameters."
+            }
+          ]
         },
         "applyGeneralTable": {
-          "desc": "Applique une table de paramètres généraux aux curseurs, chaque valeur étant bornée à sa plage.",
-          "params": {"general": {"type": "table<string, number>", "desc": "Paramètres généraux."}}
+          "desc": "Applies a general parameters table to the sliders, each value being clamped to its range.",
+          "params": {
+            "general": {
+              "type": "table<string, number>",
+              "desc": "General parameters."
+            }
+          }
         },
         "syncTraitsIntoSelectedCompetitor": {
-          "desc": "Copie les trois curseurs de traits dans le concurrent sélectionné (sans effet si aucun concurrent ou index invalide)."
+          "desc": "Copies the three trait sliders into the selected competitor (no effect if no competitor or invalid index)."
         },
         "applySelectedCompetitorToTraitSliders": {
-          "desc": "Met les curseurs de traits aux valeurs du concurrent sélectionné (index borné à la liste ; valeur par défaut ui.default_slider_value ou 0.5 si le trait est absent)."
+          "desc": "Sets the trait sliders to the selected competitor's values (index clamped to the list; default value ui.default_slider_value or 0.5 if the trait is missing)."
         },
         "competitorDisplayName": {
-          "desc": "Renvoie le nom affichable d'un concurrent, ou « ? » s'il est absent ou vide.",
-          "params": {"competitor": {"type": "table|nil", "desc": "Concurrent {name, skill, consistency, risk}."}},
-          "returns": [{"type": "string", "desc": "Nom ou « ? »."}]
+          "desc": "Returns a competitor's displayable name, or \"?\" if it is missing or empty.",
+          "params": {
+            "competitor": {
+              "type": "table|nil",
+              "desc": "Competitor {name, skill, consistency, risk}."
+            }
+          },
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Name or \"?\"."
+            }
+          ]
         },
         "loadFromDisk": {
-          "desc": "Relit la configuration (loadRawConfig puis configWithDefaults), met à jour curseurs, concurrents, ui et temps de référence, et resélectionne le premier concurrent."
+          "desc": "Re-reads the configuration (loadRawConfig then configWithDefaults), updates sliders, competitors, ui and reference time, and reselects the first competitor."
         },
         "parseReferenceTimeSeconds": {
-          "desc": "Valide le temps de référence saisi : remplace une valeur invalide (NaN) par la valeur par défaut et impose un minimum de 1 s.",
-          "returns": [{"type": "number", "desc": "Temps de référence en secondes."}]
+          "desc": "Validates the entered reference time: replaces an invalid value (NaN) with the default and enforces a minimum of 1 s.",
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Reference time in seconds."
+            }
+          ]
         },
         "buildVisualization": {
-          "desc": "Synchronise les traits puis calcule les données d'aperçu (aiCompetitorsEditorPreview.computeVisualization) avec les traits ramenés à [0,1] selon slider_min/slider_max.",
-          "returns": [{"type": "table", "desc": "{weights, density, weightedComponents, yMax, timeLo, timeHi}."}]
+          "desc": "Syncs the traits then computes the preview data (aiCompetitorsEditorPreview.computeVisualization) with the traits brought back to [0,1] according to slider_min/slider_max.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "{weights, density, weightedComponents, yMax, timeLo, timeHi}."
+            }
+          ]
         },
         "drawGeneralParameterGroups": {
-          "desc": "Dessine les groupes de curseurs des paramètres généraux avec titres, descriptions, infobulles et valeur formatée.",
+          "desc": "Draws the general parameter slider groups with titles, descriptions, tooltips and formatted value.",
           "internal": true
         },
         "drawTraitSliders": {
-          "desc": "Dessine la navigation Prev / Next entre concurrents et les curseurs Pace, Consistency et Risk.",
+          "desc": "Draws the Prev / Next navigation between competitors and the Pace, Consistency and Risk sliders.",
           "internal": true
         },
         "drawReferenceAndDriversColumn": {
-          "desc": "Dessine la colonne de droite : champ du temps de référence puis les curseurs de traits.",
+          "desc": "Draws the right column: reference time field then the trait sliders.",
           "internal": true
         },
         "trySaveToDisk": {
-          "desc": "Synchronise les traits, met à jour ui.default_player_time_sec et écrit le fichier via saveConfig ; journalise « Wrote ... » (I) ou « Failed to save ... » (E)."
+          "desc": "Syncs the traits, updates ui.default_player_time_sec and writes the file via saveConfig; logs \"Wrote ...\" (I) or \"Failed to save ...\" (E)."
         },
         "draw": {
-          "desc": "Appelé à chaque frame par la fenêtre de l'éditeur de rallye : barre d'outils (Reload / Save), parts de résultats, graphique, puis deux colonnes (paramètres généraux, référence et concurrents). Les arguments sont ignorés.",
+          "desc": "Called every frame by the rally editor window: toolbar (Reload / Save), outcome shares, chart, then two columns (general parameters, reference and competitors). Arguments are ignored.",
           "params": {
-            "_mouseInfo": {"type": "table|nil", "desc": "Non utilisé."},
-            "_dtReal": {"type": "number|nil", "desc": "Non utilisé."},
-            "_dtSim": {"type": "number|nil", "desc": "Non utilisé."},
-            "_dtRaw": {"type": "number|nil", "desc": "Non utilisé."}
+            "_mouseInfo": {
+              "type": "table|nil",
+              "desc": "Not used."
+            },
+            "_dtReal": {
+              "type": "number|nil",
+              "desc": "Not used."
+            },
+            "_dtSim": {
+              "type": "number|nil",
+              "desc": "Not used."
+            },
+            "_dtRaw": {
+              "type": "number|nil",
+              "desc": "Not used."
+            }
           },
           "internal": true
         }

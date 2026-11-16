@@ -1,58 +1,377 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallySuperCountdown.lua",
-  "module": "Nœud flowgraph « Rally Super Countdown » (icône timer, tag rally, couleur rallyLoop). Système complet de ligne de départ de la boucle rally : horloge, recherche de la position de départ, proximité, validation du placement (staging), compte à rebours, report (reschedule) et détection de faux départ. Remplace Rally Clock, Rally Position Getter et Stopped Near Plane. Dépend du gestionnaire de boucle rally : heure d'époque (getEpochTime), heure planifiée de l'évènement eventName (ex. « SS_start_line »). Déroulé : waiting_for_staging_check, puis à stagingCheckTime secondes (10 par défaut) avant le départ, si le véhicule est placé (devant le plan à moins de distance m et à l'arrêt) → countdown_armed (véhicule gelé si les faux départs sont désactivés) ; sinon report au créneau suivant (rm:rescheduleNextSSStart) jusqu'à maxReschedules (3). Ensuite countdown_running (annonces vocales/visuelles), launched (0,5 s) puis finished. Entrées : flow, reset (impulsion), pathData, spName, eventName, vehId, distance, stagingCheckTime, maxReschedules. Sorties : flow, finished, ongoing, waiting, rescheduled, falseStart, maxReschedulesReached (impulsions pour finished/rescheduled/falseStart/maxReschedulesReached).",
-  "notes": ["Avertissements à 60, 30, 15 et 10 s (pacenotes warningSeconds<N>) ; sur le planning d'origine, 60 s joue commsCheck, 30 s beltsCheck et 10 s precountdown.", "Faux départ (signedDistance < 0) : pacenote 'falseStart', pénalité rm:recordFalseStartPenalty(), dégel, la spéciale démarre quand même.", "Le véhicule qui quitte la zone de lancement pendant le compte à rebours annule et reporte le départ.", "Saut du compte à rebours (onGameplayInteract) possible quand le véhicule est placé : place l'horloge de la boucle à planifié - 6 s (COUNTDOWN_SKIP_LEAD_SECONDS) avec debounce de 2 s et coupe les audios annexes. Disponibilité signalée via rm:setCountdownCanSkip.", "Seuils : arrêt si vitesse < 0,08 m/s (hystérésis +0,6 km/h) ; saut possible sous 1 km/h (hystérésis +1 km/h, distance +0,5 m).", "Options data : useImgui, useMessages, bigFinishMsg, test (mode test sans gestionnaire de boucle), drawDebug."],
+  "module": "Flowgraph node \"Rally Super Countdown\" (timer icon, tag rally, rallyLoop color). Complete start line system of the rally loop: clock, start position lookup, proximity, placement validation (staging), countdown, reschedule and false start detection. Replaces Rally Clock, Rally Position Getter and Stopped Near Plane. Depends on the rally loop manager: epoch time (getEpochTime), scheduled time of the event eventName (e.g. \"SS_start_line\"). Sequence: waiting_for_staging_check, then at stagingCheckTime seconds (10 by default) before the start, if the vehicle is placed (in front of the plane within distance m and stopped) → countdown_armed (vehicle frozen if false starts are disabled); otherwise reschedule to the next slot (rm:rescheduleNextSSStart) up to maxReschedules (3). Then countdown_running (voice/visual announcements), launched (0.5 s) then finished. Inputs: flow, reset (pulse), pathData, spName, eventName, vehId, distance, stagingCheckTime, maxReschedules. Outputs: flow, finished, ongoing, waiting, rescheduled, falseStart, maxReschedulesReached (pulses for finished/rescheduled/falseStart/maxReschedulesReached).",
+  "notes": [
+    "Warnings at 60, 30, 15 and 10 s (pacenotes warningSeconds<N>); on the original schedule, 60 s plays commsCheck, 30 s beltsCheck and 10 s precountdown.",
+    "False start (signedDistance < 0): pacenote 'falseStart', penalty rm:recordFalseStartPenalty(), unfreeze, the stage starts anyway.",
+    "A vehicle that leaves the launch zone during the countdown cancels and reschedules the start.",
+    "Countdown skip (onGameplayInteract) possible when the vehicle is placed: sets the loop clock to scheduled - 6 s (COUNTDOWN_SKIP_LEAD_SECONDS) with a 2 s debounce and cuts the side audio. Availability signaled via rm:setCountdownCanSkip.",
+    "Thresholds: stopped if speed < 0.08 m/s (hysteresis +0.6 km/h); skip possible below 1 km/h (hysteresis +1 km/h, distance +0.5 m).",
+    "Data options: useImgui, useMessages, bigFinishMsg, test (test mode without loop manager), drawDebug."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise états, caches, drapeaux audio et options data.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
-        "_executionStarted": {"desc": "Réinitialise l'état du nœud au démarrage du graphe.", "internal": true},
-        "_executionStopped": {"desc": "Arrête le chrono et dégèle le véhicule.", "internal": true},
-        "reset": {"desc": "Arrête le chrono, dégèle le véhicule et met les sorties à false.", "internal": true},
-        "stopTimer": {"desc": "Réinitialise états, planification, compteurs, avertissements, drapeaux et audio.", "internal": true},
-        "freezeVehicle": {"desc": "Gèle le véhicule via StagedCountdownUtils.freezeVehicle (une seule fois).", "internal": true},
-        "unfreezeVehicle": {"desc": "Dégèle le véhicule s'il a été gelé par ce nœud.", "internal": true},
-        "updateVehicleData": {"desc": "Met à jour position avant et vitesse du véhicule suivi.", "returns": [{"type": "boolean", "desc": "Vrai si valide."}], "internal": true},
-        "updateStartPosition": {"desc": "Cherche la position de départ nommée dans pathData (avec cache) et mémorise la raison en cas d'échec.", "returns": [{"type": "boolean", "desc": "Vrai si valide."}], "internal": true},
-        "updateProximityState": {"desc": "Calcule distance signée, arrêt (avec hystérésis), proximité et état « staged ».", "internal": true},
-        "isStopped": {"desc": "État « à l'arrêt » mis en cache.", "returns": [{"type": "boolean", "desc": "À l'arrêt."}]},
-        "isNearPlane": {"desc": "État de proximité mis en cache.", "returns": [{"type": "boolean", "desc": "Près du plan."}]},
-        "isStaged": {"desc": "Vrai si près du plan et à l'arrêt.", "returns": [{"type": "boolean", "desc": "Placé."}]},
-        "isInLaunchZone": {"desc": "Vrai si près du plan (arrêt non requis).", "returns": [{"type": "boolean", "desc": "Dans la zone."}]},
-        "hasCrossedStartLine": {"desc": "Vrai si la distance signée est négative (ligne franchie).", "returns": [{"type": "boolean", "desc": "Ligne franchie."}]},
-        "getRallyLoopManager": {"desc": "Renvoie le gestionnaire de boucle rally (nil en mode test ou extension non chargée).", "returns": [{"type": "table|nil", "desc": "Gestionnaire."}]},
-        "getCurrentEpochTime": {"desc": "Heure d'époque rally courante (mode test : horloge de test).", "returns": [{"type": "number|nil", "desc": "Secondes."}]},
-        "getScheduledEventTime": {"desc": "Heure planifiée de l'évènement eventName (mise en cache par évènement et mission).", "returns": [{"type": "number|nil", "desc": "Secondes d'époque."}]},
-        "requestReschedule": {"desc": "Demande le report du départ au prochain créneau ; met à jour rescheduleCount et les avertissements.", "returns": [{"type": "boolean", "desc": "Vrai si reporté ; false si la limite maxReschedules est atteinte (drapeau maxReschedulesReached)."}]},
-        "shouldPlayVoiceCountdown": {"desc": "Réglage de compte à rebours vocal.", "returns": [{"type": "boolean|nil", "desc": "Voix."}]},
-        "shouldShowVisualCountdown": {"desc": "Réglage d'affichage visuel.", "returns": [{"type": "boolean|nil", "desc": "Affichage."}]},
-        "enableRallyManagerPacenoteProcessing": {"desc": "Réactive le traitement des pacenotes du rally manager.", "internal": true},
-        "enqueueSystemPacenote": {"desc": "Met en file une pacenote système aléatoire.", "params": {"pacenote_name": {"type": "string", "desc": "Nom de la pacenote."}, "audioLenOffset": {"type": "number|nil", "desc": "Décalage de durée audio."}}},
-        "enqueuePauseSecs": {"desc": "Met en file une pause audio.", "params": {"secs": {"type": "number", "desc": "Durée en s."}}},
-        "randomPauseSecs": {"desc": "Pause audio de durée entière aléatoire entre min et max.", "params": {"min": {"type": "integer", "desc": "Minimum (s)."}, "max": {"type": "integer", "desc": "Maximum (s)."}}},
-        "show": {"desc": "Affiche un message via le canal Message si useMessages est actif (le flash message est commenté).", "params": {"msg": {"type": "string", "desc": "Texte."}, "big": {"type": "boolean", "desc": "Grand format."}, "duration": {"type": "number|nil", "desc": "Durée en s."}}},
-        "shouldStartTimer": {"desc": "Vrai si flow est actif, l'état est waiting_for_staging_check et aucun départ n'est encore planifié.", "returns": [{"type": "boolean", "desc": "Démarrer."}]},
-        "configureCountdownSettings": {"desc": "Règle durée (6 s/5 annonces avec voix, 3 s/3 sans), voix, visuel et gel selon les réglages rallyAudioPacenotes/rallyVisualPacenotes et les faux départs.", "internal": true},
-        "startTimer": {"desc": "Lit l'heure planifiée et calcule targetStartTime et stagingCheckTime.", "internal": true},
-        "updateTimesAfterReschedule": {"desc": "Recalcule targetStartTime et stagingCheckTime après un report.", "internal": true},
-        "checkStagingAt10s": {"desc": "Contrôle de placement : armé si placé, sinon report ou fin si plus de reports.", "returns": [{"type": "boolean", "desc": "Vrai si placé."}], "internal": true},
-        "monitorCountdown": {"desc": "Surveille faux départ et sortie de zone pendant le compte à rebours.", "internal": true},
-        "finishCountdownImmediately": {"desc": "Termine immédiatement (skipCountdowns) : pacenotes, dégel, état finished, flow = true.", "internal": true},
-        "isOriginalSchedule": {"desc": "Vrai si aucun report n'a eu lieu.", "returns": [{"type": "boolean", "desc": "Planning d'origine."}]},
-        "isFlowActive": {"desc": "Vrai si l'état est finished ou false_start.", "returns": [{"type": "boolean", "desc": "Flux passé."}]},
-        "isOngoing": {"desc": "Vrai si le compte à rebours tourne.", "returns": [{"type": "boolean", "desc": "En cours."}]},
-        "isWaiting": {"desc": "Vrai dans les états d'attente (staging check, armé, waiting_for_staged).", "returns": [{"type": "boolean", "desc": "En attente."}]},
-        "processWarnings": {"desc": "Déclenche les avertissements 60/30/15/10 s (message et pacenotes).", "internal": true},
-        "updateCountdownStateMachine": {"desc": "Machine à états principale du départ.", "internal": true},
-        "getWallClockTime": {"desc": "Heure murale simulée (environment start + époque, modulo 86400).", "returns": [{"type": "number|nil", "desc": "Secondes."}]},
-        "shouldDrawDebug": {"desc": "Vrai si data.drawDebug ou le drapeau stopZones de la boucle est actif.", "returns": [{"type": "boolean", "desc": "Dessiner."}]},
-        "drawDebugVisualization": {"desc": "Dessine le plan de départ et les repères de debug.", "internal": true},
-        "drawMiddle": {"desc": "Dessine l'état du compte à rebours dans le nœud.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud."}, "style": {"type": "table", "desc": "Style."}}, "internal": true},
-        "canSkipCountdown": {"desc": "Indique si le saut du compte à rebours est possible (attente, véhicule placé avec hystérésis, pas de debounce).", "returns": [{"type": "boolean", "desc": "Saut possible."}]},
-        "skipToCountdown": {"desc": "Avance l'horloge de la boucle jusqu'à 6 s avant le départ.", "internal": true},
-        "onGameplayInteract": {"desc": "Hook d'interaction joueur : demande un saut du compte à rebours si possible.", "internal": true},
-        "work": {"desc": "Chaque frame : position, véhicule, proximité, démarrage, machine à états, saut, mise à jour UI (hooks de proximité/compte à rebours) et sorties.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+        "init": {
+          "desc": "Initializes states, caches, audio flags and data options.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager."
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Resets the node state when the graph starts.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Stops the timer and unfreezes the vehicle.",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Stops the timer, unfreezes the vehicle and sets the outputs to false.",
+          "internal": true
+        },
+        "stopTimer": {
+          "desc": "Resets states, scheduling, counters, warnings, flags and audio.",
+          "internal": true
+        },
+        "freezeVehicle": {
+          "desc": "Freezes the vehicle via StagedCountdownUtils.freezeVehicle (only once).",
+          "internal": true
+        },
+        "unfreezeVehicle": {
+          "desc": "Unfreezes the vehicle if it was frozen by this node.",
+          "internal": true
+        },
+        "updateVehicleData": {
+          "desc": "Updates the front position and speed of the tracked vehicle.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "True if valid."
+            }
+          ],
+          "internal": true
+        },
+        "updateStartPosition": {
+          "desc": "Looks for the named start position in pathData (with cache) and stores the reason on failure.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "True if valid."
+            }
+          ],
+          "internal": true
+        },
+        "updateProximityState": {
+          "desc": "Computes signed distance, stop (with hysteresis), proximity and \"staged\" state.",
+          "internal": true
+        },
+        "isStopped": {
+          "desc": "Cached \"stopped\" state.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Stopped."
+            }
+          ]
+        },
+        "isNearPlane": {
+          "desc": "Cached proximity state.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Near the plane."
+            }
+          ]
+        },
+        "isStaged": {
+          "desc": "True if near the plane and stopped.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Staged."
+            }
+          ]
+        },
+        "isInLaunchZone": {
+          "desc": "True if near the plane (stop not required).",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "In the zone."
+            }
+          ]
+        },
+        "hasCrossedStartLine": {
+          "desc": "True if the signed distance is negative (line crossed).",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Line crossed."
+            }
+          ]
+        },
+        "getRallyLoopManager": {
+          "desc": "Returns the rally loop manager (nil in test mode or if the extension is not loaded).",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Manager."
+            }
+          ]
+        },
+        "getCurrentEpochTime": {
+          "desc": "Current rally epoch time (test mode: test clock).",
+          "returns": [
+            {
+              "type": "number|nil",
+              "desc": "Seconds."
+            }
+          ]
+        },
+        "getScheduledEventTime": {
+          "desc": "Scheduled time of the event eventName (cached per event and mission).",
+          "returns": [
+            {
+              "type": "number|nil",
+              "desc": "Epoch seconds."
+            }
+          ]
+        },
+        "requestReschedule": {
+          "desc": "Requests postponing the start to the next slot; updates rescheduleCount and the warnings.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "True if postponed; false if the maxReschedules limit is reached (maxReschedulesReached flag)."
+            }
+          ]
+        },
+        "shouldPlayVoiceCountdown": {
+          "desc": "Voice countdown setting.",
+          "returns": [
+            {
+              "type": "boolean|nil",
+              "desc": "Voice."
+            }
+          ]
+        },
+        "shouldShowVisualCountdown": {
+          "desc": "Visual display setting.",
+          "returns": [
+            {
+              "type": "boolean|nil",
+              "desc": "Display."
+            }
+          ]
+        },
+        "enableRallyManagerPacenoteProcessing": {
+          "desc": "Re-enables the pacenote processing of the rally manager.",
+          "internal": true
+        },
+        "enqueueSystemPacenote": {
+          "desc": "Queues a random system pacenote.",
+          "params": {
+            "pacenote_name": {
+              "type": "string",
+              "desc": "Pacenote name."
+            },
+            "audioLenOffset": {
+              "type": "number|nil",
+              "desc": "Audio duration offset."
+            }
+          }
+        },
+        "enqueuePauseSecs": {
+          "desc": "Queues an audio pause.",
+          "params": {
+            "secs": {
+              "type": "number",
+              "desc": "Duration in s."
+            }
+          }
+        },
+        "randomPauseSecs": {
+          "desc": "Audio pause of random integer duration between min and max.",
+          "params": {
+            "min": {
+              "type": "integer",
+              "desc": "Minimum (s)."
+            },
+            "max": {
+              "type": "integer",
+              "desc": "Maximum (s)."
+            }
+          }
+        },
+        "show": {
+          "desc": "Displays a message via the Message channel if useMessages is active (the flash message is commented out).",
+          "params": {
+            "msg": {
+              "type": "string",
+              "desc": "Text."
+            },
+            "big": {
+              "type": "boolean",
+              "desc": "Large format."
+            },
+            "duration": {
+              "type": "number|nil",
+              "desc": "Duration in s."
+            }
+          }
+        },
+        "shouldStartTimer": {
+          "desc": "True if flow is active, the state is waiting_for_staging_check and no start is scheduled yet.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Start."
+            }
+          ]
+        },
+        "configureCountdownSettings": {
+          "desc": "Sets duration (6 s/5 announcements with voice, 3 s/3 without), voice, visual and freeze according to the rallyAudioPacenotes/rallyVisualPacenotes settings and false starts.",
+          "internal": true
+        },
+        "startTimer": {
+          "desc": "Reads the scheduled time and computes targetStartTime and stagingCheckTime.",
+          "internal": true
+        },
+        "updateTimesAfterReschedule": {
+          "desc": "Recomputes targetStartTime and stagingCheckTime after a reschedule.",
+          "internal": true
+        },
+        "checkStagingAt10s": {
+          "desc": "Placement check: armed if placed, otherwise reschedule or end if no reschedules remain.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "True if placed."
+            }
+          ],
+          "internal": true
+        },
+        "monitorCountdown": {
+          "desc": "Monitors false start and leaving the zone during the countdown.",
+          "internal": true
+        },
+        "finishCountdownImmediately": {
+          "desc": "Ends immediately (skipCountdowns): pacenotes, unfreeze, state finished, flow = true.",
+          "internal": true
+        },
+        "isOriginalSchedule": {
+          "desc": "True if no reschedule has taken place.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Original schedule."
+            }
+          ]
+        },
+        "isFlowActive": {
+          "desc": "True if the state is finished or false_start.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Flow passed."
+            }
+          ]
+        },
+        "isOngoing": {
+          "desc": "True if the countdown is running.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "In progress."
+            }
+          ]
+        },
+        "isWaiting": {
+          "desc": "True in the waiting states (staging check, armed, waiting_for_staged).",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Waiting."
+            }
+          ]
+        },
+        "processWarnings": {
+          "desc": "Triggers the 60/30/15/10 s warnings (message and pacenotes).",
+          "internal": true
+        },
+        "updateCountdownStateMachine": {
+          "desc": "Main start state machine.",
+          "internal": true
+        },
+        "getWallClockTime": {
+          "desc": "Simulated wall clock time (environment start + epoch, modulo 86400).",
+          "returns": [
+            {
+              "type": "number|nil",
+              "desc": "Seconds."
+            }
+          ]
+        },
+        "shouldDrawDebug": {
+          "desc": "True if data.drawDebug or the loop's stopZones flag is active.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Draw."
+            }
+          ]
+        },
+        "drawDebugVisualization": {
+          "desc": "Draws the start plane and the debug markers.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Draws the countdown state in the node.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Node constructor."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style."
+            }
+          },
+          "internal": true
+        },
+        "canSkipCountdown": {
+          "desc": "Indicates whether skipping the countdown is possible (waiting, vehicle placed with hysteresis, no debounce).",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Skip possible."
+            }
+          ]
+        },
+        "skipToCountdown": {
+          "desc": "Advances the loop clock to 6 s before the start.",
+          "internal": true
+        },
+        "onGameplayInteract": {
+          "desc": "Player interaction hook: requests a countdown skip if possible.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Every frame: position, vehicle, proximity, start, state machine, skip, UI update (proximity/countdown hooks) and outputs.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph engine arguments (unused)."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

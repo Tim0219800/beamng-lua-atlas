@@ -1,33 +1,33 @@
 # `editor_roadRiverCacheHandler`
 
-*Fichier : `lua/ge/extensions/editor/roadRiverCacheHandler.lua` · VM : Game Engine (GE) · 26 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadRiverCacheHandler.lua` · VM: Game Engine (GE) · 26 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadRiverCacheHandler` : `extensions.load("editor_roadRiverCacheHandler")`, puis la globale `editor_roadRiverCacheHandler`
+**Access:** extension `editor_roadRiverCacheHandler`: `extensions.load("editor_roadRiverCacheHandler")`, then the global `editor_roadRiverCacheHandler`
 
-Petit gestionnaire de l'éditeur qui maintient le cache des sommets des DecalRoad : il l'initialise pour tous les DecalRoad du niveau au démarrage de l'éditeur, et le met à jour quand un prefab est « explosé » (déballé) dans la scène. Aucune fonction n'est destinée à être appelée par un moddeur.
+Small editor manager that maintains the DecalRoad vertex cache: it initializes it for all the level's DecalRoads when the editor starts, and updates it when a prefab is "exploded" (unpacked) in the scene. No function is meant to be called by a modder.
 
-## Remarques
+## Notes
 
-- Appelle editor.initializeLevelRoadsVertices() et editor.updateRoadVertices(object), fonctions fournies par l'éditeur (C++/Lua).
+- Calls editor.initializeLevelRoadsVertices() and editor.updateRoadVertices(object), functions provided by the editor (C++/Lua).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadRiverCacheHandler.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : initialise les sommets de toutes les routes du niveau (editor.initializeLevelRoadsVertices). *(interne)* *(hook)* | 18 |
-| `editor_roadRiverCacheHandler.onEditorPrefabExploded(groups)` | Hook appelé quand un ou plusieurs prefabs sont explosés dans l'éditeur. Pour chaque objet de chaque groupe, si c'est un DecalRoad, recalcule ses sommets avec editor.updateRoadVertices. *(interne)* *(hook)* | 7 |
+| `editor_roadRiverCacheHandler.onEditorInitialized()` | Hook called when the editor initializes: initializes the vertices of all the level's roads (editor.initializeLevelRoadsVertices). *(internal)* *(hook)* | 18 |
+| `editor_roadRiverCacheHandler.onEditorPrefabExploded(groups)` | Hook called when one or more prefabs are exploded in the editor. For each object of each group, if it is a DecalRoad, recomputes its vertices with editor.updateRoadVertices. *(internal)* *(hook)* | 7 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadRiverCacheHandler.onEditorPrefabExploded(groups)`
 
-Hook appelé quand un ou plusieurs prefabs sont explosés dans l'éditeur. Pour chaque objet de chaque groupe, si c'est un DecalRoad, recalcule ses sommets avec editor.updateRoadVertices.
+Hook called when one or more prefabs are exploded in the editor. For each object of each group, if it is a DecalRoad, recomputes its vertices with editor.updateRoadVertices.
 
-- `groups` (*table*) : Liste de groupes (SimGroup) issus du prefab ; chaque groupe expose getObjects() (déduit du code).
+- `groups` (*table*) : List of groups (SimGroup) coming from the prefab; each group exposes getObjects() (inferred from code).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadRiverCacheHandler.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadRiverCacheHandler.lua`.*

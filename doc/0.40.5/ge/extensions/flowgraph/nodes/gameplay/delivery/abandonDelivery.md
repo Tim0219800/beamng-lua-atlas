@@ -1,24 +1,24 @@
 # `flowgraph_nodes_gameplay_delivery_abandonDelivery`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/abandonDelivery.lua` · VM : Game Engine (GE) · 67 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/abandonDelivery.lua` · VM: Game Engine (GE) · 67 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/delivery/abandonDelivery")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/delivery/abandonDelivery")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Abandon Delivery » (catégorie once_instant, tags delivery/mission). Abandonne la livraison en cours et démonte le système (véhicules, éléments d'interface, état) via gameplay_freeformDelivery_freeformDelivery.teardown. Pins d'entrée : flow, reset (caché), keepVehicles (bool : garde les véhicules en les sortant des prefabs). Sorties : flow, success.
+Flowgraph node "Abandon Delivery" (category once_instant, tags delivery/mission). Abandons the current delivery and tears down the system (vehicles, UI elements, state) via gameplay_freeformDelivery_freeformDelivery.teardown. Input pins: flow, reset (hidden), keepVehicles (bool: keeps the vehicles by taking them out of the prefabs). Outputs: flow, success.
 
-**Dépendances (chargées avant) :** `gameplay_freeformDelivery_freeformDelivery`
+**Dependencies (loaded first):** `gameplay_freeformDelivery_freeformDelivery`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelle reset. | 31 |
-| `C:init()` | Met flow et success à faux. | 26 |
-| `C:onNodeReset()` | Appelle reset. | 35 |
-| `C:reset()` | Remet flow et success à faux. | 39 |
-| `C:work()` | Si flow est actif : appelle teardown(keepVehicles) et signale le succès ; journalise une erreur si le système de livraison est absent. | 46 |
+| `C:_executionStopped()` | Calls reset. | 31 |
+| `C:init()` | Sets flow and success to false. | 26 |
+| `C:onNodeReset()` | Calls reset. | 35 |
+| `C:reset()` | Resets flow and success to false. | 39 |
+| `C:work()` | If flow is active: calls teardown(keepVehicles) and signals success; logs an error if the delivery system is absent. | 46 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/abandonDelivery.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/abandonDelivery.lua`.*

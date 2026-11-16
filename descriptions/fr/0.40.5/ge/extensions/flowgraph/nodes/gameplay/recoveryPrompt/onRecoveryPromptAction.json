@@ -1,0 +1,57 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/onRecoveryPromptAction.lua",
+  "module": "Nœud flowgraph « On Recovery Prompt Action » (catégorie logic). Laisse passer le flux quand un bouton du menu de récupération (recovery prompt) a été pressé. Pins : entrée flow ; sorties flow, flipMission, recoverMission, submitMission, restartMission (chacune vraie une fois quand le bouton correspondant est pressé). Les pins de sortie flow personnalisés sont autorisés (allowCustomOutPins) et sauvegardés. Reçoit l'événement via le hook onRecoveryPromptButtonPressed.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_afterTrigger": {
+          "desc": "Vide self.flags après le déclenchement du nœud.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Crée la table self.flags vide au démarrage de l'exécution.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui).",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+            },
+            "style": {
+              "type": "table",
+              "desc": "style de dessin du nœud"
+            }
+          }
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true
+        },
+        "onRecoveryPromptButtonPressed": {
+          "desc": "Hook appelé quand un bouton du recovery prompt est pressé ; mémorise l'identifiant dans self.flags pour le prochain work.",
+          "internal": false,
+          "params": {
+            "id": {
+              "type": "any",
+              "desc": "identifiant du bouton pressé (flipMission, recoverMission, submitMission, restartMission ou personnalisé)"
+            }
+          }
+        },
+        "work": {
+          "desc": "Remet toutes les sorties à false, recopie l'entrée flow sur la sortie flow, puis active les sorties dont l'identifiant de bouton figure dans self.flags, et vide les flags.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

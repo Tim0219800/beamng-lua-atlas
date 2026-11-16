@@ -2,50 +2,50 @@
 -- tim19Atlas stub generated from lua/ge/extensions/util/screenshotCreator/lightingSetup.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Prépare l'éclairage de studio pour les vignettes de véhicules et le remet en état ensuite. Il retrouve dans la scène (scenetree) les objets marqués par le champ dynamique thumbnailRole : des SpotLight (rôles key, fill, rim, top, groundFill, horizonFill) et des TSStatic « lightplane » servant de cartes de réflexion (horizonCard, shoulderCard, topCard, cameraCard). adjust() les place autour du véhicule en fonction de la caméra et de la boîte englobante, règle leur intensité en lux, applique une correction d'exposition, ajuste le SSAO, affiche ou masque le marquage de parking (champ thumbnailLayer = parkingMarkup) et cache les occupants du véhicule. restore() annule tout (transformations, champs de lumière, visibilité).
---- Accès : extension `util_screenshotCreator_lightingSetup` : `extensions.load("util_screenshotCreator_lightingSetup")`, puis la globale `util_screenshotCreator_lightingSetup`
+--- Sets up the studio lighting for vehicle thumbnails and restores it afterwards. It finds in the scene (scenetree) the objects marked by the dynamic field thumbnailRole: SpotLights (roles key, fill, rim, top, groundFill, horizonFill) and "lightplane" TSStatics serving as reflection cards (horizonCard, shoulderCard, topCard, cameraCard). adjust() places them around the vehicle based on the camera and the bounding box, sets their intensity in lux, applies an exposure correction, adjusts the SSAO, shows or hides the parking markup (field thumbnailLayer = parkingMarkup) and hides the vehicle's occupants. restore() undoes everything (transforms, light fields, visibility).
+--- Access: extension `util_screenshotCreator_lightingSetup`: `extensions.load("util_screenshotCreator_lightingSetup")`, then the global `util_screenshotCreator_lightingSetup`
 ---@class util_screenshotCreator_lightingSetup
----@field dependencies string[] Extensions chargées avant : util_screenshotCreator_settings et util_screenshotCreator_vehicleSetup.
----@field onClientEndMission function Alias de M.restore : restaure l'éclairage à la fin du niveau.
----@field onExit function Alias de M.restore : restaure l'éclairage à la fermeture du jeu.
----@field onExtensionUnloaded function Alias de M.restore : restaure l'éclairage au déchargement de l'extension.
+---@field dependencies string[] Extensions loaded before: util_screenshotCreator_settings and util_screenshotCreator_vehicleSetup.
+---@field onClientEndMission function Alias of M.restore: restores the lighting at the end of the level.
+---@field onExit function Alias of M.restore: restores the lighting when the game closes.
+---@field onExtensionUnloaded function Alias of M.restore: restores the lighting when the extension is unloaded.
 util_screenshotCreator_lightingSetup = {}
 
---- Met en place l'éclairage de capture pour ce véhicule et cette caméra : projecteurs du rig, cartes de réflexion, SSAO, marquage de parking, masquage des occupants, et activation du masque de rendu des cartes sur la vue principale.
----Source : lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:876
----@param vehicle table Objet véhicule à photographier.
----@param camera table Caméra résolue : {pos = vec3, rot = quat, ...} (résultat du cadrage).
----@return boolean  true si tout a été appliqué, false en cas d'échec (l'état est alors restauré).
+--- Sets up the capture lighting for this vehicle and this camera: rig spotlights, reflection cards, SSAO, parking markup, occupant hiding, and enabling the cards' render mask on the main view.
+---Source: lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:876
+---@param vehicle table Vehicle object to photograph.
+---@param camera table Resolved camera: {pos = vec3, rot = quat, ...} (framing result).
+---@return boolean  true if everything was applied, false on failure (the state is then restored).
 function util_screenshotCreator_lightingSetup.adjust(vehicle, camera) end
 
---- Efface le champ thumbnailLayer de tous les objets de marquage de parking.
----Source : lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:719
----@return integer  Nombre d'objets dont le tag a été effacé.
+--- Clears the thumbnailLayer field of all parking markup objects.
+---Source: lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:719
+---@return integer  Number of objects whose tag was cleared.
 function util_screenshotCreator_lightingSetup.clearMarkupTags() end
 
---- Compte les objets de la scène marqués thumbnailLayer = parkingMarkup.
----Source : lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:714
----@return integer  Nombre d'objets de marquage.
+--- Counts the scene objects marked thumbnailLayer = parkingMarkup.
+---Source: lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:714
+---@return integer  Number of markup objects.
 function util_screenshotCreator_lightingSetup.getMarkupCount() end
 
---- Cache temporairement les cartes de réflexion actives (setHidden et setRenderEnabled(false)) pour une capture « Tech ». À rappeler avec restoreReflectionCardsAfterTechCapture.
----Source : lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:295
----@return boolean  false si un masquage est déjà en cours (appel imbriqué) ou en cas d'erreur (visibilité restaurée).
+--- Temporarily hides the active reflection cards (setHidden and setRenderEnabled(false)) for a "Tech" capture. To be followed by restoreReflectionCardsAfterTechCapture.
+---Source: lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:295
+---@return boolean  false if a hide is already in progress (nested call) or on error (visibility restored).
 function util_screenshotCreator_lightingSetup.hideReflectionCardsForTechCapture() end
 
---- Annule tous les changements faits par adjust : masque de vue, SSAO, marquage, occupants, cartes de réflexion et lumières (transformation et champs intensity, innerAngle, outerAngle, range, castShadows). Les états non restaurés sont conservés pour une nouvelle tentative.
----Source : lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:334
----@return boolean  true si tout a été restauré exactement.
+--- Undoes all the changes made by adjust: view mask, SSAO, markup, occupants, reflection cards and lights (transform and fields intensity, innerAngle, outerAngle, range, castShadows). Unrestored states are kept for a new attempt.
+---Source: lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:334
+---@return boolean  true if everything was restored exactly.
 function util_screenshotCreator_lightingSetup.restore() end
 
---- Rétablit la visibilité d'origine des cartes cachées par hideReflectionCardsForTechCapture.
----Source : lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:260
----@return boolean  true si toutes les cartes ont retrouvé leur état.
+--- Restores the original visibility of the cards hidden by hideReflectionCardsForTechCapture.
+---Source: lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:260
+---@return boolean  true if all cards have recovered their state.
 function util_screenshotCreator_lightingSetup.restoreReflectionCardsAfterTechCapture() end
 
---- Test interne par assertions sur la géométrie des cartes (direction, transformation, côté arrière, rotation autour de l'axe vertical).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:548
----@return boolean  Toujours true (sinon une assertion échoue).
+--- Internal assertion-based test on the card geometry (direction, transform, rear side, rotation around the vertical axis).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/util/screenshotCreator/lightingSetup.lua:548
+---@return boolean  Always true (otherwise an assertion fails).
 function util_screenshotCreator_lightingSetup.selfCheck() end
 

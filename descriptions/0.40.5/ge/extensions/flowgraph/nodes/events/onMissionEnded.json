@@ -1,13 +1,34 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/events/onMissionEnded.lua",
-  "module": "Nœud flowgraph « on Level End » (catégorie logic, événement). Émet une impulsion de flux une fois quand le niveau courant est déchargé (hook onClientEndMission). Pin de sortie : flow.",
+  "module": "Flowgraph node \"on Level End\" (category logic, event). Emits a flow pulse once when the current level is unloaded (onClientEndMission hook). Output pin: flow.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Vide.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "onClientEndMission": {"desc": "Hook appelé au déchargement du niveau : met flow à vrai et déclenche le nœud.", "internal": true},
-        "work": {"desc": "Vide.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}, "internal": true}
+        "init": {
+          "desc": "Empty.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "onClientEndMission": {
+          "desc": "Hook called when the level is unloaded: sets flow to true and triggers the node.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Empty.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph arguments"
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

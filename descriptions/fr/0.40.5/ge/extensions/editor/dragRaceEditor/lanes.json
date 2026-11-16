@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/editor/dragRaceEditor/lanes.lua",
+  "module": "Gère la liste des voies (lanes) du drag race dans l'éditeur : chargement depuis gameplay_drag_saveSystem, sélection, ajout, suppression, sauvegarde en fichier <id>.lane.json dans le dossier drag du niveau, et dessin de l'interface ImGui (liste et détails : ID, noms, couleur, ordre, boundaryId).",
+  "notes": ["Les index de sélection commencent à 1 ; -1 signifie aucune sélection.", "Couleurs proposées : blue, red, green, yellow, purple, orange.", "Les waypoints des voies viennent du prefab du strip, la section Waypoints n'affiche qu'un texte d'aide.", "drawAxisBox dessine deux fois certains triangles avec des permutations différentes ; drawTransformsPreview écrit le nom de la voie en (0,0,0)."],
+  "functions": {
+    "loadAllLanes": {"desc": "Charge toutes les voies via dragSaveSystem.getAllLanes().", "params": {}},
+    "getAllLanes": {"desc": "Renvoie la liste des voies chargées.", "params": {}, "returns": [{"type": "table", "desc": "tableau de voies"}]},
+    "getSelectedLaneIndex": {"desc": "Index (base 1) de la voie sélectionnée, -1 si aucune.", "params": {}, "returns": [{"type": "integer", "desc": "index"}]},
+    "setSelectedLaneIndex": {"desc": "Fixe l'index sélectionné sans journaliser.", "params": {"index": {"type": "integer", "desc": "index base 1, -1 pour aucune"}}},
+    "getSelectedLane": {"desc": "Renvoie la voie sélectionnée.", "params": {}, "returns": [{"type": "table|nil", "desc": "voie ou nil si l'index est hors bornes"}]},
+    "selectLane": {"desc": "Sélectionne la voie d'index donné et journalise son nom.", "params": {"index": {"type": "integer", "desc": "index base 1"}}},
+    "addLane": {"desc": "Ajoute une voie « New Lane » (couleur blue, laneOrder suivant, waypointIds vide, metadata created/modified), la sélectionne et marque des modifications non sauvées.", "params": {}},
+    "removeSelectedLane": {"desc": "Supprime la voie sélectionnée et déplace la sélection sur la précédente ; -1 si la liste devient vide.", "params": {}},
+    "saveLane": {
+      "desc": "Sauvegarde la voie dans <dossier drag du niveau>/<lane.id>.lane.json via dragSaveSystem.saveLane.",
+      "params": {"lane": {"type": "table", "desc": "voie à sauver"}},
+      "returns": [{"type": "boolean", "desc": "false si pas de voie ou aucun niveau chargé, sinon le résultat de dragSaveSystem.saveLane"}]
+    },
+    "drawLanesSection": {"desc": "Dessine le panneau ImGui de la liste des voies (boutons Add Lane, Remove, Save, liste sélectionnable avec infobulle).", "params": {}, "internal": true},
+    "drawLaneDetails": {"desc": "Dessine le panneau ImGui des détails de la voie sélectionnée (Basics, Waypoints, Boundary) ; les champs modifient la voie et marquent des changements non sauvés.", "params": {}, "internal": true},
+    "drawTransformsPreview": {"desc": "Affiche en debug 3D le texte « Lane: <nom> » à l'origine pour la voie sélectionnée.", "params": {}, "internal": true},
+    "drawAxisBox": {
+      "desc": "Dessine en debug une boîte pleine (triangles colorés et arêtes noires) à partir d'un coin et de trois vecteurs d'axes.",
+      "params": {
+        "corner": {"type": "vec3", "desc": "coin de la boîte"},
+        "x": {"type": "vec3", "desc": "premier vecteur d'arête"},
+        "y": {"type": "vec3", "desc": "deuxième vecteur d'arête"},
+        "z": {"type": "vec3", "desc": "troisième vecteur d'arête"},
+        "clr": {"type": "ColorF", "desc": "couleur de remplissage"}
+      }
+    }
+  }
+}

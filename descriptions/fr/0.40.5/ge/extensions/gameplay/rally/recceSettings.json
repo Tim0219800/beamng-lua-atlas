@@ -1,0 +1,71 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/recceSettings.lua",
+  "module": "Préférences persistantes de la reconnaissance (recce) de rallye, enregistrées dans rallySettingsRoot/recce.json : dernier id de mission et dernier état de chargement par niveau, et nom du style d'annonce des virages. Charge aussi le fichier des angles de virage (corner angles) pour proposer les styles disponibles. Le module renvoie un constructeur.",
+  "usage": "local RecceSettings = require('/lua/ge/extensions/gameplay/rally/recceSettings')\nlocal s = RecceSettings()\ns:load()\ns:setLastMissionId('west_coast_usa', 'rally/stage1')",
+  "notes": [
+    "setLastMissionId, setLastLoadState et setCornerCallStyleName sauvegardent immédiatement le fichier.",
+    "Bug potentiel : cornerCallStyleNames et getCornerCallStyle indexent self.corner_angles_data.pacenoteStyles sans vérifier que corner_angles_data n'est pas nil (erreur si loadCornerAngles a échoué ou si load n'a pas été appelé).",
+    "Les valeurs par défaut sont partagées par référence (default_settings.last_mission_ids) : _reset réutilise les mêmes tables, donc une modification avant un rechargement peut polluer les défauts."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet de réglages renvoyé par le constructeur.",
+      "functions": {
+        "init": {"desc": "Définit le chemin du fichier (recce.json) et remet les valeurs par défaut.", "internal": true},
+        "_reset": {"desc": "Remet last_mission_ids, last_load_states et corner_call_style_name aux valeurs par défaut.", "internal": true},
+        "loadCornerAngles": {"desc": "Charge les données d'angles de virage via rallyUtil.loadCornerAnglesFile ; corner_angles_data reste nil en cas d'échec."},
+        "load": {
+          "desc": "Remet à zéro, charge les angles de virage puis lit recce.json et le désérialise.",
+          "returns": [{"type": "boolean", "desc": "false si le chemin est nil, le fichier absent ou illisible"}]
+        },
+        "save": {"desc": "Écrit les réglages sérialisés dans recce.json (jsonWriteFile, joli format)."},
+        "onSerialize": {
+          "desc": "Renvoie la table à sauvegarder (last_mission_ids, last_load_states, corner_call_style_name).",
+          "returns": [{"type": "table", "desc": "Données sérialisables"}]
+        },
+        "defaultCornerCallStyleName": {
+          "desc": "Nom du premier style de pacenoteStyles des angles de virage, ou la valeur par défaut (nil) si aucune donnée.",
+          "returns": [{"type": "string|nil", "desc": "Nom du style"}]
+        },
+        "cornerCallStyleNames": {
+          "desc": "Liste des noms de styles d'annonce de virage disponibles.",
+          "returns": [{"type": "string[]", "desc": "Noms des styles"}]
+        },
+        "onDeserialized": {
+          "desc": "Applique les données lues du fichier ; les champs absents prennent leur valeur par défaut (style : premier style disponible).",
+          "params": {"data": {"type": "table|nil", "desc": "Contenu du JSON"}}
+        },
+        "setLastMissionId": {
+          "desc": "Mémorise l'id de la dernière mission pour un niveau et sauvegarde.",
+          "params": {"level": {"type": "string", "desc": "Nom du niveau"}, "id": {"type": "string", "desc": "Id de mission"}}
+        },
+        "getLastMissionId": {
+          "desc": "Dernier id de mission pour un niveau.",
+          "params": {"level": {"type": "string", "desc": "Nom du niveau"}},
+          "returns": [{"type": "string|nil", "desc": "Id de mission"}]
+        },
+        "setLastLoadState": {
+          "desc": "Mémorise le dernier état de chargement pour un niveau et sauvegarde.",
+          "params": {"level": {"type": "string", "desc": "Nom du niveau"}, "state": {"type": "any", "desc": "État à mémoriser (déduit du code : valeur libre)"}}
+        },
+        "getLastLoadState": {
+          "desc": "Dernier état de chargement pour un niveau.",
+          "params": {"level": {"type": "string", "desc": "Nom du niveau"}},
+          "returns": [{"type": "any", "desc": "État mémorisé ou nil"}]
+        },
+        "setCornerCallStyleName": {
+          "desc": "Définit le style d'annonce des virages et sauvegarde.",
+          "params": {"style_name": {"type": "string", "desc": "Nom du style"}}
+        },
+        "getCornerCallStyleName": {
+          "desc": "Nom du style d'annonce des virages actuel.",
+          "returns": [{"type": "string|nil", "desc": "Nom du style"}]
+        },
+        "getCornerCallStyle": {
+          "desc": "Renvoie la table du style correspondant au nom actuel dans pacenoteStyles.",
+          "returns": [{"type": "table|nil", "desc": "Style, ou nil si introuvable"}]
+        }
+      }
+    }
+  }
+}

@@ -1,63 +1,63 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/sites/locationsByTag.lua",
-  "module": "Nœud flowgraph « Locations by Tags » (catégorie once_instant). Trouve au plus `count` locations portant un tag donné, éventuellement entre minDist et maxDist d'une position pos. Les résultats sont mélangés (math.random) puis triés par distance à pos si fourni. Sorties : count, found_i (flow) et loc_i (locationData) pour i=1..N (N réglable). Entrées : sitesData, tag, pos, minDist/maxDist (-1 = pas de limite), amount (-1 = maximum).",
+  "module": "Flowgraph node \"Locations by Tags\" (category once_instant). Finds at most `count` locations with a given tag, optionally between minDist and maxDist of a position pos. Results are shuffled (math.random), then sorted by distance to pos if provided. Outputs: count, found_i (flow) and loc_i (locationData) for i=1..N (N adjustable). Inputs: sitesData, tag, pos, minDist/maxDist (-1 = no limit), amount (-1 = maximum).",
   "notes": [
-    "`reason` est une variable globale dans drawCustomProperties (non déclarée local)."
+    "`reason` is a global variable in drawCustomProperties (not declared local)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_onDeserialized": {
-          "desc": "Restaure les réglages propres au nœud à partir des données sauvegardées.",
+          "desc": "Restores the node's own settings from the saved data.",
           "internal": true,
           "params": {
             "res": {
               "type": "table",
-              "desc": "table de sérialisation à remplir"
+              "desc": "serialization table to fill"
             }
           }
         },
         "_onSerialize": {
-          "desc": "Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.",
+          "desc": "Adds the node's own settings to the `res` table when saving the graph.",
           "internal": true,
           "params": {
             "res": {
               "type": "table",
-              "desc": "table de sérialisation à remplir"
+              "desc": "serialization table to fill"
             }
           }
         },
         "drawCustomProperties": {
-          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "desc": "Draws the node's custom properties in the flowgraph editor panel (ImGui).",
           "internal": true
         },
         "init": {
-          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "desc": "Initializes the node's internal state at creation (called by the flowgraph engine).",
           "internal": true,
           "params": {
             "mgr": {
               "type": "table",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           }
         },
         "updatePins": {
-          "desc": "Ajoute ou retire les paires de pins found_i / loc_i.",
+          "desc": "Adds or removes the found_i / loc_i pin pairs.",
           "internal": true,
           "params": {
             "old": {
               "type": "integer",
-              "desc": "ancien nombre de pins"
+              "desc": "old number of pins"
             },
             "new": {
               "type": "integer",
-              "desc": "nouveau nombre de pins"
+              "desc": "new number of pins"
             }
           }
         },
         "workOnce": {
-          "desc": "Construit la liste des locations (par tag ou par rayon), la mélange, garde les premières, les trie par distance, puis remplit found_i, loc_i et count.",
+          "desc": "Builds the list of locations (by tag or by radius), shuffles it, keeps the first ones, sorts them by distance, then fills found_i, loc_i and count.",
           "internal": true
         }
       }

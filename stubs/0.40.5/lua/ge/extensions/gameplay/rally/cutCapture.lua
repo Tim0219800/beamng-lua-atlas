@@ -2,32 +2,32 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/cutCapture.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Objet de capture renvoyé par le constructeur du module. Attributs : vehicle, fname, fname_transcripts, cut_id.
+--- Capture object returned by the module constructor. Attributes: vehicle, fname, fname_transcripts, cut_id.
 ---@class gameplay_rally_cutCapture
 local gameplay_rally_cutCapture = {}
 
---- Capture l'état courant du véhicule (id incrémental, horodatage rallyUtil.getTime(), pos {x,y,z}, quat {x,y,z,w} calculé depuis les vecteurs direction/haut, steering) et l'écrit via writeCut.
----Source : lua/ge/extensions/gameplay/rally/cutCapture.lua:40
----@return integer  Identifiant de la coupure créée.
+--- Captures the vehicle's current state (incremental id, timestamp rallyUtil.getTime(), pos {x,y,z}, quat {x,y,z,w} computed from the direction/up vectors, steering) and writes it via writeCut.
+---Source: lua/ge/extensions/gameplay/rally/cutCapture.lua:40
+---@return integer  Identifier of the created cut.
 function gameplay_rally_cutCapture:capture() end
 
---- Initialise : mémorise le véhicule, s'abonne aux changements de la valeur 'steering' (core_vehicleBridge) et calcule les chemins cuts.json et transcripts.json. L'identifiant de coupure repart à 1.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/cutCapture.lua:12
----@param vehicle table Objet véhicule (getId, getPosition, getDirectionVector...).
----@param missionDir string Dossier de la mission, passé à rallyUtil.missionReccePath.
+--- Initializes: stores the vehicle, subscribes to changes of the 'steering' value (core_vehicleBridge) and computes the cuts.json and transcripts.json paths. The cut identifier restarts at 1.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/cutCapture.lua:12
+---@param vehicle table Vehicle object (getId, getPosition, getDirectionVector...).
+---@param missionDir string Mission folder, passed to rallyUtil.missionReccePath.
 function gameplay_rally_cutCapture:init(vehicle, missionDir) end
 
---- Vide le fichier cuts.json (ouverture en écriture).
----Source : lua/ge/extensions/gameplay/rally/cutCapture.lua:22
+--- Empties the cuts.json file (opens it for writing).
+---Source: lua/ge/extensions/gameplay/rally/cutCapture.lua:22
 function gameplay_rally_cutCapture:truncateCapturesFile() end
 
---- Vide le fichier transcripts.json.
----Source : lua/ge/extensions/gameplay/rally/cutCapture.lua:27
+--- Empties the transcripts.json file.
+---Source: lua/ge/extensions/gameplay/rally/cutCapture.lua:27
 function gameplay_rally_cutCapture:truncateTranscriptsFile() end
 
---- Ajoute une capture encodée en JSON, suivie d'un saut de ligne, à cuts.json.
----Source : lua/ge/extensions/gameplay/rally/cutCapture.lua:32
----@param cutCapture table Table sérialisable (id, ts, pos, quat, steering).
+--- Appends a JSON-encoded capture, followed by a newline, to cuts.json.
+---Source: lua/ge/extensions/gameplay/rally/cutCapture.lua:32
+---@param cutCapture table Serializable table (id, ts, pos, quat, steering).
 function gameplay_rally_cutCapture:writeCut(cutCapture) end
 

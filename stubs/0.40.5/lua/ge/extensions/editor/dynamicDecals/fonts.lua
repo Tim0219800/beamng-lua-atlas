@@ -2,44 +2,44 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/dynamicDecals/fonts.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gestion des polices de l'outil Dynamic Decals. Génère, via FontRasterizer.createFontBitmap, des atlas de glyphes (bitmaps de 256 px de haut, option SDF avec padding, valeur onedge et échelle de distance) dans /art/dynamicDecals/fonts/ à partir d'un fichier de police (dossier source par défaut /ui/common/). Les atlas générés (`<nom>.font.json` avec header et glyphs) sont listés, prévisualisés dans la section « Fonts », dans une fenêtre d'aperçu et dans un onglet « Fonts » du navigateur ; un glyphe choisi peut servir de texture de decal (api.setDecalLayerFontPath / setDecalLayerFontCharacter). Les calques à texte (path layers) s'en servent.
---- Accès : extension `editor_dynamicDecals_fonts` : `extensions.load("editor_dynamicDecals_fonts")`, puis la globale `editor_dynamicDecals_fonts`
+--- Font management of the Dynamic Decals tool. Generates, via FontRasterizer.createFontBitmap, glyph atlases (256 px high bitmaps, SDF option with padding, onedge value and distance scale) in /art/dynamicDecals/fonts/ from a font file (default source folder /ui/common/). The generated atlases (`<name>.font.json` with header and glyphs) are listed, previewed in the "Fonts" section, in a preview window and in a "Fonts" tab of the browser; a chosen glyph can serve as a decal texture (api.setDecalLayerFontPath / setDecalLayerFontCharacter). Text layers (path layers) use them.
+--- Access: extension `editor_dynamicDecals_fonts`: `extensions.load("editor_dynamicDecals_fonts")`, then the global `editor_dynamicDecals_fonts`
 ---@class editor_dynamicDecals_fonts
----@field supportedFontFileFormats table Filtres de la boîte de fichier pour choisir une police : tous les fichiers, fichiers police (.ttf, .TTF) et fichiers TTF.
+---@field supportedFontFileFormats table File dialog filters for choosing a font: all files, font files (.ttf, .TTF) and TTF files.
 editor_dynamicDecals_fonts = {}
 
---- S'assure qu'un atlas existe pour la police donnée, le génère sinon (nom de l'atlas = nom du fichier sans extension).
----Source : lua/ge/extensions/editor/dynamicDecals/fonts.lua:502
----@param fontPath string Chemin du fichier .ttf.
----@return boolean  false si la création a échoué, true sinon.
+--- Makes sure an atlas exists for the given font, generates it otherwise (atlas name = file name without extension).
+---Source: lua/ge/extensions/editor/dynamicDecals/fonts.lua:502
+---@param fontPath string Path of the .ttf file.
+---@return boolean  false if creation failed, true otherwise.
 function editor_dynamicDecals_fonts.checkOrGenerateFontBitmaps(fontPath) end
 
---- Hook appelé quand une préférence change. Ne fait rien ici.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/fonts.lua:470
----@param path string Chemin de la préférence.
----@param value any Nouvelle valeur.
+--- Hook called when a preference changes. Does nothing here.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/fonts.lua:470
+---@param path string Preference path.
+---@param value any New value.
 function editor_dynamicDecals_fonts.editorPreferenceValueChanged(path, value) end
 
---- Renvoie le dossier source des polices (/ui/common/).
----Source : lua/ge/extensions/editor/dynamicDecals/fonts.lua:517
----@return string  Chemin du dossier.
+--- Returns the source folder of the fonts (/ui/common/).
+---Source: lua/ge/extensions/editor/dynamicDecals/fonts.lua:517
+---@return string  Folder path.
 function editor_dynamicDecals_fonts.getFontDirectory() end
 
---- Renvoie la liste (triée sans casse) des noms d'atlas de police déjà générés.
----Source : lua/ge/extensions/editor/dynamicDecals/fonts.lua:521
----@return string[]  Noms de polices.
+--- Returns the list (sorted case-insensitively) of already generated font atlas names.
+---Source: lua/ge/extensions/editor/dynamicDecals/fonts.lua:521
+---@return string[]  Font names.
 function editor_dynamicDecals_fonts.getGeneratedFontAtlases() end
 
---- Enregistre `dynamicDecalsTool.fonts` : glyphPreviewSize et glyphPreviewSizeInPreviewWindow (float, défaut 128, de 32 à 1024) et markMissingGlyphs (bool, vrai).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/fonts.lua:462
----@param prefsRegistry table Registre de préférences de l'éditeur.
+--- Registers `dynamicDecalsTool.fonts`: glyphPreviewSize and glyphPreviewSizeInPreviewWindow (float, default 128, from 32 to 1024) and markMissingGlyphs (bool, true).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/fonts.lua:462
+---@param prefsRegistry table Editor preferences registry.
 function editor_dynamicDecals_fonts.registerEditorPreferences(prefsRegistry) end
 
---- Appelé par l'outil : liste les atlas existants, enregistre la section « Fonts » (ordre 1030), l'onglet « Fonts » du navigateur (ordre 40), la fenêtre d'aperçu, les callbacks d'update et d'interface, puis indique à l'API le dossier des atlas (api.setFontTextureAtlasPath).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/fonts.lua:483
----@param tool_in table Référence à l'outil editor_dynamicDecalsTool.
+--- Called by the tool: lists the existing atlases, registers the "Fonts" section (order 1030), the "Fonts" tab of the browser (order 40), the preview window, the update and UI callbacks, then tells the API the atlas folder (api.setFontTextureAtlasPath).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/fonts.lua:483
+---@param tool_in table Reference to the editor_dynamicDecalsTool tool.
 function editor_dynamicDecals_fonts.setup(tool_in) end
 

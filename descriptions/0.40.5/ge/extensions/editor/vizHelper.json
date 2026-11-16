@@ -1,32 +1,66 @@
 {
   "path": "lua/ge/extensions/editor/vizHelper.lua",
-  "module": "Petit outil pour les level designers (menu Debug > « Viz Helper ») : il pose des décalcomanies (decals) dynamiques d'images prises dans art/vizhelper/ à l'endroit visé par la souris dans la vue 3D, pour marquer des choses. Molette = rotation, Ctrl+molette = taille, Alt+molette = changer d'image, Maj = sensibilité x10, clic gauche = poser (maintenu = peindre avec une distance minimale).",
+  "module": "Small tool for level designers (Debug > \"Viz Helper\" menu): it places dynamic decals of images taken from art/vizhelper/ at the spot targeted by the mouse in the 3D view, to mark things. Wheel = rotation, Ctrl+wheel = size, Alt+wheel = change image, Shift = sensitivity x10, left click = place (held = paint with a minimum distance).",
   "usage": "extensions.load('editor_vizHelper')\neditor_vizHelper.openWindow()",
   "notes": [
-    "Les decals posés sont gardés dans une table locale savedDecals et réaffichés à chaque onUpdate via Engine.Render.DynamicDecalMgr.addDecals ; ils sont vidés à la désactivation de l'éditeur (onEditorDeactivated) ou par le bouton « clear ». Ils ne sont pas sauvegardés dans le niveau.",
-    "Les images sont listées au chargement de l'extension (FS:findFiles sur art/vizhelper/) ; si le dossier est vide, vizHelper[curItem+1] est nil et la concaténation du chemin échoue.",
-    "Le fenêtrage utilise im.Begin directement (un TODO dans le code prévoit de passer à editor.beginWindow).",
-    "Valeurs fixes des decals : fadeStart 2000, fadeEnd 2500 (m), échelle uniforme = Size, forwardVec tourné autour de la normale."
+    "The placed decals are kept in a local table savedDecals and redisplayed on every onUpdate via Engine.Render.DynamicDecalMgr.addDecals; they are cleared when the editor is deactivated (onEditorDeactivated) or by the \"clear\" button. They are not saved in the level.",
+    "The images are listed when the extension loads (FS:findFiles on art/vizhelper/); if the folder is empty, vizHelper[curItem+1] is nil and the path concatenation fails.",
+    "Windowing uses im.Begin directly (a TODO in the code plans to switch to editor.beginWindow).",
+    "Fixed decal values: fadeStart 2000, fadeEnd 2500 (m), uniform scale = Size, forwardVec rotated around the normal."
   ],
   "fields": {
-    "windowOpen": {"type": "ImGui BoolPtr", "desc": "État ouvert/fermé de la fenêtre ; lire/écrire avec windowOpen[0]."}
+    "windowOpen": {
+      "type": "ImGui BoolPtr",
+      "desc": "Open/closed state of the window; read/write with windowOpen[0]."
+    }
   },
   "functions": {
-    "openWindow": {"desc": "Ouvre la fenêtre Viz Helper (windowOpen[0] = true).", "internal": false},
-    "onEditorGui": {"desc": "Hook de l'éditeur appelé à chaque frame : dessine la fenêtre, gère l'entrée (molette, clic), fait un cameraMouseRayCast, dessine une sphère verte au point visé et ajoute le decal de prévisualisation ou le sauvegarde.", "internal": true},
-    "onEditorInitialized": {"desc": "Hook de l'éditeur : ajoute l'entrée de menu « Viz Helper » (groupe Debug).", "internal": true},
-    "onEditorActivated": {"desc": "Hook de l'éditeur appelé à l'activation ; ne fait rien.", "internal": true},
-    "onEditorDeactivated": {"desc": "Hook de l'éditeur appelé à la désactivation : vide savedDecals.", "internal": true},
-    "onExtensionLoaded": {"desc": "Hook d'extension appelé au chargement : liste les fichiers de art/vizhelper/ et construit la chaîne de la liste déroulante.", "internal": true},
-    "onUpdate": {"desc": "Hook d'extension appelé à chaque frame : réaffiche tous les decals sauvegardés.", "internal": true},
+    "openWindow": {
+      "desc": "Opens the Viz Helper window (windowOpen[0] = true).",
+      "internal": false
+    },
+    "onEditorGui": {
+      "desc": "Editor hook called every frame: draws the window, handles input (wheel, click), does a cameraMouseRayCast, draws a green sphere at the targeted point and adds the preview decal or saves it.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Editor hook: adds the \"Viz Helper\" menu entry (Debug group).",
+      "internal": true
+    },
+    "onEditorActivated": {
+      "desc": "Editor hook called on activation; does nothing.",
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Editor hook called on deactivation: clears savedDecals.",
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Extension hook called on load: lists the files in art/vizhelper/ and builds the dropdown list string.",
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Extension hook called every frame: redisplays all saved decals.",
+      "internal": true
+    },
     "onSerialize": {
-      "desc": "Hook appelé avant un rechargement Lua : renvoie {windowOpen = bool}.",
-      "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}],
+      "desc": "Hook called before a Lua reload: returns {windowOpen = bool}.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{windowOpen = boolean}"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook appelé après un rechargement Lua : restaure l'état ouvert de la fenêtre.",
-      "params": {"data": {"type": "table", "desc": "table produite par onSerialize"}},
+      "desc": "Hook called after a Lua reload: restores the window's open state.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "table produced by onSerialize"
+        }
+      },
       "internal": true
     }
   }

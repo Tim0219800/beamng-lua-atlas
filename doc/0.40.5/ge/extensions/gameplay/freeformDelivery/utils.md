@@ -1,162 +1,162 @@
 # `gameplay_freeformDelivery_utils`
 
-*Fichier : `lua/ge/extensions/gameplay/freeformDelivery/utils.lua` · VM : Game Engine (GE) · 245 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/freeformDelivery/utils.lua` · VM: Game Engine (GE) · 245 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_freeformDelivery_utils` : `extensions.load("gameplay_freeformDelivery_utils")`, puis la globale `gameplay_freeformDelivery_utils`
+**Access:** extension `gameplay_freeformDelivery_utils`: `extensions.load("gameplay_freeformDelivery_utils")`, then the global `gameplay_freeformDelivery_utils`
 
-Fonctions utilitaires partagées par les sous-modules de la livraison libre : cache de positions de véhicules, recherche d'objets de site (lieux, zones, places de parking), tests de présence d'un véhicule dans une zone cible, résolution de chemins, formatage du temps et accès au joueur (véhicule ou à pied).
+Utility functions shared by the freeform delivery submodules: vehicle position cache, site object lookup (locations, zones, parking spots), tests for a vehicle's presence in a target area, path resolution, time formatting and player access (vehicle or on foot).
 
-## Remarques
+## Notes
 
-- Le cache de positions n'est jamais invalidé automatiquement : getCachedVehiclePosition ne recalcule que si l'entrée n'existe pas ; il faut appeler updateVehicleCache / updateVehicleCacheList régulièrement pour le rafraîchir.
-- Le vec3 renvoyé par getCachedVehiclePosition est le vec3 du cache : ne pas le modifier.
-- checkParking est appelé avec une tolérance de 0.8 (valeur fixe dans le code).
-- findSiteObject cherche d'abord par nom (byName) puis par indice numérique (objects[tonumber(siteId)]) ; sites doit contenir locations, zones et parkingSpots.
+- The position cache is never invalidated automatically: getCachedVehiclePosition only recomputes if the entry does not exist; updateVehicleCache / updateVehicleCacheList must be called regularly to refresh it.
+- The vec3 returned by getCachedVehiclePosition is the cache's vec3: do not modify it.
+- checkParking is called with a tolerance of 0.8 (fixed value in the code).
+- findSiteObject searches first by name (byName) then by numeric index (objects[tonumber(siteId)]); sites must contain locations, zones and parkingSpots.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_freeformDelivery_utils.checkVehicleInArea(veh, siteObj, areaType)` | Test unifié de présence : lieu (distance <= radius), zone (containsVehicle) ou place de parking. | 114 |
-| `gameplay_freeformDelivery_utils.checkVehicleInParkingSpot(veh, parkingSpot)` | Teste si un véhicule est garé dans une place via parkingSpot:checkParking(vehId, 0.8). | 101 |
-| `gameplay_freeformDelivery_utils.clearVehicleCache()` | Vide tout le cache de positions. | 63 |
-| `gameplay_freeformDelivery_utils.findSiteObject(sites, siteType, siteId)` | Retrouve un objet de site (lieu, zone ou place de parking) par type et identifiant. | 81 |
-| `gameplay_freeformDelivery_utils.findTargetArea(delivery, areaId)` | Cherche une zone cible par id dans delivery.targetAreas. | 152 |
-| `gameplay_freeformDelivery_utils.findVehicle(delivery, vehicleId)` | Cherche la définition d'un véhicule par id dans delivery.vehicles. | 163 |
-| `gameplay_freeformDelivery_utils.formatTime(seconds)` | Formate une durée en secondes en H:MM:SS (si au moins une heure) ou M:SS. | 68 |
-| `gameplay_freeformDelivery_utils.getCachedVehiclePosition(veh)` | Renvoie la position en cache d'un véhicule (la calcule au premier appel). | 46 |
-| `gameplay_freeformDelivery_utils.getParkingInfo(veh, parkingSpot)` | Détaille le stationnement d'un véhicule dans une place : nombre de coins dans la place (0 à 4), validité et taille de la place. | 214 |
-| `gameplay_freeformDelivery_utils.getPlayerPosition()` | Position du joueur : position en cache de son véhicule, sinon position du personnage s'il marche (gameplay_walk). | 199 |
-| `gameplay_freeformDelivery_utils.getPlayerVehicle()` | Renvoie le véhicule du joueur 0 (upcasté). | 192 |
-| `gameplay_freeformDelivery_utils.getVehicleIds(goal)` | Normalise un goal : renvoie goal.vehicleIds, ou {goal.vehicleId}, ou un tableau vide. | 96 |
-| `gameplay_freeformDelivery_utils.getVehicleObjectByDeliveryId(vehicleId)` | Convertit un ID de véhicule de livraison en objet véhicule (via gameplay_freeformDelivery_setup.getVehicleId puis Sim.upcast). | 174 |
-| `gameplay_freeformDelivery_utils.getVehiclePositionByDeliveryId(vehicleId)` | Position en cache du véhicule désigné par son ID de livraison. | 185 |
-| `gameplay_freeformDelivery_utils.resolvePath(basePath, relativePath)` | Résout un chemin relatif par rapport au dossier d'un fichier de base. Un chemin commençant par '/' est renvoyé tel quel. | 132 |
-| `gameplay_freeformDelivery_utils.updateVehicleCache(veh)` | Met à jour la position en cache d'un véhicule (sans allocation) et la marque valide. | 22 |
-| `gameplay_freeformDelivery_utils.updateVehicleCacheList(vehicles)` | Met à jour le cache pour chaque véhicule d'une liste. | 37 |
+| `gameplay_freeformDelivery_utils.checkVehicleInArea(veh, siteObj, areaType)` | Unified presence test: location (distance <= radius), zone (containsVehicle) or parking spot. | 114 |
+| `gameplay_freeformDelivery_utils.checkVehicleInParkingSpot(veh, parkingSpot)` | Tests whether a vehicle is parked in a spot via parkingSpot:checkParking(vehId, 0.8). | 101 |
+| `gameplay_freeformDelivery_utils.clearVehicleCache()` | Clears the entire position cache. | 63 |
+| `gameplay_freeformDelivery_utils.findSiteObject(sites, siteType, siteId)` | Finds a site object (location, zone or parking spot) by type and identifier. | 81 |
+| `gameplay_freeformDelivery_utils.findTargetArea(delivery, areaId)` | Finds a target area by id in delivery.targetAreas. | 152 |
+| `gameplay_freeformDelivery_utils.findVehicle(delivery, vehicleId)` | Finds a vehicle's definition by id in delivery.vehicles. | 163 |
+| `gameplay_freeformDelivery_utils.formatTime(seconds)` | Formats a duration in seconds as H:MM:SS (if at least one hour) or M:SS. | 68 |
+| `gameplay_freeformDelivery_utils.getCachedVehiclePosition(veh)` | Returns a vehicle's cached position (computes it on the first call). | 46 |
+| `gameplay_freeformDelivery_utils.getParkingInfo(veh, parkingSpot)` | Details a vehicle's parking in a spot: number of corners in the spot (0 to 4), validity and spot size. | 214 |
+| `gameplay_freeformDelivery_utils.getPlayerPosition()` | Player position: cached position of their vehicle, otherwise the position of the character if walking (gameplay_walk). | 199 |
+| `gameplay_freeformDelivery_utils.getPlayerVehicle()` | Returns player 0's vehicle (upcast). | 192 |
+| `gameplay_freeformDelivery_utils.getVehicleIds(goal)` | Normalizes a goal: returns goal.vehicleIds, or {goal.vehicleId}, or an empty array. | 96 |
+| `gameplay_freeformDelivery_utils.getVehicleObjectByDeliveryId(vehicleId)` | Converts a delivery vehicle ID into a vehicle object (via gameplay_freeformDelivery_setup.getVehicleId then Sim.upcast). | 174 |
+| `gameplay_freeformDelivery_utils.getVehiclePositionByDeliveryId(vehicleId)` | Cached position of the vehicle designated by its delivery ID. | 185 |
+| `gameplay_freeformDelivery_utils.resolvePath(basePath, relativePath)` | Resolves a relative path against the folder of a base file. A path starting with '/' is returned as is. | 132 |
+| `gameplay_freeformDelivery_utils.updateVehicleCache(veh)` | Updates a vehicle's cached position (without allocation) and marks it valid. | 22 |
+| `gameplay_freeformDelivery_utils.updateVehicleCacheList(vehicles)` | Updates the cache for each vehicle of a list. | 37 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_freeformDelivery_utils.checkVehicleInArea(veh, siteObj, areaType)`
 
-Test unifié de présence : lieu (distance <= radius), zone (containsVehicle) ou place de parking.
+Unified presence test: location (distance <= radius), zone (containsVehicle) or parking spot.
 
-- `veh` (*table*) : Objet véhicule.
-- `siteObj` (*table*) : Objet de site.
-- `areaType` (*string*) : "location", "zone" ou "parkingSpot".
-- **renvoie** : boolean true si le véhicule est dans la zone.
+- `veh` (*table*) : Vehicle object.
+- `siteObj` (*table*) : Site object.
+- `areaType` (*string*) : "location", "zone" or "parkingSpot".
+- **returns**: boolean true if the vehicle is in the area.
 
 #### `gameplay_freeformDelivery_utils.checkVehicleInParkingSpot(veh, parkingSpot)`
 
-Teste si un véhicule est garé dans une place via parkingSpot:checkParking(vehId, 0.8).
+Tests whether a vehicle is parked in a spot via parkingSpot:checkParking(vehId, 0.8).
 
-- `veh` (*table*) : Objet véhicule.
-- `parkingSpot` (*table*) : Objet place de parking.
-- **renvoie** : boolean Résultat de checkParking, false si argument manquant.
+- `veh` (*table*) : Vehicle object.
+- `parkingSpot` (*table*) : Parking spot object.
+- **returns**: boolean Result of checkParking, false if an argument is missing.
 
 #### `gameplay_freeformDelivery_utils.findSiteObject(sites, siteType, siteId)`
 
-Retrouve un objet de site (lieu, zone ou place de parking) par type et identifiant.
+Finds a site object (location, zone or parking spot) by type and identifier.
 
-- `sites` (*table|nil*) : Table de sites avec locations, zones, parkingSpots (chacun avec byName et objects).
-- `siteType` (*string*) : "location", "zone" ou "parkingSpot".
-- `siteId` (*string|integer*) : Nom ou indice de l'objet.
-- **renvoie** : table|nil Objet de site ou nil.
+- `sites` (*table|nil*) : Sites table with locations, zones, parkingSpots (each with byName and objects).
+- `siteType` (*string*) : "location", "zone" or "parkingSpot".
+- `siteId` (*string|integer*) : Name or index of the object.
+- **returns**: table|nil Site object or nil.
 
 #### `gameplay_freeformDelivery_utils.findTargetArea(delivery, areaId)`
 
-Cherche une zone cible par id dans delivery.targetAreas.
+Finds a target area by id in delivery.targetAreas.
 
-- `delivery` (*table*) : Données de livraison.
-- `areaId` (*string*) : ID de la zone cible.
-- **renvoie** : table|nil Zone cible ou nil.
+- `delivery` (*table*) : Delivery data.
+- `areaId` (*string*) : ID of the target area.
+- **returns**: table|nil Target area or nil.
 
 #### `gameplay_freeformDelivery_utils.findVehicle(delivery, vehicleId)`
 
-Cherche la définition d'un véhicule par id dans delivery.vehicles.
+Finds a vehicle's definition by id in delivery.vehicles.
 
-- `delivery` (*table*) : Données de livraison.
-- `vehicleId` (*string*) : ID du véhicule de livraison.
-- **renvoie** : table|nil Définition du véhicule ou nil.
+- `delivery` (*table*) : Delivery data.
+- `vehicleId` (*string*) : ID of the delivery vehicle.
+- **returns**: table|nil Vehicle definition or nil.
 
 #### `gameplay_freeformDelivery_utils.formatTime(seconds)`
 
-Formate une durée en secondes en H:MM:SS (si au moins une heure) ou M:SS.
+Formats a duration in seconds as H:MM:SS (if at least one hour) or M:SS.
 
-- `seconds` (*number*) : Durée en secondes.
-- **renvoie** : string Chaîne formatée.
+- `seconds` (*number*) : Duration in seconds.
+- **returns**: string Formatted string.
 
 #### `gameplay_freeformDelivery_utils.getCachedVehiclePosition(veh)`
 
-Renvoie la position en cache d'un véhicule (la calcule au premier appel).
+Returns a vehicle's cached position (computes it on the first call).
 
-- `veh` (*table*) : Objet véhicule.
-- **renvoie** : vec3|nil Position partagée, ne pas modifier ; nil si veh invalide.
+- `veh` (*table*) : Vehicle object.
+- **returns**: vec3|nil Shared position, do not modify; nil if veh is invalid.
 
 #### `gameplay_freeformDelivery_utils.getParkingInfo(veh, parkingSpot)`
 
-Détaille le stationnement d'un véhicule dans une place : nombre de coins dans la place (0 à 4), validité et taille de la place.
+Details a vehicle's parking in a spot: number of corners in the spot (0 to 4), validity and spot size.
 
-- `veh` (*table*) : Objet véhicule.
-- `parkingSpot` (*table*) : Objet place de parking.
-- **renvoie** : table|nil {valid, cornerCount, corners, spotSize={x,y,z}} ; nil si aucun coin n'est dans la place.
+- `veh` (*table*) : Vehicle object.
+- `parkingSpot` (*table*) : Parking spot object.
+- **returns**: table|nil {valid, cornerCount, corners, spotSize={x,y,z}}; nil if no corner is in the spot.
 
 #### `gameplay_freeformDelivery_utils.getPlayerPosition()`
 
-Position du joueur : position en cache de son véhicule, sinon position du personnage s'il marche (gameplay_walk).
+Player position: cached position of their vehicle, otherwise the position of the character if walking (gameplay_walk).
 
-- **renvoie** : vec3|nil Position ou nil.
+- **returns**: vec3|nil Position or nil.
 
 #### `gameplay_freeformDelivery_utils.getPlayerVehicle()`
 
-Renvoie le véhicule du joueur 0 (upcasté).
+Returns player 0's vehicle (upcast).
 
-- **renvoie** : table|nil Objet véhicule ou nil.
+- **returns**: table|nil Vehicle object or nil.
 
 #### `gameplay_freeformDelivery_utils.getVehicleIds(goal)`
 
-Normalise un goal : renvoie goal.vehicleIds, ou {goal.vehicleId}, ou un tableau vide.
+Normalizes a goal: returns goal.vehicleIds, or {goal.vehicleId}, or an empty array.
 
-- `goal` (*table*) : Objectif de livraison.
-- **renvoie** : string[] Liste d'ID de véhicules de livraison.
+- `goal` (*table*) : Delivery goal.
+- **returns**: string[] List of delivery vehicle IDs.
 
 #### `gameplay_freeformDelivery_utils.getVehicleObjectByDeliveryId(vehicleId)`
 
-Convertit un ID de véhicule de livraison en objet véhicule (via gameplay_freeformDelivery_setup.getVehicleId puis Sim.upcast).
+Converts a delivery vehicle ID into a vehicle object (via gameplay_freeformDelivery_setup.getVehicleId then Sim.upcast).
 
-- `vehicleId` (*string*) : ID du véhicule de livraison.
-- **renvoie** : table|nil Objet véhicule upcasté ou nil.
+- `vehicleId` (*string*) : ID of the delivery vehicle.
+- **returns**: table|nil Upcast vehicle object or nil.
 
 #### `gameplay_freeformDelivery_utils.getVehiclePositionByDeliveryId(vehicleId)`
 
-Position en cache du véhicule désigné par son ID de livraison.
+Cached position of the vehicle designated by its delivery ID.
 
-- `vehicleId` (*string*) : ID du véhicule de livraison.
-- **renvoie** : vec3|nil Position en cache ou nil.
+- `vehicleId` (*string*) : ID of the delivery vehicle.
+- **returns**: vec3|nil Cached position or nil.
 
 #### `gameplay_freeformDelivery_utils.resolvePath(basePath, relativePath)`
 
-Résout un chemin relatif par rapport au dossier d'un fichier de base. Un chemin commençant par '/' est renvoyé tel quel.
+Resolves a relative path against the folder of a base file. A path starting with '/' is returned as is.
 
-- `basePath` (*string*) : Chemin du fichier de référence.
-- `relativePath` (*string|nil*) : Chemin à résoudre.
-- **renvoie** : string|nil Chemin résolu, nil si relativePath est nil ou dossier introuvable.
+- `basePath` (*string*) : Path of the reference file.
+- `relativePath` (*string|nil*) : Path to resolve.
+- **returns**: string|nil Resolved path, nil if relativePath is nil or folder not found.
 
 #### `gameplay_freeformDelivery_utils.updateVehicleCache(veh)`
 
-Met à jour la position en cache d'un véhicule (sans allocation) et la marque valide.
+Updates a vehicle's cached position (without allocation) and marks it valid.
 
-- `veh` (*table*) : Objet véhicule (getID, getPositionXYZ).
+- `veh` (*table*) : Vehicle object (getID, getPositionXYZ).
 
 #### `gameplay_freeformDelivery_utils.updateVehicleCacheList(vehicles)`
 
-Met à jour le cache pour chaque véhicule d'une liste.
+Updates the cache for each vehicle of a list.
 
-- `vehicles` (*table[]*) : Liste d'objets véhicule.
+- `vehicles` (*table[]*) : List of vehicle objects.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `upcast`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/freeformDelivery/utils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/freeformDelivery/utils.lua`.*

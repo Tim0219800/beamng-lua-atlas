@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/isPlayerUsable.lua",
+  "module": "Nœud « Is Player usable » (catégorie `repeat_instant`). Lit `playerUsable` d'un véhicule. Pin d'entrée : `vehId` ; sorties : flux `true` et flux `false`.",
+  "notes": [
+    "Bug : si `vehId` est nil ou 0, le `else` est vide, donc `source` reste nil et `source.playerUsable` provoque une erreur (aucun repli sur le joueur).",
+    "La table `legacyPins` fait référence à `vehiId` (faute de frappe)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur vide.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Met `true` = `source.playerUsable` et `false` = son contraire.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

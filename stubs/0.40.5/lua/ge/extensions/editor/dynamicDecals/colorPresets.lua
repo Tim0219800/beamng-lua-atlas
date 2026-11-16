@@ -2,33 +2,33 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/dynamicDecals/colorPresets.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Section « Color Presets » de l'outil Dynamic Decals. Liste des couleurs nommées stockées dans la préférence `dynamicDecalsTool.colorPresets.presets` (environ 42 par défaut : « iconic oraNGe », Aquamarine, Burgundy, Jet Black…). Chaque entrée {name, value={r,g,b,a}} peut être éditée, renommée, supprimée, filtrée par nom, et appliquée comme couleur de decal ou de fill layer.
---- Accès : extension `editor_dynamicDecals_colorPresets` : `extensions.load("editor_dynamicDecals_colorPresets")`, puis la globale `editor_dynamicDecals_colorPresets`
+--- "Color Presets" section of the Dynamic Decals tool. List of named colors stored in the preference `dynamicDecalsTool.colorPresets.presets` (about 42 by default: "iconic oraNGe", Aquamarine, Burgundy, Jet Black...). Each entry {name, value={r,g,b,a}} can be edited, renamed, deleted, filtered by name, and applied as a decal or fill layer color.
+--- Access: extension `editor_dynamicDecals_colorPresets`: `extensions.load("editor_dynamicDecals_colorPresets")`, then the global `editor_dynamicDecals_colorPresets`
 ---@class editor_dynamicDecals_colorPresets
 editor_dynamicDecals_colorPresets = {}
 
---- Hook appelé quand une préférence change. Ne fait rien ici.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/colorPresets.lua:152
----@param path string Chemin de la préférence.
----@param value any Nouvelle valeur.
+--- Hook called when a preference changes. Does nothing here.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/colorPresets.lua:152
+---@param path string Preference path.
+---@param value any New value.
 function editor_dynamicDecals_colorPresets.editorPreferenceValueChanged(path, value) end
 
---- Dessine le filtre de recherche, la liste des presets (widget couleur, nom, boutons supprimer / appliquer comme couleur de decal via api.setDecalColor / appliquer comme couleur de fill layer via api.setFillLayerColor) et le bouton d'ajout. Sert à la fois de contenu de section et d'éditeur de la préférence `presets`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/colorPresets.lua:30
----@param guiId string Suffixe pour des identifiants ImGui uniques.
+--- Draws the search filter, the preset list (color widget, name, buttons delete / apply as decal color via api.setDecalColor / apply as fill layer color via api.setFillLayerColor) and the add button. Serves both as section content and as the editor of the `presets` preference.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/colorPresets.lua:30
+---@param guiId string Suffix for unique ImGui identifiers.
 function editor_dynamicDecals_colorPresets.onGui(guiId) end
 
---- Enregistre la sous-catégorie `dynamicDecalsTool.colorPresets` avec la table `presets` (liste par défaut de couleurs nommées) et son éditeur graphique (onGui).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/colorPresets.lua:101
----@param prefsRegistry table Registre de préférences de l'éditeur.
+--- Registers the subcategory `dynamicDecalsTool.colorPresets` with the `presets` table (default list of named colors) and its graphical editor (onGui).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/colorPresets.lua:101
+---@param prefsRegistry table Editor preferences registry.
 function editor_dynamicDecals_colorPresets.registerEditorPreferences(prefsRegistry) end
 
---- Appelé par l'outil : récupère l'API et docs, enregistre la section « Color Presets » (ordre 121) et sa page de documentation.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/colorPresets.lua:169
----@param tool_in table Référence à l'outil editor_dynamicDecalsTool.
+--- Called by the tool: gets the API and docs, registers the "Color Presets" section (order 121) and its documentation page.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/colorPresets.lua:169
+---@param tool_in table Reference to the editor_dynamicDecalsTool tool.
 function editor_dynamicDecals_colorPresets.setup(tool_in) end
 

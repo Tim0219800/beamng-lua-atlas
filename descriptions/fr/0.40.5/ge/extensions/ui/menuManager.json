@@ -1,0 +1,57 @@
+{
+  "path": "lua/ge/extensions/ui/menuManager.lua",
+  "module": "Décide quelle route de l'interface (ui_router) afficher quand le joueur ouvre, ferme ou bascule le menu : menu principal, menu pause v2, garage, écrans de mission ou de scénario, ou retour au jeu. Il émet les hooks onBeforeMenuOpened et onMenuToggled. Un moddeur l'utilise pour ouvrir/fermer le menu par script ou pour définir la route de jeu (setGameplayRoute) ou de pause (setPauseRoute) actives.",
+  "notes": [
+    "La plupart des fonctions renvoient une table {handled = true, targetRoute, navigation} ou {handled = false, reason = \"no_current_route\"} quand aucune route n'est active.",
+    "Sans niveau chargé (getMissionFilename vide), la seule destination « menu » valide est « menu » (menu principal) ; pause et play sont des routes de niveau.",
+    "Route de jeu par défaut : « play ». Routes de pause : « pause » (pause v2, ou « pause.replay:pause-replay-player » si un replay est chargé), ou « menu.careerPause » en carrière si pause v2 est désactivé.",
+    "pauseV2Enabled est une variable locale fixée à true ; aucune fonction ne la modifie, isPauseV2Enabled renvoie donc toujours true.",
+    "Quand un retour est bloqué par une garde de route (guard_blocked_exit), la sortie n'est forcée vers le menu qu'au 6e blocage consécutif (BLOCK_FORCE_THRESHOLD).",
+    "En mode garage, toggleMenu ouvre « garage » depuis « menu », ne fait rien si déjà sur « garage », sinon revient en arrière.",
+    "Pendant un scénario à l'état pre-running, toggleMenu ouvre « scenario.start » ; à l'état finished/post, l'écran de fin (scenario.end, scenario.quickrace.end ou scenario.chapter.end).",
+    "Des alias de routes existent pour MenuOpenModule : vehicleselect -> menu.vehicles, vehicleconfig -> menu.vehicleconfig.parts, vehicledebug -> menu.vehicleconfig.debug, appedit -> pause.hudApps."
+  ],
+  "functions": {
+    "toggleMenu": {
+      "desc": "Bascule entre le jeu et le menu (touche Échap). Gère les cas sans niveau, garage, écrans de mission (mission.control), scénarios, jeu vers menu, menu vers jeu, sinon navigue en arrière.",
+      "returns": [{"type": "table", "desc": "{handled = boolean, ...} avec targetRoute et navigation selon le cas."}]
+    },
+    "openMenu": {
+      "desc": "Ouvre le menu (route de pause ou menu principal) sauf si on y est déjà. Émet onBeforeMenuOpened puis onMenuToggled(true).",
+      "returns": [{"type": "table", "desc": "{handled = true, ...}."}]
+    },
+    "closeToMenu": {
+      "desc": "Navigue directement vers la route « menu » (menu principal), sans émettre onMenuToggled.",
+      "returns": [{"type": "table", "desc": "{handled = true, targetRoute = \"menu\", navigation}."}]
+    },
+    "closeMenu": {
+      "desc": "Revient à la route de jeu active (émet onMenuToggled(false)), sauf si on est déjà sur une route de jeu ou sur « garage » ou s'il n'y a pas de route courante.",
+      "returns": [{"type": "table", "desc": "{handled = true, ...}."}]
+    },
+    "MenuOpenModule": {
+      "desc": "Navigue vers une route : soit une chaîne (nom de route, alias, ou « options » qui devient « pause.options » en niveau), soit une table {state, params}. Ne renvoie rien.",
+      "params": {"data": {"type": "string|table", "desc": "Nom de route ou {state = route, params = table}."}}
+    },
+    "menuHide": {
+      "desc": "Affiche le menu (route de menu/pause) si showMenu est vrai, sinon la route de jeu.",
+      "params": {"showMenu": {"type": "boolean", "desc": "true pour afficher le menu."}},
+      "returns": [{"type": "table", "desc": "{handled = true, targetRoute, navigation}."}]
+    },
+    "setGameplayRoute": {
+      "desc": "Définit la route considérée comme « jeu » (« play » si nil).",
+      "params": {"route": {"type": "string|nil", "desc": "Nom de route."}}
+    },
+    "setPauseRoute": {
+      "desc": "Définit une route de pause spécifique, prioritaire sur « pause » quand un niveau est chargé (nil pour revenir au comportement par défaut).",
+      "params": {"route": {"type": "string|nil", "desc": "Nom de route."}}
+    },
+    "getGameplayRoute": {
+      "desc": "Renvoie la route de jeu active.",
+      "returns": [{"type": "string", "desc": "« play » par défaut."}]
+    },
+    "isPauseV2Enabled": {
+      "desc": "Indique si le menu pause v2 est actif (toujours true dans cette version, voir notes).",
+      "returns": [{"type": "boolean", "desc": "true."}]
+    }
+  }
+}

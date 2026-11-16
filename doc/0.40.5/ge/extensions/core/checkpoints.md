@@ -1,138 +1,138 @@
 # `core_checkpoints`
 
-*Fichier : `lua/ge/extensions/core/checkpoints.lua` · VM : Game Engine (GE) · 311 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/checkpoints.lua` · VM: Game Engine (GE) · 311 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_checkpoints` : `extensions.load("core_checkpoints")`, puis la globale `core_checkpoints`
+**Access:** extension `core_checkpoints`: `extensions.load("core_checkpoints")`, then the global `core_checkpoints`
 
-Mémorise, pour chaque véhicule d'un scénario de course, le dernier point de passage atteint (position, direction, vecteur haut, indices de waypoint). Sert à replacer au dernier checkpoint les véhicules pilotés par l'IA qui sont bloqués : toutes les 4 s, un véhicule non jouable qui a quitté son point de départ (> 1 m) et n'a pas bougé de plus de 4 cm depuis le dernier relevé est remis au dernier checkpoint. Actif seulement si le scénario est en état 'running' et que enableCheckpoints est vrai avec plus d'un élément dans lapConfig.
+Stores, for each vehicle of a race scenario, the last waypoint reached (position, direction, up vector, waypoint indices). Used to put back at the last checkpoint the AI-driven vehicles that are stuck: every 4 s, a non-playable vehicle that has left its starting point (> 1 m) and has not moved more than 4 cm since the last sample is put back at the last checkpoint. Active only if the scenario is in the 'running' state and enableCheckpoints is true with more than one element in lapConfig.
 
-## Remarques
+## Notes
 
-- M.state.vehicleCheckpoints[vehId] contient : vehicleName, checkTimer, pos, dirVec, upVec, currentWpName, currentWpIndex, nextWpIndex, initialPos, prevVehPos, raceOver. M.state.aiVehiclePath[vehId] garde l'argument de scenariohelper.setAiPath de l'IA (la liste waypoints perd chaque waypoint atteint).
-- Seuls les véhicules playerUsable ou contrôlés par l'IA du scénario (scenario.aiControlledVehiclesById) sont initialisés (à la création du véhicule et au redémarrage du scénario).
-- La remise au checkpoint est faite par une fonction locale ResetToSavedCheckpoint : resetBrokenFlexMesh, setPositionRotation, puis rappel GE via queueGameEngineLua vers completeReset, et recovery.clear() côté véhicule.
-- Incohérence : completeReset indexe M.state.vehicleCheckpoints[vehicleId] sans vérifier qu'il existe (erreur Lua si le véhicule n'a pas de checkpoint).
-- Sérialisé en onSerialize/onDeserialized (clés converties id <-> nom de véhicule) ; la sauvegarde de campagne n'enregistre que vehicleCheckpoints.
+- M.state.vehicleCheckpoints[vehId] contains: vehicleName, checkTimer, pos, dirVec, upVec, currentWpName, currentWpIndex, nextWpIndex, initialPos, prevVehPos, raceOver. M.state.aiVehiclePath[vehId] keeps the argument of the AI's scenariohelper.setAiPath (the waypoints list loses each waypoint reached).
+- Only vehicles that are playerUsable or controlled by the scenario's AI (scenario.aiControlledVehiclesById) are initialized (when the vehicle is created and when the scenario restarts).
+- The reset to checkpoint is done by a local function ResetToSavedCheckpoint: resetBrokenFlexMesh, setPositionRotation, then a GE callback via queueGameEngineLua to completeReset, and recovery.clear() on the vehicle side.
+- Inconsistency: completeReset indexes M.state.vehicleCheckpoints[vehicleId] without checking that it exists (Lua error if the vehicle has no checkpoint).
+- Serialized in onSerialize/onDeserialized (keys converted id <-> vehicle name); the campaign save only records vehicleCheckpoints.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_checkpoints.completeReset(vehicleId, vehicleName)` | Appelé en retour (aller-retour véhicule -> GE) après le replacement : réapplique le chemin IA sauvegardé et informe scenario_waypoints des indices de waypoint du checkpoint. *(interne)* | 54 |
-| `core_checkpoints.onClientEndMission(levelPath)` | Hook : à la sortie du niveau, remet les données à zéro. *(interne)* *(hook)* | 266 |
-| `core_checkpoints.onClientPreStartMission(levelPath)` | Hook : avant le chargement d'un niveau, remet les données à zéro. *(interne)* *(hook)* | 261 |
-| `core_checkpoints.onDeserialized(data)` | Hook : restaure l'état sérialisé (noms de véhicules reconvertis en ids). *(interne)* *(hook)* | 217 |
-| `core_checkpoints.onPreRender(dt)` | Hook par image : détecte les véhicules IA immobiles (voir description du module) et les remet au dernier checkpoint. *(interne)* *(hook)* | 168 |
-| `core_checkpoints.onRaceWaypointReached(data)` | Hook : un véhicule atteint un waypoint de course. Enregistre le checkpoint (position du waypoint ; direction = curRot du waypoint, sinon vecteur vitesse du véhicule) et marque raceOver au dernier waypoint. *(interne)* *(hook)* | 109 |
-| `core_checkpoints.onResumeCampaign(campaignInProgress, data)` | Hook : reprise de campagne, restaure vehicleCheckpoints. *(interne)* *(hook)* | 285 |
-| `core_checkpoints.onSaveCampaign(saveCallback)` | Hook : sauvegarde de campagne ; appelle saveCallback(M.__globalAlias__, {vehicleCheckpoints}). *(interne)* *(hook)* | 277 |
-| `core_checkpoints.onScenarioRestarted(scenario)` | Hook : remet à zéro les données puis initialise un checkpoint pour chaque véhicule du scénario. *(interne)* *(hook)* | 198 |
-| `core_checkpoints.onSerialize()` | Hook : renvoie vehicleCheckpoints et aiVehiclePath avec clés converties en noms de véhicules (rechargement des extensions). *(interne)* *(hook)* | 206 |
-| `core_checkpoints.onVehicleDestroyed(vid)` | Hook : supprime le checkpoint du véhicule détruit. *(interne)* *(hook)* | 244 |
-| `core_checkpoints.onVehicleSpawned(vehId)` | Hook : initialise le checkpoint d'un nouveau véhicule s'il n'en a pas. *(interne)* *(hook)* | 224 |
-| `core_checkpoints.saveAIPath(vehicleName, arg)` | Mémorise le chemin IA (argument de setAiPath) du véhicule désigné par son nom, pour le restaurer à la remise au checkpoint. | 87 |
-| `core_checkpoints.saveCheckpoint(vehicleId, vehicleName, cpData)` | Enregistre un point de reprise pour un véhicule et remet son chrono à 0. Sans cpData, utilise la position et la direction actuelles du véhicule ; le vecteur haut est toujours celui du véhicule. Ne fait rien (journal) si le véhicule n'existe pas. | 25 |
+| `core_checkpoints.completeReset(vehicleId, vehicleName)` | Called back (round trip vehicle -> GE) after the replacement: reapplies the saved AI path and informs scenario_waypoints of the checkpoint's waypoint indices. *(internal)* | 54 |
+| `core_checkpoints.onClientEndMission(levelPath)` | Hook: on leaving the level, resets the data. *(internal)* *(hook)* | 266 |
+| `core_checkpoints.onClientPreStartMission(levelPath)` | Hook: before a level loads, resets the data. *(internal)* *(hook)* | 261 |
+| `core_checkpoints.onDeserialized(data)` | Hook: restores the serialized state (vehicle names converted back to ids). *(internal)* *(hook)* | 217 |
+| `core_checkpoints.onPreRender(dt)` | Per-frame hook: detects stationary AI vehicles (see module description) and puts them back at the last checkpoint. *(internal)* *(hook)* | 168 |
+| `core_checkpoints.onRaceWaypointReached(data)` | Hook: a vehicle reaches a race waypoint. Records the checkpoint (waypoint position; direction = the waypoint's curRot, otherwise the vehicle's velocity vector) and marks raceOver at the last waypoint. *(internal)* *(hook)* | 109 |
+| `core_checkpoints.onResumeCampaign(campaignInProgress, data)` | Hook: campaign resume, restores vehicleCheckpoints. *(internal)* *(hook)* | 285 |
+| `core_checkpoints.onSaveCampaign(saveCallback)` | Hook: campaign save; calls saveCallback(M.__globalAlias__, {vehicleCheckpoints}). *(internal)* *(hook)* | 277 |
+| `core_checkpoints.onScenarioRestarted(scenario)` | Hook: resets the data then initializes a checkpoint for each vehicle of the scenario. *(internal)* *(hook)* | 198 |
+| `core_checkpoints.onSerialize()` | Hook: returns vehicleCheckpoints and aiVehiclePath with keys converted to vehicle names (extension reload). *(internal)* *(hook)* | 206 |
+| `core_checkpoints.onVehicleDestroyed(vid)` | Hook: removes the destroyed vehicle's checkpoint. *(internal)* *(hook)* | 244 |
+| `core_checkpoints.onVehicleSpawned(vehId)` | Hook: initializes the checkpoint of a new vehicle if it has none. *(internal)* *(hook)* | 224 |
+| `core_checkpoints.saveAIPath(vehicleName, arg)` | Stores the AI path (argument of setAiPath) of the vehicle designated by its name, to restore it when put back at the checkpoint. | 87 |
+| `core_checkpoints.saveCheckpoint(vehicleId, vehicleName, cpData)` | Records a restart point for a vehicle and resets its timer to 0. Without cpData, uses the vehicle's current position and direction; the up vector is always the vehicle's. Does nothing (log) if the vehicle does not exist. | 25 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_checkpoints.completeReset(vehicleId, vehicleName)`
 
-Appelé en retour (aller-retour véhicule -> GE) après le replacement : réapplique le chemin IA sauvegardé et informe scenario_waypoints des indices de waypoint du checkpoint.
+Called back (round trip vehicle -> GE) after the replacement: reapplies the saved AI path and informs scenario_waypoints of the checkpoint's waypoint indices.
 
-- `vehicleId` (*integer*) : id du véhicule
-- `vehicleName` (*string*) : nom du véhicule (journal)
+- `vehicleId` (*integer*) : vehicle id
+- `vehicleName` (*string*) : vehicle name (log)
 
 #### `core_checkpoints.onClientEndMission(levelPath)`
 
-Hook : à la sortie du niveau, remet les données à zéro.
+Hook: on leaving the level, resets the data.
 
-- `levelPath` (*string*) : chemin du niveau
+- `levelPath` (*string*) : level path
 
 #### `core_checkpoints.onClientPreStartMission(levelPath)`
 
-Hook : avant le chargement d'un niveau, remet les données à zéro.
+Hook: before a level loads, resets the data.
 
-- `levelPath` (*string*) : chemin du niveau
+- `levelPath` (*string*) : level path
 
 #### `core_checkpoints.onDeserialized(data)`
 
-Hook : restaure l'état sérialisé (noms de véhicules reconvertis en ids).
+Hook: restores the serialized state (vehicle names converted back to ids).
 
-- `data` (*table*) : table renvoyée par onSerialize
+- `data` (*table*) : table returned by onSerialize
 
 #### `core_checkpoints.onPreRender(dt)`
 
-Hook par image : détecte les véhicules IA immobiles (voir description du module) et les remet au dernier checkpoint.
+Per-frame hook: detects stationary AI vehicles (see module description) and puts them back at the last checkpoint.
 
-- `dt` (*number*) : secondes
+- `dt` (*number*) : seconds
 
 #### `core_checkpoints.onRaceWaypointReached(data)`
 
-Hook : un véhicule atteint un waypoint de course. Enregistre le checkpoint (position du waypoint ; direction = curRot du waypoint, sinon vecteur vitesse du véhicule) et marque raceOver au dernier waypoint.
+Hook: a vehicle reaches a race waypoint. Records the checkpoint (waypoint position; direction = the waypoint's curRot, otherwise the vehicle's velocity vector) and marks raceOver at the last waypoint.
 
-- `data` (*table*) : vehicleId, vehicleName, curPos, curRot (optionnel), waypointName, cur, next
+- `data` (*table*) : vehicleId, vehicleName, curPos, curRot (optional), waypointName, cur, next
 
 #### `core_checkpoints.onResumeCampaign(campaignInProgress, data)`
 
-Hook : reprise de campagne, restaure vehicleCheckpoints.
+Hook: campaign resume, restores vehicleCheckpoints.
 
-- `campaignInProgress` (*any*) : non utilisé
-- `data` (*table*) : données sauvegardées par onSaveCampaign
+- `campaignInProgress` (*any*) : unused
+- `data` (*table*) : data saved by onSaveCampaign
 
 #### `core_checkpoints.onSaveCampaign(saveCallback)`
 
-Hook : sauvegarde de campagne ; appelle saveCallback(M.__globalAlias__, {vehicleCheckpoints}).
+Hook: campaign save; calls saveCallback(M.__globalAlias__, {vehicleCheckpoints}).
 
-- `saveCallback` (*function*) : fonction de sauvegarde de la campagne
+- `saveCallback` (*function*) : campaign save function
 
 #### `core_checkpoints.onScenarioRestarted(scenario)`
 
-Hook : remet à zéro les données puis initialise un checkpoint pour chaque véhicule du scénario.
+Hook: resets the data then initializes a checkpoint for each vehicle of the scenario.
 
-- `scenario` (*table*) : scénario (utilise vehicleNameToId)
+- `scenario` (*table*) : scenario (uses vehicleNameToId)
 
 #### `core_checkpoints.onSerialize()`
 
-Hook : renvoie vehicleCheckpoints et aiVehiclePath avec clés converties en noms de véhicules (rechargement des extensions).
+Hook: returns vehicleCheckpoints and aiVehiclePath with keys converted to vehicle names (extension reload).
 
-- **renvoie** : table données à sérialiser
+- **returns**: table data to serialize
 
 #### `core_checkpoints.onVehicleDestroyed(vid)`
 
-Hook : supprime le checkpoint du véhicule détruit.
+Hook: removes the destroyed vehicle's checkpoint.
 
-- `vid` (*integer*) : id du véhicule
+- `vid` (*integer*) : vehicle id
 
 #### `core_checkpoints.onVehicleSpawned(vehId)`
 
-Hook : initialise le checkpoint d'un nouveau véhicule s'il n'en a pas.
+Hook: initializes the checkpoint of a new vehicle if it has none.
 
-- `vehId` (*integer*) : id du véhicule
+- `vehId` (*integer*) : vehicle id
 
 #### `core_checkpoints.saveAIPath(vehicleName, arg)`
 
-Mémorise le chemin IA (argument de setAiPath) du véhicule désigné par son nom, pour le restaurer à la remise au checkpoint.
+Stores the AI path (argument of setAiPath) of the vehicle designated by its name, to restore it when put back at the checkpoint.
 
-- `vehicleName` (*string*) : nom de l'objet véhicule dans scenetree
-- `arg` (*table*) : table passée à scenario/scenariohelper.setAiPath (champ waypoints = noms)
+- `vehicleName` (*string*) : name of the vehicle object in scenetree
+- `arg` (*table*) : table passed to scenario/scenariohelper.setAiPath (waypoints field = names)
 
 #### `core_checkpoints.saveCheckpoint(vehicleId, vehicleName, cpData)`
 
-Enregistre un point de reprise pour un véhicule et remet son chrono à 0. Sans cpData, utilise la position et la direction actuelles du véhicule ; le vecteur haut est toujours celui du véhicule. Ne fait rien (journal) si le véhicule n'existe pas.
+Records a restart point for a vehicle and resets its timer to 0. Without cpData, uses the vehicle's current position and direction; the up vector is always the vehicle's. Does nothing (log) if the vehicle does not exist.
 
-- `vehicleId` (*integer*) : id du véhicule
-- `vehicleName` (*string|nil*) : nom du véhicule ; « unnamed_<id> » si nil
+- `vehicleId` (*integer*) : vehicle id
+- `vehicleName` (*string|nil*) : vehicle name; "unnamed_<id>" if nil
 - `cpData` (*table|nil*) : desiredPos, desiredDir (vec3), currentWpName, currentWpIndex, nextWpIndex
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `state` | table | État interne : vehicleCheckpoints (table<integer, table>) et aiVehiclePath (table<integer, table>), remis à zéro au début/fin de niveau. |
+| `state` | table | Internal state: vehicleCheckpoints (table<integer, table>) and aiVehiclePath (table<integer, table>), reset at level start/end. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/checkpoints.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/checkpoints.lua`.*

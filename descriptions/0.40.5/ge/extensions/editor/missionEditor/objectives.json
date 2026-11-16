@@ -1,85 +1,169 @@
 {
   "path": "lua/ge/extensions/editor/missionEditor/objectives.lua",
-  "module": "Panneau « Objectives / Career Setup » de l'éditeur de missions. Il configure les étoiles de la mission (starsActive, defaultStarKeys pour les 3 étoiles par défaut, étoiles bonus), les récompenses par étoile (starRewards : attributeKey + rewardAmount) et les textes de fin (starOutroTexts, avec traduction par défaut). Il contient aussi des vérifications (getMissionIssues) et un mode « Raw » JSON. Charge l'extension career_branches pour proposer les attributs de récompense (money, beamXP, vouchers, plus les attributeKey des branches). Le module renvoie un constructeur : require(...)(missionEditor).",
+  "module": "\"Objectives / Career Setup\" panel of the mission editor. It configures the mission's stars (starsActive, defaultStarKeys for the 3 default stars, bonus stars), the rewards per star (starRewards: attributeKey + rewardAmount) and the ending texts (starOutroTexts, with default translation). It also contains checks (getMissionIssues) and a \"Raw\" JSON mode. Loads the career_branches extension to offer the reward attributes (money, beamXP, vouchers, plus the branches' attributeKey). The module returns a constructor: require(...)(missionEditor).",
   "notes": [
-    "Bug : le mode Raw appelle pushStyle(\"red\") et popStyle() qui ne sont pas définies dans ce fichier (globales nil) ; une erreur de JSON dans l'éditeur brut provoquerait donc une erreur Lua au moment d'afficher le message.",
-    "getMissionIssues : « Star X using default translations » (minor), « has no text and no default » ou « is not translated » (error), « No Stars set at all! » (error si showInCareer, sinon warning), récompense à 0 (error, seulement si showInCareer).",
-    "Cocher une étoile l'assigne au premier emplacement libre parmi les 3 étoiles par défaut ; la décocher la retire de ces emplacements.",
-    "Les stats « Summary » additionnent rewardAmount par attributeKey pour toutes les étoiles, les étoiles par défaut et les étoiles bonus."
+    "Bug: Raw mode calls pushStyle(\"red\") and popStyle() which are not defined in this file (nil globals); a JSON error in the raw editor would therefore cause a Lua error when the message is displayed.",
+    "getMissionIssues: \"Star X using default translations\" (minor), \"has no text and no default\" or \"is not translated\" (error), \"No Stars set at all!\" (error if showInCareer, otherwise warning), reward at 0 (error, only if showInCareer).",
+    "Checking a star assigns it to the first free slot among the 3 default stars; unchecking it removes it from those slots.",
+    "The \"Summary\" stats add up rewardAmount per attributeKey for all stars, default stars and bonus stars."
   ],
   "classes": {
     "C": {
-      "desc": "Instance du panneau Objectives. Champs : missionEditor, mission, missionInstance (gameplay_missions_missions.getMissionById), careerSetup, attributeOptions, skillOptions, copiedStars (presse-papiers par type de mission), starKeysSorted.",
+      "desc": "Instance of the Objectives panel. Fields: missionEditor, mission, missionInstance (gameplay_missions_missions.getMissionById), careerSetup, attributeOptions, skillOptions, copiedStars (clipboard per mission type), starKeysSorted.",
       "functions": {
         "init": {
-          "desc": "Constructeur : charge career_branches et construit les listes attributeOptions et skillOptions (branches avec isSkill).",
-          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "desc": "Constructor: loads career_branches and builds the attributeOptions and skillOptions lists (branches with isSkill).",
+          "params": {
+            "missionEditor": {
+              "type": "table",
+              "desc": "Main editor_missionEditor module."
+            }
+          },
           "internal": true
         },
         "getMissionIssues": {
-          "desc": "Appelle setMission(m) puis renvoie les problèmes d'étoiles, de textes et de récompenses de la mission.",
-          "params": {"m": {"type": "table", "desc": "Mission à vérifier."}},
-          "returns": [{"type": "table[]", "desc": "Liste d'éléments {label, severity}."}]
+          "desc": "Calls setMission(m) then returns the mission's star, text and reward issues.",
+          "params": {
+            "m": {
+              "type": "table",
+              "desc": "Mission to check."
+            }
+          },
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "List of elements {label, severity}."
+            }
+          ]
         },
         "setMission": {
-          "desc": "Définit la mission courante, récupère son instance de jeu, les clés d'étoiles triées et l'éditeur du type de mission (setContainer(mission, 'mission')).",
-          "params": {"mission": {"type": "table", "desc": "Mission éditée."}},
+          "desc": "Sets the current mission, gets its game instance, the sorted star keys and the mission type's editor (setContainer(mission, 'mission')).",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Edited mission."
+            }
+          },
           "internal": true
         },
         "getStarLabel": {
-          "desc": "Renvoie le libellé traduit (_tr) de l'étoile, en gérant les libellés sous forme de fonction, de chaîne ou de table {txt}.",
-          "params": {"key": {"type": "string", "desc": "Clé de l'étoile."}},
-          "returns": [{"type": "string", "desc": "Libellé traduit, ou chaîne vide."}]
+          "desc": "Returns the star's translated label (_tr), handling labels as a function, a string or a table {txt}.",
+          "params": {
+            "key": {
+              "type": "string",
+              "desc": "Star key."
+            }
+          },
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Translated label, or empty string."
+            }
+          ]
         },
         "drawDefaultStar": {
-          "desc": "Combo pour choisir quelle étoile active occupe l'emplacement d'étoile par défaut donné. Non appelée dans ce fichier.",
-          "params": {"defaultIndex": {"type": "integer", "desc": "Numéro d'emplacement (1 à 3)."}}
+          "desc": "Combo to choose which active star occupies the given default star slot. Not called in this file.",
+          "params": {
+            "defaultIndex": {
+              "type": "integer",
+              "desc": "Slot number (1 to 3)."
+            }
+          }
         },
         "attributeDropdown": {
-          "desc": "Petit combo « ... » listant attributeOptions.",
-          "returns": [{"type": "string|nil", "desc": "Clé d'attribut choisie ce frame, sinon nil."}]
+          "desc": "Small \"...\" combo listing attributeOptions.",
+          "returns": [
+            {
+              "type": "string|nil",
+              "desc": "Attribute key chosen this frame, otherwise nil."
+            }
+          ]
         },
         "drawAttributeInput": {
-          "desc": "Champ texte + combo pour l'attributeKey d'une récompense ; met à jour re.attributeKey.",
+          "desc": "Text field + combo for a reward's attributeKey; updates re.attributeKey.",
           "params": {
-            "re": {"type": "table", "desc": "Récompense {attributeKey, rewardAmount}."},
-            "idx": {"type": "integer", "desc": "Indice de la récompense."},
-            "key": {"type": "string", "desc": "Clé de l'étoile."}
+            "re": {
+              "type": "table",
+              "desc": "Reward {attributeKey, rewardAmount}."
+            },
+            "idx": {
+              "type": "integer",
+              "desc": "Index of the reward."
+            },
+            "key": {
+              "type": "string",
+              "desc": "Star key."
+            }
           }
         },
         "drawRewardAmount": {
-          "desc": "Champ entier pour rewardAmount ; mémorise aussi _originalRewardAmount.",
+          "desc": "Integer field for rewardAmount; also remembers _originalRewardAmount.",
           "params": {
-            "re": {"type": "table", "desc": "Récompense."},
-            "idx": {"type": "integer", "desc": "Indice de la récompense."},
-            "key": {"type": "string", "desc": "Clé de l'étoile."}
+            "re": {
+              "type": "table",
+              "desc": "Reward."
+            },
+            "idx": {
+              "type": "integer",
+              "desc": "Index of the reward."
+            },
+            "key": {
+              "type": "string",
+              "desc": "Star key."
+            }
           }
         },
         "drawAddReward": {
-          "desc": "Contrôles d'ajout d'une récompense (texte, combo, +) et boutons copier/coller des récompenses.",
+          "desc": "Controls for adding a reward (text, combo, +) and copy/paste buttons for the rewards.",
           "params": {
-            "key": {"type": "string", "desc": "Clé de l'étoile."},
-            "rewards": {"type": "table[]|nil", "desc": "Liste de récompenses actuelle."}
+            "key": {
+              "type": "string",
+              "desc": "Star key."
+            },
+            "rewards": {
+              "type": "table[]|nil",
+              "desc": "Current rewards list."
+            }
           },
-          "returns": [{"type": "table[]|nil", "desc": "Nouvelle liste si elle a changé, sinon nil."}]
+          "returns": [
+            {
+              "type": "table[]|nil",
+              "desc": "New list if it changed, otherwise nil."
+            }
+          ]
         },
         "drawStarRewards": {
-          "desc": "Affiche et édite la liste des récompenses d'une étoile (suppression par bouton « Rem », ajout).",
-          "params": {"key": {"type": "string", "desc": "Clé de l'étoile."}}
+          "desc": "Displays and edits a star's rewards list (deletion via \"Rem\" button, addition).",
+          "params": {
+            "key": {
+              "type": "string",
+              "desc": "Star key."
+            }
+          }
         },
         "starSlotSelector": {
-          "desc": "Combo pour placer l'étoile en « Bonus Star » ou en « Default Star N ».",
-          "params": {"key": {"type": "string", "desc": "Clé de l'étoile."}}
+          "desc": "Combo to place the star as \"Bonus Star\" or as \"Default Star N\".",
+          "params": {
+            "key": {
+              "type": "string",
+              "desc": "Star key."
+            }
+          }
         },
         "drawOutroText": {
-          "desc": "Ligne d'édition du texte de fin d'une étoile (ou « noStarUnlocked »), avec icônes d'état de la traduction par défaut et de la traduction actuelle.",
-          "params": {"key": {"type": "string", "desc": "Clé de l'étoile ou « noStarUnlocked »."}}
+          "desc": "Edit row for a star's ending text (or \"noStarUnlocked\"), with status icons for the default translation and the current translation.",
+          "params": {
+            "key": {
+              "type": "string",
+              "desc": "Star key or \"noStarUnlocked\"."
+            }
+          }
         },
         "drawCareerSetup": {
-          "desc": "Dessine toute la configuration : liste des étoiles avec cases à cocher, emplacement, éditeur du type, récompenses, textes de fin, puis résumé (étoiles par défaut, bonus, totaux de récompenses)."
+          "desc": "Draws the whole configuration: list of stars with checkboxes, slot, type editor, rewards, ending texts, then summary (default stars, bonus, reward totals)."
         },
         "draw": {
-          "desc": "Dessine l'en-tête « Career Setup » (case Raw, copier/coller de la configuration par type de mission) puis drawCareerSetup ou l'éditeur JSON brut de mission.careerSetup.",
+          "desc": "Draws the \"Career Setup\" header (Raw checkbox, copy/paste of the configuration per mission type) then drawCareerSetup or the raw JSON editor of mission.careerSetup.",
           "internal": true
         }
       }

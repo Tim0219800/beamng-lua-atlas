@@ -1,105 +1,185 @@
 {
   "path": "lua/vehicle/powertrain/splitShaft.lua",
-  "module": "Composant powertrain `splitShaft` : répartiteur à deux sorties, typiquement une boîte de transfert 4x4 ou un coupleur d'essieu. Une sortie est « primaire » (reçoit tout le couple d'entrée) et l'autre « secondaire » (reçoit un couple de couplage). Types de couplage (`splitType`) : `viscous` (couple proportionnel à la différence de vitesse, avec exposant) ou `locked` (accouplement à ressort quadratique, borné par lockTorque). Peut être déconnecté (mode `disconnected` : la sortie secondaire ne reçoit plus rien). Catégories `shaft` et `differential`.",
-  "usage": "local tc = powertrain.getDevice(\"transfercase\")\ntc:setMode(\"disconnected\") -- seulement si canDisconnect=true dans le jbeam (traction 2 roues)\ntc.clutchRatio = 0.5       -- affaiblit le couplage en mode locked",
+  "module": "Powertrain component `splitShaft`: two-output splitter, typically a 4x4 transfer case or an axle coupler. One output is \"primary\" (receives all the input torque) and the other \"secondary\" (receives a coupling torque). Coupling types (`splitType`): `viscous` (torque proportional to the speed difference, with exponent) or `locked` (quadratic spring coupling, bounded by lockTorque). Can be disconnected (`disconnected` mode: the secondary output receives nothing). Categories `shaft` and `differential`.",
+  "usage": "local tc = powertrain.getDevice(\"transfercase\")\ntc:setMode(\"disconnected\") -- only if canDisconnect=true in the jbeam (2-wheel drive)\ntc.clutchRatio = 0.5       -- weakens the coupling in locked mode",
   "notes": [
-    "Clés jbeam lues : name, type, inputName, inputIndex, gearRatio (1), friction (N·m), dynamicFriction, torqueLossCoef (0..1), defaultVirtualInertia, splitType ('viscous' par défaut ou 'locked'), primaryOutputID (1 ou 2, défaut 1), canDisconnect, isDisconnected, lockTorque (N·m, 500), defaultClutchRatio (1), lockDampRatio (0.15), clutchStiffness (1), lockSpringCoef (1), lockSpring (N·m/rad, sinon calculé), viscousCoef (10), viscousTorque (= viscousCoef * 10), viscousExponent (1), viscousSmoothing (25), breakTriggerBeam.",
-    "Champs principaux : inputAV (rad/s côté parent = outputAV(primaire) * gearRatio), outputAV1 / outputAV2 (rad/s, posés par les enfants), outputTorque1 / outputTorque2 (N·m), primaryOutputID et secondaryOutputID, splitType, mode ('connected' ou 'disconnected'), availableModes, clutchRatio (0..1, module le couplage en mode locked), shaftAngle (rad), lockTorque, lockSpring, lockDamp, maxShaftAngle, viscousCoef, viscousTorque, viscousExponent, cumulativeInertia, cumulativeGearRatio, isBroken.",
-    "Le couple envoyé au secondaire est borné à ± lockTorque (locked) ou ± viscousTorque (viscous), multipliés par les coefficients d'usure/dégâts. Le primaire reçoit (couple d'entrée - pertes) * gearRatio - couple secondaire. Déconnecté ou cassé : le secondaire reçoit 0 et le primaire tout le couple.",
-    "Piège : l'inertie cumulée ne tient compte que de la sortie primaire ; l'inertie de la sortie secondaire sert seulement à calibrer le ressort et l'amortissement du couplage locked. Un setMode vers 'connected' est ignoré tant que isPhysicallyDisconnected est vrai (état par défaut avant validation par le powertrain).",
-    "Bugs : getPartCondition calcule lockTorqueIntegrityValue et viscousTorqueIntegrityValue à partir de damageFrictionCoef et non de damageLockTorqueCoef / damageViscousTorqueCoef (copier-coller), donc l'intégrité n'a pas l'effet attendu ; onBreak met virtualMassAV = outputAV1 mais virtualMassAV n'est jamais utilisé dans ce fichier ; calculateInertia suppose lockSpring > 0 (division) quand le secondaire n'a pas d'inertie ; getState/setState n'existent que si plusieurs modes sont disponibles."
+    "jbeam keys read: name, type, inputName, inputIndex, gearRatio (1), friction (N·m), dynamicFriction, torqueLossCoef (0..1), defaultVirtualInertia, splitType ('viscous' by default or 'locked'), primaryOutputID (1 or 2, default 1), canDisconnect, isDisconnected, lockTorque (N·m, 500), defaultClutchRatio (1), lockDampRatio (0.15), clutchStiffness (1), lockSpringCoef (1), lockSpring (N·m/rad, otherwise computed), viscousCoef (10), viscousTorque (= viscousCoef * 10), viscousExponent (1), viscousSmoothing (25), breakTriggerBeam.",
+    "Main fields: inputAV (rad/s on the parent side = outputAV(primary) * gearRatio), outputAV1 / outputAV2 (rad/s, set by the children), outputTorque1 / outputTorque2 (N·m), primaryOutputID and secondaryOutputID, splitType, mode ('connected' or 'disconnected'), availableModes, clutchRatio (0..1, modulates the coupling in locked mode), shaftAngle (rad), lockTorque, lockSpring, lockDamp, maxShaftAngle, viscousCoef, viscousTorque, viscousExponent, cumulativeInertia, cumulativeGearRatio, isBroken.",
+    "The torque sent to the secondary is bounded to ± lockTorque (locked) or ± viscousTorque (viscous), multiplied by the wear/damage coefficients. The primary receives (input torque - losses) * gearRatio - secondary torque. Disconnected or broken: the secondary receives 0 and the primary all the torque.",
+    "Pitfall: the cumulative inertia only accounts for the primary output; the inertia of the secondary output is only used to calibrate the spring and damping of the locked coupling. A setMode to 'connected' is ignored as long as isPhysicallyDisconnected is true (default state before validation by the powertrain).",
+    "Bugs: getPartCondition computes lockTorqueIntegrityValue and viscousTorqueIntegrityValue from damageFrictionCoef and not from damageLockTorqueCoef / damageViscousTorqueCoef (copy-paste), so the integrity does not have the expected effect; onBreak sets virtualMassAV = outputAV1 but virtualMassAV is never used in this file; calculateInertia assumes lockSpring > 0 (division) when the secondary has no inertia; getState/setState only exist if several modes are available."
   ],
   "fields": {
-    "outputPorts": {"type": "table<integer, boolean>", "desc": "{[1]=true, [2]=true}."},
-    "deviceCategories": {"type": "table<string, boolean>", "desc": "{shaft=true, differential=true}."},
-    "requiredExternalInertiaOutputs": {"type": "table<integer, integer>", "desc": "{1, 2} : les deux sorties reçoivent leur inertie de leurs enfants."}
+    "outputPorts": {
+      "type": "table<integer, boolean>",
+      "desc": "{[1]=true, [2]=true}."
+    },
+    "deviceCategories": {
+      "type": "table<string, boolean>",
+      "desc": "{shaft=true, differential=true}."
+    },
+    "requiredExternalInertiaOutputs": {
+      "type": "table<integer, integer>",
+      "desc": "{1, 2}: both outputs receive their inertia from their children."
+    }
   },
   "functions": {
     "new": {
-      "desc": "Construit le répartiteur : sorties primaire et secondaire, type de couplage (viscous ou locked), modes disponibles et paramètres de couplage.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
-      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "desc": "Builds the splitter: primary and secondary outputs, coupling type (viscous or locked), available modes and coupling parameters.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "jbeam data of the component."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The device (class `device`)."
+        }
+      ],
       "internal": true
     }
   },
   "classes": {
     "device": {
-      "desc": "Objet renvoyé par new(jbeamData). torqueUpdate dépend de splitType et du mode.",
+      "desc": "Object returned by new(jbeamData). torqueUpdate depends on splitType and mode.",
       "functions": {
         "velocityUpdate": {
-          "desc": "Appelée à chaque pas physique : inputAV = vitesse de la sortie primaire * gearRatio, écrit dans le parent.",
-          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (inutilisé)."}},
+          "desc": "Called at each physics step: inputAV = speed of the primary output * gearRatio, written to the parent.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds (unused)."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "torqueUpdate": {
-          "desc": "Appelée à chaque pas physique : calcule le couple secondaire (viscous : coef * |ΔAV|^exposant, ou locked : ressort quadratique sur l'angle d'arbre + amortissement) et le couple primaire. Déconnecté : secondaire à 0.",
-          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (utilisé par la version locked)."}},
+          "desc": "Called at each physics step: computes the secondary torque (viscous: coef * |ΔAV|^exponent, or locked: quadratic spring on the shaft angle + damping) and the primary torque. Disconnected: secondary at 0.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds (used by the locked version)."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "applyDeformGroupDamage": {
-          "desc": "Augmente les coefficients de dégâts de frottement, de couple de verrouillage et de couple visqueux selon les dégâts.",
-          "params": {"damageAmount": {"type": "number", "desc": "Quantité de dégâts du groupe de déformation."}},
+          "desc": "Increases the friction, lock torque and viscous torque damage coefficients according to the damage.",
+          "params": {
+            "damageAmount": {
+              "type": "number",
+              "desc": "Amount of damage of the deformation group."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "setPartCondition": {
-          "desc": "Applique usure (selon l'odomètre) et dégâts (intégrité nombre 0..1 ou table) aux coefficients de frottement, de verrouillage et de viscosité ; appelle onBreak si isBroken.",
+          "desc": "Applies wear (based on the odometer) and damage (integrity number 0..1 or table) to the friction, lock and viscosity coefficients; calls onBreak if isBroken.",
           "params": {
-            "subSystem": {"type": "any", "desc": "Non utilisé."},
-            "odometer": {"type": "number", "desc": "Distance parcourue en mètres."},
-            "integrity": {"type": "number|table", "desc": "Nombre 0..1 ou table {damageFrictionCoef, damageLockTorqueCoef, damageViscousTorqueCoef, isBroken}."},
-            "visual": {"type": "any", "desc": "Non utilisé."}
+            "subSystem": {
+              "type": "any",
+              "desc": "Not used."
+            },
+            "odometer": {
+              "type": "number",
+              "desc": "Distance traveled in meters."
+            },
+            "integrity": {
+              "type": "number|table",
+              "desc": "Number 0..1 or table {damageFrictionCoef, damageLockTorqueCoef, damageViscousTorqueCoef, isBroken}."
+            },
+            "visual": {
+              "type": "any",
+              "desc": "Not used."
+            }
           },
           "returns": [],
           "internal": true
         },
         "getPartCondition": {
-          "desc": "Renvoie l'intégrité 0..1 (0 si cassé) et la table d'état des dégâts (voir bug dans notes).",
+          "desc": "Returns the integrity 0..1 (0 if broken) and the damage state table (see bug in notes).",
           "params": {},
-          "returns": [{"type": "number", "desc": "Intégrité 0..1."}, {"type": "table", "desc": "{damageFrictionCoef, damageLockTorqueCoef, damageViscousTorqueCoef, isBroken}."}],
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Integrity 0..1."
+            },
+            {
+              "type": "table",
+              "desc": "{damageFrictionCoef, damageLockTorqueCoef, damageViscousTorqueCoef, isBroken}."
+            }
+          ],
           "internal": true
         },
         "setMode": {
-          "desc": "Change le mode ('connected' ou 'disconnected', doit figurer dans availableModes). Un device physiquement déconnecté reste 'disconnected'. Réselectionne torqueUpdate.",
-          "params": {"mode": {"type": "string", "desc": "'connected' ou 'disconnected'."}},
+          "desc": "Changes the mode ('connected' or 'disconnected', must be in availableModes). A physically disconnected device stays 'disconnected'. Reselects torqueUpdate.",
+          "params": {
+            "mode": {
+              "type": "string",
+              "desc": "'connected' or 'disconnected'."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "getState": {
-          "desc": "Défini seulement s'il y a plusieurs modes. Renvoie stateData avec la clé '<nom>Mode' = mode courant.",
+          "desc": "Defined only if there are several modes. Returns stateData with the key '<name>Mode' = current mode.",
           "params": {},
-          "returns": [{"type": "table", "desc": "stateData."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "stateData."
+            }
+          ],
           "internal": false
         },
         "setState": {
-          "desc": "Défini seulement s'il y a plusieurs modes. Restaure le mode depuis data['<nom>Mode'].",
-          "params": {"data": {"type": "table|nil", "desc": "Table d'état produite par getState."}},
+          "desc": "Defined only if there are several modes. Restores the mode from data['<name>Mode'].",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "State table produced by getState."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "validate": {
-          "desc": "Appelée après construction du powertrain : force le mode 'disconnected' si isPhysicallyDisconnected ; renvoie true.",
+          "desc": "Called after the powertrain is built: forces the 'disconnected' mode if isPhysicallyDisconnected; returns true.",
           "params": {},
-          "returns": [{"type": "boolean", "desc": "true."}],
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true."
+            }
+          ],
           "internal": true
         },
         "onBreak": {
-          "desc": "Marque isBroken = true et passe aux fonctions de couple déconnectées (secondaire sans couple).",
+          "desc": "Sets isBroken = true and switches to the disconnected torque functions (secondary without torque).",
           "params": {},
           "returns": [],
           "internal": true
         },
         "calculateInertia": {
-          "desc": "Prend l'inertie et les rapports cumulés de la sortie primaire ; calcule lockSpring, lockDamp et maxShaftAngle à partir de l'inertie de la sortie secondaire.",
+          "desc": "Takes the cumulative inertia and ratios of the primary output; computes lockSpring, lockDamp and maxShaftAngle from the inertia of the secondary output.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "reset": {
-          "desc": "Remet à zéro vitesses, couples, angle d'arbre, lisseur visqueux, coefficients d'usure/dégâts et mode ; relit gearRatio, friction, viscousCoef et defaultClutchRatio.",
-          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "desc": "Resets speeds, torques, shaft angle, viscous smoother, wear/damage coefficients and mode; rereads gearRatio, friction, viscousCoef and defaultClutchRatio.",
+          "params": {
+            "jbeamData": {
+              "type": "table",
+              "desc": "jbeam data of the component."
+            }
+          },
           "returns": [],
           "internal": true
         }

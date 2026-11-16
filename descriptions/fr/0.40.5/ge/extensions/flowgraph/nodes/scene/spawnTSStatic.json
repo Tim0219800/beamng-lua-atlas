@@ -1,0 +1,59 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/spawnTSStatic.lua",
+  "module": "Noeud flowgraph « Spawn TSStatic » (once_instant, auteur BeamNG). Crée un objet TSStatic avec shapeName, position, rotation et scale. Entrées : flow, reset, shapeName, position, rotation, scale. Sorties : flow, created (impulsion d'une frame), lastId. L'objet est supprimé à l'arrêt, à la fin de mission ou à la destruction.",
+  "notes": [
+    "Le code d'un décalage (pin offset) est commenté dans createObject et n'a aucun effet.",
+    "maxObjectCount n'est pas utilisé."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise la liste d'objets et data.maxObjectCount = 1.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "createObject": {
+          "desc": "Crée le TSStatic (canSave = false), l'enregistre sous spawnedObj_<time>_<id>_<n>, écrit lastId et notifie l'éditeur.",
+          "params": {
+            "objectName": {
+              "type": "any",
+              "desc": "non utilisé"
+            }
+          },
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Appelle onNodeReset.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Supprime tous les objets créés.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Crée l'objet et lève created.",
+          "internal": false
+        },
+        "work": {
+          "desc": "Retombe created à false à la frame suivante.",
+          "internal": false
+        },
+        "onClientEndMission": {
+          "desc": "Hook de fin de mission : nettoie les objets créés par le noeud.",
+          "internal": true
+        },
+        "destroy": {
+          "desc": "Appelé à la destruction du noeud : nettoie les objets créés.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

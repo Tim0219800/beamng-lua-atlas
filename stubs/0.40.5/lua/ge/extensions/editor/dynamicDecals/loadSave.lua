@@ -2,52 +2,52 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/dynamicDecals/loadSave.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Section « Load/Save » de l'outil Dynamic Decals. Permet d'enregistrer la pile de calques dans un fichier projet `.dyndecals.json` (« Save as... » / « Save ») et d'en charger un (« Load from file ») en mode Overwrite (remplace) ou Append (ajoute). Le dossier par défaut est /art/dynamicDecals/projects/. Le dernier chemin utilisé est conservé lors du rechargement des extensions (onSerialize / onDeserialized).
---- Accès : extension `editor_dynamicDecals_loadSave` : `extensions.load("editor_dynamicDecals_loadSave")`, puis la globale `editor_dynamicDecals_loadSave`
+--- "Load/Save" section of the Dynamic Decals tool. Lets you save the layer stack to a `.dyndecals.json` project file ("Save as..." / "Save") and load one ("Load from file") in Overwrite (replace) or Append (add) mode. The default folder is /art/dynamicDecals/projects/. The last used path is kept across extension reloads (onSerialize / onDeserialized).
+--- Access: extension `editor_dynamicDecals_loadSave`: `extensions.load("editor_dynamicDecals_loadSave")`, then the global `editor_dynamicDecals_loadSave`
 ---@class editor_dynamicDecals_loadSave
 editor_dynamicDecals_loadSave = {}
 
---- Hook appelé quand une préférence change. Ne fait rien ici.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/loadSave.lua:88
----@param path string Chemin de la préférence.
----@param value any Nouvelle valeur.
+--- Hook called when a preference changes. Does nothing here.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/loadSave.lua:88
+---@param path string Preference path.
+---@param value any New value.
 function editor_dynamicDecals_loadSave.editorPreferenceValueChanged(path, value) end
 
---- Renvoie le chemin du dernier fichier projet utilisé (ou le dossier par défaut).
----Source : lua/ge/extensions/editor/dynamicDecals/loadSave.lua:145
----@return string  Chemin du projet.
+--- Returns the path of the last project file used (or the default folder).
+---Source: lua/ge/extensions/editor/dynamicDecals/loadSave.lua:145
+---@return string  Project path.
 function editor_dynamicDecals_loadSave.getCurrentPorjectFilePath() end
 
---- Ouvre la boîte de dialogue de fichier (filtre .dyndecals.json) puis appelle api.loadLayerStackFromFile(chemin, mode) et mémorise le chemin.
----Source : lua/ge/extensions/editor/dynamicDecals/loadSave.lua:22
+--- Opens the file dialog (filter .dyndecals.json) then calls api.loadLayerStackFromFile(path, mode) and stores the path.
+---Source: lua/ge/extensions/editor/dynamicDecals/loadSave.lua:22
 function editor_dynamicDecals_loadSave.loadFileDialog() end
 
---- Hook appelé après rechargement avec les données de onSerialize ; restaure lastProjectFilePath (défaut : dossier des projets).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/loadSave.lua:141
----@param data table Table renvoyée par onSerialize.
+--- Hook called after reload with the data from onSerialize; restores lastProjectFilePath (default: projects folder).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/loadSave.lua:141
+---@param data table Table returned by onSerialize.
 function editor_dynamicDecals_loadSave.onDeserialized(data) end
 
---- Hook de rechargement des extensions : renvoie {lastProjectFilePath} à conserver.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/loadSave.lua:135
----@return table  Données à restaurer.
+--- Extension reload hook: returns {lastProjectFilePath} to keep.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/loadSave.lua:135
+---@return table  Data to restore.
 function editor_dynamicDecals_loadSave.onSerialize() end
 
---- Ne déclare aucune préférence (corps commenté).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/loadSave.lua:82
----@param prefsRegistry table Registre de préférences de l'éditeur.
+--- Declares no preference (body commented out).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/loadSave.lua:82
+---@param prefsRegistry table Editor preferences registry.
 function editor_dynamicDecals_loadSave.registerEditorPreferences(prefsRegistry) end
 
---- Ouvre la boîte « Enregistrer sous » (confirmation d'écrasement) puis appelle api.saveLayerStackToFile et mémorise le chemin.
----Source : lua/ge/extensions/editor/dynamicDecals/loadSave.lua:39
+--- Opens the "Save as" dialog (overwrite confirmation) then calls api.saveLayerStackToFile and stores the path.
+---Source: lua/ge/extensions/editor/dynamicDecals/loadSave.lua:39
 function editor_dynamicDecals_loadSave.saveAsFileDialog() end
 
---- Appelé par l'outil : récupère API, notification et docs, prépare la liste des modes de chargement, enregistre la section « Load/Save » (ordre 20) et la page de documentation « Save & Load ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/loadSave.lua:117
----@param tool_in table Référence à l'outil editor_dynamicDecalsTool.
+--- Called by the tool: gets API, notification and docs, prepares the list of loading modes, registers the "Load/Save" section (order 20) and the "Save & Load" documentation page.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/loadSave.lua:117
+---@param tool_in table Reference to the editor_dynamicDecalsTool tool.
 function editor_dynamicDecals_loadSave.setup(tool_in) end
 

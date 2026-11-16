@@ -1,32 +1,32 @@
 # `flowgraph_nodes_vehicle_touchingStatic`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/touchingStatic.lua` · VM : Game Engine (GE) · 111 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/touchingStatic.lua` · VM: Game Engine (GE) · 111 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/touchingStatic")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/touchingStatic")` (file under extensions/ but not a regular extension)
 
-Nœud « Static Object Touch » (catégorie `repeat_instant`, tags collision/static). Détecte une intersection du véhicule avec des objets statiques ou le terrain, par rayons (`castRayStatic`) lancés depuis le centre vers 8 points (FL, F, FR, R, BR, B, BL, L) de l'OOBB, décalés. Pins d'entrée : `vehId`, `widthOffset`, `lengthOffset`, `heightOffset` (défaut 0,5), `debugMode`. Sorties : `touching`, flux `touchFL/F/FR/R/BR/B/BL/L` (cachés), `isTouching`.
+"Static Object Touch" node (category `repeat_instant`, tags collision/static). Detects an intersection of the vehicle with static objects or the terrain, using rays (`castRayStatic`) cast from the center toward 8 offset points (FL, F, FR, R, BR, B, BL, L) of the OOBB. Input pins: `vehId`, `widthOffset`, `lengthOffset`, `heightOffset` (default 0.5), `debugMode`. Outputs: `touching`, flow `touchFL/F/FR/R/BR/B/BL/L` (hidden), `isTouching`.
 
-## Remarques
+## Notes
 
-- Pas de flux d'entrée ni de sortie `flow` : seulement les sorties de touches.
-- Debug : sphères rouge (touché) ou verte dessinées dans `onPreRender`.
+- No input flow and no `flow` output: only the touch outputs.
+- Debug: red (touched) or green spheres drawn in `onPreRender`.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Crée les 8 points et les vecteurs de travail. | 42 |
-| `C:_executionStopped()` | Libère les points et réinitialise les sorties. | 47 |
-| `C:init()` | Constructeur ; appelle `reset`. | 38 |
-| `C:onPreRender()` | Hook de rendu : dessine les sphères de debug si `debugMode` est actif. | 101 |
-| `C:reset()` | Met toutes les sorties à false et désactive le nœud. | 52 |
-| `C:work()` | Calcule les 8 points, lance les rayons et remplit les sorties. | 59 |
+| `C:_executionStarted()` | Creates the 8 points and the working vectors. | 42 |
+| `C:_executionStopped()` | Frees the points and resets the outputs. | 47 |
+| `C:init()` | Constructor; calls `reset`. | 38 |
+| `C:onPreRender()` | Render hook: draws the debug spheres if `debugMode` is active. | 101 |
+| `C:reset()` | Sets all outputs to false and disables the node. | 52 |
+| `C:work()` | Computes the 8 points, casts the rays and fills the outputs. | 59 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/touchingStatic.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/touchingStatic.lua`.*

@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/flowgraph/modules/timerModule.lua",
+  "module": "Module flowgraph (moduleOrder 0) qui gère des minuteurs. Il tient trois horloges globales cumulées (real, sim, raw) mises à jour par onUpdate avec dtReal, dtSim et dtRaw ; chaque minuteur référence l'une d'elles (mode 'dtSim', 'dtReal' ou 'dtRaw'), a un temps de départ, une durée (défaut 5 s) et peut être mis en pause. Les valeurs sont stockées dans un variableStorage et finalisées à la fin du tick.",
+  "notes": [
+    "Unités : secondes. Mode par défaut : 'dtSim' (temps de simulation, affecté par le ralenti et la pause).",
+    "Les pauses sont différées : setPause pose un drapeau (pauseFlag) appliqué dans afterTrigger.",
+    "Bug probable : clear() fait C.idCounter = 0 sur la classe et non sur self ; l'instance garde son compteur d'ids si self.idCounter a déjà été créé.",
+    "setMode utilise variables:set alors que les autres fonctions utilisent variables:change ; le comportement exact dépend de variableStorage (non vérifié ici).",
+    "setPause provoque une erreur si l'id est inconnu."
+  ],
+  "functions": {
+    "getFreeId": {"desc": "Incrémente et renvoie un id de minuteur.", "returns": [{"type": "integer", "desc": "id"}]},
+    "init": {"desc": "Crée le variableStorage et appelle clear().", "internal": true},
+    "clear": {"desc": "Vide variables et minuteurs, remet les horloges globales à 0.", "internal": true},
+    "getGlobalTime": {"desc": "Renvoie l'horloge globale du mode demandé.", "params": {"mode": {"type": "string", "desc": "'dtSim', 'dtReal' ou 'dtRaw'"}}, "returns": [{"type": "number", "desc": "temps cumulé (s), 0 si mode inconnu"}]},
+    "addTimer": {"desc": "Crée un minuteur et renvoie son id.", "params": {"data": {"type": "table", "desc": "mode (défaut 'dtSim'), time (temps déjà écoulé, défaut 0), duration (défaut 5)"}}, "returns": [{"type": "integer", "desc": "id du minuteur"}]},
+    "getTimer": {"desc": "Renvoie l'objet minuteur complet (start, mode, duration, isPaused…).", "params": {"id": {"type": "integer", "desc": "id du minuteur"}}, "returns": [{"type": "table|nil", "desc": "minuteur"}]},
+    "set": {"desc": "Change un champ du minuteur (start, mode, duration) via le variableStorage.", "params": {"id": {"type": "integer", "desc": "id du minuteur"}, "field": {"type": "string", "desc": "start, mode ou duration"}, "val": {"type": "any", "desc": "nouvelle valeur"}}},
+    "setPause": {"desc": "Met en pause ou reprend un minuteur ; l'effet est appliqué dans afterTrigger. Ne fait rien si l'état demandé est déjà l'état actuel ; avertit si un drapeau est déjà posé.", "params": {"id": {"type": "integer", "desc": "id du minuteur"}, "val": {"type": "boolean", "desc": "true = pause, false = reprise"}}},
+    "setElapsedTime": {"desc": "Fixe le temps écoulé d'un minuteur (en pause : mémorise la valeur ; sinon recalcule le départ).", "params": {"id": {"type": "integer", "desc": "id du minuteur"}, "time": {"type": "number", "desc": "temps écoulé (s)"}}},
+    "setMode": {"desc": "Change le mode d'horloge du minuteur en conservant le temps écoulé (si non en pause).", "params": {"id": {"type": "integer", "desc": "id du minuteur"}, "mode": {"type": "string", "desc": "'dtSim', 'dtReal' ou 'dtRaw'"}}},
+    "getElapsedTime": {"desc": "Renvoie le temps écoulé : valeur figée si en pause, sinon horloge du mode moins le départ.", "params": {"id": {"type": "integer", "desc": "id du minuteur"}}, "returns": [{"type": "number", "desc": "temps écoulé (s)"}]},
+    "isComplete": {"desc": "Vrai si le temps écoulé a atteint la durée.", "params": {"id": {"type": "integer", "desc": "id du minuteur"}}, "returns": [{"type": "boolean", "desc": "terminé"}]},
+    "onUpdate": {"desc": "Appelé à chaque mise à jour du manager : ajoute dtReal, dtSim et dtRaw aux horloges globales.", "params": {"dtReal": {"type": "number", "desc": "delta temps réel (s)"}, "dtSim": {"type": "number", "desc": "delta temps de simulation (s)"}, "dtRaw": {"type": "number", "desc": "delta temps brut (s)"}}, "internal": true},
+    "afterTrigger": {"desc": "Appelé après le tick du graphe : applique les pauses ou reprises en attente puis finalise les variables.", "internal": true},
+    "executionStopped": {"desc": "Appelé à l'arrêt du projet : appelle clear().", "internal": true}
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/trackVehicle.lua",
+  "module": "Nœud « Track Vehicle » (catégorie `repeat_instant`). Permet au flowgraph de suivre un véhicule créé en dehors de lui (`mgr.modules.vehicle:addVehicle(veh, {dontDelete})`). Pins d'entrée : `flow`, `vehId` (défaut 0), `dontDelete` (caché, défaut true : ne pas supprimer à l'arrêt).",
+  "notes": [
+    "Pas de repli sur le véhicule joueur malgré la description du pin ; `vehId` nil provoque `findObjectById(nil)`.",
+    "Appelé à chaque frame tant que le flux est actif."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Fonction vide.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Constructeur vide.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Ajoute le véhicule au module vehicle du manager.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

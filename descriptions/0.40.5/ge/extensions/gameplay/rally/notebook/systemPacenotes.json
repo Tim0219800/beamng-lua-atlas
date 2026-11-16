@@ -1,29 +1,53 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/notebook/systemPacenotes.lua",
-  "module": "Détient la liste canonique des noms de pacenotes « système » du rallye (compte à rebours, avertissements de départ, vérifications radio/ceintures, faux départ…) et valide le tableau `system` d'un style de carnet. Chaque style doit fournir tous les noms de `required`, dans cet ordre ; les noms inconnus, doublons ou variantes sans texte sont rejetés. Utile à un moddeur qui écrit un style de copilote dans une nouvelle langue.",
-  "usage": "local sp = require('gameplay_rally_notebook_systemPacenotes')\nlocal system = sp.localized({ countdown5 = 'Cinq', countdowngo = {'Go', 'Partez'} })\nlocal ok = sp.validate(system, 'monStyle') -- false : les autres noms sont vides",
+  "module": "Holds the canonical list of rally \"system\" pacenote names (countdown, start warnings, radio/belt checks, false start…) and validates the `system` array of a notebook style. Each style must provide all the names in `required`, in that order; unknown names, duplicates or variants without text are rejected. Useful to a modder writing a co-driver style in a new language.",
+  "usage": "local sp = require('gameplay_rally_notebook_systemPacenotes')\nlocal system = sp.localized({ countdown5 = 'Cinq', countdowngo = {'Go', 'Partez'} })\nlocal ok = sp.validate(system, 'monStyle') -- false: the other names are empty",
   "notes": [
-    "L'ordre de M.required est imposé : validate exige que system[i].name == required[i].",
-    "localized() produit des entrées avec variants = {} pour les noms absents de la table ; validate les refuse ensuite (variants non vide obligatoire).",
-    "validate journalise l'erreur avec log('E', 'systemPacenotes', ...) et renvoie false dès la première anomalie."
+    "The order of M.required is enforced: validate requires system[i].name == required[i].",
+    "localized() produces entries with variants = {} for names absent from the table; validate then rejects them (non-empty variants required).",
+    "validate logs the error with log('E', 'systemPacenotes', ...) and returns false at the first anomaly."
   ],
   "fields": {
-    "required": {"type": "string[]", "desc": "Noms obligatoires, dans l'ordre : precountdown, countdown5 à countdown1, countdowngo, warningSeconds60/30/15/10, commsCheck, beltsCheck, rescheduled, falseStart (15 entrées)."}
+    "required": {
+      "type": "string[]",
+      "desc": "Required names, in order: precountdown, countdown5 to countdown1, countdowngo, warningSeconds60/30/15/10, commsCheck, beltsCheck, rescheduled, falseStart (15 entries)."
+    }
   },
   "functions": {
     "localized": {
-      "desc": "Construit le tableau ordonné `system` d'un style à partir d'une table compacte nom -> texte. Chaque valeur peut être une chaîne, une table {text=...}, ou une liste de chaînes/tables (variantes). Les noms manquants ou de type invalide donnent une liste de variantes vide.",
-      "params": {"localized": {"type": "table<string, string|table>|nil", "desc": "Textes localisés indexés par nom de pacenote système."}},
-      "returns": [{"type": "table[]", "desc": "Liste de { name = string, variants = { {text=string,...}, ... } } dans l'ordre de `required`."}],
+      "desc": "Builds a style's ordered `system` array from a compact name -> text table. Each value can be a string, a {text=...} table, or a list of strings/tables (variants). Missing or invalid-type names give an empty variants list.",
+      "params": {
+        "localized": {
+          "type": "table<string, string|table>|nil",
+          "desc": "Localized texts keyed by system pacenote name."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "List of { name = string, variants = { {text=string,...}, ... } } in the order of `required`."
+        }
+      ],
       "internal": false
     },
     "validate": {
-      "desc": "Vérifie qu'un tableau `system` est une liste ordonnée complète : entrées-tables avec `name` chaîne, noms reconnus, dans l'ordre de `required`, sans doublon, avec une liste `variants` non vide dont chaque élément a un `text` non vide.",
+      "desc": "Checks that a `system` array is a complete ordered list: table entries with a string `name`, recognized names, in the order of `required`, without duplicates, with a non-empty `variants` list in which every element has a non-empty `text`.",
       "params": {
-        "systemArray": {"type": "table", "desc": "Tableau à valider (typiquement renvoyé par localized)."},
-        "styleName": {"type": "string|nil", "desc": "Nom du style pour les messages de log (\"?\" par défaut)."}
+        "systemArray": {
+          "type": "table",
+          "desc": "Array to validate (typically returned by localized)."
+        },
+        "styleName": {
+          "type": "string|nil",
+          "desc": "Style name for log messages (\"?\" by default)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si valide, false sinon (erreur journalisée)."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if valid, false otherwise (error logged)."
+        }
+      ],
       "internal": false
     }
   }

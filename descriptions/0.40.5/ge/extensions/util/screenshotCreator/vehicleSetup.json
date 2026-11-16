@@ -1,69 +1,141 @@
 {
   "path": "lua/ge/extensions/util/screenshotCreator/vehicleSetup.lua",
-  "module": "Mise en place physique du véhicule avant une vignette : le replace à l'endroit de départ (premier SpawnSphere du niveau, sinon une position de repli), applique la rotation de vignette configurée (thumbnailConfig.getRotation), l'aligne au sol et attend qu'il se stabilise. Fournit aussi des mesures du sol sous une boîte englobante (utilisées par le cadrage procédural) et l'allumage des feux de croisement.",
+  "module": "Physical setup of the vehicle before a thumbnail: replaces it at the starting point (first SpawnSphere of the level, otherwise a fallback position), applies the configured thumbnail rotation (thumbnailConfig.getRotation), aligns it to the ground and waits for it to settle. Also provides ground measurements under a bounding box (used by procedural framing) and turning on the low beams.",
   "notes": [
-    "placeVehicleForThumbnail et waitForVehicleToSettle utilisent coroutine.yield : à appeler depuis une coroutine (celle de job.lua).",
-    "Le véhicule est aligné par le coin arrière-droit de sa boîte sur le SpawnSphere ; pour les modèles inflated_mat et large_bridge la boîte est centrée sur le point d'apparition.",
-    "La boîte du véhicule dans le monde (getSpawnWorldOOBB) ne suit une téléportation qu'après des pas de physique ; l'alignement utilise donc la boîte locale initialNodePosBB et la pose qui vient d'être fixée.",
-    "Si une rotation de vignette est appliquée, la position et l'orientation d'origine sont mémorisées par véhicule pour getResetTransform ; elles sont oubliées quand le véhicule est réapparu (onVehicleSpawned).",
-    "Délai de stabilisation : pauseDelay de la config s'il est > 0, sinon options.settleDelay, sinon 2 s."
+    "placeVehicleForThumbnail and waitForVehicleToSettle use coroutine.yield: call them from a coroutine (that of job.lua).",
+    "The vehicle is aligned by the rear-right corner of its box on the SpawnSphere; for the inflated_mat and large_bridge models the box is centered on the spawn point.",
+    "The vehicle's world box (getSpawnWorldOOBB) follows a teleport only after physics steps; the alignment therefore uses the local box initialNodePosBB and the pose that was just set.",
+    "If a thumbnail rotation is applied, the original position and orientation are stored per vehicle for getResetTransform; they are forgotten when the vehicle has respawned (onVehicleSpawned).",
+    "Settle delay: the config's pauseDelay if > 0, otherwise options.settleDelay, otherwise 2 s."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Extension chargée avant : util_screenshotCreator_thumbnailConfig."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extension loaded before: util_screenshotCreator_thumbnailConfig."
+    }
   },
   "functions": {
     "getGroundHeight": {
-      "desc": "Lance un rayon statique vers le bas (0,5 m au-dessus, 2 m en dessous) depuis la position donnée et renvoie la hauteur du sol, ou la hauteur de la position si le sol n'est pas trouvé ou est incohérent.",
-      "params": {"position": {"type": "vec3", "desc": "Position monde."}},
-      "returns": [{"type": "number", "desc": "Hauteur Z du sol en mètres."}]
+      "desc": "Casts a static ray downward (0.5 m above, 2 m below) from the given position and returns the ground height, or the height of the position if the ground is not found or is inconsistent.",
+      "params": {
+        "position": {
+          "type": "vec3",
+          "desc": "World position."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Ground Z height in meters."
+        }
+      ]
     },
     "getFloorHeight": {
-      "desc": "Trouve la hauteur du sol sous une boîte englobante en lançant le rayon depuis le dessus de la boîte (utile pour les accessoires dont des nœuds sont enterrés, comme des bornes). Se replie sur le bas de la boîte si aucun sol n'est touché.",
-      "params": {"bb": {"type": "table", "desc": "OOBB avec getPoint(i) et getCenter()."}},
-      "returns": [{"type": "number", "desc": "Hauteur Z du sol en mètres."}]
+      "desc": "Finds the ground height under a bounding box by casting the ray from the top of the box (useful for accessories with buried nodes, such as bollards). Falls back to the bottom of the box if no ground is hit.",
+      "params": {
+        "bb": {
+          "type": "table",
+          "desc": "OOBB with getPoint(i) and getCenter()."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Ground Z height in meters."
+        }
+      ]
     },
     "getThumbnailSpawnTransform": {
-      "desc": "Renvoie la position et la rotation du premier objet SpawnSphere de la scène, point de départ des vignettes.",
+      "desc": "Returns the position and rotation of the first SpawnSphere object in the scene, the starting point of thumbnails.",
       "returns": [
-        {"type": "vec3|nil", "desc": "Position, nil s'il n'y a pas de SpawnSphere."},
-        {"type": "quat|nil", "desc": "Rotation."}
+        {
+          "type": "vec3|nil",
+          "desc": "Position, nil if there is no SpawnSphere."
+        },
+        {
+          "type": "quat|nil",
+          "desc": "Rotation."
+        }
       ]
     },
     "getResetTransform": {
-      "desc": "Renvoie la position et la rotation à utiliser pour replacer le véhicule : celles d'origine mémorisées si une rotation de vignette avait été appliquée, sinon sa pose actuelle.",
-      "params": {"vehicle": {"type": "table", "desc": "Objet véhicule."}},
+      "desc": "Returns the position and rotation to use to put the vehicle back: the stored original ones if a thumbnail rotation had been applied, otherwise its current pose.",
+      "params": {
+        "vehicle": {
+          "type": "table",
+          "desc": "Vehicle object."
+        }
+      },
       "returns": [
-        {"type": "vec3", "desc": "Position."},
-        {"type": "quat", "desc": "Rotation."}
+        {
+          "type": "vec3",
+          "desc": "Position."
+        },
+        {
+          "type": "quat",
+          "desc": "Rotation."
+        }
       ]
     },
     "placeVehicleForThumbnail": {
-      "desc": "Réinitialise le véhicule (vehicle:reset), le téléporte sur le point de départ avec la rotation de vignette de la config, puis l'aligne au sol (deux coroutine.yield).",
+      "desc": "Resets the vehicle (vehicle:reset), teleports it to the starting point with the config's thumbnail rotation, then aligns it to the ground (two coroutine.yield).",
       "params": {
-        "vehicle": {"type": "table", "desc": "Objet véhicule."},
-        "configName": {"type": "string", "desc": "Nom de la configuration (pour la rotation de vignette)."},
-        "fallbackPosition": {"type": "vec3|nil", "desc": "Position utilisée s'il n'y a pas de SpawnSphere."},
-        "fallbackRotation": {"type": "quat|nil", "desc": "Rotation utilisée s'il n'y a pas de SpawnSphere."}
+        "vehicle": {
+          "type": "table",
+          "desc": "Vehicle object."
+        },
+        "configName": {
+          "type": "string",
+          "desc": "Configuration name (for the thumbnail rotation)."
+        },
+        "fallbackPosition": {
+          "type": "vec3|nil",
+          "desc": "Position used if there is no SpawnSphere."
+        },
+        "fallbackRotation": {
+          "type": "quat|nil",
+          "desc": "Rotation used if there is no SpawnSphere."
+        }
       }
     },
     "waitForVehicleToSettle": {
-      "desc": "Attend (en cédant la main à chaque frame) le temps de stabilisation du véhicule.",
+      "desc": "Waits (yielding every frame) for the vehicle's settle time.",
       "params": {
-        "modelName": {"type": "string", "desc": "Nom du modèle."},
-        "configName": {"type": "string", "desc": "Nom de la configuration."},
-        "options": {"type": "table|nil", "desc": "{settleDelay = secondes} (défaut 2)."}
+        "modelName": {
+          "type": "string",
+          "desc": "Model name."
+        },
+        "configName": {
+          "type": "string",
+          "desc": "Configuration name."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "{settleDelay = seconds} (default 2)."
+        }
       }
     },
     "setLowBeams": {
-      "desc": "Si enabled est vrai, envoie au véhicule electrics.setLightsState(1) (feux de croisement). Ne fait rien sinon.",
+      "desc": "If enabled is true, sends electrics.setLightsState(1) (low beams) to the vehicle. Does nothing otherwise.",
       "params": {
-        "vehicle": {"type": "table", "desc": "Objet véhicule."},
-        "enabled": {"type": "boolean", "desc": "Allumer les feux."}
+        "vehicle": {
+          "type": "table",
+          "desc": "Vehicle object."
+        },
+        "enabled": {
+          "type": "boolean",
+          "desc": "Turn on the lights."
+        }
       }
     },
     "onVehicleSpawned": {
-      "desc": "Hook appelé quand un véhicule apparaît : oublie la rotation de vignette mémorisée pour ce véhicule.",
-      "params": {"vehicleId": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "desc": "Hook called when a vehicle spawns: forgets the thumbnail rotation stored for this vehicle.",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
       "internal": true
     }
   }

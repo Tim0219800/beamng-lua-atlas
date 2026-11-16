@@ -2,20 +2,20 @@
 -- tim19Atlas stub generated from lua/common/libs/luasocket/socket/tp.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Bibliothèque tierce LuaSocket (Diego Nehab) : sous-système commun aux protocoles texte SMTP/FTP (« Telnet-like Protocol »). `connect` ouvre une connexion TCP et renvoie un objet dont les méthodes lisent les réponses du serveur à code numérique à trois chiffres (réponses multilignes comprises) et envoient des commandes. Utilisé par socket.smtp.
---- Accès : `require("libs/luasocket/socket/tp")`
+--- Third-party LuaSocket library (Diego Nehab): common subsystem of the SMTP/FTP text protocols ("Telnet-like Protocol"). `connect` opens a TCP connection and returns an object whose methods read the server's three-digit numeric-code responses (multiline responses included) and send commands. Used by socket.smtp.
+--- Access: `require("libs/luasocket/socket/tp")`
 ---@class libs_luasocket_socket_tp
----@field TIMEOUT number Délai par défaut des opérations réseau en secondes (60).
+---@field TIMEOUT number Default timeout of network operations in seconds (60).
 local libs_luasocket_socket_tp = {}
 
---- Crée un socket (create ou socket.tcp), fixe le délai, se connecte et renvoie l'objet de contrôle. En cas d'échec, ferme le socket et renvoie nil et l'erreur.
----Source : lua/common/libs/luasocket/socket/tp.lua:114
----@param host string Hôte du serveur.
----@param port integer Port du serveur.
----@param timeout number|nil Délai en secondes ; défaut TIMEOUT.
----@param create function|nil Fabrique de socket ; défaut socket.tcp.
----@return table|nil  Objet de contrôle du protocole, ou nil.
----@return string|nil  Message d'erreur.
+--- Creates a socket (create or socket.tcp), sets the timeout, connects and returns the control object. On failure, closes the socket and returns nil and the error.
+---Source: lua/common/libs/luasocket/socket/tp.lua:114
+---@param host string Server host.
+---@param port integer Server port.
+---@param timeout number|nil Timeout in seconds; default TIMEOUT.
+---@param create function|nil Socket factory; default socket.tcp.
+---@return table|nil  Protocol control object, or nil.
+---@return string|nil  Error message.
 function libs_luasocket_socket_tp.connect(host, port, timeout, create) end
 
 return libs_luasocket_socket_tp

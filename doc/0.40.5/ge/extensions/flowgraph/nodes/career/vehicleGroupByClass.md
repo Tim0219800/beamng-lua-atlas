@@ -1,20 +1,20 @@
 # `flowgraph_nodes_career_vehicleGroupByClass`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/career/vehicleGroupByClass.lua` · VM : Game Engine (GE) · 46 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/career/vehicleGroupByClass.lua` · VM: Game Engine (GE) · 46 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/career/vehicleGroupByClass")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/career/vehicleGroupByClass")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Vehicle Group by Performance Class » (catégorie once_instant, auteur BeamNG, tags career/race/class/vehicle). Génère un groupe de véhicules pour une classe de performance. Entrée : class (string nom de classe, ou number indice à partir de 1, borné dans la liste de gameplay_vehiclePerformance.getClassNames()). Sorties : vehGroup (table vehicleGroupData) et aggressionCoef (multiplicateur d'agressivité de l'IA). Si la mission active définit generateVehicleGroup, elle est utilisée (filtres de sélection de véhicules de l'éditeur) ; sinon career_modules_vehicleClassGrouping.generateGroup. Dépend de career_modules_vehicleClassGrouping et gameplay_vehiclePerformance.
+Flowgraph node "Vehicle Group by Performance Class" (category once_instant, author BeamNG, tags career/race/class/vehicle). Generates a vehicle group for a performance class. Input: class (string class name, or number 1-based index, clamped to the list of gameplay_vehiclePerformance.getClassNames()). Outputs: vehGroup (vehicleGroupData table) and aggressionCoef (AI aggression multiplier). If the active mission defines generateVehicleGroup, it is used (editor vehicle selection filters); otherwise career_modules_vehicleClassGrouping.generateGroup. Depends on career_modules_vehicleClassGrouping and gameplay_vehiclePerformance.
 
-**Dépendances (chargées avant) :** `career_modules_vehicleClassGrouping`, `gameplay_vehiclePerformance`
+**Dependencies (loaded first):** `career_modules_vehicleClassGrouping`, `gameplay_vehiclePerformance`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Convertit la classe numérique en nom, génère le groupe de véhicules (mission ou module de groupement) et sort aussi le coefficient d'agressivité. | 25 |
+| `C:workOnce()` | Converts the numeric class to a name, generates the vehicle group (mission or grouping module) and also outputs the aggression coefficient. | 25 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/career/vehicleGroupByClass.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/career/vehicleGroupByClass.lua`.*

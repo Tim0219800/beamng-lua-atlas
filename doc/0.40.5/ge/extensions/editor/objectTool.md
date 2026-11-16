@@ -1,93 +1,93 @@
 # `editor_objectTool`
 
-*Fichier : `lua/ge/extensions/editor/objectTool.lua` · VM : Game Engine (GE) · 1545 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/objectTool.lua` · VM: Game Engine (GE) · 1545 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_objectTool` : `extensions.load("editor_objectTool")`, puis la globale `editor_objectTool`
+**Access:** extension `editor_objectTool`: `extensions.load("editor_objectTool")`, then the global `editor_objectTool`
 
-Mode d'édition principal du World Editor, « Manipulate Object(s) » (editor.editModes.objectSelect, icône crayon). Il gère la sélection d'objets (clic, rectangle, survol), le gizmo d'axes (déplacement, rotation, échelle, alignement local/monde, snapping, glisser-dupliquer avec Shift, alignement sur surface avec Ctrl+Alt), les boîtes englobantes dessinées (orange, rouge si verrouillé ; pour un véhicule, la sphère et les axes du nœud de référence), copier/coller/dupliquer/supprimer avec annulation (editor.history), ainsi que l'enregistrement des préférences « gizmos » (général, pinceau, icônes d'objets) et « snapping » (général, terrain, grille). Il ajoute aussi au menu de l'arbre de scène « Move Selection At Camera » et « Align Objects Individually To The Grid ». À l'initialisation il enregistre des fonctions sur la table globale editor (voir classe « editor »).
+Main edit mode of the World Editor, "Manipulate Object(s)" (editor.editModes.objectSelect, pencil icon). It handles object selection (click, rectangle, hover), the axis gizmo (move, rotate, scale, local/world alignment, snapping, Shift drag-duplicate, surface alignment with Ctrl+Alt), the drawn bounding boxes (orange, red if locked; for a vehicle, the sphere and axes of the reference node), copy/paste/duplicate/delete with undo (editor.history), as well as the registration of the "gizmos" (general, brush, object icons) and "snapping" (general, terrain, grid) preferences. It also adds "Move Selection At Camera" and "Align Objects Individually To The Grid" to the scene tree menu. At initialization it registers functions on the global editor table (see class "editor").
 
-## Exemple
+## Example
 
 ```lua
--- fonctions ajoutées à `editor` par ce module
+-- functions added to `editor` by this module
 editor.selectObjectById(id)
-editor.duplicateSelectionAtCamera() -- copie la sélection à 10 m devant la caméra
-editor.moveSelectionAtCamera()      -- déplace la sélection à 10 m devant la caméra
+editor.duplicateSelectionAtCamera() -- copies the selection 10 m in front of the camera
+editor.moveSelectionAtCamera()      -- moves the selection 10 m in front of the camera
 ```
 
-## Remarques
+## Notes
 
-- onCut est un stub : il vérifie la sélection puis ne fait rien (TODO dans le code) ; couper n'est donc pas implémenté.
-- Le presse-papiers interne (copyObjectsArray) est propre au module et non le presse-papiers système (TODO dans le code).
-- Les raccourcis copier/coller/dupliquer/supprimer ne fonctionnent que si la vue 3D a le focus (editor.isViewportFocused()). Les objets verrouillés ne sont pas supprimés (notification « Some locked objects were not deleted! »).
-- Les fonctions drawSelectionBBox, drawSelectedObjectBBox, updateObjectSelectionAxisGizmo, duplicateSelectionAtCamera, duplicateSceneObjects et moveSelectionAtCamera sont exposées via la table editor (registerApi), pas via le module M.
-- onEditorInspectorFieldChanged : quand le champ startTime d'un objet TimeOfDay change, l'heure courante (core_environment) est réglée sur startTime.
-- Chaque mode d'édition mémorise l'état du gizmo (plan, grille, profils de flags, alignement, mode) à sa désactivation et le restaure à son activation.
+- onCut is a stub: it checks the selection then does nothing (TODO in the code); cut is therefore not implemented.
+- The internal clipboard (copyObjectsArray) belongs to the module and is not the system clipboard (TODO in the code).
+- The copy/paste/duplicate/delete shortcuts only work if the 3D view has focus (editor.isViewportFocused()). Locked objects are not deleted ("Some locked objects were not deleted!" notification).
+- The functions drawSelectionBBox, drawSelectedObjectBBox, updateObjectSelectionAxisGizmo, duplicateSelectionAtCamera, duplicateSceneObjects and moveSelectionAtCamera are exposed via the editor table (registerApi), not via the module M.
+- onEditorInspectorFieldChanged: when the startTime field of a TimeOfDay object changes, the current time (core_environment) is set to startTime.
+- Each edit mode remembers the gizmo state (plane, grid, flag profiles, alignment, mode) when deactivated and restores it when activated.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_objectTool.onEditorAxisGizmoAligmentChanged()` | Hook appelé quand l'alignement du gizmo change (nom avec faute dans le jeu : « Aligment »). Si le mode d'édition courant est « Manipulate Object(s) », replace le gizmo sur la sélection. *(interne)* *(hook)* | 1134 |
-| `editor_objectTool.onEditorEditModeActivated(editMode)` | Hook appelé quand un mode d'édition est activé : restaure l'état de gizmo (editMode.axisGizmoRestoreState) mémorisé à sa dernière désactivation. *(interne)* *(hook)* | 1503 |
-| `editor_objectTool.onEditorEditModeDeactivated(editMode)` | Hook appelé quand un mode d'édition est désactivé : mémorise l'état du gizmo dans editMode.axisGizmoRestoreState. *(interne)* *(hook)* | 1520 |
-| `editor_objectTool.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : crée editor.editModes.objectSelect (action map ObjectTool, raccourcis de copie, collage, duplication, suppression), enregistre l'API sur editor, applique l'alignement local par défaut si la préférence est active et ajoute deux entrées au menu contextuel de l'arbre de scène. *(interne)* *(hook)* | 1427 |
-| `editor_objectTool.onEditorInspectorFieldChanged(selectedIds, fieldName, fieldValue, arrayIndex)` | Hook appelé quand un champ de l'inspecteur est modifié. Ne traite que le champ startTime d'un TimeOfDay. *(interne)* *(hook)* | 1489 |
-| `editor_objectTool.onEditorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change : répercute les réglages gizmos.* (icônes d'objets, couleurs, échelles, snapping fin, etc.) vers worldEditorCppApi. *(interne)* *(hook)* | 1258 |
-| `editor_objectTool.onEditorRegisterPreferences(prefsRegistry)` | Hook d'enregistrement des préférences : crée les catégories gizmos et snapping et leurs préférences (surbrillance de la sélection, icônes d'objets, couleurs, tailles de gizmo, grille, etc.). *(interne)* *(hook)* | 1326 |
+| `editor_objectTool.onEditorAxisGizmoAligmentChanged()` | Hook called when the gizmo alignment changes (name with a typo in the game: "Aligment"). If the current edit mode is "Manipulate Object(s)", repositions the gizmo on the selection. *(internal)* *(hook)* | 1134 |
+| `editor_objectTool.onEditorEditModeActivated(editMode)` | Hook called when an edit mode is activated: restores the gizmo state (editMode.axisGizmoRestoreState) remembered at its last deactivation. *(internal)* *(hook)* | 1503 |
+| `editor_objectTool.onEditorEditModeDeactivated(editMode)` | Hook called when an edit mode is deactivated: remembers the gizmo state in editMode.axisGizmoRestoreState. *(internal)* *(hook)* | 1520 |
+| `editor_objectTool.onEditorInitialized()` | Hook called at editor initialization: creates editor.editModes.objectSelect (action map ObjectTool, shortcuts for copy, paste, duplicate, delete), registers the API on editor, applies the default local alignment if the preference is active and adds two entries to the scene tree context menu. *(internal)* *(hook)* | 1427 |
+| `editor_objectTool.onEditorInspectorFieldChanged(selectedIds, fieldName, fieldValue, arrayIndex)` | Hook called when an inspector field is modified. Only handles the startTime field of a TimeOfDay. *(internal)* *(hook)* | 1489 |
+| `editor_objectTool.onEditorPreferenceValueChanged(path, value)` | Hook called when a preference changes: forwards the gizmos.* settings (object icons, colors, scales, fine snapping, etc.) to worldEditorCppApi. *(internal)* *(hook)* | 1258 |
+| `editor_objectTool.onEditorRegisterPreferences(prefsRegistry)` | Preferences registration hook: creates the gizmos and snapping categories and their preferences (selection highlight, object icons, colors, gizmo sizes, grid, etc.). *(internal)* *(hook)* | 1326 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_objectTool.onEditorEditModeActivated(editMode)`
 
-Hook appelé quand un mode d'édition est activé : restaure l'état de gizmo (editMode.axisGizmoRestoreState) mémorisé à sa dernière désactivation.
+Hook called when an edit mode is activated: restores the gizmo state (editMode.axisGizmoRestoreState) remembered at its last deactivation.
 
-- `editMode` (*table*) : Mode d'édition activé.
+- `editMode` (*table*) : Edit mode activated.
 
 #### `editor_objectTool.onEditorEditModeDeactivated(editMode)`
 
-Hook appelé quand un mode d'édition est désactivé : mémorise l'état du gizmo dans editMode.axisGizmoRestoreState.
+Hook called when an edit mode is deactivated: remembers the gizmo state in editMode.axisGizmoRestoreState.
 
-- `editMode` (*table*) : Mode d'édition désactivé.
+- `editMode` (*table*) : Edit mode deactivated.
 
 #### `editor_objectTool.onEditorInspectorFieldChanged(selectedIds, fieldName, fieldValue, arrayIndex)`
 
-Hook appelé quand un champ de l'inspecteur est modifié. Ne traite que le champ startTime d'un TimeOfDay.
+Hook called when an inspector field is modified. Only handles the startTime field of a TimeOfDay.
 
-- `selectedIds` (*integer[]*) : Identifiants des objets sélectionnés ; seul le premier est examiné.
-- `fieldName` (*string*) : Nom du champ modifié.
-- `fieldValue` (*any*) : Nouvelle valeur (non utilisée).
-- `arrayIndex` (*integer|nil*) : Indice dans un champ tableau (non utilisé).
+- `selectedIds` (*integer[]*) : Ids of the selected objects; only the first is examined.
+- `fieldName` (*string*) : Name of the modified field.
+- `fieldValue` (*any*) : New value (unused).
+- `arrayIndex` (*integer|nil*) : Index in an array field (unused).
 
 #### `editor_objectTool.onEditorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change : répercute les réglages gizmos.* (icônes d'objets, couleurs, échelles, snapping fin, etc.) vers worldEditorCppApi.
+Hook called when a preference changes: forwards the gizmos.* settings (object icons, colors, scales, fine snapping, etc.) to worldEditorCppApi.
 
-- `path` (*string*) : Chemin de la préférence, par ex. « gizmos.general.drawObjectIcons ».
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path, e.g. "gizmos.general.drawObjectIcons".
+- `value` (*any*) : New value.
 
 #### `editor_objectTool.onEditorRegisterPreferences(prefsRegistry)`
 
-Hook d'enregistrement des préférences : crée les catégories gizmos et snapping et leurs préférences (surbrillance de la sélection, icônes d'objets, couleurs, tailles de gizmo, grille, etc.).
+Preferences registration hook: creates the gizmos and snapping categories and their preferences (selection highlight, object icons, colors, gizmo sizes, grid, etc.).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
-## Classe `editor`
+## Class `editor`
 
-Pas une classe : fonctions que ce module ajoute à la table globale editor lors de onEditorInitialized (registerApi).
+Not a class: functions that this module adds to the global editor table during onEditorInitialized (registerApi).
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.drawSelectedObjectBBox(obj, color)` | Dessine la boîte englobante d'un objet de scène (ignore les objets sans getTransform). Pour un BeamNGVehicle, dessine à la place une sphère magenta et trois cylindres (axes rouge, bleu, vert) au nœud de référence, dont la taille suit la distance caméra sauf si gizmos.general.fixedRefnodeVisualization est actif. | 72 |
-| `editor.drawSelectionBBox(objMat, color)` | Dessine avec debugDrawer:drawLineInstance les 12 arêtes d'une boîte unité transformée par la matrice donnée. | 47 |
-| `editor.duplicateSceneObjects()` | Duplique la sélection : si le bouton gauche de la souris est enfoncé, colle immédiatement une copie des objets manipulables et passe en glisser-dupliquer ; sinon enregistre une action annulable « DuplicateObjects ». | 1198 |
-| `editor.duplicateSelectionAtCamera()` | Crée, avec annulation possible (action « DuplicateObjectsAtCamera »), une copie de la sélection déplacée pour que le gizmo se retrouve à 10 m devant la caméra. | 238 |
-| `editor.moveSelectionAtCamera()` | Déplace la sélection (hors SimGroup) à 10 m devant la caméra, avec annulation possible (action « MoveSelectionAtCamera »). | 272 |
-| `editor.updateObjectSelectionAxisGizmo()` | Place le gizmo d'axes sur la sélection d'objets : orientation du dernier objet en mode local, position du dernier objet, du centre de la boîte de sélection ou du centroïde selon les préférences (snapping et gizmos.general.useObjectBoxCenter). | 108 |
+| `editor.drawSelectedObjectBBox(obj, color)` | Draws the bounding box of a scene object (ignores objects without getTransform). For a BeamNGVehicle, instead draws a magenta sphere and three cylinders (red, blue, green axes) at the reference node, whose size follows the camera distance unless gizmos.general.fixedRefnodeVisualization is active. | 72 |
+| `editor.drawSelectionBBox(objMat, color)` | Draws with debugDrawer:drawLineInstance the 12 edges of a unit box transformed by the given matrix. | 47 |
+| `editor.duplicateSceneObjects()` | Duplicates the selection: if the left mouse button is held down, immediately pastes a copy of the manipulable objects and switches to drag-duplicate; otherwise records an undoable "DuplicateObjects" action. | 1198 |
+| `editor.duplicateSelectionAtCamera()` | Creates, with possible undo (action "DuplicateObjectsAtCamera"), a copy of the selection moved so the gizmo ends up 10 m in front of the camera. | 238 |
+| `editor.moveSelectionAtCamera()` | Moves the selection (outside SimGroup) 10 m in front of the camera, with possible undo (action "MoveSelectionAtCamera"). | 272 |
+| `editor.updateObjectSelectionAxisGizmo()` | Places the axis gizmo on the object selection: orientation of the last object in local mode, position of the last object, of the selection box center or of the centroid depending on the preferences (snapping and gizmos.general.useObjectBoxCenter). | 108 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `castRay`
 - `Sim.` `upcast`
@@ -98,4 +98,4 @@ Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes 
 - `worldEditorCppApi.` `getAxisGizmoAlignment`, `getAxisGizmoHideDisabledRotateAxes`, `getAxisGizmoHideDisabledScaleAxes`, `getAxisGizmoHideDisabledTranslateAxes`, `getAxisGizmoMode`, `getAxisGizmoRenderMoveGrid`, `getAxisGizmoRenderPlane`, `getAxisGizmoRenderPlaneHashes`, `getAxisGizmoRotateProfileFlags`, `getAxisGizmoScaleOffset`, `getAxisGizmoScaleProfileFlags`, `getAxisGizmoTranslateProfileFlags`, `getClassIsSelectable`, `getObjectClassNames`, `setAxisGizmoAlignment`, `setAxisGizmoHideDisabledRotateAxes`, `setAxisGizmoHideDisabledScaleAxes`, `setAxisGizmoHideDisabledTranslateAxes`, `setAxisGizmoHighlightSelectedMeshes`, `setAxisGizmoMode`, `setAxisGizmoRenderMoveGrid`, `setAxisGizmoRenderPlane`, `setAxisGizmoRenderPlaneHashes`, `setAxisGizmoRotateProfileFlags`, `setAxisGizmoScaleProfileFlags`, `setAxisGizmoSelectedElement`, `setAxisGizmoTranslateProfileFlags`, `setConstantSizeIconScale`, `setConstantSizeIcons`, `setDrawIconShadow`, `setDrawObjectIcons`, `setDrawObjectsText`, `setFadeIcons`, `setFadeIconsDistance`, `setFineMoveScalar`, `setFineRotationScalar`, `setFineScaleScalar`, `setGizmoLineThicknessScale`, `setGizmoPlaneColor`, `setGizmoPlaneGridLineColor`, `setGizmoPlaneSize`, `setHideIconClass`, `setHoveredObjectId`, `setIconBackgroundColor`, `setIconBackgroundScale`, `setIconBackgroundType`, `setIconShadowColor`, `setIconShadowOffset`, `setIconWorldScale`, `setMonoIconColor`, `setObjectTextBackgroundColor`, `setObjectTextColor`, `setRandomIconColorSeed`, `setSelectedIconBgColor`, `setSelectedIconColor`, `setUseIconColor`, `setUseObjectsBoxCenter`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/objectTool.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/objectTool.lua`.*

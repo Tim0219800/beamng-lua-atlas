@@ -1,98 +1,98 @@
 # `editor_toolUtilities_rdp`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/rdp.lua` · VM : Game Engine (GE) · 197 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/rdp.lua` · VM: Game Engine (GE) · 197 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_rdp` : `extensions.load("editor_toolUtilities_rdp")`, puis la globale `editor_toolUtilities_rdp`
+**Access:** extension `editor_toolUtilities_rdp`: `extensions.load("editor_toolUtilities_rdp")`, then the global `editor_toolUtilities_rdp`
 
-Implémentation optimisée de l'algorithme de Ramer-Douglas-Peucker (RDP) pour simplifier des polylignes ayant trop de points. Utilise la distance au segment (et non à la droite infinie), une pile explicite à la place de la récursion et des tables réutilisées. Les variantes simplifyNodes* compactent les tableaux en place, y compris les tableaux parallèles (largeurs, normales, vitesses, limites de vitesse).
+Optimized implementation of the Ramer-Douglas-Peucker (RDP) algorithm to simplify polylines with too many points. Uses the distance to the segment (not to the infinite line), an explicit stack instead of recursion and reused tables. The simplifyNodes* variants compact the arrays in place, including parallel arrays (widths, normals, velocities, speed limits).
 
-## Exemple
+## Example
 
 ```lua
 local rdp = extensions.editor_toolUtilities_rdp
-local n = rdp.simplifyNodes(nodes, 2.0) -- nodes : liste de vec3, modifiée en place
--- n = nombre de points conservés
+local n = rdp.simplifyNodes(nodes, 2.0) -- nodes: list of vec3, modified in place
+-- n = number of points kept
 ```
 
-## Remarques
+## Notes
 
-- Les nœuds doivent être des vec3 (ou objets ayant la méthode squaredDistanceToLineSegment).
-- Le premier et le dernier point sont toujours conservés.
-- Tolérance par défaut 6.0 (unités du monde, mètres) quand tol vaut nil.
-- Avec 2 points ou moins, les fonctions simplify* renvoient #nodes sans rien modifier.
-- Les tables d'indices et la pile sont partagées au niveau du module : non réentrant, et la table renvoyée par rdpIndices est écrasée si on ne passe pas retListP.
-- Les tableaux parallèles (widths, normals…) doivent avoir au moins la longueur de nodes.
+- The nodes must be vec3 (or objects with the squaredDistanceToLineSegment method).
+- The first and last points are always kept.
+- Default tolerance 6.0 (world units, meters) when tol is nil.
+- With 2 points or fewer, the simplify* functions return #nodes without modifying anything.
+- The index tables and the stack are shared at module level: not reentrant, and the table returned by rdpIndices is overwritten if retListP is not passed.
+- The parallel arrays (widths, normals...) must be at least as long as nodes.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_rdp.rdpIndices(nodes, startIdx, endIdx, tol, retListP)` | Calcule les indices à conserver par RDP entre startIdx et endIdx. La table de sortie est vidée puis remplie ; l'ordre n'est pas strictement croissant selon la pile mais le premier indice est startIdx. | 24 |
-| `editor_toolUtilities_rdp.simplifyNodes(nodes, tol)` | Simplifie nodes en place et supprime les points en trop. | 69 |
-| `editor_toolUtilities_rdp.simplifyNodesVels(nodes, velocities, tol)` | Comme simplifyNodes, en gardant velocities aligné avec nodes. | 140 |
-| `editor_toolUtilities_rdp.simplifyNodesWidths(nodes, widths, tol)` | Comme simplifyNodes, en gardant le tableau widths aligné avec nodes. | 92 |
-| `editor_toolUtilities_rdp.simplifyNodesWidthsNormals(nodes, widths, normals, tol)` | Comme simplifyNodes, en gardant widths et normals alignés avec nodes. | 116 |
-| `editor_toolUtilities_rdp.simplifyNodesWidthsVelVelLimits(nodes, widths, velocities, velLimits, tol)` | Comme simplifyNodes, en gardant widths, velocities et velLimits alignés avec nodes. | 164 |
+| `editor_toolUtilities_rdp.rdpIndices(nodes, startIdx, endIdx, tol, retListP)` | Computes the indices to keep by RDP between startIdx and endIdx. The output table is emptied then filled; the order is not strictly increasing because of the stack, but the first index is startIdx. | 24 |
+| `editor_toolUtilities_rdp.simplifyNodes(nodes, tol)` | Simplifies nodes in place and removes the excess points. | 69 |
+| `editor_toolUtilities_rdp.simplifyNodesVels(nodes, velocities, tol)` | Like simplifyNodes, keeping velocities aligned with nodes. | 140 |
+| `editor_toolUtilities_rdp.simplifyNodesWidths(nodes, widths, tol)` | Like simplifyNodes, keeping the widths array aligned with nodes. | 92 |
+| `editor_toolUtilities_rdp.simplifyNodesWidthsNormals(nodes, widths, normals, tol)` | Like simplifyNodes, keeping widths and normals aligned with nodes. | 116 |
+| `editor_toolUtilities_rdp.simplifyNodesWidthsVelVelLimits(nodes, widths, velocities, velLimits, tol)` | Like simplifyNodes, keeping widths, velocities and velLimits aligned with nodes. | 164 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_rdp.rdpIndices(nodes, startIdx, endIdx, tol, retListP)`
 
-Calcule les indices à conserver par RDP entre startIdx et endIdx. La table de sortie est vidée puis remplie ; l'ordre n'est pas strictement croissant selon la pile mais le premier indice est startIdx.
+Computes the indices to keep by RDP between startIdx and endIdx. The output table is emptied then filled; the order is not strictly increasing because of the stack, but the first index is startIdx.
 
-- `nodes` (*table*) : Liste de vec3.
-- `startIdx` (*integer*) : Indice de départ (1 pour tout le tracé).
-- `endIdx` (*integer*) : Indice de fin.
-- `tol` (*number*) : Distance maximale tolérée au segment.
-- `retListP` (*table|nil*) : Table de sortie réutilisable ; créée si nil.
-- **renvoie** : table Liste des indices conservés.
+- `nodes` (*table*) : List of vec3.
+- `startIdx` (*integer*) : Start index (1 for the whole path).
+- `endIdx` (*integer*) : End index.
+- `tol` (*number*) : Maximum tolerated distance to the segment.
+- `retListP` (*table|nil*) : Reusable output table; created if nil.
+- **returns**: table List of kept indices.
 
 #### `editor_toolUtilities_rdp.simplifyNodes(nodes, tol)`
 
-Simplifie nodes en place et supprime les points en trop.
+Simplifies nodes in place and removes the excess points.
 
-- `nodes` (*table*) : Liste de vec3, modifiée.
-- `tol` (*number|nil*) : Tolérance (défaut 6.0).
-- **renvoie** : integer Nombre de points restants.
+- `nodes` (*table*) : List of vec3, modified.
+- `tol` (*number|nil*) : Tolerance (default 6.0).
+- **returns**: integer Number of remaining points.
 
 #### `editor_toolUtilities_rdp.simplifyNodesVels(nodes, velocities, tol)`
 
-Comme simplifyNodes, en gardant velocities aligné avec nodes.
+Like simplifyNodes, keeping velocities aligned with nodes.
 
 - `nodes` (*table*) : Points.
-- `velocities` (*table*) : Vitesses associées.
-- `tol` (*number|nil*) : Tolérance (défaut 6.0).
-- **renvoie** : integer Nombre de points restants.
+- `velocities` (*table*) : Associated velocities.
+- `tol` (*number|nil*) : Tolerance (default 6.0).
+- **returns**: integer Number of remaining points.
 
 #### `editor_toolUtilities_rdp.simplifyNodesWidths(nodes, widths, tol)`
 
-Comme simplifyNodes, en gardant le tableau widths aligné avec nodes.
+Like simplifyNodes, keeping the widths array aligned with nodes.
 
-- `nodes` (*table*) : Points, modifiés en place.
-- `widths` (*table*) : Largeurs associées, modifiées en place.
-- `tol` (*number|nil*) : Tolérance (défaut 6.0).
-- **renvoie** : integer Nombre de points restants.
+- `nodes` (*table*) : Points, modified in place.
+- `widths` (*table*) : Associated widths, modified in place.
+- `tol` (*number|nil*) : Tolerance (default 6.0).
+- **returns**: integer Number of remaining points.
 
 #### `editor_toolUtilities_rdp.simplifyNodesWidthsNormals(nodes, widths, normals, tol)`
 
-Comme simplifyNodes, en gardant widths et normals alignés avec nodes.
+Like simplifyNodes, keeping widths and normals aligned with nodes.
 
 - `nodes` (*table*) : Points.
-- `widths` (*table*) : Largeurs.
-- `normals` (*table*) : Normales.
-- `tol` (*number|nil*) : Tolérance (défaut 6.0).
-- **renvoie** : integer Nombre de points restants.
+- `widths` (*table*) : Widths.
+- `normals` (*table*) : Normals.
+- `tol` (*number|nil*) : Tolerance (default 6.0).
+- **returns**: integer Number of remaining points.
 
 #### `editor_toolUtilities_rdp.simplifyNodesWidthsVelVelLimits(nodes, widths, velocities, velLimits, tol)`
 
-Comme simplifyNodes, en gardant widths, velocities et velLimits alignés avec nodes.
+Like simplifyNodes, keeping widths, velocities and velLimits aligned with nodes.
 
 - `nodes` (*table*) : Points.
-- `widths` (*table*) : Largeurs.
-- `velocities` (*table*) : Vitesses.
-- `velLimits` (*table*) : Limites de vitesse.
-- `tol` (*number|nil*) : Tolérance (défaut 6.0).
-- **renvoie** : integer Nombre de points restants.
+- `widths` (*table*) : Widths.
+- `velocities` (*table*) : Speeds.
+- `velLimits` (*table*) : Speed limits.
+- `tol` (*number|nil*) : Tolerance (default 6.0).
+- **returns**: integer Number of remaining points.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/rdp.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/rdp.lua`.*

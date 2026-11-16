@@ -1,49 +1,88 @@
 {
   "path": "lua/ge/extensions/ui/missionInfo.lua",
-  "module": "Gère la fenêtre d'information de mission et l'invite d'activité (« activity accept ») affichée en jeu. Il mémorise les boutons actifs, envoie le contenu à l'interface par guihooks, joue le son d'ouverture, suit l'état ouvert/fermé et émet les hooks correspondants. Il bloque aussi, pendant l'invite sur la route « play », les actions qui partagent les mêmes touches que gameplay_interact.",
+  "module": "Manages the mission info window and the activity prompt (\"activity accept\") displayed in game. It stores the active buttons, sends the content to the UI via guihooks, plays the opening sound, tracks the opened/closed state and emits the corresponding hooks. It also blocks, during the prompt on the \"play\" route, the actions that share the same keys as gameplay_interact.",
   "notes": [
-    "Événements guihooks émis : MissionInfoUpdate, ActivityAcceptUpdate, ActivityAcceptClose.",
-    "Hooks émis : onActivityAcceptUpdate(content), onActivityIndexVisible(data), onMissionInfoChangedState(ancienEtat, nouvelEtat[, content]) ; l'état vaut « opened » ou « closed » (nil au départ).",
-    "performAction exécute button.cmd avec loadstring, sans protection contre une erreur.",
-    "setActivityIndexVisible suppose que elemDataTable existe (créé par openActivityAcceptDialogue) ; sinon erreur.",
-    "closeDialogue dépile l'action map MissionUIActionMap ; openActivityAcceptDialogue ne la pousse pas (code commenté)."
+    "guihooks events emitted: MissionInfoUpdate, ActivityAcceptUpdate, ActivityAcceptClose.",
+    "Hooks emitted: onActivityAcceptUpdate(content), onActivityIndexVisible(data), onMissionInfoChangedState(oldState, newState[, content]); the state is \"opened\" or \"closed\" (nil at start).",
+    "performAction runs button.cmd with loadstring, without protection against errors.",
+    "setActivityIndexVisible assumes elemDataTable exists (created by openActivityAcceptDialogue); otherwise error.",
+    "closeDialogue pops the action map MissionUIActionMap; openActivityAcceptDialogue does not push it (commented-out code)."
   ],
   "fields": {
-    "buttonsTable": {"type": "table|nil", "desc": "Boutons/fonctions du dialogue courant (indexés par action ou par numéro selon le type d'ouverture)."},
-    "openState": {"type": "string|nil", "desc": "« opened » ou « closed » ; nil avant la première ouverture."},
-    "elemDataTable": {"type": "table|nil", "desc": "Données (elem.data) de chaque élément de l'invite d'activité ; créé par openActivityAcceptDialogue (champ non listé dans la page auto)."}
+    "buttonsTable": {
+      "type": "table|nil",
+      "desc": "Buttons/functions of the current dialogue (keyed by action or by number depending on the opening type)."
+    },
+    "openState": {
+      "type": "string|nil",
+      "desc": "\"opened\" or \"closed\"; nil before the first opening."
+    },
+    "elemDataTable": {
+      "type": "table|nil",
+      "desc": "Data (elem.data) of each activity prompt element; created by openActivityAcceptDialogue (field not listed in the auto page)."
+    }
   },
   "functions": {
     "performAction": {
-      "desc": "Cherche dans buttonsTable le bouton dont action vaut actionName et exécute sa commande Lua (button.cmd).",
-      "params": {"actionName": {"type": "string", "desc": "Nom de l'action du bouton."}}
+      "desc": "Looks in buttonsTable for the button whose action equals actionName and runs its Lua command (button.cmd).",
+      "params": {
+        "actionName": {
+          "type": "string",
+          "desc": "Button action name."
+        }
+      }
     },
     "openDialogue": {
-      "desc": "Ouvre la fenêtre d'information : pousse l'action map MissionUIActionMap (sauf si content.actionMap == false), mémorise content.buttons, envoie MissionInfoUpdate à l'UI et joue le son UI>Missions>Info_Open.",
-      "params": {"content": {"type": "table|nil", "desc": "Contenu à afficher, avec éventuellement buttons et actionMap."}}
+      "desc": "Opens the info window: pushes the action map MissionUIActionMap (unless content.actionMap == false), stores content.buttons, sends MissionInfoUpdate to the UI and plays the sound UI>Missions>Info_Open.",
+      "params": {
+        "content": {
+          "type": "table|nil",
+          "desc": "Content to display, optionally with buttons and actionMap."
+        }
+      }
     },
     "performActivityAction": {
-      "desc": "Appelle la fonction du bouton d'index id dans buttonsTable (rien si elle n'existe pas).",
-      "params": {"id": {"type": "integer", "desc": "Index du bouton (missionInfoPerformActionIndex de l'élément)."}}
+      "desc": "Calls the function of the button with index id in buttonsTable (nothing if it does not exist).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Button index (the element's missionInfoPerformActionIndex)."
+        }
+      }
     },
     "openActivityAcceptDialogue": {
-      "desc": "Affiche l'invite d'activités : mémorise elem.buttonFun et elem.data de chaque élément, active ou non le blocage des actions en conflit, émet onActivityAcceptUpdate puis ActivityAcceptUpdate et passe à l'état « opened ».",
-      "params": {"content": {"type": "table", "desc": "Liste d'éléments {buttonFun, data, ...} ; vide pour retirer l'invite."}}
+      "desc": "Displays the activities prompt: stores elem.buttonFun and elem.data of each element, enables or not the blocking of conflicting actions, emits onActivityAcceptUpdate then ActivityAcceptUpdate and switches to the \"opened\" state.",
+      "params": {
+        "content": {
+          "type": "table",
+          "desc": "List of elements {buttonFun, data, ...}; empty to remove the prompt."
+        }
+      }
     },
     "closeDialogue": {
-      "desc": "Ferme la fenêtre/l'invite : dépile MissionUIActionMap, vide buttonsTable, lève le blocage des actions, envoie MissionInfoUpdate(nil) et ActivityAcceptClose, passe à l'état « closed »."
+      "desc": "Closes the window/prompt: pops MissionUIActionMap, empties buttonsTable, lifts the action blocking, sends MissionInfoUpdate(nil) and ActivityAcceptClose, switches to the \"closed\" state."
     },
     "setActivityIndexVisible": {
-      "desc": "Signale quel élément de l'invite est visible : émet onActivityIndexVisible avec ses données, ou nil si index vaut -1.",
-      "params": {"index": {"type": "integer", "desc": "Index à partir de 0 côté interface (-1 pour aucun) ; converti en index Lua +1."}}
+      "desc": "Signals which prompt element is visible: emits onActivityIndexVisible with its data, or nil if index is -1.",
+      "params": {
+        "index": {
+          "type": "integer",
+          "desc": "0-based index on the UI side (-1 for none); converted to a Lua index +1."
+        }
+      }
     },
     "onInputBindingsChanged": {
-      "desc": "Hook appelé quand les liaisons de touches changent ; recalcule le filtre d'actions si le blocage est actif.",
+      "desc": "Hook called when key bindings change; recomputes the action filter if blocking is active.",
       "internal": true
     },
     "onAfterRouteChange": {
-      "desc": "Hook appelé après un changement de route de l'interface ; active le blocage des actions en conflit seulement si l'invite a du contenu et que la route est « play ».",
-      "params": {"routeEntry": {"type": "table", "desc": "Entrée de route (resolved.name)."}},
+      "desc": "Hook called after a UI route change; enables blocking of conflicting actions only if the prompt has content and the route is \"play\".",
+      "params": {
+        "routeEntry": {
+          "type": "table",
+          "desc": "Route entry (resolved.name)."
+        }
+      },
       "internal": true
     }
   }

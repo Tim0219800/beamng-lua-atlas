@@ -2,12 +2,12 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/logic/branch.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+--- Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 ---@class flowgraph_nodes_logic_branch_C
 local flowgraph_nodes_logic_branch_C = {}
 
---- Si flow est vrai : flow en sortie = flow, True = condition, False = not condition. Sinon toutes les sorties passent a false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/logic/branch.lua:24
+--- If flow is true: output flow = flow, True = condition, False = not condition. Otherwise all outputs go to false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/logic/branch.lua:24
 function flowgraph_nodes_logic_branch_C:work() end
 

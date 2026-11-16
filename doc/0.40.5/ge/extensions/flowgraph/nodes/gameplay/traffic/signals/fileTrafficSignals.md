@@ -1,25 +1,25 @@
 # `flowgraph_nodes_gameplay_traffic_signals_fileTrafficSignals`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/fileTrafficSignals.lua` · VM : Game Engine (GE) · 73 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/fileTrafficSignals.lua` · VM: Game Engine (GE) · 73 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/fileTrafficSignals")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/fileTrafficSignals")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « File Traffic Signals » (once_p_duration, dépend de core_trafficSignals). Charge un fichier de feux de signalisation (core_trafficSignals.loadSignals(file)), ou celui du niveau si data.useDefaultFileFromLevel (défaut true) et pas de fichier. Active la simulation (setActive(true, true)) et sort signalsData. Erreur de nœud si le chargement échoue. À l'arrêt, recharge le fichier par défaut de la carte.
+Flowgraph node "File Traffic Signals" (once_p_duration, depends on core_trafficSignals). Loads a traffic signals file (core_trafficSignals.loadSignals(file)), or the level's own file if data.useDefaultFileFromLevel (default true) and no file is given. Activates the simulation (setActive(true, true)) and outputs signalsData. Node error if loading fails. On stop, reloads the map's default file.
 
-**Dépendances (chargées avant) :** `core_trafficSignals`
+**Dependencies (loaded first):** `core_trafficSignals`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Vide la sortie et recharge le fichier de signaux par défaut de la carte. | 47 |
-| `C:drawCustomProperties()` | Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui). | 35 |
-| `C:init()` | Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph). | 24 |
-| `C:onNodeReset()` | Vide la sortie signalsData. | 43 |
-| `C:postInit()` | Appelé après la création des pins du nœud ; sert à ajuster les pins (modèles de valeurs, filtres de fichiers, clés dynamiques). | 29 |
-| `C:work()` | Au premier appel, charge les signaux, active la simulation et publie core_trafficSignals.getData() sur signalsData. | 54 |
+| `C:_executionStopped()` | Clears the output and reloads the map's default signals file. | 47 |
+| `C:drawCustomProperties()` | Draws the node's custom properties in the flowgraph editor panel (ImGui). | 35 |
+| `C:init()` | Initializes the node's internal state at creation (called by the flowgraph engine). | 24 |
+| `C:onNodeReset()` | Clears the signalsData output. | 43 |
+| `C:postInit()` | Called after the node's pins are created; used to adjust the pins (value templates, file filters, dynamic keys). | 29 |
+| `C:work()` | On the first call, loads the signals, activates the simulation and publishes core_trafficSignals.getData() on signalsData. | 54 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/fileTrafficSignals.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/fileTrafficSignals.lua`.*

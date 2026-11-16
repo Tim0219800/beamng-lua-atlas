@@ -2,41 +2,41 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/missions/startTrigger.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Transforme le champ `startTrigger` d'une mission en liste de « locations » (zones de démarrage) et regroupe les zones proches en clusters pour la carte. Seul le type « coordinates » (niveau + position + rayon) produit réellement une location ; « league » et « none » n'en produisent aucune (nop). Utilisé par gameplay_missions_missions (getLocations) et par les marqueurs de missions.
---- Accès : extension `gameplay_missions_startTrigger` : `extensions.load("gameplay_missions_startTrigger")`, puis la globale `gameplay_missions_startTrigger`
+--- Transforms a mission's `startTrigger` field into a list of "locations" (start zones) and groups nearby zones into clusters for the map. Only the "coordinates" type (level + position + radius) actually produces a location; "league" and "none" produce none (nop). Used by gameplay_missions_missions (getLocations) and by the mission markers.
+--- Access: extension `gameplay_missions_startTrigger`: `extensions.load("gameplay_missions_startTrigger")`, then the global `gameplay_missions_startTrigger`
 ---@class gameplay_missions_startTrigger
 gameplay_missions_startTrigger = {}
 
---- Teste si le joueur est dans la zone de démarrage : même niveau, position et rayon définis, et distance au centre <= rayon.
----Source : lua/ge/extensions/gameplay/missions/startTrigger.lua:16
+--- Tests whether the player is in the start zone: same level, position and radius defined, and distance to the center <= radius.
+---Source: lua/ge/extensions/gameplay/missions/startTrigger.lua:16
 ---@param location table Location {level, pos, radius}.
----@param level string Identifiant du niveau courant (minuscules).
----@param playerPosition vec3 Position du joueur.
----@param mission table Mission concernée (non utilisée).
----@return boolean  true si le joueur est dans la zone.
+---@param level string Current level identifier (lowercase).
+---@param playerPosition vec3 Player position.
+---@param mission table Mission concerned (not used).
+---@return boolean  true if the player is in the zone.
 function gameplay_missions_startTrigger.defaultLocationCheck(location, level, playerPosition, mission) end
 
---- Dessine avec debugDrawer le marqueur d'une zone de démarrage : cylindre au sol de rayon `radius` et mât de 5 m. Rouge hors zone, vert à l'intérieur.
----Source : lua/ge/extensions/gameplay/missions/startTrigger.lua:21
+--- Draws a start zone marker with debugDrawer: a ground cylinder of radius `radius` and a 5 m pole. Red outside the zone, green inside.
+---Source: lua/ge/extensions/gameplay/missions/startTrigger.lua:21
 ---@param location table Location {pos, radius}.
----@param playerPosition vec3 Position du joueur.
+---@param playerPosition vec3 Player position.
 function gameplay_missions_startTrigger.defaultLocationDisplayMarker(location, playerPosition) end
 
---- Regroupe en clusters toutes les locations « coordinates » de toutes les missions, niveau par niveau, grâce à un quadtree. Deux zones se regroupent si leurs disques se chevauchent (rayon de fusion fixe si mergeRadius est donné).
----Source : lua/ge/extensions/gameplay/missions/startTrigger.lua:127
----@param mergeRadius number|nil Rayon (m) utilisé à la place du rayon propre de chaque location ; nil = rayons des missions.
----@return table  Liste de clusters {type, level, pos, rot, radius, check, displayMarker, missionIds, clusterId}.
+--- Groups all "coordinates" locations of all missions into clusters, level by level, using a quadtree. Two zones are grouped if their disks overlap (fixed merge radius if mergeRadius is given).
+---Source: lua/ge/extensions/gameplay/missions/startTrigger.lua:127
+---@param mergeRadius number|nil Radius (m) used in place of each location's own radius; nil = the missions' radii.
+---@return table  List of clusters {type, level, pos, rot, radius, check, displayMarker, missionIds, clusterId}.
 function gameplay_missions_startTrigger.getMissionClusters(mergeRadius) end
 
---- Hook émis par missionManager quand une mission change d'état : vide le cache des clusters.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/missions/startTrigger.lua:187
+--- Hook emitted by missionManager when a mission changes state: clears the clusters cache.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/missions/startTrigger.lua:187
 function gameplay_missions_startTrigger.onAnyMissionChanged() end
 
---- Crée la liste des locations d'une mission à partir de mission.startTrigger. Vérifie le type et les champs obligatoires.
----Source : lua/ge/extensions/gameplay/missions/startTrigger.lua:62
----@param mission table Mission dont le champ startTrigger existe (supposé vérifié par l'appelant).
----@return table  Liste de locations (vide en cas d'erreur ou pour les types league/none).
----@return string|nil  Message d'erreur (type invalide ou champs manquants), nil si tout va bien.
+--- Creates a mission's list of locations from mission.startTrigger. Checks the type and the required fields.
+---Source: lua/ge/extensions/gameplay/missions/startTrigger.lua:62
+---@param mission table Mission whose startTrigger field exists (assumed checked by the caller).
+---@return table  List of locations (empty on error or for league/none types).
+---@return string|nil  Error message (invalid type or missing fields), nil if all is well.
 function gameplay_missions_startTrigger.parseMission(mission) end
 

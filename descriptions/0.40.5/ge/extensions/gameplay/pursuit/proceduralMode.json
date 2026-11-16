@@ -1,27 +1,33 @@
 {
   "path": "lua/ge/extensions/gameplay/pursuit/proceduralMode.lua",
-  "module": "Squelette vide prévu pour les scénarios de poursuite générés procéduralement et les évènements aléatoires. Le commentaire du code indique qu'il faudra y déplacer la logique de suspect aléatoire du trafic. Aucune logique n'est implémentée.",
+  "module": "Empty skeleton intended for procedurally generated pursuit scenarios and random events. The code comment says the traffic's random suspect logic should be moved here. No logic is implemented.",
   "notes": [
-    "Les trois hooks sont des fonctions vides."
+    "The three hooks are empty functions."
   ],
   "functions": {
     "onUpdate": {
-      "desc": "Hook appelé à chaque image ; ne fait rien.",
+      "desc": "Hook called every frame; does nothing.",
       "params": {
-        "dt": {"type": "number", "desc": "Delta temps réel (s)."},
-        "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}
+        "dt": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time delta (s)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook de sérialisation avant rechargement Lua ; ne fait rien.",
+      "desc": "Serialization hook before Lua reload; does nothing.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook après rechargement Lua ; ne fait rien.",
+      "desc": "Hook after Lua reload; does nothing.",
       "params": {},
       "returns": [],
       "internal": true

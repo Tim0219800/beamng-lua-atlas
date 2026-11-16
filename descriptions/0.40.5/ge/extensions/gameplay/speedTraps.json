@@ -1,24 +1,39 @@
 {
   "path": "lua/ge/extensions/gameplay/speedTraps.lua",
-  "module": "Extension qui gère les radars de vitesse et de feu rouge posés dans les niveaux sous forme de triggers BeamNGTrigger portant un champ speedTrapType (« speed » ou « redLight »). Quand un véhicule entre dans le trigger, dans le bon sens et trop vite, elle émet les hooks onSpeedTrapTriggered ou onRedLightCamTriggered et fait flasher la lumière associée. Inactive pendant une mission au premier plan.",
+  "module": "Extension that manages the speed cameras and red light cameras placed in levels as BeamNGTrigger triggers carrying a speedTrapType field (\"speed\" or \"redLight\"). When a vehicle enters the trigger, in the right direction and too fast, it emits the hooks onSpeedTrapTriggered or onRedLightCamTriggered and makes the associated light flash. Inactive during a foreground mission.",
   "usage": "function M.onSpeedTrapTriggered(data, speed, overSpeed)\n  print(data.triggerName, speed, overSpeed)\nend",
   "notes": [
-    "Données attendues dans data : event ('enter'), speedTrapType, speedLimit (m/s), speedLimitTolerance (défaut 10 % de la limite), speedTrapLightName, subjectID, triggerID, triggerName ; pour un feu rouge : triggerSpeed (défaut 5 m/s) et trafficSignalId.",
-    "Radar de vitesse : déclenché si la vitesse dépasse limite + tolérance. Feu rouge : déclenché si la vitesse dépasse triggerSpeed ET que le signal est « redTrafficLight ».",
-    "Ignoré si le véhicule est à plus de 100 m de la caméra ou si le véhicule roule dans le sens opposé à l'axe Y du trigger.",
-    "Le flash dure 0,1 s (radar) ; pour un feu rouge : flash 0,1 s, pause de 10 / vitesse s, second flash 0,1 s.",
-    "Pour un radar de feu rouge, trafficSignal est utilisé sans vérification de nil : si trafficSignalId est invalide, erreur Lua."
+    "Data expected in data: event ('enter'), speedTrapType, speedLimit (m/s), speedLimitTolerance (default 10% of the limit), speedTrapLightName, subjectID, triggerID, triggerName; for a red light: triggerSpeed (default 5 m/s) and trafficSignalId.",
+    "Speed camera: triggered if the speed exceeds limit + tolerance. Red light camera: triggered if the speed exceeds triggerSpeed AND the signal is \"redTrafficLight\".",
+    "Ignored if the vehicle is more than 100 m from the camera or if the vehicle is driving in the opposite direction to the trigger's Y axis.",
+    "The flash lasts 0.1 s (speed camera); for a red light: flash 0.1 s, pause of 10 / speed s, second flash 0.1 s.",
+    "For a red light camera, trafficSignal is used without a nil check: if trafficSignalId is invalid, Lua error."
   ],
   "functions": {
     "onBeamNGTrigger": {
-      "desc": "Hook appelé par le moteur à chaque événement d'un BeamNGTrigger. Ne traite que les triggers avec speedTrapType et l'événement 'enter'. Calcule la vitesse du véhicule, vérifie le sens de passage et émet onSpeedTrapTriggered(data, vehSpeed, overSpeed) ou onRedLightCamTriggered(data, vehSpeed), puis allume la lumière nommée.",
-      "params": {"data": {"type": "table", "desc": "Données du trigger (voir notes)."}},
+      "desc": "Hook called by the engine on each BeamNGTrigger event. Only handles triggers with speedTrapType and the 'enter' event. Computes the vehicle speed, checks the direction of passage and emits onSpeedTrapTriggered(data, vehSpeed, overSpeed) or onRedLightCamTriggered(data, vehSpeed), then turns on the named light.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Trigger data (see notes)."
+        }
+      },
       "internal": true
     },
     "getSpeedTrapsInCurrentLevel": {
-      "desc": "Liste les triggers BeamNGTrigger du niveau courant dont le speedTrapType correspond.",
-      "params": {"speedTrapType": {"type": "string", "desc": "'speed' ou 'redLight'."}},
-      "returns": [{"type": "table[]", "desc": "Objets trigger (table vide si aucun)."}]
+      "desc": "Lists the BeamNGTrigger triggers of the current level whose speedTrapType matches.",
+      "params": {
+        "speedTrapType": {
+          "type": "string",
+          "desc": "'speed' or 'redLight'."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Trigger objects (empty table if none)."
+        }
+      ]
     }
   }
 }

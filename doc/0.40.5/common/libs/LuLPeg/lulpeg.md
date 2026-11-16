@@ -1,26 +1,26 @@
 # `libs_LuLPeg_lulpeg`
 
-*Fichier : `lua/common/libs/LuLPeg/lulpeg.lua` · VM : Commun (GE + véhicule) · 2965 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/LuLPeg/lulpeg.lua` · VM: Common (GE + vehicle) · 2965 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/LuLPeg/lulpeg")`
+**Access:** `require("libs/LuLPeg/lulpeg")`
 
-LuLPeg : bibliothèque tierce (Pierre-Yves Gérardy, licence « Romantic WTF »), portage en Lua pur de LPeg (Parsing Expression Grammars de Roberto Ierusalimschy). Le fichier est un bundle de plusieurs sous-modules internes (util, compiler, datastructures, re, charsets, evaluator, printers, analyzer, locale, match, factorizer, API, constructors, init, compat, optimizer) et se termine par `return require"init"` : require("libs/LuLPeg/lulpeg") renvoie directement l'objet LL (équivalent du module lpeg) avec le sous-module `re`. Sert à écrire des analyseurs de texte (grammaires, motifs, captures).
+LuLPeg: third-party library (Pierre-Yves Gérardy, "Romantic WTF" license), a pure-Lua port of LPeg (Parsing Expression Grammars by Roberto Ierusalimschy). The file is a bundle of several internal submodules (util, compiler, datastructures, re, charsets, evaluator, printers, analyzer, locale, match, factorizer, API, constructors, init, compat, optimizer) and ends with `return require"init"`: require("libs/LuLPeg/lulpeg") directly returns the LL object (equivalent to the lpeg module) with the `re` submodule. Used to write text parsers (grammars, patterns, captures).
 
-## Exemple
+## Example
 
 ```lua
 local lpeg = require("libs/LuLPeg/lulpeg")
 local P, C, R = lpeg.P, lpeg.C, lpeg.R
-local nombre = C(R"09"^1)
-print(nombre:match("123abc")) --> "123"
+local number = C(R"09"^1)
+print(number:match("123abc")) --> "123"
 ```
 
-## Remarques
+## Notes
 
-- Le fichier ne déclare aucune fonction globale à documenter : l'API publique est celle de l'objet renvoyé (LL), construite par les sous-modules.
-- API principale de LL (lue dans le code) : P, S, R, V, B, L (constructeurs de motifs) ; C, Cs, Ct, Cc, Cg, Cb, Cf, Cmt, Cp, Carg (captures) ; match, dmatch (exécution), ispattern, type, locale, pprint, cprint, evaluate, compile, resetptcache ; version() renvoie "0.12", luversion() "0.1.0" ; setmaxstack est un stub sans effet ; new(options) crée une instance indépendante ; global(env) et register(env) installent lpeg/re dans un environnement ; sous-module LL.re (grammaires textuelles).
-- Les opérateurs Lua sont surchargés sur les motifs : p1 * p2 (séquence), p1 + p2 (choix), p1 - p2 (différence), p^n (répétition), -p (négation), #p (prédicat « et »), p / x (capture de remplacement).
-- La table renvoyée a un champ `__index` sur elle-même, donc les motifs ont aussi les méthodes (ex. pattern:match(s)).
+- The file declares no global function to document: the public API is that of the returned object (LL), built by the submodules.
+- Main LL API (read from the code): P, S, R, V, B, L (pattern constructors); C, Cs, Ct, Cc, Cg, Cb, Cf, Cmt, Cp, Carg (captures); match, dmatch (execution), ispattern, type, locale, pprint, cprint, evaluate, compile, resetptcache; version() returns "0.12", luversion() "0.1.0"; setmaxstack is a stub with no effect; new(options) creates an independent instance; global(env) and register(env) install lpeg/re in an environment; LL.re submodule (textual grammars).
+- Lua operators are overloaded on patterns: p1 * p2 (sequence), p1 + p2 (choice), p1 - p2 (difference), p^n (repetition), -p (negation), #p ("and" predicate), p / x (replacement capture).
+- The returned table has an `__index` field pointing to itself, so patterns also have the methods (e.g. pattern:match(s)).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/LuLPeg/lulpeg.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/LuLPeg/lulpeg.lua`.*

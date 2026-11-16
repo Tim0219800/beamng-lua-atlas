@@ -1,12 +1,12 @@
 # `gameplay_speedTraps`
 
-*Fichier : `lua/ge/extensions/gameplay/speedTraps.lua` · VM : Game Engine (GE) · 121 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/speedTraps.lua` · VM: Game Engine (GE) · 121 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_speedTraps` : `extensions.load("gameplay_speedTraps")`, puis la globale `gameplay_speedTraps`
+**Access:** extension `gameplay_speedTraps`: `extensions.load("gameplay_speedTraps")`, then the global `gameplay_speedTraps`
 
-Extension qui gère les radars de vitesse et de feu rouge posés dans les niveaux sous forme de triggers BeamNGTrigger portant un champ speedTrapType (« speed » ou « redLight »). Quand un véhicule entre dans le trigger, dans le bon sens et trop vite, elle émet les hooks onSpeedTrapTriggered ou onRedLightCamTriggered et fait flasher la lumière associée. Inactive pendant une mission au premier plan.
+Extension that manages the speed cameras and red light cameras placed in levels as BeamNGTrigger triggers carrying a speedTrapType field ("speed" or "redLight"). When a vehicle enters the trigger, in the right direction and too fast, it emits the hooks onSpeedTrapTriggered or onRedLightCamTriggered and makes the associated light flash. Inactive during a foreground mission.
 
-## Exemple
+## Example
 
 ```lua
 function M.onSpeedTrapTriggered(data, speed, overSpeed)
@@ -14,47 +14,47 @@ function M.onSpeedTrapTriggered(data, speed, overSpeed)
 end
 ```
 
-## Remarques
+## Notes
 
-- Données attendues dans data : event ('enter'), speedTrapType, speedLimit (m/s), speedLimitTolerance (défaut 10 % de la limite), speedTrapLightName, subjectID, triggerID, triggerName ; pour un feu rouge : triggerSpeed (défaut 5 m/s) et trafficSignalId.
-- Radar de vitesse : déclenché si la vitesse dépasse limite + tolérance. Feu rouge : déclenché si la vitesse dépasse triggerSpeed ET que le signal est « redTrafficLight ».
-- Ignoré si le véhicule est à plus de 100 m de la caméra ou si le véhicule roule dans le sens opposé à l'axe Y du trigger.
-- Le flash dure 0,1 s (radar) ; pour un feu rouge : flash 0,1 s, pause de 10 / vitesse s, second flash 0,1 s.
-- Pour un radar de feu rouge, trafficSignal est utilisé sans vérification de nil : si trafficSignalId est invalide, erreur Lua.
+- Data expected in data: event ('enter'), speedTrapType, speedLimit (m/s), speedLimitTolerance (default 10% of the limit), speedTrapLightName, subjectID, triggerID, triggerName; for a red light: triggerSpeed (default 5 m/s) and trafficSignalId.
+- Speed camera: triggered if the speed exceeds limit + tolerance. Red light camera: triggered if the speed exceeds triggerSpeed AND the signal is "redTrafficLight".
+- Ignored if the vehicle is more than 100 m from the camera or if the vehicle is driving in the opposite direction to the trigger's Y axis.
+- The flash lasts 0.1 s (speed camera); for a red light: flash 0.1 s, pause of 10 / speed s, second flash 0.1 s.
+- For a red light camera, trafficSignal is used without a nil check: if trafficSignalId is invalid, Lua error.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_speedTraps.getSpeedTrapsInCurrentLevel(speedTrapType)` | Liste les triggers BeamNGTrigger du niveau courant dont le speedTrapType correspond. | 105 |
-| `gameplay_speedTraps.onBeamNGTrigger(data)` | Hook appelé par le moteur à chaque événement d'un BeamNGTrigger. Ne traite que les triggers avec speedTrapType et l'événement 'enter'. Calcule la vitesse du véhicule, vérifie le sens de passage et émet onSpeedTrapTriggered(data, vehSpeed, overSpeed) ou onRedLightCamTriggered(data, vehSpeed), puis allume la lumière nommée. *(interne)* *(hook)* | 45 |
+| `gameplay_speedTraps.getSpeedTrapsInCurrentLevel(speedTrapType)` | Lists the BeamNGTrigger triggers of the current level whose speedTrapType matches. | 105 |
+| `gameplay_speedTraps.onBeamNGTrigger(data)` | Hook called by the engine on each BeamNGTrigger event. Only handles triggers with speedTrapType and the 'enter' event. Computes the vehicle speed, checks the direction of passage and emits onSpeedTrapTriggered(data, vehSpeed, overSpeed) or onRedLightCamTriggered(data, vehSpeed), then turns on the named light. *(internal)* *(hook)* | 45 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_speedTraps.getSpeedTrapsInCurrentLevel(speedTrapType)`
 
-Liste les triggers BeamNGTrigger du niveau courant dont le speedTrapType correspond.
+Lists the BeamNGTrigger triggers of the current level whose speedTrapType matches.
 
-- `speedTrapType` (*string*) : 'speed' ou 'redLight'.
-- **renvoie** : table[] Objets trigger (table vide si aucun).
+- `speedTrapType` (*string*) : 'speed' or 'redLight'.
+- **returns**: table[] Trigger objects (empty table if none).
 
 #### `gameplay_speedTraps.onBeamNGTrigger(data)`
 
-Hook appelé par le moteur à chaque événement d'un BeamNGTrigger. Ne traite que les triggers avec speedTrapType et l'événement 'enter'. Calcule la vitesse du véhicule, vérifie le sens de passage et émet onSpeedTrapTriggered(data, vehSpeed, overSpeed) ou onRedLightCamTriggered(data, vehSpeed), puis allume la lumière nommée.
+Hook called by the engine on each BeamNGTrigger event. Only handles triggers with speedTrapType and the 'enter' event. Computes the vehicle speed, checks the direction of passage and emits onSpeedTrapTriggered(data, vehSpeed, overSpeed) or onRedLightCamTriggered(data, vehSpeed), then turns on the named light.
 
-- `data` (*table*) : Données du trigger (voir notes).
+- `data` (*table*) : Trigger data (see notes).
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onRedLightCamTriggered` — écouté par 2 module(s)
-- `onSpeedTrapTriggered` — écouté par 3 module(s)
+- `onRedLightCamTriggered` — listened to by 2 module(s)
+- `onSpeedTrapTriggered` — listened to by 3 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectPositionXYZ`, `getObjectVelocityXYZ`
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/speedTraps.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/speedTraps.lua`.*

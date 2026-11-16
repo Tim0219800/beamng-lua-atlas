@@ -1,278 +1,1043 @@
 {
   "path": "lua/ge/extensions/core/trafficSignals.lua",
-  "module": "Extension GE `core_trafficSignals` (Traffic Signals V2) : simule les feux tricolores, stops et autres signaux d'un niveau. Trois types d'objets : SignalInstance (un signal placé dans le monde avec position, direction, controller et séquence), SignalController (type de signal et liste d'états avec durées : feu tricolore, stop…) et SignalSequence (phases qui enchaînent des controllers, partagées par les instances d'une intersection). Charge signals.json et signalControllerDefinitions.json du dossier du niveau, met à jour les lumières des objets TSStatic liés (champs dynamiques signalInstance, instanceColor*), publie l'état aux véhicules (mailbox 'trafficSignalUpdates') et via le hook onTrafficSignalUpdate.",
-  "usage": "-- État du premier signal\nlocal s = core_trafficSignals.getSignals()[1]\nlocal stateName, stateData = s:getState()   -- ex. 'greenTrafficLight'\n-- Forcer une séquence à l'étape 2 sans que le timer interfère\nlocal seq = s:getSequence()\nseq:enableTimer(false)\nseq:setStep(2)\n-- Signal le plus proche en amont d'un véhicule\nlocal best = core_trafficSignals.getBestSignal(veh:getPosition(), veh:getDirectionVector())",
+  "module": "GE extension `core_trafficSignals` (Traffic Signals V2): simulates the traffic lights, stop signs and other signals of a level. Three object types: SignalInstance (a signal placed in the world with position, direction, controller and sequence), SignalController (signal type and list of states with durations: traffic light, stop...) and SignalSequence (phases chaining controllers, shared by the instances of an intersection). Loads signals.json and signalControllerDefinitions.json from the level folder, updates the lights of the linked TSStatic objects (dynamic fields signalInstance, instanceColor*), publishes the state to vehicles (mailbox 'trafficSignalUpdates') and through the onTrafficSignalUpdate hook.",
+  "usage": "-- State of the first signal\nlocal s = core_trafficSignals.getSignals()[1]\nlocal stateName, stateData = s:getState()   -- e.g. 'greenTrafficLight'\n-- Force a sequence to step 2 without the timer interfering\nlocal seq = s:getSequence()\nseq:enableTimer(false)\nseq:setStep(2)\n-- Nearest upstream signal of a vehicle\nlocal best = core_trafficSignals.getBestSignal(veh:getPosition(), veh:getDirectionVector())",
   "notes": [
-    "Cycle de vie : onClientStartMission -> loadSignals() ; le système n'est vraiment lancé (runSignals) par onNavgraphReloaded, quand le graphe de routes est prêt (ou immédiatement avec autoRun=true). onClientEndMission -> resetSignals().",
-    "Le temps du module (`timer`, lu par getTimer) avance de dtSim à chaque onUpdate (ou dt réel si M.useDtReal). Les changements d'étape sont planifiés dans une file de priorité (minheap) triée par temps.",
-    "Chaque changement d'état est publié aux véhicules sous forme de tableau {n1, n2, indexInterne, action} (action : 1 alert, 2 stop, 3 briefStop, 4 yield, 5 slow, 0 sinon) envoyé dans la mailbox 'trafficSignalUpdates', et au Lua GE via extensions.hook('onTrafficSignalUpdate', résultats) où résultats[nomInstance] = {state, linkedObjects, stateAction, lightColors, lightStates}.",
-    "Les définitions de controllers viennent de settings/trafficSignals.json (clés states et types) fusionnées avec celles du niveau ; signalActions et signalColors (ColorF de debug) sont ajoutés par le code.",
-    "BUG : setTimer(nil) appelle resetTimer() (timer = 0) puis exécute `timer = val`, ce qui remet timer à nil ; les additions suivantes dans onUpdate provoquent alors une erreur.",
-    "Signatures réelles différentes de la liste automatique : SignalController:autoSetTimings(speedMetresPerSecond, intersectionLength, isPermissive) ; SignalInstance:isVehAfterSignal(vehId, maxDist, minDot) ; SignalInstance:getStateAfterTime(seconds, isAbsolute) ; SignalInstance:createSignalObject(shapeFile, pos, rot) ; SignalInstance:setup(pos, dir, controllerId, sequenceId) ; SignalInstance:setStrictState(stateIdx) ; SignalInstance:getVehPlacement(vehId) ; SignalSequence:setStrictState(ctrlName, stateIdx) ; SignalSequence:createPhase(phase, idx) ; SignalSequence:deletePhase(idx) ; SignalSequence:setStep(index) ; SignalSequence:setPhase(index) ; SignalSequence:setActive(val) ; SignalSequence:enableTimer(val) ; SignalController:applyDefinition(key) ; SignalInstance:setActive(val) ; SignalInstance:setLights(lightsArray) ; SignalInstance:setController(id) ; SignalInstance:setSequence(id) ; SignalInstance:setAuxiliaryData().",
-    "Le paramètre de autoSetTimings `isPermissive` est accepté mais pas utilisé dans le code (les formules supposent déjà la règle du jaune permissif).",
-    "Les fonctions du module nommées newSignal/getSignals/getSignalByName sont en interne newInstance/getInstances/getInstanceByName ; ne pas chercher ces noms internes. Le champ getSignalsDict vaut `nop` (fonction vide globale du jeu) : il ne renvoie jamais rien. L'alerte « référence nop non définie » est une fausse alerte.",
-    "SignalSequence:calcDuration(controllersRef) est appelée avec un argument optionnel (utilisé par l'éditeur). SignalInstance:drawDebug(isEditMode, isSelected, showText, capColor, cylinderScl, arrowScl) dessine via debugDrawer ; onUpdate l'appelle quand M.debugLevel > 0 pour les signaux à moins de 300 m de la caméra (niveau 2 : textes et flèches)."
+    "Lifecycle: onClientStartMission -> loadSignals(); the system is only actually started (runSignals) by onNavgraphReloaded, when the road graph is ready (or immediately with autoRun=true). onClientEndMission -> resetSignals().",
+    "The module time (`timer`, read by getTimer) advances by dtSim on each onUpdate (or real dt if M.useDtReal). Step changes are scheduled in a priority queue (minheap) sorted by time.",
+    "Each state change is published to vehicles as a table {n1, n2, internalIndex, action} (action: 1 alert, 2 stop, 3 briefStop, 4 yield, 5 slow, 0 otherwise) sent in the 'trafficSignalUpdates' mailbox, and to GE Lua via extensions.hook('onTrafficSignalUpdate', results) where results[instanceName] = {state, linkedObjects, stateAction, lightColors, lightStates}.",
+    "Controller definitions come from settings/trafficSignals.json (keys states and types) merged with those of the level; signalActions and signalColors (debug ColorF) are added by the code.",
+    "BUG: setTimer(nil) calls resetTimer() (timer = 0) then executes `timer = val`, which sets timer back to nil; subsequent additions in onUpdate then cause an error.",
+    "Actual signatures differ from the automatic list: SignalController:autoSetTimings(speedMetresPerSecond, intersectionLength, isPermissive) ; SignalInstance:isVehAfterSignal(vehId, maxDist, minDot) ; SignalInstance:getStateAfterTime(seconds, isAbsolute) ; SignalInstance:createSignalObject(shapeFile, pos, rot) ; SignalInstance:setup(pos, dir, controllerId, sequenceId) ; SignalInstance:setStrictState(stateIdx) ; SignalInstance:getVehPlacement(vehId) ; SignalSequence:setStrictState(ctrlName, stateIdx) ; SignalSequence:createPhase(phase, idx) ; SignalSequence:deletePhase(idx) ; SignalSequence:setStep(index) ; SignalSequence:setPhase(index) ; SignalSequence:setActive(val) ; SignalSequence:enableTimer(val) ; SignalController:applyDefinition(key) ; SignalInstance:setActive(val) ; SignalInstance:setLights(lightsArray) ; SignalInstance:setController(id) ; SignalInstance:setSequence(id) ; SignalInstance:setAuxiliaryData().",
+    "The `isPermissive` parameter of autoSetTimings is accepted but not used in the code (the formulas already assume the permissive yellow rule).",
+    "The module functions named newSignal/getSignals/getSignalByName are internally newInstance/getInstances/getInstanceByName; do not look for these internal names. The getSignalsDict field equals `nop` (global empty game function): it never returns anything. The \"undefined nop reference\" warning is a false alarm.",
+    "SignalSequence:calcDuration(controllersRef) is called with an optional argument (used by the editor). SignalInstance:drawDebug(isEditMode, isSelected, showText, capColor, cylinderScl, arrowScl) draws via debugDrawer; onUpdate calls it when M.debugLevel > 0 for signals within 300 m of the camera (level 2: texts and arrows)."
   ],
   "fields": {
-    "useDtReal": {"type": "boolean", "desc": "false par défaut ; si true, le timer avance avec le temps réel (dt) au lieu du temps de simulation (dtSim), donc même pendant une pause."},
-    "debugLevel": {"type": "number", "desc": "0 = aucun dessin debug ; 1 = dessin simple ; 2 = avec textes et flèches. Sauvegardé par onSerialize."},
-    "getSignalsDict": {"type": "function", "desc": "Vaut `nop` (fonction vide) : sans effet."}
+    "useDtReal": {
+      "type": "boolean",
+      "desc": "false by default; if true, the timer advances with real time (dt) instead of simulation time (dtSim), so even while paused."
+    },
+    "debugLevel": {
+      "type": "number",
+      "desc": "0 = no debug drawing; 1 = simple drawing; 2 = with texts and arrows. Saved by onSerialize."
+    },
+    "getSignalsDict": {
+      "type": "function",
+      "desc": "Equals `nop` (empty function): no effect."
+    }
   },
   "functions": {
     "getElementById": {
-      "desc": "Renvoie un élément (instance, controller ou séquence) d'après son id unique.",
-      "params": {"id": {"type": "integer|nil", "desc": "identifiant unique"}},
-      "returns": [{"type": "SignalInstance|SignalController|SignalSequence|nil", "desc": "élément"}]
+      "desc": "Returns an element (instance, controller or sequence) by its unique id.",
+      "params": {
+        "id": {
+          "type": "integer|nil",
+          "desc": "unique identifier"
+        }
+      },
+      "returns": [
+        {
+          "type": "SignalInstance|SignalController|SignalSequence|nil",
+          "desc": "element"
+        }
+      ]
     },
     "setupSignalObjects": {
-      "desc": "Met en cache les objets TSStatic de la scène qui possèdent un champ dynamique `signalInstance` (nom d'instance), indexés par nom d'instance.",
+      "desc": "Caches the scene's TSStatic objects that have a `signalInstance` dynamic field (instance name), keyed by instance name.",
       "params": {},
       "returns": []
     },
     "resetControllerDefinitions": {
-      "desc": "Recharge les définitions par défaut (settings/trafficSignals.json : états et types) et ajoute signalActions (alert=1, stop=2, briefStop=3, yield=4, slow=5) et signalColors.",
+      "desc": "Reloads the default definitions (settings/trafficSignals.json: states and types) and adds signalActions (alert=1, stop=2, briefStop=3, yield=4, slow=5) and signalColors.",
       "params": {},
       "returns": []
     },
     "newSignal": {
-      "desc": "Crée une SignalInstance (non incluse dans le système tant que :include() n'est pas appelé). Sans pos : position de la caméra au sol ; sans dir : direction de la route la plus proche, sinon de la caméra.",
-      "params": {"data": {"type": "table|nil", "desc": "{id?, name?, pos?, dir?, group?, controllerId?, sequenceId?, useCurrentLane?, startDisabled?}"}},
-      "returns": [{"type": "SignalInstance", "desc": "nouvelle instance"}]
+      "desc": "Creates a SignalInstance (not included in the system until :include() is called). Without pos: camera position on the ground; without dir: direction of the nearest road, otherwise of the camera.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "{id?, name?, pos?, dir?, group?, controllerId?, sequenceId?, useCurrentLane?, startDisabled?}"
+        }
+      },
+      "returns": [
+        {
+          "type": "SignalInstance",
+          "desc": "new instance"
+        }
+      ]
     },
     "newController": {
-      "desc": "Crée un SignalController (non inclus tant que :include() n'est pas appelé).",
-      "params": {"data": {"type": "table|nil", "desc": "{id?, name?, type?, isSimple?, defaultIndex?, states?}"}},
-      "returns": [{"type": "SignalController", "desc": "nouveau controller"}]
+      "desc": "Creates a SignalController (not included until :include() is called).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "{id?, name?, type?, isSimple?, defaultIndex?, states?}"
+        }
+      },
+      "returns": [
+        {
+          "type": "SignalController",
+          "desc": "new controller"
+        }
+      ]
     },
     "newSequence": {
-      "desc": "Crée une SignalSequence (non incluse tant que :include() n'est pas appelé).",
-      "params": {"data": {"type": "table|nil", "desc": "{id?, name?, startTime?, phases?, startDisabled?, ignoreTimer?}"}},
-      "returns": [{"type": "SignalSequence", "desc": "nouvelle séquence"}]
+      "desc": "Creates a SignalSequence (not included until :include() is called).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "{id?, name?, startTime?, phases?, startDisabled?, ignoreTimer?}"
+        }
+      },
+      "returns": [
+        {
+          "type": "SignalSequence",
+          "desc": "new sequence"
+        }
+      ]
     },
     "setControllerDefinitions": {
-      "desc": "Fusionne des états et types personnalisés dans les définitions de controllers (tableMerge).",
-      "params": {"data": {"type": "table", "desc": "{states = {...}, types = {...}}"}},
+      "desc": "Merges custom states and types into the controller definitions (tableMerge).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{states = {...}, types = {...}}"
+        }
+      },
       "returns": []
     },
     "getControllerDefinitions": {
-      "desc": "Renvoie les définitions de controllers (states, types, signalActions, signalColors).",
+      "desc": "Returns the controller definitions (states, types, signalActions, signalColors).",
       "params": {},
-      "returns": [{"type": "table", "desc": "définitions (pas une copie)"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "definitions (not a copy)"
+        }
+      ]
     },
     "getSignals": {
-      "desc": "Renvoie le tableau des instances de signaux.",
+      "desc": "Returns the array of signal instances.",
       "params": {},
-      "returns": [{"type": "SignalInstance[]", "desc": "instances"}]
+      "returns": [
+        {
+          "type": "SignalInstance[]",
+          "desc": "instances"
+        }
+      ]
     },
     "getSignalByName": {
-      "desc": "Renvoie une instance par son nom.",
-      "params": {"name": {"type": "string", "desc": "nom de l'instance"}},
-      "returns": [{"type": "SignalInstance|nil", "desc": "instance"}]
+      "desc": "Returns an instance by its name.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "instance name"
+        }
+      },
+      "returns": [
+        {
+          "type": "SignalInstance|nil",
+          "desc": "instance"
+        }
+      ]
     },
     "getMapNodeSignals": {
-      "desc": "Renvoie la table qui relie les noeuds de la carte routière aux signaux : [n1][n2] = liste de {instance, pos, useLane, state, action}.",
+      "desc": "Returns the table that links road map nodes to signals: [n1][n2] = list of {instance, pos, useLane, state, action}.",
       "params": {},
-      "returns": [{"type": "table", "desc": "table de références (envoyée aux véhicules)"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "reference table (sent to vehicles)"
+        }
+      ]
     },
     "getControllers": {
-      "desc": "Renvoie le tableau des controllers.",
+      "desc": "Returns the array of controllers.",
       "params": {},
-      "returns": [{"type": "SignalController[]", "desc": "controllers"}]
+      "returns": [
+        {
+          "type": "SignalController[]",
+          "desc": "controllers"
+        }
+      ]
     },
     "getControllerByName": {
-      "desc": "Renvoie un controller par son nom.",
-      "params": {"name": {"type": "string", "desc": "nom"}},
-      "returns": [{"type": "SignalController|nil", "desc": "controller"}]
+      "desc": "Returns a controller by its name.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "name"
+        }
+      },
+      "returns": [
+        {
+          "type": "SignalController|nil",
+          "desc": "controller"
+        }
+      ]
     },
     "getSequences": {
-      "desc": "Renvoie le tableau des séquences.",
+      "desc": "Returns the array of sequences.",
       "params": {},
-      "returns": [{"type": "SignalSequence[]", "desc": "séquences"}]
+      "returns": [
+        {
+          "type": "SignalSequence[]",
+          "desc": "sequences"
+        }
+      ]
     },
     "getSequenceByName": {
-      "desc": "Renvoie une séquence par son nom.",
-      "params": {"name": {"type": "string", "desc": "nom"}},
-      "returns": [{"type": "SignalSequence|nil", "desc": "séquence"}]
+      "desc": "Returns a sequence by its name.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "name"
+        }
+      },
+      "returns": [
+        {
+          "type": "SignalSequence|nil",
+          "desc": "sequence"
+        }
+      ]
     },
     "getTimer": {
-      "desc": "Renvoie le temps écoulé du système (s) ; -1 tant qu'il n'a jamais été lancé.",
+      "desc": "Returns the elapsed system time (s); -1 as long as it has never been started.",
       "params": {},
-      "returns": [{"type": "number", "desc": "timer"}]
+      "returns": [
+        {
+          "type": "number",
+          "desc": "timer"
+        }
+      ]
     },
     "getData": {
-      "desc": "Renvoie les données principales du module.",
-      "params": {"full": {"type": "boolean|nil", "desc": "si true, ajoute instancesByName, controllersByName, sequencesByName, elementsById"}},
-      "returns": [{"type": "table", "desc": "{instances, controllers, sequences, loaded, active, timer, nextTime (prochaine échéance de la file, 0 si vide)} (+ tables par nom/id si full)"}]
+      "desc": "Returns the main data of the module.",
+      "params": {
+        "full": {
+          "type": "boolean|nil",
+          "desc": "if true, adds instancesByName, controllersByName, sequencesByName, elementsById"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{instances, controllers, sequences, loaded, active, timer, nextTime (next deadline in the queue, 0 if empty)} (+ tables by name/id if full)"
+        }
+      ]
     },
     "getBestSignal": {
-      "desc": "Renvoie le signal le plus pertinent près d'une position. Avec dirVec, favorise les signaux devant le véhicule et orientés dans le même sens (distance divisée par le plus petit des deux produits scalaires). Le résultat est mis en cache tant que le segment de route (n1, n2) ne change pas.",
+      "desc": "Returns the most relevant signal near a position. With dirVec, favors signals ahead of the vehicle and facing the same way (distance divided by the smaller of the two dot products). The result is cached as long as the road segment (n1, n2) does not change.",
       "params": {
-        "pos": {"type": "vec3", "desc": "position de recherche"},
-        "dirVec": {"type": "vec3|nil", "desc": "direction de déplacement"},
-        "resetCache": {"type": "boolean|nil", "desc": "true pour oublier le résultat en cache"}
+        "pos": {
+          "type": "vec3",
+          "desc": "search position"
+        },
+        "dirVec": {
+          "type": "vec3|nil",
+          "desc": "travel direction"
+        },
+        "resetCache": {
+          "type": "boolean|nil",
+          "desc": "true to forget the cached result"
+        }
       },
-      "returns": [{"type": "SignalInstance|nil", "desc": "meilleure instance valide ; nil si le système n'est pas lancé ou si aucune route proche"}]
+      "returns": [
+        {
+          "type": "SignalInstance|nil",
+          "desc": "best valid instance; nil if the system is not running or no road is nearby"
+        }
+      ]
     },
     "resetTimer": {
-      "desc": "Met le timer à 0, vide la file, (ré)active les séquences et instances valides puis émet onTrafficSignalsReset.",
+      "desc": "Sets the timer to 0, empties the queue, (re)activates the valid sequences and instances, then emits onTrafficSignalsReset.",
       "params": {},
       "returns": []
     },
     "setTimer": {
-      "desc": "Fixe directement le timer (peut changer instantanément les états). Voir le bug dans les notes si val est nil.",
-      "params": {"val": {"type": "number", "desc": "nouvelle valeur du timer (s)"}},
+      "desc": "Directly sets the timer (may change states instantly). See the bug in the notes if val is nil.",
+      "params": {
+        "val": {
+          "type": "number",
+          "desc": "new timer value (s)"
+        }
+      },
       "returns": []
     },
     "setActive": {
-      "desc": "Active ou met en pause le système. Avec autoRun=true et système non chargé, lance runSignals immédiatement ; sinon attend onNavgraphReloaded.",
+      "desc": "Enables or pauses the system. With autoRun=true and the system not loaded, runs runSignals immediately; otherwise waits for onNavgraphReloaded.",
       "params": {
-        "val": {"type": "boolean", "desc": "état actif"},
-        "autoRun": {"type": "boolean|nil", "desc": "true : lancer tout de suite (graphe de routes déjà prêt)"}
+        "val": {
+          "type": "boolean",
+          "desc": "active state"
+        },
+        "autoRun": {
+          "type": "boolean|nil",
+          "desc": "true: run right away (road graph already ready)"
+        }
       },
       "returns": []
     },
     "setLightsManual": {
-      "desc": "Allume ou éteint directement les 3 lumières d'un objet signal (champs instanceColor, instanceColor1, instanceColor2) sans changer l'état logique.",
+      "desc": "Directly turns on or off the 3 lights of a signal object (fields instanceColor, instanceColor1, instanceColor2) without changing the logical state.",
       "params": {
-        "id": {"type": "integer", "desc": "identifiant de l'objet scène (TSStatic)"},
-        "stateArray": {"type": "boolean[]|nil", "desc": "état de chaque lumière ; défaut {false,false,false}"}
+        "id": {
+          "type": "integer",
+          "desc": "scene object id (TSStatic)"
+        },
+        "stateArray": {
+          "type": "boolean[]|nil",
+          "desc": "state of each light; default {false,false,false}"
+        }
       },
       "returns": []
     },
     "setupSignals": {
-      "desc": "Installe un jeu de signaux (et efface les index précédents). Sans data, vide tout. Avec data, remplace (ou fusionne si merge) instances, controllers et séquences, retire les doublons d'id puis appelle setActive(true, autoRun).",
+      "desc": "Installs a set of signals (and clears the previous indexes). Without data, clears everything. With data, replaces (or merges if merge) instances, controllers and sequences, removes duplicate ids, then calls setActive(true, autoRun).",
       "params": {
-        "data": {"type": "table|nil", "desc": "{instances, controllers, sequences} d'objets SignalInstance/Controller/Sequence"},
-        "merge": {"type": "boolean|nil", "desc": "true : ajoute aux éléments existants"},
-        "autoRun": {"type": "boolean|nil", "desc": "true : lancer immédiatement le système"}
+        "data": {
+          "type": "table|nil",
+          "desc": "{instances, controllers, sequences} of SignalInstance/Controller/Sequence objects"
+        },
+        "merge": {
+          "type": "boolean|nil",
+          "desc": "true: adds to the existing elements"
+        },
+        "autoRun": {
+          "type": "boolean|nil",
+          "desc": "true: run the system immediately"
+        }
       },
       "returns": []
     },
     "resetSignals": {
-      "desc": "Supprime tous les signaux, controllers et séquences (setupSignals sans argument).",
+      "desc": "Deletes all signals, controllers and sequences (setupSignals without argument).",
       "params": {},
       "returns": []
     },
     "loadControllerDefinitions": {
-      "desc": "Recharge les définitions par défaut puis applique celles du niveau (signalControllerDefinitions.json dans le dossier du niveau, ou filePath).",
-      "params": {"filePath": {"type": "string|nil", "desc": "fichier de définitions ; défaut = <dossier du niveau>/signalControllerDefinitions.json"}},
+      "desc": "Reloads the default definitions then applies those of the level (signalControllerDefinitions.json in the level folder, or filePath).",
+      "params": {
+        "filePath": {
+          "type": "string|nil",
+          "desc": "definitions file; default = <level folder>/signalControllerDefinitions.json"
+        }
+      },
       "returns": []
     },
     "loadSignals": {
-      "desc": "Charge un fichier de signaux JSON (instances, controllers, sequences) et l'installe avec setupSignals. Charge aussi les définitions de controllers du niveau.",
+      "desc": "Loads a JSON signals file (instances, controllers, sequences) and installs it with setupSignals. Also loads the level's controller definitions.",
       "params": {
-        "filePath": {"type": "string|nil", "desc": "fichier ; défaut = <dossier du niveau>/signals.json"},
-        "autoRun": {"type": "boolean|nil", "desc": "false si le graphe de routes n'est pas encore chargé (cas du chargement de niveau)"}
+        "filePath": {
+          "type": "string|nil",
+          "desc": "file; default = <level folder>/signals.json"
+        },
+        "autoRun": {
+          "type": "boolean|nil",
+          "desc": "false if the road graph is not loaded yet (level loading case)"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si le fichier a été lu"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the file was read"
+        }
+      ]
     },
     "onUpdate": {
-      "desc": "Hook appelé à chaque frame : fait clignoter les états à lumières clignotantes, avance le timer, dépile la file pour faire avancer les séquences, applique les changements d'état en attente (lumières, mailbox, hook onTrafficSignalUpdate) et dessine le debug si debugLevel > 0.",
+      "desc": "Hook called every frame: blinks the flashing-light states, advances the timer, pops the queue to advance sequences, applies pending state changes (lights, mailbox, onTrafficSignalUpdate hook) and draws debug if debugLevel > 0.",
       "params": {
-        "dt": {"type": "number", "desc": "temps réel (s)"},
-        "dtSim": {"type": "number", "desc": "temps de simulation (s)"}
+        "dt": {
+          "type": "number",
+          "desc": "real time (s)"
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "simulation time (s)"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onNavgraphReloaded": {
-      "desc": "Hook : le graphe de routes est (re)chargé. Si le système est actif, lance runSignals (calcule durées, routes, timer, table mapNodeSignals).",
+      "desc": "Hook: the road graph is (re)loaded. If the system is active, runs runSignals (computes durations, roads, timer, mapNodeSignals table).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onClientStartMission": {
-      "desc": "Hook : un niveau démarre ; charge signals.json du niveau.",
+      "desc": "Hook: a level starts; loads the level's signals.json.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook : le niveau se termine ; supprime les signaux.",
+      "desc": "Hook: the level ends; deletes the signals.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook : sérialise instances, controllers, séquences, active, loaded, useDtReal, debugLevel avant un rechargement Lua.",
+      "desc": "Hook: serializes instances, controllers, sequences, active, loaded, useDtReal, debugLevel before a Lua reload.",
       "params": {},
-      "returns": [{"type": "table", "desc": "données"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "data"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook : recrée et inclut les éléments sérialisés, recharge les définitions et recalcule le compteur d'ids.",
-      "params": {"data": {"type": "table", "desc": "données de onSerialize"}},
+      "desc": "Hook: recreates and includes the serialized elements, reloads the definitions and recomputes the id counter.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "data from onSerialize"
+        }
+      },
       "returns": [],
       "internal": true
     }
   },
   "classes": {
     "SignalInstance": {
-      "desc": "Un signal placé dans le monde (feu, panneau). Champs : id, name, pos (vec3), dir (vec3), group, controllerId, sequenceId, startDisabled, active, road ({n1, n2, dist, pos, dir, radius}), linkedObjects (ids d'objets TSStatic liés), priorityStateIndex (état imposé qui prime sur la séquence), targetPos/intersectionId (centre de l'intersection), _invalid (signal inutilisable : pas de route ou de controller). Créé par newSignal.",
+      "desc": "A signal placed in the world (light, sign). Fields: id, name, pos (vec3), dir (vec3), group, controllerId, sequenceId, startDisabled, active, road ({n1, n2, dist, pos, dir, radius}), linkedObjects (ids of linked TSStatic objects), priorityStateIndex (forced state that takes precedence over the sequence), targetPos/intersectionId (intersection center), _invalid (unusable signal: no road or controller). Created by newSignal.",
       "functions": {
-        "new": {"desc": "Constructeur.", "params": {"data": {"type": "table|nil", "desc": "voir newSignal"}}, "returns": [{"type": "SignalInstance", "desc": "instance"}], "internal": true},
-        "setLights": {"desc": "Allume/éteint directement les lumières de tous les objets liés (sans changer l'état logique). Surtout interne.", "params": {"lightsArray": {"type": "string[]|nil", "desc": "couleurs ; 'black' = éteint, toute autre valeur = allumé ; défaut tout éteint"}}, "returns": []},
-        "setStrictState": {"desc": "Impose l'état de ce signal d'après l'indice dans la liste d'états du controller (prime sur la séquence ; désactiver le timer de la séquence avant). Sans stateIdx valide (nil ou <= 0), le signal retrouve son état normal.", "params": {"stateIdx": {"type": "integer|nil", "desc": "indice (base 1) dans controller.states"}}, "returns": []},
-        "getSignalObjects": {"desc": "Ids des objets TSStatic liés à ce signal (champ signalInstance = nom).", "params": {"refresh": {"type": "boolean|nil", "desc": "true : relit la scène"}}, "returns": [{"type": "integer[]", "desc": "ids"}]},
-        "clearSignalObjects": {"desc": "Délie les objets liés (efface leur champ signalInstance) ou les supprime.", "params": {"alsoDelete": {"type": "boolean|nil", "desc": "true : supprime les objets"}}, "returns": []},
-        "linkSignalObject": {"desc": "Lie un objet scène à ce signal (champ dynamique signalInstance = nom).", "params": {"objId": {"type": "integer", "desc": "id de l'objet"}}, "returns": []},
-        "unlinkSignalObject": {"desc": "Délie un objet scène de ce signal.", "params": {"objId": {"type": "integer", "desc": "id de l'objet"}}, "returns": []},
-        "createSignalObject": {"desc": "Crée un TSStatic (shape de feu, par défaut art/shapes/objects/trafficlight_overhead1.dae, cherchée dans le niveau puis dans art/shapes/), le place, le lie au signal et le range dans le groupe AutoTrafficSignals.", "params": {"shapeFile": {"type": "string|nil", "desc": "fichier .dae ou fragment de nom"}, "pos": {"type": "vec3|nil", "desc": "position ; défaut caméra"}, "rot": {"type": "quat|nil", "desc": "rotation ; défaut caméra"}}, "returns": [{"type": "userdata|nil", "desc": "objet créé ; nil si la shape est introuvable"}]},
-        "setup": {"desc": "Configuration alternative : fixe pos/dir, cherche la route, et crée un controller ('lightsBasic') et/ou une séquence si les ids donnés sont absents ou invalides.", "params": {"pos": {"type": "vec3|nil", "desc": "position"}, "dir": {"type": "vec3|nil", "desc": "direction"}, "controllerId": {"type": "integer|nil", "desc": "id de controller existant"}, "sequenceId": {"type": "integer|nil", "desc": "id de séquence existante"}}, "returns": []},
-        "getBestRoad": {"desc": "Trouve la route la plus proche d'une position et renvoie le segment orienté dans le sens du signal (route à sens unique : sens de la route).", "params": {"pos": {"type": "vec3|nil", "desc": "position ; défaut self.pos"}, "dir": {"type": "vec3|nil", "desc": "direction ; défaut self.dir"}}, "returns": [{"type": "table|nil", "desc": "{n1, n2, dist, pos, dir, radius} ou nil si aucune route"}]},
-        "getVehPlacement": {"desc": "Position d'un véhicule par rapport au signal.", "params": {"vehId": {"type": "integer", "desc": "véhicule connu de map.objects"}}, "returns": [{"type": "table|nil", "desc": "{dot (alignement des directions), dist (m), relDist (négatif avant le signal)}"}]},
-        "isVehAfterSignal": {"desc": "Vrai si le véhicule a franchi le point du signal dans le bon sens et à moins de maxDist.", "params": {"vehId": {"type": "integer", "desc": "véhicule"}, "maxDist": {"type": "number|nil", "desc": "distance max (m), défaut 20"}, "minDot": {"type": "number|nil", "desc": "produit scalaire min des directions, défaut 0.707"}}, "returns": [{"type": "boolean", "desc": "valide"}, {"type": "table|nil", "desc": "données de getVehPlacement"}]},
-        "calcIntersectionPos": {"desc": "Calcule le centre de l'intersection en moyennant les signaux de même séquence situés à moins de 40 m devant ce signal (au moins 2) et renseigne targetPos/intersectionId pour tous. Nécessite le système actif.", "params": {}, "returns": []},
-        "drawDebug": {"desc": "Dessine cylindre, flèche et texte de debug du signal.", "params": {"isEditMode": {"type": "boolean", "desc": "mode éditeur"}, "isSelected": {"type": "boolean", "desc": "sélectionné"}, "showText": {"type": "boolean", "desc": "afficher les textes"}, "capColor": {"type": "ColorF|nil", "desc": "couleur du chapeau"}, "cylinderScl": {"type": "number|nil", "desc": "hauteur du cylindre, défaut 5"}, "arrowScl": {"type": "number|nil", "desc": "échelle de la flèche, défaut 2"}}, "returns": []},
-        "getController": {"desc": "Controller associé (via controllerId).", "params": {}, "returns": [{"type": "SignalController|nil", "desc": "controller"}]},
-        "getSequence": {"desc": "Séquence associée (via sequenceId).", "params": {}, "returns": [{"type": "SignalSequence|nil", "desc": "séquence"}]},
-        "getStateAfterTime": {"desc": "État du signal après `seconds` secondes (système actif requis) en simulant la séquence.", "params": {"seconds": {"type": "number|nil", "desc": "délai (s), défaut 0"}, "isAbsolute": {"type": "boolean|nil", "desc": "true : compté depuis le début de la séquence au lieu de maintenant"}}, "returns": [{"type": "string", "desc": "nom de l'état ('none' si inactif)"}, {"type": "table", "desc": "données de l'état (lights, action…)"}]},
-        "getState": {"desc": "État courant (getStateAfterTime(0)).", "params": {}, "returns": [{"type": "string", "desc": "nom de l'état"}, {"type": "table", "desc": "données de l'état"}]},
-        "refresh": {"desc": "Réactualise ce signal ainsi que sa séquence (réactive, rétablit l'étape courante).", "params": {}, "returns": []},
-        "setController": {"desc": "Change le controller et rafraîchit si le système est actif.", "params": {"id": {"type": "integer|nil", "desc": "id du controller"}}, "returns": []},
-        "setSequence": {"desc": "Change la séquence et rafraîchit si le système est actif.", "params": {"id": {"type": "integer|nil", "desc": "id de la séquence"}}, "returns": []},
-        "setActive": {"desc": "Active ou désactive le signal ; à l'activation, met l'état attendu (séquence, sinon état par défaut du controller) en file d'envoi.", "params": {"val": {"type": "boolean", "desc": "actif"}}, "returns": []},
-        "setAuxiliaryData": {"desc": "Cherche la route, vérifie la présence du controller et recense les objets liés ; marque le signal _invalid en cas de problème (log d'erreur).", "params": {}, "returns": [], "internal": true},
-        "include": {"desc": "Ajoute l'instance (et son controller/sa séquence internes éventuels) aux données du module.", "params": {}, "returns": []},
-        "exclude": {"desc": "Retire l'instance des données du module.", "params": {}, "returns": []},
-        "onSerialize": {"desc": "Données à sauvegarder (id, name, pos, dir, group, controllerId, sequenceId, useCurrentLane, startDisabled).", "params": {}, "returns": [{"type": "table", "desc": "données"}], "internal": true},
-        "onDeserialized": {"desc": "Restaure les champs à partir de data (pos/dir reconverties en vec3).", "params": {"data": {"type": "table|nil", "desc": "données"}}, "returns": [], "internal": true}
+        "new": {
+          "desc": "Constructor.",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "see newSignal"
+            }
+          },
+          "returns": [
+            {
+              "type": "SignalInstance",
+              "desc": "instance"
+            }
+          ],
+          "internal": true
+        },
+        "setLights": {
+          "desc": "Directly turns on/off the lights of all linked objects (without changing the logical state). Mostly internal.",
+          "params": {
+            "lightsArray": {
+              "type": "string[]|nil",
+              "desc": "colors; 'black' = off, any other value = on; default all off"
+            }
+          },
+          "returns": []
+        },
+        "setStrictState": {
+          "desc": "Forces the state of this signal from the index in the controller's state list (takes precedence over the sequence; disable the sequence timer first). Without a valid stateIdx (nil or <= 0), the signal returns to its normal state.",
+          "params": {
+            "stateIdx": {
+              "type": "integer|nil",
+              "desc": "index (1-based) in controller.states"
+            }
+          },
+          "returns": []
+        },
+        "getSignalObjects": {
+          "desc": "Ids of the TSStatic objects linked to this signal (field signalInstance = name).",
+          "params": {
+            "refresh": {
+              "type": "boolean|nil",
+              "desc": "true: re-reads the scene"
+            }
+          },
+          "returns": [
+            {
+              "type": "integer[]",
+              "desc": "ids"
+            }
+          ]
+        },
+        "clearSignalObjects": {
+          "desc": "Unlinks the linked objects (clears their signalInstance field) or deletes them.",
+          "params": {
+            "alsoDelete": {
+              "type": "boolean|nil",
+              "desc": "true: deletes the objects"
+            }
+          },
+          "returns": []
+        },
+        "linkSignalObject": {
+          "desc": "Links a scene object to this signal (dynamic field signalInstance = name).",
+          "params": {
+            "objId": {
+              "type": "integer",
+              "desc": "object id"
+            }
+          },
+          "returns": []
+        },
+        "unlinkSignalObject": {
+          "desc": "Unlinks a scene object from this signal.",
+          "params": {
+            "objId": {
+              "type": "integer",
+              "desc": "object id"
+            }
+          },
+          "returns": []
+        },
+        "createSignalObject": {
+          "desc": "Creates a TSStatic (light shape, default art/shapes/objects/trafficlight_overhead1.dae, searched in the level then in art/shapes/), places it, links it to the signal and puts it in the AutoTrafficSignals group.",
+          "params": {
+            "shapeFile": {
+              "type": "string|nil",
+              "desc": ".dae file or name fragment"
+            },
+            "pos": {
+              "type": "vec3|nil",
+              "desc": "position; default camera"
+            },
+            "rot": {
+              "type": "quat|nil",
+              "desc": "rotation; default camera"
+            }
+          },
+          "returns": [
+            {
+              "type": "userdata|nil",
+              "desc": "created object; nil if the shape is not found"
+            }
+          ]
+        },
+        "setup": {
+          "desc": "Alternative setup: sets pos/dir, looks for the road, and creates a controller ('lightsBasic') and/or a sequence if the given ids are missing or invalid.",
+          "params": {
+            "pos": {
+              "type": "vec3|nil",
+              "desc": "position"
+            },
+            "dir": {
+              "type": "vec3|nil",
+              "desc": "direction"
+            },
+            "controllerId": {
+              "type": "integer|nil",
+              "desc": "existing controller id"
+            },
+            "sequenceId": {
+              "type": "integer|nil",
+              "desc": "existing sequence id"
+            }
+          },
+          "returns": []
+        },
+        "getBestRoad": {
+          "desc": "Finds the nearest road to a position and returns the segment oriented in the signal's direction (one-way road: the road's direction).",
+          "params": {
+            "pos": {
+              "type": "vec3|nil",
+              "desc": "position; default self.pos"
+            },
+            "dir": {
+              "type": "vec3|nil",
+              "desc": "direction; default self.dir"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "{n1, n2, dist, pos, dir, radius} or nil if no road"
+            }
+          ]
+        },
+        "getVehPlacement": {
+          "desc": "Position of a vehicle relative to the signal.",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "vehicle known to map.objects"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "{dot (direction alignment), dist (m), relDist (negative before the signal)}"
+            }
+          ]
+        },
+        "isVehAfterSignal": {
+          "desc": "True if the vehicle has passed the signal point in the right direction and within maxDist.",
+          "params": {
+            "vehId": {
+              "type": "integer",
+              "desc": "vehicle"
+            },
+            "maxDist": {
+              "type": "number|nil",
+              "desc": "max distance (m), default 20"
+            },
+            "minDot": {
+              "type": "number|nil",
+              "desc": "min dot product of directions, default 0.707"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "valid"
+            },
+            {
+              "type": "table|nil",
+              "desc": "data from getVehPlacement"
+            }
+          ]
+        },
+        "calcIntersectionPos": {
+          "desc": "Computes the intersection center by averaging the signals of the same sequence located less than 40 m ahead of this signal (at least 2) and fills in targetPos/intersectionId for all of them. Requires the system to be active.",
+          "params": {},
+          "returns": []
+        },
+        "drawDebug": {
+          "desc": "Draws the signal's debug cylinder, arrow and text.",
+          "params": {
+            "isEditMode": {
+              "type": "boolean",
+              "desc": "editor mode"
+            },
+            "isSelected": {
+              "type": "boolean",
+              "desc": "selected"
+            },
+            "showText": {
+              "type": "boolean",
+              "desc": "show texts"
+            },
+            "capColor": {
+              "type": "ColorF|nil",
+              "desc": "cap color"
+            },
+            "cylinderScl": {
+              "type": "number|nil",
+              "desc": "cylinder height, default 5"
+            },
+            "arrowScl": {
+              "type": "number|nil",
+              "desc": "arrow scale, default 2"
+            }
+          },
+          "returns": []
+        },
+        "getController": {
+          "desc": "Associated controller (via controllerId).",
+          "params": {},
+          "returns": [
+            {
+              "type": "SignalController|nil",
+              "desc": "controller"
+            }
+          ]
+        },
+        "getSequence": {
+          "desc": "Associated sequence (via sequenceId).",
+          "params": {},
+          "returns": [
+            {
+              "type": "SignalSequence|nil",
+              "desc": "sequence"
+            }
+          ]
+        },
+        "getStateAfterTime": {
+          "desc": "Signal state after `seconds` seconds (active system required), by simulating the sequence.",
+          "params": {
+            "seconds": {
+              "type": "number|nil",
+              "desc": "delay (s), default 0"
+            },
+            "isAbsolute": {
+              "type": "boolean|nil",
+              "desc": "true: counted from the start of the sequence instead of from now"
+            }
+          },
+          "returns": [
+            {
+              "type": "string",
+              "desc": "state name ('none' if inactive)"
+            },
+            {
+              "type": "table",
+              "desc": "state data (lights, action...)"
+            }
+          ]
+        },
+        "getState": {
+          "desc": "Current state (getStateAfterTime(0)).",
+          "params": {},
+          "returns": [
+            {
+              "type": "string",
+              "desc": "state name"
+            },
+            {
+              "type": "table",
+              "desc": "state data"
+            }
+          ]
+        },
+        "refresh": {
+          "desc": "Refreshes this signal and its sequence (reactivates, restores the current step).",
+          "params": {},
+          "returns": []
+        },
+        "setController": {
+          "desc": "Changes the controller and refreshes if the system is active.",
+          "params": {
+            "id": {
+              "type": "integer|nil",
+              "desc": "controller id"
+            }
+          },
+          "returns": []
+        },
+        "setSequence": {
+          "desc": "Changes the sequence and refreshes if the system is active.",
+          "params": {
+            "id": {
+              "type": "integer|nil",
+              "desc": "sequence id"
+            }
+          },
+          "returns": []
+        },
+        "setActive": {
+          "desc": "Enables or disables the signal; on activation, queues the expected state (sequence, otherwise the controller's default state) for sending.",
+          "params": {
+            "val": {
+              "type": "boolean",
+              "desc": "active"
+            }
+          },
+          "returns": []
+        },
+        "setAuxiliaryData": {
+          "desc": "Looks for the road, checks that the controller exists and lists the linked objects; marks the signal _invalid on any problem (error log).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "include": {
+          "desc": "Adds the instance (and its internal controller/sequence, if any) to the module data.",
+          "params": {},
+          "returns": []
+        },
+        "exclude": {
+          "desc": "Removes the instance from the module data.",
+          "params": {},
+          "returns": []
+        },
+        "onSerialize": {
+          "desc": "Data to save (id, name, pos, dir, group, controllerId, sequenceId, useCurrentLane, startDisabled).",
+          "params": {},
+          "returns": [
+            {
+              "type": "table",
+              "desc": "data"
+            }
+          ],
+          "internal": true
+        },
+        "onDeserialized": {
+          "desc": "Restores the fields from data (pos/dir converted back to vec3).",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "data"
+            }
+          },
+          "returns": [],
+          "internal": true
+        }
       }
     },
     "SignalController": {
-      "desc": "Type de signal avec sa liste d'états ordonnés ({state, duration}) : feu tricolore, stop, etc. Champs : id, name, type, isSimple (durées ignorées), defaultIndex (état par défaut), totalDuration, states. Réutilisable par plusieurs séquences.",
+      "desc": "Signal type with its ordered list of states ({state, duration}): traffic light, stop, etc. Fields: id, name, type, isSimple (durations ignored), defaultIndex (default state), totalDuration, states. Reusable by several sequences.",
       "functions": {
-        "new": {"desc": "Constructeur (voir newController).", "params": {"data": {"type": "table|nil", "desc": "{id?, name?, type?, isSimple?, defaultIndex?, states?}"}}, "returns": [{"type": "SignalController", "desc": "controller"}], "internal": true},
-        "applyDefinition": {"desc": "Applique un type de signal des définitions (copie isSimple, defaultIndex et les états avec leurs durées).", "params": {"key": {"type": "string|nil", "desc": "clé du type dans controllerDefinitions.types ; défaut 'none'"}}, "returns": []},
-        "getStateData": {"desc": "Données d'un état dans les définitions (lights, action, flashingLights…).", "params": {"state": {"type": "string", "desc": "nom de l'état"}}, "returns": [{"type": "table|nil", "desc": "données"}]},
-        "calcDuration": {"desc": "Calcule la durée totale des états (math.huge si une durée est absente ou négative ; 0 si isSimple).", "params": {}, "returns": [{"type": "number", "desc": "durée totale (s)"}]},
-        "autoSetTimings": {"desc": "Règle automatiquement les durées : vert = 0.7*vitesse + 0.6*longueur d'intersection (borné 10..40 s), jaune = 1 + (vitesse - 4.167)/3.27 (borné 3..7 s), rouge = 1 s.", "params": {"speedMetresPerSecond": {"type": "number", "desc": "vitesse de la route (m/s)"}, "intersectionLength": {"type": "number", "desc": "longueur de l'intersection (m)"}, "isPermissive": {"type": "boolean|nil", "desc": "non utilisé dans le code"}}, "returns": []},
-        "include": {"desc": "Ajoute le controller aux données du module.", "params": {}, "returns": []},
-        "exclude": {"desc": "Retire le controller des données du module.", "params": {}, "returns": []},
-        "onSerialize": {"desc": "Données à sauvegarder (les durées négatives sont ramenées à -1).", "params": {}, "returns": [{"type": "table", "desc": "données"}], "internal": true},
-        "onDeserialized": {"desc": "Restaure les champs.", "params": {"data": {"type": "table|nil", "desc": "données"}}, "returns": [], "internal": true}
+        "new": {
+          "desc": "Constructor (see newController).",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "{id?, name?, type?, isSimple?, defaultIndex?, states?}"
+            }
+          },
+          "returns": [
+            {
+              "type": "SignalController",
+              "desc": "controller"
+            }
+          ],
+          "internal": true
+        },
+        "applyDefinition": {
+          "desc": "Applies a signal type from the definitions (copies isSimple, defaultIndex and the states with their durations).",
+          "params": {
+            "key": {
+              "type": "string|nil",
+              "desc": "type key in controllerDefinitions.types; default 'none'"
+            }
+          },
+          "returns": []
+        },
+        "getStateData": {
+          "desc": "State data in the definitions (lights, action, flashingLights...).",
+          "params": {
+            "state": {
+              "type": "string",
+              "desc": "state name"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "data"
+            }
+          ]
+        },
+        "calcDuration": {
+          "desc": "Computes the total duration of the states (math.huge if a duration is missing or negative; 0 if isSimple).",
+          "params": {},
+          "returns": [
+            {
+              "type": "number",
+              "desc": "total duration (s)"
+            }
+          ]
+        },
+        "autoSetTimings": {
+          "desc": "Automatically sets the durations: green = 0.7*speed + 0.6*intersection length (clamped 10..40 s), yellow = 1 + (speed - 4.167)/3.27 (clamped 3..7 s), red = 1 s.",
+          "params": {
+            "speedMetresPerSecond": {
+              "type": "number",
+              "desc": "road speed (m/s)"
+            },
+            "intersectionLength": {
+              "type": "number",
+              "desc": "intersection length (m)"
+            },
+            "isPermissive": {
+              "type": "boolean|nil",
+              "desc": "not used in the code"
+            }
+          },
+          "returns": []
+        },
+        "include": {
+          "desc": "Adds the controller to the module data.",
+          "params": {},
+          "returns": []
+        },
+        "exclude": {
+          "desc": "Removes the controller from the module data.",
+          "params": {},
+          "returns": []
+        },
+        "onSerialize": {
+          "desc": "Data to save (negative durations are set back to -1).",
+          "params": {},
+          "returns": [
+            {
+              "type": "table",
+              "desc": "data"
+            }
+          ],
+          "internal": true
+        },
+        "onDeserialized": {
+          "desc": "Restores the fields.",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "data"
+            }
+          },
+          "returns": [],
+          "internal": true
+        }
       }
     },
     "SignalSequence": {
-      "desc": "Enchaîne des phases ({controllerIds, startTime?, totalDuration}) pour piloter les controllers d'une intersection. Champs : id, name, startTime, totalDuration, phases, timeline ([temps] = liste {nomController, indexPhase, indexEtat}), timelineTimes (temps triés), controllerStates, currStep, currPhase, stateTime, startDisabled, ignoreTimer.",
+      "desc": "Chains phases ({controllerIds, startTime?, totalDuration}) to drive the controllers of an intersection. Fields: id, name, startTime, totalDuration, phases, timeline ([time] = list of {controllerName, phaseIndex, stateIndex}), timelineTimes (sorted times), controllerStates, currStep, currPhase, stateTime, startDisabled, ignoreTimer.",
       "functions": {
-        "new": {"desc": "Constructeur (voir newSequence).", "params": {"data": {"type": "table|nil", "desc": "{id?, name?, startTime?, phases?, startDisabled?, ignoreTimer?}"}}, "returns": [{"type": "SignalSequence", "desc": "séquence"}], "internal": true},
-        "createPhase": {"desc": "Ajoute une phase (à la fin ou à l'indice idx).", "params": {"phase": {"type": "table|nil", "desc": "{controllerIds, startTime?}"}, "idx": {"type": "integer|nil", "desc": "position d'insertion"}}, "returns": []},
-        "deletePhase": {"desc": "Supprime une phase.", "params": {"idx": {"type": "integer|nil", "desc": "indice ; défaut dernière phase"}}, "returns": []},
-        "calcDuration": {"desc": "Calcule la durée de chaque phase (plus longue durée de ses controllers) et de la séquence (somme, ou max de startTime + durée si startTime est donné).", "params": {"controllersRef": {"type": "table|nil", "desc": "table [id] = controller à utiliser à la place de elementsById (éditeur)"}}, "returns": [{"type": "number", "desc": "durée totale (s)"}]},
-        "resolveUpdates": {"desc": "Pousse l'état des controllers modifiés vers les instances actives en file d'envoi.", "params": {"forceUpdate": {"type": "boolean|nil", "desc": "true : tout pousser"}}, "returns": [], "internal": true},
-        "onSequenceUpdate": {"desc": "Interne : traite l'étape courante et planifie la suivante dans la file.", "params": {}, "returns": [], "internal": true},
-        "resetSequence": {"desc": "Remet la séquence au début (états par défaut des controllers) et planifie la première échéance.", "params": {}, "returns": []},
-        "setStep": {"desc": "Saute à l'étape d'indice donné de la timeline (si elle existe).", "params": {"index": {"type": "integer|nil", "desc": "étape, base 1 ; défaut 1"}}, "returns": []},
-        "setPhase": {"desc": "Saute à la première étape de la phase donnée.", "params": {"index": {"type": "integer|nil", "desc": "phase, base 1 ; défaut 1"}}, "returns": []},
-        "advance": {"desc": "Passe à l'étape suivante (boucle au début). Appelé par la file du module quand l'échéance est atteinte.", "params": {}, "returns": [], "internal": true},
-        "setStrictState": {"desc": "Impose l'état d'un controller de la séquence pour toutes ses instances (lumières et état). Désactiver le timer avant (enableTimer(false)).", "params": {"ctrlName": {"type": "string", "desc": "nom du controller"}, "stateIdx": {"type": "integer|nil", "desc": "indice d'état (base 1) ; défaut état courant"}}, "returns": []},
-        "setActive": {"desc": "Active la séquence (construit timeline et controllerStates, puis resetSequence ; ignorée avec un avertissement si durée nulle) ou la désactive (instances mises à l'état 'none').", "params": {"val": {"type": "boolean", "desc": "actif"}}, "returns": []},
-        "enableTimer": {"desc": "Indique si la séquence suit le timer principal ; false la fige (utile avec setStep/setPhase/setStrictState).", "params": {"val": {"type": "boolean", "desc": "true : suit le timer"}}, "returns": []},
-        "include": {"desc": "Ajoute la séquence aux données du module.", "params": {}, "returns": []},
-        "exclude": {"desc": "Retire la séquence des données du module.", "params": {}, "returns": []},
-        "onSerialize": {"desc": "Données à sauvegarder (id, name, phases, startTime, startDisabled, ignoreTimer).", "params": {}, "returns": [{"type": "table", "desc": "données"}], "internal": true},
-        "onDeserialized": {"desc": "Restaure les champs.", "params": {"data": {"type": "table|nil", "desc": "données"}}, "returns": [], "internal": true}
+        "new": {
+          "desc": "Constructor (see newSequence).",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "{id?, name?, startTime?, phases?, startDisabled?, ignoreTimer?}"
+            }
+          },
+          "returns": [
+            {
+              "type": "SignalSequence",
+              "desc": "sequence"
+            }
+          ],
+          "internal": true
+        },
+        "createPhase": {
+          "desc": "Adds a phase (at the end or at index idx).",
+          "params": {
+            "phase": {
+              "type": "table|nil",
+              "desc": "{controllerIds, startTime?}"
+            },
+            "idx": {
+              "type": "integer|nil",
+              "desc": "insertion position"
+            }
+          },
+          "returns": []
+        },
+        "deletePhase": {
+          "desc": "Deletes a phase.",
+          "params": {
+            "idx": {
+              "type": "integer|nil",
+              "desc": "index; default last phase"
+            }
+          },
+          "returns": []
+        },
+        "calcDuration": {
+          "desc": "Computes the duration of each phase (longest duration of its controllers) and of the sequence (sum, or max of startTime + duration if startTime is given).",
+          "params": {
+            "controllersRef": {
+              "type": "table|nil",
+              "desc": "table [id] = controller to use instead of elementsById (editor)"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "total duration (s)"
+            }
+          ]
+        },
+        "resolveUpdates": {
+          "desc": "Pushes the state of the modified controllers to the active instances into the send queue.",
+          "params": {
+            "forceUpdate": {
+              "type": "boolean|nil",
+              "desc": "true: push everything"
+            }
+          },
+          "returns": [],
+          "internal": true
+        },
+        "onSequenceUpdate": {
+          "desc": "Internal: processes the current step and schedules the next one in the queue.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "resetSequence": {
+          "desc": "Resets the sequence to the beginning (controllers' default states) and schedules the first deadline.",
+          "params": {},
+          "returns": []
+        },
+        "setStep": {
+          "desc": "Jumps to the step with the given timeline index (if it exists).",
+          "params": {
+            "index": {
+              "type": "integer|nil",
+              "desc": "step, 1-based; default 1"
+            }
+          },
+          "returns": []
+        },
+        "setPhase": {
+          "desc": "Jumps to the first step of the given phase.",
+          "params": {
+            "index": {
+              "type": "integer|nil",
+              "desc": "phase, 1-based; default 1"
+            }
+          },
+          "returns": []
+        },
+        "advance": {
+          "desc": "Moves to the next step (loops back to the start). Called by the module queue when the deadline is reached.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "setStrictState": {
+          "desc": "Forces the state of a sequence controller for all its instances (lights and state). Disable the timer beforehand (enableTimer(false)).",
+          "params": {
+            "ctrlName": {
+              "type": "string",
+              "desc": "controller name"
+            },
+            "stateIdx": {
+              "type": "integer|nil",
+              "desc": "state index (1-based); default current state"
+            }
+          },
+          "returns": []
+        },
+        "setActive": {
+          "desc": "Activates the sequence (builds timeline and controllerStates, then resetSequence; ignored with a warning if the duration is zero) or deactivates it (instances set to state 'none').",
+          "params": {
+            "val": {
+              "type": "boolean",
+              "desc": "active"
+            }
+          },
+          "returns": []
+        },
+        "enableTimer": {
+          "desc": "Indicates whether the sequence follows the main timer; false freezes it (useful with setStep/setPhase/setStrictState).",
+          "params": {
+            "val": {
+              "type": "boolean",
+              "desc": "true: follows the timer"
+            }
+          },
+          "returns": []
+        },
+        "include": {
+          "desc": "Adds the sequence to the module data.",
+          "params": {},
+          "returns": []
+        },
+        "exclude": {
+          "desc": "Removes the sequence from the module data.",
+          "params": {},
+          "returns": []
+        },
+        "onSerialize": {
+          "desc": "Data to save (id, name, phases, startTime, startDisabled, ignoreTimer).",
+          "params": {},
+          "returns": [
+            {
+              "type": "table",
+              "desc": "data"
+            }
+          ],
+          "internal": true
+        },
+        "onDeserialized": {
+          "desc": "Restores the fields.",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "data"
+            }
+          },
+          "returns": [],
+          "internal": true
+        }
       }
     }
   }

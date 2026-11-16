@@ -1,24 +1,24 @@
 # `flowgraph_nodes_gameplay_rally_rallyStageCountdownSetup`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageCountdownSetup.lua` · VM : Game Engine (GE) · 51 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageCountdownSetup.lua` · VM: Game Engine (GE) · 51 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/rallyStageCountdownSetup")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/rallyStageCountdownSetup")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Stage Countdown Setup » (catégorie once_instant, tag rally, sans pin). Prépare le flux UI du compte à rebours rally avant le fondu d'entrée de la spéciale : charge l'extension de la boucle rally si besoin, efface les temps intermédiaires du rally manager (clearSplitTimes), lit les réglages du compte à rebours (StagedCountdownUtils.getStageCountdownSettings, défauts durée 3 et 3 annonces max) puis lance le hook onRallyDataUpdated avec l'état inactif et countdownData {countdown = durée, state = 'waiting'}.
+Flowgraph node "Rally Stage Countdown Setup" (category once_instant, tag rally, no pin). Prepares the rally countdown UI flow before the stage fade-in: loads the rally loop extension if needed, clears the rally manager's split times (clearSplitTimes), reads the countdown settings (StagedCountdownUtils.getStageCountdownSettings, defaults duration 3 and 3 announcements max) then fires the onRallyDataUpdated hook with the inactive state and countdownData {countdown = duration, state = 'waiting'}.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Exécute la préparation décrite ci-dessus une seule fois. | 34 |
+| `C:workOnce()` | Executes the preparation described above only once. | 34 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onRallyDataUpdated` — écouté par 2 module(s)
+- `onRallyDataUpdated` — listened to by 2 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageCountdownSetup.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageCountdownSetup.lua`.*

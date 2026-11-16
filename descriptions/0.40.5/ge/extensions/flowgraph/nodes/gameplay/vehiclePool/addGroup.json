@@ -1,15 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/addGroup.lua",
-  "module": "Nœud flowgraph « Add Vehicle Group To Pool » (once_instant). Insère dans le pool tous les ids de la table vehGroup (pool:insertVeh pour chacun). Nécessite le module core_vehicleActivePooling ; l'objet pool vient du nœud Create Vehicle Pool.",
+  "module": "Flowgraph node \"Add Vehicle Group To Pool\" (once_instant). Inserts all ids of the vehGroup table into the pool (pool:insertVeh for each). Requires the core_vehicleActivePooling module; the pool object comes from the Create Vehicle Pool node.",
   "notes": [
-    "La description du nœud (« Activates or deactivates a vehicle object in the pool ») ne correspond pas au code, qui ajoute un groupe au pool."
+    "The node's description (\"Activates or deactivates a vehicle object in the pool\") does not match the code, which adds a group to the pool."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "workOnce": {
-          "desc": "Appelle insertVeh pour chaque id du groupe.",
+          "desc": "Calls insertVeh for each id in the group.",
           "internal": true
         }
       }

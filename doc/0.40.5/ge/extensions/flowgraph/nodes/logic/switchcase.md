@@ -1,29 +1,29 @@
 # `flowgraph_nodes_logic_switchcase`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/logic/switchcase.lua` · VM : Game Engine (GE) · 106 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/logic/switchcase.lua` · VM: Game Engine (GE) · 106 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/logic/switchcase")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/logic/switchcase")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Switch Case' (categorie logic). Compare la valeur d'entree 'value' avec N valeurs value_i (egalite stricte) et met a true la sortie match_i correspondante ; 'none' vaut true si aucune ne correspond. Le flux de sortie est toujours true.
+Flowgraph node 'Switch Case' (logic category). Compares the input value 'value' with N values value_i (strict equality) and sets the matching output match_i to true; 'none' is true if none match. The output flow is always true.
 
-## Remarques
+## Notes
 
-- La sortie flow est toujours true, meme si le flux d'entree est inactif : le pin d'entree 'flow' n'est pas lu.
+- The flow output is always true, even if the input flow is inactive: the input pin 'flow' is not read.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Vide. | 36 |
-| `C:_onDeserialized(res)` | Relit count (1 par defaut) et recree les pins. | 100 |
-| `C:_onSerialize(res)` | Sauvegarde count. | 96 |
-| `C:drawCustomProperties()` | Panneau : nombre de cas (Count). | 40 |
-| `C:drawMiddle(builder, style)` | Dessine le milieu du noeud (vide). | 31 |
+| `C:_executionStarted()` | Empty. | 36 |
+| `C:_onDeserialized(res)` | Reads back count (1 by default) and recreates the pins. | 100 |
+| `C:_onSerialize(res)` | Saves count. | 96 |
+| `C:drawCustomProperties()` | Panel: number of cases (Count). | 40 |
+| `C:drawMiddle(builder, style)` | Draws the middle of the node (empty). | 31 |
 | `C:init()` | count=1. | 26 |
-| `C:updatePins(old, new)` | Cree ou supprime les pins value_i et match_i et les liens associes. | 57 |
-| `C:work()` | flow=true ; pour chaque i, match_i = (value_i == value) ; none = aucun correspondant. | 82 |
+| `C:updatePins(old, new)` | Creates or deletes the value_i and match_i pins and the associated links. | 57 |
+| `C:work()` | flow=true; for each i, match_i = (value_i == value); none = no match. | 82 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/logic/switchcase.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/logic/switchcase.lua`.*

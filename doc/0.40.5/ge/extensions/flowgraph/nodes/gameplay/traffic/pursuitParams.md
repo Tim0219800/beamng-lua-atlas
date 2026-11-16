@@ -1,19 +1,19 @@
 # `flowgraph_nodes_gameplay_traffic_pursuitParams`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitParams.lua` · VM : Game Engine (GE) · 61 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitParams.lua` · VM: Game Engine (GE) · 61 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/pursuitParams")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/pursuitParams")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Pursuit Parameters » (once_instant). Règle les paramètres de la police (gameplay_police.setPursuitVars) : policeStrictness (strictness), arrestLimit (arrestTime), arrestRadius, evadeLimit (evadeTime), evadeRadius, suspectFrequency, roadblockFrequency. Seuls les pins non nil sont appliqués.
+Flowgraph node "Pursuit Parameters" (once_instant). Sets the police parameters (gameplay_police.setPursuitVars): policeStrictness (strictness), arrestLimit (arrestTime), arrestRadius, evadeLimit (evadeTime), evadeRadius, suspectFrequency, roadblockFrequency. Only non-nil pins are applied.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph). | 27 |
-| `C:workOnce()` | Construit la table de variables à partir des pins non nil et appelle gameplay_police.setPursuitVars. | 31 |
+| `C:init()` | Initializes the node's internal state at creation (called by the flowgraph engine). | 27 |
+| `C:workOnce()` | Builds the variables table from the non-nil pins and calls gameplay_police.setPursuitVars. | 31 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitParams.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitParams.lua`.*

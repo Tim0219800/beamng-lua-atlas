@@ -1,0 +1,70 @@
+{
+  "path": "lua/vehicle/controller/gauges/customModules/tireData.lua",
+  "module": "Module de données pour genericGauges : fournit pour chaque roue une couleur de température (valeur fixe) et la pression de pneu.",
+  "notes": [
+    "Les températures sont des couleurs constantes \"#ffffff\" (aucune vraie température n'est calculée dans ce fichier).",
+    "Pression = max((pression du groupe de pression - pression ambiante) * 0.001, 0) ; 0 si la roue n'a pas de groupe de pression."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Ne fait rien.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Réinitialise l'état interne du module.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Ne fait rien (la mise à jour se fait par updateGaugeData).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setupGaugeData": {
+      "desc": "Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : temperatures (table nomRoue -> \"#ffffff\") et pressures (table nomRoue -> pression).",
+      "params": {
+        "properties": {
+          "type": "table<string, boolean>",
+          "desc": "Ensemble des propriétés demandées (clé = nom, valeur = true)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGaugeData": {
+      "desc": "Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées.",
+      "params": {
+        "moduleData": {
+          "type": "table",
+          "desc": "Table de données du module, envoyée ensuite à la page HTML."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Temps écoulé depuis le dernier envoi (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

@@ -1,24 +1,24 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/stopCamPath.lua",
-  "module": "Noeud flowgraph « Stop Cam Path » (once_instant). Arrete un chemin camera : le chemin actif n'est pas considere comme termine mais devient inactif. Entree optionnelle (cachee) id : sans id, tente d'utiliser le chemin actif.",
+  "module": "Flowgraph node \"Stop Cam Path\" (once_instant). Stops a camera path: the active path is not considered completed but becomes inactive. Optional (hidden) input id: without id, tries to use the active path.",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "workOnce": {
-          "desc": "Appelle self.mgr.modules.camera:endActivePath(id).",
+          "desc": "Calls self.mgr.modules.camera:endActivePath(id).",
           "internal": false
         },
         "drawMiddle": {
-          "desc": "Zone centrale du noeud (rien d'affiche).",
+          "desc": "Central area of the node (nothing displayed).",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true

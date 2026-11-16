@@ -1,13 +1,27 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crawl/setupCrawl.lua",
-  "module": "Nœud flowgraph « Setup Crawl » (catégorie once_instant, crawl). Prépare un parcours crawl : charge le trail, téléporte le véhicule au départ et charge les prefabs, sans démarrer le timer (utiliser Start Crawl). Pins d'entrée : trailId (chemin du trail) et vehicleId (0 = véhicule joueur). Sorties : success, failed, isSetup.",
-  "notes": ["Si trailId est vide : cherche la variable flowgraph « trailFile », puis le premier *.trail.json du dossier de la mission (mgr.activity.missionFolder).", "Écrit beaucoup de logs (tag SetupCrawl)."],
+  "module": "Flowgraph node \"Setup Crawl\" (category once_instant, crawl). Prepares a crawl course: loads the trail, teleports the vehicle to the start and loads the prefabs, without starting the timer (use Start Crawl). Input pins: trailId (trail path) and vehicleId (0 = player vehicle). Outputs: success, failed, isSetup.",
+  "notes": [
+    "If trailId is empty: looks for the flowgraph variable \"trailFile\", then the first *.trail.json in the mission folder (mgr.activity.missionFolder).",
+    "Writes a lot of logs (tag SetupCrawl)."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Charge le bridge du crawl.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "work": {"desc": "Résout le trail, appelle bridge.loadCrawlTrail puis bridge.setupCrawl(vehicleId, trail) et renseigne les sorties."}
+        "init": {
+          "desc": "Loads the crawl bridge.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Resolves the trail, calls bridge.loadCrawlTrail then bridge.setupCrawl(vehicleId, trail) and fills the outputs."
+        }
       }
     }
   }

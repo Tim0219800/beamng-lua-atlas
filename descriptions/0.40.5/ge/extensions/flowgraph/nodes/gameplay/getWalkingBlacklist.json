@@ -1,12 +1,22 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/getWalkingBlacklist.lua",
-  "module": "Nœud flowgraph « Is Walking Blacklisted » (catégorie repeat_instant, dépend de gameplay_walk). Indique si un véhicule (pin vehId) est autorisé ou interdit à l'entrée depuis le mode marche. Sorties : allowed, denied (flux) et value (bool caché).",
-  "notes": ["Bug : work écrit self.pinOut.bool.value, mais aucun pin « bool » n'existe (le pin s'appelle value) : l'accès plante dès que vehId est renseigné."],
+  "module": "Flowgraph node \"Is Walking Blacklisted\" (category repeat_instant, depends on gameplay_walk). Indicates whether a vehicle (vehId pin) is allowed or forbidden for entry from walking mode. Outputs: allowed, denied (flow) and value (hidden bool).",
+  "notes": [
+    "Bug: work writes self.pinOut.bool.value, but no \"bool\" pin exists (the pin is called value): the access crashes as soon as vehId is set."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Appelle gameplay_walk.isVehicleBlacklisted(vehId) pour remplir allowed/denied ; met les sorties à nil si vehId est absent.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}}
+        "work": {
+          "desc": "Calls gameplay_walk.isVehicleBlacklisted(vehId) to fill allowed/denied; sets the outputs to nil if vehId is absent.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph arguments"
+            }
+          }
+        }
       }
     }
   }

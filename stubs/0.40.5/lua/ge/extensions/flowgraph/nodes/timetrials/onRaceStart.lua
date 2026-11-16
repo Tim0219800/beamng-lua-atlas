@@ -2,33 +2,33 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+--- Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 ---@class flowgraph_nodes_timetrials_onRaceStart_C
 local flowgraph_nodes_timetrials_onRaceStart_C = {}
 
 --- started = false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua:28
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua:28
 function flowgraph_nodes_timetrials_onRaceStart_C:_executionStarted() end
 
 --- started = false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua:24
----@param mgr any gestionnaire flowgraph
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua:24
+---@param mgr any flowgraph manager
 ---@param ... any
 function flowgraph_nodes_timetrials_onRaceStart_C:init(mgr, ...) end
 
---- Hook de départ de course : started = true.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua:37
+--- Race start hook: started = true.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua:37
 function flowgraph_nodes_timetrials_onRaceStart_C:onRaceStart() end
 
---- Hook de redémarrage : réinitialise.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua:41
+--- Restart hook: resets.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua:41
 function flowgraph_nodes_timetrials_onRaceStart_C:onScenarioRestarted() end
 
---- Écrit started et stopped.
----Source : lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua:32
+--- Writes started and stopped.
+---Source: lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua:32
 function flowgraph_nodes_timetrials_onRaceStart_C:work() end
 

@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyPositionGetter.lua",
+  "module": "Nœud flowgraph « Rally Position Getter » (catégorie repeat_instant, tag rally). Cherche dans un pathData la position de départ portant le nom donné (pathData:findStartPositionByName) et renvoie sa position (pos) et sa rotation (rot). La sortie flow vaut true quand la position est trouvée.",
+  "notes": ["Malgré la description (« from the current rally loop manager »), le nœud n'utilise pas le gestionnaire de boucle : seul pathData compte.", "pos et rot sont renvoyés tels quels (vec3 et quat du chemin, pas des tables)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "_executionStarted": {"desc": "Met la sortie flow à false au démarrage.", "internal": true},
+        "work": {"desc": "Cherche la position nommée et renseigne pos, rot et flow.", "internal": true}
+      }
+    }
+  }
+}

@@ -1,85 +1,139 @@
 {
   "path": "lua/vehicle/controller/braking/hydraulicPumpBrake.lua",
-  "module": "Contrôleur auxiliaire pour un freinage hydraulique alimenté par la pompe du moteur (véhicules lourds ou anciens). Les freins avant et arrière (`brakeF`, `brakeR`) ne fonctionnent que moteur tournant ; sans pression ou si des poutres de dommage sont cassées, le frein de stationnement est serré automatiquement. Propose une assistance en côte (frein arrière résiduel sans accélérateur) et un blocage des freins avant. Ordre d'appel : `defaultOrder = 50` (tôt).",
+  "module": "Auxiliary controller for hydraulic braking powered by the engine's pump (heavy or old vehicles). The front and rear brakes (`brakeF`, `brakeR`) only work with the engine running; without pressure or if damage beams are broken, the parking brake is applied automatically. Offers a hill assist (residual rear brake without throttle) and a front brake lockout. Call order: `defaultOrder = 50` (early).",
   "notes": [
-    "Clés jbeam lues par init : `relevantEngineName` (\"mainEngine\"), `frontDamageBeamTag`, `rearDamageBeamTag` (tags de poutres de `beamstate.tagBeamMap` ; leur casse coupe le frein avant ou arrière).",
-    "Le moteur est considéré en marche si `outputAV1` > 10 rad/s ; le coefficient est lissé.",
-    "Electrics écrits : brakeF, brakeR, frontBrakeLockOut (1/0), hillAssist (0..1). Lit electrics throttle et brake.",
-    "Assistance en côte : tant que le coefficient est > 0 et que l'accélérateur est <= 0, ajoute jusqu'à 0.8 au frein arrière.",
-    "Le frein de stationnement est serré via `controller.mainController.smartParkingBrake` s'il existe, sinon via `input.event(\"parkingbrake\", 1, FILTER_KBD)`.",
-    "Attention : updateGFX suppose que les tags jbeam sont définis ; avec un tag nil, `beamstate.tagBeamMap[nil]` est lu (renvoie nil, donc table vide)."
+    "Jbeam keys read by init: `relevantEngineName` (\"mainEngine\"), `frontDamageBeamTag`, `rearDamageBeamTag` (beam tags from `beamstate.tagBeamMap`; breaking one cuts the front or rear brake).",
+    "The engine is considered running if `outputAV1` > 10 rad/s; the coefficient is smoothed.",
+    "Electrics written: brakeF, brakeR, frontBrakeLockOut (1/0), hillAssist (0..1). Reads electrics throttle and brake.",
+    "Hill assist: as long as the coefficient is > 0 and the throttle is <= 0, adds up to 0.8 to the rear brake.",
+    "The parking brake is applied via `controller.mainController.smartParkingBrake` if it exists, otherwise via `input.event(\"parkingbrake\", 1, FILTER_KBD)`.",
+    "Warning: updateGFX assumes the jbeam tags are defined; with a nil tag, `beamstate.tagBeamMap[nil]` is read (returns nil, hence an empty table)."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "defaultOrder": {"type": "number", "desc": "50 : rang d'appel par défaut, tôt dans la liste triée."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "50: default call rank, early in the sorted list."
+    }
   },
   "functions": {
     "updateGFX": {
-      "desc": "Chaque frame : calcule brakeF/brakeR en tenant compte du moteur en marche, de l'assistance en côte, du blocage avant et des poutres cassées ; gère le frein de stationnement automatique et publie les electrics.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "desc": "Every frame: computes brakeF/brakeR taking into account the running engine, hill assist, front lockout and broken beams; handles the automatic parking brake and publishes the electrics.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "beamBroken": {
-      "desc": "Hook de rupture de poutre : si la poutre est dans les tags de dommage avant ou arrière, désactive le frein correspondant jusqu'au reset.",
+      "desc": "Beam break hook: if the beam is in the front or rear damage tags, disables the corresponding brake until reset.",
       "params": {
-        "id": {"type": "integer", "desc": "cid de la poutre."},
-        "energy": {"type": "number", "desc": "Énergie de rupture (non utilisée)."}
+        "id": {
+          "type": "integer",
+          "desc": "cid of the beam."
+        },
+        "energy": {
+          "type": "number",
+          "desc": "Break energy (unused)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "setHillAssistCoef": {
-      "desc": "Fixe le coefficient d'assistance en côte (0 à 1, remis à 0 s'il est <= 0.01) et affiche un message UI sauf si silent.",
+      "desc": "Sets the hill assist coefficient (0 to 1, reset to 0 if <= 0.01) and displays a UI message unless silent.",
       "params": {
-        "coef": {"type": "number", "desc": "Coefficient 0 à 1."},
-        "silent": {"type": "boolean|nil", "desc": "true pour ne pas afficher de message."}
+        "coef": {
+          "type": "number",
+          "desc": "Coefficient 0 to 1."
+        },
+        "silent": {
+          "type": "boolean|nil",
+          "desc": "true to not display a message."
+        }
       },
       "returns": [],
       "internal": false
     },
     "changeHillAssistCoef": {
-      "desc": "Ajoute une variation au coefficient d'assistance en côte.",
-      "params": {"change": {"type": "number", "desc": "Variation (peut être négative)."}},
+      "desc": "Adds a change to the hill assist coefficient.",
+      "params": {
+        "change": {
+          "type": "number",
+          "desc": "Change (can be negative)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setFrontLockOutEnabled": {
-      "desc": "Active ou désactive le blocage du frein avant (le frein avant est coupé quand actif).",
+      "desc": "Enables or disables the front brake lockout (the front brake is cut when active).",
       "params": {
-        "enabled": {"type": "boolean", "desc": "true pour couper le frein avant."},
-        "silent": {"type": "boolean|nil", "desc": "true pour ne pas afficher de message."}
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to cut the front brake."
+        },
+        "silent": {
+          "type": "boolean|nil",
+          "desc": "true to not display a message."
+        }
       },
       "returns": [],
       "internal": false
     },
     "toggleFrontLockOutEnabled": {
-      "desc": "Inverse l'état du blocage du frein avant.",
+      "desc": "Toggles the front brake lockout state.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "reset": {
-      "desc": "Réinitialise le lisseur du moteur, les coefficients de dommage et le frein de stationnement automatique.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "desc": "Reinitializes the engine smoother, the damage coefficients and the automatic parking brake.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "init": {
-      "desc": "Retrouve le moteur et les listes de poutres de dommage (via les tags jbeam).",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "desc": "Finds the engine and the damage beam lists (via the jbeam tags).",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "getState": {
-      "desc": "Renvoie l'assistance en côte et le blocage avant pour la sauvegarde d'état.",
+      "desc": "Returns the hill assist and the front lockout for the state save.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Clés `<nom>_hillAssistCoef` et `<nom>_frontLockOutEnabled`."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Keys `<name>_hillAssistCoef` and `<name>_frontLockOutEnabled`."
+        }
+      ],
       "internal": false
     },
     "setState": {
-      "desc": "Restaure ces deux valeurs (silencieusement).",
-      "params": {"data": {"type": "table|nil", "desc": "Table d'état."}},
+      "desc": "Restores these two values (silently).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "State table."
+        }
+      },
       "returns": [],
       "internal": false
     }

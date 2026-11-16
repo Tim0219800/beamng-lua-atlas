@@ -1,104 +1,104 @@
 # `core_jobsystem`
 
-*Fichier : `lua/ge/extensions/core/jobsystem.lua` · VM : Game Engine (GE) · 204 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/jobsystem.lua` · VM: Game Engine (GE) · 204 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_jobsystem` : `extensions.load("core_jobsystem")`, puis la globale `core_jobsystem`
+**Access:** extension `core_jobsystem`: `extensions.load("core_jobsystem")`, then the global `core_jobsystem`
 
-Extension GE `core_jobsystem` : mini ordonnanceur de tâches coopératives basé sur des coroutines Lua. Un moddeur y met un traitement long (scan de fichiers, calcul lourd) pour l'étaler sur plusieurs images au lieu de bloquer le jeu. La fonction du job reçoit un objet `job` avec `job.yield()` (rend la main si le budget de temps est dépassé) et `job.sleep(secondes)` (pause sans bloquer le jeu). Toutes les coroutines sont reprises une fois par image dans onUpdate.
+GE extension `core_jobsystem`: mini cooperative task scheduler based on Lua coroutines. A modder puts a long task in it (file scan, heavy computation) to spread it over several frames instead of blocking the game. The job function receives a `job` object with `job.yield()` (yields if the time budget is exceeded) and `job.sleep(seconds)` (pause without blocking the game). All coroutines are resumed once per frame in onUpdate.
 
-## Exemple
+## Example
 
 ```lua
 local function work(job, path)
   for i = 1, 10000 do
-    -- ... traitement ...
-    job.yield()          -- rend la main si le budget maxdt est dépassé
+    -- ... processing ...
+    job.yield()          -- yields if the maxdt budget is exceeded
   end
-  job.sleep(3)           -- attend 3 s en laissant le jeu tourner
+  job.sleep(3)           -- waits 3 s while letting the game run
 end
-core_jobsystem.create(work, 1, 'some/path')   -- maxdt = 1 s : bien pour du fond
+core_jobsystem.create(work, 1, 'some/path')   -- maxdt = 1 s: good for background work
 
--- variante qui ne lance pas deux fois la même fonction en parallèle
+-- variant that does not launch the same function twice in parallel
 local check = core_jobsystem.wrap(work, 0.5)
 check('some/path')
 ```
 
-## Remarques
+## Notes
 
-- Unité de maxdt : l'en-tête du fichier et le code (dt = hp:stop()/1000 comparé à maxdt, défaut 0.01) indiquent des SECONDES ; le commentaire de create() dit 'milliseconds', ce qui est faux/trompeur. Défaut 0.01 s.
-- job.yield() ne s'interrompt que si maxdt s'est écoulé depuis le dernier yield effectif ; sinon il ne fait rien. Il ne peut pas interrompre un code qui ne l'appelle pas : insérer des yield dans les boucles longues.
-- job.yield et job.sleep ne font rien hors coroutine (coroutine.running() == nil).
-- Les arguments passés à create sont donnés à la fonction à la première reprise : fct(job, ...). Sans argument, fct(job, dtTable) reçoit une table partagée {dtReal, dtSim, dtRaw} en second paramètre (mise à jour à chaque image : lire les champs, ne pas la conserver).
-- Une erreur dans un job est loguée ('job error') et le job meurt si la coroutine est terminée ; elle n'arrête pas les autres jobs.
-- Bug probable : dans onUpdate, extensions.hook('onJobDone', coroutines[ci], #coroutines) est appelé APRÈS table.remove(coroutines, ci), donc le premier argument est l'entrée qui a pris la place du job terminé (ou nil si c'était le dernier), pas le job fini. De plus, plusieurs terminaisons dans une même image utilisent des indices mémorisés puis supprimés en ordre inverse, ce qui reste correct pour la suppression.
-- La variable locale disableBackgroundTasks vaut false et n'est jamais modifiée dans ce fichier : la branche 'exécution en avant-plan' de create() est inatteignable depuis l'extérieur.
-- wrap() ne renvoie pas le job et empêche seulement de relancer la même fonction tant qu'elle tourne (clé = la fonction elle-même).
+- Unit of maxdt: the file header and the code (dt = hp:stop()/1000 compared to maxdt, default 0.01) indicate SECONDS; the comment of create() says 'milliseconds', which is wrong/misleading. Default 0.01 s.
+- job.yield() only interrupts if maxdt has elapsed since the last effective yield; otherwise it does nothing. It cannot interrupt code that does not call it: insert yields in long loops.
+- job.yield and job.sleep do nothing outside a coroutine (coroutine.running() == nil).
+- The arguments passed to create are given to the function on the first resume: fct(job, ...). Without arguments, fct(job, dtTable) receives a shared table {dtReal, dtSim, dtRaw} as second parameter (updated every frame: read the fields, do not keep it).
+- An error in a job is logged ('job error') and the job dies if the coroutine is finished; it does not stop the other jobs.
+- Probable bug: in onUpdate, extensions.hook('onJobDone', coroutines[ci], #coroutines) is called AFTER table.remove(coroutines, ci), so the first argument is the entry that took the place of the finished job (or nil if it was the last), not the finished job. Moreover, several terminations in the same frame use stored indices then removed in reverse order, which remains correct for the removal.
+- The local variable disableBackgroundTasks is false and is never modified in this file: the 'foreground execution' branch of create() is unreachable from outside.
+- wrap() does not return the job and only prevents relaunching the same function while it is running (key = the function itself).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_jobsystem.cancelJob(jobHandle)` | Retire un job de la liste pour qu'il ne soit plus repris. N'appelle pas son exit callback ni onJobDone ; la coroutine est abandonnée. | 146 |
-| `core_jobsystem.create(fct, maxdt, ...)` | Crée et enregistre un job (coroutine) exécuté par morceaux à chaque image. La fonction est appelée avec (job, ...). | 43 |
-| `core_jobsystem.findFilesAsync(rootPath, pattern, yieldFn)` | Cherche des fichiers sous un dossier : correspondances directes à la racine, puis recherche récursive native par sous-dossier de premier niveau, avec un appel à yieldFn après chacun. À appeler depuis un job en passant job.yield. | 161 |
-| `core_jobsystem.getRunningJobCount()` | Nombre de jobs actuellement en cours. | 140 |
-| `core_jobsystem.onUpdate(dtReal, dtSim, dtRaw)` | Hook par image (appelé avec les dt du jeu) : reprend chaque coroutine, loggue les erreurs, supprime les jobs terminés, appelle leur exitCallback puis émet onJobDone. *(interne)* *(hook)* | 102 |
-| `core_jobsystem.wrap(fct, maxdt)` | Renvoie une fonction qui lance fct comme job, sauf si une instance de fct tourne déjà (dans ce cas l'appel est ignoré). | 89 |
+| `core_jobsystem.cancelJob(jobHandle)` | Removes a job from the list so it is no longer resumed. Does not call its exit callback or onJobDone; the coroutine is abandoned. | 146 |
+| `core_jobsystem.create(fct, maxdt, ...)` | Creates and registers a job (coroutine) executed in chunks every frame. The function is called with (job, ...). | 43 |
+| `core_jobsystem.findFilesAsync(rootPath, pattern, yieldFn)` | Searches for files under a folder: direct matches at the root, then native recursive search per first-level subfolder, with a call to yieldFn after each. To be called from a job by passing job.yield. | 161 |
+| `core_jobsystem.getRunningJobCount()` | Number of jobs currently running. | 140 |
+| `core_jobsystem.onUpdate(dtReal, dtSim, dtRaw)` | Per-frame hook (called with the game's dt): resumes each coroutine, logs errors, removes finished jobs, calls their exitCallback then emits onJobDone. *(internal)* *(hook)* | 102 |
+| `core_jobsystem.wrap(fct, maxdt)` | Returns a function that launches fct as a job, unless an instance of fct is already running (in which case the call is ignored). | 89 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_jobsystem.cancelJob(jobHandle)`
 
-Retire un job de la liste pour qu'il ne soit plus repris. N'appelle pas son exit callback ni onJobDone ; la coroutine est abandonnée.
+Removes a job from the list so it is no longer resumed. Does not call its exit callback or onJobDone; the coroutine is abandoned.
 
-- `jobHandle` (*table*) : Objet renvoyé par create.
-- **renvoie** : boolean true si le job a été trouvé et retiré.
+- `jobHandle` (*table*) : Object returned by create.
+- **returns**: boolean true if the job was found and removed.
 
 #### `core_jobsystem.create(fct, maxdt, ...)`
 
-Crée et enregistre un job (coroutine) exécuté par morceaux à chaque image. La fonction est appelée avec (job, ...).
+Creates and registers a job (coroutine) executed in chunks every frame. The function is called with (job, ...).
 
-- `fct` (*function*) : Fonction de travail, fct(job, ...).
-- `maxdt` (*number|nil*) : Budget de temps en secondes entre deux yield effectifs ; défaut 0.01.
-- `...` (*any*) : Arguments passés à fct après job.
-- **renvoie** : table Objet job : {yield(), sleep(secs), setExitCallback(fn), running, fct, maxdt}. exitcbl est appelé avec le job à sa fin.
+- `fct` (*function*) : Work function, fct(job, ...).
+- `maxdt` (*number|nil*) : Time budget in seconds between two effective yields; default 0.01.
+- `...` (*any*) : Arguments passed to fct after job.
+- **returns**: table Job object: {yield(), sleep(secs), setExitCallback(fn), running, fct, maxdt}. exitcbl is called with the job when it ends.
 
 #### `core_jobsystem.findFilesAsync(rootPath, pattern, yieldFn)`
 
-Cherche des fichiers sous un dossier : correspondances directes à la racine, puis recherche récursive native par sous-dossier de premier niveau, avec un appel à yieldFn après chacun. À appeler depuis un job en passant job.yield.
+Searches for files under a folder: direct matches at the root, then native recursive search per first-level subfolder, with a call to yieldFn after each. To be called from a job by passing job.yield.
 
-- `rootPath` (*string*) : Dossier racine.
-- `pattern` (*string*) : Motif de fichier (ex. '*.json').
-- `yieldFn` (*function|nil*) : Appelée avec un texte de debug après chaque sous-dossier ; défaut nop.
-- **renvoie** : string[] Chemins trouvés.
+- `rootPath` (*string*) : Root folder.
+- `pattern` (*string*) : File pattern (e.g. '*.json').
+- `yieldFn` (*function|nil*) : Called with a debug text after each subfolder; default nop.
+- **returns**: string[] Paths found.
 
 #### `core_jobsystem.getRunningJobCount()`
 
-Nombre de jobs actuellement en cours.
+Number of jobs currently running.
 
-- **renvoie** : integer Nombre de jobs.
+- **returns**: integer Number of jobs.
 
 #### `core_jobsystem.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook par image (appelé avec les dt du jeu) : reprend chaque coroutine, loggue les erreurs, supprime les jobs terminés, appelle leur exitCallback puis émet onJobDone.
+Per-frame hook (called with the game's dt): resumes each coroutine, logs errors, removes finished jobs, calls their exitCallback then emits onJobDone.
 
-- `dtReal` (*number*) : Delta temps réel en secondes.
-- `dtSim` (*number*) : Delta temps de simulation en secondes.
-- `dtRaw` (*number*) : Delta temps brut en secondes.
+- `dtReal` (*number*) : Real-time delta in seconds.
+- `dtSim` (*number*) : Simulation time delta in seconds.
+- `dtRaw` (*number*) : Raw time delta in seconds.
 
 #### `core_jobsystem.wrap(fct, maxdt)`
 
-Renvoie une fonction qui lance fct comme job, sauf si une instance de fct tourne déjà (dans ce cas l'appel est ignoré).
+Returns a function that launches fct as a job, unless an instance of fct is already running (in which case the call is ignored).
 
-- `fct` (*function*) : Fonction de travail du job.
-- `maxdt` (*number|nil*) : Budget en secondes, comme pour create.
-- **renvoie** : function function(...) qui crée le job ; ne renvoie rien.
+- `fct` (*function*) : Work function of the job.
+- `maxdt` (*number|nil*) : Budget in seconds, as for create.
+- **returns**: function function(...) that creates the job; returns nothing.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onJobDone` — écouté par 1 module(s)
+- `onJobDone` — listened to by 1 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/jobsystem.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/jobsystem.lua`.*

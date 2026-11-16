@@ -1,37 +1,37 @@
 # `flowgraph_nodes_vehicle_ai_simpleFollowDecalroad`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/simpleFollowDecalroad.lua` · VM : Game Engine (GE) · 161 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/simpleFollowDecalroad.lua` · VM: Game Engine (GE) · 161 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/ai/simpleFollowDecalroad")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/ai/simpleFollowDecalroad")` (file under extensions/ but not a regular extension)
 
-Nœud « Follow Decalroad » (couleur ai, comportement duration). Fait suivre simplement une DecalRoad à un véhicule : construit un chemin à partir des nœuds de la route (temps = distance / data.speed) et lance ai.startFollowing. Entrées : flow, start, stop, roadName, vehId, loopCount (caché). Sorties : flow, active, finished, progress (0 à 1). Données : renderDebug, speed (5 m/s), loopMode (« startReset »).
+Node "Follow Decalroad" (color ai, duration behavior). Simply makes a vehicle follow a DecalRoad: builds a path from the road nodes (time = distance / data.speed) and starts ai.startFollowing. Inputs: flow, start, stop, roadName, vehId, loopCount (hidden). Outputs: flow, active, finished, progress (0 to 1). Data: renderDebug, speed (5 m/s), loopMode ("startReset").
 
-## Remarques
+## Notes
 
-- Bug : dans onVehicleSubmitInfo, self.pinOut.active et self.pinOut.finished sont remplacés par des booléens (au lieu de .value), ce qui écrase les objets pin.
-- Bug : quand info == nil, la fonction continue et lit info.scriptTime (erreur), il manque un return.
-- Le dernier nœud de la route n'est pas ajouté au chemin (la boucle va de 0 à getNodeCount()-2), et la fin n'est jamais détectée par flow.
+- Bug: in onVehicleSubmitInfo, self.pinOut.active and self.pinOut.finished are replaced by booleans (instead of .value), which overwrites the pin objects.
+- Bug: when info == nil, the function continues and reads info.scriptTime (error); a return is missing.
+- The last node of the road is not added to the path (the loop goes from 0 to getNodeCount()-2), and the end is never detected by flow.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Affiche bouton Load, état, nombre de nœuds, distance et tracé de debug si renderDebug. | 129 |
-| `C:getVeh()` | Renvoie le véhicule dont l'id est donné en entrée, ou le véhicule du joueur (getPlayerVehicle(0)) sans entrée. | 61 |
-| `C:init()` | Initialise les données (speed=5, loopMode=startReset, renderDebug=false) et demande à tous les véhicules d'émettre le hook onVehicleSubmitInfo avec leur ai.scriptState(). | 33 |
-| `C:loadRecording()` | Construit self.path depuis la DecalRoad (scenetree.findObject(roadName)) : un point par nœud avec le temps cumulé et la direction/haut du premier point. | 98 |
-| `C:onVehicleSubmitInfo(id, info)` | Hook appelé avec l'état du script IA d'un véhicule ; met à jour progress = scriptTime / endScriptTime et receivedInfo si l'id correspond à vehId. | 47 |
-| `C:play()` | Charge la route, envoie ai.startFollowing(path, nil, loopCount ou -1, loopMode) et initialise les pins finished, active et progress. | 71 |
-| `C:stop()` | Envoie ai.stopFollowing() et met finished/active à false. | 87 |
-| `C:work()` | Appelle play sur start, ou stop sur stop. | 121 |
+| `C:drawMiddle(builder, style)` | Displays Load button, state, number of nodes, distance and debug path if renderDebug. | 129 |
+| `C:getVeh()` | Returns the vehicle whose id is given as input, or the player's vehicle (getPlayerVehicle(0)) without input. | 61 |
+| `C:init()` | Initializes the data (speed=5, loopMode=startReset, renderDebug=false) and asks all vehicles to emit the onVehicleSubmitInfo hook with their ai.scriptState(). | 33 |
+| `C:loadRecording()` | Builds self.path from the DecalRoad (scenetree.findObject(roadName)): one point per node with the cumulative time and the direction/up of the first point. | 98 |
+| `C:onVehicleSubmitInfo(id, info)` | Hook called with the AI script state of a vehicle; updates progress = scriptTime / endScriptTime and receivedInfo if the id matches vehId. | 47 |
+| `C:play()` | Loads the road, sends ai.startFollowing(path, nil, loopCount or -1, loopMode) and initializes the finished, active and progress pins. | 71 |
+| `C:stop()` | Sends ai.stopFollowing() and sets finished/active to false. | 87 |
+| `C:work()` | Calls play on start, or stop on stop. | 121 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `queueAllObjectLua`
 - `debugDrawer:` `drawSphere`, `drawSquarePrism`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/simpleFollowDecalroad.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/simpleFollowDecalroad.lua`.*

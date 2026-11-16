@@ -1,42 +1,42 @@
 # `editor_heroRoadEditor_import`
 
-*Fichier : `lua/ge/extensions/editor/heroRoadEditor/import.lua` · VM : Game Engine (GE) · 452 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/heroRoadEditor/import.lua` · VM: Game Engine (GE) · 452 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_heroRoadEditor_import` : `extensions.load("editor_heroRoadEditor_import")`, puis la globale `editor_heroRoadEditor_import`
+**Access:** extension `editor_heroRoadEditor_import`: `extensions.load("editor_heroRoadEditor_import")`, then the global `editor_heroRoadEditor_import`
 
-Import de DecalRoads existants dans un nouveau groupe Hero Road. À partir d'une sélection de DecalRoad (ou d'un polygone de sélection), le module estime une ligne centrale de référence (milieu des bords gauche/droit trouvés par recherche exponentielle puis dichotomie à partir de la plus longue route), crée un groupe 'Import N' avec ces nœuds simplifiés (RDP) et transforme chaque DecalRoad en calque (matériau, priorité de rendu, largeur, position latérale normalisée, inversion, fondus). Les DecalRoad utilisés sont supprimés, avec commit d'annulation/rétablissement.
+Import of existing DecalRoads into a new Hero Road group. From a selection of DecalRoads (or a selection polygon), the module estimates a reference centerline (middle of the left/right edges found by exponential search then bisection starting from the longest road), creates an 'Import N' group with these simplified (RDP) nodes and turns each DecalRoad into a layer (material, render priority, width, normalized lateral position, flip, fades). The used DecalRoads are deleted, with an undo/redo commit.
 
-## Remarques
+## Notes
 
-- Constantes : pas de recherche initial 0.1 m, 8 itérations de raffinement, distance de recherche max 50 m, tolérance de largeur 0.1 m (isTrackWidth), tolérance RDP 0.5.
-- Position latérale d'un calque = moyenne de (signe * distance * 2 / largeur de référence) sur ses nœuds ; isFlip est décidé par vote majoritaire sur le produit scalaire des tangentes.
-- Les boucles ne sont pas gérées (tmpSpline.isLoop = false, TODO dans le code).
-- Le groupe créé désactive toutes les couches automatiques (traces de pneus, asphalte endommagé, fissures, réparations, patchs, lignes centrales/de rive/de voie, fondus de bord).
-- L'annulation recrée les DecalRoad supprimés (nom, champs, nœuds, groupe parent) ; le rétablissement les supprime à nouveau par nom.
-- Un DecalRoad dans le polygone suffit à importer toute la route dès qu'un seul de ses nœuds est dedans (pos:inPolygon).
+- Constants: initial search step 0.1 m, 8 refinement iterations, max search distance 50 m, width tolerance 0.1 m (isTrackWidth), RDP tolerance 0.5.
+- A layer's lateral position = average of (sign * distance * 2 / reference width) over its nodes; isFlip is decided by majority vote on the dot product of the tangents.
+- Loops are not handled (tmpSpline.isLoop = false, TODO in the code).
+- The created group disables all automatic layers (tire tracks, damaged asphalt, cracks, repairs, patches, center/edge/lane lines, edge fades).
+- Undo recreates the deleted DecalRoads (name, fields, nodes, parent group); redo deletes them again by name.
+- A DecalRoad in the polygon is enough to import the whole road as soon as one of its nodes is inside (pos:inPolygon).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_heroRoadEditor_import.importFromPolygon(polygon)` | Cherche tous les DecalRoad dont au moins un nœud est dans le polygone, puis appelle importSelectedIntoNewGroup avec eux. | 426 |
-| `editor_heroRoadEditor_import.importSelectedIntoNewGroup(decalRoads)` | Importe les DecalRoad donnés dans un nouveau groupe Hero Road : calcule la spline de référence, crée le groupe, génère les calques, supprime les DecalRoad (et leurs groupes parents devenus vides) et enregistre l'action 'Import DecalRoads into Hero Road' dans l'historique. Ne fait rien si la liste est vide. | 351 |
+| `editor_heroRoadEditor_import.importFromPolygon(polygon)` | Finds all DecalRoads with at least one node inside the polygon, then calls importSelectedIntoNewGroup with them. | 426 |
+| `editor_heroRoadEditor_import.importSelectedIntoNewGroup(decalRoads)` | Imports the given DecalRoads into a new Hero Road group: computes the reference spline, creates the group, generates the layers, deletes the DecalRoads (and their parent groups that became empty) and records the 'Import DecalRoads into Hero Road' action in the history. Does nothing if the list is empty. | 351 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_heroRoadEditor_import.importFromPolygon(polygon)`
 
-Cherche tous les DecalRoad dont au moins un nœud est dans le polygone, puis appelle importSelectedIntoNewGroup avec eux.
+Finds all DecalRoads with at least one node inside the polygon, then calls importSelectedIntoNewGroup with them.
 
-- `polygon` (*table*) : Polygone de sélection (liste de points) accepté par vec3:inPolygon.
+- `polygon` (*table*) : Selection polygon (list of points) accepted by vec3:inPolygon.
 
 #### `editor_heroRoadEditor_import.importSelectedIntoNewGroup(decalRoads)`
 
-Importe les DecalRoad donnés dans un nouveau groupe Hero Road : calcule la spline de référence, crée le groupe, génère les calques, supprime les DecalRoad (et leurs groupes parents devenus vides) et enregistre l'action 'Import DecalRoads into Hero Road' dans l'historique. Ne fait rien si la liste est vide.
+Imports the given DecalRoads into a new Hero Road group: computes the reference spline, creates the group, generates the layers, deletes the DecalRoads (and their parent groups that became empty) and records the 'Import DecalRoads into Hero Road' action in the history. Does nothing if the list is empty.
 
-- `decalRoads` (*table*) : Tableau d'objets DecalRoad de la scène.
+- `decalRoads` (*table*) : Array of scene DecalRoad objects.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 - `Sim.` `getUniqueName`, `upcast`
@@ -44,4 +44,4 @@ Importe les DecalRoad donnés dans un nouveau groupe Hero Road : calcule la spli
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/heroRoadEditor/import.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/heroRoadEditor/import.lua`.*

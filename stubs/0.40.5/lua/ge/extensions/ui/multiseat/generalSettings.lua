@@ -2,47 +2,47 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/multiseat/generalSettings.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fournisseur de réglages « general » de la fenêtre de réglages multiseat. Il déclare les champs : même véhicule pour tous, rassembler les véhicules, replacer tous les joueurs, couleur automatique, marqueurs de joueurs et disposition de l'écran partagé pour 2 à 9+ joueurs ; puis il gère leurs actions, changements, validation et application via les hooks onXxxMultiseatGameSetting(s).
---- Accès : extension `ui_multiseat_generalSettings` : `extensions.load("ui_multiseat_generalSettings")`, puis la globale `ui_multiseat_generalSettings`
+--- "general" settings provider of the multiseat settings window. It declares the fields: same vehicle for everyone, gather vehicles, reseat all players, automatic color, player markers and split screen layout for 2 to 9+ players; then it handles their actions, changes, validation and application via the onXxxMultiseatGameSetting(s) hooks.
+--- Access: extension `ui_multiseat_generalSettings`: `extensions.load("ui_multiseat_generalSettings")`, then the global `ui_multiseat_generalSettings`
 ---@class ui_multiseat_generalSettings
 ui_multiseat_generalSettings = {}
 
---- Enregistre couleur automatique et dispositions, rafraîchit render_splitScreen, rassemble les véhicules (gatherVehicles) et replace les joueurs (reseatAllPlayers) si demandé, puis remet ces deux champs à zéro via result.valueOverrides.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/multiseat/generalSettings.lua:201
----@param stagedSettings table Réglages préparés par fournisseur.
----@param _activeSettings table Réglages actifs (non utilisé).
----@param result table Table de résultat (valueOverrides).
+--- Saves automatic color and layouts, refreshes render_splitScreen, gathers the vehicles (gatherVehicles) and reseats the players (reseatAllPlayers) if requested, then resets these two fields to zero via result.valueOverrides.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/multiseat/generalSettings.lua:201
+---@param stagedSettings table Settings staged per provider.
+---@param _activeSettings table Active settings (unused).
+---@param result table Result table (valueOverrides).
 function ui_multiseat_generalSettings.onApplyMultiseatGameSettings(stagedSettings, _activeSettings, result) end
 
---- Ajoute à providers le fournisseur « general » (placement afterVehicles, applyMode apply) avec tous ses champs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/multiseat/generalSettings.lua:107
----@param providers table[] Liste de fournisseurs de réglages à compléter.
+--- Adds the "general" provider (placement afterVehicles, applyMode apply) with all its fields to providers.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/multiseat/generalSettings.lua:107
+---@param providers table[] List of settings providers to complete.
 function ui_multiseat_generalSettings.onGetMultiseatGameSettings(providers) end
 
---- Gère l'action du champ sameVehicleForEveryone : « selector » ouvre le sélecteur de véhicule pour tous les joueurs, sinon le véhicule choisi est préparé pour tous. Le résultat est écrit dans result.success. Ignoré pour les autres fournisseurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/multiseat/generalSettings.lua:142
----@param providerId string Identifiant du fournisseur (« general »).
----@param fieldId string Identifiant du champ.
----@param result table Table de résultat (success).
----@param value any Valeur choisie.
+--- Handles the action of the sameVehicleForEveryone field: "selector" opens the vehicle selector for all players, otherwise the chosen vehicle is staged for all. The result is written to result.success. Ignored for other providers.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/multiseat/generalSettings.lua:142
+---@param providerId string Provider identifier ("general").
+---@param fieldId string Field identifier.
+---@param result table Result table (success).
+---@param value any Chosen value.
 function ui_multiseat_generalSettings.onMultiseatGameSettingAction(providerId, fieldId, result, value) end
 
---- Réagit à un changement de champ : automaticColor est préparé pour tous les joueurs ; showPlayerMarkers est appliqué immédiatement (core_multiseat.setPlayerMarkersEnabled, sinon réglage multiseatTags).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/multiseat/generalSettings.lua:153
----@param providerId string Identifiant du fournisseur.
----@param fieldId string Identifiant du champ.
----@param value any Nouvelle valeur.
+--- Reacts to a field change: automaticColor is staged for all players; showPlayerMarkers is applied immediately (core_multiseat.setPlayerMarkersEnabled, otherwise the multiseatTags setting).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/multiseat/generalSettings.lua:153
+---@param providerId string Provider identifier.
+---@param fieldId string Field identifier.
+---@param value any New value.
 function ui_multiseat_generalSettings.onMultiseatGameSettingChanged(providerId, fieldId, value) end
 
---- Valide les réglages préparés : présence du fournisseur, booléens showPlayerMarkers et automaticColor, dispositions valides pour chaque nombre de joueurs. Écrit result.success = false et result.reason en cas d'erreur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/multiseat/generalSettings.lua:166
----@param stagedSettings table Réglages préparés par fournisseur.
----@param _activeSettings table Réglages actifs (non utilisé).
----@param result table Table de résultat (success, reason).
+--- Validates the staged settings: provider presence, boolean showPlayerMarkers and automaticColor, valid layouts for each player count. Writes result.success = false and result.reason on error.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/multiseat/generalSettings.lua:166
+---@param stagedSettings table Settings staged per provider.
+---@param _activeSettings table Active settings (unused).
+---@param result table Result table (success, reason).
 function ui_multiseat_generalSettings.onValidateMultiseatGameSettings(stagedSettings, _activeSettings, result) end
 

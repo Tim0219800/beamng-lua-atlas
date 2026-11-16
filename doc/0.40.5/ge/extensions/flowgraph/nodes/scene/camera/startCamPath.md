@@ -1,22 +1,22 @@
 # `flowgraph_nodes_scene_camera_startCamPath`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/camera/startCamPath.lua` · VM : Game Engine (GE) · 55 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/camera/startCamPath.lua` · VM: Game Engine (GE) · 55 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/camera/startCamPath")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/camera/startCamPath")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Start Cam Path » (once_instant). Fait suivre a la camera le chemin d'un objet CameraPath (fichier .camPath.json). Entrees : pathName (string), loop (bool). Sorties : activated (flow impulsion, une seule frame) et id (number) du chemin. Utilise le module flowgraph camera (self.mgr.modules.camera).
+Flowgraph node "Start Cam Path" (once_instant). Makes the camera follow the path of a CameraPath object (.camPath.json file). Inputs: pathName (string), loop (bool). Outputs: activated (flow impulse, a single frame) and id (number) of the path. Uses the flowgraph camera module (self.mgr.modules.camera).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Zone centrale du noeud (rien d'affiche). | 49 |
-| `C:init()` | Rien a initialiser. | 24 |
-| `C:postInit()` | Restreint le pin pathName au selecteur de fichiers « Camera Path Files » (.camPath.json). | 27 |
-| `C:work()` | Retombe activated a false a la frame suivant l'activation (flag activatedFlag). | 41 |
-| `C:workOnce()` | Trouve le chemin (modules.camera:findPath), le demarre (startPath avec loop), ecrit id et leve l'impulsion activated. | 33 |
+| `C:drawMiddle(builder, style)` | Central area of the node (nothing displayed). | 49 |
+| `C:init()` | Nothing to initialize. | 24 |
+| `C:postInit()` | Restricts the pathName pin to the "Camera Path Files" file selector (.camPath.json). | 27 |
+| `C:work()` | Drops activated back to false on the frame following the activation (flag activatedFlag). | 41 |
+| `C:workOnce()` | Finds the path (modules.camera:findPath), starts it (startPath with loop), writes id and raises the activated impulse. | 33 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/camera/startCamPath.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/camera/startCamPath.lua`.*

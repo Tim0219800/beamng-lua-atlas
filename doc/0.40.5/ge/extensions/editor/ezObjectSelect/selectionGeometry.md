@@ -1,121 +1,121 @@
 # `editor_ezObjectSelect_selectionGeometry`
 
-*Fichier : `lua/ge/extensions/editor/ezObjectSelect/selectionGeometry.lua` · VM : Game Engine (GE) · 473 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ezObjectSelect/selectionGeometry.lua` · VM: Game Engine (GE) · 473 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ezObjectSelect_selectionGeometry` : `extensions.load("editor_ezObjectSelect_selectionGeometry")`, puis la globale `editor_ezObjectSelect_selectionGeometry`
+**Access:** extension `editor_ezObjectSelect_selectionGeometry`: `extensions.load("editor_ezObjectSelect_selectionGeometry")`, then the global `editor_ezObjectSelect_selectionGeometry`
 
-Géométrie de la sélection de l'outil Easy Select : validation de boîtes, calcul des 8 coins monde d'un objet (boîte orientée via getObjBox + transform + scale, boîte alignée monde pour les véhicules ou en repli), contexte caméra, signatures de bornes pour détecter qu'un objet a bougé, et création de « proxies » projetés à l'écran (polygone d'enveloppe convexe, aire, centroïde, distances, volume). Ces proxies servent à choisir l'objet sous la souris.
+Selection geometry of the Easy Select tool: box validation, computation of an object's 8 world corners (oriented box via getObjBox + transform + scale, world-aligned box for vehicles or as a fallback), camera context, bounds signatures to detect that an object has moved, and creation of screen-projected "proxies" (convex hull polygon, area, centroid, distances, volume). These proxies are used to choose the object under the mouse.
 
-## Remarques
+## Notes
 
-- Types de bornes : "vehicleWorldAabb" (BeamNGVehicle), "oriented", "worldAabb". Raisons d'échec de création de proxy : invalidBounds, degenerateBounds, outsideNearPlane, degenerateProjection.
-- createCameraContext calcule rangeOrigin : point d'impact d'un rayon de 5000 m devant la caméra ; sinon hauteur du terrain sous la caméra ; sinon impact d'un rayon vers le bas. Les distances d'un proxy (cameraDistance) sont mesurées depuis ce point.
-- Les coordonnées écran des polygones sont relatives au viewport (0..width, 0..height), alors que modalOperatorCommon.projectToScreen ajoute viewportX/Y.
+- Bounds types: "vehicleWorldAabb" (BeamNGVehicle), "oriented", "worldAabb". Proxy creation failure reasons: invalidBounds, degenerateBounds, outsideNearPlane, degenerateProjection.
+- createCameraContext computes rangeOrigin: impact point of a 5000 m ray in front of the camera; otherwise the terrain height under the camera; otherwise the impact of a downward ray. A proxy's distances (cameraDistance) are measured from this point.
+- The screen coordinates of the polygons are relative to the viewport (0..width, 0..height), whereas modalOperatorCommon.projectToScreen adds viewportX/Y.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ezObjectSelect_selectionGeometry.boundsSignaturesEqual(first, second)` | Compare deux signatures élément par élément. | 91 |
-| `editor_ezObjectSelect_selectionGeometry.createCameraContext()` | Capture la caméra de l'éditeur (core_camera position, quat, FOV) et le viewport imgui principal. | 99 |
-| `editor_ezObjectSelect_selectionGeometry.createProjectedProxy(obj, camera, boundsSignature)` | Construit le proxy d'un objet pour la caméra : polygone écran de l'enveloppe convexe des coins (découpée au plan proche), aire, centroïde, distances caméra/vue, volume, boîte orientée. | 414 |
-| `editor_ezObjectSelect_selectionGeometry.createProxy(obj, camera, mousePosition, rayOrigin, rayDirection)` | Raccourci : createProjectedProxy puis updateCursorMetrics puis updateRayEntry. | 464 |
-| `editor_ezObjectSelect_selectionGeometry.getBoundsSignature(obj, result)` | Renvoie une liste de nombres décrivant les bornes courantes d'un objet (type, transform, échelle, boîte). Sert à comparer deux états avec boundsSignaturesEqual. La table result est réutilisée si fournie. | 55 |
-| `editor_ezObjectSelect_selectionGeometry.getObjectVolume(obj)` | Volume de la boîte (étendues x échelle absolue pour les objets orientés). | 185 |
-| `editor_ezObjectSelect_selectionGeometry.getWorldCorners(obj)` | Les 8 coins monde de la boîte d'un objet. | 181 |
-| `editor_ezObjectSelect_selectionGeometry.updateCursorMetrics(proxy, mousePosition)` | Ajoute au proxy cursorDistance (distance en pixels du curseur au polygone, 0 si dedans) et centerBias (distance au centroïde divisée par racine de l'aire). | 449 |
-| `editor_ezObjectSelect_selectionGeometry.updateRayEntry(proxy, rayOrigin, rayDirection)` | Ajoute proxy.rayEntry : distance d'entrée du rayon dans la boîte orientée (math.huge s'il la manque ou sans rayon). | 458 |
-| `editor_ezObjectSelect_selectionGeometry.validBox(box)` | Teste qu'une boîte a minExtents/maxExtents finis (\|v\| < 1e10, pas de NaN) et min <= max sur chaque axe. | 23 |
+| `editor_ezObjectSelect_selectionGeometry.boundsSignaturesEqual(first, second)` | Compares two signatures element by element. | 91 |
+| `editor_ezObjectSelect_selectionGeometry.createCameraContext()` | Captures the editor camera (core_camera position, quat, FOV) and the main imgui viewport. | 99 |
+| `editor_ezObjectSelect_selectionGeometry.createProjectedProxy(obj, camera, boundsSignature)` | Builds an object's proxy for the camera: screen polygon of the convex hull of the corners (clipped at the near plane), area, centroid, camera/view distances, volume, oriented box. | 414 |
+| `editor_ezObjectSelect_selectionGeometry.createProxy(obj, camera, mousePosition, rayOrigin, rayDirection)` | Shortcut: createProjectedProxy then updateCursorMetrics then updateRayEntry. | 464 |
+| `editor_ezObjectSelect_selectionGeometry.getBoundsSignature(obj, result)` | Returns a list of numbers describing the current bounds of an object (type, transform, scale, box). Used to compare two states with boundsSignaturesEqual. The result table is reused if provided. | 55 |
+| `editor_ezObjectSelect_selectionGeometry.getObjectVolume(obj)` | Box volume (extents x absolute scale for oriented objects). | 185 |
+| `editor_ezObjectSelect_selectionGeometry.getWorldCorners(obj)` | The 8 world corners of an object's box. | 181 |
+| `editor_ezObjectSelect_selectionGeometry.updateCursorMetrics(proxy, mousePosition)` | Adds to the proxy cursorDistance (distance in pixels from the cursor to the polygon, 0 if inside) and centerBias (distance to the centroid divided by the square root of the area). | 449 |
+| `editor_ezObjectSelect_selectionGeometry.updateRayEntry(proxy, rayOrigin, rayDirection)` | Adds proxy.rayEntry: entry distance of the ray into the oriented box (math.huge if it misses it or without a ray). | 458 |
+| `editor_ezObjectSelect_selectionGeometry.validBox(box)` | Tests that a box has finite minExtents/maxExtents (\|v\| < 1e10, no NaN) and min <= max on each axis. | 23 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_ezObjectSelect_selectionGeometry.boundsSignaturesEqual(first, second)`
 
-Compare deux signatures élément par élément.
+Compares two signatures element by element.
 
 - `first` (*table|nil*) : 
 - `second` (*table|nil*) : 
-- **renvoie** : boolean false si l'une est nil ou de longueur différente
+- **returns**: boolean false if one is nil or of different length
 
 #### `editor_ezObjectSelect_selectionGeometry.createCameraContext()`
 
-Capture la caméra de l'éditeur (core_camera position, quat, FOV) et le viewport imgui principal.
+Captures the editor camera (core_camera position, quat, FOV) and the main imgui viewport.
 
-- **renvoie** : table|nil {pos, rangeOrigin, right, forward, up, halfTan, aspect, width, height, viewportX, viewportY, nearDistance} ou nil si une donnée manque ou si le viewport est vide
+- **returns**: table|nil {pos, rangeOrigin, right, forward, up, halfTan, aspect, width, height, viewportX, viewportY, nearDistance} or nil if data is missing or the viewport is empty
 
 #### `editor_ezObjectSelect_selectionGeometry.createProjectedProxy(obj, camera, boundsSignature)`
 
-Construit le proxy d'un objet pour la caméra : polygone écran de l'enveloppe convexe des coins (découpée au plan proche), aire, centroïde, distances caméra/vue, volume, boîte orientée.
+Builds an object's proxy for the camera: screen polygon of the convex hull of the corners (clipped at the near plane), area, centroid, camera/view distances, volume, oriented box.
 
-- `obj` (*userdata*) : Objet de la scène
-- `camera` (*table*) : Contexte de createCameraContext
-- `boundsSignature` (*table|nil*) : Signature déjà calculée (sinon calculée)
-- **renvoie** : table|nil {source, sourceId, boundsType, worldCorners, polygon, area, centroid, cameraDistance, viewDistance, volume, cameraInside, orientedBox, boundsSignature}
-- **renvoie** : string|nil raison de l'échec si nil
+- `obj` (*userdata*) : Scene object
+- `camera` (*table*) : Context from createCameraContext
+- `boundsSignature` (*table|nil*) : Signature already computed (otherwise computed)
+- **returns**: table|nil {source, sourceId, boundsType, worldCorners, polygon, area, centroid, cameraDistance, viewDistance, volume, cameraInside, orientedBox, boundsSignature}
+- **returns**: string|nil failure reason if nil
 
 #### `editor_ezObjectSelect_selectionGeometry.createProxy(obj, camera, mousePosition, rayOrigin, rayDirection)`
 
-Raccourci : createProjectedProxy puis updateCursorMetrics puis updateRayEntry.
+Shortcut: createProjectedProxy then updateCursorMetrics then updateRayEntry.
 
 - `obj` (*userdata*) : 
 - `camera` (*table*) : 
 - `mousePosition` (*table*) : {x, y}
 - `rayOrigin` (*vec3|nil*) : 
 - `rayDirection` (*vec3|nil*) : 
-- **renvoie** : table|nil proxy
-- **renvoie** : string|nil raison de l'échec
+- **returns**: table|nil proxy
+- **returns**: string|nil failure reason
 
 #### `editor_ezObjectSelect_selectionGeometry.getBoundsSignature(obj, result)`
 
-Renvoie une liste de nombres décrivant les bornes courantes d'un objet (type, transform, échelle, boîte). Sert à comparer deux états avec boundsSignaturesEqual. La table result est réutilisée si fournie.
+Returns a list of numbers describing the current bounds of an object (type, transform, scale, box). Used to compare two states with boundsSignaturesEqual. The result table is reused if provided.
 
-- `obj` (*userdata*) : Objet de la scène
-- `result` (*table|nil*) : Table à remplir (réutilisée)
-- **renvoie** : table|nil signature, ou nil si aucune boîte valide
+- `obj` (*userdata*) : Scene object
+- `result` (*table|nil*) : Table to fill (reused)
+- **returns**: table|nil signature, or nil if no valid box
 
 #### `editor_ezObjectSelect_selectionGeometry.getObjectVolume(obj)`
 
-Volume de la boîte (étendues x échelle absolue pour les objets orientés).
+Box volume (extents x absolute scale for oriented objects).
 
-- `obj` (*userdata|nil*) : Objet de la scène
-- **renvoie** : number|nil volume en m3 (unités monde), nil si invalide ou non fini
+- `obj` (*userdata|nil*) : Scene object
+- **returns**: number|nil volume in m3 (world units), nil if invalid or not finite
 
 #### `editor_ezObjectSelect_selectionGeometry.getWorldCorners(obj)`
 
-Les 8 coins monde de la boîte d'un objet.
+The 8 world corners of an object's box.
 
-- `obj` (*userdata*) : Objet de la scène
-- **renvoie** : table|nil liste de 8 vec3 (ou nil)
-- **renvoie** : string type de bornes, ou "invalidBounds"
+- `obj` (*userdata*) : Scene object
+- **returns**: table|nil list of 8 vec3 (or nil)
+- **returns**: string bounds type, or "invalidBounds"
 
 #### `editor_ezObjectSelect_selectionGeometry.updateCursorMetrics(proxy, mousePosition)`
 
-Ajoute au proxy cursorDistance (distance en pixels du curseur au polygone, 0 si dedans) et centerBias (distance au centroïde divisée par racine de l'aire).
+Adds to the proxy cursorDistance (distance in pixels from the cursor to the polygon, 0 if inside) and centerBias (distance to the centroid divided by the square root of the area).
 
 - `proxy` (*table*) : Proxy
-- `mousePosition` (*table*) : {x, y} relatif au viewport
-- **renvoie** : table le même proxy
+- `mousePosition` (*table*) : {x, y} relative to the viewport
+- **returns**: table the same proxy
 
 #### `editor_ezObjectSelect_selectionGeometry.updateRayEntry(proxy, rayOrigin, rayDirection)`
 
-Ajoute proxy.rayEntry : distance d'entrée du rayon dans la boîte orientée (math.huge s'il la manque ou sans rayon).
+Adds proxy.rayEntry: entry distance of the ray into the oriented box (math.huge if it misses it or without a ray).
 
 - `proxy` (*table*) : Proxy
 - `rayOrigin` (*vec3|nil*) : 
 - `rayDirection` (*vec3|nil*) : 
-- **renvoie** : table le même proxy
+- **returns**: table the same proxy
 
 #### `editor_ezObjectSelect_selectionGeometry.validBox(box)`
 
-Teste qu'une boîte a minExtents/maxExtents finis (|v| < 1e10, pas de NaN) et min <= max sur chaque axe.
+Tests that a box has finite minExtents/maxExtents (|v| < 1e10, no NaN) and min <= max on each axis.
 
-- `box` (*table|nil*) : Boîte avec minExtents et maxExtents
-- **renvoie** : boolean 
+- `box` (*table|nil*) : Box with minExtents and maxExtents
+- **returns**: boolean 
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `castRay`, `sceneGetCameraFrustum`
 - `obj:` `getID`, `getObjBox`, `getScale`, `getTransform`, `getWorldBox`, `isSubClassOf`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ezObjectSelect/selectionGeometry.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ezObjectSelect/selectionGeometry.lua`.*

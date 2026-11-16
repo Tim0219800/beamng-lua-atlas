@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/delivery/startDelivery.lua",
+  "module": "Nœud flowgraph « Start Delivery » (catégorie once_instant, livraison). Démarre la livraison : objectifs, indices, marqueurs et liste de tâches deviennent visibles et le chrono démarre. Nécessite une livraison chargée (Load Delivery) et non déjà active. Pins : flow, reset (caché) en entrée ; flow, success en sortie.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Remet flow et success à faux.", "internal": true},
+        "_executionStarted": {"desc": "Remet flow et success à faux.", "internal": true},
+        "_executionStopped": {"desc": "Remet flow et success à faux.", "internal": true},
+        "work": {"desc": "Si flow est actif : vérifie isLoaded() et not isActive(), appelle freeformDelivery.start() et renseigne success/flow ; journalise les erreurs."}
+      }
+    }
+  }
+}

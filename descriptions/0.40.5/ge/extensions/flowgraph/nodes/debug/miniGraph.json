@@ -1,15 +1,33 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/debug/miniGraph.lua",
-  "module": "Nœud flowgraph « Mini Graph » (catégorie repeat_instant, tags util/draw/table/data). Petit graphe (200x60) dans le nœud qui trace une seule valeur number au fil des frames (100 derniers points). Paramètres dans data : scaleMin/scaleMax (0..1 par défaut), autoScale (vrai : l'échelle s'étend avec les valeurs) et stop (vrai : arrête l'enregistrement). Entrée : value (number).",
+  "module": "Flowgraph node \"Mini Graph\" (category repeat_instant, tags util/draw/table/data). Small graph (200x60) in the node that plots a single number value over frames (last 100 points). Parameters in data: scaleMin/scaleMax (0..1 by default), autoScale (true: the scale grows with the values) and stop (true: stops recording). Input: value (number).",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise les données et paramètres.", "internal": true},
-        "work": {"desc": "Ajoute la valeur (0 si nil) à la série, met à jour l'échelle et retire le plus ancien point au-delà de la taille max, sauf si data.stop."},
-        "drawMiddle": {"desc": "Éditeur : dessine la courbe (PlotMultiLines).", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true}
+        "init": {
+          "desc": "Initializes the data and parameters.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Adds the value (0 if nil) to the series, updates the scale and removes the oldest point beyond the max size, unless data.stop."
+        },
+        "drawMiddle": {
+          "desc": "Editor: draws the curve (PlotMultiLines).",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "node constructor"
+            },
+            "style": {
+              "type": "table",
+              "desc": "style"
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

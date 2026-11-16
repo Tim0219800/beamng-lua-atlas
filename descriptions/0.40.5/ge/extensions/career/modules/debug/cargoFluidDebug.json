@@ -1,26 +1,35 @@
 {
   "path": "lua/ge/extensions/career/modules/debug/cargoFluidDebug.lua",
-  "module": "Onglet de debug carrière « Delivery > Fluid Cargo ». Fenêtre ImGui 'Fluid CargoDebug' qui affiche, par facilité de livraison (toutes, la plus proche ou une choisie), les stockages de matériaux (fluides) : fournisseurs, débits et connexions, en s'appuyant sur career_modules_delivery_* et career_modules_debug_parcelDebug.",
-  "notes": ["Outil de développement ; les références aux modules delivery sont prises dans onCareerActivated, donc inutilisable avant l'activation de la carrière.", "debugOrder = 11."],
+  "module": "\"Delivery > Fluid Cargo\" career debug tab. 'Fluid CargoDebug' ImGui window that shows, per delivery facility (all, the nearest or a chosen one), the material (fluid) storages: suppliers, rates and connections, relying on career_modules_delivery_* and career_modules_debug_parcelDebug.",
+  "notes": [
+    "Development tool; the references to the delivery modules are taken in onCareerActivated, so it is unusable before career is activated.",
+    "debugOrder = 11."
+  ],
   "fields": {
-    "debugOrder": {"type": "number", "desc": "Ordre de tri dans la fenêtre de debug (11)."},
-    "debugName": {"type": "string", "desc": "'Delivery > Fluid Cargo'."}
+    "debugOrder": {
+      "type": "number",
+      "desc": "Sort order in the debug window (11)."
+    },
+    "debugName": {
+      "type": "string",
+      "desc": "'Delivery > Fluid Cargo'."
+    }
   },
   "functions": {
     "onCareerActivated": {
-      "desc": "Hook de carrière : mémorise les modules delivery (parcelManager, cargoScreen, general, generator, progress, vehicleOfferManager) et career_modules_debug_parcelDebug.",
+      "desc": "Career hook: stores the delivery modules (parcelManager, cargoScreen, general, generator, progress, vehicleOfferManager) and career_modules_debug_parcelDebug.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "drawDebugFunctions": {
-      "desc": "Sous-menu de fonctions de debug ; vide dans ce module.",
+      "desc": "Debug functions submenu; empty in this module.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "drawDebugMenu": {
-      "desc": "Dessine la fenêtre 'Fluid CargoDebug' : temps de livraison, choix de facilité (all, auto, ou une facilité ayant des materialStorages) et tableau Fluid / Rate / Connections par facilité.",
+      "desc": "Draws the 'Fluid CargoDebug' window: delivery time, facility choice (all, auto, or a facility with materialStorages) and a Fluid / Rate / Connections table per facility.",
       "params": {},
       "returns": [],
       "internal": true

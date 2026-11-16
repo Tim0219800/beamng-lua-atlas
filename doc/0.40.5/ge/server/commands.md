@@ -1,221 +1,221 @@
 # `commands`
 
-*Fichier : `lua/ge/server/commands.lua` · VM : Game Engine (GE) · 253 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/server/commands.lua` · VM: Game Engine (GE) · 253 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `commands`
+**Access:** global `commands`
 
-Commandes de caméra et de placement du joueur, appelées en grande partie par le côté C++ et les actions d'entrée : basculer entre caméra de jeu et caméra libre, vitesse de la caméra libre, déposer la caméra sur le véhicule ou le véhicule à la position de la caméra, lire/écrire la transformée de la caméra libre en JSON. Contient aussi d'anciennes fonctions globales (getCameraPosition, setCameraFov…) conservées pour compatibilité, qui redirigent vers core_camera en journalisant un avertissement de dépréciation (une fois par fonction).
+Camera and player placement commands, largely called by the C++ side and the input actions: switching between the game camera and the free camera, free camera speed, dropping the camera on the vehicle or the vehicle at the camera position, reading/writing the free camera transform as JSON. It also contains old global functions (getCameraPosition, setCameraFov…) kept for compatibility, which redirect to core_camera while logging a deprecation warning (once per function).
 
-## Exemple
+## Example
 
 ```lua
 commands.toggleCamera(0)
 local json = commands.getCameraTransformJson() -- '[x, y, z, qx, qy, qz, qw]'
 ```
 
-## Remarques
+## Notes
 
-- setFreeCamera est appelée par le C++ : ne pas la renommer ni la déplacer.
-- Alias de compatibilité : setCameraFree = setFreeCamera ; setCameraPlayer = setGameCamera ; getCamera retourne l'objet scenetree « gameCamera ».
-- Bug : M.getGame = getGame et M.onSettingsChanged = onSettingsChanged exportent des variables jamais définies dans ce fichier ; ces champs valent donc nil sauf si une globale du même nom existe.
-- Dans les globales dépréciées, setCameraFovDeg/Rad/setCameraFov n'agissent que si la caméra libre est active.
-- Dans les fonctions dropPlayerAtCamera, la rotation du véhicule est multipliée par quat(0,0,1,0) car l'avant d'un véhicule est inversé.
-- Hooks émis : onCameraHandlerSet (initCamera), onCameraToggled ({cameraType = 'GameCam'|'FreeCam'}), onNodegrab (true/false).
+- setFreeCamera is called by the C++: do not rename or move it.
+- Compatibility aliases: setCameraFree = setFreeCamera; setCameraPlayer = setGameCamera; getCamera returns the "gameCamera" scenetree object.
+- Bug: M.getGame = getGame and M.onSettingsChanged = onSettingsChanged export variables that are never defined in this file; these fields are therefore nil unless a global of the same name exists.
+- In the deprecated globals, setCameraFovDeg/Rad/setCameraFov act only if the free camera is active.
+- In the dropPlayerAtCamera functions, the vehicle's rotation is multiplied by quat(0,0,1,0) because a vehicle's front is reversed.
+- Emitted hooks: onCameraHandlerSet (initCamera), onCameraToggled ({cameraType = 'GameCam'|'FreeCam'}), onNodegrab (true/false).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `commands.applyDropPlayerAtCameraNoResetPlan(player, plan)` | Applique un plan : déplace le cluster de nœuds du véhicule (setClusterPosRelRot), annule sa vitesse et met à jour la transformée d'origine. | 128 |
-| `commands.changeCameraSpeed(val)` | Modifie la vitesse normale de la caméra (typiquement Alt + molette). | 53 |
-| `commands.dropCameraAtPlayer(player)` | Passe en caméra libre et la place à la position et orientation du véhicule du joueur. | 73 |
-| `commands.dropPlayerAtCamera(player)` | Téléporte le véhicule du joueur à la position de la caméra, orienté selon la direction horizontale de la caméra, puis repasse en caméra de jeu (la caméra bigMap devient orbit) et la réinitialise. | 82 |
-| `commands.dropPlayerAtCameraNoReset(player)` | Dépose le véhicule à la caméra sans reset. Si multiplayer_vehicleSync existe, délègue la demande à celui-ci ; sinon appelle dropPlayerAtCameraNoResetImpl. | 148 |
-| `commands.dropPlayerAtCameraNoResetImpl(player)` | Planifie puis applique le dépôt sans reset, puis remet la caméra en mode jeu. | 140 |
-| `commands.getCamera()` | Retourne l'objet de scène « gameCamera » (rétrocompatibilité). | 31 |
-| `commands.getCameraTransformJson()` | Retourne la position et la rotation de la caméra sous forme de chaîne JSON. | 164 |
-| `commands.initCamera()` | Initialise la caméra principale : vide les entrées de core_camera, retrouve l'objet « gameCamera », l'attache à la vue 'main', émet le hook onCameraHandlerSet et remet la configuration de caméra par défaut. *(interne)* | 8 |
-| `commands.isFreeCamera(player)` | Indique si la caméra active du joueur est « free ». | 27 |
-| `commands.onNodegrabStart(usingPlayerVehicle)` | Hook appelé au début d'une saisie de nœud (node grab) : émet onNodegrab(true), mémorise si la caméra était libre et, si la saisie ne passe pas par le véhicule joueur, bascule en caméra libre. *(interne)* *(hook)* | 58 |
-| `commands.onNodegrabStop(usingPlayerVehicle)` | Hook appelé à la fin de la saisie de nœud : émet onNodegrab(false) et revient en caméra de jeu si la caméra libre avait été activée par la saisie. *(interne)* *(hook)* | 66 |
-| `commands.planDropPlayerAtCameraNoReset(player)` | Calcule un plan de dépôt du véhicule à la position de la caméra sans le réinitialiser (la déformation est conservée). | 106 |
-| `commands.resetDropPlayerAtCameraNoResetCamera(player)` | Repasse en caméra de jeu (bigMap devient orbit) et réinitialise la caméra du joueur ; étape finale du dépôt sans reset. | 98 |
-| `commands.setCameraFree(player)` | Alias de compatibilité de setFreeCamera. Appelée par le C++. | 40 |
-| `commands.setCameraPlayer(player)` | Alias de compatibilité de setGameCamera. | 33 |
-| `commands.setFreeCamera(player)` | Active la caméra libre (initialisée à la transformée actuelle de la vue), la réinitialise et émet onCameraToggled (FreeCam) pour la vue principale. Appelée par le C++. | 40 |
-| `commands.setFreeCameraTransformJson(json)` | Active la caméra libre puis lui applique la transformée décrite par une chaîne JSON de 7 nombres (x, y, z, qx, qy, qz, qw). Ignore silencieusement un JSON invalide ou incomplet. | 170 |
-| `commands.setGameCamera(player)` | Repasse en caméra de jeu pour la vue du joueur ; émet onCameraToggled (GameCam) pour la vue principale. Alias : setCameraPlayer. | 33 |
-| `commands.toggleCamera(player)` | Bascule la caméra : en écran partagé, bascule la caméra libre de la vue du joueur ; sinon passe au groupe de caméras suivant (core_camera.cycleCameraGroup, Maj+C). | 156 |
-| `commands.toggleFastSpeed(enabled)` | Active ou coupe le modificateur de vitesse rapide de la caméra libre (typiquement la touche Maj). | 48 |
+| `commands.applyDropPlayerAtCameraNoResetPlan(player, plan)` | Applies a plan: moves the vehicle's node cluster (setClusterPosRelRot), cancels its velocity and updates the origin transform. | 128 |
+| `commands.changeCameraSpeed(val)` | Changes the camera's normal speed (typically Alt + wheel). | 53 |
+| `commands.dropCameraAtPlayer(player)` | Switches to the free camera and places it at the position and orientation of the player's vehicle. | 73 |
+| `commands.dropPlayerAtCamera(player)` | Teleports the player's vehicle to the camera position, oriented along the camera's horizontal direction, then switches back to the game camera (the bigMap camera becomes orbit) and resets it. | 82 |
+| `commands.dropPlayerAtCameraNoReset(player)` | Drops the vehicle at the camera without reset. If multiplayer_vehicleSync exists, delegates the request to it; otherwise calls dropPlayerAtCameraNoResetImpl. | 148 |
+| `commands.dropPlayerAtCameraNoResetImpl(player)` | Plans then applies the drop without reset, then puts the camera back in game mode. | 140 |
+| `commands.getCamera()` | Returns the "gameCamera" scene object (backward compatibility). | 31 |
+| `commands.getCameraTransformJson()` | Returns the camera's position and rotation as a JSON string. | 164 |
+| `commands.initCamera()` | Initializes the main camera: empties the core_camera inputs, finds the "gameCamera" object, attaches it to the 'main' view, emits the onCameraHandlerSet hook and resets the camera configuration to default. *(internal)* | 8 |
+| `commands.isFreeCamera(player)` | Indicates whether the player's active camera is "free". | 27 |
+| `commands.onNodegrabStart(usingPlayerVehicle)` | Hook called at the start of a node grab: emits onNodegrab(true), remembers whether the camera was free and, if the grab does not go through the player vehicle, switches to the free camera. *(internal)* *(hook)* | 58 |
+| `commands.onNodegrabStop(usingPlayerVehicle)` | Hook called at the end of the node grab: emits onNodegrab(false) and returns to the game camera if the free camera had been activated by the grab. *(internal)* *(hook)* | 66 |
+| `commands.planDropPlayerAtCameraNoReset(player)` | Computes a plan for dropping the vehicle at the camera position without resetting it (the deformation is kept). | 106 |
+| `commands.resetDropPlayerAtCameraNoResetCamera(player)` | Switches back to the game camera (bigMap becomes orbit) and resets the player's camera; final step of the drop without reset. | 98 |
+| `commands.setCameraFree(player)` | Compatibility alias of setFreeCamera. Called by the C++. | 40 |
+| `commands.setCameraPlayer(player)` | Compatibility alias of setGameCamera. | 33 |
+| `commands.setFreeCamera(player)` | Activates the free camera (initialized to the view's current transform), resets it and emits onCameraToggled (FreeCam) for the main view. Called by the C++. | 40 |
+| `commands.setFreeCameraTransformJson(json)` | Activates the free camera then applies to it the transform described by a JSON string of 7 numbers (x, y, z, qx, qy, qz, qw). Silently ignores invalid or incomplete JSON. | 170 |
+| `commands.setGameCamera(player)` | Switches back to the game camera for the player's view; emits onCameraToggled (GameCam) for the main view. Alias: setCameraPlayer. | 33 |
+| `commands.toggleCamera(player)` | Toggles the camera: in split screen, toggles the free camera of the player's view; otherwise moves to the next camera group (core_camera.cycleCameraGroup, Shift+C). | 156 |
+| `commands.toggleFastSpeed(enabled)` | Enables or disables the free camera's fast speed modifier (typically the Shift key). | 48 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `commands.applyDropPlayerAtCameraNoResetPlan(player, plan)`
 
-Applique un plan : déplace le cluster de nœuds du véhicule (setClusterPosRelRot), annule sa vitesse et met à jour la transformée d'origine.
+Applies a plan: moves the vehicle's node cluster (setClusterPosRelRot), cancels its velocity and updates the origin transform.
 
-- `player` (*integer|nil*) : indice du joueur (non utilisé)
-- `plan` (*table*) : plan retourné par planDropPlayerAtCameraNoReset
-- **renvoie** : boolean faux si le véhicule du plan n'existe plus
+- `player` (*integer|nil*) : player index (unused)
+- `plan` (*table*) : plan returned by planDropPlayerAtCameraNoReset
+- **returns**: boolean false if the plan's vehicle no longer exists
 
 #### `commands.changeCameraSpeed(val)`
 
-Modifie la vitesse normale de la caméra (typiquement Alt + molette).
+Changes the camera's normal speed (typically Alt + wheel).
 
-- `val` (*number*) : variation de vitesse (transmise à core_camera.changeSpeed)
+- `val` (*number*) : speed change (passed to core_camera.changeSpeed)
 
 #### `commands.dropCameraAtPlayer(player)`
 
-Passe en caméra libre et la place à la position et orientation du véhicule du joueur.
+Switches to the free camera and places it at the position and orientation of the player's vehicle.
 
-- `player` (*integer|nil*) : indice du joueur
+- `player` (*integer|nil*) : player index
 
 #### `commands.dropPlayerAtCamera(player)`
 
-Téléporte le véhicule du joueur à la position de la caméra, orienté selon la direction horizontale de la caméra, puis repasse en caméra de jeu (la caméra bigMap devient orbit) et la réinitialise.
+Teleports the player's vehicle to the camera position, oriented along the camera's horizontal direction, then switches back to the game camera (the bigMap camera becomes orbit) and resets it.
 
-- `player` (*integer|nil*) : indice du joueur
+- `player` (*integer|nil*) : player index
 
 #### `commands.dropPlayerAtCameraNoReset(player)`
 
-Dépose le véhicule à la caméra sans reset. Si multiplayer_vehicleSync existe, délègue la demande à celui-ci ; sinon appelle dropPlayerAtCameraNoResetImpl.
+Drops the vehicle at the camera without reset. If multiplayer_vehicleSync exists, delegates the request to it; otherwise calls dropPlayerAtCameraNoResetImpl.
 
-- `player` (*integer|nil*) : indice du joueur
+- `player` (*integer|nil*) : player index
 
 #### `commands.dropPlayerAtCameraNoResetImpl(player)`
 
-Planifie puis applique le dépôt sans reset, puis remet la caméra en mode jeu.
+Plans then applies the drop without reset, then puts the camera back in game mode.
 
-- `player` (*integer|nil*) : indice du joueur
-- **renvoie** : table|nil le plan appliqué, ou nil en cas d'échec
+- `player` (*integer|nil*) : player index
+- **returns**: table|nil the applied plan, or nil on failure
 
 #### `commands.getCamera()`
 
-Retourne l'objet de scène « gameCamera » (rétrocompatibilité).
+Returns the "gameCamera" scene object (backward compatibility).
 
-- **renvoie** : table|nil objet gameCamera
+- **returns**: table|nil gameCamera object
 
 #### `commands.getCameraTransformJson()`
 
-Retourne la position et la rotation de la caméra sous forme de chaîne JSON.
+Returns the camera's position and rotation as a JSON string.
 
-- **renvoie** : string '[x, y, z, qx, qy, qz, qw]' (position à 2 décimales)
+- **returns**: string '[x, y, z, qx, qy, qz, qw]' (position to 2 decimals)
 
 #### `commands.initCamera()`
 
-Initialise la caméra principale : vide les entrées de core_camera, retrouve l'objet « gameCamera », l'attache à la vue 'main', émet le hook onCameraHandlerSet et remet la configuration de caméra par défaut.
+Initializes the main camera: empties the core_camera inputs, finds the "gameCamera" object, attaches it to the 'main' view, emits the onCameraHandlerSet hook and resets the camera configuration to default.
 
-- **renvoie** : table|nil objet de la scène gameCamera, ou nil s'il est introuvable
+- **returns**: table|nil gameCamera scene object, or nil if not found
 
 #### `commands.isFreeCamera(player)`
 
-Indique si la caméra active du joueur est « free ».
+Indicates whether the player's active camera is "free".
 
-- `player` (*integer|nil*) : indice du joueur
-- **renvoie** : boolean vrai si la caméra libre est active
+- `player` (*integer|nil*) : player index
+- **returns**: boolean true if the free camera is active
 
 #### `commands.onNodegrabStart(usingPlayerVehicle)`
 
-Hook appelé au début d'une saisie de nœud (node grab) : émet onNodegrab(true), mémorise si la caméra était libre et, si la saisie ne passe pas par le véhicule joueur, bascule en caméra libre.
+Hook called at the start of a node grab: emits onNodegrab(true), remembers whether the camera was free and, if the grab does not go through the player vehicle, switches to the free camera.
 
-- `usingPlayerVehicle` (*boolean*) : vrai si la saisie utilise le véhicule du joueur
+- `usingPlayerVehicle` (*boolean*) : true if the grab uses the player's vehicle
 
 #### `commands.onNodegrabStop(usingPlayerVehicle)`
 
-Hook appelé à la fin de la saisie de nœud : émet onNodegrab(false) et revient en caméra de jeu si la caméra libre avait été activée par la saisie.
+Hook called at the end of the node grab: emits onNodegrab(false) and returns to the game camera if the free camera had been activated by the grab.
 
-- `usingPlayerVehicle` (*boolean*) : vrai si la saisie utilisait le véhicule du joueur (non utilisé)
+- `usingPlayerVehicle` (*boolean*) : true if the grab used the player's vehicle (unused)
 
 #### `commands.planDropPlayerAtCameraNoReset(player)`
 
-Calcule un plan de dépôt du véhicule à la position de la caméra sans le réinitialiser (la déformation est conservée).
+Computes a plan for dropping the vehicle at the camera position without resetting it (the deformation is kept).
 
-- `player` (*integer|nil*) : indice du joueur
-- **renvoie** : table|nil plan {vid, nodeId, clusterId, x, y, z, rx, ry, rz, rw, origin*}, ou nil si pas de véhicule
+- `player` (*integer|nil*) : player index
+- **returns**: table|nil plan {vid, nodeId, clusterId, x, y, z, rx, ry, rz, rw, origin*}, or nil if no vehicle
 
 #### `commands.resetDropPlayerAtCameraNoResetCamera(player)`
 
-Repasse en caméra de jeu (bigMap devient orbit) et réinitialise la caméra du joueur ; étape finale du dépôt sans reset.
+Switches back to the game camera (bigMap becomes orbit) and resets the player's camera; final step of the drop without reset.
 
-- `player` (*integer|nil*) : indice du joueur
+- `player` (*integer|nil*) : player index
 
 #### `commands.setCameraFree(player)`
 
-Alias de compatibilité de setFreeCamera. Appelée par le C++.
+Compatibility alias of setFreeCamera. Called by the C++.
 
-- `player` (*integer|nil*) : indice du joueur
+- `player` (*integer|nil*) : player index
 
 #### `commands.setCameraPlayer(player)`
 
-Alias de compatibilité de setGameCamera.
+Compatibility alias of setGameCamera.
 
-- `player` (*integer|nil*) : indice du joueur
+- `player` (*integer|nil*) : player index
 
 #### `commands.setFreeCamera(player)`
 
-Active la caméra libre (initialisée à la transformée actuelle de la vue), la réinitialise et émet onCameraToggled (FreeCam) pour la vue principale. Appelée par le C++.
+Activates the free camera (initialized to the view's current transform), resets it and emits onCameraToggled (FreeCam) for the main view. Called by the C++.
 
-- `player` (*integer|nil*) : indice du joueur
+- `player` (*integer|nil*) : player index
 
 #### `commands.setFreeCameraTransformJson(json)`
 
-Active la caméra libre puis lui applique la transformée décrite par une chaîne JSON de 7 nombres (x, y, z, qx, qy, qz, qw). Ignore silencieusement un JSON invalide ou incomplet.
+Activates the free camera then applies to it the transform described by a JSON string of 7 numbers (x, y, z, qx, qy, qz, qw). Silently ignores invalid or incomplete JSON.
 
-- `json` (*string*) : chaîne produite par getCameraTransformJson
+- `json` (*string*) : string produced by getCameraTransformJson
 
 #### `commands.setGameCamera(player)`
 
-Repasse en caméra de jeu pour la vue du joueur ; émet onCameraToggled (GameCam) pour la vue principale. Alias : setCameraPlayer.
+Switches back to the game camera for the player's view; emits onCameraToggled (GameCam) for the main view. Alias: setCameraPlayer.
 
-- `player` (*integer|nil*) : indice du joueur
+- `player` (*integer|nil*) : player index
 
 #### `commands.toggleCamera(player)`
 
-Bascule la caméra : en écran partagé, bascule la caméra libre de la vue du joueur ; sinon passe au groupe de caméras suivant (core_camera.cycleCameraGroup, Maj+C).
+Toggles the camera: in split screen, toggles the free camera of the player's view; otherwise moves to the next camera group (core_camera.cycleCameraGroup, Shift+C).
 
-- `player` (*integer|nil*) : indice du joueur (0 par défaut)
+- `player` (*integer|nil*) : player index (0 by default)
 
 #### `commands.toggleFastSpeed(enabled)`
 
-Active ou coupe le modificateur de vitesse rapide de la caméra libre (typiquement la touche Maj).
+Enables or disables the free camera's fast speed modifier (typically the Shift key).
 
-- `enabled` (*boolean*) : vrai pour accélérer
+- `enabled` (*boolean*) : true to speed up
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `getGame` | any | Rétrocompatibilité ; vaut nil si la globale getGame n'existe pas. |
-| `onSettingsChanged` | any | Exporté depuis une variable non définie dans ce fichier : vaut nil (voir notes). |
+| `getGame` | any | Backward compatibility; is nil if the global getGame does not exist. |
+| `onSettingsChanged` | any | Exported from a variable not defined in this file: is nil (see notes). |
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `getCameraForward()` | (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getForward. | 222 |
-| `getCameraFov()` | (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getFovDeg (retourne des degrés). | 226 |
-| `getCameraFovDeg()` | (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getFovDeg. | 224 |
-| `getCameraFovRad()` | (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getFovRad. | 225 |
-| `getCameraPosition()` | (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getPosition. | 219 |
-| `getCameraQuat()` | (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getQuat. | 223 |
-| `getCameraRight()` | (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getRight. | 221 |
-| `getCameraUp()` | (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getUp. | 220 |
-| `setCameraFov(fovDeg)` | (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.setFOV. Règle le FOV en degrés si la caméra libre est active. | 213 |
-| `setCameraFovDeg(fovDeg)` | (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.setFOV. Règle le champ de vision (degrés) si la caméra libre est active. | 197 |
-| `setCameraFovRad(fovRad)` | (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.setFOV. Règle le FOV (radians, converti en degrés) si la caméra libre est active. | 207 |
-| `setCameraPosRot(px, py, pz, rx, ry, rz, rw)` | (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.setPosRot. Applique position et quaternion à la caméra du joueur 0. | 192 |
+| `getCameraForward()` | (Global function, not in M.) Deprecated: use core_camera.getForward. | 222 |
+| `getCameraFov()` | (Global function, not in M.) Deprecated: use core_camera.getFovDeg (returns degrees). | 226 |
+| `getCameraFovDeg()` | (Global function, not in M.) Deprecated: use core_camera.getFovDeg. | 224 |
+| `getCameraFovRad()` | (Global function, not in M.) Deprecated: use core_camera.getFovRad. | 225 |
+| `getCameraPosition()` | (Global function, not in M.) Deprecated: use core_camera.getPosition. | 219 |
+| `getCameraQuat()` | (Global function, not in M.) Deprecated: use core_camera.getQuat. | 223 |
+| `getCameraRight()` | (Global function, not in M.) Deprecated: use core_camera.getRight. | 221 |
+| `getCameraUp()` | (Global function, not in M.) Deprecated: use core_camera.getUp. | 220 |
+| `setCameraFov(fovDeg)` | (Global function, not in M.) Deprecated: use core_camera.setFOV. Sets the FOV in degrees if the free camera is active. | 213 |
+| `setCameraFovDeg(fovDeg)` | (Global function, not in M.) Deprecated: use core_camera.setFOV. Sets the field of view (degrees) if the free camera is active. | 197 |
+| `setCameraFovRad(fovRad)` | (Global function, not in M.) Deprecated: use core_camera.setFOV. Sets the FOV (radians, converted to degrees) if the free camera is active. | 207 |
+| `setCameraPosRot(px, py, pz, rx, ry, rz, rw)` | (Global function, not in M.) Deprecated: use core_camera.setPosRot. Applies position and quaternion to player 0's camera. | 192 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onCameraHandlerSet`
-- `onCameraToggled` — écouté par 1 module(s)
-- `onNodegrab` — écouté par 1 module(s)
+- `onCameraToggled` — listened to by 1 module(s)
+- `onNodegrab` — listened to by 1 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/server/commands.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/server/commands.lua`.*

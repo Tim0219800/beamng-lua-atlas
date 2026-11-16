@@ -1,0 +1,112 @@
+{
+  "path": "lua/ge/extensions/mcp/tools/editor.lua",
+  "module": "Outils MCP pour le World Editor : activer/désactiver, état, sélection, annuler/rétablir, modes d'édition, ouvrir/sauvegarder un niveau, lister les classes, créer des objets et modifier leur transformation, avec historique d'annulation. Charge editor_main à la demande.",
+  "notes": [
+    "La plupart des outils exigent que l'éditeur soit actif (set_editor_active active=true, asynchrone sur quelques frames ; vérifier avec editor_status), sinon ils renvoient une erreur explicite.",
+    "editor_load_level force ensuite editor.active=false : le code explique qu'openLevel met editor.active=true avant le démarrage de la mission, ce qui ferait ignorer le chemin d'activation F11 ; le remettre à false permet de relancer l'activation complète.",
+    "create_editor_object et set_editor_transform passent par editor.history (annulables) et marquent l'éditeur « dirty » ; create_editor_object sélectionne le nouvel objet. Par défaut : classe TSStatic, forme no_mesh.dae, collisionType et decalType 'Collision Mesh', position à 10 m devant la caméra, parent = parent sélectionné ou MissionGroup.",
+    "Rotation de set_editor_transform : euler {x,y,z} en degrés ou quaternion rot {x,y,z,w} (rot prime) ; scale nombre uniforme ou {x,y,z}. Seules les composantes fournies changent.",
+    "editor_save_level écrit le niveau sur disque ; à utiliser avec précaution."
+  ],
+  "fields": {
+    "schemas": {"type": "table<string, table>", "desc": "Schémas des outils d'éditeur."}
+  },
+  "functions": {
+    "editor_status": {
+      "desc": "État de l'éditeur : active, initialized, dirty, levelName, levelPath, editMode, selectionCount, undoCount, redoCount, headless.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "JSON."}, {"type": "boolean", "desc": "true si editor_main ne charge pas."}],
+      "internal": false
+    },
+    "set_editor_active": {
+      "desc": "Active ou désactive le World Editor (editor.setEditorActive).",
+      "params": {"args": {"type": "table", "desc": "{active: boolean, safeMode?: boolean}"}},
+      "returns": [{"type": "string", "desc": "« editor activating/deactivating »."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "get_editor_selection": {
+      "desc": "Objets actuellement sélectionnés.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "JSON {count, objects:[{id, name, class}]}."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "select_editor_objects": {
+      "desc": "Sélectionne des objets par id, ids[] ou name.",
+      "params": {"args": {"type": "table", "desc": "{id?, ids?: integer[], name?: string, mode?: 'new'|'add'|'remove'|'toggle' (défaut new)}"}},
+      "returns": [{"type": "string", "desc": "JSON {count, ids}."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "clear_editor_selection": {
+      "desc": "Vide la sélection.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "delete_editor_selection": {
+      "desc": "Supprime les objets sélectionnés (annulable).",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true si rien n'est sélectionné ou erreur."}],
+      "internal": false
+    },
+    "editor_undo": {
+      "desc": "Annule des étapes de l'historique.",
+      "params": {"args": {"type": "table|nil", "desc": "{steps?: integer (défaut 1)}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "editor_redo": {
+      "desc": "Rétablit des étapes de l'historique.",
+      "params": {"args": {"type": "table|nil", "desc": "{steps?: integer (défaut 1)}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "list_edit_modes": {
+      "desc": "Liste les modes d'édition enregistrés et le mode courant.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "JSON {current, modes}."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "set_edit_mode": {
+      "desc": "Change de mode d'édition par nom (editor.selectEditMode).",
+      "params": {"args": {"type": "table", "desc": "{name: string} (de list_edit_modes)."}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "fit_view_to_selection": {
+      "desc": "Cadre la caméra de l'éditeur sur la sélection (fitViewToSelectionSmooth ou fitViewToSelection).",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true si rien n'est sélectionné ou erreur."}],
+      "internal": false
+    },
+    "editor_load_level": {
+      "desc": "Ouvre un niveau dans l'éditeur (editor.openLevel, perd les modifications non sauvegardées, asynchrone). Ajoute un '/' final à un dossier.",
+      "params": {"args": {"type": "table", "desc": "{name?: string, path?: string}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "editor_save_level": {
+      "desc": "Sauvegarde le niveau courant (editor.saveLevel).",
+      "params": {},
+      "returns": [{"type": "string", "desc": "« saved level: … »."}, {"type": "boolean", "desc": "true si aucun chemin de niveau."}],
+      "internal": false
+    },
+    "list_editor_classes": {
+      "desc": "Liste (500 max, triée) les classes dérivées de SimObject via Sim.getSimObjectDerivedClassNames.",
+      "params": {"args": {"type": "table|nil", "desc": "{pattern?: string} sous-chaîne insensible à la casse."}},
+      "returns": [{"type": "string", "desc": "JSON {count, classes}."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "create_editor_object": {
+      "desc": "Crée un objet de scène (worldEditorCppApi.createObject), configure champs, nom, position, échelle, yaw, l'ajoute au parent et enregistre une action d'historique CreateObject.",
+      "params": {"args": {"type": "table|nil", "desc": "{class?|classname?: string, shape?|shapeName?: string, name?: string, pos?: {x,y,z}, scale?: number|{x,y,z}, yaw?: number°, parent?: string, parentId?: integer, fields?: table, field?: string, value?: any, index?: string, collisionType?: string, decalType?: string}"}},
+      "returns": [{"type": "string", "desc": "JSON {id, name, class, parentId, shapeName?}."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "set_editor_transform": {
+      "desc": "Applique position/rotation/échelle à des objets en une transaction d'historique annulable.",
+      "params": {"args": {"type": "table", "desc": "{items?: {id|name, pos?, euler?|rot?, scale?}[], id?, ids?, name?, pos?, euler?, rot?, rotation?, scale?}. Sans cible, utilise la sélection."}},
+      "returns": [{"type": "string", "desc": "JSON {count, ids}."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    }
+  }
+}

@@ -1,77 +1,77 @@
 # `editor_toolUtilities_bake`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/bake.lua` · VM : Game Engine (GE) · 196 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/bake.lua` · VM: Game Engine (GE) · 196 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_bake` : `extensions.load("editor_toolUtilities_bake")`, puis la globale `editor_toolUtilities_bake`
+**Access:** extension `editor_toolUtilities_bake`: `extensions.load("editor_toolUtilities_bake")`, then the global `editor_toolUtilities_bake`
 
-Aide partagée « Bake » des outils de splines de l'éditeur. Tant qu'une spline appartient à son outil, ses objets générés (TSStatic, DecalRoad, rivière) sont transitoires (canSave=false). Bake les valide dans le niveau : passe objets et dossier SimGroup en canSave=true et retire la spline de l'outil sans rien supprimer. Tout est piloté par une table `spec` fournie par l'outil (toolId, displayName, getBakeTarget, rebuildNow, burn, detach, finalizeFolder, removeFromTool, captureState, restoreState, findSpline, optionnellement iconColor/iconSize/bakeIcon/canBake/rowIconSize). L'opération est une seule transaction d'historique annulable, sans dialogue.
+Shared 'Bake' helper of the editor's spline tools. As long as a spline belongs to its tool, its generated objects (TSStatic, DecalRoad, river) are transient (canSave=false). Bake commits them to the level: sets objects and SimGroup folder to canSave=true and removes the spline from the tool without deleting anything. Everything is driven by a `spec` table provided by the tool (toolId, displayName, getBakeTarget, rebuildNow, burn, detach, finalizeFolder, removeFromTool, captureState, restoreState, findSpline, optionally iconColor/iconSize/bakeIcon/canBake/rowIconSize). The operation is a single undoable history transaction, without a dialog.
 
-## Remarques
+## Notes
 
-- Mode LOCK : si spec.setLockedById existe, le bouton ne supprime rien : il verrouille la spline (isEnabled=false), ses objets sont sauvegardés avec le niveau et collisionnent ; elle reste dans l'outil et peut être déverrouillée (annulable).
-- Règle de bakeabilité par défaut : spline activée, non liée (isLink), avec au moins 2 nœuds ; surchargeable par spec.canBake.
-- rowButton : après un clic (retour true), l'appelant doit faire editor.endWindow() puis return, car la liste d'items de l'outil a été modifiée en cours d'itération.
-- renderButton appelle im.NextColumn() ; renderButtonInline ne gère aucune colonne.
+- LOCK mode: if spec.setLockedById exists, the button deletes nothing: it locks the spline (isEnabled=false), its objects are saved with the level and collide; it stays in the tool and can be unlocked (undoable).
+- Default bakeability rule: spline enabled, not linked (isLink), with at least 2 nodes; can be overridden by spec.canBake.
+- rowButton: after a click (returns true), the caller must call editor.endWindow() then return, because the tool's item list was modified during iteration.
+- renderButton calls im.NextColumn(); renderButtonInline does not handle any column.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_bake.burnById(spec, id)` | Propagation Master-Spline : bake la spline d'id donné (typiquement un enfant lié) sans ouvrir sa propre transaction d'historique ; le Master Spline englobe tout dans une action. | 166 |
-| `editor_toolUtilities_bake.renderButton(spec)` | Variante colonne : dessine le bouton Bake comme une cellule de colonne (l'appelant doit augmenter son im.Columns de 1). S'il n'y a pas de spline bakeable sélectionnée, la cellule est un Dummy vide. | 142 |
-| `editor_toolUtilities_bake.renderButtonInline(spec)` | Variante en ligne : dessine le bouton Bake (ou un Dummy) sans gestion de colonnes ; l'appelant fait son propre im.SameLine() avant. | 151 |
-| `editor_toolUtilities_bake.rowButton(spec, spline)` | Variante ligne : bouton Bake pour la spline d'une ligne de liste (petite icône), ou Dummy si elle n'est pas bakeable. Un clic bake immédiatement et renvoie true. | 178 |
-| `editor_toolUtilities_bake.setLocked(spec, spline, isLocked)` | Verrouille/déverrouille `spline` en une transaction d'historique annulable. Utilisé par le bouton flamme et le basculeur de verrou de l'outil. | 114 |
-| `editor_toolUtilities_bake.unburn(data)` | Reprend un bake : supprime les objets brûlés et les items de forêt plantés, recharge la collision et remet le dossier en transitoire (cansave=false). | 72 |
+| `editor_toolUtilities_bake.burnById(spec, id)` | Master-Spline propagation: bakes the spline with the given id (typically a linked child) without opening its own history transaction; the Master Spline wraps everything in one action. | 166 |
+| `editor_toolUtilities_bake.renderButton(spec)` | Column variant: draws the Bake button as a column cell (the caller must increase its im.Columns by 1). If there is no bakeable spline selected, the cell is an empty Dummy. | 142 |
+| `editor_toolUtilities_bake.renderButtonInline(spec)` | Inline variant: draws the Bake button (or a Dummy) without column handling; the caller does its own im.SameLine() beforehand. | 151 |
+| `editor_toolUtilities_bake.rowButton(spec, spline)` | Row variant: Bake button for the spline of a list row (small icon), or Dummy if it is not bakeable. A click bakes immediately and returns true. | 178 |
+| `editor_toolUtilities_bake.setLocked(spec, spline, isLocked)` | Locks/unlocks `spline` in one undoable history transaction. Used by the flame button and the tool's lock toggle. | 114 |
+| `editor_toolUtilities_bake.unburn(data)` | Resumes a bake: deletes the burned objects and the planted forest items, reloads the collision and sets the folder back to transient (cansave=false). | 72 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_bake.burnById(spec, id)`
 
-Propagation Master-Spline : bake la spline d'id donné (typiquement un enfant lié) sans ouvrir sa propre transaction d'historique ; le Master Spline englobe tout dans une action.
+Master-Spline propagation: bakes the spline with the given id (typically a linked child) without opening its own history transaction; the Master Spline wraps everything in one action.
 
-- `spec` (*table*) : Table de configuration (doit avoir findSpline).
-- `id` (*any*) : Id de la spline.
-- **renvoie** : table|nil { manifest, items, folderId } pour permettre l'annulation, ou nil si l'id est introuvable.
+- `spec` (*table*) : Configuration table (must have findSpline).
+- `id` (*any*) : Spline id.
+- **returns**: table|nil { manifest, items, folderId } to allow undo, or nil if the id is not found.
 
 #### `editor_toolUtilities_bake.renderButton(spec)`
 
-Variante colonne : dessine le bouton Bake comme une cellule de colonne (l'appelant doit augmenter son im.Columns de 1). S'il n'y a pas de spline bakeable sélectionnée, la cellule est un Dummy vide.
+Column variant: draws the Bake button as a column cell (the caller must increase its im.Columns by 1). If there is no bakeable spline selected, the cell is an empty Dummy.
 
-- `spec` (*table*) : Table de configuration de l'outil (voir module).
+- `spec` (*table*) : Tool configuration table (see module).
 
 #### `editor_toolUtilities_bake.renderButtonInline(spec)`
 
-Variante en ligne : dessine le bouton Bake (ou un Dummy) sans gestion de colonnes ; l'appelant fait son propre im.SameLine() avant.
+Inline variant: draws the Bake button (or a Dummy) without column handling; the caller does its own im.SameLine() beforehand.
 
-- `spec` (*table*) : Table de configuration de l'outil.
+- `spec` (*table*) : Tool configuration table.
 
 #### `editor_toolUtilities_bake.rowButton(spec, spline)`
 
-Variante ligne : bouton Bake pour la spline d'une ligne de liste (petite icône), ou Dummy si elle n'est pas bakeable. Un clic bake immédiatement et renvoie true.
+Row variant: Bake button for the spline of a list row (small icon), or Dummy if it is not bakeable. A click bakes immediately and returns true.
 
-- `spec` (*table*) : Table de configuration de l'outil.
-- `spline` (*table*) : Spline de la ligne.
-- **renvoie** : boolean true si un bake a eu lieu (l'appelant doit terminer sa fenêtre). Toujours false en mode LOCK.
+- `spec` (*table*) : Tool configuration table.
+- `spline` (*table*) : Spline of the row.
+- **returns**: boolean true if a bake occurred (the caller must end its window). Always false in LOCK mode.
 
 #### `editor_toolUtilities_bake.setLocked(spec, spline, isLocked)`
 
-Verrouille/déverrouille `spline` en une transaction d'historique annulable. Utilisé par le bouton flamme et le basculeur de verrou de l'outil.
+Locks/unlocks `spline` in one undoable history transaction. Used by the flame button and the tool's lock toggle.
 
-- `spec` (*table*) : Table de configuration (doit avoir setLockedById).
-- `spline` (*table*) : Spline (utilise spline.id).
-- `isLocked` (*boolean*) : true pour verrouiller, false pour déverrouiller.
+- `spec` (*table*) : Configuration table (must have setLockedById).
+- `spline` (*table*) : Spline (uses spline.id).
+- `isLocked` (*boolean*) : true to lock, false to unlock.
 
 #### `editor_toolUtilities_bake.unburn(data)`
 
-Reprend un bake : supprime les objets brûlés et les items de forêt plantés, recharge la collision et remet le dossier en transitoire (cansave=false).
+Resumes a bake: deletes the burned objects and the planted forest items, reloads the collision and sets the folder back to transient (cansave=false).
 
-- `data` (*table*) : Enregistrement de doBake/burnById (manifest, items, folderId).
+- `data` (*table*) : Record from doBake/burnById (manifest, items, folderId).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `reloadCollision`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/bake.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/bake.lua`.*

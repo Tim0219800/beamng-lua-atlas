@@ -1,29 +1,54 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/loop/uiColors.lua",
-  "module": "Palette de couleurs d'interface pour le rallye : une couleur de thème pour la boucle (loop) et une pour la spéciale (stage), avec une variante en mode NGRC. Les fonctions écrivent la couleur dans le champ theme d'une table cible (données envoyées à l'UI). Une couleur de thème globale peut surcharger toutes les autres.",
+  "module": "UI color palette for the rally: one theme color for the loop and one for the stage, with an NGRC mode variant. The functions write the color into the theme field of a target table (data sent to the UI). A global theme color can override all the others.",
   "usage": "local data = {}\ngameplay_rally_loop_uiColors.updateForStage(data, false)\n-- data.theme == '#1f8fff'",
   "notes": [
-    "Couleurs : loop #009a1a, loopNgrc #00B890, stage #1f8fff, stageNgrc #1998b8.",
-    "Le override est normalisé : espaces retirés, # ajouté si absent, format #RRGGBB exigé ; sinon il vaut nil (donc désactivé)."
+    "Colors: loop #009a1a, loopNgrc #00B890, stage #1f8fff, stageNgrc #1998b8.",
+    "The override is normalized: spaces removed, # added if absent, #RRGGBB format required; otherwise it is nil (thus disabled)."
   ],
   "functions": {
     "setThemeOverride": {
-      "desc": "Définit (ou efface avec nil / valeur invalide) une couleur de thème qui remplace les couleurs par défaut.",
-      "params": {"hexOrNil": {"type": "string|nil", "desc": "Couleur hexadécimale, avec ou sans '#', 6 chiffres."}}
-    },
-    "getThemeOverride": {"desc": "Renvoie l'override normalisé courant.", "returns": [{"type": "string|nil", "desc": "Couleur '#RRGGBB' ou nil."}]},
-    "updateForLoop": {
-      "desc": "Écrit target.theme avec la couleur de la boucle (ou de l'override s'il existe). Ne fait rien si target est nil.",
+      "desc": "Sets (or clears with nil / invalid value) a theme color that replaces the default colors.",
       "params": {
-        "target": {"type": "table|nil", "desc": "Table à modifier."},
-        "isNgrcMode": {"type": "boolean", "desc": "true pour la variante NGRC."}
+        "hexOrNil": {
+          "type": "string|nil",
+          "desc": "Hexadecimal color, with or without '#', 6 digits."
+        }
+      }
+    },
+    "getThemeOverride": {
+      "desc": "Returns the current normalized override.",
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "'#RRGGBB' color or nil."
+        }
+      ]
+    },
+    "updateForLoop": {
+      "desc": "Writes target.theme with the loop color (or the override if it exists). Does nothing if target is nil.",
+      "params": {
+        "target": {
+          "type": "table|nil",
+          "desc": "Table to modify."
+        },
+        "isNgrcMode": {
+          "type": "boolean",
+          "desc": "true for the NGRC variant."
+        }
       }
     },
     "updateForStage": {
-      "desc": "Idem pour la couleur de spéciale.",
+      "desc": "Same for the stage color.",
       "params": {
-        "target": {"type": "table|nil", "desc": "Table à modifier."},
-        "isNgrcMode": {"type": "boolean", "desc": "true pour la variante NGRC."}
+        "target": {
+          "type": "table|nil",
+          "desc": "Table to modify."
+        },
+        "isNgrcMode": {
+          "type": "boolean",
+          "desc": "true for the NGRC variant."
+        }
       }
     }
   }

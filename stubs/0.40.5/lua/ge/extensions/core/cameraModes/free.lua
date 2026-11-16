@@ -2,94 +2,94 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/cameraModes/free.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Mode caméra libre. Champs : pos (vec3), rot (vec3 radians), velocity, angularVelocity, planarVelocity, manualzoom, smoothed, newtonTranslation, newtonRotation, planarTranslation (et planarTranslationScale/Drag/Response/SpeedMultiplier pour le mode planaire), group = 'world', groupOrder.
+--- Free camera mode. Fields: pos (vec3), rot (vec3 radians), velocity, angularVelocity, planarVelocity, manualzoom, smoothed, newtonTranslation, newtonRotation, planarTranslation (and planarTranslationScale/Drag/Response/SpeedMultiplier for the planar mode), group = 'world', groupOrder.
 ---@class core_cameraModes_free
 local core_cameraModes_free = {}
 
---- Annule la vitesse angulaire.
----Source : lua/ge/extensions/core/cameraModes/free.lua:122
+--- Cancels the angular velocity.
+---Source: lua/ge/extensions/core/cameraModes/free.lua:122
 function core_cameraModes_free:clearAngularMotion() end
 
---- Annule les vitesses de translation, planaire et angulaire.
----Source : lua/ge/extensions/core/cameraModes/free.lua:116
+--- Cancels the translation, planar and angular velocities.
+---Source: lua/ge/extensions/core/cameraModes/free.lua:116
 function core_cameraModes_free:clearMotion() end
 
---- Annule l'entrée planaire externe.
----Source : lua/ge/extensions/core/cameraModes/free.lua:135
+--- Cancels the external planar input.
+---Source: lua/ge/extensions/core/cameraModes/free.lua:135
 function core_cameraModes_free:clearPlanarTranslationInput() end
 
---- Annule la vitesse planaire et l'entrée planaire externe.
----Source : lua/ge/extensions/core/cameraModes/free.lua:140
+--- Cancels the planar velocity and the external planar input.
+---Source: lua/ge/extensions/core/cameraModes/free.lua:140
 function core_cameraModes_free:clearPlanarTranslationMotion() end
 
---- Définit les valeurs par défaut (isGlobal, group, hidden, canUseVehicleTriggerCrosshair, physique non lissée) puis reset.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/free.lua:50
+--- Sets the default values (isGlobal, group, hidden, canUseVehicleTriggerCrosshair, non-smoothed physics) then reset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/free.lua:50
 function core_cameraModes_free:init() end
 
---- Réglages exposés à l'UI de contrôle caméra / flux vidéo : speed (2-100 m/s, lu via core_camera.getSpeed), smooth, newtonRot, newtonTrans, fov (10-140).
----Source : lua/ge/extensions/core/cameraModes/free.lua:92
----@param ctxId any identifiant du contexte de vue (déduit du code)
----@return table[]  descripteurs de paramètres
+--- Settings exposed to the camera control UI / video stream: speed (2-100 m/s, read via core_camera.getSpeed), smooth, newtonRot, newtonTrans, fov (10-140).
+---Source: lua/ge/extensions/core/cameraModes/free.lua:92
+---@param ctxId any view context identifier (inferred from code)
+---@return table[]  parameter descriptors
 function core_cameraModes_free:listParams(ctxId) end
 
---- Hook : au gain de focus, appelle reset.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/free.lua:145
----@param focused boolean vrai si le mode prend le focus
+--- Hook: on focus gain, calls reset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/free.lua:145
+---@param focused boolean true if the mode takes focus
 function core_cameraModes_free:onCameraChanged(focused) end
 
---- Annule vitesses et roulis, recrée le zoom manuel à 65 degrés.
----Source : lua/ge/extensions/core/cameraModes/free.lua:21
+--- Cancels velocities and roll, recreates the manual zoom at 65 degrees.
+---Source: lua/ge/extensions/core/cameraModes/free.lua:21
 function core_cameraModes_free:reset() end
 
---- Réinitialise le zoom manuel avec ce FOV.
----Source : lua/ge/extensions/core/cameraModes/free.lua:77
----@param fovDeg number degrés
+--- Resets the manual zoom with this FOV.
+---Source: lua/ge/extensions/core/cameraModes/free.lua:77
+---@param fovDeg number degrees
 function core_cameraModes_free:setFOV(fovDeg) end
 
---- Active la rotation avec inertie.
----Source : lua/ge/extensions/core/cameraModes/free.lua:81
----@param enabled boolean activer
+--- Enables rotation with inertia.
+---Source: lua/ge/extensions/core/cameraModes/free.lua:81
+---@param enabled boolean enable
 function core_cameraModes_free:setNewtonRotation(enabled) end
 
---- Active la translation avec inertie.
----Source : lua/ge/extensions/core/cameraModes/free.lua:85
----@param enabled boolean activer
+--- Enables translation with inertia.
+---Source: lua/ge/extensions/core/cameraModes/free.lua:85
+---@param enabled boolean enable
 function core_cameraModes_free:setNewtonTranslation(enabled) end
 
---- Modifie un réglage de listParams (speed passe par core_camera.setSpeed).
----Source : lua/ge/extensions/core/cameraModes/free.lua:102
+--- Changes a listParams setting (speed goes through core_camera.setSpeed).
+---Source: lua/ge/extensions/core/cameraModes/free.lua:102
 ---@param key string speed, smooth, fov, newtonRot, newtonTrans
----@param value any nouvelle valeur
----@param ctxId any contexte de vue
+---@param value any new value
+---@param ctxId any view context
 function core_cameraModes_free:setParam(key, value, ctxId) end
 
---- Fournit une vitesse planaire externe (par exemple depuis un gamepad) pour l'image ; effacée après chaque update.
----Source : lua/ge/extensions/core/cameraModes/free.lua:126
----@param velocity vec3|nil vitesse monde
----@param active boolean vrai pour l'appliquer (sinon remise à zéro)
+--- Provides an external planar velocity (for example from a gamepad) for the frame; cleared after each update.
+---Source: lua/ge/extensions/core/cameraModes/free.lua:126
+---@param velocity vec3|nil world velocity
+---@param active boolean true to apply it (otherwise reset to zero)
 function core_cameraModes_free:setPlanarTranslationInput(velocity, active) end
 
---- Fixe la position de la caméra (la table est conservée par référence).
----Source : lua/ge/extensions/core/cameraModes/free.lua:73
----@param position vec3 position monde
+--- Sets the camera position (the table is kept by reference).
+---Source: lua/ge/extensions/core/cameraModes/free.lua:73
+---@param position vec3 world position
 function core_cameraModes_free:setPosition(position) end
 
---- Fixe l'orientation depuis un quaternion.
----Source : lua/ge/extensions/core/cameraModes/free.lua:110
----@param rotation quat orientation monde
+--- Sets the orientation from a quaternion.
+---Source: lua/ge/extensions/core/cameraModes/free.lua:110
+---@param rotation quat world orientation
 function core_cameraModes_free:setRotation(rotation) end
 
---- Choisit le jeu de paramètres de physique (lissé ou non lissé).
----Source : lua/ge/extensions/core/cameraModes/free.lua:32
----@param smoothed boolean vrai pour le mode cinématique lissé
+--- Chooses the physics parameter set (smoothed or non-smoothed).
+---Source: lua/ge/extensions/core/cameraModes/free.lua:32
+---@param smoothed boolean true for the smoothed cinematic mode
 function core_cameraModes_free:setSmoothedCam(smoothed) end
 
---- Intègre rotation et translation à partir de MoveManager et écrit data.res.pos / rot, puis applique le zoom.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/free.lua:237
----@param data table camData (data.speed, data.fastSpeedModifier lus)
+--- Integrates rotation and translation from MoveManager and writes data.res.pos / rot, then applies the zoom.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/free.lua:237
+---@param data table camData (data.speed, data.fastSpeedModifier read)
 ---@return boolean  true
 function core_cameraModes_free:update(data) end
 

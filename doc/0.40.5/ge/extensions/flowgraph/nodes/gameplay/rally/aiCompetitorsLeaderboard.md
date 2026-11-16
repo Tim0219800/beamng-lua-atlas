@@ -1,23 +1,23 @@
 # `flowgraph_nodes_gameplay_rally_aiCompetitorsLeaderboard`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/aiCompetitorsLeaderboard.lua` · VM : Game Engine (GE) · 92 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/aiCompetitorsLeaderboard.lua` · VM: Game Engine (GE) · 92 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/aiCompetitorsLeaderboard")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/aiCompetitorsLeaderboard")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally AI Competitors Leaderboard » (catégorie once_instant, tag rally). Simule les temps de spéciale de concurrents IA à partir de la config aiCompetitors (module gameplay/rally/aiCompetitors) et produit un classement pour l'écran de fin dans la pin leaderboard ({rows, playerRowIndex} ; multiStage et stageCount si plusieurs spéciales). Entrées : playerTime, silverTime (repli ancien), playerTimes et silverTimes (tables, un temps par spéciale, de même longueur), stageLabels (libellés), playerTotalTimeSec (total officiel de la boucle rally, utilisé pour classer le joueur). Exécuté une seule fois (workOnce).
+Flowgraph node "Rally AI Competitors Leaderboard" (category once_instant, tag rally). Simulates the stage times of AI competitors from the aiCompetitors config (module gameplay/rally/aiCompetitors) and produces a ranking for the end screen in the leaderboard pin ({rows, playerRowIndex}; multiStage and stageCount if several stages). Inputs: playerTime, silverTime (old fallback), playerTimes and silverTimes (tables, one time per stage, of the same length), stageLabels (labels), playerTotalTimeSec (official total of the rally loop, used to rank the player). Executed only once (workOnce).
 
-## Remarques
+## Notes
 
-- En mode multi-spéciales, si les libellés ne sont ni fournis ni récupérables via gameplay_rallyLoop.getManager():getStageLabels(), une erreur est loggée et le classement est vide ({rows = {}}).
-- En mode simple, le temps de référence vient d'aiCompetitors.getReferenceTime(missionTypeData), sinon de la pin silverTime.
+- In multi-stage mode, if the labels are neither provided nor retrievable via gameplay_rallyLoop.getManager():getStageLabels(), an error is logged and the ranking is empty ({rows = {}}).
+- In single mode, the reference time comes from aiCompetitors.getReferenceTime(missionTypeData), otherwise from the silverTime pin.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Calcule le classement via aiCompetitors.computeLeaderboard et l'écrit dans la pin leaderboard. | 64 |
+| `C:workOnce()` | Computes the ranking via aiCompetitors.computeLeaderboard and writes it to the leaderboard pin. | 64 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/aiCompetitorsLeaderboard.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/aiCompetitorsLeaderboard.lua`.*

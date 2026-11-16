@@ -1,12 +1,12 @@
 # `utils_pixellib`
 
-*Fichier : `lua/common/utils/pixellib.lua` · VM : Commun (GE + véhicule) · 566 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/utils/pixellib.lua` · VM: Common (GE + vehicle) · 566 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("utils/pixellib")`
+**Access:** `require("utils/pixellib")`
 
-Petite bibliothèque de dessin de pixels en mémoire (tampon RGBA 8 bits via FFI) : points, lignes, cercles, rectangles, icônes et texte en police bitmap 'mini_font' (majuscules, chiffres et quelques signes). Le tampon s'enregistre en image (GBitmap:saveFile). Se charge avec require('utils/pixellib') ; M.create() renvoie un objet LuaPixelBuffer. Utile pour générer des images de debug (cartes, graphiques) sans UI. Voir M.test() pour un exemple complet.
+Small in-memory pixel drawing library (8-bit RGBA buffer via FFI): points, lines, circles, rectangles, icons and text in the 'mini_font' bitmap font (capitals, digits and a few signs). The buffer is saved as an image (GBitmap:saveFile). Loaded with require('utils/pixellib'); M.create() returns a LuaPixelBuffer object. Useful to generate debug images (maps, graphs) without UI. See M.test() for a complete example.
 
-## Exemple
+## Example
 
 ```lua
 local pb = require('utils/pixellib').create()
@@ -17,52 +17,52 @@ pb:drawText(vec3(10,200,0), 'Hello', ColorI(0,0,0,255))
 pb:saveFile('test.png')
 ```
 
-## Remarques
+## Notes
 
-- Les positions de dessin (pos, p1, pos1…) sont des vec3 dont seuls x et y servent (z ignoré). Les couleurs sont des tables/objets avec champs r, g, b, a entiers 0..255 (ex. ColorI(255,0,0,255)).
-- Les coordonnées sont en pixels ; l'origine (0,0) est en haut à gauche ; les pixels hors du tampon sont ignorés (drawPixel) ; la mémoire du tampon est indexée y*width + x.
-- drawText met le texte en majuscules et ne gère que les caractères de mini_font (A-Z, 0-9, ! ? ' " . , : - _ et espace) ; la position pos.y est le BAS de la ligne de texte (le texte monte au-dessus).
-- Incohérence : getPixel ne fait pas math.floor sur x et y (contrairement à drawPixel) ; avec des coordonnées non entières l'index FFI peut être faux.
-- Incohérence : LuaPixelBuffer:init alloue width*height sans arrondir (math.floor n'est appliqué qu'aux champs width/height), ce qui peut sous-dimensionner le tampon avec des dimensions décimales.
-- drawText : pour une espace, x avance de 4 puis ne trouvant pas la lettre dans mini_font il n'y a pas d'avance supplémentaire ; le décompte consumedWidth ne compte que les caractères dessinés.
-- Les fonctions M.test() écrivent 'helloworld.png' dans le répertoire courant.
+- Drawing positions (pos, p1, pos1…) are vec3 of which only x and y are used (z ignored). Colors are tables/objects with integer fields r, g, b, a 0..255 (e.g. ColorI(255,0,0,255)).
+- Coordinates are in pixels; the origin (0,0) is at the top left; pixels outside the buffer are ignored (drawPixel); the buffer memory is indexed y*width + x.
+- drawText uppercases the text and only handles the mini_font characters (A-Z, 0-9, ! ? ' " . , : - _ and space); the position pos.y is the BOTTOM of the text line (the text goes up above it).
+- Inconsistency: getPixel does not apply math.floor to x and y (unlike drawPixel); with non-integer coordinates the FFI index can be wrong.
+- Inconsistency: LuaPixelBuffer:init allocates width*height without rounding (math.floor is only applied to the width/height fields), which can undersize the buffer with decimal dimensions.
+- drawText: for a space, x advances by 4 then, since the letter is not found in mini_font, there is no extra advance; the consumedWidth count only counts the drawn characters.
+- The M.test() functions write 'helloworld.png' in the current directory.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `utils_pixellib.create()` | Crée un objet LuaPixelBuffer vide ; appeler ensuite :init(width, height) pour allouer le tampon. | 32 |
-| `utils_pixellib.test()` | Démonstration : dessine plusieurs primitives et du texte dans un tampon 250x250 puis l'enregistre en 'helloworld.png'. | 240 |
+| `utils_pixellib.create()` | Creates an empty LuaPixelBuffer object; then call :init(width, height) to allocate the buffer. | 32 |
+| `utils_pixellib.test()` | Demonstration: draws several primitives and text in a 250x250 buffer then saves it as 'helloworld.png'. | 240 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `utils_pixellib.create()`
 
-Crée un objet LuaPixelBuffer vide ; appeler ensuite :init(width, height) pour allouer le tampon.
+Creates an empty LuaPixelBuffer object; then call :init(width, height) to allocate the buffer.
 
-- **renvoie** : table Instance LuaPixelBuffer
+- **returns**: table LuaPixelBuffer instance
 
-## Classe `LuaPixelBuffer`
+## Class `LuaPixelBuffer`
 
-Tampon de pixels RGBA renvoyé par create(). Champs : width, height, bufSize, buf (cdata rgba_pixel_t[?]).
+RGBA pixel buffer returned by create(). Fields: width, height, bufSize, buf (cdata rgba_pixel_t[?]).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `LuaPixelBuffer:__tostring()` | Texte descriptif 'LuaPixelBuffer - ... [resolution: W x H (RGBA)]'. | 65 |
-| `LuaPixelBuffer:_allocate_buffer(n)` | Alloue le tableau FFI de n pixels. Appelé par init. | 60 |
-| `LuaPixelBuffer:drawCircle(pos, radius, color, lineWidth)` | Dessine le contour d'un cercle (algorithme du point milieu). | 97 |
-| `LuaPixelBuffer:drawFilledCircle(pos, radius, color)` | Dessine un disque plein. | 130 |
-| `LuaPixelBuffer:drawFilledRect(p1, width, height, color)` | Remplit un rectangle (bornes incluses : width+1 par height+1 pixels). | 155 |
-| `LuaPixelBuffer:drawIcon(pos, type, color)` | Dessine une petite icône : 'x' (croix de 5x5) ou 'o' (cercle de rayon 2). Autre type : rien. | 194 |
-| `LuaPixelBuffer:drawLine(pos1, pos2, color, lineWidth)` | Dessine un segment (parcours pixel par pixel selon l'axe dominant). | 217 |
-| `LuaPixelBuffer:drawPixel(x, y, color)` | Écrit la couleur sur un pixel (copie r, g, b, a, sans mélange alpha). Ignore les coordonnées hors tampon. | 69 |
-| `LuaPixelBuffer:drawPoint(x, y, color, size)` | Dessine un point : un pixel si size vaut 1/nil/0, sinon un disque plein de diamètre approximatif size. | 83 |
-| `LuaPixelBuffer:drawRect(p1, width, height, color, lineWidth)` | Dessine le contour d'un rectangle avec 4 lignes. | 141 |
-| `LuaPixelBuffer:drawText(pos, text, color)` | Écrit du texte avec la police bitmap interne (5 pixels de haut). pos.y est le bas de la ligne. | 164 |
-| `LuaPixelBuffer:fill(color)` | Remplit tout le tampon avec une couleur. | 93 |
-| `LuaPixelBuffer:getPixel(x, y)` | Lit un pixel du tampon. | 78 |
-| `LuaPixelBuffer:init(width, height)` | Alloue le tampon et fixe width/height (arrondis à l'entier inférieur). Pixels initialement à zéro (transparents noirs). | 38 |
-| `LuaPixelBuffer:saveFile(filename)` | Enregistre le tampon comme image via un GBitmap du moteur (format selon l'extension, ex. .png). Loggue une erreur si le chargement dans le bitmap échoue. | 56 |
+| `LuaPixelBuffer:__tostring()` | Descriptive text 'LuaPixelBuffer - ... [resolution: W x H (RGBA)]'. | 65 |
+| `LuaPixelBuffer:_allocate_buffer(n)` | Allocates the FFI array of n pixels. Called by init. | 60 |
+| `LuaPixelBuffer:drawCircle(pos, radius, color, lineWidth)` | Draws the outline of a circle (midpoint algorithm). | 97 |
+| `LuaPixelBuffer:drawFilledCircle(pos, radius, color)` | Draws a filled disc. | 130 |
+| `LuaPixelBuffer:drawFilledRect(p1, width, height, color)` | Fills a rectangle (bounds included: width+1 by height+1 pixels). | 155 |
+| `LuaPixelBuffer:drawIcon(pos, type, color)` | Draws a small icon: 'x' (5x5 cross) or 'o' (circle of radius 2). Any other type: nothing. | 194 |
+| `LuaPixelBuffer:drawLine(pos1, pos2, color, lineWidth)` | Draws a segment (pixel by pixel along the dominant axis). | 217 |
+| `LuaPixelBuffer:drawPixel(x, y, color)` | Writes the color to a pixel (copies r, g, b, a, no alpha blending). Ignores coordinates outside the buffer. | 69 |
+| `LuaPixelBuffer:drawPoint(x, y, color, size)` | Draws a point: one pixel if size is 1/nil/0, otherwise a filled disc of approximate diameter size. | 83 |
+| `LuaPixelBuffer:drawRect(p1, width, height, color, lineWidth)` | Draws the outline of a rectangle with 4 lines. | 141 |
+| `LuaPixelBuffer:drawText(pos, text, color)` | Writes text with the internal bitmap font (5 pixels tall). pos.y is the bottom of the line. | 164 |
+| `LuaPixelBuffer:fill(color)` | Fills the whole buffer with a color. | 93 |
+| `LuaPixelBuffer:getPixel(x, y)` | Reads a pixel from the buffer. | 78 |
+| `LuaPixelBuffer:init(width, height)` | Allocates the buffer and sets width/height (rounded down to the integer). Pixels initially zero (transparent black). | 38 |
+| `LuaPixelBuffer:saveFile(filename)` | Saves the buffer as an image via an engine GBitmap (format depends on the extension, e.g. .png). Logs an error if loading into the bitmap fails. | 56 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/utils/pixellib.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/utils/pixellib.lua`.*

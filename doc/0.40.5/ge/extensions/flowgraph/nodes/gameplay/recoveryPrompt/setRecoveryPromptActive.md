@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gameplay_recoveryPrompt_setRecoveryPromptActive`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptActive.lua` · VM : Game Engine (GE) · 47 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptActive.lua` · VM: Game Engine (GE) · 47 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptActive")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptActive")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Set Recovery Prompt Active » (catégorie once_instant). Active ou désactive le système de récupération des missions (core_recoveryPrompt). À utiliser avec « Set Recovery Prompt Enabled » pour rendre les boutons sélectionnables. Pins d'entrée : active (défaut true), enableAll (obsolète, caché), flipMission, recoverMission (défaut true), submitMission, restartMission (défaut false). Dépend de gameplay_walk et bloque le reset gameplay (blocksOnResetGameplay).
+Flowgraph node "Set Recovery Prompt Active" (category once_instant). Enables or disables the mission recovery system (core_recoveryPrompt). To be used with "Set Recovery Prompt Enabled" to make the buttons selectable. Input pins: active (default true), enableAll (obsolete, hidden), flipMission, recoverMission (default true), submitMission, restartMission (default false). Depends on gameplay_walk and blocks the gameplay reset (blocksOnResetGameplay).
 
-**Dépendances (chargées avant) :** `gameplay_walk`
+**Dependencies (loaded first):** `gameplay_walk`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui). | 42 |
-| `C:workOnce(args)` | Si active est vrai : appelle core_recoveryPrompt.setActive(true), désactive tous les boutons puis active ceux dont le pin n'est pas nil. Sinon appelle core_recoveryPrompt.setActive(false). | 25 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the flowgraph editor (ImGui). | 42 |
+| `C:workOnce(args)` | If active is true: calls core_recoveryPrompt.setActive(true), disables all buttons then enables those whose pin is not nil. Otherwise calls core_recoveryPrompt.setActive(false). | 25 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptActive.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptActive.lua`.*

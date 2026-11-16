@@ -1,195 +1,195 @@
 # `ui_photomode_camera`
 
-*Fichier : `lua/ge/extensions/ui/photomode/camera.lua` · VM : Game Engine (GE) · 1380 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/photomode/camera.lua` · VM: Game Engine (GE) · 1380 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_photomode_camera` : `extensions.load("ui_photomode_camera")`, puis la globale `ui_photomode_camera`
+**Access:** extension `ui_photomode_camera`: `extensions.load("ui_photomode_camera")`, then the global `ui_photomode_camera`
 
-Caméra du mode photo : FOV, vitesse de la caméra libre, roulis, exposition (auto ou EV manuel), mouvement lissé, visibilité des nœuds fixes du NodeGrabber, signets de caméra (absolus dans le monde ou relatifs au véhicule du joueur) et presets de caméra. Le module passe par core_camera (via ui_photomode_shared.getCoreCameraFunction) et par commands.setFreeCamera pour basculer en caméra libre, et mémorise l'état d'entrée pour le restaurer à la sortie du mode photo. Il sert de backend au panneau caméra de l'UI du mode photo.
+Photo mode camera: FOV, free camera speed, roll, exposure (auto or manual EV), smoothed movement, visibility of the NodeGrabber's fixed nodes, camera bookmarks (absolute in the world or relative to the player vehicle) and camera presets. The module goes through core_camera (via ui_photomode_shared.getCoreCameraFunction) and commands.setFreeCamera to switch to the free camera, and stores the entry state to restore it when leaving photo mode. It serves as the backend of the photo mode UI camera panel.
 
-## Exemple
+## Example
 
 ```lua
 ui_photomode_camera.setCameraFov(45)
 local r = ui_photomode_camera.saveCurrentCameraBookmark()
--- plus tard
+-- later
 ui_photomode_camera.restoreSavedFreeCameraBookmark()
 ```
 
-## Remarques
+## Notes
 
-- Les fonctions renvoient une table. En cas d'échec : {ok = false, reason, ...}. En cas de succès, le champ ok est ABSENT (pas de ok = true) : tester res.ok ~= false plutôt que res.ok.
-- Bornes appliquées par clamp : FOV 10 à 120 degrés (défaut 60), vitesse 2 à 300 (défaut 15), roulis -90 à 90 degrés (défaut 0), EV manuel -20 à 20 (défaut 10).
-- Raisons d'échec courantes : camera_api_unavailable, camera_mode_unsupported (caméra « path » active, ou roulis hors caméra libre), camera_set_failed, camera_mode_switch_failed, bookmark_unavailable, bookmark_invalid, vehicle_unavailable, exposure_settings_unavailable, camera_exposure_patch_empty, nodegrabber_unavailable, preset_level_mismatch.
-- Le roulis n'est modifiable qu'en caméra libre ; le FOV ne l'est pas avec la caméra « path ».
-- Un signet relatif (mode relativeFreecam) stocke la position et la rotation de la caméra dans le repère de la boîte englobante (OOBB) du véhicule joueur ; un signet absolu stocke pos (x,y,z), rot (quaternion x,y,z,w) et fov dans le monde.
-- L'exposition passe par l'objet scenetree « PostEffectLocalExposureObject » (champs autoExposure et manualEV).
-- Au début de la session, captureNodeGrabberRestoreState masque les nœuds fixes du NodeGrabber ; restoreNodeGrabberState les rétablit à la fin (visibles par défaut si aucun getter n'existe).
+- The functions return a table. On failure: {ok = false, reason, ...}. On success, the ok field is ABSENT (no ok = true): test res.ok ~= false rather than res.ok.
+- Bounds applied by clamping: FOV 10 to 120 degrees (default 60), speed 2 to 300 (default 15), roll -90 to 90 degrees (default 0), manual EV -20 to 20 (default 10).
+- Common failure reasons: camera_api_unavailable, camera_mode_unsupported ("path" camera active, or roll outside the free camera), camera_set_failed, camera_mode_switch_failed, bookmark_unavailable, bookmark_invalid, vehicle_unavailable, exposure_settings_unavailable, camera_exposure_patch_empty, nodegrabber_unavailable, preset_level_mismatch.
+- Roll can only be changed in the free camera; FOV cannot be changed with the "path" camera.
+- A relative bookmark (relativeFreecam mode) stores the camera's position and rotation in the bounding box (OOBB) frame of the player vehicle; an absolute bookmark stores pos (x,y,z), rot (quaternion x,y,z,w) and fov in the world.
+- Exposure goes through the scenetree object "PostEffectLocalExposureObject" (fields autoExposure and manualEV).
+- At the start of the session, captureNodeGrabberRestoreState hides the NodeGrabber's fixed nodes; restoreNodeGrabberState restores them at the end (visible by default if no getter exists).
 
-**Dépendances (chargées avant) :** `ui_photomode_shared`
+**Dependencies (loaded first):** `ui_photomode_shared`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_photomode_camera.activateSessionFreeCamera()` | Passe en caméra libre au début de la session (sauf si la caméra d'entrée est « path » ou si la caméra libre est déjà active) et note qu'il faudra restaurer la caméra d'entrée à la sortie. *(interne)* | 485 |
-| `ui_photomode_camera.applyPresetState(state)` | Applique un preset de caméra : refuse un preset de scène d'un autre niveau (preset_level_mismatch), restaure le signet ou applique FOV et roulis, puis vitesse, lissage et exposition. | 1225 |
-| `ui_photomode_camera.buildMetadataState()` | Sous-ensemble de l'état à écrire dans les métadonnées d'une photo : pos, rot, fov, speed, yawDeg, pitchDown, rollDeg. | 784 |
-| `ui_photomode_camera.buildState()` | Construit l'état de la caméra : sessionActive, disponibilité des signets, availability (exposure, nodeGrabber, smoothMovement), pos, rot, fov, speed, yawDeg, pitchDown, rollDeg, autoExposure, manualEV, nodeGrabberVisible, smoothMovement. | 751 |
-| `ui_photomode_camera.captureDefaultPresetState()` | Preset « par défaut » construit à partir de l'état capturé à l'entrée de la session (fov, roulis, vitesse, lissage, exposition, levelId), ou nil si aucune session n'a été capturée. | 1207 |
-| `ui_photomode_camera.captureNodeGrabberRestoreState()` | Mémorise la visibilité des nœuds fixes du NodeGrabber puis les masque pour la session. *(interne)* | 436 |
-| `ui_photomode_camera.capturePresetState(options)` | État de caméra à enregistrer dans un preset. Type « vehicle » : signet relatif au véhicule (nil s'il est indisponible) ; type « scene » (défaut) : position absolue et levelId. Inclut aussi speed, smoothMovement, autoExposure, manualEV. | 1170 |
-| `ui_photomode_camera.captureRestoreState()` | Capture l'état de la caméra à l'entrée de la session (pos, rot, fov, vitesse, roulis, lissage, exposition, nom de la caméra active). Appelée au début d'une session du mode photo. *(interne)* | 467 |
-| `ui_photomode_camera.getCameraState()` | Renvoie l'état courant de la caméra (identique à buildState). | 1166 |
-| `ui_photomode_camera.getTemporaryPresetList()` | Convertit les objets CameraBookmark de la scène (scenetree.findClassObjects) en presets temporaires de type camera (id __cameraBookmark_<id>, source cameraBookmark, position absolue). Liste vide si l'API est indisponible. | 1314 |
-| `ui_photomode_camera.resetCameraDefaults()` | Remet les valeurs par défaut : mouvement lissé coupé, vitesse 15, roulis 0, exposition automatique avec EV manuel 10. Passe en caméra libre si nécessaire. | 1129 |
-| `ui_photomode_camera.restoreCameraBookmark(bookmark)` | Déplace la caméra libre vers un signet (absolu : pos, rot, fov ; ou relatif : offset, rotOffset, fov calculés par rapport au véhicule joueur). Bascule en caméra libre si besoin. Accepte un signet {camera = {...}} ou directement le contenu. | 985 |
-| `ui_photomode_camera.restoreNodeGrabberState()` | Rétablit la visibilité des nœuds fixes mémorisée au début de la session. *(interne)* | 452 |
-| `ui_photomode_camera.restoreSavedFreeCameraBookmark()` | Restaure le signet absolu enregistré. | 1106 |
-| `ui_photomode_camera.restoreSavedRelativeCameraBookmark()` | Restaure le signet relatif au véhicule enregistré ; l'efface s'il est invalide. | 1117 |
-| `ui_photomode_camera.restoreSessionCameraTransformState()` | Replace la caméra libre à la position/rotation (et FOV) capturées au début de la session. | 797 |
-| `ui_photomode_camera.restoreState()` | Restaure le mode de caméra d'entrée, le FOV, la vitesse, le roulis, le lissage et l'exposition capturés. Appelée à la fin de la session. *(interne)* | 703 |
-| `ui_photomode_camera.saveCurrentCameraBookmark()` | Enregistre la position actuelle de la caméra comme signet de session : un signet absolu, et un signet relatif au véhicule joueur s'il est calculable. | 899 |
-| `ui_photomode_camera.setCameraExposureState(partialState)` | Modifie l'exposition de la caméra : autoExposure (booléen) et/ou manualEV (-20 à 20). | 930 |
-| `ui_photomode_camera.setCameraFov(value)` | Règle le FOV (borné à 10-120 degrés). Utilise la caméra libre (id 0) ou le véhicule joueur. Refusé avec la caméra « path ». | 914 |
-| `ui_photomode_camera.setCameraRoll(value)` | Règle le roulis de la caméra libre (-90 à 90 degrés) en conservant lacet et tangage actuels. | 969 |
-| `ui_photomode_camera.setCameraSmoothMovement(value)` | Active ou coupe le mouvement lissé de la caméra libre (réglage cameraFreeSmoothMovement) et prévient l'UI des réglages. | 1349 |
-| `ui_photomode_camera.setCameraSpeed(value)` | Règle la vitesse de déplacement de la caméra (bornée à 2-300). | 953 |
-| `ui_photomode_camera.setNodeGrabberVisible(value)` | Affiche ou masque les nœuds fixes du NodeGrabber (Engine.NodeGrabber_setFixedNodesVisible). | 1329 |
+| `ui_photomode_camera.activateSessionFreeCamera()` | Switches to the free camera at the start of the session (unless the entry camera is "path" or the free camera is already active) and notes that the entry camera must be restored on exit. *(internal)* | 485 |
+| `ui_photomode_camera.applyPresetState(state)` | Applies a camera preset: refuses a scene preset from another level (preset_level_mismatch), restores the bookmark or applies FOV and roll, then speed, smoothing and exposure. | 1225 |
+| `ui_photomode_camera.buildMetadataState()` | Subset of the state to write into a photo's metadata: pos, rot, fov, speed, yawDeg, pitchDown, rollDeg. | 784 |
+| `ui_photomode_camera.buildState()` | Builds the camera state: sessionActive, bookmark availability, availability (exposure, nodeGrabber, smoothMovement), pos, rot, fov, speed, yawDeg, pitchDown, rollDeg, autoExposure, manualEV, nodeGrabberVisible, smoothMovement. | 751 |
+| `ui_photomode_camera.captureDefaultPresetState()` | "Default" preset built from the state captured at session entry (fov, roll, speed, smoothing, exposure, levelId), or nil if no session was captured. | 1207 |
+| `ui_photomode_camera.captureNodeGrabberRestoreState()` | Stores the visibility of the NodeGrabber's fixed nodes then hides them for the session. *(internal)* | 436 |
+| `ui_photomode_camera.capturePresetState(options)` | Camera state to save in a preset. "vehicle" type: bookmark relative to the vehicle (nil if unavailable); "scene" type (default): absolute position and levelId. Also includes speed, smoothMovement, autoExposure, manualEV. | 1170 |
+| `ui_photomode_camera.captureRestoreState()` | Captures the camera state at session entry (pos, rot, fov, speed, roll, smoothing, exposure, name of the active camera). Called at the start of a photo mode session. *(internal)* | 467 |
+| `ui_photomode_camera.getCameraState()` | Returns the current camera state (same as buildState). | 1166 |
+| `ui_photomode_camera.getTemporaryPresetList()` | Converts the scene's CameraBookmark objects (scenetree.findClassObjects) into temporary presets of type camera (id __cameraBookmark_<id>, source cameraBookmark, absolute position). Empty list if the API is unavailable. | 1314 |
+| `ui_photomode_camera.resetCameraDefaults()` | Resets to default values: smoothed movement off, speed 15, roll 0, automatic exposure with manual EV 10. Switches to the free camera if necessary. | 1129 |
+| `ui_photomode_camera.restoreCameraBookmark(bookmark)` | Moves the free camera to a bookmark (absolute: pos, rot, fov; or relative: offset, rotOffset, fov computed relative to the player vehicle). Switches to the free camera if needed. Accepts a {camera = {...}} bookmark or the content directly. | 985 |
+| `ui_photomode_camera.restoreNodeGrabberState()` | Restores the fixed nodes visibility stored at the start of the session. *(internal)* | 452 |
+| `ui_photomode_camera.restoreSavedFreeCameraBookmark()` | Restores the saved absolute bookmark. | 1106 |
+| `ui_photomode_camera.restoreSavedRelativeCameraBookmark()` | Restores the saved vehicle-relative bookmark; clears it if invalid. | 1117 |
+| `ui_photomode_camera.restoreSessionCameraTransformState()` | Puts the free camera back at the position/rotation (and FOV) captured at the start of the session. | 797 |
+| `ui_photomode_camera.restoreState()` | Restores the captured entry camera mode, FOV, speed, roll, smoothing and exposure. Called at the end of the session. *(internal)* | 703 |
+| `ui_photomode_camera.saveCurrentCameraBookmark()` | Saves the current camera position as the session bookmark: an absolute bookmark, and a bookmark relative to the player vehicle if it can be computed. | 899 |
+| `ui_photomode_camera.setCameraExposureState(partialState)` | Changes the camera's exposure: autoExposure (boolean) and/or manualEV (-20 to 20). | 930 |
+| `ui_photomode_camera.setCameraFov(value)` | Sets the FOV (clamped to 10-120 degrees). Uses the free camera (id 0) or the player vehicle. Refused with the "path" camera. | 914 |
+| `ui_photomode_camera.setCameraRoll(value)` | Sets the free camera's roll (-90 to 90 degrees) keeping the current yaw and pitch. | 969 |
+| `ui_photomode_camera.setCameraSmoothMovement(value)` | Enables or disables the free camera's smoothed movement (setting cameraFreeSmoothMovement) and notifies the UI of the settings. | 1349 |
+| `ui_photomode_camera.setCameraSpeed(value)` | Sets the camera's movement speed (clamped to 2-300). | 953 |
+| `ui_photomode_camera.setNodeGrabberVisible(value)` | Shows or hides the NodeGrabber's fixed nodes (Engine.NodeGrabber_setFixedNodesVisible). | 1329 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_photomode_camera.applyPresetState(state)`
 
-Applique un preset de caméra : refuse un preset de scène d'un autre niveau (preset_level_mismatch), restaure le signet ou applique FOV et roulis, puis vitesse, lissage et exposition.
+Applies a camera preset: refuses a scene preset from another level (preset_level_mismatch), restores the bookmark or applies FOV and roll, then speed, smoothing and exposure.
 
-- `state` (*table*) : État de preset
-- **renvoie** : table {state} ou {ok = false, reason}
+- `state` (*table*) : Preset state
+- **returns**: table {state} or {ok = false, reason}
 
 #### `ui_photomode_camera.buildMetadataState()`
 
-Sous-ensemble de l'état à écrire dans les métadonnées d'une photo : pos, rot, fov, speed, yawDeg, pitchDown, rollDeg.
+Subset of the state to write into a photo's metadata: pos, rot, fov, speed, yawDeg, pitchDown, rollDeg.
 
-- **renvoie** : table Données de caméra
+- **returns**: table Camera data
 
 #### `ui_photomode_camera.buildState()`
 
-Construit l'état de la caméra : sessionActive, disponibilité des signets, availability (exposure, nodeGrabber, smoothMovement), pos, rot, fov, speed, yawDeg, pitchDown, rollDeg, autoExposure, manualEV, nodeGrabberVisible, smoothMovement.
+Builds the camera state: sessionActive, bookmark availability, availability (exposure, nodeGrabber, smoothMovement), pos, rot, fov, speed, yawDeg, pitchDown, rollDeg, autoExposure, manualEV, nodeGrabberVisible, smoothMovement.
 
-- **renvoie** : table État de la caméra
+- **returns**: table Camera state
 
 #### `ui_photomode_camera.captureDefaultPresetState()`
 
-Preset « par défaut » construit à partir de l'état capturé à l'entrée de la session (fov, roulis, vitesse, lissage, exposition, levelId), ou nil si aucune session n'a été capturée.
+"Default" preset built from the state captured at session entry (fov, roll, speed, smoothing, exposure, levelId), or nil if no session was captured.
 
-- **renvoie** : table|nil État par défaut
+- **returns**: table|nil Default state
 
 #### `ui_photomode_camera.capturePresetState(options)`
 
-État de caméra à enregistrer dans un preset. Type « vehicle » : signet relatif au véhicule (nil s'il est indisponible) ; type « scene » (défaut) : position absolue et levelId. Inclut aussi speed, smoothMovement, autoExposure, manualEV.
+Camera state to save in a preset. "vehicle" type: bookmark relative to the vehicle (nil if unavailable); "scene" type (default): absolute position and levelId. Also includes speed, smoothMovement, autoExposure, manualEV.
 
 - `options` (*table|nil*) : {cameraPresetType = "vehicle"|"scene"}
-- **renvoie** : table|nil État du preset
+- **returns**: table|nil Preset state
 
 #### `ui_photomode_camera.getCameraState()`
 
-Renvoie l'état courant de la caméra (identique à buildState).
+Returns the current camera state (same as buildState).
 
-- **renvoie** : table État de la caméra
+- **returns**: table Camera state
 
 #### `ui_photomode_camera.getTemporaryPresetList()`
 
-Convertit les objets CameraBookmark de la scène (scenetree.findClassObjects) en presets temporaires de type camera (id __cameraBookmark_<id>, source cameraBookmark, position absolue). Liste vide si l'API est indisponible.
+Converts the scene's CameraBookmark objects (scenetree.findClassObjects) into temporary presets of type camera (id __cameraBookmark_<id>, source cameraBookmark, absolute position). Empty list if the API is unavailable.
 
-- **renvoie** : table[] Presets temporaires
+- **returns**: table[] Temporary presets
 
 #### `ui_photomode_camera.resetCameraDefaults()`
 
-Remet les valeurs par défaut : mouvement lissé coupé, vitesse 15, roulis 0, exposition automatique avec EV manuel 10. Passe en caméra libre si nécessaire.
+Resets to default values: smoothed movement off, speed 15, roll 0, automatic exposure with manual EV 10. Switches to the free camera if necessary.
 
-- **renvoie** : table {state} ou {ok = false, reason}
+- **returns**: table {state} or {ok = false, reason}
 
 #### `ui_photomode_camera.restoreCameraBookmark(bookmark)`
 
-Déplace la caméra libre vers un signet (absolu : pos, rot, fov ; ou relatif : offset, rotOffset, fov calculés par rapport au véhicule joueur). Bascule en caméra libre si besoin. Accepte un signet {camera = {...}} ou directement le contenu.
+Moves the free camera to a bookmark (absolute: pos, rot, fov; or relative: offset, rotOffset, fov computed relative to the player vehicle). Switches to the free camera if needed. Accepts a {camera = {...}} bookmark or the content directly.
 
-- `bookmark` (*table*) : Signet absolu ou relatif
-- **renvoie** : table {state} ou {ok = false, reason}
+- `bookmark` (*table*) : Absolute or relative bookmark
+- **returns**: table {state} or {ok = false, reason}
 
 #### `ui_photomode_camera.restoreSavedFreeCameraBookmark()`
 
-Restaure le signet absolu enregistré.
+Restores the saved absolute bookmark.
 
-- **renvoie** : table Résultat de restoreCameraBookmark, ou {ok = false, reason = "bookmark_unavailable"}
+- **returns**: table Result of restoreCameraBookmark, or {ok = false, reason = "bookmark_unavailable"}
 
 #### `ui_photomode_camera.restoreSavedRelativeCameraBookmark()`
 
-Restaure le signet relatif au véhicule enregistré ; l'efface s'il est invalide.
+Restores the saved vehicle-relative bookmark; clears it if invalid.
 
-- **renvoie** : table Résultat de restoreCameraBookmark, ou {ok = false, reason = "bookmark_unavailable"}
+- **returns**: table Result of restoreCameraBookmark, or {ok = false, reason = "bookmark_unavailable"}
 
 #### `ui_photomode_camera.restoreSessionCameraTransformState()`
 
-Replace la caméra libre à la position/rotation (et FOV) capturées au début de la session.
+Puts the free camera back at the position/rotation (and FOV) captured at the start of the session.
 
-- **renvoie** : table {state} ou {ok = false, reason}
+- **returns**: table {state} or {ok = false, reason}
 
 #### `ui_photomode_camera.saveCurrentCameraBookmark()`
 
-Enregistre la position actuelle de la caméra comme signet de session : un signet absolu, et un signet relatif au véhicule joueur s'il est calculable.
+Saves the current camera position as the session bookmark: an absolute bookmark, and a bookmark relative to the player vehicle if it can be computed.
 
-- **renvoie** : table {state} ou {ok = false, reason = "camera_state_unavailable", state}
+- **returns**: table {state} or {ok = false, reason = "camera_state_unavailable", state}
 
 #### `ui_photomode_camera.setCameraExposureState(partialState)`
 
-Modifie l'exposition de la caméra : autoExposure (booléen) et/ou manualEV (-20 à 20).
+Changes the camera's exposure: autoExposure (boolean) and/or manualEV (-20 to 20).
 
 - `partialState` (*table*) : {autoExposure?, manualEV?}
-- **renvoie** : table {state} ou {ok = false, reason, state}
+- **returns**: table {state} or {ok = false, reason, state}
 
 #### `ui_photomode_camera.setCameraFov(value)`
 
-Règle le FOV (borné à 10-120 degrés). Utilise la caméra libre (id 0) ou le véhicule joueur. Refusé avec la caméra « path ».
+Sets the FOV (clamped to 10-120 degrees). Uses the free camera (id 0) or the player vehicle. Refused with the "path" camera.
 
-- `value` (*number*) : FOV en degrés
-- **renvoie** : table {value} en cas de succès, sinon {ok = false, reason, value}
+- `value` (*number*) : FOV in degrees
+- **returns**: table {value} on success, otherwise {ok = false, reason, value}
 
 #### `ui_photomode_camera.setCameraRoll(value)`
 
-Règle le roulis de la caméra libre (-90 à 90 degrés) en conservant lacet et tangage actuels.
+Sets the free camera's roll (-90 to 90 degrees) keeping the current yaw and pitch.
 
-- `value` (*number*) : Roulis en degrés
-- **renvoie** : table {value} ou {ok = false, reason, value}
+- `value` (*number*) : Roll in degrees
+- **returns**: table {value} or {ok = false, reason, value}
 
 #### `ui_photomode_camera.setCameraSmoothMovement(value)`
 
-Active ou coupe le mouvement lissé de la caméra libre (réglage cameraFreeSmoothMovement) et prévient l'UI des réglages.
+Enables or disables the free camera's smoothed movement (setting cameraFreeSmoothMovement) and notifies the UI of the settings.
 
-- `value` (*boolean|table*) : Booléen, ou table dont le champ smoothMovement est lu
-- **renvoie** : table {value, state} ou {ok = false, reason, state}
+- `value` (*boolean|table*) : Boolean, or table whose smoothMovement field is read
+- **returns**: table {value, state} or {ok = false, reason, state}
 
 #### `ui_photomode_camera.setCameraSpeed(value)`
 
-Règle la vitesse de déplacement de la caméra (bornée à 2-300).
+Sets the camera's movement speed (clamped to 2-300).
 
-- `value` (*number*) : Vitesse de la caméra
-- **renvoie** : table {value} ou {ok = false, reason, value}
+- `value` (*number*) : Camera speed
+- **returns**: table {value} or {ok = false, reason, value}
 
 #### `ui_photomode_camera.setNodeGrabberVisible(value)`
 
-Affiche ou masque les nœuds fixes du NodeGrabber (Engine.NodeGrabber_setFixedNodesVisible).
+Shows or hides the NodeGrabber's fixed nodes (Engine.NodeGrabber_setFixedNodesVisible).
 
-- `value` (*boolean|table*) : Booléen, ou table dont le champ nodeGrabberVisible est lu
-- **renvoie** : table {value, state} ou {ok = false, reason, state}
+- `value` (*boolean|table*) : Boolean, or table whose nodeGrabberVisible field is read
+- **returns**: table {value, state} or {ok = false, reason, state}
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {"ui_photomode_shared"} |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findClassObjects`, `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/photomode/camera.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/photomode/camera.lua`.*

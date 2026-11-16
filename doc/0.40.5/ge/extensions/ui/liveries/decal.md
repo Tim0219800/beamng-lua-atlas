@@ -1,12 +1,12 @@
 # `ui_liveries_decal`
 
-*Fichier : `lua/ge/extensions/ui/liveries/decal.lua` · VM : Game Engine (GE) · 1121 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/liveries/decal.lua` · VM: Game Engine (GE) · 1121 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_liveries_decal` : `extensions.load("ui_liveries_decal")`, puis la globale `ui_liveries_decal`
+**Access:** extension `ui_liveries_decal`: `extensions.load("ui_liveries_decal")`, then the global `ui_liveries_decal`
 
-Logique côté Lua de l'écran des décalques de l'éditeur de livrées. Il enveloppe editor_api_dynamicDecals : pile de couches (liste, sélection, surbrillance, visibilité, duplication, suppression, réordonnancement), peinture et miroir d'un décalque, et mode de transformation (échelle, inclinaison, rotation, projection, placement à la souris) pour un nouveau décalque ou pour un décalque existant. Il envoie son état à l'interface par guihooks (évènements liveries_decal_layersUpdated, liveries_decal_selectionChanged, liveries_decal_transformUpdated). Les hooks de route de routeLifecycleCallbacks l'appellent.
+Lua-side logic of the livery editor's decals screen. It wraps editor_api_dynamicDecals: layer stack (list, selection, highlight, visibility, duplication, deletion, reordering), painting and mirroring of a decal, and the transform mode (scale, skew, rotation, projection, mouse placement) for a new decal or an existing one. It sends its state to the UI through guihooks (events liveries_decal_layersUpdated, liveries_decal_selectionChanged, liveries_decal_transformUpdated). The route hooks of routeLifecycleCallbacks call it.
 
-## Exemple
+## Example
 
 ```lua
 ui_liveries_decal.setup()
@@ -14,309 +14,309 @@ ui_liveries_decal.select(layerUid)
 ui_liveries_decal.setPaint(layerUid, {color = {1, 0, 0, 1}, metallic = 0.5, roughness = 0.3})
 ```
 
-## Remarques
+## Notes
 
-- Le module n'est actif qu'entre setup et teardown (isActive) ; getPaint, setPaint, getLayerMirror et setLayerMirror refusent (avertissement + nil ou false) s'il n'est pas actif.
-- La pile affichée contient seulement les couches de type decal, linkedSet et group ; la couche la plus récente est placée en premier dans l'arbre envoyé à l'interface.
-- Le premier élément racine de la pile est la couche de remplissage : un décalque ne peut pas être déplacé sous elle (FIRST_MOVABLE_ROOT_INDEX = 2). Seuls les décalques racine peuvent être réordonnés.
-- Vitesses de la transformation par seconde à pleine déviation : échelle 0,5 ; inclinaison 2 (bornée à ±2) ; rotation π rad (valeur wrappée sur [0, 2π[). L'échelle minimale est 0,01. L'option « petits incréments » multiplie ces vitesses par 0,1 ; « lock ratio » applique la somme des deltas horizontal et vertical aux deux axes.
-- Dans les snapshots envoyés à l'interface, l'échelle x correspond à scale.x et y à scale.z de l'API ; la rotation est en degrés (1 décimale), les nombres sont des chaînes formatées.
-- Un décalque existant ne peut être retransformé que si son curseur UV (cursorPosScreenUv) est centré à 0,01 près autour de (0,5 ; 0,5), sinon beginExistingTransform refuse et renvoie false.
-- L'alpha de la couleur du décalque sert aussi d'opacité ; le curseur de transformation est affiché avec alpha 1 et masqué avec alpha 0.
-- La table d'actions « LiveriesDecalTransform » est poussée pendant la transformation, et retirée à la sortie ou quand on ouvre les réglages (suspendTransformActionMap).
-- Les fonctions dynamicDecals_* sont des hooks appelés par editor_api_dynamicDecals ; il ne faut pas les appeler soi-même.
-- api est capturé une seule fois au chargement du fichier (local api = extensions.editor_api_dynamicDecals) ; si l'extension n'était pas encore chargée à ce moment, api reste nil et la plupart des fonctions ne font rien.
+- The module is only active between setup and teardown (isActive); getPaint, setPaint, getLayerMirror and setLayerMirror refuse (warning + nil or false) if it is not active.
+- The displayed stack contains only layers of type decal, linkedSet and group; the most recent layer is placed first in the tree sent to the UI.
+- The first root element of the stack is the fill layer: a decal cannot be moved under it (FIRST_MOVABLE_ROOT_INDEX = 2). Only root decals can be reordered.
+- Transform speeds per second at full deflection: scale 0.5; skew 2 (clamped to ±2); rotation π rad (value wrapped to [0, 2π[). The minimum scale is 0.01. The "small increments" option multiplies these speeds by 0.1; "lock ratio" applies the sum of the horizontal and vertical deltas to both axes.
+- In the snapshots sent to the UI, scale x corresponds to the API's scale.x and y to scale.z; rotation is in degrees (1 decimal), numbers are formatted strings.
+- An existing decal can only be re-transformed if its UV cursor (cursorPosScreenUv) is centered within 0.01 around (0.5, 0.5), otherwise beginExistingTransform refuses and returns false.
+- The decal color's alpha also serves as opacity; the transform cursor is displayed with alpha 1 and hidden with alpha 0.
+- The "LiveriesDecalTransform" action map is pushed during the transform, and removed on exit or when the settings are opened (suspendTransformActionMap).
+- The dynamicDecals_* functions are hooks called by editor_api_dynamicDecals; do not call them yourself.
+- api is captured only once when the file loads (local api = extensions.editor_api_dynamicDecals); if the extension was not yet loaded at that time, api stays nil and most functions do nothing.
 
-**Dépendances (chargées avant) :** `editor_api_dynamicDecals`, `ui_liveries`, `ui_liveries_camera`, `ui_liveries_paint`, `ui_liveries_textures`
+**Dependencies (loaded first):** `editor_api_dynamicDecals`, `ui_liveries`, `ui_liveries_camera`, `ui_liveries_paint`, `ui_liveries_textures`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_liveries_decal.beginExistingTransform(layerUid)` | Ouvre une session de retransformation d'un décalque existant : mémorise une copie de la couche, son état de surbrillance et un indicateur applied. Remplace toute session précédente. Refuse si la couche est introuvable, n'est pas un décalque ou n'est pas centrée. | 710 |
-| `ui_liveries_decal.commitTransform()` | Valide la transformation en cours. Sans session de retransformation, place un nouveau décalque (placeSelectedDecal) ; sinon appelle api.replaceDecalTransformFromCurrentProjection, marque la session comme appliquée et navigue vers « liveries.edit.decals ». | 874 |
-| `ui_liveries_decal.deleteLayer(layerUid)` | Supprime une couche via api.removeLayer. | 371 |
-| `ui_liveries_decal.duplicateLayer(layerUid)` | Duplique une couche via api.duplicateLayer à partir de son index et de son parent. | 362 |
-| `ui_liveries_decal.dynamicDecals_moveLayer()` | Hook appelé par editor_api_dynamicDecals quand une couche est déplacée ; même traitement que dynamicDecals_onLayerAdded. *(interne)* | 1109 |
-| `ui_liveries_decal.dynamicDecals_onLayerAdded()` | Hook appelé par editor_api_dynamicDecals quand une couche est ajoutée. Reconstruit la liste (en marquant la nouvelle couche comme focus) et notifie l'interface. À ne pas appeler soi-même. *(interne)* | 1109 |
-| `ui_liveries_decal.dynamicDecals_onLayerDeleted()` | Hook appelé par editor_api_dynamicDecals quand une couche est supprimée ; même traitement que dynamicDecals_onLayerAdded. *(interne)* | 1109 |
-| `ui_liveries_decal.dynamicDecals_onLayerUpdated()` | Hook appelé par editor_api_dynamicDecals quand une couche est modifiée ; même traitement que dynamicDecals_onLayerAdded. *(interne)* | 1109 |
-| `ui_liveries_decal.endExistingTransform()` | Ferme la session de retransformation : cache le curseur et, si rien n'a été appliqué, rétablit la visibilité d'origine de la couche et sa surbrillance, puis rafraîchit la liste. | 806 |
-| `ui_liveries_decal.getLayerMirror(layerUid)` | Renvoie les indicateurs de miroir d'un décalque validé ; le décalage du plan de miroir (mirrorOffset) est global à l'éditeur, pas par couche. | 514 |
-| `ui_liveries_decal.getLockRatio()` | Indique si le verrouillage du ratio est actif pour l'échelle et l'inclinaison. | 970 |
-| `ui_liveries_decal.getMirrorSnapshot()` | Renvoie les réglages de miroir courants de l'API : mirrored, flipMirroredDecal, mirrorOffset. | 947 |
-| `ui_liveries_decal.getPaint(layerUid)` | Renvoie la peinture d'une couche (ui_liveries_paint.getLayerPaint). Module actif requis. | 478 |
-| `ui_liveries_decal.getSmallIncrements()` | Indique si le mode « petits incréments » est actif (vitesses multipliées par 0,1, aussi pour la caméra libre). | 952 |
-| `ui_liveries_decal.getTransformPaint()` | Renvoie la peinture du décalque en cours de transformation : couleur, métallisation et rugosité courantes de l'API, présets du véhicule, et layerUid de la couche en édition (ou « transform-preview » pour un nouveau décalque). | 553 |
-| `ui_liveries_decal.getTransformSnapshot()` | Renvoie l'état de transformation envoyé à l'interface : scale {x, y}, skew {x, y}, rotation (degrés), projection (clé de libellé), smallIncrements, lockRatio. Les nombres sont des chaînes. | 942 |
-| `ui_liveries_decal.hideSelectedCursor()` | Termine le mode transformation : retire la table d'actions, remet les entrées à zéro, arrête la transformation de caméra, rend le décalque transparent (alpha 0), coupe la projection et restaure le réglage de souris si besoin. | 661 |
-| `ui_liveries_decal.isUseMousePos()` | Indique si le placement du décalque à la souris est actif (api.isUseMousePos). | 988 |
-| `ui_liveries_decal.notifyUi()` | Renvoie à l'interface la liste des couches et la sélection courante. | 286 |
-| `ui_liveries_decal.onUpdate(dtReal)` | Hook appelé à chaque image avec dtReal (secondes réelles). Tant que la table d'actions de transformation est active, applique les entrées d'échelle, d'inclinaison et de rotation au décalque et notifie l'interface en cas de changement. *(interne)* *(hook)* | 1051 |
-| `ui_liveries_decal.placeSelectedDecal()` | Valide un nouveau décalque avec api.addDecal à partir de la texture sélectionnée, le déplace éventuellement au-dessus de la cible de startAddDecal, vide la sélection de texture et navigue vers « liveries.edit.decals ». Renvoie nil avec avertissement si aucune texture n'est sélectionnée. | 829 |
-| `ui_liveries_decal.reorderLayers(orderedUids)` | Applique un nouvel ordre de couches racine, à condition qu'il corresponde au déplacement d'un seul décalque. Retrouve la couche déplacée, calcule l'index cible en tenant compte de la couche de remplissage et appelle api.moveLayer ; le rafraîchissement revient par le hook dynamicDecals_moveLayer. | 414 |
-| `ui_liveries_decal.resumeTransformActionMap()` | Repousse la table d'actions de transformation si elle n'est pas active. | 697 |
-| `ui_liveries_decal.select(layerUid)` | Sélectionne une couche (et la met en surbrillance), ou désélectionne si layerUid est nil. Notifie l'interface du changement. | 291 |
-| `ui_liveries_decal.setFlipMirroredDecal(value)` | Inverse ou non le décalque miroir (api.setFlipMirroredDecal). | 1027 |
-| `ui_liveries_decal.setLayerMirror(layerUid, mirror)` | Met à jour mirrored et flipMirroredDecal d'une couche, sur une copie passée à setLayer pour ne pas toucher à l'historique de l'API. | 532 |
-| `ui_liveries_decal.setLockRatio(value)` | Active ou coupe le verrouillage du ratio et notifie l'interface si la valeur change. | 974 |
-| `ui_liveries_decal.setMirrorOffset(value)` | Règle le décalage du plan de miroir, borné entre -1 et 1 (api.setMirrorOffset). | 1039 |
-| `ui_liveries_decal.setMirrored(value)` | Active ou coupe le miroir du décalque en cours de pose (api.setMirrored). | 1015 |
-| `ui_liveries_decal.setPaint(layerUid, paint)` | Applique une peinture à une couche (ui_liveries_paint.setLayerPaint). Module actif requis. | 487 |
-| `ui_liveries_decal.setRotateLeft(value)` | Définit l'entrée de rotation vers la gauche (gâchette) ; la rotation appliquée est droite moins gauche. | 911 |
-| `ui_liveries_decal.setRotateRight(value)` | Définit l'entrée de rotation vers la droite (gâchette). | 915 |
-| `ui_liveries_decal.setScaleHorizontal(value)` | Définit l'entrée d'axe d'échelle horizontale (appliquée dans onUpdate). | 895 |
-| `ui_liveries_decal.setScaleVertical(value)` | Définit l'entrée d'axe d'échelle verticale (appliquée dans onUpdate). | 899 |
-| `ui_liveries_decal.setSkewHorizontal(value)` | Définit l'entrée d'axe d'inclinaison horizontale (appliquée dans onUpdate). | 903 |
-| `ui_liveries_decal.setSkewVertical(value)` | Définit l'entrée d'axe d'inclinaison verticale (appliquée dans onUpdate). | 907 |
-| `ui_liveries_decal.setSmallIncrements(value)` | Active ou coupe les petits incréments et notifie l'interface si la valeur change. | 956 |
-| `ui_liveries_decal.setTransformPaint(paint)` | Applique color (RGBA normalisé, l'alpha sert d'opacité), metallic et roughness au décalque en cours de transformation, puis appelle api.onUpdate_. | 565 |
-| `ui_liveries_decal.setUseMousePos(value)` | Active ou coupe le placement à la souris (bascule le réglage UseMousePos de l'API si nécessaire). Pendant une transformation, l'activer force la caméra en mode orbite. | 993 |
-| `ui_liveries_decal.setUseSurfaceNormal(value)` | Choisit la projection selon la normale de surface (true) ou selon la caméra (false) et notifie l'interface si la valeur change. | 919 |
-| `ui_liveries_decal.setup()` | Active le module : efface la sélection, la cible d'ajout et la surbrillance, puis reconstruit la liste des couches. | 259 |
-| `ui_liveries_decal.showExistingCursor()` | Affiche le curseur du décalque existant : masque la couche d'origine, copie sa texture, couleur, échelle, inclinaison, rotation, projection et miroir dans l'API, projette le décalque, pousse la table d'actions et démarre ui_liveries_camera.startTransformAtLayer. Avertit s'il n'y a pas de session. | 751 |
-| `ui_liveries_decal.showSelectedCursor()` | Prépare la pose d'un nouveau décalque : utilise la texture sélectionnée comme texture couleur, projette le décalque, remet transformation et miroir par défaut, pousse la table d'actions de transformation et démarre ui_liveries_camera.startTransform. Si une manette est utilisée, désactive le placement à la souris. Avertit si aucune texture n'est sélectionnée. | 617 |
-| `ui_liveries_decal.startAddDecal(targetLayerUid)` | Prépare l'ajout d'un décalque au-dessus d'un décalque existant (ou en haut de pile si l'uid n'est pas un décalque) puis navigue vers la route « liveries.edit.decals.camera ». | 823 |
-| `ui_liveries_decal.suspendTransformActionMap()` | Retire la table d'actions de transformation et remet les entrées à zéro (utilisé quand on ouvre les réglages). | 684 |
-| `ui_liveries_decal.teardown()` | Désactive le module : termine la transformation d'un décalque existant, cache le curseur, vide la sélection, la texture sélectionnée (ui_liveries_textures.clearSelectedItem) et la liste des couches, et coupe la surbrillance. | 271 |
-| `ui_liveries_decal.toggleLayerHighlight(layerUid)` | Met en surbrillance la couche si elle ne l'est pas déjà (seulement si elle est activée), sinon coupe la surbrillance. Rafraîchit la liste. | 348 |
-| `ui_liveries_decal.toggleLayerVisibility(layerUid)` | Active ou désactive l'affichage d'une couche (champ enabled), sur une copie de la couche passée à setLayer, puis rafraîchit la liste. | 333 |
-| `ui_liveries_decal.toggleProjectionMode()` | Inverse le mode de projection (surface ou caméra). Sans effet hors transformation. | 935 |
+| `ui_liveries_decal.beginExistingTransform(layerUid)` | Opens a re-transform session for an existing decal: stores a copy of the layer, its highlight state and an applied flag. Replaces any previous session. Refuses if the layer is not found, is not a decal or is not centered. | 710 |
+| `ui_liveries_decal.commitTransform()` | Validates the current transform. Without a re-transform session, places a new decal (placeSelectedDecal); otherwise calls api.replaceDecalTransformFromCurrentProjection, marks the session as applied and navigates to "liveries.edit.decals". | 874 |
+| `ui_liveries_decal.deleteLayer(layerUid)` | Deletes a layer via api.removeLayer. | 371 |
+| `ui_liveries_decal.duplicateLayer(layerUid)` | Duplicates a layer via api.duplicateLayer from its index and its parent. | 362 |
+| `ui_liveries_decal.dynamicDecals_moveLayer()` | Hook called by editor_api_dynamicDecals when a layer is moved; same handling as dynamicDecals_onLayerAdded. *(internal)* | 1109 |
+| `ui_liveries_decal.dynamicDecals_onLayerAdded()` | Hook called by editor_api_dynamicDecals when a layer is added. Rebuilds the list (marking the new layer as focus) and notifies the UI. Do not call it yourself. *(internal)* | 1109 |
+| `ui_liveries_decal.dynamicDecals_onLayerDeleted()` | Hook called by editor_api_dynamicDecals when a layer is removed; same handling as dynamicDecals_onLayerAdded. *(internal)* | 1109 |
+| `ui_liveries_decal.dynamicDecals_onLayerUpdated()` | Hook called by editor_api_dynamicDecals when a layer is modified; same handling as dynamicDecals_onLayerAdded. *(internal)* | 1109 |
+| `ui_liveries_decal.endExistingTransform()` | Closes the re-transform session: hides the cursor and, if nothing was applied, restores the layer's original visibility and highlight, then refreshes the list. | 806 |
+| `ui_liveries_decal.getLayerMirror(layerUid)` | Returns the mirror flags of a validated decal; the mirror plane offset (mirrorOffset) is global to the editor, not per layer. | 514 |
+| `ui_liveries_decal.getLockRatio()` | Returns whether ratio locking is active for scale and skew. | 970 |
+| `ui_liveries_decal.getMirrorSnapshot()` | Returns the API's current mirror settings: mirrored, flipMirroredDecal, mirrorOffset. | 947 |
+| `ui_liveries_decal.getPaint(layerUid)` | Returns a layer's paint (ui_liveries_paint.getLayerPaint). Active module required. | 478 |
+| `ui_liveries_decal.getSmallIncrements()` | Returns whether "small increments" mode is active (speeds multiplied by 0.1, also for the free camera). | 952 |
+| `ui_liveries_decal.getTransformPaint()` | Returns the paint of the decal being transformed: the API's current color, metallic and roughness, the vehicle's presets, and the layerUid of the layer being edited (or "transform-preview" for a new decal). | 553 |
+| `ui_liveries_decal.getTransformSnapshot()` | Returns the transform state sent to the UI: scale {x, y}, skew {x, y}, rotation (degrees), projection (label key), smallIncrements, lockRatio. Numbers are strings. | 942 |
+| `ui_liveries_decal.hideSelectedCursor()` | Ends transform mode: removes the action map, resets the inputs to zero, stops the camera transform, makes the decal transparent (alpha 0), turns off the projection and restores the mouse setting if needed. | 661 |
+| `ui_liveries_decal.isUseMousePos()` | Returns whether mouse placement of the decal is active (api.isUseMousePos). | 988 |
+| `ui_liveries_decal.notifyUi()` | Sends the layer list and the current selection back to the UI. | 286 |
+| `ui_liveries_decal.onUpdate(dtReal)` | Hook called every frame with dtReal (real seconds). While the transform action map is active, applies the scale, skew and rotation inputs to the decal and notifies the UI on change. *(internal)* *(hook)* | 1051 |
+| `ui_liveries_decal.placeSelectedDecal()` | Validates a new decal with api.addDecal from the selected texture, optionally moves it above the startAddDecal target, clears the texture selection and navigates to "liveries.edit.decals". Returns nil with a warning if no texture is selected. | 829 |
+| `ui_liveries_decal.reorderLayers(orderedUids)` | Applies a new root layer order, provided it corresponds to the move of a single decal. Finds the moved layer, computes the target index taking the fill layer into account and calls api.moveLayer; the refresh comes back through the dynamicDecals_moveLayer hook. | 414 |
+| `ui_liveries_decal.resumeTransformActionMap()` | Pushes the transform action map again if it is not active. | 697 |
+| `ui_liveries_decal.select(layerUid)` | Selects a layer (and highlights it), or deselects if layerUid is nil. Notifies the UI of the change. | 291 |
+| `ui_liveries_decal.setFlipMirroredDecal(value)` | Flips or not the mirrored decal (api.setFlipMirroredDecal). | 1027 |
+| `ui_liveries_decal.setLayerMirror(layerUid, mirror)` | Updates mirrored and flipMirroredDecal of a layer, on a copy passed to setLayer so as not to touch the API history. | 532 |
+| `ui_liveries_decal.setLockRatio(value)` | Enables or disables ratio locking and notifies the UI if the value changes. | 974 |
+| `ui_liveries_decal.setMirrorOffset(value)` | Sets the mirror plane offset, clamped between -1 and 1 (api.setMirrorOffset). | 1039 |
+| `ui_liveries_decal.setMirrored(value)` | Enables or disables mirroring of the decal being placed (api.setMirrored). | 1015 |
+| `ui_liveries_decal.setPaint(layerUid, paint)` | Applies a paint to a layer (ui_liveries_paint.setLayerPaint). Active module required. | 487 |
+| `ui_liveries_decal.setRotateLeft(value)` | Sets the left rotation input (trigger); the applied rotation is right minus left. | 911 |
+| `ui_liveries_decal.setRotateRight(value)` | Sets the right rotation input (trigger). | 915 |
+| `ui_liveries_decal.setScaleHorizontal(value)` | Sets the horizontal scale axis input (applied in onUpdate). | 895 |
+| `ui_liveries_decal.setScaleVertical(value)` | Sets the vertical scale axis input (applied in onUpdate). | 899 |
+| `ui_liveries_decal.setSkewHorizontal(value)` | Sets the horizontal skew axis input (applied in onUpdate). | 903 |
+| `ui_liveries_decal.setSkewVertical(value)` | Sets the vertical skew axis input (applied in onUpdate). | 907 |
+| `ui_liveries_decal.setSmallIncrements(value)` | Enables or disables small increments and notifies the UI if the value changes. | 956 |
+| `ui_liveries_decal.setTransformPaint(paint)` | Applies color (normalized RGBA, alpha is used as opacity), metallic and roughness to the decal being transformed, then calls api.onUpdate_. | 565 |
+| `ui_liveries_decal.setUseMousePos(value)` | Enables or disables mouse placement (toggles the API's UseMousePos setting if needed). During a transform, enabling it forces the camera into orbit mode. | 993 |
+| `ui_liveries_decal.setUseSurfaceNormal(value)` | Chooses projection along the surface normal (true) or along the camera (false) and notifies the UI if the value changes. | 919 |
+| `ui_liveries_decal.setup()` | Activates the module: clears the selection, the add target and the highlight, then rebuilds the layer list. | 259 |
+| `ui_liveries_decal.showExistingCursor()` | Displays the existing decal's cursor: hides the original layer, copies its texture, color, scale, skew, rotation, projection and mirror into the API, projects the decal, pushes the action map and starts ui_liveries_camera.startTransformAtLayer. Warns if there is no session. | 751 |
+| `ui_liveries_decal.showSelectedCursor()` | Prepares the placement of a new decal: uses the selected texture as color texture, projects the decal, resets transform and mirror to defaults, pushes the transform action map and starts ui_liveries_camera.startTransform. If a gamepad is used, disables mouse placement. Warns if no texture is selected. | 617 |
+| `ui_liveries_decal.startAddDecal(targetLayerUid)` | Prepares adding a decal above an existing decal (or at the top of the stack if the uid is not a decal) then navigates to the route "liveries.edit.decals.camera". | 823 |
+| `ui_liveries_decal.suspendTransformActionMap()` | Removes the transform action map and resets the inputs to zero (used when the settings are opened). | 684 |
+| `ui_liveries_decal.teardown()` | Deactivates the module: ends the existing decal transform, hides the cursor, clears the selection, the selected texture (ui_liveries_textures.clearSelectedItem) and the layer list, and turns off the highlight. | 271 |
+| `ui_liveries_decal.toggleLayerHighlight(layerUid)` | Highlights the layer if it is not already (only if it is enabled), otherwise turns off the highlight. Refreshes the list. | 348 |
+| `ui_liveries_decal.toggleLayerVisibility(layerUid)` | Enables or disables the display of a layer (enabled field), on a copy of the layer passed to setLayer, then refreshes the list. | 333 |
+| `ui_liveries_decal.toggleProjectionMode()` | Toggles the projection mode (surface or camera). No effect outside a transform. | 935 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_liveries_decal.beginExistingTransform(layerUid)`
 
-Ouvre une session de retransformation d'un décalque existant : mémorise une copie de la couche, son état de surbrillance et un indicateur applied. Remplace toute session précédente. Refuse si la couche est introuvable, n'est pas un décalque ou n'est pas centrée.
+Opens a re-transform session for an existing decal: stores a copy of the layer, its highlight state and an applied flag. Replaces any previous session. Refuses if the layer is not found, is not a decal or is not centered.
 
-- `layerUid` (*string*) : Uid du décalque.
-- **renvoie** : boolean true si la session est ouverte.
+- `layerUid` (*string*) : Decal uid.
+- **returns**: boolean true if the session is open.
 
 #### `ui_liveries_decal.commitTransform()`
 
-Valide la transformation en cours. Sans session de retransformation, place un nouveau décalque (placeSelectedDecal) ; sinon appelle api.replaceDecalTransformFromCurrentProjection, marque la session comme appliquée et navigue vers « liveries.edit.decals ».
+Validates the current transform. Without a re-transform session, places a new decal (placeSelectedDecal); otherwise calls api.replaceDecalTransformFromCurrentProjection, marks the session as applied and navigates to "liveries.edit.decals".
 
-- **renvoie** : string|boolean|nil Uid du nouveau décalque, ou true/false pour une retransformation.
+- **returns**: string|boolean|nil Uid of the new decal, or true/false for a re-transform.
 
 #### `ui_liveries_decal.deleteLayer(layerUid)`
 
-Supprime une couche via api.removeLayer.
+Deletes a layer via api.removeLayer.
 
-- `layerUid` (*string*) : Uid de la couche.
+- `layerUid` (*string*) : Layer uid.
 
 #### `ui_liveries_decal.duplicateLayer(layerUid)`
 
-Duplique une couche via api.duplicateLayer à partir de son index et de son parent.
+Duplicates a layer via api.duplicateLayer from its index and its parent.
 
-- `layerUid` (*string*) : Uid de la couche.
+- `layerUid` (*string*) : Layer uid.
 
 #### `ui_liveries_decal.getLayerMirror(layerUid)`
 
-Renvoie les indicateurs de miroir d'un décalque validé ; le décalage du plan de miroir (mirrorOffset) est global à l'éditeur, pas par couche.
+Returns the mirror flags of a validated decal; the mirror plane offset (mirrorOffset) is global to the editor, not per layer.
 
-- `layerUid` (*string*) : Uid de la couche.
-- **renvoie** : table|nil Table layerUid, mirrored, flipMirroredDecal, mirrorOffset.
+- `layerUid` (*string*) : Layer uid.
+- **returns**: table|nil Table layerUid, mirrored, flipMirroredDecal, mirrorOffset.
 
 #### `ui_liveries_decal.getLockRatio()`
 
-Indique si le verrouillage du ratio est actif pour l'échelle et l'inclinaison.
+Returns whether ratio locking is active for scale and skew.
 
-- **renvoie** : boolean État du verrou.
+- **returns**: boolean Lock state.
 
 #### `ui_liveries_decal.getMirrorSnapshot()`
 
-Renvoie les réglages de miroir courants de l'API : mirrored, flipMirroredDecal, mirrorOffset.
+Returns the API's current mirror settings: mirrored, flipMirroredDecal, mirrorOffset.
 
-- **renvoie** : table|nil nil si l'API est absente.
+- **returns**: table|nil nil if the API is missing.
 
 #### `ui_liveries_decal.getPaint(layerUid)`
 
-Renvoie la peinture d'une couche (ui_liveries_paint.getLayerPaint). Module actif requis.
+Returns a layer's paint (ui_liveries_paint.getLayerPaint). Active module required.
 
-- `layerUid` (*string*) : Uid de la couche.
-- **renvoie** : table|nil Table layerUid, color, metallic, roughness, presets.
+- `layerUid` (*string*) : Layer uid.
+- **returns**: table|nil Table layerUid, color, metallic, roughness, presets.
 
 #### `ui_liveries_decal.getSmallIncrements()`
 
-Indique si le mode « petits incréments » est actif (vitesses multipliées par 0,1, aussi pour la caméra libre).
+Returns whether "small increments" mode is active (speeds multiplied by 0.1, also for the free camera).
 
-- **renvoie** : boolean État du mode.
+- **returns**: boolean Mode state.
 
 #### `ui_liveries_decal.getTransformPaint()`
 
-Renvoie la peinture du décalque en cours de transformation : couleur, métallisation et rugosité courantes de l'API, présets du véhicule, et layerUid de la couche en édition (ou « transform-preview » pour un nouveau décalque).
+Returns the paint of the decal being transformed: the API's current color, metallic and roughness, the vehicle's presets, and the layerUid of the layer being edited (or "transform-preview" for a new decal).
 
-- **renvoie** : table|nil Table de peinture, nil si l'API est absente.
+- **returns**: table|nil Paint table, nil if the API is missing.
 
 #### `ui_liveries_decal.getTransformSnapshot()`
 
-Renvoie l'état de transformation envoyé à l'interface : scale {x, y}, skew {x, y}, rotation (degrés), projection (clé de libellé), smallIncrements, lockRatio. Les nombres sont des chaînes.
+Returns the transform state sent to the UI: scale {x, y}, skew {x, y}, rotation (degrees), projection (label key), smallIncrements, lockRatio. Numbers are strings.
 
-- **renvoie** : table|nil nil si l'API est absente.
+- **returns**: table|nil nil if the API is missing.
 
 #### `ui_liveries_decal.isUseMousePos()`
 
-Indique si le placement du décalque à la souris est actif (api.isUseMousePos).
+Returns whether mouse placement of the decal is active (api.isUseMousePos).
 
-- **renvoie** : boolean false aussi si l'API est absente.
+- **returns**: boolean Also false if the API is missing.
 
 #### `ui_liveries_decal.onUpdate(dtReal)`
 
-Hook appelé à chaque image avec dtReal (secondes réelles). Tant que la table d'actions de transformation est active, applique les entrées d'échelle, d'inclinaison et de rotation au décalque et notifie l'interface en cas de changement.
+Hook called every frame with dtReal (real seconds). While the transform action map is active, applies the scale, skew and rotation inputs to the decal and notifies the UI on change.
 
-- `dtReal` (*number*) : Durée réelle de l'image en secondes.
+- `dtReal` (*number*) : Real frame duration in seconds.
 
 #### `ui_liveries_decal.placeSelectedDecal()`
 
-Valide un nouveau décalque avec api.addDecal à partir de la texture sélectionnée, le déplace éventuellement au-dessus de la cible de startAddDecal, vide la sélection de texture et navigue vers « liveries.edit.decals ». Renvoie nil avec avertissement si aucune texture n'est sélectionnée.
+Validates a new decal with api.addDecal from the selected texture, optionally moves it above the startAddDecal target, clears the texture selection and navigates to "liveries.edit.decals". Returns nil with a warning if no texture is selected.
 
-- **renvoie** : string|nil Uid de la nouvelle couche.
+- **returns**: string|nil Uid of the new layer.
 
 #### `ui_liveries_decal.reorderLayers(orderedUids)`
 
-Applique un nouvel ordre de couches racine, à condition qu'il corresponde au déplacement d'un seul décalque. Retrouve la couche déplacée, calcule l'index cible en tenant compte de la couche de remplissage et appelle api.moveLayer ; le rafraîchissement revient par le hook dynamicDecals_moveLayer.
+Applies a new root layer order, provided it corresponds to the move of a single decal. Finds the moved layer, computes the target index taking the fill layer into account and calls api.moveLayer; the refresh comes back through the dynamicDecals_moveLayer hook.
 
-- `orderedUids` (*string[]*) : Uids des couches racine dans l'ordre affiché (premier = dessus).
-- **renvoie** : boolean false avec avertissement si l'ordre est invalide, la couche n'est pas un décalque racine ou aucun voisin d'ancrage n'existe.
+- `orderedUids` (*string[]*) : Uids of the root layers in displayed order (first = top).
+- **returns**: boolean false with a warning if the order is invalid, the layer is not a root decal or no anchor neighbor exists.
 
 #### `ui_liveries_decal.select(layerUid)`
 
-Sélectionne une couche (et la met en surbrillance), ou désélectionne si layerUid est nil. Notifie l'interface du changement.
+Selects a layer (and highlights it), or deselects if layerUid is nil. Notifies the UI of the change.
 
-- `layerUid` (*string|nil*) : Uid de la couche, ou nil pour désélectionner.
-- **renvoie** : boolean false si l'API est absente ou la couche introuvable, sinon true.
+- `layerUid` (*string|nil*) : Layer uid, or nil to deselect.
+- **returns**: boolean false if the API is missing or the layer is not found, otherwise true.
 
 #### `ui_liveries_decal.setFlipMirroredDecal(value)`
 
-Inverse ou non le décalque miroir (api.setFlipMirroredDecal).
+Flips or not the mirrored decal (api.setFlipMirroredDecal).
 
-- `value` (*boolean*) : Nouvel état.
-- **renvoie** : boolean false si value n'est pas un booléen.
+- `value` (*boolean*) : New state.
+- **returns**: boolean false if value is not a boolean.
 
 #### `ui_liveries_decal.setLayerMirror(layerUid, mirror)`
 
-Met à jour mirrored et flipMirroredDecal d'une couche, sur une copie passée à setLayer pour ne pas toucher à l'historique de l'API.
+Updates mirrored and flipMirroredDecal of a layer, on a copy passed to setLayer so as not to touch the API history.
 
-- `layerUid` (*string*) : Uid de la couche.
-- `mirror` (*table*) : Table avec mirrored et flipMirroredDecal (booléens ; tout ce qui n'est pas true vaut false).
-- **renvoie** : boolean true si la mise à jour a été faite.
+- `layerUid` (*string*) : Layer uid.
+- `mirror` (*table*) : Table with mirrored and flipMirroredDecal (booleans; anything that is not true is false).
+- **returns**: boolean true if the update was done.
 
 #### `ui_liveries_decal.setLockRatio(value)`
 
-Active ou coupe le verrouillage du ratio et notifie l'interface si la valeur change.
+Enables or disables ratio locking and notifies the UI if the value changes.
 
-- `value` (*boolean*) : Nouvel état.
-- **renvoie** : boolean false si value n'est pas un booléen.
+- `value` (*boolean*) : New state.
+- **returns**: boolean false if value is not a boolean.
 
 #### `ui_liveries_decal.setMirrorOffset(value)`
 
-Règle le décalage du plan de miroir, borné entre -1 et 1 (api.setMirrorOffset).
+Sets the mirror plane offset, clamped between -1 and 1 (api.setMirrorOffset).
 
-- `value` (*number*) : Décalage.
-- **renvoie** : boolean false si value n'est pas un nombre.
+- `value` (*number*) : Offset.
+- **returns**: boolean false if value is not a number.
 
 #### `ui_liveries_decal.setMirrored(value)`
 
-Active ou coupe le miroir du décalque en cours de pose (api.setMirrored).
+Enables or disables mirroring of the decal being placed (api.setMirrored).
 
-- `value` (*boolean*) : Nouvel état.
-- **renvoie** : boolean false si value n'est pas un booléen.
+- `value` (*boolean*) : New state.
+- **returns**: boolean false if value is not a boolean.
 
 #### `ui_liveries_decal.setPaint(layerUid, paint)`
 
-Applique une peinture à une couche (ui_liveries_paint.setLayerPaint). Module actif requis.
+Applies a paint to a layer (ui_liveries_paint.setLayerPaint). Active module required.
 
-- `layerUid` (*string*) : Uid de la couche.
-- `paint` (*table*) : color {r, g, b, a}, metallic, roughness, normalisés entre 0 et 1.
-- **renvoie** : boolean true si la mise à jour a été faite.
+- `layerUid` (*string*) : Layer uid.
+- `paint` (*table*) : color {r, g, b, a}, metallic, roughness, normalized between 0 and 1.
+- **returns**: boolean true if the update was done.
 
 #### `ui_liveries_decal.setRotateLeft(value)`
 
-Définit l'entrée de rotation vers la gauche (gâchette) ; la rotation appliquée est droite moins gauche.
+Sets the left rotation input (trigger); the applied rotation is right minus left.
 
-- `value` (*number|nil*) : Valeur d'axe, nil vaut 0.
+- `value` (*number|nil*) : Axis value, nil is 0.
 
 #### `ui_liveries_decal.setRotateRight(value)`
 
-Définit l'entrée de rotation vers la droite (gâchette).
+Sets the right rotation input (trigger).
 
-- `value` (*number|nil*) : Valeur d'axe, nil vaut 0.
+- `value` (*number|nil*) : Axis value, nil is 0.
 
 #### `ui_liveries_decal.setScaleHorizontal(value)`
 
-Définit l'entrée d'axe d'échelle horizontale (appliquée dans onUpdate).
+Sets the horizontal scale axis input (applied in onUpdate).
 
-- `value` (*number|nil*) : Valeur d'axe, nil vaut 0.
+- `value` (*number|nil*) : Axis value, nil is 0.
 
 #### `ui_liveries_decal.setScaleVertical(value)`
 
-Définit l'entrée d'axe d'échelle verticale (appliquée dans onUpdate).
+Sets the vertical scale axis input (applied in onUpdate).
 
-- `value` (*number|nil*) : Valeur d'axe, nil vaut 0.
+- `value` (*number|nil*) : Axis value, nil is 0.
 
 #### `ui_liveries_decal.setSkewHorizontal(value)`
 
-Définit l'entrée d'axe d'inclinaison horizontale (appliquée dans onUpdate).
+Sets the horizontal skew axis input (applied in onUpdate).
 
-- `value` (*number|nil*) : Valeur d'axe, nil vaut 0.
+- `value` (*number|nil*) : Axis value, nil is 0.
 
 #### `ui_liveries_decal.setSkewVertical(value)`
 
-Définit l'entrée d'axe d'inclinaison verticale (appliquée dans onUpdate).
+Sets the vertical skew axis input (applied in onUpdate).
 
-- `value` (*number|nil*) : Valeur d'axe, nil vaut 0.
+- `value` (*number|nil*) : Axis value, nil is 0.
 
 #### `ui_liveries_decal.setSmallIncrements(value)`
 
-Active ou coupe les petits incréments et notifie l'interface si la valeur change.
+Enables or disables small increments and notifies the UI if the value changes.
 
-- `value` (*boolean*) : Nouvel état.
-- **renvoie** : boolean false si value n'est pas un booléen.
+- `value` (*boolean*) : New state.
+- **returns**: boolean false if value is not a boolean.
 
 #### `ui_liveries_decal.setTransformPaint(paint)`
 
-Applique color (RGBA normalisé, l'alpha sert d'opacité), metallic et roughness au décalque en cours de transformation, puis appelle api.onUpdate_.
+Applies color (normalized RGBA, alpha is used as opacity), metallic and roughness to the decal being transformed, then calls api.onUpdate_.
 
-- `paint` (*table*) : color {r, g, b, a}, metallic, roughness (facultatifs, 0 à 1).
-- **renvoie** : boolean false si l'API est absente ou si paint n'est pas une table.
+- `paint` (*table*) : color {r, g, b, a}, metallic, roughness (optional, 0 to 1).
+- **returns**: boolean false if the API is missing or paint is not a table.
 
 #### `ui_liveries_decal.setUseMousePos(value)`
 
-Active ou coupe le placement à la souris (bascule le réglage UseMousePos de l'API si nécessaire). Pendant une transformation, l'activer force la caméra en mode orbite.
+Enables or disables mouse placement (toggles the API's UseMousePos setting if needed). During a transform, enabling it forces the camera into orbit mode.
 
-- `value` (*boolean*) : Nouvel état.
-- **renvoie** : boolean false si value n'est pas un booléen ou si l'API est absente.
+- `value` (*boolean*) : New state.
+- **returns**: boolean false if value is not a boolean or the API is missing.
 
 #### `ui_liveries_decal.setUseSurfaceNormal(value)`
 
-Choisit la projection selon la normale de surface (true) ou selon la caméra (false) et notifie l'interface si la valeur change.
+Chooses projection along the surface normal (true) or along the camera (false) and notifies the UI if the value changes.
 
-- `value` (*boolean*) : Mode de projection.
-- **renvoie** : boolean false si value n'est pas un booléen ou si l'API est absente.
+- `value` (*boolean*) : Projection mode.
+- **returns**: boolean false if value is not a boolean or the API is missing.
 
 #### `ui_liveries_decal.startAddDecal(targetLayerUid)`
 
-Prépare l'ajout d'un décalque au-dessus d'un décalque existant (ou en haut de pile si l'uid n'est pas un décalque) puis navigue vers la route « liveries.edit.decals.camera ».
+Prepares adding a decal above an existing decal (or at the top of the stack if the uid is not a decal) then navigates to the route "liveries.edit.decals.camera".
 
-- `targetLayerUid` (*string|nil*) : Uid du décalque au-dessus duquel insérer.
+- `targetLayerUid` (*string|nil*) : Uid of the decal above which to insert.
 
 #### `ui_liveries_decal.toggleLayerHighlight(layerUid)`
 
-Met en surbrillance la couche si elle ne l'est pas déjà (seulement si elle est activée), sinon coupe la surbrillance. Rafraîchit la liste.
+Highlights the layer if it is not already (only if it is enabled), otherwise turns off the highlight. Refreshes the list.
 
-- `layerUid` (*string*) : Uid de la couche.
+- `layerUid` (*string*) : Layer uid.
 
 #### `ui_liveries_decal.toggleLayerVisibility(layerUid)`
 
-Active ou désactive l'affichage d'une couche (champ enabled), sur une copie de la couche passée à setLayer, puis rafraîchit la liste.
+Enables or disables the display of a layer (enabled field), on a copy of the layer passed to setLayer, then refreshes the list.
 
-- `layerUid` (*string*) : Uid de la couche.
+- `layerUid` (*string*) : Layer uid.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant celle-ci : editor_api_dynamicDecals, ui_liveries, ui_liveries_camera, ui_liveries_paint, ui_liveries_textures. |
+| `dependencies` | string[] | Extensions loaded before this one: editor_api_dynamicDecals, ui_liveries, ui_liveries_camera, ui_liveries_paint, ui_liveries_textures. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/liveries/decal.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/liveries/decal.lua`.*

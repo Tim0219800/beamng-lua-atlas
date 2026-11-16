@@ -2,190 +2,190 @@
 -- tim19Atlas stub generated from lua/common/libs/luamqtt/mqtt/client.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Client MQTT (3.1.1 ou 5.0) de la bibliothèque luamqtt. Gère la connexion à un broker via un connecteur (luasocket par défaut), l'envoi/réception de paquets, publish/subscribe/unsubscribe, les acquittements QoS 1 et 2, le keep_alive (PINGREQ), la reconnexion automatique et des événements utilisateur enregistrés avec on(). Le client est piloté soit par un ioloop (ioloop.lua), soit en synchrone (mqtt.run_sync).
---- Accès : `require("libs/luamqtt/mqtt/client")`
+--- MQTT client (3.1.1 or 5.0) from the luamqtt library. Handles connecting to a broker through a connector (luasocket by default), sending/receiving packets, publish/subscribe/unsubscribe, QoS 1 and 2 acknowledgements, keep_alive (PINGREQ), automatic reconnection and user events registered with on(). The client is driven either by an ioloop (ioloop.lua), or synchronously (mqtt.run_sync).
+--- Access: `require("libs/luamqtt/mqtt/client")`
 ---@class libs_luamqtt_mqtt_client
 local libs_luamqtt_mqtt_client = {}
 
---- Crée, initialise et renvoie une instance de client MQTT. Si un ioloop par défaut existe déjà et tourne, le client y est ajouté et la connexion démarre.
----Source : lua/common/libs/luamqtt/mqtt/client.lua:1197
----@param ... table Table d'arguments de client_mt:__init.
----@return table  Instance client_mt.
+--- Creates, initializes and returns an MQTT client instance. If a default ioloop already exists and is running, the client is added to it and the connection starts.
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:1197
+---@param ... table Argument table of client_mt:__init.
+---@return table  client_mt instance.
 function libs_luamqtt_mqtt_client.create(...) end
 
---- Instance de client MQTT renvoyée par create. Champs notables : args (arguments validés), handlers (callbacks par événement), connection (table de connexion, nil si déconnecté).
+--- MQTT client instance returned by create. Notable fields: args (validated arguments), handlers (callbacks per event), connection (connection table, nil if disconnected).
 ---@class libs_luamqtt_mqtt_client_client_mt
 local libs_luamqtt_mqtt_client_client_mt = {}
 
---- Appelé par le ramasse-miettes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/luamqtt/mqtt/client.lua:1183
+--- Called by the garbage collector.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:1183
 function libs_luamqtt_mqtt_client_client_mt:__gc() end
 
---- Valide les arguments de création (uri 'hôte[:port]', clean, version 4/5, id, username, password, secure, will{topic,payload,qos,retain}, keep_alive, reconnect, connector, ssl_module, properties, user_properties) et initialise les handlers.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/luamqtt/mqtt/client.lua:87
----@param args table Arguments de création.
+--- Validates the creation arguments (uri 'host[:port]', clean, version 4/5, id, username, password, secure, will{topic,payload,qos,retain}, keep_alive, reconnect, connector, ssl_module, properties, user_properties) and initializes the handlers.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:87
+---@param args table Creation arguments.
 function libs_luamqtt_mqtt_client_client_mt:__init(args) end
 
---- Représentation texte du client.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/luamqtt/mqtt/client.lua:1178
+--- Text representation of the client.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:1178
 function libs_luamqtt_mqtt_client_client_mt:__tostring() end
 
---- Applique le délai réseau de l'ioloop à une connexion déjà établie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/luamqtt/mqtt/client.lua:1054
+--- Applies the ioloop's network timeout to an already established connection.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:1054
 function libs_luamqtt_mqtt_client_client_mt:_apply_network_timeout() end
 
---- Construit conn.secure_params d'après les arguments de création.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/luamqtt/mqtt/client.lua:1121
+--- Builds conn.secure_params from the creation arguments.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:1121
 ---@param args any
 ---@param conn any
 function libs_luamqtt_mqtt_client_client_mt._apply_secure(args, conn) end
 
---- Attribue le prochain identifiant de paquet.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/luamqtt/mqtt/client.lua:866
+--- Assigns the next packet identifier.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:866
 ---@param pargs any
 function libs_luamqtt_mqtt_client_client_mt:_assign_packet_id(pargs) end
 
---- Effectue une itération d'E/S : réception du paquet suivant et déclenchement des événements.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/luamqtt/mqtt/client.lua:948
+--- Performs one I/O iteration: receiving the next packet and firing the events.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:948
 ---@param recv any
 function libs_luamqtt_mqtt_client_client_mt:_io_iteration(recv) end
 
---- Une itération d'E/S appelée par l'ioloop.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/luamqtt/mqtt/client.lua:891
+--- One I/O iteration called by the ioloop.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:891
 function libs_luamqtt_mqtt_client_client_mt:_ioloop_iteration() end
 
---- Remplit conn.host et conn.port d'après args.uri (port 1883, ou 8883 en sécurisé).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/luamqtt/mqtt/client.lua:1102
+--- Fills conn.host and conn.port from args.uri (port 1883, or 8883 when secure).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:1102
 ---@param args any
 ---@param conn any
 function libs_luamqtt_mqtt_client_client_mt._parse_uri(args, conn) end
 
---- Reçoit un paquet de la connexion.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/luamqtt/mqtt/client.lua:1164
+--- Receives a packet from the connection.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:1164
 function libs_luamqtt_mqtt_client_client_mt:_receive_packet() end
 
---- Envoie un paquet sur la connexion.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/luamqtt/mqtt/client.lua:1140
+--- Sends a packet on the connection.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:1140
 ---@param packet any
 function libs_luamqtt_mqtt_client_client_mt:_send_packet(packet) end
 
---- Une itération d'E/S appelée par la boucle synchrone (mqtt.run_sync).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/luamqtt/mqtt/client.lua:881
+--- One I/O iteration called by the synchronous loop (mqtt.run_sync).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:881
 function libs_luamqtt_mqtt_client_client_mt:_sync_iteration() end
 
---- Acquitte un message PUBLISH reçu (PUBACK, ou PUBREC pour QoS 2).
----Source : lua/common/libs/luamqtt/mqtt/client.lua:492
----@param msg table Paquet PUBLISH reçu.
----@param rc integer Code de raison (MQTT 5, défaut 0).
----@param properties table Propriétés.
----@param user_properties table Propriétés utilisateur.
----@return boolean  true, ou false et message.
+--- Acknowledges a received PUBLISH message (PUBACK, or PUBREC for QoS 2).
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:492
+---@param msg table PUBLISH packet received.
+---@param rc integer Reason code (MQTT 5, default 0).
+---@param properties table Properties.
+---@param user_properties table User properties.
+---@return boolean  true, or false and message.
 function libs_luamqtt_mqtt_client_client_mt:acknowledge(msg, rc, properties, user_properties) end
 
---- Envoie PUBCOMP (dernière phase d'un échange QoS 2).
----Source : lua/common/libs/luamqtt/mqtt/client.lua:820
----@param packet_id integer Identifiant de paquet.
----@return boolean  true, ou false et message.
+--- Sends PUBCOMP (last phase of a QoS 2 exchange).
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:820
+---@param packet_id integer Packet identifier.
+---@return boolean  true, or false and message.
 function libs_luamqtt_mqtt_client_client_mt:acknowledge_pubcomp(packet_id) end
 
---- Envoie PUBREL (deuxième phase d'un échange QoS 2).
----Source : lua/common/libs/luamqtt/mqtt/client.lua:797
----@param packet_id integer Identifiant de paquet.
----@return boolean  true, ou false et message.
+--- Sends PUBREL (second phase of a QoS 2 exchange).
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:797
+---@param packet_id integer Packet identifier.
+---@return boolean  true, or false and message.
 function libs_luamqtt_mqtt_client_client_mt:acknowledge_pubrel(packet_id) end
 
---- Envoie un paquet AUTH (MQTT 5.0).
----Source : lua/common/libs/luamqtt/mqtt/client.lua:602
----@param rc integer Code de raison (défaut 0).
----@param properties table Propriétés.
----@param user_properties table Propriétés utilisateur.
----@return boolean  true, ou false et message.
+--- Sends an AUTH packet (MQTT 5.0).
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:602
+---@param rc integer Reason code (default 0).
+---@param properties table Properties.
+---@param user_properties table User properties.
+---@return boolean  true, or false and message.
 function libs_luamqtt_mqtt_client_client_mt:auth(rc, properties, user_properties) end
 
---- Ferme immédiatement la connexion réseau, sans DISCONNECT. Déclenche l'événement close ; peut programmer une reconnexion si reconnect est actif.
----Source : lua/common/libs/luamqtt/mqtt/client.lua:636
----@param reason string|nil Texte de la raison.
+--- Immediately closes the network connection, without DISCONNECT. Fires the close event; may schedule a reconnection if reconnect is active.
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:636
+---@param reason string|nil Reason text.
 function libs_luamqtt_mqtt_client_client_mt:close_connection(reason) end
 
---- Envoie DISCONNECT au broker puis ferme la connexion.
----Source : lua/common/libs/luamqtt/mqtt/client.lua:563
----@param rc integer Code de raison MQTT 5 (défaut 0).
----@param properties table Propriétés.
----@param user_properties table Propriétés utilisateur.
----@return boolean  true, ou false et message.
+--- Sends DISCONNECT to the broker then closes the connection.
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:563
+---@param rc integer MQTT 5 reason code (default 0).
+---@param properties table Properties.
+---@param user_properties table User properties.
+---@return boolean  true, or false and message.
 function libs_luamqtt_mqtt_client_client_mt:disconnect(rc, properties, user_properties) end
 
---- Appelle les handlers enregistrés pour un événement.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/luamqtt/mqtt/client.lua:842
----@param event string Nom de l'événement.
----@param ... any Arguments transmis aux handlers.
+--- Calls the handlers registered for an event.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:842
+---@param event string Event name.
+---@param ... any Arguments passed to the handlers.
 function libs_luamqtt_mqtt_client_client_mt:handle(event, ...) end
 
---- Retire un handler d'un événement.
----Source : lua/common/libs/luamqtt/mqtt/client.lua:268
----@param event string Nom de l'événement.
----@param func function Handler à retirer.
+--- Removes a handler from an event.
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:268
+---@param event string Event name.
+---@param func function Handler to remove.
 function libs_luamqtt_mqtt_client_client_mt:off(event, func) end
 
---- Ajoute des handlers d'événements : on(nom, fonction) ou on({nom1 = f1, nom2 = f2}). Lève une erreur si le nom d'événement est invalide.
----Source : lua/common/libs/luamqtt/mqtt/client.lua:234
----@param ... string|table, function|nil (event_name, function) ou table d'événements.
+--- Adds event handlers: on(name, function) or on({name1 = f1, name2 = f2}). Raises an error if the event name is invalid.
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:234
+---@param ... string|table, function|nil (event_name, function) or table of events.
 function libs_luamqtt_mqtt_client_client_mt:on(...) end
 
---- Ouvre la connexion réseau vers le broker via le connecteur.
----Source : lua/common/libs/luamqtt/mqtt/client.lua:710
----@return boolean  true, ou false et message.
+--- Opens the network connection to the broker via the connector.
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:710
+---@return boolean  true, or false and message.
 function libs_luamqtt_mqtt_client_client_mt:open_connection() end
 
---- Publie un message.
----Source : lua/common/libs/luamqtt/mqtt/client.lua:425
----@param args table topic, payload, qos (défaut 0), retain (défaut false), dup (défaut false), properties, user_properties, callback (appelé à l'acquittement).
----@return boolean|integer  true ou identifiant de paquet ; false et message en cas d'échec.
+--- Publishes a message.
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:425
+---@param args table topic, payload, qos (default 0), retain (default false), dup (default false), properties, user_properties, callback (called on acknowledgement).
+---@return boolean|integer  true or packet identifier; false and message on failure.
 function libs_luamqtt_mqtt_client_client_mt:publish(args) end
 
---- Envoie le paquet CONNECT sur la connexion ouverte.
----Source : lua/common/libs/luamqtt/mqtt/client.lua:751
----@return boolean  true, ou false et message.
+--- Sends the CONNECT packet on the open connection.
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:751
+---@return boolean  true, or false and message.
 function libs_luamqtt_mqtt_client_client_mt:send_connect() end
 
---- Envoie un PINGREQ (keep_alive).
----Source : lua/common/libs/luamqtt/mqtt/client.lua:685
----@return boolean  true, ou false et message.
+--- Sends a PINGREQ (keep_alive).
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:685
+---@return boolean  true, or false and message.
 function libs_luamqtt_mqtt_client_client_mt:send_pingreq() end
 
---- Associe ou dissocie (nil) le client d'un ioloop ; appelé par ioloop:add/remove.
----Source : lua/common/libs/luamqtt/mqtt/client.lua:790
----@param loop table|nil Instance ioloop.
+--- Associates or dissociates (nil) the client with an ioloop; called by ioloop:add/remove.
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:790
+---@param loop table|nil ioloop instance.
 function libs_luamqtt_mqtt_client_client_mt:set_ioloop(loop) end
 
---- Démarre la connexion au broker (ouverture réseau puis CONNECT).
----Source : lua/common/libs/luamqtt/mqtt/client.lua:663
----@return boolean  true, ou false et message.
+--- Starts the connection to the broker (network open then CONNECT).
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:663
+---@return boolean  true, or false and message.
 function libs_luamqtt_mqtt_client_client_mt:start_connecting() end
 
---- S'abonne à un topic. Renvoie l'identifiant de paquet SUBSCRIBE ; le callback est appelé quand l'abonnement est confirmé.
----Source : lua/common/libs/luamqtt/mqtt/client.lua:296
----@param args table topic, qos (défaut 0), no_local / retain_as_published / retain_handling / properties / user_properties (MQTT 5 seulement), callback.
----@return integer|boolean  Identifiant de paquet, ou false et message d'erreur.
+--- Subscribes to a topic. Returns the SUBSCRIBE packet identifier; the callback is called when the subscription is confirmed.
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:296
+---@param args table topic, qos (default 0), no_local / retain_as_published / retain_handling / properties / user_properties (MQTT 5 only), callback.
+---@return integer|boolean  Packet identifier, or false and error message.
 function libs_luamqtt_mqtt_client_client_mt:subscribe(args) end
 
---- Se désabonne d'un topic ; callback appelé quand le broker confirme.
----Source : lua/common/libs/luamqtt/mqtt/client.lua:364
+--- Unsubscribes from a topic; callback called when the broker confirms.
+---Source: lua/common/libs/luamqtt/mqtt/client.lua:364
 ---@param args table topic, properties, user_properties, callback.
----@return integer|boolean  Identifiant de paquet, ou false et message.
+---@return integer|boolean  Packet identifier, or false and message.
 function libs_luamqtt_mqtt_client_client_mt:unsubscribe(args) end
 
 return libs_luamqtt_mqtt_client

@@ -1,14 +1,14 @@
 # `client_postFx_caustics`
 
-*Fichier : `lua/ge/client/postFx/caustics.lua` · VM : Game Engine (GE) · 49 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/client/postFx/caustics.lua` · VM: Game Engine (GE) · 49 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("client/postFx/caustics")`
+**Access:** `require("client/postFx/caustics")`
 
-Post-effet de caustiques sous l'eau. Crée (s'ils n'existent pas) le state block PFX_CausticsStateBlock (mélange additif), le shader PFX_CausticsShader (caustics.cs.hlsl) et le PostEffect « CausticsPFX », désactivé par défaut, qui lit le prepass, la profondeur et deux textures caustics_1.png / caustics_2.png. Il est activé et désactivé par les callbacks de UnderwaterFogPostFx (voir fog.lua). Aucune fonction exportée.
+Underwater caustics post-effect. Creates (if they do not exist) the state block PFX_CausticsStateBlock (additive blending), the shader PFX_CausticsShader (caustics.cs.hlsl) and the PostEffect "CausticsPFX", disabled by default, which reads the prepass, the depth and two textures caustics_1.png / caustics_2.png. It is enabled and disabled by the callbacks of UnderwaterFogPostFx (see fog.lua). No exported function.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/client/postFx/caustics.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/client/postFx/caustics.lua`.*

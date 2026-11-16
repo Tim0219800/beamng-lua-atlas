@@ -1,0 +1,101 @@
+{
+  "path": "lua/vehicle/controller/drivingDynamics/actuators/activeDiffBias.lua",
+  "module": "Actionneur de la Driving Dynamics Suite : répartition active du couple entre les deux sorties d'un différentiel (torque vectoring). Il compare les vitesses des roues gauche et droite corrigées du rayon de braquage (`CMU.vehicleData.turningCircleSpeedRatios`) et, sous accélérateur, calcule par PID un décalage de répartition (plus un terme dépendant du volant, de la g longitudinale et de l'accélérateur). Le résultat règle `diffTorqueSplitA` et `diffTorqueSplitB` du différentiel autour de 0,5/0,5. Ordre d'appel : `defaultOrder = 80`.",
+  "notes": [
+    "Clés jbeam lues par init : `avDiffThreshold` (5), `brakingPIDkP` (0), `brakingPIDkI` (0.1), `brakingPIDkD` (0), `maxBiasOffset` (0.2), `name`. Lue par initSecondStage : `differentialName`.",
+    "Le décalage final `biasOffset` est limité par `overrideMin` et `overrideMax` (défaut -1 et 1) puis : split A = 0.5 - biasOffset, split B = 1 - A.",
+    "Les roues de chaque sortie sont obtenues par `powertrain.getChildWheels` ; `wheelSides` indique quelle sortie (-1 ou 1) correspond au côté gauche ou droit, calculé par produit scalaire avec les noeuds de référence du véhicule.",
+    "Nécessite `CMU.vehicleData` et `CMU.sensorHub` ; sans CMU enregistré initSecondStage appelle shutdown.",
+    "setParameters essaie aussi la clé `avThreshold`, qui n'existe pas dans les paramètres de ce système (sans effet, entrée de debug seulement).",
+    "`shutdown` met isActive/isActing à false et retire `updateGFX` et `updateFixedStep`. Il n'y a pas de `update` ni de `updateWheelsIntermediate` : le calcul se fait à 100 Hz dans updateFixedStep."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "80."},
+    "isActive": {"type": "boolean", "desc": "true si le différentiel et les roues ont été trouvés."},
+    "isActing": {"type": "boolean", "desc": "true si le décalage de répartition est non nul."},
+    "overrideMin": {"type": "number", "desc": "Borne basse du décalage imposée par un superviseur (-1 par défaut)."},
+    "overrideMax": {"type": "number", "desc": "Borne haute du décalage (1 par défaut)."},
+    "wheelSides": {"type": "table<string, integer>", "desc": "{left = -1|1, right = -1|1} : indique quelle sortie du différentiel alimente le côté gauche ou droit (rempli par initSecondStage)."}
+  },
+  "functions": {
+    "resetOverride": {
+      "desc": "Remet les bornes d'override à -1 et 1.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "updateFixedStep": {
+      "desc": "Pas fixe (100 Hz) : calcule les vitesses corrigées, le décalage de répartition (PID + terme de volant) et règle la répartition de couple du différentiel.",
+      "params": {"dt": {"type": "number", "desc": "Pas en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Chaque frame : rien d'utile (retourne si désactivé). Variante debug : envoie les valeurs au CMU.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "shutdown": {
+      "desc": "Arrête l'actionneur.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet isActing et les bornes d'override à leur valeur initiale.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Lit les paramètres jbeam et crée le PID de répartition.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "initSecondStage": {
+      "desc": "Retrouve le différentiel (`differentialName`), ses roues par sortie et le côté gauche/droit ; active le système.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "registerCMU": {
+      "desc": "Appelée par le CMU pour donner une référence vers lui.",
+      "params": {"cmu": {"type": "table", "desc": "Module CMU."}},
+      "returns": [],
+      "internal": true
+    },
+    "setDebugMode": {
+      "desc": "Active ou désactive l'envoi de paquets de debug.",
+      "params": {"debugEnabled": {"type": "boolean", "desc": "true pour envoyer."}},
+      "returns": [],
+      "internal": true
+    },
+    "setParameters": {
+      "desc": "Modifie à chaud avDiffThreshold, isEnabled, maxBiasOffset et brakingPIDkP/kI/kD (via CMU.applyParameter).",
+      "params": {"parameters": {"type": "table", "desc": "Table des paramètres à changer."}},
+      "returns": [],
+      "internal": false
+    },
+    "setConfig": {
+      "desc": "Remplace toute la table de paramètres.",
+      "params": {"configTable": {"type": "table", "desc": "Nouveaux paramètres."}},
+      "returns": [],
+      "internal": true
+    },
+    "getConfig": {
+      "desc": "Renvoie une copie des paramètres.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Copie profonde."}],
+      "internal": false
+    },
+    "sendConfigData": {
+      "desc": "Envoie les paramètres au CMU dans un paquet de debug config.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

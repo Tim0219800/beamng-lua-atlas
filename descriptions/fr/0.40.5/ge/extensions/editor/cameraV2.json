@@ -1,0 +1,84 @@
+{
+  "path": "lua/ge/extensions/editor/cameraV2.lua",
+  "module": "Extension de l'éditeur qui active « Camera V2 », un jeu alternatif de contrôles souris pour la caméra libre du World Editor (panoramique, orbite, zoom, WASD en plan). Elle s'enregistre comme contrôleur de caméra (core/cameraControllerRegistry, id « editor.cameraV2 ») seulement quand la préférence camera.general.activeCamera vaut « cameraV2 » ou quand setTemporaryEnabled(true) a été appelé, et que l'éditeur est actif. Elle déclare les préférences camera.cameraV2.*, affiche une fenêtre de debug et peut récupérer une caméra aux coordonnées invalides. Le travail réel est délégué à editor/cameraV2/controller.",
+  "notes": [
+    "Préférences camera.cameraV2.* (défaut) : swapPanOrbitButtons (bool, true : clic droit = pan, molette = orbite), orbitAroundViewCenter (bool, true), wasdMode ('standard' ou 'pan', défaut 'standard'), wasdPanSpeedMultiplier (0,5), wasdPanFastSpeedMultiplier (1,5), showDebugWindow (bool, false), zoomFactorPerNotch (1,5), zoomMinDistance (0,25 m), zoomMaxDistance (2500 m), zoomResponse (20), inertiaDuration (0,35 s).",
+    "Si la pose caméra est invalide (NaN, > 1e7 m, quaternion non valide) onUpdate appelle recoverCamera() et abandonne la frame si la récupération échoue.",
+    "onUpdate limite le dt passé au contrôleur à 0,05 s.",
+    "Quand la caméra est au-dessus de 1500 m de hauteur, un cylindre rouge de référence est dessiné de l'origine (posée sur le terrain) jusqu'à zoomMaxDistance."
+  ],
+  "functions": {
+    "setTemporaryEnabled": {
+      "desc": "Force l'activation de Camera V2 indépendamment de la préférence (utile à un outil qui veut ces contrôles temporairement). Met à jour l'état d'enregistrement du contrôleur.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "true pour activer, tout le reste est traité comme false"
+        }
+      }
+    },
+    "consumeFocusDoubleClick": {
+      "desc": "Si Camera V2 est enregistré, relaie controller.consumeFocusDoubleClick() (double clic de focalisation consommé ou non).",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false si Camera V2 n'est pas actif"
+        }
+      ]
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Hook d'enregistrement des préférences : crée la catégorie « camera », la sous-catégorie « general » (activeCamera : stock ou cameraV2) et « cameraV2 » (préférences ci-dessus), et réordonne les sous-catégories.",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Registre de préférences de l'éditeur"
+        }
+      },
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Enregistre la fenêtre de debug « cameraV2Debug » (360x250 mis à l'échelle) puis évalue l'état d'activation.",
+      "internal": true
+    },
+    "onEditorActivated": {
+      "desc": "Appelé à l'activation de l'éditeur ; réévalue l'état d'activation de Camera V2.",
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Appelé à la désactivation de l'éditeur ; coupe la translation planaire et désenregistre le contrôleur.",
+      "internal": true
+    },
+    "onEditorPreferenceValueChanged": {
+      "desc": "Réagit aux changements de préférences : activeCamera réévalue l'activation, wasdMode resynchronise le mode WASD, showDebugWindow montre/cache la fenêtre, toute autre préférence camera.cameraV2.* annule le geste en cours du contrôleur.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "Chemin de la préférence"
+        },
+        "value": {
+          "type": "any",
+          "desc": "Nouvelle valeur"
+        }
+      },
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque frame. Si Camera V2 est actif : valide/récupère la pose, met à jour le contrôleur avec dt limité à 0,05 s, dessine la référence d'altitude et les repères de pivot (sphère rouge d'orbite, cylindre bleu de pan).",
+      "params": {
+        "dtReal": {
+          "type": "number|nil",
+          "desc": "Delta de temps réel en secondes ; à défaut ui_imgui.GetIO().DeltaTime"
+        }
+      },
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Dessine la fenêtre « Camera V2 Debug » (bouton Recover Camera, état du contrôleur, distances de rayon curseur/centre, hauteur au-dessus du terrain, réglages de zoom) si showDebugWindow n'est pas false et que le contrôleur est enregistré.",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Au déchargement : coupe le mode planaire, désenregistre le contrôleur et la fenêtre de debug.",
+      "internal": true
+    }
+  }
+}

@@ -1,14 +1,14 @@
 # `bxor`
 
-*Fichier : `lua/common/libs/lua-websockets/websocket/bit.lua` · VM : Commun (GE + véhicule) · 11 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lua-websockets/websocket/bit.lua` · VM: Common (GE + vehicle) · 11 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `bxor`
+**Access:** global `bxor`
 
-Petite couche de compatibilité pour les opérations sur bits de lua-websockets. Si la bibliothèque 'bit32' (Lua 5.2) existe, elle est renvoyée avec rol/ror ajoutés comme alias de lrotate/rrotate ; sinon le module renvoie la bibliothèque 'bit' de LuaJIT (BitOp). Aucune fonction propre : le module renvoie directement la table des opérations (band, bor, bxor, lshift, rshift…).
+Small compatibility layer for lua-websockets bit operations. If the 'bit32' library (Lua 5.2) exists, it is returned with rol/ror added as aliases of lrotate/rrotate; otherwise the module returns LuaJIT's 'bit' library (BitOp). No functions of its own: the module directly returns the table of operations (band, bor, bxor, lshift, rshift...).
 
-## Remarques
+## Notes
 
-- Dans BeamNG (LuaJIT), c'est la branche 'bit' qui est utilisée, sauf si un module 'bit32' est disponible.
+- In BeamNG (LuaJIT), the 'bit' branch is used, unless a 'bit32' module is available.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lua-websockets/websocket/bit.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lua-websockets/websocket/bit.lua`.*

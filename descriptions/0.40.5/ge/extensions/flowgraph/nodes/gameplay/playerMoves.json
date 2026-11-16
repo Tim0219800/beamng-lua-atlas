@@ -1,14 +1,32 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/playerMoves.lua",
-  "module": "Nœud flowgraph « Detect Acceleration At Start » (catégorie repeat_instant, icône timer). Sert à démarrer une mission quand le joueur bouge plutôt qu'après un compte à rebours. Entrées : flow, reset (impulsion qui remet la position initiale à zéro), vehId (véhicule suivi, sinon véhicule du joueur 0). Sortie : success (flow) vrai quand le véhicule s'est éloigné de plus de 0,1 m de sa position initiale. Tant que le véhicule n'a pas bougé, envoie le message UI 'ScenarioRealtimeDisplay' (missions.general.moveToStart, contexte accelerateToBegin) ; il est effacé au premier mouvement.",
-  "notes": ["Option data.useScenarioRealtimeDisplay (true par défaut) : active l'affichage du message de départ.", "La position est lue dans map.objects[vehId].pos ; si le véhicule n'y figure pas, le nœud ne fait rien."],
+  "module": "Flowgraph node \"Detect Acceleration At Start\" (category repeat_instant, timer icon). Used to start a mission when the player moves rather than after a countdown. Inputs: flow, reset (pulse that resets the initial position), vehId (tracked vehicle, otherwise player vehicle 0). Output: success (flow) true when the vehicle has moved more than 0.1 m away from its initial position. As long as the vehicle has not moved, sends the UI message 'ScenarioRealtimeDisplay' (missions.general.moveToStart, context accelerateToBegin); it is cleared on the first movement.",
+  "notes": [
+    "Option data.useScenarioRealtimeDisplay (true by default): enables the display of the start message.",
+    "The position is read from map.objects[vehId].pos; if the vehicle is not listed there, the node does nothing."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise initialPos à nil, msgSent à true et data.useScenarioRealtimeDisplay à true.", "internal": true},
-        "_executionStarted": {"desc": "Réinitialise la position initiale et msgSent au démarrage du graphe.", "internal": true},
-        "work": {"desc": "Chaque frame : gère reset, mémorise la position initiale du véhicule, affiche/efface le message de départ et met success à vrai si le véhicule s'est déplacé de plus de 0,1 m.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+        "init": {
+          "desc": "Initializes initialPos to nil, msgSent to true and data.useScenarioRealtimeDisplay to true.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Resets the initial position and msgSent when the graph starts.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Every frame: handles reset, stores the vehicle's initial position, shows/clears the start message and sets success to true if the vehicle has moved more than 0.1 m.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph engine arguments (unused)."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

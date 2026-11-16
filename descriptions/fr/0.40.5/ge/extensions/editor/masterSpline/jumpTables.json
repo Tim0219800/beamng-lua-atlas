@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/editor/masterSpline/jumpTables.lua",
+  "module": "Module utilitaire de l'outil Master Spline : regroupe des tables de dispatch indexées par le type de lien d'une couche (préfixe d'outil de meshSpline, assemblySpline, decalSpline, roadSpline, treeSpline). Chaque table associe à ce type la fonction de l'outil compatible correspondant (créer, restaurer, délier, supprimer, verrouiller, sérialiser…). Utile pour comprendre comment une Master Spline pilote ses splines enfants.",
+  "notes": [
+    "Toutes les tables sont indexées par la chaîne renvoyée par getToolPrefixStr() de chaque outil (layer.linkType).",
+    "Le module n'exporte que des tables, aucune fonction ; l'appel se fait par jumps.xxxJumpTable[linkType](...).",
+    "eachObjectJumpTable ne couvre que mesh et assembly (seuls outils dont les modifications manuelles peuvent être restaurées après annulation d'un déverrouillage).",
+    "Pour la route (roadSpline), les fonctions viennent de groupMgr (groupes) et non d'un splineMgr."
+  ],
+  "fields": {
+    "setLinkJumpTable": {"type": "table<string, function>", "desc": "setLink de chaque outil : définit l'état de lien d'une couche."},
+    "setNameJumpTable": {"type": "table<string, function(id: any, splineName: string)>", "desc": "Renomme la spline liée (champ name) ; pour mesh, assembly et road, renomme aussi le dossier de l'arbre de scène (sceneTreeFolderId) et rafraîchit la fenêtre de l'arbre."},
+    "createJumpTable": {"type": "table<string, function>", "desc": "Crée une nouvelle spline dans l'outil cible (addNewMeshSpline, addNewAssemblySpline, addNewDecalSpline, addNewGroup, addNewTreeSpline)."},
+    "getLastCreatedSplineJumpTable": {"type": "table<string, function>", "desc": "Renvoie la dernière spline de la liste de l'outil (ou nil si vide) ; optimisé pour undo/redo."},
+    "restoreJumpTable": {"type": "table<string, function(data: table)>", "desc": "Restaure une spline à partir de données : copie profonde, ajout à la liste de l'outil, recalcul de la table id vers indice ; renvoie la spline."},
+    "unlinkJumpTable": {"type": "table<string, function(linkedSplineId: any)>", "desc": "Délie la spline : isLink = false, linkId = nil, isDirty = true."},
+    "removeJumpTable": {"type": "table<string, function>", "desc": "Supprime une spline liée (removeLinkedXxx de chaque outil)."},
+    "setLockedJumpTable": {"type": "table<string, function(id: any, isLocked: boolean)>", "desc": "Verrouille/déverrouille une spline enfant via le setLockedById de l'outil ; suit le verrou de sa Master Spline."},
+    "eachObjectJumpTable": {"type": "table<string, function(id: any, fn: function)>", "desc": "Itère sur les objets d'une spline liée (eachObjectById), pour splineLock ; mesh et assembly seulement."},
+    "setLinkedSplineDirtyJumpTable": {"type": "table<string, function(id: any)>", "desc": "Met isDirty = true sur la spline liée, si elle existe."},
+    "serializeJumpTable": {"type": "table<string, function(linkedSplineId: any)>", "desc": "Renvoie une copie profonde de la spline liée (deepCopyXxx), ou nil si introuvable."},
+    "toolNavigation": {"type": "table<string, table>", "desc": "Pour chaque type : uiModule (nom de l'extension, ex. 'editor_meshSpline'), getModeKey, getSplines et getIdToIdxMap, pour naviguer vers l'outil compatible."}
+  }
+}

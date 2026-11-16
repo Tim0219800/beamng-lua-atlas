@@ -1,0 +1,127 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/types/transform.lua",
+  "module": "Nœud flowgraph « Transform » (catégorie provider, icône d_rotation) : fournit une position, une rotation et une échelle 3D éditables dans l'éditeur. Pins de sortie : « pos » (vec3), « rot » (quat) et « scl » (vec3), sous forme de tables {x,y,z} / {x,y,z,w}. Deux modes : « gizmo » (on édite avec le gizmo du World Editor, des DragFloat ou les boutons caméra/terrain) et « fromID » (un pin d'entrée « objID » est ajouté ; le nœud copie position/rotation/échelle de l'objet de la scène correspondant). Dans l'éditeur il dessine un volume de prévisualisation (modes d'affichage default, sphereX/Y/Z, halfBox, fullBox, aproxVehicle) avec debugDrawer.",
+  "notes": [
+    "Les sorties ne sont recalculées que si 'changed' est vrai (ou en mode fromID à chaque frame) ; _executionStarted/_executionStopped remettent 'changed' à true.",
+    "La position initiale est placée à 15 m devant la caméra de l'éditeur.",
+    "Les valeurs sont sérialisées dans position, rotation, scale, markerClr, mode, useQuatForRotation et displayMode ; le mode fromID recrée le pin objID au chargement.",
+    "Le mode d'affichage 'aproxVehicle' dessine une boîte approximant un véhicule (2 x 4.2 x 1.8 fois l'échelle) autour de la position."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Force la réécriture des sorties au démarrage (changed = true).",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Force la réécriture des sorties au prochain démarrage (changed = true).",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure l'état du nœud depuis les données sauvegardées.",
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "Données sauvegardées du nœud."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Écrit l'état du nœud dans la table de sauvegarde.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "drawAxisBox": {
+          "desc": "Dessine une boîte pleine (triangles) et ses arêtes noires à partir d'un coin et de trois vecteurs d'arête.",
+          "params": {
+            "corner": {
+              "type": "vec3",
+              "desc": "Coin de départ de la boîte."
+            },
+            "x": {
+              "type": "vec3",
+              "desc": "Premier vecteur d'arête."
+            },
+            "y": {
+              "type": "vec3",
+              "desc": "Deuxième vecteur d'arête."
+            },
+            "z": {
+              "type": "vec3",
+              "desc": "Troisième vecteur d'arête."
+            },
+            "clr": {
+              "type": "color",
+              "desc": "Couleur des faces."
+            }
+          },
+          "internal": false
+        },
+        "drawCustom": {
+          "desc": "Dessine les contrôles du mode gizmo : mode d'affichage, position, rotation (euler en degrés ou quaternion), échelle, couleur, boutons « Copier depuis la sélection », « Position devant la caméra / à la caméra », « Rotation à la caméra », « Descendre sur le terrain ».",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Combo du mode (gizmo/fromID) — ajoute ou retire le pin objID — puis drawCustom en mode gizmo.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine les axes X/Y/Z colorés (sphères et lignes) et le volume de prévisualisation selon displayMode.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale)."
+            },
+            "style": {
+              "type": "any",
+              "desc": "Style d'affichage du nœud fourni par l'éditeur."
+            }
+          },
+          "internal": true
+        },
+        "gizmoBeginDrag": {
+          "desc": "Début d'un glisser du gizmo : mémorise rotation, échelle et position d'origine.",
+          "internal": true
+        },
+        "gizmoDragging": {
+          "desc": "Pendant le glisser du gizmo : met à jour position (translation), rotation (rotation, en repère local ou relative au départ) ou échelle (composante par composante) selon le mode du gizmo, et dessine les axes.",
+          "internal": true
+        },
+        "gizmoEndDrag": {
+          "desc": "Fin d'un glisser du gizmo (appelée par editor.updateAxisGizmo) ; met à jour l'état du nœud.",
+          "internal": true
+        },
+        "hideProperties": {
+          "desc": "Appelée quand le nœud est désélectionné : retire le gizmo et revient au mode d'édition objectSelect.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Place la position à 15 m devant la caméra, rotation identité, échelle (1,1,1), couleur de marqueur rouge semi-transparente, mode 'gizmo' et displayMode 'halfBox'.",
+          "internal": true
+        },
+        "showProperties": {
+          "desc": "Appelée quand le nœud est sélectionné dans l'éditeur : branche le mode d'édition 'flowgraphTransform' avec le gizmo d'axes du World Editor.",
+          "internal": true
+        },
+        "updateTransform": {
+          "desc": "Synchronise la matrice du gizmo avec position et rotation du nœud (rotation ignorée si le gizmo est en alignement monde).",
+          "internal": false
+        },
+        "work": {
+          "desc": "En mode fromID, copie position/rotation/échelle de l'objet objID ; si 'changed', écrit les trois pins de sortie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

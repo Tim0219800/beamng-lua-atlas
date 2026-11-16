@@ -1,25 +1,108 @@
 {
   "path": "lua/vehicle/extensions/input/haptics.lua",
-  "module": "Génère les vibrations de manette (retour haptique) à partir de la dynamique du véhicule : secousses (jerk) de l'accélération, énergie de glissement des roues, roues bloquées au freinage (gâchette de frein) et roues motrices qui patinent (gâchette d'accélérateur). Les forces sont envoyées au pilote de périphérique via hydros.getForceFeedbackFunction() sur les identifiants FFB fournis. Appelé par le système d'entrée, pas par un moddeur en général.",
+  "module": "Generates gamepad vibrations (haptic feedback) from vehicle dynamics: acceleration jerks, wheel slip energy, locked wheels under braking (brake trigger) and spinning driven wheels (throttle trigger). The forces are sent to the device driver via hydros.getForceFeedbackFunction() on the supplied FFB ids. Called by the input system, not by a modder in general.",
   "usage": "haptics.setFFBIDs(idMoteur, idGachetteAccel, idGachetteFrein)\nhaptics.setFFBPeriod(1 / 30)",
   "notes": [
-    "La mise à jour n'a lieu que lorsque l'horloge murale (os.clockhp) dépasse nextDriverUpdate (période FFB, défaut 1/30 s) : les pilotes de manettes ne se soucient pas du temps de simulation.",
-    "Un identifiant FFB à -1 désactive la sortie correspondante. Les gâchettes ne reçoivent de la force que si hydros.enableThrottleForceFeedback / enableBrakeForceFeedback sont vrais ; sinon elles reçoivent 0.",
-    "Les vibrations démarrent à 20 % de hydros.ffbSpeedFast (vitesse normalisée) pour éviter les vibrations à l'arrêt. L'intensité globale est multipliée par hydros.wheelFFBForceCoef / 100.",
-    "Seuils de secousse : latéral 50, longitudinal 20, vertical 15 (unité de jerk = accélération/s). Le glissement minimal pris en compte est wheelSlipMin = 15000 (énergie de glissement).",
-    "Le frein ABS actif désactive le comptage des roues bloquées ; absTrigger est calculé mais n'est pas utilisé ensuite.",
-    "Anomalie : setJerkMin affecte la variable globale `jerkMin` qui n'est lue nulle part (les seuils réels sont jerkMinX/Y/Z) : sans effet.",
-    "Anomalie : setFFBSpeedFast (non exporté) affecte une variable globale ffbSpeedFast jamais utilisée ; le code lit hydros.ffbSpeedFast."
+    "The update only happens when the wall clock (os.clockhp) exceeds nextDriverUpdate (FFB period, default 1/30 s): gamepad drivers do not care about simulation time.",
+    "An FFB id of -1 disables the corresponding output. The triggers only receive force if hydros.enableThrottleForceFeedback / enableBrakeForceFeedback are true; otherwise they receive 0.",
+    "Vibrations start at 20% of hydros.ffbSpeedFast (normalized speed) to avoid vibrations at standstill. The overall intensity is multiplied by hydros.wheelFFBForceCoef / 100.",
+    "Jerk thresholds: lateral 50, longitudinal 20, vertical 15 (jerk unit = acceleration/s). The minimum slip taken into account is wheelSlipMin = 15000 (slip energy).",
+    "Active ABS braking disables the locked-wheel counting; absTrigger is computed but not used afterwards.",
+    "Anomaly: setJerkMin sets the global variable `jerkMin` which is read nowhere (the real thresholds are jerkMinX/Y/Z): no effect.",
+    "Anomaly: setFFBSpeedFast (not exported) sets a global variable ffbSpeedFast that is never used; the code reads hydros.ffbSpeedFast."
   ],
   "fields": {},
   "functions": {
-    "initHaptics": {"desc": "Recense les roues motrices (powertrain.getPoweredWheelNames) et le nombre de roues. À appeler après le chargement du véhicule.", "params": {}, "returns": [], "internal": true},
-    "vibrationUpdate": {"desc": "Calcule et envoie les forces de vibration (moteur principal, gâchette d'accélérateur, gâchette de frein) si la période FFB est écoulée.", "params": {"dt": {"type": "number", "desc": "Pas de temps de simulation en secondes."}}, "returns": [], "internal": true},
-    "setFFBIDs": {"desc": "Définit les identifiants des sorties de retour de force (-1 = désactivée).", "params": {"_FFBID": {"type": "integer", "desc": "Sortie de vibration principale."}, "_FFBID_accelerate": {"type": "integer", "desc": "Sortie de la gâchette d'accélérateur."}, "_FFBID_brake": {"type": "integer", "desc": "Sortie de la gâchette de frein."}}, "returns": [], "internal": true},
-    "setFFBPeriod": {"desc": "Définit la période entre deux envois au pilote (secondes) et programme le prochain envoi.", "params": {"period": {"type": "number", "desc": "Période en secondes (défaut 1/30)."}}, "returns": [], "internal": true},
-    "setWheelSlipForceMultiplier": {"desc": "Multiplicateur de la composante de vibration due au glissement des roues (debug).", "params": {"multiplier": {"type": "number", "desc": "Défaut 1."}}, "returns": [], "internal": false},
-    "setJerkForceMultiplier": {"desc": "Multiplicateur de la composante de vibration due aux secousses (debug).", "params": {"multiplier": {"type": "number", "desc": "Défaut 1."}}, "returns": [], "internal": false},
-    "setWheelSlipMin": {"desc": "Seuil minimal d'énergie de glissement pour déclencher la vibration (debug).", "params": {"min": {"type": "number", "desc": "Défaut 15000."}}, "returns": [], "internal": false},
-    "setJerkMin": {"desc": "Prévu pour régler le seuil de secousse ; sans effet réel (voir notes).", "params": {"min": {"type": "number", "desc": "Seuil (non utilisé)."}}, "returns": [], "internal": false}
+    "initHaptics": {
+      "desc": "Lists the driven wheels (powertrain.getPoweredWheelNames) and the wheel count. To be called after the vehicle has loaded.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "vibrationUpdate": {
+      "desc": "Computes and sends the vibration forces (main motor, throttle trigger, brake trigger) if the FFB period has elapsed.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Simulation time step in seconds."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setFFBIDs": {
+      "desc": "Sets the ids of the force feedback outputs (-1 = disabled).",
+      "params": {
+        "_FFBID": {
+          "type": "integer",
+          "desc": "Main vibration output."
+        },
+        "_FFBID_accelerate": {
+          "type": "integer",
+          "desc": "Throttle trigger output."
+        },
+        "_FFBID_brake": {
+          "type": "integer",
+          "desc": "Brake trigger output."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setFFBPeriod": {
+      "desc": "Sets the period between two sends to the driver (seconds) and schedules the next send.",
+      "params": {
+        "period": {
+          "type": "number",
+          "desc": "Period in seconds (default 1/30)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setWheelSlipForceMultiplier": {
+      "desc": "Multiplier of the vibration component due to wheel slip (debug).",
+      "params": {
+        "multiplier": {
+          "type": "number",
+          "desc": "Default 1."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setJerkForceMultiplier": {
+      "desc": "Multiplier of the vibration component due to jerks (debug).",
+      "params": {
+        "multiplier": {
+          "type": "number",
+          "desc": "Default 1."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setWheelSlipMin": {
+      "desc": "Minimum slip energy threshold to trigger vibration (debug).",
+      "params": {
+        "min": {
+          "type": "number",
+          "desc": "Default 15000."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setJerkMin": {
+      "desc": "Intended to set the jerk threshold; no real effect (see notes).",
+      "params": {
+        "min": {
+          "type": "number",
+          "desc": "Threshold (unused)."
+        }
+      },
+      "returns": [],
+      "internal": false
+    }
   }
 }

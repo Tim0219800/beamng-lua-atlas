@@ -1,114 +1,317 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/siteAssets.lua",
-  "module": "Les « étagères » (bibliothèque sur disque) d'où viennent les sites posés : bâtiments, espaces ouverts, parkings. Trois éditeurs y cuisent leurs sites et un placeur les lit tous ; ce module fixe une seule fois où ils vivent et comment s'appellent leurs fichiers. Un site est un dossier nommé d'après son slug, contenant le manifeste (<kind>.json : bornes, transformations du kit, plan du sol, lampes, plantes), model.json (le document éditable, pour rouvrir le site dans l'éditeur qui l'a créé) et shell.dae (géométrie unique, LODs et collision).",
+  "module": "The \"shelves\" (on-disk library) that placed sites come from: buildings, open spaces, parking lots. Three editors bake their sites there and one placer reads them all; this module fixes once where they live and how their files are named. A site is a folder named after its slug, containing the manifest (<kind>.json: bounds, kit transforms, ground plan, lamps, plants), model.json (the editable document, to reopen the site in the editor that created it) and shell.dae (unique geometry, LODs and collision).",
   "notes": [
-    "Étagères (kinds) : building -> /assets/massingBuildings/ (manifeste building.json, éditeur editor_massingEditor) ; openSpace -> /assets/openSpaces/ (openSpace.json, editor_openSpaceEditor) ; carPark -> /assets/carParks/ (carPark.json, editor_parkingLotEditor). Chaque entrée a aussi id, noun, label, icon.",
-    "kindOf renvoie l'étagère « building » pour un kind inconnu ou nil.",
-    "Le manifeste est écrit compact (il contient des milliers de transformations) ; model.json est écrit indenté.",
-    "wipe supprime aussi le cache .cdae voisin d'un .dae, sans quoi le moteur le charge à la place du nouveau fichier.",
-    "Les fonctions disque utilisent FS (directoryExists, directoryCreate, directoryList, directoryRemove, findFiles, removeFile) : sans FS elles ne font rien et list renvoie une liste vide.",
-    "La page auto signale une globale « i » : ce sont des variables de boucle."
+    "Shelves (kinds): building -> /assets/massingBuildings/ (manifest building.json, editor editor_massingEditor); openSpace -> /assets/openSpaces/ (openSpace.json, editor_openSpaceEditor); carPark -> /assets/carParks/ (carPark.json, editor_parkingLotEditor). Each entry also has id, noun, label, icon.",
+    "kindOf returns the \"building\" shelf for an unknown or nil kind.",
+    "The manifest is written compact (it contains thousands of transforms); model.json is written indented.",
+    "wipe also deletes the .cdae cache next to a .dae, without which the engine loads it instead of the new file.",
+    "The disk functions use FS (directoryExists, directoryCreate, directoryList, directoryRemove, findFiles, removeFile): without FS they do nothing and list returns an empty list.",
+    "The auto page flags a global \"i\": these are loop variables."
   ],
   "fields": {
-    "kinds": {"type": "table[]", "desc": "Liste des étagères : { id, noun, label, icon, root, manifest, editor }."},
-    "modelFile": {"type": "string", "desc": "Nom du fichier du document éditable : 'model.json'."},
-    "shellFile": {"type": "string", "desc": "Nom du fichier de géométrie unique : 'shell.dae'."}
+    "kinds": {
+      "type": "table[]",
+      "desc": "List of shelves: { id, noun, label, icon, root, manifest, editor }."
+    },
+    "modelFile": {
+      "type": "string",
+      "desc": "File name of the editable document: 'model.json'."
+    },
+    "shellFile": {
+      "type": "string",
+      "desc": "File name of the unique geometry: 'shell.dae'."
+    }
   },
   "functions": {
     "kindOf": {
-      "desc": "Renvoie la définition de l'étagère pour un identifiant (building par défaut).",
-      "params": {"kind": {"type": "string|nil", "desc": "'building', 'openSpace' ou 'carPark'."}},
-      "returns": [{"type": "table", "desc": "Entrée de kinds."}],
+      "desc": "Returns the shelf definition for an identifier (building by default).",
+      "params": {
+        "kind": {
+          "type": "string|nil",
+          "desc": "'building', 'openSpace' or 'carPark'."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Entry of kinds."
+        }
+      ],
       "internal": false
     },
     "slugify": {
-      "desc": "Nom de dossier tiré du nom de l'objet : minuscules, tout ce qui n'est pas alphanumérique devient un tiret bas, tirets bas de bord retirés. Une nouvelle cuisson d'un site renommé mais identique écrase donc son propre dossier. Un nom vide donne le nom commun du kind.",
-      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "name": {"type": "string|nil", "desc": "Nom du site."}},
-      "returns": [{"type": "string", "desc": "Slug."}],
+      "desc": "Folder name derived from the object's name: lowercase, everything that is not alphanumeric becomes an underscore, edge underscores removed. A new bake of a renamed but identical site therefore overwrites its own folder. An empty name gives the kind's common name.",
+      "params": {
+        "kind": {
+          "type": "string|nil",
+          "desc": "Shelf."
+        },
+        "name": {
+          "type": "string|nil",
+          "desc": "Site name."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Slug."
+        }
+      ],
       "internal": false
     },
     "rootOf": {
-      "desc": "Dossier racine d'une étagère (par exemple /assets/openSpaces/).",
-      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}},
-      "returns": [{"type": "string", "desc": "Chemin racine avec barre oblique finale."}],
+      "desc": "Root folder of a shelf (for example /assets/openSpaces/).",
+      "params": {
+        "kind": {
+          "type": "string|nil",
+          "desc": "Shelf."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Root path with trailing slash."
+        }
+      ],
       "internal": false
     },
     "folderFor": {
-      "desc": "Dossier d'un site : racine + slug + '/'.",
-      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "slug": {"type": "string", "desc": "Slug du site."}},
-      "returns": [{"type": "string", "desc": "Chemin du dossier."}],
+      "desc": "Folder of a site: root + slug + '/'.",
+      "params": {
+        "kind": {
+          "type": "string|nil",
+          "desc": "Shelf."
+        },
+        "slug": {
+          "type": "string",
+          "desc": "Site slug."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Folder path."
+        }
+      ],
       "internal": false
     },
     "manifestPath": {
-      "desc": "Chemin du manifeste d'un site dans son dossier dir.",
-      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "dir": {"type": "string", "desc": "Dossier du site (avec barre oblique finale)."}},
-      "returns": [{"type": "string", "desc": "Chemin du manifeste."}],
+      "desc": "Path of a site's manifest in its folder dir.",
+      "params": {
+        "kind": {
+          "type": "string|nil",
+          "desc": "Shelf."
+        },
+        "dir": {
+          "type": "string",
+          "desc": "Site folder (with trailing slash)."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Manifest path."
+        }
+      ],
       "internal": false
     },
     "modelPath": {
-      "desc": "Chemin de model.json dans dir.",
-      "params": {"dir": {"type": "string", "desc": "Dossier du site."}},
-      "returns": [{"type": "string", "desc": "Chemin."}],
+      "desc": "Path of model.json in dir.",
+      "params": {
+        "dir": {
+          "type": "string",
+          "desc": "Site folder."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Path."
+        }
+      ],
       "internal": false
     },
     "shellPath": {
-      "desc": "Chemin de shell.dae dans dir.",
-      "params": {"dir": {"type": "string", "desc": "Dossier du site."}},
-      "returns": [{"type": "string", "desc": "Chemin."}],
+      "desc": "Path of shell.dae in dir.",
+      "params": {
+        "dir": {
+          "type": "string",
+          "desc": "Site folder."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Path."
+        }
+      ],
       "internal": false
     },
     "ensureRoot": {
-      "desc": "S'assure que le dossier de l'étagère existe. Le dialogue de fichiers ne fait que LISTER le chemin donné sans le créer : sans cet appel, la première cuisson d'une installation neuve ouvrirait le dialogue sur un dossier inexistant.",
-      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}},
-      "returns": [{"type": "string", "desc": "Chemin racine."}],
+      "desc": "Ensures the shelf folder exists. The file dialog only LISTS the given path without creating it: without this call, the first bake on a fresh install would open the dialog on a nonexistent folder.",
+      "params": {
+        "kind": {
+          "type": "string|nil",
+          "desc": "Shelf."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Root path."
+        }
+      ],
       "internal": false
     },
     "wipe": {
-      "desc": "Vide un dossier avant réécriture, pour qu'une cuisson plus petite ne laisse rien de périmé ; supprime aussi les caches .cdae.",
-      "params": {"dir": {"type": "string", "desc": "Dossier à vider."}},
+      "desc": "Empties a folder before rewriting, so that a smaller bake leaves nothing stale; also deletes the .cdae caches.",
+      "params": {
+        "dir": {
+          "type": "string",
+          "desc": "Folder to empty."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "prepare": {
-      "desc": "Crée si besoin le dossier du site, le vide et le renvoie prêt à écrire. Toute cuisson commence ici.",
-      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "slug": {"type": "string", "desc": "Slug du site."}},
-      "returns": [{"type": "string", "desc": "Dossier du site."}],
+      "desc": "Creates the site folder if needed, empties it and returns it ready to write. Every bake starts here.",
+      "params": {
+        "kind": {
+          "type": "string|nil",
+          "desc": "Shelf."
+        },
+        "slug": {
+          "type": "string",
+          "desc": "Site slug."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Site folder."
+        }
+      ],
       "internal": false
     },
     "writeModel": {
-      "desc": "Écrit le document éditable à côté de ses maillages : { version = 1, tool, state }. tool est l'éditeur qui l'a écrit, pour qu'un dossier ouvert par le mauvais le signale.",
-      "params": {"dir": {"type": "string", "desc": "Dossier du site."}, "tool": {"type": "string", "desc": "Identifiant de l'éditeur."}, "state": {"type": "table", "desc": "État sérialisé du document."}},
-      "returns": [{"type": "boolean", "desc": "true si l'écriture a réussi."}],
+      "desc": "Writes the editable document next to its meshes: { version = 1, tool, state }. tool is the editor that wrote it, so that a folder opened by the wrong one reports it.",
+      "params": {
+        "dir": {
+          "type": "string",
+          "desc": "Site folder."
+        },
+        "tool": {
+          "type": "string",
+          "desc": "Editor identifier."
+        },
+        "state": {
+          "type": "table",
+          "desc": "Serialized state of the document."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the write succeeded."
+        }
+      ],
       "internal": false
     },
     "writeManifest": {
-      "desc": "Écrit le manifeste (compact), puis prévient les observateurs enregistrés par onWritten avec (kind, manifest.slug).",
-      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "dir": {"type": "string", "desc": "Dossier du site."}, "manifest": {"type": "table", "desc": "Manifeste avec au moins le champ slug."}},
-      "returns": [{"type": "boolean", "desc": "false si l'écriture a échoué, true sinon."}],
+      "desc": "Writes the manifest (compact), then notifies the observers registered by onWritten with (kind, manifest.slug).",
+      "params": {
+        "kind": {
+          "type": "string|nil",
+          "desc": "Shelf."
+        },
+        "dir": {
+          "type": "string",
+          "desc": "Site folder."
+        },
+        "manifest": {
+          "type": "table",
+          "desc": "Manifest with at least the slug field."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the write failed, true otherwise."
+        }
+      ],
       "internal": false
     },
     "onWritten": {
-      "desc": "Enregistre un observateur appelé chaque fois qu'un site est écrit sur une étagère. Les observateurs ne sont jamais retirés.",
-      "params": {"fn": {"type": "function", "desc": "fn(kind, slug)."}},
+      "desc": "Registers an observer called each time a site is written to a shelf. Observers are never removed.",
+      "params": {
+        "fn": {
+          "type": "function",
+          "desc": "fn(kind, slug)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "exists": {
-      "desc": "Le nom est-il déjà pris ? C'est ce que demande Save As avant d'écraser le travail de quelqu'un.",
-      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "slug": {"type": "string", "desc": "Slug."}},
-      "returns": [{"type": "boolean", "desc": "true si le dossier existe."}],
+      "desc": "Is the name already taken? This is what Save As asks before overwriting someone's work.",
+      "params": {
+        "kind": {
+          "type": "string|nil",
+          "desc": "Shelf."
+        },
+        "slug": {
+          "type": "string",
+          "desc": "Slug."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the folder exists."
+        }
+      ],
       "internal": false
     },
     "remove": {
-      "desc": "Retire un site de l'étagère, dossier compris. Un renommage est une sauvegarde sous le nouveau nom suivie de cet appel sur l'ancien, ce qui garde honnête le nom stocké dans le manifeste.",
-      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "slug": {"type": "string", "desc": "Slug."}},
-      "returns": [{"type": "boolean", "desc": "true si supprimé, false si absent."}, {"type": "string", "desc": "Dossier supprimé, ou 'not in the library'."}],
+      "desc": "Removes a site from the shelf, folder included. A rename is a save under the new name followed by this call on the old one, which keeps the name stored in the manifest honest.",
+      "params": {
+        "kind": {
+          "type": "string|nil",
+          "desc": "Shelf."
+        },
+        "slug": {
+          "type": "string",
+          "desc": "Slug."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if deleted, false if absent."
+        },
+        {
+          "type": "string",
+          "desc": "Deleted folder, or 'not in the library'."
+        }
+      ],
       "internal": false
     },
     "list": {
-      "desc": "Tout ce qui est déjà sur une étagère, trié par nom. Ne lit que les manifestes (une petite lecture json par site, aucun maillage). Chaque entrée est le manifeste augmenté de dir (son dossier) et kind (son étagère), ce qui suffit au placeur pour le dresser.",
-      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}},
-      "returns": [{"type": "table[]", "desc": "Manifestes (avec slug), augmentés de dir et kind."}],
+      "desc": "Everything already on a shelf, sorted by name. Reads only the manifests (one small json read per site, no mesh). Each entry is the manifest augmented with dir (its folder) and kind (its shelf), which is enough for the placer to stand it up.",
+      "params": {
+        "kind": {
+          "type": "string|nil",
+          "desc": "Shelf."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Manifests (with slug), augmented with dir and kind."
+        }
+      ],
       "internal": false
     }
   }

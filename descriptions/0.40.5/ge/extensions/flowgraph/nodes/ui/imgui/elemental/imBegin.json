@@ -1,18 +1,18 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imBegin.lua",
-  "module": "Nœud flowgraph « im Begin » (catégorie repeat_instant, tag imgui) : ouvre une fenêtre imgui (à terminer avec « im End »). Entrées : « title » (sans titre = barre de titre masquée), « width » (200), « height » (150), « posX », « posY » (100), « anchor » (TL, TR, BL, BR : coin de référence de la fenêtre par rapport à la fenêtre du jeu). Sortie « wasClosed » (impulsion quand l'utilisateur ferme la fenêtre).",
+  "module": "Flowgraph node \"im Begin\" (category repeat_instant, tag imgui): opens an imgui window (to be ended with \"im End\"). Inputs: \"title\" (no title = title bar hidden), \"width\" (200), \"height\" (150), \"posX\", \"posY\" (100), \"anchor\" (TL, TR, BL, BR: reference corner of the window relative to the game window). Output \"wasClosed\" (pulse when the user closes the window).",
   "notes": [
-    "Taille et position ne sont appliquées qu'une fois (flag done) ; ensuite la fenêtre est librement déplaçable.",
-    "Si anchor est nil, il vaut 100 dans le code (faute : valeur numérique) et aucune position n'est appliquée."
+    "Size and position are applied only once (done flag); afterwards the window can be freely moved.",
+    "If anchor is nil, it equals 100 in the code (mistake: numeric value) and no position is applied."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStarted": {
-          "desc": "done = false et sorties à false.",
+          "desc": "done = false and outputs to false.",
           "internal": true
         },
         "init": {
@@ -20,7 +20,7 @@
           "internal": true
         },
         "work": {
-          "desc": "Fixe taille/position (une seule fois, via l'ancre) puis appelle im.Begin et écrit wasClosed.",
+          "desc": "Sets size/position (only once, via the anchor) then calls im.Begin and writes wasClosed.",
           "internal": true
         }
       }

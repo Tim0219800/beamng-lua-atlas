@@ -1,17 +1,17 @@
 {
   "path": "lua/ge/extensions/core/trailerRespawn.lua",
-  "module": "Extension GE `core_trailerRespawn` : mémorise quels véhicules tractent quelle remorque (registre `trailerReg`) à partir des évènements d'attelage, et replace la remorque derrière le véhicule tracteur quand celui-ci est remis à zéro (reset) ou réactivé. Dépend de core_vehicles (vehsCouplerOffset, vehsCouplerTags, couplerTagsOptions) et de spawn.placeTrailer. Utile pour interroger la composition d'un train routier (getVehicleTrain, getVehicleTrainHead).",
+  "module": "GE extension `core_trailerRespawn`: remembers which vehicles tow which trailer (registry `trailerReg`) from coupling events, and repositions the trailer behind the towing vehicle when the latter is reset or reactivated. Depends on core_vehicles (vehsCouplerOffset, vehsCouplerTags, couplerTagsOptions) and on spawn.placeTrailer. Useful to query the composition of a road train (getVehicleTrain, getVehicleTrainHead).",
   "notes": [
-    "trailerReg[idTracteur] = {trailerId, trailerNode, node} : un véhicule ne peut tracter qu'une seule remorque dans ce registre. Les attelages avec un véhicule de type 'Prop' sont ignorés ; les boucles d'attelage sont refusées.",
-    "Le type d'un véhicule ('Trailer', 'Prop', …) vient du champ aggregates.Type de sa config, sinon du Type du modèle (getConfigType).",
-    "setEnabled(false) remplace M.onCouplerAttached et M.onCouplerDetached par `nop` : le registre n'est alors plus mis à jour (le moteur appelle les hooks via la table M, donc le changement est pris en compte). onVehicleResetted/onVehicleActiveChanged continuent d'agir sur le registre existant. Incohérence : le paramètre de setEnabled masque la variable locale `enabled` du module, qui n'est donc jamais mise à jour par setEnabled ; getEnabled() renvoie la valeur restaurée par resetData/onDeserialized (true au départ), pas le dernier état demandé.",
-    "onVehicleResetted est marqué dans le code 'TODO: Remove this when trailer respawn is disabled' : core_vehicles contient une version commentée du même mécanisme.",
-    "En multijoueur (multiplayer_vehicleSync), le replacement au reset est désactivé et l'état actif des remorques est délégué à multiplayer_vehicleSync.requestTrailerActiveFollow."
+    "trailerReg[towVehicleId] = {trailerId, trailerNode, node}: a vehicle can only tow one trailer in this registry. Couplings with a 'Prop' type vehicle are ignored; coupling loops are refused.",
+    "A vehicle's type ('Trailer', 'Prop', ...) comes from the aggregates.Type field of its config, otherwise from the model's Type (getConfigType).",
+    "setEnabled(false) replaces M.onCouplerAttached and M.onCouplerDetached with `nop`: the registry is then no longer updated (the engine calls the hooks through the M table, so the change is taken into account). onVehicleResetted/onVehicleActiveChanged keep acting on the existing registry. Inconsistency: the setEnabled parameter shadows the module's local variable `enabled`, which is therefore never updated by setEnabled; getEnabled() returns the value restored by resetData/onDeserialized (true initially), not the last requested state.",
+    "onVehicleResetted is marked in the code 'TODO: Remove this when trailer respawn is disabled': core_vehicles contains a commented-out version of the same mechanism.",
+    "In multiplayer (multiplayer_vehicleSync), repositioning on reset is disabled and the trailers' active state is delegated to multiplayer_vehicleSync.requestTrailerActiveFollow."
   ],
   "fields": {
     "debugEnabled": {
       "type": "boolean",
-      "desc": "false par défaut ; l'affichage debug des noeuds d'attelage (debugUpdate) n'est pas branché (M.onPreRender est commenté)."
+      "desc": "false by default; the debug display of coupling nodes (debugUpdate) is not hooked up (M.onPreRender is commented out)."
     },
     "dependencies": {
       "type": "string[]",
@@ -20,7 +20,7 @@
   },
   "functions": {
     "onSerialize": {
-      "desc": "Hook : sauvegarde le registre et l'état activé avant un rechargement Lua.",
+      "desc": "Hook: saves the registry and the enabled state before a Lua reload.",
       "params": {},
       "returns": [
         {
@@ -31,90 +31,90 @@
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook : restaure le registre et réapplique setEnabled.",
+      "desc": "Hook: restores the registry and reapplies setEnabled.",
       "params": {
         "data": {
           "type": "table",
-          "desc": "données de onSerialize"
+          "desc": "data from onSerialize"
         }
       },
       "returns": [],
       "internal": true
     },
     "resetData": {
-      "desc": "Vide le registre des remorques et réactive le système.",
+      "desc": "Clears the trailer registry and re-enables the system.",
       "params": {},
       "returns": []
     },
     "getTrailerData": {
-      "desc": "Renvoie le registre interne trailerReg (pas une copie).",
+      "desc": "Returns the internal registry trailerReg (not a copy).",
       "params": {},
       "returns": [
         {
           "type": "table<integer, {trailerId: integer, trailerNode: integer, node: integer}>",
-          "desc": "[idTracteur] = infos d'attelage"
+          "desc": "[towVehicleId] = coupling info"
         }
       ]
     },
     "getPreviousAttachedVehicleId": {
-      "desc": "Renvoie le véhicule qui tracte vehId (celui dont la remorque enregistrée est vehId).",
+      "desc": "Returns the vehicle that tows vehId (the one whose registered trailer is vehId).",
       "params": {
         "vehId": {
           "type": "integer",
-          "desc": "identifiant de la remorque"
+          "desc": "trailer identifier"
         }
       },
       "returns": [
         {
           "type": "integer|nil",
-          "desc": "identifiant du tracteur, nil s'il n'y en a pas"
+          "desc": "tow vehicle identifier, nil if there is none"
         }
       ]
     },
     "getVehicleTrainHead": {
-      "desc": "Remonte la chaîne d'attelages jusqu'au premier véhicule (tête du train).",
+      "desc": "Walks up the coupling chain to the first vehicle (head of the train).",
       "params": {
         "vehId": {
           "type": "integer",
-          "desc": "véhicule de départ"
+          "desc": "starting vehicle"
         }
       },
       "returns": [
         {
           "type": "integer",
-          "desc": "identifiant de la tête de train (vehId lui-même s'il n'est pas tracté)"
+          "desc": "train head identifier (vehId itself if it is not towed)"
         }
       ]
     },
     "getVehicleTrain": {
-      "desc": "Renvoie tous les véhicules reliés à vehId, vers l'avant et vers l'arrière.",
+      "desc": "Returns all vehicles connected to vehId, forward and backward.",
       "params": {
         "vehId": {
           "type": "integer",
-          "desc": "véhicule de départ"
+          "desc": "starting vehicle"
         },
         "res": {
           "type": "table|nil",
-          "desc": "table accumulatrice (usage interne, laisser nil)"
+          "desc": "accumulator table (internal use, leave nil)"
         },
         "forward": {
           "type": "boolean|nil",
-          "desc": "true : seulement vers le tracteur ; false : seulement vers les remorques ; nil : les deux"
+          "desc": "true: only toward the tow vehicle; false: only toward the trailers; nil: both"
         }
       },
       "returns": [
         {
           "type": "table<integer, boolean>",
-          "desc": "ensemble [vehId] = true"
+          "desc": "set [vehId] = true"
         }
       ]
     },
     "getConfigType": {
-      "desc": "Renvoie le type d'un véhicule ('Car', 'Trailer', 'Prop'…), d'après sa config (aggregates.Type) ou, à défaut, le Type de son modèle.",
+      "desc": "Returns a vehicle's type ('Car', 'Trailer', 'Prop'...), from its config (aggregates.Type) or, failing that, its model's Type.",
       "params": {
         "objId": {
           "type": "integer",
-          "desc": "identifiant du véhicule"
+          "desc": "vehicle identifier"
         }
       },
       "returns": [
@@ -125,172 +125,172 @@
       ]
     },
     "getAttachedNonTrailer": {
-      "desc": "Remonte les attelages pour trouver le véhicule qui n'est pas une remorque et qui tracte la chaîne contenant vehId.",
+      "desc": "Walks up the couplings to find the non-trailer vehicle that tows the chain containing vehId.",
       "params": {
         "vehId": {
           "type": "integer",
-          "desc": "véhicule de départ"
+          "desc": "starting vehicle"
         }
       },
       "returns": [
         {
           "type": "integer|false",
-          "desc": "identifiant du premier véhicule non-remorque, false si la chaîne ne contient que des remorques"
+          "desc": "identifier of the first non-trailer vehicle, false if the chain only contains trailers"
         }
       ]
     },
     "isVehicleCoupledToTrailer": {
-      "desc": "Indique si trailerId fait partie de la chaîne tractée par vehId.",
+      "desc": "Indicates whether trailerId is part of the chain towed by vehId.",
       "params": {
         "vehId": {
           "type": "integer",
-          "desc": "tracteur"
+          "desc": "tow vehicle"
         },
         "trailerId": {
           "type": "integer",
-          "desc": "remorque recherchée"
+          "desc": "trailer searched for"
         }
       },
       "returns": [
         {
           "type": "boolean",
-          "desc": "true si relié (directement ou en chaîne)"
+          "desc": "true if connected (directly or through a chain)"
         }
       ]
     },
     "placeTrailer": {
-      "desc": "Replace la remorque enregistrée de vehId derrière lui (spawn.placeTrailer, d'après les décalages de coupleurs).",
+      "desc": "Repositions the registered trailer of vehId behind it (spawn.placeTrailer, from coupler offsets).",
       "params": {
         "vehId": {
           "type": "integer",
-          "desc": "tracteur"
+          "desc": "tow vehicle"
         }
       },
       "returns": []
     },
     "coupleTrailer": {
-      "desc": "Si le tag du coupleur est de type 'autoCouple' (core_vehicles.couplerTagsOptions), lance beamstate.activateAutoCoupling(tag) sur le tracteur.",
+      "desc": "If the coupler tag is of type 'autoCouple' (core_vehicles.couplerTagsOptions), runs beamstate.activateAutoCoupling(tag) on the tow vehicle.",
       "params": {
         "vehId": {
           "type": "integer",
-          "desc": "tracteur"
+          "desc": "tow vehicle"
         }
       },
       "returns": []
     },
     "setEnabled": {
-      "desc": "Active ou désactive l'enregistrement des attelages (remplace onCouplerAttached/onCouplerDetached par la fonction vide nop si false).",
+      "desc": "Enables or disables coupling recording (replaces onCouplerAttached/onCouplerDetached with the empty function nop if false).",
       "params": {
         "enabled": {
           "type": "boolean",
-          "desc": "état voulu"
+          "desc": "desired state"
         }
       },
       "returns": []
     },
     "getEnabled": {
-      "desc": "Renvoie la variable `enabled` du module (voir notes : n'est pas mise à jour par setEnabled).",
+      "desc": "Returns the module's `enabled` variable (see notes: not updated by setEnabled).",
       "params": {},
       "returns": [
         {
           "type": "boolean",
-          "desc": "true tant que resetData/onDeserialized ne l'ont pas changé"
+          "desc": "true as long as resetData/onDeserialized have not changed it"
         }
       ]
     },
     "onCouplerAttached": {
-      "desc": "Hook : un attelage se ferme. Enregistre le sens tracteur/remorque dans trailerReg (le non-remorque tracte), ignore les Props et les boucles, puis émet onTrailerAttached(objId1, objId2).",
+      "desc": "Hook: a coupling closes. Records the tow/trailer direction in trailerReg (the non-trailer tows), ignores Props and loops, then emits onTrailerAttached(objId1, objId2).",
       "params": {
         "objId1": {
           "type": "integer",
-          "desc": "premier véhicule"
+          "desc": "first vehicle"
         },
         "objId2": {
           "type": "integer",
-          "desc": "second véhicule"
+          "desc": "second vehicle"
         },
         "nodeId": {
           "type": "integer",
-          "desc": "noeud du premier"
+          "desc": "node of the first"
         },
         "obj2nodeId": {
           "type": "integer",
-          "desc": "noeud du second"
+          "desc": "node of the second"
         }
       },
       "returns": [],
       "internal": true
     },
     "onCouplerDetached": {
-      "desc": "Hook : un attelage s'ouvre. Ne retire l'enregistrement que si breakForce est 0 (détachement volontaire), avec un délai d'une frame (job) pour ne pas empêcher le reset de la remorque.",
+      "desc": "Hook: a coupling opens. Only removes the record if breakForce is 0 (voluntary detachment), with a one-frame delay (job) so as not to prevent the trailer's reset.",
       "params": {
         "objId1": {
           "type": "integer",
-          "desc": "premier véhicule"
+          "desc": "first vehicle"
         },
         "objId2": {
           "type": "integer",
-          "desc": "second véhicule"
+          "desc": "second vehicle"
         },
         "nodeId": {
           "type": "integer",
-          "desc": "noeud du premier"
+          "desc": "node of the first"
         },
         "obj2nodeId": {
           "type": "integer",
-          "desc": "noeud du second"
+          "desc": "node of the second"
         },
         "breakForce": {
           "type": "number|nil",
-          "desc": "force de rupture ; ignoré si nil ou > 0"
+          "desc": "break force; ignored if nil or > 0"
         }
       },
       "returns": [],
       "internal": true
     },
     "onVehicleActiveChanged": {
-      "desc": "Hook : un véhicule est activé/désactivé. Aligne l'état actif de sa remorque et, à l'activation, la replace derrière lui.",
+      "desc": "Hook: a vehicle is activated/deactivated. Aligns the active state of its trailer and, on activation, repositions it behind the vehicle.",
       "params": {
         "vehId": {
           "type": "integer",
-          "desc": "véhicule"
+          "desc": "vehicle"
         },
         "active": {
           "type": "boolean",
-          "desc": "nouvel état"
+          "desc": "new state"
         }
       },
       "returns": [],
       "internal": true
     },
     "onVehicleSpawned": {
-      "desc": "Hook : un véhicule apparaît ; efface ses anciens enregistrements d'attelage.",
+      "desc": "Hook: a vehicle spawns; clears its old coupling records.",
       "params": {
         "vehId": {
           "type": "integer",
-          "desc": "véhicule"
+          "desc": "vehicle"
         }
       },
       "returns": [],
       "internal": true
     },
     "onVehicleResetted": {
-      "desc": "Hook : un véhicule est remis à zéro ; replace sa remorque derrière lui (désactivé en multijoueur).",
+      "desc": "Hook: a vehicle is reset; repositions its trailer behind it (disabled in multiplayer).",
       "params": {
         "vehId": {
           "type": "integer",
-          "desc": "véhicule"
+          "desc": "vehicle"
         }
       },
       "returns": [],
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook : un véhicule est détruit ; efface ses enregistrements d'attelage.",
+      "desc": "Hook: a vehicle is destroyed; clears its coupling records.",
       "params": {
         "vehId": {
           "type": "integer",
-          "desc": "véhicule"
+          "desc": "vehicle"
         }
       },
       "returns": [],

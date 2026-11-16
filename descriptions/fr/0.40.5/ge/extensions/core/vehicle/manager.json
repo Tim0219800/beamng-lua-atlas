@@ -1,0 +1,124 @@
+{
+  "path": "lua/ge/extensions/core/vehicle/manager.lua",
+  "module": "Extension GE `core_vehicle_manager` : chargeur de véhicules côté GE. Quand le moteur crée un objet véhicule, il appelle `_spawnCCallback` : charge les matériaux du dossier du modèle, construit la config (core_vehicle_partmgmt.buildConfigFromString), exécute l'étape 1 du chargeur jbeam (jbeam/loader), termine les meshes, notifie l'UI (VehicleChange), fait entrer le joueur si autoEnterVehicle, puis envoie les données de physique au véhicule (spawnPhysics). Conserve pour chaque véhicule son « bundle » (vdata = données jbeam, config, ioCtx…) accessible par getVehicleData, et applique en direct les changements de peinture.",
+  "usage": "local d = core_vehicle_manager.getVehicleData(be:getPlayerVehicleID(0))\nprint(d.vehicleDirectory, d.model, d.config.partConfigFilename)\ndump(d.vdata.nodes[0].pos)\n-- peintures par nom\ncore_vehicle_manager.setVehicleColorsNames(vehId, {'Black', 'White', 'Red'})",
+  "notes": [
+    "getVehicleData(id) renvoie le « bundle » de vehicles[id] : tableau avec au moins vdata, config, ioCtx, vehicleDirectory, model, mainPartName, activePlayer (champs lus ailleurs dans le code ; le détail exact vient de jbeam/loader).",
+    "BUG : setVehicleColorsNames teste `vehicle.color == vehicle.colorPalette0 == vehicle.colorPalette1`, ce qui compare un booléen à une couleur et vaut toujours false : le paramètre `optional` ne protège donc jamais rien.",
+    "BUG probable : dans _spawnCCallback, `additionalVehicleData and not additionalDataId or additionalDataId == objID` mélange and/or sans parenthèses ; si additionalDataId est nil, la condition est vraie quand additionalVehicleData existe (voulu) mais aussi vraie si additionalDataId == objID.",
+    "setVehiclePaintsNames est un alias de setVehicleColorsNames.",
+    "L'éditeur « Vehicle Manager » (onEditorGui) est marqué obsolète dans le code : il affiche seulement l'argument de ligne de commande -debugVehicleLoading à utiliser à la place. Les arguments -profileVehicleLoading et -debugVehicleLoading sont lus au chargement du module.",
+    "onUpdate appelle spawn.clearCache() à chaque frame (cache de placement de spawn.lua)."
+  ],
+  "fields": {
+    "autoSpawnPhysics": {"type": "boolean", "desc": "true par défaut ; si false, la physique n'est pas envoyée au véhicule après le chargement (spawnPhysicsForVehicle doit être appelée à la main). Aussi désactivé pour un véhicule dont NoPhysics == 'true'."}
+  },
+  "functions": {
+    "getDebug": {
+      "desc": "Indique si le mode debug de chargement des véhicules est actif.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "état"}]
+    },
+    "setDebug": {
+      "desc": "Active/désactive le debug de chargement (transmis dans additionalVehicleData.debugEnabled) et prévient l'UI (guihook debugSpawnChanged).",
+      "params": {"enabled": {"type": "boolean", "desc": "état voulu"}},
+      "returns": []
+    },
+    "toggleDebug": {
+      "desc": "Inverse le mode debug.",
+      "params": {},
+      "returns": []
+    },
+    "queueAdditionalVehicleData": {
+      "desc": "Prépare une table de données supplémentaires qui sera ajoutée à la config du prochain véhicule chargé (config.additionalVehicleData, retirée ensuite). Appelée par core_vehicles au spawn/remplacement.",
+      "params": {
+        "data": {"type": "table|nil", "desc": "données ; nil annule"},
+        "vehId": {"type": "integer|nil", "desc": "si donné, seul ce véhicule recevra les données"}
+      },
+      "returns": []
+    },
+    "spawnPhysicsForVehicle": {
+      "desc": "Envoie au véhicule (vehicleObj:spawnPhysics) ses données de physique encodées (vdata + config) ; envoie un paquet vide si le bundle est absent.",
+      "params": {
+        "objID": {"type": "integer|nil", "desc": "véhicule ; nil = joueur 0"},
+        "vehicleObj": {"type": "userdata|nil", "desc": "objet véhicule (cherché si nil)"},
+        "vehicleBundle": {"type": "table|nil", "desc": "bundle à envoyer (défaut : celui mémorisé)"}
+      },
+      "returns": []
+    },
+    "_spawnCCallback": {
+      "desc": "Appelée par le moteur C++ quand un objet véhicule est créé ou rechargé : charge matériaux, config et jbeam (étape 1), notifie, fait entrer le joueur (autoEnterVehicle / autoEnterVehiclePlayer) et lance la physique. Émet le hook onSpawnCCallback(objID) et appelle vehicleSpawned(objID).",
+      "params": {
+        "objID": {"type": "integer", "desc": "id de l'objet véhicule"},
+        "vehicleDir": {"type": "string", "desc": "dossier du modèle (ex. '/vehicles/pickup/')"},
+        "configDataIn": {"type": "table|string", "desc": "config reçue (partConfig du véhicule)"},
+        "reloading": {"type": "boolean", "desc": "true lors d'un rechargement (non exploité dans le code)"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "getPlayerVehicleData": {
+      "desc": "Bundle de données du véhicule du joueur 0.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "même structure que getVehicleData"}]
+    },
+    "getVehicleData": {
+      "desc": "Bundle de données d'un véhicule (vdata jbeam, config, ioCtx…).",
+      "params": {"id": {"type": "integer", "desc": "id du véhicule"}},
+      "returns": [{"type": "table|nil", "desc": "bundle ; nil si le véhicule n'est pas connu"}]
+    },
+    "liveUpdateVehicleColors": {
+      "desc": "Change la peinture d'un emplacement sur l'objet véhicule (color, colorPalette0, colorPalette1 + données métalliques) sans respawn, puis émet onVehicleColorChanged(objID, index, paint). Ne fait rien si le véhicule n'a pas de config.paints.",
+      "params": {
+        "objID": {"type": "integer", "desc": "id du véhicule"},
+        "_vehicleObj": {"type": "userdata|nil", "desc": "objet véhicule (cherché si nil)"},
+        "index": {"type": "integer", "desc": "emplacement 1, 2 ou 3"},
+        "paint": {"type": "table", "desc": "peinture {baseColor, metallic, roughness, clearcoat, clearcoatRoughness}"}
+      },
+      "returns": []
+    },
+    "setVehicleColorsNames": {
+      "desc": "Applique jusqu'à 3 peintures nommées (de model.paints) à un véhicule, en direct.",
+      "params": {
+        "id": {"type": "integer|nil", "desc": "véhicule ; nil = joueur 0"},
+        "paintNames": {"type": "string[]", "desc": "{nom1, nom2, nom3}"},
+        "optional": {"type": "any", "desc": "si non nil, devait annuler l'action quand les 3 couleurs du véhicule sont identiques (inopérant, voir notes)"}
+      },
+      "returns": []
+    },
+    "setVehiclePaintsNames": {
+      "desc": "Alias de setVehicleColorsNames.",
+      "params": {
+        "id": {"type": "integer|nil", "desc": "véhicule ; nil = joueur 0"},
+        "paintNames": {"type": "string[]", "desc": "noms de peintures"},
+        "optional": {"type": "any", "desc": "voir setVehicleColorsNames"}
+      },
+      "returns": []
+    },
+    "toggleModifyKey": {
+      "desc": "Affiche/masque la fenêtre d'édition en place des véhicules (core_vehicle_inplaceEdit).",
+      "params": {},
+      "returns": []
+    },
+    "reloadVehicle": {
+      "desc": "Recharge le véhicule d'un joueur : prévient core_vehicles.reloadVehicle puis be:reloadVehicle(playerId).",
+      "params": {"playerId": {"type": "integer", "desc": "index du joueur"}},
+      "returns": []
+    },
+    "reloadAllVehicles": {
+      "desc": "Recharge tous les véhicules (be:reloadAllVehicles).",
+      "params": {},
+      "returns": []
+    },
+    "onVehicleSwitched": {"desc": "Hook : le joueur change de véhicule. Met à jour activePlayer des bundles et relâche l'embrayage (input.event('clutch', 0, 0)) de l'ancien véhicule.", "params": {"oldID": {"type": "integer", "desc": "ancien véhicule"}, "newID": {"type": "integer", "desc": "nouveau véhicule"}, "player": {"type": "integer", "desc": "joueur"}}, "returns": [], "internal": true},
+    "onDespawnObject": {"desc": "Hook : un objet véhicule est retiré. Oublie son bundle sauf s'il s'agit d'un rechargement (isReloading true).", "params": {"id": {"type": "integer", "desc": "véhicule"}, "isReloading": {"type": "boolean", "desc": "true si rechargement"}}, "returns": [], "internal": true},
+    "onClientEndMission": {"desc": "Hook : fin du niveau ; invalide le cache de matériaux chargés.", "params": {}, "returns": [], "internal": true},
+    "onFilesChanged": {"desc": "Hook : fichiers modifiés ; prévient jbeam/loader.", "params": {"files": {"type": "table", "desc": "liste de fichiers modifiés"}}, "returns": [], "internal": true},
+    "onFileChanged": {"desc": "Hook : un fichier a changé. Prévient jbeam/io pour les .jbeam et invalide le cache de matériaux d'un dossier de véhicule si un .materials.json y change.", "params": {"filename": {"type": "string", "desc": "chemin"}, "type": {"type": "string", "desc": "type de modification"}}, "returns": [], "internal": true},
+    "onUpdate": {"desc": "Hook par frame : vide le cache de placement de spawn.lua.", "params": {}, "returns": [], "internal": true},
+    "onSerialize": {"desc": "Hook : encode (lpack) les bundles avant rechargement Lua.", "params": {}, "returns": [{"type": "table", "desc": "{vehicles, autoSpawnPhysics}"}], "internal": true},
+    "onDeserialized": {"desc": "Hook : restaure les bundles encodés par onSerialize.", "params": {"data": {"type": "table", "desc": "données de onSerialize"}}, "returns": [], "internal": true},
+    "onEditorInitialized": {"desc": "Hook de l'éditeur : enregistre la fenêtre obsolète « Vehicle Manager ».", "params": {}, "returns": [], "internal": true},
+    "onEditorGui": {"desc": "Hook de l'éditeur : affiche un message d'obsolescence recommandant -debugVehicleLoading.", "params": {}, "returns": [], "internal": true}
+  }
+}

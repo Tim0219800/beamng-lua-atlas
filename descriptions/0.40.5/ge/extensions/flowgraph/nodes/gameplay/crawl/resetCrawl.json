@@ -1,12 +1,23 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crawl/resetCrawl.lua",
-  "module": "Nœud flowgraph « Reset Crawl » (catégorie once_instant, crawl). Remet à zéro le crawl actif : téléporte le véhicule au départ et réinitialise données et timers. Le système reste actif mais le timer est arrêté jusqu'à Start Crawl. Sorties : success, failed, isActive.",
+  "module": "Flowgraph node \"Reset Crawl\" (category once_instant, crawl). Resets the active crawl: teleports the vehicle to the start and resets data and timers. The system stays active but the timer is stopped until Start Crawl. Outputs: success, failed, isActive.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Charge le bridge du crawl.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "work": {"desc": "Appelle bridge.resetCrawl(). Succès : isActive vrai ; échec : isActive = bridge.isCrawlActive()."}
+        "init": {
+          "desc": "Loads the crawl bridge.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Calls bridge.resetCrawl(). Success: isActive true; failure: isActive = bridge.isCrawlActive()."
+        }
       }
     }
   }

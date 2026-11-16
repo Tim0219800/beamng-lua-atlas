@@ -1,34 +1,34 @@
 # `editor_vehicleEditor_api_nodeTransformer`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/api/nodeTransformer.lua` · VM : Game Engine (GE) · 79 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/api/nodeTransformer.lua` · VM: Game Engine (GE) · 79 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_api_nodeTransformer` : `extensions.load("editor_vehicleEditor_api_nodeTransformer")`, puis la globale `editor_vehicleEditor_api_nodeTransformer`
+**Access:** extension `editor_vehicleEditor_api_nodeTransformer`: `extensions.load("editor_vehicleEditor_api_nodeTransformer")`, then the global `editor_vehicleEditor_api_nodeTransformer`
 
-Aide du Vehicle Editor pour déplacer les nœuds sélectionnés (vEditor.selectedNodes) avec le gizmo d'axes de l'éditeur. Le gizmo est centré sur la moyenne des positions des nœuds ; pendant le glissement, chaque nœud reçoit sa position d'origine plus le delta (en coordonnées locales, signe inversé).
+Vehicle Editor helper to move the selected nodes (vEditor.selectedNodes) with the editor's axis gizmo. The gizmo is centered on the average of the node positions; during the drag, each node receives its original position plus the delta (in local coordinates, sign inverted).
 
-## Remarques
+## Notes
 
-- transformNodes() doit être appelée à chaque frame tant que des nœuds sont sélectionnés ; elle divise par #vEditor.selectedNodes sans vérifier qu'il est non nul (division par 0 -> inf/NaN si la sélection est vide).
-- Désactive le plan, les hachures et la grille de déplacement du gizmo (worldEditorCppApi.setAxisGizmoRender*) quand on ne glisse pas.
-- Le gizmo est en alignement local (editor.AxisGizmoAlignment_Local), orientation identité.
+- transformNodes() must be called every frame as long as nodes are selected; it divides by #vEditor.selectedNodes without checking that it is non-zero (division by 0 -> inf/NaN if the selection is empty).
+- Disables the plane, the hatching and the translation grid of the gizmo (worldEditorCppApi.setAxisGizmoRender*) when not dragging.
+- The gizmo is in local alignment (editor.AxisGizmoAlignment_Local), identity orientation.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_api_nodeTransformer.transformNodes()` | Place et dessine le gizmo au centre des nœuds sélectionnés, gère début/fin/glissement et applique le décalage aux nœuds (node.pos). | 48 |
+| `editor_vehicleEditor_api_nodeTransformer.transformNodes()` | Places and draws the gizmo at the center of the selected nodes, handles start/end/drag and applies the offset to the nodes (node.pos). | 48 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_api_nodeTransformer.transformNodes()`
 
-Place et dessine le gizmo au centre des nœuds sélectionnés, gère début/fin/glissement et applique le décalage aux nœuds (node.pos).
+Places and draws the gizmo at the center of the selected nodes, handles start/end/drag and applies the offset to the nodes (node.pos).
 
-- **renvoie** : boolean true si un glissement du gizmo est en cours pendant cet appel.
+- **returns**: boolean true if a gizmo drag is in progress during this call.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `worldEditorCppApi.` `setAxisGizmoRenderMoveGrid`, `setAxisGizmoRenderPlane`, `setAxisGizmoRenderPlaneHashes`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/api/nodeTransformer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/api/nodeTransformer.lua`.*

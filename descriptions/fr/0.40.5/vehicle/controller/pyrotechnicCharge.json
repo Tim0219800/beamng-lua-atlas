@@ -1,0 +1,19 @@
+{
+  "path": "lua/vehicle/controller/pyrotechnicCharge.lua",
+  "module": "Contrôleur auxiliaire de charge pyrotechnique à usage unique : dès qu'un des electrics listés dans triggerElectrics vaut 1 ou true, il joue un son, casse des breakgroups et détache des coupleurs, puis affiche un message. Sert aux séparations explosives (boulons, étages, remorques). Peut aussi être déclenché à la main par trigger().",
+  "usage": "controller.getController(\"pyrotechnicCharge\").trigger()",
+  "notes": [
+    "Clés jbeam lues : triggerElectrics (liste de noms d'electrics), breakgroups (liste de noms de breakgroups), couplers (liste de noms de coupleurs), eventName (\"event:>Vehicle>Failures>pyrotechnic_charge\"), eventVolume (1), uiName (\"\", utilisé dans le message), eventNode (nom de nœud ; premier nœud de ce nom, sinon 0).",
+    "Un déclenchement par updateGFX ne se produit qu'une fois (hasTriggered) jusqu'au reset ; l'appel direct à trigger() n'est pas protégé et ne met pas hasTriggered à vrai.",
+    "Les coupleurs sont détachés avec beamstate.detachCouplers(nom, true, true)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Lit la configuration jbeam et retrouve le nœud sonore.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "reset": {"desc": "Réarme la charge (hasTriggered = false).", "internal": true},
+    "updateGFX": {"desc": "Chaque frame : si un electric de déclenchement est actif et que la charge n'est pas déjà tirée, appelle trigger().", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true},
+    "trigger": {"desc": "Déclenche la charge : joue le son sur le nœud, casse les breakgroups, détache les coupleurs et affiche un message de 5 s."}
+  }
+}

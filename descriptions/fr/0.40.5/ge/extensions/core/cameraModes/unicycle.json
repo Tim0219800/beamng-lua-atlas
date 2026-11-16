@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/unicycle.lua",
+  "module": "Caméra à la première personne du personnage à pied (« unicycle » : le véhicule joueur à pied). Masquée. La rotation de la tête vient des entrées de lacet/tangage (tangage limité à ±89.9 degrés), le zoom de data.unicycleZoom (FOV de 55 à 27). La position suit le nœud de tête du véhicule (core_camera.getDriverData). Envoie la rotation de caméra au contrôleur du véhicule (playerController.setCameraControlData). Supporte le snap turn OpenXR. setCustomData fixe la position (posée au sol à 1.6 m des yeux) et la direction de départ. Renvoie un constructeur.",
+  "notes": ["Constantes : hauteur humaine 1.6 m, hanche 0.45 * hauteur, accroupi 0.7 ; chute max 10 m, gravité -2 m/s2 dans attemptToWalk, qui est local au fichier et jamais appelée dans ce fichier (code inutilisé).", "getEyePosition utilise la variable `crouching` qui n'existe pas dans la portée (nil) : l'accroupissement n'est donc jamais pris en compte.", "onCameraChanged ne fait rien si le véhicule joueur est lui-même un unicycle ; sinon charge la disposition d'apps « unicycle » au gain de focus et redemande l'état de jeu à la perte.", "getRotVecFromFrontUp force un tangage horizontal (rotVec.y = 180) : le commentaire du code dit « the math below is broken ».", "Réglages : openXRsnapTurnUnicycle, openXRsnapTurnUnicycleDegrees."],
+  "classes": {
+    "C": {
+      "desc": "Mode caméra piéton. Champs : pos (vec3), rotVec (vec3 degrés, y = 180 pour regarder à l'horizontale).",
+      "functions": {
+        "init": {"desc": "Prépare le lissage du zoom et lit les réglages.", "internal": true},
+        "onSettingsChanged": {"desc": "Hook : relit les réglages snap turn OpenXR.", "internal": true},
+        "onCameraChanged": {"desc": "Hook : charge ou quitte la disposition d'interface « unicycle » (voir notes).", "params": {"focused": {"type": "boolean", "desc": "vrai si le mode prend le focus"}}, "internal": true},
+        "reset": {"desc": "Remet le lissage du zoom à zéro."},
+        "setCustomData": {"desc": "Fixe la position et/ou l'orientation initiales ; appelé par setGlobalCameraByName.", "params": {"customData": {"type": "table|nil", "desc": "pos (vec3, ramenée au niveau des yeux), front et up (vec3, direction de départ)"}}},
+        "getPosRot": {"desc": "Position et rotation courantes de la caméra.", "returns": [{"type": "vec3", "desc": "position"}, {"type": "quat", "desc": "rotation"}]},
+        "update": {"desc": "Applique rotation, zoom et position, et envoie la rotation au contrôleur du joueur.", "params": {"data": {"type": "table", "desc": "camData (data.unicycleZoom, data.player lus)"}}, "returns": [{"type": "boolean", "desc": "true"}], "internal": true}
+      }
+    }
+  }
+}

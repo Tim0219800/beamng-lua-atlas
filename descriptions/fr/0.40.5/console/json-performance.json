@@ -1,0 +1,11 @@
+{
+  "path": "lua/console/json-performance.lua",
+  "module": "Script de benchmark de la console (hors jeu) : il compare la vitesse de décodage JSON, d'encodage/décodage lpack (texte et binaire) et de string.buffer sur tous les fichiers *.jbeam du dossier /vehicles. Il s'exécute dès qu'on le charge, sans exporter de fonction. Utile seulement pour mesurer des performances, pas pour un mod.",
+  "notes": [
+    "Le script s'exécute entièrement au chargement (require) et affiche les temps et débits en MB/s avec print.",
+    "Il lit les fichiers avec FS:findFiles('/vehicles', '*.jbeam', -1, false, false) puis readFile ; chaque test est répété 6 fois (variable locale reruns).",
+    "Le débit affiché pour le décodage lpack est calculé sur la taille empaquetée (totalPackSize), pas sur la taille JSON d'origine."
+  ],
+  "fields": {},
+  "functions": {}
+}

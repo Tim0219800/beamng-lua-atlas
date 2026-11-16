@@ -2,140 +2,140 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/drag/saveSystem.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Chargement et sauvegarde des données de drag. Lit les pistes (fichiers *.strip.json et *.dragSettings.json, ou ancien format converti), reconstruit couloirs, waypoints, zones et timers, synchronise les waypoints avec les objets BeamNGWaypoint de la scène, précalcule le point d'arrêt IA, et fait apparaître/supprime les prefabs (arbre, panneaux, décorations, chemins). Gère aussi les fichiers du joueur : meilleurs temps par véhicule (carnet de dial) et historique des tickets, dans le dossier settings/ de l'utilisateur.
---- Accès : extension `gameplay_drag_saveSystem` : `extensions.load("gameplay_drag_saveSystem")`, puis la globale `gameplay_drag_saveSystem`
+--- Loading and saving of drag data. Reads the tracks (*.strip.json and *.dragSettings.json files, or old format converted), rebuilds lanes, waypoints, zones and timers, synchronizes the waypoints with the BeamNGWaypoint objects of the scene, precomputes the AI stop point, and spawns/removes the prefabs (tree, signs, decorations, paths). Also manages the player's files: best times per vehicle (dial book) and slip history, in the user's settings/ folder.
+--- Access: extension `gameplay_drag_saveSystem`: `extensions.load("gameplay_drag_saveSystem")`, then the global `gameplay_drag_saveSystem`
 ---@class gameplay_drag_saveSystem
----@field DEFAULT_TIMERS table[] Timers par défaut d'une piste : {id, label, labelKey, shortLabel, type = 'distanceTimer'|'velocity', distance (m), important}.
+---@field DEFAULT_TIMERS table[] Default timers of a track: {id, label, labelKey, shortLabel, type = 'distanceTimer'|'velocity', distance (m), important}.
 gameplay_drag_saveSystem = {}
 
---- Convertit l'ancien format de piste (stripInfo, strip.lanes) en structure actuelle (strip, lanes, waypoints), ajoute les timers par défaut et synchronise les waypoints avec la scène.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:415
----@param legacyData table Données dans l'ancien format.
----@return table|nil  Données converties, nil si legacyData est nil.
+--- Converts the old track format (stripInfo, strip.lanes) into the current structure (strip, lanes, waypoints), adds the default timers and synchronizes the waypoints with the scene.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:415
+---@param legacyData table Data in the old format.
+---@return table|nil  Converted data, nil if legacyData is nil.
 function gameplay_drag_saveSystem.convertLegacyData(legacyData) end
 
---- Charge une seule fois par session le carnet de dial (settings/dragDialTimes.json, historique .jsonl, overlay des meilleurs temps) et migre l'ancien historique hors du JSON principal.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:614
----@return table  Cache indexé par hash de config véhicule ({time_1_4, ..., history}).
+--- Loads the dial book once per session (settings/dragDialTimes.json, .jsonl history, best times overlay) and migrates the old history out of the main JSON.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:614
+---@return table  Cache keyed by vehicle config hash ({time_1_4, ..., history}).
 function gameplay_drag_saveSystem.ensureDialCache() end
 
---- Hash stable de la config du véhicule (hash du fichier .pc) servant de clé pour dial et historique ; mis en cache. Retourne 'vehicle_<id>' si les détails ou le fichier sont indisponibles.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:723
----@param vehicleId integer|nil ID du véhicule (défaut : véhicule du joueur 0).
----@return string  Hash ou clé de repli.
+--- Stable hash of the vehicle's config (hash of the .pc file) serving as the key for dial and history; cached. Returns 'vehicle_<id>' if the details or the file are unavailable.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:723
+---@param vehicleId integer|nil Vehicle ID (default: player 0's vehicle).
+---@return string  Hash or fallback key.
 function gameplay_drag_saveSystem.generateHashFromFile(vehicleId) end
 
---- Tous les couloirs de toutes les pistes (*.strip.json) du niveau courant, avec _stripId et _stripName ajoutés.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:887
----@return table[]  Couloirs.
+--- All the lanes of all the tracks (*.strip.json) of the current level, with _stripId and _stripName added.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:887
+---@return table[]  Lanes.
 function gameplay_drag_saveSystem.getAllLanes() end
 
---- Données brutes de toutes les pistes *.strip.json du dossier dragstrips du niveau courant (avec _filePath).
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:870
----@return table[]  Pistes.
+--- Raw data of all the *.strip.json tracks of the current level's dragstrips folder (with _filePath).
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:870
+---@return table[]  Tracks.
 function gameplay_drag_saveSystem.getAllStrips() end
 
---- Chemin /levels/<niveau>/dragstrips/ du niveau courant.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:261
----@return string|nil  Chemin, nil (log E) si le niveau est inconnu.
+--- Path /levels/<level>/dragstrips/ of the current level.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:261
+---@return string|nil  Path, nil (E log) if the level is unknown.
 function gameplay_drag_saveSystem.getCurrentLevelDragPath() end
 
---- Chemin de sauvegarde carrière courant.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:752
----@return string  Chemin, chaîne vide hors carrière.
+--- Current career save path.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:752
+---@return string  Path, empty string outside career.
 function gameplay_drag_saveSystem.getCurrentSavePath() end
 
---- Meilleurs temps par hash de config, sans l'historique ; time_1_4 vaut au moins 10 par défaut.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:706
----@return table<string, table>  Table hash vers {time_1_4, autres timers}.
+--- Best times per config hash, without the history; time_1_4 is at least 10 by default.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:706
+---@return table<string, table>  Table hash to {time_1_4, other timers}.
 function gameplay_drag_saveSystem.getDialTimes() end
 
---- Historique des tickets enregistrés. Avec id, filtre sur la piste correspondante du niveau courant (par id de dragSettings, nom de fichier ou id de strip).
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:770
----@param id string|nil Identifiant de piste/installation ; nil = tout l'historique.
+--- History of the recorded slips. With id, filters on the matching track of the current level (by dragSettings id, file name or strip id).
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:770
+---@param id string|nil Track/facility identifier; nil = whole history.
 ---@return table  {history = tickets[]}.
 function gameplay_drag_saveSystem.getHistory(id) end
 
---- Les count derniers tickets toutes pistes confondues, du plus récent au plus ancien (stripInfo.timestamp).
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:851
----@param count integer Nombre maximum de tickets.
----@return table[]  Tickets.
+--- The last count slips across all tracks, from most recent to oldest (stripInfo.timestamp).
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:851
+---@param count integer Maximum number of slips.
+---@return table[]  Slips.
 function gameplay_drag_saveSystem.getRecentHistory(count) end
 
---- Nom canonique dans la scène d'un waypoint de couloir : <stripId>_wp_<type>_<couloir> (le « _wp_ » évite la collision avec les feux d'arbre).
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:118
----@param stripId string Identifiant de piste.
----@param wpType string Type de waypoint (stage, endLine...).
----@param laneIndex integer Indice du couloir.
----@return string  Nom d'objet.
+--- Canonical name in the scene of a lane waypoint: <stripId>_wp_<type>_<lane> (the "_wp_" avoids collision with the tree lights).
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:118
+---@param stripId string Track identifier.
+---@param wpType string Waypoint type (stage, endLine...).
+---@param laneIndex integer Lane index.
+---@return string  Object name.
 function gameplay_drag_saveSystem.laneWaypointSceneName(stripId, wpType, laneIndex) end
 
---- Charge une piste complète depuis un fichier .strip.json : couloirs (waypoints, boundary, zone, stageToEndNormalized), waypoints de piste, zone de piste, phases/prefabs/timers par défaut ; puis synchronise avec la scène.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:267
----@param stripId string Chemin du fichier strip JSON.
----@return table|nil  Données complètes, nil (log E) en cas d'échec de lecture.
+--- Loads a full track from a .strip.json file: lanes (waypoints, boundary, zone, stageToEndNormalized), track waypoints, track zone, default phases/prefabs/timers; then synchronizes with the scene.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:267
+---@param stripId string Path of the strip JSON file.
+---@return table|nil  Full data, nil (E log) on read failure.
 function gameplay_drag_saveSystem.loadCompleteDragRaceData(stripId) end
 
---- Charge un fichier de réglages de piste : format modulaire (champ stripId pointant vers un .strip.json, plus dragType, context, phases, prefabs, timers) ou ancien format converti par convertLegacyData.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:375
----@param filepath string Chemin du fichier JSON (.dragSettings.json).
----@return table|nil  Données de piste ou nil.
+--- Loads a track settings file: modular format (stripId field pointing to a .strip.json, plus dragType, context, phases, prefabs, timers) or old format converted by convertLegacyData.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:375
+---@param filepath string Path of the JSON file (.dragSettings.json).
+---@return table|nil  Track data or nil.
 function gameplay_drag_saveSystem.loadDragStripData(filepath) end
 
---- Fait apparaître dans la scène les prefabs utilisés de data.prefabs (christmasTree, displaySign, decorations, paths) à l'origine et stocke leur prefabId.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:919
----@param data table Données de piste avec prefabs[clé] = {isUsed, path, treeType}.
+--- Spawns in the scene the prefabs in use from data.prefabs (christmasTree, displaySign, decorations, paths) at the origin and stores their prefabId.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:919
+---@param data table Track data with prefabs[key] = {isUsed, path, treeType}.
 function gameplay_drag_saveSystem.loadPrefabs(data) end
 
---- Hook de carrière activée ; ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:867
+--- Career activated hook; does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:867
 function gameplay_drag_saveSystem.onCareerActive() end
 
---- Hook : à la sauvegarde du profil, copie le carnet de dial dans le dossier de sauvegarde (saveDialFile).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:863
----@param currentSavePath string|nil Dossier de sauvegarde courant.
+--- Hook: when the profile is saved, copies the dial book into the save folder (saveDialFile).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:863
+---@param currentSavePath string|nil Current save folder.
 function gameplay_drag_saveSystem.onSaveCurrentProfile(currentSavePath) end
 
---- Précalcule pour chaque couloir le nom du nœud de navigation où l'IA doit s'arrêter (lane.autoStopName), à plus de 350 m de la ligne d'arrivée. Ne fait rien si la piste a un waypoint drag_stop ou si le graphe n'existe pas.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:239
----@param dragData table Données de piste.
+--- Precomputes for each lane the name of the navigation node where the AI must stop (lane.autoStopName), more than 350 m from the finish line. Does nothing if the track has a drag_stop waypoint or if the graph does not exist.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:239
+---@param dragData table Track data.
 function gameplay_drag_saveSystem.resolveAutoStopWaypoints(dragData) end
 
---- Écrit le carnet de dial dans <dir>/dragDialTimes.json.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:758
----@param dir string Dossier cible.
----@return boolean  Succès de l'écriture.
+--- Writes the dial book to <dir>/dragDialTimes.json.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:758
+---@param dir string Target folder.
+---@return boolean  Write success.
 function gameplay_drag_saveSystem.saveDialFile(dir) end
 
---- Pour chaque racer jouable, met à jour son meilleur temps (timer important) si battu, et ajoute le ticket à l'historique (mémoire et fichier .jsonl, avec configHash par pilote). Écrit settings/dragDialBest.json si un record change.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:650
----@param dragData table Données de course courantes.
----@param timeslip table|nil Ticket à enregistrer dans l'historique.
+--- For each playable racer, updates its best time (important timer) if beaten, and adds the slip to the history (memory and .jsonl file, with configHash per driver). Writes settings/dragDialBest.json if a record changes.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:650
+---@param dragData table Current race data.
+---@param timeslip table|nil Slip to record in the history.
 function gameplay_drag_saveSystem.saveDialTimes(dragData, timeslip) end
 
---- Écrit un couloir en JSON (mise en forme lisible).
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:915
----@param lane table Couloir.
----@param filePath string Fichier cible.
----@return boolean  Succès.
+--- Writes a lane as JSON (human-readable formatting).
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:915
+---@param lane table Lane.
+---@param filePath string Target file.
+---@return boolean  Success.
 function gameplay_drag_saveSystem.saveLane(lane, filePath) end
 
---- Écrit une piste en JSON après avoir renommé les waypoints de chaque couloir selon laneWaypointSceneName.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:901
----@param strip table Piste (id, lanes avec waypoints[] ayant un type).
----@param filePath string Fichier cible.
----@return boolean  Succès.
+--- Writes a track as JSON after renaming each lane's waypoints according to laneWaypointSceneName.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:901
+---@param strip table Track (id, lanes with waypoints[] having a type).
+---@param filePath string Target file.
+---@return boolean  Success.
 function gameplay_drag_saveSystem.saveStrip(strip, filePath) end
 
---- Pour chaque waypoint de couloir et de piste, retrouve le BeamNGWaypoint de la scène à son nom canonique, le renomme si besoin, relit sa position/rotation/échelle, et calcule lane.stageToEndNormalized. Rebuild le graphe de navigation (map.reset) si un renommage a eu lieu.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:158
----@param dragData table Données de piste (strip.id requis).
+--- For each lane and track waypoint, finds the scene's BeamNGWaypoint by its canonical name, renames it if needed, re-reads its position/rotation/scale, and computes lane.stageToEndNormalized. Rebuilds the navigation graph (map.reset) if a rename took place.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:158
+---@param dragData table Track data (strip.id required).
 function gameplay_drag_saveSystem.syncDragStripWaypointsWithSceneTree(dragData) end
 
---- Supprime de la scène les prefabs utilisés (par prefabId) et efface prefabId.
----Source : lua/ge/extensions/gameplay/drag/saveSystem.lua:938
----@param data table Données de piste avec prefabs.
+--- Removes the prefabs in use from the scene (by prefabId) and clears prefabId.
+---Source: lua/ge/extensions/gameplay/drag/saveSystem.lua:938
+---@param data table Track data with prefabs.
 function gameplay_drag_saveSystem.unloadPrefabs(data) end
 

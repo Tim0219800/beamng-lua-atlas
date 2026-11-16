@@ -1,41 +1,41 @@
 # `jsonDebug`
 
-*Fichier : `lua/common/jsonDebug.lua` · VM : Commun (GE + véhicule) · 388 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jsonDebug.lua` · VM: Common (GE + vehicle) · 388 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jsonDebug")`
+**Access:** `require("jsonDebug")`
 
-Variante de ljson (parseur SJSON en Lua pur) qui, en plus de décoder, renvoie une liste d'avertissements, notamment les clés dupliquées avec numéro de ligne. Sert à valider des fichiers de données (jbeam, config) pendant le développement ; une extension peut passer un nom de contexte pour étiqueter ces avertissements.
+Variant of ljson (pure-Lua SJSON parser) that, in addition to decoding, returns a list of warnings, notably duplicate keys with line number. Used to validate data files (jbeam, config) during development; an extension can pass a context name to label these warnings.
 
-## Exemple
+## Example
 
 ```lua
-local data, warnings = require('jsonDebug').decode(text, 'monFichier.jbeam')
+local data, warnings = require('jsonDebug').decode(text, 'myFile.jbeam')
 for _, w in ipairs(warnings) do log('W', 'x', w) end
 ```
 
-## Remarques
+## Notes
 
-- Même syntaxe acceptée que ljson (SJSON : commentaires, virgules facultatives, clés sans guillemets, ':' ou '=', dictionnaire racine sans accolades, Infinity) ; voir ljson.json.
-- Les avertissements sont de la forme "<context>: Duplicate key found: 'clé' near line N, '<ligne>'". La clé dupliquée écrase la valeur précédente.
-- decode(nil) renvoie nil et la liste d'avertissements (vide). Une erreur de syntaxe lève error() comme dans ljson.
-- Le module remplace table.clear par une fonction qui ne vide pas la table si l'extension LuaJIT est absente (cas qui ne se produit pas en jeu normal).
+- Same accepted syntax as ljson (SJSON: comments, optional commas, unquoted keys, ':' or '=', root dictionary without braces, Infinity); see ljson.json.
+- Warnings have the form "<context>: Duplicate key found: 'key' near line N, '<line>'". The duplicate key overwrites the previous value.
+- decode(nil) returns nil and the (empty) warnings list. A syntax error raises error() as in ljson.
+- The module replaces table.clear with a function that does not empty the table if the LuaJIT extension is absent (a case that does not occur in normal gameplay).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jsonDebug.decode(si, context)` | Décode du SJSON et renvoie la valeur avec la liste des avertissements (clés dupliquées). | 250 |
+| `jsonDebug.decode(si, context)` | Decodes SJSON and returns the value with the list of warnings (duplicate keys). | 250 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jsonDebug.decode(si, context)`
 
-Décode du SJSON et renvoie la valeur avec la liste des avertissements (clés dupliquées).
+Decodes SJSON and returns the value with the list of warnings (duplicate keys).
 
-- `si` (*string|nil*) : texte SJSON
-- `context` (*string|nil*) : étiquette (par ex. nom de fichier) préfixée aux avertissements
-- **renvoie** : table|nil valeur décodée
-- **renvoie** : string[] avertissements
+- `si` (*string|nil*) : SJSON text
+- `context` (*string|nil*) : label (e.g. file name) prefixed to the warnings
+- **returns**: table|nil decoded value
+- **returns**: string[] warnings
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jsonDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jsonDebug.lua`.*

@@ -1,49 +1,49 @@
 # `editor_assemblySpline_import`
 
-*Fichier : `lua/ge/extensions/editor/assemblySpline/import.lua` · VM : Game Engine (GE) · 674 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/assemblySpline/import.lua` · VM: Game Engine (GE) · 674 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_assemblySpline_import` : `extensions.load("editor_assemblySpline_import")`, puis la globale `editor_assemblySpline_import`
+**Access:** extension `editor_assemblySpline_import`: `extensions.load("editor_assemblySpline_import")`, then the global `editor_assemblySpline_import`
 
-Import pour l'outil Assembly Spline : convertit des objets TSStatic déjà posés dans le niveau (compatibles avec le kit d'assemblage, c'est-à-dire ayant des ancres nommées 'nail.*') en une assembly spline. Il reconstruit le kit d'assemblage et la molécule à partir des meshes, ajuste une polyligne sur les composants racine (fitPoly), crée la spline, supprime les TSStatic d'origine (et les groupes vides) et enregistre l'action dans l'historique d'annulation (undo/redo restaure les TSStatic sauvegardés). Utilisé par le menu clic droit de l'arbre de scène et par le polygone de sélection de l'outil.
+Import for the Assembly Spline tool: converts TSStatic objects already placed in the level (compatible with the assembly kit, i.e. having anchors named 'nail.*') into an assembly spline. It rebuilds the assembly kit and the molecule from the meshes, fits a polyline on the root components (fitPoly), creates the spline, deletes the original TSStatics (and empty groups) and records the action in the undo history (undo/redo restores the saved TSStatics). Used by the scene tree right-click menu and by the tool's selection polygon.
 
-## Remarques
+## Notes
 
-- Un TSStatic est compatible s'il a au moins une ancre dont le nom commence par « nail. ».
-- Il faut au moins 2 TSStatic compatibles, et au moins 2 composants racine ajustables en polyligne, sinon un avertissement est journalisé (logtag assemblySpline.import) et rien n'est converti.
-- Les variations sont reconnues par le nom de fichier contenant « var » et de forme <base>_var...; le nom de base est reconstruit avec l'extension .dae.
-- Après l'import la spline est marquée sale 2 frames plus tard (handleDelayedSplineUpdates) car il faut attendre la mise à jour du mesh de collision.
+- A TSStatic is compatible if it has at least one anchor whose name starts with "nail.".
+- At least 2 compatible TSStatics are required, and at least 2 root components that can be fitted to a polyline, otherwise a warning is logged (logtag assemblySpline.import) and nothing is converted.
+- Variations are recognized by the file name containing "var" and of the form <base>_var...; the base name is rebuilt with the .dae extension.
+- After the import the spline is marked dirty 2 frames later (handleDelayedSplineUpdates) because it must wait for the collision mesh update.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_assemblySpline_import.convertTSStatics2AssemblySpline(collection)` | Convertit une sélection de TSStatic en assembly spline : filtre les compatibles, reconstruit le kit et la molécule, ajuste la polyligne, crée la spline, supprime les objets d'origine, recharge la collision (be:reloadCollision) et enregistre l'action « Convert TSStatics to Assembly Spline » dans editor.history. | 566 |
-| `editor_assemblySpline_import.handleDelayedSplineUpdates()` | Mise à jour différée après un import : au bout de 2 appels, marque la dernière assembly spline comme sale pour la reconstruire une fois la collision mise à jour. Appelée à chaque frame par onEditorGui de assemblySpline. *(interne)* | 42 |
-| `editor_assemblySpline_import.importFromPolygon(polygon)` | Cherche tous les TSStatic du niveau dont la position est dans le polygone et les convertit via convertTSStatics2AssemblySpline. | 651 |
-| `editor_assemblySpline_import.validateToolCompatibleTSStatic(obj)` | Indique si l'objet est un TSStatic ayant au moins une ancre dont le nom commence par « nail. ». | 145 |
+| `editor_assemblySpline_import.convertTSStatics2AssemblySpline(collection)` | Converts a selection of TSStatics into an assembly spline: filters the compatible ones, rebuilds the kit and the molecule, fits the polyline, creates the spline, deletes the original objects, reloads collision (be:reloadCollision) and records the action "Convert TSStatics to Assembly Spline" in editor.history. | 566 |
+| `editor_assemblySpline_import.handleDelayedSplineUpdates()` | Deferred update after an import: after 2 calls, marks the last assembly spline as dirty to rebuild it once the collision is updated. Called every frame by onEditorGui of assemblySpline. *(internal)* | 42 |
+| `editor_assemblySpline_import.importFromPolygon(polygon)` | Finds all TSStatics in the level whose position is inside the polygon and converts them via convertTSStatics2AssemblySpline. | 651 |
+| `editor_assemblySpline_import.validateToolCompatibleTSStatic(obj)` | Indicates whether the object is a TSStatic with at least one anchor whose name starts with "nail.". | 145 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_assemblySpline_import.convertTSStatics2AssemblySpline(collection)`
 
-Convertit une sélection de TSStatic en assembly spline : filtre les compatibles, reconstruit le kit et la molécule, ajuste la polyligne, crée la spline, supprime les objets d'origine, recharge la collision (be:reloadCollision) et enregistre l'action « Convert TSStatics to Assembly Spline » dans editor.history.
+Converts a selection of TSStatics into an assembly spline: filters the compatible ones, rebuilds the kit and the molecule, fits the polyline, creates the spline, deletes the original objects, reloads collision (be:reloadCollision) and records the action "Convert TSStatics to Assembly Spline" in editor.history.
 
-- `collection` (*integer[]|nil*) : Ids des objets TSStatic sélectionnés.
+- `collection` (*integer[]|nil*) : Ids of the selected TSStatic objects.
 
 #### `editor_assemblySpline_import.importFromPolygon(polygon)`
 
-Cherche tous les TSStatic du niveau dont la position est dans le polygone et les convertit via convertTSStatics2AssemblySpline.
+Finds all TSStatics in the level whose position is inside the polygon and converts them via convertTSStatics2AssemblySpline.
 
-- `polygon` (*table*) : Polygone de sélection (liste de points).
+- `polygon` (*table*) : Selection polygon (list of points).
 
 #### `editor_assemblySpline_import.validateToolCompatibleTSStatic(obj)`
 
-Indique si l'objet est un TSStatic ayant au moins une ancre dont le nom commence par « nail. ».
+Indicates whether the object is a TSStatic with at least one anchor whose name starts with "nail.".
 
-- `obj` (*table|nil*) : Objet scène.
-- **renvoie** : boolean true si compatible.
+- `obj` (*table|nil*) : Scene object.
+- **returns**: boolean true if compatible.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 - `Sim.` `upcast`
@@ -52,4 +52,4 @@ Indique si l'objet est un TSStatic ayant au moins une ancre dont le nom commence
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/assemblySpline/import.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/assemblySpline/import.lua`.*

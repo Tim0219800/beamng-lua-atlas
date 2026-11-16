@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/activity/autoStarGoals.lua",
+  "module": "Nœud flowgraph « Auto Star Goals » (catégorie once_instant, tag activity). Crée automatiquement les objectifs de l'app Tasklist à partir des étoiles actives de la mission : envoie le guihook SetTasklistHeader (nom de la mission) puis un SetTasklistTask par étoile active (type goal, id = clé d'étoile, label depuis starLabels). Pin d'entrée codé en dur « addMissionTitle » (bool).",
+  "notes": [
+    "Le pin addMissionTitle est déclaré mais jamais lu : l'en-tête est toujours envoyé.",
+    "Un label string devient {txt, context} avec le contexte tiré des champs string/number de missionTypeData ; un label function est appelé avec la mission.",
+    "Plante sans activité associée (self.mgr.activity nil)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Vide.", "internal": true},
+        "workOnce": {"desc": "Envoie SetTasklistHeader puis un SetTasklistTask (done/fail false, active true) pour chaque étoile de careerSetup.starsActive."}
+      }
+    }
+  }
+}

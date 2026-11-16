@@ -1,55 +1,55 @@
 # `editor_dynamicDecals_layerTypes_linkedSet`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/layerTypes/linkedSet.lua` · VM : Game Engine (GE) · 220 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/layerTypes/linkedSet.lua` · VM: Game Engine (GE) · 220 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_layerTypes_linkedSet` : `extensions.load("editor_dynamicDecals_layerTypes_linkedSet")`, puis la globale `editor_dynamicDecals_layerTypes_linkedSet`
+**Access:** extension `editor_dynamicDecals_layerTypes_linkedSet`: `extensions.load("editor_dynamicDecals_layerTypes_linkedSet")`, then the global `editor_dynamicDecals_layerTypes_linkedSet`
 
-Type de calque « Linked Set » de l'outil Dynamic Decals : se comporte comme un groupe, mais on peut lui ajouter dans l'inspecteur des propriétés (parmi api.properties) avec une valeur. Le bouton « Apply » propage récursivement ces valeurs à tous les calques enfants qui possèdent la propriété, quel que soit leur type. Le bouton de barre d'outils (ordre 40) appelle api.addLinkedSet.
+"Linked Set" layer type of the Dynamic Decals tool: behaves like a group, but you can add to it in the inspector properties (among api.properties) with a value. The "Apply" button recursively propagates these values to all child layers that have the property, whatever their type. The toolbar button (order 40) calls api.addLinkedSet.
 
-## Remarques
+## Notes
 
-- Seuls les enfants qui ont déjà un champ `property.id` non nil sont modifiés.
-- Cas spécial decalGradientColor : une propriété à quatre valeurs est répartie sur decalGradientColorTopLeft / TopRight / BottomLeft / BottomRight.
-- Cas spécial useSurfaceNormal : decalPos et decalNorm de l'enfant sont mis à nil pour forcer le recalcul de la matrice du decal (le code le qualifie de hack).
-- Les types de propriété non gérés par setProperty affichent « not yet implemented » dans la console.
-- layer.propertiesDirty passe à true à chaque modification ; l'inspecteur affiche alors un message invitant à cliquer sur « Apply ».
-- Le bouton de suppression d'une propriété ne marque pas propertiesDirty ni n'appelle api.setLayer.
+- Only children that already have a non-nil `property.id` field are modified.
+- Special case decalGradientColor: a four-value property is spread over decalGradientColorTopLeft / TopRight / BottomLeft / BottomRight.
+- Special case useSurfaceNormal: the child's decalPos and decalNorm are set to nil to force recomputation of the decal matrix (the code calls it a hack).
+- Property types not handled by setProperty print "not yet implemented" in the console.
+- layer.propertiesDirty becomes true on each modification; the inspector then displays a message asking to click "Apply".
+- The delete button of a property does not mark propertiesDirty nor call api.setLayer.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_layerTypes_linkedSet.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 184 |
-| `editor_dynamicDecals_layerTypes_linkedSet.onGui(guiId)` | Fonction vide (section non utilisée). *(interne)* *(hook)* | 174 |
-| `editor_dynamicDecals_layerTypes_linkedSet.registerEditorPreferences(prefsRegistry)` | Ne déclare aucune préférence (corps commenté). *(interne)* | 178 |
-| `editor_dynamicDecals_layerTypes_linkedSet.setup(tool_in)` | Appelé par l'outil : récupère les modules liés, enregistre la GUI d'inspecteur du type linkedSet, l'élément de barre d'outils « linkedSet » et la page de documentation « Layer Types / Linked Set Layers ». *(interne)* | 202 |
+| `editor_dynamicDecals_layerTypes_linkedSet.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 184 |
+| `editor_dynamicDecals_layerTypes_linkedSet.onGui(guiId)` | Empty function (unused section). *(internal)* *(hook)* | 174 |
+| `editor_dynamicDecals_layerTypes_linkedSet.registerEditorPreferences(prefsRegistry)` | Declares no preference (body commented out). *(internal)* | 178 |
+| `editor_dynamicDecals_layerTypes_linkedSet.setup(tool_in)` | Called by the tool: gets the related modules, registers the inspector GUI of the linkedSet type, the "linkedSet" toolbar item and the "Layer Types / Linked Set Layers" documentation page. *(internal)* | 202 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_layerTypes_linkedSet.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_layerTypes_linkedSet.onGui(guiId)`
 
-Fonction vide (section non utilisée).
+Empty function (unused section).
 
-- `guiId` (*string*) : Suffixe d'identifiant ImGui (non utilisé).
+- `guiId` (*string*) : ImGui identifier suffix (unused).
 
 #### `editor_dynamicDecals_layerTypes_linkedSet.registerEditorPreferences(prefsRegistry)`
 
-Ne déclare aucune préférence (corps commenté).
+Declares no preference (body commented out).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_layerTypes_linkedSet.setup(tool_in)`
 
-Appelé par l'outil : récupère les modules liés, enregistre la GUI d'inspecteur du type linkedSet, l'élément de barre d'outils « linkedSet » et la page de documentation « Layer Types / Linked Set Layers ».
+Called by the tool: gets the related modules, registers the inspector GUI of the linkedSet type, the "linkedSet" toolbar item and the "Layer Types / Linked Set Layers" documentation page.
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/layerTypes/linkedSet.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/layerTypes/linkedSet.lua`.*

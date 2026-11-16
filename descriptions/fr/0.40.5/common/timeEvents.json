@@ -1,0 +1,30 @@
+{
+  "path": "lua/common/timeEvents.lua",
+  "module": "Petit planificateur : permet de programmer l'exécution d'une fonction dans X secondes, à la manière de `schedule()`. On crée une liste d'événements avec require('timeEvents').create(), on y ajoute des événements, et on appelle process(dt) à chaque mise à jour.",
+  "usage": "local events = require('timeEvents').create()\nevents:addEvent(5, function() print('hello world!') end) -- dans 5 s\n-- dans la boucle de mise à jour :\nevents:process(dtSim)",
+  "notes": [
+    "La page extraite montre addEvent(fn) et process() sans argument, mais le code est addEvent(time, fn) et process(dt).",
+    "process(dt) retranche dt au temps de chaque événement, parcourus du dernier ajouté au premier, et exécute puis supprime celui dont le temps devient STRICTEMENT inférieur à 0 (pas d'ordre garanti entre événements échus simultanément : ordre inverse d'ajout).",
+    "Une erreur dans une fonction planifiée interrompt process (pas de pcall) et l'événement reste dans la liste.",
+    "L'objet renvoyé par create() est lui-même le tableau des événements ({fn=, time=}) avec la metatable mt."
+  ],
+  "fields": {},
+  "functions": {
+    "create": {
+      "desc": "Crée et renvoie une nouvelle liste d'événements temporels vide.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "objet avec méthodes addEvent, clear, process"}],
+      "internal": false
+    }
+  },
+  "classes": {
+    "mt": {
+      "desc": "Objet renvoyé par create(). Les événements sont stockés comme éléments du tableau.",
+      "functions": {
+        "addEvent": {"desc": "Programme fn dans `time` secondes.", "params": {"time": {"type": "number", "desc": "délai en secondes"}, "fn": {"type": "function", "desc": "fonction sans argument à exécuter"}}, "returns": []},
+        "clear": {"desc": "Supprime tous les événements en attente.", "params": {}, "returns": []},
+        "process": {"desc": "À appeler à chaque mise à jour : fait avancer les délais de dt et exécute les événements arrivés à échéance.", "params": {"dt": {"type": "number", "desc": "temps écoulé en secondes"}}, "returns": []}
+      }
+    }
+  }
+}

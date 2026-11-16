@@ -1,39 +1,39 @@
 # `telemetry_performanceSpatialSnapshot`
 
-*Fichier : `lua/ge/extensions/telemetry/performanceSpatialSnapshot.lua` · VM : Game Engine (GE) · 192 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/performanceSpatialSnapshot.lua` · VM: Game Engine (GE) · 192 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_performanceSpatialSnapshot` : `extensions.load("telemetry_performanceSpatialSnapshot")`, puis la globale `telemetry_performanceSpatialSnapshot`
+**Access:** extension `telemetry_performanceSpatialSnapshot`: `extensions.load("telemetry_performanceSpatialSnapshot")`, then the global `telemetry_performanceSpatialSnapshot`
 
-Module utilitaire (chargé par require) qui construit l'instantané de performance envoyé par le tracker performanceSpatial : FPS (instantané, moyenne, min, p99), temps de frame, CPU/GPU, cause du plafond de FPS, position et réglages de la caméra, état du monde (échelle de temps, nombre de véhicules, écran partagé, trafic) et, sur option, répartition du temps par phase de frame et statistiques de rendu. Les valeurs sont arrondies.
+Utility module (loaded by require) that builds the performance snapshot sent by the performanceSpatial tracker: FPS (instantaneous, average, min, p99), frame time, CPU/GPU, FPS cap cause, camera position and settings, world state (time scale, vehicle count, split screen, traffic) and, optionally, the time breakdown by frame phase and render statistics. Values are rounded.
 
-## Remarques
+## Notes
 
-- framePhases n'est ajouté que si options.renderTimingTrackingEnabled ; renderStats que si options.sceneComplexityTrackingEnabled.
-- Les phases viennent de Engine.Debug.getLastPerformanceMetrics ; gpuWaitMs retombe sur la phase FramePresent s'il est absent.
-- Position de la caméra arrondie à 0,1 m, angles à 0,1 degré.
+- framePhases is only added if options.renderTimingTrackingEnabled; renderStats only if options.sceneComplexityTrackingEnabled.
+- The phases come from Engine.Debug.getLastPerformanceMetrics; gpuWaitMs falls back to the FramePresent phase if absent.
+- Camera position rounded to 0.1 m, angles to 0.1 degree.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_performanceSpatialSnapshot.capture(level, fpsInstant, frameMs, activeGpu, options)` | Renvoie une table d'événement : level, fpsInstant, fpsAvg, fpsMin, fpsP99, frameMs, cpuMs, gpuMs, gpuWaitMs, limitedBy, activeGpu, position, camera, textureStreaming, worldReadyState, simTimeScale, vehicleCount, splitScreenPlayers, trafficCount, et facultativement framePhases et renderStats. | 168 |
+| `telemetry_performanceSpatialSnapshot.capture(level, fpsInstant, frameMs, activeGpu, options)` | Returns an event table: level, fpsInstant, fpsAvg, fpsMin, fpsP99, frameMs, cpuMs, gpuMs, gpuWaitMs, limitedBy, activeGpu, position, camera, textureStreaming, worldReadyState, simTimeScale, vehicleCount, splitScreenPlayers, trafficCount, and optionally framePhases and renderStats. | 168 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_performanceSpatialSnapshot.capture(level, fpsInstant, frameMs, activeGpu, options)`
 
-Renvoie une table d'événement : level, fpsInstant, fpsAvg, fpsMin, fpsP99, frameMs, cpuMs, gpuMs, gpuWaitMs, limitedBy, activeGpu, position, camera, textureStreaming, worldReadyState, simTimeScale, vehicleCount, splitScreenPlayers, trafficCount, et facultativement framePhases et renderStats.
+Returns an event table: level, fpsInstant, fpsAvg, fpsMin, fpsP99, frameMs, cpuMs, gpuMs, gpuWaitMs, limitedBy, activeGpu, position, camera, textureStreaming, worldReadyState, simTimeScale, vehicleCount, splitScreenPlayers, trafficCount, and optionally framePhases and renderStats.
 
-- `level` (*string*) : Nom du niveau courant.
-- `fpsInstant` (*number*) : FPS instantanés.
-- `frameMs` (*number*) : Durée de frame en ms.
-- `activeGpu` (*any*) : Description du GPU actif, recopiée telle quelle.
+- `level` (*string*) : Current level name.
+- `fpsInstant` (*number*) : Instantaneous FPS.
+- `frameMs` (*number*) : Frame duration in ms.
+- `activeGpu` (*any*) : Description of the active GPU, copied as is.
 - `options` (*table|nil*) : renderTimingTrackingEnabled, sceneComplexityTrackingEnabled.
-- **renvoie** : table Événement de performance.
+- **returns**: table Performance event.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectCount`, `getSimulationTimeScale`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/performanceSpatialSnapshot.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/performanceSpatialSnapshot.lua`.*

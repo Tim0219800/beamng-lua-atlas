@@ -2,65 +2,65 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Capteur « données véhicule » du système drivingDynamics (type "auxiliary", defaultOrder 54). Il identifie les quatre roues d'angle (avant/arrière, gauche/droite) par leur position, calcule une fois la géométrie du véhicule (empattement, distances centre de gravité-essieux, voie, masse, vitesse caractéristique, inertie en lacet) puis, à chaque pas, les angles de braquage réels des roues et les rapports de vitesse de roue dus au rayon de virage. Les autres modules drivingDynamics (yawControl, STMEstimate, virtualSensors, composants) lisent ces valeurs via cmu.vehicleData.
---- Accès : contrôleur `drivingDynamics/sensors/vehicleData` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- "Vehicle data" sensor of the drivingDynamics system (type "auxiliary", defaultOrder 54). It identifies the four corner wheels (front/rear, left/right) by their position, computes the vehicle geometry once (wheelbase, center-of-gravity-to-axle distances, track width, mass, characteristic speed, yaw inertia) then, at each step, the actual steering angles of the wheels and the wheel speed ratios due to the turning radius. The other drivingDynamics modules (yawControl, STMEstimate, virtualSensors, components) read these values via cmu.vehicleData.
+--- Access: controller `drivingDynamics/sensors/vehicleData` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_drivingDynamics_sensors_vehicleData
----@field defaultOrder number Ordre d'exécution par défaut (54).
----@field frontLeftWheelAngle number Angle de la roue avant gauche (rad), signé par la direction de braquage.
----@field frontRightWheelAngle number Angle de la roue avant droite (rad), signé par la direction de braquage.
----@field frontWheelAngle number Moyenne des deux angles avant (rad).
----@field isActive boolean Vrai quand les quatre roues d'angle ont été trouvées et la géométrie calculée.
----@field rearLeftWheelAngle number Angle de la roue arrière gauche (rad), non signé.
----@field rearRightWheelAngle number Angle de la roue arrière droite (rad), non signé.
----@field rearWheelAngle number Moyenne des deux angles arrière (rad).
----@field turningCircleSpeedRatios table<string, number> Rapport de vitesse attendu par nom de roue d'angle, dû au virage (1 = pas de correction).
+---@field defaultOrder number Default execution order (54).
+---@field frontLeftWheelAngle number Front-left wheel angle (rad), signed by the steering direction.
+---@field frontRightWheelAngle number Front-right wheel angle (rad), signed by the steering direction.
+---@field frontWheelAngle number Average of the two front angles (rad).
+---@field isActive boolean True when the four corner wheels were found and the geometry computed.
+---@field rearLeftWheelAngle number Rear-left wheel angle (rad), unsigned.
+---@field rearRightWheelAngle number Rear-right wheel angle (rad), unsigned.
+---@field rearWheelAngle number Average of the two rear angles (rad).
+---@field turningCircleSpeedRatios table<string, number> Expected speed ratio per corner wheel name, due to cornering (1 = no correction).
 ---@field type string "auxiliary".
----@field vehicleStats table Géométrie et paramètres dynamiques calculés (voir notes).
----@field wheelAccess table Accès aux données des roues d'angle : frontRight, frontLeft, rearRight, rearLeft (entrées de wheels.wheels, nil tant que non trouvées).
+---@field vehicleStats table Computed geometry and dynamic parameters (see notes).
+---@field wheelAccess table Access to the corner wheel data: frontRight, frontLeft, rearRight, rearLeft (entries of wheels.wheels, nil until found).
 local controller_drivingDynamics_sensors_vehicleData = {}
 
---- Ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:241
----@param jbeamData table Données jbeam.
+--- Does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:241
+---@param jbeamData table Jbeam data.
 function controller_drivingDynamics_sensors_vehicleData.init(jbeamData) end
 
---- Lit la configuration, identifie les roues d'angle, calcule la géométrie, la vitesse caractéristique et l'inertie en lacet, puis passe isActive à true.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:244
----@param jbeamData table Données jbeam (voir notes).
+--- Reads the configuration, identifies the corner wheels, computes the geometry, the characteristic speed and the yaw inertia, then sets isActive to true.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:244
+---@param jbeamData table jbeam data (see notes).
 function controller_drivingDynamics_sensors_vehicleData.initSecondStage(jbeamData) end
 
---- Mémorise la référence au CMU (sensorHub, virtualSensors, sendDebugPacket).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:347
----@param cmu table Contrôleur CMU.
+--- Stores the reference to the CMU (sensorHub, virtualSensors, sendDebugPacket).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:347
+---@param cmu table CMU controller.
 function controller_drivingDynamics_sensors_vehicleData.registerCMU(cmu) end
 
---- Réinitialise le lisseur de l'accélération latérale utilisé pour le rayon de virage.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:237
+--- Resets the lateral acceleration smoother used for the turning radius.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:237
 function controller_drivingDynamics_sensors_vehicleData.reset() end
 
---- Active/désactive les journaux et paquets de debug.
----Source : lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:340
----@param debugEnabled boolean Vrai pour activer.
+--- Enables/disables debug logs and packets.
+---Source: lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:340
+---@param debugEnabled boolean True to enable.
 function controller_drivingDynamics_sensors_vehicleData.setDebugMode(debugEnabled) end
 
---- Désactive le capteur (isActive=false, updateGFX et update à nil).
----Source : lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:351
+--- Disables the sensor (isActive=false, updateGFX and update set to nil).
+---Source: lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:351
 function controller_drivingDynamics_sensors_vehicleData.shutdown() end
 
---- Pas physique : met à jour angles de roue, rayons de virage et turningCircleSpeedRatios.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:94
----@param dt number Pas de temps (s).
+--- Physics step: updates wheel angles, turning radii and turningCircleSpeedRatios.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:94
+---@param dt number Time step (s).
 function controller_drivingDynamics_sensors_vehicleData.update(dt) end
 
---- Vide en mode normal ; remplacé par une version qui envoie un paquet de debug en mode debug.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:142
----@param dt number Pas de temps graphique (s).
+--- Empty in normal mode; replaced by a version that sends a debug packet in debug mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua:142
+---@param dt number Graphics time step (s).
 function controller_drivingDynamics_sensors_vehicleData.updateGFX(dt) end
 
 return controller_drivingDynamics_sensors_vehicleData

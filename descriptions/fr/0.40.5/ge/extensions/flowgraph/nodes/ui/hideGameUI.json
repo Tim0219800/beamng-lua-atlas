@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/hideGameUI.lua",
+  "module": "Nœud flowgraph « Hide Game UI » (catégorie repeat_instant, auteur BeamNG) : affiche ou masque l'UI normale du jeu (apps, etc.) avec extensions.ui_visibility.setCef(not value). Entrée « value » (vrai = masquer).",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "work": {
+          "desc": "Appelle ui_visibility.setCef(not value) à chaque frame.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

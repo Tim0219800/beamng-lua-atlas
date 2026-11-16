@@ -1,72 +1,72 @@
 # `editor_meshEditor`
 
-*Fichier : `lua/ge/extensions/editor/meshEditor.lua` · VM : Game Engine (GE) · 1081 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/meshEditor.lua` · VM: Game Engine (GE) · 1081 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_meshEditor` : `extensions.load("editor_meshEditor")`, puis la globale `editor_meshEditor`
+**Access:** extension `editor_meshEditor`: `extensions.load("editor_meshEditor")`, then the global `editor_meshEditor`
 
-Code commun aux éditeurs d'objets à nœuds de type « mesh » (MeshRoad et River) du world editor. Ce n'est pas une extension chargée par extensions.load : meshRoadEditor.lua et riverEditor.lua le chargent avec dofile() puis fixent M.type, M.preferencesName et M.niceName avant de brancher ses fonctions suffixées « _ » sur leur mode d'édition. Il gère la sélection du mesh et de ses nœuds, la création par Alt+clic, l'insertion de nœuds, le glisser de largeur, la copie/collage des champs, la suppression, l'historique undo/redo, le surlignage et les préférences (largeur, profondeur, hauteur par défaut).
+Code shared by the editors of "mesh"-type node objects (MeshRoad and River) of the world editor. It is not an extension loaded by extensions.load: meshRoadEditor.lua and riverEditor.lua load it with dofile() then set M.type, M.preferencesName and M.niceName before wiring its "_"-suffixed functions to their edit mode. It handles the selection of the mesh and its nodes, creation by Alt+click, node insertion, width dragging, field copy/paste, deletion, undo/redo history, highlighting and preferences (default width, depth, height).
 
-## Remarques
+## Notes
 
-- Les variables de module (M.type, M.preferencesName, M.niceName) doivent être renseignées par l'éditeur appelant AVANT onActivate_ / onEditorRegisterPreferences_ ; sinon les chemins de préférences sont invalides.
-- Comme dofile() réévalue le fichier, chaque éditeur (route, rivière) a sa propre copie isolée de l'état (nœud sélectionné, copie des champs).
-- Alt maintenu = mode création : clic sur le vide crée un mesh ou ajoute un nœud ; clic sur le mesh sélectionné insère un nœud interpolé (largeur, profondeur, normale moyennes).
-- Bug mineur : meshRoadEditor.lua et riverEditor.lua exportent M.onEditorGui_, M.deleteNodeAM et M.selectAllNodes de ce module, mais il ne les définit pas : ces champs valent nil côté éditeurs.
-- Les fonctions de la liste exportée utilisent le suffixe « _ » pour ne pas être confondues avec les hooks de l'extension qui les enveloppe.
+- The module variables (M.type, M.preferencesName, M.niceName) must be set by the calling editor BEFORE onActivate_ / onEditorRegisterPreferences_; otherwise the preference paths are invalid.
+- Since dofile() re-evaluates the file, each editor (road, river) has its own isolated copy of the state (selected node, copied fields).
+- Alt held = creation mode: clicking on empty space creates a mesh or adds a node; clicking on the selected mesh inserts an interpolated node (average width, depth, normal).
+- Minor bug: meshRoadEditor.lua and riverEditor.lua export M.onEditorGui_, M.deleteNodeAM and M.selectAllNodes from this module, but it does not define them: these fields are nil on the editors' side.
+- The functions of the exported list use the "_" suffix so they are not confused with the hooks of the extension that wraps them.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_meshEditor.copySettingsAM()` | Appelée par l'action map (copie) : mémorise les champs du mesh sélectionné (editor.copyFields) pour un collage ultérieur ou pour initialiser un nouveau mesh. Ne fait rien si aucun mesh n'est sélectionné. *(interne)* | 964 |
-| `editor_meshEditor.onActivate_()` | Appelée à l'activation du mode d'édition : calcule le nom du mode (« Edit » .. M.type) et synchronise la sélection avec l'éditeur. *(interne)* *(hook)* | 1060 |
-| `editor_meshEditor.onDeleteSelection()` | Supprime la sélection : les nœuds sélectionnés si le mesh en garde plus de 2, sinon le mesh entier. Passe par l'historique de l'éditeur (undo/redo). *(interne)* *(hook)* | 269 |
-| `editor_meshEditor.onDeselect_()` | Appelée quand le mode d'édition est quitté : désélectionne le nœud et vide la sélection d'objets. *(interne)* *(hook)* | 1055 |
-| `editor_meshEditor.onEditorAxisGizmoAligmentChanged_()` | Hook : quand l'alignement du gizmo d'axes change (et que ce mode est actif), repositionne le gizmo sur le nœud sélectionné. Le nom contient la faute « Aligment » du jeu. *(interne)* *(hook)* | 1040 |
-| `editor_meshEditor.onEditorInspectorFieldChanged_(selectedIds, fieldName, fieldValue, arrayIndex)` | Hook : quand un champ de l'inspecteur change, régénère les meshes du type géré si le champ est segmentLength ou subdivideLength. *(interne)* *(hook)* | 1029 |
-| `editor_meshEditor.onEditorInspectorHeaderGui_(inspectorInfo)` | Hook : dessine, dans l'en-tête de l'inspecteur, le panneau des propriétés des nœuds sélectionnés (largeur, profondeur, hauteur) quand ce mode est actif et qu'un mesh avec nœuds sélectionnés existe. *(interne)* *(hook)* | 354 |
-| `editor_meshEditor.onEditorObjectSelectionChanged_()` | Hook : quand la sélection d'objets change (mode actif), retient l'id du premier objet de type M.type comme mesh courant. *(interne)* *(hook)* | 1047 |
-| `editor_meshEditor.onEditorPreferenceValueChanged_(path, value)` | Hook : recalcule le décalage de hauteur (heightOffset) quand la préférence <preferencesName>.general.defaultHeight change. *(interne)* *(hook)* | 1011 |
-| `editor_meshEditor.onEditorRegisterPreferences_(prefsRegistry)` | Hook : enregistre la catégorie de préférences M.preferencesName avec defaultWidth (10), defaultDepth (5), defaultHeight (2), dragWidth, highlightNearby et highlightNearbyDistance (100 m). *(interne)* *(hook)* | 1015 |
-| `editor_meshEditor.onSelectAll()` | Sélectionne tous les nœuds du mesh courant (indices 0 à getNodeCount()-1). *(interne)* *(hook)* | 53 |
-| `editor_meshEditor.onToolbar_()` | Dessine la barre d'outils du mode : largeur et profondeur par défaut, case « Highlight nearby » et distance de surlignage en mètres. Les valeurs sont écrites dans les préférences. *(interne)* *(hook)* | 984 |
-| `editor_meshEditor.onUpdate_()` | Appelée à chaque image tant que le mode est actif : détecte le nœud ou le mesh survolé, gère le raycast souris, la création Alt+clic de meshes et de nœuds, le glisser de largeur, le surlignage et le dessin debugDrawer (sphères et textes d'aide). *(interne)* *(hook)* | 735 |
-| `editor_meshEditor.pasteFieldsAM()` | Appelée par l'action map (coller) : applique les champs mémorisés au mesh sélectionné via une action d'historique « PasteMeshFields » (undo/redo possibles). Ne fait rien sans mesh sélectionné ou sans copie. *(interne)* | 129 |
+| `editor_meshEditor.copySettingsAM()` | Called by the action map (copy): remembers the fields of the selected mesh (editor.copyFields) for a later paste or to initialize a new mesh. Does nothing if no mesh is selected. *(internal)* | 964 |
+| `editor_meshEditor.onActivate_()` | Called when the edit mode is activated: computes the mode name ("Edit" .. M.type) and synchronizes the selection with the editor. *(internal)* *(hook)* | 1060 |
+| `editor_meshEditor.onDeleteSelection()` | Deletes the selection: the selected nodes if the mesh keeps more than 2, otherwise the whole mesh. Goes through the editor history (undo/redo). *(internal)* *(hook)* | 269 |
+| `editor_meshEditor.onDeselect_()` | Called when the edit mode is exited: deselects the node and clears the object selection. *(internal)* *(hook)* | 1055 |
+| `editor_meshEditor.onEditorAxisGizmoAligmentChanged_()` | Hook: when the axis gizmo alignment changes (and this mode is active), repositions the gizmo on the selected node. The name contains the game's typo "Aligment". *(internal)* *(hook)* | 1040 |
+| `editor_meshEditor.onEditorInspectorFieldChanged_(selectedIds, fieldName, fieldValue, arrayIndex)` | Hook: when an inspector field changes, regenerates the meshes of the handled type if the field is segmentLength or subdivideLength. *(internal)* *(hook)* | 1029 |
+| `editor_meshEditor.onEditorInspectorHeaderGui_(inspectorInfo)` | Hook: draws, in the inspector header, the panel of the selected nodes' properties (width, depth, height) when this mode is active and a mesh with selected nodes exists. *(internal)* *(hook)* | 354 |
+| `editor_meshEditor.onEditorObjectSelectionChanged_()` | Hook: when the object selection changes (mode active), keeps the id of the first object of type M.type as the current mesh. *(internal)* *(hook)* | 1047 |
+| `editor_meshEditor.onEditorPreferenceValueChanged_(path, value)` | Hook: recomputes the height offset (heightOffset) when the preference <preferencesName>.general.defaultHeight changes. *(internal)* *(hook)* | 1011 |
+| `editor_meshEditor.onEditorRegisterPreferences_(prefsRegistry)` | Hook: registers the preferences category M.preferencesName with defaultWidth (10), defaultDepth (5), defaultHeight (2), dragWidth, highlightNearby and highlightNearbyDistance (100 m). *(internal)* *(hook)* | 1015 |
+| `editor_meshEditor.onSelectAll()` | Selects all the nodes of the current mesh (indices 0 to getNodeCount()-1). *(internal)* *(hook)* | 53 |
+| `editor_meshEditor.onToolbar_()` | Draws the mode toolbar: default width and depth, "Highlight nearby" checkbox and highlight distance in meters. The values are written to the preferences. *(internal)* *(hook)* | 984 |
+| `editor_meshEditor.onUpdate_()` | Called every frame while the mode is active: detects the hovered node or mesh, handles the mouse raycast, Alt+click creation of meshes and nodes, width dragging, highlighting and debugDrawer drawing (spheres and help texts). *(internal)* *(hook)* | 735 |
+| `editor_meshEditor.pasteFieldsAM()` | Called by the action map (paste): applies the remembered fields to the selected mesh via a "PasteMeshFields" history action (undo/redo possible). Does nothing without a selected mesh or without a copy. *(internal)* | 129 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_meshEditor.onEditorInspectorFieldChanged_(selectedIds, fieldName, fieldValue, arrayIndex)`
 
-Hook : quand un champ de l'inspecteur change, régénère les meshes du type géré si le champ est segmentLength ou subdivideLength.
+Hook: when an inspector field changes, regenerates the meshes of the handled type if the field is segmentLength or subdivideLength.
 
-- `selectedIds` (*integer[]*) : Identifiants des objets dont le champ a changé.
-- `fieldName` (*string*) : Nom du champ modifié.
-- `fieldValue` (*any*) : Nouvelle valeur (non utilisée ici).
-- `arrayIndex` (*integer|nil*) : Indice dans un champ tableau (non utilisé ici).
+- `selectedIds` (*integer[]*) : Ids of the objects whose field changed.
+- `fieldName` (*string*) : Name of the modified field.
+- `fieldValue` (*any*) : New value (unused here).
+- `arrayIndex` (*integer|nil*) : Index in an array field (unused here).
 
 #### `editor_meshEditor.onEditorInspectorHeaderGui_(inspectorInfo)`
 
-Hook : dessine, dans l'en-tête de l'inspecteur, le panneau des propriétés des nœuds sélectionnés (largeur, profondeur, hauteur) quand ce mode est actif et qu'un mesh avec nœuds sélectionnés existe.
+Hook: draws, in the inspector header, the panel of the selected nodes' properties (width, depth, height) when this mode is active and a mesh with selected nodes exists.
 
-- `inspectorInfo` (*table*) : Informations de l'inspecteur fournies par l'éditeur.
+- `inspectorInfo` (*table*) : Inspector information provided by the editor.
 
 #### `editor_meshEditor.onEditorPreferenceValueChanged_(path, value)`
 
-Hook : recalcule le décalage de hauteur (heightOffset) quand la préférence <preferencesName>.general.defaultHeight change.
+Hook: recomputes the height offset (heightOffset) when the preference <preferencesName>.general.defaultHeight changes.
 
-- `path` (*string*) : Chemin complet de la préférence modifiée.
-- `value` (*number*) : Nouvelle valeur.
+- `path` (*string*) : Full path of the modified preference.
+- `value` (*number*) : New value.
 
 #### `editor_meshEditor.onEditorRegisterPreferences_(prefsRegistry)`
 
-Hook : enregistre la catégorie de préférences M.preferencesName avec defaultWidth (10), defaultDepth (5), defaultHeight (2), dragWidth, highlightNearby et highlightNearbyDistance (100 m).
+Hook: registers the preferences category M.preferencesName with defaultWidth (10), defaultDepth (5), defaultHeight (2), dragWidth, highlightNearby and highlightNearbyDistance (100 m).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLineInstance`, `drawSphere`, `drawTextAdvanced`, `setSolidTriCulling`
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/meshEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/meshEditor.lua`.*

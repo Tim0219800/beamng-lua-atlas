@@ -1,54 +1,54 @@
 # `editor_dynamicDecals_settings`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/settings.lua` · VM : Game Engine (GE) · 263 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/settings.lua` · VM: Game Engine (GE) · 263 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_settings` : `extensions.load("editor_dynamicDecals_settings")`, puis la globale `editor_dynamicDecals_settings`
+**Access:** extension `editor_dynamicDecals_settings`: `extensions.load("editor_dynamicDecals_settings")`, then the global `editor_dynamicDecals_settings`
 
-Section « Settings » (ordre 1040) de l'outil Dynamic Decals. Permet d'activer/désactiver l'API de decals, de choisir la position du curseur (UV) ou la souris, la couche UV (0 ou 1), les matériaux et les meshes du véhicule joueur qui reçoivent les decals, et la résolution des textures. Maintient la table nom de matériau <-> indice utilisée par les autres modules.
+"Settings" section (order 1040) of the Dynamic Decals tool. Lets you enable/disable the decal API, choose the cursor position (UV) or the mouse, the UV layer (0 or 1), the materials and meshes of the player vehicle that receive decals, and the texture resolution. Maintains the material name <-> index table used by the other modules.
 
-## Remarques
+## Notes
 
-- Changer la couche UV ou la résolution de texture reprojette tous les calques (peut être long).
-- updateMaterials ne fait rien si l'API n'est pas définie ou s'il n'y a pas de véhicule joueur.
-- getUsedMaterialNames dépend du dernier updateMaterials : sans mise à jour, des noms peuvent être nil.
-- À setup, la liste des meshes est récupérée dans un job retardé d'une frame (« sinon les noms ne sont pas prêts ») et stockée dans shapeMeshes, variable qui n'est pas relue ensuite : sectionGui rappelle api.getShapeMeshes() directement.
+- Changing the UV layer or the texture resolution reprojects all layers (can take a long time).
+- updateMaterials does nothing if the API is not defined or if there is no player vehicle.
+- getUsedMaterialNames depends on the last updateMaterials: without an update, names may be nil.
+- At setup, the list of meshes is fetched in a job delayed by one frame ("otherwise the names are not ready") and stored in shapeMeshes, a variable that is not read afterwards: sectionGui calls api.getShapeMeshes() directly again.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_settings.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 204 |
-| `editor_dynamicDecals_settings.getUsedMaterialNames()` | Renvoie les noms des matériaux actuellement activés (indices d'api.getMaterialIndices()). | 246 |
-| `editor_dynamicDecals_settings.registerEditorPreferences(prefsRegistry)` | Ne déclare aucune préférence (corps commenté). *(interne)* | 198 |
-| `editor_dynamicDecals_settings.setup(tool_in)` | Appelé par l'outil : prépare les listes (couches UV, résolutions), initialise les indices de résolution depuis l'API si elle est prête, met à jour les matériaux, lance le job de lecture des meshes et enregistre la section « Settings ». *(interne)* | 213 |
-| `editor_dynamicDecals_settings.updateMaterials()` | Relit api.getShapeMaterialNames() pour le véhicule joueur et reconstruit les tables nom->indice et indice->nom. | 28 |
+| `editor_dynamicDecals_settings.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 204 |
+| `editor_dynamicDecals_settings.getUsedMaterialNames()` | Returns the names of the currently enabled materials (indices of api.getMaterialIndices()). | 246 |
+| `editor_dynamicDecals_settings.registerEditorPreferences(prefsRegistry)` | Declares no preference (body commented out). *(internal)* | 198 |
+| `editor_dynamicDecals_settings.setup(tool_in)` | Called by the tool: prepares the lists (UV layers, resolutions), initializes the resolution indices from the API if it is ready, updates the materials, starts the mesh reading job and registers the "Settings" section. *(internal)* | 213 |
+| `editor_dynamicDecals_settings.updateMaterials()` | Rereads api.getShapeMaterialNames() for the player vehicle and rebuilds the name->index and index->name tables. | 28 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_settings.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_settings.getUsedMaterialNames()`
 
-Renvoie les noms des matériaux actuellement activés (indices d'api.getMaterialIndices()).
+Returns the names of the currently enabled materials (indices of api.getMaterialIndices()).
 
-- **renvoie** : string[] Liste de noms de matériaux.
+- **returns**: string[] List of material names.
 
 #### `editor_dynamicDecals_settings.registerEditorPreferences(prefsRegistry)`
 
-Ne déclare aucune préférence (corps commenté).
+Declares no preference (body commented out).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_settings.setup(tool_in)`
 
-Appelé par l'outil : prépare les listes (couches UV, résolutions), initialise les indices de résolution depuis l'API si elle est prête, met à jour les matériaux, lance le job de lecture des meshes et enregistre la section « Settings ».
+Called by the tool: prepares the lists (UV layers, resolutions), initializes the resolution indices from the API if it is ready, updates the materials, starts the mesh reading job and registers the "Settings" section.
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/settings.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/settings.lua`.*

@@ -1,0 +1,61 @@
+{
+  "path": "lua/ge/extensions/career/modules/tutorial/step04timeTrial.lua",
+  "module": "Étape 4 du tutoriel de carrière (« timeTrial ») : une popup d'intro lance la mission contre-la-montre west_coast_usa/timeTrial/tutorialSimple, avec guidage au sol (core_groundMarkers) construit à partir des prochains pathnodes de la course. À la fin, une popup propose un défi optionnel (tutorialAdvanced) ou le passage à la suite ; l'étape avance à la fin de la mission avancée ou si le joueur choisit autre chose. Phases : waitIntro, simpleMission, waitChoicePopup, waitPostSimplePopupClose, waitChoiceSelection, advancedMission. Active la zone de limites timeTrialBounds.",
+  "notes": [
+    "Si le joueur reste hors limites trop longtemps (onCareerTutorialOutOfBoundsTimedOut), la mission en cours est redémarrée (core_recoveryPrompt.buttonPressed(\"restartMission\")) avec un message.",
+    "À la fin de l'étape, le véhicule du tutoriel est désactivé (setActive(0)) ; il est réactivé au début de l'étape.",
+    "À la fin de la mission avancée, le code écrit career_modules_tutorial.playedAdvancedTimeTrial = true ; ce champ n'est pas déclaré dans tutorial.lua (champ ajouté dynamiquement).",
+    "Si la mission avancée est introuvable, une erreur est loggée et l'étape avance quand même.",
+    "Tous les hooks de suivi ignorent les évènements si l'étape courante n'est pas 04timeTrial."
+  ],
+  "functions": {
+    "setup": {
+      "desc": "Appelé à l'activation : active la zone timeTrialBounds, réinitialise les états, retrouve la place simpleTimeTrialFinish, remet le joueur dans le véhicule du tutoriel et ouvre la popup v2/simpleTimeTrial.",
+      "params": {"stepData": {"type": "any", "desc": "Données de l'étape (non utilisées)."}},
+      "internal": true
+    },
+    "onIntroPopupCareerClosed": {
+      "desc": "Hook de fermeture de popup. v2/simpleTimeTrial : démarre la mission simple et, après 0,5 s, bascule les préfabriqués de piste (tutorialTrackOpen). v2/timeTrialAssessmentComplete : ouvre la popup de choix de défi optionnel.",
+      "params": {"id": {"type": "string", "desc": "Id de la popup."}},
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Appelé chaque frame : pendant la mission simple, met à jour le tracé de guidage vers les prochains pathnodes (ou vers l'arrivée).",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "internal": true
+    },
+    "onAnyMissionChanged": {
+      "desc": "Hook émis par le gestionnaire de missions. Sur « started » de la mission simple, mémorise la course ; sur « stopped », passe à la popup de bilan (mission simple) ou avance d'étape (mission avancée).",
+      "params": {"state": {"type": "string", "desc": "État de la mission (\"started\", \"stopped\"…)."}, "mission": {"type": "table", "desc": "Mission concernée (id, race)."}},
+      "internal": true
+    },
+    "onCareerTutorialOutOfBoundsTimedOut": {"desc": "Hook émis quand le joueur est resté trop longtemps hors zone : affiche un avertissement et relance la mission en cours.", "internal": true},
+    "onRaceStarted": {
+      "desc": "Hook de départ de course : si c'est la course du tutoriel simple, la mémorise et trace le guidage.",
+      "params": {"data": {"type": "table", "desc": "Table avec le champ race."}},
+      "internal": true
+    },
+    "onRacePathnodeReached": {
+      "desc": "Hook émis à chaque pathnode atteint : met à jour le guidage pour la course simple du tutoriel.",
+      "params": {"data": {"type": "table", "desc": "Table avec le champ race."}},
+      "internal": true
+    },
+    "onScreenFadeState": {
+      "desc": "Hook de fondu d'écran : quand l'état vaut 3 pendant waitChoicePopup, remet l'état de jeu « career » et ouvre la popup de bilan ou de choix.",
+      "params": {"state": {"type": "integer", "desc": "État du fondu (3 = traité ici)."}},
+      "internal": true
+    },
+    "onCareerTutorialAdvancedOrDragSelection": {
+      "desc": "Appelé depuis OptionalChallengeSelect.vue quand le joueur choisit : « advancedTimeTrial » lance la mission avancée, tout autre choix désactive le véhicule et passe à l'étape suivante.",
+      "params": {"choice": {"type": "string", "desc": "Choix du joueur (\"advancedTimeTrial\" ou autre)."}},
+      "internal": true
+    },
+    "onCareerTutorialLeftBounds": {"desc": "Hook de sortie de zone : lance le reset de sortie de zone de l'étape.", "internal": true},
+    "cleanup": {"desc": "Appelé à la fin de l'étape : retire le reset de zone, efface le guidage et arrête la mission du tutoriel si elle est au premier plan.", "internal": true},
+    "onDebugMenu": {
+      "desc": "Bouton « Skip Step 4 » : arrête la mission, désactive le véhicule et avance.",
+      "params": {"im": {"type": "table", "desc": "Table ui_imgui."}},
+      "internal": true
+    }
+  }
+}

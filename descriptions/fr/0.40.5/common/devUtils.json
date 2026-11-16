@@ -1,0 +1,45 @@
+{
+  "path": "lua/common/devUtils.lua",
+  "module": "Utilitaires de développement rarement nécessaires, définis comme fonctions globales : exécution de code Lua avec capture du print, analyse des upvalues d'un module, instantané (snapshot) JSON de l'état global Lua pour comparer deux états, et détection de tables partagées à plusieurs endroits d'une arborescence. Surtout utile pour déboguer les fuites ou fusions de tables entre modules.",
+  "notes": [
+    "Le fichier utilise des helpers globaux d'autres fichiers : tableMerge, tableKeysSorted, tableIsEmpty, deepcopy, flattenTable, jsonWriteFile, writeFile.",
+    "executeLuaSandboxed n'est pas un vrai bac à sable (le code reste exécuté dans l'environnement du fichier et on peut atteindre des objets cachés) ; seul print est détourné.",
+    "Bug : _createGraphviz (locale, non utilisée, appel commenté dans createGlobalSnapshot) référence une variable k non définie ; elle ne fonctionnerait pas si activée.",
+    "createGlobalSnapshot appelle gui.reset() si disponible avant de capturer pour vider les caches temporaires."
+  ],
+  "fields": {},
+  "functions": {
+    "executeLuaSandboxed": {
+      "desc": "Compile puis exécute la chaîne cmd avec xpcall, en remplaçant temporairement print pour capturer les sorties. En cas d'erreur de syntaxe ou d'exécution, renvoie une chaîne commençant par 'Error: '.",
+      "params": {
+        "cmd": {"type": "string", "desc": "Code Lua à exécuter."},
+        "source": {"type": "string|nil", "desc": "Nom de chunk pour les messages d'erreur (défaut 'executeLuaSandboxed')."}
+      },
+      "returns": [
+        {"type": "any", "desc": "Résultat de l'exécution (1re valeur renvoyée par le chunk), ou chaîne 'Error: ...'."},
+        {"type": "string[]|nil", "desc": "Lignes capturées par print ; nil en cas d'erreur."}
+      ],
+      "internal": false
+    },
+    "getModuleLocals": {
+      "desc": "Renvoie les variables locales (upvalues) utilisées par les fonctions d'un module, en parcourant récursivement les fonctions, leurs upvalues et la métatable. Ignore les globales, les champs du module, le module lui-même et ___locals.",
+      "params": {"moduleTbl": {"type": "table", "desc": "Table du module à inspecter."}},
+      "returns": [{"type": "table<string, any>", "desc": "Nom d'upvalue vers valeur."}],
+      "internal": false
+    },
+    "createGlobalSnapshot": {
+      "desc": "Écrit en JSON un instantané des variables globales, des modules (contenu et locales) et des extensions chargées. Les fonctions et userdata sont retirés, les tables aplaties (flattenTable).",
+      "params": {"filename": {"type": "string", "desc": "Fichier JSON de sortie (via jsonWriteFile)."}},
+      "internal": false
+    },
+    "tableFindRecursion": {
+      "desc": "Parcourt tbl et détecte les sous-tables atteintes par plusieurs chemins (références partagées ou cycles).",
+      "params": {"tbl": {"type": "table", "desc": "Table à analyser."}},
+      "returns": [
+        {"type": "integer|nil", "desc": "Nombre de tables vues plus d'une fois ; nil si tbl n'est pas une table."},
+        {"type": "table<string, string[]>", "desc": "Pour chaque table dupliquée (adresse en texte), la liste de ses chemins."}
+      ],
+      "internal": false
+    }
+  }
+}

@@ -1,18 +1,18 @@
 # `flowgraph_nodes_ui_updatedUI_endScreenDriftStats`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenDriftStats.lua` · VM : Game Engine (GE) · 32 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenDriftStats.lua` · VM: Game Engine (GE) · 32 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/updatedUI/endScreenDriftStats")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/updatedUI/endScreenDriftStats")` (file under extensions/ but not a regular extension)
 
-Nœud « EndScreen Drift Stats » (catégorie repeat_instant, couleur ui). Ajoute à l'écran de fin un panneau de statistiques de drift. Chaîne : flow en entrée, flow en sortie (chainFlow). À placer entre EndScreen Begin et Screen Finish.
+Node "EndScreen Drift Stats" (category repeat_instant, color ui). Adds a drift statistics panel to the end screen. Chain: flow input, flow output (chainFlow). To be placed between EndScreen Begin and Screen Finish.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Recopie flow en sortie, puis appelle modules.ui:addDriftStats avec gameplay_drift_scoreboard.getPerformanceStats(), getTiersStats() et getDriftEventStats(). | 21 |
+| `C:work()` | Copies flow to the output, then calls modules.ui:addDriftStats with gameplay_drift_scoreboard.getPerformanceStats(), getTiersStats() and getDriftEventStats(). | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenDriftStats.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenDriftStats.lua`.*

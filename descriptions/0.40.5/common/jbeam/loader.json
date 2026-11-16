@@ -1,95 +1,208 @@
 {
   "path": "lua/common/jbeam/loader.lua",
-  "module": "Chargeur principal des véhicules jbeam : orchestre toutes les étapes qui transforment les fichiers .jbeam et la configuration choisie en un « bundle » de données véhicule (vdata) prêt pour la physique. Ordre : lecture des fichiers (jbeam/io), choix des pièces par le système de slots, application des variables, unification des pièces, schéma de tables, fusion de sections, résolution des liens et cid, nœuds/poutres, roues, groupes, mise à l'échelle, valeurs par défaut des options, optimisation, interaction. Puis loadBundle crée côté moteur : événements, plaques, couleurs, positions initiales des nœuds, meshes, cordes, matériaux, visages, rétroviseurs. Tourne dans les deux VM (GE et véhicule, vmType). Un moddeur s'en sert surtout pour lire la config chargée ou utiliser les hooks onJbeamLoadingPhase1/2.",
+  "module": "Main jbeam vehicle loader: orchestrates all the steps that transform the .jbeam files and the chosen configuration into a vehicle data \"bundle\" (vdata) ready for the physics. Order: file reading (jbeam/io), part selection by the slot system, variable application, part unification, table schema, section merging, link and cid resolution, nodes/beams, wheels, groups, scaling, option default values, optimization, interaction. Then loadBundle creates engine-side: events, plates, colors, initial node positions, meshes, ropes, materials, faces, mirrors. Runs in both VMs (GE and vehicle, vmType). A modder mostly uses it to read the loaded config or to use the hooks onJbeamLoadingPhase1/2.",
   "notes": [
-    "Constantes de types de poutres (définies en C, à ne pas modifier) : NORMAL 0, ANISOTROPIC 1, BOUNDED 2, PRESSURED 3, LBEAM 4, BROKEN 5, HYDRO 6, SUPPORT 7.",
-    "Valeurs par défaut appliquées à vehicle.options si absentes : beamSpring = defaultBeamSpring (4300000), beamDeform = defaultBeamDeform (220000), beamDamp = defaultBeamDamp (580), beamStrength = defaultBeamStrength (math.huge), nodeWeight = defaultNodeWeight (25).",
-    "Hooks émis (extensions.hook) : onJbeamLoadingPhase1(loadingProgress, objID, vehicle, unifyJournal, vehicleConfig, vars) après nœuds/poutres et avant les roues ; onJbeamLoadingPhase2(...) avant l'optimisation.",
-    "Les occupantSlots et la caméra ne sont traités que dans la VM GE (vmType == 'game'). loadBundle crée les objets visibles seulement côté GE (si l'objet véhicule est trouvé), sinon met props et flexbodies à {}.",
-    "Un cache de bundles (clé = SHA256 des dossiers + config) évite de recharger un véhicule identique ; vidé par onFileChanged. Le bundle est stocké encodé et décodé à chaque réutilisation.",
-    "Le paramètre de config additionalVehicleData.indestructible rend toutes les poutres hors roues/torsionbars/rails infinies en résistance (beamStrength = huge) et supprime triggers et actionsEnabled (code marqué TODO: REMOVE TEST CODE).",
-    "Une section gameEngineExtensions des pièces permet de charger automatiquement des extensions GE (name = true, ou name = {args} appelle onVehicleExtensionLoaded(objID, args) sur l'extension).",
-    "Si l'argument de ligne de commande -debugVehicleLoading est présent, des fichiers vehicleDebug_*.json sont écrits dans le dossier du véhicule.",
-    "M.materials et M.materialsMap (issus de particles.getMaterialsParticlesTable()) sont des champs exportés absents de la liste automatique.",
-    "Bug mineur : loadJbeam renvoie nil sans fermer le profilerPush quand findParts échoue (retour avant profilerPopEvent)."
+    "Beam type constants (defined in C, do not modify): NORMAL 0, ANISOTROPIC 1, BOUNDED 2, PRESSURED 3, LBEAM 4, BROKEN 5, HYDRO 6, SUPPORT 7.",
+    "Default values applied to vehicle.options if absent: beamSpring = defaultBeamSpring (4300000), beamDeform = defaultBeamDeform (220000), beamDamp = defaultBeamDamp (580), beamStrength = defaultBeamStrength (math.huge), nodeWeight = defaultNodeWeight (25).",
+    "Emitted hooks (extensions.hook): onJbeamLoadingPhase1(loadingProgress, objID, vehicle, unifyJournal, vehicleConfig, vars) after nodes/beams and before wheels; onJbeamLoadingPhase2(...) before optimization.",
+    "occupantSlots and the camera are only handled in the GE VM (vmType == 'game'). loadBundle creates the visible objects only on the GE side (if the vehicle object is found), otherwise sets props and flexbodies to {}.",
+    "A bundle cache (key = SHA256 of the folders + config) avoids reloading an identical vehicle; emptied by onFileChanged. The bundle is stored encoded and decoded on each reuse.",
+    "The config parameter additionalVehicleData.indestructible makes all beams other than wheels/torsionbars/rails infinitely strong (beamStrength = huge) and removes triggers and actionsEnabled (code marked TODO: REMOVE TEST CODE).",
+    "A gameEngineExtensions section of the parts allows automatically loading GE extensions (name = true, or name = {args} calls onVehicleExtensionLoaded(objID, args) on the extension).",
+    "If the command-line argument -debugVehicleLoading is present, vehicleDebug_*.json files are written in the vehicle folder.",
+    "M.materials and M.materialsMap (from particles.getMaterialsParticlesTable()) are exported fields missing from the automatic list.",
+    "Minor bug: loadJbeam returns nil without closing the profilerPush when findParts fails (return before profilerPopEvent)."
   ],
   "fields": {
-    "defaultBeamSpring": {"type": "number", "desc": "Raideur par défaut des poutres (4300000 N/m)."},
-    "defaultBeamDeform": {"type": "number", "desc": "Seuil de déformation par défaut (220000 N)."},
-    "defaultBeamDamp": {"type": "number", "desc": "Amortissement par défaut (580)."},
-    "defaultNodeWeight": {"type": "number", "desc": "Masse par défaut d'un nœud (25 kg)."},
-    "defaultBeamStrength": {"type": "number", "desc": "Résistance par défaut d'une poutre : math.huge (infinie)."},
-    "data": {"type": "table", "desc": "Table vide créée à l'initialisation (non remplie dans ce fichier)."},
-    "materials": {"type": "table", "desc": "Matériaux de particules (résultat de particles.getMaterialsParticlesTable())."},
-    "materialsMap": {"type": "table", "desc": "Table de correspondance des matériaux (second retour de la même fonction)."},
-    "_noSerialize": {"type": "boolean", "desc": "true : le module n'est pas sérialisé lors d'un rechargement de la VM."}
+    "defaultBeamSpring": {
+      "type": "number",
+      "desc": "Default beam stiffness (4300000 N/m)."
+    },
+    "defaultBeamDeform": {
+      "type": "number",
+      "desc": "Default deformation threshold (220000 N)."
+    },
+    "defaultBeamDamp": {
+      "type": "number",
+      "desc": "Default damping (580)."
+    },
+    "defaultNodeWeight": {
+      "type": "number",
+      "desc": "Default node mass (25 kg)."
+    },
+    "defaultBeamStrength": {
+      "type": "number",
+      "desc": "Default beam strength: math.huge (infinite)."
+    },
+    "data": {
+      "type": "table",
+      "desc": "Empty table created at initialization (not filled in this file)."
+    },
+    "materials": {
+      "type": "table",
+      "desc": "Particle materials (result of particles.getMaterialsParticlesTable())."
+    },
+    "materialsMap": {
+      "type": "table",
+      "desc": "Materials mapping table (second return value of the same function)."
+    },
+    "_noSerialize": {
+      "type": "boolean",
+      "desc": "true: the module is not serialized during a VM reload."
+    }
   },
   "functions": {
     "loadVehicleStage1": {
-      "desc": "Point d'entrée de chargement d'un véhicule : normalise le dossier (slash initial et final), ajoute /vehicles/common/, consulte le cache, appelle loadJbeam puis loadBundle et suit la progression dans le LoadingManager (côté GE).",
+      "desc": "Vehicle loading entry point: normalizes the folder (leading and trailing slash), adds /vehicles/common/, consults the cache, calls loadJbeam then loadBundle and tracks progress in the LoadingManager (GE side).",
       "params": {
-        "objID": {"type": "integer", "desc": "Identifiant de l'objet véhicule."},
-        "vehicleDir": {"type": "string", "desc": "Dossier du véhicule (ex. 'vehicles/pickup')."},
-        "vehicleConfig": {"type": "table|nil", "desc": "Configuration (pièces choisies, couleurs/paints, variables, mainPartName...)."}
+        "objID": {
+          "type": "integer",
+          "desc": "Vehicle object identifier."
+        },
+        "vehicleDir": {
+          "type": "string",
+          "desc": "Vehicle folder (e.g. 'vehicles/pickup')."
+        },
+        "vehicleConfig": {
+          "type": "table|nil",
+          "desc": "Configuration (chosen parts, colors/paints, variables, mainPartName...)."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Bundle {id, vehicleDirectory, directoriesLoaded, vdata, config, mainPartName, ioCtx} ; nil en cas d'échec."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Bundle {id, vehicleDirectory, directoriesLoaded, vdata, config, mainPartName, ioCtx}; nil on failure."
+        }
+      ],
       "internal": true
     },
     "loadJbeam": {
-      "desc": "Charge et assemble en mémoire toutes les données jbeam du véhicule (pièces, variables, tables, liens, cid, roues, groupes, optimisation) sans toucher aux objets 3D.",
+      "desc": "Loads and assembles in memory all the vehicle's jbeam data (parts, variables, tables, links, cid, wheels, groups, optimization) without touching the 3D objects.",
       "params": {
-        "objID": {"type": "integer", "desc": "Identifiant du véhicule."},
-        "loadingProgress": {"type": "table|nil", "desc": "Objet de progression du LoadingManager (méthode update)."},
-        "vehicleDirectories": {"type": "string[]", "desc": "Dossiers jbeam (le premier est le dossier du véhicule)."},
-        "vehicleConfig": {"type": "table|nil", "desc": "Configuration du véhicule."}
+        "objID": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        },
+        "loadingProgress": {
+          "type": "table|nil",
+          "desc": "LoadingManager progress object (update method)."
+        },
+        "vehicleDirectories": {
+          "type": "string[]",
+          "desc": "Jbeam folders (the first is the vehicle folder)."
+        },
+        "vehicleConfig": {
+          "type": "table|nil",
+          "desc": "Vehicle configuration."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Bundle véhicule ; nil si une étape échoue."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Vehicle bundle; nil if a step fails."
+        }
+      ],
       "internal": false
     },
     "loadJbeamOnlyConfig": {
-      "desc": "Comme loadJbeam mais ne fait que choisir les pièces : renvoie la configuration complétée (model, mainPartName, mainPartPath, partsTree).",
+      "desc": "Like loadJbeam but only chooses the parts: returns the completed configuration (model, mainPartName, mainPartPath, partsTree).",
       "params": {
-        "vehicleDirectories": {"type": "string[]", "desc": "Dossiers jbeam."},
-        "vehicleConfig": {"type": "table|nil", "desc": "Configuration de départ."}
+        "vehicleDirectories": {
+          "type": "string[]",
+          "desc": "Jbeam folders."
+        },
+        "vehicleConfig": {
+          "type": "table|nil",
+          "desc": "Starting configuration."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "vehicleConfig complétée ; nil si aucune pièce principale."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Completed vehicleConfig; nil if there is no main part."
+        }
+      ],
       "internal": false
     },
     "loadBundle": {
-      "desc": "Crée côté moteur tout ce qui dépend de l'objet véhicule : événements d'entrée, plaques, couleurs, peintures, positions initiales et collisions des nœuds, nœuds de référence, meshes, cordes visuelles, matériaux, visages d'occupants, rétroviseurs, et charge les extensions listées dans gameEngineExtensions. Sans objet véhicule (VM véhicule), met props et flexbodies à {}.",
+      "desc": "Creates engine-side everything that depends on the vehicle object: input events, plates, colors, paints, initial node positions and collisions, reference nodes, meshes, visual ropes, materials, occupant faces, mirrors, and loads the extensions listed in gameEngineExtensions. Without a vehicle object (vehicle VM), sets props and flexbodies to {}.",
       "params": {
-        "objID": {"type": "integer", "desc": "Identifiant du véhicule."},
-        "vehicleBundle": {"type": "table", "desc": "Bundle produit par loadJbeam."},
-        "loadingProgress": {"type": "table|nil", "desc": "Objet de progression."}
+        "objID": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        },
+        "vehicleBundle": {
+          "type": "table",
+          "desc": "Bundle produced by loadJbeam."
+        },
+        "loadingProgress": {
+          "type": "table|nil",
+          "desc": "Progress object."
+        }
       },
-      "returns": [{"type": "userdata|nil", "desc": "L'objet véhicule moteur (GE seulement)."}],
+      "returns": [
+        {
+          "type": "userdata|nil",
+          "desc": "The engine vehicle object (GE only)."
+        }
+      ],
       "internal": false
     },
     "cacheVehicleBundleForEditor": {
-      "desc": "Si le cache éditeur est activé, enregistre une copie encodée du bundle (en ajoutant temporairement editorTransform aux props) pour l'éditeur.",
+      "desc": "If the editor cache is enabled, stores an encoded copy of the bundle (temporarily adding editorTransform to the props) for the editor.",
       "params": {
-        "vehicleId": {"type": "integer", "desc": "Identifiant du véhicule."},
-        "vehicleBundle": {"type": "table", "desc": "Bundle à mémoriser."},
-        "vehicleObj": {"type": "userdata", "desc": "Objet véhicule moteur (pour lire les transformations des props)."}
+        "vehicleId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        },
+        "vehicleBundle": {
+          "type": "table",
+          "desc": "Bundle to store."
+        },
+        "vehicleObj": {
+          "type": "userdata",
+          "desc": "Engine vehicle object (to read the props' transforms)."
+        }
       },
       "internal": false
     },
     "getCachedVehicleBundle": {
-      "desc": "Renvoie une copie décodée du bundle mis en cache pour l'éditeur.",
-      "params": {"vehicleId": {"type": "integer", "desc": "Identifiant du véhicule."}},
-      "returns": [{"type": "table|nil", "desc": "Bundle ou nil."}],
+      "desc": "Returns a decoded copy of the bundle cached for the editor.",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Bundle or nil."
+        }
+      ],
       "internal": false
     },
     "setEditorCacheEnabled": {
-      "desc": "Active ou désactive le cache éditeur ; désactiver le vide.",
-      "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}},
+      "desc": "Enables or disables the editor cache; disabling empties it.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to enable."
+        }
+      },
       "internal": false
     },
     "onFileChanged": {
-      "desc": "Hook appelé quand un fichier change : vide le cache de bundles et le cache éditeur.",
+      "desc": "Hook called when a file changes: empties the bundle cache and the editor cache.",
       "params": {
-        "filename": {"type": "string", "desc": "Fichier modifié."},
-        "type": {"type": "string", "desc": "Type de changement."}
+        "filename": {
+          "type": "string",
+          "desc": "Modified file."
+        },
+        "type": {
+          "type": "string",
+          "desc": "Change type."
+        }
       },
       "internal": true
     }

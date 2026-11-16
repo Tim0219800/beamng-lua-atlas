@@ -1,184 +1,184 @@
 # `core_sounds`
 
-*Fichier : `lua/ge/extensions/core/sounds.lua` · VM : Game Engine (GE) · 263 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/sounds.lua` · VM: Game Engine (GE) · 263 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_sounds` : `extensions.load("core_sounds")`, puis la globale `core_sounds`
+**Access:** extension `core_sounds`: `extensions.load("core_sounds")`, then the global `core_sounds`
 
-Pont entre le jeu et le moteur audio FMOD côté GE. Chaque rendu (onPreRender), il pousse des paramètres globaux (vitesse et rotation de caméra, heure du jour, vent, vitesse du véhicule joueur, caméra intérieure, sous l'eau, hauteur au sol et à la mer, flou audio). Il fournit aussi des fonctions pour initialiser et piloter les sons moteur/échappement d'un véhicule, et gère le flou audio quand un menu de mission est ouvert.
+Bridge between the game and the FMOD audio engine on the GE side. On each render (onPreRender), it pushes global parameters (camera speed and rotation, time of day, wind, player vehicle speed, interior camera, underwater, height above ground and sea, audio blur). It also provides functions to initialize and drive a vehicle's engine/exhaust sounds, and handles the audio blur when a mission menu is open.
 
-## Exemple
+## Example
 
 ```lua
-core_sounds.setAudioBlur(1) -- flou audio actif
+core_sounds.setAudioBlur(1) -- audio blur active
 core_sounds.setAudioBlur(0)
 ```
 
-## Remarques
+## Notes
 
-- onPreRender alterne à chaque appel (frameFlag) entre deux lots de paramètres : une image sur deux pour g_Tod, g_WindSpeedMS, g_CamRotationAngle, g_VehicleSpeedPlayerMS ; l'autre pour g_CamOnboard, c_CabinFilterReverbStrength, g_CamFree, g_CamUnderwater, g_UnderwaterDepth, g_CamHeightToGround, g_CamHeightToSea. g_GameAudioBlur, g_CamSpeedMS et g_CamRotationSpeedMS sont mis à jour à chaque image.
-- Heure du jour : tod.time vaut 0 à midi, 0.25 à 18h, 0.5 à minuit, 0.75 à 6h ; le code la convertit en heures (0 à 24) pour g_Tod.
-- g_CamOnboard = AudioInsideModifier (réglage) puissance 4, multiplié par le résultat de core_camera.isCameraInside.
-- Le rayon castRayStatic vers le bas pour g_CamHeightToGround est limité à 200 m.
-- Le flou audio automatique ne s'active que si une interaction avec un marqueur de mission est en cours (missionMarkerInteraction, posé par onActivityAcceptGatherData).
-- Le commentaire « debugEnabled » dit qu'il faut changer la ligne pour activer les logs de flou audio ; la variable est locale et vaut false.
+- onPreRender alternates on each call (frameFlag) between two batches of parameters: one frame out of two for g_Tod, g_WindSpeedMS, g_CamRotationAngle, g_VehicleSpeedPlayerMS; the other for g_CamOnboard, c_CabinFilterReverbStrength, g_CamFree, g_CamUnderwater, g_UnderwaterDepth, g_CamHeightToGround, g_CamHeightToSea. g_GameAudioBlur, g_CamSpeedMS and g_CamRotationSpeedMS are updated every frame.
+- Time of day: tod.time is 0 at noon, 0.25 at 6 pm, 0.5 at midnight, 0.75 at 6 am; the code converts it to hours (0 to 24) for g_Tod.
+- g_CamOnboard = AudioInsideModifier (setting) to the power of 4, multiplied by the result of core_camera.isCameraInside.
+- The downward castRayStatic ray for g_CamHeightToGround is limited to 200 m.
+- Automatic audio blur is only enabled while an interaction with a mission marker is in progress (missionMarkerInteraction, set by onActivityAcceptGatherData).
+- The "debugEnabled" comment says to change the line to enable audio blur logs; the variable is local and equals false.
 
-**Dépendances (chargées avant) :** `core_camera`, `core_settings_settings`, `core_input_bindings`
+**Dependencies (loaded first):** `core_camera`, `core_settings_settings`, `core_input_bindings`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_sounds.initEngineSound(vehicleId, engineId, jsonPath, nodeIdArray, noloadVol, loadVol)` | Initialise le son moteur d'un véhicule : vehicle:engineSoundInit puis fixe wet_level = 0 et dry_level = 1. Ne fait rien si le véhicule n'existe pas. | 95 |
-| `core_sounds.initExhaustSound(vehicleId, engineId, jsonPath, nodeIdPairArray, noloadVol, loadVol)` | Comme initEngineSound mais pour l'échappement, avec des paires de noeuds. Appelle aussi vehicle:engineSoundInit (même appel moteur). | 106 |
-| `core_sounds.onActivityAcceptGatherData(elemData, activityData)` | Hook appelé quand une activité collecte ses données d'acceptation. Mémorise si l'un des éléments est de type "mission". *(interne)* *(hook)* | 202 |
-| `core_sounds.onDeserialized(data)` | Hook appelé après rechargement des extensions Lua : relance sounds.updateCabinFilter() sur tous les véhicules pour restaurer cabinFilterStrength. *(interne)* *(hook)* | 232 |
-| `core_sounds.onMissionAvailabilityChanged(data)` | Hook : si data.missionCount vaut 0, désactive l'interaction mission. *(interne)* *(hook)* | 214 |
-| `core_sounds.onMissionInfoChangedState(fromState, toState, content)` | Hook appelé quand la fenêtre d'info mission change d'état : passe à 'opened' active l'interaction ; 'opened' vers 'closed' la désactive et remet le flou à 0. Sans effet si aucun marqueur de mission actif. *(interne)* *(hook)* | 186 |
-| `core_sounds.onPreRender(dtReal, dtSim, dtRaw)` | Hook de rendu. Met à jour les paramètres globaux FMOD (Engine.Audio.getGlobalParams) si disponibles. Voir notes pour la liste des paramètres. *(interne)* *(hook)* | 32 |
-| `core_sounds.onSettingsChanged()` | Hook appelé quand les réglages changent : relit AudioInsideModifier. *(interne)* *(hook)* | 143 |
-| `core_sounds.onUiChangedState(toState, fromState)` | Hook appelé quand l'état de l'UI change. Si un marqueur de mission est actif, gère gameAudioBlurValue : 1 tant qu'on interagit avec l'UI mission, remis à 0 pour les transitions vers play (depuis scenario.start, menu, fadeScreen, blank) ou vers scenario.end. *(interne)* *(hook)* | 147 |
-| `core_sounds.onVehicleSwitched(oldId, newId, player)` | Hook : quand le véhicule du joueur 0 change, exécute sounds.updateCabinFilter() dans la VM du nouveau véhicule. *(interne)* *(hook)* | 225 |
-| `core_sounds.setAudioBlur(value)` | Fixe manuellement la valeur du flou audio global (paramètre g_GameAudioBlur). | 255 |
-| `core_sounds.setCabinFilterStrength(objId, value)` | Fixe cabinFilterStrength, mais seulement si objId est le véhicule joueur 0. Appelé typiquement depuis la VM véhicule. | 220 |
-| `core_sounds.setEngineSoundParameter(vehicleId, engineId, paramName, paramValue)` | Fixe un paramètre du son moteur (vehicle:engineSoundParameter). | 124 |
-| `core_sounds.setEngineSoundParameterList(vehicleId, engineId, parameters)` | Fixe plusieurs paramètres du son moteur d'un coup. | 130 |
-| `core_sounds.setExhaustSoundNodes(vehicleId, engineId, nodeIdPairArray)` | Change les noeuds d'émission du son d'échappement (vehicle:engineSoundNodes). | 136 |
-| `core_sounds.updateEngineSound(vehicleId, engineId, rpm, onLoad, engineVolume)` | Met à jour le son moteur (vehicle:engineSoundUpdate). | 118 |
+| `core_sounds.initEngineSound(vehicleId, engineId, jsonPath, nodeIdArray, noloadVol, loadVol)` | Initializes a vehicle's engine sound: vehicle:engineSoundInit, then sets wet_level = 0 and dry_level = 1. Does nothing if the vehicle does not exist. | 95 |
+| `core_sounds.initExhaustSound(vehicleId, engineId, jsonPath, nodeIdPairArray, noloadVol, loadVol)` | Like initEngineSound but for the exhaust, with node pairs. Also calls vehicle:engineSoundInit (same engine call). | 106 |
+| `core_sounds.onActivityAcceptGatherData(elemData, activityData)` | Hook called when an activity gathers its acceptance data. Remembers whether any of the items is of type "mission". *(internal)* *(hook)* | 202 |
+| `core_sounds.onDeserialized(data)` | Hook called after Lua extensions are reloaded: reruns sounds.updateCabinFilter() on all vehicles to restore cabinFilterStrength. *(internal)* *(hook)* | 232 |
+| `core_sounds.onMissionAvailabilityChanged(data)` | Hook: if data.missionCount is 0, disables the mission interaction. *(internal)* *(hook)* | 214 |
+| `core_sounds.onMissionInfoChangedState(fromState, toState, content)` | Hook called when the mission info window changes state: switching to 'opened' enables the interaction; 'opened' to 'closed' disables it and resets the blur to 0. No effect if no mission marker is active. *(internal)* *(hook)* | 186 |
+| `core_sounds.onPreRender(dtReal, dtSim, dtRaw)` | Render hook. Updates the global FMOD parameters (Engine.Audio.getGlobalParams) if available. See notes for the list of parameters. *(internal)* *(hook)* | 32 |
+| `core_sounds.onSettingsChanged()` | Hook called when settings change: re-reads AudioInsideModifier. *(internal)* *(hook)* | 143 |
+| `core_sounds.onUiChangedState(toState, fromState)` | Hook called when the UI state changes. If a mission marker is active, handles gameAudioBlurValue: 1 while interacting with the mission UI, reset to 0 for transitions to play (from scenario.start, menu, fadeScreen, blank) or to scenario.end. *(internal)* *(hook)* | 147 |
+| `core_sounds.onVehicleSwitched(oldId, newId, player)` | Hook: when player 0's vehicle changes, runs sounds.updateCabinFilter() in the new vehicle's VM. *(internal)* *(hook)* | 225 |
+| `core_sounds.setAudioBlur(value)` | Manually sets the value of the global audio blur (parameter g_GameAudioBlur). | 255 |
+| `core_sounds.setCabinFilterStrength(objId, value)` | Sets cabinFilterStrength, but only if objId is player vehicle 0. Typically called from the vehicle VM. | 220 |
+| `core_sounds.setEngineSoundParameter(vehicleId, engineId, paramName, paramValue)` | Sets an engine sound parameter (vehicle:engineSoundParameter). | 124 |
+| `core_sounds.setEngineSoundParameterList(vehicleId, engineId, parameters)` | Sets several engine sound parameters at once. | 130 |
+| `core_sounds.setExhaustSoundNodes(vehicleId, engineId, nodeIdPairArray)` | Changes the exhaust sound emitter nodes (vehicle:engineSoundNodes). | 136 |
+| `core_sounds.updateEngineSound(vehicleId, engineId, rpm, onLoad, engineVolume)` | Updates the engine sound (vehicle:engineSoundUpdate). | 118 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_sounds.initEngineSound(vehicleId, engineId, jsonPath, nodeIdArray, noloadVol, loadVol)`
 
-Initialise le son moteur d'un véhicule : vehicle:engineSoundInit puis fixe wet_level = 0 et dry_level = 1. Ne fait rien si le véhicule n'existe pas.
+Initializes a vehicle's engine sound: vehicle:engineSoundInit, then sets wet_level = 0 and dry_level = 1. Does nothing if the vehicle does not exist.
 
-- `vehicleId` (*integer*) : Id de l'objet véhicule.
-- `engineId` (*integer*) : Identifiant du moteur (déduit du code).
-- `jsonPath` (*string*) : Chemin du fichier de description du son.
-- `nodeIdArray` (*integer|integer[]*) : Noeud(s) d'émission ; un nombre seul est mis en tableau.
-- `noloadVol` (*number|nil*) : Volume sans charge, 1 par défaut.
-- `loadVol` (*number|nil*) : Volume en charge, 1 par défaut.
+- `vehicleId` (*integer*) : Vehicle object id.
+- `engineId` (*integer*) : Engine identifier (inferred from code).
+- `jsonPath` (*string*) : Path of the sound description file.
+- `nodeIdArray` (*integer|integer[]*) : Emitter node(s); a single number is wrapped into a table.
+- `noloadVol` (*number|nil*) : Volume at no load, 1 by default.
+- `loadVol` (*number|nil*) : Volume under load, 1 by default.
 
 #### `core_sounds.initExhaustSound(vehicleId, engineId, jsonPath, nodeIdPairArray, noloadVol, loadVol)`
 
-Comme initEngineSound mais pour l'échappement, avec des paires de noeuds. Appelle aussi vehicle:engineSoundInit (même appel moteur).
+Like initEngineSound but for the exhaust, with node pairs. Also calls vehicle:engineSoundInit (same engine call).
 
-- `vehicleId` (*integer*) : Id du véhicule.
-- `engineId` (*integer*) : Identifiant du moteur.
-- `jsonPath` (*string*) : Chemin du fichier de son.
-- `nodeIdPairArray` (*table|integer*) : Tableau de paires de noeuds ; un nombre seul devient {{n, n}}.
-- `noloadVol` (*number|nil*) : Volume sans charge, 1 par défaut.
-- `loadVol` (*number|nil*) : Volume en charge, 1 par défaut.
+- `vehicleId` (*integer*) : Vehicle id.
+- `engineId` (*integer*) : Engine identifier.
+- `jsonPath` (*string*) : Path of the sound file.
+- `nodeIdPairArray` (*table|integer*) : Table of node pairs; a single number becomes {{n, n}}.
+- `noloadVol` (*number|nil*) : Volume at no load, 1 by default.
+- `loadVol` (*number|nil*) : Volume under load, 1 by default.
 
 #### `core_sounds.onActivityAcceptGatherData(elemData, activityData)`
 
-Hook appelé quand une activité collecte ses données d'acceptation. Mémorise si l'un des éléments est de type "mission".
+Hook called when an activity gathers its acceptance data. Remembers whether any of the items is of type "mission".
 
-- `elemData` (*table[]*) : Liste d'éléments avec un champ type.
-- `activityData` (*any*) : Non utilisé (log seulement).
+- `elemData` (*table[]*) : List of items with a type field.
+- `activityData` (*any*) : Unused (log only).
 
 #### `core_sounds.onDeserialized(data)`
 
-Hook appelé après rechargement des extensions Lua : relance sounds.updateCabinFilter() sur tous les véhicules pour restaurer cabinFilterStrength.
+Hook called after Lua extensions are reloaded: reruns sounds.updateCabinFilter() on all vehicles to restore cabinFilterStrength.
 
-- `data` (*any*) : Non utilisé.
+- `data` (*any*) : Not used.
 
 #### `core_sounds.onMissionAvailabilityChanged(data)`
 
-Hook : si data.missionCount vaut 0, désactive l'interaction mission.
+Hook: if data.missionCount is 0, disables the mission interaction.
 
-- `data` (*table|nil*) : Table avec missionCount.
+- `data` (*table|nil*) : Table with missionCount.
 
 #### `core_sounds.onMissionInfoChangedState(fromState, toState, content)`
 
-Hook appelé quand la fenêtre d'info mission change d'état : passe à 'opened' active l'interaction ; 'opened' vers 'closed' la désactive et remet le flou à 0. Sans effet si aucun marqueur de mission actif.
+Hook called when the mission info window changes state: switching to 'opened' enables the interaction; 'opened' to 'closed' disables it and resets the blur to 0. No effect if no mission marker is active.
 
-- `fromState` (*string*) : Ancien état.
-- `toState` (*string*) : Nouvel état.
-- `content` (*any*) : Non utilisé.
+- `fromState` (*string*) : Old state.
+- `toState` (*string*) : New state.
+- `content` (*any*) : Not used.
 
 #### `core_sounds.onPreRender(dtReal, dtSim, dtRaw)`
 
-Hook de rendu. Met à jour les paramètres globaux FMOD (Engine.Audio.getGlobalParams) si disponibles. Voir notes pour la liste des paramètres.
+Render hook. Updates the global FMOD parameters (Engine.Audio.getGlobalParams) if available. See notes for the list of parameters.
 
-- `dtReal` (*number*) : Durée réelle de l'image (s).
-- `dtSim` (*number*) : Durée simulée (s) ; si 0, les vitesses de caméra ne sont pas mises à jour.
-- `dtRaw` (*number*) : Durée brute (non utilisée).
+- `dtReal` (*number*) : Real frame duration (s).
+- `dtSim` (*number*) : Simulated duration (s); if 0, camera speeds are not updated.
+- `dtRaw` (*number*) : Raw duration (unused).
 
 #### `core_sounds.onUiChangedState(toState, fromState)`
 
-Hook appelé quand l'état de l'UI change. Si un marqueur de mission est actif, gère gameAudioBlurValue : 1 tant qu'on interagit avec l'UI mission, remis à 0 pour les transitions vers play (depuis scenario.start, menu, fadeScreen, blank) ou vers scenario.end.
+Hook called when the UI state changes. If a mission marker is active, handles gameAudioBlurValue: 1 while interacting with the mission UI, reset to 0 for transitions to play (from scenario.start, menu, fadeScreen, blank) or to scenario.end.
 
-- `toState` (*string*) : Nouvel état UI.
-- `fromState` (*string*) : Ancien état UI.
+- `toState` (*string*) : New UI state.
+- `fromState` (*string*) : Old UI state.
 
 #### `core_sounds.onVehicleSwitched(oldId, newId, player)`
 
-Hook : quand le véhicule du joueur 0 change, exécute sounds.updateCabinFilter() dans la VM du nouveau véhicule.
+Hook: when player 0's vehicle changes, runs sounds.updateCabinFilter() in the new vehicle's VM.
 
-- `oldId` (*integer*) : Ancien id.
-- `newId` (*integer*) : Nouvel id.
-- `player` (*integer*) : Index du joueur ; ignoré si différent de 0.
+- `oldId` (*integer*) : Old id.
+- `newId` (*integer*) : New id.
+- `player` (*integer*) : Player index; ignored if different from 0.
 
 #### `core_sounds.setAudioBlur(value)`
 
-Fixe manuellement la valeur du flou audio global (paramètre g_GameAudioBlur).
+Manually sets the value of the global audio blur (parameter g_GameAudioBlur).
 
-- `value` (*number*) : 0 = pas de flou, 1 = flou maximal (déduit du code).
+- `value` (*number*) : 0 = no blur, 1 = maximum blur (inferred from code).
 
 #### `core_sounds.setCabinFilterStrength(objId, value)`
 
-Fixe cabinFilterStrength, mais seulement si objId est le véhicule joueur 0. Appelé typiquement depuis la VM véhicule.
+Sets cabinFilterStrength, but only if objId is player vehicle 0. Typically called from the vehicle VM.
 
-- `objId` (*integer*) : Id du véhicule émetteur.
-- `value` (*number*) : Force 0 à 1.
+- `objId` (*integer*) : Id of the emitting vehicle.
+- `value` (*number*) : Strength 0 to 1.
 
 #### `core_sounds.setEngineSoundParameter(vehicleId, engineId, paramName, paramValue)`
 
-Fixe un paramètre du son moteur (vehicle:engineSoundParameter).
+Sets an engine sound parameter (vehicle:engineSoundParameter).
 
-- `vehicleId` (*integer*) : Id du véhicule.
-- `engineId` (*integer*) : Identifiant du moteur.
-- `paramName` (*string*) : Nom du paramètre.
-- `paramValue` (*number*) : Valeur.
+- `vehicleId` (*integer*) : Vehicle id.
+- `engineId` (*integer*) : Engine identifier.
+- `paramName` (*string*) : Parameter name.
+- `paramValue` (*number*) : Value.
 
 #### `core_sounds.setEngineSoundParameterList(vehicleId, engineId, parameters)`
 
-Fixe plusieurs paramètres du son moteur d'un coup.
+Sets several engine sound parameters at once.
 
-- `vehicleId` (*integer*) : Id du véhicule.
-- `engineId` (*integer*) : Identifiant du moteur.
-- `parameters` (*table<string, number>*) : Nom -> valeur (déduit du code).
+- `vehicleId` (*integer*) : Vehicle id.
+- `engineId` (*integer*) : Engine identifier.
+- `parameters` (*table<string, number>*) : Name -> value (inferred from code).
 
 #### `core_sounds.setExhaustSoundNodes(vehicleId, engineId, nodeIdPairArray)`
 
-Change les noeuds d'émission du son d'échappement (vehicle:engineSoundNodes).
+Changes the exhaust sound emitter nodes (vehicle:engineSoundNodes).
 
-- `vehicleId` (*integer*) : Id du véhicule.
-- `engineId` (*integer*) : Identifiant du moteur.
-- `nodeIdPairArray` (*table*) : Tableau de paires de noeuds.
+- `vehicleId` (*integer*) : Vehicle id.
+- `engineId` (*integer*) : Engine identifier.
+- `nodeIdPairArray` (*table*) : Table of node pairs.
 
 #### `core_sounds.updateEngineSound(vehicleId, engineId, rpm, onLoad, engineVolume)`
 
-Met à jour le son moteur (vehicle:engineSoundUpdate).
+Updates the engine sound (vehicle:engineSoundUpdate).
 
-- `vehicleId` (*integer*) : Id du véhicule.
-- `engineId` (*integer*) : Identifiant du moteur.
-- `rpm` (*number*) : Régime moteur.
-- `onLoad` (*number*) : Charge moteur (déduit du code).
-- `engineVolume` (*number*) : Volume moteur.
+- `vehicleId` (*integer*) : Vehicle id.
+- `engineId` (*integer*) : Engine identifier.
+- `rpm` (*number*) : Engine speed (RPM).
+- `onLoad` (*number*) : Engine load (inferred from code).
+- `engineVolume` (*number*) : Engine volume.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `cabinFilterStrength` | number | Force du filtre/réverbération d'habitacle (0 à 1, borné à l'envoi) pour la caméra intérieure du véhicule joueur. Défaut 1. Écrit par setCabinFilterStrength. |
+| `cabinFilterStrength` | number | Cabin filter/reverb strength (0 to 1, clamped when sent) for the interior camera of the player vehicle. Default 1. Written by setCabinFilterStrength. |
 | `dependencies` | string[] | core_camera, core_settings_settings, core_input_bindings. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `upcast`
 - `core_environment.` `getGroundWind`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/sounds.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/sounds.lua`.*

@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/groundmarkerDistance.lua",
+  "module": "Nœud flowgraph « Groundmarker Remaining Distance » (catégorie repeat_instant, dépend de core_groundMarkers). Donne la distance restante (m) jusqu'à la cible des groundmarkers actifs. Sorties : active (flux, seulement si un chemin existe) et distance.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Lit core_groundMarkers.routePlanner.path[1].distToTarget ; active = faux si aucun chemin.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}}
+      }
+    }
+  }
+}

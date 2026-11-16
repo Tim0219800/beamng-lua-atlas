@@ -1,206 +1,206 @@
 {
   "path": "lua/ge/extensions/ui/router/routeReference.test.lua",
-  "module": "Tests unitaires de routeReference (analyse « route?clé=valeur:portée », décodage URL, fusion des paramètres explicites et inline) et de la propagation des paramètres effectifs aux hooks onEnter/onMount via ResolvedRoute et navigationContext. Lancement : extensions.testFramework_TestManager:runTestFiles(\"routeReference\").",
+  "module": "Unit tests of routeReference (parsing \"route?key=value:scope\", URL decoding, merging of explicit and inline parameters) and of the propagation of effective parameters to the onEnter/onMount hooks via ResolvedRoute and navigationContext. Run with: extensions.testFramework_TestManager:runTestFiles(\"routeReference\").",
   "notes": [
-    "Les fonctions testXxx(ctx) sont exécutées par testFramework_TestManager ; le jeu ne les appelle pas en usage normal."
+    "The testXxx(ctx) functions are run by testFramework_TestManager; the game does not call them in normal use."
   ],
   "functions": {
     "testPlainRouteHasNoDecoration": {
-      "desc": "Une route simple n'a ni portée ni paramètres.",
+      "desc": "A simple route has no scope and no parameters.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testScopeOnlyReference": {
-      "desc": "« route:portée » : portée extraite, aucun paramètre.",
+      "desc": "\"route:scope\": scope extracted, no parameters.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testQueryOnlyReference": {
-      "desc": "« route?a=1 » : paramètres extraits, pas de portée.",
+      "desc": "\"route?a=1\": parameters extracted, no scope.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testQueryAndScopeReference": {
-      "desc": "« route?a=1:portée » : paramètres et portée extraits.",
+      "desc": "\"route?a=1:scope\": parameters and scope extracted.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testRelativeRoutePreservedThroughParse": {
-      "desc": "La partie route reste relative (« ./options ») après parse.",
+      "desc": "The route part stays relative (\"./options\") after parse.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testUrlDecodingOfQueryValues": {
-      "desc": "Décodage de '+' (espace) et des séquences %XX dans les valeurs.",
+      "desc": "Decoding of '+' (space) and %XX sequences in values.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testUrlDecodingOfEncodedKeyAndDelimiters": {
-      "desc": "Les clés encodées et les délimiteurs encodés sont décodés correctement.",
+      "desc": "Encoded keys and encoded delimiters are decoded correctly.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testRepeatedInlineKeyKeepsLastValue": {
-      "desc": "Une clé répétée garde la dernière valeur.",
+      "desc": "A repeated key keeps the last value.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testBareKeyResolvesToEmptyString": {
-      "desc": "Une clé sans '=' vaut une chaîne vide.",
+      "desc": "A key without '=' is an empty string.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testMalformedEmptyScopeTreatedAsPlain": {
-      "desc": "Une portée vide est ignorée (scope = nil).",
+      "desc": "An empty scope is ignored (scope = nil).",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testMalformedEmptyRouteTreatedAsWhole": {
-      "desc": "Une route vide : la référence entière est traitée comme le nom de route.",
+      "desc": "An empty route: the whole reference is treated as the route name.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testMalformedLeadingQueryTreatedAsWhole": {
-      "desc": "Une référence qui commence par '?' est traitée comme un nom de route entier.",
+      "desc": "A reference that starts with '?' is treated as an entire route name.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testEmptyQuerySegmentsIgnored": {
-      "desc": "Les segments vides de la requête (« a=1&&b=2 ») sont ignorés.",
+      "desc": "Empty query segments (\"a=1&&b=2\") are ignored.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testNonStringReferencePassesThrough": {
-      "desc": "Une référence non-chaîne est renvoyée telle quelle avec des params vides.",
+      "desc": "A non-string reference is returned as is with empty params.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testExplicitParamsOverrideInline": {
-      "desc": "mergeParams : les paramètres explicites l'emportent sur les inline.",
+      "desc": "mergeParams: explicit parameters win over inline ones.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testMergeWithoutExplicitKeepsInline": {
-      "desc": "mergeParams sans explicites conserve les inline.",
+      "desc": "mergeParams without explicit ones keeps the inline ones.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testMergeWithoutInlineKeepsExplicit": {
-      "desc": "mergeParams sans inline conserve les explicites.",
+      "desc": "mergeParams without inline ones keeps the explicit ones.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testCanonicalReferenceReparsesWithoutQuery": {
-      "desc": "La référence canonique (sans requête) se ré-analyse sans dérive au rechargement.",
+      "desc": "The canonical reference (without query) re-parses without drift on reload.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testOnEnterAndOnMountShareEffectiveParams": {
-      "desc": "Reproduit la construction du routeur (parse, merge, requête, entrée) et vérifie que onEnter et onMount reçoivent les mêmes paramètres effectifs.",
+      "desc": "Reproduces the router construction (parse, merge, query, entry) and checks that onEnter and onMount receive the same effective parameters.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true
     },
     "testRequestPersistsEffectiveParamsWithoutQueryInFullRoute": {
-      "desc": "La requête mémorise les paramètres effectifs et `fullRoute` ne contient plus la requête inline.",
+      "desc": "The query stores the effective parameters and `fullRoute` no longer contains the inline query.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+          "desc": "Test framework context (setDescription, assert, assertEqual)."
         }
       },
       "internal": true

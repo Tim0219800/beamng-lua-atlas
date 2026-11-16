@@ -1,22 +1,22 @@
 # `flowgraph_nodes_gameplay_crash_trackMultipleVehiclesCrash`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/crash/trackMultipleVehiclesCrash.lua` · VM : Game Engine (GE) · 26 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/crash/trackMultipleVehiclesCrash.lua` · VM: Game Engine (GE) · 26 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/crash/trackMultipleVehiclesCrash")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/crash/trackMultipleVehiclesCrash")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Track Multiple Vehicles Crash » (catégorie repeat_instant). Ajoute plusieurs véhicules (pin vehIds, table d'ids) au suivi des crashs de gameplay_util_crashDetection.
+Flowgraph node "Track Multiple Vehicles Crash" (category repeat_instant). Adds several vehicles (vehIds pin, table of ids) to the crash tracking of gameplay_util_crashDetection.
 
-## Remarques
+## Notes
 
-- Plante si vehIds est nil (ipairs sur nil).
+- Crashes if vehIds is nil (ipairs on nil).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Appelle addTrackedVehicleById pour chaque id de vehIds. | 19 |
+| `C:work()` | Calls addTrackedVehicleById for each id in vehIds. | 19 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/crash/trackMultipleVehiclesCrash.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/crash/trackMultipleVehiclesCrash.lua`.*

@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/render/viewDemo.lua",
+  "module": "Petit exemple d'utilisation des vues de rendu (RenderViewManagerInstance) : crée une vue nommée 'Demo view 1' rendue dans une texture nommée, déplace sa caméra en cercle et l'affiche dans une fenêtre ImGui. À charger à la main avec extensions.load('render_viewDemo') ; sert de modèle pour un moddeur qui veut une caméra virtuelle vers une texture.",
+  "usage": "extensions.load('render_viewDemo')",
+  "notes": [
+    "Le nom de la vue est son identifiant unique ; renderView.namedTexTargetColor reçoit ce nom, et imUtils.texObj('#<nom>') récupère la texture pour ImGui.",
+    "luaOwned = true fait supprimer la vue quand le ramasse-miettes la collecte.",
+    "Paramètres de la vue dans l'exemple : résolution 512x256, fov 75, near 0.1, far 2000, renderCubemap faux, renderEditorIcons vrai.",
+    "Le texte 'Hello world view :)' est dessiné via debugDrawer:drawTextAdvanced en (20, 20, 0).",
+    "La vue n'est jamais détruite par l'extension : pas de onExtensionUnloaded."
+  ],
+  "fields": {},
+  "functions": {
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image : crée la vue au premier appel, déplace la caméra (position sin/cos du temps simulé, hauteur 1.5), dessine un texte de debug et affiche la texture de la vue dans la fenêtre ImGui 'Render view test'.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Durée réelle de l'image (s), non utilisée."},
+        "dtSim": {"type": "number", "desc": "Durée simulée (s), ajoutée à un chronomètre local."},
+        "dtRaw": {"type": "number", "desc": "Durée brute (s), non utilisée."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

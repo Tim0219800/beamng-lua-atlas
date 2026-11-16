@@ -1,45 +1,45 @@
 # `editor_toolUtilities_gridCap`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/gridCap.lua` · VM : Game Engine (GE) · 356 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/gridCap.lua` · VM: Game Engine (GE) · 356 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_gridCap` : `extensions.load("editor_toolUtilities_gridCap")`, puis la globale `editor_toolUtilities_gridCap`
+**Access:** extension `editor_toolUtilities_gridCap`: `extensions.load("editor_toolUtilities_gridCap")`, then the global `editor_toolUtilities_gridCap`
 
-Construit un « chapeau » (capot) de triangles sur un contour qui doit suivre un champ de hauteur : une grille carrée alignée sur le fil (grain) du contour, découpée à ce contour. Chaque cellule entièrement dans le contour donne deux triangles aux hauteurs du champ ; seules les cellules traversées par le contour sont découpées (polyBool), ce qui évite les triangles très longs ou en éclat. Un passage de Delaunay améliore ensuite le maillage.
+Builds a "cap" of triangles over an outline that must follow a height field: a square grid aligned with the grain of the outline, clipped to that outline. Each cell entirely inside the outline gives two triangles at the field's heights; only the cells crossed by the outline are clipped (polyBool), which avoids very long or sliver triangles. A Delaunay pass then improves the mesh.
 
-## Remarques
+## Notes
 
-- build renvoie toujours la même table 'mesh' réutilisée : { x, y, z (positions), tri (indices 1-based, 3 par triangle), nv, nt }. Elle n'est valable que jusqu'au prochain build : copier si besoin.
-- Les points sont soudés au dixième de millimètre (WELD = 1e4) ; les cellules découpées avec trous sont mises en cache (20000 par génération, deux générations conservées).
-- Un point d'un anneau dont les noeuds portent une hauteur (p.z) garde la droite entre eux ; un anneau sans hauteur prend celle du champ.
+- build always returns the same reused 'mesh' table: { x, y, z (positions), tri (1-based indices, 3 per triangle), nv, nt }. It is only valid until the next build: copy if needed.
+- Points are welded to a tenth of a millimeter (WELD = 1e4); clipped cells with holes are cached (20000 per generation, two generations kept).
+- A ring point whose nodes carry a height (p.z) keeps the straight line between them; a ring without height takes that of the field.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_gridCap.build(rings, cf, zAt, cell)` | Construit le chapeau sur les anneaux donnés (le contour extérieur, puis ses trous ; ouverts ou fermés) en coordonnées monde. Travaille dans le repère du grain où les cellules sont carrées. Renvoie nil si aucun triangle n'est produit. | 206 |
-| `editor_toolUtilities_gridCap.reaching(outer, rings, cf, cell)` | Filtre les anneaux qui peuvent toucher une cellule de la grille sur laquelle le chapeau du contour 'outer' est posé (boîte dans le repère du grain, arrondie à la grille, plus un petit jeu). Les autres ne changent rien au résultat. | 330 |
+| `editor_toolUtilities_gridCap.build(rings, cf, zAt, cell)` | Builds the cap on the given rings (the outer outline, then its holes; open or closed) in world coordinates. Works in the grain frame where cells are square. Returns nil if no triangle is produced. | 206 |
+| `editor_toolUtilities_gridCap.reaching(outer, rings, cf, cell)` | Filters the rings that can touch a cell of the grid on which the cap of the 'outer' outline is laid (box in the grain frame, rounded to the grid, plus a small margin). The others do not change the result. | 330 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_gridCap.build(rings, cf, zAt, cell)`
 
-Construit le chapeau sur les anneaux donnés (le contour extérieur, puis ses trous ; ouverts ou fermés) en coordonnées monde. Travaille dans le repère du grain où les cellules sont carrées. Renvoie nil si aucun triangle n'est produit.
+Builds the cap on the given rings (the outer outline, then its holes; open or closed) in world coordinates. Works in the grain frame where cells are square. Returns nil if no triangle is produced.
 
-- `rings` (*table[]*) : Anneaux de points {x, y, z?} : le contour puis les trous.
-- `cf` (*table*) : Le grain : ax, ay (le long), inX, inY (en travers).
-- `zAt` (*function*) : Champ de hauteur zAt(x, y) -> z, en monde.
-- `cell` (*number*) : Pas de la grille (m).
-- **renvoie** : table|nil Le maillage plat { x, y, z, tri, nv, nt } ou nil.
+- `rings` (*table[]*) : Rings of points {x, y, z?}: the outline then the holes.
+- `cf` (*table*) : The grain: ax, ay (along), inX, inY (across).
+- `zAt` (*function*) : Height field zAt(x, y) -> z, in world.
+- `cell` (*number*) : Grid step (m).
+- **returns**: table|nil The flat mesh { x, y, z, tri, nv, nt } or nil.
 
 #### `editor_toolUtilities_gridCap.reaching(outer, rings, cf, cell)`
 
-Filtre les anneaux qui peuvent toucher une cellule de la grille sur laquelle le chapeau du contour 'outer' est posé (boîte dans le repère du grain, arrondie à la grille, plus un petit jeu). Les autres ne changent rien au résultat.
+Filters the rings that can touch a cell of the grid on which the cap of the 'outer' outline is laid (box in the grain frame, rounded to the grid, plus a small margin). The others do not change the result.
 
-- `outer` (*table*) : Contour extérieur.
-- `rings` (*table[]*) : Anneaux candidats.
-- `cf` (*table*) : Le grain (ax, ay, inX, inY).
-- `cell` (*number*) : Pas de la grille (m).
-- **renvoie** : table[] Sous-liste des anneaux atteignables.
+- `outer` (*table*) : Outer outline.
+- `rings` (*table[]*) : Candidate rings.
+- `cf` (*table*) : The grain (ax, ay, inX, inY).
+- `cell` (*number*) : Grid step (m).
+- **returns**: table[] Sublist of reachable rings.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/gridCap.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/gridCap.lua`.*

@@ -1,60 +1,60 @@
 # `gameplay_util_vehicleSighting`
 
-*Fichier : `lua/ge/extensions/gameplay/util/vehicleSighting.lua` · VM : Game Engine (GE) · 77 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/util/vehicleSighting.lua` · VM: Game Engine (GE) · 77 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_util_vehicleSighting` : `extensions.load("gameplay_util_vehicleSighting")`, puis la globale `gameplay_util_vehicleSighting`
+**Access:** extension `gameplay_util_vehicleSighting`: `extensions.load("gameplay_util_vehicleSighting")`, then the global `gameplay_util_vehicleSighting`
 
-Détermine si un observateur (la caméra du joueur ou un véhicule) peut « voir » un véhicule cible. La portée dépend de l'angle : portée maximale (80 m) droit devant, portée minimale (5 m) hors du cône périphérique (90°), interpolée entre les deux. Un rayon optionnel vérifie l'absence d'obstacle.
+Determines whether an observer (the player camera or a vehicle) can "see" a target vehicle. The range depends on the angle: maximum range (80 m) straight ahead, minimum range (5 m) outside the peripheral cone (90°), interpolated between the two. An optional ray checks for the absence of obstacles.
 
-## Exemple
+## Example
 
 ```lua
 if gameplay_util_vehicleSighting.canPlayerSeeVehicle(vehId, {maxDistDirectSight = 120, needDirectVisualContact = false}) then ... end
 ```
 
-## Remarques
+## Notes
 
-- Paramètres par défaut : maxDistDirectSight 80 (m), minDistPeriphSight 5 (m), periphSightAngle 90 (degrés), needDirectVisualContact true.
-- Si `params` est fourni, seules les clés présentes sont lues ; les clés manquantes retombent sur les valeurs par défaut.
-- Le test de visibilité lance castRay entre les deux positions relevées de 1 m ; tout obstacle trouvé (statique ou dynamique) bloque la vue.
-- Deux positions confondues (distance < 1e-6) renvoient true sans autre test.
+- Default parameters: maxDistDirectSight 80 (m), minDistPeriphSight 5 (m), periphSightAngle 90 (degrees), needDirectVisualContact true.
+- If `params` is provided, only the keys present are read; missing keys fall back to the default values.
+- The visibility test casts castRay between the two positions raised by 1 m; any obstacle found (static or dynamic) blocks the view.
+- Two coincident positions (distance < 1e-6) return true with no further test.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_util_vehicleSighting.canPlayerSeeVehicle(targetVehId, params)` | Teste si la caméra du joueur voit le véhicule cible (position et direction de core_camera). | 46 |
-| `gameplay_util_vehicleSighting.canVehicleSeeVehicle(observerVehId, targetVehId, params)` | Teste si un véhicule voit un autre véhicule (position et direction avant de l'observateur). | 59 |
-| `gameplay_util_vehicleSighting.checkSighting(observerPos, observerDir, targetPos, params)` | Test de visibilité générique à partir de positions : distance, angle par rapport à la direction d'observation, puis rayon d'occultation. | 12 |
+| `gameplay_util_vehicleSighting.canPlayerSeeVehicle(targetVehId, params)` | Tests whether the player camera sees the target vehicle (position and direction from core_camera). | 46 |
+| `gameplay_util_vehicleSighting.canVehicleSeeVehicle(observerVehId, targetVehId, params)` | Tests whether a vehicle sees another vehicle (observer's position and forward direction). | 59 |
+| `gameplay_util_vehicleSighting.checkSighting(observerPos, observerDir, targetPos, params)` | Generic visibility test from positions: distance, angle relative to the viewing direction, then occlusion ray. | 12 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_util_vehicleSighting.canPlayerSeeVehicle(targetVehId, params)`
 
-Teste si la caméra du joueur voit le véhicule cible (position et direction de core_camera).
+Tests whether the player camera sees the target vehicle (position and direction from core_camera).
 
-- `targetVehId` (*integer*) : Id du véhicule cible.
-- `params` (*table|nil*) : Réglages, voir checkSighting.
-- **renvoie** : boolean false si core_camera ou le véhicule n'existe pas.
+- `targetVehId` (*integer*) : Id of the target vehicle.
+- `params` (*table|nil*) : Settings, see checkSighting.
+- **returns**: boolean false if core_camera or the vehicle does not exist.
 
 #### `gameplay_util_vehicleSighting.canVehicleSeeVehicle(observerVehId, targetVehId, params)`
 
-Teste si un véhicule voit un autre véhicule (position et direction avant de l'observateur).
+Tests whether a vehicle sees another vehicle (observer's position and forward direction).
 
-- `observerVehId` (*integer*) : Id de l'observateur.
-- `targetVehId` (*integer*) : Id de la cible.
-- `params` (*table|nil*) : Réglages, voir checkSighting.
-- **renvoie** : boolean false si l'un des véhicules n'existe pas.
+- `observerVehId` (*integer*) : Observer id.
+- `targetVehId` (*integer*) : Target id.
+- `params` (*table|nil*) : Settings, see checkSighting.
+- **returns**: boolean false if either vehicle does not exist.
 
 #### `gameplay_util_vehicleSighting.checkSighting(observerPos, observerDir, targetPos, params)`
 
-Test de visibilité générique à partir de positions : distance, angle par rapport à la direction d'observation, puis rayon d'occultation.
+Generic visibility test from positions: distance, angle relative to the viewing direction, then occlusion ray.
 
-- `observerPos` (*vec3*) : Position de l'observateur.
-- `observerDir` (*vec3*) : Direction de regard normalisée.
-- `targetPos` (*vec3*) : Position de la cible.
-- `params` (*table*) : maxDistDirectSight, minDistPeriphSight, periphSightAngle, needDirectVisualContact (table obligatoire).
-- **renvoie** : boolean true si la cible est visible.
+- `observerPos` (*vec3*) : Observer position.
+- `observerDir` (*vec3*) : Normalized viewing direction.
+- `targetPos` (*vec3*) : Target position.
+- `params` (*table*) : maxDistDirectSight, minDistPeriphSight, periphSightAngle, needDirectVisualContact (table required).
+- **returns**: boolean true if the target is visible.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/util/vehicleSighting.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/util/vehicleSighting.lua`.*

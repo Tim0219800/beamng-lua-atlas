@@ -1,23 +1,23 @@
 # `flowgraph_nodes_debug_debugSphere`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/debug/debugSphere.lua` · VM : Game Engine (GE) · 39 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/debug/debugSphere.lua` · VM: Game Engine (GE) · 39 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/debug/debugSphere")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/debug/debugSphere")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Debug Sphere » (catégorie repeat_instant, tags util/draw). Dessine chaque frame une sphère de débogage (debugDrawer:drawSphere). Entrées : pos (vec3, requis), radius (caché, 1 sur le pin, 0.25 si nil), color (caché, rose {0.91,0.05,0.48,0.5} par défaut).
+Flowgraph node "Debug Sphere" (category repeat_instant, tags util/draw). Draws a debug sphere (debugDrawer:drawSphere) every frame. Inputs: pos (vec3, required), radius (hidden, 1 on the pin, 0.25 if nil), color (hidden, pink {0.91,0.05,0.48,0.5} by default).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Vide. | 23 |
-| `C:work()` | Si pos est défini, dessine la sphère. | 26 |
+| `C:init()` | Empty. | 23 |
+| `C:work()` | If pos is set, draws the sphere. | 26 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/debug/debugSphere.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/debug/debugSphere.lua`.*

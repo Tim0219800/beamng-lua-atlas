@@ -1,16 +1,31 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/delivery/resetDelivery.lua",
-  "module": "Nœud flowgraph « Reset Delivery » (catégorie once_f_duration, livraison). Réinitialise la livraison active ou terminée : véhicules remis à leur position de départ et objectifs réinitialisés (freeformDelivery.reset). Attend la fin de l'installation (gameplay_freeformDelivery_setup.isSetupComplete) avant de donner le flux. Sorties : flow, success.",
+  "module": "Flowgraph node \"Reset Delivery\" (category once_f_duration, delivery). Resets the active or finished delivery: vehicles returned to their start position and objectives reset (freeformDelivery.reset). Waits for the setup to finish (gameplay_freeformDelivery_setup.isSetupComplete) before giving flow. Outputs: flow, success.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise les sorties et l'état de durée à 'inactive'.", "internal": true},
-        "_executionStopped": {"desc": "Appelle reset.", "internal": true},
-        "onNodeReset": {"desc": "Appelle reset.", "internal": true},
-        "reset": {"desc": "Remet les sorties à faux et l'état à 'inactive'."},
-        "workOnce": {"desc": "Vérifie qu'une livraison existe, appelle freeformDelivery.reset() et passe en 'started' ; journalise un avertissement ou une erreur sinon."},
-        "work": {"desc": "En état 'started', attend la fin du setup puis active success et flow."}
+        "init": {
+          "desc": "Initializes the outputs and the duration state to 'inactive'.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Calls reset.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Calls reset.",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Resets the outputs to false and the state to 'inactive'."
+        },
+        "workOnce": {
+          "desc": "Checks that a delivery exists, calls freeformDelivery.reset() and switches to 'started'; logs a warning or an error otherwise."
+        },
+        "work": {
+          "desc": "In the 'started' state, waits for the setup to finish then activates success and flow."
+        }
       }
     }
   }

@@ -1,12 +1,12 @@
 # `core_vehicle_vehicleTriggerHighlight`
 
-*Fichier : `lua/ge/extensions/core/vehicle/vehicleTriggerHighlight.lua` · VM : Game Engine (GE) · 296 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/vehicle/vehicleTriggerHighlight.lua` · VM: Game Engine (GE) · 296 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_vehicle_vehicleTriggerHighlight` : `extensions.load("core_vehicle_vehicleTriggerHighlight")`, puis la globale `core_vehicle_vehicleTriggerHighlight`
+**Access:** extension `core_vehicle_vehicleTriggerHighlight`: `extensions.load("core_vehicle_vehicleTriggerHighlight")`, then the global `core_vehicle_vehicleTriggerHighlight`
 
-Extension GE `core_vehicle_vehicleTriggerHighlight` : met en surbrillance dans le monde 3D des triggers de véhicule (zones d'interaction définies dans le jbeam). Chaque frame, onUpdate dessine avec debugDrawer une sphère (avec un cercle face caméra) ou une boîte pulsante (alpha oscillant) et, si demandé, une étiquette 'id - nom [section]'. Utile pour les outils de debug/édition de triggers.
+GE extension `core_vehicle_vehicleTriggerHighlight`: highlights vehicle triggers (interaction zones defined in the jbeam) in the 3D world. Every frame, onUpdate draws with debugDrawer a sphere (with a camera-facing circle) or a pulsing box (oscillating alpha) and, if requested, a label 'id - name [section]'. Useful for trigger debug/editing tools.
 
-## Exemple
+## Example
 
 ```lua
 core_vehicle_vehicleTriggerHighlight.setHighlightedTriggerByName(vehId, 'hood_trigger', {showTriggerIdAsLabel = true})
@@ -14,89 +14,89 @@ core_vehicle_vehicleTriggerHighlight.setHighlightedTriggerByName(vehId, 'hood_tr
 core_vehicle_vehicleTriggerHighlight.clearHighlightedTrigger()
 ```
 
-## Remarques
+## Notes
 
-- Les identifiants sont mémorisés sous forme de chaînes ; `triggerId` est le cid du trigger (clé de vdata.triggers et argument de veh:getTrigger).
-- Options par trigger : showTriggerIdAsLabel (true par défaut ; false masque l'étiquette).
-- Le trigger est déterminé comme sphère si trg.type == 'sphere' (ou type absent et size nombre) et comme boîte si trg.type == 'box' (ou type absent et size table) ; rayon d'une sphère = size, sinon radius, sinon la moitié de la diagonale de size, sinon 0.1.
-- drawOneHighlightedTrigger modifie la couleur partagée SPHERE_COLOR (champ alpha) à chaque dessin : les triggers dessinés dans la même frame partagent la même couleur.
-- Les étiquettes utilisent debugDrawer:drawTextAdvanced ; les boîtes sont tracées en triangles pleins + arêtes.
+- Identifiers are stored as strings; `triggerId` is the trigger's cid (key of vdata.triggers and argument of veh:getTrigger).
+- Per-trigger options: showTriggerIdAsLabel (true by default; false hides the label).
+- The trigger is determined to be a sphere if trg.type == 'sphere' (or type absent and size a number) and a box if trg.type == 'box' (or type absent and size a table); sphere radius = size, otherwise radius, otherwise half the diagonal of size, otherwise 0.1.
+- drawOneHighlightedTrigger modifies the shared color SPHERE_COLOR (alpha field) on each draw: triggers drawn in the same frame share the same color.
+- Labels use debugDrawer:drawTextAdvanced; boxes are drawn as filled triangles + edges.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_vehicle_vehicleTriggerHighlight.clearHighlightedTrigger()` | Retire toutes les surbrillances de tous les véhicules. | 207 |
-| `core_vehicle_vehicleTriggerHighlight.getSerializedHighlightedTriggerData()` | Exporte les surbrillances sous forme de liste sérialisable. | 211 |
-| `core_vehicle_vehicleTriggerHighlight.hasHighlightedTriggers()` | Indique si au moins un trigger est en surbrillance. | 154 |
-| `core_vehicle_vehicleTriggerHighlight.isHighlightedTrigger(vehId, triggerId)` | Indique si un trigger donné est en surbrillance. | 158 |
-| `core_vehicle_vehicleTriggerHighlight.onUpdate(dt)` | Hook par frame : dessine chaque trigger en surbrillance (sphère ou boîte pulsante, étiquette). *(interne)* *(hook)* | 282 |
-| `core_vehicle_vehicleTriggerHighlight.setHighlightedTrigger(vehId, triggerId, options)` | Ajoute un trigger à la surbrillance (n'efface pas les autres). | 164 |
-| `core_vehicle_vehicleTriggerHighlight.setHighlightedTriggerByName(vehId, triggerName, options)` | Comme setHighlightedTrigger mais retrouve le trigger par son nom, son id jbeam ou son cid dans vdata.triggers du véhicule. | 189 |
-| `core_vehicle_vehicleTriggerHighlight.setSerializedHighlightedTriggerData(data)` | Remplace toutes les surbrillances par celles de la liste donnée (format de getSerialized…). Accepte aussi l'ancien format d'un seul tuple {vehId, triggerId}. | 224 |
-| `core_vehicle_vehicleTriggerHighlight.unhighlightTrigger(vehId, triggerId)` | Retire un trigger de la surbrillance. | 196 |
+| `core_vehicle_vehicleTriggerHighlight.clearHighlightedTrigger()` | Removes all highlights from all vehicles. | 207 |
+| `core_vehicle_vehicleTriggerHighlight.getSerializedHighlightedTriggerData()` | Exports the highlights as a serializable list. | 211 |
+| `core_vehicle_vehicleTriggerHighlight.hasHighlightedTriggers()` | Indicates whether at least one trigger is highlighted. | 154 |
+| `core_vehicle_vehicleTriggerHighlight.isHighlightedTrigger(vehId, triggerId)` | Indicates whether a given trigger is highlighted. | 158 |
+| `core_vehicle_vehicleTriggerHighlight.onUpdate(dt)` | Per-frame hook: draws each highlighted trigger (sphere or pulsing box, label). *(internal)* *(hook)* | 282 |
+| `core_vehicle_vehicleTriggerHighlight.setHighlightedTrigger(vehId, triggerId, options)` | Adds a trigger to the highlight (does not clear the others). | 164 |
+| `core_vehicle_vehicleTriggerHighlight.setHighlightedTriggerByName(vehId, triggerName, options)` | Like setHighlightedTrigger but finds the trigger by its name, its jbeam id or its cid in the vehicle's vdata.triggers. | 189 |
+| `core_vehicle_vehicleTriggerHighlight.setSerializedHighlightedTriggerData(data)` | Replaces all highlights with those of the given list (getSerialized... format). Also accepts the legacy format of a single {vehId, triggerId} tuple. | 224 |
+| `core_vehicle_vehicleTriggerHighlight.unhighlightTrigger(vehId, triggerId)` | Removes a trigger from the highlight. | 196 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_vehicle_vehicleTriggerHighlight.getSerializedHighlightedTriggerData()`
 
-Exporte les surbrillances sous forme de liste sérialisable.
+Exports the highlights as a serializable list.
 
-- **renvoie** : table[] liste de {vehId, triggerId, options}
+- **returns**: table[] list of {vehId, triggerId, options}
 
 #### `core_vehicle_vehicleTriggerHighlight.hasHighlightedTriggers()`
 
-Indique si au moins un trigger est en surbrillance.
+Indicates whether at least one trigger is highlighted.
 
-- **renvoie** : boolean true s'il y en a
+- **returns**: boolean true if there is one
 
 #### `core_vehicle_vehicleTriggerHighlight.isHighlightedTrigger(vehId, triggerId)`
 
-Indique si un trigger donné est en surbrillance.
+Indicates whether a given trigger is highlighted.
 
-- `vehId` (*integer*) : véhicule
-- `triggerId` (*integer|string*) : cid du trigger
-- **renvoie** : boolean true si en surbrillance
+- `vehId` (*integer*) : vehicle
+- `triggerId` (*integer|string*) : trigger cid
+- **returns**: boolean true if highlighted
 
 #### `core_vehicle_vehicleTriggerHighlight.onUpdate(dt)`
 
-Hook par frame : dessine chaque trigger en surbrillance (sphère ou boîte pulsante, étiquette).
+Per-frame hook: draws each highlighted trigger (sphere or pulsing box, label).
 
-- `dt` (*number*) : temps écoulé (s), sert à faire pulser l'alpha
+- `dt` (*number*) : elapsed time (s), used to pulse the alpha
 
 #### `core_vehicle_vehicleTriggerHighlight.setHighlightedTrigger(vehId, triggerId, options)`
 
-Ajoute un trigger à la surbrillance (n'efface pas les autres).
+Adds a trigger to the highlight (does not clear the others).
 
-- `vehId` (*integer*) : véhicule
-- `triggerId` (*integer|string*) : cid du trigger
+- `vehId` (*integer*) : vehicle
+- `triggerId` (*integer|string*) : trigger cid
 - `options` (*table|nil*) : {showTriggerIdAsLabel = boolean}
 
 #### `core_vehicle_vehicleTriggerHighlight.setHighlightedTriggerByName(vehId, triggerName, options)`
 
-Comme setHighlightedTrigger mais retrouve le trigger par son nom, son id jbeam ou son cid dans vdata.triggers du véhicule.
+Like setHighlightedTrigger but finds the trigger by its name, its jbeam id or its cid in the vehicle's vdata.triggers.
 
-- `vehId` (*integer*) : véhicule
-- `triggerName` (*string|number*) : nom, id ou cid du trigger
+- `vehId` (*integer*) : vehicle
+- `triggerName` (*string|number*) : trigger name, id or cid
 - `options` (*table|nil*) : {showTriggerIdAsLabel = boolean}
-- **renvoie** : boolean false si le trigger est introuvable
+- **returns**: boolean false if the trigger is not found
 
 #### `core_vehicle_vehicleTriggerHighlight.setSerializedHighlightedTriggerData(data)`
 
-Remplace toutes les surbrillances par celles de la liste donnée (format de getSerialized…). Accepte aussi l'ancien format d'un seul tuple {vehId, triggerId}.
+Replaces all highlights with those of the given list (getSerialized... format). Also accepts the legacy format of a single {vehId, triggerId} tuple.
 
-- `data` (*table*) : liste de {vehId, triggerId, options}
+- `data` (*table*) : list of {vehId, triggerId, options}
 
 #### `core_vehicle_vehicleTriggerHighlight.unhighlightTrigger(vehId, triggerId)`
 
-Retire un trigger de la surbrillance.
+Removes a trigger from the highlight.
 
-- `vehId` (*integer*) : véhicule
-- `triggerId` (*integer|string*) : cid du trigger
+- `vehId` (*integer*) : vehicle
+- `triggerId` (*integer|string*) : trigger cid
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawSphere`, `drawTextAdvanced`, `drawTriSolid`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/vehicle/vehicleTriggerHighlight.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/vehicle/vehicleTriggerHighlight.lua`.*

@@ -1,0 +1,52 @@
+{
+  "path": "lua/ge/extensions/ui/apps/minimap/vehicles.lua",
+  "module": "Dessine les marqueurs de véhicules de la mini-carte : le joueur (véhicule, piéton à pied ou caméra libre) et les autres véhicules actifs (trafic, voitures garées, police, véhicules utilisables ou non). Le module minimap lui transmet son état de dessin via setMinimapState puis appelle drawPlayer et drawOtherVehicles à chaque frame. Chargé par require, il s'appuie sur ui_apps_minimap_utils et le td:vehicleMarker de la minimap.",
+  "notes": [
+    "setMinimapState doit être appelé avant tout dessin : les variables locales (td, scale, camPos…) sont sinon nil.",
+    "Ignorés si non forcés (trafic, garés, police active) : les modèles de type Prop, Unknown, Utility, PropTraffic et Traffic. Les véhicules hors zone (camPos ± cullRadius) sont aussi ignorés.",
+    "Les voitures de police pulsent en rouge/bleu et sont dessinées sur la couche VEHICLES_POLICE ; les véhicules inutilisables (piéton : liste noire de gameplay_walk) sont gris et plus petits.",
+    "Les véhicules de modèle 'unicycle' sont dessinés comme cercles ; le joueur à pied aussi.",
+    "En caméra libre (commands.isFreeCamera()), drawPlayer dessine aussi un repère d'orientation de la caméra ; avec lookaheadEnabled, la position est décalée de la valeur d'anticipation.",
+    "Dans drawOtherVehicles, les deux tests drawUnusableVehicles et drawOtherVehicles sont presque redondants (les deux n'écartent que les véhicules inutilisables)."
+  ],
+  "functions": {
+    "setMinimapState": {
+      "desc": "Reçoit de la minimap principale tout l'état de dessin (taille, centre, caméra, échelle, objet de dessin, réglages de debug, direction de la caméra, dpi) et récupère la palette et la transformation monde-carte courantes.",
+      "params": {
+        "w": {"type": "number", "desc": "Largeur de la carte en pixels."},
+        "h": {"type": "number", "desc": "Hauteur de la carte en pixels."},
+        "cx": {"type": "number", "desc": "Centre X."},
+        "cy": {"type": "number", "desc": "Centre Y."},
+        "cp": {"type": "vec3", "desc": "Position de la caméra."},
+        "cr": {"type": "quat", "desc": "Rotation de la caméra."},
+        "cri": {"type": "quat", "desc": "Rotation inverse de la caméra."},
+        "s": {"type": "number", "desc": "Échelle de la carte."},
+        "si": {"type": "number", "desc": "Inverse de l'échelle."},
+        "textureDraw": {"type": "table", "desc": "Objet de dessin (vehicleMarker, line…)."},
+        "debugSettingsObj": {"type": "table", "desc": "Réglages de debug (drawPlayer, drawTrafficVehicles, drawParkedVehicles, drawOtherVehicles, drawUnusableVehicles, drawActivePoliceVehicles, lookaheadEnabled, lookaheadValue)."},
+        "cameraLookObj": {"type": "vec3", "desc": "Direction de regard de la caméra."},
+        "dpiValue": {"type": "number|nil", "desc": "Facteur dpi, multiplié par la globale globalDpi si elle existe."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "drawPlayer": {
+      "desc": "Dessine le marqueur du joueur (véhicule ou piéton) et, en caméra libre, le repère de caméra. Calcule aussi une échelle dynamique (plus grande à vitesse élevée) renvoyée à l'appelant ; renvoie nil s'il n'y a pas de véhicule joueur.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel écoulé (s)."},
+        "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s)."}
+      },
+      "returns": [{"type": "number|nil", "desc": "Échelle ajustée du marqueur joueur."}],
+      "internal": true
+    },
+    "drawOtherVehicles": {
+      "desc": "Dessine tous les autres véhicules actifs visibles selon les réglages de debug (trafic, garés, police active, utilisables, inutilisables).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel écoulé (non utilisé)."},
+        "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (non utilisé)."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

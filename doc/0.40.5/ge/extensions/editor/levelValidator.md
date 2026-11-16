@@ -1,106 +1,106 @@
 # `editor_levelValidator`
 
-*Fichier : `lua/ge/extensions/editor/levelValidator.lua` · VM : Game Engine (GE) · 993 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/levelValidator.lua` · VM: Game Engine (GE) · 993 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_levelValidator` : `extensions.load("editor_levelValidator")`, puis la globale `editor_levelValidator`
+**Access:** extension `editor_levelValidator`: `extensions.load("editor_levelValidator")`, then the global `editor_levelValidator`
 
-Outil « Level Validator » de l'éditeur (menu Window > Debug). Le bouton « Find issues » lance un job qui cherche dans le niveau les objets dupliqués, flottants (non plantés sur le terrain), les splines mal configurées (moins de 2 nœuds) et les échelles nulles ou quasi nulles, pour les objets de scène et les éléments de forêt. Les résultats sont triables, ignorables, et certains corrigeables (suppression des doublons, sans undo possible). Les résultats peuvent être lus par d'autres modules via getLevelLogs.
+Editor "Level Validator" tool (Window > Debug menu). The "Find issues" button starts a job that searches the level for duplicated objects, floating objects (not planted on the terrain), misconfigured splines (fewer than 2 nodes) and zero or near-zero scales, for scene objects and forest items. The results are sortable, ignorable, and some are fixable (deleting duplicates, no undo possible). The results can be read by other modules via getLevelLogs.
 
-## Exemple
+## Example
 
 ```lua
 editor_levelValidator.startLevelValidation()
 local agg = editor_levelValidator.getLevelLogsAggregated()
 ```
 
-## Remarques
+## Notes
 
-- Préférence levelValidator.general.extendedLogs : affiche des erreurs supplémentaires dans la liste.
-- Dans startLevelValidation, getLevelLogs() est appelé mais cette fonction locale est définie plus bas dans le fichier (ligne ~894) : à cet endroit c'est la globale getLevelLogs qui est visée, donc nil. Avec extendedLogs activé, l'appel échoue (bug probable du jeu).
-- Niveaux de log : I, W, E, D. Types internes : duplicate, floating, spline, scale.
-- onEditorAfterSaveLevel est vide (l'appel automatique à startLevelValidation est commenté).
+- Preference levelValidator.general.extendedLogs: displays additional errors in the list.
+- In startLevelValidation, getLevelLogs() is called but this local function is defined further down in the file (line ~894): at that point the global getLevelLogs is targeted, hence nil. With extendedLogs enabled, the call fails (probable game bug).
+- Log levels: I, W, E, D. Internal types: duplicate, floating, spline, scale.
+- onEditorAfterSaveLevel is empty (the automatic call to startLevelValidation is commented out).
 
-**Dépendances (chargées avant) :** `core_forest`
+**Dependencies (loaded first):** `core_forest`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_levelValidator.getLevelLogs()` | Renvoie la liste brute des problèmes trouvés (entrées avec logLevel, type, objectId, message…). | 894 |
-| `editor_levelValidator.getLevelLogsAggregated()` | Renvoie les problèmes regroupés par type lisible (Duplicated Object, Floating Object, Spline Misconfigured, Duplicated Forest Item, Floating Forest Item, et « Zero or Near-Zero Scale »). Chaque entrée est enrichie du nom et de la position de l'objet, et d'une position/rotation de caméra (15 m derrière l'objet). | 897 |
-| `editor_levelValidator.onClientStartMission()` | Appelé au démarrage d'un niveau : réinitialise les dimensions du terrain, les logs et l'état de vérification. *(interne)* *(hook)* | 876 |
-| `editor_levelValidator.onEditorAfterSaveLevel(state)` | Appelé après la sauvegarde du niveau. Corps vide. *(interne)* *(hook)* | 884 |
-| `editor_levelValidator.onEditorGui()` | Dessine la fenêtre de l'outil (bouton Find issues, liste filtrable et triable, actions). *(interne)* *(hook)* | 578 |
-| `editor_levelValidator.onEditorInitialized()` | Enregistre la fenêtre « levelValidator » et l'entrée de menu « Level Validator » (groupe Debug). *(interne)* *(hook)* | 856 |
-| `editor_levelValidator.onEditorPreferenceValueChanged(path, value)` | Si extendedLogs change, vide les résultats et réinitialise l'état de vérification. *(interne)* *(hook)* | 888 |
-| `editor_levelValidator.onEditorRegisterPreferences(prefsRegistry)` | Enregistre la catégorie de préférences levelValidator.general (extendedLogs, columnSizes caché). *(interne)* *(hook)* | 865 |
-| `editor_levelValidator.onExtensionLoaded()` | Hook de chargement : écrit un log Debug « initialized ». *(interne)* *(hook)* | 861 |
-| `editor_levelValidator.startLevelValidation()` | Lance la validation du niveau dans un job (core_jobsystem, période 0.04) et passe l'état à « recherche en cours ». | 567 |
+| `editor_levelValidator.getLevelLogs()` | Returns the raw list of issues found (entries with logLevel, type, objectId, message...). | 894 |
+| `editor_levelValidator.getLevelLogsAggregated()` | Returns the issues grouped by readable type (Duplicated Object, Floating Object, Spline Misconfigured, Duplicated Forest Item, Floating Forest Item, and "Zero or Near-Zero Scale"). Each entry is enriched with the object's name and position, and a camera position/rotation (15 m behind the object). | 897 |
+| `editor_levelValidator.onClientStartMission()` | Called when a level starts: resets the terrain dimensions, the logs and the check state. *(internal)* *(hook)* | 876 |
+| `editor_levelValidator.onEditorAfterSaveLevel(state)` | Called after the level is saved. Empty body. *(internal)* *(hook)* | 884 |
+| `editor_levelValidator.onEditorGui()` | Draws the tool window (Find issues button, filterable and sortable list, actions). *(internal)* *(hook)* | 578 |
+| `editor_levelValidator.onEditorInitialized()` | Registers the "levelValidator" window and the "Level Validator" menu entry (Debug group). *(internal)* *(hook)* | 856 |
+| `editor_levelValidator.onEditorPreferenceValueChanged(path, value)` | If extendedLogs changes, clears the results and resets the check state. *(internal)* *(hook)* | 888 |
+| `editor_levelValidator.onEditorRegisterPreferences(prefsRegistry)` | Registers the levelValidator.general preferences category (extendedLogs, hidden columnSizes). *(internal)* *(hook)* | 865 |
+| `editor_levelValidator.onExtensionLoaded()` | Load hook: writes a Debug log "initialized". *(internal)* *(hook)* | 861 |
+| `editor_levelValidator.startLevelValidation()` | Starts the level validation in a job (core_jobsystem, period 0.04) and sets the state to "search in progress". | 567 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_levelValidator.getLevelLogs()`
 
-Renvoie la liste brute des problèmes trouvés (entrées avec logLevel, type, objectId, message…).
+Returns the raw list of issues found (entries with logLevel, type, objectId, message...).
 
-- **renvoie** : table levelLogs.
+- **returns**: table levelLogs.
 
 #### `editor_levelValidator.getLevelLogsAggregated()`
 
-Renvoie les problèmes regroupés par type lisible (Duplicated Object, Floating Object, Spline Misconfigured, Duplicated Forest Item, Floating Forest Item, et « Zero or Near-Zero Scale »). Chaque entrée est enrichie du nom et de la position de l'objet, et d'une position/rotation de caméra (15 m derrière l'objet).
+Returns the issues grouped by readable type (Duplicated Object, Floating Object, Spline Misconfigured, Duplicated Forest Item, Floating Forest Item, and "Zero or Near-Zero Scale"). Each entry is enriched with the object's name and position, and a camera position/rotation (15 m behind the object).
 
-- **renvoie** : table {elementsByType = {[i] = {type, count, elements}}}.
+- **returns**: table {elementsByType = {[i] = {type, count, elements}}}.
 
 #### `editor_levelValidator.onEditorAfterSaveLevel(state)`
 
-Appelé après la sauvegarde du niveau. Corps vide.
+Called after the level is saved. Empty body.
 
-- `state` (*any*) : Non utilisé.
+- `state` (*any*) : Not used.
 
 #### `editor_levelValidator.onEditorPreferenceValueChanged(path, value)`
 
-Si extendedLogs change, vide les résultats et réinitialise l'état de vérification.
+If extendedLogs changes, clears the results and resets the check state.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_levelValidator.onEditorRegisterPreferences(prefsRegistry)`
 
-Enregistre la catégorie de préférences levelValidator.general (extendedLogs, columnSizes caché).
+Registers the levelValidator.general preferences category (extendedLogs, hidden columnSizes).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | table<integer, string> | {"core_forest"}. |
 
-## Classe `sortingFunctions`
+## Class `sortingFunctions`
 
-Comparateurs de tri des colonnes de la liste de résultats (a et b sont deux entrées de log).
+Sort comparators for the result list columns (a and b are two log entries).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `sortingFunctions.Code(a, b)` | Tri par uniqueErrorCode (0 si absent). | 45 |
-| `sortingFunctions.Description(a, b)` | Tri par message. | 51 |
-| `sortingFunctions.File(a, b)` | Tri par champ filename. | 71 |
-| `sortingFunctions.Line(a, b)` | Tri par champ lineNumber (0 si absent). | 77 |
-| `sortingFunctions.LogLevel(a, b)` | Tri par logLevel (chaîne). | 39 |
-| `sortingFunctions.ObjectName(a, b)` | Tri par nom de l'objet a.object (chaîne vide si absent). | 63 |
-| `sortingFunctions.Origin(a, b)` | Tri par champ origin (chaîne vide si absent). | 57 |
+| `sortingFunctions.Code(a, b)` | Sort by uniqueErrorCode (0 if absent). | 45 |
+| `sortingFunctions.Description(a, b)` | Sort by message. | 51 |
+| `sortingFunctions.File(a, b)` | Sort by filename field. | 71 |
+| `sortingFunctions.Line(a, b)` | Sort by lineNumber field (0 if absent). | 77 |
+| `sortingFunctions.LogLevel(a, b)` | Sort by logLevel (string). | 39 |
+| `sortingFunctions.ObjectName(a, b)` | Sort by the name of object a.object (empty string if absent). | 63 |
+| `sortingFunctions.Origin(a, b)` | Sort by origin field (empty string if absent). | 57 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onLevelValidationFinished`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `deserializeObjectsFromText`, `findObjectById`
 - `obj:` `deleteObject`, `getId`, `getWorldBox`, `isSubClassOf`, `serialize`
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`, `getAllObjects`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/levelValidator.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/levelValidator.lua`.*

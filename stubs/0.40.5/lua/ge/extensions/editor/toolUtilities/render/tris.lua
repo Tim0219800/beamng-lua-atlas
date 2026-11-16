@@ -2,51 +2,51 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/render/tris.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Dessin de triangles pleins pour les outils d'édition de splines (issu de l'ancien render.lua). Triangles filtrés à 600 m de la caméra, remplissage de polygones simples (triangulation par découpe d'oreilles) et remplissage de régions 2D avec trous par balayage de lignes (règle pair-impair). Sert aux aperçus de surfaces dans l'éditeur.
---- Accès : extension `editor_toolUtilities_render_tris` : `extensions.load("editor_toolUtilities_render_tris")`, puis la globale `editor_toolUtilities_render_tris`
+--- Solid triangle drawing for the spline editing tools (from the old render.lua). Triangles filtered at 600 m from the camera, filling of simple polygons (ear clipping triangulation) and filling of 2D regions with holes by scanline (even-odd rule). Used for surface previews in the editor.
+--- Access: extension `editor_toolUtilities_render_tris`: `extensions.load("editor_toolUtilities_render_tris")`, then the global `editor_toolUtilities_render_tris`
 ---@class editor_toolUtilities_render_tris
 editor_toolUtilities_render_tris = {}
 
---- Remplit un polygone simple, éventuellement concave, dont les sommets sont des vec3 déjà à la hauteur de dessin. Triangule en 2D (x,y) par découpe d'oreilles (geom.triangulatePolygon2D), puis dessine les triangles. Sans effet pour moins de 3 sommets ou un anneau dégénéré.
----Source : lua/ge/extensions/editor/toolUtilities/render/tris.lua:40
----@param verts vec3[] Sommets du polygone.
----@param col integer Couleur packée.
+--- Fills a simple polygon, possibly concave, whose vertices are vec3s already at the drawing height. Triangulates in 2D (x,y) by ear clipping (geom.triangulatePolygon2D), then draws the triangles. No effect for fewer than 3 vertices or a degenerate ring.
+---Source: lua/ge/extensions/editor/toolUtilities/render/tris.lua:40
+---@param verts vec3[] Polygon vertices.
+---@param col integer Packed color.
 function editor_toolUtilities_render_tris.drawFilledPolygon(verts, col) end
 
---- Remplit un ensemble de régions 2D (anneaux {x=,y=}), trous compris, par balayage horizontal avec la règle pair-impair : un point dans un nombre impair d'anneaux est rempli. Gère formes concaves et régions disjointes sans triangulation.
----Source : lua/ge/extensions/editor/toolUtilities/render/tris.lua:56
----@param regions table Liste d'anneaux, chacun une liste de {x=,y=}.
----@param col integer Couleur packée.
----@param zFn function zFn(x, y) renvoie la hauteur de dessin (ex. hauteur du terrain).
----@param step number|nil Pas de balayage ; auto entre 0.25 et 3 m (hauteur/100) si nil.
+--- Fills a set of 2D regions ({x=,y=} rings), holes included, by horizontal scan with the even-odd rule: a point inside an odd number of rings is filled. Handles concave shapes and disjoint regions without triangulation.
+---Source: lua/ge/extensions/editor/toolUtilities/render/tris.lua:56
+---@param regions table List of rings, each a list of {x=,y=}.
+---@param col integer Packed color.
+---@param zFn function zFn(x, y) returns the drawing height (e.g. terrain height).
+---@param step number|nil Scan step; auto between 0.25 and 3 m (height/100) if nil.
 function editor_toolUtilities_render_tris.drawFilledRegions2D(regions, col, zFn, step) end
 
---- Triangle de surface active (colourActiveSurf).
----Source : lua/ge/extensions/editor/toolUtilities/render/tris.lua:35
----@param a vec3 Sommet 1.
----@param b vec3 Sommet 2.
----@param c vec3 Sommet 3.
+--- Active surface triangle (colourActiveSurf).
+---Source: lua/ge/extensions/editor/toolUtilities/render/tris.lua:35
+---@param a vec3 Vertex 1.
+---@param b vec3 Vertex 2.
+---@param c vec3 Vertex 3.
 function editor_toolUtilities_render_tris.drawTriActiveSurface(a, b, c) end
 
---- Dessine un triangle plein de couleur col s'il est entièrement à moins de 600 m de la caméra.
----Source : lua/ge/extensions/editor/toolUtilities/render/tris.lua:27
----@param a vec3 Sommet 1.
----@param b vec3 Sommet 2.
----@param c vec3 Sommet 3.
----@param col integer Couleur packée.
+--- Draws a solid triangle of color col if it is entirely within 600 m of the camera.
+---Source: lua/ge/extensions/editor/toolUtilities/render/tris.lua:27
+---@param a vec3 Vertex 1.
+---@param b vec3 Vertex 2.
+---@param c vec3 Vertex 3.
+---@param col integer Packed color.
 function editor_toolUtilities_render_tris.drawTriCulled(a, b, c, col) end
 
---- Triangle de surface non sélectionnée (colourNotSelectedSurf).
----Source : lua/ge/extensions/editor/toolUtilities/render/tris.lua:33
----@param a vec3 Sommet 1.
----@param b vec3 Sommet 2.
----@param c vec3 Sommet 3.
+--- Unselected surface triangle (colourNotSelectedSurf).
+---Source: lua/ge/extensions/editor/toolUtilities/render/tris.lua:33
+---@param a vec3 Vertex 1.
+---@param b vec3 Vertex 2.
+---@param c vec3 Vertex 3.
 function editor_toolUtilities_render_tris.drawTriNotSelectedSurface(a, b, c) end
 
---- Triangle de surface d'aperçu (colourPreviewSurf).
----Source : lua/ge/extensions/editor/toolUtilities/render/tris.lua:34
----@param a vec3 Sommet 1.
----@param b vec3 Sommet 2.
----@param c vec3 Sommet 3.
+--- Preview surface triangle (colourPreviewSurf).
+---Source: lua/ge/extensions/editor/toolUtilities/render/tris.lua:34
+---@param a vec3 Vertex 1.
+---@param b vec3 Vertex 2.
+---@param c vec3 Vertex 3.
 function editor_toolUtilities_render_tris.drawTriPreviewSurface(a, b, c) end
 

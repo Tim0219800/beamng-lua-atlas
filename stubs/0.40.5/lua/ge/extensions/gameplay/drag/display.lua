@@ -2,132 +2,132 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/drag/display.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Affichage de la piste de drag : arbre de départ (feux pré-stage, stage, trois ambres, vert, rouge, bleu global, feu gagnant, feu conducteur clignotant), panneaux de chrono/vitesse (chiffres 5 par couloir, temps en 3 décimales, vitesse en mph avec 2 décimales), messages flash, repère de guidage de staging, et événements UI (guihooks) pour l'app d'arbre. Il pilote les objets de scène nommés par couloir (displayTime1..5, displaySpeed1..5, displayLight) et applique les états reçus du réseau en multijoueur. Chargée à la demande par gameplay_drag_core ; un moddeur s'en sert surtout via les hooks et pour allumer/éteindre des feux.
---- Accès : extension `gameplay_drag_display` : `extensions.load("gameplay_drag_display")`, puis la globale `gameplay_drag_display`
+--- Drag track display: starting tree (pre-stage lights, stage, three ambers, green, red, global blue, winner light, flashing driver light), timing/speed panels (5 digits per lane, time with 3 decimals, speed in mph with 2 decimals), flash messages, staging guide marker, and UI events (guihooks) for the tree app. It drives the scene objects named per lane (displayTime1..5, displaySpeed1..5, displayLight) and applies the states received from the network in multiplayer. Loaded on demand by gameplay_drag_core; a modder mostly uses it through the hooks and to turn lights on/off.
+--- Access: extension `gameplay_drag_display`: `extensions.load("gameplay_drag_display")`, then the global `gameplay_drag_display`
 ---@class gameplay_drag_display
----@field alwaysShowStageApp boolean true par défaut : garde l'app de staging visible quelle que soit la distance à la ligne de stage.
+---@field alwaysShowStageApp boolean true by default: keeps the staging app visible regardless of the distance to the stage line.
 ---@field dependencies string[] gameplay_drag_core, gameplay_drag_phaseHandlers.
 gameplay_drag_display = {}
 
---- Affiche ou cache le voyant de staging de l'UI (guihook updateTreeLightStaging), et le répète pour chaque joueur multiseat.
----Source : lua/ge/extensions/gameplay/drag/display.lua:117
----@param visible boolean true pour afficher.
+--- Shows or hides the UI staging light (guihook updateTreeLightStaging), and repeats it for each multiseat player.
+---Source: lua/ge/extensions/gameplay/drag/display.lua:117
+---@param visible boolean true to show.
 function gameplay_drag_display.broadcastTreeLightStaging(visible) end
 
---- Éteint tous les feux de l'arbre, cache les chiffres des panneaux et le repère de staging, annule un flash en cours et réinitialise la graine aléatoire.
----Source : lua/ge/extensions/gameplay/drag/display.lua:684
+--- Turns off all the tree lights, hides the panel digits and the staging marker, cancels a flash in progress and resets the random seed.
+---Source: lua/ge/extensions/gameplay/drag/display.lua:684
 function gameplay_drag_display.clearAll() end
 
---- Ligne d'arrivée franchie : met à jour les panneaux (temps et vitesse) du couloir du racer.
----Source : lua/ge/extensions/gameplay/drag/display.lua:1651
----@param vehId integer ID du véhicule du racer.
+--- Finish line crossed: updates the panels (time and speed) of the racer's lane.
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1651
+---@param vehId integer Racer's vehicle ID.
 function gameplay_drag_display.dragRaceEndLineReached(vehId) end
 
---- Véhicule arrêté après la course : envoie updateTreeLightPhase=false à l'UI. N'efface pas les résultats affichés.
----Source : lua/ge/extensions/gameplay/drag/display.lua:1655
+--- Vehicle stopped after the race: sends updateTreeLightPhase=false to the UI. Does not clear the displayed results.
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1655
 function gameplay_drag_display.dragRaceVehicleStopped() end
 
---- Hook émis par core avant de décharger les extensions drag ; fait clearAll (même fonction).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drag/display.lua:684
+--- Hook emitted by core before unloading the drag extensions; does clearAll (same function).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drag/display.lua:684
 function gameplay_drag_display.onBeforeDragUnloadAllExtensions() end
 
---- Hook de clear complet : vide les caches joueur, fait clearAll puis lance un flash « reset système » (feux et chiffres clignotent 2 fois puis restent éteints) à partir d'un cache de la piste.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drag/display.lua:1724
----@param options table Options du clear (non utilisées).
+--- Full clear hook: empties the player caches, does clearAll then starts a "system reset" flash (lights and digits blink twice then stay off) from a track cache.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1724
+---@param options table Clear options (unused).
 function gameplay_drag_display.onDragClear(options) end
 
---- Hook émis par core.setDragRaceData : construit l'arbre de feux et les chiffres de la piste. En MP, ne déclenche pas le staging et garde les chiffres de la manche précédente (réinitialise seulement les feux) ; en solo fait clearAll.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drag/display.lua:1733
----@param data table Données de piste armées.
+--- Hook emitted by core.setDragRaceData: builds the track's light tree and digits. In MP, does not trigger staging and keeps the digits of the previous round (only resets the lights); in solo does clearAll.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1733
+---@param data table Armed track data.
 function gameplay_drag_display.onDragDataSet(data) end
 
---- Hook MP : un timer d'un pilote distant est arrivé ; met à jour ses panneaux.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drag/display.lua:1758
----@param raceId any Identifiant de course.
----@param mpPlayerId any Joueur MP.
----@param timerName string Nom du timer.
----@param timerValue number Valeur.
+--- MP hook: a timer from a remote driver arrived; updates their panels.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1758
+---@param raceId any Race identifier.
+---@param mpPlayerId any MP player.
+---@param timerName string Timer name.
+---@param timerValue number Value.
 function gameplay_drag_display.onDragRaceTimerUpdated(raceId, mpPlayerId, timerName, timerValue) end
 
---- Hook de reset : éteint les feux (mais garde les chiffres des résultats), annule un flash, remet à zéro les timers de couloir et les drapeaux treeStarted/raceStartBroadcasted.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drag/display.lua:1711
----@param options table Options (raceId...), non utilisées.
+--- Reset hook: turns off the lights (but keeps the result digits), cancels a flash, resets the lane timers and the treeStarted/raceStartBroadcasted flags.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1711
+---@param options table Options (raceId...), unused.
 function gameplay_drag_display.onDragReset(options) end
 
---- Hook de chargement : init() puis clearAll().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drag/display.lua:695
+--- Load hook: init() then clearAll().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drag/display.lua:695
 function gameplay_drag_display.onExtensionLoaded() end
 
---- Hook de pré-rendu : met à jour ou efface le repère de guidage de staging selon l'option dragAssistStageGuideVisualizer.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drag/display.lua:1350
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulé (s).
----@param dtRaw number Delta brut (s).
+--- Pre-render hook: updates or clears the staging guide marker according to the dragAssistStageGuideVisualizer option.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1350
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulated time delta (s).
+---@param dtRaw number Raw delta (s).
 function gameplay_drag_display.onPreRender(dtReal, dtSim, dtRaw) end
 
---- Hook par frame : applique les chiffres en attente, envoie les mises à jour d'arbre différées (MP), avance l'éventuel flash, vérifie la visibilité de l'app de staging, fait avancer le décompte de chaque racer et le clignotement du feu conducteur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/drag/display.lua:1303
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulé (s).
----@param dtRaw number Delta brut (s).
+--- Per-frame hook: applies the pending digits, sends the deferred tree updates (MP), advances the current flash if any, checks the visibility of the staging app, advances each racer's countdown and the driver light blinking.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1303
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulated time delta (s).
+---@param dtRaw number Raw delta (s).
 function gameplay_drag_display.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Allume le feu gagnant du couloir et fait clignoter son feu conducteur.
----Source : lua/ge/extensions/gameplay/drag/display.lua:1365
----@param lane integer Couloir gagnant.
+--- Turns on the lane's winner light and makes its driver light flash.
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1365
+---@param lane integer Winning lane.
 function gameplay_drag_display.onWinnerLightOn(lane) end
 
---- Éteint le feu de pré-stage du couloir du racer et met l'UI à jour.
----Source : lua/ge/extensions/gameplay/drag/display.lua:1472
----@param vehId integer ID du véhicule.
+--- Turns off the pre-stage light of the racer's lane and updates the UI.
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1472
+---@param vehId integer Vehicle ID.
 function gameplay_drag_display.preStageLightOff(vehId) end
 
---- Allume le feu de pré-stage du couloir du racer, met l'UI à jour et affiche le message flash ui.drag.flash.preStage pour un racer jouable.
----Source : lua/ge/extensions/gameplay/drag/display.lua:1437
----@param vehId integer ID du véhicule.
+--- Turns on the pre-stage light of the racer's lane, updates the UI and shows the flash message ui.drag.flash.preStage for a playable racer.
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1437
+---@param vehId integer Vehicle ID.
 function gameplay_drag_display.preStageLightOn(vehId) end
 
---- Remet à zéro les timers de couloir de l'arbre (laneTimer, laneTimerFlag, dialOffset) et les drapeaux treeStarted/raceStartBroadcasted de chaque racer.
----Source : lua/ge/extensions/gameplay/drag/display.lua:1681
+--- Resets the tree's lane timers (laneTimer, laneTimerFlag, dialOffset) and the treeStarted/raceStartBroadcasted flags of each racer.
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1681
 function gameplay_drag_display.resetDragRaceValues() end
 
---- Éteint les ambres du racer disqualifié ; si la raison est le faux départ (redLightReason), éteint le vert et allume le rouge. Efface les panneaux, émet startRaceFromTree et affiche la raison en message flash (5 s) pour un racer jouable.
----Source : lua/ge/extensions/gameplay/drag/display.lua:1597
----@param vehId integer ID du véhicule disqualifié.
+--- Turns off the ambers of the disqualified racer; if the reason is the false start (redLightReason), turns off the green and turns on the red. Clears the panels, emits startRaceFromTree and shows the reason as a flash message (5 s) for a playable racer.
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1597
+---@param vehId integer ID of the disqualified vehicle.
 function gameplay_drag_display.setDisqualifiedLights(vehId) end
 
---- Éteint le feu de stage, le feu bleu, décrémente le compteur de racers en stage et synchronise l'état (MP : drag.syncStageLightState).
----Source : lua/ge/extensions/gameplay/drag/display.lua:1537
----@param vehId integer ID du véhicule.
+--- Turns off the stage light and the blue light, decrements the count of racers in stage and synchronizes the state (MP: drag.syncStageLightState).
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1537
+---@param vehId integer Vehicle ID.
 function gameplay_drag_display.stageLightOff(vehId) end
 
---- Allume le feu de stage du racer ; quand tous les couloirs sont en stage, allume le feu bleu. Met l'UI à jour, synchronise l'état (MP) et affiche ui.drag.flash.stage pour un racer jouable.
----Source : lua/ge/extensions/gameplay/drag/display.lua:1500
----@param vehId integer ID du véhicule.
+--- Turns on the racer's stage light; when all lanes are in stage, turns on the blue light. Updates the UI, synchronizes the state (MP) and shows ui.drag.flash.stage for a playable racer.
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1500
+---@param vehId integer Vehicle ID.
 function gameplay_drag_display.stageLightOn(vehId) end
 
---- Démarre le décompte de l'arbre pour un racer en phase 2 'countdown' : émet onDragCountdownStarted, met treeStarted à true et règle dialOffset (dial moins le temps déjà écoulé depuis le départ MP).
----Source : lua/ge/extensions/gameplay/drag/display.lua:1568
----@param vehId integer ID du véhicule.
----@param dial number Délai avant le début de la séquence de feux (s).
+--- Starts the tree countdown for a racer in phase 2 'countdown': emits onDragCountdownStarted, sets treeStarted to true and sets dialOffset (dial minus the time already elapsed since the MP start).
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1568
+---@param vehId integer Vehicle ID.
+---@param dial number Delay before the start of the light sequence (s).
 function gameplay_drag_display.startDragCountdown(vehId, dial) end
 
---- Affiche le message flash missions.dragRace.gameplay.inLine (5 s) pour un racer jouable.
----Source : lua/ge/extensions/gameplay/drag/display.lua:1644
----@param vehId integer ID du véhicule.
+--- Shows the flash message missions.dragRace.gameplay.inLine (5 s) for a playable racer.
+---Source: lua/ge/extensions/gameplay/drag/display.lua:1644
+---@param vehId integer Vehicle ID.
 function gameplay_drag_display.stoppingVehicleDrag(vehId) end
 
---- Applique à un couloir l'état de feux reçu du réseau (countDownLights, stageLights) : met à jour isOn, les objets de scène, et l'UI du joueur du couloir (et multiseat). Construit l'arbre s'il n'existe pas encore.
----Source : lua/ge/extensions/gameplay/drag/display.lua:455
----@param lane integer Couloir.
+--- Applies to a lane the light state received from the network (countDownLights, stageLights): updates isOn, the scene objects, and the UI of the lane's player (and multiseat). Builds the tree if it does not exist yet.
+---Source: lua/ge/extensions/gameplay/drag/display.lua:455
+---@param lane integer Lane.
 ---@param lightState table {countDownLights = {amberLight1..3, greenLight, redLight}, stageLights = {prestageLight, stageLight}}.
 function gameplay_drag_display.updateTreeLightsFromNetwork(lane, lightState) end
 

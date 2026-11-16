@@ -1,53 +1,53 @@
 # `controller_braking_adaptiveBrakeLights`
 
-*Fichier : `lua/vehicle/controller/braking/adaptiveBrakeLights.lua` · VM : Véhicule · 177 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/braking/adaptiveBrakeLights.lua` · VM: Vehicle · 177 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `braking/adaptiveBrakeLights` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `braking/adaptiveBrakeLights` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire qui calcule la valeur des feux stop (`electrics.values.brakelights` par défaut) en plus de la simple pédale de frein : clignotement pendant l'ABS, allumage lors d'une intervention de l'ESC au-dessus de 14 m/s, allumage quand la décélération (régénération « one pedal ») dépasse un seuil, ajout du freinage par récupération, et allumage automatique des feux de détresse après un freinage d'urgence jusqu'à l'arrêt. Ordre d'appel : `defaultOrder = 900` (tard).
+Auxiliary controller that computes the brake light value (`electrics.values.brakelights` by default) beyond the simple brake pedal: blinking during ABS, turning on during an ESC intervention above 14 m/s, turning on when deceleration ("one pedal" regeneration) exceeds a threshold, adding regenerative braking, and automatically turning on the hazard lights after emergency braking until stop. Call order: `defaultOrder = 900` (late).
 
-## Remarques
+## Notes
 
-- Clés jbeam lues par init : `electricsName` ("brakelights"), `indicateESCUsageWithBrakelights` (true), `activateHazardsAfterEmergencyBraking` (true), `hazardArmSpeed` (10 m/s), `hazardActivateSpeed` (3 m/s), `hazardDeactivateThrottle` (0.3), `hazardDeactivateSpeed` (3 m/s), `blinkOnTime` (0.1 s), `blinkOffTime` (0.1 s), `activateBrakeLightsFromDecel` (true), `decelThreshold` (1.3 m/s², seuil légal britannique d'après le commentaire).
-- Electrics lus : brake, absActive, escActive, isYCBrakeActive (prioritaire sur escActive s'il existe), wheelspeed, throttle, regenFromOnePedal, regenFromBrake. Électrics écrit : la valeur de `electricsName`, arrondie au supérieur (0 ou 1).
-- Le champ jbeam n'a pas d'accès sûr : updateGFX utilise `electrics.values.wheelspeed` et `electrics.values.brake` sans valeur par défaut dans certains calculs ; ils doivent exister.
-- Les feux de détresse sont activés par `electrics.set_warn_signal(true)`, désactivés quand l'accélérateur dépasse le seuil à vitesse suffisante.
+- Jbeam keys read by init: `electricsName` ("brakelights"), `indicateESCUsageWithBrakelights` (true), `activateHazardsAfterEmergencyBraking` (true), `hazardArmSpeed` (10 m/s), `hazardActivateSpeed` (3 m/s), `hazardDeactivateThrottle` (0.3), `hazardDeactivateSpeed` (3 m/s), `blinkOnTime` (0.1 s), `blinkOffTime` (0.1 s), `activateBrakeLightsFromDecel` (true), `decelThreshold` (1.3 m/s², UK legal threshold according to the comment).
+- Electrics read: brake, absActive, escActive, isYCBrakeActive (takes priority over escActive if it exists), wheelspeed, throttle, regenFromOnePedal, regenFromBrake. Electrics written: the value of `electricsName`, rounded up (0 or 1).
+- The jbeam field has no safe access: updateGFX uses `electrics.values.wheelspeed` and `electrics.values.brake` without a default value in some computations; they must exist.
+- The hazard lights are activated by `electrics.set_warn_signal(true)`, deactivated when the throttle exceeds the threshold at sufficient speed.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_braking_adaptiveBrakeLights.init(jbeamData)` | Lit les paramètres jbeam et crée les lisseurs (ABS, ESC, accélération). *(interne)* | 139 |
-| `controller_braking_adaptiveBrakeLights.reset()` | Éteint les feux de détresse déclenchés par ce contrôleur et remet à zéro les minuteurs, lisseurs et verrous. *(interne)* | 122 |
-| `controller_braking_adaptiveBrakeLights.setParameters(parameters)` | Active ou désactive le comportement adaptatif ; désactivé, les feux suivent simplement le frein. | 165 |
-| `controller_braking_adaptiveBrakeLights.updateGFX(dt)` | Chaque frame : calcule la valeur des feux stop (frein + ESC + décélération + récupération, limitée à 1), applique le clignotement ABS et gère les feux de détresse de freinage d'urgence. *(interne)* | 48 |
+| `controller_braking_adaptiveBrakeLights.init(jbeamData)` | Reads the jbeam parameters and creates the smoothers (ABS, ESC, acceleration). *(internal)* | 139 |
+| `controller_braking_adaptiveBrakeLights.reset()` | Turns off the hazard lights triggered by this controller and resets the timers, smoothers and latches. *(internal)* | 122 |
+| `controller_braking_adaptiveBrakeLights.setParameters(parameters)` | Enables or disables the adaptive behavior; when disabled, the lights simply follow the brake. | 165 |
+| `controller_braking_adaptiveBrakeLights.updateGFX(dt)` | Every frame: computes the brake light value (brake + ESC + deceleration + regeneration, clamped to 1), applies the ABS blinking and handles the emergency braking hazard lights. *(internal)* | 48 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_braking_adaptiveBrakeLights.init(jbeamData)`
 
-Lit les paramètres jbeam et crée les lisseurs (ABS, ESC, accélération).
+Reads the jbeam parameters and creates the smoothers (ABS, ESC, acceleration).
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_braking_adaptiveBrakeLights.setParameters(parameters)`
 
-Active ou désactive le comportement adaptatif ; désactivé, les feux suivent simplement le frein.
+Enables or disables the adaptive behavior; when disabled, the lights simply follow the brake.
 
-- `parameters` (*table*) : Champ facultatif : isEnabled (boolean).
+- `parameters` (*table*) : Optional field: isEnabled (boolean).
 
 #### `controller_braking_adaptiveBrakeLights.updateGFX(dt)`
 
-Chaque frame : calcule la valeur des feux stop (frein + ESC + décélération + récupération, limitée à 1), applique le clignotement ABS et gère les feux de détresse de freinage d'urgence.
+Every frame: computes the brake light value (brake + ESC + deceleration + regeneration, clamped to 1), applies the ABS blinking and handles the emergency braking hazard lights.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `defaultOrder` | number | 900 : rang d'appel par défaut, tard dans la liste triée. |
+| `defaultOrder` | number | 900: default call rank, late in the sorted list. |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/braking/adaptiveBrakeLights.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/braking/adaptiveBrakeLights.lua`.*

@@ -2,102 +2,102 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_gameplay_race_raceEndScreen_C
 local flowgraph_nodes_gameplay_race_raceEndScreen_C = {}
 
---- Vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:154
+--- Empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:154
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:_afterTrigger() end
 
---- Met toutes les sorties à false et remet open/done à false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:47
+--- Sets all outputs to false and resets open/done to false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:47
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:_executionStarted() end
 
---- Ferme le dialogue s'il est ouvert et réinitialise l'état.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:147
+--- Closes the dialog if it is open and resets the state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:147
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:_executionStopped() end
 
---- Relit options puis appelle updateButtons.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:142
----@param nodeData table Données sérialisées.
+--- Rereads options then calls updateButtons.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:142
+---@param nodeData table Serialized data.
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:_onDeserialized(nodeData) end
 
---- Sauvegarde la liste options.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:138
----@param res table Table de sérialisation.
+--- Saves the options list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:138
+---@param res table Serialization table.
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:_onSerialize(res) end
 
---- Appelé par le clic d'un bouton : met à vrai la sortie du bouton, ferme le dialogue et marque done.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:165
----@param action string Nom du bouton cliqué.
+--- Called by a button click: sets the button's output to true, closes the dialog and marks done.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:165
+---@param action string Name of the clicked button.
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:buttonPushed(action) end
 
---- Navigue vers la route UI 'play' et marque l'écran fermé.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:184
+--- Navigates to the UI route 'play' and marks the screen closed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:184
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:closeDialogue() end
 
---- Marque done = true (fermeture signalée par l'UI).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:306
+--- Sets done = true (closing signaled by the UI).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:306
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:closed() end
 
---- Panneau éditeur : renommer, supprimer, ajouter (« add ») ou retirer (« rem ») des boutons.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:56
----@return string|nil  Raison de la modification.
+--- Editor panel: rename, delete, add ("add") or remove ("rem") buttons.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:56
+---@return string|nil  Change reason.
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:drawCustomProperties() end
 
---- Construit la chaîne de commande Lua exécutée par l'UI pour appeler buttonPushed(action).
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:173
----@param action string Nom du bouton.
----@return string  Code Lua à exécuter.
+--- Builds the Lua command string executed by the UI to call buttonPushed(action).
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:173
+---@param action string Button name.
+---@return string  Lua code to execute.
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:getCmd(action) end
 
---- Initialise l'état (open, done, options) et les options data.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:31
+--- Initializes the state (open, done, options) and the data options.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:31
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:init() end
 
---- Hook de fin de mission : marque open = false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:194
+--- Mission end hook: sets open = false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:194
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:onClientEndMission() end
 
---- Hook : si l'écran est ouvert avec le bouton Retry, le ferme et marque done (log d'information).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:177
+--- Hook: if the screen is open with the Retry button, closes it and marks done (info log).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:177
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:onResetGameplay() end
 
---- Construit les boutons et les stats (titre, temps détaillés, highscores) puis navigue vers scenario.quickrace.end.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:212
+--- Builds the buttons and the stats (title, detailed times, highscores) then navigates to scenario.quickrace.end.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:212
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:openDialogue() end
 
---- Crée le bouton par défaut 'cont' avec le libellé « Continue ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:40
+--- Creates the default 'cont' button with the label "Continue".
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:40
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:postInit() end
 
---- Remet done et open à false.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:160
+--- Resets done and open to false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:160
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:reset() end
 
---- Recrée les pins d'entrée string et de sortie flow pour chaque bouton de self.options en préservant les liens existants.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:91
+--- Recreates the string input pins and flow output pins for each button of self.options while preserving existing links.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:91
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:updateButtons() end
 
---- Gère reset et ouvre le dialogue au premier flux tant que done est faux.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:311
+--- Handles reset and opens the dialog on first flow as long as done is false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua:311
 function flowgraph_nodes_gameplay_race_raceEndScreen_C:work() end
 

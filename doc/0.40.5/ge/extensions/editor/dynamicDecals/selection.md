@@ -1,66 +1,66 @@
 # `editor_dynamicDecals_selection`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/selection.lua` · VM : Game Engine (GE) · 159 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/selection.lua` · VM: Game Engine (GE) · 159 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_selection` : `extensions.load("editor_dynamicDecals_selection")`, puis la globale `editor_dynamicDecals_selection`
+**Access:** extension `editor_dynamicDecals_selection`: `extensions.load("editor_dynamicDecals_selection")`, then the global `editor_dynamicDecals_selection`
 
-Gère la sélection des calques (layers) de l'outil Dynamic Decals. selectLayer copie le calque dans `editor.selection["dynamicDecalLayer"][uid]` (ce que l'inspecteur lit) et configure le gizmo : transform de départ et callbacks translate/rotate/scale selon le type (decal, brushStroke, path, group). deselectLayer vide la sélection et désactive le gizmo.
+Manages the selection of layers of the Dynamic Decals tool. selectLayer copies the layer into `editor.selection["dynamicDecalLayer"][uid]` (what the inspector reads) and configures the gizmo: starting transform and translate/rotate/scale callbacks depending on the type (decal, brushStroke, path, group). deselectLayer clears the selection and disables the gizmo.
 
-## Remarques
+## Notes
 
-- La sélection stocke une copie profonde (deepcopy) du calque : la modifier ne modifie pas la pile de calques ; il faut passer par api.setLayer.
-- Rotation et échelle ne sont gérées que pour les decals ; brushStroke, path et group ne gèrent que la translation (via api.moveLayerLocalPos).
-- Pour un group, le gizmo se place sur le premier enfant déplaçable. getDraggableChildLayer retourne dès le premier enfant (le `return` est dans la boucle) : seul le premier enfant est examiné.
-- Sans addToSelection, `editor.selection` est entièrement remis à {} (toutes les sélections de l'éditeur sont perdues).
-- deselectLayer remet toolMode à tool.toolModes.decal.
+- The selection stores a deep copy (deepcopy) of the layer: modifying it does not modify the layer stack; you must go through api.setLayer.
+- Rotation and scale are only handled for decals; brushStroke, path and group only handle translation (via api.moveLayerLocalPos).
+- For a group, the gizmo is placed on the first draggable child. getDraggableChildLayer returns on the first child (the `return` is inside the loop): only the first child is examined.
+- Without addToSelection, `editor.selection` is entirely reset to {} (all editor selections are lost).
+- deselectLayer resets toolMode to tool.toolModes.decal.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_selection.deselectLayer(uid)` | Retire le calque `uid` de la sélection, ou toute la sélection si uid est nil. Désactive le gizmo (mode none, callbacks et data réinitialisés). | 119 |
-| `editor_dynamicDecals_selection.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 142 |
-| `editor_dynamicDecals_selection.registerEditorPreferences(prefsRegistry)` | Ne déclare aucune préférence (corps commenté). *(interne)* | 136 |
-| `editor_dynamicDecals_selection.selectLayer(uid, addToSelection)` | Sélectionne le calque `uid` (remplace la sélection, sauf si addToSelection) et prépare le gizmo (type « drag », objectType, transform, callbacks). | 28 |
-| `editor_dynamicDecals_selection.setup(tool_in)` | Appelé par l'outil : récupère l'outil, l'API et le module gizmo. *(interne)* | 146 |
+| `editor_dynamicDecals_selection.deselectLayer(uid)` | Removes the layer `uid` from the selection, or the whole selection if uid is nil. Disables the gizmo (mode none, callbacks and data reset). | 119 |
+| `editor_dynamicDecals_selection.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 142 |
+| `editor_dynamicDecals_selection.registerEditorPreferences(prefsRegistry)` | Declares no preference (body commented out). *(internal)* | 136 |
+| `editor_dynamicDecals_selection.selectLayer(uid, addToSelection)` | Selects the layer `uid` (replaces the selection, unless addToSelection) and prepares the gizmo (type "drag", objectType, transform, callbacks). | 28 |
+| `editor_dynamicDecals_selection.setup(tool_in)` | Called by the tool: gets the tool, the API and the gizmo module. *(internal)* | 146 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_selection.deselectLayer(uid)`
 
-Retire le calque `uid` de la sélection, ou toute la sélection si uid est nil. Désactive le gizmo (mode none, callbacks et data réinitialisés).
+Removes the layer `uid` from the selection, or the whole selection if uid is nil. Disables the gizmo (mode none, callbacks and data reset).
 
-- `uid` (*string|integer|nil*) : Calque à désélectionner.
+- `uid` (*string|integer|nil*) : Layer to deselect.
 
 #### `editor_dynamicDecals_selection.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_selection.registerEditorPreferences(prefsRegistry)`
 
-Ne déclare aucune préférence (corps commenté).
+Declares no preference (body commented out).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_selection.selectLayer(uid, addToSelection)`
 
-Sélectionne le calque `uid` (remplace la sélection, sauf si addToSelection) et prépare le gizmo (type « drag », objectType, transform, callbacks).
+Selects the layer `uid` (replaces the selection, unless addToSelection) and prepares the gizmo (type "drag", objectType, transform, callbacks).
 
-- `uid` (*string|integer*) : Identifiant du calque ; un avertissement est loggé s'il est nil.
-- `addToSelection` (*boolean|nil*) : Si vrai, ajoute à la sélection existante.
+- `uid` (*string|integer*) : Layer identifier; a warning is logged if it is nil.
+- `addToSelection` (*boolean|nil*) : If true, adds to the existing selection.
 
 #### `editor_dynamicDecals_selection.setup(tool_in)`
 
-Appelé par l'outil : récupère l'outil, l'API et le module gizmo.
+Called by the tool: gets the tool, the API and the gizmo module.
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `worldEditorCppApi.` `getAxisGizmoRotateOffset`, `getAxisGizmoScaleOffset`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/selection.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/selection.lua`.*

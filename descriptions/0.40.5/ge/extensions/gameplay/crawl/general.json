@@ -1,134 +1,241 @@
 {
   "path": "lua/ge/extensions/gameplay/crawl/general.lua",
-  "module": "Cœur du mode crawl (franchissement lent de parcours) côté freeroam/carrière : garde le parcours actif (activeTrail : trail, zone, chemin copié, départ, prefabs) et la liste des données de crawlers, prépare un parcours (setupCrawl, avec inversion éventuelle du chemin), démarre le crawl en freeroam ou depuis un flowgraph, et appelle gameplay_crawl_utils.updateCrawl à chaque image. Il fournit aussi les points d'intérêt (marqueurs de départ, carte), les fenêtres d'activité, le dessin de la zone sur la minimap et enregistre les scores à la fin. Il gère le cas multi-joueur local (multiseat).",
+  "module": "Core of the crawl mode (slow trail traversal) on the freeroam/career side: keeps the active trail (activeTrail: trail, zone, copied path, start, prefabs) and the list of crawler data, prepares a trail (setupCrawl, with optional path reversal), starts the crawl in freeroam or from a flowgraph, and calls gameplay_crawl_utils.updateCrawl every frame. It also provides the points of interest (start markers, map), the activity windows, the drawing of the zone on the minimap, and records the scores at the end. It handles the local multiplayer case (multiseat).",
   "usage": "gameplay_crawl_general.startCrawlFreeroam(trail, be:getPlayerVehicle(0))",
   "notes": [
-    "Un seul parcours actif à la fois (M.activeTrail). Si trail.pathReversed est vrai, le chemin est copié, inversé et chaque rotation est tournée de 180 degrés autour de Z ; la position de départ devient trail.startingPositionIdReversed, ou le premier noeud inversé (rayon 10 m).",
-    "Les parcours apparaissent dans le jeu seulement si la carrière est active ou si le réglage enableCrawlInFreeroam est vrai (onGetRawPoiListForLevel).",
-    "En multiseat, entrer dans la zone de départ lance automatiquement le crawl, sauf si un mode de jeu multiseat est actif ou si les parcours diffèrent.",
-    "M.crawlersData et sa copie locale pointent vers la même table ; clear la vide avec table.clear, il faut donc ne pas réassigner la variable.",
-    "Quand un véhicule est changé ou détruit en freeroam (parcours non issu d'une mission), son crawler est nettoyé ; le parcours est vidé quand plus aucun crawler n'existe.",
-    "onCrawlResultsShown enregistre le score (temps, points) via saveSystem.addNewPlayerScore.",
-    "Hooks émis : onCrawlStarted({trail = trail})."
+    "Only one active trail at a time (M.activeTrail). If trail.pathReversed is true, the path is copied, reversed and each rotation is turned by 180 degrees around Z; the starting position becomes trail.startingPositionIdReversed, or the first reversed node (radius 10 m).",
+    "Trails appear in the game only if career is active or if the enableCrawlInFreeroam setting is true (onGetRawPoiListForLevel).",
+    "In multiseat, entering the start zone automatically starts the crawl, unless a multiseat game mode is active or the trails differ.",
+    "M.crawlersData and its local copy point to the same table; clear empties it with table.clear, so the variable must not be reassigned.",
+    "When a vehicle is changed or destroyed in freeroam (trail not from a mission), its crawler is cleaned up; the trail is cleared when no crawler exists anymore.",
+    "onCrawlResultsShown records the score (time, points) via saveSystem.addNewPlayerScore.",
+    "Emitted hooks: onCrawlStarted({trail = trail})."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : gameplay_crawl_saveSystem, utils, boundary, display."},
-    "activeTrail": {"type": "table|nil", "desc": "Parcours actif : {trail, boundary, path, startingPosition, prefabs, isFromMission} ; nil si aucun."},
-    "crawlersData": {"type": "table<integer, table>", "desc": "Liste des données de crawler (créées par gameplay_crawl_utils.setupCrawlerData) du parcours actif."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded beforehand: gameplay_crawl_saveSystem, utils, boundary, display."
+    },
+    "activeTrail": {
+      "type": "table|nil",
+      "desc": "Active trail: {trail, boundary, path, startingPosition, prefabs, isFromMission}; nil if none."
+    },
+    "crawlersData": {
+      "type": "table<integer, table>",
+      "desc": "List of crawler data (created by gameplay_crawl_utils.setupCrawlerData) of the active trail."
+    }
   },
   "functions": {
     "clear": {
-      "desc": "Décharge les prefabs du parcours actif, oublie le parcours, nettoie gameplay_crawl_utils et vide crawlersData.",
-      "params": {"force": {"type": "boolean|nil", "desc": "Transmis à gameplay_crawl_utils.clear."}},
+      "desc": "Unloads the prefabs of the active trail, forgets the trail, cleans up gameplay_crawl_utils and empties crawlersData.",
+      "params": {
+        "force": {
+          "type": "boolean|nil",
+          "desc": "Passed to gameplay_crawl_utils.clear."
+        }
+      },
       "internal": false
     },
     "setupCrawl": {
-      "desc": "Prépare un parcours : arrête le crawl précédent, résout zone, chemin et départ depuis saveSystem, gère l'inversion, crée les données du crawler, charge les prefabs et, si isFromMission, téléporte le véhicule à la position de départ.",
+      "desc": "Prepares a trail: stops the previous crawl, resolves zone, path and start from saveSystem, handles reversal, creates the crawler data, loads the prefabs and, if isFromMission, teleports the vehicle to the starting position.",
       "params": {
-        "trail": {"type": "table", "desc": "Parcours (boundaryId, pathId, startingPositionId, pathReversed, prefabs, name)."},
-        "veh": {"type": "userdata", "desc": "Objet véhicule."},
-        "isFromMission": {"type": "boolean|nil", "desc": "Vrai si lancé par une mission/flowgraph."}
+        "trail": {
+          "type": "table",
+          "desc": "Trail (boundaryId, pathId, startingPositionId, pathReversed, prefabs, name)."
+        },
+        "veh": {
+          "type": "userdata",
+          "desc": "Vehicle object."
+        },
+        "isFromMission": {
+          "type": "boolean|nil",
+          "desc": "True if started by a mission/flowgraph."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si zone ou chemin manquent ou si trail/veh est nil."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if zone or path are missing or if trail/veh is nil."
+        }
+      ],
       "internal": false
     },
     "startCrawlFreeroam": {
-      "desc": "Démarre un crawl en freeroam. En multiseat avec le même parcours déjà actif, ajoute simplement le véhicule au crawl ; sinon prépare le parcours puis lance gameplay_crawl_utils.startCrawl, émet onCrawlStarted et efface les POI bruts.",
+      "desc": "Starts a crawl in freeroam. In multiseat with the same trail already active, simply adds the vehicle to the crawl; otherwise prepares the trail then calls gameplay_crawl_utils.startCrawl, emits onCrawlStarted and clears the raw POIs.",
       "params": {
-        "trail": {"type": "table", "desc": "Parcours à lancer."},
-        "veh": {"type": "userdata", "desc": "Objet véhicule."}
+        "trail": {
+          "type": "table",
+          "desc": "Trail to start."
+        },
+        "veh": {
+          "type": "userdata",
+          "desc": "Vehicle object."
+        }
       },
       "internal": false
     },
     "startCrawlFlowgraph": {
-      "desc": "Démarre un crawl depuis un flowgraph. Si le même parcours (même nom) est déjà préparé, le réutilise ; sinon appelle setupCrawl(trail, veh, true). Émet onCrawlStarted.",
+      "desc": "Starts a crawl from a flowgraph. If the same trail (same name) is already prepared, reuses it; otherwise calls setupCrawl(trail, veh, true). Emits onCrawlStarted.",
       "params": {
-        "trail": {"type": "table", "desc": "Parcours à lancer."},
-        "veh": {"type": "userdata", "desc": "Objet véhicule."}
+        "trail": {
+          "type": "table",
+          "desc": "Trail to start."
+        },
+        "veh": {
+          "type": "userdata",
+          "desc": "Vehicle object."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si le crawl a démarré."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the crawl started."
+        }
+      ],
       "internal": false
     },
     "onUpdate": {
-      "desc": "Hook appelé à chaque image : fait avancer le crawl actif (gameplay_crawl_utils.updateCrawl).",
+      "desc": "Hook called every frame: advances the active crawl (gameplay_crawl_utils.updateCrawl).",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
-        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (s)."
+        }
       },
       "internal": true
     },
     "onGetRawPoiListForLevel": {
-      "desc": "Hook de collecte des points d'intérêt d'un niveau : ajoute pour chaque parcours (dossier /levels/<niveau>/crawls/) un POI de type 'crawl' avec déclencheur invisible, marqueur de départ et marqueur de carte (nom, miniature, meilleurs points) tant qu'aucun parcours n'est actif.",
+      "desc": "Hook collecting the points of interest of a level: for each trail (folder /levels/<level>/crawls/) adds a 'crawl' type POI with an invisible trigger, a start marker and a map marker (name, thumbnail, best points) as long as no trail is active.",
       "params": {
-        "levelIdentifier": {"type": "string", "desc": "Nom du niveau."},
-        "elements": {"type": "table", "desc": "Liste de POI à compléter."}
+        "levelIdentifier": {
+          "type": "string",
+          "desc": "Level name."
+        },
+        "elements": {
+          "type": "table",
+          "desc": "POI list to complete."
+        }
       },
       "internal": true
     },
     "onActivityAcceptGatherData": {
-      "desc": "Hook de la fenêtre d'activité : pour un POI 'crawl', ajoute une fiche (distance, dénivelé positif/négatif, meilleurs points, meilleur temps, tentatives) et un bouton « Jouer » qui lance startCrawlFreeroam sur le véhicule du joueur.",
+      "desc": "Activity window hook: for a 'crawl' POI, adds a card (distance, positive/negative elevation change, best points, best time, attempts) and a \"Play\" button that runs startCrawlFreeroam on the player's vehicle.",
       "params": {
-        "elemData": {"type": "table", "desc": "Données des éléments sélectionnés."},
-        "activityData": {"type": "table", "desc": "Liste de fiches à compléter."}
+        "elemData": {
+          "type": "table",
+          "desc": "Data of the selected items."
+        },
+        "activityData": {
+          "type": "table",
+          "desc": "List of cards to complete."
+        }
       },
       "internal": true
     },
     "onActivityIndexVisible": {
-      "desc": "Hook appelé quand une activité est visible/masquée dans l'index : prépare le parcours et ses marqueurs de chemin pour un POI crawl, ou nettoie si data est nil.",
-      "params": {"data": {"type": "table|nil", "desc": "Données du POI (type, trailId) ; nil quand l'index se ferme."}},
+      "desc": "Hook called when an activity is shown/hidden in the index: prepares the trail and its path markers for a crawl POI, or cleans up if data is nil.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "POI data (type, trailId); nil when the index closes."
+        }
+      },
       "internal": true
     },
     "onDrawOnMinimap": {
-      "desc": "Hook appelé pour dessiner sur la minimap : dessine la zone du parcours actif.",
-      "params": {"td": {"type": "table", "desc": "Objet de dessin de la minimap."}},
+      "desc": "Hook called to draw on the minimap: draws the zone of the active trail.",
+      "params": {
+        "td": {
+          "type": "table",
+          "desc": "Minimap drawing object."
+        }
+      },
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement : nettoie l'état et crée les dossiers de sauvegarde du joueur.",
+      "desc": "Hook called on load: cleans up the state and creates the player's save folders.",
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook appelé avant rechargement des extensions : nettoie l'état.",
+      "desc": "Hook called before extensions reload: cleans up the state.",
       "internal": true
     },
     "onMPSessionChanged": {
-      "desc": "Hook appelé au changement de session multijoueur : charge gameplay_crawl_freeroamMultiplayer au début de session et le décharge à la fin.",
+      "desc": "Hook called on multiplayer session change: loads gameplay_crawl_freeroamMultiplayer at session start and unloads it at the end.",
       "params": {
-        "old": {"type": "any", "desc": "Ancienne session (nil/false si aucune)."},
-        "new": {"type": "any", "desc": "Nouvelle session."}
+        "old": {
+          "type": "any",
+          "desc": "Old session (nil/false if none)."
+        },
+        "new": {
+          "type": "any",
+          "desc": "New session."
+        }
       },
       "internal": true
     },
     "onVehicleSwitched": {
-      "desc": "Hook appelé au changement de véhicule contrôlé : retire le crawler de l'ancien véhicule (parcours hors mission) et nettoie s'il n'en reste aucun.",
+      "desc": "Hook called when the controlled vehicle changes: removes the crawler from the old vehicle (non-mission trail) and cleans up if none remain.",
       "params": {
-        "oldId": {"type": "integer", "desc": "Id de l'ancien véhicule."},
-        "newId": {"type": "integer", "desc": "Id du nouveau véhicule."},
-        "player": {"type": "integer", "desc": "Index du joueur."}
+        "oldId": {
+          "type": "integer",
+          "desc": "Id of the old vehicle."
+        },
+        "newId": {
+          "type": "integer",
+          "desc": "Id of the new vehicle."
+        },
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        }
       },
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook appelé quand un véhicule est détruit : retire son crawler (parcours hors mission).",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "desc": "Hook called when a vehicle is destroyed: removes its crawler (non-mission trail).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
       "internal": true
     },
     "onAnyMissionChanged": {
-      "desc": "Hook appelé au changement d'état d'une mission : nettoie tout si elle passe à 'stopped'.",
+      "desc": "Hook called when a mission's state changes: cleans everything up if it goes to 'stopped'.",
       "params": {
-        "status": {"type": "string", "desc": "État de la mission."},
-        "id": {"type": "any", "desc": "Mission concernée."}
+        "status": {
+          "type": "string",
+          "desc": "Mission state."
+        },
+        "id": {
+          "type": "any",
+          "desc": "Mission concerned."
+        }
       },
       "internal": true
     },
     "onCrawlCleared": {
-      "desc": "Hook émis par utils.clear() à chaque fin de crawl : vide crawlersData et efface les POI bruts pour réafficher le marqueur de départ.",
+      "desc": "Hook emitted by utils.clear() at the end of each crawl: empties crawlersData and clears the raw POIs to show the start marker again.",
       "internal": true
     },
     "onCrawlResultsShown": {
-      "desc": "Hook appelé à l'affichage des résultats : enregistre le temps et les points du joueur pour le parcours actif.",
-      "params": {"eventData": {"type": "table", "desc": "{time, points}."}},
+      "desc": "Hook called when the results are shown: records the player's time and points for the active trail.",
+      "params": {
+        "eventData": {
+          "type": "table",
+          "desc": "{time, points}."
+        }
+      },
       "internal": true
     }
   }

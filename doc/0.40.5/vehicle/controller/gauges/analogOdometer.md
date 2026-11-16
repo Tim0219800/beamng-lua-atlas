@@ -1,56 +1,56 @@
 # `controller_gauges_analogOdometer`
 
-*Fichier : `lua/vehicle/controller/gauges/analogOdometer.lua` · VM : Véhicule · 107 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/gauges/analogOdometer.lua` · VM: Vehicle · 107 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `gauges/analogOdometer` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `gauges/analogOdometer` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire pour un compteur kilométrique analogique affiché par une texture HTML (htmlTexture). Il envoie le total (electrics.values.odometer) et le trip (extensions.odometer.getRelativeRecording()) à la page seulement quand l'un d'eux a changé de plus d'un pas de mise à jour (1000 m, ou 1609.34 m en impérial, divisé par 10 avec séparateur décimal).
+Auxiliary controller for an analog odometer displayed by an HTML texture (htmlTexture). It sends the total (electrics.values.odometer) and the trip (extensions.odometer.getRelativeRecording()) to the page only when one of them has changed by more than one update step (1000 m, or 1609.34 m in imperial, divided by 10 with a decimal separator).
 
-## Remarques
+## Notes
 
-- Clés jbeam : configuration (table, fusionnée avec les clés "configuration_xxx") avec materialName, htmlPath, displayWidth, displayHeight (obligatoires pour afficher), unit ("imperial" = pas de 1609.34, sinon 1000), odometerHasDecimalSeparator, tripHasDecimalSeparator (pas divisé par 10). La table de configuration est envoyée entière à la page par callJS("setup").
-- La texture est créée en mode "manual" à 1 FPS. L'envoi n'a lieu que si un joueur est assis et si l'UI doit être rafraîchie.
-- M.init = nop (fonction globale du moteur). setParameters ne fait rien.
+- jbeam keys: configuration (table, merged with the "configuration_xxx" keys) with materialName, htmlPath, displayWidth, displayHeight (required to display), unit ("imperial" = step of 1609.34, otherwise 1000), odometerHasDecimalSeparator, tripHasDecimalSeparator (step divided by 10). The whole configuration table is sent to the page by callJS("setup").
+- The texture is created in "manual" mode at 1 FPS. Sending only happens if a player is seated and the UI needs refreshing.
+- M.init = nop (global engine function). setParameters does nothing.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_gauges_analogOdometer.initSecondStage(jbeamData)` | Lit la configuration, calcule le pas de mise à jour, crée la texture HTML et envoie la configuration à la page. *(interne)* | 50 |
-| `controller_gauges_analogOdometer.reset()` | Force un nouvel envoi de données au prochain updateGFX. *(interne)* | 46 |
-| `controller_gauges_analogOdometer.setParameters(parameters)` | Ne fait rien. | 95 |
-| `controller_gauges_analogOdometer.updateGFX(dt)` | Envoie trip et odomètre à la page quand ils ont changé d'au moins un pas. *(interne)* | 25 |
+| `controller_gauges_analogOdometer.initSecondStage(jbeamData)` | Reads the configuration, computes the update step, creates the HTML texture and sends the configuration to the page. *(internal)* | 50 |
+| `controller_gauges_analogOdometer.reset()` | Forces a new data send at the next updateGFX. *(internal)* | 46 |
+| `controller_gauges_analogOdometer.setParameters(parameters)` | Does nothing. | 95 |
+| `controller_gauges_analogOdometer.updateGFX(dt)` | Sends trip and odometer to the page when they have changed by at least one step. *(internal)* | 25 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_gauges_analogOdometer.initSecondStage(jbeamData)`
 
-Lit la configuration, calcule le pas de mise à jour, crée la texture HTML et envoie la configuration à la page.
+Reads the configuration, computes the update step, creates the HTML texture and sends the configuration to the page.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_gauges_analogOdometer.setParameters(parameters)`
 
-Ne fait rien.
+Does nothing.
 
-- `parameters` (*table*) : Ignoré.
+- `parameters` (*table*) : Ignored.
 
 #### `controller_gauges_analogOdometer.updateGFX(dt)`
 
-Envoie trip et odomètre à la page quand ils ont changé d'au moins un pas.
+Sends trip and odometer to the page when they have changed by at least one step.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `init` | function | nop. |
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getUpdateUIflag`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/gauges/analogOdometer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/gauges/analogOdometer.lua`.*

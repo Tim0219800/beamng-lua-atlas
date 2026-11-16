@@ -1,0 +1,50 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/fadeSequence.lua",
+  "module": "Nœud flowgraph « Fade Sequence » (catégorie once_f_duration, obsolète) : enchaîne fondu au noir, pause et fondu depuis le noir via ui_fadeScreen.fadeSequence. Entrées : « startDuration » (0.75), « pauseDuration » (0), « endDuration » (0.75). Sortie « faded » (impulsion quand l'écran est noir). Le code recommande plutôt Fade To Black + Fade From Black.",
+  "notes": [
+    "C.todo : « Obsolete; use Fade To Black and Fade From Black nodes instead. »"
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Réinitialise l'état et le pin faded.",
+          "internal": true
+        },
+        "init": {
+          "desc": "État de durée 'inactive', fadedTriggered = false.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Réinitialise l'état et le pin faded.",
+          "internal": true
+        },
+        "onScreenFadeState": {
+          "desc": "Hook : état 1 -> faded = true ; état 3 -> terminé.",
+          "params": {
+            "state": {
+              "type": "integer",
+              "desc": "État du fondu d'écran (1 = noir atteint, 3 = fondu terminé)."
+            }
+          },
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Modèles de durée à 0.75 pour startDuration et endDuration.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Transforme 'faded' en impulsion (remis à false à la frame suivante).",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Démarre la séquence avec les trois durées (défauts 1, 0, 1 si nil).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

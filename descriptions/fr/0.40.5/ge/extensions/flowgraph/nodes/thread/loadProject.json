@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/thread/loadProject.lua",
+  "module": "Noeud « Load Project » (once_p_duration). Charge un flowgraph (.flow.json) par chemin et le démarre comme projet enfant via self.mgr.modules.thread:startProjectFromFilepath. Entrée : path (string) ; sortie : id (number) du projet démarré, utilisable avec Send/Receive Message.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise targetId.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Restreint path aux fichiers « Flowgraph Files » (.flow.json).",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet targetId à nil.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Remet targetId à nil.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Résout le chemin (avec ou sans extension .flow.json), démarre le projet et écrit son id.",
+          "internal": false
+        }
+      }
+    }
+  }
+}

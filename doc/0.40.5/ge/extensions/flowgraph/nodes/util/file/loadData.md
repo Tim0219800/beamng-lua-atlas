@@ -1,24 +1,24 @@
 # `flowgraph_nodes_util_file_loadData`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/file/loadData.lua` · VM : Game Engine (GE) · 53 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/file/loadData.lua` · VM: Game Engine (GE) · 53 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/file/loadData")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/file/loadData")` (file under extensions/ but not a regular extension)
 
-Nœud « Load Data » (catégorie once_instant, couleur file). Charge des données simples depuis un fichier, réutilisables entre sessions. Entrée : file (nom sans extension). Les pins de sortie personnalisés (types string, number, bool, any, table, vec3, quat, color) portent le nom des clés lues ; chaque sortie reçoit la valeur de la clé du même nom via modules.file:read.
+Node "Load Data" (category once_instant, color file). Loads simple data from a file, reusable between sessions. Input: file (name without extension). The custom output pins (types string, number, bool, any, table, vec3, quat, color) carry the names of the keys read; each output receives the value of the key with the same name via modules.file:read.
 
-## Remarques
+## Notes
 
-- La description du pin file dit « save into » mais il s'agit ici du fichier à lire.
+- The description of the file pin says "save into" but here it is the file to read.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr)` | Active la sauvegarde des pins et les pins de sortie personnalisés. | 33 |
-| `C:onNodeReset()` | Force le rechargement du fichier (modules.file:forceReload). | 48 |
-| `C:workOnce()` | Pour chaque pin de sortie (hors flow), lit la valeur correspondante dans le fichier. | 38 |
+| `C:init(mgr)` | Enables pin saving and custom output pins. | 33 |
+| `C:onNodeReset()` | Forces the file to reload (modules.file:forceReload). | 48 |
+| `C:workOnce()` | For each output pin (except flow), reads the corresponding value from the file. | 38 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/file/loadData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/file/loadData.lua`.*

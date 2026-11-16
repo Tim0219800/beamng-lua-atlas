@@ -1,15 +1,15 @@
 # `career_modules_computer`
 
-*Fichier : `lua/ge/extensions/career/modules/computer.lua` · VM : Game Engine (GE) · 143 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/computer.lua` · VM: Game Engine (GE) · 143 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_computer` : `extensions.load("career_modules_computer")`, puis la globale `career_modules_computer`
+**Access:** extension `career_modules_computer`: `extensions.load("career_modules_computer")`, then the global `career_modules_computer`
 
-Menu « ordinateur » du garage en mode carrière. openMenu construit la liste des véhicules du garage le plus proche, laisse les autres modules ajouter leurs boutons via le hook onComputerAddFunctions, démarre un tether (le menu se ferme si le joueur s'éloigne) puis navigue vers l'écran UI 'career.computer'. Un moddeur ajoute un bouton en implémentant onComputerAddFunctions(menuData, computerFunctions) dans son extension.
+Garage "computer" menu in career mode. openMenu builds the list of vehicles in the nearest garage, lets other modules add their buttons via the onComputerAddFunctions hook, starts a tether (the menu closes if the player moves away), then navigates to the 'career.computer' UI screen. A modder adds a button by implementing onComputerAddFunctions(menuData, computerFunctions) in their extension.
 
-## Exemple
+## Example
 
 ```lua
--- ajouter un bouton général dans le menu de l'ordinateur
+-- add a general button to the computer menu
 M.onComputerAddFunctions = function(menuData, computerFunctions)
   computerFunctions.general.monBouton = {
     id = 'monBouton', label = 'Mon bouton', callback = function(computerId) print(computerId) end,
@@ -18,69 +18,69 @@ M.onComputerAddFunctions = function(menuData, computerFunctions)
 end
 ```
 
-## Remarques
+## Notes
 
-- Dépend de career_career (M.dependencies).
-- computerFunctions a deux sous-tables : general[buttonId] et vehicleSpecific[inventoryId][buttonId] ; chaque entrée a un callback(computerId).
-- M.reasons contient des raisons prêtes à l'emploi (tutorialActive, hasBoughtStarterVehicle, needsRepair) ; getComputerUIData traduit leur label via core_locales.
-- Bug probable : dans openMenu, le repli startSphereTether(computerPos, ...) utilise la variable computerPos qui n'est pas définie (la ligne qui la calcule est commentée) ; elle vaut nil si la facilité n'a aucune porte.
-- Distances de tether : 1 m (boîte, porte) et 4 m (sphère).
+- Depends on career_career (M.dependencies).
+- computerFunctions has two sub-tables: general[buttonId] and vehicleSpecific[inventoryId][buttonId]; each entry has a callback(computerId).
+- M.reasons contains ready-made reasons (tutorialActive, hasBoughtStarterVehicle, needsRepair); getComputerUIData translates their label via core_locales.
+- Probable bug: in openMenu, the startSphereTether(computerPos, ...) fallback uses the variable computerPos, which is not defined (the line that computes it is commented out); it is nil if the facility has no door.
+- Tether distances: 1 m (box, door) and 4 m (sphere).
 
-**Dépendances (chargées avant) :** `career_career`
+**Dependencies (loaded first):** `career_career`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_computer.closeMenu()` | Ferme tous les menus carrière (career_career.closeAllMenus). Sert aussi de callback de tether quand le joueur s'éloigne. | 111 |
-| `career_modules_computer.computerButtonCallback(buttonId, inventoryId)` | Appelée par l'UI lors d'un clic : retrouve le bouton (vehicleSpecific[inventoryId] si inventoryId est donné, sinon general) et exécute son callback(computerId). | 57 |
-| `career_modules_computer.getComputerUIData()` | Renvoie à l'UI une copie des données du menu : computerFunctions (labels de raisons traduits, clés inventoryId converties en chaînes), vehicles (avec thumbnail et inventoryId en chaîne), facilityName, resetActiveVehicleIndex, computerId. Table vide si le menu n'a pas été ouvert. | 68 |
-| `career_modules_computer.onMenuClosed()` | Hook appelé à la fermeture du menu ; supprime le tether (tether.remove = true). *(interne)* *(hook)* | 107 |
-| `career_modules_computer.openComputerMenuById(computerId)` | Récupère la facilité 'computer' par son id via freeroam_facilities.getFacility puis appelle openMenu. | 115 |
-| `career_modules_computer.openMenu(computerFacility, resetActiveVehicleIndex, activityElement)` | Ouvre le menu ordinateur pour une facilité : liste les véhicules du garage le plus proche (nom, besoin de réparation, date de saleté), déclenche onComputerAddFunctions, démarre le tether, navigue vers 'career.computer' puis déclenche onComputerMenuOpened. | 18 |
+| `career_modules_computer.closeMenu()` | Closes all career menus (career_career.closeAllMenus). Also serves as the tether callback when the player moves away. | 111 |
+| `career_modules_computer.computerButtonCallback(buttonId, inventoryId)` | Called by the UI on a click: finds the button (vehicleSpecific[inventoryId] if inventoryId is given, otherwise general) and runs its callback(computerId). | 57 |
+| `career_modules_computer.getComputerUIData()` | Returns to the UI a copy of the menu data: computerFunctions (reason labels translated, inventoryId keys converted to strings), vehicles (with thumbnail and inventoryId as a string), facilityName, resetActiveVehicleIndex, computerId. Empty table if the menu has not been opened. | 68 |
+| `career_modules_computer.onMenuClosed()` | Hook called when the menu closes; removes the tether (tether.remove = true). *(internal)* *(hook)* | 107 |
+| `career_modules_computer.openComputerMenuById(computerId)` | Gets the 'computer' facility by its id via freeroam_facilities.getFacility, then calls openMenu. | 115 |
+| `career_modules_computer.openMenu(computerFacility, resetActiveVehicleIndex, activityElement)` | Opens the computer menu for a facility: lists the vehicles in the nearest garage (name, repair need, dirt date), fires onComputerAddFunctions, starts the tether, navigates to 'career.computer', then fires onComputerMenuOpened. | 18 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_computer.computerButtonCallback(buttonId, inventoryId)`
 
-Appelée par l'UI lors d'un clic : retrouve le bouton (vehicleSpecific[inventoryId] si inventoryId est donné, sinon general) et exécute son callback(computerId).
+Called by the UI on a click: finds the button (vehicleSpecific[inventoryId] if inventoryId is given, otherwise general) and runs its callback(computerId).
 
-- `buttonId` (*string*) : Clé du bouton dans computerFunctions.
-- `inventoryId` (*integer|nil*) : Id d'inventaire du véhicule pour un bouton spécifique à un véhicule.
+- `buttonId` (*string*) : Button key in computerFunctions.
+- `inventoryId` (*integer|nil*) : Inventory id of the vehicle for a vehicle-specific button.
 
 #### `career_modules_computer.getComputerUIData()`
 
-Renvoie à l'UI une copie des données du menu : computerFunctions (labels de raisons traduits, clés inventoryId converties en chaînes), vehicles (avec thumbnail et inventoryId en chaîne), facilityName, resetActiveVehicleIndex, computerId. Table vide si le menu n'a pas été ouvert.
+Returns to the UI a copy of the menu data: computerFunctions (reason labels translated, inventoryId keys converted to strings), vehicles (with thumbnail and inventoryId as a string), facilityName, resetActiveVehicleIndex, computerId. Empty table if the menu has not been opened.
 
-- **renvoie** : table Données pour l'écran career.computer.
+- **returns**: table Data for the career.computer screen.
 
 #### `career_modules_computer.openComputerMenuById(computerId)`
 
-Récupère la facilité 'computer' par son id via freeroam_facilities.getFacility puis appelle openMenu.
+Gets the 'computer' facility by its id via freeroam_facilities.getFacility, then calls openMenu.
 
-- `computerId` (*string*) : Identifiant de la facilité ordinateur.
+- `computerId` (*string*) : Computer facility identifier.
 
 #### `career_modules_computer.openMenu(computerFacility, resetActiveVehicleIndex, activityElement)`
 
-Ouvre le menu ordinateur pour une facilité : liste les véhicules du garage le plus proche (nom, besoin de réparation, date de saleté), déclenche onComputerAddFunctions, démarre le tether, navigue vers 'career.computer' puis déclenche onComputerMenuOpened.
+Opens the computer menu for a facility: lists the vehicles in the nearest garage (name, repair need, dirt date), fires onComputerAddFunctions, starts the tether, navigates to 'career.computer', then fires onComputerMenuOpened.
 
-- `computerFacility` (*table*) : Facilité 'computer' (champs id, name, doors).
-- `resetActiveVehicleIndex` (*boolean|nil*) : Transmis à l'UI dans menuData.resetActiveVehicleIndex.
-- `activityElement` (*any*) : Non utilisé dans la fonction.
+- `computerFacility` (*table*) : 'computer' facility (fields id, name, doors).
+- `resetActiveVehicleIndex` (*boolean|nil*) : Passed to the UI in menuData.resetActiveVehicleIndex.
+- `activityElement` (*any*) : Not used in the function.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | {"career_career"} : extensions chargées avant ce module. |
-| `reasons` | table<string, table> | Raisons standard de désactivation d'un bouton : tutorialActive, hasBoughtStarterVehicle (type 'text') et needsRepair (type 'needsRepair'), chacune avec un label de traduction. |
+| `dependencies` | string[] | {"career_career"}: extensions loaded before this module. |
+| `reasons` | table<string, table> | Standard reasons for disabling a button: tutorialActive, hasBoughtStarterVehicle (type 'text') and needsRepair (type 'needsRepair'), each with a translation label. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onComputerAddFunctions` — écouté par 11 module(s)
-- `onComputerMenuOpened` — écouté par 1 module(s)
+- `onComputerAddFunctions` — listened to by 11 module(s)
+- `onComputerMenuOpened` — listened to by 1 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/computer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/computer.lua`.*

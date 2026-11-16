@@ -1,77 +1,77 @@
 # `editor_toolUtilities_render_tris`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/render/tris.lua` · VM : Game Engine (GE) · 121 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/render/tris.lua` · VM: Game Engine (GE) · 121 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_render_tris` : `extensions.load("editor_toolUtilities_render_tris")`, puis la globale `editor_toolUtilities_render_tris`
+**Access:** extension `editor_toolUtilities_render_tris`: `extensions.load("editor_toolUtilities_render_tris")`, then the global `editor_toolUtilities_render_tris`
 
-Dessin de triangles pleins pour les outils d'édition de splines (issu de l'ancien render.lua). Triangles filtrés à 600 m de la caméra, remplissage de polygones simples (triangulation par découpe d'oreilles) et remplissage de régions 2D avec trous par balayage de lignes (règle pair-impair). Sert aux aperçus de surfaces dans l'éditeur.
+Solid triangle drawing for the spline editing tools (from the old render.lua). Triangles filtered at 600 m from the camera, filling of simple polygons (ear clipping triangulation) and filling of 2D regions with holes by scanline (even-odd rule). Used for surface previews in the editor.
 
-## Remarques
+## Notes
 
-- drawTriCulled ne dessine que si les trois sommets sont à moins de 600 m de la caméra ; le triangle est dessiné plein avec debugDraw.drawTriSolid.
-- drawFilledRegions2D est destiné aux aperçus, pas à de la géométrie finale : l'escalier dû au pas de balayage sur les arêtes diagonales est masqué par le contour exact tracé par l'appelant.
+- drawTriCulled only draws if all three vertices are within 600 m of the camera; the triangle is drawn solid with debugDraw.drawTriSolid.
+- drawFilledRegions2D is intended for previews, not final geometry: the staircase effect due to the scan step on diagonal edges is hidden by the exact outline drawn by the caller.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_render_tris.drawFilledPolygon(verts, col)` | Remplit un polygone simple, éventuellement concave, dont les sommets sont des vec3 déjà à la hauteur de dessin. Triangule en 2D (x,y) par découpe d'oreilles (geom.triangulatePolygon2D), puis dessine les triangles. Sans effet pour moins de 3 sommets ou un anneau dégénéré. | 40 |
-| `editor_toolUtilities_render_tris.drawFilledRegions2D(regions, col, zFn, step)` | Remplit un ensemble de régions 2D (anneaux {x=,y=}), trous compris, par balayage horizontal avec la règle pair-impair : un point dans un nombre impair d'anneaux est rempli. Gère formes concaves et régions disjointes sans triangulation. | 56 |
-| `editor_toolUtilities_render_tris.drawTriActiveSurface(a, b, c)` | Triangle de surface active (colourActiveSurf). | 35 |
-| `editor_toolUtilities_render_tris.drawTriCulled(a, b, c, col)` | Dessine un triangle plein de couleur col s'il est entièrement à moins de 600 m de la caméra. | 27 |
-| `editor_toolUtilities_render_tris.drawTriNotSelectedSurface(a, b, c)` | Triangle de surface non sélectionnée (colourNotSelectedSurf). | 33 |
-| `editor_toolUtilities_render_tris.drawTriPreviewSurface(a, b, c)` | Triangle de surface d'aperçu (colourPreviewSurf). | 34 |
+| `editor_toolUtilities_render_tris.drawFilledPolygon(verts, col)` | Fills a simple polygon, possibly concave, whose vertices are vec3s already at the drawing height. Triangulates in 2D (x,y) by ear clipping (geom.triangulatePolygon2D), then draws the triangles. No effect for fewer than 3 vertices or a degenerate ring. | 40 |
+| `editor_toolUtilities_render_tris.drawFilledRegions2D(regions, col, zFn, step)` | Fills a set of 2D regions ({x=,y=} rings), holes included, by horizontal scan with the even-odd rule: a point inside an odd number of rings is filled. Handles concave shapes and disjoint regions without triangulation. | 56 |
+| `editor_toolUtilities_render_tris.drawTriActiveSurface(a, b, c)` | Active surface triangle (colourActiveSurf). | 35 |
+| `editor_toolUtilities_render_tris.drawTriCulled(a, b, c, col)` | Draws a solid triangle of color col if it is entirely within 600 m of the camera. | 27 |
+| `editor_toolUtilities_render_tris.drawTriNotSelectedSurface(a, b, c)` | Unselected surface triangle (colourNotSelectedSurf). | 33 |
+| `editor_toolUtilities_render_tris.drawTriPreviewSurface(a, b, c)` | Preview surface triangle (colourPreviewSurf). | 34 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_render_tris.drawFilledPolygon(verts, col)`
 
-Remplit un polygone simple, éventuellement concave, dont les sommets sont des vec3 déjà à la hauteur de dessin. Triangule en 2D (x,y) par découpe d'oreilles (geom.triangulatePolygon2D), puis dessine les triangles. Sans effet pour moins de 3 sommets ou un anneau dégénéré.
+Fills a simple polygon, possibly concave, whose vertices are vec3s already at the drawing height. Triangulates in 2D (x,y) by ear clipping (geom.triangulatePolygon2D), then draws the triangles. No effect for fewer than 3 vertices or a degenerate ring.
 
-- `verts` (*vec3[]*) : Sommets du polygone.
-- `col` (*integer*) : Couleur packée.
+- `verts` (*vec3[]*) : Polygon vertices.
+- `col` (*integer*) : Packed color.
 
 #### `editor_toolUtilities_render_tris.drawFilledRegions2D(regions, col, zFn, step)`
 
-Remplit un ensemble de régions 2D (anneaux {x=,y=}), trous compris, par balayage horizontal avec la règle pair-impair : un point dans un nombre impair d'anneaux est rempli. Gère formes concaves et régions disjointes sans triangulation.
+Fills a set of 2D regions ({x=,y=} rings), holes included, by horizontal scan with the even-odd rule: a point inside an odd number of rings is filled. Handles concave shapes and disjoint regions without triangulation.
 
-- `regions` (*table*) : Liste d'anneaux, chacun une liste de {x=,y=}.
-- `col` (*integer*) : Couleur packée.
-- `zFn` (*function*) : zFn(x, y) renvoie la hauteur de dessin (ex. hauteur du terrain).
-- `step` (*number|nil*) : Pas de balayage ; auto entre 0.25 et 3 m (hauteur/100) si nil.
+- `regions` (*table*) : List of rings, each a list of {x=,y=}.
+- `col` (*integer*) : Packed color.
+- `zFn` (*function*) : zFn(x, y) returns the drawing height (e.g. terrain height).
+- `step` (*number|nil*) : Scan step; auto between 0.25 and 3 m (height/100) if nil.
 
 #### `editor_toolUtilities_render_tris.drawTriActiveSurface(a, b, c)`
 
-Triangle de surface active (colourActiveSurf).
+Active surface triangle (colourActiveSurf).
 
-- `a` (*vec3*) : Sommet 1.
-- `b` (*vec3*) : Sommet 2.
-- `c` (*vec3*) : Sommet 3.
+- `a` (*vec3*) : Vertex 1.
+- `b` (*vec3*) : Vertex 2.
+- `c` (*vec3*) : Vertex 3.
 
 #### `editor_toolUtilities_render_tris.drawTriCulled(a, b, c, col)`
 
-Dessine un triangle plein de couleur col s'il est entièrement à moins de 600 m de la caméra.
+Draws a solid triangle of color col if it is entirely within 600 m of the camera.
 
-- `a` (*vec3*) : Sommet 1.
-- `b` (*vec3*) : Sommet 2.
-- `c` (*vec3*) : Sommet 3.
-- `col` (*integer*) : Couleur packée.
+- `a` (*vec3*) : Vertex 1.
+- `b` (*vec3*) : Vertex 2.
+- `c` (*vec3*) : Vertex 3.
+- `col` (*integer*) : Packed color.
 
 #### `editor_toolUtilities_render_tris.drawTriNotSelectedSurface(a, b, c)`
 
-Triangle de surface non sélectionnée (colourNotSelectedSurf).
+Unselected surface triangle (colourNotSelectedSurf).
 
-- `a` (*vec3*) : Sommet 1.
-- `b` (*vec3*) : Sommet 2.
-- `c` (*vec3*) : Sommet 3.
+- `a` (*vec3*) : Vertex 1.
+- `b` (*vec3*) : Vertex 2.
+- `c` (*vec3*) : Vertex 3.
 
 #### `editor_toolUtilities_render_tris.drawTriPreviewSurface(a, b, c)`
 
-Triangle de surface d'aperçu (colourPreviewSurf).
+Preview surface triangle (colourPreviewSurf).
 
-- `a` (*vec3*) : Sommet 1.
-- `b` (*vec3*) : Sommet 2.
-- `c` (*vec3*) : Sommet 3.
+- `a` (*vec3*) : Vertex 1.
+- `b` (*vec3*) : Vertex 2.
+- `c` (*vec3*) : Vertex 3.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/render/tris.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/render/tris.lua`.*

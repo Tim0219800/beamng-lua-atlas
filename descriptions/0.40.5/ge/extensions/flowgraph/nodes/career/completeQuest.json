@@ -1,14 +1,19 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/career/completeQuest.lua",
-  "module": "Nœud flowgraph « Complete Quest » (catégorie once_instant, couleur/icône career). Termine la quête associée au flowgraph via career_modules_questManager.completeQuest(mgr.quest.id), seulement si la carrière est active et que le graphe a une quête (self.mgr.quest). Pin d'entrée : completeOnStop (bool, défaut true, hardCoded).",
-  "notes": ["Le pin completeOnStop est déclaré (« complète seulement à l'arrêt du manager, avec un décalage d'une frame ») mais n'est pas lu dans ce fichier : la quête est complétée immédiatement.", "Le pin utilise la clé « hardCoded » (C majuscule) alors que les autres nœuds écrivent « hardcoded »."],
+  "module": "Flowgraph node \"Complete Quest\" (category once_instant, career color/icon). Completes the quest associated with the flowgraph via career_modules_questManager.completeQuest(mgr.quest.id), only if career is active and the graph has a quest (self.mgr.quest). Input pin: completeOnStop (bool, default true, hardCoded).",
+  "notes": [
+    "The completeOnStop pin is declared (\"completes only when the manager stops, with a one-frame delay\") but is not read in this file: the quest is completed immediately.",
+    "The pin uses the key \"hardCoded\" (capital C) whereas the other nodes write \"hardcoded\"."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Appelle completeQuest pour la quête du graphe si carrière active."}
+        "workOnce": {
+          "desc": "Calls completeQuest for the graph's quest if career is active."
+        }
       }
     }
   }

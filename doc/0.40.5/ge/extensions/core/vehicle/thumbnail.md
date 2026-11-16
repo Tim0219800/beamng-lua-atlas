@@ -1,110 +1,110 @@
 # `core_vehicle_thumbnail`
 
-*Fichier : `lua/ge/extensions/core/vehicle/thumbnail.lua` · VM : Game Engine (GE) · 288 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/vehicle/thumbnail.lua` · VM: Game Engine (GE) · 288 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_vehicle_thumbnail` : `extensions.load("core_vehicle_thumbnail")`, puis la globale `core_vehicle_thumbnail`
+**Access:** extension `core_vehicle_thumbnail`: `extensions.load("core_vehicle_thumbnail")`, then the global `core_vehicle_thumbnail`
 
-Extension GE `core_vehicle_thumbnail` : génère les miniatures (.jpg) des configurations de véhicule sauvegardées, soit directement dans vehicles/<modèle>/<config>.jpg, soit sous forme de capture temporaire d'aperçu (dossier /screenshots/vehicleConfigTemp) que l'utilisateur peut valider ou annuler avant la sauvegarde. Délègue la prise de vue à util_screenshotCreator_currentConfigThumbnail. Utilisée par core_vehicle_partmgmt.
+GE extension `core_vehicle_thumbnail`: generates the thumbnails (.jpg) of saved vehicle configurations, either directly in vehicles/<model>/<config>.jpg, or as a temporary preview capture (folder /screenshots/vehicleConfigTemp) that the user can accept or cancel before saving. Delegates the shot to util_screenshotCreator_currentConfigThumbnail. Used by core_vehicle_partmgmt.
 
-## Exemple
+## Example
 
 ```lua
 local r = core_vehicle_thumbnail.captureTemporaryThumbnail()
 if r.success then
-  -- l'UI reçoit le guihook VehicleConfigThumbnailPreviewReady {captureId, success, path}
+  -- the UI receives the guihook VehicleConfigThumbnailPreviewReady {captureId, success, path}
 end
--- à la sauvegarde :
-core_vehicle_thumbnail.commitTemporaryThumbnail(r.captureId, 'vehicles/pickup/ma_config.jpg')
+-- on save:
+core_vehicle_thumbnail.commitTemporaryThumbnail(r.captureId, 'vehicles/pickup/my_config.jpg')
 ```
 
-## Remarques
+## Notes
 
-- Les captures temporaires sont suivies par un identifiant numérique croissant (captureId). Le guihook VehicleConfigThumbnailPreviewReady est émis avec {captureId, success, path?} à la fin de chaque capture.
-- La copie de fichier est atomique : copie vers un .tmp, sauvegarde éventuelle de l'ancien fichier en .bak, puis renommage ; restauration en cas d'échec.
-- generateThumbnail utilise `vehicle.jbeam or vehicle.JBeam` pour le nom du modèle (deux casses testées).
+- Temporary captures are tracked by an increasing numeric identifier (captureId). The guihook VehicleConfigThumbnailPreviewReady is emitted with {captureId, success, path?} at the end of each capture.
+- The file copy is atomic: copy to a .tmp, optional backup of the old file as .bak, then rename; restore on failure.
+- generateThumbnail uses `vehicle.jbeam or vehicle.JBeam` for the model name (both cases tested).
 
-**Dépendances (chargées avant) :** `core_vehicle_manager`, `core_vehicle_configTarget`, `util_screenshotCreator_currentConfigThumbnail`
+**Dependencies (loaded first):** `core_vehicle_manager`, `core_vehicle_configTarget`, `util_screenshotCreator_currentConfigThumbnail`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_vehicle_thumbnail.cancelTemporaryThumbnail(captureId)` | Annule une capture (supprime le fichier ; si elle est encore en cours, elle sera supprimée à son terme). | 186 |
-| `core_vehicle_thumbnail.captureTemporaryThumbnail()` | Démarre une capture temporaire (aperçu) pour la config courante du véhicule configuré ; le fichier est /screenshots/vehicleConfigTemp/save-preview-<id>.jpg. | 161 |
-| `core_vehicle_thumbnail.clearTemporaryThumbnail(captureId)` | Annule une capture précise, ou toutes si captureId est nil. | 199 |
-| `core_vehicle_thumbnail.commitTemporaryThumbnail(captureId, targetPath)` | Valide une capture prête : la copie vers targetPath puis supprime le fichier temporaire. | 265 |
-| `core_vehicle_thumbnail.copyThumbnailFile(sourcePath, targetPath)` | Copie un fichier miniature vers une destination en remplaçant l'ancien de manière sûre (création du dossier si nécessaire). | 223 |
-| `core_vehicle_thumbnail.generateConfigThumbnail(configName)` | Génère la miniature de la config nommée pour le véhicule configuré, dans vehicles/<modèle>/<nom>.jpg, via util_screenshotCreator_currentConfigThumbnail. | 110 |
-| `core_vehicle_thumbnail.getTemporaryThumbnail()` | Renvoie la capture temporaire prête la plus récente. | 114 |
-| `core_vehicle_thumbnail.isValidTemporaryThumbnail(path)` | Indique si le chemin correspond à une capture temporaire prête, non annulée et existante. | 213 |
+| `core_vehicle_thumbnail.cancelTemporaryThumbnail(captureId)` | Cancels a capture (deletes the file; if it is still in progress, it will be deleted when it finishes). | 186 |
+| `core_vehicle_thumbnail.captureTemporaryThumbnail()` | Starts a temporary capture (preview) for the configured vehicle's current config; the file is /screenshots/vehicleConfigTemp/save-preview-<id>.jpg. | 161 |
+| `core_vehicle_thumbnail.clearTemporaryThumbnail(captureId)` | Cancels a specific capture, or all of them if captureId is nil. | 199 |
+| `core_vehicle_thumbnail.commitTemporaryThumbnail(captureId, targetPath)` | Commits a ready capture: copies it to targetPath then deletes the temporary file. | 265 |
+| `core_vehicle_thumbnail.copyThumbnailFile(sourcePath, targetPath)` | Copies a thumbnail file to a destination, safely replacing the old one (creates the folder if needed). | 223 |
+| `core_vehicle_thumbnail.generateConfigThumbnail(configName)` | Generates the thumbnail of the named config for the configured vehicle, in vehicles/<model>/<name>.jpg, via util_screenshotCreator_currentConfigThumbnail. | 110 |
+| `core_vehicle_thumbnail.getTemporaryThumbnail()` | Returns the most recent ready temporary capture. | 114 |
+| `core_vehicle_thumbnail.isValidTemporaryThumbnail(path)` | Indicates whether the path matches a temporary capture that is ready, not canceled and existing. | 213 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_vehicle_thumbnail.cancelTemporaryThumbnail(captureId)`
 
-Annule une capture (supprime le fichier ; si elle est encore en cours, elle sera supprimée à son terme).
+Cancels a capture (deletes the file; if it is still in progress, it will be deleted when it finishes).
 
-- `captureId` (*integer*) : identifiant de la capture
-- **renvoie** : table {success, captureId} ou {success = false, reason = 'captureNotFound', captureId}
+- `captureId` (*integer*) : capture identifier
+- **returns**: table {success, captureId} or {success = false, reason = 'captureNotFound', captureId}
 
 #### `core_vehicle_thumbnail.captureTemporaryThumbnail()`
 
-Démarre une capture temporaire (aperçu) pour la config courante du véhicule configuré ; le fichier est /screenshots/vehicleConfigTemp/save-preview-<id>.jpg.
+Starts a temporary capture (preview) for the configured vehicle's current config; the file is /screenshots/vehicleConfigTemp/save-preview-<id>.jpg.
 
-- **renvoie** : table {success = true, captureId, path} ou {success = false, reason = 'noCurrentConfig'|'busy'}
+- **returns**: table {success = true, captureId, path} or {success = false, reason = 'noCurrentConfig'|'busy'}
 
 #### `core_vehicle_thumbnail.clearTemporaryThumbnail(captureId)`
 
-Annule une capture précise, ou toutes si captureId est nil.
+Cancels a specific capture, or all of them if captureId is nil.
 
-- `captureId` (*integer|nil*) : identifiant ; nil = toutes
-- **renvoie** : table {success = true} (ou résultat de cancelTemporaryThumbnail)
+- `captureId` (*integer|nil*) : identifier; nil = all
+- **returns**: table {success = true} (or the result of cancelTemporaryThumbnail)
 
 #### `core_vehicle_thumbnail.commitTemporaryThumbnail(captureId, targetPath)`
 
-Valide une capture prête : la copie vers targetPath puis supprime le fichier temporaire.
+Commits a ready capture: copies it to targetPath then deletes the temporary file.
 
-- `captureId` (*integer*) : capture prête
-- `targetPath` (*string*) : chemin du .jpg définitif
-- **renvoie** : boolean true si copiée
+- `captureId` (*integer*) : ready capture
+- `targetPath` (*string*) : path of the final .jpg
+- **returns**: boolean true if copied
 
 #### `core_vehicle_thumbnail.copyThumbnailFile(sourcePath, targetPath)`
 
-Copie un fichier miniature vers une destination en remplaçant l'ancien de manière sûre (création du dossier si nécessaire).
+Copies a thumbnail file to a destination, safely replacing the old one (creates the folder if needed).
 
-- `sourcePath` (*string*) : fichier source existant
-- `targetPath` (*string*) : fichier destination
-- **renvoie** : boolean true si la copie a réussi
+- `sourcePath` (*string*) : existing source file
+- `targetPath` (*string*) : destination file
+- **returns**: boolean true if the copy succeeded
 
 #### `core_vehicle_thumbnail.generateConfigThumbnail(configName)`
 
-Génère la miniature de la config nommée pour le véhicule configuré, dans vehicles/<modèle>/<nom>.jpg, via util_screenshotCreator_currentConfigThumbnail.
+Generates the thumbnail of the named config for the configured vehicle, in vehicles/<model>/<name>.jpg, via util_screenshotCreator_currentConfigThumbnail.
 
-- `configName` (*string*) : nom de config (le chemin et les extensions .pc/.jpg sont retirés)
-- **renvoie** : boolean true si la prise de vue a démarré
+- `configName` (*string*) : config name (path and .pc/.jpg extensions are removed)
+- **returns**: boolean true if the shot started
 
 #### `core_vehicle_thumbnail.getTemporaryThumbnail()`
 
-Renvoie la capture temporaire prête la plus récente.
+Returns the most recent ready temporary capture.
 
-- **renvoie** : table {captureId, path} ou {path = nil} s'il n'y en a pas
+- **returns**: table {captureId, path} or {path = nil} if there is none
 
 #### `core_vehicle_thumbnail.isValidTemporaryThumbnail(path)`
 
-Indique si le chemin correspond à une capture temporaire prête, non annulée et existante.
+Indicates whether the path matches a temporary capture that is ready, not canceled and existing.
 
-- `path` (*string*) : chemin du fichier
-- **renvoie** : boolean true si valide
+- `path` (*string*) : file path
+- **returns**: boolean true if valid
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | core_vehicle_manager, core_vehicle_configTarget, util_screenshotCreator_currentConfigThumbnail. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `copyFile`, `directoryCreate`, `directoryExists`, `fileExists`, `removeFile`, `renameFile`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/vehicle/thumbnail.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/vehicle/thumbnail.lua`.*

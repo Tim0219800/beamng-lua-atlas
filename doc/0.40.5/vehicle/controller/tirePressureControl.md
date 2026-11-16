@@ -1,12 +1,12 @@
 # `controller_tirePressureControl`
 
-*Fichier : `lua/vehicle/controller/tirePressureControl.lua` · VM : Véhicule · 373 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/tirePressureControl.lua` · VM: Vehicle · 373 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `tirePressureControl` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `tirePressureControl` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de gonflage/dégonflage centralisé des pneus (CTIS, véhicules tout-terrain/militaires). Les roues sont regroupées en « groupes » (essieux, côtés…) ; le conducteur active/désactive des groupes, puis lance gonflage, dégonflage ou arrêt pour tous les groupes actifs. Le contrôleur modifie directement la pression des groupes de pression des roues (obj:setGroupPressure), égalise les pressions dans un groupe et publie la pression moyenne des groupes actifs et l'état actif de chaque groupe dans electrics. Enregistre un menu radial « Contrôle de pression des pneus ».
+Auxiliary controller for central tire inflation/deflation (CTIS, off-road/military vehicles). Wheels are grouped into "groups" (axles, sides...); the driver enables/disables groups, then starts inflation, deflation or stop for all active groups. The controller directly modifies the pressure of the wheel pressure groups (obj:setGroupPressure), equalizes pressures within a group and publishes the average pressure of the active groups and the active state of each group in electrics. Registers a "Tire pressure control" radial menu.
 
-## Exemple
+## Example
 
 ```lua
 local tpc = controller.getController("tirePressureControl")
@@ -14,93 +14,93 @@ tpc.setGroupState("front", true)
 tpc.startDeflateActiveGroups()
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues dans initSecondStage : mode ("manualControl", seul mode géré), inflateMaxFlow (10) et deflateMaxFlow (10) (variation de pression par seconde, unité de obj:getGroupPressure, Pa), activeGroupPressureElectricsName (<nom>_activeGroupPressure), wheelGroups (table d'en-tête : groupName, uiName, uiIcon, wheelNames, maxPressure, minPressure, groupEqualizeFlowLimit ; tous sauf uiIcon obligatoires).
-- Electrics publiés : <nom>_activeGroupPressure (pression moyenne lissée des groupes actifs, Pa absolus) et <nom>_<groupe>_isActive (1 ou 0).
-- La pression ne descend jamais sous obj:getEnvPressure(). Une roue cassée est ignorée dans la moyenne et dans l'égalisation.
-- Les limites minPressure/maxPressure sont absolues : le gonflage (resp. dégonflage) d'une roue s'arrête à maxPressure (resp. minPressure) mais l'égalisation continue.
-- Les groupes sont inactifs après reset ; les groupes inconnus donnent un log E dans setGroupState/toggleGroupState.
-- init ne fait rien : toute l'initialisation est dans initSecondStage (appelé après l'init de tous les contrôleurs, car il lit wheels.*).
-- reset met currentPressure à 0 pour toutes les roues jusqu'à la prochaine lecture dans updateGFX.
-- Le menu radial est enregistré une seule fois par VM (hasRegisteredQuickAccess) ; il utilise controller.getControllerSafe(M.name).
+- jbeam keys read in initSecondStage: mode ("manualControl", the only supported mode), inflateMaxFlow (10) and deflateMaxFlow (10) (pressure change per second, unit of obj:getGroupPressure, Pa), activeGroupPressureElectricsName (<name>_activeGroupPressure), wheelGroups (header table: groupName, uiName, uiIcon, wheelNames, maxPressure, minPressure, groupEqualizeFlowLimit; all required except uiIcon).
+- Published electrics: <name>_activeGroupPressure (smoothed average pressure of the active groups, absolute Pa) and <name>_<group>_isActive (1 or 0).
+- Pressure never drops below obj:getEnvPressure(). A broken wheel is ignored in the average and in the equalization.
+- The minPressure/maxPressure limits are absolute: inflating (resp. deflating) a wheel stops at maxPressure (resp. minPressure) but equalization continues.
+- Groups are inactive after reset; unknown groups give a log E in setGroupState/toggleGroupState.
+- init does nothing: all initialization is in initSecondStage (called after the init of all controllers, because it reads wheels.*).
+- reset sets currentPressure to 0 for all wheels until the next read in updateGFX.
+- The radial menu is registered only once per VM (hasRegisteredQuickAccess); it uses controller.getControllerSafe(M.name).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_tirePressureControl.getState()` | État sauvegardable : variation de pression active, état actif de chaque groupe et pression de chaque roue (clés préfixées par le nom du contrôleur). | 126 |
-| `controller_tirePressureControl.init(jbeamData)` | Ne fait rien (voir initSecondStage). *(interne)* | 280 |
-| `controller_tirePressureControl.initSecondStage(jbeamData)` | Construit les groupes de roues, lit débits et limites de pression et enregistre le menu radial. Appelé après l'init des autres contrôleurs. *(interne)* | 283 |
-| `controller_tirePressureControl.reset(jbeamData)` | Désactive tous les groupes, arrête les changements de pression et remet le lisseur de l'electric à zéro. *(interne)* | 265 |
-| `controller_tirePressureControl.setGroupState(groupName, state)` | Active ou désactive un groupe de roues et affiche un message. Un nom de groupe inconnu logue une erreur et ne fait rien. | 84 |
-| `controller_tirePressureControl.setState(data)` | Restaure activations, variation de pression et pressions des roues (bornées entre pression ambiante et maxPressure, roues cassées ignorées). | 148 |
-| `controller_tirePressureControl.startDeflateActiveGroups()` | Lance le dégonflage (variation = -deflateMaxFlow par seconde) des groupes actifs et affiche un message. | 116 |
-| `controller_tirePressureControl.startInflateActiveGroups()` | Lance le gonflage (variation = +inflateMaxFlow par seconde) des groupes actifs et affiche un message. | 111 |
-| `controller_tirePressureControl.stopActiveGroups()` | Arrête le gonflage/dégonflage en cours et affiche un message. | 121 |
-| `controller_tirePressureControl.toggleGroupState(groupName)` | Bascule l'activation d'un groupe de roues. | 103 |
-| `controller_tirePressureControl.updateGFX(dt)` | Chaque frame : lit les pressions, égalise entre roues d'un groupe, applique gonflage/dégonflage aux groupes actifs et publie les electrics. *(interne)* | 28 |
+| `controller_tirePressureControl.getState()` | Saveable state: active pressure change, active state of each group and pressure of each wheel (keys prefixed by the controller name). | 126 |
+| `controller_tirePressureControl.init(jbeamData)` | Does nothing (see initSecondStage). *(internal)* | 280 |
+| `controller_tirePressureControl.initSecondStage(jbeamData)` | Builds the wheel groups, reads flows and pressure limits and registers the radial menu. Called after the init of the other controllers. *(internal)* | 283 |
+| `controller_tirePressureControl.reset(jbeamData)` | Disables all groups, stops pressure changes and resets the electric smoother to zero. *(internal)* | 265 |
+| `controller_tirePressureControl.setGroupState(groupName, state)` | Enables or disables a wheel group and displays a message. An unknown group name logs an error and does nothing. | 84 |
+| `controller_tirePressureControl.setState(data)` | Restores activations, pressure change and wheel pressures (clamped between ambient pressure and maxPressure, broken wheels ignored). | 148 |
+| `controller_tirePressureControl.startDeflateActiveGroups()` | Starts deflation (change = -deflateMaxFlow per second) of the active groups and displays a message. | 116 |
+| `controller_tirePressureControl.startInflateActiveGroups()` | Starts inflation (change = +inflateMaxFlow per second) of the active groups and displays a message. | 111 |
+| `controller_tirePressureControl.stopActiveGroups()` | Stops the current inflation/deflation and displays a message. | 121 |
+| `controller_tirePressureControl.toggleGroupState(groupName)` | Toggles the activation of a wheel group. | 103 |
+| `controller_tirePressureControl.updateGFX(dt)` | Every frame: reads the pressures, equalizes between wheels of a group, applies inflation/deflation to the active groups and publishes the electrics. *(internal)* | 28 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_tirePressureControl.getState()`
 
-État sauvegardable : variation de pression active, état actif de chaque groupe et pression de chaque roue (clés préfixées par le nom du contrôleur).
+Saveable state: active pressure change, active state of each group and pressure of each wheel (keys prefixed by the controller name).
 
-- **renvoie** : table Table d'état.
+- **returns**: table State table.
 
 #### `controller_tirePressureControl.init(jbeamData)`
 
-Ne fait rien (voir initSecondStage).
+Does nothing (see initSecondStage).
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_tirePressureControl.initSecondStage(jbeamData)`
 
-Construit les groupes de roues, lit débits et limites de pression et enregistre le menu radial. Appelé après l'init des autres contrôleurs.
+Builds the wheel groups, reads flows and pressure limits and registers the radial menu. Called after the init of the other controllers.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_tirePressureControl.reset(jbeamData)`
 
-Désactive tous les groupes, arrête les changements de pression et remet le lisseur de l'electric à zéro.
+Disables all groups, stops pressure changes and resets the electric smoother to zero.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_tirePressureControl.setGroupState(groupName, state)`
 
-Active ou désactive un groupe de roues et affiche un message. Un nom de groupe inconnu logue une erreur et ne fait rien.
+Enables or disables a wheel group and displays a message. An unknown group name logs an error and does nothing.
 
-- `groupName` (*string*) : Nom du groupe (jbeam groupName).
-- `state` (*boolean*) : Actif ?
+- `groupName` (*string*) : Group name (jbeam groupName).
+- `state` (*boolean*) : Active?
 
 #### `controller_tirePressureControl.setState(data)`
 
-Restaure activations, variation de pression et pressions des roues (bornées entre pression ambiante et maxPressure, roues cassées ignorées).
+Restores activations, pressure change and wheel pressures (clamped between ambient pressure and maxPressure, broken wheels ignored).
 
-- `data` (*table|nil*) : Table produite par getState.
+- `data` (*table|nil*) : Table produced by getState.
 
 #### `controller_tirePressureControl.toggleGroupState(groupName)`
 
-Bascule l'activation d'un groupe de roues.
+Toggles the activation of a wheel group.
 
-- `groupName` (*string*) : Nom du groupe.
+- `groupName` (*string*) : Group name.
 
 #### `controller_tirePressureControl.updateGFX(dt)`
 
-Chaque frame : lit les pressions, égalise entre roues d'un groupe, applique gonflage/dégonflage aux groupes actifs et publie les electrics.
+Every frame: reads the pressures, equalizes between wheels of a group, applies inflation/deflation to the active groups and publishes the electrics.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getEnvPressure`, `getGroupPressure`, `setGroupPressure`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/tirePressureControl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/tirePressureControl.lua`.*

@@ -1,28 +1,28 @@
 # `flowgraph_nodes_ui_imgui_elemental_imNumbers`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imNumbers.lua` · VM : Game Engine (GE) · 126 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imNumbers.lua` · VM: Game Engine (GE) · 126 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/imgui/elemental/imNumbers")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/imgui/elemental/imNumbers")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « im Number » (catégorie repeat_instant, tag imgui) : champ numérique imgui. Mode choisi dans les propriétés : Int, Float, SliderInt, SliderFloat, DragInt, DragFloat. Entrées : « text », « set » (impulsion : réapplique setVal), « setVal » (0), « min » (0), « max » (10), « step » (1), « format » (%0.2f), « power » (1). Sorties : « value » et « changed » (impulsion).
+Flowgraph node "im Number" (category repeat_instant, tag imgui): imgui number field. Mode chosen in the properties: Int, Float, SliderInt, SliderFloat, DragInt, DragFloat. Inputs: "text", "set" (pulse: reapplies setVal), "setVal" (0), "min" (0), "max" (10), "step" (1), "format" (%0.2f), "power" (1). Outputs: "value" and "changed" (pulse).
 
-## Remarques
+## Notes
 
-- La valeur est bornée à min/max même en mode Int/Float libre.
-- Sans valeur initiale (setVal nil), rien n'est dessiné.
+- The value is clamped to min/max even in free Int/Float mode.
+- Without an initial value (setVal nil), nothing is drawn.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Efface les sorties et la valeur. | 59 |
-| `C:_onDeserialized(nodeData)` | Restaure le mode (défaut 'Int'). | 120 |
-| `C:_onSerialize(res)` | Sauvegarde le mode. | 116 |
-| `C:drawCustomProperties()` | Combo du mode d'édition. | 45 |
-| `C:init()` | Liste des modes et mode = 'Int'. | 33 |
-| `C:work()` | Dessine le widget du mode choisi, borne la valeur et écrit value/changed. | 66 |
+| `C:_executionStarted()` | Clears the outputs and the value. | 59 |
+| `C:_onDeserialized(nodeData)` | Restores the mode (default 'Int'). | 120 |
+| `C:_onSerialize(res)` | Saves the mode. | 116 |
+| `C:drawCustomProperties()` | Edit mode combo. | 45 |
+| `C:init()` | List of modes and mode = 'Int'. | 33 |
+| `C:work()` | Draws the widget of the chosen mode, clamps the value and writes value/changed. | 66 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imNumbers.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imNumbers.lua`.*

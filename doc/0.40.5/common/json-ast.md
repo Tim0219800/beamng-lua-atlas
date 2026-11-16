@@ -1,92 +1,92 @@
 # `json_ast`
 
-*Fichier : `lua/common/json-ast.lua` · VM : Commun (GE + véhicule) · 526 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/json-ast.lua` · VM: Common (GE + vehicle) · 526 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("json-ast")`
+**Access:** `require("json-ast")`
 
-Parseur JSON/SJSON qui construit un arbre syntaxique (AST) sans perte : chaque espace, tabulation, saut de ligne, commentaire (// et /* */), délimiteur, chaîne, nombre (avec sa précision) devient un noeud. On peut ainsi relire un fichier .jbeam, modifier des valeurs et le réécrire à l'identique (stringify). Sert à l'éditeur de texte jbeam intégré ; en plus de l'AST il produit les données Lua natives et le schéma de tables jbeam déjà traité.
+JSON/SJSON parser that builds a lossless syntax tree (AST): every space, tab, line break, comment (// and /* */), delimiter, string and number (with its precision) becomes a node. A .jbeam file can thus be re-read, have values modified and be written back identically (stringify). Used by the built-in jbeam text editor; besides the AST it produces the native Lua data and the already-processed jbeam table schema.
 
-## Exemple
+## Example
 
 ```lua
 local jsonAst = require('json-ast')
 local ctx = jsonAst.parse(readFile('vehicles/pickup/pickup.jbeam'))
 if ctx then
-  local data = ctx.transient.luaData  -- données natives (schéma jbeam traité)
-  local text = jsonAst.stringify(ctx.ast) -- doit redonner le texte d'origine
+  local data = ctx.transient.luaData  -- native data (processed jbeam schema)
+  local text = jsonAst.stringify(ctx.ast) -- must give back the original text
 end
 ```
 
-## Remarques
+## Notes
 
-- Un noeud est une table {type, valeur, précision?}. Types produits : object_begin, object_end, list_begin, list_end, array_delimiter, key_delimiter, newline, newline_windows, bool, string, string_single, number ({'number', valeur, nbDécimales}, avec prefixPlus et addPostfixDot), comment, comment_multiline, space ({'space', n}), tab, literal (repli quand rien n'est reconnu : journalisé en erreur).
-- parse renvoie un contexte ctx (ou nil si plusieurs racines) avec : ctx.ast.nodes (liste de noeuds) ; ctx.transient.hierarchy (indice de noeud conteneur -> indices des enfants) ; ctx.transient.root (indice du noeud racine) ; ctx.transient.luaDataRaw (données natives brutes) ; ctx.transient.luaData (copie profonde après jbeamTableSchema.process sur chaque section et création de pos = vec3(posX,posY,posZ)) ; ctx.transient.linesIndexes (indice du premier noeud de chaque ligne) ; ctx.transient.nodeIdxToLineNum. ctx.str et ctx.pos sont supprimés.
-- Avec addAstId vrai, chaque table native (liste ou objet) reçoit un champ __astNodeIdx qui renvoie à son noeud AST ; chaque section traitée reçoit aussi __schemaProcessed = true.
-- Les chaînes à guillemets simples sont réécrites avec des guillemets doubles par stringify, et l'échappement n'est pas géré : une chaîne contenant un guillemet échappé ne s'écrit pas à l'identique (le parseur ne traite pas les séquences \ ).
-- Le test jbeam compare aussi avec le parseur rapide (json.decode) et écrit des fichiers *_dump_ast.txt / *.ast.json en cas de différence : utilitaire de développement.
-- La page extraite ne listait pas findDifferences : c'est une fonction locale (pas exportée).
+- A node is a table {type, value, precision?}. Types produced: object_begin, object_end, list_begin, list_end, array_delimiter, key_delimiter, newline, newline_windows, bool, string, string_single, number ({'number', value, decimalCount}, with prefixPlus and addPostfixDot), comment, comment_multiline, space ({'space', n}), tab, literal (fallback when nothing is recognized: logged as an error).
+- parse returns a context ctx (or nil if there are several roots) with: ctx.ast.nodes (list of nodes); ctx.transient.hierarchy (container node index -> children indices); ctx.transient.root (root node index); ctx.transient.luaDataRaw (raw native data); ctx.transient.luaData (deep copy after jbeamTableSchema.process on each section and creation of pos = vec3(posX,posY,posZ)); ctx.transient.linesIndexes (index of the first node of each line); ctx.transient.nodeIdxToLineNum. ctx.str and ctx.pos are removed.
+- With addAstId true, each native table (list or object) receives an __astNodeIdx field that points to its AST node; each processed section also receives __schemaProcessed = true.
+- Single-quoted strings are rewritten with double quotes by stringify, and escaping is not handled: a string containing an escaped quote is not written back identically (the parser does not handle \ sequences).
+- The jbeam test also compares with the fast parser (json.decode) and writes *_dump_ast.txt / *.ast.json files in case of a difference: development utility.
+- The extracted page did not list findDifferences: it is a local function (not exported).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `json_ast.parse(str, addAstId)` | Analyse un texte JSON/SJSON/jbeam et renvoie le contexte (AST + données Lua). Renvoie nil si le texte contient plusieurs noeuds racine. Les erreurs de nombre ou de caractère inconnu sont journalisées (log E) sans arrêter. | 391 |
-| `json_ast.stringify(ast)` | Reconstitue le texte à partir d'un AST (concatène stringifyNodes(ast.nodes)). | 421 |
-| `json_ast.stringifyNode(node)` | Texte d'un seul noeud (ex. '{' pour object_begin, '//commentaire', nombre formaté avec sa précision d'origine). Renvoie nil pour un type inconnu. | 294 |
-| `json_ast.stringifyNodes(nodes)` | Concatène le texte de tous les noeuds d'une liste (erreur Lua si un noeud est de type inconnu, car stringifyNode renvoie nil). | 345 |
-| `json_ast.testFile(filename, writeAST, addASTId)` | Outil de test : lit un fichier, le parse, compare avec json.decode, reconstruit le texte et vérifie qu'il est identique à l'original. Écrit des fichiers de diagnostic en cas de différence. Renvoie true si le cycle parse -> stringify est sans perte. | 445 |
-| `json_ast.testFiles(writeAST, reportOK)` | Outil de test : exécute testFile sur tous les *.jbeam trouvés depuis la racine ('/') et journalise les erreurs (et les OK si reportOK). | 503 |
+| `json_ast.parse(str, addAstId)` | Parses a JSON/SJSON/jbeam text and returns the context (AST + Lua data). Returns nil if the text contains several root nodes. Number or unknown-character errors are logged (log E) without stopping. | 391 |
+| `json_ast.stringify(ast)` | Rebuilds the text from an AST (concatenates stringifyNodes(ast.nodes)). | 421 |
+| `json_ast.stringifyNode(node)` | Text of a single node (e.g. '{' for object_begin, '//comment', number formatted with its original precision). Returns nil for an unknown type. | 294 |
+| `json_ast.stringifyNodes(nodes)` | Concatenates the text of all the nodes in a list (Lua error if a node has an unknown type, because stringifyNode returns nil). | 345 |
+| `json_ast.testFile(filename, writeAST, addASTId)` | Test tool: reads a file, parses it, compares with json.decode, rebuilds the text and checks that it is identical to the original. Writes diagnostic files in case of a difference. Returns true if the parse -> stringify cycle is lossless. | 445 |
+| `json_ast.testFiles(writeAST, reportOK)` | Test tool: runs testFile on all the *.jbeam files found from the root ('/') and logs the errors (and the OKs if reportOK). | 503 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `json_ast.parse(str, addAstId)`
 
-Analyse un texte JSON/SJSON/jbeam et renvoie le contexte (AST + données Lua). Renvoie nil si le texte contient plusieurs noeuds racine. Les erreurs de nombre ou de caractère inconnu sont journalisées (log E) sans arrêter.
+Parses a JSON/SJSON/jbeam text and returns the context (AST + Lua data). Returns nil if the text contains several root nodes. Number or unknown-character errors are logged (log E) without stopping.
 
-- `str` (*string*) : texte source
-- `addAstId` (*boolean|nil*) : ajoute __astNodeIdx dans les tables natives
-- **renvoie** : table|nil contexte {ast = {nodes}, transient = {luaData, luaDataRaw, hierarchy, root, linesIndexes, nodeIdxToLineNum}}
+- `str` (*string*) : source text
+- `addAstId` (*boolean|nil*) : adds __astNodeIdx in the native tables
+- **returns**: table|nil context {ast = {nodes}, transient = {luaData, luaDataRaw, hierarchy, root, linesIndexes, nodeIdxToLineNum}}
 
 #### `json_ast.stringify(ast)`
 
-Reconstitue le texte à partir d'un AST (concatène stringifyNodes(ast.nodes)).
+Rebuilds the text from an AST (concatenates stringifyNodes(ast.nodes)).
 
-- `ast` (*table*) : ctx.ast (table avec champ nodes)
-- **renvoie** : string texte
+- `ast` (*table*) : ctx.ast (table with a nodes field)
+- **returns**: string text
 
 #### `json_ast.stringifyNode(node)`
 
-Texte d'un seul noeud (ex. '{' pour object_begin, '//commentaire', nombre formaté avec sa précision d'origine). Renvoie nil pour un type inconnu.
+Text of a single node (e.g. '{' for object_begin, '//comment', number formatted with its original precision). Returns nil for an unknown type.
 
-- `node` (*table*) : noeud {type, valeur, précision}
-- **renvoie** : string|nil texte du noeud
+- `node` (*table*) : node {type, value, precision}
+- **returns**: string|nil node text
 
 #### `json_ast.stringifyNodes(nodes)`
 
-Concatène le texte de tous les noeuds d'une liste (erreur Lua si un noeud est de type inconnu, car stringifyNode renvoie nil).
+Concatenates the text of all the nodes in a list (Lua error if a node has an unknown type, because stringifyNode returns nil).
 
-- `nodes` (*table[]*) : liste de noeuds
-- **renvoie** : string texte
+- `nodes` (*table[]*) : list of nodes
+- **returns**: string text
 
 #### `json_ast.testFile(filename, writeAST, addASTId)`
 
-Outil de test : lit un fichier, le parse, compare avec json.decode, reconstruit le texte et vérifie qu'il est identique à l'original. Écrit des fichiers de diagnostic en cas de différence. Renvoie true si le cycle parse -> stringify est sans perte.
+Test tool: reads a file, parses it, compares with json.decode, rebuilds the text and checks that it is identical to the original. Writes diagnostic files in case of a difference. Returns true if the parse -> stringify cycle is lossless.
 
-- `filename` (*string*) : chemin du fichier
-- `writeAST` (*boolean|nil*) : écrit <fichier>.ast.json si succès
-- `addASTId` (*boolean|nil*) : ajoute __astNodeIdx
-- **renvoie** : boolean|nil true si OK, false/nil sinon
+- `filename` (*string*) : file path
+- `writeAST` (*boolean|nil*) : writes <file>.ast.json on success
+- `addASTId` (*boolean|nil*) : adds __astNodeIdx
+- **returns**: boolean|nil true if OK, false/nil otherwise
 
 #### `json_ast.testFiles(writeAST, reportOK)`
 
-Outil de test : exécute testFile sur tous les *.jbeam trouvés depuis la racine ('/') et journalise les erreurs (et les OK si reportOK).
+Test tool: runs testFile on all the *.jbeam files found from the root ('/') and logs the errors (and the OKs if reportOK).
 
-- `writeAST` (*boolean|nil*) : écrire les .ast.json
-- `reportOK` (*boolean|nil*) : journaliser aussi les fichiers OK
+- `writeAST` (*boolean|nil*) : write the .ast.json files
+- `reportOK` (*boolean|nil*) : also log the OK files
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/json-ast.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/json-ast.lua`.*

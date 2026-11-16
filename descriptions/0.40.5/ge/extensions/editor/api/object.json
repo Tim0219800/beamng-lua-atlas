@@ -1,42 +1,42 @@
 {
   "path": "lua/ge/extensions/editor/api/object.lua",
-  "module": "API de l'éditeur pour manipuler les objets de la scène : sélection (par id, référence, type, masque de nom, rectangle écran), lecture/écriture des champs (statiques et dynamiques, copier/coller), verrouiller/cacher, aligner, translater/tourner/mettre à l'échelle la sélection, centroïde et boîte englobante, Focus-Lock sur un groupe, prefabs (créer, exploser, convertir en v2, dépaqueter) et mementos de SimObject. `initialize` installe tout sur `editor` et définit les constantes `editor.SelectMode_*` ; `initializeFocusLock` ajoute les fonctions de Focus-Lock. La sélection vit dans `editor.selection.object` (liste d'ids). Les fonctions de ce fichier n'enregistrent PAS d'historique d'annulation : voir objectHistoryActions pour les versions `...WithUndo`.",
+  "module": "Editor API for manipulating scene objects: selection (by id, reference, type, name mask, screen rectangle), reading/writing fields (static and dynamic, copy/paste), lock/hide, align, translate/rotate/scale the selection, centroid and bounding box, Focus-Lock on a group, prefabs (create, explode, convert to v2, unpack) and SimObject mementos. `initialize` installs everything on `editor` and defines the `editor.SelectMode_*` constants; `initializeFocusLock` adds the Focus-Lock functions. The selection lives in `editor.selection.object` (list of ids). The functions in this file do NOT record undo history: see objectHistoryActions for the `...WithUndo` versions.",
   "usage": "editor.selectObjectById(objId)\nlocal sel = editor.getObjectSelection()\neditor.setFieldValue(sel[1], \"position\", \"0 0 10\")",
   "notes": [
-    "Constantes : editor.SelectMode_New = 1, _Add = 2, _Remove = 3, _Toggle = 4.",
-    "Les valeurs de champs sont des chaînes (ex. position \"x y z\", rotation \"0 0 0 0\", scale \"1 1 1\").",
-    "Hooks émis : onEditorObjectSelectionChanged, onEditorFocusLockChanged, onEditorPrefabExploded(groups). L'en-tête du fichier liste d'autres hooks (onEditorObjectCreated, ...Delete, ...SelectionLocked/Unlocked/Shown/Hidden/TransformChanged, onEditorPrefabCreated) qui ne sont pas émis depuis ce fichier.",
-    "`initialize` est volontairement scindé de `initializeFocusLock` pour rester sous la limite de 60 upvalues de Lua.",
-    "Bug : dans calculateObjectsCenter et calculateBoundingBoxCenter, `table.insert(stack, childId)` utilise une variable non définie (le code lit `childObjId`) : les sous-groupes ne sont jamais parcourus.",
-    "Bug probable : alignObjectSelectionByBounds démarre la recherche de l'objet de référence à l'indice 2, le premier objet n'est donc jamais candidat.",
-    "debugObjectSelection est défini mais non exporté."
+    "Constants: editor.SelectMode_New = 1, _Add = 2, _Remove = 3, _Toggle = 4.",
+    "Field values are strings (e.g. position \"x y z\", rotation \"0 0 0 0\", scale \"1 1 1\").",
+    "Emitted hooks: onEditorObjectSelectionChanged, onEditorFocusLockChanged, onEditorPrefabExploded(groups). The file header lists other hooks (onEditorObjectCreated, ...Delete, ...SelectionLocked/Unlocked/Shown/Hidden/TransformChanged, onEditorPrefabCreated) that are not emitted from this file.",
+    "`initialize` is deliberately split from `initializeFocusLock` to stay under Lua's 60-upvalue limit.",
+    "Bug: in calculateObjectsCenter and calculateBoundingBoxCenter, `table.insert(stack, childId)` uses an undefined variable (the code reads `childObjId`): subgroups are never traversed.",
+    "Probable bug: alignObjectSelectionByBounds starts looking for the reference object at index 2, so the first object is never a candidate.",
+    "debugObjectSelection is defined but not exported."
   ],
   "functions": {
     "initialize": {
-      "desc": "Mémorise l'éditeur, définit editor.SelectMode_* et editor.objectSelectionBBox, et installe les fonctions de sélection, champs, alignement, transformation et prefabs sur `editor`.",
+      "desc": "Remembers the editor, defines editor.SelectMode_* and editor.objectSelectionBBox, and installs the selection, fields, alignment, transform and prefab functions on `editor`.",
       "params": {
         "editorInstance": {
           "type": "table",
-          "desc": "objet `editor`"
+          "desc": "`editor` object"
         }
       },
       "internal": true
     },
     "initializeFocusLock": {
-      "desc": "Installe séparément les fonctions de Focus-Lock (getFocusLockedGroup, isFocusLockActive, setFocusLockedGroup, clearFocusLock, isObjectInFocusLockedGroup, resolveAddGroup) pour contourner la limite de 60 upvalues de initialize.",
+      "desc": "Separately installs the Focus-Lock functions (getFocusLockedGroup, isFocusLockActive, setFocusLockedGroup, clearFocusLock, isObjectInFocusLockedGroup, resolveAddGroup) to work around initialize's 60-upvalue limit.",
       "internal": true
     }
   },
   "classes": {
     "editor": {
-      "desc": "Fonctions ajoutées à `editor` par initialize et initializeFocusLock.",
+      "desc": "Functions added to `editor` by initialize and initializeFocusLock.",
       "functions": {
         "matrixToTable": {
-          "desc": "Convertit une MatrixF en table sérialisable {c0, c1, c2, c3} (colonnes).",
+          "desc": "Converts a MatrixF into a serializable table {c0, c1, c2, c3} (columns).",
           "params": {
             "mtx": {
               "type": "MatrixF",
-              "desc": "matrice"
+              "desc": "matrix"
             }
           },
           "returns": [
@@ -47,26 +47,26 @@
           ]
         },
         "tableToMatrix": {
-          "desc": "Reconstruit une MatrixF depuis une table {c0, c1, c2, c3}.",
+          "desc": "Rebuilds a MatrixF from a table {c0, c1, c2, c3}.",
           "params": {
             "tbl": {
               "type": "table",
-              "desc": "table produite par matrixToTable"
+              "desc": "table produced by matrixToTable"
             }
           },
           "returns": [
             {
               "type": "MatrixF",
-              "desc": "matrice"
+              "desc": "matrix"
             }
           ]
         },
         "canManipulateObject": {
-          "desc": "Vrai si l'objet existe, n'est ni un SimSet ni un SimGroup et n'est pas verrouillé.",
+          "desc": "True if the object exists, is neither a SimSet nor a SimGroup, and is not locked.",
           "params": {
             "object": {
               "type": "userdata|nil",
-              "desc": "objet"
+              "desc": "object"
             }
           },
           "returns": [
@@ -77,147 +77,147 @@
           ]
         },
         "getFocusLockedGroup": {
-          "desc": "Renvoie le groupe sur lequel le Focus-Lock est actif (l'arbre de scène ne montre que lui, seuls ses objets sont sélectionnables dans la vue, les nouveaux objets y sont créés). Efface le verrou s'il pointe vers un groupe supprimé.",
+          "desc": "Returns the group on which Focus-Lock is active (the scene tree shows only it, only its objects are selectable in the view, new objects are created in it). Clears the lock if it points to a deleted group.",
           "returns": [
             {
               "type": "userdata|nil",
-              "desc": "groupe verrouillé"
+              "desc": "locked group"
             }
           ]
         },
         "isFocusLockActive": {
-          "desc": "Vrai si un Focus-Lock valide est actif.",
+          "desc": "True if a valid Focus-Lock is active.",
           "returns": [
             {
               "type": "boolean",
-              "desc": "actif"
+              "desc": "active"
             }
           ]
         },
         "setFocusLockedGroup": {
-          "desc": "Active le Focus-Lock sur le groupe d'id donné et émet onEditorFocusLockChanged.",
+          "desc": "Enables Focus-Lock on the group with the given id and emits onEditorFocusLockChanged.",
           "params": {
             "id": {
               "type": "integer",
-              "desc": "id du SimGroup"
+              "desc": "id of the SimGroup"
             }
           }
         },
         "clearFocusLock": {
-          "desc": "Désactive le Focus-Lock et émet onEditorFocusLockChanged."
+          "desc": "Disables Focus-Lock and emits onEditorFocusLockChanged."
         },
         "isObjectInFocusLockedGroup": {
-          "desc": "Vrai si aucun Focus-Lock n'est actif, ou si l'objet est le groupe verrouillé ou l'un de ses descendants.",
+          "desc": "True if no Focus-Lock is active, or if the object is the locked group or one of its descendants.",
           "params": {
             "object": {
               "type": "userdata|nil",
-              "desc": "objet"
+              "desc": "object"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "dans le groupe verrouillé"
+              "desc": "in the locked group"
             }
           ]
         },
         "resolveAddGroup": {
-          "desc": "Renvoie le groupe de Focus-Lock s'il existe, sinon defaultGroup (groupe où ajouter les nouveaux objets).",
+          "desc": "Returns the Focus-Lock group if it exists, otherwise defaultGroup (group where new objects are added).",
           "params": {
             "defaultGroup": {
               "type": "userdata|nil",
-              "desc": "groupe par défaut"
+              "desc": "default group"
             }
           },
           "returns": [
             {
               "type": "userdata|nil",
-              "desc": "groupe cible"
+              "desc": "target group"
             }
           ]
         },
         "isObjectSelectable": {
-          "desc": "Vrai si l'objet est dans le groupe Focus-Lock et, pour un SceneObject, si sa sélection est activée.",
+          "desc": "True if the object is in the Focus-Lock group and, for a SceneObject, if its selection is enabled.",
           "params": {
             "object": {
               "type": "userdata",
-              "desc": "objet"
+              "desc": "object"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "sélectionnable"
+              "desc": "selectable"
             }
           ]
         },
         "isObjectSelectionEmpty": {
-          "desc": "Vrai si la sélection d'objets est vide.",
+          "desc": "True if the object selection is empty.",
           "returns": [
             {
               "type": "boolean",
-              "desc": "vide"
+              "desc": "empty"
             }
           ]
         },
         "isObjectSelected": {
-          "desc": "Vrai si l'id fait partie de la sélection d'objets.",
+          "desc": "True if the id is part of the object selection.",
           "params": {
             "objectId": {
               "type": "integer",
-              "desc": "id de l'objet"
+              "desc": "object id"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "sélectionné"
+              "desc": "selected"
             }
           ]
         },
         "getSelectionCentroid": {
-          "desc": "Renvoie le centre de la sélection : moyenne des positions, ou centre de la boîte englobante si la préférence gizmos.general.useObjectBoxCenter est vraie (sauf si un objet a des bornes globales). vec3(0,0,0) si vide.",
+          "desc": "Returns the selection center: average of the positions, or the center of the bounding box if the gizmos.general.useObjectBoxCenter preference is true (unless an object has global bounds). vec3(0,0,0) if empty.",
           "returns": [
             {
               "type": "vec3",
-              "desc": "centre"
+              "desc": "center"
             }
           ]
         },
         "computeSelectionBBox": {
-          "desc": "Recalcule editor.objectSelectionBBox et editor.objectSelectionRadius à partir des boîtes monde de la sélection (bornes infinies ignorées, repli sur la boîte objet), met à jour le centroïde et, par défaut, le gizmo (editor.updateObjectSelectionAxisGizmo).",
+          "desc": "Recomputes editor.objectSelectionBBox and editor.objectSelectionRadius from the selection's world boxes (infinite bounds ignored, falls back to the object box), updates the centroid and, by default, the gizmo (editor.updateObjectSelectionAxisGizmo).",
           "params": {
             "updateGizmo": {
               "type": "boolean|nil",
-              "desc": "false pour ne pas mettre à jour le gizmo (défaut true)"
+              "desc": "false to not update the gizmo (default true)"
             }
           }
         },
         "getFieldValue": {
-          "desc": "Lit un champ d'objet sous forme de chaîne. Renvoie \"\" si l'objet n'existe pas.",
+          "desc": "Reads an object field as a string. Returns \"\" if the object does not exist.",
           "params": {
             "objectId": {
               "type": "integer",
-              "desc": "id de l'objet"
+              "desc": "object id"
             },
             "fieldName": {
               "type": "string",
-              "desc": "nom du champ"
+              "desc": "field name"
             },
             "arrayIndex": {
               "type": "integer|nil",
-              "desc": "index dans un champ tableau"
+              "desc": "index in an array field"
             }
           },
           "returns": [
             {
               "type": "string",
-              "desc": "valeur"
+              "desc": "value"
             }
           ]
         },
         "setObjectSelectedBool": {
-          "desc": "Marque/démarque chaque objet comme sélectionné côté C++ (setSelected) puis reconstruit les données d'instances de shapes.",
+          "desc": "Marks/unmarks each object as selected on the C++ side (setSelected) then rebuilds the shape instance data.",
           "params": {
             "objectIds": {
               "type": "integer[]|nil",
@@ -225,12 +225,12 @@
             },
             "selected": {
               "type": "boolean|nil",
-              "desc": "sélectionné (false si nil)"
+              "desc": "selected (false if nil)"
             }
           }
         },
         "setObjectSelectedBoolSingle": {
-          "desc": "Idem pour un seul objet.",
+          "desc": "Same for a single object.",
           "params": {
             "objectId": {
               "type": "integer|nil",
@@ -238,73 +238,73 @@
             },
             "selected": {
               "type": "boolean",
-              "desc": "sélectionné"
+              "desc": "selected"
             }
           }
         },
         "enableEditorOnObjects": {
-          "desc": "Appelle onEditorEnable ou onEditorDisable sur tous les objets de la scène qui ont ces méthodes. Utilisé en interne au basculement du mode éditeur ; ne fait rien si le niveau n'est pas chargé.",
+          "desc": "Calls onEditorEnable or onEditorDisable on all scene objects that have these methods. Used internally when toggling editor mode; does nothing if the level is not loaded.",
           "params": {
             "enable": {
               "type": "boolean",
-              "desc": "true = activer le mode édition"
+              "desc": "true = enable edit mode"
             }
           }
         },
         "validateObjectName": {
-          "desc": "Valide un nom d'objet (isValidObjectName) ; refuse un nom vide quand newName est vrai.",
+          "desc": "Validates an object name (isValidObjectName); rejects an empty name when newName is true.",
           "params": {
             "name": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             },
             "newName": {
               "type": "boolean|nil",
-              "desc": "true si c'est un nouveau nom"
+              "desc": "true if it is a new name"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "valide"
+              "desc": "valid"
             }
           ]
         },
         "setFieldValue": {
-          "desc": "Fixe un champ statique d'un objet (preApply, setField, marque editor-dirty, postApply). Ne passe pas par l'historique : pour l'annulation utiliser editor.changeObjectFieldWithUndo.",
+          "desc": "Sets a static field of an object (preApply, setField, marks editor-dirty, postApply). Does not go through the history: for undo use editor.changeObjectFieldWithUndo.",
           "params": {
             "objectId": {
               "type": "integer",
-              "desc": "id de l'objet"
+              "desc": "object id"
             },
             "fieldName": {
               "type": "string",
-              "desc": "nom du champ"
+              "desc": "field name"
             },
             "value": {
               "type": "string",
-              "desc": "valeur en texte"
+              "desc": "value as text"
             },
             "arrayIndex": {
               "type": "integer|string|nil",
-              "desc": "index de tableau (passé via tostring ; nil devient la chaîne \"nil\")"
+              "desc": "array index (passed through tostring; nil becomes the string \"nil\")"
             }
           }
         },
         "setDynamicFieldValue": {
-          "desc": "Fixe un champ dynamique d'un objet (index 0 par défaut). Pour un champ statique utiliser setFieldValue.",
+          "desc": "Sets a dynamic field of an object (index 0 by default). For a static field use setFieldValue.",
           "params": {
             "objectId": {
               "type": "integer",
-              "desc": "id de l'objet"
+              "desc": "object id"
             },
             "fieldName": {
               "type": "string",
-              "desc": "nom"
+              "desc": "name"
             },
             "value": {
               "type": "string",
-              "desc": "valeur en texte"
+              "desc": "value as text"
             },
             "arrayIndex": {
               "type": "integer|nil",
@@ -313,15 +313,15 @@
           }
         },
         "getFieldInfo": {
-          "desc": "Renvoie le type et les flags d'un champ ; table vide si l'objet n'existe pas.",
+          "desc": "Returns the type and flags of a field; empty table if the object does not exist.",
           "params": {
             "objectId": {
               "type": "integer",
-              "desc": "id de l'objet"
+              "desc": "object id"
             },
             "fieldName": {
               "type": "string",
-              "desc": "nom du champ"
+              "desc": "field name"
             }
           },
           "returns": [
@@ -332,41 +332,41 @@
           ]
         },
         "getFields": {
-          "desc": "Renvoie les champs de l'objet destinés à l'éditeur (getFieldsForEditor), indexés par nom (id, groupName, type, elementCount, fields pour les tableaux...).",
+          "desc": "Returns the object's fields intended for the editor (getFieldsForEditor), keyed by name (id, groupName, type, elementCount, fields for arrays...).",
           "params": {
             "objectId": {
               "type": "integer",
-              "desc": "id de l'objet"
+              "desc": "object id"
             }
           },
           "returns": [
             {
               "type": "table|nil",
-              "desc": "champs"
+              "desc": "fields"
             }
           ]
         },
         "getDynamicFields": {
-          "desc": "Renvoie la liste des noms de champs dynamiques de l'objet.",
+          "desc": "Returns the list of the object's dynamic field names.",
           "params": {
             "objectId": {
               "type": "integer",
-              "desc": "id de l'objet"
+              "desc": "object id"
             }
           },
           "returns": [
             {
               "type": "string[]|nil",
-              "desc": "noms"
+              "desc": "names"
             }
           ]
         },
         "copyFields": {
-          "desc": "Copie les valeurs de champs d'un objet (hors groupe Transform, name, persistentId, parentGroup), y compris éléments de tableaux et champs dynamiques.",
+          "desc": "Copies an object's field values (excluding the Transform group, name, persistentId, parentGroup), including array elements and dynamic fields.",
           "params": {
             "objectID": {
               "type": "integer",
-              "desc": "id de l'objet"
+              "desc": "object id"
             }
           },
           "returns": [
@@ -377,261 +377,261 @@
           ]
         },
         "pasteFields": {
-          "desc": "Applique une copie de copyFields sur un objet par id (via setFieldValue/setDynamicFieldValue), recharge les templates de route si useTemplate == \"true\" et marque le niveau modifié.",
+          "desc": "Applies a copy of copyFields onto an object by id (via setFieldValue/setDynamicFieldValue), reloads the road templates if useTemplate == \"true\" and marks the level as modified.",
           "params": {
             "fields": {
               "type": "table",
-              "desc": "résultat de copyFields"
+              "desc": "result of copyFields"
             },
             "targetObjectID": {
               "type": "integer",
-              "desc": "id cible"
+              "desc": "target id"
             }
           }
         },
         "pasteFieldsToObject": {
-          "desc": "Comme pasteFields mais sur un objet déjà résolu (appelle setField directement, sans preApply/postApply).",
+          "desc": "Like pasteFields but on an already resolved object (calls setField directly, without preApply/postApply).",
           "params": {
             "fields": {
               "type": "table",
-              "desc": "résultat de copyFields"
+              "desc": "result of copyFields"
             },
             "targetObject": {
               "type": "userdata",
-              "desc": "objet cible"
+              "desc": "target object"
             }
           }
         },
         "deleteSelectedObjects": {
-          "desc": "Supprime (editor.deleteObject) tous les objets sélectionnés et vide la sélection. Pas d'historique : pour l'annulation utiliser deleteSelectedObjectsWithUndo."
+          "desc": "Deletes (editor.deleteObject) all the selected objects and clears the selection. No history: for undo use deleteSelectedObjectsWithUndo."
         },
         "clearObjectSelection": {
-          "desc": "Désélectionne tout (côté C++ aussi), met la sélection à nil, recalcule la bbox et émet onEditorObjectSelectionChanged."
+          "desc": "Deselects everything (on the C++ side too), sets the selection to nil, recomputes the bbox and emits onEditorObjectSelectionChanged."
         },
         "selectObjects": {
-          "desc": "Modifie la sélection d'objets selon le mode, met à jour l'état côté C++, recalcule la bbox et émet onEditorObjectSelectionChanged si elle a changé. Ne passe pas par l'historique.",
+          "desc": "Modifies the object selection according to the mode, updates the C++ side state, recomputes the bbox and emits onEditorObjectSelectionChanged if it changed. Does not go through the history.",
           "params": {
             "idArray": {
               "type": "integer[]",
-              "desc": "ids des objets"
+              "desc": "object ids"
             },
             "selectMode": {
               "type": "integer|nil",
-              "desc": "mode : editor.SelectMode_New (1, défaut), _Add (2), _Remove (3), _Toggle (4)"
+              "desc": "mode: editor.SelectMode_New (1, default), _Add (2), _Remove (3), _Toggle (4)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si la sélection a changé"
+              "desc": "true if the selection changed"
             }
           ]
         },
         "selectObjectsByRef": {
-          "desc": "Comme selectObjects mais avec des objets plutôt que des ids.",
+          "desc": "Like selectObjects but with objects rather than ids.",
           "params": {
             "objects": {
               "type": "table",
-              "desc": "liste d'objets"
+              "desc": "list of objects"
             },
             "selectMode": {
               "type": "integer|nil",
-              "desc": "mode : editor.SelectMode_New (1, défaut), _Add (2), _Remove (3), _Toggle (4)"
+              "desc": "mode: editor.SelectMode_New (1, default), _Add (2), _Remove (3), _Toggle (4)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "sélection changée"
+              "desc": "selection changed"
             }
           ]
         },
         "getObjectsByRectangle": {
-          "desc": "Renvoie les objets (ou items de forêt si forestData fourni) dont le volume intersecte un rectangle écran, via un frustum dérivé du frustum caméra.",
+          "desc": "Returns the objects (or forest items if forestData is provided) whose volume intersects a screen rectangle, via a frustum derived from the camera frustum.",
           "params": {
             "rect": {
               "type": "table",
-              "desc": "rectangle écran {topLeft, bottomRight}"
+              "desc": "screen rectangle {topLeft, bottomRight}"
             },
             "forestData": {
               "type": "userdata|nil",
-              "desc": "ForestData optionnel"
+              "desc": "optional ForestData"
             },
             "objectFlags": {
               "type": "integer|nil",
-              "desc": "masque de types (défaut terrain, eau, static shape, joueur, item, véhicule, lumière)"
+              "desc": "type mask (default terrain, water, static shape, player, item, vehicle, light)"
             }
           },
           "returns": [
             {
               "type": "table",
-              "desc": "liste d'objets/items"
+              "desc": "list of objects/items"
             },
             {
               "type": "Frustum",
-              "desc": "frustum du rectangle"
+              "desc": "frustum of the rectangle"
             }
           ]
         },
         "selectObjectsByNameMask": {
-          "desc": "Sélectionne les objets dont le nom contient le motif Lua (string.find).",
+          "desc": "Selects the objects whose name contains the Lua pattern (string.find).",
           "params": {
             "nameMask": {
               "type": "string",
-              "desc": "motif Lua"
+              "desc": "Lua pattern"
             },
             "selectMode": {
               "type": "integer|nil",
-              "desc": "mode : editor.SelectMode_New (1, défaut), _Add (2), _Remove (3), _Toggle (4)"
+              "desc": "mode: editor.SelectMode_New (1, default), _Add (2), _Remove (3), _Toggle (4)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "sélection changée"
+              "desc": "selection changed"
             }
           ]
         },
         "selectObjectsByType": {
-          "desc": "Sélectionne les objets dont `className` vaut typeName.",
+          "desc": "Selects the objects whose `className` equals typeName.",
           "params": {
             "typeName": {
               "type": "string",
-              "desc": "nom de classe"
+              "desc": "class name"
             },
             "selectMode": {
               "type": "integer|nil",
-              "desc": "mode : editor.SelectMode_New (1, défaut), _Add (2), _Remove (3), _Toggle (4)"
+              "desc": "mode: editor.SelectMode_New (1, default), _Add (2), _Remove (3), _Toggle (4)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "sélection changée"
+              "desc": "selection changed"
             }
           ]
         },
         "selectObjectById": {
-          "desc": "Sélectionne un objet par id selon le mode.",
+          "desc": "Selects an object by id according to the mode.",
           "params": {
             "id": {
               "type": "integer",
-              "desc": "id de l'objet"
+              "desc": "object id"
             },
             "selectMode": {
               "type": "integer|nil",
-              "desc": "mode : editor.SelectMode_New (1, défaut), _Add (2), _Remove (3), _Toggle (4)"
+              "desc": "mode: editor.SelectMode_New (1, default), _Add (2), _Remove (3), _Toggle (4)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "sélection changée"
+              "desc": "selection changed"
             }
           ]
         },
         "deselectObjectSelection": {
-          "desc": "Vide la sélection (table vide, côté C++ aussi) et émet onEditorObjectSelectionChanged."
+          "desc": "Clears the selection (empty table, on the C++ side too) and emits onEditorObjectSelectionChanged."
         },
         "lockObjectSelection": {
-          "desc": "Verrouille les objets sélectionnés (champ locked = \"true\"). Le commentaire d'origine (« Select all the objects ») est erroné. Pas annulable (voir lockObjectSelectionWithUndo)."
+          "desc": "Locks the selected objects (locked = \"true\" field). The original comment (\"Select all the objects\") is wrong. Not undoable (see lockObjectSelectionWithUndo)."
         },
         "unlockObjectSelection": {
-          "desc": "Déverrouille les objets sélectionnés (locked = \"false\")."
+          "desc": "Unlocks the selected objects (locked = \"false\")."
         },
         "hideObjectSelection": {
-          "desc": "Cache les objets sélectionnés (hidden = \"true\")."
+          "desc": "Hides the selected objects (hidden = \"true\")."
         },
         "showObjectSelection": {
-          "desc": "Affiche les objets sélectionnés (hidden = \"false\")."
+          "desc": "Shows the selected objects (hidden = \"false\")."
         },
         "alignObjectSelectionByBounds": {
-          "desc": "Aligne les objets sur la boîte englobante extrême selon l'axe. Valeurs de boundsAxis : 0-2 (editor.AxisX/Y/Z) = alignement sur le bord max de cet axe ; 3-5 = bord min de l'axe (valeur - 3). Ne fait rien (renvoie true) s'il y a moins de 2 objets.",
+          "desc": "Aligns the objects to the extreme bounding box along the axis. boundsAxis values: 0-2 (editor.AxisX/Y/Z) = alignment on the max edge of that axis; 3-5 = min edge of the axis (value - 3). Does nothing (returns true) if there are fewer than 2 objects.",
           "params": {
             "boundsAxis": {
               "type": "integer",
-              "desc": "0-5 (voir description)"
+              "desc": "0-5 (see description)"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "false si boundsAxis hors de 0..5, sinon true"
+              "desc": "false if boundsAxis is outside 0..5, otherwise true"
             }
           ]
         },
         "alignObjectSelectionByCenter": {
-          "desc": "Aligne tous les objets manipulables sur la coordonnée du premier objet sélectionné pour l'axe donné.",
+          "desc": "Aligns all manipulable objects to the coordinate of the first selected object for the given axis.",
           "params": {
             "axis": {
               "type": "integer",
-              "desc": "editor.AxisX, AxisY ou AxisZ"
+              "desc": "editor.AxisX, AxisY or AxisZ"
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "false si axe invalide ou premier objet introuvable, sinon true"
+              "desc": "false if the axis is invalid or the first object is not found, otherwise true"
             }
           ]
         },
         "setObjectSelectionTransformFromCamera": {
-          "desc": "Place chaque objet manipulable sélectionné à la transformation de la caméra de l'éditeur en conservant son échelle (sans annulation, TODO dans le code)."
+          "desc": "Places each selected manipulable object at the editor camera's transform while keeping its scale (no undo, TODO in the code)."
         },
         "resetObjectSelectionTransform": {
-          "desc": "Remet rotation à zéro et échelle à 1,1,1 pour la sélection."
+          "desc": "Resets rotation to zero and scale to 1,1,1 for the selection."
         },
         "resetObjectSelectionRotation": {
-          "desc": "Remet la rotation à \"0 0 0 0\" des objets manipulables sélectionnés."
+          "desc": "Resets the rotation to \"0 0 0 0\" of the selected manipulable objects."
         },
         "resetObjectSelectionScale": {
-          "desc": "Remet l'échelle à \"1 1 1\" des objets manipulables sélectionnés."
+          "desc": "Resets the scale to \"1 1 1\" of the selected manipulable objects."
         },
         "translateObjectSelection": {
-          "desc": "Translate les objets manipulables sélectionnés d'un delta (via setFieldValue \"position\").",
+          "desc": "Translates the selected manipulable objects by a delta (via setFieldValue \"position\").",
           "params": {
             "deltaTranslate": {
               "type": "vec3",
-              "desc": "delta de position (mètres)"
+              "desc": "position delta (meters)"
             }
           }
         },
         "rotateObjectSelection": {
-          "desc": "Applique aux objets sélectionnés la rotation du gizmo depuis l'état initial, autour de centerPoint (positions et orientations). Ne fait rien sans initialTransformations.",
+          "desc": "Applies the gizmo rotation to the selected objects from the initial state, around centerPoint (positions and orientations). Does nothing without initialTransformations.",
           "params": {
             "gizmoTransform": {
               "type": "MatrixF",
-              "desc": "transformation courante du gizmo"
+              "desc": "current gizmo transform"
             },
             "centerPoint": {
               "type": "vec3",
-              "desc": "centre de rotation"
+              "desc": "rotation center"
             },
             "initialTransformations": {
               "type": "MatrixF[]",
-              "desc": "transformations des objets au début du glissement"
+              "desc": "object transforms at the start of the drag"
             },
             "initialGizmoTransform": {
               "type": "MatrixF",
-              "desc": "transformation du gizmo au début du glissement"
+              "desc": "gizmo transform at the start of the drag"
             }
           }
         },
         "scaleObjectSelection": {
-          "desc": "Met à l'échelle les objets sélectionnés d'un delta, autour de centerPoint (centre de la bbox par défaut), avec bornes 0.01 à 1000 et exclusion des axes à delta nul ; les positions sont mises à l'échelle dans le repère du gizmo.",
+          "desc": "Scales the selected objects by a delta, around centerPoint (bbox center by default), with bounds 0.01 to 1000 and excluding axes with a zero delta; positions are scaled in the gizmo's frame.",
           "params": {
             "deltaScale": {
               "type": "vec3",
-              "desc": "delta d'échelle (ne fait rien si longueur nulle)"
+              "desc": "scale delta (does nothing if zero length)"
             },
             "centerPoint": {
               "type": "vec3|nil",
-              "desc": "centre de l'échelle"
+              "desc": "scale center"
             }
           }
         },
         "getHighestObject": {
-          "desc": "Renvoie, parmi les ids donnés, l'objet le moins profond dans la hiérarchie des groupes.",
+          "desc": "Returns, among the given ids, the object that is shallowest in the group hierarchy.",
           "params": {
             "objects": {
               "type": "integer[]",
@@ -641,108 +641,108 @@
           "returns": [
             {
               "type": "userdata|nil",
-              "desc": "objet le plus haut"
+              "desc": "topmost object"
             }
           ]
         },
         "calculateObjectsCenter": {
-          "desc": "Calcule le centre (moyenne des positions) des enfants des SimGroup donnés. Les objets non-groupe de la liste sont ignorés ; les sous-groupes ne sont pas parcourus (bug : `childId` est une variable non définie, donc rien n'est empilé). Divise par zéro (NaN) si aucun enfant.",
+          "desc": "Computes the center (average of positions) of the children of the given SimGroups. Non-group objects in the list are ignored; subgroups are not traversed (bug: `childId` is an undefined variable, so nothing is pushed). Divides by zero (NaN) if there are no children.",
           "params": {
             "objects": {
               "type": "integer[]",
-              "desc": "ids de groupes"
+              "desc": "group ids"
             }
           },
           "returns": [
             {
               "type": "vec3",
-              "desc": "centre"
+              "desc": "center"
             }
           ]
         },
         "calculateBoundingBoxCenter": {
-          "desc": "Calcule le centre de la boîte englobante des enfants non-groupe des SimGroup donnés (mêmes limites que calculateObjectsCenter pour les sous-groupes).",
+          "desc": "Computes the center of the bounding box of the non-group children of the given SimGroups (same limits as calculateObjectsCenter for subgroups).",
           "params": {
             "objects": {
               "type": "integer[]",
-              "desc": "ids de groupes"
+              "desc": "group ids"
             }
           },
           "returns": [
             {
               "type": "vec3",
-              "desc": "centre de boîte"
+              "desc": "box center"
             }
           ]
         },
         "createPrefabFromObjectSelection": {
-          "desc": "Crée un Prefab depuis la sélection : regroupe les objets valides dans un SimGroup relatif au centroïde, enregistre le Prefab dans le groupe du plus haut objet, le sauvegarde, supprime les anciens groupes, sélectionne le prefab et marque le niveau modifié. Pas d'annulation (TODO).",
+          "desc": "Creates a Prefab from the selection: groups the valid objects into a SimGroup relative to the centroid, registers the Prefab in the group of the topmost object, saves it, deletes the old groups, selects the prefab and marks the level as modified. No undo (TODO).",
           "params": {
             "newPrefabFilename": {
               "type": "string",
-              "desc": "fichier .prefab.json de destination"
+              "desc": "destination .prefab.json file"
             },
             "objName": {
               "type": "string|nil",
-              "desc": "nom de l'objet (défaut : nom du fichier)"
+              "desc": "object name (default: file name)"
             },
             "loadmode": {
               "type": "string|nil",
-              "desc": "\"auto\" ou \"manual\""
+              "desc": "\"auto\" or \"manual\""
             },
             "pathNative": {
               "type": "boolean|nil",
-              "desc": "true si le chemin est natif (converti en virtuel)"
+              "desc": "true if the path is native (converted to virtual)"
             }
           },
           "returns": [
             {
               "type": "userdata|nil",
-              "desc": "le Prefab, nil si rien de valide"
+              "desc": "the Prefab, nil if nothing valid"
             }
           ]
         },
         "explodeSelectedPrefab": {
-          "desc": "Explose les prefabs sélectionnés en groupes d'objets (nom <prefab>_unpacked), supprime les prefabs, sélectionne les groupes et émet onEditorPrefabExploded(groups).",
+          "desc": "Explodes the selected prefabs into object groups (name <prefab>_unpacked), deletes the prefabs, selects the groups and emits onEditorPrefabExploded(groups).",
           "returns": [
             {
               "type": "userdata[]|nil",
-              "desc": "groupes créés"
+              "desc": "groups created"
             }
           ]
         },
         "convertSelectedPrefabsToV2": {
-          "desc": "Convertit les prefabs sélectionnés au format v2 et les remplace par des instances (replaceGroupWithPrefabInstance) au centre de leur boîte.",
+          "desc": "Converts the selected prefabs to v2 format and replaces them with instances (replaceGroupWithPrefabInstance) at the center of their box.",
           "returns": [
             {
               "type": "userdata[]|nil",
-              "desc": "instances créées"
+              "desc": "instances created"
             }
           ]
         },
         "unpackageSelectedPrefabInstance": {
-          "desc": "Dépaquette les instances de prefab sélectionnées (unpackage) en groupes et supprime les instances.",
+          "desc": "Unpackages the selected prefab instances (unpackage) into groups and deletes the instances.",
           "returns": [
             {
               "type": "userdata[]|nil",
-              "desc": "groupes créés"
+              "desc": "groups created"
             }
           ]
         },
         "replaceGroupWithPrefabInstance": {
-          "desc": "Fait apparaître une instance du prefab v2 (spawn, échelle 1, rotation nulle) à la position donnée, l'ajoute au groupe parent et demande la reconstruction des collisions.",
+          "desc": "Spawns an instance of the v2 prefab (spawn, scale 1, zero rotation) at the given position, adds it to the parent group and requests a collision rebuild.",
           "params": {
             "prefab": {
               "type": "userdata|nil",
-              "desc": "prefab v2"
+              "desc": "v2 prefab"
             },
             "parentGroup": {
               "type": "userdata|nil",
-              "desc": "groupe parent"
+              "desc": "parent group"
             },
             "instanceName": {
               "type": "string",
-              "desc": "nom de l'instance"
+              "desc": "instance name"
             },
             "position": {
               "type": "vec3",
@@ -757,22 +757,22 @@
           ]
         },
         "findFirstSelectedByType": {
-          "desc": "Renvoie le premier objet sélectionné dont le nom de classe est classname.",
+          "desc": "Returns the first selected object whose class name is classname.",
           "params": {
             "classname": {
               "type": "string",
-              "desc": "nom de classe"
+              "desc": "class name"
             }
           },
           "returns": [
             {
               "type": "userdata|nil",
-              "desc": "objet"
+              "desc": "object"
             }
           ]
         },
         "getObjectSelection": {
-          "desc": "Renvoie la liste des ids sélectionnés (table vide si aucune).",
+          "desc": "Returns the list of selected ids (empty table if none).",
           "returns": [
             {
               "type": "integer[]",
@@ -781,7 +781,7 @@
           ]
         },
         "removeInvalidObjects": {
-          "desc": "Renvoie une copie de la liste sans les ids qui ne correspondent plus à un objet existant.",
+          "desc": "Returns a copy of the list without the ids that no longer match an existing object.",
           "params": {
             "objectIds": {
               "type": "integer[]",
@@ -791,19 +791,19 @@
           "returns": [
             {
               "type": "integer[]",
-              "desc": "ids valides"
+              "desc": "valid ids"
             }
           ]
         },
         "removeInvalidSelectedObjects": {
-          "desc": "Retire de la sélection les ids d'objets disparus."
+          "desc": "Removes from the selection the ids of objects that no longer exist."
         },
         "saveSimObjectMemento": {
-          "desc": "Sérialise un objet en texte JSON (memento), \"\" si nil.",
+          "desc": "Serializes an object to JSON text (memento), \"\" if nil.",
           "params": {
             "obj": {
               "type": "userdata|nil",
-              "desc": "objet"
+              "desc": "object"
             }
           },
           "returns": [
@@ -814,17 +814,17 @@
           ]
         },
         "restoreSimObjectMemento": {
-          "desc": "Recrée un objet depuis un memento : retire persistentId, désérialise et donne un nom unique (Sim.getUniqueName) dérivé du nom d'origine.",
+          "desc": "Recreates an object from a memento: removes persistentId, deserializes and gives a unique name (Sim.getUniqueName) derived from the original name.",
           "params": {
             "jsonString": {
               "type": "string",
-              "desc": "memento de saveSimObjectMemento"
+              "desc": "memento from saveSimObjectMemento"
             }
           },
           "returns": [
             {
               "type": "userdata|nil",
-              "desc": "nouvel objet"
+              "desc": "new object"
             }
           ]
         }

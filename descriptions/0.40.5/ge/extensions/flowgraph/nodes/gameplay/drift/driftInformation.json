@@ -1,12 +1,19 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftInformation.lua",
-  "module": "Nœud flowgraph « Drift Information » (catégorie repeat_instant, drift). Donne l'état du drift du véhicule : drifting/notDrifting, impulsions spinout, tapped, crashed, donutDetected, tightDriftDetected, driftCompleted (avec driftCompletedAddedScore, driftCompletedCachedScore, driftCompletedCombo), et les mesures closestWallDistance, driftAngle, driftVelocity, totalDriftDeg, totalDriftDistance, totalDriftTime, driftUniformity. Source : gameplay_drift_drift.getDriftActiveData et callbacks du module drift du flowgraph.",
-  "notes": ["Hors drift, les mesures valent -1.", "driftUniformity est déclaré mais jamais renseigné dans work.", "Aucune sortie « flow » générale n'est écrite en dehors de drifting/notDrifting.", "todo du code : régler driftCleanliness, nettoyer le raycast."],
+  "module": "Flowgraph node \"Drift Information\" (category repeat_instant, drift). Gives the vehicle's drift state: drifting/notDrifting, pulses spinout, tapped, crashed, donutDetected, tightDriftDetected, driftCompleted (with driftCompletedAddedScore, driftCompletedCachedScore, driftCompletedCombo), and the measurements closestWallDistance, driftAngle, driftVelocity, totalDriftDeg, totalDriftDistance, totalDriftTime, driftUniformity. Source: gameplay_drift_drift.getDriftActiveData and callbacks of the flowgraph drift module.",
+  "notes": [
+    "Outside of drift, the measurements are -1.",
+    "driftUniformity is declared but never filled in work.",
+    "No general \"flow\" output is written apart from drifting/notDrifting.",
+    "Code todo: tune driftCleanliness, clean up the raycast."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Copie les callbacks (ttl > 0) et les données actives de drift vers les pins de sortie."}
+        "work": {
+          "desc": "Copies the callbacks (ttl > 0) and the active drift data to the output pins."
+        }
       }
     }
   }

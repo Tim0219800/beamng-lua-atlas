@@ -1,0 +1,67 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/controller.lua",
+  "module": "Nœud flowgraph « Get Signal Controller » (repeat_instant). Lit un contrôleur de feux (signalControllerData) : signalType, stateCount, duration (totalDuration) et, pour chaque état i (nombre réglable), stateName_i et stateDuration_i ('none' et 0 si absent).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_onDeserialized": {
+          "desc": "Restaure les réglages propres au nœud à partir des données sauvegardées.",
+          "internal": true,
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "table de sérialisation à remplir"
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.",
+          "internal": true,
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "table de sérialisation à remplir"
+            }
+          }
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "internal": true
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Appelé après la création des pins du nœud ; sert à ajuster les pins (modèles de valeurs, filtres de fichiers, clés dynamiques).",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Ajoute ou retire les pins stateName_i / stateDuration_i et supprime leurs liens.",
+          "internal": true,
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "ancien nombre de pins"
+            },
+            "new": {
+              "type": "integer",
+              "desc": "nouveau nombre de pins"
+            }
+          }
+        },
+        "work": {
+          "desc": "Recopie type, nombre d'états, durée totale et nom/durée de chaque état sur les sorties.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

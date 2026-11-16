@@ -1,87 +1,87 @@
 # `telemetry_performanceSpatialDetector.test`
 
-*Fichier : `lua/ge/extensions/telemetry/performanceSpatialDetector.test.lua` · VM : Game Engine (GE) · 169 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/performanceSpatialDetector.test.lua` · VM: Game Engine (GE) · 169 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_performanceSpatialDetector.test` : `extensions.load("telemetry_performanceSpatialDetector.test")`, puis la globale `telemetry_performanceSpatialDetector.test`
+**Access:** extension `telemetry_performanceSpatialDetector.test`: `extensions.load("telemetry_performanceSpatialDetector.test")`, then the global `telemetry_performanceSpatialDetector.test`
 
-Tests unitaires de telemetry/performanceSpatialDetector (runTestFiles("performanceSpatialDetector")).
+Unit tests of telemetry/performanceSpatialDetector (runTestFiles("performanceSpatialDetector")).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_performanceSpatialDetector.test.testAbsoluteDip(ctx)` | Vérifie qu'une chute sous le seuil de FPS absolu produit un événement au retour à la normale. *(interne)* | 27 |
-| `telemetry_performanceSpatialDetector.test.testCooldownSuppressesDip(ctx)` | Vérifie que le délai de repos supprime un nouvel épisode. *(interne)* | 132 |
-| `telemetry_performanceSpatialDetector.test.testDipMustBeSustained(ctx)` | Vérifie qu'une chute plus courte que dipMinDurationMs ne produit rien. *(interne)* | 51 |
-| `telemetry_performanceSpatialDetector.test.testIntentionalCapDisablesAbsoluteTrigger(ctx)` | Vérifie qu'avec absoluteAllowed = false, un FPS plafonné ne déclenche pas de chute absolue. *(interne)* | 99 |
-| `telemetry_performanceSpatialDetector.test.testLongDipIsSegmented(ctx)` | Vérifie qu'un épisode dépassant maxEpisodeMs est découpé. *(interne)* | 121 |
-| `telemetry_performanceSpatialDetector.test.testOpenSustainedDipCanBeFinished(ctx)` | Vérifie que finish() clôt un épisode ouvert et soutenu. *(interne)* | 109 |
-| `telemetry_performanceSpatialDetector.test.testRecoveryEmitsWorstFrameOnce(ctx)` | Vérifie que la pire frame est capturée une fois puis que l'événement est émis à la reprise. *(interne)* | 75 |
-| `telemetry_performanceSpatialDetector.test.testRecoveryWithoutObservedDurationDoesNotEmit(ctx)` | Vérifie qu'un épisode sans durée observée (un seul échantillon) n'émet pas d'événement. *(interne)* | 65 |
-| `telemetry_performanceSpatialDetector.test.testRelativeDip(ctx)` | Vérifie qu'un temps de frame supérieur à baseline * ratio produit un événement. *(interne)* | 39 |
-| `telemetry_performanceSpatialDetector.test.testSessionCapSuppressesDip(ctx)` | Vérifie que maxDipEventsPerSession plafonne le nombre d'événements. *(interne)* | 153 |
+| `telemetry_performanceSpatialDetector.test.testAbsoluteDip(ctx)` | Checks that a drop below the absolute FPS threshold produces an event on return to normal. *(internal)* | 27 |
+| `telemetry_performanceSpatialDetector.test.testCooldownSuppressesDip(ctx)` | Checks that the cooldown delay suppresses a new episode. *(internal)* | 132 |
+| `telemetry_performanceSpatialDetector.test.testDipMustBeSustained(ctx)` | Checks that a drop shorter than dipMinDurationMs produces nothing. *(internal)* | 51 |
+| `telemetry_performanceSpatialDetector.test.testIntentionalCapDisablesAbsoluteTrigger(ctx)` | Checks that with absoluteAllowed = false, a capped FPS does not trigger an absolute dip. *(internal)* | 99 |
+| `telemetry_performanceSpatialDetector.test.testLongDipIsSegmented(ctx)` | Checks that an episode exceeding maxEpisodeMs is split. *(internal)* | 121 |
+| `telemetry_performanceSpatialDetector.test.testOpenSustainedDipCanBeFinished(ctx)` | Checks that finish() closes an open, sustained episode. *(internal)* | 109 |
+| `telemetry_performanceSpatialDetector.test.testRecoveryEmitsWorstFrameOnce(ctx)` | Checks that the worst frame is captured once then that the event is emitted on recovery. *(internal)* | 75 |
+| `telemetry_performanceSpatialDetector.test.testRecoveryWithoutObservedDurationDoesNotEmit(ctx)` | Checks that an episode with no observed duration (a single sample) does not emit an event. *(internal)* | 65 |
+| `telemetry_performanceSpatialDetector.test.testRelativeDip(ctx)` | Checks that a frame time above baseline * ratio produces an event. *(internal)* | 39 |
+| `telemetry_performanceSpatialDetector.test.testSessionCapSuppressesDip(ctx)` | Checks that maxDipEventsPerSession caps the number of events. *(internal)* | 153 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_performanceSpatialDetector.test.testAbsoluteDip(ctx)`
 
-Vérifie qu'une chute sous le seuil de FPS absolu produit un événement au retour à la normale.
+Checks that a drop below the absolute FPS threshold produces an event on return to normal.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialDetector.test.testCooldownSuppressesDip(ctx)`
 
-Vérifie que le délai de repos supprime un nouvel épisode.
+Checks that the cooldown delay suppresses a new episode.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialDetector.test.testDipMustBeSustained(ctx)`
 
-Vérifie qu'une chute plus courte que dipMinDurationMs ne produit rien.
+Checks that a drop shorter than dipMinDurationMs produces nothing.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialDetector.test.testIntentionalCapDisablesAbsoluteTrigger(ctx)`
 
-Vérifie qu'avec absoluteAllowed = false, un FPS plafonné ne déclenche pas de chute absolue.
+Checks that with absoluteAllowed = false, a capped FPS does not trigger an absolute dip.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialDetector.test.testLongDipIsSegmented(ctx)`
 
-Vérifie qu'un épisode dépassant maxEpisodeMs est découpé.
+Checks that an episode exceeding maxEpisodeMs is split.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialDetector.test.testOpenSustainedDipCanBeFinished(ctx)`
 
-Vérifie que finish() clôt un épisode ouvert et soutenu.
+Checks that finish() closes an open, sustained episode.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialDetector.test.testRecoveryEmitsWorstFrameOnce(ctx)`
 
-Vérifie que la pire frame est capturée une fois puis que l'événement est émis à la reprise.
+Checks that the worst frame is captured once then that the event is emitted on recovery.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialDetector.test.testRecoveryWithoutObservedDurationDoesNotEmit(ctx)`
 
-Vérifie qu'un épisode sans durée observée (un seul échantillon) n'émet pas d'événement.
+Checks that an episode with no observed duration (a single sample) does not emit an event.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialDetector.test.testRelativeDip(ctx)`
 
-Vérifie qu'un temps de frame supérieur à baseline * ratio produit un événement.
+Checks that a frame time above baseline * ratio produces an event.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_performanceSpatialDetector.test.testSessionCapSuppressesDip(ctx)`
 
-Vérifie que maxDipEventsPerSession plafonne le nombre d'événements.
+Checks that maxDipEventsPerSession caps the number of events.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/performanceSpatialDetector.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/performanceSpatialDetector.test.lua`.*

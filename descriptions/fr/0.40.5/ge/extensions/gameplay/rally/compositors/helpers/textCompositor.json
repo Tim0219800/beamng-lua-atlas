@@ -1,0 +1,209 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/compositors/helpers/textCompositor.lua",
+  "module": "Compositeur de texte des notes de rallye : charge un style (fichier compositors/styles/<nom>.lua), le copie, applique les calibrages de la mission, le valide, puis expose la composition de phrases pour une note structurée, la liste des notes système (avec leurs fichiers audio selon la mission ou le pack vocal), l'énumération de toutes les phrases à enregistrer et les règles de conversion des distances en texte parlé. Le module renvoie un constructeur : require(...)(compositorName, missionDir) ; il faut appeler load() avant tout usage.",
+  "usage": "local tc = require('/lua/ge/extensions/gameplay/rally/compositors/helpers/textCompositor')('english/casual', missionDir)\nif tc:load() then\n  local text = tc:compositeText(structured, 120, 40)\nend",
+  "notes": [
+    "Toutes les méthodes de composition renvoient nil (ou {} / false selon la méthode) tant que load() n'a pas réussi.",
+    "Les distances sont en mètres ; distanceToString arrondit selon distance.rounding du style et passe à l'unité 'large' (km) avec 'point' pour la virgule, ex. '1 point 5 km' (chaque chiffre décimal est séparé).",
+    "enumerateAll lève une erreur (error) si deux phrases identiques existent dans le style (distances, notes, système).",
+    "getSystemPacenote lit sys[name][i] sans test : erreur si le nom n'existe pas ou si le style n'est pas chargé.",
+    "Le résultat de getSystemPacenotes est mis en cache par dossier de notes de mission ; changer de pack vocal (setVoicepackEntry avec un id différent) vide le cache."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Compositeur de texte. Attributs : compositorName, missionDir, compositor (table du style chargé ou nil), cachedSystemPacenotes, voicepackEntry.",
+      "functions": {
+        "init": {
+          "desc": "Mémorise le nom du style et le dossier de mission (journalise une erreur si le nom est nil). Ne charge rien.",
+          "params": {
+            "compositorName": {"type": "string", "desc": "Nom du style relatif à compositors/styles/ (ex. 'english/casual')."},
+            "missionDir": {"type": "string|nil", "desc": "Dossier de la mission, pour les calibrages."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "load": {
+          "desc": "Charge le style : require + deepcopy, applique calibrationOverrides.applyToConfig, valide avec styleValidator. En cas de fichier absent ou de validation échouée, journalise une erreur et laisse le style à nil.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true si le style est chargé et valide."}],
+          "internal": false
+        },
+        "setVoicepackEntry": {
+          "desc": "Définit l'entrée de pack vocal active ; vide le cache des notes système si son identifiant (id, dir ou dirname) change.",
+          "params": {"entry": {"type": "table|nil", "desc": "Entrée de pack vocal."}},
+          "returns": [],
+          "internal": false
+        },
+        "compositorPath": {
+          "desc": "Chemin de module du style : '/lua/ge/extensions/gameplay/rally/compositors/styles/<nom>'.",
+          "params": {},
+          "returns": [{"type": "string", "desc": "Chemin sans extension."}],
+          "internal": false
+        },
+        "_requireCompositor": {
+          "desc": "Fait require du fichier de style (nil si pas de nom).",
+          "params": {},
+          "returns": [{"type": "table|nil", "desc": "Module du style (partagé : load en fait une copie)."}],
+          "internal": true
+        },
+        "compositeText": {
+          "desc": "Compose le texte d'une note en appelant style.composite(config, structured, distBefore, distAfter).",
+          "params": {
+            "structured": {"type": "table", "desc": "Note structurée."},
+            "distBefore": {"type": "number|nil", "desc": "Distance depuis la note précédente (m)."},
+            "distAfter": {"type": "number|nil", "desc": "Distance jusqu'à la note suivante (m)."}
+          },
+          "returns": [{"type": "table|nil", "desc": "Résultat du style (liste de phrases) ou nil si le style n'est pas chargé."}],
+          "internal": false
+        },
+        "compositeTextEscaped": {
+          "desc": "Comme compositeText, mais avec escapeVars=true : les distances sont remplacées par les variables de substitution (rallyUtil.var_db / var_da) au lieu de leur valeur.",
+          "params": {
+            "structured": {"type": "table", "desc": "Note structurée."},
+            "distBefore": {"type": "number|nil", "desc": "Distance avant (m)."},
+            "distAfter": {"type": "number|nil", "desc": "Distance après (m)."}
+          },
+          "returns": [{"type": "table|nil", "desc": "Liste de phrases ou nil."}],
+          "internal": false
+        },
+        "compositePhraseEntries": {
+          "desc": "Appelle compositorUtil.compositePhraseEntries avec la config du style : renvoie des entrées {text, category, variant, audioFname}.",
+          "params": {
+            "structured": {"type": "table", "desc": "Note structurée."},
+            "distBefore": {"type": "number|nil", "desc": "Distance avant (m)."},
+            "distAfter": {"type": "number|nil", "desc": "Distance après (m)."},
+            "opts": {"type": "table|nil", "desc": "Options : escapeVars, variantResolver, distanceAfterBeforePostModifier."}
+          },
+          "returns": [{"type": "table[]|nil", "desc": "Entrées de phrases."}],
+          "internal": false
+        },
+        "getConfig": {
+          "desc": "Renvoie la table du style chargé.",
+          "params": {},
+          "returns": [{"type": "table|nil", "desc": "Config du style."}],
+          "internal": false
+        },
+        "distanceCallsEnabled": {
+          "desc": "Indique si les appels de distance sont activés dans le style (false si non chargé).",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "État."}],
+          "internal": false
+        },
+        "getSystemPacenotesOrdered": {
+          "desc": "Renvoie le tableau ordonné {name, variants} des notes système tel qu'écrit par l'auteur du style.",
+          "params": {},
+          "returns": [{"type": "table[]", "desc": "Liste ordonnée (vide si non chargé)."}],
+          "internal": false
+        },
+        "getSystemPacenotes": {
+          "desc": "Renvoie une table {nom -> variantes[]} où chaque variante reçoit audioFname (fichier dans le dossier de notes de la mission, ou fichier du pack vocal actif ou résolu) et audioBasename. L'ordre de pairs() n'est pas défini : utiliser getSystemPacenotesOrdered quand l'ordre compte. Résultat mis en cache.",
+          "params": {
+            "missionPacenotesDirname": {"type": "string|nil", "desc": "Dossier des notes audio de la mission ; nil = utiliser le pack vocal."},
+            "voicepackEntry": {"type": "table|nil", "desc": "Entrée de pack vocal à activer (via setVoicepackEntry)."}
+          },
+          "returns": [{"type": "table<string, table[]>|nil", "desc": "Notes système par nom ; nil si style non chargé."}],
+          "internal": false
+        },
+        "getSystemPacenote": {
+          "desc": "Renvoie la i-ème variante (1 par défaut) de la note système 'name'.",
+          "params": {
+            "name": {"type": "string", "desc": "Nom de la note système."},
+            "i": {"type": "integer|nil", "desc": "Indice de variante."}
+          },
+          "returns": [{"type": "table|nil", "desc": "Variante {text, audioFname, audioBasename...}."}],
+          "internal": false
+        },
+        "enumerateDistanceEntries": {
+          "desc": "Énumère les appels de distance prononçables : de la distance max des liens à distance.max, par pas de rounding.small, dédoublonnés par texte. Vide si les appels de distance sont désactivés.",
+          "params": {},
+          "returns": [{"type": "table[]", "desc": "Liste triée de {phrase, distance}."}],
+          "internal": false
+        },
+        "enumerateDistances": {
+          "desc": "Même chose qu'enumerateDistanceEntries mais ne garde que les phrases.",
+          "params": {},
+          "returns": [{"type": "string[]", "desc": "Phrases de distance triées."}],
+          "internal": false
+        },
+        "enumeratePacenotes": {
+          "desc": "Énumère les phrases de notes via style.enumerate(self, config).",
+          "params": {},
+          "returns": [{"type": "string[]", "desc": "Phrases (vide si non chargé)."}],
+          "internal": false
+        },
+        "enumerateScriptEntries": {
+          "desc": "Énumère les entrées du lecteur de script avec catégorie et variantes : notes système, distances, puis celles de compositorUtil.enumerateScriptEntries. Complète hash, audioFname et recordingSlug.",
+          "params": {},
+          "returns": [{"type": "table[]", "desc": "Entrées {phrase, hash, audioFname, recordingSlug, category, subcategory, sourceContext, variant, sortGroup, sortSubgroup}."}],
+          "internal": false
+        },
+        "enumerateAll": {
+          "desc": "Énumère toutes les phrases (distances, notes, système) avec hash, groupe et statistiques (totalChars, totalPhrases...). Lève une erreur si une phrase est dupliquée.",
+          "params": {},
+          "returns": [{"type": "table", "desc": "{stats, phrases, groups = {distances, pacenotes, system}}."}],
+          "internal": false
+        },
+        "writeEnumerated": {
+          "desc": "Écrit le résultat d'une énumération dans un fichier JSON indenté.",
+          "params": {
+            "fname": {"type": "string", "desc": "Fichier de sortie."},
+            "enumerated": {"type": "table", "desc": "Données à écrire."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "roundDistance": {
+          "desc": "Arrondit une distance selon les règles du style : au-delà de largeThreshold, valeur en unité 'large' (km) ; entre mediumThreshold et largeThreshold, pas medium (bascule en 'large' si le résultat atteint largeThreshold) ; sinon pas small.",
+          "params": {"dist": {"type": "number", "desc": "Distance en mètres."}},
+          "returns": [
+            {"type": "number", "desc": "Valeur arrondie."},
+            {"type": "string", "desc": "Unité (base ou large)."}
+          ],
+          "internal": false
+        },
+        "distanceToString": {
+          "desc": "Convertit une distance en texte parlé (partie entière puis arrondi) ; en unité 'large', le point décimal est remplacé par le mot 'point' du style et les chiffres sont séparés, puis l'unité est ajoutée.",
+          "params": {"dist": {"type": "number", "desc": "Distance en mètres."}},
+          "returns": [{"type": "string", "desc": "Texte de la distance."}],
+          "internal": false
+        },
+        "getDistanceCallShorthand": {
+          "desc": "Renvoie le texte du premier lien de distance dont le seuil est supérieur à dist (ex. 'into', 'and').",
+          "params": {"dist": {"type": "number", "desc": "Distance en mètres."}},
+          "returns": [
+            {"type": "string|nil", "desc": "Texte du lien."},
+            {"type": "boolean", "desc": "true si un lien a été trouvé."}
+          ],
+          "internal": false
+        },
+        "getDistanceLinks": {
+          "desc": "Liste des liens de distance du style (distance.links).",
+          "params": {},
+          "returns": [{"type": "table[]", "desc": "Liens {threshold, text}."}],
+          "internal": false
+        },
+        "getMaxLinkDistance": {
+          "desc": "Seuil du dernier lien de distance (0 s'il n'y en a pas).",
+          "params": {},
+          "returns": [{"type": "number", "desc": "Distance en mètres."}],
+          "internal": false
+        },
+        "getBaseUnit": {"desc": "Unité de base des distances (distance.units.base).", "params": {}, "returns": [{"type": "string", "desc": "Unité."}], "internal": false},
+        "getLargeUnit": {"desc": "Grande unité des distances (distance.units.large).", "params": {}, "returns": [{"type": "string", "desc": "Unité."}], "internal": false},
+        "getPointTranslation": {"desc": "Mot parlé pour le point décimal (distance.units.point).", "params": {}, "returns": [{"type": "string", "desc": "Mot."}], "internal": false},
+        "getRoundingSmall": {"desc": "Pas d'arrondi des petites distances (distance.rounding.small).", "params": {}, "returns": [{"type": "number", "desc": "Pas en m."}], "internal": false},
+        "getRoundingMedium": {"desc": "Pas d'arrondi des distances moyennes (distance.rounding.medium).", "params": {}, "returns": [{"type": "number", "desc": "Pas en m."}], "internal": false},
+        "getRoundingMediumThreshold": {"desc": "Distance à partir de laquelle on utilise le pas moyen (distance.rounding.mediumThreshold).", "params": {}, "returns": [{"type": "number", "desc": "Seuil en m."}], "internal": false},
+        "getRoundingLarge": {"desc": "Pas d'arrondi des grandes distances (distance.rounding.large).", "params": {}, "returns": [{"type": "number", "desc": "Pas en m."}], "internal": false},
+        "getRoundingLargeThreshold": {"desc": "Distance à partir de laquelle on passe à la grande unité (distance.rounding.largeThreshold).", "params": {}, "returns": [{"type": "number", "desc": "Seuil en m."}], "internal": false},
+        "getMaxDistance": {"desc": "Distance maximale énoncée (distance.max).", "params": {}, "returns": [{"type": "number", "desc": "Distance en m."}], "internal": false},
+        "pacenoteHash": {
+          "desc": "Hash textuel d'une phrase (voir compositorUtil.pacenoteHash).",
+          "params": {"text": {"type": "string", "desc": "Phrase."}},
+          "returns": [{"type": "string|nil", "desc": "Hash."}],
+          "internal": false
+        }
+      }
+    }
+  }
+}

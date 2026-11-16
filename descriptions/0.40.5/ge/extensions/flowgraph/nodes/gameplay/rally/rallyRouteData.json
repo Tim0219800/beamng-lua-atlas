@@ -1,12 +1,17 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyRouteData.lua",
-  "module": "Nœud flowgraph « Rally Route Data » (catégorie repeat_instant, tag rally). Lit le gestionnaire rally (gameplay_rally.getRallyManager()) et publie dans nextRoutePointPos (vec3) la position de destination de recovery (rm:getRecoveryDestinationPos()). Recopie aussi flow en sortie.",
-  "notes": ["La description de la pin parle du « prochain point de route devant le véhicule » mais le code renvoie getRecoveryDestinationPos()."],
+  "module": "Flowgraph node \"Rally Route Data\" (category repeat_instant, tag rally). Reads the rally manager (gameplay_rally.getRallyManager()) and publishes in nextRoutePointPos (vec3) the recovery destination position (rm:getRecoveryDestinationPos()). Also copies flow to the output.",
+  "notes": [
+    "The pin description talks about the \"next route point ahead of the vehicle\" but the code returns getRecoveryDestinationPos()."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Chaque frame : met à jour nextRoutePointPos depuis le rally manager et recopie le flux.", "internal": true}
+        "work": {
+          "desc": "Every frame: updates nextRoutePointPos from the rally manager and copies the flow.",
+          "internal": true
+        }
       }
     }
   }

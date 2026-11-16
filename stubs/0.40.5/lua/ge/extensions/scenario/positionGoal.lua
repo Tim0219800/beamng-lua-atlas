@@ -2,30 +2,30 @@
 -- tim19Atlas stub generated from lua/ge/extensions/scenario/positionGoal.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Objectif de scénario « position » (goals.vehicles avec id = 'position') : en fin de course, le véhicule doit se trouver dans la zone d'un objet du scenetree (par exemple une zone de freinage). La zone est définie par la distance au centre de l'objet endPoint, comparée à son scale.x.
---- Accès : extension `scenario_positionGoal` : `extensions.load("scenario_positionGoal")`, puis la globale `scenario_positionGoal`
+--- "position" scenario goal (goals.vehicles with id = 'position'): at the end of the race, the vehicle must be in the zone of a scenetree object (for example a braking zone). The zone is defined by the distance to the center of the endPoint object, compared to its scale.x.
+--- Access: extension `scenario_positionGoal`: `extensions.load("scenario_positionGoal")`, then the global `scenario_positionGoal`
 ---@class scenario_positionGoal
----@field instances table Liste des goals 'position' valides, remplie par init().
+---@field instances table List of valid 'position' goals, filled by init().
 scenario_positionGoal = {}
 
---- Réinitialise instances et ajoute chaque goal id='position' ; purpose vaut 'fail' si absent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/positionGoal.lua:60
----@param scenario table Scénario courant.
+--- Resets instances and adds each goal id='position'; purpose is 'fail' if absent.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/positionGoal.lua:60
+---@param scenario table Current scenario.
 function scenario_positionGoal.init(scenario) end
 
---- Appelé à chaque état du scénario. Sur 'onRaceResult', vérifie que le véhicule est dans la zone de l'objet endPoint.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/positionGoal.lua:38
----@param scenario table Scénario courant.
----@param state string Nom de l'état.
----@param stateData table Données de l'état (non utilisées).
+--- Called on every scenario state. On 'onRaceResult', checks that the vehicle is in the zone of the endPoint object.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/positionGoal.lua:38
+---@param scenario table Current scenario.
+---@param state string State name.
+---@param stateData table State data (unused).
 function scenario_positionGoal.processState(scenario, state, stateData) end
 
---- Envoie le résultat de chaque instance à statistics_statistics.setGoalProgress.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/positionGoal.lua:78
----@param scenario table Scénario courant.
----@param instance table|nil Non utilisé.
+--- Sends each instance's result to statistics_statistics.setGoalProgress.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/positionGoal.lua:78
+---@param scenario table Current scenario.
+---@param instance table|nil Not used.
 function scenario_positionGoal.updateFinalStatus(scenario, instance) end
 

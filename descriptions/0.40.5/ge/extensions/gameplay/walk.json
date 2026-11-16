@@ -1,239 +1,583 @@
 {
   "path": "lua/ge/extensions/gameplay/walk.lua",
-  "module": "Mode « marche » du joueur : sortir du véhicule fait apparaître un véhicule spécial « unicycle » (le personnage) que le joueur contrôle à pied ; remonter dans un véhicule proche le désactive. Gère par joueur (multi-siège/écran partagé compris) l'unicycle, son visage (face part) et sa couleur, détecte le véhicule le plus proche à moins de 2 m (distance aux arêtes de sa boîte orientée), affiche le message « walkingmode » et expose une liste noire de véhicules. Un moddeur s'en sert pour téléporter/placer le joueur, forcer le mode marche ou l'interdire.",
-  "usage": "gameplay_walk.setWalkingMode(true, vec3(x, y, z), quat(0, 0, 0, 1), true) -- force le mode marche à une position\nif gameplay_walk.isWalking() then gameplay_walk.getInVehicle(veh) end\ngameplay_walk.addVehicleToBlacklist(vehId) -- ce véhicule ne sera pas proposé à l'entrée",
+  "module": "Player \"walking\" mode: leaving the vehicle spawns a special \"unicycle\" vehicle (the character) that the player controls on foot; getting back into a nearby vehicle deactivates it. Manages, per player (including multiseat/split screen), the unicycle, its face (face part) and its color, detects the nearest vehicle within 2 m (distance to the edges of its oriented box), shows the \"walkingmode\" message and exposes a vehicle blacklist. A modder uses it to teleport/place the player, force walking mode or forbid it.",
+  "usage": "gameplay_walk.setWalkingMode(true, vec3(x, y, z), quat(0, 0, 0, 1), true) -- forces walking mode at a position\nif gameplay_walk.isWalking() then gameplay_walk.getInVehicle(veh) end\ngameplay_walk.addVehicleToBlacklist(vehId) -- this vehicle will not be offered for entry",
   "notes": [
-    "`player` est l'indice de joueur (0 par défaut) ; la plupart des fonctions acceptent nil et prennent 0.",
-    "Le joueur est « à pied » quand son véhicule courant a le fichier jbeam « unicycle » (getCurrentUnicycle).",
-    "Basculer : possible seulement si force, ou (vitesse de stationnement atteinte et toggling activé, action toggleWalkingMode non bloquée, replay pas en lecture). Seuils de vitesse : < 5 km/h devient « à l'arrêt », > 6 km/h devient « en mouvement » (hystérésis).",
-    "Hook émis : onBeforeWalkingModeToggled(enabled, vehId|nil, player) avant le changement ; le message UI « Message » (catégorie cameramode) est vidé à l'entrée en mode marche.",
-    "En multijoueur, toggleWalkingMode délègue à multiplayer_vehicleSync.requestWalkingMode.",
-    "Si gameplay_seatOccupants existe, l'entrée dans un véhicule passe par requestEnterBestSeat et la sortie par getSeatExitData.",
-    "Un dump(config) de débogage reste dans le code : il écrit la config dans les logs à chaque création d'unicycle.",
-    "L'état interne `active[player]` n'est mis à jour que par onVehicleSwitched et onDeserialize : setRot ne fait rien tant que le joueur n'a pas déclenché un changement de véhicule.",
-    "Le hook de restauration s'appelle onDeserialize (et non onDeserialized) dans ce fichier, tandis que la sérialisation s'appelle onSerialize : incohérence de nom possible selon ce que le gestionnaire d'extensions appelle (non vérifié ici).",
-    "onClientEndMission vide les mémoires d'unicycles, de visages et de peintures ; onClientStartMission vide la liste noire et réactive le toggling."
+    "`player` is the player index (0 by default); most functions accept nil and use 0.",
+    "The player is \"on foot\" when their current vehicle has the \"unicycle\" jbeam file (getCurrentUnicycle).",
+    "Toggling: only possible if force, or (parking speed reached and toggling enabled, toggleWalkingMode action not blocked, replay not playing). Speed thresholds: < 5 km/h becomes \"stationary\", > 6 km/h becomes \"moving\" (hysteresis).",
+    "Emitted hook: onBeforeWalkingModeToggled(enabled, vehId|nil, player) before the change; the UI \"Message\" (cameramode category) is cleared when entering walking mode.",
+    "In multiplayer, toggleWalkingMode delegates to multiplayer_vehicleSync.requestWalkingMode.",
+    "If gameplay_seatOccupants exists, entering a vehicle goes through requestEnterBestSeat and exiting through getSeatExitData.",
+    "A debug dump(config) remains in the code: it writes the config to the logs every time a unicycle is created.",
+    "The internal state `active[player]` is only updated by onVehicleSwitched and onDeserialize: setRot does nothing until the player has triggered a vehicle change.",
+    "The restore hook is named onDeserialize (not onDeserialized) in this file, while serialization is named onSerialize: possible naming inconsistency depending on what the extension manager calls (not verified here).",
+    "onClientEndMission clears the unicycle, face and paint memories; onClientStartMission clears the blacklist and re-enables toggling."
   ],
   "functions": {
     "isWalking": {
-      "desc": "Indique si le joueur contrôle actuellement un unicycle.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice de joueur (0 par défaut)."}},
-      "returns": [{"type": "boolean", "desc": ""}],
+      "desc": "Returns whether the player is currently controlling a unicycle.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index (0 by default)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": ""
+        }
+      ],
       "internal": false
     },
     "getCurrentUnicycle": {
-      "desc": "Renvoie l'unicycle que le joueur contrôle en ce moment, qu'il soit ou non celui mémorisé dans unicycleIds.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice de joueur."}},
-      "returns": [{"type": "userdata|nil", "desc": "Objet véhicule unicycle, nil sinon."}],
+      "desc": "Returns the unicycle the player is controlling right now, whether or not it is the one stored in unicycleIds.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "userdata|nil",
+          "desc": "Unicycle vehicle object, nil otherwise."
+        }
+      ],
       "internal": false
     },
     "getStoredUnicycleId": {
-      "desc": "Id de l'unicycle mémorisé pour ce joueur (même s'il est inactif, par exemple pendant qu'il conduit).",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice de joueur."}},
-      "returns": [{"type": "integer|nil", "desc": ""}],
+      "desc": "Id of the unicycle stored for this player (even if inactive, e.g. while they are driving).",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": ""
+        }
+      ],
       "internal": false
     },
     "getFacePart": {
-      "desc": "Visage du personnage. Priorité : pièce de l'unicycle (sélecteur de pièces), réglage playerCharacterFace (par persona en écran partagé), dernier visage connu, visage aléatoire.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice de joueur."}},
-      "returns": [{"type": "string", "desc": "Nom de la pièce skin_character_face."}],
+      "desc": "Character face. Priority: unicycle part (parts selector), playerCharacterFace setting (per persona in split screen), last known face, random face.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Name of the skin_character_face part."
+        }
+      ],
       "internal": false
     },
     "setFacePart": {
-      "desc": "Change le visage. Si le joueur est à pied, son unicycle est reconfiguré ; sinon l'unicycle mémorisé est supprimé et sera recréé plus tard.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice de joueur."}, "facePart": {"type": "string", "desc": "Nom de la pièce de visage."}},
+      "desc": "Changes the face. If the player is on foot, their unicycle is reconfigured; otherwise the stored unicycle is deleted and will be recreated later.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        },
+        "facePart": {
+          "type": "string",
+          "desc": "Face part name."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getPaint": {
-      "desc": "Peinture du personnage. Priorité : peinture du persona (multi-siège), peinture de l'unicycle (menu de config), dernière peinture connue, couleur enregistrée playerCharacterColor.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice de joueur."}},
-      "returns": [{"type": "table", "desc": "Peinture de véhicule."}],
+      "desc": "Character paint. Priority: persona paint (multiseat), unicycle paint (config menu), last known paint, saved playerCharacterColor color.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Vehicle paint."
+        }
+      ],
       "internal": false
     },
     "isAtParkingSpeed": {
-      "desc": "Indique si le véhicule le plus proche (ou celui du joueur) est assez lent pour permettre de basculer en mode marche.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice de joueur."}},
-      "returns": [{"type": "boolean", "desc": "false seulement si la vitesse a dépassé 6 km/h sans repasser sous 5 km/h."}],
+      "desc": "Returns whether the nearest vehicle (or the player's) is slow enough to allow switching to walking mode.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false only if the speed exceeded 6 km/h without dropping back below 5 km/h."
+        }
+      ],
       "internal": false
     },
     "getDoorsidePosRot": {
-      "desc": "Calcule une position près de la portière conducteur d'un véhicule (côté gauche ou droit selon la conduite), orientée vers le centre du véhicule.",
-      "params": {"veh": {"type": "userdata", "desc": "Objet véhicule."}},
-      "returns": [{"type": "vec3", "desc": "Position."}, {"type": "vec3", "desc": "Direction avant (z = 0)."}, {"type": "vec3", "desc": "Vecteur haut (0,0,1)."}],
+      "desc": "Computes a position near a vehicle's driver door (left or right side depending on the driving side), oriented toward the vehicle's center.",
+      "params": {
+        "veh": {
+          "type": "userdata",
+          "desc": "Vehicle object."
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3",
+          "desc": "Position."
+        },
+        {
+          "type": "vec3",
+          "desc": "Forward direction (z = 0)."
+        },
+        {
+          "type": "vec3",
+          "desc": "Up vector (0,0,1)."
+        }
+      ],
       "internal": false
     },
     "getInVehicle": {
-      "desc": "Fait monter le joueur dans un véhicule (be:enterVehicle) en mémorisant son unicycle actuel.",
-      "params": {"vehicle": {"type": "userdata", "desc": "Véhicule à rejoindre."}, "player": {"type": "integer|nil", "desc": "Indice de joueur."}},
+      "desc": "Makes the player enter a vehicle (be:enterVehicle), storing their current unicycle.",
+      "params": {
+        "vehicle": {
+          "type": "userdata",
+          "desc": "Vehicle to enter."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setRot": {
-      "desc": "Oriente la caméra/le personnage à pied via les données de la caméra unicycle. Sans effet si le joueur n'est pas actif en mode marche.",
-      "params": {"front": {"type": "vec3", "desc": "Direction avant."}, "up": {"type": "vec3", "desc": "Direction haut."}, "player": {"type": "integer|nil", "desc": "Indice de joueur."}},
+      "desc": "Orients the camera/on-foot character via the unicycle camera data. Has no effect if the player is not active in walking mode.",
+      "params": {
+        "front": {
+          "type": "vec3",
+          "desc": "Forward direction."
+        },
+        "up": {
+          "type": "vec3",
+          "desc": "Up direction."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "canToggleWalkingMode": {
-      "desc": "Indique si le joueur peut changer de mode : force, ou vitesse de stationnement + toggling activé + action non bloquée + pas de lecture de replay.",
-      "params": {"force": {"type": "boolean|nil", "desc": "Ignore toutes les restrictions."}, "player": {"type": "integer|nil", "desc": "Indice de joueur."}},
-      "returns": [{"type": "boolean", "desc": ""}],
+      "desc": "Returns whether the player can switch modes: force, or parking speed + toggling enabled + action not blocked + no replay playing.",
+      "params": {
+        "force": {
+          "type": "boolean|nil",
+          "desc": "Ignores all restrictions."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": ""
+        }
+      ],
       "internal": false
     },
     "canSetWalkingMode": {
-      "desc": "Comme canToggleWalkingMode, mais exige aussi que l'état demandé diffère de l'état actif.",
-      "params": {"enabled": {"type": "boolean", "desc": "État demandé."}, "force": {"type": "boolean|nil", "desc": "Ignore les restrictions."}, "player": {"type": "integer|nil", "desc": "Indice de joueur."}},
-      "returns": [{"type": "boolean", "desc": ""}],
+      "desc": "Like canToggleWalkingMode, but also requires the requested state to differ from the active state.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "Requested state."
+        },
+        "force": {
+          "type": "boolean|nil",
+          "desc": "Ignores restrictions."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": ""
+        }
+      ],
       "internal": false
     },
     "setWalkingMode": {
-      "desc": "Active ou désactive le mode marche. À l'activation, fait apparaître ou réactive l'unicycle à pos (sinon près de la portière ou au siège quitté) et y place le joueur. À la désactivation, monte dans le véhicule proche, ou désactive simplement l'unicycle.",
+      "desc": "Enables or disables walking mode. On enabling, spawns or reactivates the unicycle at pos (otherwise near the door or at the seat left) and places the player in it. On disabling, enters the nearby vehicle, or simply deactivates the unicycle.",
       "params": {
-        "enabled": {"type": "boolean", "desc": "true pour marcher."},
-        "pos": {"type": "vec3|nil", "desc": "Position d'apparition (facultative)."},
-        "rot": {"type": "quat|nil", "desc": "Orientation de départ (facultative)."},
-        "force": {"type": "boolean|nil", "desc": "Ignore les restrictions de bascule."},
-        "player": {"type": "integer|nil", "desc": "Indice de joueur."}
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to walk."
+        },
+        "pos": {
+          "type": "vec3|nil",
+          "desc": "Spawn position (optional)."
+        },
+        "rot": {
+          "type": "quat|nil",
+          "desc": "Starting orientation (optional)."
+        },
+        "force": {
+          "type": "boolean|nil",
+          "desc": "Ignores toggle restrictions."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si l'état demandé est atteint (false si bloqué)."}, {"type": "integer|nil", "desc": "Id de l'unicycle courant."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the requested state is reached (false if blocked)."
+        },
+        {
+          "type": "integer|nil",
+          "desc": "Current unicycle id."
+        }
+      ],
       "internal": false
     },
     "toggleWalkingMode": {
-      "desc": "Bascule le mode marche (appelé par l'action d'entrée). Ne fait rien si le joueur marche sans véhicule à proximité ; en multijoueur, passe par multiplayer_vehicleSync.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice de joueur (ignoré si négatif)."}},
+      "desc": "Toggles walking mode (called by the input action). Does nothing if the player is walking with no vehicle nearby; in multiplayer, goes through multiplayer_vehicleSync.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index (ignored if negative)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getVehicleInFront": {
-      "desc": "Véhicule le plus proche (moins de 2 m) que le joueur à pied peut rejoindre.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice de joueur."}},
-      "returns": [{"type": "userdata|nil", "desc": ""}],
+      "desc": "Nearest vehicle (within 2 m) that the on-foot player can enter.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "userdata|nil",
+          "desc": ""
+        }
+      ],
       "internal": false
     },
     "getPosRot": {
-      "desc": "Position de l'unicycle et orientation de la caméra du joueur à pied.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice de joueur."}},
-      "returns": [{"type": "vec3|nil", "desc": "Position."}, {"type": "quat|nil", "desc": "Rotation caméra."}],
+      "desc": "Unicycle position and camera orientation of the on-foot player.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3|nil",
+          "desc": "Position."
+        },
+        {
+          "type": "quat|nil",
+          "desc": "Camera rotation."
+        }
+      ],
       "internal": false
     },
     "getPosXYZ": {
-      "desc": "Position de l'unicycle en trois nombres (sans allocation).",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice de joueur."}},
-      "returns": [{"type": "number|nil", "desc": "x, y, z (nil si le joueur n'est pas à pied)."}],
+      "desc": "Unicycle position as three numbers (no allocation).",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "x, y, z (nil if the player is not on foot)."
+        }
+      ],
       "internal": false
     },
     "getRotXYZW": {
-      "desc": "Orientation de la caméra du joueur à pied en quatre nombres.",
-      "params": {"player": {"type": "integer|nil", "desc": "Indice de joueur."}},
-      "returns": [{"type": "number|nil", "desc": "x, y, z, w (nil si le joueur n'est pas à pied)."}],
+      "desc": "On-foot player's camera orientation as four numbers.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "x, y, z, w (nil if the player is not on foot)."
+        }
+      ],
       "internal": false
     },
     "enableToggling": {
-      "desc": "Autorise ou interdit le basculement manuel entre véhicule et marche.",
-      "params": {"enabled": {"type": "boolean", "desc": "true pour autoriser."}},
+      "desc": "Allows or forbids manual switching between vehicle and walking.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to allow."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "isTogglingEnabled": {
-      "desc": "Indique si le basculement est autorisé.",
+      "desc": "Indicates whether switching is allowed.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": ""}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": ""
+        }
+      ],
       "internal": false
     },
     "addVehicleToBlacklist": {
-      "desc": "Exclut un véhicule des candidats à l'entrée en mode marche.",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "desc": "Excludes a vehicle from the candidates for entry in walking mode.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "removeVehicleFromBlacklist": {
-      "desc": "Retire un véhicule de la liste noire.",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "desc": "Removes a vehicle from the blacklist.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "isVehicleBlacklisted": {
-      "desc": "Teste si un véhicule est dans la liste noire.",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
-      "returns": [{"type": "boolean|nil", "desc": "true ou nil."}],
+      "desc": "Tests whether a vehicle is in the blacklist.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true or nil."
+        }
+      ],
       "internal": false
     },
     "clearBlacklist": {
-      "desc": "Vide la liste noire.",
+      "desc": "Clears the blacklist.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getBlacklist": {
-      "desc": "Renvoie la table de la liste noire (id -> true), pas une copie.",
+      "desc": "Returns the blacklist table (id -> true), not a copy.",
       "params": {},
-      "returns": [{"type": "table<integer, boolean>", "desc": ""}],
+      "returns": [
+        {
+          "type": "table<integer, boolean>",
+          "desc": ""
+        }
+      ],
       "internal": false
     },
     "onUpdate": {
-      "desc": "Hook appelé à chaque image : pour chaque joueur, cherche le véhicule proche, met à jour la vitesse de stationnement et affiche/retire le message « walkingmode ».",
-      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}},
+      "desc": "Hook called every frame: for each player, looks for the nearby vehicle, updates the parking speed and shows/removes the \"walkingmode\" message.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time delta (s)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook de sauvegarde avant rechargement des extensions : toggling, liste noire, unicycles, visages, peintures.",
+      "desc": "Save hook before extensions reload: toggling, blacklist, unicycles, faces, paints.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{togglingEnabled, vehicleBlacklist, unicycleIds, faceParts, paints}"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{togglingEnabled, vehicleBlacklist, unicycleIds, faceParts, paints}"
+        }
+      ],
       "internal": true
     },
     "onDeserialize": {
-      "desc": "Restaure l'état sérialisé et recalcule quels joueurs sont à pied.",
-      "params": {"data": {"type": "table", "desc": "Table de onSerialize."}},
+      "desc": "Restores the serialized state and recomputes which players are on foot.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "onSerialize table."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onClientStartMission": {
-      "desc": "Hook appelé au début d'un niveau : vide la liste noire, réactive le toggling.",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "desc": "Hook called at the start of a level: clears the blacklist, re-enables toggling.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Level path."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook appelé à la fin d'un niveau : oublie unicycles, visages et peintures.",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "desc": "Hook called at the end of a level: forgets unicycles, faces and paints.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Level path."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onSplitScreenChanged": {
-      "desc": "Hook appelé quand l'écran partagé change : reconfigure les couleurs des unicycles.",
-      "params": {"enabled": {"type": "boolean", "desc": "Écran partagé actif."}, "playerCount": {"type": "integer", "desc": "Nombre de joueurs."}, "layout": {"type": "any", "desc": "Disposition."}, "mode": {"type": "any", "desc": "Mode."}},
+      "desc": "Hook called when split screen changes: reconfigures the unicycle colors.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "Split screen active."
+        },
+        "playerCount": {
+          "type": "integer",
+          "desc": "Number of players."
+        },
+        "layout": {
+          "type": "any",
+          "desc": "Layout."
+        },
+        "mode": {
+          "type": "any",
+          "desc": "Mode."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onCameraChanged": {
-      "desc": "Hook appelé au changement de caméra d'un joueur : masque l'unicycle dans la vue du joueur quand il utilise la caméra unicycle, ou quand la transition de la grande carte s'éloigne de lui.",
-      "params": {"player": {"type": "integer", "desc": "Indice de joueur."}, "camName": {"type": "string", "desc": "Nom du mode de caméra."}, "vid": {"type": "integer|nil", "desc": "Id du véhicule suivi."}},
+      "desc": "Hook called when a player's camera changes: hides the unicycle in the player's view when they use the unicycle camera, or when the big map transition moves away from them.",
+      "params": {
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        },
+        "camName": {
+          "type": "string",
+          "desc": "Camera mode name."
+        },
+        "vid": {
+          "type": "integer|nil",
+          "desc": "Id of the tracked vehicle."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onVehicleSwitched": {
-      "desc": "Hook appelé quand un joueur change de véhicule : désactive l'ancien unicycle mémorisé et met à jour l'état actif.",
-      "params": {"oldId": {"type": "integer", "desc": "Ancien véhicule."}, "newId": {"type": "integer", "desc": "Nouveau véhicule."}, "player": {"type": "integer|nil", "desc": "Indice de joueur."}},
+      "desc": "Hook called when a player switches vehicle: deactivates the previously stored unicycle and updates the active state.",
+      "params": {
+        "oldId": {
+          "type": "integer",
+          "desc": "Old vehicle."
+        },
+        "newId": {
+          "type": "integer",
+          "desc": "New vehicle."
+        },
+        "player": {
+          "type": "integer|nil",
+          "desc": "Player index."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onVehicleColorChanged": {
-      "desc": "Hook appelé quand la couleur d'un véhicule change : si c'est l'unicycle d'un joueur (hors multi-siège), enregistre la peinture dans le réglage playerCharacterColor.",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}, "index": {"type": "integer", "desc": "Indice de peinture (seul 1 est pris en compte)."}, "paint": {"type": "table", "desc": "Peinture."}},
+      "desc": "Hook called when a vehicle's color changes: if it is a player's unicycle (outside multiseat), saves the paint in the playerCharacterColor setting.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        },
+        "index": {
+          "type": "integer",
+          "desc": "Paint index (only 1 is taken into account)."
+        },
+        "paint": {
+          "type": "table",
+          "desc": "Paint."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onVehicleReplaced": {
-      "desc": "Hook appelé quand un véhicule est remplacé : oublie l'unicycle correspondant.",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "desc": "Hook called when a vehicle is replaced: forgets the corresponding unicycle.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook appelé à la destruction d'un véhicule : oublie l'unicycle correspondant.",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "desc": "Hook called when a vehicle is destroyed: forgets the corresponding unicycle.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
       "returns": [],
       "internal": true
     }

@@ -1,47 +1,47 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua",
-  "module": "Nœud « AI Arrive » (couleur ai, once_f_duration, comportement duration). Envoie un véhicule vers un waypoint du navgraph (mode IA « manual » + ai.setTarget) et considère l'arrivée quand la distance entre l'avant du véhicule et le waypoint est inférieure à checkDistance (rayon du waypoint si vide) et que la vitesse est inférieure à checkVelocity. Entrées : aiVehId, waypointName, checkDistance (caché, 1), checkVelocity (caché, 0,1). Sortie : distance (cachée). Donnée : autoDisableOnArrive (true) désactive l'IA à l'arrivée.",
+  "module": "Node \"AI Arrive\" (color ai, once_f_duration, duration behavior). Sends a vehicle to a navgraph waypoint (\"manual\" AI mode + ai.setTarget) and considers it arrived when the distance between the front of the vehicle and the waypoint is less than checkDistance (waypoint radius if empty) and the speed is less than checkVelocity. Inputs: aiVehId, waypointName, checkDistance (hidden, 1), checkVelocity (hidden, 0.1). Output: distance (hidden). Data: autoDisableOnArrive (true) disables the AI on arrival.",
   "notes": [
-    "Le pin hérité inRadius est remappé vers complete.",
-    "Le test d'arrivée précède l'envoi de la commande : l'état finished peut être écrasé par « started » à la première frame (le même work appelle ensuite setDurationState('started')).",
-    "checkVelocity vide donne un seuil de 10000 m/s (équivalent à pas de limite)."
+    "The legacy pin inRadius is remapped to complete.",
+    "The arrival test precedes sending the command: the finished state can be overwritten by \"started\" on the first frame (the same work then calls setDurationState('started')).",
+    "An empty checkVelocity gives a threshold of 10000 m/s (equivalent to no limit)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Initialise sentCommand, data.autoDisableOnArrive=true et l'état de durée « inactive ».",
+          "desc": "Initializes sentCommand, data.autoDisableOnArrive=true and the duration state \"inactive\".",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Remet sentCommand à false et l'état à « inactive ».",
+          "desc": "Resets sentCommand to false and the state to \"inactive\".",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Appelle onNodeReset.",
+          "desc": "Calls onNodeReset.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche l'état et si la commande a été envoyée.",
+          "desc": "Displays the state and whether the command was sent.",
           "params": {
             "builder": {
               "type": "table",
-              "desc": "Constructeur de nœud."
+              "desc": "Node constructor."
             },
             "style": {
               "type": "table",
-              "desc": "Style du nœud."
+              "desc": "Node style."
             }
           },
           "internal": true
         },
         "getVeh": {
-          "desc": "Renvoie le véhicule de aiVehId, ou celui du joueur sans entrée.",
+          "desc": "Returns the vehicle of aiVehId, or the player's without input.",
           "internal": false
         },
         "work": {
-          "desc": "Si flow est actif et pas terminé : vérifie le waypoint et le véhicule (erreur de nœud sinon), calcule la distance depuis le milieu de l'avant, passe à « finished » à l'arrivée (et désactive l'IA si autoDisableOnArrive), puis envoie une fois ai.setState manual et ai.setTarget.",
+          "desc": "If flow is active and not finished: checks the waypoint and the vehicle (node error otherwise), computes the distance from the middle of the front, goes to \"finished\" on arrival (and disables the AI if autoDisableOnArrive), then sends ai.setState manual and ai.setTarget once.",
           "internal": true
         }
       }

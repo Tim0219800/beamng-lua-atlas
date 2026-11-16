@@ -1,257 +1,257 @@
 # `util_procTrack`
 
-*Fichier : `lua/ge/extensions/util/procTrack.lua` · VM : Game Engine (GE) · 1475 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/procTrack.lua` · VM: Game Engine (GE) · 1475 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_procTrack` : `extensions.load("util_procTrack")`, puis la globale `util_procTrack`
+**Access:** extension `util_procTrack`: `extensions.load("util_procTrack")`, then the global `util_procTrack`
 
-Générateur procédural de parcours de type gymkhana, utilisé par les scénarios de génération de piste. À partir de rectangles de départ (params.startingRects), il découpe la zone avec util/rectangleGen pour obtenir un graphe de points clés, cherche un chemin aléatoire qui les traverse (parcours en profondeur avec retour arrière), le transforme en tracé sinueux (virages, boucles, lignes droites), puis crée dans le niveau, sous un SimGroup « GymkhanaArena », la route (DecalRoad), des plots, des portes, des anneaux de béton, des barils et des waypoints BeamNGWaypoint pour le scénario courant. Une graine (seed) rend la piste reproductible ; elle peut aussi s'exprimer sous forme de mots (intToWords/wordsToInt). Les objets utilisent des modèles du niveau driver_training.
+Procedural generator of gymkhana-style courses, used by track generation scenarios. From starting rectangles (params.startingRects), it splits the area with util/rectangleGen to get a graph of key points, searches for a random path through them (depth-first search with backtracking), turns it into a winding track (turns, loops, straight lines), then creates in the level, under a "GymkhanaArena" SimGroup, the road (DecalRoad), cones, gates, concrete rings, barrels and BeamNGWaypoint waypoints for the current scenario. A seed makes the track reproducible; it can also be expressed as words (intToWords/wordsToInt). The objects use models from the driver_training level.
 
-## Exemple
+## Example
 
 ```lua
 local p = extensions.util_procTrack.getDefaultParams()
-p.populateFunction = function(params, scenarioParam) --[[ remplir params.startingRects ]] end
+p.populateFunction = function(params, scenarioParam) --[[ fill params.startingRects ]] end
 p.decoration.afterFunction = function(scenarioParam) end
 extensions.util_procTrack.makeGymkhana(p)
 ```
 
-## Remarques
+## Notes
 
-- L'appelant doit fournir params.populateFunction(params, scenarionParam) (qui remplit params.startingRects, rootX/rootY/rootZ, etc.) et params.decoration.afterFunction(scenarionParam) ; le nom du champ est écrit « scenarionParam » (faute de frappe conservée dans le code).
-- Les paramètres par défaut : zone de racine (rootX, rootY, rootZ, rootAngleRad), limites de tentatives (nodeCreationCounter 5, pathCounter 15), rectModeParams (minXDist/minYDist 15 m, minNodes 6, maxNodes 27, density 0,85 pour 1000 m2, fixNodes), path (minRadius 2,5, pylonRadiusThreshold 6, probabilités de boucle et de porte, closed, lapCount), decoration (gateHeight 3, gateWidth 4,5).
-- Le nombre de nœuds vaut (nombre de rectangles noSplit) + surface / (1000 / density) + un aléa entre randomMin et randomMax, borné entre minNodes et maxNodes. Au-delà de 27 la génération peut devenir extrêmement longue (commentaire du code).
-- La recherche de chemin est un parcours en profondeur avec retour arrière sur un problème de chemin hamiltonien (NP-complet) : le pire cas est très coûteux.
-- La graine est un entier : sans seed, elle est tirée avec os.time puis math.random. math.randomseed(params.seed) est appelé dans checkParams.
-- La génération modifie le niveau (création de SimGroup, DecalRoad, TSStatic, waypoints, be:reloadCollision()) et le scénario courant (scenario.nodes, scenario.lapConfig) ; elle supprime l'ancien groupe GymkhanaArena.
-- Avec debug.neighbours = true (valeur par défaut) des routes de débogage blanches relient les nœuds voisins ; debug.rects est également true par défaut.
-- makeBarrel concatène skin sans valeur par défaut : un skin nil provoquerait une erreur Lua.
-- Les coordonnées locales (x, y, z) passées à getPosition sont tournées de rootAngleRad puis décalées de rootX/rootY/rootZ.
+- The caller must provide params.populateFunction(params, scenarionParam) (which fills params.startingRects, rootX/rootY/rootZ, etc.) and params.decoration.afterFunction(scenarionParam); the field name is spelled "scenarionParam" (typo kept from the code).
+- Default parameters: root area (rootX, rootY, rootZ, rootAngleRad), attempt limits (nodeCreationCounter 5, pathCounter 15), rectModeParams (minXDist/minYDist 15 m, minNodes 6, maxNodes 27, density 0.85 per 1000 m2, fixNodes), path (minRadius 2.5, pylonRadiusThreshold 6, loop and gate probabilities, closed, lapCount), decoration (gateHeight 3, gateWidth 4.5).
+- The number of nodes is (number of noSplit rectangles) + area / (1000 / density) + a random value between randomMin and randomMax, clamped between minNodes and maxNodes. Beyond 27 generation can become extremely long (code comment).
+- The path search is a depth-first search with backtracking on a Hamiltonian path problem (NP-complete): the worst case is very costly.
+- The seed is an integer: without a seed, it is drawn with os.time then math.random. math.randomseed(params.seed) is called in checkParams.
+- Generation modifies the level (creation of SimGroup, DecalRoad, TSStatic, waypoints, be:reloadCollision()) and the current scenario (scenario.nodes, scenario.lapConfig); it deletes the old GymkhanaArena group.
+- With debug.neighbours = true (default value) white debug roads connect neighboring nodes; debug.rects is also true by default.
+- makeBarrel concatenates skin with no default value: a nil skin would cause a Lua error.
+- The local coordinates (x, y, z) passed to getPosition are rotated by rootAngleRad then offset by rootX/rootY/rootZ.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_procTrack.checkParams()` | Vérifie et complète les paramètres : fixe la graine, appelle populateFunction, calcule la densité et le nombre de nœuds cible (borné par minNodes et maxNodes) et charge util/rectangleGen. | 244 |
-| `util_procTrack.createPylons(nodes)` | Crée les plots, portes et anneaux de béton aux nœuds (cercle ou plot central selon le rayon, porte pour une ligne droite ou un rayon nul). | 975 |
-| `util_procTrack.createWaypointsForScenario(nodes)` | Crée les positions et angles des waypoints (objets BeamNGWaypoint directionnels) et remplit scenario.nodes / scenario.lapConfig du scénario courant. | 1118 |
-| `util_procTrack.createWindingPath(path)` | Extrait du chemin les informations de tracé (angles, distances, normales), détermine les rayons et les types de nœuds (droite, courbe, boucle, porte) puis calcule les points de route. | 589 |
-| `util_procTrack.createWindingRoad(nodes)` | Crée les objets DecalRoad de la route (matériaux tread_marks_clean et road_orange_markings) dans le groupe GymkhanaArena. | 862 |
-| `util_procTrack.currentEdgeNotOK(current, path, nodes, finishNode)` | Teste si l'ajout de la prochaine arête depuis le nœud courant est interdit. | 498 |
-| `util_procTrack.decorateStartAndFinish(nodes)` | Décore les nœuds de départ et d'arrivée. | 918 |
-| `util_procTrack.determineInOutAngle(nodes)` | Détermine les angles d'entrée et de sortie autour des cercles (virages). | 756 |
-| `util_procTrack.dist(a, b, x, y)` | Distance euclidienne 2D du point (a, b) au point (x, y). | 1264 |
-| `util_procTrack.edgeCreatesSplitGraph(path, nextNode, nodes)` | Teste si l'ajout de nextNode au chemin couperait le graphe restant en parties non reliées. | 515 |
-| `util_procTrack.getBaseInformationFromPath(path)` | Extrait du chemin les informations de base : angles, distances, normales, etc. | 634 |
-| `util_procTrack.getDefaultParams()` | Renvoie une nouvelle table de paramètres par défaut pour un gymkhana (voir notes). | 10 |
-| `util_procTrack.getPathRoadNodes(nodes)` | Calcule tous les points nécessaires pour créer la route autour des nœuds. | 788 |
-| `util_procTrack.getPosition(xx, yy, zz)` | Transforme une position locale du parcours en position globale (rotation de rootAngleRad puis décalage de rootX, rootY, rootZ). | 1391 |
-| `util_procTrack.getRotationDeg(dd)` | Convertit un angle local (degrés) en angle global en retirant la rotation de la racine du parcours. | 1387 |
-| `util_procTrack.getSeed()` | Renvoie la graine de la piste courante. | 1429 |
-| `util_procTrack.intToWords(int)` | Convertit une graine entière en suite de mots de 5 lettres concaténés (base de la taille de la liste de mots). | 1461 |
-| `util_procTrack.isInList(list, element)` | Teste si un élément est présent dans une liste. | 571 |
-| `util_procTrack.makeBarrel(pos, rot, skin)` | Crée un baril de signalisation (TSStatic barrelmarker_<skin>.dae), tourné de 180 degrés en plus de rot. | 1358 |
-| `util_procTrack.makeBaseNodePositions()` | Génère le graphe de points clés (via rectangleGen.getGraph) et, si debug.neighbours est vrai, dessine des routes de débogage entre voisins. | 307 |
-| `util_procTrack.makeConcreteRing(pos, radius)` | Crée un anneau de béton (TSStatic ring_2m.dae) de rayon donné (minimum 1). | 1329 |
-| `util_procTrack.makeGate(pos, rot)` | Crée une porte (TSStatic gate.dae) à une position locale. | 1302 |
-| `util_procTrack.makeGymkhana(inParams)` | Fonction principale : valide les paramètres, génère les points, le chemin, la route, les plots/portes, les waypoints du scénario, puis appelle decoration.afterFunction et affiche un message avec la graine. | 120 |
-| `util_procTrack.makePath(graph)` | Cherche un chemin aléatoire dans le graphe, par parcours en profondeur avec retour arrière. Utilise les nœuds de départ/arrivée (drapeaux de rectangles, sinon les plus proches de params.start/finish). En mode circuit fermé, choisit un voisin du départ qui ne coupe pas le graphe. | 368 |
-| `util_procTrack.makePylon(pos, size, rot, skin)` | Crée un plot (TSStatic barriersegment du niveau driver_training) à une position locale du parcours. | 1269 |
-| `util_procTrack.reGenerate(seed)` | Régénère toute la piste en reprenant populateFunction, scenarionParam et afterFunction des paramètres courants, avec la graine donnée. makeGymkhana doit avoir été appelée avant. | 109 |
-| `util_procTrack.wordsToInt(word)` | Convertit une suite de mots de 5 lettres (graine sous forme de mots) en entier. | 1437 |
+| `util_procTrack.checkParams()` | Checks and completes the parameters: sets the seed, calls populateFunction, computes the density and the target number of nodes (clamped by minNodes and maxNodes) and loads util/rectangleGen. | 244 |
+| `util_procTrack.createPylons(nodes)` | Creates the cones, gates and concrete rings at the nodes (circle or central cone depending on the radius, gate for a straight line or a zero radius). | 975 |
+| `util_procTrack.createWaypointsForScenario(nodes)` | Creates the positions and angles of the waypoints (directional BeamNGWaypoint objects) and fills scenario.nodes / scenario.lapConfig of the current scenario. | 1118 |
+| `util_procTrack.createWindingPath(path)` | Extracts layout information (angles, distances, normals) from the path, determines the radii and node types (straight, curve, loop, gate) then computes the road points. | 589 |
+| `util_procTrack.createWindingRoad(nodes)` | Creates the road's DecalRoad objects (materials tread_marks_clean and road_orange_markings) in the GymkhanaArena group. | 862 |
+| `util_procTrack.currentEdgeNotOK(current, path, nodes, finishNode)` | Tests whether adding the next edge from the current node is forbidden. | 498 |
+| `util_procTrack.decorateStartAndFinish(nodes)` | Decorates the start and finish nodes. | 918 |
+| `util_procTrack.determineInOutAngle(nodes)` | Determines the entry and exit angles around the circles (turns). | 756 |
+| `util_procTrack.dist(a, b, x, y)` | 2D Euclidean distance from point (a, b) to point (x, y). | 1264 |
+| `util_procTrack.edgeCreatesSplitGraph(path, nextNode, nodes)` | Tests whether adding nextNode to the path would split the remaining graph into unconnected parts. | 515 |
+| `util_procTrack.getBaseInformationFromPath(path)` | Extracts basic information from the path: angles, distances, normals, etc. | 634 |
+| `util_procTrack.getDefaultParams()` | Returns a new table of default parameters for a gymkhana (see notes). | 10 |
+| `util_procTrack.getPathRoadNodes(nodes)` | Computes all the points needed to create the road around the nodes. | 788 |
+| `util_procTrack.getPosition(xx, yy, zz)` | Transforms a local position of the course into a global position (rotation by rootAngleRad then offset by rootX, rootY, rootZ). | 1391 |
+| `util_procTrack.getRotationDeg(dd)` | Converts a local angle (degrees) to a global angle by removing the course root's rotation. | 1387 |
+| `util_procTrack.getSeed()` | Returns the seed of the current track. | 1429 |
+| `util_procTrack.intToWords(int)` | Converts an integer seed to a sequence of concatenated 5-letter words (base of the word list size). | 1461 |
+| `util_procTrack.isInList(list, element)` | Tests whether an element is present in a list. | 571 |
+| `util_procTrack.makeBarrel(pos, rot, skin)` | Creates a signaling barrel (TSStatic barrelmarker_<skin>.dae), rotated by 180 degrees in addition to rot. | 1358 |
+| `util_procTrack.makeBaseNodePositions()` | Generates the graph of key points (via rectangleGen.getGraph) and, if debug.neighbours is true, draws debug roads between neighbors. | 307 |
+| `util_procTrack.makeConcreteRing(pos, radius)` | Creates a concrete ring (TSStatic ring_2m.dae) of the given radius (minimum 1). | 1329 |
+| `util_procTrack.makeGate(pos, rot)` | Creates a gate (TSStatic gate.dae) at a local position. | 1302 |
+| `util_procTrack.makeGymkhana(inParams)` | Main function: validates the parameters, generates the points, the path, the road, the cones/gates, the scenario waypoints, then calls decoration.afterFunction and displays a message with the seed. | 120 |
+| `util_procTrack.makePath(graph)` | Searches for a random path in the graph, by depth-first search with backtracking. Uses the start/finish nodes (rectangle flags, otherwise the nodes closest to params.start/finish). In closed circuit mode, picks a neighbor of the start that does not cut the graph. | 368 |
+| `util_procTrack.makePylon(pos, size, rot, skin)` | Creates a cone (TSStatic barriersegment from the driver_training level) at a local position of the course. | 1269 |
+| `util_procTrack.reGenerate(seed)` | Regenerates the whole track reusing populateFunction, scenarionParam and afterFunction from the current parameters, with the given seed. makeGymkhana must have been called before. | 109 |
+| `util_procTrack.wordsToInt(word)` | Converts a sequence of 5-letter words (seed expressed as words) to an integer. | 1437 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_procTrack.createPylons(nodes)`
 
-Crée les plots, portes et anneaux de béton aux nœuds (cercle ou plot central selon le rayon, porte pour une ligne droite ou un rayon nul).
+Creates the cones, gates and concrete rings at the nodes (circle or central cone depending on the radius, gate for a straight line or a zero radius).
 
-- `nodes` (*table*) : Nœuds du tracé
+- `nodes` (*table*) : Layout nodes
 
 #### `util_procTrack.createWaypointsForScenario(nodes)`
 
-Crée les positions et angles des waypoints (objets BeamNGWaypoint directionnels) et remplit scenario.nodes / scenario.lapConfig du scénario courant.
+Creates the positions and angles of the waypoints (directional BeamNGWaypoint objects) and fills scenario.nodes / scenario.lapConfig of the current scenario.
 
-- `nodes` (*table*) : Nœuds du tracé
+- `nodes` (*table*) : Layout nodes
 
 #### `util_procTrack.createWindingPath(path)`
 
-Extrait du chemin les informations de tracé (angles, distances, normales), détermine les rayons et les types de nœuds (droite, courbe, boucle, porte) puis calcule les points de route.
+Extracts layout information (angles, distances, normals) from the path, determines the radii and node types (straight, curve, loop, gate) then computes the road points.
 
-- `path` (*table*) : Chemin de makePath
-- **renvoie** : table Nœuds avec leurs points de route (points)
+- `path` (*table*) : Path from makePath
+- **returns**: table Nodes with their road points (points)
 
 #### `util_procTrack.createWindingRoad(nodes)`
 
-Crée les objets DecalRoad de la route (matériaux tread_marks_clean et road_orange_markings) dans le groupe GymkhanaArena.
+Creates the road's DecalRoad objects (materials tread_marks_clean and road_orange_markings) in the GymkhanaArena group.
 
-- `nodes` (*table*) : Nœuds avec points de route
+- `nodes` (*table*) : Nodes with road points
 
 #### `util_procTrack.currentEdgeNotOK(current, path, nodes, finishNode)`
 
-Teste si l'ajout de la prochaine arête depuis le nœud courant est interdit.
+Tests whether adding the next edge from the current node is forbidden.
 
-- `current` (*table*) : Nœud courant
-- `path` (*table*) : Chemin en cours
-- `nodes` (*table*) : Nœuds du graphe
-- `finishNode` (*table|nil*) : Nœud d'arrivée
-- **renvoie** : boolean true si l'arête n'est pas autorisée
+- `current` (*table*) : Current node
+- `path` (*table*) : Path in progress
+- `nodes` (*table*) : Graph nodes
+- `finishNode` (*table|nil*) : Finish node
+- **returns**: boolean true if the edge is not allowed
 
 #### `util_procTrack.decorateStartAndFinish(nodes)`
 
-Décore les nœuds de départ et d'arrivée.
+Decorates the start and finish nodes.
 
-- `nodes` (*table*) : Nœuds du tracé
+- `nodes` (*table*) : Layout nodes
 
 #### `util_procTrack.determineInOutAngle(nodes)`
 
-Détermine les angles d'entrée et de sortie autour des cercles (virages).
+Determines the entry and exit angles around the circles (turns).
 
-- `nodes` (*table*) : Nœuds du tracé
+- `nodes` (*table*) : Layout nodes
 
 #### `util_procTrack.dist(a, b, x, y)`
 
-Distance euclidienne 2D du point (a, b) au point (x, y).
+2D Euclidean distance from point (a, b) to point (x, y).
 
-- `a` (*number*) : X du premier point
-- `b` (*number*) : Y du premier point
-- `x` (*number*) : X du second point
-- `y` (*number*) : Y du second point
-- **renvoie** : number Distance
+- `a` (*number*) : X of the first point
+- `b` (*number*) : Y of the first point
+- `x` (*number*) : X of the second point
+- `y` (*number*) : Y of the second point
+- **returns**: number Distance
 
 #### `util_procTrack.edgeCreatesSplitGraph(path, nextNode, nodes)`
 
-Teste si l'ajout de nextNode au chemin couperait le graphe restant en parties non reliées.
+Tests whether adding nextNode to the path would split the remaining graph into unconnected parts.
 
-- `path` (*table*) : Chemin en cours
-- `nextNode` (*table*) : Nœud candidat
-- `nodes` (*table*) : Nœuds du graphe
-- **renvoie** : boolean true si le graphe serait scindé
+- `path` (*table*) : Path in progress
+- `nextNode` (*table*) : Candidate node
+- `nodes` (*table*) : Graph nodes
+- **returns**: boolean true if the graph would be split
 
 #### `util_procTrack.getBaseInformationFromPath(path)`
 
-Extrait du chemin les informations de base : angles, distances, normales, etc.
+Extracts basic information from the path: angles, distances, normals, etc.
 
-- `path` (*table*) : Chemin de makePath
-- **renvoie** : table Nœuds enrichis
+- `path` (*table*) : Path from makePath
+- **returns**: table Enriched nodes
 
 #### `util_procTrack.getDefaultParams()`
 
-Renvoie une nouvelle table de paramètres par défaut pour un gymkhana (voir notes).
+Returns a new table of default parameters for a gymkhana (see notes).
 
-- **renvoie** : table Paramètres par défaut
+- **returns**: table Default parameters
 
 #### `util_procTrack.getPathRoadNodes(nodes)`
 
-Calcule tous les points nécessaires pour créer la route autour des nœuds.
+Computes all the points needed to create the road around the nodes.
 
-- `nodes` (*table*) : Nœuds du tracé
+- `nodes` (*table*) : Layout nodes
 
 #### `util_procTrack.getPosition(xx, yy, zz)`
 
-Transforme une position locale du parcours en position globale (rotation de rootAngleRad puis décalage de rootX, rootY, rootZ).
+Transforms a local position of the course into a global position (rotation by rootAngleRad then offset by rootX, rootY, rootZ).
 
-- `xx` (*number*) : X local
-- `yy` (*number*) : Y local
-- `zz` (*number*) : Z local
-- **renvoie** : table {x, y, z} global
+- `xx` (*number*) : Local X
+- `yy` (*number*) : Local Y
+- `zz` (*number*) : Local Z
+- **returns**: table Global {x, y, z}
 
 #### `util_procTrack.getRotationDeg(dd)`
 
-Convertit un angle local (degrés) en angle global en retirant la rotation de la racine du parcours.
+Converts a local angle (degrees) to a global angle by removing the course root's rotation.
 
-- `dd` (*number*) : Angle local en degrés
-- **renvoie** : number Angle global en degrés
+- `dd` (*number*) : Local angle in degrees
+- **returns**: number Global angle in degrees
 
 #### `util_procTrack.getSeed()`
 
-Renvoie la graine de la piste courante.
+Returns the seed of the current track.
 
-- **renvoie** : integer|nil Graine, ou nil si aucune piste générée
+- **returns**: integer|nil Seed, or nil if no track generated
 
 #### `util_procTrack.intToWords(int)`
 
-Convertit une graine entière en suite de mots de 5 lettres concaténés (base de la taille de la liste de mots).
+Converts an integer seed to a sequence of concatenated 5-letter words (base of the word list size).
 
-- `int` (*integer*) : Graine
-- **renvoie** : string Mots concaténés
+- `int` (*integer*) : Seed
+- **returns**: string Concatenated words
 
 #### `util_procTrack.isInList(list, element)`
 
-Teste si un élément est présent dans une liste.
+Tests whether an element is present in a list.
 
-- `list` (*table*) : Liste
-- `element` (*any*) : Élément cherché
-- **renvoie** : boolean true si présent
+- `list` (*table*) : List
+- `element` (*any*) : Element searched for
+- **returns**: boolean true if present
 
 #### `util_procTrack.makeBarrel(pos, rot, skin)`
 
-Crée un baril de signalisation (TSStatic barrelmarker_<skin>.dae), tourné de 180 degrés en plus de rot.
+Creates a signaling barrel (TSStatic barrelmarker_<skin>.dae), rotated by 180 degrees in addition to rot.
 
-- `pos` (*number[]*) : Position locale {x, y, z}
-- `rot` (*number|nil*) : Rotation locale en degrés (défaut 0)
-- `skin` (*string*) : Suffixe du modèle (obligatoire)
+- `pos` (*number[]*) : Local position {x, y, z}
+- `rot` (*number|nil*) : Local rotation in degrees (default 0)
+- `skin` (*string*) : Model suffix (required)
 
 #### `util_procTrack.makeBaseNodePositions()`
 
-Génère le graphe de points clés (via rectangleGen.getGraph) et, si debug.neighbours est vrai, dessine des routes de débogage entre voisins.
+Generates the graph of key points (via rectangleGen.getGraph) and, if debug.neighbours is true, draws debug roads between neighbors.
 
-- **renvoie** : table|nil Graphe {nodes, start, finish}
+- **returns**: table|nil Graph {nodes, start, finish}
 
 #### `util_procTrack.makeConcreteRing(pos, radius)`
 
-Crée un anneau de béton (TSStatic ring_2m.dae) de rayon donné (minimum 1).
+Creates a concrete ring (TSStatic ring_2m.dae) of the given radius (minimum 1).
 
-- `pos` (*number[]*) : Position locale {x, y, z}
-- `radius` (*number*) : Rayon (échelle X et Y)
+- `pos` (*number[]*) : Local position {x, y, z}
+- `radius` (*number*) : Radius (X and Y scale)
 
 #### `util_procTrack.makeGate(pos, rot)`
 
-Crée une porte (TSStatic gate.dae) à une position locale.
+Creates a gate (TSStatic gate.dae) at a local position.
 
-- `pos` (*number[]*) : Position locale {x, y, z}
-- `rot` (*number|nil*) : Rotation locale en degrés (défaut 0)
+- `pos` (*number[]*) : Local position {x, y, z}
+- `rot` (*number|nil*) : Local rotation in degrees (default 0)
 
 #### `util_procTrack.makeGymkhana(inParams)`
 
-Fonction principale : valide les paramètres, génère les points, le chemin, la route, les plots/portes, les waypoints du scénario, puis appelle decoration.afterFunction et affiche un message avec la graine.
+Main function: validates the parameters, generates the points, the path, the road, the cones/gates, the scenario waypoints, then calls decoration.afterFunction and displays a message with the seed.
 
-- `inParams` (*table*) : Paramètres (voir getDefaultParams)
+- `inParams` (*table*) : Parameters (see getDefaultParams)
 
 #### `util_procTrack.makePath(graph)`
 
-Cherche un chemin aléatoire dans le graphe, par parcours en profondeur avec retour arrière. Utilise les nœuds de départ/arrivée (drapeaux de rectangles, sinon les plus proches de params.start/finish). En mode circuit fermé, choisit un voisin du départ qui ne coupe pas le graphe.
+Searches for a random path in the graph, by depth-first search with backtracking. Uses the start/finish nodes (rectangle flags, otherwise the nodes closest to params.start/finish). In closed circuit mode, picks a neighbor of the start that does not cut the graph.
 
-- `graph` (*table*) : Graphe de makeBaseNodePositions
-- **renvoie** : table|nil Liste de nœuds du chemin, ou nil si aucun chemin trouvé
+- `graph` (*table*) : Graph from makeBaseNodePositions
+- **returns**: table|nil List of path nodes, or nil if no path found
 
 #### `util_procTrack.makePylon(pos, size, rot, skin)`
 
-Crée un plot (TSStatic barriersegment du niveau driver_training) à une position locale du parcours.
+Creates a cone (TSStatic barriersegment from the driver_training level) at a local position of the course.
 
-- `pos` (*number[]*) : Position locale {x, y, z}
-- `size` (*number|number[]|nil*) : Échelle : nombre (hauteur, largeur 0,33) ou {x, y, z} (défaut {0.33, 0.33, 1})
-- `rot` (*number|nil*) : Rotation locale en degrés (défaut 0)
-- `skin` (*string|nil*) : Suffixe du nom de modèle (défaut vide)
+- `pos` (*number[]*) : Local position {x, y, z}
+- `size` (*number|number[]|nil*) : Scale: number (height, width 0.33) or {x, y, z} (default {0.33, 0.33, 1})
+- `rot` (*number|nil*) : Local rotation in degrees (default 0)
+- `skin` (*string|nil*) : Model name suffix (default empty)
 
 #### `util_procTrack.reGenerate(seed)`
 
-Régénère toute la piste en reprenant populateFunction, scenarionParam et afterFunction des paramètres courants, avec la graine donnée. makeGymkhana doit avoir été appelée avant.
+Regenerates the whole track reusing populateFunction, scenarionParam and afterFunction from the current parameters, with the given seed. makeGymkhana must have been called before.
 
-- `seed` (*integer|nil*) : Nouvelle graine (nil : une graine aléatoire est tirée)
+- `seed` (*integer|nil*) : New seed (nil: a random seed is drawn)
 
 #### `util_procTrack.wordsToInt(word)`
 
-Convertit une suite de mots de 5 lettres (graine sous forme de mots) en entier.
+Converts a sequence of 5-letter words (seed expressed as words) to an integer.
 
-- `word` (*string*) : Mots concaténés (5 lettres chacun)
-- **renvoie** : integer Graine entière
+- `word` (*string*) : Concatenated words (5 letters each)
+- **returns**: integer Integer seed
 
-**Évènements UI (guihooks.trigger) :** `Message`, `procTrackSeed`
+**UI events (guihooks.trigger):** `Message`, `procTrackSeed`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `reloadCollision`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/procTrack.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/procTrack.lua`.*

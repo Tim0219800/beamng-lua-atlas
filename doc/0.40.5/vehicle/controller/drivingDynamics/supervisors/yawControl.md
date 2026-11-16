@@ -1,130 +1,130 @@
 # `controller_drivingDynamics_supervisors_yawControl`
 
-*Fichier : `lua/vehicle/controller/drivingDynamics/supervisors/yawControl.lua` · VM : Véhicule · 230 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/drivingDynamics/supervisors/yawControl.lua` · VM: Vehicle · 230 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `drivingDynamics/supervisors/yawControl` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `drivingDynamics/supervisors/yawControl` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Superviseur de contrôle de lacet (ESC moderne, type "auxiliary", defaultOrder 60) de l'architecture drivingDynamics. À chaque pas fixe il demande le lacet attendu à la première yawProvider qui répond (ex. STMEstimate), le compare au lacet mesuré (sensorHub.yawAVSmooth), calcule l'écart et les angles de dérive avant/arrière, puis appelle actAsYawControl de chaque composant enregistré (brakeControl, motorTorqueControl, awdControl…). Il pilote le voyant electrics.values.esc/escActive.
+Yaw control supervisor (modern ESC, type "auxiliary", defaultOrder 60) of the drivingDynamics architecture. At every fixed step it asks the first yawProvider that answers (e.g. STMEstimate) for the expected yaw, compares it to the measured yaw (sensorHub.yawAVSmooth), computes the difference and the front/rear slip angles, then calls actAsYawControl of each registered component (brakeControl, motorTorqueControl, awdControl...). It drives the electrics.values.esc/escActive light.
 
-## Exemple
+## Example
 
 ```lua
 local yc = controller.getControllerSafe('drivingDynamics/supervisors/yawControl')
 if yc then yc.setParameters({isEnabled = false}) end
 ```
 
-## Remarques
+## Notes
 
-- Signature appelée sur chaque composant : actAsYawControl(measuredYaw, expectedYaw, yawDifferenceAdjusted, bodySlipAngleAdjusted, frontSlipAngle, rearSlipAngle, dt) ; doit renvoyer vrai si le composant est intervenu.
-- Les fournisseurs de lacet doivent exposer calculateExpectedYaw(speed, dt) (renvoie nil s'ils ne peuvent pas répondre) et setParameters. Le lacet est en rad/s, les angles de dérive en rad, la vitesse en m/s.
-- Si le lacet mesuré et le lacet attendu sont de signes opposés (contre-braquage), le lacet attendu est inversé. yawDifferenceRaw = (mesuré - attendu) * signe(mesuré) : positif = survirage, négatif = sous-virage.
-- bodySlipAngleAdjusted = angle de dérive de caisse * coefficient de confiance (linearScale 0.5..0.8 de trustWorthiness.bodySlipAngle) * coefficient basse vitesse (s'annule sous 8..10 m/s). Les angles avant/arrière sont calculés seulement si la vitesse utilisée dépasse 1 m/s, sinon 0.
-- Le voyant est lissé ; electrics.values.esc reste à 1 fixe si isEnabled est faux. Contrairement à tractionControl, shutdown met aussi updateFixedStep à nil.
-- init remplace controlParameters par {isEnabled = true}. Il n'y a aucune clé jbeam lue dans ce fichier (le superviseur n'utilise pas jbeamData).
-- Les composants sont triés par componentOrderYawControl (ou order), les fournisseurs par providerOrder (ou order).
+- Signature called on each component: actAsYawControl(measuredYaw, expectedYaw, yawDifferenceAdjusted, bodySlipAngleAdjusted, frontSlipAngle, rearSlipAngle, dt); must return true if the component intervened.
+- Yaw providers must expose calculateExpectedYaw(speed, dt) (returns nil if they cannot answer) and setParameters. Yaw is in rad/s, slip angles in rad, speed in m/s.
+- If the measured yaw and the expected yaw have opposite signs (countersteering), the expected yaw is inverted. yawDifferenceRaw = (measured - expected) * sign(measured): positive = oversteer, negative = understeer.
+- bodySlipAngleAdjusted = body slip angle * confidence coefficient (linearScale 0.5..0.8 of trustWorthiness.bodySlipAngle) * low-speed coefficient (goes to zero below 8..10 m/s). The front/rear angles are only computed if the speed used exceeds 1 m/s, otherwise 0.
+- The light is smoothed; electrics.values.esc stays at a steady 1 if isEnabled is false. Unlike tractionControl, shutdown also sets updateFixedStep to nil.
+- init replaces controlParameters with {isEnabled = true}. No jbeam key is read in this file (the supervisor does not use jbeamData).
+- Components are sorted by componentOrderYawControl (or order), providers by providerOrder (or order).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_drivingDynamics_supervisors_yawControl.getConfig()` | Renvoie une copie de la configuration. | 201 |
-| `controller_drivingDynamics_supervisors_yawControl.init(jbeamData)` | Réinitialise paramètres, fournisseurs et composants et met isActive à true. *(interne)* | 139 |
-| `controller_drivingDynamics_supervisors_yawControl.initLastStage(jbeamData)` | Trie fournisseurs et composants selon leur ordre. *(interne)* | 156 |
-| `controller_drivingDynamics_supervisors_yawControl.initSecondStage(jbeamData)` | Met electrics.values.hasESC à true et sauvegarde les paramètres initiaux. *(interne)* | 150 |
-| `controller_drivingDynamics_supervisors_yawControl.registerCMU(cmu)` | Mémorise la référence au CMU (virtualSensors, vehicleData, sensorHub, sendDebugPacket, applyParameter, warningLightPulse). *(interne)* | 122 |
-| `controller_drivingDynamics_supervisors_yawControl.registerComponent(component)` | Ajoute un composant exposant actAsYawControl. *(interne)* | 131 |
-| `controller_drivingDynamics_supervisors_yawControl.registerYawProvider(yawProvider)` | Ajoute un fournisseur de lacet attendu. *(interne)* | 126 |
-| `controller_drivingDynamics_supervisors_yawControl.reset()` | Ne fait rien. *(interne)* | 136 |
-| `controller_drivingDynamics_supervisors_yawControl.sendConfigData()` | Envoie la configuration au CMU (paquet de debug "config"). | 205 |
-| `controller_drivingDynamics_supervisors_yawControl.setConfig(configTable)` | Remplace la configuration et propage isEnabled. | 196 |
-| `controller_drivingDynamics_supervisors_yawControl.setDebugMode(debugEnabled)` | Active/désactive l'envoi de paquets de debug (écarts de lacet, angles de dérive, vitesse utilisée) au CMU. | 116 |
-| `controller_drivingDynamics_supervisors_yawControl.setParameters(parameters)` | Modifie isEnabled via CMU.applyParameter ; propagé aux fournisseurs (clé "isEnabled") et aux composants (clé "yawControl.isEnabled"). | 190 |
-| `controller_drivingDynamics_supervisors_yawControl.shutdown()` | Désactive le superviseur (isActive=false, updateGFX, update et updateFixedStep à nil). | 174 |
-| `controller_drivingDynamics_supervisors_yawControl.updateFixedStep(dt)` | Pas fixe : calcule lacet attendu, écart, angles de dérive, puis appelle les composants. *(interne)* | 43 |
-| `controller_drivingDynamics_supervisors_yawControl.updateGFX(dt)` | Met à jour electrics.values.esc et escActive depuis l'état lissé (remplacé par une version avec paquet de debug si setDebugMode(true)). *(interne)* | 91 |
+| `controller_drivingDynamics_supervisors_yawControl.getConfig()` | Returns a copy of the configuration. | 201 |
+| `controller_drivingDynamics_supervisors_yawControl.init(jbeamData)` | Resets parameters, providers and components and sets isActive to true. *(internal)* | 139 |
+| `controller_drivingDynamics_supervisors_yawControl.initLastStage(jbeamData)` | Sorts providers and components by their order. *(internal)* | 156 |
+| `controller_drivingDynamics_supervisors_yawControl.initSecondStage(jbeamData)` | Sets electrics.values.hasESC to true and saves the initial parameters. *(internal)* | 150 |
+| `controller_drivingDynamics_supervisors_yawControl.registerCMU(cmu)` | Stores the reference to the CMU (virtualSensors, vehicleData, sensorHub, sendDebugPacket, applyParameter, warningLightPulse). *(internal)* | 122 |
+| `controller_drivingDynamics_supervisors_yawControl.registerComponent(component)` | Adds a component exposing actAsYawControl. *(internal)* | 131 |
+| `controller_drivingDynamics_supervisors_yawControl.registerYawProvider(yawProvider)` | Adds an expected yaw provider. *(internal)* | 126 |
+| `controller_drivingDynamics_supervisors_yawControl.reset()` | Does nothing. *(internal)* | 136 |
+| `controller_drivingDynamics_supervisors_yawControl.sendConfigData()` | Sends the configuration to the CMU ("config" debug packet). | 205 |
+| `controller_drivingDynamics_supervisors_yawControl.setConfig(configTable)` | Replaces the configuration and propagates isEnabled. | 196 |
+| `controller_drivingDynamics_supervisors_yawControl.setDebugMode(debugEnabled)` | Enables/disables sending debug packets (yaw differences, slip angles, speed used) to the CMU. | 116 |
+| `controller_drivingDynamics_supervisors_yawControl.setParameters(parameters)` | Changes isEnabled via CMU.applyParameter; propagated to the providers (key "isEnabled") and to the components (key "yawControl.isEnabled"). | 190 |
+| `controller_drivingDynamics_supervisors_yawControl.shutdown()` | Disables the supervisor (isActive=false, updateGFX, update and updateFixedStep set to nil). | 174 |
+| `controller_drivingDynamics_supervisors_yawControl.updateFixedStep(dt)` | Fixed step: computes the expected yaw, the difference, the slip angles, then calls the components. *(internal)* | 43 |
+| `controller_drivingDynamics_supervisors_yawControl.updateGFX(dt)` | Updates electrics.values.esc and escActive from the smoothed state (replaced by a version with a debug packet if setDebugMode(true)). *(internal)* | 91 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_drivingDynamics_supervisors_yawControl.getConfig()`
 
-Renvoie une copie de la configuration.
+Returns a copy of the configuration.
 
-- **renvoie** : table Copie de {isEnabled}.
+- **returns**: table Copy of {isEnabled}.
 
 #### `controller_drivingDynamics_supervisors_yawControl.init(jbeamData)`
 
-Réinitialise paramètres, fournisseurs et composants et met isActive à true.
+Resets parameters, providers and components and sets isActive to true.
 
-- `jbeamData` (*table*) : Données jbeam (inutilisées).
+- `jbeamData` (*table*) : jbeam data (unused).
 
 #### `controller_drivingDynamics_supervisors_yawControl.initLastStage(jbeamData)`
 
-Trie fournisseurs et composants selon leur ordre.
+Sorts providers and components by their order.
 
-- `jbeamData` (*table*) : Données jbeam (inutilisées).
+- `jbeamData` (*table*) : jbeam data (unused).
 
 #### `controller_drivingDynamics_supervisors_yawControl.initSecondStage(jbeamData)`
 
-Met electrics.values.hasESC à true et sauvegarde les paramètres initiaux.
+Sets electrics.values.hasESC to true and saves the initial parameters.
 
-- `jbeamData` (*table*) : Données jbeam (inutilisées).
+- `jbeamData` (*table*) : jbeam data (unused).
 
 #### `controller_drivingDynamics_supervisors_yawControl.registerCMU(cmu)`
 
-Mémorise la référence au CMU (virtualSensors, vehicleData, sensorHub, sendDebugPacket, applyParameter, warningLightPulse).
+Stores the reference to the CMU (virtualSensors, vehicleData, sensorHub, sendDebugPacket, applyParameter, warningLightPulse).
 
-- `cmu` (*table*) : Contrôleur CMU.
+- `cmu` (*table*) : CMU controller.
 
 #### `controller_drivingDynamics_supervisors_yawControl.registerComponent(component)`
 
-Ajoute un composant exposant actAsYawControl.
+Adds a component exposing actAsYawControl.
 
-- `component` (*table*) : Composant de contrôle.
+- `component` (*table*) : Control component.
 
 #### `controller_drivingDynamics_supervisors_yawControl.registerYawProvider(yawProvider)`
 
-Ajoute un fournisseur de lacet attendu.
+Adds an expected yaw provider.
 
-- `yawProvider` (*table*) : Fournisseur exposant calculateExpectedYaw.
+- `yawProvider` (*table*) : Provider exposing calculateExpectedYaw.
 
 #### `controller_drivingDynamics_supervisors_yawControl.setConfig(configTable)`
 
-Remplace la configuration et propage isEnabled.
+Replaces the configuration and propagates isEnabled.
 
 - `configTable` (*table*) : Table {isEnabled}.
 
 #### `controller_drivingDynamics_supervisors_yawControl.setDebugMode(debugEnabled)`
 
-Active/désactive l'envoi de paquets de debug (écarts de lacet, angles de dérive, vitesse utilisée) au CMU.
+Enables/disables sending debug packets (yaw differences, slip angles, speed used) to the CMU.
 
-- `debugEnabled` (*boolean*) : Vrai pour activer.
+- `debugEnabled` (*boolean*) : True to enable.
 
 #### `controller_drivingDynamics_supervisors_yawControl.setParameters(parameters)`
 
-Modifie isEnabled via CMU.applyParameter ; propagé aux fournisseurs (clé "isEnabled") et aux composants (clé "yawControl.isEnabled").
+Changes isEnabled via CMU.applyParameter; propagated to the providers (key "isEnabled") and to the components (key "yawControl.isEnabled").
 
-- `parameters` (*table<string, any>*) : Ex. {isEnabled = false}.
+- `parameters` (*table<string, any>*) : E.g. {isEnabled = false}.
 
 #### `controller_drivingDynamics_supervisors_yawControl.updateFixedStep(dt)`
 
-Pas fixe : calcule lacet attendu, écart, angles de dérive, puis appelle les composants.
+Fixed step: computes the expected yaw, the difference, the slip angles, then calls the components.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_drivingDynamics_supervisors_yawControl.updateGFX(dt)`
 
-Met à jour electrics.values.esc et escActive depuis l'état lissé (remplacé par une version avec paquet de debug si setDebugMode(true)).
+Updates electrics.values.esc and escActive from the smoothed state (replaced by a version with a debug packet if setDebugMode(true)).
 
-- `dt` (*number*) : Pas de temps graphique (s).
+- `dt` (*number*) : Graphics time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `defaultOrder` | number | Ordre d'exécution par défaut (60). |
-| `isActing` | boolean | Vrai quand le contrôle de lacet intervient de façon soutenue (indicateur lissé >= 1). |
-| `isActive` | boolean | Vrai après init, faux après shutdown. |
+| `defaultOrder` | number | Default execution order (60). |
+| `isActing` | boolean | True when the yaw control intervenes continuously (smoothed flag >= 1). |
+| `isActive` | boolean | True after init, false after shutdown. |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/drivingDynamics/supervisors/yawControl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/drivingDynamics/supervisors/yawControl.lua`.*

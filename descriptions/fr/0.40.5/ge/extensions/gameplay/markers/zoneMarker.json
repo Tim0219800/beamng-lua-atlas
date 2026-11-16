@@ -1,0 +1,54 @@
+{
+  "path": "lua/ge/extensions/gameplay/markers/zoneMarker.lua",
+  "module": "Marqueur de zone sans visuel : rend un POI interactif quand le véhicule du joueur (ses quatre coins au sol de la boîte englobante) est entièrement dans l'un des polygones de zone donnés. Aucune icône ni décalque n'est dessiné. Le module renvoie {create, cluster} ; chaque POI zoneMarker forme son propre cluster.",
+  "notes": [
+    "cluster : un par POI (id 'zoneMarker#<poi.id>'). Lit poi.markerInfo.zoneMarker.{zones, pos, radius} ; elemData = {poi.data}.",
+    "interactInPlayMode ne fait rien si le joueur marche (interactData.isWalking). La distance 2D du véhicule au centre doit être <= rayon + 2 m, puis les points 1, 4, 5 et 8 de bbPoints (coins du bas ou du haut de la boîte, déduit du code) doivent tous être dans une zone (containsPoint2D).",
+    "Le résultat 'inside' est évalué même sans canInteract ; l'ajout aux éléments interactifs exige canInteract.",
+    "Toutes les autres méthodes (update, hide, show, createObjects, clearObjects, setHidden, instantFade) sont vides."
+  ],
+  "functions": {
+    "create": {
+      "desc": "Fabrique un marqueur de zone (instance de C).",
+      "params": {"...": {"type": "any", "desc": "Arguments transmis à C:init (non utilisés)."}},
+      "returns": [{"type": "table", "desc": "Instance de marqueur."}],
+      "internal": false
+    },
+    "cluster": {
+      "desc": "Transforme chaque POI zoneMarker en un cluster distinct (pas de fusion) et l'ajoute à allClusters.",
+      "params": {
+        "pois": {"type": "table[]", "desc": "POI avec markerInfo.zoneMarker {zones, pos, radius}."},
+        "allClusters": {"type": "table[]", "desc": "Liste de clusters complétée en place."}
+      },
+      "internal": true
+    }
+  },
+  "classes": {
+    "C": {
+      "desc": "Marqueur de zone sans rendu.",
+      "functions": {
+        "init": {"desc": "Ne fait rien.", "internal": true},
+        "update": {"desc": "Ne fait rien.", "params": {"data": {"type": "table", "desc": "Ignoré."}}, "internal": true},
+        "setup": {
+          "desc": "Mémorise zones, cluster, centre 2D (visibilityPos avec z = 0) et rayon (visibilityRadius).",
+          "params": {"cluster": {"type": "table", "desc": "Cluster issu de cluster()."}},
+          "internal": true
+        },
+        "setHidden": {"desc": "Ne fait rien.", "params": {"value": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
+        "createObjects": {"desc": "Ne fait rien.", "internal": true},
+        "hide": {"desc": "Ne fait rien.", "internal": false},
+        "show": {"desc": "Ne fait rien.", "internal": false},
+        "instantFade": {"desc": "Ne fait rien.", "params": {"visible": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
+        "clearObjects": {"desc": "Ne fait rien.", "internal": false},
+        "interactInPlayMode": {
+          "desc": "Ajoute les données (elemData) du cluster aux éléments interactifs si le véhicule est entièrement dans une zone et que canInteract est vrai ; sans effet à pied.",
+          "params": {
+            "interactData": {"type": "table", "desc": "Données de frame : isWalking, vehPos2d, bbPoints, canInteract."},
+            "interactableElements": {"type": "table[]", "desc": "Liste complétée en place."}
+          },
+          "internal": false
+        }
+      }
+    }
+  }
+}

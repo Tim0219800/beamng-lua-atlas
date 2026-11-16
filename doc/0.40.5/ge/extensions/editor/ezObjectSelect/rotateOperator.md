@@ -1,75 +1,75 @@
 # `editor_ezObjectSelect_rotateOperator`
 
-*Fichier : `lua/ge/extensions/editor/ezObjectSelect/rotateOperator.lua` · VM : Game Engine (GE) · 141 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ezObjectSelect/rotateOperator.lua` · VM: Game Engine (GE) · 141 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ezObjectSelect_rotateOperator` : `extensions.load("editor_ezObjectSelect_rotateOperator")`, puis la globale `editor_ezObjectSelect_rotateOperator`
+**Access:** extension `editor_ezObjectSelect_rotateOperator`: `extensions.load("editor_ezObjectSelect_rotateOperator")`, then the global `editor_ezObjectSelect_rotateOperator`
 
-Opérateur modal « Rotate » (touche R) de l'outil Easy Select. Ouvre une session de transformation (historique « EasySelectRotate ») et fait tourner la sélection autour du pivot : sans contrainte l'axe est la direction de vue de la caméra, avec contrainte X/Y/Z c'est l'axe choisi (monde ou local). L'angle vient de l'angle écran souris-pivot ou d'une saisie numérique en degrés, avec magnétisme optionnel. Clic gauche/Entrée valide, clic droit/Échap annule.
+"Rotate" modal operator (R key) of the Easy Select tool. Opens a transform session (history "EasySelectRotate") and rotates the selection around the pivot: without constraint the axis is the camera view direction, with an X/Y/Z constraint it is the chosen axis (world or local). The angle comes from the mouse-pivot screen angle or from a numeric input in degrees, with optional snapping. Left click/Enter confirms, right click/Esc cancels.
 
-## Remarques
+## Notes
 
-- Le magnétisme n'est appliqué qu'à l'angle souris (pas à la saisie numérique) et si options.rotateSnapEnabled est vrai et rotateSnapSize > 0 (en degrés).
-- Changer d'axe ou d'espace réinitialise la référence souris et l'angle à 0.
+- Snapping is only applied to the mouse angle (not to numeric input) and if options.rotateSnapEnabled is true and rotateSnapSize > 0 (in degrees).
+- Changing axis or space resets the mouse reference and the angle to 0.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ezObjectSelect_rotateOperator.begin(options)` | Démarre la rotation. Renvoie false si déjà actif, session impossible ou pivot non projetable. | 66 |
-| `editor_ezObjectSelect_rotateOperator.cancel()` | Annule la rotation en cours. | 105 |
-| `editor_ezObjectSelect_rotateOperator.drawScreen()` | Dessine l'indicateur et le HUD (contrainte VIEW/axe, espace, angle en degrés ou texte saisi). | 125 |
-| `editor_ezObjectSelect_rotateOperator.getObjectIds()` | Ids des objets de la session ({} si inactif). | 121 |
-| `editor_ezObjectSelect_rotateOperator.isActive()` | Indique si l'opérateur est en cours. | 117 |
-| `editor_ezObjectSelect_rotateOperator.setLocalSpace(localSpace)` | Bascule espace local/monde et réinitialise la référence souris. | 111 |
-| `editor_ezObjectSelect_rotateOperator.update(options)` | Chaque frame : gère fin, contrainte, saisie, calcule l'angle (rad), applique transformSession.updateRotation et dessine le gizmo. | 86 |
-| `editor_ezObjectSelect_rotateOperator.wantsBegin()` | True si la touche R vient d'être pressée. | 62 |
+| `editor_ezObjectSelect_rotateOperator.begin(options)` | Starts the rotation. Returns false if already active, session impossible or pivot not projectable. | 66 |
+| `editor_ezObjectSelect_rotateOperator.cancel()` | Cancels the current rotation. | 105 |
+| `editor_ezObjectSelect_rotateOperator.drawScreen()` | Draws the indicator and the HUD (VIEW/axis constraint, space, angle in degrees or typed text). | 125 |
+| `editor_ezObjectSelect_rotateOperator.getObjectIds()` | Ids of the session objects ({} if inactive). | 121 |
+| `editor_ezObjectSelect_rotateOperator.isActive()` | Indicates whether the operator is in progress. | 117 |
+| `editor_ezObjectSelect_rotateOperator.setLocalSpace(localSpace)` | Toggles local/world space and resets the mouse reference. | 111 |
+| `editor_ezObjectSelect_rotateOperator.update(options)` | Every frame: handles end, constraint, input, computes the angle (rad), applies transformSession.updateRotation and draws the gizmo. | 86 |
+| `editor_ezObjectSelect_rotateOperator.wantsBegin()` | True if the R key has just been pressed. | 62 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_ezObjectSelect_rotateOperator.begin(options)`
 
-Démarre la rotation. Renvoie false si déjà actif, session impossible ou pivot non projetable.
+Starts the rotation. Returns false if already active, session impossible or pivot not projectable.
 
 - `options` (*table|nil*) : {defaultLocal = boolean}
-- **renvoie** : boolean true si démarré
+- **returns**: boolean true if started
 
 #### `editor_ezObjectSelect_rotateOperator.cancel()`
 
-Annule la rotation en cours.
+Cancels the current rotation.
 
-- **renvoie** : boolean true si un opérateur était actif
+- **returns**: boolean true if an operator was active
 
 #### `editor_ezObjectSelect_rotateOperator.getObjectIds()`
 
-Ids des objets de la session ({} si inactif).
+Ids of the session objects ({} if inactive).
 
-- **renvoie** : table 
+- **returns**: table 
 
 #### `editor_ezObjectSelect_rotateOperator.isActive()`
 
-Indique si l'opérateur est en cours.
+Indicates whether the operator is in progress.
 
-- **renvoie** : boolean 
+- **returns**: boolean 
 
 #### `editor_ezObjectSelect_rotateOperator.setLocalSpace(localSpace)`
 
-Bascule espace local/monde et réinitialise la référence souris.
+Toggles local/world space and resets the mouse reference.
 
-- `localSpace` (*boolean*) : true pour local
-- **renvoie** : boolean false si le changement n'a pas eu lieu
+- `localSpace` (*boolean*) : true for local
+- **returns**: boolean false if the change did not happen
 
 #### `editor_ezObjectSelect_rotateOperator.update(options)`
 
-Chaque frame : gère fin, contrainte, saisie, calcule l'angle (rad), applique transformSession.updateRotation et dessine le gizmo.
+Every frame: handles end, constraint, input, computes the angle (rad), applies transformSession.updateRotation and draws the gizmo.
 
-- `options` (*table|nil*) : {rotateSnapEnabled = boolean, rotateSnapSize = degrés}
-- **renvoie** : string|nil "active" pendant l'opération, résultat de finish à la fin, nil si inactif
+- `options` (*table|nil*) : {rotateSnapEnabled = boolean, rotateSnapSize = degrees}
+- **returns**: string|nil "active" during the operation, result of finish at the end, nil if inactive
 
 #### `editor_ezObjectSelect_rotateOperator.wantsBegin()`
 
-True si la touche R vient d'être pressée.
+True if the R key has just been pressed.
 
-- **renvoie** : boolean 
+- **returns**: boolean 
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ezObjectSelect/rotateOperator.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ezObjectSelect/rotateOperator.lua`.*

@@ -1,0 +1,116 @@
+{
+  "path": "lua/ge/extensions/ui/photomode/scene.lua",
+  "module": "Onglet « scène » du mode photo : lit et modifie l'environnement du niveau (heure du jour, date, nuages, brouillard, vent, décalage du nord, affichages célestes et météores) via core_environment et core_celestial. Il gère aussi la sauvegarde/restauration de l'état d'origine à l'ouverture/fermeture de la session, un bookmark d'environnement, et les presets de type « scene » (qui incluent une partie advancedRender gérée par ui_photomode_advancedRender).",
+  "notes": [
+    "Limites appliquées : time 0..1 (fraction du jour), cloudCover 0..3, fogDensity 0..50, fogAtmosphereHeight 1..1000. northOverride est ramené dans [-180, 180[ (180 conservé si la valeur d'entrée est positive).",
+    "setSceneState exige une session photo active. __lerpSeconds (nombre) dans le patch donne la durée de transition passée à core_environment.setState. Seuls time, cloudCover, fogDensity, fogAtmosphereHeight et northOverride sont pris en compte par setSceneState (pas windSpeed, vents ni celestial).",
+    "Raisons d'échec possibles : session_inactive, scene_state_invalid, scene_api_unavailable, scene_tod_unavailable, scene_celestial_api_unavailable, scene_set_failed, scene_patch_empty, scene_state_unavailable, bookmark_unavailable, preset_part_invalid.",
+    "applyPresetState accepte options.part : \"all\" (ou nil), \"environment\" (heure et date), \"shadows\", \"detailTerrain\", \"weather\", \"celestial\" ; toute autre valeur donne preset_part_invalid.",
+    "Bug du jeu : logSceneTimeOfDayDebug lit une variable isDebugEnabled qui n'est pas déclarée dans ce fichier (globale, donc nil) : le journal détaillé de l'heure du jour n'est jamais écrit. De même logTag n'est pas déclaré dans ce fichier et les log(\"E\", logTag, ...) utilisent une globale nil.",
+    "formatSceneTimeOfDayDebugState affiche sceneState.dayLength, champ absent de l'état de scène (affiche nil)."
+  ],
+  "fields": {
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions chargées avant : ui_photomode_shared, ui_photomode_advancedRender, core_celestial."
+    }
+  },
+  "functions": {
+    "setSceneState": {
+      "desc": "Applique un patch partiel de scène (heure, météo, nord) pendant une session photo et renvoie le nouvel état. Échoue avec scene_patch_empty si rien n'a été appliqué.",
+      "params": {
+        "partialState": {"type": "table", "desc": "Champs possibles : time (0..1), play (booléen, avec time), year, month, day, cloudCover, fogDensity, fogAtmosphereHeight, northOverride (degrés), __lerpSeconds (secondes de transition)."}
+      },
+      "returns": [
+        {"type": "table", "desc": "{ok=true, state=...} ou {ok=false, reason=..., state?=...}."}
+      ],
+      "internal": false
+    },
+    "getSceneState": {
+      "desc": "Renvoie l'état de scène courant (buildState) avec ok = session active ; reason=\"session_inactive\" sinon.",
+      "params": {},
+      "returns": [
+        {"type": "table", "desc": "État de scène : sessionActive, bookmarkAvailable, availability, time, play, year, month, day, cloudCover, fogDensity, fogAtmosphereHeight, windSpeed, cloudWindDirection, groundWind, northOverride, celestial, plus ok/reason."}
+      ],
+      "internal": false
+    },
+    "buildState": {
+      "desc": "Construit l'état de scène courant (valeurs bornées aux limites) à partir de core_environment et core_celestial, avec la table availability indiquant quels éléments sont lisibles.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "État de scène (voir getSceneState)."}],
+      "internal": false
+    },
+    "saveEnvironmentBookmark": {
+      "desc": "Mémorise l'état d'environnement courant dans S.savedEnvironmentBookmark. Exige une session active.",
+      "params": {},
+      "returns": [
+        {"type": "table", "desc": "{ok=true, state} ou {ok=false, reason}."}
+      ],
+      "internal": false
+    },
+    "loadEnvironmentBookmark": {
+      "desc": "Réapplique le bookmark d'environnement mémorisé (heure, météo, nord, éléments célestes). Exige une session active et un bookmark.",
+      "params": {},
+      "returns": [
+        {"type": "table", "desc": "{ok=true, state} ou {ok=false, reason, state?}."}
+      ],
+      "internal": false
+    },
+    "captureRestoreState": {
+      "desc": "Mémorise dans S.sessionSceneRestoreState l'état de scène d'origine pour le restaurer à la fin de la session. Appelée au début de la session photo.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "restoreState": {
+      "desc": "Restaure l'état de scène sauvegardé par captureRestoreState (heure, environnement, nord, éléments célestes) puis l'efface. Appelée à la fin de la session photo ; ne fait rien s'il n'y a rien à restaurer.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "captureSerializableState": {
+      "desc": "Lit l'état brut de scène : time, play, year, month, day, cloudCover, fogDensity, fogAtmosphereHeight, windSpeed, cloudWindDirection, groundWind (vecteurs {x,y,z}), northOverride, celestial ({meteor, display}). Les valeurs indisponibles valent nil.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "État brut sérialisable."}],
+      "internal": false
+    },
+    "logTimeOfDayDebug": {
+      "desc": "Journalise (niveau debug) l'heure du jour sous la forme {time, play, dayLength} avec un libellé. Voir la note sur le bug isDebugEnabled.",
+      "params": {
+        "label": {"type": "string", "desc": "Préfixe du message."},
+        "sceneState": {"type": "table", "desc": "État à afficher."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "capturePresetState": {
+      "desc": "Capture l'état courant sous forme de preset : {scene={...}, advancedRender=...} (advancedRender vient de ui_photomode_advancedRender.buildMetadataState).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Données de preset combinées."}],
+      "internal": false
+    },
+    "captureDefaultPresetState": {
+      "desc": "Capture l'état par défaut de la session (état de scène restauré ou courant + rendu avancé par défaut). Renvoie nil si aucun des deux n'est disponible.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Données de preset combinées."}],
+      "internal": false
+    },
+    "applyPresetState": {
+      "desc": "Applique un preset de scène (heure, météo, nord, éléments célestes) puis sa partie advancedRender. S'arrête au premier échec.",
+      "params": {
+        "state": {"type": "table", "desc": "Preset {scene=..., advancedRender=...}."},
+        "options": {"type": "table|nil", "desc": "options.part : all, environment, shadows, detailTerrain, weather, celestial."}
+      },
+      "returns": [
+        {"type": "table", "desc": "{state=...} ou {ok=false, reason}."}
+      ],
+      "internal": false
+    },
+    "buildMetadataState": {
+      "desc": "Renvoie la partie scène à inclure dans les métadonnées d'une capture : time, play, year, month, day, cloudCover, fogDensity, fogAtmosphereHeight, windSpeed, cloudWindDirection, groundWind, northOverride, celestial.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "État de scène pour métadonnées."}],
+      "internal": false
+    }
+  }
+}

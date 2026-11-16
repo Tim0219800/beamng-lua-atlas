@@ -2,30 +2,30 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/gameContext.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_gameContext` : petit relais vers `gameplay_markerInteraction` (contexte de jeu courant) et vers l'UI (changement de mission en avant-plan). Fournit aussi le libellé d'avertissement « expérimental » affiché pour la carrière et les missions de rallye.
---- Accès : extension `core_gameContext` : `extensions.load("core_gameContext")`, puis la globale `core_gameContext`
+--- GE extension `core_gameContext`: small relay to `gameplay_markerInteraction` (current game context) and to the UI (foreground mission change). Also provides the "experimental" warning label displayed for the career and rally missions.
+--- Access: extension `core_gameContext`: `extensions.load("core_gameContext")`, then the global `core_gameContext`
 ---@class core_gameContext
 core_gameContext = {}
 
---- Renvoie le contexte de jeu fourni par gameplay_markerInteraction.getGameContext(...) en chargeant l'extension si besoin.
----Source : lua/ge/extensions/core/gameContext.lua:7
----@param ... any Arguments transmis tels quels à gameplay_markerInteraction.getGameContext.
----@return table  Contexte de jeu, ou {} si l'extension est indisponible.
+--- Returns the game context provided by gameplay_markerInteraction.getGameContext(...), loading the extension if needed.
+---Source: lua/ge/extensions/core/gameContext.lua:7
+---@param ... any Arguments passed as is to gameplay_markerInteraction.getGameContext.
+---@return table  Game context, or {} if the extension is unavailable.
 function core_gameContext.getGameContext(...) end
 
---- Clé de traduction du bandeau « expérimental » : 'ui.rally.experimentalWarning' si la mission de premier plan est de type rallyStage, rallyLoop ou rallyLoop2 et que le réglage rallyHideExperimentalBanner est faux ; 'ui.career.experimentalWarning' si la carrière est active ; sinon nil.
----Source : lua/ge/extensions/core/gameContext.lua:25
----@return string|nil  Clé de traduction ou nil.
+--- Translation key of the "experimental" banner: 'ui.rally.experimentalWarning' if the foreground mission is of type rallyStage, rallyLoop or rallyLoop2 and the rallyHideExperimentalBanner setting is false; 'ui.career.experimentalWarning' if career is active; otherwise nil.
+---Source: lua/ge/extensions/core/gameContext.lua:25
+---@return string|nil  Translation key or nil.
 function core_gameContext.getWIPWarningLabel() end
 
---- Hook appelé quand l'état d'une mission change : transmet à l'UI l'évènement guihooks 'onAnyMissionChanged' (state, id de la mission).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/gameContext.lua:21
----@param state string Nouvel état de la mission (valeur définie par le gestionnaire de missions).
----@param mission table|nil Mission concernée ; seul mission.id est envoyé.
+--- Hook called when a mission's state changes: forwards the guihooks event 'onAnyMissionChanged' (state, mission id) to the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/gameContext.lua:21
+---@param state string New state of the mission (value defined by the mission manager).
+---@param mission table|nil Mission concerned; only mission.id is sent.
 function core_gameContext.onAnyMissionChanged(state, mission) end
 
---- Ne fait rien (fonction vide).
----Source : lua/ge/extensions/core/gameContext.lua:17
+--- Does nothing (empty function).
+---Source: lua/ge/extensions/core/gameContext.lua:17
 function core_gameContext.toggleMenues() end
 

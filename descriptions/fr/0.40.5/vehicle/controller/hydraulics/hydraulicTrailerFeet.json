@@ -1,0 +1,111 @@
+{
+  "path": "lua/vehicle/controller/hydraulics/hydraulicTrailerFeet.lua",
+  "module": "Contrôleur auxiliaire pour les béquilles hydrauliques d'une remorque (type \"auxiliary\"). Il mémorise la position du vérin quand la remorque est attelée et détachée (par réglage manuel) et ramène automatiquement les béquilles à la bonne position lors d'un attelage ou dételage, en écrivant la direction de vérin dans electrics (directionElectricsName du vérin).",
+  "notes": [
+    "Clés jbeam (défaut) : powertrainHydroName (nom du vérin, obligatoire : erreur Lua si introuvable), attachedDefaultPosition (0), detachedDefaultPosition (1), startValue (0, valeur initiale de la commande de direction).",
+    "États internes : detached, attached, detachedMoveFeet, attachedMoveFeet. Les mouvements manuels (|entrée| > 0.05) mémorisent la position courante pour l'état en cours.",
+    "Les hooks onCouplerAttached/onCouplerDetached ne réagissent que si l'autre objet (obj2id) est différent de ce véhicule."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Retrouve le vérin et initialise les positions et états.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Écrit la direction du vérin (manuelle ou automatique vers la position mémorisée).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerAttached": {
+      "desc": "Hook appelé par le moteur quand un coupleur du véhicule s'attache ; lance le mouvement vers la position « attaché » si l'autre objet est un autre véhicule.",
+      "params": {
+        "nodeId": {
+          "type": "integer",
+          "desc": "Nœud de ce véhicule."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Id du véhicule partenaire."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "Nœud du partenaire."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerDetached": {
+      "desc": "Hook appelé quand un coupleur se détache ; lance le mouvement vers la position « détaché ».",
+      "params": {
+        "nodeId": {
+          "type": "integer",
+          "desc": "Nœud de ce véhicule."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Id du véhicule partenaire."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "Nœud du partenaire."
+        },
+        "breakForce": {
+          "type": "number",
+          "desc": "Force de rupture (non utilisée)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "moveFeet": {
+      "desc": "Commande manuelle des béquilles : -1 à 1 (la direction est écrite dans electrics). Interrompt un déplacement automatique en cours.",
+      "params": {
+        "input": {
+          "type": "number",
+          "desc": "Entrée de direction -1..1."
+        }
+      },
+      "returns": []
+    },
+    "getState": {
+      "desc": "Renvoie l'état (positions mémorisées, entrée manuelle, état d'attelage).",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Table d'état (réutilisée)."
+        }
+      ]
+    },
+    "setState": {
+      "desc": "Restaure l'état renvoyé par getState.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Table d'état."
+        }
+      },
+      "returns": []
+    }
+  }
+}

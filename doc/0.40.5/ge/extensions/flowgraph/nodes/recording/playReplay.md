@@ -1,22 +1,22 @@
 # `flowgraph_nodes_recording_playReplay`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/recording/playReplay.lua` · VM : Game Engine (GE) · 30 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/recording/playReplay.lua` · VM: Game Engine (GE) · 30 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/recording/playReplay")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/recording/playReplay")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Play Replay' (categorie repeat_instant). Sur l'impulsion 'play', charge et lance un replay avec core_replay.loadFile. Le chemin est resolu relativement au projet flowgraph via mgr:getRelativeAbsolutePath({filename}).
+Flowgraph node 'Play Replay' (repeat_instant category). On the 'play' impulse, loads and starts a replay with core_replay.loadFile. The path is resolved relative to the flowgraph project via mgr:getRelativeAbsolutePath({filename}).
 
-## Remarques
+## Notes
 
-- La description du pin 'filename' ('The prefix for the generated filename') est copiee du noeud Record Replay : ici c'est le nom du fichier a lire.
+- The description of the 'filename' pin ('The prefix for the generated filename') is copied from the Record Replay node: here it is the name of the file to read.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Si 'play' est actif et que le chemin existe, appelle core_replay.loadFile(chemin). | 19 |
+| `C:work()` | If 'play' is active and the path exists, calls core_replay.loadFile(path). | 19 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/recording/playReplay.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/recording/playReplay.lua`.*

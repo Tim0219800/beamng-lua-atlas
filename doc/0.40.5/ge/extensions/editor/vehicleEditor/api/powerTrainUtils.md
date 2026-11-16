@@ -1,52 +1,52 @@
 # `editor_vehicleEditor_api_powerTrainUtils`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/api/powerTrainUtils.lua` · VM : Game Engine (GE) · 144 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/api/powerTrainUtils.lua` · VM: Game Engine (GE) · 144 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_api_powerTrainUtils` : `extensions.load("editor_vehicleEditor_api_powerTrainUtils")`, puis la globale `editor_vehicleEditor_api_powerTrainUtils`
+**Access:** extension `editor_vehicleEditor_api_powerTrainUtils`: `extensions.load("editor_vehicleEditor_api_powerTrainUtils")`, then the global `editor_vehicleEditor_api_powerTrainUtils`
 
-Fonctions d'affichage imgui partagées par l'inspecteur de transmission du Vehicle Editor (vePowerTrain). Elles montrent les données jbeam d'un périphérique (arbre récursif) et ses données live (vitesses angulaires, couples, rapports, embrayage…), avec des champs spécifiques selon le type de device (combustionEngine, differential, shaft, manualGearbox, frictionClutch, torqueConverter, automaticGearbox, cvtGearbox, dctGearbox).
+Shared imgui display functions for the Vehicle Editor's powertrain inspector (vePowerTrain). They show the jbeam data of a device (recursive tree) and its live data (angular velocities, torques, ratios, clutch...), with fields specific to the device type (combustionEngine, differential, shaft, manualGearbox, frictionClutch, torqueConverter, automaticGearbox, cvtGearbox, dctGearbox).
 
-## Remarques
+## Notes
 
-- Les valeurs `device` viennent de powertrain.serializeDevicesInfo() côté véhicule, copiées dans vEditor.powertrainDevices.
-- showJbeamData lit vEditor.vdata.powertrain[deviceID] ; deviceID est l'index Lua 0-based utilisé par vePowerTrain.
-- Pour manualGearbox, la boucle `for i=0,#device.gearDamages` utilise l'opérateur # sur une table qui peut commencer à 0.
+- The `device` values come from powertrain.serializeDevicesInfo() on the vehicle side, copied into vEditor.powertrainDevices.
+- showJbeamData reads vEditor.vdata.powertrain[deviceID]; deviceID is the 0-based Lua index used by vePowerTrain.
+- For manualGearbox, the loop `for i=0,#device.gearDamages` uses the # operator on a table that may start at 0.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_api_powerTrainUtils.displayLivedata(device)` | Affiche les données live communes : inputAV, outputAV1/2, outputTorque1/2, isBroken, mode, virtualMassAV, isPhysicallyDisconnected, gearRatio, cumulativeGearRatio, cumulativeInertia. | 102 |
-| `editor_vehicleEditor_api_powerTrainUtils.displayLivedataByType(deviceType, device)` | Affiche en deux colonnes les champs live propres au type du device (par exemple engineLoad pour un moteur, diffAngle/outputAV2/outputTorque2 pour un différentiel, clutchAngle/lockSpring pour un embrayage). | 11 |
-| `editor_vehicleEditor_api_powerTrainUtils.initialize(editorInstance)` | Affecte la globale `vEditor` à l'instance donnée. *(interne)* | 133 |
-| `editor_vehicleEditor_api_powerTrainUtils.showJbeamData(deviceID)` | Affiche dans un nœud d'arbre 'All jbeam data' toutes les données jbeam du device vEditor.vdata.powertrain[deviceID]. | 126 |
+| `editor_vehicleEditor_api_powerTrainUtils.displayLivedata(device)` | Displays the common live data: inputAV, outputAV1/2, outputTorque1/2, isBroken, mode, virtualMassAV, isPhysicallyDisconnected, gearRatio, cumulativeGearRatio, cumulativeInertia. | 102 |
+| `editor_vehicleEditor_api_powerTrainUtils.displayLivedataByType(deviceType, device)` | Displays in two columns the live fields specific to the device type (for example engineLoad for an engine, diffAngle/outputAV2/outputTorque2 for a differential, clutchAngle/lockSpring for a clutch). | 11 |
+| `editor_vehicleEditor_api_powerTrainUtils.initialize(editorInstance)` | Assigns the global `vEditor` to the given instance. *(internal)* | 133 |
+| `editor_vehicleEditor_api_powerTrainUtils.showJbeamData(deviceID)` | Displays in a tree node 'All jbeam data' all the jbeam data of the device vEditor.vdata.powertrain[deviceID]. | 126 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_api_powerTrainUtils.displayLivedata(device)`
 
-Affiche les données live communes : inputAV, outputAV1/2, outputTorque1/2, isBroken, mode, virtualMassAV, isPhysicallyDisconnected, gearRatio, cumulativeGearRatio, cumulativeInertia.
+Displays the common live data: inputAV, outputAV1/2, outputTorque1/2, isBroken, mode, virtualMassAV, isPhysicallyDisconnected, gearRatio, cumulativeGearRatio, cumulativeInertia.
 
-- `device` (*table*) : Données live sérialisées du device.
+- `device` (*table*) : Serialized live data of the device.
 
 #### `editor_vehicleEditor_api_powerTrainUtils.displayLivedataByType(deviceType, device)`
 
-Affiche en deux colonnes les champs live propres au type du device (par exemple engineLoad pour un moteur, diffAngle/outputAV2/outputTorque2 pour un différentiel, clutchAngle/lockSpring pour un embrayage).
+Displays in two columns the live fields specific to the device type (for example engineLoad for an engine, diffAngle/outputAV2/outputTorque2 for a differential, clutchAngle/lockSpring for a clutch).
 
-- `deviceType` (*string*) : Type du device (device.type).
-- `device` (*table*) : Données live sérialisées du device.
+- `deviceType` (*string*) : Type of the device (device.type).
+- `device` (*table*) : Serialized live data of the device.
 
 #### `editor_vehicleEditor_api_powerTrainUtils.initialize(editorInstance)`
 
-Affecte la globale `vEditor` à l'instance donnée.
+Assigns the global `vEditor` to the given instance.
 
-- `editorInstance` (*table*) : Instance de l'éditeur (normalement editor_veMain).
+- `editorInstance` (*table*) : Editor instance (normally editor_veMain).
 
 #### `editor_vehicleEditor_api_powerTrainUtils.showJbeamData(deviceID)`
 
-Affiche dans un nœud d'arbre 'All jbeam data' toutes les données jbeam du device vEditor.vdata.powertrain[deviceID].
+Displays in a tree node 'All jbeam data' all the jbeam data of the device vEditor.vdata.powertrain[deviceID].
 
-- `deviceID` (*integer*) : Index du device dans vdata.powertrain (0-based).
+- `deviceID` (*integer*) : Index of the device in vdata.powertrain (0-based).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/api/powerTrainUtils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/api/powerTrainUtils.lua`.*

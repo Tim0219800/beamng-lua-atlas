@@ -1,12 +1,12 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/removeVehicle.lua",
-  "module": "Nœud flowgraph « Remove Vehicle (Traffic) » (once_instant). Retire le véhicule vehId de la table du trafic via self.mgr.modules.traffic:removeTraffic.",
+  "module": "Flowgraph node \"Remove Vehicle (Traffic)\" (once_instant). Removes the vehicle vehId from the traffic table via self.mgr.modules.traffic:removeTraffic.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "workOnce": {
-          "desc": "Appelle removeTraffic(vehId) si vehId est défini.",
+          "desc": "Calls removeTraffic(vehId) if vehId is defined.",
           "internal": true
         }
       }

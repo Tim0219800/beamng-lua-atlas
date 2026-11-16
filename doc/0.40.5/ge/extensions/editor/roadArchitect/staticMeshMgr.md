@@ -1,57 +1,57 @@
 # `editor_roadArchitect_staticMeshMgr`
 
-*Fichier : `lua/ge/extensions/editor/roadArchitect/staticMeshMgr.lua` · VM : Game Engine (GE) · 157 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadArchitect/staticMeshMgr.lua` · VM: Game Engine (GE) · 157 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadArchitect_staticMeshMgr` : `extensions.load("editor_roadArchitect_staticMeshMgr")`, puis la globale `editor_roadArchitect_staticMeshMgr`
+**Access:** extension `editor_roadArchitect_staticMeshMgr`: `extensions.load("editor_roadArchitect_staticMeshMgr")`, then the global `editor_roadArchitect_staticMeshMgr`
 
-Gère l'« audition » des maillages statiques dans le Road Architect : il liste les fichiers .dae disponibles (dossiers art/shapes/objects et art/shapes/garage_and_dealership/Clutter), affiche un maillage choisi dans la scène à 1000 m d'altitude et déplace/fait tourner la caméra libre autour pour le prévisualiser. Il renseigne aussi, dans la couche de profil concernée, les dimensions du maillage (boîte). Utilisé par l'interface d'édition de profils.
+Manages the "audition" of static meshes in Road Architect: it lists the available .dae files (art/shapes/objects and art/shapes/garage_and_dealership/Clutter folders), displays a chosen mesh in the scene at 1000 m altitude and moves/rotates the free camera around it to preview it. It also fills in, in the relevant profile layer, the dimensions of the mesh (box). Used by the profile editing UI.
 
-## Remarques
+## Notes
 
-- L'objet d'audition s'appelle « Mesh Under Audition [temporary] » et est placé à (0, 0, 1000) dans MissionGroup.
-- La caméra tourne par pas de pi/500 par appel de manageRotateCam ; la distance est fonction de la taille du maillage (1.2 x longueur de la boîte).
-- availStaticMeshes est vidé et rempli en place (table.clear) : la référence exportée reste valide après fetchAvailableStaticMeshes.
-- Dans addMeshToAudition, la table scenetree.MissionGroup:addObject reçoit l'objet directement (et non .obj comme ailleurs) : incohérence possible avec les autres modules.
+- The audition object is called "Mesh Under Audition [temporary]" and is placed at (0, 0, 1000) in MissionGroup.
+- The camera rotates in steps of pi/500 per call of manageRotateCam; the distance depends on the mesh size (1.2 x box length).
+- availStaticMeshes is emptied and refilled in place (table.clear): the exported reference remains valid after fetchAvailableStaticMeshes.
+- In addMeshToAudition, the table scenetree.MissionGroup:addObject receives the object directly (and not .obj as elsewhere): possible inconsistency with the other modules.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadArchitect_staticMeshMgr.addMeshToAudition(selectedMeshIdx, road, customIdx)` | Remplace le maillage en audition par celui d'indice donné, ajuste la distance de la caméra à sa taille, puis écrit dans la couche du profil les distances de la boîte autour du centre (boxXLeft/Right, boxYLeft/Right, boxZLeft/Right) et ses extensions (extentsL, extentsW, extentsH). | 72 |
-| `editor_roadArchitect_staticMeshMgr.fetchAvailableStaticMeshes()` | Cherche récursivement les *.dae dans les dossiers prédéfinis et remplit availStaticMeshes (triée par filename). | 41 |
-| `editor_roadArchitect_staticMeshMgr.goToMeshView(timer, time)` | Si la caméra n'est pas déjà en vue d'audition : mémorise sa pose, arrête et remet à zéro le chronomètre, et applique la pose d'audition. | 118 |
-| `editor_roadArchitect_staticMeshMgr.goToOldView()` | Restaure la pose de caméra mémorisée avant l'audition et sort de la vue d'audition. | 138 |
-| `editor_roadArchitect_staticMeshMgr.manageRotateCam()` | Fait avancer d'un pas l'angle de rotation de la caméra autour du maillage et applique la pose (à appeler à chaque frame). | 129 |
-| `editor_roadArchitect_staticMeshMgr.removeAuditionMesh()` | Supprime l'objet de scène du maillage en audition s'il existe. | 55 |
-| `editor_roadArchitect_staticMeshMgr.updateCameraPose()` | Passe en caméra libre et place la caméra sur la pose d'audition (derrière et au-dessus du maillage, regardant vers lui). | 64 |
+| `editor_roadArchitect_staticMeshMgr.addMeshToAudition(selectedMeshIdx, road, customIdx)` | Replaces the mesh under audition with the one at the given index, adjusts the camera distance to its size, then writes into the profile layer the distances from the box to the center (boxXLeft/Right, boxYLeft/Right, boxZLeft/Right) and its extents (extentsL, extentsW, extentsH). | 72 |
+| `editor_roadArchitect_staticMeshMgr.fetchAvailableStaticMeshes()` | Recursively searches for *.dae in the predefined folders and fills availStaticMeshes (sorted by filename). | 41 |
+| `editor_roadArchitect_staticMeshMgr.goToMeshView(timer, time)` | If the camera is not already in audition view: stores its pose, stops and resets the timer, and applies the audition pose. | 118 |
+| `editor_roadArchitect_staticMeshMgr.goToOldView()` | Restores the camera pose stored before the audition and leaves the audition view. | 138 |
+| `editor_roadArchitect_staticMeshMgr.manageRotateCam()` | Advances the camera rotation angle around the mesh by one step and applies the pose (to be called every frame). | 129 |
+| `editor_roadArchitect_staticMeshMgr.removeAuditionMesh()` | Deletes the scene object of the mesh under audition if it exists. | 55 |
+| `editor_roadArchitect_staticMeshMgr.updateCameraPose()` | Switches to free camera and places the camera at the audition pose (behind and above the mesh, looking at it). | 64 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadArchitect_staticMeshMgr.addMeshToAudition(selectedMeshIdx, road, customIdx)`
 
-Remplace le maillage en audition par celui d'indice donné, ajuste la distance de la caméra à sa taille, puis écrit dans la couche du profil les distances de la boîte autour du centre (boxXLeft/Right, boxYLeft/Right, boxZLeft/Right) et ses extensions (extentsL, extentsW, extentsH).
+Replaces the mesh under audition with the one at the given index, adjusts the camera distance to its size, then writes into the profile layer the distances from the box to the center (boxXLeft/Right, boxYLeft/Right, boxZLeft/Right) and its extents (extentsL, extentsW, extentsH).
 
-- `selectedMeshIdx` (*integer*) : Indice dans availStaticMeshes.
-- `road` (*table*) : Route dont le profil contient la couche.
-- `customIdx` (*integer*) : Indice de la couche dans road.profile.layers.
+- `selectedMeshIdx` (*integer*) : Index in availStaticMeshes.
+- `road` (*table*) : Road whose profile contains the layer.
+- `customIdx` (*integer*) : Index of the layer in road.profile.layers.
 
 #### `editor_roadArchitect_staticMeshMgr.goToMeshView(timer, time)`
 
-Si la caméra n'est pas déjà en vue d'audition : mémorise sa pose, arrête et remet à zéro le chronomètre, et applique la pose d'audition.
+If the camera is not already in audition view: stores its pose, stops and resets the timer, and applies the audition pose.
 
-- `timer` (*table*) : Chronomètre avec stopAndReset().
-- `time` (*number*) : Temps courant.
-- **renvoie** : number 0.0 à l'entrée dans la vue ; sinon la valeur time reçue.
+- `timer` (*table*) : Timer with stopAndReset().
+- `time` (*number*) : Current time.
+- **returns**: number 0.0 on entering the view; otherwise the time value received.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `availStaticMeshes` | table<integer, {path: string, filename: string}> | Maillages .dae trouvés, triés par nom de fichier. Rempli par fetchAvailableStaticMeshes. |
+| `availStaticMeshes` | table<integer, {path: string, filename: string}> | .dae meshes found, sorted by file name. Filled by fetchAvailableStaticMeshes. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadArchitect/staticMeshMgr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadArchitect/staticMeshMgr.lua`.*

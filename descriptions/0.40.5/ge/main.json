@@ -1,112 +1,966 @@
 {
   "path": "lua/ge/main.lua",
-  "module": "Point d'entrée de la VM Lua « Game Engine » (GE, vmType = 'game'). Le moteur C++ charge ce fichier au démarrage puis appelle ses fonctions globales (onGameEngineStartup, init, update, luaPreRender, clientPreStartMission, vehicleSpawned, onExit…). Chacune relaie en général l'évènement aux extensions via extensions.hook('onXxx', ...). Un moddeur n'appelle presque jamais ces fonctions : il écoute les hooks correspondants dans son extension (onUpdate, onPreRender, onClientStartMission, onVehicleSpawned…). Il utilise en revanche setExtensionUnloadMode, loadPresetExtensions, unloadAutoExtensions, returnToMainMenu et endActiveGameMode.",
-  "usage": "-- extension GE (lua/ge/extensions/monmod.lua)\nlocal M = {}\nlocal function onInit() setExtensionUnloadMode(M, 'manual') end -- survit aux changements de niveau\nlocal function onUpdate(dtReal, dtSim, dtRaw) end -- appelé depuis update() de main.lua\nlocal function onPreRender(dtReal, dtSim, dtRaw) end -- appelé depuis luaPreRender()\nlocal function onVehicleSpawned(vid, veh) end\nM.onInit, M.onUpdate, M.onPreRender, M.onVehicleSpawned = onInit, onUpdate, onPreRender, onVehicleSpawned\nreturn M",
+  "module": "Entry point of the \"Game Engine\" Lua VM (GE, vmType = 'game'). The C++ engine loads this file at startup then calls its global functions (onGameEngineStartup, init, update, luaPreRender, clientPreStartMission, vehicleSpawned, onExit…). Each one generally relays the event to the extensions via extensions.hook('onXxx', ...). A modder almost never calls these functions: they listen to the corresponding hooks in their extension (onUpdate, onPreRender, onClientStartMission, onVehicleSpawned…). They do use setExtensionUnloadMode, loadPresetExtensions, unloadAutoExtensions, returnToMainMenu and endActiveGameMode, however.",
+  "usage": "-- GE extension (lua/ge/extensions/monmod.lua)\nlocal M = {}\nlocal function onInit() setExtensionUnloadMode(M, 'manual') end -- survives level changes\nlocal function onUpdate(dtReal, dtSim, dtRaw) end -- called from update() in main.lua\nlocal function onPreRender(dtReal, dtSim, dtRaw) end -- called from luaPreRender()\nlocal function onVehicleSpawned(vid, veh) end\nM.onInit, M.onUpdate, M.onPreRender, M.onVehicleSpawned = onInit, onUpdate, onPreRender, onVehicleSpawned\nreturn M",
   "notes": [
-    "Ordre de chargement du fichier (top-level) : vmType='game', package.path, require luaCore et common/cdefs, définition de log/print (log -> Lua:log, print -> log('A','print',...)), puis mathlib, utils, devUtils, ge_utils, luaProfiler, StackTracePlus (remplace debug.traceback), puis les modules globaux ci-dessous.",
-    "Modules chargés et exposés en globales par main.lua : Point3F (= vec3), json, guihooks, screenshot, simTimeAuthority (alias rétrocompatible bullettime), WinInput (= Input), extensions (chemins lua/ge/extensions/ et lua/common/extensions/), map, settings (= extensions.core_settings_settings), perf (utils/perf), spawn, setSpawnpoint, serverConnection, server (server/server), commands (server/commands), editor (table vide ; si PlatformSwitches.useEditor est faux : editor.isEditorActive renvoie false et editor.toggleActive ne fait rien), parseArgs (client/parseArgs), MoveManager (table vide), sailingTheHighSeas, photoModeOpen=false, levelLoaded=nil, worldReadyState=-1, logAlways (= print), doStartupProfiling. gameConnection=nil (rétrocompatibilité, getGame() la renvoie).",
-    "Ordre de démarrage : (1) chargement du fichier ; (2) C++ appelle onPreStart() (vide) puis onGameEngineStartup() qui crée les dossiers settings/ et screenshots/, l'EventManager 'MainEventManager', parseArgs.defaultParseArgs(), client/core initializeCore, client/init initClient, PhysicsPlugin.init, poste l'évènement 'onStart', puis charge un niveau passé en ligne de commande ($levelToLoad) via core_loadMapCmd ; (3) init(reason) charge les extensions de démarrage (startupExtensions) ; (4) à la première frame updateFirstFrame() ; (5) l'UI appelle uiReady(). Dans le code lu, l'appelant exact de init n'est pas dans ce fichier : le commentaire dit qu'elle est aussi appelée au rechargement (Ctrl+L), reason valant 'startup' ou 'reload'.",
-    "Boucle d'update : update(dtReal, dtSim, dtRaw) est appelée à chaque frame après les entrées et avant la physique. Elle fait : fondu de la musique du menu, settings.settingsTick, core_input_bindings.updateGFX(dtRaw), simTimeAuthority.update(dtReal), hook onUpdate, gestion des véhicules instables, puis (seulement si be:getUpdateUIflag()) hook onGuiUpdate et envoi des streams UI (guihooks.sendStreams), perf.update(), tryCompleteLuaReload. luaPreRender(dtReal, dtSim, dtRaw) est appelée juste avant le rendu et après la physique : map.updateGFX(dtReal, dtSim), hook onPreRender, hook onDrawDebug(Lua.lastDebugFocusPos, dtReal, dtSim, dtRaw), puis la détection de fin de chargement (worldReadyState).",
-    "Ordre au chargement d'un niveau : clientPreStartMission (worldReadyState=0, hook onClientPreStartMission, UI 'PreStartMission') -> clientPostStartMission (état de jeu 'freeroam' par défaut, hook onClientPostStartMission) -> clientStartMission (hook onClientStartMission, puis map.assureLoad()). worldReadyState passe à 1 (valeur posée par du code hors de ce fichier, non vue ici) ; dans luaPreRender, quand le véhicule joueur 0 a ses matériaux prêts (ou après 5 s de dtRaw cumulé), l'écran de chargement est quitté, worldReadyState=2 et le hook onWorldReadyState(2) est émis. À la fin : clientEndMission émet onClientPreEndMission, arrête la simulation physique, retire la pause puis émet onClientEndMission.",
-    "Unités : dtReal, dtSim, dtRaw en secondes (dtSim est le temps simulé, tient compte du ralenti/pause ; dtRaw est le temps brut).",
-    "Extensions : les startupExtensions sont toutes en unloadMode 'manual' (jamais déchargées au changement de niveau). Les presetExtensions (core_environment, core_weather, gameplay_traffic, gameplay_parking, core_groundMarkers…) sont chargées par loadPresetExtensions() lors de la mise en place d'un mode de jeu. Les autres sont en mode 'auto' et déchargées par unloadAutoExtensions().",
-    "Instabilité physique : onInstabilityDetected active le mode fantôme du véhicule et le téléporte sur place pendant 1 s (instabilityDetectionTime) ; une deuxième instabilité pendant ce délai supprime le véhicule. Un hook onInstabilityDetected(vid, returnData) permet à une extension de gérer le cas elle-même en mettant returnData.instabilityHandled = true.",
-    "Bug/incohérence : physicsEngineEvent(...) fait « local args = unpack({...}) » : seule la première valeur est conservée et transmise au hook onPhysicsEngineEvent.",
-    "Bug/incohérence : onInstabilityDetected appelle v:getJBeamFilename() avant de tester « if v » ; si le véhicule n'existe plus, la fonction plante (la garde plus bas est inutile).",
-    "Bug/incohérence : validatePrefabJson calcule newPath sans l'utiliser ; loadModScriptsRec est local, jamais appelée dans ce fichier ; handleCommandLineFirstFrame et loadRequiredExtension sont locales (inaccessibles aux extensions).",
-    "Fonctions obsolètes : loadGameModeModules et registerCoreModule loguent « OUTDATED MOD CODE » et sont prévues pour disparaître ; utiliser unloadAutoExtensions()+loadPresetExtensions()+extensions.load(...) et setExtensionUnloadMode(M,'manual').",
-    "Fonctions de test/debug (test_prefabv2, load_test_prefabv1/2, test_spawn_prefabv2, test_spawn_prefabv2_massive, test_unload_prefabv2, load_spawn_prefabv2_indirect, runMimalloc_test, convert*/validate* prefab) : outils de développement appelables depuis la console."
+    "File load order (top-level): vmType='game', package.path, require luaCore and common/cdefs, definition of log/print (log -> Lua:log, print -> log('A','print',...)), then mathlib, utils, devUtils, ge_utils, luaProfiler, StackTracePlus (replaces debug.traceback), then the global modules below.",
+    "Modules loaded and exposed as globals by main.lua: Point3F (= vec3), json, guihooks, screenshot, simTimeAuthority (backward-compatible alias bullettime), WinInput (= Input), extensions (paths lua/ge/extensions/ and lua/common/extensions/), map, settings (= extensions.core_settings_settings), perf (utils/perf), spawn, setSpawnpoint, serverConnection, server (server/server), commands (server/commands), editor (empty table; if PlatformSwitches.useEditor is false: editor.isEditorActive returns false and editor.toggleActive does nothing), parseArgs (client/parseArgs), MoveManager (empty table), sailingTheHighSeas, photoModeOpen=false, levelLoaded=nil, worldReadyState=-1, logAlways (= print), doStartupProfiling. gameConnection=nil (backward compatibility, getGame() returns it).",
+    "Startup order: (1) file load; (2) C++ calls onPreStart() (empty) then onGameEngineStartup() which creates the settings/ and screenshots/ folders, the 'MainEventManager' EventManager, parseArgs.defaultParseArgs(), client/core initializeCore, client/init initClient, PhysicsPlugin.init, posts the 'onStart' event, then loads a level passed on the command line ($levelToLoad) via core_loadMapCmd; (3) init(reason) loads the startup extensions (startupExtensions); (4) on the first frame updateFirstFrame(); (5) the UI calls uiReady(). In the code read, the exact caller of init is not in this file: the comment says it is also called on reload (Ctrl+L), reason being 'startup' or 'reload'.",
+    "Update loop: update(dtReal, dtSim, dtRaw) is called every frame after the inputs and before the physics. It does: menu music fade, settings.settingsTick, core_input_bindings.updateGFX(dtRaw), simTimeAuthority.update(dtReal), onUpdate hook, handling of unstable vehicles, then (only if be:getUpdateUIflag()) onGuiUpdate hook and sending of the UI streams (guihooks.sendStreams), perf.update(), tryCompleteLuaReload. luaPreRender(dtReal, dtSim, dtRaw) is called just before rendering and after the physics: map.updateGFX(dtReal, dtSim), onPreRender hook, onDrawDebug(Lua.lastDebugFocusPos, dtReal, dtSim, dtRaw) hook, then the end-of-loading detection (worldReadyState).",
+    "Order when loading a level: clientPreStartMission (worldReadyState=0, onClientPreStartMission hook, UI 'PreStartMission') -> clientPostStartMission ('freeroam' game state by default, onClientPostStartMission hook) -> clientStartMission (onClientStartMission hook, then map.assureLoad()). worldReadyState goes to 1 (value set by code outside this file, not seen here); in luaPreRender, when player vehicle 0 has its materials ready (or after 5 s of cumulative dtRaw), the loading screen is dismissed, worldReadyState=2 and the onWorldReadyState(2) hook is emitted. At the end: clientEndMission emits onClientPreEndMission, stops the physics simulation, removes the pause then emits onClientEndMission.",
+    "Units: dtReal, dtSim, dtRaw in seconds (dtSim is the simulated time, accounts for slow motion/pause; dtRaw is the raw time).",
+    "Extensions: the startupExtensions are all in unloadMode 'manual' (never unloaded on level change). The presetExtensions (core_environment, core_weather, gameplay_traffic, gameplay_parking, core_groundMarkers…) are loaded by loadPresetExtensions() when setting up a game mode. The others are in 'auto' mode and unloaded by unloadAutoExtensions().",
+    "Physics instability: onInstabilityDetected enables the vehicle's ghost mode and teleports it in place for 1 s (instabilityDetectionTime); a second instability during this delay deletes the vehicle. A hook onInstabilityDetected(vid, returnData) lets an extension handle the case itself by setting returnData.instabilityHandled = true.",
+    "Bug/inconsistency: physicsEngineEvent(...) does \"local args = unpack({...})\": only the first value is kept and passed to the onPhysicsEngineEvent hook.",
+    "Bug/inconsistency: onInstabilityDetected calls v:getJBeamFilename() before testing \"if v\"; if the vehicle no longer exists, the function crashes (the guard further down is useless).",
+    "Bug/inconsistency: validatePrefabJson computes newPath without using it; loadModScriptsRec is local, never called in this file; handleCommandLineFirstFrame and loadRequiredExtension are local (inaccessible to extensions).",
+    "Obsolete functions: loadGameModeModules and registerCoreModule log \"OUTDATED MOD CODE\" and are due to disappear; use unloadAutoExtensions()+loadPresetExtensions()+extensions.load(...) and setExtensionUnloadMode(M,'manual').",
+    "Test/debug functions (test_prefabv2, load_test_prefabv1/2, test_spawn_prefabv2, test_spawn_prefabv2_massive, test_unload_prefabv2, load_spawn_prefabv2_indirect, runMimalloc_test, convert*/validate* prefab): development tools callable from the console."
   ],
   "fields": {},
   "functions": {
-    "log": {"desc": "Remplacement global de log : transmet tous les arguments à Lua:log (niveau 'D','I','W','E','A', origine, message).", "params": {"...": {"type": "any", "desc": "niveau, tag, message"}}, "returns": [], "internal": false},
-    "print": {"desc": "Remplacement global de print : écrit via log('A','print', tostring(...)). Seul le premier argument est converti et journalisé.", "params": {"...": {"type": "any", "desc": "valeurs à afficher"}}, "returns": [], "internal": false},
-    "ConsoleInputCallback": {"desc": "Callback global vide pour la console imgui ; une extension peut le redéfinir pour recevoir la saisie.", "params": {}, "returns": [], "internal": false},
-    "getGame": {"desc": "Rétrocompatibilité : renvoie la globale gameConnection, qui vaut nil (n'est plus un objet de scène).", "params": {}, "returns": [{"type": "nil", "desc": "toujours nil dans ce fichier"}], "internal": false},
-    "isSafeMode": {"desc": "Indique si le jeu a été lancé avec l'argument de ligne de commande -safemode.", "params": {}, "returns": [{"type": "integer|nil", "desc": "clé trouvée dans les arguments (truthy) ou nil"}], "internal": false},
-    "convertPrefabtoJson": {"desc": "Outil de dev : charge un prefab .prefab (TorqueScript) à l'origine, le sauvegarde en .prefab.json puis le décharge et le supprime.", "params": {"filepath": {"type": "string", "desc": "chemin du fichier .prefab"}}, "returns": [], "internal": false},
-    "convertLevelPrefabs": {"desc": "Outil de dev : cherche tous les *.prefab / *.prefab.json sous levelPath et appelle convertPrefabtoJson sur chacun.", "params": {"levelPath": {"type": "string", "desc": "dossier du niveau"}}, "returns": [], "internal": false},
-    "validatePrefabJson": {"desc": "Outil de dev : recharge un .prefab.json et le resauvegarde au même endroit (normalisation du format).", "params": {"filepath": {"type": "string", "desc": "chemin du .prefab.json"}}, "returns": [], "internal": false},
-    "validateLevelPrefabs": {"desc": "Outil de dev : appelle validatePrefabJson sur chaque *.prefab.json de levelPath.", "params": {"levelPath": {"type": "string", "desc": "dossier du niveau"}}, "returns": [], "internal": false},
-    "convertCStoJson": {"desc": "Outil de dev : exécute des scripts TorqueScript (.cs), détecte les objets créés et les sauvegarde au nouveau format JSON via un PersistenceManager, puis supprime les objets (sauf SimSet/SimGroup).", "params": {"filenames": {"type": "table<integer, string>", "desc": "scripts .cs à convertir"}, "newExtSuffix": {"type": "string", "desc": "non utilisé dans le corps de la fonction"}}, "returns": [], "internal": false},
-    "prepareStartupExtensionsList": {"desc": "Si PlatformSwitches.useEditor est vrai, ajoute editor_main et editor_veMain à la liste des extensions de démarrage ; recalcule la liste des extensions en déchargement manuel. Appelée par init().", "params": {}, "returns": [], "internal": true},
-    "loadManualUnloadExtensions": {"desc": "Charge toutes les extensions en unloadMode 'manual'.", "params": {}, "returns": [], "internal": false},
-    "unloadAutoExtensions": {"desc": "Décharge toutes les extensions sauf celles en mode 'manual' (extensions.unloadExcept). À appeler lors du changement de mode de jeu/niveau.", "params": {}, "returns": [], "internal": false},
-    "loadPresetExtensions": {"desc": "Charge la liste presetExtensions (+ celles demandées en ligne de commande via queueCmdlineLevelLoadExtension), puis vide cette liste de ligne de commande (usage unique).", "params": {}, "returns": [], "internal": false},
-    "setExtensionUnloadMode": {"desc": "Définit si une extension survit aux changements de niveau ('manual') ou peut être déchargée automatiquement ('auto', défaut). Logue une erreur si l'extension ou le mode est inconnu.", "params": {"extension": {"type": "table|string", "desc": "module M (son __extensionName__ est lu) ou nom de l'extension"}, "unloadMode": {"type": "string", "desc": "'manual' ou 'auto'"}}, "returns": [], "internal": false},
-    "endActiveGameMode": {"desc": "Se déconnecte du serveur local (serverConnection.disconnect, machine à états asynchrone) puis, dans le callback, décharge toutes les extensions non manuelles et appelle callback.", "params": {"callback": {"type": "function|nil", "desc": "appelé une fois le mode terminé"}}, "returns": [], "internal": false},
-    "queueCmdlineLevelLoadExtension": {"desc": "Ajoute une extension à charger au prochain loadPresetExtensions (utilisé pour les extensions demandées en ligne de commande).", "params": {"extension": {"type": "string", "desc": "nom de l'extension"}}, "returns": [], "internal": false},
-    "setMainMenuMusicKeepAlive": {"desc": "Force la musique du menu principal à continuer (true) ou rend la main à la logique par route UI (false). Ne fait rien si l'état ne change pas.", "params": {"active": {"type": "boolean", "desc": "true pour maintenir la musique"}}, "returns": [], "internal": false},
-    "setMainMenuMusicPauseRequest": {"desc": "Enregistre ou retire une demande de pause de la musique du menu identifiée par requestId, puis rafraîchit l'état.", "params": {"requestId": {"type": "string", "desc": "identifiant non vide"}, "active": {"type": "boolean", "desc": "true pour demander la pause"}}, "returns": [{"type": "boolean", "desc": "false si requestId est invalide, sinon true"}], "internal": false},
-    "setMainMenuMusicRouteState": {"desc": "Applique la logique de musique selon la route UI : pause demandée > keepAlive > route 'menu' (reprise) > niveau chargé (arrêt avec fondu 0,6 s) > route 'menu.credits' (extension ui_credits) > route 'menu.uiSounds' (pause) > reprise.", "params": {"routeName": {"type": "string|nil", "desc": "nom de la route UI courante"}}, "returns": [], "internal": false},
-    "refreshMainMenuMusicRouteState": {"desc": "Lit la route courante dans ui_router.getCurrent() et appelle setMainMenuMusicRouteState.", "params": {}, "returns": [], "internal": false},
-    "clientPreStartMission": {"desc": "Appelée par le moteur avant le chargement des ressources du niveau. Met worldReadyState=0, enregistre l'action, émet onClientPreStartMission(levelPath) et l'évènement UI 'PreStartMission'.", "params": {"levelPath": {"type": "string", "desc": "chemin du niveau"}}, "returns": [], "internal": true},
-    "clientPostStartMission": {"desc": "Appelée quand le niveau et les véhicules sont chargés (après clientPreStartMission). Met l'état de jeu 'freeroam' par défaut (core_gamestate) puis émet onClientPostStartMission(levelPath).", "params": {"levelPath": {"type": "string", "desc": "chemin du niveau"}}, "returns": [], "internal": true},
-    "clientStartMission": {"desc": "Appelée quand les objets du niveau sont chargés (après clientPostStartMission). Coupe la musique du menu (sauf keepAlive), émet onClientStartMission(levelPath) via hookNotify, puis map.assureLoad() et vide le cache Sim.", "params": {"levelPath": {"type": "string", "desc": "chemin du niveau"}}, "returns": [], "internal": true},
-    "clientEndMission": {"desc": "Appelée à la fin/déchargement du niveau. Émet onClientPreEndMission, arrête la simulation physique (be:physicsStopSimulation), retire la pause temporelle, puis émet onClientEndMission(levelPath).", "params": {"levelPath": {"type": "string", "desc": "chemin du niveau"}}, "returns": [], "internal": true},
-    "returnToMainMenu": {"desc": "Quitte le mode de jeu actif (endActiveGameMode) et demande l'état de jeu par défaut (menu principal). Le callback est appelé quand le niveau est déchargé et qu'un nouveau peut être chargé.", "params": {"callback": {"type": "function|nil", "desc": "appelé une fois le niveau déchargé"}}, "returns": [], "internal": false},
-    "runMimalloc_test": {"desc": "Debug : appelle Engine.Debug.mimalloc_test().", "params": {}, "returns": [], "internal": false},
-    "editorEnabled": {"desc": "Appelée par le moteur quand l'éditeur est activé/désactivé (et à la première frame). Émet onEditorEnabled(enabled) et informe map via map.setEditorState.", "params": {"enabled": {"type": "boolean", "desc": "état de l'éditeur"}}, "returns": [], "internal": true},
-    "requestGeluaProfile": {"desc": "Appelée par le C++ quand un journal de performance est voulu : crée un LuaProfiler pour la prochaine frame (update + luaPreRender), activé dans les extensions.", "params": {}, "returns": [], "internal": true},
-    "luaPreRender": {"desc": "Appelée à chaque frame par le moteur, juste avant le rendu et après la physique. Ordre : map.updateGFX, hook onPreRender(dtReal, dtSim, dtRaw), hook onDrawDebug(Lua.lastDebugFocusPos, dtReal, dtSim, dtRaw), puis, si worldReadyState==1, attend que les matériaux du véhicule joueur soient prêts (max 5 s) pour quitter l'écran de chargement, passer worldReadyState à 2 et émettre onWorldReadyState(2).", "params": {"dtReal": {"type": "number", "desc": "delta temps réel (s)"}, "dtSim": {"type": "number", "desc": "delta temps simulé (s)"}, "dtRaw": {"type": "number", "desc": "delta temps brut (s)"}}, "returns": [], "internal": true},
-    "checkFSErrors": {"desc": "Une seule fois par session : lit Engine.Platform.getFSInfo() ; si une erreur est signalée, affiche un toast d'erreur dans l'UI et logue un message de corruption d'installation.", "params": {}, "returns": [], "internal": false},
-    "updateFirstFrame": {"desc": "Appelée par le moteur à la première frame. Émet onFirstUpdate, settings.finalizeInit(), synchronise l'état de l'éditeur, traite les arguments de ligne de commande de première frame (-flowgraph, -compilemeshes, -convertCSMaterials, -deps, -disableDynamicCollision, -enablemcp, etc.) et appelle uiReady() directement avec -noui ou en mode headless.", "params": {}, "returns": [], "internal": true},
-    "update": {"desc": "Appelée à chaque frame par le moteur, après les entrées et avant la physique. Voir notes : settingsTick, core_input_bindings.updateGFX, simTimeAuthority.update, hook onUpdate(dtReal, dtSim, dtRaw), gestion des véhicules instables, et si l'UI doit être rafraîchie hook onGuiUpdate + envoi des streams guihooks.", "params": {"dtReal": {"type": "number", "desc": "delta temps réel (s)"}, "dtSim": {"type": "number", "desc": "delta temps simulé (s)"}, "dtRaw": {"type": "number", "desc": "delta temps brut (s)"}}, "returns": [], "internal": true},
-    "uiReady": {"desc": "Appelée quand l'UI est prête. Émet onUiReady et marque l'UI prête pour la finalisation d'un rechargement Lua.", "params": {}, "returns": [], "internal": true},
-    "isLuaReady": {"desc": "Permet à l'UI de savoir si init() est terminée.", "params": {}, "returns": [{"type": "boolean", "desc": "true une fois init() exécutée jusqu'au bout"}], "internal": false},
-    "init": {"desc": "Initialise la VM GE au démarrage et au rechargement (Ctrl+L) : initSettings, réserve _tr, active detectGlobalWrites, charge les extensions de démarrage (+ util_materialHotReload sous Windows), ouvre la session en ligne, importPersistentData, demande l'état de l'UI (guihooks 'isUIReady'), appelle core_modmanager.onUiReady(), map.assureLoad(), crée les dossiers mods et trackEditor, puis luaReady=true.", "params": {"reason": {"type": "string", "desc": "'startup' ou 'reload' ; copié dans la globale luaVmStartReason"}}, "returns": [], "internal": true},
-    "onBeamNGWaypoint": {"desc": "Appelée par le moteur quand un véhicule franchit un waypoint BeamNG (objet de scène). Appelle map.onWaypoint puis émet onBeamNGWaypoint(args).", "params": {"args": {"type": "table", "desc": "données du waypoint (structure fournie par le C++)"}}, "returns": [], "internal": true},
-    "onBeamNGTrigger": {"desc": "Nom de fonction par défaut du callback des BeamNGTrigger côté C++ ; émet le hook onBeamNGTrigger(data).", "params": {"data": {"type": "table", "desc": "données du déclencheur (structure fournie par le C++)"}}, "returns": [], "internal": true},
-    "onFileChanged": {"desc": "Appelée par le moteur quand des fichiers surveillés changent. Appelle settings.onFilesChanged et map.onFilesChanged, émet onFilesChanged(files), puis pour chaque fichier onFileChanged(filename, type), enfin onFileChangedEnd.", "params": {"files": {"type": "table", "desc": "liste d'entrées {filename, type}"}}, "returns": [], "internal": true},
-    "physicsEngineEvent": {"desc": "Relaie un évènement du moteur physique : hook onPhysicsEngineEvent. Seul le premier argument est transmis (voir notes).", "params": {"...": {"type": "any", "desc": "arguments de l'évènement"}}, "returns": [], "internal": true},
-    "vehicleSpawned": {"desc": "Appelée par le moteur quand un véhicule apparaît. Invalide les caches de véhicules, règle la gravité du véhicule (core_environment.getGravity), puis émet onPreVehicleSpawned(vid, veh) puis onVehicleSpawned(vid, veh). Ne fait rien si l'objet n'existe pas.", "params": {"vid": {"type": "integer", "desc": "id de l'objet véhicule"}}, "returns": [], "internal": true},
-    "vehicleSwitched": {"desc": "Appelée quand le joueur change de véhicule. Émet onVehicleSwitched(oldId, newId, player) (id -1 si absent) et l'évènement UI 'VehicleFocusChanged'.", "params": {"oldVehicle": {"type": "table|nil", "desc": "ancien objet véhicule"}, "newVehicle": {"type": "table|nil", "desc": "nouvel objet véhicule"}, "player": {"type": "integer", "desc": "index du joueur"}}, "returns": [], "internal": true},
-    "onSetClusterPosRelRot": {"desc": "Callback asynchrone quand un cluster de nœuds d'un véhicule est téléporté ; émet onSetClusterPosRelRot(vehicleID, cNodeId).", "params": {"vehicleID": {"type": "integer", "desc": "id du véhicule"}, "cNodeId": {"type": "integer", "desc": "id du nœud de cluster"}}, "returns": [], "internal": true},
-    "vehicleReset": {"desc": "Callback asynchrone après la réinitialisation d'un véhicule ; émet onVehicleResetted(vehicleID).", "params": {"vehicleID": {"type": "integer", "desc": "id du véhicule"}}, "returns": [], "internal": true},
-    "vehicleActiveChanged": {"desc": "Appelée quand un véhicule est activé/désactivé (ex. pooling du trafic). Sans rapport avec le changement de véhicule du joueur. Émet onVehicleActiveChanged.", "params": {"vehicleID": {"type": "integer", "desc": "id du véhicule"}, "active": {"type": "boolean", "desc": "nouvel état"}, "setActiveCount": {"type": "any", "desc": "transmis tel quel (déduit du code)"}}, "returns": [], "internal": true},
-    "onMouseLocked": {"desc": "Appelée quand le curseur est verrouillé/déverrouillé ; émet onMouseLocked(locked).", "params": {"locked": {"type": "boolean", "desc": "état du verrouillage"}}, "returns": [], "internal": true},
-    "vehicleDestroyed": {"desc": "Appelée quand un véhicule est supprimé : oublie ses minuteries d'instabilité, émet onVehicleDestroyed(vid), invalide les caches de véhicules.", "params": {"vid": {"type": "integer", "desc": "id du véhicule"}}, "returns": [], "internal": true},
-    "onCouplerAttached": {"desc": "Un attelage s'est accroché ; émet onCouplerAttached.", "params": {"objId1": {"type": "integer", "desc": "véhicule 1"}, "objId2": {"type": "integer", "desc": "véhicule 2"}, "nodeId": {"type": "integer", "desc": "nœud d'attelage du véhicule 1"}, "obj2nodeId": {"type": "integer", "desc": "nœud d'attelage du véhicule 2"}}, "returns": [], "internal": true},
-    "onCouplerDetached": {"desc": "Un attelage s'est détaché ; émet onCouplerDetached.", "params": {"objId1": {"type": "integer", "desc": "véhicule 1"}, "objId2": {"type": "integer", "desc": "véhicule 2"}, "nodeId": {"type": "integer", "desc": "nœud du véhicule 1"}, "obj2nodeId": {"type": "integer", "desc": "nœud du véhicule 2"}, "breakForce": {"type": "number", "desc": "force de rupture (déduit du nom)"}}, "returns": [], "internal": true},
-    "onCouplerDetach": {"desc": "Déclenchée quand l'utilisateur détache volontairement l'attelage d'une remorque ; émet onCouplerDetach(objId, nodeId).", "params": {"objId": {"type": "integer", "desc": "id du véhicule"}, "nodeId": {"type": "integer", "desc": "nœud d'attelage"}}, "returns": [], "internal": true},
-    "onAiModeChange": {"desc": "Le mode de l'IA d'un véhicule a changé ; émet onAiModeChange.", "params": {"vehicleID": {"type": "integer", "desc": "id du véhicule"}, "newAiMode": {"type": "string", "desc": "nouveau mode IA (déduit du nom)"}}, "returns": [], "internal": true},
-    "onAiRouteDone": {"desc": "L'IA a terminé sa route ; émet onAiRouteDone(vehicleID).", "params": {"vehicleID": {"type": "integer", "desc": "id du véhicule"}}, "returns": [], "internal": true},
-    "replayStateChanged": {"desc": "Transmet à core_replay.stateChanged(...).", "params": {"...": {"type": "any", "desc": "arguments du moteur"}}, "returns": [], "internal": true},
-    "openXRStateChanged": {"desc": "Transmet à render_openxr.stateChanged si ce module existe.", "params": {"state": {"type": "any", "desc": "état OpenXR"}}, "returns": [], "internal": true},
-    "openXRErrorDetected": {"desc": "Transmet à render_openxr.errorDetected si ce module existe.", "params": {"...": {"type": "any", "desc": "détails de l'erreur"}}, "returns": [], "internal": true},
-    "replaySpawnVehicle": {"desc": "Appelée par le moteur de replay pour recréer un véhicule en (0,0,0) ; le joueur n'y est installé que s'il n'a pas encore de véhicule. S'il n'y a qu'un véhicule enterable, passe en caméra de jeu.", "params": {"jbeamFilename": {"type": "string", "desc": "véhicule"}, "partConfigData": {"type": "table", "desc": "configuration des pièces"}}, "returns": [{"type": "table|nil", "desc": "objet véhicule créé"}], "internal": true},
-    "replayStartLevel": {"desc": "Appelée par le replay : core_replay.startLevel(levelPath).", "params": {"levelPath": {"type": "string", "desc": "niveau à charger"}}, "returns": [], "internal": true},
-    "CEFTypingLostFocus": {"desc": "Appelée par le C++ quand le champ de saisie CEF perd le focus ; relaye l'évènement UI 'CEFTypingLostFocus'.", "params": {}, "returns": [], "internal": true},
-    "exportPersistentData": {"desc": "Avant un rechargement Lua : sérialise les paquets des extensions (serializePackages), levelLoaded et l'id de la source musicale dans be.persistenceLuaData.", "params": {}, "returns": [], "internal": true},
-    "importPersistentData": {"desc": "Inverse d'exportPersistentData, appelée à la fin de init(). En cas d'erreur de désérialisation, journalise et écrit persistentDataError.txt.", "params": {}, "returns": [], "internal": true},
-    "physicsStateChanged": {"desc": "La simulation physique est mise en pause/reprise. Relaye l'évènement UI 'physicsStateChanged' puis émet onPhysicsUnpaused (val vrai) ou onPhysicsPaused.", "params": {"val": {"type": "boolean", "desc": "true si la physique tourne"}}, "returns": [], "internal": true},
-    "updateTranslations": {"desc": "Démonte mods/translations.zip s'il est monté, télécharge locales_v2.zip via core_repository.installMod, puis recharge les réglages.", "params": {}, "returns": [], "internal": false},
-    "enableCommunityTranslations": {"desc": "Active le réglage communityTranslations puis lance updateTranslations().", "params": {}, "returns": [], "internal": false},
-    "onScreenKeyboardClosed": {"desc": "Le clavier virtuel est fermé ; émet onScreenKeyboardClosed(applied, text).", "params": {"applied": {"type": "boolean", "desc": "saisie validée"}, "text": {"type": "string", "desc": "texte saisi"}}, "returns": [], "internal": true},
-    "onInstabilityDetected": {"desc": "Appelée par le moteur physique quand un véhicule est instable : journalise les véhicules proches (< 1 m), affiche un message UI, émet onInstabilityDetected(vid, returnData), puis, si non géré, met le véhicule en mode fantôme et le téléporte sur place ; une 2e instabilité dans la seconde supprime le véhicule.", "params": {"vid": {"type": "integer", "desc": "id du véhicule instable"}}, "returns": [], "internal": true},
-    "onSpawnError": {"desc": "Erreur de création d'un véhicule : journalise et affiche un toast d'erreur dans l'UI.", "params": {"status": {"type": "any", "desc": "code d'erreur"}, "jbeamFilename": {"type": "string", "desc": "véhicule concerné"}}, "returns": [], "internal": true},
-    "resetGameplay": {"desc": "Émet onResetGameplay(playerID).", "params": {"playerID": {"type": "integer", "desc": "joueur concerné"}}, "returns": [], "internal": true},
-    "sendUIModules": {"desc": "Envoie à l'UI (évènement 'onUIBootstrap') la liste des dossiers de /ui/modModules/ ; liste vide en cas d'erreur.", "params": {}, "returns": [], "internal": true},
-    "loadDirRec": {"desc": "Charge récursivement les matériaux d'un dossier : d'abord *materials.cs (TorqueScript), puis *materials.json, puis *datablocks.json.", "params": {"dir": {"type": "string", "desc": "dossier à parcourir"}}, "returns": [], "internal": false},
-    "onPreStart": {"desc": "Point d'entrée appelé par le moteur avant onGameEngineStartup ; corps vide.", "params": {}, "returns": [], "internal": true},
-    "onPreWindowClose": {"desc": "Appelée avant la fermeture de la fenêtre ; émet onPreWindowClose.", "params": {}, "returns": [], "internal": true},
-    "onPreExit": {"desc": "Appelée avant la sortie du jeu ; émet onPreExit (profilée).", "params": {}, "returns": [], "internal": true},
-    "onExit": {"desc": "Appelée directement par le C++ à la sortie : émet onExit, déconnecte le serveur, détruit PhysicsPlugin, poste l'évènement 'onExit' du MainEventManager, puis settings.exit().", "params": {}, "returns": [], "internal": true},
-    "onGameEngineStartup": {"desc": "Appelée une fois par le moteur au démarrage de la VM : crée les dossiers settings/ et screenshots/, l'EventManager 'MainEventManager', parse la ligne de commande, initialise le core et le client (client/core, client/init), PhysicsPlugin, puis charge le niveau $levelToLoad éventuel via core_loadMapCmd (différé jusqu'à ce que le mod manager soit prêt).", "params": {}, "returns": [], "internal": true},
-    "onLuaReloaded": {"desc": "Appelée après un rechargement Lua (Ctrl+L) : client/core reloadCore, client/init reloadClient, mesure la durée et arme le suivi de fin de rechargement.", "params": {"reloadStartTime": {"type": "number", "desc": "os.clockhp() au début du rechargement (s)"}}, "returns": [], "internal": true},
-    "onLuaReloadModManagerCompleted": {"desc": "Signale que le mod manager a fini après un rechargement Lua.", "params": {}, "returns": [], "internal": true},
-    "onLuaReloadCompleted": {"desc": "Logue la durée totale du rechargement et efface luaReloadStartTime. Appelée par tryCompleteLuaReload quand jobs, settings, UI, mod manager (et MCP) sont prêts.", "params": {}, "returns": [], "internal": true},
-    "onTexDrawPrimCompressDone": {"desc": "Une texture dessinée est compressée ; émet onTexDrawPrimCompressDone(textureName).", "params": {"textureName": {"type": "string", "desc": "nom de la texture"}}, "returns": [], "internal": true},
-    "updateLoadingProgress": {"desc": "Met à jour la barre de chargement UI (évènement 'UpdateProgress') et force un repaint du Canvas pendant le chargement d'un niveau ; stocke $lastProgress et $$lastProgressTxt.", "params": {"val": {"type": "number", "desc": "progression entre 0 et 1"}, "txt": {"type": "string", "desc": "texte affiché"}}, "returns": [], "internal": false},
-    "updateTSShapeLoadProgressDynamic": {"desc": "Utilise updateTSShapeLoadProgress si défini (éditeur chargé), sinon updateLoadingProgress.", "params": {"progress": {"type": "number", "desc": "progression"}, "msg": {"type": "string", "desc": "texte"}}, "returns": [], "internal": true},
-    "loadGameModeModules": {"desc": "OBSOLÈTE : unloadAutoExtensions() + loadPresetExtensions() + extensions.load(...) avec journal d'erreur.", "params": {"...": {"type": "any", "desc": "extensions à charger en plus"}}, "returns": [], "internal": false},
-    "registerCoreModule": {"desc": "OBSOLÈTE : équivaut à setExtensionUnloadMode(nom, 'manual').", "params": {"extensionName": {"type": "string", "desc": "chemin Lua ou nom d'extension"}}, "returns": [], "internal": false},
-    "test_prefabv2": {"desc": "Test de dev : construit des SimGroup et TSStatic dans MissionGroup puis supprime thePlayer, spawn_default, ParticleEmitter.", "params": {}, "returns": [], "internal": false},
-    "load_test_prefabv1": {"desc": "Test de dev : spawn du prefab /levels/smallgrid/test_v1.prefab.json.", "params": {}, "returns": [], "internal": false},
-    "load_test_prefabv2": {"desc": "Test de dev : charge /levels/smallgrid/test_v2.prefab.json comme PrefabV2 'test_v2'.", "params": {}, "returns": [], "internal": false},
-    "test_spawn_prefabv2": {"desc": "Test de dev : instancie 'test_v2' à (6,3,2), échelle 1,5, rotation 45° en Z.", "params": {}, "returns": [], "internal": false},
-    "test_spawn_prefabv2_massive": {"desc": "Test de dev : instancie count copies aléatoires de 'test_v2' dans MissionGroup.", "params": {"count": {"type": "integer|nil", "desc": "nombre d'instances (1000 par défaut)"}}, "returns": [], "internal": false},
-    "test_unload_prefabv2": {"desc": "Test de dev : supprime l'objet 'test_v2'.", "params": {}, "returns": [], "internal": false},
-    "load_spawn_prefabv2_indirect": {"desc": "Test de dev : spawnPrefab de test_v2.prefab.json via spawnPrefab.", "params": {}, "returns": [], "internal": false}
+    "log": {
+      "desc": "Global replacement of log: forwards all arguments to Lua:log (level 'D','I','W','E','A', origin, message).",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "level, tag, message"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "print": {
+      "desc": "Global replacement of print: writes via log('A','print', tostring(...)). Only the first argument is converted and logged.",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "values to display"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "ConsoleInputCallback": {
+      "desc": "Empty global callback for the imgui console; an extension can redefine it to receive the input.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getGame": {
+      "desc": "Backward compatibility: returns the global gameConnection, which is nil (no longer a scene object).",
+      "params": {},
+      "returns": [
+        {
+          "type": "nil",
+          "desc": "always nil in this file"
+        }
+      ],
+      "internal": false
+    },
+    "isSafeMode": {
+      "desc": "Indicates whether the game was launched with the command-line argument -safemode.",
+      "params": {},
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "key found in the arguments (truthy) or nil"
+        }
+      ],
+      "internal": false
+    },
+    "convertPrefabtoJson": {
+      "desc": "Dev tool: loads a .prefab (TorqueScript) prefab at the origin, saves it as .prefab.json then unloads and deletes it.",
+      "params": {
+        "filepath": {
+          "type": "string",
+          "desc": "path of the .prefab file"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "convertLevelPrefabs": {
+      "desc": "Dev tool: finds all *.prefab / *.prefab.json under levelPath and calls convertPrefabtoJson on each.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "level folder"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "validatePrefabJson": {
+      "desc": "Dev tool: reloads a .prefab.json and saves it again in the same place (format normalization).",
+      "params": {
+        "filepath": {
+          "type": "string",
+          "desc": "path of the .prefab.json"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "validateLevelPrefabs": {
+      "desc": "Dev tool: calls validatePrefabJson on each *.prefab.json of levelPath.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "level folder"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "convertCStoJson": {
+      "desc": "Dev tool: runs TorqueScript scripts (.cs), detects the created objects and saves them in the new JSON format via a PersistenceManager, then deletes the objects (except SimSet/SimGroup).",
+      "params": {
+        "filenames": {
+          "type": "table<integer, string>",
+          "desc": ".cs scripts to convert"
+        },
+        "newExtSuffix": {
+          "type": "string",
+          "desc": "not used in the function body"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "prepareStartupExtensionsList": {
+      "desc": "If PlatformSwitches.useEditor is true, adds editor_main and editor_veMain to the startup extension list; recomputes the list of manual-unload extensions. Called by init().",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "loadManualUnloadExtensions": {
+      "desc": "Loads all extensions in unloadMode 'manual'.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "unloadAutoExtensions": {
+      "desc": "Unloads all extensions except those in 'manual' mode (extensions.unloadExcept). Call when changing game mode/level.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "loadPresetExtensions": {
+      "desc": "Loads the presetExtensions list (+ those requested on the command line via queueCmdlineLevelLoadExtension), then empties this command-line list (single use).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setExtensionUnloadMode": {
+      "desc": "Defines whether an extension survives level changes ('manual') or can be unloaded automatically ('auto', default). Logs an error if the extension or the mode is unknown.",
+      "params": {
+        "extension": {
+          "type": "table|string",
+          "desc": "module M (its __extensionName__ is read) or extension name"
+        },
+        "unloadMode": {
+          "type": "string",
+          "desc": "'manual' or 'auto'"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "endActiveGameMode": {
+      "desc": "Disconnects from the local server (serverConnection.disconnect, asynchronous state machine) then, in the callback, unloads all non-manual extensions and calls callback.",
+      "params": {
+        "callback": {
+          "type": "function|nil",
+          "desc": "called once the mode has finished"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "queueCmdlineLevelLoadExtension": {
+      "desc": "Adds an extension to load at the next loadPresetExtensions (used for extensions requested on the command line).",
+      "params": {
+        "extension": {
+          "type": "string",
+          "desc": "extension name"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setMainMenuMusicKeepAlive": {
+      "desc": "Forces the main menu music to continue (true) or hands control back to the per-UI-route logic (false). Does nothing if the state does not change.",
+      "params": {
+        "active": {
+          "type": "boolean",
+          "desc": "true to keep the music"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setMainMenuMusicPauseRequest": {
+      "desc": "Registers or removes a menu music pause request identified by requestId, then refreshes the state.",
+      "params": {
+        "requestId": {
+          "type": "string",
+          "desc": "non-empty identifier"
+        },
+        "active": {
+          "type": "boolean",
+          "desc": "true to request the pause"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if requestId is invalid, otherwise true"
+        }
+      ],
+      "internal": false
+    },
+    "setMainMenuMusicRouteState": {
+      "desc": "Applies the music logic according to the UI route: requested pause > keepAlive > 'menu' route (resume) > level loaded (stop with 0.6 s fade) > 'menu.credits' route (ui_credits extension) > 'menu.uiSounds' route (pause) > resume.",
+      "params": {
+        "routeName": {
+          "type": "string|nil",
+          "desc": "name of the current UI route"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "refreshMainMenuMusicRouteState": {
+      "desc": "Reads the current route from ui_router.getCurrent() and calls setMainMenuMusicRouteState.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "clientPreStartMission": {
+      "desc": "Called by the engine before the level resources are loaded. Sets worldReadyState=0, records the action, emits onClientPreStartMission(levelPath) and the UI event 'PreStartMission'.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "level path"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "clientPostStartMission": {
+      "desc": "Called when the level and the vehicles are loaded (after clientPreStartMission). Sets the default 'freeroam' game state (core_gamestate) then emits onClientPostStartMission(levelPath).",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "level path"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "clientStartMission": {
+      "desc": "Called when the level objects are loaded (after clientPostStartMission). Stops the menu music (except keepAlive), emits onClientStartMission(levelPath) via hookNotify, then map.assureLoad() and empties the Sim cache.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "level path"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "clientEndMission": {
+      "desc": "Called at the end/unloading of the level. Emits onClientPreEndMission, stops the physics simulation (be:physicsStopSimulation), removes the time pause, then emits onClientEndMission(levelPath).",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "level path"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "returnToMainMenu": {
+      "desc": "Leaves the active game mode (endActiveGameMode) and requests the default game state (main menu). The callback is called when the level is unloaded and a new one can be loaded.",
+      "params": {
+        "callback": {
+          "type": "function|nil",
+          "desc": "called once the level is unloaded"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "runMimalloc_test": {
+      "desc": "Debug: calls Engine.Debug.mimalloc_test().",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "editorEnabled": {
+      "desc": "Called by the engine when the editor is enabled/disabled (and on the first frame). Emits onEditorEnabled(enabled) and informs map via map.setEditorState.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "editor state"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "requestGeluaProfile": {
+      "desc": "Called by the C++ when a performance log is wanted: creates a LuaProfiler for the next frame (update + luaPreRender), enabled in the extensions.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "luaPreRender": {
+      "desc": "Called every frame by the engine, just before rendering and after the physics. Order: map.updateGFX, onPreRender(dtReal, dtSim, dtRaw) hook, onDrawDebug(Lua.lastDebugFocusPos, dtReal, dtSim, dtRaw) hook, then, if worldReadyState==1, waits for the player vehicle's materials to be ready (max 5 s) to dismiss the loading screen, set worldReadyState to 2 and emit onWorldReadyState(2).",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "real time delta (s)"
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "simulation time delta (s)"
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "raw time delta (s)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "checkFSErrors": {
+      "desc": "Once per session: reads Engine.Platform.getFSInfo(); if an error is reported, displays an error toast in the UI and logs an installation corruption message.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "updateFirstFrame": {
+      "desc": "Called by the engine on the first frame. Emits onFirstUpdate, settings.finalizeInit(), synchronizes the editor state, processes the first-frame command-line arguments (-flowgraph, -compilemeshes, -convertCSMaterials, -deps, -disableDynamicCollision, -enablemcp, etc.) and calls uiReady() directly with -noui or in headless mode.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "update": {
+      "desc": "Called every frame by the engine, after the inputs and before the physics. See notes: settingsTick, core_input_bindings.updateGFX, simTimeAuthority.update, onUpdate(dtReal, dtSim, dtRaw) hook, handling of unstable vehicles, and if the UI must be refreshed onGuiUpdate hook + sending of the guihooks streams.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "real time delta (s)"
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "simulation time delta (s)"
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "raw time delta (s)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "uiReady": {
+      "desc": "Called when the UI is ready. Emits onUiReady and marks the UI as ready for the finalization of a Lua reload.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "isLuaReady": {
+      "desc": "Lets the UI know whether init() has finished.",
+      "params": {},
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true once init() has run to completion"
+        }
+      ],
+      "internal": false
+    },
+    "init": {
+      "desc": "Initializes the GE VM at startup and on reload (Ctrl+L): initSettings, reserves _tr, enables detectGlobalWrites, loads the startup extensions (+ util_materialHotReload on Windows), opens the online session, importPersistentData, requests the UI state (guihooks 'isUIReady'), calls core_modmanager.onUiReady(), map.assureLoad(), creates the mods and trackEditor folders, then luaReady=true.",
+      "params": {
+        "reason": {
+          "type": "string",
+          "desc": "'startup' or 'reload'; copied into the global luaVmStartReason"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onBeamNGWaypoint": {
+      "desc": "Called by the engine when a vehicle crosses a BeamNG waypoint (scene object). Calls map.onWaypoint then emits onBeamNGWaypoint(args).",
+      "params": {
+        "args": {
+          "type": "table",
+          "desc": "waypoint data (structure provided by the C++)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onBeamNGTrigger": {
+      "desc": "Default callback function name of the BeamNGTrigger on the C++ side; emits the onBeamNGTrigger(data) hook.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "trigger data (structure provided by the C++)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onFileChanged": {
+      "desc": "Called by the engine when watched files change. Calls settings.onFilesChanged and map.onFilesChanged, emits onFilesChanged(files), then for each file onFileChanged(filename, type), finally onFileChangedEnd.",
+      "params": {
+        "files": {
+          "type": "table",
+          "desc": "list of entries {filename, type}"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "physicsEngineEvent": {
+      "desc": "Relays a physics engine event: onPhysicsEngineEvent hook. Only the first argument is passed on (see notes).",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "event arguments"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "vehicleSpawned": {
+      "desc": "Called by the engine when a vehicle appears. Invalidates the vehicle caches, sets the vehicle's gravity (core_environment.getGravity), then emits onPreVehicleSpawned(vid, veh) then onVehicleSpawned(vid, veh). Does nothing if the object does not exist.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "vehicle object id"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "vehicleSwitched": {
+      "desc": "Called when the player switches vehicle. Emits onVehicleSwitched(oldId, newId, player) (id -1 if absent) and the UI event 'VehicleFocusChanged'.",
+      "params": {
+        "oldVehicle": {
+          "type": "table|nil",
+          "desc": "old vehicle object"
+        },
+        "newVehicle": {
+          "type": "table|nil",
+          "desc": "new vehicle object"
+        },
+        "player": {
+          "type": "integer",
+          "desc": "player index"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onSetClusterPosRelRot": {
+      "desc": "Asynchronous callback when a vehicle's node cluster is teleported; emits onSetClusterPosRelRot(vehicleID, cNodeId).",
+      "params": {
+        "vehicleID": {
+          "type": "integer",
+          "desc": "vehicle id"
+        },
+        "cNodeId": {
+          "type": "integer",
+          "desc": "cluster node id"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "vehicleReset": {
+      "desc": "Asynchronous callback after a vehicle reset; emits onVehicleResetted(vehicleID).",
+      "params": {
+        "vehicleID": {
+          "type": "integer",
+          "desc": "vehicle id"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "vehicleActiveChanged": {
+      "desc": "Called when a vehicle is activated/deactivated (e.g. traffic pooling). Unrelated to the player's vehicle switch. Emits onVehicleActiveChanged.",
+      "params": {
+        "vehicleID": {
+          "type": "integer",
+          "desc": "vehicle id"
+        },
+        "active": {
+          "type": "boolean",
+          "desc": "new state"
+        },
+        "setActiveCount": {
+          "type": "any",
+          "desc": "passed as is (inferred from code)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onMouseLocked": {
+      "desc": "Called when the cursor is locked/unlocked; emits onMouseLocked(locked).",
+      "params": {
+        "locked": {
+          "type": "boolean",
+          "desc": "lock state"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "vehicleDestroyed": {
+      "desc": "Called when a vehicle is deleted: forgets its instability timers, emits onVehicleDestroyed(vid), invalidates the vehicle caches.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "vehicle id"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerAttached": {
+      "desc": "A coupler attached; emits onCouplerAttached.",
+      "params": {
+        "objId1": {
+          "type": "integer",
+          "desc": "vehicle 1"
+        },
+        "objId2": {
+          "type": "integer",
+          "desc": "vehicle 2"
+        },
+        "nodeId": {
+          "type": "integer",
+          "desc": "coupler node of vehicle 1"
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "coupler node of vehicle 2"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerDetached": {
+      "desc": "A coupler detached; emits onCouplerDetached.",
+      "params": {
+        "objId1": {
+          "type": "integer",
+          "desc": "vehicle 1"
+        },
+        "objId2": {
+          "type": "integer",
+          "desc": "vehicle 2"
+        },
+        "nodeId": {
+          "type": "integer",
+          "desc": "node of vehicle 1"
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "node of vehicle 2"
+        },
+        "breakForce": {
+          "type": "number",
+          "desc": "breaking force (inferred from the name)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerDetach": {
+      "desc": "Triggered when the user deliberately detaches a trailer's coupler; emits onCouplerDetach(objId, nodeId).",
+      "params": {
+        "objId": {
+          "type": "integer",
+          "desc": "vehicle id"
+        },
+        "nodeId": {
+          "type": "integer",
+          "desc": "coupler node"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onAiModeChange": {
+      "desc": "A vehicle's AI mode has changed; emits onAiModeChange.",
+      "params": {
+        "vehicleID": {
+          "type": "integer",
+          "desc": "vehicle id"
+        },
+        "newAiMode": {
+          "type": "string",
+          "desc": "new AI mode (inferred from the name)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onAiRouteDone": {
+      "desc": "The AI has finished its route; emits onAiRouteDone(vehicleID).",
+      "params": {
+        "vehicleID": {
+          "type": "integer",
+          "desc": "vehicle id"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "replayStateChanged": {
+      "desc": "Forwards to core_replay.stateChanged(...).",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "engine arguments"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "openXRStateChanged": {
+      "desc": "Forwards to render_openxr.stateChanged if this module exists.",
+      "params": {
+        "state": {
+          "type": "any",
+          "desc": "OpenXR state"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "openXRErrorDetected": {
+      "desc": "Forwards to render_openxr.errorDetected if this module exists.",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "error details"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "replaySpawnVehicle": {
+      "desc": "Called by the replay engine to recreate a vehicle at (0,0,0); the player is installed in it only if they do not have a vehicle yet. If there is only one enterable vehicle, switches to the game camera.",
+      "params": {
+        "jbeamFilename": {
+          "type": "string",
+          "desc": "vehicle"
+        },
+        "partConfigData": {
+          "type": "table",
+          "desc": "parts configuration"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "created vehicle object"
+        }
+      ],
+      "internal": true
+    },
+    "replayStartLevel": {
+      "desc": "Called by the replay: core_replay.startLevel(levelPath).",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "level to load"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "CEFTypingLostFocus": {
+      "desc": "Called by the C++ when the CEF input field loses focus; relays the UI event 'CEFTypingLostFocus'.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "exportPersistentData": {
+      "desc": "Before a Lua reload: serializes the extensions' packages (serializePackages), levelLoaded and the music source id into be.persistenceLuaData.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "importPersistentData": {
+      "desc": "Inverse of exportPersistentData, called at the end of init(). On a deserialization error, logs and writes persistentDataError.txt.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "physicsStateChanged": {
+      "desc": "The physics simulation is paused/resumed. Relays the UI event 'physicsStateChanged' then emits onPhysicsUnpaused (val true) or onPhysicsPaused.",
+      "params": {
+        "val": {
+          "type": "boolean",
+          "desc": "true if the physics is running"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateTranslations": {
+      "desc": "Unmounts mods/translations.zip if mounted, downloads locales_v2.zip via core_repository.installMod, then reloads the settings.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "enableCommunityTranslations": {
+      "desc": "Enables the communityTranslations setting then launches updateTranslations().",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onScreenKeyboardClosed": {
+      "desc": "The virtual keyboard is closed; emits onScreenKeyboardClosed(applied, text).",
+      "params": {
+        "applied": {
+          "type": "boolean",
+          "desc": "input confirmed"
+        },
+        "text": {
+          "type": "string",
+          "desc": "text entered"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onInstabilityDetected": {
+      "desc": "Called by the physics engine when a vehicle is unstable: logs the nearby vehicles (< 1 m), displays a UI message, emits onInstabilityDetected(vid, returnData), then, if not handled, puts the vehicle in ghost mode and teleports it in place; a 2nd instability within the second deletes the vehicle.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "id of the unstable vehicle"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onSpawnError": {
+      "desc": "Vehicle creation error: logs and displays an error toast in the UI.",
+      "params": {
+        "status": {
+          "type": "any",
+          "desc": "error code"
+        },
+        "jbeamFilename": {
+          "type": "string",
+          "desc": "vehicle concerned"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "resetGameplay": {
+      "desc": "Emits onResetGameplay(playerID).",
+      "params": {
+        "playerID": {
+          "type": "integer",
+          "desc": "player concerned"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "sendUIModules": {
+      "desc": "Sends to the UI ('onUIBootstrap' event) the list of the folders in /ui/modModules/; empty list on error.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "loadDirRec": {
+      "desc": "Recursively loads the materials of a folder: first *materials.cs (TorqueScript), then *materials.json, then *datablocks.json.",
+      "params": {
+        "dir": {
+          "type": "string",
+          "desc": "folder to walk"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "onPreStart": {
+      "desc": "Entry point called by the engine before onGameEngineStartup; empty body.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onPreWindowClose": {
+      "desc": "Called before the window closes; emits onPreWindowClose.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onPreExit": {
+      "desc": "Called before the game exits; emits onPreExit (profiled).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExit": {
+      "desc": "Called directly by the C++ on exit: emits onExit, disconnects the server, destroys PhysicsPlugin, posts the 'onExit' event of the MainEventManager, then settings.exit().",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onGameEngineStartup": {
+      "desc": "Called once by the engine at VM startup: creates the settings/ and screenshots/ folders, the 'MainEventManager' EventManager, parses the command line, initializes the core and the client (client/core, client/init), PhysicsPlugin, then loads the $levelToLoad level if any via core_loadMapCmd (deferred until the mod manager is ready).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onLuaReloaded": {
+      "desc": "Called after a Lua reload (Ctrl+L): client/core reloadCore, client/init reloadClient, measures the duration and arms the reload-completion tracking.",
+      "params": {
+        "reloadStartTime": {
+          "type": "number",
+          "desc": "os.clockhp() at the start of the reload (s)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onLuaReloadModManagerCompleted": {
+      "desc": "Signals that the mod manager has finished after a Lua reload.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onLuaReloadCompleted": {
+      "desc": "Logs the total reload duration and clears luaReloadStartTime. Called by tryCompleteLuaReload when jobs, settings, UI, mod manager (and MCP) are ready.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onTexDrawPrimCompressDone": {
+      "desc": "A drawn texture is compressed; emits onTexDrawPrimCompressDone(textureName).",
+      "params": {
+        "textureName": {
+          "type": "string",
+          "desc": "texture name"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateLoadingProgress": {
+      "desc": "Updates the UI loading bar ('UpdateProgress' event) and forces a Canvas repaint while a level is loading; stores $lastProgress and $$lastProgressTxt.",
+      "params": {
+        "val": {
+          "type": "number",
+          "desc": "progress between 0 and 1"
+        },
+        "txt": {
+          "type": "string",
+          "desc": "displayed text"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "updateTSShapeLoadProgressDynamic": {
+      "desc": "Uses updateTSShapeLoadProgress if defined (editor loaded), otherwise updateLoadingProgress.",
+      "params": {
+        "progress": {
+          "type": "number",
+          "desc": "progress"
+        },
+        "msg": {
+          "type": "string",
+          "desc": "text"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "loadGameModeModules": {
+      "desc": "OBSOLETE: unloadAutoExtensions() + loadPresetExtensions() + extensions.load(...) with error logging.",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "extensions to load in addition"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "registerCoreModule": {
+      "desc": "OBSOLETE: equivalent to setExtensionUnloadMode(name, 'manual').",
+      "params": {
+        "extensionName": {
+          "type": "string",
+          "desc": "Lua path or extension name"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "test_prefabv2": {
+      "desc": "Dev test: builds SimGroup and TSStatic objects in MissionGroup then deletes thePlayer, spawn_default, ParticleEmitter.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "load_test_prefabv1": {
+      "desc": "Dev test: spawns the prefab /levels/smallgrid/test_v1.prefab.json.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "load_test_prefabv2": {
+      "desc": "Dev test: loads /levels/smallgrid/test_v2.prefab.json as PrefabV2 'test_v2'.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "test_spawn_prefabv2": {
+      "desc": "Dev test: instantiates 'test_v2' at (6,3,2), scale 1.5, 45° rotation around Z.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "test_spawn_prefabv2_massive": {
+      "desc": "Dev test: instantiates count random copies of 'test_v2' in MissionGroup.",
+      "params": {
+        "count": {
+          "type": "integer|nil",
+          "desc": "number of instances (1000 by default)"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "test_unload_prefabv2": {
+      "desc": "Dev test: deletes the object 'test_v2'.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "load_spawn_prefabv2_indirect": {
+      "desc": "Dev test: spawnPrefab of test_v2.prefab.json via spawnPrefab.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
   }
 }

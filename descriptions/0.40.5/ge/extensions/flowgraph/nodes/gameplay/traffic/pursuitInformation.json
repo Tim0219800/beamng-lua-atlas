@@ -1,45 +1,45 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.lua",
-  "module": "Nœud flowgraph « Pursuit Information » (repeat_instant). Donne l'état de la poursuite policière d'un véhicule (vehId, sinon joueur) via gameplay_police.getPursuitData : active, arrest/evade (impulsions), mode (0 off, 1-3 poursuite, -1 arrêté), score, sightValue, arrestValue, evadeValue, timeElapsed, roadblocks, collisions, policeWrecks, offenses, uniqueOffenses, offensesList.",
+  "module": "Flowgraph node \"Pursuit Information\" (repeat_instant). Gives the police pursuit state of a vehicle (vehId, otherwise the player) via gameplay_police.getPursuitData: active, arrest/evade (pulses), mode (0 off, 1-3 pursuit, -1 arrested), score, sightValue, arrestValue, evadeValue, timeElapsed, roadblocks, collisions, policeWrecks, offenses, uniqueOffenses, offensesList.",
   "notes": [
-    "Les valeurs sont gardées une frame de plus après un arrest/evade (flags) avant d'être rafraîchies."
+    "The values are kept one more frame after an arrest/evade (flags) before being refreshed."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStopped": {
-          "desc": "Appelle reset().",
+          "desc": "Calls reset().",
           "internal": true
         },
         "init": {
-          "desc": "Appelle reset().",
+          "desc": "Calls reset().",
           "internal": true
         },
         "onPursuitAction": {
-          "desc": "Hook appelé par le système de police ; mémorise 'arrest' ou 'evade' si id correspond au véhicule suivi.",
+          "desc": "Hook called by the police system; remembers 'arrest' or 'evade' if id matches the tracked vehicle.",
           "internal": false,
           "params": {
             "id": {
               "type": "any",
-              "desc": "id du véhicule concerné"
+              "desc": "id of the vehicle concerned"
             },
             "action": {
               "type": "any",
-              "desc": "action de poursuite ('arrest' ou 'evade')"
+              "desc": "pursuit action ('arrest' or 'evade')"
             },
             "data": {
               "type": "table",
-              "desc": "données associées à l'action"
+              "desc": "data associated with the action"
             }
           }
         },
         "reset": {
-          "desc": "Remet à zéro le véhicule, les sorties flow et les flags.",
+          "desc": "Resets the vehicle, the flow outputs and the flags.",
           "internal": false
         },
         "work": {
-          "desc": "Lit les données de poursuite et met à jour les sorties ; émet arrest/evade une frame.",
+          "desc": "Reads the pursuit data and updates the outputs; emits arrest/evade for one frame.",
           "internal": true
         }
       }

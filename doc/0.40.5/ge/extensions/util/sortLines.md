@@ -1,48 +1,48 @@
 # `util_sortLines`
 
-*Fichier : `lua/ge/extensions/util/sortLines.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/sortLines.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_sortLines` : `extensions.load("util_sortLines")`, puis la globale `util_sortLines`
+**Access:** extension `util_sortLines`: `extensions.load("util_sortLines")`, then the global `util_sortLines`
 
-Outil de développement qui trie, par champ « name », les fichiers JSON de sons d'un niveau. Ces fichiers contiennent un objet JSON par ligne (format « JSON lines ») dans /levels/<niveau>/main/MissionGroup/Audio/. handleLevel parcourt les *.json de ce dossier et handleFile réécrit chaque fichier avec ses lignes triées par nom. Il modifie les fichiers sur place.
+Development tool that sorts, by "name" field, the sound JSON files of a level. These files contain one JSON object per line ("JSON lines" format) in /levels/<level>/main/MissionGroup/Audio/. handleLevel walks the *.json files of this folder and handleFile rewrites each file with its lines sorted by name. It modifies files in place.
 
-## Exemple
+## Example
 
 ```lua
 util_sortLines.handleLevel('west_coast_usa')
 ```
 
-## Remarques
+## Notes
 
-- Écrase le fichier d'origine (io.open(path, 'w')) sans sauvegarde ; à utiliser sur une copie de travail.
-- Les lignes vides sont supprimées à la réécriture. Chaque ligne est décodée avec jsonDecode ; les lignes sans champ name sont triées avec le nom vide (en premier).
-- Probable bug : le motif gmatch('([^\n]*)\n?') produit une dernière chaîne vide quand le fichier se termine par un saut de ligne ; jsonDecode('') ne renvoie pas une table, et obj.name provoquerait alors une erreur Lua (indexation de nil).
-- table.sort n'est pas stable : l'ordre relatif des lignes de même name n'est pas garanti.
+- Overwrites the original file (io.open(path, 'w')) with no backup; use it on a working copy.
+- Empty lines are removed on rewrite. Each line is decoded with jsonDecode; lines without a name field are sorted with the empty name (first).
+- Probable bug: the gmatch('([^\n]*)\n?') pattern produces a last empty string when the file ends with a line break; jsonDecode('') does not return a table, and obj.name would then cause a Lua error (indexing nil).
+- table.sort is not stable: the relative order of lines with the same name is not guaranteed.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_sortLines.handleFile(path)` | Lit un fichier JSON lines, trie les lignes selon leur champ name (ordre croissant) et réécrit le fichier. | 11 |
-| `util_sortLines.handleLevel(level)` | Trie tous les fichiers *.json (non récursif) du dossier /levels/<level>/main/MissionGroup/Audio/. | 35 |
+| `util_sortLines.handleFile(path)` | Reads a JSON lines file, sorts the lines by their name field (ascending order) and rewrites the file. | 11 |
+| `util_sortLines.handleLevel(level)` | Sorts all the *.json files (non-recursive) of the /levels/<level>/main/MissionGroup/Audio/ folder. | 35 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_sortLines.handleFile(path)`
 
-Lit un fichier JSON lines, trie les lignes selon leur champ name (ordre croissant) et réécrit le fichier.
+Reads a JSON lines file, sorts the lines by their name field (ascending order) and rewrites the file.
 
-- `path` (*string*) : Chemin du fichier à trier.
+- `path` (*string*) : Path of the file to sort.
 
 #### `util_sortLines.handleLevel(level)`
 
-Trie tous les fichiers *.json (non récursif) du dossier /levels/<level>/main/MissionGroup/Audio/.
+Sorts all the *.json files (non-recursive) of the /levels/<level>/main/MissionGroup/Audio/ folder.
 
-- `level` (*string*) : Nom du dossier du niveau.
+- `level` (*string*) : Level folder name.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/sortLines.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/sortLines.lua`.*

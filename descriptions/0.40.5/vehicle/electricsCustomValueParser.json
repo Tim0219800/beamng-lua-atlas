@@ -1,21 +1,51 @@
 {
   "path": "lua/vehicle/electricsCustomValueParser.lua",
-  "module": "Compile et exécute les valeurs électriques personnalisées déclarées dans le jbeam (electrics.customValues : champs electricsName, electricsFunction, electricsDefault). Chaque expression est évaluée chaque frame dans un environnement bac à sable (fonctions math, round, clamp, smoothstep, case, pwm…, et une copie de `electrics`) puis le résultat est recopié dans electrics.values. Utilisé uniquement par electrics.lua.",
-  "usage": "-- jbeam (section electrics.customValues)\n-- [\"electricsName\", \"electricsFunction\", \"electricsDefault\"],\n-- [\"myBlink\", \"pwm(1, 2, 0.5)\", 0],\n-- [\"throttleHalf\", \"clamp(electrics.throttle * 0.5, 0, 1)\", 0]",
+  "module": "Compiles and runs the custom electrical values declared in the jbeam (electrics.customValues: fields electricsName, electricsFunction, electricsDefault). Each expression is evaluated every frame in a sandboxed environment (math functions, round, clamp, smoothstep, case, pwm..., and a copy of `electrics`) then the result is copied back into electrics.values. Used only by electrics.lua.",
+  "usage": "-- jbeam (electrics.customValues section)\n-- [\"electricsName\", \"electricsFunction\", \"electricsDefault\"],\n-- [\"myBlink\", \"pwm(1, 2, 0.5)\", 0],\n-- [\"throttleHalf\", \"clamp(electrics.throttle * 0.5, 0, 1)\", 0]",
   "notes": [
-    "Une expression est de la forme `electrics.<nom> = <expression>` : les affectations (signe = isolé) sont refusées dans l'expression elle-même.",
-    "Variables disponibles dans l'expression : electrics (copie des valeurs courantes), dt, fonctions de math.*, dump, dumpz, round, square, clamp, smoothstep, smootherstep, smoothmin, sign, case, pwm, logValue.",
-    "case(selector, ...) : avec un booléen, agit comme un ternaire (true -> 1er argument, false -> 2e) ; avec un nombre n, renvoie le (n)ème argument (indexé depuis 1 après floor, avec n=0 renvoyant le dernier faute d'index 0), ou le dernier argument si hors plage.",
-    "pwm(input, frequency, dutyCycle, timeOffset) : renvoie input quand une sinusoïde (fréquence en Hz) normalisée dépasse 1 - dutyCycle, sinon 0. Le temps pwm repart à 0 toutes les 3600 s.",
-    "logValue(value, label) affiche la valeur et la renvoie (aide au débogage).",
-    "Bug/anomalie : `pwm` est déclarée comme fonction globale (function pwm sans local), elle fuit dans l'environnement global du VM véhicule.",
-    "Si la compilation du bloc complet échoue, updateCustomElectricsFunction reste nil et M.updateGFX lèvera une erreur à chaque frame (non protégé).",
-    "L'expression 'electricsFunction' (valeur littérale en-tête de table jbeam mal fusionné) est ignorée volontairement."
+    "An expression has the form `electrics.<name> = <expression>`: assignments (isolated = sign) are refused inside the expression itself.",
+    "Variables available in the expression: electrics (copy of the current values), dt, math.* functions, dump, dumpz, round, square, clamp, smoothstep, smootherstep, smoothmin, sign, case, pwm, logValue.",
+    "case(selector, ...): with a boolean, acts as a ternary (true -> 1st argument, false -> 2nd); with a number n, returns the (n)th argument (1-based after floor, with n=0 returning the last one for lack of index 0), or the last argument if out of range.",
+    "pwm(input, frequency, dutyCycle, timeOffset): returns input when a normalized sine wave (frequency in Hz) exceeds 1 - dutyCycle, otherwise 0. The pwm time restarts at 0 every 3600 s.",
+    "logValue(value, label) prints the value and returns it (debugging aid).",
+    "Bug/anomaly: `pwm` is declared as a global function (function pwm without local), it leaks into the global environment of the vehicle VM.",
+    "If compilation of the whole block fails, updateCustomElectricsFunction stays nil and M.updateGFX will raise an error every frame (unprotected).",
+    "The 'electricsFunction' expression (literal value of a badly merged jbeam table header) is deliberately ignored."
   ],
   "fields": {},
   "functions": {
-    "compileCustomValueUpdates": {"desc": "Construit l'environnement bac à sable, analyse chaque valeur custom, initialise electrics.values avec electricsDefault et compile une fonction unique exécutant toutes les affectations.", "params": {"customValueData": {"type": "table<integer, table>", "desc": "Liste d'entrées {electricsName, electricsFunction?, electricsDefault?}."}}, "returns": [{"type": "nil", "desc": "Rien (nil aussi si la compilation échoue, erreur journalisée)."}], "internal": true},
-    "resetCustomValues": {"desc": "Remet dans electrics.values les valeurs electricsDefault de toutes les valeurs custom (appelé au reset).", "params": {}, "returns": [], "internal": true},
-    "updateGFX": {"desc": "Copie electrics.values dans l'environnement, exécute la fonction compilée puis recopie dans electrics.values les clés personnalisées. Appelé par electrics.updateGFXSecondStep.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true}
+    "compileCustomValueUpdates": {
+      "desc": "Builds the sandboxed environment, parses each custom value, initializes electrics.values with electricsDefault and compiles a single function running all the assignments.",
+      "params": {
+        "customValueData": {
+          "type": "table<integer, table>",
+          "desc": "List of entries {electricsName, electricsFunction?, electricsDefault?}."
+        }
+      },
+      "returns": [
+        {
+          "type": "nil",
+          "desc": "Nothing (nil also if compilation fails, error logged)."
+        }
+      ],
+      "internal": true
+    },
+    "resetCustomValues": {
+      "desc": "Puts back into electrics.values the electricsDefault values of all custom values (called at reset).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Copies electrics.values into the environment, runs the compiled function then copies the custom keys back into electrics.values. Called by electrics.updateGFXSecondStep.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

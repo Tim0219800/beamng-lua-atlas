@@ -1,32 +1,32 @@
 # `flowgraph_nodes_ui_buttons_simpleMultipleButtons`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/buttons/simpleMultipleButtons.lua` · VM : Game Engine (GE) · 174 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/buttons/simpleMultipleButtons.lua` · VM: Game Engine (GE) · 174 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/buttons/simpleMultipleButtons")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/buttons/simpleMultipleButtons")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Simple Multiple Buttons » (catégorie once_instant) : version multi-boutons de Simple Button. Pour chaque i : entrées « hideWhenDone_i », « label_i », « order_i », « style_i » ; sorties « clicked_i » (impulsion), « complete_i », « incomplete_i » (cachées), « buttonId_i ». Le nombre de boutons se règle dans les propriétés.
+Flowgraph node "Simple Multiple Buttons" (category once_instant): multi-button version of Simple Button. For each i: inputs "hideWhenDone_i", "label_i", "order_i", "style_i"; outputs "clicked_i" (pulse), "complete_i", "incomplete_i" (hidden), "buttonId_i". The number of buttons is set in the properties.
 
-## Remarques
+## Notes
 
-- Bug : workOnce lit self.pinIn.active (pin inexistant, erreur) pour chaque bouton.
-- Contrairement à Simple Button, les sorties s'appellent complete_i / incomplete_i (pas used/unused).
+- Bug: workOnce reads self.pinIn.active (nonexistent pin, error) for each button.
+- Unlike Simple Button, the outputs are named complete_i / incomplete_i (not used/unused).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Initialise hiddenAfterDone/hiddenAfterReset à false pour chaque bouton. | 34 |
-| `C:_onDeserialized(res)` | Restaure l'état du nœud depuis les données sauvegardées. | 168 |
-| `C:_onSerialize(res)` | Écrit l'état du nœud dans la table de sauvegarde. | 164 |
-| `C:drawCustomProperties()` | Dessine le panneau de propriétés personnalisé de l'éditeur ; renvoie une chaîne décrivant la modification (pour l'historique d'annulation) ou nil. | 43 |
-| `C:drawMiddle(builder, style)` | Zone centrale vide. | 30 |
+| `C:_executionStarted()` | Initializes hiddenAfterDone/hiddenAfterReset to false for each button. | 34 |
+| `C:_onDeserialized(res)` | Restores the node's state from the saved data. | 168 |
+| `C:_onSerialize(res)` | Writes the node's state to the save table. | 164 |
+| `C:drawCustomProperties()` | Draws the editor's custom properties panel; returns a string describing the change (for the undo history) or nil. | 43 |
+| `C:drawMiddle(builder, style)` | Empty central area. | 30 |
 | `C:init()` | count = 1. | 26 |
-| `C:onNodeReset()` | Désactive chaque bouton une fois et remet hiddenAfterDone à false. | 123 |
-| `C:updatePins(old, new)` | Ajuste le nombre de groupes de pins (4 entrées, 4 sorties par bouton). | 60 |
-| `C:work()` | Pour chaque bouton, met à jour clicked/complete/incomplete et le désactive si hideWhenDone et complété. | 146 |
-| `C:workOnce()` | Crée tous les boutons et écrit leurs id (voir notes : bug). | 135 |
+| `C:onNodeReset()` | Disables each button once and resets hiddenAfterDone to false. | 123 |
+| `C:updatePins(old, new)` | Adjusts the number of pin groups (4 inputs, 4 outputs per button). | 60 |
+| `C:work()` | For each button, updates clicked/complete/incomplete and disables it if hideWhenDone is set and it is completed. | 146 |
+| `C:workOnce()` | Creates all the buttons and writes their ids (see notes: bug). | 135 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/buttons/simpleMultipleButtons.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/buttons/simpleMultipleButtons.lua`.*

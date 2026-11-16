@@ -1,32 +1,32 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/fileTrafficSignals.lua",
-  "module": "Nœud flowgraph « File Traffic Signals » (once_p_duration, dépend de core_trafficSignals). Charge un fichier de feux de signalisation (core_trafficSignals.loadSignals(file)), ou celui du niveau si data.useDefaultFileFromLevel (défaut true) et pas de fichier. Active la simulation (setActive(true, true)) et sort signalsData. Erreur de nœud si le chargement échoue. À l'arrêt, recharge le fichier par défaut de la carte.",
+  "module": "Flowgraph node \"File Traffic Signals\" (once_p_duration, depends on core_trafficSignals). Loads a traffic signals file (core_trafficSignals.loadSignals(file)), or the level's own file if data.useDefaultFileFromLevel (default true) and no file is given. Activates the simulation (setActive(true, true)) and outputs signalsData. Node error if loading fails. On stop, reloads the map's default file.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStopped": {
-          "desc": "Vide la sortie et recharge le fichier de signaux par défaut de la carte.",
+          "desc": "Clears the output and reloads the map's default signals file.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "desc": "Draws the node's custom properties in the flowgraph editor panel (ImGui).",
           "internal": true
         },
         "init": {
-          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "desc": "Initializes the node's internal state at creation (called by the flowgraph engine).",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Vide la sortie signalsData.",
+          "desc": "Clears the signalsData output.",
           "internal": true
         },
         "postInit": {
-          "desc": "Appelé après la création des pins du nœud ; sert à ajuster les pins (modèles de valeurs, filtres de fichiers, clés dynamiques).",
+          "desc": "Called after the node's pins are created; used to adjust the pins (value templates, file filters, dynamic keys).",
           "internal": true
         },
         "work": {
-          "desc": "Au premier appel, charge les signaux, active la simulation et publie core_trafficSignals.getData() sur signalsData.",
+          "desc": "On the first call, loads the signals, activates the simulation and publishes core_trafficSignals.getData() on signalsData.",
           "internal": true
         }
       }

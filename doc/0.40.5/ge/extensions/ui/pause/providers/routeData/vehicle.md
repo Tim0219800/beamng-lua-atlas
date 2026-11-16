@@ -1,114 +1,114 @@
 # `ui_pause_providers_routeData_vehicle`
 
-*Fichier : `lua/ge/extensions/ui/pause/providers/routeData/vehicle.lua` · VM : Game Engine (GE) · 498 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/pause/providers/routeData/vehicle.lua` · VM: Game Engine (GE) · 498 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_pause_providers_routeData_vehicle` : `extensions.load("ui_pause_providers_routeData_vehicle")`, puis la globale `ui_pause_providers_routeData_vehicle`
+**Access:** extension `ui_pause_providers_routeData_vehicle`: `extensions.load("ui_pause_providers_routeData_vehicle")`, then the global `ui_pause_providers_routeData_vehicle`
 
-Fournit les données des routes « véhicule » du menu pause (pause.vehicle et sous-routes : configuration combinée, packs, réglages, peinture, sauvegarde, liste des configurations, véhicules apparus, debug). Chaque fonction renvoie une table décrivant les composants Vue à afficher (mainPanelContent, sidePanelContents, rail, mainCardClass, heading). getVehicleData calcule en plus les permissions de chaque action selon le mode de jeu, la première conduite et la présence d'un véhicule.
+Provides the data for the pause menu "vehicle" routes (pause.vehicle and sub-routes: combined configuration, packs, tuning, paint, save, configuration list, spawned vehicles, debug). Each function returns a table describing the Vue components to display (mainPanelContent, sidePanelContents, rail, mainCardClass, heading). getVehicleData also computes the permissions of each action based on the game mode, the first drive and the presence of a vehicle.
 
-## Remarques
+## Notes
 
-- Les éléments de panneau sont des tables {id, type = "component"|"title", componentName, props}.
-- Édition de véhicule autorisée seulement en freeroam, multiplayer, garage et freeroamTutorial ; la récupération (réparer, dernière route, remettre sur les roues) en freeroam, multiplayer et freeroamTutorial ; le sélecteur de véhicule en freeroam, multiplayer, garage et freeroamTutorial.
-- En multiseat actif, getVehicleData renvoie uniquement le composant PauseMultiseatVehiclesDigest, sans rail ni actions.
-- Sans véhicule joueur (getPlayerVehicle(0) nil), les actions configurationCombined et de récupération sont désactivées avec la raison ui.radialmenu2.noVehicle.
-- Pendant une session de première conduite (gameplay_discover_firstDrive_capabilities), les permissions sont ajustées via applyUiPermission (partsAndTuning, vehicleManagement, radialMenu, advancedSandbox).
-- Seuls les boutons configurationCombined, vehicleSelector et les trois boutons de récupération sont réellement construits dans le rail ; partpacks, tuning, colorSkin et seatAdjust sont commentés dans le code (mais restent dans la table actions).
-- Les boutons de récupération émettent onPauseMenuRightRailButtonPressed avec « repairHere », « recoverToRoad » ou « flipUpright ».
-- getVehicleSpawnedData ne renvoie qu'un contenu léger (shell) ; l'écran Vue demande ensuite les données complètes après le montage.
+- Panel items are tables {id, type = "component"|"title", componentName, props}.
+- Vehicle editing is allowed only in freeroam, multiplayer, garage and freeroamTutorial; recovery (repair, last road, flip upright) in freeroam, multiplayer and freeroamTutorial; the vehicle selector in freeroam, multiplayer, garage and freeroamTutorial.
+- When multiseat is active, getVehicleData returns only the PauseMultiseatVehiclesDigest component, with no rail or actions.
+- Without a player vehicle (getPlayerVehicle(0) is nil), the configurationCombined and recovery actions are disabled with the reason ui.radialmenu2.noVehicle.
+- During a first-drive session (gameplay_discover_firstDrive_capabilities), permissions are adjusted via applyUiPermission (partsAndTuning, vehicleManagement, radialMenu, advancedSandbox).
+- Only the configurationCombined and vehicleSelector buttons and the three recovery buttons are actually built in the rail; partpacks, tuning, colorSkin and seatAdjust are commented out in the code (but remain in the actions table).
+- The recovery buttons emit onPauseMenuRightRailButtonPressed with "repairHere", "recoverToRoad" or "flipUpright".
+- getVehicleSpawnedData returns only a light content (shell); the Vue screen then requests the full data after mounting.
 
-**Dépendances (chargées avant) :** `ui_pause_providers_vehicleTabInteractions`, `ui_vehicleSelector_general`
+**Dependencies (loaded first):** `ui_pause_providers_vehicleTabInteractions`, `ui_vehicleSelector_general`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_pause_providers_routeData_vehicle.getVehicleConfigListManageData()` | Données de la route de gestion de la liste des configurations : composant PauseVehicleConfigListManage. | 454 |
-| `ui_pause_providers_routeData_vehicle.getVehicleConfigurationCombinedData()` | Données de l'écran de configuration combinée (pièces, composant PauseVehicleConfigurationCombined), avec customConfigurationsEnabled selon les capacités de la première conduite. | 403 |
-| `ui_pause_providers_routeData_vehicle.getVehicleData(context)` | Données de la route principale « véhicule » : indicateur editable, rail (groupes vehicleButtons, vehicleSelectorButtons, vehicleRecoveryButtons), composant PauseVehicleSpawned, panneau latéral PauseVehicleTab et table actions avec visible, enabled et disabledReason pour chaque action. | 282 |
-| `ui_pause_providers_routeData_vehicle.getVehicleDebugData()` | Données de la route de debug du véhicule : composant PauseVehicleDebug. | 484 |
-| `ui_pause_providers_routeData_vehicle.getVehiclePacksData()` | Données de la route des packs de pièces : composant PauseVehiclePacks. | 391 |
-| `ui_pause_providers_routeData_vehicle.getVehiclePaintData()` | Données de la route de peinture : composant PauseVehicleSkin. | 432 |
-| `ui_pause_providers_routeData_vehicle.getVehicleSaveData()` | Données de la route de sauvegarde de configuration : titre « Enregistrer la configuration - <marque modèle> » du véhicule actuel. | 444 |
-| `ui_pause_providers_routeData_vehicle.getVehicleSaveRouteTitle()` | Renvoie le titre de la route de sauvegarde : le texte ui.pause.route.saveConfig, suivi de « - marque modèle » si le véhicule joueur est connu. | 450 |
-| `ui_pause_providers_routeData_vehicle.getVehicleSpawnedData(context)` | Données de la route des véhicules apparus : composant PauseVehicleSpawned et données allégées (shell) de ui_pause_providers_vehicleTabInteractions.getSpawnedVehiclesShellData. | 467 |
-| `ui_pause_providers_routeData_vehicle.getVehicleTuningData()` | Données de la route de réglages : composant PauseVehicleTuning. | 420 |
+| `ui_pause_providers_routeData_vehicle.getVehicleConfigListManageData()` | Data for the configuration list management route: PauseVehicleConfigListManage component. | 454 |
+| `ui_pause_providers_routeData_vehicle.getVehicleConfigurationCombinedData()` | Data for the combined configuration screen (parts, PauseVehicleConfigurationCombined component), with customConfigurationsEnabled depending on the first-drive capabilities. | 403 |
+| `ui_pause_providers_routeData_vehicle.getVehicleData(context)` | Data for the main "vehicle" route: editable flag, rail (groups vehicleButtons, vehicleSelectorButtons, vehicleRecoveryButtons), PauseVehicleSpawned component, PauseVehicleTab side panel and actions table with visible, enabled and disabledReason for each action. | 282 |
+| `ui_pause_providers_routeData_vehicle.getVehicleDebugData()` | Data for the vehicle debug route: PauseVehicleDebug component. | 484 |
+| `ui_pause_providers_routeData_vehicle.getVehiclePacksData()` | Data for the part packs route: PauseVehiclePacks component. | 391 |
+| `ui_pause_providers_routeData_vehicle.getVehiclePaintData()` | Data for the paint route: PauseVehicleSkin component. | 432 |
+| `ui_pause_providers_routeData_vehicle.getVehicleSaveData()` | Data for the configuration save route: title "Save configuration - <make model>" of the current vehicle. | 444 |
+| `ui_pause_providers_routeData_vehicle.getVehicleSaveRouteTitle()` | Returns the save route title: the text ui.pause.route.saveConfig, followed by "- make model" if the player vehicle is known. | 450 |
+| `ui_pause_providers_routeData_vehicle.getVehicleSpawnedData(context)` | Data for the spawned vehicles route: PauseVehicleSpawned component and lightweight data (shell) from ui_pause_providers_vehicleTabInteractions.getSpawnedVehiclesShellData. | 467 |
+| `ui_pause_providers_routeData_vehicle.getVehicleTuningData()` | Data for the tuning route: PauseVehicleTuning component. | 420 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_pause_providers_routeData_vehicle.getVehicleConfigListManageData()`
 
-Données de la route de gestion de la liste des configurations : composant PauseVehicleConfigListManage.
+Data for the configuration list management route: PauseVehicleConfigListManage component.
 
-- **renvoie** : table {mainCardClass, mainPanelContent}.
+- **returns**: table {mainCardClass, mainPanelContent}.
 
 #### `ui_pause_providers_routeData_vehicle.getVehicleConfigurationCombinedData()`
 
-Données de l'écran de configuration combinée (pièces, composant PauseVehicleConfigurationCombined), avec customConfigurationsEnabled selon les capacités de la première conduite.
+Data for the combined configuration screen (parts, PauseVehicleConfigurationCombined component), with customConfigurationsEnabled depending on the first-drive capabilities.
 
-- **renvoie** : table {heading, mainCardClass, mainPanelContent}.
+- **returns**: table {heading, mainCardClass, mainPanelContent}.
 
 #### `ui_pause_providers_routeData_vehicle.getVehicleData(context)`
 
-Données de la route principale « véhicule » : indicateur editable, rail (groupes vehicleButtons, vehicleSelectorButtons, vehicleRecoveryButtons), composant PauseVehicleSpawned, panneau latéral PauseVehicleTab et table actions avec visible, enabled et disabledReason pour chaque action.
+Data for the main "vehicle" route: editable flag, rail (groups vehicleButtons, vehicleSelectorButtons, vehicleRecoveryButtons), PauseVehicleSpawned component, PauseVehicleTab side panel and actions table with visible, enabled and disabledReason for each action.
 
-- `context` (*table*) : Contexte du pause : mode, isMultiseatActive, isFirstDriveActive.
-- **renvoie** : table {editable, rail, mainCardClass, mainPanelContent, spawnedVehicles, sidePanelContents, actions}.
+- `context` (*table*) : Pause context: mode, isMultiseatActive, isFirstDriveActive.
+- **returns**: table {editable, rail, mainCardClass, mainPanelContent, spawnedVehicles, sidePanelContents, actions}.
 
 #### `ui_pause_providers_routeData_vehicle.getVehicleDebugData()`
 
-Données de la route de debug du véhicule : composant PauseVehicleDebug.
+Data for the vehicle debug route: PauseVehicleDebug component.
 
-- **renvoie** : table {mainCardClass, mainPanelContent}.
+- **returns**: table {mainCardClass, mainPanelContent}.
 
 #### `ui_pause_providers_routeData_vehicle.getVehiclePacksData()`
 
-Données de la route des packs de pièces : composant PauseVehiclePacks.
+Data for the part packs route: PauseVehiclePacks component.
 
-- **renvoie** : table {mainPanelContent}.
+- **returns**: table {mainPanelContent}.
 
 #### `ui_pause_providers_routeData_vehicle.getVehiclePaintData()`
 
-Données de la route de peinture : composant PauseVehicleSkin.
+Data for the paint route: PauseVehicleSkin component.
 
-- **renvoie** : table {mainPanelContent}.
+- **returns**: table {mainPanelContent}.
 
 #### `ui_pause_providers_routeData_vehicle.getVehicleSaveData()`
 
-Données de la route de sauvegarde de configuration : titre « Enregistrer la configuration - <marque modèle> » du véhicule actuel.
+Data for the configuration save route: title "Save configuration - <make model>" of the current vehicle.
 
-- **renvoie** : table {heading}.
+- **returns**: table {heading}.
 
 #### `ui_pause_providers_routeData_vehicle.getVehicleSaveRouteTitle()`
 
-Renvoie le titre de la route de sauvegarde : le texte ui.pause.route.saveConfig, suivi de « - marque modèle » si le véhicule joueur est connu.
+Returns the save route title: the text ui.pause.route.saveConfig, followed by "- make model" if the player vehicle is known.
 
-- **renvoie** : string Titre.
+- **returns**: string Title.
 
 #### `ui_pause_providers_routeData_vehicle.getVehicleSpawnedData(context)`
 
-Données de la route des véhicules apparus : composant PauseVehicleSpawned et données allégées (shell) de ui_pause_providers_vehicleTabInteractions.getSpawnedVehiclesShellData.
+Data for the spawned vehicles route: PauseVehicleSpawned component and lightweight data (shell) from ui_pause_providers_vehicleTabInteractions.getSpawnedVehiclesShellData.
 
-- `context` (*table*) : Contexte du pause.
-- **renvoie** : table {mainCardClass, mainPanelContent, spawnedVehicles}.
+- `context` (*table*) : Pause context.
+- **returns**: table {mainCardClass, mainPanelContent, spawnedVehicles}.
 
 #### `ui_pause_providers_routeData_vehicle.getVehicleTuningData()`
 
-Données de la route de réglages : composant PauseVehicleTuning.
+Data for the tuning route: PauseVehicleTuning component.
 
-- **renvoie** : table {mainPanelContent}.
+- **returns**: table {mainPanelContent}.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : ui_pause_providers_vehicleTabInteractions, ui_vehicleSelector_general. |
+| `dependencies` | table<integer, string> | Extensions loaded beforehand: ui_pause_providers_vehicleTabInteractions, ui_vehicleSelector_general. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onPauseMenuRightRailButtonPressed`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/pause/providers/routeData/vehicle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/pause/providers/routeData/vehicle.lua`.*

@@ -1,12 +1,12 @@
 # `editor_toolUtilities_splineLock`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/splineLock.lua` · VM : Game Engine (GE) · 150 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/splineLock.lua` · VM: Game Engine (GE) · 150 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_splineLock` : `extensions.load("editor_toolUtilities_splineLock")`, puis la globale `editor_toolUtilities_splineLock`
+**Access:** extension `editor_toolUtilities_splineLock`: `extensions.load("editor_toolUtilities_splineLock")`, then the global `editor_toolUtilities_splineLock`
 
-État de verrouillage partagé par les outils de splines personnalisés de l'éditeur. Une spline verrouillée (isEnabled == false) reste dans son outil, mais les objets générés appartiennent au niveau : ils sont sauvegardés (canSave = true) et collisionnent. Une spline déverrouillée produit des objets d'aperçu transitoires (canSave = false, sans collision). Chaque outil appelle sync() depuis sa reconstruction, et fournit un itérateur `each(fn)` qui appelle fn(obj, collides, isParked) pour chaque objet qu'il possède. Tant que c'est verrouillé, l'outil ne déplace ni ne refait les objets existants : les retouches manuelles restent.
+Lock state shared by the editor's custom spline tools. A locked spline (isEnabled == false) stays in its tool, but the generated objects belong to the level: they are saved (canSave = true) and collide. An unlocked spline produces transient preview objects (canSave = false, no collision). Each tool calls sync() from its rebuild, and provides an iterator `each(fn)` that calls fn(obj, collides, isParked) for each object it owns. While locked, the tool neither moves nor redoes the existing objects: manual touch-ups are kept.
 
-## Exemple
+## Example
 
 ```lua
 local lock = require('editor/toolUtilities/splineLock')
@@ -15,85 +15,85 @@ local function each(fn) for _, o in ipairs(myObjs) do fn(o, true, false) end end
 lock.sync(applied, spline, 'myTool', each)
 ```
 
-## Remarques
+## Notes
 
-- `each` reçoit fn(obj, collides, isParked) ; isParked = objet possédé mais hors résultat (caché pour réutilisation), laissé tel quel.
-- capture/restore ignorent les DecalRoad, MeshRoad et River (posés par leurs nœuds, pas par une transformation).
-- Tous les objets taggués avec les champs dynamiques sourceTool, sourceSplineId et sourceSplineName.
-- sync ne fait rien si l'état de verrouillage n'a pas changé depuis le dernier appliqué ; une spline neuve non verrouillée est considérée déjà en état « live ».
+- `each` receives fn(obj, collides, isParked); isParked = object owned but outside the result (hidden for reuse), left as is.
+- capture/restore ignore DecalRoad, MeshRoad and River (placed by their nodes, not by a transform).
+- All objects tagged with the dynamic fields sourceTool, sourceSplineId and sourceSplineName.
+- sync does nothing if the lock state has not changed since the last applied one; a new unlocked spline is considered already in the "live" state.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_splineLock.applyObject(obj, isLocked, collides)` | Met un objet généré dans l'état de verrouillage : canSave = isLocked, et collisionType = 'Collision Mesh' si verrouillé et `collides`, sinon 'None'. | 38 |
-| `editor_toolUtilities_splineLock.capture(each)` | Enregistre l'état éditable à la main des objets d'une spline (transformation, échelle, forme pour les TSStatic, dossier), indexé par id d'objet. À prendre avant un déverrouillage qui les réinitialise, pour pouvoir annuler. | 100 |
-| `editor_toolUtilities_splineLock.dropDeleted(list)` | Retire d'une liste les références à des objets qui n'existent plus (par ex. supprimés à la main dans l'arbre de scène). Compacte la liste en place. | 18 |
-| `editor_toolUtilities_splineLock.hasAny(each)` | Vrai si l'outil possède encore au moins un objet vivant (non parqué) pour la spline. | 46 |
-| `editor_toolUtilities_splineLock.restore(rec, each)` | Remet une capture en place après le re-verrouillage qui annule un déverrouillage : forme (shapeName + postApply), transformation, échelle, dossier. Les objets créés entre-temps et absents de la capture sont supprimés. Appelle be:reloadCollision(). | 118 |
-| `editor_toolUtilities_splineLock.sync(applied, spline, toolName, each)` | Aligne les objets générés d'une spline sur son état de verrouillage. N'agit que si l'état diffère du dernier appliqué (table `applied` id -> isLocked). Met à jour le dossier de scène (canSave, tag), les objets (applyObject, tag, remise dans le dossier si déplacé à la main). Au déverrouillage, supprime les objets du dossier portant le tag de la spline mais non possédés par l'outil. Appelle be:reloadCollision(). | 62 |
-| `editor_toolUtilities_splineLock.tag(obj, toolName, spline)` | Marque un objet généré avec la spline d'origine (champs dynamiques sourceTool, sourceSplineId, sourceSplineName) pour le retrouver dans l'arbre de scène ou l'inspecteur. | 31 |
+| `editor_toolUtilities_splineLock.applyObject(obj, isLocked, collides)` | Puts a generated object in the lock state: canSave = isLocked, and collisionType = 'Collision Mesh' if locked and `collides`, otherwise 'None'. | 38 |
+| `editor_toolUtilities_splineLock.capture(each)` | Records the hand-editable state of a spline's objects (transform, scale, shape for TSStatic, folder), keyed by object id. To be taken before an unlock that resets them, so it can be undone. | 100 |
+| `editor_toolUtilities_splineLock.dropDeleted(list)` | Removes from a list the references to objects that no longer exist (e.g. deleted by hand in the scene tree). Compacts the list in place. | 18 |
+| `editor_toolUtilities_splineLock.hasAny(each)` | True if the tool still owns at least one live (non-parked) object for the spline. | 46 |
+| `editor_toolUtilities_splineLock.restore(rec, each)` | Puts a capture back in place after the re-lock that undoes an unlock: shape (shapeName + postApply), transform, scale, folder. Objects created in the meantime and absent from the capture are deleted. Calls be:reloadCollision(). | 118 |
+| `editor_toolUtilities_splineLock.sync(applied, spline, toolName, each)` | Aligns the generated objects of a spline with its lock state. Only acts if the state differs from the last applied one (`applied` table id -> isLocked). Updates the scene folder (canSave, tag), the objects (applyObject, tag, put back in the folder if moved by hand). On unlock, deletes the objects in the folder carrying the spline's tag but not owned by the tool. Calls be:reloadCollision(). | 62 |
+| `editor_toolUtilities_splineLock.tag(obj, toolName, spline)` | Marks a generated object with the source spline (dynamic fields sourceTool, sourceSplineId, sourceSplineName) to find it in the scene tree or the inspector. | 31 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_splineLock.applyObject(obj, isLocked, collides)`
 
-Met un objet généré dans l'état de verrouillage : canSave = isLocked, et collisionType = 'Collision Mesh' si verrouillé et `collides`, sinon 'None'.
+Puts a generated object in the lock state: canSave = isLocked, and collisionType = 'Collision Mesh' if locked and `collides`, otherwise 'None'.
 
-- `obj` (*userdata*) : Objet de scène.
-- `isLocked` (*boolean*) : Spline verrouillée.
-- `collides` (*boolean|nil*) : Collision une fois verrouillé ; nil laisse la collision inchangée.
+- `obj` (*userdata*) : Scene object.
+- `isLocked` (*boolean*) : Spline locked.
+- `collides` (*boolean|nil*) : Collision once locked; nil leaves the collision unchanged.
 
 #### `editor_toolUtilities_splineLock.capture(each)`
 
-Enregistre l'état éditable à la main des objets d'une spline (transformation, échelle, forme pour les TSStatic, dossier), indexé par id d'objet. À prendre avant un déverrouillage qui les réinitialise, pour pouvoir annuler.
+Records the hand-editable state of a spline's objects (transform, scale, shape for TSStatic, folder), keyed by object id. To be taken before an unlock that resets them, so it can be undone.
 
-- `each` (*function*) : Itérateur de l'outil.
-- **renvoie** : table id -> { xf, scale, shape, groupId }.
+- `each` (*function*) : Tool iterator.
+- **returns**: table id -> { xf, scale, shape, groupId }.
 
 #### `editor_toolUtilities_splineLock.dropDeleted(list)`
 
-Retire d'une liste les références à des objets qui n'existent plus (par ex. supprimés à la main dans l'arbre de scène). Compacte la liste en place.
+Removes from a list the references to objects that no longer exist (e.g. deleted by hand in the scene tree). Compacts the list in place.
 
-- `list` (*table*) : Tableau d'objets de scène, modifié en place.
+- `list` (*table*) : Array of scene objects, modified in place.
 
 #### `editor_toolUtilities_splineLock.hasAny(each)`
 
-Vrai si l'outil possède encore au moins un objet vivant (non parqué) pour la spline.
+True if the tool still owns at least one live (non-parked) object for the spline.
 
-- `each` (*function*) : Itérateur de l'outil.
-- **renvoie** : boolean Un objet vivant existe.
+- `each` (*function*) : Tool iterator.
+- **returns**: boolean A live object exists.
 
 #### `editor_toolUtilities_splineLock.restore(rec, each)`
 
-Remet une capture en place après le re-verrouillage qui annule un déverrouillage : forme (shapeName + postApply), transformation, échelle, dossier. Les objets créés entre-temps et absents de la capture sont supprimés. Appelle be:reloadCollision().
+Puts a capture back in place after the re-lock that undoes an unlock: shape (shapeName + postApply), transform, scale, folder. Objects created in the meantime and absent from the capture are deleted. Calls be:reloadCollision().
 
-- `rec` (*table*) : Résultat de capture.
-- `each` (*function*) : Itérateur de l'outil.
+- `rec` (*table*) : Capture result.
+- `each` (*function*) : Tool iterator.
 
 #### `editor_toolUtilities_splineLock.sync(applied, spline, toolName, each)`
 
-Aligne les objets générés d'une spline sur son état de verrouillage. N'agit que si l'état diffère du dernier appliqué (table `applied` id -> isLocked). Met à jour le dossier de scène (canSave, tag), les objets (applyObject, tag, remise dans le dossier si déplacé à la main). Au déverrouillage, supprime les objets du dossier portant le tag de la spline mais non possédés par l'outil. Appelle be:reloadCollision().
+Aligns the generated objects of a spline with its lock state. Only acts if the state differs from the last applied one (`applied` table id -> isLocked). Updates the scene folder (canSave, tag), the objects (applyObject, tag, put back in the folder if moved by hand). On unlock, deletes the objects in the folder carrying the spline's tag but not owned by the tool. Calls be:reloadCollision().
 
-- `applied` (*table<any, boolean>*) : Table id de spline -> dernier état appliqué ; modifiée.
+- `applied` (*table<any, boolean>*) : Table spline id -> last applied state; modified.
 - `spline` (*table*) : Spline (id, name, isEnabled, sceneTreeFolderId).
-- `toolName` (*string*) : Nom de l'outil, utilisé pour le tag.
-- `each` (*function*) : Itérateur de l'outil.
-- **renvoie** : boolean Vrai si une action a été menée.
+- `toolName` (*string*) : Tool name, used for the tag.
+- `each` (*function*) : Tool iterator.
+- **returns**: boolean True if an action was taken.
 
 #### `editor_toolUtilities_splineLock.tag(obj, toolName, spline)`
 
-Marque un objet généré avec la spline d'origine (champs dynamiques sourceTool, sourceSplineId, sourceSplineName) pour le retrouver dans l'arbre de scène ou l'inspecteur.
+Marks a generated object with the source spline (dynamic fields sourceTool, sourceSplineId, sourceSplineName) to find it in the scene tree or the inspector.
 
-- `obj` (*userdata*) : Objet de scène.
-- `toolName` (*string*) : Nom de l'outil.
-- `spline` (*table*) : Spline avec .id et .name.
+- `obj` (*userdata*) : Scene object.
+- `toolName` (*string*) : Tool name.
+- `spline` (*table*) : Spline with .id and .name.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `reloadCollision`
 - `obj:` `getClassName`, `getField`, `getGroup`, `getId`, `getScale`, `getTransform`, `postApply`, `setDynDataFieldbyName`, `setField`, `setScale`, `setTransform`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/splineLock.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/splineLock.lua`.*

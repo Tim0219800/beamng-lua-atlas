@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/career/modules/debug/cargoFluidDebug.lua",
+  "module": "Onglet de debug carrière « Delivery > Fluid Cargo ». Fenêtre ImGui 'Fluid CargoDebug' qui affiche, par facilité de livraison (toutes, la plus proche ou une choisie), les stockages de matériaux (fluides) : fournisseurs, débits et connexions, en s'appuyant sur career_modules_delivery_* et career_modules_debug_parcelDebug.",
+  "notes": ["Outil de développement ; les références aux modules delivery sont prises dans onCareerActivated, donc inutilisable avant l'activation de la carrière.", "debugOrder = 11."],
+  "fields": {
+    "debugOrder": {"type": "number", "desc": "Ordre de tri dans la fenêtre de debug (11)."},
+    "debugName": {"type": "string", "desc": "'Delivery > Fluid Cargo'."}
+  },
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook de carrière : mémorise les modules delivery (parcelManager, cargoScreen, general, generator, progress, vehicleOfferManager) et career_modules_debug_parcelDebug.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "drawDebugFunctions": {
+      "desc": "Sous-menu de fonctions de debug ; vide dans ce module.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "drawDebugMenu": {
+      "desc": "Dessine la fenêtre 'Fluid CargoDebug' : temps de livraison, choix de facilité (all, auto, ou une facilité ayant des materialStorages) et tableau Fluid / Rate / Connections par facilité.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

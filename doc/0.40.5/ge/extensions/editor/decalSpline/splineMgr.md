@@ -1,250 +1,250 @@
 # `editor_decalSpline_splineMgr`
 
-*Fichier : `lua/ge/extensions/editor/decalSpline/splineMgr.lua` · VM : Game Engine (GE) · 755 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/decalSpline/splineMgr.lua` · VM: Game Engine (GE) · 755 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_decalSpline_splineMgr` : `extensions.load("editor_decalSpline_splineMgr")`, puis la globale `editor_decalSpline_splineMgr`
+**Access:** extension `editor_decalSpline_splineMgr`: `extensions.load("editor_decalSpline_splineMgr")`, then the global `editor_decalSpline_splineMgr`
 
-Gestionnaire des splines de l'outil Decal Spline de l'éditeur (préfixe « Decal Spline », mode d'édition decalSplineEditMode) : une spline de decals suit un tracé (nœuds, largeurs, normales) sur lequel des decals sont répartis (espacement, jitter, rotation, lignes/colonnes de l'atlas, échelle, frame, jusqu'à 4 composants). Le module garde la liste des splines et une table id vers index, crée/supprime/coupe/joint des splines, gère undo/redo, copie de profil, sérialisation (buffer binaire ou table JSON de session), liens avec des splines maîtres, et reconstruit la géométrie et les decals des splines marquées isDirty.
+Spline manager of the editor's Decal Spline tool (prefix "Decal Spline", edit mode decalSplineEditMode): a decal spline follows a path (nodes, widths, normals) on which decals are distributed (spacing, jitter, rotation, atlas rows/columns, scale, frame, up to 4 components). The module keeps the list of splines and an id to index table, creates/deletes/splits/joins splines, handles undo/redo, profile copy, serialization (binary buffer or session JSON table), links with master splines, and rebuilds the geometry and decals of splines marked isDirty.
 
-## Remarques
+## Notes
 
-- Une spline est une table : name, id (UUID), isDirty, isLoop, isLink/linkId, nodes (vec3), widths, nmls, divPoints/divWidths/tangents/binormals/normals/discMap (géométrie dérivée recalculée), isEnabled, isAliasRoundRobin, roadLength, spacing, jitter, randomSeed, et par composant n (1 à 4) : rotN, numRowsN, numColsN, scaleN, frameN.
-- Valeurs par défaut des curseurs : spacing 0, jitter 0, rot 1, randomSeed 41225, numRows 4, numCols 2, scale 1, frame 3, matériau par défaut asphalt_patches ; minimum 100 subdivisions ; taille minimale d'import d'un tracé 10 m.
-- Toute modification d'une spline passe par isDirty = true : updateDirtyDecalSplines (appelée chaque frame par l'outil) reconstruit alors la géométrie (catmullRomRaycast) et les decals (pop.populateDecalSpline). Moins de 2 nœuds : decals et géométrie dérivée supprimés.
-- Une spline désactivée (isEnabled = false) dont les decals existent déjà n'est pas reconstruite.
-- convertPathsToDecalSplines crée une spline pour chaque chemin même si le chemin est trop petit (la spline reste alors vide), et le message de log compte #paths - #decalSplines (faux s'il existait déjà des splines).
-- deepCopyDecalSplineState est listé deux fois dans l'interface publique (même fonction).
+- A spline is a table: name, id (UUID), isDirty, isLoop, isLink/linkId, nodes (vec3), widths, nmls, divPoints/divWidths/tangents/binormals/normals/discMap (recomputed derived geometry), isEnabled, isAliasRoundRobin, roadLength, spacing, jitter, randomSeed, and per component n (1 to 4): rotN, numRowsN, numColsN, scaleN, frameN.
+- Slider default values: spacing 0, jitter 0, rot 1, randomSeed 41225, numRows 4, numCols 2, scale 1, frame 3, default material asphalt_patches; minimum 100 subdivisions; minimum path import size 10 m.
+- Any modification of a spline goes through isDirty = true: updateDirtyDecalSplines (called every frame by the tool) then rebuilds the geometry (catmullRomRaycast) and the decals (pop.populateDecalSpline). Fewer than 2 nodes: decals and derived geometry deleted.
+- A disabled spline (isEnabled = false) whose decals already exist is not rebuilt.
+- convertPathsToDecalSplines creates a spline for each path even if the path is too small (the spline then stays empty), and the log message counts #paths - #decalSplines (wrong if splines already existed).
+- deepCopyDecalSplineState is listed twice in the public interface (same function).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_decalSpline_splineMgr.addNewDecalSpline()` | Ajoute à la fin une nouvelle spline vide avec un nom unique (« Decal Spline N »), un UUID Engine.generateUUID() et les paramètres par défaut. | 83 |
-| `editor_decalSpline_splineMgr.convertPathsToDecalSplines(paths)` | Convertit des tracés issus d'une image (points en grille terrain) en splines : coordonnées monde via l'éditeur de terrain, normales du terrain. Les tracés dont la plus petite dimension fait au plus 10 m ne sont pas importés (voir notes). | 608 |
-| `editor_decalSpline_splineMgr.copyDecalSplineProfile(spline)` | Copie le profil (paramètres de répartition des decals) d'une spline, sans nodes, widths, nmls ni géométrie dérivée. | 466 |
-| `editor_decalSpline_splineMgr.deepCopyDecalSpline(spline)` | Copie profonde (encode/decode string.buffer) d'une spline, avec la géométrie dérivée vidée. | 198 |
-| `editor_decalSpline_splineMgr.deepCopyDecalSplineState()` | Copie profonde de toutes les splines (pour l'historique undo). | 210 |
-| `editor_decalSpline_splineMgr.deserializeDecalSpline(data, isCreateObject)` | Désérialise une spline depuis le blob de l'éditeur (string) ou une table JSON de session. Sur le chemin JSON, les tables dérivées sont vides et les positions réhydratées en vec3 avant la première construction. | 546 |
-| `editor_decalSpline_splineMgr.getCurrentDecalSplineList()` | Liste des splines activées sous forme {name, id, type} (type = préfixe de l'outil), pour les sélecteurs d'autres outils. | 641 |
-| `editor_decalSpline_splineMgr.getDecalSplines()` | Renvoie la table des splines (référence, non copiée). | 61 |
-| `editor_decalSpline_splineMgr.getDefaultSliderParams()` | Renvoie les valeurs par défaut des curseurs de l'interface. | 80 |
-| `editor_decalSpline_splineMgr.getEditModeKey()` | Renvoie la clé du mode d'édition (« decalSplineEditMode »). | 58 |
-| `editor_decalSpline_splineMgr.getSplineMap()` | Renvoie la table id de spline vers index. | 64 |
-| `editor_decalSpline_splineMgr.getToolPrefixStr()` | Renvoie le préfixe de l'outil (« Decal Spline »). | 55 |
-| `editor_decalSpline_splineMgr.isLinked(id)` | Indique si la spline d'id donné est liée à une spline maîtresse. | 655 |
-| `editor_decalSpline_splineMgr.joinDecalSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2)` | Joint deux splines non bouclées : la géométrie concaténée est appliquée à la première, la seconde est supprimée. Sans effet si les index de nœuds sont invalides. | 335 |
-| `editor_decalSpline_splineMgr.pasteDecalSplineProfile(spline, profile)` | Applique un profil à une spline : supprime ses decals, copie les paramètres (spacing, jitter, rotN, numRowsN, numColsN, scaleN, frameN…) et la marque isDirty. | 481 |
-| `editor_decalSpline_splineMgr.recomputeIdMap()` | Recalcule la table id vers index (appelée par l'utilitaire de session après un chargement). | 565 |
-| `editor_decalSpline_splineMgr.removeAllDecalSplines(isIncludeDisabled)` | Supprime les splines. Avec isIncludeDisabled vrai, toutes ; sinon seulement celles activées et non liées. | 179 |
-| `editor_decalSpline_splineMgr.removeDecalSpline(idx)` | Supprime une spline, retire ses decals de la scène, met à jour la table d'index, et supprime le dossier de decals s'il ne reste plus de spline. | 158 |
-| `editor_decalSpline_splineMgr.removeLinkedDecalSpline(splineId)` | Supprime une spline à partir de son id (appelée quand la couche maîtresse est supprimée). Sans effet si l'id est inconnu. | 169 |
-| `editor_decalSpline_splineMgr.serializeDecalSpline(spline)` | Sérialise une spline en blob binaire (string.buffer) pour l'éditeur. | 524 |
-| `editor_decalSpline_splineMgr.serializeDecalSplineToTable(spline)` | Sérialise une spline en table portable pour un fichier de session : géométrie dérivée vidée, handle de scène supprimé, la spline vivante n'est pas modifiée. | 537 |
-| `editor_decalSpline_splineMgr.setDecalSpline(spline, idx)` | Place une spline à l'index donné et la marque isDirty. | 67 |
-| `editor_decalSpline_splineMgr.setDecalSplines(splines)` | Place toutes les splines d'un tableau aux mêmes index (chacune marquée isDirty) ; ne supprime pas les autres. | 73 |
-| `editor_decalSpline_splineMgr.setLink(id, groupId, isLink)` | Active ou désactive le lien d'une spline avec un groupe, supprime ses decals et la marque isDirty. | 661 |
-| `editor_decalSpline_splineMgr.singleSplineEditRedo(decalSplineData)` | Rétablit une édition de spline unique avec decalSplineData.new (si présent). *(interne)* | 434 |
-| `editor_decalSpline_splineMgr.singleSplineEditUndo(decalSplineData)` | Annule une édition de spline unique avec decalSplineData.old (si présent). *(interne)* | 426 |
-| `editor_decalSpline_splineMgr.splitDecalSpline(selectedSplineIdx, selectedNodeIdx)` | Coupe une spline au nœud donné en deux splines. Une boucle est ouverte sur place en démarrant au nœud choisi. | 219 |
-| `editor_decalSpline_splineMgr.transSplineEditRedo(data)` | Rétablit une édition globale avec data.new. *(interne)* | 454 |
-| `editor_decalSpline_splineMgr.transSplineEditUndo(data)` | Annule une édition globale : supprime toutes les splines, remet data.old, marque tout isDirty et recalcule la table d'index. *(interne)* | 442 |
-| `editor_decalSpline_splineMgr.unlinkAll()` | Délie toutes les splines liées et marque toutes les splines isDirty. | 698 |
-| `editor_decalSpline_splineMgr.updateDirtyDecalSplines()` | Reconstruit les splines isDirty : raycasts verticaux des nœuds, géométrie Catmull-Rom, decals, longueur ; marque l'édition dans la session si au moins une a été reconstruite. Appelée chaque frame par l'outil. *(interne)* | 568 |
-| `editor_decalSpline_splineMgr.updateLinkedDecalSpline(id, points, widths, nmls, isLoop, isConformToTerrain)` | Met à jour une spline liée avec la géométrie de la spline maîtresse (nœuds, largeurs, normales, boucle). Si moins de 2 points, vide la géométrie dérivée et supprime les decals. | 676 |
+| `editor_decalSpline_splineMgr.addNewDecalSpline()` | Adds a new empty spline at the end with a unique name ("Decal Spline N"), an Engine.generateUUID() UUID and the default parameters. | 83 |
+| `editor_decalSpline_splineMgr.convertPathsToDecalSplines(paths)` | Converts paths from an image (points in terrain grid) into splines: world coordinates via the terrain editor, terrain normals. Paths whose smallest dimension is at most 10 m are not imported (see notes). | 608 |
+| `editor_decalSpline_splineMgr.copyDecalSplineProfile(spline)` | Copies the profile (decal distribution parameters) of a spline, without nodes, widths, nmls or derived geometry. | 466 |
+| `editor_decalSpline_splineMgr.deepCopyDecalSpline(spline)` | Deep copy (string.buffer encode/decode) of a spline, with the derived geometry cleared. | 198 |
+| `editor_decalSpline_splineMgr.deepCopyDecalSplineState()` | Deep copy of all splines (for the undo history). | 210 |
+| `editor_decalSpline_splineMgr.deserializeDecalSpline(data, isCreateObject)` | Deserializes a spline from the editor blob (string) or a session JSON table. On the JSON path, the derived tables are empty and the positions rehydrated as vec3 before the first build. | 546 |
+| `editor_decalSpline_splineMgr.getCurrentDecalSplineList()` | List of enabled splines as {name, id, type} (type = tool prefix), for the selectors of other tools. | 641 |
+| `editor_decalSpline_splineMgr.getDecalSplines()` | Returns the splines table (reference, not copied). | 61 |
+| `editor_decalSpline_splineMgr.getDefaultSliderParams()` | Returns the default slider values of the interface. | 80 |
+| `editor_decalSpline_splineMgr.getEditModeKey()` | Returns the edit mode key ("decalSplineEditMode"). | 58 |
+| `editor_decalSpline_splineMgr.getSplineMap()` | Returns the spline id to index table. | 64 |
+| `editor_decalSpline_splineMgr.getToolPrefixStr()` | Returns the tool prefix ("Decal Spline"). | 55 |
+| `editor_decalSpline_splineMgr.isLinked(id)` | Indicates whether the spline with the given id is linked to a master spline. | 655 |
+| `editor_decalSpline_splineMgr.joinDecalSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2)` | Joins two non-looped splines: the concatenated geometry is applied to the first, the second is deleted. No effect if the node indices are invalid. | 335 |
+| `editor_decalSpline_splineMgr.pasteDecalSplineProfile(spline, profile)` | Applies a profile to a spline: deletes its decals, copies the parameters (spacing, jitter, rotN, numRowsN, numColsN, scaleN, frameN...) and marks it isDirty. | 481 |
+| `editor_decalSpline_splineMgr.recomputeIdMap()` | Recomputes the id to index table (called by the session utility after a load). | 565 |
+| `editor_decalSpline_splineMgr.removeAllDecalSplines(isIncludeDisabled)` | Deletes the splines. With isIncludeDisabled true, all of them; otherwise only those enabled and not linked. | 179 |
+| `editor_decalSpline_splineMgr.removeDecalSpline(idx)` | Deletes a spline, removes its decals from the scene, updates the index table, and deletes the decal folder if no spline remains. | 158 |
+| `editor_decalSpline_splineMgr.removeLinkedDecalSpline(splineId)` | Deletes a spline from its id (called when the master layer is deleted). No effect if the id is unknown. | 169 |
+| `editor_decalSpline_splineMgr.serializeDecalSpline(spline)` | Serializes a spline into a binary blob (string.buffer) for the editor. | 524 |
+| `editor_decalSpline_splineMgr.serializeDecalSplineToTable(spline)` | Serializes a spline into a portable table for a session file: derived geometry cleared, scene handle removed, the live spline is not modified. | 537 |
+| `editor_decalSpline_splineMgr.setDecalSpline(spline, idx)` | Places a spline at the given index and marks it isDirty. | 67 |
+| `editor_decalSpline_splineMgr.setDecalSplines(splines)` | Places all splines of an array at the same indices (each marked isDirty); does not delete the others. | 73 |
+| `editor_decalSpline_splineMgr.setLink(id, groupId, isLink)` | Enables or disables the link of a spline with a group, deletes its decals and marks it isDirty. | 661 |
+| `editor_decalSpline_splineMgr.singleSplineEditRedo(decalSplineData)` | Redoes a single-spline edit with decalSplineData.new (if present). *(internal)* | 434 |
+| `editor_decalSpline_splineMgr.singleSplineEditUndo(decalSplineData)` | Undoes a single-spline edit with decalSplineData.old (if present). *(internal)* | 426 |
+| `editor_decalSpline_splineMgr.splitDecalSpline(selectedSplineIdx, selectedNodeIdx)` | Splits a spline at the given node into two splines. A loop is opened in place, starting at the chosen node. | 219 |
+| `editor_decalSpline_splineMgr.transSplineEditRedo(data)` | Redoes a global edit with data.new. *(internal)* | 454 |
+| `editor_decalSpline_splineMgr.transSplineEditUndo(data)` | Undoes a global edit: deletes all splines, restores data.old, marks everything isDirty and recomputes the index table. *(internal)* | 442 |
+| `editor_decalSpline_splineMgr.unlinkAll()` | Unlinks all linked splines and marks all splines isDirty. | 698 |
+| `editor_decalSpline_splineMgr.updateDirtyDecalSplines()` | Rebuilds the isDirty splines: vertical raycasts of the nodes, Catmull-Rom geometry, decals, length; marks the edit in the session if at least one was rebuilt. Called every frame by the tool. *(internal)* | 568 |
+| `editor_decalSpline_splineMgr.updateLinkedDecalSpline(id, points, widths, nmls, isLoop, isConformToTerrain)` | Updates a linked spline with the geometry of the master spline (nodes, widths, normals, loop). If fewer than 2 points, clears the derived geometry and deletes the decals. | 676 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_decalSpline_splineMgr.convertPathsToDecalSplines(paths)`
 
-Convertit des tracés issus d'une image (points en grille terrain) en splines : coordonnées monde via l'éditeur de terrain, normales du terrain. Les tracés dont la plus petite dimension fait au plus 10 m ne sont pas importés (voir notes).
+Converts paths from an image (points in terrain grid) into splines: world coordinates via the terrain editor, terrain normals. Paths whose smallest dimension is at most 10 m are not imported (see notes).
 
-- `paths` (*table*) : tableau de {points, widths}
+- `paths` (*table*) : array of {points, widths}
 
 #### `editor_decalSpline_splineMgr.copyDecalSplineProfile(spline)`
 
-Copie le profil (paramètres de répartition des decals) d'une spline, sans nodes, widths, nmls ni géométrie dérivée.
+Copies the profile (decal distribution parameters) of a spline, without nodes, widths, nmls or derived geometry.
 
-- `spline` (*table*) : spline source
-- **renvoie** : table profil
+- `spline` (*table*) : source spline
+- **returns**: table profile
 
 #### `editor_decalSpline_splineMgr.deepCopyDecalSpline(spline)`
 
-Copie profonde (encode/decode string.buffer) d'une spline, avec la géométrie dérivée vidée.
+Deep copy (string.buffer encode/decode) of a spline, with the derived geometry cleared.
 
 - `spline` (*table*) : spline
-- **renvoie** : table copie
+- **returns**: table copy
 
 #### `editor_decalSpline_splineMgr.deepCopyDecalSplineState()`
 
-Copie profonde de toutes les splines (pour l'historique undo).
+Deep copy of all splines (for the undo history).
 
-- **renvoie** : table tableau de copies
+- **returns**: table array of copies
 
 #### `editor_decalSpline_splineMgr.deserializeDecalSpline(data, isCreateObject)`
 
-Désérialise une spline depuis le blob de l'éditeur (string) ou une table JSON de session. Sur le chemin JSON, les tables dérivées sont vides et les positions réhydratées en vec3 avant la première construction.
+Deserializes a spline from the editor blob (string) or a session JSON table. On the JSON path, the derived tables are empty and the positions rehydrated as vec3 before the first build.
 
-- `data` (*string|table*) : blob ou table
-- `isCreateObject` (*boolean|nil*) : (déduit du code) indique s'il faut créer l'objet
-- **renvoie** : table spline
+- `data` (*string|table*) : blob or table
+- `isCreateObject` (*boolean|nil*) : (inferred from code) indicates whether the object must be created
+- **returns**: table spline
 
 #### `editor_decalSpline_splineMgr.getCurrentDecalSplineList()`
 
-Liste des splines activées sous forme {name, id, type} (type = préfixe de l'outil), pour les sélecteurs d'autres outils.
+List of enabled splines as {name, id, type} (type = tool prefix), for the selectors of other tools.
 
-- **renvoie** : table tableau de {name, id, type}
+- **returns**: table array of {name, id, type}
 
 #### `editor_decalSpline_splineMgr.getDecalSplines()`
 
-Renvoie la table des splines (référence, non copiée).
+Returns the splines table (reference, not copied).
 
-- **renvoie** : table tableau de splines
+- **returns**: table array of splines
 
 #### `editor_decalSpline_splineMgr.getDefaultSliderParams()`
 
-Renvoie les valeurs par défaut des curseurs de l'interface.
+Returns the default slider values of the interface.
 
-- **renvoie** : table spacing, jitter, rot, randomSeed, numRows, numCols, scale, frame…
+- **returns**: table spacing, jitter, rot, randomSeed, numRows, numCols, scale, frame...
 
 #### `editor_decalSpline_splineMgr.getEditModeKey()`
 
-Renvoie la clé du mode d'édition (« decalSplineEditMode »).
+Returns the edit mode key ("decalSplineEditMode").
 
-- **renvoie** : string clé
+- **returns**: string key
 
 #### `editor_decalSpline_splineMgr.getSplineMap()`
 
-Renvoie la table id de spline vers index.
+Returns the spline id to index table.
 
-- **renvoie** : table<string, integer> id vers index
+- **returns**: table<string, integer> id to index
 
 #### `editor_decalSpline_splineMgr.getToolPrefixStr()`
 
-Renvoie le préfixe de l'outil (« Decal Spline »).
+Returns the tool prefix ("Decal Spline").
 
-- **renvoie** : string préfixe
+- **returns**: string prefix
 
 #### `editor_decalSpline_splineMgr.isLinked(id)`
 
-Indique si la spline d'id donné est liée à une spline maîtresse.
+Indicates whether the spline with the given id is linked to a master spline.
 
-- `id` (*string*) : id de spline
-- **renvoie** : boolean vrai si liée
+- `id` (*string*) : spline id
+- **returns**: boolean true if linked
 
 #### `editor_decalSpline_splineMgr.joinDecalSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2)`
 
-Joint deux splines non bouclées : la géométrie concaténée est appliquée à la première, la seconde est supprimée. Sans effet si les index de nœuds sont invalides.
+Joins two non-looped splines: the concatenated geometry is applied to the first, the second is deleted. No effect if the node indices are invalid.
 
-- `splineIdx1` (*integer*) : index de la première spline (conservée)
-- `nodeIdx1` (*integer*) : nœud d'extrémité de la première
-- `splineIdx2` (*integer*) : index de la seconde spline (supprimée)
-- `nodeIdx2` (*integer*) : nœud d'extrémité de la seconde
+- `splineIdx1` (*integer*) : index of the first spline (kept)
+- `nodeIdx1` (*integer*) : end node of the first
+- `splineIdx2` (*integer*) : index of the second spline (deleted)
+- `nodeIdx2` (*integer*) : end node of the second
 
 #### `editor_decalSpline_splineMgr.pasteDecalSplineProfile(spline, profile)`
 
-Applique un profil à une spline : supprime ses decals, copie les paramètres (spacing, jitter, rotN, numRowsN, numColsN, scaleN, frameN…) et la marque isDirty.
+Applies a profile to a spline: deletes its decals, copies the parameters (spacing, jitter, rotN, numRowsN, numColsN, scaleN, frameN...) and marks it isDirty.
 
-- `spline` (*table*) : spline cible
-- `profile` (*table*) : profil issu de copyDecalSplineProfile
+- `spline` (*table*) : target spline
+- `profile` (*table*) : profile from copyDecalSplineProfile
 
 #### `editor_decalSpline_splineMgr.removeAllDecalSplines(isIncludeDisabled)`
 
-Supprime les splines. Avec isIncludeDisabled vrai, toutes ; sinon seulement celles activées et non liées.
+Deletes the splines. With isIncludeDisabled true, all of them; otherwise only those enabled and not linked.
 
-- `isIncludeDisabled` (*boolean*) : inclure les splines désactivées (et liées)
+- `isIncludeDisabled` (*boolean*) : include disabled (and linked) splines
 
 #### `editor_decalSpline_splineMgr.removeDecalSpline(idx)`
 
-Supprime une spline, retire ses decals de la scène, met à jour la table d'index, et supprime le dossier de decals s'il ne reste plus de spline.
+Deletes a spline, removes its decals from the scene, updates the index table, and deletes the decal folder if no spline remains.
 
-- `idx` (*integer*) : index (base 1)
+- `idx` (*integer*) : index (1-based)
 
 #### `editor_decalSpline_splineMgr.removeLinkedDecalSpline(splineId)`
 
-Supprime une spline à partir de son id (appelée quand la couche maîtresse est supprimée). Sans effet si l'id est inconnu.
+Deletes a spline from its id (called when the master layer is deleted). No effect if the id is unknown.
 
-- `splineId` (*string*) : id de la spline
+- `splineId` (*string*) : spline id
 
 #### `editor_decalSpline_splineMgr.serializeDecalSpline(spline)`
 
-Sérialise une spline en blob binaire (string.buffer) pour l'éditeur.
+Serializes a spline into a binary blob (string.buffer) for the editor.
 
 - `spline` (*table*) : spline
-- **renvoie** : string données encodées
+- **returns**: string encoded data
 
 #### `editor_decalSpline_splineMgr.serializeDecalSplineToTable(spline)`
 
-Sérialise une spline en table portable pour un fichier de session : géométrie dérivée vidée, handle de scène supprimé, la spline vivante n'est pas modifiée.
+Serializes a spline into a portable table for a session file: derived geometry cleared, scene handle removed, the live spline is not modified.
 
 - `spline` (*table*) : spline
-- **renvoie** : table table simple
+- **returns**: table simple table
 
 #### `editor_decalSpline_splineMgr.setDecalSpline(spline, idx)`
 
-Place une spline à l'index donné et la marque isDirty.
+Places a spline at the given index and marks it isDirty.
 
 - `spline` (*table*) : spline
-- `idx` (*integer*) : index (base 1)
+- `idx` (*integer*) : index (1-based)
 
 #### `editor_decalSpline_splineMgr.setDecalSplines(splines)`
 
-Place toutes les splines d'un tableau aux mêmes index (chacune marquée isDirty) ; ne supprime pas les autres.
+Places all splines of an array at the same indices (each marked isDirty); does not delete the others.
 
-- `splines` (*table*) : tableau de splines
+- `splines` (*table*) : array of splines
 
 #### `editor_decalSpline_splineMgr.setLink(id, groupId, isLink)`
 
-Active ou désactive le lien d'une spline avec un groupe, supprime ses decals et la marque isDirty.
+Enables or disables the link of a spline with a group, deletes its decals and marks it isDirty.
 
-- `id` (*string*) : id de spline
-- `groupId` (*string|nil*) : id du groupe de lien
-- `isLink` (*boolean*) : lier ou délier
+- `id` (*string*) : spline id
+- `groupId` (*string|nil*) : link group id
+- `isLink` (*boolean*) : link or unlink
 
 #### `editor_decalSpline_splineMgr.singleSplineEditRedo(decalSplineData)`
 
-Rétablit une édition de spline unique avec decalSplineData.new (si présent).
+Redoes a single-spline edit with decalSplineData.new (if present).
 
 - `decalSplineData` (*table*) : {old, new}
 
 #### `editor_decalSpline_splineMgr.singleSplineEditUndo(decalSplineData)`
 
-Annule une édition de spline unique avec decalSplineData.old (si présent).
+Undoes a single-spline edit with decalSplineData.old (if present).
 
 - `decalSplineData` (*table*) : {old, new}
 
 #### `editor_decalSpline_splineMgr.splitDecalSpline(selectedSplineIdx, selectedNodeIdx)`
 
-Coupe une spline au nœud donné en deux splines. Une boucle est ouverte sur place en démarrant au nœud choisi.
+Splits a spline at the given node into two splines. A loop is opened in place, starting at the chosen node.
 
-- `selectedSplineIdx` (*integer*) : index de la spline
-- `selectedNodeIdx` (*integer*) : index du nœud de coupe
+- `selectedSplineIdx` (*integer*) : spline index
+- `selectedNodeIdx` (*integer*) : index of the split node
 
 #### `editor_decalSpline_splineMgr.transSplineEditRedo(data)`
 
-Rétablit une édition globale avec data.new.
+Redoes a global edit with data.new.
 
-- `data` (*table*) : {old, new} avec des tableaux de splines
+- `data` (*table*) : {old, new} with arrays of splines
 
 #### `editor_decalSpline_splineMgr.transSplineEditUndo(data)`
 
-Annule une édition globale : supprime toutes les splines, remet data.old, marque tout isDirty et recalcule la table d'index.
+Undoes a global edit: deletes all splines, restores data.old, marks everything isDirty and recomputes the index table.
 
-- `data` (*table*) : {old, new} avec des tableaux de splines
+- `data` (*table*) : {old, new} with arrays of splines
 
 #### `editor_decalSpline_splineMgr.updateLinkedDecalSpline(id, points, widths, nmls, isLoop, isConformToTerrain)`
 
-Met à jour une spline liée avec la géométrie de la spline maîtresse (nœuds, largeurs, normales, boucle). Si moins de 2 points, vide la géométrie dérivée et supprime les decals.
+Updates a linked spline with the geometry of the master spline (nodes, widths, normals, loop). If fewer than 2 points, clears the derived geometry and deletes the decals.
 
-- `id` (*string*) : id de spline
-- `points` (*table*) : nœuds vec3
-- `widths` (*table*) : largeurs
-- `nmls` (*table*) : normales
-- `isLoop` (*boolean*) : boucle
-- `isConformToTerrain` (*boolean*) : (non utilisé dans la fonction)
+- `id` (*string*) : spline id
+- `points` (*table*) : vec3 nodes
+- `widths` (*table*) : widths
+- `nmls` (*table*) : normals
+- `isLoop` (*boolean*) : loop
+- `isConformToTerrain` (*boolean*) : (not used in the function)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/decalSpline/splineMgr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/decalSpline/splineMgr.lua`.*

@@ -1,0 +1,42 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/colorHistory.lua",
+  "module": "Section « Color History » de l'outil Dynamic Decals. Garde en préférence editor (`dynamicDecalsTool.colorHistory.history`) la liste des dernières couleurs utilisées (RGBA) et permet de les réappliquer comme couleur de decal ou de fill layer, ou de les supprimer. La taille maximale est la préférence `maxHistoryCount` (défaut 10, de 2 à 128).",
+  "usage": "extensions.editor_dynamicDecals_colorHistory.addColorToHistory(Point4F(1, 0, 0, 1))",
+  "notes": [
+    "addColorToHistory lit color.x/.y/.z/.w : il faut une valeur type Point4F/vec4, pas une table {r,g,b,a}.",
+    "Dans addColorToHistory, table.remove est appelé pendant ipairs : au plus un doublon est correctement géré.",
+    "La suppression d'une couleur dans onGui modifie la table pendant ipairs ; sans conséquence puisque la boucle continue sur la table raccourcie."
+  ],
+  "functions": {
+    "addColorToHistory": {
+      "desc": "Ajoute la couleur en tête de l'historique (retire d'abord une entrée identique), tronque à maxHistoryCount et enregistre la préférence.",
+      "params": {"color": {"type": "Point4F", "desc": "Couleur avec champs x, y, z, w (RGBA)."}},
+      "returns": [],
+      "internal": false
+    },
+    "onGui": {
+      "desc": "Dessine la liste : pour chaque couleur un widget, les boutons « Set as decal color » (api.setDecalColor), « Set as fill layer color » (api.setFillLayerColor) et une icône de suppression. Utilisé comme contenu de la section et de l'éditeur de la préférence `history`.",
+      "params": {"guiId": {"type": "string", "desc": "Suffixe pour rendre les identifiants ImGui uniques."}},
+      "returns": [],
+      "internal": true
+    },
+    "registerEditorPreferences": {
+      "desc": "Enregistre la sous-catégorie `dynamicDecalsTool.colorHistory` : `history` (table, éditée par onGui) et `maxHistoryCount` (int, défaut 10, min 2, max 128).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : récupère l'API et docs, enregistre la section « Color History » (ordre 122) et sa page de documentation.",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

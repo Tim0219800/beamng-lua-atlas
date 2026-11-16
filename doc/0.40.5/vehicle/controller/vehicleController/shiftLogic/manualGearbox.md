@@ -1,140 +1,140 @@
 # `controller_vehicleController_shiftLogic_manualGearbox`
 
-*Fichier : `lua/vehicle/controller/vehicleController/shiftLogic/manualGearbox.lua` · VM : Véhicule · 714 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/vehicleController/shiftLogic/manualGearbox.lua` · VM: Vehicle · 714 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `vehicleController/shiftLogic/manualGearbox` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `vehicleController/shiftLogic/manualGearbox` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Logique de boîte manuelle (levier en H ou touches monter/descendre) avec embrayage automatique ou manuel. Chargé par vehicleController quand le device « gearbox » est de type manualGearbox. En arcade, la boîte choisit seule le rapport (points de passage, marche arrière auto) et pilote l'embrayage au démarrage ; en realistic, le conducteur choisit le rapport, la machine à états gère embrayage, point mort, synchronisation (rev-match) et engagement.
+Manual gearbox logic (H-shifter or up/down keys) with automatic or manual clutch. Loaded by vehicleController when the "gearbox" device is of type manualGearbox. In arcade, the gearbox chooses the gear by itself (shift points, automatic reverse) and drives the clutch at launch; in realistic, the driver chooses the gear, the state machine handles clutch, neutral, synchronization (rev-match) and engagement.
 
-## Exemple
+## Example
 
 ```lua
-controller.mainController.shiftToGearIndex(3) -- engage le 3e (mode realistic) ; en arcade bascule d'abord en realistic
+controller.mainController.shiftToGearIndex(3) -- engages 3rd (realistic mode); in arcade switches to realistic first
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues dans init : clutchLaunchTargetRPM (3000), clutchLaunchStartRPM (2000), clutchInRate (25), clutchOutRate (25), revMatchThrottle (0.5).
-- Machine à états de changement de rapport (clutchHandling.shiftState) : clutchIn -> neutral -> waitingForShift -> shift -> (gearGrind) -> clutchOut. En realistic le passage attend le relâchement de la touche (shiftUpOnUp/shiftDownOnUp) ou un shiftToGearIndex ; waitingForShift est abandonné après 2 s en passage direct.
-- gearboxSafety : un rapport qui ferait dépasser engine.maxAV est refusé (on garde le rapport précédent).
-- autoClutch (réglage utilisateur) : sinon l'embrayage suit directement 1 - inputValues.clutch. autoThrottle : permet le rev-match automatique (throttle = revMatchThrottle).
-- Le module expose M.shiftUpOnDown/shiftDownOnDown/shiftUpOnUp/shiftDownOnUp/shiftToGearIndex qui sont ré-affectés dans gearboxBehaviorChanged selon le mode ; vehicleController appelle donc la version du mode courant.
-- En arcade, shiftUp/Down affichent un avertissement ; shiftToGearIndex bascule en realistic.
-- Contrat commun shiftLogic : gearboxHandling, timer, timerConstants, inputValues, shiftPreventionData, shiftBehavior, smoothedValues injectés par vehicleController.
-- M.running est écrit sans être déclaré. init met M.minGearIndex = abs(minGearIndex) mais updateExposedData le réécrit ensuite avec la valeur signée.
-- gearboxBehaviorChanged : passer en realistic sans autoClutch avec rapport 1 ou -1 engagé remet la boîte au point mort.
+- jbeam keys read in init: clutchLaunchTargetRPM (3000), clutchLaunchStartRPM (2000), clutchInRate (25), clutchOutRate (25), revMatchThrottle (0.5).
+- Gear change state machine (clutchHandling.shiftState): clutchIn -> neutral -> waitingForShift -> shift -> (gearGrind) -> clutchOut. In realistic the shift waits for the key release (shiftUpOnUp/shiftDownOnUp) or a shiftToGearIndex; waitingForShift is abandoned after 2 s in direct shift.
+- gearboxSafety: a gear that would exceed engine.maxAV is refused (the previous gear is kept).
+- autoClutch (user setting): otherwise the clutch directly follows 1 - inputValues.clutch. autoThrottle: allows automatic rev-match (throttle = revMatchThrottle).
+- The module exposes M.shiftUpOnDown/shiftDownOnDown/shiftUpOnUp/shiftDownOnUp/shiftToGearIndex which are reassigned in gearboxBehaviorChanged depending on the mode; vehicleController therefore calls the version of the current mode.
+- In arcade, shiftUp/Down display a warning; shiftToGearIndex switches to realistic.
+- Common shiftLogic contract: gearboxHandling, timer, timerConstants, inputValues, shiftPreventionData, shiftBehavior, smoothedValues injected by vehicleController.
+- M.running is written without being declared. init sets M.minGearIndex = abs(minGearIndex) but updateExposedData then rewrites it with the signed value.
+- gearboxBehaviorChanged: switching to realistic without autoClutch with gear 1 or -1 engaged puts the gearbox back in neutral.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_vehicleController_shiftLogic_manualGearbox.areShiftLEDsInUse()` | Vrai hors arcade. *(interne)* | 82 |
-| `controller_vehicleController_shiftLogic_manualGearbox.gearboxBehaviorChanged(behavior)` | Sélectionne la logique du mode (arcade/realistic) et réaffecte les fonctions de passage. *(interne)* | 94 |
-| `controller_vehicleController_shiftLogic_manualGearbox.getGearName()` | Renvoie l'index de rapport numérique de la boîte (pas de chaîne). | 86 |
-| `controller_vehicleController_shiftLogic_manualGearbox.getGearPosition()` | Toujours 0, 0 (non utilisé pour manuelles et séquentielles). | 90 |
-| `controller_vehicleController_shiftLogic_manualGearbox.getState()` | État sauvegardable : {grb_idx = rapport courant}. | 683 |
-| `controller_vehicleController_shiftLogic_manualGearbox.init(jbeamData, sharedFunctionTable)` | Récupère mainEngine et gearbox, construit les logiques arcade/realistic, lit les paramètres d'embrayage (voir notes). Appelé par vehicleController à l'init et au reset. *(interne)* | 605 |
-| `controller_vehicleController_shiftLogic_manualGearbox.sendTorqueData()` | Demande au moteur d'envoyer ses courbes de couple à l'UI. *(interne)* | 599 |
-| `controller_vehicleController_shiftLogic_manualGearbox.setState(data)` | Restaure le rapport via shiftToGearIndex(data.grb_idx). | 689 |
-| `controller_vehicleController_shiftLogic_manualGearbox.shiftDownOnDown()` | Appui sur descendre : demande le rapport inférieur et lance la séquence. | 152 |
-| `controller_vehicleController_shiftLogic_manualGearbox.shiftDownOnUp()` | Relâchement de descendre, même logique que shiftUpOnUp. | 176 |
-| `controller_vehicleController_shiftLogic_manualGearbox.shiftToGearIndex(index)` | Demande directement un rapport (borné, sécurité surrégime) ; passage direct (levier en H). Index 0 depuis gearGrind remet au point mort. | 185 |
-| `controller_vehicleController_shiftLogic_manualGearbox.shiftUpOnDown()` | Appui sur monter : demande le rapport suivant (borné min/max, sécurité surrégime) et lance la séquence de passage. | 119 |
-| `controller_vehicleController_shiftLogic_manualGearbox.shiftUpOnUp()` | Relâchement de monter : en attente de passage, déclenche l'engagement ; sinon mémorise que l'entrée est terminée. | 143 |
+| `controller_vehicleController_shiftLogic_manualGearbox.areShiftLEDsInUse()` | True outside arcade. *(internal)* | 82 |
+| `controller_vehicleController_shiftLogic_manualGearbox.gearboxBehaviorChanged(behavior)` | Selects the mode logic (arcade/realistic) and reassigns the shift functions. *(internal)* | 94 |
+| `controller_vehicleController_shiftLogic_manualGearbox.getGearName()` | Returns the gearbox's numeric gear index (not a string). | 86 |
+| `controller_vehicleController_shiftLogic_manualGearbox.getGearPosition()` | Always 0, 0 (unused for manual and sequential gearboxes). | 90 |
+| `controller_vehicleController_shiftLogic_manualGearbox.getState()` | Saveable state: {grb_idx = current gear}. | 683 |
+| `controller_vehicleController_shiftLogic_manualGearbox.init(jbeamData, sharedFunctionTable)` | Gets mainEngine and gearbox, builds the arcade/realistic logics, reads the clutch parameters (see notes). Called by vehicleController at init and reset. *(internal)* | 605 |
+| `controller_vehicleController_shiftLogic_manualGearbox.sendTorqueData()` | Asks the engine to send its torque curves to the UI. *(internal)* | 599 |
+| `controller_vehicleController_shiftLogic_manualGearbox.setState(data)` | Restores the gear via shiftToGearIndex(data.grb_idx). | 689 |
+| `controller_vehicleController_shiftLogic_manualGearbox.shiftDownOnDown()` | Shift down press: requests the lower gear and starts the sequence. | 152 |
+| `controller_vehicleController_shiftLogic_manualGearbox.shiftDownOnUp()` | Shift down release, same logic as shiftUpOnUp. | 176 |
+| `controller_vehicleController_shiftLogic_manualGearbox.shiftToGearIndex(index)` | Directly requests a gear (bounded, over-rev safety); direct shift (H-shifter). Index 0 from gearGrind puts the gearbox back in neutral. | 185 |
+| `controller_vehicleController_shiftLogic_manualGearbox.shiftUpOnDown()` | Shift up press: requests the next gear (bounded min/max, over-rev safety) and starts the shift sequence. | 119 |
+| `controller_vehicleController_shiftLogic_manualGearbox.shiftUpOnUp()` | Shift up release: when waiting for shift, triggers engagement; otherwise records that the input is finished. | 143 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_vehicleController_shiftLogic_manualGearbox.areShiftLEDsInUse()`
 
-Vrai hors arcade.
+True outside arcade.
 
-- **renvoie** : boolean LEDs de passage utilisées ?
+- **returns**: boolean Shift LEDs used?
 
 #### `controller_vehicleController_shiftLogic_manualGearbox.gearboxBehaviorChanged(behavior)`
 
-Sélectionne la logique du mode (arcade/realistic) et réaffecte les fonctions de passage.
+Selects the mode logic (arcade/realistic) and reassigns the shift functions.
 
-- `behavior` (*string*) : "arcade" ou "realistic".
+- `behavior` (*string*) : "arcade" or "realistic".
 
 #### `controller_vehicleController_shiftLogic_manualGearbox.getGearName()`
 
-Renvoie l'index de rapport numérique de la boîte (pas de chaîne).
+Returns the gearbox's numeric gear index (not a string).
 
-- **renvoie** : integer gearbox.gearIndex
+- **returns**: integer gearbox.gearIndex
 
 #### `controller_vehicleController_shiftLogic_manualGearbox.getGearPosition()`
 
-Toujours 0, 0 (non utilisé pour manuelles et séquentielles).
+Always 0, 0 (unused for manual and sequential gearboxes).
 
-- **renvoie** : number 0
-- **renvoie** : number 0
+- **returns**: number 0
+- **returns**: number 0
 
 #### `controller_vehicleController_shiftLogic_manualGearbox.getState()`
 
-État sauvegardable : {grb_idx = rapport courant}.
+Saveable state: {grb_idx = current gear}.
 
-- **renvoie** : table|nil État.
+- **returns**: table|nil State.
 
 #### `controller_vehicleController_shiftLogic_manualGearbox.init(jbeamData, sharedFunctionTable)`
 
-Récupère mainEngine et gearbox, construit les logiques arcade/realistic, lit les paramètres d'embrayage (voir notes). Appelé par vehicleController à l'init et au reset.
+Gets mainEngine and gearbox, builds the arcade/realistic logics, reads the clutch parameters (see notes). Called by vehicleController at init and reset.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 - `sharedFunctionTable` (*table*) : sharedFunctions.
 
 #### `controller_vehicleController_shiftLogic_manualGearbox.setState(data)`
 
-Restaure le rapport via shiftToGearIndex(data.grb_idx).
+Restores the gear via shiftToGearIndex(data.grb_idx).
 
-- `data` (*table*) : Table produite par getState.
+- `data` (*table*) : Table produced by getState.
 
 #### `controller_vehicleController_shiftLogic_manualGearbox.shiftToGearIndex(index)`
 
-Demande directement un rapport (borné, sécurité surrégime) ; passage direct (levier en H). Index 0 depuis gearGrind remet au point mort.
+Directly requests a gear (bounded, over-rev safety); direct shift (H-shifter). Index 0 from gearGrind puts the gearbox back in neutral.
 
-- `index` (*integer*) : Rapport voulu.
+- `index` (*integer*) : Wanted gear.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `brake` | number | Frein décidé (0..1). |
-| `checkEngine` | boolean | Moteur désactivé. |
-| `clutchRatio` | number | Taux d'embrayage (1 = embrayé). |
-| `currentGearIndex` | integer | Rapport courant de la boîte. |
-| `energyStorages` | table<integer, string> | Réservoirs du moteur. |
-| `engineLoad` | number | Charge moteur. |
-| `engineThrottle` | number | Gaz appliqués au moteur. |
-| `engineTorque` | number | Couple de combustion. |
-| `flywheelTorque` | number | Couple volant moteur. |
-| `gearboxHandling` | table|nil | Injecté par vehicleController. |
-| `gearboxTorque` | number | Couple de sortie de boîte. |
-| `idleRPM` | number | Régime de ralenti. |
+| `brake` | number | Decided brake (0..1). |
+| `checkEngine` | boolean | Engine disabled. |
+| `clutchRatio` | number | Clutch ratio (1 = engaged). |
+| `currentGearIndex` | integer | Current gearbox gear. |
+| `energyStorages` | table<integer, string> | Engine tanks. |
+| `engineLoad` | number | Engine load. |
+| `engineThrottle` | number | Throttle applied to the engine. |
+| `engineTorque` | number | Combustion torque. |
+| `flywheelTorque` | number | Engine flywheel torque. |
+| `gearboxHandling` | table|nil | Injected by vehicleController. |
+| `gearboxTorque` | number | Gearbox output torque. |
+| `idleRPM` | number | Idle RPM. |
 | `ignition` | boolean | ignitionLevel > 1. |
-| `inputValues` | table|nil | Injecté. |
-| `isArcadeSwitched` | boolean | Gaz/frein permutés (arcade marche arrière). |
-| `isEngineRunning` | number | 1 si le moteur tourne. |
-| `isShifting` | boolean | Vrai pendant un changement de rapport (hors attente du conducteur). |
-| `isSportModeActive` | boolean | Toujours false. |
-| `maxGearIndex` | integer | Plus grand rapport avant. |
-| `maxRPM` | number | Régime maximal. |
-| `minGearIndex` | integer | Plus petit index (marche arrière). |
-| `oilTemp` | number | Température d'huile. |
-| `rpm` | number | Régime moteur (tr/min). |
-| `shiftBehavior` | table|nil | Injecté. |
-| `shiftPreventionData` | table|nil | Injecté. |
-| `shiftingAggression` | number | Coefficient 0.3..1 de vitesse de passage calculé par calculateShiftAggression. |
-| `smoothedAvgAVInput` | number | Vitesse angulaire de sortie de boîte (rad/s). |
-| `smoothedValues` | table|nil | Injecté. |
-| `throttle` | number | Gaz décidés (0..1), nuls pendant un changement de rapport au-delà du 1er sauf rev-match. |
-| `timer` | table|nil | Injecté. |
-| `timerConstants` | table|nil | Injecté. |
-| `updateGearboxGFX` | function | nop puis inGear/whileShifting du mode actif. |
-| `waterTemp` | number | Température de liquide de refroidissement. |
+| `inputValues` | table|nil | Injected. |
+| `isArcadeSwitched` | boolean | Throttle/brake swapped (arcade reverse). |
+| `isEngineRunning` | number | 1 if the engine is running. |
+| `isShifting` | boolean | True during a gear change (excluding waiting for the driver). |
+| `isSportModeActive` | boolean | Always false. |
+| `maxGearIndex` | integer | Highest forward gear. |
+| `maxRPM` | number | Maximum RPM. |
+| `minGearIndex` | integer | Smallest index (reverse). |
+| `oilTemp` | number | Oil temperature. |
+| `rpm` | number | Engine speed (RPM). |
+| `shiftBehavior` | table|nil | Injected. |
+| `shiftPreventionData` | table|nil | Injected. |
+| `shiftingAggression` | number | Shift speed coefficient 0.3..1 computed by calculateShiftAggression. |
+| `smoothedAvgAVInput` | number | Gearbox output angular velocity (rad/s). |
+| `smoothedValues` | table|nil | Injected. |
+| `throttle` | number | Decided throttle (0..1), zero during a gear change beyond the 1st except rev-match. |
+| `timer` | table|nil | Injected. |
+| `timerConstants` | table|nil | Injected. |
+| `updateGearboxGFX` | function | nop then inGear/whileShifting of the active mode. |
+| `waterTemp` | number | Coolant temperature. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getSimulationTimeScale`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/vehicleController/shiftLogic/manualGearbox.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/vehicleController/shiftLogic/manualGearbox.lua`.*

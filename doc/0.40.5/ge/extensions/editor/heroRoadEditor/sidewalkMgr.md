@@ -1,62 +1,62 @@
 # `editor_heroRoadEditor_sidewalkMgr`
 
-*Fichier : `lua/ge/extensions/editor/heroRoadEditor/sidewalkMgr.lua` · VM : Game Engine (GE) · 131 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/heroRoadEditor/sidewalkMgr.lua` · VM: Game Engine (GE) · 131 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_heroRoadEditor_sidewalkMgr` : `extensions.load("editor_heroRoadEditor_sidewalkMgr")`, puis la globale `editor_heroRoadEditor_sidewalkMgr`
+**Access:** extension `editor_heroRoadEditor_sidewalkMgr`: `extensions.load("editor_heroRoadEditor_sidewalkMgr")`, then the global `editor_heroRoadEditor_sidewalkMgr`
 
-Trottoirs/bordures procéduraux d'un groupe du Hero Road Editor. Fine couche au-dessus du balayage partagé toolUtilities/walkRibbon : lit les bords réels inclinés du maillage (meshEdgeL/R, meshEdgeDirL/R) et balaie bordure + dallage le long de chaque côté activé (group.sidewalkLeft / sidewalkRight). Pendant l'édition c'est un ProceduralMesh transitoire 'HeroWalk_<id>' ; le bake l'écrit en .dae et pose un TSStatic persistant à sa place.
+Procedural sidewalks/curbs of a Hero Road Editor group. Thin layer on top of the shared sweep toolUtilities/walkRibbon: reads the actual banked edges of the mesh (meshEdgeL/R, meshEdgeDirL/R) and sweeps curb + paving along each enabled side (group.sidewalkLeft / sidewalkRight). During editing it is a transient ProceduralMesh 'HeroWalk_<id>'; the bake writes it to .dae and places a persistent TSStatic in its place.
 
-## Remarques
+## Notes
 
-- Les deux côtés sont fusionnés dans UN seul maillage (deux draws au total).
-- La hauteur Z du trottoir est celle du bord de chaussée (p.z), pas p.z + d.z*décalage, pour qu'il reste à niveau malgré le dévers.
-- Le décalage depuis le bord est group.sidewalkOffsetM (>= 0, défaut 0) ; la largeur vient de walkRibbon.width(). Les passages piétons (group.crossings) abaissent la bordure à fleur via walkRibbon.crossingDips.
-- Le maillage est collidable (meshPart.emitObject avec collision) mais non sauvegardé (canSave=false) tant que la route est en édition.
-- Le trottoir cuit n'a qu'un niveau de détail (NEAR_PX = 400) ; collisionType 'Collision Mesh', decalType 'Visible Mesh Final'.
-- Les enregistrements runtime (maillage, parts) sont gardés dans le module, indexés par group.id, et jamais sur le groupe.
+- Both sides are merged into ONE mesh (two draws in total).
+- The sidewalk's Z height is that of the roadway edge (p.z), not p.z + d.z*offset, so that it stays level despite the superelevation.
+- The offset from the edge is group.sidewalkOffsetM (>= 0, default 0); the width comes from walkRibbon.width(). Crosswalks (group.crossings) lower the curb flush via walkRibbon.crossingDips.
+- The mesh is collidable (meshPart.emitObject with collision) but not saved (canSave=false) while the road is being edited.
+- The baked sidewalk has only one level of detail (NEAR_PX = 400); collisionType 'Collision Mesh', decalType 'Visible Mesh Final'.
+- The runtime records (mesh, parts) are kept in the module, indexed by group.id, and never on the group.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_heroRoadEditor_sidewalkMgr.burnGroup(group, dir)` | Bake : écrit le trottoir en <dir>/HeroWalk_<id>.dae (centré sur son propre centre) et pose un TSStatic persistant (canSave=true) à sa place, après avoir supprimé le maillage procédural qui porte le même nom. En cas d'échec d'écriture, logue une erreur ('heroSidewalk') et le trottoir disparaît de ce bake. | 95 |
-| `editor_heroRoadEditor_sidewalkMgr.removeGroup(group)` | Supprime le maillage de trottoir du groupe et l'oublie. | 61 |
-| `editor_heroRoadEditor_sidewalkMgr.tris(group)` | Nombre de triangles du trottoir du groupe, pour le décompte de l'outil. | 87 |
-| `editor_heroRoadEditor_sidewalkMgr.updateGroup(group)` | (Re)construit les trottoirs du groupe d'après le bord de maillage actuel et les bascules sidewalkLeft/sidewalkRight. Appelé juste après la reconstruction du maillage. Ne fait rien sans dossier de scène (sceneTreeFolderId) ; ne crée rien si aucun triangle n'est produit. | 70 |
+| `editor_heroRoadEditor_sidewalkMgr.burnGroup(group, dir)` | Bake: writes the sidewalk to <dir>/HeroWalk_<id>.dae (centered on its own center) and places a persistent TSStatic (canSave=true) in its place, after deleting the procedural mesh that has the same name. On write failure, logs an error ('heroSidewalk') and the sidewalk disappears from this bake. | 95 |
+| `editor_heroRoadEditor_sidewalkMgr.removeGroup(group)` | Deletes the group's sidewalk mesh and forgets it. | 61 |
+| `editor_heroRoadEditor_sidewalkMgr.tris(group)` | Number of triangles of the group's sidewalk, for the tool's count. | 87 |
+| `editor_heroRoadEditor_sidewalkMgr.updateGroup(group)` | (Re)builds the group's sidewalks from the current mesh edge and the sidewalkLeft/sidewalkRight toggles. Called right after the mesh rebuild. Does nothing without a scene folder (sceneTreeFolderId); creates nothing if no triangle is produced. | 70 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_heroRoadEditor_sidewalkMgr.burnGroup(group, dir)`
 
-Bake : écrit le trottoir en <dir>/HeroWalk_<id>.dae (centré sur son propre centre) et pose un TSStatic persistant (canSave=true) à sa place, après avoir supprimé le maillage procédural qui porte le même nom. En cas d'échec d'écriture, logue une erreur ('heroSidewalk') et le trottoir disparaît de ce bake.
+Bake: writes the sidewalk to <dir>/HeroWalk_<id>.dae (centered on its own center) and places a persistent TSStatic (canSave=true) in its place, after deleting the procedural mesh that has the same name. On write failure, logs an error ('heroSidewalk') and the sidewalk disappears from this bake.
 
-- `group` (*table*) : Groupe Hero Road.
-- `dir` (*string*) : Dossier de bake (créé s'il n'existe pas), avec slash final.
-- **renvoie** : string[] Manifeste des noms d'objets de scène créés (vide si rien à cuire) ; sert à retirer le statique au unbake.
+- `group` (*table*) : Hero Road group.
+- `dir` (*string*) : Bake folder (created if it does not exist), with trailing slash.
+- **returns**: string[] Manifest of the created scene object names (empty if nothing to bake); used to remove the static at unbake.
 
 #### `editor_heroRoadEditor_sidewalkMgr.removeGroup(group)`
 
-Supprime le maillage de trottoir du groupe et l'oublie.
+Deletes the group's sidewalk mesh and forgets it.
 
-- `group` (*table*) : Groupe Hero Road.
+- `group` (*table*) : Hero Road group.
 
 #### `editor_heroRoadEditor_sidewalkMgr.tris(group)`
 
-Nombre de triangles du trottoir du groupe, pour le décompte de l'outil.
+Number of triangles of the group's sidewalk, for the tool's count.
 
-- `group` (*table|nil*) : Groupe Hero Road.
-- **renvoie** : integer Nombre de triangles, 0 si aucun trottoir.
+- `group` (*table|nil*) : Hero Road group.
+- **returns**: integer Number of triangles, 0 if no sidewalk.
 
 #### `editor_heroRoadEditor_sidewalkMgr.updateGroup(group)`
 
-(Re)construit les trottoirs du groupe d'après le bord de maillage actuel et les bascules sidewalkLeft/sidewalkRight. Appelé juste après la reconstruction du maillage. Ne fait rien sans dossier de scène (sceneTreeFolderId) ; ne crée rien si aucun triangle n'est produit.
+(Re)builds the group's sidewalks from the current mesh edge and the sidewalkLeft/sidewalkRight toggles. Called right after the mesh rebuild. Does nothing without a scene folder (sceneTreeFolderId); creates nothing if no triangle is produced.
 
-- `group` (*table*) : Groupe Hero Road.
+- `group` (*table*) : Hero Road group.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`, `directoryExists`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/heroRoadEditor/sidewalkMgr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/heroRoadEditor/sidewalkMgr.lua`.*

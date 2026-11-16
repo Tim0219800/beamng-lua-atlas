@@ -2,113 +2,113 @@
 -- tim19Atlas stub generated from lua/vehicle/powertrain/automaticGearbox.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Type de device powertrain `automaticGearbox` : boîte automatique à train planétaire/hydraulique simplifié. Elle a des rapports indexés (gearIndex), des modes drive / neutral / park, une interpolation progressive du rapport lors des changements (simule l'ouverture/fermeture des embrayages internes), un frottement, une perte à la montée en rapport, un verrouillage de parking, un amortisseur visqueux anti-recul et des sons de sifflement d'engrenages. Le parent doit être un dispositif de couplage visqueux (catégorie viscouscoupling, en pratique un convertisseur de couple). Le choix des rapports est piloté par un contrôleur (gearbox controller), pas par ce module.
---- Accès : type de composant powertrain `automaticGearbox` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+--- Powertrain device type `automaticGearbox`: simplified planetary/hydraulic automatic gearbox. It has indexed gears (gearIndex), drive / neutral / park modes, a progressive interpolation of the ratio during shifts (simulates the opening/closing of internal clutches), friction, a loss on upshifts, a parking lock, an anti-rollback viscous damper and gear whine sounds. The parent must be a viscous coupling device (category viscouscoupling, in practice a torque converter). Gear selection is driven by a controller (gearbox controller), not by this module.
+--- Access: powertrain device type `automaticGearbox` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 ---@class powertrain_automaticGearbox
 ---@field deviceCategories table<string, boolean> {gearbox = true}.
 ---@field outputPorts table<integer, boolean> {[1] = true}.
----@field requiredExternalInertiaOutputs integer[] {1} : powertrain ajoute un arbre factice sur ce port si rien n'y est connecté.
+---@field requiredExternalInertiaOutputs integer[] {1}: powertrain adds a dummy shaft on this port if nothing is connected to it.
 local powertrain_automaticGearbox = {}
 
---- Fabrique du device appelée par powertrain.init pour le type 'automaticGearbox'. Construit les tables de rapports, de sons, de verrouillage de parking et d'anti-recul, puis sélectionne le rapport 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/automaticGearbox.lua:366
----@param jbeamData table Données jbeam ; gearRatios est obligatoire.
----@return table  Le device automaticGearbox.
+--- Device factory called by powertrain.init for the type 'automaticGearbox'. Builds the ratio, sound, parking lock and anti-rollback tables, then selects gear 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:366
+---@param jbeamData table jbeam data; gearRatios is mandatory.
+---@return table  The automaticGearbox device.
 function powertrain_automaticGearbox.new(jbeamData) end
 
---- Objet renvoyé par new(jbeamData).
+--- Object returned by new(jbeamData).
 ---@class powertrain_automaticGearbox_device
 local powertrain_automaticGearbox_device = {}
 
---- Applique un dégât de déformation : augmente le frottement, réduit la vitesse de changement de rapport (plancher 0.2).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/automaticGearbox.lua:161
----@param damageAmount number Dégât ajouté.
+--- Applies deformation damage: increases friction, reduces the shift speed (floor 0.2).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:161
+---@param damageAmount number Damage added.
 function powertrain_automaticGearbox_device:applyDeformGroupDamage(damageAmount) end
 
---- Calcule l'inertie cumulée ramenée à l'entrée (inertie de l'enfant / rapport²), les paramètres du verrou de parking et les rapports cumulés.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/automaticGearbox.lua:257
+--- Computes the cumulative inertia referred to the input (child inertia / ratio²), the parking lock parameters and the cumulative ratios.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:257
 function powertrain_automaticGearbox_device:calculateInertia() end
 
---- Renvoie l'intégrité 0..1 (0 si cassé) et la table d'état {damageFrictionCoef, damageGearRatioChangeRateCoef, isBroken}.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/automaticGearbox.lua:188
----@return number  Intégrité 0..1.
----@return table  État détaillé.
+--- Returns the integrity 0..1 (0 if broken) and the state table {damageFrictionCoef, damageGearRatioChangeRateCoef, isBroken}.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:188
+---@return number  Integrity 0..1.
+---@return table  Detailed state.
 function powertrain_automaticGearbox_device:getPartCondition() end
 
---- Crée les boucles sonores de sifflement (entrée/sortie) et leurs lisseurs d'après les clés jbeam gearWhine*.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/automaticGearbox.lua:292
----@param jbeamData table Données jbeam.
+--- Creates the whine sound loops (input/output) and their smoothers from the gearWhine* jbeam keys.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:292
+---@param jbeamData table Jbeam data.
 function powertrain_automaticGearbox_device:initSounds(jbeamData) end
 
---- Remet tout à l'état initial (vitesses, mode 'drive', usure, dégâts, parking) et sélectionne le rapport 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/automaticGearbox.lua:328
----@param jbeamData table Données jbeam (gearRatio, friction).
+--- Resets everything to the initial state (speeds, 'drive' mode, wear, damage, parking) and selects gear 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:328
+---@param jbeamData table jbeam data (gearRatio, friction).
 function powertrain_automaticGearbox_device:reset(jbeamData) end
 
---- Remet à zéro les lisseurs et valeurs de bruit d'engrenages.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/automaticGearbox.lua:280
+--- Resets the gear noise smoothers and values.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:280
 function powertrain_automaticGearbox_device:resetSounds() end
 
---- Choisit un rapport par son indice (borné à [minGearIndex, maxGearIndex]). Le rapport réel est ensuite interpolé dans updateGFX ; pendant le changement le couple est réduit par shiftEfficiency.
----Source : lua/vehicle/powertrain/automaticGearbox.lua:241
----@param index integer Indice de rapport (0 neutre, positifs avant, négatifs arrière).
----@param gearChangeTime number|nil Durée souhaitée du changement en s (au moins minimumGearChangeTime = gearChangeTime jbeam).
+--- Selects a gear by its index (bounded to [minGearIndex, maxGearIndex]). The real ratio is then interpolated in updateGFX; during the shift the torque is reduced by shiftEfficiency.
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:241
+---@param index integer Gear index (0 neutral, positive forward, negative reverse).
+---@param gearChangeTime number|nil Desired shift duration in s (at least minimumGearChangeTime = jbeam gearChangeTime).
 function powertrain_automaticGearbox_device:setGearIndex(index, gearChangeTime) end
 
---- Active (true) ou désactive le verrouillage : lockCoef = 0 déconnecte l'entrée et laisse seul le verrou de parking, 1 fonctionnement normal ; remet parkClutchAngle à 0.
----Source : lua/vehicle/powertrain/automaticGearbox.lua:252
----@param enabled boolean true pour déconnecter/verrouiller.
+--- Enables (true) or disables the lock: lockCoef = 0 disconnects the input and leaves only the parking lock, 1 normal operation; resets parkClutchAngle to 0.
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:252
+---@param enabled boolean true to disconnect/lock.
 function powertrain_automaticGearbox_device:setLock(enabled) end
 
---- Change le mode ('drive', 'neutral' ou 'park') et sélectionne les fonctions de mise à jour correspondantes.
----Source : lua/vehicle/powertrain/automaticGearbox.lua:236
----@param mode string 'drive', 'neutral' ou 'park'.
+--- Changes the mode ('drive', 'neutral' or 'park') and selects the corresponding update functions.
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:236
+---@param mode string 'drive', 'neutral' or 'park'.
 function powertrain_automaticGearbox_device:setMode(mode) end
 
---- Applique usure et intégrité (nombre ou table) : coefficients de friction et de vitesse de changement de rapport ; appelle onBreak si isBroken (méthode inexistante, voir notes).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/automaticGearbox.lua:166
----@param subSystem string|nil Non utilisé.
----@param odometer number Usure cumulée.
----@param integrity number|table Intégrité 0..1 ou table d'état.
----@param visual any Non utilisé.
+--- Applies wear and integrity (number or table): friction and shift speed coefficients; calls onBreak if isBroken (nonexistent method, see notes).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:166
+---@param subSystem string|nil Not used.
+---@param odometer number Cumulative wear.
+---@param integrity number|table Integrity 0..1 or state table.
+---@param visual any Not used.
 function powertrain_automaticGearbox_device:setPartCondition(subSystem, odometer, integrity, visual) end
 
---- Pas de physique (couples). Calcule outputTorque1 selon le mode, le frottement, le verrouillage de parking et l'anti-recul, et alimente les lisseurs de bruit d'engrenages.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/automaticGearbox.lua:79
----@param dt number Pas de physique en secondes.
+--- Physics step (torques). Computes outputTorque1 according to the mode, the friction, the parking lock and the anti-rollback, and feeds the gear noise smoothers.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:79
+---@param dt number Physics step in seconds.
 function powertrain_automaticGearbox_device:torqueUpdate(dt) end
 
---- Une fois par frame : fait progresser gearRatio vers desiredGearRatio à la vitesse gearRatioChangeRate (influencée par usure/dégâts), recalcule l'inertie quand le rapport est atteint, met à jour isShifting*, et engage le parking si mode 'park' et vitesse basse.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/automaticGearbox.lua:115
----@param dt number Pas de temps en secondes.
+--- Once per frame: advances gearRatio toward desiredGearRatio at the speed gearRatioChangeRate (influenced by wear/damage), recomputes the inertia when the ratio is reached, updates isShifting*, and engages park if mode is 'park' and speed is low.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:115
+---@param dt number Time step in seconds.
 function powertrain_automaticGearbox_device:updateGFX(dt) end
 
---- Appelée par powertrain.updateGFX : met à jour volume et hauteur des boucles de sifflement d'engrenages d'entrée et de sortie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/automaticGearbox.lua:19
----@param dt number Pas de temps en secondes.
+--- Called by powertrain.updateGFX: updates volume and pitch of the input and output gear whine loops.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:19
+---@param dt number Time step in seconds.
 function powertrain_automaticGearbox_device:updateSounds(dt) end
 
---- Vérifie que le parent est un couplage visqueux (viscouscoupling) ; calcule les couples/vitesses attendus (depuis le moteur grand-parent si présent, sinon 100 N·m et 6000 tr/min) pour normaliser les sons.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/automaticGearbox.lua:204
----@return boolean  false si le parent n'est pas un couplage visqueux.
+--- Checks that the parent is a viscous coupling (viscouscoupling); computes the expected torques/speeds (from the grandparent engine if present, otherwise 100 N·m and 6000 RPM) to normalize the sounds.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:204
+---@return boolean  false if the parent is not a viscous coupling.
 function powertrain_automaticGearbox_device:validate() end
 
---- Pas de physique (vitesses). Fonction sélectionnée selon le mode : updateVelocity (drive), neutralUpdateVelocity ou parkUpdateVelocity (masse virtuelle). Écrit la vitesse d'entrée dans le parent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/automaticGearbox.lua:74
----@param dt number Pas de physique en secondes.
+--- Physics step (velocities). Function selected according to the mode: updateVelocity (drive), neutralUpdateVelocity or parkUpdateVelocity (virtual mass). Writes the input speed into the parent.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/automaticGearbox.lua:74
+---@param dt number Physics step in seconds.
 function powertrain_automaticGearbox_device:velocityUpdate(dt) end
 
 return powertrain_automaticGearbox

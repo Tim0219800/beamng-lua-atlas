@@ -1,43 +1,43 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/idByName.lua",
-  "module": "Noeud flowgraph « ID by Name » (categorie simple). Retrouve l'id du premier objet de la scene portant un nom (scenetree.findObject). Entree : name (string, cache ; sinon le nom est dans self.data.name). Sorties : objID (number) et exist (bool, cache). L'id trouve est memorise jusqu'au debut/fin de mission ou au demarrage du graphe.",
+  "module": "Flowgraph node \"ID by Name\" (simple category). Finds the id of the first scene object with a given name (scenetree.findObject). Input: name (string, hidden; otherwise the name is in self.data.name). Outputs: objID (number) and exist (bool, hidden). The found id is remembered until the start/end of a mission or the start of the graph.",
   "notes": [
-    "Une fois l'id trouve, il est conserve meme si le nom du pin change ensuite et que l'objet n'est plus trouve."
+    "Once the id is found, it is kept even if the pin's name later changes and the object is no longer found."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Nom vide et objID nil.",
+          "desc": "Empty name and objID nil.",
           "internal": true
         },
         "work": {
-          "desc": "Utilise le pin name s'il est branche, cherche l'objet et ecrit objID et exist.",
+          "desc": "Uses the name pin if it is connected, looks up the object and writes objID and exist.",
           "internal": false
         },
         "onClientEndMission": {
-          "desc": "Hook de fin de mission : oublie l'id memorise.",
+          "desc": "End-of-mission hook: forgets the remembered id.",
           "internal": true
         },
         "onClientStartMission": {
-          "desc": "Hook de debut de mission : oublie l'id memorise.",
+          "desc": "Start-of-mission hook: forgets the remembered id.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Oublie l'id memorise au demarrage du graphe.",
+          "desc": "Forgets the remembered id when the graph starts.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche le nom et l'id courants au milieu du noeud.",
+          "desc": "Displays the current name and id in the middle of the node.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true

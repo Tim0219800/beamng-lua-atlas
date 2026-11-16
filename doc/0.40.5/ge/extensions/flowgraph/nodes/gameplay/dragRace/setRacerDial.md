@@ -1,23 +1,23 @@
 # `flowgraph_nodes_gameplay_dragRace_setRacerDial`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/setRacerDial.lua` · VM : Game Engine (GE) · 83 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/setRacerDial.lua` · VM: Game Engine (GE) · 83 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/dragRace/setRacerDial")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/dragRace/setRacerDial")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Set Drag Racer Dial » (catégorie once_instant). Règle le dial (temps annoncé) d'un ou plusieurs pilotes. Pin d'entrée : dials, table d'entrées {racerId = number, value = number}. Sorties : flow (impulsion), success (tout réussi), count (nombre de dials valides). Appelle dragBridge.setRacersDial.
+Flowgraph node "Set Drag Racer Dial" (category once_instant). Sets the dial (announced time) of one or more drivers. Input pin: dials, table of entries {racerId = number, value = number}. Outputs: flow (pulse), success (all succeeded), count (number of valid dials). Calls dragBridge.setRacersDial.
 
-## Remarques
+## Notes
 
-- count est calculé avant l'appel : c'est le nombre d'entrées valides dont le racerId existe dans dragData.racers.
-- Table vide : success faux, count 0, mais flux donné.
+- count is computed before the call: it is the number of valid entries whose racerId exists in dragData.racers.
+- Empty table: success false, count 0, but flow given.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Valide les entrées, appelle setRacersDial et renseigne success/count ; signale un échec partiel par erreur de nœud. | 26 |
+| `C:workOnce()` | Validates the entries, calls setRacersDial and fills success/count; reports a partial failure through a node error. | 26 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/setRacerDial.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/setRacerDial.lua`.*

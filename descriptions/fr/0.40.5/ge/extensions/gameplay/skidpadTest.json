@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/gameplay/skidpadTest.lua",
+  "module": "Extension de test de skidpad : téléporte un véhicule au point de départ « skidpadSpawn » puis lui fait suivre par l'IA le circuit défini par les waypoints skidpadWP1 à skidpadWP4 (2 tours). Utilise util_stepHandler pour enchaîner les étapes. Le niveau doit contenir ces objets de scène.",
+  "usage": "extensions.load('gameplay_skidpadTest')\ngameplay_skidpadTest.startTest(be:getPlayerVehicleID(0))",
+  "notes": [
+    "testResults n'est jamais renseigné par ce fichier : getData() renvoie toujours nil (remis à nil au démarrage).",
+    "cancelTest ne fait que lever un drapeau cancelTestRequested qui n'est lu nulle part : l'annulation n'a aucun effet.",
+    "startTest suppose que l'objet « skidpadSpawn » existe, sinon erreur Lua (spawnPoint nil)."
+  ],
+  "functions": {
+    "startTest": {
+      "desc": "Lance la séquence : téléportation sûre du véhicule sur skidpadSpawn (orientation retournée de 180°), attente 0,2 s, puis ai.driveUsingPath sur les waypoints skidpadWP1..4, WP1 avec noOfLaps = 2 et aggression = 1.",
+      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule à tester."}}
+    },
+    "getData": {
+      "desc": "Renvoie les résultats du test (testResults).",
+      "returns": [{"type": "table|nil", "desc": "Toujours nil dans cette version (jamais rempli)."}]
+    },
+    "cancelTest": {
+      "desc": "Lève le drapeau d'annulation (sans effet réel, voir notes)."
+    }
+  }
+}

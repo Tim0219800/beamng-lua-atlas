@@ -1,0 +1,57 @@
+{
+  "path": "lua/ge/extensions/career/modules/insurance/history.lua",
+  "module": "Historique des événements d'assurance du joueur en carrière (réclamations, réparations privées, renouvellements, changements de contrat…). Chaque entrée porte un type, un titre, des effets (par exemple {type='money', changedBy=-montant}), le nom de l'assurance concernée, un texte optionnel, des données libres (other) et l'heure os.time(). Le module fournit aussi des totaux utilisés pour les statistiques d'assurance. Les données sont sauvegardées par le module insurance via getPlHistory/setPlHistory.",
+  "notes": [
+    "Types d'entrée utilisés par les totaux : 'insuranceRepairClaim', 'privateRepair', 'insuranceRenewed', 'insuranceChanged'.",
+    "getHistoryTotalDetails (interne) incrémente totalCount une fois par effet de type 'money' (et non une fois par entrée) : une entrée avec plusieurs effets d'argent compte plusieurs fois, une entrée sans effet d'argent ne compte pas.",
+    "Le total d'argent utilise la valeur absolue de changedBy.",
+    "getTotalInsuranceRepairDeductiblesPaid lit entry.other.deductible et getDamageCostCoveredByInsurance lit entry.other.vehDamagePrice ; ces champs doivent être fournis dans other lors de l'ajout.",
+    "buildPlHistory renvoie une copie triée de la plus récente à la plus ancienne et ajoute un champ date formaté os.date('%c')."
+  ],
+  "functions": {
+    "addToPlHistory": {
+      "desc": "Ajoute une entrée à l'historique avec l'heure courante (os.time()).",
+      "params": {"data": {"type": "table", "desc": "Table avec type, title, effects, concernedInsuranceName, overrideText, other."}}
+    },
+    "buildPlHistory": {
+      "desc": "Construit la liste d'historique pour l'UI : copie profonde triée du plus récent au plus ancien, avec date lisible.",
+      "returns": [{"type": "table", "desc": "Liste d'entrées avec champ date supplémentaire."}]
+    },
+    "getPlHistory": {
+      "desc": "Renvoie la table d'historique brute (pour la sauvegarde).",
+      "returns": [{"type": "table", "desc": "Liste d'entrées."}]
+    },
+    "setPlHistory": {
+      "desc": "Remplace l'historique (chargement de sauvegarde) ; une valeur nil le vide.",
+      "params": {"history": {"type": "table|nil", "desc": "Historique sauvegardé."}}
+    },
+    "initPlHistory": {
+      "desc": "Vide l'historique (nouvelle partie).",
+      "internal": true
+    },
+    "getInsuranceClaimsCount": {
+      "desc": "Nombre de réparations prises en charge par une assurance (effets d'argent des entrées 'insuranceRepairClaim').",
+      "returns": [{"type": "integer", "desc": "Nombre de réclamations."}]
+    },
+    "getNonInsuranceRepairsCount": {
+      "desc": "Nombre de réparations payées sans assurance (entrées 'privateRepair').",
+      "returns": [{"type": "integer", "desc": "Nombre de réparations privées."}]
+    },
+    "getTotalPremiumPaid": {
+      "desc": "Total des primes payées : renouvellements ('insuranceRenewed') plus changements de contrat ('insuranceChanged').",
+      "returns": [{"type": "number", "desc": "Montant en argent du jeu."}]
+    },
+    "getTotalInsuranceRepairDeductiblesPaid": {
+      "desc": "Somme des franchises payées lors des réclamations de réparation.",
+      "returns": [{"type": "number", "desc": "Montant."}]
+    },
+    "getTotalPrivateRepairsPaid": {
+      "desc": "Total dépensé en réparations sans assurance.",
+      "returns": [{"type": "number", "desc": "Montant."}]
+    },
+    "getDamageCostCoveredByInsurance": {
+      "desc": "Somme des coûts de dégâts (vehDamagePrice) des réclamations de réparation, c'est-à-dire la valeur des dommages couverts.",
+      "returns": [{"type": "number", "desc": "Montant."}]
+    }
+  }
+}

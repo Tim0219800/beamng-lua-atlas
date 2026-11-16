@@ -1,27 +1,37 @@
 {
   "path": "lua/ge/extensions/editor/missionEditor/prefabs.lua",
-  "module": "Panneau « Prefabs » de l'éditeur de missions. Il édite la liste mission.prefabs (chemins de fichiers .prefab / .prefab.json) et le booléen prefabsRequireCollisionReload. Chaque ligne a un champ de chemin, un sélecteur de fichier, un indicateur d'existence (FS:fileExists) et un bouton « Spawn » qui instancie le prefab dans MissionGroup. Le module renvoie un constructeur : require(...)(missionEditor).",
+  "module": "\"Prefabs\" panel of the mission editor. It edits the mission.prefabs list (paths of .prefab / .prefab.json files) and the boolean prefabsRequireCollisionReload. Each row has a path field, a file picker, an existence indicator (FS:fileExists) and a \"Spawn\" button that instantiates the prefab in MissionGroup. The module returns a constructor: require(...)(missionEditor).",
   "notes": [
-    "Spawn : spawnPrefab(nom unique, fichier, \"0 0 0\", \"0 0 1 0\", \"1 1 1\"), loadMode = 0, ajouté à scenetree.MissionGroup puis sélectionné dans l'éditeur.",
-    "Un nouveau prefab ajouté par « Add » vaut « / » tant qu'il n'est pas édité.",
-    "Le bouton de suppression utilise originalPrefabName dans son identifiant imgui ; la liste self.filenames est parallèle à mission.prefabs."
+    "Spawn: spawnPrefab(unique name, file, \"0 0 0\", \"0 0 1 0\", \"1 1 1\"), loadMode = 0, added to scenetree.MissionGroup then selected in the editor.",
+    "A new prefab added by \"Add\" is \"/\" until it is edited.",
+    "The delete button uses originalPrefabName in its imgui id; the self.filenames list is parallel to mission.prefabs."
   ],
   "classes": {
     "C": {
-      "desc": "Instance du panneau. Champs : missionEditor, mission, filenames (tampons imgui), prefabsRequireCollisionReload.",
+      "desc": "Instance of the panel. Fields: missionEditor, mission, filenames (imgui buffers), prefabsRequireCollisionReload.",
       "functions": {
         "init": {
-          "desc": "Constructeur.",
-          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "desc": "Constructor.",
+          "params": {
+            "missionEditor": {
+              "type": "table",
+              "desc": "Main editor_missionEditor module."
+            }
+          },
           "internal": true
         },
         "setMission": {
-          "desc": "Définit la mission et recrée les tampons de texte depuis mission.prefabs.",
-          "params": {"mission": {"type": "table", "desc": "Mission courante."}},
+          "desc": "Sets the mission and recreates the text buffers from mission.prefabs.",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Current mission."
+            }
+          },
           "internal": true
         },
         "draw": {
-          "desc": "Dessine la liste des prefabs (suppression, chemin, sélecteur, état, spawn), le bouton « Add » et la case « Requires collision reload ».",
+          "desc": "Draws the prefabs list (deletion, path, picker, status, spawn), the \"Add\" button and the \"Requires collision reload\" checkbox.",
           "internal": true
         }
       }

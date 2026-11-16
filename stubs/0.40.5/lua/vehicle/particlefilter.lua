@@ -2,15 +2,15 @@
 -- tim19Atlas stub generated from lua/vehicle/particlefilter.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Filtre d'émission de particules lors des collisions de noeuds. main.lua remplit la table partagée particlefilter.particleData à chaque onNodeCollision puis appelle nodeCollision(p) : si la vitesse perpendiculaire dépasse un seuil lié à la profondeur de pénétration, il cherche dans la table des règles de particules (particles.getMaterialsParticlesTable, issue de particles.json) les règles correspondant à la paire de matériaux et, pour celles dont compareFunc(p) est vrai, émet les particules via obj:addParticleVelWidthTypeCount.
---- Accès : globale `particlefilter`
+--- Particle emission filter for node collisions. main.lua fills the shared table particlefilter.particleData at each onNodeCollision then calls nodeCollision(p): if the perpendicular velocity exceeds a threshold tied to the penetration depth, it looks in the particle rules table (particles.getMaterialsParticlesTable, from particles.json) for the rules matching the material pair and, for those whose compareFunc(p) is true, emits the particles via obj:addParticleVelWidthTypeCount.
+--- Access: global `particlefilter`
 ---@class particlefilter
----@field particleData table Table réutilisée (évite des allocations) décrivant la collision courante : id1 (noeud), pos, normal, nodeVel, perpendicularVel, slipVec, slipVel, slipForce, normalForce, depth, materialID1, materialID2. Remplie par main.lua:onNodeCollision.
+---@field particleData table Reused table (avoids allocations) describing the current collision: id1 (node), pos, normal, nodeVel, perpendicularVel, slipVec, slipVel, slipForce, normalForce, depth, materialID1, materialID2. Filled by main.lua:onNodeCollision.
 particlefilter = {}
 
---- Évalue une collision de noeud et émet des particules si le seuil de vitesse est dépassé et si une règle de la paire de matériaux accepte (compareFunc). Appelée par main.lua:onNodeCollision à chaque collision.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/particlefilter.lua:25
----@param p table Données de collision au format de particleData.
+--- Evaluates a node collision and emits particles if the speed threshold is exceeded and if a rule of the material pair accepts (compareFunc). Called by main.lua:onNodeCollision on each collision.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/particlefilter.lua:25
+---@param p table Collision data in particleData format.
 function particlefilter.nodeCollision(p) end
 

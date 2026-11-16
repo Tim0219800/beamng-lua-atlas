@@ -1,83 +1,83 @@
 # `career_modules_spawnPoints`
 
-*Fichier : `lua/ge/extensions/career/modules/spawnPoints.lua` · VM : Game Engine (GE) · 120 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/spawnPoints.lua` · VM: Game Engine (GE) · 120 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_spawnPoints` : `extensions.load("career_modules_spawnPoints")`, puis la globale `career_modules_spawnPoints`
+**Access:** extension `career_modules_spawnPoints`: `extensions.load("career_modules_spawnPoints")`, then the global `career_modules_spawnPoints`
 
-Découverte des points d'apparition (spawn points) d'un niveau en carrière. Chaque seconde, si le joueur conduit un véhicule de l'inventaire, il teste la distance aux points non découverts (seuil 75 m) ; à la découverte il ajoute une entrée au journal de bord (career_modules_logbook.spawnPointUnlocked), émet le hook onSpawnPointUnlocked(spawnPoint) et vide gameplay_rawPois. L'état est sauvegardé dans <save>/career/spawnPoints.json.
+Discovery of a level's spawn points in career. Every second, if the player is driving an inventory vehicle, it tests the distance to undiscovered points (threshold 75 m); on discovery it adds a logbook entry (career_modules_logbook.spawnPointUnlocked), emits the onSpawnPointUnlocked(spawnPoint) hook and clears gameplay_rawPois. The state is saved in <save>/career/spawnPoints.json.
 
-## Remarques
+## Notes
 
-- Données : table niveau -> nom d'objet du spawn point -> true.
-- Le fichier est ignoré (table vide) si la version de info.json est < 42.
-- Aucune vérification n'est faite pendant le tutoriel.
-- getSpawnPointTranslation est défini mais jamais utilisé.
+- Data: table level -> spawn point object name -> true.
+- The file is ignored (empty table) if the info.json version is < 42.
+- No check is made during the tutorial.
+- getSpawnPointTranslation is defined but never used.
 
-**Dépendances (chargées avant) :** `career_career`
+**Dependencies (loaded first):** `career_career`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_spawnPoints.getUnlockedSpawnpointsData()` | Renvoie la table des points découverts, par niveau. | 77 |
-| `career_modules_spawnPoints.isSpawnPointDiscovered(level, spawnPointName)` | Indique si un point d'apparition est découvert (crée l'entrée de niveau si besoin). | 91 |
-| `career_modules_spawnPoints.onCareerActive(active)` | Hook : charge les points découverts quand la carrière devient active. *(interne)* *(hook)* | 103 |
-| `career_modules_spawnPoints.onExtensionLoaded()` | Hook : charge les points découverts si la carrière est déjà active (renvoie false sinon). *(interne)* *(hook)* | 98 |
-| `career_modules_spawnPoints.onSaveCurrentProfile(currentSavePath)` | Hook de sauvegarde : écrit spawnPoints.json dans <save>/career/. *(interne)* *(hook)* | 109 |
-| `career_modules_spawnPoints.onUpdate(dtReal, dtSim, dtRaw)` | Hook appelé chaque frame : toutes les secondes (dtReal cumulé), recherche un point non découvert à moins de 75 m du véhicule joueur et le débloque. *(interne)* *(hook)* | 28 |
+| `career_modules_spawnPoints.getUnlockedSpawnpointsData()` | Returns the table of discovered points, per level. | 77 |
+| `career_modules_spawnPoints.isSpawnPointDiscovered(level, spawnPointName)` | Indicates whether a spawn point is discovered (creates the level entry if needed). | 91 |
+| `career_modules_spawnPoints.onCareerActive(active)` | Hook: loads the discovered points when the career becomes active. *(internal)* *(hook)* | 103 |
+| `career_modules_spawnPoints.onExtensionLoaded()` | Hook: loads the discovered points if the career is already active (returns false otherwise). *(internal)* *(hook)* | 98 |
+| `career_modules_spawnPoints.onSaveCurrentProfile(currentSavePath)` | Save hook: writes spawnPoints.json to <save>/career/. *(internal)* *(hook)* | 109 |
+| `career_modules_spawnPoints.onUpdate(dtReal, dtSim, dtRaw)` | Hook called every frame: every second (accumulated dtReal), looks for an undiscovered point within 75 m of the player vehicle and unlocks it. *(internal)* *(hook)* | 28 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_spawnPoints.getUnlockedSpawnpointsData()`
 
-Renvoie la table des points découverts, par niveau.
+Returns the table of discovered points, per level.
 
-- **renvoie** : table<string, table<string, boolean>> niveau -> nom du point -> true.
+- **returns**: table<string, table<string, boolean>> level -> point name -> true.
 
 #### `career_modules_spawnPoints.isSpawnPointDiscovered(level, spawnPointName)`
 
-Indique si un point d'apparition est découvert (crée l'entrée de niveau si besoin).
+Indicates whether a spawn point is discovered (creates the level entry if needed).
 
-- `level` (*string*) : Identifiant du niveau.
-- `spawnPointName` (*string*) : Nom de l'objet du point (objectname).
-- **renvoie** : boolean|nil true si découvert, nil sinon.
+- `level` (*string*) : Level identifier.
+- `spawnPointName` (*string*) : Point object name (objectname).
+- **returns**: boolean|nil true if discovered, nil otherwise.
 
 #### `career_modules_spawnPoints.onCareerActive(active)`
 
-Hook : charge les points découverts quand la carrière devient active.
+Hook: loads the discovered points when the career becomes active.
 
-- `active` (*boolean*) : Rien si false.
+- `active` (*boolean*) : Nothing if false.
 
 #### `career_modules_spawnPoints.onSaveCurrentProfile(currentSavePath)`
 
-Hook de sauvegarde : écrit spawnPoints.json dans <save>/career/.
+Save hook: writes spawnPoints.json to <save>/career/.
 
-- `currentSavePath` (*string*) : Dossier de sauvegarde.
+- `currentSavePath` (*string*) : Save folder.
 
 #### `career_modules_spawnPoints.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé chaque frame : toutes les secondes (dtReal cumulé), recherche un point non découvert à moins de 75 m du véhicule joueur et le débloque.
+Hook called every frame: every second (accumulated dtReal), looks for an undiscovered point within 75 m of the player vehicle and unlocks it.
 
-- `dtReal` (*number*) : Temps réel écoulé (s).
-- `dtSim` (*number*) : Temps de simulation (s), non utilisé.
-- `dtRaw` (*number*) : Temps brut (s), non utilisé.
+- `dtReal` (*number*) : Elapsed real time (s).
+- `dtSim` (*number*) : Simulation time (s), unused.
+- `dtRaw` (*number*) : Raw time (s), unused.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_career. |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_career. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onSpawnPointUnlocked`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getPosition`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/spawnPoints.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/spawnPoints.lua`.*

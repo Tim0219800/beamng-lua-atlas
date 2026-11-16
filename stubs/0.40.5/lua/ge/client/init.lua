@@ -2,24 +2,24 @@
 -- tim19Atlas stub generated from lua/ge/client/init.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Initialisation du client graphique (portage de client.cs de Torque). initClient prépare le rendu (postFx, renderManager, systèmes d'éclairage), crée les contrôles GameViewportCtrl « OnlyGui » et CefGui « maincef » (interface web), charge les datablocks (core/art/datablocks, art, assets) puis affiche le menu principal. reloadClient ne recharge que les systèmes d'éclairage et les post-effets.
---- Accès : `require("client/init")`
+--- Initialization of the graphics client (port of Torque's client.cs). initClient prepares rendering (postFx, renderManager, lighting systems), creates the GameViewportCtrl "OnlyGui" and CefGui "maincef" controls (web interface), loads the datablocks (core/art/datablocks, art, assets) then shows the main menu. reloadClient only reloads the lighting systems and post-effects.
+--- Access: `require("client/init")`
 ---@class client_init
 local client_init = {}
 
---- Séquence complète d'initialisation du client : rendu de base, contrôles GUI, datablocks, audioData.cs s'il existe, puis loadMainMenu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/client/init.lua:164
+--- Full client initialization sequence: base rendering, GUI controls, datablocks, audioData.cs if it exists, then loadMainMenu.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/client/init.lua:164
 function client_init.initClient() end
 
---- Affiche le contrôle « OnlyGui » comme contenu du canvas (menu principal), si les deux objets existent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/client/init.lua:89
+--- Shows the "OnlyGui" control as the canvas content (main menu), if both objects exist.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/client/init.lua:89
 function client_init.loadMainMenu() end
 
---- Recharge les systèmes d'éclairage et les post-effets (reloadLightingSystems, reloadPostEffects), utile après un changement de configuration graphique.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/client/init.lua:193
+--- Reloads the lighting systems and post-effects (reloadLightingSystems, reloadPostEffects), useful after a graphics configuration change.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/client/init.lua:193
 function client_init.reloadClient() end
 
 return client_init

@@ -1,42 +1,42 @@
 # `render_hdr`
 
-*Fichier : `lua/ge/extensions/render/hdr.lua` · VM : Game Engine (GE) · 72 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/render/hdr.lua` · VM: Game Engine (GE) · 72 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `render_hdr` : `extensions.load("render_hdr")`, puis la globale `render_hdr`
+**Access:** extension `render_hdr`: `extensions.load("render_hdr")`, then the global `render_hdr`
 
-Crée au premier frame la chaîne d'effets de post-traitement HDR (exposition automatique/locale) : PostEffectBrightPass (rendu AfterPostFX à échelle 0.5) avec ses enfants PostEffectDownScale, PostEffectLuminance et PostEffectCombinePass, plus PostEffectLocalExposure (échelle 0.25) dont le biais d'exposition en EV vient du réglage GraphicEVCompensation. Aucun usage direct par un moddeur ; global : render_hdr.
+Creates, on the first frame, the HDR post-processing effect chain (auto/local exposure): PostEffectBrightPass (AfterPostFX rendering at 0.5 scale) with its children PostEffectDownScale, PostEffectLuminance and PostEffectCombinePass, plus PostEffectLocalExposure (0.25 scale) whose exposure bias in EV comes from the GraphicEVCompensation setting. Not used directly by a modder; global: render_hdr.
 
-## Remarques
+## Notes
 
-- Ne fait rien si l'unique adaptateur graphique est « GFX Null Device » (serveur sans GPU) : log d'erreur « Null graphics device detected ».
-- Chaque objet n'est créé que s'il n'existe pas déjà dans le scenetree (recherche par nom PostEffect…Object) ; seul exposureBiasEV de PostEffectLocalExposureObject est mis à jour à chaque appel.
-- La variable `initialized` n'est jamais mise à true dans onFirstUpdate (seulement par onDeserialized) : le garde-fou n'agit donc qu'après un rechargement Lua ; la création reste idempotente grâce aux recherches par nom.
+- Does nothing if the only graphics adapter is "GFX Null Device" (server without GPU): error log "Null graphics device detected".
+- Each object is only created if it does not already exist in the scenetree (lookup by name PostEffect…Object); only exposureBiasEV of PostEffectLocalExposureObject is updated on each call.
+- The variable `initialized` is never set to true in onFirstUpdate (only by onDeserialized): the guard therefore only acts after a Lua reload; creation remains idempotent thanks to the lookups by name.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `render_hdr.onDeserialized(data)` | Après rechargement Lua : restaure le drapeau initialized. *(interne)* *(hook)* | 61 |
-| `render_hdr.onFirstUpdate()` | Hook du premier update du jeu : crée (si absents) les objets de post-traitement HDR décrits ci-dessus et applique le biais d'exposition GraphicEVCompensation (réglage, en EV, 0 par défaut). *(interne)* *(hook)* | 9 |
-| `render_hdr.onSerialize()` | Avant rechargement Lua. *(interne)* *(hook)* | 57 |
+| `render_hdr.onDeserialized(data)` | After Lua reload: restores the initialized flag. *(internal)* *(hook)* | 61 |
+| `render_hdr.onFirstUpdate()` | Hook of the game's first update: creates (if absent) the HDR post-processing objects described above and applies the GraphicEVCompensation exposure bias (setting, in EV, 0 by default). *(internal)* *(hook)* | 9 |
+| `render_hdr.onSerialize()` | Before Lua reload. *(internal)* *(hook)* | 57 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `render_hdr.onDeserialized(data)`
 
-Après rechargement Lua : restaure le drapeau initialized.
+After Lua reload: restores the initialized flag.
 
-- `data` (*table*) : Table renvoyée par onSerialize.
+- `data` (*table*) : Table returned by onSerialize.
 
 #### `render_hdr.onSerialize()`
 
-Avant rechargement Lua.
+Before Lua reload.
 
-- **renvoie** : table {initialized = true}
+- **returns**: table {initialized = true}
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/render/hdr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/render/hdr.lua`.*

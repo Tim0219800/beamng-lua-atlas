@@ -1,63 +1,63 @@
 # `gameplay_drift_stallingSystem`
 
-*Fichier : `lua/ge/extensions/gameplay/drift/stallingSystem.lua` · VM : Game Engine (GE) · 186 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drift/stallingSystem.lua` · VM: Game Engine (GE) · 186 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drift_stallingSystem` : `extensions.load("gameplay_drift_stallingSystem")`, puis la globale `gameplay_drift_stallingSystem`
+**Access:** extension `gameplay_drift_stallingSystem`: `extensions.load("gameplay_drift_stallingSystem")`, then the global `gameplay_drift_stallingSystem`
 
-Système anti-répétition du mode défi « Gymkhana » : il garde l'historique des figures (drifts normaux et zones de cascade) et calcule un multiplicateur (stallingValue, entre 0.5 et 1) qui réduit le score quand le joueur répète la même figure. Chargé par gameplay_drift_general quand le mode de défi est "Gymkhana". Contient aussi une fenêtre imgui de debug.
+Anti-repetition system of the "Gymkhana" challenge mode: it keeps the history of figures (normal drifts and stunt zones) and computes a multiplier (stallingValue, between 0.5 and 1) that reduces the score when the player repeats the same figure. Loaded by gameplay_drift_general when the challenge mode is "Gymkhana". Also contains a debug imgui window.
 
-## Remarques
+## Notes
 
-- Réglages : minStallingValue 0.5, maxStallingValue 1, historique pris en compte = 10 dernières figures. Drift normal (stuntId 0) : +0.35 si changement de figure, -0.15 au-delà de 5 répétitions. Zone de cascade : +1, -0.6 au-delà de 1 répétition.
-- Le multiplicateur reste à 1 tant que l'historique contient moins de 2 entrées ou moins de 2 figures différentes.
-- Le multiplicateur vaut score/maxPossibleScore borné ; si maxPossibleScore reste à 0 la division donne NaN/inf avant le bornage (math.max/min).
-- La variable stuntZonesCount est remise à -1 mais n'est jamais utilisée ailleurs (code mort).
+- Settings: minStallingValue 0.5, maxStallingValue 1, history considered = last 10 figures. Normal drift (stuntId 0): +0.35 on figure change, -0.15 beyond 5 repetitions. Stunt zone: +1, -0.6 beyond 1 repetition.
+- The multiplier stays at 1 as long as the history contains fewer than 2 entries or fewer than 2 different figures.
+- The multiplier equals score/maxPossibleScore clamped; if maxPossibleScore stays at 0, the division gives NaN/inf before clamping (math.max/min).
+- The variable stuntZonesCount is reset to -1 but is never used elsewhere (dead code).
 
-**Dépendances (chargées avant) :** `gameplay_drift_general`
+**Dependencies (loaded first):** `gameplay_drift_general`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drift_stallingSystem.calculateScore(score)` | Applique le multiplicateur de stalling à un score. | 118 |
-| `gameplay_drift_stallingSystem.getDriftDebugInfo()` | Renvoie {default=true, canBeChanged=true} pour la fenêtre de debug drift. | 173 |
-| `gameplay_drift_stallingSystem.onDriftStatusChanged(isDrifting)` | Hook : quand le joueur commence à drifter, ajoute un drift (stuntId 0) à l'historique et recalcule le multiplicateur. *(interne)* *(hook)* | 132 |
-| `gameplay_drift_stallingSystem.onUpdate()` | Appelé à chaque frame : affiche la fenêtre de debug « Drift stalling system » si activée. *(interne)* *(hook)* | 169 |
-| `gameplay_drift_stallingSystem.processStuntZone(stuntZoneId)` | Ajoute une zone de cascade à l'historique (type "stuntZone") et recalcule le multiplicateur. | 122 |
-| `gameplay_drift_stallingSystem.reset()` | Vide l'historique et remet le multiplicateur à 1. | 40 |
+| `gameplay_drift_stallingSystem.calculateScore(score)` | Applies the stalling multiplier to a score. | 118 |
+| `gameplay_drift_stallingSystem.getDriftDebugInfo()` | Returns {default=true, canBeChanged=true} for the drift debug window. | 173 |
+| `gameplay_drift_stallingSystem.onDriftStatusChanged(isDrifting)` | Hook: when the player starts drifting, adds a drift (stuntId 0) to the history and recomputes the multiplier. *(internal)* *(hook)* | 132 |
+| `gameplay_drift_stallingSystem.onUpdate()` | Called every frame: displays the "Drift stalling system" debug window if enabled. *(internal)* *(hook)* | 169 |
+| `gameplay_drift_stallingSystem.processStuntZone(stuntZoneId)` | Adds a stunt zone to the history (type "stuntZone") and recomputes the multiplier. | 122 |
+| `gameplay_drift_stallingSystem.reset()` | Clears the history and resets the multiplier to 1. | 40 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drift_stallingSystem.calculateScore(score)`
 
-Applique le multiplicateur de stalling à un score.
+Applies the stalling multiplier to a score.
 
-- `score` (*number*) : Score brut.
-- **renvoie** : number score * stallingValue.
+- `score` (*number*) : Raw score.
+- **returns**: number score * stallingValue.
 
 #### `gameplay_drift_stallingSystem.getDriftDebugInfo()`
 
-Renvoie {default=true, canBeChanged=true} pour la fenêtre de debug drift.
+Returns {default=true, canBeChanged=true} for the drift debug window.
 
-- **renvoie** : table {default = true, canBeChanged = true}
+- **returns**: table {default = true, canBeChanged = true}
 
 #### `gameplay_drift_stallingSystem.onDriftStatusChanged(isDrifting)`
 
-Hook : quand le joueur commence à drifter, ajoute un drift (stuntId 0) à l'historique et recalcule le multiplicateur.
+Hook: when the player starts drifting, adds a drift (stuntId 0) to the history and recomputes the multiplier.
 
-- `isDrifting` (*boolean*) : true au début d'un drift.
+- `isDrifting` (*boolean*) : true at the start of a drift.
 
 #### `gameplay_drift_stallingSystem.processStuntZone(stuntZoneId)`
 
-Ajoute une zone de cascade à l'historique (type "stuntZone") et recalcule le multiplicateur.
+Adds a stunt zone to the history (type "stuntZone") and recomputes the multiplier.
 
-- `stuntZoneId` (*integer*) : Identifiant de la zone ; une valeur différente de 0 la distingue des drifts normaux.
+- `stuntZoneId` (*integer*) : Zone identifier; a non-zero value distinguishes it from normal drifts.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | gameplay_drift_general, chargé avant. |
+| `dependencies` | string[] | gameplay_drift_general, loaded beforehand. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drift/stallingSystem.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drift/stallingSystem.lua`.*

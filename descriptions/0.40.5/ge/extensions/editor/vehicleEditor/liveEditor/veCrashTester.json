@@ -1,18 +1,45 @@
 {
   "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veCrashTester.lua",
-  "module": "Outil 'Other/Crash Tester' du Vehicle Editor live. On choisit un point de départ sur le terrain (molette = rotation par pas de 5°), un nombre de véhicules (1 à 15) et une vitesse cible (10 à 200 km/h). 'Run Test!' fait apparaître des voitures/camions tirés au hasard (core_vehicles.getVehicleList, Type Car ou Truck), espacés de 10 m, frein à main relâché et lancés à la vitesse cible via applyClusterVelocityScaleAdd. 'Stop Test!' supprime les véhicules.",
+  "module": "'Other/Crash Tester' tool of the live Vehicle Editor. You choose a starting point on the terrain (wheel = rotation in 5° steps), a number of vehicles (1 to 15) and a target speed (10 to 200 km/h). 'Run Test!' spawns randomly picked cars/trucks (core_vehicles.getVehicleList, Type Car or Truck), spaced 10 m apart, handbrake released and launched at the target speed via applyClusterVelocityScaleAdd. 'Stop Test!' deletes the vehicles.",
   "notes": [
-    "Vitesse de départ = targetSpeed / 3.6 (km/h vers m/s) dans la direction startDir * (0,1,0).",
-    "Bug mineur : `hit = cameraMouseRayCast(...)` est affecté sans `local`, donc une globale `hit` est créée.",
-    "vehsData.done n'est jamais mis à jour : seule la suppression via Stop Test! retire les véhicules."
+    "Starting speed = targetSpeed / 3.6 (km/h to m/s) in the direction startDir * (0,1,0).",
+    "Minor bug: `hit = cameraMouseRayCast(...)` is assigned without `local`, so a global `hit` is created.",
+    "vehsData.done is never updated: only deletion via Stop Test! removes the vehicles."
   ],
   "fields": {
-    "menuEntry": {"type": "string", "desc": "'Other/Crash Tester' (sous-menu 'Other')."}
+    "menuEntry": {
+      "type": "string",
+      "desc": "'Other/Crash Tester' ('Other' submenu)."
+    }
   },
   "functions": {
-    "onUpdate": {"desc": "Appelé chaque frame : dessine la fenêtre (curseurs, boutons) et les repères de départ (triangles rouges via debugDrawer:drawTriSolid).", "internal": true},
-    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
-    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
-    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+    "onUpdate": {
+      "desc": "Called every frame: draws the window (sliders, buttons) and the start markers (red triangles via debugDrawer:drawTriSolid).",
+      "internal": true
+    },
+    "open": {
+      "desc": "Opens the window.",
+      "internal": false
+    },
+    "onSerialize": {
+      "desc": "Returns {windowOpen}.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{windowOpen = boolean}"
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Restores the open state.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "onSerialize table."
+        }
+      },
+      "internal": true
+    }
   }
 }

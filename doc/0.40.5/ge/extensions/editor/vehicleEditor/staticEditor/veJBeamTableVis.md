@@ -1,60 +1,60 @@
 # `editor_vehicleEditor_staticEditor_veJBeamTableVis`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/staticEditor/veJBeamTableVis.lua` · VM : Game Engine (GE) · 201 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/staticEditor/veJBeamTableVis.lua` · VM: Game Engine (GE) · 201 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_staticEditor_veJBeamTableVis` : `extensions.load("editor_vehicleEditor_staticEditor_veJBeamTableVis")`, puis la globale `editor_vehicleEditor_staticEditor_veJBeamTableVis`
+**Access:** extension `editor_vehicleEditor_staticEditor_veJBeamTableVis`: `extensions.load("editor_vehicleEditor_staticEditor_veJBeamTableVis")`, then the global `editor_vehicleEditor_staticEditor_veJBeamTableVis`
 
-Application « JBeam Table Visualizer » du Static Editor de l'éditeur de véhicule. Elle charge un fichier .jbeam choisi via un sélecteur de fichier, cherche récursivement les tables de nombres qui peuvent être tracées en courbe (par exemple les courbes de couple ou de torque d'un moteur), et les affiche avec plotHelperUtil (courbe de Catmull-Rom, mise à l'échelle auto). Un bouton Refresh relit le fichier sur le disque.
+"JBeam Table Visualizer" app of the vehicle editor's Static Editor. It loads a .jbeam file chosen via a file selector, recursively looks for tables of numbers that can be plotted as a curve (for example an engine's torque curves), and displays them with plotHelperUtil (Catmull-Rom curve, auto scaling). A Refresh button re-reads the file from disk.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('editor_vehicleEditor_staticEditor_veJBeamTableVis')
 editor_vehicleEditor_staticEditor_veJBeamTableVis.open()
 ```
 
-## Remarques
+## Notes
 
-- Est listée dans le menu Apps du Static Editor grâce à M.menuEntry = 'JBeam Table Visualizer' (appelle open()).
-- Une table est « traçable » quand ses sous-tables ont toutes la même taille et que le premier et le deuxième élément des lignes (sauf la première) sont des nombres. L'en-tête (première ligne dont le premier élément est un texte) est retiré de la table d'origine par removeHeader, ce qui modifie les données chargées en mémoire.
-- Les chemins sont affichés sous la forme « section > sous-section » dans la liste déroulante.
-- onUpdate ne dessine rien tant que vEditor.vehicle est nil ; le sélecteur de fichier s'ouvre dans /vehicles/ avec le filtre .jbeam.
-- Le parsing utilise json.decode (copié de common/jbeam/io.lua), donc le fichier doit être du JSON valide (pas le JBeam étendu avec commentaires).
+- Is listed in the Static Editor's Apps menu thanks to M.menuEntry = 'JBeam Table Visualizer' (calls open()).
+- A table is "plottable" when its subtables all have the same size and the first and second elements of the rows (except the first) are numbers. The header (first row whose first element is text) is removed from the original table by removeHeader, which modifies the data loaded in memory.
+- The paths are displayed as "section > subsection" in the dropdown list.
+- onUpdate draws nothing as long as vEditor.vehicle is nil; the file selector opens in /vehicles/ with the .jbeam filter.
+- Parsing uses json.decode (copied from common/jbeam/io.lua), so the file must be valid JSON (not extended JBeam with comments).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_staticEditor_veJBeamTableVis.onDeserialized(data)` | Hook appelé après un rechargement Lua : restaure l'état de la fenêtre. *(interne)* *(hook)* | 190 |
-| `editor_vehicleEditor_staticEditor_veJBeamTableVis.onSerialize()` | Hook appelé avant un rechargement Lua : sauvegarde l'état ouvert/fermé de la fenêtre. *(interne)* *(hook)* | 184 |
-| `editor_vehicleEditor_staticEditor_veJBeamTableVis.onUpdate(dt)` | Hook d'extension appelé à chaque frame : si la fenêtre est ouverte et qu'un véhicule est chargé dans l'éditeur, dessine le bouton d'ouverture de fichier, la liste des données traçables, le bouton Refresh et le graphe. *(interne)* *(hook)* | 136 |
-| `editor_vehicleEditor_staticEditor_veJBeamTableVis.open()` | Ouvre la fenêtre de l'application (windowOpen[0] = true). Appelée par le menu Apps du Static Editor. | 180 |
+| `editor_vehicleEditor_staticEditor_veJBeamTableVis.onDeserialized(data)` | Hook called after a Lua reload: restores the window state. *(internal)* *(hook)* | 190 |
+| `editor_vehicleEditor_staticEditor_veJBeamTableVis.onSerialize()` | Hook called before a Lua reload: saves the open/closed state of the window. *(internal)* *(hook)* | 184 |
+| `editor_vehicleEditor_staticEditor_veJBeamTableVis.onUpdate(dt)` | Extension hook called every frame: if the window is open and a vehicle is loaded in the editor, draws the file open button, the list of plottable data, the Refresh button and the graph. *(internal)* *(hook)* | 136 |
+| `editor_vehicleEditor_staticEditor_veJBeamTableVis.open()` | Opens the app window (windowOpen[0] = true). Called by the Static Editor's Apps menu. | 180 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_staticEditor_veJBeamTableVis.onDeserialized(data)`
 
-Hook appelé après un rechargement Lua : restaure l'état de la fenêtre.
+Hook called after a Lua reload: restores the window state.
 
-- `data` (*table*) : table produite par onSerialize
+- `data` (*table*) : table produced by onSerialize
 
 #### `editor_vehicleEditor_staticEditor_veJBeamTableVis.onSerialize()`
 
-Hook appelé avant un rechargement Lua : sauvegarde l'état ouvert/fermé de la fenêtre.
+Hook called before a Lua reload: saves the open/closed state of the window.
 
-- **renvoie** : table {windowOpen = boolean}
+- **returns**: table {windowOpen = boolean}
 
 #### `editor_vehicleEditor_staticEditor_veJBeamTableVis.onUpdate(dt)`
 
-Hook d'extension appelé à chaque frame : si la fenêtre est ouverte et qu'un véhicule est chargé dans l'éditeur, dessine le bouton d'ouverture de fichier, la liste des données traçables, le bouton Refresh et le graphe.
+Extension hook called every frame: if the window is open and a vehicle is loaded in the editor, draws the file open button, the list of plottable data, the Refresh button and the graph.
 
-- `dt` (*number*) : delta de temps (s), transmis au tracé
+- `dt` (*number*) : time delta (s), passed to the plot
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `menuEntry` | string | Texte de l'entrée du menu Apps : « JBeam Table Visualizer ». |
+| `menuEntry` | string | Text of the Apps menu entry: "JBeam Table Visualizer". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/staticEditor/veJBeamTableVis.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/staticEditor/veJBeamTableVis.lua`.*

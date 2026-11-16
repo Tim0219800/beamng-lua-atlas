@@ -1,13 +1,18 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/driveline/drivelineMeasurement.lua",
-  "module": "Classe vide (squelette) prévue pour les mesures sur une driveline de rallye. Le constructeur require(...)(driveline) appelle C:init, qui ne fait rien. Aucune donnée n'est stockée.",
+  "module": "Empty class (skeleton) intended for measurements on a rally driveline. The constructor require(...)(driveline) calls C:init, which does nothing. No data is stored.",
   "classes": {
     "C": {
-      "desc": "Objet renvoyé par le constructeur du module ; sans attribut ni autre méthode.",
+      "desc": "Object returned by the module constructor; no attributes or other methods.",
       "functions": {
         "init": {
-          "desc": "Ne fait rien (le paramètre driveline n'est pas mémorisé).",
-          "params": {"driveline": {"type": "any", "desc": "Driveline à mesurer (non utilisé)."}},
+          "desc": "Does nothing (the driveline parameter is not stored).",
+          "params": {
+            "driveline": {
+              "type": "any",
+              "desc": "Driveline to measure (unused)."
+            }
+          },
           "returns": [],
           "internal": true
         }

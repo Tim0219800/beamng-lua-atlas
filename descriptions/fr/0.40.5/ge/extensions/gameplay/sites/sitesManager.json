@@ -1,0 +1,55 @@
+{
+  "path": "lua/ge/extensions/gameplay/sites/sitesManager.lua",
+  "module": "Extension qui recense les fichiers *.sites.json de chaque niveau, les charge en objets « sites » (lieux, zones, places de parking) et les met en cache. Les scénarios, missions et le trafic passent par elle pour obtenir les sites d'une carte. Garde un cache par chemin de fichier, vidé à la fin de la mission.",
+  "usage": "local sites = gameplay_sites_sitesManager.loadSites(gameplay_sites_sitesManager.getCurrentLevelSitesFileByName('parking'))",
+  "notes": [
+    "getCurrentLevelSitesFileByName compare le nom à celui du fichier privé de ses 11 derniers caractères (« .sites.json » + 1 : string.sub(siteName, 0, -12)) ; le nom passé doit donc être sans extension.",
+    "getCurrentLevelSitesFiles ignore son paramètre « name ».",
+    "getBestParkingSpotForVehicleFromList renvoie la dernière place de la liste en dernier recours (et plante si la liste est vide)."
+  ],
+  "functions": {
+    "getAllLevelSites": {
+      "desc": "Parcourt les niveaux (core_levels.getList) et reconstruit la table des fichiers *.sites.json par niveau (clé = nom de niveau en minuscules). Journalise le nombre de fichiers trouvés."
+    },
+    "loadSites": {
+      "desc": "Charge un fichier .sites.json et renvoie l'objet sites (désérialisé et finalisé). Utilise le cache si présent, sauf force. Ajoute site.dir et site.filename.",
+      "params": {
+        "filepath": {"type": "string", "desc": "Chemin du fichier .sites.json."},
+        "force": {"type": "boolean|nil", "desc": "Recharge même si en cache."},
+        "ignoreCache": {"type": "boolean|nil", "desc": "Ne pas stocker le résultat dans le cache."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Objet sites, ou nil si le fichier est illisible (erreur journalisée)."}]
+    },
+    "getSitesFilesByLevel": {
+      "desc": "Renvoie la table niveau -> liste de fichiers sites (la construit si besoin).",
+      "returns": [{"type": "table<string, string[]>", "desc": "Fichiers par niveau."}]
+    },
+    "getCurrentLevelSitesFiles": {
+      "desc": "Liste des fichiers sites du niveau courant (getCurrentLevelIdentifier).",
+      "params": {"name": {"type": "any", "desc": "Inutilisé."}},
+      "returns": [{"type": "string[]", "desc": "Chemins, table vide si aucun."}]
+    },
+    "getCurrentLevelSitesFileByName": {
+      "desc": "Trouve le fichier sites du niveau courant dont le nom (sans « .sites.json ») correspond.",
+      "params": {"name": {"type": "string", "desc": "Nom du fichier sans extension."}},
+      "returns": [{"type": "string|nil", "desc": "Chemin complet ou nil."}]
+    },
+    "getBestParkingSpotForVehicleFromList": {
+      "desc": "Renvoie la première place où le véhicule rentre (vehicleFits) et qui n'est occupée par aucun véhicule (hasAnyVehicles), sinon la dernière de la liste.",
+      "params": {
+        "vehId": {"type": "integer|nil", "desc": "Véhicule ; par défaut le véhicule du joueur 0."},
+        "parkingSpots": {"type": "table[]", "desc": "Liste d'objets parkingSpot."}
+      },
+      "returns": [{"type": "table", "desc": "Place choisie."}]
+    },
+    "onModManagerReady": {"desc": "Hook appelé quand le gestionnaire de mods est prêt : construit la liste des fichiers sites.", "internal": true},
+    "onClientStartMission": {"desc": "Hook appelé au début d'une mission/niveau : mémorise le niveau courant.", "internal": true},
+    "onClientEndMission": {"desc": "Hook appelé à la fin de la mission : vide le cache des sites.", "internal": true},
+    "onSerialize": {"desc": "Sérialise la liste des fichiers, le niveau courant et le cache pour le rechargement Lua. Renvoie nil si rien n'est en cache.", "internal": true},
+    "onDeserialized": {
+      "desc": "Restaure l'état après un rechargement Lua.",
+      "params": {"data": {"type": "table|nil", "desc": "Données de onSerialize."}},
+      "internal": true
+    }
+  }
+}

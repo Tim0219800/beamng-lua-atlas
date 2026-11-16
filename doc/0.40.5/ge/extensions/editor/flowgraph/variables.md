@@ -1,33 +1,33 @@
 # `editor_flowgraph_variables`
 
-*Fichier : `lua/ge/extensions/editor/flowgraph/variables.lua` · VM : Game Engine (GE) · 368 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/flowgraph/variables.lua` · VM: Game Engine (GE) · 368 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/flowgraph/variables")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/flowgraph/variables")` (file under extensions/ but not a regular extension)
 
-Fenêtre « Variables » (fg_variables) de l'éditeur Flowgraph. Elle montre les variables du graphe courant (mgr.graph.variables) et celles du projet (mgr.variables) sous forme de cartes dépliables, avec la valeur courte, un éditeur de variable, la création d'un nœud getter (types/getVariable) ou setter (types/setVariable) par clic ou glisser-déposer, et le réordonnancement par glisser.
+"Variables" window (fg_variables) of the Flowgraph editor. It shows the variables of the current graph (mgr.graph.variables) and those of the project (mgr.variables) as expandable cards, with the short value, a variable editor, creation of a getter (types/getVariable) or setter (types/setVariable) node by click or drag and drop, and reordering by dragging.
 
-## Remarques
+## Notes
 
-- Les boutons de création de nœuds ne sont actifs que si mgr.allowEditing est vrai.
-- Le nouvel ordre des variables est appliqué avec changeCustomVariableOrder puis une entrée d'historique « Changed Variable Order ».
-- drawGraph, drawRecursive et drawSortedGraphs ne sont pas appelées depuis draw() dans ce fichier (code disponible pour afficher les variables de tous les graphes).
+- The node creation buttons are only active if mgr.allowEditing is true.
+- The new variable order is applied with changeCustomVariableOrder then a "Changed Variable Order" history entry.
+- drawGraph, drawRecursive and drawSortedGraphs are not called from draw() in this file (code available to display the variables of all graphs).
 
-## Classe `C`
+## Class `C`
 
-Classe de la fenêtre (windowName 'fg_variables', windowDescription 'Variables').
+Window class (windowName 'fg_variables', windowDescription 'Variables').
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(data)` | Hook de désérialisation : vide. | 363 |
-| `C:_onSerialize(data)` | Hook de sérialisation : vide. | 359 |
-| `C:draw()` | Dessine l'en-tête « Current Graph Variables », le bouton d'ajout (popup addVariablePopup), les variables du graphe puis celles du projet. | 30 |
-| `C:drawGraph(graph)` | Dessine les variables d'un graphe, avec « (current) » si c'est le graphe courant. | 326 |
-| `C:drawRecursive(graph)` | Dessine un graphe dans un TreeNode puis ses enfants triés par id. | 330 |
-| `C:drawSortedGraphs(source)` | Dessine récursivement les graphes racines (sans parentId) d'une table, triés par id. | 346 |
-| `C:drawTarget(target, name, id, global)` | Dessine toutes les variables d'un conteneur dans l'ordre customVariableOrder et gère le dépôt pour changer l'ordre. | 288 |
-| `C:drawVariableCard(target, varName, global)` | Dessine la carte d'une variable : icône de type, nom, valeur, boutons getter/setter, poignée de glisser et éditeur déplié. | 200 |
-| `C:getAutoTypeFromName(name)` | Déduit un type de variable à partir d'un nom via ui_flowgraph_editor.getAutoTypeFromName. | 195 |
-| `C:init()` | Initialise les champs de saisie, le payload de glisser-déposer et enregistre la fenêtre. | 21 |
+| `C:_onDeserialized(data)` | Deserialization hook: empty. | 363 |
+| `C:_onSerialize(data)` | Serialization hook: empty. | 359 |
+| `C:draw()` | Draws the "Current Graph Variables" header, the add button (addVariablePopup popup), the graph's variables then the project's. | 30 |
+| `C:drawGraph(graph)` | Draws the variables of a graph, with "(current)" if it is the current graph. | 326 |
+| `C:drawRecursive(graph)` | Draws a graph in a TreeNode then its children sorted by id. | 330 |
+| `C:drawSortedGraphs(source)` | Recursively draws the root graphs (without parentId) of a table, sorted by id. | 346 |
+| `C:drawTarget(target, name, id, global)` | Draws all the variables of a container in customVariableOrder order and handles the drop to change the order. | 288 |
+| `C:drawVariableCard(target, varName, global)` | Draws a variable's card: type icon, name, value, getter/setter buttons, drag handle and expanded editor. | 200 |
+| `C:getAutoTypeFromName(name)` | Infers a variable type from a name via ui_flowgraph_editor.getAutoTypeFromName. | 195 |
+| `C:init()` | Initializes the input fields, the drag and drop payload and registers the window. | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/flowgraph/variables.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/flowgraph/variables.lua`.*

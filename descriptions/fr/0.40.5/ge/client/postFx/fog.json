@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/client/postFx/fog.lua",
+  "module": "Brouillard en post-traitement. Crée le PostEffect « FogPostFx » (shader fog.cs.hlsl, priorité 5, activé, hors passes de réflexion) et le PostEffect « UnderwaterFogPostFx » (underwaterFog.cs.hlsl, priorité 4, oneFrameOnly) avec leurs shaders et state blocks. Les callbacks de l'effet sous-marin activent/désactivent le PostEffect de caustiques.",
+  "notes": ["Les callbacks sont publiés sur la globale UnderwaterFogPostFxCallbacks (via rawset)."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "underwaterFogPostFxCallbacks": {
+      "desc": "Callbacks appelés par le moteur pour UnderwaterFogPostFx.",
+      "functions": {
+        "onEnabled": {"desc": "Active CausticsPFX s'il existe et retourne true.", "params": {}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true},
+        "onDisabled": {"desc": "Désactive CausticsPFX s'il existe.", "params": {}, "returns": [], "internal": true}
+      }
+    }
+  }
+}

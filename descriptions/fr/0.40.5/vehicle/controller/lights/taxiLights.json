@@ -1,0 +1,89 @@
+{
+  "path": "lua/vehicle/controller/lights/taxiLights.lua",
+  "module": "Contrôleur auxiliaire pour l'enseigne de taxi (type \"auxiliary\"). Il mémorise un état parmi available, occupied, reserved, offDuty (défaut), driverDistress et expose chaque état comme une valeur electrics nommée \"<nomContrôleur>_<état>\" valant 1 pour l'état actif et 0 pour les autres.",
+  "notes": [
+    "Aucune clé jbeam n'est lue. Les noms electrics dépendent du nom du contrôleur (M.name).",
+    "setTaxiState ne valide pas l'état passé : une valeur inconnue éteint toutes les sorties."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Initialise l'état offDuty et les noms d'electrics.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet l'état offDuty.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Écrit les valeurs electrics 0/1 de chaque état.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setTaxiState": {
+      "desc": "Change l'état de l'enseigne.",
+      "params": {
+        "state": {
+          "type": "string",
+          "desc": "\"available\", \"occupied\", \"reserved\", \"offDuty\" ou \"driverDistress\"."
+        }
+      },
+      "returns": []
+    },
+    "getTaxiState": {
+      "desc": "Renvoie l'état courant.",
+      "params": {},
+      "returns": [
+        {
+          "type": "string",
+          "desc": "État de l'enseigne."
+        }
+      ]
+    },
+    "getState": {
+      "desc": "Renvoie l'état pour la sauvegarde.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Table d'état (réutilisée)."
+        }
+      ]
+    },
+    "setState": {
+      "desc": "Restaure l'état renvoyé par getState (si valide).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Table d'état."
+        }
+      },
+      "returns": []
+    }
+  }
+}

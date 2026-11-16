@@ -1,207 +1,464 @@
 {
   "path": "lua/ge/extensions/ui/multiseat/multiseatSettings.lua",
-  "module": "Logique de l'écran de réglages multi-sièges (routes « pause.multiseatSettings » et « pause.multiseatSettings.vehicleSelector »). Il collecte les fournisseurs de réglages des autres extensions (hook onGetMultiseatGameSettings), garde des valeurs actives et des valeurs préparées (staged), construit les données de l'écran pour l'interface Vue, applique ou abandonne les changements et gère la confirmation de sortie. Les actions sur les joueurs/périphériques sont déléguées à ui_multiseat_multiseatVehicles. Un moddeur ajoute des réglages en répondant au hook onGetMultiseatGameSettings.",
-  "usage": "-- fournisseur de réglages dans une extension\nfunction M.onGetMultiseatGameSettings(providers)\n  providers[#providers + 1] = {id = 'monMod', title = 'Mon mod', applyMode = 'apply', fields = {\n    {id = 'actif', type = 'switch', label = 'Actif', value = true}\n  }}\nend",
+  "module": "Logic of the multi-seat settings screen (routes \"pause.multiseatSettings\" and \"pause.multiseatSettings.vehicleSelector\"). It collects the settings providers from other extensions (hook onGetMultiseatGameSettings), keeps active values and staged values, builds the screen data for the Vue UI, applies or abandons changes and handles exit confirmation. Actions on players/devices are delegated to ui_multiseat_multiseatVehicles. A modder adds settings by answering the hook onGetMultiseatGameSettings.",
+  "usage": "-- settings provider in an extension\nfunction M.onGetMultiseatGameSettings(providers)\n  providers[#providers + 1] = {id = 'monMod', title = 'Mon mod', applyMode = 'apply', fields = {\n    {id = 'actif', type = 'switch', label = 'Actif', value = true}\n  }}\nend",
   "notes": [
-    "Un fournisseur valide est une table {id = string, fields = table, title, placement, applyMode}. placement = \"afterVehicles\" place la section après la liste des véhicules.",
-    "Types de champ : « action » et « actionSelect » ne stockent pas de valeur (exécutés tout de suite par onMultiseatGameSettingAction) ; les autres (switch, select, layout…) sont stockés et préparés.",
-    "applyMode (par champ ou par fournisseur) vaut « restart » par défaut ; « apply » ou « immediate » sinon. « immediate » met aussi à jour la valeur active dès le changement.",
-    "Si un champ a une liste options, la valeur doit y figurer (comparaison numérique tolérante) ; sinon refus (raison « invalid_setting »), sauf valeur « » avec allowEmpty = true.",
-    "Hooks émis : onGetMultiseatGameSettings(providers), onGetMultiseatSettingsScreenData(screen), onMultiseatGameSettingChanged(providerId, fieldId, value), onMultiseatGameSettingAction(providerId, fieldId, result[, value]), onValidateMultiseatGameSettings(staged, active, result, context), onApplyMultiseatGameSettings(staged, active, result, context), onMultiseatSettingsApplied(changeSet, result), onMultiseatSettingsClosed(toRoute), onPlayMultiseatGameSettings(result).",
-    "Un hook peut mettre result.success = false (et result.reason) pour refuser ; result.valueOverrides[providerId][fieldId] remplace des valeurs préparées après application ; result.deferred = true évite la notification d'écran.",
-    "Pendant que l'écran est ouvert, le jeu est mis en pause via simTimeAuthority.pushPauseRequest(\"multiseat_settings\") ; la pause est relâchée à la fermeture.",
-    "Événements UI émis : MultiseatSettingsChanged (l'écran doit se recharger) et showConfirmationDialog (boutons avec luaCallback)."
+    "A valid provider is a table {id = string, fields = table, title, placement, applyMode}. placement = \"afterVehicles\" places the section after the vehicle list.",
+    "Field types: \"action\" and \"actionSelect\" do not store a value (executed immediately by onMultiseatGameSettingAction); the others (switch, select, layout...) are stored and staged.",
+    "applyMode (per field or per provider) is \"restart\" by default; \"apply\" or \"immediate\" otherwise. \"immediate\" also updates the active value as soon as it changes.",
+    "If a field has an options list, the value must be in it (tolerant numeric comparison); otherwise refused (reason \"invalid_setting\"), except the value \"\" with allowEmpty = true.",
+    "Hooks emitted: onGetMultiseatGameSettings(providers), onGetMultiseatSettingsScreenData(screen), onMultiseatGameSettingChanged(providerId, fieldId, value), onMultiseatGameSettingAction(providerId, fieldId, result[, value]), onValidateMultiseatGameSettings(staged, active, result, context), onApplyMultiseatGameSettings(staged, active, result, context), onMultiseatSettingsApplied(changeSet, result), onMultiseatSettingsClosed(toRoute), onPlayMultiseatGameSettings(result).",
+    "A hook can set result.success = false (and result.reason) to refuse; result.valueOverrides[providerId][fieldId] replaces staged values after application; result.deferred = true avoids the screen notification.",
+    "While the screen is open, the game is paused via simTimeAuthority.pushPauseRequest(\"multiseat_settings\"); the pause is released on close.",
+    "UI events emitted: MultiseatSettingsChanged (the screen must reload) and showConfirmationDialog (buttons with luaCallback)."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : ui_multiseat_generalSettings, ui_multiseat_multiseatConfiguration, ui_multiseat_multiseatVehicles, ui_gridSelectorRouteLifecycleCallbacks, ui_pause_routeLifecycleCallbacks."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: ui_multiseat_generalSettings, ui_multiseat_multiseatConfiguration, ui_multiseat_multiseatVehicles, ui_gridSelectorRouteLifecycleCallbacks, ui_pause_routeLifecycleCallbacks."
+    }
   },
   "functions": {
     "getScreenData": {
-      "desc": "Construit les données de l'écran : composants « personas », « settings » (un par fournisseur), « vehicles », titre, indicateurs active, dirty, discardDirty, applyMode (« none », « apply » ou « restart »), readyToPlay et busy. Ouvre la transaction multiseatConfiguration si besoin. Renvoie nil si l'écran n'est pas ouvert.",
-      "returns": [{"type": "table|nil", "desc": "Données d'écran."}]
+      "desc": "Builds the screen data: components \"personas\", \"settings\" (one per provider), \"vehicles\", title, flags active, dirty, discardDirty, applyMode (\"none\", \"apply\" or \"restart\"), readyToPlay and busy. Opens the multiseatConfiguration transaction if needed. Returns nil if the screen is not open.",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Screen data."
+        }
+      ]
     },
     "stageSetting": {
-      "desc": "Prépare la valeur d'un champ (normalisée selon ses options) et émet onMultiseatGameSettingChanged. Valeur ou champ invalide : l'écran est simplement renvoyé inchangé.",
+      "desc": "Stages a field's value (normalized according to its options) and emits onMultiseatGameSettingChanged. Invalid value or field: the screen is simply returned unchanged.",
       "params": {
-        "providerId": {"type": "string", "desc": "Identifiant du fournisseur."},
-        "fieldId": {"type": "string", "desc": "Identifiant du champ."},
-        "value": {"type": "any", "desc": "Nouvelle valeur."}
+        "providerId": {
+          "type": "string",
+          "desc": "Provider identifier."
+        },
+        "fieldId": {
+          "type": "string",
+          "desc": "Field identifier."
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Données d'écran à jour."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Updated screen data."
+        }
+      ]
     },
     "runSettingAction": {
-      "desc": "Exécute un champ de type « action » ou « actionSelect » via le hook onMultiseatGameSettingAction. Recharge l'écran si l'action a réussi.",
+      "desc": "Executes a field of type \"action\" or \"actionSelect\" via the hook onMultiseatGameSettingAction. Reloads the screen if the action succeeded.",
       "params": {
-        "providerId": {"type": "string", "desc": "Identifiant du fournisseur."},
-        "fieldId": {"type": "string", "desc": "Identifiant du champ."},
-        "value": {"type": "any", "desc": "Option choisie (actionSelect uniquement)."}
+        "providerId": {
+          "type": "string",
+          "desc": "Provider identifier."
+        },
+        "fieldId": {
+          "type": "string",
+          "desc": "Field identifier."
+        },
+        "value": {
+          "type": "any",
+          "desc": "Chosen option (actionSelect only)."
+        }
       },
-      "returns": [{"type": "table", "desc": "{success = boolean, data = données d'écran}."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success = boolean, data = screen data}."
+        }
+      ]
     },
     "applyStagedSettings": {
-      "desc": "Applique les changements préparés : valide (hook onValidateMultiseatGameSettings), prépare les véhicules, applique la configuration des joueurs (commitCore), finalise les véhicules, appelle onApplyMultiseatGameSettings puis onMultiseatSettingsApplied. En cas d'échec la configuration est restaurée (rollbackCommit).",
-      "params": {"options": {"type": "table|nil", "desc": "exitAfterApply = true transmet l'indicateur aux hooks (result.exitAfterApply)."}},
-      "returns": [{"type": "table", "desc": "{success, reason?, requiresRestart?, exitAfterApply?, ...} ; {success = true} s'il n'y a aucun changement."}]
+      "desc": "Applies the staged changes: validates (hook onValidateMultiseatGameSettings), prepares the vehicles, applies the player configuration (commitCore), finalizes the vehicles, calls onApplyMultiseatGameSettings then onMultiseatSettingsApplied. On failure the configuration is restored (rollbackCommit).",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "exitAfterApply = true passes the flag to the hooks (result.exitAfterApply)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, reason?, requiresRestart?, exitAfterApply?, ...}; {success = true} if there are no changes."
+        }
+      ]
     },
     "discardStagedSettings": {
-      "desc": "Abandonne les valeurs préparées (retour aux valeurs actives), vide le cache d'affectations si le multiseat n'est pas actif, abandonne la configuration et les changements de véhicules.",
-      "returns": [{"type": "table|nil", "desc": "Données d'écran à jour."}]
+      "desc": "Abandons the staged values (back to active values), clears the assignment cache if multiseat is not active, abandons the configuration and the vehicle changes.",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Updated screen data."
+        }
+      ]
     },
     "requestMultiseatExit": {
-      "desc": "Affiche une boîte de confirmation pour quitter le multiseat (bouton de confirmation : confirmMultiseatExit). Ne fait rien si le multiseat n'est pas actif.",
-      "returns": [{"type": "boolean", "desc": "false si le multiseat n'est pas actif."}]
+      "desc": "Shows a confirmation box to quit multiseat (confirmation button: confirmMultiseatExit). Does nothing if multiseat is not active.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if multiseat is not active."
+        }
+      ]
     },
     "confirmMultiseatExit": {
-      "desc": "Quitte le multiseat : met en cache les affectations s'il n'y a plus de joueurs préparés, applique les changements en attente s'il ne reste qu'un joueur, appelle ui_multiseat_freeroam.exitMultiseat puis ferme le menu.",
-      "returns": [{"type": "boolean", "desc": "true si la sortie et la fermeture du menu ont réussi."}]
+      "desc": "Quits multiseat: caches the assignments if no staged players remain, applies pending changes if only one player remains, calls ui_multiseat_freeroam.exitMultiseat then closes the menu.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the exit and the menu closing succeeded."
+        }
+      ]
     },
     "confirmExit": {
-      "desc": "Garde de sortie de route : s'il y a des changements non appliqués, mémorise la navigation visée et affiche une boîte (annuler, abandonner, appliquer) puis renvoie false pour bloquer la sortie. Renvoie true si la sortie est autorisée.",
+      "desc": "Route exit guard: if there are unapplied changes, stores the targeted navigation and shows a box (cancel, discard, apply) then returns false to block the exit. Returns true if the exit is allowed.",
       "params": {
-        "route": {"type": "table", "desc": "Route visée (champ name)."},
-        "params": {"type": "table|nil", "desc": "Paramètres de navigation."},
-        "context": {"type": "table|nil", "desc": "Contexte (routeName, options)."}
+        "route": {
+          "type": "table",
+          "desc": "Targeted route (name field)."
+        },
+        "params": {
+          "type": "table|nil",
+          "desc": "Navigation parameters."
+        },
+        "context": {
+          "type": "table|nil",
+          "desc": "Context (routeName, options)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true pour autoriser la sortie."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true to allow the exit."
+        }
+      ]
     },
-    "cancelExit": {"desc": "Annule la navigation de sortie en attente."},
+    "cancelExit": {
+      "desc": "Cancels the pending exit navigation."
+    },
     "confirmExitDiscarding": {
-      "desc": "Reprend la navigation en attente sans appliquer ; les valeurs préparées sont perdues à la fermeture (closeSettings).",
-      "returns": [{"type": "any", "desc": "Résultat de ui_router.navigate, ou false."}]
+      "desc": "Resumes the pending navigation without applying; staged values are lost on close (closeSettings).",
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of ui_router.navigate, or false."
+        }
+      ]
     },
     "confirmExitApplying": {
-      "desc": "Applique les réglages préparés puis reprend la navigation en attente ; en cas d'échec, annule la navigation et renvoie le résultat.",
-      "returns": [{"type": "table|any", "desc": "Résultat d'échec, sinon résultat de la navigation."}]
+      "desc": "Applies the staged settings then resumes the pending navigation; on failure, cancels the navigation and returns the result.",
+      "returns": [
+        {
+          "type": "table|any",
+          "desc": "Failure result, otherwise navigation result."
+        }
+      ]
     },
     "stagePlayerOptIn": {
-      "desc": "Prépare l'inscription ou la sortie d'un joueur (via ui_multiseat_multiseatVehicles.stagePlayerOptIn).",
+      "desc": "Stages a player's opt-in or exit (via ui_multiseat_multiseatVehicles.stagePlayerOptIn).",
       "params": {
-        "player": {"type": "integer", "desc": "Indice de joueur."},
-        "optedIn": {"type": "boolean", "desc": "true pour inscrire."}
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        },
+        "optedIn": {
+          "type": "boolean",
+          "desc": "true to sign up."
+        }
       },
-      "returns": [{"type": "table", "desc": "{success, data}."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, data}."
+        }
+      ]
     },
     "cycleDevicePlayer": {
-      "desc": "Fait passer un périphérique au joueur suivant (délégué à multiseatVehicles).",
-      "params": {"deviceId": {"type": "string", "desc": "Identifiant du périphérique."}},
-      "returns": [{"type": "table", "desc": "{success, data}."}]
+      "desc": "Moves a device to the next player (delegated to multiseatVehicles).",
+      "params": {
+        "deviceId": {
+          "type": "string",
+          "desc": "Device identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, data}."
+        }
+      ]
     },
     "toggleDevicePlayer": {
-      "desc": "Assigne/désassigne un périphérique (délégué à multiseatVehicles).",
-      "params": {"deviceId": {"type": "string", "desc": "Identifiant du périphérique."}},
-      "returns": [{"type": "table", "desc": "{success, data}."}]
+      "desc": "Assigns/unassigns a device (delegated to multiseatVehicles).",
+      "params": {
+        "deviceId": {
+          "type": "string",
+          "desc": "Device identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, data}."
+        }
+      ]
     },
     "moveDevicePlayer": {
-      "desc": "Déplace un périphérique vers le joueur précédent ou suivant.",
+      "desc": "Moves a device to the previous or next player.",
       "params": {
-        "deviceId": {"type": "string", "desc": "Identifiant du périphérique."},
-        "direction": {"type": "integer", "desc": "-1 ou 1."}
+        "deviceId": {
+          "type": "string",
+          "desc": "Device identifier."
+        },
+        "direction": {
+          "type": "integer",
+          "desc": "-1 or 1."
+        }
       },
-      "returns": [{"type": "table", "desc": "{success, data}."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, data}."
+        }
+      ]
     },
     "setDevicePlayer": {
-      "desc": "Assigne un périphérique à une persona donnée.",
+      "desc": "Assigns a device to a given persona.",
       "params": {
-        "deviceId": {"type": "string", "desc": "Identifiant du périphérique."},
-        "personaNumber": {"type": "integer|nil", "desc": "Numéro de persona, nil ou 0 pour désassigner."}
+        "deviceId": {
+          "type": "string",
+          "desc": "Device identifier."
+        },
+        "personaNumber": {
+          "type": "integer|nil",
+          "desc": "Persona number, nil or 0 to unassign."
+        }
       },
-      "returns": [{"type": "table", "desc": "{success, data}."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, data}."
+        }
+      ]
     },
     "removeDevice": {
-      "desc": "Oublie un périphérique déconnecté.",
-      "params": {"deviceId": {"type": "string", "desc": "Identifiant du périphérique."}},
-      "returns": [{"type": "table", "desc": "{success, data}."}]
+      "desc": "Forgets a disconnected device.",
+      "params": {
+        "deviceId": {
+          "type": "string",
+          "desc": "Device identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, data}."
+        }
+      ]
     },
     "joinDeviceGroup": {
-      "desc": "Fait rejoindre un groupe de périphériques géré par la plateforme.",
-      "params": {"groupId": {"type": "integer", "desc": "Identifiant de groupe."}},
-      "returns": [{"type": "table", "desc": "{success, data}."}]
+      "desc": "Makes a platform-managed device group join.",
+      "params": {
+        "groupId": {
+          "type": "integer",
+          "desc": "Group identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, data}."
+        }
+      ]
     },
     "leaveDeviceGroup": {
-      "desc": "Retire un joueur (et son groupe).",
-      "params": {"player": {"type": "integer", "desc": "Indice de joueur."}},
-      "returns": [{"type": "table", "desc": "{success, data}."}]
+      "desc": "Removes a player (and its group).",
+      "params": {
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, data}."
+        }
+      ]
     },
     "openVehicleSelectorForPlayer": {
-      "desc": "Ouvre le sélecteur de véhicule pour un joueur (délégué à multiseatVehicles).",
-      "params": {"player": {"type": "integer", "desc": "Indice de joueur."}},
-      "returns": [{"type": "any", "desc": "Résultat de multiseatVehicles.openVehicleSelectorForPlayer."}]
+      "desc": "Opens the vehicle selector for a player (delegated to multiseatVehicles).",
+      "params": {
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of multiseatVehicles.openVehicleSelectorForPlayer."
+        }
+      ]
     },
     "stagePlayerVehiclePreferences": {
-      "desc": "Prépare les préférences de véhicule d'un joueur.",
+      "desc": "Stages a player's vehicle preferences.",
       "params": {
-        "player": {"type": "integer", "desc": "Indice de joueur."},
-        "preferences": {"type": "table", "desc": "Préférences (déduit du code)."}
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        },
+        "preferences": {
+          "type": "table",
+          "desc": "Preferences (inferred from code)."
+        }
       },
-      "returns": [{"type": "table", "desc": "{success, data}."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, data}."
+        }
+      ]
     },
     "stagePlayerIcon": {
-      "desc": "Prépare l'icône d'un joueur.",
+      "desc": "Stages a player's icon.",
       "params": {
-        "player": {"type": "integer", "desc": "Indice de joueur."},
-        "icon": {"type": "string", "desc": "Identifiant d'icône (déduit du code)."}
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        },
+        "icon": {
+          "type": "string",
+          "desc": "Icon identifier (inferred from code)."
+        }
       },
-      "returns": [{"type": "table", "desc": "{success, data}."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, data}."
+        }
+      ]
     },
     "play": {
-      "desc": "Émet le hook onPlayMultiseatGameSettings ; un mode de jeu peut y démarrer la partie en mettant result.success = true.",
-      "returns": [{"type": "table", "desc": "{success = boolean}."}]
+      "desc": "Emits the hook onPlayMultiseatGameSettings; a game mode can start the game there by setting result.success = true.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success = boolean}."
+        }
+      ]
     },
-    "notifyScreenChanged": {"desc": "Envoie l'événement UI MultiseatSettingsChanged pour que l'écran se recharge."},
+    "notifyScreenChanged": {
+      "desc": "Sends the UI event MultiseatSettingsChanged so that the screen reloads."
+    },
     "onLocalParticipantsChanged": {
-      "desc": "Hook appelé quand les participants locaux changent ; notifie l'écran sauf pendant une synchronisation des véhicules.",
+      "desc": "Hook called when the local participants change; notifies the screen except during a vehicle synchronization.",
       "internal": true
     },
     "onSettingsEnter": {
-      "desc": "Callback d'entrée de la route de réglages : marque l'écran ouvert et met le jeu en pause.",
+      "desc": "Entry callback of the settings route: marks the screen open and pauses the game.",
       "internal": true
     },
     "onSettingsLeave": {
-      "desc": "Callback de sortie de la route de réglages : appelle ui_pause_routeLifecycleCallbacks.onPauseLeave puis ferme les réglages si la route visée n'en fait plus partie.",
+      "desc": "Exit callback of the settings route: calls ui_pause_routeLifecycleCallbacks.onPauseLeave then closes the settings if the targeted route is no longer part of them.",
       "params": {
-        "context": {"type": "table", "desc": "Contexte de route."},
-        "toRoute": {"type": "table", "desc": "Route d'arrivée."},
-        "fromRoute": {"type": "table", "desc": "Route de départ."},
-        "data": {"type": "any", "desc": "Données de navigation."}
+        "context": {
+          "type": "table",
+          "desc": "Route context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Destination route."
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Navigation data."
+        }
       },
       "internal": true
     },
     "onVehicleSelectorEnter": {
-      "desc": "Callback d'entrée de la route du sélecteur de véhicule : marque l'écran ouvert, pause le jeu et délègue à ui_gridSelectorRouteLifecycleCallbacks.onRouteEnter.",
+      "desc": "Entry callback of the vehicle selector route: marks the screen open, pauses the game and delegates to ui_gridSelectorRouteLifecycleCallbacks.onRouteEnter.",
       "params": {
-        "context": {"type": "table", "desc": "Contexte de route."},
-        "toRoute": {"type": "table", "desc": "Route d'arrivée."},
-        "fromRoute": {"type": "table", "desc": "Route de départ."},
-        "data": {"type": "any", "desc": "Données de navigation."}
+        "context": {
+          "type": "table",
+          "desc": "Route context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Destination route."
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Navigation data."
+        }
       },
       "internal": true
     },
     "onVehicleSelectorMount": {
-      "desc": "Callback de montage de la route du sélecteur ; délègue à ui_gridSelectorRouteLifecycleCallbacks.onRouteMount.",
+      "desc": "Mount callback of the selector route; delegates to ui_gridSelectorRouteLifecycleCallbacks.onRouteMount.",
       "params": {
-        "context": {"type": "table", "desc": "Contexte de route."},
-        "toRoute": {"type": "table", "desc": "Route d'arrivée."},
-        "fromRoute": {"type": "table", "desc": "Route de départ."},
-        "data": {"type": "any", "desc": "Données de navigation."}
+        "context": {
+          "type": "table",
+          "desc": "Route context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Destination route."
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Navigation data."
+        }
       },
       "internal": true
     },
     "onVehicleSelectorLeave": {
-      "desc": "Callback de sortie de la route du sélecteur : délègue à gridSelector et pause, prévient multiseatVehicles puis ferme les réglages si la route visée n'en fait plus partie.",
+      "desc": "Exit callback of the selector route: delegates to gridSelector and pause, informs multiseatVehicles then closes the settings if the targeted route is no longer part of them.",
       "params": {
-        "context": {"type": "table", "desc": "Contexte de route."},
-        "toRoute": {"type": "table", "desc": "Route d'arrivée."},
-        "fromRoute": {"type": "table", "desc": "Route de départ."},
-        "data": {"type": "any", "desc": "Données de navigation."}
+        "context": {
+          "type": "table",
+          "desc": "Route context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Destination route."
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Navigation data."
+        }
       },
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook appelé à la fin du niveau ; réinitialise tout l'état (valeurs, pause, sorties en attente).",
+      "desc": "Hook called at the end of the level; resets all state (values, pause, pending exits).",
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook appelé au déchargement de l'extension ; relâche la demande de pause.",
+      "desc": "Hook called when the extension is unloaded; releases the pause request.",
       "internal": true
     }
   }

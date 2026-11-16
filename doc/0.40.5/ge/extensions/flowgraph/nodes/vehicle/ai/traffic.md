@@ -1,18 +1,18 @@
 # `flowgraph_nodes_vehicle_ai_traffic`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/traffic.lua` · VM : Game Engine (GE) · 34 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/traffic.lua` · VM: Game Engine (GE) · 34 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/ai/traffic")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/ai/traffic")` (file under extensions/ but not a regular extension)
 
-Nœud « AI Traffic » (couleur ai, once_p_duration). Met un véhicule en mode IA « traffic » : il roule selon les règles de circulation. N'active pas le système de gestion du trafic. Entrée : aiVehId (sans valeur = véhicule du joueur).
+Node "AI Traffic" (color ai, once_p_duration). Puts a vehicle in "traffic" AI mode: it drives according to traffic rules. Does not enable the traffic management system. Input: aiVehId (no value = player vehicle).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Envoie au véhicule ai.setMode("traffic"). | 21 |
+| `C:workOnce()` | Sends ai.setMode("traffic") to the vehicle. | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/traffic.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/traffic.lua`.*

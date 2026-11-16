@@ -1,12 +1,12 @@
 # `editor_toolUtilities_noise`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/noise.lua` · VM : Game Engine (GE) · 63 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/noise.lua` · VM: Game Engine (GE) · 63 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_noise` : `extensions.load("editor_toolUtilities_noise")`, puis la globale `editor_toolUtilities_noise`
+**Access:** extension `editor_toolUtilities_noise`: `extensions.load("editor_toolUtilities_noise")`, then the global `editor_toolUtilities_noise`
 
-Bruit fractal partagé en coordonnées monde pour les outils de terrain et de maillage de l'éditeur (terraform, éditeur de route héros). Source unique pour que le maillage d'une route et le terrain autour d'elle échantillonnent le même champ avec la même correspondance rugosité/échelle et s'accordent bosse pour bosse sur leur bord commun. Aucune graine par outil : les coordonnées sont les XY monde bruts.
+Fractal noise shared in world coordinates for the editor's terrain and meshing tools (terraform, hero road editor). Single source so that a road's mesh and the terrain around it sample the same field with the same roughness/scale mapping and match bump for bump along their shared edge. No per-tool seed: the coordinates are the raw world XY.
 
-## Exemple
+## Example
 
 ```lua
 local noise = require('editor/toolUtilities/noise')
@@ -14,63 +14,63 @@ local f, s, oct, lac, gain = noise.mapNoiseParameters(0.5, 0.5)
 local h = s * noise.fbm(x * f, y * f, oct, lac, gain)
 ```
 
-## Remarques
+## Notes
 
-- Utilise editor/toolUtilities/simplex (simplex.noise(x, y)) ; clamp et lerp sont des globales de common/mathlib.lua.
-- Les deux fonctions de correspondance renvoient la fréquence (1/m), la force (m, hauteur de crête), les octaves, la lacunarité et le gain, dans cet ordre.
-- fbm applique la fréquence par octave ; passer x*freq et y*freq en entrée donne la longueur d'onde de base voulue.
+- Uses editor/toolUtilities/simplex (simplex.noise(x, y)); clamp and lerp are globals from common/mathlib.lua.
+- The two mapping functions return the frequency (1/m), strength (m, crest height), octaves, lacunarity and gain, in that order.
+- fbm applies the frequency per octave; passing x*freq and y*freq as input gives the desired base wavelength.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_noise.fbm(x, y, octaves, lacunarity, gain)` | Mouvement brownien fractionnaire au point monde (x, y) : somme de bruit simplex sur plusieurs octaves, normalisée par l'amplitude totale. | 20 |
-| `editor_toolUtilities_noise.mapNoiseParameters(roughness, scale)` | Convertit rugosité et échelle utilisateur ([0,1], bornées) en paramètres de fbm pour de GRANDES ondulations de terrain : force 0 à 1 m, fréquence 0.02 (bosses d'environ 50 m) à 0.2 (environ 5 m), octaves 3 à 6. | 33 |
-| `editor_toolUtilities_noise.mapRoadNoiseParameters(roughness, scale)` | Même champ, mais réglé pour une SURFACE DE ROUTE (bosses de rallye) : bande plus fine et amplitude plus faible, force 0 à 0.18 m de hauteur de crête, fréquence 0.06 (environ 16 m) à 0.5 (environ 2 m), octaves 3 à 5. | 46 |
+| `editor_toolUtilities_noise.fbm(x, y, octaves, lacunarity, gain)` | Fractional Brownian motion at world point (x, y): a sum of simplex noise over several octaves, normalized by the total amplitude. | 20 |
+| `editor_toolUtilities_noise.mapNoiseParameters(roughness, scale)` | Converts user roughness and scale ([0,1], clamped) into fbm parameters for LARGE terrain undulations: strength 0 to 1 m, frequency 0.02 (bumps of about 50 m) to 0.2 (about 5 m), octaves 3 to 6. | 33 |
+| `editor_toolUtilities_noise.mapRoadNoiseParameters(roughness, scale)` | Same field, but tuned for a ROAD SURFACE (rally bumps): finer band and lower amplitude, strength 0 to 0.18 m crest height, frequency 0.06 (about 16 m) to 0.5 (about 2 m), octaves 3 to 5. | 46 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_noise.fbm(x, y, octaves, lacunarity, gain)`
 
-Mouvement brownien fractionnaire au point monde (x, y) : somme de bruit simplex sur plusieurs octaves, normalisée par l'amplitude totale.
+Fractional Brownian motion at world point (x, y): a sum of simplex noise over several octaves, normalized by the total amplitude.
 
-- `x` (*number*) : X monde (déjà multiplié par la fréquence de base si voulu).
-- `y` (*number*) : Y monde.
-- `octaves` (*integer*) : Nombre d'octaves.
-- `lacunarity` (*number*) : Multiplicateur de fréquence par octave.
-- `gain` (*number*) : Multiplicateur d'amplitude par octave.
-- **renvoie** : number Valeur normalisée d'environ [-1, 1].
+- `x` (*number*) : World X (already multiplied by the base frequency if desired).
+- `y` (*number*) : World Y.
+- `octaves` (*integer*) : Number of octaves.
+- `lacunarity` (*number*) : Frequency multiplier per octave.
+- `gain` (*number*) : Amplitude multiplier per octave.
+- **returns**: number Normalized value of about [-1, 1].
 
 #### `editor_toolUtilities_noise.mapNoiseParameters(roughness, scale)`
 
-Convertit rugosité et échelle utilisateur ([0,1], bornées) en paramètres de fbm pour de GRANDES ondulations de terrain : force 0 à 1 m, fréquence 0.02 (bosses d'environ 50 m) à 0.2 (environ 5 m), octaves 3 à 6.
+Converts user roughness and scale ([0,1], clamped) into fbm parameters for LARGE terrain undulations: strength 0 to 1 m, frequency 0.02 (bumps of about 50 m) to 0.2 (about 5 m), octaves 3 to 6.
 
-- `roughness` (*number*) : Rugosité 0 à 1 (amplitude).
-- `scale` (*number*) : Échelle 0 à 1 (0 = grandes bosses, 1 = petites).
-- **renvoie** : number noiseFreq.
-- **renvoie** : number noiseStrength (m).
-- **renvoie** : integer fbmOctaves.
-- **renvoie** : number fbmLacunarity (2.0).
-- **renvoie** : number fbmGain (0.5).
+- `roughness` (*number*) : Roughness 0 to 1 (amplitude).
+- `scale` (*number*) : Scale 0 to 1 (0 = large bumps, 1 = small).
+- **returns**: number noiseFreq.
+- **returns**: number noiseStrength (m).
+- **returns**: integer fbmOctaves.
+- **returns**: number fbmLacunarity (2.0).
+- **returns**: number fbmGain (0.5).
 
 #### `editor_toolUtilities_noise.mapRoadNoiseParameters(roughness, scale)`
 
-Même champ, mais réglé pour une SURFACE DE ROUTE (bosses de rallye) : bande plus fine et amplitude plus faible, force 0 à 0.18 m de hauteur de crête, fréquence 0.06 (environ 16 m) à 0.5 (environ 2 m), octaves 3 à 5.
+Same field, but tuned for a ROAD SURFACE (rally bumps): finer band and lower amplitude, strength 0 to 0.18 m crest height, frequency 0.06 (about 16 m) to 0.5 (about 2 m), octaves 3 to 5.
 
-- `roughness` (*number*) : Rugosité 0 à 1.
-- `scale` (*number*) : Échelle 0 à 1.
-- **renvoie** : number noiseFreq.
-- **renvoie** : number noiseStrength (m).
-- **renvoie** : integer fbmOctaves.
-- **renvoie** : number fbmLacunarity.
-- **renvoie** : number fbmGain.
+- `roughness` (*number*) : Roughness 0 to 1.
+- `scale` (*number*) : Scale 0 to 1.
+- **returns**: number noiseFreq.
+- **returns**: number noiseStrength (m).
+- **returns**: integer fbmOctaves.
+- **returns**: number fbmLacunarity.
+- **returns**: number fbmGain.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `defaultFbmGain` | number | Multiplicateur d'amplitude par octave (0.5). |
-| `defaultFbmLacunarity` | number | Multiplicateur de fréquence par octave (2.0). |
+| `defaultFbmGain` | number | Amplitude multiplier per octave (0.5). |
+| `defaultFbmLacunarity` | number | Frequency multiplier per octave (2.0). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/noise.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/noise.lua`.*

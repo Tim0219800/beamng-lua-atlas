@@ -1,12 +1,12 @@
 # `profiling_zone`
 
-*Fichier : `lua/vehicle/extensions/profiling/zone.lua` · VM : Véhicule · 46 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/profiling/zone.lua` · VM: Vehicle · 46 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/profiling/zone")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/profiling/zone")` (file under extensions/ but not a regular extension)
 
-Bibliothèque tierce : jit.zone de LuaJIT (Mike Pall), copyright 2005-2016, licence MIT. Implémente un modèle simple de zones hiérarchiques (une pile de noms) utilisé par le profileur LuaJIT (mode z de profiling_p) pour regrouper les échantillons par zone nommée. Le module retourne une table appelable : zone('nom') empile une zone, zone() la dépile.
+Third-party library: LuaJIT's jit.zone (Mike Pall), copyright 2005-2016, MIT license. Implements a simple model of hierarchical zones (a stack of names) used by the LuaJIT profiler (mode z of profiling_p) to group samples by named zone. The module returns a callable table: zone('name') pushes a zone, zone() pops it.
 
-## Exemple
+## Example
 
 ```lua
 local zone = require('extensions/profiling/zone')
@@ -18,11 +18,11 @@ print(zone:get()) --> 'AI'
 zone()
 ```
 
-## Remarques
+## Notes
 
-- Dépiler une pile vide déclenche l'erreur « empty zone stack » (assert).
-- Le module n'est pas une extension du jeu : il se charge par require sur ce chemin (l'exemple d'origine citait require('jit.zone')).
-- Aucune fonction M : l'API est la table retournée (méthodes flush et get, plus le métamethode __call).
+- Popping an empty stack triggers the error "empty zone stack" (assert).
+- The module is not a game extension: it is loaded by require on this path (the original example cited require('jit.zone')).
+- No M function: the API is the returned table (methods flush and get, plus the __call metamethod).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/profiling/zone.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/profiling/zone.lua`.*

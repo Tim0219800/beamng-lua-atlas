@@ -1,43 +1,43 @@
 # `json`
 
-*Fichier : `lua/common/json.lua` · VM : Commun (GE + véhicule) · 38 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/json.lua` · VM: Common (GE + vehicle) · 38 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `json`
+**Access:** global `json`
 
-Fin enrobage de string.buffer de LuaJIT pour lire et écrire du JSON/SJSON (https://github.com/Autodesk/sjson). `json.decode` lit du texte ou un buffer ; `json.encode` est directement buffer.jsonencode. L'ancien parseur SJSON en Lua pur a été déplacé dans ljson.lua.
+Thin wrapper around LuaJIT's string.buffer to read and write JSON/SJSON (https://github.com/Autodesk/sjson). `json.decode` reads text or a buffer; `json.encode` is directly buffer.jsonencode. The old pure-Lua SJSON parser was moved to ljson.lua.
 
-## Exemple
+## Example
 
 ```lua
 local t = json.decode('{"a": 1, "b": [1,2,3]}')
 local s = json.encode(t)
 ```
 
-## Remarques
+## Notes
 
-- decode(nil) renvoie nil. Le code évite buffer.jsondecode directement car il lèverait une erreur si le buffer n'est pas entièrement consommé ; il utilise un buffer partagé du module (_buf), donc decode n'est pas réentrant (pas un problème hors coroutines).
-- M.encode est buffer.jsonencode de LuaJIT : l'extraction automatique le signale comme champ de type inconnu ; c'est bien une fonction.
+- decode(nil) returns nil. The code avoids buffer.jsondecode directly because it would raise an error if the buffer is not entirely consumed; it uses a shared module buffer (_buf), so decode is not reentrant (not a problem outside coroutines).
+- M.encode is LuaJIT's buffer.jsonencode: automatic extraction flags it as a field of unknown type; it is indeed a function.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `json.decode(si)` | Décode du JSON/SJSON. Accepte une chaîne ou un objet string.buffer (qui doit avoir une méthode jsondecode). Renvoie nil si l'argument est nil. | 25 |
+| `json.decode(si)` | Decodes JSON/SJSON. Accepts a string or a string.buffer object (which must have a jsondecode method). Returns nil if the argument is nil. | 25 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `json.decode(si)`
 
-Décode du JSON/SJSON. Accepte une chaîne ou un objet string.buffer (qui doit avoir une méthode jsondecode). Renvoie nil si l'argument est nil.
+Decodes JSON/SJSON. Accepts a string or a string.buffer object (which must have a jsondecode method). Returns nil if the argument is nil.
 
-- `si` (*string|table|nil*) : texte JSON ou string.buffer
-- **renvoie** : any valeur Lua décodée (table, nombre, chaîne, booléen…) ; erreur levée si JSON invalide (comportement de string.buffer)
+- `si` (*string|table|nil*) : JSON text or string.buffer
+- **returns**: any decoded Lua value (table, number, string, boolean...); error raised if the JSON is invalid (string.buffer behavior)
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `encode` | function | string.buffer.jsonencode : sérialise une valeur Lua (table, nombre, chaîne, booléen) en texte JSON. |
+| `encode` | function | string.buffer.jsonencode: serializes a Lua value (table, number, string, boolean) to JSON text. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/json.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/json.lua`.*

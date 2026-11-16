@@ -1,60 +1,60 @@
 # `editor_heroRoadEditor_barrierMgr`
 
-*Fichier : `lua/ge/extensions/editor/heroRoadEditor/barrierMgr.lua` · VM : Game Engine (GE) · 182 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/heroRoadEditor/barrierMgr.lua` · VM: Game Engine (GE) · 182 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_heroRoadEditor_barrierMgr` : `extensions.load("editor_heroRoadEditor_barrierMgr")`, puis la globale `editor_heroRoadEditor_barrierMgr`
+**Access:** extension `editor_heroRoadEditor_barrierMgr`: `extensions.load("editor_heroRoadEditor_barrierMgr")`, then the global `editor_heroRoadEditor_barrierMgr`
 
-Gestionnaire du mobilier de bord de route (glissières, clôtures, lampadaires) d'un groupe du Hero Road Editor. Il lit les bords de maillage du groupe (meshEdgeL/R, meshEdgeDirL/R, meshEdgeUp) et pose des pièces via editor/toolUtilities/roadsideProps (pools transitoires identifiés par id..'bL', 'fL', 'lL'…). Il gère les rails de toute la route (onglet Furniture) et les segments de barrière placés (onglet Features, group.barriers).
+Manager of the roadside furniture (guardrails, fences, lampposts) of a Hero Road Editor group. It reads the group's mesh edges (meshEdgeL/R, meshEdgeDirL/R, meshEdgeUp) and places pieces via editor/toolUtilities/roadsideProps (transient pools identified by id..'bL', 'fL', 'lL'...). It handles the rails of the whole road (Furniture tab) and the placed barrier segments (Features tab, group.barriers).
 
-## Remarques
+## Notes
 
-- Décalage vertical (enfouissement) par type de barrière : guardrail -0.35 m, jersey 0.0, plastic -0.15 m ; s'ajoute au zOffsetM du segment.
-- Valeurs par défaut du groupe : barrierOffsetM 0.5, fenceOffsetM 0.7, lampOffsetM 1.0 (mètres, décalage latéral vers l'extérieur depuis le bord).
-- Les types valent 'none' si absents ; 'none' ne pose rien. Les lampadaires sont ancrés aux deux extrémités (lockEnds) avec espacement group.lampSpacingM.
-- Une route cuite (baked) n'a plus de pièces dans les pools : counts renvoie alors 0.
+- Vertical offset (burial) per barrier type: guardrail -0.35 m, jersey 0.0, plastic -0.15 m; added to the segment's zOffsetM.
+- Group defaults: barrierOffsetM 0.5, fenceOffsetM 0.7, lampOffsetM 1.0 (meters, lateral offset outward from the edge).
+- The types are 'none' if absent; 'none' places nothing. The lampposts are anchored at both ends (lockEnds) with spacing group.lampSpacingM.
+- A baked road no longer has pieces in the pools: counts then returns 0.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_heroRoadEditor_barrierMgr.burnGroup(group)` | « Burn » : rend persistantes (canSave=true) les pièces actuelles via props.commitPool et les détache des pools transitoires. Renvoie le manifeste des noms, que exportMgr stocke lors du bake. | 159 |
-| `editor_heroRoadEditor_barrierMgr.counts(group)` | Nombre de pièces actuellement posées pour le groupe, par catégorie, côtés cumulés. Lit les pools transitoires (donc l'aperçu éditable). | 146 |
-| `editor_heroRoadEditor_barrierMgr.removeGroup(group)` | Supprime tout le mobilier posé du groupe (démontage ou moins de 2 nœuds). | 131 |
-| `editor_heroRoadEditor_barrierMgr.updateGroup(group)` | (Re)construit barrières, clôtures et lampadaires du groupe d'après les bords du maillage actuel et les sélections. Appelé après la reconstruction du maillage ; ne fait rien si le groupe n'a pas de dossier scenetree (sceneTreeFolderId). | 111 |
+| `editor_heroRoadEditor_barrierMgr.burnGroup(group)` | "Burn": makes the current pieces persistent (canSave=true) via props.commitPool and detaches them from the transient pools. Returns the manifest of names, which exportMgr stores during the bake. | 159 |
+| `editor_heroRoadEditor_barrierMgr.counts(group)` | Number of pieces currently placed for the group, per category, both sides combined. Reads the transient pools (so the editable preview). | 146 |
+| `editor_heroRoadEditor_barrierMgr.removeGroup(group)` | Removes all the furniture placed for the group (teardown or fewer than 2 nodes). | 131 |
+| `editor_heroRoadEditor_barrierMgr.updateGroup(group)` | (Re)builds the group's barriers, fences and lampposts from the current mesh edges and the selections. Called after the mesh is rebuilt; does nothing if the group has no scenetree folder (sceneTreeFolderId). | 111 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_heroRoadEditor_barrierMgr.burnGroup(group)`
 
-« Burn » : rend persistantes (canSave=true) les pièces actuelles via props.commitPool et les détache des pools transitoires. Renvoie le manifeste des noms, que exportMgr stocke lors du bake.
+"Burn": makes the current pieces persistent (canSave=true) via props.commitPool and detaches them from the transient pools. Returns the manifest of names, which exportMgr stores during the bake.
 
-- `group` (*table*) : Groupe Hero Road.
-- **renvoie** : table Tableau des identifiants/noms d'objets de scène créés (vide si le groupe est invalide).
+- `group` (*table*) : Hero Road group.
+- **returns**: table Array of identifiers/names of created scene objects (empty if the group is invalid).
 
 #### `editor_heroRoadEditor_barrierMgr.counts(group)`
 
-Nombre de pièces actuellement posées pour le groupe, par catégorie, côtés cumulés. Lit les pools transitoires (donc l'aperçu éditable).
+Number of pieces currently placed for the group, per category, both sides combined. Reads the transient pools (so the editable preview).
 
-- `group` (*table*) : Groupe Hero Road.
-- **renvoie** : integer Nombre de barrières.
-- **renvoie** : integer Nombre de clôtures.
-- **renvoie** : integer Nombre de lampadaires.
+- `group` (*table*) : Hero Road group.
+- **returns**: integer Number of barriers.
+- **returns**: integer Number of fences.
+- **returns**: integer Number of lampposts.
 
 #### `editor_heroRoadEditor_barrierMgr.removeGroup(group)`
 
-Supprime tout le mobilier posé du groupe (démontage ou moins de 2 nœuds).
+Removes all the furniture placed for the group (teardown or fewer than 2 nodes).
 
-- `group` (*table*) : Groupe Hero Road.
+- `group` (*table*) : Hero Road group.
 
 #### `editor_heroRoadEditor_barrierMgr.updateGroup(group)`
 
-(Re)construit barrières, clôtures et lampadaires du groupe d'après les bords du maillage actuel et les sélections. Appelé après la reconstruction du maillage ; ne fait rien si le groupe n'a pas de dossier scenetree (sceneTreeFolderId).
+(Re)builds the group's barriers, fences and lampposts from the current mesh edges and the selections. Called after the mesh is rebuilt; does nothing if the group has no scenetree folder (sceneTreeFolderId).
 
-- `group` (*table*) : Groupe Hero Road (id, sceneTreeFolderId, meshEdgeL/R, barrierLeftType, fenceLeftType, lampLeftType, barriers…).
+- `group` (*table*) : Hero Road group (id, sceneTreeFolderId, meshEdgeL/R, barrierLeftType, fenceLeftType, lampLeftType, barriers...).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/heroRoadEditor/barrierMgr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/heroRoadEditor/barrierMgr.lua`.*

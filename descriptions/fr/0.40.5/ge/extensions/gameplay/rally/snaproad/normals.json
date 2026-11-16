@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/snaproad/normals.lua",
+  "module": "Petit utilitaire de calcul de normales pour les points d'un snaproad de rallye. À partir d'un point doté de liens prev/next, il calcule le vecteur normal « vers l'avant » en s'appuyant sur les voisins disponibles (rallyUtil.calculateForwardNormal).",
+  "functions": {
+    "normalAlignPoints": {
+      "desc": "Renvoie le triplet (point précédent, point courant, point suivant) d'un point ; renvoie nil, nil, nil si le point est nil.",
+      "params": {"point": {"type": "table|nil", "desc": "Point avec champs prev et next (et pos)"}},
+      "returns": [
+        {"type": "table|nil", "desc": "point.prev"},
+        {"type": "table|nil", "desc": "le point lui-même"},
+        {"type": "table|nil", "desc": "point.next"}
+      ],
+      "internal": false
+    },
+    "forwardNormalVec": {
+      "desc": "Calcule la normale vers l'avant du point. Utilise prev→next si les deux existent, sinon courant→next, sinon prev→courant ; renvoie nil si aucun voisin n'existe.",
+      "params": {"point": {"type": "table", "desc": "Point avec pos, prev et next"}},
+      "returns": [{"type": "vec3|nil", "desc": "Vecteur normal construit à partir de x, y, z du résultat de rallyUtil.calculateForwardNormal"}],
+      "internal": false
+    }
+  }
+}

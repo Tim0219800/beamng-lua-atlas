@@ -1,0 +1,53 @@
+{
+  "path": "lua/ge/extensions/ui/router/navigationObserver.lua",
+  "module": "Diagnostic non-shipping du routeur : attribue chaque appel à navigate() au module Lua appelant (en remontant la pile en ignorant les fichiers « ui/router/ ») et avertit quand une navigation en préempte une autre encore en cours (transition active remplacée, ou navigate() dont l'époque a été incrémentée par un navigate() réentrant pendant ses gardes/onEnter). Chaque préemption est classée duplicate_navigation (requêtes identiques : route, params, portée, options) ou conflicting_navigation. Il n'a aucun effet sur le comportement du routeur : il enregistre des tentatives et écrit des avertissements.",
+  "notes": [
+    "Ne doit être chargé et appelé que si shipping_build ~= true (router.lua le garantit).",
+    "Le message d'avertissement est écrit avec l'étiquette de journal « LuaRouterObserver » au niveau W, sous la forme « <catégorie>: navigation from <source> [route=… scope=…] preempted by … (phase: …); check and fix duplicate navigation ».",
+    "La source est {module, file, func, line} du premier cadre hors routeur dans les 24 premiers niveaux de pile ; sinon module = \"bridge/unknown\" (appel venant du moteur/UI).",
+    "Une même tentative préemptée n'est jamais signalée deux fois, et une tentative ne se préempte pas elle-même.",
+    "Valeurs de phase utilisées par router.lua : active_transition, post_guard, post_enter."
+  ],
+  "fields": {
+    "ModuleName": {"type": "string", "desc": "Nom du module : \"navigationObserver\"."}
+  },
+  "functions": {
+    "beginAttempt": {
+      "desc": "Démarre une nouvelle tentative à l'entrée de navigate() en capturant l'appelant Lua externe. Doit être appelée avant tout wrapper du routeur.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Tentative {id, source, route, params, scope, options} (les quatre derniers renseignés par attachResolvedTarget)."}],
+      "internal": true
+    },
+    "attachResolvedTarget": {
+      "desc": "Associe la cible résolue (route complète, paramètres effectifs, portée, options) à une tentative.",
+      "params": {
+        "attempt": {"type": "table|nil", "desc": "Tentative créée par beginAttempt."},
+        "target": {"type": "table|nil", "desc": "Cible issue de resolveNavigationTarget (fullRouteName, params, options)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "getCurrentAttempt": {
+      "desc": "Renvoie la dernière tentative commencée (un navigate() réentrant écrase la précédente).",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Tentative courante."}],
+      "internal": true
+    },
+    "reportPreemption": {
+      "desc": "Signale une préemption avérée : classe la paire de tentatives, écrit un avertissement unique et renvoie l'enregistrement. Ne fait rien si une tentative manque, si ce sont les mêmes ou si la préemptée a déjà été signalée.",
+      "params": {
+        "preemptedAttempt": {"type": "table|nil", "desc": "Navigation interrompue."},
+        "replacementAttempt": {"type": "table|nil", "desc": "Navigation qui l'a remplacée."},
+        "phase": {"type": "string", "desc": "Étiquette indiquant où la préemption a été détectée."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{category, phase, preempted, replacement} ou nil si rien n'a été signalé."}],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Réinitialise l'observateur (tentative courante, compteur, tentatives déjà signalées).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

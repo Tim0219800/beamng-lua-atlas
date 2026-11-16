@@ -1,18 +1,18 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/tasklistMessage.lua",
-  "module": "Nœud flowgraph « Tasklist Message » (catégorie once_instant, durée) : affiche un objectif de type message dans l'app Goal List (hook 'SetTasklistTask', type 'message'). Entrées : « label », « sub » (sous-texte, caché), « identifier » (flowgraph), « clear » (caché, vrai par défaut), « active » (caché, vrai). Sortie : flow propagé.",
+  "module": "Flowgraph node \"Tasklist Message\" (category once_instant, duration): displays a message-type objective in the Goal List app ('SetTasklistTask' hook, type 'message'). Inputs: \"label\", \"sub\" (subtext, hidden), \"identifier\" (flowgraph), \"clear\" (hidden, true by default), \"active\" (hidden, true). Output: propagated flow.",
   "notes": [
-    "L'app n'accepte pas un libellé qui commence par un chiffre (todo du code).",
-    "Par défaut 'clear' vaut true : l'objectif est effacé sauf si le pin est mis à false."
+    "The app does not accept a label that starts with a digit (todo from the code).",
+    "By default 'clear' is true: the objective is cleared unless the pin is set to false."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "workOnce": {
-          "desc": "Envoie l'objectif à l'UI et propage le flux.",
+          "desc": "Sends the objective to the UI and propagates the flow.",
           "internal": true
         }
       }

@@ -1,26 +1,26 @@
 # `flowgraph_nodes_gameplay_rally_stageRuntimeState`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/stageRuntimeState.lua` · VM : Game Engine (GE) · 78 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/stageRuntimeState.lua` · VM: Game Engine (GE) · 78 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/stageRuntimeState")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/stageRuntimeState")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Stage Runtime State » (catégorie repeat_instant, tag rally). Lit l'état d'exécution de la spéciale tenu par le RallyManager : met le manager en mode d'autorité 'tracker', active la spéciale (setStageRuntimeActive(true)) et envoie onRallyDataUpdated avec l'état stageActive tant que flow est actif. Sorties : flow, active (spéciale active), complete (suivi terminé, via getStageObserverState().stageComplete) et time (temps de spéciale en s : currentSSTime ou getStageRuntimeTime, dernière valeur conservée).
+Flowgraph node "Rally Stage Runtime State" (category repeat_instant, tag rally). Reads the stage runtime state held by the RallyManager: puts the manager in 'tracker' authority mode, activates the stage (setStageRuntimeActive(true)) and sends onRallyDataUpdated with the stageActive state while flow is active. Outputs: flow, active (stage active), complete (tracking finished, via getStageObserverState().stageComplete) and time (stage time in s: currentSSTime or getStageRuntimeTime, last value kept).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet lastTime à 0. | 28 |
-| `C:init()` | Initialise lastTime à 0. | 24 |
-| `C:work()` | Chaque frame : remet les sorties à zéro puis les remplit depuis le rally manager. | 39 |
+| `C:_executionStarted()` | Resets lastTime to 0. | 28 |
+| `C:init()` | Initializes lastTime to 0. | 24 |
+| `C:work()` | Every frame: resets the outputs to zero then fills them from the rally manager. | 39 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onRallyDataUpdated` — écouté par 2 module(s)
+- `onRallyDataUpdated` — listened to by 2 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/stageRuntimeState.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/stageRuntimeState.lua`.*

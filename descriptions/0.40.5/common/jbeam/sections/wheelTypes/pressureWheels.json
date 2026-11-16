@@ -1,24 +1,37 @@
 {
   "path": "lua/common/jbeam/sections/wheelTypes/pressureWheels.lua",
-  "module": "Gestionnaire du type de roue 'pressureWheels' : le modèle de roue le plus récent et le plus complet, avec pression d'air simulée par des TRIANGLES pressurisés (groupe de pression par roue) au lieu de poutres pressurisées. Il crée l'anneau de bande de roulement (si un pneu existe), l'anneau de moyeu, un éventuel nœud stabilisateur, des enjoliveurs, de nombreuses familles de poutres (jante, côtés, périphérie, renforts, bande, en L, soutien) et les triangles du pneu et du moyeu. Appelé par jbeam/sections/wheels.lua pendant le chargement.",
-  "usage": "-- appelé par le répartiteur : process(vehicle, wheelKey, wheel)",
+  "module": "Handler for the 'pressureWheels' wheel type: the most recent and most complete wheel model, with air pressure simulated by pressurized TRIANGLES (one pressure group per wheel) instead of pressurized beams. It creates the tread ring (if a tire exists), the hub ring, an optional stabilizer node, hubcaps, many beam families (rim, sides, periphery, reinforcements, tread, L-beams, support) and the tire and hub triangles. Called by jbeam/sections/wheels.lua during loading.",
+  "usage": "-- called by the dispatcher: process(vehicle, wheelKey, wheel)",
   "notes": [
-    "Un pneu n'existe que si radius ET pressurePSI sont définis et si wheel.hasTire n'est pas false ; sinon seul le moyeu est créé (radius reçoit 0.5 en secours).",
-    "Nœud stabilisateur : wheel.nodeStabilizer (ou l'ancien alias nodeS, puis effacé) ; valeur 9999 ou nœud inexistant = pas de stabilisateur ; dans ce cas des poutres hubStabilizer* sont ajoutées depuis les nœuds extérieurs du moyeu.",
-    "Géométrie : wheelAngle (degrés) décale l'angle initial des rayons, conicityFactor (borné à [0.5,1.5]) déforme la conicité du pneu entre les deux côtés, offsetFromNode (1 ou 2) positionne le milieu de la roue par rapport à un nœud avec hubWidth, wheelOffset décale le long de l'axe, tireWidth pose les anneaux de pneu. hubWeight / tireWeight donnent un poids total réparti par nœud (hubNodeWeight = hubWeight/(2*numRays), nodeWeight = tireWeight/(2*numRays)) et hubWeightGainRatio ([0,1[) transfère une part du poids du pneu au moyeu.",
-    "Pour un nombre pair de rayons, chaque nœud de bande reçoit oppositeTreadNodeCid (nœud opposé, pour mesurer le rayon dynamique du pneu).",
-    "Les options de pneu sont copiées dans une 'cleanwheel' dépouillée (freins, thermique, options d'activation, hasTire…) puis cleanupWheelOptions retire les options propres au moyeu (hub*, hubcap*...) pour obtenir les options des nœuds de pneu ; les nœuds du moyeu reçoivent les options hub*.",
-    "Triangles : groupe de pression '_wheelPressureGroup<wheelID>' ; addPressTri (avec pressureGroup, pressurePSI, skinDragCoef) pour les triangles du pneu (bande, deux côtés) et du moyeu ; addTri (sans pression) pour les triangles de moyeu non pressurisés. Collision des triangles : triangleCollision (défaut faux = NONCOLLIDABLE), treadTriangleCollision, side1TriangleCollision, side2TriangleCollision, hubTriangleCollision, hubSide1TriangleCollision, hubSide2TriangleCollision. Triangles ajoutés à vehicle.triangles.",
-    "Options d'activation lues : enableTireReinfBeams / enableTireLbeams (renforts X ou en L), enableTireSideReinfBeams, enableTirePeripheryReinfBeams, enableTreadReinfBeams, enableTireSupportBeams, enableHubcaps (nombre de rayons pair), enableExtraHubcapBeams.",
-    "Résultat dans la roue : wheel.nodes (moyeu), wheel.treadNodes, wheel.rimBeams, wheel.sideBeams, wheel.peripheryBeams, wheel.reinfBeams, wheel.treadBeams, wheel.pressureGroup. wheel.collision forcé à true ; wheel.hubWidth reçoit axis:length() (qui vaut 1 après normalisation !) si hubWidth n'est pas fourni.",
-    "BUG probable : `wheel.hubWidth = wheel.hubWidth or axis:length()` est évalué APRÈS axis:normalize(), donc la largeur de moyeu par défaut vaut 1 m au lieu de la distance node1-node2.",
-    "Constantes C codées en dur : NORMALTYPE 0, BEAM_ANISOTROPIC 1, NONCOLLIDABLE 2, BEAM_LBEAM 4, BEAM_SUPPORT 7."
+    "A tire only exists if radius AND pressurePSI are defined and wheel.hasTire is not false; otherwise only the hub is created (radius is set to 0.5 as a fallback).",
+    "Stabilizer node: wheel.nodeStabilizer (or the old alias nodeS, then cleared); value 9999 or a nonexistent node = no stabilizer; in that case hubStabilizer* beams are added from the outer hub nodes.",
+    "Geometry: wheelAngle (degrees) offsets the initial angle of the rays, conicityFactor (clamped to [0.5,1.5]) deforms the tire conicity between the two sides, offsetFromNode (1 or 2) positions the middle of the wheel relative to a node using hubWidth, wheelOffset shifts along the axle, tireWidth places the tire rings. hubWeight / tireWeight give a total weight distributed per node (hubNodeWeight = hubWeight/(2*numRays), nodeWeight = tireWeight/(2*numRays)) and hubWeightGainRatio ([0,1[) transfers part of the tire weight to the hub.",
+    "For an even number of rays, each tread node receives oppositeTreadNodeCid (opposite node, to measure the tire's dynamic radius).",
+    "The tire options are copied into a stripped-down 'cleanwheel' (brakes, thermal, enable options, hasTire...) then cleanupWheelOptions removes the hub-specific options (hub*, hubcap*...) to obtain the tire node options; the hub nodes receive the hub* options.",
+    "Triangles: pressure group '_wheelPressureGroup<wheelID>'; addPressTri (with pressureGroup, pressurePSI, skinDragCoef) for the tire triangles (tread, two sides) and the hub; addTri (no pressure) for the non-pressurized hub triangles. Triangle collision: triangleCollision (default false = NONCOLLIDABLE), treadTriangleCollision, side1TriangleCollision, side2TriangleCollision, hubTriangleCollision, hubSide1TriangleCollision, hubSide2TriangleCollision. Triangles are added to vehicle.triangles.",
+    "Enable options read: enableTireReinfBeams / enableTireLbeams (X or L reinforcements), enableTireSideReinfBeams, enableTirePeripheryReinfBeams, enableTreadReinfBeams, enableTireSupportBeams, enableHubcaps (even number of rays), enableExtraHubcapBeams.",
+    "Result in the wheel: wheel.nodes (hub), wheel.treadNodes, wheel.rimBeams, wheel.sideBeams, wheel.peripheryBeams, wheel.reinfBeams, wheel.treadBeams, wheel.pressureGroup. wheel.collision forced to true; wheel.hubWidth receives axis:length() (which is 1 after normalization!) if hubWidth is not provided.",
+    "Probable BUG: `wheel.hubWidth = wheel.hubWidth or axis:length()` is evaluated AFTER axis:normalize(), so the default hub width is 1 m instead of the node1-node2 distance.",
+    "Hardcoded C constants: NORMALTYPE 0, BEAM_ANISOTROPIC 1, NONCOLLIDABLE 2, BEAM_LBEAM 4, BEAM_SUPPORT 7."
   ],
   "fields": {},
   "functions": {
     "process": {
-      "desc": "Crée nœuds, poutres et triangles d'une roue de type pressureWheels (alias de addPressureWheel). Avertissement 'invalid pressureWheel' et sortie si node1 ou node2 manque.",
-      "params": {"vehicle": {"type": "table", "desc": "véhicule en construction (nodes, triangles, maxIDs…)"}, "wheelKey": {"type": "integer", "desc": "indice de la roue dans sa section"}, "wheel": {"type": "table", "desc": "définition jbeam de la roue (nombreux champs, voir notes) ; modifiée avec nodes, treadNodes, rimBeams, sideBeams, peripheryBeams, reinfBeams, treadBeams, pressureGroup"}},
+      "desc": "Creates nodes, beams and triangles of a pressureWheels wheel (alias of addPressureWheel). Warning 'invalid pressureWheel' and exits if node1 or node2 is missing.",
+      "params": {
+        "vehicle": {
+          "type": "table",
+          "desc": "vehicle under construction (nodes, triangles, maxIDs...)"
+        },
+        "wheelKey": {
+          "type": "integer",
+          "desc": "index of the wheel in its section"
+        },
+        "wheel": {
+          "type": "table",
+          "desc": "jbeam definition of the wheel (many fields, see notes); modified with nodes, treadNodes, rimBeams, sideBeams, peripheryBeams, reinfBeams, treadBeams, pressureGroup"
+        }
+      },
       "returns": [],
       "internal": true
     }

@@ -1,18 +1,18 @@
 # `flowgraph_nodes_mission_getSetupData`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/mission/getSetupData.lua` · VM : Game Engine (GE) · 43 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/mission/getSetupData.lua` · VM: Game Engine (GE) · 43 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/mission/getSetupData")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/mission/getSetupData")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Get Mission Setup Data' (categorie provider). Expose sur ses sorties les valeurs des modules de preparation de mission (self.mgr.activity.setupModules) : utilisation du vehicule d'origine du joueur, modele/config choisis, et reglages du trafic (actif, trafic precedent, quantite, quantite active, taux de reapparition).
+Flowgraph node 'Get Mission Setup Data' (provider category). Exposes on its outputs the values of the mission setup modules (self.mgr.activity.setupModules): use of the player's original vehicle, chosen model/config, and traffic settings (active, previous traffic, amount, active amount, respawn rate).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Si une activite avec setupModules existe, recopie data.vehicles.* et data.traffic.* vers les pins (booleens forces, valeurs par defaut '' ou 0). | 25 |
+| `C:work()` | If an activity with setupModules exists, copies data.vehicles.* and data.traffic.* to the pins (booleans forced, default values '' or 0). | 25 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/mission/getSetupData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/mission/getSetupData.lua`.*

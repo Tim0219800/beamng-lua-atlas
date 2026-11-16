@@ -1,37 +1,37 @@
 # `flowgraph_nodes_scene_sevensegmentDisplay`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/sevensegmentDisplay.lua` · VM : Game Engine (GE) · 174 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/sevensegmentDisplay.lua` · VM: Game Engine (GE) · 174 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/sevensegmentDisplay")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/sevensegmentDisplay")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Sevensegment Display » (repeat_instant, auteur BeamNG). Crée un afficheur sept segments composé de TSStatic (art/shapes/quarter_mile_display/display_*.dae) à la position/rotation données et y affiche le nombre du pin number. Réglages dans self.data : mode ('number', 'minutes', 'hours'), scaling, count (5 chiffres), decimals (3), decimalOffset, spacing, shapeFolder, showLeadingZeroes. Sortie : number.
+Flowgraph node "Sevensegment Display" (repeat_instant, author BeamNG). Creates a seven-segment display made of TSStatic (art/shapes/quarter_mile_display/display_*.dae) at the given position/rotation and displays the number of the number pin on it. Settings in self.data: mode ('number', 'minutes', 'hours'), scaling, count (5 digits), decimals (3), decimalOffset, spacing, shapeFolder, showLeadingZeroes. Output: number.
 
-## Remarques
+## Notes
 
-- Le pin de sortie number n'est jamais écrit.
-- Les modes 'hours' et 'number' n'ont pas de logique distincte : seul 'minutes' ajoute les deux points.
-- Si le pin number est nil, updateNumbers échoue (division de nil).
+- The output pin number is never written.
+- The 'hours' and 'number' modes have no distinct logic: only 'minutes' adds the colon.
+- If the number pin is nil, updateNumbers fails (division of nil).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Oublie le dernier nombre affiché. | 135 |
-| `C:_executionStopped()` | Supprime les objets à l'arrêt. | 131 |
-| `C:clearObjects()` | Supprime tous les objets créés et remet spawned à false. | 139 |
-| `C:createObjects(objectName)` | Crée les chiffres (shape '8'), le point décimal et, en mode minutes, les deux points. | 42 |
-| `C:destroy()` | Appelé à la destruction du noeud : nettoie les objets créés. | 169 |
-| `C:init(mgr, ...)` | Initialise les réglages par défaut (mode 'minutes', count 5, decimals 3, spacing 5...). | 27 |
-| `C:makeDot(offset, name)` | Crée un TSStatic de point (shape 'period') décalé par rapport à la position de base. | 81 |
-| `C:onClientEndMission()` | Hook de fin de mission : nettoie les objets créés par le noeud. | 165 |
-| `C:updateNumbers()` | Change la shape de chaque chiffre selon le nombre courant ; efface les zéros de tête si showLeadingZeroes est faux. | 101 |
-| `C:work()` | Sur clear, supprime l'afficheur ; sinon le crée si besoin et met à jour les chiffres si le nombre a changé. | 152 |
+| `C:_executionStarted()` | Forgets the last displayed number. | 135 |
+| `C:_executionStopped()` | Deletes the objects on stop. | 131 |
+| `C:clearObjects()` | Deletes all created objects and sets spawned back to false. | 139 |
+| `C:createObjects(objectName)` | Creates the digits (shape '8'), the decimal point and, in minutes mode, the colon. | 42 |
+| `C:destroy()` | Called when the node is destroyed: cleans up the created objects. | 169 |
+| `C:init(mgr, ...)` | Initializes the default settings (mode 'minutes', count 5, decimals 3, spacing 5...). | 27 |
+| `C:makeDot(offset, name)` | Creates a point TSStatic (shape 'period') offset relative to the base position. | 81 |
+| `C:onClientEndMission()` | End-of-mission hook: cleans up the objects created by the node. | 165 |
+| `C:updateNumbers()` | Changes the shape of each digit according to the current number; clears leading zeros if showLeadingZeroes is false. | 101 |
+| `C:work()` | On clear, deletes the display; otherwise creates it if needed and updates the digits if the number changed. | 152 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `delete`, `getId`, `postApply`, `preApply`, `setField`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/sevensegmentDisplay.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/sevensegmentDisplay.lua`.*

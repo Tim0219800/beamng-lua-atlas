@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceSettings.lua",
+  "module": "Nœud flowgraph « Signal Instance Settings » (once_instant). Règle une instance de feu : sequence (setSequence par id), controller (setController par id), active (setActive), stateIndex (setStrictState ; 0 pour réinitialiser). Seuls les pins non nil sont appliqués.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "workOnce": {
+          "desc": "Applique séquence, contrôleur, activation et état forcé à l'instance.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

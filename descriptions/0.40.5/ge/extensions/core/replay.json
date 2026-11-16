@@ -1,302 +1,567 @@
 {
   "path": "lua/ge/extensions/core/replay.lua",
-  "module": "Interface Lua du système de replays (fichiers .rpl sous replays/). Elle pilote le flux de fichier C++ (be:getFileStream) : enregistrement manuel ou de mission, lecture, pause, vitesse, saut, renommage, suppression. Elle reçoit l'état du moteur par stateChanged, le republie à l'UI (guihooks replayStateChanged) et aux extensions (hooks onReplayStateChanged et onReplayCoreEvent), et active ou désactive les action maps de lecture. Gère aussi les replays automatiques de mission (replays/missionReplays/ et replays/userSavedMissionReplays/).",
-  "usage": "core_replay.startRecording()\n-- plus tard\ncore_replay.stopRecording({autoplayAfterStopping = true})\nlocal list = core_replay.getRecordings()\ncore_replay.loadFile(list[1].filename, true)",
+  "module": "Lua interface of the replay system (.rpl files under replays/). It drives the C++ file stream (be:getFileStream): manual or mission recording, playback, pause, speed, seek, rename, delete. It receives the engine state through stateChanged, republishes it to the UI (guihooks replayStateChanged) and to extensions (hooks onReplayStateChanged and onReplayCoreEvent), and enables or disables the playback action maps. Also handles automatic mission replays (replays/missionReplays/ and replays/userSavedMissionReplays/).",
+  "usage": "core_replay.startRecording()\n-- later\ncore_replay.stopRecording({autoplayAfterStopping = true})\nlocal list = core_replay.getRecordings()\ncore_replay.loadFile(list[1].filename, true)",
   "notes": [
-    "M.state contient : loadedFile, positionSeconds, totalSeconds, speed (arrondi au millième), paused, fpsPlay, fpsRec, state ('inactive', 'playback' ou 'recording'), framePositionSeconds.",
-    "Tous les noms de fichiers sont validés : relatifs au jeu, sous replays/, avec extension .rpl, sans '..', sans ':' ni caractères interdits. Sinon les fonctions renvoient un résultat d'échec avec code 'invalidFilename' ou un message.",
-    "Beaucoup de fonctions renvoient un résultat {success, filename, message?, code?, ...} (replayOperationResult). Codes vus : ok, queued, invalidFilename, fileNotFound, streamUnavailable, streamPlayFailed, recordStartFailed, recordingActive, notRecording, playbackActive.",
-    "loadFile ne lance pas la lecture tout de suite : il met la demande en attente et affiche 'app:waiting' ; la lecture démarre dans onUiWaitingState. Un nouvel appel remplace la demande en attente.",
-    "Vitesses accessibles par toggleSpeed : 1/1000, 1/500, 1/200, 1/100, 1/50, 1/32, 1/16, 1/8, 1/4, 1/2, 3/4, 1, 1.5, 2, 4, 8.",
-    "Le commentaire de setSpeed dit '1=realtime, 0.5=slowmo, 2=fastmotion'. Le changement est instantané, sans lissage.",
-    "Un enregistrement manuel est refusé pendant qu'un enregistrement de mission est actif (message ui replay.cantManualRecording).",
-    "BUG probable : getMissionReplayFiles appelle career_saveSystem.getCurrentProfile() sans tester que career_saveSystem existe (le test career_career vient après). Hors carrière, si career_saveSystem n'est pas chargé, cela lève une erreur.",
-    "Les fonctions saveMissionReplay et removeMissionSavedReplay copient puis suppriment les fichiers .rpl et .rplMeta.json, et supposent que le meta existe (meta.missionId)."
+    "M.state contains: loadedFile, positionSeconds, totalSeconds, speed (rounded to the thousandth), paused, fpsPlay, fpsRec, state ('inactive', 'playback' or 'recording'), framePositionSeconds.",
+    "All file names are validated: relative to the game, under replays/, with the .rpl extension, without '..', without ':' or forbidden characters. Otherwise the functions return a failure result with code 'invalidFilename' or a message.",
+    "Many functions return a result {success, filename, message?, code?, ...} (replayOperationResult). Codes seen: ok, queued, invalidFilename, fileNotFound, streamUnavailable, streamPlayFailed, recordStartFailed, recordingActive, notRecording, playbackActive.",
+    "loadFile does not start playback right away: it queues the request and displays 'app:waiting'; playback starts in onUiWaitingState. A new call replaces the pending request.",
+    "Speeds reachable by toggleSpeed: 1/1000, 1/500, 1/200, 1/100, 1/50, 1/32, 1/16, 1/8, 1/4, 1/2, 3/4, 1, 1.5, 2, 4, 8.",
+    "The comment of setSpeed says '1=realtime, 0.5=slowmo, 2=fastmotion'. The change is instantaneous, without smoothing.",
+    "A manual recording is refused while a mission recording is active (UI message replay.cantManualRecording).",
+    "Probable BUG: getMissionReplayFiles calls career_saveSystem.getCurrentProfile() without testing that career_saveSystem exists (the career_career test comes after). Outside career, if career_saveSystem is not loaded, this raises an error.",
+    "The functions saveMissionReplay and removeMissionSavedReplay copy then delete the .rpl and .rplMeta.json files, and assume the meta exists (meta.missionId)."
   ],
   "fields": {
-    "state": {"type": "table", "desc": "Dernier état reçu du moteur (voir notes). Au départ seulement {speed = 1}."},
-    "requestedStartLevel": {"type": "boolean|nil", "desc": "Mis à true par startLevel pour que onClientEndMission n'arrête pas la lecture lors du changement de niveau voulu."}
+    "state": {
+      "type": "table",
+      "desc": "Last state received from the engine (see notes). Initially only {speed = 1}."
+    },
+    "requestedStartLevel": {
+      "type": "boolean|nil",
+      "desc": "Set to true by startLevel so that onClientEndMission does not stop playback during the intended level change."
+    }
   },
   "functions": {
     "onInit": {
-      "desc": "Hook d'initialisation de l'extension : demande au flux de fichier de renvoyer son état (stream:requestState).",
+      "desc": "Extension initialization hook: asks the file stream to send back its state (stream:requestState).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "stateChanged": {
-      "desc": "Appelé par le C++ à chaque changement d'état du flux de replay. À l'entrée en 'playback', désactive les action maps VehicleCommon/VehicleSpecific et pousse ReplayPlaybackActionMap ; à la sortie, l'inverse. Met à jour M.state, déclenche guihooks 'replayStateChanged', hook 'onReplayStateChanged'(state) et 'onReplayCoreEvent'({event, state, ...}) avec event parmi playbackStarted, playbackStopped, recordingStarted, recordingStopped, playbackPaused, playbackResumed, loadedFileChanged.",
+      "desc": "Called by C++ on every change of the replay stream state. On entering 'playback', disables the VehicleCommon/VehicleSpecific action maps and pushes ReplayPlaybackActionMap; on leaving, the reverse. Updates M.state, triggers guihooks 'replayStateChanged', hook 'onReplayStateChanged'(state) and 'onReplayCoreEvent'({event, state, ...}) with event among playbackStarted, playbackStopped, recordingStarted, recordingStopped, playbackPaused, playbackResumed, loadedFileChanged.",
       "params": {
-        "loadedFile": {"type": "string", "desc": "Fichier chargé."},
-        "positionSeconds": {"type": "number", "desc": "Position de lecture (s)."},
-        "totalSeconds": {"type": "number", "desc": "Durée totale (s)."},
-        "speed": {"type": "number", "desc": "Vitesse de lecture."},
-        "paused": {"type": "boolean", "desc": "En pause."},
-        "fpsPlay": {"type": "number", "desc": "Images par seconde en lecture."},
-        "fpsRec": {"type": "number", "desc": "Images par seconde à l'enregistrement."},
-        "statestr": {"type": "string", "desc": "'inactive', 'playback' ou 'recording'."},
-        "framePositionSeconds": {"type": "number", "desc": "Position de l'image courante (s)."}
+        "loadedFile": {
+          "type": "string",
+          "desc": "Loaded file."
+        },
+        "positionSeconds": {
+          "type": "number",
+          "desc": "Playback position (s)."
+        },
+        "totalSeconds": {
+          "type": "number",
+          "desc": "Total duration (s)."
+        },
+        "speed": {
+          "type": "number",
+          "desc": "Playback speed."
+        },
+        "paused": {
+          "type": "boolean",
+          "desc": "Paused."
+        },
+        "fpsPlay": {
+          "type": "number",
+          "desc": "Frames per second in playback."
+        },
+        "fpsRec": {
+          "type": "number",
+          "desc": "Frames per second when recording."
+        },
+        "statestr": {
+          "type": "string",
+          "desc": "'inactive', 'playback' or 'recording'."
+        },
+        "framePositionSeconds": {
+          "type": "number",
+          "desc": "Position of the current frame (s)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook appelé à la fin d'un niveau : si une lecture est en cours et que le changement de niveau n'a pas été demandé par startLevel, la lecture est arrêtée avec un message.",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau quitté (déduit du code)."}},
+      "desc": "Hook called at the end of a level: if playback is in progress and the level change was not requested by startLevel, playback is stopped with a message.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Path of the level being left (inferred from code)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onUiWaitingState": {
-      "desc": "Hook appelé quand l'écran d'attente de l'UI est affiché. Lance alors la lecture du fichier mis en attente par loadFile (stop du flux puis play).",
-      "params": {"state": {"type": "boolean", "desc": "Vrai quand l'attente est active ; sinon ignoré."}},
+      "desc": "Hook called when the UI waiting screen is displayed. It then starts playback of the file queued by loadFile (stream stop then play).",
+      "params": {
+        "state": {
+          "type": "boolean",
+          "desc": "True when waiting is active; otherwise ignored."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "_getReplayVehicleData": {
-      "desc": "Appelé par le C++ : renvoie les données du véhicule (core_vehicle_manager.getVehicleData) encodées en JSON.",
-      "params": {"id": {"type": "integer", "desc": "Id du véhicule."}},
-      "returns": [{"type": "string", "desc": "JSON ; doit être une chaîne."}],
+      "desc": "Called by C++: returns the vehicle data (core_vehicle_manager.getVehicleData) encoded as JSON.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "JSON; must be a string."
+        }
+      ],
       "internal": true
     },
     "setDebugEnabled": {
-      "desc": "Active ou désactive les logs de debug du replay (tag core_replay.debug).",
-      "params": {"enabled": {"type": "boolean", "desc": "Vrai pour activer."}},
+      "desc": "Enables or disables the replay debug logs (tag core_replay.debug).",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "True to enable."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getDebugEnabled": {
-      "desc": "Indique si les logs de debug du replay sont actifs.",
+      "desc": "Indicates whether the replay debug logs are active.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "État du debug."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Debug state."
+        }
+      ],
       "internal": false
     },
     "logUiAction": {
-      "desc": "Écrit dans le log de debug (si actif) une action venue de l'UI, avec le préfixe 'ui.'.",
+      "desc": "Writes to the debug log (if active) an action coming from the UI, with the prefix 'ui.'.",
       "params": {
-        "scope": {"type": "string", "desc": "Nom de l'action."},
-        "data": {"type": "any", "desc": "Données à journaliser."}
+        "scope": {
+          "type": "string",
+          "desc": "Name of the action."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Data to log."
+        }
       },
       "returns": [],
       "internal": false
     },
     "getRecordings": {
-      "desc": "Liste les .rpl du dossier replays/ (sans sous-dossiers). Chaque entrée : filename, path, key, basename, displayName, size, sortTime, map, levelName, metadataAvailable, missingMetadataFields. Le niveau est deviné en scannant le début du fichier (jusqu'à 1 Mo) ; tri : niveau courant d'abord, puis le plus récent.",
+      "desc": "Lists the .rpl files of the replays/ folder (without subfolders). Each entry: filename, path, key, basename, displayName, size, sortTime, map, levelName, metadataAvailable, missingMetadataFields. The level is guessed by scanning the start of the file (up to 1 MB); sort: current level first, then most recent.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Liste d'enregistrements."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "List of recordings."
+        }
+      ],
       "internal": false
     },
     "getPlaybackContext": {
-      "desc": "Indique si un replay peut être lu et s'il faut d'abord charger son niveau.",
-      "params": {"filename": {"type": "string", "desc": "Fichier replay (sous replays/)."}},
-      "returns": [{"type": "table", "desc": "{success, filename, code, recordedLevel, currentLevel, levelKnown, requiresLevelLoad} ou échec avec code invalidFilename / fileNotFound."}],
+      "desc": "Indicates whether a replay can be played and whether its level must be loaded first.",
+      "params": {
+        "filename": {
+          "type": "string",
+          "desc": "Replay file (under replays/)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, filename, code, recordedLevel, currentLevel, levelKnown, requiresLevelLoad} or failure with code invalidFilename / fileNotFound."
+        }
+      ],
       "internal": false
     },
     "getPositionSeconds": {
-      "desc": "Position de lecture courante en secondes.",
+      "desc": "Current playback position in seconds.",
       "params": {},
-      "returns": [{"type": "number|nil", "desc": "Position (nil avant le premier stateChanged)."}],
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Position (nil before the first stateChanged)."
+        }
+      ],
       "internal": false
     },
     "getTotalSeconds": {
-      "desc": "Durée totale du replay chargé en secondes.",
+      "desc": "Total duration of the loaded replay in seconds.",
       "params": {},
-      "returns": [{"type": "number|nil", "desc": "Durée."}],
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Duration."
+        }
+      ],
       "internal": false
     },
     "getState": {
-      "desc": "État du système de replay.",
+      "desc": "State of the replay system.",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "'inactive', 'playback' ou 'recording'."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "'inactive', 'playback' or 'recording'."
+        }
+      ],
       "internal": false
     },
     "isGameplayAllowed": {
-      "desc": "Indique si le gameplay est autorisé pendant le replay. Renvoie toujours true actuellement (un TODO dans le code prévoit une option).",
+      "desc": "Indicates whether gameplay is allowed during the replay. Currently always returns true (a TODO in the code plans an option).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "Toujours true."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Always true."
+        }
+      ],
       "internal": false
     },
     "isPaused": {
-      "desc": "Indique si la lecture est en pause.",
+      "desc": "Indicates whether playback is paused.",
       "params": {},
-      "returns": [{"type": "boolean|nil", "desc": "État de pause."}],
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "Pause state."
+        }
+      ],
       "internal": false
     },
     "getLoadedFile": {
-      "desc": "Nom du fichier replay chargé.",
+      "desc": "Name of the loaded replay file.",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "Chemin du fichier."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "File path."
+        }
+      ],
       "internal": false
     },
     "setSpeed": {
-      "desc": "Fixe la vitesse de lecture (1 = temps réel, 0.5 = ralenti, 2 = accéléré), sans lissage. Ne fait rien si la vitesse est déjà celle-ci.",
-      "params": {"speed": {"type": "number", "desc": "Facteur de vitesse."}},
+      "desc": "Sets the playback speed (1 = realtime, 0.5 = slow motion, 2 = fast motion), without smoothing. Does nothing if the speed is already this value.",
+      "params": {
+        "speed": {
+          "type": "number",
+          "desc": "Speed factor."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "toggleSpeed": {
-      "desc": "Change la vitesse. 'realtime' alterne entre 1 et la dernière autre vitesse (1/8 au départ) ; 'slowmotion' met 1/8 ; un nombre positif ou négatif monte ou descend d'autant de crans dans la liste des vitesses. Informe simTimeAuthority.",
-      "params": {"val": {"type": "string|integer", "desc": "'realtime', 'slowmotion', ou nombre de crans (+1, -1…)."}},
+      "desc": "Changes the speed. 'realtime' alternates between 1 and the last other speed (1/8 at start); 'slowmotion' sets 1/8; a positive or negative number goes up or down that many steps in the speed list. Informs simTimeAuthority.",
+      "params": {
+        "val": {
+          "type": "string|integer",
+          "desc": "'realtime', 'slowmotion', or number of steps (+1, -1...)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "pause": {
-      "desc": "Met en pause ou relance la lecture. Sans effet hors 'playback'.",
-      "params": {"v": {"type": "boolean", "desc": "true = pause."}},
+      "desc": "Pauses or resumes playback. No effect outside 'playback'.",
+      "params": {
+        "v": {
+          "type": "boolean",
+          "desc": "true = pause."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "displayMsg": {
-      "desc": "Affiche une notification (toastrMsg) 'Replay <level>' et écrit un log.",
+      "desc": "Displays a notification (toastrMsg) 'Replay <level>' and writes a log.",
       "params": {
-        "level": {"type": "string", "desc": "Catégorie toastr : error, info, warning…"},
-        "msg": {"type": "string", "desc": "Clé de traduction ou texte."},
-        "context": {"type": "table|nil", "desc": "Variables de traduction."}
+        "level": {
+          "type": "string",
+          "desc": "Toastr category: error, info, warning..."
+        },
+        "msg": {
+          "type": "string",
+          "desc": "Translation key or text."
+        },
+        "context": {
+          "type": "table|nil",
+          "desc": "Translation variables."
+        }
       },
       "returns": [],
       "internal": false
     },
     "togglePlay": {
-      "desc": "Bascule lecture/pause du replay chargé. Si l'état est 'inactive', recharge et lance le fichier ; hors playback et inactive, journalise une erreur.",
+      "desc": "Toggles play/pause of the loaded replay. If the state is 'inactive', reloads and starts the file; outside playback and inactive, logs an error.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "loadFile": {
-      "desc": "Met en attente le chargement d'un replay (affiche l'écran d'attente ; la lecture démarre dans onUiWaitingState). Valide le nom de fichier.",
+      "desc": "Queues the loading of a replay (displays the waiting screen; playback starts in onUiWaitingState). Validates the file name.",
       "params": {
-        "filename": {"type": "string", "desc": "Chemin sous replays/ (extension .rpl)."},
-        "autoplay": {"type": "boolean|nil", "desc": "Si vrai, la lecture démarre immédiatement ; sinon elle démarre en pause."},
-        "options": {"type": "table|nil", "desc": "options.pauseWhenReady = true : remet en pause au début quand le monde est prêt."}
+        "filename": {
+          "type": "string",
+          "desc": "Path under replays/ (.rpl extension)."
+        },
+        "autoplay": {
+          "type": "boolean|nil",
+          "desc": "If true, playback starts immediately; otherwise it starts paused."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "options.pauseWhenReady = true: pauses again at the start when the world is ready."
+        }
       },
-      "returns": [{"type": "table", "desc": "{success, filename, code = 'queued'} ou échec."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, filename, code = 'queued'} or failure."
+        }
+      ],
       "internal": false
     },
     "stop": {
-      "desc": "Annule un chargement en attente et arrête le flux (lecture ou enregistrement).",
+      "desc": "Cancels a pending load and stops the stream (playback or recording).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "stopAndUnload": {
-      "desc": "Arrête la lecture et publie un état vide 'inactive'. Refusé pendant un enregistrement (code recordingActive).",
+      "desc": "Stops playback and publishes an empty 'inactive' state. Refused during a recording (code recordingActive).",
       "params": {},
-      "returns": [{"type": "table", "desc": "Résultat {success, filename, message?, code}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Result {success, filename, message?, code}."
+        }
+      ],
       "internal": false
     },
     "cancelRecording": {
-      "desc": "Si un enregistrement est en cours : l'arrête et supprime le fichier, puis publie l'état vide.",
+      "desc": "If a recording is in progress: stops it and deletes the file, then publishes the empty state.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "startRecording": {
-      "desc": "Démarre un enregistrement manuel dans replays/ (nom 'AAAA-MM-JJ_HH-MM-SS <niveau>.rpl'). Refusé si déjà en enregistrement, en lecture, ou si un enregistrement de mission est actif.",
+      "desc": "Starts a manual recording in replays/ (name 'YYYY-MM-DD_HH-MM-SS <level>.rpl'). Refused if already recording, playing back, or if a mission recording is active.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{success, filename, code, ...}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, filename, code, ...}."
+        }
+      ],
       "internal": false
     },
     "stopRecording": {
-      "desc": "Arrête l'enregistrement manuel et met à jour le catalogue (guihooks replayRecordingsUpdated).",
-      "params": {"options": {"type": "table|nil", "desc": "options.autoplayAfterStopping = true : charge le replay à l'arrêt."}},
-      "returns": [{"type": "table", "desc": "{success, filename, code, playbackResult?}."}],
+      "desc": "Stops the manual recording and updates the catalog (guihooks replayRecordingsUpdated).",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "options.autoplayAfterStopping = true: loads the replay on stop."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, filename, code, playbackResult?}."
+        }
+      ],
       "internal": false
     },
     "toggleRecording": {
-      "desc": "Bascule l'enregistrement : en enregistrement, l'arrête ; en lecture, arrête la lecture ; sinon démarre un enregistrement.",
+      "desc": "Toggles recording: while recording, stops it; during playback, stops playback; otherwise starts a recording.",
       "params": {
-        "autoplayAfterStopping": {"type": "boolean|nil", "desc": "Lire le replay après l'arrêt. Si nil : vrai pour un enregistrement manuel, faux pour un replay de mission."},
-        "isMissionReplay": {"type": "boolean|nil", "desc": "Replay automatique de mission (dossier replays/missionReplays/)."}
+        "autoplayAfterStopping": {
+          "type": "boolean|nil",
+          "desc": "Play the replay after stopping. If nil: true for a manual recording, false for a mission replay."
+        },
+        "isMissionReplay": {
+          "type": "boolean|nil",
+          "desc": "Automatic mission replay (replays/missionReplays/ folder)."
+        }
       },
-      "returns": [{"type": "string|nil", "desc": "Nom du fichier si un enregistrement vient de démarrer."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "File name if a recording has just started."
+        }
+      ],
       "internal": false
     },
     "toggleMissionRecording": {
-      "desc": "Raccourci de toggleRecording(false, true) : bascule l'enregistrement du replay de mission.",
+      "desc": "Shortcut for toggleRecording(false, true): toggles mission replay recording.",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "Nom du fichier si un enregistrement vient de démarrer."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "File name if a recording has just started."
+        }
+      ],
       "internal": false
     },
     "seek": {
-      "desc": "Se place à une position normalisée du replay. Sans effet hors playback.",
-      "params": {"percent": {"type": "number", "desc": "Position entre 0 et 1 (borné)."}},
+      "desc": "Jumps to a normalized position of the replay. No effect outside playback.",
+      "params": {
+        "percent": {
+          "type": "number",
+          "desc": "Position between 0 and 1 (clamped)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "jump": {
-      "desc": "Alias de jumpFrames (ancien nom).",
-      "params": {"offset": {"type": "integer", "desc": "Nombre d'images."}},
+      "desc": "Alias of jumpFrames (old name).",
+      "params": {
+        "offset": {
+          "type": "integer",
+          "desc": "Number of frames."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "jumpFrames": {
-      "desc": "Avance ou recule d'un nombre d'images (stream:stepFrames) et affiche un message UI.",
-      "params": {"offset": {"type": "integer", "desc": "Nombre d'images (négatif = recul)."}},
+      "desc": "Moves forward or backward by a number of frames (stream:stepFrames) and displays a UI message.",
+      "params": {
+        "offset": {
+          "type": "integer",
+          "desc": "Number of frames (negative = backward)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "jumpTime": {
-      "desc": "Avance ou recule d'une durée (stream:stepTime) et affiche un message UI.",
-      "params": {"timeDiffInSeconds": {"type": "number", "desc": "Durée en secondes (négatif = recul)."}},
+      "desc": "Moves forward or backward by a duration (stream:stepTime) and displays a UI message.",
+      "params": {
+        "timeDiffInSeconds": {
+          "type": "number",
+          "desc": "Duration in seconds (negative = backward)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "openReplayFolderInExplorer": {
-      "desc": "Ouvre le dossier replays/ dans l'explorateur de fichiers (le crée s'il manque).",
+      "desc": "Opens the replays/ folder in the file explorer (creates it if missing).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "startLevel": {
-      "desc": "Lance le niveau donné en freeroam sans faire apparaître de véhicule (freeroam_freeroam.startFreeroamByName), en marquant requestedStartLevel pour ne pas arrêter la lecture.",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "desc": "Starts the given level in freeroam without spawning a vehicle (freeroam_freeroam.startFreeroamByName), marking requestedStartLevel so as not to stop playback.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Level path."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "removeRecording": {
-      "desc": "Supprime un replay et son fichier .rplMeta.json ; l'arrête d'abord s'il est chargé ; met à jour le catalogue.",
-      "params": {"filename": {"type": "string", "desc": "Fichier sous replays/."}},
-      "returns": [{"type": "table", "desc": "{success, filename, message?}."}],
+      "desc": "Deletes a replay and its .rplMeta.json file; stops it first if it is loaded; updates the catalog.",
+      "params": {
+        "filename": {
+          "type": "string",
+          "desc": "File under replays/."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, filename, message?}."
+        }
+      ],
       "internal": false
     },
     "acceptRename": {
-      "desc": "Renomme un replay (et son .rplMeta.json). Un nouveau nom sans '/' reste dans le même dossier ; refusé si la cible existe. Si le replay était chargé, il est rechargé sous son nouveau nom.",
+      "desc": "Renames a replay (and its .rplMeta.json). A new name without '/' stays in the same folder; refused if the target exists. If the replay was loaded, it is reloaded under its new name.",
       "params": {
-        "oldFilename": {"type": "string", "desc": "Ancien chemin sous replays/."},
-        "newFilename": {"type": "string", "desc": "Nouveau nom ou chemin."}
+        "oldFilename": {
+          "type": "string",
+          "desc": "Old path under replays/."
+        },
+        "newFilename": {
+          "type": "string",
+          "desc": "New name or path."
+        }
       },
-      "returns": [{"type": "table", "desc": "{success, filename, newFilename?, message?}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success, filename, newFilename?, message?}."
+        }
+      ],
       "internal": false
     },
     "getMissionReplayFiles": {
-      "desc": "Liste les replays de mission (automatiques et sauvegardés par l'utilisateur pour la carrière/freeroam courante) correspondant à une mission, triés par meta.time.",
+      "desc": "Lists the mission replays (automatic and user-saved for the current career/freeroam) matching a mission, sorted by meta.time.",
       "params": {
-        "mission": {"type": "table", "desc": "Mission, avec champ id."},
-        "returnOnlyWithAttempt": {"type": "boolean|nil", "desc": "Si vrai, ne garde que ceux dont le meta contient attempt."}
+        "mission": {
+          "type": "table",
+          "desc": "Mission, with an id field."
+        },
+        "returnOnlyWithAttempt": {
+          "type": "boolean|nil",
+          "desc": "If true, keeps only those whose meta contains attempt."
+        }
       },
-      "returns": [{"type": "table[]", "desc": "Entrées {replayFile, replayFileName, meta, userSaved}."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Entries {replayFile, replayFileName, meta, userSaved}."
+        }
+      ],
       "internal": false
     },
     "getMissionReplaysPath": {
-      "desc": "Renvoie le dossier des replays de mission automatiques.",
+      "desc": "Returns the folder of automatic mission replays.",
       "params": {},
-      "returns": [{"type": "string", "desc": "\"replays/missionReplays/\"."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "\"replays/missionReplays/\"."
+        }
+      ],
       "internal": false
     },
     "saveMissionReplay": {
-      "desc": "Déplace un replay de mission automatique vers le dossier des replays sauvegardés par l'utilisateur (carrière/<slot>/ ou freeroam/) avec son .rplMeta.json, puis notifie l'UI (recordingFilesUpdated).",
-      "params": {"replayFileName": {"type": "string", "desc": "Chemin du .rpl."}},
+      "desc": "Moves an automatic mission replay to the user-saved replays folder (career/<slot>/ or freeroam/) with its .rplMeta.json, then notifies the UI (recordingFilesUpdated).",
+      "params": {
+        "replayFileName": {
+          "type": "string",
+          "desc": "Path of the .rpl."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "removeMissionSavedReplay": {
-      "desc": "Opération inverse : déplace un replay sauvegardé vers replays/missionReplays/ (pour qu'il soit de nouveau géré automatiquement), puis notifie l'UI.",
-      "params": {"replayFileName": {"type": "string", "desc": "Chemin du .rpl."}},
+      "desc": "Reverse operation: moves a saved replay to replays/missionReplays/ (so that it is managed automatically again), then notifies the UI.",
+      "params": {
+        "replayFileName": {
+          "type": "string",
+          "desc": "Path of the .rpl."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "openMissionReplayFolder": {
-      "desc": "Ouvre l'emplacement d'un fichier replay dans l'explorateur ; journalise une erreur s'il n'existe pas.",
-      "params": {"replayFileName": {"type": "string", "desc": "Chemin du fichier."}},
+      "desc": "Opens the location of a replay file in the explorer; logs an error if it does not exist.",
+      "params": {
+        "replayFileName": {
+          "type": "string",
+          "desc": "File path."
+        }
+      },
       "returns": [],
       "internal": false
     }

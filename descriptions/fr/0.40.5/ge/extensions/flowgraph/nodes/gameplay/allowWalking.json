@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/allowWalking.lua",
+  "module": "Nœud flowgraph « Allow Walking » (catégorie par défaut, dépend de gameplay_walk). Autorise ou interdit le mode marche, donc l'entrée et la sortie des véhicules. Pins d'entrée : flow, allow, deny, set (caché) et enable (bool caché, utilisé avec set). Sortie : flow, recopie de l'entrée. Appelle gameplay_walk.enableToggling.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Si flow est actif : allow active le mode marche, deny le désactive, set l'applique selon enable. Recopie flow en sortie.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}}
+      }
+    }
+  }
+}

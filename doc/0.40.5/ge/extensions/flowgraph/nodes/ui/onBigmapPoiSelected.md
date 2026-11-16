@@ -1,25 +1,25 @@
 # `flowgraph_nodes_ui_onBigmapPoiSelected`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/onBigmapPoiSelected.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/onBigmapPoiSelected.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/onBigmapPoiSelected")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/onBigmapPoiSelected")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « On Bigmap Poi » (catégorie repeat_instant) : détecte la sélection d'un point d'intérêt sur la grande carte. Sorties : « selected » et « deselected » (impulsions), « poiId » (string), « navigated » et « denavigated » (impulsions), « pos » (vec3 navigué). Alimenté par les hooks onPoiSelectedFromBigmap et onSetBigmapNavFocus.
+Flowgraph node "On Bigmap Poi" (category repeat_instant): detects the selection of a point of interest on the big map. Outputs: "selected" and "deselected" (pulses), "poiId" (string), "navigated" and "denavigated" (pulses), "pos" (navigated vec3). Fed by the hooks onPoiSelectedFromBigmap and onSetBigmapNavFocus.
 
-## Remarques
+## Notes
 
-- Les impulsions durent une frame : work() les remet à false puis applique les drapeaux reçus.
+- Pulses last one frame: work() resets them to false then applies the received flags.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Initialise les drapeaux et la position. | 26 |
-| `C:onPoiSelectedFromBigmap(poiId)` | Hook : POI sélectionné (poiId) ou nil si désélectionné. | 45 |
-| `C:onSetBigmapNavFocus(pos)` | Hook : navigation vers pos, ou nil si annulée. | 54 |
-| `C:work(args)` | Remet les impulsions à false, applique les drapeaux enregistrés par les hooks puis les vide et écrit poiId et pos. | 31 |
+| `C:init()` | Initializes the flags and the position. | 26 |
+| `C:onPoiSelectedFromBigmap(poiId)` | Hook: POI selected (poiId) or nil if deselected. | 45 |
+| `C:onSetBigmapNavFocus(pos)` | Hook: navigation to pos, or nil if cancelled. | 54 |
+| `C:work(args)` | Resets the pulses to false, applies the flags recorded by the hooks then clears them and writes poiId and pos. | 31 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/onBigmapPoiSelected.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/onBigmapPoiSelected.lua`.*

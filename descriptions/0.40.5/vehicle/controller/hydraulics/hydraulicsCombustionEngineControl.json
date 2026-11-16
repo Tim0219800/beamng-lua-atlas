@@ -1,10 +1,10 @@
 {
   "path": "lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua",
-  "module": "Contrôleur auxiliaire qui relève le ralenti d'un moteur thermique et connecte la pompe hydraulique quand une fonction hydraulique est commandée (mode \"electricsRaiseAndConnect\"). Il surveille des valeurs electrics, impose idleAVOverwrite/maxIdleThrottleOverwrite au moteur, connecte la pompe (setConnected) une fois le régime assez haut et écrit une valeur electrics d'état. Un relèvement de ralenti manuel est aussi possible.",
+  "module": "Auxiliary controller that raises the idle of a combustion engine and connects the hydraulic pump when a hydraulic function is commanded (\"electricsRaiseAndConnect\" mode). It watches electrics values, imposes idleAVOverwrite/maxIdleThrottleOverwrite on the engine, connects the pump (setConnected) once the RPM is high enough and writes a state electrics value. A manual idle raise is also possible.",
   "notes": [
-    "Clés jbeam (défaut) : mode (seule valeur gérée : \"electricsRaiseAndConnect\" ; sinon le contrôleur ne fait rien), controlledEngine (\"mainEngine\"), relevantPump (\"pump1\"), relevantElectrics (liste de noms), actOnPositiveElectric (vrai), actOnNegativeElectric (vrai), raisedIdleRPM (1800 tr/min, converti en rad/s), raisedIdleElectricsName (\"raisedIdle\").",
-    "Le relèvement automatique est annulé si electrics.values.wheelspeed > 2 m/s. La pompe n'est connectée que si une électrique est active et que le régime moteur dépasse 70 % du ralenti relevé.",
-    "M.updateGFX = nop à l'export ; il est remplacé par la version active à l'init si le mode est valide."
+    "jbeam keys (default): mode (only handled value: \"electricsRaiseAndConnect\"; otherwise the controller does nothing), controlledEngine (\"mainEngine\"), relevantPump (\"pump1\"), relevantElectrics (list of names), actOnPositiveElectric (true), actOnNegativeElectric (true), raisedIdleRPM (1800 RPM, converted to rad/s), raisedIdleElectricsName (\"raisedIdle\").",
+    "The automatic raise is canceled if electrics.values.wheelspeed > 2 m/s. The pump is only connected if an electrics value is active and the engine RPM exceeds 70% of the raised idle.",
+    "M.updateGFX = nop at export; it is replaced by the active version at init if the mode is valid."
   ],
   "fields": {
     "type": {
@@ -14,69 +14,69 @@
   },
   "functions": {
     "init": {
-      "desc": "Lit la configuration, retrouve le moteur et la pompe et active la boucle de contrôle.",
+      "desc": "Reads the configuration, finds the engine and the pump and enables the control loop.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Désactive le relèvement manuel.",
+      "desc": "Disables the manual raise.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam."
+          "desc": "Jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Applique le relèvement de ralenti et la connexion de pompe (défini dynamiquement à l'init).",
+      "desc": "Applies the idle raise and the pump connection (dynamically defined at init).",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "setIdleRaise": {
-      "desc": "Active/désactive le relèvement manuel du ralenti.",
+      "desc": "Enables/disables the manual idle raise.",
       "params": {
         "enabled": {
           "type": "boolean",
-          "desc": "Vrai pour relever."
+          "desc": "True to raise."
         }
       },
       "returns": []
     },
     "toggleIdleRaise": {
-      "desc": "Inverse le relèvement manuel du ralenti.",
+      "desc": "Toggles the manual idle raise.",
       "params": {},
       "returns": []
     },
     "getState": {
-      "desc": "Renvoie l'état (relèvement manuel).",
+      "desc": "Returns the state (manual raise).",
       "params": {},
       "returns": [
         {
           "type": "table",
-          "desc": "Table d'état."
+          "desc": "State table."
         }
       ]
     },
     "setState": {
-      "desc": "Restaure l'état renvoyé par getState.",
+      "desc": "Restores the state returned by getState.",
       "params": {
         "data": {
           "type": "table|nil",
-          "desc": "Table d'état."
+          "desc": "State table."
         }
       },
       "returns": []

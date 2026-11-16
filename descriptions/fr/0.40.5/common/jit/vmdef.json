@@ -1,0 +1,17 @@
+{
+  "path": "lua/common/jit/vmdef.lua",
+  "module": "Fichier généré (« DO NOT EDIT ») de LuaJIT : tables de noms internes utilisées par les modules jit.dump, jit.bc, jit.v et le profileur pour afficher bytecodes, instructions IR, fonctions rapides (fast functions) et causes d'abandon de trace. Le fichier vérifie au chargement que jit.version == « LuaJIT 2.1.1788767029 », sinon l'assertion échoue (« LuaJIT core/library version mismatch »). Un moddeur n'a normalement aucune raison de l'utiliser.",
+  "notes": [
+    "L'assertion de version lie ce fichier au LuaJIT embarqué ; ne pas le remplacer par une autre version.",
+    "bcnames et irnames sont de longues chaînes de noms à largeur fixe (6 caractères) et non des tables."
+  ],
+  "fields": {
+    "bcnames": {"type": "string", "desc": "Noms des opcodes de bytecode LuaJIT concaténés (6 caractères chacun)."},
+    "irnames": {"type": "string", "desc": "Noms des opcodes de la représentation intermédiaire (IR) concaténés."},
+    "irfpm": {"type": "table", "desc": "Noms des fonctions math pour FPMATH."},
+    "irfield": {"type": "table", "desc": "Noms des champs de structures pour l'IR (FLOAD/XLOAD)."},
+    "ircall": {"type": "table", "desc": "Noms des fonctions C appelées depuis l'IR."},
+    "traceerr": {"type": "table", "desc": "Messages d'erreur des traces abandonnées."},
+    "ffnames": {"type": "table", "desc": "Noms des fonctions rapides (fast functions) de LuaJIT."}
+  }
+}

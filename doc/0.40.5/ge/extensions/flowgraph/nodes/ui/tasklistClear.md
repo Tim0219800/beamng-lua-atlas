@@ -1,20 +1,20 @@
 # `flowgraph_nodes_ui_tasklistClear`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/tasklistClear.lua` · VM : Game Engine (GE) · 24 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/tasklistClear.lua` · VM: Game Engine (GE) · 24 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/tasklistClear")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/tasklistClear")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Clear Goals » (catégorie once_instant, auteur BeamNG) : efface tous les objectifs de la liste de tâches (hook 'ClearTasklist'). Aucun pin.
+Flowgraph node "Clear Goals" (category once_instant, author BeamNG): clears all objectives from the task list ('ClearTasklist' hook). No pins.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:workOnce()` | guihooks.trigger('ClearTasklist'). | 19 |
 
-**Évènements UI (guihooks.trigger) :** `ClearTasklist`
+**UI events (guihooks.trigger):** `ClearTasklist`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/tasklistClear.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/tasklistClear.lua`.*

@@ -1,23 +1,23 @@
 # `flowgraph_nodes_gameplay_race_raceSuspend`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceSuspend.lua` · VM : Game Engine (GE) · 38 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceSuspend.lua` · VM: Game Engine (GE) · 38 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/race/raceSuspend")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/race/raceSuspend")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Race Suspend » (tag scenario, pas de catégorie définie). Suspend ou reprend une course : un flux sur la pin suspend appelle raceData:doSuspend(true), un flux sur resume appelle doSuspend(false) (suspend est prioritaire). La sortie flow vaut toujours true.
+Flowgraph node "Race Suspend" (tag scenario, no category defined). Suspends or resumes a race: flow on the suspend pin calls raceData:doSuspend(true), flow on resume calls doSuspend(false) (suspend takes priority). The flow output is always true.
 
-## Remarques
+## Notes
 
-- Les trois pins d'entrée flow, suspend et resume ont la même description « Inflow for this node. ».
+- The three input pins flow, suspend and resume have the same description "Inflow for this node.".
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Vide. | 23 |
-| `C:work()` | Suspend ou reprend la course selon les pins suspend/resume. | 26 |
+| `C:init()` | Empty. | 23 |
+| `C:work()` | Suspends or resumes the race according to the suspend/resume pins. | 26 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceSuspend.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceSuspend.lua`.*

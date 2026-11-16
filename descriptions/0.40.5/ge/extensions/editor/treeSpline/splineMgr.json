@@ -1,40 +1,378 @@
 {
   "path": "lua/ge/extensions/editor/treeSpline/splineMgr.lua",
-  "module": "Gestionnaire de données de l'outil Tree Spline : détient la liste des splines d'arbres (treeSplines) et la table id -> index (splineMap), crée/supprime/copie/divise les splines, gère la sérialisation (rechargement Lua et fichiers de session JSON), l'annulation/rétablissement, les liens avec la Master Spline et la reconstruction des splines sales (géométrie puis replantage via editor/treeSpline/populate). Utilisé par editor/treeSpline.lua et par les outils partagés (splineInput, session).",
-  "notes": ["Chaque spline porte : name, id (UUID), isDirty, isLoop, isEnabled (faux = verrouillée), isConformToTerrain (toujours vrai), isLink/linkId, avoidInfrastructure, nodes/widths/nmls, divPoints/divWidths/tangents/binormals/normals/discMap, items/count (instances Forest, runtime seulement) et les paramètres de feuillage (class, spacingM, posVariance, scaleVariance, alignToNormal, slopeMaxDeg, seed, species, speciesWeights).", "Valeurs par défaut de feuillage : posVariance 0.25, slopeMaxDeg 89, le reste vient de scatter.getDefaultDistribution() ; une seule espèce cochée par défaut pour que la spline plante.", "Une spline liée (isLink) tire sa géométrie de la Master Spline ; son drapeau de conformité au terrain est volontairement ignoré."],
+  "module": "Data manager of the Tree Spline tool: holds the list of tree splines (treeSplines) and the id -> index table (splineMap), creates/deletes/copies/splits splines, handles serialization (Lua reload and JSON session files), undo/redo, the links with the Master Spline and the rebuild of dirty splines (geometry then replanting via editor/treeSpline/populate). Used by editor/treeSpline.lua and by the shared tools (splineInput, session).",
+  "notes": [
+    "Each spline carries: name, id (UUID), isDirty, isLoop, isEnabled (false = locked), isConformToTerrain (always true), isLink/linkId, avoidInfrastructure, nodes/widths/nmls, divPoints/divWidths/tangents/binormals/normals/discMap, items/count (Forest instances, runtime only) and the foliage parameters (class, spacingM, posVariance, scaleVariance, alignToNormal, slopeMaxDeg, seed, species, speciesWeights).",
+    "Foliage default values: posVariance 0.25, slopeMaxDeg 89, the rest comes from scatter.getDefaultDistribution(); a single species is checked by default so that the spline plants.",
+    "A linked spline (isLink) takes its geometry from the Master Spline; its terrain conformity flag is deliberately ignored."
+  ],
   "functions": {
-    "getToolPrefixStr": {"desc": "Renvoie le préfixe de nom de l'outil (utilisé pour nommer les splines et identifier le type dans la Master Spline).", "returns": [{"type": "string", "desc": "Préfixe de l'outil."}]},
-    "getEditModeKey": {"desc": "Renvoie la clé du mode d'édition de l'outil.", "returns": [{"type": "string", "desc": "Clé du mode d'édition."}]},
-    "getTreeSplines": {"desc": "Renvoie la liste (vivante, non copiée) des tree splines.", "returns": [{"type": "table", "desc": "Liste de splines."}]},
-    "getSplineMap": {"desc": "Renvoie la table id -> index des splines.", "returns": [{"type": "table<string, integer>", "desc": "Table id vers index."}]},
-    "getFoliageParamDefaults": {"desc": "Valeurs numériques de distribution par défaut pour une nouvelle spline (sans accès au scenetree, sûr au chargement du module).", "returns": [{"type": "table", "desc": "class, spacingM, posVariance, scaleVariance, alignToNormal, slopeMaxDeg, seed."}]},
-    "makeFoliageDefaults": {"desc": "Construit la distribution de feuillage par défaut d'une nouvelle spline : les valeurs numériques plus une espèce cochée (species) avec son poids 1.0 (speciesWeights).", "returns": [{"type": "table", "desc": "Paramètres de feuillage."}]},
-    "addNewTreeSpline": {"desc": "Ajoute une nouvelle spline vide (nom unique, UUID Engine.generateUUID, isConformToTerrain = true) ; l'utilisateur place ensuite ses nœuds en cliquant sur le terrain.", "returns": [{"type": "integer", "desc": "Index de la nouvelle spline."}]},
-    "removeTreeSpline": {"desc": "Supprime la spline à l'index donné et retire ses arbres plantés. Sans effet si l'index est invalide.", "params": {"idx": {"type": "integer", "desc": "Index de la spline."}}},
-    "removeAllTreeSplines": {"desc": "Supprime toutes les splines (et leurs arbres). Sans isIncludeDisabled, seules les splines actives et non liées sont supprimées.", "params": {"isIncludeDisabled": {"type": "boolean", "desc": "Vrai pour inclure les splines verrouillées ou liées."}}},
-    "deepCopyTreeSpline": {"desc": "Copie profonde d'une spline, sans la géométrie dérivée ni les poignées runtime (reconstruites depuis les nœuds et paramètres).", "params": {"spline": {"type": "table", "desc": "Spline à copier."}}, "returns": [{"type": "table", "desc": "Copie."}]},
-    "deepCopyTreeSplineState": {"desc": "Copie profonde de toute la liste (pour l'annulation/rétablissement inter-splines).", "returns": [{"type": "table", "desc": "Liste copiée."}]},
-    "splitTreeSpline": {"desc": "Coupe la spline sélectionnée en deux au nœud choisi (splines ouvertes), ou déroule une boucle sur place. Les deux moitiés héritent des paramètres de feuillage et du réglage de conformité.", "params": {"selIdx": {"type": "integer", "desc": "Index de la spline."}, "nodeIdx": {"type": "integer", "desc": "Index du nœud de coupe."}}, "returns": [{"type": "integer", "desc": "Nouvel index sélectionné."}]},
-    "setTreeSpline": {"desc": "Remplace l'enregistrement d'une spline (chemin d'annulation de la sélection d'objet dans splineInput).", "params": {"spline": {"type": "table", "desc": "Nouvelle spline."}, "idx": {"type": "integer", "desc": "Index à remplacer."}}},
-    "setTreeSplines": {"desc": "Remplace toute la liste des splines (annulation/rétablissement inter-splines).", "params": {"splines": {"type": "table", "desc": "Nouvelle liste."}}},
-    "singleSplineEditUndo": {"desc": "Annule l'édition d'une seule spline (callback d'historique de l'éditeur).", "params": {"splineData": {"type": "table", "desc": "Données {old, new} de l'action."}}, "internal": true},
-    "singleSplineEditRedo": {"desc": "Rétablit l'édition d'une seule spline (callback d'historique).", "params": {"splineData": {"type": "table", "desc": "Données {old, new} de l'action."}}, "internal": true},
-    "transSplineEditUndo": {"desc": "Annule une édition inter-splines (ajout, suppression, réordonnancement sur toute la liste).", "params": {"data": {"type": "table", "desc": "Données {old, new} de l'action."}}, "internal": true},
-    "transSplineEditRedo": {"desc": "Rétablit une édition inter-splines.", "params": {"data": {"type": "table", "desc": "Données {old, new} de l'action."}}, "internal": true},
-    "copyTreeSplineProfile": {"desc": "Copie le profil (paramètres de feuillage seulement, pas la géométrie) ; callback requis par splineInput.", "params": {"spline": {"type": "table", "desc": "Spline source."}}, "returns": [{"type": "table", "desc": "Profil copié."}]},
-    "pasteTreeSplineProfile": {"desc": "Applique un profil de feuillage à une spline ; la géométrie reste inchangée.", "params": {"spline": {"type": "table", "desc": "Spline cible."}, "profile": {"type": "table", "desc": "Profil renvoyé par copyTreeSplineProfile."}}},
-    "serializeTreeSpline": {"desc": "Sérialise une spline (liste blanche des champs primaires, sans géométrie dérivée) en blob encodé, pour la persistance au rechargement Lua.", "params": {"spline": {"type": "table", "desc": "Spline."}}, "returns": [{"type": "string", "desc": "Blob encodé."}]},
-    "serializeTreeSplineToTable": {"desc": "Table simple portable pour un fichier de session (toolUtilities/session) : décode le blob de serializeTreeSpline ; jsonWriteFile aplatit les nœuds vec3.", "params": {"spline": {"type": "table", "desc": "Spline."}}, "returns": [{"type": "table", "desc": "Table sérialisable en JSON."}]},
-    "deserializeTreeSpline": {"desc": "Reconstruit une spline depuis un blob encodé (string) ou une table JSON. Réinitialise les tables dérivées, marque la spline sale, réhydrate les vec3 (nodes, nmls) et reprend les arbres conservés (keptObjects) via pop.adopt.", "params": {"data": {"type": "string|table", "desc": "Blob de l'éditeur ou table issue d'un fichier de session."}}, "returns": [{"type": "table", "desc": "Spline reconstruite."}]},
-    "recomputeIdMap": {"desc": "Recalcule la table id -> index ; appelé par l'aide de session après un chargement qui ajoute des splines.", "internal": true},
-    "getState": {"desc": "Instantané complet (toutes les splines) en données simples, pour onSerialize.", "returns": [{"type": "table", "desc": "Liste de blobs sérialisés."}]},
-    "setState": {"desc": "Restaure toute la liste depuis un instantané (supprime d'abord tout) ; les splines sont marquées sales et replantées.", "params": {"state": {"type": "table|nil", "desc": "Instantané de getState."}}},
-    "updateDirtyTreeSplines": {"desc": "Reconstruit la géométrie et replante les splines sales ; peut être appelée à chaque frame. Signale l'édition à la session (session.markEdited).", "internal": true},
-    "getCurrentTreeSplineList": {"desc": "Liste des splines actives sous forme {name, id, type} pour le lien avec la Master Spline.", "returns": [{"type": "table[]", "desc": "Entrées {name, id, type = préfixe de l'outil}."}]},
-    "isLinked": {"desc": "Indique si la spline d'identifiant donné est liée à une Master Spline.", "params": {"id": {"type": "string", "desc": "Identifiant de la spline."}}, "returns": [{"type": "boolean", "desc": "Vrai si liée."}]},
-    "setLink": {"desc": "Lie ou délie la spline à un groupe de Master Spline (linkId), retire ses arbres et la marque sale.", "params": {"id": {"type": "string", "desc": "Identifiant de la spline."}, "groupId": {"type": "string", "desc": "Identifiant du groupe Master Spline."}, "isLink": {"type": "boolean", "desc": "Vrai pour lier."}}},
-    "updateLinkedTreeSpline": {"desc": "Met à jour une spline liée avec la géométrie poussée par la Master Spline (nœuds, largeurs, normales, boucle) ; vide la géométrie dérivée et les arbres si moins de 2 points. Le paramètre isConformToTerrain est ignoré.", "params": {"id": {"type": "string", "desc": "Identifiant."}, "points": {"type": "table", "desc": "Nœuds."}, "widths": {"type": "table", "desc": "Largeurs."}, "nmls": {"type": "table", "desc": "Normales."}, "isLoop": {"type": "boolean", "desc": "Spline fermée."}, "isConformToTerrain": {"type": "boolean", "desc": "Ignoré."}}},
-    "removeLinkedTreeSpline": {"desc": "Supprime une spline liée par id (appelé quand un calque de la Master Spline est retiré).", "params": {"splineId": {"type": "string", "desc": "Identifiant."}}},
-    "unlinkAll": {"desc": "Délie toutes les splines liées et les marque sales."}
+    "getToolPrefixStr": {
+      "desc": "Returns the tool's name prefix (used to name splines and identify the type in the Master Spline).",
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Tool prefix."
+        }
+      ]
+    },
+    "getEditModeKey": {
+      "desc": "Returns the tool's edit mode key.",
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Edit mode key."
+        }
+      ]
+    },
+    "getTreeSplines": {
+      "desc": "Returns the list (live, not copied) of tree splines.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of splines."
+        }
+      ]
+    },
+    "getSplineMap": {
+      "desc": "Returns the id -> index table of the splines.",
+      "returns": [
+        {
+          "type": "table<string, integer>",
+          "desc": "Table id to index."
+        }
+      ]
+    },
+    "getFoliageParamDefaults": {
+      "desc": "Default numeric distribution values for a new spline (no scenetree access, safe at module load).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "class, spacingM, posVariance, scaleVariance, alignToNormal, slopeMaxDeg, seed."
+        }
+      ]
+    },
+    "makeFoliageDefaults": {
+      "desc": "Builds the default foliage distribution of a new spline: the numeric values plus one checked species (species) with its weight 1.0 (speciesWeights).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Foliage parameters."
+        }
+      ]
+    },
+    "addNewTreeSpline": {
+      "desc": "Adds a new empty spline (unique name, UUID Engine.generateUUID, isConformToTerrain = true); the user then places its nodes by clicking on the terrain.",
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Index of the new spline."
+        }
+      ]
+    },
+    "removeTreeSpline": {
+      "desc": "Deletes the spline at the given index and removes its planted trees. No effect if the index is invalid.",
+      "params": {
+        "idx": {
+          "type": "integer",
+          "desc": "Spline index."
+        }
+      }
+    },
+    "removeAllTreeSplines": {
+      "desc": "Deletes all splines (and their trees). Without isIncludeDisabled, only active, non-linked splines are deleted.",
+      "params": {
+        "isIncludeDisabled": {
+          "type": "boolean",
+          "desc": "True to include locked or linked splines."
+        }
+      }
+    },
+    "deepCopyTreeSpline": {
+      "desc": "Deep copy of a spline, without the derived geometry or the runtime handles (rebuilt from the nodes and parameters).",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Spline to copy."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy."
+        }
+      ]
+    },
+    "deepCopyTreeSplineState": {
+      "desc": "Deep copy of the whole list (for cross-spline undo/redo).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copied list."
+        }
+      ]
+    },
+    "splitTreeSpline": {
+      "desc": "Cuts the selected spline in two at the chosen node (open splines), or unrolls a loop in place. Both halves inherit the foliage parameters and the conformity setting.",
+      "params": {
+        "selIdx": {
+          "type": "integer",
+          "desc": "Spline index."
+        },
+        "nodeIdx": {
+          "type": "integer",
+          "desc": "Index of the split node."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "New selected index."
+        }
+      ]
+    },
+    "setTreeSpline": {
+      "desc": "Replaces a spline's record (undo path of object selection in splineInput).",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "New spline."
+        },
+        "idx": {
+          "type": "integer",
+          "desc": "Index to replace."
+        }
+      }
+    },
+    "setTreeSplines": {
+      "desc": "Replaces the whole list of splines (cross-spline undo/redo).",
+      "params": {
+        "splines": {
+          "type": "table",
+          "desc": "New list."
+        }
+      }
+    },
+    "singleSplineEditUndo": {
+      "desc": "Undoes the edit of a single spline (editor history callback).",
+      "params": {
+        "splineData": {
+          "type": "table",
+          "desc": "Action data {old, new}."
+        }
+      },
+      "internal": true
+    },
+    "singleSplineEditRedo": {
+      "desc": "Redoes the edit of a single spline (history callback).",
+      "params": {
+        "splineData": {
+          "type": "table",
+          "desc": "Action data {old, new}."
+        }
+      },
+      "internal": true
+    },
+    "transSplineEditUndo": {
+      "desc": "Undoes a cross-spline edit (add, delete, reorder across the whole list).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Action data {old, new}."
+        }
+      },
+      "internal": true
+    },
+    "transSplineEditRedo": {
+      "desc": "Redoes a cross-spline edit.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Action data {old, new}."
+        }
+      },
+      "internal": true
+    },
+    "copyTreeSplineProfile": {
+      "desc": "Copies the profile (foliage parameters only, not the geometry); callback required by splineInput.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Source spline."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copied profile."
+        }
+      ]
+    },
+    "pasteTreeSplineProfile": {
+      "desc": "Applies a foliage profile to a spline; the geometry stays unchanged.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Target spline."
+        },
+        "profile": {
+          "type": "table",
+          "desc": "Profile returned by copyTreeSplineProfile."
+        }
+      }
+    },
+    "serializeTreeSpline": {
+      "desc": "Serializes a spline (whitelist of primary fields, without derived geometry) into an encoded blob, for persistence across Lua reload.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Spline."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Encoded blob."
+        }
+      ]
+    },
+    "serializeTreeSplineToTable": {
+      "desc": "Plain portable table for a session file (toolUtilities/session): decodes the blob from serializeTreeSpline; jsonWriteFile flattens the vec3 nodes.",
+      "params": {
+        "spline": {
+          "type": "table",
+          "desc": "Spline."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "JSON-serializable table."
+        }
+      ]
+    },
+    "deserializeTreeSpline": {
+      "desc": "Rebuilds a spline from an encoded blob (string) or a JSON table. Resets the derived tables, marks the spline dirty, rehydrates the vec3 (nodes, nmls) and takes back the kept trees (keptObjects) via pop.adopt.",
+      "params": {
+        "data": {
+          "type": "string|table",
+          "desc": "Editor blob or table from a session file."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Rebuilt spline."
+        }
+      ]
+    },
+    "recomputeIdMap": {
+      "desc": "Recomputes the id -> index table; called by the session helper after a load that adds splines.",
+      "internal": true
+    },
+    "getState": {
+      "desc": "Full snapshot (all splines) as plain data, for onSerialize.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of serialized blobs."
+        }
+      ]
+    },
+    "setState": {
+      "desc": "Restores the whole list from a snapshot (deletes everything first); the splines are marked dirty and replanted.",
+      "params": {
+        "state": {
+          "type": "table|nil",
+          "desc": "Snapshot from getState."
+        }
+      }
+    },
+    "updateDirtyTreeSplines": {
+      "desc": "Rebuilds the geometry and replants dirty splines; may be called every frame. Reports the edit to the session (session.markEdited).",
+      "internal": true
+    },
+    "getCurrentTreeSplineList": {
+      "desc": "List of active splines as {name, id, type} for the link with the Master Spline.",
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Entries {name, id, type = tool prefix}."
+        }
+      ]
+    },
+    "isLinked": {
+      "desc": "Tells whether the spline with the given identifier is linked to a Master Spline.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Spline identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if linked."
+        }
+      ]
+    },
+    "setLink": {
+      "desc": "Links or unlinks the spline to a Master Spline group (linkId), removes its trees and marks it dirty.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Spline identifier."
+        },
+        "groupId": {
+          "type": "string",
+          "desc": "Master Spline group identifier."
+        },
+        "isLink": {
+          "type": "boolean",
+          "desc": "True to link."
+        }
+      }
+    },
+    "updateLinkedTreeSpline": {
+      "desc": "Updates a linked spline with the geometry pushed by the Master Spline (nodes, widths, normals, loop); empties the derived geometry and the trees if fewer than 2 points. The isConformToTerrain parameter is ignored.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Identifier."
+        },
+        "points": {
+          "type": "table",
+          "desc": "Nodes."
+        },
+        "widths": {
+          "type": "table",
+          "desc": "Widths."
+        },
+        "nmls": {
+          "type": "table",
+          "desc": "Normals."
+        },
+        "isLoop": {
+          "type": "boolean",
+          "desc": "Closed spline."
+        },
+        "isConformToTerrain": {
+          "type": "boolean",
+          "desc": "Ignored."
+        }
+      }
+    },
+    "removeLinkedTreeSpline": {
+      "desc": "Deletes a linked spline by id (called when a Master Spline layer is removed).",
+      "params": {
+        "splineId": {
+          "type": "string",
+          "desc": "Identifier."
+        }
+      }
+    },
+    "unlinkAll": {
+      "desc": "Unlinks all linked splines and marks them dirty."
+    }
   }
 }

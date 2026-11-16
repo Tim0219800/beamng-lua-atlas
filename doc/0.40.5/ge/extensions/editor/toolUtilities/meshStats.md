@@ -1,12 +1,12 @@
 # `editor_toolUtilities_meshStats`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/meshStats.lua` · VM : Game Engine (GE) · 154 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/meshStats.lua` · VM: Game Engine (GE) · 154 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_meshStats` : `extensions.load("editor_toolUtilities_meshStats")`, puis la globale `editor_toolUtilities_meshStats`
+**Access:** extension `editor_toolUtilities_meshStats`: `extensions.load("editor_toolUtilities_meshStats")`, then the global `editor_toolUtilities_meshStats`
 
-Diagnostic du poids de maillage lors d'un import (importeur de ville/réseau de l'éditeur). Distingue la géométrie UNIQUE (ProceduralMesh : bâtiments, tabliers de pont ou de tunnel, portiques, chacun avec son propre tampon et sa propre construction de collision) de la géométrie INSTANCIÉE (TSStatic regroupés par forme, items Forest). Les générateurs appellent recordMesh pendant la construction ; l'importeur appelle begin() au début et report() à la fin, ce qui journalise un récapitulatif par famille.
+Mesh weight diagnostic during an import (the editor's city/network importer). Distinguishes UNIQUE geometry (ProceduralMesh: buildings, bridge or tunnel decks, gantries, each with its own buffer and its own collision build) from INSTANCED geometry (TSStatics grouped by shape, Forest items). Generators call recordMesh during construction; the importer calls begin() at the start and report() at the end, which logs a summary per family.
 
-## Exemple
+## Example
 
 ```lua
 local ms = require('editor/toolUtilities/meshStats')
@@ -16,49 +16,49 @@ ms.recordParts('bridge.deck', nVerts, nTris)
 ms.report('import')
 ```
 
-## Remarques
+## Notes
 
-- La collecte n'est active qu'entre begin() et report() : hors de cette fenêtre, recordMesh et recordParts sont sans effet, donc l'édition normale ne touche pas aux compteurs.
-- report() revérifie chaque nom enregistré dans la scène (scenetree.findObject) : un mesh renommé ou supprimé en cours d'import n'est pas compté ; il énumère aussi tous les TSStatic (groupés par fichier shapeName), les items du Forest et les objets WaterBlock/WaterPlane.
-- Les sorties sont des lignes de log niveau I préfixées '[mesh]' (par famille : meshes, triangles, sommets ; répartition des parties fusionnées ; props instanciés ; ligne HEADLINE).
+- Collection is active only between begin() and report(): outside this window, recordMesh and recordParts have no effect, so normal editing does not touch the counters.
+- report() re-checks each recorded name in the scene (scenetree.findObject): a mesh renamed or deleted during the import is not counted; it also enumerates all TSStatics (grouped by shapeName file), the Forest's items and the WaterBlock/WaterPlane objects.
+- The outputs are level I log lines prefixed '[mesh]' (per family: meshes, triangles, vertices; breakdown of merged parts; instanced props; HEADLINE line).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_meshStats.begin()` | Démarre une fenêtre de collecte : active la collecte et efface les enregistrements précédents. | 27 |
-| `editor_toolUtilities_meshStats.recordMesh(name, family, nVerts, nTris)` | Enregistre un ProceduralMesh par son NOM dans l'arbre de scène (une reconstruction sous le même nom écrase l'entrée). Sans effet hors collecte ou si name est nil. | 35 |
-| `editor_toolUtilities_meshStats.recordParts(category, nVerts, nTris)` | Enregistre la géométrie d'UNE partie d'un maillage fusionné par catégorie structurelle (bridge.deck, tunnel.floor, tunnel.shell). Additif : les valeurs s'ajoutent. C'est une ventilation des totaux de maillage, pas un doublon. | 43 |
-| `editor_toolUtilities_meshStats.report(tag)` | Agrège tout et journalise le récapitulatif, puis termine la fenêtre de collecte. Sans collecte active, journalise '[mesh] no active mesh-stats session' et revient. | 72 |
+| `editor_toolUtilities_meshStats.begin()` | Starts a collection window: enables collection and clears previous records. | 27 |
+| `editor_toolUtilities_meshStats.recordMesh(name, family, nVerts, nTris)` | Records a ProceduralMesh by its NAME in the scene tree (a rebuild under the same name overwrites the entry). No effect outside collection or if name is nil. | 35 |
+| `editor_toolUtilities_meshStats.recordParts(category, nVerts, nTris)` | Records the geometry of ONE part of a mesh merged by structural category (bridge.deck, tunnel.floor, tunnel.shell). Additive: values add up. It is a breakdown of the mesh totals, not a duplicate. | 43 |
+| `editor_toolUtilities_meshStats.report(tag)` | Aggregates everything and logs the summary, then ends the collection window. Without an active collection, logs '[mesh] no active mesh-stats session' and returns. | 72 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_meshStats.recordMesh(name, family, nVerts, nTris)`
 
-Enregistre un ProceduralMesh par son NOM dans l'arbre de scène (une reconstruction sous le même nom écrase l'entrée). Sans effet hors collecte ou si name est nil.
+Records a ProceduralMesh by its NAME in the scene tree (a rebuild under the same name overwrites the entry). No effect outside collection or if name is nil.
 
-- `name` (*string*) : Nom de l'objet dans la scène.
-- `family` (*string|nil*) : Famille pour le récapitulatif (défaut 'other').
-- `nVerts` (*integer|nil*) : Nombre de sommets (défaut 0).
-- `nTris` (*integer|nil*) : Nombre de triangles (défaut 0).
+- `name` (*string*) : Name of the object in the scene.
+- `family` (*string|nil*) : Family for the summary (default 'other').
+- `nVerts` (*integer|nil*) : Number of vertices (default 0).
+- `nTris` (*integer|nil*) : Number of triangles (default 0).
 
 #### `editor_toolUtilities_meshStats.recordParts(category, nVerts, nTris)`
 
-Enregistre la géométrie d'UNE partie d'un maillage fusionné par catégorie structurelle (bridge.deck, tunnel.floor, tunnel.shell). Additif : les valeurs s'ajoutent. C'est une ventilation des totaux de maillage, pas un doublon.
+Records the geometry of ONE part of a mesh merged by structural category (bridge.deck, tunnel.floor, tunnel.shell). Additive: values add up. It is a breakdown of the mesh totals, not a duplicate.
 
-- `category` (*string*) : Catégorie de la partie.
-- `nVerts` (*integer|nil*) : Sommets à ajouter.
-- `nTris` (*integer|nil*) : Triangles à ajouter.
+- `category` (*string*) : Category of the part.
+- `nVerts` (*integer|nil*) : Vertices to add.
+- `nTris` (*integer|nil*) : Triangles to add.
 
 #### `editor_toolUtilities_meshStats.report(tag)`
 
-Agrège tout et journalise le récapitulatif, puis termine la fenêtre de collecte. Sans collecte active, journalise '[mesh] no active mesh-stats session' et revient.
+Aggregates everything and logs the summary, then ends the collection window. Without an active collection, logs '[mesh] no active mesh-stats session' and returns.
 
-- `tag` (*string|nil*) : Tag de log ; défaut 'meshStats'.
+- `tag` (*string|nil*) : Log tag; default 'meshStats'.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/meshStats.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/meshStats.lua`.*

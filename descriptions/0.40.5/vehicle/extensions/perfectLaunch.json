@@ -1,23 +1,66 @@
 {
   "path": "lua/vehicle/extensions/perfectLaunch.lua",
-  "module": "Aide au départ arrêté 'parfait' (launch control) pour dragsters : gaz à fond, puis contrôle PI de la patinage des roues motrices et du lacet en modulant les gaz, avec maintien de la trajectoire via l'extension straightLine. Séquence : prepare(cible) (véhicule gelé, gaz à fond), go() (dégel, départ), stop() (remise à zéro).",
-  "usage": "extensions.perfectLaunch.prepare(vec3(0, 400, 0))\nextensions.perfectLaunch.go()\n-- M.launchFailed passe à true si le véhicule part en tête-à-queue",
+  "module": "'Perfect' standing-start aid (launch control) for dragsters: full throttle, then PI control of driven-wheel slip and yaw by modulating the throttle, with trajectory holding via the straightLine extension. Sequence: prepare(target) (vehicle frozen, full throttle), go() (unfreeze, launch), stop() (reset).",
+  "usage": "extensions.perfectLaunch.prepare(vec3(0, 400, 0))\nextensions.perfectLaunch.go()\n-- M.launchFailed becomes true if the vehicle spins out",
   "notes": [
-    "États : idle, prepareThrottle, prepareBrake (attend), go. prepare gèle le véhicule (controller.mainController.setFreeze(1)), met la boîte en mode 'arcade', pause l'action ESC et appelle straightLine.setTargetDirection(cible, 'road').",
-    "En 'go', les gaz sont calculés ainsi : slipError = (patinage max des roues avec différentiel - 0,2) + lacet parasite * 80 (doublé si négatif) ; throttle = clamp(1 - (0,5 * slipError + 3,5 * intégrale), 0,05, 1), à 1 au-delà de 0,95. Les gaz sont envoyés par input.event('throttle', throttle, 2).",
-    "launchFailed devient true si le taux de lacet lissé dépasse 0,5.",
-    "onInit recharge l'extension straightLine (extensions.reload) et la ré-initialise ; il est aussi utilisé comme onReset.",
-    "Dépend de drivetrain.esc.isExisting (champ absent du faux objet esc de drivetrain.lua : toujours nil, donc l'ESC n'est jamais mis en pause) et de la globale straightLine."
+    "States: idle, prepareThrottle, prepareBrake (waits), go. prepare freezes the vehicle (controller.mainController.setFreeze(1)), sets the gearbox to 'arcade' mode, pauses the ESC action and calls straightLine.setTargetDirection(target, 'road').",
+    "In 'go', the throttle is computed as follows: slipError = (max slip of wheels with differential - 0.2) + parasitic yaw * 80 (doubled if negative); throttle = clamp(1 - (0.5 * slipError + 3.5 * integral), 0.05, 1), set to 1 above 0.95. The throttle is sent via input.event('throttle', throttle, 2).",
+    "launchFailed becomes true if the smoothed yaw rate exceeds 0.5.",
+    "onInit reloads the straightLine extension (extensions.reload) and re-initializes it; it is also used as onReset.",
+    "Depends on drivetrain.esc.isExisting (a field absent from the fake esc object in drivetrain.lua: always nil, so the ESC is never paused) and on the global straightLine."
   ],
   "fields": {
-    "launchFailed": {"type": "boolean", "desc": "true si un tête-à-queue (lacet lissé > 0,5) a été détecté pendant le départ."}
+    "launchFailed": {
+      "type": "boolean",
+      "desc": "true if a spin-out (smoothed yaw > 0.5) was detected during the launch."
+    }
   },
   "functions": {
-    "onInit": {"desc": "Hook d'initialisation : état 'idle', remise à zéro des régulations, mode de boîte 'arcade' et rechargement de straightLine.", "params": {}, "returns": [], "internal": true},
-    "onReset": {"desc": "Même fonction que onInit.", "params": {}, "returns": [], "internal": true},
-    "updateGFX": {"desc": "Appelé chaque frame : exécute la machine à états et le contrôle des gaz, puis straightLine.updateGFX.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true},
-    "prepare": {"desc": "Prépare le départ : gèle le véhicule, gaz à fond, donne la direction cible à straightLine.", "params": {"target": {"type": "vec3|table", "desc": "Cible ou direction passée à straightLine.setTargetDirection (déduit du code)."}}, "returns": [], "internal": false},
-    "go": {"desc": "Lance le départ : dégèle le véhicule et passe en état 'go'.", "params": {}, "returns": [], "internal": false},
-    "stop": {"desc": "Arrête tout : relâche frein à main, frein et gaz, dégèle, arrête straightLine et réinitialise.", "params": {}, "returns": [], "internal": false}
+    "onInit": {
+      "desc": "Initialization hook: 'idle' state, resets the controllers, gearbox mode 'arcade' and reloads straightLine.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onReset": {
+      "desc": "Same function as onInit.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Called every frame: runs the state machine and the throttle control, then straightLine.updateGFX.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "prepare": {
+      "desc": "Prepares the launch: freezes the vehicle, full throttle, gives the target direction to straightLine.",
+      "params": {
+        "target": {
+          "type": "vec3|table",
+          "desc": "Target or direction passed to straightLine.setTargetDirection (inferred from code)."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "go": {
+      "desc": "Starts the launch: unfreezes the vehicle and switches to the 'go' state.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "stop": {
+      "desc": "Stops everything: releases parking brake, brake and throttle, unfreezes, stops straightLine and resets.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
   }
 }

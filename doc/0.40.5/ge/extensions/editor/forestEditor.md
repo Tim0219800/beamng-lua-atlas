@@ -1,135 +1,135 @@
 # `editor_forestEditor`
 
-*Fichier : `lua/ge/extensions/editor/forestEditor.lua` · VM : Game Engine (GE) · 3222 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/forestEditor.lua` · VM: Game Engine (GE) · 3222 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_forestEditor` : `extensions.load("editor_forestEditor")`, puis la globale `editor_forestEditor`
+**Access:** extension `editor_forestEditor`: `extensions.load("editor_forestEditor")`, then the global `editor_forestEditor`
 
-Outil « Edit Forest » de l'éditeur de monde : peinture et édition des objets de la forêt (ForestItem) avec des pinceaux (brosses de ForestBrush/ForestBrushElement), outils de sélection, de déplacement, rotation, échelle et accrochage au terrain. Il gère aussi l'inspecteur des ForestItemData (aperçu du mesh via ShapePreview), la sauvegarde des brosses (main.forestbrushes4.json) et de la forêt à l'enregistrement du niveau. Un moddeur l'utilise surtout pour sélectionner des items par script ou changer la taille du pinceau.
+"Edit Forest" tool of the world editor: painting and editing of forest objects (ForestItem) with brushes (ForestBrush/ForestBrushElement brushes), selection, move, rotate, scale and terrain snapping tools. It also manages the ForestItemData inspector (mesh preview via ShapePreview), saving of the brushes (main.forestbrushes4.json) and of the forest when the level is saved. A modder mostly uses it to select items by script or change the brush size.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('editor_forestEditor')
 editor_forestEditor.selectToolByName('select')
-editor_forestEditor.changeBrush(1, 0.5) -- agrandit le pinceau (ou la pression si Ctrl est enfoncé)
+editor_forestEditor.changeBrush(1, 0.5) -- enlarges the brush (or the pressure if Ctrl is held)
 ```
 
-## Remarques
+## Notes
 
-- Les items « parallax window » (fenêtres d'intérieur parallaxe) sont filtrés : ils appartiennent à l'éditeur Parallax Interior et sont exclus de la sélection et de la palette de ForestItemData.
-- Le mode d'édition enregistré s'appelle « Edit Forest » (actionMap forestTools). Les préférences sont dans la catégorie forestEditor.general (brushSize, brushPressure, brushHardness, brushDepthOffset, forceAlignToTerrain, snapAnyForestItemType, toolWorkingDistance 1000 à 50000 m, pas de redimensionnement clavier/molette).
-- Bug probable dans onEditorInspectorFieldChanged : la condition `object and object:getClassName() == 'ForestBrushElement' or object:getClassName() == 'ForestBrush'` a une priorité d'opérateurs incorrecte ; si l'objet est nil, le second terme appelle une méthode sur nil et lève une erreur.
-- refreshForestItemDataList et selectBrushByIndex dépendent de l'état interne (var) initialisé par onEditorInitialized ; ne pas les appeler avant l'initialisation de l'éditeur.
-- Le module exporte onDeserialize (sans « d ») alors que d'autres modules utilisent onDeserialized ; ici il se contente de mettre deserializeBrushes à false.
+- "Parallax window" items (parallax interior windows) are filtered: they belong to the Parallax Interior editor and are excluded from the selection and from the ForestItemData palette.
+- The registered edit mode is called "Edit Forest" (actionMap forestTools). The preferences are in the forestEditor.general category (brushSize, brushPressure, brushHardness, brushDepthOffset, forceAlignToTerrain, snapAnyForestItemType, toolWorkingDistance 1000 to 50000 m, keyboard/wheel resize steps).
+- Probable bug in onEditorInspectorFieldChanged: the condition `object and object:getClassName() == 'ForestBrushElement' or object:getClassName() == 'ForestBrush'` has incorrect operator precedence; if the object is nil, the second term calls a method on nil and raises an error.
+- refreshForestItemDataList and selectBrushByIndex depend on the internal state (var) initialized by onEditorInitialized; do not call them before the editor is initialized.
+- The module exports onDeserialize (without "d") while other modules use onDeserialized; here it just sets deserializeBrushes to false.
 
-**Dépendances (chargées avant) :** `core_forest`
+**Dependencies (loaded first):** `core_forest`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_forestEditor.beginChangeBrushSizeWithKeys(direction)` | Active la répétition automatique du redimensionnement du pinceau au clavier (touches [ ]) : remet le timer à 0 et mémorise la direction. L'update par frame appelle ensuite changeBrush à l'intervalle de la préférence brushSizeChangeIntervalWithKeys. | 3215 |
-| `editor_forestEditor.changeBrush(value, step)` | Modifie la taille du pinceau, ou sa pression (densité) si la touche Ctrl est enfoncée. Les valeurs sont bornées puis appliquées à l'outil de pinceau. | 1425 |
-| `editor_forestEditor.clearForestItemsSelection()` | Vide la sélection d'items de forêt, y compris la surbrillance dans le viewport : remet l'état « sélectionné » de chaque item à faux puis demande la reconstruction des données d'instances. Ne fait rien (aucune reconstruction) si rien n'est sélectionné. | 208 |
-| `editor_forestEditor.dumpBrushProperties()` | Debug : affiche dans la console la taille, la pression et la dureté du pinceau courant. | 144 |
-| `editor_forestEditor.dumpForestBrushes()` | Debug : affiche dans la console la liste des brosses de forêt (var.forestBrushes). | 132 |
-| `editor_forestEditor.dumpForestBrushesMap()` | Debug : affiche dans la console la table de correspondance des brosses de forêt (var.forestBrushesMap). | 138 |
-| `editor_forestEditor.endChangeBrushSizeWithKeys()` | Arrête la répétition automatique du redimensionnement du pinceau au clavier et remet le timer à 0. | 3216 |
-| `editor_forestEditor.onDeserialize(data)` | Hook appelé après un rechargement Lua (reçoit les données renvoyées par onSerialize). Met simplement deserializeBrushes à false. *(interne)* *(hook)* | 3192 |
-| `editor_forestEditor.onEditorAfterSaveLevel()` | Hook appelé après l'enregistrement du niveau. Sauve les ForestBrushGroup dans <niveau>/main.forestbrushes4.json si les brosses sont modifiées, sauve la forêt (saveForest) si editor.forestDirty, et enregistre les datablocks ForestItemData modifiés. *(interne)* *(hook)* | 3111 |
-| `editor_forestEditor.onEditorAxisGizmoAligmentChanged()` | Hook appelé quand l'alignement du gizmo d'axes change (local/monde). Replace le gizmo sur l'item (alignement local, un seul item) ou sur le centroïde de la sélection. Le nom contient la faute « Aligment » telle que dans le moteur. *(interne)* *(hook)* | 2881 |
-| `editor_forestEditor.onEditorAxisGizmoModeChanged(mode)` | Hook appelé quand le mode du gizmo (déplacer/tourner/échelle) change. Si le mode d'édition actif est « Edit Forest » et que l'outil courant n'est pas « select », bascule sur l'outil « select ». *(interne)* *(hook)* | 3179 |
-| `editor_forestEditor.onEditorGui()` | Hook appelé chaque frame par l'éditeur : dessine la fenêtre de l'outil (barre d'outils, palettes de brosses et de ForestItemData, inspecteur), gère les entrées et le rendu des aides (lignes, sphères, boîtes englobantes). *(interne)* *(hook)* | 2040 |
-| `editor_forestEditor.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre « forestEditor », deux dialogues modaux, l'inspecteur de type forestItem, les éditeurs de champs personnalisés (shapeFile, ForestItemData) et le mode d'édition « Edit Forest » ; initialise ensuite pinceau, pression, dureté et tables de datablocks. *(interne)* *(hook)* | 3073 |
-| `editor_forestEditor.onEditorInspectorFieldChanged(selectedIds, fieldName, fieldValue, arrayIndex)` | Hook appelé quand un champ de l'inspecteur est modifié. Marque les brosses comme modifiées (ForestBrush/ForestBrushElement) et met à jour l'aperçu du mesh quand shapeFile d'un ForestItemData ou forestItemData d'un ForestBrushElement change. Ne traite que le cas d'un seul objet sélectionné. *(interne)* *(hook)* | 3133 |
-| `editor_forestEditor.onEditorRegisterPreferences(prefsRegistry)` | Hook appelé pour déclarer les préférences de l'éditeur : catégorie forestEditor, sous-catégorie general (taille, pression/densité, dureté, décalage de profondeur, alignement forcé au terrain, accrochage de tous les types, distance de travail). *(interne)* *(hook)* | 3159 |
-| `editor_forestEditor.onSerialize()` | Hook appelé avant un rechargement Lua : vide la sélection d'items puis renvoie true pour que onDeserialize soit déclenché ensuite. *(interne)* *(hook)* | 3196 |
-| `editor_forestEditor.refreshForestItemDataList()` | Reconstruit la liste var.forestItemData à partir de tous les objets de classe ForestItemData de la scène, en excluant les datablocks parallax window. | 1459 |
-| `editor_forestEditor.selectBrushByIndex(index)` | Sélectionne l'outil de pinceau d'indice donné dans var.brushes (indice Lua, à partir de 1). | 3188 |
-| `editor_forestEditor.selectForestItems(forestItems, addToSelection)` | Définit (ou complète) la sélection d'items de forêt de l'éditeur. Filtre les items parallax, met à jour la surbrillance, le centroïde, le gizmo d'axes et l'aperçu du mesh du dernier item. | 219 |
-| `editor_forestEditor.selectToolByName(toolName)` | Active un outil ou une brosse de la barre d'outils à partir de son libellé (par exemple « select »). Ne fait rien si aucun libellé ne correspond. | 367 |
+| `editor_forestEditor.beginChangeBrushSizeWithKeys(direction)` | Enables auto-repeat of the brush resize with the keyboard (keys [ ]): resets the timer to 0 and stores the direction. The per-frame update then calls changeBrush at the interval of the brushSizeChangeIntervalWithKeys preference. | 3215 |
+| `editor_forestEditor.changeBrush(value, step)` | Changes the brush size, or its pressure (density) if the Ctrl key is held. The values are clamped then applied to the brush tool. | 1425 |
+| `editor_forestEditor.clearForestItemsSelection()` | Clears the forest item selection, including the highlight in the viewport: sets each item's "selected" state to false then requests the rebuild of the instance data. Does nothing (no rebuild) if nothing is selected. | 208 |
+| `editor_forestEditor.dumpBrushProperties()` | Debug: prints the size, pressure and hardness of the current brush to the console. | 144 |
+| `editor_forestEditor.dumpForestBrushes()` | Debug: prints the list of forest brushes (var.forestBrushes) to the console. | 132 |
+| `editor_forestEditor.dumpForestBrushesMap()` | Debug: prints the forest brush lookup table (var.forestBrushesMap) to the console. | 138 |
+| `editor_forestEditor.endChangeBrushSizeWithKeys()` | Stops the auto-repeat of the brush resize with the keyboard and resets the timer to 0. | 3216 |
+| `editor_forestEditor.onDeserialize(data)` | Hook called after a Lua reload (receives the data returned by onSerialize). Simply sets deserializeBrushes to false. *(internal)* *(hook)* | 3192 |
+| `editor_forestEditor.onEditorAfterSaveLevel()` | Hook called after the level is saved. Saves the ForestBrushGroups to <level>/main.forestbrushes4.json if the brushes are modified, saves the forest (saveForest) if editor.forestDirty, and saves the modified ForestItemData datablocks. *(internal)* *(hook)* | 3111 |
+| `editor_forestEditor.onEditorAxisGizmoAligmentChanged()` | Hook called when the axis gizmo alignment changes (local/world). Places the gizmo on the item (local alignment, single item) or on the selection centroid. The name contains the typo "Aligment" as in the engine. *(internal)* *(hook)* | 2881 |
+| `editor_forestEditor.onEditorAxisGizmoModeChanged(mode)` | Hook called when the gizmo mode (move/rotate/scale) changes. If the active edit mode is "Edit Forest" and the current tool is not "select", switches to the "select" tool. *(internal)* *(hook)* | 3179 |
+| `editor_forestEditor.onEditorGui()` | Hook called every frame by the editor: draws the tool window (toolbar, brush and ForestItemData palettes, inspector), handles inputs and the rendering of helpers (lines, spheres, bounding boxes). *(internal)* *(hook)* | 2040 |
+| `editor_forestEditor.onEditorInitialized()` | Hook called at editor initialization: registers the "forestEditor" window, two modal dialogs, the forestItem type inspector, the custom field editors (shapeFile, ForestItemData) and the "Edit Forest" edit mode; then initializes brush, pressure, hardness and datablock tables. *(internal)* *(hook)* | 3073 |
+| `editor_forestEditor.onEditorInspectorFieldChanged(selectedIds, fieldName, fieldValue, arrayIndex)` | Hook called when an inspector field is modified. Marks the brushes as modified (ForestBrush/ForestBrushElement) and updates the mesh preview when the shapeFile of a ForestItemData or the forestItemData of a ForestBrushElement changes. Only handles the case of a single selected object. *(internal)* *(hook)* | 3133 |
+| `editor_forestEditor.onEditorRegisterPreferences(prefsRegistry)` | Hook called to declare the editor preferences: forestEditor category, general subcategory (size, pressure/density, hardness, depth offset, forced terrain alignment, snapping of all types, working distance). *(internal)* *(hook)* | 3159 |
+| `editor_forestEditor.onSerialize()` | Hook called before a Lua reload: clears the item selection then returns true so that onDeserialize is triggered afterwards. *(internal)* *(hook)* | 3196 |
+| `editor_forestEditor.refreshForestItemDataList()` | Rebuilds the var.forestItemData list from all ForestItemData class objects in the scene, excluding parallax window datablocks. | 1459 |
+| `editor_forestEditor.selectBrushByIndex(index)` | Selects the brush tool of the given index in var.brushes (Lua index, starting at 1). | 3188 |
+| `editor_forestEditor.selectForestItems(forestItems, addToSelection)` | Sets (or extends) the editor's forest item selection. Filters the parallax items, updates the highlight, the centroid, the axis gizmo and the mesh preview of the last item. | 219 |
+| `editor_forestEditor.selectToolByName(toolName)` | Activates a toolbar tool or brush from its label (for example "select"). Does nothing if no label matches. | 367 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_forestEditor.beginChangeBrushSizeWithKeys(direction)`
 
-Active la répétition automatique du redimensionnement du pinceau au clavier (touches [ ]) : remet le timer à 0 et mémorise la direction. L'update par frame appelle ensuite changeBrush à l'intervalle de la préférence brushSizeChangeIntervalWithKeys.
+Enables auto-repeat of the brush resize with the keyboard (keys [ ]): resets the timer to 0 and stores the direction. The per-frame update then calls changeBrush at the interval of the brushSizeChangeIntervalWithKeys preference.
 
-- `direction` (*number*) : Sens du changement (positif agrandit, négatif réduit) ; transmis tel quel à changeBrush
+- `direction` (*number*) : Direction of the change (positive enlarges, negative shrinks); passed as is to changeBrush
 
 #### `editor_forestEditor.changeBrush(value, step)`
 
-Modifie la taille du pinceau, ou sa pression (densité) si la touche Ctrl est enfoncée. Les valeurs sont bornées puis appliquées à l'outil de pinceau.
+Changes the brush size, or its pressure (density) if the Ctrl key is held. The values are clamped then applied to the brush tool.
 
-- `value` (*number*) : Direction/multiplicateur du changement (déduit du code)
-- `step` (*number*) : Pas appliqué (unités de la préférence correspondante)
+- `value` (*number*) : Direction/multiplier of the change (inferred from code)
+- `step` (*number*) : Step applied (units of the corresponding preference)
 
 #### `editor_forestEditor.onDeserialize(data)`
 
-Hook appelé après un rechargement Lua (reçoit les données renvoyées par onSerialize). Met simplement deserializeBrushes à false.
+Hook called after a Lua reload (receives the data returned by onSerialize). Simply sets deserializeBrushes to false.
 
-- `data` (*any*) : Valeur renvoyée par onSerialize (true)
+- `data` (*any*) : Value returned by onSerialize (true)
 
 #### `editor_forestEditor.onEditorAxisGizmoModeChanged(mode)`
 
-Hook appelé quand le mode du gizmo (déplacer/tourner/échelle) change. Si le mode d'édition actif est « Edit Forest » et que l'outil courant n'est pas « select », bascule sur l'outil « select ».
+Hook called when the gizmo mode (move/rotate/scale) changes. If the active edit mode is "Edit Forest" and the current tool is not "select", switches to the "select" tool.
 
-- `mode` (*integer*) : Nouveau mode du gizmo (non utilisé)
+- `mode` (*integer*) : New gizmo mode (not used)
 
 #### `editor_forestEditor.onEditorInspectorFieldChanged(selectedIds, fieldName, fieldValue, arrayIndex)`
 
-Hook appelé quand un champ de l'inspecteur est modifié. Marque les brosses comme modifiées (ForestBrush/ForestBrushElement) et met à jour l'aperçu du mesh quand shapeFile d'un ForestItemData ou forestItemData d'un ForestBrushElement change. Ne traite que le cas d'un seul objet sélectionné.
+Hook called when an inspector field is modified. Marks the brushes as modified (ForestBrush/ForestBrushElement) and updates the mesh preview when the shapeFile of a ForestItemData or the forestItemData of a ForestBrushElement changes. Only handles the case of a single selected object.
 
-- `selectedIds` (*integer[]*) : Ids des objets sélectionnés dans l'inspecteur
-- `fieldName` (*string*) : Nom du champ modifié
-- `fieldValue` (*any*) : Nouvelle valeur
-- `arrayIndex` (*integer|nil*) : Index dans le champ tableau (non utilisé)
+- `selectedIds` (*integer[]*) : Ids of the objects selected in the inspector
+- `fieldName` (*string*) : Name of the modified field
+- `fieldValue` (*any*) : New value
+- `arrayIndex` (*integer|nil*) : Index in the array field (not used)
 
 #### `editor_forestEditor.onEditorRegisterPreferences(prefsRegistry)`
 
-Hook appelé pour déclarer les préférences de l'éditeur : catégorie forestEditor, sous-catégorie general (taille, pression/densité, dureté, décalage de profondeur, alignement forcé au terrain, accrochage de tous les types, distance de travail).
+Hook called to declare the editor preferences: forestEditor category, general subcategory (size, pressure/density, hardness, depth offset, forced terrain alignment, snapping of all types, working distance).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur
+- `prefsRegistry` (*table*) : Editor preferences registry
 
 #### `editor_forestEditor.onSerialize()`
 
-Hook appelé avant un rechargement Lua : vide la sélection d'items puis renvoie true pour que onDeserialize soit déclenché ensuite.
+Hook called before a Lua reload: clears the item selection then returns true so that onDeserialize is triggered afterwards.
 
-- **renvoie** : boolean Toujours true
+- **returns**: boolean Always true
 
 #### `editor_forestEditor.selectBrushByIndex(index)`
 
-Sélectionne l'outil de pinceau d'indice donné dans var.brushes (indice Lua, à partir de 1).
+Selects the brush tool of the given index in var.brushes (Lua index, starting at 1).
 
-- `index` (*integer*) : Indice dans la liste des brosses
+- `index` (*integer*) : Index in the brush list
 
 #### `editor_forestEditor.selectForestItems(forestItems, addToSelection)`
 
-Définit (ou complète) la sélection d'items de forêt de l'éditeur. Filtre les items parallax, met à jour la surbrillance, le centroïde, le gizmo d'axes et l'aperçu du mesh du dernier item.
+Sets (or extends) the editor's forest item selection. Filters the parallax items, updates the highlight, the centroid, the axis gizmo and the mesh preview of the last item.
 
-- `forestItems` (*table|nil*) : Liste d'items de forêt ; nil pour seulement désélectionner
-- `addToSelection` (*boolean|nil*) : true pour ajouter à la sélection existante, sinon elle est remplacée
+- `forestItems` (*table|nil*) : List of forest items; nil to only deselect
+- `addToSelection` (*boolean|nil*) : true to add to the existing selection, otherwise it is replaced
 
 #### `editor_forestEditor.selectToolByName(toolName)`
 
-Active un outil ou une brosse de la barre d'outils à partir de son libellé (par exemple « select »). Ne fait rien si aucun libellé ne correspond.
+Activates a toolbar tool or brush from its label (for example "select"). Does nothing if no label matches.
 
-- `toolName` (*string*) : Libellé (label) de l'outil ou de la brosse
+- `toolName` (*string*) : Label of the tool or brush
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant ce module : {"core_forest"}. |
+| `dependencies` | string[] | Extensions loaded before this module: {"core_forest"}. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onEditorEditModeChanged` — écouté par 1 module(s)
-- `onEditorObjectSelectionChanged` — écouté par 8 module(s)
+- `onEditorEditModeChanged` — listened to by 1 module(s)
+- `onEditorObjectSelectionChanged` — listened to by 8 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `castRay`
 - `FS:` `fileExists`
@@ -140,4 +140,4 @@ Active un outil ou une brosse de la barre d'outils à partir de son libellé (pa
 - `worldEditorCppApi.` `createObject`, `findDerivedDatablockClassname`, `getAxisGizmoScaleOffset`, `getAxisGizmoTotalRotateOffset`, `rebuildForestManagerInstanceData`, `renderForestBBs`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/forestEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/forestEditor.lua`.*

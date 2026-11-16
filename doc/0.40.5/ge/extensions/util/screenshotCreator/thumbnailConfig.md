@@ -1,126 +1,126 @@
 # `util_screenshotCreator_thumbnailConfig`
 
-*Fichier : `lua/ge/extensions/util/screenshotCreator/thumbnailConfig.lua` · VM : Game Engine (GE) · 143 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/screenshotCreator/thumbnailConfig.lua` · VM: Game Engine (GE) · 143 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_screenshotCreator_thumbnailConfig` : `extensions.load("util_screenshotCreator_thumbnailConfig")`, puis la globale `util_screenshotCreator_thumbnailConfig`
+**Access:** extension `util_screenshotCreator_thumbnailConfig`: `extensions.load("util_screenshotCreator_thumbnailConfig")`, then the global `util_screenshotCreator_thumbnailConfig`
 
-Lecture et écriture de la configuration de vignette (clé thumbnailConfig) d'un véhicule : elle est stockée dans /vehicles/<modèle>/info_<config>.json pour une configuration, et dans /vehicles/<modèle>/info.json pour le modèle. Elle contient notamment rotation (degrés, rotation du repère de caméra autour de l'axe vertical), pauseDelay (secondes d'attente avant capture) et des caméras enregistrées (configCamEnabled, modelCamEnabled). Le module fournit aussi les axes de référence du véhicule (niveau et orientés selon la rotation) et les conversions décalage de caméra <-> repère véhicule utilisées pour enregistrer et rejouer une caméra.
+Reading and writing of a vehicle's thumbnail configuration (thumbnailConfig key): it is stored in /vehicles/<model>/info_<config>.json for a configuration, and in /vehicles/<model>/info.json for the model. It notably contains rotation (degrees, rotation of the camera frame around the vertical axis), pauseDelay (seconds of waiting before capture) and saved cameras (configCamEnabled, modelCamEnabled). The module also provides the vehicle's reference axes (level and oriented according to the rotation) and the camera offset <-> vehicle frame conversions used to save and replay a camera.
 
-## Remarques
+## Notes
 
-- La configuration d'une config prime sur celle du modèle pour rotation et pauseDelay ; valeurs par défaut 0.
-- getCameraConfig renvoie vehCamConfig = {configCamEnabled = false, modelCamEnabled = false} si aucune config de vignette n'existe pour la config.
-- Les fonctions de lecture supposent que core_vehicles.getModel(modelName) renvoie une table ; un modèle inconnu peut provoquer une erreur Lua en accédant à modelData.configs.
-- getLevelAxes redresse les axes de la boîte du véhicule à l'horizontale (le cap est conservé) pour qu'un véhicule incliné à l'apparition n'incline pas la caméra.
+- A config's configuration takes priority over the model's for rotation and pauseDelay; default values 0.
+- getCameraConfig returns vehCamConfig = {configCamEnabled = false, modelCamEnabled = false} if no thumbnail config exists for the config.
+- The read functions assume that core_vehicles.getModel(modelName) returns a table; an unknown model can cause a Lua error when accessing modelData.configs.
+- getLevelAxes straightens the vehicle box's axes to the horizontal (the heading is kept) so that a vehicle tilted at spawn does not tilt the camera.
 
-**Dépendances (chargées avant) :** `core_camera`, `core_vehicles`
+**Dependencies (loaded first):** `core_camera`, `core_vehicles`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_screenshotCreator_thumbnailConfig.getCameraConfig(modelName, configName)` | Récupère les configs de vignette d'une configuration et de son modèle (en relisant le fichier info_<config>.json si elle n'est pas en mémoire). | 54 |
-| `util_screenshotCreator_thumbnailConfig.getCameraOffsets(configName, vehicle)` | Convertit la position et l'orientation de la caméra actuelle en décalages relatifs au véhicule (dans ses axes de référence) pour pouvoir les enregistrer. | 116 |
-| `util_screenshotCreator_thumbnailConfig.getLevelAxes(bb)` | Calcule des axes orthonormés à partir de la boîte du véhicule : cap horizontal (axe 1), droite et haut du monde. | 95 |
-| `util_screenshotCreator_thumbnailConfig.getPauseDelay(modelName, configName)` | Renvoie le délai d'attente avant capture en secondes (config, sinon modèle, sinon 0), jamais négatif. | 83 |
-| `util_screenshotCreator_thumbnailConfig.getReferenceAxes(vehicle, configName, boundingBox)` | Renvoie les axes de référence du véhicule pour la caméra : axes redressés par getLevelAxes, tournés de -rotation degrés autour de l'axe vertical si une rotation est configurée. | 104 |
-| `util_screenshotCreator_thumbnailConfig.getRotation(modelName, configName)` | Renvoie la rotation de caméra (en degrés) : celle de la config, sinon celle du modèle, sinon 0. | 72 |
-| `util_screenshotCreator_thumbnailConfig.rewindCameraOffsets(posOffset, rotOffset, vehicle, configName)` | Opération inverse de getCameraOffsets : reconstruit la position et l'orientation monde de la caméra pour le véhicule à partir de décalages enregistrés. | 132 |
-| `util_screenshotCreator_thumbnailConfig.saveModelConfig(modelName, config)` | Enregistre la config de vignette du modèle dans /vehicles/<modèle>/info.json et met à jour la donnée en mémoire. | 41 |
-| `util_screenshotCreator_thumbnailConfig.saveVehicleConfig(modelName, configName, config)` | Enregistre la config de vignette d'une configuration dans son fichier info (infoFilename connu, sinon /vehicles/<modèle>/info_<config>.json) et met à jour la donnée en mémoire. | 27 |
+| `util_screenshotCreator_thumbnailConfig.getCameraConfig(modelName, configName)` | Retrieves the thumbnail configs of a configuration and of its model (rereading the info_<config>.json file if it is not in memory). | 54 |
+| `util_screenshotCreator_thumbnailConfig.getCameraOffsets(configName, vehicle)` | Converts the current camera's position and orientation into offsets relative to the vehicle (in its reference axes) so they can be saved. | 116 |
+| `util_screenshotCreator_thumbnailConfig.getLevelAxes(bb)` | Computes orthonormal axes from the vehicle's box: horizontal heading (axis 1), world right and up. | 95 |
+| `util_screenshotCreator_thumbnailConfig.getPauseDelay(modelName, configName)` | Returns the wait time before capture in seconds (config, otherwise model, otherwise 0), never negative. | 83 |
+| `util_screenshotCreator_thumbnailConfig.getReferenceAxes(vehicle, configName, boundingBox)` | Returns the vehicle's reference axes for the camera: axes straightened by getLevelAxes, rotated by -rotation degrees around the vertical axis if a rotation is configured. | 104 |
+| `util_screenshotCreator_thumbnailConfig.getRotation(modelName, configName)` | Returns the camera rotation (in degrees): that of the config, otherwise that of the model, otherwise 0. | 72 |
+| `util_screenshotCreator_thumbnailConfig.rewindCameraOffsets(posOffset, rotOffset, vehicle, configName)` | Inverse operation of getCameraOffsets: rebuilds the camera's world position and orientation for the vehicle from saved offsets. | 132 |
+| `util_screenshotCreator_thumbnailConfig.saveModelConfig(modelName, config)` | Saves the model's thumbnail config to /vehicles/<model>/info.json and updates the in-memory data. | 41 |
+| `util_screenshotCreator_thumbnailConfig.saveVehicleConfig(modelName, configName, config)` | Saves a configuration's thumbnail config to its info file (known infoFilename, otherwise /vehicles/<model>/info_<config>.json) and updates the in-memory data. | 27 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_screenshotCreator_thumbnailConfig.getCameraConfig(modelName, configName)`
 
-Récupère les configs de vignette d'une configuration et de son modèle (en relisant le fichier info_<config>.json si elle n'est pas en mémoire).
+Retrieves the thumbnail configs of a configuration and of its model (rereading the info_<config>.json file if it is not in memory).
 
-- `modelName` (*string*) : Nom du modèle.
-- `configName` (*string*) : Nom de la configuration.
-- **renvoie** : table {vehCamConfig = table, modelCamConfig = table|nil}.
+- `modelName` (*string*) : Model name.
+- `configName` (*string*) : Configuration name.
+- **returns**: table {vehCamConfig = table, modelCamConfig = table|nil}.
 
 #### `util_screenshotCreator_thumbnailConfig.getCameraOffsets(configName, vehicle)`
 
-Convertit la position et l'orientation de la caméra actuelle en décalages relatifs au véhicule (dans ses axes de référence) pour pouvoir les enregistrer.
+Converts the current camera's position and orientation into offsets relative to the vehicle (in its reference axes) so they can be saved.
 
-- `configName` (*string|nil*) : Nom de la configuration.
-- `vehicle` (*table|nil*) : Objet véhicule (défaut : véhicule du joueur 0).
-- **renvoie** : vec3 Décalage de position dans le repère du véhicule.
-- **renvoie** : quat Orientation de la caméra dans le repère du véhicule.
+- `configName` (*string|nil*) : Configuration name.
+- `vehicle` (*table|nil*) : Vehicle object (default: player 0's vehicle).
+- **returns**: vec3 Position offset in the vehicle frame.
+- **returns**: quat Camera orientation in the vehicle frame.
 
 #### `util_screenshotCreator_thumbnailConfig.getLevelAxes(bb)`
 
-Calcule des axes orthonormés à partir de la boîte du véhicule : cap horizontal (axe 1), droite et haut du monde.
+Computes orthonormal axes from the vehicle's box: horizontal heading (axis 1), world right and up.
 
-- `bb` (*table*) : Boîte englobante orientée (OOBB) avec getAxis(i).
-- **renvoie** : vec3 Axe droite.
-- **renvoie** : vec3 Axe avant (horizontal).
-- **renvoie** : vec3 Axe haut (0, 0, 1).
+- `bb` (*table*) : Oriented bounding box (OOBB) with getAxis(i).
+- **returns**: vec3 Right axis.
+- **returns**: vec3 Forward axis (horizontal).
+- **returns**: vec3 Up axis (0, 0, 1).
 
 #### `util_screenshotCreator_thumbnailConfig.getPauseDelay(modelName, configName)`
 
-Renvoie le délai d'attente avant capture en secondes (config, sinon modèle, sinon 0), jamais négatif.
+Returns the wait time before capture in seconds (config, otherwise model, otherwise 0), never negative.
 
-- `modelName` (*string*) : Nom du modèle.
-- `configName` (*string*) : Nom de la configuration.
-- **renvoie** : number Délai en secondes (>= 0).
+- `modelName` (*string*) : Model name.
+- `configName` (*string*) : Configuration name.
+- **returns**: number Delay in seconds (>= 0).
 
 #### `util_screenshotCreator_thumbnailConfig.getReferenceAxes(vehicle, configName, boundingBox)`
 
-Renvoie les axes de référence du véhicule pour la caméra : axes redressés par getLevelAxes, tournés de -rotation degrés autour de l'axe vertical si une rotation est configurée.
+Returns the vehicle's reference axes for the camera: axes straightened by getLevelAxes, rotated by -rotation degrees around the vertical axis if a rotation is configured.
 
-- `vehicle` (*table*) : Objet véhicule.
-- `configName` (*string|nil*) : Nom de la configuration (pour lire la rotation).
-- `boundingBox` (*table|nil*) : OOBB déjà calculée ; sinon vehicle:getSpawnWorldOOBB().
-- **renvoie** : vec3 Axe droite.
-- **renvoie** : vec3 Axe avant.
-- **renvoie** : vec3 Axe haut.
+- `vehicle` (*table*) : Vehicle object.
+- `configName` (*string|nil*) : Configuration name (to read the rotation).
+- `boundingBox` (*table|nil*) : OOBB already computed; otherwise vehicle:getSpawnWorldOOBB().
+- **returns**: vec3 Right axis.
+- **returns**: vec3 Forward axis.
+- **returns**: vec3 Up axis.
 
 #### `util_screenshotCreator_thumbnailConfig.getRotation(modelName, configName)`
 
-Renvoie la rotation de caméra (en degrés) : celle de la config, sinon celle du modèle, sinon 0.
+Returns the camera rotation (in degrees): that of the config, otherwise that of the model, otherwise 0.
 
-- `modelName` (*string*) : Nom du modèle.
-- `configName` (*string*) : Nom de la configuration.
-- **renvoie** : number Rotation en degrés.
+- `modelName` (*string*) : Model name.
+- `configName` (*string*) : Configuration name.
+- **returns**: number Rotation in degrees.
 
 #### `util_screenshotCreator_thumbnailConfig.rewindCameraOffsets(posOffset, rotOffset, vehicle, configName)`
 
-Opération inverse de getCameraOffsets : reconstruit la position et l'orientation monde de la caméra pour le véhicule à partir de décalages enregistrés.
+Inverse operation of getCameraOffsets: rebuilds the camera's world position and orientation for the vehicle from saved offsets.
 
-- `posOffset` (*vec3*) : Décalage de position enregistré.
-- `rotOffset` (*quat*) : Orientation enregistrée.
-- `vehicle` (*table|nil*) : Objet véhicule (défaut : véhicule du joueur 0).
-- `configName` (*string|nil*) : Nom de la configuration.
-- **renvoie** : vec3 Position monde de la caméra.
-- **renvoie** : quat Orientation monde de la caméra.
+- `posOffset` (*vec3*) : Saved position offset.
+- `rotOffset` (*quat*) : Saved orientation.
+- `vehicle` (*table|nil*) : Vehicle object (default: player 0's vehicle).
+- `configName` (*string|nil*) : Configuration name.
+- **returns**: vec3 Camera world position.
+- **returns**: quat Camera world orientation.
 
 #### `util_screenshotCreator_thumbnailConfig.saveModelConfig(modelName, config)`
 
-Enregistre la config de vignette du modèle dans /vehicles/<modèle>/info.json et met à jour la donnée en mémoire.
+Saves the model's thumbnail config to /vehicles/<model>/info.json and updates the in-memory data.
 
-- `modelName` (*string*) : Nom du modèle.
-- `config` (*table*) : Table thumbnailConfig à enregistrer.
-- **renvoie** : boolean Succès de l'écriture.
+- `modelName` (*string*) : Model name.
+- `config` (*table*) : thumbnailConfig table to save.
+- **returns**: boolean Write success.
 
 #### `util_screenshotCreator_thumbnailConfig.saveVehicleConfig(modelName, configName, config)`
 
-Enregistre la config de vignette d'une configuration dans son fichier info (infoFilename connu, sinon /vehicles/<modèle>/info_<config>.json) et met à jour la donnée en mémoire.
+Saves a configuration's thumbnail config to its info file (known infoFilename, otherwise /vehicles/<model>/info_<config>.json) and updates the in-memory data.
 
-- `modelName` (*string*) : Nom du modèle.
-- `configName` (*string*) : Nom de la configuration.
-- `config` (*table*) : Table thumbnailConfig à enregistrer.
-- **renvoie** : boolean false si le fichier existant est illisible ou si l'écriture échoue.
+- `modelName` (*string*) : Model name.
+- `configName` (*string*) : Configuration name.
+- `config` (*table*) : thumbnailConfig table to save.
+- **returns**: boolean false if the existing file is unreadable or if the write fails.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant : core_camera et core_vehicles. |
+| `dependencies` | string[] | Extensions loaded before: core_camera and core_vehicles. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/screenshotCreator/thumbnailConfig.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/screenshotCreator/thumbnailConfig.lua`.*

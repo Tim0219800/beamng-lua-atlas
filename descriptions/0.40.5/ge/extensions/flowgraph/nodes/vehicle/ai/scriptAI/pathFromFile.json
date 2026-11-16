@@ -1,50 +1,50 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/pathFromFile.lua",
-  "module": "Nœud « AI Path from File » (catégorie provider, couleur ai). Fournit un chemin ScriptAI chargé depuis un fichier de piste /replays/scriptai/tracks/*.track.json choisi dans l'inspecteur (bouton « Refresh Files » pour relister). Sortie : path (type aiPath), c'est le champ « recording » du fichier. À brancher sur « AI Follow Path from Data ».",
+  "module": "Node \"AI Path from File\" (category provider, color ai). Provides a ScriptAI path loaded from a track file /replays/scriptai/tracks/*.track.json chosen in the inspector (\"Refresh Files\" button to relist). Output: path (type aiPath), this is the \"recording\" field of the file. To be connected to \"AI Follow Path from Data\".",
   "notes": [
-    "Si aucun fichier n'est choisi ou si la lecture échoue, loadedFile reste nil et work lève une erreur (loadedFile.recording).",
-    "jsonReadFile reçoit le premier retour de mgr:getRelativeAbsolutePath (le chemin résolu)."
+    "If no file is chosen or if reading fails, loadedFile stays nil and work raises an error (loadedFile.recording).",
+    "jsonReadFile receives the first return value of mgr:getRelativeAbsolutePath (the resolved path)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Liste les fichiers de piste (FS:findFiles) et initialise nom et fichier chargé.",
+          "desc": "Lists the track files (FS:findFiles) and initializes the name and loaded file.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Ne fait rien.",
+          "desc": "Does nothing.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Dessine le bouton « Refresh Files » et la liste déroulante des fichiers de piste.",
+          "desc": "Draws the \"Refresh Files\" button and the dropdown list of track files.",
           "internal": true
         },
         "work": {
-          "desc": "Charge le fichier avec jsonReadFile s'il ne l'est pas encore et publie loadedFile.recording sur path.",
+          "desc": "Loads the file with jsonReadFile if it is not loaded yet and publishes loadedFile.recording on path.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche le nom court du fichier et son état de chargement.",
+          "desc": "Displays the short file name and its loading state.",
           "params": {
             "builder": {
               "type": "table",
-              "desc": "Constructeur de nœud."
+              "desc": "Node constructor."
             },
             "style": {
               "type": "table",
-              "desc": "Style du nœud."
+              "desc": "Node style."
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde le nom de fichier.",
+          "desc": "Saves the file name.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure le nom de fichier et recalcule le nom court.",
+          "desc": "Restores the file name and recomputes the short name.",
           "internal": true
         }
       }

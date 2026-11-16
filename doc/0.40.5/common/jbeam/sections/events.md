@@ -1,37 +1,37 @@
 # `jbeam_sections_events`
 
-*Fichier : `lua/common/jbeam/sections/events.lua` · VM : Commun (GE + véhicule) · 337 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/sections/events.lua` · VM: Common (GE + vehicle) · 337 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/sections/events")`
+**Access:** `require("jbeam/sections/events")`
 
-Traite les sections jbeam d'interaction : events (évènements d'entrée, simplement nettoyés), triggers (zones de déclenchement 3D box/sphère créées dans le moteur avec addTrigger, position, rotation, taille, couleur, label, meshes à surligner) et triggerEventLinks / triggerEventLinks2 (liens entre un trigger et une action d'entrée). Construit vehicle.triggerEventLinksDict[triggerId][entrée] = liste de liens et migre les anciens liens (v1, vers vehicle.events) vers le format v2 (inputActions). Charge l'extension core_vehicleTriggers si au moins un trigger a été créé.
+Processes the jbeam interaction sections: events (input events, simply cleaned), triggers (3D box/sphere trigger zones created in the engine with addTrigger, position, rotation, size, color, label, meshes to highlight) and triggerEventLinks / triggerEventLinks2 (links between a trigger and an input action). Builds vehicle.triggerEventLinksDict[triggerId][input] = list of links and migrates the old links (v1, to vehicle.events) to the v2 format (inputActions). Loads the core_vehicleTriggers extension if at least one trigger was created.
 
-## Remarques
+## Notes
 
-- Un trigger : id de référence idRef et axes idX, idY (nœuds), rotation en degrés (convertie en radians), translation, baseTranslation(+Global/Elastic/Rigid), type 'box' (size = vec3) ou 'sphere' (size = nombre), label, color {r,g,b,a}, mesh (chaîne ou liste) à mettre en surbrillance, alphaOnUsed. Les variantes baseTranslationGlobal* tiennent compte des rotations/déplacements du composant (écrites aussi sous 'xxxWithNodeTransforms').
-- Le cid du trigger doit être égal à l'id renvoyé par le moteur (addTrigger) ; sinon erreur 'Trigger cId desync' et le trigger est ignoré.
-- triggerEventLinks2 : champs obligatoires triggerId, triggerInput, inputAction ; inputAction peut avoir la forme 'namespace:action' (namespace par défaut 'vehicle'). Les liens v1 (triggerEventLinks) exigent targetEventId, triggerId et action et déclenchent un avertissement 'Legacy' dans le journal ; ils sont convertis en actions d'entrée du véhicule (vehicle.inputActions, ctx 'vlua', cat 'vehicle_specific').
-- Lors de la conversion v1, le label du trigger, s'il est non vide, devient le titre de l'action et est vidé sur le trigger.
-- Les lignes avec un champ manquant sont ignorées avec un print (et non un log) du contenu.
-- Les triggers ne sont créés que quand l'objet véhicule moteur existe (VM GE).
+- A trigger: reference id idRef and axes idX, idY (nodes), rotation in degrees (converted to radians), translation, baseTranslation(+Global/Elastic/Rigid), type 'box' (size = vec3) or 'sphere' (size = number), label, color {r,g,b,a}, mesh (string or list) to highlight, alphaOnUsed. The baseTranslationGlobal* variants take the component's rotations/translations into account (also written under 'xxxWithNodeTransforms').
+- The trigger's cid must equal the id returned by the engine (addTrigger); otherwise error 'Trigger cId desync' and the trigger is ignored.
+- triggerEventLinks2: mandatory fields triggerId, triggerInput, inputAction; inputAction can have the form 'namespace:action' (namespace defaults to 'vehicle'). The v1 links (triggerEventLinks) require targetEventId, triggerId and action and trigger a 'Legacy' warning in the log; they are converted to vehicle input actions (vehicle.inputActions, ctx 'vlua', cat 'vehicle_specific').
+- During the v1 conversion, the trigger's label, if non-empty, becomes the action's title and is emptied on the trigger.
+- Rows with a missing field are ignored with a print (not a log) of the content.
+- Triggers are only created when the engine vehicle object exists (GE VM).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_sections_events.process(objID, vehicleObj, vehicle)` | Traite events, triggers et liens trigger-évènement du véhicule (crée les triggers dans le moteur et remplit vehicle.triggerEventLinksDict). *(interne)* | 324 |
+| `jbeam_sections_events.process(objID, vehicleObj, vehicle)` | Processes the vehicle's events, triggers and trigger-event links (creates the triggers in the engine and fills vehicle.triggerEventLinksDict). *(internal)* | 324 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_sections_events.process(objID, vehicleObj, vehicle)`
 
-Traite events, triggers et liens trigger-évènement du véhicule (crée les triggers dans le moteur et remplit vehicle.triggerEventLinksDict).
+Processes the vehicle's events, triggers and trigger-event links (creates the triggers in the engine and fills vehicle.triggerEventLinksDict).
 
-- `objID` (*integer*) : Identifiant du véhicule (non utilisé).
-- `vehicleObj` (*userdata*) : Objet véhicule moteur (addTrigger, getTrigger).
-- `vehicle` (*table*) : Données jbeam du véhicule (modifiées en place).
+- `objID` (*integer*) : Vehicle identifier (unused).
+- `vehicleObj` (*userdata*) : Engine vehicle object (addTrigger, getTrigger).
+- `vehicle` (*table*) : Vehicle jbeam data (modified in place).
 
-**Charge les extensions :** `core_vehicleTriggers`
+**Loads extensions:** `core_vehicleTriggers`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/sections/events.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/sections/events.lua`.*

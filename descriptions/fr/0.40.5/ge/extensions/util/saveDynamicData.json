@@ -1,0 +1,59 @@
+{
+  "path": "lua/ge/extensions/util/saveDynamicData.lua",
+  "module": "Outil automatisé interne : charge le niveau de test « autotest », puis fait apparaître chaque configuration de véhicule (filtrable par modèle ou par fichier .pc) et lance dans le véhicule l'extension dynamicVehicleData pour mesurer ses données dynamiques (dynamicVehicleData.performTests). Les résultats sont déposés dans vehicles/<modèle>/info_<config>.touched ; les configs déjà traitées sont sautées. Un chien de garde (20 s sans heartbeat) et une durée maximale (600 s) font passer au véhicule suivant. À la fin, le jeu est quitté (shutdown(0)).",
+  "usage": "extensions.util_saveDynamicData.work('', 'pickup')",
+  "notes": [
+    "Les modèles listés dans blacklist.json (ou à défaut blacklistDefault.json) sont ignorés.",
+    "Le travail attend que le gestionnaire de mods soit prêt et que le niveau de test soit chargé (hook onClientStartMission).",
+    "Le véhicule remplacé est placé en (0, 0, 0.5) et la vitesse de physique est fixée à physicsSpeedFactor (0 : valeur interne du fichier).",
+    "Le code contient un TODO : work ne bloque pas jusqu'à la fin du travail. Le fichier utilise la globale non déclarée newVehicle.",
+    "Le test de filtre sur pcFile est ignoré si la chaîne est vide ou nil ; un vehicleToTest nil teste tous les modèles."
+  ],
+  "functions": {
+    "onInit": {
+      "desc": "Appelé à l'initialisation du module ; ne fait que logger.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Appelé au chargement : décharge/recharge les extensions de base si core_camera est absent, puis charge la liste noire de véhicules (blacklist.json, sinon blacklistDefault.json).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Appelé au déchargement ; ne fait que logger.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientStartMission": {
+      "desc": "Hook appelé au démarrage d'un niveau ; marque le niveau comme prêt si c'est le niveau de test autotest.",
+      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau démarré"}},
+      "returns": [],
+      "internal": true
+    },
+    "work": {
+      "desc": "Point d'entrée : mémorise les filtres, démarre le job de test et lance le niveau autotest s'il n'est pas déjà chargé.",
+      "params": {
+        "pcFile": {"type": "string|nil", "desc": "Clé de configuration à tester (vide ou nil = toutes)"},
+        "vehicle": {"type": "string|nil", "desc": "Clé de modèle à tester (nil = tous)"}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "vehicleDone": {
+      "desc": "Appelée par le côté véhicule (dynamicVehicleData) quand les tests de la configuration courante sont terminés ; passe à la suivante.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "heartbeat": {
+      "desc": "Appelée par le côté véhicule pendant les tests pour signaler qu'il est toujours actif (réarme le chien de garde de 20 s).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

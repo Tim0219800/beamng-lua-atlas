@@ -1,78 +1,78 @@
 # `protocols_outgauge`
 
-*Fichier : `lua/vehicle/protocols/outgauge.lua` · VM : Véhicule · 139 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/protocols/outgauge.lua` · VM: Vehicle · 139 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("protocols/outgauge")`
+**Access:** `require("protocols/outgauge")`
 
-Protocole UDP OutGauge (compatible Live For Speed) : envoie vitesse, régime, rapport, pression de turbo, températures, carburant, entrées pédales et voyants du véhicule pour des tableaux de bord externes. Chargé par protocols.lua ; adresse, port et fréquence viennent des réglages protocols_outgauge_address, _port, _maxUpdateRate. Utilise le pas graphique (coût faible).
+UDP OutGauge protocol (Live For Speed compatible): sends speed, RPM, gear, turbo pressure, temperatures, fuel, pedal inputs and warning lights of the vehicle for external dashboards. Loaded by protocols.lua; address, port and rate come from the settings protocols_outgauge_address, _port, _maxUpdateRate. Uses the graphics step (low cost).
 
-## Exemple
+## Example
 
 ```lua
--- Activation : réglage 'protocols_outgauge_enabled'. Dans un logiciel de dashboard OutGauge, écouter le port UDP configuré.
+-- Activation: setting 'protocols_outgauge_enabled'. In OutGauge dashboard software, listen on the configured UDP port.
 ```
 
-## Remarques
+## Notes
 
-- Paquet (struct C) : unsigned time (toujours 0) ; char car[4] = "beam" ; unsigned short flags ; char gear ; char plid (0) ; float speed (m/s) ; rpm (tr/min) ; turbo (bar) ; engTemp (°C) ; fuel (0..1) ; oilPressure (0, non géré) ; oilTemp (°C) ; unsigned dashLights ; unsigned showLights ; float throttle, brake, clutch (0..1) ; char display1[16], display2[16] (vides) ; int id (0).
-- flags = OG_KM + OG_BAR (+ OG_TURBO si electrics.turboBoost existe) : indique des unités km/h et bar. Le turbo est convertit depuis psi (electrics.turboBoost / 14.504). Valeurs OG_x : 8192 turbo, 16384 km, 32768 bar.
-- gear = electrics.gearIndex + 1 : 0 marche arrière, 1 point mort, 2 première, etc. (gearIndex vaut -1 en marche arrière).
-- speed = electrics.wheelspeed, sinon airspeed ; rpm = electrics.rpm ; engTemp = electrics.watertemp ; oilTemp = electrics.oiltemp ; fuel = electrics.fuel.
-- Voyants dashLights/showLights (bits 2^n) : SHIFT 0 (si contrôleur shiftLights présent, electrics.shouldShift), FULLBEAM 1 (highbeam), HANDBRAKE 2 (parkingbrake), TC 4 (esc ou tcs actifs, seulement si electrics.hasESC), SIGNAL_L 5 / SIGNAL_R 6 (clignotants), OILWARN 8 (electrics.oil), BATTERY 9 (moteur arrêté : engineRunning == 0), ABS 10 (electrics.absActive, seulement si hasABS). PITSPEED 3, SIGNAL_ANY 7, SPARE 11 ne sont pas utilisés (N/A).
-- Bug/incohérence : fillStruct fait un `return` anticipé si electrics.values.watertemp est nil, mais protocols.lua envoie quand même le paquet (rempli de zéros) car l'envoi se fait après l'appel.
-- Bug potentiel : electrics.values.gearIndex n'est pas protégé : s'il est nil, l'addition lève une erreur. Les comparaisons `~= 0` des voyants supposent des valeurs numériques (nil ~= 0 est vrai et allume le voyant si la valeur electrics n'existe pas : highbeam, parkingbrake, signal_L, signal_R, oil).
+- Packet (C struct): unsigned time (always 0); char car[4] = "beam"; unsigned short flags; char gear; char plid (0); float speed (m/s); rpm (RPM); turbo (bar); engTemp (°C); fuel (0..1); oilPressure (0, not handled); oilTemp (°C); unsigned dashLights; unsigned showLights; float throttle, brake, clutch (0..1); char display1[16], display2[16] (empty); int id (0).
+- flags = OG_KM + OG_BAR (+ OG_TURBO if electrics.turboBoost exists): indicates km/h and bar units. Turbo is converted from psi (electrics.turboBoost / 14.504). OG_x values: 8192 turbo, 16384 km, 32768 bar.
+- gear = electrics.gearIndex + 1: 0 reverse, 1 neutral, 2 first, etc. (gearIndex is -1 in reverse).
+- speed = electrics.wheelspeed, otherwise airspeed; rpm = electrics.rpm; engTemp = electrics.watertemp; oilTemp = electrics.oiltemp; fuel = electrics.fuel.
+- Warning lights dashLights/showLights (bits 2^n): SHIFT 0 (if a shiftLights controller is present, electrics.shouldShift), FULLBEAM 1 (highbeam), HANDBRAKE 2 (parkingbrake), TC 4 (esc or tcs active, only if electrics.hasESC), SIGNAL_L 5 / SIGNAL_R 6 (turn signals), OILWARN 8 (electrics.oil), BATTERY 9 (engine stopped: engineRunning == 0), ABS 10 (electrics.absActive, only if hasABS). PITSPEED 3, SIGNAL_ANY 7, SPARE 11 are not used (N/A).
+- Bug/inconsistency: fillStruct does an early `return` if electrics.values.watertemp is nil, but protocols.lua still sends the packet (filled with zeros) because the send happens after the call.
+- Potential bug: electrics.values.gearIndex is not guarded: if it is nil, the addition raises an error. The `~= 0` comparisons of the lights assume numeric values (nil ~= 0 is true and lights the indicator if the electrics value does not exist: highbeam, parkingbrake, signal_L, signal_R, oil).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `protocols_outgauge.fillStruct(o, dtSim)` | Remplit le paquet à partir de electrics.values (vitesse, régime, rapport, turbo, températures, carburant, pédales, voyants). *(interne)* | 84 |
-| `protocols_outgauge.getAddress()` | Adresse IP de destination (réglage protocols_outgauge_address). *(interne)* | 19 |
-| `protocols_outgauge.getMaxUpdateRate()` | Fréquence maximale d'envoi en Hz (réglage protocols_outgauge_maxUpdateRate). *(interne)* | 21 |
-| `protocols_outgauge.getPort()` | Port UDP de destination (réglage protocols_outgauge_port). *(interne)* | 20 |
-| `protocols_outgauge.getStructDefinition()` | Renvoie la définition C du paquet OutGauge (texte passé à ffi.cdef). *(interne)* | 28 |
-| `protocols_outgauge.init()` | Cherche les contrôleurs de type shiftLights pour savoir si le voyant de changement de rapport est disponible. *(interne)* | 13 |
-| `protocols_outgauge.isPhysicsStepUsed()` | Indique que ce protocole est mis à jour dans la boucle graphique. *(interne)* | 23 |
-| `protocols_outgauge.reset()` | Réinitialisation du protocole (ne fait rien). *(interne)* | 18 |
+| `protocols_outgauge.fillStruct(o, dtSim)` | Fills the packet from electrics.values (speed, RPM, gear, turbo, temperatures, fuel, pedals, warning lights). *(internal)* | 84 |
+| `protocols_outgauge.getAddress()` | Destination IP address (setting protocols_outgauge_address). *(internal)* | 19 |
+| `protocols_outgauge.getMaxUpdateRate()` | Maximum sending rate in Hz (setting protocols_outgauge_maxUpdateRate). *(internal)* | 21 |
+| `protocols_outgauge.getPort()` | Destination UDP port (setting protocols_outgauge_port). *(internal)* | 20 |
+| `protocols_outgauge.getStructDefinition()` | Returns the C definition of the OutGauge packet (text passed to ffi.cdef). *(internal)* | 28 |
+| `protocols_outgauge.init()` | Looks for controllers of type shiftLights to know whether the shift light is available. *(internal)* | 13 |
+| `protocols_outgauge.isPhysicsStepUsed()` | Indicates that this protocol is updated in the graphics loop. *(internal)* | 23 |
+| `protocols_outgauge.reset()` | Protocol reset (does nothing). *(internal)* | 18 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `protocols_outgauge.fillStruct(o, dtSim)`
 
-Remplit le paquet à partir de electrics.values (vitesse, régime, rapport, turbo, températures, carburant, pédales, voyants).
+Fills the packet from electrics.values (speed, RPM, gear, turbo, temperatures, fuel, pedals, warning lights).
 
-- `o` (*cdata*) : Struct C du paquet à remplir (mise à zéro avant l'appel).
-- `dtSim` (*number*) : Temps de simulation accumulé depuis le dernier envoi (non utilisé).
+- `o` (*cdata*) : C struct of the packet to fill (zeroed before the call).
+- `dtSim` (*number*) : Simulation time accumulated since the last send (not used).
 
 #### `protocols_outgauge.getAddress()`
 
-Adresse IP de destination (réglage protocols_outgauge_address).
+Destination IP address (setting protocols_outgauge_address).
 
-- **renvoie** : string Adresse IP.
+- **returns**: string IP address.
 
 #### `protocols_outgauge.getMaxUpdateRate()`
 
-Fréquence maximale d'envoi en Hz (réglage protocols_outgauge_maxUpdateRate).
+Maximum sending rate in Hz (setting protocols_outgauge_maxUpdateRate).
 
-- **renvoie** : number Hz.
+- **returns**: number Hz.
 
 #### `protocols_outgauge.getPort()`
 
-Port UDP de destination (réglage protocols_outgauge_port).
+Destination UDP port (setting protocols_outgauge_port).
 
-- **renvoie** : integer Numéro de port.
+- **returns**: integer Port number.
 
 #### `protocols_outgauge.getStructDefinition()`
 
-Renvoie la définition C du paquet OutGauge (texte passé à ffi.cdef).
+Returns the C definition of the OutGauge packet (text passed to ffi.cdef).
 
-- **renvoie** : string Corps de la struct C.
+- **returns**: string Body of the C struct.
 
 #### `protocols_outgauge.isPhysicsStepUsed()`
 
-Indique que ce protocole est mis à jour dans la boucle graphique.
+Indicates that this protocol is updated in the graphics loop.
 
-- **renvoie** : boolean Toujours false.
+- **returns**: boolean Always false.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/protocols/outgauge.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/protocols/outgauge.lua`.*

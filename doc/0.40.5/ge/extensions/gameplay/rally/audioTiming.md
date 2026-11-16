@@ -1,64 +1,64 @@
 # `gameplay_rally_audioTiming`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/audioTiming.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/audioTiming.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_audioTiming` : `extensions.load("gameplay_rally_audioTiming")`, puis la globale `gameplay_rally_audioTiming`
+**Access:** extension `gameplay_rally_audioTiming`: `extensions.load("gameplay_rally_audioTiming")`, then the global `gameplay_rally_audioTiming`
 
-Bornes et fonctions de limitation (clamp) des réglages d'espacement audio du copilote de rallye, en millisecondes : écart entre virages, entre phrases, entre mots de liaison et entre notes. Chaque fonction arrondit la valeur à l'entier et la ramène dans la plage autorisée. Utilisé par l'éditeur/les réglages et par gameplay_rally_audioManager.
+Bounds and clamp functions for the rally co-driver audio spacing settings, in milliseconds: gap between corners, between phrases, between link words and between notes. Each function rounds the value to an integer and clamps it to the allowed range. Used by the editor/settings and by gameplay_rally_audioManager.
 
-## Remarques
+## Notes
 
-- cornerGapMs, phraseGapMs et linkWordGapMs sont la MÊME table (min -200, max 200) : modifier l'une modifie les deux autres.
-- pacenoteGapMs : min -100, max 400.
-- Une valeur négative signifie un chevauchement des clips audio (déduit du nom du champ et de l'usage dans audioManager).
+- cornerGapMs, phraseGapMs and linkWordGapMs are the SAME table (min -200, max 200): changing one changes the other two.
+- pacenoteGapMs: min -100, max 400.
+- A negative value means the audio clips overlap (inferred from the field name and its usage in audioManager).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_audioTiming.clampCornerGapMs(value)` | Arrondit et limite un écart entre virages à cornerGapMs. | 27 |
-| `gameplay_rally_audioTiming.clampLinkWordGapMs(value)` | Arrondit et limite un écart de mot de liaison à linkWordGapMs. | 35 |
-| `gameplay_rally_audioTiming.clampPacenoteGapMs(value)` | Arrondit et limite un écart entre notes à pacenoteGapMs. | 39 |
-| `gameplay_rally_audioTiming.clampPhraseGapMs(value)` | Arrondit et limite un écart entre phrases à phraseGapMs. | 31 |
+| `gameplay_rally_audioTiming.clampCornerGapMs(value)` | Rounds and clamps a corner gap to cornerGapMs. | 27 |
+| `gameplay_rally_audioTiming.clampLinkWordGapMs(value)` | Rounds and clamps a link word gap to linkWordGapMs. | 35 |
+| `gameplay_rally_audioTiming.clampPacenoteGapMs(value)` | Rounds and clamps a note gap to pacenoteGapMs. | 39 |
+| `gameplay_rally_audioTiming.clampPhraseGapMs(value)` | Rounds and clamps a phrase gap to phraseGapMs. | 31 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rally_audioTiming.clampCornerGapMs(value)`
 
-Arrondit et limite un écart entre virages à cornerGapMs.
+Rounds and clamps a corner gap to cornerGapMs.
 
-- `value` (*number|string*) : Valeur en ms ; convertie par tonumber, 0 si invalide.
-- **renvoie** : integer Valeur bornée en ms.
+- `value` (*number|string*) : Value in ms; converted with tonumber, 0 if invalid.
+- **returns**: integer Clamped value in ms.
 
 #### `gameplay_rally_audioTiming.clampLinkWordGapMs(value)`
 
-Arrondit et limite un écart de mot de liaison à linkWordGapMs.
+Rounds and clamps a link word gap to linkWordGapMs.
 
-- `value` (*number|string*) : Valeur en ms.
-- **renvoie** : integer Valeur bornée en ms.
+- `value` (*number|string*) : Value in ms.
+- **returns**: integer Clamped value in ms.
 
 #### `gameplay_rally_audioTiming.clampPacenoteGapMs(value)`
 
-Arrondit et limite un écart entre notes à pacenoteGapMs.
+Rounds and clamps a note gap to pacenoteGapMs.
 
-- `value` (*number|string*) : Valeur en ms.
-- **renvoie** : integer Valeur bornée en ms.
+- `value` (*number|string*) : Value in ms.
+- **returns**: integer Clamped value in ms.
 
 #### `gameplay_rally_audioTiming.clampPhraseGapMs(value)`
 
-Arrondit et limite un écart entre phrases à phraseGapMs.
+Rounds and clamps a phrase gap to phraseGapMs.
 
-- `value` (*number|string*) : Valeur en ms.
-- **renvoie** : integer Valeur bornée en ms.
+- `value` (*number|string*) : Value in ms.
+- **returns**: integer Clamped value in ms.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `cornerGapMs` | table | Bornes {min=-200, max=200} de l'écart entre virages (ms). Table partagée avec phraseGapMs et linkWordGapMs. |
-| `linkWordGapMs` | table | Bornes {min=-200, max=200} de l'écart avec les mots de liaison (ms). |
-| `pacenoteGapMs` | table | Bornes {min=-100, max=400} de l'écart entre deux notes (ms). |
-| `phraseGapMs` | table | Bornes {min=-200, max=200} de l'écart entre phrases (ms). |
+| `cornerGapMs` | table | Bounds {min=-200, max=200} of the gap between corners (ms). Table shared with phraseGapMs and linkWordGapMs. |
+| `linkWordGapMs` | table | Bounds {min=-200, max=200} of the gap with link words (ms). |
+| `pacenoteGapMs` | table | Bounds {min=-100, max=400} of the gap between two notes (ms). |
+| `phraseGapMs` | table | Bounds {min=-200, max=200} of the gap between phrases (ms). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/audioTiming.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/audioTiming.lua`.*

@@ -1,21 +1,21 @@
 # `core_cameraModes_trackir`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/trackir.lua` · VM : Game Engine (GE) · 67 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/trackir.lua` · VM: Game Engine (GE) · 67 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/trackir")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/trackir")` (file under extensions/ but not a regular extension)
 
-Filtre global (runningOrder 0.5) qui applique le suivi de tête TrackIR : décale la position (nx, ny, nz * 0.00005) et tourne la caméra (yaw, pitch, roll * 0.01 degré). S'initialise via TrackIR.init()/start() ; sans TrackIR disponible, il ne fait rien. Désactivé pendant une session OpenXR. Renvoie un constructeur.
+Global filter (runningOrder 0.5) that applies TrackIR head tracking: shifts the position (nx, ny, nz * 0.00005) and rotates the camera (yaw, pitch, roll * 0.01 degree). Initializes via TrackIR.init()/start(); without TrackIR available, it does nothing. Disabled during an OpenXR session. Returns a constructor.
 
-## Classe `C`
+## Class `C`
 
-Filtre TrackIR. Champ working : vrai si TrackIR a pu démarrer.
+TrackIR filter. Field working: true if TrackIR could start.
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_trackir")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_trackir")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Marque le mode global/filtre/masqué et démarre TrackIR s'il est disponible. | 20 |
-| `C:update(data)` | Lit TrackIR.getData et applique translation et rotation à data.res. | 39 |
+| `C:init()` | Marks the mode as global/filter/hidden and starts TrackIR if available. | 20 |
+| `C:update(data)` | Reads TrackIR.getData and applies translation and rotation to data.res. | 39 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/trackir.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/trackir.lua`.*

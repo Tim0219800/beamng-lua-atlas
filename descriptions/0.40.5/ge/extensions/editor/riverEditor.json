@@ -1,29 +1,56 @@
 {
   "path": "lua/ge/extensions/editor/riverEditor.lua",
-  "module": "Mode d'édition « River » de l'éditeur de monde. Ce fichier est une fine enveloppe : il charge la logique générique de meshEditor.lua (via dofile), la configure avec type = \"River\" (preferencesName \"riverEditor\", niceName \"River\") et réexpose ses callbacks d'éditeur. Il enregistre le mode riverEditMode (icône create_river, action map \"RiverEditor\", classe éditée River) avec les raccourcis Alt + clic gauche (créer une rivière / ajouter un nœud), copier et coller les propriétés de la rivière.",
+  "module": "\"River\" edit mode of the world editor. This file is a thin wrapper: it loads the generic logic of meshEditor.lua (via dofile), configures it with type = \"River\" (preferencesName \"riverEditor\", niceName \"River\") and re-exposes its editor callbacks. It registers the riverEditMode mode (icon create_river, action map \"RiverEditor\", edited class River) with the shortcuts Alt + left click (create a river / add a node), copy and paste river properties.",
   "notes": [
-    "Presque tout le comportement vient de meshEditor.lua ; les champs exportés sont des alias directs vers meshEditor.xxx_ (nil si meshEditor ne les définit pas).",
-    "Le même schéma est probablement utilisé par les autres éditeurs de mesh (routes, etc.), mais seul River est configuré ici."
+    "Almost all the behavior comes from meshEditor.lua; the exported fields are direct aliases to meshEditor.xxx_ (nil if meshEditor does not define them).",
+    "The same pattern is probably used by the other mesh editors (roads, etc.), but only River is configured here."
   ],
   "fields": {
-    "onEditorGui": {"type": "function", "desc": "Alias de meshEditor.onEditorGui_ : dessine l'interface ImGui du mode."},
-    "onEditorInspectorHeaderGui": {"type": "function", "desc": "Alias de meshEditor.onEditorInspectorHeaderGui_ : en-tête personnalisé de l'inspecteur."},
-    "onEditorRegisterPreferences": {"type": "function", "desc": "Alias de meshEditor.onEditorRegisterPreferences_ : déclare les préférences de l'éditeur de rivière."},
-    "onEditorPreferenceValueChanged": {"type": "function", "desc": "Alias de meshEditor.onEditorPreferenceValueChanged_ : réagit au changement d'une préférence."},
-    "onEditorInspectorFieldChanged": {"type": "function", "desc": "Alias de meshEditor.onEditorInspectorFieldChanged_ : réagit à la modification d'un champ dans l'inspecteur."},
-    "onEditorAxisGizmoAligmentChanged": {"type": "function", "desc": "Alias de meshEditor.onEditorAxisGizmoAligmentChanged_ : changement d'alignement du gizmo d'axes (l'orthographe « Aligment » est celle du code)."},
-    "onEditorObjectSelectionChanged": {"type": "function", "desc": "Alias de meshEditor.onEditorObjectSelectionChanged_ : la sélection d'objets a changé."},
-    "deleteNodeAM": {"type": "function", "desc": "Alias de meshEditor.deleteNodeAM : suppression d'un nœud, destinée à l'action map."},
-    "selectAllNodes": {"type": "function", "desc": "Alias de meshEditor.selectAllNodes : sélectionne tous les nœuds de la rivière."}
+    "onEditorGui": {
+      "type": "function",
+      "desc": "Alias of meshEditor.onEditorGui_: draws the mode's ImGui interface."
+    },
+    "onEditorInspectorHeaderGui": {
+      "type": "function",
+      "desc": "Alias of meshEditor.onEditorInspectorHeaderGui_: custom inspector header."
+    },
+    "onEditorRegisterPreferences": {
+      "type": "function",
+      "desc": "Alias of meshEditor.onEditorRegisterPreferences_: declares the river editor's preferences."
+    },
+    "onEditorPreferenceValueChanged": {
+      "type": "function",
+      "desc": "Alias of meshEditor.onEditorPreferenceValueChanged_: reacts to a preference change."
+    },
+    "onEditorInspectorFieldChanged": {
+      "type": "function",
+      "desc": "Alias of meshEditor.onEditorInspectorFieldChanged_: reacts to a field modification in the inspector."
+    },
+    "onEditorAxisGizmoAligmentChanged": {
+      "type": "function",
+      "desc": "Alias of meshEditor.onEditorAxisGizmoAligmentChanged_: axis gizmo alignment change (the spelling \"Aligment\" is the code's)."
+    },
+    "onEditorObjectSelectionChanged": {
+      "type": "function",
+      "desc": "Alias of meshEditor.onEditorObjectSelectionChanged_: the object selection changed."
+    },
+    "deleteNodeAM": {
+      "type": "function",
+      "desc": "Alias of meshEditor.deleteNodeAM: node deletion, intended for the action map."
+    },
+    "selectAllNodes": {
+      "type": "function",
+      "desc": "Alias of meshEditor.selectAllNodes: selects all the river's nodes."
+    }
   },
   "functions": {
     "onEditorInitialized": {
-      "desc": "Hook appelé quand l'éditeur est initialisé. Crée editor.editModes.riverEditMode (onActivate, onUpdate, onToolbar, copier/coller, suppression, tout sélectionner, icône, auxShortcuts) et ajoute les raccourcis auxiliaires « Create river / Add node » (LMB + Alt), « Copy river properties » et « Paste river properties ».",
+      "desc": "Hook called when the editor is initialized. Creates editor.editModes.riverEditMode (onActivate, onUpdate, onToolbar, copy/paste, delete, select all, icon, auxShortcuts) and adds the auxiliary shortcuts \"Create river / Add node\" (LMB + Alt), \"Copy river properties\" and \"Paste river properties\".",
       "params": {},
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement de l'extension ; écrit seulement « initialized » dans le log (niveau D).",
+      "desc": "Hook called when the extension loads; only writes \"initialized\" to the log (level D).",
       "params": {},
       "internal": true
     }

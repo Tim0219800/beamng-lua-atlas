@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/layerTypes/fill.lua",
+  "module": "Type de calque « Fill » de l'outil Dynamic Decals : remplit tout le véhicule avec une couleur unie, utile comme base d'un design. Fournit la fenêtre « Add Fill Layer » (palette de couleur + couleur, OK appelle api.addFillLayer puis ajoute la couleur à l'historique), le bouton de barre d'outils (ordre 10), la GUI d'inspecteur du type fill et la page de documentation.",
+  "notes": [
+    "colorPaletteMapId : 0 = couleur propre du calque (fill_color) ; 1 = couleur du véhicule (vehicleObj.color) ; 2 = colorPalette0 ; 3 = colorPalette1. Pour les valeurs différentes de 0 le champ couleur est désactivé et l'aperçu montre la couleur de la palette du véhicule.",
+    "Le code lit getPlayerVehicle(0) sans vérifier qu'il n'est pas nil quand une palette est choisie.",
+    "Le réglage du blend mode du fill layer est commenté (« heavily WIP »)."
+  ],
+  "functions": {
+    "openAddLayerWindow": {
+      "desc": "Ouvre la fenêtre « Add Fill Layer ».",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "registerEditorPreferences": {
+      "desc": "Ne déclare aucune préférence (corps commenté).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : récupère les modules liés, enregistre la fenêtre d'ajout (360x140), le dessin de cette fenêtre, la GUI d'inspecteur du type fill, l'élément de barre d'outils « fill » et la page de documentation.",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

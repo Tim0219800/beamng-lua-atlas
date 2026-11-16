@@ -1,24 +1,24 @@
 # `flowgraph_nodes_vehicle_onCannonFired`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/onCannonFired.lua` · VM : Game Engine (GE) · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/onCannonFired.lua` · VM: Game Engine (GE) · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/onCannonFired")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/onCannonFired")` (file under extensions/ but not a regular extension)
 
-Nœud événement « on Cannon Fired » (catégorie `repeat_instant`). Émet une impulsion sur la sortie flux `cannonFired` quand le hook `onCannonFired` est reçu. Aucune entrée.
+Event node "on Cannon Fired" (category `repeat_instant`). Emits a pulse on the flow output `cannonFired` when the `onCannonFired` hook is received. No input.
 
-## Remarques
+## Notes
 
-- Le paramètre `id` du hook n'est pas exposé sur une sortie.
+- The hook's `id` parameter is not exposed on an output.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:onCannonFired(id)` | Hook appelé quand un canon tire ; lève le drapeau interne. `id` : identifiant du véhicule/objet (déduit du nom, non utilisé). | 35 |
-| `C:work(args)` | Met `cannonFired` à true pendant une frame si un tir a été signalé, sinon false. | 26 |
-| `C:workOnce()` | Met le drapeau interne `flag` à false. | 22 |
+| `C:onCannonFired(id)` | Hook called when a cannon fires; raises the internal flag. `id`: vehicle/object identifier (inferred from the name, unused). | 35 |
+| `C:work(args)` | Sets `cannonFired` to true for one frame if a shot was signaled, otherwise false. | 26 |
+| `C:workOnce()` | Sets the internal flag `flag` to false. | 22 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/onCannonFired.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/onCannonFired.lua`.*

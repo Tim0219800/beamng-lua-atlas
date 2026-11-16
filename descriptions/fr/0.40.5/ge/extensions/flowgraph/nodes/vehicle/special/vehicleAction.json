@@ -1,0 +1,72 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/special/vehicleAction.lua",
+  "module": "Nœud « Vehicle Action » (comportement `duration`, catégorie `repeat_p_duration`). Appelle une action du véhicule définie dans son `input_actions.json` (ou celles de `lua/ge/extensions/core/input/actions/vehicle.json` pour « allVehicles »). Pins d'entrée : `vehId`, `val` (VALUE), `inputFilter` et `angle` (cachés, 0), flux `down`, `change`, `up` pour simuler onDown/onChange/onUp. Les mots VALUE, FILTERTYPE et ANGLE de la commande sont remplacés par les pins.",
+  "notes": [
+    "Seules les actions de contexte `vlua` (ou sans contexte) sont proposées.",
+    "Pas de repli sur le véhicule joueur dans `work`.",
+    "`loadActions` trie avec `actions[a].order` : plante si une action n'a pas de champ `order`."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_onDeserialized": {
+          "desc": "Restaure modèle, type, nom et action.",
+          "internal": true,
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "Données sauvegardées du nœud."
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde modèle, type, nom et action.",
+          "internal": true,
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde à remplir."
+            }
+          }
+        },
+        "drawCustomProperties": {
+          "desc": "Sélecteur de véhicule et liste des actions disponibles.",
+          "internal": true
+        },
+        "formatCommand": {
+          "desc": "Remplace VALUE, FILTERTYPE et ANGLE dans la commande par les valeurs des pins.",
+          "internal": false,
+          "params": {
+            "cmd": {
+              "type": "string",
+              "desc": "Commande avec jetons VALUE, FILTERTYPE, ANGLE."
+            }
+          }
+        },
+        "init": {
+          "desc": "Constructeur ; aucune action sélectionnée.",
+          "internal": true
+        },
+        "loadActions": {
+          "desc": "Charge et met en cache les actions d'un modèle (`key`) depuis `file` (défaut `vehicles/<key>/input_actions.json`).",
+          "internal": false,
+          "params": {
+            "key": {
+              "type": "string",
+              "desc": "Clé du modèle de véhicule ou 'allVehicles'."
+            },
+            "file": {
+              "type": "string|nil",
+              "desc": "Fichier d'actions (défaut vehicles/<key>/input_actions.json)."
+            }
+          }
+        },
+        "work": {
+          "desc": "Envoie au véhicule `onDown`, `onChange`, `onUp` de l'action selon les pins de flux actifs.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

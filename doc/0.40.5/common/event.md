@@ -1,28 +1,28 @@
 # `event`
 
-*Fichier : `lua/common/event.lua` · VM : Commun (GE + véhicule) · 46 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/event.lua` · VM: Common (GE + vehicle) · 46 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("event")`
+**Access:** `require("event")`
 
-Petite classe d'événements (délégués) exposée comme global Event. On crée un objet avec Event.new(), on y abonne des fonctions avec add, et on les déclenche avec call ou en appelant l'objet directement.
+Small event class (delegates) exposed as the global Event. Create an object with Event.new(), subscribe functions with add, and trigger them with call or by calling the object directly.
 
-## Exemple
+## Example
 
 ```lua
 local ev = Event.new()
-local function cb(x) print('reçu', x) end
+local function cb(x) print('received', x) end
 ev:add(cb)
-ev(42)      -- ou ev:call(42)
+ev(42)      -- or ev:call(42)
 ev:remove(cb)
 ```
 
-## Remarques
+## Notes
 
-- Les abonnés sont stockés comme clés d'une table : l'ordre d'appel n'est pas garanti et ajouter deux fois la même fonction ne la compte qu'une fois.
-- add et remove lèvent error('Wrong parameter type: must be a function') si l'argument n'est pas une fonction.
-- Les fonctions sont des champs de la table globale Event (appel conseillé en notation ':').
+- Subscribers are stored as table keys: call order is not guaranteed and adding the same function twice counts it only once.
+- add and remove raise error('Wrong parameter type: must be a function') if the argument is not a function.
+- The functions are fields of the global Event table (':' notation recommended for calls).
 
-**Globales affectées :** `Event`
+**Globals assigned:** `Event`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/event.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/event.lua`.*

@@ -1,21 +1,100 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/events/customizedTriggerBox.lua",
-  "module": "Nœud flowgraph « Custom Trigger » (catégorie repeat_instant, événement). Crée une zone de déclenchement (boîte ou sphère/ellipsoïde) pendant l'exécution du projet. Pins d'entrée : position (vec3), rotation (quat), scale (number ou vec3), vehId (défaut : véhicule joueur). Sorties : enter et exit (impulsions), inside, outside, vehId. Le type de zone (Box/Sphere) se choisit dans l'éditeur.",
-  "notes": ["data.highPrecision : teste 4 points de la boîte englobante du véhicule (au lieu de sa seule position). data.debug : dessine la zone avec debugDrawer.", "Si le véhicule est introuvable, toutes les sorties passent à nil.", "Le trigger est recalculé quand position, rotation ou scale changent. Le type est sérialisé (triggerType).", "todo du code : à fusionner avec onBeamNGTrigger."],
+  "module": "Flowgraph node \"Custom Trigger\" (category repeat_instant, event). Creates a trigger zone (box or sphere/ellipsoid) while the project is running. Input pins: position (vec3), rotation (quat), scale (number or vec3), vehId (default: player vehicle). Outputs: enter and exit (pulses), inside, outside, vehId. The zone type (Box/Sphere) is chosen in the editor.",
+  "notes": [
+    "data.highPrecision: tests 4 points of the vehicle's bounding box (instead of its position alone). data.debug: draws the zone with debugDrawer.",
+    "If the vehicle cannot be found, all outputs are set to nil.",
+    "The trigger is recomputed when position, rotation or scale change. The type is serialized (triggerType).",
+    "Code todo: to be merged with onBeamNGTrigger."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise les drapeaux, triggerType = 'Box', data.highPrecision et data.debug à false.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "_executionStarted": {"desc": "Réinitialise les états dedans/dehors et marque le trigger à recalculer.", "internal": true},
-        "_executionStopped": {"desc": "Oublie la position, l'échelle et les points mémorisés.", "internal": true},
-        "checkIntersections": {"desc": "Teste si l'un des points du véhicule est dans la zone (containsOBB_point ou containsEllipsoid_Point) et met à jour enterFlag, exitFlag, vehInside."},
-        "work": {"desc": "Recalcule la zone si besoin, récupère les points du véhicule, appelle checkIntersections et remplit les pins de sortie.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}},
-        "drawAxisBox": {"desc": "Dessine une boîte colorée avec arêtes via debugDrawer (mode debug).", "params": {"corner": {"type": "vec3", "desc": "Coin de départ"}, "x": {"type": "vec3", "desc": "Vecteur de l'axe x"}, "y": {"type": "vec3", "desc": "Vecteur de l'axe y"}, "z": {"type": "vec3", "desc": "Vecteur de l'axe z"}, "clr": {"type": "table", "desc": "Couleur (color(...))"}}, "internal": true},
-        "drawCustomProperties": {"desc": "Éditeur : liste déroulante du type de trigger ; renvoie la raison du changement.", "internal": true},
-        "drawMiddle": {"desc": "Dessin du nœud dans l'éditeur.", "internal": true},
-        "_onSerialize": {"desc": "Sauvegarde triggerType dans res.", "params": {"res": {"type": "table", "desc": "Table de sérialisation"}}, "internal": true},
-        "_onDeserialized": {"desc": "Relit triggerType depuis res.", "params": {"res": {"type": "table", "desc": "Données sauvegardées"}}, "internal": true}
+        "init": {
+          "desc": "Initializes the flags, triggerType = 'Box', data.highPrecision and data.debug to false.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Resets the inside/outside states and marks the trigger for recomputation.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Forgets the stored position, scale and points.",
+          "internal": true
+        },
+        "checkIntersections": {
+          "desc": "Tests whether any of the vehicle's points is inside the zone (containsOBB_point or containsEllipsoid_Point) and updates enterFlag, exitFlag, vehInside."
+        },
+        "work": {
+          "desc": "Recomputes the zone if needed, gets the vehicle's points, calls checkIntersections and fills the output pins.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph arguments"
+            }
+          }
+        },
+        "drawAxisBox": {
+          "desc": "Draws a colored box with edges via debugDrawer (debug mode).",
+          "params": {
+            "corner": {
+              "type": "vec3",
+              "desc": "Starting corner"
+            },
+            "x": {
+              "type": "vec3",
+              "desc": "x-axis vector"
+            },
+            "y": {
+              "type": "vec3",
+              "desc": "y-axis vector"
+            },
+            "z": {
+              "type": "vec3",
+              "desc": "z-axis vector"
+            },
+            "clr": {
+              "type": "table",
+              "desc": "Color (color(...))"
+            }
+          },
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Editor: trigger type dropdown; returns the change reason.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Node drawing in the editor.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Saves triggerType in res.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Serialization table"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Rereads triggerType from res.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Saved data"
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

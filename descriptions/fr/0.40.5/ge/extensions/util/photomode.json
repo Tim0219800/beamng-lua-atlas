@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/util/photomode.lua",
+  "module": "Petit module du mode photo : liste les images PNG d'overlays disponibles dans ui/modules/photomode/ui-overlays (cadres, filigranes) que l'interface propose à l'utilisateur. Un moddeur peut y déposer ses propres PNG pour les rendre disponibles.",
+  "usage": "dump(extensions.util_photomode.getPhotomodeOverlays())",
+  "functions": {
+    "getPhotomodeOverlays": {
+      "desc": "Liste les fichiers *.png de ui/modules/photomode/ui-overlays (non récursif).",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Liste de tables {filename = chemin du PNG}"}],
+      "internal": false
+    }
+  }
+}

@@ -1,117 +1,117 @@
 # `flowgraph_manager`
 
-*Fichier : `lua/ge/extensions/flowgraph/manager.lua` · VM : Game Engine (GE) · 2333 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/manager.lua` · VM: Game Engine (GE) · 2333 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/manager")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/manager")` (file under extensions/ but not a regular extension)
 
-Classe 'manager' du flowgraph : un manager représente UN projet flowgraph (graphes, macros, variables, modules, historique, état d'exécution). Il est créé par core_flowgraphManager (self.fgMgr) et exposé à l'éditeur (fgEditor). Il crée les graphes (dont le graphe d'états), gère les macros et leurs instances, la sélection, copier-coller, annuler-refaire, la sérialisation du projet, et pilote l'exécution : setRunning planifie les graphes, démarre les états, diffuse les hooks (broadcastCall) et notifie les 16 modules (missionReplay, drift, vehicle, level, prefab, timer, button, action, camera, file, traffic, mission, foreach, thread, ui, aiRecording) triés par moduleOrder. Le module renvoie un constructeur : require('/lua/ge/extensions/flowgraph/manager')(parent).
+Flowgraph 'manager' class: a manager represents ONE flowgraph project (graphs, macros, variables, modules, history, execution state). It is created by core_flowgraphManager (self.fgMgr) and exposed to the editor (fgEditor). It creates the graphs (including the state graph), manages macros and their instances, selection, copy-paste, undo-redo, project serialization, and drives execution: setRunning plans the graphs, starts the states, broadcasts the hooks (broadcastCall) and notifies the 16 modules (missionReplay, drift, vehicle, level, prefab, timer, button, action, camera, file, traffic, mission, foreach, thread, ui, aiRecording) sorted by moduleOrder. The module returns a constructor: require('/lua/ge/extensions/flowgraph/manager')(parent).
 
-## Remarques
+## Notes
 
-- États d'exécution (runningState) : 'stopped', 'running', 'paused'. L'arrêt normal est différé en fin de frame (queueReset traité par resolveHooksAndReset) ; setRunning(false, true) arrête et détruit immédiatement.
-- Les ids de graphe et de nœud sont petits (getNextFreeGraphNodeId) ; les ids de pins et de liens descendent depuis 2^29 (getNextFreePinLinkId).
-- Les hooks des modules sont enregistrés via extProxy:submitEventSinks(getHooklist(), getDependencies()) ; getHooklist et getDependencies renvoient {} si le projet n'est pas en 'running'.
-- getRelativeAbsolutePath cherche d'abord à la racine, puis dans les dossiers layers de l'activité, ou sinon savedDir puis missionFolder.
-- Bug : checkDuplicateId utilise les variables non définies 'i', 'occupied' et 'node' (restes de getNextFreeGraphNodeId) : self.graphs[i] vaut toujours nil et la boucle suivante peut échouer ; la vérification est donc inopérante (elle n'est exécutée que si __safeIds, vrai par défaut).
-- Bug mineur : setPaused appelle extProxy:submitEventSinks(self:getHooklist()) sans la liste de dépendances.
-- Bug probable : findMacrosUsedInChildren lit graph.children, champ commenté dans graph.lua (jamais rempli).
-- createStateFromLibrary utilise 'oldIdMap' non défini (nil) lors de l'appel à graph:_onDeserialized.
+- Execution states (runningState): 'stopped', 'running', 'paused'. A normal stop is deferred to the end of the frame (queueReset handled by resolveHooksAndReset); setRunning(false, true) stops and destroys immediately.
+- Graph and node ids are small (getNextFreeGraphNodeId); pin and link ids count down from 2^29 (getNextFreePinLinkId).
+- The modules' hooks are registered via extProxy:submitEventSinks(getHooklist(), getDependencies()); getHooklist and getDependencies return {} if the project is not 'running'.
+- getRelativeAbsolutePath looks first at the root, then in the activity's layers folders, or otherwise savedDir then missionFolder.
+- Bug: checkDuplicateId uses the undefined variables 'i', 'occupied' and 'node' (leftovers from getNextFreeGraphNodeId): self.graphs[i] is always nil and the following loop can fail; the check is therefore ineffective (it only runs if __safeIds, true by default).
+- Minor bug: setPaused calls extProxy:submitEventSinks(self:getHooklist()) without the dependency list.
+- Probable bug: findMacrosUsedInChildren reads graph.children, a field commented out in graph.lua (never filled).
+- createStateFromLibrary uses the undefined 'oldIdMap' (nil) when calling graph:_onDeserialized.
 
-## Classe `C`
+## Class `C`
 
-Objet manager (un projet flowgraph).
+Manager object (a flowgraph project).
 
-Le module renvoie un constructeur : `local obj = require("flowgraph_manager")(options)`.
+The module returns a constructor: `local obj = require("flowgraph_manager")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:DrawTypeIcon(dataType, connected, alpha, typeIconSize, innercolor)` | Dessine l'icône d'un type de donnée (couleur du type, plein si connecté) dans l'éditeur. | 1030 |
-| `C:_executionStarted()` | Notifie graphes et modules du démarrage (ordre des modules par moduleOrder). | 2106 |
-| `C:_executionStopped()` | Appelé à l'arrêt : notifie graphes, variables et modules (executionStopped), retire le proxy d'extensions, décharge les extensions de extToUnload, remet steps et frameCount à 0. | 2132 |
-| `C:_onClear()` | Appelé à l'arrêt : notifie graphes, variables, modules (onClear) et états. | 2120 |
-| `C:_onDeserialized(data)` | Reconstruit le projet depuis des données sérialisées. | 1599 |
-| `C:_onSerialize()` | Sérialise tout le projet (graphes, macros, variables, métadonnées). | 1533 |
-| `C:allNodes()` | Itérateur sur tous les nœuds de tous les graphes : for node in mgr:allNodes() do ... end. | 2265 |
-| `C:attach(fgEditor)` | Attache l'éditeur (fgEditor) et met à jour la position des nœuds. | 16 |
-| `C:autoGraphNodeOffset()` | Définit ce décalage au plus grand id de graphe ou de nœud existant (graphes et macros). | 84 |
-| `C:blocksOnResetGameplay()` | Vrai si le projet tourne et qu'un de ses nœuds déclare blocksOnResetGameplay (résultat mis en cache jusqu'au prochain setRunning). | 2249 |
-| `C:broadcastCall(functionName, ...)` | Si le projet tourne, appelle la fonction de hook donnée sur le proxy d'extensions puis sur les états (donc sur les nœuds qui l'écoutent). | 2193 |
-| `C:broadcastCallReturn(functionName, ...)` | Comme broadcastCall, mais collecte les résultats des nœuds dans une table (passée comme premier argument aux hooks). | 2202 |
-| `C:checkCompileWarnings()` | Journalise une erreur si une section du graphe a plusieurs nœuds racines (couleurs de flux multiples). | 1989 |
-| `C:checkDuplicateId(id)` | Devait signaler un id déjà utilisé (voir notes : code défectueux). | 28 |
-| `C:clearGraph(graph)` | Vide un graphe (par défaut le courant) : supprime nœuds et liens de l'éditeur puis appelle graph:clear(). | 1504 |
-| `C:convertToMacro(graph)` | Transforme un graphe en macro : sa copie sérialisée devient un macro (self.macros) et le graphe d'origine devient une instance de ce macro. | 356 |
-| `C:copyGraph(oldGraph, newName, hidden)` | Copie un graphe par sérialisation puis désérialisation, en conservant macroID. | 342 |
-| `C:copyNodes()` | Copie les nœuds sélectionnés dans le presse-papier interne (copiedNodes). | 1193 |
-| `C:createGraph(name, hidden, forceId)` | Crée un graphe lié au manager ; s'il n'est pas hidden, il est ajouté à self.graphs. | 333 |
-| `C:createGraphAsState(name, isStateGraph)` | Crée un graphe et un nœud d'état (states/stateNode) dans le graphe courant qui le cible. | 257 |
-| `C:createGroupState(name)` | Crée un état de groupe (graphe d'états enfant du graphe courant) avec entrée et sortie 'success'. | 269 |
-| `C:createInstanceFromMacro(macro, node, forceId)` | Crée un graphe de type 'instance' depuis un macro et le lie éventuellement à un nœud integrated. | 691 |
-| `C:createMacroInstanceFromPath(path, node)` | Crée une instance de macro depuis un fichier (réutilise le macro déjà chargé s'il a le même macroPath). | 725 |
-| `C:createNewMacroNode(path)` | Crée un nœud macro/integrated dans le graphe courant, instancié depuis un fichier macro. | 684 |
-| `C:createStateFromLibrary(data)` | Crée un état depuis une donnée de bibliothèque (graph, node, minId, name). | 286 |
-| `C:createSubgraphFromMacroInstance()` | Crée un sous-graphe depuis l'instance de macro sélectionnée (via groupHelper). | 1849 |
-| `C:createSubgraphFromSelection()` | Groupe la sélection en sous-graphe (groupHelper:createGroupingFromSelection). | 1853 |
-| `C:creationWorkflow()` | Traite chaque frame la création de liens et de nœuds par glisser dans l'éditeur. | 891 |
-| `C:deleteGraph(graph)` | Supprime un graphe (graphes ou macros du manager) ; journalise une erreur s'il n'appartient pas au manager. | 784 |
-| `C:deleteGraphs()` | Supprime tous les graphes puis tous les macros. | 1517 |
-| `C:deleteSelection()` | Supprime les nœuds et liens sélectionnés du graphe courant (si l'édition est autorisée). | 1404 |
-| `C:deleteSelectionButton()` | Supprime la sélection puis ajoute une entrée d'historique 'Deleted Selection'. | 1396 |
-| `C:deletionWorkflow()` | Traite la suppression par l'éditeur (touche Suppr et sélection). | 1062 |
-| `C:destroy()` | Arrête le projet s'il tourne, détruit les états et le proxy d'extensions et marque le manager comme détruit. | 2162 |
-| `C:detached()` | Détache l'éditeur : vide la sélection. | 21 |
-| `C:dragDropSource(payloadType, data)` | Appelé par l'éditeur pour préparer la source d'un glisser-déposer. | 1169 |
-| `C:dragDropTarget(payloadType)` | Appelé par l'éditeur quand un objet est déposé : gère la cible du glisser-déposer. | 1158 |
-| `C:draw(dtReal, dtSim, dtRaw)` | Dessine le projet dans l'éditeur à chaque frame (ui). | 1423 |
-| `C:findDependencyMap(serializedMacros)` | Construit l'ordre de dépendance entre macros sérialisés. | 1797 |
-| `C:findIntegratedNode(graph)` | Trouve le nœud macro/integrated du graphe parent qui représente ce graphe. | 520 |
-| `C:findLinkIdFromHiddenLinkId(hiddenId)` | Renvoie l'id du lien dont hiddenId est donné, dans le graphe courant. | 1134 |
-| `C:findMacrosUsedInChildren(graph, list)` | Liste récursivement les macroID utilisés par les enfants (voir notes). | 1787 |
-| `C:getAvailableMacros()` | Liste les fichiers macros JSON du dossier /flowgraphEditor/macros/ (par nom, avec le champ path). | 1429 |
-| `C:getAvailableNodeTemplates()` | Renvoie les modèles de nœuds (liste et table de recherche par type) du jeu, plus les nœuds personnalisés du dossier customNodes/ du projet s'il est enregistré. | 1446 |
-| `C:getAvailableStateTemplates()` | Renvoie les modèles d'états de core_flowgraphManager. | 1442 |
-| `C:getCustomNodeTemplates()` | Charge les nœuds personnalisés (*Node.lua) depuis savedDir/customNodes/. | 1465 |
-| `C:getDependencies()` | Renvoie, triées, les extensions requises par les nœuds (hors macros) et les modules. Vide si le projet n'est pas en cours. | 1961 |
-| `C:getGraphByName(name)` | Renvoie le premier graphe portant ce nom. | 2177 |
-| `C:getGraphNodeOffset()` | Décalage d'ids utilisé lors de la désérialisation (défaut 0). | 80 |
-| `C:getHooklist()` | Renvoie la liste des cibles de hooks (le manager et une table de fonctions regroupant les hooks des modules, exécutés sous xpcall avec log d'erreur). Vide si le projet n'est pas en cours. | 1920 |
-| `C:getNextFreeGraphNodeId()` | Renvoie le prochain id libre pour un graphe ou un nœud (incrémental, vérifie graphes, macros et leurs nœuds). | 50 |
-| `C:getNextFreePinLinkId()` | Renvoie le prochain id libre pour pins et liens, en descendant depuis 2^29. | 101 |
-| `C:getNextUniqueIdentifier()` | Renvoie un id unique entre toutes les instances de l'éditeur (délègue à core_flowgraphManager). | 1529 |
-| `C:getRelativeAbsolutePath(p, disableLogEntryOnFail)` | Résout un ou plusieurs chemins relatifs à la racine, aux dossiers de couches de l'activité, à savedDir ou au dossier de mission et renvoie le premier fichier existant (FS:fileExists). Sinon renvoie le premier chemin candidat et false (avec un avertissement sauf si désactivé). | 2284 |
-| `C:goToHistory(index)` | Restaure un état de l'historique par index. | 1344 |
-| `C:hasNodeForHook(functionName)` | Vrai si le projet tourne et qu'un nœud ou un état écoute ce hook. | 2213 |
-| `C:historySnapshot(title)` | Enregistre un instantané sérialisé du projet dans l'historique (ignoré si l'édition est interdite, c'est-à-dire pendant l'exécution). | 1374 |
-| `C:init(parent)` | Crée un projet vide : graphe 'New State' avec un nœud events/onUpdate, graphe d'états, variableStorage, instances des 16 modules, historique (99 entrées max), proxy d'extensions (newExtensionProxy) enregistré dans core_flowgraphManager.runningProxies, groupHelper, et un premier instantané d'historique. | 126 |
-| `C:logEvent(name, type, description, meta)` | Ajoute un évènement au journal du projet (nom, type 'I'/'W'/'E', description, frame, heure) et compte les doublons par nom. Utile aux nœuds et modules pour tracer l'exécution. | 1898 |
-| `C:onClientEndMission()` | Hook de fin de mission : arrête immédiatement le projet si stopRunningOnClientEndMission est vrai. | 2277 |
-| `C:onDrag()` | Pendant un glisser-déposer. | 1147 |
-| `C:onDragEnded()` | Fin d'un glisser-déposer. | 1153 |
-| `C:onDragStarted()` | Début d'un glisser-déposer (dragging = true). | 1143 |
-| `C:onUpdate(dtReal, dtSim, dtRaw)` | Appelé à chaque frame : compte les frames, mémorise dtReal/dtSim/dtRaw, gère le mode pas-à-pas (steps) puis appelle onUpdate de chaque module. | 1882 |
-| `C:pasteNodes()` | Colle les nœuds copiés dans le graphe courant. | 1238 |
-| `C:queueForRestart()` | Demande un redémarrage du projet en fin de frame. | 2102 |
-| `C:redo()` | Passe à l'entrée suivante de l'historique. | 1364 |
-| `C:refreshIntegratedPins(node)` | Reconstruit les pins d'un nœud macro/integrated d'après son graphe cible en conservant liens et valeurs codées en dur. | 395 |
-| `C:resolveHooksAndReset()` | Appelé en fin de frame par core_flowgraphManager : exécute les arrêts (queueReset) et redémarrages (queueRestart) différés. | 1858 |
-| `C:resolveVariableChanges()` | Applique les changements de variables en attente du manager et de tous les graphes. | 2186 |
-| `C:saveMacro(macro, savedata)` | Écrit un macro (racine) dans un fichier JSON avec ses tags et met à jour macroPath des instances. | 608 |
-| `C:selectGraph(graph)` | Rend un graphe courant (affiche son onglet, mémorise l'instance récente, ouvre le macro si arrêté) et vide la sélection. | 303 |
-| `C:setPaused(paused)` | Met le projet en pause ou le reprend (sans effet si arrêté). | 2094 |
-| `C:setRunning(running, stopInstant)` | Démarre ou arrête le projet. Au démarrage : planifie les graphes racines, construit et démarre les états, notifie nœuds et modules (_executionStarted) et diffuse 'onExecutionStarted'. À l'arrêt : diffuse 'onRemoveNextFrame' et programme l'arrêt en fin de frame, ou l'immédiat si stopInstant. | 2027 |
-| `C:setupCreationWorkflow()` | Prépare la création de nœud ou de lien depuis l'éditeur (ui_flowgraph_editor). | 837 |
-| `C:setupStateGraph(empty)` | Crée le graphe d'états 'States' avec nœuds stateEntry et stateExit, et (sauf si empty) un stateNode vers le graphe principal. | 233 |
-| `C:undo()` | Revient à l'entrée précédente de l'historique. | 1354 |
-| `C:unselectAll()` | Vide la sélection de nœuds et de liens. | 1088 |
-| `C:updateEditorPosition(force)` | Met à jour la position éditeur de tous les nœuds des graphes et macros. | 1759 |
-| `C:updateEditorSelections()` | Met à jour les tables de nœuds et de liens sélectionnés à partir de la sélection côté C++. | 1100 |
-| `C:updateInstances(macro)` | Met à jour toutes les instances d'un macro modifié à partir de sa version sérialisée. | 551 |
-| `C:updateNodePositions()` | Relit la position éditeur de tous les nœuds des graphes. | 1776 |
-| `C:updateSubgraphs(graph)` | Remplace récursivement les graphes cibles des nœuds integrated par des copies de type 'instance'. | 537 |
+| `C:DrawTypeIcon(dataType, connected, alpha, typeIconSize, innercolor)` | Draws the icon of a data type (type color, filled if connected) in the editor. | 1030 |
+| `C:_executionStarted()` | Notifies graphs and modules of the start (module order by moduleOrder). | 2106 |
+| `C:_executionStopped()` | Called on stop: notifies graphs, variables and modules (executionStopped), removes the extension proxy, unloads the extensions in extToUnload, resets steps and frameCount to 0. | 2132 |
+| `C:_onClear()` | Called on stop: notifies graphs, variables, modules (onClear) and states. | 2120 |
+| `C:_onDeserialized(data)` | Rebuilds the project from serialized data. | 1599 |
+| `C:_onSerialize()` | Serializes the whole project (graphs, macros, variables, metadata). | 1533 |
+| `C:allNodes()` | Iterator over all nodes of all graphs: for node in mgr:allNodes() do ... end. | 2265 |
+| `C:attach(fgEditor)` | Attaches the editor (fgEditor) and updates the node positions. | 16 |
+| `C:autoGraphNodeOffset()` | Sets this offset to the largest existing graph or node id (graphs and macros). | 84 |
+| `C:blocksOnResetGameplay()` | True if the project is running and one of its nodes declares blocksOnResetGameplay (result cached until the next setRunning). | 2249 |
+| `C:broadcastCall(functionName, ...)` | If the project is running, calls the given hook function on the extension proxy then on the states (hence on the nodes that listen to it). | 2193 |
+| `C:broadcastCallReturn(functionName, ...)` | Like broadcastCall, but collects the nodes' results in a table (passed as the first argument to the hooks). | 2202 |
+| `C:checkCompileWarnings()` | Logs an error if a section of the graph has several root nodes (multiple flow colors). | 1989 |
+| `C:checkDuplicateId(id)` | Was meant to report an id already in use (see notes: faulty code). | 28 |
+| `C:clearGraph(graph)` | Clears a graph (the current one by default): removes nodes and links from the editor then calls graph:clear(). | 1504 |
+| `C:convertToMacro(graph)` | Turns a graph into a macro: its serialized copy becomes a macro (self.macros) and the original graph becomes an instance of that macro. | 356 |
+| `C:copyGraph(oldGraph, newName, hidden)` | Copies a graph by serialization then deserialization, keeping macroID. | 342 |
+| `C:copyNodes()` | Copies the selected nodes to the internal clipboard (copiedNodes). | 1193 |
+| `C:createGraph(name, hidden, forceId)` | Creates a graph linked to the manager; if it is not hidden, it is added to self.graphs. | 333 |
+| `C:createGraphAsState(name, isStateGraph)` | Creates a graph and a state node (states/stateNode) in the current graph that targets it. | 257 |
+| `C:createGroupState(name)` | Creates a group state (state graph child of the current graph) with entry and 'success' exit. | 269 |
+| `C:createInstanceFromMacro(macro, node, forceId)` | Creates a graph of type 'instance' from a macro and optionally links it to an integrated node. | 691 |
+| `C:createMacroInstanceFromPath(path, node)` | Creates a macro instance from a file (reuses the already loaded macro if it has the same macroPath). | 725 |
+| `C:createNewMacroNode(path)` | Creates a macro/integrated node in the current graph, instantiated from a macro file. | 684 |
+| `C:createStateFromLibrary(data)` | Creates a state from library data (graph, node, minId, name). | 286 |
+| `C:createSubgraphFromMacroInstance()` | Creates a subgraph from the selected macro instance (via groupHelper). | 1849 |
+| `C:createSubgraphFromSelection()` | Groups the selection into a subgraph (groupHelper:createGroupingFromSelection). | 1853 |
+| `C:creationWorkflow()` | Every frame, handles link and node creation by dragging in the editor. | 891 |
+| `C:deleteGraph(graph)` | Deletes a graph (manager graphs or macros); logs an error if it does not belong to the manager. | 784 |
+| `C:deleteGraphs()` | Deletes all graphs then all macros. | 1517 |
+| `C:deleteSelection()` | Deletes the selected nodes and links of the current graph (if editing is allowed). | 1404 |
+| `C:deleteSelectionButton()` | Deletes the selection then adds a 'Deleted Selection' history entry. | 1396 |
+| `C:deletionWorkflow()` | Handles deletion by the editor (Delete key and selection). | 1062 |
+| `C:destroy()` | Stops the project if it is running, destroys the states and the extension proxy and marks the manager as destroyed. | 2162 |
+| `C:detached()` | Detaches the editor: clears the selection. | 21 |
+| `C:dragDropSource(payloadType, data)` | Called by the editor to prepare the source of a drag-and-drop. | 1169 |
+| `C:dragDropTarget(payloadType)` | Called by the editor when an object is dropped: handles the drag-and-drop target. | 1158 |
+| `C:draw(dtReal, dtSim, dtRaw)` | Draws the project in the editor every frame (ui). | 1423 |
+| `C:findDependencyMap(serializedMacros)` | Builds the dependency order between serialized macros. | 1797 |
+| `C:findIntegratedNode(graph)` | Finds the macro/integrated node of the parent graph that represents this graph. | 520 |
+| `C:findLinkIdFromHiddenLinkId(hiddenId)` | Returns the id of the link with the given hiddenId, in the current graph. | 1134 |
+| `C:findMacrosUsedInChildren(graph, list)` | Recursively lists the macroIDs used by the children (see notes). | 1787 |
+| `C:getAvailableMacros()` | Lists the JSON macro files in the /flowgraphEditor/macros/ folder (by name, with the path field). | 1429 |
+| `C:getAvailableNodeTemplates()` | Returns the node templates (list and lookup table by type) of the game, plus the custom nodes from the project's customNodes/ folder if it is saved. | 1446 |
+| `C:getAvailableStateTemplates()` | Returns the state templates from core_flowgraphManager. | 1442 |
+| `C:getCustomNodeTemplates()` | Loads the custom nodes (*Node.lua) from savedDir/customNodes/. | 1465 |
+| `C:getDependencies()` | Returns, sorted, the extensions required by the nodes (excluding macros) and the modules. Empty if the project is not running. | 1961 |
+| `C:getGraphByName(name)` | Returns the first graph with this name. | 2177 |
+| `C:getGraphNodeOffset()` | Id offset used during deserialization (default 0). | 80 |
+| `C:getHooklist()` | Returns the list of hook targets (the manager and a table of functions grouping the modules' hooks, run under xpcall with error logging). Empty if the project is not running. | 1920 |
+| `C:getNextFreeGraphNodeId()` | Returns the next free id for a graph or a node (incremental, checks graphs, macros and their nodes). | 50 |
+| `C:getNextFreePinLinkId()` | Returns the next free id for pins and links, counting down from 2^29. | 101 |
+| `C:getNextUniqueIdentifier()` | Returns an id that is unique across all editor instances (delegates to core_flowgraphManager). | 1529 |
+| `C:getRelativeAbsolutePath(p, disableLogEntryOnFail)` | Resolves one or more paths relative to the root, the activity's layer folders, savedDir or the mission folder and returns the first existing file (FS:fileExists). Otherwise returns the first candidate path and false (with a warning unless disabled). | 2284 |
+| `C:goToHistory(index)` | Restores a history state by index. | 1344 |
+| `C:hasNodeForHook(functionName)` | True if the project is running and a node or state listens to this hook. | 2213 |
+| `C:historySnapshot(title)` | Records a serialized snapshot of the project in the history (ignored if editing is forbidden, i.e. during execution). | 1374 |
+| `C:init(parent)` | Creates an empty project: 'New State' graph with an events/onUpdate node, state graph, variableStorage, instances of the 16 modules, history (99 entries max), extension proxy (newExtensionProxy) registered in core_flowgraphManager.runningProxies, groupHelper, and a first history snapshot. | 126 |
+| `C:logEvent(name, type, description, meta)` | Adds an event to the project log (name, type 'I'/'W'/'E', description, frame, time) and counts duplicates by name. Useful for nodes and modules to trace execution. | 1898 |
+| `C:onClientEndMission()` | End-of-mission hook: immediately stops the project if stopRunningOnClientEndMission is true. | 2277 |
+| `C:onDrag()` | During a drag-and-drop. | 1147 |
+| `C:onDragEnded()` | End of a drag-and-drop. | 1153 |
+| `C:onDragStarted()` | Start of a drag-and-drop (dragging = true). | 1143 |
+| `C:onUpdate(dtReal, dtSim, dtRaw)` | Called every frame: counts frames, stores dtReal/dtSim/dtRaw, handles step-by-step mode (steps) then calls onUpdate of each module. | 1882 |
+| `C:pasteNodes()` | Pastes the copied nodes into the current graph. | 1238 |
+| `C:queueForRestart()` | Requests a project restart at the end of the frame. | 2102 |
+| `C:redo()` | Moves to the next history entry. | 1364 |
+| `C:refreshIntegratedPins(node)` | Rebuilds the pins of a macro/integrated node from its target graph while keeping links and hardcoded values. | 395 |
+| `C:resolveHooksAndReset()` | Called at the end of the frame by core_flowgraphManager: executes the deferred stops (queueReset) and restarts (queueRestart). | 1858 |
+| `C:resolveVariableChanges()` | Applies the pending variable changes of the manager and of all graphs. | 2186 |
+| `C:saveMacro(macro, savedata)` | Writes a macro (root) to a JSON file with its tags and updates macroPath of the instances. | 608 |
+| `C:selectGraph(graph)` | Makes a graph current (shows its tab, remembers the recent instance, opens the macro if stopped) and clears the selection. | 303 |
+| `C:setPaused(paused)` | Pauses or resumes the project (no effect if stopped). | 2094 |
+| `C:setRunning(running, stopInstant)` | Starts or stops the project. On start: plans the root graphs, builds and starts the states, notifies nodes and modules (_executionStarted) and broadcasts 'onExecutionStarted'. On stop: broadcasts 'onRemoveNextFrame' and schedules the stop at the end of the frame, or immediately if stopInstant. | 2027 |
+| `C:setupCreationWorkflow()` | Prepares node or link creation from the editor (ui_flowgraph_editor). | 837 |
+| `C:setupStateGraph(empty)` | Creates the 'States' state graph with stateEntry and stateExit nodes, and (unless empty) a stateNode toward the main graph. | 233 |
+| `C:undo()` | Goes back to the previous history entry. | 1354 |
+| `C:unselectAll()` | Clears the node and link selection. | 1088 |
+| `C:updateEditorPosition(force)` | Updates the editor position of all nodes in the graphs and macros. | 1759 |
+| `C:updateEditorSelections()` | Updates the selected node and link tables from the C++-side selection. | 1100 |
+| `C:updateInstances(macro)` | Updates all instances of a modified macro from its serialized version. | 551 |
+| `C:updateNodePositions()` | Re-reads the editor position of all nodes in the graphs. | 1776 |
+| `C:updateSubgraphs(graph)` | Recursively replaces the target graphs of integrated nodes with copies of type 'instance'. | 537 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/manager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/manager.lua`.*

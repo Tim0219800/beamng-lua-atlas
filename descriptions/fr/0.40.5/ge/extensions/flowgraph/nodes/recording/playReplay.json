@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/recording/playReplay.lua",
+  "module": "Noeud flowgraph 'Play Replay' (categorie repeat_instant). Sur l'impulsion 'play', charge et lance un replay avec core_replay.loadFile. Le chemin est resolu relativement au projet flowgraph via mgr:getRelativeAbsolutePath({filename}).",
+  "notes": [
+    "La description du pin 'filename' ('The prefix for the generated filename') est copiee du noeud Record Replay : ici c'est le nom du fichier a lire."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "work": {
+          "desc": "Si 'play' est actif et que le chemin existe, appelle core_replay.loadFile(chemin).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

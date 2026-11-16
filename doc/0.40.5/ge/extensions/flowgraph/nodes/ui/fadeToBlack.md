@@ -1,29 +1,29 @@
 # `flowgraph_nodes_ui_fadeToBlack`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/fadeToBlack.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/fadeToBlack.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/fadeToBlack")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/fadeToBlack")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Fade To Black » (catégorie once_f_duration) : fait passer l'écran au noir. Entrée « duration » (0.75 s). Sortie de durée par setDurationState (flow « complete », ancien nom « done »). Passe directement à 'finished' si l'écran est déjà noir (ui_fadeScreen.isBlack).
+Flowgraph node "Fade To Black" (category once_f_duration): fades the screen to black. Input "duration" (0.75 s). Duration output via setDurationState (flow "complete", former name "done"). Goes directly to 'finished' if the screen is already black (ui_fadeScreen.isBlack).
 
-## Remarques
+## Notes
 
-- Met self.mgr.modules.ui.isFadeScreenActive = true pour que Fade From Black sache qu'un fondu est actif.
+- Sets self.mgr.modules.ui.isFadeScreenActive = true so that Fade From Black knows a fade is active.
 
-**Dépendances (chargées avant) :** `ui_fadeScreen`, `gameplay_missions_missionManager`
+**Dependencies (loaded first):** `ui_fadeScreen`, `gameplay_missions_missionManager`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Remet l'état 'inactive' et isFadeScreenActive = false. | 38 |
-| `C:init()` | État de durée 'inactive'. | 28 |
-| `C:onNodeReset()` | Remet l'état 'inactive'. | 44 |
-| `C:onScreenFadeState(state)` | Hook : état 1 (noir atteint) -> terminé. | 58 |
-| `C:postInit()` | Modèle de durée à 0.75. | 32 |
-| `C:workOnce()` | Lance ui_fadeScreen.fadeToBlack (sauf si déjà noir). | 48 |
+| `C:_executionStopped()` | Resets the 'inactive' state and isFadeScreenActive = false. | 38 |
+| `C:init()` | Duration state 'inactive'. | 28 |
+| `C:onNodeReset()` | Resets the 'inactive' state. | 44 |
+| `C:onScreenFadeState(state)` | Hook: state 1 (black reached) -> finished. | 58 |
+| `C:postInit()` | Duration template at 0.75. | 32 |
+| `C:workOnce()` | Starts ui_fadeScreen.fadeToBlack (unless already black). | 48 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/fadeToBlack.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/fadeToBlack.lua`.*

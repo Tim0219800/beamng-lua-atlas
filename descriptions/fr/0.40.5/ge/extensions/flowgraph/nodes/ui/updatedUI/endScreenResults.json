@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenResults.lua",
+  "module": "Nœud « EndScreen Results » (repeat_instant, couleur ui). Ajoute à l'écran de fin le panneau de résultats de la mission : texte formaté de la tentative (change.formattedAttempt), sous-texte optionnel, puis éventuellement objectifs et notes. Entrées : flow, text (string ou table), change (table de l'agrégat de tentative), includeObjectives, includeRatings (bool). Sortie : flow (chainFlow).",
+  "notes": [
+    "Si includeObjectives ou includeRatings est vrai alors que change est nil, addObjectives/addRatings reçoivent nil."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Ne fait rien.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Recopie flow. Ajoute un textPanel (en-tête « ui.missions.results.title » une seule fois) pour change.formattedAttempt et/ou pour text, puis appelle modules.ui:addObjectives / addRatings avec change si les options sont cochées.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,229 +1,604 @@
 {
   "path": "lua/ge/extensions/freeroam/freeroamConfigurator.lua",
-  "module": "Configurateur de la partie freeroam (assistant « Wizard » de l'UI) : mémorise le niveau, le point de départ, le véhicule (modèle, config, peintures) et les options de partie (heure, date, trafic…) ; les persiste dans `settings/freeroamConfigurator.json` ; fournit à l'UI les tuiles de sélection (point de départ, véhicule), les boutons de démarrage et les données des routes du wizard (recherche/filtres par étape, instantanés de sélecteur, chargements asynchrones) ; puis lance la partie via freeroam_freeroam.startFreeroamByName. Les options viennent d'autres extensions via le hook onFreeroamConfiguratorGetOptions : toutes les extensions `lua/ge/extensions/freeroam/configuratorOptions/*.lua` (nom `freeroam_configuratorOptions_<fichier>`) sont ajoutées aux dépendances. Global : freeroam_freeroamConfigurator.",
-  "usage": "-- depuis l'UI (ou un autre module) :\nfreeroam_freeroamConfigurator.setSpawnPoint('west_coast_usa', 'spawns_industrial')\nfreeroam_freeroamConfigurator.setVehicle('pickup', 'd15_4wd_A', {paint = 'Sea Blue'})\nfreeroam_freeroamConfigurator.updateOption('traffic_trafficMode', 'enabled')\nfreeroam_freeroamConfigurator.startFreeroam(configuration)",
+  "module": "Freeroam game configurator (the UI \"Wizard\" assistant): stores the level, spawn point, vehicle (model, config, paints) and game options (time, date, traffic...); persists them in `settings/freeroamConfigurator.json`; provides the UI with the selection tiles (spawn point, vehicle), the start buttons and the wizard route data (per-step search/filters, selector snapshots, asynchronous loads); then launches the game via freeroam_freeroam.startFreeroamByName. The options come from other extensions via the onFreeroamConfiguratorGetOptions hook: all the `lua/ge/extensions/freeroam/configuratorOptions/*.lua` extensions (name `freeroam_configuratorOptions_<file>`) are added to the dependencies. Global: freeroam_freeroamConfigurator.",
+  "usage": "-- from the UI (or another module):\nfreeroam_freeroamConfigurator.setSpawnPoint('west_coast_usa', 'spawns_industrial')\nfreeroam_freeroamConfigurator.setVehicle('pickup', 'd15_4wd_A', {paint = 'Sea Blue'})\nfreeroam_freeroamConfigurator.updateOption('traffic_trafficMode', 'enabled')\nfreeroam_freeroamConfigurator.startFreeroam(configuration)",
   "notes": [
-    "Valeurs par défaut : niveau west_coast_usa, point de départ spawns_industrial ; véhicule pickup/d15_4wd_A (peinture Sea Blue) ou, si la licence est valide (extensions.license.isValid()), etk800/854_190d_A (Mineral Green) ; options par défaut environment_timeOfDay='default', environment_date (défaut du niveau via freeroam_configuratorOptions_freeroamOptions, sinon le 20/06/2026 midi), environment_timePlay='disabled', traffic_trafficMode='disabled'.",
-    "Le fichier de configuration est versionné (version 1) : une version différente est ignorée. Les tuiles en cache ne sont rechargées que si la langue sauvegardée (_language) est la langue courante ; onLanguageChanged vide les tuiles. La configuration n'est écrite que si elle est « sale » (_dirty) : au triggerButton et à onSerialize.",
-    "Hooks émis : onFreeroamConfiguratorGetOptions(level, options) (les extensions ajoutent des groupes d'options {key, order, options[]…}), onFreeroamConfiguratorApplyOptions(options) (avant démarrage) et onFreeroamConfiguratorOverrideStartButton(buttonModule, configuration) (pour remplacer/ajouter un bouton ; le bouton de plus haute priorité est renvoyé). Événement UI émis : FreeroamSelectorDataLoaded.",
-    "Étapes du wizard : « level » (sélecteur freeroamSelector, chemin par défaut {keys={'allFreeroam'}}) et « vehicle » (sélecteur vehicleSelector, chemin par défaut {keys={'allModels'}}).",
-    "startFreeroam passe `{model, options}` (options = config + peintures résolues depuis les paints du modèle) en 4e argument (spawnVehicle) de freeroam_freeroam.startFreeroamByName ; trackRecent est appelé pour les récents ; le passage à l'écran « play » se fait dans onLoadingScreenFadeout.",
-    "doubleClickOverride ne fait que dump(item) (reste de debug).",
-    "Fichier volumineux (près de 2000 lignes) : l'essentiel de la logique interne (résolution des points de départ/configs de repli, construction des tuiles et des instantanés du wizard, routes de détail) est local et non exporté ; seules les fonctions M.* sont documentées ici."
+    "Defaults: level west_coast_usa, spawn point spawns_industrial; vehicle pickup/d15_4wd_A (paint Sea Blue) or, if the license is valid (extensions.license.isValid()), etk800/854_190d_A (Mineral Green); default options environment_timeOfDay='default', environment_date (level default via freeroam_configuratorOptions_freeroamOptions, otherwise 06/20/2026 noon), environment_timePlay='disabled', traffic_trafficMode='disabled'.",
+    "The configuration file is versioned (version 1): a different version is ignored. Cached tiles are only reloaded if the saved language (_language) is the current language; onLanguageChanged empties the tiles. The configuration is only written if it is \"dirty\" (_dirty): in triggerButton and in onSerialize.",
+    "Emitted hooks: onFreeroamConfiguratorGetOptions(level, options) (extensions add option groups {key, order, options[]...}), onFreeroamConfiguratorApplyOptions(options) (before start) and onFreeroamConfiguratorOverrideStartButton(buttonModule, configuration) (to replace/add a button; the highest-priority button is returned). Emitted UI event: FreeroamSelectorDataLoaded.",
+    "Wizard steps: \"level\" (freeroamSelector selector, default path {keys={'allFreeroam'}}) and \"vehicle\" (vehicleSelector selector, default path {keys={'allModels'}}).",
+    "startFreeroam passes `{model, options}` (options = config + paints resolved from the model's paints) as the 4th argument (spawnVehicle) of freeroam_freeroam.startFreeroamByName; trackRecent is called for the recents; the switch to the \"play\" screen is done in onLoadingScreenFadeout.",
+    "doubleClickOverride only does dump(item) (debug leftover).",
+    "Large file (nearly 2000 lines): most of the internal logic (resolving spawn points/fallback configs, building the wizard's tiles and snapshots, detail routes) is local and not exported; only the M.* functions are documented here."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Noms d'extensions freeroam_configuratorOptions_* découverts dynamiquement dans lua/ge/extensions/freeroam/configuratorOptions/."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "freeroam_configuratorOptions_* extension names discovered dynamically in lua/ge/extensions/freeroam/configuratorOptions/."
+    }
   },
   "functions": {
     "getConfiguration": {
-      "desc": "Renvoie à l'UI la configuration : options (groupes collectés par le hook onFreeroamConfiguratorGetOptions, triés par `order`, valeurs remplies depuis la configuration courante ou leur valeur par défaut), currentSpawnPoint (tuile) et currentVehicle (tuile). Charge le fichier de configuration au premier appel.",
+      "desc": "Returns the configuration to the UI: options (groups collected by the onFreeroamConfiguratorGetOptions hook, sorted by `order`, values filled from the current configuration or their default value), currentSpawnPoint (tile) and currentVehicle (tile). Loads the configuration file on the first call.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{options, currentSpawnPoint, currentVehicle}"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{options, currentSpawnPoint, currentVehicle}"
+        }
+      ],
       "internal": false
     },
     "getButtons": {
-      "desc": "Construit le bouton de démarrage (« Start freeroam », priorité 1), laisse les extensions le surcharger (onFreeroamConfiguratorOverrideStartButton) et renvoie celui de plus haute priorité.",
+      "desc": "Builds the start button (\"Start freeroam\", priority 1), lets the extensions override it (onFreeroamConfiguratorOverrideStartButton) and returns the highest-priority one.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Infos du bouton."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Button info."
+        }
+      ],
       "internal": false
     },
     "triggerButton": {
-      "desc": "Exécute un bouton : sauvegarde la configuration si modifiée, notifie onFreeroamConfiguratorApplyOptions puis déclenche le bouton.",
-      "params": {"buttonId": {"type": "any", "desc": "Id du bouton (déduit du code : buttonModule.executeButton)."}, "...": {"type": "any", "desc": "Arguments supplémentaires (non utilisés ici)."}},
+      "desc": "Runs a button: saves the configuration if modified, notifies onFreeroamConfiguratorApplyOptions then triggers the button.",
+      "params": {
+        "buttonId": {
+          "type": "any",
+          "desc": "Button id (inferred from code: buttonModule.executeButton)."
+        },
+        "...": {
+          "type": "any",
+          "desc": "Extra arguments (not used here)."
+        }
+      },
       "internal": false
     },
     "doubleClickOverride": {
-      "desc": "Gestionnaire de double-clic : fait seulement dump(item).",
-      "params": {"item": {"type": "any", "desc": "Élément cliqué."}},
+      "desc": "Double-click handler: only does dump(item).",
+      "params": {
+        "item": {
+          "type": "any",
+          "desc": "Clicked item."
+        }
+      },
       "internal": false
     },
     "updateOption": {
-      "desc": "Enregistre la valeur d'une option de partie et marque la configuration comme modifiée.",
-      "params": {"key": {"type": "string", "desc": "Clé de l'option (ex. traffic_trafficMode)."}, "value": {"type": "any", "desc": "Valeur."}},
+      "desc": "Stores a game option's value and marks the configuration as modified.",
+      "params": {
+        "key": {
+          "type": "string",
+          "desc": "Option key (e.g. traffic_trafficMode)."
+        },
+        "value": {
+          "type": "any",
+          "desc": "Value."
+        }
+      },
       "internal": false
     },
     "getCurrentSelectionRecentTile": {
-      "desc": "Tuile « récent » de la sélection courante pour l'étape donnée.",
-      "params": {"step": {"type": "string", "desc": "'level' ou 'vehicle'."}},
-      "returns": [{"type": "table|nil", "desc": "Tuile."}],
+      "desc": "\"Recent\" tile of the current selection for the given step.",
+      "params": {
+        "step": {
+          "type": "string",
+          "desc": "'level' or 'vehicle'."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Tile."
+        }
+      ],
       "internal": false
     },
     "isCurrentSelection": {
-      "desc": "Indique si les détails correspondent à la sélection courante (level : levelName + spawnPointObjectName ; vehicle : model + config).",
-      "params": {"step": {"type": "string", "desc": "'level' ou 'vehicle'."}, "details": {"type": "table", "desc": "Détails de la tuile."}},
-      "returns": [{"type": "boolean", "desc": "Vrai si identique."}],
+      "desc": "Tells whether the details match the current selection (level: levelName + spawnPointObjectName; vehicle: model + config).",
+      "params": {
+        "step": {
+          "type": "string",
+          "desc": "'level' or 'vehicle'."
+        },
+        "details": {
+          "type": "table",
+          "desc": "Tile details."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if identical."
+        }
+      ],
       "internal": false
     },
     "setWizardSearchForStep": {
-      "desc": "Mémorise le texte de recherche d'une étape (normalisé).",
-      "params": {"step": {"type": "string", "desc": "'level' ou 'vehicle'."}, "searchText": {"type": "string", "desc": "Texte."}},
-      "returns": [{"type": "boolean", "desc": "false si étape non supportée."}],
+      "desc": "Stores a step's search text (normalized).",
+      "params": {
+        "step": {
+          "type": "string",
+          "desc": "'level' or 'vehicle'."
+        },
+        "searchText": {
+          "type": "string",
+          "desc": "Text."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the step is not supported."
+        }
+      ],
       "internal": false
     },
     "getWizardSearchForStep": {
-      "desc": "Lit le texte de recherche mémorisé.",
-      "params": {"step": {"type": "string", "desc": "Étape."}},
-      "returns": [{"type": "string|nil", "desc": "Texte, nil si étape non supportée."}],
+      "desc": "Reads the stored search text.",
+      "params": {
+        "step": {
+          "type": "string",
+          "desc": "Step."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Text, nil if the step is not supported."
+        }
+      ],
       "internal": false
     },
     "clearWizardSearchForStep": {
-      "desc": "Vide la recherche de l'étape.",
-      "params": {"step": {"type": "string", "desc": "Étape."}},
-      "returns": [{"type": "boolean", "desc": "Succès."}],
+      "desc": "Clears the step's search.",
+      "params": {
+        "step": {
+          "type": "string",
+          "desc": "Step."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Success."
+        }
+      ],
       "internal": false
     },
     "setWizardFiltersForStep": {
-      "desc": "Mémorise les filtres d'une étape (charge normalisée).",
-      "params": {"step": {"type": "string", "desc": "Étape."}, "filtersPayload": {"type": "table", "desc": "Filtres."}},
-      "returns": [{"type": "boolean", "desc": "Succès."}],
+      "desc": "Stores a step's filters (normalized payload).",
+      "params": {
+        "step": {
+          "type": "string",
+          "desc": "Step."
+        },
+        "filtersPayload": {
+          "type": "table",
+          "desc": "Filters."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Success."
+        }
+      ],
       "internal": false
     },
     "getWizardFiltersForStep": {
-      "desc": "Renvoie une copie des filtres mémorisés d'une étape.",
-      "params": {"step": {"type": "string", "desc": "Étape."}},
-      "returns": [{"type": "table|nil", "desc": "Filtres."}],
+      "desc": "Returns a copy of a step's stored filters.",
+      "params": {
+        "step": {
+          "type": "string",
+          "desc": "Step."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Filters."
+        }
+      ],
       "internal": false
     },
     "clearWizardFiltersForStep": {
-      "desc": "Efface les filtres d'une étape.",
-      "params": {"step": {"type": "string", "desc": "Étape."}},
-      "returns": [{"type": "boolean", "desc": "Succès."}],
+      "desc": "Clears a step's filters.",
+      "params": {
+        "step": {
+          "type": "string",
+          "desc": "Step."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Success."
+        }
+      ],
       "internal": false
     },
     "onWizardLevelsRouteEnter": {
-      "desc": "Hook d'entrée sur la route des niveaux du wizard : prépare les données de route (chemin de niveau par défaut).",
-      "params": {"context": {"type": "any", "desc": "Contexte du routeur."}, "toRoute": {"type": "table", "desc": "Route cible."}, "fromRoute": {"type": "table", "desc": "Route d'origine."}, "data": {"type": "table", "desc": "Données de route à compléter."}},
+      "desc": "Entry hook on the wizard's levels route: prepares the route data (default level path).",
+      "params": {
+        "context": {
+          "type": "any",
+          "desc": "Router context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route."
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Route data to complete."
+        }
+      },
       "internal": true
     },
     "onWizardVehiclesRouteEnter": {
-      "desc": "Idem pour la route des véhicules.",
-      "params": {"context": {"type": "any", "desc": "Contexte."}, "toRoute": {"type": "table", "desc": "Route cible."}, "fromRoute": {"type": "table", "desc": "Route d'origine."}, "data": {"type": "table", "desc": "Données."}},
+      "desc": "Same for the vehicles route.",
+      "params": {
+        "context": {
+          "type": "any",
+          "desc": "Context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route."
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Data."
+        }
+      },
       "internal": true
     },
     "onWizardLevelDetailRouteEnter": {
-      "desc": "Idem pour la route de détail d'un niveau (points de départ du niveau).",
-      "params": {"context": {"type": "any", "desc": "Contexte."}, "toRoute": {"type": "table", "desc": "Route cible."}, "fromRoute": {"type": "table", "desc": "Route d'origine."}, "data": {"type": "table", "desc": "Données."}},
+      "desc": "Same for a level's detail route (the level's spawn points).",
+      "params": {
+        "context": {
+          "type": "any",
+          "desc": "Context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route."
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Data."
+        }
+      },
       "internal": true
     },
     "onWizardVehicleDetailRouteEnter": {
-      "desc": "Idem pour la route de détail d'un véhicule (configs d'un modèle).",
-      "params": {"context": {"type": "any", "desc": "Contexte."}, "toRoute": {"type": "table", "desc": "Route cible."}, "fromRoute": {"type": "table", "desc": "Route d'origine."}, "data": {"type": "table", "desc": "Données."}},
+      "desc": "Same for a vehicle's detail route (a model's configs).",
+      "params": {
+        "context": {
+          "type": "any",
+          "desc": "Context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route."
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Data."
+        }
+      },
       "internal": true
     },
     "onWizardRouteEnter": {
-      "desc": "Hook générique d'entrée sur une route du wizard.",
-      "params": {"context": {"type": "any", "desc": "Contexte."}, "toRoute": {"type": "table", "desc": "Route cible."}, "fromRoute": {"type": "table", "desc": "Route d'origine."}, "data": {"type": "table", "desc": "Données."}},
+      "desc": "Generic entry hook on a wizard route.",
+      "params": {
+        "context": {
+          "type": "any",
+          "desc": "Context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route."
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Data."
+        }
+      },
       "internal": true
     },
     "onWizardLevelsRouteMount": {
-      "desc": "Hook de montage de la route des niveaux : prépare les données et attache ou diffère l'instantané du sélecteur (chargement asynchrone si la liste n'est pas chargée).",
-      "params": {"context": {"type": "any", "desc": "Contexte."}, "toRoute": {"type": "table", "desc": "Route."}, "fromRoute": {"type": "table", "desc": "Route d'origine."}, "data": {"type": "table", "desc": "Données."}},
+      "desc": "Mount hook of the levels route: prepares the data and attaches or defers the selector snapshot (asynchronous load if the list is not loaded).",
+      "params": {
+        "context": {
+          "type": "any",
+          "desc": "Context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Road."
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Data."
+        }
+      },
       "internal": true
     },
     "onWizardLevelDetailRouteMount": {
-      "desc": "Idem pour le détail d'un niveau.",
-      "params": {"context": {"type": "any", "desc": "Contexte."}, "toRoute": {"type": "table", "desc": "Route."}, "fromRoute": {"type": "table", "desc": "Route d'origine."}, "data": {"type": "table", "desc": "Données."}},
+      "desc": "Same for a level's detail.",
+      "params": {
+        "context": {
+          "type": "any",
+          "desc": "Context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Road."
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Data."
+        }
+      },
       "internal": true
     },
     "onWizardVehiclesRouteMount": {
-      "desc": "Idem pour la liste des véhicules.",
-      "params": {"context": {"type": "any", "desc": "Contexte."}, "toRoute": {"type": "table", "desc": "Route."}, "fromRoute": {"type": "table", "desc": "Route d'origine."}, "data": {"type": "table", "desc": "Données."}},
+      "desc": "Same for the vehicle list.",
+      "params": {
+        "context": {
+          "type": "any",
+          "desc": "Context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Road."
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Data."
+        }
+      },
       "internal": true
     },
     "onWizardVehicleDetailRouteMount": {
-      "desc": "Idem pour le détail d'un véhicule.",
-      "params": {"context": {"type": "any", "desc": "Contexte."}, "toRoute": {"type": "table", "desc": "Route."}, "fromRoute": {"type": "table", "desc": "Route d'origine."}, "data": {"type": "table", "desc": "Données."}},
+      "desc": "Same for a vehicle's detail.",
+      "params": {
+        "context": {
+          "type": "any",
+          "desc": "Context."
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Road."
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Origin route."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Data."
+        }
+      },
       "internal": true
     },
     "resolveSelectedLevelTitle": {
-      "desc": "Titre du fil d'Ariane pour le niveau : d'abord le niveau de la route de détail (spawnPointsForLevel), sinon le niveau choisi (tuile ou nom).",
-      "params": {"params": {"type": "table", "desc": "Paramètres de la route (params.path.keys)."}},
-      "returns": [{"type": "string|nil", "desc": "Titre."}],
+      "desc": "Breadcrumb title for the level: first the level of the detail route (spawnPointsForLevel), otherwise the chosen level (tile or name).",
+      "params": {
+        "params": {
+          "type": "table",
+          "desc": "Route parameters (params.path.keys)."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Title."
+        }
+      ],
       "internal": false
     },
     "resolveSelectedVehicleTitle": {
-      "desc": "Titre du fil d'Ariane pour le véhicule : modèle de la route (configsForModel / configsForBrandSubModelOrModel), sinon la tuile véhicule, sinon le nom dérivé du modèle choisi.",
-      "params": {"params": {"type": "table", "desc": "Paramètres de la route."}},
-      "returns": [{"type": "string|nil", "desc": "Titre."}],
+      "desc": "Breadcrumb title for the vehicle: the route's model (configsForModel / configsForBrandSubModelOrModel), otherwise the vehicle tile, otherwise the name derived from the chosen model.",
+      "params": {
+        "params": {
+          "type": "table",
+          "desc": "Route parameters."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Title."
+        }
+      ],
       "internal": false
     },
     "asyncLevelLoadComplete": {
-      "desc": "Hook appelé quand le chargeur asynchrone des niveaux a fini : émet l'instantané FreeroamSelectorDataLoaded('level') si la route en attente est toujours courante.",
+      "desc": "Hook called when the asynchronous level loader has finished: emits the FreeroamSelectorDataLoaded('level') snapshot if the pending route is still current.",
       "params": {},
       "internal": true
     },
     "asyncVehicleLoadComplete": {
-      "desc": "Idem pour les véhicules (appelé depuis util_asyncBulkLoader.loadVehicles via extensions.hook).",
+      "desc": "Same for vehicles (called from util_asyncBulkLoader.loadVehicles via extensions.hook).",
       "params": {},
       "internal": true
     },
     "setSpawnPoint": {
-      "desc": "Choisit le niveau et le point de départ : résout un point de repli si besoin (resolveSpawnPointNameForLevel), met à jour la date d'environnement par défaut du niveau si elle n'avait pas été modifiée, charge et met en cache la tuile, marque la configuration modifiée et navigue vers routeName si fourni.",
-      "params": {"levelName": {"type": "string", "desc": "Nom du niveau."}, "spawnPointName": {"type": "string|nil", "desc": "Nom de l'objet de départ ('undefined' ou nil = point par défaut)."}, "key": {"type": "string|nil", "desc": "Clé de tuile (non utilisée dans le corps)."}, "routeName": {"type": "string|nil", "desc": "Route UI vers laquelle naviguer."}},
+      "desc": "Chooses the level and the spawn point: resolves a fallback point if needed (resolveSpawnPointNameForLevel), updates the level's default environment date if it had not been modified, loads and caches the tile, marks the configuration as modified and navigates to routeName if provided.",
+      "params": {
+        "levelName": {
+          "type": "string",
+          "desc": "Level name."
+        },
+        "spawnPointName": {
+          "type": "string|nil",
+          "desc": "Spawn object name ('undefined' or nil = default point)."
+        },
+        "key": {
+          "type": "string|nil",
+          "desc": "Tile key (not used in the body)."
+        },
+        "routeName": {
+          "type": "string|nil",
+          "desc": "UI route to navigate to."
+        }
+      },
       "internal": false
     },
     "validateFiles": {
-      "desc": "Vérifie que des fichiers (motif nom.ext) ou dossiers existent (FS:fileExists / FS:directoryExists) ; vrai si la liste est nil.",
-      "params": {"validationFiles": {"type": "string[]|nil", "desc": "Chemins à valider."}},
-      "returns": [{"type": "boolean", "desc": "Vrai si tous existent."}],
+      "desc": "Checks that files (name.ext pattern) or folders exist (FS:fileExists / FS:directoryExists); true if the list is nil.",
+      "params": {
+        "validationFiles": {
+          "type": "string[]|nil",
+          "desc": "Paths to validate."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if all exist."
+        }
+      ],
       "internal": false
     },
     "getCurrentSpawnPointTile": {
-      "desc": "Tuile du point de départ courant. Si ses fichiers n'existent plus ou si la tuile manque, recharge ou retombe sur le niveau/point par défaut.",
+      "desc": "Tile of the current spawn point. If its files no longer exist or the tile is missing, reloads or falls back to the default level/point.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Tuile."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Tile."
+        }
+      ],
       "internal": false
     },
     "getCurrentVehicleTile": {
-      "desc": "Tuile du véhicule courant, avec repli sur le véhicule par défaut si invalide.",
+      "desc": "Tile of the current vehicle, with fallback to the default vehicle if invalid.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Tuile."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Tile."
+        }
+      ],
       "internal": false
     },
     "setVehicle": {
-      "desc": "Choisit le véhicule : résout la config (repli sur une config existante du modèle), garde les additionalData existantes si c'est le même véhicule sans données, met en cache la tuile.",
-      "params": {"model": {"type": "string", "desc": "Clé du modèle."}, "config": {"type": "string", "desc": "Clé de la config."}, "additionalData": {"type": "table|nil", "desc": "Données (paint, paint2, paint3 : noms de peintures)."}, "key": {"type": "string|nil", "desc": "Non utilisé dans le corps."}},
+      "desc": "Chooses the vehicle: resolves the config (fallback to an existing config of the model), keeps the existing additionalData if it is the same vehicle with no data, caches the tile.",
+      "params": {
+        "model": {
+          "type": "string",
+          "desc": "Model key."
+        },
+        "config": {
+          "type": "string",
+          "desc": "Config key."
+        },
+        "additionalData": {
+          "type": "table|nil",
+          "desc": "Data (paint, paint2, paint3: paint names)."
+        },
+        "key": {
+          "type": "string|nil",
+          "desc": "Not used in the body."
+        }
+      },
       "internal": false
     },
     "getCurrentVehicle": {
-      "desc": "Véhicule courant de la configuration.",
+      "desc": "Current vehicle of the configuration.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{model, config, additionalData}"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{model, config, additionalData}"
+        }
+      ],
       "internal": false
     },
     "onSpawnPointTileClick": {
-      "desc": "Clic sur la tuile de point de départ : ouvre le sélecteur de freeroam ; au choix, appelle setSpawnPoint et revient à menu.freeroamconfigurator.",
+      "desc": "Click on the spawn point tile: opens the freeroam selector; on choice, calls setSpawnPoint and returns to menu.freeroamconfigurator.",
       "params": {},
       "internal": true
     },
     "onVehicleTileClick": {
-      "desc": "Clic sur la tuile de véhicule : ouvre le sélecteur de véhicule ; au choix, appelle setVehicle et revient à menu.freeroamconfigurator.",
+      "desc": "Click on the vehicle tile: opens the vehicle selector; on choice, calls setVehicle and returns to menu.freeroamconfigurator.",
       "params": {},
       "internal": true
     },
     "onLanguageChanged": {
-      "desc": "Hook de changement de langue : efface les tuiles en cache (elles contiennent des textes traduits).",
+      "desc": "Language change hook: clears the cached tiles (they contain translated text).",
       "params": {},
       "internal": true
     },
     "onSerialize": {
-      "desc": "Avant rechargement Lua : sauvegarde la configuration si modifiée et la renvoie.",
+      "desc": "Before Lua reload: saves the configuration if modified and returns it.",
       "params": {},
-      "returns": [{"type": "table", "desc": "La configuration courante."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The current configuration."
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Après rechargement Lua : restaure la configuration.",
-      "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "desc": "After Lua reload: restores the configuration.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Table returned by onSerialize."
+        }
+      },
       "internal": true
     },
     "startFreeroam": {
-      "desc": "Démarre la partie : résout les peintures du véhicule, appelle freeroam_freeroam.startFreeroamByName(niveau, point de départ, nil, {modèle, options}), enregistre les récents (point de départ et véhicule) et vide les filtres du wizard.",
-      "params": {"configuration": {"type": "table", "desc": "Configuration complète {levelName, spawnPointName, vehicle={model, config, additionalData}, spawnPointTile…}."}},
+      "desc": "Starts the game: resolves the vehicle's paints, calls freeroam_freeroam.startFreeroamByName(level, spawn point, nil, {model, options}), records the recents (spawn point and vehicle) and clears the wizard's filters.",
+      "params": {
+        "configuration": {
+          "type": "table",
+          "desc": "Full configuration {levelName, spawnPointName, vehicle={model, config, additionalData}, spawnPointTile...}."
+        }
+      },
       "internal": false
     },
     "onLoadingScreenFadeout": {
-      "desc": "Hook de fin de fondu de l'écran de chargement : si un démarrage a été lancé, navigue une seule fois vers l'écran « play ».",
+      "desc": "Loading screen fade-out end hook: if a start was launched, navigates once to the \"play\" screen.",
       "params": {},
       "internal": true
     }

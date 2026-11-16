@@ -1,28 +1,28 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/getGearboxMode.lua",
-  "module": "Nœud « Get Gearboxmode » (catégorie `once_f_duration`). Demande au contrôleur `mainController` du véhicule son `gearboxMode` (par `core_vehicleBridge.requestValue`) et le renvoie sur la sortie `value` (any). Pin d'entrée : `vehId` (défaut : joueur). État de durée : inactive/started/finished.",
+  "module": "Node \"Get Gearboxmode\" (category `once_f_duration`). Asks the vehicle's `mainController` controller for its `gearboxMode` (via `core_vehicleBridge.requestValue`) and returns it on the `value` output (any). Input pin: `vehId` (default: player). Duration state: inactive/started/finished.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_executionStarted": {
-          "desc": "Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.",
+          "desc": "Called by the manager when the flowgraph project execution starts; resets the internal state to zero.",
           "internal": true
         },
         "init": {
-          "desc": "Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne.",
+          "desc": "Node constructor, called at its creation by the flowgraph editor/manager; initializes the internal state.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Efface la réponse reçue et passe en durée `inactive`.",
+          "desc": "Clears the received response and goes to `inactive` duration.",
           "internal": true
         },
         "work": {
-          "desc": "Quand la réponse est arrivée, la copie sur `value` et passe en `finished`.",
+          "desc": "When the response has arrived, copies it to `value` and goes to `finished`.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Envoie la requête `mainController/gearboxMode` au véhicule et passe en `started`.",
+          "desc": "Sends the `mainController/gearboxMode` request to the vehicle and goes to `started`.",
           "internal": true
         }
       }

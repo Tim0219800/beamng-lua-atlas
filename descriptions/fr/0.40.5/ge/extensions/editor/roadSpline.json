@@ -1,0 +1,62 @@
+{
+  "path": "lua/ge/extensions/editor/roadSpline.lua",
+  "module": "Outil « Road Spline » de l'éditeur de niveaux : on trace une spline (nœuds + largeurs) et l'outil génère automatiquement des DecalRoads empilés en couches (chaussée, lignes centrales/de rive, fondus de bord, marques de pneus, fissures, rustines…), avec peinture optionnelle du terrain. Ce fichier est surtout l'interface ImGui (fenêtre « roadSplineEditor », mode d'édition « Road Spline ») ; la logique de données est dans editor/roadSpline/groupMgr et layerMgr. Il enregistre aussi l'entrée « Convert to Road Spline » dans le menu contextuel de l'arbre de scène pour convertir des DecalRoads existants. Utile à un moddeur surtout pour verrouiller/sélectionner une spline depuis un autre outil (Master Spline).",
+  "notes": [
+    "Le dossier de scène créé pour chaque spline n'est sauvegardé avec le niveau que si la route est verrouillée (« bakée ») ; sinon il est transitoire (cansave = false).",
+    "onSerialize/onDeserialized servent au rechargement des extensions Lua : une route verrouillée garde ses DecalRoads dans la scène, seuls leurs ids sont repris au retour (groupMgr.release/adopt).",
+    "Même si l'outil n'est pas actif, onEditorGui reconstruit les groupes marqués sales et dessine les « coques » des splines."
+  ],
+  "functions": {
+    "setLockedById": {
+      "desc": "Verrouille ou déverrouille la spline dont l'id est donné et la reconstruit immédiatement. Verrouillée (isEnabled = false), la route n'est plus reconstruite par l'outil et ses DecalRoads sont sauvegardés avec le niveau. Utilisée aussi par la Master Spline pour les splines enfants liées. Ne fait rien si l'id est inconnu.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant (UUID) du groupe/spline."},
+        "isLocked": {"type": "boolean", "desc": "true pour verrouiller (le dernier état affiché est d'abord reconstruit), false pour déverrouiller."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setSelectedSplineIdx": {
+      "desc": "Définit l'indice de la spline sélectionnée dans l'outil (sélection partagée entre outils).",
+      "params": {"idx": {"type": "integer", "desc": "Indice (à partir de 1) dans la liste des groupes."}},
+      "returns": [],
+      "internal": false
+    },
+    "setSelectedNodeIdx": {
+      "desc": "Définit l'indice du nœud sélectionné dans la spline courante (sélection partagée entre outils).",
+      "params": {"idx": {"type": "integer", "desc": "Indice (à partir de 1) du nœud."}},
+      "returns": [],
+      "internal": false
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation avant rechargement Lua. Renvoie la liste des groupes encodés ; pour une route verrouillée, mémorise les ids de ses DecalRoads (keptObjects) et laisse les objets dans la scène. Vide ensuite la liste des groupes.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Tableau de groupes sérialisés (chaînes encodées par string.buffer)."}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook de désérialisation après rechargement Lua : recrée les groupes, reprend les DecalRoads conservés des routes verrouillées (groupMgr.adopt) et recalcule la table id -> indice.",
+      "params": {"data": {"type": "table", "desc": "Valeur renvoyée par onSerialize."}},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Appelé à chaque image par l'éditeur. Met à jour les groupes sales (même si l'outil est inactif), puis, si l'outil est actif, dessine la fenêtre principale, gère le polygone de sélection, la sélection de matériau, le fil de fer, les nœuds/poignées et le gizmo.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Appelé à l'initialisation de l'éditeur : déclare le mode d'édition roadSplineEditor (« Road Spline »), enregistre la fenêtre de l'outil et celle de sélection de matériau, et ajoute « Convert to Road Spline » au menu contextuel de l'arbre de scène.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Appelé à la sortie du niveau : supprime les groupes actifs non liés (les verrouillés et liés restent dans la liste) et recalcule la table id -> indice.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

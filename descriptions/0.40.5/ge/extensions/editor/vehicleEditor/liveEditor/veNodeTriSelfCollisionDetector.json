@@ -1,27 +1,63 @@
 {
   "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veNodeTriSelfCollisionDetector.lua",
-  "module": "Fenêtre 'Node Triangle Self Collision Detector' du Vehicle Editor live. Le bouton 'Start Analysis' teste, pour chaque triangle collidable, quels nœuds du véhicule passent à moins d'un rayon donné (0.025 à 0.1 m, 0.025 m étant le vrai rayon de collision) du triangle. Sont ignorés : triangles NONCOLLIDABLE, nœuds du triangle, nœuds sans collision ou sans selfCollision, nœuds de coupleurs ou avec couplerTag/tag, et nœuds de même premier groupe qu'un sommet du triangle. Les paires trouvées sont imprimées dans la console et dessinées (sphère orange, triangle vert, textes).",
+  "module": "'Node Triangle Self Collision Detector' window of the live Vehicle Editor. The 'Start Analysis' button tests, for each collidable triangle, which vehicle nodes pass within a given radius (0.025 to 0.1 m, 0.025 m being the real collision radius) of the triangle. Ignored: NONCOLLIDABLE triangles, the triangle's nodes, nodes without collision or without selfCollision, coupler nodes or nodes with couplerTag/tag, and nodes in the same first group as a triangle vertex. The pairs found are printed to the console and drawn (orange sphere, green triangle, texts).",
   "notes": [
-    "Complexité O(triangles x nœuds) exécutée en un seul frame : peut figer l'éditeur sur un gros véhicule.",
-    "Les résultats sont stockés par ID de véhicule dans vehsResultData et inclus dans onSerialize.",
-    "Distances en mètres."
+    "O(triangles x nodes) complexity run in a single frame: can freeze the editor on a large vehicle.",
+    "The results are stored per vehicle ID in vehsResultData and included in onSerialize.",
+    "Distances in meters."
   ],
   "fields": {
-    "menuEntry": {"type": "string", "desc": "'Node Triangle Self Collision Detector'."}
+    "menuEntry": {
+      "type": "string",
+      "desc": "'Node Triangle Self Collision Detector'."
+    }
   },
   "functions": {
     "onVehicleEditorRenderJBeams": {
-      "desc": "Hook de rendu émis par editor_veMain : dessine les résultats de l'analyse du véhicule courant (sphère du nœud, triangle, étiquettes).",
+      "desc": "Render hook emitted by editor_veMain: draws the analysis results of the current vehicle (node sphere, triangle, labels).",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
-        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (s)."
+        }
       },
       "internal": true
     },
-    "onUpdate": {"desc": "Appelé chaque frame : dessine la fenêtre (curseur de rayon, boutons Start Analysis / Clear Results).", "internal": true},
-    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
-    "onSerialize": {"desc": "Renvoie {windowOpen, nodeCollisionRadius, vehsResultData}.", "returns": [{"type": "table", "desc": "État à restaurer."}], "internal": true},
-    "onDeserialized": {"desc": "Restaure l'état d'ouverture et le rayon (data.nodeCollisionRadius).", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+    "onUpdate": {
+      "desc": "Called every frame: draws the window (radius slider, Start Analysis / Clear Results buttons).",
+      "internal": true
+    },
+    "open": {
+      "desc": "Opens the window.",
+      "internal": false
+    },
+    "onSerialize": {
+      "desc": "Returns {windowOpen, nodeCollisionRadius, vehsResultData}.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "State to restore."
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Restores the open state and the radius (data.nodeCollisionRadius).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "onSerialize table."
+        }
+      },
+      "internal": true
+    }
   }
 }

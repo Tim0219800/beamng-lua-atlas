@@ -1,60 +1,60 @@
 # `gameplay_achievement`
 
-*Fichier : `lua/ge/extensions/gameplay/achievement.lua` · VM : Game Engine (GE) · 403 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/achievement.lua` · VM: Game Engine (GE) · 403 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_achievement` : `extensions.load("gameplay_achievement")`, puis la globale `gameplay_achievement`
+**Access:** extension `gameplay_achievement`: `extensions.load("gameplay_achievement")`, then the global `gameplay_achievement`
 
-Extension GE qui relie les statistiques de jeu (gameplay_statistic) aux succès et statistiques du fournisseur en ligne (OnlineServiceProvider : Steam, EOS…). Au démarrage elle lit lua/ge/extensions/gameplay/achievements.json, construit la liste des succès en attente et des statistiques à publier, puis s'abonne aux métriques correspondantes. Quand une métrique atteint le seuil unlockAt, le succès est débloqué. Elle gère aussi trois succès « manuels » (VEHICLE_EXPLORER, LEVEL_EXPLORER, VEHICLE_FAVOURITE). Un moddeur s'en sert surtout via unlockAchievement.
+GE extension that links the game statistics (gameplay_statistic) to the achievements and statistics of the online provider (OnlineServiceProvider: Steam, EOS...). At startup it reads lua/ge/extensions/gameplay/achievements.json, builds the list of pending achievements and statistics to publish, then subscribes to the corresponding metrics. When a metric reaches the unlockAt threshold, the achievement is unlocked. It also handles three "manual" achievements (VEHICLE_EXPLORER, LEVEL_EXPLORER, VEHICLE_FAVOURITE). A modder mostly uses it through unlockAchievement.
 
-## Exemple
+## Example
 
 ```lua
 gameplay_achievement.unlockAchievement("VEHICLE_EXPLORER")
 ```
 
-## Remarques
+## Notes
 
-- Rien ne se passe si OnlineServiceProvider.isWorking est faux ou si aucune plateforme n'est mappée (startup retourne false, achievements inactifs).
-- startup() n'est exécuté qu'une fois (drapeau started) ; il est appelé depuis onFirstUpdate, onOnlineServiceProviderReady et onClientStartMission.
-- Les mises à jour de statistiques sont limitées : envoi si plus de 20 s depuis le dernier envoi ou si la variation atteint submitMinDelta.
-- Seuils manuels : 15 véhicules avec odomètre >= 10000 (VEHICLE_EXPLORER), 5 niveaux avec temps >= 300 (LEVEL_EXPLORER), un odomètre >= 1000000 (VEHICLE_FAVOURITE). Unités des métriques déduites du code.
-- Incohérence : dans maybeSubmitStat, watcher.valueLastSent reçoit timer:stop() (un temps) alors qu'il est aussi comparé à v (une valeur de stat) ; le test math.abs(v - valueLastSent) mélange donc temps et valeur. Dans statCallback, newvalue.career est lu avant de tester newvalue (erreur si nil).
-- flushPendingOnlineStats (envoi des valeurs en file) n'est appelé qu'au déchargement de l'extension.
+- Nothing happens if OnlineServiceProvider.isWorking is false or if no platform is mapped (startup returns false, achievements inactive).
+- startup() only runs once (started flag); it is called from onFirstUpdate, onOnlineServiceProviderReady and onClientStartMission.
+- Statistic updates are throttled: sent if more than 20 s since the last send or if the change reaches submitMinDelta.
+- Manual thresholds: 15 vehicles with odometer >= 10000 (VEHICLE_EXPLORER), 5 levels with time >= 300 (LEVEL_EXPLORER), one odometer >= 1000000 (VEHICLE_FAVOURITE). Metric units inferred from code.
+- Inconsistency: in maybeSubmitStat, watcher.valueLastSent receives timer:stop() (a time) while it is also compared to v (a stat value); the math.abs(v - valueLastSent) test therefore mixes time and value. In statCallback, newvalue.career is read before testing newvalue (error if nil).
+- flushPendingOnlineStats (sending of queued values) is only called when the extension unloads.
 
-**Dépendances (chargées avant) :** `gameplay_statistic`
+**Dependencies (loaded first):** `gameplay_statistic`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_achievement.onClientStartMission()` | Hook appelé au démarrage d'un niveau ; relance startup() (sans effet si déjà démarré). *(interne)* *(hook)* | 376 |
-| `gameplay_achievement.onExtensionUnloaded()` | Hook appelé au déchargement de l'extension ; envoie les statistiques et progressions encore en file d'attente. *(interne)* *(hook)* | 380 |
-| `gameplay_achievement.onFirstUpdate()` | Hook appelé à la première mise à jour du jeu : lance startup() si le fournisseur en ligne fonctionne, sinon journalise un avertissement. *(interne)* *(hook)* | 364 |
-| `gameplay_achievement.onOnlineServiceProviderReady()` | Hook appelé quand le fournisseur de service en ligne devient prêt ; lance startup(). *(interne)* *(hook)* | 372 |
-| `gameplay_achievement.statCallback(key, oldvalue, newvalue)` | Callback enregistré auprès de gameplay_statistic pour chaque métrique suivie. Publie les statistiques en ligne correspondantes, pousse la progression des succès et débloque ceux dont la valeur atteint unlockAt (puis les retire de la liste en attente). Désabonne la métrique si plus personne ne l'utilise. *(interne)* | 108 |
-| `gameplay_achievement.unlockAchievement(achievementId)` | Débloque un succès par son identifiant via OnlineServiceProvider.unlockAchievement. Ne le fait qu'une fois par session pour un même identifiant. | 385 |
+| `gameplay_achievement.onClientStartMission()` | Hook called when a level starts; launches startup() again (no effect if already started). *(internal)* *(hook)* | 376 |
+| `gameplay_achievement.onExtensionUnloaded()` | Hook called when the extension unloads; sends the statistics and progress still queued. *(internal)* *(hook)* | 380 |
+| `gameplay_achievement.onFirstUpdate()` | Hook called on the game's first update: launches startup() if the online provider works, otherwise logs a warning. *(internal)* *(hook)* | 364 |
+| `gameplay_achievement.onOnlineServiceProviderReady()` | Hook called when the online service provider becomes ready; launches startup(). *(internal)* *(hook)* | 372 |
+| `gameplay_achievement.statCallback(key, oldvalue, newvalue)` | Callback registered with gameplay_statistic for each tracked metric. Publishes the corresponding online statistics, pushes achievement progress and unlocks those whose value reaches unlockAt (then removes them from the pending list). Unsubscribes the metric if nobody uses it anymore. *(internal)* | 108 |
+| `gameplay_achievement.unlockAchievement(achievementId)` | Unlocks an achievement by its identifier via OnlineServiceProvider.unlockAchievement. Only does so once per session for a given identifier. | 385 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_achievement.statCallback(key, oldvalue, newvalue)`
 
-Callback enregistré auprès de gameplay_statistic pour chaque métrique suivie. Publie les statistiques en ligne correspondantes, pousse la progression des succès et débloque ceux dont la valeur atteint unlockAt (puis les retire de la liste en attente). Désabonne la métrique si plus personne ne l'utilise.
+Callback registered with gameplay_statistic for each tracked metric. Publishes the corresponding online statistics, pushes achievement progress and unlocks those whose value reaches unlockAt (then removes them from the pending list). Unsubscribes the metric if nobody uses it anymore.
 
-- `key` (*string*) : Nom de la métrique modifiée.
-- `oldvalue` (*table|nil*) : Ancienne entrée de la métrique (non utilisée).
-- `newvalue` (*table*) : Nouvelle entrée : champs value (number) et career (boolean).
+- `key` (*string*) : Name of the changed metric.
+- `oldvalue` (*table|nil*) : Old entry of the metric (unused).
+- `newvalue` (*table*) : New entry: fields value (number) and career (boolean).
 
 #### `gameplay_achievement.unlockAchievement(achievementId)`
 
-Débloque un succès par son identifiant via OnlineServiceProvider.unlockAchievement. Ne le fait qu'une fois par session pour un même identifiant.
+Unlocks an achievement by its identifier via OnlineServiceProvider.unlockAchievement. Only does so once per session for a given identifier.
 
-- `achievementId` (*string*) : Identifiant du succès côté plateforme.
+- `achievementId` (*string*) : Achievement identifier on the platform side.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : {"gameplay_statistic"}. |
+| `dependencies` | table<integer, string> | Extensions loaded before: {"gameplay_statistic"}. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/achievement.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/achievement.lua`.*

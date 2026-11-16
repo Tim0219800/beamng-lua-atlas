@@ -1,0 +1,25 @@
+{
+  "path": "lua/common/libs/copas/copas/timer.lua",
+  "module": "Sous-module de la bibliothèque tierce Copas : minuteries (ponctuelles ou récurrentes) exécutées dans le répartiteur Copas. timer.new arme immédiatement un timer qui appellera callback(timer_obj, params) après le délai. Le module renvoie la table timer.",
+  "usage": "local timer = require(\"libs/copas/copas/timer\")\nlocal t = timer.new({delay = 2, recurring = true, callback = function(self, p) print(\"tic\") end})\nt:cancel()",
+  "notes": [
+    "new lève une erreur (assert) si delay < 0 ou si callback n'est pas une fonction."
+  ],
+  "fields": {
+    "__index": {"type": "table", "desc": "Métatable des objets timer."}
+  },
+  "functions": {
+    "new": {
+      "desc": "Crée et arme un timer.",
+      "params": {
+        "opts": {"type": "table", "desc": "{delay (s), callback, recurring?, params?, initial_delay? (défaut delay)}"}
+      },
+      "returns": [{"type": "table", "desc": "Objet timer"}]
+    },
+    "cancel": {
+      "desc": "Annule un timer actif (retire sa coroutine du répartiteur).",
+      "params": {"self": {"type": "table", "desc": "Le timer (timer:cancel())"}},
+      "returns": [{"type": "table|nil", "desc": "Le timer, ou nil + erreur si déjà annulé"}]
+    }
+  }
+}
